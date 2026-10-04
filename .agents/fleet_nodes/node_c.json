@@ -16,9 +16,9 @@
   "session_end": null,
   "session_limit_enabled": false,
   "timer_enabled": false,
-  "turns_executed": 117,
+  "turns_executed": 118,
   "last_turn_timestamp": "2026-10-04T08:45:00-07:00",
-  "last_heartbeat": "2026-10-04T15:53:04.107414+00:00",
-  "current_target": "KHex",
+  "last_heartbeat": "2026-10-04T16:10:46.076122+00:00",
+  "current_target": "KMatch3",
   "remote_command": "none"
 }

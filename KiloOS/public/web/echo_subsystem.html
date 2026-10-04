@@ -626,6 +626,119 @@
     justify-content: space-between;
   }
 
+  /* TAB 9: Lithospheric Seismic & Strata Profiler Styles */
+  .seismic-layout-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin-bottom: 14px;
+  }
+  @media (max-width: 900px) {
+    .seismic-layout-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+  .seismic-view-panel {
+    background: #040814;
+    border: 1px solid var(--border-dim);
+    border-radius: 4px;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+  }
+  .seismic-canvas-container {
+    position: relative;
+    background: #02050c;
+    border: 1px solid var(--border-bright);
+    box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.9);
+    border-radius: 3px;
+    overflow: hidden;
+    margin-bottom: 8px;
+  }
+  .strata-buttons-bar {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 6px;
+    margin-bottom: 12px;
+  }
+  @media (max-width: 768px) {
+    .strata-buttons-bar {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+  .strata-btn {
+    background: #081124;
+    border: 1px solid var(--border-dim);
+    color: #cbd5e1;
+    font-family: inherit;
+    font-size: 10.5px;
+    font-weight: 700;
+    padding: 6px 4px;
+    border-radius: 3px;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.15s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+  }
+  .strata-btn:hover {
+    border-color: var(--border-bright);
+    color: #fff;
+    background: #0e1c3b;
+  }
+  .strata-btn.active {
+    border-color: var(--green-phosphor);
+    background: rgba(0, 255, 170, 0.12);
+    color: #fff;
+    box-shadow: 0 0 8px rgba(0, 255, 170, 0.25);
+  }
+  .strata-info-card {
+    background: #030712;
+    border: 1px solid var(--border-dim);
+    border-left: 3px solid var(--border-bright);
+    padding: 10px 12px;
+    border-radius: 3px;
+    font-size: 11px;
+    margin-bottom: 12px;
+  }
+  .strata-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    margin-top: 8px;
+    font-size: 10.5px;
+  }
+  @media (max-width: 600px) {
+    .strata-stats-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+  .strata-stat-box {
+    background: #070d1e;
+    border: 1px solid rgba(56, 189, 248, 0.2);
+    padding: 5px 8px;
+    border-radius: 3px;
+  }
+  .seismic-pulse-badge {
+    display: inline-block;
+    padding: 2px 6px;
+    border-radius: 2px;
+    font-size: 10px;
+    font-weight: 700;
+  }
+  .seismic-pulse-badge.locked {
+    background: rgba(0, 255, 170, 0.2);
+    color: var(--green-phosphor);
+    border: 1px solid var(--green-phosphor);
+  }
+  .seismic-pulse-badge.normal {
+    background: rgba(56, 189, 248, 0.2);
+    color: var(--border-bright);
+    border: 1px solid var(--border-bright);
+  }
+
   /* Webring & Footer */
   .lab-footer {
     border-top: 2px solid var(--border-dim);
@@ -707,6 +820,7 @@
     <button class="tab-btn" id="tabBtn6" onclick="switchTab('stego')">🧩 [06] CIPHER &amp; STEGANOGRAPHY</button>
     <button class="tab-btn" id="tabBtn7" onclick="switchTab('terminal')">💻 [07] FIELD TERMINAL</button>
     <button class="tab-btn" id="tabBtn8" onclick="switchTab('mesh')">⚡ [08] AIRGAP MESH &amp; ARTIFACTS</button>
+    <button class="tab-btn" id="tabBtn9" onclick="switchTab('seismic')">🪨 [09] LITHOSPHERIC SEISMIC &amp; STRATA PROFILER</button>
   </nav>
 
   <!-- TAB 1: RESEARCH JOURNAL & OBSERVATION LOGBOOK -->
@@ -1657,6 +1771,262 @@ END TRANSMISSION // ESARL 1999</div>
               <button class="btn-retro btn-green" onclick="downloadCarrierBurstWav()">Download Audio (.WAV)</button>
             </div>
           </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 9: LITHOSPHERIC SEISMIC REFLECTION & STRATA PROFILER (TDR) -->
+  <div id="pane-seismic" class="tab-pane">
+    <div class="card-box">
+      <div class="card-header">
+        <span>LITHOSPHERIC TIME-DOMAIN REFLECTOMETER (TDR) &amp; BOREHOLE ACOUSTIC PROFILER</span>
+        <div style="display:flex; gap:6px; align-items:center;">
+          <span class="journal-tag" style="border-color:var(--amber-led); color:var(--amber-led);">CARLSBAD DELAWARE BASIN // STRATA TDR</span>
+          <span class="seismic-pulse-badge normal" id="badgeSeismicLock">CARRIER: 1999.0 Hz READY</span>
+        </div>
+      </div>
+      <p style="font-size:12px; color:#94a3b8; margin-bottom:12px;">
+        Real-time acoustic reflection profiling down through 3,500 meters of Permian geological strata. When acoustic impulses are tuned to the <strong>1999.0 Hz</strong> dielectric cavity resonance, the <em>Salado Halite</em> salt cavern acts as an ultra-low loss acoustic waveguide, triggering active telemetry responses from <strong>Station Alpha (10.19.99.4/classified)</strong> at 850m and deep precursor echoes from <strong>Node 0x7F</strong> at 3,100m.
+      </p>
+
+      <!-- Quick Metrics Bar -->
+      <div style="display:flex; justify-content:space-between; align-items:center; background:#060b17; border:1px solid var(--border-dim); border-radius:4px; padding:6px 12px; margin-bottom:14px; font-size:11px; flex-wrap:wrap; gap:8px;">
+        <div>SURFACE ELEVATION: <strong style="color:#bae6fd;">+1,040 m MSL</strong></div>
+        <div>BOREHOLE DEPTH: <strong style="color:var(--border-bright);">3,500 m</strong></div>
+        <div>WAVEGUIDE MEDIA: <strong style="color:var(--green-phosphor);">Salado Halite (v = 4,450 m/s)</strong></div>
+        <div>TRANSPONDER LOCK: <strong id="lblTransponderStatus" style="color:var(--amber-led);">STATION ALPHA (850m) STANDBY</strong></div>
+      </div>
+
+      <!-- Main Visual Displays: 2D Cross-Section + A-Scan Oscillograph -->
+      <div class="seismic-layout-grid">
+        <!-- Left: 2D Geological Strata Cross-Section -->
+        <div class="seismic-view-panel">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+            <strong style="color:var(--border-bright); font-size:11.5px;">2D SUBTERRANEAN STRATA CROSS-SECTION (0 - 3,500m)</strong>
+            <span style="font-size:10px; color:#64748b;">BOREHOLE BH-1999-E</span>
+          </div>
+          <div class="seismic-canvas-container">
+            <canvas id="seismicCrossCanvas" width="490" height="340" style="display:block; width:100%; height:auto;"></canvas>
+          </div>
+          <div style="display:flex; justify-content:space-between; align-items:center; font-size:10.5px; color:#94a3b8;">
+            <span>▲ Surface Array (0m)</span>
+            <span style="color:#38bdf8;">◈ Station Alpha (850m)</span>
+            <span style="color:#a78bfa;">✦ Node 0x7F (3,100m)</span>
+            <span>▼ Basement Granite (3,500m)</span>
+          </div>
+        </div>
+
+        <!-- Right: Time-Domain Reflection A-Scan Oscillograph -->
+        <div class="seismic-view-panel">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+            <strong style="color:var(--green-phosphor); font-size:11.5px;">TIME-DOMAIN REFLECTION OSCILLOGRAPH (A-SCAN TRACE)</strong>
+            <span style="font-size:10px; color:var(--green-phosphor);" id="lblSeismicTwtReadout">TWT: 0.0 ms</span>
+          </div>
+          <div class="seismic-canvas-container">
+            <canvas id="seismicOscCanvas" width="490" height="340" style="display:block; width:100%; height:auto;"></canvas>
+          </div>
+          <div style="display:flex; justify-content:space-between; align-items:center; font-size:10.5px; color:#94a3b8;">
+            <span>0 ms (Ping)</span>
+            <span>333 ms (Rustler)</span>
+            <span style="color:#38bdf8;">700 ms (Alpha)</span>
+            <span>992 ms (Castile)</span>
+            <span style="color:#a78bfa;">1,691 ms (0x7F)</span>
+            <span>2,200 ms</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Interactive Strata Geological Selector Bar -->
+      <div style="margin-bottom:14px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+          <span style="font-size:11px; font-weight:700; color:#bae6fd;">SELECT STRATUM FORMATION TO AUDIT ROCK PHYSICS:</span>
+          <span style="font-size:10px; color:#64748b;">Click stratum to inspect acoustic impedance &amp; velocity</span>
+        </div>
+        <div class="strata-buttons-bar" id="strataButtonsBar">
+          <button class="strata-btn" id="strataBtn-0" onclick="selectStrataLayer(0)">
+            <span>[01] CALICHE</span>
+            <span style="font-size:9.5px; opacity:0.8;">0 - 300m</span>
+          </button>
+          <button class="strata-btn" id="strataBtn-1" onclick="selectStrataLayer(1)">
+            <span>[02] RUSTLER</span>
+            <span style="font-size:9.5px; opacity:0.8;">300 - 750m</span>
+          </button>
+          <button class="strata-btn active" id="strataBtn-2" onclick="selectStrataLayer(2)">
+            <span>[03] SALADO SALT ★</span>
+            <span style="font-size:9.5px; opacity:0.8;">750 - 1,500m</span>
+          </button>
+          <button class="strata-btn" id="strataBtn-3" onclick="selectStrataLayer(3)">
+            <span>[04] CASTILE</span>
+            <span style="font-size:9.5px; opacity:0.8;">1,500 - 2,400m</span>
+          </button>
+          <button class="strata-btn" id="strataBtn-4" onclick="selectStrataLayer(4)">
+            <span>[05] BELL CANYON</span>
+            <span style="font-size:9.5px; opacity:0.8;">2,400 - 3,500m</span>
+          </button>
+        </div>
+
+        <!-- Selected Stratum Detail Panel -->
+        <div class="strata-info-card" id="strataDetailPanel">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+            <strong style="color:var(--border-bright); font-size:12px;" id="strataLayerName">FORMATION: SALADO HALITE (CARLSBAD SALT FORMATION)</strong>
+            <span class="journal-tag" id="strataLayerTag" style="border-color:var(--green-phosphor); color:var(--green-phosphor);">ACOUSTIC WAVEGUIDE</span>
+          </div>
+          <div style="color:#cbd5e1; font-size:11px; line-height:1.4;" id="strataLayerDesc">
+            Massive subterranean bedded halite salt (NaCl) with interspersed polyhalite seams. Extremely low acoustic absorption coefficient (0.12 dB/100m) enables 1999Hz harmonic tones to traverse tens of kilometers with minimal dielectric dispersion. Station Alpha transponder is situated inside this cavern stratum at 850m.
+          </div>
+          <div class="strata-stats-grid">
+            <div class="strata-stat-box">
+              <span style="color:#64748b;">P-WAVE VELOCITY:</span><br>
+              <strong style="color:#bae6fd;" id="strataVp">4,450 m/s</strong>
+            </div>
+            <div class="strata-stat-box">
+              <span style="color:#64748b;">BULK DENSITY (ρ):</span><br>
+              <strong style="color:#bae6fd;" id="strataDensity">2.16 g/cm³</strong>
+            </div>
+            <div class="strata-stat-box">
+              <span style="color:#64748b;">ACOUSTIC IMPEDANCE (Z):</span><br>
+              <strong style="color:var(--green-phosphor);" id="strataImpedance">9.61 MRayl</strong>
+            </div>
+            <div class="strata-stat-box">
+              <span style="color:#64748b;">ATTENUATION RATE:</span><br>
+              <strong style="color:var(--amber-led);" id="strataAttenuation">0.12 dB/100m</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pulse Controls & Hydrophone Probe Deck -->
+      <div class="grid-2col" style="margin-bottom:14px;">
+        <!-- Left: Excitation Pulse Parameters -->
+        <div style="background:#070d1e; border:1px solid var(--border-dim); padding:12px; border-radius:4px;">
+          <div style="font-size:11.5px; font-weight:700; color:#bae6fd; margin-bottom:10px; border-bottom:1px solid var(--border-dim); padding-bottom:4px;">
+            TRANSDUCER EXCITATION &amp; ACOUSTIC IMPULSE CONTROLS
+          </div>
+
+          <!-- Trigger Buttons -->
+          <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-bottom:12px;">
+            <button class="btn-retro btn-green" id="btnFireImpulse" onclick="fireAcousticImpulse()">⚡ FIRE ACOUSTIC IMPULSE</button>
+            <button class="btn-retro" id="btnContinuousProfiling" onclick="toggleContinuousProfiling()">🔄 Continuous Profiling</button>
+            <button class="btn-retro btn-amber" onclick="abortSeismicPulse()">⏹️ Abort</button>
+          </div>
+
+          <!-- Frequency Presets -->
+          <div style="margin-bottom:10px;">
+            <label style="font-size:11px; color:#cbd5e1; font-weight:700;">CARRIER FREQUENCY PRESETS:</label>
+            <div style="display:flex; gap:6px; flex-wrap:wrap; margin-top:4px;">
+              <button class="btn-retro btn-green" onclick="setSeismicFreq(1999)">1999.0 Hz (Salado Cavity)</button>
+              <button class="btn-retro" onclick="setSeismicFreq(432)">432.0 Hz (Litho Baseline)</button>
+              <button class="btn-retro" onclick="setSeismicFreq(1200)">1200 Hz (Bell Mark)</button>
+              <button class="btn-retro" onclick="setSeismicFreq(2200)">2200 Hz (Bell Space)</button>
+              <button class="btn-retro btn-purple" onclick="setSeismicFreq(888)">888 Hz (Quartz)</button>
+            </div>
+          </div>
+
+          <!-- Frequency Slider -->
+          <div class="control-row">
+            <label class="control-label">Acoustic Frequency:</label>
+            <div style="display:flex; align-items:center; gap:8px;">
+              <input type="range" id="seismicFreqSlider" class="slider-control" min="20" max="4000" step="1" value="1999" oninput="updateSeismicFreq(this.value)">
+              <span id="seismicFreqBadge" class="value-badge" style="color:var(--green-phosphor);">1999 Hz</span>
+            </div>
+          </div>
+
+          <!-- Excitation Waveform -->
+          <div class="control-row">
+            <label class="control-label">Excitation Waveform:</label>
+            <select id="seismicWaveformSelect" class="term-input" style="max-width:180px; font-size:11px; padding:3px;" onchange="updateSeismicWaveform(this.value)">
+              <option value="fm">YM2612 2-Op FM Ping</option>
+              <option value="piezo">Piezo Shockwave Transient</option>
+              <option value="chirp">Chirp FM Sweep (200-3500Hz)</option>
+              <option value="thump">Infrasound Seismic Thump (43Hz)</option>
+            </select>
+          </div>
+
+          <!-- Transducer Energy -->
+          <div class="control-row">
+            <label class="control-label">Transducer Energy (dB):</label>
+            <div style="display:flex; align-items:center; gap:8px;">
+              <input type="range" id="seismicEnergySlider" class="slider-control" min="10" max="60" step="1" value="45" oninput="updateSeismicEnergy(this.value)">
+              <span id="seismicEnergyBadge" class="value-badge">+45 dB</span>
+            </div>
+          </div>
+
+          <!-- Time-Gain Compensation -->
+          <div class="control-row">
+            <label class="control-label">Time-Gain Comp (TGC):</label>
+            <div style="display:flex; align-items:center; gap:8px;">
+              <input type="range" id="seismicTgcSlider" class="slider-control" min="0" max="100" step="1" value="65" oninput="updateSeismicTgc(this.value)">
+              <span id="seismicTgcBadge" class="value-badge">65%</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: Borehole Hydrophone Probe & Real-Time Reflection Feed -->
+        <div style="background:#070d1e; border:1px solid var(--border-dim); padding:12px; border-radius:4px; display:flex; flex-direction:column; justify-content:space-between;">
+          <div>
+            <div style="font-size:11.5px; font-weight:700; color:#bae6fd; margin-bottom:10px; border-bottom:1px solid var(--border-dim); padding-bottom:4px;">
+              BOREHOLE HYDROPHONE PROBE &amp; DOWNHOLE TELEMETRY
+            </div>
+
+            <!-- Borehole Depth Slider -->
+            <div class="control-row">
+              <label class="control-label">Hydrophone Depth Probe:</label>
+              <div style="display:flex; align-items:center; gap:8px;">
+                <input type="range" id="boreholeDepthSlider" class="slider-control" min="0" max="3500" step="25" value="850" oninput="updateBoreholeDepth(this.value)">
+                <span id="boreholeDepthBadge" class="value-badge" style="color:var(--border-bright);">850 m</span>
+              </div>
+            </div>
+
+            <div style="background:#040814; border:1px solid var(--border-dim); padding:8px 10px; border-radius:3px; font-size:11px; margin-bottom:10px;">
+              <div style="display:flex; justify-content:space-between; margin-bottom:3px;">
+                <span>STRATUM AT PROBE:</span>
+                <strong style="color:var(--green-phosphor);" id="probeStratumName">Salado Halite Bed</strong>
+              </div>
+              <div style="display:flex; justify-content:space-between; margin-bottom:3px;">
+                <span>HYDROSTATIC PRESSURE:</span>
+                <strong style="color:#bae6fd;" id="probePressure">18.4 MPa (181 atm)</strong>
+              </div>
+              <div style="display:flex; justify-content:space-between; margin-bottom:3px;">
+                <span>DOWNHOLE AMBIENT TEMP:</span>
+                <strong style="color:var(--amber-led);" id="probeTemp">28.5 °C (83.3 °F)</strong>
+              </div>
+              <div style="display:flex; justify-content:space-between;">
+                <span>STATION LOCK PROXIMITY:</span>
+                <strong style="color:var(--green-phosphor);" id="probeStationProximity">STATION ALPHA CO-LOCATED (0m offset)</strong>
+              </div>
+            </div>
+
+            <div style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:10px;">
+              <button class="btn-retro" id="btnListenProbe" onclick="toggleListenProbe()">🎧 Listen Ambient Downhole Sound</button>
+              <button class="btn-retro btn-purple" onclick="seekProbeToStation('alpha')">Seek Station Alpha (850m)</button>
+              <button class="btn-retro btn-purple" onclick="seekProbeToStation('node7f')">Seek Node 0x7F (3100m)</button>
+            </div>
+          </div>
+
+          <!-- Real-Time Seismic Stream Log -->
+          <div>
+            <div style="font-size:10.5px; font-weight:700; color:#64748b; margin-bottom:4px;">REAL-TIME REFLECTION &amp; ECHO LOG:</div>
+            <div class="signal-stream-terminal" id="seismicEchoLog" style="height:90px; font-size:10.5px;">
+[1999-12-31 23:59:00] TDR ARRAY READY: Hydrophone calibrated. Select frequency and click [FIRE ACOUSTIC IMPULSE].
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Cross-Tab Bridge & Data Export Deck -->
+      <div style="border-top:1px solid var(--border-dim); padding-top:12px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+        <div style="display:flex; gap:6px; flex-wrap:wrap;">
+          <button class="btn-retro" onclick="feedResonantToDecoder()">📻 Feed 1999Hz to Decoder (Tab 2)</button>
+          <button class="btn-retro" onclick="applySaladoFilter()">🎛️ Tune Filter to Salado Resonance (Tab 4)</button>
+          <button class="btn-retro" onclick="alignBeamformerCarlsbad()">📡 Steer SIGINT to Carlsbad (Tab 5)</button>
+        </div>
+
+        <div style="display:flex; gap:6px; flex-wrap:wrap;">
+          <button class="btn-retro btn-green" onclick="exportSeismicWav()">Download Strata Wave (.WAV)</button>
+          <button class="btn-retro" onclick="exportStrataCsv()">Export Strata (.CSV)</button>
+          <button class="btn-retro" onclick="exportBoreholeDat()">Export Borehole (.DAT)</button>
+          <button class="btn-retro btn-purple" onclick="exportSeismicDossierSig()">Export Dossier (.SIG)</button>
         </div>
       </div>
     </div>
@@ -3057,7 +3427,7 @@ Host: kweb://echo-subsystem.net | Station: SIG-1999-ECHO
   }
 
   function switchTab(name) {
-    const tabs = ['journal', 'decoder', 'spectral', 'filter', 'sigint', 'stego', 'terminal', 'mesh'];
+    const tabs = ['journal', 'decoder', 'spectral', 'filter', 'sigint', 'stego', 'terminal', 'mesh', 'seismic'];
     tabs.forEach((t, i) => {
       const btn = document.getElementById('tabBtn' + (i + 1));
       const pane = document.getElementById('pane-' + t);
@@ -3077,6 +3447,7 @@ Host: kweb://echo-subsystem.net | Station: SIG-1999-ECHO
     }
     if (name === 'stego') previewStegoBitmap();
     if (name === 'mesh') checkArtifactSlots();
+    if (name === 'seismic') initSeismicCanvases();
   }
 
   function executeTermInput() {
@@ -3094,7 +3465,36 @@ Host: kweb://echo-subsystem.net | Station: SIG-1999-ECHO
 
     switch (c) {
       case 'help':
-        logToTerminal("AVAILABLE COMMANDS:\n  help            - List console commands\n  status          - Display station telemetry and memory state\n  mesh            - Switch to Subterranean Acoustic Airgap Mesh\n  artifacts       - Load and test Tier 3 gating key artifacts\n  pulse           - Broadcast 1999Hz harmonic pulse across mesh\n  loopback        - Toggle simulated Salado halite echo loopback\n  scan            - Perform frequency scan across acoustic bands\n  decode [hz]     - Tune harmonic decoder to specific frequency\n  transmit [text] - Transmit text as 1999Hz Morse burst\n  sigint          - Open SIGINT beamformer array\n  beamform [deg]  - Set beam azimuth angle (0-359)\n  stego [text]    - Synthesize spectrographic audio glyph\n  rtty [text]     - Transmit message via FSK teleprinter\n  lissajous       - Toggle XY Lissajous vector scope mode\n  journal [1-9]   - View specific field log entry\n  filter          - Auto-calibrate parametric filter to 1999Hz\n  ping [ip]       - Ping internal subnet address (try 10.19.99.4)\n  traceroute      - Trace routing hops to echo-subsystem.net\n  export [format] - Export data (wav, dat, json, sig)\n  clear           - Clear terminal output");
+        logToTerminal("AVAILABLE COMMANDS:\n  help            - List console commands\n  status          - Display station telemetry and memory state\n  seismic         - Switch to Lithospheric TDR & Strata Profiler\n  fire [hz]       - Fire acoustic impulse into Delaware Basin strata\n  probe [depth]   - Lower borehole hydrophone probe (0 - 3500m)\n  layer [1-5]     - Inspect rock physics of geological stratum\n  mesh            - Switch to Subterranean Acoustic Airgap Mesh\n  artifacts       - Load and test Tier 3 gating key artifacts\n  pulse           - Broadcast 1999Hz harmonic pulse across mesh\n  loopback        - Toggle simulated Salado halite echo loopback\n  scan            - Perform frequency scan across acoustic bands\n  decode [hz]     - Tune harmonic decoder to specific frequency\n  transmit [text] - Transmit text as 1999Hz Morse burst\n  sigint          - Open SIGINT beamformer array\n  beamform [deg]  - Set beam azimuth angle (0-359)\n  stego [text]    - Synthesize spectrographic audio glyph\n  rtty [text]     - Transmit message via FSK teleprinter\n  lissajous       - Toggle XY Lissajous vector scope mode\n  journal [1-9]   - View specific field log entry\n  filter          - Auto-calibrate parametric filter to 1999Hz\n  ping [ip]       - Ping internal subnet address (try 10.19.99.4)\n  traceroute      - Trace routing hops to echo-subsystem.net\n  export [format] - Export data (wav, dat, json, sig, csv)\n  clear           - Clear terminal output");
+        break;
+
+      case 'seismic':
+      case 'tdr':
+      case 'strata':
+        switchTab('seismic');
+        logToTerminal(">> Opened Lithospheric Time-Domain Reflectometer & Strata Profiler.");
+        break;
+
+      case 'fire':
+        const fireHz = parseFloat(parts[1]) || 1999;
+        setSeismicFreq(fireHz);
+        switchTab('seismic');
+        fireAcousticImpulse();
+        break;
+
+      case 'probe':
+        const pDepth = parseFloat(parts[1]) || 850;
+        updateBoreholeDepth(pDepth);
+        const pSlider = document.getElementById('boreholeDepthSlider');
+        if (pSlider) pSlider.value = pDepth;
+        switchTab('seismic');
+        logToTerminal(`>> Lowered borehole hydrophone probe to ${pDepth} meters.`);
+        break;
+
+      case 'layer':
+        const lIdx = (parseInt(parts[1]) || 3) - 1;
+        selectStrataLayer(Math.max(0, Math.min(4, lIdx)));
+        switchTab('seismic');
         break;
 
       case 'status':
@@ -3879,11 +4279,1156 @@ END TRANSMISSION // ESARL 1999
     logToTerminal(">> [EXPORT] Synthesized genuine 1999Hz FM burst: 'ESARL_1999HZ_CARRIER_BURST.WAV'.");
   }
 
+  /* ============================================================
+     9. Lithospheric Seismic Reflection & Strata Profiler (TDR)
+     ============================================================ */
+  const STRATA_DATA = [
+    {
+      id: 0,
+      name: "Surface Caliche & Alluvium",
+      shortName: "Caliche / Alluvium",
+      top: 0,
+      bottom: 300,
+      thickness: 300,
+      vp: 1800,
+      vs: 950,
+      density: 1.95,
+      z: 3.51,
+      attenuation: 1.85,
+      tag: "SURFACE COVER",
+      color: "#a16207",
+      desc: "Semiarid caliche duricrust, windblown sand, and Quaternary alluvium. Characterized by high acoustic wave scattering and low-pass thermal damping."
+    },
+    {
+      id: 1,
+      name: "Rustler Formation (Siltstone & Dolomite)",
+      shortName: "Rustler Formation",
+      top: 300,
+      bottom: 750,
+      thickness: 450,
+      vp: 2800,
+      vs: 1480,
+      density: 2.45,
+      z: 6.86,
+      attenuation: 0.92,
+      tag: "CAPROCK DOLOMITE",
+      color: "#475569",
+      desc: "Interbedded anhydrite, siltstone, gypsum, and Culebra dolomite member. Acts as the protective hydrological caprock isolating the Salado halite formation below."
+    },
+    {
+      id: 2,
+      name: "Salado Halite (Carlsbad Salt Formation)",
+      shortName: "Salado Halite Bed",
+      top: 750,
+      bottom: 1500,
+      thickness: 750,
+      vp: 4450,
+      vs: 2550,
+      density: 2.16,
+      z: 9.61,
+      attenuation: 0.12,
+      tag: "ACOUSTIC WAVEGUIDE",
+      color: "#0284c7",
+      desc: "Massive bedded rock salt (NaCl) with polyhalite seams. Ultra-low attenuation (0.12 dB/100m) turns this layer into a natural subterranean waveguide locked to 1999.0 Hz. Station Alpha transponder is situated inside this cavern stratum at 850m."
+    },
+    {
+      id: 3,
+      name: "Castile Anhydrite & Deep Halite",
+      shortName: "Castile Anhydrite",
+      top: 1500,
+      bottom: 2400,
+      thickness: 900,
+      vp: 5800,
+      vs: 3150,
+      density: 2.96,
+      z: 17.17,
+      attenuation: 0.38,
+      tag: "HIGH DENSITY BARRIER",
+      color: "#64748b",
+      desc: "Microcrystalline anhydrite laminations (CaSO4) interbedded with dense deep halite. High acoustic impedance (17.17 MRayl) creates strong reflection boundaries."
+    },
+    {
+      id: 4,
+      name: "Bell Canyon Sandstone (Delaware Basin)",
+      shortName: "Bell Canyon Sandstone",
+      top: 2400,
+      bottom: 3500,
+      thickness: 1100,
+      vp: 3600,
+      vs: 2100,
+      density: 2.38,
+      z: 8.57,
+      attenuation: 0.78,
+      tag: "DEEP RESERVOIR",
+      color: "#1e293b",
+      desc: "Fine-grained arkosic sandstone and hypersaline brine reservoirs. Precursor subterranean relay Node 0x7F is anchored at 3,100m depth inside this stratum."
+    }
+  ];
+
+  let seismicState = {
+    isFiring: false,
+    isContinuous: false,
+    continuousTimer: null,
+    pulseStartTime: 0,
+    pulseFreq: 1999,
+    pulseWaveform: 'fm',
+    pulseEnergy: 45,
+    tgcGain: 65,
+    probeDepth: 850,
+    selectedLayerIndex: 2,
+    isListeningProbe: false,
+    probeOsc: null,
+    probeGain: null,
+    wavefronts: [],
+    animationId: null,
+    echoPoints: [],
+    lastDrawTime: 0
+  };
+
+  let seismicCrossCanvas = null;
+  let seismicCrossCtx = null;
+  let seismicOscCanvas = null;
+  let seismicOscCtx = null;
+
+  function initSeismicCanvases() {
+    seismicCrossCanvas = document.getElementById('seismicCrossCanvas');
+    if (seismicCrossCanvas) seismicCrossCtx = seismicCrossCanvas.getContext('2d');
+    seismicOscCanvas = document.getElementById('seismicOscCanvas');
+    if (seismicOscCanvas) seismicOscCtx = seismicOscCanvas.getContext('2d');
+
+    renderStrataCrossSection();
+    renderSeismicOscilloscope(0);
+  }
+
+  function logToSeismicTerminal(msg) {
+    const el = document.getElementById('seismicEchoLog');
+    if (!el) return;
+    const now = new Date();
+    const pad = n => n.toString().padStart(2, '0');
+    const ts = `[1999-12-31 ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}]`;
+    el.textContent += `\n${ts} ${msg}`;
+    el.scrollTop = el.scrollHeight;
+  }
+
+  function selectStrataLayer(idx) {
+    seismicState.selectedLayerIndex = idx;
+    const layer = STRATA_DATA[idx];
+    if (!layer) return;
+
+    for (let i = 0; i < 5; i++) {
+      const btn = document.getElementById('strataBtn-' + i);
+      if (btn) btn.className = (i === idx) ? 'strata-btn active' : 'strata-btn';
+    }
+
+    const nameEl = document.getElementById('strataLayerName');
+    const tagEl = document.getElementById('strataLayerTag');
+    const descEl = document.getElementById('strataLayerDesc');
+    const vpEl = document.getElementById('strataVp');
+    const denEl = document.getElementById('strataDensity');
+    const zEl = document.getElementById('strataImpedance');
+    const attEl = document.getElementById('strataAttenuation');
+
+    if (nameEl) nameEl.textContent = `FORMATION: ${layer.name.toUpperCase()}`;
+    if (tagEl) tagEl.textContent = layer.tag;
+    if (descEl) descEl.textContent = layer.desc;
+    if (vpEl) vpEl.textContent = `${layer.vp.toLocaleString()} m/s`;
+    if (denEl) denEl.textContent = `${layer.density} g/cm³`;
+    if (zEl) zEl.textContent = `${layer.z} MRayl`;
+    if (attEl) attEl.textContent = `${layer.attenuation} dB/100m`;
+
+    renderStrataCrossSection();
+  }
+
+  function updateBoreholeDepth(depth) {
+    const d = parseInt(depth);
+    seismicState.probeDepth = d;
+    const badge = document.getElementById('boreholeDepthBadge');
+    if (badge) badge.textContent = `${d} m`;
+
+    let stratum = STRATA_DATA[0];
+    for (let s of STRATA_DATA) {
+      if (d >= s.top && d <= s.bottom) {
+        stratum = s;
+        break;
+      }
+    }
+
+    const nameEl = document.getElementById('probeStratumName');
+    if (nameEl) nameEl.textContent = stratum.shortName;
+
+    const pressure = (d * 0.0216).toFixed(1);
+    const pressEl = document.getElementById('probePressure');
+    if (pressEl) pressEl.textContent = `${pressure} MPa (${Math.round(pressure * 9.87)} atm)`;
+
+    const temp = (18.0 + (d / 100) * 1.25).toFixed(1);
+    const tempF = (temp * 1.8 + 32).toFixed(1);
+    const tempEl = document.getElementById('probeTemp');
+    if (tempEl) tempEl.textContent = `${temp} °C (${tempF} °F)`;
+
+    const proxEl = document.getElementById('probeStationProximity');
+    if (proxEl) {
+      const alphaDist = Math.abs(d - 850);
+      const node7fDist = Math.abs(d - 3100);
+      if (alphaDist === 0) {
+        proxEl.textContent = "STATION ALPHA CO-LOCATED (0m offset)";
+        proxEl.style.color = "var(--green-phosphor)";
+      } else if (alphaDist <= 100) {
+        proxEl.textContent = `STATION ALPHA PROXIMITY (${alphaDist}m offset)`;
+        proxEl.style.color = "var(--border-bright)";
+      } else if (node7fDist === 0) {
+        proxEl.textContent = "NODE 0x7F CO-LOCATED (0m offset)";
+        proxEl.style.color = "var(--purple-spectral)";
+      } else if (node7fDist <= 150) {
+        proxEl.textContent = `NODE 0x7F PROXIMITY (${node7fDist}m offset)`;
+        proxEl.style.color = "var(--purple-spectral)";
+      } else {
+        proxEl.textContent = `Salado Cavity: ${alphaDist}m | Node 0x7F: ${node7fDist}m`;
+        proxEl.style.color = "#94a3b8";
+      }
+    }
+
+    if (seismicState.isListeningProbe && seismicState.probeOsc) {
+      updateProbeAudioTone(d, stratum);
+    }
+
+    renderStrataCrossSection();
+  }
+
+  function seekProbeToStation(st) {
+    const slider = document.getElementById('boreholeDepthSlider');
+    if (st === 'alpha') {
+      if (slider) slider.value = 850;
+      updateBoreholeDepth(850);
+      selectStrataLayer(2);
+      logToSeismicTerminal(">> Probe navigated to Station Alpha [Carlsbad Halite 850m].");
+    } else if (st === 'node7f') {
+      if (slider) slider.value = 3100;
+      updateBoreholeDepth(3100);
+      selectStrataLayer(4);
+      logToSeismicTerminal(">> Probe navigated to Node 0x7F [Bell Canyon Sandstone 3100m].");
+    }
+  }
+
+  function setSeismicFreq(hz) {
+    seismicState.pulseFreq = hz;
+    const sl = document.getElementById('seismicFreqSlider');
+    if (sl) sl.value = hz;
+    updateSeismicFreq(hz);
+  }
+
+  function updateSeismicFreq(val) {
+    const hz = parseFloat(val);
+    seismicState.pulseFreq = hz;
+    const badge = document.getElementById('seismicFreqBadge');
+    if (badge) badge.textContent = `${hz} Hz`;
+
+    const lockBadge = document.getElementById('badgeSeismicLock');
+    if (lockBadge) {
+      if (Math.abs(hz - 1999) <= 20) {
+        lockBadge.className = 'seismic-pulse-badge locked';
+        lockBadge.textContent = '★ 1999.0 Hz SALADO RESONANCE LOCKED';
+      } else {
+        lockBadge.className = 'seismic-pulse-badge normal';
+        lockBadge.textContent = `CARRIER: ${hz} Hz TUNED`;
+      }
+    }
+  }
+
+  function updateSeismicWaveform(wf) {
+    seismicState.pulseWaveform = wf;
+  }
+
+  function updateSeismicEnergy(db) {
+    seismicState.pulseEnergy = parseInt(db);
+    const badge = document.getElementById('seismicEnergyBadge');
+    if (badge) badge.textContent = `+${db} dB`;
+  }
+
+  function updateSeismicTgc(val) {
+    seismicState.tgcGain = parseInt(val);
+    const badge = document.getElementById('seismicTgcBadge');
+    if (badge) badge.textContent = `${val}%`;
+    renderSeismicOscilloscope(0);
+  }
+
+  function renderStrataCrossSection() {
+    if (!seismicCrossCtx || !seismicCrossCanvas) return;
+    const ctx = seismicCrossCtx;
+    const w = seismicCrossCanvas.width;
+    const h = seismicCrossCanvas.height;
+
+    ctx.fillStyle = '#02050c';
+    ctx.fillRect(0, 0, w, h);
+
+    const topMargin = 22;
+    const bottomMargin = 16;
+    const usableH = h - topMargin - bottomMargin;
+    const scaleY = usableH / 3500;
+
+    STRATA_DATA.forEach((s, i) => {
+      const y1 = topMargin + s.top * scaleY;
+      const y2 = topMargin + s.bottom * scaleY;
+      const layerH = y2 - y1;
+
+      ctx.fillStyle = s.color;
+      ctx.globalAlpha = (i === seismicState.selectedLayerIndex) ? 0.35 : 0.20;
+      ctx.fillRect(40, y1, w - 80, layerH);
+      ctx.globalAlpha = 1.0;
+
+      ctx.strokeStyle = (i === seismicState.selectedLayerIndex) ? '#00ffaa' : '#1e315b';
+      ctx.lineWidth = (i === seismicState.selectedLayerIndex) ? 1.5 : 1;
+      ctx.strokeRect(40, y1, w - 80, layerH);
+
+      // Stratum Texture Pattern
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(40, y1, w - 80, layerH);
+      ctx.clip();
+      ctx.fillStyle = s.color;
+      ctx.globalAlpha = 0.25;
+
+      if (i === 0) {
+        // Caliche dots
+        for (let dx = 45; dx < w - 85; dx += 18) {
+          for (let dy = y1 + 5; dy < y2 - 5; dy += 12) {
+            ctx.fillRect(dx + (dy % 7), dy, 2, 2);
+          }
+        }
+      } else if (i === 1) {
+        // Rustler horizontal strata lines
+        ctx.strokeStyle = '#64748b';
+        ctx.lineWidth = 0.75;
+        for (let dy = y1 + 6; dy < y2; dy += 8) {
+          ctx.beginPath();
+          ctx.moveTo(42, dy);
+          ctx.lineTo(w - 82, dy);
+          ctx.stroke();
+        }
+      } else if (i === 2) {
+        // Salado Halite salt crystal boxes
+        ctx.strokeStyle = '#38bdf8';
+        ctx.lineWidth = 0.75;
+        for (let dx = 48; dx < w - 85; dx += 24) {
+          for (let dy = y1 + 8; dy < y2 - 8; dy += 18) {
+            ctx.strokeRect(dx, dy, 12, 10);
+            ctx.strokeRect(dx + 6, dy + 5, 4, 4);
+          }
+        }
+      } else if (i === 3) {
+        // Castile diagonal anhydrite hatching
+        ctx.strokeStyle = '#94a3b8';
+        ctx.lineWidth = 0.75;
+        for (let d = -layerH; d < w; d += 15) {
+          ctx.beginPath();
+          ctx.moveTo(40 + d, y1);
+          ctx.lineTo(40 + d + layerH, y2);
+          ctx.stroke();
+        }
+      } else if (i === 4) {
+        // Bell Canyon fine stippling
+        for (let dx = 44; dx < w - 84; dx += 12) {
+          for (let dy = y1 + 6; dy < y2 - 6; dy += 10) {
+            ctx.fillRect(dx + ((dy * 3) % 8), dy, 1.5, 1.5);
+          }
+        }
+      }
+      ctx.restore();
+
+      // Stratum Label
+      ctx.fillStyle = '#bae6fd';
+      ctx.font = '10px Consolas, monospace';
+      ctx.textAlign = 'left';
+      ctx.fillText(`${s.shortName} (${s.vp} m/s)`, 46, y1 + 13);
+
+      // Depth ticks on left
+      ctx.fillStyle = '#64748b';
+      ctx.font = '9px Consolas, monospace';
+      ctx.textAlign = 'right';
+      ctx.fillText(`${s.top}m`, 36, y1 + 3);
+    });
+
+    // 3500m tick
+    ctx.fillStyle = '#64748b';
+    ctx.font = '9px Consolas, monospace';
+    ctx.textAlign = 'right';
+    ctx.fillText('3500m', 36, topMargin + usableH + 3);
+
+    // Borehole Shaft
+    const bhX = w - 110;
+    ctx.fillStyle = '#060d1d';
+    ctx.fillRect(bhX - 5, topMargin, 10, usableH);
+    ctx.strokeStyle = '#38bdf8';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(bhX - 5, topMargin, 10, usableH);
+
+    // Surface Rig
+    ctx.fillStyle = '#f59e0b';
+    ctx.beginPath();
+    ctx.moveTo(bhX - 10, topMargin);
+    ctx.lineTo(bhX, topMargin - 14);
+    ctx.lineTo(bhX + 10, topMargin);
+    ctx.closePath();
+    ctx.fill();
+
+    // Station Alpha Transponder in Salado Halite (850m)
+    const alphaY = topMargin + 850 * scaleY;
+    ctx.save();
+    ctx.fillStyle = '#022c22';
+    ctx.strokeStyle = (Math.abs(seismicState.pulseFreq - 1999) <= 20) ? '#00ffaa' : '#38bdf8';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.arc(bhX - 55, alphaY, 14, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.fillStyle = (Math.abs(seismicState.pulseFreq - 1999) <= 20) ? '#00ffaa' : '#bae6fd';
+    ctx.font = 'bold 9.5px Consolas, monospace';
+    ctx.textAlign = 'right';
+    ctx.fillText('STATION ALPHA (10.19.99.4) [850m]', bhX - 74, alphaY + 3);
+
+    // Blinking LED
+    ctx.fillStyle = (Date.now() % 1000 < 500) ? '#00ffaa' : '#059669';
+    ctx.beginPath();
+    ctx.arc(bhX - 55, alphaY, 4, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+
+    // Node 0x7F in Bell Canyon (3100m)
+    const nodeY = topMargin + 3100 * scaleY;
+    ctx.save();
+    ctx.fillStyle = '#1e1138';
+    ctx.strokeStyle = '#a78bfa';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(bhX - 55, nodeY - 12);
+    ctx.lineTo(bhX - 43, nodeY);
+    ctx.lineTo(bhX - 55, nodeY + 12);
+    ctx.lineTo(bhX - 67, nodeY);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.fillStyle = '#e9d5ff';
+    ctx.font = 'bold 9.5px Consolas, monospace';
+    ctx.textAlign = 'right';
+    ctx.fillText('NODE 0x7F [0x7F1999] [3100m]', bhX - 74, nodeY + 3);
+    ctx.restore();
+
+    // Borehole Hydrophone Probe
+    const probeY = topMargin + seismicState.probeDepth * scaleY;
+    ctx.strokeStyle = '#f59e0b';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(bhX, topMargin);
+    ctx.lineTo(bhX, probeY);
+    ctx.stroke();
+
+    ctx.fillStyle = '#f59e0b';
+    ctx.strokeStyle = '#fff';
+    ctx.lineWidth = 1;
+    ctx.fillRect(bhX - 4, probeY - 6, 8, 14);
+    ctx.strokeRect(bhX - 4, probeY - 6, 8, 14);
+
+    if (seismicState.isListeningProbe) {
+      ctx.strokeStyle = 'rgba(0, 255, 170, 0.7)';
+      ctx.beginPath();
+      ctx.arc(bhX, probeY, 12, 0, Math.PI * 2);
+      ctx.arc(bhX, probeY, 20, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+
+    // Active Wavefronts Animation
+    if (seismicState.wavefronts && seismicState.wavefronts.length > 0) {
+      seismicState.wavefronts.forEach(wf => {
+        const wfY = topMargin + wf.depth * scaleY;
+        ctx.save();
+        ctx.strokeStyle = wf.color || '#00ffaa';
+        ctx.lineWidth = 2.5;
+        ctx.shadowColor = wf.color || '#00ffaa';
+        ctx.shadowBlur = 8;
+        ctx.beginPath();
+        ctx.arc(bhX, wfY, 45, 0, Math.PI);
+        ctx.stroke();
+        ctx.restore();
+      });
+    }
+  }
+
+  function renderSeismicOscilloscope(sweepTwt) {
+    if (!seismicOscCtx || !seismicOscCanvas) return;
+    const ctx = seismicOscCtx;
+    const w = seismicOscCanvas.width;
+    const h = seismicOscCanvas.height;
+
+    ctx.fillStyle = '#02050c';
+    ctx.fillRect(0, 0, w, h);
+
+    const centerY = h / 2;
+
+    // Graticule Grid
+    ctx.strokeStyle = 'rgba(56, 189, 248, 0.12)';
+    ctx.lineWidth = 1;
+    for (let x = 0; x <= w; x += w / 10) {
+      ctx.beginPath();
+      ctx.moveTo(x, 0);
+      ctx.lineTo(x, h);
+      ctx.stroke();
+    }
+    for (let y = 0; y <= h; y += h / 8) {
+      ctx.beginPath();
+      ctx.moveTo(0, y);
+      ctx.lineTo(w, y);
+      ctx.stroke();
+    }
+
+    // Center Zero Line
+    ctx.strokeStyle = 'rgba(56, 189, 248, 0.35)';
+    ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    ctx.moveTo(0, centerY);
+    ctx.lineTo(w, centerY);
+    ctx.stroke();
+
+    // Time Graticules (0 to 2200 ms)
+    const timeLabels = [
+      { t: 0, label: '0ms' },
+      { t: 333, label: '333ms' },
+      { t: 700, label: '700ms' },
+      { t: 992, label: '992ms' },
+      { t: 1302, label: '1302ms' },
+      { t: 1691, label: '1691ms' },
+      { t: 2200, label: '2200ms' }
+    ];
+
+    ctx.fillStyle = '#64748b';
+    ctx.font = '9px Consolas, monospace';
+    ctx.textAlign = 'center';
+    timeLabels.forEach(tl => {
+      const x = (tl.t / 2200) * w;
+      ctx.fillText(tl.label, x, h - 4);
+    });
+
+    // Draw A-Scan Reflection Trace Waveform
+    ctx.save();
+    ctx.strokeStyle = '#00ffaa';
+    ctx.lineWidth = 1.5;
+    ctx.shadowColor = '#00ffaa';
+    ctx.shadowBlur = 6;
+    ctx.beginPath();
+
+    const tgc = 1 + (seismicState.tgcGain / 100) * 1.5;
+    const isLocked = Math.abs(seismicState.pulseFreq - 1999) <= 20;
+
+    for (let px = 0; px < w; px++) {
+      const tMs = (px / w) * 2200;
+      let amp = 0;
+
+      // 1. Initial excitation impulse at t = 0ms
+      if (tMs < 60) {
+        amp += Math.sin(tMs * 0.4) * Math.exp(-tMs / 12) * (seismicState.pulseEnergy * 1.2);
+      }
+
+      // 2. Rustler reflection at 333ms
+      const d1 = Math.abs(tMs - 333.3);
+      if (d1 < 45) {
+        amp += Math.sin((tMs - 333.3) * 0.25) * Math.exp(-(d1 * d1) / 180) * 35 * tgc;
+      }
+
+      // 3. Salado Halite reflection at 655ms
+      const d2 = Math.abs(tMs - 654.7);
+      if (d2 < 55) {
+        amp += Math.sin((tMs - 654.7) * 0.3) * Math.exp(-(d2 * d2) / 220) * 28 * tgc;
+      }
+
+      // 4. Station Alpha Transponder Lock at 699.6ms (700ms)
+      const dAlpha = Math.abs(tMs - 699.6);
+      if (dAlpha < 65) {
+        const transAmp = isLocked ? 85 : 18;
+        amp += Math.sin((tMs - 699.6) * 0.6) * Math.exp(-(dAlpha * dAlpha) / 280) * transAmp * tgc;
+      }
+
+      // 5. Castile Anhydrite reflection at 992ms
+      const d3 = Math.abs(tMs - 991.8);
+      if (d3 < 55) {
+        amp += Math.sin((tMs - 991.8) * 0.28) * Math.exp(-(d3 * d3) / 240) * 42 * tgc;
+      }
+
+      // 6. Bell Canyon reflection at 1302ms (inverted phase)
+      const d4 = Math.abs(tMs - 1302.1);
+      if (d4 < 60) {
+        amp -= Math.sin((tMs - 1302.1) * 0.22) * Math.exp(-(d4 * d4) / 260) * 36 * tgc;
+      }
+
+      // 7. Node 0x7F Precursor echo at 1691ms
+      const dNode = Math.abs(tMs - 1691.0);
+      if (dNode < 70) {
+        const nodeAmp = isLocked ? 55 : 12;
+        amp += Math.sin((tMs - 1691.0) * 0.45) * Math.exp(-(dNode * dNode) / 320) * nodeAmp * tgc;
+      }
+
+      // Background ambient earth microphonics
+      amp += (Math.sin(px * 0.15) * 1.5) + ((Math.random() - 0.5) * 1.2);
+
+      const py = centerY - amp;
+      if (px === 0) ctx.moveTo(px, py);
+      else ctx.lineTo(px, py);
+    }
+    ctx.stroke();
+    ctx.restore();
+
+    // Peak Annotations on Scope
+    ctx.font = 'bold 9px Consolas, monospace';
+    // Alpha
+    const alphaX = (700 / 2200) * w;
+    ctx.fillStyle = isLocked ? '#00ffaa' : '#38bdf8';
+    ctx.fillText('▼ ALPHA 700ms', alphaX - 30, centerY - 70);
+
+    // Node 0x7F
+    const nodeX = (1691 / 2200) * w;
+    ctx.fillStyle = '#a78bfa';
+    ctx.fillText('▼ 0x7F 1691ms', nodeX - 30, centerY - 45);
+
+    // Sweep Line (animated electron beam)
+    if (sweepTwt > 0) {
+      const sx = (sweepTwt / 2200) * w;
+      ctx.save();
+      ctx.strokeStyle = '#fff';
+      ctx.lineWidth = 2;
+      ctx.shadowColor = '#00ffaa';
+      ctx.shadowBlur = 10;
+      ctx.beginPath();
+      ctx.moveTo(sx, 0);
+      ctx.lineTo(sx, h);
+      ctx.stroke();
+      ctx.restore();
+    }
+  }
+
+  function fireAcousticImpulse() {
+    if (seismicState.isFiring) return;
+    seismicState.isFiring = true;
+    seismicState.pulseStartTime = performance.now();
+
+    const isLocked = Math.abs(seismicState.pulseFreq - 1999) <= 20;
+    const transStatus = document.getElementById('lblTransponderStatus');
+    if (transStatus) {
+      if (isLocked) {
+        transStatus.textContent = "★ STATION ALPHA HARMONIC LOCKED (699.6ms)";
+        transStatus.style.color = "var(--green-phosphor)";
+      } else {
+        transStatus.textContent = "TRANSPONDER: NO CARRIER MATCH";
+        transStatus.style.color = "var(--amber-led)";
+      }
+    }
+
+    logToSeismicTerminal(`IMPULSE DISPATCHED: ${seismicState.pulseFreq} Hz (${seismicState.pulseWaveform.toUpperCase()}) @ +${seismicState.pulseEnergy} dB.`);
+    logToTerminal(`>> [SEISMIC] Lithospheric acoustic impulse triggered: ${seismicState.pulseFreq} Hz.`);
+
+    // Schedule Procedural Web Audio Sound
+    scheduleProceduralEchoAudio(seismicState.pulseFreq, seismicState.pulseEnergy, seismicState.pulseWaveform);
+
+    // Initialize wavefronts for 2D animation
+    seismicState.wavefronts = [
+      { depth: 0, direction: 1, color: isLocked ? '#00ffaa' : '#38bdf8' }
+    ];
+
+    // Wavefront secondary spawns
+    setTimeout(() => {
+      seismicState.wavefronts.push({ depth: 300, direction: -1, color: '#64748b' });
+      logToSeismicTerminal("ECHO: Interface #1 (Rustler) return detected @ 333.3 ms.");
+    }, 333);
+
+    setTimeout(() => {
+      seismicState.wavefronts.push({ depth: 750, direction: -1, color: '#38bdf8' });
+      logToSeismicTerminal("ECHO: Interface #2 (Salado Halite) return detected @ 654.7 ms.");
+    }, 655);
+
+    setTimeout(() => {
+      if (isLocked) {
+        seismicState.wavefronts.push({ depth: 850, direction: -1, color: '#00ffaa' });
+        logToSeismicTerminal("★ TRANSPONDER ACTIVE: Station Alpha (10.19.99.4) matched 1999Hz carrier! Packet echo verified.");
+      }
+    }, 700);
+
+    setTimeout(() => {
+      seismicState.wavefronts.push({ depth: 1500, direction: -1, color: '#94a3b8' });
+      logToSeismicTerminal("ECHO: Interface #3 (Castile Anhydrite) return detected @ 991.8 ms.");
+    }, 992);
+
+    setTimeout(() => {
+      seismicState.wavefronts.push({ depth: 2400, direction: -1, color: '#cbd5e1' });
+      logToSeismicTerminal("ECHO: Interface #4 (Bell Canyon Sandstone) inverted phase return @ 1302.1 ms.");
+    }, 1302);
+
+    setTimeout(() => {
+      if (isLocked) {
+        seismicState.wavefronts.push({ depth: 3100, direction: -1, color: '#a78bfa' });
+        logToSeismicTerminal("✦ PRECURSOR RELIC: Subterranean relay Node 0x7F echo synchronized @ 1691.0 ms!");
+      }
+    }, 1691);
+
+    // Animate canvas sweeps
+    const duration = 2200;
+    const startT = performance.now();
+
+    function animateStep(now) {
+      const elapsed = now - startT;
+      const twt = (elapsed / duration) * 2200;
+
+      const readout = document.getElementById('lblSeismicTwtReadout');
+      if (readout) readout.textContent = `TWT: ${Math.min(2200, twt).toFixed(1)} ms`;
+
+      // Update wavefront depths
+      seismicState.wavefronts.forEach(wf => {
+        if (wf.direction === 1) {
+          wf.depth = Math.min(3500, (twt / 1913) * 3500);
+        } else {
+          wf.depth = Math.max(0, wf.depth - (elapsed / duration) * 80);
+        }
+      });
+
+      renderStrataCrossSection();
+      renderSeismicOscilloscope(twt);
+
+      if (elapsed < duration) {
+        seismicState.animationId = requestAnimationFrame(animateStep);
+      } else {
+        seismicState.isFiring = false;
+        seismicState.wavefronts = [];
+        renderStrataCrossSection();
+        renderSeismicOscilloscope(0);
+        logToSeismicTerminal("TDR PROFILE CYCLE COMPLETED. Transponder baseline refreshed.");
+      }
+    }
+
+    seismicState.animationId = requestAnimationFrame(animateStep);
+  }
+
+  function scheduleProceduralEchoAudio(freq, energy, waveform) {
+    if (!initAudioContext()) return;
+    const ctx = audioCtx;
+    const now = ctx.currentTime;
+    const isLocked = Math.abs(freq - 1999) <= 20;
+
+    // 1. Initial Excitation Ping
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+
+    if (waveform === 'fm') {
+      const mod = ctx.createOscillator();
+      const modG = ctx.createGain();
+      mod.frequency.setValueAtTime(freq * 2.0, now);
+      modG.gain.setValueAtTime(freq * 1.5, now);
+      modG.gain.exponentialRampToValueAtTime(1.0, now + 0.08);
+      mod.connect(modG);
+      modG.connect(osc.frequency);
+      mod.start(now);
+      mod.stop(now + 0.1);
+    } else if (waveform === 'chirp') {
+      osc.frequency.setValueAtTime(200, now);
+      osc.frequency.linearRampToValueAtTime(3500, now + 0.06);
+    } else if (waveform === 'thump') {
+      osc.frequency.setValueAtTime(43.2, now);
+      osc.frequency.exponentialRampToValueAtTime(20.0, now + 0.12);
+    } else {
+      osc.frequency.setValueAtTime(freq, now);
+    }
+
+    const initGainVal = (energy / 60) * 0.35;
+    gain.gain.setValueAtTime(initGainVal, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
+
+    osc.connect(gain);
+    gain.connect(analyser || ctx.destination);
+    if (delayNode) gain.connect(delayNode);
+    osc.start(now);
+    osc.stop(now + 0.09);
+
+    // 2. Scheduled Echo Arrivals
+    const echoSchedules = [
+      { delay: 0.333, freq: 1400, gainVal: 0.07, dur: 0.05 },
+      { delay: 0.655, freq: 1200, gainVal: 0.05, dur: 0.06 },
+      { delay: 0.992, freq: 950, gainVal: 0.06, dur: 0.07 },
+      { delay: 1.302, freq: 800, gainVal: 0.04, dur: 0.08 }
+    ];
+
+    echoSchedules.forEach(ec => {
+      const echoOsc = ctx.createOscillator();
+      const echoG = ctx.createGain();
+      const filter = ctx.createBiquadFilter();
+
+      filter.type = 'lowpass';
+      filter.frequency.setValueAtTime(ec.freq, now + ec.delay);
+
+      echoOsc.frequency.setValueAtTime(freq * 0.8, now + ec.delay);
+      echoG.gain.setValueAtTime(0.001, now + ec.delay);
+      echoG.gain.linearRampToValueAtTime(ec.gainVal, now + ec.delay + 0.01);
+      echoG.gain.exponentialRampToValueAtTime(0.0001, now + ec.delay + ec.dur);
+
+      echoOsc.connect(filter);
+      filter.connect(echoG);
+      echoG.connect(analyser || ctx.destination);
+      if (delayNode) echoG.connect(delayNode);
+
+      echoOsc.start(now + ec.delay);
+      echoOsc.stop(now + ec.delay + ec.dur + 0.02);
+    });
+
+    // 3. Station Alpha Harmonic Chime at 700ms (if 1999Hz locked)
+    if (isLocked) {
+      const alphaOsc1 = ctx.createOscillator();
+      const alphaOsc2 = ctx.createOscillator();
+      const alphaG = ctx.createGain();
+
+      alphaOsc1.frequency.setValueAtTime(1999.0, now + 0.70);
+      alphaOsc2.frequency.setValueAtTime(3998.0, now + 0.70);
+
+      alphaG.gain.setValueAtTime(0.001, now + 0.70);
+      alphaG.gain.linearRampToValueAtTime(0.18, now + 0.71);
+      alphaG.gain.exponentialRampToValueAtTime(0.0001, now + 1.05);
+
+      alphaOsc1.connect(alphaG);
+      alphaOsc2.connect(alphaG);
+      alphaG.connect(analyser || ctx.destination);
+      if (delayNode) alphaG.connect(delayNode);
+
+      alphaOsc1.start(now + 0.70);
+      alphaOsc2.start(now + 0.70);
+      alphaOsc1.stop(now + 1.10);
+      alphaOsc2.stop(now + 1.10);
+
+      // Bell 202 FSK chirplet (1200 / 2200 Hz)
+      const fskOsc = ctx.createOscillator();
+      const fskG = ctx.createGain();
+      fskOsc.frequency.setValueAtTime(1200, now + 0.74);
+      fskOsc.frequency.setValueAtTime(2200, now + 0.78);
+      fskG.gain.setValueAtTime(0.08, now + 0.74);
+      fskG.gain.exponentialRampToValueAtTime(0.001, now + 0.83);
+
+      fskOsc.connect(fskG);
+      fskG.connect(analyser || ctx.destination);
+      fskOsc.start(now + 0.74);
+      fskOsc.stop(now + 0.84);
+
+      // Node 0x7F deep sub-bass echo at 1691ms
+      const nodeOsc = ctx.createOscillator();
+      const nodeG = ctx.createGain();
+      nodeOsc.frequency.setValueAtTime(43.2, now + 1.691);
+      nodeG.gain.setValueAtTime(0.14, now + 1.691);
+      nodeG.gain.exponentialRampToValueAtTime(0.001, now + 2.05);
+
+      nodeOsc.connect(nodeG);
+      nodeG.connect(analyser || ctx.destination);
+      nodeOsc.start(now + 1.691);
+      nodeOsc.stop(now + 2.06);
+    }
+  }
+
+  function toggleContinuousProfiling() {
+    const btn = document.getElementById('btnContinuousProfiling');
+    if (seismicState.isContinuous) {
+      seismicState.isContinuous = false;
+      if (seismicState.continuousTimer) clearInterval(seismicState.continuousTimer);
+      if (btn) btn.className = 'btn-retro';
+      logToSeismicTerminal("Continuous profiling stopped.");
+    } else {
+      seismicState.isContinuous = true;
+      if (btn) btn.className = 'btn-retro btn-green';
+      fireAcousticImpulse();
+      seismicState.continuousTimer = setInterval(() => {
+        if (!seismicState.isFiring) fireAcousticImpulse();
+      }, 2500);
+      logToSeismicTerminal("Continuous profiling engaged (2.5s cadence).");
+    }
+  }
+
+  function abortSeismicPulse() {
+    if (seismicState.animationId) cancelAnimationFrame(seismicState.animationId);
+    if (seismicState.continuousTimer) clearInterval(seismicState.continuousTimer);
+    seismicState.isContinuous = false;
+    seismicState.isFiring = false;
+    seismicState.wavefronts = [];
+    const btn = document.getElementById('btnContinuousProfiling');
+    if (btn) btn.className = 'btn-retro';
+    renderStrataCrossSection();
+    renderSeismicOscilloscope(0);
+    logToSeismicTerminal("Impulse aborted by operator.");
+  }
+
+  function toggleListenProbe() {
+    const btn = document.getElementById('btnListenProbe');
+    if (seismicState.isListeningProbe) {
+      seismicState.isListeningProbe = false;
+      if (seismicState.probeOsc) {
+        try { seismicState.probeOsc.stop(); } catch (e) {}
+        seismicState.probeOsc = null;
+      }
+      if (btn) {
+        btn.textContent = "🎧 Listen Ambient Downhole Sound";
+        btn.className = "btn-retro";
+      }
+      renderStrataCrossSection();
+      logToSeismicTerminal("Downhole audio monitor disconnected.");
+    } else {
+      if (!initAudioContext()) return;
+      seismicState.isListeningProbe = true;
+      if (btn) {
+        btn.textContent = "⏹️ Mute Downhole Sound";
+        btn.className = "btn-retro btn-green";
+      }
+      startProbeAudioTone();
+      renderStrataCrossSection();
+      logToSeismicTerminal(`Downhole audio monitor active at ${seismicState.probeDepth}m depth.`);
+    }
+  }
+
+  function startProbeAudioTone() {
+    const ctx = audioCtx;
+    if (!ctx) return;
+    seismicState.probeOsc = ctx.createOscillator();
+    seismicState.probeGain = ctx.createGain();
+
+    const d = seismicState.probeDepth;
+    let stratum = STRATA_DATA[0];
+    for (let s of STRATA_DATA) {
+      if (d >= s.top && d <= s.bottom) { stratum = s; break; }
+    }
+
+    updateProbeAudioTone(d, stratum);
+
+    seismicState.probeOsc.connect(seismicState.probeGain);
+    seismicState.probeGain.connect(analyser || ctx.destination);
+    seismicState.probeOsc.start();
+  }
+
+  function updateProbeAudioTone(depth, stratum) {
+    if (!seismicState.probeOsc || !audioCtx) return;
+    const now = audioCtx.currentTime;
+
+    // Salado Halite salt cavern waveguide hum (1999Hz)
+    if (depth >= 750 && depth <= 1500) {
+      seismicState.probeOsc.frequency.setValueAtTime(1999.0, now);
+      seismicState.probeGain.gain.setValueAtTime(0.04, now);
+    } else if (depth >= 2400) {
+      // Deep reservoir infrasound
+      seismicState.probeOsc.frequency.setValueAtTime(43.2, now);
+      seismicState.probeGain.gain.setValueAtTime(0.08, now);
+    } else {
+      // Surface / Rustler ambient tone
+      seismicState.probeOsc.frequency.setValueAtTime(120.0 + (depth * 0.15), now);
+      seismicState.probeGain.gain.setValueAtTime(0.03, now);
+    }
+  }
+
+  function feedResonantToDecoder() {
+    loadPresetToDecoder(1999, 2.0, 350);
+    switchTab('decoder');
+    logToTerminal(">> [BRIDGE] Fed 1999.0 Hz Salado Cavity Resonance into Harmonic Decoder.");
+  }
+
+  function applySaladoFilter() {
+    const freqEl = document.getElementById('filterCenterFreq');
+    if (freqEl) {
+      freqEl.value = 1999;
+      updateFilterFreq(1999);
+    }
+    const typeEl = document.getElementById('filterTypeSelect');
+    if (typeEl) {
+      typeEl.value = 'bandpass';
+      updateFilterType('bandpass');
+    }
+    switchTab('filter');
+    logToTerminal(">> [BRIDGE] Configured Parametric Filter to 1999.0 Hz Salado Bandpass.");
+  }
+
+  function alignBeamformerCarlsbad() {
+    updateBeamAzimuth(199.9);
+    selectSigintStation('alpha');
+    switchTab('sigint');
+    logToTerminal(">> [BRIDGE] Aligned Phased Beamformer to Carlsbad Bearing 199.9°.");
+  }
+
+  function exportSeismicWav() {
+    const sampleRate = 22050;
+    const duration = 2.2;
+    const numSamples = Math.floor(sampleRate * duration);
+    const samples = new Float32Array(numSamples);
+    const isLocked = Math.abs(seismicState.pulseFreq - 1999) <= 20;
+
+    for (let i = 0; i < numSamples; i++) {
+      const t = i / sampleRate;
+      let val = 0;
+
+      // Excitation ping at t = 0
+      if (t < 0.06) {
+        val += Math.sin(2 * Math.PI * seismicState.pulseFreq * t) * (1 - t / 0.06) * 0.45;
+      }
+
+      // Echo 1: Rustler at 0.333s
+      if (t >= 0.333 && t < 0.383) {
+        const dt = t - 0.333;
+        val += Math.sin(2 * Math.PI * 1400 * dt) * Math.exp(-dt / 0.015) * 0.18;
+      }
+
+      // Echo 2: Salado Halite at 0.655s
+      if (t >= 0.655 && t < 0.715) {
+        const dt = t - 0.655;
+        val += Math.sin(2 * Math.PI * 1200 * dt) * Math.exp(-dt / 0.02) * 0.15;
+      }
+
+      // Station Alpha transponder at 0.700s
+      if (isLocked && t >= 0.700 && t < 0.950) {
+        const dt = t - 0.700;
+        val += Math.sin(2 * Math.PI * 1999.0 * dt) * Math.exp(-dt / 0.08) * 0.35;
+        val += Math.sin(2 * Math.PI * 3998.0 * dt) * Math.exp(-dt / 0.05) * 0.15;
+      }
+
+      // Echo 3: Castile Anhydrite at 0.992s
+      if (t >= 0.992 && t < 1.052) {
+        const dt = t - 0.992;
+        val += Math.sin(2 * Math.PI * 950 * dt) * Math.exp(-dt / 0.02) * 0.22;
+      }
+
+      // Echo 4: Bell Canyon Sandstone at 1.302s (inverted)
+      if (t >= 1.302 && t < 1.372) {
+        const dt = t - 1.302;
+        val -= Math.sin(2 * Math.PI * 800 * dt) * Math.exp(-dt / 0.025) * 0.16;
+      }
+
+      // Node 0x7F echo at 1.691s
+      if (isLocked && t >= 1.691 && t < 2.050) {
+        const dt = t - 1.691;
+        val += Math.sin(2 * Math.PI * 43.2 * dt) * Math.exp(-dt / 0.1) * 0.28;
+        val += Math.sin(2 * Math.PI * 1999.0 * dt) * Math.exp(-dt / 0.08) * 0.12;
+      }
+
+      // Earth thermal microphonics noise
+      val += (Math.random() - 0.5) * 0.02;
+
+      samples[i] = Math.max(-1, Math.min(1, val));
+    }
+
+    const wavBlob = createWavBlob(sampleRate, samples);
+    const url = URL.createObjectURL(wavBlob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `ESARL_STRATA_SEISMIC_${seismicState.pulseFreq}HZ.WAV`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    logToSeismicTerminal(`Synthesized genuine reflection audio: 'ESARL_STRATA_SEISMIC_${seismicState.pulseFreq}HZ.WAV'.`);
+    logToTerminal(`>> [EXPORT] Synthesized borehole reflection audio: 'ESARL_STRATA_SEISMIC_${seismicState.pulseFreq}HZ.WAV'.`);
+  }
+
+  function exportStrataCsv() {
+    let csv = `Formation_ID,Formation_Name,Top_Depth_m,Bottom_Depth_m,Thickness_m,P_Wave_Velocity_mps,S_Wave_Velocity_mps,Bulk_Density_gpcm3,Acoustic_Impedance_MRayl,Attenuation_dB_per_100m,Tag,Special_Targets\n`;
+
+    STRATA_DATA.forEach(s => {
+      let target = 'None';
+      if (s.id === 2) target = 'Station Alpha Transponder (10.19.99.4/classified) [850m]';
+      if (s.id === 4) target = 'Subterranean Relay Node 0x7F [0x7F1999] [3100m]';
+      csv += `${s.id + 1},"${s.name}",${s.top},${s.bottom},${s.thickness},${s.vp},${s.vs},${s.density},${s.z},${s.attenuation},"${s.tag}","${target}"\n`;
+    });
+
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'ESARL_CARLSBAD_STRATA_SURVEY.CSV';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    logToSeismicTerminal("Exported geological strata database: 'ESARL_CARLSBAD_STRATA_SURVEY.CSV'.");
+    logToTerminal(">> [EXPORT] Downloaded strata dataset: 'ESARL_CARLSBAD_STRATA_SURVEY.CSV'.");
+  }
+
+  function exportBoreholeDat() {
+    let dat = `================================================================================
+ESARL BOREHOLE BH-1999-E ACOUSTIC LOG // DELAWARE BASIN, CARLSBAD
+Host: kweb://echo-subsystem.net | Station: SIG-1999-ECHO
+================================================================================
+DEPTH_M   STRATUM_ID   VP_MPS   DENSITY   IMPEDANCE_MRAYL   TEMP_C   PRESS_MPA
+--------------------------------------------------------------------------------\n`;
+
+    for (let d = 0; d <= 3500; d += 25) {
+      let s = STRATA_DATA[0];
+      for (let layer of STRATA_DATA) {
+        if (d >= layer.top && d <= layer.bottom) { s = layer; break; }
+      }
+      const p = (d * 0.0216).toFixed(2);
+      const temp = (18.0 + (d / 100) * 1.25).toFixed(2);
+      dat += `${d.toString().padStart(6, ' ')}   ${(s.id + 1).toString().padStart(10, ' ')}   ${s.vp.toString().padStart(6, ' ')}   ${s.density.toFixed(2).padStart(7, ' ')}   ${s.z.toFixed(2).padStart(15, ' ')}   ${temp.padStart(6, ' ')}   ${p.padStart(9, ' ')}\n`;
+    }
+
+    const blob = new Blob([dat], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'ESARL_BOREHOLE_BH1999E_LOG.DAT';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    logToSeismicTerminal("Exported borehole acoustic telemetry: 'ESARL_BOREHOLE_BH1999E_LOG.DAT'.");
+    logToTerminal(">> [EXPORT] Downloaded borehole log: 'ESARL_BOREHOLE_BH1999E_LOG.DAT'.");
+  }
+
+  function exportSeismicDossierSig() {
+    let dossier = `================================================================================
+ESARL CLASSIFIED INTELLIGENCE DOSSIER // LITHOSPHERIC TIME-DOMAIN REFLECTOMETRY
+STATION ID: SIG-1999-ECHO // SUBTERRANEAN ACOUSTIC SURVEY
+LOCATION: CARLSBAD DELAWARE BASIN, PERMIAN STRATA
+================================================================================
+
+[EXECUTIVE SUMMARY]
+Acoustic time-domain reflectometry surveys conducted down borehole BH-1999-E
+reveal anomalous electromagnetic-acoustic coupling centered within the
+Permian Salado Halite salt formation (750m - 1500m depth).
+
+[WAVEGUIDE TRANSMISSION CHARACTERISTICS]
+- Layer: Salado Halite Formation (Massive Rock Salt)
+- Attenuation: 0.12 dB per 100 meters
+- Acoustic Velocity: 4,450 m/s
+- Cavity Resonance: 1999.0 Hz (Exact Phase Coherence)
+- Ground Waveguide Transponder: Station Alpha (10.19.99.4/classified) at 850m
+- Two-Way Travel Time (TWT): 699.6 ms
+
+[SUBTERRANEAN ANOMALY 0x7F]
+At depth 3,100 meters within the Delaware Basin Bell Canyon sandstone reservoir,
+an anomalous acoustic reflection is recorded at TWT 1691.0 ms.
+The reflection inverts phase (R = -0.334) and demodulates a 43.2 Hz infrasound
+carrier synchronized with Node 0x7F memory offset [0x7F1999].
+
+[STATION AUTHORIZATION]
+Dr. Alistair Vance, Principal Investigator
+ESARL Subterranean Acoustics Team
+kweb://echo-subsystem.net
+================================================================================\n`;
+
+    const blob = new Blob([dossier], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'ESARL_LITHOSPHERIC_SEISMIC_DOSSIER.SIG';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    logToSeismicTerminal("Exported classified intelligence dossier: 'ESARL_LITHOSPHERIC_SEISMIC_DOSSIER.SIG'.");
+    logToTerminal(">> [EXPORT] Downloaded classified dossier: 'ESARL_LITHOSPHERIC_SEISMIC_DOSSIER.SIG'.");
+  }
+
   window.addEventListener('keydown', (e) => {
     if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA')) return;
 
-    if (e.key >= '1' && e.key <= '8') {
-      const tabs = ['journal', 'decoder', 'spectral', 'filter', 'sigint', 'stego', 'terminal', 'mesh'];
+    if (e.key >= '1' && e.key <= '9') {
+      const tabs = ['journal', 'decoder', 'spectral', 'filter', 'sigint', 'stego', 'terminal', 'mesh', 'seismic'];
       switchTab(tabs[parseInt(e.key) - 1]);
       e.preventDefault();
       return;
@@ -3937,12 +5482,15 @@ END TRANSMISSION // ESARL 1999
     logToTerminal(">> SIGINT Phased Array & Beamforming Grid: 4 stations online.");
     logToTerminal(">> Spectrographic Steganography Studio & Bell 202 FSK Teleprinter ready.");
     logToTerminal(">> Airgap Mesh & Dual Resonance Bridge initialized.");
+    logToTerminal(">> Lithospheric Strata TDR & Borehole Acoustic Profiler online.");
     logToTerminal(">> Type 'help' or 'status' for station diagnostic commands.");
     renderPianoKeys();
     loadFieldLogs();
     initCanvases();
     initAirgapMesh();
     checkArtifactSlots();
+    initSeismicCanvases();
+    selectStrataLayer(2);
   });
 </script>
 </body>
