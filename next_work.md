@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-creator
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -16,7 +16,7 @@ current_targets:
   kilo_graphics: KColosseum
   kilo_tester: KSys
   kilo_usability: KGraph
-  kilo_qa: KBookmark
+  kilo_qa: KPing
   kilo_expander: KSimon
 virtual_web_target: "kweb://deep-core"
 virtual_web_rotation:
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://cybercafe"
   - "kweb://10.19.99.4/classified"
 last_run:
-  agent: kilo-usability
-  app: KHash
-  timestamp: "2026-10-04T10:10:00-07:00"
+  agent: kilo-qa
+  app: KBookmark
+  timestamp: "2026-10-04T10:25:00-07:00"
 last_planner_run: "2026-10-04T06:50:00Z"
 ---
 
@@ -124,9 +124,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KClock`, `KTimer`, `KPomodoro` *(Completed: KHash, KMystery, KMandel, KFont, KPing, KAudio, KSynth, KScript, KRead, KRadio, KSys, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KChrono, KTask, KStarForge, KPad, KBookmark, KRSS, KClip, KHex, KHabit, KFarm, KPaint, KGraph, KImage, KJournal, KMail, KMedia, KNet, KNote, KPass)*.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
-- **Current Target**: `KBookmark`
+- **Current Target**: `KPing`
 - **Upcoming Queue**:
-  `KPing`, `KChat`, `KClock`, `KTimer`, `KPomodoro`, `KMandel`, `KHex` *(Completed in Pass 5: KBBS, KChrono, KCipher, KClip, KCyber, KDragon, KFortress, KHash, KMaze, KMech, KMystery, KQuest, KSanctuary, KSnake, KSolitaire, KSpace, KStarDredge, KStarship, KStellar, KSubmarine, KSynth, KSys, KTask, KTerm, KTimer, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KRSS, K2048, KChart, KGraph, KContacts, KScript, KRead, KColosseum, KAbyss, KMedia, KAudio, KRadio, KPad, KPaint, KCalc, KMine, KCosmic, KBase, KBudget, KCalendar, KFarm, KFlash, KFont, KImage, KJournal, KMail, KMandel, KNet, KNote, KPass, KDB, KHex)*.
+  `KChat`, `KClock`, `KTimer`, `KPomodoro`, `KMandel`, `KHex` *(Completed in Pass 5: KBBS, KChrono, KCipher, KClip, KCyber, KDragon, KFortress, KHash, KMaze, KMech, KMystery, KQuest, KSanctuary, KSnake, KSolitaire, KSpace, KStarDredge, KStarship, KStellar, KSubmarine, KSynth, KSys, KTask, KTerm, KTimer, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KRSS, K2048, KChart, KGraph, KContacts, KScript, KRead, KColosseum, KAbyss, KMedia, KAudio, KRadio, KPad, KPaint, KCalc, KMine, KCosmic, KBase, KBudget, KCalendar, KFarm, KFlash, KFont, KImage, KJournal, KMail, KMandel, KNet, KNote, KPass, KDB, KHex, KBookmark)*.
 
 ### 6. Feature Expander Queue (`kilo-expander`)
 - **Current Target**: `KSimon`
@@ -221,6 +221,14 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-04T10:25:00-07:00 — kilo-qa: KBookmark (Pass 5: QA & Build Quality, Quicksave/Load, Tutorial & ARCH-05)**
+  - Status: PASS ✅ (0 regressions, clean builds, 121.2 KB web / 24.1 KB native < 999 KB ceiling).
+  - Quicksave & Quickload: Hardened [F5]/[F9] full state persistence (filters, categories, theme, view mode) and quota protection across web/Win32.
+  - Tutorial Integrity: Enforced first-run flag gates (`kbookmark_tutorial.dat` / localStorage) preventing tutorial popups on restored saves.
+  - Interactive Overlays: Added Space/Enter dismissal across splash, help, and diagnostic overlays; added Win32 modal dialog message processing.
+  - Resource & Tab Visibility (ARCH-05): Added `visibilitychange` listener for background autosave snapshot without CPU waste.
+  - Verification: MSVC clean (`KBookmark.exe` 24.1 KB); Vite clean in 333ms; security_lint 100% PASS; check_icons 100% PASS.
+
 - **2026-10-04T10:10:00-07:00 — kilo-usability: KHash (Toast Occlusion Remediation, HiDPI Canvas & ARCH-05)**
   - Status: PASS ✅ (0 regressions, clean builds, 143.2 KB web / 17.9 KB native < 999 KB ceiling).
   - Toast Occlusion Remediation: Re-anchored toast bar to top-center (50px) under header and added auto-dismissal on user interaction per Directive 189.
@@ -246,13 +254,4 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Data Export Deck: Added multi-format export for synthetic reflection WAV audio, geological CSV survey, binary DAT log, and classified SIG dossier.
   - Network Directory & Webring: Integrated across KNet address resolver, portal search catalog, and Central Webring entry #016.
   - Verification: Vite build clean in 317ms; security_lint 100% PASS; check_sizes 100% PASS.
-
-- **2026-10-04T09:10:00-07:00 — kilo-expander: KMatch3 (Deep Feature Expansion, RFMS Duel Arena & State Persistence)**
-  - Status: PASS ✅ (0 regressions, clean builds, 130.8 KB web / 38.4 KB native < 999 KB ceiling).
-  - Online Multiplayer Duel: Standardized RFMS integration with public lobby, invite links (#room=CODE), and score attack mechanics.
-  - Connect Gate & Solo Fallback: Enforced no-autostart modal gate and 25s fallback timer to local GemBot-99 AI opponent per Rule 12.
-  - State Persistence: Implemented Quicksave/Quickload ([F5]/[F9]) across web/Win32 C, JSON session export/import, and move replay viewer.
-  - Custom Ergonomics & ARCH-05: Added key rebinds, tab visibility timer drift protection, and safe top-center toast bar per Directive 189.
-  - ARG Signal Mesh: Connected silent fragment broadcast (`arg/signals/kmatch3`) on 5+ combo or duel victory per Directive 215.
-  - Verification: MSVC clean (`KMatch3.exe` 38.4 KB); Vite clean in 321ms; security_lint 100% PASS; check_icons 100% PASS.
 

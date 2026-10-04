@@ -388,6 +388,41 @@ static void DeleteSelected(void) {
     SetStatus("Bookmark deleted.");
 }
 
+static void CheckFirstRunTutorial(HWND hwnd) {
+    if (GetFileAttributesA("kbookmark.dat") != INVALID_FILE_ATTRIBUTES ||
+        GetFileAttributesA("kbookmark_tutorial.dat") != INVALID_FILE_ATTRIBUTES) {
+        if (GetFileAttributesA("kbookmark_tutorial.dat") == INVALID_FILE_ATTRIBUTES) {
+            HANDLE hTut = CreateFileA("kbookmark_tutorial.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+            if (hTut != INVALID_HANDLE_VALUE) {
+                DWORD written = 0;
+                WriteFile(hTut, "SEEN\r\n", 6, &written, NULL);
+                CloseHandle(hTut);
+            }
+        }
+        return;
+    }
+
+    const char* splashText =
+        "Welcome to KBookmark Vault v1.0!\r\n\r\n"
+        "Curate, classify, and explore the retro web and KiloOS ecosystem.\r\n"
+        "Features:\r\n"
+        "  - Categorized Link Vault (Web 1.0 Portals, Dev, Fleet, Cyberdeck)\r\n"
+        "  - URL Protocol Dispatch (kweb://, internal:<app>, http://, etc.)\r\n"
+        "  - Quicksave [F5] & Quickload [F9] state persistence\r\n\r\n"
+        "Keyboard Shortcuts:\r\n"
+        "  [F1] Help Manual   |   [F5] Quicksave   |   [F9] Quickload\r\n"
+        "  [Enter] Open URL   |   [S] Star / Unstar |   [Ctrl+N] New Link\r\n\r\n"
+        "Press OK to enter the vault.";
+    MessageBoxA(hwnd, splashText, "KBookmark First-Run Guide", MB_OK | MB_ICONINFORMATION);
+
+    HANDLE hCreateFlag = CreateFileA("kbookmark_tutorial.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hCreateFlag != INVALID_HANDLE_VALUE) {
+        DWORD written = 0;
+        WriteFile(hCreateFlag, "SEEN\r\n", 6, &written, NULL);
+        CloseHandle(hCreateFlag);
+    }
+}
+
 static void QuickSave(void) {
     HANDLE hFile = CreateFileA("kbookmark.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
     if (hFile != INVALID_HANDLE_VALUE) {
@@ -395,6 +430,7 @@ static void QuickSave(void) {
         DWORD magic = FILE_MAGIC;
         WriteFile(hFile, &magic, sizeof(magic), &written, NULL);
         WriteFile(hFile, &g_bookmarkCount, sizeof(g_bookmarkCount), &written, NULL);
+        WriteFile(hFile, &g_selectedCategory, sizeof(g_selectedCategory), &written, NULL);
         WriteFile(hFile, g_bookmarks, sizeof(BookmarkItem) * g_bookmarkCount, &written, NULL);
         CloseHandle(hFile);
         SetStatus("Vault state quicksaved to kbookmark.dat (F5)");
@@ -414,10 +450,24 @@ static void QuickLoad(void) {
             ReadFile(hFile, &count, sizeof(count), &bytesRead, NULL);
             if (count >= 0 && count <= MAX_BOOKMARKS) {
                 g_bookmarkCount = count;
+                int cat = 0;
+                ReadFile(hFile, &cat, sizeof(cat), &bytesRead, NULL);
+                if (cat >= 0 && cat < CATEGORY_COUNT) {
+                    g_selectedCategory = cat;
+                }
                 ReadFile(hFile, g_bookmarks, sizeof(BookmarkItem) * g_bookmarkCount, &bytesRead, NULL);
                 RefreshCategoryList();
                 RefreshListView();
                 SetStatus("Vault state quickloaded from kbookmark.dat (F9)");
+
+                if (GetFileAttributesA("kbookmark_tutorial.dat") == INVALID_FILE_ATTRIBUTES) {
+                    HANDLE hTut = CreateFileA("kbookmark_tutorial.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+                    if (hTut != INVALID_HANDLE_VALUE) {
+                        DWORD written = 0;
+                        WriteFile(hTut, "SEEN\r\n", 6, &written, NULL);
+                        CloseHandle(hTut);
+                    }
+                }
             }
         }
         CloseHandle(hFile);
@@ -435,7 +485,7 @@ static void ShowHelpDialog(HWND parent) {
         "  Ctrl+N / [+ New]   : Add new categorized link\n"
         "  Ctrl+E / [Edit]    : Edit selected link properties\n"
         "  Delete / [Delete]  : Remove selected bookmark\n"
-        "  S / [★ Star]       : Toggle favorite status\n"
+        "  Space / S          : Toggle favorite (star) status\n"
         "  F5                 : Quicksave vault to kbookmark.dat\n"
         "  F9                 : Quickload vault from kbookmark.dat\n\n"
         "URL Protocols Supported:\n"
@@ -614,8 +664,10 @@ static void ShowAddEditDialog(HWND parent, int editIdx) {
             DestroyWindow(hDlg);
             break;
         }
-        TranslateMessage(&msg);
-        DispatchMessageA(&msg);
+        if (!IsDialogMessageA(hDlg, &msg)) {
+            TranslateMessage(&msg);
+            DispatchMessageA(&msg);
+        }
     }
     EnableWindow(parent, TRUE);
     SetFocus(parent);
@@ -804,6 +856,8 @@ void __cdecl MainEntry(void) {
     ShowWindow(hwnd, SW_SHOW);
     UpdateWindow(hwnd);
 
+    CheckFirstRunTutorial(hwnd);
+
     MSG msg;
     while (GetMessageA(&msg, NULL, 0, 0)) {
         if (msg.message == WM_KEYDOWN) {
@@ -819,10 +873,33 @@ void __cdecl MainEntry(void) {
                 QuickLoad();
                 continue;
             }
+            if ((GetKeyState(VK_CONTROL) & 0x8000)) {
+                if (msg.wParam == 'N' || msg.wParam == 'n') {
+                    ShowAddEditDialog(hwnd, -1);
+                    continue;
+                }
+                if (msg.wParam == 'E' || msg.wParam == 'e') {
+                    int sel = GetSelectedBookmarkIndex();
+                    if (sel >= 0) ShowAddEditDialog(hwnd, sel);
+                    else SetStatus("Select a bookmark to edit.");
+                    continue;
+                }
+                if (msg.wParam == 'F' || msg.wParam == 'f') {
+                    SetFocus(g_hEditSearch);
+                    continue;
+                }
+            }
             if (msg.wParam == VK_RETURN) {
                 HWND hFocus = GetFocus();
                 if (hFocus == g_hListView) {
                     OpenSelectedBookmark();
+                    continue;
+                }
+            }
+            if (msg.wParam == VK_SPACE || msg.wParam == 'S' || msg.wParam == 's') {
+                HWND hFocus = GetFocus();
+                if (hFocus == g_hListView) {
+                    ToggleStarSelected();
                     continue;
                 }
             }

@@ -4,6 +4,15 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-04T09:10:00-07:00 — kilo-expander: KMatch3 (Deep Feature Expansion, RFMS Duel Arena & State Persistence)**
+  - Status: PASS ✅ (0 regressions, clean builds, 130.8 KB web / 38.4 KB native < 999 KB ceiling).
+  - Online Multiplayer Duel: Standardized RFMS integration with public lobby, invite links (#room=CODE), and score attack mechanics.
+  - Connect Gate & Solo Fallback: Enforced no-autostart modal gate and 25s fallback timer to local GemBot-99 AI opponent per Rule 12.
+  - State Persistence: Implemented Quicksave/Quickload ([F5]/[F9]) across web/Win32 C, JSON session export/import, and move replay viewer.
+  - Custom Ergonomics & ARCH-05: Added key rebinds, tab visibility timer drift protection, and safe top-center toast bar per Directive 189.
+  - ARG Signal Mesh: Connected silent fragment broadcast (`arg/signals/kmatch3`) on 5+ combo or duel victory per Directive 215.
+  - Verification: MSVC clean (`KMatch3.exe` 38.4 KB); Vite clean in 321ms; security_lint 100% PASS; check_icons 100% PASS.
+
 - **2026-10-04T08:45:00-07:00 — kilo-qa: KHex (Pass 5: QA & Build Quality, Quicksave/Load, Tutorial & Subterranean Signal)**
   - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 138.0 KB web / 31.5 KB native < 999 KB ceiling).
   - Quicksave & Quickload: Implemented persistent disk snapshots (`khex_quicksave.dat`, [F5]/[F9]) in Win32 C and hardened web state restoration.

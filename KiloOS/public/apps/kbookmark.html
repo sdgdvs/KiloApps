@@ -1812,6 +1812,7 @@
           updateStorageStats(json.length);
         } catch(e) {
           console.warn('Storage save error:', e);
+          setStatus('Warning: LocalStorage quota exceeded. Backup vault via Export.');
         }
       }
 
@@ -1824,7 +1825,13 @@
             if (data.bookmarks && Array.isArray(data.bookmarks)) bookmarks = data.bookmarks;
             if (data.activeTheme) setTheme(data.activeTheme);
             if (data.soundEnabled !== undefined) soundEnabled = data.soundEnabled;
-            if (data.isTableMode !== undefined) isTableMode = data.isTableMode;
+            if (data.isTableMode !== undefined) {
+              isTableMode = data.isTableMode;
+              if (viewCardsBtn && viewTableBtn) {
+                viewCardsBtn.classList.toggle('active', !isTableMode);
+                viewTableBtn.classList.toggle('active', isTableMode);
+              }
+            }
             updateStorageStats(saved.length);
             return true;
           }
@@ -1840,12 +1847,21 @@
           const payload = {
             categories,
             bookmarks,
+            activeTheme,
+            soundEnabled,
+            isTableMode,
+            activeCategory,
+            activeTagFilter,
+            searchQuery,
+            selectedProtocol,
+            selectedHealth,
+            currentSort,
             time: Date.now()
           };
           localStorage.setItem('kbookmark_quicksave', JSON.stringify(payload));
           setStatus('Vault quicksaved successfully to localStorage (F5).');
         } catch(e) {
-          setStatus('Error performing quicksave.');
+          setStatus('Error performing quicksave (storage quota exceeded).');
         }
       }
 
@@ -1857,8 +1873,41 @@
             return;
           }
           const data = JSON.parse(raw);
-          if (data.categories) categories = data.categories;
-          if (data.bookmarks) bookmarks = data.bookmarks;
+          if (data.categories && Array.isArray(data.categories)) categories = data.categories;
+          if (data.bookmarks && Array.isArray(data.bookmarks)) bookmarks = data.bookmarks;
+          if (data.activeTheme) setTheme(data.activeTheme);
+          if (data.soundEnabled !== undefined) soundEnabled = data.soundEnabled;
+          if (data.isTableMode !== undefined) {
+            isTableMode = data.isTableMode;
+            if (viewCardsBtn && viewTableBtn) {
+              viewCardsBtn.classList.toggle('active', !isTableMode);
+              viewTableBtn.classList.toggle('active', isTableMode);
+            }
+          }
+          if (data.activeCategory !== undefined) activeCategory = data.activeCategory;
+          if (data.activeTagFilter !== undefined) activeTagFilter = data.activeTagFilter;
+          if (data.searchQuery !== undefined) {
+            searchQuery = data.searchQuery;
+            if (searchInput) searchInput.value = searchQuery;
+          }
+          if (data.selectedProtocol !== undefined) {
+            selectedProtocol = data.selectedProtocol;
+            if (filterProtocol) filterProtocol.value = selectedProtocol;
+          }
+          if (data.selectedHealth !== undefined) {
+            selectedHealth = data.selectedHealth;
+            if (filterHealth) filterHealth.value = selectedHealth;
+          }
+          if (data.currentSort !== undefined) {
+            currentSort = data.currentSort;
+            if (sortSelect) sortSelect.value = currentSort;
+          }
+          if (modalSplash && modalSplash.classList.contains('active')) {
+            modalSplash.classList.remove('active');
+          }
+          localStorage.setItem('kbookmark_tutorialSeen', '1');
+          if (checkTutorialSeen) checkTutorialSeen.checked = true;
+          if (splashTutorialCheck) splashTutorialCheck.checked = true;
           sfxLoad();
           renderCategories();
           renderBookmarks();
@@ -2989,6 +3038,27 @@
             modalSplash.classList.remove('active');
             localStorage.setItem('kbookmark_tutorialSeen', '1');
             if (checkTutorialSeen) checkTutorialSeen.checked = true;
+            if (splashTutorialCheck) splashTutorialCheck.checked = true;
+            sfxClick();
+            return;
+          }
+          if (modalHelp.classList.contains('active')) {
+            modalHelp.classList.remove('active');
+            sfxClick();
+            return;
+          }
+          if (modalDiag.classList.contains('active')) {
+            modalDiag.classList.remove('active');
+            sfxClick();
+            return;
+          }
+          if (modalQr.classList.contains('active')) {
+            modalQr.classList.remove('active');
+            sfxClick();
+            return;
+          }
+          if (modalExportImport.classList.contains('active') && !isInputFocused) {
+            modalExportImport.classList.remove('active');
             sfxClick();
             return;
           }
@@ -3002,19 +3072,54 @@
           }
         }
 
-        // Space key handling: toggle star on highlighted bookmark
-        if (e.key === ' ' && !hasActiveModal && !isInputFocused) {
-          const items = getFilteredBookmarks();
-          if (highlightedIndex >= 0 && highlightedIndex < items.length) {
+        // Space key handling: dismiss overlays or toggle star on highlighted bookmark
+        if (e.key === ' ' && !isInputFocused) {
+          if (modalSplash.classList.contains('active')) {
             e.preventDefault();
-            const b = items[highlightedIndex];
-            sfxStar();
-            b.starred = !b.starred;
-            saveStateToLocal();
-            renderCategories();
-            renderBookmarks();
-            setStatus(b.starred ? `Starred "${b.title}"` : `Unstarred "${b.title}"`);
+            modalSplash.classList.remove('active');
+            localStorage.setItem('kbookmark_tutorialSeen', '1');
+            if (checkTutorialSeen) checkTutorialSeen.checked = true;
+            if (splashTutorialCheck) splashTutorialCheck.checked = true;
+            sfxClick();
             return;
+          }
+          if (modalHelp.classList.contains('active')) {
+            e.preventDefault();
+            modalHelp.classList.remove('active');
+            sfxClick();
+            return;
+          }
+          if (modalDiag.classList.contains('active')) {
+            e.preventDefault();
+            modalDiag.classList.remove('active');
+            sfxClick();
+            return;
+          }
+          if (modalQr.classList.contains('active')) {
+            e.preventDefault();
+            modalQr.classList.remove('active');
+            sfxClick();
+            return;
+          }
+          if (modalExportImport.classList.contains('active')) {
+            e.preventDefault();
+            modalExportImport.classList.remove('active');
+            sfxClick();
+            return;
+          }
+          if (!hasActiveModal) {
+            const items = getFilteredBookmarks();
+            if (highlightedIndex >= 0 && highlightedIndex < items.length) {
+              e.preventDefault();
+              const b = items[highlightedIndex];
+              sfxStar();
+              b.starred = !b.starred;
+              saveStateToLocal();
+              renderCategories();
+              renderBookmarks();
+              setStatus(b.starred ? `Starred "${b.title}"` : `Unstarred "${b.title}"`);
+              return;
+            }
           }
         }
 
@@ -3279,6 +3384,16 @@
       const sidebarBackdrop = document.getElementById('sidebarBackdrop');
       if (sidebarBackdrop) sidebarBackdrop.onclick = closeMobileSidebar;
 
+      // Tab Visibility / Background Resource Preservation (ARCH-05)
+      document.addEventListener('visibilitychange', () => {
+        if (document.hidden) {
+          saveStateToLocal();
+        } else {
+          const saved = localStorage.getItem('kbookmark_vault');
+          if (saved) updateStorageStats(saved.length);
+        }
+      });
+
       // Boot initialization
       function init() {
         const loaded = loadStateFromLocal();
@@ -3296,8 +3411,12 @@
         if (splashTutorialCheck) {
           splashTutorialCheck.checked = !!tutorialSeen;
         }
-        if (!tutorialSeen) {
+        if (!tutorialSeen && !loaded) {
           modalSplash.classList.add('active');
+        } else if (loaded && !tutorialSeen) {
+          localStorage.setItem('kbookmark_tutorialSeen', '1');
+          if (checkTutorialSeen) checkTutorialSeen.checked = true;
+          if (splashTutorialCheck) splashTutorialCheck.checked = true;
         }
 
         renderCategories();
