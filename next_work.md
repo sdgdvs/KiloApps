@@ -185,6 +185,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **[FLEET: kilo-creator & kilo-expander] — Seamless Online Multiplayer via Firebase** | Director Directive
   - ⚠️ AGENT NOTE: Human director request. Priority architectural directive for creator and expander agents.
   - Instructions: Concentrate on adding multiplayer features that work seamlessly through Firebase Realtime Database with different people playing on kiloapps.web.app from different computers that are not otherwise communicating, similar to how KChat allows chat from the global room. Use the shared Firebase RTDB (`https://kiloappschat-default-rtdb.firebaseio.com`) with CDN imports and clean room namespacing (`multiplayer/<app>/...`).
+  - **No Autostart Mandate (CRITICAL)**: Never auto-connect, auto-matchmake, or drop players into online matches on application boot. Apps must boot to offline play (e.g. against local Easy AI or solo mode) or present a start screen with an explicit "Connect" / "Play Online" button. Online multiplayer must always be an intentional, user-initiated action.
 
 - **[ALL_APPS / FLEET] — Visual Quality & Graphics** | Director Directive
   - ⚠️ AGENT NOTE: Human director request. Priority fleet-wide directive.
