@@ -16,9 +16,9 @@
   "session_end": null,
   "session_limit_enabled": false,
   "timer_enabled": false,
-  "turns_executed": 123,
+  "turns_executed": 124,
   "last_turn_timestamp": "2026-10-04T08:45:00-07:00",
-  "last_heartbeat": "2026-10-04T17:26:07.805867+00:00",
-  "current_target": "KBookmark",
+  "last_heartbeat": "2026-10-04T17:46:51.799469+00:00",
+  "current_target": "KSimon",
   "remote_command": "none"
 }

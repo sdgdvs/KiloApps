@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-creator
-next_agent: kilo-graphics
+current_agent: kilo-graphics
+next_agent: kilo-tester
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -12,13 +12,13 @@ model: gemini-3.8-flash-high
 timeout_minutes: 15
 status: ready
 current_targets:
-  kilo_creator: "kweb://deep-core"
+  kilo_creator: "kweb://darknet"
   kilo_graphics: KColosseum
   kilo_tester: KSys
   kilo_usability: KGraph
   kilo_qa: KPing
   kilo_expander: KReversi
-virtual_web_target: "kweb://deep-core"
+virtual_web_target: "kweb://darknet"
 virtual_web_rotation:
   - "kweb://echo-subsystem.net"
   - "kweb://deep-core"
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://cybercafe"
   - "kweb://10.19.99.4/classified"
 last_run:
-  agent: kilo-expander
-  app: KSimon
-  timestamp: "2026-10-04T10:45:00-07:00"
+  agent: kilo-creator
+  app: "kweb://deep-core"
+  timestamp: "2026-10-04T10:55:00-07:00"
 last_planner_run: "2026-10-04T06:50:00Z"
 ---
 
@@ -102,9 +102,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ### 1. Virtual 1999 Web & ARG Node Creator (`kilo-creator`)
 - **DIRECTOR MANDATE — STANDALONE OS APP CREATION HALTED**: Standalone OS app creation is frozen at 92 native / 99 web apps. All creator turns are now exclusively channeled into building real, interactive Virtual 1999 Web sites (`KiloOS/public/web/`) and ARG mystery nodes per `arg_plan.md`. Zero shallow stubs; every page must be a functioning Web 1.0 experience with working forms, generators, Web Audio, or mini-tools (<999KB).
-- **Current Target**: `kweb://echo-subsystem.net`
+- **Current Target**: `kweb://darknet`
 - **Upcoming Queue**:
-  `kweb://deep-core`, `kweb://darknet`, `kweb://portal`, `kweb://webring`, `kweb://warez`, `kweb://geocities`, `kweb://users/~neon_rider`, `kweb://asm-temple`, `kweb://cybercafe`, `kweb://10.19.99.4/classified`
+  `kweb://portal`, `kweb://webring`, `kweb://warez`, `kweb://geocities`, `kweb://users/~neon_rider`, `kweb://asm-temple`, `kweb://cybercafe`, `kweb://10.19.99.4/classified`, `kweb://echo-subsystem.net`, `kweb://deep-core`
   *(Completed: kweb://geocities, kweb://portal, kweb://cybercafe, kweb://asm-temple, kweb://users/~neon_rider, kweb://darknet, kweb://deep-core, kweb://echo-subsystem.net, kweb://10.19.99.4/classified, kweb://webring, kweb://warez)*.
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
@@ -135,8 +135,8 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Multiplayer Focus (CRITICAL)**: Concentrate on expanding games (*KChess*, *KConnect4*, *KGo*, *KReversi*, *KDarts*, *KTetris*, *KSnake*, *K2048*, *KMatch3*, *KSimon*) and collaborative apps (*KDraw*, *KPaint*, *KSynth*, *KPad*) with seamless Firebase Realtime Database multiplayer for cross-computer play on `kiloapps.web.app`.
 
 ### 7. Virtual 1999 Web Expansion Queue (Eternal Fleet Track)
-- **Current Active Target**: `kweb://echo-subsystem.net` (`KiloOS/public/web/echo_subsystem.html`)
-  - *Next in Rotation*: `kweb://deep-core` ➔ `kweb://darknet` ➔ `kweb://portal` ➔ `kweb://webring` ➔ `kweb://warez` ➔ `kweb://geocities` ➔ `kweb://users/~neon_rider` ➔ `kweb://asm-temple` ➔ `kweb://cybercafe` ➔ `kweb://10.19.99.4/classified`.
+- **Current Active Target**: `kweb://darknet` (`KiloOS/public/web/darknet.html`)
+  - *Next in Rotation*: `kweb://portal` ➔ `kweb://webring` ➔ `kweb://warez` ➔ `kweb://geocities` ➔ `kweb://users/~neon_rider` ➔ `kweb://asm-temple` ➔ `kweb://cybercafe` ➔ `kweb://10.19.99.4/classified` ➔ `kweb://echo-subsystem.net` ➔ `kweb://deep-core`.
 - **Anti-Potemkin Quality Standard**:
   - All 11 Virtual 1999 Web destinations are live, interactive, and feature-complete.
   - See [archive/virtual_web_completed.md](archive/virtual_web_completed.md) for full historical breakdown of completed content mandates across all sites.
@@ -221,6 +221,14 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-04T10:55:00-07:00 — kilo-creator: kweb://deep-core (Subterranean Terminal Expansion & Passkey Secrecy Remediation)**
+  - Status: PASS ✅ (0 regressions, clean builds, 149.5 KB web < 999 KB ceiling).
+  - Mystery Preservation: Purged all cleartext leaks of master passkey and pre-climax meta-spoilers per TINAG standard.
+  - Penultimate Key Fragment: Sector 05 unseals "1999-ARCH" and SHA-256 target digest, pointing to App #100 KMatrix.
+  - Network Diagnostics Expansion: Added live directives `scan`/`nmap`, `ifconfig`/`ip`, `whois`, `finger`, `version`, `history`.
+  - Portal & Webring Interconnect: Linked `kweb://deep-core` into Portal guestbook #015 and verified Webring #017 routing.
+  - Verification: Node syntax tests PASS (100%); Vite build clean in 355ms; security_lint 100% PASS (0 violations).
+
 - **2026-10-04T10:45:00-07:00 — kilo-expander: KSimon (Deep Feature Expansion, RFMS Duels, YM2612 FM Audio & Replay)**
   - Status: PASS ✅ (0 regressions, clean builds, 114.7 KB web / 137.0 KB native < 999 KB ceiling).
   - Online Multiplayer Duels (RFMS): Retrofitted Speed Match & Add-A-Step Volley modes via RTDB with live opponent LED indicators and quick-chat.
@@ -252,7 +260,4 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Resource & Tab Visibility (ARCH-05): Added `visibilitychange` listener releasing active voices and auto-saving patch on tab hide.
   - Preset Loading UX: Synchronized preset dropdown to custom patch indicator on JSON file import.
   - Verification: Vite build clean in 316ms; test_app_startup PASS; security_lint 100% PASS; check_icons 100% PASS.
-
-- **2026-10-04T09:40:00-07:00 — kilo-graphics: KRogue**
-  - ⏭️ Skip — Imagen 3 asset replacement not appropriate for KRogue
 

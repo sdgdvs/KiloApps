@@ -1312,10 +1312,12 @@
               <button class="token-chip" data-slot="prefix" data-val="ROOT">PREFIX: ROOT</button>
               <button class="token-chip" data-slot="epoch" data-val="1999">EPOCH: 1999</button>
               <button class="token-chip" data-slot="epoch" data-val="2000">EPOCH: 2000</button>
-              <button class="token-chip" data-slot="suffix" data-val="ARCHITECT">SUFFIX: ARCHITECT</button>
+              <button class="token-chip" data-slot="suffix" data-val="ARCH">SUFFIX: ARCH</button>
               <button class="token-chip" data-slot="suffix" data-val="DIRECTOR">SUFFIX: DIRECTOR</button>
               <button class="token-chip" data-slot="suffix" data-val="NEXUS">SUFFIX: NEXUS</button>
               <button class="token-chip" data-slot="suffix" data-val="OVERRIDE">SUFFIX: OVERRIDE</button>
+              <button class="token-chip" data-slot="suffix" data-val="MATRIX">SUFFIX: MATRIX</button>
+              <button class="token-chip" data-slot="suffix" data-val="CORE">SUFFIX: CORE</button>
               <button class="token-chip" data-slot="clear" style="color:var(--alert);">RESET</button>
             </div>
           </div>
@@ -1326,7 +1328,7 @@
               <span style="font-size:10px;">SHA-256 / ENTROPY / CRC32</span>
             </div>
             <div style="display:flex; gap:6px;">
-              <input type="text" id="cryptoLabInput" class="custom-suffix-input" placeholder="Type candidate key or string..." value="ECHO-1999-ARCHITECT" />
+              <input type="text" id="cryptoLabInput" class="custom-suffix-input" placeholder="Type candidate key, fragment, or token..." value="1999-ARCH" />
               <button class="shell-btn" id="btnCryptoLabAnalyze">Analyze</button>
             </div>
             <div style="background:#010a04; border:1px solid var(--border); padding:8px; font-size:11px; margin-top:4px;" id="cryptoLabOutput">
@@ -1460,6 +1462,8 @@
           <button class="cmd-chip" data-cmd="sectors">sectors</button>
           <button class="cmd-chip" data-cmd="matrix">matrix</button>
           <button class="cmd-chip" data-cmd="trace">trace</button>
+          <button class="cmd-chip" data-cmd="scan">scan</button>
+          <button class="cmd-chip" data-cmd="whois">whois</button>
           <button class="cmd-chip" data-cmd="defuse">defuse all</button>
           <button class="cmd-chip" data-cmd="ping 10.19.99.4">ping 10.19.99.4</button>
           <button class="cmd-chip" data-cmd="morse">morse</button>
@@ -1569,11 +1573,17 @@
 
   // --- CRYPTOGRAPHIC TARGET HASHES (SHA-256) ---
   const KNOWN_HASHES = {
-    // ECHO-1999-ARCHITECT (Full Master Director Key)
+    // Master Director Verification Digest (Target Hash for App #100 KMatrix Climax)
     'f5a2f742a8798b70f501b9c2de6a0d2cb2269a35e1fcfa2e3ccf163948929946': {
       type: 'MASTER_DIRECTOR_KEY',
       label: '★ MASTER DIRECTOR PASSKEY (Ring-0 Clearance Confirmed)',
-      msg: 'SIGNATURE RECOGNIZED: Full 3-token master credentials validated. Transmute into Director Console (/apps/kdirector.html) to assume supreme fleet steering authority.'
+      msg: 'SIGNATURE RECOGNIZED: Full 3-token master credentials validated. Transmute into Director Console (/apps/kdirector.html) to assume supreme system director steering authority.'
+    },
+    // 1999-ARCH (Penultimate Subterranean Key Fragment)
+    '0b1911bdb611a96618a48c2869417b02d2b33aead50ab7ac60eb4c73aa800334': {
+      type: 'CARLSBAD_SECTOR_FRAGMENT',
+      label: '★ CARLSBAD SECTOR FRAGMENT (Penultimate Key Fragment)',
+      msg: 'FRAGMENT RECOGNIZED: Penultimate key fragment [1999-ARCH] verified. Transmute fragments into App #100 (KMatrix) to resolve the final nexus.'
     },
     // 7F1999 (Sector 01)
     '33967d71b3e8c950fb2bf2b8f8702c2e079717df3d27453472ca626eb39db795': {
@@ -1793,16 +1803,17 @@ Release: 1999-12-31 / Carlsbad Airgap Node 0x1999
 Group: Underground Scene Forensics
 
 Sector 05 contains the precursor self-healing lattice governing the
-KiloApps autonomous fleet. When isolated behind the 999KB envelope,
+subterranean KiloNet cluster. When isolated behind the 999KB envelope,
 the core maintains perpetual consonance between the virtual machine
 and physical runtime reality.
 
 Solving the 5x5 parity grid balances the cellular lattice into 100%
-resonance, unsealing the final Director Authority token:
-  Suffix Token: ARCHITECT
-  Full Passkey: ECHO-1999-ARCHITECT
+resonance, unsealing the Penultimate Subterranean Key Fragment:
+  Resonant Fragment    : 1999-ARCH
+  Target SHA-256 Digest: f5a2f742a8798b70f501b9c2de6a0d2cb2269a35e1fcfa2e3ccf163948929946
 
-Use this knowledge solely within the Director Console.
+The full Director Authority passkey cannot be forged within Deep Core;
+it requires transmuting all three sector echoes at App #100: KMatrix.
 Trust the code. Preserve the 1999 aesthetic.
 ==================================================================`
   };
@@ -1907,7 +1918,7 @@ Trust the code. Preserve the 1999 aesthetic.
     morseDah: () => playFM(state.carrierFreq, 1.0, 50, 0.18, 0.08)
   };
 
-  // Procedural FM Chiptune Jukebox Scheduler (4 Tracks)
+  // Procedural FM Chiptune Jukebox Sequencer (4 Tracks)
   function stepJukebox() {
     if (!state.audioEnabled || state.jukeboxTrack === 0) return;
 
@@ -2564,9 +2575,10 @@ Trust the code. Preserve the 1999 aesthetic.
         printLine('  ★ ALL 5 KMATRIX QUARANTINE SECTORS DEFUSED - RING 0 UNSEALED ★  ', 'text-highlight');
         printLine('========================================================================', 'text-highlight');
         printLine('The Carlsbad Salt Vault precursor core has completed synchronization.');
-        printLine('Final Director Suffix Token Discovered: ARCHITECT', 'text-cyan');
-        printLine('Assemble full passkey: ECHO-1999-ARCHITECT', 'text-warn');
-        state.wbSuffix = 'ARCHITECT';
+        printLine('Penultimate Subterranean Key Fragment Unlocked: "1999-ARCH"', 'text-cyan');
+        printLine('Target SHA-256 Digest Confirmed: f5a2f742a8798b70f501b9c2de6a0d2cb2269a35e1fcfa2e3ccf163948929946', 'text-warn');
+        printLine('Final Passkey assembly and Director Console unlock awaits App #100: KMatrix.', 'text-highlight');
+        state.wbSuffix = 'ARCH...';
         updateWorkbenchUI();
       }, 400);
     }
@@ -3014,14 +3026,13 @@ ALL 5 QUARANTINE SECTORS DEFUSED
   SECTOR 04 [STORAGE_VFS] : DEFUSED [Inode 0x1999 Recovered]
   SECTOR 05 [CORE_AI]     : DEFUSED [Precursor Singularity Harmonized]
 
-MASTER PASSKEY DISCOVERY:
-  PREFIX : ECHO
-  EPOCH  : 1999
-  SUFFIX : ARCHITECT
-  PASSKEY: ECHO-1999-ARCHITECT
-  SHA-256: f5a2f742a8798b70f501b9c2de6a0d2cb2269a35e1fcfa2e3ccf163948929946
+PENULTIMATE KEY FRAGMENT DISCOVERY:
+  PREFIX FRAGMENT : ECHO-
+  CARLSBAD FRAGMENT: 1999-ARCH
+  CRYPTOGRAPHIC SHA-256 TARGET: f5a2f742a8798b70f501b9c2de6a0d2cb2269a35e1fcfa2e3ccf163948929946
+  NEXT DESTINATION: App #100 (KMatrix Nexus)
 
-AUTHORITY CLEARANCE: SUPREME DIRECTOR OVERRIDE CONFIRMED.`;
+AUTHORITY CLEARANCE: PENULTIMATE SUBTERRANEAN FRAGMENT UNLOCKED.`;
     downloadFile('carlsbad_vault_unseal.dat', payload, 'application/octet-stream');
   };
 
@@ -3029,7 +3040,7 @@ AUTHORITY CLEARANCE: SUPREME DIRECTOR OVERRIDE CONFIRMED.`;
     const cert = `-----BEGIN KILO-NET RING-0 CLEARANCE CERTIFICATE-----
 Version: 1999.4-PROD
 Subject: Carlsbad Subterranean Ghost Terminal 0x1999
-Issuer: Project Echo Autonomous Fleet Consensus
+Issuer: Project Echo Subterranean Autonomous Relay
 Subcarrier Lock: 1999.00 Hz (Phase Coherence 99.4%)
 Quarantine Defusal: 5/5 Sectors Complete
 Hash Signature: f5a2f742a8798b70f501b9c2de6a0d2cb2269a35e1fcfa2e3ccf163948929946
@@ -3148,7 +3159,12 @@ Timestamp: ${new Date().toISOString()}
         printLine('  download <file>      - Download spool file directly to local disk');
         printLine('  probe <target>       - Diagnostic probe (passkey, 10.19.99.4, 0x7F1999, 1999hz, vfs, core)');
         printLine('  dump [offset]        - Hexadecimal memory viewer (default: 0x7F1990)');
-        printLine('  trace                - Trace subterranean route hops into Carlsbad vault');
+        printLine('  trace / traceroute   - Trace subterranean route hops into Carlsbad vault');
+        printLine('  scan / nmap          - Scan subterranean subnet 10.19.99.0/24');
+        printLine('  ifconfig / ip        - Query subterranean network interface telemetry');
+        printLine('  whois                - Inspect Carlsbad Intranet lease registration');
+        printLine('  finger               - Query active subterranean terminal operators');
+        printLine('  version / uname      - Display Deep Core kernel & hardware architecture');
         printLine('  matrix               - Display Passkey Anatomy blueprint & target SHA-256');
         printLine('  verify <candidate>   - Compute SHA-256 and test against Ring-0 key signatures');
         printLine('  hash <string>        - Calculate SHA-256 and CRC32 checksums for string');
@@ -3157,6 +3173,7 @@ Timestamp: ${new Date().toISOString()}
         printLine('  ping <host>          - Ping subterranean host (e.g. 10.19.99.4, 10.19.99.1)');
         printLine('  inject <ip> <msg>    - Transmit raw diagnostic packet to subnet host');
         printLine('  netstat              - Display active subterranean socket connections');
+        printLine('  history              - Display previous command execution log');
         printLine('  radar                - Switch to 3D Salt Vault Wireframe Scanner deck');
         printLine('  mesh                 - Switch to Collaborative Subterranean Signal Mesh');
         printLine('  morse [message]      - Transmit audio Morse code over 1999Hz FM carrier');
@@ -3281,7 +3298,72 @@ Timestamp: ${new Date().toISOString()}
         break;
 
       case 'trace':
+      case 'traceroute':
         handleTrace();
+        break;
+
+      case 'scan':
+      case 'nmap':
+        printLine('--- SCANNING SUBTERRANEAN SUBNET 10.19.99.0/24 ---', 'text-cyan');
+        printLine('Starting Subterranean Network Probe (5 hosts responding):');
+        printLine('  [10.19.99.1]   echo-gw-07.kilonet.internal    : 80/tcp (HTTP), 23/tcp (TELNET) [OPEN]');
+        printLine('  [10.19.99.4]   project-echo.kilonet.internal  : 1999/tcp (ECHO-RELAY-0x7F) [OPEN]');
+        printLine('  [10.19.99.12]  rf-beacon.kilonet.internal     : 1999/udp (SUBCARRIER-BEACON) [OPEN]');
+        printLine('  [10.19.99.19]  acoustic-lab.kilonet.internal  : 1999/tcp (SPECTRO-LAB) [OPEN]');
+        printLine('  [10.19.99.127] deep-core.kilonet.internal     : 1999/tcp (RING-0-BRIDGE) [LOCAL]');
+        printLine('Scan complete: 5 IP addresses (5 hosts up) scanned in 0.42s.', 'text-highlight');
+        SFX.beep();
+        break;
+
+      case 'ifconfig':
+      case 'ip':
+        printLine('eth0: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500', 'text-cyan');
+        printLine('      inet 10.19.99.127  netmask 255.255.255.0  broadcast 10.19.99.255');
+        printLine('      inet6 fe80::1999:7fff:fe19:9901  prefixlen 64  scopeid 0x20<link>');
+        printLine('      ether 00:19:99:7f:19:99  txqueuelen 1000  (Lithospheric Coax)');
+        printLine('      RX packets 1999127  bytes 128941029 (122.9 MB)');
+        printLine('      TX packets 1049281  bytes 67891204 (64.7 MB)');
+        printLine('tun0: flags=4305<UP,POINTOPOINT,RUNNING,NOARP,MULTICAST>  mtu 1420', 'text-cyan');
+        printLine('      inet 10.19.99.254  netmask 255.255.255.255  destination 10.19.99.1');
+        printLine('      tunnel mode: Airgap Ring-0 Subterranean Pipe');
+        SFX.beep();
+        break;
+
+      case 'whois':
+        printLine('--- WHOIS DATABASE: CARLSBAD INTRANET LEASE ---', 'text-cyan');
+        printLine('Network Range : 10.19.99.0 - 10.19.99.255');
+        printLine('NetName       : CARLSBAD-TRANSPONDER-GRID');
+        printLine('Organization  : Carlsbad Subterranean Acoustic & RF Skunkworks');
+        printLine('RegDate       : 1999-07-19  Updated: 1999-12-31');
+        printLine('Facility      : Permian Rock Salt Vault Sector 7F (Depth: 650m)');
+        printLine('Carrier Lock  : 1999.00 Hz Lithospheric Subcarrier');
+        printLine('Gateway Node  : 10.19.99.1 (echo-gw-07.kilonet.internal)');
+        SFX.beep();
+        break;
+
+      case 'finger':
+        printLine('--- ACTIVE USERS ON SUBTERRANEAN RING-0 BUS ---', 'text-cyan');
+        printLine('Login            TTY      Idle  When             Where');
+        printLine('Ghost_SysOp_0x7F  ttyS0     0  1999-12-31 23:58  10.19.99.4 (Relay 0x7F)');
+        printLine('Dr_A_Vance        pts/1     4  1999-12-31 23:55  10.19.99.19 (Echo Lab)');
+        printLine('Operator_0x1999   pts/0     -  1999-12-31 23:59  10.19.99.127 (Local Console)');
+        SFX.beep();
+        break;
+
+      case 'version':
+      case 'uname':
+        printLine('KiloOS DeepCore-Kernel 1.0.4-99 (Permian Ring-0 build 1999-12-31)', 'text-highlight');
+        printLine('Hardware: Permian Salado Seismic Processor // AdLib OPL2 / Yamaha YM2612 2-Op FM', 'text-cyan');
+        printLine('Runtime: Single-File Hypermedia Subterranean Terminal (<999KB Anti-Potemkin)', 'text-dim');
+        SFX.beep();
+        break;
+
+      case 'history':
+        printLine('--- DIRECTIVE EXECUTION HISTORY ---', 'text-cyan');
+        state.history.forEach((h, idx) => {
+          printLine(`  ${(idx + 1).toString().padStart(3, ' ')}  ${h}`);
+        });
+        SFX.beep();
         break;
 
       case 'matrix':
