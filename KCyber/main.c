@@ -144,7 +144,7 @@ void GenerateMissions() {
     }
 }
 
-void PlayKeyClack() { Beep(800, 10); }
+void PlayKeyClack() { /* Beep on keypress disabled */ }
 void PlayAccessGranted() {
     Beep(400, 100); Beep(600, 100); Beep(800, 200);
 }
@@ -1900,7 +1900,6 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 
         case WM_CHAR:
             if (wParam >= 32 && wParam <= 126) {
-                PlayKeyClack();
                 if (current_input_len < MAX_LINE_LENGTH - 1) {
                     current_input[current_input_len++] = (char)wParam;
                     current_input[current_input_len] = '\0';
@@ -1908,7 +1907,6 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     InvalidateRect(hwnd, NULL, FALSE);
                 }
             } else if (wParam == '\b' && current_input_len > 0) {
-                PlayKeyClack();
                 current_input[--current_input_len] = '\0';
                 cursor_visible = 1;
                 InvalidateRect(hwnd, NULL, FALSE);

@@ -338,7 +338,7 @@
       osc.stop(audioCtx.currentTime + duration);
     }
 
-    function playKeyClack() { playTone(800, 'square', 0.05, 0.02); }
+    function playKeyClack() { /* Beep on keypress disabled */ }
     function playAccessGranted() {
       playTone(400, 'sine', 0.1, 0.1);
       setTimeout(() => playTone(600, 'sine', 0.1, 0.1), 100);
@@ -454,7 +454,6 @@
       const m = document.getElementById('tutorial-modal');
       if (m) {
         m.style.display = 'flex';
-        playKeyClack();
         if (cmdInput) cmdInput.blur();
       }
     }
@@ -471,7 +470,6 @@
       const willShow = (typeof force === 'boolean') ? force : (m.style.display === 'none' || !m.style.display);
       m.style.display = willShow ? 'flex' : 'none';
       if (willShow) {
-        playKeyClack();
         if (cmdInput) cmdInput.blur();
       } else {
         if (cmdInput) cmdInput.focus();
@@ -2343,8 +2341,6 @@
         spawnBurst(90, 80, 8, 'spark', '#00ff66');
         processCommand(val);
         cmdInput.value = '';
-      } else {
-        playKeyClack();
       }
     });
 
