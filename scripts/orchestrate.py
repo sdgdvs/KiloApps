@@ -668,7 +668,8 @@ def build_agent_prompt(agent: str, targets: dict) -> str:
         target = targets.get("kilo_graphics", "the next game in queue")
         return (
             f"Activate skill 'kilo-graphics'. "
-            f"Perform game content, visual polish, and balance pass for '{target}' per next_work.md. "
+            f"Replace programmer art with Imagen 3 generated sprites and backgrounds for '{target}' per next_work.md. "
+            f"If Imagen 3 asset replacement is not appropriate for '{target}', skip turn cleanly with format: '⏭️ Skip — Imagen 3 asset replacement not appropriate for {target}'. "
             f"Search for and remove any rotating specular glints or traveling perimeter border dots. "
             f"Verify builds, advance queue, update next_work.md, and git commit/push. Process 1 app only then STOP."
         )
