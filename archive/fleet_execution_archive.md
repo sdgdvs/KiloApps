@@ -4,6 +4,15 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-04T00:10:00-07:00 — kilo-usability: KMandel (Tabbed Controls Ergonomics, Multiplayer Connect Gate, Mote/Shake Purge & ARCH-05)**
+  - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 124.2 KB web / 21.5 KB native < 999 KB ceiling).
+  - Tabbed Ergonomics: Organized 18 controls into 3 compact category tabs (Explore, Style, Tools) eliminating vertical scrolling in 720px window.
+  - Mandatory Connect Gate: Enforced Rule 12 with offline-by-default boot, replacing autostart with manual Connect Co-Op and Disconnect.
+  - Glint & Clutter Purge: Removed floating motes, screen shake, and GDI brush churn across web and native C for crisp, serene exploration.
+  - Toast & Dialog Polish: Capped toast stack to 3 with explicit dismiss crosses; wired modal Esc and backdrop dismiss handlers.
+  - ARCH-05 Visibility: Implemented visibilitychange listeners pausing animation loops and suspending AudioContext on background tab.
+  - Verification: MSVC native clean (21.5 KB); Vite build clean in 337ms; check_icons 100% PASS; security_lint 100% PASS.
+
 - **2026-10-04T00:05:00-07:00 — kilo-qa: Fleet Audit (Multiplayer Connect Gate & Startup UX Verification)**
   - Status: PASS ✅ (11 apps audited, 100% startup & UX test suite pass, zero console exceptions).
   - Connect Gate Standard: Added explicit confirmation dialogs on deep links (`#room=CODE`) across `KChess`, `KConnect4`, `KReversi`, `KGo`, `KDarts`, `KTetris`, `K2048`, `KSnake`, `KSynth`, `KPad`.
