@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-expander
-next_agent: kilo-creator
+current_agent: kilo-creator
+next_agent: kilo-graphics
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -17,7 +17,7 @@ current_targets:
   kilo_tester: KChrono
   kilo_usability: KClock
   kilo_qa: KChat
-  kilo_expander: KReversi
+  kilo_expander: KTowers
 virtual_web_target: "kweb://darknet"
 virtual_web_rotation:
   - "kweb://echo-subsystem.net"
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://cybercafe"
   - "kweb://10.19.99.4/classified"
 last_run:
-  agent: kilo-qa
-  app: KPing
-  timestamp: "2026-10-04T11:56:00-07:00"
+  agent: kilo-expander
+  app: KReversi
+  timestamp: "2026-10-04T12:08:00-07:00"
 last_planner_run: "2026-10-04T06:50:00Z"
 ---
 
@@ -129,9 +129,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KClock`, `KTimer`, `KPomodoro`, `KMandel`, `KHex` *(Completed in Pass 5: KBBS, KChrono, KCipher, KClip, KCyber, KDragon, KFortress, KHash, KMaze, KMech, KMystery, KQuest, KSanctuary, KSnake, KSolitaire, KSpace, KStarDredge, KStarship, KStellar, KSubmarine, KSynth, KSys, KTask, KTerm, KTimer, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KRSS, K2048, KChart, KGraph, KContacts, KScript, KRead, KColosseum, KAbyss, KMedia, KAudio, KRadio, KPad, KPaint, KCalc, KMine, KCosmic, KBase, KBudget, KCalendar, KFarm, KFlash, KFont, KImage, KJournal, KMail, KMandel, KNet, KNote, KPass, KDB, KHex, KBookmark, KPing)*.
 
 ### 6. Feature Expander Queue (`kilo-expander`)
-- **Current Target**: `KReversi`
+- **Current Target**: `KTowers`
 - **Upcoming Queue**:
-  `KTowers` *(Completed: KSimon, KMatch3, KTowers, KSnake, KPong, KGo, KSynth, KNote, KFont, KRSS, KSys, KZip, KVault, KType, KMandel, KGraph, KChart, KPaint, KConnect4, KChess, KReversi, KTetris, KDB, KTodo, KJournal, KCalendar, KContacts, KMail, KRead, KPass, KImage, KAudio, KMedia, KTask, KNet, KPing, KHash, KPad, K2048, KDarts)*.
+  `KReversi`, `KSnake`, `KPong`, `KGo`, `KSynth`, `KNote`, `KFont`, `KRSS`, `KSys`, `KZip`, `KVault`, `KType`, `KMandel`, `KGraph`, `KChart`, `KPaint`, `KConnect4`, `KChess`, `KTetris`, `KDB`, `KTodo`, `KJournal`, `KCalendar`, `KContacts`, `KMail`, `KRead`, `KPass`, `KImage`, `KAudio`, `KMedia`, `KTask`, `KNet`, `KPing`, `KHash`, `KPad`, `K2048`, `KDarts` *(Completed: KReversi, KSimon, KMatch3, KTowers, KSnake, KPong, KGo, KSynth, KNote, KFont, KRSS, KSys, KZip, KVault, KType, KMandel, KGraph, KChart, KPaint, KConnect4, KChess, KTetris, KDB, KTodo, KJournal, KCalendar, KContacts, KMail, KRead, KPass, KImage, KAudio, KMedia, KTask, KNet, KPing, KHash, KPad, K2048, KDarts)*.
 - **Multiplayer Focus (CRITICAL)**: Concentrate on expanding games (*KChess*, *KConnect4*, *KGo*, *KReversi*, *KDarts*, *KTetris*, *KSnake*, *K2048*, *KMatch3*, *KSimon*) and collaborative apps (*KDraw*, *KPaint*, *KSynth*, *KPad*) with seamless Firebase Realtime Database multiplayer for cross-computer play on `kiloapps.web.app`.
 
 ### 7. Virtual 1999 Web Expansion Queue (Eternal Fleet Track)
@@ -221,6 +221,15 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-04T12:08:00-07:00 — kilo-expander: KReversi (Standardized RFMS Multiplayer, ARCH-05 & Tournament Exports)**
+  - Status: PASS ✅ (0 regressions, clean builds, 221.0 KB web / 164.3 KB native < 999 KB ceiling).
+  - Online Multiplayer (RFMS): Retrofitted standardized RetroMultiplayer with room sync, live lobby, chat, and spectator mode.
+  - Connect Gate & Solo Fallback: Enforced no-autostart modal gate and 25s fallback timer to local Cyber-Bot AI per Rule 12.
+  - Resource & Tab Visibility (ARCH-05): Added `visibilitychange` listener pausing timers/RAF and calculating drift on return.
+  - Glint & Comet Ban (Mandate 11): Removed continuous ambient motes and idle 60fps RAF loop to preserve CPU/battery.
+  - Tournament Exports: Added WOT/GGF (.ggf) and JSON match log downloads for external engine analysis (Edax/WZebra).
+  - Verification: MSVC clean (`KReversi.exe` 164.3 KB); Vite clean in 345ms; security_lint 100% PASS; check_icons 100% PASS.
+
 - **2026-10-04T11:56:00-07:00 — kilo-qa: KPing (Pass 5: QA & Build Quality, Quicksave/Load, Tutorial & ARCH-05)**
   - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 157.3 KB web / 38.5 KB native < 999 KB ceiling).
   - Quicksave & State Persistence: Fixed integer parsing bug in Win32 C [F5]/[F9], hardened web state persistence, and added quota protection.
@@ -248,12 +257,4 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 - **2026-10-04T11:04:00-07:00 — kilo-graphics: KColosseum**
   - ⏭️ Skip — Imagen 3 asset replacement not appropriate for KColosseum
-
-- **2026-10-04T10:55:00-07:00 — kilo-creator: kweb://deep-core (Subterranean Terminal Expansion & Passkey Secrecy Remediation)**
-  - Status: PASS ✅ (0 regressions, clean builds, 149.5 KB web < 999 KB ceiling).
-  - Mystery Preservation: Purged all cleartext leaks of master passkey and pre-climax meta-spoilers per TINAG standard.
-  - Penultimate Key Fragment: Sector 05 unseals "1999-ARCH" and SHA-256 target digest, pointing to App #100 KMatrix.
-  - Network Diagnostics Expansion: Added live directives `scan`/`nmap`, `ifconfig`/`ip`, `whois`, `finger`, `version`, `history`.
-  - Portal & Webring Interconnect: Linked `kweb://deep-core` into Portal guestbook #015 and verified Webring #017 routing.
-  - Verification: Node syntax tests PASS (100%); Vite build clean in 355ms; security_lint 100% PASS (0 violations).
 

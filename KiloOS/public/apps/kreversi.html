@@ -1130,6 +1130,82 @@
             });
         }
 
+        function downloadFile(filename, content, mime) {
+            try {
+                const blob = new Blob([content], { type: mime });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                setTimeout(() => URL.revokeObjectURL(url), 1000);
+            } catch(e) {
+                console.error("Export download failed:", e);
+                showToast("Download failed in current environment.", "warning");
+            }
+        }
+
+        function exportGGF() {
+            const bPlayer = isOnlineGame ? (myPlayerNum === 1 ? myPlayerName : opponentName) : 'Player';
+            const wPlayer = isOnlineGame ? (myPlayerNum === 2 ? myPlayerName : opponentName) : (gameMode === 'campaign' ? `Stage ${currentStage} AI` : `${aiDifficulty} AI`);
+            let resultStr = '*';
+            const bScore = countDiscs(boardState, BLACK);
+            const wScore = countDiscs(boardState, WHITE);
+            if (gameEnded) {
+                if (bScore > wScore) resultStr = `B+${bScore - wScore}`;
+                else if (wScore > bScore) resultStr = `W+${wScore - bScore}`;
+                else resultStr = '0.0';
+            }
+            let ggf = `(;GM[Othello]PC[KReversi]PB[${bPlayer}]PW[${wPlayer}]RE[${resultStr}]SZ[${boardWidth}]`;
+            for (let i = 1; i < moveHistory.length; i++) {
+                const m = moveHistory[i];
+                if (m.isPass) {
+                    ggf += `;${m.player === BLACK ? 'B' : 'W'}[pa]`;
+                } else if (m.notation) {
+                    ggf += `;${m.player === BLACK ? 'B' : 'W'}[${m.notation.toUpperCase()}]`;
+                }
+            }
+            ggf += ' ;)';
+            downloadFile(`kreversi_match_${Date.now()}.ggf`, ggf, 'text/plain');
+            showToast('Exported tournament Generic Game Format (.ggf)!', 'success');
+        }
+
+        function exportJSONTranscript() {
+            const bPlayer = isOnlineGame ? (myPlayerNum === 1 ? myPlayerName : opponentName) : 'Player';
+            const wPlayer = isOnlineGame ? (myPlayerNum === 2 ? myPlayerName : opponentName) : (gameMode === 'campaign' ? `Stage ${currentStage} AI` : `${aiDifficulty} AI`);
+            const bScore = countDiscs(boardState, BLACK);
+            const wScore = countDiscs(boardState, WHITE);
+            const transcriptData = {
+                game: 'KReversi',
+                version: '1.999',
+                exportedAt: new Date().toISOString(),
+                boardSize: `${boardWidth}x${boardHeight}`,
+                gameMode: gameMode,
+                isOnline: isOnlineGame,
+                roomId: currentRoomId,
+                players: { black: bPlayer, white: wPlayer },
+                score: { black: bScore, white: wScore },
+                gameEnded: gameEnded,
+                winner: gameEnded ? (bScore > wScore ? 'Black' : (wScore > bScore ? 'White' : 'Draw')) : null,
+                finalFEN: generateBoardFEN(),
+                moveCount: moveHistory.length > 1 ? moveHistory.length - 1 : 0,
+                moves: moveHistory.slice(1).map((m, idx) => ({
+                    ply: idx + 1,
+                    player: m.player === BLACK ? 'Black' : 'White',
+                    notation: m.notation,
+                    isPass: !!m.isPass,
+                    flipsCount: m.flips ? m.flips.length : 0,
+                    scoreAfter: { black: m.bCount, white: m.wCount },
+                    evalScore: m.evalScore,
+                    timestamp: m.timestamp
+                }))
+            };
+            downloadFile(`kreversi_transcript_${Date.now()}.json`, JSON.stringify(transcriptData, null, 2), 'application/json');
+            showToast('Exported match JSON transcript!', 'success');
+        }
+
         function importPositionFromInput() {
             const input = document.getElementById('importPositionInput');
             if (!input) return;
@@ -1243,10 +1319,11 @@
             }
         }
 
-        /* Online Multiplayer State */
+        /* Standardized RFMS RetroMultiplayer Integration */
+        let rMultiplayer = null;
         let isOnlineGame = false;
         let currentRoomId = null;
-        let currentRoomStatus = 'none'; // 'waiting', 'playing', 'finished'
+        let currentRoomStatus = 'none'; // 'none', 'waiting', 'playing', 'finished'
         let myPlayerNum = 0; // 0=Spectator, 1=Black(P1), 2=White(P2)
         let myPlayerName = localStorage.getItem('kreversi_playerName') || ('Reversi_' + Math.floor(1000 + Math.random() * 9000));
         let opponentName = 'Opponent';
@@ -1299,6 +1376,73 @@
             }, 3500);
         }
 
+        function initRetroMultiplayer() {
+            if (typeof RetroMultiplayer === 'undefined') {
+                console.warn("[KReversi] RetroMultiplayer library not loaded.");
+                return;
+            }
+            if (rMultiplayer) return;
+
+            try {
+                rMultiplayer = new RetroMultiplayer({
+                    gameId: 'kreversi',
+                    prefix: 'REV',
+                    playerName: myPlayerName,
+                    soloTimeoutMs: 25000,
+                    onMove: (moveData) => {
+                        handleRemoteMove(moveData);
+                    },
+                    onStateChange: (room) => {
+                        handleRoomUpdate(room);
+                    },
+                    onOpponentJoin: ({ slot, name }) => {
+                        opponentName = name || 'Challenger';
+                        const oppIndicator = document.getElementById('onlineOpponentIndicator');
+                        const oppText = document.getElementById('onlineOpponentText');
+                        if (oppIndicator) oppIndicator.textContent = '🟢';
+                        if (oppText) oppText.textContent = `Opponent: ${escapeHtml(opponentName)}`;
+                        showToast(`🥋 ${escapeHtml(opponentName)} joined the match! Game on!`, 'success');
+                        playSound('join');
+                    },
+                    onOpponentLeave: ({ slot, name }) => {
+                        const oppIndicator = document.getElementById('onlineOpponentIndicator');
+                        const oppText = document.getElementById('onlineOpponentText');
+                        if (oppIndicator) oppIndicator.textContent = '🔴';
+                        if (oppText) oppText.textContent = `Opponent (${escapeHtml(name || slot)}) disconnected.`;
+                        showToast(`Opponent ${escapeHtml(name || slot)} disconnected.`, 'warning');
+                    },
+                    onChat: (chat) => {
+                        if (chat && chat.text && chat.sender !== myPlayerName) {
+                            showToast(`💬 <strong>${escapeHtml(chat.sender || 'Opponent')}:</strong> ${escapeHtml(chat.text)}`, 'info');
+                            playSound('chat');
+                        }
+                    },
+                    onRematch: (rematchData) => {
+                        showToast('Opponent requested a rematch! Click Rematch to accept.', 'info');
+                    },
+                    onSoloFallback: ({ reason }) => {
+                        showToast("⏱️ No opponent joined in 25s. Engaging Subnet AI Cyber-Bot...", "warning");
+                        leaveOnlineGame(false);
+                        gameMode = 'skirmish';
+                        aiDifficulty = 'Grandmaster';
+                        initGame();
+                        showToast("🎮 Subnet Cyber-Bot engaged! Your turn (Black).", "info");
+                    },
+                    onStatusMsg: (msg, type) => {
+                        showToast(msg, type);
+                    }
+                });
+
+                rMultiplayer.init().then(({ onlineAvailable, inviteCode }) => {
+                    if (inviteCode) {
+                        showInvitePrompt(inviteCode.toUpperCase());
+                    }
+                });
+            } catch(err) {
+                console.warn("[KReversi] RetroMultiplayer init failed:", err);
+            }
+        }
+
         function openMultiplayerModal() {
             const modal = document.getElementById('multiplayer-modal');
             if (modal) modal.style.display = 'flex';
@@ -1328,18 +1472,20 @@
             if (name.length > 0) {
                 myPlayerName = name;
                 localStorage.setItem('kreversi_playerName', name);
+                if (rMultiplayer) rMultiplayer.playerName = name;
                 showToast(`Call-sign saved as "${escapeHtml(name)}"!`, 'success');
             }
         }
 
         function subscribeLobby() {
-            if (!window.fb) return;
+            const fb = (rMultiplayer && rMultiplayer.fb) || window.fb;
+            if (!fb || !fb.db) return;
             if (activeLobbyRef && activeLobbyListener) {
-                try { window.fb.off(activeLobbyRef, 'value', activeLobbyListener); } catch(e) {}
+                try { fb.off(activeLobbyRef, 'value', activeLobbyListener); } catch(e) {}
             }
-            const lobbyRef = window.fb.ref(window.fb.db, 'multiplayer/kreversi/lobby');
+            const lobbyRef = fb.ref(fb.db, 'multiplayer/kreversi/lobby');
             activeLobbyRef = lobbyRef;
-            activeLobbyListener = window.fb.onValue(lobbyRef, (snapshot) => {
+            activeLobbyListener = fb.onValue(lobbyRef, (snapshot) => {
                 renderLobbyList(snapshot.val());
             });
         }
@@ -1386,6 +1532,58 @@
         }
 
         async function startQuickMatch() {
+            if (rMultiplayer && rMultiplayer.isOnline()) {
+                const quickBtn = document.getElementById('mpQuickMatchBtn');
+                if (quickBtn) quickBtn.textContent = '🔍 Searching for Open Match...';
+                try {
+                    const res = await rMultiplayer.quickMatch({
+                        size: 8,
+                        boardState: createInitialOnlineBoard(8),
+                        turn: BLACK
+                    });
+                    if (res && res.success) {
+                        currentRoomId = res.roomId;
+                        isOnlineGame = true;
+                        isHost = (res.slot === 'p1');
+                        myPlayerNum = (res.slot === 'p1') ? 1 : 2;
+                        currentRoomStatus = (res.slot === 'p1') ? 'waiting' : 'playing';
+
+                        boardWidth = 8;
+                        boardHeight = 8;
+                        boardState = createInitialOnlineBoard(8);
+                        currentPlayer = BLACK;
+                        gameEnded = false;
+                        isBombActive = false;
+                        aiFrozen = false;
+                        if (aiTimeoutId) { clearTimeout(aiTimeoutId); aiTimeoutId = null; }
+
+                        initBoardDOM();
+                        renderBoard();
+                        closeMultiplayerModal();
+
+                        const onlineBar = document.getElementById('onlineBar');
+                        if (onlineBar) onlineBar.style.display = 'flex';
+                        document.getElementById('onlineRoomIdText').textContent = currentRoomId;
+                        document.getElementById('onlineRoleText').textContent = myPlayerNum === 1 ? 'You: Black (P1)' : 'You: White (P2)';
+                        document.getElementById('onlineSizeText').textContent = '8x8 Reversi';
+                        document.getElementById('onlineRematchBtn').style.display = 'none';
+
+                        if (res.slot === 'p1') {
+                            document.getElementById('onlineOpponentIndicator').textContent = '🟡';
+                            document.getElementById('onlineOpponentText').textContent = 'Waiting for opponent to join (or AI in 25s)...';
+                            showToast(`🌐 Created public room ${currentRoomId}! Waiting for Player 2...`, 'info');
+                        } else {
+                            showToast(`🎮 Joined match ${currentRoomId} as White (P2)!`, 'success');
+                        }
+                        return;
+                    }
+                } catch(err) {
+                    console.warn("RFMS quickMatch error:", err);
+                } finally {
+                    if (quickBtn) quickBtn.textContent = '⚡ Instant Quick Match';
+                }
+            }
+
             if (!window.fb) {
                 showToast('Connecting to Firebase RTDB... please wait', 'warning');
                 return;
@@ -1438,11 +1636,6 @@
         }
 
         async function createCustomRoom(isPublic = true, specificCode = null) {
-            if (!window.fb) {
-                showToast('Firebase RTDB not connected yet.', 'warning');
-                return;
-            }
-            const code = (specificCode || ('REV-' + Math.floor(1000 + Math.random() * 9000))).toUpperCase().trim();
             const selectSizeEl = document.getElementById('mpBoardSizeSelect');
             const chosenSize = selectSizeEl ? parseInt(selectSizeEl.value, 10) : 8;
 
@@ -1458,11 +1651,45 @@
             isOnlineGame = true;
             isHost = true;
             myPlayerNum = 1; // Black (P1)
-            currentRoomId = code;
             currentRoomStatus = 'waiting';
 
             initBoardDOM();
             renderBoard();
+
+            if (rMultiplayer && rMultiplayer.isOnline()) {
+                const customData = {
+                    size: chosenSize,
+                    turn: BLACK,
+                    boardState: boardState,
+                    winner: 0,
+                    winReason: null
+                };
+                if (specificCode) customData.roomId = specificCode.toUpperCase().trim();
+                const res = await rMultiplayer.createRoom(customData, isPublic);
+                if (res && res.success) {
+                    currentRoomId = res.roomId;
+                    closeMultiplayerModal();
+
+                    const onlineBar = document.getElementById('onlineBar');
+                    if (onlineBar) onlineBar.style.display = 'flex';
+                    document.getElementById('onlineRoomIdText').textContent = currentRoomId;
+                    document.getElementById('onlineRoleText').textContent = 'You: Black (P1)';
+                    document.getElementById('onlineSizeText').textContent = `${chosenSize}x${chosenSize} Reversi`;
+                    document.getElementById('onlineOpponentIndicator').textContent = '🟡';
+                    document.getElementById('onlineOpponentText').textContent = 'Waiting for opponent to join (or AI in 25s)...';
+                    document.getElementById('onlineRematchBtn').style.display = 'none';
+
+                    showToast(`🌐 Room ${currentRoomId} created! Waiting for Player 2...`, 'success');
+                    return;
+                }
+            }
+
+            if (!window.fb) {
+                showToast('Firebase RTDB not connected yet.', 'warning');
+                return;
+            }
+            const code = (specificCode || ('REV-' + Math.floor(1000 + Math.random() * 9000))).toUpperCase().trim();
+            currentRoomId = code;
 
             const roomData = {
                 id: code,
@@ -1536,13 +1763,53 @@
         }
 
         async function joinOnlineRoom(roomId) {
-            if (!window.fb) {
-                showToast('Firebase RTDB not connected yet.', 'warning');
-                return;
-            }
-            const code = roomId.toUpperCase().trim();
+            const code = (roomId || '').toUpperCase().trim();
             if (!code) {
                 showToast('Please enter a valid room code.', 'warning');
+                return;
+            }
+
+            if (rMultiplayer && rMultiplayer.isOnline()) {
+                const res = await rMultiplayer.joinRoom(code);
+                if (res && res.success) {
+                    const room = res.room || {};
+                    currentRoomId = code;
+                    isOnlineGame = true;
+                    isHost = (res.slot === 'p1');
+                    myPlayerNum = (res.slot === 'p1') ? 1 : ((res.slot === 'p2') ? 2 : 0);
+                    currentRoomStatus = room.status || (res.slot === 'p2' ? 'playing' : 'waiting');
+
+                    boardWidth = room.size || 8;
+                    boardHeight = room.size || 8;
+                    boardState = room.boardState ? room.boardState.slice() : createInitialOnlineBoard(boardWidth);
+                    currentPlayer = room.turn || BLACK;
+                    gameEnded = (room.status === 'finished');
+                    isBombActive = false;
+                    aiFrozen = false;
+                    if (aiTimeoutId) { clearTimeout(aiTimeoutId); aiTimeoutId = null; }
+
+                    initBoardDOM();
+                    renderBoard();
+                    closeMultiplayerModal();
+
+                    const onlineBar = document.getElementById('onlineBar');
+                    if (onlineBar) onlineBar.style.display = 'flex';
+                    document.getElementById('onlineRoomIdText').textContent = code;
+                    document.getElementById('onlineRoleText').textContent = myPlayerNum === 1 ? 'You: Black (P1)' : (myPlayerNum === 2 ? 'You: White (P2)' : 'You: Spectator');
+                    document.getElementById('onlineSizeText').textContent = `${boardWidth}x${boardHeight} Reversi`;
+                    document.getElementById('onlineRematchBtn').style.display = 'none';
+
+                    if (myPlayerNum === 2) {
+                        showToast(`🎮 Joined match ${code} as White (P2)!`, 'success');
+                    } else if (myPlayerNum === 0) {
+                        showToast(`👁️ Joined room ${code} as Spectator!`, 'info');
+                    }
+                    return;
+                }
+            }
+
+            if (!window.fb) {
+                showToast('Firebase RTDB not connected yet.', 'warning');
                 return;
             }
 
@@ -1620,15 +1887,17 @@
         }
 
         function attachRoomListener(roomId) {
-            if (activeRoomRef && activeRoomListener && window.fb) {
-                try { window.fb.off(activeRoomRef, 'value', activeRoomListener); } catch(e) {}
+            const fb = (rMultiplayer && rMultiplayer.fb) || window.fb;
+            if (activeRoomRef && activeRoomListener && fb) {
+                try { fb.off(activeRoomRef, 'value', activeRoomListener); } catch(e) {}
                 activeRoomRef = null;
                 activeRoomListener = null;
             }
 
-            const roomRef = window.fb.ref(window.fb.db, 'multiplayer/kreversi/rooms/' + roomId);
+            if (!fb || !fb.db) return;
+            const roomRef = fb.ref(fb.db, 'multiplayer/kreversi/rooms/' + roomId);
             activeRoomRef = roomRef;
-            activeRoomListener = window.fb.onValue(roomRef, (snapshot) => {
+            activeRoomListener = fb.onValue(roomRef, (snapshot) => {
                 const data = snapshot.val();
                 if (!data) {
                     if (isOnlineGame) {
@@ -1641,9 +1910,26 @@
             });
         }
 
+        function handleRemoteMove(moveData) {
+            if (!moveData) return;
+            if (moveData.flips && moveData.flips.length > 0) {
+                playSound(moveData.flips.length > 3 ? 'bonus' : 'place');
+                renderBoard(moveData.flips, moveData.idx);
+            }
+        }
+
         function handleRoomUpdate(room) {
+            if (!room) return;
             const prevStatus = currentRoomStatus;
             currentRoomStatus = room.status || 'waiting';
+
+            if (rMultiplayer) {
+                isHost = rMultiplayer.isHost;
+                currentRoomId = rMultiplayer.roomId;
+                if (rMultiplayer.mySlot === 'p1') myPlayerNum = 1;
+                else if (rMultiplayer.mySlot === 'p2') myPlayerNum = 2;
+                else myPlayerNum = 0;
+            }
 
             const roleStr = myPlayerNum === 1 ? 'You: Black (P1)' : (myPlayerNum === 2 ? 'You: White (P2)' : 'You: Spectator');
             const roleEl = document.getElementById('onlineRoleText');
@@ -1655,27 +1941,29 @@
 
             if (room.status === 'waiting' && !room.p2) {
                 if (oppIndicator) oppIndicator.textContent = '🟡';
-                if (oppText) oppText.textContent = 'Waiting for opponent to join...';
+                if (oppText) oppText.textContent = 'Waiting for opponent to join (or AI in 25s)...';
             } else if (opponent) {
                 opponentName = opponent.name || 'Opponent';
                 if (oppIndicator) oppIndicator.textContent = opponent.connected ? '🟢' : '🔴';
-                if (oppText) oppText.textContent = `Opponent: ${opponentName}${opponent.connected ? '' : ' (Disconnected)'}`;
+                if (oppText) oppText.textContent = `Opponent: ${escapeHtml(opponentName)}${opponent.connected ? '' : ' (Disconnected)'}`;
                 
                 if (prevStatus === 'waiting' && room.status === 'playing') {
-                    showToast(`🥋 ${opponentName} joined the match! Game on!`, 'success');
+                    showToast(`🥋 ${escapeHtml(opponentName)} joined the match! Game on!`, 'success');
                     playSound('join');
                 }
             }
 
             if (room.status === 'playing' || (room.p2 && room.p2.connected)) {
                 clearSoloFallbackTimer();
+                if (rMultiplayer) rMultiplayer.stopSoloFallbackTimer();
             }
 
             if (room.size && room.size !== boardWidth) {
                 boardWidth = room.size;
                 boardHeight = room.size;
                 initBoardDOM();
-                document.getElementById('onlineSizeText').textContent = `${boardWidth}x${boardHeight} Reversi`;
+                const sizeTextEl = document.getElementById('onlineSizeText');
+                if (sizeTextEl) sizeTextEl.textContent = `${boardWidth}x${boardHeight} Reversi`;
             }
 
             if (room.lastMove && room.lastMove.ts > localLastMoveTs) {
@@ -1683,20 +1971,21 @@
                 if (room.boardState) boardState = room.boardState.slice();
                 if (room.turn) currentPlayer = room.turn;
 
+                const lmData = room.lastMove.data || room.lastMove;
                 recordMoveToHistory(
-                    room.lastMove.idx !== undefined ? room.lastMove.idx : null,
-                    room.lastMove.player,
-                    room.lastMove.flips || [],
-                    !!room.lastMove.pass
+                    lmData.idx !== undefined ? lmData.idx : null,
+                    lmData.player !== undefined ? lmData.player : (room.lastMove.by === 'p1' ? BLACK : WHITE),
+                    lmData.flips || [],
+                    !!lmData.pass
                 );
 
-                if (room.lastMove.pass) {
-                    const passPlayer = room.lastMove.player === BLACK ? 'Black' : 'White';
+                if (lmData.pass) {
+                    const passPlayer = (lmData.player === BLACK || room.lastMove.by === 'p1') ? 'Black' : 'White';
                     showToast(`Turn passed! ${passPlayer} had no legal moves.`, 'info');
                 }
 
-                playSound(room.lastMove.flips && room.lastMove.flips.length > 3 ? 'bonus' : 'place');
-                renderBoard(room.lastMove.flips || [], room.lastMove.idx !== undefined ? room.lastMove.idx : -1);
+                playSound(lmData.flips && lmData.flips.length > 3 ? 'bonus' : 'place');
+                renderBoard(lmData.flips || [], lmData.idx !== undefined ? lmData.idx : -1);
 
                 if (currentPlayer === myPlayerNum && room.status === 'playing') {
                     playSound('turn');
@@ -1747,15 +2036,16 @@
 
             if (room.rematch) {
                 if (room.rematch.p1 && room.rematch.p2) {
-                    if (isHost) {
+                    const fb = (rMultiplayer && rMultiplayer.fb) || window.fb;
+                    if (isHost && fb) {
                         const newBoard = createInitialOnlineBoard(boardWidth);
-                        window.fb.set(window.fb.ref(window.fb.db, 'multiplayer/kreversi/rooms/' + currentRoomId + '/rematch'), { p1: false, p2: false });
-                        window.fb.set(window.fb.ref(window.fb.db, 'multiplayer/kreversi/rooms/' + currentRoomId + '/status'), 'playing');
-                        window.fb.set(window.fb.ref(window.fb.db, 'multiplayer/kreversi/rooms/' + currentRoomId + '/winner'), 0);
-                        window.fb.set(window.fb.ref(window.fb.db, 'multiplayer/kreversi/rooms/' + currentRoomId + '/winReason'), null);
-                        window.fb.set(window.fb.ref(window.fb.db, 'multiplayer/kreversi/rooms/' + currentRoomId + '/turn'), BLACK);
-                        window.fb.set(window.fb.ref(window.fb.db, 'multiplayer/kreversi/rooms/' + currentRoomId + '/lastMove'), null);
-                        window.fb.set(window.fb.ref(window.fb.db, 'multiplayer/kreversi/rooms/' + currentRoomId + '/boardState'), newBoard);
+                        fb.set(fb.ref(fb.db, 'multiplayer/kreversi/rooms/' + currentRoomId + '/rematch'), { p1: false, p2: false });
+                        fb.set(fb.ref(fb.db, 'multiplayer/kreversi/rooms/' + currentRoomId + '/status'), 'playing');
+                        fb.set(fb.ref(fb.db, 'multiplayer/kreversi/rooms/' + currentRoomId + '/winner'), 0);
+                        fb.set(fb.ref(fb.db, 'multiplayer/kreversi/rooms/' + currentRoomId + '/winReason'), null);
+                        fb.set(fb.ref(fb.db, 'multiplayer/kreversi/rooms/' + currentRoomId + '/turn'), BLACK);
+                        fb.set(fb.ref(fb.db, 'multiplayer/kreversi/rooms/' + currentRoomId + '/lastMove'), null);
+                        fb.set(fb.ref(fb.db, 'multiplayer/kreversi/rooms/' + currentRoomId + '/boardState'), newBoard);
                     }
                     boardState = createInitialOnlineBoard(boardWidth);
                     currentPlayer = BLACK;
@@ -1772,15 +2062,23 @@
         }
 
         function sendOnlineChat(chipText) {
-            if (!isOnlineGame || !currentRoomId || !window.fb) return;
-            const chatData = {
-                sender: myPlayerName,
-                text: chipText,
-                ts: Date.now()
-            };
-            localLastChatTs = chatData.ts;
-            window.fb.set(window.fb.ref(window.fb.db, 'multiplayer/kreversi/rooms/' + currentRoomId + '/chat'), chatData);
-            showToast(`💬 You: ${escapeHtml(chipText)}`, 'info');
+            if (!isOnlineGame) return;
+            if (rMultiplayer && rMultiplayer.isOnline()) {
+                rMultiplayer.sendChat(chipText);
+                localLastChatTs = Date.now();
+                showToast(`💬 You: ${escapeHtml(chipText)}`, 'info');
+                return;
+            }
+            if (window.fb && currentRoomId) {
+                const chatData = {
+                    sender: myPlayerName,
+                    text: chipText,
+                    ts: Date.now()
+                };
+                localLastChatTs = chatData.ts;
+                window.fb.set(window.fb.ref(window.fb.db, 'multiplayer/kreversi/rooms/' + currentRoomId + '/chat'), chatData);
+                showToast(`💬 You: ${escapeHtml(chipText)}`, 'info');
+            }
         }
 
         function sendCustomOnlineChat() {
@@ -1793,14 +2091,37 @@
         }
 
         function requestOnlineRematch() {
-            if (!isOnlineGame || !currentRoomId || !window.fb) return;
-            const slot = myPlayerNum === 1 ? 'p1' : (myPlayerNum === 2 ? 'p2' : null);
-            if (!slot) return;
-            window.fb.set(window.fb.ref(window.fb.db, 'multiplayer/kreversi/rooms/' + currentRoomId + '/rematch/' + slot), true);
-            showToast('Rematch requested! Waiting for opponent...', 'info');
+            if (!isOnlineGame) return;
+            if (rMultiplayer && rMultiplayer.isOnline()) {
+                rMultiplayer.requestRematch({
+                    boardState: createInitialOnlineBoard(boardWidth),
+                    turn: BLACK,
+                    status: 'playing',
+                    winner: 0,
+                    winReason: null,
+                    lastMove: null
+                });
+                showToast('Rematch requested! Waiting for opponent...', 'info');
+                return;
+            }
+            if (window.fb && currentRoomId) {
+                const slot = myPlayerNum === 1 ? 'p1' : (myPlayerNum === 2 ? 'p2' : null);
+                if (!slot) return;
+                window.fb.set(window.fb.ref(window.fb.db, 'multiplayer/kreversi/rooms/' + currentRoomId + '/rematch/' + slot), true);
+                showToast('Rematch requested! Waiting for opponent...', 'info');
+            }
         }
 
         function copyOnlineRoomLink() {
+            if (rMultiplayer && rMultiplayer.roomId) {
+                const ok = rMultiplayer.copyInviteLink();
+                if (ok) {
+                    showToast(`📋 Room invite link copied! (${rMultiplayer.roomId})`, 'success');
+                } else {
+                    showToast(`Room Code: ${rMultiplayer.roomId}`, 'info');
+                }
+                return;
+            }
             if (!currentRoomId) return;
             const url = window.location.origin + window.location.pathname + '#room=' + currentRoomId;
             try {
@@ -1818,14 +2139,19 @@
             clearSoloFallbackTimer();
             if (confirmPrompt && isOnlineGame && currentRoomStatus === 'playing') {
                 if (!confirm('Leave this active online match? This will concede the match to your opponent.')) return;
-                if (window.fb && currentRoomId) {
-                    window.fb.set(window.fb.ref(window.fb.db, 'multiplayer/kreversi/rooms/' + currentRoomId + '/winner'), (myPlayerNum === 1 ? 2 : 1));
-                    window.fb.set(window.fb.ref(window.fb.db, 'multiplayer/kreversi/rooms/' + currentRoomId + '/winReason'), 'opponent concession');
-                    window.fb.set(window.fb.ref(window.fb.db, 'multiplayer/kreversi/rooms/' + currentRoomId + '/status'), 'finished');
+                const fb = (rMultiplayer && rMultiplayer.fb) || window.fb;
+                const cId = (rMultiplayer && rMultiplayer.roomId) || currentRoomId;
+                if (fb && cId) {
+                    const winner = (myPlayerNum === 1 ? 2 : 1);
+                    fb.set(fb.ref(fb.db, 'multiplayer/kreversi/rooms/' + cId + '/winner'), winner);
+                    fb.set(fb.ref(fb.db, 'multiplayer/kreversi/rooms/' + cId + '/winReason'), 'opponent concession');
+                    fb.set(fb.ref(fb.db, 'multiplayer/kreversi/rooms/' + cId + '/status'), 'finished');
                 }
             }
 
-            if (window.fb && currentRoomId) {
+            if (rMultiplayer) {
+                rMultiplayer.leaveRoom(true);
+            } else if (window.fb && currentRoomId) {
                 if (isHost && currentRoomStatus === 'waiting') {
                     try { window.fb.set(window.fb.ref(window.fb.db, 'multiplayer/kreversi/lobby/' + currentRoomId), null); } catch(e) {}
                 }
@@ -2333,27 +2659,9 @@
 
         // Multi-Layer Kinematic Particle FX & Procedural Screen-Shake System
         let particles = [];
-        let ambientMotes = [];
         let animFrameId = null;
         let screenShake = 0;
         let sheenProgress = 0;
-
-        function initAmbientMotes() {
-            ambientMotes = [];
-            for (let i = 0; i < 36; i++) {
-                ambientMotes.push({
-                    x: Math.random() * 500,
-                    y: Math.random() * 500,
-                    vx: (Math.random() - 0.5) * 0.4,
-                    vy: -0.2 - Math.random() * 0.4,
-                    baseAlpha: 0.2 + Math.random() * 0.5,
-                    pulseSpeed: 0.02 + Math.random() * 0.03,
-                    pulsePhase: Math.random() * Math.PI * 2,
-                    size: 1.2 + Math.random() * 2.2,
-                    color: i % 3 === 0 ? '#ffd700' : (i % 3 === 1 ? '#55ff99' : '#00f5d4')
-                });
-            }
-        }
 
         function triggerScreenShake(amt) {
             screenShake = Math.min(screenShake + amt, 16);
@@ -2534,121 +2842,108 @@
 
         function updateParticles() {
             const canvas = document.getElementById('fx-canvas');
-            if (canvas) {
-                const ctx = canvas.getContext('2d');
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
+            if (!canvas) {
+                animFrameId = null;
+                return;
+            }
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-                // 1. Atmospheric Ambient Floating Motes
-                if (ambientMotes.length === 0) initAmbientMotes();
-                for (let m of ambientMotes) {
-                    m.x += m.vx;
-                    m.y += m.vy;
-                    m.pulsePhase += m.pulseSpeed;
-                    if (m.x < 0) m.x = canvas.width;
-                    if (m.x > canvas.width) m.x = 0;
-                    if (m.y < 0) m.y = canvas.height;
-                    if (m.y > canvas.height) m.y = 0;
+            const wrapper = document.getElementById('board-wrapper');
 
-                    const a = m.baseAlpha * (0.6 + 0.4 * Math.sin(m.pulsePhase));
-                    ctx.save();
-                    ctx.globalAlpha = a;
-                    ctx.fillStyle = m.color;
+            // Procedural screen-shake decay & rotational damping
+            if (screenShake > 0.05) {
+                screenShake *= 0.86;
+                const sAng = Math.random() * Math.PI * 2;
+                const sx = Math.cos(sAng) * screenShake;
+                const sy = Math.sin(sAng) * screenShake;
+                const sRot = (Math.random() - 0.5) * screenShake * 0.2;
+                if (wrapper) wrapper.style.transform = `translate(${sx.toFixed(1)}px, ${sy.toFixed(1)}px) rotate(${sRot.toFixed(2)}deg)`;
+            } else if (screenShake > 0) {
+                screenShake = 0;
+                if (wrapper) wrapper.style.transform = '';
+            }
+            
+            // Active particles update
+            for (let i = particles.length - 1; i >= 0; i--) {
+                const p = particles[i];
+                p.life -= p.decay;
+                if (p.life <= 0) {
+                    particles.splice(i, 1);
+                    continue;
+                }
+
+                ctx.save();
+                ctx.globalAlpha = Math.max(0, p.life);
+
+                if (p.type === 'spark') {
+                    p.x += p.vx;
+                    p.y += p.vy;
+                    p.vx *= 0.95;
+                    p.vy *= 0.95;
+                    ctx.strokeStyle = p.color;
+                    ctx.lineWidth = p.size;
+                    ctx.lineCap = 'round';
                     ctx.beginPath();
-                    ctx.arc(m.x, m.y, m.size, 0, Math.PI * 2);
+                    ctx.moveTo(p.x, p.y);
+                    ctx.lineTo(p.x - p.vx * 2.2, p.y - p.vy * 2.2);
+                    ctx.stroke();
+                } else if (p.type === 'smoke') {
+                    p.x += p.vx;
+                    p.y += p.vy;
+                    p.vy -= 0.03;
+                    p.size += p.growth;
+                    ctx.fillStyle = p.color + (p.life * 0.45) + ')';
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
                     ctx.fill();
-                    ctx.restore();
-                }
-
-                // Procedural screen-shake decay & rotational damping
-                if (screenShake > 0.05) {
-                    screenShake *= 0.86;
-                    const sAng = Math.random() * Math.PI * 2;
-                    const sx = Math.cos(sAng) * screenShake;
-                    const sy = Math.sin(sAng) * screenShake;
-                    const sRot = (Math.random() - 0.5) * screenShake * 0.2;
-                    if (wrapper) wrapper.style.transform = `translate(${sx.toFixed(1)}px, ${sy.toFixed(1)}px) rotate(${sRot.toFixed(2)}deg)`;
-                } else if (screenShake > 0) {
-                    screenShake = 0;
-                    if (wrapper) wrapper.style.transform = '';
-                }
-                
-                // Active particles update
-                for (let i = particles.length - 1; i >= 0; i--) {
-                    const p = particles[i];
-                    p.life -= p.decay;
-                    if (p.life <= 0) {
-                        particles.splice(i, 1);
-                        continue;
-                    }
-
-                    ctx.save();
-                    ctx.globalAlpha = Math.max(0, p.life);
-
-                    if (p.type === 'spark') {
-                        p.x += p.vx;
-                        p.y += p.vy;
-                        p.vx *= 0.95;
-                        p.vy *= 0.95;
-                        ctx.strokeStyle = p.color;
-                        ctx.lineWidth = p.size;
-                        ctx.lineCap = 'round';
-                        ctx.beginPath();
-                        ctx.moveTo(p.x, p.y);
-                        ctx.lineTo(p.x - p.vx * 2.2, p.y - p.vy * 2.2);
-                        ctx.stroke();
-                    } else if (p.type === 'smoke') {
-                        p.x += p.vx;
-                        p.y += p.vy;
-                        p.vy -= 0.03;
-                        p.size += p.growth;
-                        ctx.fillStyle = p.color + (p.life * 0.45) + ')';
+                } else if (p.type === 'shard') {
+                    p.x += p.vx;
+                    p.y += p.vy;
+                    p.vy += 0.22; // Gravity
+                    p.vx *= 0.96; // Air drag
+                    p.rot += p.vrot;
+                    ctx.fillStyle = p.color;
+                    ctx.translate(p.x, p.y);
+                    ctx.rotate(p.rot);
+                    ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size);
+                } else if (p.type === 'star') {
+                    p.x += p.vx;
+                    p.y += p.vy;
+                    p.rot += p.vrot;
+                    ctx.fillStyle = p.color;
+                    ctx.translate(p.x, p.y);
+                    ctx.rotate(p.rot);
+                    drawStarShape(ctx, 0, 0, 4, p.size, p.size * 0.35);
+                } else if (p.type === 'shockwave') {
+                    const spd = p.growthSpeed || 0.22;
+                    p.radius += (p.maxRadius - p.radius) * spd;
+                    ctx.strokeStyle = p.color;
+                    ctx.lineWidth = Math.max(1, p.life * 2.5);
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+                    ctx.stroke();
+                } else { // confetti
+                    p.x += p.vx;
+                    p.y += p.vy;
+                    ctx.fillStyle = p.color;
+                    if (p.shape === 'rect') {
+                        ctx.fillRect(p.x, p.y, p.size, p.size * 1.4);
+                    } else {
                         ctx.beginPath();
                         ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
                         ctx.fill();
-                    } else if (p.type === 'shard') {
-                        p.x += p.vx;
-                        p.y += p.vy;
-                        p.vy += 0.22; // Gravity
-                        p.vx *= 0.96; // Air drag
-                        p.rot += p.vrot;
-                        ctx.fillStyle = p.color;
-                        ctx.translate(p.x, p.y);
-                        ctx.rotate(p.rot);
-                        ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size);
-                    } else if (p.type === 'star') {
-                        p.x += p.vx;
-                        p.y += p.vy;
-                        p.rot += p.vrot;
-                        ctx.fillStyle = p.color;
-                        ctx.translate(p.x, p.y);
-                        ctx.rotate(p.rot);
-                        drawStarShape(ctx, 0, 0, 4, p.size, p.size * 0.35);
-                    } else if (p.type === 'shockwave') {
-                        const spd = p.growthSpeed || 0.22;
-                        p.radius += (p.maxRadius - p.radius) * spd;
-                        ctx.strokeStyle = p.color;
-                        ctx.lineWidth = Math.max(1, p.life * 2.5);
-                        ctx.beginPath();
-                        ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
-                        ctx.stroke();
-                    } else { // confetti
-                        p.x += p.vx;
-                        p.y += p.vy;
-                        ctx.fillStyle = p.color;
-                        if (p.shape === 'rect') {
-                            ctx.fillRect(p.x, p.y, p.size, p.size * 1.4);
-                        } else {
-                            ctx.beginPath();
-                            ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-                            ctx.fill();
-                        }
                     }
-                    ctx.restore();
                 }
+                ctx.restore();
             }
             
-            // Keep the 60 FPS loop running continuously for ambient motes & traveling glint
-            animFrameId = requestAnimationFrame(updateParticles);
+            if (particles.length > 0 || screenShake > 0.05) {
+                animFrameId = requestAnimationFrame(updateParticles);
+            } else {
+                animFrameId = null;
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+            }
         }
 
         function initBoardDOM() {
@@ -2973,7 +3268,20 @@
 
                 localLastMoveTs = moveData.ts;
 
-                if (window.fb && currentRoomId) {
+                if (rMultiplayer && rMultiplayer.isOnline()) {
+                    const nextTurnSlot = nextTurn === BLACK ? 'p1' : 'p2';
+                    const additionalState = {
+                        boardState: boardState,
+                        turn: nextTurn,
+                        turnSlot: nextTurnSlot
+                    };
+                    if (matchOver) {
+                        additionalState.status = 'finished';
+                        additionalState.winner = winner;
+                        additionalState.winReason = winReason;
+                    }
+                    rMultiplayer.sendMove(moveData, nextTurnSlot, additionalState);
+                } else if (window.fb && currentRoomId) {
                     window.fb.set(window.fb.ref(window.fb.db, 'multiplayer/kreversi/rooms/' + currentRoomId + '/boardState'), boardState);
                     window.fb.set(window.fb.ref(window.fb.db, 'multiplayer/kreversi/rooms/' + currentRoomId + '/turn'), nextTurn);
                     window.fb.set(window.fb.ref(window.fb.db, 'multiplayer/kreversi/rooms/' + currentRoomId + '/lastMove'), moveData);
@@ -3547,8 +3855,70 @@
             } catch(e) {}
         }
 
+        // --- Background Tab Visibility & Timer Drift (ARCH-05) ---
+        let tabHiddenTimestamp = 0;
+        let wasTimerActiveBeforeHide = false;
+        let wasReplayActiveBeforeHide = false;
+
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) {
+                tabHiddenTimestamp = Date.now();
+                if (moveTimerInterval) {
+                    wasTimerActiveBeforeHide = true;
+                    clearInterval(moveTimerInterval);
+                    moveTimerInterval = null;
+                } else {
+                    wasTimerActiveBeforeHide = false;
+                }
+                if (replayAutoPlayTimer) {
+                    wasReplayActiveBeforeHide = true;
+                    clearInterval(replayAutoPlayTimer);
+                    replayAutoPlayTimer = null;
+                    const playBtn = document.getElementById('replayAutoPlayBtn');
+                    if (playBtn) playBtn.textContent = '▶ Play';
+                } else {
+                    wasReplayActiveBeforeHide = false;
+                }
+                if (animFrameId) {
+                    cancelAnimationFrame(animFrameId);
+                    animFrameId = null;
+                }
+            } else {
+                if (tabHiddenTimestamp > 0) {
+                    const elapsedMs = Date.now() - tabHiddenTimestamp;
+                    tabHiddenTimestamp = 0;
+
+                    if (wasTimerActiveBeforeHide && !gameEnded) {
+                        const elapsedTenths = Math.floor(elapsedMs / 100);
+                        moveTimeLeft = Math.max(0, moveTimeLeft - elapsedTenths);
+                        updateClockDisplay();
+                        if (moveTimeLeft <= 0) {
+                            tickTimer();
+                        } else {
+                            moveTimerInterval = setInterval(tickTimer, 100);
+                        }
+                    }
+
+                    if (wasReplayActiveBeforeHide && isReplayMode) {
+                        toggleReplayAutoPlay();
+                    }
+
+                    if (particles.length > 0 || screenShake > 0.05) {
+                        if (!animFrameId) animFrameId = requestAnimationFrame(updateParticles);
+                    }
+                }
+            }
+        });
+
+        window.addEventListener('DOMContentLoaded', () => {
+            initRetroMultiplayer();
+        });
+        if (typeof RetroMultiplayer !== 'undefined') {
+            initRetroMultiplayer();
+        }
+
         window.onFirebaseLoaded = function() {
-            checkUrlAutoJoin();
+            initRetroMultiplayer();
             const modal = document.getElementById('multiplayer-modal');
             if (modal && modal.style.display === 'flex') {
                 subscribeLobby();
@@ -3711,6 +4081,15 @@
                 <input type="text" id="boardFenInput" readonly style="width: 100%; box-sizing: border-box; background: #161b22; color: #ffd700; font-family: monospace; font-size: 11px; border: 1px solid #333; border-radius: 4px; padding: 6px;">
                 <div style="display: flex; gap: 6px; margin-top: 6px;">
                     <button onclick="copyBoardFen()" style="flex: 1; background: #4a3800; color: #ffd700; font-size: 11px; border: 1px solid #ffd700; border-radius: 4px; padding: 5px 8px; cursor: pointer; font-weight: bold;">📋 Copy FEN String</button>
+                </div>
+            </div>
+
+            <!-- Export Tournament File Formats (.ggf / .json) -->
+            <div class="mp-section" style="border-color: #444;">
+                <label style="color: #00e5ff;">Tournament &amp; Analysis Exports:</label>
+                <div style="display: flex; gap: 6px; margin-top: 4px;">
+                    <button onclick="exportGGF()" style="flex: 1; background: #003366; color: #00e5ff; font-size: 11px; border: 1px solid #00e5ff; border-radius: 4px; padding: 5px 8px; cursor: pointer; font-weight: bold;">💾 Export WOT/GGF (.ggf)</button>
+                    <button onclick="exportJSONTranscript()" style="flex: 1; background: #331440; color: #ff80df; font-size: 11px; border: 1px solid #ff80df; border-radius: 4px; padding: 5px 8px; cursor: pointer; font-weight: bold;">💾 Export JSON Log (.json)</button>
                 </div>
             </div>
 
