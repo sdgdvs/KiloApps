@@ -2184,21 +2184,19 @@ void Update() {
 }
 
 void DrawCyberHUD(HDC hdc) {
-    long long t = GetTimeMs();
-    float timeSec = t * 0.001f;
-
-    // 1. Pulsating Energy Perimeter Inlay Border
-    int pulse = (int)(sin(timeSec * 3.0f) * 45.0f);
-    int bAlpha = 180 + pulse;
-    if (bAlpha > 255) bAlpha = 255;
-    if (bAlpha < 100) bAlpha = 100;
-    COLORREF borderCol = RGB(56 * bAlpha / 255, 189 * bAlpha / 255, 248 * bAlpha / 255);
+    // 1. Clean Static Perimeter Inlay Border (Glint-Free, Zero Traveling Dots per Mandate 11)
+    COLORREF borderCol = RGB(36, 120, 160);
+    COLORREF innerCol = RGB(10, 80, 110);
     HPEN bPen = CreatePen(PS_SOLID, 1, borderCol);
     SelectObject(hdc, bPen);
     SelectObject(hdc, GetStockObject(NULL_BRUSH));
     Rectangle(hdc, 8, 8, WIDTH - 8, HEIGHT - 8);
-    Rectangle(hdc, 11, 11, WIDTH - 11, HEIGHT - 11);
     DeleteObject(bPen);
+
+    HPEN iPen2 = CreatePen(PS_SOLID, 1, innerCol);
+    SelectObject(hdc, iPen2);
+    Rectangle(hdc, 11, 11, WIDTH - 11, HEIGHT - 11);
+    DeleteObject(iPen2);
 
     // 2. Ornate Cybernetic Arcade HUD Corner Filigree L-Brackets with tech notches & rivet accents
     HPEN cPen = CreatePen(PS_SOLID, 2, RGB(56, 189, 248));
@@ -2285,15 +2283,6 @@ void Draw(HDC hdc) {
     Ellipse(hdc, p2_x - 20, p2_y - 15, p2_x - 4, p2_y + 1);
     Ellipse(hdc, p2_x - 2, p2_y + 5, p2_x + 18, p2_y + 25);
     DeleteObject(redB); DeleteObject(redP); DeleteObject(craterB);
-
-    // Random comets
-    if (rand() % 1000 < 5 && ship.active && num_particles < 700) {
-        Particle* pt = &particles[num_particles++];
-        pt->x = (float)(rand() % WIDTH); pt->y = -20.0f;
-        pt->vx = -3.0f + (rand()%200)/100.0f; pt->vy = 4.0f + (rand()%300)/100.0f;
-        pt->life = 150; pt->max_life = 150; pt->color = RGB(56, 189, 248);
-        pt->active = true; pt->type = 0; pt->size = 3.0f;
-    }
 
     if (hyperspace_jump_timer > 0) {
         float progress = 1.0f - (hyperspace_jump_timer / 120.0f);
@@ -2424,15 +2413,6 @@ void Draw(HDC hdc) {
         pts[7].x = (LONG)(ship.x + (8 * c - 6 * s));     pts[7].y = (LONG)(ship.y + (8 * s + 6 * c));
         Polygon(hdc, pts, 8);
         DeleteObject(hullPen); DeleteObject(hullBrush);
-
-        // Sculpted hull specular sheen sweep line
-        HPEN sheenPen = CreatePen(PS_SOLID, 1, RGB(255, 255, 255));
-        SelectObject(hdc, sheenPen);
-        MoveToEx(hdc, (LONG)(ship.x + (14 * c - 0 * s)), (LONG)(ship.y + (14 * s + 0 * c)), NULL);
-        LineTo(hdc, (LONG)(ship.x + (2 * c - (-4) * s)), (LONG)(ship.y + (2 * s + (-4) * c)));
-        MoveToEx(hdc, (LONG)(ship.x + (6 * c - (-5) * s)), (LONG)(ship.y + (6 * s + (-5) * c)), NULL);
-        LineTo(hdc, (LONG)(ship.x + (-8 * c - (-11) * s)), (LONG)(ship.y + (-8 * s + (-11) * c)));
-        DeleteObject(sheenPen);
 
         // Cockpit Glass Canopy
         HBRUSH glassBrush = CreateSolidBrush(RGB(56, 189, 248));
@@ -2731,12 +2711,6 @@ void Draw(HDC hdc) {
             Pie(hdc, (int)(ufos[i].x - r * 0.6f), (int)(ufos[i].y - r * 0.8f), (int)(ufos[i].x + r * 0.6f), (int)(ufos[i].y + r * 0.2f), (int)(ufos[i].x + r * 0.6f), (int)ufos[i].y, (int)(ufos[i].x - r * 0.6f), (int)ufos[i].y);
             DeleteObject(bossPen); DeleteObject(bossBrush); DeleteObject(domeB);
 
-            // Procedural specular reflection shifting based on velocity
-            HBRUSH specB = CreateSolidBrush(RGB(255, 255, 255));
-            SelectObject(hdc, specB); SelectObject(hdc, GetStockObject(NULL_PEN));
-            int shiftX = (int)(ufos[i].vx * 3.0f);
-            Ellipse(hdc, (int)(ufos[i].x) + shiftX - (int)(r*0.15f), (int)(ufos[i].y) - (int)(r*0.6f), (int)(ufos[i].x) + shiftX + (int)(r*0.15f), (int)(ufos[i].y) - (int)(r*0.4f));
-            DeleteObject(specB);
             if (ufos[i].shield_hp > 0) {
                 HPEN csPen = CreatePen(PS_SOLID, 2, RGB(56, 189, 248));
                 SelectObject(hdc, csPen);
@@ -2771,13 +2745,6 @@ void Draw(HDC hdc) {
             SelectObject(hdc, domeB);
             Pie(hdc, (int)(ufos[i].x - r * 0.4f), (int)(ufos[i].y - r * 0.7f), (int)(ufos[i].x + r * 0.4f), (int)(ufos[i].y + r * 0.2f), (int)(ufos[i].x + r * 0.4f), (int)ufos[i].y, (int)(ufos[i].x - r * 0.4f), (int)ufos[i].y);
             DeleteObject(ufoPen); DeleteObject(ufoBrush); DeleteObject(domeB);
-
-            // Procedural specular reflection shifting based on velocity
-            HBRUSH specB = CreateSolidBrush(RGB(255, 255, 255));
-            SelectObject(hdc, specB); SelectObject(hdc, GetStockObject(NULL_PEN));
-            int shiftX = (int)(ufos[i].vx * 3.0f);
-            Ellipse(hdc, (int)(ufos[i].x) + shiftX - (int)(r*0.1f), (int)(ufos[i].y) - (int)(r*0.5f), (int)(ufos[i].x) + shiftX + (int)(r*0.1f), (int)(ufos[i].y) - (int)(r*0.35f));
-            DeleteObject(specB);
         }
     }
 

@@ -4,6 +4,15 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-03T16:35:00-07:00 — kilo-usability: KJournal (UI/UX Layout, Toast Remediation, Responsive Toolbar & ARCH-05)**
+  - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 132.7 KB web / 205.8 KB native < 999 KB ceiling).
+  - Sidebar & Tabs: Installed compact Help [F1] badge preventing button wrap; wrapped notebook tabs to 3x2 matrix with 0 scrollbars.
+  - Layout & Overflow: Fixed flex child min-width: 0 bug preventing right-edge clipping on mood selector and footer status.
+  - Responsive Toolbar: Rebuilt into clean 2-row layout with dedicated date navigation and attribute/mood selector with live label.
+  - Toast Remediation: Relocated notification toast to non-occluding bottom-right safe zone with click dismissal and gold accent.
+  - ARCH-05 Visibility: Added visibilitychange event listener to flush dirty state and clear timers on tab hidden.
+  - Verification: Clean MSVC compile (`KJournal.exe` 205.8 KB); Vite clean in 487ms; check_icons 100% PASS; security_lint 100% PASS.
+
 - **2026-10-03T15:15:00-07:00 — kilo-qa: KiloOS (Architecture Audit & App.jsx State Hardening)**
   - Status: PASS ✅ (0 regressions, clean build in 406ms, version bumped to 0.4.22).
   - State & Concurrency: Fixed openApp race condition with functional updater and zIndexRef synchronous mirror.
