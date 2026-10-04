@@ -48,8 +48,9 @@ This skill designs and implements new applications or deep game worlds on exactl
 6. **Alternate Reality Fictionalization Mandate**:
    - All commercial video game titles, software products, corporate entities, and demoscene warez groups must be fictionalized parodies (e.g. *Surreal Tournament*, *Tremor III Arena*, *VoidCraft*, *Machina Ex*, *FLARELIGHT*, *RAZOR 1999*, *SlashNet*, *Cabled*). Never use real trademarked names. Enforced algorithmically by `scripts/security_lint.py`.
 
-7. **Seamless Online Multiplayer via Firebase (DIRECTOR MANDATE - CRITICAL)**:
+7. **Seamless Online Multiplayer via Firebase & Autostart Prohibition (DIRECTOR MANDATE - CRITICAL)**:
    - **Core Focus**: When creating new games and interactive applications, concentrate on adding seamless online multiplayer features that run through Firebase Realtime Database.
+   - **No Autostart / Mandatory Connect Gate**: NEVER autostart into multiplayer or initiate matchmaking on application load. Apps must open to a clean local/offline mode (e.g. against local Easy AI or solo practice) or a start screen with explicit mode choices. Online connection requires an explicit user action (clicking a "Connect" / "Play Online" button or choosing Multiplayer from a menu). People must never be thrown into multiplayer without prior warning.
    - **Cross-Computer Play**: Enable different people playing on `kiloapps.web.app` from different computers anywhere on the internet—who are not otherwise communicating and share no local network—to discover each other, match up, and play together in real-time, identical to how KChat connects global users in its `#general` chat room.
    - **Architecture & Setup (Retro Firebase Multiplayer Service - RFMS)**:
      - Use the standardized RFMS client module [`KiloOS/public/assets/js/retro_multiplayer.js`](../../KiloOS/public/assets/js/retro_multiplayer.js) (spec: [`docs/RFMS_SPEC.md`](../../docs/RFMS_SPEC.md)) via `<script src="../assets/js/retro_multiplayer.js"></script>`.
