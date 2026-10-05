@@ -422,7 +422,9 @@ window.addEventListener('beforeunload', () => {
     y: H - 60,
     hp: 3,
     maxHp: 3,
-    shield: false,
+    shields: 3,
+    maxShields: 3,
+    shield: true,
     bombs: 1,
     maxBombs: 3,
     weaponType: 0 // 0: Normal, 1: Spread, 2: Laser, 3: Plasma
@@ -433,7 +435,7 @@ window.addEventListener('beforeunload', () => {
   if (isNaN(playerChassis) || playerChassis < 0 || playerChassis > 2) playerChassis = 0;
   const CHASSIS_SPECS = [
     { name: 'ALPHA INTERCEPTOR', desc: 'Agile titanium interceptor (+15% speed, rapid Vulcan cycle)', perk: '+15% SPD / Rapid Vulcan' },
-    { name: 'CRIMSON VANGUARD', desc: 'Heavy assault dreadnought (4 Max HP, 4 Max Bombs, blast armor)', perk: '+1 Max HP / +1 Max Bomb' },
+    { name: 'CRIMSON VANGUARD', desc: 'Heavy assault dreadnought (4 Max HP, 4 Max Shields, 4 Bombs)', perk: '+1 HP / +1 Shield / +1 Bomb' },
     { name: 'VOID PHANTOM', desc: 'Phased stealth delta (+25% Overcharge rate, 30% faster Dash)', perk: '+Overcharge / Fast Dash' }
   ];
 
@@ -443,6 +445,9 @@ window.addEventListener('beforeunload', () => {
     if (p) {
       p.maxHp = playerChassis === 1 ? 4 : 3;
       p.hp = Math.min(p.hp, p.maxHp);
+      p.maxShields = playerChassis === 1 ? 4 : 3;
+      p.shields = Math.min(p.shields || 3, p.maxShields);
+      p.shield = p.shields > 0;
       p.maxBombs = playerChassis === 1 ? 4 : 3;
     }
     showToast(`🚀 Fighter: ${CHASSIS_SPECS[playerChassis].name} [${CHASSIS_SPECS[playerChassis].perk}]`, 'info', 2200);
@@ -460,6 +465,7 @@ window.addEventListener('beforeunload', () => {
   let invincibleTimer = 0;
   let hyperShieldTimer = 0;
   let hyperShieldCooldown = 0;
+  let shieldRechargeTimer = 0; // Ticks when unharmed to restore shields
 
   // Loop 11: Drone Wings & Hyper-Jump Systems
   let drones = []; // { x, y, shootTimer }
@@ -646,6 +652,7 @@ window.addEventListener('beforeunload', () => {
       comboTimer: comboTimer,
       shotsFired: shotsFired,
       shotsHit: shotsHit,
+      shieldRechargeTimer: shieldRechargeTimer,
       timeSurvivedFrames: timeSurvivedFrames,
       seed: seed,
       boss: boss,
@@ -675,6 +682,12 @@ window.addEventListener('beforeunload', () => {
       let saveObj = safeGetJSON('kspace_save', null);
       if (!saveObj || !saveObj.p) return false;
       p = saveObj.p;
+      if (typeof p.shields !== 'number') {
+        p.maxShields = playerChassis === 1 ? 4 : 3;
+        p.shields = p.shield ? p.maxShields : 3;
+      }
+      p.shield = p.shields > 0;
+      shieldRechargeTimer = saveObj.shieldRechargeTimer || 0;
       score = saveObj.score || 0;
       wave = saveObj.wave || 1;
       modeIndex = (typeof saveObj.modeIndex === 'number') ? saveObj.modeIndex : 0;
@@ -1262,7 +1275,7 @@ window.addEventListener('beforeunload', () => {
       let x = startX + k * 65;
       let y = -30 - (k % 2) * 35;
       enemies.push({
-        x: x, y: y, type: type, hp: hp, maxHp: hp, dx: (k % 2 === 0 ? 1.8 : -1.8), dy: 1.2,
+        x: x, y: y, type: type, hp: hp, maxHp: hp, dx: (k % 2 === 0 ? 0.9 : -0.9), dy: 0.6,
         timer: 0, cloaked: false, isElite: true, squadId: formationType
       });
     }
@@ -1595,12 +1608,15 @@ window.addEventListener('beforeunload', () => {
       x: W / 2 - 10, y: H - 60,
       hp: playerChassis === 1 ? 4 : 3,
       maxHp: playerChassis === 1 ? 4 : 3,
-      shield: false,
+      shields: playerChassis === 1 ? 4 : 3,
+      maxShields: playerChassis === 1 ? 4 : 3,
+      shield: true,
       bombs: playerChassis === 1 ? 2 : 1,
       maxBombs: playerChassis === 1 ? 4 : 3,
       weaponType: 0
     };
     weaponLevel = 0;
+    shieldRechargeTimer = 0;
     score = 0; wave = 1; enemiesKilled = 0;
     comboMultiplier = 1; comboTimer = 0;
     spreadTimer = 0; laserTimer = 0; plasmaTimer = 0; rapidTimer = 0;
@@ -1652,12 +1668,12 @@ window.addEventListener('beforeunload', () => {
       if (t < 40) type = 0;
       else if (t < 70) type = 1;
       else if (t < 88) type = 5;
-      else { type = 4; dx = (randomFloat() < 0.5 ? 2.2 : -2.2); }
+      else { type = 4; dx = (randomFloat() < 0.5 ? 1.1 : -1.1); }
     } else if (sec === 2) {
       // Sector 2: Nebula Corridor - Saucers, Zigzags, Kamikaze, Asteroids
       if (t < 25) type = 0;
       else if (t < 45) type = 2;
-      else if (t < 65) { type = 4; dx = (randomFloat() < 0.5 ? 2.2 : -2.2); }
+      else if (t < 65) { type = 4; dx = (randomFloat() < 0.5 ? 1.1 : -1.1); }
       else if (t < 82) type = 7;
       else type = 5;
     } else if (sec === 3) {
@@ -1665,20 +1681,20 @@ window.addEventListener('beforeunload', () => {
       if (t < 20) type = 1;
       else if (t < 40) type = 2;
       else if (t < 62) type = 3;
-      else if (t < 82) { type = 6; dx = (randomFloat() < 0.5 ? 1.8 : -1.8); }
+      else if (t < 82) { type = 6; dx = (randomFloat() < 0.5 ? 0.9 : -0.9); }
       else type = 7;
     } else if (sec === 4) {
       // Sector 4: Volcanic Expanse - Stealth, Frigates, Heavies, Giant Asteroids
       if (t < 20) type = 3;
       else if (t < 42) type = 8;
-      else if (t < 64) { type = 6; dx = (randomFloat() < 0.5 ? 1.8 : -1.8); }
+      else if (t < 64) { type = 6; dx = (randomFloat() < 0.5 ? 0.9 : -0.9); }
       else if (t < 82) type = 9;
       else type = 7;
     } else {
       // Sector 5: Citadel Core - Maximum danger squad
       if (t < 18) type = 3;
       else if (t < 38) type = 8;
-      else if (t < 58) { type = 6; dx = (randomFloat() < 0.5 ? 1.8 : -1.8); }
+      else if (t < 58) { type = 6; dx = (randomFloat() < 0.5 ? 0.9 : -0.9); }
       else if (t < 78) type = 10;
       else type = 11;
     }
@@ -1700,9 +1716,9 @@ window.addEventListener('beforeunload', () => {
       } else {
         x = Math.min(W - 30, startX + k * 48);
         y = -20 - (k % 3) * 20;
-        dx = k % 2 === 0 ? 1.5 : -1.5;
+        dx = k % 2 === 0 ? 0.75 : -0.75;
       }
-      enemies.push({ x: x, y: y, type: type === 9 ? 2 : type, hp: hp, maxHp: hp, dx: dx, dy: 2.0, timer: 0, cloaked: false, isElite: false });
+      enemies.push({ x: x, y: y, type: type === 9 ? 2 : type, hp: hp, maxHp: hp, dx: dx, dy: 1.0, timer: 0, cloaked: false, isElite: false });
     }
   }
 
@@ -1738,7 +1754,7 @@ window.addEventListener('beforeunload', () => {
         { hp: 80, active: true },
         { hp: 80, active: true }
       ] : [],
-      dx: 1.8,
+      dx: 0.9,
       attackTimer: 0,
       phase: 1
     };
@@ -1872,8 +1888,8 @@ window.addEventListener('beforeunload', () => {
 
       // Auto-firing twin support plasma vulcan bolts
       drone.shootTimer++;
-      if (drone.shootTimer % 14 === 0) {
-        bullets.push({ x: drone.x + 4, y: drone.y - 2, dx: (d === 0 ? -0.4 : 0.4), dy: -9.0, type: 0 });
+      if (drone.shootTimer % 24 === 0) {
+        bullets.push({ x: drone.x + 4, y: drone.y - 2, dx: (d === 0 ? -0.4 : 0.4), dy: -6.0, type: 0 });
         playSound(8);
         addMuzzleFlash(drone.x + 4, drone.y - 2, '#00e5ff', 4);
       }
@@ -1891,16 +1907,16 @@ window.addEventListener('beforeunload', () => {
       }
     }
 
-    // Planetary Bombardment Simulation
+    // Planetary Bombardment Simulation (paced for fair reaction time)
     if (bombardmentActive) {
       bombardmentTimer--;
-      if (frameCount % 45 === 0) {
-        strikes.push({ x: 25 + Math.floor(randomFloat() * (W - 50)), timer: 55 });
+      if (frameCount % 90 === 0) {
+        strikes.push({ x: 25 + Math.floor(randomFloat() * (W - 50)), timer: 110 });
       }
       for (let k = strikes.length - 1; k >= 0; k--) {
         let st = strikes[k];
         st.timer--;
-        if (st.timer === 15) {
+        if (st.timer === 30) {
           playSound(4);
           addShockwave(st.x, H - 30, 35, '#ff3d00');
           addExplosion(st.x, H - 30, 15, '#ff1744');
@@ -1916,8 +1932,8 @@ window.addEventListener('beforeunload', () => {
         }
         if (st.timer <= 0) strikes.splice(k, 1);
       }
-      if (frameCount % 80 === 0) {
-        enemies.push({ x: randomFloat() * (W - 35), y: -30, type: 13, hp: 24, maxHp: 24, dx: 0, dy: 3.0, timer: 0, cloaked: false, isElite: false });
+      if (frameCount % 160 === 0) {
+        enemies.push({ x: randomFloat() * (W - 35), y: -30, type: 13, hp: 24, maxHp: 24, dx: 0, dy: 1.5, timer: 0, cloaked: false, isElite: false });
       }
       if (bombardmentTimer <= 0) {
         bombardmentActive = false;
@@ -1937,7 +1953,7 @@ window.addEventListener('beforeunload', () => {
         overchargeEnergy = Math.min(100, overchargeEnergy + 35);
         hyperJumpEnergy = Math.min(100, hyperJumpEnergy + 35);
         playSound(6);
-        powerups.push({ x: W / 2 - 15, y: 50, dy: 1.5, type: 10 }); // Drone Pod
+        powerups.push({ x: W / 2 - 15, y: 50, dy: 0.75, type: 10 }); // Drone Pod
       }
     }
 
@@ -1962,7 +1978,7 @@ window.addEventListener('beforeunload', () => {
       let fireRate = (overchargeTimer > 0) ? (playerChassis === 0 ? 2 : 3) : ((rapidTimer > 0) ? 3 : baseFireRate);
       let willFire = (isFire && frameCount % fireRate === 0);
 
-      const baseSpeed = playerChassis === 0 ? 5.2 : (playerChassis === 1 ? 4.2 : 4.6);
+      const baseSpeed = playerChassis === 0 ? 3.8 : (playerChassis === 1 ? 3.2 : 3.4);
       const speed = (keys['shift'] || keys['ShiftLeft']) ? baseSpeed * 1.5 : baseSpeed;
       if (keys[keybinds.left] || keys['arrowleft']) p.x -= speed;
       if (keys[keybinds.right] || keys['arrowright']) p.x += speed;
@@ -2011,25 +2027,38 @@ window.addEventListener('beforeunload', () => {
       if (wave % 7 === 0 && frameCount % 400 === 0 && !bombardmentActive && !boss) triggerBombardment();
     }
 
-    // Scroll Starfield
-    let starSpeedMult = (modeIndex === 1 ? 1.5 : 1.0) * (hyperJumpTimer > 0 ? 5.0 : 1.0);
+    // Scroll Starfield (Smooth half-speed descent)
+    let starSpeedMult = (modeIndex === 1 ? 0.75 : 0.5) * (hyperJumpTimer > 0 ? 3.0 : 1.0);
     for (let s of stars) {
       s.y += s.speed * starSpeedMult;
       if (s.y > H) { s.y = 0; s.x = randomFloat() * W; }
     }
 
+    // Shield Auto-Regeneration System (Recharges 1 layer if unharmed for ~8 seconds)
+    if (p.hp > 0 && p.shields < p.maxShields) {
+      shieldRechargeTimer++;
+      if (shieldRechargeTimer >= 480) {
+        p.shields++;
+        p.shield = true;
+        shieldRechargeTimer = 0;
+        addShieldRipple(p.x + 10, p.y + 10, '#00e5ff');
+        playSound(2);
+        showToast(`🛡️ Shield Layer Recharged! (${p.shields}/${p.maxShields})`, 'info', 1600);
+      }
+    }
+
     if (pathGatesActive) {
-      pathGatesY += 1.0;
+      pathGatesY += 0.5;
       if (pathGatesY > H + 50) pathGatesActive = false;
       if (p.x < W/4 + 20 && p.x + 20 > W/4 - 20 && p.y < pathGatesY + 20 && p.y + 20 > pathGatesY - 20) {
         pathGatesActive = false; wave += 1; score += 2000; playSound(2);
       } else if (p.x < 3*W/4 + 20 && p.x + 20 > 3*W/4 - 20 && p.y < pathGatesY + 20 && p.y + 20 > pathGatesY - 20) {
-        pathGatesActive = false; p.hp = p.maxHp; playSound(2);
+        pathGatesActive = false; p.hp = p.maxHp; p.shields = p.maxShields; p.shield = true; playSound(2);
       }
     }
 
-    if (frameCount % 600 === 0 && !escort.active && !boss && wave % 2 === 0) {
-      escort.active = true; escort.x = W / 2 - 15; escort.y = -30; escort.dy = 0.5;
+    if (frameCount % 1200 === 0 && !escort.active && !boss && wave % 2 === 0) {
+      escort.active = true; escort.x = W / 2 - 15; escort.y = -30; escort.dy = 0.25;
       escort.maxHp = 20; escort.hp = 20;
     }
 
@@ -2079,7 +2108,7 @@ window.addEventListener('beforeunload', () => {
     // Boss & Dreadnought Sieges Logic
     if (boss) {
       if (boss.isDreadnought) {
-        if (boss.y < boss.targetY) boss.y += 0.8;
+        if (boss.y < boss.targetY) boss.y += 0.4;
         else {
           boss.x += boss.dx;
           if (boss.x < 5 || boss.x > W - boss.w - 5) boss.dx = -boss.dx;
@@ -2088,12 +2117,12 @@ window.addEventListener('beforeunload', () => {
         boss.attackTimer++;
         boss.flakTimer++;
 
-        // Mega-Ion Cannon Charging & Firing
+        // Mega-Ion Cannon Charging & Firing (smooth 2x telegraph)
         if (timeStopTimer === 0) {
-          boss.ionCharge += 1;
+          boss.ionCharge += 0.5;
           if (boss.ionCharge >= 100) {
             boss.ionCharge = 0;
-            boss.ionBeamTimer = 45; // 0.75s beam
+            boss.ionBeamTimer = 60; // 1s beam
             playSound(9);
             screenShake = 15;
           }
@@ -2103,15 +2132,15 @@ window.addEventListener('beforeunload', () => {
           boss.ionBeamTimer--;
           let beamX = boss.x + 60;
           if (p.x + 18 > beamX - 14 && p.x + 2 < beamX + 14) {
-            if (frameCount % 6 === 0) playerHit();
+            if (frameCount % 12 === 0) playerHit();
           }
         }
 
-        // Dreadnought Flak & Salvos
-        if (timeStopTimer === 0 && boss.flakTimer % 38 === 0) {
-          eBullets.push({ x: boss.x + 20, y: boss.y + 40, dx: -1.8, dy: 3.2 });
-          eBullets.push({ x: boss.x + 100, y: boss.y + 40, dx: 1.8, dy: 3.2 });
-          eBullets.push({ x: boss.x + 60, y: boss.y + 50, dx: (frameCount % 2 === 0 ? -0.8 : 0.8), dy: 3.8 });
+        // Dreadnought Flak & Salvos (half speed)
+        if (timeStopTimer === 0 && boss.flakTimer % 76 === 0) {
+          eBullets.push({ x: boss.x + 20, y: boss.y + 40, dx: -0.9, dy: 1.6 });
+          eBullets.push({ x: boss.x + 100, y: boss.y + 40, dx: 0.9, dy: 1.6 });
+          eBullets.push({ x: boss.x + 60, y: boss.y + 50, dx: (frameCount % 2 === 0 ? -0.4 : 0.4), dy: 1.9 });
         }
 
         // Bullets vs Dreadnought Subsystems
@@ -2169,31 +2198,31 @@ window.addEventListener('beforeunload', () => {
           }
         }
       } else {
-        // Mothership & Normal Boss Logic
-        if (boss.y < boss.targetY) boss.y += 1;
+        // Mothership & Normal Boss Logic (half speed & 2x reaction windows)
+        if (boss.y < boss.targetY) boss.y += 0.5;
         else {
           boss.x += boss.dx;
           if (boss.x < 10 || boss.x > W - boss.w - 10) boss.dx = -boss.dx;
         }
 
         boss.attackTimer++;
-        if (timeStopTimer === 0 && boss.attackTimer % (boss.isMothership ? 35 : 45) === 0) {
+        if (timeStopTimer === 0 && boss.attackTimer % (boss.isMothership ? 70 : 90) === 0) {
           if (boss.isMothership) {
             let tOffsets = [5, 25, 65, 85];
             for (let tIdx = 0; tIdx < 4; tIdx++) {
               if (boss.turrets[tIdx] && boss.turrets[tIdx].active) {
-                eBullets.push({ x: boss.x + tOffsets[tIdx], y: boss.y + 35, dx: (tIdx === 0 ? -1.5 : (tIdx === 3 ? 1.5 : 0)), dy: 3.5 });
+                eBullets.push({ x: boss.x + tOffsets[tIdx], y: boss.y + 35, dx: (tIdx === 0 ? -0.75 : (tIdx === 3 ? 0.75 : 0)), dy: 1.75 });
               }
             }
-            if (!isMothershipShieldActive() && (boss.attackTimer % 50 === 0)) {
+            if (!isMothershipShieldActive() && (boss.attackTimer % 100 === 0)) {
               for (let a = -2; a <= 2; a++) {
-                eBullets.push({ x: boss.x + 45, y: boss.y + 45, dx: a * 1.5, dy: 3.8 });
+                eBullets.push({ x: boss.x + 45, y: boss.y + 45, dx: a * 0.75, dy: 1.9 });
               }
             }
           } else {
-            eBullets.push({ x: boss.x + 10, y: boss.y + boss.h, dx: -1.5, dy: 3.5 });
-            eBullets.push({ x: boss.x + boss.w / 2, y: boss.y + boss.h, dx: 0, dy: 4 });
-            eBullets.push({ x: boss.x + boss.w - 10, y: boss.y + boss.h, dx: 1.5, dy: 3.5 });
+            eBullets.push({ x: boss.x + 10, y: boss.y + boss.h, dx: -0.75, dy: 1.75 });
+            eBullets.push({ x: boss.x + boss.w / 2, y: boss.y + boss.h, dx: 0, dy: 2.0 });
+            eBullets.push({ x: boss.x + boss.w - 10, y: boss.y + boss.h, dx: 0.75, dy: 1.75 });
           }
         }
 
@@ -2270,13 +2299,13 @@ window.addEventListener('beforeunload', () => {
       }
     }
 
-    // Spawning regular enemies
-    let spawnRate = Math.max(8, 30 - Math.floor(score / 200) - (modeIndex === 1 ? 8 : 0));
+    // Spawning regular enemies (paced at half-rate for relaxed gameplay)
+    let spawnRate = Math.max(16, 60 - Math.floor(score / 150) - (modeIndex === 1 ? 16 : 0));
     if (frameCount % spawnRate === 0) spawnEnemy();
 
-    // Regular & Elite Enemies Update
-    let speedBonus = Math.min(2.2, (score / 5000) * 1.5) + Math.min(1.5, (wave - 1) * 0.12);
-    let baseEnemySpeed = 1.8 + speedBonus + (modeIndex === 1 ? 0.6 : 0);
+    // Regular & Elite Enemies Update (smooth half-speed descent)
+    let speedBonus = (Math.min(2.2, (score / 5000) * 1.5) + Math.min(1.5, (wave - 1) * 0.12)) * 0.5;
+    let baseEnemySpeed = 0.9 + speedBonus + (modeIndex === 1 ? 0.3 : 0);
     for (let i = enemies.length - 1; i >= 0; i--) {
       let e = enemies[i];
       let ew = (e.type === 6 || e.type === 9 || e.type === 11 || e.type === 12) ? 36 : 20;
@@ -2291,51 +2320,51 @@ window.addEventListener('beforeunload', () => {
         if (e.type === 0) e.y += baseEnemySpeed * 1.2;
         else if (e.type === 1) {
           e.y += baseEnemySpeed * 0.8;
-          if (e.x < p.x) e.x += 0.8;
-          if (e.x > p.x) e.x -= 0.8;
+          if (e.x < p.x) e.x += 0.4;
+          if (e.x > p.x) e.x -= 0.4;
         } else if (e.type === 2) e.y += baseEnemySpeed * 0.5;
         else if (e.type === 3) e.y += baseEnemySpeed * 0.4;
         else if (e.type === 4) {
           e.y += baseEnemySpeed * 0.9;
-          e.x += e.dx;
+          e.x += e.dx * 0.5;
           if (e.x < 0 || e.x > W - ew) e.dx = -e.dx;
         } else if (e.type === 5 || e.type === 9) e.y += baseEnemySpeed * 1.3;
         else if (e.type === 6) {
-          if (e.y < 60) e.y += 0.8;
+          if (e.y < 60) e.y += 0.4;
           else {
-            e.x += e.dx;
+            e.x += e.dx * 0.5;
             if (e.x < 0 || e.x > W - ew) e.dx = -e.dx;
           }
         } else if (e.type === 7) { // Kamikaze
-          e.y += baseEnemySpeed * 2.0;
-          if (e.x < p.x) e.x += 1.4;
-          if (e.x > p.x) e.x -= 1.4;
+          e.y += baseEnemySpeed * 1.8;
+          if (e.x < p.x) e.x += 0.7;
+          if (e.x > p.x) e.x -= 0.7;
         } else if (e.type === 8) {
           e.y += baseEnemySpeed * 1.0;
         } else if (e.type === 10) { // Crimson Valkyrie
           e.y += baseEnemySpeed * 1.0;
-          e.x += e.dx;
+          e.x += e.dx * 0.5;
           if (e.x < 10 || e.x > W - ew - 10) e.dx = -e.dx;
-          if (frameCount % 45 === 0) eBullets.push({ x: e.x + 10, y: e.y + 20, dx: (randomFloat() < 0.5 ? -1.0 : 1.0), dy: 4.0 });
+          if (frameCount % 90 === 0) eBullets.push({ x: e.x + 10, y: e.y + 20, dx: (randomFloat() < 0.5 ? -0.5 : 0.5), dy: 2.0 });
         } else if (e.type === 11) { // Void Phantom
           e.y += baseEnemySpeed * 0.7;
-          e.x += e.dx;
+          e.x += e.dx * 0.5;
           if (e.x < 15 || e.x > W - ew - 15) e.dx = -e.dx;
-          if (frameCount % 55 === 0) eBullets.push({ x: e.x + 15, y: e.y + 25, dx: (p.x > e.x ? 1.0 : -1.0), dy: 3.2 });
+          if (frameCount % 110 === 0) eBullets.push({ x: e.x + 15, y: e.y + 25, dx: (p.x > e.x ? 0.5 : -0.5), dy: 1.6 });
         } else if (e.type === 12) { // Command Cruiser
-          if (e.y < 70) e.y += 0.6;
-          e.x += e.dx;
+          if (e.y < 70) e.y += 0.3;
+          e.x += e.dx * 0.5;
           if (e.x < 20 || e.x > W - ew - 20) e.dx = -e.dx;
-          if (frameCount % 40 === 0) {
-            for (let a = -1; a <= 1; a++) eBullets.push({ x: e.x + 18, y: e.y + 30, dx: a * 1.5, dy: 3.6 });
+          if (frameCount % 80 === 0) {
+            for (let a = -1; a <= 1; a++) eBullets.push({ x: e.x + 18, y: e.y + 30, dx: a * 0.75, dy: 1.8 });
           }
         } else if (e.type === 13) {
-          e.y += baseEnemySpeed * 2.2;
+          e.y += baseEnemySpeed * 1.8;
         }
 
-        // Enemy Firing
-        if (e.type === 2 && frameCount % 60 === 0 && randomFloat() < 0.5) {
-          eBullets.push({ x: e.x + 10, y: e.y + 20, dx: 0, dy: 3.5 });
+        // Enemy Firing (half frequency)
+        if (e.type === 2 && frameCount % 120 === 0 && randomFloat() < 0.5) {
+          eBullets.push({ x: e.x + 10, y: e.y + 20, dx: 0, dy: 1.75 });
         }
       }
 
@@ -2352,8 +2381,18 @@ window.addEventListener('beforeunload', () => {
         }
       }
 
-      // Player Collision with Enemy
+      // Player Collision with Enemy (with invincibility deflection)
       if (p.x < e.x + ew && p.x + 20 > e.x && p.y < e.y + eh && p.y + 20 > e.y) {
+        if (hyperShieldTimer > 0 || hyperJumpTimer > 0) {
+          addExplosion(e.x + ew / 2, e.y + eh / 2, 16);
+          enemies.splice(i, 1);
+          continue;
+        }
+        if (invincibleTimer > 0) {
+          addExplosion(e.x + ew / 2, e.y + eh / 2, 12, '#00e5ff');
+          enemies.splice(i, 1);
+          continue;
+        }
         addExplosion(e.x + ew / 2, e.y + eh / 2, 16);
         enemies.splice(i, 1);
         playerHit();
@@ -2400,15 +2439,20 @@ window.addEventListener('beforeunload', () => {
       }
 
       if (p.x < eb.x + 4 && p.x + 20 > eb.x && p.y < eb.y + 10 && p.y + 20 > eb.y) {
+        if (invincibleTimer > 0) {
+          addExplosion(eb.x, eb.y, 3, '#00e5ff');
+          eBullets.splice(i, 1);
+          continue;
+        }
         eBullets.splice(i, 1);
         playerHit();
       }
     }
 
-    // Power-ups Update
+    // Power-ups Update (smooth float)
     for (let i = powerups.length - 1; i >= 0; i--) {
       let pu = powerups[i];
-      pu.y += pu.dy;
+      pu.y += pu.dy * 0.5;
 
       if (p.x < pu.x + 16 && p.x + 20 > pu.x && p.y < pu.y + 16 && p.y + 20 > pu.y) {
         applyPowerup(pu.type);
@@ -2495,21 +2539,27 @@ window.addEventListener('beforeunload', () => {
     }
     safeSetStorage('kspace_totalkills', totalKills);
 
-    // Powerup Drop Chance
+    // Powerup Drop Chance (smooth float speed)
     let dropChance = e.isElite ? 0.8 : 0.22;
     if (randomFloat() < dropChance) {
-      powerups.push({ x: e.x, y: e.y, dy: 1.8, type: Math.floor(randomFloat() * 12) });
+      powerups.push({ x: e.x, y: e.y, dy: 0.9, type: Math.floor(randomFloat() * 12) });
     }
 
     enemies.splice(index, 1);
   }
 
   function applyPowerup(type) {
-    if (type === 0) { spreadTimer = 350; p.weaponType = 1; }
-    else if (type === 1) { laserTimer = 300; p.weaponType = 2; }
-    else if (type === 2) { p.shield = true; addShieldRipple(p.x + 10, p.y + 10, '#00e5ff'); }
+    if (type === 0) { spreadTimer = 600; p.weaponType = 1; }
+    else if (type === 1) { laserTimer = 600; p.weaponType = 2; }
+    else if (type === 2) {
+      p.shields = p.maxShields;
+      p.shield = true;
+      addShieldRipple(p.x + 10, p.y + 10, '#00e5ff');
+      showToast('🛡️ SHIELDS FULLY RESTORED!', 'info', 1800);
+      playSound(2);
+    }
     else if (type === 3) { p.bombs = Math.min(p.maxBombs, p.bombs + 1); }
-    else if (type === 4) { rapidTimer = 350; }
+    else if (type === 4) { rapidTimer = 600; }
     else if (type === 5) { useTimeStop(); }
     else if (type === 6) { useHyperShield(); addShieldRipple(p.x + 10, p.y + 10, '#ffea00'); }
     else if (type === 7) { dashCooldown = 0; useTacticalDash(); }
@@ -2517,7 +2567,7 @@ window.addEventListener('beforeunload', () => {
     else if (type === 9) { overchargeEnergy = Math.min(100, overchargeEnergy + 50); }
     else if (type === 10) { deployDroneWing(); }
     else if (type === 11) {
-      plasmaTimer = 350;
+      plasmaTimer = 600;
       p.weaponType = 3;
       showToast('⚡ PLASMA CANNON ENGAGED!', 'info', 1800);
       playSound(2);
@@ -2527,20 +2577,30 @@ window.addEventListener('beforeunload', () => {
   function playerHit() {
     if (hyperShieldTimer > 0 || invincibleTimer > 0 || hyperJumpTimer > 0) return;
 
-    if (p.shield) {
-      p.shield = false;
+    invincibleTimer = 90; // 1.5s generous invulnerability buffer on every hit!
+    shieldRechargeTimer = 0;
+
+    if (p.shields > 0) {
+      p.shields--;
+      p.shield = p.shields > 0;
       addShieldRipple(p.x + 10, p.y + 10, '#00e5ff');
-      addExplosion(p.x + 10, p.y + 10, 16, '#00e5ff');
+      addExplosion(p.x + 10, p.y + 10, 18, '#00e5ff');
       playSound(1);
+      screenShake = 6;
+      showToast(`🛡️ Shield Absorbed Hit! (${p.shields}/${p.maxShields} remaining)`, 'info', 1200);
     } else {
       p.hp--;
-      weaponLevel = 0;
+      weaponLevel = Math.max(0, weaponLevel - 1);
       addExplosion(p.x + 10, p.y + 10, 30, '#ff1744');
       playSound(1);
+      screenShake = 12;
       if (p.hp <= 0) {
+        p.hp = 0;
         gameState = STATE_GAMEOVER;
         addScoreToLeaderboard(score, wave, MODES[modeIndex].name);
         if (!isReplaying) lastReplaySaved = currentReplay;
+      } else {
+        showToast(`⚠️ HULL DAMAGED! (${p.hp}/${p.maxHp} HP remaining)`, 'warning', 1200);
       }
     }
   }
@@ -2614,6 +2674,10 @@ window.addEventListener('beforeunload', () => {
   function drawPlayerShip(x, y, shield, frame) {
     ctx.save();
     ctx.translate(x, y);
+
+    if (invincibleTimer > 0 && Math.floor(frame / 4) % 2 === 0) {
+      ctx.globalAlpha = 0.35;
+    }
 
     let flameH = 6 + Math.sin(frame * 0.4) * 3;
     if (overchargeTimer > 0) flameH += 4;
@@ -2847,11 +2911,23 @@ window.addEventListener('beforeunload', () => {
       ctx.lineWidth = 3;
       ctx.shadowBlur = 10; ctx.shadowColor = '#ffea00';
       ctx.beginPath(); ctx.arc(10, 10, rPulse, 0, Math.PI * 2); ctx.stroke();
-    } else if (shield) {
-      ctx.strokeStyle = '#00e5ff';
-      ctx.lineWidth = 2;
-      ctx.shadowBlur = 8; ctx.shadowColor = '#00e5ff';
+    } else if (shield || (p && p.shields > 0)) {
+      let sc = (p && typeof p.shields === 'number') ? p.shields : 1;
+      let sAlpha = 0.55 + Math.sin(frame * 0.15) * 0.25;
+      ctx.strokeStyle = `rgba(0, 229, 255, ${sAlpha})`;
+      ctx.lineWidth = 1.5 + (sc * 0.5);
+      ctx.shadowBlur = 6 + sc * 2; ctx.shadowColor = '#00e5ff';
       ctx.beginPath(); ctx.arc(10, 10, 16, 0, Math.PI * 2); ctx.stroke();
+      if (sc >= 2) {
+        ctx.strokeStyle = `rgba(0, 229, 255, ${sAlpha * 0.6})`;
+        ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.arc(10, 10, 13, 0, Math.PI * 2); ctx.stroke();
+      }
+      if (sc >= 3) {
+        ctx.strokeStyle = `rgba(255, 255, 255, ${sAlpha * 0.4})`;
+        ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.arc(10, 10, 10, 0, Math.PI * 2); ctx.stroke();
+      }
     }
 
     ctx.restore();
@@ -3625,17 +3701,56 @@ window.addEventListener('beforeunload', () => {
     ctx.fillText('||', W - 18, 17);
     ctx.textAlign = 'left';
 
-    ctx.fillStyle = '#ff1744';
-    for (let i = 0; i < p.hp; i++) ctx.fillRect(10 + i * 12, 26, 8, 8);
-
-    ctx.fillStyle = '#ffea00';
-    for (let i = 0; i < p.bombs; i++) ctx.fillRect(60 + i * 12, 26, 8, 8);
-
+    // SHIELD INDICATOR (Cyan)
     ctx.fillStyle = '#00e5ff';
-    ctx.fillText(`Drones:[W]${droneCount}/2`, 105, 34);
-    const cTag = playerChassis === 1 ? 'CRIMSON' : (playerChassis === 2 ? 'VOID' : 'ALPHA');
+    ctx.font = 'bold 9px monospace';
+    ctx.fillText('SHD', 10, 33);
+    let maxS = p.maxShields || 3;
+    let curS = (typeof p.shields === 'number') ? p.shields : 0;
+    for (let i = 0; i < maxS; i++) {
+      if (i < curS) {
+        ctx.fillStyle = '#00e5ff';
+        ctx.fillRect(32 + i * 10, 26, 7, 8);
+      } else {
+        ctx.strokeStyle = 'rgba(0, 229, 255, 0.4)';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(32 + i * 10, 26, 7, 8);
+      }
+    }
+
+    // HULL HP INDICATOR (Red)
+    let hullX = 32 + maxS * 10 + 6;
+    ctx.fillStyle = '#ff1744';
+    ctx.font = 'bold 9px monospace';
+    ctx.fillText('HUL', hullX, 33);
+    let maxH = p.maxHp || 3;
+    for (let i = 0; i < maxH; i++) {
+      if (i < p.hp) {
+        ctx.fillStyle = '#ff1744';
+        ctx.fillRect(hullX + 22 + i * 10, 26, 7, 8);
+      } else {
+        ctx.strokeStyle = 'rgba(255, 23, 68, 0.4)';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(hullX + 22 + i * 10, 26, 7, 8);
+      }
+    }
+
+    // BOMBS INDICATOR (Yellow)
+    let bombX = hullX + 22 + maxH * 10 + 6;
+    ctx.fillStyle = '#ffea00';
+    ctx.font = 'bold 9px monospace';
+    ctx.fillText('BOM', bombX, 33);
+    for (let i = 0; i < p.bombs; i++) {
+      ctx.fillRect(bombX + 22 + i * 10, 26, 7, 8);
+    }
+
+    // DRONES & CHASSIS
+    ctx.fillStyle = '#00e5ff';
+    ctx.font = '9px monospace';
+    ctx.fillText(`[W]${droneCount}/2`, W - 92, 33);
+    const cTag = playerChassis === 1 ? 'CRIM' : (playerChassis === 2 ? 'VOID' : 'ALPH');
     ctx.fillStyle = playerChassis === 1 ? '#ff5252' : (playerChassis === 2 ? '#b388ff' : '#00e5ff');
-    ctx.fillText(`[C]${cTag}`, 205, 34);
+    ctx.fillText(`[C]${cTag}`, W - 42, 33);
 
     // Overcharge & Hyper-Jump status
     if (hyperJumpTimer > 0) {
@@ -3733,6 +3848,10 @@ window.addEventListener('beforeunload', () => {
       "[F5] / [F9]   : Quicksave / Quickload",
       "[M]           : Toggle Genesis FM Audio",
       "",
+      "--- SHIP DEFENSES ---",
+      "SHIELDS : 3 Energy Layers (Recharges out of combat)",
+      "HULL HP : Multiple Hits + 1.5s I-Frame Buffer",
+      "",
       "--- COMBAT SUBSYSTEMS ---",
       "[J] : Hyper-Jump Warp Drive",
       "[W] : Deploy Companion Drone",
@@ -3743,7 +3862,7 @@ window.addEventListener('beforeunload', () => {
       "[S] : Hyper Shield (Barrier)",
       "",
       "--- POWERUP PODS ---",
-      "S:Spread L:Laser P:Plasma H:Shield",
+      "S:Spread L:Laser P:Plasma H:Shield Pod",
       "B:Bomb R:Rapid T:Time W:Drone O:Core"
     ];
     for (let i = 0; i < instructions.length; i++) {

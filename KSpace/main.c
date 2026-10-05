@@ -104,7 +104,9 @@ static HFONT hFontMenu = NULL;
 static HFONT hFontHUD = NULL;
 
 Ent p = { W/2.0f - 10.0f, H - 60.0f, 1.0f, 0, 0, 0, 3, 3, 0, 0, 0, 0, 0 };
-int shieldActive = 0;
+int shieldActive = 3;
+int maxShields = 3;
+int shieldRechargeTimer = 0;
 int hyperShieldTimer = 0;
 int hyperShieldCooldown = 0;
 int bombCount = 1;
@@ -521,6 +523,11 @@ void SaveLeaderboard() {
 
 void CyclePlayerChassis() {
     playerChassis = (playerChassis + 1) % 3;
+    p.maxHp = playerChassis == 1 ? 4 : 3;
+    if (p.hp > p.maxHp) p.hp = p.maxHp;
+    maxShields = playerChassis == 1 ? 4 : 3;
+    if (shieldActive > maxShields) shieldActive = maxShields;
+    maxBombs = playerChassis == 1 ? 4 : 3;
     HKEY hKey;
     if (RegCreateKeyExA(HKEY_CURRENT_USER, "Software\\KSpace", 0, NULL, 0, KEY_WRITE, NULL, &hKey, NULL) == ERROR_SUCCESS) {
         DWORD chVal = (DWORD)playerChassis;
@@ -1398,12 +1405,15 @@ void StartNewGame(int modeIdx) {
     modeIndex = modeIdx;
     p.x = W / 2.0f - 10.0f;
     p.y = H - 60.0f;
-    p.hp = 3;
-    p.maxHp = 3;
-    shieldActive = 0;
+    p.maxHp = playerChassis == 1 ? 4 : 3;
+    p.hp = p.maxHp;
+    maxShields = playerChassis == 1 ? 4 : 3;
+    shieldActive = maxShields;
+    shieldRechargeTimer = 0;
     hyperShieldTimer = 0;
     hyperShieldCooldown = 0;
-    bombCount = 1;
+    bombCount = playerChassis == 1 ? 2 : 1;
+    maxBombs = playerChassis == 1 ? 4 : 3;
     weaponType = 0;
     weaponLevel = 0;
     score = 0; shotsFired = 0; shotsHit = 0; timeSurvivedFrames = 0;
@@ -1461,8 +1471,11 @@ void StartNewGame(int modeIdx) {
 void PlayerHit() {
     if (hyperShieldTimer > 0 || invincibleTimer > 0) return;
 
-    if (shieldActive) {
-        shieldActive = 0;
+    invincibleTimer = 90; // 1.5s i-frame buffer on every hit!
+    shieldRechargeTimer = 0;
+
+    if (shieldActive > 0) {
+        shieldActive--;
         AddShieldRipple(p.x + 10.0f, p.y + 10.0f, RGB(0, 229, 255));
         AddExplosion(p.x + 10.0f, p.y + 10.0f, 16, RGB(0, 229, 255));
         PlaySnd(1);
@@ -1472,6 +1485,7 @@ void PlayerHit() {
         AddExplosion(p.x + 10.0f, p.y + 10.0f, 30, RGB(255, 23, 68));
         PlaySnd(1);
         if (p.hp <= 0) {
+            p.hp = 0;
             gameState = STATE_GAMEOVER;
             AddScoreToLeaderboard(score, wave, modeIndex);
         }
@@ -1479,11 +1493,11 @@ void PlayerHit() {
 }
 
 void ApplyPowerup(int type) {
-    if (type == 0) { spreadTimer = 350; weaponType = 1; }
-    else if (type == 1) { laserTimer = 300; weaponType = 2; }
-    else if (type == 2) { shieldActive = 1; AddShieldRipple(p.x + 10.0f, p.y + 10.0f, RGB(0, 229, 255)); }
+    if (type == 0) { spreadTimer = 600; weaponType = 1; }
+    else if (type == 1) { laserTimer = 600; weaponType = 2; }
+    else if (type == 2) { shieldActive = maxShields; AddShieldRipple(p.x + 10.0f, p.y + 10.0f, RGB(0, 229, 255)); PlaySnd(2); }
     else if (type == 3) { if (bombCount < maxBombs) bombCount++; }
-    else if (type == 4) { rapidTimer = 350; }
+    else if (type == 4) { rapidTimer = 600; }
     else if (type == 5) { UseTimeStop(); }
     else if (type == 6) { UseHyperShield(); AddShieldRipple(p.x + 10.0f, p.y + 10.0f, RGB(255, 234, 0)); }
     else if (type == 7) { dashCooldown = 0; UseTacticalDash(); }
@@ -1579,15 +1593,15 @@ void Update() {
         }
     }
 
-    // Loop 10: Planetary Bombardment Mission Simulation
+    // Loop 10: Planetary Bombardment Mission Simulation (half-paced for fair reaction time)
     if (bombardmentActive) {
         bombardmentTimer--;
-        if (frameCount % 45 == 0) {
+        if (frameCount % 90 == 0) {
             for (int k = 0; k < MAX_STRIKES; k++) {
                 if (!strikes[k].active) {
                     strikes[k].active = 1;
                     strikes[k].x = 25.0f + (float)(rnd() % (W - 50));
-                    strikes[k].timer = 55;
+                    strikes[k].timer = 110;
                     strikes[k].width = 24;
                     break;
                 }
@@ -1596,7 +1610,7 @@ void Update() {
         for (int k = 0; k < MAX_STRIKES; k++) {
             if (strikes[k].active) {
                 strikes[k].timer--;
-                if (strikes[k].timer == 15) { // Impact moment!
+                if (strikes[k].timer == 30) { // Impact moment!
                     PlaySnd(4);
                     AddShockwave(strikes[k].x, H - 30.0f, 35.0f, RGB(255, 60, 0));
                     AddExplosion(strikes[k].x, H - 30.0f, 15, RGB(255, 23, 68));
@@ -1613,7 +1627,7 @@ void Update() {
                 if (strikes[k].timer <= 0) strikes[k].active = 0;
             }
         }
-        if (frameCount % 80 == 0) {
+        if (frameCount % 160 == 0) {
             for (int i = 0; i < MAX_ENEMIES; i++) {
                 if (!e[i].active) {
                     e[i].active = 1.0f;
@@ -1621,7 +1635,7 @@ void Update() {
                     e[i].y = -30.0f;
                     e[i].type = 13.0f; // Siege Drop Pod
                     e[i].hp = 24; e[i].maxHp = 24;
-                    e[i].dx = 0.0f; e[i].dy = 3.0f;
+                    e[i].dx = 0.0f; e[i].dy = 1.5f;
                     e[i].timer = 0; e[i].cloaked = 0; e[i].isElite = 0; e[i].squadId = 0;
                     e[i].shield = 0;
                     break;
@@ -1655,7 +1669,7 @@ void Update() {
             PlaySnd(6);
             for (int k = 0; k < MAX_POWERUPS; k++) {
                 if (!pu[k].active) {
-                    pu[k].active = 1.0f; pu[k].x = W / 2.0f - 15.0f; pu[k].y = 50.0f; pu[k].dy = 1.5f;
+                    pu[k].active = 1.0f; pu[k].x = W / 2.0f - 15.0f; pu[k].y = 50.0f; pu[k].dy = 0.75f;
                     pu[k].type = (k == 0 ? 10.0f : 9.0f); // 10 = Drone Pod, 9 = Overcharge Core
                     break;
                 }
@@ -1698,9 +1712,9 @@ void Update() {
         if (wave % 7 == 0 && frameCount % 400 == 0 && !bombardmentActive && !bossActive) TriggerBombardment();
     }
 
-    // Scroll Starfield
+    // Scroll Starfield (smooth half-speed)
     for (int i = 0; i < MAX_STARS; i++) {
-        stars[i].y += stars[i].speed * (modeIndex == MODE_ENDURANCE ? 1.5f : 1.0f);
+        stars[i].y += stars[i].speed * (modeIndex == MODE_ENDURANCE ? 0.75f : 0.5f);
         if (stars[i].y > H) {
             stars[i].y = 0;
             stars[i].x = (float)(rnd() % W);
@@ -1709,19 +1723,30 @@ void Update() {
 
     UpdateParticles();
 
+    // Shield Auto-Regeneration System (recharges 1 layer when unharmed for ~8 seconds)
+    if (p.hp > 0 && shieldActive < maxShields) {
+        shieldRechargeTimer++;
+        if (shieldRechargeTimer >= 480) {
+            shieldActive++;
+            shieldRechargeTimer = 0;
+            AddShieldRipple(p.x + 10.0f, p.y + 10.0f, RGB(0, 229, 255));
+            PlaySnd(2);
+        }
+    }
+
     if (pathGatesActive) {
-        pathGatesY += 1.0f;
+        pathGatesY += 0.5f;
         if (pathGatesY > H + 50.0f) pathGatesActive = 0;
         
         if (p.x < W/4.0f + 20 && p.x + 20 > W/4.0f - 20 && p.y < pathGatesY + 20 && p.y + 20 > pathGatesY - 20) {
             pathGatesActive = 0; wave += 1; score += 2000; PlaySnd(2);
         } else if (p.x < 3*W/4.0f + 20 && p.x + 20 > 3*W/4.0f - 20 && p.y < pathGatesY + 20 && p.y + 20 > pathGatesY - 20) {
-            pathGatesActive = 0; p.hp = p.maxHp; PlaySnd(2);
+            pathGatesActive = 0; p.hp = p.maxHp; shieldActive = maxShields; PlaySnd(2);
         }
     }
 
-    if (frameCount % 600 == 0 && !escort.active && !bossActive && wave % 2 == 0) {
-        escort.active = 1; escort.x = W / 2.0f - 15.0f; escort.y = -30.0f; escort.dy = 0.5f;
+    if (frameCount % 1200 == 0 && !escort.active && !bossActive && wave % 2 == 0) {
+        escort.active = 1; escort.x = W / 2.0f - 15.0f; escort.y = -30.0f; escort.dy = 0.25f;
         escort.maxHp = 20; escort.hp = 20;
     }
     if (escort.active) {
@@ -1744,7 +1769,7 @@ void Update() {
     }
 
     // Controls
-    float speed = (GetAsyncKeyState(VK_SHIFT) & 0x8000) ? 7.0f : 4.5f;
+    float speed = (GetAsyncKeyState(VK_SHIFT) & 0x8000) ? 5.2f : 3.5f;
     if ((GetAsyncKeyState(kbLeft) & 0x8000)) p.x -= speed;
     if ((GetAsyncKeyState(kbRight) & 0x8000)) p.x += speed;
     if ((GetAsyncKeyState(kbUp) & 0x8000)) p.y -= speed;
@@ -1808,7 +1833,7 @@ void Update() {
     // Loop 11: Dreadnought Boss & Mothership Logic
     if (bossActive) {
         if (bossIsDreadnought) {
-            if (bossY < 35.0f) bossY += 0.8f;
+            if (bossY < 35.0f) bossY += 0.4f;
             else {
                 bossX += bossDx;
                 if (bossX < 5.0f || bossX > W - 125.0f) bossDx = -bossDx;
@@ -1817,12 +1842,12 @@ void Update() {
             bossAttackTimer++;
             dreadFlakTimer++;
 
-            // Mega-Ion Cannon Charging & Firing
+            // Mega-Ion Cannon Charging & Firing (2x telegraph window)
             if (timeStopTimer == 0) {
-                dreadIonCharge += 1;
+                dreadIonCharge += 0.5f;
                 if (dreadIonCharge >= 100) {
                     dreadIonCharge = 0;
-                    dreadIonBeamTimer = 45; // 0.75 seconds of mega-beam
+                    dreadIonBeamTimer = 60; // 1 second of mega-beam
                     PlaySnd(11);
                     screenShake = 15;
                 }
@@ -1832,17 +1857,17 @@ void Update() {
                 dreadIonBeamTimer--;
                 float beamX = bossX + 60.0f;
                 if (p.x + 18.0f > beamX - 14.0f && p.x + 2.0f < beamX + 14.0f) {
-                    if (frameCount % 6 == 0) PlayerHit();
+                    if (frameCount % 12 == 0) PlayerHit();
                 }
             }
 
-            // Dreadnought Flak & Homing Salvos
-            if (timeStopTimer == 0 && dreadFlakTimer % 38 == 0) {
+            // Dreadnought Flak & Homing Salvos (half speed)
+            if (timeStopTimer == 0 && dreadFlakTimer % 76 == 0) {
                 for (int k = 0; k < MAX_EBULLETS; k++) {
                     if (!eb[k].active) {
                         eb[k].active = 1.0f;
                         eb[k].x = bossX + 20.0f; eb[k].y = bossY + 40.0f;
-                        eb[k].dx = -1.8f; eb[k].dy = 3.2f;
+                        eb[k].dx = -0.9f; eb[k].dy = 1.6f;
                         break;
                     }
                 }
@@ -1850,7 +1875,7 @@ void Update() {
                     if (!eb[k].active) {
                         eb[k].active = 1.0f;
                         eb[k].x = bossX + 100.0f; eb[k].y = bossY + 40.0f;
-                        eb[k].dx = 1.8f; eb[k].dy = 3.2f;
+                        eb[k].dx = 0.9f; eb[k].dy = 1.6f;
                         break;
                     }
                 }
@@ -1858,7 +1883,7 @@ void Update() {
                     if (!eb[k].active) {
                         eb[k].active = 1.0f;
                         eb[k].x = bossX + 60.0f; eb[k].y = bossY + 50.0f;
-                        eb[k].dx = (frameCount % 2 == 0 ? -0.8f : 0.8f); eb[k].dy = 3.8f;
+                        eb[k].dx = (frameCount % 2 == 0 ? -0.4f : 0.4f); eb[k].dy = 1.9f;
                         break;
                     }
                 }
@@ -1922,15 +1947,15 @@ void Update() {
                 }
             }
         } else {
-            // Mothership / Regular Boss
-            if (bossY < 45.0f) bossY += 1.0f;
+            // Mothership / Regular Boss (half speed & 2x reaction windows)
+            if (bossY < 45.0f) bossY += 0.5f;
             else {
                 bossX += bossDx;
                 if (bossX < 10.0f || bossX > W - (bossIsMothership ? 95.0f : 70.0f)) bossDx = -bossDx;
             }
 
             bossAttackTimer++;
-            if (timeStopTimer == 0 && bossAttackTimer % (bossIsMothership ? 35 : 45) == 0) {
+            if (timeStopTimer == 0 && bossAttackTimer % (bossIsMothership ? 70 : 90) == 0) {
                 if (bossIsMothership) {
                     for (int tIdx = 0; tIdx < 4; tIdx++) {
                         if (turretActive[tIdx]) {
@@ -1940,20 +1965,20 @@ void Update() {
                                 if (!eb[k].active) {
                                     eb[k].active = 1.0f;
                                     eb[k].x = tx; eb[k].y = ty;
-                                    eb[k].dy = 3.5f;
-                                    eb[k].dx = (tIdx == 0 ? -1.5f : (tIdx == 3 ? 1.5f : 0.0f));
+                                    eb[k].dy = 1.75f;
+                                    eb[k].dx = (tIdx == 0 ? -0.75f : (tIdx == 3 ? 0.75f : 0.0f));
                                     break;
                                 }
                             }
                         }
                     }
-                    if (!IsMothershipShieldActive() && (bossAttackTimer % 50 == 0)) {
+                    if (!IsMothershipShieldActive() && (bossAttackTimer % 100 == 0)) {
                         for (int a = -2; a <= 2; a++) {
                             for (int k = 0; k < MAX_EBULLETS; k++) {
                                 if (!eb[k].active) {
                                     eb[k].active = 1.0f;
                                     eb[k].x = bossX + 45.0f; eb[k].y = bossY + 45.0f;
-                                    eb[k].dy = 3.8f; eb[k].dx = (float)a * 1.5f;
+                                    eb[k].dy = 1.9f; eb[k].dx = (float)a * 0.75f;
                                     break;
                                 }
                             }
@@ -1961,12 +1986,12 @@ void Update() {
                     }
                 } else {
                     int bspawned = 0;
-                    float bdx[] = {-1.5f, 0.0f, 1.5f};
+                    float bdx[] = {-0.75f, 0.0f, 0.75f};
                     for (int k = 0; k < MAX_EBULLETS; k++) {
                         if (!eb[k].active) {
                             eb[k].active = 1.0f;
                             eb[k].x = bossX + 30.0f; eb[k].y = bossY + 45.0f;
-                            eb[k].dy = 3.5f; eb[k].dx = bdx[bspawned];
+                            eb[k].dy = 1.75f; eb[k].dx = bdx[bspawned];
                             bspawned++;
                             if (bspawned >= 3) break;
                         }
@@ -2052,17 +2077,17 @@ void Update() {
         }
     }
 
-    // Spawning regular enemies & formations
-    int spawnRate = 30 - (score / 200) - (modeIndex == MODE_ENDURANCE ? 8 : 0);
-    if (spawnRate < 8) spawnRate = 8;
+    // Spawning regular enemies & formations (paced at half rate)
+    int spawnRate = 60 - (score / 150) - (modeIndex == MODE_ENDURANCE ? 16 : 0);
+    if (spawnRate < 16) spawnRate = 16;
     if (frameCount % spawnRate == 0) SpawnEnemy();
 
-    // Regular & Elite Enemies Update
-    float sBonus1 = (score / 5000.0f) * 1.5f;
+    // Regular & Elite Enemies Update (smooth half-speed)
+    float sBonus1 = ((score / 5000.0f) * 1.5f);
     if (sBonus1 > 2.2f) sBonus1 = 2.2f;
     float sBonus2 = (wave - 1) * 0.12f;
     if (sBonus2 > 1.5f) sBonus2 = 1.5f;
-    float baseEnemySpeed = 1.8f + sBonus1 + sBonus2 + (modeIndex == MODE_ENDURANCE ? 0.6f : 0.0f);
+    float baseEnemySpeed = (1.8f + sBonus1 + sBonus2 + (modeIndex == MODE_ENDURANCE ? 0.6f : 0.0f)) * 0.5f;
     for (int i = 0; i < MAX_ENEMIES; i++) {
         if (e[i].active) {
             float ew = (e[i].type == 6.0f || e[i].type == 9.0f || e[i].type == 11.0f || e[i].type == 12.0f) ? 36.0f : 20.0f;
@@ -2077,78 +2102,78 @@ void Update() {
                 if (e[i].type == 0.0f) e[i].y += baseEnemySpeed * 1.2f;
                 else if (e[i].type == 1.0f) {
                     e[i].y += baseEnemySpeed * 0.8f;
-                    if (e[i].x < p.x) e[i].x += 0.8f;
-                    if (e[i].x > p.x) e[i].x -= 0.8f;
+                    if (e[i].x < p.x) e[i].x += 0.4f;
+                    if (e[i].x > p.x) e[i].x -= 0.4f;
                 } else if (e[i].type == 2.0f) e[i].y += baseEnemySpeed * 0.5f;
                 else if (e[i].type == 3.0f) e[i].y += baseEnemySpeed * 0.4f;
                 else if (e[i].type == 4.0f) {
                     e[i].y += baseEnemySpeed * 0.9f;
-                    e[i].x += e[i].dx;
+                    e[i].x += e[i].dx * 0.5f;
                     if (e[i].x < 0 || e[i].x > W - ew) e[i].dx = -e[i].dx;
                 } else if (e[i].type == 5.0f || e[i].type == 9.0f) e[i].y += baseEnemySpeed * 1.3f;
                 else if (e[i].type == 6.0f) {
-                    if (e[i].y < 60.0f) e[i].y += 0.8f;
+                    if (e[i].y < 60.0f) e[i].y += 0.4f;
                     else {
-                        e[i].x += e[i].dx;
+                        e[i].x += e[i].dx * 0.5f;
                         if (e[i].x < 0 || e[i].x > W - ew) e[i].dx = -e[i].dx;
                     }
                 } else if (e[i].type == 7.0f) { // Kamikaze dive
-                    e[i].y += baseEnemySpeed * 2.0f;
-                    if (e[i].x < p.x) e[i].x += 1.4f;
-                    if (e[i].x > p.x) e[i].x -= 1.4f;
+                    e[i].y += baseEnemySpeed * 1.8f;
+                    if (e[i].x < p.x) e[i].x += 0.7f;
+                    if (e[i].x > p.x) e[i].x -= 0.7f;
                 } else if (e[i].type == 8.0f) { // Stealth fighter
                     e[i].y += baseEnemySpeed * 1.0f;
                 } else if (e[i].type == 10.0f) { // Elite Crimson Valkyrie
                     e[i].y += baseEnemySpeed * 1.0f;
-                    e[i].x += e[i].dx;
+                    e[i].x += e[i].dx * 0.5f;
                     if (e[i].x < 10.0f || e[i].x > W - ew - 10.0f) e[i].dx = -e[i].dx;
-                    if (frameCount % 45 == 0) {
+                    if (frameCount % 90 == 0) {
                         for (int j = 0; j < MAX_EBULLETS; j++) {
                             if (!eb[j].active) {
                                 eb[j].active = 1.0f; eb[j].x = e[i].x + 10.0f; eb[j].y = e[i].y + 20.0f;
-                                eb[j].dy = 4.0f; eb[j].dx = (rnd() % 2 == 0 ? -1.0f : 1.0f);
+                                eb[j].dy = 2.0f; eb[j].dx = (rnd() % 2 == 0 ? -0.5f : 0.5f);
                                 break;
                             }
                         }
                     }
                 } else if (e[i].type == 11.0f) { // Elite Void Phantom
                     e[i].y += baseEnemySpeed * 0.7f;
-                    e[i].x += e[i].dx;
+                    e[i].x += e[i].dx * 0.5f;
                     if (e[i].x < 15.0f || e[i].x > W - ew - 15.0f) e[i].dx = -e[i].dx;
-                    if (frameCount % 55 == 0) {
+                    if (frameCount % 110 == 0) {
                         for (int j = 0; j < MAX_EBULLETS; j++) {
                             if (!eb[j].active) {
                                 eb[j].active = 1.0f; eb[j].x = e[i].x + 15.0f; eb[j].y = e[i].y + 25.0f;
-                                eb[j].dy = 3.2f; eb[j].dx = (p.x > e[i].x ? 1.0f : -1.0f);
+                                eb[j].dy = 1.6f; eb[j].dx = (p.x > e[i].x ? 0.5f : -0.5f);
                                 break;
                             }
                         }
                     }
                 } else if (e[i].type == 12.0f) { // Elite Command Cruiser
-                    if (e[i].y < 70.0f) e[i].y += 0.6f;
-                    e[i].x += e[i].dx;
+                    if (e[i].y < 70.0f) e[i].y += 0.3f;
+                    e[i].x += e[i].dx * 0.5f;
                     if (e[i].x < 20.0f || e[i].x > W - ew - 20.0f) e[i].dx = -e[i].dx;
-                    if (frameCount % 40 == 0) {
+                    if (frameCount % 80 == 0) {
                         for (int a = -1; a <= 1; a++) {
                             for (int j = 0; j < MAX_EBULLETS; j++) {
                                 if (!eb[j].active) {
                                     eb[j].active = 1.0f; eb[j].x = e[i].x + 18.0f; eb[j].y = e[i].y + 30.0f;
-                                    eb[j].dy = 3.6f; eb[j].dx = (float)a * 1.5f;
+                                    eb[j].dy = 1.8f; eb[j].dx = (float)a * 0.75f;
                                     break;
                                 }
                             }
                         }
                     }
                 } else if (e[i].type == 13.0f) { // Siege Drop Pod
-                    e[i].y += baseEnemySpeed * 2.2f;
+                    e[i].y += baseEnemySpeed * 1.8f;
                 }
 
-                if (e[i].type == 2.0f && (frameCount % 60 == 0) && (rnd() % 2 == 0)) {
+                if (e[i].type == 2.0f && (frameCount % 120 == 0) && (rnd() % 2 == 0)) {
                     for (int j = 0; j < MAX_EBULLETS; j++) {
                         if (!eb[j].active) {
                             eb[j].active = 1.0f;
                             eb[j].x = e[i].x + 10.0f; eb[j].y = e[i].y + 20.0f;
-                            eb[j].dy = 3.5f; eb[j].dx = 0.0f;
+                            eb[j].dy = 1.75f; eb[j].dx = 0.0f;
                             break;
                         }
                     }
@@ -2167,11 +2192,22 @@ void Update() {
                 }
             }
 
-            // Player Collision
+            // Player Collision (with invulnerability deflection)
             if (p.x < e[i].x + ew && p.x + 20 > e[i].x && p.y < e[i].y + eh && p.y + 20 > e[i].y) {
+                if (hyperShieldTimer > 0) {
+                    e[i].active = 0.0f;
+                    AddExplosion(e[i].x + ew/2.0f, e[i].y + eh/2.0f, 16, RGB(255, 152, 0));
+                    continue;
+                }
+                if (invincibleTimer > 0) {
+                    e[i].active = 0.0f;
+                    AddExplosion(e[i].x + ew/2.0f, e[i].y + eh/2.0f, 12, RGB(0, 229, 255));
+                    continue;
+                }
                 e[i].active = 0.0f;
                 AddExplosion(e[i].x + ew/2.0f, e[i].y + eh/2.0f, 16, RGB(255, 152, 0));
                 PlayerHit();
+                continue;
             }
 
             // Bullets Collision
@@ -2214,7 +2250,7 @@ void Update() {
                 if ((rnd() % 100) < dropChance) {
                     for (int k = 0; k < MAX_POWERUPS; k++) {
                         if (!pu[k].active) {
-                            pu[k].active = 1.0f; pu[k].x = e[i].x; pu[k].y = e[i].y; pu[k].dy = 1.8f;
+                            pu[k].active = 1.0f; pu[k].x = e[i].x; pu[k].y = e[i].y; pu[k].dy = 0.9f;
                             pu[k].type = (float)(rnd() % 12); // Powerup 0..11
                             break;
                         }
@@ -2235,16 +2271,21 @@ void Update() {
             }
             if (eb[i].y > H || eb[i].x < 0 || eb[i].x > W) eb[i].active = 0.0f;
             if (p.x < eb[i].x + 4 && p.x + 20 > eb[i].x && p.y < eb[i].y + 10 && p.y + 20 > eb[i].y) {
+                if (invincibleTimer > 0) {
+                    AddExplosion(eb[i].x, eb[i].y, 3, RGB(0, 229, 255));
+                    eb[i].active = 0.0f;
+                    continue;
+                }
                 eb[i].active = 0.0f;
                 PlayerHit();
             }
         }
     }
 
-    // Powerups Movement
+    // Powerups Movement (smooth half-speed)
     for (int i = 0; i < MAX_POWERUPS; i++) {
         if (pu[i].active) {
-            pu[i].y += pu[i].dy;
+            pu[i].y += pu[i].dy * 0.5f;
             if (pu[i].y > H) pu[i].active = 0.0f;
             if (p.x < pu[i].x + 16 && p.x + 20 > pu[i].x && p.y < pu[i].y + 16 && p.y + 20 > pu[i].y) {
                 pu[i].active = 0.0f;
@@ -2314,6 +2355,7 @@ void DrawEnemyBulletGDI(HDC hdc, float fx, float fy, int frame) {
 }
 
 void DrawPlayerShipGDI(HDC hdc, int x, int y, int shield, int frame) {
+    if (gameState == STATE_PLAYING && invincibleTimer > 0 && (frame % 4 < 2)) return;
     HPEN nullPen = (HPEN)GetStockObject(NULL_PEN);
     HPEN oldPen = (HPEN)SelectObject(hdc, nullPen);
 
@@ -2541,12 +2583,24 @@ void DrawPlayerShipGDI(HDC hdc, int x, int y, int shield, int frame) {
         SelectObject(hdc, prevBr);
         SelectObject(hdc, nullPen);
         DeleteObject(hpen);
-    } else if (shield) {
-        HPEN spen = CreatePen(PS_SOLID, 2, RGB(0, 229, 255));
+    } else if (shield > 0) {
+        HPEN spen = CreatePen(PS_SOLID, shield >= 3 ? 3 : 2, RGB(0, 229, 255));
         SelectObject(hdc, spen);
         HBRUSH nullBr = (HBRUSH)GetStockObject(NULL_BRUSH);
         HBRUSH prevBr = (HBRUSH)SelectObject(hdc, nullBr);
         Ellipse(hdc, x - 4, y - 4, x + 24, y + 24);
+        if (shield >= 2) {
+            HPEN spen2 = CreatePen(PS_SOLID, 1, RGB(128, 222, 234));
+            SelectObject(hdc, spen2);
+            Ellipse(hdc, x - 1, y - 1, x + 21, y + 21);
+            DeleteObject(spen2);
+        }
+        if (shield >= 3) {
+            HPEN spen3 = CreatePen(PS_SOLID, 1, RGB(255, 255, 255));
+            SelectObject(hdc, spen3);
+            Ellipse(hdc, x + 2, y + 2, x + 18, y + 18);
+            DeleteObject(spen3);
+        }
         SelectObject(hdc, prevBr);
         SelectObject(hdc, nullPen);
         DeleteObject(spen);
@@ -3786,8 +3840,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     wsprintfA(hudStr, "SCORE:%d HI:%d W:%d/20 [S%d]", score, highScore, wave, sec);
                     TextOutA(memDC, 10, 6, hudStr, lstrlenA(hudStr));
 
-                    char statStr[80];
-                    wsprintfA(statStr, "HP: %d  B:[B]%d  Drones:[W]%d/2  [C]%s", p.hp, bombCount, droneCount, chassisTags[playerChassis]);
+                    char statStr[96];
+                    wsprintfA(statStr, "SHD:%d/%d  HP:%d/%d  B:%d  Drones:[W]%d/2  [C]%s", shieldActive, maxShields, p.hp, p.maxHp, bombCount, droneCount, chassisTags[playerChassis]);
                     TextOutA(memDC, 10, 22, statStr, lstrlenA(statStr));
 
                     // Overcharge & Hyper-Jump Status

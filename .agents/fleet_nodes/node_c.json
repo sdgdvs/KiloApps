@@ -5,7 +5,7 @@
   "hostname": "12900K",
   "model_tier": "Gemini Ultra",
   "cadence": "4 turns/hour",
-  "status": "active",
+  "status": "stopped",
   "schedule_minutes": [
     2,
     20,
@@ -16,9 +16,9 @@
   "session_end": null,
   "session_limit_enabled": false,
   "timer_enabled": false,
-  "turns_executed": 147,
+  "turns_executed": 148,
   "last_turn_timestamp": "2026-10-04T16:55:00-07:00",
-  "last_heartbeat": "2026-10-04T23:55:17.976911+00:00",
-  "current_target": "KPomodoro",
+  "last_heartbeat": "2026-10-05T00:16:43.772797+00:00",
+  "current_target": "KTimer",
   "remote_command": "none"
 }
