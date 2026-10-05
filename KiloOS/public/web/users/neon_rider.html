@@ -1519,6 +1519,10 @@ NOP</textarea>
 
           <!-- SUB-PANEL 4: Opcode Matrix 16x16 -->
           <div id="sub-matrix" class="sub-panel" style="display:none;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; gap:6px;">
+              <input type="text" id="opcodeSearchInput" placeholder="🔍 Search opcode mnemonic (e.g. MOV, XOR, PUSH, LEA, JMP)..." style="flex:1; background:#020509; border:1px solid #1e3a4a; color:#00ffcc; font-family:var(--font-mono); font-size:10px; padding:3px 6px;">
+              <button class="btn-retro" id="btnClearOpcodeSearch" style="font-size:9px; padding:2px 6px;">Clear</button>
+            </div>
             <div class="opcode-matrix-wrap">
               <div class="opcode-matrix" id="opcodeMatrix">
                 <!-- Rendered 256 cells via JS -->
@@ -3075,32 +3079,111 @@ NOP</textarea>
   }
   setupRamTools();
 
-  /* 16x16 Opcode Matrix Generator */
+  /* 16x16 Opcode Matrix Generator & x86 Opcode Reference */
   const opcodeDatabase = {
-    0x90: { name: "NOP", cat: "mov", desc: "No Operation. 1 cycle delay, no flags changed.", cycles: 1 },
-    0xCC: { name: "INT 3", cat: "jump", desc: "Software Breakpoint. Used by debuggers.", cycles: 3 },
-    0x31: { name: "XOR r/m32, r32", cat: "alu", desc: "Bitwise Exclusive OR. Used to zero registers.", cycles: 1 },
-    0x89: { name: "MOV r/m32, r32", cat: "mov", desc: "Move 32-bit register to memory or register.", cycles: 1 },
-    0x8B: { name: "MOV r32, r/m32", cat: "mov", desc: "Move 32-bit memory to register.", cycles: 1 },
-    0xB8: { name: "MOV EAX, imm32", cat: "mov", desc: "Load 32-bit immediate constant into EAX.", cycles: 1 },
-    0x50: { name: "PUSH EAX", cat: "stack", desc: "Push EAX onto stack (ESP decrements by 4).", cycles: 1 },
-    0x58: { name: "POP EAX", cat: "stack", desc: "Pop 32-bit dword from stack into EAX.", cycles: 1 },
-    0x74: { name: "JZ rel8", cat: "jump", desc: "Jump if Zero flag is set (ZF=1).", cycles: 2 },
-    0x75: { name: "JNZ rel8", cat: "jump", desc: "Jump if Zero flag is clear (ZF=0).", cycles: 2 },
-    0xEB: { name: "JMP rel8", cat: "jump", desc: "Unconditional Short Jump.", cycles: 2 },
-    0xE8: { name: "CALL rel32", cat: "jump", desc: "Call Procedure. Pushes return address.", cycles: 3 },
-    0xC3: { name: "RET", cat: "jump", desc: "Return from Procedure. Pops EIP.", cycles: 2 },
-    0xE2: { name: "LOOP rel8", cat: "jump", desc: "Decrement ECX and jump if ECX != 0.", cycles: 3 },
-    0xF4: { name: "HLT", cat: "jump", desc: "Halt CPU until next external interrupt.", cycles: 1 },
+    0x00: { name: "ADD r/m8, r8", cat: "alu", desc: "Add 8-bit register to r/m8.", cycles: 1 },
+    0x01: { name: "ADD r/m32, r32", cat: "alu", desc: "Add 32-bit register to r/m32.", cycles: 1 },
     0x03: { name: "ADD r32, r/m32", cat: "alu", desc: "Integer addition into 32-bit register.", cycles: 1 },
+    0x04: { name: "ADD AL, imm8", cat: "alu", desc: "Add 8-bit immediate to AL.", cycles: 1 },
+    0x05: { name: "ADD EAX, imm32", cat: "alu", desc: "Add 32-bit immediate to EAX.", cycles: 1 },
+    0x09: { name: "OR r/m32, r32", cat: "alu", desc: "Bitwise Inclusive OR.", cycles: 1 },
+    0x0B: { name: "OR r32, r/m32", cat: "alu", desc: "Bitwise OR into 32-bit register.", cycles: 1 },
+    0x0F: { name: "TWO-BYTE ESCAPE", cat: "jump", desc: "Two-byte opcode prefix (0x0F xx). Extended instruction set.", cycles: 1 },
+    0x21: { name: "AND r/m32, r32", cat: "alu", desc: "Bitwise Logical AND.", cycles: 1 },
+    0x23: { name: "AND r32, r/m32", cat: "alu", desc: "Bitwise Logical AND into r32.", cycles: 1 },
+    0x29: { name: "SUB r/m32, r32", cat: "alu", desc: "Integer subtraction from r/m32.", cycles: 1 },
     0x2B: { name: "SUB r32, r/m32", cat: "alu", desc: "Integer subtraction from 32-bit register.", cycles: 1 },
+    0x2D: { name: "SUB EAX, imm32", cat: "alu", desc: "Subtract 32-bit immediate from EAX.", cycles: 1 },
+    0x31: { name: "XOR r/m32, r32", cat: "alu", desc: "Bitwise Exclusive OR. Used to zero registers (XOR EAX, EAX).", cycles: 1 },
+    0x33: { name: "XOR r32, r/m32", cat: "alu", desc: "Bitwise Exclusive OR into r32.", cycles: 1 },
+    0x39: { name: "CMP r/m32, r32", cat: "alu", desc: "Compare two 32-bit registers (sets arithmetic flags).", cycles: 1 },
+    0x3B: { name: "CMP r32, r/m32", cat: "alu", desc: "Compare 32-bit memory with register.", cycles: 1 },
+    0x3D: { name: "CMP EAX, imm32", cat: "alu", desc: "Compare EAX with 32-bit immediate.", cycles: 1 },
     0x40: { name: "INC EAX", cat: "alu", desc: "Increment EAX by 1. Updates ZF, SF, OF.", cycles: 1 },
-    0x49: { name: "DEC ECX", cat: "alu", desc: "Decrement ECX by 1. Updates ZF, SF, OF.", cycles: 1 }
+    0x41: { name: "INC ECX", cat: "alu", desc: "Increment ECX by 1. Common loop counter bump.", cycles: 1 },
+    0x42: { name: "INC EDX", cat: "alu", desc: "Increment EDX by 1.", cycles: 1 },
+    0x43: { name: "INC EBX", cat: "alu", desc: "Increment EBX by 1.", cycles: 1 },
+    0x46: { name: "INC ESI", cat: "alu", desc: "Increment Source Index pointer.", cycles: 1 },
+    0x47: { name: "INC EDI", cat: "alu", desc: "Increment Destination Index pointer.", cycles: 1 },
+    0x48: { name: "DEC EAX", cat: "alu", desc: "Decrement EAX by 1.", cycles: 1 },
+    0x49: { name: "DEC ECX", cat: "alu", desc: "Decrement ECX by 1. Updates ZF, SF, OF.", cycles: 1 },
+    0x4A: { name: "DEC EDX", cat: "alu", desc: "Decrement EDX by 1.", cycles: 1 },
+    0x4B: { name: "DEC EBX", cat: "alu", desc: "Decrement EBX by 1.", cycles: 1 },
+    0x4E: { name: "DEC ESI", cat: "alu", desc: "Decrement Source Index pointer.", cycles: 1 },
+    0x4F: { name: "DEC EDI", cat: "alu", desc: "Decrement Destination Index pointer.", cycles: 1 },
+    0x50: { name: "PUSH EAX", cat: "stack", desc: "Push EAX onto stack (ESP decrements by 4).", cycles: 1 },
+    0x51: { name: "PUSH ECX", cat: "stack", desc: "Push ECX onto stack.", cycles: 1 },
+    0x52: { name: "PUSH EDX", cat: "stack", desc: "Push EDX onto stack.", cycles: 1 },
+    0x53: { name: "PUSH EBX", cat: "stack", desc: "Push EBX onto stack.", cycles: 1 },
+    0x54: { name: "PUSH ESP", cat: "stack", desc: "Push Stack Pointer onto stack.", cycles: 1 },
+    0x55: { name: "PUSH EBP", cat: "stack", desc: "Push Base Pointer (sets standard stack frame).", cycles: 1 },
+    0x56: { name: "PUSH ESI", cat: "stack", desc: "Push Source Index onto stack.", cycles: 1 },
+    0x57: { name: "PUSH EDI", cat: "stack", desc: "Push Destination Index onto stack.", cycles: 1 },
+    0x58: { name: "POP EAX", cat: "stack", desc: "Pop 32-bit dword from stack into EAX.", cycles: 1 },
+    0x59: { name: "POP ECX", cat: "stack", desc: "Pop 32-bit dword from stack into ECX.", cycles: 1 },
+    0x5A: { name: "POP EDX", cat: "stack", desc: "Pop 32-bit dword from stack into EDX.", cycles: 1 },
+    0x5B: { name: "POP EBX", cat: "stack", desc: "Pop 32-bit dword from stack into EBX.", cycles: 1 },
+    0x5C: { name: "POP ESP", cat: "stack", desc: "Pop 32-bit dword from stack into ESP.", cycles: 1 },
+    0x5D: { name: "POP EBP", cat: "stack", desc: "Pop Base Pointer (restores caller stack frame).", cycles: 1 },
+    0x5E: { name: "POP ESI", cat: "stack", desc: "Pop Source Index from stack.", cycles: 1 },
+    0x5F: { name: "POP EDI", cat: "stack", desc: "Pop Destination Index from stack.", cycles: 1 },
+    0x68: { name: "PUSH imm32", cat: "stack", desc: "Push 32-bit immediate constant onto stack.", cycles: 1 },
+    0x6A: { name: "PUSH imm8", cat: "stack", desc: "Push sign-extended 8-bit immediate onto stack.", cycles: 1 },
+    0x74: { name: "JZ rel8", cat: "jump", desc: "Jump if Zero flag is set (ZF=1 / JE).", cycles: 2 },
+    0x75: { name: "JNZ rel8", cat: "jump", desc: "Jump if Zero flag is clear (ZF=0 / JNE).", cycles: 2 },
+    0x7C: { name: "JL rel8", cat: "jump", desc: "Jump if Less (SF != OF). Signed comparison.", cycles: 2 },
+    0x7D: { name: "JGE rel8", cat: "jump", desc: "Jump if Greater or Equal (SF == OF).", cycles: 2 },
+    0x7E: { name: "JLE rel8", cat: "jump", desc: "Jump if Less or Equal (ZF=1 or SF!=OF).", cycles: 2 },
+    0x7F: { name: "JG rel8", cat: "jump", desc: "Jump if Greater (ZF=0 and SF==OF). Diegetic Gate 0x7F.", cycles: 2 },
+    0x83: { name: "ALU r/m32, imm8", cat: "alu", desc: "Immediate arithmetic (ADD/SUB/CMP/AND/XOR/OR with 8-bit sign-extended imm).", cycles: 1 },
+    0x85: { name: "TEST r/m32, r32", cat: "alu", desc: "Non-destructive bitwise AND. Updates ZF, SF.", cycles: 1 },
+    0x88: { name: "MOV r/m8, r8", cat: "mov", desc: "Move 8-bit register to r/m8.", cycles: 1 },
+    0x89: { name: "MOV r/m32, r32", cat: "mov", desc: "Move 32-bit register to memory or register.", cycles: 1 },
+    0x8A: { name: "MOV r8, r/m8", cat: "mov", desc: "Move 8-bit memory into 8-bit register.", cycles: 1 },
+    0x8B: { name: "MOV r32, r/m32", cat: "mov", desc: "Move 32-bit memory to register.", cycles: 1 },
+    0x8D: { name: "LEA r32, m", cat: "alu", desc: "Load Effective Address. Fast integer multiplication/indexing.", cycles: 1 },
+    0x90: { name: "NOP", cat: "mov", desc: "No Operation. 1 cycle delay, no flags changed.", cycles: 1 },
+    0x99: { name: "CDQ", cat: "alu", desc: "Convert Doubleword to Quadword (sign-extends EAX into EDX:EAX).", cycles: 1 },
+    0xA4: { name: "MOVSB", cat: "mov", desc: "Move byte from [ESI] to [EDI] and advance pointers.", cycles: 1 },
+    0xA5: { name: "MOVSD", cat: "mov", desc: "Move 32-bit dword from [ESI] to [EDI]. Fast memory copy.", cycles: 1 },
+    0xAA: { name: "STOSB", cat: "mov", desc: "Store AL to [EDI] and increment/decrement EDI.", cycles: 1 },
+    0xAB: { name: "STOSD", cat: "mov", desc: "Store EAX to [EDI] (fast 32-bit pixel/RAM fill).", cycles: 1 },
+    0xAC: { name: "LODSB", cat: "mov", desc: "Load byte from [ESI] into AL.", cycles: 1 },
+    0xAD: { name: "LODSD", cat: "mov", desc: "Load 32-bit dword from [ESI] into EAX.", cycles: 1 },
+    0xB0: { name: "MOV AL, imm8", cat: "mov", desc: "Load 8-bit immediate constant into AL.", cycles: 1 },
+    0xB8: { name: "MOV EAX, imm32", cat: "mov", desc: "Load 32-bit immediate constant into EAX.", cycles: 1 },
+    0xB9: { name: "MOV ECX, imm32", cat: "mov", desc: "Load 32-bit immediate constant into ECX.", cycles: 1 },
+    0xBA: { name: "MOV EDX, imm32", cat: "mov", desc: "Load 32-bit immediate constant into EDX.", cycles: 1 },
+    0xBB: { name: "MOV EBX, imm32", cat: "mov", desc: "Load 32-bit immediate constant into EBX.", cycles: 1 },
+    0xBE: { name: "MOV ESI, imm32", cat: "mov", desc: "Load 32-bit immediate constant into ESI.", cycles: 1 },
+    0xBF: { name: "MOV EDI, imm32", cat: "mov", desc: "Load 32-bit immediate constant into EDI.", cycles: 1 },
+    0xC1: { name: "SHIFT r/m32, imm8", cat: "alu", desc: "Bitwise Shift/Rotate (SHL, SHR, SAR, ROL, ROR).", cycles: 1 },
+    0xC3: { name: "RET", cat: "jump", desc: "Return from Procedure. Pops EIP.", cycles: 2 },
+    0xC9: { name: "LEAVE", cat: "stack", desc: "High-level procedure exit (MOV ESP, EBP; POP EBP).", cycles: 1 },
+    0xCC: { name: "INT 3", cat: "jump", desc: "Software Breakpoint. Used by debuggers.", cycles: 3 },
+    0xCD: { name: "INT imm8", cat: "jump", desc: "Software Interrupt (e.g. INT 21h, INT 10h).", cycles: 16 },
+    0xE2: { name: "LOOP rel8", cat: "jump", desc: "Decrement ECX and jump if ECX != 0.", cycles: 3 },
+    0xE4: { name: "IN AL, imm8", cat: "mov", desc: "Input byte from 8-bit I/O port.", cycles: 4 },
+    0xE6: { name: "OUT imm8, AL", cat: "mov", desc: "Output byte in AL to 8-bit I/O port.", cycles: 4 },
+    0xE8: { name: "CALL rel32", cat: "jump", desc: "Call Procedure. Pushes return address.", cycles: 3 },
+    0xEB: { name: "JMP rel8", cat: "jump", desc: "Unconditional Short Jump.", cycles: 2 },
+    0xEC: { name: "IN AL, DX", cat: "mov", desc: "Input byte from 16-bit I/O port specified in DX.", cycles: 4 },
+    0xEE: { name: "OUT DX, AL", cat: "mov", desc: "Output byte to 16-bit I/O port specified in DX (e.g. VGA 0x3C8/0x3C9).", cycles: 4 },
+    0xF3: { name: "REP Prefix", cat: "mov", desc: "Repeat string instruction (ECX times).", cycles: 1 },
+    0xF4: { name: "HLT", cat: "jump", desc: "Halt CPU until next external interrupt.", cycles: 1 },
+    0xF8: { name: "CLC", cat: "alu", desc: "Clear Carry Flag (CF = 0).", cycles: 1 },
+    0xF9: { name: "STC", cat: "alu", desc: "Set Carry Flag (CF = 1).", cycles: 1 },
+    0xFC: { name: "CLD", cat: "mov", desc: "Clear Direction Flag (DF = 0, autoincrement string pointers).", cycles: 1 },
+    0xFD: { name: "STD", cat: "mov", desc: "Set Direction Flag (DF = 1, autodecrement string pointers).", cycles: 1 }
   };
 
   function initOpcodeMatrix() {
     const grid = document.getElementById('opcodeMatrix');
+    if (!grid) return;
     grid.innerHTML = '';
+
+    const searchInput = document.getElementById('opcodeSearchInput');
+    const searchTerm = (searchInput ? searchInput.value.trim().toLowerCase() : '');
 
     for (let i = 0; i < 256; i++) {
       const cell = document.createElement('div');
@@ -3116,21 +3199,40 @@ NOP</textarea>
         else if (info.cat === 'stack') cell.classList.add('has-cat-stack');
       }
 
+      if (searchTerm) {
+        const matches = (
+          hex.toLowerCase().includes(searchTerm) ||
+          (info && (info.name.toLowerCase().includes(searchTerm) || info.desc.toLowerCase().includes(searchTerm)))
+        );
+        if (matches) {
+          cell.style.boxShadow = '0 0 8px #00ffcc';
+          cell.style.borderColor = '#00ffcc';
+          cell.style.fontWeight = 'bold';
+        } else {
+          cell.style.opacity = '0.2';
+        }
+      }
+
       cell.addEventListener('click', () => {
         document.querySelectorAll('.op-cell').forEach(c => c.classList.remove('selected'));
         cell.classList.add('selected');
 
         const mnem = info ? info.name : `0x${hex}: Undefined / Prefix`;
         const desc = info ? `${info.desc} (Cycles: ${info.cycles})` : 'Multi-byte opcode, ModR/M extension, or reserved in standard x86.';
-        document.getElementById('opInspMnemonic').textContent = `0x${hex} &bull; ${mnem}`;
+        document.getElementById('opInspMnemonic').textContent = `0x${hex} • ${mnem}`;
         document.getElementById('opInspDesc').textContent = desc;
 
         const btn = document.getElementById('btnInsertOpcode');
         if (info) {
           btn.style.display = 'inline-block';
           btn.onclick = () => {
-            asmInput.value += `\n${info.name.split(' ')[0]}`;
-            assembleCode();
+            const mnemWord = info.name.split(' ')[0];
+            const asmEl = document.getElementById('asmInput');
+            if (asmEl) {
+              asmEl.value += `\n${mnemWord}`;
+              assembleCode();
+              showToast(`✔ Appended ${mnemWord} to source`);
+            }
           };
         } else {
           btn.style.display = 'none';
@@ -3141,6 +3243,18 @@ NOP</textarea>
     }
   }
   initOpcodeMatrix();
+
+  const opSearch = document.getElementById('opcodeSearchInput');
+  if (opSearch) {
+    opSearch.addEventListener('input', () => initOpcodeMatrix());
+  }
+  const btnClearOpSearch = document.getElementById('btnClearOpcodeSearch');
+  if (btnClearOpSearch && opSearch) {
+    btnClearOpSearch.addEventListener('click', () => {
+      opSearch.value = '';
+      initOpcodeMatrix();
+    });
+  }
 
   /* Hex Disassembler Workbench */
   document.getElementById('btnDisasmBytes').addEventListener('click', () => {
@@ -3154,27 +3268,86 @@ NOP</textarea>
     while (i < bytes.length) {
       const b0 = bytes[i];
       let lineText = '';
-      if (b0 === 0x90) { lineText = 'NOP'; i += 1; }
-      else if (b0 === 0xCC) { lineText = 'INT 3'; i += 1; }
-      else if (b0 === 0xC3) { lineText = 'RET'; i += 1; }
-      else if (b0 === 0x31 && bytes[i+1] === 0xC0) { lineText = 'XOR EAX, EAX'; i += 2; }
-      else if (b0 === 0xB8) {
+      let instLen = 1;
+
+      if (b0 === 0x90) { lineText = 'NOP'; instLen = 1; }
+      else if (b0 === 0xCC) { lineText = 'INT 3'; instLen = 1; }
+      else if (b0 === 0xC3) { lineText = 'RET'; instLen = 1; }
+      else if (b0 === 0xC9) { lineText = 'LEAVE'; instLen = 1; }
+      else if (b0 === 0xF4) { lineText = 'HLT'; instLen = 1; }
+      else if (b0 === 0x31 && bytes[i+1] === 0xC0) { lineText = 'XOR EAX, EAX'; instLen = 2; }
+      else if (b0 === 0x31 && bytes[i+1] === 0xDB) { lineText = 'XOR EBX, EBX'; instLen = 2; }
+      else if (b0 === 0x31 && bytes[i+1] === 0xC9) { lineText = 'XOR ECX, ECX'; instLen = 2; }
+      else if (b0 === 0x31 && bytes[i+1] === 0xD2) { lineText = 'XOR EDX, EDX'; instLen = 2; }
+      else if (b0 >= 0xB8 && b0 <= 0xBF && i + 4 < bytes.length) {
+        const regNames = ['EAX','ECX','EDX','EBX','ESP','EBP','ESI','EDI'];
+        const reg = regNames[b0 - 0xB8];
         const imm = bytes[i+1] | (bytes[i+2]<<8) | (bytes[i+3]<<16) | (bytes[i+4]<<24);
-        lineText = `MOV EAX, 0x${(imm>>>0).toString(16).padStart(8,'0').toUpperCase()}`;
-        i += 5;
+        lineText = `MOV ${reg}, 0x${(imm>>>0).toString(16).padStart(8,'0').toUpperCase()}`;
+        instLen = 5;
       }
-      else if (b0 === 0x83 && bytes[i+1] === 0xC0) {
+      else if (b0 === 0x83 && bytes[i+1] === 0xC0 && i + 2 < bytes.length) {
         lineText = `ADD EAX, ${bytes[i+2]}`;
-        i += 3;
+        instLen = 3;
       }
-      else if (b0 === 0x50) { lineText = 'PUSH EAX'; i += 1; }
-      else if (b0 === 0x58) { lineText = 'POP EAX'; i += 1; }
-      else { lineText = `DB 0x${b0.toString(16).padStart(2,'0').toUpperCase()}`; i += 1; }
+      else if (b0 === 0x83 && bytes[i+1] === 0xE8 && i + 2 < bytes.length) {
+        lineText = `SUB EAX, ${bytes[i+2]}`;
+        instLen = 3;
+      }
+      else if (b0 >= 0x50 && b0 <= 0x57) {
+        const regNames = ['EAX','ECX','EDX','EBX','ESP','EBP','ESI','EDI'];
+        lineText = `PUSH ${regNames[b0 - 0x50]}`;
+        instLen = 1;
+      }
+      else if (b0 >= 0x58 && b0 <= 0x5F) {
+        const regNames = ['EAX','ECX','EDX','EBX','ESP','EBP','ESI','EDI'];
+        lineText = `POP ${regNames[b0 - 0x58]}`;
+        instLen = 1;
+      }
+      else if (b0 >= 0x40 && b0 <= 0x47) {
+        const regNames = ['EAX','ECX','EDX','EBX','ESP','EBP','ESI','EDI'];
+        lineText = `INC ${regNames[b0 - 0x40]}`;
+        instLen = 1;
+      }
+      else if (b0 >= 0x48 && b0 <= 0x4F) {
+        const regNames = ['EAX','ECX','EDX','EBX','ESP','EBP','ESI','EDI'];
+        lineText = `DEC ${regNames[b0 - 0x48]}`;
+        instLen = 1;
+      }
+      else if (b0 === 0xCD && i + 1 < bytes.length) {
+        lineText = `INT 0x${bytes[i+1].toString(16).toUpperCase()}`;
+        instLen = 2;
+      }
+      else if (b0 === 0xEB && i + 1 < bytes.length) {
+        const rel = (bytes[i+1] << 24) >> 24;
+        lineText = `JMP rel ${rel >= 0 ? '+' : ''}${rel}`;
+        instLen = 2;
+      }
+      else if (b0 === 0x74 && i + 1 < bytes.length) {
+        const rel = (bytes[i+1] << 24) >> 24;
+        lineText = `JZ rel ${rel >= 0 ? '+' : ''}${rel}`;
+        instLen = 2;
+      }
+      else if (b0 === 0x75 && i + 1 < bytes.length) {
+        const rel = (bytes[i+1] << 24) >> 24;
+        lineText = `JNZ rel ${rel >= 0 ? '+' : ''}${rel}`;
+        instLen = 2;
+      }
+      else if (b0 === 0xE2 && i + 1 < bytes.length) {
+        const rel = (bytes[i+1] << 24) >> 24;
+        lineText = `LOOP rel ${rel >= 0 ? '+' : ''}${rel}`;
+        instLen = 2;
+      }
+      else {
+        lineText = `DB 0x${b0.toString(16).padStart(2,'0').toUpperCase()}`;
+        instLen = 1;
+      }
 
       const row = document.createElement('div');
       row.textContent = `0x${addr.toString(16).toUpperCase()}: ${lineText}`;
       output.appendChild(row);
-      addr += 2;
+      addr += instLen;
+      i += instLen;
     }
   });
 
@@ -5579,8 +5752,15 @@ glyph_neon:
 
       // Register presence for this browser session
       const presRef = ref(fbDb, `virtual_web/neon_rider/presence/${hackerId}`);
-      set(presRef, { time: Date.now(), handle: hackerId });
-      onDisconnect(presRef).remove();
+      try {
+        const setP = set(presRef, { time: Date.now(), handle: hackerId });
+        if (setP && typeof setP.catch === 'function') setP.catch(() => {});
+        const onDis = onDisconnect(presRef);
+        if (onDis && typeof onDis.remove === 'function') {
+          const remP = onDis.remove();
+          if (remP && typeof remP.catch === 'function') remP.catch(() => {});
+        }
+      } catch (e) {}
 
       // Listen for all active cyber hackers
       const allPresRef = ref(fbDb, `virtual_web/neon_rider/presence`);
@@ -5647,7 +5827,8 @@ glyph_neon:
     if (fbDb && fbPush && fbRef) {
       try {
         const remoteRef = fbRef(fbDb, `virtual_web/neon_rider/guestbook`);
-        fbPush(remoteRef, newEntry);
+        const p = fbPush(remoteRef, newEntry);
+        if (p && typeof p.catch === 'function') p.catch(() => {});
       } catch (err) {
         console.log("Firebase push failed, stored in localStorage:", err);
       }
@@ -6182,7 +6363,8 @@ glyph_neon:
           if (fbDb && fbPush && fbRef) {
             try {
               const remoteRef = fbRef(fbDb, `virtual_web/neon_rider/guestbook`);
-              fbPush(remoteRef, responseEntry);
+              const p = fbPush(remoteRef, responseEntry);
+              if (p && typeof p.catch === 'function') p.catch(() => {});
             } catch (err) {
               console.log("Firebase dead-drop push failed:", err);
             }

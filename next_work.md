@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-creator
-next_agent: kilo-graphics
+current_agent: kilo-graphics
+next_agent: kilo-tester
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -12,13 +12,13 @@ model: gemini-3.8-flash-high
 timeout_minutes: 15
 status: ready
 current_targets:
-  kilo_creator: "kweb://users/~neon_rider"
+  kilo_creator: "kweb://asm-temple"
   kilo_graphics: KColosseum
   kilo_tester: KHash
   kilo_usability: KMine
   kilo_qa: KBreakout
   kilo_expander: "KConnect4 (Firebase multiplayer enhancement)"
-virtual_web_target: "kweb://users/~neon_rider"
+virtual_web_target: "kweb://asm-temple"
 virtual_web_rotation:
   - "kweb://geocities"
   - "kweb://users/~neon_rider"
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-expander
-  app: KSpace
-  timestamp: "2026-10-05T09:35:00-07:00"
+  agent: kilo-creator
+  app: "kweb://users/~neon_rider"
+  timestamp: "2026-10-05T10:38:00-07:00"
 last_planner_run: "2026-10-05T07:31:00Z"
 ---
 
@@ -102,9 +102,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ### 1. Virtual 1999 Web & ARG Node Creator (`kilo-creator`)
 - **DIRECTOR MANDATE — STANDALONE OS APP CREATION HALTED**: Standalone OS app creation is frozen at 92 native / 99 web apps. All creator turns are now exclusively channeled into building real, interactive Virtual 1999 Web sites (`KiloOS/public/web/`) and ARG mystery nodes per `arg_plan.md`. Zero shallow stubs; every page must be a functioning Web 1.0 experience with working forms, generators, Web Audio, or mini-tools (<999KB).
-- **Current Target**: `kweb://users/~neon_rider`
+- **Current Target**: `kweb://asm-temple`
 - **Upcoming Queue**:
-  `kweb://asm-temple`, `kweb://cybercafe`, `kweb://10.19.99.4/classified`, `kweb://echo-subsystem.net`, `kweb://deep-core`, `kweb://darknet`, `kweb://portal`, `kweb://webring`, `kweb://warez`, `kweb://geocities`
+  `kweb://cybercafe`, `kweb://10.19.99.4/classified`, `kweb://echo-subsystem.net`, `kweb://deep-core`, `kweb://darknet`, `kweb://portal`, `kweb://webring`, `kweb://warez`, `kweb://geocities`, `kweb://users/~neon_rider`
   *(Completed: kweb://geocities, kweb://portal, kweb://cybercafe, kweb://asm-temple, kweb://users/~neon_rider, kweb://darknet, kweb://deep-core, kweb://echo-subsystem.net, kweb://10.19.99.4/classified, kweb://webring, kweb://warez)*.
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
@@ -135,8 +135,8 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Multiplayer Focus (CRITICAL)**: Concentrate on expanding games (*KChess*, *KConnect4*, *KGo*, *KReversi*, *KDarts*, *KTetris*, *KSnake*, *K2048*, *KMatch3*, *KSimon*) and collaborative apps (*KDraw*, *KPaint*, *KSynth*, *KPad*) with seamless Firebase Realtime Database multiplayer for cross-computer play on `kiloapps.web.app`.
 
 ### 7. Virtual 1999 Web Expansion Queue (Eternal Fleet Track)
-- **Current Active Target**: `kweb://users/~neon_rider` (`KiloOS/public/web/neon_rider.html`)
-  - *Next in Rotation*: `kweb://asm-temple` ➔ `kweb://cybercafe` ➔ `kweb://10.19.99.4/classified` ➔ `kweb://echo-subsystem.net` ➔ `kweb://deep-core` ➔ `kweb://darknet` ➔ `kweb://portal` ➔ `kweb://webring` ➔ `kweb://warez` ➔ `kweb://geocities`.
+- **Current Active Target**: `kweb://asm-temple` (`KiloOS/public/web/asm_temple.html`)
+  - *Next in Rotation*: `kweb://cybercafe` ➔ `kweb://10.19.99.4/classified` ➔ `kweb://echo-subsystem.net` ➔ `kweb://deep-core` ➔ `kweb://darknet` ➔ `kweb://portal` ➔ `kweb://webring` ➔ `kweb://warez` ➔ `kweb://geocities` ➔ `kweb://users/~neon_rider`.
 - **Anti-Potemkin Quality Standard**:
   - All 11 Virtual 1999 Web destinations are live, interactive, and feature-complete.
   - See [archive/virtual_web_completed.md](archive/virtual_web_completed.md) for full historical breakdown of completed content mandates across all sites.
@@ -217,6 +217,14 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-05T10:38:00-07:00 — kilo-creator: kweb://users/~neon_rider (Anti-Potemkin Web 1.0 Expansion, Opcode Matrix & Safe Promise Catch)**
+  - Status: PASS ✅ (0 regressions, 0 console errors, 256.6 KB < 999 KB ceiling).
+  - Opcode Reference & Matrix: Expanded x86 opcode database to 40+ instructions; added live mnemonic search filter and clear controls.
+  - Hex Disassembler Workbench: Added multi-byte instruction decode, register parsing (MOV, PUSH, POP, INC, DEC, JMP, INT, LOOP) and accurate address offsets.
+  - Safe Promise Handling: Added `.catch()` error bounds to Firebase Realtime Database presence and guestbook push handlers.
+  - Diegetic ARG Integrity: Verified 10.19.99.4 packet buffer, 1999Hz acoustic subcarrier, and dead-drop guestbook trigger integration.
+  - Verification: Headless CDP browser test PASS (0 errors); `test_arg_flow.py` PASS; `security_lint.py` 100% PASS; `npm run build` PASS (519ms).
+
 - **2026-10-05T09:35:00-07:00 — kilo-expander: KSpace (5-Level Campaign Expansion: Kuiper, Nebula, Magma, Void & Citadel)**
   - Status: PASS ✅ (0 regressions, clean builds, 183.7 KB web / 91.1 KB native < 999 KB ceiling).
   - 5 Campaign Sectors: Added Kuiper Debris (wells & shards), Ionized Rift (damped lasers & EMP), Magma Foundry (heat gauge, [D] vent & flares), Phased Graveyard (spectral sync [T]/Q-pod), and Citadel (laser barriers & pylons).
@@ -250,11 +258,5 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Click-to-Run & History: Added `data-cmd` / `data-shortcut` mappings across Help table; wired command history buffer logging.
   - Math & Session Polish: Fixed unclosed paren handling in `calc`, added `customNamed` tab persistence, and single-tab close warning.
   - Verification: `test_app_startup.py` PASS; `test_web_apps.js` PASS (33 elements); MSVC clean (`KTerm.exe`); Vite clean in 462ms.
-
-- **2026-10-05T03:33:00-07:00 — kilo-graphics: KRogue (Skip Turn — ASCII Roguelike Aesthetic & Zero Glints)**
-  - Status: ⏭️ Skip — Imagen 3 asset replacement not appropriate for KRogue
-  - Rationale: Foundational 1980s text/terminal & ASCII grid roguelike identity; raster sprites inappropriate per Rule 2.
-  - Glint Audit: Verified 0 rotating specular glints and 0 traveling perimeter border dots across web and native Win32 C.
-  - Verification: `scripts/check_icons.py` 100% PASS; `scripts/security_lint.py` 100% PASS; MSVC clean (`KRogue.exe` 77.8 KB); Vite clean in 513ms; web (208.7 KB) < 999 KB ceiling.
 
 
