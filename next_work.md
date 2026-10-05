@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-expander
-next_agent: kilo-creator
+current_agent: kilo-creator
+next_agent: kilo-graphics
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -17,7 +17,7 @@ current_targets:
   kilo_tester: KTerm
   kilo_usability: KGraph
   kilo_qa: KPomodoro
-  kilo_expander: KSnake
+  kilo_expander: "KSpace (5-Level Campaign Expansion)"
 virtual_web_target: "kweb://warez"
 virtual_web_rotation:
   - "kweb://echo-subsystem.net"
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://cybercafe"
   - "kweb://10.19.99.4/classified"
 last_run:
-  agent: kilo-qa
-  app: KTimer
-  timestamp: "2026-10-04T17:08:00-07:00"
+  agent: kilo-expander
+  app: KSnake
+  timestamp: "2026-10-04T22:45:00-07:00"
 last_planner_run: "2026-10-04T06:50:00Z"
 ---
 
@@ -129,9 +129,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KMandel`, `KHex`, `KClock`, `KTimer` *(Completed in Pass 5: KBBS, KChrono, KCipher, KClip, KCyber, KDragon, KFortress, KHash, KMaze, KMech, KMystery, KQuest, KSanctuary, KSnake, KSolitaire, KSpace, KStarDredge, KStarship, KStellar, KSubmarine, KSynth, KSys, KTask, KTerm, KTimer, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KRSS, K2048, KChart, KGraph, KContacts, KScript, KRead, KColosseum, KAbyss, KMedia, KAudio, KRadio, KPad, KPaint, KCalc, KMine, KCosmic, KBase, KBudget, KCalendar, KFarm, KFlash, KFont, KImage, KJournal, KMail, KMandel, KNet, KNote, KPass, KDB, KHex, KBookmark, KPing, KChat, KClock)*.
 
 ### 6. Feature Expander Queue (`kilo-expander`)
-- **Current Target**: `KSnake`
+- **Current Target**: `KSpace (5-Level Campaign Expansion)`
 - **Upcoming Queue**:
-  `KSpace (5-Level Campaign Expansion)`, `KPong`, `KGo`, `KSynth`, `KNote`, `KFont`, `KRSS`, `KSys`, `KZip`, `KVault`, `KType`, `KMandel`, `KGraph`, `KChart`, `KPaint`, `KConnect4`, `KChess`, `KTetris`, `KDB`, `KTodo`, `KJournal`, `KCalendar`, `KContacts`, `KMail`, `KRead`, `KPass`, `KImage`, `KAudio`, `KMedia`, `KTask`, `KNet`, `KPing`, `KHash`, `KPad`, `K2048`, `KDarts`, `KTowers`, `KReversi` *(Completed: KReversi, KSimon, KMatch3, KTowers, KSnake, KPong, KGo, KSynth, KNote, KFont, KRSS, KSys, KZip, KVault, KType, KMandel, KGraph, KChart, KPaint, KConnect4, KChess, KTetris, KDB, KTodo, KJournal, KCalendar, KContacts, KMail, KRead, KPass, KImage, KAudio, KMedia, KTask, KNet, KPing, KHash, KPad, K2048, KDarts)*.
+  `KPong`, `KGo`, `KSynth`, `KNote`, `KFont`, `KRSS`, `KSys`, `KZip`, `KVault`, `KType`, `KMandel`, `KGraph`, `KChart`, `KPaint`, `KConnect4`, `KChess`, `KTetris`, `KDB`, `KTodo`, `KJournal`, `KCalendar`, `KContacts`, `KMail`, `KRead`, `KPass`, `KImage`, `KAudio`, `KMedia`, `KTask`, `KNet`, `KPing`, `KHash`, `KPad`, `K2048`, `KDarts`, `KTowers`, `KReversi`, `KSnake` *(Completed: KReversi, KSimon, KMatch3, KTowers, KSnake, KPong, KGo, KSynth, KNote, KFont, KRSS, KSys, KZip, KVault, KType, KMandel, KGraph, KChart, KPaint, KConnect4, KChess, KTetris, KDB, KTodo, KJournal, KCalendar, KContacts, KMail, KRead, KPass, KImage, KAudio, KMedia, KTask, KNet, KPing, KHash, KPad, K2048, KDarts)*.
 - **Multiplayer Focus (CRITICAL)**: Concentrate on expanding games (*KChess*, *KConnect4*, *KGo*, *KReversi*, *KDarts*, *KTetris*, *KSnake*, *K2048*, *KMatch3*, *KSimon*) and collaborative apps (*KDraw*, *KPaint*, *KSynth*, *KPad*) with seamless Firebase Realtime Database multiplayer for cross-computer play on `kiloapps.web.app`.
 
 ### 7. Virtual 1999 Web Expansion Queue (Eternal Fleet Track)
@@ -227,6 +227,15 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-04T22:45:00-07:00 — kilo-expander: KSnake (Replay Engine, Vault Archive, Map Presets & Duel Custom Rules)**
+  - Status: PASS ✅ (0 regressions, clean builds, 286.3 KB web / 54.7 KB native < 999 KB ceiling).
+  - Replay Engine & Analytics Lab: Added deterministic frame seeking, timeline scrubber, single-frame step (`.`/`,`), jump (`[`/`]`), and APM/efficiency telemetry HUD (`A`).
+  - Replay Vault: Implemented persistent multi-match archive (`ksnake_replay_vault`) with 1-click save, replay, `.ksr` export, and delete.
+  - Map Editor Lab: Added 4 arena presets (Bastion, Twin Rooms, Spiral, Checkerboard) and `.ksm` board state JSON import/export.
+  - Duel Mode Custom Rules: Wired hazard density (standard/high/chaos) and speed tiers (classic/turbo/hyper) over Firebase RTDB.
+  - Native Engine Polish: Replaced blocking Win32 modals with `ShowToastNative` and added replay speed/step controls and HUD.
+  - Verification: `test_app_startup.py` PASS; MSVC clean (`KSnake.exe`); Vite clean in 549ms; security_lint 100% PASS.
+
 - **2026-10-04T21:30:00-07:00 — kilo-expander: KStarDredge (Hyperlane Pirate Ambushes & Tactical Combat Outfitting)**
   - Status: PASS ✅ (0 regressions, clean builds, 530.3 KB web / 292.9 KB native < 999 KB ceiling).
   - Hyperlane Ambush Corridor: Sector warp transits trigger hyperlane pirate ambushes along transit vector; starter sector is raider-free.
@@ -256,10 +265,5 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Tab Visibility & Interval Safety (ARCH-05): Added `visibilitychange` handler pausing audio/fab and eliminating drift; added `blur` key clear.
   - State Sync & Shortcuts: Wired `drydock-progress-bar` in `updateUI`; synced drydock redraw on F9 quickload and template load.
   - Verification: `test_app_startup.py` PASS; `smoke_test_native.py` PASS; MSVC clean (`KStarForge.exe` 29.5 KB); Vite clean in 311ms.
-
-- **2026-10-04T16:25:00-07:00 — kilo-graphics: KPac**
-  - ⏭️ Skip — Imagen 3 asset replacement not appropriate for KPac
-  - Glint & Flare Purge: Purged rotating specular flare on Relic Stone and orbiting spark on void rift.
-  - Verification: MSVC clean (`KPac.exe` 51.2 KB); Vite clean in 328ms (`kpac.html` 130.5 KB < 999 KB); check_icons & security_lint 100% PASS.
 
 

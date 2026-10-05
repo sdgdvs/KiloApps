@@ -105,6 +105,7 @@ struct ReplayEvent {
 struct ReplayEvent replay_events[30000];
 int replay_event_count = 0;
 int is_replay_mode = 0;
+int replay_paused = 0;
 unsigned int match_seed = 0;
 int match_ticks = 0;
 int match_apples_gained = 0;
@@ -513,7 +514,7 @@ void ExportReplay() {
         WriteFile(hFile, &replay_event_count, sizeof(int), &bw, NULL);
         WriteFile(hFile, replay_events, sizeof(struct ReplayEvent) * replay_event_count, &bw, NULL);
         CloseHandle(hFile);
-        MessageBoxA(NULL, "Replay saved to match.ksr", "Export", MB_OK);
+        ShowToastNative("Replay saved to match.ksr");
     }
 }
 void ImportReplay() {
@@ -528,9 +529,11 @@ void ImportReplay() {
         ReadFile(hFile, replay_events, sizeof(struct ReplayEvent) * replay_event_count, &br, NULL);
         CloseHandle(hFile);
         is_replay_mode = 1;
+        replay_paused = 0;
         InitGame();
+        ShowToastNative("Replay Playing (match.ksr)");
     } else {
-        MessageBoxA(NULL, "match.ksr not found", "Error", MB_OK);
+        ShowToastNative("match.ksr not found");
     }
 }
 void ExportMatchStatsCSV() {
@@ -542,7 +545,7 @@ void ExportMatchStatsCSV() {
         wsprintfA(buf, "Ticks,Apples,CoveragePct\r\n%d,%d,%d\r\n", match_ticks, match_apples_gained, pct);
         WriteFile(hFile, buf, lstrlenA(buf), &bw, NULL);
         CloseHandle(hFile);
-        MessageBoxA(NULL, "Stats saved to match_stats.csv", "Export", MB_OK);
+        ShowToastNative("Stats saved to match_stats.csv");
     }
 }
 
@@ -2736,7 +2739,35 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             } else if (game_state == 2 || game_state == 4) {
                 if ((wParam == VK_RETURN || wParam == VK_ESCAPE) && !is_high_score_entry) { game_state = 0; InvalidateRect(hwnd, NULL, TRUE); }
             } else if (game_state == 1) { // Playing
-                if (!is_replay_mode) {
+                if (is_replay_mode) {
+                    if (wParam == '1') { SetTimer(hwnd, TIMER_ID, 200, NULL); ShowToastNative("Replay: 0.5x"); break; }
+                    else if (wParam == '2') { SetTimer(hwnd, TIMER_ID, 100, NULL); ShowToastNative("Replay: 1.0x"); break; }
+                    else if (wParam == '3') { SetTimer(hwnd, TIMER_ID, 50, NULL); ShowToastNative("Replay: 2.0x"); break; }
+                    else if (wParam == '4') { SetTimer(hwnd, TIMER_ID, 25, NULL); ShowToastNative("Replay: 4.0x"); break; }
+                    else if (wParam == VK_SPACE || wParam == 'P') {
+                        replay_paused = !replay_paused;
+                        if (replay_paused) { KillTimer(hwnd, TIMER_ID); ShowToastNative("Replay Paused [Space]"); }
+                        else { SetTimer(hwnd, TIMER_ID, current_speed, NULL); ShowToastNative("Replay Resumed"); }
+                        InvalidateRect(hwnd, NULL, TRUE);
+                        break;
+                    }
+                    else if (wParam == VK_OEM_PERIOD || wParam == 190) { // '.' key
+                        if (replay_paused) {
+                            SendMessage(hwnd, WM_TIMER, TIMER_ID, 0);
+                            ShowToastNative("Step Frame +1");
+                        }
+                        break;
+                    }
+                    else if (wParam == VK_ESCAPE || wParam == 'Q') {
+                        is_replay_mode = 0;
+                        replay_paused = 0;
+                        game_state = 0;
+                        SetTimer(hwnd, TIMER_ID, 80, NULL);
+                        ShowToastNative("Exited Replay");
+                        InvalidateRect(hwnd, NULL, TRUE);
+                        break;
+                    }
+                } else {
                     char a = 0;
                     if ((wParam == VK_UP || wParam == bind_up) && last_dir_y != 1) { dir_x = 0; dir_y = -1; a = 'U'; }
                     else if ((wParam == VK_DOWN || wParam == bind_down) && last_dir_y != -1) { dir_x = 0; dir_y = 1; a = 'D'; }
@@ -3234,6 +3265,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     wsprintfA(score_text, "Score: %d | Mode: %s", score, mode_names[game_mode]);
                 }
                 TextOutA(hdc, 5, 5, score_text, lstrlenA(score_text));
+                if (is_replay_mode) {
+                    char replay_hud[128];
+                    wsprintfA(replay_hud, "[REPLAY: %s | T:%d | Space:Pause | .:Step | 1-4:Speed | Esc:Exit]",
+                        replay_paused ? "PAUSED" : "PLAY", match_ticks);
+                    SetTextColor(hdc, RGB(162, 155, 254));
+                    TextOutA(hdc, 5, 24, replay_hud, lstrlenA(replay_hud));
+                }
 
                 // Bottom Skills HUD
                 wsprintfA(hud_text, "[G]: %s  [F]: %s  [M]: %s",

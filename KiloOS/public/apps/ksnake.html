@@ -131,6 +131,18 @@
                         <option value="3" selected>Best of 5 (3 KOs)</option>
                     </select>
                 </div>
+                <div style="display:flex; gap:6px; margin-bottom:6px;">
+                    <select id="mpHazardDensity" style="background:#0c0e18; border:1px solid #556; color:#00ffff; border-radius:4px; padding:4px; font-size:10px; width:50%;">
+                        <option value="standard" selected>Hazards: Standard</option>
+                        <option value="high">Hazards: High</option>
+                        <option value="chaos">Hazards: Chaos</option>
+                    </select>
+                    <select id="mpSpeedTier" style="background:#0c0e18; border:1px solid #556; color:#ffd700; border-radius:4px; padding:4px; font-size:10px; width:50%;">
+                        <option value="classic">Speed: Classic (140ms)</option>
+                        <option value="turbo" selected>Speed: Turbo (110ms)</option>
+                        <option value="hyper">Speed: Hyper (80ms)</option>
+                    </select>
+                </div>
                 <button onclick="createCustomRoom()" style="background:#f59e0b; border:none; color:#0b0f19; font-weight:bold; font-size:12px; padding:8px 12px; border-radius:4px; cursor:pointer; width:100%;">Create Custom Room</button>
             </div>
         </div>
@@ -243,6 +255,17 @@
                     <button class="btn" onclick="startCustomGame()">[T] Test / Play</button>
                     <button class="btn" onclick="closeMapEditor()">[ESC] Menu</button>
                 </div>
+                <div style="display:flex; gap:6px; flex-wrap:wrap; justify-content:center; margin-top:6px;">
+                    <button class="btn" onclick="exportMapJSON()" style="background:#22223b; border-color:#00d2d3; color:#00d2d3; font-size:11px; padding:4px 8px;">💾 Export Map (.ksm)</button>
+                    <button class="btn" onclick="importMapPrompt()" style="background:#22223b; border-color:#fbc531; color:#fbc531; font-size:11px; padding:4px 8px;">📁 Import Map</button>
+                </div>
+                <div style="display:flex; gap:4px; flex-wrap:wrap; justify-content:center; align-items:center; margin-top:6px;">
+                    <span style="font-size:10px; color:#fbc531; font-weight:bold;">Presets:</span>
+                    <button class="btn" onclick="loadMapPreset('bastion')" style="font-size:10px; padding:3px 6px;">Bastion</button>
+                    <button class="btn" onclick="loadMapPreset('twin')" style="font-size:10px; padding:3px 6px;">Twin Rooms</button>
+                    <button class="btn" onclick="loadMapPreset('spiral')" style="font-size:10px; padding:3px 6px;">Spiral</button>
+                    <button class="btn" onclick="loadMapPreset('checker')" style="font-size:10px; padding:3px 6px;">Checker</button>
+                </div>
                 <p style="font-size:11px; color:#8395a7; margin-top:8px;">Click grid on canvas to draw or erase custom elements!</p>
             </div>
 
@@ -274,6 +297,7 @@
                 <div style="display:flex; gap:6px; margin-top:4px; flex-wrap:wrap; justify-content:center;">
                     <button class="btn" onclick="showMenu()">Back to Menu</button>
                     <button class="btn" onclick="watchLastReplay()" style="border-color:#a29bfe; color:#a29bfe;">🎬 Watch Replay</button>
+                    <button class="btn" onclick="saveCurrentReplayToVaultPrompt()" style="border-color:#00d2d3; color:#00d2d3;">🏆 Vault Replay</button>
                     <button class="btn" onclick="exportReplay()">💾 Save .ksr</button>
                     <button class="btn" id="btnGameOverQuickload" onclick="quickLoad()" style="display:none;">[F9] Reload Quicksave</button>
                 </div>
@@ -387,19 +411,32 @@
                 <button class="modal-close-btn" onclick="showMenu()" title="Back (ESC)">✕</button>
                 <h2>🎬 MATCH REPLAY VIEWER</h2>
                 <p style="color:#a29bfe; font-size:12px;">Watch previous matches with full seed determinism, step through inputs, or load exported .ksr replays.</p>
-                <div style="display:flex; flex-direction:column; gap:8px; width:92%; margin-top:8px;">
-                    <button id="btnPlayLastReplay" class="btn" onclick="watchLastReplay()" style="background:#2e2e4a; border-color:#a29bfe; color:#a29bfe; font-weight:bold; padding:8px;">▶ Watch Last Match</button>
-                    <button id="btnPlayLastDuel" class="btn" onclick="exportDuelReplay()" style="background:#2e2e4a; border-color:#ffd700; color:#ffd700; font-weight:bold; padding:8px;">💾 Export Last Duel Record (.ksdr)</button>
+                <div style="display:flex; flex-direction:column; gap:8px; width:94%; margin-top:6px;">
+                    <div style="display:flex; gap:6px; justify-content:center;">
+                        <button id="btnPlayLastReplay" class="btn" onclick="watchLastReplay()" style="background:#2e2e4a; border-color:#a29bfe; color:#a29bfe; font-weight:bold; padding:6px 10px; flex:1;">▶ Watch Last Match</button>
+                        <button id="btnSaveLastToVault" class="btn" onclick="saveCurrentReplayToVaultPrompt()" style="background:#2e2e4a; border-color:#00d2d3; color:#00d2d3; font-weight:bold; padding:6px 10px;" title="Archive match into Replay Vault">🏆 Save to Vault</button>
+                    </div>
+                    <button id="btnPlayLastDuel" class="btn" onclick="exportDuelReplay()" style="background:#2e2e4a; border-color:#ffd700; color:#ffd700; font-weight:bold; padding:6px;">💾 Export Last Duel Record (.ksdr)</button>
+                    
+                    <!-- REPLAY VAULT LIST -->
+                    <div style="background:#0c0e18; border:1px solid #2a3350; border-radius:6px; padding:6px; max-height:120px; overflow-y:auto; text-align:left;">
+                        <div style="font-size:11px; font-weight:bold; color:#a29bfe; margin-bottom:4px; display:flex; justify-content:space-between;">
+                            <span>🏆 REPLAY VAULT ARCHIVE</span>
+                            <span id="vaultCountLabel" style="color:#64748b; font-weight:normal;">0 saved</span>
+                        </div>
+                        <div id="replayVaultContainer" style="font-size:10px; color:#cbd5e1;"></div>
+                    </div>
+
                     <div style="display:flex; gap:6px; justify-content:center;">
                         <input type="file" id="replayFileInput" accept=".ksr,.ksdr,.json" style="display:none;" onchange="handleReplayFileSelect(event)">
                         <button class="btn" onclick="document.getElementById('replayFileInput').click()">📁 Load .ksr File</button>
                         <button class="btn" onclick="exportReplay()">💾 Export Solo .ksr</button>
                     </div>
-                    <textarea id="replayPasteBox" placeholder="Or paste replay JSON string here..." style="height:55px; font-size:10px;"></textarea>
-                    <button class="btn" onclick="playPastedReplay()" style="background:#4834d4; border-color:#a29bfe; color:#fff;">▶ Load & Play Pasted Replay</button>
+                    <textarea id="replayPasteBox" placeholder="Or paste replay JSON string here..." style="height:48px; font-size:10px;"></textarea>
+                    <button class="btn" onclick="playPastedReplay()" style="background:#4834d4; border-color:#a29bfe; color:#fff; padding:6px;">▶ Load &amp; Play Pasted Replay</button>
                 </div>
-                <div style="margin-top:8px; font-size:11px; color:#8395a7;">Controls during replay: [Space] Pause | [1-4] 0.5x-4x Speed | [Esc] Exit</div>
-                <button class="btn" onclick="showMenu()" style="margin-top: 6px;">[ESC] Back to Menu</button>
+                <div style="margin-top:6px; font-size:10px; color:#8395a7;">Controls: [Space] Pause &bull; [.] Step &bull; [1-5] 0.5x-8x Speed &bull; [A] Telemetry &bull; [Esc] Exit</div>
+                <button class="btn" onclick="showMenu()" style="margin-top: 4px;">[ESC] Back to Menu</button>
             </div>
         </div>
 
@@ -485,6 +522,16 @@
         let replayTick = 0;
         let replayEvents = {};
         let replayTotalTicks = 0;
+        let activeReplayData = null;
+        let isFastForwarding = false;
+        let replayTelemetryVisible = false;
+        let sessionTurnsCount = 0;
+        let sessionNearMisses = 0;
+        let sessionOptimalDistance = 0;
+        let sessionActualDistance = 0;
+        let lastAppleSpawnPos = null;
+        let duelHazardDensity = 'standard';
+        let duelSpeedTier = 'turbo';
 
         function addShockwave(x, y, color) {
             shockwaves.push({x, y, r: 2, r2: 1, maxR: 40, color, alpha: 1.0});
@@ -706,7 +753,7 @@
         }
 
         function playSound(type) {
-            if (!soundEnabled) return;
+            if (!soundEnabled || isFastForwarding) return;
             try {
                 const ctxAudio = getAudioContext();
                 if (!ctxAudio) return;
@@ -1252,15 +1299,25 @@
             let code = codeInput ? codeInput.value.trim().toUpperCase() : '';
             if (!code) code = 'SNK-' + Math.floor(1000 + Math.random() * 9000);
             let targetKOsVal = parseInt(document.getElementById('mpTargetKOs')?.value || '3', 10);
+            let hazardDensityVal = document.getElementById('mpHazardDensity')?.value || 'standard';
+            let speedTierVal = document.getElementById('mpSpeedTier')?.value || 'turbo';
 
             if (rMultiplayer && rMultiplayer.isOnline()) {
                 try {
-                    const res = await rMultiplayer.createRoom({ roomId: code, targetKOs: targetKOsVal }, true);
+                    const res = await rMultiplayer.createRoom({
+                        roomId: code,
+                        targetKOs: targetKOsVal,
+                        hazardDensity: hazardDensityVal,
+                        speedTier: speedTierVal
+                    }, true);
                     if (res && res.success) {
                         currentRoomId = res.roomId;
                         isHost = true;
                         myPlayerSlot = 1;
                         targetKOs = targetKOsVal;
+                        duelHazardDensity = hazardDensityVal;
+                        duelSpeedTier = speedTierVal;
+                        duelStepInterval = (duelSpeedTier === 'hyper') ? 80 : (duelSpeedTier === 'classic' ? 140 : 110);
                         startSoloFallbackTimer(res.roomId);
                         listenToRoom(res.roomId);
                         const copyBtn = document.getElementById('btnCopyInviteLink');
@@ -1271,10 +1328,10 @@
                     console.warn("[KSnake] rMultiplayer createRoom error:", err);
                 }
             }
-            await createRoomWithCode(code, targetKOsVal, true);
+            await createRoomWithCode(code, targetKOsVal, true, hazardDensityVal, speedTierVal);
         }
 
-        async function createRoomWithCode(code, kos, isPublic) {
+        async function createRoomWithCode(code, kos, isPublic, hazardDensity = 'standard', speedTier = 'turbo') {
             if (!window.fb) {
                 showToast("Firebase offline. Starting AI Duel.");
                 launchAIDuelFromModal();
@@ -1285,11 +1342,16 @@
                 isHost = true;
                 myPlayerSlot = 1;
                 targetKOs = kos;
+                duelHazardDensity = hazardDensity;
+                duelSpeedTier = speedTier;
+                duelStepInterval = (duelSpeedTier === 'hyper') ? 80 : (duelSpeedTier === 'classic' ? 140 : 110);
 
                 const roomData = {
                     status: 'waiting',
                     createdAt: Date.now(),
                     targetKOs: kos,
+                    hazardDensity: hazardDensity,
+                    speedTier: speedTier,
                     p1: {
                         name: myPlayerName,
                         connected: true,
@@ -1417,6 +1479,11 @@
                 if (!val) return;
 
                 targetKOs = val.targetKOs || 3;
+                if (val.hazardDensity) duelHazardDensity = val.hazardDensity;
+                if (val.speedTier) {
+                    duelSpeedTier = val.speedTier;
+                    duelStepInterval = (duelSpeedTier === 'hyper') ? 80 : (duelSpeedTier === 'classic' ? 140 : 110);
+                }
 
                 // Host detects challenger join
                 if (isHost && myPlayerSlot === 1 && val.p2 && val.status === 'playing' && !isDuelMode) {
@@ -1503,6 +1570,11 @@
             currentRoomId = code;
             myPlayerSlot = slot;
             targetKOs = roomData.targetKOs || 3;
+            if (roomData.hazardDensity) duelHazardDensity = roomData.hazardDensity;
+            if (roomData.speedTier) {
+                duelSpeedTier = roomData.speedTier;
+                duelStepInterval = (duelSpeedTier === 'hyper') ? 80 : (duelSpeedTier === 'classic' ? 140 : 110);
+            }
             p1KOs = 0; p2KOs = 0;
             roundNumber = 1;
             duelMatchOver = false;
@@ -1907,6 +1979,8 @@
 
             if (type === 'junk' || type === 'magma') {
                 let count = (type === 'magma') ? 2 : 1;
+                if (duelHazardDensity === 'high') count += 1;
+                else if (duelHazardDensity === 'chaos') count += 2;
                 for (let k = 0; k < count; k++) {
                     let rx = Math.floor(Math.random() * D_W);
                     let ry = Math.floor(Math.random() * D_H);
@@ -1917,8 +1991,9 @@
                 screenShake = Math.max(screenShake, 8);
                 playSound('die');
             } else if (type === 'speed') {
-                if (targetSlot === 1) p1SpeedCurse = 35;
-                else p2SpeedCurse = 35;
+                let curseDuration = (duelHazardDensity === 'chaos') ? 50 : (duelHazardDensity === 'high' ? 42 : 35);
+                if (targetSlot === 1) p1SpeedCurse = curseDuration;
+                else p2SpeedCurse = curseDuration;
                 screenShake = Math.max(screenShake, 6);
                 playSound('skill');
             }
@@ -2622,6 +2697,97 @@
             showToast("Custom Map saved successfully!");
         }
 
+        function loadMapPreset(presetName) {
+            customObstacles = [];
+            customPortalActive = false;
+            customPortalA = null;
+            customPortalB = null;
+
+            if (presetName === 'bastion') {
+                for (let i = 2; i <= 6; i++) {
+                    customObstacles.push({x: i, y: 3}, {x: 3, y: i});
+                    customObstacles.push({x: WIDTH - 1 - i, y: 3}, {x: WIDTH - 4, y: i});
+                    customObstacles.push({x: i, y: HEIGHT - 4}, {x: 3, y: HEIGHT - 1 - i});
+                    customObstacles.push({x: WIDTH - 1 - i, y: HEIGHT - 4}, {x: WIDTH - 4, y: HEIGHT - 1 - i});
+                }
+                customObstacles.push({x: 9, y: 9}, {x: 10, y: 9}, {x: 9, y: 10}, {x: 10, y: 10});
+                showToast("Loaded 'Bastion' Preset!");
+            } else if (presetName === 'twin') {
+                for (let y = 0; y < HEIGHT; y++) {
+                    if (y !== 4 && y !== 15) {
+                        customObstacles.push({x: 10, y});
+                    }
+                }
+                customPortalActive = true;
+                customPortalA = {x: 4, y: 10};
+                customPortalB = {x: 15, y: 10};
+                showToast("Loaded 'Twin Chambers' Preset!");
+            } else if (presetName === 'spiral') {
+                for (let x = 2; x <= 17; x++) customObstacles.push({x, y: 2});
+                for (let y = 2; y <= 17; y++) customObstacles.push({x: 17, y});
+                for (let x = 17; x >= 4; x--) customObstacles.push({x, y: 17});
+                for (let y = 17; y >= 5; y--) customObstacles.push({x: 4, y});
+                for (let x = 4; x <= 14; x++) customObstacles.push({x, y: 5});
+                for (let y = 5; y <= 14; y++) customObstacles.push({x: 14, y});
+                showToast("Loaded 'Spiral Labyrinth' Preset!");
+            } else if (presetName === 'checker') {
+                for (let x = 3; x < WIDTH - 3; x += 3) {
+                    for (let y = 3; y < HEIGHT - 3; y += 3) {
+                        customObstacles.push({x, y});
+                    }
+                }
+                showToast("Loaded 'Checkerboard Pillars' Preset!");
+            }
+            renderEditorCanvas();
+        }
+
+        function exportMapJSON() {
+            const mapData = {
+                format: "ksnake_map",
+                version: 1,
+                date: new Date().toISOString(),
+                obstacles: customObstacles,
+                portalA: customPortalA,
+                portalB: customPortalB,
+                portalActive: customPortalActive
+            };
+            const jsonStr = JSON.stringify(mapData, null, 2);
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(jsonStr).then(() => {
+                    showToast("Map JSON copied to clipboard! [💾 .ksm download started]");
+                }).catch(() => {});
+            }
+            const blob = new Blob([jsonStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'ksnake_custom_map.ksm';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        function importMapPrompt() {
+            const str = prompt("Paste map JSON string here (from .ksm export):");
+            if (!str || !str.trim()) return;
+            try {
+                const data = JSON.parse(str.trim());
+                if (data.obstacles && Array.isArray(data.obstacles)) {
+                    customObstacles = data.obstacles.map(o => ({x: o.x, y: o.y}));
+                    if (data.portalA) customPortalA = {x: data.portalA.x, y: data.portalA.y};
+                    if (data.portalB) customPortalB = {x: data.portalB.x, y: data.portalB.y};
+                    customPortalActive = !!data.portalActive;
+                    renderEditorCanvas();
+                    showToast("Custom Map imported successfully!");
+                } else {
+                    showToast("Invalid map JSON structure.");
+                }
+            } catch(e) {
+                showToast("JSON parse error: " + e.message);
+            }
+        }
+
         function startCustomGame() {
             gameMode = 'custom';
             hideOverlays();
@@ -2656,6 +2822,20 @@
 
         // Canvas Click for Map Editor and Gameplay Steering
         canvas.addEventListener('click', e => {
+            if (isReplayMode) {
+                const rect = canvas.getBoundingClientRect();
+                const clickY = e.clientY - rect.top;
+                const clickX = e.clientX - rect.left;
+                if (clickY <= 44) {
+                    const pct = Math.max(0, Math.min(1, (clickX - 14) / (rect.width - 28)));
+                    const targetTick = Math.round(pct * (replayTotalTicks || 1));
+                    seekReplay(targetTick);
+                    showToast(`Scrubbed to tick ${targetTick} / ${replayTotalTicks}`);
+                    return;
+                }
+                togglePauseReplay();
+                return;
+            }
             if (isDuelMode) {
                 handleDuelClick(e);
                 return;
@@ -3031,6 +3211,13 @@
             score = 0;
             applesEaten = 0;
 
+            // Session Telemetry Counters
+            sessionTurnsCount = 0;
+            sessionNearMisses = 0;
+            sessionOptimalDistance = 0;
+            sessionActualDistance = 0;
+            lastAppleSpawnPos = null;
+
             const speeds = [200, 150, 100];
             const mults = [5, 10, 20];
             currentSpeed = speeds[difficulty];
@@ -3085,6 +3272,7 @@
                 if (snake.some(s => s.x === fx && s.y === fy)) ok = false;
                 if (ok) food = {x: fx, y: fy};
             }
+            lastAppleSpawnPos = { ...food };
         }
 
         function placeGoldenApple() {
@@ -3178,6 +3366,10 @@
             updateCPURivals();
             updateBossLogic();
 
+            if (dir.x !== lastDir.x || dir.y !== lastDir.y) {
+                sessionTurnsCount++;
+            }
+            sessionActualDistance++;
             lastDir = {...dir};
             let head = {x: snake[0].x + dir.x, y: snake[0].y + dir.y};
 
@@ -3229,12 +3421,40 @@
                         screenShake = Math.max(screenShake, 16);
                     }
                 });
+
+                // Near-miss telemetry check: head adjacent to lethal obstacle, boundary, or snake body without collision
+                const adj = [
+                    { x: head.x + 1, y: head.y },
+                    { x: head.x - 1, y: head.y },
+                    { x: head.x, y: head.y + 1 },
+                    { x: head.x, y: head.y - 1 }
+                ];
+                let isNearMiss = false;
+                for (let i = 0; i < adj.length; i++) {
+                    const p = adj[i];
+                    if (!effectiveWrap && (p.x < 0 || p.x >= WIDTH || p.y < 0 || p.y >= HEIGHT)) {
+                        isNearMiss = true;
+                        break;
+                    }
+                    if (obstacles.some(o => o.x === p.x && o.y === p.y)) {
+                        isNearMiss = true;
+                        break;
+                    }
+                    if (snake.slice(1).some(s => s.x === p.x && s.y === p.y)) {
+                        isNearMiss = true;
+                        break;
+                    }
+                }
+                if (isNearMiss) sessionNearMisses++;
             }
 
             snake.unshift(head);
 
             // Eat Food
             if (food && head.x === food.x && head.y === food.y) {
+                if (lastAppleSpawnPos) {
+                    sessionOptimalDistance += Math.abs(head.x - lastAppleSpawnPos.x) + Math.abs(head.y - lastAppleSpawnPos.y);
+                }
                 playSound('eat');
                 addSparks(head.x * CELL + CELL/2, head.y * CELL + CELL/2, '#ff4757', 10);
                 addShockwave(head.x * CELL + CELL/2, head.y * CELL + CELL/2, '#ff4757');
@@ -4537,19 +4757,58 @@
             // Replay Playback HUD Overlay
             if (isReplayMode) {
                 ctx.save();
-                ctx.fillStyle = 'rgba(16, 19, 29, 0.92)';
-                ctx.fillRect(8, 8, 384, 26);
+                ctx.fillStyle = 'rgba(16, 19, 29, 0.95)';
+                ctx.fillRect(8, 6, 384, 34);
                 ctx.strokeStyle = '#a29bfe';
                 ctx.lineWidth = 1;
-                ctx.strokeRect(8, 8, 384, 26);
+                ctx.strokeRect(8, 6, 384, 34);
 
                 ctx.font = 'bold 10px monospace';
                 ctx.fillStyle = '#a29bfe';
                 const statusIcon = isReplayPaused ? '⏸ PAUSED' : '▶ PLAYING';
-                ctx.fillText(`🎬 ${statusIcon} [${replaySpeed}x] [T:${matchTicks}/${replayTotalTicks || '?'}]`, 14, 25);
-                ctx.fillStyle = '#cbd5e1';
+                ctx.fillText(`🎬 ${statusIcon} [${replaySpeed}x] T:${matchTicks}/${replayTotalTicks || '?'}`, 14, 20);
+                ctx.fillStyle = '#94a3b8';
                 ctx.font = '9px "Segoe UI", sans-serif';
-                ctx.fillText('[Space: Pause | 1-4: Speed | Esc: Exit]', 195, 25);
+                ctx.fillText('[Space:Pause | .:Step | 0-5:Spd | A:Telemetry]', 180, 20);
+
+                // Progress Bar Scrubber
+                const barX = 14, barY = 26, barW = 372, barH = 7;
+                ctx.fillStyle = 'rgba(40, 45, 65, 0.9)';
+                ctx.fillRect(barX, barY, barW, barH);
+                ctx.strokeStyle = '#4a5568';
+                ctx.strokeRect(barX, barY, barW, barH);
+
+                const progress = replayTotalTicks > 0 ? Math.min(1, Math.max(0, matchTicks / replayTotalTicks)) : 0;
+                const fillW = Math.round(progress * barW);
+                ctx.fillStyle = '#a29bfe';
+                ctx.fillRect(barX, barY, fillW, barH);
+
+                // Scrubber handle knob
+                const knobX = barX + fillW;
+                ctx.fillStyle = '#00d2d3';
+                ctx.beginPath();
+                ctx.arc(knobX, barY + barH/2, 4, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Telemetry overlay HUD
+                if (replayTelemetryVisible) {
+                    ctx.fillStyle = 'rgba(12, 14, 24, 0.94)';
+                    ctx.fillRect(8, 346, 384, 46);
+                    ctx.strokeStyle = '#00d2d3';
+                    ctx.lineWidth = 1;
+                    ctx.strokeRect(8, 346, 384, 46);
+
+                    const apm = Math.round((sessionTurnsCount / Math.max(1, matchTicks)) * (60000 / (currentSpeed || 150)));
+                    const eff = sessionActualDistance > 0 ? Math.min(100, Math.round((sessionOptimalDistance / sessionActualDistance) * 100)) : 100;
+                    const rate = (matchApplesEaten / Math.max(0.1, matchTicks / 100)).toFixed(1);
+
+                    ctx.font = 'bold 9px monospace';
+                    ctx.fillStyle = '#00d2d3';
+                    ctx.fillText(`⚡ APM: ${apm}   🎯 Path Efficiency: ${eff}%   🍎 Rate: ${rate}/100t`, 14, 362);
+                    ctx.fillStyle = '#cbd5e1';
+                    ctx.font = '9px monospace';
+                    ctx.fillText(`🔄 Turns: ${sessionTurnsCount}   ⚠️ Near-Miss: ${sessionNearMisses}   🌱 Coverage: ${gridCoverage.size}/400`, 14, 380);
+                }
                 ctx.restore();
             }
 
@@ -4834,6 +5093,7 @@
                     playLastDuelBtn.innerText = "💾 Export Last Duel Record (No duel recorded yet)";
                 }
             }
+            renderReplayVaultUI();
         }
 
         function watchLastReplay() {
@@ -4854,6 +5114,7 @@
             hideOverlays();
             isReplayMode = true;
             isReplayPaused = false;
+            activeReplayData = data;
             replaySpeed = 1.0;
             replayEvents = data.events || {};
             replayTotalTicks = data.totalTicks || 0;
@@ -4861,6 +5122,7 @@
             gameMode = data.mode || 'classic';
             difficulty = (data.diff !== undefined) ? data.diff : 1;
             wrapMode = !!data.wrap;
+            replayTelemetryVisible = false;
 
             startNewGameInternal(true, true);
             applyReplaySpeed();
@@ -4900,8 +5162,169 @@
             if (gameLoop) clearInterval(gameLoop);
             isReplayMode = false;
             isReplayPaused = false;
+            activeReplayData = null;
+            replayTelemetryVisible = false;
             showToast("Exited replay mode.");
             showMenu();
+        }
+
+        function seekReplay(targetTick) {
+            if (!isReplayMode || !activeReplayData) return;
+            targetTick = Math.max(0, Math.min(targetTick, replayTotalTicks));
+            isFastForwarding = true;
+            rngSeed = activeReplayData.seed || 12345;
+            gameMode = activeReplayData.mode || 'classic';
+            difficulty = (activeReplayData.diff !== undefined) ? activeReplayData.diff : 1;
+            wrapMode = !!activeReplayData.wrap;
+            startNewGameInternal(true, true);
+            while (matchTicks < targetTick && gameState === 1) {
+                update();
+            }
+            isFastForwarding = false;
+            requestAnimationFrame(draw);
+        }
+
+        function stepReplayForward() {
+            if (!isReplayMode) return;
+            if (!isReplayPaused) togglePauseReplay();
+            if (matchTicks < replayTotalTicks && gameState === 1) {
+                update();
+                requestAnimationFrame(draw);
+            }
+        }
+
+        function stepReplayBackward() {
+            if (!isReplayMode || !activeReplayData) return;
+            if (!isReplayPaused) togglePauseReplay();
+            const target = Math.max(0, matchTicks - 1);
+            seekReplay(target);
+        }
+
+        function jumpReplay(deltaTicks) {
+            if (!isReplayMode || !activeReplayData) return;
+            seekReplay(matchTicks + deltaTicks);
+        }
+
+        function toggleReplayTelemetry() {
+            if (!isReplayMode) return;
+            replayTelemetryVisible = !replayTelemetryVisible;
+            showToast(replayTelemetryVisible ? "📊 Telemetry HUD: ON [A]" : "📊 Telemetry HUD: OFF [A]");
+            requestAnimationFrame(draw);
+        }
+
+        // Replay Vault Persistence Engine
+        function getReplayVault() {
+            let vault = safeGetJSON('ksnake_replay_vault', []);
+            if (!Array.isArray(vault)) vault = [];
+            return vault;
+        }
+
+        function saveReplayToVault(replayData, customLabel) {
+            if (!replayData || !replayData.events) {
+                showToast("No replay data available to archive.");
+                return false;
+            }
+            let vault = getReplayVault();
+            const entry = {
+                id: 'rep_' + Date.now(),
+                date: new Date().toLocaleDateString() + ' ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                mode: replayData.mode || 'classic',
+                diff: replayData.diff !== undefined ? replayData.diff : 1,
+                wrap: !!replayData.wrap,
+                score: replayData.score || 0,
+                apples: replayData.apples || 0,
+                totalTicks: replayData.totalTicks || 0,
+                label: customLabel || `${(replayData.mode || 'classic').toUpperCase()} (${replayData.score || 0} pts)`,
+                seed: replayData.seed,
+                events: replayData.events
+            };
+            vault.unshift(entry);
+            if (vault.length > 10) vault = vault.slice(0, 10);
+            safeSetStorage('ksnake_replay_vault', JSON.stringify(vault));
+            showToast(`Archived "${entry.label}" to Replay Vault!`);
+            renderReplayVaultUI();
+            return true;
+        }
+
+        function saveCurrentReplayToVaultPrompt() {
+            const rep = lastReplayData || safeGetJSON('ksnake_last_replay', null);
+            if (!rep) {
+                showToast("No replay data to save. Play a match first!");
+                return;
+            }
+            const defaultLabel = `${(rep.mode || 'classic').toUpperCase()} - ${rep.score || 0} pts`;
+            const label = prompt("Enter a label for this replay in the Vault:", defaultLabel);
+            if (label !== null) {
+                saveReplayToVault(rep, label.trim() || defaultLabel);
+            }
+        }
+
+        function deleteVaultReplay(id) {
+            let vault = getReplayVault();
+            vault = vault.filter(v => v.id !== id);
+            safeSetStorage('ksnake_replay_vault', JSON.stringify(vault));
+            showToast("Replay removed from Vault.");
+            renderReplayVaultUI();
+        }
+
+        function playVaultReplay(id) {
+            const vault = getReplayVault();
+            const item = vault.find(v => v.id === id);
+            if (!item) {
+                showToast("Replay not found in Vault.");
+                return;
+            }
+            playReplayData(item);
+        }
+
+        function exportVaultReplay(id) {
+            const vault = getReplayVault();
+            const item = vault.find(v => v.id === id);
+            if (!item) {
+                showToast("Replay not found in Vault.");
+                return;
+            }
+            const blob = new Blob([JSON.stringify(item, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `ksnake_${item.mode}_${item.score}pts_${item.id}.ksr`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            showToast(`Exported ${item.label} (.ksr)`);
+        }
+
+        function renderReplayVaultUI() {
+            const container = document.getElementById('replayVaultContainer');
+            const countLabel = document.getElementById('vaultCountLabel');
+            if (!container) return;
+            const vault = getReplayVault();
+            if (countLabel) countLabel.innerText = `${vault.length} / 10 saved`;
+            if (vault.length === 0) {
+                container.innerHTML = '<div style="padding:8px; text-align:center; color:#64748b;">Replay Vault is empty. Archive top matches here!</div>';
+                return;
+            }
+            let html = '<table style="width:100%; border-collapse:collapse; font-size:11px;">';
+            html += '<tr style="color:#a29bfe; border-bottom:1px solid #2a3350; font-size:10px;"><th style="text-align:left; padding:3px;">LABEL / MODE</th><th style="padding:3px;">SCORE</th><th style="padding:3px;">TICKS</th><th style="padding:3px;">ACTIONS</th></tr>';
+            vault.forEach(v => {
+                html += `<tr style="border-bottom:1px solid #161a29;">
+                    <td style="padding:4px 2px; text-align:left;">
+                        <b style="color:#00d2d3;">${escapeHTML(v.label)}</b>
+                        <div style="font-size:9px; color:#8395a7;">${escapeHTML(v.date)} &bull; ${escapeHTML(v.mode)}</div>
+                    </td>
+                    <td style="padding:4px 2px; text-align:center; color:#ffd700; font-weight:bold;">${v.score}</td>
+                    <td style="padding:4px 2px; text-align:center; color:#94a3b8;">${v.totalTicks}</td>
+                    <td style="padding:4px 2px; text-align:center; white-space:nowrap;">
+                        <button onclick="playVaultReplay('${v.id}')" style="background:#2e2e4a; border:1px solid #a29bfe; color:#a29bfe; font-size:9px; padding:2px 5px; border-radius:3px; cursor:pointer;" title="Play Replay">▶ Play</button>
+                        <button onclick="exportVaultReplay('${v.id}')" style="background:#2e2e4a; border:1px solid #00d2d3; color:#00d2d3; font-size:9px; padding:2px 4px; border-radius:3px; cursor:pointer;" title="Export .ksr">💾</button>
+                        <button onclick="deleteVaultReplay('${v.id}')" style="background:#2e2e4a; border:1px solid #ff4757; color:#ff4757; font-size:9px; padding:2px 4px; border-radius:3px; cursor:pointer;" title="Delete">🗑️</button>
+                    </td>
+                </tr>`;
+            });
+            html += '</table>';
+            container.innerHTML = html;
         }
 
         function handleReplayFileSelect(event) {
@@ -5258,6 +5681,9 @@
                     e.preventDefault();
                     togglePauseReplay();
                     return;
+                } else if (k === '0') {
+                    setReplaySpeed(0.25);
+                    return;
                 } else if (k === '1') {
                     setReplaySpeed(0.5);
                     return;
@@ -5269,6 +5695,33 @@
                     return;
                 } else if (k === '4') {
                     setReplaySpeed(4.0);
+                    return;
+                } else if (k === '5') {
+                    setReplaySpeed(8.0);
+                    return;
+                } else if (e.key === '.' || e.key === '>') {
+                    e.preventDefault();
+                    stepReplayForward();
+                    return;
+                } else if (e.key === ',' || e.key === '<') {
+                    e.preventDefault();
+                    stepReplayBackward();
+                    return;
+                } else if (e.key === ']' || e.key === '}') {
+                    e.preventDefault();
+                    jumpReplay(10);
+                    return;
+                } else if (e.key === '[' || e.key === '{') {
+                    e.preventDefault();
+                    jumpReplay(-10);
+                    return;
+                } else if (k === 'a') {
+                    e.preventDefault();
+                    toggleReplayTelemetry();
+                    return;
+                } else if (k === 'r') {
+                    e.preventDefault();
+                    seekReplay(0);
                     return;
                 } else if (e.key === 'Escape' || k === 'q') {
                     exitReplay();
