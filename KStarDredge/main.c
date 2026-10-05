@@ -4658,7 +4658,7 @@ void RenderGame(HDC hdc, RECT* clientRect) {
         if (isZero) {
             sprintf(alertBuf, "⚠️ ZERO FUEL: AUXILIARY SOLAR RCS ENGAGED (25%% DRIFT) • SYNTHESIZE FUEL [R]");
         } else {
-            sprintf(alertBuf, "⚠️ LOW FUEL (<15%%): DOCK AT SPACEPORT [D] OR REFINE WARP CELL [R]");
+            sprintf(alertBuf, "⚠️ LOW FUEL (<15%%): DOCK AT SPACEPORT [O] OR REFINE WARP CELL [R]");
         }
         DrawTextA(hdc, alertBuf, -1, &rcAlert, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
     }
@@ -4684,9 +4684,9 @@ void RenderGame(HDC hdc, RECT* clientRect) {
             char stPromptBuf[80];
             const StationDef* curStDef = &STATION_DEFS[g_state.currentSectorIndex];
             if (g_state.stationDocked) {
-                sprintf(stPromptBuf, "⚓ DOCKED AT %s • PRESS [D] FOR STATION TERMINAL", curStDef->name);
+                sprintf(stPromptBuf, "⚓ DOCKED AT %s • PRESS [O] FOR STATION TERMINAL", curStDef->name);
             } else {
-                sprintf(stPromptBuf, "⚓ [D] DOCK WITH %s (%dm)", curStDef->name, (int)stDist);
+                sprintf(stPromptBuf, "⚓ [O] DOCK WITH %s (%dm)", curStDef->name, (int)stDist);
             }
             DrawTextA(hdc, stPromptBuf, -1, &rcStPrompt, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
         }
@@ -6722,7 +6722,7 @@ void RenderGame(HDC hdc, RECT* clientRect) {
                 "• [P]               Multi-Spectral Spectrometer",
                 "• [U]               Engineering Bay & Upgrades",
                 "• [N]               Star Sector Charts & Warp",
-                "• [D] / [E] / [K]   Spaceport / EVA / Crisis Ops"
+                "• [O] / [E] / [K]   Spaceport / EVA / Crisis Ops"
             };
             for (int i = 0; i < 14; i++) {
                 SetTextColor(hdc, (i == 3 || i == 4 || i == 5) ? RGB(244, 63, 94) : RGB(148, 163, 184));
@@ -7106,7 +7106,7 @@ void RenderGame(HDC hdc, RECT* clientRect) {
         TextOutA(hdc, c2x + 10, r1y + 46, "* [E]: EVA Salvage Ops (Cut Airlocks & Cores)", 45);
         TextOutA(hdc, c2x + 10, r1y + 64, "* [K]: Crisis Ops (Vent Plasma & Patch Breaches)", 48);
         TextOutA(hdc, c2x + 10, r1y + 82, "* [R]: Refinery Smelter (Produce Hyper-Alloys)", 46);
-        TextOutA(hdc, c2x + 10, r1y + 100, "* [D]: Orbital Station (Repairs & Contracts)", 44);
+        TextOutA(hdc, c2x + 10, r1y + 100, "* [O]: Orbital Station (Repairs & Contracts)", 44);
         TextOutA(hdc, c2x + 10, r1y + 118, "* [N]: Sector Star Chart (Warp Hyperspace)", 42);
 
         RECT rcC3 = { c1x, r2y, c1x + cardW, r2y + cardH };
@@ -7263,7 +7263,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             g_btnDampener  = CreateWindowA("BUTTON", "DAMPENER [Z]",  WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_DAMPENER, NULL, NULL);
             g_btnScan      = CreateWindowA("BUTTON", "PROSPECT [P]",  WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_SCAN, NULL, NULL);
             g_btnNav       = CreateWindowA("BUTTON", "SECTORS [N]",   WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_NAV, NULL, NULL);
-            g_btnStation   = CreateWindowA("BUTTON", "STATION [D]",   WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_STATION, NULL, NULL);
+            g_btnStation   = CreateWindowA("BUTTON", "STATION [O]",   WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_STATION, NULL, NULL);
             g_btnEva       = CreateWindowA("BUTTON", "EVA OPS [E]",   WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_EVA, NULL, NULL);
             g_btnCrisis    = CreateWindowA("BUTTON", "CRISIS [K]",    WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_CRISIS, NULL, NULL);
             g_btnDefense   = CreateWindowA("BUTTON", "ARMORY [X]",    WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_DEFENSE, NULL, NULL);
@@ -8114,7 +8114,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 if (wParam == '7') { ClaimContract(2); InvalidateRect(hwnd, NULL, FALSE); return 0; }
                 if (wParam == 'S') { BarterSellAllWithTariff(); InvalidateRect(hwnd, NULL, FALSE); return 0; }
                 if (wParam == 'U') { ToggleDocking(); InvalidateRect(hwnd, NULL, FALSE); return 0; }
-                if (wParam == 'D' || wParam == VK_ESCAPE) { g_state.showStation = 0; InvalidateRect(hwnd, NULL, FALSE); return 0; }
+                if (wParam == 'O' || wParam == VK_ESCAPE) { g_state.showStation = 0; InvalidateRect(hwnd, NULL, FALSE); return 0; }
             }
             
             if (g_state.showRefinery) {
@@ -8185,8 +8185,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 case 'W': case VK_UP:    g_state.thrusting = 1; break;
                 case 'S': case VK_DOWN:  g_state.reversing = 1; break;
                 case 'A': case VK_LEFT:  g_state.turningLeft = 1; break;
-                case VK_RIGHT:           g_state.turningRight = 1; break;
-                case 'D': {
+                case 'D': case VK_RIGHT: g_state.turningRight = 1; break;
+                case 'O': {
                     float stDist = (float)sqrt((g_state.stationX - g_state.shipX) * (g_state.stationX - g_state.shipX) +
                                                (g_state.stationY - g_state.shipY) * (g_state.stationY - g_state.shipY));
                     if (stDist < 280.0f && !g_state.stationDocked) {
@@ -8198,11 +8198,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         if (g_state.showStation) {
                             g_state.showStarChart = 0; g_state.showUpgrades = 0; g_state.showSpectrometer = 0; g_state.showEva = 0; g_state.showCrisis = 0; g_state.showRefinery = 0;
                         }
-                    } else {
-                        // Regular turn right if not in proximity
-                        g_state.turningRight = 1;
                     }
-                    break;
+                    InvalidateRect(hwnd, NULL, FALSE);
+                    return 0;
                 }
                 case VK_SPACE:
                     g_state.miningActive = 1;

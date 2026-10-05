@@ -2020,7 +2020,7 @@
                     </button>
                     <button class="btn btn-station" id="btnStation">
                         <span>🛰️ SPACEPORT</span>
-                        <span class="key-hint">[D] DOCK / TRADE</span>
+                        <span class="key-hint">[O] DOCK / TRADE</span>
                     </button>
                     <button class="btn btn-eva" id="btnEva">
                         <span>🚀 EVA OPS</span>
@@ -2107,7 +2107,7 @@
                             <li><strong style="color: #fff;">[E] EVA Salvage:</strong> Cut derelict airlocks & extract cores</li>
                             <li><strong style="color: #fff;">[K] Crisis Ops:</strong> Patch hull breaches, vent plasma fires</li>
                             <li><strong style="color: #fff;">[R] Refinery:</strong> Smelt raw minerals into hyper-alloys</li>
-                            <li><strong style="color: #fff;">[D] Station:</strong> Dock for repairs, fuel, & trade contracts</li>
+                            <li><strong style="color: #fff;">[O] Station:</strong> Dock for repairs, fuel, & trade contracts</li>
                         </ul>
                     </div>
                     <div style="background: rgba(0, 0, 0, 0.4); border: 1px solid var(--border-panel); padding: 8px; border-radius: 3px;">
@@ -2546,7 +2546,7 @@
                     <span>🛰️</span>
                     <span id="stationModalTitle">ORBITAL SPACEPORT & BLACK MARKET TRADE TERMINAL</span>
                 </span>
-                <button class="btn" id="btnCloseStation" style="padding: 2px 8px; border-color: var(--accent-red); color: var(--accent-red);">✕ CLOSE [D]</button>
+                <button class="btn" id="btnCloseStation" style="padding: 2px 8px; border-color: var(--accent-red); color: var(--accent-red);">✕ CLOSE [O]</button>
             </div>
             <div class="modal-body">
                 <!-- Station Faction Header Banner -->
@@ -2920,7 +2920,7 @@
                             <div class="keybind-item"><span>P</span><span class="keybind-pill">PROSPECT / SPECTROMETER</span></div>
                             <div class="keybind-item"><span>U</span><span class="keybind-pill">UPGRADES / ENGINEERING</span></div>
                             <div class="keybind-item"><span>N</span><span class="keybind-pill">SECTORS / WARP CHART</span></div>
-                            <div class="keybind-item"><span>D</span><span class="keybind-pill">DOCK WITH SPACEPORT</span></div>
+                            <div class="keybind-item"><span>O</span><span class="keybind-pill">DOCK WITH SPACEPORT</span></div>
                             <div class="keybind-item"><span>E</span><span class="keybind-pill">EVA DERELICT SALVAGE</span></div>
                             <div class="keybind-item"><span>K</span><span class="keybind-pill">DAMAGE CONTROL CRISIS</span></div>
                             <div class="keybind-item"><span>R</span><span class="keybind-pill">ORBITAL REFINERY / SMELT</span></div>
@@ -7053,7 +7053,7 @@
                 if (refineryModal.classList.contains('open')) closeRefineryModal();
                 else openRefineryModal();
             }
-            if (e.code === 'KeyD') {
+            if (e.code === 'KeyO') {
                 const stationModal = document.getElementById('stationModal');
                 if (stationModal && stationModal.classList.contains('open')) {
                     closeStationModal();
@@ -7074,7 +7074,7 @@
                 if (e.code === 'Digit7') { const stDef = STATION_DEFS[state.currentSectorIndex]; if (stDef.contracts[2]) claimContract(stDef.contracts[2].id); }
                 if (e.code === 'KeyS') barterSellAllWithTariff();
                 if (e.code === 'KeyU') toggleDocking();
-                if (e.code === 'Escape') closeStationModal();
+                if (e.code === 'Escape' || e.code === 'KeyO') closeStationModal();
             }
             if (document.getElementById('refineryModal').classList.contains('open')) {
                 if (e.code === 'Digit1') smeltRecipe(REFINERY_RECIPES[0].id, 1);
@@ -9666,9 +9666,9 @@
                     ctx.textAlign = 'center';
                     const stDef = STATION_DEFS[state.currentSectorIndex];
                     if (state.station.docked) {
-                        ctx.fillText(`🛰️ DOCKED AT ${stDef.name.toUpperCase()} • PRESS [D] FOR SPACEPORT`, cx, pY + 17);
+                        ctx.fillText(`🛰️ DOCKED AT ${stDef.name.toUpperCase()} • PRESS [O] FOR SPACEPORT`, cx, pY + 17);
                     } else {
-                        ctx.fillText(`🛰️ IN DOCKING RANGE (${Math.round(distToSt)}m) • PRESS [D] TO DOCK & TRADE`, cx, pY + 17);
+                        ctx.fillText(`🛰️ IN DOCKING RANGE (${Math.round(distToSt)}m) • PRESS [O] TO DOCK & TRADE`, cx, pY + 17);
                     }
                     ctx.restore();
                 }
@@ -9692,7 +9692,7 @@
                 if (isZero) {
                     ctx.fillText('⚠️ ZERO FUEL: AUXILIARY SOLAR RCS ENGAGED (25% DRIFT) • SYNTHESIZE WARP CELL [R]', cx, aY + 16);
                 } else {
-                    ctx.fillText(`⚠️ LOW FUEL WARNING (${Math.round(state.fuel)}%): DOCK AT SPACEPORT [D] OR REFINE FUEL [R]`, cx, aY + 16);
+                    ctx.fillText(`⚠️ LOW FUEL WARNING (${Math.round(state.fuel)}%): DOCK AT SPACEPORT [O] OR REFINE FUEL [R]`, cx, aY + 16);
                 }
                 ctx.restore();
             }
