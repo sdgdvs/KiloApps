@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-tester
-next_agent: kilo-usability
+current_agent: kilo-usability
+next_agent: kilo-qa
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -14,7 +14,7 @@ status: ready
 current_targets:
   kilo_creator: "kweb://users/~neon_rider"
   kilo_graphics: KColosseum
-  kilo_tester: KTerm
+  kilo_tester: KHash
   kilo_usability: KCalc
   kilo_qa: KPomodoro
   kilo_expander: "KSpace (5-Level Campaign Expansion)"
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-graphics
-  app: KRogue
-  timestamp: "2026-10-05T03:33:00-07:00"
+  agent: kilo-tester
+  app: KTerm
+  timestamp: "2026-10-05T04:38:00-07:00"
 last_planner_run: "2026-10-05T07:31:00Z"
 ---
 
@@ -114,9 +114,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KAbyss`, `KBreakout`, `KAsteroids`, `KSpace`, `KPac`, `KQuest`, `KRogue` *(Note: Pure vector/wireframe or abstract board targets skip automatically per Mandate 15. Completed: KQuest Phases 1-5, KSpace)*.
 
 ### 3. App Tester Queue (`kilo-tester`)
-- **Current Target**: `KTerm`
+- **Current Target**: `KHash`
 - **Upcoming Queue**:
-  `KHash`, `KRSS`, `KClip`, `KCipher`, `KCalc`, `KMine`, `KSnake`, `KTetris`, `KPong`, `KMaze`, `KSolitaire`, `KChess`, `KColor`, `KTimer`, `KConverter`, `KQuarantine`, `KSettings`, `KTaskMgr`, `K2048`, `KSudoku`, `KConnect4`, `KHangman`, `KSimon`, `KFreecell`, `KMatch3`, `KWords`, `KGo`, `KDarts` *(Completed: KStarForge, KTask, KChrono, KSys, KSynth, KCyber, KCosmic, KContacts, KDB, KDragon, KFlash, KFont, KFortress, KGraph, KHabit, KHex, KImage, KJournal, KMail, KMandel, KMech, KMedia, KMystery, KNet, KNote, KPad, KPaint, KPass, KPing, KQuest, KRadio, KRead, KSanctuary, KScript, KStarDredge, KStarship, KStellar, KSubmarine)*.
+  `KRSS`, `KClip`, `KCipher`, `KCalc`, `KMine`, `KSnake`, `KTetris`, `KPong`, `KMaze`, `KSolitaire`, `KChess`, `KColor`, `KTimer`, `KConverter`, `KQuarantine`, `KSettings`, `KTaskMgr`, `K2048`, `KSudoku`, `KConnect4`, `KHangman`, `KSimon`, `KFreecell`, `KMatch3`, `KWords`, `KGo`, `KDarts` *(Completed: KStarForge, KTask, KChrono, KSys, KSynth, KCyber, KCosmic, KContacts, KDB, KDragon, KFlash, KFont, KFortress, KGraph, KHabit, KHex, KImage, KJournal, KMail, KMandel, KMech, KMedia, KMystery, KNet, KNote, KPad, KPaint, KPass, KPing, KQuest, KRadio, KRead, KSanctuary, KScript, KStarDredge, KStarship, KStellar, KSubmarine, KTerm)*.
 
 ### 4. Usability & UX Queue (`kilo-usability`)
 - **Current Target**: `KCalc`
@@ -227,6 +227,16 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-05T04:38:00-07:00 — kilo-tester: KTerm (Interactive UI Audit, Checkbox Sync & Modal Trap Fixes)**
+  - Status: PASS ✅ (6 issues, 6 fixed; 113.2 KB web / 45.0 KB native < 999 KB ceiling).
+  - Checkbox & Briefing Sync: Wired `chkDontShowTutorial` state synchronization with `kterm_tutorialSeen` in localStorage.
+  - Keyboard & Modal Trap Fixes: Prevented Space key trapping on checkbox and table scroll; wired Escape/Enter dismissals.
+  - TINAG ARG Mystery Audit: Stripped explicit `ARG` markers in `glitch` modal row and `dmesg` output per Rule 14.
+  - Toast Occlusion Remediation: Relocated `#toastContainer` to bottom: 70px (z-index: 900); added modal toast auto-clearing.
+  - Click-to-Run & History: Added `data-cmd` / `data-shortcut` mappings across Help table; wired command history buffer logging.
+  - Math & Session Polish: Fixed unclosed paren handling in `calc`, added `customNamed` tab persistence, and single-tab close warning.
+  - Verification: `test_app_startup.py` PASS; `test_web_apps.js` PASS (33 elements); MSVC clean (`KTerm.exe`); Vite clean in 462ms.
+
 - **2026-10-05T03:33:00-07:00 — kilo-graphics: KRogue (Skip Turn — ASCII Roguelike Aesthetic & Zero Glints)**
   - Status: ⏭️ Skip — Imagen 3 asset replacement not appropriate for KRogue
   - Rationale: Foundational 1980s text/terminal & ASCII grid roguelike identity; raster sprites inappropriate per Rule 2.
@@ -256,12 +266,5 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Duel Mode Custom Rules: Wired hazard density (standard/high/chaos) and speed tiers (classic/turbo/hyper) over Firebase RTDB.
   - Native Engine Polish: Replaced blocking Win32 modals with `ShowToastNative` and added replay speed/step controls and HUD.
   - Verification: `test_app_startup.py` PASS; MSVC clean (`KSnake.exe`); Vite clean in 549ms; security_lint 100% PASS.
-
-- **2026-10-04T21:30:00-07:00 — kilo-expander: KStarDredge (Hyperlane Pirate Ambushes & Tactical Combat Outfitting)**
-  - Status: PASS ✅ (0 regressions, clean builds, 530.3 KB web / 292.9 KB native < 999 KB ceiling).
-  - Hyperlane Ambush Corridor: Sector warp transits trigger hyperlane pirate ambushes along transit vector; starter sector is raider-free.
-  - Station Safe Zone: 500m defense perimeter around spaceports repels raiders (32 DPS) and destroys torpedoes (480m); raiders cannot target safe vessels.
-  - Tactical Combat Retrofits: Added port outfitting (Railguns, EMP Flak, Auto-PDL, Deflector Aegis) with station drydock gating and keys [8]/[9].
-  - Verification: MSVC clean (`KStarDredge.exe` 292.9 KB); Vite clean in 307ms; security_lint 100% PASS.
 
 

@@ -4,6 +4,13 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-04T21:30:00-07:00 — kilo-expander: KStarDredge (Hyperlane Pirate Ambushes & Tactical Combat Outfitting)**
+  - Status: PASS ✅ (0 regressions, clean builds, 530.3 KB web / 292.9 KB native < 999 KB ceiling).
+  - Hyperlane Ambush Corridor: Sector warp transits trigger hyperlane pirate ambushes along transit vector; starter sector is raider-free.
+  - Station Safe Zone: 500m defense perimeter around spaceports repels raiders (32 DPS) and destroys torpedoes (480m); raiders cannot target safe vessels.
+  - Tactical Combat Retrofits: Added port outfitting (Railguns, EMP Flak, Auto-PDL, Deflector Aegis) with station drydock gating and keys [8]/[9].
+  - Verification: MSVC clean (`KStarDredge.exe` 292.9 KB); Vite clean in 307ms; security_lint 100% PASS.
+
 - **2026-10-04T17:08:00-07:00 — kilo-qa: KTimer (Pass 5: QA & Build Quality, Quicksave/Load & State Integrity)**
   - Status: PASS ✅ (0 regressions, clean builds, 104.2 KB web / 32.8 KB native < 999 KB ceiling).
   - Quicksave & State Persistence: Validated and tuned F5/F9 state snapshots with exact delta calculations across all 5 timing engines.

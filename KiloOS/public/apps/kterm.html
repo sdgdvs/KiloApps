@@ -516,12 +516,12 @@
   /* Toasts */
   #toastContainer {
     position: fixed;
-    bottom: 36px;
+    bottom: 70px;
     right: 16px;
     display: flex;
     flex-direction: column;
     gap: 8px;
-    z-index: 2000;
+    z-index: 900;
     pointer-events: none;
   }
   .toast {
@@ -648,81 +648,81 @@
       <div class="modal-section">
         <div class="modal-section-title">⌨️ Keyboard Shortcuts</div>
         <table class="cmd-table">
-          <tr><td class="code-cell"><code>F1</code> or <code>h</code></td><td class="cmd-desc">Open / toggle this Help Reference guide</td></tr>
-          <tr><td class="code-cell"><code>F5</code> / <code>save</code></td><td class="cmd-desc">Quicksave all tabs and session state to local storage</td></tr>
-          <tr><td class="code-cell"><code>F9</code> / <code>load</code></td><td class="cmd-desc">Quickload all tabs and session state from local storage</td></tr>
-          <tr><td class="code-cell"><code>Ctrl + O</code> / <code>restore</code></td><td class="cmd-desc">Import JSON session backup file</td></tr>
-          <tr><td class="code-cell"><code>Ctrl + T</code></td><td class="cmd-desc">Open a new terminal tab session</td></tr>
-          <tr><td class="code-cell"><code>Ctrl + W</code></td><td class="cmd-desc">Close the current terminal tab</td></tr>
-          <tr><td class="code-cell"><code>Ctrl + Tab</code></td><td class="cmd-desc">Cycle forward to the next tab (Shift for previous)</td></tr>
-          <tr><td class="code-cell"><code>Ctrl + 1..8</code></td><td class="cmd-desc">Directly switch to tab 1 through 8</td></tr>
-          <tr><td class="code-cell"><code>Ctrl + S</code></td><td class="cmd-desc">Export current session log to downloadable file</td></tr>
-          <tr><td class="code-cell"><code>Ctrl + R</code></td><td class="cmd-desc">Incremental reverse search through command history</td></tr>
-          <tr><td class="code-cell"><code>Ctrl + L</code></td><td class="cmd-desc">Clear terminal screen output (or <code>cls</code> / <code>clear</code>)</td></tr>
-          <tr><td class="code-cell"><code>Ctrl + C</code></td><td class="cmd-desc">Cancel current command input line</td></tr>
-          <tr><td class="code-cell"><code>Ctrl + Alt + E</code></td><td class="cmd-desc">Intercept Echo Anomaly telemetry transmission</td></tr>
-          <tr><td class="code-cell"><code>Tab</code></td><td class="cmd-desc">Auto-complete commands, aliases, and file paths</td></tr>
-          <tr><td class="code-cell"><code>Ctrl + +/-</code></td><td class="cmd-desc">Increase or decrease terminal font size (0 to reset)</td></tr>
-          <tr><td class="code-cell"><code>↑ / ↓ Arrows</code></td><td class="cmd-desc">Navigate through previous command history</td></tr>
-          <tr><td class="code-cell"><code>Escape</code></td><td class="cmd-desc">Dismiss this dialog, cancel search, or clear input</td></tr>
+          <tr data-cmd="help"><td class="code-cell"><code>F1</code> or <code>h</code></td><td class="cmd-desc">Open / toggle this Help Reference guide</td></tr>
+          <tr data-cmd="save"><td class="code-cell"><code>F5</code> / <code>save</code></td><td class="cmd-desc">Quicksave all tabs and session state to local storage</td></tr>
+          <tr data-cmd="load"><td class="code-cell"><code>F9</code> / <code>load</code></td><td class="cmd-desc">Quickload all tabs and session state from local storage</td></tr>
+          <tr data-cmd="restore"><td class="code-cell"><code>Ctrl + O</code> / <code>restore</code></td><td class="cmd-desc">Import JSON session backup file</td></tr>
+          <tr data-cmd="newtab"><td class="code-cell"><code>Ctrl + T</code></td><td class="cmd-desc">Open a new terminal tab session</td></tr>
+          <tr data-cmd="closetab"><td class="code-cell"><code>Ctrl + W</code></td><td class="cmd-desc">Close the current terminal tab</td></tr>
+          <tr data-shortcut="tab-cycle"><td class="code-cell"><code>Ctrl + Tab</code></td><td class="cmd-desc">Cycle forward to the next tab (Shift for previous)</td></tr>
+          <tr data-shortcut="tab-switch"><td class="code-cell"><code>Ctrl + 1..8</code></td><td class="cmd-desc">Directly switch to tab 1 through 8</td></tr>
+          <tr data-cmd="export-log"><td class="code-cell"><code>Ctrl + S</code></td><td class="cmd-desc">Export current session log to downloadable file</td></tr>
+          <tr data-shortcut="reverse-search"><td class="code-cell"><code>Ctrl + R</code></td><td class="cmd-desc">Incremental reverse search through command history</td></tr>
+          <tr data-cmd="clear"><td class="code-cell"><code>Ctrl + L</code></td><td class="cmd-desc">Clear terminal screen output (or <code>cls</code> / <code>clear</code>)</td></tr>
+          <tr data-shortcut="cancel-input"><td class="code-cell"><code>Ctrl + C</code></td><td class="cmd-desc">Cancel current command input line</td></tr>
+          <tr data-shortcut="echo-intercept"><td class="code-cell"><code>Ctrl + Alt + E</code></td><td class="cmd-desc">Intercept Echo Anomaly telemetry transmission</td></tr>
+          <tr data-shortcut="tab-complete"><td class="code-cell"><code>Tab</code></td><td class="cmd-desc">Auto-complete commands, aliases, and file paths</td></tr>
+          <tr data-shortcut="zoom"><td class="code-cell"><code>Ctrl + +/-</code></td><td class="cmd-desc">Increase or decrease terminal font size (0 to reset)</td></tr>
+          <tr data-shortcut="history-nav"><td class="code-cell"><code>↑ / ↓ Arrows</code></td><td class="cmd-desc">Navigate through previous command history</td></tr>
+          <tr data-shortcut="escape"><td class="code-cell"><code>Escape</code></td><td class="cmd-desc">Dismiss this dialog, cancel search, or clear input</td></tr>
         </table>
       </div>
 
       <div class="modal-section">
         <div class="modal-section-title">📁 File &amp; Navigation Commands</div>
         <table class="cmd-table">
-          <tr><td class="code-cell"><code>dir</code> / <code>ls</code> [path]</td><td class="cmd-desc">List files and folders in directory</td></tr>
-          <tr><td class="code-cell"><code>cd</code> [dir]</td><td class="cmd-desc">Change directory (e.g. <code>cd Documents</code>, <code>cd ..</code>)</td></tr>
-          <tr><td class="code-cell"><code>type</code> / <code>cat</code> &lt;file&gt;</td><td class="cmd-desc">View text file contents (e.g. <code>type readme.txt</code>)</td></tr>
-          <tr><td class="code-cell"><code>mkdir</code> &lt;folder&gt;</td><td class="cmd-desc">Create a new sub-directory in virtual file system</td></tr>
-          <tr><td class="code-cell"><code>touch</code> &lt;file&gt;</td><td class="cmd-desc">Create empty file or update timestamp in VFS</td></tr>
-          <tr><td class="code-cell"><code>del</code> / <code>rm</code> &lt;file&gt;</td><td class="cmd-desc">Delete a file from the virtual file system</td></tr>
-          <tr><td class="code-cell"><code>copy</code> / <code>cp</code> &lt;s&gt; &lt;d&gt;</td><td class="cmd-desc">Copy a file to destination (e.g. <code>copy a.txt b.txt</code>)</td></tr>
-          <tr><td class="code-cell"><code>move</code> / <code>ren</code> &lt;s&gt; &lt;d&gt;</td><td class="cmd-desc">Move or rename a file (e.g. <code>move a.txt b.txt</code>)</td></tr>
+          <tr data-cmd="dir"><td class="code-cell"><code>dir</code> / <code>ls</code> [path]</td><td class="cmd-desc">List files and folders in directory</td></tr>
+          <tr data-cmd="cd Documents"><td class="code-cell"><code>cd</code> [dir]</td><td class="cmd-desc">Change directory (e.g. <code>cd Documents</code>, <code>cd ..</code>)</td></tr>
+          <tr data-cmd="type Documents/readme.txt"><td class="code-cell"><code>type</code> / <code>cat</code> &lt;file&gt;</td><td class="cmd-desc">View text file contents (e.g. <code>type readme.txt</code>)</td></tr>
+          <tr data-cmd="mkdir Projects"><td class="code-cell"><code>mkdir</code> &lt;folder&gt;</td><td class="cmd-desc">Create a new sub-directory in virtual file system</td></tr>
+          <tr data-cmd="touch test.txt"><td class="code-cell"><code>touch</code> &lt;file&gt;</td><td class="cmd-desc">Create empty file or update timestamp in VFS</td></tr>
+          <tr data-cmd="del test.txt"><td class="code-cell"><code>del</code> / <code>rm</code> &lt;file&gt;</td><td class="cmd-desc">Delete a file from the virtual file system</td></tr>
+          <tr data-cmd="copy Documents/readme.txt readme_backup.txt"><td class="code-cell"><code>copy</code> / <code>cp</code> &lt;s&gt; &lt;d&gt;</td><td class="cmd-desc">Copy a file to destination (e.g. <code>copy a.txt b.txt</code>)</td></tr>
+          <tr data-cmd="move readme_backup.txt Documents/backup.txt"><td class="code-cell"><code>move</code> / <code>ren</code> &lt;s&gt; &lt;d&gt;</td><td class="cmd-desc">Move or rename a file (e.g. <code>move a.txt b.txt</code>)</td></tr>
         </table>
       </div>
 
       <div class="modal-section">
         <div class="modal-section-title">🔍 Text &amp; Pipeline Utilities</div>
         <table class="cmd-table">
-          <tr><td class="code-cell"><code>grep</code> [-i] &lt;pat&gt; [file]</td><td class="cmd-desc">Search lines for pattern in file or terminal output</td></tr>
-          <tr><td class="code-cell"><code>wc</code> &lt;file&gt;</td><td class="cmd-desc">Count lines, words, and character bytes in text file</td></tr>
-          <tr><td class="code-cell"><code>head</code> / <code>tail</code> [-n N] &lt;file&gt;</td><td class="cmd-desc">View the first or last N lines of a file (default: 10)</td></tr>
-          <tr><td class="code-cell"><code>calc</code> &lt;expr&gt;</td><td class="cmd-desc">Safe arithmetic math calculator (<code>+</code>, <code>-</code>, <code>*</code>, <code>/</code>, <code>%</code>, <code>^</code>, <code>()</code>)</td></tr>
-          <tr><td class="code-cell"><code>history</code> / <code>!n</code> / <code>!!</code></td><td class="cmd-desc">Display command history list; execute item n or last command</td></tr>
-          <tr><td class="code-cell"><code>run</code> / <code>exec</code> &lt;script&gt;</td><td class="cmd-desc">Execute commands line-by-line from batch script file</td></tr>
-          <tr><td class="code-cell"><code>cmd &gt; file</code> / <code>&gt;&gt; file</code></td><td class="cmd-desc">Output redirection: overwrite (<code>&gt;</code>) or append (<code>&gt;&gt;</code>) to file</td></tr>
-          <tr><td class="code-cell"><code>cmd1 ; cmd2</code></td><td class="cmd-desc">Sequential command chaining (or <code>cmd1 &amp;&amp; cmd2</code>)</td></tr>
+          <tr data-cmd="grep clean Documents/readme.txt"><td class="code-cell"><code>grep</code> [-i] &lt;pat&gt; [file]</td><td class="cmd-desc">Search lines for pattern in file or terminal output</td></tr>
+          <tr data-cmd="wc Documents/readme.txt"><td class="code-cell"><code>wc</code> &lt;file&gt;</td><td class="cmd-desc">Count lines, words, and character bytes in text file</td></tr>
+          <tr data-cmd="head -n 5 Documents/readme.txt"><td class="code-cell"><code>head</code> / <code>tail</code> [-n N] &lt;file&gt;</td><td class="cmd-desc">View the first or last N lines of a file (default: 10)</td></tr>
+          <tr data-cmd="calc (1024 * 768) / 1000"><td class="code-cell"><code>calc</code> &lt;expr&gt;</td><td class="cmd-desc">Safe arithmetic math calculator (<code>+</code>, <code>-</code>, <code>*</code>, <code>/</code>, <code>%</code>, <code>^</code>, <code>()</code>)</td></tr>
+          <tr data-cmd="history"><td class="code-cell"><code>history</code> / <code>!n</code> / <code>!!</code></td><td class="cmd-desc">Display command history list; execute item n or last command</td></tr>
+          <tr data-cmd="run System/autoexec.bat"><td class="code-cell"><code>run</code> / <code>exec</code> &lt;script&gt;</td><td class="cmd-desc">Execute commands line-by-line from batch script file</td></tr>
+          <tr data-cmd="uptime > uptime.log"><td class="code-cell"><code>cmd &gt; file</code> / <code>&gt;&gt; file</code></td><td class="cmd-desc">Output redirection: overwrite (<code>&gt;</code>) or append (<code>&gt;&gt;</code>) to file</td></tr>
+          <tr data-cmd="ver ; uptime"><td class="code-cell"><code>cmd1 ; cmd2</code></td><td class="cmd-desc">Sequential command chaining (or <code>cmd1 &amp;&amp; cmd2</code>)</td></tr>
         </table>
       </div>
 
       <div class="modal-section">
         <div class="modal-section-title">🛠️ System, Diagnostics &amp; Telemetry</div>
         <table class="cmd-table">
-          <tr><td class="code-cell"><code>help</code></td><td class="cmd-desc">Show command summary &amp; open quick reference</td></tr>
-          <tr><td class="code-cell"><code>ver</code> / <code>sysinfo</code></td><td class="cmd-desc">Display KiloOS terminal operating system version</td></tr>
-          <tr><td class="code-cell"><code>ps</code> / <code>tasks</code></td><td class="cmd-desc">Display virtual system processes and memory telemetry</td></tr>
-          <tr><td class="code-cell"><code>uptime</code></td><td class="cmd-desc">Display terminal session uptime and execution telemetry</td></tr>
-          <tr><td class="code-cell"><code>ping</code> &lt;host&gt;</td><td class="cmd-desc">Simulate ICMP ping packets to network hosts</td></tr>
-          <tr><td class="code-cell"><code>netstat</code></td><td class="cmd-desc">Display active virtual socket connections and ports</td></tr>
-          <tr><td class="code-cell"><code>theme</code> [name]</td><td class="cmd-desc">Set CRT theme: <code>green</code>, <code>amber</code>, <code>cyan</code>, <code>white</code>, <code>crimson</code>, <code>purple</code></td></tr>
-          <tr><td class="code-cell"><code>dmesg</code> / <code>syslog</code></td><td class="cmd-desc">Inspect kernel boot diagnostic log &amp; security traces</td></tr>
-          <tr><td class="code-cell"><code>glitch</code></td><td class="cmd-desc">Inspect corrupted memory dump and ARG route leak</td></tr>
-          <tr><td class="code-cell"><code>echo</code> &lt;text&gt;</td><td class="cmd-desc">Print message with variable expansion (<code>$VAR</code>, <code>%VAR%</code>)</td></tr>
-          <tr><td class="code-cell"><code>date</code> / <code>time</code></td><td class="cmd-desc">Print current system calendar date or local time</td></tr>
-          <tr><td class="code-cell"><code>whoami</code></td><td class="cmd-desc">Show current session user name</td></tr>
-          <tr><td class="code-cell"><code>alias</code> [name=cmd]</td><td class="cmd-desc">Create or list custom command aliases</td></tr>
-          <tr><td class="code-cell"><code>unalias</code> &lt;name&gt;</td><td class="cmd-desc">Delete a previously defined custom alias</td></tr>
-          <tr><td class="code-cell"><code>export</code> VAR=val</td><td class="cmd-desc">Set environment variable (view all with <code>env</code>)</td></tr>
-          <tr><td class="code-cell"><code>macro</code> record &lt;name&gt;</td><td class="cmd-desc">Record a sequence of terminal commands (stop with <code>macro stop</code>)</td></tr>
-          <tr><td class="code-cell"><code>macro</code> play &lt;name&gt;</td><td class="cmd-desc">Replay a saved command macro (view all with <code>macro list</code>)</td></tr>
-          <tr><td class="code-cell"><code>export-state</code> / <code>backup</code></td><td class="cmd-desc">Export full multi-tab JSON state backup snapshot</td></tr>
-          <tr><td class="code-cell"><code>import-state</code> / <code>restore</code></td><td class="cmd-desc">Import previously exported JSON state backup snapshot</td></tr>
-          <tr><td class="code-cell"><code>tutorial</code></td><td class="cmd-desc">Open the quick-start onboarding briefing dialog</td></tr>
-          <tr><td class="code-cell"><code>rmdir</code> / <code>rd</code> &lt;dir&gt;</td><td class="cmd-desc">Remove empty directory from virtual file system</td></tr>
-          <tr><td class="code-cell"><code>export-log</code> [file]</td><td class="cmd-desc">Export current session log to downloadable text file</td></tr>
-          <tr><td class="code-cell"><code>newtab</code> [name]</td><td class="cmd-desc">Create a new named terminal tab session</td></tr>
-          <tr><td class="code-cell"><code>exit</code> / <code>closetab</code></td><td class="cmd-desc">Close current tab session</td></tr>
+          <tr data-cmd="help"><td class="code-cell"><code>help</code></td><td class="cmd-desc">Show command summary &amp; open quick reference</td></tr>
+          <tr data-cmd="ver"><td class="code-cell"><code>ver</code> / <code>sysinfo</code></td><td class="cmd-desc">Display KiloOS terminal operating system version</td></tr>
+          <tr data-cmd="ps"><td class="code-cell"><code>ps</code> / <code>tasks</code></td><td class="cmd-desc">Display virtual system processes and memory telemetry</td></tr>
+          <tr data-cmd="uptime"><td class="code-cell"><code>uptime</code></td><td class="cmd-desc">Display terminal session uptime and execution telemetry</td></tr>
+          <tr data-cmd="ping localhost"><td class="code-cell"><code>ping</code> &lt;host&gt;</td><td class="cmd-desc">Simulate ICMP ping packets to network hosts</td></tr>
+          <tr data-cmd="netstat"><td class="code-cell"><code>netstat</code></td><td class="cmd-desc">Display active virtual socket connections and ports</td></tr>
+          <tr data-cmd="theme"><td class="code-cell"><code>theme</code> [name]</td><td class="cmd-desc">Set CRT theme: <code>green</code>, <code>amber</code>, <code>cyan</code>, <code>white</code>, <code>crimson</code>, <code>purple</code></td></tr>
+          <tr data-cmd="dmesg"><td class="code-cell"><code>dmesg</code> / <code>syslog</code></td><td class="cmd-desc">Inspect kernel boot diagnostic log &amp; security traces</td></tr>
+          <tr data-cmd="glitch"><td class="code-cell"><code>glitch</code></td><td class="cmd-desc">Inspect corrupted memory dump and subterranean anomaly</td></tr>
+          <tr data-cmd="echo Hello from KTerm!"><td class="code-cell"><code>echo</code> &lt;text&gt;</td><td class="cmd-desc">Print message with variable expansion (<code>$VAR</code>, <code>%VAR%</code>)</td></tr>
+          <tr data-cmd="date"><td class="code-cell"><code>date</code> / <code>time</code></td><td class="cmd-desc">Print current system calendar date or local time</td></tr>
+          <tr data-cmd="whoami"><td class="code-cell"><code>whoami</code></td><td class="cmd-desc">Show current session user name</td></tr>
+          <tr data-cmd="alias"><td class="code-cell"><code>alias</code> [name=cmd]</td><td class="cmd-desc">Create or list custom command aliases</td></tr>
+          <tr data-cmd="unalias ll"><td class="code-cell"><code>unalias</code> &lt;name&gt;</td><td class="cmd-desc">Delete a previously defined custom alias</td></tr>
+          <tr data-cmd="env"><td class="code-cell"><code>export</code> VAR=val</td><td class="cmd-desc">Set environment variable (view all with <code>env</code>)</td></tr>
+          <tr data-cmd="macro list"><td class="code-cell"><code>macro</code> record &lt;name&gt;</td><td class="cmd-desc">Record a sequence of terminal commands (stop with <code>macro stop</code>)</td></tr>
+          <tr data-cmd="macro list"><td class="code-cell"><code>macro</code> play &lt;name&gt;</td><td class="cmd-desc">Replay a saved command macro (view all with <code>macro list</code>)</td></tr>
+          <tr data-cmd="backup"><td class="code-cell"><code>export-state</code> / <code>backup</code></td><td class="cmd-desc">Export full multi-tab JSON state backup snapshot</td></tr>
+          <tr data-cmd="restore"><td class="code-cell"><code>import-state</code> / <code>restore</code></td><td class="cmd-desc">Import previously exported JSON state backup snapshot</td></tr>
+          <tr data-cmd="tutorial"><td class="code-cell"><code>tutorial</code></td><td class="cmd-desc">Open the quick-start onboarding briefing dialog</td></tr>
+          <tr data-cmd="rmdir Projects"><td class="code-cell"><code>rmdir</code> / <code>rd</code> &lt;dir&gt;</td><td class="cmd-desc">Remove empty directory from virtual file system</td></tr>
+          <tr data-cmd="export-log"><td class="code-cell"><code>export-log</code> [file]</td><td class="cmd-desc">Export current session log to downloadable text file</td></tr>
+          <tr data-cmd="newtab"><td class="code-cell"><code>newtab</code> [name]</td><td class="cmd-desc">Create a new named terminal tab session</td></tr>
+          <tr data-cmd="exit"><td class="code-cell"><code>exit</code> / <code>closetab</code></td><td class="cmd-desc">Close current tab session</td></tr>
         </table>
       </div>
     </div>
@@ -909,6 +909,7 @@
       sessions: sessions.map(sess => ({
         id: sess.id,
         name: sess.name,
+        customNamed: !!sess.customNamed,
         currentPath: sess.currentPath,
         history: sess.history || [],
         historyPos: sess.historyPos || 0,
@@ -927,6 +928,7 @@
     }
     sessions = data.sessions.map(d => {
       const sess = new TerminalSession(d.id || ('sess_' + Math.random().toString(36).substr(2, 4)), d.name || 'Tab');
+      sess.customNamed = !!d.customNamed;
       sess.currentPath = d.currentPath || '/';
       sess.history = Array.isArray(d.history) ? d.history : [];
       sess.historyPos = typeof d.historyPos === 'number' ? d.historyPos : sess.history.length;
@@ -1092,7 +1094,11 @@
       if (pos < s.length && s[pos] === '(') {
         pos++;
         const res = parseExpr();
-        if (pos < s.length && s[pos] === ')') pos++;
+        if (pos < s.length && s[pos] === ')') {
+          pos++;
+        } else {
+          throw new Error("Missing closing parenthesis ')'");
+        }
         return sign * res;
       }
 
@@ -1105,6 +1111,9 @@
     }
 
     const result = parseExpr();
+    if (pos < s.length) {
+      throw new Error(`Unexpected token '${s[pos]}'`);
+    }
     return Number.isInteger(result) ? result : parseFloat(result.toFixed(4));
   }
 
@@ -1187,6 +1196,7 @@
     constructor(id, name) {
       this.id = id;
       this.name = name;
+      this.customNamed = false;
       this.currentPath = '/';
       this.history = [];
       this.historyPos = 0;
@@ -1234,6 +1244,7 @@
     const id = 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4);
     const sessionName = title || ('Tab ' + nextSessionNum++);
     const session = new TerminalSession(id, sessionName);
+    session.customNamed = !!title;
     sessions.push(session);
     
     // Add default banner to new session
@@ -1353,6 +1364,7 @@
         const newName = window.prompt("Rename terminal session tab:", s.name);
         if (newName && newName.trim()) {
           s.name = newName.trim();
+          s.customNamed = true;
           renderTabs();
           showToast(`Renamed tab to "${escapeHtml(s.name)}"`, "sys");
         }
@@ -1557,7 +1569,7 @@
           print("  ping          - ICMP echo diagnostic simulation (ping <host>)");
           print("  netstat       - Active virtual network sockets");
           print("  theme         - CRT color theme (theme <green|amber|cyan|white|crimson|purple>)");
-          print("  dmesg         - Kernel boot diagnostic log & ARG telemetry");
+          print("  dmesg         - Kernel boot diagnostic log & security traces");
           print("  glitch        - Memory dump anomaly inspection");
           print("  run / exec    - Run batch commands from script file (run <file>)");
           print("  date / time   - Show system date or clock");
@@ -1771,10 +1783,12 @@
               if (node && node.type === 'dir') {
                   s.currentPath = target;
                   updatePrompt();
-                  const parts = target.split('/').filter(Boolean);
-                  const lastFolder = parts.length > 0 ? parts[parts.length - 1] : 'Root';
-                  s.name = lastFolder;
-                  renderTabs();
+                  if (!s.customNamed) {
+                    const parts = target.split('/').filter(Boolean);
+                    const lastFolder = parts.length > 0 ? parts[parts.length - 1] : 'Root';
+                    s.name = lastFolder;
+                    renderTabs();
+                  }
               } else {
                   print("ERROR: Path not found.", "log-error");
               }
@@ -2464,6 +2478,14 @@
         input.value = cmd;
         input.focus();
         updateCursor();
+        const s = getActiveSession();
+        if (s && cmd.trim()) {
+          if (s.history.length === 0 || s.history[s.history.length - 1] !== cmd) {
+            s.history.push(cmd);
+            if (s.history.length > 500) s.history.shift();
+          }
+          s.historyPos = s.history.length;
+        }
         processCommandLine(cmd);
         input.value = '';
         updateCursor();
@@ -2471,27 +2493,64 @@
     });
   });
 
-  // Clickable commands in Help modal
+  // Clickable commands and shortcuts in Help modal
   document.querySelectorAll('.cmd-table tr').forEach(row => {
-    const codeEl = row.querySelector('code');
-    if (codeEl) {
-      row.style.cursor = 'pointer';
-      row.title = 'Click to run this command';
-      row.addEventListener('click', () => {
-        const raw = codeEl.textContent.trim();
-        const firstCmd = raw.split(/[\s/<\[]/)[0].trim();
-        if (firstCmd) {
-          closeHelpModal();
-          input.value = firstCmd;
-          input.focus();
-          updateCursor();
-          processCommandLine(firstCmd);
+    row.style.cursor = 'pointer';
+    row.addEventListener('click', () => {
+      const dataCmd = row.getAttribute('data-cmd');
+      const dataShortcut = row.getAttribute('data-shortcut');
+      if (dataCmd) {
+        closeHelpModal();
+        input.value = dataCmd;
+        input.focus();
+        updateCursor();
+        const s = getActiveSession();
+        if (s && dataCmd.trim()) {
+          if (s.history.length === 0 || s.history[s.history.length - 1] !== dataCmd) {
+            s.history.push(dataCmd);
+            if (s.history.length > 500) s.history.shift();
+          }
+          s.historyPos = s.history.length;
+        }
+        processCommandLine(dataCmd);
+        input.value = '';
+        updateCursor();
+      } else if (dataShortcut) {
+        closeHelpModal();
+        if (dataShortcut === 'tab-cycle') {
+          if (sessions.length > 1) {
+            const currIdx = sessions.findIndex(s => s.id === activeSessionId);
+            switchTabByIndex((currIdx + 1) % sessions.length);
+          } else {
+            showToast("Open multiple tabs with Ctrl+T or '+ New'", "sys");
+          }
+        } else if (dataShortcut === 'reverse-search') {
+          startReverseSearch();
+        } else if (dataShortcut === 'echo-intercept') {
+          print("[ECHO ANOMALY INTERCEPT DETECTED] Resonance: 1999Hz.", "log-system");
+          print(">> Sector 0x1999: kweb://deep-core | Key Fragment: \"1999-ARCH\" <<", "log-operator");
+          showToast("🌌 Echo Anomaly Intercepted: 1999Hz", "sys");
+        } else if (dataShortcut === 'zoom') {
+          setFontSize(currentFontSize + 1);
+        } else if (dataShortcut === 'escape') {
           input.value = '';
           updateCursor();
+        } else {
+          const codeEl = row.querySelector('code');
+          showToast(`Shortcut: ${codeEl ? codeEl.textContent : 'Active'}`, "sys");
         }
+      }
+    });
+  });
+
+  function clearAllToasts() {
+    if (toastContainer) {
+      toastContainer.querySelectorAll('.toast').forEach(t => {
+        if (t._timer) clearTimeout(t._timer);
+        t.remove();
       });
     }
-  });
+  }
 
   function showToast(message, type = 'success', duration = 3500) {
     if (!toastContainer) return;
@@ -2530,6 +2589,7 @@
   }
 
   function openHelpModal() {
+    clearAllToasts();
     if (helpModal) {
       helpModal.classList.add('open');
     }
@@ -2551,7 +2611,11 @@
   }
 
   function openTutorialModal() {
+    clearAllToasts();
     if (tutorialModal) {
+      if (chkDontShowTutorial) {
+        chkDontShowTutorial.checked = safeGetStorage('kterm_tutorialSeen') === '1' || !safeGetStorage('kterm_tutorialSeen');
+      }
       tutorialModal.classList.add('open');
       if (btnTutorialStart) btnTutorialStart.focus();
     }
@@ -2560,7 +2624,15 @@
   function closeTutorialModal() {
     if (tutorialModal) {
       tutorialModal.classList.remove('open');
-      safeSetStorage('kterm_tutorialSeen', '1');
+      if (chkDontShowTutorial) {
+        if (chkDontShowTutorial.checked) {
+          safeSetStorage('kterm_tutorialSeen', '1');
+        } else {
+          try { localStorage.removeItem('kterm_tutorialSeen'); } catch (e) {}
+        }
+      } else {
+        safeSetStorage('kterm_tutorialSeen', '1');
+      }
       input.focus();
     }
   }
@@ -2576,9 +2648,17 @@
       if (e.target === tutorialModal) closeTutorialModal();
     });
     tutorialModal.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' || e.key === 'Escape' || e.key === ' ') {
+      if (e.key === 'Escape') {
         e.preventDefault();
         closeTutorialModal();
+        return;
+      }
+      if (e.key === 'Enter') {
+        if (e.target !== chkDontShowTutorial) {
+          e.preventDefault();
+          closeTutorialModal();
+        }
+        return;
       }
     });
   }
@@ -2590,7 +2670,7 @@
       if (e.target === helpModal) closeHelpModal();
     });
     helpModal.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' || e.key === 'Escape' || e.key === ' ') {
+      if (e.key === 'Escape') {
         e.preventDefault();
         closeHelpModal();
       }
@@ -2689,6 +2769,8 @@
       e.preventDefault();
       if (sessions.length > 1) {
         closeTab(activeSessionId);
+      } else {
+        showToast("Cannot close the only open tab", "warn", 1800);
       }
       return;
     }
