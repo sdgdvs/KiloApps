@@ -131,7 +131,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 ### 6. Feature Expander Queue (`kilo-expander`)
 - **Current Target**: `KSnake`
 - **Upcoming Queue**:
-  `KPong`, `KGo`, `KSynth`, `KNote`, `KFont`, `KRSS`, `KSys`, `KZip`, `KVault`, `KType`, `KMandel`, `KGraph`, `KChart`, `KPaint`, `KConnect4`, `KChess`, `KTetris`, `KDB`, `KTodo`, `KJournal`, `KCalendar`, `KContacts`, `KMail`, `KRead`, `KPass`, `KImage`, `KAudio`, `KMedia`, `KTask`, `KNet`, `KPing`, `KHash`, `KPad`, `K2048`, `KDarts`, `KTowers`, `KReversi` *(Completed: KReversi, KSimon, KMatch3, KTowers, KSnake, KPong, KGo, KSynth, KNote, KFont, KRSS, KSys, KZip, KVault, KType, KMandel, KGraph, KChart, KPaint, KConnect4, KChess, KTetris, KDB, KTodo, KJournal, KCalendar, KContacts, KMail, KRead, KPass, KImage, KAudio, KMedia, KTask, KNet, KPing, KHash, KPad, K2048, KDarts)*.
+  `KSpace (5-Level Campaign Expansion)`, `KPong`, `KGo`, `KSynth`, `KNote`, `KFont`, `KRSS`, `KSys`, `KZip`, `KVault`, `KType`, `KMandel`, `KGraph`, `KChart`, `KPaint`, `KConnect4`, `KChess`, `KTetris`, `KDB`, `KTodo`, `KJournal`, `KCalendar`, `KContacts`, `KMail`, `KRead`, `KPass`, `KImage`, `KAudio`, `KMedia`, `KTask`, `KNet`, `KPing`, `KHash`, `KPad`, `K2048`, `KDarts`, `KTowers`, `KReversi` *(Completed: KReversi, KSimon, KMatch3, KTowers, KSnake, KPong, KGo, KSynth, KNote, KFont, KRSS, KSys, KZip, KVault, KType, KMandel, KGraph, KChart, KPaint, KConnect4, KChess, KTetris, KDB, KTodo, KJournal, KCalendar, KContacts, KMail, KRead, KPass, KImage, KAudio, KMedia, KTask, KNet, KPing, KHash, KPad, K2048, KDarts)*.
 - **Multiplayer Focus (CRITICAL)**: Concentrate on expanding games (*KChess*, *KConnect4*, *KGo*, *KReversi*, *KDarts*, *KTetris*, *KSnake*, *K2048*, *KMatch3*, *KSimon*) and collaborative apps (*KDraw*, *KPaint*, *KSynth*, *KPad*) with seamless Firebase Realtime Database multiplayer for cross-computer play on `kiloapps.web.app`.
 
 ### 7. Virtual 1999 Web Expansion Queue (Eternal Fleet Track)
@@ -157,6 +157,16 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - ⚠️ AGENT NOTE: This is a human director request, not a machine-generated task. Evaluate whether this directive aligns with the project's core pillars (999KB retro OS, ludonarrative consonance, ARG integrity, fleet stability) before implementing. If counterproductive, skip and log your reasoning.
   - Instructions: <directive text here>
 -->
+
+- **[KSPACE] — Campaign Expansion: 5 Distinct Pre-Boss Levels with Unique Mechanics** | Director Directive
+  - ⚠️ AGENT NOTE: Human director priority directive. Expand KSpace campaign across web (`kspace.html`) and native (`KSpace/main.c`).
+  - Instructions: Restructure KSpace into at least 5 distinct levels/sectors before the final Dreadnought Boss showdown at Level 6, each with dedicated environmental hazards and signature mechanics:
+    1. **Level 1 (Kuiper Debris Field)**: Micro-gravity slingshot wells and destructible ice/iron asteroids that fracture into smaller kinetic shards that damage enemies.
+    2. **Level 2 (Ionized Nebula Rift)**: Electromagnetic storm field. Standard laser ranges are damped, but plasma/spread shots chain electric arcs across grouped interceptors; periodic EMP lightning flashes scramble enemy shields.
+    3. **Level 3 (Magma Foundry of Vulcanus)**: Low-orbit solar foundry. Sustained firing builds a ship heat gauge; tactical dashes [D] vent thermal buildup. Sweeping horizontal solar flares telegraphed with warning beacons sweep the screen.
+    4. **Level 4 (Phased Void Graveyard)**: Derelict dimensional anomaly. Elite phantom hulls and debris periodically phase into spectral states, requiring Phase Converter pods or Chrono-Shift [T] to synchronize dimensions and strike vulnerable cores.
+    5. **Level 5 (Citadel Orbital Approach)**: Heavily fortified Dreadnought defensive perimeter. Moving laser barrier gates, armored defense drones, and rotating shield pylons that protect convoy cruisers until pylons are destroyed.
+    6. **Level 6 (Final Boss: Dreadnought Siege)**: Multi-phase flagship battle featuring dual plasma generators, orbital lance bombardments, flak screen bursts, and core meltdown sequence.
 
 - **[FLEET: kilo-graphics] — Exclusive Focus on Imagen 3 Asset Overhauls & Inappropriate App Turn Skipping** | Director Directive
   - ⚠️ AGENT NOTE: Human director priority mandate for `kilo-graphics`.
