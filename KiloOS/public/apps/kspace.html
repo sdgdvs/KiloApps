@@ -561,7 +561,7 @@ window.addEventListener('beforeunload', () => {
       'ship_alpha', 'ship_crimson', 'ship_phantom',
       'enemy_interceptor', 'enemy_chaser', 'enemy_saucer',
       'enemy_armored', 'enemy_zigzag', 'asteroid',
-      'boss_flagship'
+      'boss_flagship', 'planet_red', 'planet_ringed', 'strike_flare'
     ];
 
     spriteKeys.forEach(key => {
@@ -1916,16 +1916,18 @@ window.addEventListener('beforeunload', () => {
       for (let k = strikes.length - 1; k >= 0; k--) {
         let st = strikes[k];
         st.timer--;
-        if (st.timer === 30) {
+        if (st.timer === 25) {
           playSound(4);
-          addShockwave(st.x, H - 30, 35, '#ff3d00');
-          addExplosion(st.x, H - 30, 15, '#ff1744');
-          if (p.x + 20 > st.x - 12 && p.x < st.x + 12) playerHit();
+          addShockwave(st.x, H - 35, 45, '#ff3d00');
+          addExplosion(st.x, H - 35, 20, '#ff1744');
+        }
+        if (st.timer <= 25 && st.timer >= 5) {
+          if (p.x + 20 > st.x - 14 && p.x < st.x + 14) playerHit();
           for (let i = enemies.length - 1; i >= 0; i--) {
             let e = enemies[i];
             if (e.x + 20 > st.x - 14 && e.x < st.x + 14) {
-              e.hp -= 25;
-              addExplosion(e.x + 10, e.y + 10, 10, '#ff3d00');
+              e.hp -= 2;
+              if (frameCount % 3 === 0) addExplosion(e.x + 10, e.y + 10, 8, '#ff3d00');
               if (e.hp <= 0) handleEnemyDefeat(e, i);
             }
           }
@@ -3477,7 +3479,7 @@ window.addEventListener('beforeunload', () => {
       }
     }
 
-    // Planets
+    // Planets (Rendered with Imagen 3 Assets & Spherical Fallback)
     for (let p of planets) {
       p.x += p.vx; p.y += p.vy; p.rot += 0.005;
       if (p.x < -p.r*2) p.x = W + p.r*2;
@@ -3485,10 +3487,17 @@ window.addEventListener('beforeunload', () => {
       if (p.y < -p.r*2) p.y = H + p.r*2;
       if (p.y > H + p.r*2) p.y = -p.r*2;
       ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.rot);
-      ctx.fillStyle = p.col; ctx.beginPath(); ctx.arc(0, 0, p.r, 0, Math.PI * 2); ctx.fill();
-      if (p.type === 'ringed') {
-        ctx.strokeStyle = p.ringCol; ctx.lineWidth = 4;
-        ctx.beginPath(); ctx.ellipse(0, 0, p.r * 1.8, p.r * 0.4, Math.PI/6, 0, Math.PI * 2); ctx.stroke();
+      let sprKey = (p.type === 'ringed') ? 'planet_ringed' : 'planet_red';
+      let spr = KSPACE_SPRITES[sprKey];
+      if (spr && spr.loaded) {
+        let diam = (p.type === 'ringed') ? p.r * 2.6 : p.r * 2.1;
+        ctx.drawImage(spr.img, -diam / 2, -diam / 2, diam, diam);
+      } else {
+        ctx.fillStyle = p.col; ctx.beginPath(); ctx.arc(0, 0, p.r, 0, Math.PI * 2); ctx.fill();
+        if (p.type === 'ringed') {
+          ctx.strokeStyle = p.ringCol; ctx.lineWidth = 4;
+          ctx.beginPath(); ctx.ellipse(0, 0, p.r * 1.8, p.r * 0.4, Math.PI/6, 0, Math.PI * 2); ctx.stroke();
+        }
       }
       ctx.restore();
     }
@@ -3500,17 +3509,33 @@ window.addEventListener('beforeunload', () => {
       ctx.beginPath(); ctx.moveTo(0, H - 35); ctx.lineTo(W, H - 35); ctx.stroke();
     }
 
-    // Orbital Bombardment Strikes
+    // Orbital Bombardment Strikes (Telegraphing Warning & Active Plasma Lance with Flare)
     for (let st of strikes) {
-      if (st.timer > 15) {
-        ctx.strokeStyle = (frameCount % 4 < 2) ? '#ff1744' : '#ffea00';
-        ctx.lineWidth = 1;
+      if (st.timer > 25) {
+        let alpha = 0.4 + (Math.sin(frameCount * 0.2) + 1) * 0.25;
+        ctx.strokeStyle = (frameCount % 4 < 2) ? `rgba(255, 23, 68, ${alpha})` : `rgba(255, 234, 0, ${alpha})`;
+        ctx.lineWidth = 1.5;
+        ctx.setLineDash([6, 4]);
         ctx.beginPath(); ctx.moveTo(st.x, 0); ctx.lineTo(st.x, H); ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.strokeStyle = '#ff1744'; ctx.lineWidth = 2;
+        ctx.strokeRect(st.x - 12, H - 45, 24, 20);
       } else {
-        ctx.fillStyle = (frameCount % 2 === 0) ? '#ff3d00' : '#ffea00';
-        ctx.fillRect(st.x - 12, 0, 24, H);
+        let bAlpha = Math.min(1.0, st.timer / 15.0 + 0.35);
+        ctx.save();
+        ctx.fillStyle = (frameCount % 2 === 0) ? `rgba(255, 61, 0, ${bAlpha * 0.7})` : `rgba(255, 145, 0, ${bAlpha * 0.7})`;
+        ctx.shadowBlur = 16; ctx.shadowColor = '#ff3d00';
+        ctx.fillRect(st.x - 14, 0, 28, H);
+        ctx.fillStyle = `rgba(255, 234, 0, ${bAlpha * 0.9})`;
+        ctx.fillRect(st.x - 7, 0, 14, H);
         ctx.fillStyle = '#ffffff';
-        ctx.fillRect(st.x - 4, 0, 8, H);
+        ctx.fillRect(st.x - 2.5, 0, 5, H);
+        let flareSpr = KSPACE_SPRITES['strike_flare'];
+        if (flareSpr && flareSpr.loaded) {
+          let fw = 96, fh = 96;
+          ctx.drawImage(flareSpr.img, st.x - fw / 2, H - fh + 6, fw, fh);
+        }
+        ctx.restore();
       }
     }
 

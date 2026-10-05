@@ -1610,17 +1610,26 @@ void Update() {
         for (int k = 0; k < MAX_STRIKES; k++) {
             if (strikes[k].active) {
                 strikes[k].timer--;
-                if (strikes[k].timer == 30) { // Impact moment!
+                if (strikes[k].timer == 25) { // Impact moment!
                     PlaySnd(4);
-                    AddShockwave(strikes[k].x, H - 30.0f, 35.0f, RGB(255, 60, 0));
-                    AddExplosion(strikes[k].x, H - 30.0f, 15, RGB(255, 23, 68));
-                    if (p.x + 20.0f > strikes[k].x - 12.0f && p.x < strikes[k].x + 12.0f) {
+                    AddShockwave(strikes[k].x, H - 35.0f, 45.0f, RGB(255, 60, 0));
+                    AddExplosion(strikes[k].x, H - 35.0f, 20, RGB(255, 23, 68));
+                }
+                if (strikes[k].timer <= 25 && strikes[k].timer >= 5) {
+                    if (p.x + 20.0f > strikes[k].x - 14.0f && p.x < strikes[k].x + 14.0f) {
                         PlayerHit();
                     }
                     for (int i = 0; i < MAX_ENEMIES; i++) {
                         if (e[i].active && e[i].x + 20.0f > strikes[k].x - 14.0f && e[i].x < strikes[k].x + 14.0f) {
-                            e[i].hp -= 25;
-                            AddExplosion(e[i].x + 10.0f, e[i].y + 10.0f, 10, RGB(255, 60, 0));
+                            e[i].hp -= 2.0f;
+                            if (frameCount % 3 == 0) AddExplosion(e[i].x + 10.0f, e[i].y + 10.0f, 8, RGB(255, 60, 0));
+                            if (e[i].hp <= 0.0f) {
+                                e[i].active = 0.0f;
+                                score += 30 * comboMultiplier;
+                                enemiesKilled++;
+                                totalKills++;
+                                AddExplosion(e[i].x + 10.0f, e[i].y + 10.0f, 16, RGB(255, 60, 0));
+                            }
                         }
                     }
                 }
@@ -3476,18 +3485,38 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     int px = (int)planets[p].x, py = (int)planets[p].y, pr = (int)planets[p].r;
                     Ellipse(memDC, px - pr, py - pr, px + pr, py + pr);
                     
-                    if (planets[p].type == 0) { // ringed
-                        HPEN rpen = CreatePen(PS_SOLID, 4, RGB(0, 255, 128));
+                    if (planets[p].type == 0) { // ringed gas giant
+                        HBRUSH shBr = CreateSolidBrush(RGB(0, 25, 20));
+                        SelectObject(memDC, shBr);
+                        Ellipse(memDC, px, py - pr, px + pr, py + pr);
+                        DeleteObject(shBr);
+
+                        HPEN rpen = CreatePen(PS_SOLID, 3, RGB(0, 255, 128));
                         HPEN oldPen = (HPEN)SelectObject(memDC, rpen);
                         SelectObject(memDC, GetStockObject(NULL_BRUSH));
-                        Ellipse(memDC, px - (int)(pr * 1.8f), py - (int)(pr * 0.4f), px + (int)(pr * 1.8f), py + (int)(pr * 0.4f));
-                        SelectObject(memDC, oldPen); DeleteObject(rpen);
-                    } else { // cratered
-                        HBRUSH cbr = CreateSolidBrush(RGB(100, 10, 10));
+                        Ellipse(memDC, px - (int)(pr * 1.9f), py - (int)(pr * 0.45f), px + (int)(pr * 1.9f), py + (int)(pr * 0.45f));
+                        HPEN rpen2 = CreatePen(PS_SOLID, 1, RGB(128, 255, 200));
+                        SelectObject(memDC, rpen2);
+                        Ellipse(memDC, px - (int)(pr * 1.5f), py - (int)(pr * 0.35f), px + (int)(pr * 1.5f), py + (int)(pr * 0.35f));
+                        SelectObject(memDC, oldPen); DeleteObject(rpen); DeleteObject(rpen2);
+                    } else { // cratered desert planet with 3D spherical shadow
+                        HBRUSH shBr = CreateSolidBrush(RGB(55, 8, 8));
+                        SelectObject(memDC, shBr);
+                        Ellipse(memDC, px - (int)(pr * 0.1f), py - pr, px + pr, py + pr);
+                        DeleteObject(shBr);
+
+                        HBRUSH cbr = CreateSolidBrush(RGB(80, 10, 10));
                         SelectObject(memDC, cbr);
-                        Ellipse(memDC, px - (int)(pr*0.3f) - (int)(pr*0.15f), py - (int)(pr*0.2f) - (int)(pr*0.15f), px - (int)(pr*0.3f) + (int)(pr*0.15f), py - (int)(pr*0.2f) + (int)(pr*0.15f));
-                        Ellipse(memDC, px + (int)(pr*0.4f) - (int)(pr*0.2f), py + (int)(pr*0.3f) - (int)(pr*0.2f), px + (int)(pr*0.4f) + (int)(pr*0.2f), py + (int)(pr*0.3f) + (int)(pr*0.2f));
-                        SelectObject(memDC, oldBr); DeleteObject(cbr);
+                        Ellipse(memDC, px - (int)(pr*0.4f), py - (int)(pr*0.25f), px - (int)(pr*0.1f), py + (int)(pr*0.05f));
+                        Ellipse(memDC, px + (int)(pr*0.1f), py + (int)(pr*0.1f), px + (int)(pr*0.45f), py + (int)(pr*0.45f));
+                        Ellipse(memDC, px - (int)(pr*0.2f), py + (int)(pr*0.25f), px + (int)(pr*0.05f), py + (int)(pr*0.5f));
+                        DeleteObject(cbr);
+
+                        HPEN rimPen = CreatePen(PS_SOLID, 1, RGB(255, 80, 80));
+                        HPEN oldPen = (HPEN)SelectObject(memDC, rimPen);
+                        SelectObject(memDC, GetStockObject(NULL_BRUSH));
+                        Ellipse(memDC, px - pr, py - pr, px + pr, py + pr);
+                        SelectObject(memDC, oldPen); DeleteObject(rimPen);
                     }
                     SelectObject(memDC, oldBr); DeleteObject(pbr);
                 }
@@ -3503,26 +3532,43 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 }
 
 
-                // Orbital Bombardment Strikes Rendering
+                // Orbital Bombardment Strikes Rendering (Telegraphed Targeting & Active Plasma Lance)
                 for (int k = 0; k < MAX_STRIKES; k++) {
                     if (strikes[k].active) {
                         int sx = (int)strikes[k].x;
-                        if (strikes[k].timer > 15) {
-                            HPEN tPen = CreatePen(PS_SOLID, 1, (frameCount % 4 < 2) ? RGB(255, 23, 68) : RGB(255, 234, 0));
+                        if (strikes[k].timer > 25) {
+                            HPEN tPen = CreatePen(PS_DOT, 1, (frameCount % 4 < 2) ? RGB(255, 23, 68) : RGB(255, 234, 0));
                             HPEN oldP = (HPEN)SelectObject(memDC, tPen);
                             MoveToEx(memDC, sx, 0, NULL); LineTo(memDC, sx, H);
-                            MoveToEx(memDC, sx - 10, H - 40, NULL); LineTo(memDC, sx + 10, H - 40);
-                            MoveToEx(memDC, sx, H - 50, NULL); LineTo(memDC, sx, H - 30);
-                            SelectObject(memDC, oldP); DeleteObject(tPen);
+                            SelectObject(memDC, GetStockObject(NULL_BRUSH));
+                            HPEN bPen = CreatePen(PS_SOLID, 2, RGB(255, 23, 68));
+                            SelectObject(memDC, bPen);
+                            Rectangle(memDC, sx - 12, H - 45, sx + 12, H - 25);
+                            SelectObject(memDC, oldP); DeleteObject(tPen); DeleteObject(bPen);
                         } else {
-                            HBRUSH beamBr = CreateSolidBrush((frameCount % 2 == 0) ? RGB(255, 60, 0) : RGB(255, 234, 0));
-                            RECT bRc = {sx - 12, 0, sx + 12, H};
+                            // Outer blazing aura
+                            HBRUSH beamBr = CreateSolidBrush((frameCount % 2 == 0) ? RGB(255, 60, 0) : RGB(255, 145, 0));
+                            RECT bRc = {sx - 14, 0, sx + 14, H};
                             FillRect(memDC, &bRc, beamBr);
                             DeleteObject(beamBr);
+                            // Mid plasma channel
+                            HBRUSH midBr = CreateSolidBrush(RGB(255, 234, 0));
+                            RECT mRc = {sx - 7, 0, sx + 7, H};
+                            FillRect(memDC, &mRc, midBr);
+                            DeleteObject(midBr);
+                            // Inner white core
                             HBRUSH coreBr = CreateSolidBrush(RGB(255, 255, 255));
-                            RECT cRc = {sx - 4, 0, sx + 4, H};
+                            RECT cRc = {sx - 2, 0, sx + 2, H};
                             FillRect(memDC, &cRc, coreBr);
                             DeleteObject(coreBr);
+                            // Ground impact blast flare
+                            HBRUSH flBr = CreateSolidBrush(RGB(255, 234, 0));
+                            HGDIOBJ prevBr = SelectObject(memDC, flBr);
+                            HPEN shPen = CreatePen(PS_SOLID, 2, RGB(255, 60, 0));
+                            HGDIOBJ prevP = SelectObject(memDC, shPen);
+                            Ellipse(memDC, sx - 22, H - 40, sx + 22, H - 10);
+                            SelectObject(memDC, prevBr); SelectObject(memDC, prevP);
+                            DeleteObject(flBr); DeleteObject(shPen);
                         }
                     }
                 }
