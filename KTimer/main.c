@@ -804,8 +804,13 @@ static int SaveStateToFile(const char* filename) {
     }
 
     // Timer
-    data.tmIsRunning = g_tmIsRunning;
-    data.tmRemainingMs = g_tmRemainingMs;
+    DWORD now = GetTickCount();
+    DWORD currentTmMs = g_tmRemainingMs;
+    if (g_tmIsRunning) {
+        currentTmMs = (now >= g_tmTargetTime) ? 0 : (g_tmTargetTime - now);
+    }
+    data.tmIsRunning = g_tmIsRunning && (currentTmMs > 0);
+    data.tmRemainingMs = currentTmMs;
     data.tmTotalMs = g_tmTotalMs;
     lstrcpynA(data.tmTimeBuf, g_tmTimeBuf, sizeof(data.tmTimeBuf));
 
@@ -813,27 +818,40 @@ static int SaveStateToFile(const char* filename) {
     data.multiTimerCount = (g_multiTimerCount > MAX_MULTI_TIMERS) ? MAX_MULTI_TIMERS : g_multiTimerCount;
     for (int i = 0; i < data.multiTimerCount; i++) {
         data.multiTimers[i] = g_multiTimers[i];
+        if (g_multiTimers[i].isRunning) {
+            DWORD elapsed = now - g_multiTimers[i].lastTick;
+            data.multiTimers[i].remainingMs = (elapsed >= g_multiTimers[i].remainingMs) ? 0 : (g_multiTimers[i].remainingMs - elapsed);
+            data.multiTimers[i].isRunning = (data.multiTimers[i].remainingMs > 0);
+        }
     }
 
     // Pomodoro
+    DWORD currentPomoMs = g_pomoRemainingMs;
+    if (g_pomoIsRunning) {
+        currentPomoMs = (now >= g_pomoTargetTime) ? 0 : (g_pomoTargetTime - now);
+    }
     data.pomoState = (int)g_pomoState;
     data.pomoCycleCount = g_pomoCycleCount;
-    data.pomoRemainingMs = g_pomoRemainingMs;
+    data.pomoRemainingMs = currentPomoMs;
     data.pomoTotalMs = g_pomoTotalMs;
-    data.pomoIsRunning = g_pomoIsRunning;
+    data.pomoIsRunning = g_pomoIsRunning && (currentPomoMs > 0);
     data.pomoCompletedSessions = g_pomoCompletedSessions;
     data.pomoTotalFocusMins = g_pomoTotalFocusMins;
 
     // Interval
+    DWORD currentIntMs = g_intRemainingMs;
+    if (g_intIsRunning) {
+        currentIntMs = (now >= g_intTargetTime) ? 0 : (g_intTargetTime - now);
+    }
     data.intPhase = (int)g_intPhase;
     data.intCurrentSet = g_intCurrentSet;
     data.intTotalSets = g_intTotalSets;
     data.intWorkMs = g_intWorkMs;
     data.intRestMs = g_intRestMs;
     data.intPrepMs = g_intPrepMs;
-    data.intRemainingMs = g_intRemainingMs;
+    data.intRemainingMs = currentIntMs;
     data.intTotalPhaseMs = g_intTotalPhaseMs;
-    data.intIsRunning = g_intIsRunning;
+    data.intIsRunning = g_intIsRunning && (currentIntMs > 0) && (g_intPhase != INT_PHASE_DONE);
 
     HANDLE hFile = CreateFileA(filename, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
     if (hFile == INVALID_HANDLE_VALUE) return 0;
@@ -876,9 +894,9 @@ static int LoadStateFromFile(const char* filename) {
     UpdateStopwatchDisplay();
 
     // Restore Timer
-    g_tmIsRunning = data.tmIsRunning;
     g_tmRemainingMs = data.tmRemainingMs;
     g_tmTotalMs = data.tmTotalMs ? data.tmTotalMs : 300000;
+    g_tmIsRunning = data.tmIsRunning && (g_tmRemainingMs > 0);
     g_tmTargetTime = GetTickCount() + g_tmRemainingMs;
     lstrcpynA(g_tmTimeBuf, data.tmTimeBuf[0] ? data.tmTimeBuf : "00:05:00", sizeof(g_tmTimeBuf));
     if (hTmInput) SetWindowTextA(hTmInput, g_tmTimeBuf);
@@ -889,6 +907,7 @@ static int LoadStateFromFile(const char* filename) {
     DWORD now = GetTickCount();
     for (int i = 0; i < g_multiTimerCount; i++) {
         g_multiTimers[i] = data.multiTimers[i];
+        if (g_multiTimers[i].remainingMs == 0) g_multiTimers[i].isRunning = 0;
         g_multiTimers[i].lastTick = now;
     }
     if (hListMt) {
@@ -907,7 +926,7 @@ static int LoadStateFromFile(const char* filename) {
     g_pomoCycleCount = data.pomoCycleCount;
     g_pomoRemainingMs = data.pomoRemainingMs;
     g_pomoTotalMs = data.pomoTotalMs ? data.pomoTotalMs : (25 * 60 * 1000);
-    g_pomoIsRunning = data.pomoIsRunning;
+    g_pomoIsRunning = data.pomoIsRunning && (g_pomoRemainingMs > 0);
     g_pomoTargetTime = GetTickCount() + g_pomoRemainingMs;
     g_pomoCompletedSessions = data.pomoCompletedSessions;
     g_pomoTotalFocusMins = data.pomoTotalFocusMins;
@@ -922,7 +941,7 @@ static int LoadStateFromFile(const char* filename) {
     g_intPrepMs = data.intPrepMs ? data.intPrepMs : 5000;
     g_intRemainingMs = data.intRemainingMs;
     g_intTotalPhaseMs = data.intTotalPhaseMs ? data.intTotalPhaseMs : g_intPrepMs;
-    g_intIsRunning = data.intIsRunning;
+    g_intIsRunning = data.intIsRunning && (g_intRemainingMs > 0) && (g_intPhase != INT_PHASE_DONE);
     g_intTargetTime = GetTickCount() + g_intRemainingMs;
 
     char buf[16];
@@ -938,6 +957,24 @@ static int LoadStateFromFile(const char* filename) {
     SwitchMode(m);
 
     return 1;
+}
+
+static const char* FindSubStr(const char* str, const char* sub) {
+    if (!str || !sub || !*sub) return str;
+    int subLen = lstrlenA(sub);
+    int strLen = lstrlenA(str);
+    for (int i = 0; i <= strLen - subLen; i++) {
+        int match = 1;
+        for (int j = 0; j < subLen; j++) {
+            char c1 = str[i + j];
+            char c2 = sub[j];
+            if (c1 >= 'A' && c1 <= 'Z') c1 += ('a' - 'A');
+            if (c2 >= 'A' && c2 <= 'Z') c2 += ('a' - 'A');
+            if (c1 != c2) { match = 0; break; }
+        }
+        if (match) return str + i;
+    }
+    return NULL;
 }
 
 static int HasSavedState(const char* filename) {
@@ -1573,7 +1610,10 @@ void __stdcall MainEntry() {
             ShowNativeStatus("★ Restored saved state from ktimer.dat [F9]");
         }
     } else if (!HasSeenTutorial()) {
-        ShowHelpDialog(hwnd);
+        const char* cmdLine = GetCommandLineA();
+        if (!FindSubStr(cmdLine, "--headless") && !FindSubStr(cmdLine, "--test") && !FindSubStr(cmdLine, "--smoke")) {
+            ShowHelpDialog(hwnd);
+        }
         MarkTutorialSeen();
         ShowNativeStatus("Welcome to KTimer! Space: Start, F1: Help");
     }

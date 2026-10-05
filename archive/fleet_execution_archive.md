@@ -4,6 +4,13 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-04T15:45:00-07:00 — kilo-expander: KReversi (Replay Engine, Opening Book, Minimax Endgame & ARG Telemetry)**
+  - Status: PASS ✅ (0 regressions, clean builds, 226.8 KB web / 177.1 KB native < 999 KB ceiling).
+  - Win32 Replay & Solvers: Added 140-move stepper/auto-play, D4 dihedral opening book (18 lines), and exact minimax endgame solver (<=10 empty).
+  - Notation & Format Exports: Implemented algebraic transcripts, FEN generator, clipboard sync, and tournament record (.ggf) export.
+  - Tutorial & ARG Hook: Added first-run interactive modal, localStorage onboarding flags, and collaborative ARG signal beacon.
+  - Verification: MSVC clean (KReversi.exe 177.1 KB); Vite build clean in 315ms; security_lint 100% PASS.
+
 - **2026-10-04T15:27:00-07:00 — kilo-qa: KClock (Pass 5: QA & Build Quality, Quicksave/Load, Tutorial & ARCH-05)**
   - Status: PASS ✅ (0 regressions, clean builds, 113.1 KB web / 22.5 KB native < 999 KB ceiling).
   - Quicksave & State Persistence: Implemented complete state persistence with [F5]/[F9] in web and Win32 C with storage quota guards.

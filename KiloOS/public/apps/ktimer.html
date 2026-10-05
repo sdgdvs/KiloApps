@@ -2374,9 +2374,14 @@
         currentSwElapsed += (performance.now() - swStart);
       }
 
+      const now = Date.now();
+      const currentTmRemaining = tmInterval ? Math.max(0, tmTarget - now) : tmRemaining;
+      const currentPomoRemaining = pomoInterval ? Math.max(0, pomoTargetTime - now) : pomoRemaining;
+      const currentIntRemaining = intInterval ? Math.max(0, intTargetTime - now) : intRemainingMs;
+
       return {
         version: 1,
-        timestamp: Date.now(),
+        timestamp: now,
         activeTab: activeTabName,
         stopwatch: {
           running: !!swInterval,
@@ -2384,25 +2389,32 @@
           laps: swLaps.map(l => ({ ...l }))
         },
         timer: {
-          running: !!tmInterval,
-          remaining: tmRemaining,
+          running: !!tmInterval && currentTmRemaining > 0,
+          remaining: currentTmRemaining,
           total: tmTotal,
           inputStr: tmInput ? tmInput.value : '00:05:00',
           customPresets: Array.isArray(customPresets) ? [...customPresets] : []
         },
-        multiTimers: multiTimers.map(t => ({
-          name: t.name,
-          totalMs: t.totalMs,
-          remainingMs: t.remainingMs,
-          isRunning: !!t.isRunning,
-          lastTick: Date.now()
-        })),
+        multiTimers: multiTimers.map(t => {
+          let rem = t.remainingMs;
+          if (t.isRunning) {
+            let elapsed = now - (t.lastTick || now);
+            rem = Math.max(0, rem - elapsed);
+          }
+          return {
+            name: t.name,
+            totalMs: t.totalMs,
+            remainingMs: rem,
+            isRunning: !!(t.isRunning && rem > 0),
+            lastTick: now
+          };
+        }),
         pomodoro: {
           state: pomoState,
           cycleCount: pomoCycleCount,
           total: pomoTotal,
-          remaining: pomoRemaining,
-          running: !!pomoInterval,
+          remaining: currentPomoRemaining,
+          running: !!pomoInterval && currentPomoRemaining > 0,
           stats: { ...pomoStats }
         },
         interval: {
@@ -2412,9 +2424,9 @@
           workMs: intWorkMs,
           restMs: intRestMs,
           prepMs: intPrepMs,
-          remainingMs: intRemainingMs,
+          remainingMs: currentIntRemaining,
           totalPhaseMs: intTotalPhaseMs,
-          running: !!intInterval
+          running: !!intInterval && currentIntRemaining > 0 && intPhase !== INT_PHASE.DONE
         }
       };
     }
@@ -2488,6 +2500,7 @@
           const now = Date.now();
           multiTimers = state.multiTimers.map(t => ({
             ...t,
+            isRunning: !!(t.isRunning && t.remainingMs > 0),
             lastTick: now
           }));
           saveMultiTimers();
