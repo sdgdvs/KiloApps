@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-graphics
-next_agent: kilo-tester
+current_agent: kilo-tester
+next_agent: kilo-usability
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -13,7 +13,7 @@ timeout_minutes: 15
 status: ready
 current_targets:
   kilo_creator: "kweb://users/~neon_rider"
-  kilo_graphics: KRogue
+  kilo_graphics: KColosseum
   kilo_tester: KTerm
   kilo_usability: KCalc
   kilo_qa: KPomodoro
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-creator
-  app: "kweb://geocities"
-  timestamp: "2026-10-05T02:45:00-07:00"
+  agent: kilo-graphics
+  app: KRogue
+  timestamp: "2026-10-05T03:33:00-07:00"
 last_planner_run: "2026-10-05T07:31:00Z"
 ---
 
@@ -109,9 +109,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
 - **EXCLUSIVE MISSION**: Replace programmer vector art with Imagen 3 generated sprites and backgrounds via the 2-stage asset pipeline. If the target app is not appropriate for raster/sprite replacement (e.g. wireframe classics or abstract board games), skip the turn immediately.
-- **Current Target**: `KRogue`
+- **Current Target**: `KColosseum`
 - **Upcoming Queue**:
-  `KColosseum`, `KAbyss`, `KBreakout`, `KAsteroids`, `KSpace`, `KPac`, `KQuest` *(Note: Pure vector/wireframe or abstract board targets skip automatically per Mandate 15. Completed: KQuest Phases 1-5, KSpace)*.
+  `KAbyss`, `KBreakout`, `KAsteroids`, `KSpace`, `KPac`, `KQuest`, `KRogue` *(Note: Pure vector/wireframe or abstract board targets skip automatically per Mandate 15. Completed: KQuest Phases 1-5, KSpace)*.
 
 ### 3. App Tester Queue (`kilo-tester`)
 - **Current Target**: `KTerm`
@@ -227,6 +227,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-05T03:33:00-07:00 — kilo-graphics: KRogue (Skip Turn — ASCII Roguelike Aesthetic & Zero Glints)**
+  - Status: ⏭️ Skip — Imagen 3 asset replacement not appropriate for KRogue
+  - Rationale: Foundational 1980s text/terminal & ASCII grid roguelike identity; raster sprites inappropriate per Rule 2.
+  - Glint Audit: Verified 0 rotating specular glints and 0 traveling perimeter border dots across web and native Win32 C.
+  - Verification: `scripts/check_icons.py` 100% PASS; `scripts/security_lint.py` 100% PASS; MSVC clean (`KRogue.exe` 77.8 KB); Vite clean in 513ms; web (208.7 KB) < 999 KB ceiling.
+
 - **2026-10-05T02:45:00-07:00 — kilo-creator: kweb://geocities (Homestead Explorer, Cross-Fleet Signal Board & RTDB Sync)**
   - Status: PASS ✅ (0 regressions, clean builds, 444.9 KB < 999 KB ceiling).
   - Homestead Explorer: Added 20 authentic 1999 neighborhood homepages across 5 zones + Netscape 4.0 Communicator CRT modal reader.
@@ -257,12 +263,5 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Station Safe Zone: 500m defense perimeter around spaceports repels raiders (32 DPS) and destroys torpedoes (480m); raiders cannot target safe vessels.
   - Tactical Combat Retrofits: Added port outfitting (Railguns, EMP Flak, Auto-PDL, Deflector Aegis) with station drydock gating and keys [8]/[9].
   - Verification: MSVC clean (`KStarDredge.exe` 292.9 KB); Vite clean in 307ms; security_lint 100% PASS.
-
-- **2026-10-04T17:08:00-07:00 — kilo-qa: KTimer (Pass 5: QA & Build Quality, Quicksave/Load & State Integrity)**
-  - Status: PASS ✅ (0 regressions, clean builds, 104.2 KB web / 32.8 KB native < 999 KB ceiling).
-  - Quicksave & State Persistence: Validated and tuned F5/F9 state snapshots with exact delta calculations across all 5 timing engines.
-  - First-Run Tutorial & Modal Flow: Verified fresh-session tutorial gating (`ktimer_tutorialSeen` / `.dat`), unblocked headless tests.
-  - Resource Cleanup & Ergonomics: Verified ARCH-05 interval safety, audio suspend, and non-occluding toast container positioning.
-  - Verification: `test_app_startup.py` PASS; `smoke_test_native.py` PASS (101/101); MSVC clean (`KTimer.exe` 32.8 KB); Vite clean in 369ms.
 
 

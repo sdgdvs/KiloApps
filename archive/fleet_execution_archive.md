@@ -4,6 +4,13 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-04T17:08:00-07:00 — kilo-qa: KTimer (Pass 5: QA & Build Quality, Quicksave/Load & State Integrity)**
+  - Status: PASS ✅ (0 regressions, clean builds, 104.2 KB web / 32.8 KB native < 999 KB ceiling).
+  - Quicksave & State Persistence: Validated and tuned F5/F9 state snapshots with exact delta calculations across all 5 timing engines.
+  - First-Run Tutorial & Modal Flow: Verified fresh-session tutorial gating (`ktimer_tutorialSeen` / `.dat`), unblocked headless tests.
+  - Resource Cleanup & Ergonomics: Verified ARCH-05 interval safety, audio suspend, and non-occluding toast container positioning.
+  - Verification: `test_app_startup.py` PASS; `smoke_test_native.py` PASS (101/101); MSVC clean (`KTimer.exe` 32.8 KB); Vite clean in 369ms.
+
 - **2026-10-04T15:45:00-07:00 — kilo-expander: KReversi (Replay Engine, Opening Book, Minimax Endgame & ARG Telemetry)**
   - Status: PASS ✅ (0 regressions, clean builds, 226.8 KB web / 177.1 KB native < 999 KB ceiling).
   - Win32 Replay & Solvers: Added 140-move stepper/auto-play, D4 dihedral opening book (18 lines), and exact minimax endgame solver (<=10 empty).
