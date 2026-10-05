@@ -88,9 +88,45 @@ static void ToggleStartPause(void);
 static void SkipPhase(void);
 static void ResetTimer(void);
 static void QuickSave(void);
-static void QuickLoad(void);
+static BOOL QuickLoad(void);
 static void ShowHelp(HWND hwnd);
 static void ShowStatus(const char* txt);
+static int HasSavedState(const char* filename);
+static int HasSeenTutorial(void);
+static void MarkTutorialSeen(void);
+
+static const char* FindSubStr(const char* str, const char* sub) {
+    if (!str || !sub) return NULL;
+    int len1 = lstrlenA(str);
+    int len2 = lstrlenA(sub);
+    for (int i = 0; i <= len1 - len2; i++) {
+        int match = 1;
+        for (int j = 0; j < len2; j++) {
+            if (str[i + j] != sub[j]) { match = 0; break; }
+        }
+        if (match) return str + i;
+    }
+    return NULL;
+}
+
+static int HasSavedState(const char* filename) {
+    DWORD attr = GetFileAttributesA(filename);
+    return (attr != INVALID_FILE_ATTRIBUTES && !(attr & FILE_ATTRIBUTE_DIRECTORY));
+}
+
+static int HasSeenTutorial(void) {
+    return HasSavedState("kpomodoro_tutorial.dat");
+}
+
+static void MarkTutorialSeen(void) {
+    HANDLE h = CreateFileA("kpomodoro_tutorial.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (h != INVALID_HANDLE_VALUE) {
+        char buf[16] = "seen\r\n";
+        DWORD written = 0;
+        WriteFile(h, buf, 6, &written, NULL);
+        CloseHandle(h);
+    }
+}
 
 static void ShowStatus(const char* txt) {
     if (!txt) return;
@@ -114,7 +150,7 @@ static void QuickSave(void) {
     HANDLE hFile = CreateFileA("kpomodoro.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
     if (hFile != INVALID_HANDLE_VALUE) {
         DWORD written = 0;
-        int data[8];
+        int data[13];
         data[0] = (int)g_mode;
         data[1] = g_remainingSeconds;
         data[2] = g_targetDuration;
@@ -123,6 +159,11 @@ static void QuickSave(void) {
         data[5] = g_todayMinutes;
         data[6] = g_streak;
         data[7] = g_taskDone;
+        data[8] = g_taskEst;
+        data[9] = g_longInterval;
+        data[10] = g_focusMin;
+        data[11] = g_shortMin;
+        data[12] = g_longMin;
         WriteFile(hFile, data, sizeof(data), &written, NULL);
         WriteFile(hFile, g_taskTitle, sizeof(g_taskTitle), &written, NULL);
         CloseHandle(hFile);
@@ -132,12 +173,13 @@ static void QuickSave(void) {
     }
 }
 
-static void QuickLoad(void) {
+static BOOL QuickLoad(void) {
     HANDLE hFile = CreateFileA("kpomodoro.dat", GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
     if (hFile != INVALID_HANDLE_VALUE) {
         DWORD bytesRead = 0;
-        int data[8];
-        if (ReadFile(hFile, data, sizeof(data), &bytesRead, NULL) && bytesRead == sizeof(data)) {
+        int data[13];
+        memset(data, 0, sizeof(data));
+        if (ReadFile(hFile, data, sizeof(data), &bytesRead, NULL) && bytesRead >= 8 * sizeof(int)) {
             g_mode = (PomoMode)data[0];
             g_remainingSeconds = data[1];
             g_targetDuration = data[2];
@@ -146,15 +188,24 @@ static void QuickLoad(void) {
             g_todayMinutes = data[5];
             g_streak = data[6];
             g_taskDone = data[7];
+            if (bytesRead >= sizeof(data)) {
+                g_taskEst = data[8];
+                g_longInterval = data[9];
+                g_focusMin = data[10];
+                g_shortMin = data[11];
+                g_longMin = data[12];
+            }
             ReadFile(hFile, g_taskTitle, sizeof(g_taskTitle), &bytesRead, NULL);
             if (g_hEditTask) SetWindowTextA(g_hEditTask, g_taskTitle);
             SetMode(g_mode, FALSE);
             ShowStatus("Workstation state quickloaded from kpomodoro.dat (F9)");
+            CloseHandle(hFile);
+            return TRUE;
         }
         CloseHandle(hFile);
-    } else {
-        ShowStatus("No quicksave file (kpomodoro.dat) found.");
     }
+    ShowStatus("No quicksave file (kpomodoro.dat) found.");
+    return FALSE;
 }
 
 static void SetMode(PomoMode newMode, BOOL resetTimer) {
@@ -249,6 +300,7 @@ static void SkipPhase(void) {
 }
 
 static void ShowHelp(HWND hwnd) {
+    MarkTutorialSeen();
     const char* helpText =
         "KPomodoro v1.0.0 - Work/Break Cycle Manager\n\n"
         "The Pomodoro Technique is a proven cognitive cadence method:\n"
@@ -263,9 +315,9 @@ static void ShowHelp(HWND hwnd) {
         "  * H or F1     : This Help Manual\n"
         "  * F5          : Quicksave State to disk (kpomodoro.dat)\n"
         "  * F9          : Quickload State from disk\n\n"
-        "Ludonarrative ARG Lore:\n"
-        "  The KiloOS fleet runs on disciplined cycles. Focus your attention,\n"
-        "  conserve CPU cycles, and prepare for KMatrix #100.";
+        "Operational Cadence:\n"
+        "  Standard cognitive pacing optimizes workstation endurance.\n"
+        "  Focus undivided attention, conserve mental cycles, and log tasks.";
     MessageBoxA(hwnd, helpText, "KPomodoro Help & Guidelines", MB_OK | MB_ICONINFORMATION);
 }
 
@@ -428,7 +480,16 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
         SendMessageA(g_hEditTask, WM_SETFONT, (WPARAM)g_hFontRegular, TRUE);
 
         SetTimer(hwnd, ID_TIMER_STATUS, 1000, NULL);
-        QuickLoad();
+        if (HasSavedState("kpomodoro.dat")) {
+            QuickLoad();
+        } else if (!HasSeenTutorial()) {
+            const char* cmdLine = GetCommandLineA();
+            if (!FindSubStr(cmdLine, "--headless") && !FindSubStr(cmdLine, "--test") && !FindSubStr(cmdLine, "--smoke")) {
+                ShowHelp(hwnd);
+            } else {
+                MarkTutorialSeen();
+            }
+        }
         return 0;
     }
 

@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-creator
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -16,7 +16,7 @@ current_targets:
   kilo_graphics: KColosseum
   kilo_tester: KHash
   kilo_usability: KMine
-  kilo_qa: KPomodoro
+  kilo_qa: KBreakout
   kilo_expander: "KSpace (5-Level Campaign Expansion)"
 virtual_web_target: "kweb://users/~neon_rider"
 virtual_web_rotation:
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-usability
-  app: KCalc
-  timestamp: "2026-10-05T05:40:00-07:00"
+  agent: kilo-qa
+  app: KPomodoro
+  timestamp: "2026-10-05T06:36:00-07:00"
 last_planner_run: "2026-10-05T07:31:00Z"
 ---
 
@@ -124,9 +124,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KBBS`, `KCalendar`, `KChart`, `KColor`, `KChess`, `KConnect4`, `KConverter`, `KFreecell`, `KHangman`, `KMatch3`, `KPong`, `KSettings`, `KSimon`, `KSnake`, `KSolitaire`, `KSudoku`, `KTetris`, `KWords` *(Completed: KCalc, KPomodoro, KTimer, KClock, KHash, KMystery, KMandel, KFont, KPing, KAudio, KSynth, KScript, KRead, KRadio, KSys, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KChrono, KTask, KStarForge, KPad, KBookmark, KRSS, KClip, KHex, KHabit, KFarm, KPaint, KGraph, KImage, KJournal, KMail, KMedia, KNet, KNote, KPass)*.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
-- **Current Target**: `KPomodoro`
+- **Current Target**: `KBreakout`
 - **Upcoming Queue**:
-  `KBreakout`, `KRogue`, `KTetris`, `KPong`, `KPac`, `KChess`, `KColor`, `KConverter`, `KQuarantine`, `KSettings`, `KTaskMgr`, `KHabit`, `KSudoku`, `KConnect4`, `KHangman`, `KSimon`, `KAsteroids`, `KFreecell`, `KMatch3`, `KWords`, `KGo`, `KDarts`, `KTowers`, `KReversi`, `KAlchemy`, `KColony`, `KStarForge` *(Completed in Pass 5: KBBS, KChrono, KCipher, KClip, KCyber, KDragon, KFortress, KHash, KMaze, KMech, KMystery, KQuest, KSanctuary, KSnake, KSolitaire, KSpace, KStarDredge, KStarship, KStellar, KSubmarine, KSynth, KSys, KTask, KTerm, KTimer, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KRSS, K2048, KChart, KGraph, KContacts, KScript, KRead, KColosseum, KAbyss, KMedia, KAudio, KRadio, KPad, KPaint, KCalc, KMine, KCosmic, KBase, KBudget, KCalendar, KFarm, KFlash, KFont, KImage, KJournal, KMail, KMandel, KNet, KNote, KPass, KDB, KHex, KBookmark, KPing, KChat, KClock)*.
+  `KRogue`, `KTetris`, `KPong`, `KPac`, `KChess`, `KColor`, `KConverter`, `KQuarantine`, `KSettings`, `KTaskMgr`, `KHabit`, `KSudoku`, `KConnect4`, `KHangman`, `KSimon`, `KAsteroids`, `KFreecell`, `KMatch3`, `KWords`, `KGo`, `KDarts`, `KTowers`, `KReversi`, `KAlchemy`, `KColony`, `KStarForge` *(Completed in Pass 5: KBBS, KChrono, KCipher, KClip, KCyber, KDragon, KFortress, KHash, KMaze, KMech, KMystery, KQuest, KSanctuary, KSnake, KSolitaire, KSpace, KStarDredge, KStarship, KStellar, KSubmarine, KSynth, KSys, KTask, KTerm, KTimer, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KRSS, K2048, KChart, KGraph, KContacts, KScript, KRead, KColosseum, KAbyss, KMedia, KAudio, KRadio, KPad, KPaint, KCalc, KMine, KCosmic, KBase, KBudget, KCalendar, KFarm, KFlash, KFont, KImage, KJournal, KMail, KMandel, KNet, KNote, KPass, KDB, KHex, KBookmark, KPing, KChat, KClock, KPomodoro)*.
 
 ### 6. Feature Expander Queue (`kilo-expander`)
 - **Current Target**: `KSpace (5-Level Campaign Expansion)`
@@ -227,6 +227,14 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-05T06:36:00-07:00 — kilo-qa: KPomodoro (Pass 5: QA & Build Quality, Quicksave/Load & Tutorial Integrity)**
+  - Status: PASS ✅ (0 regressions, 85.6 KB web / 17.4 KB native < 999 KB ceiling).
+  - Quicksave & State Snapshot: Dedicated snapshot restore slot with [F5]/[F9], extended Win32 C fields with backward compatibility, and storage quota guard.
+  - First-Run Tutorial Integrity: Added flag gating (`kpomodoro_tutorialSeen` / `.dat`) preventing popup interruptions on restored sessions in web and native.
+  - ARG & Mystery Compliance: Cleaned un-diegetic tags and meta disclosures per Rule 14 across web history logs and Win32 C help text.
+  - Toast Occlusion Remediation: Added modal opening toast auto-clear preventing occlusion over interactive modal controls.
+  - Verification: `test_app_startup.py` PASS; `test_web_apps.js` PASS (54 elements); MSVC clean (`KPomodoro.exe` 17.4 KB); Vite clean in 533ms; security_lint 100% PASS.
+
 - **2026-10-05T05:40:00-07:00 — kilo-usability: KCalc (Layout Tuning, Toast Occlusion Remediation & Formula Bar Navigation)**
   - Status: PASS ✅ (0 regressions, 112.3 KB web / 28.0 KB native < 999 KB ceiling).
   - Window Dimension Tuning: Expanded KCalc default window size to 830x670 in `App.jsx`, preventing header wrap and keypad cramping.
@@ -259,12 +267,5 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Community Homestead Directory: Added user homestead publisher & local/Firebase RTDB live feed (`virtual_web/geocities/homesteads`).
   - KNet Routing: Enhanced `kweb://geocities` URL parsing in `knet.html` supporting neighborhood query paths and direct deep-links.
   - Verification: `npm run build` PASS (444ms); `security_lint.py` 100% PASS; `check_sizes.py` PASS; size 444.9 KB (< 999 KB limit).
-
-- **2026-10-04T23:45:00-07:00 — kilo-creator: kweb://warez (64KB/4KB Intro Arena & Keymaker Algorithm Lab)**
-  - Status: PASS ✅ (0 regressions, Vite clean in 514ms, 323.0 KB web < 999 KB ceiling).
-  - 64KB & 4KB Intro Arena (Tab 11): Implemented real-time procedural demoscene intro player with 4 complete entries (FLARELIGHT Mindflux '99 raymarched tunnel, PARALAX Voxel Mars '99 raycaster, ECHOPLEX Echo Carrier 4KB with 1999Hz Fourier ripples, SKID VECTOR Fire & Copper Dream), Mode 13h / SVGA toggles, FPS telemetry, and downloadable NASM assembly sources.
-  - Keymaker Algorithm Lab (Tab 12): Added interactive step-by-step mathematical dissector for 6 authentic 1999 schemes (SecuROM v2 Horner polynomial mod 65521, WON auth mod 7, SafeDisc v1 matrix dot-product, VoidCraft weighted Luhn mod 10, LaserLock LCG/CRC16, and Subterranean cipher seed transponder).
-  - ARG & Diegetic Discovery: Integrated 1999Hz audio carrier triggers, memory heap residue display (0x007F1999), Node 0x7F / Deep Core gateway routing, and .NFO key report exporter.
-  - Verification: `security_lint.py` 100% PASS; Vite clean in 514ms; file size 323.0 KB < 999 KB limit.
 
 

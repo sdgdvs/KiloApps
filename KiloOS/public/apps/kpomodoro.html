@@ -876,7 +876,7 @@
     transform: translate(-50%, 0);
   }
 
-  /* ARG Relic notification badge */
+  /* Diegetic Easter egg notification badge */
   .relic-badge {
     display: inline-flex;
     align-items: center;
@@ -1614,7 +1614,15 @@ function saveState() {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
   } catch (e) {
-    console.error('Save failed', e);
+    console.warn('Save failed or quota exceeded, pruning history', e);
+    try {
+      if (state.history && state.history.length > 50) {
+        state.history = state.history.slice(0, 50);
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      }
+    } catch (err) {
+      console.error('Storage quota exceeded completely', err);
+    }
   }
 }
 
@@ -1650,8 +1658,17 @@ function loadState() {
   return false;
 }
 
+function clearToast() {
+  const toastBox = document.getElementById('toastBox');
+  if (toastBox) {
+    clearTimeout(toastBox._timer);
+    toastBox.classList.remove('show');
+  }
+}
+
 function showToast(msg, icon = '🍅') {
   const toastBox = document.getElementById('toastBox');
+  if (!toastBox) return;
   const toastIcon = document.getElementById('toastIcon');
   const toastMsg = document.getElementById('toastMsg');
   toastIcon.textContent = icon;
@@ -1917,7 +1934,7 @@ function updateCyclePips() {
   }
 }
 
-// --- ARG Easter Egg Lore ---
+// --- Diegetic Telemetry Easter Egg ---
 function triggerArgEvent() {
   document.body.classList.add('theme-amber');
   state.settings.theme = 'amber';
@@ -1925,10 +1942,10 @@ function triggerArgEvent() {
     time: '19:99',
     mode: 'ECHO TELEMETRY',
     duration: '42m',
-    task: 'SYNCHRONIZED COGNITIVE CORE: Harmonic 432Hz locked. The KMatrix awaits.',
-    tag: 'ARG'
+    task: 'SYNCHRONIZED COGNITIVE CORE: Harmonic 432Hz locked. Frequency offset calibrated.',
+    tag: 'TELEMETRY'
   });
-  showToast('ARG Relic Unlocked: "Echo Cadence" Phosphor Mode!', '✨');
+  showToast('System Telemetry Synchronized: "Echo Cadence" Phosphor Mode!', '✨');
 }
 
 // --- Task List View Rendering ---
@@ -2269,23 +2286,51 @@ function bindSettings() {
 }
 
 // --- Quicksave / Quickload & Export/Import ---
+const QUICKSAVE_KEY = 'kpomodoro_quicksave';
+
 function quickSave() {
-  saveState();
-  showToast('Workstation state quicksaved (F5)', '💾');
+  try {
+    localStorage.setItem(QUICKSAVE_KEY, JSON.stringify(state));
+    saveState();
+    showToast('Workstation state quicksaved (F5)', '💾');
+  } catch (e) {
+    try {
+      if (state.history && state.history.length > 50) {
+        state.history = state.history.slice(0, 50);
+        localStorage.setItem(QUICKSAVE_KEY, JSON.stringify(state));
+        saveState();
+        showToast('Workstation state quicksaved (history pruned) (F5)', '💾');
+        return;
+      }
+    } catch (err) {}
+    showToast('Failed to quicksave state', '⚠️');
+  }
 }
 
 function quickLoad() {
-  if (loadState()) {
-    setMode(state.mode, false);
-    targetEndTimestamp = state.isRunning ? (Date.now() + (state.remainingSeconds * 1000)) : null;
-    renderTasks();
-    renderStats();
-    renderHistory();
-    updateCyclePips();
-    syncSettingsUI();
-    showToast('Workstation state quickloaded (F9)', '📂');
-  } else {
-    showToast('No saved state found', '⚠️');
+  try {
+    const raw = localStorage.getItem(QUICKSAVE_KEY) || localStorage.getItem(STORAGE_KEY);
+    if (!raw) {
+      showToast('No saved state found', '⚠️');
+      return;
+    }
+    const data = JSON.parse(raw);
+    if (data && typeof data === 'object') {
+      Object.assign(state, data);
+      setMode(state.mode, false);
+      targetEndTimestamp = state.isRunning ? (Date.now() + (state.remainingSeconds * 1000)) : null;
+      renderTasks();
+      renderStats();
+      renderHistory();
+      updateCyclePips();
+      syncSettingsUI();
+      saveState();
+      showToast('Workstation state quickloaded (F9)', '📂');
+    } else {
+      showToast('Corrupted quicksave data', '⚠️');
+    }
+  } catch (e) {
+    showToast('Error loading quicksave data', '⚠️');
   }
 }
 
@@ -2351,12 +2396,22 @@ function exportCSV() {
 function openModal(id) {
   const target = document.getElementById(id);
   if (!target) return;
-  const tutorialModal = document.getElementById('tutorialModal');
+  clearToast();
 
+  const tutorialModal = document.getElementById('tutorialModal');
   // Auto-mark tutorial seen if moving to another modal from tutorial
   if (tutorialModal && tutorialModal.classList.contains('open') && id !== 'tutorialModal') {
     const chk = document.getElementById('chkDontShowTutorial');
-    if (chk && chk.checked) localStorage.setItem(TUTORIAL_FLAG, 'true');
+    if (chk && chk.checked) {
+      try { localStorage.setItem(TUTORIAL_FLAG, 'true'); } catch (e) {}
+    }
+  }
+
+  if (id === 'tutorialModal') {
+    const chk = document.getElementById('chkDontShowTutorial');
+    if (chk) {
+      chk.checked = localStorage.getItem(TUTORIAL_FLAG) === 'true' || !localStorage.getItem(TUTORIAL_FLAG);
+    }
   }
 
   // Close all other modals first to prevent any double-modal backdrop stacking/collisions
@@ -2379,7 +2434,15 @@ function closeModal(id) {
   if (m) {
     if (id === 'tutorialModal') {
       const chk = document.getElementById('chkDontShowTutorial');
-      if (chk && chk.checked) localStorage.setItem(TUTORIAL_FLAG, 'true');
+      if (chk) {
+        if (chk.checked) {
+          try { localStorage.setItem(TUTORIAL_FLAG, 'true'); } catch (e) {}
+        } else {
+          try { localStorage.removeItem(TUTORIAL_FLAG); } catch (e) {}
+        }
+      } else {
+        try { localStorage.setItem(TUTORIAL_FLAG, 'true'); } catch (e) {}
+      }
     }
     m.classList.remove('open');
     m.style.display = 'none';
@@ -2392,7 +2455,15 @@ function closeAllModals() {
   document.querySelectorAll('.modal-overlay').forEach(m => {
     if (m.id === 'tutorialModal') {
       const chk = document.getElementById('chkDontShowTutorial');
-      if (chk && chk.checked) localStorage.setItem(TUTORIAL_FLAG, 'true');
+      if (chk) {
+        if (chk.checked) {
+          try { localStorage.setItem(TUTORIAL_FLAG, 'true'); } catch (e) {}
+        } else {
+          try { localStorage.removeItem(TUTORIAL_FLAG); } catch (e) {}
+        }
+      } else {
+        try { localStorage.setItem(TUTORIAL_FLAG, 'true'); } catch (e) {}
+      }
     }
     m.classList.remove('open');
     m.style.display = 'none';
@@ -2527,6 +2598,7 @@ function initEvents() {
   document.getElementById('btnResetAllData').addEventListener('click', () => {
     if (confirm('Reset ALL data, history, and tasks to factory default?')) {
       localStorage.removeItem(STORAGE_KEY);
+      localStorage.removeItem(QUICKSAVE_KEY);
       localStorage.removeItem(TUTORIAL_FLAG);
       location.reload();
     }
@@ -2723,11 +2795,12 @@ function init() {
   renderHistory();
   updateCyclePips();
 
-  // First-run tutorial vs start splash screen presentation
+  // First-run tutorial vs start splash screen presentation (Pass 5 integrity)
   const tutorialSeen = localStorage.getItem(TUTORIAL_FLAG);
-  if (!tutorialSeen) {
+  const hasExistingState = state.completedToday > 0 || state.todayMinutes > 0 || state.history.length > 0 || (state.tasks && state.tasks.length > 1) || state.isRunning;
+  if (!tutorialSeen && !hasExistingState) {
     openModal('tutorialModal');
-  } else {
+  } else if (!hasExistingState) {
     openModal('splashModal');
   }
 }

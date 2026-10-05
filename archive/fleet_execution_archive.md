@@ -4,6 +4,13 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-04T23:45:00-07:00 — kilo-creator: kweb://warez (64KB/4KB Intro Arena & Keymaker Algorithm Lab)**
+  - Status: PASS ✅ (0 regressions, Vite clean in 514ms, 323.0 KB web < 999 KB ceiling).
+  - 64KB & 4KB Intro Arena (Tab 11): Implemented real-time procedural demoscene intro player with 4 complete entries (FLARELIGHT Mindflux '99 raymarched tunnel, PARALAX Voxel Mars '99 raycaster, ECHOPLEX Echo Carrier 4KB with 1999Hz Fourier ripples, SKID VECTOR Fire & Copper Dream), Mode 13h / SVGA toggles, FPS telemetry, and downloadable NASM assembly sources.
+  - Keymaker Algorithm Lab (Tab 12): Added interactive step-by-step mathematical dissector for 6 authentic 1999 schemes (SecuROM v2 Horner polynomial mod 65521, WON auth mod 7, SafeDisc v1 matrix dot-product, VoidCraft weighted Luhn mod 10, LaserLock LCG/CRC16, and Subterranean cipher seed transponder).
+  - ARG & Diegetic Discovery: Integrated 1999Hz audio carrier triggers, memory heap residue display (0x007F1999), Node 0x7F / Deep Core gateway routing, and .NFO key report exporter.
+  - Verification: `security_lint.py` 100% PASS; Vite clean in 514ms; file size 323.0 KB < 999 KB limit.
+
 - **2026-10-04T22:45:00-07:00 — kilo-expander: KSnake (Replay Engine, Vault Archive, Map Presets & Duel Custom Rules)**
   - Status: PASS ✅ (0 regressions, clean builds, 286.3 KB web / 54.7 KB native < 999 KB ceiling).
   - Replay Engine & Analytics Lab: Added deterministic frame seeking, timeline scrubber, single-frame step (`.`/`,`), jump (`[`/`]`), and APM/efficiency telemetry HUD (`A`).
