@@ -914,6 +914,40 @@
             border-color: var(--border-panel);
         }
 
+        .upgrade-dock-badge {
+            font-size: 9px;
+            padding: 3px 6px;
+            border-radius: 2px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-weight: bold;
+            border: 1px solid;
+            letter-spacing: 0.5px;
+        }
+
+        .upgrade-dock-badge.authorized {
+            background: rgba(16, 185, 129, 0.15);
+            border-color: #10b981;
+            color: #6ee7b7;
+        }
+
+        .upgrade-dock-badge.restricted {
+            background: rgba(245, 158, 11, 0.12);
+            border-color: #f59e0b;
+            color: #fef08a;
+        }
+
+        .upgrade-dock-hint {
+            font-size: 9px;
+            line-height: 1.35;
+            padding: 4px 6px;
+            border-radius: 2px;
+            background: rgba(0, 0, 0, 0.4);
+            border-left: 2px solid #f59e0b;
+            color: #94a3b8;
+        }
+
         /* Multi-Spectral Prospector & Spectrometer Modal */
         .btn.btn-prospect {
             border-color: #38bdf8;
@@ -1790,8 +1824,8 @@
         </div>
         <div class="header-stats">
             <div class="stat-badge">SECTOR: <span id="hdrSector">Belt Alpha-09</span></div>
-            <div class="stat-badge">CREDITS: <span id="hdrCredits">2,500</span> CR</div>
-            <div class="stat-badge">HOLD: <span id="hdrCargo">0</span> / <span id="hdrCargoMax">200</span> T</div>
+            <div class="stat-badge">CREDITS: <span id="hdrCredits">350</span> CR</div>
+            <div class="stat-badge">HOLD: <span id="hdrCargo">0</span> / <span id="hdrCargoMax">50</span> T</div>
             <div class="stat-badge">HULL: <span id="hdrHull">100%</span></div>
         </div>
         <div class="header-actions">
@@ -1897,7 +1931,7 @@
         <div class="panel cargo-panel">
             <div class="panel-header">
                 <span>MINERAL ORE HOLD</span>
-                <span id="cargoCapDisplay">0 / 200 T</span>
+                <span id="cargoCapDisplay">0 / 50 T</span>
             </div>
             <div class="panel-content">
                 <div class="cargo-item">
@@ -2187,7 +2221,7 @@
                     </div>
                     <div>
                         <span style="color: var(--text-dim); font-size: 11px;">AVAILABLE CREDITS: </span>
-                        <span id="upgradeModalCredits" style="color: var(--accent-amber); font-weight: bold; font-size: 13px;">2,500 CR</span>
+                        <span id="upgradeModalCredits" style="color: var(--accent-amber); font-weight: bold; font-size: 13px;">350 CR</span>
                     </div>
                 </div>
 
@@ -2561,13 +2595,17 @@
                             <div style="font-size: 10px; color: var(--text-bright); margin-top: 2px; max-width: 580px;" id="stnDescInfo">Massive rotating ring citadel. Primary export terminal for refined metals.</div>
                         </div>
                         <div style="text-align: right; display: flex; flex-direction: column; gap: 4px; align-items: flex-end;">
-                            <div style="font-size: 11px; color: var(--accent-amber);">BARGE CREDITS: <span id="stnPlayerCredits" style="font-weight: bold; color: #fff;">2,500</span> CR</div>
+                            <div style="font-size: 11px; color: var(--accent-amber);">BARGE CREDITS: <span id="stnPlayerCredits" style="font-weight: bold; color: #fff;">350</span> CR</div>
                             <div style="font-size: 10px; color: var(--accent-emerald);">FACTION STANDING: <span id="stnFactionStanding" style="font-weight: bold;">Honored (+25 Rep)</span></div>
                             <button class="btn" id="btnToggleDock" style="padding: 3px 10px; font-size: 9px; border-color: #38bdf8; color: #38bdf8;">⚓ UNDOCK [U]</button>
                         </div>
                     </div>
                     <div class="tariff-badge-bar" id="stnTariffBanner">
                         ⭐ STATION TARIFF SPECIALS: +30% Ferrum Ore, +40% Hyper-Ferrum Ingots, -25% Fuel Service
+                    </div>
+                    <div style="background: rgba(30, 58, 138, 0.25); border: 1px solid #3b82f6; border-radius: 3px; padding: 5px 8px; margin-top: 5px; display: flex; justify-content: space-between; align-items: center; font-size: 10px;">
+                        <span>🛠️ <strong>SPECIALIZED DRYDOCK:</strong> <span id="stnDrydockSpecialtyText" style="color: #fef08a;">Titan Cargo Bay Expansions</span></span>
+                        <button class="btn btn-upgrade" id="btnStnOpenUpgrades" style="padding: 2px 8px; font-size: 9px; border-color: #f59e0b; color: #fef08a;">OPEN DRYDOCK [U]</button>
                     </div>
                 </div>
 
@@ -4159,52 +4197,64 @@
                 id: 'drill',
                 name: 'Heavy Plasma Drill',
                 icon: '⚡',
+                specialistSector: 2, // Derelict Graveyard (Sector 3)
+                specialistStation: 'Shadow-Haven Pirate Freeport',
+                specialistDesc: 'Void Corsairs Outlaw Armaments & Emitter Chop-Shop',
                 desc: 'Laser core focal arrays, diamond-plasma emitters, and harmonic resonance bores.',
                 tiers: [
-                    { level: 1, name: 'Mk-I Pulse Beam', cost: 0, dpsBonus: 1.0, heatRate: 1.0, chunkBonus: 0.12, desc: 'Stock pulse laser emitter. Standard extraction efficiency.' },
-                    { level: 2, name: 'Mk-II Focused Lance', cost: 800, dpsBonus: 1.35, heatRate: 0.85, chunkBonus: 0.16, desc: '+35% Drill DPS, -15% heat buildup rate, +33% ore chunks.' },
-                    { level: 3, name: 'Mk-III Heavy Plasma Drill', cost: 2400, dpsBonus: 1.80, heatRate: 0.70, chunkBonus: 0.22, desc: '+80% Drill DPS, -30% heat buildup rate, +83% ore chunks.' },
-                    { level: 4, name: 'Mk-IV Singularity Bore', cost: 6000, dpsBonus: 2.40, heatRate: 0.55, chunkBonus: 0.30, desc: '+140% Drill DPS, -45% heat buildup rate, +150% ore chunks.' },
-                    { level: 5, name: 'Mk-V Void Annihilator', cost: 14000, dpsBonus: 3.20, heatRate: 0.40, chunkBonus: 0.40, desc: '+220% Drill DPS, -60% heat buildup rate, +233% ore chunks.' }
+                    { level: 1, name: 'Mk-I Pulse Cutter', cost: 0, dpsBonus: 0.40, heatRate: 1.45, chunkBonus: 0.035, desc: 'Stock pulse cutter. Slow cutting speed with high thermal output.' },
+                    { level: 2, name: 'Mk-II Focused Lance', cost: 700, dpsBonus: 0.85, heatRate: 1.10, chunkBonus: 0.070, desc: '+112% Drill DPS, -24% heat rate, +100% ore chunks.' },
+                    { level: 3, name: 'Mk-III Heavy Plasma Drill', cost: 2200, dpsBonus: 1.45, heatRate: 0.85, chunkBonus: 0.130, desc: '+262% Drill DPS, -41% heat rate, +271% ore chunks.' },
+                    { level: 4, name: 'Mk-IV Singularity Bore', cost: 5500, dpsBonus: 2.25, heatRate: 0.60, chunkBonus: 0.220, desc: '+462% Drill DPS, -59% heat rate, +528% ore chunks.' },
+                    { level: 5, name: 'Mk-V Void Annihilator', cost: 13000, dpsBonus: 3.20, heatRate: 0.40, chunkBonus: 0.350, desc: '+700% Drill DPS, -72% heat rate, +900% ore chunks.' }
                 ]
             },
             cargo: {
                 id: 'cargo',
                 name: 'Titan Cargo Bay',
                 icon: '📦',
+                specialistSector: 0, // Belt Alpha-09 (Sector 1)
+                specialistStation: 'Vanguard-Prime Orbital Foundry',
+                specialistDesc: 'Sol Mining Consortium Heavy Metallurgy & Structural Vaults',
                 desc: 'Modular compressive titanium-reinforced storage vaults for raw ore containment.',
                 tiers: [
-                    { level: 1, name: 'Mk-I Standard Hold', cost: 0, capacity: 200, desc: '200 Tonnage base ore capacity.' },
-                    { level: 2, name: 'Mk-II Reinforced Vault', cost: 650, capacity: 350, desc: '350 Tonnage capacity (+150T expansion).' },
-                    { level: 3, name: 'Mk-III Titan Cargo Bay', cost: 1800, capacity: 550, desc: '550 Tonnage capacity (+350T expansion).' },
-                    { level: 4, name: 'Mk-IV Super-Freighter Hull', cost: 4500, capacity: 850, desc: '850 Tonnage capacity (+650T expansion).' },
-                    { level: 5, name: 'Mk-V Dreadnought Vault', cost: 11000, capacity: 1300, desc: '1,300 Tonnage mega-capacity (+1,100T expansion).' }
+                    { level: 1, name: 'Mk-I Salvaged Hold', cost: 0, capacity: 50, desc: '50 Tonnage compact starter hold. Requires frequent port runs.' },
+                    { level: 2, name: 'Mk-II Reinforced Vault', cost: 500, capacity: 120, desc: '120 Tonnage capacity (+70T expansion).' },
+                    { level: 3, name: 'Mk-III Titan Cargo Bay', cost: 1600, capacity: 280, desc: '280 Tonnage capacity (+230T expansion).' },
+                    { level: 4, name: 'Mk-IV Super-Freighter Hull', cost: 4000, capacity: 600, desc: '600 Tonnage capacity (+550T expansion).' },
+                    { level: 5, name: 'Mk-V Dreadnought Vault', cost: 10000, capacity: 1200, desc: '1,200 Tonnage mega-capacity (+1,150T expansion).' }
                 ]
             },
             engine: {
                 id: 'engine',
                 name: 'Fusion Thrusters',
                 icon: '🚀',
+                specialistSector: 1, // Kuiper Ring (Sector 2)
+                specialistStation: 'Cryo-Reach Free Waystation',
+                specialistDesc: 'Rim Free Traders Cryo-Propulsion & Vector Nozzles',
                 desc: 'High-impulse magnetic nozzle fusion engines with vectorized maneuvering thrusters.',
                 tiers: [
-                    { level: 1, name: 'Mk-I Chemical Jets', cost: 0, thrust: 0.12, maxSpeed: 6.0, rot: 0.045, fuelBurn: 1.0, desc: 'Stock hydrazine maneuvering thrusters.' },
-                    { level: 2, name: 'Mk-II Ion Pulse Drive', cost: 750, thrust: 0.16, maxSpeed: 7.2, rot: 0.052, fuelBurn: 0.80, desc: '+33% Thrust, +20% Top Speed, -20% fuel burn.' },
-                    { level: 3, name: 'Mk-III Fusion Thrusters', cost: 2200, thrust: 0.21, maxSpeed: 8.5, rot: 0.060, fuelBurn: 0.65, desc: '+75% Thrust, +42% Top Speed, -35% fuel burn.' },
-                    { level: 4, name: 'Mk-IV Antimatter Core Drive', cost: 5500, thrust: 0.27, maxSpeed: 10.0, rot: 0.068, fuelBurn: 0.50, desc: '+125% Thrust, +67% Top Speed, -50% fuel burn.' },
-                    { level: 5, name: 'Mk-V Quantum Gravity Drive', cost: 13000, thrust: 0.35, maxSpeed: 12.0, rot: 0.078, fuelBurn: 0.35, desc: '+190% Thrust, +100% Top Speed, -65% fuel burn.' }
+                    { level: 1, name: 'Mk-I Chemical Jets', cost: 0, thrust: 0.09, maxSpeed: 4.8, rot: 0.040, fuelBurn: 1.20, desc: 'Stock hydrazine maneuvering thrusters. Heavy inertial lag.' },
+                    { level: 2, name: 'Mk-II Ion Pulse Drive', cost: 650, thrust: 0.15, maxSpeed: 6.8, rot: 0.050, fuelBurn: 0.90, desc: '+67% Thrust, +42% Top Speed, -25% fuel burn.' },
+                    { level: 3, name: 'Mk-III Fusion Thrusters', cost: 2000, thrust: 0.21, maxSpeed: 8.5, rot: 0.060, fuelBurn: 0.65, desc: '+133% Thrust, +77% Top Speed, -46% fuel burn.' },
+                    { level: 4, name: 'Mk-IV Antimatter Core Drive', cost: 5000, thrust: 0.28, maxSpeed: 10.5, rot: 0.070, fuelBurn: 0.50, desc: '+211% Thrust, +118% Top Speed, -58% fuel burn.' },
+                    { level: 5, name: 'Mk-V Quantum Gravity Drive', cost: 12000, thrust: 0.36, maxSpeed: 12.5, rot: 0.080, fuelBurn: 0.35, desc: '+300% Thrust, +160% Top Speed, -71% fuel burn.' }
                 ]
             },
             shield: {
                 id: 'shield',
                 name: 'Particle Shields',
                 icon: '🛡️',
+                specialistSector: 3, // Plasma Nebula (Sector 4)
+                specialistStation: 'Omega-7 Black Lab Citadel',
+                specialistDesc: 'Void Arcane Research Harmonic Shields & Sub-Space Barriers',
                 desc: 'Localized deflector energy barriers & layered ablative hull composite plating.',
                 tiers: [
-                    { level: 1, name: 'Mk-I Deflector Mesh', cost: 0, shield: 100, hull: 100, regen: 0.05, desc: '100 Shield / 100 Hull plating.' },
-                    { level: 2, name: 'Mk-II Particle Shield', cost: 700, shield: 150, hull: 125, regen: 0.08, desc: '150 Shield (+50) / 125 Hull (+25), +60% shield regen.' },
-                    { level: 3, name: 'Mk-III Kinetic Barrier', cost: 2000, shield: 220, hull: 160, regen: 0.12, desc: '220 Shield (+120) / 160 Hull (+60), +140% shield regen.' },
-                    { level: 4, name: 'Mk-IV Aegis Energy Matrix', cost: 5000, shield: 300, hull: 200, regen: 0.18, desc: '300 Shield (+200) / 200 Hull (+100), +260% shield regen.' },
-                    { level: 5, name: 'Mk-V Void Phase Barrier', cost: 12000, shield: 420, hull: 260, regen: 0.25, desc: '420 Shield (+320) / 260 Hull (+160), +400% shield regen.' }
+                    { level: 1, name: 'Mk-I Deflector Mesh', cost: 0, shield: 60, hull: 75, regen: 0.03, desc: '60 Shield / 75 Hull plating. Fragile civilian defensive barrier.' },
+                    { level: 2, name: 'Mk-II Particle Shield', cost: 600, shield: 120, hull: 110, regen: 0.06, desc: '120 Shield (+60) / 110 Hull (+35), 2x shield regen.' },
+                    { level: 3, name: 'Mk-III Kinetic Barrier', cost: 1800, shield: 200, hull: 150, regen: 0.10, desc: '200 Shield (+140) / 150 Hull (+75), 3.3x shield regen.' },
+                    { level: 4, name: 'Mk-IV Aegis Energy Matrix', cost: 4800, shield: 300, hull: 200, regen: 0.16, desc: '300 Shield (+240) / 200 Hull (+125), 5.3x shield regen.' },
+                    { level: 5, name: 'Mk-V Void Phase Barrier', cost: 11500, shield: 420, hull: 260, regen: 0.25, desc: '420 Shield (+360) / 260 Hull (+185), 8.3x shield regen.' }
                 ]
             }
         };
@@ -4302,9 +4352,12 @@
             {
                 sectorId: 'alpha',
                 name: 'Vanguard-Prime Orbital Foundry',
+                shortName: 'Vanguard-Prime',
                 type: 'Consortium Heavy Industrial Starport',
                 faction: 'Sol Mining Consortium',
-                desc: 'Massive rotating ring citadel. Primary export terminal for refined metals and heavy alloy foundries.',
+                specialty: 'Titan Cargo Bay Expansions',
+                specialistKey: 'cargo',
+                desc: 'Massive rotating ring citadel. Heavy alloy foundries and drydocks specialized in expanding cargo holds and compression vaults.',
                 repKey: 'consortium',
                 tariffText: '⭐ TARIFF BONUS: +30% Ferrum Ore, +40% Hyper-Ferrum Ingots, -25% Refuel Cost',
                 tariffs: { ferrum: 1.30, hyperFerrum: 1.40, silicates: 1.15, platinum: 1.0, quartz: 1.0, darkMatter: 1.0, scrap: 1.0, superconductor: 1.0, warpCells: 1.0, darkMatrix: 1.0, nanitePaste: 1.0, o2Canister: 1.0 },
@@ -4321,9 +4374,12 @@
             {
                 sectorId: 'kuiper',
                 name: 'Cryo-Reach Free Waystation',
+                shortName: 'Cryo-Reach',
                 type: 'Deep-Ice Prospector Trading Post',
                 faction: 'Rim Free Traders Guild',
-                desc: 'Deep space outpost anchored inside a hollow nickel-iron asteroid. Premier market for superconductor metals and rare geodes.',
+                specialty: 'Fusion Propulsion & Thrusters',
+                specialistKey: 'engine',
+                desc: 'Deep space outpost anchored inside a hollow nickel-iron asteroid. Premier market for cryo-propulsion, ion thrusters, and vector nozzles.',
                 repKey: 'freeTraders',
                 tariffText: '⭐ TARIFF BONUS: +35% Platinum Veins, +45% Superconductors, +20% Silicates',
                 tariffs: { platinum: 1.35, superconductor: 1.45, silicates: 1.20, ferrum: 1.0, quartz: 1.10, darkMatter: 1.0, scrap: 1.0, hyperFerrum: 1.0, warpCells: 1.0, darkMatrix: 1.0, nanitePaste: 1.0, o2Canister: 1.0 },
@@ -4340,9 +4396,12 @@
             {
                 sectorId: 'graveyard',
                 name: 'Shadow-Haven Pirate Freeport',
+                shortName: 'Shadow-Haven',
                 type: 'Black Market Outlaw Citadel',
                 faction: 'Void Corsairs Syndicate',
-                desc: 'Unregulated outlaw stronghold forged from welded dreadnought wreckage. Lucrative market for military scrap & illicit salvage.',
+                specialty: 'Heavy Plasma Drills & Singularity Bores',
+                specialistKey: 'drill',
+                desc: 'Unregulated outlaw stronghold forged from welded dreadnought wreckage. Black-market armaments chop-shop specialized in high-yield mining drills.',
                 repKey: 'corsairs',
                 tariffText: '⭐ TARIFF BONUS: +50% Derelict Scrap, +40% Nanite Paste, +30% Void Quartz',
                 tariffs: { scrap: 1.50, nanitePaste: 1.40, quartz: 1.30, ferrum: 1.0, silicates: 1.0, platinum: 1.15, darkMatter: 1.20, hyperFerrum: 1.0, superconductor: 1.0, warpCells: 1.0, darkMatrix: 1.0, o2Canister: 1.0 },
@@ -4359,9 +4418,12 @@
             {
                 sectorId: 'nebula',
                 name: 'Omega-7 Black Lab Citadel',
+                shortName: 'Omega-7',
                 type: 'Classified Sub-Space Research Complex',
                 faction: 'Void Arcane Research Division',
-                desc: 'Heavy cloaked science fortress hovering in ionized storm clouds. Studies dark matter singularities & high-warp phenomena.',
+                specialty: 'Particle Shields & Deflector Matrices',
+                specialistKey: 'shield',
+                desc: 'Heavy cloaked science fortress hovering in ionized storm clouds. Classified research laboratories specialized in sub-space harmonic shields.',
                 repKey: 'arcane',
                 tariffText: '⭐ TARIFF BONUS: +60% Dark Geodes, +50% Dark Matter Matrix, +40% Warp Cells',
                 tariffs: { darkMatter: 1.60, darkMatrix: 1.50, warpCells: 1.40, quartz: 1.25, ferrum: 1.0, silicates: 1.0, platinum: 1.20, scrap: 1.10, hyperFerrum: 1.0, superconductor: 1.30, nanitePaste: 1.0, o2Canister: 1.0 },
@@ -4378,15 +4440,15 @@
         ];
 
         const state = {
-            credits: 2500,
+            credits: 350,
             currentSectorIndex: 0,
             selectedSectorIndex: 0,
             warpActive: false,
             warpTimer: 0,
-            hull: 100,
-            maxHull: 100,
-            shield: 100,
-            maxShield: 100,
+            hull: 75,
+            maxHull: 75,
+            shield: 60,
+            maxShield: 60,
             fuel: 100,
             maxFuel: 100,
             heat: 0,
@@ -4402,7 +4464,7 @@
             droneTimer: 0,
             alarmTick: 0,
             cargo: 0,
-            maxCargo: 200,
+            maxCargo: 50,
             dampeners: true,
             laserOverheated: false,
             themeIndex: 0,
@@ -5141,7 +5203,7 @@
             const dist = 220 + Math.random() * 920;
             const oreType = specificOre || pickOreForCurrentSector();
             const radius = 18 + Math.random() * 26;
-            const maxHp = Math.round(radius * 3.5);
+            const maxHp = Math.round(radius * 4.5);
 
             // Generate polygon shape offsets
             const numVerts = 8 + Math.floor(Math.random() * 4);
@@ -5268,6 +5330,7 @@
 
                 let oresHtml = sec.ores.map(o => `<span class="ore-tag">${o.type} (${o.weight}%)</span>`).join('');
 
+                const stDef = STATION_DEFS[idx];
                 card.innerHTML = `
                     <div style="display: flex; justify-content: space-between; align-items: center;">
                         <span style="font-weight: bold; color: var(--accent-cyan); font-size: 12px;">${sec.name}</span>
@@ -5276,6 +5339,10 @@
                     ${isCurrent ? '<div class="sector-badge-current">CURRENT SECTOR</div>' : ''}
                     <div style="color: var(--text-dim); font-size: 10px;">${sec.type}</div>
                     <div style="color: var(--text-bright); font-size: 10px; line-height: 1.3;">${sec.desc}</div>
+                    <div style="font-size: 9px; color: #38bdf8; margin-top: 3px; display: flex; align-items: center; gap: 4px;">
+                        <span>🛰️</span>
+                        <span><strong>${stDef.shortName || stDef.name}:</strong> <span style="color: #fef08a;">${stDef.specialty}</span></span>
+                    </div>
                     <div style="font-size: 9px; color: var(--text-dim); margin-top: 2px;">DOMINANT RESOURCES:</div>
                     <div class="sector-ores-bar">${oresHtml}</div>
                     <div style="display: flex; justify-content: space-between; font-size: 10px; margin-top: 4px; color: var(--accent-amber);">
@@ -5336,6 +5403,10 @@
             grid.innerHTML = '';
             document.getElementById('upgradeModalCredits').textContent = `${state.credits.toLocaleString()} CR`;
 
+            const isDocked = !!(state.station && state.station.docked);
+            const curSectorIdx = state.currentSectorIndex;
+            document.getElementById('upgradeModalCredits').textContent = `${state.credits.toLocaleString()} CR`;
+
             for (const key in UPGRADE_DEFS) {
                 const mod = UPGRADE_DEFS[key];
                 const currentTierIdx = state.upgrades[key] || 0;
@@ -5343,12 +5414,37 @@
                 const nextTier = mod.tiers[currentTierIdx + 1] || null;
                 const isMax = (currentTierIdx >= mod.tiers.length - 1);
 
+                const reqStation = STATION_DEFS[mod.specialistSector];
+                const reqSector = SECTORS[mod.specialistSector];
+                const isAuthorized = isDocked && (curSectorIdx === mod.specialistSector);
+
                 const card = document.createElement('div');
                 card.className = `upgrade-card ${isMax ? 'maxed' : ''}`;
 
                 let pipsHtml = '';
                 for (let t = 0; t < mod.tiers.length; t++) {
                     pipsHtml += `<div class="tier-pip ${t <= currentTierIdx ? 'filled' : ''}"></div>`;
+                }
+
+                // Station Drydock Authorization & Location Hint
+                let dockStatusHtml = '';
+                if (isAuthorized) {
+                    dockStatusHtml = `
+                        <div class="upgrade-dock-badge authorized">
+                            <span>🟢 DRYDOCK ONLINE:</span>
+                            <span>${reqStation.name}</span>
+                        </div>
+                    `;
+                } else {
+                    dockStatusHtml = `
+                        <div class="upgrade-dock-badge restricted">
+                            <span>🔒 SPECIALIZED DRYDOCK REQUIRED:</span>
+                            <span>${reqStation.shortName || reqStation.name}</span>
+                        </div>
+                        <div class="upgrade-dock-hint">
+                            💡 <strong>Where to find:</strong> Open Star Chart [N] to warp to <em>${reqSector.name}</em>, then dock [O] with <em>${reqStation.name}</em> to install ${mod.name} retrofits.
+                        </div>
+                    `;
                 }
 
                 let statDiffHtml = '';
@@ -5377,6 +5473,13 @@
                 let btnHtml = '';
                 if (isMax) {
                     btnHtml = `<button class="btn-buy-upgrade" disabled><span>✓ FULLY RETROFITTED</span><span>TIER MAX</span></button>`;
+                } else if (!isAuthorized) {
+                    btnHtml = `
+                        <button class="btn-buy-upgrade" disabled style="opacity: 0.6; cursor: not-allowed;">
+                            <span>🔒 DOCK AT ${reqStation.shortName ? reqStation.shortName.toUpperCase() : 'REQUIRED PORT'} REQ</span>
+                            <span style="color: var(--accent-amber);">${nextTier.cost.toLocaleString()} CR</span>
+                        </button>
+                    `;
                 } else {
                     const canAfford = (state.credits >= nextTier.cost);
                     btnHtml = `
@@ -5396,6 +5499,7 @@
                         <div class="upgrade-tier-pips">${pipsHtml}</div>
                     </div>
                     <div style="font-size: 10px; color: var(--text-dim);">${mod.desc}</div>
+                    ${dockStatusHtml}
                     <div class="upgrade-stat-diff">${statDiffHtml}</div>
                     ${btnHtml}
                 `;
@@ -5410,6 +5514,17 @@
             const currentTierIdx = state.upgrades[key] || 0;
             if (currentTierIdx >= mod.tiers.length - 1) return;
             const nextTier = mod.tiers[currentTierIdx + 1];
+
+            const isDocked = !!(state.station && state.station.docked);
+            if (!isDocked || state.currentSectorIndex !== mod.specialistSector) {
+                const reqStation = STATION_DEFS[mod.specialistSector];
+                const reqSector = SECTORS[mod.specialistSector];
+                addLog(`🔒 DRYDOCK RESTRICTED: ${mod.name} upgrades require docking at ${reqStation.name} in ${reqSector.name}!`, 'critical');
+                addFloatingText(`LOCKED: DOCK AT ${reqStation.shortName ? reqStation.shortName.toUpperCase() : reqStation.name.split(' ')[0].toUpperCase()}`, state.ship.x, state.ship.y - 30, '#ef4444');
+                audio.playOverheat();
+                return;
+            }
+
             if (state.credits < nextTier.cost) {
                 addLog(`⚠️ Insufficient credits to install ${nextTier.name}!`, 'warning');
                 return;
@@ -5418,6 +5533,7 @@
             state.credits -= nextTier.cost;
             state.upgrades[key] = currentTierIdx + 1;
             document.getElementById('hdrCredits').textContent = state.credits.toLocaleString();
+            document.getElementById('upgradeModalCredits').textContent = `${state.credits.toLocaleString()} CR`;
             audio.playCollect();
 
             // Apply upgraded limits
@@ -5432,7 +5548,7 @@
                 state.hull = state.maxHull;
             }
 
-            addLog(`🛠️ Engineering Retrofit: Installed [${nextTier.name}] for ${nextTier.cost.toLocaleString()} CR!`, 'success');
+            addLog(`🛠️ Engineering Retrofit: Installed [${nextTier.name}] for ${nextTier.cost.toLocaleString()} CR at ${STATION_DEFS[mod.specialistSector].name}!`, 'success');
             addFloatingText(`RETROFIT: ${nextTier.name}`, state.ship.x, state.ship.y - 30, '#10b981');
             renderUpgradeGrid();
         }

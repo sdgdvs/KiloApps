@@ -105,11 +105,15 @@ typedef struct {
 typedef struct {
     const char* sectorId;
     const char* name;
+    const char* shortName;
     const char* type;
     const char* faction;
     const char* desc;
     int repIndex;
     const char* tariffText;
+    const char* specialty;
+    int specialistModule;
+    const char* specialistDesc;
     float multipliers[12];
     int fuelCostPerPct;
     int repairCostPerPct;
@@ -122,11 +126,15 @@ static const StationDef STATION_DEFS[4] = {
     {
         "alpha",
         "Vanguard-Prime Orbital Foundry",
+        "Vanguard-Prime",
         "Consortium Heavy Industrial Starport",
         "Sol Mining Consortium",
         "Massive rotating ring citadel. Primary export terminal for refined metals and heavy alloy foundries.",
         0,
         "TARIFF: +30% Ferrum, +40% Hyper-Ferrum, -25% Fuel Cost",
+        "Titan Cargo Bay Expansions",
+        1,
+        "Sol Mining Consortium Heavy Metallurgy & Structural Vaults",
         { 1.30f, 1.15f, 1.0f, 1.0f, 1.0f, 1.0f, 1.40f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f },
         3, 10, 8, 80,
         {
@@ -138,11 +146,15 @@ static const StationDef STATION_DEFS[4] = {
     {
         "kuiper",
         "Cryo-Reach Free Waystation",
+        "Cryo-Reach",
         "Deep-Ice Prospector Trading Post",
         "Rim Free Traders Guild",
         "Deep space outpost anchored inside a hollow nickel-iron asteroid. Premier market for superconductor metals.",
         1,
         "TARIFF: +35% Platinum Veins, +45% Superconductors, +20% Silicates",
+        "Fusion Propulsion & Thrusters",
+        2,
+        "Rim Free Traders Cryo-Propulsion & Vector Nozzles",
         { 1.0f, 1.20f, 1.35f, 1.10f, 1.0f, 1.0f, 1.0f, 1.45f, 1.0f, 1.0f, 1.0f, 1.0f },
         4, 15, 10, 100,
         {
@@ -154,11 +166,15 @@ static const StationDef STATION_DEFS[4] = {
     {
         "graveyard",
         "Shadow-Haven Pirate Freeport",
+        "Shadow-Haven",
         "Black Market Outlaw Citadel",
         "Void Corsairs Syndicate",
         "Unregulated outlaw stronghold forged from welded dreadnought wreckage. Lucrative market for military scrap.",
         2,
         "TARIFF: +50% Derelict Scrap, +40% Nanite Paste, +30% Void Quartz",
+        "Heavy Plasma Drills & Singularity Bores",
+        0,
+        "Void Corsairs Outlaw Armaments & Emitter Chop-Shop",
         { 1.0f, 1.0f, 1.15f, 1.30f, 1.20f, 1.50f, 1.0f, 1.0f, 1.0f, 1.0f, 1.40f, 1.0f },
         5, 20, 12, 120,
         {
@@ -170,11 +186,15 @@ static const StationDef STATION_DEFS[4] = {
     {
         "nebula",
         "Omega-7 Black Lab Citadel",
+        "Omega-7",
         "Classified Sub-Space Research Complex",
         "Void Arcane Research Division",
         "Heavy cloaked science fortress hovering in ionized storm clouds. Studies dark matter singularities.",
         3,
         "TARIFF: +60% Dark Geodes, +50% Dark Matter Matrix, +40% Warp Cells",
+        "Particle Shields & Deflector Matrices",
+        3,
+        "Void Arcane Research Harmonic Shields & Sub-Space Barriers",
         { 1.0f, 1.0f, 1.20f, 1.25f, 1.60f, 1.10f, 1.0f, 1.30f, 1.40f, 1.50f, 1.0f, 1.0f },
         6, 25, 15, 150,
         {
@@ -183,6 +203,21 @@ static const StationDef STATION_DEFS[4] = {
             { "c_neb_3", "High-Warp Plasma Cache", "Supply 2 Sub-Space Warp Fuel Cells for deep anomaly probes.", 2, 2, 1, "2x Warp Fuel Cells", 4200, 35 }
         }
     }
+};
+
+typedef struct {
+    int reqSector;
+    const char* modName;
+    const char* reqStation;
+    const char* reqSectorName;
+    const char* hint;
+} UpgradeFacilityInfo;
+
+static const UpgradeFacilityInfo UPGRADE_FACILITIES[4] = {
+    { 2, "Heavy Plasma Drill", "Shadow-Haven Pirate Freeport", "Derelict Graveyard (Sec 3)", "Warp [N] to Derelict Graveyard & Dock [O]" },
+    { 0, "Titan Cargo Bay",    "Vanguard-Prime Orbital Foundry", "Belt Alpha-09 (Sec 1)",      "Warp [N] to Belt Alpha-09 & Dock [O]" },
+    { 1, "Fusion Thrusters",   "Cryo-Reach Free Waystation",    "Kuiper Ring (Sec 2)",        "Warp [N] to Kuiper Ring & Dock [O]" },
+    { 3, "Particle Shields",   "Omega-7 Black Lab Citadel",     "Plasma Nebula (Sec 4)",      "Warp [N] to Plasma Nebula & Dock [O]" }
 };
 
 #define MAX_COMPARTMENTS 5
@@ -578,35 +613,35 @@ typedef struct {
 } ShieldUpgradeDef;
 
 static const DrillUpgradeDef DRILL_UPGRADES[5] = {
-    { 1, "Mk-I Pulse Beam",          0,     1.0f,  1.0f,  0.12f, "Stock pulse laser emitter." },
-    { 2, "Mk-II Focused Lance",      800,   1.35f, 0.85f, 0.16f, "+35% DPS, -15% heat, +33% ore." },
-    { 3, "Mk-III Heavy Plasma Drill",2400,  1.80f, 0.70f, 0.22f, "+80% DPS, -30% heat, +83% ore." },
-    { 4, "Mk-IV Singularity Bore",   6000,  2.40f, 0.55f, 0.30f, "+140% DPS, -45% heat, +150% ore." },
-    { 5, "Mk-V Void Annihilator",    14000, 3.20f, 0.40f, 0.40f, "+220% DPS, -60% heat, +233% ore." }
+    { 1, "Mk-I Pulse Cutter",        0,     0.40f, 1.45f, 0.035f, "Stock pulse cutter. Slow cutting speed." },
+    { 2, "Mk-II Focused Lance",      700,   0.85f, 1.10f, 0.070f, "+112% Drill DPS, -24% heat, +100% ore." },
+    { 3, "Mk-III Heavy Plasma Drill",2200,  1.45f, 0.85f, 0.130f, "+262% Drill DPS, -41% heat, +271% ore." },
+    { 4, "Mk-IV Singularity Bore",   5500,  2.25f, 0.60f, 0.220f, "+462% Drill DPS, -59% heat, +528% ore." },
+    { 5, "Mk-V Void Annihilator",    13000, 3.20f, 0.40f, 0.350f, "+700% Drill DPS, -72% heat, +900% ore." }
 };
 
 static const CargoUpgradeDef CARGO_UPGRADES[5] = {
-    { 1, "Mk-I Standard Hold",       0,     200,  "200 T base capacity." },
-    { 2, "Mk-II Reinforced Vault",   650,   350,  "350 T capacity (+150T)." },
-    { 3, "Mk-III Titan Cargo Bay",   1800,  550,  "550 T capacity (+350T)." },
-    { 4, "Mk-IV Super-Freighter",    4500,  850,  "850 T capacity (+650T)." },
-    { 5, "Mk-V Dreadnought Vault",   11000, 1300, "1,300 T capacity (+1,100T)." }
+    { 1, "Mk-I Salvaged Hold",       0,     50,   "50 T starter hold. Frequent port runs." },
+    { 2, "Mk-II Reinforced Vault",   500,   120,  "120 T capacity (+70T expansion)." },
+    { 3, "Mk-III Titan Cargo Bay",   1600,  280,  "280 T capacity (+230T expansion)." },
+    { 4, "Mk-IV Super-Freighter",    4000,  600,  "600 T capacity (+550T expansion)." },
+    { 5, "Mk-V Dreadnought Vault",   10000, 1200, "1,200 T mega-vault (+1,150T expansion)." }
 };
 
 static const EngineUpgradeDef ENGINE_UPGRADES[5] = {
-    { 1, "Mk-I Chemical Jets",       0,     0.12f, 6.0f,  0.045f, 1.0f,  "Stock hydrazine thrusters." },
-    { 2, "Mk-II Ion Pulse Drive",    750,   0.16f, 7.2f,  0.052f, 0.80f, "+33% Thrust, +20% Spd, -20% Burn." },
-    { 3, "Mk-III Fusion Thrusters",  2200,  0.21f, 8.5f,  0.060f, 0.65f, "+75% Thrust, +42% Spd, -35% Burn." },
-    { 4, "Mk-IV Antimatter Drive",   5500,  0.27f, 10.0f, 0.068f, 0.50f, "+125% Thrust, +67% Spd, -50% Burn." },
-    { 5, "Mk-V Quantum Gravity Drive",13000,0.35f, 12.0f, 0.078f, 0.35f, "+190% Thrust, +100% Spd, -65% Burn." }
+    { 1, "Mk-I Chemical Jets",       0,     0.09f, 4.8f,  0.040f, 1.20f, "Stock hydrazine thrusters." },
+    { 2, "Mk-II Ion Pulse Drive",    650,   0.15f, 6.8f,  0.050f, 0.90f, "+67% Thrust, +42% Spd, -25% Burn." },
+    { 3, "Mk-III Fusion Thrusters",  2000,  0.21f, 8.5f,  0.060f, 0.65f, "+133% Thrust, +77% Spd, -46% Burn." },
+    { 4, "Mk-IV Antimatter Drive",   5000,  0.28f, 10.5f, 0.070f, 0.50f, "+211% Thrust, +118% Spd, -58% Burn." },
+    { 5, "Mk-V Quantum Gravity Drive",12000,0.36f, 12.5f, 0.080f, 0.35f, "+300% Thrust, +160% Spd, -71% Burn." }
 };
 
 static const ShieldUpgradeDef SHIELD_UPGRADES[5] = {
-    { 1, "Mk-I Deflector Mesh",      0,     100.0f, 100.0f, 0.05f, "100 Shield / 100 Hull plating." },
-    { 2, "Mk-II Particle Shield",    700,   150.0f, 125.0f, 0.08f, "150 Shield / 125 Hull, +60% regen." },
-    { 3, "Mk-III Kinetic Barrier",   2000,  220.0f, 160.0f, 0.12f, "220 Shield / 160 Hull, +140% regen." },
-    { 4, "Mk-IV Aegis Energy Matrix",5000,  300.0f, 200.0f, 0.18f, "300 Shield / 200 Hull, +260% regen." },
-    { 5, "Mk-V Void Phase Barrier",  12000, 420.0f, 260.0f, 0.25f, "420 Shield / 260 Hull, +400% regen." }
+    { 1, "Mk-I Deflector Mesh",      0,     60.0f,  75.0f,  0.03f, "60 Shield / 75 Hull starter barrier." },
+    { 2, "Mk-II Particle Shield",    600,   120.0f, 110.0f, 0.06f, "120 Shield / 110 Hull, 2x regen." },
+    { 3, "Mk-III Kinetic Barrier",   1800,  200.0f, 150.0f, 0.10f, "200 Shield / 150 Hull, 3.3x regen." },
+    { 4, "Mk-IV Aegis Energy Matrix",4800,  300.0f, 200.0f, 0.16f, "300 Shield / 200 Hull, 5.3x regen." },
+    { 5, "Mk-V Void Phase Barrier",  11500, 420.0f, 260.0f, 0.25f, "420 Shield / 260 Hull, 8.3x regen." }
 };
 
 // Derelict Spaceship Salvage Definitions (Phase 8)
@@ -1250,7 +1285,7 @@ void SpawnAsteroid(int index, int oreType) {
     ast->vx = (((float)rand() / (float)RAND_MAX) - 0.5f) * 0.3f;
     ast->vy = (((float)rand() / (float)RAND_MAX) - 0.5f) * 0.3f;
     ast->radius = 18.0f + (((float)rand() / (float)RAND_MAX) * 24.0f);
-    ast->maxHp = (float)((int)(ast->radius * 3.5f));
+    ast->maxHp = (float)((int)(ast->radius * 4.5f));
     ast->hp = ast->maxHp;
     ast->oreType = (oreType >= 0 && oreType < 6) ? oreType : PickOreForSector(g_state.currentSectorIndex);
     ast->richness = 40 + (rand() % 60);
@@ -2502,6 +2537,27 @@ void CycleScanlines(void) {
 }
 
 void BuyUpgrade(int moduleIdx) {
+    if (moduleIdx < 0 || moduleIdx > 3) return;
+    const UpgradeFacilityInfo* fac = &UPGRADE_FACILITIES[moduleIdx];
+    int isAuthorized = g_state.stationDocked && (g_state.currentSectorIndex == fac->reqSector);
+    if (!isAuthorized) {
+        char buf[128];
+        if (!g_state.stationDocked) {
+            AddLog("DRYDOCK REQUIRED: Must be docked [O] at specialized orbital starport!", 4);
+            sprintf(buf, "LOCKED: Go to %s in %s.", fac->reqStation, fac->reqSectorName);
+            AddLog(buf, 4);
+            AddFloatingText("DRYDOCK OFFLINE", g_state.shipX, g_state.shipY - 30.0f, RGB(239, 68, 68));
+        } else {
+            sprintf(buf, "FACILITY RESTRICTION: %s drydock is at %s!", fac->modName, fac->reqStation);
+            AddLog(buf, 4);
+            sprintf(buf, "HINT: %s.", fac->hint);
+            AddLog(buf, 4);
+            AddFloatingText("WRONG DRYDOCK", g_state.shipX, g_state.shipY - 30.0f, RGB(239, 68, 68));
+        }
+        TriggerSound(SFX_ALARM);
+        return;
+    }
+
     char buf[128];
     char fTxt[32];
     if (moduleIdx == 0) { // Drill
@@ -2510,7 +2566,7 @@ void BuyUpgrade(int moduleIdx) {
         if (g_state.credits < nextTier->cost) { AddLog("Insufficient credits for drill upgrade!", 4); return; }
         g_state.credits -= nextTier->cost;
         g_state.upgradeDrill++;
-        sprintf(buf, "Installed [%s] for %d CR! Drill DPS +%.0f%%.", nextTier->name, nextTier->cost, (nextTier->dpsBonus - 1.0f) * 100.0f);
+        sprintf(buf, "Installed [%s] for %d CR at %s! Drill DPS x%.2f.", nextTier->name, nextTier->cost, fac->reqStation, nextTier->dpsBonus);
         AddLog(buf, 5);
         sprintf(fTxt, "RETROFIT: %s", nextTier->name);
         AddFloatingText(fTxt, g_state.shipX, g_state.shipY - 30.0f, RGB(16, 185, 129));
@@ -2522,7 +2578,7 @@ void BuyUpgrade(int moduleIdx) {
         g_state.credits -= nextTier->cost;
         g_state.upgradeCargo++;
         g_state.maxCargo = nextTier->capacity;
-        sprintf(buf, "Installed [%s] for %d CR! Max capacity expanded to %d T.", nextTier->name, nextTier->cost, nextTier->capacity);
+        sprintf(buf, "Installed [%s] for %d CR at %s! Max capacity expanded to %d T.", nextTier->name, nextTier->cost, fac->reqStation, nextTier->capacity);
         AddLog(buf, 5);
         sprintf(fTxt, "EXPAND: %d T", nextTier->capacity);
         AddFloatingText(fTxt, g_state.shipX, g_state.shipY - 30.0f, RGB(16, 185, 129));
@@ -2533,7 +2589,7 @@ void BuyUpgrade(int moduleIdx) {
         if (g_state.credits < nextTier->cost) { AddLog("Insufficient credits for thruster upgrade!", 4); return; }
         g_state.credits -= nextTier->cost;
         g_state.upgradeEngine++;
-        sprintf(buf, "Installed [%s] for %d CR! Top speed increased to %.1f km/s.", nextTier->name, nextTier->cost, nextTier->maxSpeed);
+        sprintf(buf, "Installed [%s] for %d CR at %s! Top speed increased to %.1f km/s.", nextTier->name, nextTier->cost, fac->reqStation, nextTier->maxSpeed);
         AddLog(buf, 5);
         sprintf(fTxt, "DRIVE: %s", nextTier->name);
         AddFloatingText(fTxt, g_state.shipX, g_state.shipY - 30.0f, RGB(16, 185, 129));
@@ -2548,7 +2604,7 @@ void BuyUpgrade(int moduleIdx) {
         g_state.maxHull = nextTier->maxHull;
         g_state.shield = g_state.maxShield;
         g_state.hull = g_state.maxHull;
-        sprintf(buf, "Installed [%s] for %d CR! Shield max %d / Hull max %d.", nextTier->name, nextTier->cost, (int)nextTier->maxShield, (int)nextTier->maxHull);
+        sprintf(buf, "Installed [%s] for %d CR at %s! Shield max %d / Hull max %d.", nextTier->name, nextTier->cost, fac->reqStation, (int)nextTier->maxShield, (int)nextTier->maxHull);
         AddLog(buf, 5);
         sprintf(fTxt, "SHIELD: %.0f", nextTier->maxShield);
         AddFloatingText(fTxt, g_state.shipX, g_state.shipY - 30.0f, RGB(16, 185, 129));
@@ -2558,11 +2614,12 @@ void BuyUpgrade(int moduleIdx) {
 
 void InitGame(void) {
     memset(&g_state, 0, sizeof(GameState));
-    g_state.credits = 2500;
-    g_state.hull = 100.0f;
-    g_state.maxHull = 100.0f;
-    g_state.shield = 100.0f;
-    g_state.maxShield = 100.0f;
+    g_state.credits = 350;
+    g_state.hull = 75.0f;
+    g_state.maxHull = 75.0f;
+    g_state.shield = 60.0f;
+    g_state.maxShield = 60.0f;
+    g_state.maxCargo = 50;
     g_state.fuel = 100.0f;
     g_state.maxFuel = 100.0f;
     g_state.heat = 0.0f;
@@ -2798,8 +2855,8 @@ void UpdateGame(float dt) {
                     float dpsMultiplier = ast->resonantLock ? 1.5f : 1.0f;
                     ast->hp -= 0.6f * drillDef->dpsBonus * dpsMultiplier;
                     
-                    int chunkChance = (int)(drillDef->chunkBonus * (ast->resonantLock ? 1.5f : 1.0f) * 100.0f);
-                    if ((rand() % 100) < chunkChance) {
+                    int chunkChance = (int)(drillDef->chunkBonus * (ast->resonantLock ? 1.5f : 1.0f) * 1000.0f);
+                    if ((rand() % 1000) < chunkChance) {
                         TriggerSound(SFX_FRACTURE);
                         // Pick ore chunk based on ast->comp
                         int roll = rand() % 100;
@@ -4917,14 +4974,21 @@ void RenderGame(HDC hdc, RECT* clientRect) {
             
             // Description
             SetTextColor(hdc, RGB(226, 232, 240));
-            RECT rcDesc = { scx + 8, scy + 38, scx + cardW - 8, scy + 80 };
+            RECT rcDesc = { scx + 8, scy + 38, scx + cardW - 8, scy + 78 };
             DrawTextA(hdc, sec->desc, -1, &rcDesc, DT_WORDBREAK);
+            
+            // Station Drydock Specialty Info
+            const StationDef* st = &STATION_DEFS[i];
+            SetTextColor(hdc, RGB(56, 189, 248));
+            char stInfo[96];
+            sprintf(stInfo, "PORT: %s (%s)", st->shortName, st->specialty);
+            TextOutA(hdc, scx + 8, scy + 80, stInfo, (int)strlen(stInfo));
             
             // Resources & Specs
             SetTextColor(hdc, RGB(245, 158, 11));
             char specBuf[64];
             sprintf(specBuf, "WARP COST: %d%% FUEL   DENSITY: %d ASTEROIDS", sec->fuelCost, sec->density);
-            TextOutA(hdc, scx + 8, scy + cardH - 20, specBuf, (int)strlen(specBuf));
+            TextOutA(hdc, scx + 8, scy + cardH - 18, specBuf, (int)strlen(specBuf));
         }
         
         // Bottom Warp Action Bar
@@ -4974,8 +5038,8 @@ void RenderGame(HDC hdc, RECT* clientRect) {
     
     // Modular Upgrades Engineering Bay Modal
     if (g_state.showUpgrades) {
-        int modalW = 680;
-        int modalH = 430;
+        int modalW = 710;
+        int modalH = 480;
         int mx = (totalW - modalW) / 2;
         int my = (totalH - modalH) / 2;
         
@@ -5012,7 +5076,7 @@ void RenderGame(HDC hdc, RECT* clientRect) {
         
         SelectObject(hdc, g_fontMonoBold);
         SetTextColor(hdc, pal->vector);
-        TextOutA(hdc, mx + 24, my + 39, "BARGE RETROFIT DOCK: KStarDredge Mk-IV Heavy Frame", 50);
+        TextOutA(hdc, mx + 24, my + 39, "BARGE RETROFIT DOCK: KStarDredge Heavy Dredge Barge", 51);
         
         char credBuf[64];
         sprintf(credBuf, "AVAILABLE CREDITS: %d CR", g_state.credits);
@@ -5020,9 +5084,9 @@ void RenderGame(HDC hdc, RECT* clientRect) {
         TextOutA(hdc, mx + modalW - 220, my + 39, credBuf, (int)strlen(credBuf));
         
         // 2x2 Upgrade Cards
-        int cardW = 318;
-        int cardH = 145;
-        int gapX = 16;
+        int cardW = 332;
+        int cardH = 175;
+        int gapX = 18;
         int gapY = 10;
         int startX = mx + 14;
         int startY = my + 68;
@@ -5033,12 +5097,15 @@ void RenderGame(HDC hdc, RECT* clientRect) {
             int ucx = startX + col * (cardW + gapX);
             int ucy = startY + row * (cardH + gapY);
             
+            const UpgradeFacilityInfo* fac = &UPGRADE_FACILITIES[m];
+            int isAuthorized = g_state.stationDocked && (g_state.currentSectorIndex == fac->reqSector);
+            
             RECT rcCard = { ucx, ucy, ucx + cardW, ucy + cardH };
-            HBRUSH hBrCard = CreateSolidBrush(RGB(5, 12, 28));
+            HBRUSH hBrCard = CreateSolidBrush(isAuthorized ? RGB(8, 20, 42) : RGB(4, 8, 20));
             FillRect(hdc, &rcCard, hBrCard);
             DeleteObject(hBrCard);
             
-            HPEN hPenCard = CreatePen(PS_SOLID, 1, pal->borderPanel);
+            HPEN hPenCard = CreatePen(PS_SOLID, 1, isAuthorized ? RGB(56, 189, 248) : RGB(51, 65, 85));
             SelectObject(hdc, hPenCard);
             Rectangle(hdc, ucx, ucy, ucx + cardW, ucy + cardH);
             DeleteObject(hPenCard);
@@ -5055,11 +5122,11 @@ void RenderGame(HDC hdc, RECT* clientRect) {
                 curTierIdx = g_state.upgradeDrill;
                 const DrillUpgradeDef* cur = &DRILL_UPGRADES[curTierIdx];
                 curName = cur->name;
-                sprintf(curStatStr, "DPS: +%.0f%% | Heat: -%.0f%% | Drop: %.0f%%", (cur->dpsBonus - 1.0f) * 100.0f, (1.0f - cur->heatRate) * 100.0f, cur->chunkBonus * 100.0f);
+                sprintf(curStatStr, "DPS: x%.2f | Heat: x%.2f | Drop: %.1f%%", cur->dpsBonus, cur->heatRate, cur->chunkBonus * 100.0f);
                 if (curTierIdx < 4) {
                     const DrillUpgradeDef* nxt = &DRILL_UPGRADES[curTierIdx + 1];
                     nextCost = nxt->cost;
-                    sprintf(nextStatStr, "Next: %s (+%.0f%% DPS)", nxt->name, (nxt->dpsBonus - 1.0f) * 100.0f);
+                    sprintf(nextStatStr, "Next: %s (x%.2f DPS, %.1f%% drop)", nxt->name, nxt->dpsBonus, nxt->chunkBonus * 100.0f);
                 }
             } else if (m == 1) { // Cargo
                 modTitle = "[2] TITAN CARGO BAY";
@@ -5077,11 +5144,11 @@ void RenderGame(HDC hdc, RECT* clientRect) {
                 curTierIdx = g_state.upgradeEngine;
                 const EngineUpgradeDef* cur = &ENGINE_UPGRADES[curTierIdx];
                 curName = cur->name;
-                sprintf(curStatStr, "Speed: %.1f km/s | Thrust: %.2f | Burn: -%.0f%%", cur->maxSpeed, cur->thrust, (1.0f - cur->fuelBurn) * 100.0f);
+                sprintf(curStatStr, "Speed: %.1f km/s | Thrust: %.2f | Burn: x%.2f", cur->maxSpeed, cur->thrust, cur->fuelBurn);
                 if (curTierIdx < 4) {
                     const EngineUpgradeDef* nxt = &ENGINE_UPGRADES[curTierIdx + 1];
                     nextCost = nxt->cost;
-                    sprintf(nextStatStr, "Next: %s (%.1f km/s)", nxt->name, nxt->maxSpeed);
+                    sprintf(nextStatStr, "Next: %s (%.1f km/s top speed)", nxt->name, nxt->maxSpeed);
                 }
             } else if (m == 3) { // Shield
                 modTitle = "[4] PARTICLE SHIELDS";
@@ -5092,7 +5159,7 @@ void RenderGame(HDC hdc, RECT* clientRect) {
                 if (curTierIdx < 4) {
                     const ShieldUpgradeDef* nxt = &SHIELD_UPGRADES[curTierIdx + 1];
                     nextCost = nxt->cost;
-                    sprintf(nextStatStr, "Next: %s (%.0f Shield / %.0f Hull)", nxt->name, nxt->maxShield, nxt->maxHull);
+                    sprintf(nextStatStr, "Next: %s (%.0f Shld / %.0f Hull)", nxt->name, nxt->maxShield, nxt->maxHull);
                 }
             }
             
@@ -5103,27 +5170,45 @@ void RenderGame(HDC hdc, RECT* clientRect) {
             
             // 5 Tier Pips
             for (int p = 0; p < 5; p++) {
-                RECT rcPip = { ucx + cardW - 80 + (p * 14), ucy + 8, ucx + cardW - 80 + (p * 14) + 11, ucy + 16 };
+                RECT rcPip = { ucx + cardW - 78 + (p * 14), ucy + 8, ucx + cardW - 78 + (p * 14) + 11, ucy + 16 };
                 HBRUSH hBrPip = CreateSolidBrush(p <= curTierIdx ? RGB(245, 158, 11) : RGB(30, 41, 59));
                 FillRect(hdc, &rcPip, hBrPip);
                 DeleteObject(hBrPip);
                 FrameRect(hdc, &rcPip, (HBRUSH)GetStockObject(WHITE_BRUSH));
             }
             
-            // Current Tier Name
+            // Drydock Requirement Banner / Hint
             SelectObject(hdc, g_fontSmall);
+            if (isAuthorized) {
+                SetTextColor(hdc, RGB(52, 211, 153));
+                char authBuf[80];
+                sprintf(authBuf, "[DRYDOCK ONLINE: %s]", fac->reqStation);
+                TextOutA(hdc, ucx + 8, ucy + 24, authBuf, (int)strlen(authBuf));
+            } else {
+                SetTextColor(hdc, RGB(248, 113, 113));
+                char lkBuf[80];
+                sprintf(lkBuf, "[LOCKED: %s]", fac->reqStation);
+                TextOutA(hdc, ucx + 8, ucy + 24, lkBuf, (int)strlen(lkBuf));
+                
+                SetTextColor(hdc, RGB(251, 191, 36));
+                char hntBuf[96];
+                sprintf(hntBuf, "Hint: %s", fac->hint);
+                TextOutA(hdc, ucx + 8, ucy + 38, hntBuf, (int)strlen(hntBuf));
+            }
+            
+            // Current Tier Name and Stats
             SetTextColor(hdc, RGB(255, 255, 255));
             char curTierLabel[64];
             sprintf(curTierLabel, "Current: %s", curName);
-            TextOutA(hdc, ucx + 8, ucy + 26, curTierLabel, (int)strlen(curTierLabel));
+            TextOutA(hdc, ucx + 8, ucy + 56, curTierLabel, (int)strlen(curTierLabel));
             
             SetTextColor(hdc, RGB(148, 163, 184));
-            TextOutA(hdc, ucx + 8, ucy + 42, curStatStr, (int)strlen(curStatStr));
+            TextOutA(hdc, ucx + 8, ucy + 72, curStatStr, (int)strlen(curStatStr));
             
             // Next Tier Info or Max Level
             if (curTierIdx >= 4) {
                 SetTextColor(hdc, RGB(16, 185, 129));
-                TextOutA(hdc, ucx + 8, ucy + 64, "* FULLY RETROFITTED (MAX TIER)", 30);
+                TextOutA(hdc, ucx + 8, ucy + 92, "* FULLY RETROFITTED (MAX TIER)", 30);
                 
                 RECT rcBtnMax = { ucx + 8, ucy + cardH - 34, ucx + cardW - 8, ucy + cardH - 8 };
                 HBRUSH hBrMax = CreateSolidBrush(RGB(6, 78, 59));
@@ -5134,19 +5219,36 @@ void RenderGame(HDC hdc, RECT* clientRect) {
                 DrawTextA(hdc, "TIER MAXIMUM INSTALLED", -1, &rcBtnMax, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
             } else {
                 SetTextColor(hdc, RGB(56, 189, 248));
-                TextOutA(hdc, ucx + 8, ucy + 64, nextStatStr, (int)strlen(nextStatStr));
+                TextOutA(hdc, ucx + 8, ucy + 92, nextStatStr, (int)strlen(nextStatStr));
                 
                 int canAfford = (g_state.credits >= nextCost);
                 RECT rcBtnBuy = { ucx + 8, ucy + cardH - 34, ucx + cardW - 8, ucy + cardH - 8 };
-                HBRUSH hBrBuy = CreateSolidBrush(canAfford ? RGB(30, 58, 138) : RGB(30, 41, 59));
+                
+                COLORREF btnBg;
+                COLORREF btnFg;
+                char buyBtnTxt[64];
+                
+                if (!isAuthorized) {
+                    btnBg = RGB(35, 20, 25);
+                    btnFg = RGB(248, 113, 113);
+                    sprintf(buyBtnTxt, "DRYDOCK LOCKED (GO TO SEC %d)", fac->reqSector + 1);
+                } else if (!canAfford) {
+                    btnBg = RGB(30, 41, 59);
+                    btnFg = RGB(148, 163, 184);
+                    sprintf(buyBtnTxt, "INSTALL [%d]  -  %d CR", m + 1, nextCost);
+                } else {
+                    btnBg = RGB(30, 58, 138);
+                    btnFg = RGB(255, 255, 255);
+                    sprintf(buyBtnTxt, "INSTALL [%d]  -  %d CR", m + 1, nextCost);
+                }
+                
+                HBRUSH hBrBuy = CreateSolidBrush(btnBg);
                 FillRect(hdc, &rcBtnBuy, hBrBuy);
                 DeleteObject(hBrBuy);
                 FrameRect(hdc, &rcBtnBuy, (HBRUSH)GetStockObject(WHITE_BRUSH));
                 
                 SelectObject(hdc, g_fontMonoBold);
-                SetTextColor(hdc, canAfford ? RGB(255, 255, 255) : RGB(148, 163, 184));
-                char buyBtnTxt[64];
-                sprintf(buyBtnTxt, "INSTALL [%d]  -  %d CR", m + 1, nextCost);
+                SetTextColor(hdc, btnFg);
                 DrawTextA(hdc, buyBtnTxt, -1, &rcBtnBuy, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
             }
         }
@@ -5154,7 +5256,7 @@ void RenderGame(HDC hdc, RECT* clientRect) {
         // Footer hint
         SelectObject(hdc, g_fontSmall);
         SetTextColor(hdc, RGB(245, 158, 11));
-        TextOutA(hdc, mx + 16, my + modalH - 24, "Press Keys [1-4] or Click Upgrade Buttons to Install Retrofits • [U / ESC] Close", 79);
+        TextOutA(hdc, mx + 16, my + modalH - 24, "Keys [1-4] or Click • Dock [O] at specialized orbital starports for retrofits • [U / ESC] Close", 95);
         
         SelectObject(hdc, oldPen3);
         SelectObject(hdc, oldBrush3);
@@ -6226,7 +6328,7 @@ void RenderGame(HDC hdc, RECT* clientRect) {
         
         SelectObject(hdc, g_fontSmall);
         SetTextColor(hdc, pal->textBright);
-        TextOutA(hdc, mx + modalW - 120, my + 10, "[D / ESC] CLOSE", 15);
+        TextOutA(hdc, mx + modalW - 120, my + 10, "[O / ESC] CLOSE", 15);
         
         // Faction & Tariff Sub-header Banner
         int barY = my + 36;
@@ -6244,6 +6346,12 @@ void RenderGame(HDC hdc, RECT* clientRect) {
         
         SetTextColor(hdc, RGB(56, 189, 248));
         TextOutA(hdc, mx + 20, barY + 17, curSt->tariffText, (int)strlen(curSt->tariffText));
+        
+        // Drydock specialty badge in station header
+        char specLine[64];
+        sprintf(specLine, "DRYDOCK: %s [U]", curSt->specialty);
+        SetTextColor(hdc, RGB(254, 240, 138));
+        TextOutA(hdc, mx + modalW - 310, barY + 17, specLine, (int)strlen(specLine));
         
         // Left Column: Quick Services & Black Market Barter (320px wide)
         int leftX = mx + 14;
@@ -7895,8 +8003,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             }
             
             if (g_state.showUpgrades) {
-                int modalW = 680;
-                int modalH = 430;
+                int modalW = 710;
+                int modalH = 480;
                 int hx = (totalW - modalW) / 2;
                 int hy = (totalH - modalH) / 2;
                 
@@ -7908,9 +8016,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 }
                 
                 // 4 Upgrade Cards Buy Buttons
-                int cardW = 318;
-                int cardH = 145;
-                int gapX = 16;
+                int cardW = 332;
+                int cardH = 175;
+                int gapX = 18;
                 int gapY = 10;
                 int startX = hx + 14;
                 int startY = hy + 68;
