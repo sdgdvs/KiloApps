@@ -4,6 +4,15 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-05T05:40:00-07:00 — kilo-usability: KCalc (Layout Tuning, Toast Occlusion Remediation & Formula Bar Navigation)**
+  - Status: PASS ✅ (0 regressions, 112.3 KB web / 28.0 KB native < 999 KB ceiling).
+  - Window Dimension Tuning: Expanded KCalc default window size to 830x670 in `App.jsx`, preventing header wrap and keypad cramping.
+  - Toast Occlusion Remediation: Relocated `#toastContainer` to safe top-right (56px/20px) per Directive 195; wired modal auto-clearing.
+  - Formula Bar Navigation: Added formula history browsing (`ArrowUp`/`ArrowDown`), inline clear button (`✕`), and click-to-recall.
+  - Touch & Accessibility: Added `touch-action: manipulation`, `:focus-visible` outlines, ARIA dialog roles, and keypad tooltips.
+  - Modal Ergonomics: Wired `F1`/`H` and `M` keyboard toggle closing; enhanced click-to-copy with visual flash and status feedback.
+  - Verification: `test_web_apps.js` PASS (139 elements); MSVC clean (`KCalc.exe`); Vite clean in 448ms; security_lint 100% PASS.
+
 - **2026-10-05T04:38:00-07:00 — kilo-tester: KTerm (Interactive UI Audit, Checkbox Sync & Modal Trap Fixes)**
   - Status: PASS ✅ (6 issues, 6 fixed; 113.2 KB web / 45.0 KB native < 999 KB ceiling).
   - Checkbox & Briefing Sync: Wired `chkDontShowTutorial` state synchronization with `kterm_tutorialSeen` in localStorage.
