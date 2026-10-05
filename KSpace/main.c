@@ -64,7 +64,7 @@ unsigned int initialSeed = 999;
 #define MAX_FLASHES 20
 #define MAX_STRIKES 6
 
-typedef struct { float x, y, active, dx, dy, type; int hp, maxHp, timer, cloaked; int isElite, squadId, shield; } Ent;
+typedef struct { float x, y, active, dx, dy, type; int hp, maxHp, timer, cloaked; int isElite, squadId, shield; float range; int phased; } Ent;
 typedef struct { float x, y, speed; int size, layer; } Star;
 typedef struct { float x, y, vx, vy; int life, maxLife; COLORREF color; int layer; float size; } Particle;
 typedef struct { int score, wave, mode; } LeaderEntry;
@@ -92,7 +92,75 @@ typedef struct {
     int escortActive, escortHp;
     float escortX, escortY;
     int pathGatesActive, eliteSquadActive, eliteSquadTimer;
+    float heatGauge;
+    int spectralPhaseTimer;
 } SaveState;
+
+// --- CAMPAIGN EXPANSION (6 DISTINCT SECTORS & SIGNATURE MECHANICS) ---
+static const char* secNames[6] = {
+    "KUIPER DEBRIS FIELD",
+    "IONIZED NEBULA RIFT",
+    "MAGMA FOUNDRY OF VULCANUS",
+    "PHASED VOID GRAVEYARD",
+    "CITADEL ORBITAL APPROACH",
+    "DREADNOUGHT SIEGE"
+};
+
+static int GetSector(int w) {
+    if (w <= 3) return 1;
+    if (w <= 6) return 2;
+    if (w <= 9) return 3;
+    if (w <= 12) return 4;
+    if (w <= 15) return 5;
+    return 6;
+}
+
+// Level 1: Slingshot Wells & Kinetic Shards
+typedef struct { float x, y, r, pull; } SlingshotWell;
+static SlingshotWell slingshotWells[2] = {
+    { W * 0.32f, H * 0.42f, 62.0f, 0.8f },
+    { W * 0.72f, H * 0.62f, 54.0f, -0.7f }
+};
+
+#define MAX_KINETIC_SHARDS 24
+typedef struct { float x, y, vx, vy; int life, dmg, active; COLORREF col; } KineticShard;
+static KineticShard kineticShards[MAX_KINETIC_SHARDS] = {0};
+
+// Level 2: Lightning Arcs & EMP Storm
+#define MAX_LIGHTNING_ARCS 8
+typedef struct { float x1, y1, x2, y2; int life, active; COLORREF col; } LightningArc;
+static LightningArc lightningArcs[MAX_LIGHTNING_ARCS] = {0};
+static int empTimer = 420;
+static int empFlash = 0;
+static int empSlowTimer = 0;
+
+// Level 3: Heat Gauge & Solar Flares
+static float heatGauge = 0.0f;
+static int overheatTimer = 0;
+static int solarFlareTimer = 0;
+static int solarFlareWarning = 0;
+static int solarFlareActive = 0;
+static float solarFlareY = 220.0f;
+
+// Level 4: Spectral Phase Synchronization
+static int spectralPhaseTimer = 0;
+
+// Level 5: Shield Pylons & Laser Barrier Gates
+typedef struct { float x, y; int hp, maxHp, active; } ShieldPylon;
+static ShieldPylon shieldPylons[2] = {
+    { 42.0f, 70.0f, 80, 80, 0 },
+    { W - 62.0f, 70.0f, 80, 80, 0 }
+};
+
+typedef struct { float y, x, vx, len; int active; } LaserBarrier;
+static LaserBarrier laserBarriers[2] = {
+    { 210.0f, 45.0f, 1.6f, 120.0f, 0 },
+    { 350.0f, W - 165.0f, -1.8f, 120.0f, 0 }
+};
+
+// Level 6: Dreadnought Core Meltdown
+static int dreadCoreMeltdown = 0;
+static int meltdownTimer = 0;
 
 // --- GLOBAL GAME DATA ---
 int gameState = STATE_MENU;
@@ -103,7 +171,7 @@ static HFONT hFontTitle = NULL;
 static HFONT hFontMenu = NULL;
 static HFONT hFontHUD = NULL;
 
-Ent p = { W/2.0f - 10.0f, H - 60.0f, 1.0f, 0, 0, 0, 3, 3, 0, 0, 0, 0, 0 };
+Ent p = { W/2.0f - 10.0f, H - 60.0f, 1.0f, 0, 0, 0, 3, 3, 0, 0, 0, 0, 0, 0.0f, 0 };
 int shieldActive = 3;
 int maxShields = 3;
 int shieldRechargeTimer = 0;
@@ -666,6 +734,8 @@ void SaveGameState() {
     s.pathGatesActive = pathGatesActive;
     s.eliteSquadActive = eliteSquadActive;
     s.eliteSquadTimer = eliteSquadTimer;
+    s.heatGauge = heatGauge;
+    s.spectralPhaseTimer = spectralPhaseTimer;
 
     HANDLE hFile = CreateFileA("kspace_save.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
     if (hFile != INVALID_HANDLE_VALUE) {
@@ -731,7 +801,7 @@ int LoadGameState() {
         p.x = s.px;
         p.y = s.py;
         enemiesKilled = s.enemiesKilled;
-        comboMultiplier = s.comboMultiplier > 0 ? s.comboMultiplier : 1;
+        comboMultiplier = s.comboMultiplier > 0 ? comboMultiplier : 1;
         comboTimer = s.comboTimer;
         shotsFired = s.shotsFired;
         shotsHit = s.shotsHit;
@@ -759,6 +829,8 @@ int LoadGameState() {
         pathGatesActive = s.pathGatesActive;
         eliteSquadActive = s.eliteSquadActive;
         eliteSquadTimer = s.eliteSquadTimer;
+        heatGauge = s.heatGauge;
+        spectralPhaseTimer = s.spectralPhaseTimer;
 
         for (int i = 0; i < MAX_ENEMIES; i++) e[i].active = 0;
         for (int i = 0; i < MAX_BULLETS; i++) b[i].active = 0;
@@ -823,13 +895,64 @@ int IsMothershipShieldActive() {
     return 0;
 }
 
+void SpawnKineticShards(float x, float y, int count) {
+    int spawned = 0;
+    for (int k = 0; k < MAX_KINETIC_SHARDS && spawned < count; k++) {
+        if (!kineticShards[k].active) {
+            kineticShards[k].active = 1;
+            kineticShards[k].x = x;
+            kineticShards[k].y = y;
+            int ang = (spawned * 16 / (count > 0 ? count : 1)) & 15;
+            float spd = 2.4f + (float)((rnd() % 100)) * 0.02f;
+            kineticShards[k].vx = ((float)FastCos(ang) / 127.0f) * spd;
+            kineticShards[k].vy = ((float)FastSin(ang) / 127.0f) * spd;
+            kineticShards[k].life = 55;
+            kineticShards[k].dmg = 20;
+            kineticShards[k].col = RGB(128, 216, 255);
+            spawned++;
+        }
+    }
+    PlaySnd(1);
+}
+
+void TriggerChainLightning(float sx, float sy, int sourceIdx) {
+    int chained = 0;
+    for (int k = 0; k < MAX_ENEMIES && chained < 2; k++) {
+        if (!e[k].active || k == sourceIdx) continue;
+        float dx = (e[k].x + 10.0f) - sx;
+        float dy = (e[k].y + 10.0f) - sy;
+        if (dx * dx + dy * dy < 6400.0f) { // within 80px
+            for (int a = 0; a < MAX_LIGHTNING_ARCS; a++) {
+                if (!lightningArcs[a].active) {
+                    lightningArcs[a].active = 1;
+                    lightningArcs[a].x1 = sx; lightningArcs[a].y1 = sy;
+                    lightningArcs[a].x2 = e[k].x + 10.0f; lightningArcs[a].y2 = e[k].y + 10.0f;
+                    lightningArcs[a].life = 10;
+                    lightningArcs[a].col = RGB(0, 229, 255);
+                    break;
+                }
+            }
+            e[k].hp -= 12;
+            AddExplosion(e[k].x + 10.0f, e[k].y + 10.0f, 6, RGB(0, 229, 255));
+            if (e[k].hp <= 0) {
+                e[k].active = 0.0f;
+                comboTimer = 180;
+                if (comboMultiplier < 10) comboMultiplier++;
+                score += 40 * comboMultiplier;
+                enemiesKilled++; totalKills++;
+            }
+            chained++;
+        }
+    }
+}
+
 void SpawnBoss(int lvl) {
     bossActive = 1;
     bossLevel = lvl;
     bossAttackTimer = 0;
     bossPhase = 1;
 
-    if (wave == 8 || wave == 16 || (modeIndex == MODE_BOSS_RUSH && (lvl == 2 || lvl == 4))) {
+    if (wave >= 16 || lvl >= 5 || (modeIndex == MODE_BOSS_RUSH && (lvl == 2 || lvl == 4 || lvl >= 5))) {
         bossIsDreadnought = 1;
         bossIsMothership = 0;
         bossX = W / 2.0f - 60.0f;
@@ -842,7 +965,9 @@ void SpawnBoss(int lvl) {
         dreadIonCharge = 0;
         dreadIonBeamTimer = 0;
         dreadFlakTimer = 0;
-    } else if (wave >= 20 || (modeIndex == MODE_BOSS_RUSH && lvl >= 5) || lvl >= 4) {
+        dreadCoreMeltdown = 0;
+        meltdownTimer = 0;
+    } else if (wave >= 20 || (modeIndex == MODE_BOSS_RUSH && lvl >= 6)) {
         bossIsDreadnought = 0;
         bossIsMothership = 1;
         bossX = W / 2.0f - 45.0f;
@@ -880,6 +1005,8 @@ void DestroyBoss() {
     bossDeathFlash = 150;
     bossActive = 0;
     bossIsDreadnought = 0;
+    dreadCoreMeltdown = 0;
+    meltdownTimer = 0;
     PlaySnd(3);
 
     // Drop Powerups (including guaranteed Drone Wing or Overcharge Core)
@@ -893,7 +1020,7 @@ void DestroyBoss() {
             if (dropped == 0) pu[k].type = 10.0f; // Drone Wing Pod
             else if (dropped == 1) pu[k].type = 9.0f; // Overcharge Core
             else if (modeIndex == MODE_BOSS_RUSH && p.hp < p.maxHp) pu[k].type = 3.0f; // Shield/Repair Pod
-            else pu[k].type = (float)(rnd() % 11);
+            else pu[k].type = (float)(rnd() % 13);
             dropped++;
             if (dropped >= 3) break;
         }
@@ -926,42 +1053,47 @@ void SpawnEnemy() {
             e[i].timer = 0;
             e[i].cloaked = 0;
 
-            int sec = (wave <= 4) ? 1 : ((wave <= 8) ? 2 : ((wave <= 12) ? 3 : ((wave <= 16) ? 4 : 5)));
+            int sec = GetSector(wave);
             int t = rnd() % 100;
             if (sec == 1) {
-                // Sector 1: Perimeter Belt - Scouts, Chasers, Asteroids, occasional Zigzag
-                if (t < 40) e[i].type = 0.0f;
-                else if (t < 70) e[i].type = 1.0f;
-                else if (t < 88) e[i].type = 5.0f;
-                else { e[i].type = 4.0f; e[i].dx = (rnd()%2==0?2.2f:-2.2f); }
+                // Sector 1: Kuiper Debris Field - Scouts, Chasers, Asteroids, Heavy Asteroids
+                if (t < 35) e[i].type = 0.0f;
+                else if (t < 60) e[i].type = 1.0f;
+                else if (t < 85) e[i].type = 5.0f; // Heavy Asteroid
+                else { e[i].type = 4.0f; e[i].dx = (rnd()%2==0?2.2f:-2.2f); } // Destructible Asteroid
             } else if (sec == 2) {
-                // Sector 2: Nebula Corridor - Saucers, Zigzags, Kamikaze, Asteroids
+                // Sector 2: Ionized Nebula Rift - Saucers, Zigzags, Kamikaze, Interceptors
                 if (t < 25) e[i].type = 0.0f;
-                else if (t < 45) e[i].type = 2.0f;
-                else if (t < 65) { e[i].type = 4.0f; e[i].dx = (rnd()%2==0?2.2f:-2.2f); }
-                else if (t < 82) e[i].type = 7.0f;
-                else e[i].type = 5.0f;
+                else if (t < 50) e[i].type = 2.0f;
+                else if (t < 75) { e[i].type = 4.0f; e[i].dx = (rnd()%2==0?2.2f:-2.2f); }
+                else e[i].type = 7.0f;
             } else if (sec == 3) {
-                // Sector 3: Fleet Corridor - Heavies, Frigates, Saucers, Kamikaze
+                // Sector 3: Magma Foundry of Vulcanus - Heavies, Frigates, Saucers, Kamikaze
                 if (t < 20) e[i].type = 1.0f;
                 else if (t < 40) e[i].type = 2.0f;
                 else if (t < 62) e[i].type = 3.0f;
                 else if (t < 82) { e[i].type = 6.0f; e[i].dx = (rnd()%2==0?1.8f:-1.8f); }
                 else e[i].type = 7.0f;
             } else if (sec == 4) {
-                // Sector 4: Volcanic Expanse - Stealth, Frigates, Heavies, Giant Asteroids
+                // Sector 4: Phased Void Graveyard - Stealth Phantoms, Frigates, Heavies, Giant Asteroids
                 if (t < 20) e[i].type = 3.0f;
-                else if (t < 42) e[i].type = 8.0f;
-                else if (t < 64) { e[i].type = 6.0f; e[i].dx = (rnd()%2==0?1.8f:-1.8f); }
-                else if (t < 82) e[i].type = 9.0f;
-                else e[i].type = 7.0f;
+                else if (t < 45) e[i].type = 8.0f; // Stealth Phantom
+                else if (t < 68) { e[i].type = 6.0f; e[i].dx = (rnd()%2==0?1.8f:-1.8f); }
+                else if (t < 85) e[i].type = 9.0f;
+                else e[i].type = 11.0f; // Elite Void Phantom
+            } else if (sec == 5) {
+                // Sector 5: Citadel Orbital Approach - Armored Cruisers, Heavies, Command Cruisers
+                if (t < 20) e[i].type = 3.0f;
+                else if (t < 40) e[i].type = 6.0f;
+                else if (t < 65) { e[i].type = 10.0f; e[i].dx = (rnd()%2==0?1.8f:-1.8f); }
+                else if (t < 85) e[i].type = 11.0f;
+                else e[i].type = 12.0f; // Elite Command Cruiser
             } else {
-                // Sector 5: Citadel Core - Maximum danger squad
-                if (t < 18) e[i].type = 3.0f;
-                else if (t < 38) e[i].type = 8.0f;
-                else if (t < 58) { e[i].type = 6.0f; e[i].dx = (rnd()%2==0?1.8f:-1.8f); }
-                else if (t < 78) e[i].type = 10.0f;
-                else e[i].type = 11.0f;
+                // Sector 6: Dreadnought Siege - Maximum danger escort squad
+                if (t < 20) e[i].type = 6.0f;
+                else if (t < 45) e[i].type = 10.0f;
+                else if (t < 75) e[i].type = 11.0f;
+                else e[i].type = 12.0f;
             }
 
             if (e[i].type == 11.0f) e[i].hp = 35;
@@ -977,6 +1109,8 @@ void SpawnEnemy() {
             else e[i].hp = 2;
 
             e[i].maxHp = e[i].hp;
+            e[i].phased = 0;
+            e[i].range = 0.0f;
             break;
         }
     }
@@ -1019,8 +1153,9 @@ void UseTimeStop() {
     if (timeStopCooldown <= 0 && timeStopTimer <= 0) {
         timeStopTimer = 375; // 6 seconds
         timeStopCooldown = 600; // 10 seconds CD
+        spectralPhaseTimer = 450; // Sector 4: Synchronizes dimensions with spectral phase!
         PlaySnd(3);
-        ShowNativeToast("CHRONO-FIELD ENGAGED!", 0, 100);
+        ShowNativeToast("CHRONO-FIELD ENGAGED! SPECTRAL SYNC!", 0, 100);
         AddExplosion(W / 2.0f, H / 2.0f, 35, RGB(0, 229, 255));
     } else {
         ShowNativeToast("Time Stop on cooldown!", 2, 80);
@@ -1034,10 +1169,34 @@ void UseTacticalDash() {
         p.x = W / 2.0f - 10.0f;
         p.y = H - 60.0f;
         invincibleTimer = 125; // 2 seconds
-        dashCooldown = 300; // 5 seconds CD
+        dashCooldown = (playerChassis == 2) ? 210 : 300; // Void Phantom: faster cooldown
         PlaySnd(2);
-        ShowNativeToast("Tactical Dash burst!", 0, 80);
-        AddExplosion(p.x + 10.0f, p.y + 10.0f, 25, RGB(0, 176, 255));
+        if (heatGauge > 0.0f) {
+            AddShockwave(p.x + 10.0f, p.y + 10.0f, 95.0f, RGB(255, 61, 0));
+            for (int i = 0; i < MAX_ENEMIES; i++) {
+                if (e[i].active) {
+                    float dx = (e[i].x + 10.0f) - (p.x + 10.0f);
+                    float dy = (e[i].y + 10.0f) - (p.y + 10.0f);
+                    if (dx * dx + dy * dy < 9025.0f) { // 95^2
+                        e[i].hp -= 35;
+                        AddExplosion(e[i].x + 10.0f, e[i].y + 10.0f, 16, RGB(255, 109, 0));
+                        if (e[i].hp <= 0) {
+                            e[i].active = 0.0f;
+                            comboTimer = 180;
+                            if (comboMultiplier < 10) comboMultiplier++;
+                            score += 60 * comboMultiplier;
+                            enemiesKilled++; totalKills++;
+                        }
+                    }
+                }
+            }
+            heatGauge = 0.0f;
+            overheatTimer = 0;
+            ShowNativeToast("THERMAL HEAT VENTED! RADIAL BLAST!", 0, 120);
+        } else {
+            ShowNativeToast("Tactical Dash burst!", 0, 80);
+        }
+        AddExplosion(p.x + 10.0f, p.y + 10.0f, 25, RGB(0, 229, 255));
     } else {
         ShowNativeToast("Dash on cooldown!", 2, 80);
     }
@@ -1291,6 +1450,21 @@ void SpawnEliteSquad(int squadType) {
 }
 
 void Shoot() {
+    if (overheatTimer > 0) {
+        if (frameCount % 30 == 0) ShowNativeToast("WEAPONS OVERHEATED! PRESS [D] TO VENT!", 2, 60);
+        return;
+    }
+    int curSec = GetSector(wave);
+    if (curSec == 3) {
+        heatGauge += (playerChassis == 1 ? 1.6f : 2.2f);
+        if (heatGauge >= 100.0f) {
+            heatGauge = 100.0f;
+            overheatTimer = 150;
+            ShowNativeToast("WEAPON OVERHEAT JAM! [D] TO VENT!", 2, 120);
+            PlaySnd(1);
+        }
+    }
+
     shotsFired++;
     if (overchargeTimer > 0) {
         PlaySnd(5); // Laser pulse sound
@@ -1440,6 +1614,23 @@ void StartNewGame(int modeIdx) {
     droneCount = 0;
     hyperJumpEnergy = 0;
     hyperJumpTimer = 0;
+    heatGauge = 0.0f;
+    overheatTimer = 0;
+    solarFlareTimer = 0;
+    solarFlareWarning = 0;
+    solarFlareActive = 0;
+    spectralPhaseTimer = 0;
+    empTimer = 420;
+    empFlash = 0;
+    empSlowTimer = 0;
+    dreadCoreMeltdown = 0;
+    meltdownTimer = 0;
+    shieldPylons[0].active = 0;
+    shieldPylons[1].active = 0;
+    laserBarriers[0].active = 0;
+    laserBarriers[1].active = 0;
+    for (int k = 0; k < MAX_KINETIC_SHARDS; k++) kineticShards[k].active = 0;
+    for (int k = 0; k < MAX_LIGHTNING_ARCS; k++) lightningArcs[k].active = 0;
 
     for (int i = 0; i < MAX_STRIKES; i++) strikes[i].active = 0;
     for (int i = 0; i < MAX_ENEMIES; i++) e[i].active = 0;
@@ -1518,6 +1709,11 @@ void ApplyPowerup(int type) {
         weaponType = 3;
         ShowNativeToast("PLASMA CANNON ENGAGED!", 0, 120);
         PlaySnd(2);
+    }
+    else if (type == 12) { // Quantum Phase Converter Pod
+        spectralPhaseTimer = 480;
+        ShowNativeToast("QUANTUM PHASE POD! SPECTRAL SYNC ACTIVE!", 0, 120);
+        PlaySnd(3);
     }
 }
 
@@ -1691,28 +1887,29 @@ void Update() {
         int targetWave = 1 + (score / 650);
         if (targetWave > 20) targetWave = 20;
         if (targetWave > wave) {
-            int oldSec = (wave <= 4) ? 1 : ((wave <= 8) ? 2 : ((wave <= 12) ? 3 : ((wave <= 16) ? 4 : 5)));
+            int oldSec = GetSector(wave);
             wave = targetWave;
-            int newSec = (wave <= 4) ? 1 : ((wave <= 8) ? 2 : ((wave <= 12) ? 3 : ((wave <= 16) ? 4 : 5)));
+            int newSec = GetSector(wave);
             if (newSec != oldSec) {
-                const char* secNames[] = {"PERIMETER BELT", "NEBULA CORRIDOR", "DREADNOUGHT FLEET", "VOLCANIC EXPANSE", "MOTHERSHIP CITADEL"};
                 char secMsg[64];
                 wsprintfA(secMsg, "ENTERING SECTOR %d: %s", newSec, secNames[newSec - 1]);
                 ShowNativeToast(secMsg, 0, 180);
+                if (newSec == 5) {
+                    shieldPylons[0].active = 1; shieldPylons[0].hp = 80; shieldPylons[0].maxHp = 80;
+                    shieldPylons[1].active = 1; shieldPylons[1].hp = 80; shieldPylons[1].maxHp = 80;
+                    laserBarriers[0].active = 1; laserBarriers[1].active = 1;
+                }
             }
             PlaySnd(3);
             if (wave == 3 && !eliteSquadActive && !bossActive) SpawnEliteSquad(0);
             else if (wave == 4 && !bombardmentActive && !bossActive) TriggerBombardment();
-            else if (wave == 5 && !bossActive) SpawnBoss(1);
-            else if (wave == 7 && !eliteSquadActive && !bossActive) SpawnEliteSquad(1);
-            else if (wave == 8 && !bossActive) SpawnBoss(2); // Loop 11: Capital Ship Dreadnought Siege!
-            else if (wave == 10 && !bossActive) SpawnBoss(3);
+            else if (wave == 6 && !bossActive) SpawnBoss(1);
+            else if (wave == 8 && !eliteSquadActive && !bossActive) SpawnEliteSquad(1);
+            else if (wave == 9 && !bossActive) SpawnBoss(2);
             else if (wave == 11 && !eliteSquadActive && !bossActive) SpawnEliteSquad(2);
-            else if (wave == 12 && !bombardmentActive && !bossActive) TriggerBombardment();
+            else if (wave == 12 && !bossActive) SpawnBoss(3);
             else if (wave == 15 && !bossActive) SpawnBoss(4);
-            else if (wave == 16 && !bossActive) SpawnBoss(5); // Loop 11: Capital Ship Dreadnought Siege Rematch!
-            else if (wave == 17 && !eliteSquadActive && !bossActive) SpawnEliteSquad(rnd() % 3);
-            else if (wave == 20 && !bossActive) SpawnBoss(6); // Stage 20 Alien Mothership Boss
+            else if (wave >= 16 && !bossActive) SpawnBoss(5); // Level 6: Dreadnought Siege!
             else if (wave % 4 == 0) SpawnFormation(rnd() % 3 == 0 ? 9 : (rnd() % 2 == 0 ? 7 : 8));
         }
     } else if (modeIndex == MODE_ENDURANCE) {
@@ -1740,6 +1937,154 @@ void Update() {
             shieldRechargeTimer = 0;
             AddShieldRipple(p.x + 10.0f, p.y + 10.0f, RGB(0, 229, 255));
             PlaySnd(2);
+        }
+    }
+
+    // --- SECTOR ENVIRONMENTAL HAZARDS & SIGNATURE MECHANICS ---
+    int curSec = GetSector(wave);
+
+    // Level 1: Micro-gravity slingshot wells
+    if (curSec == 1) {
+        for (int swIdx = 0; swIdx < 2; swIdx++) {
+            float dx = slingshotWells[swIdx].x - (p.x + 10.0f);
+            float dy = slingshotWells[swIdx].y - (p.y + 10.0f);
+            float d2 = dx * dx + dy * dy;
+            float maxR = slingshotWells[swIdx].r + 20.0f;
+            if (d2 < maxR * maxR && d2 > 4.0f) {
+                float invD = 1.0f / (d2 > 100.0f ? 10.0f : (d2 > 25.0f ? 5.0f : 2.0f));
+                p.x += dx * invD * slingshotWells[swIdx].pull * 0.4f;
+                p.y += dy * invD * slingshotWells[swIdx].pull * 0.4f;
+            }
+        }
+    }
+
+    // Level 1: Kinetic shards update and enemy collision
+    for (int k = 0; k < MAX_KINETIC_SHARDS; k++) {
+        if (kineticShards[k].active) {
+            kineticShards[k].x += kineticShards[k].vx;
+            kineticShards[k].y += kineticShards[k].vy;
+            kineticShards[k].life--;
+            if (kineticShards[k].life <= 0 || kineticShards[k].x < -10 || kineticShards[k].x > W + 10 || kineticShards[k].y < -10 || kineticShards[k].y > H + 10) {
+                kineticShards[k].active = 0;
+                continue;
+            }
+            for (int i = 0; i < MAX_ENEMIES; i++) {
+                if (e[i].active) {
+                    float ew = (e[i].type == 6.0f || e[i].type == 9.0f || e[i].type == 11.0f || e[i].type == 12.0f) ? 36.0f : 20.0f;
+                    float eh = ew;
+                    if (kineticShards[k].x >= e[i].x && kineticShards[k].x <= e[i].x + ew &&
+                        kineticShards[k].y >= e[i].y && kineticShards[k].y <= e[i].y + eh) {
+                        e[i].hp -= kineticShards[k].dmg;
+                        AddExplosion(kineticShards[k].x, kineticShards[k].y, 8, RGB(128, 216, 255));
+                        kineticShards[k].active = 0;
+                        if (e[i].hp <= 0) {
+                            e[i].active = 0.0f;
+                            comboTimer = 180;
+                            if (comboMultiplier < 10) comboMultiplier++;
+                            score += 50 * comboMultiplier;
+                            enemiesKilled++; totalKills++;
+                        }
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    // Level 2: Lightning Arcs & EMP Storm
+    for (int a = 0; a < MAX_LIGHTNING_ARCS; a++) {
+        if (lightningArcs[a].active) {
+            lightningArcs[a].life--;
+            if (lightningArcs[a].life <= 0) lightningArcs[a].active = 0;
+        }
+    }
+    if (curSec == 2) {
+        empTimer--;
+        if (empTimer <= 0) {
+            empTimer = 450;
+            empFlash = 15;
+            empSlowTimer = 180;
+            PlaySnd(4);
+            ShowNativeToast("EMP STORM DISCHARGE! ENEMY SHIELDS SCRAMBLED!", 0, 150);
+            for (int k = 0; k < MAX_ENEMIES; k++) {
+                if (e[k].active) {
+                    e[k].shield = 0;
+                    e[k].hp = (e[k].hp > 10 ? e[k].hp - 10 : 1);
+                }
+            }
+        }
+    }
+    if (empFlash > 0) empFlash--;
+    if (empSlowTimer > 0) empSlowTimer--;
+
+    // Level 3: Heat Gauge cooling & Sweeping Horizontal Solar Flares
+    if (curSec == 3) {
+        if (overheatTimer > 0) {
+            overheatTimer--;
+            heatGauge -= 0.6f;
+            if (heatGauge < 0.0f) heatGauge = 0.0f;
+        } else {
+            heatGauge -= 0.3f;
+            if (heatGauge < 0.0f) heatGauge = 0.0f;
+        }
+        solarFlareTimer++;
+        if (solarFlareTimer % 450 == 0) {
+            solarFlareWarning = 1;
+            solarFlareActive = 0;
+            solarFlareY = 160.0f + (float)(frameCount % 180);
+            ShowNativeToast("WARNING: SOLAR FLARE IMMINENT!", 2, 120);
+        } else if (solarFlareTimer % 450 == 90) {
+            solarFlareWarning = 0;
+            solarFlareActive = 1;
+            PlaySnd(8);
+            screenShake = 16;
+        } else if (solarFlareTimer % 450 == 150) {
+            solarFlareActive = 0;
+        }
+
+        if (solarFlareActive) {
+            if (p.y >= solarFlareY - 15.0f && p.y <= solarFlareY + 65.0f) {
+                if (frameCount % 10 == 0) PlayerHit();
+            }
+            for (int k = 0; k < MAX_ENEMIES; k++) {
+                if (e[k].active && e[k].y >= solarFlareY - 15.0f && e[k].y <= solarFlareY + 65.0f) {
+                    e[k].hp -= 2;
+                    if (e[k].hp <= 0) {
+                        e[k].active = 0.0f;
+                        score += 30 * comboMultiplier;
+                        enemiesKilled++; totalKills++;
+                    }
+                }
+            }
+        }
+    } else {
+        heatGauge -= 0.5f; if (heatGauge < 0.0f) heatGauge = 0.0f;
+        solarFlareWarning = 0; solarFlareActive = 0;
+    }
+
+    // Level 4: Spectral Phase Synchronization
+    if (spectralPhaseTimer > 0) spectralPhaseTimer--;
+    if (curSec == 4) {
+        for (int k = 0; k < MAX_ENEMIES; k++) {
+            if (e[k].active) {
+                e[k].phased = (e[k].type == 8.0f || e[k].type == 10.0f || e[k].type == 11.0f || e[k].type == 6.0f) &&
+                              (((frameCount + (int)e[k].x) / 160) % 2 == 1);
+            }
+        }
+    }
+
+    // Level 5: Moving Laser Barriers
+    if (curSec == 5) {
+        for (int lbIdx = 0; lbIdx < 2; lbIdx++) {
+            laserBarriers[lbIdx].active = 1;
+            laserBarriers[lbIdx].x += laserBarriers[lbIdx].vx;
+            if (laserBarriers[lbIdx].x < 30.0f || laserBarriers[lbIdx].x + laserBarriers[lbIdx].len > W - 30.0f) {
+                laserBarriers[lbIdx].vx = -laserBarriers[lbIdx].vx;
+            }
+            if (p.y + 16.0f > laserBarriers[lbIdx].y - 4.0f && p.y + 4.0f < laserBarriers[lbIdx].y + 8.0f &&
+                p.x + 16.0f > laserBarriers[lbIdx].x && p.x + 4.0f < laserBarriers[lbIdx].x + laserBarriers[lbIdx].len) {
+                if (frameCount % 15 == 0) PlayerHit();
+            }
         }
     }
 
@@ -1835,6 +2180,14 @@ void Update() {
             }
             b[i].y += b[i].dy;
             b[i].x += b[i].dx;
+            if (curSec == 2 && b[i].type == 0.0f) {
+                b[i].range += (b[i].dy < 0 ? -b[i].dy : b[i].dy);
+                if (b[i].range > 270.0f) {
+                    AddExplosion(b[i].x, b[i].y, 2, RGB(0, 229, 255));
+                    b[i].active = 0.0f;
+                    continue;
+                }
+            }
             if (b[i].y < -10 || b[i].x < -10 || b[i].x > W + 10) b[i].active = 0.0f;
         }
     }
@@ -1896,6 +2249,41 @@ void Update() {
                         break;
                     }
                 }
+            }
+
+            // Phase 2: Coordinated Orbital Lance Bombardments once generators are destroyed
+            if (dreadGenL <= 0 && dreadGenR <= 0 && timeStopTimer == 0) {
+                if (frameCount % 240 == 0 && !bombardmentActive) {
+                    TriggerBombardment();
+                }
+            }
+
+            // Phase 3: Core Meltdown Sequence (<25% HP)
+            if (bossHp <= bossMaxHp / 4 && !dreadCoreMeltdown) {
+                dreadCoreMeltdown = 1;
+                meltdownTimer = 800;
+                ShowNativeToast("DREADNOUGHT CORE BREACH - MELTDOWN IMMINENT!", 2, 200);
+                screenShake = 22;
+                PlaySnd(8);
+            }
+            if (dreadCoreMeltdown && timeStopTimer == 0 && frameCount % 35 == 0) {
+                int angleIdx = (frameCount / 4) & 15;
+                for (int a = 0; a < 4; a++) {
+                    int ang = (angleIdx + a * 4) & 15;
+                    float bvx = ((float)FastCos(ang) / 127.0f) * 2.2f;
+                    float bvy = ((float)FastSin(ang) / 127.0f) * 2.2f;
+                    for (int k = 0; k < MAX_EBULLETS; k++) {
+                        if (!eb[k].active) {
+                            eb[k].active = 1.0f;
+                            eb[k].x = bossX + 60.0f;
+                            eb[k].y = bossY + 35.0f;
+                            eb[k].dx = bvx;
+                            eb[k].dy = bvy;
+                            break;
+                        }
+                    }
+                }
+                AddExplosion(bossX + 60.0f + (float)((rnd() % 60) - 30), bossY + 35.0f + (float)((rnd() % 40) - 20), 16, RGB(255, 23, 68));
             }
 
             // Bullets vs Dreadnought Subsystems & Hull
@@ -2222,6 +2610,23 @@ void Update() {
             // Bullets Collision
             for (int j = 0; j < MAX_BULLETS; j++) {
                 if (b[j].active && b[j].x < e[i].x + ew && b[j].x + 6 > e[i].x && b[j].y < e[i].y + eh && b[j].y + 12 > e[i].y) {
+                    // Check Pylon Shield in Sector 5
+                    if (curSec == 5 && (shieldPylons[0].active || shieldPylons[1].active) &&
+                        (e[i].type == 6.0f || e[i].type == 3.0f || e[i].type == 11.0f || e[i].type == 12.0f)) {
+                        AddShieldRipple(b[j].x, b[j].y, RGB(255, 215, 0));
+                        b[j].active = 0.0f;
+                        continue;
+                    }
+
+                    // Check Phased Enemy in Sector 4
+                    if (e[i].phased) {
+                        if (spectralPhaseTimer <= 0 && timeStopTimer <= 0) {
+                            AddExplosion(b[j].x, b[j].y, 2, RGB(170, 0, 255));
+                            b[j].active = 0.0f;
+                            continue;
+                        }
+                    }
+
                     if (e[i].cloaked && (rnd() % 100 < 75)) {
                         // Bullets miss cloaked fighter!
                     } else {
@@ -2229,10 +2634,19 @@ void Update() {
                         shotsHit++;
                         int dmg = (b[j].type == 1.0f) ? 6 : ((b[j].type == 2.0f) ? 10 : 1);
                         if (overchargeTimer > 0) dmg *= 3;
+                        if (e[i].phased && (spectralPhaseTimer > 0 || timeStopTimer > 0)) {
+                            dmg *= 2; // Critical hit on synchronized phase target!
+                            AddExplosion(b[j].x, b[j].y, 8, RGB(213, 0, 249));
+                        }
                         e[i].hp -= dmg;
                         overchargeEnergy++; if (overchargeEnergy > 100) overchargeEnergy = 100;
                         hyperJumpEnergy++; if (hyperJumpEnergy > 100) hyperJumpEnergy = 100;
                         AddWeaponHitParticles(b[j].x, b[j].y, weaponType, (overchargeTimer > 0 ? RGB(255, 234, 0) : RGB(0, 229, 255)));
+
+                        // Sector 2: Electric Arc Chaining
+                        if (curSec == 2 && (b[j].type == 1.0f || weaponType == 1 || weaponType == 3 || spreadTimer > 0 || plasmaTimer > 0)) {
+                            TriggerChainLightning(e[i].x + ew / 2.0f, e[i].y + eh / 2.0f, i);
+                        }
                     }
                     break;
                 }
@@ -2253,6 +2667,11 @@ void Update() {
                 PlaySnd(1);
                 AddExplosion(e[i].x + ew/2.0f, e[i].y + eh/2.0f, (e[i].isElite ? 25 : 14), (e[i].isElite ? RGB(255, 215, 0) : RGB(255, 152, 0)));
 
+                // Asteroids shatter into kinetic shards!
+                if (e[i].type == 4.0f || e[i].type == 5.0f) {
+                    SpawnKineticShards(e[i].x + ew / 2.0f, e[i].y + eh / 2.0f, (e[i].type == 5.0f ? 6 : 4));
+                }
+
                 if (score > highScore) { highScore = score; SaveLeaderboard(); }
 
                 int dropChance = e[i].isElite ? 80 : 22;
@@ -2260,13 +2679,41 @@ void Update() {
                     for (int k = 0; k < MAX_POWERUPS; k++) {
                         if (!pu[k].active) {
                             pu[k].active = 1.0f; pu[k].x = e[i].x; pu[k].y = e[i].y; pu[k].dy = 0.9f;
-                            pu[k].type = (float)(rnd() % 12); // Powerup 0..11
+                            int ptype = (curSec == 4 && (rnd() % 100 < 35)) ? 12 : (rnd() % 13);
+                            pu[k].type = (float)ptype;
                             break;
                         }
                     }
                 }
             } else if (e[i].y > H + 20) {
                 e[i].active = 0.0f;
+            }
+        }
+    }
+
+    // Bullets vs Shield Pylons in Sector 5
+    if (curSec == 5) {
+        for (int j = 0; j < MAX_BULLETS; j++) {
+            if (b[j].active) {
+                for (int pIdx = 0; pIdx < 2; pIdx++) {
+                    if (shieldPylons[pIdx].active &&
+                        b[j].x >= shieldPylons[pIdx].x - 14.0f && b[j].x <= shieldPylons[pIdx].x + 14.0f &&
+                        b[j].y >= shieldPylons[pIdx].y - 14.0f && b[j].y <= shieldPylons[pIdx].y + 14.0f) {
+                        int dmg = (b[j].type == 1.0f ? 8 : 2) * (overchargeTimer > 0 ? 3 : 1);
+                        shieldPylons[pIdx].hp -= dmg;
+                        shotsHit++;
+                        AddExplosion(b[j].x, b[j].y, 5, RGB(255, 215, 0));
+                        b[j].active = 0.0f;
+                        if (shieldPylons[pIdx].hp <= 0) {
+                            shieldPylons[pIdx].active = 0;
+                            AddShockwave(shieldPylons[pIdx].x, shieldPylons[pIdx].y, 85.0f, RGB(255, 215, 0));
+                            score += 1000 * comboMultiplier;
+                            PlaySnd(1);
+                            ShowNativeToast("SHIELD PYLON SHATTERED! CONVOY VULNERABLE!", 0, 150);
+                        }
+                        break;
+                    }
+                }
             }
         }
     }
@@ -2636,7 +3083,7 @@ void DrawPlayerShipGDI(HDC hdc, int x, int y, int shield, int frame) {
     SelectObject(hdc, oldPen);
 }
 
-void DrawEnemyShipGDI(HDC hdc, float fx, float fy, float ftype, int cloaked, int hp, int maxHp, int frame) {
+void DrawEnemyShipGDI(HDC hdc, float fx, float fy, float ftype, int cloaked, int hp, int maxHp, int frame, int phased) {
     int x = (int)fx, y = (int)fy, type = (int)ftype;
     HPEN nullPen = (HPEN)GetStockObject(NULL_PEN);
     HPEN oldPen = (HPEN)SelectObject(hdc, nullPen);
@@ -2769,6 +3216,24 @@ void DrawEnemyShipGDI(HDC hdc, float fx, float fy, float ftype, int cloaked, int
         RECT bgR = {x, y - 6, x + barW, y - 3}; FillRect(hdc, &bgR, bgB); DeleteObject(bgB);
         HBRUSH fgB = CreateSolidBrush(RGB(255, 215, 0));
         RECT fgR = {x, y - 6, x + fillW, y - 3}; FillRect(hdc, &fgR, fgB); DeleteObject(fgB);
+    }
+    // Spectral Phase Silhouette
+    if (phased) {
+        if (spectralPhaseTimer > 0 || timeStopTimer > 0) {
+            HPEN pPen = CreatePen(PS_SOLID, 1, (frame % 4 < 2) ? RGB(213, 0, 249) : RGB(255, 234, 0));
+            HPEN prevP = (HPEN)SelectObject(hdc, pPen);
+            HBRUSH prevB = (HBRUSH)SelectObject(hdc, GetStockObject(NULL_BRUSH));
+            Rectangle(hdc, x - 2, y - 2, x + 22, y + 24);
+            SelectObject(hdc, prevP); SelectObject(hdc, prevB);
+            DeleteObject(pPen);
+        } else {
+            HPEN pPen = CreatePen(PS_DOT, 1, RGB(170, 0, 255));
+            HPEN prevP = (HPEN)SelectObject(hdc, pPen);
+            HBRUSH prevB = (HBRUSH)SelectObject(hdc, GetStockObject(NULL_BRUSH));
+            Rectangle(hdc, x - 2, y - 2, x + 22, y + 24);
+            SelectObject(hdc, prevP); SelectObject(hdc, prevB);
+            DeleteObject(pPen);
+        }
     }
 
     SelectObject(hdc, oldPen);
@@ -3153,14 +3618,26 @@ void DrawBossGDI(HDC hdc, float fx, float fy, int frame) {
 
 void DrawPowerupGDI(HDC hdc, float fx, float fy, float ftype, int frame) {
     int x = (int)fx, y = (int)fy, type = (int)ftype;
-    COLORREF cols[12] = { RGB(0, 230, 118), RGB(0, 229, 255), RGB(61, 90, 255), RGB(255, 23, 68), RGB(255, 234, 0), RGB(213, 0, 249), RGB(255, 215, 0), RGB(0, 176, 255), RGB(255, 100, 200), RGB(255, 234, 0), RGB(0, 229, 255), RGB(255, 87, 34) };
-    COLORREF c = (type >= 0 && type < 12) ? cols[type] : RGB(255, 255, 255);
+    COLORREF cols[13] = { RGB(0, 230, 118), RGB(0, 229, 255), RGB(61, 90, 255), RGB(255, 23, 68), RGB(255, 234, 0), RGB(213, 0, 249), RGB(255, 215, 0), RGB(0, 176, 255), RGB(255, 100, 200), RGB(255, 234, 0), RGB(0, 229, 255), RGB(255, 87, 34), RGB(179, 136, 255) };
+    COLORREF c = (type >= 0 && type < 13) ? cols[type] : RGB(255, 255, 255);
     HBRUSH br = CreateSolidBrush(c);
     HBRUSH oldBr = (HBRUSH)SelectObject(hdc, br);
     HPEN pen = CreatePen(PS_SOLID, 1, RGB(255, 255, 255));
     HPEN oldPen = (HPEN)SelectObject(hdc, pen);
     int pulse = (frame % 20 < 10) ? 1 : 0;
-    if (type == 10) { // Drone Wing Pod
+    if (type == 12) { // Quantum Phase Converter Pod
+        POINT pts[4] = { {x + 8, y - pulse}, {x + 16 + pulse, y + 8}, {x + 8, y + 16 + pulse}, {x - pulse, y + 8} };
+        Polygon(hdc, pts, 4);
+        HBRUSH coreB = CreateSolidBrush(RGB(224, 64, 251));
+        SelectObject(hdc, coreB);
+        Ellipse(hdc, x + 3, y + 3, x + 13, y + 13);
+        SelectObject(hdc, oldBr); DeleteObject(coreB);
+        SetBkMode(hdc, TRANSPARENT);
+        SetTextColor(hdc, RGB(255, 255, 255));
+        HFONT hF = (HFONT)SelectObject(hdc, hFontHUD);
+        TextOutA(hdc, x + 5, y + 1, "Q", 1);
+        SelectObject(hdc, hF);
+    } else if (type == 10) { // Drone Wing Pod
         POINT pts[6] = { {x + 8, y - pulse}, {x + 16 + pulse, y + 6}, {x + 12, y + 16 + pulse}, {x + 8, y + 12}, {x + 4, y + 16 + pulse}, {x - pulse, y + 6} };
         Polygon(hdc, pts, 6);
         HBRUSH coreB = CreateSolidBrush(RGB(255, 234, 0));
@@ -3185,6 +3662,134 @@ void DrawPowerupGDI(HDC hdc, float fx, float fy, float ftype, int frame) {
     }
     SelectObject(hdc, oldBr); SelectObject(hdc, oldPen);
     DeleteObject(br); DeleteObject(pen);
+}
+
+void DrawCampaignSectorEffectsGDI(HDC hdc, int frame) {
+    int curSec = GetSector(wave);
+
+    // Sector 1: Slingshot Wells & Kinetic Shards
+    if (curSec == 1) {
+        for (int i = 0; i < 2; i++) {
+            int cx = (int)slingshotWells[i].x;
+            int cy = (int)slingshotWells[i].y;
+            int r = (int)slingshotWells[i].r;
+            HPEN gPen = CreatePen(PS_DOT, 1, RGB(0, 188, 212));
+            HGDIOBJ oldP = SelectObject(hdc, gPen);
+            HGDIOBJ oldB = SelectObject(hdc, GetStockObject(NULL_BRUSH));
+            Ellipse(hdc, cx - r, cy - r, cx + r, cy + r);
+            int r2 = r / 2 + (frame % 8);
+            Ellipse(hdc, cx - r2, cy - r2, cx + r2, cy + r2);
+            HBRUSH cbr = CreateSolidBrush(RGB(0, 229, 255));
+            SelectObject(hdc, cbr);
+            Ellipse(hdc, cx - 4, cy - 4, cx + 4, cy + 4);
+            SelectObject(hdc, oldB); SelectObject(hdc, oldP);
+            DeleteObject(gPen); DeleteObject(cbr);
+        }
+    }
+    for (int i = 0; i < MAX_KINETIC_SHARDS; i++) {
+        if (kineticShards[i].active) {
+            int sx = (int)kineticShards[i].x;
+            int sy = (int)kineticShards[i].y;
+            HPEN kPen = CreatePen(PS_SOLID, 2, RGB(255, 234, 0));
+            HGDIOBJ oldP = SelectObject(hdc, kPen);
+            MoveToEx(hdc, sx, sy, NULL);
+            LineTo(hdc, sx + (int)(kineticShards[i].vx * 2), sy + (int)(kineticShards[i].vy * 2));
+            SelectObject(hdc, oldP);
+            DeleteObject(kPen);
+        }
+    }
+
+    // Sector 2: Lightning Arcs & EMP Discharges
+    for (int i = 0; i < MAX_LIGHTNING_ARCS; i++) {
+        if (lightningArcs[i].active) {
+            HPEN aPen = CreatePen(PS_SOLID, 2, (frame % 2 == 0) ? RGB(0, 229, 255) : RGB(255, 255, 255));
+            HGDIOBJ oldP = SelectObject(hdc, aPen);
+            int mx = (int)((lightningArcs[i].x1 + lightningArcs[i].x2) / 2 + (rnd() % 14 - 7));
+            int my = (int)((lightningArcs[i].y1 + lightningArcs[i].y2) / 2 + (rnd() % 14 - 7));
+            MoveToEx(hdc, (int)lightningArcs[i].x1, (int)lightningArcs[i].y1, NULL);
+            LineTo(hdc, mx, my);
+            LineTo(hdc, (int)lightningArcs[i].x2, (int)lightningArcs[i].y2);
+            SelectObject(hdc, oldP);
+            DeleteObject(aPen);
+        }
+    }
+    if (empFlash > 0) {
+        HPEN empPen = CreatePen(PS_SOLID, 2, RGB(0, 229, 255));
+        HGDIOBJ oldP = SelectObject(hdc, empPen);
+        HGDIOBJ oldB = SelectObject(hdc, GetStockObject(NULL_BRUSH));
+        Rectangle(hdc, 2, 2, W - 2, H - 2);
+        SelectObject(hdc, oldP); SelectObject(hdc, oldB);
+        DeleteObject(empPen);
+    }
+
+    // Sector 3: Solar Flare Warning & Blazing Magma Sweep
+    if (curSec == 3) {
+        int fy = (int)solarFlareY;
+        int fh = 60;
+        if (solarFlareWarning) {
+            HPEN wPen = CreatePen(PS_DOT, 2, (frame % 4 < 2) ? RGB(255, 23, 68) : RGB(255, 234, 0));
+            HGDIOBJ oldP = SelectObject(hdc, wPen);
+            MoveToEx(hdc, 0, fy, NULL); LineTo(hdc, W, fy);
+            MoveToEx(hdc, 0, fy + fh, NULL); LineTo(hdc, W, fy + fh);
+            SelectObject(hdc, oldP); DeleteObject(wPen);
+            SetBkMode(hdc, TRANSPARENT);
+            SetTextColor(hdc, (frame % 4 < 2) ? RGB(255, 23, 68) : RGB(255, 234, 0));
+            TextOutA(hdc, W/2 - 75, fy + fh/2 - 6, "! SOLAR FLARE WARNING !", 23);
+        } else if (solarFlareActive) {
+            HBRUSH fbr = CreateSolidBrush((frame % 2 == 0) ? RGB(255, 87, 34) : RGB(255, 171, 0));
+            RECT frc = {0, fy, W, fy + fh};
+            FillRect(hdc, &frc, fbr);
+            DeleteObject(fbr);
+            HBRUSH cbr = CreateSolidBrush(RGB(255, 255, 255));
+            RECT crc = {0, fy + fh/3, W, fy + 2*fh/3};
+            FillRect(hdc, &crc, cbr);
+            DeleteObject(cbr);
+        }
+    }
+
+    // Sector 5: Moving Laser Barriers & Shield Pylons
+    if (curSec == 5) {
+        for (int i = 0; i < 2; i++) {
+            if (!laserBarriers[i].active) continue;
+            int bx = (int)laserBarriers[i].x;
+            int by = (int)laserBarriers[i].y;
+            int blen = (int)laserBarriers[i].len;
+            HPEN bPen = CreatePen(PS_SOLID, 2, (frame % 2 == 0) ? RGB(255, 23, 68) : RGB(255, 234, 0));
+            HGDIOBJ oldP = SelectObject(hdc, bPen);
+            MoveToEx(hdc, bx, by, NULL); LineTo(hdc, bx + blen, by);
+            SelectObject(hdc, oldP); DeleteObject(bPen);
+            HBRUSH ebr = CreateSolidBrush(RGB(255, 23, 68));
+            RECT er1 = {bx - 4, by - 4, bx + 4, by + 4};
+            RECT er2 = {bx + blen - 4, by - 4, bx + blen + 4, by + 4};
+            FillRect(hdc, &er1, ebr); FillRect(hdc, &er2, ebr);
+            DeleteObject(ebr);
+        }
+
+        for (int i = 0; i < 2; i++) {
+            if (!shieldPylons[i].active) continue;
+            int px = (int)shieldPylons[i].x;
+            int py = (int)shieldPylons[i].y;
+            for (int k = 0; k < MAX_ENEMIES; k++) {
+                if (e[k].active && (e[k].type == 6 || e[k].type == 3 || e[k].type == 11 || e[k].type == 12)) {
+                    HPEN tPen = CreatePen(PS_SOLID, 1, RGB(255, 215, 0));
+                    HGDIOBJ oldP = SelectObject(hdc, tPen);
+                    MoveToEx(hdc, px, py, NULL);
+                    LineTo(hdc, (int)e[k].x + 10, (int)e[k].y + 10);
+                    SelectObject(hdc, oldP); DeleteObject(tPen);
+                }
+            }
+            HBRUSH pbr = CreateSolidBrush(RGB(255, 215, 0));
+            HGDIOBJ oldB = SelectObject(hdc, pbr);
+            HPEN pPen = CreatePen(PS_SOLID, 1, RGB(255, 255, 255));
+            HGDIOBJ oldP = SelectObject(hdc, pPen);
+            Ellipse(hdc, px - 6, py - 6, px + 6, py + 6);
+            HBRUSH cbr = CreateSolidBrush(RGB(255, 255, 255));
+            SelectObject(hdc, cbr);
+            Ellipse(hdc, px - 2, py - 2, px + 2, py + 2);
+            SelectObject(hdc, oldB); SelectObject(hdc, oldP);
+            DeleteObject(pbr); DeleteObject(cbr); DeleteObject(pPen);
+        }
+    }
 }
 
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
@@ -3697,7 +4302,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 } else if (gameState == STATE_HELP) {
                     SelectObject(memDC, hFontTitle);
                     SetTextColor(memDC, RGB(0, 229, 255));
-                    TextOutA(memDC, W/2 - 50, 22, "HOW TO PLAY", 11);
+                    TextOutA(memDC, W/2 - 50, 16, "HOW TO PLAY", 11);
                     SelectObject(memDC, hFontHUD);
                     SetTextColor(memDC, RGB(255, 255, 255));
                     char* lines[] = {
@@ -3705,26 +4310,27 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         "SPACE / CLICK : Fire Weapon",
                         "C / F4        : Cycle Fighter Chassis",
                         "P / [||]      : Pause Game",
-                        "M             : Toggle Sound Mute",
+                        "M             : Sound Mute",
                         "",
-                        "--- LOOP 11 SYSTEMS ---",
-                        "J : Hyper-Jump Warp Drive",
-                        "W : Deploy Drone Wing",
-                        "O : Overcharge Hyper-Mode",
-                        "T : Time Stop Chrono-Field",
-                        "D : Tactical Dash Burst",
-                        "B : Smart Bomb Subsystems",
-                        "S : Hyper Shield Barricade",
+                        "--- SUBSYSTEMS & TACTICS ---",
+                        "J:Hyper-Jump   W:Deploy Drones",
+                        "O:Overcharge   T:Time/Phase Sync",
+                        "D:Dash & Vent  B:Smart Bomb",
+                        "S:Hyper Shield Barricade",
                         "",
-                        "--- POWERUP PODS ---",
-                        "S:Spread L:Laser H:Shield",
-                        "B:Bomb R:Rapid T:Time"
+                        "--- 6 CAMPAIGN SECTORS ---",
+                        "S1:Kuiper Debris (Kinetic Shards)",
+                        "S2:Ion Rift (Range Damp/EMP)",
+                        "S3:Vulcanus (Heat / Flares)",
+                        "S4:Phased Graveyard (Q-Pods)",
+                        "S5:Citadel Gates (Shield Pylons)",
+                        "S6:Dreadnought Siege (Meltdown)"
                     };
                     for (int i = 0; i < 18; i++) {
-                        TextOutA(memDC, 20, 44 + i * 15, lines[i], lstrlenA(lines[i]));
+                        TextOutA(memDC, 12, 38 + i * 14, lines[i], lstrlenA(lines[i]));
                     }
                     SetTextColor(memDC, RGB(255, 234, 0));
-                    TextOutA(memDC, W/2 - 110, H - 28, "Press [H], [ESC], or Click to return", 36);
+                    TextOutA(memDC, W/2 - 110, H - 24, "Press [H], [ESC], or Click to return", 36);
                 } else if (gameState == STATE_LEADERBOARD) {
                     SelectObject(memDC, hFontTitle);
                     SetTextColor(memDC, RGB(0, 229, 255));
@@ -3755,8 +4361,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         }
                     }
 
+                    DrawCampaignSectorEffectsGDI(memDC, frameCount);
+
                     for (int i = 0; i < MAX_ENEMIES; i++) {
-                        if (e[i].active) DrawEnemyShipGDI(memDC, e[i].x, e[i].y, e[i].type, e[i].cloaked, e[i].hp, e[i].maxHp, frameCount);
+                        if (e[i].active) DrawEnemyShipGDI(memDC, e[i].x, e[i].y, e[i].type, e[i].cloaked, e[i].hp, e[i].maxHp, frameCount, e[i].phased);
                     }
 
                     if (bossActive) DrawBossGDI(memDC, bossX, bossY, frameCount);
@@ -3881,10 +4489,22 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
                     // HUD
                     SetTextColor(memDC, RGB(255, 255, 255));
-                    int sec = (wave <= 4) ? 1 : ((wave <= 8) ? 2 : ((wave <= 12) ? 3 : ((wave <= 16) ? 4 : 5)));
+                    int sec = GetSector(wave);
                     char hudStr[64];
-                    wsprintfA(hudStr, "SCORE:%d HI:%d W:%d/20 [S%d]", score, highScore, wave, sec);
+                    wsprintfA(hudStr, "SC:%d HI:%d W:%d/20 S%d", score, highScore, wave, sec);
                     TextOutA(memDC, 10, 6, hudStr, lstrlenA(hudStr));
+
+                    if (sec == 3 || heatGauge > 0) {
+                        char hStr[48];
+                        wsprintfA(hStr, "HEAT:%d%% %s", (int)heatGauge, heatGauge >= 100.0f ? "[JAM! D:VENT]" : (heatGauge > 70.0f ? "[WARN]" : ""));
+                        SetTextColor(memDC, heatGauge >= 100.0f ? RGB(255, 23, 68) : (heatGauge > 70.0f ? RGB(255, 145, 0) : RGB(255, 234, 0)));
+                        TextOutA(memDC, 172, 6, hStr, lstrlenA(hStr));
+                    } else if (sec == 4) {
+                        char pStr[48];
+                        wsprintfA(pStr, "PHASE:%s", spectralPhaseTimer > 0 ? "SYNC 2X" : "DESYNC");
+                        SetTextColor(memDC, spectralPhaseTimer > 0 ? RGB(0, 230, 118) : RGB(179, 136, 255));
+                        TextOutA(memDC, 172, 6, pStr, lstrlenA(pStr));
+                    }
 
                     char statStr[96];
                     wsprintfA(statStr, "SHD:%d/%d  HP:%d/%d  B:%d  Drones:[W]%d/2  [C]%s", shieldActive, maxShields, p.hp, p.maxHp, bombCount, droneCount, chassisTags[playerChassis]);

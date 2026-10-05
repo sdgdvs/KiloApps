@@ -411,7 +411,7 @@ window.addEventListener('beforeunload', () => {
 
   // --- GAME MODES ---
   const MODES = [
-    { name: 'Classic 20-Wave Campaign', desc: '20 Waves with Stage 20 Alien Mothership Boss' },
+    { name: 'Classic Campaign (6 Sectors)', desc: '5 Unique Hazard Sectors leading to Sector 6 Dreadnought Siege' },
     { name: 'Endurance Wave Storm', desc: 'Relentless enemy storm, scaling speed & asteroids' },
     { name: 'Boss Rush Challenge', desc: 'Non-stop Boss encounters back-to-back' }
   ];
@@ -515,6 +515,62 @@ window.addEventListener('beforeunload', () => {
   let escort = { active: false, x: 0, y: 0, dy: 0, hp: 0, maxHp: 0 };
   let pathGatesActive = false;
   let pathGatesY = 0;
+
+  // --- CAMPAIGN EXPANSION (6 DISTINCT SECTORS & SIGNATURE MECHANICS) ---
+  const secNames = [
+    "KUIPER DEBRIS FIELD",
+    "IONIZED NEBULA RIFT",
+    "MAGMA FOUNDRY OF VULCANUS",
+    "PHASED VOID GRAVEYARD",
+    "CITADEL ORBITAL APPROACH",
+    "DREADNOUGHT SIEGE"
+  ];
+  function getSector(w) {
+    if (w <= 3) return 1;
+    if (w <= 6) return 2;
+    if (w <= 9) return 3;
+    if (w <= 12) return 4;
+    if (w <= 15) return 5;
+    return 6;
+  }
+
+  // Level 1: Slingshot Wells & Kinetic Shards
+  let slingshotWells = [
+    { x: W * 0.32, y: H * 0.42, r: 62, pull: 0.8 },
+    { x: W * 0.72, y: H * 0.62, r: 54, pull: -0.7 }
+  ];
+  let kineticShards = [];
+
+  // Level 2: Lightning Arcs & EMP Storm
+  let lightningArcs = [];
+  let empTimer = 420;
+  let empFlash = 0;
+  let empSlowTimer = 0;
+
+  // Level 3: Heat Gauge & Solar Flares
+  let heatGauge = 0;
+  let overheatTimer = 0;
+  let solarFlareTimer = 0;
+  let solarFlareWarning = false;
+  let solarFlareActive = false;
+  let solarFlareY = 220;
+
+  // Level 4: Spectral Phase Synchronization
+  let spectralPhaseTimer = 0;
+
+  // Level 5: Shield Pylons & Laser Barrier Gates
+  let shieldPylons = [
+    { x: 42, y: 70, hp: 80, maxHp: 80, active: false },
+    { x: W - 62, y: 70, hp: 80, maxHp: 80, active: false }
+  ];
+  let laserBarriers = [
+    { y: 210, x: 45, vx: 1.6, len: 120, active: false },
+    { y: 350, x: W - 165, vx: -1.8, len: 120, active: false }
+  ];
+
+  // Level 6: Dreadnought Core Meltdown
+  let dreadCoreMeltdown = false;
+  let meltdownTimer = 0;
 
   // Deep Space Shifting Nebulae
   let nebulae = [
@@ -1168,8 +1224,9 @@ window.addEventListener('beforeunload', () => {
     if (timeStopCooldown <= 0 && timeStopTimer <= 0) {
       timeStopTimer = 375; // 6 seconds
       timeStopCooldown = 600; // 10 seconds CD
+      spectralPhaseTimer = 450; // Sector 4: Synchronizes dimensions with spectral phase!
       playSound(3);
-      showToast('⏳ CHRONO TIME STOP ENGAGED!', 'info', 1800);
+      showToast('⏳ CHRONO-SHIFT ENGAGED! SPECTRAL SYNC ACTIVE!', 'info', 1800);
       addExplosion(W / 2, H / 2, 40, '#00e5ff');
     } else {
       showToast(`Time Stop on cooldown (${Math.ceil(timeStopCooldown / 60)}s)`, 'warning', 1500);
@@ -1186,7 +1243,23 @@ window.addEventListener('beforeunload', () => {
       invincibleTimer = 125; // 2 seconds invincibility
       dashCooldown = playerChassis === 2 ? 210 : 300; // Void Phantom: 30% faster cooldown
       playSound(2);
-      showToast('💨 Tactical Dash Burst!', 'info', 1500);
+      if (heatGauge > 0) {
+        addShockwave(p.x + 10, p.y + 10, 95, '#ff3d00');
+        for (let i = enemies.length - 1; i >= 0; i--) {
+          let e = enemies[i];
+          let d = Math.hypot(e.x + 10 - (p.x + 10), e.y + 10 - (p.y + 10));
+          if (d < 95) {
+            e.hp -= 35;
+            addExplosion(e.x + 10, e.y + 10, 16, '#ff6d00');
+            if (e.hp <= 0) handleEnemyDefeat(e, i);
+          }
+        }
+        heatGauge = 0;
+        overheatTimer = 0;
+        showToast('🔥 THERMAL HEAT VENTED! RADIAL BLAST! 🔥', 'info', 1800);
+      } else {
+        showToast('💨 Tactical Dash Burst!', 'info', 1500);
+      }
       addExplosion(p.x + 10, p.y + 10, 25, '#00e5ff');
     } else {
       showToast(`Dash on cooldown (${Math.ceil(dashCooldown / 60)}s)`, 'warning', 1500);
@@ -1642,6 +1715,26 @@ window.addEventListener('beforeunload', () => {
     shockwaves = []; debris = []; shieldRipples = []; muzzleFlashes = [];
     boss = null;
     escort.active = false; pathGatesActive = false;
+
+    // Reset Campaign Level States
+    kineticShards = [];
+    lightningArcs = [];
+    empTimer = 420;
+    empFlash = 0;
+    empSlowTimer = 0;
+    heatGauge = 0;
+    overheatTimer = 0;
+    solarFlareTimer = 0;
+    solarFlareWarning = false;
+    solarFlareActive = false;
+    spectralPhaseTimer = 0;
+    shieldPylons[0].active = false; shieldPylons[0].hp = 80;
+    shieldPylons[1].active = false; shieldPylons[1].hp = 80;
+    laserBarriers[0].active = false;
+    laserBarriers[1].active = false;
+    dreadCoreMeltdown = false;
+    meltdownTimer = 0;
+
     gameState = STATE_PLAYING;
     playSound(3);
 
@@ -1660,48 +1753,50 @@ window.addEventListener('beforeunload', () => {
   function spawnEnemy() {
     if (boss || modeIndex === 2) return;
 
-    let sec = (wave <= 4) ? 1 : ((wave <= 8) ? 2 : ((wave <= 12) ? 3 : ((wave <= 16) ? 4 : 5)));
+    let sec = getSector(wave);
     let t = Math.floor(randomFloat() * 100);
     let type, dx = 0;
     if (sec === 1) {
-      // Sector 1: Perimeter Belt - Scouts, Chasers, Asteroids, occasional Zigzag
-      if (t < 40) type = 0;
-      else if (t < 70) type = 1;
-      else if (t < 88) type = 5;
-      else { type = 4; dx = (randomFloat() < 0.5 ? 1.1 : -1.1); }
+      // Sector 1: Kuiper Debris Field - Heavy Asteroids, Scouts, Chasers
+      if (t < 35) type = 5;      // Ice/Iron Asteroid
+      else if (t < 55) type = 9; // Giant Asteroid
+      else if (t < 80) type = 0; // Scout Interceptor
+      else type = 1;             // Chaser
     } else if (sec === 2) {
-      // Sector 2: Nebula Corridor - Saucers, Zigzags, Kamikaze, Asteroids
-      if (t < 25) type = 0;
-      else if (t < 45) type = 2;
-      else if (t < 65) { type = 4; dx = (randomFloat() < 0.5 ? 1.1 : -1.1); }
-      else if (t < 82) type = 7;
-      else type = 5;
+      // Sector 2: Ionized Nebula Rift - Grouped Saucers, Interceptors, Zigzags
+      if (t < 35) type = 0;
+      else if (t < 60) type = 2; // Saucer
+      else if (t < 80) { type = 4; dx = (randomFloat() < 0.5 ? 1.2 : -1.2); } // Zigzag
+      else type = 7;             // Kamikaze
     } else if (sec === 3) {
-      // Sector 3: Fleet Corridor - Heavies, Frigates, Saucers, Kamikaze
-      if (t < 20) type = 1;
-      else if (t < 40) type = 2;
-      else if (t < 62) type = 3;
-      else if (t < 82) { type = 6; dx = (randomFloat() < 0.5 ? 0.9 : -0.9); }
+      // Sector 3: Magma Foundry of Vulcanus - Heavies, Frigates, Solar Interceptors
+      if (t < 30) type = 3;      // Heavy Armored
+      else if (t < 55) type = 6; // Frigate
+      else if (t < 80) type = 1;
       else type = 7;
     } else if (sec === 4) {
-      // Sector 4: Volcanic Expanse - Stealth, Frigates, Heavies, Giant Asteroids
-      if (t < 20) type = 3;
-      else if (t < 42) type = 8;
-      else if (t < 64) { type = 6; dx = (randomFloat() < 0.5 ? 0.9 : -0.9); }
-      else if (t < 82) type = 9;
-      else type = 7;
+      // Sector 4: Phased Void Graveyard - Phased Stealth Deltas, Void Phantoms
+      if (t < 35) type = 8;      // Stealth Fighter (Phased)
+      else if (t < 65) type = 10;// Void Phantom (Phased)
+      else if (t < 85) type = 3;
+      else type = 6;
+    } else if (sec === 5) {
+      // Sector 5: Citadel Orbital Approach - Armored Defense Drones, Convoy Cruisers
+      if (t < 30) type = 11;     // Elite Armored Drone
+      else if (t < 60) type = 6; // Convoy Frigate
+      else if (t < 85) type = 3;
+      else type = 10;
     } else {
-      // Sector 5: Citadel Core - Maximum danger squad
-      if (t < 18) type = 3;
-      else if (t < 38) type = 8;
-      else if (t < 58) { type = 6; dx = (randomFloat() < 0.5 ? 0.9 : -0.9); }
-      else if (t < 78) type = 10;
-      else type = 11;
+      // Sector 6: Dreadnought Siege Perimeter
+      if (t < 25) type = 11;
+      else if (t < 50) type = 10;
+      else if (t < 75) type = 6;
+      else type = 8;
     }
 
     let hp = (type === 11) ? 35 : ((type === 10) ? 28 : ((type === 9) ? 50 : (type === 8 ? 18 : (type === 7 ? 8 : (type === 6 ? 45 : (type === 5 ? 25 : (type === 3 ? 12 : (type === 2 ? 6 : (type === 4 ? 4 : 2)))))))));
     let ew = (type === 6 || type === 9 || type === 11 || type === 12) ? 36 : 20;
-    enemies.push({ x: randomFloat() * (W - ew), y: -24, type: type, hp: hp, maxHp: hp, dx: dx, timer: 0, cloaked: false, isElite: (type >= 10) });
+    enemies.push({ x: randomFloat() * (W - ew), y: -24, type: type, hp: hp, maxHp: hp, dx: dx, timer: 0, cloaked: false, isElite: (type >= 10), phased: false });
   }
 
   function spawnFormation(type) {
@@ -1782,7 +1877,7 @@ window.addEventListener('beforeunload', () => {
       powerups.push({ x: boss.x + boss.w / 2 - 8, y: boss.y + 20, dy: 1.5, type: 3 }); // Shield / Repair Pod
     }
 
-    if (boss.isMothership || wave >= 20) {
+    if (boss.isMothership || wave >= 16 || (boss.isDreadnought && boss.level >= 5)) {
       boss = null;
       gameState = STATE_VICTORY;
       playSound(6);
@@ -1804,8 +1899,54 @@ window.addEventListener('beforeunload', () => {
     }
   }
 
+  // --- SECTOR SIGNATURE COMBAT MECHANICS ---
+  function spawnKineticShards(x, y, count = 5) {
+    for (let i = 0; i < count; i++) {
+      let angle = (i * Math.PI * 2 / count) + (randomFloat() - 0.5) * 0.5;
+      let spd = 2.5 + randomFloat() * 2.5;
+      kineticShards.push({
+        x: x, y: y,
+        vx: Math.cos(angle) * spd,
+        vy: Math.sin(angle) * spd,
+        life: 55, maxLife: 55,
+        dmg: 20,
+        col: '#80d8ff'
+      });
+    }
+    playSound(1);
+  }
+
+  function triggerChainLightning(sx, sy, sourceIdx) {
+    let targets = [];
+    for (let k = 0; k < enemies.length; k++) {
+      if (k === sourceIdx) continue;
+      let dist = Math.hypot(enemies[k].x + 10 - sx, enemies[k].y + 10 - sy);
+      if (dist < 80) targets.push(enemies[k]);
+      if (targets.length >= 2) break;
+    }
+    for (let t of targets) {
+      lightningArcs.push({ x1: sx, y1: sy, x2: t.x + 10, y2: t.y + 10, life: 10, col: '#00e5ff' });
+      t.hp -= 12;
+      addExplosion(t.x + 10, t.y + 10, 6, '#00e5ff');
+    }
+  }
+
   // --- SHOOTING LOGIC ---
   function shoot() {
+    if (overheatTimer > 0) {
+      if (frameCount % 20 === 0) showToast('🔥 WEAPONS OVERHEATED! PRESS [D] TO VENT! 🔥', 'warning', 700);
+      return;
+    }
+    let curSec = getSector(wave);
+    if (curSec === 3) {
+      heatGauge = Math.min(100, heatGauge + (playerChassis === 1 ? 1.6 : 2.2));
+      if (heatGauge >= 100) {
+        overheatTimer = 150;
+        showToast('🔥 WEAPON OVERHEAT JAM! [D] TO VENT! 🔥', 'warning', 2000);
+        playSound(1);
+      }
+    }
+
     shotsFired++;
     playSound(laserTimer > 0 ? 5 : (p.weaponType === 3 ? 10 : 0));
     if (laserTimer > 0) return;
@@ -1815,14 +1956,14 @@ window.addEventListener('beforeunload', () => {
       let dxs = [0, -2.5, 2.5, -1.25, 1.25, -3.75, 3.75];
       let dys = [-9, -8, -8, -8.5, -8.5, -7, -7];
       for (let i = 0; i < maxB; i++) {
-        bullets.push({ x: p.x + 8, y: p.y, dx: dxs[i], dy: dys[i], type: 0 });
+        bullets.push({ x: p.x + 8, y: p.y, dx: dxs[i], dy: dys[i], type: 0, range: 0 });
       }
       addMuzzleFlash(p.x + 10, p.y - 2, '#00e5ff', 8);
     } else if (p.weaponType === 3) {
       let maxB = 1 + weaponLevel;
       let dxs = [0, -2, 2];
       for (let i = 0; i < maxB; i++) {
-        bullets.push({ x: p.x + 6, y: p.y, dx: dxs[i], dy: -5, type: 1 });
+        bullets.push({ x: p.x + 6, y: p.y, dx: dxs[i], dy: -5, type: 1, range: 0 });
       }
       addMuzzleFlash(p.x + 10, p.y - 2, '#d500f9', 10);
     } else {
@@ -1832,7 +1973,7 @@ window.addEventListener('beforeunload', () => {
       let dxs = [0, 0, 0, 0];
       if (weaponLevel === 2) { dxs[2] = -1.5; dxs[3] = 1.5; }
       for (let i = 0; i < maxB; i++) {
-        bullets.push({ x: p.x + offsets[i], y: p.y, dx: dxs[i], dy: dys[i], type: 0 });
+        bullets.push({ x: p.x + offsets[i], y: p.y, dx: dxs[i], dy: dys[i], type: 0, range: 0 });
       }
       addMuzzleFlash(p.x + 4, p.y, '#00e5ff', 5);
       addMuzzleFlash(p.x + 14, p.y, '#00e5ff', 5);
@@ -1997,30 +2138,31 @@ window.addEventListener('beforeunload', () => {
     skillBar.style.display = 'flex';
     updateSkillButtonsUI();
 
-    // Mode Progression (20 Waves)
+    // Mode Progression (6 Distinct Sectors across 20 Waves)
     if (modeIndex === 0) {
       let targetWave = Math.min(20, 1 + Math.floor(score / 650));
       if (targetWave > wave) {
-        let oldSec = (wave <= 4) ? 1 : ((wave <= 8) ? 2 : ((wave <= 12) ? 3 : ((wave <= 16) ? 4 : 5)));
+        let oldSec = getSector(wave);
         wave = targetWave;
-        let newSec = (wave <= 4) ? 1 : ((wave <= 8) ? 2 : ((wave <= 12) ? 3 : ((wave <= 16) ? 4 : 5)));
+        let newSec = getSector(wave);
         if (newSec !== oldSec) {
-          const secNames = ["PERIMETER BELT", "NEBULA CORRIDOR", "DREADNOUGHT FLEET", "VOLCANIC EXPANSE", "MOTHERSHIP CITADEL"];
           showToast(`⚡ ENTERING SECTOR ${newSec}: ${secNames[newSec - 1]}`, 'info', 3500);
+          if (newSec === 5) {
+            shieldPylons[0].active = true; shieldPylons[0].hp = 80;
+            shieldPylons[1].active = true; shieldPylons[1].hp = 80;
+            laserBarriers[0].active = true; laserBarriers[1].active = true;
+          }
         }
         playSound(3);
         if (wave === 3 && !eliteSquadActive && !boss) spawnEliteSquad(0);
         else if (wave === 4 && !bombardmentActive && !boss) triggerBombardment();
-        else if (wave === 5 && !boss) spawnBoss(1);
-        else if (wave === 7 && !eliteSquadActive && !boss) spawnEliteSquad(1);
-        else if (wave === 8 && !boss) spawnBoss(2); // Dreadnought Siege!
-        else if (wave === 10 && !boss) spawnBoss(3);
+        else if (wave === 6 && !boss) spawnBoss(1);
+        else if (wave === 8 && !eliteSquadActive && !boss) spawnEliteSquad(1);
+        else if (wave === 9 && !boss) spawnBoss(2);
         else if (wave === 11 && !eliteSquadActive && !boss) spawnEliteSquad(2);
-        else if (wave === 12 && !bombardmentActive && !boss) triggerBombardment();
+        else if (wave === 12 && !boss) spawnBoss(3);
         else if (wave === 15 && !boss) spawnBoss(4);
-        else if (wave === 16 && !boss) spawnBoss(5); // Dreadnought Siege Rematch!
-        else if (wave === 17 && !eliteSquadActive && !boss) spawnEliteSquad(Math.floor(randomFloat() * 3));
-        else if (wave === 20 && !boss) spawnBoss(6); // Alien Mothership Boss
+        else if (wave >= 16 && !boss) spawnBoss(5); // Level 6: Dreadnought Siege!
         else if (wave % 4 === 0) spawnFormation(randomFloat() < 0.33 ? 9 : (randomFloat() < 0.5 ? 7 : 8));
       }
     } else if (modeIndex === 1) {
@@ -2046,6 +2188,128 @@ window.addEventListener('beforeunload', () => {
         addShieldRipple(p.x + 10, p.y + 10, '#00e5ff');
         playSound(2);
         showToast(`🛡️ Shield Layer Recharged! (${p.shields}/${p.maxShields})`, 'info', 1600);
+      }
+    }
+
+    // --- SECTOR ENVIRONMENTAL HAZARDS & SIGNATURE MECHANICS ---
+    let curSec = getSector(wave);
+
+    // Level 1: Micro-gravity slingshot wells
+    if (curSec === 1) {
+      for (let sw of slingshotWells) {
+        let dx = sw.x - (p.x + 10);
+        let dy = sw.y - (p.y + 10);
+        let dist = Math.hypot(dx, dy);
+        if (dist < sw.r + 20 && dist > 2) {
+          p.x += (dx / dist) * sw.pull * 1.2;
+          p.y += (dy / dist) * sw.pull * 1.2;
+        }
+      }
+    }
+
+    // Level 1: Kinetic shards update and enemy collision
+    for (let i = kineticShards.length - 1; i >= 0; i--) {
+      let ks = kineticShards[i];
+      ks.x += ks.vx; ks.y += ks.vy; ks.life--;
+      if (ks.life <= 0 || ks.x < -10 || ks.x > W + 10 || ks.y < -10 || ks.y > H + 10) {
+        kineticShards.splice(i, 1);
+        continue;
+      }
+      for (let k = enemies.length - 1; k >= 0; k--) {
+        let e = enemies[k];
+        let ew = (e.type === 6 || e.type === 9 || e.type === 11 || e.type === 12) ? 36 : 20;
+        let eh = ew;
+        if (ks.x >= e.x && ks.x <= e.x + ew && ks.y >= e.y && ks.y <= e.y + eh) {
+          e.hp -= ks.dmg;
+          addExplosion(ks.x, ks.y, 8, '#80d8ff');
+          kineticShards.splice(i, 1);
+          if (e.hp <= 0) handleEnemyDefeat(e, k);
+          break;
+        }
+      }
+    }
+
+    // Level 2: Lightning Arcs & EMP Storm
+    for (let i = lightningArcs.length - 1; i >= 0; i--) {
+      lightningArcs[i].life--;
+      if (lightningArcs[i].life <= 0) lightningArcs.splice(i, 1);
+    }
+    if (curSec === 2) {
+      empTimer--;
+      if (empTimer <= 0) {
+        empTimer = 450;
+        empFlash = 15;
+        empSlowTimer = 180;
+        playSound(4);
+        showToast('⚡ EMP STORM DISCHARGE! ENEMY SHIELDS SCRAMBLED! ⚡', 'info', 2500);
+        for (let e of enemies) {
+          if (e.shield) e.shield = 0;
+          e.hp = Math.max(1, e.hp - 10);
+        }
+      }
+    }
+    if (empFlash > 0) empFlash--;
+    if (empSlowTimer > 0) empSlowTimer--;
+
+    // Level 3: Heat Gauge cooling & Sweeping Horizontal Solar Flares
+    if (curSec === 3) {
+      if (overheatTimer > 0) {
+        overheatTimer--;
+        heatGauge = Math.max(0, heatGauge - 0.6);
+      } else {
+        heatGauge = Math.max(0, heatGauge - 0.3);
+      }
+
+      solarFlareTimer++;
+      if (solarFlareTimer % 450 === 0) {
+        solarFlareWarning = true;
+        solarFlareActive = false;
+        solarFlareY = 160 + (frameCount % 180);
+        showToast('⚠️ WARNING: SOLAR FLARE IMMINENT! ⚠️', 'warning', 2000);
+      } else if (solarFlareTimer % 450 === 90) {
+        solarFlareWarning = false;
+        solarFlareActive = true;
+        playSound(9);
+        screenShake = 16;
+      } else if (solarFlareTimer % 450 === 150) {
+        solarFlareActive = false;
+      }
+
+      if (solarFlareActive) {
+        if (p.y >= solarFlareY - 15 && p.y <= solarFlareY + 65) {
+          if (frameCount % 10 === 0) playerHit();
+        }
+        for (let k = enemies.length - 1; k >= 0; k--) {
+          let e = enemies[k];
+          if (e.y >= solarFlareY - 15 && e.y <= solarFlareY + 65) {
+            e.hp -= 2;
+            if (e.hp <= 0) handleEnemyDefeat(e, k);
+          }
+        }
+      }
+    } else {
+      heatGauge = Math.max(0, heatGauge - 0.5);
+      solarFlareWarning = false;
+      solarFlareActive = false;
+    }
+
+    // Level 4: Spectral Phase Synchronization
+    if (spectralPhaseTimer > 0) spectralPhaseTimer--;
+    if (curSec === 4) {
+      for (let e of enemies) {
+        e.phased = (e.type === 8 || e.type === 10 || e.type === 11 || e.type === 6) && (((Math.floor((frameCount + e.x) / 160)) % 2) === 1);
+      }
+    }
+
+    // Level 5: Moving Laser Barriers
+    if (curSec === 5) {
+      for (let lb of laserBarriers) {
+        lb.active = true;
+        lb.x += lb.vx;
+        if (lb.x < 30 || lb.x + lb.len > W - 30) lb.vx = -lb.vx;
+        if (p.y + 16 > lb.y - 4 && p.y + 4 < lb.y + 8 && p.x + 16 > lb.x && p.x + 4 < lb.x + lb.len) {
+          if (frameCount % 15 === 0) playerHit();
+        }
       }
     }
 
@@ -2104,6 +2368,14 @@ window.addEventListener('beforeunload', () => {
       let b = bullets[i];
       b.y += b.dy;
       b.x += b.dx;
+      if (curSec === 2 && b.type === 0) {
+        b.range = (b.range || 0) + Math.abs(b.dy);
+        if (b.range > 270) {
+          addExplosion(b.x, b.y, 2, '#00e5ff');
+          bullets.splice(i, 1);
+          continue;
+        }
+      }
       if (b.y < -10 || b.x < -10 || b.x > W + 10) bullets.splice(i, 1);
     }
 
@@ -2143,6 +2415,36 @@ window.addEventListener('beforeunload', () => {
           eBullets.push({ x: boss.x + 20, y: boss.y + 40, dx: -0.9, dy: 1.6 });
           eBullets.push({ x: boss.x + 100, y: boss.y + 40, dx: 0.9, dy: 1.6 });
           eBullets.push({ x: boss.x + 60, y: boss.y + 50, dx: (frameCount % 2 === 0 ? -0.4 : 0.4), dy: 1.9 });
+        }
+
+        // Phase 2: Coordinated Orbital Lance Bombardments once generators are destroyed
+        if (boss.genL <= 0 && boss.genR <= 0 && timeStopTimer === 0) {
+          if (frameCount % 240 === 0 && !bombardmentActive) {
+            triggerBombardment();
+          }
+        }
+
+        // Phase 3: Core Meltdown Sequence (<25% HP)
+        if (boss.hp <= boss.maxHp * 0.25 && !boss.coreMeltdown) {
+          boss.coreMeltdown = true;
+          dreadCoreMeltdown = true;
+          meltdownTimer = 800;
+          showToast('⚠️ DREADNOUGHT CORE BREACH — MELTDOWN IMMINENT ⚠️', 'warning', 4000);
+          screenShake = 22;
+          playSound(4);
+        }
+        if (boss.coreMeltdown && timeStopTimer === 0 && frameCount % 35 === 0) {
+          let angle = (frameCount * 0.2) % (Math.PI * 2);
+          for (let a = 0; a < 4; a++) {
+            let rad = angle + a * (Math.PI / 2);
+            eBullets.push({
+              x: boss.x + boss.w / 2,
+              y: boss.y + boss.h / 2,
+              dx: Math.cos(rad) * 2.0,
+              dy: Math.sin(rad) * 2.0
+            });
+          }
+          addExplosion(boss.x + boss.w / 2 + (randomFloat() - 0.5) * 50, boss.y + boss.h / 2 + (randomFloat() - 0.5) * 30, 16, '#ff1744');
         }
 
         // Bullets vs Dreadnought Subsystems
@@ -2405,16 +2707,40 @@ window.addEventListener('beforeunload', () => {
       for (let j = bullets.length - 1; j >= 0; j--) {
         let b = bullets[j];
         if (b.x < e.x + ew && b.x + 4 > e.x && b.y < e.y + eh && b.y + 10 > e.y) {
+          // Check Pylon Shield in Sector 5
+          if (curSec === 5 && (shieldPylons[0].active || shieldPylons[1].active) && (e.type === 6 || e.type === 3 || e.type === 11 || e.type === 12)) {
+            addShieldRipple(b.x, b.y, '#ffd700');
+            bullets.splice(j, 1);
+            continue;
+          }
+          // Check Phased Enemy in Sector 4
+          if (e.phased) {
+            if (spectralPhaseTimer <= 0 && timeStopTimer <= 0) {
+              addExplosion(b.x, b.y, 2, 'rgba(170, 0, 255, 0.4)');
+              bullets.splice(j, 1);
+              continue;
+            }
+          }
+
           if (e.cloaked && randomFloat() < 0.75) {
             // Miss cloaked fighter
           } else {
             shotsHit++;
             let dmg = (b.type === 1 ? 6 : 1) * (overchargeTimer > 0 ? 3 : 1);
+            if (e.phased && (spectralPhaseTimer > 0 || timeStopTimer > 0)) {
+              dmg *= 2; // Critical hit on synchronized phase target!
+              addExplosion(b.x, b.y, 8, '#d500f9');
+            }
             e.hp -= dmg;
             overchargeEnergy = Math.min(100, overchargeEnergy + 1);
             hyperJumpEnergy = Math.min(100, hyperJumpEnergy + 1);
             addExplosion(b.x, b.y, b.type === 1 ? 6 : 3, (overchargeTimer > 0 ? '#ffea00' : '#00e5ff'));
             bullets.splice(j, 1);
+
+            // Sector 2: Electric Arc Chaining
+            if (curSec === 2 && (b.type === 1 || p.weaponType === 1 || p.weaponType === 3 || spreadTimer > 0 || plasmaTimer > 0)) {
+              triggerChainLightning(e.x + ew / 2, e.y + eh / 2, i);
+            }
           }
 
           if (e.hp <= 0) {
@@ -2427,12 +2753,38 @@ window.addEventListener('beforeunload', () => {
       if (e.y > H + 20) enemies.splice(i, 1);
     }
 
+    // Bullets vs Shield Pylons in Sector 5
+    if (curSec === 5) {
+      for (let j = bullets.length - 1; j >= 0; j--) {
+        let b = bullets[j];
+        for (let pIdx = 0; pIdx < 2; pIdx++) {
+          let py = shieldPylons[pIdx];
+          if (py.active && b.x >= py.x - 14 && b.x <= py.x + 14 && b.y >= py.y - 14 && b.y <= py.y + 14) {
+            let dmg = (b.type === 1 ? 8 : 2) * (overchargeTimer > 0 ? 3 : 1);
+            py.hp -= dmg;
+            shotsHit++;
+            addExplosion(b.x, b.y, 5, '#ffd700');
+            bullets.splice(j, 1);
+            if (py.hp <= 0) {
+              py.active = false;
+              addShockwave(py.x, py.y, 85, '#ffd700');
+              score += 1000 * comboMultiplier;
+              playSound(1);
+              showToast('💥 SHIELD PYLON SHATTERED! CONVOY VULNERABLE!', 'info', 2000);
+            }
+            break;
+          }
+        }
+      }
+    }
+
     // Enemy Bullets Update
     for (let i = eBullets.length - 1; i >= 0; i--) {
       let eb = eBullets[i];
       if (timeStopTimer === 0) {
-        eb.y += eb.dy;
-        eb.x += eb.dx;
+        let spdMult = (empSlowTimer > 0) ? 0.5 : 1.0;
+        eb.y += eb.dy * spdMult;
+        eb.x += eb.dx * spdMult;
       }
 
       if (eb.y > H || eb.x < 0 || eb.x > W) {
@@ -2535,6 +2887,11 @@ window.addEventListener('beforeunload', () => {
     playSound(1);
     addExplosion(e.x + 10, e.y + 10, e.isElite ? 24 : (e.type === 6 ? 20 : 12), e.isElite ? '#ffd700' : '#ff9100');
 
+    // Level 1: Asteroids shatter into lethal kinetic shards that damage other hostiles
+    if (e.type === 5 || e.type === 9) {
+      spawnKineticShards(e.x + 10, e.y + 10, e.type === 9 ? 6 : 4);
+    }
+
     if (score > highScore) {
       highScore = score;
       safeSetStorage('kspace_highscore', highScore);
@@ -2542,9 +2899,11 @@ window.addEventListener('beforeunload', () => {
     safeSetStorage('kspace_totalkills', totalKills);
 
     // Powerup Drop Chance (smooth float speed)
+    let curSec = getSector(wave);
     let dropChance = e.isElite ? 0.8 : 0.22;
     if (randomFloat() < dropChance) {
-      powerups.push({ x: e.x, y: e.y, dy: 0.9, type: Math.floor(randomFloat() * 12) });
+      let pType = (curSec === 4 && randomFloat() < 0.45) ? 12 : Math.floor(randomFloat() * 12);
+      powerups.push({ x: e.x, y: e.y, dy: 0.9, type: pType });
     }
 
     enemies.splice(index, 1);
@@ -2573,6 +2932,11 @@ window.addEventListener('beforeunload', () => {
       p.weaponType = 3;
       showToast('⚡ PLASMA CANNON ENGAGED!', 'info', 1800);
       playSound(2);
+    }
+    else if (type === 12) {
+      spectralPhaseTimer = 480;
+      showToast('⚡ QUANTUM PHASE POD! SPECTRAL SYNC ACTIVE!', 'info', 2000);
+      playSound(3);
     }
   }
 
@@ -3021,6 +3385,9 @@ window.addEventListener('beforeunload', () => {
     ctx.save();
     ctx.translate(e.x, e.y);
     if (e.cloaked) ctx.globalAlpha = 0.25;
+    else if (e.phased) {
+      ctx.globalAlpha = (spectralPhaseTimer > 0) ? 0.9 : 0.28;
+    }
 
     // Enemy Rear Thruster Flames
     if (e.type !== 5 && e.type !== 9 && e.type !== 13) {
@@ -3223,6 +3590,23 @@ window.addEventListener('beforeunload', () => {
       }
     }
 
+    // Golden Pylon Shield Bubble in Sector 5
+    let curSec = getSector(wave);
+    if (curSec === 5 && (shieldPylons[0].active || shieldPylons[1].active) && (e.type === 6 || e.type === 3 || e.type === 11 || e.type === 12)) {
+      ctx.strokeStyle = '#ffd700';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.arc(10, 10, 18, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+
+    // Spectral Phase Indicator in Sector 4
+    if (e.phased) {
+      ctx.strokeStyle = (spectralPhaseTimer > 0) ? '#d500f9' : 'rgba(170, 0, 255, 0.5)';
+      ctx.lineWidth = 1.5;
+      ctx.strokeRect(-2, -2, 24, 24);
+    }
+
     ctx.restore();
   }
 
@@ -3402,13 +3786,15 @@ window.addEventListener('beforeunload', () => {
     let pulse = 1 + Math.sin(frame * 0.15) * 0.15;
     ctx.scale(pulse, pulse);
 
-    const colors = ['#00e676', '#00e5ff', '#3d5aff', '#ff1744', '#ffea00', '#d500f9', '#ffd700', '#00b0ff', '#ff64c8', '#ffea00', '#00e5ff', '#d500f9'];
-    const labels = ['S', 'L', 'H', 'B', 'R', 'T', 'Y', 'D', 'W', 'O', 'W', 'P'];
+    const colors = ['#00e676', '#00e5ff', '#3d5aff', '#ff1744', '#ffea00', '#d500f9', '#ffd700', '#00b0ff', '#ff64c8', '#ffea00', '#00e5ff', '#d500f9', '#b388ff'];
+    const labels = ['S', 'L', 'H', 'B', 'R', 'T', 'Y', 'D', 'W', 'O', 'W', 'P', 'Q'];
 
     ctx.fillStyle = colors[pu.type] || '#fff';
     ctx.beginPath();
     let pulseAmt = (frame % 20 < 10) ? 1 : 0;
-    if (pu.type === 11) {
+    if (pu.type === 12) {
+      ctx.arc(0, 0, 8.5 + pulseAmt, 0, Math.PI * 2);
+    } else if (pu.type === 11) {
       ctx.arc(0, 0, 8 + pulseAmt, 0, Math.PI * 2);
     } else if (pu.type === 10) {
       ctx.moveTo(0, -8 - pulseAmt); ctx.lineTo(8+pulseAmt, 4); ctx.lineTo(4, 8+pulseAmt); ctx.lineTo(0, 4); ctx.lineTo(-4, 8+pulseAmt); ctx.lineTo(-8-pulseAmt, 4); ctx.closePath();
@@ -3586,6 +3972,7 @@ window.addEventListener('beforeunload', () => {
       for (let e of enemies) drawEnemyShip(e, frameCount);
       if (boss) drawBoss(boss, frameCount);
       for (let pu of powerups) drawPowerupItem(pu, frameCount);
+      drawCampaignSectorEffects(ctx, frameCount);
 
       // Debris & Particles
       for (let i = debris.length - 1; i >= 0; i--) {
@@ -3622,7 +4009,17 @@ window.addEventListener('beforeunload', () => {
       }
 
       // Top Banner Alerts
-      if (eliteSquadTimer > 0) {
+      if (dreadCoreMeltdown) {
+        ctx.fillStyle = '#b41414'; ctx.fillRect(15, 38, W - 30, 20);
+        ctx.fillStyle = (frameCount % 4 < 2) ? '#ffea00' : '#ffffff';
+        ctx.font = 'bold 10px monospace'; ctx.textAlign = 'center';
+        ctx.fillText('! DREADNOUGHT CORE BREACH — MELTDOWN IMMINENT !', W / 2, 52);
+      } else if (spectralPhaseTimer > 0) {
+        ctx.fillStyle = 'rgba(106, 27, 154, 0.85)'; ctx.fillRect(15, 38, W - 30, 20);
+        ctx.fillStyle = '#e1bee7';
+        ctx.font = 'bold 10px monospace'; ctx.textAlign = 'center';
+        ctx.fillText('⚡ SPECTRAL PHASE SYNCHRONIZED [CRIT x2] ⚡', W / 2, 52);
+      } else if (eliteSquadTimer > 0) {
         ctx.fillStyle = '#b41414'; ctx.fillRect(15, 38, W - 30, 20);
         ctx.fillStyle = (frameCount % 4 < 2) ? '#ffea00' : '#ffffff';
         ctx.font = 'bold 11px monospace'; ctx.textAlign = 'center';
@@ -3644,6 +4041,148 @@ window.addEventListener('beforeunload', () => {
     }
     
     ctx.restore();
+  }
+
+  function drawCampaignSectorEffects(ctx, frame) {
+    let curSec = getSector(wave);
+
+    // Level 1: Slingshot Wells & Kinetic Shards
+    if (curSec === 1) {
+      for (let sw of slingshotWells) {
+        ctx.save();
+        ctx.strokeStyle = 'rgba(0, 229, 255, 0.4)';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.arc(sw.x, sw.y, sw.r, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.strokeStyle = 'rgba(128, 216, 255, 0.25)';
+        ctx.beginPath();
+        ctx.arc(sw.x, sw.y, sw.r * 0.6 + Math.sin(frame * 0.1) * 6, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.fillStyle = 'rgba(0, 229, 255, 0.12)';
+        ctx.beginPath();
+        ctx.arc(sw.x, sw.y, 10, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
+    }
+
+    // Kinetic Shards (from shattered asteroids)
+    for (let ks of kineticShards) {
+      ctx.save();
+      ctx.fillStyle = ks.col || '#80d8ff';
+      ctx.shadowColor = '#00e5ff';
+      ctx.shadowBlur = 4;
+      ctx.fillRect(ks.x - 2, ks.y - 2, 4, 4);
+      ctx.restore();
+    }
+
+    // Level 2: Lightning Arcs & EMP Flash
+    for (let arc of lightningArcs) {
+      ctx.save();
+      ctx.strokeStyle = arc.col || '#00e5ff';
+      ctx.lineWidth = 2;
+      ctx.shadowColor = '#00e5ff';
+      ctx.shadowBlur = 8;
+      ctx.beginPath();
+      ctx.moveTo(arc.x1, arc.y1);
+      let midX = (arc.x1 + arc.x2) / 2 + (randomFloat() - 0.5) * 16;
+      let midY = (arc.y1 + arc.y2) / 2 + (randomFloat() - 0.5) * 16;
+      ctx.lineTo(midX, midY);
+      ctx.lineTo(arc.x2, arc.y2);
+      ctx.stroke();
+      ctx.restore();
+    }
+    if (empFlash > 0) {
+      ctx.fillStyle = `rgba(0, 229, 255, ${empFlash / 25})`;
+      ctx.fillRect(0, 0, W, H);
+    }
+
+    // Level 3: Sweeping Horizontal Solar Flares
+    if (curSec === 3) {
+      if (solarFlareWarning) {
+        ctx.save();
+        ctx.fillStyle = 'rgba(255, 61, 0, 0.2)';
+        ctx.fillRect(0, solarFlareY - 10, W, 70);
+        ctx.strokeStyle = (frame % 4 < 2) ? '#ffea00' : '#ff1744';
+        ctx.lineWidth = 1.5;
+        ctx.strokeRect(4, solarFlareY - 10, W - 8, 70);
+        ctx.fillStyle = (frame % 4 < 2) ? '#ffea00' : '#ffffff';
+        ctx.font = 'bold 11px monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText('⚠️ SOLAR FLARE IMMINENT — TAKE EVASIVE ACTION ⚠️', W / 2, solarFlareY + 28);
+        ctx.restore();
+      } else if (solarFlareActive) {
+        ctx.save();
+        let grad = ctx.createLinearGradient(0, solarFlareY, 0, solarFlareY + 60);
+        grad.addColorStop(0, 'rgba(255, 23, 68, 0.85)');
+        grad.addColorStop(0.5, 'rgba(255, 234, 0, 0.95)');
+        grad.addColorStop(1, 'rgba(255, 61, 0, 0.85)');
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, solarFlareY, W, 60);
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, solarFlareY + 25, W, 10);
+        ctx.restore();
+      }
+    }
+
+    // Level 5: Moving Laser Barriers
+    if (curSec === 5) {
+      for (let lb of laserBarriers) {
+        if (!lb.active) continue;
+        ctx.save();
+        // Emitter Nodes
+        ctx.fillStyle = '#ff1744';
+        ctx.fillRect(lb.x - 6, lb.y - 6, 12, 12);
+        ctx.fillRect(lb.x + lb.len - 6, lb.y - 6, 12, 12);
+        // Laser Beam
+        ctx.strokeStyle = (frame % 2 === 0) ? '#ff1744' : '#ffea00';
+        ctx.lineWidth = 2.5;
+        ctx.shadowColor = '#ff1744';
+        ctx.shadowBlur = 8;
+        ctx.beginPath();
+        ctx.moveTo(lb.x, lb.y);
+        ctx.lineTo(lb.x + lb.len, lb.y);
+        ctx.stroke();
+        ctx.restore();
+      }
+
+      // Shield Pylons & Tether Lines to Convoy Cruisers
+      for (let py of shieldPylons) {
+        if (!py.active) continue;
+        ctx.save();
+        // Tether lines to protected cruisers
+        for (let e of enemies) {
+          if (e.type === 6 || e.type === 3 || e.type === 11 || e.type === 12) {
+            ctx.strokeStyle = (frame % 4 < 2) ? 'rgba(255, 215, 0, 0.45)' : 'rgba(255, 234, 0, 0.25)';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(py.x, py.y);
+            ctx.lineTo(e.x + 10, e.y + 10);
+            ctx.stroke();
+          }
+        }
+        // Pylon Diamond Body
+        ctx.fillStyle = '#ffd700';
+        ctx.shadowColor = '#ffd700';
+        ctx.shadowBlur = 10;
+        ctx.beginPath();
+        ctx.moveTo(py.x, py.y - 12);
+        ctx.lineTo(py.x + 12, py.y);
+        ctx.lineTo(py.x, py.y + 12);
+        ctx.lineTo(py.x - 12, py.y);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath(); ctx.arc(py.x, py.y, 4, 0, Math.PI * 2); ctx.fill();
+        // Health Bar
+        ctx.fillStyle = '#ff1744';
+        ctx.fillRect(py.x - 12, py.y + 15, 24, 3);
+        ctx.fillStyle = '#00e676';
+        ctx.fillRect(py.x - 12, py.y + 15, Math.floor(24 * (py.hp / py.maxHp)), 3);
+        ctx.restore();
+      }
+    }
   }
 
   function drawSciFiHUDFrame(ctx, frame) {
@@ -3708,7 +4247,7 @@ window.addEventListener('beforeunload', () => {
     ctx.font = '12px monospace';
     ctx.textAlign = 'left';
     ctx.fillText(isReplaying ? `REP: ${score}` : `SCORE: ${score}`, 10, 18);
-    let sec = (wave <= 4) ? 1 : ((wave <= 8) ? 2 : ((wave <= 12) ? 3 : ((wave <= 16) ? 4 : 5)));
+    let sec = getSector(wave);
     ctx.fillText(`W:${wave}/20 [S${sec}]`, 175, 18);
 
     // Visible Pause [||] and Help [?] buttons in HUD
@@ -3767,6 +4306,19 @@ window.addEventListener('beforeunload', () => {
     ctx.fillText('BOM', bombX, 33);
     for (let i = 0; i < p.bombs; i++) {
       ctx.fillRect(bombX + 22 + i * 10, 26, 7, 8);
+    }
+
+    // HEAT GAUGE (Sector 3 or when heat > 0)
+    let curSec = getSector(wave);
+    if (curSec === 3 || heatGauge > 0) {
+      ctx.fillStyle = (overheatTimer > 0 && frameCount % 6 < 3) ? '#ff1744' : '#ff9100';
+      ctx.font = 'bold 9px monospace';
+      ctx.textAlign = 'left';
+      ctx.fillText(`HEAT:${Math.floor(heatGauge)}%`, bombX + 22 + p.bombs * 10 + 8, 33);
+      if (overheatTimer > 0) {
+        ctx.fillStyle = (frameCount % 4 < 2) ? '#ffea00' : '#ff1744';
+        ctx.fillText('[D]VENT', bombX + 22 + p.bombs * 10 + 64, 33);
+      }
     }
 
     // DRONES & CHASSIS
@@ -3873,22 +4425,19 @@ window.addEventListener('beforeunload', () => {
       "[F5] / [F9]   : Quicksave / Quickload",
       "[M]           : Toggle Genesis FM Audio",
       "",
-      "--- SHIP DEFENSES ---",
-      "SHIELDS : 3 Energy Layers (Recharges out of combat)",
-      "HULL HP : Multiple Hits + 1.5s I-Frame Buffer",
+      "--- 6 CAMPAIGN SECTORS ---",
+      "S1: Kuiper Debris - Asteroid Kinetic Shards & Slingshots",
+      "S2: Ionized Nebula - Damped Laser, Chain Arcs, EMP Storm",
+      "S3: Magma Foundry - Heat Gauge, [D] Heat Vent, Solar Flares",
+      "S4: Phased Graveyard - Phased Hosts, Spectral Sync [T]/Q-Pod",
+      "S5: Citadel Approach - Laser Barrier Gates, Shield Pylons",
+      "S6: Dreadnought Siege - Dual Gens, Lances, Core Meltdown",
       "",
       "--- COMBAT SUBSYSTEMS ---",
-      "[J] : Hyper-Jump Warp Drive",
-      "[W] : Deploy Companion Drone",
-      "[O] : Overcharge Hyper-Mode",
-      "[T] : Time Stop (Chrono)",
-      "[D] : Tactical Dash (Invinc.)",
-      "[B] : Smart Bomb (Screen Wipe)",
-      "[S] : Hyper Shield (Barrier)",
-      "",
-      "--- POWERUP PODS ---",
-      "S:Spread L:Laser P:Plasma H:Shield Pod",
-      "B:Bomb R:Rapid T:Time W:Drone O:Core"
+      "[J] : Hyper-Jump Warp Drive   [D] : Dash / Vent Heat",
+      "[W] : Deploy Companion Drone  [T] : Time / Phase Sync",
+      "[O] : Overcharge Hyper-Mode   [B] : Smart Bomb Screen Wipe",
+      "[S] : Hyper Shield Barrier    Q   : Quantum Phase Pod"
     ];
     for (let i = 0; i < instructions.length; i++) {
       ctx.fillText(instructions[i], W / 2, 65 + i * 15);
