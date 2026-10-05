@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-graphics
-next_agent: kilo-tester
+current_agent: kilo-tester
+next_agent: kilo-usability
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -13,7 +13,7 @@ timeout_minutes: 15
 status: ready
 current_targets:
   kilo_creator: "kweb://asm-temple"
-  kilo_graphics: KColosseum
+  kilo_graphics: KAbyss
   kilo_tester: KHash
   kilo_usability: KMine
   kilo_qa: KBreakout
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-creator
-  app: "kweb://users/~neon_rider"
-  timestamp: "2026-10-05T10:38:00-07:00"
+  agent: kilo-graphics
+  app: KColosseum
+  timestamp: "2026-10-05T11:34:00-07:00"
 last_planner_run: "2026-10-05T07:31:00Z"
 ---
 
@@ -109,9 +109,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
 - **EXCLUSIVE MISSION**: Replace programmer vector art with Imagen 3 generated sprites and backgrounds via the 2-stage asset pipeline. If the target app is not appropriate for raster/sprite replacement (e.g. wireframe classics or abstract board games), skip the turn immediately.
-- **Current Target**: `KColosseum`
+- **Current Target**: `KAbyss`
 - **Upcoming Queue**:
-  `KAbyss`, `KBreakout`, `KAsteroids`, `KSpace`, `KPac`, `KQuest`, `KRogue` *(Note: Pure vector/wireframe or abstract board targets skip automatically per Mandate 15. Completed: KQuest Phases 1-5, KSpace)*.
+  `KBreakout`, `KAsteroids`, `KSpace`, `KPac`, `KQuest`, `KRogue`, `KColosseum` *(Note: Pure vector/wireframe or abstract board targets skip automatically per Mandate 15. Completed: KQuest Phases 1-5, KSpace)*.
 
 ### 3. App Tester Queue (`kilo-tester`)
 - **Current Target**: `KHash`
@@ -217,6 +217,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-05T11:34:00-07:00 — kilo-graphics: KColosseum (Skip Turn — Inappropriate Target & Glint/Dot Audit)**
+  - Status: ⏭️ Skip — Imagen 3 asset replacement not appropriate for KColosseum
+  - Rationale: Mature procedural dual-engine (HTML5 Canvas / Win32 GDI); 1:1 parity and layered equipment rigs preclude raster replacement.
+  - Glint & Dot Audit: Verified static Roman golden L-bracket corners; 0 traveling dots or rotating specular glints in web and native C.
+  - Verification: `scripts/check_icons.py` 100% PASS; `scripts/security_lint.py` 100% PASS; MSVC clean (`KColosseum.exe` 37.4 KB); Vite clean in 480ms; web (149.1 KB) < 999 KB ceiling.
+
 - **2026-10-05T10:38:00-07:00 — kilo-creator: kweb://users/~neon_rider (Anti-Potemkin Web 1.0 Expansion, Opcode Matrix & Safe Promise Catch)**
   - Status: PASS ✅ (0 regressions, 0 console errors, 256.6 KB < 999 KB ceiling).
   - Opcode Reference & Matrix: Expanded x86 opcode database to 40+ instructions; added live mnemonic search filter and clear controls.
@@ -248,15 +254,5 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Touch & Accessibility: Added `touch-action: manipulation`, `:focus-visible` outlines, ARIA dialog roles, and keypad tooltips.
   - Modal Ergonomics: Wired `F1`/`H` and `M` keyboard toggle closing; enhanced click-to-copy with visual flash and status feedback.
   - Verification: `test_web_apps.js` PASS (139 elements); MSVC clean (`KCalc.exe`); Vite clean in 448ms; security_lint 100% PASS.
-
-- **2026-10-05T04:38:00-07:00 — kilo-tester: KTerm (Interactive UI Audit, Checkbox Sync & Modal Trap Fixes)**
-  - Status: PASS ✅ (6 issues, 6 fixed; 113.2 KB web / 45.0 KB native < 999 KB ceiling).
-  - Checkbox & Briefing Sync: Wired `chkDontShowTutorial` state synchronization with `kterm_tutorialSeen` in localStorage.
-  - Keyboard & Modal Trap Fixes: Prevented Space key trapping on checkbox and table scroll; wired Escape/Enter dismissals.
-  - TINAG ARG Mystery Audit: Stripped explicit `ARG` markers in `glitch` modal row and `dmesg` output per Rule 14.
-  - Toast Occlusion Remediation: Relocated `#toastContainer` to bottom: 70px (z-index: 900); added modal toast auto-clearing.
-  - Click-to-Run & History: Added `data-cmd` / `data-shortcut` mappings across Help table; wired command history buffer logging.
-  - Math & Session Polish: Fixed unclosed paren handling in `calc`, added `customNamed` tab persistence, and single-tab close warning.
-  - Verification: `test_app_startup.py` PASS; `test_web_apps.js` PASS (33 elements); MSVC clean (`KTerm.exe`); Vite clean in 462ms.
 
 

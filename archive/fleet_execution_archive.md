@@ -4,6 +4,16 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-05T04:38:00-07:00 — kilo-tester: KTerm (Interactive UI Audit, Checkbox Sync & Modal Trap Fixes)**
+  - Status: PASS ✅ (6 issues, 6 fixed; 113.2 KB web / 45.0 KB native < 999 KB ceiling).
+  - Checkbox & Briefing Sync: Wired `chkDontShowTutorial` state synchronization with `kterm_tutorialSeen` in localStorage.
+  - Keyboard & Modal Trap Fixes: Prevented Space key trapping on checkbox and table scroll; wired Escape/Enter dismissals.
+  - TINAG ARG Mystery Audit: Stripped explicit `ARG` markers in `glitch` modal row and `dmesg` output per Rule 14.
+  - Toast Occlusion Remediation: Relocated `#toastContainer` to bottom: 70px (z-index: 900); added modal toast auto-clearing.
+  - Click-to-Run & History: Added `data-cmd` / `data-shortcut` mappings across Help table; wired command history buffer logging.
+  - Math & Session Polish: Fixed unclosed paren handling in `calc`, added `customNamed` tab persistence, and single-tab close warning.
+  - Verification: `test_app_startup.py` PASS; `test_web_apps.js` PASS (33 elements); MSVC clean (`KTerm.exe`); Vite clean in 462ms.
+
 - **2026-10-05T02:45:00-07:00 — kilo-creator: kweb://geocities (Homestead Explorer, Cross-Fleet Signal Board & RTDB Sync)**
   - Status: PASS ✅ (0 regressions, clean builds, 444.9 KB < 999 KB ceiling).
   - Homestead Explorer: Added 20 authentic 1999 neighborhood homepages across 5 zones + Netscape 4.0 Communicator CRT modal reader.
