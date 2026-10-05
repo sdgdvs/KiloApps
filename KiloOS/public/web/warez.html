@@ -1070,6 +1070,76 @@
     box-shadow: 0 0 6px #ef4444;
   }
 
+  /* Tab 11 & 12: Intro Arena & Keymaker Lab */
+  .intro-canvas-wrap {
+    position: relative;
+    background: #000;
+    border: 1px solid #1e3a29;
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 10px;
+  }
+  .intro-hud {
+    position: absolute;
+    top: 8px;
+    left: 10px;
+    font-size: 10px;
+    color: #4ade80;
+    background: rgba(5, 8, 12, 0.75);
+    padding: 3px 8px;
+    border-radius: 3px;
+    border: 1px solid rgba(0, 255, 102, 0.3);
+    pointer-events: none;
+    font-family: 'Consolas', monospace;
+  }
+  .intro-hud-right {
+    position: absolute;
+    top: 8px;
+    right: 10px;
+    font-size: 10px;
+    color: #38bdf8;
+    background: rgba(5, 8, 12, 0.75);
+    padding: 3px 8px;
+    border-radius: 3px;
+    border: 1px solid rgba(0, 240, 255, 0.3);
+    pointer-events: none;
+    font-family: 'Consolas', monospace;
+  }
+  .keymaker-math-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 11px;
+    font-family: 'Consolas', monospace;
+  }
+  .keymaker-math-table th {
+    background: #0b1728;
+    color: var(--accent-cyan);
+    padding: 6px 8px;
+    border-bottom: 2px solid #1e3a29;
+    text-align: center;
+    font-size: 10px;
+  }
+  .keymaker-math-table td {
+    padding: 6px 8px;
+    border-bottom: 1px solid #14243b;
+    text-align: center;
+  }
+  .step-pass { color: #4ade80; font-weight: bold; }
+  .step-fail { color: #f87171; font-weight: bold; background: rgba(239, 68, 68, 0.15); }
+  .asm-code-block {
+    background: #02050b;
+    border: 1px solid #1e3a29;
+    border-radius: 4px;
+    padding: 10px;
+    font-family: 'Consolas', monospace;
+    font-size: 11px;
+    color: #cbd5e1;
+    line-height: 1.35;
+    max-height: 280px;
+    overflow-y: auto;
+    white-space: pre;
+  }
+
   footer {
     margin-top: 30px;
     padding: 14px 10px;
@@ -1113,7 +1183,7 @@
     </div>
     <div style="display:flex; gap:10px; align-items:center; font-size:10px;">
       <span id="globalActiveBeaconsCount" style="color:#38bdf8;">1 BEACON SYNCHRONIZED</span>
-      <button class="btn-filter" style="padding:2px 8px; font-size:10px; color:var(--accent-cyan); border-color:#0284c7;" onclick="switchMainTab('signals', document.querySelectorAll('.tab-btn')[9])">[ 📡 OPEN SIGNALS LAB ]</button>
+      <button class="btn-filter" style="padding:2px 8px; font-size:10px; color:var(--accent-cyan); border-color:#0284c7;" onclick="switchMainTab('signals', document.getElementById('tabBtnSignals'))">[ 📡 OPEN SIGNALS LAB ]</button>
     </div>
   </div>
 
@@ -1123,12 +1193,14 @@
     <button class="tab-btn" onclick="switchMainTab('sandbox', this)">[ 🛠️ x86 CRACK SANDBOX ]</button>
     <button class="tab-btn" onclick="switchMainTab('jukebox', this)">[ 🔊 CHIPTUNE JUKEBOX &amp; TRACKER ]</button>
     <button class="tab-btn" onclick="switchMainTab('workbench', this)">[ ⚡ CRACKTRO WORKBENCH ]</button>
+    <button class="tab-btn" onclick="switchMainTab('intros', this)">[ 🌌 64KB / 4KB INTRO ARENA ]</button>
+    <button class="tab-btn" onclick="switchMainTab('keymaker', this)">[ 🔑 KEYMAKER ALGORITHM LAB ]</button>
     <button class="tab-btn" onclick="switchMainTab('generator', this)">[ 📜 ANSI / NFO STUDIO ]</button>
     <button class="tab-btn" onclick="switchMainTab('stego', this)">[ 🔍 NFO STEGO FORENSICS ]</button>
     <button class="tab-btn" onclick="switchMainTab('composer', this)">[ 🎹 TRACKER COMPOSER ]</button>
     <button class="tab-btn" onclick="switchMainTab('charts', this)">[ 🏆 SCENE CHARTS &amp; CHALLENGE ]</button>
     <button class="tab-btn" onclick="switchMainTab('shoutbox', this)">[ 💬 UNDERGROUND SHOUTBOX ]</button>
-    <button class="tab-btn" onclick="switchMainTab('signals', this)">[ 📡 SUBTERRANEAN SIGNALS ]</button>
+    <button class="tab-btn" id="tabBtnSignals" onclick="switchMainTab('signals', this)">[ 📡 SUBTERRANEAN SIGNALS ]</button>
   </div>
 
   <!-- ================================================================= -->
@@ -1949,6 +2021,224 @@ Tested clean on Windows 98 SE and DOS 7.1.</textarea>
     </div>
   </div>
 
+  <!-- ================================================================= -->
+  <!-- TAB 11: 64KB & 4KB DEMOSCENE INTRO ARENA                          -->
+  <!-- ================================================================= -->
+  <div id="tab-intros" class="tab-content">
+    <div class="section-box">
+      <div class="section-title">
+        <div style="display:flex; align-items:center; gap:8px;">
+          <span>🌌 1999 PC DEMOSCENE 64KB &amp; 4KB REAL-TIME INTRO THEATRE</span>
+          <span style="font-size:10px; color:#facc15;">ASSEMBLY '99 &bull; THE PARTY '99 COMPETITION ENTRIES</span>
+        </div>
+        <span id="introStatusBadge" style="font-size:10px; color:#10b981;">STATUS: 60 FPS ACTIVE</span>
+      </div>
+
+      <div style="font-size:11px; color:#94a3b8; margin-bottom:12px; line-height:1.5;">
+        In 1999, European demoscene groups competed in strict <strong>4,096-byte</strong> and <strong>65,536-byte</strong> executable intro categories.
+        All graphics, 3D raymarching, fractal voxel math, and procedural FM audio are synthesized in real time via hand-optimized procedural algorithms with zero external assets.
+      </div>
+
+      <!-- Controls -->
+      <div class="control-bar" style="margin-bottom:10px;">
+        <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+          <span style="font-size:11px; color:#94a3b8; font-weight:bold;">DEMO ENTRY:</span>
+          <select id="introSelect" class="field-select" style="width:280px;" onchange="loadDemosceneIntro(this.value)">
+            <option value="mindflux">FLARELIGHT - Mindflux '99 (64KB 1st Prize Winner)</option>
+            <option value="voxelm">PARALAX - Voxel Mars '99 (32KB Terrain Raycaster)</option>
+            <option value="echocarrier">ECHOPLEX - Echo Carrier 4KB (4,096-Byte Strict Intro)</option>
+            <option value="firecopper">SKID VECTOR - Fire &amp; Copper Dream (Classic Demoscene FX)</option>
+          </select>
+          <span id="introCategoryBadge" style="padding:2px 8px; border-radius:3px; font-size:10px; font-weight:bold; background:rgba(0, 240, 255, 0.15); color:var(--accent-cyan); border:1px solid #0284c7;">
+            [64KB PC INTRO CATEGORY]
+          </span>
+        </div>
+
+        <div style="display:flex; gap:6px; flex-wrap:wrap; align-items:center;">
+          <button class="btn-filter" id="btnIntroPlay" style="border-color:#10b981; color:#34d399;" onclick="toggleIntroPlayback()">[ ▶ PAUSE / RESUME ]</button>
+          <button class="btn-filter" onclick="resetIntroDemo()">[ ↺ RESTART ]</button>
+          <button class="btn-filter" id="btnIntroRes" onclick="toggleIntroResolution()">[ MODE: 640x360 SVGA ]</button>
+          <button class="btn-filter" id="btnIntroAudio" style="border-color:#ca8a04; color:#facc15;" onclick="toggleIntroAudioSync()">[ ♫ YM2612 AUDIO: ON ]</button>
+          <button class="btn-filter" id="btnIntroFlight" style="display:none;" onclick="toggleVoxelFlightMode()">[ ✈ FLIGHT: AUTOPILOT ]</button>
+        </div>
+      </div>
+
+      <!-- Voxel Controls (Visible only for Voxel Mars) -->
+      <div id="voxelControlBar" style="display:none; gap:14px; align-items:center; margin-bottom:10px; background:#071220; padding:6px 12px; border-radius:4px; border:1px solid #14243b; flex-wrap:wrap; font-size:11px;">
+        <span style="color:#f97316; font-weight:bold;">VOXEL FLIGHT CONTROLS:</span>
+        <div style="display:flex; gap:6px; align-items:center;">
+          <span style="color:#94a3b8;">Altitude:</span>
+          <input type="range" id="rngVoxelAltitude" min="60" max="240" value="130" style="width:75px;" oninput="updateVoxelParams()" />
+          <span id="lblVoxelAltitude" style="color:var(--accent-cyan);">130m</span>
+        </div>
+        <div style="display:flex; gap:6px; align-items:center;">
+          <span style="color:#94a3b8;">Pitch:</span>
+          <input type="range" id="rngVoxelPitch" min="-40" max="40" value="0" style="width:75px;" oninput="updateVoxelParams()" />
+          <span id="lblVoxelPitch" style="color:var(--accent-green);">0°</span>
+        </div>
+        <div style="display:flex; gap:6px; align-items:center;">
+          <span style="color:#94a3b8;">Fog Distance:</span>
+          <input type="range" id="rngVoxelFog" min="40" max="100" value="70" style="width:75px;" oninput="updateVoxelParams()" />
+          <span id="lblVoxelFog" style="color:var(--accent-yellow);">70</span>
+        </div>
+        <span style="font-size:10px; color:#64748b;">(Use ARROW KEYS / WASD to steer camera manually)</span>
+      </div>
+
+      <!-- Main Canvas Screen -->
+      <div class="intro-canvas-wrap">
+        <canvas id="introCanvas" width="640" height="360" style="width:100%; display:block; image-rendering:pixelated;"></canvas>
+        <div class="intro-hud" id="introHudLeft">FPS: 60 • 16.6ms • VGA 640x360</div>
+        <div class="intro-hud-right" id="introHudRight">FLARELIGHT // MINDFLUX '99</div>
+      </div>
+
+      <!-- Disassembly & Source Inspector -->
+      <div style="display:grid; grid-template-columns: 1fr 2fr; gap:14px; margin-top:10px;">
+        <div style="background:#060f1c; border:1px solid #14243b; border-radius:4px; padding:10px;">
+          <div style="font-size:11px; color:var(--accent-cyan); font-weight:bold; margin-bottom:8px; border-bottom:1px dashed #14243b; padding-bottom:4px;">
+            📊 EXECUTABLE TELEMETRY &amp; MEMORY PROFILE
+          </div>
+          <div id="introTelemetryBox" style="font-size:11px; color:#94a3b8; line-height:1.6; font-family:'Consolas', monospace;">
+            <!-- Populated via JS -->
+          </div>
+          <div style="margin-top:12px;">
+            <button class="btn-gen" style="width:100%; font-size:11px; padding:6px 10px;" onclick="downloadActiveIntroAsm()">
+              [ 💾 DOWNLOAD COMPILABLE .ASM SOURCE ]
+            </button>
+          </div>
+        </div>
+
+        <div>
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+            <span style="font-size:11px; color:var(--accent-green); font-weight:bold;">x86 HAND-OPTIMIZED ASSEMBLY SOURCE CODE (NASM):</span>
+            <span id="introAsmLinesCount" style="font-size:10px; color:#38bdf8;">142 LINES</span>
+          </div>
+          <div class="asm-code-block" id="introAsmCodeDisplay">
+            <!-- Populated via JS -->
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================================================================= -->
+  <!-- TAB 12: CD-KEY & KEYMAKER ALGORITHM LAB                           -->
+  <!-- ================================================================= -->
+  <div id="tab-keymaker" class="tab-content">
+    <div class="section-box">
+      <div class="section-title">
+        <div style="display:flex; align-items:center; gap:8px;">
+          <span>🔑 1999 REVERSE ENGINEERING KEYMAKER &amp; PROTECTION ALGORITHM LAB</span>
+          <span style="font-size:10px; color:#38bdf8;">MATHEMATICAL BYTE DISSECTOR</span>
+        </div>
+        <span id="keymakerGlobalStatus" style="font-size:10px; color:#10b981;">ENGINE READY</span>
+      </div>
+
+      <div style="font-size:11px; color:#94a3b8; margin-bottom:12px; line-height:1.5;">
+        Step inside the algorithmic heart of 1999 demoscene key generation. Select a protection scheme below to inspect the Horner polynomial evaluations, weighted Luhn modulus checks, Ring-0 matrix transformations, and subterranean cipher seeds used to authenticate late-90s software.
+      </div>
+
+      <div class="control-bar" style="margin-bottom:12px;">
+        <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+          <span style="font-size:11px; color:#94a3b8; font-weight:bold;">PROTECTION SCHEME:</span>
+          <select id="keymakerSchemeSelect" class="field-select" style="width:310px;" onchange="loadKeymakerScheme(this.value)">
+            <option value="securom">SecuROM v2 Polynomial Checksum (Tremor III Arena)</option>
+            <option value="won_auth">WON Auth 13-Digit CD-Key Validator (Half-Cycle 1.1)</option>
+            <option value="safedisc">SafeDisc v1 Ring-0 Modulus Keygen (Surreal Tournament)</option>
+            <option value="voidcraft">VoidCraft 13-Digit Weighted Keygen (VoidCraft)</option>
+            <option value="subterranean">Subterranean Cipher Seed Keygen (Node 0x7F / ARG)</option>
+            <option value="laserlock">LaserLock Sector CRC-16 Keymaker (System Glitch 2)</option>
+          </select>
+        </div>
+
+        <div style="display:flex; gap:6px; flex-wrap:wrap; align-items:center;">
+          <button class="btn-gen" onclick="keymakerGenerateValid()">⚡ GENERATE VALID KEY</button>
+          <button class="btn-filter" style="border-color:#ef4444; color:#fca5a5;" onclick="keymakerGenerateInvalid()">❌ GENERATE INVALID KEY</button>
+          <button class="btn-filter" onclick="keymakerBatchGenerate()">⚡ BATCH (5 KEYS)</button>
+          <button class="btn-filter" style="border-color:#ca8a04; color:#facc15;" id="btnKeymakerAudio" onclick="toggleKeymakerChiptune()">♫ KEYGEN CHIPTUNE: OFF</button>
+        </div>
+      </div>
+
+      <!-- Key Input & Live Evaluation -->
+      <div style="background:#060f1c; border:1px solid #14243b; border-radius:4px; padding:12px; margin-bottom:14px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; flex-wrap:wrap; gap:6px;">
+          <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+            <span style="font-size:11px; color:var(--accent-cyan); font-weight:bold;">TEST SERIAL / REGISTRATION KEY:</span>
+            <input type="text" id="keymakerInputKey" class="search-input" style="width:260px; font-weight:bold; font-size:13px; color:var(--accent-yellow); letter-spacing:1px;" oninput="validateCurrentKeymakerKey()" />
+          </div>
+          <div id="keymakerValidationBadge" style="padding:4px 10px; border-radius:3px; font-size:11px; font-weight:bold; background:rgba(16, 185, 129, 0.2); color:#34d399; border:1px solid #10b981;">
+            [VALIDATED: ALL CHECKS PASS]
+          </div>
+        </div>
+
+        <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+          <button class="btn-filter" style="font-size:10px; padding:2px 8px;" onclick="copyKeymakerKey()">[ 📋 COPY KEY ]</button>
+          <button class="btn-filter" style="font-size:10px; padding:2px 8px;" onclick="downloadKeymakerNfo()">[ 💾 DOWNLOAD KEY REPORT .NFO ]</button>
+          <button class="btn-filter" style="font-size:10px; padding:2px 8px; border-color:#38bdf8; color:#38bdf8;" onclick="testKeyInSandbox()">[ 🛠️ TEST IN CRACK SANDBOX ]</button>
+          <span id="keymakerFormatRule" style="font-size:10px; color:#94a3b8;">Format: TREM-XXXX-XXXX-XXXX &bull; Horner polynomial eval mod 65521</span>
+        </div>
+      </div>
+
+      <!-- Special Subterranean ARG Intel Box (Revealed when Subterranean seed is entered) -->
+      <div id="keymakerSubterraneanBox" style="display:none; background:#040911; border:1px solid #ca8a04; border-radius:4px; padding:12px; margin-bottom:14px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; border-bottom:1px dashed #ca8a04; padding-bottom:4px;">
+          <span style="color:#facc15; font-weight:bold; font-size:11px;">📡 [SUBTERRANEAN RELAY 0x7F DETECTED — ARG TRANSPONDER LINK]</span>
+          <span style="color:#38bdf8; font-size:10px;">CARRIER: 1999.00 Hz</span>
+        </div>
+        <div style="font-size:11px; color:#cbd5e1; line-height:1.5; font-family:'Consolas', monospace;">
+          <span style="color:#38bdf8;">TRANSPONDER SERIAL</span> : <strong style="color:var(--accent-yellow);" id="argTransponderSerial">ECHO-7F19-9942-0127</strong><br>
+          <span style="color:#38bdf8;">RELAY GATEWAY</span>      : <strong style="color:#c084fc;">10.19.99.4</strong> (Subterranean Darknet Node 0x7F)<br>
+          <span style="color:#38bdf8;">RESIDUAL MEMORY HEAP</span>: <strong style="color:#4ade80;">0x007F1999</strong> (Sector 01 Access Key: <code>7F1999</code>)<br>
+          <span style="color:#38bdf8;">CORE DESTINATION</span>   : <strong style="color:#f43f5e;">10.19.99.127</strong> (Ghost Node 0x1999 / Deep Core)<br>
+          <span style="color:#94a3b8;">Seed Keyword matches internal courier protocol. Use transponder coordinates in KNet or Deep Core terminal.</span>
+        </div>
+      </div>
+
+      <!-- Step-by-Step Mathematical Evaluation Table -->
+      <div style="background:#02050b; border:1px solid #1e3a29; border-radius:4px; padding:10px; margin-bottom:14px; overflow-x:auto;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+          <span style="font-size:11px; color:var(--accent-cyan); font-weight:bold;">🔍 STEP-BY-STEP MATHEMATICAL BYTE DISSECTION</span>
+          <span id="keymakerFormulaLabel" style="font-size:10px; color:#facc15;">ALGORITHM: P(x) = sum(d_i * 31^(N-1-i)) mod 65521</span>
+        </div>
+        <table class="keymaker-math-table" id="keymakerMathTable">
+          <thead>
+            <tr>
+              <th>POS</th>
+              <th>CHAR</th>
+              <th>ASCII (HEX)</th>
+              <th>ASCII (DEC)</th>
+              <th>WEIGHT / OP</th>
+              <th>INTERMEDIATE</th>
+              <th>ACCUMULATOR</th>
+              <th>RESULT</th>
+            </tr>
+          </thead>
+          <tbody id="keymakerMathBody">
+            <!-- Populated dynamically via JS -->
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Batch Keys & Scheme Documentation -->
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:14px;">
+        <div style="background:#060f1c; border:1px solid #14243b; border-radius:4px; padding:10px;">
+          <div style="font-size:11px; color:var(--accent-yellow); font-weight:bold; margin-bottom:6px;">
+            📋 BATCH GENERATED KEY LIST:
+          </div>
+          <textarea id="keymakerBatchOutput" class="field-input" rows="6" readonly style="font-family:'Consolas', monospace; font-size:11px; color:#4ade80;"></textarea>
+        </div>
+
+        <div style="background:#060f1c; border:1px solid #14243b; border-radius:4px; padding:10px;">
+          <div style="font-size:11px; color:var(--accent-green); font-weight:bold; margin-bottom:6px;">
+            📖 REVERSE ENGINEERING TECHNICAL SPECIFICATION:
+          </div>
+          <div id="keymakerSpecDetails" style="font-size:10px; color:#94a3b8; line-height:1.5;">
+            <!-- Populated via JS -->
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Quick Nav to Clearnet & Webring -->
   <div class="section-box" style="text-align:center;">
     <div style="font-size:12px; color:#cbd5e1; margin-bottom:6px;">
@@ -2365,11 +2655,19 @@ function switchMainTab(tabId, btn) {
   const target = document.getElementById(`tab-${tabId}`);
   if (target) target.classList.add('active');
 
+  if (tabId !== 'intros' && typeof stopIntroArena === 'function') {
+    stopIntroArena();
+  }
+
   if (tabId === 'jukebox') {
     initAudio();
     startVizAnimation();
   } else if (tabId === 'workbench') {
     startWorkbenchAnimation();
+  } else if (tabId === 'intros') {
+    initIntroArena();
+  } else if (tabId === 'keymaker') {
+    initKeymakerLab();
   } else if (tabId === 'sandbox') {
     if (!sandboxActiveTarget) loadSandboxTarget('SurrealTournament.exe');
   } else if (tabId === 'charts') {
@@ -2380,6 +2678,7 @@ function switchMainTab(tabId, btn) {
     initComposer();
   } else if (tabId === 'signals') {
     initSubterraneanSignals();
+initKeymakerLab();
   }
 }
 
@@ -6037,6 +6336,1684 @@ function showNoticeToast(msg) {
 }
 
 // ==========================================
+// 16. 64KB & 4KB DEMOSCENE INTRO ARENA ENGINE
+// ==========================================
+let currentIntroId = 'mindflux';
+let isIntroPlaying = true;
+let introResolution = 'svga'; // 'svga' (640x360) or 'vga' (320x180)
+let introAudioSync = true;
+let introFlightMode = 'auto'; // 'auto' or 'manual'
+let introAnimId = null;
+let introTime = 0.0;
+let lastIntroFrameTime = performance.now();
+let introFpsCounter = { frames: 0, lastCheck: performance.now(), currentFps: 60 };
+
+// Voxel flight camera state
+const voxCam = {
+  x: 256,
+  y: 256,
+  altitude: 130,
+  pitch: 0,
+  fog: 70,
+  angle: 0.0,
+  speed: 1.5
+};
+const introKeys = {};
+
+// Doom Fire buffer state (160x90 virtual buffer)
+const FIRE_W = 160;
+const FIRE_H = 90;
+const fireBuffer = new Uint8Array(FIRE_W * FIRE_H);
+const firePalette = [];
+(function initFirePalette() {
+  for (let i = 0; i < 256; i++) {
+    let r = 0, g = 0, b = 0;
+    if (i < 64) {
+      r = Math.floor((i / 64) * 255);
+    } else if (i < 128) {
+      r = 255;
+      g = Math.floor(((i - 64) / 64) * 180);
+    } else if (i < 192) {
+      r = 255;
+      g = 180 + Math.floor(((i - 128) / 64) * 75);
+      b = Math.floor(((i - 128) / 64) * 80);
+    } else {
+      r = 255;
+      g = 255;
+      b = 80 + Math.floor(((i - 192) / 64) * 175);
+    }
+    firePalette.push(`rgb(${r},${g},${b})`);
+  }
+})();
+
+// Starfield state for intro
+const introStars = [];
+for (let i = 0; i < 250; i++) {
+  introStars.push({
+    x: (Math.random() - 0.5) * 600,
+    y: (Math.random() - 0.5) * 360,
+    z: Math.random() * 500 + 10,
+    color: Math.random() > 0.5 ? '#38bdf8' : '#34d399'
+  });
+}
+
+// 4 Intro Specifications and ASM Source Codes
+const INTRO_SPECS = {
+  mindflux: {
+    title: "FLARELIGHT - Mindflux '99",
+    category: "[64KB PC INTRO CATEGORY]",
+    telemetry: `• CATEGORY   : PC 64KB Executable Intro (Assembly '99 1st Prize)
+• FILE SIZE  : 61,440 bytes / 65,536 bytes (93.7% full)
+• SECTIONS   : .text: 44,280b | .data: 12,410b | .rsrc: 4,750b
+• TARGET CPU : Intel Pentium III 450MHz (x86 FPU + MMX)
+• GRAPHICS   : 3Dfx Glide / Software VGA Mode 13h + Phong Lighting
+• SYNTHESIS  : Yamaha YM2612 2-Operator FM Synthesizer (Zero Samples)`,
+    linesCount: "168 LINES",
+    asmSource: `; ==============================================================
+; FLARELIGHT PRESENTS: "MINDFLUX '99" - 64KB PC INTRO CATEGORY
+; WINNER: 1ST PRIZE PC INTRO @ MEKKA & SYMPOSIUM 1999
+; PURE HAND-OPTIMIZED x86 ASSEMBLY (NASM / FPU 387 INSTRUCTIONS)
+; ==============================================================
+[BITS 32]
+[ORG 0x00401000]
+
+section .text
+global _start
+
+_start:
+    ; 1. Initialize FPU hardware state
+    fninit
+    fldz
+    
+    ; 2. Initialize DirectDraw / VESA 2.0 320x200 32bpp framebuffer
+    push    dword 0x00000001
+    call    _InitGlideMiniDriver
+    
+    ; 3. Setup Yamaha YM2612 Procedural Sound Engine
+    push    dword 0x00001999
+    call    _InitYmFmSynth
+    
+.render_frame:
+    ; Load time delta into st0
+    fld     dword [flt_time_accumulator]
+    fadd    dword [flt_time_delta]
+    fstp    dword [flt_time_accumulator]
+    
+    ; 4. Ray-march Torus Tunnel with Phong specular shading
+    xor     ecx, ecx             ; Y coordinate
+.y_loop:
+    xor     ebx, ebx             ; X coordinate
+.x_loop:
+    ; dx = (x - cx) / cx, dy = (y - cy) / cy
+    mov     eax, ebx
+    sub     eax, 160
+    mov     [esp-4], eax
+    fild    dword [esp-4]        ; st0 = dx
+    
+    mov     eax, ecx
+    sub     eax, 100
+    mov     [esp-4], eax
+    fild    dword [esp-4]        ; st0 = dy, st1 = dx
+    
+    ; Radius r = sqrt(dx^2 + dy^2)
+    fld     st1
+    fmul    st0, st0
+    fld     st1
+    fmul    st0, st0
+    faddp   st1, st0
+    fsqrt                        ; st0 = r
+    
+    ; Angle theta = atan2(dy, dx) + twist
+    fpatan                       ; st0 = atan2(dy, dx)
+    fld     dword [flt_twist_factor]
+    faddp   st1, st0
+    
+    ; Sine bump-map surface modulation
+    fld     st0
+    fmul    dword [flt_freq_u]
+    fsin
+    fld     st1
+    fmul    dword [flt_freq_v]
+    fcos
+    fmulp   st1, st0             ; bump texture
+    
+    ; Apply Phong lighting dot-product specular attenuation
+    fld     st0
+    fmul    dword [flt_specular_gain]
+    faddp   st1, st0
+    
+    ; Store 32-bit ARGB pixel to linear video buffer
+    call    _CalculatePhongPixel
+    mov     [edi + ecx*1280 + ebx*4], eax
+    
+    inc     ebx
+    cmp     ebx, 320
+    jl      .x_loop
+    
+    inc     ecx
+    cmp     ecx, 200
+    jl      .y_loop
+    
+    ; 5. Blit backbuffer to primary Glide surface
+    call    _FlipSurfaces
+    
+    ; Check ESC key exit
+    in      al, 0x60
+    cmp     al, 0x01
+    jne     .render_frame
+    
+    ret
+`
+  },
+  voxelm: {
+    title: "PARALAX - Voxel Mars '99",
+    category: "[32KB PC INTRO CATEGORY]",
+    telemetry: `• CATEGORY   : PC 32KB Real-Time Voxel Renderer (The Party '99)
+• FILE SIZE  : 28,672 bytes / 32,768 bytes (87.5% full)
+• SECTIONS   : .text: 21,340b | .data: 5,120b | .bss: 2,212b
+• TARGET CPU : Intel Pentium II / AMD K6-2 3DNow!
+• GRAPHICS   : Comanche-style raycaster, 60 distance slices
+• PALETTE    : 256-color VGA Mode 13h Martian strata heightmap`,
+    linesCount: "154 LINES",
+    asmSource: `; ==============================================================
+; PARALAX PRESENTS: "VOXEL MARS '99" - 32KB REAL-TIME VOXEL INTRO
+; COMANCHE-STYLE FORWARD COLUMN RAYCASTER (VGA MODE 13h)
+; PURE HAND-OPTIMIZED x86 ASSEMBLY (UNROLLED REGISTERS)
+; ==============================================================
+[BITS 32]
+[ORG 0x00401000]
+
+section .text
+global _start
+
+_start:
+    ; Set VGA Mode 13h (320x200x256 colors) via INT 10h
+    mov     ax, 0x0013
+    int     0x10
+    
+    ; Setup linear video segment pointer (0xA0000)
+    mov     edi, 0x000A0000
+    
+.main_voxel_loop:
+    ; Clear vertical screen column buffer (horizon array)
+    mov     ecx, 320
+    xor     eax, eax
+    lea     edi, [screen_horizon_buffer]
+    rep     stosd
+    
+    ; Ray-march terrain from near distance (z=1) to far fog (z=60)
+    mov     dword [ray_z], 1
+    
+.distance_slice_loop:
+    ; Calculate lateral ray delta based on camera angle
+    fld     dword [cam_angle]
+    fsin
+    fstp    dword [ray_dir_y]
+    fld     dword [cam_angle]
+    fcos
+    fstp    dword [ray_dir_x]
+    
+    ; Column sweep across screen width (320 pixels)
+    xor     ebx, ebx
+.column_sweep:
+    ; Map camera coordinates + forward ray vector
+    mov     eax, [cam_x]
+    add     eax, [ray_z_dx]
+    mov     esi, eax
+    
+    mov     edx, [cam_y]
+    add     edx, [ray_z_dy]
+    mov     ebp, edx
+    
+    ; Evaluate fractal terrain height: H(x,y)
+    call    _EvaluateHeightmap
+    
+    ; Perspective projection: screen_y = (cam_alt - H) / z + horizon
+    mov     eax, [cam_altitude]
+    sub     eax, [terrain_height]
+    cdq
+    idiv    dword [ray_z]
+    add     eax, [cam_horizon_pitch]
+    
+    ; Vertical occlusion clipping
+    mov     edx, [screen_horizon_buffer + ebx*4]
+    cmp     eax, edx
+    jle     .skip_voxel_draw
+    
+    ; Draw vertical column with altitude-based Martian palette
+    mov     ecx, eax
+    sub     ecx, edx
+    mov     al, [terrain_palette_index]
+    call    _DrawVerticalLine
+    mov     [screen_horizon_buffer + ebx*4], eax
+    
+.skip_voxel_draw:
+    inc     ebx
+    cmp     ebx, 320
+    jl      .column_sweep
+    
+    inc     dword [ray_z]
+    cmp     dword [ray_z], 60
+    jl      .distance_slice_loop
+    
+    call    _UpdateCameraPosition
+    jmp     .main_voxel_loop
+`
+  },
+  echocarrier: {
+    title: "ECHOPLEX - Echo Carrier 4KB",
+    category: "[4KB PC INTRO CATEGORY]",
+    telemetry: `• CATEGORY   : PC 4KB Strict Executable Intro (<4,096 bytes)
+• FILE SIZE  : 3,982 bytes / 4,096 bytes (97.2% full)
+• SECTIONS   : .text: 2,980b | .data: 680b | .bss: 322b
+• TARGET CPU : Intel x86 Pentium (MS-DOS COM / Win32 PE)
+• PHENOMENA  : 4D Tesseract double-rotation & 1999Hz Fourier acoustic ripple
+• ARG SIGNAL : Phosphor residue lock: 0x007F1999 • 10.19.99.127`,
+    linesCount: "142 LINES",
+    asmSource: `; ==============================================================
+; ECHOPLEX PRESENTS: "ECHO CARRIER 4KB" - STRICT 4096-BYTE INTRO
+; ROTATING 4D HYPERCUBE + 1999Hz ACOUSTIC FOURIER INTERFERENCE
+; WINNER: STRICT SIZE AWARD 1999 // NODE 0x7F CARRIER RELAY
+; ==============================================================
+[BITS 16]
+[ORG 0x0100]
+
+start:
+    mov     al, 0x13
+    int     0x10
+    
+    ; Setup 1999Hz subcarrier tone modulation
+    mov     dx, 0x0388
+    mov     ax, 0x2001
+    out     dx, ax
+    mov     ax, 0xA019
+    out     dx, ax
+    
+.render_hypercube:
+    ; 4D Tesseract vertices: 16 points (x,y,z,w in {-1, 1})
+    ; Rotate simultaneously in XY and ZW 4D planes
+    fld     dword [rot_angle_xy]
+    fadd    dword [delta_angle]
+    fst     dword [rot_angle_xy]
+    
+    ; Project 4D -> 3D perspective
+    xor     si, si
+.vertex_loop:
+    call    _Project4DVertex
+    inc     si
+    cmp     si, 16
+    jl      .vertex_loop
+    
+    call    _RenderTesseractEdges
+    call    _RenderFourierInterferenceFringes
+    
+    cmp     byte [phase_lock_flag], 1
+    jne     .skip_glitch
+    mov     si, msg_carlsbad_residue
+    call    _PrintPhosphorText
+.skip_glitch:
+    in      al, 0x60
+    dec     al
+    jnz     .render_hypercube
+    
+    mov     ax, 0x0003
+    int     0x10
+    ret
+
+msg_carlsbad_residue:
+    db "CARRIER: 1999Hz | OFFSET: 0x007F1999 | NODE: 10.19.99.127", 0
+`
+  },
+  firecopper: {
+    title: "SKID VECTOR - Fire & Copper Dream",
+    category: "[64KB PC DEMO CATEGORY]",
+    telemetry: `• CATEGORY   : PC 64KB Demoscene FX Archive
+• FILE SIZE  : 18,432 bytes / 65,536 bytes (28.1% full)
+• SECTIONS   : .text: 14,200b | .data: 3,420b | .bss: 812b
+• TARGET CPU : Intel 486DX4 / Pentium 90MHz
+• EFFECTS    : Doom fire cellular automata, Amiga copper rainbow sine bars
+• AUDIO      : YM2612 Genesis slap-bass + 3D warp depth starfield`,
+    linesCount: "135 LINES",
+    asmSource: `; ==============================================================
+; SKID VECTOR PRESENTS: "FIRE & COPPER DREAM" - CLASSIC SCENE FX
+; AUTHENTIC DOOM CELLULAR FIRE + AMIGA COPPER RAINBOW BARS
+; PURE HAND-OPTIMIZED x86 ASSEMBLY (VGA MODE 13h)
+; ==============================================================
+[BITS 32]
+[ORG 0x00401000]
+
+section .text
+global _start
+
+_start:
+    mov     ax, 0x0013
+    int     0x10
+    
+    ; Set fire palette
+    xor     eax, eax
+    mov     dx, 0x03C8
+    out     dx, al
+    inc     dx
+    mov     esi, fire_dac_palette
+    mov     ecx, 768
+    rep     outsb
+    
+.frame_loop:
+    ; Cellular automata fire propagation:
+    mov     edi, fire_screen_buffer
+    mov     ecx, 198 * 320
+.fire_diffuse:
+    movzx   eax, byte [edi - 1]
+    movzx   ebx, byte [edi]
+    add     eax, ebx
+    movzx   ebx, byte [edi + 1]
+    add     eax, ebx
+    movzx   ebx, byte [edi + 320]
+    add     eax, ebx
+    shr     eax, 2
+    test    eax, eax
+    jz      .decay_done
+    dec     eax
+.decay_done:
+    mov     [edi - 320], al
+    inc     edi
+    dec     ecx
+    jnz     .fire_diffuse
+    
+    call    _RenderCopperSineBars
+    call    _UpdateStarfield
+    
+    in      al, 0x60
+    cmp     al, 0x01
+    jne     .frame_loop
+    ret
+`
+  }
+};
+
+function initIntroArena() {
+  loadDemosceneIntro(currentIntroId);
+  setupIntroKeyListeners();
+  if (isIntroPlaying && !introAnimId) {
+    lastIntroFrameTime = performance.now();
+    introAnimId = requestAnimationFrame(renderIntroFrame);
+  }
+}
+
+function stopIntroArena() {
+  if (introAnimId) {
+    cancelAnimationFrame(introAnimId);
+    introAnimId = null;
+  }
+}
+
+function loadDemosceneIntro(introId) {
+  currentIntroId = introId;
+  const spec = INTRO_SPECS[introId] || INTRO_SPECS.mindflux;
+  
+  const sel = document.getElementById('introSelect');
+  if (sel) sel.value = introId;
+  
+  const catBadge = document.getElementById('introCategoryBadge');
+  if (catBadge) catBadge.textContent = spec.category;
+  
+  const hudR = document.getElementById('introHudRight');
+  if (hudR) hudR.textContent = spec.title.toUpperCase();
+  
+  const telBox = document.getElementById('introTelemetryBox');
+  if (telBox) telBox.textContent = spec.telemetry;
+  
+  const codeBox = document.getElementById('introAsmCodeDisplay');
+  if (codeBox) codeBox.textContent = spec.asmSource;
+  
+  const linesLbl = document.getElementById('introAsmLinesCount');
+  if (linesLbl) linesLbl.textContent = spec.linesCount;
+  
+  const voxBar = document.getElementById('voxelControlBar');
+  const btnFlight = document.getElementById('btnIntroFlight');
+  if (voxBar) voxBar.style.display = (introId === 'voxelm') ? 'flex' : 'none';
+  if (btnFlight) btnFlight.style.display = (introId === 'voxelm') ? 'inline-block' : 'none';
+  
+  introTime = 0.0;
+}
+
+function toggleIntroPlayback() {
+  isIntroPlaying = !isIntroPlaying;
+  const btn = document.getElementById('btnIntroPlay');
+  const badge = document.getElementById('introStatusBadge');
+  
+  if (isIntroPlaying) {
+    if (btn) btn.textContent = "[ ▶ PAUSE / RESUME ]";
+    if (badge) {
+      badge.textContent = "STATUS: 60 FPS ACTIVE";
+      badge.style.color = "#10b981";
+    }
+    if (!introAnimId) {
+      lastIntroFrameTime = performance.now();
+      introAnimId = requestAnimationFrame(renderIntroFrame);
+    }
+  } else {
+    if (btn) btn.textContent = "[ ⏸ RESUME PLAYBACK ]";
+    if (badge) {
+      badge.textContent = "STATUS: PAUSED";
+      badge.style.color = "#facc15";
+    }
+    stopIntroArena();
+  }
+}
+
+function resetIntroDemo() {
+  introTime = 0.0;
+  voxCam.x = 256;
+  voxCam.y = 256;
+  voxCam.angle = 0.0;
+  if (!isIntroPlaying) toggleIntroPlayback();
+}
+
+function toggleIntroResolution() {
+  introResolution = (introResolution === 'svga') ? 'vga' : 'svga';
+  const btn = document.getElementById('btnIntroRes');
+  if (btn) btn.textContent = (introResolution === 'svga') ? "[ MODE: 640x360 SVGA ]" : "[ MODE: 320x180 VGA ]";
+}
+
+function toggleIntroAudioSync() {
+  introAudioSync = !introAudioSync;
+  const btn = document.getElementById('btnIntroAudio');
+  if (btn) btn.textContent = introAudioSync ? "[ ♫ YM2612 AUDIO: ON ]" : "[ ♫ YM2612 AUDIO: OFF ]";
+  
+  if (introAudioSync) {
+    initAudio();
+    if (!isSongPlaying) startSong(0);
+  } else {
+    stopSong();
+  }
+}
+
+function toggleVoxelFlightMode() {
+  introFlightMode = (introFlightMode === 'auto') ? 'manual' : 'auto';
+  const btn = document.getElementById('btnIntroFlight');
+  if (btn) btn.textContent = (introFlightMode === 'auto') ? "[ ✈ FLIGHT: AUTOPILOT ]" : "[ ✈ FLIGHT: MANUAL (KEYS) ]";
+}
+
+function updateVoxelParams() {
+  const alt = document.getElementById('rngVoxelAltitude');
+  const pitch = document.getElementById('rngVoxelPitch');
+  const fog = document.getElementById('rngVoxelFog');
+  
+  if (alt) {
+    voxCam.altitude = parseInt(alt.value, 10);
+    const lbl = document.getElementById('lblVoxelAltitude');
+    if (lbl) lbl.textContent = `${voxCam.altitude}m`;
+  }
+  if (pitch) {
+    voxCam.pitch = parseInt(pitch.value, 10);
+    const lbl = document.getElementById('lblVoxelPitch');
+    if (lbl) lbl.textContent = `${voxCam.pitch}°`;
+  }
+  if (fog) {
+    voxCam.fog = parseInt(fog.value, 10);
+    const lbl = document.getElementById('lblVoxelFog');
+    if (lbl) lbl.textContent = `${voxCam.fog}`;
+  }
+}
+
+function downloadActiveIntroAsm() {
+  const spec = INTRO_SPECS[currentIntroId] || INTRO_SPECS.mindflux;
+  const blob = new Blob([spec.asmSource], { type: 'text/plain;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `${currentIntroId}_intro.asm`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showNoticeToast(`💾 Downloaded ${currentIntroId}_intro.asm source code!`);
+}
+
+function setupIntroKeyListeners() {
+  if (window._introKeyHandlersBound) return;
+  window._introKeyHandlersBound = true;
+  
+  window.addEventListener('keydown', (e) => {
+    introKeys[e.key.toLowerCase()] = true;
+  });
+  window.addEventListener('keyup', (e) => {
+    introKeys[e.key.toLowerCase()] = false;
+  });
+}
+
+function renderIntroFrame(now) {
+  const dt = Math.min((now - lastIntroFrameTime) / 1000.0, 0.1);
+  lastIntroFrameTime = now;
+  introTime += dt;
+
+  // FPS calculation
+  introFpsCounter.frames++;
+  if (now - introFpsCounter.lastCheck >= 500) {
+    introFpsCounter.currentFps = Math.round((introFpsCounter.frames * 1000) / (now - introFpsCounter.lastCheck));
+    introFpsCounter.frames = 0;
+    introFpsCounter.lastCheck = now;
+    
+    const hudL = document.getElementById('introHudLeft');
+    if (hudL) {
+      hudL.textContent = `FPS: ${introFpsCounter.currentFps} • ${(dt * 1000).toFixed(1)}ms • ${introResolution.toUpperCase()} ${introResolution === 'svga' ? '640x360' : '320x180'}`;
+    }
+  }
+
+  const canvas = document.getElementById('introCanvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return;
+
+  const w = canvas.width;
+  const h = canvas.height;
+
+  // Render specific demoscene routine
+  if (currentIntroId === 'mindflux') {
+    renderMindfluxIntro(ctx, w, h);
+  } else if (currentIntroId === 'voxelm') {
+    renderVoxelMarsIntro(ctx, w, h, dt);
+  } else if (currentIntroId === 'echocarrier') {
+    renderEchoCarrierIntro(ctx, w, h);
+  } else if (currentIntroId === 'firecopper') {
+    renderFireCopperIntro(ctx, w, h);
+  }
+
+  if (isIntroPlaying) {
+    introAnimId = requestAnimationFrame(renderIntroFrame);
+  }
+}
+
+// 1. FLARELIGHT: Mindflux '99 (Raymarched Torus Tunnel)
+function renderMindfluxIntro(ctx, w, h) {
+  ctx.fillStyle = '#02050c';
+  ctx.fillRect(0, 0, w, h);
+
+  const cx = w / 2;
+  const cy = h / 2;
+  const t = introTime;
+
+  // Render procedural raymarched tunnel rings with bump-mapped Phong lighting
+  const stepR = (introResolution === 'vga') ? 8 : 4;
+  const numSlices = 28;
+
+  for (let s = numSlices; s >= 1; s--) {
+    const z = s * 14.0 - ((t * 60) % 14.0);
+    const radius = 2400.0 / (z + 10.0);
+    if (radius <= 0 || radius > w) continue;
+
+    // Twist and camera wobble
+    const twist = Math.sin(z * 0.015 + t * 1.5) * 1.8;
+    const ringCenterX = cx + Math.sin(t * 1.2 + z * 0.008) * 45;
+    const ringCenterY = cy + Math.cos(t * 0.9 + z * 0.008) * 35;
+
+    // Ring lighting & color palette cycling
+    const hue = (s * 8 + t * 40) % 360;
+    const intensity = Math.max(0.15, 1.0 - (s / numSlices));
+    const alpha = Math.min(1.0, (1.0 - (s / numSlices)) * 1.4);
+
+    ctx.save();
+    ctx.beginPath();
+    ctx.lineWidth = Math.max(2, 60 / (z + 5.0));
+    ctx.strokeStyle = `hsla(${hue}, 90%, ${Math.floor(intensity * 65)}%, ${alpha})`;
+    ctx.ellipse(ringCenterX, ringCenterY, radius, radius * 0.75, twist, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // Bump mapped radial spoke spikes
+    if (s % 2 === 0) {
+      const numSpokes = 12;
+      for (let k = 0; k < numSpokes; k++) {
+        const spokeAng = (k / numSpokes) * Math.PI * 2 + twist;
+        const x1 = ringCenterX + Math.cos(spokeAng) * (radius * 0.85);
+        const y1 = ringCenterY + Math.sin(spokeAng) * (radius * 0.85 * 0.75);
+        const x2 = ringCenterX + Math.cos(spokeAng) * radius;
+        const y2 = ringCenterY + Math.sin(spokeAng) * radius * 0.75;
+
+        ctx.strokeStyle = `hsla(${(hue + 45) % 360}, 100%, 75%, ${alpha * 0.8})`;
+        ctx.beginPath();
+        ctx.moveTo(x1, y1);
+        ctx.lineTo(x2, y2);
+        ctx.stroke();
+      }
+    }
+    ctx.restore();
+  }
+
+  // Central plasma core / flare
+  const flareGrad = ctx.createRadialGradient(cx, cy, 2, cx, cy, 75);
+  flareGrad.addColorStop(0, 'rgba(255, 255, 255, 0.9)');
+  flareGrad.addColorStop(0.3, 'rgba(0, 240, 255, 0.6)');
+  flareGrad.addColorStop(0.7, 'rgba(192, 132, 252, 0.25)');
+  flareGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+  ctx.fillStyle = flareGrad;
+  ctx.beginPath();
+  ctx.arc(cx, cy, 75, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Scroller overlay
+  ctx.font = "bold 11px Consolas, monospace";
+  ctx.fillStyle = "rgba(0, 255, 102, 0.85)";
+  ctx.fillText("FLARELIGHT // MINDFLUX '99 -- PC 64KB INTRO CHAMPION -- ASSEMBLY '99 GREETS", 18, h - 14);
+}
+
+// 2. PARALAX: Voxel Mars '99 (Comanche Voxel Terrain Raycaster)
+function renderVoxelMarsIntro(ctx, w, h, dt) {
+  // Flight motion update
+  if (introFlightMode === 'auto') {
+    voxCam.angle = Math.sin(introTime * 0.4) * 0.35;
+    voxCam.x += Math.cos(voxCam.angle) * voxCam.speed * 25.0 * dt;
+    voxCam.y += Math.sin(voxCam.angle) * voxCam.speed * 25.0 * dt;
+  } else {
+    // Manual steering
+    if (introKeys['arrowleft'] || introKeys['a']) voxCam.angle -= 1.8 * dt;
+    if (introKeys['arrowright'] || introKeys['d']) voxCam.angle += 1.8 * dt;
+    if (introKeys['arrowup'] || introKeys['w']) {
+      voxCam.x += Math.cos(voxCam.angle) * voxCam.speed * 40.0 * dt;
+      voxCam.y += Math.sin(voxCam.angle) * voxCam.speed * 40.0 * dt;
+    }
+    if (introKeys['arrowdown'] || introKeys['s']) {
+      voxCam.x -= Math.cos(voxCam.angle) * voxCam.speed * 30.0 * dt;
+      voxCam.y -= Math.sin(voxCam.angle) * voxCam.speed * 30.0 * dt;
+    }
+  }
+
+  // Draw Martian Dusty Sky Gradient
+  const skyGrad = ctx.createLinearGradient(0, 0, 0, h * 0.6);
+  skyGrad.addColorStop(0, '#0a0305');
+  skyGrad.addColorStop(0.5, '#2e0f0a');
+  skyGrad.addColorStop(1, '#662211');
+  ctx.fillStyle = skyGrad;
+  ctx.fillRect(0, 0, w, h);
+
+  const horizonY = Math.floor(h * 0.45) + voxCam.pitch;
+  const colStep = (introResolution === 'vga') ? 4 : 2;
+  const maxZ = voxCam.fog;
+
+  // Track closest drawn screen height per column
+  const horizonBuffer = new Int16Array(w);
+  for (let i = 0; i < w; i++) horizonBuffer[i] = h;
+
+  // Raymarch terrain distance slices from near to far
+  for (let z = 2; z < maxZ; z += 1.8) {
+    const invZ = 1.0 / z;
+    const forwardX = Math.cos(voxCam.angle) * z;
+    const forwardY = Math.sin(voxCam.angle) * z;
+    const lateralX = -Math.sin(voxCam.angle);
+    const lateralY = Math.cos(voxCam.angle);
+
+    for (let sx = 0; sx < w; sx += colStep) {
+      const rayFrac = (sx - w / 2) / (w / 2);
+      const worldX = voxCam.x + forwardX * 12.0 + lateralX * rayFrac * z * 8.0;
+      const worldY = voxCam.y + forwardY * 12.0 + lateralY * rayFrac * z * 8.0;
+
+      // Fractal Martian Heightmap formula
+      const hVal = Math.sin(worldX * 0.02) * Math.cos(worldY * 0.02) * 55.0
+                 + Math.sin(worldX * 0.06 + worldY * 0.04) * 25.0
+                 + Math.cos(worldX * 0.12 - worldY * 0.08) * 12.0;
+
+      const screenY = Math.floor(horizonY + (voxCam.altitude - hVal) * invZ * 3.8);
+
+      if (screenY < horizonBuffer[sx]) {
+        const topY = Math.max(0, screenY);
+        const botY = horizonBuffer[sx];
+
+        // Martian strata altitude coloring
+        let col = '#993311';
+        if (hVal > 45) col = '#d97706'; // Sulfur high ridges
+        else if (hVal > 15) col = '#b45309'; // Red rocks
+        else if (hVal > -20) col = '#78350f'; // Dark valleys
+        else col = '#381a08'; // Basalt canyons
+
+        // Fog dimming
+        const fogAlpha = Math.max(0.2, 1.0 - (z / maxZ));
+        ctx.fillStyle = col;
+        ctx.globalAlpha = fogAlpha;
+        ctx.fillRect(sx, topY, colStep, botY - topY);
+
+        horizonBuffer[sx] = topY;
+      }
+    }
+  }
+  ctx.globalAlpha = 1.0;
+
+  // Telemetry overlay
+  ctx.font = "10px Consolas, monospace";
+  ctx.fillStyle = "rgba(255, 255, 255, 0.75)";
+  ctx.fillText(`CAM [X:${Math.round(voxCam.x)} Y:${Math.round(voxCam.y)} ALT:${voxCam.altitude}m HDG:${Math.round(voxCam.angle * 57.3)}°]`, 14, 24);
+}
+
+// 3. ECHOPLEX: Echo Carrier 4KB (Rotating 4D Hypercube + 1999Hz Fourier Ripples)
+function renderEchoCarrierIntro(ctx, w, h) {
+  ctx.fillStyle = '#010408';
+  ctx.fillRect(0, 0, w, h);
+
+  const cx = w / 2;
+  const cy = h / 2;
+  const t = introTime;
+
+  // 1. Draw 1999Hz acoustic Fourier interference ripple rings
+  ctx.lineWidth = 1;
+  for (let r = 20; r < 340; r += 18) {
+    const wave = Math.sin(r * 0.1999 - t * 4.0);
+    const alpha = Math.max(0, wave * 0.3);
+    ctx.strokeStyle = `rgba(0, 240, 255, ${alpha})`;
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+
+  // 2. 4D Hypercube (Tesseract): 16 Vertices in {-1, 1}^4
+  const verts4D = [];
+  for (let i = 0; i < 16; i++) {
+    verts4D.push([
+      (i & 1) ? 1 : -1,
+      (i & 2) ? 1 : -1,
+      (i & 4) ? 1 : -1,
+      (i & 8) ? 1 : -1
+    ]);
+  }
+
+  // Double 4D Rotation in XY plane and ZW plane
+  const angXY = t * 0.8;
+  const angZW = t * 1.1;
+  const cosXY = Math.cos(angXY), sinXY = Math.sin(angXY);
+  const cosZW = Math.cos(angZW), sinZW = Math.sin(angZW);
+
+  const projected2D = verts4D.map(v => {
+    // XY rotation
+    const x1 = v[0] * cosXY - v[1] * sinXY;
+    const y1 = v[0] * sinXY + v[1] * cosXY;
+    // ZW rotation
+    const z1 = v[2] * cosZW - v[3] * sinZW;
+    const w1 = v[2] * sinZW + v[3] * cosZW;
+
+    // 4D -> 3D perspective projection (w_dist = 2.4)
+    const scale4D = 1.0 / (2.6 - w1 * 0.5);
+    const x3 = x1 * scale4D;
+    const y3 = y1 * scale4D;
+    const z3 = z1 * scale4D;
+
+    // 3D -> 2D screen projection
+    const scale3D = 220.0 / (2.5 + z3 * 0.6);
+    return {
+      x: cx + x3 * scale3D,
+      y: cy + y3 * scale3D,
+      w: w1
+    };
+  });
+
+  // Render 32 Tesseract Edges (pairs differing by 1 bit)
+  ctx.lineWidth = 1.8;
+  for (let i = 0; i < 16; i++) {
+    for (let bit = 1; bit < 16; bit <<= 1) {
+      if ((i & bit) === 0) {
+        const j = i | bit;
+        const p1 = projected2D[i];
+        const p2 = projected2D[j];
+
+        // Color based on 4D depth (cyan to neon green)
+        const depthGrad = ctx.createLinearGradient(p1.x, p1.y, p2.x, p2.y);
+        depthGrad.addColorStop(0, '#00f0ff');
+        depthGrad.addColorStop(1, '#00ff66');
+
+        ctx.strokeStyle = depthGrad;
+        ctx.beginPath();
+        ctx.moveTo(p1.x, p1.y);
+        ctx.lineTo(p2.x, p2.y);
+        ctx.stroke();
+      }
+    }
+  }
+
+  // Draw Vertices
+  projected2D.forEach((p, idx) => {
+    ctx.fillStyle = (idx % 2 === 0) ? '#ff0077' : '#ffdd00';
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, 3, 0, Math.PI * 2);
+    ctx.fill();
+  });
+
+  // 3. Periodic Subterranean Ring-0 Memory Glitch
+  const glitch = Math.sin(t * 3.1415);
+  if (glitch > 0.82) {
+    ctx.fillStyle = "rgba(0, 255, 102, 0.12)";
+    ctx.fillRect(0, 0, w, h);
+
+    ctx.font = "bold 11px Consolas, monospace";
+    ctx.fillStyle = "#4ade80";
+    ctx.fillText("[CARRIER LOCKED: 1999.00 Hz] • SECTOR 01 RESIDUE CONFIRMED", 20, cy - 30);
+    ctx.fillText("HEAP OFFSET: 0x007F1999 • RELAY: 10.19.99.4 • DEST: 10.19.99.127", 20, cy - 12);
+    ctx.fillText("STRICT INTRO CEILING: 3,982 / 4,096 BYTES [PASS]", 20, cy + 6);
+  }
+}
+
+// 4. SKID VECTOR: Fire & Copper Dream (Doom Fire + Copper Bars + Starfield)
+function renderFireCopperIntro(ctx, w, h) {
+  ctx.fillStyle = '#000000';
+  ctx.fillRect(0, 0, w, h);
+
+  const t = introTime;
+
+  // 1. Amiga Copper Rainbow Sine Bars in Background
+  const numBars = 16;
+  for (let b = 0; b < numBars; b++) {
+    const yPos = Math.sin(t * 1.8 + b * 0.25) * 50 + (h * 0.35) + (b * 6);
+    const colHue = (b * 16 + t * 50) % 360;
+    ctx.fillStyle = `hsla(${colHue}, 100%, 50%, 0.45)`;
+    ctx.fillRect(0, yPos, w, 4);
+  }
+
+  // 2. 3D Warp Depth Starfield
+  ctx.fillStyle = '#ffffff';
+  introStars.forEach(st => {
+    st.z -= 4.0;
+    if (st.z <= 2) {
+      st.z = 500;
+      st.x = (Math.random() - 0.5) * 600;
+      st.y = (Math.random() - 0.5) * 360;
+    }
+    const k = 220.0 / st.z;
+    const sx = w / 2 + st.x * k;
+    const sy = h / 2 + st.y * k;
+    const size = Math.max(1, (1.0 - st.z / 500) * 3);
+
+    if (sx >= 0 && sx < w && sy >= 0 && sy < h) {
+      ctx.fillStyle = st.color;
+      ctx.fillRect(sx, sy, size, size);
+    }
+  });
+
+  // 3. Doom Cellular Fire Simulation (Rendered in bottom half)
+  // Seed sparks at bottom row of fireBuffer
+  const bottomRowStart = (FIRE_H - 1) * FIRE_W;
+  for (let x = 0; x < FIRE_W; x++) {
+    fireBuffer[bottomRowStart + x] = (Math.random() > 0.45) ? 255 : 0;
+  }
+
+  // Cellular automata propagation upwards
+  for (let y = 1; y < FIRE_H; y++) {
+    for (let x = 0; x < FIRE_W; x++) {
+      const idx = y * FIRE_W + x;
+      const decay = Math.floor(Math.random() * 3.5);
+      const val = fireBuffer[idx];
+      const destX = Math.max(0, Math.min(FIRE_W - 1, x + (Math.random() > 0.5 ? 1 : -1)));
+      const destIdx = (y - 1) * FIRE_W + destX;
+      fireBuffer[destIdx] = Math.max(0, val - decay);
+    }
+  }
+
+  // Render fireBuffer to bottom half of canvas
+  const cellW = w / FIRE_W;
+  const cellH = (h * 0.55) / FIRE_H;
+  const fireBaseY = h * 0.45;
+
+  for (let y = 0; y < FIRE_H; y++) {
+    for (let x = 0; x < FIRE_W; x++) {
+      const pVal = fireBuffer[y * FIRE_W + x];
+      if (pVal > 15) {
+        ctx.fillStyle = firePalette[pVal];
+        ctx.fillRect(x * cellW, fireBaseY + y * cellH, cellW + 0.5, cellH + 0.5);
+      }
+    }
+  }
+
+  // Sine Text Scroller
+  const scroller = "+++ SKID VECTOR PRESENTS: FIRE & COPPER DREAM +++ 64KB DEMO FX ARCHIVE +++ GREETS TO FLARELIGHT, RAZOR 1999, PARALAX +++";
+  ctx.font = "bold 13px Consolas, monospace";
+  ctx.fillStyle = "#ffffff";
+  for (let i = 0; i < scroller.length; i++) {
+    const charX = ((t * 90) % (w + 600)) - (i * 12);
+    const charY = h - 20 + Math.sin(t * 4.0 + i * 0.3) * 8;
+    if (charX >= 0 && charX < w) {
+      ctx.fillText(scroller[scroller.length - 1 - i], charX, charY);
+    }
+  }
+}
+
+// ==========================================
+// 17. CD-KEY & KEYMAKER ALGORITHM LAB
+// ==========================================
+let currentKeymakerScheme = 'securom';
+let isKeymakerChiptunePlaying = false;
+let keymakerArpTimer = null;
+
+const KEYMAKER_SCHEMES = {
+  securom: {
+    id: "securom",
+    name: "SecuROM v2 Polynomial Checksum (Tremor III Arena)",
+    prefix: "TREM",
+    formatRule: "Format: TREM-XXXX-XXXX-XXXX • Horner polynomial eval mod 65521",
+    formula: "P(x) = sum(d_i * 31^(11-i)) mod 65521",
+    spec: `• ALGORITHM : Horner Polynomial Checksum with Prime Modulus 65,521 (0xFFF1).
+• ENCODING  : 3 groups of 4 base-32 alphanumeric characters + 4-char checksum word.
+• VERIFY    : Parser evaluates weighted polynomial on first 12 characters. The resulting 16-bit remainder is converted to 4 hexadecimal characters and matched against the trailing 4 characters.`,
+    generateValid: () => {
+      const chars = "23456789ABCDEFGHJKLMNPQRSTUVWXYZ";
+      let body = "";
+      for (let i = 0; i < 8; i++) {
+        body += chars.charAt(Math.floor(Math.random() * chars.length));
+      }
+      // Calculate Horner polynomial mod 65521
+      let acc = 0;
+      for (let i = 0; i < body.length; i++) {
+        acc = (acc * 31 + body.charCodeAt(i)) % 65521;
+      }
+      const checkHex = acc.toString(16).toUpperCase().padStart(4, '0');
+      return `TREM-${body.substring(0, 4)}-${body.substring(4, 8)}-${checkHex}`;
+    },
+    generateInvalid: () => {
+      return `TREM-8F42-99AB-0000`;
+    },
+    dissect: (keyStr) => {
+      const clean = keyStr.trim().toUpperCase();
+      const parts = clean.split('-');
+      const steps = [];
+
+      if (parts.length !== 4 || parts[0] !== 'TREM') {
+        return {
+          pass: false,
+          error: "Key must start with 'TREM-' followed by 3 four-character groups",
+          steps: []
+        };
+      }
+
+      const body = parts[1] + parts[2];
+      const checkGiven = parts[3];
+
+      let acc = 0;
+      for (let i = 0; i < body.length; i++) {
+        const ch = body.charAt(i);
+        const code = ch.charCodeAt(0);
+        const prevAcc = acc;
+        acc = (prevAcc * 31 + code) % 65521;
+
+        steps.push({
+          pos: `[${i}]`,
+          char: ch,
+          hex: '0x' + code.toString(16).toUpperCase(),
+          dec: code,
+          weight: `* 31 + ${code}`,
+          intermediate: `(${prevAcc} * 31 + ${code})`,
+          accumulator: `${acc} (mod 65521)`,
+          pass: true
+        });
+      }
+
+      const calculatedHex = acc.toString(16).toUpperCase().padStart(4, '0');
+      const pass = (calculatedHex === checkGiven);
+
+      steps.push({
+        pos: `[CHK]`,
+        char: checkGiven,
+        hex: calculatedHex,
+        dec: acc,
+        weight: "Horner Modulus Match",
+        intermediate: `Expected: ${calculatedHex}`,
+        accumulator: `Given: ${checkGiven}`,
+        pass: pass
+      });
+
+      return {
+        pass: pass,
+        error: pass ? null : `Checksum mismatch! Calculated '${calculatedHex}', but key supplied '${checkGiven}'`,
+        steps: steps
+      };
+    }
+  },
+
+  won_auth: {
+    id: "won_auth",
+    name: "WON Auth 13-Digit CD-Key Validator (Half-Cycle 1.1)",
+    prefix: "WON",
+    formatRule: "Format: XXXXX-XXXXXXX (5 prefix digits + 7 body digits)",
+    formula: "Prefix d_3 in [1..8] • sum(body_digits) mod 7 == 0",
+    spec: `• ALGORITHM : Dual-stage Modulo-7 Authentication Check.
+• STRUCTURE : 5 prefix digits + 7 body digits.
+• PREFIX    : The 3rd prefix digit must be between 1 and 8 (OEM/Retail flag).
+• BODY      : The sum of all 7 body digits must be evenly divisible by 7 (sum % 7 == 0).
+• AUTHENTIC : Replicates genuine 1999 WON (World Opponent Network) CD-key verification.`,
+    generateValid: () => {
+      // 5-digit prefix: d0 d1 d2 d3 d4 where d2 is 1..8
+      const d0 = Math.floor(Math.random() * 9) + 1;
+      const d1 = Math.floor(Math.random() * 10);
+      const d2 = Math.floor(Math.random() * 8) + 1; // 1..8
+      const d3 = Math.floor(Math.random() * 10);
+      const d4 = Math.floor(Math.random() * 10);
+      const prefix = `${d0}${d1}${d2}${d3}${d4}`;
+
+      // 7-digit body: sum % 7 == 0
+      const bDigits = [];
+      let sum = 0;
+      for (let i = 0; i < 6; i++) {
+        const val = Math.floor(Math.random() * 10);
+        bDigits.push(val);
+        sum += val;
+      }
+      const remainder = sum % 7;
+      const lastDigit = (remainder === 0) ? 0 : (7 - remainder);
+      bDigits.push(lastDigit);
+      const body = bDigits.join('');
+
+      return `${prefix}-${body}`;
+    },
+    generateInvalid: () => {
+      return `12945-1234567`; // d2 is 9, body sum 28 % 7 == 0 but prefix invalid
+    },
+    dissect: (keyStr) => {
+      const clean = keyStr.trim().replace(/\s+/g, '');
+      const parts = clean.split('-');
+      const steps = [];
+
+      if (parts.length !== 2 || parts[0].length !== 5 || parts[1].length !== 7) {
+        return {
+          pass: false,
+          error: "Key format must be 5 digits, hyphen, 7 digits (e.g. 12456-1234567)",
+          steps: []
+        };
+      }
+
+      const prefix = parts[0];
+      const body = parts[1];
+
+      // Dissect prefix
+      let prefixPass = true;
+      for (let i = 0; i < 5; i++) {
+        const ch = prefix.charAt(i);
+        const num = parseInt(ch, 10);
+        let pass = !isNaN(num);
+        let op = "Prefix Digit";
+        if (i === 2) {
+          op = "OEM Tier Flag (1..8)";
+          if (num < 1 || num > 8) {
+            pass = false;
+            prefixPass = false;
+          }
+        }
+        steps.push({
+          pos: `P[${i}]`,
+          char: ch,
+          hex: '0x' + ch.charCodeAt(0).toString(16).toUpperCase(),
+          dec: num,
+          weight: op,
+          intermediate: (i === 2) ? `${num} ∈ [1..8]` : "Valid",
+          accumulator: `Prefix Valid: ${prefixPass}`,
+          pass: pass
+        });
+      }
+
+      // Dissect body sum
+      let sum = 0;
+      for (let i = 0; i < 7; i++) {
+        const ch = body.charAt(i);
+        const num = parseInt(ch, 10);
+        sum += num;
+        steps.push({
+          pos: `B[${i}]`,
+          char: ch,
+          hex: '0x' + ch.charCodeAt(0).toString(16).toUpperCase(),
+          dec: num,
+          weight: "+ Digit",
+          intermediate: `Sum + ${num}`,
+          accumulator: `Running Sum: ${sum}`,
+          pass: true
+        });
+      }
+
+      const mod7 = sum % 7;
+      const bodyPass = (mod7 === 0);
+
+      steps.push({
+        pos: `[MOD7]`,
+        char: `${sum}`,
+        hex: '0x' + sum.toString(16).toUpperCase(),
+        dec: sum,
+        weight: "Modulo 7 Check",
+        intermediate: `${sum} % 7 = ${mod7}`,
+        accumulator: (mod7 === 0) ? "DIVISIBLE (0)" : `REMAINDER (${mod7})`,
+        pass: bodyPass
+      });
+
+      const totalPass = prefixPass && bodyPass;
+      return {
+        pass: totalPass,
+        error: totalPass ? null : (!prefixPass ? "Prefix 3rd digit must be 1..8" : `Body sum (${sum}) is not divisible by 7 (remainder ${mod7})`),
+        steps: steps
+      };
+    }
+  },
+
+  safedisc: {
+    id: "safedisc",
+    name: "SafeDisc v1 Ring-0 Modulus Keygen (Surreal Tournament)",
+    prefix: "SURR",
+    formatRule: "Format: SURR-XXXX-XXXX-XXXX • Modulus matrix dot-product check",
+    formula: "K * W = sum(k_i * w_i) mod 26 == 17",
+    spec: `• ALGORITHM : SafeDisc Ring-0 Alphanumeric Matrix Checksum.
+• STRUCTURE : 3 groups of 4 uppercase alphanumeric characters with weighted vector multiplication.
+• MODULUS   : Dot product mod 26 must match residue 17 (0x11).`,
+    generateValid: () => {
+      const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ";
+      const weights = [1, 3, 7, 9, 1, 3, 7, 9, 1, 3, 7, 9];
+      let kChars = [];
+      let sum = 0;
+      for (let i = 0; i < 11; i++) {
+        const c = chars.charAt(Math.floor(Math.random() * chars.length));
+        kChars.push(c);
+        sum += (c.charCodeAt(0) - 65) * weights[i];
+      }
+      // Solve for 12th character
+      let lastChar = 'A';
+      for (let j = 0; j < chars.length; j++) {
+        const candidate = chars.charAt(j);
+        const testSum = sum + (candidate.charCodeAt(0) - 65) * weights[11];
+        if (testSum % 26 === 17) {
+          lastChar = candidate;
+          break;
+        }
+      }
+      kChars.push(lastChar);
+      const str = kChars.join('');
+      return `SURR-${str.substring(0, 4)}-${str.substring(4, 8)}-${str.substring(8, 12)}`;
+    },
+    generateInvalid: () => {
+      return `SURR-AAAA-BBBB-CCCC`;
+    },
+    dissect: (keyStr) => {
+      const clean = keyStr.trim().toUpperCase();
+      const parts = clean.split('-');
+      const steps = [];
+
+      if (parts.length !== 4 || parts[0] !== 'SURR') {
+        return {
+          pass: false,
+          error: "Key must start with 'SURR-' followed by 3 four-letter groups",
+          steps: []
+        };
+      }
+
+      const body = parts[1] + parts[2] + parts[3];
+      const weights = [1, 3, 7, 9, 1, 3, 7, 9, 1, 3, 7, 9];
+      let sum = 0;
+
+      for (let i = 0; i < body.length; i++) {
+        const ch = body.charAt(i);
+        const code = ch.charCodeAt(0) - 65;
+        const w = weights[i % 12];
+        const prod = code * w;
+        sum += prod;
+
+        steps.push({
+          pos: `[${i}]`,
+          char: ch,
+          hex: '0x' + ch.charCodeAt(0).toString(16).toUpperCase(),
+          dec: code,
+          weight: `* ${w}`,
+          intermediate: `${code} * ${w} = ${prod}`,
+          accumulator: `Sum: ${sum}`,
+          pass: (code >= 0 && code < 26)
+        });
+      }
+
+      const mod26 = sum % 26;
+      const pass = (mod26 === 17);
+
+      steps.push({
+        pos: `[RES]`,
+        char: `${mod26}`,
+        hex: '0x' + mod26.toString(16).toUpperCase(),
+        dec: mod26,
+        weight: "Target Residue = 17",
+        intermediate: `${sum} % 26 = ${mod26}`,
+        accumulator: (mod26 === 17) ? "MATCH (17)" : `MISMATCH (${mod26})`,
+        pass: pass
+      });
+
+      return {
+        pass: pass,
+        error: pass ? null : `Matrix residue mismatch! Expected 17, got ${mod26}`,
+        steps: steps
+      };
+    }
+  },
+
+  voidcraft: {
+    id: "voidcraft",
+    name: "VoidCraft 13-Digit Weighted Keygen (VoidCraft)",
+    prefix: "VOID",
+    formatRule: "Format: XXX-XXXX-XXXX • Alternating [3, 1, 3, 1] weight Luhn check",
+    formula: "sum(d_i * (i%2 ? 1 : 3)) mod 10 == 0",
+    spec: `• ALGORITHM : BattleNet-style Alternating Weighted Modulo-10 Checksum.
+• STRUCTURE : 3 prefix digits + 4 digits + 4 digits (total 11 digits).
+• WEIGHTS   : Alternating pattern [3, 1, 3, 1, 3, 1, 3, 1, 3, 1, 1].
+• VERIFY    : Total weighted sum must modulo 10 to 0.`,
+    generateValid: () => {
+      const weights = [3, 1, 3, 1, 3, 1, 3, 1, 3, 1];
+      const digits = [];
+      let sum = 0;
+      for (let i = 0; i < 10; i++) {
+        const d = Math.floor(Math.random() * 10);
+        digits.push(d);
+        sum += d * weights[i];
+      }
+      const rem = sum % 10;
+      const checkDigit = (rem === 0) ? 0 : (10 - rem);
+      digits.push(checkDigit);
+
+      const str = digits.join('');
+      return `${str.substring(0, 3)}-${str.substring(3, 7)}-${str.substring(7, 11)}`;
+    },
+    generateInvalid: () => {
+      return `123-4567-8901`;
+    },
+    dissect: (keyStr) => {
+      const clean = keyStr.trim().replace(/\s+/g, '');
+      const parts = clean.split('-');
+      const steps = [];
+
+      if (parts.length !== 3 || parts[0].length !== 3 || parts[1].length !== 4 || parts[2].length !== 4) {
+        return {
+          pass: false,
+          error: "Key must follow format XXX-XXXX-XXXX (11 decimal digits)",
+          steps: []
+        };
+      }
+
+      const body = parts[0] + parts[1] + parts[2];
+      const weights = [3, 1, 3, 1, 3, 1, 3, 1, 3, 1, 1];
+      let sum = 0;
+
+      for (let i = 0; i < body.length; i++) {
+        const ch = body.charAt(i);
+        const d = parseInt(ch, 10);
+        const w = weights[i];
+        const prod = d * w;
+        sum += prod;
+
+        steps.push({
+          pos: `[${i}]`,
+          char: ch,
+          hex: '0x' + ch.charCodeAt(0).toString(16).toUpperCase(),
+          dec: d,
+          weight: `* ${w}`,
+          intermediate: `${d} * ${w} = ${prod}`,
+          accumulator: `Sum: ${sum}`,
+          pass: !isNaN(d)
+        });
+      }
+
+      const mod10 = sum % 10;
+      const pass = (mod10 === 0);
+
+      steps.push({
+        pos: `[MOD10]`,
+        char: `${mod10}`,
+        hex: '0x' + mod10.toString(16).toUpperCase(),
+        dec: mod10,
+        weight: "Modulo 10 Check",
+        intermediate: `${sum} % 10 = ${mod10}`,
+        accumulator: (mod10 === 0) ? "PASS (0)" : `FAIL (${mod10})`,
+        pass: pass
+      });
+
+      return {
+        pass: pass,
+        error: pass ? null : `Weighted sum (${sum}) is not divisible by 10 (remainder ${mod10})`,
+        steps: steps
+      };
+    }
+  },
+
+  subterranean: {
+    id: "subterranean",
+    name: "Subterranean Cipher Seed Keygen (Node 0x7F / ARG)",
+    prefix: "ECHO",
+    formatRule: "Format: ECHO-XXXX-XXXX-XXXX • Seeds: darknet, matrix, 0x7f, echoes, deep-core, 1999",
+    formula: "XOR-0x7F Seed Masking & Ring-0 Memory Pointer Generation",
+    spec: `• ALGORITHM : Subterranean Transponder Courier Protocol.
+• FUNCTION  : Entering or generating clandestine ARG keywords generates authenticated relay coordinates for Node 0x7F and Deep Core (10.19.99.127).
+• AUDIO     : Generates real-time 1999Hz acoustic subcarrier confirmation tone.`,
+    generateValid: () => {
+      return `ECHO-7F19-9942-0127`;
+    },
+    generateInvalid: () => {
+      return `ECHO-0000-0000-0000`;
+    },
+    dissect: (keyStr) => {
+      const clean = keyStr.trim().toLowerCase();
+      const steps = [];
+
+      // Check if keyword is present
+      const isArgSeed = clean.includes('darknet') || clean.includes('matrix') || clean.includes('echo') ||
+                        clean.includes('0x7f') || clean.includes('deep-core') || clean.includes('1999') ||
+                        clean.includes('carlsbad') || clean.includes('precursor') || clean.includes('7f1999');
+
+      for (let i = 0; i < Math.min(clean.length, 16); i++) {
+        const ch = clean.charAt(i);
+        const code = ch.charCodeAt(0);
+        const xor7f = code ^ 0x7F;
+
+        steps.push({
+          pos: `[${i}]`,
+          char: ch,
+          hex: '0x' + code.toString(16).toUpperCase(),
+          dec: code,
+          weight: "XOR 0x7F",
+          intermediate: `0x${xor7f.toString(16).toUpperCase()}`,
+          accumulator: `Offset: 0x007F199${i % 10}`,
+          pass: isArgSeed
+        });
+      }
+
+      return {
+        pass: isArgSeed,
+        isArg: isArgSeed,
+        error: isArgSeed ? null : "Key does not contain subterranean courier cipher seed (e.g. 'echo', 'darknet', '7f1999')",
+        steps: steps
+      };
+    }
+  },
+
+  laserlock: {
+    id: "laserlock",
+    name: "LaserLock Sector CRC-16 Keymaker (System Glitch 2)",
+    prefix: "GLT2",
+    formatRule: "Format: GLT2-XXXX-XXXX-XXXX • Linear congruential seed + CRC16 parity",
+    formula: "S_(n+1) = (S_n * 214013 + 2531011) mod 2^32",
+    spec: `• ALGORITHM : LaserLock Optical Sector Signature & CRC-16 Keymaker.
+• STRUCTURE : 3 groups of 4 hex characters with LCG pseudorandom parity.`,
+    generateValid: () => {
+      const seed = Math.floor(Math.random() * 0xFFFF);
+      const hex1 = seed.toString(16).toUpperCase().padStart(4, '0');
+      // LCG step
+      const lcg = ((seed * 214013 + 2531011) >>> 16) & 0xFFFF;
+      const hex2 = lcg.toString(16).toUpperCase().padStart(4, '0');
+      // CRC-16
+      const crc = (seed ^ lcg ^ 0x1999) & 0xFFFF;
+      const hex3 = crc.toString(16).toUpperCase().padStart(4, '0');
+      return `GLT2-${hex1}-${hex2}-${hex3}`;
+    },
+    generateInvalid: () => {
+      return `GLT2-0000-1111-2222`;
+    },
+    dissect: (keyStr) => {
+      const clean = keyStr.trim().toUpperCase();
+      const parts = clean.split('-');
+      const steps = [];
+
+      if (parts.length !== 4 || parts[0] !== 'GLT2') {
+        return {
+          pass: false,
+          error: "Key must follow format GLT2-XXXX-XXXX-XXXX",
+          steps: []
+        };
+      }
+
+      const seed = parseInt(parts[1], 16);
+      const lcgGiven = parseInt(parts[2], 16);
+      const crcGiven = parseInt(parts[3], 16);
+
+      const lcgExpected = ((seed * 214013 + 2531011) >>> 16) & 0xFFFF;
+      const crcExpected = (seed ^ lcgExpected ^ 0x1999) & 0xFFFF;
+
+      steps.push({
+        pos: `[SEED]`,
+        char: parts[1],
+        hex: '0x' + parts[1],
+        dec: seed,
+        weight: "Seed Word",
+        intermediate: `S0 = ${seed}`,
+        accumulator: "Valid Hex Word",
+        pass: !isNaN(seed)
+      });
+
+      steps.push({
+        pos: `[LCG]`,
+        char: parts[2],
+        hex: '0x' + parts[2],
+        dec: lcgGiven,
+        weight: "LCG Step 1",
+        intermediate: `Expected: 0x${lcgExpected.toString(16).toUpperCase()}`,
+        accumulator: (lcgGiven === lcgExpected) ? "MATCH" : "MISMATCH",
+        pass: (lcgGiven === lcgExpected)
+      });
+
+      steps.push({
+        pos: `[CRC]`,
+        char: parts[3],
+        hex: '0x' + parts[3],
+        dec: crcGiven,
+        weight: "CRC16 Parity",
+        intermediate: `Expected: 0x${crcExpected.toString(16).toUpperCase()}`,
+        accumulator: (crcGiven === crcExpected) ? "MATCH" : "MISMATCH",
+        pass: (crcGiven === crcExpected)
+      });
+
+      const pass = (lcgGiven === lcgExpected && crcGiven === crcExpected);
+      return {
+        pass: pass,
+        error: pass ? null : "LaserLock CRC-16 parity mismatch!",
+        steps: steps
+      };
+    }
+  }
+};
+
+function initKeymakerLab() {
+  loadKeymakerScheme(currentKeymakerScheme);
+}
+
+function loadKeymakerScheme(schemeId) {
+  currentKeymakerScheme = schemeId;
+  const scheme = KEYMAKER_SCHEMES[schemeId] || KEYMAKER_SCHEMES.securom;
+
+  const sel = document.getElementById('keymakerSchemeSelect');
+  if (sel) sel.value = schemeId;
+
+  const fmtRule = document.getElementById('keymakerFormatRule');
+  if (fmtRule) fmtRule.textContent = scheme.formatRule;
+
+  const formulaLbl = document.getElementById('keymakerFormulaLabel');
+  if (formulaLbl) formulaLbl.textContent = `ALGORITHM: ${scheme.formula}`;
+
+  const specDetails = document.getElementById('keymakerSpecDetails');
+  if (specDetails) {
+    specDetails.innerHTML = scheme.spec.replace(/\n/g, '<br>');
+  }
+
+  // Generate an initial valid key
+  keymakerGenerateValid();
+}
+
+function keymakerGenerateValid() {
+  const scheme = KEYMAKER_SCHEMES[currentKeymakerScheme] || KEYMAKER_SCHEMES.securom;
+  const key = scheme.generateValid();
+  const input = document.getElementById('keymakerInputKey');
+  if (input) {
+    input.value = key;
+    validateCurrentKeymakerKey();
+  }
+}
+
+function keymakerGenerateInvalid() {
+  const scheme = KEYMAKER_SCHEMES[currentKeymakerScheme] || KEYMAKER_SCHEMES.securom;
+  const key = scheme.generateInvalid();
+  const input = document.getElementById('keymakerInputKey');
+  if (input) {
+    input.value = key;
+    validateCurrentKeymakerKey();
+  }
+}
+
+function keymakerBatchGenerate() {
+  const scheme = KEYMAKER_SCHEMES[currentKeymakerScheme] || KEYMAKER_SCHEMES.securom;
+  const keys = [];
+  keys.push(`=== 0xRELEASE KEYMAKER ARCHIVE: ${scheme.name.toUpperCase()} ===`);
+  keys.push(`GEN DATE: 1999-12-31 // CRACKED BY: 0xRELEASE REVERSE ENGINEERING LAB`);
+  keys.push(`-----------------------------------------------------------------`);
+  for (let i = 1; i <= 5; i++) {
+    keys.push(`KEY #${i.toString().padStart(2, '0')}: ${scheme.generateValid()}`);
+  }
+  keys.push(`-----------------------------------------------------------------`);
+  keys.push(`Enjoy another quality keygen release from the subterranean scene!`);
+
+  const txt = document.getElementById('keymakerBatchOutput');
+  if (txt) txt.value = keys.join('\n');
+}
+
+function validateCurrentKeymakerKey() {
+  const input = document.getElementById('keymakerInputKey');
+  if (!input) return;
+  const val = input.value;
+  const scheme = KEYMAKER_SCHEMES[currentKeymakerScheme] || KEYMAKER_SCHEMES.securom;
+
+  const dissection = scheme.dissect(val);
+  const badge = document.getElementById('keymakerValidationBadge');
+  const subBox = document.getElementById('keymakerSubterraneanBox');
+
+  // Check ARG keyword detection
+  const lower = val.toLowerCase();
+  const hasArgKeyword = lower.includes('darknet') || lower.includes('matrix') || lower.includes('echo') ||
+                        lower.includes('0x7f') || lower.includes('deep-core') || lower.includes('1999') ||
+                        lower.includes('carlsbad') || lower.includes('precursor') || lower.includes('7f1999');
+
+  if (hasArgKeyword) {
+    if (subBox) subBox.style.display = 'block';
+    // Emit 1999Hz audio ping if audio context is active
+    if (typeof playDemosceneSfx === 'function') {
+      playDemosceneSfx('carrier');
+    }
+  } else {
+    if (subBox && currentKeymakerScheme !== 'subterranean') subBox.style.display = 'none';
+  }
+
+  if (badge) {
+    if (dissection.pass) {
+      badge.textContent = "[VALIDATED: ALL CHECKS PASS]";
+      badge.style.background = "rgba(16, 185, 129, 0.2)";
+      badge.style.color = "#34d399";
+      badge.style.borderColor = "#10b981";
+    } else {
+      badge.textContent = `[FAILED: ${dissection.error || 'CHECKSUM MISMATCH'}]`;
+      badge.style.background = "rgba(239, 68, 68, 0.2)";
+      badge.style.color = "#f87171";
+      badge.style.borderColor = "#ef4444";
+    }
+  }
+
+  renderKeymakerMathTable(dissection.steps);
+}
+
+function renderKeymakerMathTable(steps) {
+  const tbody = document.getElementById('keymakerMathBody');
+  if (!tbody) return;
+
+  if (!steps || steps.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="8" style="color:#64748b; padding:12px;">Type a key above to inspect step-by-step mathematical dissection.</td></tr>`;
+    return;
+  }
+
+  let html = '';
+  steps.forEach(st => {
+    const cls = st.pass ? 'step-pass' : 'step-fail';
+    const statusIcon = st.pass ? '✓ PASS' : '✗ FAIL';
+    html += `<tr>
+      <td style="color:#38bdf8;">${st.pos}</td>
+      <td style="font-weight:bold; color:var(--accent-yellow);">${st.char}</td>
+      <td style="color:#94a3b8;">${st.hex}</td>
+      <td style="color:#cbd5e1;">${st.dec}</td>
+      <td style="color:#34d399;">${st.weight}</td>
+      <td style="color:#cbd5e1;">${st.intermediate}</td>
+      <td style="color:#c084fc;">${st.accumulator}</td>
+      <td class="${cls}">${statusIcon}</td>
+    </tr>`;
+  });
+
+  tbody.innerHTML = html;
+}
+
+function copyKeymakerKey() {
+  const input = document.getElementById('keymakerInputKey');
+  if (input) {
+    navigator.clipboard.writeText(input.value).then(() => {
+      showNoticeToast("📋 Serial Key copied to clipboard!");
+    }).catch(() => {
+      showNoticeToast("📋 Serial Key: " + input.value);
+    });
+  }
+}
+
+function downloadKeymakerNfo() {
+  const scheme = KEYMAKER_SCHEMES[currentKeymakerScheme] || KEYMAKER_SCHEMES.securom;
+  const input = document.getElementById('keymakerInputKey');
+  const key = input ? input.value : scheme.generateValid();
+
+  const content = `╔══════════════════════════════════════════════════════════════════════════════╗
+║                   0xRELEASE 1999 KEYMAKER DIVISION                           ║
+║                     "Surpassing the 999 KB Horizon"                          ║
+╠══════════════════════════════════════════════════════════════════════════════╣
+  PROTECTION SCHEME : ${scheme.name}
+  REGISTRATION KEY  : ${key}
+  ALGORITHM FORMULA : ${scheme.formula}
+  DATE OF KEYGEN    : 1999-12-31
+  CRACKER / REVERSE : SubCarrier & HexLord [0xRELEASE]
+╠══════════════════════════════════════════════════════════════════════════════╣
+  TECHNICAL SPECIFICATION:
+${scheme.spec}
+╠══════════════════════════════════════════════════════════════════════════════╣
+  GREETINGS TO: FLARELIGHT * RAZOR 1999 * PARALAX * SKID VECTOR * CYBRID * KLASS
+╚══════════════════════════════════════════════════════════════════════════════╝`;
+
+  const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `${scheme.id}_key_report.nfo`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showNoticeToast(`💾 Downloaded ${scheme.id}_key_report.nfo!`);
+}
+
+function testKeyInSandbox() {
+  const scheme = KEYMAKER_SCHEMES[currentKeymakerScheme] || KEYMAKER_SCHEMES.securom;
+  switchMainTab('sandbox', document.querySelectorAll('.tab-btn')[1]);
+  if (scheme.id === 'securom') loadSandboxTarget('tremor3.exe');
+  else if (scheme.id === 'won_auth') loadSandboxTarget('halfcycle.exe');
+  else if (scheme.id === 'safedisc') loadSandboxTarget('SurrealTournament.exe');
+  else if (scheme.id === 'voidcraft') loadSandboxTarget('voidcraft.exe');
+  else if (scheme.id === 'laserlock') loadSandboxTarget('glitch2.exe');
+  else loadSandboxTarget('DeepCoreBridge.exe');
+  showNoticeToast("🛠️ Target EXE loaded into SoftICE '99 sandbox for key testing!");
+}
+
+function toggleKeymakerChiptune() {
+  isKeymakerChiptunePlaying = !isKeymakerChiptunePlaying;
+  const btn = document.getElementById('btnKeymakerAudio');
+  if (btn) btn.textContent = isKeymakerChiptunePlaying ? "♫ KEYGEN CHIPTUNE: ON" : "♫ KEYGEN CHIPTUNE: OFF";
+
+  if (isKeymakerChiptunePlaying) {
+    initAudio();
+    // Fast 16th-note keygen arpeggiator
+    const arpNotes = [440, 554.37, 659.25, 880, 659.25, 554.37, 739.99, 880];
+    let noteIdx = 0;
+    keymakerArpTimer = setInterval(() => {
+      if (!isKeymakerChiptunePlaying || !audioCtx) return;
+      const freq = arpNotes[noteIdx % arpNotes.length];
+      playYm2612Fm(freq, 2.0, 3.5, 0.12, audioCtx.currentTime, 0.18);
+      noteIdx++;
+    }, 110);
+  } else {
+    if (keymakerArpTimer) {
+      clearInterval(keymakerArpTimer);
+      keymakerArpTimer = null;
+    }
+  }
+}
+
+
+// ==========================================
 // ARCH-05: BACKGROUND TAB VISIBILITY & TIMER DRIFT
 // ==========================================
 let lastHiddenTimestamp = 0;
@@ -6074,6 +8051,14 @@ document.addEventListener('visibilitychange', () => {
       cancelAnimationFrame(stegoWaterfallAnimId);
       stegoWaterfallAnimId = null;
     }
+    if (introAnimId) {
+      cancelAnimationFrame(introAnimId);
+      introAnimId = null;
+    }
+    if (keymakerArpTimer) {
+      clearInterval(keymakerArpTimer);
+      keymakerArpTimer = null;
+    }
   } else {
     // Resume audio context
     if (audioCtx && audioCtx.state === 'suspended') {
@@ -6098,6 +8083,12 @@ document.addEventListener('visibilitychange', () => {
     const wbTab = document.getElementById('tab-workbench');
     if (wbTab && wbTab.classList.contains('active') && !wbAnimId) {
       startWorkbenchAnimation();
+    }
+    // Resume intro arena if intro tab is active
+    const introTab = document.getElementById('tab-intros');
+    if (introTab && introTab.classList.contains('active') && !introAnimId && isIntroPlaying) {
+      lastIntroFrameTime = performance.now();
+      introAnimId = requestAnimationFrame(renderIntroFrame);
     }
   }
 });
