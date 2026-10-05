@@ -22,7 +22,7 @@ const APPS = [
   { id: 'kpad', title: 'KPad', url: '/apps/kpad.html', exeUrl: '/exe/KPad.exe', icon: '/assets/icons/kpad.ico', w: 1000, h: 680, folder: 'Office' },
   { id: 'kcalc', title: 'KCalc', url: '/apps/kcalc.html', exeUrl: '/exe/KCalc.exe', icon: '/assets/icons/kcalc.ico', w: 830, h: 670, folder: 'System' },
   { id: 'kpaint', title: 'KPaint', url: '/apps/kpaint.html', exeUrl: '/exe/KPaint.exe', icon: '/assets/icons/kpaint.ico', w: 1140, h: 780, folder: 'Media' },
-  { id: 'kmine', title: 'KMine', url: '/apps/kmine.html', exeUrl: '/exe/KMine.exe', icon: '/assets/icons/kmines.ico', w: 1020, h: 720, folder: 'Games' },
+  { id: 'kmine', title: 'KMine', url: '/apps/kmine.html', exeUrl: '/exe/KMine.exe', icon: '/assets/icons/kmines.ico', w: 1040, h: 740, folder: 'Games' },
   { id: 'kclock', title: 'KClock', url: '/apps/kclock.html', exeUrl: '/exe/KClock.exe', icon: '/assets/icons/kclock.ico', w: 840, h: 640, folder: 'System' },
   { id: 'ktask', title: 'KTask', url: '/apps/ktask.html', exeUrl: '/exe/KTask.exe', icon: '/assets/icons/ktask.ico', w: 1040, h: 700, folder: 'System' },
   { id: 'kbbs', title: 'KBBS', url: '/apps/kbbs.html', exeUrl: '/exe/KBBS.exe', icon: '/assets/icons/kbbs.ico', w: 850, h: 650, folder: 'Network' },

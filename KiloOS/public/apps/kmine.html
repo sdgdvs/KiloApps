@@ -162,6 +162,7 @@
     border: 1px solid #30363d; 
     max-width: 100%;
     overflow: auto;
+    -webkit-overflow-scrolling: touch;
   }
   canvas { 
     background-color: #090d16; 
@@ -169,6 +170,42 @@
     cursor: pointer; 
     display: block; 
     border-radius: 6px; 
+    touch-action: none;
+  }
+
+  /* Flag Mode Active Button Style */
+  .btn-flag-active {
+    background: #854d0e !important;
+    border-color: #f59e0b !important;
+    color: #fef08a !important;
+    box-shadow: 0 0 12px rgba(245, 158, 11, 0.4) !important;
+  }
+  .btn-flag-active .badge {
+    background: rgba(0, 0, 0, 0.5) !important;
+    border-color: #fde047 !important;
+    color: #fef08a !important;
+  }
+
+  /* Audio active / muted styling */
+  .btn-muted {
+    opacity: 0.65;
+    border-color: #4b5563 !important;
+    color: #9ca3af !important;
+  }
+
+  @media (max-width: 860px) {
+    body { padding: 8px; }
+    #controls { padding: 8px 10px; gap: 6px; }
+    button, select { padding: 5px 8px; font-size: 12px; }
+    .badge { display: none; }
+    #status { min-width: 130px; font-size: 13px; padding: 4px 6px; }
+    .stats-box { font-size: 12px; padding: 5px 8px; }
+    .info-bar { font-size: 11px; gap: 8px; }
+  }
+  @media (max-width: 580px) {
+    .info-bar { display: none; }
+    #controls { justify-content: stretch; }
+    .ctrl-group { flex: 1 1 100%; justify-content: center; }
   }
 
   /* Toast Notification System - Safe Bottom Zone (Eliminates Controls Occlusion) */
@@ -318,25 +355,28 @@
 <div id="toast-container"></div>
 
 <!-- Help Modal Dialog -->
-<div id="helpModal" class="modal-backdrop" onclick="if(event.target===this) toggleHelpModal(false)">
+<div id="helpModal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="helpModalTitle" onclick="if(event.target===this) toggleHelpModal(false)">
   <div class="modal-box">
     <div class="modal-header">
-      <h3>💣 KMine - Rules & Keyboard Shortcuts</h3>
-      <button class="modal-close" onclick="toggleHelpModal(false)">✕</button>
+      <h3 id="helpModalTitle">💣 KMine - Rules & Keyboard Shortcuts</h3>
+      <button class="modal-close" aria-label="Close Help" onclick="toggleHelpModal(false)">✕</button>
     </div>
     <div class="modal-body">
       <p style="margin-top:0;"><strong>Objective:</strong> Uncover all safe tiles across the grid without detonating any hidden naval mines. Numbers indicate how many adjacent mines touch that tile.</p>
       
-      <div style="font-weight: 600; color: #79c0ff; margin-bottom: 4px;">🖱️ Mouse Controls</div>
+      <div style="font-weight: 600; color: #79c0ff; margin-bottom: 4px;">🖱️ Mouse & Touch Controls</div>
       <ul style="margin: 0 0 12px 0; padding-left: 20px;">
-        <li><strong>Left-Click:</strong> Reveal tile (safe first click guaranteed)</li>
-        <li><strong>Right-Click:</strong> Place or remove mine flag 🚩</li>
-        <li><strong>Left-Click on Revealed Number:</strong> <em>Chord</em> — instantly reveals all adjacent unflagged tiles if the number of placed flags matches the number!</li>
+        <li><strong>Left-Click / Tap:</strong> Reveal tile (safe first click guaranteed; places flag if in Flag Mode)</li>
+        <li><strong>Right-Click / Long-Press (Hold):</strong> Place or remove mine flag 🚩 (with haptic feedback on touch)</li>
+        <li><strong>Left-Click on Revealed Number:</strong> <em>Chord</em> — instantly reveals all adjacent unflagged tiles if placed flags match the number! Hovering a number previews the chord target area.</li>
+        <li><strong>Mode Button / F:</strong> Switch between ⛏️ Dig Mode and 🚩 Flag Mode (ideal for touchscreens)</li>
       </ul>
 
       <div style="font-weight: 600; color: #79c0ff; margin-bottom: 4px;">⌨️ Keyboard Shortcuts</div>
       <div class="shortcut-grid">
         <div><kbd>F1</kbd> / <kbd>?</kbd></div><div>Open this Help & Shortcuts Guide</div>
+        <div><kbd>F</kbd></div><div>Toggle ⛏️ Dig / 🚩 Flag Mode (Touch Friendly)</div>
+        <div><kbd>M</kbd></div><div>Toggle Procedural Audio Sound Effects</div>
         <div><kbd>H</kbd></div><div>Safe Move Hint (reveals a guaranteed safe tile)</div>
         <div><kbd>F2</kbd></div><div>Restart New Game on current difficulty</div>
         <div><kbd>1</kbd></div><div>Beginner Mode (10×10, 15 mines)</div>
@@ -365,6 +405,7 @@
       <option value="2">Expert (30x16) [3]</option>
     </select>
     <button onclick="initGame()" title="New Game (F2)">🔄 Restart <span class="badge">F2</span></button>
+    <button id="modeToggleBtn" onclick="toggleDigFlagMode()" title="Toggle Dig / Flag Mode (F)">⛏️ Dig <span class="badge">F</span></button>
     <button onclick="giveHint()" title="Reveal Safe Tile (H)">💡 Hint <span class="badge">H</span></button>
   </div>
 
@@ -373,6 +414,7 @@
   <div class="stats-box">🏆 Best: <span id="bestTime" style="color:#fff;">--</span>s</div>
 
   <div class="ctrl-group">
+    <button id="audioToggleBtn" onclick="toggleAudio()" title="Toggle Sound FX (M)">🔊 Sound <span class="badge">M</span></button>
     <button onclick="quickSave()" title="Save Current State (F5)">💾 Save <span class="badge">F5</span></button>
     <button onclick="quickLoad()" title="Load Saved State (F9)">📂 Load <span class="badge">F9</span></button>
     <button onclick="exportStats()" title="Export Best Times">📤 Exp <span class="badge">E</span></button>
@@ -387,6 +429,8 @@
   <span><kbd>L-Click</kbd> Reveal</span>
   <span><kbd>R-Click</kbd> Flag</span>
   <span><kbd>Click Number</kbd> Chord</span>
+  <span><kbd>F</kbd> Mode</span>
+  <span><kbd>M</kbd> Sound</span>
   <span><kbd>H</kbd> Hint</span>
   <span><kbd>1-3</kbd> Diff</span>
   <span><kbd>F1</kbd> Guide</span>
@@ -465,14 +509,174 @@
   function toggleHelpModal(show) {
     const modal = document.getElementById('helpModal');
     if (show) {
+      document.querySelectorAll('.toast').forEach(t => t.remove());
       modal.classList.add('active');
       const okBtn = document.getElementById('helpModalOkBtn');
       if (okBtn) okBtn.focus();
     } else {
       modal.classList.remove('active');
       safeSetStorage('kmine_tutorialSeen', '1');
+      if (cvs && cvs.focus) cvs.focus();
     }
   }
+
+  // Web Audio Procedural Synthesis (Yamaha FM & SNES Warm Envelopes - Directive 9)
+  let audioCtx = null;
+  let soundEnabled = safeGetStorage('kmine_soundEnabled', '1') === '1';
+
+  function initAudio() {
+    if (!audioCtx) {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (AudioCtx) audioCtx = new AudioCtx();
+    }
+    if (audioCtx && audioCtx.state === 'suspended') {
+      audioCtx.resume();
+    }
+  }
+
+  function toggleAudio() {
+    initAudio();
+    soundEnabled = !soundEnabled;
+    safeSetStorage('kmine_soundEnabled', soundEnabled ? '1' : '0');
+    updateAudioBtn();
+    showToast(soundEnabled ? "🔊 Sound FX Enabled" : "🔇 Sound FX Muted", "info", 1500);
+    if (soundEnabled) playSfx('flag');
+  }
+
+  function updateAudioBtn() {
+    const btn = document.getElementById('audioToggleBtn');
+    if (!btn) return;
+    if (soundEnabled) {
+      btn.innerHTML = `🔊 Sound <span class="badge">M</span>`;
+      btn.classList.remove('btn-muted');
+      btn.title = "Toggle Sound FX [M] (Currently ON)";
+    } else {
+      btn.innerHTML = `🔇 Muted <span class="badge">M</span>`;
+      btn.classList.add('btn-muted');
+      btn.title = "Toggle Sound FX [M] (Currently OFF)";
+    }
+  }
+
+  function playSfx(type) {
+    if (!soundEnabled) return;
+    initAudio();
+    if (!audioCtx) return;
+    const now = audioCtx.currentTime;
+
+    try {
+      if (type === 'click') {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(1100, now);
+        osc.frequency.exponentialRampToValueAtTime(320, now + 0.04);
+        gain.gain.setValueAtTime(0.12, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.04);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start(now);
+        osc.stop(now + 0.045);
+      } else if (type === 'flag') {
+        [587.33, 880].forEach((freq, idx) => {
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.type = 'sine';
+          const startTime = now + idx * 0.035;
+          osc.frequency.setValueAtTime(freq, startTime);
+          gain.gain.setValueAtTime(0.14, startTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.12);
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.start(startTime);
+          osc.stop(startTime + 0.13);
+        });
+      } else if (type === 'chord') {
+        [440, 554.37, 659.25, 880].forEach((freq, idx) => {
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.type = 'triangle';
+          const startTime = now + idx * 0.025;
+          osc.frequency.setValueAtTime(freq, startTime);
+          gain.gain.setValueAtTime(0.1, startTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.08);
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.start(startTime);
+          osc.stop(startTime + 0.09);
+        });
+      } else if (type === 'boom') {
+        const bufferSize = Math.floor(audioCtx.sampleRate * 0.4);
+        const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) {
+          data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (audioCtx.sampleRate * 0.12));
+        }
+        const noise = audioCtx.createBufferSource();
+        noise.buffer = buffer;
+        const filter = audioCtx.createBiquadFilter();
+        filter.type = 'lowpass';
+        filter.frequency.setValueAtTime(380, now);
+        filter.frequency.linearRampToValueAtTime(60, now + 0.38);
+        const gain = audioCtx.createGain();
+        gain.gain.setValueAtTime(0.3, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+        noise.connect(filter);
+        filter.connect(gain);
+        gain.connect(audioCtx.destination);
+        noise.start(now);
+      } else if (type === 'win') {
+        [523.25, 659.25, 783.99, 987.77, 1046.50].forEach((freq, idx) => {
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.type = 'sine';
+          const startTime = now + idx * 0.08;
+          osc.frequency.setValueAtTime(freq, startTime);
+          gain.gain.setValueAtTime(0.16, startTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.28);
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.start(startTime);
+          osc.stop(startTime + 0.3);
+        });
+      } else if (type === 'hint') {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(987.77, now);
+        gain.gain.setValueAtTime(0.12, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start(now);
+        osc.stop(now + 0.2);
+      }
+    } catch (e) {
+      // Audio fallback safe
+    }
+  }
+
+  // Dig / Flag Mode Toggle (Touch & Keyboard Ergonomics)
+  let flagMode = false;
+  function toggleDigFlagMode() {
+    flagMode = !flagMode;
+    const btn = document.getElementById('modeToggleBtn');
+    if (btn) {
+      if (flagMode) {
+        btn.innerHTML = `🚩 Flag <span class="badge">F</span>`;
+        btn.classList.add('btn-flag-active');
+        btn.title = "Mode: Flagging [F] (Click/Tap to place flag)";
+      } else {
+        btn.innerHTML = `⛏️ Dig <span class="badge">F</span>`;
+        btn.classList.remove('btn-flag-active');
+        btn.title = "Mode: Digging [F] (Click/Tap to reveal tile)";
+      }
+    }
+    showToast(flagMode ? "🚩 Flag Mode Active: Tap/Click sets flags" : "⛏️ Dig Mode Active: Tap/Click reveals tiles", "info", 1800);
+    playSfx('click');
+  }
+
+  // Interactive Hover & Chording Preview
+  let hoverX = -1, hoverY = -1;
 
   // Visual Effects Engine
   let animTime = 0;
@@ -704,6 +908,7 @@
       stopTimer();
       updateStatus();
       spawnWinCelebration();
+      playSfx('win');
       document.getElementById('replayBtn').style.display = 'inline-flex';
       showToast(`🏆 VICTORY! Cleared in ${timeElapsed}s!`, "success", 5000);
       if (!isReplaying) {
@@ -726,6 +931,14 @@
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     initDust();
   }
+
+  let resizeTimer = null;
+  window.addEventListener('resize', () => {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(() => {
+      setupCanvas();
+    }, 120);
+  });
 
   function changeDiff(customVal) {
     const select = document.getElementById('diff');
@@ -801,6 +1014,7 @@
         chord(x, y);
       } else if (state[y][x] === 0) {
         reveal(x, y);
+        if (gameOver === 0) playSfx('click');
       }
       if (gameOver === 0) checkWin();
     } else if (btn === 2) {
@@ -808,6 +1022,7 @@
         if (state[y][x] === 0) { 
           state[y][x] = 2; 
           flags++;
+          playSfx('flag');
           triggerShake(2.5, 0.85);
           for (let i = 0; i < 6; i++) {
             particles.push({
@@ -829,6 +1044,7 @@
         } else { 
           state[y][x] = 0; 
           flags--; 
+          playSfx('flag');
         }
         updateStatus();
       }
@@ -841,6 +1057,7 @@
     if (grid[y][x] === 9) {
       gameOver = 1;
       spawnExplosion(x * CELL + CELL/2, y * CELL + CELL/2);
+      playSfx('boom');
       stopTimer();
       updateStatus();
       document.getElementById('replayBtn').style.display = 'inline-flex';
@@ -872,6 +1089,7 @@
       }
     }
     if (flagCount === grid[y][x]) {
+      playSfx('chord');
       triggerShake(4.0, 0.88);
       for (let dy = -1; dy <= 1; dy++) {
         for (let dx = -1; dx <= 1; dx++) {
@@ -904,6 +1122,7 @@
       }
     }
     if (actionX !== -1) {
+      playSfx('hint');
       moves.push({ t: Date.now() - startRealTime, x: actionX, y: actionY, b: 0 });
       applyAction(actionX, actionY, 0);
       showToast(`💡 Hint: Safely revealed (${actionX + 1}, ${actionY + 1})`, "info", 2000);
@@ -1175,12 +1394,13 @@
         const bx = x * CELL;
         const by = y * CELL;
         const cellState = state[y][x];
+        const isHovered = (x === hoverX && y === hoverY && gameOver === 0);
 
         if (cellState === 0 || cellState === 2) {
-          ctx.fillStyle = "#1e293b";
+          ctx.fillStyle = (cellState === 0 && isHovered) ? (flagMode ? "#332a1e" : "#2d3748") : "#1e293b";
           ctx.fillRect(bx + 1, by + 1, CELL - 2, CELL - 2);
 
-          ctx.fillStyle = "#475569";
+          ctx.fillStyle = (cellState === 0 && isHovered) ? (flagMode ? "#f59e0b" : "#38bdf8") : "#475569";
           ctx.fillRect(bx, by, CELL, 2);
           ctx.fillRect(bx, by, 2, CELL);
 
@@ -1188,7 +1408,7 @@
           ctx.fillRect(bx, by + CELL - 2, CELL, 2);
           ctx.fillRect(bx + CELL - 2, by, 2, CELL);
 
-          ctx.fillStyle = "rgba(255, 255, 255, 0.08)";
+          ctx.fillStyle = (cellState === 0 && isHovered) ? "rgba(255, 255, 255, 0.22)" : "rgba(255, 255, 255, 0.08)";
           ctx.fillRect(bx + 2, by + 2, CELL - 4, 1);
           ctx.fillRect(bx + 2, by + 2, 1, CELL - 4);
 
@@ -1196,7 +1416,7 @@
             drawFlagSprite(bx, by);
           }
         } else if (cellState === 1) {
-          ctx.fillStyle = "#0f172a";
+          ctx.fillStyle = isHovered ? "#162032" : "#0f172a";
           ctx.fillRect(bx, by, CELL, CELL);
 
           ctx.fillStyle = "#020617";
@@ -1222,6 +1442,17 @@
             ctx.fillStyle = numColor;
             ctx.fillText(val, bx + CELL / 2, by + CELL / 2 + 1);
           }
+        }
+
+        // Chording Target Preview Highlight
+        if (hoverX >= 0 && hoverY >= 0 && gameOver === 0 &&
+            state[hoverY][hoverX] === 1 && grid[hoverY][hoverX] > 0 &&
+            cellState === 0 && Math.abs(x - hoverX) <= 1 && Math.abs(y - hoverY) <= 1) {
+          ctx.fillStyle = "rgba(56, 189, 248, 0.16)";
+          ctx.fillRect(bx + 1, by + 1, CELL - 2, CELL - 2);
+          ctx.strokeStyle = "rgba(56, 189, 248, 0.8)";
+          ctx.lineWidth = 1.5;
+          ctx.strokeRect(bx + 1.5, by + 1.5, CELL - 3, CELL - 3);
         }
       }
     }
@@ -1346,10 +1577,10 @@
       ctx.font = "bold 13px 'Segoe UI', Arial, sans-serif";
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
-      ctx.fillText("L-Click: Reveal | R-Click: Flag", totalW / 2, by + 18);
+      ctx.fillText("L-Click: Reveal | R-Click / [F]: Flag", totalW / 2, by + 18);
       ctx.fillStyle = "#38bdf8";
       ctx.font = "12px 'Segoe UI', Arial, sans-serif";
-      ctx.fillText("Press 'H' for Hint | 'F1' for Guide", totalW / 2, by + 38);
+      ctx.fillText("Press 'H' Hint | 'M' Sound | 'F1' Guide", totalW / 2, by + 38);
     }
 
     ctx.restore();
@@ -1357,7 +1588,35 @@
     requestAnimationFrame(animLoop);
   }
   
+  // Mouse and Touch Interaction Handlers
+  let lastTouchTime = 0;
+  let touchStartX = 0, touchStartY = 0;
+  let touchTimer = null;
+  let touchLongPressed = false;
+
+  cvs.addEventListener('mousemove', (e) => {
+    const rect = cvs.getBoundingClientRect();
+    const cellWidth = rect.width / cols;
+    const cellHeight = rect.height / rows;
+    const x = Math.floor((e.clientX - rect.left) / cellWidth);
+    const y = Math.floor((e.clientY - rect.top) / cellHeight);
+    if (x >= 0 && x < cols && y >= 0 && y < rows) {
+      hoverX = x;
+      hoverY = y;
+    } else {
+      hoverX = -1;
+      hoverY = -1;
+    }
+  });
+
+  cvs.addEventListener('mouseleave', () => {
+    hoverX = -1;
+    hoverY = -1;
+  });
+
   cvs.addEventListener('mousedown', (e) => {
+    initAudio();
+    if (Date.now() - lastTouchTime < 400) return;
     if (gameOver !== 0 || isReplaying) {
       if (gameOver !== 0) initGame();
       return;
@@ -1369,9 +1628,89 @@
     const y = Math.floor((e.clientY - rect.top) / cellHeight);
     if (x < 0 || x >= cols || y < 0 || y >= rows) return;
     
+    let effBtn = e.button;
+    if (effBtn === 0 && flagMode && state[y][x] === 0) {
+      effBtn = 2;
+    }
+
     if (firstClick) startRealTime = Date.now();
-    moves.push({ t: Date.now() - startRealTime, x, y, b: e.button });
-    applyAction(x, y, e.button);
+    moves.push({ t: Date.now() - startRealTime, x, y, b: effBtn });
+    applyAction(x, y, effBtn);
+  });
+
+  cvs.addEventListener('touchstart', (e) => {
+    initAudio();
+    if (e.touches.length !== 1) return;
+    const t = e.touches[0];
+    touchStartX = t.clientX;
+    touchStartY = t.clientY;
+    touchLongPressed = false;
+
+    const rect = cvs.getBoundingClientRect();
+    const cellWidth = rect.width / cols;
+    const cellHeight = rect.height / rows;
+    const x = Math.floor((t.clientX - rect.left) / cellWidth);
+    const y = Math.floor((t.clientY - rect.top) / cellHeight);
+
+    if (x >= 0 && x < cols && y >= 0 && y < rows) {
+      touchTimer = setTimeout(() => {
+        touchLongPressed = true;
+        if (gameOver !== 0 || isReplaying) return;
+        if (state[y][x] !== 1) {
+          if (navigator.vibrate) navigator.vibrate(35);
+          moves.push({ t: Date.now() - startRealTime, x, y, b: 2 });
+          applyAction(x, y, 2);
+        }
+      }, 320);
+    }
+  }, { passive: false });
+
+  cvs.addEventListener('touchmove', (e) => {
+    if (touchTimer && e.touches.length === 1) {
+      const t = e.touches[0];
+      if (Math.hypot(t.clientX - touchStartX, t.clientY - touchStartY) > 12) {
+        clearTimeout(touchTimer);
+        touchTimer = null;
+      }
+    }
+  }, { passive: false });
+
+  cvs.addEventListener('touchend', (e) => {
+    if (touchTimer) {
+      clearTimeout(touchTimer);
+      touchTimer = null;
+    }
+    if (touchLongPressed) {
+      e.preventDefault();
+      return;
+    }
+    e.preventDefault();
+    lastTouchTime = Date.now();
+
+    if (gameOver !== 0 || isReplaying) {
+      if (gameOver !== 0) initGame();
+      return;
+    }
+
+    const t = e.changedTouches[0];
+    const rect = cvs.getBoundingClientRect();
+    const cellWidth = rect.width / cols;
+    const cellHeight = rect.height / rows;
+    const x = Math.floor((t.clientX - rect.left) / cellWidth);
+    const y = Math.floor((t.clientY - rect.top) / cellHeight);
+    if (x < 0 || x >= cols || y < 0 || y >= rows) return;
+
+    let effBtn = (flagMode && state[y][x] === 0) ? 2 : 0;
+    if (firstClick) startRealTime = Date.now();
+    moves.push({ t: Date.now() - startRealTime, x, y, b: effBtn });
+    applyAction(x, y, effBtn);
+  }, { passive: false });
+
+  cvs.addEventListener('touchcancel', () => {
+    if (touchTimer) {
+      clearTimeout(touchTimer);
+      touchTimer = null;
+    }
   });
   
   window.addEventListener('keydown', (e) => {
@@ -1392,6 +1731,10 @@
 
     if (e.key === 'h' || e.key === 'H') {
       giveHint();
+    } else if (e.key === 'f' || e.key === 'F') {
+      toggleDigFlagMode();
+    } else if (e.key === 'm' || e.key === 'M') {
+      toggleAudio();
     } else if (e.key === 'F1' || e.key === '?') {
       e.preventDefault();
       toggleHelpModal(true);
@@ -1426,6 +1769,7 @@
   });
   
   loadStats();
+  updateAudioBtn();
   setupCanvas();
   initGame();
   requestAnimationFrame(animLoop);
@@ -1440,7 +1784,7 @@
     }, 250);
   } else {
     setTimeout(() => {
-      showToast("💣 KMine Ready! L-Click: Reveal | R-Click: Flag | F1: Guide", "info", 4000);
+      showToast("💣 KMine Ready! Reveal: L-Click | Flag: R-Click / [F] | F1: Guide", "info", 4000);
     }, 300);
   }
 </script>
