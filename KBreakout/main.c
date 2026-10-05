@@ -170,7 +170,8 @@ int pad_squash_timer = 0;
 int score = 0;
 int high_score = 0;
 int lifetime_bricks = 0;
-int state = 0; // 0=start, 1=play, 2=gameover, 3=victory, 4=editor, 5=forge
+int state = 0; // 0=start, 1=play, 2=gameover, 3=victory, 4=editor, 5=forge, 6=tutorial, 7=pause
+int prev_state = 0;
 int diff = 0; // 0=Easy, 1=Hard
 float speed = 3.5f;
 int lives = 3;
@@ -1086,6 +1087,212 @@ void SaveHighScore() {
     }
 }
 
+char toast_text[64] = "";
+int toast_timer = 0;
+void ShowToast(const char* msg) {
+    int i = 0;
+    while (msg[i] && i < 63) { toast_text[i] = msg[i]; i++; }
+    toast_text[i] = '\0';
+    toast_timer = 90;
+}
+
+#pragma pack(push, 1)
+typedef struct {
+    DWORD magic; // 0x4B52424B = 'KBRK'
+    DWORD version; // 1
+    int score;
+    int high_score;
+    int lifetime_bricks;
+    int diff;
+    float speed;
+    int lives;
+    int level;
+    int chaos_mode;
+    int pad_x, pad_w;
+    int bricks[ROWS][COLS];
+    int brick_hp[ROWS][COLS];
+    int bricks_left;
+    Ball balls[MAX_BALLS];
+    int plasma_shards, quantum_cores, nano_alloys;
+    int forge_supernova, forge_chronos, forge_valkyrie, forge_aegis, forge_singularity, forge_satellite, forge_resonance;
+    int active_supernova, active_chronos, active_valkyrie, aegis_layers, active_singularity, active_satellite_boost, active_resonance_catalyst;
+    int cd_laser, dur_laser;
+    int cd_multi;
+    int cd_fire, dur_fire;
+    int cd_barrier, dur_barrier;
+    int cd_gravity, dur_gravity;
+    int cd_satellite, dur_satellite;
+    int paddle_timer, sticky_timer;
+    int boss_active, boss_type, boss_dx, boss_hp, boss_max_hp, boss_x, boss_y;
+} KBreakoutSave;
+#pragma pack(pop)
+
+int HasSavedGame() {
+    HANDLE hFile = CreateFileA("kbreakout_save.dat", GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile != INVALID_HANDLE_VALUE) {
+        DWORD read = 0;
+        DWORD magic = 0;
+        if (ReadFile(hFile, &magic, sizeof(magic), &read, NULL) && magic == 0x4B52424B) {
+            CloseHandle(hFile);
+            return 1;
+        }
+        CloseHandle(hFile);
+    }
+    return 0;
+}
+
+void SaveGameState() {
+    KBreakoutSave s;
+    memset(&s, 0, sizeof(s));
+    s.magic = 0x4B52424B;
+    s.version = 1;
+    s.score = score;
+    s.high_score = high_score;
+    s.lifetime_bricks = lifetime_bricks;
+    s.diff = diff;
+    s.speed = speed;
+    s.lives = lives;
+    s.level = level;
+    s.chaos_mode = chaos_mode;
+    s.pad_x = pad_x;
+    s.pad_w = pad_w;
+    for (int r = 0; r < ROWS; r++) {
+        for (int c = 0; c < COLS; c++) {
+            s.bricks[r][c] = bricks[r][c];
+            s.brick_hp[r][c] = brick_hp[r][c];
+        }
+    }
+    s.bricks_left = bricks_left;
+    for (int i = 0; i < MAX_BALLS; i++) {
+        s.balls[i] = balls[i];
+    }
+    s.plasma_shards = plasma_shards;
+    s.quantum_cores = quantum_cores;
+    s.nano_alloys = nano_alloys;
+    s.forge_supernova = forge_supernova;
+    s.forge_chronos = forge_chronos;
+    s.forge_valkyrie = forge_valkyrie;
+    s.forge_aegis = forge_aegis;
+    s.forge_singularity = forge_singularity;
+    s.forge_satellite = forge_satellite;
+    s.forge_resonance = forge_resonance;
+    s.active_supernova = active_supernova;
+    s.active_chronos = active_chronos;
+    s.active_valkyrie = active_valkyrie;
+    s.aegis_layers = aegis_layers;
+    s.active_singularity = active_singularity;
+    s.active_satellite_boost = active_satellite_boost;
+    s.active_resonance_catalyst = active_resonance_catalyst;
+    s.cd_laser = cd_laser; s.dur_laser = dur_laser;
+    s.cd_multi = cd_multi;
+    s.cd_fire = cd_fire; s.dur_fire = dur_fire;
+    s.cd_barrier = cd_barrier; s.dur_barrier = dur_barrier;
+    s.cd_gravity = cd_gravity; s.dur_gravity = dur_gravity;
+    s.cd_satellite = cd_satellite; s.dur_satellite = dur_satellite;
+    s.paddle_timer = paddle_timer; s.sticky_timer = sticky_timer;
+    s.boss_active = boss_active; s.boss_type = boss_type; s.boss_dx = boss_dx;
+    s.boss_hp = boss_hp; s.boss_max_hp = boss_max_hp; s.boss_x = boss_x; s.boss_y = boss_y;
+
+    HANDLE hFile = CreateFileA("kbreakout_save.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile != INVALID_HANDLE_VALUE) {
+        DWORD written = 0;
+        WriteFile(hFile, &s, sizeof(s), &written, NULL);
+        CloseHandle(hFile);
+        ShowToast("TACTICAL QUICKSAVE STORED [F5]");
+        MessageBeep(MB_OK);
+    }
+}
+
+int LoadGameState() {
+    HANDLE hFile = CreateFileA("kbreakout_save.dat", GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile == INVALID_HANDLE_VALUE) {
+        ShowToast("NO QUICKSAVE FOUND!");
+        MessageBeep(0xFFFFFFFF);
+        return 0;
+    }
+    KBreakoutSave s;
+    memset(&s, 0, sizeof(s));
+    DWORD read = 0;
+    int success = 0;
+    if (ReadFile(hFile, &s, sizeof(s), &read, NULL) && read == sizeof(s) && s.magic == 0x4B52424B) {
+        score = s.score;
+        high_score = s.high_score;
+        lifetime_bricks = s.lifetime_bricks;
+        diff = s.diff;
+        speed = s.speed;
+        lives = s.lives;
+        level = s.level;
+        chaos_mode = s.chaos_mode;
+        pad_x = s.pad_x;
+        pad_w = s.pad_w;
+        for (int r = 0; r < ROWS; r++) {
+            for (int c = 0; c < COLS; c++) {
+                bricks[r][c] = s.bricks[r][c];
+                brick_hp[r][c] = s.brick_hp[r][c];
+            }
+        }
+        bricks_left = s.bricks_left;
+        for (int i = 0; i < MAX_BALLS; i++) {
+            balls[i] = s.balls[i];
+        }
+        plasma_shards = s.plasma_shards;
+        quantum_cores = s.quantum_cores;
+        nano_alloys = s.nano_alloys;
+        forge_supernova = s.forge_supernova;
+        forge_chronos = s.forge_chronos;
+        forge_valkyrie = s.forge_valkyrie;
+        forge_aegis = s.forge_aegis;
+        forge_singularity = s.forge_singularity;
+        forge_satellite = s.forge_satellite;
+        forge_resonance = s.forge_resonance;
+        active_supernova = s.active_supernova;
+        active_chronos = s.active_chronos;
+        active_valkyrie = s.active_valkyrie;
+        aegis_layers = s.aegis_layers;
+        active_singularity = s.active_singularity;
+        active_satellite_boost = s.active_satellite_boost;
+        active_resonance_catalyst = s.active_resonance_catalyst;
+        cd_laser = s.cd_laser; dur_laser = s.dur_laser;
+        cd_multi = s.cd_multi;
+        cd_fire = s.cd_fire; dur_fire = s.dur_fire;
+        cd_barrier = s.cd_barrier; dur_barrier = s.dur_barrier;
+        cd_gravity = s.cd_gravity; dur_gravity = s.dur_gravity;
+        cd_satellite = s.cd_satellite; dur_satellite = s.dur_satellite;
+        paddle_timer = s.paddle_timer; sticky_timer = s.sticky_timer;
+        boss_active = s.boss_active; boss_type = s.boss_type; boss_dx = s.boss_dx;
+        boss_hp = s.boss_hp; boss_max_hp = s.boss_max_hp; boss_x = s.boss_x; boss_y = s.boss_y;
+
+        state = 1; // Play
+        success = 1;
+        ShowToast("TACTICAL QUICKSAVE RESTORED [F9]");
+        MessageBeep(MB_OK);
+    } else {
+        ShowToast("CORRUPT QUICKSAVE FILE!");
+        MessageBeep(0xFFFFFFFF);
+    }
+    CloseHandle(hFile);
+    return success;
+}
+
+int HasSeenTutorial() {
+    HANDLE hFile = CreateFileA("kbreakout_tut.dat", GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile != INVALID_HANDLE_VALUE) {
+        CloseHandle(hFile);
+        return 1;
+    }
+    return 0;
+}
+
+void MarkTutorialSeen() {
+    HANDLE hFile = CreateFileA("kbreakout_tut.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile != INVALID_HANDLE_VALUE) {
+        char c = '1';
+        DWORD written = 0;
+        WriteFile(hFile, &c, 1, &written, NULL);
+        CloseHandle(hFile);
+    }
+}
+
 void SplitBall(int idx) {
     if (!balls[idx].active) return;
     for (int n = 0; n < 2; n++) {
@@ -1408,12 +1615,41 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
         case WM_CREATE:
             LoadHighScore();
+            if (!HasSeenTutorial() && !HasSavedGame()) {
+                prev_state = 0;
+                state = 6;
+            }
             SetTimer(hwnd, TIMER_ID, 16, NULL);
             break;
         case WM_LBUTTONDOWN: {
             int x = LOWORD(lParam);
             int y = HIWORD(lParam);
-            if (state == 4) {
+            if (state == 6) {
+                MarkTutorialSeen();
+                state = prev_state;
+                InvalidateRect(hwnd, NULL, FALSE);
+            } else if (state == 7) {
+                if (y >= 95 && y <= 118) { state = 1; }
+                else if (y >= 120 && y <= 143) { SaveGameState(); }
+                else if (y >= 145 && y <= 168) { LoadGameState(); }
+                else if (y >= 170 && y <= 193) { prev_state = 7; state = 6; }
+                else if (y >= 195 && y <= 218) { state = 0; }
+                InvalidateRect(hwnd, NULL, FALSE);
+            } else if (state == 0) {
+                if (HasSavedGame() && y >= H/2 + 65 && y <= H/2 + 88) {
+                    LoadGameState();
+                    InvalidateRect(hwnd, NULL, FALSE);
+                } else if (y >= H/2 + 88 && y <= H/2 + 110) {
+                    prev_state = 0;
+                    state = 6;
+                    InvalidateRect(hwnd, NULL, FALSE);
+                }
+            } else if (state == 2 || state == 3) {
+                if (HasSavedGame() && y >= H/2 + 25 && y <= H/2 + 50) {
+                    LoadGameState();
+                    InvalidateRect(hwnd, NULL, FALSE);
+                }
+            } else if (state == 4) {
                 if (y >= 35 && y < 35 + ROWS * BR_H && x >= 0 && x < W) {
                     int r = (y - 35) / BR_H;
                     int c = x / BR_W;
@@ -1434,7 +1670,44 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             break;
         }
         case WM_KEYDOWN:
+            if (wParam == VK_F1 || wParam == 'H' || wParam == 'h') {
+                if (state == 6) {
+                    MarkTutorialSeen();
+                    state = prev_state;
+                } else {
+                    prev_state = state;
+                    state = 6;
+                }
+                InvalidateRect(hwnd, NULL, FALSE);
+                break;
+            }
+            if (wParam == VK_F5) {
+                if (state == 1 || state == 7) SaveGameState();
+                else ShowToast("QUICKSAVE ONLY IN ACTIVE MISSION");
+                InvalidateRect(hwnd, NULL, FALSE);
+                break;
+            }
+            if (wParam == VK_F9) {
+                LoadGameState();
+                InvalidateRect(hwnd, NULL, FALSE);
+                break;
+            }
+            if (state == 6) {
+                if (wParam == VK_RETURN || wParam == VK_SPACE || wParam == VK_ESCAPE) {
+                    MarkTutorialSeen();
+                    state = prev_state;
+                    InvalidateRect(hwnd, NULL, FALSE);
+                }
+                break;
+            }
+            if (state == 7) {
+                if (wParam == 'P' || wParam == 'p' || wParam == VK_ESCAPE) state = 1;
+                else if (wParam == 'Q' || wParam == 'q') state = 0;
+                InvalidateRect(hwnd, NULL, FALSE);
+                break;
+            }
             if (state == 1) {
+                if (wParam == 'P' || wParam == 'p' || wParam == VK_ESCAPE) { state = 7; InvalidateRect(hwnd, NULL, FALSE); break; }
                 if (wParam == 'L' || wParam == 'l') UseSkill('L');
                 if (wParam == 'M' || wParam == 'm') UseSkill('M');
                 if (wParam == 'F' || wParam == 'f') UseSkill('F');
@@ -2047,16 +2320,82 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 char* t5 = "Press C for MULTI-BALL CHAOS MODE";
                 char* t6 = "Press O/F for CYBER-FORGE LAB";
                 char* t7 = "Press E for Level Editor";
-                TextOutA(memDC, W/2 - 42, H/2 - 60, t1, lstrlenA(t1));
-                TextOutA(memDC, W/2 - 120, H/2 - 38, t2, lstrlenA(t2));
-                TextOutA(memDC, W/2 - 90, H/2 - 5, t3, lstrlenA(t3));
-                TextOutA(memDC, W/2 - 80, H/2 + 15, t4, lstrlenA(t4));
+                TextOutA(memDC, W/2 - 42, H/2 - 75, t1, lstrlenA(t1));
+                TextOutA(memDC, W/2 - 120, H/2 - 53, t2, lstrlenA(t2));
+                TextOutA(memDC, W/2 - 90, H/2 - 25, t3, lstrlenA(t3));
+                TextOutA(memDC, W/2 - 80, H/2 - 5, t4, lstrlenA(t4));
                 SetTextColor(memDC, RGB(255, 100, 255));
-                TextOutA(memDC, W/2 - 105, H/2 + 35, t5, lstrlenA(t5));
+                TextOutA(memDC, W/2 - 105, H/2 + 15, t5, lstrlenA(t5));
                 SetTextColor(memDC, RGB(0, 255, 255));
-                TextOutA(memDC, W/2 - 85, H/2 + 55, t6, lstrlenA(t6));
+                TextOutA(memDC, W/2 - 85, H/2 + 35, t6, lstrlenA(t6));
                 SetTextColor(memDC, RGB(180, 180, 180));
-                TextOutA(memDC, W/2 - 75, H/2 + 75, t7, lstrlenA(t7));
+                TextOutA(memDC, W/2 - 75, H/2 + 55, t7, lstrlenA(t7));
+                if (HasSavedGame()) {
+                    SetTextColor(memDC, RGB(255, 220, 0));
+                    char* t8 = "Press F9 to Resume Quicksave";
+                    TextOutA(memDC, W/2 - 85, H/2 + 75, t8, lstrlenA(t8));
+                    SetTextColor(memDC, RGB(0, 255, 200));
+                    char* t9 = "Press H or F1 for Tactical Manual";
+                    TextOutA(memDC, W/2 - 95, H/2 + 95, t9, lstrlenA(t9));
+                } else {
+                    SetTextColor(memDC, RGB(0, 255, 200));
+                    char* t9 = "Press H or F1 for Tactical Manual";
+                    TextOutA(memDC, W/2 - 95, H/2 + 75, t9, lstrlenA(t9));
+                }
+            } else if (state == 6) {
+                SetTextColor(memDC, RGB(0, 255, 255));
+                char* title = "=== TACTICAL PROTOCOL & CONTROLS ===";
+                TextOutA(memDC, W/2 - 120, 15, title, lstrlenA(title));
+
+                SetTextColor(memDC, RGB(255, 220, 0));
+                char* s1 = "[FLIGHT SYSTEM]";
+                TextOutA(memDC, 20, 42, s1, lstrlenA(s1));
+                SetTextColor(memDC, RGB(220, 220, 220));
+                char* s2 = "Move Paddle: Left / Right Arrows or [A] / [D]";
+                char* s3 = "Deploy Held Ball: SPACEBAR or Click";
+                TextOutA(memDC, 20, 60, s2, lstrlenA(s2));
+                TextOutA(memDC, 20, 78, s3, lstrlenA(s3));
+
+                SetTextColor(memDC, RGB(255, 100, 255));
+                char* s4 = "[COMBAT & SPECIAL SKILLS]";
+                TextOutA(memDC, 20, 104, s4, lstrlenA(s4));
+                SetTextColor(memDC, RGB(200, 200, 200));
+                char* s5 = "[L] Lasers  [M] Split Multi-Ball  [F] Fireball";
+                char* s6 = "[B] Barrier [G] Gravity Vortex    [S] Satellites";
+                char* s7 = "[O] Cyber-Forge Power Lab (spend materials)";
+                TextOutA(memDC, 20, 122, s5, lstrlenA(s5));
+                TextOutA(memDC, 20, 140, s6, lstrlenA(s6));
+                TextOutA(memDC, 20, 158, s7, lstrlenA(s7));
+
+                SetTextColor(memDC, RGB(0, 255, 200));
+                char* s8 = "[MISSION SYSTEM & HOTKEYS]";
+                TextOutA(memDC, 20, 184, s8, lstrlenA(s8));
+                SetTextColor(memDC, RGB(220, 220, 220));
+                char* s9 = "[F5] Tactical Quicksave | [F9] Tactical Quickload";
+                char* s10 = "[P] Pause Mission       | [H/F1] Toggle Manual";
+                TextOutA(memDC, 20, 202, s9, lstrlenA(s9));
+                TextOutA(memDC, 20, 220, s10, lstrlenA(s10));
+
+                SetTextColor(memDC, RGB(0, 255, 255));
+                char* sub = "Press ENTER / SPACE / ESC to engage mission";
+                TextOutA(memDC, W/2 - 130, 255, sub, lstrlenA(sub));
+            } else if (state == 7) {
+                SetTextColor(memDC, RGB(0, 255, 255));
+                char* title = "=== TACTICAL SYSTEM PAUSED ===";
+                TextOutA(memDC, W/2 - 105, 50, title, lstrlenA(title));
+
+                SetTextColor(memDC, RGB(255, 255, 255));
+                char* opt1 = "[P / ESC] Resume Mission";
+                char* opt2 = "[F5] Tactical Quicksave";
+                char* opt3 = "[F9] Tactical Quickload";
+                char* opt4 = "[H / F1] Tactical Manual";
+                char* opt5 = "[Q] Abort to Main Menu";
+                TextOutA(memDC, W/2 - 75, 100, opt1, lstrlenA(opt1));
+                TextOutA(memDC, W/2 - 75, 125, opt2, lstrlenA(opt2));
+                TextOutA(memDC, W/2 - 75, 150, opt3, lstrlenA(opt3));
+                TextOutA(memDC, W/2 - 75, 175, opt4, lstrlenA(opt4));
+                SetTextColor(memDC, RGB(255, 100, 100));
+                TextOutA(memDC, W/2 - 75, 200, opt5, lstrlenA(opt5));
             } else if (state == 5) {
                 SetTextColor(memDC, RGB(0, 255, 255));
                 char* title = "=== CYBER-FORGE POWER LAB ===";
@@ -2119,14 +2458,24 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 char* t1 = "GAME OVER";
                 char* t2 = "Press ENTER for Campaign";
                 char* t3 = "Press C for Chaos Mode";
-                TextOutA(memDC, W/2 - 40, H/2 - 20, t1, lstrlenA(t1));
-                TextOutA(memDC, W/2 - 75, H/2 + 10, t2, lstrlenA(t2));
-                TextOutA(memDC, W/2 - 75, H/2 + 30, t3, lstrlenA(t3));
+                TextOutA(memDC, W/2 - 40, H/2 - 30, t1, lstrlenA(t1));
+                TextOutA(memDC, W/2 - 75, H/2 - 5, t2, lstrlenA(t2));
+                TextOutA(memDC, W/2 - 75, H/2 + 15, t3, lstrlenA(t3));
+                if (HasSavedGame()) {
+                    SetTextColor(memDC, RGB(0, 255, 200));
+                    char* t4 = "Press F9 to Reload Quicksave";
+                    TextOutA(memDC, W/2 - 85, H/2 + 38, t4, lstrlenA(t4));
+                }
             } else if (state == 3) {
                 char* t1 = "VICTORY! CAMPAIGN CLEARED";
                 char* t2 = "Press ENTER to Play Again";
-                TextOutA(memDC, W/2 - 85, H/2 - 20, t1, lstrlenA(t1));
-                TextOutA(memDC, W/2 - 75, H/2 + 15, t2, lstrlenA(t2));
+                TextOutA(memDC, W/2 - 85, H/2 - 25, t1, lstrlenA(t1));
+                TextOutA(memDC, W/2 - 75, H/2, t2, lstrlenA(t2));
+                if (HasSavedGame()) {
+                    SetTextColor(memDC, RGB(255, 220, 0));
+                    char* t3 = "Press F9 to Reload Quicksave";
+                    TextOutA(memDC, W/2 - 85, H/2 + 25, t3, lstrlenA(t3));
+                }
             } else {
                 for (int r = 0; r < ROWS; r++) {
                     for (int c = 0; c < COLS; c++) {
@@ -2590,6 +2939,16 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             
             DeleteObject(lPen);
             DeleteObject(dPen);
+
+            if (toast_timer > 0) {
+                toast_timer--;
+                SetTextColor(memDC, RGB(0, 255, 255));
+                SetBkMode(memDC, OPAQUE);
+                SetBkColor(memDC, RGB(10, 20, 35));
+                int tlen = lstrlenA(toast_text);
+                TextOutA(memDC, W/2 - (tlen * 3), 48, toast_text, tlen);
+                SetBkMode(memDC, TRANSPARENT);
+            }
             
             BitBlt(hdc, 0, 0, W, H, memDC, 0, 0, SRCCOPY);
             SelectObject(memDC, hOld);
@@ -2599,6 +2958,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             break;
         }
         case WM_DESTROY:
+            if (state == 1 || state == 7) {
+                SaveGameState();
+            }
             SaveHighScore();
             PostQuitMessage(0);
             break;
@@ -2618,7 +2980,7 @@ void MainEntry() {
     wc.hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(1));
     RegisterClass(&wc);
 
-    HWND hwnd = CreateWindowEx(0, "KBreakoutApp", "KBreakout", WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX,
+    HWND hwnd = CreateWindowEx(0, "KBreakoutApp", "KBreakout [F1: Help | F5: Save | F9: Load | P: Pause]", WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX,
         CW_USEDEFAULT, CW_USEDEFAULT, W + 16, H + 39, NULL, NULL, hInstance, NULL);
 
     ShowWindow(hwnd, SW_SHOW);

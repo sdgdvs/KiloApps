@@ -27,6 +27,69 @@ canvas { background: #10101a; border: 1px solid #282845; border-radius: 4px; cur
 .forge-item { display: flex; justify-content: space-between; align-items: center; background: #181a32; border: 1px solid #334; border-radius: 4px; padding: 4px 6px; margin-bottom: 4px; font-size: 10.5px; }
 .forge-btn { background: #0088aa; border: 1px solid #00ffff; color: #fff; padding: 2px 6px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 10px; }
 .forge-btn:hover { background: #00aacc; }
+
+.modal-overlay {
+    display: none;
+    position: absolute;
+    top: 35px;
+    left: 10px;
+    width: 400px;
+    background: rgba(12, 14, 28, 0.98);
+    border: 2px solid #00ffff;
+    border-radius: 8px;
+    padding: 12px;
+    box-shadow: 0 0 25px rgba(0,255,255,0.5);
+    z-index: 110;
+    max-height: 400px;
+    overflow-y: auto;
+}
+.modal-title {
+    color: #00ffff;
+    font-size: 13px;
+    font-weight: bold;
+    text-align: center;
+    margin-bottom: 8px;
+    text-shadow: 0 0 8px #00ffff;
+}
+.manual-section {
+    background: #181a32;
+    border: 1px solid #334;
+    border-radius: 4px;
+    padding: 6px 8px;
+    margin-bottom: 6px;
+    font-size: 11px;
+    line-height: 1.45;
+}
+.manual-section b { color: #00ffcc; }
+.manual-key {
+    display: inline-block;
+    background: #111;
+    color: #00ffff;
+    padding: 1px 4px;
+    border-radius: 3px;
+    margin: 0 1px;
+    font-weight: bold;
+    border: 1px solid #335;
+}
+#toast-bar {
+    display: none;
+    position: absolute;
+    top: 48px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(14, 18, 36, 0.96);
+    border: 1px solid #00ffff;
+    color: #00ffff;
+    padding: 4px 12px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: bold;
+    box-shadow: 0 0 12px rgba(0,255,255,0.4);
+    z-index: 150;
+    cursor: pointer;
+    white-space: nowrap;
+    text-align: center;
+}
 </style>
 </head>
 <body>
@@ -38,6 +101,7 @@ canvas { background: #10101a; border: 1px solid #282845; border-radius: 4px; cur
         <div>HI: <span id="hi" class="ui-val">0</span></div>
         <div>LIVES: <span id="lv" class="ui-val">3</span></div>
         <div>MAT: <span id="mat" class="ui-val">0/0/0</span></div>
+        <button id="btn-manual-toggle" onclick="openTutorial()" style="background:#1e1e36; border:1px solid #00ffff; color:#00ffff; border-radius:3px; cursor:pointer; font-size:10px; font-weight:bold; padding:2px 6px;" title="Tactical Protocol & Controls [F1/H]">?</button>
     </div>
     
     <div id="boss-bar-container">
@@ -55,6 +119,42 @@ canvas { background: #10101a; border: 1px solid #282845; border-radius: 4px; cur
         <div id="btn-grav" class="skill-btn ready" onclick="useSkill('grav')"><span class="skill-key">G</span>GRV</div>
         <div id="btn-sat" class="skill-btn ready" onclick="useSkill('sat')"><span class="skill-key">S</span>SAT</div>
         <div id="btn-forge" class="skill-btn ready" onclick="toggleForge()"><span class="skill-key">O</span>FRG</div>
+    </div>
+
+    <div id="toast-bar" onclick="dismissToast()"></div>
+
+    <div id="tutorial-overlay" class="modal-overlay">
+        <div class="modal-title">⚡ TACTICAL PROTOCOL & FLIGHT CONTROLS ⚡</div>
+        <div class="manual-section">
+            <b>FLIGHT SYSTEM:</b> Move paddle using <span class="manual-key">Mouse</span>, <span class="manual-key">A</span> / <span class="manual-key">D</span>, or <span class="manual-key">←</span> / <span class="manual-key">→</span>.<br>
+            <b>DEPLOY BALL:</b> Click or press <span class="manual-key">Space</span> to launch held/magnetic balls.
+        </div>
+        <div class="manual-section">
+            <b>ACTIVE COMBAT SKILLS:</b><br>
+            <span class="manual-key">L</span> Laser Cannons | <span class="manual-key">M</span> Split Multi-Ball | <span class="manual-key">F</span> Nova Fireball<br>
+            <span class="manual-key">B</span> Aegis Barrier | <span class="manual-key">G</span> Graviton Singularity | <span class="manual-key">S</span> Satellites<br>
+            <span class="manual-key">O</span> Cyber-Forge Lab (spend Plasma/Quantum/Alloy materials)
+        </div>
+        <div class="manual-section">
+            <b>MISSION SYSTEM & HOTKEYS:</b><br>
+            <span class="manual-key">F5</span> Tactical Quicksave | <span class="manual-key">F9</span> Tactical Quickload<br>
+            <span class="manual-key">P</span> / <span class="manual-key">Esc</span> Pause Mission | <span class="manual-key">H</span> / <span class="manual-key">F1</span> Toggle Manual
+        </div>
+        <div style="text-align: center; margin-top: 8px;">
+            <button class="forge-btn" id="btn-tutorial-engage" style="padding: 4px 10px;" onclick="closeTutorial()">ENGAGE MISSION [ENTER / SPACE]</button>
+        </div>
+    </div>
+
+    <div id="pause-overlay" class="modal-overlay">
+        <div class="modal-title">⏸ TACTICAL SYSTEM PAUSED</div>
+        <div style="display: flex; flex-direction: column; gap: 6px; margin: 10px 0;">
+            <button class="forge-btn" style="padding: 6px;" onclick="togglePause()">RESUME MISSION [P / ESC]</button>
+            <button class="forge-btn" style="padding: 6px;" onclick="quicksaveGame()">TACTICAL QUICKSAVE [F5]</button>
+            <button class="forge-btn" style="padding: 6px;" onclick="quickloadGame()">TACTICAL QUICKLOAD [F9]</button>
+            <button class="forge-btn" style="padding: 6px;" onclick="openTutorial()">MISSION MANUAL [H / F1]</button>
+            <button class="forge-btn" style="padding: 6px; background: #661122; border-color: #ff3366;" onclick="abortToMenu()">ABORT TO MENU</button>
+        </div>
+        <div style="font-size: 10px; color: #88a; text-align: center; margin-top: 4px;">Hotkeys: [P/Esc] Resume, [F5] Save, [F9] Load, [H] Manual</div>
     </div>
 
     <div id="forge-overlay">
@@ -129,10 +229,257 @@ function playTone(freq, type = 'sine', duration = 0.1, vol = 0.1) {
     } catch(e) {}
 }
 
+// Storage Safe Helpers
+function safeGetStorage(key) {
+    try { return localStorage.getItem(key); } catch(e) { return null; }
+}
+function safeSetStorage(key, val) {
+    try { localStorage.setItem(key, val); return true; } catch(e) { return false; }
+}
+function safeGetJSON(key) {
+    try {
+        const val = localStorage.getItem(key);
+        return val ? JSON.parse(val) : null;
+    } catch(e) { return null; }
+}
+function safeSetJSON(key, val) {
+    try {
+        localStorage.setItem(key, JSON.stringify(val));
+        return true;
+    } catch(e) { return false; }
+}
+
+let toastTimeout = null;
+function showToast(msg, type = 'info', duration = 3000) {
+    const toast = document.getElementById('toast-bar');
+    if (!toast) return;
+    toast.innerText = msg;
+    toast.style.display = 'block';
+    toast.style.opacity = '1';
+    if (type === 'error' || type === 'warning') {
+        toast.style.borderColor = '#ff4444';
+        toast.style.color = '#ff6666';
+        toast.style.boxShadow = '0 0 10px rgba(255, 68, 68, 0.5)';
+    } else if (type === 'success') {
+        toast.style.borderColor = '#00ffcc';
+        toast.style.color = '#00ffcc';
+        toast.style.boxShadow = '0 0 10px rgba(0, 255, 204, 0.5)';
+    } else {
+        toast.style.borderColor = '#00ffff';
+        toast.style.color = '#00ffff';
+        toast.style.boxShadow = '0 0 10px rgba(0, 255, 255, 0.4)';
+    }
+    if (toastTimeout) clearTimeout(toastTimeout);
+    toastTimeout = setTimeout(() => {
+        toast.style.opacity = '0';
+        setTimeout(() => { toast.style.display = 'none'; }, 200);
+    }, duration);
+}
+function dismissToast() {
+    const toast = document.getElementById('toast-bar');
+    if (toast) { toast.style.display = 'none'; }
+}
+
+let tutorial_open = false;
+let is_paused = false;
+
+function openTutorial(isFirstRun = false) {
+    tutorial_open = true;
+    const ov = document.getElementById('tutorial-overlay');
+    if (ov) ov.style.display = 'block';
+    if (isFirstRun) {
+        showToast('⚡ Welcome Pilot! Review Tactical Protocol [F1/H/Esc].', 'info', 4500);
+    }
+}
+
+function closeTutorial() {
+    tutorial_open = false;
+    safeSetStorage('kbreakout_tutorialSeen', '1');
+    const ov = document.getElementById('tutorial-overlay');
+    if (ov) ov.style.display = 'none';
+}
+
+function togglePause() {
+    if (state !== 1 && !is_paused) return;
+    is_paused = !is_paused;
+    const ov = document.getElementById('pause-overlay');
+    if (ov) ov.style.display = is_paused ? 'block' : 'none';
+    if (is_paused) {
+        playTone(350, 'square', 0.1);
+    } else {
+        playTone(500, 'square', 0.1);
+    }
+}
+
+function abortToMenu() {
+    if (is_paused) togglePause();
+    if (forge_open) toggleForge();
+    if (tutorial_open) closeTutorial();
+    state = 0;
+    saveGameData();
+}
+
+function hasSavedGame() {
+    let s = safeGetJSON('kbreakout_quicksave');
+    return s !== null && typeof s === 'object' && !!s.saved;
+}
+
+function quicksaveGame(silent = false) {
+    if (state !== 1 && !is_paused) {
+        if (!silent) showToast('Quicksave only available during active mission', 'warning');
+        return false;
+    }
+    const saveData = {
+        saved: true,
+        version: 1,
+        timestamp: Date.now(),
+        score,
+        level,
+        lives,
+        diff,
+        speed,
+        chaos_mode,
+        pad_x,
+        pad_w,
+        balls: balls.map(b => ({
+            x: b.x,
+            y: b.y,
+            dx: b.dx,
+            dy: b.dy,
+            stuck: b.stuck || 0,
+            stuckOffset: b.stuckOffset || 0
+        })),
+        bricks: bricks.map(row => [...row]),
+        brick_hp: brick_hp.map(row => [...row]),
+        bricks_left,
+        plasma_shards,
+        quantum_cores,
+        nano_alloys,
+        lifetime_bricks,
+        cd_laser, dur_laser,
+        cd_multi,
+        cd_fire, dur_fire,
+        cd_barrier, dur_barrier,
+        cd_gravity, dur_gravity,
+        cd_satellite, dur_satellite,
+        paddle_timer, sticky_timer,
+        active_supernova,
+        active_chronos,
+        active_valkyrie,
+        aegis_layers,
+        active_singularity,
+        active_satellite_boost,
+        active_resonance_catalyst,
+        boss_active, boss_type, boss_hp, boss_max_hp, boss_x, boss_y, boss_dx
+    };
+    const ok = safeSetJSON('kbreakout_quicksave', saveData);
+    if (ok) {
+        if (!silent) {
+            showToast('Tactical Quicksave Stored! [F5]', 'success');
+            playTone(700, 'sine', 0.15);
+        }
+    } else {
+        if (!silent) showToast('Failed to save (storage quota error)', 'error');
+    }
+    return ok;
+}
+
+function quickloadGame() {
+    const saveData = safeGetJSON('kbreakout_quicksave');
+    if (!saveData || !saveData.saved) {
+        showToast('No quicksave found!', 'warning');
+        return false;
+    }
+    score = saveData.score || 0;
+    level = saveData.level || 1;
+    lives = saveData.lives !== undefined ? saveData.lives : 3;
+    diff = saveData.diff || 0;
+    speed = saveData.speed || 3.5;
+    chaos_mode = saveData.chaos_mode || 0;
+    pad_w = saveData.pad_w || (diff === 1 ? 45 : 60);
+    pad_x = Math.max(0, Math.min(w - pad_w, saveData.pad_x || (w/2 - pad_w/2)));
+
+    balls = (saveData.balls || []).map(b => ({
+        x: b.x,
+        y: b.y,
+        dx: b.dx,
+        dy: b.dy,
+        stuck: b.stuck || 0,
+        stuckOffset: b.stuckOffset || 0,
+        trail: []
+    }));
+    if (balls.length === 0) {
+        balls = [{ x: pad_x + pad_w/2, y: h - 50, dx: 2.5, dy: -speed, stuck: 1, stuckOffset: pad_w/2, trail: [] }];
+    }
+
+    if (saveData.bricks && Array.isArray(saveData.bricks)) {
+        bricks = saveData.bricks.map(row => [...row]);
+    }
+    if (saveData.brick_hp && Array.isArray(saveData.brick_hp)) {
+        brick_hp = saveData.brick_hp.map(row => [...row]);
+    }
+    bricks_left = saveData.bricks_left !== undefined ? saveData.bricks_left : 0;
+
+    plasma_shards = saveData.plasma_shards || 0;
+    quantum_cores = saveData.quantum_cores || 0;
+    nano_alloys = saveData.nano_alloys || 0;
+    lifetime_bricks = saveData.lifetime_bricks || 0;
+
+    cd_laser = saveData.cd_laser || 0;
+    dur_laser = saveData.dur_laser || 0;
+    cd_multi = saveData.cd_multi || 0;
+    cd_fire = saveData.cd_fire || 0;
+    dur_fire = saveData.dur_fire || 0;
+    cd_barrier = saveData.cd_barrier || 0;
+    dur_barrier = saveData.dur_barrier || 0;
+    cd_gravity = saveData.cd_gravity || 0;
+    dur_gravity = saveData.dur_gravity || 0;
+    cd_satellite = saveData.cd_satellite || 0;
+    dur_satellite = saveData.dur_satellite || 0;
+    paddle_timer = saveData.paddle_timer || 0;
+    sticky_timer = saveData.sticky_timer || 0;
+
+    active_supernova = saveData.active_supernova || 0;
+    active_chronos = saveData.active_chronos || 0;
+    active_valkyrie = saveData.active_valkyrie || 0;
+    aegis_layers = saveData.aegis_layers || 0;
+    active_singularity = saveData.active_singularity || 0;
+    active_satellite_boost = saveData.active_satellite_boost || 0;
+    active_resonance_catalyst = saveData.active_resonance_catalyst || 0;
+
+    boss_active = saveData.boss_active || 0;
+    boss_type = saveData.boss_type || 1;
+    boss_hp = saveData.boss_hp || 50;
+    boss_max_hp = saveData.boss_max_hp || 50;
+    boss_x = saveData.boss_x || (w/2 - 50);
+    boss_y = saveData.boss_y || 35;
+    boss_dx = saveData.boss_dx || 0;
+
+    lasers = [];
+    meteors = [];
+    gravity_wells = [];
+    particles = [];
+    shockwaves = [];
+
+    if (forge_open) toggleForge();
+    if (tutorial_open) closeTutorial();
+    if (is_paused) togglePause();
+
+    state = 1;
+    if (boss_active) {
+        document.getElementById('boss-bar-container').style.display = 'block';
+    } else {
+        document.getElementById('boss-bar-container').style.display = 'none';
+    }
+    showToast('Tactical State Restored! [F9]', 'success');
+    playTone(850, 'triangle', 0.2);
+    return true;
+}
+
 // Game State
 let state = 0; // 0=start, 1=play, 2=gameover, 3=victory, 4=editor
-let score = 0, high_score = parseInt(localStorage.getItem('kbreakout_hi')||'0');
-let lifetime_bricks = parseInt(localStorage.getItem('kbreakout_bricks')||'0');
+let score = 0, high_score = parseInt(safeGetStorage('kbreakout_hi')||'0');
+let lifetime_bricks = parseInt(safeGetStorage('kbreakout_bricks')||'0');
 let level = 1, diff = 0, speed = 3.5, lives = 3;
 let frame = 0;
 
@@ -140,9 +487,9 @@ let frame = 0;
 let chaos_mode = 0;
 
 // Materials & Cyber-Forge System
-let plasma_shards = parseInt(localStorage.getItem('kbreakout_plasma')||'0');
-let quantum_cores = parseInt(localStorage.getItem('kbreakout_quantum')||'0');
-let nano_alloys = parseInt(localStorage.getItem('kbreakout_alloys')||'0');
+let plasma_shards = parseInt(safeGetStorage('kbreakout_plasma')||'0');
+let quantum_cores = parseInt(safeGetStorage('kbreakout_quantum')||'0');
+let nano_alloys = parseInt(safeGetStorage('kbreakout_alloys')||'0');
 
 let active_supernova = 0;
 let active_chronos = 0;
@@ -340,11 +687,11 @@ function spawnLaser(x, y, vx, vy, type) {
 
 function saveGameData() {
     if (score > high_score) high_score = score;
-    localStorage.setItem('kbreakout_hi', high_score);
-    localStorage.setItem('kbreakout_bricks', lifetime_bricks);
-    localStorage.setItem('kbreakout_plasma', plasma_shards);
-    localStorage.setItem('kbreakout_quantum', quantum_cores);
-    localStorage.setItem('kbreakout_alloys', nano_alloys);
+    safeSetStorage('kbreakout_hi', high_score);
+    safeSetStorage('kbreakout_bricks', lifetime_bricks);
+    safeSetStorage('kbreakout_plasma', plasma_shards);
+    safeSetStorage('kbreakout_quantum', quantum_cores);
+    safeSetStorage('kbreakout_alloys', nano_alloys);
 }
 
 function toggleForge() {
@@ -871,7 +1218,7 @@ function initLevel() {
 
 function update() {
     frame++;
-    if (state === 1 && !forge_open) {
+    if (state === 1 && !forge_open && !is_paused && !tutorial_open) {
         if (boss_active) {
             boss_x += boss_dx;
             if (boss_x < 10 || boss_x + boss_w > w - 10) boss_dx = -boss_dx;
@@ -1685,26 +2032,43 @@ function render() {
 
     if (state === 0) {
         ctx.fillStyle = '#fff'; ctx.font = 'bold 18px Segoe UI'; ctx.textAlign = 'center';
-        ctx.fillText("KBREAKOUT", w/2, h/2 - 60);
+        ctx.fillText("KBREAKOUT", w/2, h/2 - 68);
         ctx.fillStyle = '#00ffff'; ctx.font = '12px Segoe UI';
-        ctx.fillText("Satellites, Reflectors & Quantum Resonance", w/2, h/2 - 38);
+        ctx.fillText("Satellites, Reflectors & Quantum Resonance", w/2, h/2 - 46);
         ctx.fillStyle = '#ddd';
-        ctx.fillText("Press ENTER or Click for Classic Campaign", w/2, h/2 - 5);
-        ctx.fillText("Press SPACE for Hard Campaign", w/2, h/2 + 18);
+        ctx.fillText("Press ENTER or Click for Classic Campaign", w/2, h/2 - 14);
+        ctx.fillText("Press SPACE for Hard Campaign", w/2, h/2 + 8);
         ctx.fillStyle = '#ff66ff';
-        ctx.fillText("Press C for MULTI-BALL CHAOS MODE", w/2, h/2 + 40);
+        ctx.fillText("Press C for MULTI-BALL CHAOS MODE", w/2, h/2 + 30);
         ctx.fillStyle = '#00ffcc';
-        ctx.fillText("Press O for CYBER-FORGE LAB", w/2, h/2 + 62);
+        ctx.fillText("Press O for CYBER-FORGE LAB", w/2, h/2 + 52);
+        if (hasSavedGame()) {
+            ctx.fillStyle = '#ffd700';
+            ctx.fillText("[F9] RESUME SAVED MISSION", w/2, h/2 + 74);
+            ctx.fillStyle = '#88aacc';
+            ctx.fillText("[F1 / H] MISSION MANUAL", w/2, h/2 + 94);
+        } else {
+            ctx.fillStyle = '#88aacc';
+            ctx.fillText("[F1 / H] TACTICAL PROTOCOL & CONTROLS", w/2, h/2 + 76);
+        }
     } else if (state === 2) {
         ctx.fillStyle = '#ff3366'; ctx.font = 'bold 20px Segoe UI'; ctx.textAlign = 'center';
-        ctx.fillText("GAME OVER", w/2, h/2 - 10);
+        ctx.fillText("GAME OVER", w/2, h/2 - 16);
         ctx.fillStyle = '#fff'; ctx.font = '12px Segoe UI';
-        ctx.fillText("Press ENTER or Click to Retry", w/2, h/2 + 20);
+        ctx.fillText("Press ENTER or Click to Retry", w/2, h/2 + 10);
+        if (hasSavedGame()) {
+            ctx.fillStyle = '#00ffcc';
+            ctx.fillText("Press F9 to Reload Quicksave", w/2, h/2 + 32);
+        }
     } else if (state === 3) {
         ctx.fillStyle = '#00ffcc'; ctx.font = 'bold 20px Segoe UI'; ctx.textAlign = 'center';
-        ctx.fillText("VICTORY! CAMPAIGN CLEARED", w/2, h/2 - 10);
+        ctx.fillText("VICTORY! CAMPAIGN CLEARED", w/2, h/2 - 16);
         ctx.fillStyle = '#fff'; ctx.font = '12px Segoe UI';
-        ctx.fillText("Press ENTER or Click to Play Again", w/2, h/2 + 20);
+        ctx.fillText("Press ENTER or Click to Play Again", w/2, h/2 + 10);
+        if (hasSavedGame()) {
+            ctx.fillStyle = '#ffd700';
+            ctx.fillText("Press F9 to Reload Quicksave", w/2, h/2 + 32);
+        }
     } else {
         for (let r = 0; r < ROWS; r++) {
             for (let c = 0; c < COLS; c++) {
@@ -1836,6 +2200,51 @@ function loop() {
 
 window.addEventListener('keydown', e => {
     keys[e.code] = true;
+
+    // Tactical Manual toggle [F1 / H]
+    if (e.code === 'KeyH' || e.code === 'F1') {
+        e.preventDefault();
+        if (tutorial_open) closeTutorial();
+        else openTutorial();
+        return;
+    }
+
+    // Tactical Quicksave [F5] & Quickload [F9]
+    if (e.code === 'F5') {
+        e.preventDefault();
+        quicksaveGame();
+        return;
+    }
+    if (e.code === 'F9') {
+        e.preventDefault();
+        quickloadGame();
+        return;
+    }
+
+    // Modal dismissals on Space / Enter
+    if (tutorial_open && (e.code === 'Enter' || e.code === 'Space')) {
+        e.preventDefault();
+        closeTutorial();
+        return;
+    }
+
+    // Tactical Pause toggle [P]
+    if (e.code === 'KeyP') {
+        if (state === 1 || is_paused) {
+            e.preventDefault();
+            togglePause();
+            return;
+        }
+    }
+
+    // Escape handling hierarchy
+    if (e.code === 'Escape') {
+        if (tutorial_open) { closeTutorial(); return; }
+        if (forge_open) { toggleForge(); return; }
+        if (is_paused) { togglePause(); return; }
+        if (state === 1) { togglePause(); return; }
+    }
+
     if (state === 0 || state === 2 || state === 3) {
         if (e.code === 'Enter') {
             diff = 0; speed = 3.5; score = 0; lives = 3; level = 1; chaos_mode = 0; initLevel(); state = 1;
@@ -1845,23 +2254,26 @@ window.addEventListener('keydown', e => {
             diff = 1; speed = 4.5; score = 0; lives = 5; level = 1; chaos_mode = 1; initLevel(); state = 1;
         }
     }
-    if (e.code === 'KeyL') useSkill('laser');
-    if (e.code === 'KeyM') useSkill('multi');
-    if (e.code === 'KeyF') useSkill('fire');
-    if (e.code === 'KeyB') useSkill('barrier');
-    if (e.code === 'KeyG') useSkill('grav');
-    if (e.code === 'KeyS') useSkill('sat');
-    if (e.code === 'KeyO') toggleForge();
+
+    if (state === 1 && !forge_open && !is_paused && !tutorial_open) {
+        if (e.code === 'KeyL') useSkill('laser');
+        if (e.code === 'KeyM') useSkill('multi');
+        if (e.code === 'KeyF') useSkill('fire');
+        if (e.code === 'KeyB') useSkill('barrier');
+        if (e.code === 'KeyG') useSkill('grav');
+        if (e.code === 'KeyS') useSkill('sat');
+        if (e.code === 'KeyO') toggleForge();
+    }
+
     if (forge_open && ((e.code >= 'Digit1' && e.code <= 'Digit7') || (e.code >= 'Numpad1' && e.code <= 'Numpad7') || (e.key >= '1' && e.key <= '7'))) {
         craftForge(parseInt(e.key));
     }
-    if (e.code === 'Escape' && forge_open) toggleForge();
 });
 
 window.addEventListener('keyup', e => { keys[e.code] = false; });
 
 cvs.addEventListener('pointermove', e => {
-    if (state === 1 && !forge_open) {
+    if (state === 1 && !forge_open && !is_paused && !tutorial_open) {
         const rect = cvs.getBoundingClientRect();
         const scaleX = cvs.width / rect.width;
         const mx = (e.clientX - rect.left) * scaleX;
@@ -1873,7 +2285,7 @@ cvs.addEventListener('pointerdown', e => {
     initAudio();
     if (state === 0 || state === 2 || state === 3) {
         diff = 0; speed = 3.5; score = 0; lives = 3; level = 1; chaos_mode = 0; initLevel(); state = 1;
-    } else if (state === 1 && !forge_open) {
+    } else if (state === 1 && !forge_open && !is_paused && !tutorial_open) {
         for (let b of balls) {
             if (b.stuck) {
                 b.stuck = 0;
@@ -1881,6 +2293,26 @@ cvs.addEventListener('pointerdown', e => {
             }
         }
     }
+});
+
+window.addEventListener('load', () => {
+    if (window.parent) {
+        window.parent.postMessage({ type: 'OS_SET_WINDOW_SIZE', width: 440, height: 530 }, '*');
+    }
+    setTimeout(() => {
+        let tutorialSeen = safeGetStorage('kbreakout_tutorialSeen') === '1';
+        let hasSaved = hasSavedGame();
+        if (!tutorialSeen && !hasSaved) {
+            openTutorial(true);
+        }
+    }, 300);
+});
+
+window.addEventListener('beforeunload', () => {
+    if (state === 1 || is_paused) {
+        quicksaveGame(true);
+    }
+    saveGameData();
 });
 
 loop();
