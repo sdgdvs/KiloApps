@@ -801,6 +801,11 @@ typedef struct {
     int soundEnabled;
     int showDefense;
     int selectedWeapon; // 0=Laser, 1=Railgun, 2=EMP Flak, 3=PDL
+    int hasRailgun;
+    int hasEMP;
+    int hasPDL;
+    int hasAegis;
+    int inAmbush;
     int railgunSlugs;
     int empCharges;
     int autoPDL;
@@ -1038,7 +1043,7 @@ void AddScanWave(float x, float y, float maxR, COLORREF color);
 void SpawnOreChunk(float x, float y, int oreType, int amount);
 void SpawnAsteroid(int index, int oreType);
 void SpawnDerelict(int index, int templateIdx);
-void SpawnRaider(int index, int type);
+void SpawnRaider(int index, int type, float customX, float customY);
 void FireRailgun(void);
 void FireEMPFlak(void);
 void TriggerEMPShockwave(float x, float y);
@@ -1053,13 +1058,14 @@ void DecryptBlackBox(int index);
 void HarvestReactorCore(int index);
 void ScavengeCargoPods(int index);
 int PickOreForSector(int sectorIdx);
-void InitSectorField(int sectorIdx);
+void InitSectorField(int sectorIdx, int isWarpAmbush);
 void EngageWarpJump(int targetSectorIdx);
 void ScanTargetAsteroid(int index);
 void ScanAllWideBand(void);
 void TuneLaserResonance(int index);
 void InitGame(void);
 void BuyUpgrade(int moduleIdx);
+void BuyCombatUpgrade(int type);
 void UpdateGame(float dt);
 void RenderGame(HDC hdc, RECT* clientRect);
 int CalculateCargoValue(void);
@@ -1403,7 +1409,7 @@ void TuneLaserResonance(int index) {
     AddFloatingText("RESONANCE LOCKED (+50%)", g_state.shipX, g_state.shipY - 35.0f, RGB(245, 158, 11));
 }
 
-void SpawnRaider(int index, int type) {
+void SpawnRaider(int index, int type, float customX, float customY) {
     if (index < 0 || index >= MAX_RAIDERS) return;
     Raider* r = &g_state.raiders[index];
     r->type = type;
@@ -1411,10 +1417,15 @@ void SpawnRaider(int index, int type) {
     r->stunTimer = 0.0f;
     r->shootTimer = 1.0f + (((float)rand() / (float)RAND_MAX) * 2.0f);
 
-    float angle = ((float)rand() / (float)RAND_MAX) * 6.28318f;
-    float dist = 420.0f + (((float)rand() / (float)RAND_MAX) * 380.0f);
-    r->x = g_state.shipX + (float)cos(angle) * dist;
-    r->y = g_state.shipY + (float)sin(angle) * dist;
+    if (customX > -9000.0f) {
+        r->x = customX;
+        r->y = customY;
+    } else {
+        float angle = ((float)rand() / (float)RAND_MAX) * 6.28318f;
+        float dist = 420.0f + (((float)rand() / (float)RAND_MAX) * 380.0f);
+        r->x = g_state.shipX + (float)cos(angle) * dist;
+        r->y = g_state.shipY + (float)sin(angle) * dist;
+    }
     r->vx = 0.0f;
     r->vy = 0.0f;
     r->angle = (float)atan2(g_state.shipY - r->y, g_state.shipX - r->x);
@@ -1456,9 +1467,14 @@ void SpawnRaider(int index, int type) {
 }
 
 void FireRailgun(void) {
+    if (!g_state.hasRailgun) {
+        AddLog("LOCKED: Kinetic Railgun Battery not installed! Retrofit at Vanguard-Prime [O].", 3);
+        TriggerSound(SFX_BEEP);
+        return;
+    }
     if (g_state.railgunCooldown > 0.0f) return;
     if (g_state.railgunSlugs <= 0) {
-        AddLog("WARNING: Kinetic Railgun dry! Smelt slugs from Ferrum in Armory [X].", 3);
+        AddLog("WARNING: Kinetic Railgun dry! Smelt slugs from Ferrum in Armory [X] or buy at port.", 3);
         TriggerSound(SFX_BEEP);
         return;
     }
@@ -1490,9 +1506,14 @@ void FireRailgun(void) {
 }
 
 void FireEMPFlak(void) {
+    if (!g_state.hasEMP) {
+        AddLog("LOCKED: EMP Flak Burst Cannon not installed! Retrofit at Cryo-Reach [O].", 3);
+        TriggerSound(SFX_BEEP);
+        return;
+    }
     if (g_state.flakCooldown > 0.0f) return;
     if (g_state.empCharges <= 0) {
-        AddLog("WARNING: EMP Flak capacitors depleted! Recharge from Silicates in Armory [X].", 3);
+        AddLog("WARNING: EMP Flak capacitors depleted! Recharge from Silicates in Armory [X] or buy at port.", 3);
         TriggerSound(SFX_BEEP);
         return;
     }
@@ -1567,7 +1588,7 @@ void TriggerEMPShockwave(float x, float y) {
 }
 
 void FirePDL(void) {
-    if (g_state.pdlCooldown > 0.0f) return;
+    if (!g_state.hasPDL || g_state.pdlCooldown > 0.0f) return;
     g_state.pdlCooldown = 0.22f;
 
     // Target closest hostile torpedo or raider
@@ -1679,6 +1700,11 @@ void DeployChaff(void) {
 }
 
 void CraftRailgunSlugs(void) {
+    if (!g_state.hasRailgun) {
+        AddLog("LOCKED: Kinetic Railgun Battery not installed! Retrofit at Vanguard-Prime [O].", 3);
+        TriggerSound(SFX_BEEP);
+        return;
+    }
     if (g_state.cargoHold[0] < 5) {
         AddLog("WARNING: Insufficient Ferrum Ore! Need 5T Ferrum to smelt 5 slugs.", 3);
         return;
@@ -1692,6 +1718,11 @@ void CraftRailgunSlugs(void) {
 }
 
 void RechargeEMPCapacitor(void) {
+    if (!g_state.hasEMP) {
+        AddLog("LOCKED: EMP Flak Burst Cannon not installed! Retrofit at Cryo-Reach [O].", 3);
+        TriggerSound(SFX_BEEP);
+        return;
+    }
     if (g_state.cargoHold[1] < 4) {
         AddLog("WARNING: Insufficient Silicates! Need 4T Silicates to charge 2 EMP capacitors.", 3);
         return;
@@ -2363,7 +2394,7 @@ void ClaimContract(int contractIdx) {
     AddFloatingText(fTxt, g_state.shipX, g_state.shipY - 40.0f, RGB(251, 191, 36));
 }
 
-void InitSectorField(int sectorIdx) {
+void InitSectorField(int sectorIdx, int isWarpAmbush) {
     if (sectorIdx < 0 || sectorIdx >= 4) sectorIdx = 0;
     g_state.currentSectorIndex = sectorIdx;
     g_state.selectedSectorIndex = sectorIdx;
@@ -2412,14 +2443,45 @@ void InitSectorField(int sectorIdx) {
         }
     }
     
-    // Seed Raiders per sector threat level
-    int raiderCount = (sectorIdx == 0) ? 1 : ((sectorIdx == 1) ? 2 : ((sectorIdx == 2) ? 3 : 4));
-    for (int i = 0; i < MAX_RAIDERS; i++) {
-        if (i < raiderCount) {
-            int rType = (sectorIdx == 0) ? 0 : ((sectorIdx == 1) ? (i % 2) : ((sectorIdx == 2) ? (1 + (i % 2)) : (i % 3)));
-            SpawnRaider(i, rType);
+    // Phase 12: Pirate Attacks prey on hyperlanes between spaceports
+    // Pirates do NOT spawn randomly near spaceports or in starter Belt Alpha-09.
+    for (int i = 0; i < MAX_RAIDERS; i++) g_state.raiders[i].active = 0;
+    g_state.inAmbush = isWarpAmbush;
+
+    if (isWarpAmbush) {
+        int ambushTemplates[4];
+        int ambushCount = 0;
+        if (sectorIdx == 1) {
+            ambushTemplates[0] = 0; ambushTemplates[1] = 0; // 2 Corsair Skiffs
+            ambushCount = 2;
+            AddLog("HYPERLANE PIRATE AMBUSH: 2x Corsair Skiffs intercepted transit! Use Railgun [F] or reach station [O]!", 1);
+        } else if (sectorIdx == 2) {
+            ambushTemplates[0] = 1; ambushTemplates[1] = 1; // 2 Marauder Gunships
+            ambushCount = 2;
+            AddLog("HYPERLANE PIRATE AMBUSH: Marauder Gunships with torpedoes detected! Deploy EMP Flak [G] & Railguns [F]!", 1);
+        } else if (sectorIdx == 3) {
+            ambushTemplates[0] = 2; ambushTemplates[1] = 1; // Dreadnought + Marauder
+            ambushCount = 2;
+            AddLog("HYPERLANE PIRATE AMBUSH: Outlaw Dreadnought wolfpack blockading Nebula shipping lane! Auto-PDL active!", 1);
         } else {
-            g_state.raiders[i].active = 0;
+            ambushTemplates[0] = 0; // 1 Skiff
+            ambushCount = 1;
+            AddLog("HYPERLANE SKIRMISH: Corsair Skiff attempting ambush along return corridor!", 2);
+        }
+
+        AddFloatingText("HYPERLANE AMBUSH!", g_state.shipX, g_state.shipY - 40.0f, RGB(239, 68, 68));
+        TriggerSound(SFX_ALARM);
+
+        float toStationX = g_state.stationX - g_state.shipX;
+        float toStationY = g_state.stationY - g_state.shipY;
+        float baseAngle = (float)atan2(toStationY, toStationX);
+
+        for (int i = 0; i < ambushCount; i++) {
+            float spreadAngle = baseAngle + ((i == 0) ? -0.32f : ((i == 1) ? 0.32f : 0.0f));
+            float ambushDist = 380.0f + (float)i * 80.0f;
+            float rx = g_state.shipX + (float)cos(spreadAngle) * ambushDist;
+            float ry = g_state.shipY + (float)sin(spreadAngle) * ambushDist;
+            SpawnRaider(i, ambushTemplates[i], rx, ry);
         }
     }
 
@@ -2612,6 +2674,122 @@ void BuyUpgrade(int moduleIdx) {
     }
 }
 
+void BuyCombatUpgrade(int type) {
+    if (!g_state.stationDocked) {
+        AddLog("You must be docked at an orbital spaceport to purchase combat retrofits [O].", 3);
+        TriggerSound(SFX_BEEP);
+        return;
+    }
+    int sec = g_state.currentSectorIndex;
+
+    if (type == 0) { // Railgun
+        if (g_state.hasRailgun) {
+            AddLog("Kinetic Railgun Battery is already installed on your dredging barge.", 3);
+            return;
+        }
+        if (sec != 0) {
+            AddLog("Kinetic Railgun requires docking at Vanguard-Prime Orbital Foundry in Belt Alpha-09!", 3);
+            return;
+        }
+        if (g_state.credits < 400) {
+            AddLog("Insufficient credits! Mk-I Kinetic Railgun Battery costs 400 CR.", 4);
+            return;
+        }
+        g_state.credits -= 400;
+        g_state.hasRailgun = 1;
+        if (g_state.railgunSlugs < 15) g_state.railgunSlugs = 15;
+        TriggerSound(SFX_COLLECT);
+        AddLog("COMBAT RETROFIT COMPLETE: Mk-I Kinetic Railgun Battery installed (+15 Slugs)! Select [2] or fire [F].", 5);
+        AddFloatingText("RAILGUN BATTERY INSTALLED!", g_state.shipX, g_state.shipY - 35.0f, RGB(56, 189, 248));
+    } else if (type == 1) { // Slugs
+        if (!g_state.hasRailgun) {
+            AddLog("You must install a Kinetic Railgun Battery before purchasing slugs.", 3);
+            return;
+        }
+        if (g_state.credits < 50) {
+            AddLog("Insufficient credits! +5 Slugs cost 50 CR.", 4);
+            return;
+        }
+        g_state.credits -= 50;
+        g_state.railgunSlugs += 5;
+        TriggerSound(SFX_COLLECT);
+        AddLog("Munition Crate: +5 Kinetic Railgun Slugs loaded into magazines.", 5);
+        AddFloatingText("+5 SLUGS", g_state.shipX, g_state.shipY - 30.0f, RGB(148, 163, 184));
+    } else if (type == 2) { // EMP Flak
+        if (g_state.hasEMP) {
+            AddLog("EMP Flak Burst Cannon is already installed on your dredging barge.", 3);
+            return;
+        }
+        if (sec != 1) {
+            AddLog("EMP Flak Burst Cannon requires docking at Cryo-Reach Free Waystation in Kuiper Expanse!", 3);
+            return;
+        }
+        if (g_state.credits < 950) {
+            AddLog("Insufficient credits! EMP Flak Cannon costs 950 CR.", 4);
+            return;
+        }
+        g_state.credits -= 950;
+        g_state.hasEMP = 1;
+        if (g_state.empCharges < 6) g_state.empCharges = 6;
+        TriggerSound(SFX_COLLECT);
+        AddLog("COMBAT RETROFIT COMPLETE: EMP Flak Burst Cannon installed (+6 Charges)! Select [3] or detonate [G].", 5);
+        AddFloatingText("EMP FLAK CANNON INSTALLED!", g_state.shipX, g_state.shipY - 35.0f, RGB(192, 132, 252));
+    } else if (type == 3) { // EMP Charges
+        if (!g_state.hasEMP) {
+            AddLog("You must install an EMP Flak Cannon before purchasing pulse charges.", 3);
+            return;
+        }
+        if (g_state.credits < 100) {
+            AddLog("Insufficient credits! +2 EMP Charges cost 100 CR.", 4);
+            return;
+        }
+        g_state.credits -= 100;
+        g_state.empCharges += 2;
+        TriggerSound(SFX_COLLECT);
+        AddLog("High-Yield Capacitors: +2 EMP Charges loaded.", 5);
+        AddFloatingText("+2 EMP CHARGES", g_state.shipX, g_state.shipY - 30.0f, RGB(192, 132, 252));
+    } else if (type == 4) { // Auto-PDL
+        if (g_state.hasPDL) {
+            AddLog("Auto-PDL Turret is already installed on your dredging barge.", 3);
+            return;
+        }
+        if (sec != 2) {
+            AddLog("Point-Defense Laser Turret requires docking at Shadow-Haven Pirate Freeport in Ship Graveyard!", 3);
+            return;
+        }
+        if (g_state.credits < 2200) {
+            AddLog("Insufficient credits! Auto-PDL Turret costs 2,200 CR.", 4);
+            return;
+        }
+        g_state.credits -= 2200;
+        g_state.hasPDL = 1;
+        g_state.autoPDL = 1;
+        TriggerSound(SFX_COLLECT);
+        AddLog("COMBAT RETROFIT COMPLETE: 360 Auto-PDL Turret installed! Auto-intercepts incoming torpedoes.", 5);
+        AddFloatingText("AUTO-PDL TURRET INSTALLED!", g_state.shipX, g_state.shipY - 35.0f, RGB(16, 185, 129));
+    } else if (type == 5) { // Aegis
+        if (g_state.hasAegis) {
+            AddLog("Harmonic Deflector Aegis is already installed on your dredging barge.", 3);
+            return;
+        }
+        if (sec != 3) {
+            AddLog("Harmonic Deflector Aegis requires docking at Omega-7 Black Lab Citadel in Phantom Nebula!", 3);
+            return;
+        }
+        if (g_state.credits < 3500) {
+            AddLog("Insufficient credits! Harmonic Deflector Aegis costs 3,500 CR.", 4);
+            return;
+        }
+        g_state.credits -= 3500;
+        g_state.hasAegis = 1;
+        g_state.maxShield += 50.0f;
+        g_state.shield = g_state.maxShield;
+        TriggerSound(SFX_COLLECT);
+        AddLog("ADVANCED DEFENSE RETROFIT: Harmonic Deflector Aegis installed! Shield capacity expanded by +50 MW.", 5);
+        AddFloatingText("+50 MW DEFLECTOR AEGIS!", g_state.shipX, g_state.shipY - 35.0f, RGB(56, 189, 248));
+    }
+}
+
 void InitGame(void) {
     memset(&g_state, 0, sizeof(GameState));
     g_state.credits = 350;
@@ -2636,16 +2814,20 @@ void InitGame(void) {
     g_state.showCrisis = 0;
     g_state.showDefense = 0;
     g_state.selectedWeapon = 0;
-    g_state.railgunSlugs = 15;
-    g_state.empCharges = 6;
-    g_state.autoPDL = 1;
+    g_state.hasRailgun = 0;
+    g_state.hasEMP = 0;
+    g_state.hasPDL = 0;
+    g_state.hasAegis = 0;
+    g_state.inAmbush = 0;
+    g_state.railgunSlugs = 0;
+    g_state.empCharges = 0;
+    g_state.autoPDL = 0;
     g_state.railgunCooldown = 0.0f;
     g_state.flakCooldown = 0.0f;
     g_state.pdlCooldown = 0.0f;
     g_state.chaffCooldown = 0.0f;
     g_state.piratesDefeated = 0;
     g_state.bountiesClaimed = 0;
-    g_state.maxCargo = 200;
     g_state.dampeners = 1;
     g_state.soundEnabled = 1;
     g_state.themeIndex = 0;
@@ -2662,7 +2844,7 @@ void InitGame(void) {
     memset(g_state.refined, 0, sizeof(g_state.refined));
     g_state.crucibleAnimTime = 0.0f;
     
-    InitSectorField(0);
+    InitSectorField(0, 0);
     
     // Check if save file already exists; if not, trigger first-run tutorial briefing
     char savePath[MAX_PATH];
@@ -2700,7 +2882,7 @@ void UpdateGame(float dt) {
     if (g_state.warpActive) {
         g_state.warpTimer -= dt;
         if (g_state.warpTimer <= 0.4f && g_state.currentSectorIndex != g_state.selectedSectorIndex) {
-            InitSectorField(g_state.selectedSectorIndex);
+            InitSectorField(g_state.selectedSectorIndex, 1);
             g_state.shipVx = 0.0f;
             g_state.shipVy = 0.0f;
         }
@@ -3195,7 +3377,7 @@ void UpdateGame(float dt) {
     if (g_state.chaffCooldown > 0.0f) g_state.chaffCooldown = max(0.0f, g_state.chaffCooldown - dt);
 
     // Auto-PDL routine
-    if (g_state.autoPDL && g_state.pdlCooldown <= 0.0f) {
+    if (g_state.hasPDL && g_state.autoPDL && g_state.pdlCooldown <= 0.0f) {
         int foundThreat = 0;
         for (int i = 0; i < MAX_ENEMY_PROJECTILES; i++) {
             if (!g_state.enemyProjectiles[i].active || g_state.enemyProjectiles[i].type != 1) continue;
@@ -3363,6 +3545,40 @@ void UpdateGame(float dt) {
         }
     }
 
+    // Station Defensive Perimeter & Safe Zone Logic
+    float distShipToStation = (float)sqrt((g_state.shipX - g_state.stationX) * (g_state.shipX - g_state.stationX) + 
+                                          (g_state.shipY - g_state.stationY) * (g_state.shipY - g_state.stationY));
+    int inStationSafeZone = (g_state.stationDocked || distShipToStation < 500.0f);
+
+    // Spaceport heavy point defense repels raiders & shreds hostile trespassers
+    for (int i = 0; i < MAX_RAIDERS; i++) {
+        Raider* r = &g_state.raiders[i];
+        if (!r->active) continue;
+        float distRToStn = (float)sqrt((r->x - g_state.stationX) * (r->x - g_state.stationX) + 
+                                       (r->y - g_state.stationY) * (r->y - g_state.stationY));
+        if (distRToStn < 520.0f) {
+            float stnAngle = (float)atan2(r->y - g_state.stationY, r->x - g_state.stationX);
+            r->vx += (float)cos(stnAngle) * (180.0f * dt);
+            r->vy += (float)sin(stnAngle) * (180.0f * dt);
+            r->hp -= 32.0f * dt;
+            if (rand() % 100 < 15) {
+                AddSparks(r->x, r->y, RGB(56, 189, 248), 3);
+            }
+        }
+    }
+
+    // Station destroys incoming hostile projectiles within safe perimeter (480m)
+    for (int i = 0; i < MAX_ENEMY_PROJECTILES; i++) {
+        EnemyProjectile* ep = &g_state.enemyProjectiles[i];
+        if (!ep->active) continue;
+        float distEpToStn = (float)sqrt((ep->x - g_state.stationX) * (ep->x - g_state.stationX) + 
+                                        (ep->y - g_state.stationY) * (ep->y - g_state.stationY));
+        if (distEpToStn < 480.0f) {
+            AddSparks(ep->x, ep->y, RGB(56, 189, 248), 6);
+            ep->active = 0;
+        }
+    }
+
     // Update Raider AI
     for (int i = 0; i < MAX_RAIDERS; i++) {
         Raider* r = &g_state.raiders[i];
@@ -3402,9 +3618,9 @@ void UpdateGame(float dt) {
         r->x += r->vx;
         r->y += r->vy;
 
-        // Raider Shooting
+        // Raider Shooting (Raiders will NOT fire if player is inside the station safe zone!)
         r->shootTimer -= dt;
-        if (r->shootTimer <= 0.0f && dist < 420.0f) {
+        if (!inStationSafeZone && r->shootTimer <= 0.0f && dist < 420.0f) {
             if (r->type == 0) { // Corsair: dual rapid blaster
                 r->shootTimer = 1.8f + (((float)rand() / (float)RAND_MAX) * 1.0f);
                 for (int ep = 0; ep < MAX_ENEMY_PROJECTILES; ep++) {
@@ -3923,8 +4139,20 @@ void RenderGame(HDC hdc, RECT* clientRect) {
         int stY = cyCenter + (int)(g_state.stationY - g_state.shipY);
         int stR = (int)g_state.stationRadius;
         
-        if (stX >= viewportX - 150 && stX <= viewportX + viewportW + 150 &&
-            stY >= viewportY - 150 && stY <= viewportY + viewportH + 150) {
+        if (stX >= viewportX - 550 && stX <= viewportX + viewportW + 550 &&
+            stY >= viewportY - 550 && stY <= viewportY + viewportH + 550) {
+            
+            // Station 500m Defensive Perimeter Safe Zone
+            float distToShipStn = (float)sqrt((g_state.shipX - g_state.stationX) * (g_state.shipX - g_state.stationX) + 
+                                              (g_state.shipY - g_state.stationY) * (g_state.shipY - g_state.stationY));
+            int inSafeStn = (g_state.stationDocked || distToShipStn < 500.0f);
+            HPEN hPenSZ = CreatePen(PS_DOT, 1, inSafeStn ? RGB(16, 185, 129) : RGB(56, 189, 248));
+            HGDIOBJ oldSZP = SelectObject(hdc, hPenSZ);
+            HGDIOBJ oldSZB = SelectObject(hdc, GetStockObject(NULL_BRUSH));
+            Ellipse(hdc, stX - 500, stY - 500, stX + 500, stY + 500);
+            SelectObject(hdc, oldSZP);
+            SelectObject(hdc, oldSZB);
+            DeleteObject(hPenSZ);
             
             // Outer rotating ring (Dotted / segmented)
             HPEN hPenStRing = CreatePen(PS_SOLID, 2, RGB(56, 189, 248));
@@ -4642,14 +4870,27 @@ void RenderGame(HDC hdc, RECT* clientRect) {
         }
     }
     
-    // Radar Blip for Orbital Spaceport (Cyan Star Hex)
+    // Radar Blip for Orbital Spaceport (Cyan Star Hex) & Safe Zone Ring
     {
         float bdx = (g_state.stationX - g_state.shipX) * radarScale;
         float bdy = (g_state.stationY - g_state.shipY) * radarScale;
+        int sx = rcRadarX + (int)bdx;
+        int sy = rcRadarY + (int)bdy;
+        float distReal = (float)sqrt((g_state.stationX - g_state.shipX) * (g_state.stationX - g_state.shipX) + 
+                                     (g_state.stationY - g_state.shipY) * (g_state.stationY - g_state.shipY));
+        int inSafe = (g_state.stationDocked || distReal < 500.0f);
+        int safeR = (int)(500.0f * radarScale);
+
+        HPEN hPenRadarSZ = CreatePen(PS_DOT, 1, inSafe ? RGB(16, 185, 129) : RGB(56, 189, 248));
+        HGDIOBJ oldRP = SelectObject(hdc, hPenRadarSZ);
+        HGDIOBJ oldRB = SelectObject(hdc, GetStockObject(NULL_BRUSH));
+        Ellipse(hdc, sx - safeR, sy - safeR, sx + safeR, sy + safeR);
+        SelectObject(hdc, oldRP);
+        SelectObject(hdc, oldRB);
+        DeleteObject(hPenRadarSZ);
+
         if (bdx * bdx + bdy * bdy < (radarR - 4) * (radarR - 4)) {
             COLORREF stBlip = RGB(56, 189, 248);
-            int sx = rcRadarX + (int)bdx;
-            int sy = rcRadarY + (int)bdy;
             SetPixel(hdc, sx, sy, stBlip);
             SetPixel(hdc, sx - 1, sy, stBlip);
             SetPixel(hdc, sx + 1, sy, stBlip);
@@ -5009,9 +5250,38 @@ void RenderGame(HDC hdc, RECT* clientRect) {
         TextOutA(hdc, mx + 24, barY + 8, selBuf, (int)strlen(selBuf));
         
         SelectObject(hdc, g_fontSmall);
-        char fReqBuf[64];
-        sprintf(fReqBuf, "WARP FUEL: %d%%  (AVAILABLE: %d%%)", isCur ? 0 : selSec->fuelCost, (int)g_state.fuel);
-        SetTextColor(hdc, (g_state.fuel >= selSec->fuelCost || isCur) ? RGB(16, 185, 129) : RGB(239, 68, 68));
+        char fReqBuf[128];
+        if (isCur) {
+            sprintf(fReqBuf, "WARP FUEL: 0%%  |  Station perimeter security active. Local operations.");
+            SetTextColor(hdc, RGB(56, 189, 248));
+        } else if (g_state.selectedSectorIndex == 1) {
+            if (g_state.hasRailgun) {
+                sprintf(fReqBuf, "WARP: %d%% | READY: Railgun armed for Corsair Skiff corridor ambush!", selSec->fuelCost);
+                SetTextColor(hdc, RGB(16, 185, 129));
+            } else {
+                sprintf(fReqBuf, "WARP: %d%% | DANGER: Corsair ambushes! Retrofit Railgun at Vanguard [O]!", selSec->fuelCost);
+                SetTextColor(hdc, RGB(239, 68, 68));
+            }
+        } else if (g_state.selectedSectorIndex == 2) {
+            if (g_state.hasEMP) {
+                sprintf(fReqBuf, "WARP: %d%% | READY: EMP Flak armed for Marauder homing torpedoes!", selSec->fuelCost);
+                SetTextColor(hdc, RGB(16, 185, 129));
+            } else {
+                sprintf(fReqBuf, "WARP: %d%% | DANGER: Torpedo gunships! Retrofit EMP Flak at Cryo-Reach [O]!", selSec->fuelCost);
+                SetTextColor(hdc, RGB(239, 68, 68));
+            }
+        } else if (g_state.selectedSectorIndex == 3) {
+            if (g_state.hasPDL) {
+                sprintf(fReqBuf, "WARP: %d%% | READY: Auto-PDL Turret active for Dreadnought salvos!", selSec->fuelCost);
+                SetTextColor(hdc, RGB(16, 185, 129));
+            } else {
+                sprintf(fReqBuf, "WARP: %d%% | DANGER: Heavy salvos! Retrofit Auto-PDL at Shadow-Haven [O]!", selSec->fuelCost);
+                SetTextColor(hdc, RGB(239, 68, 68));
+            }
+        } else {
+            sprintf(fReqBuf, "WARP FUEL: %d%%  (AVAILABLE: %d%%)", selSec->fuelCost, (int)g_state.fuel);
+            SetTextColor(hdc, (g_state.fuel >= selSec->fuelCost) ? RGB(16, 185, 129) : RGB(239, 68, 68));
+        }
         TextOutA(hdc, mx + 24, barY + 26, fReqBuf, (int)strlen(fReqBuf));
         
         // Jump Button box
@@ -6301,7 +6571,7 @@ void RenderGame(HDC hdc, RECT* clientRect) {
     // Phase 11: Orbital Spaceport & Black Market Trade Station Modal
     if (g_state.showStation) {
         int modalW = 760;
-        int modalH = 480;
+        int modalH = 508;
         int mx = (totalW - modalW) / 2;
         int my = (totalH - modalH) / 2;
         
@@ -6469,6 +6739,53 @@ void RenderGame(HDC hdc, RECT* clientRect) {
             TextOutA(hdc, px + 4, supY + 15, supCosts[p], (int)strlen(supCosts[p]));
         }
         
+        // Tactical Combat Retrofit & Munitions
+        int cbtY = barY2 + 86;
+        SelectObject(hdc, g_fontSmall);
+        SetTextColor(hdc, RGB(239, 68, 68));
+        TextOutA(hdc, leftX + 8, cbtY, "TACTICAL COMBAT RETROFIT & MUNITIONS", 36);
+
+        int cbtBtnY1 = cbtY + 16;
+        RECT rcCbt1 = { leftX + 8, cbtBtnY1, leftX + leftW - 8, cbtBtnY1 + 24 };
+        int secIdx = g_state.currentSectorIndex;
+        int hasWeap = (secIdx == 0) ? g_state.hasRailgun : ((secIdx == 1) ? g_state.hasEMP : ((secIdx == 2) ? g_state.hasPDL : g_state.hasAegis));
+        const char* wLabels[4] = {
+            "[8] RETROFIT RAILGUN BATTERY (400 CR)",
+            "[8] RETROFIT EMP FLAK CANNON (950 CR)",
+            "[8] RETROFIT 360 AUTO-PDL (2,200 CR)",
+            "[8] RETROFIT DEFLECTOR AEGIS (3,500 CR)"
+        };
+        const char* wOwnedLabels[4] = {
+            "✓ [8] KINETIC RAILGUN INSTALLED",
+            "✓ [8] EMP FLAK CANNON INSTALLED",
+            "✓ [8] AUTO-PDL TURRET INSTALLED",
+            "✓ [8] DEFLECTOR AEGIS INSTALLED"
+        };
+        HBRUSH hBrCbt1 = CreateSolidBrush(hasWeap ? RGB(6, 78, 59) : RGB(88, 28, 28));
+        FillRect(hdc, &rcCbt1, hBrCbt1);
+        DeleteObject(hBrCbt1);
+        FrameRect(hdc, &rcCbt1, (HBRUSH)GetStockObject(WHITE_BRUSH));
+
+        SelectObject(hdc, g_fontSmall);
+        SetTextColor(hdc, hasWeap ? RGB(110, 231, 183) : RGB(254, 202, 202));
+        DrawTextA(hdc, hasWeap ? wOwnedLabels[secIdx] : wLabels[secIdx], -1, &rcCbt1, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+
+        int cbtBtnY2 = cbtBtnY1 + 28;
+        RECT rcCbt2 = { leftX + 8, cbtBtnY2, leftX + leftW - 8, cbtBtnY2 + 24 };
+        const char* ammoLabels[4] = {
+            "[9] BUY +5 KINETIC SLUGS (50 CR)",
+            "[9] BUY +2 EMP CAPACITORS (100 CR)",
+            "[9] BUY +5 KINETIC SLUGS (50 CR)",
+            "[9] BUY +2 EMP CAPACITORS (100 CR)"
+        };
+        HBRUSH hBrCbt2 = CreateSolidBrush(RGB(15, 23, 42));
+        FillRect(hdc, &rcCbt2, hBrCbt2);
+        DeleteObject(hBrCbt2);
+        FrameRect(hdc, &rcCbt2, (HBRUSH)GetStockObject(WHITE_BRUSH));
+
+        SetTextColor(hdc, RGB(251, 191, 36));
+        DrawTextA(hdc, ammoLabels[secIdx], -1, &rcCbt2, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+        
         // Right Column: 3 Dredging Contracts (380px wide)
         int rcX = leftX + leftW + 12;
         int rcY = leftY;
@@ -6542,7 +6859,7 @@ void RenderGame(HDC hdc, RECT* clientRect) {
         // Footer instruction
         SelectObject(hdc, g_fontSmall);
         SetTextColor(hdc, RGB(245, 158, 11));
-        TextOutA(hdc, mx + 16, my + modalH - 24, "Keys [1-4] Services • [5-7] Claim Contracts • [S] Sell All Tariffs • [U] Undock • [D / ESC] Close", 99);
+        TextOutA(hdc, mx + 16, my + modalH - 24, "Keys [1-4] Services • [5-7] Contracts • [8-9] Retrofit/Ammo • [S] Sell • [U] Undock • [O / ESC] Close", 102);
         
         SelectObject(hdc, oldPenSt);
         SelectObject(hdc, oldBrushSt);
@@ -6642,9 +6959,16 @@ void RenderGame(HDC hdc, RECT* clientRect) {
             // Ammo & Status
             char ammoStr[64];
             if (w == 0) sprintf(ammoStr, "Status: %s (Heat: %d%%)", g_state.miningActive ? "FIRING" : "STANDBY", (int)g_state.heat);
-            else if (w == 1) sprintf(ammoStr, "Ammo: %d Slugs (Hold [F] to Fire)", g_state.railgunSlugs);
-            else if (w == 2) sprintf(ammoStr, "Capacitors: %d Charges (Hold [G] to Detonate)", g_state.empCharges);
-            else sprintf(ammoStr, "Auto-PDL: %s (Intercept Range: 280m)", g_state.autoPDL ? "ONLINE" : "STANDBY");
+            else if (w == 1) {
+                if (!g_state.hasRailgun) sprintf(ammoStr, "LOCKED: DOCK AT VANGUARD-PRIME [O]");
+                else sprintf(ammoStr, "Ammo: %d Slugs (Hold [F] to Fire)", g_state.railgunSlugs);
+            } else if (w == 2) {
+                if (!g_state.hasEMP) sprintf(ammoStr, "LOCKED: DOCK AT CRYO-REACH [O]");
+                else sprintf(ammoStr, "Capacitors: %d Charges (Hold [G] to Detonate)", g_state.empCharges);
+            } else {
+                if (!g_state.hasPDL) sprintf(ammoStr, "LOCKED: DOCK AT SHADOW-HAVEN [O]");
+                else sprintf(ammoStr, "Auto-PDL: %s (Intercept Range: 280m)", g_state.autoPDL ? "ONLINE" : "STANDBY");
+            }
 
             SetTextColor(hdc, isSelected ? RGB(251, 191, 36) : RGB(148, 163, 184));
             TextOutA(hdc, leftX + 8, wy + 68, ammoStr, (int)strlen(ammoStr));
@@ -6673,11 +6997,11 @@ void RenderGame(HDC hdc, RECT* clientRect) {
             const char* desc;
             int canDo;
         } actDefs[6] = {
-            { "1. Smelt Railgun Slugs (+5 Slugs)", "5 Ferrum", "Cast high-density tungsten-ferrum kinetic slugs", g_state.cargoHold[0] >= 5 },
-            { "2. Recharge EMP Capacitors (+2 Charges)", "4 Silicates", "Refill high-voltage electromagnetic discharge capacitor bank", g_state.cargoHold[1] >= 4 },
+            { "1. Smelt Railgun Slugs (+5 Slugs)", g_state.hasRailgun ? "5 Ferrum" : "LOCKED", g_state.hasRailgun ? "Cast high-density tungsten-ferrum kinetic slugs" : "Requires Kinetic Railgun Battery retrofit", g_state.hasRailgun && g_state.cargoHold[0] >= 5 },
+            { "2. Recharge EMP Capacitors (+2 Charges)", g_state.hasEMP ? "4 Silicates" : "LOCKED", g_state.hasEMP ? "Refill high-voltage electromagnetic discharge capacitor bank" : "Requires EMP Flak Cannon retrofit", g_state.hasEMP && g_state.cargoHold[1] >= 4 },
             { "3. Overcharge Deflector Shields (+130%)", "200 CR", "Route aux power into shield emitters for 130% overcharge", g_state.credits >= 200 },
             { "4. Emergency Combat Drones (18s)", "350 CR", "Launch autonomous drone swarm for combat & continuous hull repairs", g_state.credits >= 350 },
-            { "5. Toggle Auto-Point Defense Turret", g_state.autoPDL ? "ACTIVE" : "OFFLINE", "Automatically shoot down incoming enemy homing torpedoes", 1 },
+            { "5. Toggle Auto-Point Defense Turret", !g_state.hasPDL ? "LOCKED" : (g_state.autoPDL ? "ACTIVE" : "OFFLINE"), g_state.hasPDL ? "Automatically shoot down incoming enemy homing torpedoes" : "Requires Auto-PDL Turret retrofit", g_state.hasPDL },
             { "6. Deploy Emergency Chaff Cloud", "Cooldown: 8s", "Release dense metallic chaff cloud to break all torpedo tracking locks", g_state.chaffCooldown <= 0.0f }
         };
 
@@ -7664,7 +7988,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             
             if (g_state.showStation) {
                 int modalW = 760;
-                int modalH = 480;
+                int modalH = 508;
                 int hx = (totalW - modalW) / 2;
                 int hy = (totalH - modalH) / 2;
                 
@@ -7714,6 +8038,25 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         InvalidateRect(hwnd, NULL, FALSE);
                         return 0;
                     }
+                }
+
+                // Tactical Combat Retrofit buttons
+                int cbtY = barY2 + 86;
+                int cbtBtnY1 = cbtY + 16;
+                int cbtBtnY2 = cbtBtnY1 + 28;
+                if (mx >= leftX + 8 && mx <= leftX + leftW - 8 && my >= cbtBtnY1 && my <= cbtBtnY1 + 24) {
+                    int sec = g_state.currentSectorIndex;
+                    int cType = (sec == 0) ? 0 : ((sec == 1) ? 2 : ((sec == 2) ? 4 : 5));
+                    BuyCombatUpgrade(cType);
+                    InvalidateRect(hwnd, NULL, FALSE);
+                    return 0;
+                }
+                if (mx >= leftX + 8 && mx <= leftX + leftW - 8 && my >= cbtBtnY2 && my <= cbtBtnY2 + 24) {
+                    int sec = g_state.currentSectorIndex;
+                    int aType = (sec == 0 || sec == 2) ? 1 : 3;
+                    BuyCombatUpgrade(aType);
+                    InvalidateRect(hwnd, NULL, FALSE);
+                    return 0;
                 }
                 
                 // Right Column: 3 Dredging Contracts
@@ -8203,9 +8546,39 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             if (g_state.showDefense) {
                 if (wParam == '1') { g_state.selectedWeapon = 0; TriggerSound(SFX_BEEP); InvalidateRect(hwnd, NULL, FALSE); return 0; }
-                if (wParam == '2') { g_state.selectedWeapon = 1; TriggerSound(SFX_BEEP); InvalidateRect(hwnd, NULL, FALSE); return 0; }
-                if (wParam == '3') { g_state.selectedWeapon = 2; TriggerSound(SFX_BEEP); InvalidateRect(hwnd, NULL, FALSE); return 0; }
-                if (wParam == '4') { g_state.selectedWeapon = 3; TriggerSound(SFX_BEEP); InvalidateRect(hwnd, NULL, FALSE); return 0; }
+                if (wParam == '2') {
+                    if (!g_state.hasRailgun) {
+                        AddLog("LOCKED: Kinetic Railgun Battery not installed! Retrofit at Vanguard-Prime [O].", 3);
+                        TriggerSound(SFX_BEEP);
+                    } else {
+                        g_state.selectedWeapon = 1;
+                        TriggerSound(SFX_BEEP);
+                    }
+                    InvalidateRect(hwnd, NULL, FALSE);
+                    return 0;
+                }
+                if (wParam == '3') {
+                    if (!g_state.hasEMP) {
+                        AddLog("LOCKED: EMP Flak Burst Cannon not installed! Retrofit at Cryo-Reach [O].", 3);
+                        TriggerSound(SFX_BEEP);
+                    } else {
+                        g_state.selectedWeapon = 2;
+                        TriggerSound(SFX_BEEP);
+                    }
+                    InvalidateRect(hwnd, NULL, FALSE);
+                    return 0;
+                }
+                if (wParam == '4') {
+                    if (!g_state.hasPDL) {
+                        AddLog("LOCKED: Point-Defense Laser Turret not installed! Retrofit at Shadow-Haven [O].", 3);
+                        TriggerSound(SFX_BEEP);
+                    } else {
+                        g_state.selectedWeapon = 3;
+                        TriggerSound(SFX_BEEP);
+                    }
+                    InvalidateRect(hwnd, NULL, FALSE);
+                    return 0;
+                }
                 if (wParam == 'F') { FireRailgun(); InvalidateRect(hwnd, NULL, FALSE); return 0; }
                 if (wParam == 'G') { FireEMPFlak(); InvalidateRect(hwnd, NULL, FALSE); return 0; }
                 if (wParam == 'C') { DeployChaff(); InvalidateRect(hwnd, NULL, FALSE); return 0; }
@@ -8220,6 +8593,20 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 if (wParam == '5') { ClaimContract(0); InvalidateRect(hwnd, NULL, FALSE); return 0; }
                 if (wParam == '6') { ClaimContract(1); InvalidateRect(hwnd, NULL, FALSE); return 0; }
                 if (wParam == '7') { ClaimContract(2); InvalidateRect(hwnd, NULL, FALSE); return 0; }
+                if (wParam == '8') {
+                    int sec = g_state.currentSectorIndex;
+                    int cType = (sec == 0) ? 0 : ((sec == 1) ? 2 : ((sec == 2) ? 4 : 5));
+                    BuyCombatUpgrade(cType);
+                    InvalidateRect(hwnd, NULL, FALSE);
+                    return 0;
+                }
+                if (wParam == '9') {
+                    int sec = g_state.currentSectorIndex;
+                    int aType = (sec == 0 || sec == 2) ? 1 : 3;
+                    BuyCombatUpgrade(aType);
+                    InvalidateRect(hwnd, NULL, FALSE);
+                    return 0;
+                }
                 if (wParam == 'S') { BarterSellAllWithTariff(); InvalidateRect(hwnd, NULL, FALSE); return 0; }
                 if (wParam == 'U') { ToggleDocking(); InvalidateRect(hwnd, NULL, FALSE); return 0; }
                 if (wParam == 'O' || wParam == VK_ESCAPE) { g_state.showStation = 0; InvalidateRect(hwnd, NULL, FALSE); return 0; }
@@ -8319,19 +8706,34 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     TriggerSound(SFX_BEEP);
                     break;
                 case '2':
-                    g_state.selectedWeapon = 1;
-                    AddLog("Selected Weapon: Kinetic Railgun Cannon [2] (Press [F] to fire).", 4);
-                    TriggerSound(SFX_BEEP);
+                    if (!g_state.hasRailgun) {
+                        AddLog("LOCKED: Kinetic Railgun Battery not installed! Retrofit at Vanguard-Prime [O].", 3);
+                        TriggerSound(SFX_BEEP);
+                    } else {
+                        g_state.selectedWeapon = 1;
+                        AddLog("Selected Weapon: Kinetic Railgun Cannon [2] (Press [F] to fire).", 4);
+                        TriggerSound(SFX_BEEP);
+                    }
                     break;
                 case '3':
-                    g_state.selectedWeapon = 2;
-                    AddLog("Selected Weapon: EMP Flak Cannon [3] (Press [G] to fire).", 3);
-                    TriggerSound(SFX_BEEP);
+                    if (!g_state.hasEMP) {
+                        AddLog("LOCKED: EMP Flak Burst Cannon not installed! Retrofit at Cryo-Reach [O].", 3);
+                        TriggerSound(SFX_BEEP);
+                    } else {
+                        g_state.selectedWeapon = 2;
+                        AddLog("Selected Weapon: EMP Flak Cannon [3] (Press [G] to fire).", 3);
+                        TriggerSound(SFX_BEEP);
+                    }
                     break;
                 case '4':
-                    g_state.selectedWeapon = 3;
-                    AddLog("Selected Weapon: Automated Point-Defense Turret [4].", 5);
-                    TriggerSound(SFX_BEEP);
+                    if (!g_state.hasPDL) {
+                        AddLog("LOCKED: Point-Defense Laser Turret not installed! Retrofit at Shadow-Haven [O].", 3);
+                        TriggerSound(SFX_BEEP);
+                    } else {
+                        g_state.selectedWeapon = 3;
+                        AddLog("Selected Weapon: Automated Point-Defense Turret [4].", 5);
+                        TriggerSound(SFX_BEEP);
+                    }
                     break;
                 case 'F':
                     FireRailgun();

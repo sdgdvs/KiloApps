@@ -227,6 +227,13 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-04T21:30:00-07:00 — kilo-expander: KStarDredge (Hyperlane Pirate Ambushes & Tactical Combat Outfitting)**
+  - Status: PASS ✅ (0 regressions, clean builds, 530.3 KB web / 292.9 KB native < 999 KB ceiling).
+  - Hyperlane Ambush Corridor: Sector warp transits trigger hyperlane pirate ambushes along transit vector; starter sector is raider-free.
+  - Station Safe Zone: 500m defense perimeter around spaceports repels raiders (32 DPS) and destroys torpedoes (480m); raiders cannot target safe vessels.
+  - Tactical Combat Retrofits: Added port outfitting (Railguns, EMP Flak, Auto-PDL, Deflector Aegis) with station drydock gating and keys [8]/[9].
+  - Verification: MSVC clean (`KStarDredge.exe` 292.9 KB); Vite clean in 307ms; security_lint 100% PASS.
+
 - **2026-10-04T17:08:00-07:00 — kilo-qa: KTimer (Pass 5: QA & Build Quality, Quicksave/Load & State Integrity)**
   - Status: PASS ✅ (0 regressions, clean builds, 104.2 KB web / 32.8 KB native < 999 KB ceiling).
   - Quicksave & State Persistence: Validated and tuned F5/F9 state snapshots with exact delta calculations across all 5 timing engines.
@@ -254,13 +261,5 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - ⏭️ Skip — Imagen 3 asset replacement not appropriate for KPac
   - Glint & Flare Purge: Purged rotating specular flare on Relic Stone and orbiting spark on void rift.
   - Verification: MSVC clean (`KPac.exe` 51.2 KB); Vite clean in 328ms (`kpac.html` 130.5 KB < 999 KB); check_icons & security_lint 100% PASS.
-
-- **2026-10-04T16:10:00-07:00 — kilo-creator: kweb://webring (Ring Surfer, Ringmaster Validator, 56k Modem & Gateway-07 Decryptor)**
-  - Status: PASS ✅ (0 regressions, clean builds, 270.3 KB web < 999 KB ceiling).
-  - Ring Surfer & Auto-Tour (Tab 8): Built Netscape 4.7 viewport cruiser with dwell countdown, 56k dialup handshake audio & bookmarks.html.
-  - Ringmaster Validator (Tab 9): Implemented 5-stage HTML 4.01/widget/999KB audit, 88x31 animated pixel seal & ASCII accreditation cert.
-  - Gateway-07 Decryptor & Sniffer (Tab 4): Added 1999Hz oscilloscope tuner, phase lock detection & descrambled lithospheric packet capture.
-  - Audio & Ergonomics: Added procedural dialup handshake (DTMF/2100Hz/V.90), hop chime, 1-9 global tab hotkeys, and ARCH-05 interval safety.
-  - Verification: Vite build clean (333ms); test_arg_flow.py 100% PASS; check_icons.py PASS; security_lint.py 100% PASS.
 
 

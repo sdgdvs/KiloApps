@@ -2194,6 +2194,7 @@
                         <div id="warpTargetDesc" style="color: var(--text-bright); font-size: 10px; max-width: 440px; margin-top: 2px;">
                             Inner dense asteroid belt rich in industrial ferrum, silicates, and standard ore veins.
                         </div>
+                        <div id="warpThreatWarning" style="font-size: 10px; color: #fca5a5; margin-top: 4px; max-width: 440px;"></div>
                     </div>
                     <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 6px;">
                         <div style="font-size: 11px;">WARP FUEL: <span id="warpFuelCost" style="color: var(--accent-amber); font-weight: bold;">0%</span> (Available: <span id="warpFuelAvail" style="color: var(--accent-emerald); font-weight: bold;">100%</span>)</div>
@@ -2661,6 +2662,17 @@
                                 <button class="btn btn-barter" id="btnBuyNanite"><span>🛡️ Nanite Paste</span><small>600 CR</small></button>
                                 <button class="btn btn-barter" id="btnBuyO2"><span>🧪 O2 Canister</span><small>250 CR</small></button>
                                 <button class="btn btn-barter" id="btnBuyScrap"><span>⚙️ 20T Scrap</span><small>900 CR</small></button>
+                            </div>
+                        </div>
+
+                        <!-- Tactical Combat Outfitting & Station Armory -->
+                        <div class="station-panel-card" style="margin-top: 8px;">
+                            <div class="station-card-header">
+                                <span>⚔️ TACTICAL COMBAT OUTFITTING & ARMORY</span>
+                                <span id="stnCombatSpecTitle" style="color: #fca5a5; font-size: 9px;">SPECIALTY</span>
+                            </div>
+                            <div id="stnCombatUpgradeContainer" style="display: flex; flex-direction: column; gap: 6px; margin-top: 5px;">
+                                <!-- Dynamic Combat Weapon & Munition Actions -->
                             </div>
                         </div>
                     </div>
@@ -4527,9 +4539,12 @@
             },
             weapons: {
                 selected: 0, // 0=Mining Laser, 1=Railgun, 2=EMP Flak, 3=PDL
-                railgunSlugs: 15,
-                empCharges: 5,
-                autoPDL: true,
+                hasRailgun: false,
+                hasEMP: false,
+                hasPDL: false,
+                railgunSlugs: 0,
+                empCharges: 0,
+                autoPDL: false,
                 railgunCooldown: 0,
                 flakCooldown: 0,
                 pdlCooldown: 0,
@@ -4747,6 +4762,9 @@
                     },
                     weapons: {
                         selected: state.weapons.selected,
+                        hasRailgun: !!state.weapons.hasRailgun,
+                        hasEMP: !!state.weapons.hasEMP,
+                        hasPDL: !!state.weapons.hasPDL,
                         railgunSlugs: state.weapons.railgunSlugs,
                         empCharges: state.weapons.empCharges,
                         autoPDL: state.weapons.autoPDL,
@@ -4931,7 +4949,7 @@
         }
 
         // Initialize Procedural Starfield & Asteroid Field
-        function initField(sectorIndex = 0) {
+        function initField(sectorIndex = 0, isWarpAmbush = false) {
             state.currentSectorIndex = sectorIndex;
             const sector = SECTORS[sectorIndex];
             document.getElementById('hdrSector').textContent = sector.name;
@@ -4973,26 +4991,49 @@
                 spawnDerelict(i % DERELICT_TEMPLATES.length);
             }
 
-            // Phase 12: Spawn Sector Void Pirate Raiders based on Threat
-            const raiderCount = (sector.id === 'alpha') ? 1 : ((sector.id === 'kuiper') ? 2 : ((sector.id === 'graveyard') ? 3 : 4));
-            for (let i = 0; i < raiderCount; i++) {
-                let rType = 0; // Skiff
-                if (sector.id === 'kuiper' && i >= 1) rType = 1; // Marauder
-                if (sector.id === 'graveyard') rType = (i % 2 === 0) ? 0 : 1;
-                if (sector.id === 'nebula') rType = (i === 0) ? 2 : ((i % 2 === 0) ? 1 : 0);
-                spawnRaider(rType);
-            }
-
             // Phase 11: Spawn Sector Orbital Station
             state.station = {
-                x: 240 + (Math.random() - 0.5) * 60,
-                y: -210 + (Math.random() - 0.5) * 60,
+                x: 480 + (Math.random() - 0.5) * 60,
+                y: -360 + (Math.random() - 0.5) * 60,
                 radius: 65,
                 angle: Math.random() * Math.PI * 2,
                 rotSpeed: 0.003,
                 docked: false,
                 beaconTimer: 0
             };
+
+            // Phase 12: Pirate Attacks prey on hyperlanes between spaceports
+            // Pirates do NOT spawn randomly near spaceports or in starter Belt Alpha-09.
+            if (isWarpAmbush) {
+                let ambushTemplates = [];
+                if (sectorIndex === 1) {
+                    ambushTemplates = [0, 0]; // 2 Corsair Skiffs
+                    addLog("🚨 HYPERLANE PIRATE AMBUSH: 2x Corsair Skiffs intercepted your transit! Use Kinetic Railgun [F] or reach the station defense perimeter [O]!", "critical");
+                } else if (sectorIndex === 2) {
+                    ambushTemplates = [1, 1]; // 2 Marauder Gunships
+                    addLog("🚨 HYPERLANE PIRATE AMBUSH: Marauder Gunships with homing torpedoes detected! Deploy EMP Flak [G] and Railguns [F]!", "critical");
+                } else if (sectorIndex === 3) {
+                    ambushTemplates = [2, 1]; // Dreadnought + Marauder
+                    addLog("🚨 HYPERLANE PIRATE AMBUSH: Outlaw Dreadnought wolfpack blockading the Nebula shipping lane! Auto-PDL active!", "critical");
+                } else {
+                    ambushTemplates = [0]; // 1 Skiff
+                    addLog("🚨 HYPERLANE SKIRMISH: Corsair Skiff attempting ambush along the return corridor!", "warning");
+                }
+
+                if (audio && audio.playTorpedoAlert) audio.playTorpedoAlert();
+                addFloatingText("⚠️ HYPERLANE AMBUSH!", state.ship.x, state.ship.y - 40, "#ef4444");
+
+                // Spawn raiders along shipping corridor vector between ship and station
+                const toStationX = state.station.x - state.ship.x;
+                const toStationY = state.station.y - state.ship.y;
+                const baseAngle = Math.atan2(toStationY, toStationX);
+
+                for (let i = 0; i < ambushTemplates.length; i++) {
+                    const spreadAngle = baseAngle + (i === 0 ? -0.32 : (i === 1 ? 0.32 : 0));
+                    const ambushDist = 380 + i * 80;
+                    spawnRaider(ambushTemplates[i], state.ship.x + Math.cos(spreadAngle) * ambushDist, state.ship.y + Math.sin(spreadAngle) * ambushDist);
+                }
+            }
         }
 
         const DERELICT_TEMPLATES = [
@@ -5150,18 +5191,20 @@
             }
         ];
 
-        function spawnRaider(templateIdx = 0) {
+        function spawnRaider(templateIdx = 0, customX = null, customY = null) {
             const tmpl = RAIDER_TEMPLATES[templateIdx] || RAIDER_TEMPLATES[0];
             const angle = Math.random() * Math.PI * 2;
             const dist = 550 + Math.random() * 450;
+            const rx = (customX !== null) ? customX : (state.ship.x + Math.cos(angle) * dist);
+            const ry = (customY !== null) ? customY : (state.ship.y + Math.sin(angle) * dist);
 
             const raider = {
                 id: 'RAID-' + (100 + state.raiders.length * 17 + Math.floor(Math.random() * 80)),
                 name: tmpl.name,
                 type: tmpl.type,
                 className: tmpl.className,
-                x: state.ship.x + Math.cos(angle) * dist,
-                y: state.ship.y + Math.sin(angle) * dist,
+                x: rx,
+                y: ry,
                 vx: (Math.random() - 0.5) * 0.5,
                 vy: (Math.random() - 0.5) * 0.5,
                 angle: Math.random() * Math.PI * 2,
@@ -5383,6 +5426,42 @@
                 btnWarp.disabled = false;
                 btnWarp.style.opacity = '1.0';
                 btnWarp.innerHTML = '<span>🚀 ENGAGE WARP JUMP</span>';
+            }
+
+            // Hyperlane Threat Warning & Combat Upgrade Readiness Hints
+            const warnElem = document.getElementById('warpThreatWarning');
+            if (warnElem) {
+                if (isCurrent) {
+                    warnElem.textContent = '🛡️ Station perimeter security active. Local dredging & trade ops.';
+                    warnElem.style.color = '#38bdf8';
+                } else if (state.selectedSectorIndex === 1) {
+                    if (state.weapons.hasRailgun) {
+                        warnElem.innerHTML = '⚠️ <strong>HYPERLANE INTERDICTION ROUTE:</strong> Corsair Skiff raiders active along vector. Kinetic Railgun Battery installed and ready for defense!';
+                        warnElem.style.color = '#10b981';
+                    } else {
+                        warnElem.innerHTML = '🚨 <strong>PIRATE INTERDICTION HAZARD:</strong> Fast Corsair Skiffs ambush this hyperlane! Recommend installing <em>Kinetic Railgun Battery</em> at Vanguard-Prime drydock before warping!';
+                        warnElem.style.color = '#f87171';
+                    }
+                } else if (state.selectedSectorIndex === 2) {
+                    if (state.weapons.hasEMP) {
+                        warnElem.innerHTML = '⚠️ <strong>HEAVY CORRIDOR AMBUSH:</strong> Marauder Gunships with homing torpedoes detect transit vectors. EMP Flak Burst Cannon armed!';
+                        warnElem.style.color = '#10b981';
+                    } else {
+                        warnElem.innerHTML = '🚨 <strong>TORPEDO THREAT DETECTED:</strong> Marauder Gunships with homing torpedoes prey on this route! Recommend installing <em>EMP Flak Cannon</em> at Cryo-Reach drydock before venturing out!';
+                        warnElem.style.color = '#f87171';
+                    }
+                } else if (state.selectedSectorIndex === 3) {
+                    if (state.weapons.hasPDL) {
+                        warnElem.innerHTML = '⚠️ <strong>NEBULA WOLFPACK PATROL:</strong> Outlaw Dreadnought salvos block the corridor. 360° Auto-PDL Turret online for torpedo interception!';
+                        warnElem.style.color = '#10b981';
+                    } else {
+                        warnElem.innerHTML = '☠️ <strong>HEAVY WOLFPACK BLOCKADE:</strong> Outlaw Dreadnoughts fire multi-torpedo salvos along this shipping lane! Recommend installing <em>Auto-PDL Turret</em> at Shadow-Haven before jumping!';
+                        warnElem.style.color = '#f87171';
+                    }
+                } else {
+                    warnElem.innerHTML = '🛡️ <strong>HOME TRANSIT:</strong> Safe shipping corridor to Sol Consortium starport.';
+                    warnElem.style.color = '#10b981';
+                }
             }
         }
 
@@ -6634,6 +6713,125 @@
             renderStationModal();
         }
 
+        function buyCombatUpgrade(type) {
+            const isDocked = !!(state.station && state.station.docked);
+            const sector = state.currentSectorIndex;
+            if (type === 'railgun') {
+                if (state.weapons.hasRailgun) {
+                    addLog("Kinetic Railgun Battery is already installed on your dredging barge.", "system");
+                    return;
+                }
+                if (!isDocked || sector !== 0) {
+                    addLog("🔒 Kinetic Railgun requires docking at Vanguard-Prime Orbital Foundry in Belt Alpha-09!", "warning");
+                    return;
+                }
+                if (state.credits < 400) {
+                    addLog("⚠️ Insufficient credits! Mk-I Kinetic Railgun Battery costs 400 CR.", "warning");
+                    return;
+                }
+                state.credits -= 400;
+                state.weapons.hasRailgun = true;
+                state.weapons.railgunSlugs = Math.max(state.weapons.railgunSlugs, 15);
+                document.getElementById('hdrCredits').textContent = state.credits.toLocaleString();
+                audio.playCollect();
+                addLog("⚔️ COMBAT RETROFIT COMPLETE: Mk-I Kinetic Railgun Battery installed (+15 Slugs)! Select with [2] or fire with [F].", "success");
+                addFloatingText("RAILGUN BATTERY INSTALLED!", state.ship.x, state.ship.y - 35, '#38bdf8');
+            } else if (type === 'slugs') {
+                if (!state.weapons.hasRailgun) {
+                    addLog("⚠️ You must install a Kinetic Railgun Battery before purchasing slugs.", "warning");
+                    return;
+                }
+                if (state.credits < 50) {
+                    addLog("⚠️ Insufficient credits! +5 Slugs cost 50 CR.", "warning");
+                    return;
+                }
+                state.credits -= 50;
+                state.weapons.railgunSlugs += 5;
+                document.getElementById('hdrCredits').textContent = state.credits.toLocaleString();
+                audio.playCollect();
+                addLog("📦 Munition Crate: +5 Kinetic Railgun Slugs loaded into magazines.", "success");
+                addFloatingText("+5 SLUGS", state.ship.x, state.ship.y - 30, '#94a3b8');
+            } else if (type === 'emp') {
+                if (state.weapons.hasEMP) {
+                    addLog("EMP Flak Burst Cannon is already installed on your dredging barge.", "system");
+                    return;
+                }
+                if (!isDocked || sector !== 1) {
+                    addLog("🔒 EMP Flak Burst Cannon requires docking at Cryo-Reach Free Waystation in Kuiper Expanse!", "warning");
+                    return;
+                }
+                if (state.credits < 950) {
+                    addLog("⚠️ Insufficient credits! EMP Flak Cannon costs 950 CR.", "warning");
+                    return;
+                }
+                state.credits -= 950;
+                state.weapons.hasEMP = true;
+                state.weapons.empCharges = Math.max(state.weapons.empCharges, 6);
+                document.getElementById('hdrCredits').textContent = state.credits.toLocaleString();
+                audio.playCollect();
+                addLog("⚡ COMBAT RETROFIT COMPLETE: EMP Flak Burst Cannon installed (+6 Charges)! Select with [3] or detonate with [G] to neutralize torpedoes & stun raiders.", "success");
+                addFloatingText("EMP FLAK CANNON INSTALLED!", state.ship.x, state.ship.y - 35, '#c084fc');
+            } else if (type === 'empCharges') {
+                if (!state.weapons.hasEMP) {
+                    addLog("⚠️ You must install an EMP Flak Cannon before purchasing pulse charges.", "warning");
+                    return;
+                }
+                if (state.credits < 100) {
+                    addLog("⚠️ Insufficient credits! +2 EMP Charges cost 100 CR.", "warning");
+                    return;
+                }
+                state.credits -= 100;
+                state.weapons.empCharges += 2;
+                document.getElementById('hdrCredits').textContent = state.credits.toLocaleString();
+                audio.playCollect();
+                addLog("⚡ High-Yield Capacitors: +2 EMP Charges loaded.", "success");
+                addFloatingText("+2 EMP CHARGES", state.ship.x, state.ship.y - 30, '#c084fc');
+            } else if (type === 'pdl') {
+                if (state.weapons.hasPDL) {
+                    addLog("Auto-PDL Turret is already installed on your dredging barge.", "system");
+                    return;
+                }
+                if (!isDocked || sector !== 2) {
+                    addLog("🔒 Point-Defense Laser Turret requires docking at Shadow-Haven Pirate Freeport in Ship Graveyard!", "warning");
+                    return;
+                }
+                if (state.credits < 2200) {
+                    addLog("⚠️ Insufficient credits! Auto-PDL Turret costs 2,200 CR.", "warning");
+                    return;
+                }
+                state.credits -= 2200;
+                state.weapons.hasPDL = true;
+                state.weapons.autoPDL = true;
+                document.getElementById('hdrCredits').textContent = state.credits.toLocaleString();
+                audio.playCollect();
+                addLog("🎯 COMBAT RETROFIT COMPLETE: 360° Automated Point-Defense Laser Turret installed! Auto-intercepts incoming torpedoes.", "success");
+                addFloatingText("AUTO-PDL TURRET INSTALLED!", state.ship.x, state.ship.y - 35, '#10b981');
+            } else if (type === 'aegis') {
+                if (state.weapons.hasAegis) {
+                    addLog("Harmonic Deflector Aegis is already installed on your dredging barge.", "system");
+                    return;
+                }
+                if (!isDocked || sector !== 3) {
+                    addLog("🔒 Harmonic Deflector Aegis requires docking at Omega-7 Black Lab Citadel in Phantom Nebula!", "warning");
+                    return;
+                }
+                if (state.credits < 3500) {
+                    addLog("⚠️ Insufficient credits! Harmonic Deflector Aegis costs 3,500 CR.", "warning");
+                    return;
+                }
+                state.credits -= 3500;
+                state.weapons.hasAegis = true;
+                state.maxShield += 50;
+                state.shield = state.maxShield;
+                document.getElementById('hdrCredits').textContent = state.credits.toLocaleString();
+                audio.playCollect();
+                addLog("🛡️ ADVANCED DEFENSE RETROFIT: Harmonic Deflector Aegis installed! Shield capacity expanded by +50 MW.", "success");
+                addFloatingText("+50 MW DEFLECTOR AEGIS!", state.ship.x, state.ship.y - 35, '#38bdf8');
+            }
+            renderStationModal();
+            updateDefenseModalUI();
+        }
+
         function claimContract(contractId) {
             const stDef = STATION_DEFS[state.currentSectorIndex];
             const contract = stDef.contracts.find(c => c.id === contractId);
@@ -6728,6 +6926,80 @@
 
             const deconCost = (state.radiation <= 0 && state.o2 >= 99 && state.o2Scrubber >= 99) ? 0 : stDef.deconCost;
             document.getElementById('srvDeconCost').textContent = deconCost > 0 ? `${deconCost} CR` : 'NOMINAL';
+
+            // Render Tactical Combat Outfitting & Armory
+            const combatContainer = document.getElementById('stnCombatUpgradeContainer');
+            const specTitle = document.getElementById('stnCombatSpecTitle');
+            if (combatContainer) {
+                combatContainer.innerHTML = '';
+                const sectorIdx = state.currentSectorIndex;
+                let weaponKey = 'railgun';
+                let weaponName = 'Mk-I Kinetic Railgun Battery';
+                let weaponCost = 400;
+                let weaponInstalled = !!state.weapons.hasRailgun;
+                let weaponDesc = 'Hypervelocity tungsten slug battery. Required to eliminate agile Corsair Skiffs ambushing the transit corridor to Cryo-Reach!';
+                let ammoType = 'slugs';
+                let ammoName = '+5 Kinetic Slugs';
+                let ammoCost = 50;
+
+                if (sectorIdx === 1) {
+                    weaponKey = 'emp';
+                    weaponName = 'EMP Flak Burst Cannon';
+                    weaponCost = 950;
+                    weaponInstalled = !!state.weapons.hasEMP;
+                    weaponDesc = 'Proximity EMP flak detonator. Strips shields and neutralizes Marauder Gunship homing torpedoes ambushing the route to Shadow-Haven!';
+                    ammoType = 'empCharges';
+                    ammoName = '+2 EMP Capacitors';
+                    ammoCost = 100;
+                } else if (sectorIdx === 2) {
+                    weaponKey = 'pdl';
+                    weaponName = '360° Point-Defense Laser Turret';
+                    weaponCost = 2200;
+                    weaponInstalled = !!state.weapons.hasPDL;
+                    weaponDesc = 'Automated high-speed pulse interceptor. Shoots down heavy Outlaw Dreadnought torpedo salvos on the corridor to Omega-7!';
+                    ammoType = 'slugs';
+                    ammoName = '+5 Kinetic Slugs';
+                    ammoCost = 50;
+                } else if (sectorIdx === 3) {
+                    weaponKey = 'aegis';
+                    weaponName = 'Harmonic Deflector Aegis (+50 MW Shield)';
+                    weaponCost = 3500;
+                    weaponInstalled = !!state.weapons.hasAegis;
+                    weaponDesc = 'Classified black-lab harmonic particle shielding. Expands maximum shield barrier capacity by +50 MW.';
+                    ammoType = 'empCharges';
+                    ammoName = '+2 EMP Capacitors';
+                    ammoCost = 100;
+                }
+
+                if (specTitle) specTitle.textContent = `${weaponName.split(' ')[0]} SPECIALTY`;
+
+                const cardHtml = `
+                    <div style="background: rgba(0,0,0,0.4); border: 1px solid var(--border-panel); border-radius: 4px; padding: 6px 8px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span style="font-weight: bold; color: #fca5a5; font-size: 11px;">${weaponName}</span>
+                            <span class="badge-status" style="background: ${weaponInstalled ? 'rgba(16,185,129,0.2)' : 'rgba(239,68,68,0.2)'}; color: ${weaponInstalled ? '#6ee7b7' : '#fca5a5'};">
+                                ${weaponInstalled ? '✓ INSTALLED' : 'NOT INSTALLED'}
+                            </span>
+                        </div>
+                        <div style="font-size: 9px; color: var(--text-dim); margin-top: 2px;">${weaponDesc}</div>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 5px;">
+                            ${weaponInstalled ? `
+                                <button class="btn" disabled style="padding: 2px 10px; font-size: 9px; border-color: #10b981; color: #6ee7b7; opacity: 0.85;">
+                                    <span>✓ RETROFIT ALREADY INSTALLED</span>
+                                </button>
+                            ` : `
+                                <button class="btn btn-upgrade" onclick="buyCombatUpgrade('${weaponKey}')" style="padding: 3px 12px; font-size: 9px; border-color: #ef4444; color: #fee2e2;">
+                                    <span>INSTALL RETROFIT [${weaponCost.toLocaleString()} CR]</span>
+                                </button>
+                            `}
+                            <button class="btn btn-barter" onclick="buyCombatUpgrade('${ammoType}')" style="padding: 3px 10px; font-size: 9px;">
+                                <span>📦 ${ammoName} (${ammoCost} CR)</span>
+                            </button>
+                        </div>
+                    </div>
+                `;
+                combatContainer.innerHTML = cardHtml;
+            }
 
             // Update Contracts Count & List
             document.getElementById('stnContractsDoneCount').textContent = `TOTAL COMPLETED: ${state.totalContractsDone || 0}`;
@@ -7076,7 +7348,7 @@
             setTimeout(() => {
                 state.ship.vx = 0;
                 state.ship.vy = 0;
-                initField(targetIdx);
+                initField(targetIdx, true);
                 state.warpActive = false;
                 addLog(`Exited hyperspace into ${target.name}. Asteroid radar recalibrated.`, 'success');
                 audio.playCollect();
@@ -7824,6 +8096,22 @@
 
         // --- Phase 12: Void Pirate Defense & Weapon Systems Logic ---
         function selectWeapon(wIdx) {
+            if (wIdx === 1 && !state.weapons.hasRailgun) {
+                addLog("🔒 Kinetic Railgun Battery not installed! Purchase tactical retrofit at Vanguard-Prime drydock [O]!", "warning");
+                audio.playBeep(240, 'square', 0.1, 0.1);
+                return;
+            }
+            if (wIdx === 2 && !state.weapons.hasEMP) {
+                addLog("🔒 EMP Flak Burst Cannon not installed! Purchase tactical retrofit at Cryo-Reach drydock [O]!", "warning");
+                audio.playBeep(240, 'square', 0.1, 0.1);
+                return;
+            }
+            if (wIdx === 3 && !state.weapons.hasPDL) {
+                addLog("🔒 Point-Defense Laser Turret not installed! Purchase tactical retrofit at Shadow-Haven drydock [O]!", "warning");
+                audio.playBeep(240, 'square', 0.1, 0.1);
+                return;
+            }
+
             state.weapons.selected = wIdx;
             const names = ['MINING LASER', 'KINETIC RAILGUN', 'EMP FLAK CANNON', 'POINT-DEFENSE LASER'];
             for (let i = 0; i < 4; i++) {
@@ -7842,9 +8130,14 @@
         }
 
         function fireRailgun() {
+            if (!state.weapons.hasRailgun) {
+                addLog("🔒 Kinetic Railgun not installed on barge! Purchase retrofit at Vanguard-Prime [O].", "warning");
+                audio.playBeep(240, 'square', 0.1, 0.1);
+                return;
+            }
             if (state.weapons.railgunCooldown > 0) return;
             if (state.weapons.railgunSlugs <= 0) {
-                addLog("⚠️ Kinetic Railgun dry! Smelt slugs from Ferrum in Munitions Workshop [X].", "warning");
+                addLog("⚠️ Kinetic Railgun dry! Smelt slugs from Ferrum in Munitions Workshop [X] or buy at port.", "warning");
                 audio.playBeep(240, 'square', 0.1, 0.1);
                 return;
             }
@@ -7873,9 +8166,14 @@
         }
 
         function fireEMPFlak() {
+            if (!state.weapons.hasEMP) {
+                addLog("🔒 EMP Flak Burst Cannon not installed on barge! Purchase retrofit at Cryo-Reach [O].", "warning");
+                audio.playBeep(240, 'square', 0.1, 0.1);
+                return;
+            }
             if (state.weapons.flakCooldown > 0) return;
             if (state.weapons.empCharges <= 0) {
-                addLog("⚠️ EMP Flak capacitors depleted! Recharge from Silicates in Armory [X].", "warning");
+                addLog("⚠️ EMP Flak capacitors depleted! Recharge from Silicates in Armory [X] or buy at port.", "warning");
                 audio.playBeep(240, 'square', 0.1, 0.1);
                 return;
             }
@@ -8023,6 +8321,10 @@
         }
 
         function craftRailgunSlugs() {
+            if (!state.weapons.hasRailgun) {
+                addLog("⚠️ Cannot craft slugs: Heavy Kinetic Railgun Battery is not installed! Purchase at Vanguard-Prime drydock [O].", "warning");
+                return;
+            }
             if ((state.cargoHold.ferrum || 0) < 5) {
                 addLog("⚠️ Insufficient Ferrum Ore! Need 5T Ferrum to smelt 5 slugs.", "warning");
                 return;
@@ -8036,6 +8338,10 @@
         }
 
         function rechargeEMPCapacitor() {
+            if (!state.weapons.hasEMP) {
+                addLog("⚠️ Cannot recharge EMP: EMP Flak Burst Cannon is not installed! Purchase at Cryo-Reach drydock [O].", "warning");
+                return;
+            }
             if ((state.cargoHold.silicates || 0) < 4) {
                 addLog("⚠️ Insufficient Silicates! Need 4T Silicates to charge 2 EMP capacitors.", "warning");
                 return;
@@ -8086,10 +8392,13 @@
         }
 
         function updateDefenseModalUI() {
+            const isDocked = !!(state.station && state.station.docked);
+            const curSector = state.currentSectorIndex;
+
             const rEl = document.getElementById('txtRailgunSlugs');
-            if (rEl) rEl.textContent = state.weapons.railgunSlugs;
+            if (rEl) rEl.textContent = state.weapons.hasRailgun ? `${state.weapons.railgunSlugs} Slugs` : 'LOCKED (0 Slugs)';
             const eEl = document.getElementById('txtEmpCharges');
-            if (eEl) eEl.textContent = state.weapons.empCharges;
+            if (eEl) eEl.textContent = state.weapons.hasEMP ? `${state.weapons.empCharges} Charges` : 'LOCKED (0 Charges)';
             const pCountEl = document.getElementById('txtPiratesKilledCount');
             if (pCountEl) pCountEl.textContent = state.piratesDefeated;
             const pValEl = document.getElementById('txtPirateBountiesVal');
@@ -8111,16 +8420,70 @@
                 defCountEl.textContent = `${state.raiders.length} IN SECTOR`;
             }
 
+            // Update weapon badges with install / port status
+            const wBadge1 = document.getElementById('wBadge1');
+            if (wBadge1) {
+                if (state.weapons.selected === 1) {
+                    wBadge1.textContent = 'EQUIPPED [2]';
+                    wBadge1.style.color = '#10b981';
+                } else if (state.weapons.hasRailgun) {
+                    wBadge1.textContent = 'SELECT [2]';
+                    wBadge1.style.color = '#fca5a5';
+                } else {
+                    wBadge1.textContent = (isDocked && curSector === 0) ? 'BUY RETROFIT [400 CR]' : '🔒 Vanguard-Prime';
+                    wBadge1.style.color = (isDocked && curSector === 0) ? '#f59e0b' : '#ef4444';
+                }
+            }
+
+            const wBadge2 = document.getElementById('wBadge2');
+            if (wBadge2) {
+                if (state.weapons.selected === 2) {
+                    wBadge2.textContent = 'EQUIPPED [3]';
+                    wBadge2.style.color = '#10b981';
+                } else if (state.weapons.hasEMP) {
+                    wBadge2.textContent = 'SELECT [3]';
+                    wBadge2.style.color = '#c084fc';
+                } else {
+                    wBadge2.textContent = (isDocked && curSector === 1) ? 'BUY RETROFIT [950 CR]' : '🔒 Cryo-Reach';
+                    wBadge2.style.color = (isDocked && curSector === 1) ? '#f59e0b' : '#ef4444';
+                }
+            }
+
+            const wBadge3 = document.getElementById('wBadge3');
+            if (wBadge3) {
+                if (state.weapons.selected === 3) {
+                    wBadge3.textContent = 'EQUIPPED [4]';
+                    wBadge3.style.color = '#10b981';
+                } else if (state.weapons.hasPDL) {
+                    wBadge3.textContent = 'SELECT [4]';
+                    wBadge3.style.color = '#10b981';
+                } else {
+                    wBadge3.textContent = (isDocked && curSector === 2) ? 'BUY RETROFIT [2.2k CR]' : '🔒 Shadow-Haven';
+                    wBadge3.style.color = (isDocked && curSector === 2) ? '#f59e0b' : '#ef4444';
+                }
+            }
+
             const autoBtn = document.getElementById('btnToggleAutoPDL');
             if (autoBtn) {
-                autoBtn.textContent = state.weapons.autoPDL ? '🎯 AUTO-PDL: ENGAGED [P]' : '🎯 AUTO-PDL: MANUAL ONLY';
-                autoBtn.style.borderColor = state.weapons.autoPDL ? '#10b981' : '#f59e0b';
-                autoBtn.style.color = state.weapons.autoPDL ? '#a7f3d0' : '#fef08a';
+                if (!state.weapons.hasPDL) {
+                    autoBtn.textContent = '🎯 AUTO-PDL: NOT INSTALLED';
+                    autoBtn.style.borderColor = '#ef4444';
+                    autoBtn.style.color = '#fca5a5';
+                } else {
+                    autoBtn.textContent = state.weapons.autoPDL ? '🎯 AUTO-PDL: ENGAGED [P]' : '🎯 AUTO-PDL: MANUAL ONLY';
+                    autoBtn.style.borderColor = state.weapons.autoPDL ? '#10b981' : '#f59e0b';
+                    autoBtn.style.color = state.weapons.autoPDL ? '#a7f3d0' : '#fef08a';
+                }
             }
             const txtPdl = document.getElementById('txtPdlMode');
             if (txtPdl) {
-                txtPdl.textContent = state.weapons.autoPDL ? 'AUTO-ENGAGED' : 'MANUAL';
-                txtPdl.style.color = state.weapons.autoPDL ? '#10b981' : '#f59e0b';
+                if (!state.weapons.hasPDL) {
+                    txtPdl.textContent = 'NOT INSTALLED';
+                    txtPdl.style.color = '#ef4444';
+                } else {
+                    txtPdl.textContent = state.weapons.autoPDL ? 'AUTO-ENGAGED' : 'MANUAL';
+                    txtPdl.style.color = state.weapons.autoPDL ? '#10b981' : '#f59e0b';
+                }
             }
         }
 
@@ -8137,7 +8500,7 @@
             state.weapons.chaffCooldown = Math.max(0, state.weapons.chaffCooldown - dt);
 
             // Auto-PDL Turret logic
-            if (state.weapons.autoPDL && state.weapons.pdlCooldown <= 0) {
+            if (state.weapons.hasPDL && state.weapons.autoPDL && state.weapons.pdlCooldown <= 0) {
                 // Check if any incoming torpedo within 280
                 let nearTorp = null;
                 let minTorpD = 280;
@@ -8648,6 +9011,46 @@
                 btnCrisisElem.classList.toggle('alarm-pulse', hasHazard);
             }
 
+            // Station Defensive Perimeter & Safe Zone Logic
+            const distShipToStation = state.station ? Math.hypot(state.station.x - state.ship.x, state.station.y - state.ship.y) : 9999;
+            const inStationSafeZone = state.station && (state.station.docked || distShipToStation < 500);
+
+            // Spaceport heavy point defense repels raiders & shreds hostile trespassers
+            if (state.station) {
+                for (let i = state.raiders.length - 1; i >= 0; i--) {
+                    const r = state.raiders[i];
+                    const distRToStn = Math.hypot(r.x - state.station.x, r.y - state.station.y);
+                    if (distRToStn < 520) {
+                        const stnAngle = Math.atan2(r.y - state.station.y, r.x - state.station.x);
+                        r.vx += Math.cos(stnAngle) * (180 * dt);
+                        r.vy += Math.sin(stnAngle) * (180 * dt);
+                        r.hp -= 32 * dt;
+                        if (Math.random() < 0.15) {
+                            createSparks(r.x, r.y, '#38bdf8', 4);
+                            state.projectiles.push({
+                                type: 'pdlBeam',
+                                x1: state.station.x + Math.cos(stnAngle) * 50,
+                                y1: state.station.y + Math.sin(stnAngle) * 50,
+                                x2: r.x,
+                                y2: r.y,
+                                life: 0.1,
+                                color: '#38bdf8'
+                            });
+                        }
+                    }
+                }
+
+                // Station destroys incoming hostile projectiles within safe perimeter
+                for (let i = state.enemyProjectiles.length - 1; i >= 0; i--) {
+                    const ep = state.enemyProjectiles[i];
+                    const distEpToStn = Math.hypot(ep.x - state.station.x, ep.y - state.station.y);
+                    if (distEpToStn < 480) {
+                        createSparks(ep.x, ep.y, '#38bdf8', 8);
+                        state.enemyProjectiles.splice(i, 1);
+                    }
+                }
+            }
+
             // Phase 12: Pirate Raiders AI & Hostile Engagements Simulation
             for (let i = state.raiders.length - 1; i >= 0; i--) {
                 const r = state.raiders[i];
@@ -8692,8 +9095,10 @@
                     r.x += r.vx;
                     r.y += r.vy;
 
-                    // Firing behavior
-                    if (r.shootTimer <= 0 && distToShip < 480) {
+                    // Firing behavior (Raiders will NOT fire if player is inside the station safe zone!)
+                    if (inStationSafeZone) {
+                        // Target lock scrambled by station defensive field
+                    } else if (r.shootTimer <= 0 && distToShip < 480) {
                         r.shootTimer = (r.type === 'dread') ? 1.6 : ((r.type === 'gunship') ? 2.2 : 3.0);
                         const muzzleX = r.x + Math.cos(r.angle) * (r.radius + 6);
                         const muzzleY = r.y + Math.sin(r.angle) * (r.radius + 6);
@@ -9512,6 +9917,24 @@
                     ctx.stroke();
                     ctx.setLineDash([]);
                 }
+
+                // Station Defensive Perimeter Shield Circle (500m radius safe zone)
+                const inSafe = (st.docked || distToShip < 500);
+                ctx.save();
+                ctx.strokeStyle = inSafe ? 'rgba(16, 185, 129, 0.45)' : 'rgba(56, 189, 248, 0.25)';
+                ctx.fillStyle = inSafe ? 'rgba(16, 185, 129, 0.05)' : 'rgba(56, 189, 248, 0.02)';
+                ctx.lineWidth = 1.5;
+                ctx.setLineDash([8, 8]);
+                ctx.beginPath();
+                ctx.arc(st.x, st.y, 500, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.stroke();
+                ctx.setLineDash([]);
+                ctx.font = 'bold 9px monospace';
+                ctx.fillStyle = inSafe ? '#6ee7b7' : '#7dd3fc';
+                ctx.textAlign = 'center';
+                ctx.fillText('🛡️ STATION DEFENSE PERIMETER (SAFE ZONE)', st.x, st.y + 518);
+                ctx.restore();
             }
 
             // Phase 12: Render Pirate Raiders & Hostile Warships
@@ -10091,6 +10514,18 @@
                 const sx = (state.station.x - state.ship.x) * radarScale;
                 const sy = (state.station.y - state.ship.y) * radarScale;
                 const sDist = Math.hypot(sx, sy);
+                const safeR = 500 * radarScale;
+                const distReal = Math.hypot(state.station.x - state.ship.x, state.station.y - state.ship.y);
+                const inSafe = (state.station.docked || distReal < 500);
+
+                radarCtx.save();
+                radarCtx.strokeStyle = inSafe ? 'rgba(16, 185, 129, 0.5)' : 'rgba(56, 189, 248, 0.25)';
+                radarCtx.lineWidth = 1;
+                radarCtx.beginPath();
+                radarCtx.arc(rcx + sx, rcy + sy, safeR, 0, Math.PI * 2);
+                radarCtx.stroke();
+                radarCtx.restore();
+
                 if (sDist < rRadius - 4) {
                     radarCtx.fillStyle = state.station.docked ? '#10b981' : '#38bdf8';
                     radarCtx.fillRect(rcx + sx - 3, rcy + sy - 3, 6, 6);
