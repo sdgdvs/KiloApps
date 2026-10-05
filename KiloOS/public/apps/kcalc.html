@@ -58,10 +58,11 @@
     background: var(--card-bg);
     border: 1px solid var(--border-color);
     border-radius: 14px;
-    padding: 8px 14px;
+    padding: 8px 12px;
     backdrop-filter: blur(16px);
     flex-wrap: wrap;
     gap: 8px;
+    flex-shrink: 0;
   }
 
   .logo {
@@ -72,6 +73,7 @@
     font-size: 16px;
     letter-spacing: -0.5px;
     color: #fff;
+    user-select: none;
   }
 
   .logo-icon {
@@ -94,13 +96,14 @@
     padding: 3px;
     border: 1px solid var(--border-color);
     gap: 2px;
+    user-select: none;
   }
 
   .tab-btn {
     border: none;
     background: transparent;
     color: var(--text-muted);
-    padding: 6px 12px;
+    padding: 5px 10px;
     font-size: 12px;
     font-weight: 600;
     border-radius: 7px;
@@ -109,6 +112,9 @@
     display: flex;
     align-items: center;
     gap: 4px;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
   }
 
   .tab-badge {
@@ -134,14 +140,14 @@
   .header-controls {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
   }
 
   .badge-btn {
     background: rgba(255, 255, 255, 0.05);
     border: 1px solid var(--border-color);
     color: var(--text-main);
-    padding: 5px 11px;
+    padding: 5px 9px;
     border-radius: 7px;
     font-size: 11px;
     font-weight: 600;
@@ -151,9 +157,18 @@
     display: flex;
     align-items: center;
     gap: 4px;
+    user-select: none;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
   }
   .badge-btn:hover { background: rgba(255,255,255,0.12); border-color: rgba(255,255,255,0.2); }
+  .badge-btn:active { transform: translateY(1px); }
   .badge-btn.active { background: rgba(16, 185, 129, 0.2); color: #34d399; border-color: rgba(16, 185, 129, 0.3); }
+
+  .badge-btn:focus-visible, .tab-btn:focus-visible, .calc-btn:focus-visible, .action-btn:focus-visible, .mini-btn:focus-visible {
+    outline: 2px solid #818cf8;
+    outline-offset: 1px;
+  }
 
   /* Main Workspace Layout */
   .workspace {
@@ -184,6 +199,7 @@
     backdrop-filter: blur(12px);
     min-height: 95px;
     position: relative;
+    flex-shrink: 0;
   }
 
   .sub-display {
@@ -196,7 +212,10 @@
     overflow-x: auto;
     letter-spacing: 0.5px;
     user-select: text;
+    cursor: pointer;
+    transition: color 0.15s ease;
   }
+  .sub-display:hover { color: #cbd5e1; }
   .sub-display::-webkit-scrollbar { display: none; }
 
   .main-display {
@@ -212,9 +231,13 @@
     margin-top: 4px;
     user-select: text;
     cursor: pointer;
-    transition: opacity 0.15s ease;
+    transition: opacity 0.15s ease, color 0.2s ease, text-shadow 0.2s ease;
   }
   .main-display:hover { opacity: 0.9; }
+  .main-display.copied {
+    color: #34d399 !important;
+    text-shadow: 0 0 20px rgba(52, 211, 153, 0.5) !important;
+  }
   .main-display::-webkit-scrollbar { display: none; }
 
   .display-status {
@@ -233,6 +256,7 @@
     background: rgba(255, 255, 255, 0.06);
     color: var(--text-muted);
     font-family: 'JetBrains Mono', monospace;
+    user-select: none;
   }
   .status-chip.highlight { background: rgba(99, 102, 241, 0.2); color: #818cf8; }
   .status-chip.copy-btn {
@@ -241,10 +265,15 @@
     color: #a5b4fc;
     border: 1px solid rgba(99, 102, 241, 0.3);
     transition: all 0.15s ease;
+    user-select: none;
+    touch-action: manipulation;
   }
   .status-chip.copy-btn:hover {
     background: rgba(99, 102, 241, 0.35);
     color: #ffffff;
+  }
+  .status-chip.copy-btn:active {
+    transform: scale(0.96);
   }
 
   .stat-val, .fin-res-val { user-select: text; }
@@ -258,6 +287,7 @@
     border-radius: 10px;
     padding: 6px 10px;
     align-items: center;
+    flex-shrink: 0;
   }
   .formula-label {
     font-size: 11px;
@@ -308,6 +338,9 @@
     justify-content: center;
     backdrop-filter: blur(8px);
     box-shadow: 0 2px 4px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.04);
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
   }
 
   .calc-btn:hover {
@@ -319,7 +352,7 @@
 
   .calc-btn:active {
     background: var(--btn-active);
-    transform: translateY(1px);
+    transform: translateY(1px) scale(0.98);
     box-shadow: inset 0 1px 3px rgba(0,0,0,0.4);
   }
 
@@ -778,27 +811,26 @@
   .mem-reg-val { font-family: 'JetBrains Mono', monospace; font-size: 16px; font-weight: 700; color: #fff; word-break: break-all; }
   .mem-reg-actions { display: flex; gap: 6px; }
 
-  /* Toast Notification */
+  /* Toast Notification (Safe Top-Right Placement per Usability & Vision Directives) */
   .toast-container {
     position: fixed;
-    bottom: 24px;
-    left: 50%;
-    transform: translateX(-50%);
+    top: 56px;
+    right: 20px;
     display: flex;
     flex-direction: column;
-    align-items: center;
-    gap: 8px;
+    align-items: flex-end;
+    gap: 6px;
     z-index: 3000;
     pointer-events: none;
-    max-width: min(420px, calc(100vw - 36px));
+    max-width: min(380px, calc(100vw - 32px));
   }
 
   .toast {
     background: rgba(18, 22, 34, 0.96);
     border: 1px solid rgba(99, 102, 241, 0.45);
     color: #f8fafc;
-    padding: 9px 16px;
-    border-radius: 10px;
+    padding: 8px 14px;
+    border-radius: 9px;
     font-size: 12px;
     font-weight: 500;
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6), 0 0 15px rgba(99, 102, 241, 0.2);
@@ -807,7 +839,7 @@
     align-items: center;
     gap: 8px;
     opacity: 0;
-    transform: translateY(8px) scale(0.96);
+    transform: translateY(-8px) scale(0.96);
     transition: opacity 0.2s ease, transform 0.2s ease;
     pointer-events: auto;
     cursor: pointer;
@@ -829,7 +861,7 @@
     .header { flex-direction: column; align-items: stretch; }
     .mode-tabs { overflow-x: auto; }
     .mem-reg-grid { grid-template-columns: 1fr; }
-    .toast-container { bottom: 16px; left: 50%; transform: translateX(-50%); max-width: calc(100vw - 24px); }
+    .toast-container { top: 56px; right: 12px; max-width: calc(100vw - 24px); }
   }
 </style>
 </head>
@@ -885,89 +917,90 @@
           <span id="memChip" class="status-chip" style="display:none;">MEM</span>
           <button class="status-chip copy-btn" onclick="event.stopPropagation(); copyMainDisplay()" title="Copy result to clipboard (Ctrl+C)">📋 Copy</button>
         </div>
-        <div class="sub-display" id="subDisp"></div>
-        <div class="main-display" id="mainDisp" aria-live="polite" title="Click to copy (Ctrl+C)">0</div>
+        <div class="sub-display" id="subDisp" title="Click to recall previous formula" onclick="event.stopPropagation(); recallSubDisplay()"></div>
+        <div class="main-display" id="mainDisp" aria-live="polite" title="Click to copy value (Ctrl+C)">0</div>
       </div>
 
       <!-- Formula Expression Direct Bar -->
       <div class="formula-bar">
         <span class="formula-label">fx</span>
-        <input type="text" id="formulaInput" class="formula-input" placeholder="Type formula e.g. sin(30) + sqrt(144)..." oninput="expr = this.value" onkeydown="handleFormulaKey(event)">
-        <button class="action-btn" onclick="evalFormulaInput()">Eval</button>
+        <input type="text" id="formulaInput" class="formula-input" placeholder="Type formula e.g. sin(30) + sqrt(144)..." oninput="handleFormulaInput(this.value)" onkeydown="handleFormulaKey(event)">
+        <button id="formulaClearBtn" class="mini-btn" style="padding: 2px 7px; font-size: 11px; display: none;" onclick="clearFormulaInput()" title="Clear expression (Esc)">✕</button>
+        <button class="action-btn" onclick="evalFormulaInput()" title="Evaluate formula (Enter)">Eval</button>
       </div>
 
       <!-- View 1: Scientific Calculator Keypad -->
       <div id="view-scientific" class="view-panel active">
         <div class="keypad-grid">
           <!-- Row 0: Memory & Clear -->
-          <button class="calc-btn mem" onclick="memClear()" title="Memory Clear">MC</button>
-          <button class="calc-btn mem" onclick="memRecall()" title="Memory Recall">MR</button>
-          <button class="calc-btn mem" onclick="memStore()" title="Memory Store">MS</button>
-          <button class="calc-btn mem" onclick="memAdd()" title="Memory Add">M+</button>
-          <button class="calc-btn mem" onclick="memSub()" title="Memory Subtract">M-</button>
-          <button class="calc-btn danger" onclick="backspace()" title="Backspace">⌫</button>
+          <button class="calc-btn mem" onclick="memClear()" title="Memory Clear (MC)">MC</button>
+          <button class="calc-btn mem" onclick="memRecall()" title="Memory Recall (MR)">MR</button>
+          <button class="calc-btn mem" onclick="memStore()" title="Memory Store (MS)">MS</button>
+          <button class="calc-btn mem" onclick="memAdd()" title="Memory Add (M+)">M+</button>
+          <button class="calc-btn mem" onclick="memSub()" title="Memory Subtract (M-)">M-</button>
+          <button class="calc-btn danger" onclick="backspace()" title="Backspace (⌫)">⌫</button>
           <button class="calc-btn danger" onclick="clearAll()" title="Clear All (Esc)">C</button>
 
           <!-- Row 1: Trigonometric -->
-          <button class="calc-btn func" onclick="append('sin(')">sin</button>
-          <button class="calc-btn func" onclick="append('cos(')">cos</button>
-          <button class="calc-btn func" onclick="append('tan(')">tan</button>
-          <button class="calc-btn func" onclick="append('asin(')">asin</button>
-          <button class="calc-btn func" onclick="append('acos(')">acos</button>
-          <button class="calc-btn func" onclick="append('atan(')">atan</button>
-          <button class="calc-btn op" onclick="append('(')">(</button>
+          <button class="calc-btn func" onclick="append('sin(')" title="Sine: sin(x)">sin</button>
+          <button class="calc-btn func" onclick="append('cos(')" title="Cosine: cos(x)">cos</button>
+          <button class="calc-btn func" onclick="append('tan(')" title="Tangent: tan(x)">tan</button>
+          <button class="calc-btn func" onclick="append('asin(')" title="Arcsine / Inverse Sine: asin(x)">asin</button>
+          <button class="calc-btn func" onclick="append('acos(')" title="Arccosine / Inverse Cosine: acos(x)">acos</button>
+          <button class="calc-btn func" onclick="append('atan(')" title="Arctangent / Inverse Tangent: atan(x)">atan</button>
+          <button class="calc-btn op" onclick="append('(')" title="Open Parenthesis: (">(</button>
 
           <!-- Row 2: Powers & Logs -->
-          <button class="calc-btn func" onclick="append('ln(')">ln</button>
-          <button class="calc-btn func" onclick="append('log(')">log</button>
-          <button class="calc-btn func" onclick="append('log2(')">log₂</button>
-          <button class="calc-btn func" onclick="append('e^(')">eˣ</button>
-          <button class="calc-btn func" onclick="append('10^(')">10ˣ</button>
-          <button class="calc-btn func" onclick="append('^')">xʸ</button>
-          <button class="calc-btn op" onclick="append(')')">)</button>
+          <button class="calc-btn func" onclick="append('ln(')" title="Natural Logarithm (base e): ln(x)">ln</button>
+          <button class="calc-btn func" onclick="append('log(')" title="Common Logarithm (base 10): log(x)">log</button>
+          <button class="calc-btn func" onclick="append('log2(')" title="Binary Logarithm (base 2): log2(x)">log₂</button>
+          <button class="calc-btn func" onclick="append('e^(')" title="Exponential: e^(x)">eˣ</button>
+          <button class="calc-btn func" onclick="append('10^(')" title="Power of Ten: 10^(x)">10ˣ</button>
+          <button class="calc-btn func" onclick="append('^')" title="Exponentiation / Power: x^y">xʸ</button>
+          <button class="calc-btn op" onclick="append(')')" title="Close Parenthesis: )">)</button>
 
           <!-- Row 3: Roots & Exponents -->
-          <button class="calc-btn func" onclick="append('sqrt(')">√</button>
-          <button class="calc-btn func" onclick="append('cbrt(')">∛</button>
-          <button class="calc-btn func" onclick="append('^2')">x²</button>
-          <button class="calc-btn func" onclick="append('^3')">x³</button>
-          <button class="calc-btn func" onclick="reciprocal()" title="Reciprocal (1/x)">1/x</button>
-          <button class="calc-btn func" onclick="append('fact(')">n!</button>
-          <button class="calc-btn op" onclick="append(' mod ')" title="Modulo / Remainder">mod</button>
+          <button class="calc-btn func" onclick="append('sqrt(')" title="Square Root: sqrt(x)">√</button>
+          <button class="calc-btn func" onclick="append('cbrt(')" title="Cube Root: cbrt(x)">∛</button>
+          <button class="calc-btn func" onclick="append('^2')" title="Square: x²">x²</button>
+          <button class="calc-btn func" onclick="append('^3')" title="Cube: x³">x³</button>
+          <button class="calc-btn func" onclick="reciprocal()" title="Reciprocal: 1/x">1/x</button>
+          <button class="calc-btn func" onclick="append('fact(')" title="Factorial: n!">n!</button>
+          <button class="calc-btn op" onclick="append(' mod ')" title="Modulo / Remainder: x mod y">mod</button>
 
           <!-- Row 4: Keypad 7-9 -->
-          <button class="calc-btn func" onclick="append('pi')">π</button>
-          <button class="calc-btn func" onclick="append('e')">e</button>
-          <button class="calc-btn num" onclick="append('7')">7</button>
-          <button class="calc-btn num" onclick="append('8')">8</button>
-          <button class="calc-btn num" onclick="append('9')">9</button>
-          <button class="calc-btn op" onclick="append('/')">÷</button>
-          <button class="calc-btn func" onclick="append('abs(')">|x|</button>
+          <button class="calc-btn func" onclick="append('pi')" title="Pi Constant (π ≈ 3.14159)">π</button>
+          <button class="calc-btn func" onclick="append('e')" title="Euler's Constant (e ≈ 2.71828)">e</button>
+          <button class="calc-btn num" onclick="append('7')" title="Number 7">7</button>
+          <button class="calc-btn num" onclick="append('8')" title="Number 8">8</button>
+          <button class="calc-btn num" onclick="append('9')" title="Number 9">9</button>
+          <button class="calc-btn op" onclick="append('/')" title="Division: ÷">÷</button>
+          <button class="calc-btn func" onclick="append('abs(')" title="Absolute Value: |x|">|x|</button>
 
           <!-- Row 5: Keypad 4-6 -->
-          <button class="calc-btn func" onclick="append('floor(')">floor</button>
-          <button class="calc-btn func" onclick="append('ceil(')">ceil</button>
-          <button class="calc-btn num" onclick="append('4')">4</button>
-          <button class="calc-btn num" onclick="append('5')">5</button>
-          <button class="calc-btn num" onclick="append('6')">6</button>
-          <button class="calc-btn op" onclick="append('*')">×</button>
-          <button class="calc-btn func" onclick="append('rnd')">rnd</button>
+          <button class="calc-btn func" onclick="append('floor(')" title="Floor / Round Down: floor(x)">floor</button>
+          <button class="calc-btn func" onclick="append('ceil(')" title="Ceiling / Round Up: ceil(x)">ceil</button>
+          <button class="calc-btn num" onclick="append('4')" title="Number 4">4</button>
+          <button class="calc-btn num" onclick="append('5')" title="Number 5">5</button>
+          <button class="calc-btn num" onclick="append('6')" title="Number 6">6</button>
+          <button class="calc-btn op" onclick="append('*')" title="Multiplication: ×">×</button>
+          <button class="calc-btn func" onclick="append('rnd')" title="Random Float (0 to 1): rnd">rnd</button>
 
           <!-- Row 6: Keypad 1-3 -->
-          <button class="calc-btn func" onclick="append('Ans')">Ans</button>
-          <button class="calc-btn func" onclick="toggleSign()">±</button>
-          <button class="calc-btn num" onclick="append('1')">1</button>
-          <button class="calc-btn num" onclick="append('2')">2</button>
-          <button class="calc-btn num" onclick="append('3')">3</button>
-          <button class="calc-btn op" onclick="append('-')">−</button>
-          <button class="calc-btn op" onclick="append('%')">%</button>
+          <button class="calc-btn func" onclick="append('Ans')" title="Previous Answer: Ans">Ans</button>
+          <button class="calc-btn func" onclick="toggleSign()" title="Toggle Sign (+/-)">±</button>
+          <button class="calc-btn num" onclick="append('1')" title="Number 1">1</button>
+          <button class="calc-btn num" onclick="append('2')" title="Number 2">2</button>
+          <button class="calc-btn num" onclick="append('3')" title="Number 3">3</button>
+          <button class="calc-btn op" onclick="append('-')" title="Subtraction: −">−</button>
+          <button class="calc-btn op" onclick="append('%')" title="Percentage / Remainder: %">%</button>
 
           <!-- Row 7: Keypad 0 -->
-          <button class="calc-btn num" onclick="append('00')">00</button>
-          <button class="calc-btn num" onclick="append('0')">0</button>
-          <button class="calc-btn num" onclick="append('.')">.</button>
-          <button class="calc-btn op" style="grid-column: span 2;" onclick="append('+')">+</button>
-          <button class="calc-btn op" style="grid-column: span 2; background: linear-gradient(135deg, #10b981 0%, #059669 100%);" onclick="calculate()">=</button>
+          <button class="calc-btn num" onclick="append('00')" title="Double Zero: 00">00</button>
+          <button class="calc-btn num" onclick="append('0')" title="Number 0">0</button>
+          <button class="calc-btn num" onclick="append('.')" title="Decimal Point: .">.</button>
+          <button class="calc-btn op" style="grid-column: span 2;" onclick="append('+')" title="Addition: +">+</button>
+          <button class="calc-btn op" style="grid-column: span 2; background: linear-gradient(135deg, #10b981 0%, #059669 100%);" onclick="calculate()" title="Calculate (Enter / =)">=</button>
         </div>
       </div>
 
@@ -1265,9 +1298,9 @@
 <!-- Modal Dialogs -->
 <div id="modalOverlay" class="modal-overlay" onclick="handleBackdropClick(event)">
   <!-- Help Modal -->
-  <div id="helpModal" class="modal-content" style="display:none;">
+  <div id="helpModal" class="modal-content" style="display:none;" role="dialog" aria-modal="false" aria-labelledby="helpModalTitle">
     <div class="modal-header">
-      <div class="modal-title">
+      <div class="modal-title" id="helpModalTitle">
         <div class="logo-icon" style="width:20px; height:20px; font-size:11px;">?</div>
         <span>KCalc Pro — User Guide & Shortcuts</span>
       </div>
@@ -1314,9 +1347,9 @@
   </div>
 
   <!-- Memory Registers Modal -->
-  <div id="memModal" class="modal-content" style="display:none;">
+  <div id="memModal" class="modal-content" style="display:none;" role="dialog" aria-modal="false" aria-labelledby="memModalTitle">
     <div class="modal-header">
-      <div class="modal-title">
+      <div class="modal-title" id="memModalTitle">
         <div class="logo-icon" style="width:20px; height:20px; font-size:11px;">M</div>
         <span>Memory Registers</span>
       </div>
@@ -1369,9 +1402,9 @@
   </div>
 
   <!-- First-Run Tutorial Onboarding Modal -->
-  <div id="tutorialModal" class="modal-content" style="display:none; max-width: 540px;">
+  <div id="tutorialModal" class="modal-content" style="display:none; max-width: 540px;" role="dialog" aria-modal="false" aria-labelledby="tutorialModalTitle">
     <div class="modal-header">
-      <div class="modal-title">
+      <div class="modal-title" id="tutorialModalTitle">
         <div class="logo-icon" style="width:20px; height:20px; font-size:11px;">✨</div>
         <span>Welcome to KCalc Pro</span>
       </div>
@@ -1411,12 +1444,25 @@
   let isDeg = true;
   let historyTape = [];
   let justCalculated = false;
+  let historyNavIndex = -1;
 
   // Clipboard copy utilities
   function copyMainDisplay() {
     const mainDisp = document.getElementById('mainDisp');
     const val = mainDisp ? mainDisp.textContent.trim() : '';
     if (!val || val === 'Error' || val.startsWith('ERR')) return;
+
+    if (mainDisp) {
+      mainDisp.classList.add('copied');
+      setTimeout(() => { if (mainDisp) mainDisp.classList.remove('copied'); }, 350);
+    }
+    const copyBtn = document.querySelector('.status-chip.copy-btn');
+    if (copyBtn) {
+      const orig = copyBtn.textContent;
+      copyBtn.textContent = '✓ Copied!';
+      setTimeout(() => { if (copyBtn) copyBtn.textContent = orig; }, 1400);
+    }
+
     if (navigator.clipboard && navigator.clipboard.writeText) {
       navigator.clipboard.writeText(val).then(() => {
         showToast(`Copied ${val} to clipboard`, 'success', 2000);
@@ -1479,7 +1525,7 @@
 
     const hasSeenTutorial = localStorage.getItem('kcalc_tutorialSeen') === 'true';
     if (!hasSeenTutorial) {
-      setTimeout(openTutorialModal, 400);
+      openTutorialModal();
     } else {
       showToast("Welcome to KCalc Pro • Press 'H' or F1 for Help", 'info', 2800);
     }
@@ -1539,33 +1585,56 @@
 
   // Modals Management
   function openHelpModal() {
+    dismissActiveToasts();
     document.getElementById('modalOverlay').classList.add('active');
-    document.getElementById('helpModal').style.display = 'flex';
-    document.getElementById('memModal').style.display = 'none';
-    document.getElementById('tutorialModal').style.display = 'none';
+    const help = document.getElementById('helpModal');
+    help.style.display = 'flex';
+    help.setAttribute('aria-modal', 'true');
+    const mem = document.getElementById('memModal');
+    mem.style.display = 'none';
+    mem.setAttribute('aria-modal', 'false');
+    const tut = document.getElementById('tutorialModal');
+    tut.style.display = 'none';
+    tut.setAttribute('aria-modal', 'false');
     tutorialActive = false;
   }
 
   function openMemoryModal() {
+    dismissActiveToasts();
     updateModalMemVals();
     document.getElementById('modalOverlay').classList.add('active');
-    document.getElementById('memModal').style.display = 'flex';
-    document.getElementById('helpModal').style.display = 'none';
-    document.getElementById('tutorialModal').style.display = 'none';
+    const mem = document.getElementById('memModal');
+    mem.style.display = 'flex';
+    mem.setAttribute('aria-modal', 'true');
+    const help = document.getElementById('helpModal');
+    help.style.display = 'none';
+    help.setAttribute('aria-modal', 'false');
+    const tut = document.getElementById('tutorialModal');
+    tut.style.display = 'none';
+    tut.setAttribute('aria-modal', 'false');
     tutorialActive = false;
   }
 
   function openTutorialModal() {
+    dismissActiveToasts();
     tutorialActive = true;
     document.getElementById('modalOverlay').classList.add('active');
-    document.getElementById('tutorialModal').style.display = 'flex';
-    document.getElementById('helpModal').style.display = 'none';
-    document.getElementById('memModal').style.display = 'none';
+    const tut = document.getElementById('tutorialModal');
+    tut.style.display = 'flex';
+    tut.setAttribute('aria-modal', 'true');
+    const help = document.getElementById('helpModal');
+    help.style.display = 'none';
+    help.setAttribute('aria-modal', 'false');
+    const mem = document.getElementById('memModal');
+    mem.style.display = 'none';
+    mem.setAttribute('aria-modal', 'false');
   }
 
   function closeTutorialModal() {
     tutorialActive = false;
-    document.getElementById('tutorialModal').style.display = 'none';
+    const tut = document.getElementById('tutorialModal');
+    tut.style.display = 'none';
+    tut.setAttribute('aria-modal', 'false');
     if (document.getElementById('helpModal').style.display !== 'flex' &&
         document.getElementById('memModal').style.display !== 'flex') {
       document.getElementById('modalOverlay').classList.remove('active');
@@ -1581,9 +1650,15 @@
       closeTutorialModal();
     }
     document.getElementById('modalOverlay').classList.remove('active');
-    document.getElementById('helpModal').style.display = 'none';
-    document.getElementById('memModal').style.display = 'none';
-    document.getElementById('tutorialModal').style.display = 'none';
+    const help = document.getElementById('helpModal');
+    help.style.display = 'none';
+    help.setAttribute('aria-modal', 'false');
+    const mem = document.getElementById('memModal');
+    mem.style.display = 'none';
+    mem.setAttribute('aria-modal', 'false');
+    const tut = document.getElementById('tutorialModal');
+    tut.style.display = 'none';
+    tut.setAttribute('aria-modal', 'false');
     tutorialActive = false;
   }
 
@@ -1640,6 +1715,8 @@
   let activeViewName = 'scientific';
 
   function switchView(viewName) {
+    dismissActiveToasts();
+    historyNavIndex = -1;
     activeViewName = viewName;
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
     document.querySelectorAll('.view-panel').forEach(p => p.classList.remove('active'));
@@ -1740,7 +1817,10 @@
       .replace(/\^3/g, '³');
 
     mainDisp.textContent = pretty === '' ? '0' : pretty;
-    formulaInput.value = expr;
+    if (document.activeElement !== formulaInput) {
+      formulaInput.value = expr;
+    }
+    updateFormulaClearBtn();
     mainDisp.scrollLeft = mainDisp.scrollWidth;
 
     // Memory status chip
@@ -2193,11 +2273,89 @@
     if (e.key === 'Enter') {
       e.preventDefault();
       evalFormulaInput();
+    } else if (e.key === 'Escape') {
+      e.preventDefault();
+      clearFormulaInput();
+    } else if (e.key === 'ArrowUp') {
+      if (historyTape && historyTape.length > 0) {
+        e.preventDefault();
+        if (historyNavIndex < historyTape.length - 1) {
+          historyNavIndex++;
+          const f = historyTape[historyNavIndex].formula;
+          expr = f;
+          const fi = document.getElementById('formulaInput');
+          if (fi) { fi.value = f; updateFormulaClearBtn(); }
+          render();
+        }
+      }
+    } else if (e.key === 'ArrowDown') {
+      if (historyNavIndex > 0) {
+        e.preventDefault();
+        historyNavIndex--;
+        const f = historyTape[historyNavIndex].formula;
+        expr = f;
+        const fi = document.getElementById('formulaInput');
+        if (fi) { fi.value = f; updateFormulaClearBtn(); }
+        render();
+      } else if (historyNavIndex === 0) {
+        e.preventDefault();
+        historyNavIndex = -1;
+        clearFormulaInput();
+      }
+    }
+  }
+
+  function handleFormulaInput(val) {
+    expr = val;
+    historyNavIndex = -1;
+    updateFormulaClearBtn();
+  }
+
+  function updateFormulaClearBtn() {
+    const btn = document.getElementById('formulaClearBtn');
+    const input = document.getElementById('formulaInput');
+    if (btn && input) {
+      btn.style.display = input.value.trim().length > 0 ? 'inline-flex' : 'none';
+    }
+  }
+
+  function clearFormulaInput() {
+    dismissActiveToasts();
+    const input = document.getElementById('formulaInput');
+    if (input) {
+      input.value = '';
+      expr = '';
+      historyNavIndex = -1;
+      updateFormulaClearBtn();
+      render();
+      input.focus();
+    }
+  }
+
+  function recallSubDisplay() {
+    dismissActiveToasts();
+    const sub = document.getElementById('subDisp');
+    if (!sub) return;
+    let text = (sub.textContent || '').replace(/\s*=\s*$/, '').trim();
+    if (text) {
+      expr = text;
+      historyNavIndex = -1;
+      const formulaInput = document.getElementById('formulaInput');
+      if (formulaInput) {
+        formulaInput.value = text;
+        formulaInput.focus();
+      }
+      render();
+      updateFormulaClearBtn();
+      showToast('Recalled previous formula into editor', 'info', 1800);
     }
   }
 
   function evalFormulaInput() {
-    expr = document.getElementById('formulaInput').value;
+    dismissActiveToasts();
+    historyNavIndex = -1;
+    const fi = document.getElementById('formulaInput');
+    if (fi) expr = fi.value;
     calculate();
   }
 
@@ -2674,11 +2832,22 @@
       }
     }
 
-    // If modal is open and Esc pressed, close modal
+    // If modal is open, handle toggling and dismissal shortcuts
     if (document.getElementById('modalOverlay').classList.contains('active')) {
       if (e.key === 'Escape') {
         e.preventDefault();
         closeModals();
+        return;
+      }
+      if ((e.key === 'h' || e.key === 'H' || e.key === 'F1') && document.getElementById('helpModal').style.display === 'flex') {
+        e.preventDefault();
+        closeModals();
+        return;
+      }
+      if ((e.key === 'm' || e.key === 'M') && document.getElementById('memModal').style.display === 'flex') {
+        e.preventDefault();
+        closeModals();
+        return;
       }
       return;
     }

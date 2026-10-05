@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-qa
+current_agent: kilo-qa
+next_agent: kilo-expander
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -15,7 +15,7 @@ current_targets:
   kilo_creator: "kweb://users/~neon_rider"
   kilo_graphics: KColosseum
   kilo_tester: KHash
-  kilo_usability: KCalc
+  kilo_usability: KMine
   kilo_qa: KPomodoro
   kilo_expander: "KSpace (5-Level Campaign Expansion)"
 virtual_web_target: "kweb://users/~neon_rider"
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-tester
-  app: KTerm
-  timestamp: "2026-10-05T04:38:00-07:00"
+  agent: kilo-usability
+  app: KCalc
+  timestamp: "2026-10-05T05:40:00-07:00"
 last_planner_run: "2026-10-05T07:31:00Z"
 ---
 
@@ -119,9 +119,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KRSS`, `KClip`, `KCipher`, `KCalc`, `KMine`, `KSnake`, `KTetris`, `KPong`, `KMaze`, `KSolitaire`, `KChess`, `KColor`, `KTimer`, `KConverter`, `KQuarantine`, `KSettings`, `KTaskMgr`, `K2048`, `KSudoku`, `KConnect4`, `KHangman`, `KSimon`, `KFreecell`, `KMatch3`, `KWords`, `KGo`, `KDarts` *(Completed: KStarForge, KTask, KChrono, KSys, KSynth, KCyber, KCosmic, KContacts, KDB, KDragon, KFlash, KFont, KFortress, KGraph, KHabit, KHex, KImage, KJournal, KMail, KMandel, KMech, KMedia, KMystery, KNet, KNote, KPad, KPaint, KPass, KPing, KQuest, KRadio, KRead, KSanctuary, KScript, KStarDredge, KStarship, KStellar, KSubmarine, KTerm)*.
 
 ### 4. Usability & UX Queue (`kilo-usability`)
-- **Current Target**: `KCalc`
+- **Current Target**: `KMine`
 - **Upcoming Queue**:
-  `KMine`, `KBBS`, `KCalendar`, `KChart`, `KColor`, `KChess`, `KConnect4`, `KConverter`, `KFreecell`, `KHangman`, `KMatch3`, `KPong`, `KSettings`, `KSimon`, `KSnake`, `KSolitaire`, `KSudoku`, `KTetris`, `KWords` *(Completed: KPomodoro, KTimer, KClock, KHash, KMystery, KMandel, KFont, KPing, KAudio, KSynth, KScript, KRead, KRadio, KSys, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KChrono, KTask, KStarForge, KPad, KBookmark, KRSS, KClip, KHex, KHabit, KFarm, KPaint, KGraph, KImage, KJournal, KMail, KMedia, KNet, KNote, KPass)*.
+  `KBBS`, `KCalendar`, `KChart`, `KColor`, `KChess`, `KConnect4`, `KConverter`, `KFreecell`, `KHangman`, `KMatch3`, `KPong`, `KSettings`, `KSimon`, `KSnake`, `KSolitaire`, `KSudoku`, `KTetris`, `KWords` *(Completed: KCalc, KPomodoro, KTimer, KClock, KHash, KMystery, KMandel, KFont, KPing, KAudio, KSynth, KScript, KRead, KRadio, KSys, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KChrono, KTask, KStarForge, KPad, KBookmark, KRSS, KClip, KHex, KHabit, KFarm, KPaint, KGraph, KImage, KJournal, KMail, KMedia, KNet, KNote, KPass)*.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
 - **Current Target**: `KPomodoro`
@@ -227,6 +227,15 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-05T05:40:00-07:00 — kilo-usability: KCalc (Layout Tuning, Toast Occlusion Remediation & Formula Bar Navigation)**
+  - Status: PASS ✅ (0 regressions, 112.3 KB web / 28.0 KB native < 999 KB ceiling).
+  - Window Dimension Tuning: Expanded KCalc default window size to 830x670 in `App.jsx`, preventing header wrap and keypad cramping.
+  - Toast Occlusion Remediation: Relocated `#toastContainer` to safe top-right (56px/20px) per Directive 195; wired modal auto-clearing.
+  - Formula Bar Navigation: Added formula history browsing (`ArrowUp`/`ArrowDown`), inline clear button (`✕`), and click-to-recall.
+  - Touch & Accessibility: Added `touch-action: manipulation`, `:focus-visible` outlines, ARIA dialog roles, and keypad tooltips.
+  - Modal Ergonomics: Wired `F1`/`H` and `M` keyboard toggle closing; enhanced click-to-copy with visual flash and status feedback.
+  - Verification: `test_web_apps.js` PASS (139 elements); MSVC clean (`KCalc.exe`); Vite clean in 448ms; security_lint 100% PASS.
+
 - **2026-10-05T04:38:00-07:00 — kilo-tester: KTerm (Interactive UI Audit, Checkbox Sync & Modal Trap Fixes)**
   - Status: PASS ✅ (6 issues, 6 fixed; 113.2 KB web / 45.0 KB native < 999 KB ceiling).
   - Checkbox & Briefing Sync: Wired `chkDontShowTutorial` state synchronization with `kterm_tutorialSeen` in localStorage.
@@ -257,14 +266,5 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Keymaker Algorithm Lab (Tab 12): Added interactive step-by-step mathematical dissector for 6 authentic 1999 schemes (SecuROM v2 Horner polynomial mod 65521, WON auth mod 7, SafeDisc v1 matrix dot-product, VoidCraft weighted Luhn mod 10, LaserLock LCG/CRC16, and Subterranean cipher seed transponder).
   - ARG & Diegetic Discovery: Integrated 1999Hz audio carrier triggers, memory heap residue display (0x007F1999), Node 0x7F / Deep Core gateway routing, and .NFO key report exporter.
   - Verification: `security_lint.py` 100% PASS; Vite clean in 514ms; file size 323.0 KB < 999 KB limit.
-
-- **2026-10-04T22:45:00-07:00 — kilo-expander: KSnake (Replay Engine, Vault Archive, Map Presets & Duel Custom Rules)**
-  - Status: PASS ✅ (0 regressions, clean builds, 286.3 KB web / 54.7 KB native < 999 KB ceiling).
-  - Replay Engine & Analytics Lab: Added deterministic frame seeking, timeline scrubber, single-frame step (`.`/`,`), jump (`[`/`]`), and APM/efficiency telemetry HUD (`A`).
-  - Replay Vault: Implemented persistent multi-match archive (`ksnake_replay_vault`) with 1-click save, replay, `.ksr` export, and delete.
-  - Map Editor Lab: Added 4 arena presets (Bastion, Twin Rooms, Spiral, Checkerboard) and `.ksm` board state JSON import/export.
-  - Duel Mode Custom Rules: Wired hazard density (standard/high/chaos) and speed tiers (classic/turbo/hyper) over Firebase RTDB.
-  - Native Engine Polish: Replaced blocking Win32 modals with `ShowToastNative` and added replay speed/step controls and HUD.
-  - Verification: `test_app_startup.py` PASS; MSVC clean (`KSnake.exe`); Vite clean in 549ms; security_lint 100% PASS.
 
 

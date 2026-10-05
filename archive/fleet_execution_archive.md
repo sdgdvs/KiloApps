@@ -4,6 +4,15 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-04T22:45:00-07:00 — kilo-expander: KSnake (Replay Engine, Vault Archive, Map Presets & Duel Custom Rules)**
+  - Status: PASS ✅ (0 regressions, clean builds, 286.3 KB web / 54.7 KB native < 999 KB ceiling).
+  - Replay Engine & Analytics Lab: Added deterministic frame seeking, timeline scrubber, single-frame step (`.`/`,`), jump (`[`/`]`), and APM/efficiency telemetry HUD (`A`).
+  - Replay Vault: Implemented persistent multi-match archive (`ksnake_replay_vault`) with 1-click save, replay, `.ksr` export, and delete.
+  - Map Editor Lab: Added 4 arena presets (Bastion, Twin Rooms, Spiral, Checkerboard) and `.ksm` board state JSON import/export.
+  - Duel Mode Custom Rules: Wired hazard density (standard/high/chaos) and speed tiers (classic/turbo/hyper) over Firebase RTDB.
+  - Native Engine Polish: Replaced blocking Win32 modals with `ShowToastNative` and added replay speed/step controls and HUD.
+  - Verification: `test_app_startup.py` PASS; MSVC clean (`KSnake.exe`); Vite clean in 549ms; security_lint 100% PASS.
+
 - **2026-10-04T21:30:00-07:00 — kilo-expander: KStarDredge (Hyperlane Pirate Ambushes & Tactical Combat Outfitting)**
   - Status: PASS ✅ (0 regressions, clean builds, 530.3 KB web / 292.9 KB native < 999 KB ceiling).
   - Hyperlane Ambush Corridor: Sector warp transits trigger hyperlane pirate ambushes along transit vector; starter sector is raider-free.

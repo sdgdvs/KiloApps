@@ -13,9 +13,9 @@
   "session_end": null,
   "session_limit_enabled": false,
   "timer_enabled": false,
-  "turns_executed": 36,
+  "turns_executed": 37,
   "last_turn_timestamp": "2026-09-28T17:56:12Z",
-  "last_heartbeat": "2026-10-05T10:34:45.284483+00:00",
-  "current_target": "KRogue",
+  "last_heartbeat": "2026-10-05T11:38:52.908204+00:00",
+  "current_target": "KTerm",
   "remote_command": "none"
 }
