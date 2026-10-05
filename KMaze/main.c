@@ -506,7 +506,7 @@ void InitTextures() {
                         int g = 100 + (int)wave; if (g < 0) g = 0; if (g > 255) g = 255;
                         col = RGB(255, g, 10);
                     }
-                } else if (t == 8) { // Compass Block
+                } else if (t == 8) { // Pathfinder Rune Block
                     if (x == 7 || y == 7 || abs(x - 7) + abs(y - 7) <= 4) col = RGB(0, 255, 255);
                     else col = RGB(0, 68, 85);
                 } else if (t == 9) { // Speed Boost
@@ -1104,13 +1104,13 @@ void GenerateMaze(int w, int h) {
             mapRandom[rx][ry] = 5;
         }
     }
-    int placedCompass = 0;
-    while(!placedCompass) {
+    int placedPathfinder = 0;
+    while(!placedPathfinder) {
         int rx = 1 + rand()%(w-2);
         int ry = 1 + rand()%(h-2);
         if (mapRandom[rx][ry] == 0) {
             mapRandom[rx][ry] = 8;
-            placedCompass = 1;
+            placedPathfinder = 1;
         }
     }
     for(int i=0; i<w*h/20; i++) {
@@ -1475,7 +1475,7 @@ void NextLevel() {
     torchTimer = 0;
 
     currentLevel++;
-    hasCompass = (currentLevel < 6) ? 1 : 0;
+    hasCompass = 0;
     if (currentLevel > 44) {
         gameState = 2;
         endTime = GetTickCount();
@@ -1586,37 +1586,9 @@ void StartNewGame(HWND hwnd) {
     if (hwnd) CheckFirstRunTutorial(hwnd);
 }
 
-static HBRUSH s_frameB = NULL;
-static HBRUSH s_mWall, s_mExit, s_mKey, s_mDoor, s_mFloor, s_mPlayer, s_mCoin;
-static HBRUSH s_mTrap, s_mComp, s_mSpeed, s_mTele, s_mPath, s_mBoss, s_mMono;
-static HBRUSH s_mPick, s_mStun, s_mShrine, s_mTorch, s_mShaft, s_mFake, s_mLore;
 static HFONT s_hFont = NULL;
 
 static void EnsureGdiResources(HDC hdc) {
-    if (!s_frameB) {
-        s_frameB = CreateSolidBrush(RGB(40, 40, 50));
-        s_mWall = CreateSolidBrush(RGB(153, 153, 153));
-        s_mExit = CreateSolidBrush(RGB(0, 255, 0));
-        s_mKey = CreateSolidBrush(RGB(255, 255, 0));
-        s_mDoor = CreateSolidBrush(RGB(0, 0, 255));
-        s_mFloor = CreateSolidBrush(RGB(20, 20, 25));
-        s_mPlayer = CreateSolidBrush(RGB(255, 0, 0));
-        s_mCoin = CreateSolidBrush(RGB(255, 128, 0));
-        s_mTrap = CreateSolidBrush(RGB(255, 0, 0));
-        s_mComp = CreateSolidBrush(RGB(0, 255, 255));
-        s_mSpeed = CreateSolidBrush(RGB(255, 255, 0));
-        s_mTele = CreateSolidBrush(RGB(255, 0, 255));
-        s_mPath = CreateSolidBrush(RGB(0, 255, 255));
-        s_mBoss = CreateSolidBrush(RGB(255, 215, 0));
-        s_mMono = CreateSolidBrush(RGB(255, 50, 50));
-        s_mPick = CreateSolidBrush(RGB(150, 75, 0));
-        s_mStun = CreateSolidBrush(RGB(100, 200, 255));
-        s_mShrine = CreateSolidBrush(RGB(255, 215, 0));
-        s_mTorch = CreateSolidBrush(RGB(255, 140, 0));
-        s_mShaft = CreateSolidBrush(RGB(0, 255, 200));
-        s_mFake = CreateSolidBrush(RGB(120, 70, 150));
-        s_mLore = CreateSolidBrush(RGB(0, 229, 255));
-    }
     if (!s_hFont) {
         int dpi = GetDeviceCaps(hdc, LOGPIXELSY);
         int fontHeight = -MulDiv(12, dpi, 72);
@@ -1840,8 +1812,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     }
                 }
                 if (GetAsyncKeyState(keyBinds.pathfinder) & 0x8000) {
-                    if (pathfinderCharges > 0 || hasCompass) {
-                        if (pathfinderCharges > 0) pathfinderCharges--;
+                    if (pathfinderCharges > 0) {
+                        pathfinderCharges--;
                         pathfinderTimer = 10000;
                         ComputePathfinderPath();
                         MessageBeep(MB_ICONASTERISK);
@@ -1969,7 +1941,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 AddParticles(160.0f, 120.0f, RGB(150, 150, 150), 10);
             } else if (curVal == 8) {
                 pathfinderCharges++;
-                hasCompass = 1;
                 SetMapValue((int)pX, (int)pY, 0);
                 MessageBeep(MB_ICONASTERISK);
                 AddParticles(160.0f, 120.0f, RGB(0, 255, 255), 15);
@@ -2064,7 +2035,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 }
             } else if (curVal == 26) {
                 score += 500;
-                hasCompass = 0;
                 pathfinderCharges = 0;
                 speedBoost = 0;
                 speedShoesCharges = 0;
@@ -2472,169 +2442,49 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             swayX = swayX * 0.8f + turnAmount * 200.0f;
             lastPX = pX; lastPY = pY; lastDX = dX; lastDY = dY;
 
-            // Held Equipment HUD
+            // Held Equipment HUD - Off-Hand Adventurer's Dungeon Lantern
             if (gameState == 1) {
-                if (hasCompass || pathfinderTimer > 0) {
-                    int cx = 27 + (int)(bobX - swayX), cy = H - 27 + (int)bobY;
-                    HBRUSH darkRimB = CreateSolidBrush(RGB(17, 17, 17));
-                    HPEN darkRimP = CreatePen(PS_SOLID, 1, RGB(17, 17, 17));
-                    SelectObject(hdcMem, darkRimB); SelectObject(hdcMem, darkRimP);
-                    Ellipse(hdcMem, cx - 22, cy - 22, cx + 22, cy + 22);
-                    DeleteObject(darkRimB); DeleteObject(darkRimP);
+                int lx = 32 + (int)(bobX * 0.7f - swayX), ly = H - 24 + (int)bobY;
+                int isTorchActive = (torchTimer > 0);
+                int lanternGlow = isTorchActive ? 36 : 22;
+                HBRUSH glowB = CreateSolidBrush(isTorchActive ? RGB(255, 180, 50) : RGB(200, 140, 40));
+                SelectObject(hdcMem, glowB);
+                Ellipse(hdcMem, lx - lanternGlow / 2, ly - 10 - lanternGlow / 2, lx + lanternGlow / 2, ly - 10 + lanternGlow / 2);
+                DeleteObject(glowB);
 
-                    for (int r = 21; r >= 18; r--) {
-                        int c = 112 + (21 - r) * 32; if (c > 255) c = 255;
-                        HBRUSH rimB = CreateSolidBrush(RGB(c, c, c));
-                        HPEN rimP = CreatePen(PS_SOLID, 1, RGB(c, c, c));
-                        SelectObject(hdcMem, rimB); SelectObject(hdcMem, rimP);
-                        Ellipse(hdcMem, cx - r, cy - r, cx + r, cy + r);
-                        DeleteObject(rimB); DeleteObject(rimP);
-                    }
-                    for (int r = 18; r >= 14; r--) {
-                        int g = 100 + (18 - r) * 25; if (g > 255) g = 255;
-                        HBRUSH rimB = CreateSolidBrush(RGB(g, (int)(g*0.8f), (int)(g*0.3f)));
-                        HPEN rimP = CreatePen(PS_SOLID, 1, RGB(g, (int)(g*0.8f), (int)(g*0.3f)));
-                        SelectObject(hdcMem, rimB); SelectObject(hdcMem, rimP);
-                        Ellipse(hdcMem, cx - r, cy - r, cx + r, cy + r);
-                        DeleteObject(rimB); DeleteObject(rimP);
-                    }
-                    HBRUSH faceB = CreateSolidBrush(RGB(15, 30, 45));
-                    HPEN faceP = CreatePen(PS_SOLID, 1, RGB(10, 20, 30));
-                    SelectObject(hdcMem, faceB); SelectObject(hdcMem, faceP);
-                    Ellipse(hdcMem, cx - 14, cy - 14, cx + 14, cy + 14);
-                    DeleteObject(faceB); DeleteObject(faceP);
-                    
-                    int ex = 8, ey = 8;
-                    for (int i = 0; i < 45; i++) {
-                        for (int j = 0; j < 45; j++) {
-                            if (GetMapValue(i, j) == 2 || GetMapValue(i, j) == 38) { ex = i; ey = j; break; }
-                        }
-                    }
-                    float targetAngle = (float)atan2(ey - pY, ex - pX) - (float)atan2(dY, dX);
-                    int nx = cx + (int)(cos(targetAngle) * 11);
-                    int ny = cy + (int)(sin(targetAngle) * 11);
-                    int nx2 = cx - (int)(cos(targetAngle) * 5);
-                    int ny2 = cy - (int)(sin(targetAngle) * 5);
-                    
-                    HPEN needleP = CreatePen(PS_SOLID, 2, RGB(255, 50, 50));
-                    SelectObject(hdcMem, needleP);
-                    MoveToEx(hdcMem, cx, cy, NULL); LineTo(hdcMem, nx, ny);
-                    DeleteObject(needleP);
-                    
-                    HPEN needleP2 = CreatePen(PS_SOLID, 2, RGB(200, 200, 200));
-                    SelectObject(hdcMem, needleP2);
-                    MoveToEx(hdcMem, cx, cy, NULL); LineTo(hdcMem, nx2, ny2);
-                    DeleteObject(needleP2);
+                HBRUSH baseB = CreateSolidBrush(RGB(74, 59, 44));
+                HPEN baseP = CreatePen(PS_SOLID, 1, RGB(200, 150, 62));
+                SelectObject(hdcMem, baseB); SelectObject(hdcMem, baseP);
+                Rectangle(hdcMem, lx - 7, ly + 2, lx + 7, ly + 6);
+                DeleteObject(baseB); DeleteObject(baseP);
 
-                    HBRUSH glassB = CreateSolidBrush(RGB(200, 220, 255));
-                    HPEN glassP = CreatePen(PS_SOLID, 1, RGB(200, 220, 255));
-                    SelectObject(hdcMem, glassB); SelectObject(hdcMem, glassP);
-                    Ellipse(hdcMem, cx - 8, cy - 10, cx + 4, cy - 2);
-                    DeleteObject(glassB); DeleteObject(glassP);
-                }
+                HBRUSH glassB = CreateSolidBrush(RGB(20, 30, 40));
+                SelectObject(hdcMem, glassB);
+                Rectangle(hdcMem, lx - 6, ly - 12, lx + 6, ly + 2);
+                DeleteObject(glassB);
 
-                if (!hasCompass && pathfinderTimer <= 0) {
-                    int lx = 32 + (int)(bobX * 0.7f - swayX), ly = H - 24 + (int)bobY;
-                    int isTorchActive = (torchTimer > 0);
-                    int lanternGlow = isTorchActive ? 36 : 22;
-                    HBRUSH glowB = CreateSolidBrush(isTorchActive ? RGB(255, 180, 50) : RGB(200, 140, 40));
-                    SelectObject(hdcMem, glowB);
-                    Ellipse(hdcMem, lx - lanternGlow / 2, ly - 10 - lanternGlow / 2, lx + lanternGlow / 2, ly - 10 + lanternGlow / 2);
-                    DeleteObject(glowB);
+                int flameFlicker = (int)(sin(animFrameCount * 0.35f) * 2.0f);
+                HBRUSH flameB = CreateSolidBrush(isTorchActive ? RGB(255, 255, 200) : RGB(255, 200, 50));
+                SelectObject(hdcMem, flameB);
+                Ellipse(hdcMem, lx - 3 + flameFlicker, ly - 9, lx + 3 + flameFlicker, ly - 1);
+                DeleteObject(flameB);
 
-                    HBRUSH baseB = CreateSolidBrush(RGB(74, 59, 44));
-                    HPEN baseP = CreatePen(PS_SOLID, 1, RGB(200, 150, 62));
-                    SelectObject(hdcMem, baseB); SelectObject(hdcMem, baseP);
-                    Rectangle(hdcMem, lx - 7, ly + 2, lx + 7, ly + 6);
-                    DeleteObject(baseB); DeleteObject(baseP);
+                HPEN ribP = CreatePen(PS_SOLID, 1, RGB(43, 44, 48));
+                SelectObject(hdcMem, ribP);
+                MoveToEx(hdcMem, lx - 6, ly - 12, NULL); LineTo(hdcMem, lx - 6, ly + 2);
+                MoveToEx(hdcMem, lx, ly - 12, NULL); LineTo(hdcMem, lx, ly + 2);
+                MoveToEx(hdcMem, lx + 6, ly - 12, NULL); LineTo(hdcMem, lx + 6, ly + 2);
+                DeleteObject(ribP);
 
-                    HBRUSH glassB = CreateSolidBrush(RGB(20, 30, 40));
-                    SelectObject(hdcMem, glassB);
-                    Rectangle(hdcMem, lx - 6, ly - 12, lx + 6, ly + 2);
-                    DeleteObject(glassB);
+                HBRUSH hoodB = CreateSolidBrush(RGB(212, 162, 66));
+                SelectObject(hdcMem, hoodB);
+                Pie(hdcMem, lx - 7, ly - 18, lx + 7, ly - 6, lx + 7, ly - 12, lx - 7, ly - 12);
+                DeleteObject(hoodB);
 
-                    int flameFlicker = (int)(sin(animFrameCount * 0.35f) * 2.0f);
-                    HBRUSH flameB = CreateSolidBrush(isTorchActive ? RGB(255, 255, 200) : RGB(255, 200, 50));
-                    SelectObject(hdcMem, flameB);
-                    Ellipse(hdcMem, lx - 3 + flameFlicker, ly - 9, lx + 3 + flameFlicker, ly - 1);
-                    DeleteObject(flameB);
-
-                    HPEN ribP = CreatePen(PS_SOLID, 1, RGB(43, 44, 48));
-                    SelectObject(hdcMem, ribP);
-                    MoveToEx(hdcMem, lx - 6, ly - 12, NULL); LineTo(hdcMem, lx - 6, ly + 2);
-                    MoveToEx(hdcMem, lx, ly - 12, NULL); LineTo(hdcMem, lx, ly + 2);
-                    MoveToEx(hdcMem, lx + 6, ly - 12, NULL); LineTo(hdcMem, lx + 6, ly + 2);
-                    DeleteObject(ribP);
-
-                    HBRUSH hoodB = CreateSolidBrush(RGB(212, 162, 66));
-                    SelectObject(hdcMem, hoodB);
-                    Pie(hdcMem, lx - 7, ly - 18, lx + 7, ly - 6, lx + 7, ly - 12, lx - 7, ly - 12);
-                    DeleteObject(hoodB);
-
-                    HPEN ringP = CreatePen(PS_SOLID, 2, RGB(240, 192, 80));
-                    SelectObject(hdcMem, ringP);
-                    Ellipse(hdcMem, lx - 3, ly - 23, lx + 4, ly - 16);
-                    DeleteObject(ringP);
-                }
-
-
-            }
-
-            // Minimap with direction arrow & Pathfinder Path
-            if (gameState == 1 && (hasCompass || pathfinderTimer > 0 || currentLevel < 15)) {
-                int mmW = 0, mmH = 0;
-                if (currentLevel >= 10) { mmW = curRandW; mmH = curRandH; }
-                else if (currentLevel == 0 || currentLevel == 3) { mmW = 10; mmH = 10; }
-                else if (currentLevel == 1 || currentLevel == 4 || currentLevel == 5 || currentLevel == 7 || currentLevel == 8) { mmW = 12; mmH = 12; }
-                else if (currentLevel == 2 || currentLevel == 6 || currentLevel == 9) { mmW = 15; mmH = 15; }
-                
-                if (mmW > 0) {
-                    int mmS = 5;
-                    if (mmW > 15) mmS = 4;
-                    if (mmW > 23) mmS = 3;
-                    if (mmW > 35) mmS = 2;
-                    int mmX = W - 10 - mmW * mmS;
-                    int mmY = 10;
-                    
-                    EnsureGdiResources(hdcMem);
-                    RECT frameRc = {mmX - 2, mmY - 2, mmX + mmW * mmS + 2, mmY + mmH * mmS + 2};
-                    FillRect(hdcMem, &frameRc, s_frameB);
-
-                    for (int i = 0; i < mmW; i++) {
-                        for (int j = 0; j < mmH; j++) {
-                            if (currentLevel >= 15 && pathfinderTimer <= 0) {
-                                float distToP = (float)sqrt((i - pX)*(i - pX) + (j - pY)*(j - pY));
-                                if (distToP > 5.5f) continue;
-                            }
-                            int v = GetMapValue(i, j);
-                            HBRUSH b = s_mFloor;
-                            if (isPathTile[i][j] && pathfinderTimer > 0) b = s_mPath;
-                            else if (v == 1 || v == 7 || v == 20 || v == 21 || v == 22 || v == 27) b = s_mWall;
-                            else if (v == 2) b = s_mExit;
-                            else if (v == 3) b = s_mKey;
-                            else if (v == 4) b = s_mDoor;
-                            else if (v == 5) b = s_mCoin;
-                            else if (v == 6) b = s_mTrap;
-                            else if (v == 8) b = s_mComp;
-                            else if (v == 9) b = s_mSpeed;
-                            else if (v == 10 || v == 11) b = s_mTele;
-                            else if (v == 12) b = s_mMono;
-                            else if (v == 13) b = s_mPick;
-                            else if (v == 14) b = s_mStun;
-                            else if (v == 15) b = s_mBoss;
-                            else if (v == 28) b = s_mShrine;
-                            else if (v == 29) b = s_mTorch;
-                            else if (v == 38) b = s_mShaft;
-                            else if (v == 39) b = s_mFake;
-                            else if (v == 40) b = s_mLore;
-                            
-                            RECT mr = {mmX + i*mmS, mmY + j*mmS, mmX + i*mmS + mmS, mmY + j*mmS + mmS};
-                            FillRect(hdcMem, &mr, b);
-                        }
-                    }
-                    RECT mr = {mmX + (int)pX*mmS, mmY + (int)pY*mmS, mmX + (int)pX*mmS + mmS, mmY + (int)pY*mmS + mmS};
-                    FillRect(hdcMem, &mr, s_mPlayer);
-                }
+                HPEN ringP = CreatePen(PS_SOLID, 2, RGB(240, 192, 80));
+                SelectObject(hdcMem, ringP);
+                Ellipse(hdcMem, lx - 3, ly - 23, lx + 4, ly - 16);
+                DeleteObject(ringP);
             }
 
             RECT clientRect;
@@ -2815,15 +2665,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             KillTimer(hwnd, 1);
             if (hdcMem) DeleteDC(hdcMem);
             if (hbmCanvas) DeleteObject(hbmCanvas);
-            if (s_frameB) {
-                DeleteObject(s_frameB); DeleteObject(s_mWall); DeleteObject(s_mExit); DeleteObject(s_mKey);
-                DeleteObject(s_mDoor); DeleteObject(s_mFloor); DeleteObject(s_mPlayer); DeleteObject(s_mCoin);
-                DeleteObject(s_mTrap); DeleteObject(s_mComp); DeleteObject(s_mSpeed); DeleteObject(s_mTele);
-                DeleteObject(s_mPath); DeleteObject(s_mBoss); DeleteObject(s_mMono); DeleteObject(s_mPick);
-                DeleteObject(s_mStun); DeleteObject(s_mShrine); DeleteObject(s_mTorch); DeleteObject(s_mShaft);
-                DeleteObject(s_mFake); DeleteObject(s_mLore);
-                s_frameB = NULL;
-            }
             if (s_hFont) { DeleteObject(s_hFont); s_hFont = NULL; }
             PostQuitMessage(0);
             return 0;

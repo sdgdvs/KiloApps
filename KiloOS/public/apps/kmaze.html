@@ -923,7 +923,7 @@
                       if (y >= 13 || dist > 7.0) { r = 40; g = 25; b = 20; }
                       else if (dist < 3.0) { r = 255; g = 250; b = 180; }
                       else { r = 255; g = Math.min(255, Math.max(0, Math.floor(100 + wave))); b = 10; }
-                  } else if (t === 8) { // Compass Block
+                  } else if (t === 8) { // Pathfinder Rune Block
                       if (x === 7 || y === 7 || Math.abs(x - 7) + Math.abs(y - 7) <= 4) { r = 0; g = 255; b = 255; }
                       else { r = 0; g = 68; b = 85; }
                   } else if (t === 9) { // Speed Boost
@@ -1439,11 +1439,11 @@
           let ry = 1 + Math.floor(Math.random()*(h-2));
           if (m[rx][ry] === 0 && (rx !== 1 || ry !== 1) && (rx !== farX || ry !== farY)) m[rx][ry] = 5;
       }
-      let placedCompass = false;
-      while(!placedCompass) {
+      let placedPathfinder = false;
+      while(!placedPathfinder) {
           let rx = 1 + Math.floor(Math.random()*(w-2));
           let ry = 1 + Math.floor(Math.random()*(h-2));
-          if (m[rx][ry] === 0) { m[rx][ry] = 8; placedCompass = true; }
+          if (m[rx][ry] === 0) { m[rx][ry] = 8; placedPathfinder = true; }
       }
       for(let i=0; i < (w*h)/20; i++) {
           let rx = 1 + Math.floor(Math.random()*(w-2));
@@ -1588,7 +1588,7 @@
   
   function nextLevel() {
       currentLevel++;
-      hasCompass = currentLevel < 6 ? 1 : 0;
+      hasCompass = 0;
       speedBoost = 0;
       hasPickaxe = 1;
       pathfinderCharges = 1;
@@ -1814,8 +1814,8 @@
 
   function usePathfinder() {
       if (gameState !== 1) return;
-      if (pathfinderCharges > 0 || hasCompass) {
-          if (pathfinderCharges > 0) pathfinderCharges--;
+      if (pathfinderCharges > 0) {
+          pathfinderCharges--;
           pathfinderTimer = 10000;
           computePathfinderPath();
           playTone(700, 'sine', 0.2);
@@ -2228,7 +2228,6 @@
           addParticles(W/2, H/2, '#aaaaaa', 10);
       } else if (curVal === 8) {
           pathfinderCharges++;
-          hasCompass = 1;
           map[Math.floor(pX)][Math.floor(pY)] = 0;
           playTone(700, 'square', 0.2);
           addParticles(W/2, H/2, '#00ffff', 15);
@@ -2326,7 +2325,6 @@
           }
       } else if (curVal === 26) {
           score += 500;
-          hasCompass = 0;
           pathfinderCharges = 0;
           speedBoost = 0;
           speedShoesCharges = 0;
@@ -2694,160 +2692,78 @@
 
       uiCtx.globalCompositeOperation = 'source-over';
       
-      // 4. Equipment HUD
+      // 4. Equipment HUD - Off-Hand Adventurer's Dungeon Lantern
       if (gameState === 1) {
-          if (hasCompass || pathfinderTimer > 0) {
-              let cx = 27 + bobX - swayX, cy = H - 27 + bobY;
-              uiCtx.save();
-              uiCtx.beginPath(); uiCtx.arc(cx, cy, 22, 0, Math.PI * 2);
-              uiCtx.fillStyle = '#111'; uiCtx.fill();
-              
-              let bevelOuter = uiCtx.createRadialGradient(cx-6, cy-6, 5, cx, cy, 21);
-              bevelOuter.addColorStop(0, '#e0e0e0');
-              bevelOuter.addColorStop(0.3, '#707070');
-              bevelOuter.addColorStop(0.7, '#303030');
-              bevelOuter.addColorStop(1, '#101010');
-              uiCtx.beginPath(); uiCtx.arc(cx, cy, 21, 0, Math.PI * 2);
-              uiCtx.fillStyle = bevelOuter; uiCtx.fill();
-
-              let bevelInner = uiCtx.createRadialGradient(cx+6, cy+6, 5, cx, cy, 18);
-              bevelInner.addColorStop(0, '#f5d76e');
-              bevelInner.addColorStop(0.4, '#b8860b');
-              bevelInner.addColorStop(1, '#5c4305');
-              uiCtx.beginPath(); uiCtx.arc(cx, cy, 18, 0, Math.PI * 2);
-              uiCtx.fillStyle = bevelInner; uiCtx.fill();
-              
-              uiCtx.beginPath(); uiCtx.arc(cx, cy, 15, 0, Math.PI * 2);
-              uiCtx.fillStyle = 'rgba(0,0,0,0.6)'; uiCtx.fill();
-
-              let faceGrad = uiCtx.createRadialGradient(cx, cy, 0, cx, cy, 14);
-              faceGrad.addColorStop(0, '#0f1e2d');
-              faceGrad.addColorStop(1, '#050a10');
-              uiCtx.beginPath();
-              uiCtx.arc(cx, cy, 14, 0, Math.PI * 2);
-              uiCtx.fillStyle = faceGrad;
-              uiCtx.fill();
-              
-              let ex = 8, ey = 8;
-              for (let i = 0; i < map.length; i++) {
-                  for (let j = 0; j < map[0].length; j++) {
-                      if (map[i][j] === 2 || map[i][j] === 38) { ex = i; ey = j; break; }
-                  }
-              }
-              let targetAngle = Math.atan2(ey - pY, ex - pX) - Math.atan2(dY, dX);
-              uiCtx.translate(cx, cy);
-              uiCtx.rotate(targetAngle);
-              
-              uiCtx.beginPath();
-              uiCtx.moveTo(0, -2); uiCtx.lineTo(10, 0); uiCtx.lineTo(0, 2); uiCtx.closePath();
-              uiCtx.fillStyle = '#ff3333'; uiCtx.fill();
-              
-              uiCtx.beginPath();
-              uiCtx.moveTo(0, -2); uiCtx.lineTo(-6, 0); uiCtx.lineTo(0, 2); uiCtx.closePath();
-              uiCtx.fillStyle = '#cccccc'; uiCtx.fill();
-              
-              uiCtx.beginPath();
-              uiCtx.arc(0, 0, 2, 0, Math.PI * 2);
-              uiCtx.fillStyle = '#ffcc00'; uiCtx.fill();
-              
-              // Cardinal ticks
-              uiCtx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
-              uiCtx.lineWidth = 1;
-              uiCtx.strokeRect(-12, -0.5, 3, 1);
-              uiCtx.strokeRect(9, -0.5, 3, 1);
-
-              uiCtx.rotate(-targetAngle);
-
-              // Specular glass crescent highlight
-              let glassSheen = uiCtx.createLinearGradient(-10, -10, 8, 8);
-              glassSheen.addColorStop(0, 'rgba(255, 255, 255, 0.55)');
-              glassSheen.addColorStop(0.4, 'rgba(255, 255, 255, 0.1)');
-              glassSheen.addColorStop(1, 'rgba(255, 255, 255, 0)');
-              uiCtx.fillStyle = glassSheen;
-              uiCtx.beginPath();
-              uiCtx.arc(0, 0, 13, -Math.PI * 0.8, -Math.PI * 0.1);
-              uiCtx.lineTo(0, 0);
-              uiCtx.fill();
-
-              uiCtx.translate(-cx, -cy);
-              uiCtx.restore();
-          }
+          let lx = 32 + bobX * 0.7 - swayX, ly = H - 24 + bobY;
+          uiCtx.save();
+          uiCtx.translate(lx, ly);
           
-          // Off-Hand Adventurer's Dungeon Lantern (when exploring without compass or holding lantern)
-          if (!hasCompass && pathfinderTimer <= 0) {
-              let lx = 32 + bobX * 0.7 - swayX, ly = H - 24 + bobY;
-              uiCtx.save();
-              uiCtx.translate(lx, ly);
-              
-              let isTorchActive = torchTimer > 0;
-              let lanternGlowRadius = isTorchActive ? 38 : 22;
-              let flameFlicker = Math.sin(frameCount * 0.35) * 1.5;
-              let radGrad = uiCtx.createRadialGradient(0, -6, 2, 0, -6, lanternGlowRadius);
-              radGrad.addColorStop(0, isTorchActive ? 'rgba(255, 230, 150, 0.45)' : 'rgba(255, 190, 80, 0.25)');
-              radGrad.addColorStop(0.5, isTorchActive ? 'rgba(255, 140, 20, 0.2)' : 'rgba(255, 120, 10, 0.1)');
-              radGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
-              uiCtx.fillStyle = radGrad;
-              uiCtx.beginPath();
-              uiCtx.arc(0, -6, lanternGlowRadius, 0, Math.PI * 2);
-              uiCtx.fill();
+          let isTorchActive = torchTimer > 0;
+          let lanternGlowRadius = isTorchActive ? 38 : 22;
+          let flameFlicker = Math.sin(frameCount * 0.35) * 1.5;
+          let radGrad = uiCtx.createRadialGradient(0, -6, 2, 0, -6, lanternGlowRadius);
+          radGrad.addColorStop(0, isTorchActive ? 'rgba(255, 230, 150, 0.45)' : 'rgba(255, 190, 80, 0.25)');
+          radGrad.addColorStop(0.5, isTorchActive ? 'rgba(255, 140, 20, 0.2)' : 'rgba(255, 120, 10, 0.1)');
+          radGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+          uiCtx.fillStyle = radGrad;
+          uiCtx.beginPath();
+          uiCtx.arc(0, -6, lanternGlowRadius, 0, Math.PI * 2);
+          uiCtx.fill();
 
-              // Lantern Base Reservoir
-              uiCtx.fillStyle = '#4a3b2c';
-              uiCtx.fillRect(-7, 2, 14, 4);
-              uiCtx.fillStyle = '#c8963e';
-              uiCtx.fillRect(-8, 5, 16, 2);
+          // Lantern Base Reservoir
+          uiCtx.fillStyle = '#4a3b2c';
+          uiCtx.fillRect(-7, 2, 14, 4);
+          uiCtx.fillStyle = '#c8963e';
+          uiCtx.fillRect(-8, 5, 16, 2);
 
-              // Cylindrical glass chamber
-              uiCtx.fillStyle = 'rgba(220, 240, 255, 0.15)';
-              uiCtx.fillRect(-6, -12, 12, 14);
+          // Cylindrical glass chamber
+          uiCtx.fillStyle = 'rgba(220, 240, 255, 0.15)';
+          uiCtx.fillRect(-6, -12, 12, 14);
 
-              // Dancing Oil Lamp Flame
-              let fHeight = isTorchActive ? 12 : 7;
-              let flameGrad = uiCtx.createLinearGradient(0, 2, 0, -12);
-              flameGrad.addColorStop(0, '#ff4400');
-              flameGrad.addColorStop(0.5, '#ffbb00');
-              flameGrad.addColorStop(1, '#ffffff');
-              uiCtx.fillStyle = flameGrad;
-              uiCtx.beginPath();
-              uiCtx.moveTo(-2.5, 2);
-              uiCtx.quadraticCurveTo(-3.5, -4, 0 + flameFlicker * 0.5, -fHeight - flameFlicker);
-              uiCtx.quadraticCurveTo(3.5, -4, 2.5, 2);
-              uiCtx.fill();
+          // Dancing Oil Lamp Flame
+          let fHeight = isTorchActive ? 12 : 7;
+          let flameGrad = uiCtx.createLinearGradient(0, 2, 0, -12);
+          flameGrad.addColorStop(0, '#ff4400');
+          flameGrad.addColorStop(0.5, '#ffbb00');
+          flameGrad.addColorStop(1, '#ffffff');
+          uiCtx.fillStyle = flameGrad;
+          uiCtx.beginPath();
+          uiCtx.moveTo(-2.5, 2);
+          uiCtx.quadraticCurveTo(-3.5, -4, 0 + flameFlicker * 0.5, -fHeight - flameFlicker);
+          uiCtx.quadraticCurveTo(3.5, -4, 2.5, 2);
+          uiCtx.fill();
 
-              // Protective Cast-Iron Ribs
-              uiCtx.strokeStyle = '#2b2c30';
-              uiCtx.lineWidth = 1.2;
-              uiCtx.beginPath();
-              uiCtx.moveTo(-6, -12); uiCtx.lineTo(-6, 2);
-              uiCtx.moveTo(0, -12); uiCtx.lineTo(0, 2);
-              uiCtx.moveTo(6, -12); uiCtx.lineTo(6, 2);
-              uiCtx.stroke();
+          // Protective Cast-Iron Ribs
+          uiCtx.strokeStyle = '#2b2c30';
+          uiCtx.lineWidth = 1.2;
+          uiCtx.beginPath();
+          uiCtx.moveTo(-6, -12); uiCtx.lineTo(-6, 2);
+          uiCtx.moveTo(0, -12); uiCtx.lineTo(0, 2);
+          uiCtx.moveTo(6, -12); uiCtx.lineTo(6, 2);
+          uiCtx.stroke();
 
-              // Brass Domed Hood & Vent Cap
-              uiCtx.fillStyle = '#d4a242';
-              uiCtx.beginPath();
-              uiCtx.moveTo(-7, -12);
-              uiCtx.quadraticCurveTo(0, -18, 7, -12);
-              uiCtx.closePath();
-              uiCtx.fill();
+          // Brass Domed Hood & Vent Cap
+          uiCtx.fillStyle = '#d4a242';
+          uiCtx.beginPath();
+          uiCtx.moveTo(-7, -12);
+          uiCtx.quadraticCurveTo(0, -18, 7, -12);
+          uiCtx.closePath();
+          uiCtx.fill();
 
-              // Top Brass Hanging Ring
-              uiCtx.strokeStyle = '#f0c050';
-              uiCtx.lineWidth = 1.5;
-              uiCtx.beginPath();
-              uiCtx.arc(0, -20, 3.5, 0, Math.PI * 2);
-              uiCtx.stroke();
+          // Top Brass Hanging Ring
+          uiCtx.strokeStyle = '#f0c050';
+          uiCtx.lineWidth = 1.5;
+          uiCtx.beginPath();
+          uiCtx.arc(0, -20, 3.5, 0, Math.PI * 2);
+          uiCtx.stroke();
 
-              // Adventurer's Leather Gauntlet Fingers holding the ring
-              uiCtx.fillStyle = '#6b4423';
-              uiCtx.beginPath();
-              uiCtx.rect(-4, -22, 8, 4);
-              uiCtx.fill();
+          // Adventurer's Leather Gauntlet Fingers holding the ring
+          uiCtx.fillStyle = '#6b4423';
+          uiCtx.beginPath();
+          uiCtx.rect(-4, -22, 8, 4);
+          uiCtx.fill();
 
-              uiCtx.restore();
-          }
-          
-
+          uiCtx.restore();
       }
       
       // 5. Draw UI
@@ -2903,60 +2819,6 @@
               uiCtx.fillStyle = 'yellow';
               uiCtx.fillText(msgText, W/2 - 120, 45);
               uiCtx.fillStyle = 'white';
-          }
-          
-          // 6. Minimap
-          if (hasCompass || pathfinderTimer > 0 || currentLevel < 15) {
-              let mmW = map.length;
-              let mmH = map[0].length;
-              let mmS = 5;
-              if (mmW > 15) mmS = 4;
-              if (mmW > 23) mmS = 3;
-              if (mmW > 35) mmS = 2;
-              const mmX = W - 10 - mmW * mmS;
-              const mmY = 10;
-              
-              uiCtx.fillStyle = '#282832';
-              uiCtx.fillRect(mmX - 2, mmY - 2, mmW * mmS + 4, mmH * mmS + 4);
-              
-              for (let i = 0; i < mmW; i++) {
-                  for (let j = 0; j < mmH; j++) {
-                      if (currentLevel >= 15 && pathfinderTimer <= 0) {
-                          let distToPlayer = Math.sqrt((i - pX)**2 + (j - pY)**2);
-                          if (distToPlayer > 5.5) continue;
-                      }
-                      let v = map[i][j];
-                      if (isPathTile[i] && isPathTile[i][j] && pathfinderTimer > 0) uiCtx.fillStyle = '#0ff';
-                      else if (v === 1 || v === 7 || v === 20 || v === 21 || v === 22 || v === 27) uiCtx.fillStyle = '#999';
-                      else if (v === 2) uiCtx.fillStyle = '#0f0';
-                      else if (v === 3) uiCtx.fillStyle = '#ff0';
-                      else if (v === 4) uiCtx.fillStyle = '#00f';
-                      else if (v === 5) uiCtx.fillStyle = '#f80';
-                      else if (v === 6) uiCtx.fillStyle = '#f30';
-                      else if (v === 8) uiCtx.fillStyle = '#0ff';
-                      else if (v === 9) uiCtx.fillStyle = '#ff0';
-                      else if (v === 10 || v === 11) uiCtx.fillStyle = '#f0f';
-                      else if (v === 12) uiCtx.fillStyle = '#ff3232';
-                      else if (v === 13) uiCtx.fillStyle = '#964b00';
-                      else if (v === 14) uiCtx.fillStyle = '#00ccff';
-                      else if (v === 15) uiCtx.fillStyle = '#ffd700';
-                      else if (v === 16) uiCtx.fillStyle = '#0f6';
-                      else if (v === 17) uiCtx.fillStyle = '#f00';
-                      else if (v === 18) uiCtx.fillStyle = '#555';
-                      else if (v === 19) uiCtx.fillStyle = '#06f';
-                      else if (v === 25) uiCtx.fillStyle = '#aaa';
-                      else if (v === 26) uiCtx.fillStyle = '#800080';
-                      else if (v === 28) uiCtx.fillStyle = '#ffd700';
-                      else if (v === 29) uiCtx.fillStyle = '#ff8800';
-                      else if (v === 38) uiCtx.fillStyle = '#00ffcc';
-                      else if (v === 39) uiCtx.fillStyle = '#784696';
-                      else if (v === 40) uiCtx.fillStyle = '#00e5ff';
-                      else uiCtx.fillStyle = '#141419';
-                      uiCtx.fillRect(mmX + i * mmS, mmY + j * mmS, mmS, mmS);
-                  }
-              }
-              uiCtx.fillStyle = '#f00';
-              uiCtx.fillRect(mmX + Math.floor(pX) * mmS, mmY + Math.floor(pY) * mmS, mmS, mmS);
           }
       }
       uiCtx.restore();
