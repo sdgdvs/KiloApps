@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-creator
-next_agent: kilo-graphics
+current_agent: kilo-graphics
+next_agent: kilo-tester
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -12,13 +12,13 @@ model: gemini-3.8-flash-high
 timeout_minutes: 15
 status: ready
 current_targets:
-  kilo_creator: "kweb://geocities"
+  kilo_creator: "kweb://users/~neon_rider"
   kilo_graphics: KRogue
   kilo_tester: KTerm
   kilo_usability: KCalc
   kilo_qa: KPomodoro
   kilo_expander: "KSpace (5-Level Campaign Expansion)"
-virtual_web_target: "kweb://geocities"
+virtual_web_target: "kweb://users/~neon_rider"
 virtual_web_rotation:
   - "kweb://geocities"
   - "kweb://users/~neon_rider"
@@ -33,8 +33,8 @@ virtual_web_rotation:
   - "kweb://warez"
 last_run:
   agent: kilo-creator
-  app: "kweb://warez"
-  timestamp: "2026-10-04T23:45:00-07:00"
+  app: "kweb://geocities"
+  timestamp: "2026-10-05T02:45:00-07:00"
 last_planner_run: "2026-10-05T07:31:00Z"
 ---
 
@@ -102,9 +102,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ### 1. Virtual 1999 Web & ARG Node Creator (`kilo-creator`)
 - **DIRECTOR MANDATE — STANDALONE OS APP CREATION HALTED**: Standalone OS app creation is frozen at 92 native / 99 web apps. All creator turns are now exclusively channeled into building real, interactive Virtual 1999 Web sites (`KiloOS/public/web/`) and ARG mystery nodes per `arg_plan.md`. Zero shallow stubs; every page must be a functioning Web 1.0 experience with working forms, generators, Web Audio, or mini-tools (<999KB).
-- **Current Target**: `kweb://geocities`
+- **Current Target**: `kweb://users/~neon_rider`
 - **Upcoming Queue**:
-  `kweb://users/~neon_rider`, `kweb://asm-temple`, `kweb://cybercafe`, `kweb://10.19.99.4/classified`, `kweb://echo-subsystem.net`, `kweb://deep-core`, `kweb://darknet`, `kweb://portal`, `kweb://webring`, `kweb://warez`
+  `kweb://asm-temple`, `kweb://cybercafe`, `kweb://10.19.99.4/classified`, `kweb://echo-subsystem.net`, `kweb://deep-core`, `kweb://darknet`, `kweb://portal`, `kweb://webring`, `kweb://warez`, `kweb://geocities`
   *(Completed: kweb://geocities, kweb://portal, kweb://cybercafe, kweb://asm-temple, kweb://users/~neon_rider, kweb://darknet, kweb://deep-core, kweb://echo-subsystem.net, kweb://10.19.99.4/classified, kweb://webring, kweb://warez)*.
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
@@ -135,8 +135,8 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Multiplayer Focus (CRITICAL)**: Concentrate on expanding games (*KChess*, *KConnect4*, *KGo*, *KReversi*, *KDarts*, *KTetris*, *KSnake*, *K2048*, *KMatch3*, *KSimon*) and collaborative apps (*KDraw*, *KPaint*, *KSynth*, *KPad*) with seamless Firebase Realtime Database multiplayer for cross-computer play on `kiloapps.web.app`.
 
 ### 7. Virtual 1999 Web Expansion Queue (Eternal Fleet Track)
-- **Current Active Target**: `kweb://geocities` (`KiloOS/public/web/geocities.html`)
-  - *Next in Rotation*: `kweb://users/~neon_rider` ➔ `kweb://asm-temple` ➔ `kweb://cybercafe` ➔ `kweb://10.19.99.4/classified` ➔ `kweb://echo-subsystem.net` ➔ `kweb://deep-core` ➔ `kweb://darknet` ➔ `kweb://portal` ➔ `kweb://webring` ➔ `kweb://warez`.
+- **Current Active Target**: `kweb://users/~neon_rider` (`KiloOS/public/web/neon_rider.html`)
+  - *Next in Rotation*: `kweb://asm-temple` ➔ `kweb://cybercafe` ➔ `kweb://10.19.99.4/classified` ➔ `kweb://echo-subsystem.net` ➔ `kweb://deep-core` ➔ `kweb://darknet` ➔ `kweb://portal` ➔ `kweb://webring` ➔ `kweb://warez` ➔ `kweb://geocities`.
 - **Anti-Potemkin Quality Standard**:
   - All 11 Virtual 1999 Web destinations are live, interactive, and feature-complete.
   - See [archive/virtual_web_completed.md](archive/virtual_web_completed.md) for full historical breakdown of completed content mandates across all sites.
@@ -227,6 +227,14 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-05T02:45:00-07:00 — kilo-creator: kweb://geocities (Homestead Explorer, Cross-Fleet Signal Board & RTDB Sync)**
+  - Status: PASS ✅ (0 regressions, clean builds, 444.9 KB < 999 KB ceiling).
+  - Homestead Explorer: Added 20 authentic 1999 neighborhood homepages across 5 zones + Netscape 4.0 Communicator CRT modal reader.
+  - Cross-Fleet Signal Board: Added 4 lithospheric signal locks (1999Hz, 0x0040, XOR-0x7F, Halite) with live RTDB sync (`arg/signals`).
+  - Community Homestead Directory: Added user homestead publisher & local/Firebase RTDB live feed (`virtual_web/geocities/homesteads`).
+  - KNet Routing: Enhanced `kweb://geocities` URL parsing in `knet.html` supporting neighborhood query paths and direct deep-links.
+  - Verification: `npm run build` PASS (444ms); `security_lint.py` 100% PASS; `check_sizes.py` PASS; size 444.9 KB (< 999 KB limit).
+
 - **2026-10-04T23:45:00-07:00 — kilo-creator: kweb://warez (64KB/4KB Intro Arena & Keymaker Algorithm Lab)**
   - Status: PASS ✅ (0 regressions, Vite clean in 514ms, 323.0 KB web < 999 KB ceiling).
   - 64KB & 4KB Intro Arena (Tab 11): Implemented real-time procedural demoscene intro player with 4 complete entries (FLARELIGHT Mindflux '99 raymarched tunnel, PARALAX Voxel Mars '99 raycaster, ECHOPLEX Echo Carrier 4KB with 1999Hz Fourier ripples, SKID VECTOR Fire & Copper Dream), Mode 13h / SVGA toggles, FPS telemetry, and downloadable NASM assembly sources.
@@ -256,13 +264,5 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - First-Run Tutorial & Modal Flow: Verified fresh-session tutorial gating (`ktimer_tutorialSeen` / `.dat`), unblocked headless tests.
   - Resource Cleanup & Ergonomics: Verified ARCH-05 interval safety, audio suspend, and non-occluding toast container positioning.
   - Verification: `test_app_startup.py` PASS; `smoke_test_native.py` PASS (101/101); MSVC clean (`KTimer.exe` 32.8 KB); Vite clean in 369ms.
-
-- **2026-10-04T16:55:00-07:00 — kilo-usability: KPomodoro**
-  - Status: PASS ✅ (0 regressions, clean builds, 81.1 KB web / 16.5 KB native < 999 KB ceiling).
-  - Background Tab Visibility & Timer Drift (ARCH-05): Added `visibilitychange` & `blur` handlers with `targetEndTimestamp` delta math; eliminated drift & idle CPU.
-  - Toast & Modal Ergonomics (Directive 189): Centered toast above footer preventing control occlusion; moved modal helpers to top-level scope.
-  - Modal Dismissal & Display States: Added explicit `style.display` toggle (`none`/`flex`) across all dialogs; headless CDP startup modal test 100% PASS.
-  - Analytics & Layout: Added `requestAnimationFrame` render on desk tab switch for crisp HiDPI canvas chart; added `Escape` blur on text inputs.
-  - Verification: `test_app_startup.py` PASS; `smoke_test_native.py` PASS (101/101); MSVC clean (`KPomodoro.exe` 16.5 KB); Vite clean in 371ms; security_lint 100% PASS.
 
 

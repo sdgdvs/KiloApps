@@ -2132,8 +2132,13 @@
       url = '/web/portal.html';
     } else if (url.toLowerCase() === 'kweb://webring' || url.toLowerCase() === 'webring') {
       url = '/web/webring.html';
-    } else if (url.toLowerCase() === 'kweb://geocities' || url.toLowerCase() === 'geocities') {
-      url = '/web/geocities.html';
+    } else if (url.toLowerCase() === 'kweb://geocities' || url.toLowerCase() === 'geocities' || url.toLowerCase().startsWith('kweb://geocities') || url.toLowerCase().startsWith('geocities.com') || url.toLowerCase().startsWith('http://geocities.com') || url.toLowerCase().startsWith('http://www.geocities.com') || url.toLowerCase().startsWith('www.geocities.com')) {
+      let nh = '';
+      const lower = url.toLowerCase();
+      ['area51', 'siliconvalley', 'beverlyhills', 'soho', 'enchantedforest'].forEach(n => {
+        if (lower.includes(n)) nh = n;
+      });
+      url = '/web/geocities.html' + (nh ? '?neighborhood=' + nh : '');
     } else if (url.toLowerCase() === 'kweb://cybercafe' || url.toLowerCase() === 'cybercafe' || url.toLowerCase() === 'kweb://cafe' || url.toLowerCase() === 'cafe' || url.toLowerCase() === 'kweb://bbs') {
       url = '/web/cybercafe.html';
     } else if (url.toLowerCase() === 'kweb://users/~neon_rider' || url.toLowerCase() === 'users/~neon_rider' || url.toLowerCase() === 'kweb://neon_rider' || url.toLowerCase() === 'neon_rider' || url.toLowerCase() === '~neon_rider' || url.toLowerCase() === 'kweb://users/neon_rider') {

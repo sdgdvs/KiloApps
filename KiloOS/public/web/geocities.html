@@ -1429,6 +1429,286 @@
     color: #ffff00;
   }
 
+  /* ==========================================================================
+     HOMESTEAD EXPLORER & NEIGHBORHOOD DIRECTORY STYLES
+     ========================================================================== */
+  .neighborhood-explorer-box {
+    background: #040914;
+    border: 2px inset #00ffff;
+    padding: 14px;
+    margin-bottom: 16px;
+    box-shadow: 0 0 15px rgba(0, 255, 255, 0.2);
+  }
+  .nh-tab-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    background: #02060c;
+    border: 1px solid #005577;
+    padding: 6px;
+    margin-bottom: 12px;
+  }
+  .nh-tab-btn {
+    background: #001a2b;
+    color: #00ffff;
+    border: 1px outset #0088cc;
+    font-family: 'Courier New', monospace;
+    font-size: 11px;
+    font-weight: bold;
+    padding: 5px 10px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .nh-tab-btn:hover {
+    background: #003355;
+    color: #ffffff;
+  }
+  .nh-tab-btn.active {
+    background: var(--neon-pink);
+    color: #ffffff;
+    border-style: inset;
+    border-color: #ff00ff;
+    box-shadow: 0 0 8px var(--neon-pink);
+  }
+  .nh-lead-banner {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    background: rgba(0, 30, 45, 0.7);
+    border-left: 4px solid var(--neon-cyan);
+    padding: 8px 12px;
+    margin-bottom: 12px;
+    font-size: 11px;
+  }
+  .homestead-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+    gap: 12px;
+    margin-top: 10px;
+  }
+  @media (max-width: 640px) {
+    .homestead-grid { grid-template-columns: 1fr; }
+  }
+  .homestead-card {
+    background: #001220;
+    border: 2px outset #0088aa;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    box-shadow: 0 0 10px rgba(0, 136, 170, 0.15);
+    transition: transform 0.1s, border-color 0.1s;
+  }
+  .homestead-card:hover {
+    border-color: #ffff00;
+    transform: translateY(-2px);
+    box-shadow: 0 0 15px rgba(255, 255, 0, 0.25);
+  }
+  .homestead-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  .homestead-title {
+    color: #00ffff;
+    font-size: 13px;
+    font-weight: bold;
+    line-height: 1.3;
+  }
+  .homestead-url {
+    font-family: 'Courier New', monospace;
+    font-size: 10px;
+    color: #88ccee;
+    background: #010a12;
+    padding: 2px 6px;
+    border: 1px solid #004466;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .homestead-desc {
+    font-size: 11px;
+    color: #cbd5e1;
+    line-height: 1.4;
+  }
+  .homestead-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+  .homestead-tag {
+    font-size: 9px;
+    background: #002233;
+    color: #38bdf8;
+    border: 1px solid #005577;
+    padding: 1px 5px;
+    border-radius: 2px;
+  }
+  .homestead-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: auto;
+    padding-top: 6px;
+    border-top: 1px dashed #004466;
+  }
+  .btn-visit-homestead {
+    background: #005522;
+    color: #00ff66;
+    border: 2px outset #00ff66;
+    font-family: 'Courier New', monospace;
+    font-size: 11px;
+    font-weight: bold;
+    padding: 4px 10px;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.1s;
+  }
+  .btn-visit-homestead:hover {
+    background: #00ff66;
+    color: #000;
+  }
+  .btn-visit-homestead:active {
+    border-style: inset;
+  }
+
+  /* Homestead Modal Lightbox */
+  .homestead-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.85);
+    z-index: 10000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 16px;
+    backdrop-filter: blur(4px);
+  }
+  .homestead-modal-window {
+    width: 100%;
+    max-width: 860px;
+    max-height: 90vh;
+    background: #0a0e17;
+    border: 3px outset #00ffff;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 0 35px rgba(0, 255, 255, 0.4);
+    overflow: hidden;
+  }
+  .homestead-modal-titlebar {
+    background: linear-gradient(90deg, #000080, #1084d0);
+    color: #fff;
+    padding: 5px 8px;
+    font-family: Arial, sans-serif;
+    font-size: 12px;
+    font-weight: bold;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    user-select: none;
+  }
+  .homestead-modal-close {
+    background: #c0c0c0;
+    color: #000;
+    border: 1px outset #fff;
+    font-size: 10px;
+    font-weight: bold;
+    width: 18px;
+    height: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+  }
+  .homestead-modal-close:hover { background: #ff0055; color: #fff; }
+  .homestead-modal-urlbar {
+    background: #d4d0c8;
+    color: #000;
+    padding: 4px 8px;
+    font-family: 'Courier New', monospace;
+    font-size: 11px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border-bottom: 2px groove #fff;
+  }
+  .homestead-modal-viewport {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px;
+    background: #000;
+    color: #00ffcc;
+  }
+
+  /* Cross-Fleet Lithospheric Signal Board */
+  .signal-board-wrap {
+    background: #010a12;
+    border: 2px solid #00aa44;
+    padding: 12px;
+    margin-top: 14px;
+    box-shadow: 0 0 15px rgba(0, 170, 68, 0.25);
+  }
+  .signal-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 8px;
+    margin: 10px 0;
+  }
+  .signal-card {
+    background: #00120a;
+    border: 1px solid #005522;
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .signal-card.locked {
+    border-color: #00ff66;
+    background: #002211;
+    box-shadow: 0 0 10px rgba(0, 255, 102, 0.2);
+  }
+  .signal-status-led {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 4px;
+    background: #444;
+  }
+  .signal-card.locked .signal-status-led {
+    background: #00ff66;
+    box-shadow: 0 0 6px #00ff66;
+    animation: blinkGlow 1.2s infinite;
+  }
+  .signal-coherence-bar {
+    background: #002211;
+    border: 1px solid #00aa44;
+    height: 16px;
+    width: 100%;
+    position: relative;
+    overflow: hidden;
+    margin: 6px 0;
+  }
+  .signal-coherence-fill {
+    background: linear-gradient(90deg, #00aa44, #00ff66);
+    height: 100%;
+    width: 25%;
+    transition: width 0.6s ease;
+  }
+  .subterranean-matrix {
+    background: #0a001a;
+    border: 2px dashed #aa00ff;
+    padding: 10px;
+    margin-top: 10px;
+    box-shadow: 0 0 15px rgba(170, 0, 255, 0.35);
+  }
+
 </style>
 </head>
 <body class="theme-siliconvalley">
@@ -1463,6 +1743,7 @@
   <!-- Retro Navigation Bar -->
   <nav class="retro-nav">
     <a href="#shrine-welcome" class="nav-btn">🔮 Home</a>
+    <a href="#neighborhood-explorer" class="nav-btn" style="color:#f0abfc; border-color:#f0abfc;">🏘️ Homestead Explorer</a>
     <a href="#neighborhood-watch-section" class="nav-btn" style="color:#ffff00; border-color:#ffff00;">📢 Neighborhood Watch</a>
     <a href="#jukebox-section" class="nav-btn">📻 MIDI Jukebox</a>
     <a href="#mod-vault" class="nav-btn">💾 MOD Downloads</a>
@@ -1507,6 +1788,62 @@
     <p style="font-size:12px; color:#aaffee; margin:0;">
       ⚡ <em>Anti-Potemkin guarantee</em>: Every tool works client-side—draw and download pixel sprites (.PNG, .BMP, C-Code), download real Amiga .MOD tracker music files, dissect 31 sample records and pattern matrices, synthesize custom FM timbres, or design your own personal 1999 homepage!
     </p>
+  </div>
+
+  <!-- 0. GeoCities Neighborhood Directory & Homestead Explorer -->
+  <div class="neighborhood-explorer-box" id="neighborhood-explorer">
+    <div class="section-title">
+      <span>🏘️ GEOCITIES NEIGHBORHOOD DIRECTORY &amp; HOMESTEAD REGISTRY</span>
+      <span style="font-size:11px; color:#ffff00;" id="nhActiveIndicator">[NEIGHBORHOOD: SILICONVALLEY]</span>
+    </div>
+    <p style="font-size:12px; margin:0 0 10px 0; line-height:1.5;">
+      Explore authentic personal homepages from the golden 1999 web! Choose a neighborhood below to browse authentic community homesteads, launch interactive Web 1.0 mini-sites in the Netscape CRT viewer, or publish your own site to the directory using the <a href="#page-builder">Page Builder</a>.
+    </p>
+
+    <!-- Neighborhood Explorer Tab Bar -->
+    <div class="nh-tab-bar">
+      <button class="nh-tab-btn active" id="tabNhSilicon" onclick="switchExplorerNeighborhood('siliconvalley')">⚡ SiliconValley (Hardware &amp; Code)</button>
+      <button class="nh-tab-btn" id="tabNhArea51" onclick="switchExplorerNeighborhood('area51')">🛸 Area51 (Sci-Fi &amp; SIGINT)</button>
+      <button class="nh-tab-btn" id="tabNhBeverly" onclick="switchExplorerNeighborhood('beverlyhills')">💎 BeverlyHills (Dot-Com &amp; Glamour)</button>
+      <button class="nh-tab-btn" id="tabNhSoHo" onclick="switchExplorerNeighborhood('soho')">🎨 SoHo (Text Art &amp; Acid Synths)</button>
+      <button class="nh-tab-btn" id="tabNhForest" onclick="switchExplorerNeighborhood('enchantedforest')">🌲 EnchantedForest (MUDs &amp; Lore)</button>
+      <button class="nh-tab-btn" id="tabNhCommunity" onclick="switchExplorerNeighborhood('community')" style="color:#ffcc00; border-color:#ffcc00;">⭐ Community Registry (<span id="nhUserCount">0</span>)</button>
+    </div>
+
+    <!-- Active Neighborhood Lead Banner -->
+    <div class="nh-lead-banner" id="nhLeadBanner">
+      <div>
+        <strong id="nhLeadTitle" style="color:#ffff00; font-size:12px;">SiliconValley Community Homesteads</strong>:
+        <span id="nhLeadDesc" style="color:#aaffee;">For techies, hardware overclockers, x86 assembly wizards, and Linux kernel hackers.</span>
+      </div>
+      <div style="display:flex; gap:6px; align-items:center;">
+        <span style="font-size:10px; color:#88aacc;" id="nhHomesteadCount">4 Homesteads Listed</span>
+        <button class="tool-btn" style="background:#004466; font-size:10px; padding:2px 8px;" onclick="scrollToPageBuilder()">+ Register Site</button>
+      </div>
+    </div>
+
+    <!-- Homestead Grid -->
+    <div class="homestead-grid" id="homesteadGrid">
+      <!-- Populated dynamically via renderHomesteadGrid() -->
+    </div>
+  </div>
+
+  <!-- Homestead Viewer Modal Overlay -->
+  <div id="homesteadModal" class="homestead-modal-overlay" style="display:none;" onclick="closeHomesteadModalOnBackdrop(event)">
+    <div class="homestead-modal-window" onclick="event.stopPropagation()">
+      <div class="homestead-modal-titlebar">
+        <span id="hsModalTitle">Netscape Communicator 4.0 - [Homestead View]</span>
+        <button class="homestead-modal-close" onclick="closeHomesteadModal()">✕</button>
+      </div>
+      <div class="homestead-modal-urlbar">
+        <span style="font-weight:bold; color:#000080;">Location:</span>
+        <input type="text" id="hsModalUrlInput" style="flex:1; background:#fff; color:#000; border:1px inset #999; font-family:'Courier New', monospace; font-size:11px; padding:2px 6px;" readonly />
+        <button class="tool-btn" style="background:#c0c0c0; color:#000; border:1px outset #fff; font-size:10px; padding:2px 6px;" onclick="copyHomesteadUrl()">📋 Copy</button>
+      </div>
+      <div class="homestead-modal-viewport" id="hsModalViewport">
+        <!-- Rendered dynamically -->
+      </div>
+    </div>
   </div>
 
   <!-- 1. 1999 Vintage MIDI & Tracker Jukebox -->
@@ -2387,6 +2724,110 @@
         Click a transform button above to analyze the payload string.
       </div>
     </div>
+
+    <!-- Cross-Fleet Lithospheric Signal Board (Firebase RTDB + Local Storage) -->
+    <div class="signal-board-wrap" id="signalBoardSection">
+      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px; border-bottom:1px solid #00aa44; padding-bottom:4px; margin-bottom:8px;">
+        <span style="font-size:12px; font-weight:bold; color:#39ff14; font-family:'Courier New', monospace;">
+          📡 CROSS-FLEET LITHOSPHERIC SIGNAL BOARD &amp; SUBCARRIER COHERENCE MATRIX
+        </span>
+        <div style="display:flex; gap:6px; align-items:center;">
+          <span id="signalSyncStatus" style="font-size:10px; color:#ffff00; font-family:'Courier New', monospace;">[SYNCED WITH RTDB: arg/signals]</span>
+          <button class="tool-btn" style="background:#003322; color:#39ff14; font-size:10px;" onclick="syncLocalSignalsToRtdb()">⚡ Refresh Signals</button>
+        </div>
+      </div>
+
+      <p style="font-size:11px; color:#aaffee; margin:0 0 8px 0; line-height:1.4;">
+        Acoustic subharmonic transponders buried across the Southwestern Permian basin synchronize cross-app telemetry. When at least <strong>2 signal fragments</strong> are verified across KiloApps nodes, the classified subterranean gateway transit matrix unlocks.
+      </p>
+
+      <!-- Coherence Progress Meter -->
+      <div style="display:flex; justify-content:space-between; font-size:10px; color:#00ff66; font-family:'Courier New', monospace;">
+        <span>LITHOSPHERIC COHERENCE: <strong id="signalCoherenceLabel">25% (1/4 SIGNALS LOCKED)</strong></span>
+        <span>GATEWAY LOCK THRESHOLD: ≥50% (2 SIGNALS)</span>
+      </div>
+      <div class="signal-coherence-bar">
+        <div class="signal-coherence-fill" id="signalCoherenceFill" style="width:25%;"></div>
+      </div>
+
+      <!-- 4 Tracked Signal Cards -->
+      <div class="signal-grid" id="signalGrid">
+        <!-- Card 1: 1999Hz Carrier -->
+        <div class="signal-card" id="sigCardCarrier">
+          <div style="display:flex; justify-content:space-between; font-size:10px;">
+            <span style="color:#00ffcc; font-weight:bold;"><span class="signal-status-led"></span>SIGNAL 0x01</span>
+            <span id="sigStateCarrier" style="color:#888;">ACQUIRING</span>
+          </div>
+          <div style="font-size:11px; font-weight:bold; color:#ffff00;">1999.0 Hz Carrier Lock</div>
+          <div style="font-size:9px; color:#88aacc;">Origin: Geocities / KRadio / Echo</div>
+          <button class="tool-btn" style="margin-top:auto; font-size:10px; padding:2px;" onclick="tuneAndLockSignal('carrier')">🔒 Lock 1999Hz</button>
+        </div>
+
+        <!-- Card 2: Memory Offset 0x0040 -->
+        <div class="signal-card" id="sigCardOffset">
+          <div style="display:flex; justify-content:space-between; font-size:10px;">
+            <span style="color:#00ffcc; font-weight:bold;"><span class="signal-status-led"></span>SIGNAL 0x02</span>
+            <span id="sigStateOffset" style="color:#888;">ACQUIRING</span>
+          </div>
+          <div style="font-size:11px; font-weight:bold; color:#ffff00;">Offset 0x0040 Parity</div>
+          <div style="font-size:9px; color:#88aacc;">Origin: Classified / KHex / KNet</div>
+          <button class="tool-btn" style="margin-top:auto; font-size:10px; padding:2px;" onclick="tuneAndLockSignal('offset')">🔒 Lock 0x0040</button>
+        </div>
+
+        <!-- Card 3: XOR-0x7F Stream Mask -->
+        <div class="signal-card" id="sigCardMask">
+          <div style="display:flex; justify-content:space-between; font-size:10px;">
+            <span style="color:#00ffcc; font-weight:bold;"><span class="signal-status-led"></span>SIGNAL 0x03</span>
+            <span id="sigStateMask" style="color:#888;">ACQUIRING</span>
+          </div>
+          <div style="font-size:11px; font-weight:bold; color:#ffff00;">XOR-0x7F Permian Mask</div>
+          <div style="font-size:9px; color:#88aacc;">Origin: Darknet / KCipher / Forensics</div>
+          <button class="tool-btn" style="margin-top:auto; font-size:10px; padding:2px;" onclick="tuneAndLockSignal('mask')">🔒 Lock XOR-0x7F</button>
+        </div>
+
+        <!-- Card 4: Halite Acoustic Resonance -->
+        <div class="signal-card" id="sigCardResonance">
+          <div style="display:flex; justify-content:space-between; font-size:10px;">
+            <span style="color:#00ffcc; font-weight:bold;"><span class="signal-status-led"></span>SIGNAL 0x04</span>
+            <span id="sigStateResonance" style="color:#888;">ACQUIRING</span>
+          </div>
+          <div style="font-size:11px; font-weight:bold; color:#ffff00;">Halite Sonic Coupling</div>
+          <div style="font-size:9px; color:#88aacc;">Origin: Echo Subsystem / KSynth</div>
+          <button class="tool-btn" style="margin-top:auto; font-size:10px; padding:2px;" onclick="tuneAndLockSignal('resonance')">🔒 Lock Halite</button>
+        </div>
+      </div>
+
+      <!-- Unlocked Gateway Matrix (Visible when >= 2 signals are active) -->
+      <div id="subterraneanGatewayMatrix" class="subterranean-matrix" style="display:none;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; border-bottom:1px dashed #aa00ff; padding-bottom:4px;">
+          <span style="color:#ff00ff; font-weight:bold; font-size:12px; font-family:'Courier New', monospace;">
+            🔓 CLASSIFIED LITHOSPHERIC GATEWAY MATRIX UNLOCKED
+          </span>
+          <span style="color:#00ff66; font-size:10px; font-family:'Courier New', monospace;">STATUS: INTRANET TRANSIT NOMINAL</span>
+        </div>
+        <p style="font-size:11px; color:#cbd5e1; margin:0 0 8px 0;">
+          Acoustic carrier synchronization achieved across subterranean transponder arrays. Direct transit vectors confirmed:
+        </p>
+        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:6px;">
+          <a href="/web/classified.html" class="nav-btn" style="background:#002233; border-color:#00ffcc; color:#00ffcc; font-size:11px; text-align:center;">
+            🔒 Subnet 10.19.99.4/classified &raquo;
+          </a>
+          <a href="/web/echo_subsystem.html" class="nav-btn" style="background:#002211; border-color:#00ff66; color:#00ff66; font-size:11px; text-align:center;">
+            🔊 echo-subsystem.net (ESARL) &raquo;
+          </a>
+          <a href="/web/darknet.html" class="nav-btn" style="background:#220033; border-color:#aa00ff; color:#ff00ff; font-size:11px; text-align:center;">
+            👁️ Node 0x7F Darknet &raquo;
+          </a>
+          <a href="/web/deep_core.html" class="nav-btn" style="background:#332200; border-color:#ffff00; color:#ffff00; font-size:11px; text-align:center;">
+            ⚡ Carlsbad Deep Core Salt Vault &raquo;
+          </a>
+        </div>
+        <div style="margin-top:8px; font-size:10px; color:#ffffaa; font-family:'Courier New', monospace; display:flex; justify-content:space-between; align-items:center;">
+          <span>VERIFIED TRANSIT TOKEN: <strong style="color:#00ff66;" id="sigTransitToken">CARLSBAD-HALITE-1999</strong></span>
+          <button class="tool-btn" style="font-size:9px;" onclick="navigator.clipboard.writeText('CARLSBAD-HALITE-1999'); playUiBeep(1600,0.04);">📋 Copy Token</button>
+        </div>
+      </div>
+    </div>
   </div>
 
   <!-- 9. The Silicon Oracle '99 & Y2K Diagnostic -->
@@ -2603,6 +3044,9 @@
 
         <button class="btn-sign" style="width:100%; background:#005500; border-color:#00ff00;" onclick="downloadGeneratedPage()">
           💾 Download Standalone index.html (&lt;10 KB)
+        </button>
+        <button class="btn-sign" style="width:100%; margin-top:6px; background:#440055; border-color:#ff00ff;" onclick="publishHomesteadToDirectory()">
+          🚀 Publish to GeoCities Neighborhood Directory
         </button>
       </div>
 
@@ -2951,6 +3395,8 @@
       <button class="quick-stamp-btn" onclick="applyQuickStamp('Probing subnet 10.19.99.4 at 1999Hz carrier...')">📡 Subnet 10.19.99.4 Probe</button>
       <button class="quick-stamp-btn" onclick="applyQuickStamp('Intercepted 1999Hz subcarrier on 10.19.99.4!')">📡 1999Hz Subcarrier</button>
       <button class="quick-stamp-btn" onclick="applyQuickStamp('Carlsbad acoustic telemetry verified nominal!')">⛰️ Carlsbad Telemetry</button>
+      <button class="quick-stamp-btn" style="border-color:#39ff14; color:#39ff14;" onclick="applyQuickStamp('!carrier 1999Hz lock')">⚡ !carrier 1999Hz</button>
+      <button class="quick-stamp-btn" style="border-color:#ff00aa; color:#ff66cc;" onclick="applyQuickStamp('probe 10.19.99.4 halite')">🔒 10.19.99.4 Halite</button>
     </div>
 
     <div class="guestbook-form" style="margin-top:6px;">
@@ -2958,7 +3404,24 @@
       <textarea id="gbMsg" class="gb-input" rows="2" placeholder="Leave your mark on CyberSpire's live shoutbox..."></textarea>
       <button class="btn-sign" onclick="addGuestbookEntry()">Sign Guestbook [✍️]</button>
     </div>
-    <div id="guestbookList" style="margin-top:12px;"></div>
+
+    <!-- Shoutbox Neighborhood Filter Bar -->
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px; flex-wrap:wrap; gap:6px;">
+      <div style="display:flex; align-items:center; gap:6px; font-size:11px;">
+        <span style="color:#aaffee;">Filter Shouts:</span>
+        <select id="gbFilterNeighborhood" onchange="filterGuestbook(this.value)" style="background:#000; color:#00ffcc; border:1px solid #00ffcc; font-size:11px; padding:2px;">
+          <option value="all">All Neighborhoods (Global)</option>
+          <option value="siliconvalley">SiliconValley</option>
+          <option value="area51">Area51</option>
+          <option value="beverlyhills">BeverlyHills</option>
+          <option value="soho">SoHo</option>
+          <option value="enchantedforest">EnchantedForest</option>
+        </select>
+      </div>
+      <span style="font-size:10px; color:#88aacc;">Total Shouts: <span id="gbTotalCount">0</span></span>
+    </div>
+
+    <div id="guestbookList" style="margin-top:8px;"></div>
   </div>
 
   <!-- Visitor Hit Counter -->
@@ -5505,6 +5968,9 @@ function dissectStream() {
     jumpLink.textContent = '🚀 Launch ' + matched.label + ' »';
     if (badgeEl) badgeEl.textContent = '[TARGET LOCATED: ' + matched.key + ']';
     playFm1999Carrier(0.25);
+    if (typeof tuneAndLockSignal === 'function') {
+      tuneAndLockSignal('offset', true);
+    }
   } else {
     if (urlBanner) urlBanner.style.display = 'none';
     if (badgeEl) badgeEl.textContent = '[ANALYSIS COMPLETE]';
@@ -5671,6 +6137,9 @@ function setNeighborhood(name) {
   }
 
   playUiBeep(1200, 0.04);
+  if (typeof switchExplorerNeighborhood === 'function') {
+    switchExplorerNeighborhood(name);
+  }
 }
 
 function capitalize(s) {
@@ -7642,6 +8111,9 @@ function tuneSubcarrierFreq(f) {
   });
 
   updateSubcarrierDemod();
+  if (f === 1999 && typeof tuneAndLockSignal === 'function') {
+    tuneAndLockSignal('carrier', true);
+  }
 }
 
 function onSubcarrierSlider(v) {
@@ -7931,6 +8403,9 @@ function togglePacketXorMask() {
     btnXor.textContent = isPacketXorMasked ? '✔ XOR-0x7F Applied' : '⚡ Apply XOR-0x7F Mask';
   }
   renderCurrentPacket();
+  if (isPacketXorMasked && typeof tuneAndLockSignal === 'function') {
+    tuneAndLockSignal('mask', true);
+  }
 }
 
 function verifyPacketCrc() {
@@ -8955,6 +9430,659 @@ function initDiskmagReader() {
   selectDiskmagArticle(0);
 }
 
+// ============================================================================
+// GEOCITIES NEIGHBORHOOD HOMESTEAD DIRECTORY & 1999 WEB 1.0 SHOWCASE
+// ============================================================================
+const HOMESTEADS_DATA = {
+  siliconvalley: [
+    {
+      id: "hs_sv_01",
+      title: "3dfx Voodoo2 SLI & Celeron 300A @ 450MHz Overclocking Temple",
+      webmaster: "~overclock_god",
+      address: "http://www.geocities.com/SiliconValley/Overclock/1999/",
+      desc: "Pencil trick voltage mods, BX chipset FSB 100MHz jumpers, Tremor II timedemo benchmarks (84.2 FPS), and dual Diamond Monster 3D II SLI configurations.",
+      tags: ["3dfx", "Voodoo2", "Overclock", "Glide", "TremorII"],
+      views: 18420,
+      badge: "VOODOO2 READY",
+      contentHtml: `<div style="background:#000033; color:#00ffff; font-family:'Courier New', monospace; padding:14px; border:2px outset #00ffff;"><h2 style="color:#ffff00; text-align:center; margin:0 0 6px 0;">⚡ THE CELERON 300A @ 450MHz OVERCLOCKING SHRINE ⚡</h2><marquee style="color:#00ff66; background:#001122; padding:3px; border:1px solid #005577;">★ RUNNING 450MHz AT 2.2V CORE ON ABIT BH6 ★ GLIDE DRIVERS v3.02 ★ NO FRAMEDROPS IN TREMOR II ★</marquee><div style="margin:12px 0; background:rgba(0,0,0,0.6); padding:10px; border-left:4px solid #ffff00;"><p style="margin:0 0 8px 0;">Welcome to my hardware bench! The Intel Celeron 300A (Mendocino core with 128KB on-die L2 cache) is the greatest budget processor ever stamped into silicon.</p><p style="margin:0 0 8px 0;">By setting your Abit BH6 motherboard jumpers to 100MHz Front Side Bus (FSB) and pinning the voltage regulator to 2.2V with the conductive pencil trick on pin B21, you attain a stable 450MHz clock speed with zero thermal throttling!</p><table style="width:100%; border-collapse:collapse; margin-top:8px; font-size:11px;"><tr style="background:#002244; color:#ffff00;"><th>Benchmark Suite</th><th>Stock 300MHz</th><th>Overclock 450MHz</th><th>Delta</th></tr><tr><td>Tremor II (Timedemo 1)</td><td>48.4 FPS</td><td>84.2 FPS</td><td style="color:#00ff66;">+74.0%</td></tr><tr><td>Surreal Tournament (D3D)</td><td>36.1 FPS</td><td>62.8 FPS</td><td style="color:#00ff66;">+73.9%</td></tr><tr><td>3DMark 99 MAX (1024x768)</td><td>2,450 3DMarks</td><td>4,120 3DMarks</td><td style="color:#00ff66;">+68.1%</td></tr></table></div></div>`
+    },
+    {
+      id: "hs_sv_02",
+      title: "Protected Mode Ring 0 Kernel & VGA Mode 13h Assembly Guide",
+      webmaster: "~x86_artisan",
+      address: "http://www.geocities.com/SiliconValley/Assembly/1999/",
+      desc: "Bare-metal x86 real-mode to protected-mode transition, GDT/IDT descriptors, VGA 320x200 256-color palette cycling, and greetings to ~neon_rider.",
+      tags: ["x86", "NASM", "Mode13h", "Ring0", "ASM"],
+      views: 9410,
+      badge: "PURE NASM",
+      contentHtml: `<div style="background:#001100; color:#00ff66; font-family:'Courier New', monospace; padding:14px; border:2px solid #00aa00;"><h2 style="color:#39ff14; text-align:center; margin:0 0 6px 0;">[ x86 PROTECTED MODE &amp; MODE 13h DEMOSCENE BIBLE ]</h2><div style="background:#002200; padding:6px; text-align:center; font-size:11px; margin-bottom:10px;">"Real programmers write directly to memory address 0xA0000" — Greets to ~neon_rider &amp; ASM Temple!</div><p style="font-size:12px; margin:0 0 8px 0;">To set 320x200 256-color Mode 13h in pure x86 assembly:</p><pre style="background:#000; color:#00ffcc; padding:8px; border:1px solid #004422; font-size:10px;">mov ax, 0013h   ; BIOS INT 10h Video Mode 13h\nint 10h         ; 320x200x256 linear framebuffer\nmov ax, 0A000h  ; ES points to video segment\nmov es, ax\nxor di, di      ; Pixel offset (X + Y*320)\nmov al, 0Fh     ; Bright white pixel\nstosb           ; Write pixel to screen!</pre></div>`
+    },
+    {
+      id: "hs_sv_03",
+      title: "Compiling Slackware 4.0 on a 486DX2/66 with 16MB RAM",
+      webmaster: "~linux_kernel_99",
+      address: "http://www.geocities.com/SiliconValley/Kernel/1999/",
+      desc: "Step-by-step diary compiling Linux kernel 2.2.10 from source on a 486. Sendmail configs, XFree86 modelines for S3 Trio64, and dial-up pppd scripts.",
+      tags: ["Linux", "Slackware", "486DX2", "Kernel", "Unix"],
+      views: 7320,
+      badge: "SLACK 4.0",
+      contentHtml: `<div style="background:#000; color:#ffffff; font-family:'Courier New', monospace; padding:14px; border:2px solid #555;"><h2 style="color:#00ffff; text-align:center; margin:0 0 6px 0;">🐧 SLACKWARE 4.0 ON A 486DX2/66: A 28-HOUR KERNEL COMPILATION</h2><p style="font-size:11px; color:#aaa; margin:0 0 8px 0;">Specs: 486DX2-66MHz, 16MB 72-pin EDO RAM, 540MB IDE Seagate HDD, S3 Trio64 2MB, 3Com 3C509B ISA NIC.</p><div style="background:#111; padding:8px; border:1px dashed #444; font-size:11px; line-height:1.5;"><div>[00:00] cd /usr/src/linux &amp;&amp; make menuconfig</div><div>[00:15] Disabled SCSI, Sound, Token Ring. Enabled ext2, PPP, TCP/IP.</div><div>[00:20] make dep &amp;&amp; make clean &amp;&amp; make bzImage</div><div>[27:44] System is 100% complete! bzImage size: 482 KB. Boots in 14 seconds.</div></div></div>`
+    },
+    {
+      id: "hs_sv_04",
+      title: "Amiga Paula DMA vs Sound Blaster AWE64 Gold: Sound Hardware Showdown",
+      webmaster: "~audio_paula",
+      address: "http://www.geocities.com/SiliconValley/Audio/1999/",
+      desc: "Hardware wavetable analysis: Amiga 8364 Paula (4-channel 8-bit DMA mixing with analog lowpass filter) compared to Creative EMU8000 64-voice wavetable.",
+      tags: ["Paula", "Amiga", "AWE64", "Wavetable", "ProTracker"],
+      views: 12150,
+      badge: "AUDIO WARS",
+      contentHtml: `<div style="background:#0a0520; color:#d8b4fe; font-family:'Courier New', monospace; padding:14px; border:2px outset #a855f7;"><h2 style="color:#f0abfc; text-align:center; margin:0 0 6px 0;">🔊 PAULA (AMIGA) VS AWE64 GOLD: THE 16-BIT AUDIO SHOWDOWN</h2><p style="font-size:11px; line-height:1.5;">Commodore Paula (MOS 8364) features 4 DMA channels, independent 8-bit DACs, hardware panning, and dynamic clock rate (3.54 MHz PAL). The warmth of Paula comes from its hardware 4.4 kHz RC lowpass filter. Audition our 5 .MOD tracker modules below!</p></div>`
+    }
+  ],
+  area51: [
+    {
+      id: "hs_a51_01",
+      title: "Black Project Radar Anomalies & Tonopah Microwave Intercepts",
+      webmaster: "~roswell_truth",
+      address: "http://www.geocities.com/Area51/Tonopah/1999/",
+      desc: "Declassified radar telemetry logs from the Nevada Test and Training Range. Intercepted 1420MHz hydrogen line bursts, Groom Lake flight logs, and scanner frequencies.",
+      tags: ["Radar", "UFO", "Area51", "Microwave", "GroomLake"],
+      views: 24800,
+      badge: "CLASSIFIED",
+      contentHtml: `<div style="background:#021008; color:#00ff66; font-family:'Courier New', monospace; padding:14px; border:2px solid #00aa44;"><h2 style="color:#39ff14; text-align:center; margin:0 0 6px 0;">🛸 TONOPAH &amp; GROOM LAKE RADAR INTERCEPT LOGS (1999)</h2><p style="font-size:12px; margin:0 0 8px 0; line-height:1.5;">Between 22:00 and 03:00 hours, stationary VHF radar returns over sector 4 exhibit velocity jumps from Mach 0 to Mach 7 with zero sonic boom propagation. Spectrogram analysis reveals pulse-Doppler radar waveforms mirroring the 1999Hz bedrock carrier!</p></div>`
+    },
+    {
+      id: "hs_a51_02",
+      title: "Bedrock SIGINT: The 1999.0 Hz Carlsbad Subharmonic Transponder",
+      webmaster: "~subcarrier_1999",
+      address: "http://www.geocities.com/Area51/Subcarrier/1999/",
+      desc: "Deep diegetic investigative research: Lithospheric acoustic carrier locked at exactly 1999.0 Hz traversing Permian Basin Salado halite salt beds. Uncovers subnet 10.19.99.4/classified.",
+      tags: ["SIGINT", "1999Hz", "Carlsbad", "Halite", "ARG"],
+      views: 31200,
+      badge: "ARG NEXUS",
+      contentHtml: `<div style="background:#030d06; color:#aaffee; font-family:'Courier New', monospace; padding:14px; border:2px solid #39ff14;"><h2 style="color:#ffff00; text-align:center; margin:0 0 6px 0;">📡 BEDROCK SIGINT: THE 1999.0 Hz LITHOSPHERIC TRANSPONDER</h2><div style="background:#003311; border:1px solid #00ff66; padding:8px; color:#39ff14; font-size:11px; margin-bottom:10px;">★ DIEGETIC INVESTIGATION ★ CARLSBAD GATEWAY INTRANET DEMARCATION ★</div><p style="font-size:12px; line-height:1.5; margin:0 0 8px 0;">Fellow cyber voyagers: The mysterious signal vibrating through our dial-up modems is not atmospheric noise. It is an acoustic carrier locked at exactly <strong>1999.0 Hz</strong> radiating from 2,150 feet underground in the Permian Salado Halite salt formations near Carlsbad, New Mexico.</p><div style="background:#00150a; padding:10px; border-left:4px solid #ff00aa; margin-bottom:10px; font-size:11px; line-height:1.5;"><p style="margin:0 0 6px 0; color:#ffffaa;"><strong>Key Artifacts Collected:</strong></p><p style="margin:0 0 4px 0;">• <strong>Subnet Origin</strong>: Packets leak through non-routable address <code>10.19.99.4</code> (Gateway: <code>kweb://10.19.99.4/classified</code>).</p><p style="margin:0 0 4px 0;">• <strong>Memory Offset</strong>: Encrypted frames contain persistent pointer to memory offset <code>0x0040:0x1999</code>.</p><p style="margin:0 0 4px 0;">• <strong>Cipher Stream</strong>: Payloads are masked with XOR byte <code>0x7F</code>.</p><p style="margin:0; color:#38bdf8;">• <strong>Acoustic Monitoring Facility</strong>: Accessible directly at <code>kweb://echo-subsystem.net</code>.</p></div><div style="display:flex; gap:6px; flex-wrap:wrap; justify-content:center;"><a href="/web/classified.html" class="nav-btn" style="background:#004422; color:#00ff66;">🔒 Probe 10.19.99.4 Classified Intranet</a><a href="/web/echo_subsystem.html" class="nav-btn" style="background:#002244; color:#38bdf8;">🔊 Access ESARL Acoustic Lab</a></div></div>`
+    },
+    {
+      id: "hs_a51_03",
+      title: "DES 56-Bit Crackers, PGP 6.5.1 Keyrings & Rotor Cipher Emulators",
+      webmaster: "~crypto_vault",
+      address: "http://www.geocities.com/Area51/Crypto/1999/",
+      desc: "Client-side cryptanalysis workstation. Electronic Frontier Foundation Deep Crack machine analysis, RSA 512-bit factoring logs, and interactive XOR-0x7F cipher tester.",
+      tags: ["Crypto", "PGP", "DES", "XOR0x7F", "Ciphers"],
+      views: 11400,
+      badge: "CIPHER LAB",
+      contentHtml: `<div style="background:#0a001a; color:#00ffff; font-family:'Courier New', monospace; padding:14px; border:2px outset #aa00ff;"><h2 style="color:#ff00ff; text-align:center; margin:0 0 6px 0;">🔐 CRYPTO VAULT '99: ASYMMETRIC KEYS &amp; XOR STREAM MASKS</h2><p style="font-size:12px; margin:0 0 8px 0; line-height:1.5;">In 1999, strong cryptography is considered munition under US export law. Here we preserve mathematical algorithms that cannot be silenced by executive orders!</p><div style="background:#050010; border:1px solid #aa00ff; padding:8px; font-size:11px; margin-bottom:10px;"><div style="color:#ffff00; font-weight:bold; margin-bottom:4px;">Underground XOR-0x7F Cipher Test:</div><input type="text" id="hsCryptoInput" value="CARLSBAD-HALITE-1999" style="width:100%; background:#000; color:#00ff66; border:1px solid #aa00ff; font-family:'Courier New', monospace; font-size:11px; padding:3px; margin-bottom:4px;" /><div style="display:flex; gap:6px;"><button class="tool-btn" onclick="testHsCrypto()" style="background:#550055; color:#fff;">⚡ Apply XOR-0x7F</button><span id="hsCryptoOutput" style="color:#00ffcc; font-size:11px; align-self:center;"></span></div></div></div>`
+    },
+    {
+      id: "hs_a51_04",
+      title: "Subnet 10.19.99.x Packet Log Archive: Ghost Routing in New Mexico",
+      webmaster: "~null_horizon",
+      address: "http://www.geocities.com/Area51/Subnet/1999/",
+      desc: "Tcpdump traces capturing rogue routing advertisements leaking across BGP routers into private subnet 10.19.99.x. Detailed packet anatomy and TTL decay analysis.",
+      tags: ["Tcpdump", "Routing", "Subnet", "BGP", "GhostNet"],
+      views: 14200,
+      badge: "PACKET LOG",
+      contentHtml: `<div style="background:#02060f; color:#38bdf8; font-family:'Courier New', monospace; padding:14px; border:2px solid #0088cc;"><h2 style="color:#ffff00; text-align:center; margin:0 0 6px 0;">🌐 SUBNET 10.19.99.x PACKET LOG ARCHIVE</h2><p style="font-size:11px; color:#cbd5e1; margin:0 0 8px 0;">Captured via 56k dial-up PPP interface using libpcap. Non-routable IP packets escaping the local access network:</p><pre style="background:#000; border:1px solid #004466; color:#00ffcc; padding:8px; font-size:10px; line-height:1.3; overflow-x:auto;">1999-12-31 23:59:58.420199 IP 10.19.99.4.1999 > 209.85.128.42.1999: UDP, length 64\n0x0000:  4500 0054 1999 4000 3b11 7f42 0a13 6304  E..T..@.;..B..c.\n0x0010:  d155 802a 07cf 07cf 0040 1999 6b77 6562  .U.*.....@..kweb\n0x0020:  3a2f 2f31 302e 3139 2e39 392e 342f 636c  ://10.19.99.4/cl\n0x0030:  6173 7369 6669 6564 2048 414c 4954 4521  assified.HALITE!\n0x0040:  007f 1999 dead beef c001 d00d 0000 0000  ................</pre><p style="font-size:11px; color:#ff00aa;">Notice ASCII string decoded at offset 0x001c: <code>kweb://10.19.99.4/classified HALITE!</code></p></div>`
+    }
+  ],
+  beverlyhills: [
+    {
+      id: "hs_bh_01",
+      title: "IPO Millionaire 1999: PetFood.com & B2B Web Portals",
+      webmaster: "~dotcom_tycoon",
+      address: "http://www.geocities.com/BeverlyHills/IPO/1999/",
+      desc: "Super Bowl 2000 sock puppet marketing budgets, NASDAQ 5,000 celebration, venture capitalist term sheets, and paper billionaire dreams.",
+      tags: ["DotCom", "IPO", "NASDAQ", "BeverlyHills", "Y2K"],
+      views: 19800,
+      badge: "DOT-COM",
+      contentHtml: `<div style="background:#070e1e; color:#ffd700; font-family:Arial, sans-serif; padding:14px; border:3px outset #ffd700;"><h2 style="color:#ffffff; text-align:center; margin:0 0 6px 0; text-shadow:2px 2px #000;">💰 DOT-COM VENTURE ALLIANCE '99: PAPER MILLIONAIRES 💰</h2><marquee style="background:#000; color:#00ff00; font-family:'Courier New', monospace; padding:3px; border:1px solid #ffd700;">★ NASDAQ COMPOSITE: 4,069.31 (+85.4) ★ PETFOOD.COM RAISES $110M SERIES C ★ E-COMMERCE IS THE FUTURE ★</marquee><div style="background:rgba(255,215,0,0.1); border:1px solid #ffd700; padding:10px; margin:12px 0; font-size:12px; line-height:1.5; color:#fff;"><p style="margin:0 0 8px 0;">Welcome to my virtual penthouse in BeverlyHills! Who cares about price-to-earnings ratios when you have <strong>eyeballs and pageviews</strong>?</p><p style="margin:0 0 8px 0;">Our dot-com startup spent $3.5M on a 30-second Super Bowl ad featuring a singing ferret. Valuation jumped from $40M to $620M overnight!</p></div></div>`
+    },
+    {
+      id: "hs_bh_02",
+      title: "MIDI Tribute to 90s Blockbusters (Roland Sound Canvas SC-88)",
+      webmaster: "~hollywood_midi",
+      address: "http://www.geocities.com/BeverlyHills/CinemaMidi/1999/",
+      desc: "General MIDI arrangements of 90s blockbuster film themes sequenced on a Roland Sound Canvas SC-88 Pro. Crisp wavetable brass and lush delay reverb.",
+      tags: ["MIDI", "SoundCanvas", "Cinema", "Soundtrack", "Roland"],
+      views: 15400,
+      badge: "ROLAND SC-88",
+      contentHtml: `<div style="background:#1a0525; color:#ffccff; font-family:'Courier New', monospace; padding:14px; border:2px ridge #ff00aa;"><h2 style="color:#ffff00; text-align:center; margin:0 0 6px 0;">🎬 HOLLYWOOD BLOCKBUSTER MIDI VAULT (SC-88 PRO)</h2><p style="font-size:12px; margin:0 0 8px 0; line-height:1.5;">Every file here was carefully quantized and velocity-scaled on a genuine Roland SC-88 Sound Canvas. Includes reverb and chorus SysEx strings!</p><ul style="font-size:11px; line-height:1.6; color:#aaffee;"><li>🎵 <em>CyberSpire Sunset Theme</em> (135 BPM Synth Epic) — Sequenced for GM/GS</li><li>🎵 <em>Matrix Infiltration Overdrive</em> (144 BPM Acid Breakbeat)</li><li>🎵 <em>Millennium Solstice Waltz</em> (128 BPM Paula Harpsichord)</li></ul></div>`
+    },
+    {
+      id: "hs_bh_03",
+      title: "The Silicon Alley Millennium Yacht Club & Champagne Lounge",
+      webmaster: "~vip_yacht_club",
+      address: "http://www.geocities.com/BeverlyHills/Yacht/1999/",
+      desc: "Exclusive Beverly Hills dot-com yacht gala for New Year's Eve 1999. Caviar buffets, champagne ice sculptures, and satellite uplinks.",
+      tags: ["Yacht", "Luxury", "Gala", "Millennium", "Party"],
+      views: 8900,
+      badge: "VIP ONLY",
+      contentHtml: `<div style="background:#051424; color:#fff; font-family:Georgia, serif; padding:14px; border:2px solid #ffd700;"><h2 style="color:#ffd700; text-align:center; margin:0 0 6px 0;">🥂 THE MILLENNIUM 2000 GALA &amp; YACHT SOIREE</h2><div style="text-align:center; font-style:italic; font-size:12px; color:#cbd5e1; margin-bottom:10px;">December 31, 1999 • Dock 42, Marina Del Rey • Formal Black Tie &amp; Cyber Couture</div><p style="font-size:12px; line-height:1.5; margin:0 0 8px 0;">Toast the death of the 20th century aboard the 180-foot superyacht <em>S.S. Bandwidth</em>. Guaranteed uninterrupted power via dual diesel generators in case of Y2K grid failure!</p></div>`
+    },
+    {
+      id: "hs_bh_04",
+      title: "1999 Cyber Fashion: Phosphor LED Watches & Vinyl Trenchcoats",
+      webmaster: "~cyber_couture",
+      address: "http://www.geocities.com/BeverlyHills/Couture/1999/",
+      desc: "Look the part of the turn-of-the-century netrunner. Oakley trench sunglasses, transparent pager holsters, PVC trenchcoats, and phosphor green LED digital watches.",
+      tags: ["Fashion", "Cyberpunk", "Oakley", "LED", "Rave"],
+      views: 11200,
+      badge: "STREETWEAR",
+      contentHtml: `<div style="background:#0a0a0f; color:#00ffff; font-family:'Courier New', monospace; padding:14px; border:2px solid #00ffff;"><h2 style="color:#ff00aa; text-align:center; margin:0 0 6px 0;">🕶️ CYBER COUTURE 1999: NETRUNNER LOOKBOOK</h2><div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; font-size:11px; margin-top:8px;"><div style="background:#111; padding:6px; border:1px solid #333;"><strong style="color:#ffff00;">Vinyl Matrix Duster</strong><br>Floor-length black polyvinyl chloride coat with internal pocket sized specifically for a Nokia 8110 slider.</div><div style="background:#111; padding:6px; border:1px solid #333;"><strong style="color:#ffff00;">Phosphor LED Watch</strong><br>Green electroluminescent backlight with countdown timer ticking toward midnight 2000.</div></div></div>`
+    }
+  ],
+  soho: [
+    {
+      id: "hs_so_01",
+      title: "Underground ASCII / ANSI Art Scene: The 80x25 Textmode Masters",
+      webmaster: "~ascii_monks",
+      address: "http://www.geocities.com/SoHo/Textmode/1999/",
+      desc: "Honoring the legendary demoscene ANSI and ASCII art groups (ACID, iCE, Mimic). TheDraw keybindings, SAUCE metadata headers, and VGA 16-color character set tributes.",
+      tags: ["ASCII", "ANSI", "TheDraw", "ACID", "Textmode"],
+      views: 22100,
+      badge: "ANSI SCENE",
+      contentHtml: `<div style="background:#000; color:#aaaaaa; font-family:'Courier New', monospace; padding:14px; border:2px solid #5555ff;"><h2 style="color:#ffff55; text-align:center; margin:0 0 6px 0;">░▒▓ 80x25 ANSI / ASCII TEXTMODE MASTERY ▓▒░</h2><p style="font-size:11px; color:#cbd5e1; margin:6px 0;">Every glyph crafted in 80 columns and 25 lines using the IBM CP437 character set. Greetings to all scene artists across FLARELIGHT and RAZOR 1999!</p></div>`
+    },
+    {
+      id: "hs_so_02",
+      title: "TB-303 Pattern Architecture & Modular Synth Patch Sheets",
+      webmaster: "~ambient_acid",
+      address: "http://www.geocities.com/SoHo/SynthLab/1999/",
+      desc: "Square wave resonance, 18dB diode ladder filter quirks, step sequencer slide programming, and Roland TR-909 DIN-sync cabling diagrams.",
+      tags: ["TB303", "Acid", "TR909", "Synth", "Squelch"],
+      views: 14800,
+      badge: "ACID 303",
+      contentHtml: `<div style="background:#150700; color:#ff9966; font-family:'Courier New', monospace; padding:14px; border:2px outset #ff6600;"><h2 style="color:#ffcc00; text-align:center; margin:0 0 6px 0;">🎛️ TB-303 ACID LAB: SQUELCH, ACCENT &amp; SLIDES</h2><p style="font-size:12px; margin:0 0 8px 0; line-height:1.5;">The magic of acid house and demoscene trance lies in the interplay between the 303's slide potentiometer and the accent capacitor discharge.</p><div style="background:#0a0300; border:1px solid #ff6600; padding:8px; font-size:11px;"><div style="color:#ffff00; font-weight:bold;">16-Step Classic Pattern Matrix:</div><div>[01] C-2 Accent &nbsp; [02] C-3 Slide &nbsp; [03] D#3 Squelch &nbsp; [04] G-2 Normal</div><div>[05] A#2 Slide &nbsp; [06] C-3 Accent &nbsp; [07] G-3 Slide &nbsp; [08] F-2 Normal</div></div></div>`
+    },
+    {
+      id: "hs_so_03",
+      title: "Zine #04: Digital Nomadism & The Dawn of Cybernetic Art",
+      webmaster: "~cyber_zine",
+      address: "http://www.geocities.com/SoHo/Zine/1999/",
+      desc: "Hypertext underground zine published from an East Village cybercafé. Manifestos on net freedom, baud-rate poetry, and demoscene philosophy.",
+      tags: ["Zine", "Cyberpunk", "Manifesto", "Poetry", "Culture"],
+      views: 9900,
+      badge: "ZINE #04",
+      contentHtml: `<div style="background:#0a0515; color:#aaffee; font-family:Courier, monospace; padding:14px; border:2px dashed #9900ff;"><h2 style="color:#ffff00; text-align:center; margin:0 0 6px 0;">📰 CYBER_ZINE #04: BITS, BAUD &amp; BEING (1999)</h2><p style="font-size:12px; line-height:1.6; margin:0 0 8px 0;">"We who live across the telephone lines do not belong to geography. We belong to packets. We dwell in latency. We reside in the phosphor glow of cathode tubes."</p></div>`
+    },
+    {
+      id: "hs_so_04",
+      title: "Corrupted JPEG Artifacts & 28.8k Baud-Rate Soundscapes",
+      webmaster: "~glitch_poetics",
+      address: "http://www.geocities.com/SoHo/Glitch/1999/",
+      desc: "Intentionally hex-edited JPEG headers, bit-flip macroblock distortions, and audio recordings of 28.8k dial-up V.34 handshakes.",
+      tags: ["Glitch", "HexEdit", "Artifacts", "JPEG", "LoFi"],
+      views: 8400,
+      badge: "GLITCH ART",
+      contentHtml: `<div style="background:#000; color:#00ffcc; font-family:'Courier New', monospace; padding:14px; border:2px dotted #ff00ff;"><h2 style="color:#ff00aa; text-align:center; margin:0 0 6px 0;">👾 GLITCH POETICS: DISCRETE COSINE TRANSFORM ANOMALIES</h2><p style="font-size:12px; margin:0 0 8px 0; line-height:1.5;">By opening an 800x600 JPEG inside a hex editor and randomly overwriting bytes between offsets 0x0100 and 0x0400, the Huffman decoding trees desynchronize, yielding chromatic smears.</p></div>`
+    }
+  ],
+  enchantedforest: [
+    {
+      id: "hs_ef_01",
+      title: "MUD (Multi-User Dungeon) Wizard's Guild & Realm Cartography",
+      webmaster: "~elven_realm",
+      address: "http://www.geocities.com/EnchantedForest/Realm/1999/",
+      desc: "Telnet connection guides to CircleMUD & DikuMUD servers. ANSI ASCII realm maps, wizard spell compendiums, and roleplaying guild charters.",
+      tags: ["MUD", "Telnet", "RPG", "Dungeon", "Cartography"],
+      views: 13900,
+      badge: "MUD GUILD",
+      contentHtml: `<div style="background:#021508; color:#aaffaa; font-family:'Courier New', monospace; padding:14px; border:2px ridge #22c55e;"><h2 style="color:#ffff00; text-align:center; margin:0 0 6px 0;">⚔️ REALMS OF DESPAIR: MUD WIZARD COMPENDIUM ⚔️</h2><p style="font-size:12px; line-height:1.5; margin:0 0 8px 0;">You stand in the Great Hall of Eldoria. Torches flicker upon damp stone walls. An archway leads north toward the Dragon's Chasm. Exits: [N, S, E, W].</p></div>`
+    },
+    {
+      id: "hs_ef_02",
+      title: "Elder Futhark Rune Translation & Cyber-Divination",
+      webmaster: "~runic_codex",
+      address: "http://www.geocities.com/EnchantedForest/Runes/1999/",
+      desc: "Interactive 3-rune casting oracle. 24 Elder Futhark rune interpretations, Anglo-Saxon poetic verses, and woodcut font downloads.",
+      tags: ["Runes", "Divination", "Futhark", "Mythology", "Oracle"],
+      views: 11100,
+      badge: "RUNIC CODEX",
+      contentHtml: `<div style="background:#0f0702; color:#fed7aa; font-family:Georgia, serif; padding:14px; border:2px solid #ea580c;"><h2 style="color:#fdba74; text-align:center; margin:0 0 6px 0;">ᚠ ᚢ ᚦ ᚬ ᚱ ᚴ ELDER FUTHARK RUNIC ORACLE ᚴ ᚱ ᚬ ᚦ ᚢ ᚠ</h2><p style="font-size:12px; line-height:1.5; margin:0 0 8px 0;">Draw three runes from the pouch to divine the path across the Y2K transition: What was, What is, and What shall be.</p></div>`
+    },
+    {
+      id: "hs_ef_03",
+      title: "BBS ANSI Roguelike Companion & Bestiary",
+      webmaster: "~retro_rpg",
+      address: "http://www.geocities.com/EnchantedForest/Bestiary/1999/",
+      desc: "Monsters, armor classes, THAC0 combat tables, and potions guide for underground BBS door games (Legend of the Red Dragon, Usurper, NetHack).",
+      tags: ["LORD", "BBS", "DoorGames", "Roguelike", "NetHack"],
+      views: 16700,
+      badge: "BBS DOOR",
+      contentHtml: `<div style="background:#09090b; color:#22c55e; font-family:'Courier New', monospace; padding:14px; border:2px solid #16a34a;"><h2 style="color:#eab308; text-align:center; margin:0 0 6px 0;">🐉 LEGEND OF THE RED DRAGON (LORD) STRATEGY GUIDE</h2><p style="font-size:12px; line-height:1.5; margin:0 0 8px 0;">How to beat the Red Dragon in under 14 game days: Always buy the Bronze Sword on day 1 from Arthur's Weapons, flirt with Violet daily for forest fight bonuses, and save fairy dust for dungeon level 12!</p></div>`
+    },
+    {
+      id: "hs_ef_04",
+      title: "Midsummer Solstice 1999: The Digital Druids & Herbal Codex",
+      webmaster: "~candle_shrine",
+      address: "http://www.geocities.com/EnchantedForest/Druids/1999/",
+      desc: "Herbal medicine recipes, midsummer solstice bonfire rituals, Celtic knotwork backgrounds, and ambient pan-flute MIDI arrangements.",
+      tags: ["Druids", "Solstice", "Herbs", "Celtic", "MIDI"],
+      views: 7900,
+      badge: "DRUID CODEX",
+      contentHtml: `<div style="background:#051a0d; color:#86efac; font-family:Times, serif; padding:14px; border:2px outset #10b981;"><h2 style="color:#34d399; text-align:center; margin:0 0 6px 0;">🌿 THE DIGITAL DRUID'S SOLSTICE SANCTUARY 🌿</h2><p style="font-size:12px; line-height:1.6; margin:0 0 8px 0;">Blessed be! In harmony with the silicon motherboard and the green earth, we celebrate the solstice before the turning of the millennium wheel.</p></div>`
+    }
+  ]
+};
+
+let currentExplorerNh = 'siliconvalley';
+
+function switchExplorerNeighborhood(nh) {
+  currentExplorerNh = nh;
+  const map = {
+    siliconvalley: 'tabNhSilicon',
+    area51: 'tabNhArea51',
+    beverlyhills: 'tabNhBeverly',
+    soho: 'tabNhSoHo',
+    enchantedforest: 'tabNhForest',
+    community: 'tabNhCommunity'
+  };
+
+  Object.values(map).forEach(id => {
+    const btn = document.getElementById(id);
+    if (btn) btn.classList.remove('active');
+  });
+  const activeBtn = document.getElementById(map[nh]);
+  if (activeBtn) activeBtn.classList.add('active');
+
+  const ind = document.getElementById('nhActiveIndicator');
+  if (ind) ind.textContent = `[NEIGHBORHOOD: ${nh.toUpperCase()}]`;
+
+  const leadTitle = document.getElementById('nhLeadTitle');
+  const leadDesc = document.getElementById('nhLeadDesc');
+  const titles = {
+    siliconvalley: "SiliconValley Community Homesteads",
+    area51: "Area51 Homesteads & Unexplained Signals",
+    beverlyhills: "BeverlyHills Dot-Com Mansions & Glamour",
+    soho: "SoHo Digital Bohemia, ASCII Art & Acid Tracks",
+    enchantedforest: "EnchantedForest Realms, MUDs & Magic",
+    community: "Community Registered Homesteads (Live)"
+  };
+  const descs = {
+    siliconvalley: "For techies, hardware overclockers, x86 assembly wizards, and Linux kernel hackers.",
+    area51: "Classified radar anomalies, subterranean acoustic 1999Hz SIGINT, and black project leaks.",
+    beverlyhills: "High-flying IPO millionaires, Roland SC-88 MIDI tributes, and cyber-couture.",
+    soho: "Underground 80x25 ANSI art, TB-303 acid synths, baud-rate poetry, and digital zines.",
+    enchantedforest: "MUD wizard guilds, Elder Futhark rune divinations, and BBS roguelike lore.",
+    community: "Homepages published by fellow cyber voyagers using the Webmaster Page Builder."
+  };
+  if (leadTitle) leadTitle.textContent = titles[nh] || titles.siliconvalley;
+  if (leadDesc) leadDesc.textContent = descs[nh] || descs.siliconvalley;
+
+  renderHomesteadGrid();
+  playUiBeep(1300, 0.03);
+}
+
+function renderHomesteadGrid() {
+  const container = document.getElementById('homesteadGrid');
+  if (!container) return;
+
+  let list = [];
+  if (currentExplorerNh === 'community') {
+    list = getUserHomesteads();
+  } else {
+    list = HOMESTEADS_DATA[currentExplorerNh] || [];
+  }
+
+  const countBadge = document.getElementById('nhHomesteadCount');
+  if (countBadge) countBadge.textContent = `${list.length} Homesteads Listed`;
+
+  if (list.length === 0) {
+    container.innerHTML = `
+      <div style="grid-column: 1 / -1; background:#001020; border:1px dashed #005577; padding:16px; text-align:center; font-family:'Courier New', monospace; font-size:12px; color:#88aacc;">
+        No community homesteads registered in this section yet.<br>
+        <button class="btn-sign" style="margin-top:8px; background:#005500;" onclick="scrollToPageBuilder()">🏗️ Design &amp; Publish Your Homestead Now</button>
+      </div>
+    `;
+    return;
+  }
+
+  container.innerHTML = list.map(item => `
+    <div class="homestead-card" id="card_${item.id}">
+      <div class="homestead-card-header">
+        <div>
+          <div class="homestead-title">${escapeHtml(item.title)}</div>
+          <div style="font-size:11px; color:#ffff00; font-family:'Courier New', monospace; margin-top:2px;">
+            Webmaster: <strong style="color:#00ffcc;">${escapeHtml(item.webmaster)}</strong>
+          </div>
+        </div>
+        ${item.badge ? `<span style="font-size:9px; background:#003344; color:#39ff14; border:1px solid #00ff66; padding:2px 6px; font-weight:bold; white-space:nowrap;">${escapeHtml(item.badge)}</span>` : ''}
+      </div>
+
+      <div class="homestead-url">${escapeHtml(item.address)}</div>
+      <div class="homestead-desc">${escapeHtml(item.desc)}</div>
+
+      <div class="homestead-tags">
+        ${(item.tags || []).map(t => `<span class="homestead-tag">#${escapeHtml(t)}</span>`).join('')}
+      </div>
+
+      <div class="homestead-footer">
+        <span style="font-size:10px; color:#88ccee; font-family:'Courier New', monospace;">
+          👁️ ${item.views ? item.views.toLocaleString() : '1,280'} Visitors
+        </span>
+        <button class="btn-visit-homestead" onclick="openHomesteadModal('${item.id}')">
+          🌐 Visit Homestead &raquo;
+        </button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function openHomesteadModal(id) {
+  let item = null;
+  Object.values(HOMESTEADS_DATA).forEach(arr => {
+    const found = arr.find(h => h.id === id);
+    if (found) item = found;
+  });
+  if (!item) {
+    const userList = getUserHomesteads();
+    item = userList.find(h => h.id === id);
+  }
+  if (!item) return;
+
+  const modal = document.getElementById('homesteadModal');
+  const titleEl = document.getElementById('hsModalTitle');
+  const urlInput = document.getElementById('hsModalUrlInput');
+  const viewport = document.getElementById('hsModalViewport');
+
+  if (titleEl) titleEl.textContent = `Netscape Communicator 4.0 - [${item.title}]`;
+  if (urlInput) urlInput.value = item.address;
+  if (viewport) {
+    viewport.innerHTML = item.contentHtml || `
+      <div style="padding:16px; font-family:'Courier New', monospace;">
+        <h2>${escapeHtml(item.title)}</h2>
+        <p>${escapeHtml(item.desc)}</p>
+      </div>
+    `;
+  }
+  if (modal) {
+    modal.style.display = 'flex';
+  }
+  playDemosceneChime();
+}
+
+function closeHomesteadModal() {
+  const modal = document.getElementById('homesteadModal');
+  if (modal) modal.style.display = 'none';
+  playUiBeep(900, 0.04);
+}
+
+function closeHomesteadModalOnBackdrop(e) {
+  if (e.target.id === 'homesteadModal') {
+    closeHomesteadModal();
+  }
+}
+
+function copyHomesteadUrl() {
+  const input = document.getElementById('hsModalUrlInput');
+  if (input) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(input.value);
+    }
+    playUiBeep(1600, 0.04);
+  }
+}
+
+function publishHomesteadToDirectory() {
+  playUiBeep(1400, 0.05);
+  const title = document.getElementById('builderTitle')?.value.trim() || "My 1999 Domain";
+  const alias = document.getElementById('builderAlias')?.value.trim() || "Webmaster_99";
+  const nh = document.getElementById('builderNeighborhood')?.value.toLowerCase() || "siliconvalley";
+  const bio = document.getElementById('builderBio')?.value.trim() || "Welcome to my cyberspace realm.";
+
+  const cleanAlias = alias.replace(/[^a-zA-Z0-9_]/g, '').toLowerCase() || "voyager";
+  const address = `http://www.geocities.com/${capitalize(nh)}/Peaks/1999/~${cleanAlias}.html`;
+  const id = `user_hs_${Date.now()}`;
+
+  const renderedPageHtml = generateWeb10Html();
+
+  const newHomestead = {
+    id: id,
+    title: title,
+    webmaster: "~" + cleanAlias,
+    neighborhood: nh,
+    address: address,
+    desc: bio.substring(0, 120) + (bio.length > 120 ? '...' : ''),
+    tags: [nh, "UserSite", "Web10"],
+    views: Math.floor(Math.random() * 50) + 1,
+    badge: "NEW HOMESTEAD",
+    contentHtml: renderedPageHtml,
+    publishedAt: Date.now()
+  };
+
+  let userList = getUserHomesteads();
+  userList.unshift(newHomestead);
+  localStorage.setItem('cyberspire_user_homesteads', JSON.stringify(userList.slice(0, 20)));
+
+  if (window.submitHomesteadToFirebase) {
+    window.submitHomesteadToFirebase(newHomestead);
+  }
+
+  updateUserHomesteadCounter();
+  switchExplorerNeighborhood('community');
+  const explorerSection = document.getElementById('neighborhood-explorer');
+  if (explorerSection) {
+    explorerSection.scrollIntoView({ behavior: 'smooth' });
+  }
+
+  playDemosceneChime();
+}
+
+function getUserHomesteads() {
+  try {
+    const saved = JSON.parse(localStorage.getItem('cyberspire_user_homesteads') || '[]');
+    return Array.isArray(saved) ? saved : [];
+  } catch(e) {
+    return [];
+  }
+}
+
+function updateUserHomesteadCounter() {
+  const count = getUserHomesteads().length;
+  const badge = document.getElementById('nhUserCount');
+  if (badge) badge.textContent = count;
+}
+
+function scrollToPageBuilder() {
+  const el = document.getElementById('page-builder');
+  if (el) el.scrollIntoView({ behavior: 'smooth' });
+  playUiBeep(1200, 0.04);
+}
+
+// ============================================================================
+// CROSS-FLEET LITHOSPHERIC SIGNAL BOARD (ARG COLLABORATIVE / SOLO ENGINE)
+// ============================================================================
+let signalsState = {
+  carrier: false,
+  offset: false,
+  mask: false,
+  resonance: false
+};
+
+function loadSignalsState() {
+  try {
+    const saved = JSON.parse(localStorage.getItem('arg_signals') || '{}');
+    signalsState.carrier = !!saved.carrier;
+    signalsState.offset = !!saved.offset;
+    signalsState.mask = !!saved.mask;
+    signalsState.resonance = !!saved.resonance;
+  } catch(e) {}
+  updateSignalBoardUi();
+}
+
+function saveSignalsState() {
+  localStorage.setItem('arg_signals', JSON.stringify(signalsState));
+  updateSignalBoardUi();
+  if (window.syncSignalToFirebase) {
+    window.syncSignalToFirebase(signalsState);
+  }
+}
+
+function tuneAndLockSignal(key, forceState) {
+  if (!signalsState.hasOwnProperty(key)) return;
+  if (typeof forceState === 'boolean') {
+    signalsState[key] = forceState;
+  } else {
+    signalsState[key] = !signalsState[key];
+  }
+  saveSignalsState();
+
+  if (signalsState[key]) {
+    playFm1999Carrier(0.3);
+    playUiBeep(1800, 0.06);
+  } else {
+    playUiBeep(700, 0.05);
+  }
+}
+
+function updateSignalBoardUi() {
+  const cards = {
+    carrier: { card: 'sigCardCarrier', state: 'sigStateCarrier' },
+    offset: { card: 'sigCardOffset', state: 'sigStateOffset' },
+    mask: { card: 'sigCardMask', state: 'sigStateMask' },
+    resonance: { card: 'sigCardResonance', state: 'sigStateResonance' }
+  };
+
+  let lockedCount = 0;
+  Object.keys(cards).forEach(key => {
+    const isLocked = !!signalsState[key];
+    if (isLocked) lockedCount++;
+    const cardEl = document.getElementById(cards[key].card);
+    const stateEl = document.getElementById(cards[key].state);
+    if (cardEl) {
+      if (isLocked) cardEl.classList.add('locked');
+      else cardEl.classList.remove('locked');
+    }
+    if (stateEl) {
+      stateEl.textContent = isLocked ? 'LOCKED' : 'ACQUIRING';
+      stateEl.style.color = isLocked ? '#00ff66' : '#888888';
+      stateEl.style.fontWeight = isLocked ? 'bold' : 'normal';
+    }
+  });
+
+  const pct = Math.max(25, (lockedCount / 4) * 100);
+  const fill = document.getElementById('signalCoherenceFill');
+  if (fill) fill.style.width = pct + '%';
+
+  const lbl = document.getElementById('signalCoherenceLabel');
+  if (lbl) lbl.textContent = `${pct}% (${lockedCount}/4 SIGNALS LOCKED)`;
+
+  const matrix = document.getElementById('subterraneanGatewayMatrix');
+  if (matrix) {
+    if (lockedCount >= 2) {
+      matrix.style.display = 'block';
+    } else {
+      matrix.style.display = 'none';
+    }
+  }
+}
+
+function syncLocalSignalsToRtdb() {
+  playUiBeep(1400, 0.04);
+  saveSignalsState();
+  const statusEl = document.getElementById('signalSyncStatus');
+  if (statusEl) {
+    statusEl.textContent = '[SIGNALS RESYNCHRONIZED WITH RTDB]';
+    setTimeout(() => {
+      statusEl.textContent = '[SYNCED WITH RTDB: arg/signals]';
+    }, 3000);
+  }
+}
+
+// Remote update hooks called from Firebase module
+window.updateSignalsFromRemote = function(remote) {
+  if (!remote || typeof remote !== 'object') return;
+  let changed = false;
+  ['carrier', 'offset', 'mask', 'resonance'].forEach(k => {
+    if (typeof remote[k] === 'boolean' && remote[k] !== signalsState[k]) {
+      signalsState[k] = remote[k];
+      changed = true;
+    }
+  });
+  if (changed) {
+    localStorage.setItem('arg_signals', JSON.stringify(signalsState));
+    updateSignalBoardUi();
+  }
+};
+
+window.addRemoteHomestead = function(item) {
+  if (!item || !item.id) return;
+  let userList = getUserHomesteads();
+  if (!userList.some(h => h.id === item.id)) {
+    userList.unshift(item);
+    localStorage.setItem('cyberspire_user_homesteads', JSON.stringify(userList.slice(0, 20)));
+    updateUserHomesteadCounter();
+    if (currentExplorerNh === 'community') {
+      renderHomesteadGrid();
+    }
+  }
+};
+
+// Interactive Homestead Area51 cipher test
+function testHsCrypto() {
+  const input = document.getElementById('hsCryptoInput');
+  const out = document.getElementById('hsCryptoOutput');
+  if (!input || !out) return;
+  const val = input.value;
+  let res = '';
+  for (let i = 0; i < val.length; i++) {
+    const code = val.charCodeAt(i) ^ 0x7F;
+    res += (code < 16 ? '0' : '') + code.toString(16).toUpperCase() + ' ';
+  }
+  out.textContent = `XOR-0x7F Hex: ${res.trim()}`;
+  tuneAndLockSignal('mask', true);
+  playUiBeep(1500, 0.05);
+}
+
+// Guestbook Filtering
+let currentGuestbookFilter = 'all';
+function filterGuestbook(nh) {
+  currentGuestbookFilter = nh;
+  let saved = [];
+  try {
+    saved = JSON.parse(localStorage.getItem('knet_guestbook') || '[]');
+  } catch(e) { saved = []; }
+  if (!Array.isArray(saved) || saved.length === 0) saved = defaultEntries;
+
+  let filtered = saved;
+  if (nh !== 'all') {
+    filtered = saved.filter(e => {
+      const eNh = (e.neighborhood || '').toLowerCase();
+      const isCorrupted = (e.time === '1999-12-31 23:59:58' || (e.alias && e.alias.includes('Null_Daemon')));
+      const isDeadDrop = (e.alias === 'Carlsbad_Relay_04');
+      return eNh === nh || isCorrupted || isDeadDrop;
+    });
+  }
+
+  const countBadge = document.getElementById('gbTotalCount');
+  if (countBadge) countBadge.textContent = filtered.length;
+
+  renderGuestbook(filtered);
+  playUiBeep(1100, 0.03);
+}
+
+// Deep-linking URL parameter checking
+function checkUrlParameters() {
+  const params = new URLSearchParams(window.location.search);
+  const nh = params.get('neighborhood') || params.get('nh');
+  if (nh && NEIGHBORHOOD_NAMES.includes(nh.toLowerCase())) {
+    setNeighborhood(nh.toLowerCase());
+    switchExplorerNeighborhood(nh.toLowerCase());
+  } else if (window.location.hash) {
+    const hash = window.location.hash.replace('#', '').toLowerCase();
+    if (NEIGHBORHOOD_NAMES.includes(hash)) {
+      setNeighborhood(hash);
+      switchExplorerNeighborhood(hash);
+    }
+  }
+
+  const hsId = params.get('homestead') || params.get('hs');
+  if (hsId) {
+    setTimeout(() => { openHomesteadModal(hsId); }, 400);
+  }
+}
+
 // Initialize Everything
 setNeighborhood(currentNeighborhood);
 renderSwatches();
@@ -8977,6 +10105,10 @@ renderPollQuestions();
 initSubcarrierLab();
 initSfxLab();
 initDiskmagReader();
+loadSignalsState();
+renderHomesteadGrid();
+updateUserHomesteadCounter();
+checkUrlParameters();
 
 // Auto-unlock audio context on user interaction
 document.body.addEventListener('click', () => {
@@ -9067,6 +10199,24 @@ try {
     }
   });
 
+  // Live signal board sync stream
+  const signalsRef = ref(db, 'arg/signals');
+  onValue(signalsRef, (snapshot) => {
+    const data = snapshot.val();
+    if (data && window.updateSignalsFromRemote) {
+      window.updateSignalsFromRemote(data);
+    }
+  });
+
+  // Live community homesteads stream
+  const homesteadsRef = ref(db, 'virtual_web/geocities/homesteads');
+  onChildAdded(homesteadsRef, (snapshot) => {
+    const data = snapshot.val();
+    if (data && window.addRemoteHomestead) {
+      window.addRemoteHomestead(data);
+    }
+  });
+
   const badgeEl = document.getElementById('shoutboxStatusBadge');
   if (badgeEl) badgeEl.textContent = '[LIVE RTDB CONNECTED]';
   const pollBadgeEl = document.getElementById('pollSyncBadge');
@@ -9134,6 +10284,30 @@ window.submitPollVoteToFirebase = function(qId, newOptKey, oldOptKey) {
       }
     } catch(err) {
       console.warn("Error updating poll vote in Firebase:", err);
+    }
+  }
+};
+
+// Window export for syncSignalToFirebase
+window.syncSignalToFirebase = function(state) {
+  if (db) {
+    try {
+      const signalsRef = ref(db, 'arg/signals');
+      set(signalsRef, state);
+    } catch(err) {
+      console.warn("Error syncing signals to Firebase:", err);
+    }
+  }
+};
+
+// Window export for submitHomesteadToFirebase
+window.submitHomesteadToFirebase = function(homestead) {
+  if (db) {
+    try {
+      const hsRef = ref(db, 'virtual_web/geocities/homesteads');
+      push(hsRef, homestead);
+    } catch(err) {
+      console.warn("Error pushing homestead to Firebase:", err);
     }
   }
 };
