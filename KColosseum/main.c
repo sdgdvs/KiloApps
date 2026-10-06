@@ -85,6 +85,8 @@ void PlaySoundAsync(int type) {
 #define ID_HELP_BUTTON 121
 #define ID_HELP_BACK_BUTTON 122
 #define ID_EQ_SICA 123
+#define ID_STATS_BUTTON 124
+#define ID_STATS_BACK_BUTTON 125
 
 typedef struct {
     int id;
@@ -105,8 +107,22 @@ typedef struct {
     int isDimachaerus;
 } Gladiator;
 
+typedef struct {
+    int totalBattles;
+    int victories;
+    int defeats;
+    int totalGoldWon;
+    int lionsSlain;
+    int chariotsSlain;
+    int twinsSlain;
+    int behemothsSlain;
+    int praetoriansSlain;
+    int executionersSlain;
+    int maxLevel;
+} LudusStats;
+
 #define SAVE_MAGIC 0x434F4C4F // "COLO"
-#define SAVE_VERSION 101
+#define SAVE_VERSION 102
 
 typedef struct {
     DWORD magic;
@@ -131,6 +147,17 @@ typedef struct {
     int crowdFavor;
     int soundMuted;
     int tutorialSeen;
+    int totalBattles;
+    int victories;
+    int defeats;
+    int totalGoldWon;
+    int lionsSlain;
+    int chariotsSlain;
+    int twinsSlain;
+    int behemothsSlain;
+    int praetoriansSlain;
+    int executionersSlain;
+    int maxLevel;
 } GameSaveData;
 
 typedef struct {
@@ -167,7 +194,8 @@ int g_playerStance = 0; // 0: idle, 1: attack, 2: defend, 3: showboat, 4: dead
 int g_enemyStance = 0;
 int g_enemyStaggered = 0;
 int g_animTick = 0;
-int g_currentView = 0; // 0: Dash, 1: Combat, 2: Help
+int g_currentView = 0; // 0: Dash, 1: Combat, 2: Help, 3: Stats
+static LudusStats g_stats = {0};
 
 HWND g_hWndMain = NULL;
 
@@ -263,6 +291,7 @@ HWND hTitle, hFundsLabel, hL1, hRefreshButton, hMarketList, hBuyButton, hL2, hOw
 HWND hEqGladiusBtn, hEqTridentBtn, hEqSicaBtn, hEqArmorBtn, hEqShieldBtn, hHealBtn;
 HWND hCombatTitle, hCombatPlayer, hCombatEnemy, hAttackBtn, hDefendBtn, hShowboatBtn, hFleeBtn, hCombatLog, hFavorLabel;
 HWND hHelpBtn, hHelpTitle, hHelpText, hHelpBackBtn;
+HWND hStatsBtn, hStatsTitle, hStatsText, hStatsBackBtn;
 
 Gladiator* currentFighter = NULL;
 Gladiator enemyFighter;
@@ -372,11 +401,67 @@ void BuyGladiator(int index) {
     }
 }
 
+void UpdateStatsUI(void) {
+    char buf[1024];
+    int winRate = (g_stats.totalBattles > 0) ? (g_stats.victories * 100) / g_stats.totalBattles : 0;
+    
+    char bestLiving[128] = "None";
+    int bestRating = -1;
+    for (int i = 0; i < owned_count; i++) {
+        int r = owned[i].str + owned[i].agi + owned[i].vit;
+        if (r > bestRating) {
+            bestRating = r;
+            const char* wName = "Pugilist";
+            if (owned[i].weapon == 1) wName = "Gladius";
+            else if (owned[i].weapon == 2) wName = "Trident";
+            else if (owned[i].weapon == 3) wName = "Twin Sica";
+            wsprintfA(bestLiving, "%s (%s, STR:%d AGI:%d VIT:%d)", 
+                      owned[i].name, wName, owned[i].str, owned[i].agi, owned[i].vit);
+        }
+    }
+
+    int dispMaxLvl = g_stats.maxLevel > arenaLevel ? g_stats.maxLevel : arenaLevel;
+
+    wsprintfA(buf,
+        "=== LUDUS HALL OF FAME & CAMPAIGN CHRONICLES ===\n\n"
+        "Arena Battles Fought:   %d\n"
+        "Triumphs & Victories:   %d\n"
+        "Gladiator Casualties:   %d\n"
+        "Overall Win Rate:       %d%%\n"
+        "Total Prize Gold Won:   %d Denarii\n"
+        "Highest Arena Rank:     Level %d (%s)\n\n"
+        "--- BEASTS & LEGENDARY CHAMPIONS VANQUISHED ---\n"
+        "Colosseum Lions:        %d slain\n"
+        "Armored War Chariots:   %d wrecked\n"
+        "Deadly Gladiator Twins: %d dispatched\n"
+        "Gallic Behemoths:       %d felled\n"
+        "Praetorian Champions:   %d overcome\n"
+        "Thracian Executioners:  %d vanquished\n\n"
+        "Top Living Gladiator:   %s\n",
+        g_stats.totalBattles,
+        g_stats.victories,
+        g_stats.defeats,
+        winRate,
+        g_stats.totalGoldWon,
+        dispMaxLvl,
+        GetLeagueName(dispMaxLvl),
+        g_stats.lionsSlain,
+        g_stats.chariotsSlain,
+        g_stats.twinsSlain,
+        g_stats.behemothsSlain,
+        g_stats.praetoriansSlain,
+        g_stats.executionersSlain,
+        bestLiving
+    );
+    SetWindowTextA(hStatsText, buf);
+}
+
 void SwitchView(int view) {
     g_currentView = view;
     int cmdDash = (view == 0) ? SW_SHOW : SW_HIDE;
     int cmdComb = (view == 1) ? SW_SHOW : SW_HIDE;
     int cmdHelp = (view == 2) ? SW_SHOW : SW_HIDE;
+    int cmdStats = (view == 3) ? SW_SHOW : SW_HIDE;
 
     ShowWindow(hTitle, cmdDash);
     ShowWindow(hFundsLabel, cmdDash);
@@ -397,6 +482,7 @@ void SwitchView(int view) {
     ShowWindow(hFightBtn, cmdDash);
     ShowWindow(hHealBtn, cmdDash);
     ShowWindow(hHelpBtn, cmdDash);
+    ShowWindow(hStatsBtn, cmdDash);
 
     ShowWindow(hCombatTitle, SW_HIDE);
     ShowWindow(hCombatPlayer, cmdComb);
@@ -411,6 +497,14 @@ void SwitchView(int view) {
     ShowWindow(hHelpTitle, cmdHelp);
     ShowWindow(hHelpText, cmdHelp);
     ShowWindow(hHelpBackBtn, cmdHelp);
+
+    ShowWindow(hStatsTitle, cmdStats);
+    ShowWindow(hStatsText, cmdStats);
+    ShowWindow(hStatsBackBtn, cmdStats);
+
+    if (view == 3) {
+        UpdateStatsUI();
+    }
 
     if (view == 1 && g_hWndMain) {
         SetTimer(g_hWndMain, 1, 33, NULL);
@@ -454,6 +548,17 @@ int SaveGameToFile(const char* filename) {
     for (int i = 0; i < data.market_count; i++) data.market[i] = market[i];
     data.soundMuted = g_soundMuted;
     data.tutorialSeen = g_tutorialSeen;
+    data.totalBattles = g_stats.totalBattles;
+    data.victories = g_stats.victories;
+    data.defeats = g_stats.defeats;
+    data.totalGoldWon = g_stats.totalGoldWon;
+    data.lionsSlain = g_stats.lionsSlain;
+    data.chariotsSlain = g_stats.chariotsSlain;
+    data.twinsSlain = g_stats.twinsSlain;
+    data.behemothsSlain = g_stats.behemothsSlain;
+    data.praetoriansSlain = g_stats.praetoriansSlain;
+    data.executionersSlain = g_stats.executionersSlain;
+    data.maxLevel = g_stats.maxLevel;
 
     if (g_currentView == 1 && currentFighter != NULL) {
         data.inCombat = 1;
@@ -487,7 +592,8 @@ int LoadGameFromFile(const char* filename) {
     DWORD readBytes = 0;
     BOOL res = ReadFile(hFile, &data, sizeof(data), &readBytes, NULL);
     CloseHandle(hFile);
-    if (!res || readBytes != sizeof(data) || data.magic != SAVE_MAGIC || data.version != SAVE_VERSION) return 0;
+    if (!res || readBytes < 32 || data.magic != SAVE_MAGIC) return 0;
+    if (data.version != 101 && data.version != 102) return 0;
 
     funds = data.funds;
     arenaLevel = data.arenaLevel;
@@ -498,6 +604,23 @@ int LoadGameFromFile(const char* filename) {
     for (int i = 0; i < market_count; i++) market[i] = data.market[i];
     g_soundMuted = data.soundMuted;
     g_tutorialSeen = 1;
+
+    if (data.version == 102) {
+        g_stats.totalBattles = data.totalBattles;
+        g_stats.victories = data.victories;
+        g_stats.defeats = data.defeats;
+        g_stats.totalGoldWon = data.totalGoldWon;
+        g_stats.lionsSlain = data.lionsSlain;
+        g_stats.chariotsSlain = data.chariotsSlain;
+        g_stats.twinsSlain = data.twinsSlain;
+        g_stats.behemothsSlain = data.behemothsSlain;
+        g_stats.praetoriansSlain = data.praetoriansSlain;
+        g_stats.executionersSlain = data.executionersSlain;
+        g_stats.maxLevel = data.maxLevel;
+    } else {
+        ZeroMemory(&g_stats, sizeof(g_stats));
+        g_stats.maxLevel = arenaLevel;
+    }
 
     for (int i = 0; i < owned_count; i++) UpdateGladiatorDesc(&owned[i]);
     for (int i = 0; i < market_count; i++) UpdateGladiatorDesc(&market[i]);
@@ -687,6 +810,9 @@ void EnterArena(int index) {
     g_playerStance = 0;
     g_enemyStance = 0;
 
+    g_stats.totalBattles++;
+    if (arenaLevel > g_stats.maxLevel) g_stats.maxLevel = arenaLevel;
+
     SendMessageA(hCombatLog, LB_RESETCONTENT, 0, 0);
     char buf[128];
     wsprintfA(buf, "Match starts! %s vs %s", currentFighter->name, enemyFighter.name);
@@ -706,6 +832,7 @@ void CombatAction(int action) {
     
     char buf[128];
     if (action == 2) { // flee
+        g_stats.defeats++;
         wsprintfA(buf, "%s flees the arena in disgrace!", currentFighter->name);
         LogCombat(buf);
         PlaySoundAsync(5);
@@ -845,6 +972,14 @@ void CombatAction(int action) {
         LogCombat(buf);
         PlaySoundAsync(4);
         funds += reward;
+        g_stats.victories++;
+        g_stats.totalGoldWon += reward;
+        if (lstrcmpA(enemyFighter.name, "Ferocious Lion") == 0 || enemyFighter.isBeast) g_stats.lionsSlain++;
+        if (lstrcmpA(enemyFighter.name, "Armed Chariot") == 0) g_stats.chariotsSlain++;
+        if (enemyFighter.isTwins) g_stats.twinsSlain++;
+        if (enemyFighter.isBehemoth) g_stats.behemothsSlain++;
+        if (enemyFighter.isPraetorian) g_stats.praetoriansSlain++;
+        if (enemyFighter.isDimachaerus) g_stats.executionersSlain++;
         AddScreenShake(12);
         SpawnParticles(135, 70, 25, 0, RGB(255, 215, 0));
         SpawnParticles(275, 30, 20, 3, RGB(255, 215, 0));
@@ -852,6 +987,7 @@ void CombatAction(int action) {
 
         if (arenaLevel < 10) {
             arenaLevel++;
+            if (arenaLevel > g_stats.maxLevel) g_stats.maxLevel = arenaLevel;
             wsprintfA(buf, "Your ludus advances to level %d!", arenaLevel);
             LogCombat(buf);
         }
@@ -996,6 +1132,7 @@ void CombatAction(int action) {
 
     if (playerHp <= 0) {
         playerHp = 0;
+        g_stats.defeats++;
         g_playerStance = 4;
         UpdateCombatUI();
         wsprintfA(buf, "%s is DEAD.", currentFighter->name);
@@ -2042,6 +2179,10 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                           10, 10, 560, 30, hwnd, NULL, NULL, NULL);
             SendMessageA(hTitle, WM_SETFONT, (WPARAM)hTitleFont, TRUE);
 
+            hStatsBtn = CreateWindowA("BUTTON", "Stats", WS_VISIBLE | WS_CHILD,
+                          425, 10, 70, 25, hwnd, (HMENU)ID_STATS_BUTTON, NULL, NULL);
+            SendMessageA(hStatsBtn, WM_SETFONT, (WPARAM)hFont, TRUE);
+
             hHelpBtn = CreateWindowA("BUTTON", "Guide", WS_VISIBLE | WS_CHILD,
                           500, 10, 70, 25, hwnd, (HMENU)ID_HELP_BUTTON, NULL, NULL);
             SendMessageA(hHelpBtn, WM_SETFONT, (WPARAM)hFont, TRUE);
@@ -2178,6 +2319,19 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                           230, 312, 140, 30, hwnd, (HMENU)ID_HELP_BACK_BUTTON, NULL, NULL);
             SendMessageA(hHelpBackBtn, WM_SETFONT, (WPARAM)hFont, TRUE);
 
+            // Stats Controls
+            hStatsTitle = CreateWindowA("STATIC", "Ludus Hall of Fame & Statistics", WS_CHILD | SS_CENTER,
+                          10, 10, 560, 30, hwnd, NULL, NULL, NULL);
+            SendMessageA(hStatsTitle, WM_SETFONT, (WPARAM)hTitleFont, TRUE);
+
+            hStatsText = CreateWindowA("STATIC", "", WS_CHILD | SS_LEFT,
+                          20, 45, 540, 260, hwnd, NULL, NULL, NULL);
+            SendMessageA(hStatsText, WM_SETFONT, (WPARAM)hFont, TRUE);
+
+            hStatsBackBtn = CreateWindowA("BUTTON", "Back to Ludus", WS_CHILD,
+                          230, 312, 140, 30, hwnd, (HMENU)ID_STATS_BACK_BUTTON, NULL, NULL);
+            SendMessageA(hStatsBackBtn, WM_SETFONT, (WPARAM)hFont, TRUE);
+
             UpdateUI();
             if (!saveLoaded && !CheckTutorialSeen()) {
                 MarkTutorialSeen();
@@ -2299,7 +2453,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 return 0;
             }
             if (wParam == VK_ESCAPE) {
-                if (g_currentView == 2) {
+                if (g_currentView == 2 || g_currentView == 3) {
                     SwitchView(0);
                     return 0;
                 }
@@ -2334,6 +2488,10 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     }
                 }
             } else if (g_currentView == 0) {
+                if (wParam == 'S') {
+                    SwitchView(3);
+                    return 0;
+                }
                 if (wParam == 'R') {
                     if (funds >= 50) {
                         SendMessageA(hwnd, WM_COMMAND, MAKEWPARAM(ID_REFRESH_BUTTON, 0), 0);
@@ -2357,6 +2515,11 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     }
                     return 0;
                 }
+            } else if (g_currentView == 3) {
+                if (wParam == 'S' || wParam == VK_ESCAPE || wParam == VK_RETURN || wParam == VK_SPACE) {
+                    SwitchView(0);
+                    return 0;
+                }
             }
             break;
         }
@@ -2371,6 +2534,10 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             } else if (LOWORD(wParam) == ID_HELP_BUTTON) {
                 SwitchView(2);
             } else if (LOWORD(wParam) == ID_HELP_BACK_BUTTON) {
+                SwitchView(0);
+            } else if (LOWORD(wParam) == ID_STATS_BUTTON) {
+                SwitchView(3);
+            } else if (LOWORD(wParam) == ID_STATS_BACK_BUTTON) {
                 SwitchView(0);
             } else if (LOWORD(wParam) == ID_TRAIN_STR || LOWORD(wParam) == ID_TRAIN_AGI || LOWORD(wParam) == ID_TRAIN_VIT) {
                 int sel = SendMessageA(hOwnedList, LB_GETCURSEL, 0, 0);
@@ -2486,7 +2653,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
         case WM_CTLCOLORSTATIC: {
             HDC hdcStatic = (HDC)wParam;
             HWND hCtrl = (HWND)lParam;
-            if (hCtrl == hFundsLabel || hCtrl == hCombatTitle || hCtrl == hFavorLabel || hCtrl == hHelpTitle) {
+            if (hCtrl == hFundsLabel || hCtrl == hCombatTitle || hCtrl == hFavorLabel || hCtrl == hHelpTitle || hCtrl == hStatsTitle) {
                 SetTextColor(hdcStatic, RGB(212, 175, 55));
                 SetBkColor(hdcStatic, RGB(139, 0, 0));
                 return (LRESULT)hbrCrimson;

@@ -179,6 +179,9 @@
     <div class="top-nav-title">🏛️ KCOLOSSEUM (1999)</div>
     <div class="top-nav-btns">
       <button id="soundToggleBtn" onclick="toggleSound()" title="Toggle Sound [M]">🔊 Audio: ON</button>
+      <button id="btnOnlineDuelNav" onclick="showMultiplayerModal()" title="Colosseum Online Duels [O]" style="background:#004d40; border-color:#00e5ff; color:#fff;">🌐 Online Duel [O]</button>
+      <button id="btnReplayNav" onclick="showReplayModal()" title="View Last Combat Chronicle [C]">📜 Replay [C]</button>
+      <button id="btnStatsNav" onclick="showStatsModal()" title="Ludus Hall of Fame & Statistics [T]">🏆 Hall of Fame [T]</button>
       <button onclick="quickSave()" title="Quicksave Ludus State [F5]">💾 Save [F5]</button>
       <button onclick="quickLoad()" title="Quickload Ludus State [F9]">📂 Load [F9]</button>
       <button onclick="showExportModal()" title="Backup & Restore JSON Save">📜 Backup</button>
@@ -189,6 +192,18 @@
   <h1>KColosseum - Ludus Management</h1>
   <div class="funds">Treasury: <span id="fundsDisplay">1000</span> Denarii | League: <span id="leagueDisplay">Local Pits (Level 1)</span></div>
   
+  <!-- Empire Duel Arena Banner -->
+  <div style="background:linear-gradient(90deg, #1c0b0b 0%, #2b0808 50%, #1c0b0b 100%); border:2px solid #d4af37; border-radius:6px; padding:10px 16px; margin-bottom:15px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; box-shadow:0 4px 12px rgba(0,0,0,0.35);">
+    <div style="color:#fdf5e6; font-size:1.02em;">
+      <strong style="color:#ffd700;">🌐 EMPIRE DUEL ARENA:</strong> Cross-computer gladiator duels via Firebase RTDB. Challenge rival Lanistas worldwide!
+    </div>
+    <div style="display:flex; gap:8px; flex-wrap:wrap;">
+      <button onclick="showMultiplayerModal()" style="background:#004d40; border-color:#00e5ff; color:#fff; font-size:0.95em; padding:6px 14px;">⚔️ Enter Online Duel Arena [O]</button>
+      <button onclick="showReplayModal()" style="background:#2b1d0c; border-color:#d4af37; font-size:0.95em; padding:6px 12px;">📜 Battle Replay</button>
+      <button onclick="showStatsModal()" style="background:#2b1d0c; border-color:#d4af37; font-size:0.95em; padding:6px 12px;">🏆 Hall of Fame</button>
+    </div>
+  </div>
+
   <div class="dashboard" id="dashboard">
     <div class="panel">
       <h2 style="display:flex; justify-content:space-between; align-items:center;">
@@ -204,7 +219,25 @@
   </div>
 
   <div id="arenaPanel" style="display:none; margin:0 auto; width:85%; max-width:800px;" class="panel">
-    <h2>Arena Combat</h2>
+    <!-- Online Duel Status Bar (hidden during solo league battles) -->
+    <div id="onlineDuelBanner" style="display:none; background:#1b2838; border:2px solid #00d2ff; border-radius:6px; padding:8px 12px; margin-bottom:12px; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; font-size:0.92em; color:#e0f7fa;">
+      <div style="display:flex; align-items:center; gap:8px;">
+        <span style="display:inline-block; width:10px; height:10px; border-radius:50%; background:#00e676; box-shadow:0 0 8px #00e676;"></span>
+        <strong>ONLINE ARENA DUEL:</strong> <span id="duelRoomLabel" style="font-family:monospace; color:#ffd700; font-weight:bold;">ROOM</span>
+        <span id="duelOpponentLabel" style="color:#b2ebf2; margin-left:6px;">vs Lanista</span>
+      </div>
+      <div style="display:flex; gap:6px;">
+        <button onclick="copyOnlineRoomLink()" style="font-size:0.8em; padding:4px 8px; background:#006064; border-color:#00e5ff; color:#fff;">📋 Copy Link</button>
+        <button onclick="leaveOnlineDuel()" style="font-size:0.8em; padding:4px 8px; background:#b71c1c; border-color:#ff5252; color:#fff;">🚪 Concede Duel</button>
+      </div>
+    </div>
+
+    <!-- Duel Turn / Battle Cry Indicator -->
+    <div id="duelTurnBanner" style="display:none; text-align:center; padding:6px; margin-bottom:10px; border-radius:5px; font-weight:bold; font-size:1.05em; letter-spacing:1px; background:#3e1212; border:1px solid #d4af37; color:#ffd700;">
+      Awaiting Lanista's order...
+    </div>
+
+    <h2 id="arenaCombatTitle">Arena Combat</h2>
     
     <!-- Graphical Arena Canvas Viewport -->
     <div style="text-align:center; margin-bottom:12px; position:relative;">
@@ -222,7 +255,24 @@
         <button id="btnAttack" onclick="combatAction('attack')" style="min-width:90px; font-size:1.05em; padding:8px 16px;">⚔️ Attack [A]</button>
         <button id="btnDefend" onclick="combatAction('defend')" style="min-width:90px; font-size:1.05em; padding:8px 16px;">🛡️ Defend [D]</button>
         <button id="btnShowboat" onclick="combatAction('showboat')" style="min-width:90px; font-size:1.05em; padding:8px 16px;">✨ Showboat [S]</button>
+        <button id="btnWarCry" onclick="combatAction('warcry')" style="min-width:90px; font-size:1.05em; padding:8px 16px; display:none; background:#8a5500; border-color:#ffd700;">⚡ War Cry [W]</button>
         <button id="btnFlee" onclick="combatAction('flee')" style="min-width:90px; font-size:1.05em; padding:8px 16px;">🏃 Flee [F]</button>
+      </div>
+
+      <!-- Quick Roman Taunts Bar (in online duels) -->
+      <div id="duelTauntBar" style="display:none; justify-content:center; gap:6px; margin-top:10px; flex-wrap:wrap;">
+        <span style="font-size:0.85em; color:#8b0000; font-weight:bold; align-self:center;">Roman Battle Cries:</span>
+        <button onclick="sendDuelTaunt('Morituri te salutant!')" style="font-size:0.75em; padding:3px 8px; background:#4a1f00;">⚔️ Morituri te salutant!</button>
+        <button onclick="sendDuelTaunt('By the wrath of Mars!')" style="font-size:0.75em; padding:3px 8px; background:#4a1f00;">🔥 Wrath of Mars!</button>
+        <button onclick="sendDuelTaunt('Yield or bleed!')" style="font-size:0.75em; padding:3px 8px; background:#4a1f00;">🩸 Yield or bleed!</button>
+        <button onclick="sendDuelTaunt('Roma Invicta!')" style="font-size:0.75em; padding:3px 8px; background:#4a1f00;">🏛️ Roma Invicta!</button>
+        <button onclick="sendDuelTaunt('Glory to Rome!')" style="font-size:0.75em; padding:3px 8px; background:#4a1f00;">👑 Glory to Rome!</button>
+      </div>
+
+      <!-- Post-Match Duel Rematch Controls -->
+      <div id="duelEndControls" style="display:none; justify-content:center; gap:12px; margin-top:14px; flex-wrap:wrap;">
+        <button id="btnDuelRematch" onclick="requestOnlineRematch()" style="background:#228b22; color:#fff; font-size:1.05em; padding:8px 20px;">⚔️ Request Rematch</button>
+        <button onclick="exitArena()" style="background:#552222; color:#fff; font-size:1.05em; padding:8px 20px;">🏛️ Return to Ludus [Esc]</button>
       </div>
     </div>
     <div id="combatLog" style="margin-top:15px; height:130px; overflow-y:auto; background:#fff; color:#333; padding:10px; border:1px solid #ccc; font-family:monospace; font-size:0.9em;"></div>
@@ -231,7 +281,7 @@
   <!-- Help Modal (Lanista's Guide) -->
   <div id="helpModal" class="modal-backdrop" onclick="if(event.target===this)closeAllModals()" style="display:none;">
     <div class="panel" style="width:80%; max-width:700px; max-height:85vh; overflow-y:auto; position:relative; background:#fdf5e6; color:#333;">
-      <button onclick="closeAllModals()" style="position:absolute; top:15px; right:15px;">Close [Esc]</button>
+      <button id="btnHelpClose" class="modal-close btn-close" onclick="closeAllModals()" style="position:absolute; top:15px; right:15px;">Close [Esc]</button>
       <h2 style="border-bottom:2px solid #d4af37; padding-bottom:10px; margin-top:0;">Lanista's Guide</h2>
       <div style="font-size:1.05em; line-height:1.6; margin-top:15px;">
         <p><strong>HOW TO PLAY:</strong><br>
@@ -243,6 +293,9 @@
         <ul style="list-style-type:disc; padding-left:20px;">
           <li style="border:none; padding:3px 0; background:transparent; justify-content:flex-start;"><strong>F5 / F9:</strong>&nbsp;Quicksave / Quickload Ludus snapshot</li>
           <li style="border:none; padding:3px 0; background:transparent; justify-content:flex-start;"><strong>F1 / H / ?:</strong>&nbsp;Open / close this Lanista's Guide</li>
+          <li style="border:none; padding:3px 0; background:transparent; justify-content:flex-start;"><strong>O:</strong>&nbsp;Open Colosseum Online Duels</li>
+          <li style="border:none; padding:3px 0; background:transparent; justify-content:flex-start;"><strong>C:</strong>&nbsp;Open Combat Replay &amp; Chronicles</li>
+          <li style="border:none; padding:3px 0; background:transparent; justify-content:flex-start;"><strong>T:</strong>&nbsp;Open Ludus Hall of Fame &amp; Statistics</li>
           <li style="border:none; padding:3px 0; background:transparent; justify-content:flex-start;"><strong>M:</strong>&nbsp;Toggle audio sound effects on/off</li>
           <li style="border:none; padding:3px 0; background:transparent; justify-content:flex-start;"><strong>R:</strong>&nbsp;Refresh recruit market (50D)</li>
           <li style="border:none; padding:3px 0; background:transparent; justify-content:flex-start;"><strong>1, 2, 3:</strong>&nbsp;Quick-recruit market fighter 1, 2, or 3</li>
@@ -250,6 +303,7 @@
           <li style="border:none; padding:3px 0; background:transparent; justify-content:flex-start;"><strong>A / 1:</strong>&nbsp;Attack in arena combat</li>
           <li style="border:none; padding:3px 0; background:transparent; justify-content:flex-start;"><strong>D / 2:</strong>&nbsp;Defend in arena combat</li>
           <li style="border:none; padding:3px 0; background:transparent; justify-content:flex-start;"><strong>S / 3:</strong>&nbsp;Showboat for Crowd Favor in combat</li>
+          <li style="border:none; padding:3px 0; background:transparent; justify-content:flex-start;"><strong>W:</strong>&nbsp;War Cry / Rally in online &amp; cyber duels</li>
           <li style="border:none; padding:3px 0; background:transparent; justify-content:flex-start;"><strong>F / 4:</strong>&nbsp;Flee combat (retreat with gladiator's life intact)</li>
           <li style="border:none; padding:3px 0; background:transparent; justify-content:flex-start;"><strong>Esc:</strong>&nbsp;Dismiss open dialogs or exit arena after battle</li>
         </ul>
@@ -284,7 +338,7 @@
 
         <div style="display:flex; justify-content:space-between; margin-top:20px; flex-wrap:wrap; gap:10px;">
           <button onclick="showTutorial()" style="border-color:#d4af37;">📜 View First-Run Briefing</button>
-          <button onclick="closeAllModals()">Close Guide [Esc]</button>
+          <button class="modal-close btn-close" onclick="closeAllModals()">Close Guide [Esc]</button>
         </div>
       </div>
     </div>
@@ -293,7 +347,7 @@
   <!-- Tutorial Modal (First-Run Briefing) -->
   <div id="tutorialModal" class="modal-backdrop" onclick="if(event.target===this)dismissTutorial()" style="display:none;">
     <div class="panel" style="width:85%; max-width:640px; max-height:85vh; overflow-y:auto; position:relative; background:#fdf5e6; color:#333;">
-      <button onclick="dismissTutorial()" style="position:absolute; top:15px; right:15px;">✕ [Esc]</button>
+      <button id="btnTutorialClose" class="modal-close btn-close" onclick="dismissTutorial()" style="position:absolute; top:15px; right:15px;">✕ [Esc]</button>
       <h2 style="border-bottom:2px solid #d4af37; padding-bottom:10px; margin-top:0; color:#8b0000;">🏛️ WELCOME TO ROME, LANISTA</h2>
       <div style="font-size:1.05em; line-height:1.6; margin-top:15px;">
         <p>You have taken ownership of a fledgling <strong>Gladiator Ludus</strong> in 1999 B.C. Rome. The Emperor and the Roman mob crave spectacle, courage, and blood.</p>
@@ -305,7 +359,7 @@
           <li><strong>Protect Your Veterans:</strong> If wounded, heal them before the next match. Death in the arena is permanent.</li>
         </ol>
         <div style="text-align:center; margin-top:20px;">
-          <button onclick="dismissTutorial()" style="font-size:1.15em; padding:8px 24px; background:#228b22; color:#fff; border-color:#d4af37;">Enter the Ludus [Enter / Space]</button>
+          <button id="btnTutorialEnter" class="modal-close tutorial-btn-primary" onclick="dismissTutorial()" style="font-size:1.15em; padding:8px 24px; background:#228b22; color:#fff; border-color:#d4af37;">Enter the Ludus [Enter / Space]</button>
         </div>
       </div>
     </div>
@@ -314,7 +368,7 @@
   <!-- Export / Import Modal -->
   <div id="exportModal" class="modal-backdrop" onclick="if(event.target===this)closeAllModals()" style="display:none;">
     <div class="panel" style="width:85%; max-width:600px; max-height:85vh; overflow-y:auto; position:relative; background:#fdf5e6; color:#333;">
-      <button onclick="closeAllModals()" style="position:absolute; top:15px; right:15px;">Close [Esc]</button>
+      <button id="btnExportClose" class="modal-close btn-close" onclick="closeAllModals()" style="position:absolute; top:15px; right:15px;">Close [Esc]</button>
       <h2 style="border-bottom:2px solid #d4af37; padding-bottom:10px; margin-top:0;">📜 Ludus Save Records</h2>
       <p style="margin-top:10px; font-size:0.95em;">Export your ludus roster and treasury to backup JSON or import an existing save.</p>
       
@@ -351,6 +405,242 @@
     </div>
   </div>
 
+  <!-- Online Arena Duel Modal (RFMS) -->
+  <div id="multiplayerModal" class="modal-backdrop" onclick="if(event.target===this)closeAllModals()" style="display:none;">
+    <div class="panel" style="width:90%; max-width:680px; max-height:88vh; overflow-y:auto; position:relative; background:#fdf5e6; color:#333;">
+      <button onclick="closeAllModals()" style="position:absolute; top:15px; right:15px;">✕ [Esc]</button>
+      <h2 style="border-bottom:2px solid #d4af37; padding-bottom:10px; margin-top:0; color:#8b0000; text-align:center;">
+        🌐 COLOSSEUM ONLINE DUELS (RFMS)
+      </h2>
+      <p style="text-align:center; font-size:0.95em; color:#555; margin-top:-5px; margin-bottom:14px;">
+        Real-time cross-computer gladiatorial combat powered by Firebase Realtime Database.
+      </p>
+
+      <!-- Lanista Identity -->
+      <div style="background:#fff; border:1px solid #d4af37; border-radius:6px; padding:12px; margin-bottom:12px;">
+        <label style="font-weight:bold; color:#8b0000; display:block; margin-bottom:5px;">Your Lanista Call-Sign:</label>
+        <div style="display:flex; gap:8px;">
+          <input type="text" id="mpLanistaNameInput" maxlength="18" placeholder="Enter Lanista Name..." style="flex:1; padding:6px 10px; border:1px solid #999; border-radius:4px; font-family:'Times New Roman'; font-size:1em;">
+          <button onclick="saveLanistaName()" style="background:#228b22; color:#fff;">Save Call-Sign</button>
+        </div>
+      </div>
+
+      <!-- Champion Selection -->
+      <div style="background:#fff; border:1px solid #d4af37; border-radius:6px; padding:12px; margin-bottom:12px;">
+        <label style="font-weight:bold; color:#8b0000; display:block; margin-bottom:5px;">Select Your Ludus Champion:</label>
+        <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+          <select id="mpChampionSelect" onchange="onChampionSelectChange()" style="flex:1; min-width:220px; padding:6px 8px; border:1px solid #999; border-radius:4px; font-family:'Times New Roman'; font-size:0.95em;"></select>
+          <div id="mpChampionPreview" style="font-size:0.9em; color:#333; background:#f7eee0; padding:6px 10px; border-radius:4px; border:1px solid #d4af37;"></div>
+        </div>
+      </div>
+
+      <!-- Instant Quick Match -->
+      <div style="background:rgba(34, 139, 34, 0.12); border:2px solid #228b22; border-radius:6px; padding:12px; margin-bottom:12px; text-align:center;">
+        <h3 style="margin:0 0 4px 0; color:#1a6b1a;">⚡ Instant Quick Duel</h3>
+        <p style="font-size:0.9em; color:#444; margin:0 0 10px 0;">Find an open challenger or host a new public duel immediately.</p>
+        <button id="btnQuickMatch" onclick="startQuickMatch()" style="background:linear-gradient(135deg, #228b22, #008080); color:#fff; font-size:1.1em; padding:9px 24px; width:100%; border:none; box-shadow:0 3px 8px rgba(0,0,0,0.25);">
+          ⚡ Find / Host Quick Duel
+        </button>
+      </div>
+
+      <!-- Custom Room Hosting & Joining -->
+      <div style="background:#fff; border:1px solid #d4af37; border-radius:6px; padding:12px; margin-bottom:12px;">
+        <h3 style="margin:0 0 8px 0; color:#8b0000; font-size:1.05em;">🔑 Host or Join Custom Room</h3>
+        <div style="display:flex; gap:8px; margin-bottom:10px; flex-wrap:wrap;">
+          <button onclick="createCustomRoom(true)" style="flex:1; background:#004d40; color:#fff; border-color:#00e5ff;">+ Host Public Duel</button>
+          <button onclick="createCustomRoom(false)" style="flex:1; background:#37474f; color:#fff; border-color:#90a4ae;">🔒 Host Private Duel</button>
+        </div>
+        <div style="display:flex; gap:8px;">
+          <input type="text" id="mpRoomCodeInput" maxlength="12" placeholder="Room Code (e.g. COL-7X89)" style="flex:1; text-transform:uppercase; padding:6px 10px; border:1px solid #999; border-radius:4px; font-family:monospace; font-size:1em;">
+          <button onclick="joinRoomByInput()" style="background:#8b0000; color:#ffd700;">Join Duel</button>
+        </div>
+      </div>
+
+      <!-- Live Public Lobby -->
+      <div style="background:#fff; border:1px solid #d4af37; border-radius:6px; padding:12px; margin-bottom:12px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+          <h3 style="margin:0; color:#8b0000; font-size:1.05em;">📡 Live Empire Arena Lobby</h3>
+          <button onclick="refreshLobbyList()" style="font-size:0.75em; padding:3px 8px; background:#4a1f00;">🔄 Refresh</button>
+        </div>
+        <div id="mpLobbyList" style="max-height:140px; overflow-y:auto; border:1px solid #ccc; padding:8px; border-radius:4px; background:#fafafa; font-size:0.9em;">
+          <div style="color:#777; text-align:center; padding:8px; font-style:italic;">Scanning imperial subnet...</div>
+        </div>
+      </div>
+
+      <!-- In-Room Waiting State (Hidden when idle) -->
+      <div id="mpWaitingOverlay" style="display:none; background:#1b2838; color:#fff; border:2px solid #ffd700; border-radius:6px; padding:15px; text-align:center; margin-top:10px;">
+        <h3 style="margin:0 0 6px 0; color:#ffd700;">🏛️ ARENA GATES OPEN — AWAITING CHALLENGER</h3>
+        <p style="margin:0 0 8px 0; font-size:0.95em;">
+          Room Code: <strong id="mpWaitingRoomCode" style="font-family:monospace; font-size:1.2em; color:#00e5ff; letter-spacing:1px;"></strong>
+        </p>
+        <p id="mpSoloCountdownLabel" style="font-size:0.92em; color:#ffcc66; margin:0 0 12px 0;">
+          ⏳ 25-Second Solo Cyber-Bot Fallback in: <strong id="mpCountdownVal">25</strong>s
+        </p>
+        <div style="display:flex; justify-content:center; gap:10px; flex-wrap:wrap;">
+          <button onclick="copyOnlineRoomLink()" style="background:#006064; border-color:#00e5ff; color:#fff;">📋 Copy Invite Link</button>
+          <button onclick="startSoloFallbackDuel({ reason: 'user_trigger' })" style="background:#2e7d32; border-color:#81c784; color:#fff;">🤖 Duel Cyber-Bot Now</button>
+          <button onclick="leaveOnlineDuel(false)" style="background:#b71c1c; border-color:#ff5252; color:#fff;">Cancel / Leave</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Deep-Link Match Invite Confirmation Modal (Mandate Rule 12 Compliant) -->
+  <div id="invite-modal" class="modal-backdrop" onclick="if(event.target===this)declineInvite()" style="display:none;">
+    <div class="panel" style="width:85%; max-width:420px; background:#fdf5e6; color:#333; text-align:center;">
+      <h3 style="margin-top:0; color:#8b0000; font-size:1.25em;">⚔️ Online Arena Duel Invite</h3>
+      <p style="font-size:1em; margin-bottom:14px; line-height:1.5;">
+        You have received a challenge to duel in Colosseum room:<br>
+        <strong id="invite-code-label" style="font-family:monospace; font-size:1.3em; color:#8b0000; letter-spacing:1px;"></strong>
+      </p>
+      <div style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap;">
+        <button id="invite-join-btn" onclick="acceptInvite()" style="background:#228b22; color:#fff; font-size:1.05em; padding:8px 20px;">⚔️ Connect & Join Duel</button>
+        <button id="invite-decline-btn" onclick="declineInvite()" style="background:#552222; color:#fff; font-size:1.05em; padding:8px 16px;">Play Solo / Decline</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Combat Replay & Battle Chronicles Modal -->
+  <div id="replayModal" class="modal-backdrop" onclick="if(event.target===this)closeAllModals()" style="display:none;">
+    <div class="panel" style="width:90%; max-width:720px; max-height:88vh; overflow-y:auto; position:relative; background:#fdf5e6; color:#333;">
+      <button onclick="closeAllModals()" style="position:absolute; top:15px; right:15px;">✕ [Esc]</button>
+      <h2 style="border-bottom:2px solid #d4af37; padding-bottom:10px; margin-top:0; color:#8b0000; text-align:center;">
+        📜 BATTLE CHRONICLES & COMBAT REPLAY
+      </h2>
+      <p style="text-align:center; font-size:0.95em; color:#555; margin-top:-5px; margin-bottom:14px;">
+        Round-by-round combat analysis, health telemetry, and Flavian Amphitheatre chronicles.
+      </p>
+
+      <!-- Match Summary Cards -->
+      <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(130px, 1fr)); gap:8px; margin-bottom:14px;">
+        <div style="background:#fff; border:1px solid #d4af37; border-radius:4px; padding:8px; text-align:center;">
+          <div style="font-size:0.8em; color:#777; text-transform:uppercase;">Outcome</div>
+          <div id="repOutcome" style="font-size:1.15em; font-weight:bold; color:#8b0000;">None</div>
+        </div>
+        <div style="background:#fff; border:1px solid #d4af37; border-radius:4px; padding:8px; text-align:center;">
+          <div style="font-size:0.8em; color:#777; text-transform:uppercase;">Total Rounds</div>
+          <div id="repTotalRounds" style="font-size:1.15em; font-weight:bold; color:#333;">0</div>
+        </div>
+        <div style="background:#fff; border:1px solid #d4af37; border-radius:4px; padding:8px; text-align:center;">
+          <div style="font-size:0.8em; color:#777; text-transform:uppercase;">Peak Favor</div>
+          <div id="repPeakFavor" style="font-size:1.15em; font-weight:bold; color:#d4af37;">0%</div>
+        </div>
+        <div style="background:#fff; border:1px solid #d4af37; border-radius:4px; padding:8px; text-align:center;">
+          <div style="font-size:0.8em; color:#777; text-transform:uppercase;">Damage Dealt</div>
+          <div id="repDmgDealt" style="font-size:1.15em; font-weight:bold; color:#228b22;">0</div>
+        </div>
+        <div style="background:#fff; border:1px solid #d4af37; border-radius:4px; padding:8px; text-align:center;">
+          <div style="font-size:0.8em; color:#777; text-transform:uppercase;">Damage Taken</div>
+          <div id="repDmgTaken" style="font-size:1.15em; font-weight:bold; color:#cc0000;">0</div>
+        </div>
+      </div>
+
+      <!-- Interactive Stepper -->
+      <div style="background:#fff; border:1px solid #d4af37; border-radius:6px; padding:12px; margin-bottom:14px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; flex-wrap:wrap; gap:6px;">
+          <span style="font-weight:bold; color:#8b0000; font-size:1.05em;">Interactive Round Stepper</span>
+          <div style="display:flex; gap:6px;">
+            <button onclick="stepReplay(-1)" style="font-size:0.85em; padding:4px 8px;">◀ Prev</button>
+            <span id="repRoundIndicator" style="font-weight:bold; align-self:center; font-size:0.95em; padding:0 6px;">Round 0 / 0</span>
+            <button onclick="stepReplay(1)" style="font-size:0.85em; padding:4px 8px;">Next ▶</button>
+            <button id="btnAutoReplay" onclick="toggleReplayAutoPlay()" style="font-size:0.85em; padding:4px 10px; background:#004d40; border-color:#00e5ff; color:#fff;">▶ Auto Play</button>
+          </div>
+        </div>
+        <div id="repStepCard" style="background:#fdf5e6; border:1px solid #d4af37; border-radius:4px; padding:10px; min-height:80px; font-size:0.95em; line-height:1.5;">
+          <em>No battle recorded yet. Enter the arena or online duel to record combat chronicles!</em>
+        </div>
+      </div>
+
+      <!-- Full Battle Transcript -->
+      <div style="background:#fff; border:1px solid #d4af37; border-radius:6px; padding:12px; margin-bottom:14px;">
+        <label style="font-weight:bold; color:#8b0000; display:block; margin-bottom:6px;">Flavian Chronicle Transcript:</label>
+        <textarea id="repTranscriptText" readonly style="width:100%; height:130px; box-sizing:border-box; font-family:monospace; font-size:0.85em; background:#fafafa; border:1px solid #ccc; padding:8px; border-radius:4px;"></textarea>
+      </div>
+
+      <div style="display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap;">
+        <div style="display:flex; gap:8px;">
+          <button onclick="copyReplayChronicle()">📋 Copy Chronicle</button>
+          <button onclick="downloadReplayReport()">💾 Download .txt</button>
+          <button onclick="downloadReplayJson()">💾 Export .json</button>
+        </div>
+        <button onclick="closeAllModals()">Close [Esc]</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Ludus Hall of Fame & Arena Statistics Modal -->
+  <div id="statsModal" class="modal-backdrop" onclick="if(event.target===this)closeAllModals()" style="display:none;">
+    <div class="panel" style="width:90%; max-width:720px; max-height:88vh; overflow-y:auto; position:relative; background:#fdf5e6; color:#333;">
+      <button onclick="closeAllModals()" style="position:absolute; top:15px; right:15px;">✕ [Esc]</button>
+      <h2 style="border-bottom:2px solid #d4af37; padding-bottom:10px; margin-top:0; color:#8b0000; text-align:center;">
+        🏆 LUDUS HALL OF FAME & STATISTICS
+      </h2>
+      <p style="text-align:center; font-size:0.95em; color:#555; margin-top:-5px; margin-bottom:14px;">
+        Lifetime record of your gladiators' glory, imperial standing, and legendary conquests.
+      </p>
+
+      <!-- Stat Grid -->
+      <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(140px, 1fr)); gap:10px; margin-bottom:16px;">
+        <div style="background:#fff; border:1px solid #d4af37; border-radius:6px; padding:10px; text-align:center;">
+          <div style="font-size:0.8em; color:#777; text-transform:uppercase;">Arena Battles</div>
+          <div id="statBattles" style="font-size:1.35em; font-weight:bold; color:#8b0000;">0</div>
+        </div>
+        <div style="background:#fff; border:1px solid #d4af37; border-radius:6px; padding:10px; text-align:center;">
+          <div style="font-size:0.8em; color:#777; text-transform:uppercase;">Victories / Win Rate</div>
+          <div id="statWinRate" style="font-size:1.35em; font-weight:bold; color:#228b22;">0 (0%)</div>
+        </div>
+        <div style="background:#fff; border:1px solid #d4af37; border-radius:6px; padding:10px; text-align:center;">
+          <div style="font-size:0.8em; color:#777; text-transform:uppercase;">Total Denarii Won</div>
+          <div id="statGoldWon" style="font-size:1.35em; font-weight:bold; color:#d4af37;">0 D</div>
+        </div>
+        <div style="background:#fff; border:1px solid #d4af37; border-radius:6px; padding:10px; text-align:center;">
+          <div style="font-size:0.8em; color:#777; text-transform:uppercase;">Online Duels Won</div>
+          <div id="statDuelsWon" style="font-size:1.35em; font-weight:bold; color:#008080;">0</div>
+        </div>
+      </div>
+
+      <!-- Legendary Foes Defeated -->
+      <div style="background:#fff; border:1px solid #d4af37; border-radius:6px; padding:12px; margin-bottom:16px;">
+        <h3 style="margin:0 0 8px 0; color:#8b0000; font-size:1.05em;">🦁 Legendary Foes Conquered</h3>
+        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:8px; font-size:0.9em;">
+          <div style="background:#fdf5e6; border:1px solid #e0c8a0; padding:6px 10px; border-radius:4px;">🦁 Ferocious Lions: <strong id="statLions">0</strong></div>
+          <div style="background:#fdf5e6; border:1px solid #e0c8a0; padding:6px 10px; border-radius:4px;">🐎 Armed Chariots: <strong id="statChariots">0</strong></div>
+          <div style="background:#fdf5e6; border:1px solid #e0c8a0; padding:6px 10px; border-radius:4px;">⚔️ Twin Gladiators: <strong id="statTwins">0</strong></div>
+          <div style="background:#fdf5e6; border:1px solid #e0c8a0; padding:6px 10px; border-radius:4px;">🔨 Gallic Behemoths: <strong id="statBehemoths">0</strong></div>
+          <div style="background:#fdf5e6; border:1px solid #e0c8a0; padding:6px 10px; border-radius:4px;">🛡️ Praetorian Champions: <strong id="statPraetorians">0</strong></div>
+          <div style="background:#fdf5e6; border:1px solid #e0c8a0; padding:6px 10px; border-radius:4px;">🗡️ Thracian Executioners: <strong id="statExecutioners">0</strong></div>
+        </div>
+      </div>
+
+      <!-- Hall of Champions Roster -->
+      <div style="background:#fff; border:1px solid #d4af37; border-radius:6px; padding:12px; margin-bottom:16px;">
+        <h3 style="margin:0 0 8px 0; color:#8b0000; font-size:1.05em;">🏛️ Decorated Ludus Champions</h3>
+        <div id="statChampionsList" style="max-height:160px; overflow-y:auto; border:1px solid #eee; border-radius:4px;">
+          <table style="width:100%; border-collapse:collapse; font-size:0.9em;">
+            <thead>
+              <tr style="background:#8b0000; color:#ffd700; text-align:left;">
+                <th style="padding:6px;">Champion</th>
+                <th style="padding:6px;">Battles</th>
+                <th style="padding:6px;">Kills</th>
+                <th style="padding:6px;">Damage</th>
+                <th style="padding:6px;">Status</th>
+              </tr>
+            </thead>
+            <tbody id="statChampionsTableBody">
+              <tr><td colspan="5" style="text-align:center; padding:10px; color:#777; font-style:italic;">No veteran champions recorded yet.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <button onclick="resetStats()" style="background:#552222; font-size:0.85em;">🔄 Reset Statistics</button>
+        <button onclick="closeAllModals()">Close [Esc]</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="../assets/js/retro_multiplayer.js"></script>
   <script>
     // --- YAMAHA YM2612 2-OPERATOR FM SYNTHESIS & SPC700 DELAY AUDIO ENGINE ---
     let soundMuted = false;
@@ -2863,6 +3153,27 @@
       
       document.getElementById('dashboard').style.display = 'none';
       document.getElementById('arenaPanel').style.display = 'block';
+
+      // Ensure online duel overlays are reset for solo play
+      isOnlineGame = false;
+      isCyberBotDuel = false;
+      const ob = document.getElementById('onlineDuelBanner');
+      if (ob) ob.style.display = 'none';
+      const tb = document.getElementById('duelTurnBanner');
+      if (tb) tb.style.display = 'none';
+      const tbar = document.getElementById('duelTauntBar');
+      if (tbar) tbar.style.display = 'none';
+      const wc = document.getElementById('btnWarCry');
+      if (wc) wc.style.display = 'none';
+      const fl = document.getElementById('btnFlee');
+      if (fl) fl.innerText = '🏃 Flee [F]';
+      const ec = document.getElementById('duelEndControls');
+      if (ec) ec.style.display = 'none';
+      const title = document.getElementById('arenaCombatTitle');
+      if (title) title.innerText = 'Arena Combat';
+
+      // Start fresh replay recording
+      initCombatReplay(`League Arena (${getLeagueName(arenaLevel)} - Lvl ${arenaLevel})`, currentFighter.name, enemyFighter.name);
       
       const log = document.getElementById('combatLog');
       log.innerHTML = `<em>Match starts! <strong>${currentFighter.name}</strong> vs <strong>${enemyFighter.name}</strong></em><br>`;
@@ -2883,7 +3194,7 @@
 
     function setCombatButtonsDisabled(disabled) {
       combatBusy = disabled;
-      ['btnAttack', 'btnDefend', 'btnShowboat', 'btnFlee'].forEach(id => {
+      ['btnAttack', 'btnDefend', 'btnShowboat', 'btnWarCry', 'btnFlee'].forEach(id => {
         const btn = document.getElementById(id);
         if (btn) btn.disabled = disabled;
       });
@@ -2906,6 +3217,7 @@
     function checkCrowdFavor() {
       if (crowdFavor >= 100) {
         crowdFavor = 0;
+        broadcastColosseumSignal('crowd_favor_100');
         playTrumpetFanfare();
         setTimeout(playCheer, 250);
         addScreenShake(8);
@@ -2938,6 +3250,14 @@
 
     function combatAction(action) {
       if (combatOver || combatBusy) return;
+      if (isOnlineGame) {
+        handleOnlineDuelPlayerAction(action);
+        return;
+      }
+      if (isCyberBotDuel) {
+        handleCyberBotDuelPlayerAction(action);
+        return;
+      }
       setCombatButtonsDisabled(true);
       
       const pX = arenaCanvas.width * 0.28;
@@ -3086,6 +3406,16 @@
         spawnParticles(arenaCanvas.width * 0.5, 40, 25, 'coins');
         addFloatingText(`VICTORY! +${reward}D`, arenaCanvas.width * 0.5, 90, '#ffd700');
         showToast(`🏆 Victory! Earned +${reward}D!`, 'success');
+        recordBattleStats('victory', {
+          fighterName: currentFighter.name,
+          enemyName: enemyFighter.name,
+          gold: reward,
+          peakFavor: crowdFavor
+        });
+        finishCombatReplay('VICTORY', reward);
+        if (enemyFighter.isPraetorian || enemyFighter.isDimachaerus || arenaLevel >= 7) {
+          broadcastColosseumSignal('legendary_boss_slain');
+        }
 
         let achievedChampion = false;
         if (arenaLevel < 10) {
@@ -3274,6 +3604,12 @@
       showToast(`💀 ${currentFighter.name} has perished in the arena!`, 'warning');
       addScreenShake(12);
       addFloatingText("DEAD", arenaCanvas.width * 0.28, arenaCanvas.height * 0.68 - 30, '#ff0000');
+      recordBattleStats('defeat', {
+        fighterName: currentFighter.name,
+        enemyName: enemyFighter ? enemyFighter.name : 'Arena Foe',
+        peakFavor: crowdFavor
+      });
+      finishCombatReplay('DEFEAT', 0);
       const deadIdx = owned.findIndex(g => g.id === currentFighter.id);
       if (deadIdx !== -1) {
         owned.splice(deadIdx, 1);
@@ -3293,6 +3629,24 @@
       if (animId) cancelAnimationFrame(animId);
       document.getElementById('arenaPanel').style.display = 'none';
       document.getElementById('dashboard').style.display = 'flex';
+
+      // Reset online duel overlays
+      isOnlineGame = false;
+      isCyberBotDuel = false;
+      const ob = document.getElementById('onlineDuelBanner');
+      if (ob) ob.style.display = 'none';
+      const tb = document.getElementById('duelTurnBanner');
+      if (tb) tb.style.display = 'none';
+      const tbar = document.getElementById('duelTauntBar');
+      if (tbar) tbar.style.display = 'none';
+      const wc = document.getElementById('btnWarCry');
+      if (wc) wc.style.display = 'none';
+      const fl = document.getElementById('btnFlee');
+      if (fl) fl.innerText = '🏃 Flee [F]';
+      const ec = document.getElementById('duelEndControls');
+      if (ec) ec.style.display = 'none';
+      const title = document.getElementById('arenaCombatTitle');
+      if (title) title.innerText = 'Arena Combat';
       
       // Pass time slightly - all gladiators NOT fighting heal by 2 HP
       owned.forEach(g => {
@@ -3322,7 +3676,7 @@
     }
 
     function closeAllModals() {
-      ['helpModal', 'tutorialModal', 'exportModal', 'victoryModal'].forEach(id => {
+      ['helpModal', 'tutorialModal', 'exportModal', 'victoryModal', 'multiplayerModal', 'invite-modal', 'replayModal', 'statsModal'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.style.display = 'none';
       });
@@ -3702,6 +4056,1718 @@
       showToast('🔄 Ludus reset to initial standing.', 'info');
     }
 
+    // --- HALL OF FAME & LUDUS STATISTICS ---
+    let ludusStats = {
+      battlesFought: 0,
+      victories: 0,
+      defeats: 0,
+      fled: 0,
+      totalGoldWon: 0,
+      peakFavor: 0,
+      highestLeague: 1,
+      onlineDuelsFought: 0,
+      onlineDuelsWon: 0,
+      lionsSlain: 0,
+      chariotsWrecked: 0,
+      twinsDefeated: 0,
+      behemothsFelled: 0,
+      praetoriansConquered: 0,
+      executionersOvercome: 0,
+      championsRoster: []
+    };
+
+    function loadLudusStats() {
+      try {
+        const raw = localStorage.getItem('kcolosseum_stats');
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          ludusStats = Object.assign(ludusStats, parsed);
+        }
+      } catch (e) {}
+    }
+
+    function saveLudusStats() {
+      try {
+        localStorage.setItem('kcolosseum_stats', JSON.stringify(ludusStats));
+      } catch (e) {}
+    }
+
+    function recordBattleStats(outcome, details = {}) {
+      loadLudusStats();
+      ludusStats.battlesFought++;
+      if (details.isOnline || details.isCyberBot) {
+        ludusStats.onlineDuelsFought++;
+        if (outcome === 'victory') ludusStats.onlineDuelsWon++;
+      }
+      if (outcome === 'victory') {
+        ludusStats.victories++;
+        if (details.gold) ludusStats.totalGoldWon += details.gold;
+      } else if (outcome === 'defeat') {
+        ludusStats.defeats++;
+      } else if (outcome === 'fled') {
+        ludusStats.fled++;
+      }
+
+      if (details.peakFavor && details.peakFavor > ludusStats.peakFavor) {
+        ludusStats.peakFavor = details.peakFavor;
+      }
+      if (arenaLevel > ludusStats.highestLeague) {
+        ludusStats.highestLeague = arenaLevel;
+      }
+
+      if (details.enemyName) {
+        const en = details.enemyName;
+        if (en === "Ferocious Lion") ludusStats.lionsSlain++;
+        else if (en === "Armed Chariot") ludusStats.chariotsWrecked++;
+        else if (en === "Twin Gladiators") ludusStats.twinsDefeated++;
+        else if (en === "Gallic Behemoth") ludusStats.behemothsFelled++;
+        else if (en === "Praetorian Champion") ludusStats.praetoriansConquered++;
+        else if (en === "Thracian Executioner") ludusStats.executionersOvercome++;
+      }
+
+      if (details.fighterName) {
+        if (!ludusStats.championsRoster) ludusStats.championsRoster = [];
+        let entry = ludusStats.championsRoster.find(c => c.name === details.fighterName);
+        if (!entry) {
+          entry = { name: details.fighterName, battles: 0, kills: 0, damage: 0, status: 'Active' };
+          ludusStats.championsRoster.push(entry);
+        }
+        entry.battles++;
+        if (outcome === 'victory') entry.kills++;
+        if (details.damageDealt) entry.damage += details.damageDealt;
+        if (outcome === 'defeat') entry.status = 'Perished';
+      }
+
+      saveLudusStats();
+    }
+
+    function showStatsModal() {
+      closeAllModals();
+      loadLudusStats();
+      updateStatsUI();
+      const el = document.getElementById('statsModal');
+      if (el) el.style.display = 'flex';
+    }
+
+    function closeStatsModal() {
+      const el = document.getElementById('statsModal');
+      if (el) el.style.display = 'none';
+    }
+
+    function updateStatsUI() {
+      const bEl = document.getElementById('statBattles');
+      if (bEl) bEl.innerText = ludusStats.battlesFought;
+      const wEl = document.getElementById('statWinRate');
+      if (wEl) {
+        const rate = ludusStats.battlesFought > 0 ? Math.round((ludusStats.victories / ludusStats.battlesFought) * 100) : 0;
+        wEl.innerText = `${ludusStats.victories} (${rate}%)`;
+      }
+      const gEl = document.getElementById('statGoldWon');
+      if (gEl) gEl.innerText = `${ludusStats.totalGoldWon} D`;
+      const dEl = document.getElementById('statDuelsWon');
+      if (dEl) dEl.innerText = `${ludusStats.onlineDuelsWon} / ${ludusStats.onlineDuelsFought}`;
+
+      const map = {
+        statLions: ludusStats.lionsSlain,
+        statChariots: ludusStats.chariotsWrecked,
+        statTwins: ludusStats.twinsDefeated,
+        statBehemoths: ludusStats.behemothsFelled,
+        statPraetorians: ludusStats.praetoriansConquered,
+        statExecutioners: ludusStats.executionersOvercome
+      };
+      for (const [id, val] of Object.entries(map)) {
+        const el = document.getElementById(id);
+        if (el) el.innerText = val;
+      }
+
+      const tbody = document.getElementById('statChampionsTableBody');
+      if (tbody) {
+        if (!ludusStats.championsRoster || ludusStats.championsRoster.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:10px; color:#777; font-style:italic;">No veteran champions recorded yet.</td></tr>';
+        } else {
+          tbody.innerHTML = ludusStats.championsRoster.map(c => `
+            <tr style="border-bottom:1px solid #ddd;">
+              <td style="padding:6px; font-weight:bold; color:#8b0000;">${escapeHtml(c.name)}</td>
+              <td style="padding:6px;">${c.battles}</td>
+              <td style="padding:6px;">${c.kills}</td>
+              <td style="padding:6px;">${c.damage || 0}</td>
+              <td style="padding:6px; font-weight:bold; color:${c.status === 'Perished' ? '#cc0000' : '#228b22'};">${c.status}</td>
+            </tr>
+          `).join('');
+        }
+      }
+    }
+
+    function resetStats() {
+      if (!confirm("Reset all Hall of Fame metrics and lifetime statistics?")) return;
+      ludusStats = {
+        battlesFought: 0,
+        victories: 0,
+        defeats: 0,
+        fled: 0,
+        totalGoldWon: 0,
+        peakFavor: 0,
+        highestLeague: 1,
+        onlineDuelsFought: 0,
+        onlineDuelsWon: 0,
+        lionsSlain: 0,
+        chariotsWrecked: 0,
+        twinsDefeated: 0,
+        behemothsFelled: 0,
+        praetoriansConquered: 0,
+        executionersOvercome: 0,
+        championsRoster: []
+      };
+      saveLudusStats();
+      updateStatsUI();
+      showToast('🔄 Hall of Fame statistics reset.', 'info');
+    }
+
+    // --- COMBAT REPLAY & BATTLE CHRONICLES ---
+    let currentMatchReplay = {
+      mode: 'League Arena',
+      fighter1: '',
+      fighter2: '',
+      rounds: [],
+      outcome: 'None',
+      peakFavor: 0,
+      damageDealt: 0,
+      damageTaken: 0,
+      reward: 0,
+      date: new Date().toISOString()
+    };
+    let activeReplayStep = 0;
+    let replayAutoTimer = null;
+
+    function initCombatReplay(mode, f1, f2) {
+      currentMatchReplay = {
+        mode: mode || 'Arena Combat',
+        fighter1: f1 || 'Player',
+        fighter2: f2 || 'Foe',
+        rounds: [],
+        outcome: 'Ongoing',
+        peakFavor: 0,
+        damageDealt: 0,
+        damageTaken: 0,
+        reward: 0,
+        date: new Date().toLocaleString()
+      };
+      activeReplayStep = 0;
+    }
+
+    function recordReplayRound(data) {
+      if (!currentMatchReplay) return;
+      currentMatchReplay.rounds.push({
+        num: currentMatchReplay.rounds.length + 1,
+        actor: data.actor || 'Fighter',
+        action: data.action || 'Strike',
+        hit: data.hit !== false,
+        dmg: data.dmg || 0,
+        favor: data.favor || 0,
+        p1Hp: data.p1Hp,
+        p2Hp: data.p2Hp,
+        log: data.log || ''
+      });
+      if (data.dmg) {
+        if (data.isPlayer) currentMatchReplay.damageDealt += data.dmg;
+        else currentMatchReplay.damageTaken += data.dmg;
+      }
+      if (data.favor && data.favor > currentMatchReplay.peakFavor) {
+        currentMatchReplay.peakFavor = data.favor;
+      }
+    }
+
+    function finishCombatReplay(outcome, reward = 0) {
+      if (!currentMatchReplay) return;
+      currentMatchReplay.outcome = outcome;
+      currentMatchReplay.reward = reward;
+      try {
+        localStorage.setItem('kcolosseum_last_replay', JSON.stringify(currentMatchReplay));
+      } catch (e) {}
+    }
+
+    function showReplayModal() {
+      closeAllModals();
+      try {
+        const raw = localStorage.getItem('kcolosseum_last_replay');
+        if (raw) currentMatchReplay = JSON.parse(raw);
+      } catch (e) {}
+      const el = document.getElementById('replayModal');
+      if (el) el.style.display = 'flex';
+      activeReplayStep = (currentMatchReplay && currentMatchReplay.rounds.length > 0) ? currentMatchReplay.rounds.length - 1 : 0;
+      updateReplayView();
+    }
+
+    function closeReplayModal() {
+      if (replayAutoTimer) {
+        clearInterval(replayAutoTimer);
+        replayAutoTimer = null;
+      }
+      const el = document.getElementById('replayModal');
+      if (el) el.style.display = 'none';
+    }
+
+    function updateReplayView() {
+      const rep = currentMatchReplay || { rounds: [] };
+      const oEl = document.getElementById('repOutcome');
+      if (oEl) {
+        oEl.innerText = rep.outcome || 'None';
+        oEl.style.color = (rep.outcome === 'VICTORY' || rep.outcome === 'victory') ? '#228b22' : '#8b0000';
+      }
+      const rEl = document.getElementById('repTotalRounds');
+      if (rEl) rEl.innerText = rep.rounds ? rep.rounds.length : 0;
+      const fEl = document.getElementById('repPeakFavor');
+      if (fEl) fEl.innerText = `${rep.peakFavor || 0}%`;
+      const dEl = document.getElementById('repDmgDealt');
+      if (dEl) dEl.innerText = rep.damageDealt || 0;
+      const tEl = document.getElementById('repDmgTaken');
+      if (tEl) tEl.innerText = rep.damageTaken || 0;
+
+      const indEl = document.getElementById('repRoundIndicator');
+      const totalR = rep.rounds ? rep.rounds.length : 0;
+      if (indEl) indEl.innerText = `Round ${totalR > 0 ? (activeReplayStep + 1) : 0} / ${totalR}`;
+
+      const card = document.getElementById('repStepCard');
+      if (card) {
+        if (!rep.rounds || rep.rounds.length === 0) {
+          card.innerHTML = '<em>No combat actions recorded in this match yet. Enter the arena or online duel to record chronicles!</em>';
+        } else {
+          const step = rep.rounds[activeReplayStep] || rep.rounds[0];
+          card.innerHTML = `
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+              <strong style="color:#8b0000; font-size:1.05em;">Round ${step.num}: ${escapeHtml(step.actor)} (${escapeHtml(step.action.toUpperCase())})</strong>
+              <span style="font-size:0.85em; color:#d4af37; background:#8b0000; padding:2px 8px; border-radius:3px;">Crowd Favor: ${step.favor}%</span>
+            </div>
+            <div style="font-family:monospace; font-size:0.95em; color:#222; margin-bottom:6px;">
+              ${escapeHtml(step.log || (step.hit ? `Landed strike for ${step.dmg} damage!` : 'Attack missed!'))}
+            </div>
+            <div style="display:flex; gap:16px; font-size:0.88em; color:#555;">
+              <span>${escapeHtml(rep.fighter1)} HP: <strong>${step.p1Hp !== undefined ? step.p1Hp : '?'}</strong></span>
+              <span>${escapeHtml(rep.fighter2)} HP: <strong>${step.p2Hp !== undefined ? step.p2Hp : '?'}</strong></span>
+            </div>
+          `;
+        }
+      }
+
+      // Transcript
+      const ta = document.getElementById('repTranscriptText');
+      if (ta) {
+        let txt = `====================================================\n`;
+        txt += `ANNO DOMINI MCMXCIX - FLAVIAN AMPHITHEATRE RECORD\n`;
+        txt += `Mode: ${rep.mode} | Date: ${rep.date}\n`;
+        txt += `Combatants: ${rep.fighter1} vs ${rep.fighter2}\n`;
+        txt += `Outcome: ${rep.outcome} | Peak Favor: ${rep.peakFavor}% | Reward: ${rep.reward}D\n`;
+        txt += `====================================================\n\n`;
+        if (rep.rounds) {
+          rep.rounds.forEach(r => {
+            txt += `[R${r.num}] ${r.actor}: ${r.log || (r.hit ? `Hit for ${r.dmg} dmg` : 'Missed')}\n`;
+          });
+        }
+        ta.value = txt;
+      }
+    }
+
+    function stepReplay(delta) {
+      if (!currentMatchReplay || !currentMatchReplay.rounds || currentMatchReplay.rounds.length === 0) return;
+      activeReplayStep = Math.max(0, Math.min(currentMatchReplay.rounds.length - 1, activeReplayStep + delta));
+      updateReplayView();
+    }
+
+    function toggleReplayAutoPlay() {
+      const btn = document.getElementById('btnAutoReplay');
+      if (replayAutoTimer) {
+        clearInterval(replayAutoTimer);
+        replayAutoTimer = null;
+        if (btn) btn.innerText = '▶ Auto Play';
+      } else {
+        if (!currentMatchReplay || !currentMatchReplay.rounds || currentMatchReplay.rounds.length === 0) return;
+        activeReplayStep = 0;
+        updateReplayView();
+        if (btn) btn.innerText = '⏸️ Pause';
+        replayAutoTimer = setInterval(() => {
+          if (activeReplayStep >= currentMatchReplay.rounds.length - 1) {
+            clearInterval(replayAutoTimer);
+            replayAutoTimer = null;
+            if (btn) btn.innerText = '▶ Auto Play';
+          } else {
+            activeReplayStep++;
+            updateReplayView();
+          }
+        }, 1000);
+      }
+    }
+
+    function copyReplayChronicle() {
+      const ta = document.getElementById('repTranscriptText');
+      if (!ta || !ta.value) return;
+      navigator.clipboard.writeText(ta.value).then(() => {
+        showToast('📋 Battle Chronicle copied to clipboard!', 'success');
+      }).catch(() => {
+        ta.select();
+        document.execCommand('copy');
+        showToast('📋 Battle Chronicle copied!', 'success');
+      });
+    }
+
+    function downloadReplayReport() {
+      const ta = document.getElementById('repTranscriptText');
+      if (!ta || !ta.value) return;
+      const blob = new Blob([ta.value], { type: 'text/plain;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `kcolosseum_chronicle_${Date.now()}.txt`;
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast('💾 Chronicle downloaded (.txt)', 'success');
+    }
+
+    function downloadReplayJson() {
+      if (!currentMatchReplay) return;
+      const blob = new Blob([JSON.stringify(currentMatchReplay, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `kcolosseum_replay_${Date.now()}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast('💾 Replay telemetry exported (.json)', 'success');
+    }
+
+    // --- ARG SIGNAL BROADCASTER (SOLO-COMPLETABLE COLLABORATIVE MECHANIC) ---
+    function broadcastColosseumSignal(reason = 'arena_triumph') {
+      try {
+        const fb = (rMultiplayer && rMultiplayer.fb) || window.fb;
+        if (fb && fb.db && fb.ref && fb.set) {
+          const sigRef = fb.ref(fb.db, 'arg/signals/kcolosseum');
+          fb.set(sigRef, {
+            source: 'kcolosseum',
+            signal: '0x1999_COLOSSEUM_ECHO',
+            reason: reason,
+            ludus: myPlayerName || 'Lanista',
+            ts: Date.now()
+          });
+        }
+      } catch (e) {}
+    }
+
+    // --- STANDARDIZED RFMS RETROMULTIPLAYER INTEGRATION ---
+    let rMultiplayer = null;
+    let myPlayerName = localStorage.getItem('kcolosseum_playerName') || ('Lanista_' + Math.floor(1000 + Math.random() * 9000));
+    let currentRoomId = null;
+    let isOnlineGame = false;
+    let isCyberBotDuel = false;
+    let myPlayerNum = 1;
+    let isHost = false;
+    let opponentLanistaName = 'Challenger';
+    let selectedChampionId = null;
+    let fallbackCountdownTimer = null;
+    let pendingInviteRoom = null;
+    let onlineTurnSlot = 'p1';
+    let duelRoundNum = 1;
+    let playerRallied = false;
+    let enemyRallied = false;
+
+    function initRetroMultiplayer() {
+      if (typeof RetroMultiplayer === 'undefined') {
+        console.warn("[KColosseum] RetroMultiplayer script not loaded yet.");
+        return;
+      }
+      if (rMultiplayer) return;
+
+      try {
+        rMultiplayer = new RetroMultiplayer({
+          gameId: 'kcolosseum',
+          prefix: 'COL',
+          playerName: myPlayerName,
+          soloTimeoutMs: 25000,
+          onMove: (moveData) => {
+            if (moveData) handleRemoteDuelMove(moveData);
+          },
+          onStateChange: (room) => {
+            if (room) handleDuelRoomUpdate(room);
+          },
+          onOpponentJoin: (opp) => {
+            opponentLanistaName = (opp && opp.name) || 'Rival Lanista';
+            showToast(`⚔️ Lanista ${opponentLanistaName} entered the arena!`, 'success');
+            playTrumpetFanfare();
+          },
+          onOpponentLeave: () => {
+            if (isOnlineGame && !combatOver) {
+              logCombat(`<strong>Lanista ${opponentLanistaName} has conceded and fled the amphitheatre!</strong>`);
+              showToast(`🏆 Opponent conceded! You claim victory!`, 'success');
+              playVictory();
+              funds += 250;
+              saveGame();
+              updateUI();
+              recordBattleStats('victory', { isOnline: true, fighterName: currentFighter ? currentFighter.name : 'Champion', gold: 250 });
+              finishCombatReplay('VICTORY (Forfeit)', 250);
+              broadcastColosseumSignal('online_forfeit_victory');
+              combatOver = true;
+              combatBusy = false;
+              const ctrl = document.getElementById('duelEndControls');
+              if (ctrl) ctrl.style.display = 'flex';
+            }
+          },
+          onChat: (chat) => {
+            if (chat) {
+              const text = (typeof chat === 'string') ? chat : (chat.text || '');
+              const sender = (chat && chat.sender) || opponentLanistaName;
+              logCombat(`<span style="color:#8b0000; font-weight:bold;">[${escapeHtml(sender)}]:</span> <em>${escapeHtml(text)}</em>`);
+              showToast(`💬 ${escapeHtml(sender)}: "${escapeHtml(text)}"`, 'info');
+              playTone(600, 'triangle', 0.1, 0.2);
+            }
+          },
+          onRematch: (rematchData) => {
+            showToast(`⚔️ Lanista ${opponentLanistaName} requested a rematch!`, 'info');
+            startOnlineRematch(rematchData);
+          },
+          onSoloFallback: (info) => {
+            startSoloFallbackDuel(info);
+          },
+          onStatusMsg: (msg, type) => {
+            showToast(msg, type === 'error' ? 'warning' : type);
+          }
+        });
+
+        rMultiplayer.init().then(res => {
+          if (res && res.inviteCode) {
+            handleDeepLinkInvite(res.inviteCode);
+          }
+        }).catch(err => {
+          console.warn("[KColosseum] RFMS init warning:", err);
+        });
+      } catch (err) {
+        console.warn("[KColosseum] RetroMultiplayer init exception:", err);
+      }
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str).replace(/[&<>"']/g, m => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+      })[m]);
+    }
+
+    function handleDeepLinkInvite(roomCode) {
+      pendingInviteRoom = roomCode;
+      const modal = document.getElementById('invite-modal');
+      const label = document.getElementById('invite-code-label');
+      if (modal && label) {
+        label.innerText = roomCode;
+        modal.style.display = 'flex';
+      }
+    }
+
+    function acceptInvite() {
+      const modal = document.getElementById('invite-modal');
+      if (modal) modal.style.display = 'none';
+      if (!pendingInviteRoom) return;
+      const code = pendingInviteRoom;
+      pendingInviteRoom = null;
+      joinRoomByCode(code);
+    }
+
+    function declineInvite() {
+      const modal = document.getElementById('invite-modal');
+      if (modal) modal.style.display = 'none';
+      pendingInviteRoom = null;
+      if (typeof window !== 'undefined' && window.history && window.history.replaceState) {
+        window.history.replaceState(null, '', window.location.pathname);
+      }
+      showToast('Duel invite declined. Playing solo.', 'info');
+    }
+
+    function saveLanistaName() {
+      const inp = document.getElementById('mpLanistaNameInput');
+      if (!inp || !inp.value.trim()) return;
+      myPlayerName = inp.value.trim();
+      localStorage.setItem('kcolosseum_playerName', myPlayerName);
+      if (rMultiplayer) rMultiplayer.playerName = myPlayerName;
+      showToast(`Lanista name saved: ${myPlayerName}`, 'success');
+    }
+
+    function populateChampionSelect() {
+      const sel = document.getElementById('mpChampionSelect');
+      if (!sel) return;
+      sel.innerHTML = '';
+      if (owned.length === 0) {
+        const opt = document.createElement('option');
+        opt.value = -1;
+        opt.innerText = 'Spartacus of Capua (Seasoned Contender)';
+        sel.appendChild(opt);
+        selectedChampionId = -1;
+      } else {
+        owned.forEach(g => {
+          const opt = document.createElement('option');
+          opt.value = g.id;
+          opt.innerText = `${g.name} (STR:${getEffStr(g)} AGI:${getEffAgi(g)} VIT:${getEffVit(g)})`;
+          sel.appendChild(opt);
+        });
+        if (!selectedChampionId || !owned.some(g => g.id === selectedChampionId)) {
+          selectedChampionId = owned[0].id;
+        }
+        sel.value = selectedChampionId;
+      }
+      onChampionSelectChange();
+    }
+
+    function onChampionSelectChange() {
+      const sel = document.getElementById('mpChampionSelect');
+      const prev = document.getElementById('mpChampionPreview');
+      if (!sel || !prev) return;
+      selectedChampionId = parseInt(sel.value, 10);
+      const data = getSelectedChampionData();
+      prev.innerHTML = `<strong>${data.name}</strong> | HP:${data.vit * 10} | STR:${data.str} AGI:${data.agi} VIT:${data.vit} | Wpn:${data.weapon === 1 ? 'Glad' : (data.weapon === 2 ? 'Trid' : (data.weapon === 3 ? 'Sica' : 'Fists'))}`;
+    }
+
+    function getSelectedChampionData() {
+      let g = owned.find(x => x.id === selectedChampionId);
+      if (!g) {
+        if (owned.length > 0) g = owned[0];
+        else g = { id: -1, name: "Spartacus of Capua", cost: 0, str: 6, agi: 6, vit: 6, weapon: 1, armor: 1, shield: 1, damageTaken: 0, skinTone: '#d29a68' };
+      }
+      return {
+        id: g.id,
+        name: g.name,
+        str: getEffStr(g),
+        agi: getEffAgi(g),
+        vit: getEffVit(g),
+        weapon: g.weapon,
+        armor: g.armor,
+        shield: g.shield,
+        skinTone: g.skinTone || '#d29a68'
+      };
+    }
+
+    function showMultiplayerModal() {
+      closeAllModals();
+      initRetroMultiplayer();
+      const inp = document.getElementById('mpLanistaNameInput');
+      if (inp) inp.value = myPlayerName;
+      populateChampionSelect();
+      refreshLobbyList();
+      const overlay = document.getElementById('mpWaitingOverlay');
+      if (overlay) overlay.style.display = 'none';
+      const el = document.getElementById('multiplayerModal');
+      if (el) el.style.display = 'flex';
+    }
+
+    function closeMultiplayerModal() {
+      const el = document.getElementById('multiplayerModal');
+      if (el) el.style.display = 'none';
+    }
+
+    function startFallbackCountdown() {
+      stopFallbackCountdown();
+      let timeLeft = 25;
+      const countEl = document.getElementById('mpCountdownVal');
+      if (countEl) countEl.innerText = timeLeft;
+      fallbackCountdownTimer = setInterval(() => {
+        timeLeft--;
+        if (countEl) countEl.innerText = Math.max(0, timeLeft);
+        if (timeLeft <= 0) {
+          stopFallbackCountdown();
+        }
+      }, 1000);
+    }
+
+    function stopFallbackCountdown() {
+      if (fallbackCountdownTimer) {
+        clearInterval(fallbackCountdownTimer);
+        fallbackCountdownTimer = null;
+      }
+    }
+
+    async function startQuickMatch() {
+      initRetroMultiplayer();
+      if (!rMultiplayer || !rMultiplayer.isOnline()) {
+        showToast('Subnet connection offline. Starting solo duel vs Cyber-Bot.', 'warning');
+        startSoloFallbackDuel({ reason: 'offline' });
+        return;
+      }
+      const champ = getSelectedChampionData();
+      const overlay = document.getElementById('mpWaitingOverlay');
+      if (overlay) overlay.style.display = 'block';
+      const codeEl = document.getElementById('mpWaitingRoomCode');
+      if (codeEl) codeEl.innerText = 'SEARCHING...';
+      startFallbackCountdown();
+
+      const res = await rMultiplayer.quickMatch({
+        p1Gladiator: champ,
+        mode: 'colosseum_duel',
+        turn: 'p1'
+      });
+      if (res && res.success) {
+        currentRoomId = res.roomId;
+        if (codeEl) codeEl.innerText = res.roomId;
+        if (res.slot === 'p2') {
+          stopFallbackCountdown();
+          myPlayerNum = 2;
+          isHost = false;
+          const fb = rMultiplayer.fb;
+          if (fb && fb.db) {
+            fb.set(fb.ref(fb.db, `${rMultiplayer.basePath}/rooms/${res.roomId}/p2Gladiator`), champ);
+          }
+          enterOnlineDuel(res.room);
+        } else {
+          myPlayerNum = 1;
+          isHost = true;
+        }
+      }
+    }
+
+    async function createCustomRoom(isPublic) {
+      initRetroMultiplayer();
+      if (!rMultiplayer || !rMultiplayer.isOnline()) {
+        showToast('Subnet connection offline. Starting solo duel vs Cyber-Bot.', 'warning');
+        startSoloFallbackDuel({ reason: 'offline' });
+        return;
+      }
+      const champ = getSelectedChampionData();
+      const overlay = document.getElementById('mpWaitingOverlay');
+      if (overlay) overlay.style.display = 'block';
+      startFallbackCountdown();
+
+      const res = await rMultiplayer.createRoom({
+        p1Gladiator: champ,
+        mode: 'colosseum_duel',
+        turn: 'p1'
+      }, isPublic);
+      if (res && res.success) {
+        currentRoomId = res.roomId;
+        myPlayerNum = 1;
+        isHost = true;
+        const codeEl = document.getElementById('mpWaitingRoomCode');
+        if (codeEl) codeEl.innerText = res.roomId;
+      }
+    }
+
+    async function joinRoomByInput() {
+      const inp = document.getElementById('mpRoomCodeInput');
+      if (!inp || !inp.value.trim()) {
+        showToast('Please enter a room code.', 'warning');
+        return;
+      }
+      joinRoomByCode(inp.value.trim());
+    }
+
+    async function joinRoomByCode(code) {
+      initRetroMultiplayer();
+      if (!rMultiplayer || !rMultiplayer.isOnline()) {
+        showToast('Subnet connection offline.', 'warning');
+        return;
+      }
+      const res = await rMultiplayer.joinRoom(code);
+      if (res && res.success) {
+        currentRoomId = code;
+        const champ = getSelectedChampionData();
+        const fb = rMultiplayer.fb;
+        if (fb && fb.db && res.slot === 'p2') {
+          fb.set(fb.ref(fb.db, `${rMultiplayer.basePath}/rooms/${code}/p2Gladiator`), champ);
+        }
+        myPlayerNum = (res.slot === 'p1') ? 1 : 2;
+        isHost = (res.slot === 'p1');
+        enterOnlineDuel(res.room);
+      }
+    }
+
+    async function refreshLobbyList() {
+      const box = document.getElementById('mpLobbyList');
+      if (!box) return;
+      initRetroMultiplayer();
+      if (!rMultiplayer || !rMultiplayer.isOnline()) {
+        box.innerHTML = '<div style="color:#777; text-align:center; padding:8px; font-style:italic;">Subnet offline. Solo vs Cyber-Bot available.</div>';
+        return;
+      }
+      try {
+        const lobby = await rMultiplayer.fetchPublicLobby();
+        const codes = Object.keys(lobby || {});
+        if (codes.length === 0) {
+          box.innerHTML = '<div style="color:#777; text-align:center; padding:8px; font-style:italic;">No active duels waiting in the public lobby. Host one!</div>';
+          return;
+        }
+        box.innerHTML = codes.map(c => `
+          <div style="display:flex; justify-content:space-between; align-items:center; padding:6px 8px; border-bottom:1px solid #ddd;">
+            <div>
+              <strong style="color:#8b0000; font-family:monospace;">${escapeHtml(c)}</strong>
+              <span style="font-size:0.85em; color:#555; margin-left:6px;">Lanista: ${escapeHtml((lobby[c] && lobby[c].host) || 'Challenger')}</span>
+            </div>
+            <button onclick="joinRoomByCode('${escapeHtml(c)}')" style="font-size:0.75em; padding:3px 10px; background:#228b22; color:#fff;">⚔️ Challenge</button>
+          </div>
+        `).join('');
+      } catch (e) {
+        box.innerHTML = '<div style="color:#aa0000; text-align:center; padding:8px;">Error loading lobby.</div>';
+      }
+    }
+
+    function copyOnlineRoomLink() {
+      if (!currentRoomId) return;
+      const url = window.location.origin + window.location.pathname + '#room=' + currentRoomId;
+      navigator.clipboard.writeText(url).then(() => {
+        showToast(`📋 Room invite link copied! (${currentRoomId})`, 'success');
+      }).catch(() => {
+        showToast(`Room Code: ${currentRoomId}`, 'info');
+      });
+    }
+
+    function sendDuelTaunt(msg) {
+      if (!isOnlineGame || !rMultiplayer) {
+        logCombat(`<span style="color:#8b0000; font-weight:bold;">[You]:</span> <em>${escapeHtml(msg)}</em>`);
+        playTone(523, 'triangle', 0.1, 0.2);
+        return;
+      }
+      rMultiplayer.sendChat(msg);
+      logCombat(`<span style="color:#8b0000; font-weight:bold;">[You]:</span> <em>${escapeHtml(msg)}</em>`);
+      showToast(`⚔️ You: "${msg}"`, 'info');
+      playTone(523, 'triangle', 0.1, 0.2);
+    }
+
+    function enterOnlineDuel(room) {
+      stopFallbackCountdown();
+      closeAllModals();
+      isOnlineGame = true;
+      isCyberBotDuel = false;
+      combatOver = false;
+      combatBusy = false;
+      playerRallied = false;
+      enemyRallied = false;
+      playerDefending = false;
+      enemyDefending = false;
+      crowdFavor = 0;
+      duelRoundNum = 1;
+
+      const myChamp = getSelectedChampionData();
+      currentFighter = Object.assign({}, myChamp);
+      currentFighter.maxHp = currentFighter.vit * 10;
+      currentFighter.hp = currentFighter.maxHp;
+      currentFighter.damageTaken = 0;
+
+      let oppChamp = null;
+      if (room) {
+        if (myPlayerNum === 1) {
+          oppChamp = room.p2Gladiator || (room.p2 && room.p2.gladiator);
+          opponentLanistaName = (room.p2 && room.p2.name) || 'Rival Lanista';
+        } else {
+          oppChamp = room.p1Gladiator || (room.p1 && room.p1.gladiator);
+          opponentLanistaName = (room.p1 && room.p1.name) || 'Host Lanista';
+        }
+      }
+      if (!oppChamp) {
+        oppChamp = {
+          name: opponentLanistaName + "'s Champion",
+          str: 6, agi: 6, vit: 6,
+          weapon: 1, armor: 1, shield: 1,
+          skinTone: '#b8c4d0'
+        };
+      }
+      enemyFighter = Object.assign({}, oppChamp);
+      enemyFighter.maxHp = enemyFighter.vit * 10;
+      enemyFighter.hp = enemyFighter.maxHp;
+      enemyFighter.damageTaken = 0;
+      enemyFighter.isEnemy = true;
+
+      playerState = { stance: 'idle', timer: 0, flash: 0, lunge: 0 };
+      enemyState = { stance: 'idle', timer: 0, flash: 0, lunge: 0 };
+      particles = [];
+      floaters = [];
+
+      document.getElementById('dashboard').style.display = 'none';
+      document.getElementById('arenaPanel').style.display = 'block';
+
+      const ob = document.getElementById('onlineDuelBanner');
+      if (ob) ob.style.display = 'flex';
+      const rl = document.getElementById('duelRoomLabel');
+      if (rl) rl.innerText = currentRoomId || 'DUEL';
+      const ol = document.getElementById('duelOpponentLabel');
+      if (ol) ol.innerText = `vs Lanista ${opponentLanistaName}`;
+
+      const tb = document.getElementById('duelTauntBar');
+      if (tb) tb.style.display = 'flex';
+      const wc = document.getElementById('btnWarCry');
+      if (wc) wc.style.display = 'inline-block';
+      const fl = document.getElementById('btnFlee');
+      if (fl) fl.innerText = '🏳️ Concede';
+      const ec = document.getElementById('duelEndControls');
+      if (ec) ec.style.display = 'none';
+
+      const title = document.getElementById('arenaCombatTitle');
+      if (title) title.innerText = `Colosseum Online Duel - ${currentFighter.name} vs ${enemyFighter.name}`;
+
+      initCombatReplay('Online Arena Duel', `${myPlayerName} (${currentFighter.name})`, `${opponentLanistaName} (${enemyFighter.name})`);
+
+      const log = document.getElementById('combatLog');
+      log.innerHTML = `<em>⚔️ Online Colosseum Duel commences! <strong>${currentFighter.name}</strong> vs <strong>${enemyFighter.name}</strong>!</em><br>`;
+      playWarHorn();
+      setTimeout(playCheer, 350);
+
+      if (myChamp.agi >= oppChamp.agi) {
+        onlineTurnSlot = 'p1';
+      } else {
+        onlineTurnSlot = 'p2';
+      }
+      setDuelTurn(onlineTurnSlot);
+      updateCombatUI();
+
+      if (animId) cancelAnimationFrame(animId);
+      animId = requestAnimationFrame(renderArenaLoop);
+    }
+
+    function setDuelTurn(slot) {
+      onlineTurnSlot = slot;
+      const isMyTurn = (myPlayerNum === 1 && slot === 'p1') || (myPlayerNum === 2 && slot === 'p2');
+      const tb = document.getElementById('duelTurnBanner');
+      if (tb) {
+        tb.style.display = 'block';
+        if (isMyTurn) {
+          tb.innerText = '⚔️ YOUR TURN TO STRIKE! Select tactical order.';
+          tb.style.borderColor = '#00e676';
+          tb.style.color = '#00e676';
+        } else {
+          tb.innerText = `⏳ Awaiting Lanista ${opponentLanistaName}'s tactical order...`;
+          tb.style.borderColor = '#ffcc66';
+          tb.style.color = '#ffcc66';
+        }
+      }
+      setCombatButtonsDisabled(!isMyTurn || combatOver);
+    }
+
+    function handleDuelRoomUpdate(room) {
+      if (!room) return;
+      if (room.status === 'playing' && (!currentFighter || !isOnlineGame)) {
+        stopFallbackCountdown();
+        enterOnlineDuel(room);
+      }
+      if (room.turn && isOnlineGame && !combatOver) {
+        setDuelTurn(room.turn);
+      }
+    }
+
+    function handleRemoteDuelMove(moveData) {
+      if (!isOnlineGame || combatOver) return;
+      if (moveData.type !== 'duel_action') return;
+
+      const pX = arenaCanvas.width * 0.28;
+      const pY = arenaCanvas.height * 0.68;
+      const eX = arenaCanvas.width * 0.72;
+      const eY = arenaCanvas.height * 0.68;
+
+      const act = moveData.action;
+
+      if (act === 'concede') {
+        logCombat(`<strong>Lanista ${opponentLanistaName} has surrendered the duel!</strong>`);
+        showToast(`🏆 Opponent yielded! Victory is yours!`, 'success');
+        playVictory();
+        funds += 250;
+        saveGame();
+        updateUI();
+        recordBattleStats('victory', { isOnline: true, fighterName: currentFighter.name, gold: 250 });
+        finishCombatReplay('VICTORY (Concession)', 250);
+        broadcastColosseumSignal('online_duel_victory');
+        combatOver = true;
+        combatBusy = false;
+        setCombatButtonsDisabled(true);
+        const ctrl = document.getElementById('duelEndControls');
+        if (ctrl) ctrl.style.display = 'flex';
+        return;
+      }
+
+      if (act === 'defend') {
+        enemyDefending = true;
+        enemyState.stance = 'defend';
+        addFloatingText("DEFENDING", eX, eY - 30, '#ffd700');
+        spawnParticles(eX, eY, 8, 'dust');
+        logCombat(`<strong>${enemyFighter.name}</strong> braces defensively.`);
+      } else if (act === 'showboat') {
+        enemyDefending = false;
+        enemyState.stance = 'showboat';
+        setTimeout(() => { enemyState.stance = 'idle'; }, 600);
+        addFloatingText("+FAVOR", eX, eY - 30, '#ffd700');
+        spawnParticles(eX, eY - 20, 16, 'sparks', '#ffd700');
+        crowdFavor = moveData.favor !== undefined ? moveData.favor : Math.min(100, crowdFavor + 20);
+        logCombat(`<strong>${enemyFighter.name}</strong> plays to the Roman crowd!`);
+        checkCrowdFavor();
+      } else if (act === 'warcry') {
+        enemyDefending = false;
+        enemyRallied = true;
+        addFloatingText("WAR CRY!", eX, eY - 30, '#ffd700');
+        spawnParticles(eX, eY, 18, 'sparks', '#ffd700');
+        playWarHorn();
+        logCombat(`<strong>${enemyFighter.name}</strong> bellows a fierce Roman War Cry! (+STR)`);
+      } else if (act === 'attack') {
+        enemyDefending = false;
+        enemyState.stance = 'attack';
+        enemyState.lunge = 45;
+        setTimeout(() => { enemyState.stance = 'idle'; }, 300);
+
+        if (moveData.hit) {
+          const dmg = moveData.dmg || 8;
+          currentFighter.hp = Math.max(0, currentFighter.hp - dmg);
+          currentFighter.damageTaken += dmg;
+          enemyState.flash = 0;
+          playerState.flash = 12;
+          addScreenShake(dmg > 10 ? 10 : 6);
+          playClash();
+
+          if (moveData.rend) {
+            logCombat(`<strong>${enemyFighter.name}</strong> lands a deep arterial rend for <span style="color:#8b0000;">${dmg} damage</span>!`);
+            addFloatingText(`REND! -${dmg}`, pX, pY - 30, '#ff1111');
+            spawnParticles(pX, pY, 20, 'blood');
+          } else if (moveData.flurry) {
+            logCombat(`<strong>${enemyFighter.name}</strong> executes a Twin-Blade Flurry for <span style="color:#8b0000;">${dmg} damage</span>!`);
+            addFloatingText(`FLURRY! -${dmg}`, pX, pY - 30, '#c0c0ff');
+            playDualSlash();
+            spawnParticles(pX, pY, 20, 'sparks', '#c0c0ff');
+          } else {
+            logCombat(`<strong>${enemyFighter.name}</strong> strikes for <span style="color:#8b0000;">${dmg} damage</span>!`);
+            addFloatingText(`-${dmg}`, pX, pY - 30, '#ff2222');
+            spawnParticles(pX, pY, 15, 'blood');
+          }
+
+          recordReplayRound({
+            actor: enemyFighter.name,
+            action: 'Attack',
+            hit: true,
+            dmg: dmg,
+            favor: crowdFavor,
+            p1Hp: currentFighter.hp,
+            p2Hp: enemyFighter.hp,
+            isPlayer: false,
+            log: `${enemyFighter.name} struck for ${dmg} damage.`
+          });
+        } else {
+          logCombat(`<strong>${enemyFighter.name}</strong> strikes and misses!`);
+          playMiss();
+          addFloatingText("MISS!", pX, pY - 30, '#aaaaaa');
+          spawnParticles(pX, pY + 20, 6, 'dust');
+
+          if (playerDefending && currentFighter.shield === 1) {
+            const bashDmg = 2 + Math.floor(Math.random() * 3);
+            enemyFighter.hp = Math.max(0, enemyFighter.hp - bashDmg);
+            logCombat(`<strong>${currentFighter.name}</strong> counters with a ferocious <strong>Shield Bash</strong> for <span style="color:#d4af37;">${bashDmg} damage</span>!`);
+            addFloatingText(`BASH -${bashDmg}`, eX, eY - 30, '#ffd700');
+            spawnParticles(eX, eY, 14, 'sparks', '#ffd700');
+            playShieldBash();
+          }
+
+          recordReplayRound({
+            actor: enemyFighter.name,
+            action: 'Attack',
+            hit: false,
+            dmg: 0,
+            favor: crowdFavor,
+            p1Hp: currentFighter.hp,
+            p2Hp: enemyFighter.hp,
+            isPlayer: false,
+            log: `${enemyFighter.name} attacked and missed.`
+          });
+        }
+      }
+
+      updateCombatUI();
+
+      if (currentFighter.hp <= 0) {
+        currentFighter.hp = 0;
+        playerState.stance = 'dead';
+        updateCombatUI();
+        logCombat(`<strong>${currentFighter.name} has fallen in the duel! Lanista ${opponentLanistaName} wins!</strong>`);
+        playDefeat();
+        showToast(`Defeat in the arena! Opponent claims victory.`, 'warning');
+        recordBattleStats('defeat', { isOnline: true, fighterName: currentFighter.name });
+        finishCombatReplay('DEFEAT', 0);
+        combatOver = true;
+        combatBusy = false;
+        setCombatButtonsDisabled(true);
+        const ctrl = document.getElementById('duelEndControls');
+        if (ctrl) ctrl.style.display = 'flex';
+        return;
+      }
+
+      if (enemyFighter.hp <= 0) {
+        enemyFighter.hp = 0;
+        enemyState.stance = 'dead';
+        updateCombatUI();
+        logCombat(`<strong>${enemyFighter.name} has fallen! VICTORIA! You win the Online Duel!</strong>`);
+        playVictory();
+        funds += 250;
+        saveGame();
+        updateUI();
+        showToast(`🏆 VICTORIA! Won +250 Denarii!`, 'success');
+        recordBattleStats('victory', { isOnline: true, fighterName: currentFighter.name, gold: 250 });
+        finishCombatReplay('VICTORY', 250);
+        broadcastColosseumSignal('online_duel_victory');
+        combatOver = true;
+        combatBusy = false;
+        setCombatButtonsDisabled(true);
+        const ctrl = document.getElementById('duelEndControls');
+        if (ctrl) ctrl.style.display = 'flex';
+        return;
+      }
+
+      const mySlot = (myPlayerNum === 1 ? 'p1' : 'p2');
+      setDuelTurn(mySlot);
+    }
+
+    function handleOnlineDuelPlayerAction(action) {
+      if (!isOnlineGame || combatOver || combatBusy) return;
+      setCombatButtonsDisabled(true);
+
+      const pX = arenaCanvas.width * 0.28;
+      const pY = arenaCanvas.height * 0.68;
+      const eX = arenaCanvas.width * 0.72;
+      const eY = arenaCanvas.height * 0.68;
+
+      if (action === 'flee') {
+        if (!confirm("Concede this duel to your opponent?")) {
+          setCombatButtonsDisabled(false);
+          return;
+        }
+        logCombat(`<strong>${currentFighter.name} yields and concedes the duel!</strong>`);
+        playDefeat();
+        combatOver = true;
+        combatBusy = false;
+        const mySlot = (myPlayerNum === 1 ? 'p1' : 'p2');
+        const nextSlot = (myPlayerNum === 1 ? 'p2' : 'p1');
+        rMultiplayer.sendMove({ type: 'duel_action', action: 'concede', attackerSlot: mySlot }, nextSlot, { status: 'finished', winner: nextSlot });
+        recordBattleStats('fled', { isOnline: true, fighterName: currentFighter.name });
+        finishCombatReplay('CONCEDED', 0);
+        const ctrl = document.getElementById('duelEndControls');
+        if (ctrl) ctrl.style.display = 'flex';
+        return;
+      }
+
+      let isHit = false;
+      let dmg = 0;
+      let rend = false;
+      let flurry = false;
+
+      if (action === 'defend') {
+        playerDefending = true;
+        playerState.stance = 'defend';
+        addFloatingText("DEFENDING", pX, pY - 30, '#ffd700');
+        spawnParticles(pX, pY, 8, 'dust');
+        logCombat(`<strong>${currentFighter.name}</strong> braces defensively.`);
+        recordReplayRound({
+          actor: currentFighter.name,
+          action: 'Defend',
+          hit: true,
+          dmg: 0,
+          favor: crowdFavor,
+          p1Hp: currentFighter.hp,
+          p2Hp: enemyFighter.hp,
+          isPlayer: true,
+          log: `${currentFighter.name} braced defensively.`
+        });
+      } else if (action === 'showboat') {
+        playerDefending = false;
+        let gain = 30 + Math.floor(Math.random() * 20);
+        crowdFavor += gain;
+        playerState.stance = 'showboat';
+        setTimeout(() => { playerState.stance = 'idle'; }, 600);
+        addFloatingText(`+${gain}% FAVOR`, pX, pY - 30, '#ffd700');
+        spawnParticles(pX, pY - 20, 16, 'sparks', '#ffd700');
+        logCombat(`<strong>${currentFighter.name}</strong> plays to the Roman crowd!`);
+        checkCrowdFavor();
+        recordReplayRound({
+          actor: currentFighter.name,
+          action: 'Showboat',
+          hit: true,
+          dmg: 0,
+          favor: crowdFavor,
+          p1Hp: currentFighter.hp,
+          p2Hp: enemyFighter.hp,
+          isPlayer: true,
+          log: `${currentFighter.name} showboated for +${gain}% favor.`
+        });
+      } else if (action === 'warcry') {
+        playerDefending = false;
+        playerRallied = true;
+        addFloatingText("WAR CRY!", pX, pY - 30, '#ffd700');
+        spawnParticles(pX, pY, 18, 'sparks', '#ffd700');
+        playWarHorn();
+        logCombat(`<strong>${currentFighter.name}</strong> bellows a ferocious War Cry! (+3 STR on next strike)`);
+        recordReplayRound({
+          actor: currentFighter.name,
+          action: 'War Cry',
+          hit: true,
+          dmg: 0,
+          favor: crowdFavor,
+          p1Hp: currentFighter.hp,
+          p2Hp: enemyFighter.hp,
+          isPlayer: true,
+          log: `${currentFighter.name} rallied with a War Cry.`
+        });
+      } else if (action === 'attack') {
+        playerDefending = false;
+        playerState.stance = 'attack';
+        playerState.lunge = 45;
+        setTimeout(() => { playerState.stance = 'idle'; }, 300);
+
+        let effStr = currentFighter.str + (playerRallied ? 3 : 0);
+        playerRallied = false;
+
+        let hitChance = 75 + (currentFighter.agi - enemyFighter.agi) * 5;
+        if (enemyDefending) hitChance -= (enemyFighter.shield === 1 ? 45 : 25);
+        if (Math.random() * 100 < hitChance) {
+          isHit = true;
+          dmg = Math.max(1, effStr + Math.floor(Math.random() * 4));
+          if (enemyDefending) {
+            dmg = Math.max(1, dmg - (enemyFighter.shield === 1 ? 5 : 3));
+          }
+
+          if (currentFighter.weapon === 1 && Math.random() < 0.25) {
+            rend = true;
+            dmg += 4;
+          }
+          if (currentFighter.weapon === 3 && Math.random() < 0.28) {
+            flurry = true;
+            dmg += Math.max(1, Math.floor(effStr * 0.65));
+          }
+
+          enemyFighter.hp = Math.max(0, enemyFighter.hp - dmg);
+          crowdFavor += 6 + Math.floor(Math.random() * 8);
+
+          if (rend) {
+            logCombat(`<strong>${currentFighter.name}</strong> strikes a deep arterial rend for <span style="color:#8b0000;">${dmg} damage</span>!`);
+            addFloatingText(`REND! -${dmg}`, eX, eY - 30, '#ff1111');
+            spawnParticles(eX, eY, 20, 'blood');
+          } else if (flurry) {
+            logCombat(`<strong>${currentFighter.name}</strong> strikes with Twin-Blade Flurry for <span style="color:#8b0000;">${dmg} damage</span>!`);
+            addFloatingText(`FLURRY! -${dmg}`, eX, eY - 30, '#c0c0ff');
+            playDualSlash();
+            spawnParticles(eX, eY, 20, 'sparks', '#c0c0ff');
+          } else {
+            logCombat(`<strong>${currentFighter.name}</strong> hits for <span style="color:#8b0000;">${dmg} damage</span>!`);
+            addFloatingText(`-${dmg}`, eX, eY - 30, '#ff2222');
+            spawnParticles(eX, eY, 15, 'blood');
+          }
+          playClash();
+          enemyState.flash = 12;
+          addScreenShake(dmg > 10 ? 10 : 6);
+          checkCrowdFavor();
+
+          recordReplayRound({
+            actor: currentFighter.name,
+            action: 'Attack',
+            hit: true,
+            dmg: dmg,
+            favor: crowdFavor,
+            p1Hp: currentFighter.hp,
+            p2Hp: enemyFighter.hp,
+            isPlayer: true,
+            log: `${currentFighter.name} hit ${enemyFighter.name} for ${dmg} damage.`
+          });
+        } else {
+          isHit = false;
+          dmg = 0;
+          logCombat(`<strong>${currentFighter.name}</strong> strikes and misses!`);
+          playMiss();
+          addFloatingText("MISS!", eX, eY - 30, '#aaaaaa');
+          spawnParticles(eX, eY + 20, 6, 'dust');
+
+          recordReplayRound({
+            actor: currentFighter.name,
+            action: 'Attack',
+            hit: false,
+            dmg: 0,
+            favor: crowdFavor,
+            p1Hp: currentFighter.hp,
+            p2Hp: enemyFighter.hp,
+            isPlayer: true,
+            log: `${currentFighter.name} attacked and missed.`
+          });
+        }
+      }
+
+      updateCombatUI();
+
+      const matchWon = (enemyFighter.hp <= 0);
+      const mySlot = (myPlayerNum === 1 ? 'p1' : 'p2');
+      const nextSlot = (myPlayerNum === 1 ? 'p2' : 'p1');
+
+      const movePayload = {
+        type: 'duel_action',
+        action: action,
+        attackerSlot: mySlot,
+        hit: isHit,
+        dmg: dmg,
+        rend: rend,
+        flurry: flurry,
+        favor: crowdFavor,
+        ts: Date.now()
+      };
+
+      const addState = {
+        turn: nextSlot,
+        crowdFavor: crowdFavor
+      };
+      if (matchWon) {
+        addState.status = 'finished';
+        addState.winner = mySlot;
+      }
+
+      rMultiplayer.sendMove(movePayload, nextSlot, addState);
+
+      if (matchWon) {
+        enemyFighter.hp = 0;
+        enemyState.stance = 'dead';
+        updateCombatUI();
+        logCombat(`<strong>${enemyFighter.name} is defeated! VICTORIA! You win the Online Duel!</strong>`);
+        playVictory();
+        funds += 250;
+        saveGame();
+        updateUI();
+        showToast(`🏆 VICTORIA! Won +250 Denarii!`, 'success');
+        recordBattleStats('victory', { isOnline: true, fighterName: currentFighter.name, gold: 250 });
+        finishCombatReplay('VICTORY', 250);
+        broadcastColosseumSignal('online_duel_victory');
+        combatOver = true;
+        combatBusy = false;
+        setCombatButtonsDisabled(true);
+        const ctrl = document.getElementById('duelEndControls');
+        if (ctrl) ctrl.style.display = 'flex';
+        return;
+      }
+
+      setDuelTurn(nextSlot);
+    }
+
+    function requestOnlineRematch() {
+      if (!rMultiplayer || !currentRoomId) {
+        showToast('Online connection lost.', 'warning');
+        return;
+      }
+      showToast('⚔️ Rematch challenge sent to opponent...', 'info');
+      rMultiplayer.requestRematch({
+        status: 'playing',
+        round: duelRoundNum + 1,
+        p1Hp: getEffVit(currentFighter) * 10,
+        p2Hp: getEffVit(enemyFighter) * 10
+      });
+    }
+
+    function startOnlineRematch(rematchData) {
+      logCombat(`<strong>--- REMATCH COMMENCES! ---</strong>`);
+      enterOnlineDuel(rematchData || {});
+    }
+
+    function leaveOnlineDuel(confirmPrompt = true) {
+      if (confirmPrompt && !combatOver) {
+        if (!confirm("Are you sure you want to forfeit this online duel?")) return;
+      }
+      stopFallbackCountdown();
+      if (rMultiplayer) {
+        rMultiplayer.leaveRoom(true);
+      }
+      exitArena();
+    }
+
+    // --- 25-SECOND SOLO FALLBACK CYBER-BOT DUEL ---
+    function startSoloFallbackDuel(info) {
+      stopFallbackCountdown();
+      closeAllModals();
+      isOnlineGame = false;
+      isCyberBotDuel = true;
+      combatOver = false;
+      combatBusy = false;
+      playerRallied = false;
+      enemyRallied = false;
+      playerDefending = false;
+      enemyDefending = false;
+      crowdFavor = 0;
+      duelRoundNum = 1;
+
+      showToast('⏳ 25s elapsed without peer. Engaging Cyber-Lanista Marcus (Subnet AI)!', 'warning');
+
+      const myChamp = getSelectedChampionData();
+      currentFighter = Object.assign({}, myChamp);
+      currentFighter.maxHp = currentFighter.vit * 10;
+      currentFighter.hp = currentFighter.maxHp;
+      currentFighter.damageTaken = 0;
+
+      opponentLanistaName = "Cyber-Lanista Marcus";
+      enemyFighter = {
+        name: "Automaton Champion Titus",
+        str: Math.max(5, currentFighter.str),
+        agi: Math.max(5, currentFighter.agi),
+        vit: Math.max(5, currentFighter.vit),
+        weapon: 1,
+        armor: 1,
+        shield: 1,
+        skinTone: '#b0bec5',
+        isEnemy: true
+      };
+      enemyFighter.maxHp = enemyFighter.vit * 10;
+      enemyFighter.hp = enemyFighter.maxHp;
+      enemyFighter.damageTaken = 0;
+
+      playerState = { stance: 'idle', timer: 0, flash: 0, lunge: 0 };
+      enemyState = { stance: 'idle', timer: 0, flash: 0, lunge: 0 };
+      particles = [];
+      floaters = [];
+
+      document.getElementById('dashboard').style.display = 'none';
+      document.getElementById('arenaPanel').style.display = 'block';
+
+      const ob = document.getElementById('onlineDuelBanner');
+      if (ob) ob.style.display = 'flex';
+      const rl = document.getElementById('duelRoomLabel');
+      if (rl) rl.innerText = 'SUBNET-AI';
+      const ol = document.getElementById('duelOpponentLabel');
+      if (ol) ol.innerText = `vs ${opponentLanistaName} (Solo Fallback)`;
+
+      const tb = document.getElementById('duelTauntBar');
+      if (tb) tb.style.display = 'flex';
+      const wc = document.getElementById('btnWarCry');
+      if (wc) wc.style.display = 'inline-block';
+      const fl = document.getElementById('btnFlee');
+      if (fl) fl.innerText = '🏃 Flee';
+      const ec = document.getElementById('duelEndControls');
+      if (ec) ec.style.display = 'none';
+
+      const title = document.getElementById('arenaCombatTitle');
+      if (title) title.innerText = `Colosseum Cyber-Duel - ${currentFighter.name} vs ${enemyFighter.name}`;
+
+      initCombatReplay('Cyber-Bot Duel (Solo Fallback)', currentFighter.name, enemyFighter.name);
+
+      const log = document.getElementById('combatLog');
+      log.innerHTML = `<em>⚔️ Subnet AI Cyber-Duel begins! <strong>${currentFighter.name}</strong> vs <strong>${enemyFighter.name}</strong>!</em><br>`;
+      playWarHorn();
+      setTimeout(playCheer, 300);
+
+      updateCombatUI();
+      setDuelTurn('p1');
+
+      if (animId) cancelAnimationFrame(animId);
+      animId = requestAnimationFrame(renderArenaLoop);
+    }
+
+    function handleCyberBotTurn() {
+      if (!isCyberBotDuel || combatOver) return;
+
+      const pX = arenaCanvas.width * 0.28;
+      const pY = arenaCanvas.height * 0.68;
+      const eX = arenaCanvas.width * 0.72;
+      const eY = arenaCanvas.height * 0.68;
+
+      let action = 'attack';
+      if (enemyFighter.hp < enemyFighter.maxHp * 0.35 && Math.random() < 0.40) {
+        action = 'defend';
+      } else if (crowdFavor < 40 && Math.random() < 0.25) {
+        action = 'showboat';
+      } else if (!enemyRallied && Math.random() < 0.20) {
+        action = 'warcry';
+      }
+
+      if (action === 'defend') {
+        enemyDefending = true;
+        enemyState.stance = 'defend';
+        addFloatingText("DEFENDING", eX, eY - 30, '#ffd700');
+        spawnParticles(eX, eY, 8, 'dust');
+        logCombat(`<strong>${enemyFighter.name}</strong> braces defensively.`);
+      } else if (action === 'showboat') {
+        enemyDefending = false;
+        let gain = 25 + Math.floor(Math.random() * 20);
+        crowdFavor += gain;
+        enemyState.stance = 'showboat';
+        setTimeout(() => { enemyState.stance = 'idle'; }, 600);
+        addFloatingText(`+${gain}% FAVOR`, eX, eY - 30, '#ffd700');
+        spawnParticles(eX, eY - 20, 16, 'sparks', '#ffd700');
+        logCombat(`<strong>${enemyFighter.name}</strong> pleases the Roman crowd!`);
+        checkCrowdFavor();
+      } else if (action === 'warcry') {
+        enemyDefending = false;
+        enemyRallied = true;
+        addFloatingText("WAR CRY!", eX, eY - 30, '#ffd700');
+        spawnParticles(eX, eY, 18, 'sparks', '#ffd700');
+        playWarHorn();
+        logCombat(`<strong>${enemyFighter.name}</strong> activates Subnet Cyber-Overdrive! (+STR)`);
+      } else {
+        enemyDefending = false;
+        enemyState.stance = 'attack';
+        enemyState.lunge = 45;
+        setTimeout(() => { enemyState.stance = 'idle'; }, 300);
+
+        let effStr = enemyFighter.str + (enemyRallied ? 3 : 0);
+        enemyRallied = false;
+
+        let hitChance = 75 + (enemyFighter.agi - currentFighter.agi) * 5;
+        if (playerDefending) hitChance -= (currentFighter.shield === 1 ? 50 : 30);
+
+        if (Math.random() * 100 < hitChance) {
+          let dmg = Math.max(1, effStr + Math.floor(Math.random() * 4));
+          if (playerDefending) {
+            dmg = Math.max(1, dmg - (currentFighter.shield === 1 ? 5 : 3));
+          }
+          currentFighter.hp = Math.max(0, currentFighter.hp - dmg);
+          currentFighter.damageTaken += dmg;
+          playerState.flash = 12;
+          addScreenShake(dmg > 10 ? 10 : 6);
+          playClash();
+          logCombat(`<strong>${enemyFighter.name}</strong> strikes for <span style="color:#8b0000;">${dmg} damage</span>!`);
+          addFloatingText(`-${dmg}`, pX, pY - 30, '#ff2222');
+          spawnParticles(pX, pY, 15, 'blood');
+
+          recordReplayRound({
+            actor: enemyFighter.name,
+            action: 'Attack',
+            hit: true,
+            dmg: dmg,
+            favor: crowdFavor,
+            p1Hp: currentFighter.hp,
+            p2Hp: enemyFighter.hp,
+            isPlayer: false,
+            log: `${enemyFighter.name} hit for ${dmg} damage.`
+          });
+        } else {
+          logCombat(`<strong>${enemyFighter.name}</strong> strikes and misses!`);
+          playMiss();
+          addFloatingText("MISS!", pX, pY - 30, '#aaaaaa');
+          spawnParticles(pX, pY + 20, 6, 'dust');
+
+          if (playerDefending && currentFighter.shield === 1) {
+            let bashDmg = 2 + Math.floor(Math.random() * 3);
+            enemyFighter.hp = Math.max(0, enemyFighter.hp - bashDmg);
+            logCombat(`<strong>${currentFighter.name}</strong> counter-bashes for <span style="color:#d4af37;">${bashDmg} damage</span>!`);
+            addFloatingText(`BASH -${bashDmg}`, eX, eY - 30, '#ffd700');
+            spawnParticles(eX, eY, 14, 'sparks', '#ffd700');
+            playShieldBash();
+          }
+
+          recordReplayRound({
+            actor: enemyFighter.name,
+            action: 'Attack',
+            hit: false,
+            dmg: 0,
+            favor: crowdFavor,
+            p1Hp: currentFighter.hp,
+            p2Hp: enemyFighter.hp,
+            isPlayer: false,
+            log: `${enemyFighter.name} attacked and missed.`
+          });
+        }
+      }
+
+      updateCombatUI();
+
+      if (currentFighter.hp <= 0) {
+        currentFighter.hp = 0;
+        playerState.stance = 'dead';
+        updateCombatUI();
+        logCombat(`<strong>${currentFighter.name} has fallen to the Cyber-Bot!</strong>`);
+        playDefeat();
+        showToast('💀 Defeat against Cyber-Bot Titus!', 'warning');
+        recordBattleStats('defeat', { isCyberBot: true, fighterName: currentFighter.name });
+        finishCombatReplay('DEFEAT', 0);
+        combatOver = true;
+        combatBusy = false;
+        setCombatButtonsDisabled(true);
+        const ctrl = document.getElementById('duelEndControls');
+        if (ctrl) ctrl.style.display = 'flex';
+        return;
+      }
+
+      if (enemyFighter.hp <= 0) {
+        enemyFighter.hp = 0;
+        enemyState.stance = 'dead';
+        updateCombatUI();
+        logCombat(`<strong>${enemyFighter.name} is vanquished! VICTORIA!</strong>`);
+        playVictory();
+        funds += 200;
+        saveGame();
+        updateUI();
+        showToast('🏆 VICTORIA! Defeated Cyber-Bot Titus (+200D)!', 'success');
+        recordBattleStats('victory', { isCyberBot: true, fighterName: currentFighter.name, gold: 200 });
+        finishCombatReplay('VICTORY', 200);
+        broadcastColosseumSignal('cyber_duel_victory');
+        combatOver = true;
+        combatBusy = false;
+        setCombatButtonsDisabled(true);
+        const ctrl = document.getElementById('duelEndControls');
+        if (ctrl) ctrl.style.display = 'flex';
+        return;
+      }
+
+      setDuelTurn('p1');
+    }
+
+    function handleCyberBotDuelPlayerAction(action) {
+      if (!isCyberBotDuel || combatOver || combatBusy) return;
+      setCombatButtonsDisabled(true);
+
+      const pX = arenaCanvas.width * 0.28;
+      const pY = arenaCanvas.height * 0.68;
+      const eX = arenaCanvas.width * 0.72;
+      const eY = arenaCanvas.height * 0.68;
+
+      if (action === 'flee') {
+        logCombat(`<strong>${currentFighter.name} retreats from the cyber-duel!</strong>`);
+        playDefeat();
+        combatOver = true;
+        combatBusy = false;
+        recordBattleStats('fled', { isCyberBot: true, fighterName: currentFighter.name });
+        finishCombatReplay('FLED', 0);
+        const ctrl = document.getElementById('duelEndControls');
+        if (ctrl) ctrl.style.display = 'flex';
+        return;
+      }
+
+      if (action === 'defend') {
+        playerDefending = true;
+        playerState.stance = 'defend';
+        addFloatingText("DEFENDING", pX, pY - 30, '#ffd700');
+        spawnParticles(pX, pY, 8, 'dust');
+        logCombat(`<strong>${currentFighter.name}</strong> braces defensively.`);
+        recordReplayRound({
+          actor: currentFighter.name,
+          action: 'Defend',
+          hit: true,
+          dmg: 0,
+          favor: crowdFavor,
+          p1Hp: currentFighter.hp,
+          p2Hp: enemyFighter.hp,
+          isPlayer: true,
+          log: `${currentFighter.name} braced defensively.`
+        });
+      } else if (action === 'showboat') {
+        playerDefending = false;
+        let gain = 30 + Math.floor(Math.random() * 20);
+        crowdFavor += gain;
+        playerState.stance = 'showboat';
+        setTimeout(() => { playerState.stance = 'idle'; }, 600);
+        addFloatingText(`+${gain}% FAVOR`, pX, pY - 30, '#ffd700');
+        spawnParticles(pX, pY - 20, 16, 'sparks', '#ffd700');
+        logCombat(`<strong>${currentFighter.name}</strong> plays to the Roman crowd!`);
+        checkCrowdFavor();
+        recordReplayRound({
+          actor: currentFighter.name,
+          action: 'Showboat',
+          hit: true,
+          dmg: 0,
+          favor: crowdFavor,
+          p1Hp: currentFighter.hp,
+          p2Hp: enemyFighter.hp,
+          isPlayer: true,
+          log: `${currentFighter.name} showboated for +${gain}% favor.`
+        });
+      } else if (action === 'warcry') {
+        playerDefending = false;
+        playerRallied = true;
+        addFloatingText("WAR CRY!", pX, pY - 30, '#ffd700');
+        spawnParticles(pX, pY, 18, 'sparks', '#ffd700');
+        playWarHorn();
+        logCombat(`<strong>${currentFighter.name}</strong> bellows a ferocious War Cry! (+3 STR on next strike)`);
+        recordReplayRound({
+          actor: currentFighter.name,
+          action: 'War Cry',
+          hit: true,
+          dmg: 0,
+          favor: crowdFavor,
+          p1Hp: currentFighter.hp,
+          p2Hp: enemyFighter.hp,
+          isPlayer: true,
+          log: `${currentFighter.name} rallied with a War Cry.`
+        });
+      } else if (action === 'attack') {
+        playerDefending = false;
+        playerState.stance = 'attack';
+        playerState.lunge = 45;
+        setTimeout(() => { playerState.stance = 'idle'; }, 300);
+
+        let effStr = currentFighter.str + (playerRallied ? 3 : 0);
+        playerRallied = false;
+
+        let hitChance = 75 + (currentFighter.agi - enemyFighter.agi) * 5;
+        if (enemyDefending) hitChance -= (enemyFighter.shield === 1 ? 45 : 25);
+        if (Math.random() * 100 < hitChance) {
+          let dmg = Math.max(1, effStr + Math.floor(Math.random() * 4));
+          if (enemyDefending) dmg = Math.max(1, dmg - (enemyFighter.shield === 1 ? 5 : 3));
+          
+          let rend = (currentFighter.weapon === 1 && Math.random() < 0.25);
+          if (rend) dmg += 4;
+          let flurry = (currentFighter.weapon === 3 && Math.random() < 0.28);
+          if (flurry) dmg += Math.max(1, Math.floor(effStr * 0.65));
+
+          enemyFighter.hp = Math.max(0, enemyFighter.hp - dmg);
+          crowdFavor += 6 + Math.floor(Math.random() * 8);
+
+          if (rend) {
+            logCombat(`<strong>${currentFighter.name}</strong> strikes a deep arterial rend for <span style="color:#8b0000;">${dmg} damage</span>!`);
+            addFloatingText(`REND! -${dmg}`, eX, eY - 30, '#ff1111');
+            spawnParticles(eX, eY, 20, 'blood');
+          } else if (flurry) {
+            logCombat(`<strong>${currentFighter.name}</strong> strikes with Twin-Blade Flurry for <span style="color:#8b0000;">${dmg} damage</span>!`);
+            addFloatingText(`FLURRY! -${dmg}`, eX, eY - 30, '#c0c0ff');
+            playDualSlash();
+            spawnParticles(eX, eY, 20, 'sparks', '#c0c0ff');
+          } else {
+            logCombat(`<strong>${currentFighter.name}</strong> hits for <span style="color:#8b0000;">${dmg} damage</span>!`);
+            addFloatingText(`-${dmg}`, eX, eY - 30, '#ff2222');
+            spawnParticles(eX, eY, 15, 'blood');
+          }
+          playClash();
+          enemyState.flash = 12;
+          addScreenShake(dmg > 10 ? 10 : 6);
+          checkCrowdFavor();
+
+          recordReplayRound({
+            actor: currentFighter.name,
+            action: 'Attack',
+            hit: true,
+            dmg: dmg,
+            favor: crowdFavor,
+            p1Hp: currentFighter.hp,
+            p2Hp: enemyFighter.hp,
+            isPlayer: true,
+            log: `${currentFighter.name} hit ${enemyFighter.name} for ${dmg} damage.`
+          });
+        } else {
+          logCombat(`<strong>${currentFighter.name}</strong> strikes and misses!`);
+          playMiss();
+          addFloatingText("MISS!", eX, eY - 30, '#aaaaaa');
+          spawnParticles(eX, eY + 20, 6, 'dust');
+
+          recordReplayRound({
+            actor: currentFighter.name,
+            action: 'Attack',
+            hit: false,
+            dmg: 0,
+            favor: crowdFavor,
+            p1Hp: currentFighter.hp,
+            p2Hp: enemyFighter.hp,
+            isPlayer: true,
+            log: `${currentFighter.name} attacked and missed.`
+          });
+        }
+      }
+
+      updateCombatUI();
+
+      if (enemyFighter.hp <= 0) {
+        enemyFighter.hp = 0;
+        enemyState.stance = 'dead';
+        updateCombatUI();
+        logCombat(`<strong>${enemyFighter.name} is vanquished! VICTORIA!</strong>`);
+        playVictory();
+        funds += 200;
+        saveGame();
+        updateUI();
+        showToast('🏆 VICTORIA! Defeated Cyber-Bot Titus (+200D)!', 'success');
+        recordBattleStats('victory', { isCyberBot: true, fighterName: currentFighter.name, gold: 200 });
+        finishCombatReplay('VICTORY', 200);
+        broadcastColosseumSignal('cyber_duel_victory');
+        combatOver = true;
+        combatBusy = false;
+        setCombatButtonsDisabled(true);
+        const ctrl = document.getElementById('duelEndControls');
+        if (ctrl) ctrl.style.display = 'flex';
+        return;
+      }
+
+      setDuelTurn('p2');
+      setTimeout(handleCyberBotTurn, 700);
+    }
+
     window.addEventListener('keydown', (e) => {
       if (e.ctrlKey || e.altKey || e.metaKey) return;
       if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) return;
@@ -3710,7 +5776,11 @@
       const tutOpen = document.getElementById('tutorialModal') && document.getElementById('tutorialModal').style.display === 'flex';
       const expOpen = document.getElementById('exportModal') && document.getElementById('exportModal').style.display === 'flex';
       const vicOpen = document.getElementById('victoryModal') && document.getElementById('victoryModal').style.display === 'flex';
-      const anyModalOpen = helpOpen || tutOpen || expOpen || vicOpen;
+      const mpOpen = document.getElementById('multiplayerModal') && document.getElementById('multiplayerModal').style.display === 'flex';
+      const invOpen = document.getElementById('invite-modal') && document.getElementById('invite-modal').style.display === 'flex';
+      const repOpen = document.getElementById('replayModal') && document.getElementById('replayModal').style.display === 'flex';
+      const stOpen = document.getElementById('statsModal') && document.getElementById('statsModal').style.display === 'flex';
+      const anyModalOpen = helpOpen || tutOpen || expOpen || vicOpen || mpOpen || invOpen || repOpen || stOpen;
       const arenaOpen = document.getElementById('arenaPanel') && document.getElementById('arenaPanel').style.display !== 'none';
 
       if (e.key === 'Escape') {
@@ -3732,6 +5802,27 @@
         e.preventDefault();
         if (helpOpen) closeAllModals();
         else showHelp();
+        return;
+      }
+
+      if (e.key === 'o' || e.key === 'O') {
+        e.preventDefault();
+        if (mpOpen) closeAllModals();
+        else showMultiplayerModal();
+        return;
+      }
+
+      if (e.key === 'c' || e.key === 'C') {
+        e.preventDefault();
+        if (repOpen) closeAllModals();
+        else showReplayModal();
+        return;
+      }
+
+      if (e.key === 't' || e.key === 'T') {
+        e.preventDefault();
+        if (stOpen) closeAllModals();
+        else showStatsModal();
         return;
       }
 
@@ -3790,6 +5881,11 @@
         } else if (e.key === '3' || e.key === 's' || e.key === 'S') {
           e.preventDefault();
           combatAction('showboat');
+        } else if (e.key === 'w' || e.key === 'W') {
+          if (isOnlineGame || isCyberBotDuel) {
+            e.preventDefault();
+            combatAction('warcry');
+          }
         } else if (e.key === '4' || e.key === 'f' || e.key === 'F') {
           e.preventDefault();
           combatAction('flee');
@@ -3814,8 +5910,18 @@
     });
 
     loadGame();
+    loadLudusStats();
     updateSoundButton();
     updateUI();
+    initRetroMultiplayer();
+
+    window.addEventListener('DOMContentLoaded', () => {
+      initRetroMultiplayer();
+    });
+    if (typeof RetroMultiplayer !== 'undefined') {
+      initRetroMultiplayer();
+    }
+
     const hasExistingSave = localStorage.getItem('kcolosseum_save') || localStorage.getItem('kcolosseum_quicksave');
     if (!localStorage.getItem('kcolosseum_tutorialSeen') && (!hasExistingSave || (funds === 1000 && owned.length === 0 && arenaLevel === 1))) {
       setTimeout(showTutorial, 400);

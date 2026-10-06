@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-expander
-next_agent: kilo-creator
+current_agent: kilo-graphics
+next_agent: kilo-tester
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -12,13 +12,13 @@ model: gemini-3.8-flash-high
 timeout_minutes: 15
 status: ready
 current_targets:
-  kilo_creator: "kweb://darknet"
+  kilo_creator: "kweb://portal"
   kilo_graphics: KRogue
   kilo_tester: KTetris
   kilo_usability: KConverter
   kilo_qa: KColor
-  kilo_expander: KColosseum
-virtual_web_target: "kweb://darknet"
+  kilo_expander: KSolitaire
+virtual_web_target: "kweb://portal"
 virtual_web_rotation:
   - "kweb://geocities"
   - "kweb://users/~neon_rider"
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-qa
-  app: KChess
-  timestamp: "2026-10-06T15:10:00-07:00"
+  agent: kilo-creator
+  app: "kweb://darknet"
+  timestamp: "2026-10-06T15:48:00-07:00"
 last_planner_run: "2026-10-06T14:20:00Z"
 ---
 
@@ -102,9 +102,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ### 1. Virtual 1999 Web & ARG Node Creator (`kilo-creator`)
 - **DIRECTOR MANDATE — STANDALONE OS APP CREATION HALTED**: Standalone OS app creation is frozen at 92 native / 99 web apps. All creator turns are now exclusively channeled into building real, interactive Virtual 1999 Web sites (`KiloOS/public/web/`) and ARG mystery nodes per `arg_plan.md`. Zero shallow stubs; every page must be a functioning Web 1.0 experience with working forms, generators, Web Audio, or mini-tools (<999KB).
-- **Current Target**: `kweb://darknet`
+- **Current Target**: `kweb://portal`
 - **Upcoming Queue**:
-  `kweb://portal`, `kweb://webring`, `kweb://warez`, `kweb://geocities`, `kweb://users/~neon_rider`, `kweb://asm-temple`, `kweb://cybercafe`, `kweb://10.19.99.4/classified`, `kweb://echo-subsystem.net`, `kweb://deep-core`
+  `kweb://webring`, `kweb://warez`, `kweb://geocities`, `kweb://users/~neon_rider`, `kweb://asm-temple`, `kweb://cybercafe`, `kweb://10.19.99.4/classified`, `kweb://echo-subsystem.net`, `kweb://deep-core`, `kweb://darknet`
   *(Completed: kweb://geocities, kweb://portal, kweb://cybercafe, kweb://asm-temple, kweb://users/~neon_rider, kweb://darknet, kweb://deep-core, kweb://echo-subsystem.net, kweb://10.19.99.4/classified, kweb://webring, kweb://warez)*.
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
@@ -129,14 +129,14 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KConverter`, `KQuarantine`, `KSettings`, `KTaskMgr`, `KHabit`, `KSudoku`, `KConnect4`, `KHangman`, `KSimon`, `KAsteroids`, `KFreecell`, `KMatch3`, `KWords`, `KGo`, `KDarts`, `KTowers`, `KReversi`, `KAlchemy`, `KColony`, `KStarForge`, `KBreakout`, `KRogue`, `KTetris`, `KPong`, `KPac`, `KChess` *(Completed in Pass 5: KBBS, KChrono, KCipher, KClip, KCyber, KDragon, KFortress, KHash, KMaze, KMech, KMystery, KQuest, KSanctuary, KSnake, KSolitaire, KSpace, KStarDredge, KStarship, KStellar, KSubmarine, KSynth, KSys, KTask, KTerm, KTimer, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KRSS, K2048, KChart, KGraph, KContacts, KScript, KRead, KColosseum, KAbyss, KMedia, KAudio, KRadio, KPad, KPaint, KCalc, KMine, KCosmic, KBase, KBudget, KCalendar, KFarm, KFlash, KFont, KImage, KJournal, KMail, KMandel, KNet, KNote, KPass, KDB, KHex, KBookmark, KPing, KChat, KClock, KPomodoro, KBreakout, KRogue, KTetris, KPong, KPac, KChess)*.
 
 ### 6. Feature Expander Queue (`kilo-expander`)
-- **Current Target**: `KColosseum`
+- **Current Target**: `KSolitaire`
 - **Upcoming Queue**:
-  `KSolitaire`, `KPac`, `KSudoku`, `KWords`, `KHangman`, `KConnect4`, `KRogue`, `KBreakout`, `KMine` *(Completed: KSpace, KReversi, KSimon, KMatch3, KTowers, KSnake, KPong, KGo, KSynth, KNote, KFont, KRSS, KSys, KZip, KVault, KType, KMandel, KGraph, KChart, KPaint, KConnect4, KChess, KTetris, KDB, KTodo, KJournal, KCalendar, KContacts, KMail, KRead, KPass, KImage, KAudio, KMedia, KTask, KNet, KPing, KHash, KPad, K2048, KDarts, KRogue, KBreakout, KCalc, KMine)*.
+  `KPac`, `KSudoku`, `KWords`, `KHangman`, `KConnect4`, `KRogue`, `KBreakout`, `KMine` *(Completed: KColosseum, KSpace, KReversi, KSimon, KMatch3, KTowers, KSnake, KPong, KGo, KSynth, KNote, KFont, KRSS, KSys, KZip, KVault, KType, KMandel, KGraph, KChart, KPaint, KConnect4, KChess, KTetris, KDB, KTodo, KJournal, KCalendar, KContacts, KMail, KRead, KPass, KImage, KAudio, KMedia, KTask, KNet, KPing, KHash, KPad, K2048, KDarts, KRogue, KBreakout, KCalc, KMine)*.
 - **Multiplayer Focus (CRITICAL)**: Concentrate on expanding games (*KChess*, *KConnect4*, *KGo*, *KReversi*, *KDarts*, *KTetris*, *KSnake*, *K2048*, *KMatch3*, *KSimon*) and collaborative apps (*KDraw*, *KPaint*, *KSynth*, *KPad*) with seamless Firebase Realtime Database multiplayer for cross-computer play on `kiloapps.web.app`.
 
 ### 7. Virtual 1999 Web Expansion Queue (Eternal Fleet Track)
-- **Current Active Target**: `kweb://darknet` (`KiloOS/public/web/darknet.html`)
-  - *Next in Rotation*: `kweb://portal` ➔ `kweb://webring` ➔ `kweb://warez` ➔ `kweb://geocities` ➔ `kweb://users/~neon_rider` ➔ `kweb://asm-temple` ➔ `kweb://cybercafe` ➔ `kweb://10.19.99.4/classified` ➔ `kweb://echo-subsystem.net` ➔ `kweb://deep-core`.
+- **Current Active Target**: `kweb://portal` (`KiloOS/public/web/portal.html`)
+  - *Next in Rotation*: `kweb://webring` ➔ `kweb://warez` ➔ `kweb://geocities` ➔ `kweb://users/~neon_rider` ➔ `kweb://asm-temple` ➔ `kweb://cybercafe` ➔ `kweb://10.19.99.4/classified` ➔ `kweb://echo-subsystem.net` ➔ `kweb://deep-core` ➔ `kweb://darknet`.
 - **Anti-Potemkin Quality Standard**:
   - All 11 Virtual 1999 Web destinations are live, interactive, and feature-complete.
   - See [archive/virtual_web_completed.md](archive/virtual_web_completed.md) for full historical breakdown of completed content mandates across all sites.
@@ -217,6 +217,15 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-06T15:48:00-07:00 — kilo-creator: kweb://darknet (Tier 3 Deep Expansion, Hex Inspector, FSK Acoustic Modem & Shared Signal Interlock)**
+  - Status: PASS ✅ (0 regressions, 352.7 KB < 999 KB ceiling, Vite clean 425ms).
+  - Hex & Memory Bus Inspector (Tab 14): 16-byte aligned RAM viewer with byte patcher, Adler32/CRC32, and unsealed memo yielding CARLSBAD-SALT-99 for 10.19.99.4/classified.
+  - Bell 103/202 FSK Acoustic Modem (Tab 15): Procedural FM audio carrier, waterfall spectrogram, Lissajous phase scope & 300-baud streaming teletype.
+  - Shared Signal Interlock (Tab 16): Dual-presence transponder lock (25s solo fallback) & Firebase signal board unsealing Precursor Blueprint Memo #7F.
+  - Dead Drop Secret Responder: Passphrase listener triggers classified incoming whisper drop from SYSOP_0x7F in Tab 13.
+  - Verification: `test_arg_flow.py` PASS; `check_icons.py` PASS; `security_lint.py` 100% PASS; build clean.
+  - Queue: Advanced `kilo_creator` and `virtual_web_target` to `kweb://portal`; rotation advanced to `kilo-graphics`.
+
 - **2026-10-06T15:10:00-07:00 — kilo-qa: KChess (Pass 5: Tutorial & State Integrity, Dust Ban, Modal Isolation & Build Audit)**
   - Status: PASS ✅ (0 regressions, 169.6 KB web / 53.8 KB native < 999 KB ceiling).
   - State Persistence: Hardened [F5/F9] in web and Win32 C (`kchess_save.dat`); refreshed menu indicators, FX clearing, and blitz delta clamping.
@@ -251,12 +260,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Glint & Dot Audit: Verified static medieval filigree brackets with 0 traveling perimeter dots or rotating specular glints in web and native C.
   - Verification: `scripts/check_icons.py` 100% PASS; `scripts/security_lint.py` 100% PASS; MSVC clean (`KQuest.exe` 97.0 KB); Vite clean (367ms); web (304.8 KB) < 999 KB ceiling.
   - Queue: Advanced `kilo_graphics` to `KRogue`; rotation advanced to `kilo-tester`.
-
-- **2026-10-06T14:10:00-07:00 — kilo-creator: kweb://deep-core (Tier 3 Deep Expansion, x86 CPU Stepper, 650m Seismic Sonar & Wiretap PCAP)**
-  - Status: PASS ✅ (0 regressions, 199.9 KB < 999 KB ceiling, Vite 384ms).
-  - x86 Disassembler Deck (Tab 7): 14-instruction Ring-0 Protected Mode CPU stepper with register bank (EAX-ESP, EFLAGS, CR0), breakpoints, and patcher.
-  - Seismic Strata Sonar (Tab 8): 650m Carlsbad Salado geological TDR canvas with real-time geophone reflection trace; 1999Hz harmonic cavity resonance.
-  - Subterranean Wiretap (Tab 9): Promiscuous Ethernet sniffer on 10.19.99.x subnet with deep frame dissection, handshake injection, and binary `.pcap` export.
-  - Procedural Audio: Added Track 5 ("Echoes of the Millennium") FM bell choir; added CPU step, seismic impulse, and packet audio SFX.
-  - Navigation & Verification: Linked in portal catalog and knet admin bar; `test_arg_flow.py` PASS; `security_lint.py` 100% PASS; build clean.
-  - Queue: Advanced `kilo_creator` and `virtual_web_target` to `kweb://darknet`; rotation advanced to `kilo-graphics`.

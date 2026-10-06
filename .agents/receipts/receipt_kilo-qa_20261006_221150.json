@@ -1,0 +1,10 @@
+{
+  "timestamp": "2026-10-06T22:11:50.617736+00:00",
+  "agent": "kilo-qa",
+  "model": "gemini-3.8-flash-high",
+  "target": "KChess",
+  "duration_seconds": 587.41,
+  "returncode": 0,
+  "success": true,
+  "provenance": null
+}

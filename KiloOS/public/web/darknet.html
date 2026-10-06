@@ -1305,6 +1305,236 @@
     border: 1px solid #059669;
     border-radius: 2px;
   }
+
+  /* TAB 14: SUBTERRANEAN HEX & MEMORY INSPECTOR */
+  .hex-container {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .hex-toolbar {
+    background: rgba(0, 15, 6, 0.95);
+    border: 1px solid var(--panel-border);
+    padding: 6px 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+    font-size: 11px;
+  }
+  .hex-workbench {
+    display: grid;
+    grid-template-columns: 1fr 340px;
+    gap: 10px;
+  }
+  @media (max-width: 900px) {
+    .hex-workbench { grid-template-columns: 1fr; }
+  }
+  .hex-dump-panel {
+    background: #000;
+    border: 1px solid var(--panel-border);
+    padding: 8px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    line-height: 1.45;
+    overflow-x: auto;
+    max-height: 480px;
+    overflow-y: auto;
+  }
+  .hex-table {
+    width: 100%;
+    border-collapse: collapse;
+    user-select: none;
+  }
+  .hex-table th {
+    color: var(--phosphor-dim);
+    font-weight: normal;
+    text-align: left;
+    padding: 2px 4px;
+    border-bottom: 1px solid var(--panel-border);
+  }
+  .hex-table td {
+    padding: 2px 4px;
+    white-space: nowrap;
+  }
+  .hex-addr {
+    color: var(--cyan);
+    font-weight: bold;
+    padding-right: 12px;
+  }
+  .hex-byte {
+    display: inline-block;
+    width: 20px;
+    text-align: center;
+    cursor: pointer;
+    border-radius: 2px;
+    transition: background 0.1s;
+    margin: 0 1px;
+  }
+  .hex-byte:hover {
+    background: rgba(34, 255, 102, 0.25);
+    color: var(--phosphor-bright);
+  }
+  .hex-byte.selected {
+    background: var(--phosphor);
+    color: #000;
+    font-weight: bold;
+  }
+  .hex-byte.corrupt {
+    color: var(--alert);
+    font-weight: bold;
+  }
+  .hex-byte.signature {
+    color: var(--cyan);
+    font-weight: bold;
+  }
+  .hex-ascii-col {
+    border-left: 1px dashed var(--panel-border);
+    padding-left: 10px;
+    color: var(--phosphor-bright);
+    letter-spacing: 1px;
+  }
+  .hex-ascii-char {
+    display: inline-block;
+    width: 9px;
+    text-align: center;
+  }
+  .hex-sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .hex-card {
+    background: rgba(4, 20, 9, 0.88);
+    border: 1px solid var(--panel-border);
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .memo-unlocked-banner {
+    background: rgba(0, 40, 20, 0.95);
+    border: 2px solid var(--phosphor);
+    box-shadow: 0 0 12px var(--phosphor-glow);
+    padding: 10px;
+    font-size: 11.5px;
+    line-height: 1.5;
+    animation: memoPulse 2s infinite ease-in-out;
+  }
+  @keyframes memoPulse {
+    0%, 100% { border-color: var(--phosphor); box-shadow: 0 0 10px var(--phosphor-glow); }
+    50% { border-color: var(--phosphor-bright); box-shadow: 0 0 18px var(--phosphor-bright); }
+  }
+
+  /* TAB 15: SUBTERRANEAN FSK ACOUSTIC MODEM */
+  .modem-container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .modem-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  @media (max-width: 860px) {
+    .modem-grid { grid-template-columns: 1fr; }
+  }
+  .modem-scope-box {
+    background: #000;
+    border: 1px solid var(--panel-border);
+    padding: 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .teletype-box {
+    background: #010a04;
+    border: 2px solid var(--panel-border);
+    box-shadow: inset 0 0 12px rgba(0, 0, 0, 0.9);
+    padding: 10px;
+    height: 240px;
+    overflow-y: auto;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    line-height: 1.45;
+    color: var(--phosphor);
+    white-space: pre-wrap;
+    word-break: break-all;
+  }
+  .teletype-cursor {
+    display: inline-block;
+    width: 8px;
+    height: 14px;
+    background: var(--phosphor);
+    vertical-align: text-bottom;
+    animation: blinkCursor 0.8s infinite;
+  }
+  @keyframes blinkCursor {
+    0%, 50% { opacity: 1; }
+    51%, 100% { opacity: 0; }
+  }
+
+  /* TAB 16: SHARED SIGNAL INTERLOCK */
+  .interlock-container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .interlock-duo {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  @media (max-width: 760px) {
+    .interlock-duo { grid-template-columns: 1fr; }
+  }
+  .interlock-card {
+    background: rgba(3, 14, 6, 0.95);
+    border: 2px solid var(--panel-border);
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .interlock-card.locked {
+    border-color: var(--phosphor);
+    box-shadow: 0 0 12px var(--phosphor-glow);
+  }
+  .interlock-lamp {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: #333;
+    border: 1px solid #555;
+    display: inline-block;
+  }
+  .interlock-lamp.active-green {
+    background: #22ff66;
+    border-color: #88ffaa;
+    box-shadow: 0 0 8px #22ff66;
+  }
+  .interlock-lamp.active-yellow {
+    background: #ffaa00;
+    border-color: #ffff44;
+    box-shadow: 0 0 8px #ffaa00;
+  }
+  .signal-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 11px;
+    margin-top: 4px;
+  }
+  .signal-table th, .signal-table td {
+    padding: 4px 6px;
+    border: 1px solid var(--panel-border);
+    text-align: left;
+  }
+  .signal-table th {
+    background: rgba(0, 30, 12, 0.6);
+    color: var(--phosphor-bright);
+  }
 </style>
 </head>
 <body class="theme-green">
@@ -1390,6 +1620,9 @@
     <button class="tab-btn" onclick="switchTab('topology')">[11] RELAY TOPOLOGY SWITCHBOARD</button>
     <button class="tab-btn" onclick="switchTab('bluebox')">[12] 2600Hz BLUE BOX</button>
     <button class="tab-btn" onclick="switchTab('deaddrop')">[13] DEAD DROP VAULT</button>
+    <button class="tab-btn" onclick="switchTab('hex-inspector')">[14] HEX &amp; MEMORY BUS INSPECTOR</button>
+    <button class="tab-btn" onclick="switchTab('acoustic-modem')">[15] FSK ACOUSTIC MODEM &amp; SCOPE</button>
+    <button class="tab-btn" onclick="switchTab('signal-board')">[16] SHARED SIGNAL INTERLOCK</button>
   </nav>
 
   <!-- Main Workspaces -->
@@ -2683,6 +2916,308 @@
       </div>
     </section>
 
+    <!-- TAB 14: SUBTERRANEAN HEX & MEMORY BUS INSPECTOR (DIRECTIVE 189 COMPLIANCE) -->
+    <section id="panel-hex-inspector" class="tab-panel">
+      <div class="hex-container">
+        <!-- Top Toolbar -->
+        <div class="hex-toolbar">
+          <div class="ctrl-row">
+            <span style="font-weight:bold; color:var(--phosphor-bright);">MEMORY BUS INSPECTOR // SECTOR 0x7F-RAM</span>
+            <span style="color:var(--phosphor-dim);">BASE: 0x00000000 &bull; OFFSET: <strong id="lblCurrentHexOffset" style="color:var(--cyan);">0x007F1990</strong></span>
+          </div>
+          <div class="ctrl-row">
+            <label style="font-size:11px;">JUMP OFFSET:</label>
+            <input type="text" id="inpHexJump" class="custom-input" value="0x007F1990" style="width:110px;" onkeydown="if(event.key==='Enter') jumpToEnteredHexOffset()" />
+            <button class="action-btn" onclick="jumpToEnteredHexOffset()">SEEK</button>
+            <button class="action-btn" onclick="prevHexPage()">◀ PREV</button>
+            <button class="action-btn" onclick="nextHexPage()">NEXT ▶</button>
+          </div>
+        </div>
+
+        <!-- Quick Offset Preset Chips -->
+        <div class="quick-chips">
+          <span style="font-size:11px; color:var(--phosphor-dim);">KEY TELEMETRY OFFSETS:</span>
+          <button class="chip-btn" onclick="jumpToHexOffset(0x007F1990)">0x007F1990 [Carlsbad Transponder &amp; Leaked Memo]</button>
+          <button class="chip-btn" onclick="jumpToHexOffset('0x00DEEPC0')">0x00DEEPC0 [Deep Core Waveguide Commutator]</button>
+          <button class="chip-btn" onclick="jumpToHexOffset(0x10199904)">0x10199904 [Aethel Intranet DMA Buffer]</button>
+          <button class="chip-btn" onclick="jumpToHexOffset('0x00ECHO99')">0x00ECHO99 [1999Hz Acoustic Harmonics]</button>
+          <button class="chip-btn" onclick="jumpToHexOffset(0x00260000)">0x00260000 [2600Hz Bell Toll Tandem SF Table]</button>
+          <button class="chip-btn" onclick="jumpToHexOffset(0x00000000)">0x00000000 [Ring-0 Boot Header]</button>
+        </div>
+
+        <!-- Hex Main Workbench (Dump Table + Inspector Sidebar) -->
+        <div class="hex-workbench">
+          <!-- Left: 16-byte Hex & ASCII Dump -->
+          <div class="hex-dump-panel" id="hexDumpContainer">
+            <table class="hex-table" id="tblHexDump">
+              <thead>
+                <tr>
+                  <th>OFFSET</th>
+                  <th>00 01 02 03 04 05 06 07  08 09 0A 0B 0C 0D 0E 0F</th>
+                  <th>ASCII DECODE</th>
+                </tr>
+              </thead>
+              <tbody id="hexDumpBody">
+                <!-- Dynamically rendered 16 lines (256 bytes per view) -->
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Right: Byte Inspector & Memory Patcher Card -->
+          <div class="hex-sidebar">
+            <div class="hex-card">
+              <div class="panel-title">
+                <span>BYTE TELEMETRY</span>
+                <span id="lblByteSectorTag" class="badge-tag">RAM</span>
+              </div>
+              <div style="font-size:11px; display:grid; grid-template-columns: 1fr 1fr; gap:4px;">
+                <div>OFFSET: <strong id="inspByteOffset" style="color:var(--cyan);">0x007F1990</strong></div>
+                <div>HEX VAL: <strong id="inspByteHex" style="color:var(--phosphor-bright);">0x41</strong></div>
+                <div>DECIMAL: <span id="inspByteDec">65</span></div>
+                <div>ASCII: <strong id="inspByteAscii" style="color:var(--phosphor);">'A'</strong></div>
+                <div style="grid-column: span 2;">BINARY: <code id="inspByteBin" style="color:var(--phosphor-bright);">01000001</code></div>
+              </div>
+
+              <!-- Patcher Controls -->
+              <div class="panel-title" style="margin-top:6px;">
+                <span>LIVE MEMORY PATCHER</span>
+                <span style="font-size:10px; color:var(--phosphor-dim);">VOLATILE BUS</span>
+              </div>
+              <div class="ctrl-row">
+                <label style="font-size:11px;">PATCH HEX BYTE:</label>
+                <input type="text" id="inpPatchByte" class="custom-input" maxlength="2" value="41" style="width:45px; text-transform:uppercase;" />
+                <button class="action-btn" onclick="applyBytePatch()">APPLY PATCH</button>
+                <button class="action-btn" onclick="restoreSectorRAM()">REVERT</button>
+              </div>
+
+              <!-- Memory Block Search -->
+              <div class="ctrl-row" style="margin-top:4px;">
+                <input type="text" id="inpHexSearch" class="custom-input" placeholder="Search ASCII or Hex (e.g. ARCHI)..." style="flex:1;" onkeydown="if(event.key==='Enter') searchHexMemory()" />
+                <button class="action-btn" onclick="searchHexMemory()">FIND</button>
+              </div>
+
+              <!-- Checksums -->
+              <div style="font-size:10.5px; color:var(--phosphor-dim); border-top:1px dashed var(--panel-border); padding-top:4px; margin-top:4px;">
+                <div>CRC32: <code id="lblSectorCrc32" style="color:var(--phosphor-bright);">0x7F199942</code> &bull; ADLER32: <code id="lblSectorAdler" style="color:var(--cyan);">0x4E4F4445</code></div>
+              </div>
+
+              <!-- Memory Exporters -->
+              <div class="ctrl-row" style="justify-content:space-between; margin-top:6px;">
+                <button class="action-btn" onclick="exportCurrentMemoryDump('hex')">💾 EXPORT .HEX</button>
+                <button class="action-btn" onclick="exportCurrentMemoryDump('bin')">💾 EXPORT .BIN</button>
+              </div>
+            </div>
+
+            <!-- Intercepted / Unlocked Memo Box (DIRECTIVE 189) -->
+            <div id="boxHexUnlockedMemo" class="memo-unlocked-banner" style="display:none;">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                <strong style="color:var(--phosphor-bright);">🔓 CLASSIFIED MEMO UNLOCKED // OFFSET 0x007F1990</strong>
+                <span class="badge-tag" style="background:var(--phosphor); color:#000;">AIRGAP TAP</span>
+              </div>
+              <p style="margin-bottom:6px; font-size:11px; color:#e2e8f0;">
+                <em>"Aethel Dynamics Project Echo Intercept &bull; Carlsbad Salt Vault Lithospheric Tap"</em>
+              </p>
+              <div style="background:#000; padding:6px; border:1px solid var(--panel-border); font-size:10.5px; font-family:var(--font-mono); margin-bottom:6px;">
+                <div>• <strong>COORDINATES:</strong> <code>LAT 32.3724 N, LON 103.7912 W</code></div>
+                <div>• <strong>CLASSIFIED ACCESS CODE:</strong> <code style="color:var(--phosphor-bright); font-weight:bold;">CARLSBAD-SALT-99</code></div>
+                <div>• <strong>TARGET SUBNET:</strong> <a href="/web/classified.html" style="color:var(--cyan); font-weight:bold;">kweb://10.19.99.4/classified</a> (Sector 0x0024)</div>
+                <div>• <strong>KERNEL ROM LIMIT:</strong> <code>999 KB MAXIMUM</code></div>
+                <div>• <strong>WAVEGUIDE HARMONIC:</strong> <code>1999.002 Hz</code></div>
+              </div>
+              <div class="ctrl-row" style="justify-content:space-between;">
+                <button class="action-btn" onclick="copyAccessCode('CARLSBAD-SALT-99')">📋 COPY ACCESS CODE</button>
+                <button class="action-btn" onclick="pipeMemoToTerminal()">📺 PIPE TO VT-100</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 15: SUBTERRANEAN FSK ACOUSTIC MODEM & SPECTRUM WATERFALL -->
+    <section id="panel-acoustic-modem" class="tab-panel">
+      <div class="modem-container">
+        <!-- Control Bar -->
+        <div class="workbench-panel">
+          <div class="panel-title">
+            <span>BELL 103 / 202 FSK ACOUSTIC MODEM TRANSCEIVER &amp; WATERFALL</span>
+            <span style="font-size:11px; color:var(--phosphor-bright);" id="lblModemStatus">STATUS: ON-HOOK (IDLE)</span>
+          </div>
+          <p style="font-size:11.5px; color:#a7f3d0;">
+            Authentic late-90s audio frequency shift keying (FSK) acoustic coupler transceiver. Modulates and demodulates Bell 103 (300 baud) and Bell 202 (1200 baud) audio carrier frequencies using procedural FM synthesis and stereo delay warmth.
+          </p>
+
+          <div class="ctrl-row" style="flex-wrap:wrap;">
+            <label style="font-size:11px;">MODULATION STANDARD:</label>
+            <select id="selModemStandard" class="custom-select" onchange="updateModemStandard(this.value)">
+              <option value="bell103_orig">Bell 103 Originate (Mark 1270Hz / Space 1070Hz - 300 Baud)</option>
+              <option value="bell103_ans">Bell 103 Answer (Mark 2225Hz / Space 2025Hz - 300 Baud)</option>
+              <option value="bell202" selected>Bell 202 Subterranean (Mark 1200Hz / Space 2200Hz - 1200 Baud)</option>
+            </select>
+
+            <label style="font-size:11px;">DIAL TARGET:</label>
+            <select id="selModemTarget" class="custom-select" style="flex:1;">
+              <option value="10.19.99.12" selected>10.19.99.12:202 [Node 0x7F Carlsbad Transponder]</option>
+              <option value="10.19.99.4">10.19.99.4:103 [Aethel Skunkworks Intranet Loop]</option>
+              <option value="10.19.99.1">10.19.99.1:1999 [Echo Subsystem Acoustic Beacon]</option>
+              <option value="10.19.99.127">10.19.99.127:0 [Deep Core Ring-0 Precursor Commutator]</option>
+            </select>
+
+            <button class="action-btn" onclick="dialSelectedModem()">☎️ DIAL MODEM</button>
+            <button class="action-btn" onclick="hangUpModem()">🔴 HANG UP</button>
+            <button class="action-btn" onclick="toggleModemMute()" id="btnModemMute">MUTE: OFF</button>
+          </div>
+        </div>
+
+        <!-- Scope & Waterfall Visualizers -->
+        <div class="modem-grid">
+          <div class="modem-scope-box">
+            <div style="font-size:10.5px; color:var(--phosphor-dim); display:flex; justify-content:space-between;">
+              <span>REAL-TIME RF WATERFALL SPECTROGRAM (0–3000 Hz):</span>
+              <span id="lblWaterfallCarrier">CARRIER: IDLE</span>
+            </div>
+            <canvas id="modemWaterfallCanvas" width="560" height="150" style="background:#000; width:100%; height:150px;"></canvas>
+          </div>
+
+          <div class="modem-scope-box">
+            <div style="font-size:10.5px; color:var(--phosphor-dim); display:flex; justify-content:space-between;">
+              <span>LISSAJOUS PHASE DISCRIMINATOR &amp; CARRIER ORBIT:</span>
+              <span id="lblLissajousFreq">MARK: 1200Hz &bull; SPACE: 2200Hz</span>
+            </div>
+            <canvas id="modemLissajousCanvas" width="560" height="150" style="background:#000; width:100%; height:150px;"></canvas>
+          </div>
+        </div>
+
+        <!-- Teletype Receiver & Transmitter -->
+        <div class="workbench-panel">
+          <div class="panel-title">
+            <span>300-BAUD STREAMING TELETYPE RECEIVER</span>
+            <span style="font-size:11px; color:var(--phosphor-bright);">DEMODULATED ASCII STREAM</span>
+          </div>
+
+          <div class="teletype-box" id="modemTeletypeScreen">
+[00:00:00] Bell 202 / 103 Subterranean Acoustic Coupler online. Ready for carrier detection.<span class="teletype-cursor"></span>
+          </div>
+
+          <!-- Transmit Packet Input Row -->
+          <div class="ctrl-row" style="margin-top:6px;">
+            <label style="font-size:11px;">TX BUFFER:</label>
+            <input type="text" id="inpModemTx" class="custom-input" style="flex:1;" value="ECHO_RELAY_SYNC" placeholder="Type text to modulate into audio FSK (e.g. LITHO-CORE-99)..." />
+            <button class="action-btn" onclick="transmitModemPacket()">📡 TRANSMIT FSK AUDIO</button>
+            <button class="action-btn" onclick="clearTeletypeScreen()">CLEAR</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 16: SHARED SIGNAL INTERLOCK (DIRECTIVE 208 COMPLIANCE) -->
+    <section id="panel-signal-board" class="tab-panel">
+      <div class="interlock-container">
+        <!-- Dual-Presence Gated Interlock -->
+        <div class="workbench-panel">
+          <div class="panel-title">
+            <span>SUBTERRANEAN DUAL-PRESENCE RELAY INTERLOCK (CARLSBAD // DEEP CORE)</span>
+            <span style="font-size:11px; color:var(--phosphor-bright);">SYNCHRONIZATION: <strong id="lblInterlockProgress">50% [LOCAL LOCK]</strong></span>
+          </div>
+          <p style="font-size:11.5px; color:#a7f3d0;">
+            Requires two synchronized transponder sessions across the subterranean network. (Designed per Directive 208: fully solo-completable via two browser tabs or via the automatic 25-second cached transponder fallback).
+          </p>
+
+          <div class="interlock-duo">
+            <!-- Channel Alpha -->
+            <div class="interlock-card locked" id="cardChannelAlpha">
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <div style="display:flex; align-items:center; gap:8px;">
+                  <span class="interlock-lamp active-green"></span>
+                  <strong>CHANNEL ALPHA: LOCAL TRANSPONDER</strong>
+                </div>
+                <span class="badge-tag">SYNCHRONIZED</span>
+              </div>
+              <div style="font-size:11px; color:var(--phosphor-dim);">
+                Anchor: Node 0x7F (Carlsbad Salt Vault) &bull; Session ID: <code id="lblSessionIdAlpha" style="color:var(--phosphor-bright);">...</code>
+              </div>
+              <div style="font-size:10.5px; background:rgba(0,0,0,0.6); padding:4px; border:1px solid var(--panel-border);">
+                Lithospheric carrier locked at 144.390 MHz // Subcarrier: 1999.002 Hz // Telemetry frame: ACK
+              </div>
+            </div>
+
+            <!-- Channel Beta -->
+            <div class="interlock-card" id="cardChannelBeta">
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <div style="display:flex; align-items:center; gap:8px;">
+                  <span class="interlock-lamp" id="lampChannelBeta"></span>
+                  <strong>CHANNEL BETA: REMOTE PEER TRANSPONDER</strong>
+                </div>
+                <span class="badge-tag" id="badgeChannelBeta" style="background:#555; color:#fff;">AWAITING PEER</span>
+              </div>
+              <div style="font-size:11px; color:var(--phosphor-dim);">
+                Listening on: <code>arg/subterranean/presence</code> &bull; <span id="lblBetaTimer">Fallback countdown: 25s</span>
+              </div>
+              <div style="font-size:10.5px; background:rgba(0,0,0,0.6); padding:4px; border:1px solid var(--panel-border);" id="descChannelBeta">
+                Open a second browser tab visiting kweb://darknet, or wait 25s for automated salt-vault reflection lock.
+              </div>
+            </div>
+          </div>
+
+          <!-- Convergence Waveguide Doorway -->
+          <div id="boxDualPresenceUnlocked" class="memo-unlocked-banner" style="display:none; margin-top:8px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+              <strong style="color:var(--phosphor-bright);">🎉 DUAL-PRESENCE SYNCHRONIZATION ESTABLISHED!</strong>
+              <span class="badge-tag" style="background:var(--phosphor); color:#000;">TRANSIT UNLOCKED</span>
+            </div>
+            <p style="font-size:11.5px; line-height:1.5;">
+              The dual acoustic transponder loop has bridged the lithospheric waveguide barrier between Carlsbad Node 0x7F and Deep Core (10.19.99.127). Direct subterranean transit corridor is unsealed.
+            </p>
+            <div class="ctrl-row" style="margin-top:6px;">
+              <a href="/web/deep_core.html" class="action-btn" style="text-decoration:none; padding:6px 14px; font-size:12px; display:inline-block;">⚡ ENTER DEEP CORE TERMINAL (10.19.99.127)</a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Shared Signal Board (Directive 208) -->
+        <div class="workbench-panel">
+          <div class="panel-title">
+            <span>SUBTERRANEAN SHARED SIGNAL BOARD (arg/signals/subterranean_darknet)</span>
+            <span style="font-size:11px; color:var(--phosphor-bright);" id="lblSignalsCount">0 / 3 FRAGMENTS ACCUMULATED</span>
+          </div>
+          <p style="font-size:11.5px; color:#a7f3d0;">
+            Aggregates cross-application out-of-band signals emitted when players tune KRadio/KSynth to 1999Hz, patch memory offsets in KHex, or decode cipher packets. Reach 3 fragments to decrypt Precursor Blueprint Memo #7F.
+          </p>
+
+          <table class="signal-table">
+            <thead>
+              <tr>
+                <th>TIMESTAMP</th>
+                <th>ORIGIN</th>
+                <th>TARGET SUBNET</th>
+                <th>SIGNAL FREQUENCY</th>
+                <th>PAYLOAD FRAGMENT</th>
+              </tr>
+            </thead>
+            <tbody id="tblSignalBoardBody">
+              <!-- Dynamically populated -->
+            </tbody>
+          </table>
+
+          <div class="ctrl-row" style="justify-content:space-between; margin-top:6px;">
+            <button class="action-btn" onclick="injectLocalSignalFragment()">⚡ INJECT LOCAL SIGNAL FRAGMENT (SOLO SIMULATOR)</button>
+            <button class="action-btn" onclick="clearSignalBoard()">CLEAR BOARD</button>
+          </div>
+
+          <!-- Unlocked Precursor Blueprint Memo #7F -->
+          <div id="boxPrecursorBlueprint" class="memo-unlocked-banner" style="display:none; margin-top:8px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+              <strong style="color:var(--phosphor-bright);">📜 PRECURSOR BLUEPRINT MEMO #7F UNSEALED</strong>
+              <span class="badge-tag">SECRET DOSSIER</span>
+            </div>
+            <p style="font-size:11.5px; line-height:1.5;">
+              <em>"Transmitted via Carlsbad 3000m halite antenna to all subterranean terminals: The 99 applications of KiloOS are not independent entities—they form the synaptic mesh of a distributed autonomous intellect. The final reconciliation occurs at App #100 (KMatrix). All convergence passkeys (LITHO-CORE-99, CARLSBAD-SALT-99, 10.19.99.4) point to Deep Core Sector 05."</em>
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
   </main>
 
   <!-- Webring Navigation & Diegetic Footer -->
@@ -3165,6 +3700,68 @@ class DarknetSoundEngine {
     }, tempoMs);
   }
 
+  playFSKTone(freq, durationMs = 80) {
+    if (this.muted) return;
+    this.init();
+    if (!this.ctx) return;
+    const now = this.ctx.currentTime;
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(freq, now);
+    gain.gain.setValueAtTime(0.04, now);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + (durationMs / 1000));
+    osc.connect(gain);
+    gain.connect(this.masterGain || this.ctx.destination);
+    osc.start(now);
+    osc.stop(now + (durationMs / 1000));
+  }
+
+  playTeletypeClick() {
+    if (this.muted) return;
+    this.init();
+    if (!this.ctx) return;
+    const now = this.ctx.currentTime;
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(600 + Math.random() * 300, now);
+    osc.frequency.exponentialRampToValueAtTime(80, now + 0.025);
+    gain.gain.setValueAtTime(0.035, now);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.025);
+    osc.connect(gain);
+    gain.connect(this.masterGain || this.ctx.destination);
+    osc.start(now);
+    osc.stop(now + 0.025);
+  }
+
+  playHexSeekChirp(offset = 0) {
+    if (this.muted) return;
+    this.init();
+    if (!this.ctx) return;
+    const now = this.ctx.currentTime;
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+    osc.type = 'square';
+    const baseFreq = 900 + ((offset % 1000) * 0.8);
+    osc.frequency.setValueAtTime(baseFreq, now);
+    osc.frequency.exponentialRampToValueAtTime(baseFreq * 1.5, now + 0.04);
+    gain.gain.setValueAtTime(0.02, now);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.04);
+    osc.connect(gain);
+    gain.connect(this.masterGain || this.ctx.destination);
+    osc.start(now);
+    osc.stop(now + 0.04);
+  }
+
+  playDualPresenceLockTone() {
+    if (this.muted) return;
+    const notes = [440, 554.37, 659.25, 880, 1108.73, 1318.51];
+    notes.forEach((f, i) => {
+      setTimeout(() => this.playFMChirp(f), i * 90);
+    });
+  }
+
   stopMusic() {
     if (this.musicTimer) {
       clearInterval(this.musicTimer);
@@ -3235,7 +3832,7 @@ function toggleScanlines() {
    ========================================================================= */
 function switchTab(tabId) {
   snd.playKeyClick();
-  const tabs = ['terminal', 'warez-nfo', 'decoder', 'sniffer', 'spectrum', 'puzzle-relay', 'mesh', 'spool', 'directory', 'crypto-lab', 'topology', 'bluebox', 'deaddrop'];
+  const tabs = ['terminal', 'warez-nfo', 'decoder', 'sniffer', 'spectrum', 'puzzle-relay', 'mesh', 'spool', 'directory', 'crypto-lab', 'topology', 'bluebox', 'deaddrop', 'hex-inspector', 'acoustic-modem', 'signal-board'];
   tabs.forEach(t => {
     const panel = document.getElementById('panel-' + t);
     if (panel) panel.classList.remove('active');
@@ -3255,6 +3852,9 @@ function switchTab(tabId) {
     if (tabId === 'topology') return text.includes('topology');
     if (tabId === 'bluebox') return text.includes('blue box');
     if (tabId === 'deaddrop') return text.includes('dead drop');
+    if (tabId === 'hex-inspector') return text.includes('hex');
+    if (tabId === 'acoustic-modem') return text.includes('fsk');
+    if (tabId === 'signal-board') return text.includes('interlock');
     return text.includes(tabId);
   });
   if (activeBtn) activeBtn.classList.add('active');
@@ -3265,6 +3865,12 @@ function switchTab(tabId) {
     setTimeout(initBlueboxScope, 50);
   } else if (tabId === 'deaddrop' && typeof renderDeadDropList === 'function') {
     renderDeadDropList();
+  } else if (tabId === 'hex-inspector' && typeof renderHexDump === 'function') {
+    renderHexDump();
+  } else if (tabId === 'acoustic-modem' && typeof startModemScopes === 'function') {
+    setTimeout(startModemScopes, 50);
+  } else if (tabId === 'signal-board' && typeof updateSignalBoardUi === 'function') {
+    updateSignalBoardUi();
   }
 }
 
@@ -3772,6 +4378,43 @@ ${count === 3 ? '  RING-0 BRIDGE: ACTIVE - Navigate to kweb://deep-core' : '  Ty
         if (typeof zeroizeAllUserDrops === 'function') zeroizeAllUserDrops();
       } else {
         printTerminal(`Unknown drop subcommand '${arg}'. Use 'drop list' or 'drop read <id>'.`);
+      }
+      break;
+
+    case 'hex':
+      switchTab('hex-inspector');
+      if (arg) {
+        let parsed = parseInt(arg, arg.toLowerCase().startsWith('0x') ? 16 : 10);
+        if (!isNaN(parsed)) jumpToHexOffset(parsed);
+      }
+      printTerminal('[HEX] Switched to Subterranean Hex & Memory Bus Inspector (Tab 14).');
+      break;
+
+    case 'fsk':
+    case 'modem':
+      switchTab('acoustic-modem');
+      if (arg.startsWith('dial')) {
+        dialSelectedModem();
+      } else if (arg.startsWith('tx ')) {
+        const payload = arg.replace('tx ', '').trim();
+        const inpEl = document.getElementById('inpModemTx');
+        if (inpEl) inpEl.value = payload;
+        transmitModemPacket();
+      }
+      printTerminal('[MODEM] Switched to Bell 103/202 FSK Acoustic Coupler (Tab 15).');
+      break;
+
+    case 'signals':
+    case 'interlock':
+      switchTab('signal-board');
+      printTerminal('[INTERLOCK] Switched to Shared Signal Interlock & Dual Presence Deck (Tab 16).');
+      break;
+
+    case 'memo':
+      if (typeof pipeMemoToTerminal === 'function') {
+        pipeMemoToTerminal();
+      } else {
+        printTerminal('[SECURITY] Seek offset 0x007F1990 in Hex Inspector (Tab 14) to decode the intercepted memo.');
       }
       break;
 
@@ -5766,8 +6409,7 @@ function generateNewOtpSheet() {
   lines.push(`WARNING: ONE-TIME USE ONLY. DESTROY PAD IMMEDIATELY AFTER USE.`);
 
   currentOtpPad = rawLetters;
-  document.getElementById('otpSheetBox').textContent = lines.join('
-');
+  document.getElementById('otpSheetBox').textContent = lines.join('\n');
   printTerminal(`[OTP] Generated fresh pad sheet: ${serial} (200 random codebook characters).`);
 }
 
@@ -5973,8 +6615,7 @@ function verifyAndDecryptPgpArmor() {
     return;
   }
   try {
-    const lines = raw.split('
-');
+    const lines = raw.split('\n');
     let b64 = "";
     let crc = "";
     for (let l of lines) {
@@ -7229,6 +7870,34 @@ function transmitNewDeadDrop() {
   selectedDropId = newDrop.id;
   renderDeadDropList();
   printTerminal(`[DEAD DROP WIRE] Transmitted '${newDrop.title}' to subterranean queue.`);
+
+  // Directive 208 item 3: Secret passphrase dead-drop responder
+  const checkSecret = (plain + ' ' + key).toUpperCase();
+  if (checkSecret.includes('HALITE') || checkSecret.includes('CARLSBAD') || checkSecret.includes('LITHO-CORE') || checkSecret.includes('SECTOR_03') || checkSecret.includes('ECHO-LOCK') || checkSecret.includes('CARLSBAD-SALT-99')) {
+    setTimeout(() => {
+      snd.playDecodeSuccess();
+      const whisperDrop = {
+        id: 'drop-sysop7f',
+        title: 'CLASSIFIED DISPATCH // SYSOP_0x7F',
+        author: 'SYSOP_0x7F',
+        target: author,
+        cipher: 'xor',
+        key: 'HALITE-1999',
+        burn: 'permanent',
+        ciphertext: xorEncryptHex("Subterranean courier signal verified. Access code CARLSBAD-SALT-99 unsealed. Waveguide transit authorized to Deep Core.", "HALITE-1999"),
+        plaintext: "Subterranean courier signal verified. Access code CARLSBAD-SALT-99 unsealed. Waveguide transit authorized to Deep Core.",
+        date: new Date().toLocaleTimeString()
+      };
+      try {
+        const raw = localStorage.getItem('kweb_darknet_deaddrops');
+        const userDrops = raw ? JSON.parse(raw) : [];
+        userDrops.unshift(whisperDrop);
+        localStorage.setItem('kweb_darknet_deaddrops', JSON.stringify(userDrops));
+      } catch (e) {}
+      renderDeadDropList();
+      printTerminal('[DEAD DROP ALERT] Classified response from SYSOP_0x7F received in Dead Drop Vault.');
+    }, 1200);
+  }
 }
 
 function downloadComposedDrop() {
@@ -7290,11 +7959,741 @@ function downloadTextFile(filename, text) {
 }
 
 /* =========================================================================
-   STATION STATE PERSISTENCE (QUICKSAVE F5 & QUICKLOAD F9)
+   TAB 14: SUBTERRANEAN HEX & MEMORY BUS INSPECTOR (DIRECTIVE 189)
    ========================================================================= */
+const HEX_RAM_SIZE = 0x10000; // 64 KB base page
+let hexVirtualRAM = new Uint8Array(HEX_RAM_SIZE);
+let hexBankedPages = {};
+let currentHexOffset = 0x007F1990;
+let selectedHexByteOffset = 0x007F1990;
+let hexMemoUnlocked = false;
 
+function initHexVirtualMemory() {
+  for (let i = 0; i < HEX_RAM_SIZE; i++) {
+    hexVirtualRAM[i] = ((i * 37 + 13) ^ (i >> 4)) & 0xFF;
+  }
+
+  // Sector 0x00000000: Ring-0 Boot Header
+  const bootStr = "RING0_KILONET_BOOT_1999_SECTOR_0x7F_HALITE_SALT_VAULT";
+  for (let i = 0; i < bootStr.length; i++) {
+    setHexMemoryByte(0x00000000 + i, bootStr.charCodeAt(i));
+  }
+
+  // Sector 0x007F1990: Carlsbad Transponder RAM & Classified Memo Intercept
+  const archBytes = [0x41, 0x52, 0x43, 0x48, 0x49]; // 'ARCHI'
+  for (let i = 0; i < archBytes.length; i++) {
+    setHexMemoryByte(0x007F1990 + i, archBytes[i]);
+  }
+  const memoText = "CLASSIFIED MEMO COORD: LAT 32.3724 N, LON 103.7912 W // ACCESS CODE: CARLSBAD-SALT-99 // TARGET: 10.19.99.4 SECTOR 0x0024 // KERNEL ROM LIMIT: 999KB // WAVEGUIDE HARMONIC: 1999.002Hz";
+  for (let i = 0; i < memoText.length; i++) {
+    setHexMemoryByte(0x007F1998 + i, memoText.charCodeAt(i));
+  }
+
+  // Sector 0x00DEEPC0 (0x00DEEC00): Precursor Waveguide Commutator
+  const deepCoreText = "DEEP_CORE_COMMUTATOR_HASH:0x7F199942_RING0_SYNC:ECHO_RELAY_SYNC_PRECURSOR_LAT:32.37_LON:103.79_LITHO-CORE-99";
+  for (let i = 0; i < deepCoreText.length; i++) {
+    setHexMemoryByte(0x00DEEC00 + i, deepCoreText.charCodeAt(i));
+  }
+
+  // Sector 0x10199904: Aethel Intranet DMA Buffer
+  const aethelText = "AETHEL_DYNAMICS_DMA:10.19.99.4:1999_SECTOR_03_SYNC_XOR_0x7F_HALITE_SALT_VAULT_RECOVERY_1999";
+  for (let i = 0; i < aethelText.length; i++) {
+    setHexMemoryByte(0x10199904 + i, aethelText.charCodeAt(i));
+  }
+
+  // Sector 0x00ECHO99 (0x00EC4099): Acoustic Harmonics Table
+  const echoText = "ACOUSTIC_TABLE:1999.002Hz_MODEM_FSK_BELL202:1200/2200_BELL103:1070/1270_YM2612_SPC700";
+  for (let i = 0; i < echoText.length; i++) {
+    setHexMemoryByte(0x00EC4099 + i, echoText.charCodeAt(i));
+  }
+
+  // Sector 0x00260000: 2600Hz Bell Toll Tandem SF Table
+  const blueboxText = "BELL_4ESS_TOLL_TANDEM:2600Hz_SF_SEIZE_MF_KP_ST_ROUTE:KP-7F1999-ST_TRUNK_SECTOR_0x7F";
+  for (let i = 0; i < blueboxText.length; i++) {
+    setHexMemoryByte(0x00260000 + i, blueboxText.charCodeAt(i));
+  }
+}
+
+function initHexInspector() {
+  initHexVirtualMemory();
+  renderHexDump();
+}
+
+function getHexMemoryByte(addr) {
+  if (addr < HEX_RAM_SIZE) {
+    return hexVirtualRAM[addr];
+  }
+  return hexBankedPages[addr] !== undefined ? hexBankedPages[addr] : (((addr * 31 + 7) ^ (addr >> 6)) & 0xFF);
+}
+
+function setHexMemoryByte(addr, val) {
+  val = val & 0xFF;
+  if (addr < HEX_RAM_SIZE) {
+    hexVirtualRAM[addr] = val;
+  } else {
+    hexBankedPages[addr] = val;
+  }
+}
+
+function renderHexDump() {
+  const tbody = document.getElementById('hexDumpBody');
+  if (!tbody) return;
+  tbody.innerHTML = '';
+
+  const base = Math.floor(currentHexOffset / 16) * 16;
+  const lblOffset = document.getElementById('lblCurrentHexOffset');
+  const inpHex = document.getElementById('inpHexJump');
+  if (lblOffset) lblOffset.textContent = '0x' + base.toString(16).padStart(8, '0').toUpperCase();
+  if (inpHex) inpHex.value = '0x' + base.toString(16).padStart(8, '0').toUpperCase();
+
+  const memoBox = document.getElementById('boxHexUnlockedMemo');
+  if (base >= 0x007F1980 && base <= 0x007F1A80) {
+    if (memoBox) memoBox.style.display = 'block';
+    if (!hexMemoUnlocked) {
+      hexMemoUnlocked = true;
+      snd.playDecodeSuccess();
+      printTerminal('[HEX INSPECTOR] Intercepted Aethel Dynamics classified memo fragment at offset 0x007F1990.');
+    }
+  } else {
+    if (memoBox && hexMemoUnlocked) memoBox.style.display = 'block';
+  }
+
+  for (let row = 0; row < 16; row++) {
+    const rowAddr = base + (row * 16);
+    const tr = document.createElement('tr');
+
+    const tdAddr = document.createElement('td');
+    tdAddr.className = 'hex-addr';
+    tdAddr.textContent = '0x' + rowAddr.toString(16).padStart(8, '0').toUpperCase();
+    tr.appendChild(tdAddr);
+
+    const tdBytes = document.createElement('td');
+    let asciiChars = '';
+
+    for (let col = 0; col < 16; col++) {
+      const byteAddr = rowAddr + col;
+      const byteVal = getHexMemoryByte(byteAddr);
+      const span = document.createElement('span');
+      span.className = 'hex-byte';
+      span.textContent = byteVal.toString(16).padStart(2, '0').toUpperCase();
+      span.dataset.addr = byteAddr;
+
+      if (byteAddr === selectedHexByteOffset) {
+        span.classList.add('selected');
+      }
+      if (byteAddr >= 0x007F1990 && byteAddr <= 0x007F1994) {
+        span.classList.add('signature');
+      } else if (byteAddr >= 0x007F1995 && byteAddr <= 0x007F1997) {
+        span.classList.add('corrupt');
+      }
+
+      span.onclick = () => selectHexByte(byteAddr);
+      tdBytes.appendChild(span);
+      if (col === 7) {
+        const spacer = document.createElement('span');
+        spacer.style.display = 'inline-block';
+        spacer.style.width = '8px';
+        tdBytes.appendChild(spacer);
+      }
+
+      const ch = (byteVal >= 32 && byteVal <= 126) ? String.fromCharCode(byteVal) : '.';
+      asciiChars += ch;
+    }
+    tr.appendChild(tdBytes);
+
+    const tdAscii = document.createElement('td');
+    tdAscii.className = 'hex-ascii-col';
+    for (let c = 0; c < asciiChars.length; c++) {
+      const chSpan = document.createElement('span');
+      chSpan.className = 'hex-ascii-char';
+      chSpan.textContent = asciiChars[c];
+      tdAscii.appendChild(chSpan);
+    }
+    tr.appendChild(tdAscii);
+
+    tbody.appendChild(tr);
+  }
+
+  updateByteInspectorTelemetry(selectedHexByteOffset);
+  updateSectorChecksums(base);
+}
+
+function selectHexByte(addr) {
+  selectedHexByteOffset = addr;
+  snd.playKeyClick();
+  renderHexDump();
+}
+
+function updateByteInspectorTelemetry(addr) {
+  const byteVal = getHexMemoryByte(addr);
+  const elOffset = document.getElementById('inspByteOffset');
+  const elHex = document.getElementById('inspByteHex');
+  const elDec = document.getElementById('inspByteDec');
+  const elAscii = document.getElementById('inspByteAscii');
+  const elBin = document.getElementById('inspByteBin');
+  const elPatch = document.getElementById('inpPatchByte');
+  const elTag = document.getElementById('lblByteSectorTag');
+
+  if (elOffset) elOffset.textContent = '0x' + addr.toString(16).padStart(8, '0').toUpperCase();
+  if (elHex) elHex.textContent = '0x' + byteVal.toString(16).padStart(2, '0').toUpperCase();
+  if (elDec) elDec.textContent = byteVal.toString();
+  const ch = (byteVal >= 32 && byteVal <= 126) ? `'${String.fromCharCode(byteVal)}'` : "'?'";
+  if (elAscii) elAscii.textContent = ch;
+  if (elBin) elBin.textContent = byteVal.toString(2).padStart(8, '0');
+  if (elPatch) elPatch.value = byteVal.toString(16).padStart(2, '0').toUpperCase();
+
+  if (elTag) {
+    if (addr >= 0x007F1990 && addr <= 0x007F1A80) elTag.textContent = 'MEMO-TAP';
+    else if (addr >= 0x00DEEC00 && addr <= 0x00DEEFFF) elTag.textContent = 'RING-0';
+    else if (addr >= 0x10199904 && addr <= 0x10199FFF) elTag.textContent = 'INTRANET';
+    else if (addr >= 0x00EC4000 && addr <= 0x00ECFFFF) elTag.textContent = 'ACOUSTIC';
+    else if (addr >= 0x00260000 && addr <= 0x0026FFFF) elTag.textContent = 'BLUEBOX';
+    else elTag.textContent = 'RAM';
+  }
+}
+
+function updateSectorChecksums(baseAddr) {
+  let crc = 0xFFFFFFFF;
+  let a = 1, b = 0;
+  for (let i = 0; i < 256; i++) {
+    const byte = getHexMemoryByte(baseAddr + i);
+    crc ^= byte;
+    for (let j = 0; j < 8; j++) {
+      crc = (crc >>> 1) ^ (-(crc & 1) & 0xEDB88320);
+    }
+    a = (a + byte) % 65521;
+    b = (b + a) % 65521;
+  }
+  const adler = (b << 16) | a;
+
+  const elCrc = document.getElementById('lblSectorCrc32');
+  const elAdler = document.getElementById('lblSectorAdler');
+  if (elCrc) elCrc.textContent = '0x' + ((crc ^ 0xFFFFFFFF) >>> 0).toString(16).padStart(8, '0').toUpperCase();
+  if (elAdler) elAdler.textContent = '0x' + (adler >>> 0).toString(16).padStart(8, '0').toUpperCase();
+}
+
+function applyBytePatch() {
+  snd.playCipherStep();
+  const hexStr = document.getElementById('inpPatchByte').value.trim();
+  const val = parseInt(hexStr, 16);
+  if (isNaN(val) || val < 0 || val > 255) {
+    alert("INVALID BYTE: Enter a valid 2-digit hex value (00-FF).");
+    return;
+  }
+  setHexMemoryByte(selectedHexByteOffset, val);
+  printTerminal(`[MEMORY PATCH] Applied byte 0x${val.toString(16).padStart(2, '0').toUpperCase()} at offset 0x${selectedHexByteOffset.toString(16).padStart(8, '0').toUpperCase()}`);
+  renderHexDump();
+}
+
+function restoreSectorRAM() {
+  snd.playKeyClick();
+  initHexVirtualMemory();
+  renderHexDump();
+  printTerminal('[MEMORY] Virtual RAM sector reset to factory flash state.');
+}
+
+function jumpToHexOffset(offset) {
+  if (typeof offset === 'string') {
+    if (offset.toUpperCase().includes('DEEPC0') || offset.toUpperCase().includes('DEEP')) {
+      offset = 0x00DEEC00;
+    } else if (offset.toUpperCase().includes('ECHO')) {
+      offset = 0x00EC4099;
+    } else {
+      offset = parseInt(offset, offset.toLowerCase().startsWith('0x') ? 16 : 10);
+    }
+  }
+  if (isNaN(offset) || offset < 0) offset = 0;
+  snd.playHexSeekChirp(offset);
+  currentHexOffset = offset;
+  selectedHexByteOffset = offset;
+  renderHexDump();
+}
+
+function jumpToEnteredHexOffset() {
+  const raw = document.getElementById('inpHexJump').value.trim();
+  let parsed;
+  if (raw.toUpperCase().includes('DEEPC0') || raw.toUpperCase().includes('DEEP')) {
+    parsed = 0x00DEEC00;
+  } else if (raw.toUpperCase().includes('ECHO')) {
+    parsed = 0x00EC4099;
+  } else {
+    parsed = parseInt(raw, raw.toLowerCase().startsWith('0x') ? 16 : 10);
+  }
+  if (isNaN(parsed) || parsed < 0) parsed = 0;
+  jumpToHexOffset(parsed);
+}
+
+function prevHexPage() {
+  jumpToHexOffset(Math.max(0, currentHexOffset - 256));
+}
+
+function nextHexPage() {
+  jumpToHexOffset(currentHexOffset + 256);
+}
+
+function searchHexMemory() {
+  const query = document.getElementById('inpHexSearch').value.trim();
+  if (!query) return;
+
+  snd.playFMChirp(720);
+  let isHex = query.length % 2 === 0 && /^[0-9a-fA-F]+$/.test(query);
+  let searchBytes = [];
+  if (isHex && query.length >= 4) {
+    for (let i = 0; i < query.length; i += 2) {
+      searchBytes.push(parseInt(query.substr(i, 2), 16));
+    }
+  } else {
+    for (let i = 0; i < query.length; i++) {
+      searchBytes.push(query.charCodeAt(i));
+    }
+  }
+
+  const targets = [0x007F1990, 0x00DEEC00, 0x10199904, 0x00EC4099, 0x00260000, 0x00000000];
+  let found = -1;
+
+  for (let t = 0; t < targets.length; t++) {
+    const start = targets[t];
+    for (let o = 0; o < 256; o++) {
+      let match = true;
+      for (let b = 0; b < searchBytes.length; b++) {
+        if (getHexMemoryByte(start + o + b) !== searchBytes[b]) {
+          match = false;
+          break;
+        }
+      }
+      if (match) {
+        found = start + o;
+        break;
+      }
+    }
+    if (found !== -1) break;
+  }
+
+  if (found !== -1) {
+    jumpToHexOffset(found);
+    printTerminal(`[SEARCH] Match for '${query}' found at offset 0x${found.toString(16).padStart(8, '0').toUpperCase()}`);
+  } else {
+    snd.playTone(200, 120);
+    printTerminal(`[SEARCH] Pattern '${query}' not found in active sectors.`);
+  }
+}
+
+function exportCurrentMemoryDump(format) {
+  snd.playFMChirp(580);
+  const base = Math.floor(currentHexOffset / 16) * 16;
+  const filename = `node0x7f_mem_${base.toString(16).padStart(8, '0')}.${format}`;
+
+  if (format === 'hex') {
+    let out = `;; NODE 0x7F MEMORY DUMP // BASE: 0x${base.toString(16).padStart(8, '0').toUpperCase()}\n`;
+    for (let r = 0; r < 16; r++) {
+      const a = base + (r * 16);
+      let hex = '';
+      let asc = '';
+      for (let c = 0; c < 16; c++) {
+        const b = getHexMemoryByte(a + c);
+        hex += b.toString(16).padStart(2, '0').toUpperCase() + ' ';
+        asc += (b >= 32 && b <= 126) ? String.fromCharCode(b) : '.';
+      }
+      out += `0x${a.toString(16).padStart(8, '0').toUpperCase()}  ${hex} |${asc}|\n`;
+    }
+    downloadTextFile(filename, out);
+  } else {
+    const bytes = new Uint8Array(256);
+    for (let i = 0; i < 256; i++) {
+      bytes[i] = getHexMemoryByte(base + i);
+    }
+    const blob = new Blob([bytes], { type: 'application/octet-stream' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+  printTerminal(`[DUMP] Exported 256 bytes from 0x${base.toString(16).padStart(8, '0').toUpperCase()} as ${filename}`);
+}
+
+function copyAccessCode(code) {
+  snd.playKeyClick();
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(code);
+    printTerminal(`[CLIPBOARD] Copied classified access code '${code}' to clipboard.`);
+  }
+}
+
+function pipeMemoToTerminal() {
+  snd.playFMChirp(880);
+  printTerminal(
+`[INTERCEPTED COMMUNIQUE // AETHEL DYNAMICS AIRGAP TAP]
+--------------------------------------------------------------------------------
+LOCATION    : Carlsbad Salt Vault Transceiver Anchor (3000m Depth)
+COORDINATES : LAT 32.3724 N, LON 103.7912 W
+ACCESS CODE : CARLSBAD-SALT-99
+TARGET HOST : kweb://10.19.99.4/classified (Sector 0x0024)
+KERNEL ROM  : 999 KB MAXIMUM (Zero Bloat Fleet Standard)
+WAVEGUIDE   : 1999.002 Hz Harmonic Subcarrier Locked
+--------------------------------------------------------------------------------
+Navigate to kweb://10.19.99.4/classified and input CARLSBAD-SALT-99 in Sector 0x0024!`
+  );
+  switchTab('terminal');
+}
+
+/* =========================================================================
+   TAB 15: SUBTERRANEAN FSK ACOUSTIC MODEM & SPECTRUM WATERFALL
+   ========================================================================= */
+let modemConnected = false;
+let modemMuted = false;
+let modemStandard = 'bell202';
+let waterfallRunning = false;
+let modemWaterfallCanvas = null;
+let modemWaterfallCtx = null;
+let lissajousCanvas = null;
+let lissajousCtx = null;
+let lissajousPhase = 0;
+
+function initAcousticModem() {
+  modemWaterfallCanvas = document.getElementById('modemWaterfallCanvas');
+  if (modemWaterfallCanvas) modemWaterfallCtx = modemWaterfallCanvas.getContext('2d');
+  lissajousCanvas = document.getElementById('modemLissajousCanvas');
+  if (lissajousCanvas) lissajousCtx = lissajousCanvas.getContext('2d');
+}
+
+function updateModemStandard(std) {
+  modemStandard = std;
+  snd.playKeyClick();
+  const label = document.getElementById('lblLissajousFreq');
+  if (std === 'bell103_orig') {
+    if (label) label.textContent = 'BELL 103: MARK 1270Hz • SPACE 1070Hz (300 BD)';
+  } else if (std === 'bell103_ans') {
+    if (label) label.textContent = 'BELL 103: MARK 2225Hz • SPACE 2025Hz (300 BD)';
+  } else {
+    if (label) label.textContent = 'BELL 202: MARK 1200Hz • SPACE 2200Hz (1200 BD)';
+  }
+}
+
+function toggleModemMute() {
+  modemMuted = !modemMuted;
+  const btn = document.getElementById('btnModemMute');
+  if (btn) btn.textContent = modemMuted ? 'MUTE: ON' : 'MUTE: OFF';
+}
+
+function dialSelectedModem() {
+  if (modemConnected) return;
+  const target = document.getElementById('selModemTarget').value;
+  snd.playBell202Handshake();
+
+  const statusEl = document.getElementById('lblModemStatus');
+  if (statusEl) {
+    statusEl.textContent = `DIALING ${target}...`;
+    statusEl.style.color = 'var(--warn)';
+  }
+
+  typeToTeletype(`\n[DIALING] ATDT ${target}...`);
+  setTimeout(() => {
+    typeToTeletype(`[CARRIER DETECT] 1999Hz Halite Subcarrier Locked.`);
+    setTimeout(() => {
+      modemConnected = true;
+      if (statusEl) {
+        statusEl.textContent = `CONNECTED // ${target} (CARRIER LOCK)`;
+        statusEl.style.color = 'var(--phosphor-bright)';
+      }
+      snd.playDecodeSuccess();
+      typeToTeletype(`\nCONNECT 1200 / FSK BELL 202 PROTOCOL\n>>> KILONET NODE 0x7F SUBTERRANEAN GATEWAY OPEN <<<\nSubnet: 10.19.99.0/24 | Lithospheric Waveguide Nominal.\n`);
+      printTerminal(`[MODEM] Carrier lock established with ${target} via Bell FSK transceiver.`);
+    }, 900);
+  }, 1200);
+}
+
+function hangUpModem() {
+  modemConnected = false;
+  const statusEl = document.getElementById('lblModemStatus');
+  if (statusEl) {
+    statusEl.textContent = 'STATUS: ON-HOOK (IDLE)';
+    statusEl.style.color = 'var(--phosphor)';
+  }
+  typeToTeletype(`\n[DISCONNECT] +++ ATH0 OK (NO CARRIER)\n`);
+  snd.playTone(400, 100);
+}
+
+function transmitModemPacket() {
+  const inp = document.getElementById('inpModemTx');
+  if (!inp) return;
+  const text = inp.value.trim();
+  if (!text) return;
+
+  typeToTeletype(`\n[TX PACKET] >>> "${text}"`);
+  const chars = text.split('');
+  let delay = 0;
+
+  chars.forEach((ch) => {
+    setTimeout(() => {
+      const code = ch.charCodeAt(0);
+      const isMark = (code & 1) === 1;
+      let freq = 1200;
+      if (modemStandard === 'bell103_orig') freq = isMark ? 1270 : 1070;
+      else if (modemStandard === 'bell103_ans') freq = isMark ? 2225 : 2025;
+      else freq = isMark ? 1200 : 2200;
+
+      if (!modemMuted) snd.playFSKTone(freq, 40);
+      snd.playTeletypeClick();
+      appendCharToTeletype(ch);
+
+      lissajousPhase += 0.8;
+    }, delay);
+    delay += 55;
+  });
+
+  setTimeout(() => {
+    typeToTeletype(`\n[RX ACK] Frame checksum 0x7F verified by subterranean receiver.`);
+    printTerminal(`[FSK TRANSMIT] Modulated frame "${text}" via acoustic carrier.`);
+  }, delay + 200);
+}
+
+function typeToTeletype(text) {
+  const screen = document.getElementById('modemTeletypeScreen');
+  if (!screen) return;
+  const span = document.createElement('div');
+  span.textContent = text;
+  screen.appendChild(span);
+  screen.scrollTop = screen.scrollHeight;
+}
+
+function appendCharToTeletype(ch) {
+  const screen = document.getElementById('modemTeletypeScreen');
+  if (!screen) return;
+  let lastNode = screen.lastChild;
+  if (!lastNode || lastNode.nodeType !== Node.TEXT_NODE) {
+    const textNode = document.createTextNode(ch);
+    screen.appendChild(textNode);
+  } else {
+    lastNode.nodeValue += ch;
+  }
+  screen.scrollTop = screen.scrollHeight;
+}
+
+function clearTeletypeScreen() {
+  const screen = document.getElementById('modemTeletypeScreen');
+  if (screen) {
+    screen.innerHTML = `[00:00:00] Teletype screen flushed.<span class="teletype-cursor"></span>`;
+  }
+}
+
+function startModemScopes() {
+  if (waterfallRunning) return;
+  waterfallRunning = true;
+
+  function renderScopes() {
+    if (!waterfallRunning) return;
+
+    if (modemWaterfallCtx && modemWaterfallCanvas) {
+      const w = modemWaterfallCanvas.width;
+      const h = modemWaterfallCanvas.height;
+
+      const img = modemWaterfallCtx.getImageData(0, 2, w, h - 2);
+      modemWaterfallCtx.putImageData(img, 0, 0);
+
+      modemWaterfallCtx.fillStyle = '#000';
+      modemWaterfallCtx.fillRect(0, h - 2, w, 2);
+
+      for (let x = 0; x < w; x += 4) {
+        const intensity = Math.random() * 0.15;
+        modemWaterfallCtx.fillStyle = `rgba(34, 255, 102, ${intensity})`;
+        modemWaterfallCtx.fillRect(x, h - 2, 4, 2);
+      }
+
+      const x1999 = Math.floor(w * (1999 / 3000));
+      modemWaterfallCtx.fillStyle = modemConnected ? 'rgba(56, 189, 248, 0.9)' : 'rgba(34, 255, 102, 0.6)';
+      modemWaterfallCtx.fillRect(x1999 - 2, h - 2, 4, 2);
+
+      const xMark = Math.floor(w * (1200 / 3000));
+      const xSpace = Math.floor(w * (2200 / 3000));
+      if (modemConnected) {
+        modemWaterfallCtx.fillStyle = 'rgba(255, 255, 68, 0.75)';
+        modemWaterfallCtx.fillRect(xMark - 1, h - 2, 3, 2);
+        modemWaterfallCtx.fillRect(xSpace - 1, h - 2, 3, 2);
+      }
+    }
+
+    if (lissajousCtx && lissajousCanvas) {
+      const lw = lissajousCanvas.width;
+      const lh = lissajousCanvas.height;
+      lissajousCtx.fillStyle = 'rgba(0, 0, 0, 0.25)';
+      lissajousCtx.fillRect(0, 0, lw, lh);
+
+      lissajousCtx.strokeStyle = modemConnected ? '#38bdf8' : '#22ff66';
+      lissajousCtx.lineWidth = 1.5;
+      lissajousCtx.beginPath();
+
+      const cx = lw / 2;
+      const cy = lh / 2;
+      const rx = lw * 0.38;
+      const ry = lh * 0.38;
+
+      lissajousPhase += 0.05;
+      for (let t = 0; t <= Math.PI * 2; t += 0.1) {
+        const x = cx + Math.sin(t * 2 + lissajousPhase) * rx;
+        const y = cy + Math.cos(t * 3) * ry;
+        if (t === 0) lissajousCtx.moveTo(x, y);
+        else lissajousCtx.lineTo(x, y);
+      }
+      lissajousCtx.stroke();
+    }
+
+    requestAnimationFrame(renderScopes);
+  }
+  renderScopes();
+}
+
+/* =========================================================================
+   TAB 16: SHARED SIGNAL INTERLOCK & DUAL-PRESENCE RELAY (DIRECTIVE 208)
+   ========================================================================= */
+let dualPresenceUnlocked = false;
+let betaFallbackTimer = 25;
+let betaTimerInterval = null;
+let signalFragments = [];
+
+function initSignalBoard() {
+  const elSession = document.getElementById('lblSessionIdAlpha');
+  if (elSession) elSession.textContent = localNodeId;
+
+  startDualPresenceCheck();
+
+  signalFragments = [
+    { time: "23:58:12", origin: "KSynth (1999Hz)", target: "10.19.99.1", freq: "1999.002 Hz", payload: "HARMONIC_SUBCARRIER_ECHO_LAB" },
+    { time: "23:59:04", origin: "KHex (0x007F1990)", target: "10.19.99.12", freq: "144.390 MHz", payload: "MEMO_CARLSBAD_SALT_99" }
+  ];
+  renderSignalBoardTable();
+}
+
+function startDualPresenceCheck() {
+  if (meshRtdb && meshRtdb.db) {
+    try {
+      const presenceRef = meshRtdb.ref(meshRtdb.db, `arg/subterranean/presence/${localNodeId}`);
+      meshRtdb.push(presenceRef, { nodeId: localNodeId, ts: Date.now() });
+
+      const allPresenceRef = meshRtdb.ref(meshRtdb.db, 'arg/subterranean/presence');
+      meshRtdb.onChildAdded(allPresenceRef, (snap) => {
+        const val = snap.val();
+        if (val && snap.key !== localNodeId) {
+          lockChannelBeta("ONLINE PEER");
+        }
+      });
+    } catch (e) {}
+  }
+
+  const lblTimer = document.getElementById('lblBetaTimer');
+  betaTimerInterval = setInterval(() => {
+    betaFallbackTimer--;
+    if (lblTimer) lblTimer.textContent = `Fallback countdown: ${betaFallbackTimer}s`;
+
+    if (betaFallbackTimer <= 0) {
+      clearInterval(betaTimerInterval);
+      lockChannelBeta("SOLO CACHE");
+    }
+  }, 1000);
+}
+
+function lockChannelBeta(sourceType) {
+  if (dualPresenceUnlocked) return;
+  dualPresenceUnlocked = true;
+  if (betaTimerInterval) clearInterval(betaTimerInterval);
+
+  snd.playDualPresenceLockTone();
+  const lamp = document.getElementById('lampChannelBeta');
+  const badge = document.getElementById('badgeChannelBeta');
+  const card = document.getElementById('cardChannelBeta');
+  const desc = document.getElementById('descChannelBeta');
+  const unlockedBox = document.getElementById('boxDualPresenceUnlocked');
+  const prog = document.getElementById('lblInterlockProgress');
+
+  if (lamp) lamp.className = 'interlock-lamp active-green';
+  if (badge) {
+    badge.textContent = 'SYNCHRONIZED';
+    badge.style.background = 'var(--phosphor)';
+    badge.style.color = '#000';
+  }
+  if (card) card.classList.add('locked');
+  if (desc) {
+    desc.innerHTML = `<span style="color:var(--phosphor-bright);">[${sourceType} LOCKED]</span> Lithospheric waveguide loop verified. Secondary reflection locked to Deep Core transit bus.`;
+  }
+  if (prog) {
+    prog.textContent = '100% [DUAL LOCK ESTABLISHED]';
+    prog.style.color = 'var(--phosphor-bright)';
+  }
+  if (unlockedBox) unlockedBox.style.display = 'block';
+
+  printTerminal(`[DUAL INTERLOCK] Subterranean dual transponder locked via ${sourceType}. Deep Core transit corridor unsealed.`);
+}
+
+function injectLocalSignalFragment() {
+  snd.playPacketBurst();
+  const origins = ["KRadio (1999Hz)", "KCipher (0x7F)", "KTerm (Ghost Log)", "KPad (recovery.log)"];
+  const payloads = ["CARLSBAD_SALT_99_VERIFIED", "PRECURSOR_LATTICE_0x00DEEPC0", "ECHO_RELAY_SYNC_CONFIRMED"];
+  const origin = origins[Math.floor(Math.random() * origins.length)];
+  const payload = payloads[Math.floor(Math.random() * payloads.length)];
+  const time = new Date().toTimeString().split(' ')[0];
+
+  signalFragments.unshift({
+    time: time,
+    origin: origin,
+    target: "10.19.99.127 (Deep Core)",
+    freq: "1999 Hz",
+    payload: payload
+  });
+
+  renderSignalBoardTable();
+  printTerminal(`[SIGNAL BOARD] Injected signal fragment '${payload}' from ${origin}.`);
+}
+
+function renderSignalBoardTable() {
+  const tbody = document.getElementById('tblSignalBoardBody');
+  if (!tbody) return;
+  tbody.innerHTML = '';
+
+  signalFragments.forEach(f => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><code>${f.time}</code></td>
+      <td><strong style="color:var(--cyan);">${f.origin}</strong></td>
+      <td><code>${f.target}</code></td>
+      <td><span style="color:var(--phosphor-bright);">${f.freq}</span></td>
+      <td><code style="color:var(--phosphor);">${f.payload}</code></td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  const countEl = document.getElementById('lblSignalsCount');
+  if (countEl) {
+    countEl.textContent = `${signalFragments.length} / 3 FRAGMENTS ACCUMULATED`;
+    if (signalFragments.length >= 3) {
+      countEl.style.color = 'var(--phosphor-bright)';
+      const blueprint = document.getElementById('boxPrecursorBlueprint');
+      if (blueprint && blueprint.style.display === 'none') {
+        blueprint.style.display = 'block';
+        snd.playRelayUnlockAffirmation();
+        printTerminal('[ARG] PRECURSOR BLUEPRINT MEMO #7F UNSEALED! Lore reconciliation unlocked.');
+      }
+    }
+  }
+}
+
+function clearSignalBoard() {
+  snd.playKeyClick();
+  signalFragments = [];
+  renderSignalBoardTable();
+}
+
+function updateSignalBoardUi() {
+  renderSignalBoardTable();
+}
+
+/* =========================================================================
+   STATE PERSISTENCE & STATION INITIALIZATION
+   ========================================================================= */
 function quicksaveStationState() {
-  snd.playFMChirp(650);
+  snd.playFMChirp(880);
   const state = {
     relayState: RELAY_STATE,
     themeIdx: currentThemeIdx,
@@ -7302,11 +8701,16 @@ function quicksaveStationState() {
     feistelRounds: feistelState.maxRounds,
     currentOtpPad: currentOtpPad,
     bbConnectedRoute: bbState.connectedRoute,
+    hexOffset: currentHexOffset,
+    hexPatches: hexBankedPages,
+    hexMemoUnlocked: hexMemoUnlocked,
+    dualPresenceUnlocked: dualPresenceUnlocked,
+    signalFragments: signalFragments,
     savedAt: Date.now()
   };
   try {
     localStorage.setItem('kweb_darknet_state', JSON.stringify(state));
-    printTerminal('[QUICKSAVE] Station telemetry, dead drops & cryptographic keys stored in persistent storage (F5).');
+    printTerminal('[QUICKSAVE] Station telemetry, hex memory, dead drops & cryptographic keys stored in persistent storage (F5).');
   } catch (e) {
     printTerminal('[SAVE ERROR] Could not access local storage.');
   }
@@ -7330,6 +8734,25 @@ function quickloadStationState() {
     }
     if (state.bbConnectedRoute) {
       dialRouteByString(state.bbConnectedRoute);
+    }
+    if (state.hexOffset !== undefined) {
+      jumpToHexOffset(state.hexOffset);
+    }
+    if (state.hexPatches) {
+      Object.assign(hexBankedPages, state.hexPatches);
+      renderHexDump();
+    }
+    if (state.hexMemoUnlocked) {
+      hexMemoUnlocked = true;
+      const memoBox = document.getElementById('boxHexUnlockedMemo');
+      if (memoBox) memoBox.style.display = 'block';
+    }
+    if (state.dualPresenceUnlocked) {
+      lockChannelBeta("SAVED STATE");
+    }
+    if (state.signalFragments) {
+      signalFragments = state.signalFragments;
+      renderSignalBoardTable();
     }
     renderDeadDropList();
     printTerminal(`[QUICKLOAD] Restored station state from ${new Date(state.savedAt).toLocaleTimeString()} (F9).`);
@@ -7359,6 +8782,10 @@ setTimeout(() => {
   renderBlueboxKeypad();
   renderDeadDropList();
   encryptNewDropLive();
+  initHexVirtualMemory();
+  initHexInspector();
+  initAcousticModem();
+  initSignalBoard();
 }, 600);
 
 </script>
