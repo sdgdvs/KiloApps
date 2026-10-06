@@ -205,6 +205,11 @@
       border-color: var(--primary-hover);
     }
 
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
     .btn-sm {
       padding: 3px 6px;
       font-size: 11px;
@@ -914,7 +919,7 @@
       font-size: 12px;
       box-shadow: 0 4px 16px rgba(0,0,0,0.6);
       z-index: 2000;
-      pointer-events: auto;
+      pointer-events: none;
       cursor: pointer;
       opacity: 0;
       transform: translateX(-50%) translateY(8px);
@@ -924,6 +929,7 @@
     .toast.show {
       opacity: 1;
       transform: translateX(-50%) translateY(0);
+      pointer-events: auto;
     }
 
     /* Presence Badge */
@@ -2030,13 +2036,19 @@
             searchQuery = parsed.searchQuery;
             const searchInput = document.getElementById('inputSearch');
             if (searchInput) searchInput.value = searchQuery;
+            const clearSearchBtn = document.getElementById('btnClearSearch');
+            if (clearSearchBtn) clearSearchBtn.style.display = searchQuery ? 'inline-block' : 'none';
           }
           if (parsed.soundEnabled !== undefined) {
             soundEnabled = !!parsed.soundEnabled;
             const soundBtn = document.getElementById('btnToggleSound');
             if (soundBtn) soundBtn.textContent = soundEnabled ? '🔊 SFX' : '🔇 Muted';
           }
-          if (parsed.theme) applyTheme(parsed.theme);
+          if (parsed.theme) {
+            applyTheme(parsed.theme);
+            const themeSelect = document.getElementById('selectTheme');
+            if (themeSelect) themeSelect.value = parsed.theme;
+          }
           if (parsed.zoomLevel) {
             zoomLevel = Math.max(10, Math.min(26, parsed.zoomLevel));
             const bodyEl = document.getElementById('articleBody');
@@ -3209,11 +3221,35 @@
       if (!art) {
         emptyEl.style.display = 'flex';
         articleEl.style.display = 'none';
+        const prevBtn = document.getElementById('btnPrevArticle');
+        const nextBtn = document.getElementById('btnNextArticle');
+        if (prevBtn) prevBtn.disabled = true;
+        if (nextBtn) nextBtn.disabled = true;
+        if (isSpeaking && window.speechSynthesis) {
+          window.speechSynthesis.cancel();
+          isSpeaking = false;
+          updateSpeechButton();
+        }
         return;
+      }
+
+      // Stop speech synthesizer on article change
+      if (isSpeaking && window.speechSynthesis) {
+        window.speechSynthesis.cancel();
+        isSpeaking = false;
+        updateSpeechButton();
       }
 
       emptyEl.style.display = 'none';
       articleEl.style.display = 'block';
+
+      // Update prev/next button states
+      const prevBtn = document.getElementById('btnPrevArticle');
+      const nextBtn = document.getElementById('btnNextArticle');
+      const filtered = getFilteredArticles();
+      const curIdx = filtered.findIndex(a => a.id === art.id);
+      if (prevBtn) prevBtn.disabled = curIdx <= 0;
+      if (nextBtn) nextBtn.disabled = curIdx === -1 || curIdx >= filtered.length - 1;
 
       const feed = feeds.find(f => f.id === art.feedId) || { title: "Syndicated Feed" };
 
@@ -3378,15 +3414,24 @@
       const art = articles.find(a => a.id === selectedArticleId);
       if (art && art.url) {
         playSoundEffect('click');
+        let posted = false;
         // If running inside KiloOS window manager, postMessage or open window
         if (window.parent && window.parent !== window) {
           try {
             window.parent.postMessage({ type: 'OPEN_APP', id: 'knet', url: art.url }, '*');
             window.parent.postMessage({ type: 'KILO_OPEN_URL', url: art.url }, '*');
+            posted = true;
           } catch(e) {}
         }
         showToast(`Navigating virtual gateway: ${art.url}`);
-        window.open(art.url, '_blank');
+        if (!posted) {
+          if (art.url.startsWith('kweb://')) {
+            const path = art.url.replace('kweb://', '').split('/')[0];
+            window.open(`../web/${path}.html`, '_blank');
+          } else {
+            window.open(art.url, '_blank');
+          }
+        }
       }
     }
 
@@ -3465,6 +3510,8 @@
 
     // --- Modal Helpers ---
     function openModal(id) {
+      const toast = document.getElementById('toastNotice');
+      if (toast) toast.className = 'toast';
       const el = document.getElementById(id);
       if (el) {
         el.classList.add('active');
@@ -3485,6 +3532,7 @@
       const success = loadWorkstationState();
       renderFeedsList();
       renderArticlesList();
+      populateTagFilterOptions();
       if (success) {
         playSoundEffect('load');
         showToast("Workstation State Restored [F9] 📂");
@@ -3811,6 +3859,15 @@
           document.getElementById('btnConfirmAddFeed').click();
         }
       });
+      const rawXmlInput = document.getElementById('inputRawXml');
+      if (rawXmlInput) {
+        rawXmlInput.addEventListener('keydown', (e) => {
+          if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+            e.preventDefault();
+            document.getElementById('btnConfirmAddFeed').click();
+          }
+        });
+      }
 
       document.getElementById('btnCloseAddFeed').onclick = () => closeModal('modalAddFeed');
       document.getElementById('btnCancelAddFeed').onclick = () => closeModal('modalAddFeed');
@@ -3999,6 +4056,7 @@
           showToast(`Imported ${count} channels from ${file.name}!`);
         };
         reader.readAsText(file);
+        e.target.value = '';
       };
 
       document.getElementById('btnBrowseJson').onclick = () => {
@@ -4049,6 +4107,7 @@
           }
         };
         reader.readAsText(file);
+        e.target.value = '';
       };
 
       document.getElementById('btnDownloadOpml').onclick = () => {
@@ -4084,6 +4143,24 @@
       document.getElementById('btnCloseBroadcast').onclick = () => closeModal('modalBroadcast');
       document.getElementById('btnCancelBroadcast').onclick = () => closeModal('modalBroadcast');
       document.getElementById('btnConfirmBroadcast').onclick = broadcastWireDispatch;
+      const wireTitle = document.getElementById('inputWireTitle');
+      if (wireTitle) {
+        wireTitle.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            broadcastWireDispatch();
+          }
+        });
+      }
+      const wireContent = document.getElementById('inputWireContent');
+      if (wireContent) {
+        wireContent.addEventListener('keydown', (e) => {
+          if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+            e.preventDefault();
+            broadcastWireDispatch();
+          }
+        });
+      }
 
       // Catalog Modal Handlers
       document.getElementById('btnCloseCatalog').onclick = () => closeModal('modalCatalog');
@@ -4144,9 +4221,15 @@
       window.addEventListener('keydown', (e) => {
         if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
           if (e.key === 'Escape') {
+            const splash = document.getElementById('modalSplash');
+            if (splash && splash.classList.contains('active')) {
+              dismissSplash(false);
+            }
             if (e.target.id === 'inputSearch') {
               e.target.value = '';
               searchQuery = '';
+              const clearSearchBtn = document.getElementById('btnClearSearch');
+              if (clearSearchBtn) clearSearchBtn.style.display = 'none';
               renderArticlesList();
             }
             closeAllModals();
@@ -4163,7 +4246,17 @@
           if (isZenMode) {
             toggleZenMode(false);
           }
-          closeAllModals();
+          const hasOpenModal = Array.from(document.querySelectorAll('.modal-overlay')).some(m => m.classList.contains('active'));
+          if (hasOpenModal) {
+            closeAllModals();
+          } else if (searchQuery) {
+            searchQuery = '';
+            const searchInput = document.getElementById('inputSearch');
+            if (searchInput) searchInput.value = '';
+            const clearSearchBtn = document.getElementById('btnClearSearch');
+            if (clearSearchBtn) clearSearchBtn.style.display = 'none';
+            renderArticlesList();
+          }
         } else if (e.key === 'z' || e.key === 'Z') {
           e.preventDefault();
           toggleZenMode();
@@ -4215,6 +4308,7 @@
             e.preventDefault();
             const target = filtered[idx];
             selectedArticleId = target.id;
+            if (window.innerWidth <= 768) setMobileView('reader');
             if (!target.isRead) {
               target.isRead = true;
               saveWorkstationState(true);
@@ -4311,6 +4405,7 @@
       renderArticlesList();
       populateTagFilterOptions();
       checkFirstRunSplash();
+      window.addEventListener('beforeunload', () => saveWorkstationState(true));
       if (window.fb) {
         window.initCommunityWire();
       }
