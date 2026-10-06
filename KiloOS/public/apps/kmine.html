@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>KMine - Minesweeper</title>
+<script src="../assets/js/retro_multiplayer.js"></script>
 <style>
   * { box-sizing: border-box; }
   body { 
@@ -347,6 +348,183 @@
     display: flex;
     justify-content: flex-end;
   }
+
+  /* Game Layout & Duel Arena Styling */
+  #game-layout {
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+    justify-content: center;
+    max-width: 100%;
+    flex-wrap: wrap;
+  }
+
+  .opponent-panel {
+    background: #161b22;
+    border: 1px solid #30363d;
+    border-radius: 10px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+    padding: 12px;
+    width: 250px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    backdrop-filter: blur(8px);
+    animation: modalFadeIn 0.25s ease-out;
+  }
+
+  .opp-card {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+  }
+
+  .opp-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #21262d;
+    padding-bottom: 8px;
+  }
+
+  .opp-avatar-box {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .opp-avatar { font-size: 22px; }
+  .opp-name { font-size: 13px; font-weight: 700; color: #f0f6fc; }
+  .opp-status { font-size: 11px; color: #4ade80; }
+
+  .opp-metrics {
+    background: #0d1117;
+    border: 1px solid #21262d;
+    border-radius: 6px;
+    padding: 8px 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .metric-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    color: #8b949e;
+  }
+  .metric-row strong { color: #f0f6fc; }
+
+  .opp-progress-bar {
+    width: 100%;
+    height: 8px;
+    background: #21262d;
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  .opp-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #1f6feb, #38bdf8);
+    transition: width 0.25s ease;
+  }
+
+  .metric-sub {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    color: #79c0ff;
+    font-family: monospace;
+  }
+
+  .opp-radar-wrap {
+    background: #0d1117;
+    border: 1px solid #21262d;
+    border-radius: 6px;
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .radar-header {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    font-size: 10px;
+    font-weight: 700;
+    color: #8b949e;
+    letter-spacing: 0.5px;
+  }
+
+  .radar-canvas {
+    background: #060a12;
+    border: 1px solid #1e293b;
+    border-radius: 4px;
+    display: block;
+    width: 210px;
+    height: 130px;
+  }
+
+  .comms-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .comms-label {
+    font-size: 10px;
+    font-weight: 700;
+    color: #8b949e;
+    letter-spacing: 0.5px;
+  }
+
+  .comms-btns {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+
+  .comm-btn {
+    padding: 3px 6px;
+    font-size: 10px;
+    font-weight: 600;
+    background: #21262d;
+    border: 1px solid #30363d;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  .comm-btn:hover {
+    background: #30363d;
+    color: #38bdf8;
+  }
+
+  .comms-log {
+    font-size: 11px;
+    min-height: 18px;
+    color: #58a6ff;
+    font-style: italic;
+    text-align: center;
+  }
+
+  .opp-actions {
+    display: flex;
+    gap: 6px;
+    justify-content: flex-end;
+  }
+
+  .btn-secondary {
+    background: #21262d;
+    color: #c9d1d9;
+    border: 1px solid #30363d;
+  }
+  .btn-secondary:hover {
+    background: #30363d;
+    color: #f85149;
+    border-color: #f85149;
+  }
 </style>
 </head>
 <body oncontextmenu="return false;">
@@ -379,6 +557,8 @@
         <div><kbd>Enter</kbd> / <kbd>Space</kbd></div><div>Reveal tile / Chord (or Restart on Game Over)</div>
         <div><kbd>Shift+Enter</kbd> / <kbd>X</kbd></div><div>Place or remove flag 🚩</div>
         <div><kbd>F</kbd></div><div>Toggle ⛏️ Dig / 🚩 Flag Mode (Touch Friendly)</div>
+        <div><kbd>N</kbd></div><div>Cyber Duel Arena (Online Multiplayer & Local AI)</div>
+        <div><kbd>4</kbd></div><div>Custom Grid Configuration Dialog</div>
         <div><kbd>M</kbd></div><div>Toggle Procedural Audio Sound Effects</div>
         <div><kbd>H</kbd></div><div>Safe Move Hint (reveals a guaranteed safe tile)</div>
         <div><kbd>F2</kbd></div><div>Restart New Game on current difficulty</div>
@@ -388,11 +568,129 @@
         <div><kbd>E</kbd></div><div>Export Best Times & Records (JSON)</div>
         <div><kbd>I</kbd></div><div>Import Best Times & Records (JSON)</div>
         <div><kbd>P</kbd></div><div>Watch Replay (after game completion)</div>
-        <div><kbd>Esc</kbd></div><div>Close Help Modal / Dismiss Toasts</div>
+        <div><kbd>Esc</kbd></div><div>Close Modals / Dismiss Toasts</div>
       </div>
     </div>
     <div class="modal-footer">
       <button class="btn-accent" id="helpModalOkBtn" onclick="toggleHelpModal(false)">Got It [Esc / Enter]</button>
+    </div>
+  </div>
+</div>
+
+<!-- Cyber Duel Arena Modal (Online RFMS & Local AI) -->
+<div id="mpModal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="mpModalTitle" onclick="if(event.target===this) toggleMultiplayerModal(false)">
+  <div class="modal-box" style="max-width: 520px;">
+    <div class="modal-header">
+      <h3 id="mpModalTitle">⚔️ KMine - Cyber Duel Arena</h3>
+      <button class="modal-close" aria-label="Close Arena" onclick="toggleMultiplayerModal(false)">✕</button>
+    </div>
+    <div class="modal-body">
+      <div style="margin-bottom: 14px;">
+        <label for="mpCallSign" style="display:block; font-size:12px; font-weight:600; color:#79c0ff; margin-bottom:4px;">Sweeper Call-Sign:</label>
+        <div style="display:flex; gap:8px;">
+          <input id="mpCallSign" type="text" maxlength="16" style="flex:1; background:#0d1117; border:1px solid #30363d; color:#f0f6fc; padding:6px 10px; border-radius:6px; font-size:13px; font-weight:600;" placeholder="Sweeper-99">
+          <button type="button" onclick="saveMpCallSign()" style="padding:6px 12px;">Save</button>
+        </div>
+      </div>
+
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:14px;">
+        <button type="button" class="btn-accent" style="padding:10px; flex-direction:column; gap:2px;" onclick="startQuickMatch()">
+          <span style="font-size:14px;">⚡ Quick Match</span>
+          <span style="font-size:10px; font-weight:normal; opacity:0.85;">Join or host public room</span>
+        </button>
+        <button type="button" style="padding:10px; flex-direction:column; gap:2px;" onclick="startCreateRoom()">
+          <span style="font-size:14px;">🏠 Create Room</span>
+          <span style="font-size:10px; font-weight:normal; opacity:0.85;">Generate custom code</span>
+        </button>
+      </div>
+
+      <div style="background:#0d1117; border:1px solid #21262d; border-radius:8px; padding:12px; margin-bottom:14px;">
+        <label for="mpJoinCode" style="display:block; font-size:12px; font-weight:600; color:#8b949e; margin-bottom:6px;">Join with Code (e.g. MIN-XXXX):</label>
+        <div style="display:flex; gap:8px;">
+          <input id="mpJoinCode" type="text" maxlength="12" placeholder="MIN-XXXX" style="flex:1; background:#161b22; border:1px solid #30363d; color:#f0f6fc; padding:6px 10px; border-radius:6px; font-family:monospace; font-weight:bold; text-transform:uppercase;">
+          <button type="button" class="btn-accent" onclick="startJoinRoom()">Join Room</button>
+        </div>
+      </div>
+
+      <div style="border-top:1px solid #21262d; padding-top:12px; display:flex; justify-content:space-between; align-items:center;">
+        <div>
+          <div style="font-size:13px; font-weight:600; color:#f0f6fc;">🤖 Solo Offline Duel (Vs CyberBot AI)</div>
+          <div style="font-size:11px; color:#8b949e;">Practice locally against CyberBot-99 solver</div>
+        </div>
+        <button type="button" onclick="startCyberBotDuel()" style="padding:6px 12px; background:#238636; border-color:#2ea043; color:#fff;">Play CyberBot</button>
+      </div>
+
+      <!-- Live Matchmaking Status & Fallback Timer (Rule 12 compliant) -->
+      <div id="mpStatusSection" style="display:none; margin-top:14px; background:#161b22; border:1px solid #388bfd; border-radius:8px; padding:12px; text-align:center;">
+        <div id="mpRoomCodeDisplay" style="font-size:18px; font-family:monospace; font-weight:bold; color:#58a6ff; margin-bottom:4px;"></div>
+        <div id="mpStatusMessage" style="font-size:12px; color:#c9d1d9; margin-bottom:8px;">Waiting for challenger...</div>
+        <div id="mpFallbackTimerDisplay" style="font-size:11px; color:#e3b341; font-weight:600;">⏱️ Lone player? Auto-engaging CyberBot-99 in 25s</div>
+        <div style="margin-top:10px; display:flex; gap:8px; justify-content:center;">
+          <button type="button" id="mpCopyLinkBtn" onclick="copyDuelInviteLink()" style="font-size:11px; padding:4px 10px;">📋 Copy Link</button>
+          <button type="button" onclick="cancelMatchmaking()" style="font-size:11px; padding:4px 10px; background:#da3633; border-color:#f85149; color:#fff;">Cancel</button>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" onclick="toggleMultiplayerModal(false)">Close [Esc]</button>
+    </div>
+  </div>
+</div>
+
+<!-- Custom Grid Configuration Modal -->
+<div id="customModal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="customModalTitle" onclick="if(event.target===this) toggleCustomModal(false)">
+  <div class="modal-box" style="max-width: 440px;">
+    <div class="modal-header">
+      <h3 id="customModalTitle">⚙️ Custom Grid Configuration</h3>
+      <button class="modal-close" aria-label="Close Custom" onclick="toggleCustomModal(false)">✕</button>
+    </div>
+    <div class="modal-body">
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-bottom:12px;">
+        <div>
+          <label for="custCols" style="display:block; font-size:12px; color:#8b949e; margin-bottom:4px;">Columns (8-30):</label>
+          <input id="custCols" type="number" min="8" max="30" value="16" oninput="updateCustomDensity()" style="width:100%; background:#0d1117; border:1px solid #30363d; color:#f0f6fc; padding:6px 8px; border-radius:6px; font-weight:bold;">
+        </div>
+        <div>
+          <label for="custRows" style="display:block; font-size:12px; color:#8b949e; margin-bottom:4px;">Rows (8-24):</label>
+          <input id="custRows" type="number" min="8" max="24" value="16" oninput="updateCustomDensity()" style="width:100%; background:#0d1117; border:1px solid #30363d; color:#f0f6fc; padding:6px 8px; border-radius:6px; font-weight:bold;">
+        </div>
+      </div>
+      <div style="margin-bottom:12px;">
+        <label for="custMines" style="display:block; font-size:12px; color:#8b949e; margin-bottom:4px;">Mines Count:</label>
+        <input id="custMines" type="number" min="1" max="180" value="40" oninput="updateCustomDensity()" style="width:100%; background:#0d1117; border:1px solid #30363d; color:#f0f6fc; padding:6px 8px; border-radius:6px; font-weight:bold;">
+      </div>
+      <div id="custDensityNote" style="font-size:12px; color:#79c0ff; background:#0d1117; padding:8px 12px; border-radius:6px; border:1px solid #21262d; margin-bottom:10px;">
+        Grid: 16x16 (256 tiles) | Mines: 40 (15.6% density)
+      </div>
+      <div style="display:flex; gap:6px; flex-wrap:wrap; font-size:11px;">
+        <span style="color:#8b949e; align-self:center;">Presets:</span>
+        <button type="button" style="padding:2px 8px; font-size:11px;" onclick="setCustomPreset(8, 8, 10)">Micro (8x8/10)</button>
+        <button type="button" style="padding:2px 8px; font-size:11px;" onclick="setCustomPreset(20, 12, 35)">Wide (20x12/35)</button>
+        <button type="button" style="padding:2px 8px; font-size:11px;" onclick="setCustomPreset(24, 18, 70)">Titan (24x18/70)</button>
+      </div>
+    </div>
+    <div class="modal-footer" style="gap:8px;">
+      <button type="button" onclick="toggleCustomModal(false)">Cancel</button>
+      <button type="button" class="btn-accent" onclick="applyCustomGrid()">Apply & Play</button>
+    </div>
+  </div>
+</div>
+
+<!-- Incoming Duel Challenge Prompt (Rule 12 Connect Gate) -->
+<div id="inviteModal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="inviteModalTitle">
+  <div class="modal-box" style="max-width: 440px;">
+    <div class="modal-header">
+      <h3 id="inviteModalTitle">⚔️ Incoming Duel Challenge!</h3>
+    </div>
+    <div class="modal-body" style="text-align:center;">
+      <div style="font-size:40px; margin-bottom:8px;">💣</div>
+      <p style="font-size:14px; margin-top:0;">You have been invited to a live Minesweeper Speed Duel!</p>
+      <div id="inviteRoomDisplay" style="font-family:monospace; font-size:20px; font-weight:bold; color:#58a6ff; background:#0d1117; padding:8px 16px; border-radius:6px; border:1px solid #30363d; display:inline-block; margin-bottom:14px;">MIN-XXXX</div>
+      <p style="font-size:12px; color:#8b949e; margin:0;">Both players race on the identical minefield layout. First to sweep all safe tiles wins.</p>
+    </div>
+    <div class="modal-footer" style="justify-content:center; gap:12px;">
+      <button type="button" onclick="declineInviteChallenge()" style="background:#21262d; border-color:#30363d;">Decline</button>
+      <button type="button" class="btn-accent" onclick="acceptInviteChallenge()" style="padding:8px 20px; font-size:14px;">⚔️ Accept & Connect</button>
     </div>
   </div>
 </div>
@@ -404,10 +702,13 @@
       <option value="0">Beginner (10x10) [1]</option>
       <option value="1" selected>Intermediate (16x16) [2]</option>
       <option value="2">Expert (30x16) [3]</option>
+      <option value="custom">Custom Grid... [4]</option>
     </select>
     <button onclick="initGame()" title="New Game (F2)">🔄 Restart <span class="badge">F2</span></button>
     <button id="modeToggleBtn" onclick="toggleDigFlagMode()" title="Toggle Dig / Flag Mode (F)">⛏️ Dig <span class="badge">F</span></button>
     <button onclick="giveHint()" title="Reveal Safe Tile (H)">💡 Hint <span class="badge">H</span></button>
+    <button id="duelBtn" class="btn-accent" onclick="toggleMultiplayerModal(true)" title="Online & Local AI Speed Duel (N)">⚔️ Duel <span class="badge">N</span></button>
+    <button id="customBtn" onclick="toggleCustomModal(true)" title="Configure Custom Grid (4)">⚙️ Custom <span class="badge">4</span></button>
   </div>
 
   <span id="status">💣 40 | ⏱️ 0s</span>
@@ -431,14 +732,73 @@
   <span><kbd>Enter/Space</kbd> Dig</span>
   <span><kbd>X/R-Click</kbd> Flag</span>
   <span><kbd>F</kbd> Mode</span>
+  <span><kbd>N</kbd> Duel</span>
+  <span><kbd>4</kbd> Custom</span>
   <span><kbd>M</kbd> Sound</span>
   <span><kbd>H</kbd> Hint</span>
   <span><kbd>1-3</kbd> Diff</span>
   <span><kbd>F1</kbd> Guide</span>
 </div>
 
-<div id="canvas-container">
-  <canvas id="cvs" tabindex="0" role="region" aria-label="KMine Grid Board"></canvas>
+<div id="game-layout">
+  <div id="canvas-container">
+    <canvas id="cvs" tabindex="0" role="region" aria-label="KMine Grid Board"></canvas>
+  </div>
+
+  <!-- Opponent Tactical HUD & Radar (Visible in Duel Mode) -->
+  <div id="opponent-panel" class="opponent-panel" style="display: none;">
+    <div class="opp-card">
+      <div class="opp-header">
+        <div class="opp-avatar-box">
+          <span id="oppAvatar" class="opp-avatar">⚔️</span>
+          <div>
+            <div id="oppName" class="opp-name">Challenger</div>
+            <div id="oppStatus" class="opp-status">🟢 In Duel</div>
+          </div>
+        </div>
+        <span id="oppBadge" class="badge" style="color: #4ade80; border-color: #22c55e;">DUEL</span>
+      </div>
+
+      <div class="opp-metrics">
+        <div class="metric-row">
+          <span>Safe Cleared:</span>
+          <strong id="oppSafeCount">0 / 0</strong>
+        </div>
+        <div class="opp-progress-bar">
+          <div id="oppProgressFill" class="opp-progress-fill" style="width: 0%;"></div>
+        </div>
+        <div class="metric-sub">
+          <span id="oppFlags">🚩 0 flags</span>
+          <span id="oppPct">0.0%</span>
+        </div>
+      </div>
+
+      <div class="opp-radar-wrap">
+        <div class="radar-header">
+          <span>📡 TACTICAL RADAR</span>
+          <span id="oppLiveTag" style="font-size:10px; color:#38bdf8;">LIVE FEED</span>
+        </div>
+        <canvas id="oppRadarCvs" width="210" height="130" class="radar-canvas"></canvas>
+      </div>
+
+      <div class="comms-panel">
+        <div class="comms-label">📻 BATTLE COMMS [1-5]</div>
+        <div class="comms-btns">
+          <button type="button" class="comm-btn" onclick="sendDuelChat('Watch your step!')">⚠️ Watch out</button>
+          <button type="button" class="comm-btn" onclick="sendDuelChat('Cascade surge!')">⚡ Cascade</button>
+          <button type="button" class="comm-btn" onclick="sendDuelChat('Sector safe!')">🚩 Clear</button>
+          <button type="button" class="comm-btn" onclick="sendDuelChat('Detonation near!')">💣 Danger</button>
+          <button type="button" class="comm-btn" onclick="sendDuelChat('Good game!')">🏆 GG</button>
+        </div>
+        <div id="commsLog" class="comms-log"></div>
+      </div>
+
+      <div class="opp-actions">
+        <button id="duelRematchBtn" type="button" class="btn-accent" style="display:none; font-size:12px; padding:4px 10px;" onclick="requestDuelRematch()">🔄 Rematch</button>
+        <button type="button" class="btn-secondary" style="font-size:12px; padding:4px 10px;" onclick="exitDuelMode()">Leave Duel</button>
+      </div>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -462,6 +822,39 @@
   let isReplaying = false;
   let startRealTime = 0;
   let quickSaveData = null;
+
+  // RFMS Multiplayer & Speed Duel State
+  let rMultiplayer = null;
+  let isDuelMode = false;
+  let duelType = 'none'; // 'none' | 'online' | 'cyberbot'
+  let myPlayerName = safeGetStorage('kmine_playerName') || ('Sweeper_' + Math.floor(100 + Math.random() * 900));
+  let duelSeed = null;
+  let duelOpponent = {
+    name: 'Challenger',
+    status: 'In Duel',
+    safeRevealed: 0,
+    totalSafe: 0,
+    flags: 0,
+    radarGrid: null,
+    detonated: false
+  };
+  let fallbackCountdownTimer = null;
+  let fallbackSecondsLeft = 25;
+  let pendingInviteRoom = null;
+  let cyberBotTimer = null;
+  let cyberBotGrid = null;
+  let cyberBotState = null;
+  let cyberBotSafeRevealed = 0;
+  let cyberBotFlags = 0;
+
+  function mulberry32(a) {
+    return function() {
+      let t = a += 0x6D2B79F5;
+      t = Math.imul(t ^ t >>> 15, t | 1);
+      t ^= t + Math.imul(t ^ t >>> 7, t | 61);
+      return ((t ^ t >>> 14) >>> 0) / 4294967296;
+    };
+  }
   
   // Safe Storage Helpers with Quota Guard
   function safeGetStorage(key, fallback = null) {
@@ -650,6 +1043,92 @@
         gain.connect(audioCtx.destination);
         osc.start(now);
         osc.stop(now + 0.2);
+      } else if (type === 'duel_start') {
+        // Yamaha YM2612 2-Operator FM synthesis: Carrier + Modulator
+        const carrier = audioCtx.createOscillator();
+        const modulator = audioCtx.createOscillator();
+        const modGain = audioCtx.createGain();
+        const masterGain = audioCtx.createGain();
+
+        carrier.type = 'sine';
+        carrier.frequency.setValueAtTime(440, now);
+        carrier.frequency.setValueAtTime(587.33, now + 0.09);
+        carrier.frequency.setValueAtTime(880, now + 0.18);
+
+        modulator.type = 'sine';
+        modulator.frequency.setValueAtTime(880, now);
+        modulator.frequency.setValueAtTime(1174.66, now + 0.09);
+        modulator.frequency.setValueAtTime(1760, now + 0.18);
+
+        modGain.gain.setValueAtTime(350, now);
+        modGain.gain.exponentialRampToValueAtTime(10, now + 0.32);
+
+        masterGain.gain.setValueAtTime(0.18, now);
+        masterGain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+
+        modulator.connect(modGain);
+        modGain.connect(carrier.frequency);
+        carrier.connect(masterGain);
+        masterGain.connect(audioCtx.destination);
+
+        carrier.start(now);
+        modulator.start(now);
+        carrier.stop(now + 0.36);
+        modulator.stop(now + 0.36);
+      } else if (type === 'radar_ping') {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(1480, now);
+        osc.frequency.exponentialRampToValueAtTime(740, now + 0.08);
+        gain.gain.setValueAtTime(0.12, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.09);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start(now);
+        osc.stop(now + 0.095);
+      } else if (type === 'comm') {
+        [750, 1050].forEach((freq, idx) => {
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.type = 'sine';
+          const t = now + idx * 0.04;
+          osc.frequency.setValueAtTime(freq, t);
+          gain.gain.setValueAtTime(0.1, t);
+          gain.gain.exponentialRampToValueAtTime(0.001, t + 0.035);
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.start(t);
+          osc.stop(t + 0.04);
+        });
+      } else if (type === 'duel_win') {
+        [523.25, 659.25, 783.99, 1046.5].forEach((freq, idx) => {
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.type = 'triangle';
+          const t = now + idx * 0.07;
+          osc.frequency.setValueAtTime(freq, t);
+          gain.gain.setValueAtTime(0.16, t);
+          gain.gain.exponentialRampToValueAtTime(0.001, t + 0.25);
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.start(t);
+          osc.stop(t + 0.28);
+        });
+      } else if (type === 'duel_lose') {
+        [392, 349.23, 311.13, 261.63].forEach((freq, idx) => {
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.type = 'sawtooth';
+          const t = now + idx * 0.09;
+          osc.frequency.setValueAtTime(freq, t);
+          gain.gain.setValueAtTime(0.12, t);
+          gain.gain.exponentialRampToValueAtTime(0.001, t + 0.22);
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.start(t);
+          osc.stop(t + 0.25);
+        });
       }
     } catch (e) {
       // Audio fallback safe
@@ -910,6 +1389,16 @@
     }
   }
   
+  function countRevealedSafeTiles() {
+    let count = 0;
+    for (let y = 0; y < rows; y++) {
+      for (let x = 0; x < cols; x++) {
+        if (state[y][x] === 1 && grid[y][x] !== 9) count++;
+      }
+    }
+    return count;
+  }
+
   function checkWin() {
     let unrevealed = 0;
     for (let y = 0; y < rows; y++) {
@@ -925,9 +1414,12 @@
       playSfx('win');
       document.getElementById('replayBtn').style.display = 'inline-flex';
       showToast(`🏆 VICTORY! Cleared in ${timeElapsed}s!`, "success", 5000);
+      if (isDuelMode) {
+        handleLocalDuelWin();
+      }
       if (!isReplaying) {
         let d = document.getElementById('diff').value;
-        if (bestTimes[d] === null || timeElapsed < bestTimes[d]) {
+        if (bestTimes[d] !== undefined && (bestTimes[d] === null || timeElapsed < bestTimes[d])) {
           bestTimes[d] = timeElapsed;
           saveStats();
           showToast(`⭐ New Personal Best: ${timeElapsed}s!`, "success", 5000);
@@ -958,6 +1450,10 @@
     const select = document.getElementById('diff');
     if (customVal !== undefined) select.value = customVal;
     const val = select.value;
+    if (val === 'custom') {
+      toggleCustomModal(true);
+      return;
+    }
     const names = { "0": "Beginner (10x10)", "1": "Intermediate (16x16)", "2": "Expert (30x16)" };
     if (val === "0") { cols = 10; rows = 10; totalMines = 15; }
     else if (val === "1") { cols = 16; rows = 16; totalMines = 40; }
@@ -965,15 +1461,16 @@
     updateBestTimeDisplay();
     setupCanvas();
     initGame();
-    showToast(`🎮 Difficulty set to ${names[val]}`, "info", 2000);
+    showToast(`🎮 Difficulty set to ${names[val] || val}`, "info", 2000);
   }
   
   function generateMines(safeX, safeY) {
     grid = Array.from({length: rows}, () => Array(cols).fill(0));
     let mines = 0;
+    const rng = (duelSeed !== null) ? mulberry32(duelSeed) : Math.random;
     while (mines < totalMines) {
-      let x = Math.floor(Math.random() * cols);
-      let y = Math.floor(Math.random() * rows);
+      let x = Math.floor(rng() * cols);
+      let y = Math.floor(rng() * rows);
       if (grid[y][x] !== 9 && !(x === safeX && y === safeY)) {
         grid[y][x] = 9;
         mines++;
@@ -1014,6 +1511,10 @@
     }
     state = Array.from({length: rows}, () => Array(cols).fill(0));
     initDust();
+    if (isDuelMode) {
+      updateOpponentHud();
+      drawOpponentRadar();
+    }
   }
 
   function applyAction(x, y, btn) {
@@ -1031,6 +1532,11 @@
         if (gameOver === 0) playSfx('click');
       }
       if (gameOver === 0) checkWin();
+      if (isDuelMode && gameOver === 0) {
+        const totalSafe = (cols * rows) - totalMines;
+        const safeCount = countRevealedSafeTiles();
+        broadcastDuelProgress(safeCount, totalSafe, flags, 'Sweeping');
+      }
     } else if (btn === 2) {
       if (state[y][x] !== 1) {
         if (state[y][x] === 0) { 
@@ -1061,6 +1567,11 @@
           playSfx('flag');
         }
         updateStatus();
+        if (isDuelMode && gameOver === 0) {
+          const totalSafe = (cols * rows) - totalMines;
+          const safeCount = countRevealedSafeTiles();
+          broadcastDuelProgress(safeCount, totalSafe, flags, 'Sweeping');
+        }
       }
     }
   }
@@ -1081,6 +1592,9 @@
           if (grid[i][j] === 9) state[i][j] = 1;
         }
       }
+      if (isDuelMode) {
+        handleLocalDuelDetonation(x, y);
+      }
       return;
     }
     if (grid[y][x] === 0) {
@@ -1090,6 +1604,696 @@
         }
       }
     }
+  }
+
+  // --- Duel & Multiplayer Progress Synchronization ---
+  function broadcastDuelProgress(safeRevealed, totalSafe, currentFlags, status) {
+    if (!isDuelMode) return;
+    if (duelType === 'online' && rMultiplayer) {
+      rMultiplayer.sendMove({
+        type: 'progress',
+        safeRevealed,
+        totalSafe,
+        flags: currentFlags,
+        status,
+        radarSnapshot: getCompactRadarState()
+      });
+    }
+  }
+
+  function getCompactRadarState() {
+    return state.map(row => [...row]);
+  }
+
+  function updateOpponentHud() {
+    const safeEl = document.getElementById('oppSafeCount');
+    const fillEl = document.getElementById('oppProgressFill');
+    const flagsEl = document.getElementById('oppFlags');
+    const pctEl = document.getElementById('oppPct');
+    const statusEl = document.getElementById('oppStatus');
+
+    const total = duelOpponent.totalSafe || Math.max(1, (cols * rows) - totalMines);
+    const safe = Math.min(total, duelOpponent.safeRevealed || 0);
+    const pct = ((safe / total) * 100).toFixed(1);
+
+    if (safeEl) safeEl.innerText = `${safe} / ${total}`;
+    if (fillEl) fillEl.style.width = `${pct}%`;
+    if (flagsEl) flagsEl.innerText = `🚩 ${duelOpponent.flags || 0} flags`;
+    if (pctEl) pctEl.innerText = `${pct}%`;
+    if (statusEl && duelOpponent.status) statusEl.innerText = duelOpponent.status;
+  }
+
+  function drawOpponentRadar() {
+    const rcvs = document.getElementById('oppRadarCvs');
+    if (!rcvs) return;
+    const rctx = rcvs.getContext('2d');
+    const w = rcvs.width;
+    const h = rcvs.height;
+
+    rctx.fillStyle = '#060a12';
+    rctx.fillRect(0, 0, w, h);
+
+    const cellW = (w - 4) / cols;
+    const cellH = (h - 4) / rows;
+
+    // Subtle tactical grid lines
+    rctx.strokeStyle = '#0e1e2e';
+    rctx.lineWidth = 0.5;
+    for (let x = 0; x <= cols; x += 4) {
+      rctx.beginPath();
+      rctx.moveTo(2 + x * cellW, 2);
+      rctx.lineTo(2 + x * cellW, 2 + rows * cellH);
+      rctx.stroke();
+    }
+    for (let y = 0; y <= rows; y += 4) {
+      rctx.beginPath();
+      rctx.moveTo(2, 2 + y * cellH);
+      rctx.lineTo(2 + cols * cellW, 2 + y * cellH);
+      rctx.stroke();
+    }
+
+    // Render opponent cells
+    const oppGrid = duelOpponent.radarGrid;
+    if (oppGrid) {
+      for (let y = 0; y < rows; y++) {
+        for (let x = 0; x < cols; x++) {
+          const val = oppGrid[y] ? oppGrid[y][x] : 0;
+          const cx = 2 + x * cellW;
+          const cy = 2 + y * cellH;
+          if (val === 1) { // revealed safe
+            rctx.fillStyle = '#22c55e';
+            rctx.fillRect(cx + 0.5, cy + 0.5, Math.max(1, cellW - 1), Math.max(1, cellH - 1));
+          } else if (val === 2) { // flagged
+            rctx.fillStyle = '#f59e0b';
+            rctx.fillRect(cx + 0.5, cy + 0.5, Math.max(1, cellW - 1), Math.max(1, cellH - 1));
+          } else if (val === 9) { // detonated
+            rctx.fillStyle = '#ef4444';
+            rctx.fillRect(cx, cy, cellW, cellH);
+          }
+        }
+      }
+    }
+
+    // Animated radar sweep beam
+    const sweepX = ((Date.now() / 15) % (w - 4));
+    const grad = rctx.createLinearGradient(sweepX - 25, 0, sweepX, 0);
+    grad.addColorStop(0, 'rgba(56, 189, 248, 0)');
+    grad.addColorStop(1, 'rgba(56, 189, 248, 0.22)');
+    rctx.fillStyle = grad;
+    rctx.fillRect(Math.max(2, sweepX - 25), 2, 25, h - 4);
+  }
+
+  // --- Duel Match Outcomes ---
+  function handleLocalDuelWin() {
+    stopTimer();
+    stopCyberBotLoop();
+    playSfx('duel_win');
+    spawnWinCelebration();
+    showToast("🏆 DUEL VICTORY! You cleared the minefield first!", "success", 6000);
+    if (duelType === 'online' && rMultiplayer) {
+      rMultiplayer.sendMove({ type: 'win', timeElapsed });
+    }
+    const rBtn = document.getElementById('duelRematchBtn');
+    if (rBtn) rBtn.style.display = 'inline-flex';
+    const stEl = document.getElementById('oppStatus');
+    if (stEl) stEl.innerText = 'Defeated';
+  }
+
+  function handleLocalDuelDetonation(x, y) {
+    stopTimer();
+    stopCyberBotLoop();
+    playSfx('boom');
+    showToast(`💥 Mine detonated! ${duelOpponent.name} wins the duel!`, "error", 6000);
+    if (duelType === 'online' && rMultiplayer) {
+      rMultiplayer.sendMove({ type: 'detonated', x, y });
+    }
+    const rBtn = document.getElementById('duelRematchBtn');
+    if (rBtn) rBtn.style.display = 'inline-flex';
+    const stEl = document.getElementById('oppStatus');
+    if (stEl) stEl.innerText = '🏆 VICTORY';
+  }
+
+  function handleOpponentWin(name) {
+    stopTimer();
+    stopCyberBotLoop();
+    playSfx('duel_lose');
+    gameOver = 1;
+    showToast(`⚠️ ${name} swept the minefield first! DEFEAT.`, "warn", 6000);
+    const stEl = document.getElementById('oppStatus');
+    if (stEl) stEl.innerText = '🏆 VICTORY';
+    const rBtn = document.getElementById('duelRematchBtn');
+    if (rBtn) rBtn.style.display = 'inline-flex';
+  }
+
+  function handleOpponentDetonation(name) {
+    stopTimer();
+    stopCyberBotLoop();
+    playSfx('duel_win');
+    spawnWinCelebration();
+    showToast(`💥 ${name} triggered a naval mine! YOU WIN BY KNOCKOUT!`, "success", 6000);
+    const stEl = document.getElementById('oppStatus');
+    if (stEl) stEl.innerText = '💥 Detonated';
+    const rBtn = document.getElementById('duelRematchBtn');
+    if (rBtn) rBtn.style.display = 'inline-flex';
+  }
+
+  // --- CyberBot AI Local Opponent ---
+  function startCyberBotDuel() {
+    toggleMultiplayerModal(false);
+    stopFallbackCountdown();
+    if (rMultiplayer) rMultiplayer.leaveRoom();
+
+    isDuelMode = true;
+    duelType = 'cyberbot';
+    duelOpponent.name = 'CyberBot-99';
+    duelOpponent.status = '🟢 In Duel';
+    duelOpponent.safeRevealed = 0;
+    duelOpponent.totalSafe = (cols * rows) - totalMines;
+    duelOpponent.flags = 0;
+    duelOpponent.detonated = false;
+
+    duelSeed = Math.floor(Math.random() * 10000000);
+    initGame(false);
+
+    cyberBotGrid = grid.map(r => [...r]);
+    cyberBotState = Array.from({length: rows}, () => Array(cols).fill(0));
+    cyberBotSafeRevealed = 0;
+    cyberBotFlags = 0;
+    duelOpponent.radarGrid = cyberBotState.map(r => [...r]);
+
+    const panel = document.getElementById('opponent-panel');
+    if (panel) panel.style.display = 'flex';
+    document.getElementById('oppName').innerText = duelOpponent.name;
+    document.getElementById('oppAvatar').innerText = '🤖';
+    document.getElementById('oppStatus').innerText = 'Sweeping...';
+    document.getElementById('duelRematchBtn').style.display = 'none';
+    updateOpponentHud();
+    drawOpponentRadar();
+
+    showToast("🤖 CyberBot-99 Duel initiated! Race to sweep the field!", "info", 3500);
+    playSfx('duel_start');
+
+    setTimeout(() => {
+      const midX = Math.floor(cols / 2);
+      const midY = Math.floor(rows / 2);
+      if (cyberBotState[midY] && cyberBotState[midY][midX] === 0) {
+        cyberBotReveal(midX, midY);
+      }
+      startCyberBotLoop();
+    }, 700);
+  }
+
+  function startCyberBotLoop() {
+    stopCyberBotLoop();
+    cyberBotTimer = setInterval(() => {
+      if (!isDuelMode || duelType !== 'cyberbot' || gameOver !== 0 || duelOpponent.detonated) {
+        stopCyberBotLoop();
+        return;
+      }
+      cyberBotStep();
+    }, 1100 + Math.floor(Math.random() * 400));
+  }
+
+  function stopCyberBotLoop() {
+    if (cyberBotTimer) {
+      clearInterval(cyberBotTimer);
+      cyberBotTimer = null;
+    }
+  }
+
+  function cyberBotReveal(x, y) {
+    if (x < 0 || x >= cols || y < 0 || y >= rows || cyberBotState[y][x] !== 0) return;
+    cyberBotState[y][x] = 1;
+    if (cyberBotGrid[y][x] === 9) {
+      cyberBotState[y][x] = 9;
+      handleOpponentDetonation('CyberBot-99');
+      return;
+    }
+    cyberBotSafeRevealed++;
+    if (cyberBotGrid[y][x] === 0) {
+      for (let dy = -1; dy <= 1; dy++) {
+        for (let dx = -1; dx <= 1; dx++) {
+          cyberBotReveal(x + dx, y + dy);
+        }
+      }
+    }
+  }
+
+  function cyberBotStep() {
+    let madeMove = false;
+    for (let y = 0; y < rows; y++) {
+      for (let x = 0; x < cols; x++) {
+        if (cyberBotState[y][x] === 1 && cyberBotGrid[y][x] > 0) {
+          const val = cyberBotGrid[y][x];
+          let unrevealed = [];
+          let flagsAround = 0;
+          for (let dy = -1; dy <= 1; dy++) {
+            for (let dx = -1; dx <= 1; dx++) {
+              let nx = x + dx, ny = y + dy;
+              if (nx >= 0 && nx < cols && ny >= 0 && ny < rows) {
+                if (cyberBotState[ny][nx] === 0) unrevealed.push({x: nx, y: ny});
+                else if (cyberBotState[ny][nx] === 2) flagsAround++;
+              }
+            }
+          }
+          if (unrevealed.length > 0 && (unrevealed.length + flagsAround) === val) {
+            let target = unrevealed[0];
+            cyberBotState[target.y][target.x] = 2;
+            cyberBotFlags++;
+            madeMove = true;
+            break;
+          }
+          if (flagsAround === val && unrevealed.length > 0) {
+            let target = unrevealed[0];
+            cyberBotReveal(target.x, target.y);
+            madeMove = true;
+            break;
+          }
+        }
+      }
+      if (madeMove) break;
+    }
+
+    if (!madeMove) {
+      let unrevealed = [];
+      for (let y = 0; y < rows; y++) {
+        for (let x = 0; x < cols; x++) {
+          if (cyberBotState[y][x] === 0) unrevealed.push({x, y});
+        }
+      }
+      if (unrevealed.length > 0) {
+        let pick = unrevealed[Math.floor(Math.random() * unrevealed.length)];
+        cyberBotReveal(pick.x, pick.y);
+      }
+    }
+
+    duelOpponent.safeRevealed = cyberBotSafeRevealed;
+    duelOpponent.flags = cyberBotFlags;
+    duelOpponent.radarGrid = cyberBotState.map(r => [...r]);
+    updateOpponentHud();
+    drawOpponentRadar();
+
+    const totalSafe = (cols * rows) - totalMines;
+    if (cyberBotSafeRevealed >= totalSafe) {
+      handleOpponentWin('CyberBot-99');
+    }
+  }
+
+  // --- RFMS Online Multiplayer Integration ---
+  function initRetroMultiplayer() {
+    if (typeof RetroMultiplayer === 'undefined') {
+      console.warn("[KMine] RetroMultiplayer module not loaded.");
+      return;
+    }
+    if (rMultiplayer) return;
+
+    try {
+      rMultiplayer = new RetroMultiplayer({
+        gameId: 'kmine',
+        prefix: 'MIN',
+        playerName: myPlayerName,
+        soloTimeoutMs: 25000,
+        onMove: (moveData) => handleRemoteDuelMove(moveData),
+        onStateChange: (room) => handleRoomStateChange(room),
+        onOpponentJoin: ({ slot, name }) => handleOpponentJoined(slot, name),
+        onOpponentLeave: ({ slot, name }) => handleOpponentLeft(slot, name),
+        onChat: (chat) => handleDuelChat(chat),
+        onRematch: (rematchData) => handleDuelRematch(rematchData),
+        onSoloFallback: ({ reason }) => handleSoloFallback(reason),
+        onStatusMsg: (msg, type) => showToast(msg, type)
+      });
+
+      rMultiplayer.init().then(({ onlineAvailable, inviteCode }) => {
+        if (inviteCode) {
+          showInvitePrompt(inviteCode.toUpperCase());
+        }
+      });
+    } catch(err) {
+      console.warn("[KMine] RetroMultiplayer init error:", err);
+    }
+  }
+
+  function handleRemoteDuelMove(data) {
+    if (!data || !isDuelMode) return;
+    if (data.type === 'start_match') {
+      duelSeed = data.seed;
+      if (data.cols && data.rows && data.totalMines) {
+        cols = data.cols;
+        rows = data.rows;
+        totalMines = data.totalMines;
+        setupCanvas();
+      }
+      initGame(false);
+      showToast("⚔️ Challenger started match! Race begins!", "success", 3000);
+      playSfx('duel_start');
+    } else if (data.type === 'progress') {
+      duelOpponent.safeRevealed = data.safeRevealed || 0;
+      duelOpponent.totalSafe = data.totalSafe || ((cols * rows) - totalMines);
+      duelOpponent.flags = data.flags || 0;
+      duelOpponent.status = data.status || 'Sweeping';
+      if (data.radarSnapshot) {
+        duelOpponent.radarGrid = data.radarSnapshot;
+      }
+      updateOpponentHud();
+      drawOpponentRadar();
+    } else if (data.type === 'win') {
+      duelOpponent.safeRevealed = duelOpponent.totalSafe;
+      updateOpponentHud();
+      handleOpponentWin(duelOpponent.name);
+    } else if (data.type === 'detonated') {
+      duelOpponent.detonated = true;
+      if (duelOpponent.radarGrid && data.x !== undefined && data.y !== undefined) {
+        if (!duelOpponent.radarGrid[data.y]) duelOpponent.radarGrid[data.y] = [];
+        duelOpponent.radarGrid[data.y][data.x] = 9;
+      }
+      drawOpponentRadar();
+      handleOpponentDetonation(duelOpponent.name);
+    }
+  }
+
+  function handleRoomStateChange(room) {
+    if (!room) return;
+    if (room.status === 'playing' && !isDuelMode) {
+      setupOnlineDuelSession();
+    }
+  }
+
+  function handleOpponentJoined(slot, name) {
+    stopFallbackCountdown();
+    duelOpponent.name = name || 'Challenger';
+    toggleMultiplayerModal(false);
+    setupOnlineDuelSession();
+    showToast(`⚔️ Challenger ${duelOpponent.name} joined! Preparing arena...`, "success", 3500);
+    playSfx('duel_start');
+
+    if (rMultiplayer && rMultiplayer.isHost) {
+      duelSeed = Math.floor(Math.random() * 10000000);
+      rMultiplayer.sendMove({
+        type: 'start_match',
+        seed: duelSeed,
+        cols, rows, totalMines
+      });
+      initGame(false);
+    }
+  }
+
+  function handleOpponentLeft(slot, name) {
+    showToast(`⚠️ Opponent ${name || 'Challenger'} disconnected.`, "warn", 4000);
+    const stEl = document.getElementById('oppStatus');
+    if (stEl) stEl.innerText = 'Disconnected';
+  }
+
+  function handleDuelChat(chat) {
+    if (!chat || !chat.text) return;
+    const log = document.getElementById('commsLog');
+    if (log) log.innerText = `"${chat.text}"`;
+    playSfx('comm');
+    showToast(`📻 ${escapeHtml(chat.name || 'Opponent')}: ${escapeHtml(chat.text)}`, "info", 3000);
+  }
+
+  function handleDuelRematch(rematchData) {
+    showToast("Opponent requested a rematch! Press Rematch to accept.", "info", 4000);
+    const rBtn = document.getElementById('duelRematchBtn');
+    if (rBtn) {
+      rBtn.style.display = 'inline-flex';
+      rBtn.classList.add('btn-accent');
+    }
+  }
+
+  function handleSoloFallback(reason) {
+    stopFallbackCountdown();
+    if (rMultiplayer) rMultiplayer.leaveRoom();
+    toggleMultiplayerModal(false);
+    showToast("⏱️ No opponent joined within 25s. Auto-engaging CyberBot-99 AI!", "warn", 4500);
+    startCyberBotDuel();
+  }
+
+  function setupOnlineDuelSession() {
+    isDuelMode = true;
+    duelType = 'online';
+    duelOpponent.status = '🟢 In Duel';
+    duelOpponent.safeRevealed = 0;
+    duelOpponent.totalSafe = (cols * rows) - totalMines;
+    duelOpponent.flags = 0;
+    duelOpponent.detonated = false;
+    duelOpponent.radarGrid = Array.from({length: rows}, () => Array(cols).fill(0));
+
+    const panel = document.getElementById('opponent-panel');
+    if (panel) panel.style.display = 'flex';
+    document.getElementById('oppName').innerText = duelOpponent.name;
+    document.getElementById('oppAvatar').innerText = '⚔️';
+    document.getElementById('oppStatus').innerText = 'Sweeping...';
+    document.getElementById('duelRematchBtn').style.display = 'none';
+    updateOpponentHud();
+    drawOpponentRadar();
+  }
+
+  function sendDuelChat(text) {
+    playSfx('comm');
+    const log = document.getElementById('commsLog');
+    if (log) log.innerText = `"${text}"`;
+    if (duelType === 'online' && rMultiplayer) {
+      rMultiplayer.sendChat(text);
+    } else if (duelType === 'cyberbot') {
+      showToast(`📻 You: ${text}`, "info", 2000);
+      setTimeout(() => {
+        const botReplies = ["Affirmative.", "Scanning sector.", "Processing odds...", "Beep boop."];
+        const r = botReplies[Math.floor(Math.random() * botReplies.length)];
+        handleDuelChat({ name: 'CyberBot-99', text: r });
+      }, 900);
+    }
+  }
+
+  function requestDuelRematch() {
+    document.getElementById('duelRematchBtn').style.display = 'none';
+    if (duelType === 'online' && rMultiplayer) {
+      rMultiplayer.requestRematch();
+      if (rMultiplayer.isHost) {
+        duelSeed = Math.floor(Math.random() * 10000000);
+        rMultiplayer.sendMove({
+          type: 'start_match',
+          seed: duelSeed,
+          cols, rows, totalMines
+        });
+      }
+    }
+    if (duelType === 'cyberbot') {
+      startCyberBotDuel();
+    } else {
+      initGame(false);
+      showToast("🔄 Rematch initiated! Resetting board.", "info", 2000);
+    }
+  }
+
+  function exitDuelMode() {
+    stopCyberBotLoop();
+    stopFallbackCountdown();
+    if (duelType === 'online' && rMultiplayer) {
+      rMultiplayer.leaveRoom();
+    }
+    isDuelMode = false;
+    duelType = 'none';
+    duelSeed = null;
+    const panel = document.getElementById('opponent-panel');
+    if (panel) panel.style.display = 'none';
+    initGame();
+    showToast("Returned to solo Minesweeper mode.", "info", 2000);
+  }
+
+  // --- Matchmaking UI Actions ---
+  function toggleMultiplayerModal(show) {
+    const modal = document.getElementById('mpModal');
+    if (!modal) return;
+    if (show) {
+      document.getElementById('mpCallSign').value = myPlayerName;
+      document.getElementById('mpStatusSection').style.display = 'none';
+      modal.classList.add('active');
+    } else {
+      modal.classList.remove('active');
+      stopFallbackCountdown();
+    }
+  }
+
+  function saveMpCallSign() {
+    const input = document.getElementById('mpCallSign');
+    if (!input) return;
+    const name = input.value.trim().slice(0, 16) || 'Sweeper-99';
+    myPlayerName = name;
+    safeSetStorage('kmine_playerName', name);
+    if (rMultiplayer) rMultiplayer.playerName = name;
+    showToast(`Call-sign updated to "${name}"`, "success", 2000);
+  }
+
+  function startQuickMatch() {
+    if (!rMultiplayer) initRetroMultiplayer();
+    if (!rMultiplayer) {
+      showToast("Multiplayer offline. Starting CyberBot duel!", "warn");
+      startCyberBotDuel();
+      return;
+    }
+    document.getElementById('mpStatusSection').style.display = 'block';
+    document.getElementById('mpRoomCodeDisplay').innerText = 'Searching Lobby...';
+    document.getElementById('mpStatusMessage').innerText = 'Connecting to public duel room...';
+    startFallbackCountdown();
+    rMultiplayer.quickMatch();
+  }
+
+  function startCreateRoom() {
+    if (!rMultiplayer) initRetroMultiplayer();
+    if (!rMultiplayer) {
+      showToast("Multiplayer offline. Starting CyberBot duel!", "warn");
+      startCyberBotDuel();
+      return;
+    }
+    rMultiplayer.createRoom().then((code) => {
+      document.getElementById('mpStatusSection').style.display = 'block';
+      document.getElementById('mpRoomCodeDisplay').innerText = code;
+      document.getElementById('mpStatusMessage').innerText = 'Waiting for challenger to connect...';
+      startFallbackCountdown();
+    });
+  }
+
+  function startJoinRoom(forceCode) {
+    if (!rMultiplayer) initRetroMultiplayer();
+    const input = document.getElementById('mpJoinCode');
+    const code = (forceCode || (input ? input.value : '')).trim().toUpperCase();
+    if (!code) {
+      showToast("Please enter a room code (e.g. MIN-XXXX)", "warn");
+      return;
+    }
+    document.getElementById('mpStatusSection').style.display = 'block';
+    document.getElementById('mpRoomCodeDisplay').innerText = code;
+    document.getElementById('mpStatusMessage').innerText = `Connecting to room ${code}...`;
+    startFallbackCountdown();
+    rMultiplayer.joinRoom(code);
+  }
+
+  function cancelMatchmaking() {
+    stopFallbackCountdown();
+    if (rMultiplayer) rMultiplayer.leaveRoom();
+    document.getElementById('mpStatusSection').style.display = 'none';
+    showToast("Matchmaking cancelled.", "info", 1500);
+  }
+
+  function copyDuelInviteLink() {
+    const code = (rMultiplayer && rMultiplayer.roomId) ? rMultiplayer.roomId : '';
+    if (!code) return;
+    const url = `${window.location.origin}${window.location.pathname}#room=${code}`;
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(url).then(() => {
+        showToast("📋 Duel invite link copied to clipboard!", "success", 3000);
+      });
+    } else {
+      showToast(`Invite code: ${code}`, "info", 4000);
+    }
+  }
+
+  function startFallbackCountdown() {
+    stopFallbackCountdown();
+    fallbackSecondsLeft = 25;
+    const timerEl = document.getElementById('mpFallbackTimerDisplay');
+    if (timerEl) timerEl.innerText = `⏱️ Lone player? Auto-engaging CyberBot-99 in ${fallbackSecondsLeft}s`;
+
+    fallbackCountdownTimer = setInterval(() => {
+      fallbackSecondsLeft--;
+      if (fallbackSecondsLeft <= 0) {
+        stopFallbackCountdown();
+      } else {
+        const el = document.getElementById('mpFallbackTimerDisplay');
+        if (el) el.innerText = `⏱️ Lone player? Auto-engaging CyberBot-99 in ${fallbackSecondsLeft}s`;
+      }
+    }, 1000);
+  }
+
+  function stopFallbackCountdown() {
+    if (fallbackCountdownTimer) {
+      clearInterval(fallbackCountdownTimer);
+      fallbackCountdownTimer = null;
+    }
+  }
+
+  function showInvitePrompt(roomCode) {
+    pendingInviteRoom = roomCode;
+    const modal = document.getElementById('inviteModal');
+    const display = document.getElementById('inviteRoomDisplay');
+    if (display) display.innerText = roomCode;
+    if (modal) modal.classList.add('active');
+  }
+
+  function acceptInviteChallenge() {
+    const modal = document.getElementById('inviteModal');
+    if (modal) modal.classList.remove('active');
+    if (pendingInviteRoom) {
+      const code = pendingInviteRoom;
+      pendingInviteRoom = null;
+      document.getElementById('mpJoinCode').value = code;
+      startJoinRoom(code);
+    }
+  }
+
+  function declineInviteChallenge() {
+    const modal = document.getElementById('inviteModal');
+    if (modal) modal.classList.remove('active');
+    pendingInviteRoom = null;
+    try {
+      history.replaceState(null, '', window.location.pathname);
+    } catch(e){}
+    showToast("Invite declined. Solo Minesweeper active.", "info", 2000);
+  }
+
+  function escapeHtml(str) {
+    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  // --- Custom Grid Modal & Configuration ---
+  function toggleCustomModal(show) {
+    const modal = document.getElementById('customModal');
+    if (!modal) return;
+    if (show) {
+      document.getElementById('custCols').value = cols;
+      document.getElementById('custRows').value = rows;
+      document.getElementById('custMines').value = totalMines;
+      updateCustomDensity();
+      modal.classList.add('active');
+    } else {
+      modal.classList.remove('active');
+    }
+  }
+
+  function updateCustomDensity() {
+    const c = Math.max(8, Math.min(30, parseInt(document.getElementById('custCols').value) || 16));
+    const r = Math.max(8, Math.min(24, parseInt(document.getElementById('custRows').value) || 16));
+    const maxM = Math.max(1, (c * r) - 9);
+    let m = Math.max(1, Math.min(maxM, parseInt(document.getElementById('custMines').value) || 40));
+    document.getElementById('custMines').max = maxM;
+    const total = c * r;
+    const pct = ((m / total) * 100).toFixed(1);
+    const note = document.getElementById('custDensityNote');
+    if (note) note.innerText = `Grid: ${c}x${r} (${total} tiles) | Mines: ${m} (${pct}% density)`;
+  }
+
+  function setCustomPreset(c, r, m) {
+    document.getElementById('custCols').value = c;
+    document.getElementById('custRows').value = r;
+    document.getElementById('custMines').value = m;
+    updateCustomDensity();
+  }
+
+  function applyCustomGrid() {
+    const c = Math.max(8, Math.min(30, parseInt(document.getElementById('custCols').value) || 16));
+    const r = Math.max(8, Math.min(24, parseInt(document.getElementById('custRows').value) || 16));
+    const maxM = Math.max(1, (c * r) - 9);
+    const m = Math.max(1, Math.min(maxM, parseInt(document.getElementById('custMines').value) || 40));
+
+    cols = c;
+    rows = r;
+    totalMines = m;
+    toggleCustomModal(false);
+    document.getElementById('diff').value = 'custom';
+    updateBestTimeDisplay();
+    setupCanvas();
+    initGame();
+    showToast(`⚙️ Custom grid applied: ${cols}x${rows} with ${totalMines} mines`, "success", 2500);
   }
   
   function chord(x, y) {
@@ -1625,7 +2829,11 @@
       ctx.fillText("L-Click / Space: Reveal | R-Click / [X]: Flag", totalW / 2, by + 18);
       ctx.fillStyle = "#38bdf8";
       ctx.font = "12px 'Segoe UI', Arial, sans-serif";
-      ctx.fillText("Arrows/WASD: Move | 'H' Hint | 'F1' Guide", totalW / 2, by + 38);
+      ctx.fillText("Arrows/WASD: Move | 'H' Hint | 'F1' Guide | 'N' Duel", totalW / 2, by + 38);
+    }
+
+    if (isDuelMode) {
+      drawOpponentRadar();
     }
 
     ctx.restore();
@@ -1664,7 +2872,11 @@
     if (Date.now() - lastTouchTime < 400) return;
     if (isReplaying) return;
     if (gameOver !== 0) {
-      initGame();
+      if (isDuelMode) {
+        requestDuelRematch();
+      } else {
+        initGame();
+      }
       return;
     }
     const rect = cvs.getBoundingClientRect();
@@ -1736,7 +2948,11 @@
 
     if (isReplaying) return;
     if (gameOver !== 0) {
-      initGame();
+      if (isDuelMode) {
+        requestDuelRematch();
+      } else {
+        initGame();
+      }
       return;
     }
 
@@ -1766,11 +2982,25 @@
     if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
     if (e.ctrlKey || e.altKey || e.metaKey) return;
 
-    const modal = document.getElementById('helpModal');
-    const isModalOpen = modal && modal.classList.contains('active');
+    const helpModal = document.getElementById('helpModal');
+    const mpModal = document.getElementById('mpModal');
+    const customModal = document.getElementById('customModal');
+    const inviteModal = document.getElementById('inviteModal');
+    const isAnyModalOpen = (helpModal && helpModal.classList.contains('active')) ||
+                           (mpModal && mpModal.classList.contains('active')) ||
+                           (customModal && customModal.classList.contains('active')) ||
+                           (inviteModal && inviteModal.classList.contains('active'));
 
-    if (isModalOpen) {
-      if (e.key === 'Escape' || e.key === 'Enter' || e.key === ' ') {
+    if (isAnyModalOpen) {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        toggleHelpModal(false);
+        toggleMultiplayerModal(false);
+        toggleCustomModal(false);
+        if (inviteModal) declineInviteChallenge();
+        return;
+      }
+      if (helpModal && helpModal.classList.contains('active') && (e.key === 'Enter' || e.key === ' ')) {
         e.preventDefault();
         toggleHelpModal(false);
         return;
@@ -1781,6 +3011,10 @@
       giveHint();
     } else if (e.key === 'f' || e.key === 'F') {
       toggleDigFlagMode();
+    } else if (e.key === 'n' || e.key === 'N') {
+      toggleMultiplayerModal(true);
+    } else if (e.key === '4') {
+      toggleCustomModal(true);
     } else if (e.key === 'm' || e.key === 'M') {
       toggleAudio();
     } else if (e.key === 'F1' || e.key === '?') {
@@ -1788,10 +3022,19 @@
       toggleHelpModal(true);
     } else if (e.key === 'Escape') {
       toggleHelpModal(false);
+      toggleMultiplayerModal(false);
+      toggleCustomModal(false);
       document.querySelectorAll('.toast').forEach(t => t.remove());
     } else if (e.key === 'F2') {
       e.preventDefault();
       initGame();
+    } else if (isDuelMode && (e.key === '1' || e.key === '2' || e.key === '3' || e.key === '4' || e.key === '5')) {
+      const commMsgs = ['Watch your step!', 'Cascade surge!', 'Sector safe!', 'Detonation near!', 'Good game!'];
+      const idx = parseInt(e.key) - 1;
+      if (commMsgs[idx]) {
+        sendDuelChat(commMsgs[idx]);
+        return;
+      }
     } else if (e.key === '1') {
       changeDiff("0");
     } else if (e.key === '2') {
@@ -1828,13 +3071,21 @@
       if (gameOver !== 0) {
         if (e.key === 'Enter') {
           e.preventDefault();
-          initGame();
+          if (isDuelMode) {
+            requestDuelRematch();
+          } else {
+            initGame();
+          }
         } else if (e.key === ' ' || e.key === 'p' || e.key === 'P') {
           if (document.getElementById('replayBtn').style.display !== 'none') {
             e.preventDefault();
             startReplay();
           } else {
-            initGame();
+            if (isDuelMode) {
+              requestDuelRematch();
+            } else {
+              initGame();
+            }
           }
         }
       } else if (!isReplaying) {
@@ -1861,6 +3112,7 @@
   updateAudioBtn();
   setupCanvas();
   initGame();
+  initRetroMultiplayer();
   requestAnimationFrame(animLoop);
 
   // First-run Tutorial Integrity: Show interactive guide only on fresh session
@@ -1873,7 +3125,7 @@
     }, 250);
   } else {
     setTimeout(() => {
-      showToast("💣 KMine Ready! Reveal: L-Click | Flag: R-Click / [F] | F1: Guide", "info", 4000);
+      showToast("💣 KMine Ready! Reveal: L-Click | Flag: [F] | Duel: [N] | F1: Guide", "info", 4000);
     }, 300);
   }
 </script>
