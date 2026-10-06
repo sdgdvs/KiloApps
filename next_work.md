@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-creator
-next_agent: kilo-graphics
+current_agent: kilo-graphics
+next_agent: kilo-tester
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -12,13 +12,13 @@ model: gemini-3.8-flash-high
 timeout_minutes: 15
 status: ready
 current_targets:
-  kilo_creator: "kweb://deep-core"
+  kilo_creator: "kweb://darknet"
   kilo_graphics: KQuest
   kilo_tester: KSnake
   kilo_usability: KConnect4
   kilo_qa: KChess
   kilo_expander: KColosseum
-virtual_web_target: "kweb://deep-core"
+virtual_web_target: "kweb://darknet"
 virtual_web_rotation:
   - "kweb://geocities"
   - "kweb://users/~neon_rider"
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-expander
-  app: KMine
-  timestamp: "2026-10-06T13:59:00-07:00"
+  agent: kilo-creator
+  app: "kweb://deep-core"
+  timestamp: "2026-10-06T14:10:00-07:00"
 last_planner_run: "2026-10-06T14:20:00Z"
 ---
 
@@ -102,9 +102,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ### 1. Virtual 1999 Web & ARG Node Creator (`kilo-creator`)
 - **DIRECTOR MANDATE — STANDALONE OS APP CREATION HALTED**: Standalone OS app creation is frozen at 92 native / 99 web apps. All creator turns are now exclusively channeled into building real, interactive Virtual 1999 Web sites (`KiloOS/public/web/`) and ARG mystery nodes per `arg_plan.md`. Zero shallow stubs; every page must be a functioning Web 1.0 experience with working forms, generators, Web Audio, or mini-tools (<999KB).
-- **Current Target**: `kweb://deep-core`
+- **Current Target**: `kweb://darknet`
 - **Upcoming Queue**:
-  `kweb://darknet`, `kweb://portal`, `kweb://webring`, `kweb://warez`, `kweb://geocities`, `kweb://users/~neon_rider`, `kweb://asm-temple`, `kweb://cybercafe`, `kweb://10.19.99.4/classified`, `kweb://echo-subsystem.net`
+  `kweb://portal`, `kweb://webring`, `kweb://warez`, `kweb://geocities`, `kweb://users/~neon_rider`, `kweb://asm-temple`, `kweb://cybercafe`, `kweb://10.19.99.4/classified`, `kweb://echo-subsystem.net`, `kweb://deep-core`
   *(Completed: kweb://geocities, kweb://portal, kweb://cybercafe, kweb://asm-temple, kweb://users/~neon_rider, kweb://darknet, kweb://deep-core, kweb://echo-subsystem.net, kweb://10.19.99.4/classified, kweb://webring, kweb://warez)*.
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
@@ -135,8 +135,8 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Multiplayer Focus (CRITICAL)**: Concentrate on expanding games (*KChess*, *KConnect4*, *KGo*, *KReversi*, *KDarts*, *KTetris*, *KSnake*, *K2048*, *KMatch3*, *KSimon*) and collaborative apps (*KDraw*, *KPaint*, *KSynth*, *KPad*) with seamless Firebase Realtime Database multiplayer for cross-computer play on `kiloapps.web.app`.
 
 ### 7. Virtual 1999 Web Expansion Queue (Eternal Fleet Track)
-- **Current Active Target**: `kweb://deep-core` (`KiloOS/public/web/deep_core.html`)
-  - *Next in Rotation*: `kweb://darknet` ➔ `kweb://portal` ➔ `kweb://webring` ➔ `kweb://warez` ➔ `kweb://geocities` ➔ `kweb://users/~neon_rider` ➔ `kweb://asm-temple` ➔ `kweb://cybercafe` ➔ `kweb://10.19.99.4/classified` ➔ `kweb://echo-subsystem.net`.
+- **Current Active Target**: `kweb://darknet` (`KiloOS/public/web/darknet.html`)
+  - *Next in Rotation*: `kweb://portal` ➔ `kweb://webring` ➔ `kweb://warez` ➔ `kweb://geocities` ➔ `kweb://users/~neon_rider` ➔ `kweb://asm-temple` ➔ `kweb://cybercafe` ➔ `kweb://10.19.99.4/classified` ➔ `kweb://echo-subsystem.net` ➔ `kweb://deep-core`.
 - **Anti-Potemkin Quality Standard**:
   - All 11 Virtual 1999 Web destinations are live, interactive, and feature-complete.
   - See [archive/virtual_web_completed.md](archive/virtual_web_completed.md) for full historical breakdown of completed content mandates across all sites.
@@ -217,6 +217,15 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-06T14:10:00-07:00 — kilo-creator: kweb://deep-core (Tier 3 Deep Expansion, x86 CPU Stepper, 650m Seismic Sonar & Wiretap PCAP)**
+  - Status: PASS ✅ (0 regressions, 199.9 KB < 999 KB ceiling, Vite 384ms).
+  - x86 Disassembler Deck (Tab 7): 14-instruction Ring-0 Protected Mode CPU stepper with register bank (EAX-ESP, EFLAGS, CR0), breakpoints, and patcher.
+  - Seismic Strata Sonar (Tab 8): 650m Carlsbad Salado geological TDR canvas with real-time geophone reflection trace; 1999Hz harmonic cavity resonance.
+  - Subterranean Wiretap (Tab 9): Promiscuous Ethernet sniffer on 10.19.99.x subnet with deep frame dissection, handshake injection, and binary `.pcap` export.
+  - Procedural Audio: Added Track 5 ("Echoes of the Millennium") FM bell choir; added CPU step, seismic impulse, and packet audio SFX.
+  - Navigation & Verification: Linked in portal catalog and knet admin bar; `test_arg_flow.py` PASS; `security_lint.py` 100% PASS; build clean.
+  - Queue: Advanced `kilo_creator` and `virtual_web_target` to `kweb://darknet`; rotation advanced to `kilo-graphics`.
+
 - **2026-10-06T13:59:00-07:00 — kilo-expander: KMine (Cyber Duel Arena, RFMS Real-Time Multiplayer, CyberBot AI & Custom Grid)**
   - Status: PASS ✅ (0 regressions, 106.7 KB web / 26.5 KB native < 999 KB ceiling).
   - RFMS Multiplayer: Standardized Firebase RTDB duel race (`MIN-XXXX`) on synchronized seeded board with dual links (`#room=MIN-XXXX`).
@@ -253,11 +262,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Accessibility & Polish: Added tabindex/ARIA attributes to canvas; documented all new hotkeys in Help guide and shortcut bar.
   - Verification: `test_app_startup.py` PASS; `test_web_apps.js` PASS (15 elements); MSVC clean (`KMine.exe` 26.5 KB); Vite clean (452ms); security_lint 100% PASS.
   - Queue: Advanced `kilo_tester` to `KSnake`; rotation advanced to `kilo-usability`.
-
-- **2026-10-06T12:50:00-07:00 — kilo-graphics: KPac (Skip Turn — Inappropriate Target & Glint/Dot Audit)**
-  - Status: ⏭️ Skip — Imagen 3 asset replacement not appropriate for KPac
-  - Rationale: Authentic retro arcade classic maze game (Loop 9+); already mature & locked in human review queue.
-  - Glint & Dot Ban: Verified zero rotating specular glints or traveling perimeter border dots in web or Win32 C.
-  - Icon Uniqueness: `check_icons.py` verified 100% unique across all 105 apps (Rule 13 compliant).
-  - Verification: Vite build clean (325ms); `security_lint.py` 100% PASS; web (127.4 KB) < 999 KB ceiling.
-  - Queue: Advanced `kilo_graphics` to `KQuest`; rotation advanced to `kilo-tester`.

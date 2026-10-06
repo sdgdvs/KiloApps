@@ -980,6 +980,268 @@
   .text-warn { color: var(--warn); }
   .text-cyan { color: var(--cyan); }
   .text-dim { color: var(--phosphor-dim); }
+
+  /* Tab 7: x86 Disassembler Styles */
+  .disasm-deck {
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex: 1;
+    overflow-y: auto;
+  }
+  .reg-bank-card {
+    background: #010a04;
+    border: 1px solid var(--border);
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .reg-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+    gap: 4px;
+  }
+  .reg-cell {
+    background: rgba(0, 20, 10, 0.6);
+    border: 1px solid var(--border);
+    padding: 3px 6px;
+    font-size: 11px;
+    display: flex;
+    justify-content: space-between;
+  }
+  .reg-cell.changed {
+    border-color: var(--border-bright);
+    background: rgba(34, 255, 102, 0.2);
+    color: #fff;
+  }
+  .flags-bar {
+    display: flex;
+    gap: 6px;
+    font-size: 10px;
+    align-items: center;
+    border-top: 1px dashed var(--border);
+    padding-top: 4px;
+  }
+  .flag-pill {
+    padding: 1px 5px;
+    background: #000;
+    border: 1px solid var(--border);
+    color: var(--phosphor-dim);
+  }
+  .flag-pill.set {
+    border-color: var(--border-bright);
+    color: var(--border-bright);
+    font-weight: bold;
+    background: rgba(34, 255, 102, 0.15);
+  }
+  .disasm-controls-bar {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    flex-wrap: wrap;
+    background: rgba(0, 15, 7, 0.8);
+    border: 1px solid var(--border);
+    padding: 4px 8px;
+  }
+  .disasm-table-container {
+    flex: 1;
+    background: #010803;
+    border: 1px solid var(--border);
+    overflow-y: auto;
+    min-height: 240px;
+    max-height: 380px;
+  }
+  .disasm-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+  }
+  .disasm-table th {
+    background: rgba(0, 20, 10, 0.95);
+    border-bottom: 1px solid var(--border);
+    color: var(--phosphor-dim);
+    padding: 4px 6px;
+    text-align: left;
+    font-size: 10.5px;
+    position: sticky;
+    top: 0;
+    z-index: 2;
+  }
+  .disasm-table td {
+    padding: 3px 6px;
+    border-bottom: 1px solid rgba(26, 122, 53, 0.2);
+    white-space: nowrap;
+  }
+  .disasm-tr {
+    cursor: pointer;
+    transition: background 0.1s ease;
+  }
+  .disasm-tr:hover {
+    background: rgba(34, 255, 102, 0.08);
+  }
+  .disasm-tr.active-instr {
+    background: rgba(34, 255, 102, 0.25);
+    border-left: 3px solid var(--border-bright);
+    font-weight: bold;
+    color: #fff;
+  }
+  .disasm-tr.breakpoint {
+    background: rgba(255, 51, 68, 0.2);
+  }
+
+  /* Tab 8: Seismic Strata Sonar Styles */
+  .seismic-deck {
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex: 1;
+    overflow-y: auto;
+  }
+  .seismic-viewports-container {
+    display: flex;
+    gap: 8px;
+    min-height: 280px;
+  }
+  @media (max-width: 900px) {
+    .seismic-viewports-container {
+      flex-direction: column;
+    }
+  }
+  .seismic-panel-box {
+    background: #010a04;
+    border: 1px solid var(--border);
+    padding: 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .seismic-panel-box canvas {
+    width: 100%;
+    height: 100%;
+    background: #010502;
+    border: 1px solid rgba(26, 122, 53, 0.4);
+    display: block;
+  }
+  .seismic-controls-bar {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+    background: rgba(0, 15, 7, 0.8);
+    border: 1px solid var(--border);
+    padding: 6px 10px;
+    font-size: 11px;
+  }
+  .strata-legend-bar {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    font-size: 10.5px;
+  }
+  .strata-chip {
+    padding: 2px 6px;
+    background: #010a04;
+    border: 1px solid var(--border);
+  }
+  .strata-chip.active {
+    box-shadow: 0 0 5px var(--phosphor-glow);
+  }
+
+  /* Tab 9: Subterranean Wiretap Sniffer Styles */
+  .wiretap-deck {
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex: 1;
+    overflow-y: auto;
+  }
+  .wiretap-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px;
+    background: rgba(0, 15, 7, 0.8);
+    border: 1px solid var(--border);
+    padding: 4px 8px;
+    font-size: 11px;
+  }
+  .wiretap-table-container {
+    flex: 1;
+    background: #010803;
+    border: 1px solid var(--border);
+    overflow-y: auto;
+    min-height: 200px;
+    max-height: 280px;
+  }
+  .wiretap-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: var(--font-mono);
+    font-size: 11px;
+  }
+  .wiretap-table th {
+    background: rgba(0, 20, 10, 0.95);
+    border-bottom: 1px solid var(--border);
+    color: var(--phosphor-dim);
+    padding: 4px 6px;
+    text-align: left;
+    font-size: 10px;
+    position: sticky;
+    top: 0;
+    z-index: 2;
+  }
+  .wiretap-table td {
+    padding: 3px 6px;
+    border-bottom: 1px solid rgba(26, 122, 53, 0.2);
+    white-space: nowrap;
+  }
+  .wiretap-row {
+    cursor: pointer;
+    transition: background 0.1s ease;
+  }
+  .wiretap-row:hover {
+    background: rgba(34, 255, 102, 0.08);
+  }
+  .wiretap-row.selected {
+    background: rgba(34, 255, 102, 0.25);
+    color: #fff;
+    font-weight: bold;
+  }
+  .wiretap-inspector-box {
+    display: flex;
+    gap: 8px;
+    border: 1px solid var(--border);
+    background: #010a04;
+    padding: 6px;
+    min-height: 140px;
+  }
+  @media (max-width: 900px) {
+    .wiretap-inspector-box {
+      flex-direction: column;
+    }
+  }
+  .wiretap-tree-pane {
+    flex: 1.2;
+    overflow-y: auto;
+    max-height: 160px;
+    font-size: 11px;
+    line-height: 1.4;
+  }
+  .wiretap-hex-pane {
+    flex: 1;
+    overflow-y: auto;
+    max-height: 160px;
+    background: #000;
+    border: 1px solid rgba(26, 122, 53, 0.4);
+    padding: 4px;
+    color: var(--phosphor-dim);
+  }
 </style>
 </head>
 <body>
@@ -1037,6 +1299,18 @@
     <button class="deck-tab-btn" data-tab="crypto">
       <span>06. PASSKEY LAB</span>
       <span class="deck-tab-badge" id="tabBadgeCrypto">SHA-256</span>
+    </button>
+    <button class="deck-tab-btn" data-tab="disasm">
+      <span>07. x86 DISASM</span>
+      <span class="deck-tab-badge" id="tabBadgeDisasm">OPCODES</span>
+    </button>
+    <button class="deck-tab-btn" data-tab="seismic">
+      <span>08. SEISMIC SONAR</span>
+      <span class="deck-tab-badge" id="tabBadgeSeismic">650M STRATA</span>
+    </button>
+    <button class="deck-tab-btn" data-tab="wiretap">
+      <span>09. WIRETAP</span>
+      <span class="deck-tab-badge" id="tabBadgeWiretap">PROMISC</span>
     </button>
   </div>
 
@@ -1338,6 +1612,193 @@
         </div>
       </div>
 
+      <!-- TAB 7: x86 PROTECTED MODE DISASSEMBLER & OPCODES STEPPER -->
+      <div class="deck-panel" id="panel-disasm">
+        <div class="terminal-header">
+          <span>RING-0 PRECURSOR x86 CPU STEPPER &bull; BASE: 0x007F1990 [PROTECTED MODE 32-BIT]</span>
+          <span id="disasmCpuStatus" style="color:var(--cyan);">READY &bull; EIP: 0x007F1990</span>
+        </div>
+        <div class="disasm-deck">
+          <!-- CPU Register Bank -->
+          <div class="reg-bank-card">
+            <div class="side-card-title">
+              <span>32-BIT GENERAL PURPOSE &amp; SEGMENT REGISTERS</span>
+              <span id="disasmCycleCount" style="font-size:10px; color:var(--phosphor-dim);">CYCLE: 0</span>
+            </div>
+            <div class="reg-grid" id="disasmRegGrid">
+              <!-- Rendered dynamically -->
+            </div>
+            <div class="flags-bar" id="disasmFlagsBar">
+              <!-- EFLAGS pills -->
+            </div>
+          </div>
+
+          <!-- Controls Bar -->
+          <div class="disasm-controls-bar">
+            <button class="shell-btn" id="btnDisasmStep" style="background:var(--border-bright); color:#000; font-weight:bold;">[F7] Step Into</button>
+            <button class="shell-btn" id="btnDisasmRun">Run / Pause</button>
+            <button class="shell-btn" id="btnDisasmReset">Reset CPU</button>
+            <button class="shell-btn" id="btnDisasmPatch" style="color:var(--warn); border-color:var(--warn);">Patch 0x007F19A7 ('A')</button>
+            <div style="flex:1;"></div>
+            <span style="font-size:11px; color:var(--phosphor-dim);">Break at:</span>
+            <input type="text" id="disasmBpInput" class="custom-suffix-input" style="width:90px;" placeholder="0x007F19B3" />
+          </div>
+
+          <!-- Disassembly Table -->
+          <div class="disasm-table-container">
+            <table class="disasm-table">
+              <thead>
+                <tr>
+                  <th style="width:36px;">BP</th>
+                  <th style="width:95px;">ADDRESS</th>
+                  <th style="width:130px;">MACHINE OPCODES</th>
+                  <th style="width:110px;">MNEMONIC</th>
+                  <th>OPERANDS / TARGET</th>
+                  <th>IN-CIRCUIT COMMENT</th>
+                </tr>
+              </thead>
+              <tbody id="disasmTableBody">
+                <!-- Dynamically populated rows -->
+              </tbody>
+            </table>
+          </div>
+
+          <div style="font-size:10.5px; color:var(--phosphor-dim); padding:4px;">
+            &bull; The routine at <code>0x007F1990</code> performs Ring-0 hardware verification. If the key byte at <code>0x007F19A7</code> is corrupted, execution jumps to <code>.integrity_failure</code> (EAX=0). Patch the byte to <code>41</code> ('A') or NOP the branch to achieve clearance (EAX=1)!
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 8: 650M CARLSBAD STRATA SEISMIC SONAR -->
+      <div class="deck-panel" id="panel-seismic">
+        <div class="terminal-header">
+          <span>PERMIAN SALADO FORMATION LITHOSPHERIC SEISMOGRAPH &bull; DEPTH: 650M SALT CAVITY</span>
+          <span id="seismicStatusBadge" style="color:var(--cyan);">GEOPHONE ARRAY: LISTENING</span>
+        </div>
+        <div class="seismic-deck">
+          <div class="seismic-viewports-container">
+            <!-- Geological Strata Cross-Section Canvas -->
+            <div class="seismic-panel-box" style="flex:1.4;">
+              <div class="side-card-title">
+                <span>GEOLOGICAL STRATA CROSS-SECTION &amp; TDR ACOUSTIC WAVEFRONT</span>
+                <span style="font-size:10px; color:var(--phosphor-dim);">0m - 900m DEPTH PROFILE</span>
+              </div>
+              <canvas id="seismicCanvas" width="620" height="280"></canvas>
+            </div>
+
+            <!-- Geophone Oscilloscope Trace Canvas -->
+            <div class="seismic-panel-box" style="flex:1;">
+              <div class="side-card-title">
+                <span>SURFACE GEOPHONE REFLECTION TRACE (TIME-DOMAIN ECHO)</span>
+                <span id="lblSeismicCoherence" style="font-size:10px; color:var(--warn);">ECHO COHERENCE: 0%</span>
+              </div>
+              <canvas id="geophoneCanvas" width="420" height="280"></canvas>
+            </div>
+          </div>
+
+          <!-- Controls Bar -->
+          <div class="seismic-controls-bar">
+            <button class="shell-btn" id="btnFireSeismicPulse" style="background:var(--border-bright); color:#000; font-weight:bold;">★ Fire Seismic Sounding</button>
+            <div style="display:flex; align-items:center; gap:6px;">
+              <span>CARRIER FREQ:</span>
+              <button class="shell-btn seismic-freq-btn" data-f="432">432 Hz</button>
+              <button class="shell-btn seismic-freq-btn" data-f="880">880 Hz</button>
+              <button class="shell-btn seismic-freq-btn active" data-f="1999">1999 Hz (LOCK)</button>
+              <button class="shell-btn seismic-freq-btn" data-f="2400">2400 Hz</button>
+            </div>
+            <div style="display:flex; align-items:center; gap:6px;">
+              <span>WAVELET:</span>
+              <button class="shell-btn seismic-wavelet-btn active" data-w="ricker">Ricker</button>
+              <button class="shell-btn seismic-wavelet-btn" data-w="chirp">Chirp</button>
+            </div>
+            <div style="display:flex; align-items:center; gap:6px;">
+              <span>GAIN:</span>
+              <input type="range" id="seismicGainSlider" min="1" max="8" step="0.5" value="2.5" style="width:70px;" />
+            </div>
+          </div>
+
+          <!-- Strata Legend Chips -->
+          <div class="strata-legend-bar">
+            <div class="strata-chip" style="border-color:#a3e635; color:#a3e635;">[0-80m] Surface Caliche (1800 m/s)</div>
+            <div class="strata-chip" style="border-color:#38bdf8; color:#38bdf8;">[80-240m] Rustler Aquifer (3200 m/s)</div>
+            <div class="strata-chip" style="border-color:#facc15; color:#facc15;">[240-540m] Salado Halite (4450 m/s)</div>
+            <div class="strata-chip active" style="border-color:var(--border-bright); color:var(--border-bright); font-weight:bold;">[540-700m] Salt Vault Core (1999Hz Cavity Anomaly)</div>
+            <div class="strata-chip" style="border-color:#c084fc; color:#c084fc;">[700-900m] Basal Anhydrite (5600 m/s)</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 9: SUBTERRANEAN WIRETAP & PROMISCUOUS PACKET SNIFFER -->
+      <div class="deck-panel" id="panel-wiretap">
+        <div class="terminal-header">
+          <span>SUBTERRANEAN PROMISCUOUS ETHERNET TAP &bull; INTERFACE: eth0 [10.19.99.0/24]</span>
+          <span id="wiretapStatusBadge" style="color:var(--border-bright);">CAPTURE RUNNING &bull; PROMISCUOUS MODE</span>
+        </div>
+        <div class="wiretap-deck">
+          <!-- Toolbar -->
+          <div class="wiretap-toolbar">
+            <div style="display:flex; gap:6px; align-items:center;">
+              <button class="shell-btn" id="btnToggleCapture">Pause Capture</button>
+              <button class="shell-btn" id="btnClearPackets">Clear Buffer</button>
+              <button class="shell-btn" id="btnDownloadPcap" style="background:rgba(56,189,248,0.2); border-color:var(--cyan); color:#fff; font-weight:bold;">Download .PCAP File</button>
+              <button class="shell-btn" id="btnSendRelayFrame" style="color:var(--border-bright); border-color:var(--border-bright);">Inject Handshake Frame</button>
+            </div>
+            <div style="display:flex; gap:8px; align-items:center;">
+              <span>PROTO:</span>
+              <select id="wiretapProtoFilter" class="form-input" style="font-size:11px; background:#010a04; color:var(--phosphor); border:1px solid var(--border); padding:2px 4px;">
+                <option value="ALL">ALL PROTOCOLS</option>
+                <option value="TCP">TCP (Port 1999/23/80)</option>
+                <option value="UDP">UDP (Port 1999/432)</option>
+                <option value="ICMP">ICMP Echo</option>
+                <option value="ARP">ARP Subnet</option>
+              </select>
+              <span>HOST:</span>
+              <select id="wiretapHostFilter" class="form-input" style="font-size:11px; background:#010a04; color:var(--phosphor); border:1px solid var(--border); padding:2px 4px;">
+                <option value="ALL">ALL HOSTS</option>
+                <option value="10.19.99.1">10.19.99.1 (Gateway)</option>
+                <option value="10.19.99.4">10.19.99.4 (Relay 0x7F)</option>
+                <option value="10.19.99.12">10.19.99.12 (Beacon)</option>
+                <option value="10.19.99.19">10.19.99.19 (Echo Lab)</option>
+                <option value="10.19.99.127">10.19.99.127 (Deep Core)</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Packet List Table -->
+          <div class="wiretap-table-container">
+            <table class="wiretap-table">
+              <thead>
+                <tr>
+                  <th style="width:40px;">NO.</th>
+                  <th style="width:65px;">TIME</th>
+                  <th style="width:100px;">SOURCE</th>
+                  <th style="width:100px;">DESTINATION</th>
+                  <th style="width:55px;">PROTO</th>
+                  <th style="width:50px;">LEN</th>
+                  <th>SUMMARY / PAYLOAD SIGNATURE</th>
+                </tr>
+              </thead>
+              <tbody id="wiretapTableBody">
+                <!-- Dynamically populated packets -->
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Packet Details & Hex Inspection Pane -->
+          <div class="wiretap-inspector-box">
+            <div class="wiretap-tree-pane" id="wiretapTreePane">
+              <div style="color:var(--phosphor-dim);">Select a captured frame above to inspect protocol headers and byte fields.</div>
+            </div>
+            <div class="wiretap-hex-pane" id="wiretapHexPane">
+              <pre style="margin:0; font-family:var(--font-mono); font-size:11px;">0000   00 19 99 7f 19 99 00 19  99 04 00 00 08 00 45 00  ..............E.
+0010   00 3c 19 99 40 00 40 06  e3 7f 0a 13 63 7f 0a 13  .<..@.@.....c...
+0020   63 04 07 cf 07 cf 00 00  19 99 00 00 00 00 a0 02  c...............
+0030   72 10 a7 19 00 00 02 04  05 b4 04 02 08 0a 19 99  r...............</pre>
+            </div>
+          </div>
+        </div>
+      </div>
+
     </div>
 
     <!-- Right Sidebar: Telemetry & Forensics Dashboard -->
@@ -1568,7 +2029,40 @@
       [0, 1, 1, 1, 0],
       [1, 0, 1, 0, 1],
       [0, 1, 0, 1, 0]
-    ]
+    ],
+    // x86 Disassembler & CPU Stepper
+    disasmEip: 0x007F1990,
+    disasmRegs: {
+      EAX: 0x00000000,
+      EBX: 0x00000000,
+      ECX: 0x00000008,
+      EDX: 0x00000000,
+      ESI: 0x007F1990,
+      EDI: 0x007F1A00,
+      EBP: 0x007F1FF0,
+      ESP: 0x007F1FE0,
+      EFLAGS: { CF: 0, ZF: 0, SF: 0, OF: 0, IF: 1 },
+      CR0: 0x80000011
+    },
+    disasmCycles: 0,
+    disasmHalted: false,
+    disasmRunning: false,
+    disasmBreakpoint: 0,
+
+    // 650m Seismic Strata Sonar
+    seismicFreq: 1999.0,
+    seismicWavelet: 'ricker',
+    seismicGain: 2.5,
+    seismicPulseActive: false,
+    seismicPulseT: 0,
+
+    // Subterranean Wiretap Promiscuous Sniffer
+    wiretapCapturing: true,
+    wiretapPromisc: true,
+    wiretapProtoFilter: 'ALL',
+    wiretapHostFilter: 'ALL',
+    wiretapSelectedPkt: 0,
+    wiretapPackets: []
   };
 
   // --- CRYPTOGRAPHIC TARGET HASHES (SHA-256) ---
@@ -1915,10 +2409,13 @@ Trust the code. Preserve the 1999 aesthetic.
       });
     },
     morseDit: () => playFM(state.carrierFreq, 1.0, 50, 0.06, 0.08),
-    morseDah: () => playFM(state.carrierFreq, 1.0, 50, 0.18, 0.08)
+    morseDah: () => playFM(state.carrierFreq, 1.0, 50, 0.18, 0.08),
+    cpuStep: () => playFM(1800, 1.0, 150, 0.02, 0.03),
+    seismicBoom: () => playFM(65.4, 3.5, 300, 0.65, 0.16),
+    packet: () => playFM(2400, 0.5, 100, 0.015, 0.02)
   };
 
-  // Procedural FM Chiptune Jukebox Sequencer (4 Tracks)
+  // Procedural FM Chiptune Jukebox Sequencer (5 Tracks)
   function stepJukebox() {
     if (!state.audioEnabled || state.jukeboxTrack === 0) return;
 
@@ -1957,20 +2454,34 @@ Trust the code. Preserve the 1999 aesthetic.
       if (jukeboxStep % 4 === 2) {
         playFM(880, 1.5, 600, 0.15, 0.05);
       }
+    } else if (state.jukeboxTrack === 5) {
+      // Track 5: Echoes of the Millennium (Am - F - C - G ambient bell choir in 1999Hz tuning)
+      const chords = [
+        [220.0, 261.6, 329.6],
+        [174.6, 220.0, 261.6],
+        [130.8, 164.8, 196.0],
+        [196.0, 246.9, 293.7]
+      ];
+      const chord = chords[Math.floor(jukeboxStep / 4) % chords.length];
+      const note = chord[jukeboxStep % chord.length];
+      playFM(note, 2.0, 280, 0.40, 0.06);
+      if (jukeboxStep % 8 === 0) {
+        playFM(state.carrierFreq, 0.5, 120, 0.55, 0.03);
+      }
     }
 
     jukeboxStep++;
   }
 
   function cycleJukebox() {
-    state.jukeboxTrack = (state.jukeboxTrack + 1) % 5;
+    state.jukeboxTrack = (state.jukeboxTrack + 1) % 6;
     updateJukeboxUI();
     SFX.key();
   }
 
   function updateJukeboxUI() {
     const pill = document.getElementById('pillJukebox');
-    const names = ['MUTE', 'T1: VAULT', 'T2: AIRGAP', 'T3: PRECURSOR', 'T4: MELTDOWN'];
+    const names = ['MUTE', 'T1: VAULT', 'T2: AIRGAP', 'T3: PRECURSOR', 'T4: MELTDOWN', 'T5: MILLENNIUM'];
     pill.textContent = `MUSIC: ${names[state.jukeboxTrack]}`;
     if (state.jukeboxTrack > 0) {
       pill.className = 'pill active';
@@ -3086,6 +3597,664 @@ Timestamp: ${new Date().toISOString()}
   document.getElementById('btnCryptoLabAnalyze').onclick = runCryptoLab;
   cryptoLabInput.onkeydown = (e) => { if (e.key === 'Enter') runCryptoLab(); };
 
+  // =========================================================================
+  // TAB 7: x86 PROTECTED MODE DISASSEMBLER & OPCODES STEPPER
+  // =========================================================================
+  const DISASM_PROGRAM = [
+    { addr: 0x007F1990, bytes: 'B8 90 19 7F 00', mnem: 'MOV', ops: 'EAX, 0x007F1990', comment: '; Load Ring-0 base memory pointer', action: (r) => { r.EAX = 0x007F1990; return 0x007F1995; } },
+    { addr: 0x007F1995, bytes: '8B 10',          mnem: 'MOV', ops: 'EDX, [EAX]',       comment: '; Dereference memory dword [0x007F1990]', action: (r) => { r.EDX = 0x4F484345; return 0x007F1997; } },
+    { addr: 0x007F1997, bytes: '81 FA 45 43 48 4F', mnem: 'CMP', ops: "EDX, 0x4F484345", comment: "; Compare with ASCII 'ECHO' signature", action: (r) => {
+        const match = (r.EDX === 0x4F484345);
+        r.EFLAGS.ZF = match ? 1 : 0;
+        r.EFLAGS.CF = 0; r.EFLAGS.SF = 0;
+        return 0x007F199D;
+      }
+    },
+    { addr: 0x007F199D, bytes: '75 2B',          mnem: 'JNE', ops: '.integrity_failure', comment: '; Abort if header signature corrupted', action: (r) => {
+        return r.EFLAGS.ZF === 0 ? 0x007F19C0 : 0x007F199F;
+      }
+    },
+    { addr: 0x007F199F, bytes: 'BA 88 03 00 00', mnem: 'MOV', ops: 'EDX, 0x0388',     comment: '; OPL2 / YM2612 FM Hardware Port', action: (r) => { r.EDX = 0x0388; return 0x007F19A4; } },
+    { addr: 0x007F19A4, bytes: 'B0 20',          mnem: 'MOV', ops: 'AL, 0x20',          comment: '; FM Timer Control Register', action: (r) => { r.EAX = (r.EAX & 0xFFFFFF00) | 0x20; return 0x007F19A6; } },
+    { addr: 0x007F19A6, bytes: 'EE',             mnem: 'OUT', ops: 'DX, AL',            comment: '; Write FM Hardware Trigger Pulse', action: (r) => {
+        SFX.beep();
+        return 0x007F19A7;
+      }
+    },
+    { addr: 0x007F19A7, bytes: 'BE A7 19 7F 00', mnem: 'MOV', ops: 'ESI, 0x007F19A7', comment: '; Key fragment heap pointer', action: (r) => { r.ESI = 0x007F19A7; return 0x007F19AC; } },
+    { addr: 0x007F19AC, bytes: '8A 1E',          mnem: 'MOV', ops: 'BL, [ESI]',        comment: '; Read key byte from memory page', action: (r) => {
+        const b = state.memBytes[23];
+        const val = (b === '??' || !b) ? 0x00 : parseInt(b, 16);
+        r.EBX = (r.EBX & 0xFFFFFF00) | val;
+        return 0x007F19AE;
+      }
+    },
+    { addr: 0x007F19AE, bytes: '80 FB 41',       mnem: 'CMP', ops: "BL, 0x41",          comment: "; Verify key prefix is 'A' (ARCH)", action: (r) => {
+        const bl = r.EBX & 0xFF;
+        const match = (bl === 0x41);
+        r.EFLAGS.ZF = match ? 1 : 0;
+        r.EFLAGS.CF = bl < 0x41 ? 1 : 0;
+        r.EFLAGS.SF = (bl - 0x41) < 0 ? 1 : 0;
+        return 0x007F19B1;
+      }
+    },
+    { addr: 0x007F19B1, bytes: '75 0D',          mnem: 'JNE', ops: '.integrity_failure', comment: '; Abort if key fragment unpatched', action: (r) => {
+        return r.EFLAGS.ZF === 0 ? 0x007F19C0 : 0x007F19B3;
+      }
+    },
+    { addr: 0x007F19B3, bytes: 'B8 01 00 00 00', mnem: 'MOV', ops: 'EAX, 1',           comment: '; Ring-0 Clearance Granted!', action: (r) => {
+        r.EAX = 1;
+        defuseSector('MEM_HEAP', 'x86 CPU stepper executed _unseal_ring0_core successfully (EAX=1).');
+        return 0x007F19B8;
+      }
+    },
+    { addr: 0x007F19B8, bytes: 'CD 19',          mnem: 'INT', ops: '0x19',             comment: '; Bootstrap warm reload interrupt', action: (r) => {
+        SFX.unsealFanfare();
+        return 0x007F19BA;
+      }
+    },
+    { addr: 0x007F19BA, bytes: 'C3',             mnem: 'RET', ops: '',                 comment: '; Return to kernel caller', action: (r) => {
+        state.disasmHalted = true;
+        return 0x007F19BA;
+      }
+    },
+    { addr: 0x007F19C0, bytes: '31 C0',          mnem: 'XOR', ops: 'EAX, EAX',         comment: '; .integrity_failure: Clearance Denied', action: (r) => {
+        r.EAX = 0;
+        r.EFLAGS.ZF = 1;
+        SFX.warn();
+        return 0x007F19C2;
+      }
+    },
+    { addr: 0x007F19C2, bytes: 'C3',             mnem: 'RET', ops: '',                 comment: '; Return with rejection status', action: (r) => {
+        state.disasmHalted = true;
+        return 0x007F19C2;
+      }
+    }
+  ];
+
+  const disasmRegGrid = document.getElementById('disasmRegGrid');
+  const disasmFlagsBar = document.getElementById('disasmFlagsBar');
+  const disasmTableBody = document.getElementById('disasmTableBody');
+  const disasmCpuStatus = document.getElementById('disasmCpuStatus');
+  const disasmCycleCount = document.getElementById('disasmCycleCount');
+  const tabBadgeDisasm = document.getElementById('tabBadgeDisasm');
+
+  function toHex32(val) {
+    return '0x' + (val >>> 0).toString(16).toUpperCase().padStart(8, '0');
+  }
+
+  function renderDisasmRegs() {
+    if (!disasmRegGrid) return;
+    const regNames = ['EAX', 'EBX', 'ECX', 'EDX', 'ESI', 'EDI', 'EBP', 'ESP', 'CR0'];
+    disasmRegGrid.innerHTML = '';
+    regNames.forEach(rn => {
+      const cell = document.createElement('div');
+      cell.className = 'reg-cell';
+      const val = state.disasmRegs[rn];
+      cell.innerHTML = `<span style="color:var(--phosphor-dim);">${rn}:</span><span>${toHex32(val)}</span>`;
+      disasmRegGrid.appendChild(cell);
+    });
+
+    if (disasmFlagsBar) {
+      disasmFlagsBar.innerHTML = '<span style="color:var(--phosphor-dim); margin-right:4px;">EFLAGS:</span>';
+      const f = state.disasmRegs.EFLAGS;
+      ['CF', 'ZF', 'SF', 'OF', 'IF'].forEach(fn => {
+        const isSet = !!f[fn];
+        const span = document.createElement('span');
+        span.className = `flag-pill ${isSet ? 'set' : ''}`;
+        span.textContent = `${fn}=${isSet ? '1' : '0'}`;
+        disasmFlagsBar.appendChild(span);
+      });
+    }
+
+    if (disasmCpuStatus) {
+      const eipStr = toHex32(state.disasmEip);
+      if (state.disasmHalted) {
+        const granted = state.disasmRegs.EAX === 1;
+        disasmCpuStatus.textContent = granted ? `HALTED: CLEARANCE GRANTED (EAX=1)` : `HALTED: INTEGRITY FAILED (EAX=0)`;
+        disasmCpuStatus.style.color = granted ? 'var(--border-bright)' : 'var(--alert)';
+      } else {
+        disasmCpuStatus.textContent = `READY • EIP: ${eipStr}`;
+        disasmCpuStatus.style.color = 'var(--cyan)';
+      }
+    }
+
+    if (disasmCycleCount) disasmCycleCount.textContent = `CYCLE: ${state.disasmCycles}`;
+    if (tabBadgeDisasm) tabBadgeDisasm.textContent = `EIP: 0x${state.disasmEip.toString(16).toUpperCase()}`;
+  }
+
+  function renderDisasmTable() {
+    if (!disasmTableBody) return;
+    disasmTableBody.innerHTML = '';
+    DISASM_PROGRAM.forEach(instr => {
+      const tr = document.createElement('tr');
+      tr.className = 'disasm-tr';
+      if (instr.addr === state.disasmEip) tr.classList.add('active-instr');
+      if (instr.addr === state.disasmBreakpoint) tr.classList.add('breakpoint');
+
+      tr.innerHTML = `
+        <td style="text-align:center; color:var(--alert); cursor:pointer;" title="Click to toggle breakpoint">${instr.addr === state.disasmBreakpoint ? '●' : '○'}</td>
+        <td style="color:var(--cyan); font-weight:bold;">${toHex32(instr.addr)}</td>
+        <td style="color:var(--phosphor-dim);">${instr.bytes}</td>
+        <td style="color:var(--warn); font-weight:bold;">${instr.mnem}</td>
+        <td style="color:#fff;">${instr.ops}</td>
+        <td style="color:var(--phosphor-dim); font-size:10.5px;">${instr.comment}</td>
+      `;
+
+      tr.children[0].onclick = (e) => {
+        e.stopPropagation();
+        state.disasmBreakpoint = (state.disasmBreakpoint === instr.addr) ? 0 : instr.addr;
+        renderDisasmTable();
+        SFX.key();
+      };
+
+      tr.onclick = () => {
+        state.disasmEip = instr.addr;
+        state.disasmHalted = false;
+        renderDisasmRegs();
+        renderDisasmTable();
+        SFX.key();
+      };
+
+      disasmTableBody.appendChild(tr);
+    });
+  }
+
+  function stepDisasm() {
+    if (state.disasmHalted) {
+      resetDisasmCpu();
+    }
+    const cur = DISASM_PROGRAM.find(i => i.addr === state.disasmEip);
+    if (!cur) {
+      state.disasmHalted = true;
+      renderDisasmRegs();
+      return;
+    }
+
+    SFX.cpuStep();
+    state.disasmCycles++;
+    const nextEip = cur.action(state.disasmRegs);
+    state.disasmEip = nextEip;
+    renderDisasmRegs();
+    renderDisasmTable();
+  }
+
+  let disasmRunTimer = null;
+  function toggleRunDisasm() {
+    const btn = document.getElementById('btnDisasmRun');
+    if (disasmRunTimer) {
+      clearInterval(disasmRunTimer);
+      disasmRunTimer = null;
+      btn.textContent = 'Run / Pause';
+      btn.classList.remove('active');
+    } else {
+      if (state.disasmHalted) resetDisasmCpu();
+      btn.textContent = 'Pause Execution';
+      btn.classList.add('active');
+      disasmRunTimer = setInterval(() => {
+        stepDisasm();
+        if (state.disasmHalted || (state.disasmBreakpoint && state.disasmEip === state.disasmBreakpoint)) {
+          clearInterval(disasmRunTimer);
+          disasmRunTimer = null;
+          btn.textContent = 'Run / Pause';
+          btn.classList.remove('active');
+        }
+      }, 160);
+    }
+  }
+
+  function resetDisasmCpu() {
+    state.disasmEip = 0x007F1990;
+    state.disasmRegs = {
+      EAX: 0x00000000,
+      EBX: 0x00000000,
+      ECX: 0x00000008,
+      EDX: 0x00000000,
+      ESI: 0x007F1990,
+      EDI: 0x007F1A00,
+      EBP: 0x007F1FF0,
+      ESP: 0x007F1FE0,
+      EFLAGS: { CF: 0, ZF: 0, SF: 0, OF: 0, IF: 1 },
+      CR0: 0x80000011
+    };
+    state.disasmCycles = 0;
+    state.disasmHalted = false;
+    renderDisasmRegs();
+    renderDisasmTable();
+    SFX.key();
+  }
+
+  function patchDisasmKeyByte() {
+    state.memBytes[23] = '41';
+    renderHexPatchGrid();
+    renderDisasmRegs();
+    renderDisasmTable();
+    SFX.success();
+    printLine("[x86 DISASM] Memory offset 0x007F19A7 patched to 0x41 ('A'). Key prefix aligned.", 'text-highlight');
+  }
+
+  document.getElementById('btnDisasmStep').onclick = stepDisasm;
+  document.getElementById('btnDisasmRun').onclick = toggleRunDisasm;
+  document.getElementById('btnDisasmReset').onclick = resetDisasmCpu;
+  document.getElementById('btnDisasmPatch').onclick = patchDisasmKeyByte;
+
+  const disasmBpInput = document.getElementById('disasmBpInput');
+  if (disasmBpInput) {
+    disasmBpInput.onchange = () => {
+      const v = disasmBpInput.value.trim();
+      const parsed = parseInt(v, 16);
+      state.disasmBreakpoint = isNaN(parsed) ? 0 : parsed;
+      renderDisasmTable();
+    };
+  }
+
+  // =========================================================================
+  // TAB 8: 650M CARLSBAD STRATA SEISMIC SONAR ENGINE
+  // =========================================================================
+  const seismicCanvas = document.getElementById('seismicCanvas');
+  const seismicCtx = seismicCanvas ? seismicCanvas.getContext('2d') : null;
+  const geophoneCanvas = document.getElementById('geophoneCanvas');
+  const geophoneCtx = geophoneCanvas ? geophoneCanvas.getContext('2d') : null;
+  const seismicStatusBadge = document.getElementById('seismicStatusBadge');
+  const lblSeismicCoherence = document.getElementById('lblSeismicCoherence');
+  const seismicGainSlider = document.getElementById('seismicGainSlider');
+
+  if (seismicGainSlider) {
+    seismicGainSlider.oninput = (e) => { state.seismicGain = parseFloat(e.target.value) || 2.5; };
+  }
+
+  document.querySelectorAll('.seismic-freq-btn').forEach(btn => {
+    btn.onclick = () => {
+      document.querySelectorAll('.seismic-freq-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      state.seismicFreq = parseFloat(btn.getAttribute('data-f')) || 1999.0;
+      SFX.beep();
+    };
+  });
+
+  document.querySelectorAll('.seismic-wavelet-btn').forEach(btn => {
+    btn.onclick = () => {
+      document.querySelectorAll('.seismic-wavelet-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      state.seismicWavelet = btn.getAttribute('data-w');
+      SFX.key();
+    };
+  });
+
+  function fireSeismicSounding() {
+    state.seismicPulseActive = true;
+    state.seismicPulseT = 0;
+    SFX.seismicBoom();
+    if (seismicStatusBadge) {
+      seismicStatusBadge.textContent = `PULSE ACTIVE • ${state.seismicFreq} Hz [${state.seismicWavelet.toUpperCase()}]`;
+      seismicStatusBadge.style.color = 'var(--warn)';
+    }
+    printLine(`[SEISMIC] Lithospheric acoustic sounding fired at ${state.seismicFreq.toFixed(1)} Hz.`, 'text-cyan');
+  }
+  document.getElementById('btnFireSeismicPulse').onclick = fireSeismicSounding;
+
+  const STRATA_LAYERS = [
+    { name: 'Caliche & Alluvium', top: 0, bot: 45, depth: '0-80m', vel: '1800 m/s', color: 'rgba(163, 230, 53, 0.15)', stroke: '#a3e635' },
+    { name: 'Rustler Dolomite Aquifer', top: 45, bot: 110, depth: '80-240m', vel: '3200 m/s', color: 'rgba(56, 189, 248, 0.15)', stroke: '#38bdf8' },
+    { name: 'Salado Halite Evaporite', top: 110, bot: 200, depth: '240-540m', vel: '4450 m/s', color: 'rgba(250, 204, 21, 0.12)', stroke: '#facc15' },
+    { name: 'Deep Core Carlsbad Salt Vault', top: 200, bot: 240, depth: '540-700m (650m)', vel: '4450 m/s (1999Hz Echo)', color: 'rgba(34, 255, 102, 0.25)', stroke: 'var(--border-bright)', isCavity: true },
+    { name: 'Basal Anhydrite Bed', top: 240, bot: 280, depth: '700-900m', vel: '5600 m/s', color: 'rgba(192, 132, 252, 0.15)', stroke: '#c084fc' }
+  ];
+
+  function renderSeismicEngine() {
+    if (!seismicCtx || !geophoneCtx || state.activeTab !== 'seismic') {
+      requestAnimationFrame(renderSeismicEngine);
+      return;
+    }
+
+    const sw = seismicCanvas.width;
+    const sh = seismicCanvas.height;
+    seismicCtx.fillStyle = '#010502';
+    seismicCtx.fillRect(0, 0, sw, sh);
+
+    // Draw Geological Strata Layers
+    STRATA_LAYERS.forEach(l => {
+      seismicCtx.fillStyle = l.color;
+      seismicCtx.fillRect(0, l.top, sw, l.bot - l.top);
+      seismicCtx.strokeStyle = l.stroke;
+      seismicCtx.lineWidth = 1;
+      seismicCtx.beginPath();
+      seismicCtx.moveTo(0, l.top);
+      seismicCtx.lineTo(sw, l.top);
+      seismicCtx.stroke();
+
+      seismicCtx.fillStyle = l.stroke;
+      seismicCtx.font = '10px monospace';
+      seismicCtx.fillText(`${l.name} [${l.depth}] - v=${l.vel}`, 10, l.top + 14);
+
+      if (l.isCavity) {
+        seismicCtx.strokeStyle = 'var(--border-bright)';
+        seismicCtx.fillStyle = 'rgba(34, 255, 102, 0.35)';
+        const cx = sw / 2;
+        const cy = (l.top + l.bot) / 2;
+        seismicCtx.beginPath();
+        seismicCtx.arc(cx, cy, 14, 0, Math.PI * 2);
+        seismicCtx.fill();
+        seismicCtx.stroke();
+        seismicCtx.fillStyle = '#fff';
+        seismicCtx.font = 'bold 9.5px monospace';
+        seismicCtx.fillText('★ CORE 0x1999 (650m)', cx + 20, cy + 3);
+      }
+    });
+
+    if (state.seismicPulseActive) {
+      state.seismicPulseT += 2.2;
+      const waveY = state.seismicPulseT;
+
+      if (waveY < sh) {
+        seismicCtx.strokeStyle = 'rgba(255, 255, 255, 0.85)';
+        seismicCtx.lineWidth = 2.5;
+        seismicCtx.beginPath();
+        for (let x = 0; x < sw; x += 6) {
+          const mod = Math.sin(x * 0.08 + waveY * 0.1) * 3;
+          if (x === 0) seismicCtx.moveTo(x, waveY + mod);
+          else seismicCtx.lineTo(x, waveY + mod);
+        }
+        seismicCtx.stroke();
+      }
+
+      if (waveY >= 200 && waveY <= 240) {
+        seismicCtx.fillStyle = 'rgba(34, 255, 102, 0.2)';
+        seismicCtx.fillRect(0, 200, sw, 40);
+        if (Math.abs(state.seismicFreq - 1999.0) < 1.0) {
+          if (!state.verifiedSectors.AUDIO_DSP) {
+            defuseSector('AUDIO_DSP', 'Seismic acoustic sounding locked 1999.00 Hz cavity resonance.');
+          }
+        }
+      }
+
+      if (waveY > sh + 120) {
+        state.seismicPulseActive = false;
+        if (seismicStatusBadge) {
+          seismicStatusBadge.textContent = 'GEOPHONE ARRAY: LISTENING (READY)';
+          seismicStatusBadge.style.color = 'var(--cyan)';
+        }
+      }
+    }
+
+    const gw = geophoneCanvas.width;
+    const gh = geophoneCanvas.height;
+    geophoneCtx.fillStyle = '#010502';
+    geophoneCtx.fillRect(0, 0, gw, gh);
+
+    geophoneCtx.strokeStyle = 'rgba(26, 122, 53, 0.25)';
+    geophoneCtx.lineWidth = 1;
+    for (let x = 0; x < gw; x += 40) {
+      geophoneCtx.beginPath(); geophoneCtx.moveTo(x, 0); geophoneCtx.lineTo(x, gh); geophoneCtx.stroke();
+    }
+    for (let y = 0; y < gh; y += 28) {
+      geophoneCtx.beginPath(); geophoneCtx.moveTo(0, y); geophoneCtx.lineTo(gw, y); geophoneCtx.stroke();
+    }
+
+    const phosphor = getComputedStyle(document.body).getPropertyValue('--phosphor').trim() || '#22ff66';
+    geophoneCtx.strokeStyle = phosphor;
+    geophoneCtx.lineWidth = 1.5;
+    geophoneCtx.beginPath();
+    const midY = gh / 2;
+
+    const is1999 = Math.abs(state.seismicFreq - 1999.0) < 1.0;
+    const coherence = is1999 ? 99.4 : Math.max(12, 100 - Math.abs(state.seismicFreq - 1999.0) * 0.08);
+
+    if (lblSeismicCoherence) {
+      lblSeismicCoherence.textContent = `ECHO COHERENCE: ${coherence.toFixed(1)}%`;
+      lblSeismicCoherence.style.color = is1999 ? 'var(--border-bright)' : 'var(--warn)';
+    }
+
+    for (let x = 0; x < gw; x++) {
+      let y = midY;
+      if (state.seismicPulseActive) {
+        const t = x / gw;
+        const p1 = Math.exp(-Math.pow((t - 0.2) / 0.03, 2)) * Math.sin(x * 0.25) * 22;
+        const p2 = Math.exp(-Math.pow((t - 0.45) / 0.04, 2)) * Math.sin(x * 0.35) * 35;
+        const amp = is1999 ? 75 : 20;
+        const p3 = Math.exp(-Math.pow((t - 0.68) / 0.045, 2)) * Math.sin(x * 0.55 * (state.seismicFreq / 1999)) * amp;
+        y += (p1 + p2 + p3) * (state.seismicGain / 2.5);
+      } else {
+        y += Math.sin(x * 0.05 + Date.now() * 0.003) * 2 + (Math.random() - 0.5) * 2.5;
+      }
+      if (x === 0) geophoneCtx.moveTo(x, y);
+      else geophoneCtx.lineTo(x, y);
+    }
+    geophoneCtx.stroke();
+
+    requestAnimationFrame(renderSeismicEngine);
+  }
+  requestAnimationFrame(renderSeismicEngine);
+
+  // =========================================================================
+  // TAB 9: SUBTERRANEAN WIRETAP PROMISCUOUS PACKET SNIFFER
+  // =========================================================================
+  const INITIAL_PACKETS = [
+    { no: 1, time: '0.000', src: '10.19.99.127', dst: '10.19.99.4', proto: 'TCP', len: 64, summary: '1999 > 1999 [SYN] Seq=0 Win=8192 Len=0', hex: '4500003c199940004006e37f0a13637f0a13630407cf07cf0000199900000000a0027210a7190000020405b4' },
+    { no: 2, time: '0.002', src: '10.19.99.4', dst: '10.19.99.127', proto: 'TCP', len: 64, summary: '1999 > 1999 [SYN, ACK] Seq=0 Ack=1 Win=8192', hex: '4500003c007f40004006fc990a1363040a13637f07cf07cf0000007f0000199aa0127210b4220000020405b4' },
+    { no: 3, time: '0.003', src: '10.19.99.127', dst: '10.19.99.4', proto: 'TCP', len: 76, summary: '1999 > 1999 [PSH, ACK] Payload: ECHO_RELAY_SYNC', hex: '4500004c199a40004006e36e0a13637f0a13630407cf07cf0000199a00000080501872104543484f5f52454c41595f53594e43' },
+    { no: 4, time: '0.015', src: '10.19.99.12', dst: '10.19.99.255', proto: 'UDP', len: 52, summary: '1999 > 1999 LEN=24 Payload: SUBCARRIER_1999HZ', hex: '45000034000c40004011ff120a13630c0a1363ff07cf07cf00201999535542434152524945525f31393939485a' },
+    { no: 5, time: '0.042', src: '10.19.99.19', dst: '10.19.99.127', proto: 'TCP', len: 80, summary: '1999 > 1999 [ACK] Telemetry: 1999Hz_COHERENT_99.4%', hex: '45000050001340004006ff050a1363130a13637f07cf07cf00000013000019a05018721031393939487a5f434f484552454e54' },
+    { no: 6, time: '0.088', src: '10.19.99.1', dst: '10.19.99.127', proto: 'ICMP', len: 60, summary: 'Echo (ping) request id=0x1999 seq=1', hex: '4500003c000140004001ff210a1363010a13637f080019990001000000000000000000006162636465666768' },
+    { no: 7, time: '0.089', src: '10.19.99.127', dst: '10.19.99.1', proto: 'ICMP', len: 60, summary: 'Echo (ping) reply id=0x1999 seq=1 (ttl=64)', hex: '4500003c199b40004001e5870a13637f0a136301000021990001000000000000000000006162636465666768' }
+  ];
+
+  state.wiretapPackets = [...INITIAL_PACKETS];
+
+  const wiretapTableBody = document.getElementById('wiretapTableBody');
+  const wiretapTreePane = document.getElementById('wiretapTreePane');
+  const wiretapHexPane = document.getElementById('wiretapHexPane');
+  const wiretapProtoFilter = document.getElementById('wiretapProtoFilter');
+  const wiretapHostFilter = document.getElementById('wiretapHostFilter');
+  const wiretapStatusBadge = document.getElementById('wiretapStatusBadge');
+
+  if (wiretapProtoFilter) {
+    wiretapProtoFilter.onchange = () => {
+      state.wiretapProtoFilter = wiretapProtoFilter.value;
+      renderWiretapTable();
+    };
+  }
+  if (wiretapHostFilter) {
+    wiretapHostFilter.onchange = () => {
+      state.wiretapHostFilter = wiretapHostFilter.value;
+      renderWiretapTable();
+    };
+  }
+
+  function renderWiretapTable() {
+    if (!wiretapTableBody) return;
+    wiretapTableBody.innerHTML = '';
+
+    const filtered = state.wiretapPackets.filter(pkt => {
+      if (state.wiretapProtoFilter !== 'ALL' && pkt.proto !== state.wiretapProtoFilter) return false;
+      if (state.wiretapHostFilter !== 'ALL' && (pkt.src !== state.wiretapHostFilter && pkt.dst !== state.wiretapHostFilter)) return false;
+      return true;
+    });
+
+    filtered.forEach(pkt => {
+      const tr = document.createElement('tr');
+      tr.className = `wiretap-row ${pkt.no === state.wiretapSelectedPkt ? 'selected' : ''}`;
+      tr.innerHTML = `
+        <td style="color:var(--phosphor-dim);">${pkt.no}</td>
+        <td style="color:var(--cyan);">${pkt.time}</td>
+        <td>${pkt.src}</td>
+        <td>${pkt.dst}</td>
+        <td style="color:${pkt.proto === 'TCP' ? '#38bdf8' : (pkt.proto === 'UDP' ? '#fbbf24' : '#a3e635')}; font-weight:bold;">${pkt.proto}</td>
+        <td>${pkt.len}</td>
+        <td style="color:#fff;">${pkt.summary}</td>
+      `;
+      tr.onclick = () => selectWiretapPacket(pkt);
+      wiretapTableBody.appendChild(tr);
+    });
+
+    if (filtered.length > 0 && (!state.wiretapSelectedPkt || !filtered.some(p => p.no === state.wiretapSelectedPkt))) {
+      selectWiretapPacket(filtered[filtered.length - 1]);
+    }
+  }
+
+  function selectWiretapPacket(pkt) {
+    state.wiretapSelectedPkt = pkt.no;
+    document.querySelectorAll('.wiretap-row').forEach((r) => {
+      r.classList.toggle('selected', r.children[0].textContent == pkt.no);
+    });
+
+    if (wiretapTreePane) {
+      let treeHtml = `<div style="font-weight:bold; color:var(--border-bright); margin-bottom:4px;">Frame ${pkt.no}: ${pkt.len} bytes on interface eth0</div>`;
+      treeHtml += `<div><strong>&gt; Ethernet II</strong>, Src: 00:19:99:7f:00:04, Dst: 00:19:99:7f:19:99</div>`;
+      treeHtml += `<div><strong>&gt; Internet Protocol Version 4</strong>, Src: ${pkt.src}, Dst: ${pkt.dst}, TTL: 64, Checksum: OK</div>`;
+      if (pkt.proto === 'TCP') {
+        treeHtml += `<div><strong>&gt; Transmission Control Protocol</strong>, Src Port: 1999, Dst Port: 1999, Flags: [ACK, PSH], Window: 8192</div>`;
+      } else if (pkt.proto === 'UDP') {
+        treeHtml += `<div><strong>&gt; User Datagram Protocol</strong>, Src Port: 1999, Dst Port: 1999, Length: ${pkt.len - 34}</div>`;
+      } else if (pkt.proto === 'ICMP') {
+        treeHtml += `<div><strong>&gt; Internet Control Message Protocol</strong>, Type: 8 (Echo), Code: 0, Checksum: 0x1999</div>`;
+      }
+      treeHtml += `<div style="margin-top:4px; color:var(--cyan); font-weight:bold;">&gt; Subterranean Payload: <code>${pkt.summary}</code></div>`;
+      wiretapTreePane.innerHTML = treeHtml;
+    }
+
+    if (wiretapHexPane) {
+      const h = pkt.hex || '0019997f199900199904000008004500003c199940004006e37f0a13637f0a13630407cf07cf';
+      let out = '';
+      for (let i = 0; i < h.length; i += 32) {
+        const chunk = h.substring(i, i + 32);
+        const offset = (i / 2).toString(16).padStart(4, '0');
+        let hexPart = '';
+        let asciiPart = '';
+        for (let j = 0; j < chunk.length; j += 2) {
+          const b = chunk.substring(j, j + 2);
+          hexPart += b + ' ';
+          const code = parseInt(b, 16);
+          asciiPart += (code >= 32 && code <= 126) ? String.fromCharCode(code) : '.';
+        }
+        out += `${offset}   ${hexPart.padEnd(48, ' ')}  ${asciiPart}\n`;
+      }
+      wiretapHexPane.innerHTML = `<pre style="margin:0; font-family:var(--font-mono); font-size:11px;">${out}</pre>`;
+    }
+  }
+
+  setInterval(() => {
+    if (!state.wiretapCapturing) return;
+    const nowSec = ((state.wiretapPackets.length + 1) * 0.125).toFixed(3);
+    const generators = [
+      { src: '10.19.99.4', dst: '10.19.99.127', proto: 'TCP', len: 68, summary: '1999 > 1999 [ACK] Relayed heartbeat 0x7F', hex: '45000044007f40004006fc910a1363040a13637f07cf07cf000000800000199b50107210199900004543484f' },
+      { src: '10.19.99.12', dst: '10.19.99.255', proto: 'UDP', len: 52, summary: '1999 > 1999 Broadcast subcarrier sync frame', hex: '45000034000d40004011ff110a13630c0a1363ff07cf07cf0020199931393939485a5f53594e43' },
+      { src: '10.19.99.19', dst: '10.19.99.127', proto: 'TCP', len: 72, summary: '1999 > 1999 Phase Coherence: 99.4%', hex: '45000048001440004006ff000a1363130a13637f07cf07cf00000014000019a150187210434f484552454e4345' }
+    ];
+    const g = generators[Math.floor(Math.random() * generators.length)];
+    const newPkt = {
+      no: state.wiretapPackets.length + 1,
+      time: nowSec,
+      src: g.src,
+      dst: g.dst,
+      proto: g.proto,
+      len: g.len,
+      summary: g.summary,
+      hex: g.hex
+    };
+    state.wiretapPackets.push(newPkt);
+    if (state.wiretapPackets.length > 60) state.wiretapPackets.shift();
+
+    if (state.activeTab === 'wiretap') {
+      renderWiretapTable();
+      SFX.packet();
+    }
+  }, 4500);
+
+  document.getElementById('btnToggleCapture').onclick = () => {
+    state.wiretapCapturing = !state.wiretapCapturing;
+    const btn = document.getElementById('btnToggleCapture');
+    btn.textContent = state.wiretapCapturing ? 'Pause Capture' : 'Resume Capture';
+    if (wiretapStatusBadge) {
+      wiretapStatusBadge.textContent = state.wiretapCapturing ? 'CAPTURE RUNNING • PROMISCUOUS MODE' : 'CAPTURE PAUSED';
+      wiretapStatusBadge.style.color = state.wiretapCapturing ? 'var(--border-bright)' : 'var(--warn)';
+    }
+    SFX.key();
+  };
+
+  document.getElementById('btnClearPackets').onclick = () => {
+    state.wiretapPackets = [];
+    renderWiretapTable();
+    SFX.key();
+  };
+
+  document.getElementById('btnSendRelayFrame').onclick = () => {
+    defuseSector('NET_RELAY', 'Promiscuous packet sniffer injected synchronized handshake frame into 10.19.99.4.');
+    const nowSec = ((state.wiretapPackets.length + 1) * 0.125).toFixed(3);
+    state.wiretapPackets.push({
+      no: state.wiretapPackets.length + 1,
+      time: nowSec,
+      src: '10.19.99.127',
+      dst: '10.19.99.4',
+      proto: 'TCP',
+      len: 84,
+      summary: '1999 > 1999 [PSH, ACK] Payload: ECHO_RELAY_SYNC (SECTOR 03 DEFUSED)',
+      hex: '45000054199c40004006e3660a13637f0a13630407cf07cf0000199c00000085501872104543484f5f52454c41595f53594e43'
+    });
+    renderWiretapTable();
+    SFX.success();
+    printLine('[WIRETAP] Handshake frame injected to 10.19.99.4. Sector 03 synchronized!', 'text-highlight');
+  };
+
+  function generatePcapBinary() {
+    const globalHeader = new Uint8Array([
+      0xd4, 0xc3, 0xb2, 0xa1,
+      0x02, 0x00,
+      0x04, 0x00,
+      0x00, 0x00, 0x00, 0x00,
+      0x00, 0x00, 0x00, 0x00,
+      0xff, 0xff, 0x00, 0x00,
+      0x01, 0x00, 0x00, 0x00
+    ]);
+
+    const packetBuffers = [];
+    let totalLen = globalHeader.byteLength;
+
+    state.wiretapPackets.forEach((pkt, idx) => {
+      const hex = pkt.hex || '0019997f199900199904000008004500003c199940004006e37f0a13637f0a13630407cf07cf';
+      const frameBytes = [];
+      frameBytes.push(0x00, 0x19, 0x99, 0x7f, 0x19, 0x99);
+      frameBytes.push(0x00, 0x19, 0x99, 0x04, 0x00, 0x00);
+      frameBytes.push(0x08, 0x00);
+
+      for (let i = 0; i < hex.length; i += 2) {
+        frameBytes.push(parseInt(hex.substring(i, i + 2), 16) || 0);
+      }
+
+      const pLen = frameBytes.length;
+      const sec = 946684800 + idx;
+      const usec = idx * 125000;
+
+      const pktHdr = new Uint8Array(16);
+      const dv = new DataView(pktHdr.buffer);
+      dv.setUint32(0, sec, true);
+      dv.setUint32(4, usec, true);
+      dv.setUint32(8, pLen, true);
+      dv.setUint32(12, pLen, true);
+
+      packetBuffers.push(pktHdr);
+      packetBuffers.push(new Uint8Array(frameBytes));
+      totalLen += 16 + pLen;
+    });
+
+    const out = new Uint8Array(totalLen);
+    let offset = 0;
+    out.set(globalHeader, offset);
+    offset += globalHeader.byteLength;
+
+    packetBuffers.forEach(buf => {
+      out.set(buf, offset);
+      offset += buf.byteLength;
+    });
+
+    return out;
+  }
+
+  document.getElementById('btnDownloadPcap').onclick = () => {
+    const pcapBytes = generatePcapBinary();
+    downloadFile('deep_core_wiretap.pcap', pcapBytes, 'application/vnd.tcpdump.pcap');
+  };
+
   // --- TAB DECK SWITCHER ---
   const tabBtns = document.querySelectorAll('.deck-tab-btn');
   const panels = document.querySelectorAll('.deck-panel');
@@ -3101,6 +4270,11 @@ Timestamp: ${new Date().toISOString()}
     SFX.key();
     if (tabId === 'terminal') {
       termInput.focus();
+    } else if (tabId === 'disasm') {
+      renderDisasmRegs();
+      renderDisasmTable();
+    } else if (tabId === 'wiretap') {
+      renderWiretapTable();
     }
   }
 
@@ -3174,10 +4348,17 @@ Timestamp: ${new Date().toISOString()}
         printLine('  inject <ip> <msg>    - Transmit raw diagnostic packet to subnet host');
         printLine('  netstat              - Display active subterranean socket connections');
         printLine('  history              - Display previous command execution log');
+        printLine('  disasm [addr]        - Switch to x86 Opcode Disassembler deck');
+        printLine('  step                 - Step CPU 1 instruction in Protected Mode simulator');
+        printLine('  regs                 - Display 32-bit x86 register dump (EAX, EDX, EFLAGS)');
+        printLine('  seismic [fire]       - Launch 650m lithospheric acoustic sounding pulse');
+        printLine('  wiretap / sniff      - Switch to Subterranean Promiscuous Sniffer deck');
+        printLine('  pcap                 - Generate & download authentic binary .pcap trace');
+        printLine('  uptime               - Query node uptime, load average & carrier drift');
         printLine('  radar                - Switch to 3D Salt Vault Wireframe Scanner deck');
         printLine('  mesh                 - Switch to Collaborative Subterranean Signal Mesh');
         printLine('  morse [message]      - Transmit audio Morse code over 1999Hz FM carrier');
-        printLine('  music [1|2|3|4|off]  - Select procedural ambient chiptune track');
+        printLine('  music [1..5|off]     - Select procedural ambient chiptune track (1-5)');
         printLine('  audio <on|off>       - Toggle Yamaha FM & SPC700 delay audio synthesizer');
         printLine('  theme <green|amber>  - Switch CRT phosphor palette');
         printLine('  scanlines            - Toggle CRT scanline overlay filter');
@@ -3240,6 +4421,58 @@ Timestamp: ${new Date().toISOString()}
       case 'mesh':
         switchTab('mesh');
         printLine('[NAVIGATION] Switched to Collaborative Subterranean Signal Mesh deck.', 'text-cyan');
+        break;
+
+      case 'disasm':
+        switchTab('disasm');
+        printLine('[NAVIGATION] Switched to x86 Disassembler & Opcode Stepper deck.', 'text-cyan');
+        break;
+
+      case 'step':
+        switchTab('disasm');
+        stepDisasm();
+        printLine(`[x86 STEP] EIP advanced to ${toHex32(state.disasmEip)}.`, 'text-cyan');
+        break;
+
+      case 'regs':
+        printLine('--- 32-BIT x86 CPU REGISTERS ---', 'text-cyan');
+        ['EAX', 'EBX', 'ECX', 'EDX', 'ESI', 'EDI', 'EBP', 'ESP', 'CR0'].forEach(rn => {
+          printLine(`  ${rn.padEnd(4, ' ')} : ${toHex32(state.disasmRegs[rn])}`);
+        });
+        const f = state.disasmRegs.EFLAGS;
+        printLine(`  EFLAGS : CF=${f.CF} ZF=${f.ZF} SF=${f.SF} OF=${f.OF} IF=${f.IF}`, 'text-warn');
+        SFX.beep();
+        break;
+
+      case 'seismic':
+      case 'sonar':
+        if (arg === 'fire' || arg === 'pulse') {
+          switchTab('seismic');
+          fireSeismicSounding();
+        } else {
+          switchTab('seismic');
+          printLine('[NAVIGATION] Switched to 650m Carlsbad Strata Seismic Sonar deck.', 'text-cyan');
+        }
+        break;
+
+      case 'wiretap':
+      case 'sniff':
+      case 'sniffer':
+        switchTab('wiretap');
+        printLine('[NAVIGATION] Switched to Subterranean Wiretap Promiscuous Sniffer deck.', 'text-cyan');
+        break;
+
+      case 'pcap':
+        const pcapBytes = generatePcapBinary();
+        downloadFile('deep_core_wiretap.pcap', pcapBytes, 'application/vnd.tcpdump.pcap');
+        break;
+
+      case 'uptime':
+        printLine('--- KILO-NET DEEP CORE UPTIME ---', 'text-cyan');
+        printLine('System up 1999 days, 23:59:12');
+        printLine('1 user, load average: 0.19, 0.99, 1.99');
+        printLine(`Subcarrier lock drift: ${(Math.random() * 0.02 - 0.01).toFixed(4)} Hz [NOMINAL]`);
+        SFX.beep();
         break;
 
       case 'ls':
@@ -3782,6 +5015,11 @@ Timestamp: ${new Date().toISOString()}
         verifiedSectors: state.verifiedSectors,
         memBytes: state.memBytes,
         latticeGrid: state.latticeGrid,
+        disasmEip: state.disasmEip,
+        disasmRegs: state.disasmRegs,
+        disasmCycles: state.disasmCycles,
+        seismicFreq: state.seismicFreq,
+        seismicGain: state.seismicGain,
         history: state.history.slice(-30),
         timestamp: new Date().toISOString()
       };
@@ -3821,6 +5059,11 @@ Timestamp: ${new Date().toISOString()}
       if (data.verifiedSectors) state.verifiedSectors = data.verifiedSectors;
       if (data.memBytes) state.memBytes = data.memBytes;
       if (data.latticeGrid) state.latticeGrid = data.latticeGrid;
+      if (data.disasmEip) state.disasmEip = data.disasmEip;
+      if (data.disasmRegs) state.disasmRegs = data.disasmRegs;
+      if (data.disasmCycles !== undefined) state.disasmCycles = data.disasmCycles;
+      if (data.seismicFreq) state.seismicFreq = data.seismicFreq;
+      if (data.seismicGain) state.seismicGain = data.seismicGain;
       if (data.audioEnabled) {
         state.audioEnabled = true;
         const pill = document.getElementById('pillAudio');
@@ -3901,7 +5144,13 @@ Timestamp: ${new Date().toISOString()}
     }
   });
 
-  const AUTO_COMMANDS = ['help', 'status', 'sectors', 'defuse', 'ls', 'dir', 'cat', 'download', 'probe', 'dump', 'trace', 'matrix', 'verify', 'hash', 'entropy', 'xor', 'ping', 'inject', 'netstat', 'radar', 'mesh', 'morse', 'music', 'audio', 'theme', 'scanlines', 'save', 'load', 'export', 'clear'];
+  const AUTO_COMMANDS = [
+    'help', 'status', 'sectors', 'defuse', 'ls', 'dir', 'cat', 'download', 'probe',
+    'dump', 'trace', 'traceroute', 'matrix', 'verify', 'hash', 'entropy', 'xor', 'ping',
+    'inject', 'netstat', 'radar', 'mesh', 'morse', 'music', 'audio', 'theme', 'scanlines',
+    'disasm', 'step', 'regs', 'seismic', 'sonar', 'wiretap', 'sniff', 'pcap', 'uptime',
+    'save', 'load', 'export', 'clear'
+  ];
   function handleAutocomplete() {
     const val = termInput.value.trim().toLowerCase();
     if (!val) return;
@@ -3947,6 +5196,9 @@ Timestamp: ${new Date().toISOString()}
   renderHexPatchGrid();
   renderLatticeGrid();
   renderSpoolList();
+  renderDisasmRegs();
+  renderDisasmTable();
+  renderWiretapTable();
   quickloadState(false);
 
   // Show first-run briefing if not previously seen
