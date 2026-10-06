@@ -10,10 +10,10 @@
 <script src="../assets/js/retro_multiplayer.js"></script>
 </head>
 <body>
-<div id="toast" onclick="this.style.opacity='0'; this.style.pointerEvents='none';" style="position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: rgba(18, 22, 34, 0.96); border: 1px solid #00f0f0; color: #00f0f0; padding: 9px 20px; border-radius: 20px; font-size: 13px; font-weight: 600; box-shadow: 0 4px 18px rgba(0,240,240,0.4); opacity: 0; pointer-events: none; cursor: pointer; transition: opacity 0.25s ease; z-index: 2000; font-family: 'Segoe UI', system-ui, sans-serif; display: flex; align-items: center; gap: 8px;" role="status" aria-live="polite"></div>
+<div id="toast" onclick="this.style.opacity='0'; this.style.pointerEvents='none';" style="position: fixed; top: 16px; right: 20px; background: rgba(18, 22, 34, 0.96); border: 1px solid #00f0f0; color: #00f0f0; padding: 9px 20px; border-radius: 20px; font-size: 13px; font-weight: 600; box-shadow: 0 4px 18px rgba(0,240,240,0.4); opacity: 0; pointer-events: none; cursor: pointer; transition: opacity 0.25s ease; z-index: 2000; font-family: 'Segoe UI', system-ui, sans-serif; display: flex; align-items: center; gap: 8px;" role="status" aria-live="polite"></div>
 
 <!-- Modal Backdrop -->
-<div id="modalBackdrop" onclick="closeAllModals()" style="display:none; position:fixed; inset:0; background:rgba(6,8,14,0.78); backdrop-filter:blur(3px); z-index:800;"></div>
+<div id="modalBackdrop" onclick="closeAllModals()" style="display:none; position:fixed; inset:0; background:rgba(6,8,14,0.78); backdrop-filter:blur(3px); z-index:800; cursor:pointer;"></div>
 
 <!-- Deep-Link Match Invite Confirmation Modal -->
 <div id="inviteModal" style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); width:90%; max-width:380px; background:#10131d; border:2px solid #00f0f0; box-shadow:0 0 35px rgba(0,240,240,0.35); border-radius:8px; z-index:900; font-family:'Segoe UI',system-ui,sans-serif; color:#ffffff; padding:18px; text-align:center;">
@@ -705,6 +705,12 @@
       const nameInput = document.getElementById('mpPlayerName');
       if (nameInput) nameInput.value = myPlayerName;
       refreshLobbyList();
+  }
+
+  function isAnyModalOpen() {
+      const modal = document.getElementById('multiplayerModal');
+      const inv = document.getElementById('inviteModal');
+      return (modal && modal.style.display !== 'none') || (inv && inv.style.display !== 'none');
   }
 
   function closeAllModals() {
@@ -1783,26 +1789,8 @@
   }
 
   function updateSpeedMotes() {
-      if (speedMotes.length < 25) {
-          speedMotes.push({
-              x: Math.random() * BOARD_W,
-              y: Math.random() * (H * CELL),
-              vy: 0.8 + Math.random() * 1.6,
-              vx: (Math.random() - 0.5) * 0.4,
-              size: 1.0 + Math.random() * 1.5,
-              alpha: 0.2 + Math.random() * 0.5,
-              hue: Math.random() > 0.5 ? '#00f0f0' : '#ffd700'
-          });
-      }
-      for (let i = speedMotes.length - 1; i >= 0; i--) {
-          let m = speedMotes[i];
-          m.y += m.vy;
-          m.x += m.vx + Math.sin(m.y * 0.05) * 0.2;
-          if (m.y > H * CELL) {
-              m.y = 0;
-              m.x = Math.random() * BOARD_W;
-          }
-      }
+      // Disabled per Mandate 11 / Directive 177: floating dust motes removed for visual clarity
+      speedMotes.length = 0;
   }
 
   let bag = [];
@@ -2268,6 +2256,10 @@
   // Interactive Skill Button Clicks, Menu Navigation, & Board Touch/Steering
   canvas.addEventListener('click', e => {
       dismissToast();
+      if (isAnyModalOpen()) {
+          closeAllModals();
+          return;
+      }
       const rect = canvas.getBoundingClientRect();
       const winW = window.innerWidth;
       const winH = window.innerHeight;
@@ -2458,6 +2450,25 @@
           showToast("Telemetry carrier aligned at 1999Hz [0x1999]", 3000);
           return;
       }
+      // Input Focus Isolation: Prevent typing in modal inputs from triggering game shortcuts
+      const isInputFocused = e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA');
+      if (isInputFocused) {
+          if (e.key === 'Escape') {
+              closeAllModals();
+              e.target.blur();
+              return;
+          }
+          if (e.key === 'Enter') return;
+          return;
+      }
+
+      // Modal Escape Key Dismissal (multiplayerModal / inviteModal)
+      if (e.key === 'Escape' && isAnyModalOpen()) {
+          e.preventDefault();
+          closeAllModals();
+          return;
+      }
+
       // Universal Quicksave (F5 / Ctrl+S)
       if (e.key === 'F5' || (e.ctrlKey && e.key.toLowerCase() === 's' && !e.altKey)) {
           e.preventDefault();
@@ -2974,42 +2985,7 @@
           ctx.fill();
       }
       
-      // Specular sheen sweep for active piece
-      if (drawState === 2 && colorIdx !== 14 && colorIdx !== 15) {
-          ctx.save();
-          ctx.beginPath();
-          ctx.rect(px + 1, py + 1, size - 2, size - 2);
-          ctx.clip();
-          
-          let reflectionOffset = (px * 0.5 + py * 0.5 + tick * 0.05) % (size * 3);
-          ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
-          ctx.beginPath();
-          ctx.moveTo(px - size + reflectionOffset, py - size);
-          ctx.lineTo(px + reflectionOffset, py - size);
-          ctx.lineTo(px - size + reflectionOffset + size * 2, py + size * 2);
-          ctx.lineTo(px - size * 2 + reflectionOffset + size * 2, py + size * 2);
-          ctx.fill();
-          ctx.restore();
-      }
-
-      // Glinting highlight animation for placed blocks (drawState === 0)
-      if (drawState === 0 && colorIdx !== 14 && colorIdx !== 15) {
-          let sweep = (tick * 0.15) % 3000;
-          let diag = px + py; 
-          if (sweep > diag - 30 && sweep < diag + 30) {
-              let intensity = Math.max(0, 1.0 - Math.abs(sweep - diag) / 30.0);
-              ctx.save();
-              ctx.fillStyle = `rgba(255, 255, 255, ${0.4 * intensity})`;
-              ctx.beginPath();
-              ctx.moveTo(px + 1, py + size - 1);
-              ctx.lineTo(px + size - 1, py + 1);
-              ctx.lineTo(px + size - 1, py + size / 2);
-              ctx.lineTo(px + size / 2, py + size - 1);
-              ctx.fill();
-              ctx.restore();
-          }
-      }
-
+      // Clean retro block bevel shading (traveling specular sheen sweep removed per Mandate 11 / Directive 177)
       ctx.restore();
   }
 
@@ -3738,14 +3714,7 @@
       ctx.arc(offX + BOARD_W - 4, offY + H * CELL - 4, 2, 0, Math.PI * 2);
       ctx.fill();
 
-      // Dynamic Speed Dust Motes
-      for (let m of speedMotes) {
-          ctx.fillStyle = m.hue;
-          ctx.globalAlpha = m.alpha;
-          ctx.beginPath();
-          ctx.arc(offX + m.x, offY + m.y, m.size, 0, Math.PI * 2);
-          ctx.fill();
-      }
+      // Speed dust motes removed per Mandate 11 / Directive 177
       ctx.restore();
 
       // Board blocks

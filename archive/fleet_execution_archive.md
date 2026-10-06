@@ -4,6 +4,14 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-06T14:44:00-07:00 — kilo-tester: KSnake (Interactive UI Audit, Map Editor Occlusion & Modal Isolation)**
+  - Status: PASS ✅ (3 issues, 3 fixed).
+  - Map Editor Layout: Restructured editor panel outside canvas wrapper to eliminate canvas occlusion; restored canvas drawing hit-tests and menu return.
+  - Modal Ergonomics & Isolation: Wired Escape dismissal for online duel and invite modals; isolated keyboard input from underlying menu shortcuts.
+  - Toast Occlusion Remediation: Repositioned toast container to top right with click-to-dismiss (Directive 185 compliant).
+  - Verification: `test_app_startup.py` PASS; `test_web_apps.js` PASS (106 interactive elements, 0 errors); MSVC clean (`KSnake.exe` 53.0 KB); Vite clean (333ms); security_lint 100% PASS.
+  - Queue: Advanced `kilo_tester` to `KTetris`; rotation advanced to `kilo-usability`.
+
 - **2026-10-06T14:22:00-07:00 — kilo-graphics: KQuest (Skip Turn — Mature Imagen 3 Assets & Glint/Dot Audit)**
   - Status: ⏭️ Skip — Imagen 3 asset replacement not appropriate for KQuest
   - Rationale: Mature custom art; all 12 backgrounds, 5 hero classes, 12 monsters, 5 NPCs, and 4 FX already fully generated and integrated.

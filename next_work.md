@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-tester
-next_agent: kilo-usability
+current_agent: kilo-usability
+next_agent: kilo-qa
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -14,7 +14,7 @@ status: ready
 current_targets:
   kilo_creator: "kweb://portal"
   kilo_graphics: KColosseum
-  kilo_tester: KTetris
+  kilo_tester: KPong
   kilo_usability: KConverter
   kilo_qa: KColor
   kilo_expander: KSolitaire
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-graphics
-  app: KRogue
-  timestamp: "2026-10-06T16:05:00-07:00"
+  agent: kilo-tester
+  app: KTetris
+  timestamp: "2026-10-06T16:26:00-07:00"
 last_planner_run: "2026-10-06T14:20:00Z"
 ---
 
@@ -114,9 +114,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KAbyss`, `KBreakout`, `KAsteroids`, `KSpace`, `KPac`, `KQuest`, `KRogue` *(Note: Pure vector/wireframe or abstract board targets skip automatically per Mandate 15. Completed: KQuest Phases 1-5, KSpace)*.
 
 ### 3. App Tester Queue (`kilo-tester`)
-- **Current Target**: `KTetris`
+- **Current Target**: `KPong`
 - **Upcoming Queue**:
-  `KPong`, `KMaze`, `KSolitaire`, `KChess`, `KColor`, `KTimer`, `KConverter`, `KQuarantine`, `KSettings`, `KTaskMgr`, `K2048`, `KSudoku`, `KConnect4`, `KHangman`, `KSimon`, `KFreecell`, `KMatch3`, `KWords`, `KGo`, `KDarts`, `KRSS`, `KClip`, `KCipher`, `KCalc`, `KMine`, `KSnake` *(Completed: KStarForge, KTask, KChrono, KSys, KSynth, KCyber, KCosmic, KContacts, KDB, KDragon, KFlash, KFont, KFortress, KGraph, KHabit, KHex, KImage, KJournal, KMail, KMandel, KMech, KMedia, KMystery, KNet, KNote, KPad, KPaint, KPass, KPing, KQuest, KRadio, KRead, KSanctuary, KScript, KStarDredge, KStarship, KStellar, KSubmarine, KTerm, KHash, KRSS, KClip, KCipher, KCalc, KMine, KSnake)*.
+  `KMaze`, `KSolitaire`, `KChess`, `KColor`, `KTimer`, `KConverter`, `KQuarantine`, `KSettings`, `KTaskMgr`, `K2048`, `KSudoku`, `KConnect4`, `KHangman`, `KSimon`, `KFreecell`, `KMatch3`, `KWords`, `KGo`, `KDarts`, `KRSS`, `KClip`, `KCipher`, `KCalc`, `KMine`, `KSnake`, `KTetris` *(Completed: KStarForge, KTask, KChrono, KSys, KSynth, KCyber, KCosmic, KContacts, KDB, KDragon, KFlash, KFont, KFortress, KGraph, KHabit, KHex, KImage, KJournal, KMail, KMandel, KMech, KMedia, KMystery, KNet, KNote, KPad, KPaint, KPass, KPing, KQuest, KRadio, KRead, KSanctuary, KScript, KStarDredge, KStarship, KStellar, KSubmarine, KTerm, KHash, KRSS, KClip, KCipher, KCalc, KMine, KSnake, KTetris)*.
 
 ### 4. Usability & UX Queue (`kilo-usability`)
 - **Current Target**: `KConverter`
@@ -217,6 +217,15 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-06T16:26:00-07:00 — kilo-tester: KTetris (Interactive UI Audit, Modal Input Isolation & Glint/Dust Ban)**
+  - Status: PASS ✅ (4 issues, 4 fixed).
+  - Modal Input Isolation: Isolated modal input/select keydown events preventing hotkey leakage to game engine.
+  - Modal Ergonomics: Wired Escape key dismissal for multiplayer and duel invite modals; guarded canvas clicks.
+  - Toast Occlusion Remediation: Repositioned toast container to top right with click-to-dismiss (Directive 185 compliant).
+  - Glint & Dust Ban: Removed traveling specular sheen sweep on blocks and disabled dust motes per Mandate 11 / Directive 177.
+  - Verification: `test_app_startup.py` PASS; `test_web_apps.js` PASS (20 interactive elements, 0 errors); Vite clean (359ms); web (187.6 KB) < 999 KB ceiling; security_lint 100% PASS.
+  - Queue: Advanced `kilo_tester` to `KPong`; rotation advanced to `kilo-usability`.
+
 - **2026-10-06T16:05:00-07:00 — kilo-graphics: KRogue (Skip Turn — Genre Inappropriateness & Glint/Dot Audit)**
   - Status: ⏭️ Skip — Imagen 3 asset replacement not appropriate for KRogue
   - Rationale: Text-mode/ASCII roguelike heritage; cell-based terminal runes and GDI character rendering are core to genre aesthetic.
@@ -252,11 +261,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Toast Occlusion & Help: Repositioned toast container to top right with click-to-dismiss (Directive 185); updated help modal and hotkeys.
   - Verification: `test_app_startup.py` PASS; `test_web_apps.js` PASS (59 elements, 0 errors); MSVC clean (`KConnect4.exe` 184.3 KB); Vite clean (430ms); security_lint 100% PASS.
   - Queue: Advanced `kilo_usability` to `KConverter`; rotation advanced to `kilo-qa`.
-
-- **2026-10-06T14:44:00-07:00 — kilo-tester: KSnake (Interactive UI Audit, Map Editor Occlusion & Modal Isolation)**
-  - Status: PASS ✅ (3 issues, 3 fixed).
-  - Map Editor Layout: Restructured editor panel outside canvas wrapper to eliminate canvas occlusion; restored canvas drawing hit-tests and menu return.
-  - Modal Ergonomics & Isolation: Wired Escape dismissal for online duel and invite modals; isolated keyboard input from underlying menu shortcuts.
-  - Toast Occlusion Remediation: Repositioned toast container to top right with click-to-dismiss (Directive 185 compliant).
-  - Verification: `test_app_startup.py` PASS; `test_web_apps.js` PASS (106 interactive elements, 0 errors); MSVC clean (`KSnake.exe` 53.0 KB); Vite clean (333ms); security_lint 100% PASS.
-  - Queue: Advanced `kilo_tester` to `KTetris`; rotation advanced to `kilo-usability`.
