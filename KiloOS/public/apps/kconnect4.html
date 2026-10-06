@@ -18,7 +18,7 @@
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
     margin: 0;
-    padding: 15px;
+    padding: 10px 15px;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -26,20 +26,20 @@
   }
   h1 {
     margin-top: 0;
-    margin-bottom: 8px;
+    margin-bottom: 4px;
     background: linear-gradient(135deg, #ff5252, #ffd700);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     text-shadow: 0 2px 10px rgba(0,0,0,0.5);
-    font-size: 1.8em;
+    font-size: 1.6em;
   }
   #status {
-    margin-bottom: 8px;
-    font-size: 1.1em;
+    margin-bottom: 6px;
+    font-size: 1.05em;
     font-weight: bold;
     color: #4fc3f7;
     text-shadow: 0 0 8px rgba(79,195,247,0.3);
-    min-height: 24px;
+    min-height: 22px;
   }
   #timerContainer {
     width: 380px;
@@ -69,7 +69,7 @@
       0 14px 28px rgba(0,0,0,0.6),
       0 0 0 5px #0a1738;
     border: 2px solid #3c6edb;
-    margin-bottom: 10px;
+    margin-bottom: 24px;
   }
   #boardWrapper::before, #boardWrapper::after {
     content: '';
@@ -131,14 +131,14 @@
   }
   #tableSurface {
     position: absolute;
-    bottom: -40px;
-    left: -15%;
-    width: 130%;
-    height: 80px;
+    bottom: -16px;
+    left: -6%;
+    width: 112%;
+    height: 28px;
     background: linear-gradient(to bottom, #8b4513 0%, #5c2e0b 100%);
-    border-top: 3px solid #a0522d;
-    border-radius: 50% / 30px 30px 0 0;
-    box-shadow: inset 0 5px 15px rgba(255,255,255,0.1), 0 15px 30px rgba(0,0,0,0.9);
+    border-top: 2px solid #a0522d;
+    border-radius: 8px 8px 4px 4px;
+    box-shadow: inset 0 2px 6px rgba(255,255,255,0.15), 0 8px 16px rgba(0,0,0,0.8);
     z-index: -1;
     pointer-events: none;
   }
@@ -310,18 +310,20 @@
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
-    gap: 6px;
-    margin-top: 8px;
-    max-width: 500px;
+    gap: 4px;
+    margin-top: 5px;
+    max-width: 560px;
+    position: relative;
+    z-index: 2;
   }
   button, select {
-    padding: 7px 12px;
+    padding: 5px 6px;
     background: #1f2a3e;
     color: #fff;
     border: 1px solid #3b4e70;
     border-radius: 6px;
     cursor: pointer;
-    font-size: 0.85em;
+    font-size: 0.79em;
     font-weight: 500;
     transition: all 0.2s ease;
   }
@@ -336,15 +338,15 @@
     box-shadow: 0 0 8px #4fc3f7;
   }
   #stats {
-    margin-top: 12px;
-    font-size: 0.82em;
+    margin-top: 8px;
+    font-size: 0.8em;
     color: #aaa;
     text-align: center;
-    line-height: 1.5;
+    line-height: 1.4;
   }
   #helpModal {
     display: none;
-    position: absolute;
+    position: fixed;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
@@ -354,8 +356,11 @@
     border-radius: 12px;
     border: 2px solid #3c6edb;
     box-shadow: 0 0 30px rgba(0,0,0,0.9);
-    z-index: 100;
-    max-width: 360px;
+    z-index: 120;
+    width: 90%;
+    max-width: 400px;
+    max-height: 85vh;
+    overflow-y: auto;
   }
   #helpModal h2 { margin-top: 0; color: #4fc3f7; }
   #helpModal ul { padding-left: 20px; font-size: 0.9em; }
@@ -491,35 +496,34 @@
     border: 1px solid #1f3666;
   }
 
-  /* Toast Notification System */
+  /* Toast Notification System - Safe non-occluding top-right position (Directive 185 compliant) */
   #toastContainer {
     position: fixed;
-    bottom: 22px;
-    left: 50%;
-    transform: translateX(-50%);
+    top: 8px;
+    right: 10px;
     z-index: 9999;
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 6px;
     pointer-events: none;
-    max-width: 90%;
+    max-width: 260px;
     width: max-content;
   }
   .toast {
     background: rgba(15, 30, 60, 0.95);
     border: 1px solid #3c6edb;
     color: #ffffff;
-    padding: 10px 18px;
-    border-radius: 8px;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.7), 0 0 12px rgba(60, 110, 219, 0.4);
-    font-size: 0.88em;
+    padding: 6px 12px;
+    border-radius: 6px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.7), 0 0 10px rgba(60, 110, 219, 0.4);
+    font-size: 0.78em;
     font-weight: 500;
     pointer-events: auto;
     cursor: pointer;
     animation: toastIn 0.25s ease-out;
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
     backdrop-filter: blur(4px);
     transition: opacity 0.2s, transform 0.2s;
   }
@@ -527,7 +531,7 @@
   .toast.warning { border-color: #ffd700; box-shadow: 0 8px 24px rgba(0,0,0,0.7), 0 0 12px rgba(255,215,0,0.4); }
   .toast.info { border-color: #00e5ff; box-shadow: 0 8px 24px rgba(0,0,0,0.7), 0 0 12px rgba(0,229,255,0.4); }
   @keyframes toastIn {
-    from { opacity: 0; transform: translateY(12px) scale(0.95); }
+    from { opacity: 0; transform: translateY(-8px) scale(0.95); }
     to { opacity: 1; transform: translateY(0) scale(1); }
   }
 
@@ -793,7 +797,7 @@
   <div id="modalBackdrop" class="modal-backdrop" onclick="closeAllModals()"></div>
   <div id="toastContainer"></div>
   <h1>KConnect4</h1>
-  <div style="font-size: 0.95em; color: #ffeb3b; margin-bottom: 6px; font-weight: bold; text-shadow: 0 1px 3px rgba(0,0,0,0.8); text-align: center;">Press [F1/H] for Help &bull; Keys [1-7] to Drop &bull; [B/D/M/F] Skills</div>
+  <div style="font-size: 0.85em; color: #ffeb3b; margin-bottom: 4px; font-weight: bold; text-shadow: 0 1px 3px rgba(0,0,0,0.8); text-align: center; max-width: 440px;">[F1/H] Help &bull; Keys [1-7] Drop &bull; [B/D/M/F] Skills</div>
   <div id="status">Player 1's turn (Red)</div>
   <div id="evalBarWrapper">
     <div class="eval-header">
@@ -893,23 +897,28 @@
   </div>
   
   <div id="helpModal">
-    <h2>KConnect4 - Loop 7</h2>
+    <h2>KConnect4 - Help &amp; Controls</h2>
     <p><strong>Rules:</strong> Connect 4 discs vertically, horizontally, or diagonally!</p>
-    <p><strong>Campaign Mode:</strong> 20 Stages with dynamic grid sizes (7x6 to 10x8) and 4 AI Personalities (Rookie, Aggressive, Trapper, Grandmaster Minimax)!</p>
-    <p><strong>Special Discs:</strong></p>
+    <p><strong>Game Modes:</strong> vs AI, 2-Player Local, 20-Stage Campaign (7x6 to 10x8), and Speed Blitz.</p>
+    <p><strong>Controls &amp; Hotkeys:</strong></p>
     <ul>
-      <li><strong>Bomb (B):</strong> Explodes 3x3 surrounding cells.</li>
-      <li><strong>Drill/Anvil (D):</strong> Crushes cell directly underneath.</li>
-      <li><strong>Magnet (M):</strong> Pulls friendly discs from adjacent columns.</li>
+      <li><strong>[1-7] / Numpad / Click:</strong> Drop piece in column</li>
+      <li><strong>[B] Bomb:</strong> Explodes 3x3 surrounding cells</li>
+      <li><strong>[D] Drill:</strong> Crushes cell directly underneath</li>
+      <li><strong>[M] Magnet:</strong> Pulls friendly discs from adjacent columns</li>
+      <li><strong>[F] Freeze:</strong> Freezes selected column for 2 turns</li>
+      <li><strong>[T] AI Hint:</strong> Highlights recommended column</li>
+      <li><strong>[U] Undo:</strong> Reverts last turn pair</li>
+      <li><strong>[V] Mode:</strong> Cycles game mode</li>
+      <li><strong>[O] Online:</strong> Open multiplayer lobby &amp; room browser</li>
+      <li><strong>[N] Notation:</strong> View C4N move sequence &amp; FEN position</li>
+      <li><strong>[R] Reset / Rematch:</strong> Restart board or ask online rematch</li>
+      <li><strong>[P] Mute:</strong> Toggle sound effects</li>
+      <li><strong>[F5 / Ctrl+S] Save:</strong> Quick-save game state</li>
+      <li><strong>[F9 / Ctrl+O] Load:</strong> Quick-load saved game</li>
+      <li><strong>[Esc]:</strong> Close dialogs / cancel skill selection</li>
     </ul>
-    <p><strong>Active Skills:</strong></p>
-    <ul>
-      <li><strong>AI Hint (T):</strong> Highlights best move column.</li>
-      <li><strong>Undo Move (U):</strong> Reverts last turn pair.</li>
-      <li><strong>Column Freeze (F):</strong> Freezes opponent column for 2 turns.</li>
-      <li><strong>Notation & Match Analysis (N):</strong> View C4N move sequence, FEN string, and load custom positions.</li>
-    </ul>
-    <button class="close" onclick="toggleHelp()">Close</button>
+    <button class="close" onclick="toggleHelp()">Close [Esc]</button>
   </div>
 
   <div id="notationModal">
@@ -3822,39 +3831,10 @@
       const w = fxCanvas.clientWidth || 400;
       fxCtx.clearRect(0, 0, w, h);
 
-      // --- Background Floating Dust Motes ---
-      if (dustMotes.length === 0) initDustMotes();
-      fxCtx.fillStyle = '#ffffff';
-      dustMotes.forEach(m => {
-        m.x += m.vx; m.y += m.vy;
-        if (m.x < 0) m.x = w; if (m.x > w) m.x = 0;
-        if (m.y < 0) m.y = h; if (m.y > h) m.y = 0;
-        fxCtx.globalAlpha = m.alpha * (0.6 + Math.sin(Date.now()*0.002 + m.x)*0.4);
-        fxCtx.beginPath();
-        fxCtx.arc(m.x, m.y, m.size, 0, Math.PI*2);
-        fxCtx.fill();
-      });
-      fxCtx.globalAlpha = 1.0;
-
-      // --- Pulsating Golden/Cyan Perimeter Inlay Border ---
-      const now = Date.now();
-      const pulseAlpha = 0.4 + Math.sin(now * 0.003) * 0.2;
-      fxCtx.strokeStyle = `rgba(79, 195, 247, ${pulseAlpha})`;
+      // --- Clean Static Perimeter Inlay Border (Mandate 11 compliant: 0 traveling dots/glints) ---
+      fxCtx.strokeStyle = 'rgba(79, 195, 247, 0.45)';
       fxCtx.lineWidth = 1.5;
       fxCtx.strokeRect(6, 6, w - 12, h - 12);
-
-      // --- Diagonal Specular Sheen Sweep across playfield ---
-      fxCtx.save();
-      const sweepPeriod = 6000;
-      const sweepProgress = (now % sweepPeriod) / sweepPeriod;
-      const sweepX = -100 + sweepProgress * (w + h + 200);
-      const sweepGrad = fxCtx.createLinearGradient(sweepX, 0, sweepX + 60, 60);
-      sweepGrad.addColorStop(0, 'rgba(255, 255, 255, 0)');
-      sweepGrad.addColorStop(0.5, 'rgba(255, 255, 255, 0.08)');
-      sweepGrad.addColorStop(1, 'rgba(255, 255, 255, 0)');
-      fxCtx.fillStyle = sweepGrad;
-      fxCtx.fillRect(0, 0, w, h);
-      fxCtx.restore();
 
       // --- Ornate Cybernetic / Arcade HUD Corner Filigree L-Brackets with Brass Rivets ---
       const cornerSize = 22;
@@ -4263,8 +4243,6 @@
     initGame();
     resizeFxCanvas();
     requestAnimationFrame(renderFx);
-
-    let pendingInviteRoom = null;
 
     function showInvitePrompt(code) {
       pendingInviteRoom = code;

@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-qa
+current_agent: kilo-qa
+next_agent: kilo-expander
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -15,7 +15,7 @@ current_targets:
   kilo_creator: "kweb://darknet"
   kilo_graphics: KRogue
   kilo_tester: KTetris
-  kilo_usability: KConnect4
+  kilo_usability: KConverter
   kilo_qa: KChess
   kilo_expander: KColosseum
 virtual_web_target: "kweb://darknet"
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-tester
-  app: KSnake
-  timestamp: "2026-10-06T14:44:00-07:00"
+  agent: kilo-usability
+  app: KConnect4
+  timestamp: "2026-10-06T14:57:00-07:00"
 last_planner_run: "2026-10-06T14:20:00Z"
 ---
 
@@ -119,9 +119,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KPong`, `KMaze`, `KSolitaire`, `KChess`, `KColor`, `KTimer`, `KConverter`, `KQuarantine`, `KSettings`, `KTaskMgr`, `K2048`, `KSudoku`, `KConnect4`, `KHangman`, `KSimon`, `KFreecell`, `KMatch3`, `KWords`, `KGo`, `KDarts`, `KRSS`, `KClip`, `KCipher`, `KCalc`, `KMine`, `KSnake` *(Completed: KStarForge, KTask, KChrono, KSys, KSynth, KCyber, KCosmic, KContacts, KDB, KDragon, KFlash, KFont, KFortress, KGraph, KHabit, KHex, KImage, KJournal, KMail, KMandel, KMech, KMedia, KMystery, KNet, KNote, KPad, KPaint, KPass, KPing, KQuest, KRadio, KRead, KSanctuary, KScript, KStarDredge, KStarship, KStellar, KSubmarine, KTerm, KHash, KRSS, KClip, KCipher, KCalc, KMine, KSnake)*.
 
 ### 4. Usability & UX Queue (`kilo-usability`)
-- **Current Target**: `KConnect4`
+- **Current Target**: `KConverter`
 - **Upcoming Queue**:
-  `KConverter`, `KFreecell`, `KHangman`, `KMatch3`, `KPong`, `KSettings`, `KSimon`, `KSnake`, `KSolitaire`, `KSudoku`, `KTetris`, `KWords`, `KBBS`, `KCalendar`, `KChess` *(Completed: KCalc, KPomodoro, KTimer, KClock, KHash, KMystery, KMandel, KFont, KPing, KAudio, KSynth, KScript, KRead, KRadio, KSys, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KChrono, KTask, KStarForge, KPad, KBookmark, KRSS, KClip, KHex, KHabit, KFarm, KPaint, KGraph, KImage, KJournal, KMail, KMedia, KNet, KNote, KPass, KMine, KBBS, KCalendar, KChart, KColor, KChess)*.
+  `KFreecell`, `KHangman`, `KMatch3`, `KPong`, `KSettings`, `KSimon`, `KSnake`, `KSolitaire`, `KSudoku`, `KTetris`, `KWords`, `KBBS`, `KCalendar`, `KChess` *(Completed: KCalc, KPomodoro, KTimer, KClock, KHash, KMystery, KMandel, KFont, KPing, KAudio, KSynth, KScript, KRead, KRadio, KSys, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KChrono, KTask, KStarForge, KPad, KBookmark, KRSS, KClip, KHex, KHabit, KFarm, KPaint, KGraph, KImage, KJournal, KMail, KMedia, KNet, KNote, KPass, KMine, KBBS, KCalendar, KChart, KColor, KChess, KConnect4)*.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
 - **Current Target**: `KChess`
@@ -217,6 +217,16 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-06T14:57:00-07:00 — kilo-usability: KConnect4 (UI/UX, Layout De-occlusion, Glint Ban & SyntaxError Remediation)**
+  - Status: PASS ✅ (0 regressions, 163.6 KB web / 184.3 KB native < 999 KB ceiling).
+  - SyntaxError Fix: Removed duplicate `pendingInviteRoom` declaration unblocking page script and board DOM rendering.
+  - Layout & Stand De-occlusion: Restructured `#tableSurface` base stand and tuned `#boardWrapper` margin (24px) eliminating button occlusion.
+  - Single-Line Ergonomics: Compacted controls-row width and button padding; all 3 button strips align on single lines without wrapping.
+  - Glint & Dust Ban: Removed traveling specular sheen sweep and floating dust motes per Mandate 11 / Directive 177; kept static brass filigree.
+  - Toast Occlusion & Help: Repositioned toast container to top right with click-to-dismiss (Directive 185); updated help modal and hotkeys.
+  - Verification: `test_app_startup.py` PASS; `test_web_apps.js` PASS (59 elements, 0 errors); MSVC clean (`KConnect4.exe` 184.3 KB); Vite clean (430ms); security_lint 100% PASS.
+  - Queue: Advanced `kilo_usability` to `KConverter`; rotation advanced to `kilo-qa`.
+
 - **2026-10-06T14:44:00-07:00 — kilo-tester: KSnake (Interactive UI Audit, Map Editor Occlusion & Modal Isolation)**
   - Status: PASS ✅ (3 issues, 3 fixed).
   - Map Editor Layout: Restructured editor panel outside canvas wrapper to eliminate canvas occlusion; restored canvas drawing hit-tests and menu return.
@@ -250,12 +260,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Custom Configuration: Built custom grid dialog (8-30 cols, 8-24 rows, 1-180 mines) with dynamic density validation and presets.
   - Verification: `test_app_startup.py` PASS; `test_web_apps.js` PASS (107/107 apps, 0 errors); MSVC clean (`KMine.exe` 26.5 KB); Vite clean (327ms).
   - Queue: Advanced `kilo_expander` to `KColosseum`; rotation advanced to `kilo-creator`.
-
-- **2026-10-06T13:45:00-07:00 — kilo-qa: KPac (Pass 5: Tutorial & State Integrity, Modal Ergonomics & Build Audit)**
-  - Status: PASS ✅ (0 regressions, 131.5 KB web / 50.0 KB native < 999 KB ceiling).
-  - State Persistence: Hardened [F5/F9] in web and Win32 C (`kpac_save.dat`) preserving full board tiles, player, ghosts, skills, traps, and boss state.
-  - Tutorial Integrity: Gated first-run prompt behind `kpac_tutorialSeen` / `kpac_tut.dat`; restored saves bypass tutorial.
-  - Overlays & Ergonomics: Fixed `speedCooldown` & `shieldCooldown` load bug; wired Esc, Enter, Space across help, forge, and game over overlays.
-  - Toast Occlusion Remediation: Repositioned toast container below toolbar with click-to-dismiss (Directive 185 compliant).
-  - Verification: `test_app_startup.py` PASS; `test_web_apps.js` PASS (43 elements, 0 errors); MSVC clean (`KPac.exe` 50.0 KB); Vite clean (330ms); security_lint 100% PASS.
-  - Queue: Advanced `kilo_qa` to `KChess`; rotation advanced to `kilo-expander`.

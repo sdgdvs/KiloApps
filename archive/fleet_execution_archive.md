@@ -4,6 +4,15 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-06T13:45:00-07:00 — kilo-qa: KPac (Pass 5: Tutorial & State Integrity, Modal Ergonomics & Build Audit)**
+  - Status: PASS ✅ (0 regressions, 131.5 KB web / 50.0 KB native < 999 KB ceiling).
+  - State Persistence: Hardened [F5/F9] in web and Win32 C (`kpac_save.dat`) preserving full board tiles, player, ghosts, skills, traps, and boss state.
+  - Tutorial Integrity: Gated first-run prompt behind `kpac_tutorialSeen` / `kpac_tut.dat`; restored saves bypass tutorial.
+  - Overlays & Ergonomics: Fixed `speedCooldown` & `shieldCooldown` load bug; wired Esc, Enter, Space across help, forge, and game over overlays.
+  - Toast Occlusion Remediation: Repositioned toast container below toolbar with click-to-dismiss (Directive 185 compliant).
+  - Verification: `test_app_startup.py` PASS; `test_web_apps.js` PASS (43 elements, 0 errors); MSVC clean (`KPac.exe` 50.0 KB); Vite clean (330ms); security_lint 100% PASS.
+  - Queue: Advanced `kilo_qa` to `KChess`; rotation advanced to `kilo-expander`.
+
 - **2026-10-06T13:28:00-07:00 — kilo-usability: KChess (UI/UX, Responsive HiDPI Canvas, UTF-8 Encoding & Toast Occlusion)**
   - Status: PASS ✅ (0 regressions, 172.4 KB web / 53.8 KB native < 999 KB ceiling).
   - Mojibake & Encoding: Added `<meta charset="UTF-8">` and viewport meta tags; eliminated mojibake across symbols and menus.
