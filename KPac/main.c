@@ -708,8 +708,8 @@ void LoadGame() {
         score = st.score; level = st.level; lives = st.lives; diffMode = st.diffMode;
         frightTimer = st.frightTimer; freezeSkillTimer = st.freezeSkillTimer; speedSkillTimer = st.speedSkillTimer;
         magnetSkillTimer = st.magnetSkillTimer; shieldActive = st.shieldActive; shieldHits = st.shieldHits;
-        freezeCooldown = st.freezeCooldown; speedCooldown = speedCooldown;
-        magnetCooldown = st.magnetCooldown; shieldCooldown = shieldCooldown;
+        freezeCooldown = st.freezeCooldown; speedCooldown = st.speedCooldown;
+        magnetCooldown = st.magnetCooldown; shieldCooldown = st.shieldCooldown;
         bossHp = st.bossHp;
         dotCount = st.dotCount; frameCount = st.frameCount;
         fruitActive = st.fruitActive; fruitTimer = st.fruitTimer; gameOver = st.gameOver;
@@ -720,6 +720,8 @@ void LoadGame() {
         relicAegis = st.relicAegis; relicStone = st.relicStone;
         petActive = st.petActive; petType = st.petType; petLevel = st.petLevel; petExp = st.petExp;
         paused = 0;
+        showHelp = 0;
+        showCraftMenu = 0;
         lstrcpyA(saveMsgText, "GAME LOADED");
         saveMsgTimer = 20;
         MessageBeep(MB_OK);
@@ -1900,6 +1902,20 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             Init(0);
             randSeed = GetTickCount();
             SetTimer(hwnd, 1, 100, NULL);
+            {
+                HANDLE hTut = CreateFileA("kpac_tut.dat", GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+                HANDLE hSave = CreateFileA("kpac_save.dat", GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+                int hasSave = (hSave != INVALID_HANDLE_VALUE);
+                if (hSave != INVALID_HANDLE_VALUE) CloseHandle(hSave);
+
+                if (hTut == INVALID_HANDLE_VALUE && !hasSave) {
+                    showHelp = 1;
+                    HANDLE hTutOut = CreateFileA("kpac_tut.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+                    if (hTutOut != INVALID_HANDLE_VALUE) CloseHandle(hTutOut);
+                } else {
+                    if (hTut != INVALID_HANDLE_VALUE) CloseHandle(hTut);
+                }
+            }
             lstrcpyA(saveMsgText, "WELCOME! [F1: HELP]");
             saveMsgTimer = 35;
             break;
@@ -2064,8 +2080,19 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (key == bindSkill3) { if (replayMode == 1 && replayCount < 9999) { replays[replayCount++] = (ReplayEvent){frameCount, 7}; } TriggerMagnetSkill(); }
             if (key == bindSkill4) { if (replayMode == 1 && replayCount < 9999) { replays[replayCount++] = (ReplayEvent){frameCount, 8}; } TriggerShieldSkill(); }
 
-            if (key == VK_RETURN && gameOver) Init(0);
-            if (key == VK_SPACE) paused = !paused;
+            if (key == VK_RETURN) {
+                if (showHelp) { showHelp = 0; InvalidateRect(hwnd, NULL, FALSE); return 0; }
+                if (showCraftMenu) { showCraftMenu = 0; InvalidateRect(hwnd, NULL, FALSE); return 0; }
+                if (gameOver) { Init(0); InvalidateRect(hwnd, NULL, FALSE); return 0; }
+            }
+            if (key == VK_SPACE) {
+                if (showHelp) { showHelp = 0; InvalidateRect(hwnd, NULL, FALSE); return 0; }
+                if (showCraftMenu) { showCraftMenu = 0; InvalidateRect(hwnd, NULL, FALSE); return 0; }
+                if (gameOver) { Init(0); InvalidateRect(hwnd, NULL, FALSE); return 0; }
+                paused = !paused;
+                InvalidateRect(hwnd, NULL, FALSE);
+                return 0;
+            }
             if (key == '1') { diffMode = 0; lstrcpyA(saveMsgText, "DIFF: EASY"); saveMsgTimer = 20; MessageBeep(MB_OK); }
             if (key == '2') { diffMode = 1; lstrcpyA(saveMsgText, "DIFF: NORMAL"); saveMsgTimer = 20; MessageBeep(MB_OK); }
             if (key == '3') { diffMode = 2; lstrcpyA(saveMsgText, "DIFF: HARD"); saveMsgTimer = 20; MessageBeep(MB_OK); }

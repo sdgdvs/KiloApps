@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-creator
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -16,7 +16,7 @@ current_targets:
   kilo_graphics: KQuest
   kilo_tester: KSnake
   kilo_usability: KConnect4
-  kilo_qa: KPac
+  kilo_qa: KChess
   kilo_expander: KMine
 virtual_web_target: "kweb://deep-core"
 virtual_web_rotation:
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-usability
-  app: KChess
-  timestamp: "2026-10-06T13:28:00-07:00"
+  agent: kilo-qa
+  app: KPac
+  timestamp: "2026-10-06T13:45:00-07:00"
 last_planner_run: "2026-10-06T14:20:00Z"
 ---
 
@@ -124,9 +124,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KConverter`, `KFreecell`, `KHangman`, `KMatch3`, `KPong`, `KSettings`, `KSimon`, `KSnake`, `KSolitaire`, `KSudoku`, `KTetris`, `KWords`, `KBBS`, `KCalendar`, `KChess` *(Completed: KCalc, KPomodoro, KTimer, KClock, KHash, KMystery, KMandel, KFont, KPing, KAudio, KSynth, KScript, KRead, KRadio, KSys, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KChrono, KTask, KStarForge, KPad, KBookmark, KRSS, KClip, KHex, KHabit, KFarm, KPaint, KGraph, KImage, KJournal, KMail, KMedia, KNet, KNote, KPass, KMine, KBBS, KCalendar, KChart, KColor, KChess)*.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
-- **Current Target**: `KPac`
+- **Current Target**: `KChess`
 - **Upcoming Queue**:
-  `KChess`, `KColor`, `KConverter`, `KQuarantine`, `KSettings`, `KTaskMgr`, `KHabit`, `KSudoku`, `KConnect4`, `KHangman`, `KSimon`, `KAsteroids`, `KFreecell`, `KMatch3`, `KWords`, `KGo`, `KDarts`, `KTowers`, `KReversi`, `KAlchemy`, `KColony`, `KStarForge`, `KBreakout`, `KRogue`, `KTetris`, `KPong` *(Completed in Pass 5: KBBS, KChrono, KCipher, KClip, KCyber, KDragon, KFortress, KHash, KMaze, KMech, KMystery, KQuest, KSanctuary, KSnake, KSolitaire, KSpace, KStarDredge, KStarship, KStellar, KSubmarine, KSynth, KSys, KTask, KTerm, KTimer, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KRSS, K2048, KChart, KGraph, KContacts, KScript, KRead, KColosseum, KAbyss, KMedia, KAudio, KRadio, KPad, KPaint, KCalc, KMine, KCosmic, KBase, KBudget, KCalendar, KFarm, KFlash, KFont, KImage, KJournal, KMail, KMandel, KNet, KNote, KPass, KDB, KHex, KBookmark, KPing, KChat, KClock, KPomodoro, KBreakout, KRogue, KTetris, KPong)*.
+  `KColor`, `KConverter`, `KQuarantine`, `KSettings`, `KTaskMgr`, `KHabit`, `KSudoku`, `KConnect4`, `KHangman`, `KSimon`, `KAsteroids`, `KFreecell`, `KMatch3`, `KWords`, `KGo`, `KDarts`, `KTowers`, `KReversi`, `KAlchemy`, `KColony`, `KStarForge`, `KBreakout`, `KRogue`, `KTetris`, `KPong`, `KPac` *(Completed in Pass 5: KBBS, KChrono, KCipher, KClip, KCyber, KDragon, KFortress, KHash, KMaze, KMech, KMystery, KQuest, KSanctuary, KSnake, KSolitaire, KSpace, KStarDredge, KStarship, KStellar, KSubmarine, KSynth, KSys, KTask, KTerm, KTimer, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KRSS, K2048, KChart, KGraph, KContacts, KScript, KRead, KColosseum, KAbyss, KMedia, KAudio, KRadio, KPad, KPaint, KCalc, KMine, KCosmic, KBase, KBudget, KCalendar, KFarm, KFlash, KFont, KImage, KJournal, KMail, KMandel, KNet, KNote, KPass, KDB, KHex, KBookmark, KPing, KChat, KClock, KPomodoro, KBreakout, KRogue, KTetris, KPong, KPac)*.
 
 ### 6. Feature Expander Queue (`kilo-expander`)
 - **Current Target**: `KMine`
@@ -217,6 +217,15 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-06T13:45:00-07:00 — kilo-qa: KPac (Pass 5: Tutorial & State Integrity, Modal Ergonomics & Build Audit)**
+  - Status: PASS ✅ (0 regressions, 131.5 KB web / 50.0 KB native < 999 KB ceiling).
+  - State Persistence: Hardened [F5/F9] in web and Win32 C (`kpac_save.dat`) preserving full board tiles, player, ghosts, skills, traps, and boss state.
+  - Tutorial Integrity: Gated first-run prompt behind `kpac_tutorialSeen` / `kpac_tut.dat`; restored saves bypass tutorial.
+  - Overlays & Ergonomics: Fixed `speedCooldown` & `shieldCooldown` load bug; wired Esc, Enter, Space across help, forge, and game over overlays.
+  - Toast Occlusion Remediation: Repositioned toast container below toolbar with click-to-dismiss (Directive 185 compliant).
+  - Verification: `test_app_startup.py` PASS; `test_web_apps.js` PASS (43 elements, 0 errors); MSVC clean (`KPac.exe` 50.0 KB); Vite clean (330ms); security_lint 100% PASS.
+  - Queue: Advanced `kilo_qa` to `KChess`; rotation advanced to `kilo-expander`.
+
 - **2026-10-06T13:28:00-07:00 — kilo-usability: KChess (UI/UX, Responsive HiDPI Canvas, UTF-8 Encoding & Toast Occlusion)**
   - Status: PASS ✅ (0 regressions, 172.4 KB web / 53.8 KB native < 999 KB ceiling).
   - Mojibake & Encoding: Added `<meta charset="UTF-8">` and viewport meta tags; eliminated mojibake across symbols and menus.
@@ -252,12 +261,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - ARG & Mystery Preservation: Sanitized pre-climax text per TINAG rule; 0 trademarks.
   - Verification: `npm run build` clean (324ms); `security_lint.py` 100% PASS; web (294.6 KB) < 999 KB.
   - Queue: Advanced `kilo_creator` & `virtual_web_target` to `kweb://deep-core`; rotation advanced to `kilo-graphics`.
-
-- **2026-10-06T12:35:00-07:00 — kilo-expander: KCalc (Calculus & Numerical Solver, Matrix/Vector Algebra Modes & Markdown Tape)**
-  - Status: PASS ✅ (0 regressions, 194.8 KB web / 28.0 KB native < 999 KB ceiling).
-  - Expanded Modes: Added Numerical Calculus & Solvers (Definite integration, 5-point differentiation, Newton-Raphson & polynomial root solving).
-  - Linear Algebra: Added 2x2/3x3 Matrix tools (det, inverse, transpose, trace, products, eigenvalues) and 3D Vector operations (dot, cross, projection).
-  - Scientific Keypad: Integrated dynamic Hyperbolic trig mode (`HYP`) and expanded function strip (`nCr`, `nPr`, `gcd`, `lcm`, `sgn`, `root`, `logBase`).
-  - Tape & Annotation: Added thermal paper receipt roll modal, calculation note editing, and Markdown table export.
-  - Verification: `test_web_apps.js` PASS (107/107 apps, 0 errors); Vite clean (311ms); security_lint 100% PASS; MSVC clean (`KCalc.exe` 28.0 KB).
-  - Queue: Advanced `kilo_expander` to `KMine`; rotation advanced to `kilo-creator`.

@@ -4,6 +4,15 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-06T12:35:00-07:00 — kilo-expander: KCalc (Calculus & Numerical Solver, Matrix/Vector Algebra Modes & Markdown Tape)**
+  - Status: PASS ✅ (0 regressions, 194.8 KB web / 28.0 KB native < 999 KB ceiling).
+  - Expanded Modes: Added Numerical Calculus & Solvers (Definite integration, 5-point differentiation, Newton-Raphson & polynomial root solving).
+  - Linear Algebra: Added 2x2/3x3 Matrix tools (det, inverse, transpose, trace, products, eigenvalues) and 3D Vector operations (dot, cross, projection).
+  - Scientific Keypad: Integrated dynamic Hyperbolic trig mode (`HYP`) and expanded function strip (`nCr`, `nPr`, `gcd`, `lcm`, `sgn`, `root`, `logBase`).
+  - Tape & Annotation: Added thermal paper receipt roll modal, calculation note editing, and Markdown table export.
+  - Verification: `test_web_apps.js` PASS (107/107 apps, 0 errors); Vite clean (311ms); security_lint 100% PASS; MSVC clean (`KCalc.exe` 28.0 KB).
+  - Queue: Advanced `kilo_expander` to `KMine`; rotation advanced to `kilo-creator`.
+
 - **2026-10-06T12:10:00-07:00 — kilo-qa: KPong (Pass 5: Tutorial & State Integrity, Modal Ergonomics & Build Audit)**
   - Status: PASS ✅ (0 regressions, 121.1 KB web / 44.5 KB native < 999 KB ceiling).
   - State Persistence: Hardened [F5/F9] in web and Win32 C (`kpong_save.dat`) preserving hazards, boss, powerups, paddles, and cooldowns.

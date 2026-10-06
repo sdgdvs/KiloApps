@@ -169,17 +169,18 @@
     color: #030611;
   }
 
-  /* Toast notification system */
+  /* Toast notification system - Positioned safely below header toolbar to prevent button occlusion */
   .toast-container {
     position: absolute;
-    top: 8px;
+    top: 42px;
     left: 50%;
     transform: translateX(-50%);
     z-index: 1000;
     display: flex;
     flex-direction: column;
     gap: 6px;
-    width: 90%;
+    width: 88%;
+    max-width: 290px;
     pointer-events: none;
   }
   .toast-card {
@@ -1008,7 +1009,23 @@
       if (document.getElementById('btnRelicStone')) document.getElementById('btnRelicStone').textContent = relicStone ? 'Forged ✔' : 'Forge [9]';
   }
 
+  const TUTORIAL_KEY = 'kpac_tutorialSeen';
+  function isTutorialSeen() {
+      try {
+          return localStorage.getItem(TUTORIAL_KEY) === '1';
+      } catch(e) { return true; }
+  }
+  function setTutorialSeen() {
+      try {
+          localStorage.setItem(TUTORIAL_KEY, '1');
+      } catch(e) {}
+  }
+
   function togglePause() {
+      if (gameOver) {
+          init(false);
+          return;
+      }
       paused = !paused;
       const btn = document.getElementById('btnPause');
       if (btn) btn.textContent = paused ? 'Resume [Space]' : 'Pause [Space]';
@@ -1025,6 +1042,7 @@
           const btn = document.getElementById('btnPause');
           if (btn) btn.textContent = 'Resume [Space]';
       }
+      setTutorialSeen();
   }
 
   function toggleCraftModal(show) {
@@ -1078,7 +1096,17 @@
               score, highScore, level, endlessWave, endlessHighWave, lives, diffMode, gameMode,
               craftEctoplasm, craftFruitEssence, craftStarDust,
               relicCrown, relicHourglass, relicOrb, relicAegis, relicStone,
-              petType, petLevel
+              petActive, petType, petLevel, petExp, petX, petY, petCooldown, petBurstTimer,
+              px, py, pdx, pdy, ndx, ndy, playerSlowTimer,
+              shieldActive, shieldHits, shieldCooldown,
+              ghosts, numGhosts, dotCount, frameCount,
+              freezeSkillTimer, freezeCooldown, speedSkillTimer, speedCooldown,
+              magnetSkillTimer, magnetCooldown,
+              frightTimer, fruitActive, fruitTimer,
+              vipX, vipY, vipActive,
+              bossHp, bossMaxHp, phantomSpawnTimer,
+              sludgeTraps,
+              map
           };
           localStorage.setItem('kpac_quicksave', JSON.stringify(saveState));
           saveHighScore();
@@ -1102,7 +1130,7 @@
           level = s.level || 1;
           endlessWave = s.endlessWave || 1;
           endlessHighWave = Math.max(endlessHighWave, s.endlessHighWave || 1);
-          lives = s.lives || 3;
+          lives = s.lives !== undefined ? s.lives : 3;
           diffMode = s.diffMode !== undefined ? s.diffMode : 1;
           gameMode = s.gameMode || 0;
           craftEctoplasm = s.craftEctoplasm || 0;
@@ -1113,9 +1141,59 @@
           relicOrb = s.relicOrb || 0;
           relicAegis = s.relicAegis || 0;
           relicStone = s.relicStone || 0;
+          petActive = s.petActive !== undefined ? s.petActive : 1;
           petType = s.petType || 0;
           petLevel = s.petLevel || 1;
-          init(true);
+          petExp = s.petExp || 0;
+          petCooldown = s.petCooldown || 0;
+          petBurstTimer = s.petBurstTimer || 0;
+          freezeSkillTimer = s.freezeSkillTimer || 0;
+          freezeCooldown = s.freezeCooldown || 0;
+          speedSkillTimer = s.speedSkillTimer || 0;
+          speedCooldown = s.speedCooldown || 0;
+          magnetSkillTimer = s.magnetSkillTimer || 0;
+          magnetCooldown = s.magnetCooldown || 0;
+          shieldActive = s.shieldActive !== undefined ? s.shieldActive : (relicAegis ? 1 : 0);
+          shieldHits = s.shieldHits !== undefined ? s.shieldHits : (relicAegis ? 3 : 0);
+          shieldCooldown = s.shieldCooldown || 0;
+
+          if (s.map && Array.isArray(s.map) && s.map.length === ROWS) {
+              map = s.map.map(row => [...row]);
+              px = s.px !== undefined ? s.px : 7;
+              py = s.py !== undefined ? s.py : 12;
+              pdx = s.pdx || 0; pdy = s.pdy || 0;
+              ndx = s.ndx || 0; ndy = s.ndy || 0;
+              playerSlowTimer = s.playerSlowTimer || 0;
+              petX = s.petX !== undefined ? s.petX : px;
+              petY = s.petY !== undefined ? s.petY : py;
+              if (Array.isArray(s.ghosts) && s.ghosts.length > 0) {
+                  ghosts = s.ghosts.map(g => ({...g}));
+              }
+              numGhosts = s.numGhosts || ghosts.length;
+              dotCount = s.dotCount !== undefined ? s.dotCount : dotCount;
+              frightTimer = s.frightTimer || 0;
+              fruitActive = s.fruitActive || 0;
+              fruitTimer = s.fruitTimer || 0;
+              vipX = s.vipX || 7;
+              vipY = s.vipY || 7;
+              vipActive = s.vipActive || 0;
+              bossHp = s.bossHp !== undefined ? s.bossHp : 8;
+              bossMaxHp = s.bossMaxHp !== undefined ? s.bossMaxHp : 8;
+              phantomSpawnTimer = s.phantomSpawnTimer || 0;
+              sludgeTraps = Array.isArray(s.sludgeTraps) ? s.sludgeTraps.map(t => ({...t})) : [];
+              gameOver = 0;
+              paused = 0;
+              deathTimer = 0;
+              victoryTimer = 0;
+              shockwaves = [];
+              particles = [];
+              popups = [];
+          } else {
+              init(true);
+          }
+
+          toggleHelpModal(false);
+          toggleCraftModal(false);
           updateUIBadges();
           showToast('📂 Quick Game State Loaded!', 'success');
           playSound(600, 0.25, 'sine', 150);
@@ -1753,6 +1831,12 @@
       }
 
       if (helpOpen || craftOpen) {
+          if (e.key === 'Enter' || key === 'ENTER' || e.key === ' ' || key === 'SPACE') {
+              e.preventDefault();
+              if (helpOpen) toggleHelpModal(false);
+              if (craftOpen) toggleCraftModal(false);
+              return;
+          }
           if (craftOpen) {
               if (craftMenuPage === 0) {
                   if (key === '1' || key === '7') craftItem(1);
@@ -1786,8 +1870,14 @@
       else if (key === '3') { diffMode = 2; showToast("⚔️ Difficulty: HARD (2 Lives, Fast Ghosts)", "warning"); updateUIBadges(); }
       else if (key === 'E') exportJSON();
       else if (key === 'I') triggerImport();
-      else if (key === ' ') { e.preventDefault(); togglePause(); }
-      else if (key === 'ENTER' && gameOver) init(false);
+      else if (key === ' ' || key === 'SPACE') {
+          e.preventDefault();
+          if (gameOver) { init(false); return; }
+          togglePause();
+      }
+      else if (key === 'ENTER') {
+          if (gameOver) { e.preventDefault(); init(false); return; }
+      }
       else if (key === '7') craftItem(1);
       else if (key === '8') craftItem(2);
       else if (key === '9') craftItem(3);
@@ -2938,7 +3028,14 @@
   loadHighScore();
   init(false);
   updateUIBadges();
-  showToast("⚡ KPac Cyber Edition: WASD/Arrows to Move, [Space] to Pause, [F1] for Help & Codex", "info");
+
+  const hasQuicksave = !!localStorage.getItem('kpac_quicksave');
+  if (!isTutorialSeen() && !hasQuicksave) {
+      showToast("⚡ Welcome to KPac! WASD/Arrows to Move, [Space] to Pause, [F1] for Codex & Skills", "info");
+      setTutorialSeen();
+  } else {
+      showToast("⚡ KPac Cyber Edition: WASD/Arrows to Move, [Space] to Pause, [F1] for Help & Codex", "info");
+  }
   setInterval(() => {
       update();
       draw();
