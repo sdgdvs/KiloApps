@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-creator
-next_agent: kilo-graphics
+current_agent: kilo-graphics
+next_agent: kilo-tester
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -12,13 +12,13 @@ model: gemini-3.8-flash-high
 timeout_minutes: 15
 status: ready
 current_targets:
-  kilo_creator: "kweb://echo-subsystem.net"
+  kilo_creator: "kweb://deep-core"
   kilo_graphics: KPac
   kilo_tester: KMine
   kilo_usability: KChess
   kilo_qa: KPac
   kilo_expander: KMine
-virtual_web_target: "kweb://echo-subsystem.net"
+virtual_web_target: "kweb://deep-core"
 virtual_web_rotation:
   - "kweb://geocities"
   - "kweb://users/~neon_rider"
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-expander
-  app: KCalc
-  timestamp: "2026-10-06T12:35:00-07:00"
+  agent: kilo-creator
+  app: "kweb://echo-subsystem.net"
+  timestamp: "2026-10-06T12:44:00-07:00"
 last_planner_run: "2026-10-06T14:20:00Z"
 ---
 
@@ -102,9 +102,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ### 1. Virtual 1999 Web & ARG Node Creator (`kilo-creator`)
 - **DIRECTOR MANDATE — STANDALONE OS APP CREATION HALTED**: Standalone OS app creation is frozen at 92 native / 99 web apps. All creator turns are now exclusively channeled into building real, interactive Virtual 1999 Web sites (`KiloOS/public/web/`) and ARG mystery nodes per `arg_plan.md`. Zero shallow stubs; every page must be a functioning Web 1.0 experience with working forms, generators, Web Audio, or mini-tools (<999KB).
-- **Current Target**: `kweb://echo-subsystem.net`
+- **Current Target**: `kweb://deep-core`
 - **Upcoming Queue**:
-  `kweb://deep-core`, `kweb://darknet`, `kweb://portal`, `kweb://webring`, `kweb://warez`, `kweb://geocities`, `kweb://users/~neon_rider`, `kweb://asm-temple`, `kweb://cybercafe`, `kweb://10.19.99.4/classified`
+  `kweb://darknet`, `kweb://portal`, `kweb://webring`, `kweb://warez`, `kweb://geocities`, `kweb://users/~neon_rider`, `kweb://asm-temple`, `kweb://cybercafe`, `kweb://10.19.99.4/classified`, `kweb://echo-subsystem.net`
   *(Completed: kweb://geocities, kweb://portal, kweb://cybercafe, kweb://asm-temple, kweb://users/~neon_rider, kweb://darknet, kweb://deep-core, kweb://echo-subsystem.net, kweb://10.19.99.4/classified, kweb://webring, kweb://warez)*.
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
@@ -135,8 +135,8 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Multiplayer Focus (CRITICAL)**: Concentrate on expanding games (*KChess*, *KConnect4*, *KGo*, *KReversi*, *KDarts*, *KTetris*, *KSnake*, *K2048*, *KMatch3*, *KSimon*) and collaborative apps (*KDraw*, *KPaint*, *KSynth*, *KPad*) with seamless Firebase Realtime Database multiplayer for cross-computer play on `kiloapps.web.app`.
 
 ### 7. Virtual 1999 Web Expansion Queue (Eternal Fleet Track)
-- **Current Active Target**: `kweb://echo-subsystem.net` (`KiloOS/public/web/echo_subsystem.html`)
-  - *Next in Rotation*: `kweb://deep-core` ➔ `kweb://darknet` ➔ `kweb://portal` ➔ `kweb://webring` ➔ `kweb://warez` ➔ `kweb://geocities` ➔ `kweb://users/~neon_rider` ➔ `kweb://asm-temple` ➔ `kweb://cybercafe` ➔ `kweb://10.19.99.4/classified`.
+- **Current Active Target**: `kweb://deep-core` (`KiloOS/public/web/deep_core.html`)
+  - *Next in Rotation*: `kweb://darknet` ➔ `kweb://portal` ➔ `kweb://webring` ➔ `kweb://warez` ➔ `kweb://geocities` ➔ `kweb://users/~neon_rider` ➔ `kweb://asm-temple` ➔ `kweb://cybercafe` ➔ `kweb://10.19.99.4/classified` ➔ `kweb://echo-subsystem.net`.
 - **Anti-Potemkin Quality Standard**:
   - All 11 Virtual 1999 Web destinations are live, interactive, and feature-complete.
   - See [archive/virtual_web_completed.md](archive/virtual_web_completed.md) for full historical breakdown of completed content mandates across all sites.
@@ -217,6 +217,16 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-06T12:44:00-07:00 — kilo-creator: kweb://echo-subsystem.net (Deep Expansion: Tab 10 Helmholtz Cavity & 4-Track Tape Deck)**
+  - Status: PASS ✅ (0 regressions, 294.6 KB web < 999 KB ceiling, Anti-Potemkin compliant).
+  - Tab 10 Addition: Built Helmholtz Cavity Resonator & 4-Track Reel-to-Reel Tape Deck with analog tape saturation & wow/flutter.
+  - Interactive Engines: 4-track mixer with VU meter bridge, endless 4s loop cartridge, and live standing wave cavity pressure simulation.
+  - Acoustic Physics: Real-time Helmholtz equation solver with 1999Hz lock, impulse spark excitation, and procedural .WAV & .CAL exporters.
+  - Ecosystem & Cross-Links: Registered Tab 10 in terminal ('tape', 'cavity') and key 0; updated descriptions in KNet, Portal, and Webring.
+  - ARG & Mystery Preservation: Sanitized pre-climax text per TINAG rule; 0 trademarks.
+  - Verification: `npm run build` clean (324ms); `security_lint.py` 100% PASS; web (294.6 KB) < 999 KB.
+  - Queue: Advanced `kilo_creator` & `virtual_web_target` to `kweb://deep-core`; rotation advanced to `kilo-graphics`.
+
 - **2026-10-06T12:35:00-07:00 — kilo-expander: KCalc (Calculus & Numerical Solver, Matrix/Vector Algebra Modes & Markdown Tape)**
   - Status: PASS ✅ (0 regressions, 194.8 KB web / 28.0 KB native < 999 KB ceiling).
   - Expanded Modes: Added Numerical Calculus & Solvers (Definite integration, 5-point differentiation, Newton-Raphson & polynomial root solving).
@@ -253,11 +263,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Accessibility & Ergonomics: Added keyboard navigation/ARIA to constant cards; added Up/Down history recall and Delete/C shortcuts; wired stats "Use In Calc" buttons.
   - Verification: `test_app_startup.py` PASS; `test_web_apps.js` PASS (159 elements); Vite clean (362ms); security_lint 100% PASS.
   - Queue: Advanced `kilo_tester` to `KMine`; rotation advanced to `kilo-usability`.
-
-- **2026-10-06T11:21:00-07:00 — kilo-graphics: KSpace (Skip Turn — Inappropriate Target & Glint/Dot Audit)**
-  - Status: ⏭️ Skip — Imagen 3 asset replacement not appropriate for KSpace
-  - Rationale: Mature custom art; all 13 entity sprites and celestial backgrounds already Imagen 3 generated.
-  - Glint & Dot Ban: Verified zero traveling border dots or specular glints in web or Win32 C (Rule 11 compliant).
-  - Icon Uniqueness: `check_icons.py` verified 100% unique (Rule 13 compliant).
-  - Verification: Vite build clean (311ms); security_lint 100% PASS; web (183.7 KB) < 999 KB.
-  - Queue: Advanced `kilo_graphics` to `KPac`; rotation advanced to `kilo-tester`.

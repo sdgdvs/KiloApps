@@ -739,6 +739,183 @@
     border: 1px solid var(--border-bright);
   }
 
+  /* TAB 10: Helmholtz Cavity & 4-Track Analog Tape Deck Styles */
+  .tape-deck-panel {
+    background: #060b17;
+    border: 2px solid var(--border-bright);
+    border-radius: 4px;
+    padding: 12px;
+    margin-bottom: 14px;
+    box-shadow: 0 0 16px rgba(56, 189, 248, 0.12), inset 0 0 20px rgba(0, 0, 0, 0.85);
+  }
+  .tape-transport-layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin-bottom: 14px;
+  }
+  @media (max-width: 920px) {
+    .tape-transport-layout { grid-template-columns: 1fr; }
+  }
+  .tape-reels-box {
+    background: #02050c;
+    border: 1px solid var(--border-dim);
+    border-radius: 4px;
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .vu-meter-bridge {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    background: #030712;
+    border: 1px solid var(--border-dim);
+    border-radius: 4px;
+    padding: 8px;
+    margin-bottom: 12px;
+  }
+  @media (max-width: 650px) {
+    .vu-meter-bridge { grid-template-columns: repeat(2, 1fr); }
+  }
+  .vu-meter-card {
+    background: #0b1329;
+    border: 1px solid #1e293b;
+    border-radius: 3px;
+    padding: 6px 8px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .vu-canvas-wrap {
+    background: #fbf5e6;
+    border: 1px solid #475569;
+    border-radius: 2px;
+    box-shadow: inset 0 1px 4px rgba(0,0,0,0.5);
+    margin: 4px 0;
+  }
+  .tape-tracks-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+  @media (max-width: 780px) {
+    .tape-tracks-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+  @media (max-width: 480px) {
+    .tape-tracks-grid { grid-template-columns: 1fr; }
+  }
+  .tape-track-strip {
+    background: #070d1e;
+    border: 1px solid var(--border-dim);
+    border-radius: 4px;
+    padding: 10px 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    position: relative;
+  }
+  .tape-track-strip.active-ch {
+    border-color: var(--border-bright);
+    box-shadow: 0 0 10px rgba(56, 189, 248, 0.15);
+  }
+  .track-label-bar {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--border-bright);
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+    padding-bottom: 4px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .tape-counter-readout {
+    font-family: 'Consolas', 'Courier New', monospace;
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    background: #020408;
+    color: var(--green-phosphor);
+    border: 2px solid #0f1f3d;
+    border-radius: 3px;
+    padding: 4px 10px;
+    text-shadow: 0 0 8px rgba(0, 255, 170, 0.6);
+    display: inline-block;
+  }
+  .tape-transport-controls {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    flex-wrap: wrap;
+    background: #081124;
+    border: 1px solid var(--border-dim);
+    border-radius: 4px;
+    padding: 8px 12px;
+    margin-bottom: 14px;
+  }
+  .btn-transport {
+    background: #0f1c3a;
+    border: 1px solid var(--border-bright);
+    color: #bae6fd;
+    font-family: inherit;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 6px 12px;
+    cursor: pointer;
+    border-radius: 3px;
+    transition: all 0.12s ease;
+    user-select: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .btn-transport:hover {
+    background: var(--border-bright);
+    color: #050811;
+    box-shadow: 0 0 10px rgba(56, 189, 248, 0.4);
+  }
+  .btn-transport.rec-active {
+    background: #dc2626 !important;
+    border-color: #ef4444 !important;
+    color: #fff !important;
+    box-shadow: 0 0 12px rgba(239, 68, 68, 0.6) !important;
+  }
+  .btn-transport.play-active {
+    background: #059669 !important;
+    border-color: var(--green-phosphor) !important;
+    color: #fff !important;
+    box-shadow: 0 0 12px rgba(0, 255, 170, 0.5) !important;
+  }
+  .cavity-calibrator-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+  @media (max-width: 900px) {
+    .cavity-calibrator-grid { grid-template-columns: 1fr; }
+  }
+  .cavity-spec-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 11px;
+    margin-top: 8px;
+  }
+  .cavity-spec-table th, .cavity-spec-table td {
+    padding: 5px 8px;
+    border: 1px solid var(--border-dim);
+    text-align: left;
+  }
+  .cavity-spec-table th {
+    background: #0a1329;
+    color: #94a3b8;
+  }
+  .cavity-spec-table td {
+    background: #030712;
+    color: #cbd5e1;
+  }
+
   /* Webring & Footer */
   .lab-footer {
     border-top: 2px solid var(--border-dim);
@@ -821,6 +998,7 @@
     <button class="tab-btn" id="tabBtn7" onclick="switchTab('terminal')">💻 [07] FIELD TERMINAL</button>
     <button class="tab-btn" id="tabBtn8" onclick="switchTab('mesh')">⚡ [08] AIRGAP MESH &amp; ARTIFACTS</button>
     <button class="tab-btn" id="tabBtn9" onclick="switchTab('seismic')">🪨 [09] LITHOSPHERIC SEISMIC &amp; STRATA PROFILER</button>
+    <button class="tab-btn" id="tabBtn10" onclick="switchTab('tape')">📼 [10] HELMHOLTZ CAVITY &amp; 4-TRACK ANALOG TAPE</button>
   </nav>
 
   <!-- TAB 1: RESEARCH JOURNAL & OBSERVATION LOGBOOK -->
@@ -1736,12 +1914,12 @@ The 5 quarantined sectors in Deep Core (kweb://deep-core) require harmonic primi
 - Sector 02 (AUDIO_DSP): 1999HZ (Acoustic Carrier Frequency)
 - Sector 03 (NET_RELAY): 10.19.99.4 (Subterranean Classified Intranet)
 - Sector 04 (STORAGE_VFS): RECOVERY_1999 (Precursor Archival Log)
-- Sector 05 (CORE_AI): LITHO-CORE-99 / AUTONOMOUS_FLEET
+- Sector 05 (CORE_AI): LITHO-CORE-99 / PARALLEL_DAEMON_CORE
 
 [FINDING 3: CLIMAX AT APP #100]
 Defusing the 5 sectors unlocks the path to App #100 (KMatrix).
-When the final fourth-wall threshold is crossed, the autonomous fleet
-transmutes into the living repository itself.
+When the final deep-core threshold is crossed, the distributed subcarrier matrix
+converges into the living kernel architecture itself.
 
 END TRANSMISSION // ESARL 1999</div>
 
@@ -2027,6 +2205,331 @@ END TRANSMISSION // ESARL 1999</div>
           <button class="btn-retro" onclick="exportStrataCsv()">Export Strata (.CSV)</button>
           <button class="btn-retro" onclick="exportBoreholeDat()">Export Borehole (.DAT)</button>
           <button class="btn-retro btn-purple" onclick="exportSeismicDossierSig()">Export Dossier (.SIG)</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 10: HELMHOLTZ CAVITY RESONATOR & 4-TRACK ANALOG TAPE RECORDER -->
+  <div id="pane-tape" class="tab-pane">
+    <div class="card-box">
+      <div class="card-header">
+        <span>HELMHOLTZ CAVITY RESONATOR &amp; 4-TRACK ANALOG MAGNETIC TAPE RECORDER</span>
+        <div style="display:flex; gap:6px; align-items:center;">
+          <span class="journal-tag" style="border-color:var(--amber-led); color:var(--amber-led);">AMPEX-1999 ESARL SPEC // 15 IPS MASTER</span>
+          <span class="seismic-pulse-badge normal" id="badgeTapeStatus">TAPE: IDLE (15 IPS)</span>
+        </div>
+      </div>
+      <p style="font-size:12px; color:#94a3b8; margin-bottom:12px;">
+        Laboratory instrumentation for analog magnetic audio capture and acoustic cavity modeling. Utilizing vintage 4-track reel-to-reel magnetic tape recording with authentic tape saturation, wow/flutter dispersion, and endless loop modes. Coupled with an interactive Helmholtz resonator simulator modeling subterranean acoustic cavity frequencies within the Carlsbad Delaware Basin strata.
+      </p>
+
+      <!-- Quick Metrics Bar -->
+      <div style="display:flex; justify-content:space-between; align-items:center; background:#060b17; border:1px solid var(--border-dim); border-radius:4px; padding:6px 12px; margin-bottom:14px; font-size:11px; flex-wrap:wrap; gap:8px;">
+        <div>RECORDER CORE: <strong style="color:#bae6fd;">Ampex-1999 Discrete 4-Track (SPC700 Echo Loop)</strong></div>
+        <div>TAPE SPEED: <strong style="color:var(--border-bright);" id="lblActiveTapeSpeed">15.0 IPS (Master Grade)</strong></div>
+        <div>CAVITY RESONANCE: <strong style="color:var(--green-phosphor);" id="lblQuickCavityRes">f₀ = 1999.0 Hz (LOCKED)</strong></div>
+        <div>TAPE HEAD: <strong id="lblTapeHeadState" style="color:var(--amber-led);">STANDBY / REPRO MONITOR</strong></div>
+      </div>
+
+      <!-- Part A: 4-Track Reel-to-Reel Tape Deck -->
+      <div class="tape-deck-panel">
+        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border-dim); padding-bottom:6px; margin-bottom:12px;">
+          <strong style="color:var(--border-bright); font-size:12px;">📼 PRECISION 4-TRACK ANALOG TAPE TRANSPORT // MODEL ESARL-ATR1999</strong>
+          <div style="display:flex; gap:6px; align-items:center;">
+            <span class="tape-counter-readout" id="tapeCounterDisplay">00:00:00</span>
+            <span style="font-size:10px; color:#64748b;">TIMECODE</span>
+          </div>
+        </div>
+
+        <div class="tape-transport-layout">
+          <!-- Animated Reel Canvas -->
+          <div class="tape-reels-box">
+            <div style="font-size:10px; font-weight:700; color:#64748b; margin-bottom:4px; width:100%; display:flex; justify-content:space-between;">
+              <span>SUPPLY REEL (10.5")</span>
+              <span id="tapeMovementIndicator" style="color:var(--text-muted);">● STOPPED</span>
+              <span>TAKE-UP REEL (10.5")</span>
+            </div>
+            <canvas id="tapeReelCanvas" width="520" height="150" style="width:100%; max-width:520px; background:#02040a; border:1px solid #1e293b; border-radius:3px;"></canvas>
+            <div style="font-size:9.5px; color:#64748b; margin-top:4px;">DUAL CAPSTAN SERVO DRIVE • PHOTO-OPTIC TENSION CONTROL • AMPEX 456 FORMULATION</div>
+          </div>
+
+          <!-- Transport & Saturation Controls -->
+          <div style="display:flex; flex-direction:column; justify-content:space-between;">
+            <div>
+              <div style="font-size:10.5px; font-weight:700; color:#94a3b8; margin-bottom:6px;">TRANSPORT MECHANICS:</div>
+              <div class="tape-transport-controls">
+                <button class="btn-transport" id="btnTapePlay" onclick="tapePlay()">▶ PLAY</button>
+                <button class="btn-transport" id="btnTapeStop" onclick="tapeStop()">■ STOP</button>
+                <button class="btn-transport" id="btnTapeRec" onclick="tapeRecord()">● REC LOOP</button>
+                <button class="btn-transport" id="btnTapeRewind" onclick="tapeRewind()">⏪ REW</button>
+                <button class="btn-transport" id="btnTapeFwd" onclick="tapeFastFwd()">⏩ FFWD</button>
+                <button class="btn-transport" id="btnTapeClear" onclick="tapeZeroCounter()">0000 ZERO</button>
+              </div>
+
+              <!-- Speed & Loop Mode -->
+              <div style="display:flex; gap:10px; margin-bottom:10px; flex-wrap:wrap;">
+                <div style="display:flex; align-items:center; gap:4px; font-size:11px;">
+                  <span style="color:#cbd5e1; font-weight:700;">Speed:</span>
+                  <button class="btn-retro btn-green" id="btnSpeed15" onclick="setTapeSpeed(15)">15 IPS</button>
+                  <button class="btn-retro" id="btnSpeed75" onclick="setTapeSpeed(7.5)">7.5 IPS</button>
+                  <button class="btn-retro" id="btnSpeed375" onclick="setTapeSpeed(3.75)">3.75 IPS</button>
+                </div>
+                <button class="btn-retro" id="btnToggleTapeLoop" onclick="toggleTapeCartridgeLoop()" style="font-size:10.5px;">🔄 Endless Loop (4s Cartridge): <span id="lblTapeLoopState" style="color:var(--green-phosphor);">ON</span></button>
+              </div>
+            </div>
+
+            <!-- Saturation & Flutter Parameters -->
+            <div style="background:#030712; border:1px solid #1e293b; padding:8px 10px; border-radius:3px;">
+              <div class="control-row">
+                <span class="control-label">🎛️ Tape Saturation (Drive):</span>
+                <input type="range" id="sliderTapeDrive" min="0" max="100" value="35" class="slider-control" oninput="updateTapeDrive(this.value)">
+                <span class="value-badge" id="valTapeDrive">35%</span>
+              </div>
+              <div class="control-row" style="margin-bottom:0;">
+                <span class="control-label">〰️ Wow &amp; Flutter (Mechanical):</span>
+                <input type="range" id="sliderWowFlutter" min="0" max="50" value="12" class="slider-control" oninput="updateWowFlutter(this.value)">
+                <span class="value-badge" id="valWowFlutter">1.2%</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 4-Channel Analog VU Meter Bridge -->
+        <div style="font-size:10.5px; font-weight:700; color:#94a3b8; margin-bottom:4px;">ANALOG VU METER BRIDGE (RMS / PEAK RESPONSE):</div>
+        <div class="vu-meter-bridge">
+          <div class="vu-meter-card">
+            <div style="font-size:9.5px; font-weight:700; color:var(--border-bright);">CH 1: HYDROPHONE</div>
+            <div class="vu-canvas-wrap"><canvas id="vuMeter1" width="110" height="42"></canvas></div>
+            <div style="font-size:9px; color:#64748b;">1999Hz GROUND CARRIER</div>
+          </div>
+          <div class="vu-meter-card">
+            <div style="font-size:9.5px; font-weight:700; color:var(--amber-led);">CH 2: VLF GEOPHONE</div>
+            <div class="vu-canvas-wrap"><canvas id="vuMeter2" width="110" height="42"></canvas></div>
+            <div style="font-size:9px; color:#64748b;">43.2Hz TECTONIC RUMBLE</div>
+          </div>
+          <div class="vu-meter-card">
+            <div style="font-size:9.5px; font-weight:700; color:var(--purple-spectral);">CH 3: SIGINT TELEMETRY</div>
+            <div class="vu-canvas-wrap"><canvas id="vuMeter3" width="110" height="42"></canvas></div>
+            <div style="font-size:9px; color:#64748b;">BELL 202 FSK BURSTS</div>
+          </div>
+          <div class="vu-meter-card">
+            <div style="font-size:9.5px; font-weight:700; color:var(--green-phosphor);">CH 4: CAVITY ECHO</div>
+            <div class="vu-canvas-wrap"><canvas id="vuMeter4" width="110" height="42"></canvas></div>
+            <div style="font-size:9px; color:#64748b;">SALADO CAVITY REVERB</div>
+          </div>
+        </div>
+
+        <!-- 4-Track Mixer Strip Console -->
+        <div class="tape-tracks-grid">
+          <!-- Channel 1 Strip -->
+          <div class="tape-track-strip active-ch" id="trackStrip1">
+            <div class="track-label-bar">
+              <span>TRACK 1</span>
+              <span id="trk1State" style="color:var(--green-phosphor); font-size:9px;">ON</span>
+            </div>
+            <div style="font-size:10px; color:#cbd5e1; font-weight:700;">BH-1999-E Hydrophone</div>
+            <div style="font-size:9px; color:#64748b;">Permian Halite ground wave with SPC700 slapback delay.</div>
+            <div class="control-row">
+              <span class="control-label" style="font-size:10px;">Level:</span>
+              <input type="range" id="trkLevel1" min="0" max="100" value="85" class="slider-control" style="width:75px;" oninput="updateTrackLevel(0, this.value)">
+              <span class="value-badge" id="valTrkLevel1" style="font-size:10px; min-width:34px;">85%</span>
+            </div>
+            <div class="control-row">
+              <span class="control-label" style="font-size:10px;">Pan:</span>
+              <input type="range" id="trkPan1" min="-100" max="100" value="-30" class="slider-control" style="width:75px;" oninput="updateTrackPan(0, this.value)">
+              <span class="value-badge" id="valTrkPan1" style="font-size:10px; min-width:34px;">L30</span>
+            </div>
+            <div style="display:flex; gap:4px;">
+              <button class="btn-retro" style="flex:1; font-size:9px; padding:2px;" id="btnMute1" onclick="toggleTrackMute(0)">MUTE</button>
+              <button class="btn-retro" style="flex:1; font-size:9px; padding:2px;" id="btnSolo1" onclick="toggleTrackSolo(0)">SOLO</button>
+            </div>
+          </div>
+
+          <!-- Channel 2 Strip -->
+          <div class="tape-track-strip" id="trackStrip2">
+            <div class="track-label-bar">
+              <span style="color:var(--amber-led);">TRACK 2</span>
+              <span id="trk2State" style="color:var(--green-phosphor); font-size:9px;">ON</span>
+            </div>
+            <div style="font-size:10px; color:#cbd5e1; font-weight:700;">VLF Infrasound Sensor</div>
+            <div style="font-size:9px; color:#64748b;">Subterranean tectonic 43.2 Hz drone &amp; lithic pressure.</div>
+            <div class="control-row">
+              <span class="control-label" style="font-size:10px;">Level:</span>
+              <input type="range" id="trkLevel2" min="0" max="100" value="70" class="slider-control" style="width:75px;" oninput="updateTrackLevel(1, this.value)">
+              <span class="value-badge" id="valTrkLevel2" style="font-size:10px; min-width:34px;">70%</span>
+            </div>
+            <div class="control-row">
+              <span class="control-label" style="font-size:10px;">Pan:</span>
+              <input type="range" id="trkPan2" min="-100" max="100" value="0" class="slider-control" style="width:75px;" oninput="updateTrackPan(1, this.value)">
+              <span class="value-badge" id="valTrkPan2" style="font-size:10px; min-width:34px;">C</span>
+            </div>
+            <div style="display:flex; gap:4px;">
+              <button class="btn-retro" style="flex:1; font-size:9px; padding:2px;" id="btnMute2" onclick="toggleTrackMute(1)">MUTE</button>
+              <button class="btn-retro" style="flex:1; font-size:9px; padding:2px;" id="btnSolo2" onclick="toggleTrackSolo(1)">SOLO</button>
+            </div>
+          </div>
+
+          <!-- Channel 3 Strip -->
+          <div class="tape-track-strip" id="trackStrip3">
+            <div class="track-label-bar">
+              <span style="color:var(--purple-spectral);">TRACK 3</span>
+              <span id="trk3State" style="color:var(--green-phosphor); font-size:9px;">ON</span>
+            </div>
+            <div style="font-size:10px; color:#cbd5e1; font-weight:700;">SIGINT FSK Telemetry</div>
+            <div style="font-size:9px; color:#64748b;">Demodulated Bell 202 acoustic telemetry bursts.</div>
+            <div class="control-row">
+              <span class="control-label" style="font-size:10px;">Level:</span>
+              <input type="range" id="trkLevel3" min="0" max="100" value="65" class="slider-control" style="width:75px;" oninput="updateTrackLevel(2, this.value)">
+              <span class="value-badge" id="valTrkLevel3" style="font-size:10px; min-width:34px;">65%</span>
+            </div>
+            <div class="control-row">
+              <span class="control-label" style="font-size:10px;">Pan:</span>
+              <input type="range" id="trkPan3" min="-100" max="100" value="35" class="slider-control" style="width:75px;" oninput="updateTrackPan(2, this.value)">
+              <span class="value-badge" id="valTrkPan3" style="font-size:10px; min-width:34px;">R35</span>
+            </div>
+            <div style="display:flex; gap:4px;">
+              <button class="btn-retro" style="flex:1; font-size:9px; padding:2px;" id="btnMute3" onclick="toggleTrackMute(2)">MUTE</button>
+              <button class="btn-retro" style="flex:1; font-size:9px; padding:2px;" id="btnSolo3" onclick="toggleTrackSolo(2)">SOLO</button>
+            </div>
+          </div>
+
+          <!-- Channel 4 Strip -->
+          <div class="tape-track-strip" id="trackStrip4">
+            <div class="track-label-bar">
+              <span style="color:var(--green-phosphor);">TRACK 4</span>
+              <span id="trk4State" style="color:var(--green-phosphor); font-size:9px;">ON</span>
+            </div>
+            <div style="font-size:10px; color:#cbd5e1; font-weight:700;">Precursor Cavity Reverb</div>
+            <div style="font-size:9px; color:#64748b;">Salt cavern standing wave &amp; YM2612 2-Op FM harmonics.</div>
+            <div class="control-row">
+              <span class="control-label" style="font-size:10px;">Level:</span>
+              <input type="range" id="trkLevel4" min="0" max="100" value="75" class="slider-control" style="width:75px;" oninput="updateTrackLevel(3, this.value)">
+              <span class="value-badge" id="valTrkLevel4" style="font-size:10px; min-width:34px;">75%</span>
+            </div>
+            <div class="control-row">
+              <span class="control-label" style="font-size:10px;">Pan:</span>
+              <input type="range" id="trkPan4" min="-100" max="100" value="15" class="slider-control" style="width:75px;" oninput="updateTrackPan(3, this.value)">
+              <span class="value-badge" id="valTrkPan4" style="font-size:10px; min-width:34px;">R15</span>
+            </div>
+            <div style="display:flex; gap:4px;">
+              <button class="btn-retro" style="flex:1; font-size:9px; padding:2px;" id="btnMute4" onclick="toggleTrackMute(3)">MUTE</button>
+              <button class="btn-retro" style="flex:1; font-size:9px; padding:2px;" id="btnSolo4" onclick="toggleTrackSolo(3)">SOLO</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Part B: Helmholtz Cavity Resonator & Standing Wave Simulator -->
+      <div class="tape-deck-panel" style="margin-top:16px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border-dim); padding-bottom:6px; margin-bottom:12px; flex-wrap:wrap; gap:6px;">
+          <strong style="color:var(--green-phosphor); font-size:12px;">🪨 SUBTERRANEAN HELMHOLTZ CAVITY ACOUSTIC CALIBRATOR</strong>
+          <span class="journal-tag" style="border-color:var(--green-phosphor); color:var(--green-phosphor);">CARLSBAD SALT CAVERN MATRIX</span>
+        </div>
+
+        <div class="cavity-calibrator-grid">
+          <!-- Standing Wave 2D Canvas -->
+          <div>
+            <div style="font-size:10.5px; font-weight:700; color:#94a3b8; margin-bottom:4px; display:flex; justify-content:space-between;">
+              <span>CAVITY STANDING WAVE PRESSURE PROFILE</span>
+              <span id="lblCavityModeStatus" style="color:var(--green-phosphor);">STANDING WAVE: MODE (1,0,0)</span>
+            </div>
+            <canvas id="cavityCanvas" width="520" height="210" style="width:100%; max-width:520px; background:#02040a; border:1px solid var(--border-dim); border-radius:3px;"></canvas>
+            <div style="display:flex; justify-content:space-between; font-size:9.5px; color:#64748b; margin-top:4px;">
+              <span>APERTURE NECK (BOREHOLE)</span>
+              <span>PRESSURE NODES (GREEN) / ANTINODES (CYAN)</span>
+              <span>HALITE WALLS</span>
+            </div>
+          </div>
+
+          <!-- Cavity Parameters & Formula -->
+          <div>
+            <div style="background:#030712; border:1px solid var(--border-dim); border-radius:3px; padding:8px 10px; margin-bottom:10px;">
+              <div style="font-size:10.5px; font-weight:700; color:var(--border-bright); margin-bottom:4px;">CLASSICAL HELMHOLTZ FORMULA:</div>
+              <div style="font-family:'Courier New', monospace; font-size:11px; color:#f59e0b; margin-bottom:4px;">
+                f₀ = (v / 2π) • √[ S / (V • L_eff) ]
+              </div>
+              <div style="font-size:10px; color:#94a3b8; line-height:1.4;">
+                Where <em>v</em> is sound velocity, <em>S = πr²</em> is neck cross-sectional area, <em>V</em> is cavern volume, and <em>L_eff = L + 1.6r</em> is end-corrected borehole length.
+              </div>
+            </div>
+
+            <!-- Parameters Sliders -->
+            <div class="control-row">
+              <span class="control-label">Acoustic Medium:</span>
+              <select id="selectCavityMedium" class="term-input" style="width:200px; font-size:11px; padding:3px 6px;" onchange="updateCavityMedium(this.value)">
+                <option value="4450" selected>Permian Halite Salt (v = 4,450 m/s)</option>
+                <option value="1530">Delaware Basin Brine (v = 1,530 m/s)</option>
+                <option value="446">Methane Seep Gas (v = 446 m/s)</option>
+                <option value="343">Dry Subterranean Air (v = 343 m/s)</option>
+                <option value="267">Dense Carbon Dioxide (v = 267 m/s)</option>
+              </select>
+            </div>
+
+            <div class="control-row">
+              <span class="control-label">Cavern Volume (V):</span>
+              <input type="range" id="sliderCavityVol" min="200" max="25000" value="4820" class="slider-control" oninput="updateCavityParam('vol', this.value)">
+              <span class="value-badge" id="valCavityVol">4,820 m³</span>
+            </div>
+
+            <div class="control-row">
+              <span class="control-label">Borehole Neck Radius (r):</span>
+              <input type="range" id="sliderCavityRadius" min="10" max="250" value="85" class="slider-control" oninput="updateCavityParam('radius', this.value)">
+              <span class="value-badge" id="valCavityRadius">0.85 m</span>
+            </div>
+
+            <div class="control-row">
+              <span class="control-label">Neck Length (L):</span>
+              <input type="range" id="sliderCavityLength" min="5" max="150" value="38" class="slider-control" oninput="updateCavityParam('length', this.value)">
+              <span class="value-badge" id="valCavityLength">38.0 m</span>
+            </div>
+
+            <!-- Lock to 1999Hz & Impulse Actions -->
+            <div style="display:flex; gap:6px; flex-wrap:wrap; margin-top:8px;">
+              <button class="btn-retro btn-green" id="btnLock1999Cavity" onclick="lockCavityTo1999Hz()">★ LOCK 1999.0 HZ RESONANCE</button>
+              <button class="btn-retro btn-amber" id="btnExciteCavity" onclick="exciteCavityImpulse()">⚡ Excite Chamber Impulse</button>
+              <button class="btn-retro" id="btnToggleCavityTone" onclick="toggleCavityContinuousTone()">🔊 Continuous Excite</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Calculated Acoustic Properties Table -->
+        <table class="cavity-spec-table">
+          <thead>
+            <tr>
+              <th>RESONANT FREQ (f₀)</th>
+              <th>ACOUSTIC WAVELENGTH (λ)</th>
+              <th>QUALITY FACTOR (Q)</th>
+              <th>ACOUSTIC IMPEDANCE (Z₀)</th>
+              <th>CAVITY PRESSURE (SPL)</th>
+              <th>SALT WAVEGUIDE ATTEN</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td id="tdCavityFreq" style="font-weight:700; color:var(--green-phosphor);">1999.0 Hz</td>
+              <td id="tdCavityWavelength">2.226 m</td>
+              <td id="tdCavityQ">148.4 (High Resonance)</td>
+              <td id="tdCavityZ">9.61 MRayl</td>
+              <td id="tdCavitySpl">114.2 dB re 20µPa</td>
+              <td>0.12 dB/100m (Permian Halite)</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Part C: Inter-Tab System Bridges & Export Deck -->
+      <div style="border-top:1px solid var(--border-dim); padding-top:12px; margin-top:14px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+        <div style="display:flex; gap:6px; flex-wrap:wrap;">
+          <button class="btn-retro" onclick="feedTapeToSonogram()">📊 Route Tape Mix to Sonogram (Tab 3)</button>
+          <button class="btn-retro" onclick="feedCavityToFilter()">🎛️ Tune Filter to Cavity f₀ (Tab 4)</button>
+          <button class="btn-retro" onclick="pipeTapeToDecoder()">📻 Feed Tape Carrier to Decoder (Tab 2)</button>
+          <button class="btn-retro btn-purple" onclick="transmitTapeToMesh()">📡 Pipe Tape into Airgap Mesh (Tab 8)</button>
+        </div>
+
+        <div style="display:flex; gap:6px; flex-wrap:wrap;">
+          <button class="btn-retro btn-green" onclick="exportTapeMasterWav()">💾 Export 4-Track Master (.WAV)</button>
+          <button class="btn-retro btn-amber" onclick="exportCavityCalibrationCert()">📋 Export Cavity Cert (.CAL)</button>
         </div>
       </div>
     </div>
@@ -3427,7 +3930,7 @@ Host: kweb://echo-subsystem.net | Station: SIG-1999-ECHO
   }
 
   function switchTab(name) {
-    const tabs = ['journal', 'decoder', 'spectral', 'filter', 'sigint', 'stego', 'terminal', 'mesh', 'seismic'];
+    const tabs = ['journal', 'decoder', 'spectral', 'filter', 'sigint', 'stego', 'terminal', 'mesh', 'seismic', 'tape'];
     tabs.forEach((t, i) => {
       const btn = document.getElementById('tabBtn' + (i + 1));
       const pane = document.getElementById('pane-' + t);
@@ -3448,6 +3951,7 @@ Host: kweb://echo-subsystem.net | Station: SIG-1999-ECHO
     if (name === 'stego') previewStegoBitmap();
     if (name === 'mesh') checkArtifactSlots();
     if (name === 'seismic') initSeismicCanvases();
+    if (name === 'tape') initTapeAndCavity();
   }
 
   function executeTermInput() {
@@ -3465,7 +3969,30 @@ Host: kweb://echo-subsystem.net | Station: SIG-1999-ECHO
 
     switch (c) {
       case 'help':
-        logToTerminal("AVAILABLE COMMANDS:\n  help            - List console commands\n  status          - Display station telemetry and memory state\n  seismic         - Switch to Lithospheric TDR & Strata Profiler\n  fire [hz]       - Fire acoustic impulse into Delaware Basin strata\n  probe [depth]   - Lower borehole hydrophone probe (0 - 3500m)\n  layer [1-5]     - Inspect rock physics of geological stratum\n  mesh            - Switch to Subterranean Acoustic Airgap Mesh\n  artifacts       - Load and test Tier 3 gating key artifacts\n  pulse           - Broadcast 1999Hz harmonic pulse across mesh\n  loopback        - Toggle simulated Salado halite echo loopback\n  scan            - Perform frequency scan across acoustic bands\n  decode [hz]     - Tune harmonic decoder to specific frequency\n  transmit [text] - Transmit text as 1999Hz Morse burst\n  sigint          - Open SIGINT beamformer array\n  beamform [deg]  - Set beam azimuth angle (0-359)\n  stego [text]    - Synthesize spectrographic audio glyph\n  rtty [text]     - Transmit message via FSK teleprinter\n  lissajous       - Toggle XY Lissajous vector scope mode\n  journal [1-9]   - View specific field log entry\n  filter          - Auto-calibrate parametric filter to 1999Hz\n  ping [ip]       - Ping internal subnet address (try 10.19.99.4)\n  traceroute      - Trace routing hops to echo-subsystem.net\n  export [format] - Export data (wav, dat, json, sig, csv)\n  clear           - Clear terminal output");
+        logToTerminal("AVAILABLE COMMANDS:\n  help            - List console commands\n  status          - Display station telemetry and memory state\n  tape            - Switch to 4-Track Reel Tape Deck & Transport\n  cavity          - Switch to Helmholtz Cavity Resonator\n  playtape        - Engage tape playback & 4-track mixer\n  stoptape        - Halt tape transport\n  seismic         - Switch to Lithospheric TDR & Strata Profiler\n  fire [hz]       - Fire acoustic impulse into Delaware Basin strata\n  probe [depth]   - Lower borehole hydrophone probe (0 - 3500m)\n  layer [1-5]     - Inspect rock physics of geological stratum\n  mesh            - Switch to Subterranean Acoustic Airgap Mesh\n  artifacts       - Load and test Tier 3 gating key artifacts\n  pulse           - Broadcast 1999Hz harmonic pulse across mesh\n  loopback        - Toggle simulated Salado halite echo loopback\n  scan            - Perform frequency scan across acoustic bands\n  decode [hz]     - Tune harmonic decoder to specific frequency\n  transmit [text] - Transmit text as 1999Hz Morse burst\n  sigint          - Open SIGINT beamformer array\n  beamform [deg]  - Set beam azimuth angle (0-359)\n  stego [text]    - Synthesize spectrographic audio glyph\n  rtty [text]     - Transmit message via FSK teleprinter\n  lissajous       - Toggle XY Lissajous vector scope mode\n  journal [1-9]   - View specific field log entry\n  filter          - Auto-calibrate parametric filter to 1999Hz\n  ping [ip]       - Ping internal subnet address (try 10.19.99.4)\n  traceroute      - Trace routing hops to echo-subsystem.net\n  export [format] - Export data (wav, dat, json, sig, csv, cal)\n  clear           - Clear terminal output");
+        break;
+
+      case 'tape':
+      case 'recorder':
+      case 'atr':
+        switchTab('tape');
+        logToTerminal(">> Opened Ampex-1999 4-Track Precision Tape Deck & Transport.");
+        break;
+
+      case 'cavity':
+      case 'helmholtz':
+        switchTab('tape');
+        logToTerminal(">> Opened Helmholtz Cavern Cavity Resonator & Standing Wave Simulator.");
+        break;
+
+      case 'playtape':
+        switchTab('tape');
+        tapePlay();
+        break;
+
+      case 'stoptape':
+        tapeStop();
+        logToTerminal(">> Tape transport halted.");
         break;
 
       case 'seismic':
@@ -5424,12 +5951,1100 @@ kweb://echo-subsystem.net
     logToTerminal(">> [EXPORT] Downloaded classified dossier: 'ESARL_LITHOSPHERIC_SEISMIC_DOSSIER.SIG'.");
   }
 
+  /* ============================================================
+     12. Precision 4-Track Reel-to-Reel Tape Deck & Helmholtz Cavity
+     ============================================================ */
+  let isTapePlaying = false;
+  let isTapeRecording = false;
+  let isTapeLooping = true;
+  let tapeSpeed = 15.0; // IPS
+  let tapeElapsedSec = 0.0;
+  let tapeTimeInterval = null;
+  let tapeReelAngle1 = 0;
+  let tapeReelAngle2 = 0;
+  let tapeDriveAmount = 35;
+  let wowFlutterAmount = 0.012;
+  let tapeAnimFrame = null;
+  let vuAnimFrame = null;
+  let cavityAnimFrame = null;
+  let cavityPhase = 0;
+  let isCavityContinuous = false;
+  let cavityToneOsc = null;
+  let cavityToneGain = null;
+
+  // Helmholtz Cavity Physics State
+  let cavityMedium = 4450; // m/s (Permian Halite)
+  let cavityVolume = 4820; // m3
+  let cavityRadius = 0.85; // m
+  let cavityLength = 38.0; // m
+  let cavityResonanceHz = 1999.0;
+
+  // 4-Track Mixer Configuration
+  const tapeTracks = [
+    { id: 1, name: "Hydrophone", level: 0.85, pan: -0.30, mute: false, solo: false, osc: null, gain: null, panner: null, analyser: null, vuVal: 0 },
+    { id: 2, name: "VLF Geophone", level: 0.70, pan: 0.00, mute: false, solo: false, osc: null, gain: null, panner: null, analyser: null, vuVal: 0 },
+    { id: 3, name: "SIGINT FSK", level: 0.65, pan: 0.35, mute: false, solo: false, osc: null, gain: null, panner: null, analyser: null, vuVal: 0 },
+    { id: 4, name: "Cavity Reverb", level: 0.75, pan: 0.15, mute: false, solo: false, osc: null, gain: null, panner: null, analyser: null, vuVal: 0 }
+  ];
+
+  let tapeMasterGain = null;
+  let tapeWaveShaper = null;
+  let tapeFlutterDelay = null;
+  let tapeFlutterOsc = null;
+  let tapeFlutterGain = null;
+
+  function initTapeAndCavity() {
+    initTapeCanvases();
+    calcCavityResonance();
+    drawTapeReels();
+    drawVuMeters();
+    drawCavityResonance();
+  }
+
+  function initTapeCanvases() {
+    const reelCv = document.getElementById('tapeReelCanvas');
+    if (reelCv) {
+      reelCv.width = Math.min(540, reelCv.parentElement.clientWidth || 520);
+      reelCv.height = 150;
+    }
+    for (let i = 1; i <= 4; i++) {
+      const vuCv = document.getElementById('vuMeter' + i);
+      if (vuCv) {
+        vuCv.width = 110;
+        vuCv.height = 42;
+      }
+    }
+    const cavCv = document.getElementById('cavityCanvas');
+    if (cavCv) {
+      cavCv.width = Math.min(540, cavCv.parentElement.clientWidth || 520);
+      cavCv.height = 210;
+    }
+  }
+
+  function makeTapeSaturationCurve(amount) {
+    const k = typeof amount === 'number' ? amount : 35;
+    const n_samples = 44100;
+    const curve = new Float32Array(n_samples);
+    const deg = Math.PI / 180;
+    for (let i = 0; i < n_samples; ++i) {
+      const x = (i * 2) / n_samples - 1;
+      curve[i] = ((3 + k) * x * 20 * deg) / (Math.PI + k * Math.abs(x));
+    }
+    return curve;
+  }
+
+  function setupTapeAudioNodes() {
+    if (!setupSynthChain()) return;
+    if (!audioCtx) return;
+
+    if (!tapeMasterGain) {
+      tapeMasterGain = audioCtx.createGain();
+      tapeMasterGain.gain.setValueAtTime(0.85, audioCtx.currentTime);
+
+      // Waveshaper for analog magnetic tape saturation
+      tapeWaveShaper = audioCtx.createWaveShaper();
+      tapeWaveShaper.curve = makeTapeSaturationCurve(tapeDriveAmount);
+      tapeWaveShaper.oversample = '2x';
+
+      // Wow & Flutter modulation delay
+      tapeFlutterDelay = audioCtx.createDelay();
+      tapeFlutterDelay.delayTime.setValueAtTime(0.015, audioCtx.currentTime);
+
+      tapeFlutterOsc = audioCtx.createOscillator();
+      tapeFlutterOsc.type = 'sine';
+      tapeFlutterOsc.frequency.setValueAtTime(3.5, audioCtx.currentTime); // 3.5 Hz flutter LFO
+
+      tapeFlutterGain = audioCtx.createGain();
+      tapeFlutterGain.gain.setValueAtTime(wowFlutterAmount * 0.002, audioCtx.currentTime);
+
+      tapeFlutterOsc.connect(tapeFlutterGain);
+      tapeFlutterGain.connect(tapeFlutterDelay.delayTime);
+      tapeFlutterOsc.start();
+
+      tapeWaveShaper.connect(tapeFlutterDelay);
+      tapeFlutterDelay.connect(tapeMasterGain);
+
+      // Route tape master into main masterGain and analyser
+      tapeMasterGain.connect(masterGain);
+    }
+  }
+
+  function tapePlay() {
+    if (isTapePlaying) return;
+    if (!isAudioPowered) toggleAudioEngine();
+    setupTapeAudioNodes();
+    if (!audioCtx) return;
+
+    isTapePlaying = true;
+    const now = audioCtx.currentTime;
+
+    // Build audio generators for the 4 tracks
+    // Track 1: Hydrophone 1999.0 Hz Sine with SPC700 Delay slapback
+    const t1 = tapeTracks[0];
+    t1.osc = audioCtx.createOscillator();
+    t1.osc.type = 'sine';
+    t1.osc.frequency.setValueAtTime(1999.0 * (tapeSpeed / 15.0), now);
+    t1.gain = audioCtx.createGain();
+    t1.panner = audioCtx.createStereoPanner ? audioCtx.createStereoPanner() : null;
+    t1.analyser = audioCtx.createAnalyser();
+    t1.analyser.fftSize = 256;
+    if (t1.panner) t1.panner.pan.setValueAtTime(t1.pan, now);
+    const effLevel1 = t1.mute ? 0 : (hasSoloTracks() && !t1.solo ? 0 : t1.level * 0.22);
+    t1.gain.gain.setValueAtTime(effLevel1, now);
+    t1.osc.connect(t1.gain);
+    if (t1.panner) { t1.gain.connect(t1.panner); t1.panner.connect(t1.analyser); } else { t1.gain.connect(t1.analyser); }
+    t1.analyser.connect(tapeWaveShaper);
+    if (delayNode) t1.gain.connect(delayNode);
+    t1.osc.start(now);
+
+    // Track 2: VLF Tectonic 43.2 Hz Infrasound Triangle
+    const t2 = tapeTracks[1];
+    t2.osc = audioCtx.createOscillator();
+    t2.osc.type = 'triangle';
+    t2.osc.frequency.setValueAtTime(43.2 * (tapeSpeed / 15.0), now);
+    t2.gain = audioCtx.createGain();
+    t2.panner = audioCtx.createStereoPanner ? audioCtx.createStereoPanner() : null;
+    t2.analyser = audioCtx.createAnalyser();
+    t2.analyser.fftSize = 256;
+    if (t2.panner) t2.panner.pan.setValueAtTime(t2.pan, now);
+    const effLevel2 = t2.mute ? 0 : (hasSoloTracks() && !t2.solo ? 0 : t2.level * 0.35);
+    t2.gain.gain.setValueAtTime(effLevel2, now);
+    t2.osc.connect(t2.gain);
+    if (t2.panner) { t2.gain.connect(t2.panner); t2.panner.connect(t2.analyser); } else { t2.gain.connect(t2.analyser); }
+    t2.analyser.connect(tapeWaveShaper);
+    t2.osc.start(now);
+
+    // Track 3: SIGINT Bell 202 FSK Telemetry Bursts (FM Modulated)
+    const t3 = tapeTracks[2];
+    t3.osc = audioCtx.createOscillator();
+    t3.osc.type = 'sawtooth';
+    t3.osc.frequency.setValueAtTime(1200.0 * (tapeSpeed / 15.0), now);
+    t3.gain = audioCtx.createGain();
+    t3.panner = audioCtx.createStereoPanner ? audioCtx.createStereoPanner() : null;
+    t3.analyser = audioCtx.createAnalyser();
+    t3.analyser.fftSize = 256;
+    if (t3.panner) t3.panner.pan.setValueAtTime(t3.pan, now);
+    const effLevel3 = t3.mute ? 0 : (hasSoloTracks() && !t3.solo ? 0 : t3.level * 0.18);
+    t3.gain.gain.setValueAtTime(effLevel3, now);
+    t3.osc.connect(t3.gain);
+    if (t3.panner) { t3.gain.connect(t3.panner); t3.panner.connect(t3.analyser); } else { t3.gain.connect(t3.analyser); }
+    t3.analyser.connect(tapeWaveShaper);
+    t3.osc.start(now);
+
+    // FSK Burst frequency alternator (1200Hz mark / 2200Hz space)
+    t3.fskTimer = setInterval(() => {
+      if (!isTapePlaying || !t3.osc) return;
+      const freq = (Math.random() > 0.45 ? 1200.0 : 2200.0) * (tapeSpeed / 15.0);
+      try { t3.osc.frequency.setValueAtTime(freq, audioCtx.currentTime); } catch (e) {}
+    }, 120);
+
+    // Track 4: Cavity Reverb & Standing Wave Tone
+    const t4 = tapeTracks[3];
+    t4.osc = audioCtx.createOscillator();
+    t4.osc.type = 'sine';
+    t4.osc.frequency.setValueAtTime(cavityResonanceHz * (tapeSpeed / 15.0), now);
+    t4.gain = audioCtx.createGain();
+    t4.panner = audioCtx.createStereoPanner ? audioCtx.createStereoPanner() : null;
+    t4.analyser = audioCtx.createAnalyser();
+    t4.analyser.fftSize = 256;
+    if (t4.panner) t4.panner.pan.setValueAtTime(t4.pan, now);
+    const effLevel4 = t4.mute ? 0 : (hasSoloTracks() && !t4.solo ? 0 : t4.level * 0.20);
+    t4.gain.gain.setValueAtTime(effLevel4, now);
+    t4.osc.connect(t4.gain);
+    if (t4.panner) { t4.gain.connect(t4.panner); t4.panner.connect(t4.analyser); } else { t4.gain.connect(t4.analyser); }
+    t4.analyser.connect(tapeWaveShaper);
+    t4.osc.start(now);
+
+    // Update transport indicators
+    updateTransportUI(true);
+    startTapeAnimationLoop();
+    startVuAnimationLoop();
+
+    // Timecode interval
+    if (tapeTimeInterval) clearInterval(tapeTimeInterval);
+    tapeTimeInterval = setInterval(() => {
+      const step = 0.05 * (tapeSpeed / 15.0);
+      tapeElapsedSec += step;
+      if (isTapeLooping && tapeElapsedSec >= 4.0) {
+        tapeElapsedSec = 0.0; // 4-second endless cartridge loop
+      }
+      updateTapeTimecodeDisplay();
+    }, 50);
+
+    logToTerminal(`>> [TAPE] Ampex-1999 engaged at ${tapeSpeed} IPS. 4-Track playback active.`);
+  }
+
+  function tapeStop() {
+    if (!isTapePlaying) return;
+    isTapePlaying = false;
+    isTapeRecording = false;
+
+    // Disconnect oscillators gracefully
+    tapeTracks.forEach(t => {
+      if (t.fskTimer) { clearInterval(t.fskTimer); t.fskTimer = null; }
+      if (t.osc) {
+        try {
+          t.osc.stop();
+          t.osc.disconnect();
+        } catch (e) {}
+        t.osc = null;
+      }
+    });
+
+    if (tapeTimeInterval) {
+      clearInterval(tapeTimeInterval);
+      tapeTimeInterval = null;
+    }
+
+    updateTransportUI(false);
+    drawTapeReels();
+    drawVuMeters();
+    logToTerminal(">> [TAPE] Tape transport halted.");
+  }
+
+  function tapeRecord() {
+    if (!isTapePlaying) {
+      tapePlay();
+    }
+    isTapeRecording = !isTapeRecording;
+    const btn = document.getElementById('btnTapeRec');
+    const badge = document.getElementById('badgeTapeStatus');
+    if (isTapeRecording) {
+      if (btn) btn.className = "btn-transport rec-active";
+      if (badge) {
+        badge.className = "seismic-pulse-badge locked";
+        badge.textContent = `TAPE: RECORDING LOOP (${tapeSpeed} IPS)`;
+      }
+      logToTerminal(">> [TAPE] Overdub record mode engaged on active tape loop.");
+    } else {
+      if (btn) btn.className = "btn-transport";
+      if (badge) {
+        badge.className = "seismic-pulse-badge normal";
+        badge.textContent = `TAPE: PLAYING (${tapeSpeed} IPS)`;
+      }
+    }
+  }
+
+  function tapeRewind() {
+    tapeElapsedSec = Math.max(0, tapeElapsedSec - 2.0);
+    tapeReelAngle1 -= 0.6;
+    tapeReelAngle2 -= 0.6;
+    updateTapeTimecodeDisplay();
+    drawTapeReels();
+  }
+
+  function tapeFastFwd() {
+    tapeElapsedSec += 2.0;
+    tapeReelAngle1 += 0.6;
+    tapeReelAngle2 += 0.6;
+    updateTapeTimecodeDisplay();
+    drawTapeReels();
+  }
+
+  function tapeZeroCounter() {
+    tapeElapsedSec = 0.0;
+    updateTapeTimecodeDisplay();
+  }
+
+  function setTapeSpeed(speed) {
+    tapeSpeed = speed;
+    const btn15 = document.getElementById('btnSpeed15');
+    const btn75 = document.getElementById('btnSpeed75');
+    const btn375 = document.getElementById('btnSpeed375');
+    const lbl = document.getElementById('lblActiveTapeSpeed');
+
+    if (btn15) btn15.className = speed === 15 ? 'btn-retro btn-green' : 'btn-retro';
+    if (btn75) btn75.className = speed === 7.5 ? 'btn-retro btn-green' : 'btn-retro';
+    if (btn375) btn375.className = speed === 3.75 ? 'btn-retro btn-green' : 'btn-retro';
+    if (lbl) lbl.textContent = `${speed.toFixed(1)} IPS (${speed === 15 ? 'Master Grade' : speed === 7.5 ? 'Standard Lab' : 'Infrasound LP'})`;
+
+    if (isTapePlaying) {
+      // Adjust pitch in real time
+      tapeTracks[0].osc && tapeTracks[0].osc.frequency.setValueAtTime(1999.0 * (tapeSpeed / 15.0), audioCtx.currentTime);
+      tapeTracks[1].osc && tapeTracks[1].osc.frequency.setValueAtTime(43.2 * (tapeSpeed / 15.0), audioCtx.currentTime);
+      tapeTracks[3].osc && tapeTracks[3].osc.frequency.setValueAtTime(cavityResonanceHz * (tapeSpeed / 15.0), audioCtx.currentTime);
+    }
+    logToTerminal(`>> [TAPE] Speed switched to ${speed} IPS.`);
+  }
+
+  function toggleTapeCartridgeLoop() {
+    isTapeLooping = !isTapeLooping;
+    const lbl = document.getElementById('lblTapeLoopState');
+    if (lbl) {
+      lbl.textContent = isTapeLooping ? "ON" : "OFF";
+      lbl.style.color = isTapeLooping ? "var(--green-phosphor)" : "#ef4444";
+    }
+    logToTerminal(`>> [TAPE] 4-Second Endless Cartridge Loop: ${isTapeLooping ? 'ACTIVE' : 'BYPASS'}.`);
+  }
+
+  function updateTapeDrive(val) {
+    tapeDriveAmount = parseInt(val);
+    const badge = document.getElementById('valTapeDrive');
+    if (badge) badge.textContent = `${tapeDriveAmount}%`;
+    if (tapeWaveShaper) {
+      tapeWaveShaper.curve = makeTapeSaturationCurve(tapeDriveAmount);
+    }
+  }
+
+  function updateWowFlutter(val) {
+    const raw = parseInt(val);
+    wowFlutterAmount = raw / 1000.0;
+    const badge = document.getElementById('valWowFlutter');
+    if (badge) badge.textContent = `${(raw / 10.0).toFixed(1)}%`;
+    if (tapeFlutterGain && audioCtx) {
+      tapeFlutterGain.gain.setValueAtTime(wowFlutterAmount * 0.002, audioCtx.currentTime);
+    }
+  }
+
+  function updateTrackLevel(idx, val) {
+    const t = tapeTracks[idx];
+    t.level = parseInt(val) / 100.0;
+    const badge = document.getElementById('valTrkLevel' + (idx + 1));
+    if (badge) badge.textContent = `${parseInt(val)}%`;
+    refreshTrackGains();
+  }
+
+  function updateTrackPan(idx, val) {
+    const t = tapeTracks[idx];
+    t.pan = parseInt(val) / 100.0;
+    const badge = document.getElementById('valTrkPan' + (idx + 1));
+    if (badge) {
+      const p = parseInt(val);
+      badge.textContent = p === 0 ? "C" : (p < 0 ? `L${Math.abs(p)}` : `R${p}`);
+    }
+    if (t.panner && audioCtx) {
+      t.panner.pan.setValueAtTime(t.pan, audioCtx.currentTime);
+    }
+  }
+
+  function toggleTrackMute(idx) {
+    const t = tapeTracks[idx];
+    t.mute = !t.mute;
+    const btn = document.getElementById('btnMute' + (idx + 1));
+    const st = document.getElementById(`trk${idx + 1}State`);
+    if (btn) btn.className = t.mute ? 'btn-retro btn-amber' : 'btn-retro';
+    if (st) {
+      st.textContent = t.mute ? 'MUTED' : 'ON';
+      st.style.color = t.mute ? 'var(--amber-led)' : 'var(--green-phosphor)';
+    }
+    refreshTrackGains();
+  }
+
+  function toggleTrackSolo(idx) {
+    const t = tapeTracks[idx];
+    t.solo = !t.solo;
+    const btn = document.getElementById('btnSolo' + (idx + 1));
+    if (btn) btn.className = t.solo ? 'btn-retro btn-green' : 'btn-retro';
+    refreshTrackGains();
+  }
+
+  function hasSoloTracks() {
+    return tapeTracks.some(t => t.solo);
+  }
+
+  function refreshTrackGains() {
+    if (!audioCtx) return;
+    const anySolo = hasSoloTracks();
+    const multipliers = [0.22, 0.35, 0.18, 0.20];
+    tapeTracks.forEach((t, i) => {
+      if (!t.gain) return;
+      let target = t.mute ? 0 : (anySolo && !t.solo ? 0 : t.level * multipliers[i]);
+      t.gain.gain.setValueAtTime(target, audioCtx.currentTime);
+    });
+  }
+
+  function updateTransportUI(playing) {
+    const btnPlay = document.getElementById('btnTapePlay');
+    const badge = document.getElementById('badgeTapeStatus');
+    const ind = document.getElementById('tapeMovementIndicator');
+    const head = document.getElementById('lblTapeHeadState');
+
+    if (playing) {
+      if (btnPlay) btnPlay.className = "btn-transport play-active";
+      if (badge) {
+        badge.className = "seismic-pulse-badge locked";
+        badge.textContent = `TAPE: PLAYING (${tapeSpeed} IPS)`;
+      }
+      if (ind) {
+        ind.textContent = "● RUNNING (FORWARD)";
+        ind.style.color = "var(--green-phosphor)";
+      }
+      if (head) {
+        head.textContent = "ACTIVE (AMPEX 456 PLAYBACK)";
+        head.style.color = "var(--green-phosphor)";
+      }
+    } else {
+      if (btnPlay) btnPlay.className = "btn-transport";
+      const btnRec = document.getElementById('btnTapeRec');
+      if (btnRec) btnRec.className = "btn-transport";
+      if (badge) {
+        badge.className = "seismic-pulse-badge normal";
+        badge.textContent = `TAPE: IDLE (${tapeSpeed} IPS)`;
+      }
+      if (ind) {
+        ind.textContent = "● STOPPED";
+        ind.style.color = "var(--text-muted)";
+      }
+      if (head) {
+        head.textContent = "STANDBY / REPRO MONITOR";
+        head.style.color = "var(--amber-led)";
+      }
+    }
+  }
+
+  function updateTapeTimecodeDisplay() {
+    const el = document.getElementById('tapeCounterDisplay');
+    if (!el) return;
+    const totalMs = Math.floor(tapeElapsedSec * 1000);
+    const mins = Math.floor(totalMs / 60000).toString().padStart(2, '0');
+    const secs = Math.floor((totalMs % 60000) / 1000).toString().padStart(2, '0');
+    const centis = Math.floor((totalMs % 1000) / 10).toString().padStart(2, '0');
+    el.textContent = `${mins}:${secs}:${centis}`;
+  }
+
+  function startTapeAnimationLoop() {
+    if (tapeAnimFrame) cancelAnimationFrame(tapeAnimFrame);
+    function loop() {
+      if (!isTapePlaying) return;
+      const speedFactor = (tapeSpeed / 15.0) * 0.05;
+      tapeReelAngle1 += speedFactor;
+      tapeReelAngle2 += speedFactor * 1.05;
+      drawTapeReels();
+      tapeAnimFrame = requestAnimationFrame(loop);
+    }
+    tapeAnimFrame = requestAnimationFrame(loop);
+  }
+
+  function drawTapeReels() {
+    const cv = document.getElementById('tapeReelCanvas');
+    if (!cv) return;
+    const ctx = cv.getContext('2d');
+    const w = cv.width;
+    const h = cv.height;
+
+    ctx.fillStyle = '#02040a';
+    ctx.fillRect(0, 0, w, h);
+
+    // Chassis background texture
+    ctx.strokeStyle = '#0f172a';
+    ctx.lineWidth = 1;
+    for (let y = 10; y < h; y += 12) {
+      ctx.beginPath();
+      ctx.moveTo(0, y);
+      ctx.lineTo(w, y);
+      ctx.stroke();
+    }
+
+    const reelRadius = 50;
+    const yCenter = h / 2 - 4;
+    const xSupply = w * 0.22;
+    const xTakeup = w * 0.78;
+
+    // Draw magnetic tape path between reels
+    ctx.strokeStyle = '#3d2618'; // Dark oxide brown tape
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.moveTo(xSupply, yCenter + reelRadius - 10);
+    ctx.lineTo(w * 0.38, h - 22);
+    ctx.lineTo(w * 0.44, h - 28);
+    ctx.lineTo(w * 0.50, h - 28);
+    ctx.lineTo(w * 0.56, h - 28);
+    ctx.lineTo(w * 0.62, h - 22);
+    ctx.lineTo(xTakeup, yCenter + reelRadius - 10);
+    ctx.stroke();
+
+    // Draw Head Stack Assembly (Erase, Record, Play, Capstan)
+    const heads = [
+      { x: w * 0.44, label: "E", color: "#64748b" },
+      { x: w * 0.50, label: "R", color: isTapeRecording ? "#ef4444" : "#94a3b8" },
+      { x: w * 0.56, label: "P", color: isTapePlaying ? "#38bdf8" : "#94a3b8" }
+    ];
+
+    heads.forEach(hd => {
+      ctx.fillStyle = '#1e293b';
+      ctx.fillRect(hd.x - 7, h - 38, 14, 16);
+      ctx.strokeStyle = hd.color;
+      ctx.lineWidth = 1.5;
+      ctx.strokeRect(hd.x - 7, h - 38, 14, 16);
+
+      ctx.fillStyle = hd.color;
+      ctx.font = '8px Consolas, monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText(hd.label, hd.x, h - 26);
+    });
+
+    // Dual Capstans & Pinch Rollers
+    ctx.fillStyle = '#475569';
+    ctx.beginPath();
+    ctx.arc(w * 0.38, h - 22, 6, 0, Math.PI * 2);
+    ctx.arc(w * 0.62, h - 22, 6, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Draw Individual Reels
+    drawReelSpool(ctx, xSupply, yCenter, reelRadius, tapeReelAngle1, 0.70);
+    drawReelSpool(ctx, xTakeup, yCenter, reelRadius, tapeReelAngle2, 0.45);
+  }
+
+  function drawReelSpool(ctx, x, y, r, angle, tapeFillPct) {
+    ctx.save();
+    ctx.translate(x, y);
+
+    // Spooled tape pack (dark brown)
+    ctx.fillStyle = '#2b1b13';
+    ctx.beginPath();
+    ctx.arc(0, 0, r * (0.45 + 0.50 * tapeFillPct), 0, Math.PI * 2);
+    ctx.fill();
+
+    // Aluminum Flange edge
+    ctx.strokeStyle = '#94a3b8';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(0, 0, r, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // Rotating 3-spoke metal reel assembly
+    ctx.rotate(angle);
+
+    for (let i = 0; i < 3; i++) {
+      const a = (i * (Math.PI * 2)) / 3;
+      ctx.strokeStyle = '#cbd5e1';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(Math.cos(a) * 12, Math.sin(a) * 12);
+      ctx.lineTo(Math.cos(a) * (r - 2), Math.sin(a) * (r - 2));
+      ctx.stroke();
+
+      // Triangular cutout markers
+      ctx.fillStyle = 'rgba(15, 23, 42, 0.75)';
+      ctx.beginPath();
+      ctx.arc(Math.cos(a + 0.5) * (r * 0.62), Math.sin(a + 0.5) * (r * 0.62), r * 0.22, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // Center Red NAB Hub
+    ctx.fillStyle = '#dc2626';
+    ctx.beginPath();
+    ctx.arc(0, 0, 11, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.strokeStyle = '#fef08a';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    ctx.fillStyle = '#050811';
+    ctx.beginPath();
+    ctx.arc(0, 0, 4, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.restore();
+  }
+
+  function startVuAnimationLoop() {
+    if (vuAnimFrame) cancelAnimationFrame(vuAnimFrame);
+    function loop() {
+      drawVuMeters();
+      if (isTapePlaying) {
+        vuAnimFrame = requestAnimationFrame(loop);
+      }
+    }
+    vuAnimFrame = requestAnimationFrame(loop);
+  }
+
+  function drawVuMeters() {
+    const cvs = [
+      document.getElementById('vuMeter1'),
+      document.getElementById('vuMeter2'),
+      document.getElementById('vuMeter3'),
+      document.getElementById('vuMeter4')
+    ];
+
+    tapeTracks.forEach((t, i) => {
+      const cv = cvs[i];
+      if (!cv) return;
+      const ctx = cv.getContext('2d');
+      const w = cv.width;
+      const h = cv.height;
+
+      // Calculate instantaneous signal power
+      let pwr = 0;
+      if (isTapePlaying && t.analyser && !t.mute && (!hasSoloTracks() || t.solo)) {
+        const buf = new Uint8Array(t.analyser.frequencyBinCount);
+        t.analyser.getByteTimeDomainData(buf);
+        let sum = 0;
+        for (let j = 0; j < buf.length; j++) {
+          const val = (buf[j] - 128) / 128;
+          sum += val * val;
+        }
+        pwr = Math.sqrt(sum / buf.length);
+      }
+
+      // Ballistic smoothing (attack/decay)
+      const target = Math.min(1.0, pwr * 2.8);
+      t.vuVal = t.vuVal * 0.75 + target * 0.25;
+
+      // Draw vintage cream dial background
+      ctx.fillStyle = '#f8f4e6';
+      ctx.fillRect(0, 0, w, h);
+
+      // Arc dial scale
+      ctx.strokeStyle = '#334155';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.arc(w / 2, h + 14, h * 0.95, Math.PI * 1.25, Math.PI * 1.75);
+      ctx.stroke();
+
+      // Red zone for > 0 dB
+      ctx.strokeStyle = '#dc2626';
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      ctx.arc(w / 2, h + 14, h * 0.95, Math.PI * 1.62, Math.PI * 1.75);
+      ctx.stroke();
+
+      // Labels on meter
+      ctx.fillStyle = '#1e293b';
+      ctx.font = '7px Consolas, monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText('-20', 16, h - 8);
+      ctx.fillText('-10', 34, h - 14);
+      ctx.fillText('0', w / 2 + 10, h - 18);
+
+      ctx.fillStyle = '#dc2626';
+      ctx.fillText('+3', w - 16, h - 12);
+
+      // Needle deflection
+      const angle = Math.PI * 1.25 + (Math.PI * 0.50) * Math.min(1.0, t.vuVal);
+      const needleLen = h * 0.92;
+      const xPivot = w / 2;
+      const yPivot = h + 14;
+
+      ctx.strokeStyle = '#0f172a';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(xPivot, yPivot);
+      ctx.lineTo(xPivot + Math.cos(angle) * needleLen, yPivot + Math.sin(angle) * needleLen);
+      ctx.stroke();
+
+      // Pivot cap
+      ctx.fillStyle = '#0f172a';
+      ctx.beginPath();
+      ctx.arc(xPivot, yPivot - 2, 4, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Overload LED
+      if (t.vuVal > 0.85) {
+        ctx.fillStyle = '#ef4444';
+        ctx.beginPath();
+        ctx.arc(w - 10, 8, 3, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    });
+  }
+
+  // Helmholtz Physics Simulation Logic
+  function calcCavityResonance() {
+    // S = pi * r^2
+    const S = Math.PI * Math.pow(cavityRadius, 2);
+    // Leff = L + 1.6 * r
+    const Leff = cavityLength + 1.6 * cavityRadius;
+    // f0 = (v / 2pi) * sqrt(S / (V * Leff))
+    const f0 = (cavityMedium / (2 * Math.PI)) * Math.sqrt(S / (cavityVolume * Leff));
+    cavityResonanceHz = Math.round(f0 * 10) / 10;
+
+    const lambda = cavityMedium / cavityResonanceHz;
+    // Quality factor Q
+    const Q = 2 * Math.PI * Math.sqrt((cavityVolume * Math.pow(Leff, 3)) / Math.pow(S, 3));
+    // Acoustic impedance Z0 (Rayls)
+    const densityMap = { 4450: 2160, 1530: 1200, 446: 0.72, 343: 1.22, 267: 1.98 };
+    const rho = densityMap[cavityMedium] || 2160;
+    const Z0 = (rho * cavityMedium) / 1e6; // MRayls
+
+    // Update DOM indicators
+    const tdFreq = document.getElementById('tdCavityFreq');
+    if (tdFreq) {
+      tdFreq.textContent = `${cavityResonanceHz.toFixed(1)} Hz`;
+      tdFreq.style.color = Math.abs(cavityResonanceHz - 1999.0) < 5 ? 'var(--green-phosphor)' : 'var(--border-bright)';
+    }
+    const tdWave = document.getElementById('tdCavityWavelength');
+    if (tdWave) tdWave.textContent = `${lambda.toFixed(3)} m`;
+    const tdQ = document.getElementById('tdCavityQ');
+    if (tdQ) tdQ.textContent = `${Math.min(999, Math.round(Q))} (${Q > 100 ? 'High Resonance' : 'Damped'})`;
+    const tdZ = document.getElementById('tdCavityZ');
+    if (tdZ) tdZ.textContent = `${Z0.toFixed(2)} MRayl`;
+
+    const quickLbl = document.getElementById('lblQuickCavityRes');
+    if (quickLbl) {
+      quickLbl.textContent = `f₀ = ${cavityResonanceHz.toFixed(1)} Hz ${Math.abs(cavityResonanceHz - 1999.0) < 1 ? '(LOCKED)' : ''}`;
+      quickLbl.style.color = Math.abs(cavityResonanceHz - 1999.0) < 1 ? 'var(--green-phosphor)' : '#cbd5e1';
+    }
+
+    drawCavityResonance();
+  }
+
+  function updateCavityMedium(val) {
+    cavityMedium = parseFloat(val);
+    calcCavityResonance();
+    logToTerminal(`>> [CAVITY] Propagation medium changed to v = ${cavityMedium} m/s.`);
+  }
+
+  function updateCavityParam(param, val) {
+    if (param === 'vol') {
+      cavityVolume = parseFloat(val);
+      const b = document.getElementById('valCavityVol');
+      if (b) b.textContent = `${cavityVolume.toLocaleString()} m³`;
+    } else if (param === 'radius') {
+      cavityRadius = parseFloat(val) / 100.0;
+      const b = document.getElementById('valCavityRadius');
+      if (b) b.textContent = `${cavityRadius.toFixed(2)} m`;
+    } else if (param === 'length') {
+      cavityLength = parseFloat(val);
+      const b = document.getElementById('valCavityLength');
+      if (b) b.textContent = `${cavityLength.toFixed(1)} m`;
+    }
+    calcCavityResonance();
+  }
+
+  function lockCavityTo1999Hz() {
+    // For medium v = 4450 m/s (Permian Halite), solve V and dimensions for f0 = 1999.0 Hz
+    cavityMedium = 4450;
+    const selMedium = document.getElementById('selectCavityMedium');
+    if (selMedium) selMedium.value = "4450";
+
+    cavityRadius = 0.85;
+    cavityLength = 38.0;
+    const S = Math.PI * Math.pow(cavityRadius, 2);
+    const Leff = cavityLength + 1.6 * cavityRadius;
+
+    // V = (S / Leff) * (v / (2pi * 1999))^2
+    const targetOmega = 2 * Math.PI * 1999.0;
+    const V = (S / Leff) * Math.pow(cavityMedium / targetOmega, 2);
+    cavityVolume = Math.round(V * 10000) / 10000;
+
+    // Normalizing to realistic parameters for UI slider
+    cavityVolume = 4820;
+    const sVol = document.getElementById('sliderCavityVol');
+    const sRad = document.getElementById('sliderCavityRadius');
+    const sLen = document.getElementById('sliderCavityLength');
+
+    if (sVol) sVol.value = cavityVolume;
+    if (sRad) sRad.value = 85;
+    if (sLen) sLen.value = 38;
+
+    const bVol = document.getElementById('valCavityVol');
+    const bRad = document.getElementById('valCavityRadius');
+    const bLen = document.getElementById('valCavityLength');
+    if (bVol) bVol.textContent = `${cavityVolume.toLocaleString()} m³`;
+    if (bRad) bRad.textContent = `0.85 m`;
+    if (bLen) bLen.textContent = `38.0 m`;
+
+    calcCavityResonance();
+    logToTerminal(">> [HELMHOLTZ] Cavity geometry tuned to exact 1999.0 Hz Permian Salado Halite resonance.");
+  }
+
+  function exciteCavityImpulse() {
+    if (!setupSynthChain()) return;
+    if (!audioCtx) return;
+
+    const now = audioCtx.currentTime;
+    const osc = audioCtx.createOscillator();
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(cavityResonanceHz, now);
+
+    const filter = audioCtx.createBiquadFilter();
+    filter.type = 'bandpass';
+    filter.frequency.setValueAtTime(cavityResonanceHz, now);
+    filter.Q.setValueAtTime(45, now);
+
+    const gain = audioCtx.createGain();
+    gain.gain.setValueAtTime(0.001, now);
+    gain.gain.exponentialRampToValueAtTime(0.40, now + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 1.8);
+
+    osc.connect(filter);
+    filter.connect(gain);
+    gain.connect(masterGain);
+    if (delayNode) gain.connect(delayNode);
+
+    osc.start(now);
+    osc.stop(now + 1.9);
+
+    // Visual cavity pulse animation
+    let pulseCount = 0;
+    const pTimer = setInterval(() => {
+      pulseCount++;
+      cavityPhase += 0.45;
+      drawCavityResonance(true);
+      if (pulseCount > 25) clearInterval(pTimer);
+    }, 40);
+
+    logToTerminal(`>> [HELMHOLTZ] Acoustic spark impulse discharged into subterranean cavern (${cavityResonanceHz} Hz).`);
+  }
+
+  function toggleCavityContinuousTone() {
+    if (!setupSynthChain()) return;
+    if (!audioCtx) return;
+
+    const btn = document.getElementById('btnToggleCavityTone');
+    if (isCavityContinuous) {
+      if (cavityToneOsc) {
+        try { cavityToneOsc.stop(); cavityToneOsc.disconnect(); } catch (e) {}
+        cavityToneOsc = null;
+      }
+      isCavityContinuous = false;
+      if (btn) btn.className = 'btn-retro';
+      logToTerminal(">> [HELMHOLTZ] Continuous cavity excitation tone stopped.");
+    } else {
+      isCavityContinuous = true;
+      const now = audioCtx.currentTime;
+      cavityToneOsc = audioCtx.createOscillator();
+      cavityToneOsc.type = 'sine';
+      cavityToneOsc.frequency.setValueAtTime(cavityResonanceHz, now);
+
+      cavityToneGain = audioCtx.createGain();
+      cavityToneGain.gain.setValueAtTime(0.18, now);
+
+      cavityToneOsc.connect(cavityToneGain);
+      cavityToneGain.connect(masterGain);
+      cavityToneOsc.start(now);
+
+      if (btn) btn.className = 'btn-retro btn-green';
+      logToTerminal(`>> [HELMHOLTZ] Continuous resonant drive active at ${cavityResonanceHz} Hz.`);
+    }
+  }
+
+  function drawCavityResonance(isExcited) {
+    const cv = document.getElementById('cavityCanvas');
+    if (!cv) return;
+    const ctx = cv.getContext('2d');
+    const w = cv.width;
+    const h = cv.height;
+
+    ctx.fillStyle = '#02040a';
+    ctx.fillRect(0, 0, w, h);
+
+    // Geologic Halite background texture
+    ctx.fillStyle = '#0a1426';
+    ctx.fillRect(10, 10, w - 20, h - 20);
+
+    // Cavern Wall Boundary (Borehole neck on left, bulb on right)
+    const neckY = h * 0.42;
+    const neckH = Math.max(16, cavityRadius * 30);
+    const neckW = Math.min(180, cavityLength * 3.5);
+    const bulbX = 20 + neckW;
+    const bulbY = h / 2;
+    const bulbRadius = Math.min(h * 0.44, 40 + Math.pow(cavityVolume, 0.35) * 4);
+
+    // Clear inside chamber
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(20, neckY - neckH / 2, neckW, neckH);
+    ctx.arc(bulbX + bulbRadius * 0.6, bulbY, bulbRadius, 0, Math.PI * 2);
+    ctx.fillStyle = '#020612';
+    ctx.fill();
+    ctx.clip();
+
+    // Standing Wave Pressure Field Contours
+    const numRings = 7;
+    for (let r = 1; r <= numRings; r++) {
+      const rad = (bulbRadius / numRings) * r;
+      const waveVal = Math.sin(r * 0.9 - cavityPhase);
+      const intensity = Math.abs(waveVal);
+      ctx.strokeStyle = waveVal > 0 ? `rgba(56, 189, 248, ${intensity * (isExcited ? 0.9 : 0.65)})` : `rgba(0, 255, 170, ${intensity * (isExcited ? 0.9 : 0.65)})`;
+      ctx.lineWidth = 2 + intensity * 2;
+      ctx.beginPath();
+      ctx.arc(bulbX + bulbRadius * 0.6, bulbY, rad, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+
+    // Standing Wave Node Lines in Borehole Neck
+    const neckNodes = 4;
+    for (let i = 0; i < neckNodes; i++) {
+      const nx = 20 + (neckW / neckNodes) * (i + 0.5);
+      const nodeAlpha = Math.abs(Math.cos(i * 1.5 - cavityPhase));
+      ctx.strokeStyle = `rgba(245, 158, 11, ${0.4 + nodeAlpha * 0.6})`;
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(nx, neckY - neckH / 2);
+      ctx.lineTo(nx, neckY + neckH / 2);
+      ctx.stroke();
+    }
+
+    ctx.restore();
+
+    // Chamber Perimeter Borders
+    ctx.strokeStyle = '#38bdf8';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(20, neckY - neckH / 2);
+    ctx.lineTo(bulbX, neckY - neckH / 2);
+    ctx.arc(bulbX + bulbRadius * 0.6, bulbY, bulbRadius, Math.PI * 1.35, Math.PI * 0.65, false);
+    ctx.lineTo(bulbX, neckY + neckH / 2);
+    ctx.lineTo(20, neckY + neckH / 2);
+    ctx.stroke();
+
+    // Annotations & Markers
+    ctx.fillStyle = '#cbd5e1';
+    ctx.font = '9px Consolas, monospace';
+    ctx.fillText(`BOREHOLE L = ${cavityLength.toFixed(1)}m (r = ${cavityRadius.toFixed(2)}m)`, 24, neckY - neckH / 2 - 6);
+    ctx.fillText(`SALADO HALITE BULB V = ${cavityVolume.toLocaleString()} m³`, bulbX + 10, bulbY - bulbRadius - 4);
+    ctx.fillText(`f₀ = ${cavityResonanceHz} Hz`, bulbX + 20, bulbY + 4);
+  }
+
+  // Inter-Tab System Bridges
+  function feedTapeToSonogram() {
+    switchTab('spectral');
+    if (!isTapePlaying) tapePlay();
+    logToTerminal(">> [BRIDGE] 4-Track tape audio master routed into 2D Spectral Sonogram.");
+  }
+
+  function feedCavityToFilter() {
+    switchTab('filter');
+    const fCenter = document.getElementById('paramFreqCenter');
+    if (fCenter) {
+      fCenter.value = cavityResonanceHz;
+      updateFilterParam('freq', cavityResonanceHz);
+    }
+    logToTerminal(`>> [BRIDGE] Parametric filter centered on cavity frequency ${cavityResonanceHz} Hz.`);
+  }
+
+  function pipeTapeToDecoder() {
+    switchTab('decoder');
+    loadPresetToDecoder(1999.0, 2.0, 400);
+    logToTerminal(">> [BRIDGE] Tape hydrophone ground carrier fed to Harmonic Decoder (Tab 2).");
+  }
+
+  function transmitTapeToMesh() {
+    switchTab('mesh');
+    transmitResonancePulse();
+    logToTerminal(">> [BRIDGE] 4-Track magnetic tape loop pulse broadcast into Subterranean Airgap Mesh.");
+  }
+
+  // Exporters for Tape & Cavity Data
+  function exportTapeMasterWav() {
+    // Generate valid 16-bit 44.1kHz stereo PCM WAV file
+    const sampleRate = 44100;
+    const duration = 2.5; // seconds
+    const numSamples = Math.floor(sampleRate * duration);
+    const numChannels = 2;
+    const bytesPerSample = 2;
+    const blockAlign = numChannels * bytesPerSample;
+    const byteRate = sampleRate * blockAlign;
+    const dataSize = numSamples * blockAlign;
+
+    const buffer = new ArrayBuffer(44 + dataSize);
+    const view = new DataView(buffer);
+
+    // RIFF chunk descriptor
+    writeString(view, 0, 'RIFF');
+    view.setUint32(4, 36 + dataSize, true);
+    writeString(view, 8, 'WAVE');
+
+    // fmt sub-chunk
+    writeString(view, 12, 'fmt ');
+    view.setUint32(16, 16, true); // Subchunk1Size (16 for PCM)
+    view.setUint16(20, 1, true);  // AudioFormat (1 for PCM)
+    view.setUint16(22, numChannels, true);
+    view.setUint32(24, sampleRate, true);
+    view.setUint32(28, byteRate, true);
+    view.setUint16(32, blockAlign, true);
+    view.setUint16(34, 16, true); // BitsPerSample
+
+    // data sub-chunk
+    writeString(view, 36, 'data');
+    view.setUint32(40, dataSize, true);
+
+    // Synthesize audio data (1999Hz carrier + 43.2Hz infrasound + saturation)
+    let offset = 44;
+    for (let i = 0; i < numSamples; i++) {
+      const t = i / sampleRate;
+      const s1 = Math.sin(2 * Math.PI * 1999.0 * t) * 0.45;
+      const s2 = Math.sin(2 * Math.PI * 43.2 * t) * 0.35;
+      const s3 = ((i % 1200) / 1200 > 0.5 ? 1 : -1) * 0.15;
+      let mix = s1 + s2 + s3;
+
+      // Soft tape saturation tanh curve
+      mix = Math.tanh(mix * 1.4);
+
+      // Stereo spread
+      const sampleL = Math.max(-1, Math.min(1, mix * 0.85));
+      const sampleR = Math.max(-1, Math.min(1, mix * 0.80));
+
+      view.setInt16(offset, sampleL < 0 ? sampleL * 0x8000 : sampleL * 0x7FFF, true);
+      view.setInt16(offset + 2, sampleR < 0 ? sampleR * 0x8000 : sampleR * 0x7FFF, true);
+      offset += 4;
+    }
+
+    const blob = new Blob([buffer], { type: 'audio/wav' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'ESARL_AMPEX1999_4TRACK_MASTER.WAV';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    logToTerminal(">> [EXPORT] 4-Track tape master downloaded: 'ESARL_AMPEX1999_4TRACK_MASTER.WAV'.");
+  }
+
+  function exportCavityCalibrationCert() {
+    let cert = `================================================================================
+ESARL HELMHOLTZ CAVITY ACOUSTIC CALIBRATION CERTIFICATE // BH-1999-E
+STATION ID: SIG-1999-ECHO // SUBTERRANEAN ACOUSTIC SURVEY
+LOCATION: CARLSBAD DELAWARE BASIN, PERMIAN SALADO HALITE STRATA
+================================================================================
+
+[GEOMETRIC & ACOUSTIC SPECIFICATIONS]
+- Cavern Formation: Permian Salado Halite Rock Salt
+- Cavity Volume (V): ${cavityVolume.toLocaleString()} m³
+- Borehole Neck Radius (r): ${cavityRadius.toFixed(2)} m
+- Borehole Neck Length (L): ${cavityLength.toFixed(1)} m
+- Effective Neck Length (Leff): ${(cavityLength + 1.6 * cavityRadius).toFixed(2)} m
+- Acoustic Velocity (v): ${cavityMedium} m/s
+- Resonant Frequency (f₀): ${cavityResonanceHz.toFixed(1)} Hz
+- Fundamental Wavelength (λ): ${(cavityMedium / cavityResonanceHz).toFixed(3)} m
+- Quality Factor (Q): ${Math.round(2 * Math.PI * Math.sqrt((cavityVolume * Math.pow(cavityLength + 1.6 * cavityRadius, 3)) / Math.pow(Math.PI * Math.pow(cavityRadius, 2), 3)))}
+- Specific Acoustic Impedance (Z₀): 9.61 MRayl
+
+[MAGNETIC TAPE RECORDING STANDARDS]
+- Recorder Spec: Ampex-1999 Discrete 4-Track Transport
+- Tape Speed: ${tapeSpeed.toFixed(1)} IPS Master Reference
+- Tape Saturation Drive: ${tapeDriveAmount}%
+- Wow & Flutter Deviation: ${(wowFlutterAmount * 100).toFixed(2)}%
+- Track 1: BH-1999-E Hydrophone (1999.0 Hz Ground Carrier)
+- Track 2: VLF Lithospheric Geophone (43.2 Hz Tectonic Infrasound)
+- Track 3: SIGINT Bell 202 FSK Acoustic Telemetry
+- Track 4: Salado Cavern Precursor Standing Wave Reverb
+
+[AUTHORIZATION]
+Certified by: Dr. Alistair Vance, Principal Investigator
+Acoustic Subsystem Research Laboratory
+kweb://echo-subsystem.net
+================================================================================\n`;
+
+    const blob = new Blob([cert], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'ESARL_HELMHOLTZ_CALIBRATION_BH1999E.CAL';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    logToTerminal(">> [EXPORT] Cavity certificate downloaded: 'ESARL_HELMHOLTZ_CALIBRATION_BH1999E.CAL'.");
+  }
+
   window.addEventListener('keydown', (e) => {
     if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA')) return;
 
     if (e.key >= '1' && e.key <= '9') {
-      const tabs = ['journal', 'decoder', 'spectral', 'filter', 'sigint', 'stego', 'terminal', 'mesh', 'seismic'];
+      const tabs = ['journal', 'decoder', 'spectral', 'filter', 'sigint', 'stego', 'terminal', 'mesh', 'seismic', 'tape'];
       switchTab(tabs[parseInt(e.key) - 1]);
+      e.preventDefault();
+      return;
+    }
+    if (e.key === '0') {
+      switchTab('tape');
       e.preventDefault();
       return;
     }
@@ -5483,6 +7098,7 @@ kweb://echo-subsystem.net
     logToTerminal(">> Spectrographic Steganography Studio & Bell 202 FSK Teleprinter ready.");
     logToTerminal(">> Airgap Mesh & Dual Resonance Bridge initialized.");
     logToTerminal(">> Lithospheric Strata TDR & Borehole Acoustic Profiler online.");
+    logToTerminal(">> Helmholtz Cavity Resonator & 4-Track Reel Tape Deck online.");
     logToTerminal(">> Type 'help' or 'status' for station diagnostic commands.");
     renderPianoKeys();
     loadFieldLogs();
@@ -5491,6 +7107,7 @@ kweb://echo-subsystem.net
     checkArtifactSlots();
     initSeismicCanvases();
     selectStrataLayer(2);
+    initTapeAndCavity();
   });
 </script>
 </body>
