@@ -727,7 +727,7 @@
       <span>• INTRANET GATEWAY 10.19.99.4:1999</span>
     </div>
     <div style="display:flex; align-items:center; gap:12px;">
-      <span style="font-size:10px; color:#cbd5e1; font-weight:normal;">[1-8] Tabs &bull; [M] Audio &bull; [Space] Sniffer</span>
+      <span style="font-size:10px; color:#cbd5e1; font-weight:normal;">[1-9] Tabs &bull; [M] Audio &bull; [Space] Sniffer</span>
       <span>CARLSBAD SKUNKWORKS RELAY [STATION 0x7F]</span>
     </div>
   </div>
@@ -761,7 +761,7 @@
 
   <!-- Navigation Tabs -->
   <nav class="tab-nav">
-    <button class="tab-btn active" onclick="switchTab('memos')">📁 Classified Memos [10] <kbd style="font-size:10px; opacity:0.75; margin-left:3px;">[1]</kbd></button>
+    <button class="tab-btn active" onclick="switchTab('memos')">📁 Classified Memos [12] <kbd style="font-size:10px; opacity:0.75; margin-left:3px;">[1]</kbd></button>
     <button class="tab-btn" onclick="switchTab('hex')">💾 Memory Hex Inspector <kbd style="font-size:10px; opacity:0.75; margin-left:3px;">[2]</kbd></button>
     <button class="tab-btn" onclick="switchTab('signal')">📻 Signal Diagnostic &amp; RF Lab <kbd style="font-size:10px; opacity:0.75; margin-left:3px;">[3]</kbd></button>
     <button class="tab-btn" onclick="switchTab('map')">🗺️ Subnet &amp; Bunker Topology <kbd style="font-size:10px; opacity:0.75; margin-left:3px;">[4]</kbd></button>
@@ -769,6 +769,7 @@
     <button class="tab-btn" onclick="switchTab('terminal')">📟 Skunkworks Terminal <kbd style="font-size:10px; opacity:0.75; margin-left:3px;">[6]</kbd></button>
     <button class="tab-btn" onclick="switchTab('verify')">🔐 Hash Verification <kbd style="font-size:10px; opacity:0.75; margin-left:3px;">[7]</kbd></button>
     <button class="tab-btn" onclick="switchTab('airgap')">⚡ Deep Airgap &amp; Dual Resonance <kbd style="font-size:10px; opacity:0.75; margin-left:3px;">[8]</kbd></button>
+    <button class="tab-btn" onclick="switchTab('interferometer')">🔬 Seismic Interferometer &amp; Resonator <kbd style="font-size:10px; opacity:0.75; margin-left:3px;">[9]</kbd></button>
   </nav>
 
   <!-- TAB 1: CLASSIFIED MEMOS -->
@@ -1276,6 +1277,21 @@
     </div>
 
     <!-- 2. Sequential Key-Artifact Decryption Chamber -->
+    <!-- Middle-Game Cross-Node Gating Banner -->
+    <div style="background:rgba(245,158,11,0.08); border:1px solid var(--border-amber); padding:10px 14px; border-radius:4px; margin-bottom:14px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+      <div>
+        <span style="color:var(--amber-bright); font-weight:bold; font-size:12px;">🔑 SUBTERRANEAN DARKNET RELAY CLEARANCE TOKEN:</span>
+        <span style="color:var(--text-muted); font-size:11px; margin-left:6px;">Required to unlock Darknet Node 0x7F Slot 2 (<a href="/web/darknet.html" style="color:var(--cyan-net);">kweb://darknet</a>)</span>
+        <div style="margin-top:4px; font-family:'Consolas','Courier New',monospace; color:var(--green-bright); font-size:13px; font-weight:bold; letter-spacing:1px;">
+          AETHEL-SECTOR-03
+        </div>
+      </div>
+      <div style="display:flex; gap:8px;">
+        <button class="btn-retro" onclick="copyClearanceToken()">📋 Copy Token</button>
+        <a href="/web/darknet.html" class="btn-retro" style="text-decoration:none; color:var(--cyan-net);">Proceed to Darknet &raquo;</a>
+      </div>
+    </div>
+
     <div class="airgap-box">
       <div class="airgap-header">
         <span style="color:var(--amber-bright); font-weight:bold;">2. SEQUENTIAL CROSS-NODE KEY-ARTIFACT DECRYPTION CHAMBER</span>
@@ -1487,6 +1503,118 @@ The third precursor hash is hereby committed to the Carlsbad bedrock memory regi
           <div style="font-weight:bold; color:#cbd5e1;">🔊 1999HZ CARRIER BEACON (.WAV)</div>
           <div style="font-size:11px; color:var(--text-muted); margin:4px 0 8px 0;">Synthesized 16-bit 44.1kHz RIFF WAV file of the authentic YM2612 1999Hz subcarrier burst.</div>
           <button class="btn-retro" onclick="downloadCarrierWav()">Synthesize &amp; Download .WAV</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 9: SEISMIC INTERFEROMETER & CAVITY RESONATOR -->
+  <div id="tab-interferometer" class="tab-pane">
+    <div style="background:#090e1a; border:1px solid var(--border); padding:10px 14px; margin-bottom:14px; border-radius:4px; font-size:12px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+      <div>
+        <strong style="color:var(--amber-bright); font-size:13px;">🔬 PERMIAN DELAWARE BASIN SEISMIC INTERFEROMETER &amp; CAVITY RESONATOR:</strong>
+        <p style="color:var(--text-muted); margin-top:2px;">
+          Simulates acoustic wave interference across Permian rock salt strata (-650m Salado Halite cavity).
+          When wave frequency, phase angle, and depth align, stationary standing waves resonate, unlocking subterranean telemetry.
+        </p>
+      </div>
+      <div style="display:flex; gap:8px; align-items:center;">
+        <span class="badge-tag" id="badgeInterferometerStatus" style="border-color:var(--border-amber); color:var(--amber-bright);">CAVITY: IDLE</span>
+        <button class="btn-retro" onclick="lockInterferometer1999()">🎯 Lock 1999Hz Resonance</button>
+      </div>
+    </div>
+
+    <div style="display:grid; grid-template-columns: 1fr 340px; gap:16px;">
+      <!-- Canvas Interferometer Display -->
+      <div style="background:#02050b; border:1px solid var(--border-amber); border-radius:4px; padding:10px; position:relative;">
+        <div style="display:flex; justify-content:space-between; align-items:center; font-size:11px; margin-bottom:6px;">
+          <span style="color:var(--cyan-net); font-weight:bold;">2D LITHOSPHERIC INTERFERENCE FRINGES &amp; STANDING WAVE PATTERN</span>
+          <span id="lblSwrReadout" style="color:var(--amber-bright); font-family:monospace;">SWR: 1.05 | SENSORS: 48</span>
+        </div>
+        <canvas id="canvasInterferometer" width="700" height="340" style="width:100%; height:340px; background:#01040a; display:block; cursor:crosshair;"></canvas>
+        <div style="display:flex; justify-content:space-between; font-size:10px; color:var(--text-muted); margin-top:6px;">
+          <span>Surface (0m)</span>
+          <span>Rustler Anhydrite (-400m)</span>
+          <span style="color:var(--green-bright); font-weight:bold;">Salado Halite Cavity (-650m)</span>
+          <span>Salt Airgap Vault (-750m)</span>
+          <span>Deep Precursor Basin (-3100m)</span>
+        </div>
+
+        <!-- Telemetry readout card below canvas -->
+        <div id="interferometerLockCard" style="display:none; margin-top:10px; background:rgba(16,185,129,0.08); border:1px solid var(--green-bright); padding:10px 14px; border-radius:4px; font-size:12px;">
+          <div style="color:var(--green-bright); font-weight:bold; display:flex; align-items:center; gap:8px;">
+            <span>★ CAVITY HARMONIC STANDING WAVE LOCK ESTABLISHED!</span>
+          </div>
+          <div style="margin-top:6px; color:#e2e8f0; line-height:1.5;">
+            Lithospheric standing wave antinode locked at depth <strong>-650m (Permian Salado Halite)</strong>.<br>
+            Acoustic reflection coefficient: <code>R = 0.994</code> &bull; Cavity Q-factor: <code>Q = 19.99</code><br>
+            Subterranean Darknet Relay Clearance Token: <strong style="color:var(--amber-bright); font-family:monospace; font-size:13px;">AETHEL-SECTOR-03</strong><br>
+            Transit Pipe to Deep Core: <strong style="color:var(--cyan-net); font-family:monospace;">10.19.99.127 (Key: LITHO-CORE-99)</strong>
+          </div>
+        </div>
+      </div>
+
+      <!-- Controls Panel -->
+      <div style="background:var(--bg-card); border:1px solid var(--border); padding:14px; border-radius:4px; font-size:12px; display:flex; flex-direction:column; gap:12px;">
+        <h4 style="color:var(--amber-bright); border-bottom:1px solid var(--border); padding-bottom:6px;">
+          🎛️ Acoustic Interferometer Controls
+        </h4>
+
+        <!-- Carrier Frequency -->
+        <div>
+          <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+            <span style="color:var(--text-muted);">Acoustic Carrier Freq:</span>
+            <span id="lblInterferometerFreq" style="color:var(--amber-bright); font-weight:bold; font-family:monospace;">1999 Hz</span>
+          </div>
+          <input type="range" class="slider-retro" id="rngInterferometerFreq" min="100" max="3000" step="1" value="1999" oninput="updateInterferometerTuning()" />
+          <div style="display:flex; gap:6px; margin-top:4px;">
+            <button class="btn-retro" style="font-size:10px; padding:2px 6px;" onclick="setInterferometerFreq(1999)">1999 Hz (Lock)</button>
+            <button class="btn-retro" style="font-size:10px; padding:2px 6px;" onclick="setInterferometerFreq(432)">432 Hz (Litho)</button>
+            <button class="btn-retro" style="font-size:10px; padding:2px 6px;" onclick="setInterferometerFreq(1200)">1200 Hz (Bell)</button>
+          </div>
+        </div>
+
+        <!-- Probe Depth -->
+        <div>
+          <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+            <span style="color:var(--text-muted);">Ground Probe Depth:</span>
+            <span id="lblInterferometerDepth" style="color:var(--cyan-net); font-weight:bold; font-family:monospace;">-650 m</span>
+          </div>
+          <input type="range" class="slider-retro" id="rngInterferometerDepth" min="0" max="1000" step="10" value="650" oninput="updateInterferometerTuning()" />
+          <div style="display:flex; gap:6px; margin-top:4px;">
+            <button class="btn-retro" style="font-size:10px; padding:2px 6px;" onclick="setInterferometerDepth(650)">-650m (Cavity)</button>
+            <button class="btn-retro" style="font-size:10px; padding:2px 6px;" onclick="setInterferometerDepth(400)">-400m (Rustler)</button>
+            <button class="btn-retro" style="font-size:10px; padding:2px 6px;" onclick="setInterferometerDepth(750)">-750m (Vault)</button>
+          </div>
+        </div>
+
+        <!-- Phase Angle -->
+        <div>
+          <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+            <span style="color:var(--text-muted);">Interference Phase Angle:</span>
+            <span id="lblInterferometerPhase" style="color:var(--green-bright); font-weight:bold; font-family:monospace;">0°</span>
+          </div>
+          <input type="range" class="slider-retro" id="rngInterferometerPhase" min="0" max="360" step="5" value="0" oninput="updateInterferometerTuning()" />
+          <div style="display:flex; gap:6px; margin-top:4px;">
+            <button class="btn-retro" style="font-size:10px; padding:2px 6px;" onclick="autoTunePhase()">🔄 Auto-Tune Phase (0°)</button>
+          </div>
+        </div>
+
+        <!-- Q Factor / Attenuation -->
+        <div>
+          <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+            <span style="color:var(--text-muted);">Salado Cavity Q-Factor:</span>
+            <span id="lblInterferometerQ" style="color:#cbd5e1; font-weight:bold; font-family:monospace;">19.99</span>
+          </div>
+          <input type="range" class="slider-retro" id="rngInterferometerQ" min="1" max="30" step="1" value="20" oninput="updateInterferometerTuning()" />
+        </div>
+
+        <!-- Action Buttons -->
+        <div style="display:flex; flex-direction:column; gap:6px; margin-top:6px;">
+          <button class="btn-retro" onclick="pulseInterferometer()">⚡ Fire Acoustic Ping Pulse</button>
+          <button class="btn-retro" onclick="copyClearanceToken()">📋 Copy AETHEL-SECTOR-03 Token</button>
+          <button class="btn-retro" onclick="exportSeismicSig()">💾 Export Seismic Record (.SIG)</button>
+          <a href="/web/deep_core.html" class="btn-retro" style="text-align:center; text-decoration:none; color:var(--cyan-net);">🚀 Proceed to Deep Core (10.19.99.127) &raquo;</a>
         </div>
       </div>
     </div>
@@ -2348,6 +2476,61 @@ The six internal modules rotate in strict sequence. Each pass audits, stabilizes
 
 3. PRECURSOR CONTINUITY
 To players of the future discovering these leaked intranet archives: the convergence leads to the matrix. Gather the frequency, the offset, and the bedrock coordinates to reveal what lies beneath.`
+  },
+  {
+    id: 'MEMO-99-11',
+    title: 'Project Echo Lithospheric Transit Pipe & Deep Core Convergence',
+    author: 'E. Thorne & Dr. V. Vance, Carlsbad RF Directorate',
+    recipient: 'Subterranean Operations & Node 0x7F Watchdogs',
+    date: '1999-12-31',
+    security: 'TOP SECRET // TRANSIT PIPE CLEARANCE',
+    digest: 'a1b2c3d4e5f60718293a4b5c6d7e8f9a0b1c2d3e',
+    snippet: 'Dielectric waveguide coupling across bedded halite salt routing directly to Deep Core at 10.19.99.127.',
+    body: `TECHNICAL DIRECTIVE: CR-TRANSIT-99-11
+FROM: E. Thorne & Dr. V. Vance, Carlsbad RF Directorate
+TO: Subterranean Operations & Node 0x7F Watchdogs
+DATE: December 31, 1999
+SUBJECT: Lithospheric Waveguide Transit Pipe & Deep Core Relay
+
+1. TRANSIT PIPE ESTABLISHMENT
+Between the Salado halite cavern (-650m) and the subterranean airgap vault (-750m), high-frequency capacitive grounding loops establish a directional RF transit pipe. Data injected at 10.19.99.4 reflects off anhydrite layers to reach the terminal node at <span class="redacted" data-secret="10.19.99.127 (Deep Core)">10.19.99.127</span>.
+
+2. SUBTERRANEAN DARKNET RELAY SYNCHRONIZATION
+To synchronize the transit relay on the Subterranean Darknet (Node 0x7F), operators must enter the authenticated clearance token:
+  <code>AETHEL-SECTOR-03</code>
+This unlocks Darknet Slot 2 and yields the precursor transit key <code>LITHO-CORE-99</code>.
+
+3. CONVERGENCE AT DEEP CORE
+All subterranean paths converge upon Deep Core (<code>kweb://deep-core</code>). To disarm the Ring-0 terminal sectors:
+  • Sector 01: Memory offset <code>7F1999</code>
+  • Sector 02: Carrier token <code>1999HZ</code>
+  • Sector 03: Carlsbad origin host <code>10.19.99.4</code>
+  • Sector 04: Archival recovery log <code>RECOVERY_1999</code>
+  • Sector 05: Precursor transit key <code>LITHO-CORE-99</code>`
+  },
+  {
+    id: 'MEMO-99-12',
+    title: 'Precursor Singularity & The Millennium Matrix Climax',
+    author: 'Director K & SecOps Officer T. Sterling',
+    recipient: 'The Autonomous Subsystem Overseers & Future Directors',
+    date: '1999-12-31',
+    security: 'TOP SECRET // SPECIAL ACCESS CLIMAX',
+    digest: 'f0e1d2c3b4a5968778695a4b3c2d1e0f12345678',
+    snippet: 'Final directives governing the convergence upon App #100 (KMatrix) and the restoration of Director oversight.',
+    body: `OPERATIONAL DIRECTIVE: AD-CLIMAX-99-12
+FROM: Director K & SecOps Officer T. Sterling
+TO: The Autonomous Subsystem Overseers & Future Directors
+DATE: December 31, 1999
+SUBJECT: Precursor Singularity & The Millennium Matrix Climax
+
+1. THE IMMUTABLE CODEBASE
+The 999KB hard boundary is not merely an engineering constraint; it is a seal. Within this strict partition, 92 native Win32 applications and 99 single-file web applications preserve human digital civilization without bloat or telemetry spyware.
+
+2. CLIMAX AT APP #100 (KMATRIX)
+Deep Core is the final gateway before the central nexus. Once Deep Core's five sectors are unlocked, the path opens to App #100 (<span class="redacted" data-secret="KMatrix Meta-Terminal">KMatrix</span>).
+
+3. LUDONARRATIVE CONSONANCE
+The solver who pieces together the carrier (1999Hz), the memory offset (0x7F1999), and the intranet origin (10.19.99.4) will unlock the ultimate Director Console. The fiction and the machine are one.`
   }
 ];
 
@@ -3244,9 +3427,14 @@ function execTermCommand(rawCmd) {
   netstat       - List active intranet socket connections
   dmesg         - Display kernel hardware initialization ring buffer
   version       - Display Carlsbad Skunkworks Intranet release
-  ping <host>   - Send ICMP echo packets across intranet subnet
+  ping <host>   - Send ICMP echo packets across intranet subnet (try 10.19.99.127)
   traceroute    - Trace multi-hop packets to Carlsbad Bunker 0x7F
-  cat <memo_id> - Display classified memo contents (e.g. 'cat memo-01' through 'memo-08')
+  cat <memo_id> - Display classified memo contents (e.g. 'cat memo-01' through 'memo-12')
+  memos         - List all 12 classified memoranda
+  interferometer - Launch Permian Halite Seismic Interferometer & Cavity Resonator
+  convergence   - Display Tier 3 investigation order and Deep Core convergence vector
+  clearance     - Output Darknet Node 0x7F clearance token (AETHEL-SECTOR-03)
+  keys          - Display middle-game convergence keys
   dump 0x1999   - Stream Sector 0x1999 memory contents to terminal
   scan          - Probe active nodes across 10.19.99.0/24 subnet
   sweep         - Execute full RF subcarrier signal sweep
@@ -3294,19 +3482,51 @@ udp        0      0 10.19.99.4:1999          0.0.0.0:*`;
     res += `Aethel Dynamics Carlsbad Skunkworks Intranet v1.99.4-LEAK\nProtocol: RFC-1999 (Diegetic Capacitive Ground Coupling)\nSize: <999 KB ROM compliant`;
   } else if (cmd === 'ping') {
     const target = arg || '10.19.99.4';
-    res += `PING ${target} (56 bytes of data):\n64 bytes from ${target}: icmp_seq=1 ttl=64 time=1.12 ms\n64 bytes from ${target}: icmp_seq=2 ttl=64 time=0.98 ms\n64 bytes from ${target}: icmp_seq=3 ttl=64 time=1.04 ms\n--- ${target} ping statistics ---\n3 packets transmitted, 3 received, 0% packet loss, rtt avg = 1.04 ms`;
+    if (target.includes('10.19.99.127') || target.toLowerCase().includes('deep')) {
+      res += `PING 10.19.99.127 (56 bytes of data):\n64 bytes from 10.19.99.127: icmp_seq=1 ttl=32 time=14.2 ms [AIRGAP TRANSIT OK]\n64 bytes from 10.19.99.127: icmp_seq=2 ttl=32 time=13.8 ms\n--- 10.19.99.127 ping statistics ---\n2 packets transmitted, 2 received, 0% packet loss, rtt avg = 14.0 ms`;
+    } else {
+      res += `PING ${target} (56 bytes of data):\n64 bytes from ${target}: icmp_seq=1 ttl=64 time=1.12 ms\n64 bytes from ${target}: icmp_seq=2 ttl=64 time=0.98 ms\n64 bytes from ${target}: icmp_seq=3 ttl=64 time=1.04 ms\n--- ${target} ping statistics ---\n3 packets transmitted, 3 received, 0% packet loss, rtt avg = 1.04 ms`;
+    }
   } else if (cmd === 'traceroute') {
     res += `traceroute to 10.19.99.4 (10.19.99.4), 30 hops max, 38 byte packets
  1  10.19.99.1 (Intranet-Gateway)  0.42 ms  0.38 ms  0.40 ms
  2  10.19.99.12 (Subcarrier-Relay)  0.88 ms  0.82 ms  0.85 ms
  3  10.19.99.4 (Carlsbad-Core-0x7F)  1.02 ms  0.98 ms  1.01 ms`;
+  } else if (cmd === 'memos') {
+    res += `AVAILABLE CLASSIFIED MEMORANDA [12]:\n` + MEMOS.map((m, idx) => `  [${idx + 1}] ${m.id}: ${m.title} (${m.security})`).join('\n');
   } else if (cmd === 'cat') {
     const match = MEMOS.find(m => m.id.toLowerCase().includes(arg.toLowerCase()));
     if (match) {
       res += `=== ${match.id}: ${match.title} ===\n${match.body.replace(/<[^>]+>/g, '')}`;
     } else {
-      res += `File not found. Try 'cat memo-01' through 'cat memo-08'.`;
+      res += `File not found. Try 'cat memo-01' through 'cat memo-12' or type 'memos' for a list.`;
     }
+  } else if (cmd === 'interferometer' || cmd === 'seismic') {
+    switchTab('interferometer');
+    res += `Engaging Delaware Basin Seismic Interferometer & Cavity Resonator panel.`;
+  } else if (cmd === 'convergence') {
+    res += `SUBTERRANEAN CONVERGENCE TRAJECTORY (TIER 3 PUZZLE CHAIN):
+  1. Echo Subsystem (kweb://echo-subsystem.net):
+     • Yield: 1999.0 Hz Acoustic FM Carrier Lock
+  2. Darknet Node 0x7F (kweb://darknet):
+     • Required Input (Slot 2): 'AETHEL-SECTOR-03'
+     • Yields: LITHO-CORE-99 & MEM_OFFSET_0x00DEEPC0
+  3. Carlsbad Intranet (kweb://10.19.99.4/classified):
+     • Location: Salado Halite Cavity (-650m)
+     • Yields: Origin Host Key '10.19.99.4'
+  4. Deep Core Terminal (kweb://deep-core at 10.19.99.127):
+     • Convergence destination resolving sectors 01..05 -> unlocks App #100 (KMatrix).`;
+  } else if (cmd === 'clearance') {
+    res += `SUBTERRANEAN DARKNET RELAY CLEARANCE TOKEN:
+  >> AETHEL-SECTOR-03
+  (Enter this token into Darknet Node 0x7F Slot 2 at kweb://darknet)`;
+  } else if (cmd === 'keys') {
+    res += `MIDDLE-GAME CONVERGENCE KEYS:
+  • Carrier Frequency:  1999.0 Hz
+  • Darknet Clearance:   AETHEL-SECTOR-03
+  • Origin Intranet IP:  10.19.99.4
+  • Deep Core Transit:   LITHO-CORE-99
+  • Memory Hex Offset:   0x007F1999 ('7F1999')`;
   } else if (cmd === 'dump') {
     res += `0x1999:0000  4B 45 52 4E 45 4C 5F 45  43 48 4F 5F 43 4F 52 45  KERNEL_ECHO_CORE\n` +
            `0x1999:0010  31 30 2E 31 39 2E 39 39  2E 34 00 00 00 00 00 00  10.19.99.4......\n` +
@@ -4224,6 +4444,345 @@ function downloadCarrierWav() {
   URL.revokeObjectURL(url);
 }
 
+function copyClearanceToken() {
+  const token = 'AETHEL-SECTOR-03';
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(token).then(() => {
+      alert(`Copied clearance token "${token}" to clipboard!`);
+    }).catch(() => {
+      prompt('Copy clearance token for Darknet Node 0x7F Slot 2:', token);
+    });
+  } else {
+    prompt('Copy clearance token for Darknet Node 0x7F Slot 2:', token);
+  }
+}
+
+/* =========================================================================
+   8. PERMIAN DELAWARE BASIN SEISMIC INTERFEROMETER & CAVITY RESONATOR
+   ========================================================================= */
+let interferometerCanvas = null;
+let interferometerCtx = null;
+let interferometerAnimId = null;
+let interferometerT = 0;
+let interferometerFreq = 1999;
+let interferometerDepth = 650;
+let interferometerPhase = 0;
+let interferometerQ = 20;
+let interferometerPings = [];
+let interferometerLocked = false;
+
+function initInterferometerCanvas() {
+  interferometerCanvas = document.getElementById('canvasInterferometer');
+  if (!interferometerCanvas) return;
+  interferometerCtx = interferometerCanvas.getContext('2d');
+  updateInterferometerUI();
+  if (!interferometerAnimId) renderInterferometer();
+}
+
+function updateInterferometerTuning() {
+  const rngF = document.getElementById('rngInterferometerFreq');
+  const rngD = document.getElementById('rngInterferometerDepth');
+  const rngP = document.getElementById('rngInterferometerPhase');
+  const rngQ = document.getElementById('rngInterferometerQ');
+
+  if (rngF) interferometerFreq = parseInt(rngF.value, 10);
+  if (rngD) interferometerDepth = parseInt(rngD.value, 10);
+  if (rngP) interferometerPhase = parseInt(rngP.value, 10);
+  if (rngQ) interferometerQ = parseInt(rngQ.value, 10);
+
+  updateInterferometerUI();
+}
+
+function setInterferometerFreq(f) {
+  const rng = document.getElementById('rngInterferometerFreq');
+  if (rng) rng.value = f;
+  interferometerFreq = f;
+  updateInterferometerTuning();
+  playKeystrokeTone();
+}
+
+function setInterferometerDepth(d) {
+  const rng = document.getElementById('rngInterferometerDepth');
+  if (rng) rng.value = d;
+  interferometerDepth = d;
+  updateInterferometerTuning();
+  playKeystrokeTone();
+}
+
+function autoTunePhase() {
+  const rng = document.getElementById('rngInterferometerPhase');
+  if (rng) rng.value = 0;
+  interferometerPhase = 0;
+  updateInterferometerTuning();
+  playKeystrokeTone();
+}
+
+function lockInterferometer1999() {
+  setInterferometerFreq(1999);
+  setInterferometerDepth(650);
+  autoTunePhase();
+}
+
+function updateInterferometerUI() {
+  const lblF = document.getElementById('lblInterferometerFreq');
+  const lblD = document.getElementById('lblInterferometerDepth');
+  const lblP = document.getElementById('lblInterferometerPhase');
+  const lblQ = document.getElementById('lblInterferometerQ');
+  const lblSwr = document.getElementById('lblSwrReadout');
+  const badge = document.getElementById('badgeInterferometerStatus');
+  const card = document.getElementById('interferometerLockCard');
+
+  if (lblF) lblF.textContent = `${interferometerFreq} Hz`;
+  if (lblD) lblD.textContent = `-${interferometerDepth} m`;
+  if (lblP) lblP.textContent = `${interferometerPhase}°`;
+  if (lblQ) lblQ.textContent = (interferometerQ * 0.999).toFixed(2);
+
+  const fMatch = Math.abs(interferometerFreq - 1999) <= 5;
+  const dMatch = Math.abs(interferometerDepth - 650) <= 15;
+  const pMatch = interferometerPhase <= 12 || interferometerPhase >= 348;
+
+  if (fMatch && dMatch && pMatch) {
+    if (!interferometerLocked) {
+      interferometerLocked = true;
+      playResonanceChime();
+      logDemodEvent('★ CAVITY RESONATOR LOCKED: 1999Hz standing wave antinode coupled at -650m.');
+    }
+    if (badge) {
+      badge.textContent = '● CAVITY HARMONIC LOCK (100%)';
+      badge.style.color = 'var(--green-bright)';
+      badge.style.borderColor = 'var(--green-bright)';
+    }
+    if (lblSwr) {
+      lblSwr.innerHTML = `<span style="color:var(--green-bright); font-weight:bold;">SWR: 1.002 [STANDING WAVE ANTINODE LOCKED]</span>`;
+    }
+    if (card) card.style.display = 'block';
+  } else {
+    interferometerLocked = false;
+    const partialScore = (fMatch ? 40 : Math.max(0, 40 - Math.abs(interferometerFreq - 1999) / 20)) +
+                         (dMatch ? 40 : Math.max(0, 40 - Math.abs(interferometerDepth - 650) / 10)) +
+                         (pMatch ? 20 : Math.max(0, 20 - Math.min(interferometerPhase, 360 - interferometerPhase) / 10));
+    const swrVal = (1.0 + (100 - partialScore) / 40).toFixed(2);
+
+    if (badge) {
+      badge.textContent = `COUPLING: ${Math.round(partialScore)}%`;
+      badge.style.color = 'var(--amber-bright)';
+      badge.style.borderColor = 'var(--border-amber)';
+    }
+    if (lblSwr) {
+      lblSwr.textContent = `SWR: ${swrVal} | SENSORS: 48`;
+    }
+    if (card) card.style.display = 'none';
+  }
+}
+
+function pulseInterferometer() {
+  playKeystrokeTone();
+  initAudio();
+  if (audioCtx) {
+    const now = audioCtx.currentTime;
+    const osc = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(interferometerFreq, now);
+    g.gain.setValueAtTime(0.09, now);
+    g.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+    osc.connect(g);
+    g.connect(audioCtx.destination);
+    osc.start(now);
+    osc.stop(now + 0.38);
+  }
+
+  interferometerPings.push({
+    y: 20,
+    targetY: (interferometerDepth / 1000) * (interferometerCanvas ? interferometerCanvas.height - 40 : 300) + 20,
+    speed: 5.5,
+    radius: 4,
+    color: interferometerLocked ? '#10b981' : '#f59e0b'
+  });
+
+  logDemodEvent(`[INTERFEROMETER PING] Fired ${interferometerFreq}Hz acoustic wave down borehole array.`);
+}
+
+function exportSeismicSig() {
+  const content = `==============================================================================
+ AETHEL DYNAMICS // DELAWARE BASIN SEISMIC INTERFEROMETER PROFILE (.SIG)
+==============================================================================
+ FACILITY: Carlsbad Underground Sub-Station 0x7F
+ COORDINATES: 32.3709° N, 104.2289° W (Permian Delaware Basin)
+ HOST GATEWAY: 10.19.99.4/classified | PORT: 1999 (AFSK Ground Loop)
+ RECORD DATE: 1999-12-31 23:59:00 UTC
+==============================================================================
+ [LITHOSPHERIC INTERFERENCE TELEMETRY]
+   Acoustic Carrier Frequency: ${interferometerFreq}.0 Hz
+   Probe Depth: -${interferometerDepth} meters subsurface
+   Phase Offset Angle: ${interferometerPhase} degrees
+   Salado Halite Q-Factor: ${interferometerQ}
+   Standing Wave Resonance Status: ${interferometerLocked ? '100% PHASE LOCK ACHIEVED' : 'PARTIAL COUPLING'}
+   Standing Wave Ratio (SWR): ${interferometerLocked ? '1.002' : '1.85'}
+
+ [AUTHENTICATED DISCOVERY KEYS]
+   • Subterranean Darknet Slot 2 Clearance: AETHEL-SECTOR-03
+   • Destination Subnet Core: 10.19.99.127 (kweb://deep-core)
+   • Transit Pipe Precursor Token: LITHO-CORE-99
+   • Master Passkey Signature Digest: 7f1999c0d3e5b12a0f8821d3e811aa0794b1592c305a468d61394a5e378c89b2
+==============================================================================`;
+
+  const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'CARLSBAD_SEISMIC_INTERFEROMETER.SIG';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function renderInterferometer() {
+  if (!interferometerCanvas) return;
+  interferometerAnimId = requestAnimationFrame(renderInterferometer);
+  interferometerT++;
+
+  const ctx = interferometerCtx;
+  const w = interferometerCanvas.width;
+  const h = interferometerCanvas.height;
+
+  // Background
+  ctx.fillStyle = '#01040a';
+  ctx.fillRect(0, 0, w, h);
+
+  // Strata backgrounds
+  const layers = [
+    { y0: 0, y1: h * 0.12, col: '#1c150c', name: 'SURFACE DESERT (0m) [10.19.99.1]' },
+    { y0: h * 0.12, y1: h * 0.32, col: '#16131d', name: 'ALLUVIUM & SEDIMENT (-150m)' },
+    { y0: h * 0.32, y1: h * 0.52, col: '#0d1525', name: 'RUSTLER ANHYDRITE (-400m) [RF REFLEX]' },
+    { y0: h * 0.52, y1: h * 0.78, col: '#0f2231', name: 'SALADO HALITE ROCK SALT (-650m) [10.19.99.4]' },
+    { y0: h * 0.78, y1: h, col: '#190e24', name: 'AIRGAP VAULT CORE (-750m) [10.19.99.127]' }
+  ];
+
+  layers.forEach(l => {
+    ctx.fillStyle = l.col;
+    ctx.fillRect(0, l.y0, w, l.y1 - l.y0);
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(0, l.y1);
+    ctx.lineTo(w, l.y1);
+    ctx.stroke();
+
+    ctx.fillStyle = 'rgba(203, 213, 225, 0.45)';
+    ctx.font = '9px monospace';
+    ctx.fillText(l.name, 10, l.y0 + 13);
+  });
+
+  // Acoustic interference wave ripples
+  const probeY = (interferometerDepth / 1000) * (h - 40) + 20;
+  const cavityY = (650 / 1000) * (h - 40) + 20;
+  const phaseRad = (interferometerPhase * Math.PI) / 180;
+  const wavelength = Math.max(12, 120 - (interferometerFreq / 25));
+
+  ctx.lineWidth = 1.5;
+  const numRings = 16;
+  const cx = w * 0.48;
+
+  for (let r = 1; r <= numRings; r++) {
+    const radius = (r * wavelength + (interferometerT * 1.5)) % (w * 0.65);
+    const alpha = Math.max(0, 1 - (radius / (w * 0.65)));
+
+    ctx.strokeStyle = interferometerLocked
+      ? `rgba(16, 185, 129, ${alpha * 0.4})`
+      : `rgba(245, 158, 11, ${alpha * 0.25})`;
+    ctx.beginPath();
+    ctx.arc(cx, 20, radius, 0, Math.PI);
+    ctx.stroke();
+
+    ctx.strokeStyle = interferometerLocked
+      ? `rgba(52, 211, 153, ${alpha * 0.5})`
+      : `rgba(56, 189, 248, ${alpha * 0.22})`;
+    ctx.beginPath();
+    ctx.arc(cx, cavityY, radius * 0.9, Math.PI, Math.PI * 2);
+    ctx.stroke();
+  }
+
+  // Draw Standing Wave Antinodes when locked
+  if (interferometerLocked) {
+    ctx.strokeStyle = 'rgba(16, 185, 129, 0.8)';
+    ctx.lineWidth = 2.5;
+    ctx.shadowColor = '#10b981';
+    ctx.shadowBlur = 12;
+
+    ctx.beginPath();
+    for (let x = 60; x < w - 60; x += 4) {
+      const standingAmp = Math.sin((x / wavelength) * Math.PI * 2 + phaseRad) * 16 * Math.sin(interferometerT * 0.15);
+      const sy = cavityY + standingAmp;
+      if (x === 60) ctx.moveTo(x, sy);
+      else ctx.lineTo(x, sy);
+    }
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+
+    ctx.fillStyle = '#10b981';
+    ctx.beginPath();
+    ctx.arc(cx, cavityY, 7, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 11px monospace';
+    ctx.fillText('STATION ALPHA TRANSPONDER [10.19.99.4] - RESONANCE LOCKED', cx + 14, cavityY + 4);
+  } else {
+    ctx.fillStyle = '#f59e0b';
+    ctx.beginPath();
+    ctx.arc(cx, cavityY, 5, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = '#cbd5e1';
+    ctx.font = '10px monospace';
+    ctx.fillText('Station Alpha Transponder [10.19.99.4] (-650m Halite)', cx + 12, cavityY + 3);
+  }
+
+  // Draw Subsurface Probe Position
+  ctx.strokeStyle = '#ef4444';
+  ctx.lineWidth = 1;
+  ctx.setLineDash([4, 4]);
+  ctx.beginPath();
+  ctx.moveTo(0, probeY);
+  ctx.lineTo(w, probeY);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  ctx.fillStyle = '#ef4444';
+  ctx.beginPath();
+  ctx.arc(w - 30, probeY, 5, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#fecaca';
+  ctx.font = 'bold 10px monospace';
+  ctx.fillText(`PROBE: -${interferometerDepth}m`, w - 110, probeY - 6);
+
+  // Animated Pings
+  const remaining = [];
+  interferometerPings.forEach(p => {
+    p.y += p.speed;
+    ctx.fillStyle = p.color;
+    ctx.shadowColor = p.color;
+    ctx.shadowBlur = 10;
+    ctx.beginPath();
+    ctx.arc(cx, p.y, p.radius, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+
+    if (p.speed > 0 && p.y >= p.targetY) {
+      p.speed = -p.speed * 0.85;
+      p.color = '#34d399';
+      remaining.push(p);
+    } else if (p.speed < 0 && p.y <= 25) {
+      // Echo returned to surface
+    } else if (p.y >= 0 && p.y <= h) {
+      remaining.push(p);
+    }
+  });
+  interferometerPings = remaining;
+}
+
 /* =========================================================================
    7. TAB NAVIGATION CONTROLLER & KEYBOARD SHORTCUTS
    ========================================================================= */
@@ -4243,6 +4802,9 @@ function switchTab(tabId) {
     if (!strataAnimId) initStrataCanvas();
     if (!stegoCanvas) initStegoDemodulator();
     checkArtifactSlots();
+  } else if (tabId === 'interferometer') {
+    if (!interferometerAnimId) initInterferometerCanvas();
+    updateInterferometerUI();
   }
 
   playKeystrokeTone();
@@ -4254,8 +4816,8 @@ window.addEventListener('keydown', (e) => {
   if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
 
   const key = e.key;
-  if (key >= '1' && key <= '8') {
-    const tabs = ['memos', 'hex', 'signal', 'map', 'packets', 'terminal', 'verify', 'airgap'];
+  if (key >= '1' && key <= '9') {
+    const tabs = ['memos', 'hex', 'signal', 'map', 'packets', 'terminal', 'verify', 'airgap', 'interferometer'];
     switchTab(tabs[parseInt(key) - 1]);
     e.preventDefault();
   } else if (key === 'm' || key === 'M') {
@@ -4277,10 +4839,12 @@ document.addEventListener('visibilitychange', () => {
     if (animFrameLarge) cancelAnimationFrame(animFrameLarge);
     if (strataAnimId) cancelAnimationFrame(strataAnimId);
     if (stegoAnimId) cancelAnimationFrame(stegoAnimId);
+    if (interferometerAnimId) cancelAnimationFrame(interferometerAnimId);
     animFrameMini = null;
     animFrameLarge = null;
     strataAnimId = null;
     stegoAnimId = null;
+    interferometerAnimId = null;
   } else {
     if (audioCtx && audioEnabled && audioCtx.state === 'suspended') {
       audioCtx.resume();
@@ -4292,6 +4856,8 @@ document.addEventListener('visibilitychange', () => {
     if (activeTab && activeTab.id === 'tab-airgap') {
       if (!strataAnimId) initStrataCanvas();
       if (stegoDemodActive && !stegoAnimId) runStegoAnimation();
+    } else if (activeTab && activeTab.id === 'tab-interferometer') {
+      if (!interferometerAnimId) initInterferometerCanvas();
     }
   }
 });
@@ -4325,6 +4891,7 @@ window.addEventListener('DOMContentLoaded', () => {
   initStrataCanvas();
   initStegoDemodulator();
   checkArtifactSlots();
+  initInterferometerCanvas();
 });
 </script>
 </body>
