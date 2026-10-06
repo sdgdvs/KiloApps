@@ -4,6 +4,14 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-06T10:29:00-07:00 — kilo-qa: KTetris (Pass 5: Tutorial & State Integrity, Modal Ergonomics & Build Audit)**
+  - Status: PASS ✅ (0 regressions, 188.7 KB web / 55.5 KB native < 999 KB ceiling).
+  - State Persistence: Hardened quicksave/quickload [F5/F9] in web and Win32 C (`save.dat`); added bag preservation, unload autosave, and validation.
+  - Tutorial Integrity: Gated first-run guide behind `ktetris_tutorialSeen` / `ktetris_tutorial.dat`; restored saves bypass tutorial.
+  - Overlays & Ergonomics: Wired Esc, Enter, Space across help, game over, victory, and leaderboard overlays; updated guide key legends.
+  - Toast Occlusion Remediation: Set default `pointer-events: none` on toast; canvas interaction auto-dismisses toast (Directive 185).
+  - Verification: `test_app_startup.py` PASS; `test_web_apps.js` PASS (1 app, 20 elements); MSVC clean (`KTetris.exe` 55.5 KB); Vite clean (314ms); security_lint 100% PASS.
+
 - **2026-10-06T10:11:00-07:00 — kilo-usability: KChart (Usability & Layout Polish, HiDPI Scaling & Label Ergonomics)**
   - Status: PASS ✅ (0 regressions, 120.7 KB web / 36.8 KB native < 999 KB ceiling).
   - Window & Layout Ergonomics: Tuned default dimensions to 1060x740 in `App.jsx`; made canvas height viewport-responsive (`clamp`).

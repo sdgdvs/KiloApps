@@ -18,6 +18,7 @@
 #define IDC_BTN_COPY_HSL 110
 #define IDC_BTN_RANDOM   111
 #define IDC_BTN_INVERT   112
+#define IDC_BTN_HELP     113
 
 // Swatch rect count
 #define NUM_SWATCHES 10
@@ -43,7 +44,7 @@ static HWND g_hValR, g_hValG, g_hValB;
 static HWND g_hValH, g_hValS, g_hValL;
 static HWND g_hEditHex;
 static HWND g_hBtnCopyHex, g_hBtnCopyRgb, g_hBtnCopyHsl;
-static HWND g_hBtnRandom, g_hBtnInvert;
+static HWND g_hBtnRandom, g_hBtnInvert, g_hBtnHelp;
 static HWND g_hStatus;
 
 static HFONT g_hFontNormal = NULL;
@@ -222,6 +223,22 @@ static void CopyTextToClipboard(HWND hwndOwner, const char* text) {
     }
 }
 
+static void ShowHelpDialog(HWND hwnd) {
+    MessageBoxA(hwnd,
+        "KColor - Advanced Color Picker & Palette Studio\n\n"
+        "Controls & Hotkeys:\n"
+        "  - R: Generate Random Color\n"
+        "  - I: Invert Active Color\n"
+        "  - C: Copy Active HEX code\n"
+        "  - 1..9: Quick-select Swatches 1..9\n"
+        "  - Left-Click Swatch: Select color\n"
+        "  - Right-Click Swatch: Save current color to swatch\n"
+        "  - F1 / H: Open this Help guide\n\n"
+        "Adjust RGB and HSL sliders or type any HEX color in the input field.",
+        "KColor Help & Hotkeys",
+        MB_OK | MB_ICONINFORMATION);
+}
+
 // --- EDIT CONTROL SUBCLASSING ---
 
 static LRESULT CALLBACK HexEditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
@@ -361,12 +378,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             g_hBtnCopyRgb = CreateWindowExA(0, "BUTTON", "Copy RGB", WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_PUSHBUTTON, 325, 160, 95, 26, hwnd, (HMENU)IDC_BTN_COPY_RGB, NULL, NULL);
             g_hBtnCopyHsl = CreateWindowExA(0, "BUTTON", "Copy HSL", WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_PUSHBUTTON, 425, 160, 95, 26, hwnd, (HMENU)IDC_BTN_COPY_HSL, NULL, NULL);
 
-            // Utility Buttons: Random & Invert
-            g_hBtnRandom = CreateWindowExA(0, "BUTTON", "Random (R)", WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_PUSHBUTTON, 225, 192, 110, 26, hwnd, (HMENU)IDC_BTN_RANDOM, NULL, NULL);
-            g_hBtnInvert = CreateWindowExA(0, "BUTTON", "Invert (I)", WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_PUSHBUTTON, 345, 192, 110, 26, hwnd, (HMENU)IDC_BTN_INVERT, NULL, NULL);
+            // Utility Buttons: Random, Invert, Help
+            g_hBtnRandom = CreateWindowExA(0, "BUTTON", "Random (R)", WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_PUSHBUTTON, 225, 192, 95, 26, hwnd, (HMENU)IDC_BTN_RANDOM, NULL, NULL);
+            g_hBtnInvert = CreateWindowExA(0, "BUTTON", "Invert (I)", WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_PUSHBUTTON, 325, 192, 95, 26, hwnd, (HMENU)IDC_BTN_INVERT, NULL, NULL);
+            g_hBtnHelp = CreateWindowExA(0, "BUTTON", "Help (F1)", WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_PUSHBUTTON, 425, 192, 95, 26, hwnd, (HMENU)IDC_BTN_HELP, NULL, NULL);
 
             // Status Bar
-            g_hStatus = CreateWindowExA(0, "STATIC", "Ready (L-Click select swatch, R-Click save to swatch, R: Random, I: Invert)", WS_CHILD | WS_VISIBLE | SS_SUNKEN, 10, 380, 525, 22, hwnd, NULL, NULL, NULL);
+            g_hStatus = CreateWindowExA(0, "STATIC", "Ready (L-Click select, R-Click save, F1: Help, R: Random, I: Invert)", WS_CHILD | WS_VISIBLE | SS_SUNKEN, 10, 380, 525, 22, hwnd, NULL, NULL, NULL);
 
             // Apply font to all controls
             EnumChildWindows(hwnd, (WNDENUMPROC)SendMessageA, (LPARAM)WM_SETFONT);
@@ -461,12 +479,16 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 g_b = 255 - g_b;
                 SyncControlsFromRgb(hwnd, TRUE);
                 if (g_hStatus) SetWindowTextA(g_hStatus, "Inverted Active Color");
+            } else if (id == IDC_BTN_HELP) {
+                ShowHelpDialog(hwnd);
             }
             break;
         }
 
         case WM_KEYDOWN: {
-            if (wParam == 'R' || wParam == 'r') {
+            if (wParam == VK_F1 || wParam == 'H' || wParam == 'h') {
+                ShowHelpDialog(hwnd);
+            } else if (wParam == 'R' || wParam == 'r') {
                 SendMessageA(hwnd, WM_COMMAND, MAKEWPARAM(IDC_BTN_RANDOM, 0), 0);
             } else if (wParam == 'I' || wParam == 'i') {
                 SendMessageA(hwnd, WM_COMMAND, MAKEWPARAM(IDC_BTN_INVERT, 0), 0);

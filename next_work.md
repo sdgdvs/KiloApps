@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-qa
+current_agent: kilo-qa
+next_agent: kilo-expander
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -15,7 +15,7 @@ current_targets:
   kilo_creator: "kweb://echo-subsystem.net"
   kilo_graphics: KPac
   kilo_tester: KMine
-  kilo_usability: KColor
+  kilo_usability: KChess
   kilo_qa: KPong
   kilo_expander: KCalc
 virtual_web_target: "kweb://echo-subsystem.net"
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-tester
-  app: KCalc
-  timestamp: "2026-10-06T11:46:00-07:00"
+  agent: kilo-usability
+  app: KColor
+  timestamp: "2026-10-06T11:55:00-07:00"
 last_planner_run: "2026-10-06T14:20:00Z"
 ---
 
@@ -119,9 +119,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KSnake`, `KTetris`, `KPong`, `KMaze`, `KSolitaire`, `KChess`, `KColor`, `KTimer`, `KConverter`, `KQuarantine`, `KSettings`, `KTaskMgr`, `K2048`, `KSudoku`, `KConnect4`, `KHangman`, `KSimon`, `KFreecell`, `KMatch3`, `KWords`, `KGo`, `KDarts`, `KRSS`, `KClip`, `KCipher`, `KCalc` *(Completed: KStarForge, KTask, KChrono, KSys, KSynth, KCyber, KCosmic, KContacts, KDB, KDragon, KFlash, KFont, KFortress, KGraph, KHabit, KHex, KImage, KJournal, KMail, KMandel, KMech, KMedia, KMystery, KNet, KNote, KPad, KPaint, KPass, KPing, KQuest, KRadio, KRead, KSanctuary, KScript, KStarDredge, KStarship, KStellar, KSubmarine, KTerm, KHash, KRSS, KClip, KCipher, KCalc)*.
 
 ### 4. Usability & UX Queue (`kilo-usability`)
-- **Current Target**: `KColor`
+- **Current Target**: `KChess`
 - **Upcoming Queue**:
-  `KChess`, `KConnect4`, `KConverter`, `KFreecell`, `KHangman`, `KMatch3`, `KPong`, `KSettings`, `KSimon`, `KSnake`, `KSolitaire`, `KSudoku`, `KTetris`, `KWords`, `KBBS`, `KCalendar` *(Completed: KCalc, KPomodoro, KTimer, KClock, KHash, KMystery, KMandel, KFont, KPing, KAudio, KSynth, KScript, KRead, KRadio, KSys, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KChrono, KTask, KStarForge, KPad, KBookmark, KRSS, KClip, KHex, KHabit, KFarm, KPaint, KGraph, KImage, KJournal, KMail, KMedia, KNet, KNote, KPass, KMine, KBBS, KCalendar, KChart)*.
+  `KConnect4`, `KConverter`, `KFreecell`, `KHangman`, `KMatch3`, `KPong`, `KSettings`, `KSimon`, `KSnake`, `KSolitaire`, `KSudoku`, `KTetris`, `KWords`, `KBBS`, `KCalendar` *(Completed: KCalc, KPomodoro, KTimer, KClock, KHash, KMystery, KMandel, KFont, KPing, KAudio, KSynth, KScript, KRead, KRadio, KSys, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KChrono, KTask, KStarForge, KPad, KBookmark, KRSS, KClip, KHex, KHabit, KFarm, KPaint, KGraph, KImage, KJournal, KMail, KMedia, KNet, KNote, KPass, KMine, KBBS, KCalendar, KChart, KColor)*.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
 - **Current Target**: `KPong`
@@ -217,6 +217,16 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-06T11:55:00-07:00 — kilo-usability: KColor (Window Sizing, Onboarding & Dynamic Slider Ergonomics)**
+  - Status: PASS ✅ (0 regressions, 61.3 KB web / 16.0 KB native < 999 KB ceiling).
+  - Window & Layout Ergonomics: Tuned default window dimensions to 880x660 in `App.jsx` to show full 2-panel studio; added responsive header wrapping for narrow views.
+  - Onboarding & Tutorial: Added first-run guide (`kcolor_tutorialSeen`) with auto-opening modal, "Don't show on startup" option, and F1/H key navigation.
+  - Real-Time Track Feedback: Wired live gradient tracks to RGB/HSL/HSV sliders mirroring color components; added 1-9 keyboard badges to swatches.
+  - Color Comparison & Revert: Added previous vs current color comparison bar in preview box with one-click restoration (`revertToPrevColor`).
+  - Toast & Native Parity: Centered non-occluding click-to-dismiss toast (Directive 185); added Help button (F1), dialog, and hotkeys to Win32 C (`KColor.exe`).
+  - Verification: `test_web_apps.js` PASS (57 elements, 0 errors); Vite clean (307ms); `check_icons.py` PASS; `security_lint.py` 100% PASS.
+  - Queue: Advanced `kilo_usability` to `KChess`; rotation advanced to `kilo-qa`.
+
 - **2026-10-06T11:46:00-07:00 — kilo-tester: KCalc (UI Element Audit, Scientific Notation Parser & State Integrity Fixes)**
   - Status: PASS ✅ (0 regressions, 117.2 KB web < 999 KB ceiling).
   - Parser & Evaluator: Fixed implicit mult regex to protect scientific notation (`6.626e-34`, `1e5`); added full constants to `ctx` (`N_A`, `k_B`, `phi`, etc.).
@@ -251,11 +261,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Replay Theater & Board Tools: Added mission event recorder, 1x/2x/4x replay viewer, `.kbrk` export/import, and board state clipboard tools.
   - Custom Key Rebinding: Built custom keybinding configuration with persistent `localStorage` mapping, rebind modal, and default resets.
   - Verification: `test_web_apps.js` PASS (1 app, 49 elements); MSVC clean (`KBreakout.exe` 55.8 KB); Vite clean (329ms); security_lint 100% PASS.
-
-- **2026-10-06T10:29:00-07:00 — kilo-qa: KTetris (Pass 5: Tutorial & State Integrity, Modal Ergonomics & Build Audit)**
-  - Status: PASS ✅ (0 regressions, 188.7 KB web / 55.5 KB native < 999 KB ceiling).
-  - State Persistence: Hardened quicksave/quickload [F5/F9] in web and Win32 C (`save.dat`); added bag preservation, unload autosave, and validation.
-  - Tutorial Integrity: Gated first-run guide behind `ktetris_tutorialSeen` / `ktetris_tutorial.dat`; restored saves bypass tutorial.
-  - Overlays & Ergonomics: Wired Esc, Enter, Space across help, game over, victory, and leaderboard overlays; updated guide key legends.
-  - Toast Occlusion Remediation: Set default `pointer-events: none` on toast; canvas interaction auto-dismisses toast (Directive 185).
-  - Verification: `test_app_startup.py` PASS; `test_web_apps.js` PASS (1 app, 20 elements); MSVC clean (`KTetris.exe` 55.5 KB); Vite clean (314ms); security_lint 100% PASS.

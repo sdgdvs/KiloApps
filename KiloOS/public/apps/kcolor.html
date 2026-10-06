@@ -112,12 +112,14 @@
 
   /* Main Color Preview Box */
   .preview-box {
-    height: 120px;
+    min-height: 135px;
+    height: auto;
     border-radius: var(--radius);
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    padding: 14px;
+    gap: 8px;
+    padding: 12px 14px;
     box-shadow: inset 0 2px 4px rgba(0,0,0,0.2), var(--shadow);
     transition: background-color 0.15s ease, color 0.15s ease;
     position: relative;
@@ -276,6 +278,24 @@
     text-overflow: ellipsis;
   }
 
+  .swatch-key-badge {
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    font-size: 0.6rem;
+    font-weight: 800;
+    background: rgba(0,0,0,0.7);
+    color: #fff;
+    width: 14px;
+    height: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 3px;
+    border: 1px solid rgba(255,255,255,0.25);
+    pointer-events: none;
+  }
+
   /* Contrast Checker */
   .contrast-box {
     display: flex;
@@ -353,25 +373,45 @@
     gap: 8px;
   }
 
-  /* Toast Notification */
+  /* Toast Notification (Centered & Non-Occluding) */
   #toast {
     position: fixed;
-    bottom: 20px;
-    right: 20px;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(100px);
     background: var(--accent);
     color: #0f172a;
     font-weight: 700;
-    padding: 10px 18px;
+    padding: 9px 18px;
     border-radius: 8px;
-    box-shadow: 0 10px 20px rgba(0,0,0,0.4);
-    transform: translateY(100px);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.25);
     opacity: 0;
-    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     z-index: 1000;
     font-size: 0.85rem;
     pointer-events: none;
+    cursor: pointer;
+    max-width: 90vw;
+    text-align: center;
+    white-space: nowrap;
   }
-  #toast.show { transform: translateY(0); opacity: 1; }
+  #toast.show {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  @media (max-width: 640px) {
+    header {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 10px;
+    }
+    .header-actions {
+      width: 100%;
+      flex-wrap: wrap;
+    }
+  }
 </style>
 </head>
 <body>
@@ -381,7 +421,7 @@
     <div class="title-icon" aria-hidden="true"></div>
     <div>
       <h1>KColor</h1>
-      <div class="subtitle">Color Picker, Conversions & Palette Studio</div>
+      <div class="subtitle">Color Picker, Conversions &amp; Palette Studio &bull; Press <kbd style="background:rgba(255,255,255,0.12); padding:1px 5px; border-radius:3px; font-weight:600;">F1</kbd> or <kbd style="background:rgba(255,255,255,0.12); padding:1px 5px; border-radius:3px; font-weight:600;">H</kbd> for Help</div>
     </div>
   </div>
   <div class="header-actions">
@@ -395,38 +435,47 @@
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m2 22 1-1h3l9-9M19 8l-5-5-2 2 5 5 2-2Z"/></svg>
       Eyedropper
     </button>
-    <button class="action-btn" id="helpBtn" title="Help & Keyboard Shortcuts (Hotkey: H / ?)" aria-label="Help and Shortcuts">
-      ❓ Help
+    <button class="action-btn" id="helpBtn" title="Help &amp; Keyboard Shortcuts (Hotkey: F1, H, ?)" aria-label="Help and Shortcuts">
+      ❓ Help <span style="font-size:0.75rem; opacity:0.75; font-weight:600;">(F1)</span>
     </button>
   </div>
 </header>
 
 <!-- Help & Shortcuts Modal -->
 <div id="helpModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.7); backdrop-filter:blur(4px); z-index:999; justify-content:center; align-items:center; padding:16px;">
-  <div class="card" style="max-width:480px; width:100%; max-height:90vh; overflow-y:auto; gap:12px;">
+  <div class="card" style="max-width:500px; width:100%; max-height:90vh; overflow-y:auto; gap:14px;">
     <div class="card-title">
-      <span>KColor Help & Shortcuts</span>
+      <span style="font-weight:700; color:var(--text-main); font-size:0.95rem;">🎨 KColor Quick Guide &amp; Shortcuts</span>
       <button class="copy-btn" id="closeHelpBtn" aria-label="Close Help">✕</button>
     </div>
-    <div style="font-size:0.85rem; line-height:1.5; color:var(--text-muted); display:flex; flex-direction:column; gap:8px;">
-      <p><strong style="color:var(--text-main);">Features:</strong></p>
-      <ul style="padding-left:18px;">
-        <li>Precision RGB, HSL, HSV, and CMYK interactive sliders</li>
+    <div style="font-size:0.85rem; line-height:1.5; color:var(--text-muted); display:flex; flex-direction:column; gap:10px;">
+      <p><strong style="color:var(--text-main);">Features &amp; Tools:</strong></p>
+      <ul style="padding-left:18px; display:flex; flex-direction:column; gap:3px;">
+        <li>Precision RGB, HSL, HSV, and CMYK interactive sliders with dynamic color tracks</li>
         <li>Universal input accepting HEX, RGB, HSL, HSV, CMYK, CSS Vars, and named colors</li>
-        <li>Real-time WCAG 2.1 AA/AAA contrast ratios against white & dark text</li>
+        <li>Real-time WCAG 2.1 AA/AAA contrast ratios against white &amp; dark text</li>
         <li>Harmonies generator (Complementary, Analogous, Triadic, Tetradic)</li>
-        <li>9-step dynamic Tints & Shades scale</li>
-        <li>Palette library with localStorage persistence and right-click removal</li>
+        <li>9-step dynamic Tints &amp; Shades scale</li>
+        <li>Palette library with localStorage persistence, CSS/JSON export, and right-click removal</li>
+        <li>Previous / current color comparison with one-click revert</li>
       </ul>
       <p><strong style="color:var(--text-main);">Keyboard Shortcuts:</strong></p>
-      <ul style="padding-left:18px;">
+      <ul style="padding-left:18px; display:flex; flex-direction:column; gap:3px;">
+        <li><kbd style="background:rgba(255,255,255,0.1); padding:2px 5px; border-radius:3px;">F1</kbd>, <kbd style="background:rgba(255,255,255,0.1); padding:2px 5px; border-radius:3px;">H</kbd>, or <kbd style="background:rgba(255,255,255,0.1); padding:2px 5px; border-radius:3px;">?</kbd> — Open this Help guide</li>
         <li><kbd style="background:rgba(255,255,255,0.1); padding:2px 5px; border-radius:3px;">R</kbd> — Generate random color</li>
         <li><kbd style="background:rgba(255,255,255,0.1); padding:2px 5px; border-radius:3px;">I</kbd> — Invert active color</li>
         <li><kbd style="background:rgba(255,255,255,0.1); padding:2px 5px; border-radius:3px;">C</kbd> — Copy active HEX code</li>
         <li><kbd style="background:rgba(255,255,255,0.1); padding:2px 5px; border-radius:3px;">1</kbd>–<kbd style="background:rgba(255,255,255,0.1); padding:2px 5px; border-radius:3px;">9</kbd> — Quick-select palette swatches 1–9</li>
-        <li><kbd style="background:rgba(255,255,255,0.1); padding:2px 5px; border-radius:3px;">H</kbd> or <kbd style="background:rgba(255,255,255,0.1); padding:2px 5px; border-radius:3px;">?</kbd> — Open this Help guide</li>
-        <li><kbd style="background:rgba(255,255,255,0.1); padding:2px 5px; border-radius:3px;">Esc</kbd> — Close modal / blur inputs</li>
+        <li><kbd style="background:rgba(255,255,255,0.1); padding:2px 5px; border-radius:3px;">Esc</kbd> — Close modal / blur inputs / dismiss toast</li>
       </ul>
+    </div>
+    <div style="display:flex; justify-content:space-between; align-items:center; padding-top:10px; border-top:1px solid var(--card-border); margin-top:4px;">
+      <label style="display:flex; align-items:center; gap:6px; font-size:0.8rem; color:var(--text-muted); cursor:pointer;">
+        <input type="checkbox" id="chkDoNotShow" style="cursor:pointer;"> Don't show on startup
+      </label>
+      <button class="action-btn" id="gotItBtn" style="background:var(--accent); color:#0f172a; font-weight:700; padding:6px 16px;">
+        Got It
+      </button>
     </div>
   </div>
 </div>
@@ -436,10 +485,21 @@
   <div class="card">
     <div class="card-title">Active Color</div>
     <div class="preview-box" id="mainPreview" role="region" aria-live="polite" aria-label="Active color preview">
-      <div class="preview-hex" id="previewHex">#6496C8</div>
+      <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+        <div class="preview-hex" id="previewHex">#6496C8</div>
+        <div style="font-size:0.7rem; font-weight:700; background:rgba(0,0,0,0.55); color:#fff; padding:2px 8px; border-radius:4px; border:1px solid rgba(255,255,255,0.25); backdrop-filter:blur(2px); pointer-events:none;">📋 Click to copy HEX</div>
+      </div>
       <div class="preview-details">
         <span id="previewRgb">rgb(100, 150, 200)</span>
         <span id="previewHsl">hsl(210°, 50%, 59%)</span>
+      </div>
+      <div id="prevColorBar" style="display:flex; align-items:center; justify-content:space-between; margin-top:4px; padding-top:6px; border-top:1px solid rgba(255,255,255,0.2); font-size:0.75rem;">
+        <div style="display:flex; align-items:center; gap:6px;">
+          <span style="opacity:0.9;">Previous:</span>
+          <span id="prevColorChip" style="display:inline-block; width:18px; height:18px; border-radius:3px; border:1px solid rgba(255,255,255,0.6); cursor:pointer;" title="Click to restore previous color"></span>
+          <span id="prevHexLabel" style="font-family:monospace; font-weight:600; opacity:0.95;">#6496C8</span>
+        </div>
+        <button class="copy-btn" id="revertColorBtn" style="font-size:0.7rem; padding:2px 8px; margin:0;" title="Revert to previous color">Revert</button>
       </div>
     </div>
 
@@ -605,8 +665,12 @@
     <!-- Saved & Preset Swatches -->
     <div class="card">
       <div class="card-title">
-        <span>Palette Library</span>
-        <button class="copy-btn" id="clearSwatchesBtn" aria-label="Clear Saved Swatches">Clear Saved</button>
+        <span>Palette Library (1-9 Hotkeys)</span>
+        <div style="display:flex; gap:6px;">
+          <button class="copy-btn" id="exportCssBtn" title="Copy all swatches as CSS variables">Copy CSS</button>
+          <button class="copy-btn" id="exportJsonBtn" title="Copy all swatches as JSON array">Copy JSON</button>
+          <button class="copy-btn" id="clearSwatchesBtn" aria-label="Clear Saved Swatches">Clear Saved</button>
+        </div>
       </div>
       <div class="swatch-grid" id="swatchGrid" role="group" aria-label="Palette Library Swatches"></div>
     </div>
@@ -661,6 +725,7 @@
 
   // State
   let state = { r: 100, g: 150, b: 200 };
+  let prevState = { r: 100, g: 150, b: 200 };
   let activeTab = 'rgb';
   let savedSwatches = safeGetStorage('kcolor_saved_swatches', [
     '#EF4444', '#F59E0B', '#10B981', '#3B82F6', '#6366F1', '#8B5CF6', '#EC4899'
@@ -674,7 +739,24 @@
   const previewHex = document.getElementById('previewHex');
   const previewRgb = document.getElementById('previewRgb');
   const previewHsl = document.getElementById('previewHsl');
+  const prevColorChip = document.getElementById('prevColorChip');
+  const prevHexLabel = document.getElementById('prevHexLabel');
+  const revertColorBtn = document.getElementById('revertColorBtn');
   const customHexInput = document.getElementById('customHexInput');
+
+  function capturePrevState() {
+    prevState = { ...state };
+    updatePrevDisplay();
+  }
+
+  function updatePrevDisplay() {
+    if (prevColorChip && prevHexLabel) {
+      const hex = rgbToHex(prevState.r, prevState.g, prevState.b);
+      prevColorChip.style.backgroundColor = hex;
+      prevHexLabel.textContent = hex;
+      prevColorChip.title = `Previous color: ${hex} (Click to restore)`;
+    }
+  }
 
   // Sliders
   const rangeR = document.getElementById('range-r'), rangeG = document.getElementById('range-g'), rangeB = document.getElementById('range-b');
@@ -1006,6 +1088,19 @@
     fmtCss.textContent = `--color: ${hex};`;
     fmtCpp.textContent = `RGB(${state.r}, ${state.g}, ${state.b})`;
 
+    // Live Dynamic Slider Track Gradients
+    rangeR.style.background = `linear-gradient(to right, rgb(0, ${state.g}, ${state.b}), rgb(255, ${state.g}, ${state.b}))`;
+    rangeG.style.background = `linear-gradient(to right, rgb(${state.r}, 0, ${state.b}), rgb(${state.r}, 255, ${state.b}))`;
+    rangeB.style.background = `linear-gradient(to right, rgb(${state.r}, ${state.g}, 0), rgb(${state.r}, ${state.g}, 255))`;
+
+    rangeS.style.background = `linear-gradient(to right, hsl(${hsl.h}, 0%, ${hsl.l}%), hsl(${hsl.h}, 100%, ${hsl.l}%))`;
+    rangeL.style.background = `linear-gradient(to right, #000, hsl(${hsl.h}, ${hsl.s}%, 50%), #fff)`;
+
+    rangeHsvS.style.background = `linear-gradient(to right, #fff, hsl(${hsv.h}, 100%, ${hsv.v}%))`;
+    rangeHsvV.style.background = `linear-gradient(to right, #000, hsl(${hsv.h}, ${hsv.s}%, 100%))`;
+
+    updatePrevDisplay();
+
     // Render Extras
     renderShades(hsl);
     renderHarmonies(hsl);
@@ -1028,6 +1123,7 @@
       el.role = 'button';
       el.setAttribute('aria-label', `Shade ${stepHex}, lightness ${l}%`);
       el.onclick = () => {
+        capturePrevState();
         state = stepRgb;
         updateAll();
       };
@@ -1069,10 +1165,11 @@
       swatch.role = 'button';
       swatch.title = `${item.name}: ${targetHex}`;
       swatch.setAttribute('aria-label', `${item.name}: ${targetHex}`);
-      swatch.onclick = () => { state = targetRgb; updateAll(); };
+      swatch.onclick = () => { capturePrevState(); state = targetRgb; updateAll(); };
       swatch.onkeydown = (e) => {
         if (e.key === 'Enter' || e.key === ' ') {
           e.preventDefault();
+          capturePrevState();
           state = targetRgb;
           updateAll();
         }
@@ -1094,24 +1191,26 @@
     // Combine saved swatches and presets
     const all = [...new Set([...savedSwatches, ...presets])];
 
-    all.forEach(hex => {
+    all.forEach((hex, idx) => {
       const swatch = document.createElement('div');
       swatch.className = 'swatch-item';
       swatch.style.backgroundColor = hex;
       swatch.tabIndex = 0;
       const isSaved = savedSwatches.includes(hex);
-      swatch.title = isSaved ? `Swatch ${hex} (Click to select, Right-click to remove)` : `Preset ${hex}`;
-      swatch.setAttribute('aria-label', `Palette Swatch ${hex}`);
+      const hotkeyHint = idx < 9 ? ` [Key ${idx + 1}]` : '';
+      swatch.title = isSaved ? `Swatch ${hex}${hotkeyHint} (Click to select, Right-click to remove)` : `Preset ${hex}${hotkeyHint}`;
+      swatch.setAttribute('aria-label', `Palette Swatch ${hex}${hotkeyHint}`);
       swatch.onclick = () => {
+        capturePrevState();
         const rgb = parseColorString(hex);
         if (rgb) { state = rgb; updateAll(); }
       };
       swatch.oncontextmenu = (e) => {
         if (isSaved) {
           e.preventDefault();
-          const idx = savedSwatches.indexOf(hex);
-          if (idx !== -1) {
-            savedSwatches.splice(idx, 1);
+          const sIdx = savedSwatches.indexOf(hex);
+          if (sIdx !== -1) {
+            savedSwatches.splice(sIdx, 1);
             safeSetStorage('kcolor_saved_swatches', savedSwatches);
             renderSwatches();
             showToast(`Removed ${hex} from library`);
@@ -1121,10 +1220,19 @@
       swatch.onkeydown = (e) => {
         if (e.key === 'Enter' || e.key === ' ') {
           e.preventDefault();
+          capturePrevState();
           const rgb = parseColorString(hex);
           if (rgb) { state = rgb; updateAll(); }
         }
       };
+
+      if (idx < 9) {
+        const badge = document.createElement('div');
+        badge.className = 'swatch-key-badge';
+        badge.textContent = idx + 1;
+        badge.title = `Press ${idx + 1} to select`;
+        swatch.appendChild(badge);
+      }
 
       const label = document.createElement('div');
       label.className = 'swatch-hex';
@@ -1173,6 +1281,7 @@
   // --- RANDOM & INVERT HELPERS ---
 
   function randomizeColor() {
+    capturePrevState();
     state = {
       r: Math.floor(Math.random() * 256),
       g: Math.floor(Math.random() * 256),
@@ -1183,6 +1292,7 @@
   }
 
   function invertColor() {
+    capturePrevState();
     state = {
       r: 255 - state.r,
       g: 255 - state.g,
@@ -1193,6 +1303,17 @@
   }
 
   // --- EVENT HANDLERS ---
+
+  // Capture prevState on slider interaction
+  const allSliders = [
+    rangeR, rangeG, rangeB,
+    rangeH, rangeS, rangeL,
+    rangeHsvH, rangeHsvS, rangeHsvV,
+    rangeCmykC, rangeCmykM, rangeCmykY, rangeCmykK
+  ];
+  allSliders.forEach(input => {
+    input.addEventListener('pointerdown', capturePrevState);
+  });
 
   // RGB Sliders
   [rangeR, rangeG, rangeB].forEach(input => {
@@ -1242,10 +1363,24 @@
   customHexInput.addEventListener('input', () => {
     const parsed = parseColorString(customHexInput.value);
     if (parsed) {
+      capturePrevState();
       state = parsed;
       updateAll('customHexInput');
     }
   });
+
+  // Revert / Restore Previous Color
+  function revertToPrevColor() {
+    const temp = { ...state };
+    state = { ...prevState };
+    prevState = temp;
+    updatePrevDisplay();
+    updateAll();
+    showToast(`Restored ${rgbToHex(state.r, state.g, state.b)}`);
+  }
+
+  if (prevColorChip) prevColorChip.addEventListener('click', revertToPrevColor);
+  if (revertColorBtn) revertColorBtn.addEventListener('click', revertToPrevColor);
 
   // Tabs Switching
   document.querySelectorAll('.tab-btn').forEach(btn => {
@@ -1275,6 +1410,7 @@
         const result = await eyeDropper.open();
         const rgb = parseColorString(result.sRGBHex);
         if (rgb) {
+          capturePrevState();
           state = rgb;
           updateAll();
           showToast(`Sampled ${result.sRGBHex}`);
@@ -1294,6 +1430,7 @@
       picker.addEventListener('input', (e) => {
         const rgb = parseColorString(e.target.value);
         if (rgb) {
+          capturePrevState();
           state = rgb;
           updateAll();
         }
@@ -1317,21 +1454,41 @@
 
   mainPreview.style.cursor = 'pointer';
   mainPreview.title = 'Click to copy HEX code';
-  mainPreview.addEventListener('click', () => {
+  mainPreview.addEventListener('click', (e) => {
+    // Avoid copying if user clicked revert button or previous color chip
+    if (e.target.closest('#prevColorBar')) return;
     const hex = rgbToHex(state.r, state.g, state.b);
     copyStringToClipboard(hex);
   });
 
-  // Help Modal Toggle
+  // Help Modal & Onboarding Flow
   const helpModal = document.getElementById('helpModal');
   const helpBtn = document.getElementById('helpBtn');
   const closeHelpBtn = document.getElementById('closeHelpBtn');
+  const gotItBtn = document.getElementById('gotItBtn');
+  const chkDoNotShow = document.getElementById('chkDoNotShow');
+
   function toggleHelp(show) {
     if (show === undefined) show = helpModal.style.display === 'none';
     helpModal.style.display = show ? 'flex' : 'none';
+    if (!show && chkDoNotShow && chkDoNotShow.checked) {
+      safeSetStorage('kcolor_tutorialSeen', true);
+    }
   }
+
   helpBtn.addEventListener('click', () => toggleHelp(true));
   closeHelpBtn.addEventListener('click', () => toggleHelp(false));
+  if (gotItBtn) {
+    gotItBtn.addEventListener('click', () => {
+      safeSetStorage('kcolor_tutorialSeen', true);
+      toggleHelp(false);
+    });
+  }
+  if (chkDoNotShow) {
+    chkDoNotShow.addEventListener('change', () => {
+      safeSetStorage('kcolor_tutorialSeen', chkDoNotShow.checked);
+    });
+  }
   helpModal.addEventListener('click', (e) => {
     if (e.target === helpModal) toggleHelp(false);
   });
@@ -1357,6 +1514,27 @@
     renderSwatches();
     showToast('Cleared saved swatches');
   });
+
+  // Palette Exports
+  const exportCssBtn = document.getElementById('exportCssBtn');
+  if (exportCssBtn) {
+    exportCssBtn.addEventListener('click', () => {
+      const all = [...new Set([...savedSwatches, ...presets])];
+      const cssVars = all.map((hex, i) => `  --palette-color-${i + 1}: ${hex};`).join('\n');
+      const cssBlock = `:root {\n${cssVars}\n}`;
+      copyStringToClipboard(cssBlock);
+      showToast('Copied palette as CSS variables');
+    });
+  }
+
+  const exportJsonBtn = document.getElementById('exportJsonBtn');
+  if (exportJsonBtn) {
+    exportJsonBtn.addEventListener('click', () => {
+      const all = [...new Set([...savedSwatches, ...presets])];
+      copyStringToClipboard(JSON.stringify(all, null, 2));
+      showToast('Copied palette as JSON array');
+    });
+  }
 
   // Clipboard Helpers
   function copyValue(elementId) {
@@ -1391,17 +1569,28 @@
   }
 
   let toastTimer = null;
+  const toastEl = document.getElementById('toast');
   function showToast(msg) {
-    const toast = document.getElementById('toast');
-    toast.textContent = msg;
-    toast.classList.add('show');
+    if (!toastEl) return;
+    toastEl.textContent = msg;
+    toastEl.classList.add('show');
     if (toastTimer) clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => toast.classList.remove('show'), 2200);
+    toastTimer = setTimeout(() => toastEl.classList.remove('show'), 2200);
+  }
+  if (toastEl) {
+    toastEl.addEventListener('click', () => {
+      toastEl.classList.remove('show');
+      if (toastTimer) clearTimeout(toastTimer);
+    });
   }
 
   // Global Keyboard Shortcuts
   window.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
+      if (toastEl && toastEl.classList.contains('show')) {
+        toastEl.classList.remove('show');
+        if (toastTimer) clearTimeout(toastTimer);
+      }
       if (helpModal && helpModal.style.display !== 'none') {
         toggleHelp(false);
         return;
@@ -1421,7 +1610,10 @@
       return;
     }
 
-    if (e.key === 'r' || e.key === 'R') {
+    if (e.key === 'F1' || e.key === 'f1') {
+      e.preventDefault();
+      toggleHelp();
+    } else if (e.key === 'r' || e.key === 'R') {
       e.preventDefault();
       randomizeColor();
     } else if (e.key === 'i' || e.key === 'I') {
@@ -1438,6 +1630,7 @@
       const idx = parseInt(e.key) - 1;
       const all = [...new Set([...savedSwatches, ...presets])];
       if (all[idx]) {
+        capturePrevState();
         const rgb = parseColorString(all[idx]);
         if (rgb) {
           state = rgb;
@@ -1449,8 +1642,14 @@
   });
 
   // Init
+  const tutorialSeen = safeGetStorage('kcolor_tutorialSeen', false);
+  if (chkDoNotShow) chkDoNotShow.checked = !!tutorialSeen;
   renderSwatches();
   updateAll();
+  updatePrevDisplay();
+  if (!tutorialSeen) {
+    toggleHelp(true);
+  }
 </script>
 </body>
 </html>
