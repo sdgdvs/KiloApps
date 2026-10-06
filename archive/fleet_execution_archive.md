@@ -4,6 +4,12 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-06T07:54:00-07:00 — kilo-graphics: KBreakout (Skip Turn — Inappropriate Target & Glint/Dot Purge)**
+  - Status: ⏭️ Skip — Imagen 3 asset replacement not appropriate for KBreakout
+  - Rationale: Mature arcade classic (Loop 11+); dynamic 40-stage procedural brick engine and Win32 GDI 1:1 parity preclude raster replacement.
+  - Glint & Dot Purge: Purged brick specular sheen, ball-proximity glints, paddle bevel sheen, quantum lepton dot, background travel dots, and corner diodes.
+  - Verification: `scripts/check_icons.py` 100% PASS; `scripts/security_lint.py` 100% PASS; MSVC clean (`KBreakout.exe` 55.3 KB); Vite clean in 320ms; web (91.6 KB) < 999 KB ceiling.
+
 - **2026-10-05T19:43:00-07:00 — kilo-usability: KBBS (Usability & Layout Polish, Modal Ergonomics & HiDPI Scaling)**
   - Status: PASS ✅ (0 regressions, 162.2 KB web / 101.9 KB native < 999 KB ceiling).
   - Window Dimension Tuning: Expanded default dimensions to 960x680 in `App.jsx`, preventing 800px modal clipping.

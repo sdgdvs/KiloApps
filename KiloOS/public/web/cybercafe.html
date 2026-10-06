@@ -1429,6 +1429,7 @@
           </select>
           <button id="fmLabToggleBtn" class="btn-audio" onclick="toggleFmLab()">🎛️ FM LAB</button>
           <button id="audioToggleBtn" class="btn-audio" onclick="toggleAudioEngine()">🔊 SFX: ON</button>
+          <button id="helpToggleBtn" class="btn-audio" style="border-color:var(--cyan-bright); color:var(--cyan-bright);" onclick="openHelpModal()">❓ HELP (F1)</button>
         </div>
         <span id="clockDisplay">1999-11-23 23:42:00 EST</span>
       </div>
@@ -1751,6 +1752,8 @@ Select an item above to vend voucher.</div>
           <h5 style="font-size:11px; color:var(--amber-bright); margin-bottom:6px;">TELECOMMUNICATIONS FREQUENCY WEAPONS &amp; BEACONS</h5>
           <div class="phreak-tools-grid">
             <button class="phreak-tool-btn" onclick="trigger2600Hz()">2600Hz TRUNK SEIZE</button>
+            <button class="phreak-tool-btn" style="border-color:var(--cyan-bright); color:var(--cyan-bright);" onclick="triggerBlueBoxDial()">BLUE BOX (KP+1999+ST)</button>
+            <button class="phreak-tool-btn" style="border-color:var(--green-bright); color:var(--green-bright);" onclick="triggerFreqSweep()">⚡ SWEEP 300-3000Hz</button>
             <button class="phreak-tool-btn" onclick="triggerRedBox('nickel')">RED BOX: 5¢ (NICKEL)</button>
             <button class="phreak-tool-btn" onclick="triggerRedBox('dime')">RED BOX: 10¢ (DIME)</button>
             <button class="phreak-tool-btn" onclick="triggerRedBox('quarter')">RED BOX: 25¢ (QUARTER)</button>
@@ -1772,7 +1775,12 @@ Carrier Monitor: Scanning 10.19.99.0/24 subnet loopbacks...</div>
   <section id="tab-forum" class="pane-content">
     <div class="section-title">
       <span>💬 UNDERGROUND BBS DISCUSSION FORUM</span>
-      <button class="btn-retro amber" onclick="openNewThreadModal()">+ START NEW THREAD</button>
+      <div style="display:flex; gap:6px; flex-wrap:wrap;">
+        <button class="btn-retro" style="font-size:10px;" onclick="exportForumJson()">💾 EXPORT BBS (.JSON)</button>
+        <button class="btn-retro" style="font-size:10px;" onclick="document.getElementById('forumImportFile').click()">📂 IMPORT BBS</button>
+        <input type="file" id="forumImportFile" accept=".json" style="display:none" onchange="importForumJson(event)">
+        <button class="btn-retro amber" onclick="openNewThreadModal()">+ START NEW THREAD</button>
+      </div>
     </div>
 
     <div class="forum-toolbar">
@@ -1900,6 +1908,9 @@ Carrier Monitor: Scanning 10.19.99.0/24 subnet loopbacks...</div>
             <option value="modem">USRobotics 56K Modem</option>
             <option value="floppy">3.5" HD Floppy Disk</option>
             <option value="relic">Echo Anomaly Node</option>
+            <option value="voodoo">3dfx Voodoo3 3000</option>
+            <option value="coffee">Baud Roast Mug</option>
+            <option value="glider">Hacker Glider Emblem</option>
           </select>
         </div>
 
@@ -1910,6 +1921,8 @@ Carrier Monitor: Scanning 10.19.99.0/24 subnet loopbacks...</div>
             <button class="btn-retro" style="flex:1;" onclick="downloadTxtFile()">📄 .TXT</button>
             <button class="btn-retro" style="flex:1;" onclick="downloadCHeaderFile()">⚙️ .H (C)</button>
           </div>
+          <button class="btn-retro" onclick="document.getElementById('asciiFileInput').click()">📂 IMPORT ART (.TXT)</button>
+          <input type="file" id="asciiFileInput" accept=".txt,.ans" style="display:none" onchange="importAsciiFile(event)">
           <button class="btn-retro" onclick="copyCanvasText()">📋 COPY AS TEXT</button>
           <button class="btn-retro amber" onclick="saveDrawingLocal()">💾 SAVE TO STORAGE</button>
           <button class="btn-retro" onclick="clearCanvasPrompt()">🗑️ CLEAR CANVAS</button>
@@ -2008,7 +2021,9 @@ Choose an option below to initialize your carrier!
         <div class="game-controls-grid" id="gameControlsBar">
           <button class="btn-retro green" onclick="doorGameAction('new_game')">▶ NEW GAME / ENTER</button>
           <button class="btn-retro" onclick="doorGameAction('scan')">📡 PROBE SUBNET</button>
+          <button class="btn-retro" style="border-color:var(--amber); color:var(--amber-bright);" onclick="doorGameAction('dial_classified')">⚡ PROBE 10.19.99.4</button>
           <button class="btn-retro amber" onclick="doorGameAction('armory')">🛒 RIG ARMORY</button>
+          <button class="btn-retro" onclick="doorGameAction('inventory')">📦 RIG INVENTORY</button>
           <button class="btn-retro" onclick="doorGameAction('tavern')">🍺 SYSOP TAVERN</button>
           <button class="btn-retro" onclick="doorGameAction('hall_of_fame')">🏆 HALL OF FAME</button>
           <button class="btn-retro" onclick="downloadDoorGameLog()">💾 SAVE LOG (.LOG)</button>
@@ -2139,7 +2154,7 @@ Choose an option below to initialize your carrier!
   <section id="tab-vault" class="pane-content">
     <div class="section-title">
       <span>💾 CYBERCAFE PUBLIC ARCHIVES &amp; TEXT VAULT</span>
-      <span style="font-size: 11px; color: var(--text-muted);">9 VERIFIED NFO/TEXT DOCUMENTS</span>
+      <span style="font-size: 11px; color: var(--text-muted);">11 VERIFIED NFO/TEXT DOCUMENTS</span>
     </div>
 
     <p style="font-size:11px; color:var(--text-muted); margin-bottom:12px;">
@@ -2267,6 +2282,26 @@ Choose an option below to initialize your carrier!
             <button class="btn-retro" style="color:var(--cyan-bright); border-color:var(--cyan);" onclick="openZmodemModal('LAN_RULES')">⚡ ZMODEM DL</button>
           </td>
         </tr>
+        <tr>
+          <td><strong>ACOUSTIC_COUPLER_SCHEMATICS.TXT</strong></td>
+          <td>2.4 KB</td>
+          <td>1999-11-26</td>
+          <td>Telecom Phreak</td>
+          <td>
+            <button class="btn-retro" onclick="viewVaultFile('ACOUSTIC_SCHEMATICS')">VIEW</button>
+            <button class="btn-retro" style="color:var(--cyan-bright); border-color:var(--cyan);" onclick="openZmodemModal('ACOUSTIC_SCHEMATICS')">⚡ ZMODEM DL</button>
+          </td>
+        </tr>
+        <tr>
+          <td><strong>CARLSBAD_MEM_DUMP_0x0040.HEX</strong></td>
+          <td>2.1 KB</td>
+          <td>1999-11-27</td>
+          <td>Intranet Leak</td>
+          <td>
+            <button class="btn-retro" onclick="viewVaultFile('CARLSBAD_MEM_DUMP')">VIEW</button>
+            <button class="btn-retro" style="color:var(--cyan-bright); border-color:var(--cyan);" onclick="openZmodemModal('CARLSBAD_MEM_DUMP')">⚡ ZMODEM DL</button>
+          </td>
+        </tr>
       </tbody>
     </table>
 
@@ -2351,6 +2386,39 @@ Ready to initiate packet stream. Click "START TRANSMISSION" to begin.</div>
         <button class="btn-retro green" id="zmodemStartBtn" onclick="startZmodemTransfer()">⚡ START TRANSMISSION</button>
         <button class="btn-retro amber" id="zmodemSaveBtn" style="display:none;" onclick="downloadTransferredFile()">💾 SAVE TO DISK</button>
         <button class="btn-retro" onclick="closeZmodemModal()">ABORT / CLOSE</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- QUICK HELP & SHORTCUTS MODAL -->
+  <div id="helpModal" class="modal-overlay">
+    <div class="modal-box" style="max-width:600px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border-bright); padding-bottom:6px; margin-bottom:10px;">
+        <span style="color:var(--cyan-bright); font-size:13px; font-weight:bold;">❓ CYBERCAFE '99 // GUIDE &amp; DIRECTORY HOTKEYS</span>
+        <button class="btn-retro" style="padding:2px 8px;" onclick="closeHelpModal()">[X]</button>
+      </div>
+      <div style="font-size:11px; line-height:1.5; color:var(--text); max-height:360px; overflow-y:auto;">
+        <h4 style="color:var(--amber-bright); font-size:12px; margin-bottom:4px;">KEYBOARD SHORTCUTS:</h4>
+        <ul style="margin-left:18px; margin-bottom:10px; color:var(--text-muted);">
+          <li><strong style="color:#fff;">1 - 7:</strong> Switch Panes (1: Lounge, 2: Phreak, 3: Forum, 4: ASCII, 5: IRC, 6: Door Game, 7: Vault)</li>
+          <li><strong style="color:#fff;">M:</strong> Toggle Procedural FM Background Music</li>
+          <li><strong style="color:#fff;">S:</strong> Toggle Procedural Sound Effects</li>
+          <li><strong style="color:#fff;">F1 or ?:</strong> Open this Help &amp; Shortcuts Guide</li>
+          <li><strong style="color:#fff;">Esc:</strong> Close all active modals</li>
+        </ul>
+        <h4 style="color:var(--amber-bright); font-size:12px; margin-bottom:4px;">CAFE MODULE DIRECTORY:</h4>
+        <ul style="margin-left:18px; color:var(--text-muted);">
+          <li><strong>☕ Terminal Lounge:</strong> 8-booth 10Base-T LAN station monitor, interactive station CLI shell, and cyber barista beverage synthesizer.</li>
+          <li><strong>📞 Phreak Lab:</strong> Bell 202/212A acoustic coupler simulation, in-band 2600Hz trunk seize, red box coin tones, and frequency scanner.</li>
+          <li><strong>💬 Threaded BBS Forum:</strong> Retro message board with real client-side thread persistence and JSON export/import.</li>
+          <li><strong>🎨 ASCII Art Studio:</strong> 60x20 ANSI character grid with CP437 box drawing, text/header export, and file importer.</li>
+          <li><strong>📟 mIRC Chat Lounge:</strong> Live Firebase RTDB multi-patron chat with channel switching and dead-drop triggers.</li>
+          <li><strong>⚔️ BBS Door Game:</strong> "Node-Wars '99" subterranean rogue node crawler and live 1v1 RFMS cyberspace duel.</li>
+          <li><strong>💾 Floppy Archives:</strong> High-speed ZMODEM-99 file streaming transfer simulator and authentic 1999 documentation.</li>
+        </ul>
+      </div>
+      <div style="display:flex; justify-content:flex-end; margin-top:10px;">
+        <button class="btn-retro amber" onclick="closeHelpModal()">CLOSE GUIDE</button>
       </div>
     </div>
   </div>
@@ -2809,9 +2877,29 @@ function playPianoNote(freq, keyEl) {
   }
 }
 
-// Map Computer Keyboard to Piano Keys
+// Map Computer Keyboard to Piano Keys & Global Cafe Shortcuts
 window.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    closeHelpModal();
+    closeBoothModal();
+    closeZmodemModal();
+    closeNewThreadModal();
+    return;
+  }
   if (['input', 'textarea'].includes((e.target.tagName || '').toLowerCase())) return;
+
+  // Global Navigation & Audio Hotkeys
+  if (e.key === '1') { switchTab('tab-lounge'); return; }
+  if (e.key === '2') { switchTab('tab-phreak'); return; }
+  if (e.key === '3') { switchTab('tab-forum'); return; }
+  if (e.key === '4') { switchTab('tab-ascii'); return; }
+  if (e.key === '5') { switchTab('tab-irc'); return; }
+  if (e.key === '6') { switchTab('tab-game'); return; }
+  if (e.key === '7') { switchTab('tab-vault'); return; }
+  if (e.key === 'm' || e.key === 'M') { toggleBgmPlayback(); return; }
+  if (e.key === 's' || e.key === 'S') { toggleAudioEngine(); return; }
+  if (e.key === '?' || e.key === 'F1') { e.preventDefault(); openHelpModal(); return; }
+
   const keyMap = {
     'a': 261.63, 'w': 277.18, 's': 293.66, 'e': 311.13, 'd': 329.63,
     'f': 349.23, 't': 369.99, 'g': 392.00, 'y': 415.30, 'h': 440.00,
@@ -2859,6 +2947,18 @@ function switchTab(tabId) {
   }
 }
 
+function openHelpModal() {
+  playChime(660, 0.08);
+  const m = document.getElementById('helpModal');
+  if (m) m.style.display = 'flex';
+}
+
+function closeHelpModal() {
+  playKeyClick();
+  const m = document.getElementById('helpModal');
+  if (m) m.style.display = 'none';
+}
+
 function updateClock() {
   const now = new Date();
   const clockEl = document.getElementById('clockDisplay');
@@ -2901,6 +3001,7 @@ function renderBooths() {
 function interactBooth(id) {
   playChime(580, 0.08);
   selectedBoothId = id;
+  switchStationCrtTo(id);
   const booth = BOOTHS_DATA.find(b => b.id === id);
   if (!booth) return;
 
@@ -3240,24 +3341,52 @@ function renderStationCrtLoop() {
   stationCrtAnimId = requestAnimationFrame(renderStationCrtLoop);
 }
 
-function cycleStationCrtView() {
-  playKeyClick();
-  currentStationCrtId = (currentStationCrtId % 8) + 1;
+let stationCliHistory = [];
+let stationCliHistoryIdx = -1;
+
+function switchStationCrtTo(id) {
+  if (id < 1 || id > 8) return;
+  currentStationCrtId = id;
   const booth = BOOTHS_DATA.find(b => b.id === currentStationCrtId) || BOOTHS_DATA[0];
-  
   const title = document.getElementById('remoteStationTitle');
   const ip = document.getElementById('remoteStationIp');
   const prompt = document.getElementById('stationCliPrompt');
   if (title) title.textContent = `📺 REMOTE VNC STATION CRT: STATION #${booth.id}`;
   if (ip) ip.textContent = `[${booth.ip}]`;
   if (prompt) prompt.textContent = `st${booth.id}:~$`;
+  logStationCli(`\n[VNC FOCUS] Remote CRT synchronized to Station #${booth.id} (${booth.ip} - ${booth.user})`);
+}
 
-  logStationCli(`\n[VNC CARRIER SWITCH] Switched terminal to Station #${booth.id} (${booth.ip} - ${booth.user})`);
+function cycleStationCrtView() {
+  playKeyClick();
+  currentStationCrtId = (currentStationCrtId % 8) + 1;
+  switchStationCrtTo(currentStationCrtId);
 }
 
 function handleStationCliKey(e) {
   if (e.key === 'Enter') {
     execStationCli();
+  } else if (e.key === 'ArrowUp') {
+    if (stationCliHistory.length > 0) {
+      if (stationCliHistoryIdx === -1) stationCliHistoryIdx = stationCliHistory.length - 1;
+      else if (stationCliHistoryIdx > 0) stationCliHistoryIdx--;
+      const input = document.getElementById('stationCliInput');
+      if (input) input.value = stationCliHistory[stationCliHistoryIdx] || '';
+    }
+    e.preventDefault();
+  } else if (e.key === 'ArrowDown') {
+    if (stationCliHistory.length > 0 && stationCliHistoryIdx !== -1) {
+      if (stationCliHistoryIdx < stationCliHistory.length - 1) {
+        stationCliHistoryIdx++;
+        const input = document.getElementById('stationCliInput');
+        if (input) input.value = stationCliHistory[stationCliHistoryIdx] || '';
+      } else {
+        stationCliHistoryIdx = -1;
+        const input = document.getElementById('stationCliInput');
+        if (input) input.value = '';
+      }
+    }
+    e.preventDefault();
   }
 }
 
@@ -3266,6 +3395,10 @@ function execStationCli() {
   const raw = (input.value || '').trim();
   if (!raw) return;
   input.value = '';
+
+  stationCliHistory.push(raw);
+  if (stationCliHistory.length > 50) stationCliHistory.shift();
+  stationCliHistoryIdx = -1;
 
   playKeyClick();
   const booth = BOOTHS_DATA.find(b => b.id === currentStationCrtId) || BOOTHS_DATA[0];
@@ -3279,10 +3412,17 @@ function execStationCli() {
     logStationCli(`DIRECTIVES:
   ping <ip>          - ICMP echo request probe (e.g. ping 10.19.99.4)
   traceroute <ip>    - Trace packet hops across KiloNet switches
+  telnet <ip> [port] - Connect to remote telnet socket / echo carrier
+  route              - Display kernel IP routing table
+  ifconfig           - Display 10Base-T network interface configuration
+  dmesg              - Print Linux kernel ring buffer logs
   cat /proc/cpuinfo  - Display processor architecture and SSE flags
+  cat /etc/hosts     - Display local IP-to-host resolution table
+  motd               - Display CyberCafe message of the day
   glinfo             - 3dfx Glide 3.x driver configuration
   netstat            - Open TCP/UDP listening sockets
   finger             - Patron session registry
+  fortune            - Classical hacker fortune / quote
   uptime             - Kernel session timer
   glide_test         - Run timedemo graphics test
   scan               - Scan subnet 10.19.99.0/24
@@ -3304,6 +3444,72 @@ Telemetry payload: [CARRIER_1999HZ_FACILITY_CARLSBAD_OFFSET_0x0040]`);
  1  10.19.99.1 (cafe-switch-01.knet)  0.28 ms
  2  10.19.99.12 (station-02.knet)     0.41 ms
  3  10.19.99.4 (echo-bus-loopback)    0.35 ms [ANOMALY]`);
+  } else if (cmd === 'telnet') {
+    const target = arg || '10.19.99.4 1999';
+    if (target.includes('10.19.99.4')) {
+      playFmTone(1999, 432 / 1999, 2.8, 1.4, 0.18, true);
+      logStationCli(`Trying 10.19.99.4...
+Connected to 10.19.99.4.
+Escape character is '^]'.
+========================================================================
+[PRECURSOR ECHO BUS TERMINAL // PORT 1999]
+SYN_ACK_OK: Memory loopback carrier established.
+TELEMETRY: FACILITY=CARLSBAD OFFSET=0x0040 SUBCARRIER=432HZ
+CHKSUM: 0x7F199942 (Ring-0 Bridge Transit Pipe Verified)
+Access classified dossier: kweb://10.19.99.4/classified
+========================================================================
+Connection closed by foreign host.`);
+      broadcastArgSignalFragment(1999, 'TELNET_1019994');
+    } else {
+      playChime(400, 0.1);
+      logStationCli(`telnet: Unable to connect to remote host ${target}: Connection refused`);
+    }
+  } else if (cmd === 'route') {
+    logStationCli(`Kernel IP routing table
+Destination     Gateway         Genmask         Flags Metric Ref    Use Iface
+10.19.99.0      0.0.0.0         255.255.255.0   U     0      0        0 eth0
+10.19.99.4      0.0.0.0         255.255.255.255 UH    0      0        0 mem0 [LOOPBACK]
+0.0.0.0         10.19.99.1      0.0.0.0         UG    1      0        0 eth0`);
+  } else if (cmd === 'ifconfig') {
+    logStationCli(`eth0      Link encap:10Base-T Fast Ethernet  HWaddr 00:50:DA:19:99:0${booth.id}
+          inet addr:10.19.99.${booth.id}  Bcast:10.19.99.255  Mask:255.255.255.0
+          UP BROADCAST RUNNING MULTICAST  MTU:1500  Metric:1
+          RX packets:14298 errors:0 dropped:0 overruns:0 frame:0
+          TX packets:12044 errors:0 dropped:0 overruns:0 carrier:0
+          collisions:0 txqueuelen:100 
+          Interrupt:11 Base address:0xd800`);
+  } else if (cmd === 'dmesg') {
+    logStationCli(`Linux version 2.2.12-20 (root@cafe-gw) (gcc version 2.95.2 19991024)
+CPU0: Intel Pentium III (Katmai) stepping 03
+Checking 386/387 coupling... OK, using FPU exceptions.
+PCI: Found 3dfx Interactive Voodoo3 AGP 16MB (rev 01)
+Sound Blaster 16 / AWE64 PnP at 0x220 irq 5 dma 1,5
+eth0: Realtek RTL8139 Fast Ethernet at 0xd800, IRQ 11
+[KERN_WARN] Memory controller bus detected echo carrier at 10.19.99.4:1999
+[KERN_WARN] Acoustic subcarrier modulated inside system memory timing loop`);
+  } else if (cmd === 'fortune' || cmd === 'quote') {
+    const fortunes = [
+      '"56,600 bps should be enough bandwidth for anyone." - SysOp_0x7F',
+      '"There is no place like 127.0.0.1, but 10.19.99.4 is where the signal lives."',
+      '"Hardware eventually fails. Software eventually works." - 1999 Proverb',
+      '"The box said Requires Windows 98 or better, so I installed KiloOS."'
+    ];
+    logStationCli(fortunes[Math.floor(Math.random() * fortunes.length)]);
+  } else if (cmd === 'motd' || (cmd === 'cat' && raw.includes('motd'))) {
+    logStationCli(`========================================================================
+            WELCOME TO CYBERCAFE '99 TERMINAL LOUNGE
+========================================================================
+1. All 8 booths are connected via switched 10Base-T Fast Ethernet.
+2. Friday Night LAN: Tremor III rocket arena at 21:00 EST.
+3. Unroutable packet emissions to 10.19.99.4 must be logged with SysOp.`);
+  } else if (cmd === 'cat' && raw.includes('hosts')) {
+    logStationCli(`127.0.0.1       localhost
+10.19.99.1      cafe-gateway.knet
+10.19.99.4      echo-subsystem.internal [NO_MAC]
+10.19.99.11     booth-01.knet (~neon_rider)
+10.19.99.12     booth-02.knet (BitCrusher_99)
+10.19.99.14     booth-04.knet (OPEN_STATION)
+10.19.99.20     lan-server.knet (Tremor III / Surreal Tournament)`);
   } else if (cmd === 'cat' && raw.includes('cpuinfo')) {
     logStationCli(`processor : 0
 vendor_id : GenuineIntel
@@ -3622,6 +3828,63 @@ function trigger2600Hz() {
 Toll line disconnected. Remote switch hold active. Free trunk circuit seized!`);
 }
 
+function triggerBlueBoxDial() {
+  initAudio();
+  logPhreak(`\n[BLUE BOX OPERATOR SEIZE]
+Transmitting Key Pulse (KP: 1100+1700Hz, 100ms)...`);
+  playDtmfTone(1100, 1700, 0.12);
+
+  const digits = ['1', '9', '9', '9'];
+  const mfTones = {
+    '1': [700, 900], '9': [1100, 1500]
+  };
+
+  digits.forEach((d, idx) => {
+    setTimeout(() => {
+      const f = mfTones[d] || [700, 900];
+      playDtmfTone(f[0], f[1], 0.08);
+      logPhreak(`[MF TONE] Outpulsed digit '${d}' (${f[0]}+${f[1]}Hz)`);
+    }, 180 + idx * 140);
+  });
+
+  setTimeout(() => {
+    logPhreak(`[BLUE BOX] Transmitting Start (ST: 1500+1700Hz)...`);
+    playDtmfTone(1500, 1700, 0.12);
+  }, 180 + digits.length * 140);
+
+  setTimeout(() => {
+    trigger1999HzCarrier();
+  }, 180 + digits.length * 140 + 250);
+}
+
+let freqSweepTimer = null;
+function triggerFreqSweep() {
+  initAudio();
+  if (freqSweepTimer) {
+    clearInterval(freqSweepTimer);
+    freqSweepTimer = null;
+    logPhreak(`[SWEEP ABORTED] Spectrum analyzer stopped.`);
+    return;
+  }
+  logPhreak(`\n[SPECTRUM SWEEP] Commencing automated acoustic sweep (300Hz -> 3000Hz)...`);
+  let curFreq = 300;
+  freqSweepTimer = setInterval(() => {
+    curFreq += 60;
+    playFmTone(curFreq, 1.0, 0.2, 0.06, 0.05, false);
+    if (Math.abs(curFreq - 1999) < 70) {
+      clearInterval(freqSweepTimer);
+      freqSweepTimer = null;
+      trigger1999HzCarrier();
+      return;
+    }
+    if (curFreq >= 3000) {
+      clearInterval(freqSweepTimer);
+      freqSweepTimer = null;
+      logPhreak(`[SWEEP FINISHED] Frequency range 300Hz-3000Hz complete.`);
+    }
+  }, 75);
+}
+
 function triggerRedBox(type) {
   initAudio();
   const pulses = (type === 'nickel') ? 1 : (type === 'dime') ? 2 : 5;
@@ -3790,6 +4053,25 @@ const DEFAULT_THREADS = [
         body: 'In IRC #cybercafe-99, someone whispered that typing !signal or querying the echo-subsystem on the cafe terminal reveals harmonic coordinates...'
       }
     ]
+  },
+  {
+    id: 6,
+    category: 'Echoes',
+    title: 'Acoustic coupler subcarrier modulation at 1999Hz & Memory Bus Anomalies',
+    author: 'AcousticPhreak',
+    date: '1999-11-24 04:12',
+    posts: [
+      {
+        author: 'AcousticPhreak',
+        date: '1999-11-24 04:12',
+        body: 'Coupled my Bell 103 modem directly to the telephone receiver while monitoring Station #4. Spectrum analyser locked onto a 1999.04 Hz tone with a 432 Hz subcarrier. The signal isn\'t coming from the Central Office—it\'s originating from inside the machine\'s memory bus! Traced the hex offset to 0x0040. Access kweb://10.19.99.4/classified if you want to inspect the raw facility dossier.'
+      },
+      {
+        author: 'DarkFiber',
+        date: '1999-11-24 05:03',
+        body: 'Can verify. The CRC-32 on that sector matches 0x7F199942, identical to the demoscene release checksum in the warez vault. The entire network is connected.'
+      }
+    ]
   }
 ];
 
@@ -3819,6 +4101,39 @@ function loadForumData() {
 
 function saveForumData() {
   localStorage.setItem('kweb_cybercafe_threads', JSON.stringify(forumThreads));
+}
+
+function exportForumJson() {
+  playChime(750, 0.1);
+  const dataStr = JSON.stringify(forumThreads, null, 2);
+  const blob = new Blob([dataStr], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'CYBERCAFE_FORUM_BACKUP.JSON';
+  a.click();
+}
+
+function importForumJson(e) {
+  const file = e.target?.files?.[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    try {
+      const parsed = JSON.parse(ev.target.result);
+      if (Array.isArray(parsed) && parsed.length > 0 && parsed[0].title) {
+        forumThreads = parsed;
+        saveForumData();
+        renderThreadsList();
+        playChime(880, 0.15);
+        alert(`BBS Forum restored successfully! Loaded ${forumThreads.length} threads.`);
+      } else {
+        alert('Invalid BBS backup JSON file format.');
+      }
+    } catch (err) {
+      alert('Error parsing JSON backup file.');
+    }
+  };
+  reader.readAsText(file);
 }
 
 function renderThreadsList() {
@@ -4474,8 +4789,74 @@ const PRESETS = {
     "      \\ \\/ /             \\ \\/ /      ",
     "       \\  /               \\  /       ",
     "        \\/=================\\/        "
+  ],
+  voodoo: [
+    "      .---------------------------------.      ",
+    "     /    3dfx INTERACTIVE VOODOO3       \\     ",
+    "    +=====================================+    ",
+    "    |  .----.  .----.  .----.  .-------.  |    ",
+    "    |  | 3D |  | FX |  | GL |  | 16MB  |  |    ",
+    "    |  '----'  '----'  '----'  '-------'  |    ",
+    "    |   [AGP 2X] [166MHz CORE] [GLIDE 3]  |    ",
+    "    +-------------------------------------+    ",
+    "     \\___________________________________/     "
+  ],
+  coffee: [
+    "                  )  (  )                      ",
+    "                 (  )  (                       ",
+    "              .------------.                   ",
+    "             /              \\                  ",
+    "            |  BAUD ROAST    |----.            ",
+    "            |   100% ARABICA |    |            ",
+    "            |  HOT & FRESH   |---'             ",
+    "             \\              /                  ",
+    "              '------------'                   ",
+    "             (==============)                  "
+  ],
+  glider: [
+    "                 .---.                         ",
+    "                |     |   .---.                ",
+    "                 '---'   |     |               ",
+    "                          '---'                ",
+    "          .---.   .---.   .---.                ",
+    "         |     | |     | |     |               ",
+    "          '---'   '---'   '---'                ",
+    "             [HACKER GLIDER]                   "
   ]
 };
+
+function importAsciiFile(e) {
+  const file = e.target?.files?.[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    const text = ev.target.result;
+    const lines = text.split(/\r?\n/);
+    for (let r = 0; r < CANVAS_ROWS; r++) {
+      for (let c = 0; c < CANVAS_COLS; c++) {
+        canvasGrid[r][c].char = ' ';
+        canvasGrid[r][c].fg = '#aaaaaa';
+      }
+    }
+    const maxR = Math.min(CANVAS_ROWS, lines.length);
+    for (let r = 0; r < maxR; r++) {
+      const line = lines[r] || '';
+      const maxC = Math.min(CANVAS_COLS, line.length);
+      for (let c = 0; c < maxC; c++) {
+        canvasGrid[r][c].char = line[c];
+        canvasGrid[r][c].fg = currentFg;
+      }
+    }
+    for (let r = 0; r < CANVAS_ROWS; r++) {
+      for (let c = 0; c < CANVAS_COLS; c++) {
+        updateCellDom(r, c);
+      }
+    }
+    playChime(880, 0.15);
+    alert(`Imported ASCII art file "${file.name}"!`);
+  };
+  reader.readAsText(file);
+}
 
 function loadAsciiPreset(key) {
   if (!key || !PRESETS[key]) return;
@@ -4730,10 +5111,32 @@ function handleBotTriggers(text, timeStr) {
       addLocalIrcMessage({ time: timeStr, nick: 'EchoDaemon', text: '*** [CARRIER LOCK] Frequency 1999Hz verified. Gateway 10.19.99.4 online. Decoded header: "FACILITY=CARLSBAD OFFSET=0x0040". Access terminal: kweb://10.19.99.4/classified' });
       playFmTone(999.5, 2.0, 4.0, 0.4, 0.15, true);
       localStorage.setItem('kweb_cybercafe_deaddrop_unlocked', 'true');
-    } else if (lower.includes('subcarrier-litho') || lower.includes('echo-harmonic')) {
+      broadcastArgSignalFragment(1999, 'CARRIER_LOCK_ECHO');
+    } else if (lower.includes('subcarrier-litho') || lower.includes('echo-harmonic') || lower.includes('litho-core-99') || lower.includes('litho-core') || lower.startsWith('!deaddrop')) {
       addLocalIrcMessage({ time: timeStr, nick: 'SysAdmin_NULL', text: '*** [DEAD-DROP CONFIRMED] Passphrase recognized. Memory sector 0x7F unlocked. For acoustic sweep, tune KRadio to 1999Hz and inspect memory in KHex.' });
       playChime(880, 0.25);
       localStorage.setItem('kweb_cybercafe_deaddrop_unlocked', 'true');
+      broadcastArgSignalFragment(1999, 'DEAD_DROP_UNLOCKED');
+    } else if (lower.includes('0x7f199942')) {
+      addLocalIrcMessage({ time: timeStr, nick: '@SysOp_0x7F', text: '*** [CRC-32 MATCH] Warez release integrity checksum 0x7F199942 verified. Carlsbad Transponder Node 0x7F confirmed active.' });
+      playChime(920, 0.2);
+    } else if (lower.includes('recovery_1999') || lower.includes('7f1999')) {
+      addLocalIrcMessage({ time: timeStr, nick: 'RetroEcho', text: '*** [HEAP OFFSET VERIFIED] Archival memory dump offset 0x7F1999 linked. Telemetry log accessible in KNote.' });
+      playChime(780, 0.15);
+    } else if (lower.includes('1999hz')) {
+      addLocalIrcMessage({ time: timeStr, nick: 'FreqHunter', text: '*** [ACOUSTIC HARMONIC] 1999.04 Hz fundamental tone verified on gateway 10.19.99.4 with 432 Hz subcarrier.' });
+      playFmTone(1999, 432 / 1999, 2.0, 0.8, 0.12, true);
+    } else if (lower.includes('carlsbad')) {
+      addLocalIrcMessage({ time: timeStr, nick: 'DarkFiber', text: '*** [FACILITY CLEARANCE] Facility tag CARLSBAD recognized. Check hex sector 0x0040 in the Floppy Archives.' });
+      playChime(640, 0.1);
+    } else if (lower.startsWith('!status')) {
+      addLocalIrcMessage({ time: timeStr, nick: 'CafeBot', text: 'SERVER STATUS: irc.underground.knet IRCD 2.4. 8 booths online. Gateway: 10.19.99.1. 10Base-T LAN latency: 0.4ms.' });
+    } else if (lower.startsWith('!phreak')) {
+      addLocalIrcMessage({ time: timeStr, nick: 'PhreakMaster_99', text: 'PHREAK GUIDE: Blue Box: KP+1999+ST forces international trunk circuit. Red Box: 1700+2200Hz simulates payphone coin pulses.' });
+    } else if (lower.startsWith('!voodoo')) {
+      addLocalIrcMessage({ time: timeStr, nick: 'VoodooMaster', text: '3DFX GLIDE: Voodoo3 3000 AGP 16MB running Glide 3.03. 1024x768 16-bit color at 60 FPS locked.' });
+    } else if (lower.startsWith('!rules')) {
+      addLocalIrcMessage({ time: timeStr, nick: '@SysOp_0x7F', text: 'CAFE RULES: 1. No soda on keyboards. 2. Respect SysOp. 3. Unroutable packets to 10.19.99.4 must be reported.' });
     } else if (lower.startsWith('!menu')) {
       addLocalIrcMessage({ time: timeStr, nick: 'CafeBot', text: 'CAFE MENU: Jolt Cola ($2.25), Baud Roast ($1.75), Surge ($1.50), Bawls Guarana ($2.50), Hot Pocket ($2.00). Use the Lounge tab to vend!' });
       playChime(600, 0.08);
@@ -4845,6 +5248,7 @@ function connectFirebaseChannel() {
         text: data.text || ''
       });
       playKeyClick();
+      handleBotTriggers(data.text || '', data.time || timeStr);
     });
   } catch (e) {}
 }
@@ -5060,12 +5464,50 @@ Choose "PROBE SUBNET" to explore servers or "RIG ARMORY" to upgrade.`;
       } else printDoorGame('[ERROR] Insufficient credits.');
     }
     saveDoorGame();
+  } else if (act === 'dial_classified') {
+    if (p.turns <= 0) {
+      printDoorGame('[ERROR] Out of daily modem turns! Visit the SysOp Tavern to recharge.');
+      playChime(250, 0.1);
+      return;
+    }
+    p.turns--;
+    playFmTone(1999, 432 / 1999, 2.5, 1.2, 0.16, true);
+    printDoorGame(`\n========================================================================
+[CARRIER INTERCEPT DETECTED // GATEWAY 10.19.99.4:1999]
+Subnet probe successfully locked onto unroutable intranet echo loopback!
+No physical network interface detected on target node.
+Decoded Sector Header: "FACILITY=CARLSBAD OFFSET=0x0040 SUBCARRIER=432HZ"
+Acoustic carrier locked at 1999.04 Hz.
+Extracted confidential telemetry packet! Awarded +250 Credits & +100 XP!
+Check classified dossier at kweb://10.19.99.4/classified.
+========================================================================`);
+    p.credits += 250;
+    p.xp += 100;
+    p.nodesHacked++;
+    localStorage.setItem('kweb_cybercafe_deaddrop_unlocked', 'true');
+    broadcastArgSignalFragment(1999, 'DOOR_GAME_CARRIER_LOCK');
+    playChime(950, 0.3);
+    saveDoorGame();
+  } else if (act === 'inventory') {
+    printDoorGame(`\n--- [RIG HARDWARE & INVENTORY SPECS] ---
+Operator Alias : ${p.handle} (Class: ${p.cls}, Level ${p.level})
+Buffer Health  : ${p.hp} / ${p.maxHp} HP
+SDRAM Capacity : ${p.ram}MB PC100 SDRAM
+Modem Bandwidth: ${p.baud} (Sliding Window ZMODEM-99)
+BBS Credits    : ${p.credits} CR
+Nodes Breached : ${p.nodesHacked}
+Daily Turns    : ${p.turns} / ${p.maxTurns}
+Hardware & Apps:
+${p.inventory.map(item => `  - [ITEM] ${item}`).join('\n')}
+----------------------------------------`);
+    playChime(640, 0.08);
   } else if (act === 'tavern') {
     printDoorGame(`\n--- [SYSOP TAVERN & RECHARGE BAR] ---
 BBS Patrons present: SysOp_0x7F, ~neon_rider, DarkFiber.
 1. Buy Round of Baud Roast (+5 Turns) - $80 CR
-2. High/Low 2d6 Dice Wager (Double your credits)`);
-    const tChoice = prompt('Choose (1: Coffee / 2: Dice):', '1');
+2. High/Low 2d6 Dice Wager (Double your credits)
+3. Gossip with SysOp_0x7F (Subnet Rumors)`);
+    const tChoice = prompt('Choose (1: Coffee / 2: Dice / 3: Gossip):', '1');
     if (tChoice === '1') {
       if (p.credits >= 80) {
         p.credits -= 80; p.turns += 5;
@@ -5090,6 +5532,14 @@ BBS Patrons present: SysOp_0x7F, ~neon_rider, DarkFiber.
           playChime(260, 0.15);
         }
       } else printDoorGame('[ERROR] Invalid wager amount.');
+    } else if (tChoice === '3') {
+      const gossip = [
+        'SysOp_0x7F whispers: "Keep an eye on port 1999. That acoustic subcarrier is modulating right inside the machine memory controller."',
+        'SysOp_0x7F warns: "Subnet node 10.19.99.4 has no physical Ethernet card. If you dial it, you are probing the machine kernel itself."',
+        'DarkFiber mutters: "Inspect the Floppy Archives. The Carlsbad memory dump at offset 0x0040 contains the facility clearance tag."'
+      ];
+      printDoorGame(`[SYSOP GOSSIP] ${gossip[Math.floor(Math.random() * gossip.length)]}`);
+      playChime(600, 0.1);
     }
     saveDoorGame();
   } else if (act === 'hall_of_fame') {
@@ -5120,7 +5570,9 @@ function resetCombatControls() {
   bar.innerHTML = `
     <button class="btn-retro green" onclick="doorGameAction('new_game')">▶ NEW GAME / ENTER</button>
     <button class="btn-retro" onclick="doorGameAction('scan')">📡 PROBE SUBNET</button>
+    <button class="btn-retro" style="border-color:var(--amber); color:var(--amber-bright);" onclick="doorGameAction('dial_classified')">⚡ PROBE 10.19.99.4</button>
     <button class="btn-retro amber" onclick="doorGameAction('armory')">🛒 RIG ARMORY</button>
+    <button class="btn-retro" onclick="doorGameAction('inventory')">📦 RIG INVENTORY</button>
     <button class="btn-retro" onclick="doorGameAction('tavern')">🍺 SYSOP TAVERN</button>
     <button class="btn-retro" onclick="doorGameAction('hall_of_fame')">🏆 HALL OF FAME</button>
     <button class="btn-retro" onclick="downloadDoorGameLog()">💾 SAVE LOG (.LOG)</button>
@@ -5917,7 +6369,48 @@ CYBERCAFE '99 // OFFICIAL LAN DEATHMATCH RULES & PROTOCOLS
 
 4. REFRESHMENTS:
    - Baud Roast Coffee and Jolt Cola must remain in cup holders.
-   - Hot Pocket grease must be wiped from keyboard keycaps before station handover.`
+   - Hot Pocket grease must be wiped from keyboard keycaps before station handover.`,
+
+  ACOUSTIC_SCHEMATICS: `[TECHNICAL SCHEMATIC: ACOUSTIC_COUPLER_SCHEMATICS.TXT // 1999-11-26]
+========================================================================
+BELL SYSTEM ACOUSTIC COUPLING & IN-BAND SIGNALING SPECIFICATION
+Transmitter / Receiver Hardware: Rubber Coupler Mufflers (Bell 103 Standard)
+========================================================================
+1. FREQUENCY ALLOCATION:
+   - Originate Mode: Mark = 1270 Hz, Space = 1070 Hz
+   - Answer Mode:    Mark = 2225 Hz, Space = 2025 Hz
+   - V.22bis Carrier: 1200 / 2400 Hz QAM Quadrature Lock
+
+2. SUPERVISORY TRUNK SEIZE:
+   - 2600 Hz Single Frequency (SF) tone forces toll trunk disconnect.
+   - Blue Box sequence: Key Pulse (KP) + Routing Code + Start (ST).
+   - Coin pulses (Red Box): Nickel (1x 66ms), Dime (2x 66ms), Quarter (5x 33ms)
+     using dual frequencies 1700 Hz + 2200 Hz.
+
+3. ANOMALOUS HARMONIC RESONANCE:
+   - In-band carrier detection at 1999.04 Hz matches the internal bus clock
+     frequency observed in KHex memory dumps at offset 0x0040.
+   - When dialing 10.19.99.4, acoustic lock is established immediately without
+     a telephone carrier relay. Gateway responds via direct system loopback.
+   - Intranet dossier available at kweb://10.19.99.4/classified.`,
+
+  CARLSBAD_MEM_DUMP: `[ARCHIVAL HEX DUMP: CARLSBAD_MEM_DUMP_0x0040.HEX // 1999-11-27]
+========================================================================
+CARLSBAD SUBNET ROUTER MEMORY CONTROLLER // SECTOR 0x0040 CAPTURE
+Captured from: 10.19.99.4:1999 (Internal System Bus Controller)
+========================================================================
+OFFSET    00 01 02 03 04 05 06 07  08 09 0A 0B 0C 0D 0E 0F  ASCII
+------------------------------------------------------------------------
+0x0040    10 19 99 04 2F 63 6C 61  73 73 69 66 69 65 64 00  ..../classified.
+0x0050    46 41 43 49 4C 49 54 59  3D 43 41 52 4C 53 42 41  FACILITY=CARLSBA
+0x0060    44 5F 4C 41 42 5F 31 39  39 39 00 00 00 00 00 00  D_LAB_1999......
+0x0070    53 55 42 43 41 52 52 49  45 52 3D 31 39 39 39 48  SUBCARRIER=1999H
+0x0080    5A 5F 48 41 52 4D 4F 4E  49 43 5F 34 33 32 48 5A  Z_HARMONIC_432HZ
+0x0090    53 54 41 54 55 53 3D 41  49 52 47 41 50 5F 42 52  STATUS=AIRGAP_BR
+0x00A0    45 41 43 48 45 44 00 00  7F 19 99 42 00 00 00 00  EACHED...B......
+------------------------------------------------------------------------
+CRC-32: 0x7F199942 [MATCHES WAREZ RELEASE & PRECURSOR CHECKSUM]
+NOTE: Telemetry confirms loopback link between 10.19.99.4 and KMatrix core.`
 };
 
 let currentVaultKey = null;
