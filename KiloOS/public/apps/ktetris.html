@@ -10,7 +10,7 @@
 <script src="../assets/js/retro_multiplayer.js"></script>
 </head>
 <body>
-<div id="toast" onclick="this.style.opacity='0'" style="position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: rgba(18, 22, 34, 0.96); border: 1px solid #00f0f0; color: #00f0f0; padding: 9px 20px; border-radius: 20px; font-size: 13px; font-weight: 600; box-shadow: 0 4px 18px rgba(0,240,240,0.4); opacity: 0; pointer-events: auto; cursor: pointer; transition: opacity 0.25s ease; z-index: 2000; font-family: 'Segoe UI', system-ui, sans-serif; display: flex; align-items: center; gap: 8px;" role="status" aria-live="polite"></div>
+<div id="toast" onclick="this.style.opacity='0'; this.style.pointerEvents='none';" style="position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: rgba(18, 22, 34, 0.96); border: 1px solid #00f0f0; color: #00f0f0; padding: 9px 20px; border-radius: 20px; font-size: 13px; font-weight: 600; box-shadow: 0 4px 18px rgba(0,240,240,0.4); opacity: 0; pointer-events: none; cursor: pointer; transition: opacity 0.25s ease; z-index: 2000; font-family: 'Segoe UI', system-ui, sans-serif; display: flex; align-items: center; gap: 8px;" role="status" aria-live="polite"></div>
 
 <!-- Modal Backdrop -->
 <div id="modalBackdrop" onclick="closeAllModals()" style="display:none; position:fixed; inset:0; background:rgba(6,8,14,0.78); backdrop-filter:blur(3px); z-index:800;"></div>
@@ -161,10 +161,23 @@
       s2.textContent = '[✕]';
       t.appendChild(s1);
       t.appendChild(s2);
+      t.style.pointerEvents = 'auto';
       t.style.opacity = '1';
       clearTimeout(t._timer);
-      t._timer = setTimeout(() => { t.style.opacity = '0'; }, dur);
+      t._timer = setTimeout(() => {
+          t.style.opacity = '0';
+          t.style.pointerEvents = 'none';
+      }, dur);
   }
+
+  function dismissToast() {
+      const t = document.getElementById('toast');
+      if (t) {
+          t.style.opacity = '0';
+          t.style.pointerEvents = 'none';
+      }
+  }
+
   setTimeout(() => showToast("Welcome to KTetris! Press [H] or F1 for Controls & Help", 4500), 400);
 
   function safeGetJSON(key, fallback) {
@@ -175,10 +188,28 @@
           return fallback;
       }
   }
+  function safeGetStorage(key, fallback = null) {
+      try {
+          const val = localStorage.getItem(key);
+          return val !== null ? val : fallback;
+      } catch(e) {
+          return fallback;
+      }
+  }
   function safeSetStorage(key, val) {
       try {
           localStorage.setItem(key, val);
       } catch(e) {}
+  }
+  function isTutorialSeen() {
+      return safeGetStorage('ktetris_tutorialSeen') === '1';
+  }
+  function setTutorialSeen() {
+      safeSetStorage('ktetris_tutorialSeen', '1');
+  }
+  function closeHelp() {
+      showHelp = false;
+      setTutorialSeen();
   }
 
   let audioCtx = null;
@@ -210,8 +241,22 @@
 
   window.addEventListener('beforeunload', () => {
       try {
+          if (!startScreen && !gameOver && !winScreen && !isDuelMode) {
+              saveGameState();
+          }
           if (audioCtx && audioCtx.state !== 'closed') audioCtx.close();
       } catch(e) {}
+  });
+
+  window.addEventListener('load', () => {
+      setTimeout(() => {
+          let tutorialSeen = isTutorialSeen();
+          let hasSaved = hasSavedGame();
+          if (!tutorialSeen && !hasSaved) {
+              showHelp = true;
+              setTutorialSeen();
+          }
+      }, 350);
   });
 
   document.addEventListener('visibilitychange', () => {
@@ -1567,19 +1612,29 @@
   }
 
   function saveGameState() {
-      if (startScreen || gameOver || winScreen || isDuelMode) return;
-      let state = {
-          grid, pc, rot, cx, cy, isBomb,
-          score, lines, level, combo, piecesPlaced,
-          gameMode, campaignLevel, statLines,
-          modeTimerMs, ultraTimeLeftMs,
-          nextQueue, holdPc, holdIsBomb, holdUsed,
-          nukeCharges, swapCharges, freezeCharges, freezeTimerMs
-      };
-      safeSetStorage('ktetris_saved_game', JSON.stringify(state));
-      addPopup(BOARD_W / 2 - 30, H * CELL / 2, "GAME SAVED!", "#00ffff");
-      showToast("Game state saved!");
-      playSound(800, 'sine', 0.15);
+      if (startScreen || gameOver || winScreen || isDuelMode) {
+          showToast("Cannot quicksave in current menu or mode!");
+          return false;
+      }
+      try {
+          let state = {
+              grid, pc, rot, cx, cy, isBomb,
+              score, lines, level, combo, piecesPlaced,
+              gameMode, campaignLevel, statLines,
+              modeTimerMs, ultraTimeLeftMs,
+              nextQueue, holdPc, holdIsBomb, holdUsed,
+              nukeCharges, swapCharges, freezeCharges, freezeTimerMs,
+              bag: bag || []
+          };
+          safeSetStorage('ktetris_saved_game', JSON.stringify(state));
+          addPopup(BOARD_W / 2 - 30, H * CELL / 2, "GAME SAVED!", "#00ffff");
+          showToast("Quicksave saved! [F5]");
+          playSound(800, 'sine', 0.15);
+          return true;
+      } catch(e) {
+          showToast("Storage error or quota exceeded!");
+          return false;
+      }
   }
 
   function loadGameState() {
@@ -1587,25 +1642,30 @@
       if (!raw) return false;
       try {
           let state = typeof raw === 'object' ? raw : JSON.parse(raw);
+          if (!state || !state.grid || !Array.isArray(state.grid)) return false;
           grid = state.grid;
-          pc = state.pc; rot = state.rot; cx = state.cx; cy = state.cy; isBomb = state.isBomb;
-          score = state.score; lines = state.lines; level = state.level; combo = state.combo; piecesPlaced = state.piecesPlaced;
-          gameMode = state.gameMode; campaignLevel = state.campaignLevel; statLines = state.statLines;
-          modeTimerMs = state.modeTimerMs; ultraTimeLeftMs = state.ultraTimeLeftMs;
-          nextQueue = state.nextQueue; holdPc = state.holdPc; holdIsBomb = state.holdIsBomb; holdUsed = state.holdUsed;
+          pc = state.pc ?? 0; rot = state.rot ?? 0; cx = state.cx ?? (W / 2 - 2); cy = state.cy ?? -2; isBomb = !!state.isBomb;
+          score = state.score ?? 0; lines = state.lines ?? 0; level = state.level ?? 1; combo = state.combo ?? 0; piecesPlaced = state.piecesPlaced ?? 0;
+          gameMode = state.gameMode ?? MODE_MARATHON; campaignLevel = state.campaignLevel ?? 1; statLines = state.statLines ?? [0,0,0,0,0];
+          modeTimerMs = state.modeTimerMs ?? 0; ultraTimeLeftMs = state.ultraTimeLeftMs ?? 120000;
+          nextQueue = Array.isArray(state.nextQueue) ? state.nextQueue : [];
+          holdPc = state.holdPc ?? -1; holdIsBomb = !!state.holdIsBomb; holdUsed = !!state.holdUsed;
           nukeCharges = state.nukeCharges ?? 2;
           swapCharges = state.swapCharges ?? 3;
           freezeCharges = state.freezeCharges ?? 2;
           freezeTimerMs = state.freezeTimerMs ?? 0;
+          bag = Array.isArray(state.bag) ? state.bag : [];
           
           isDuelMode = false;
           handleResize();
-          startScreen = false; gameOver = false;
-      if (!isReplaying) { currentReplay = { seed: Date.now(), inputs: [] }; randomSeed(currentReplay.seed); } else { randomSeed(currentReplay.seed); replayTick = 0; replayIndex = 0; } winScreen = false; isPaused = false; showLeaderboard = false;
+          startScreen = false; gameOver = false; winScreen = false; isPaused = false;
+          showLeaderboard = false; showHelp = false; showKeybinds = false;
+          if (!isReplaying) { currentReplay = { seed: Date.now(), inputs: [] }; randomSeed(currentReplay.seed); } else { randomSeed(currentReplay.seed); replayTick = 0; replayIndex = 0; }
           dropInterval = Math.max(40, 500 - (level - 1) * 20);
           lastLevel = level; levelUpTimer = 0;
+          popups = []; particles = []; lineFlashes = []; shockwaves = [];
           addPopup(BOARD_W / 2 - 35, H * CELL / 2, "GAME RESUMED!", "#00ff66");
-          showToast("Game state resumed!");
+          showToast("Quicksave loaded! [F9]");
           playSound(600, 'square', 0.2);
           return true;
       } catch(e) {
@@ -1614,7 +1674,12 @@
   }
 
   function hasSavedGame() {
-      return !!safeGetJSON('ktetris_saved_game', null);
+      try {
+          const raw = safeGetJSON('ktetris_saved_game', null);
+          return !!(raw && raw.grid && Array.isArray(raw.grid));
+      } catch(e) {
+          return false;
+      }
   }
 
   function triggerScreenShake(intensity, rotationalForce = 0.035) {
@@ -2202,6 +2267,7 @@
 
   // Interactive Skill Button Clicks, Menu Navigation, & Board Touch/Steering
   canvas.addEventListener('click', e => {
+      dismissToast();
       const rect = canvas.getBoundingClientRect();
       const winW = window.innerWidth;
       const winH = window.innerHeight;
@@ -2212,7 +2278,7 @@
       const my = (e.clientY - rect.top) / scale;
 
       if (showHelp) {
-          showHelp = false;
+          closeHelp();
           return;
       }
 
@@ -2396,14 +2462,14 @@
       if (e.key === 'F5' || (e.ctrlKey && e.key.toLowerCase() === 's' && !e.altKey)) {
           e.preventDefault();
           saveGameState();
-          showToast("Quicksave saved! [F5]");
           return;
       }
       // Universal Quickload (F9 / Ctrl+L)
       if (e.key === 'F9' || (e.ctrlKey && e.key.toLowerCase() === 'l' && !e.altKey)) {
           e.preventDefault();
-          loadGameState();
-          showToast("Quicksave loaded! [F9]");
+          if (!loadGameState()) {
+              showToast("No saved game found to load! [F9]");
+          }
           return;
       }
 
@@ -2420,9 +2486,9 @@
           return;
       }
       if (showHelp) {
-          if (e.key === 'F1' || e.key.toLowerCase() === 'h' || e.key === 'Escape' || e.key === 'Enter') {
+          if (e.key === 'F1' || e.key.toLowerCase() === 'h' || e.key === 'Escape' || e.key === 'Enter' || e.key === ' ') {
               e.preventDefault();
-              showHelp = false;
+              closeHelp();
           }
           return;
       }
@@ -2516,13 +2582,13 @@
           return;
       }
       if (showLeaderboard) {
-          if (e.key === 'Enter' || e.key === 'Escape' || e.key.toLowerCase() === 'b') { showLeaderboard = false; startScreen = true; }
+          if (e.key === 'Enter' || e.key === 'Escape' || e.key === ' ' || e.key.toLowerCase() === 'b') { showLeaderboard = false; startScreen = true; }
           if (e.key.toLowerCase() === 'e') { exportLeaderboard(); }
           if (e.key.toLowerCase() === 'i') { importLeaderboard(); }
           return;
       }
       if (winScreen || gameOver) {
-          if (e.key === 'Enter') { startScreen = true; winScreen = false; gameOver = false; return; }
+          if (e.key === 'Enter' || e.key === 'Escape' || e.key === ' ') { startScreen = true; winScreen = false; gameOver = false; return; }
           if (e.key.toLowerCase() === 'e') { exportStats(); return; }
           if (e.key.toLowerCase() === 's' && !isReplaying) { safeSetStorage('ktetris_replay', JSON.stringify(currentReplay)); addPopup(BOARD_W/2-25, H*CELL/2, "REPLAY SAVED!", "#00ff00"); savedReplay = currentReplay; showToast("Replay saved!"); return; }
           return;
@@ -4061,7 +4127,7 @@
               { key: '[S]', desc: 'Piece Swap Skill: Rerolls with next queue' },
               { key: '[F]', desc: 'Gravity Freeze Skill: Halts drop for 10s' },
               { key: '[P / Esc]', desc: 'Pause / Resume Game' },
-              { key: '[V]', desc: 'Quick-Save Match State' },
+              { key: '[F5 / F9 / V]', desc: 'Quicksave / Quickload Match State' },
               { key: '[1 - 4]', desc: 'Select Game Mode on Start Menu' }
           ];
 
@@ -4090,7 +4156,7 @@
           ctx.fillStyle = '#00ffff';
           ctx.font = 'bold 12px system-ui, sans-serif';
           ctx.textAlign = 'center';
-          ctx.fillText('✕ Close Guide [Esc / Enter]', 370 / 2, 476);
+          ctx.fillText('✕ Close Guide [Esc / Enter / Space]', 370 / 2, 476);
           ctx.textAlign = 'left';
       } else if (showKeybinds) {
           ctx.fillStyle = 'rgba(10, 11, 16, 0.94)';

@@ -330,9 +330,25 @@ int HasSavedGame() {
     return 0;
 }
 
-void SaveGameStateToFile() {
-    if (start_screen || game_over || win_screen || show_leaderboard) return;
+int HasTutorialSeen(void) {
+    DWORD attr = GetFileAttributesA("ktetris_tutorial.dat");
+    return (attr != INVALID_FILE_ATTRIBUTES);
+}
+
+void SetTutorialSeen(void) {
+    HANDLE h = CreateFileA("ktetris_tutorial.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (h != INVALID_HANDLE_VALUE) {
+        DWORD written = 0;
+        char flag = '1';
+        WriteFile(h, &flag, 1, &written, NULL);
+        CloseHandle(h);
+    }
+}
+
+int SaveGameStateToFile() {
+    if (start_screen || game_over || win_screen || show_leaderboard || is_replaying) return 0;
     GameSaveState state;
+    memset(&state, 0, sizeof(GameSaveState));
     for (int y = 0; y < H; y++)
         for (int x = 0; x < W; x++)
             state.grid[y][x] = grid[y][x];
@@ -364,10 +380,12 @@ void SaveGameStateToFile() {
 
     HANDLE hFile = CreateFileA("ktetris_save.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
     if (hFile != INVALID_HANDLE_VALUE) {
-        DWORD bytesWritten;
-        WriteFile(hFile, &state, sizeof(GameSaveState), &bytesWritten, NULL);
+        DWORD bytesWritten = 0;
+        BOOL ok = WriteFile(hFile, &state, sizeof(GameSaveState), &bytesWritten, NULL);
         CloseHandle(hFile);
+        return (ok && bytesWritten == sizeof(GameSaveState)) ? 1 : 0;
     }
+    return 0;
 }
 
 int LoadGameStateFromFile() {
@@ -375,11 +393,11 @@ int LoadGameStateFromFile() {
     if (hFile == INVALID_HANDLE_VALUE) return 0;
     
     GameSaveState state;
-    DWORD bytesRead;
-    ReadFile(hFile, &state, sizeof(GameSaveState), &bytesRead, NULL);
+    DWORD bytesRead = 0;
+    BOOL ok = ReadFile(hFile, &state, sizeof(GameSaveState), &bytesRead, NULL);
     CloseHandle(hFile);
 
-    if (bytesRead < sizeof(GameSaveState) || state.is_valid != 12345) return 0;
+    if (!ok || bytesRead < sizeof(GameSaveState) || state.is_valid != 12345) return 0;
 
     for (int y = 0; y < H; y++)
         for (int x = 0; x < W; x++)
@@ -1628,6 +1646,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             LoadReplay();
             LoadLeaderboard();
             InitGame();
+            if (!HasTutorialSeen() && !HasSavedGame()) {
+                show_help = 1;
+                SetTutorialSeen();
+            }
             SetTimer(hwnd, TIMER_ID, 20, NULL);
             break;
 
@@ -1809,6 +1831,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             if (show_help) {
                 show_help = 0;
+                SetTutorialSeen();
                 InvalidateRect(hwnd, NULL, FALSE);
                 break;
             }
@@ -1951,8 +1974,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             }
 
             if (show_help) {
-                if (wParam == 'H' || wParam == VK_F1 || wParam == VK_ESCAPE || wParam == VK_RETURN) {
+                if (wParam == 'H' || wParam == VK_F1 || wParam == VK_ESCAPE || wParam == VK_RETURN || wParam == VK_SPACE) {
                     show_help = 0;
+                    SetTutorialSeen();
                 }
                 InvalidateRect(hwnd, NULL, FALSE);
                 return 0;
@@ -1965,6 +1989,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 if (wParam == '4') { game_mode = MODE_CAMPAIGN; start_screen = 0; campaign_level = 1; score = 0; InitGame(); ShowNativeToast("Campaign Stage 1 Started!", 1500); }
                 if (wParam == '5' || wParam == 'L') { show_leaderboard = 1; start_screen = 0; }
                 if (wParam == 'V' || wParam == 'R' || wParam == VK_F9) { if(LoadGameStateFromFile()) ShowNativeToast("Saved Game Loaded! [F9]", 1800); }
+                if (wParam == VK_F5) { ShowNativeToast("Cannot save on start menu!", 1500); }
                 if (wParam == 'H' || wParam == VK_F1) { show_help = 1; }
                 if (wParam == 'K') { show_keybinds = 1; bind_index = 0; start_screen = 0; }
                 if (wParam == 'W' && has_saved_replay) { is_replaying = 1; start_screen = 0; InitGame(); ShowNativeToast("Playing Saved Replay...", 1500); }
@@ -1976,7 +2001,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (show_leaderboard) {
                 if (wParam == 'E') { ExportLeaderboardJSON(); }
                 if (wParam == 'I') { ImportLeaderboardJSON(); }
-                if (wParam == VK_RETURN || wParam == VK_ESCAPE || wParam == 'B') {
+                if (wParam == VK_RETURN || wParam == VK_ESCAPE || wParam == VK_SPACE || wParam == 'B') {
                     show_leaderboard = 0; start_screen = 1;
                 }
                 InvalidateRect(hwnd, NULL, FALSE);
@@ -1987,7 +2012,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (win_screen) {
                 if (wParam == 'E') ExportStats();
                 if (wParam == 'S' && !is_replaying) SaveReplay();
-                if (wParam == VK_RETURN || wParam == VK_ESCAPE) {
+                if (wParam == VK_RETURN || wParam == VK_ESCAPE || wParam == VK_SPACE) {
                     start_screen = 1; win_screen = 0;
                     InvalidateRect(hwnd, NULL, FALSE);
                 }
@@ -1996,7 +2021,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (game_over) {
                 if (wParam == 'E') ExportStats();
                 if (wParam == 'S' && !is_replaying) SaveReplay();
-                if (wParam == VK_RETURN || wParam == VK_ESCAPE) {
+                if (wParam == VK_RETURN || wParam == VK_ESCAPE || wParam == VK_SPACE) {
                     start_screen = 1; game_over = 0;
                     InvalidateRect(hwnd, NULL, FALSE);
                 }
@@ -2020,7 +2045,16 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     InvalidateRect(hwnd, NULL, FALSE);
                     break;
                 }
-                if (wParam == 'V' || wParam == VK_F5) { SaveGameStateToFile(); ShowNativeToast("Quicksave Saved! [F5]", 1800); AddPopup((float)(W * CELL_SIZE / 2 - 30), (float)(H * CELL_SIZE / 2), "GAME SAVED!", RGB(0, 255, 255)); InvalidateRect(hwnd, NULL, FALSE); break; }
+                if (wParam == 'V' || wParam == VK_F5) {
+                    if (SaveGameStateToFile()) {
+                        ShowNativeToast("Quicksave Saved! [F5]", 1800);
+                        AddPopup((float)(W * CELL_SIZE / 2 - 30), (float)(H * CELL_SIZE / 2), "GAME SAVED!", RGB(0, 255, 255));
+                    } else {
+                        ShowNativeToast("Cannot save right now!", 1500);
+                    }
+                    InvalidateRect(hwnd, NULL, FALSE);
+                    break;
+                }
                 if (wParam == VK_F9) { if(LoadGameStateFromFile()) { ShowNativeToast("Quicksave Loaded! [F9]", 1800); AddPopup((float)(W * CELL_SIZE / 2 - 30), (float)(H * CELL_SIZE / 2), "GAME LOADED!", RGB(0, 255, 100)); } else { ShowNativeToast("No Quicksave Found!", 1800); } InvalidateRect(hwnd, NULL, FALSE); break; }
                 if (wParam == keys.nuke) { UseRowNuke(); if(current_replay.count < 5000) { current_replay.events[current_replay.count].tick = replay_tick; current_replay.events[current_replay.count].key = 'B'; current_replay.count++; } InvalidateRect(hwnd, NULL, FALSE); break; }
                 if (wParam == keys.swap) { UsePieceSwap(); if(current_replay.count < 5000) { current_replay.events[current_replay.count].tick = replay_tick; current_replay.events[current_replay.count].key = 'S'; current_replay.count++; } InvalidateRect(hwnd, NULL, FALSE); break; }
@@ -2641,7 +2675,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     "[S]",
                     "[F]",
                     "[P / Esc]",
-                    "[V]",
+                    "[F5/F9/V]",
                     "[1 - 4]"
                 };
                 const char* help_desc[] = {
@@ -2654,7 +2688,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     "Piece Swap Skill: Rerolls with next queue",
                     "Gravity Freeze Skill: Halts drop for 10s",
                     "Pause / Resume Game",
-                    "Quick-Save Match State to File",
+                    "Quicksave / Quickload Match State",
                     "Select Game Mode on Start Menu"
                 };
 
@@ -2669,7 +2703,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 
                 Draw3DPanel(memDC, 85, 445, 200, 30);
                 SetTextColor(memDC, RGB(0, 255, 255));
-                TextOutA(memDC, total_w / 2 - 80, 452, "X Close Guide [Esc / Enter]", 27);
+                TextOutA(memDC, total_w / 2 - 95, 452, "X Close Guide [Esc/Enter/Space]", 31);
             } else if (show_keybinds) {
                 HBRUSH ov = CreateSolidBrush(RGB(10, 11, 16)); RECT ovRc = {0, 0, total_w, total_h}; FillRect(memDC, &ovRc, ov); DeleteObject(ov);
                 SetTextColor(memDC, RGB(0, 255, 255)); TextOutA(memDC, total_w / 2 - 60, 35, "KEYBINDS CONFIG", 15);
@@ -2904,6 +2938,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             return 1;
         case WM_DESTROY:
             KillTimer(hwnd, TIMER_ID);
+            if (!start_screen && !game_over && !win_screen && !show_leaderboard && !is_replaying) {
+                SaveGameStateToFile();
+            }
             if (g_hFontMain) DeleteObject(g_hFontMain);
             if (g_hFontSmall) DeleteObject(g_hFontSmall);
             PostQuitMessage(0);

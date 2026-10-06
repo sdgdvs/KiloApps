@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-creator
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -16,7 +16,7 @@ current_targets:
   kilo_graphics: KSpace
   kilo_tester: KCalc
   kilo_usability: KColor
-  kilo_qa: KTetris
+  kilo_qa: KPong
   kilo_expander: KBreakout
 virtual_web_target: "kweb://10.19.99.4/classified"
 virtual_web_rotation:
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-usability
-  app: KChart
-  timestamp: "2026-10-06T10:11:00-07:00"
+  agent: kilo-qa
+  app: KTetris
+  timestamp: "2026-10-06T10:29:00-07:00"
 last_planner_run: "2026-10-06T14:20:00Z"
 ---
 
@@ -124,9 +124,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KChess`, `KConnect4`, `KConverter`, `KFreecell`, `KHangman`, `KMatch3`, `KPong`, `KSettings`, `KSimon`, `KSnake`, `KSolitaire`, `KSudoku`, `KTetris`, `KWords`, `KBBS`, `KCalendar` *(Completed: KCalc, KPomodoro, KTimer, KClock, KHash, KMystery, KMandel, KFont, KPing, KAudio, KSynth, KScript, KRead, KRadio, KSys, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KChrono, KTask, KStarForge, KPad, KBookmark, KRSS, KClip, KHex, KHabit, KFarm, KPaint, KGraph, KImage, KJournal, KMail, KMedia, KNet, KNote, KPass, KMine, KBBS, KCalendar, KChart)*.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
-- **Current Target**: `KTetris`
+- **Current Target**: `KPong`
 - **Upcoming Queue**:
-  `KPong`, `KPac`, `KChess`, `KColor`, `KConverter`, `KQuarantine`, `KSettings`, `KTaskMgr`, `KHabit`, `KSudoku`, `KConnect4`, `KHangman`, `KSimon`, `KAsteroids`, `KFreecell`, `KMatch3`, `KWords`, `KGo`, `KDarts`, `KTowers`, `KReversi`, `KAlchemy`, `KColony`, `KStarForge`, `KBreakout`, `KRogue` *(Completed in Pass 5: KBBS, KChrono, KCipher, KClip, KCyber, KDragon, KFortress, KHash, KMaze, KMech, KMystery, KQuest, KSanctuary, KSnake, KSolitaire, KSpace, KStarDredge, KStarship, KStellar, KSubmarine, KSynth, KSys, KTask, KTerm, KTimer, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KRSS, K2048, KChart, KGraph, KContacts, KScript, KRead, KColosseum, KAbyss, KMedia, KAudio, KRadio, KPad, KPaint, KCalc, KMine, KCosmic, KBase, KBudget, KCalendar, KFarm, KFlash, KFont, KImage, KJournal, KMail, KMandel, KNet, KNote, KPass, KDB, KHex, KBookmark, KPing, KChat, KClock, KPomodoro, KBreakout, KRogue)*.
+  `KPac`, `KChess`, `KColor`, `KConverter`, `KQuarantine`, `KSettings`, `KTaskMgr`, `KHabit`, `KSudoku`, `KConnect4`, `KHangman`, `KSimon`, `KAsteroids`, `KFreecell`, `KMatch3`, `KWords`, `KGo`, `KDarts`, `KTowers`, `KReversi`, `KAlchemy`, `KColony`, `KStarForge`, `KBreakout`, `KRogue`, `KTetris` *(Completed in Pass 5: KBBS, KChrono, KCipher, KClip, KCyber, KDragon, KFortress, KHash, KMaze, KMech, KMystery, KQuest, KSanctuary, KSnake, KSolitaire, KSpace, KStarDredge, KStarship, KStellar, KSubmarine, KSynth, KSys, KTask, KTerm, KTimer, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KRSS, K2048, KChart, KGraph, KContacts, KScript, KRead, KColosseum, KAbyss, KMedia, KAudio, KRadio, KPad, KPaint, KCalc, KMine, KCosmic, KBase, KBudget, KCalendar, KFarm, KFlash, KFont, KImage, KJournal, KMail, KMandel, KNet, KNote, KPass, KDB, KHex, KBookmark, KPing, KChat, KClock, KPomodoro, KBreakout, KRogue, KTetris)*.
 
 ### 6. Feature Expander Queue (`kilo-expander`)
 - **Current Target**: `KBreakout`
@@ -217,6 +217,14 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-06T10:29:00-07:00 — kilo-qa: KTetris (Pass 5: Tutorial & State Integrity, Modal Ergonomics & Build Audit)**
+  - Status: PASS ✅ (0 regressions, 188.7 KB web / 55.5 KB native < 999 KB ceiling).
+  - State Persistence: Hardened quicksave/quickload [F5/F9] in web and Win32 C (`save.dat`); added bag preservation, unload autosave, and validation.
+  - Tutorial Integrity: Gated first-run guide behind `ktetris_tutorialSeen` / `ktetris_tutorial.dat`; restored saves bypass tutorial.
+  - Overlays & Ergonomics: Wired Esc, Enter, Space across help, game over, victory, and leaderboard overlays; updated guide key legends.
+  - Toast Occlusion Remediation: Set default `pointer-events: none` on toast; canvas interaction auto-dismisses toast (Directive 185).
+  - Verification: `test_app_startup.py` PASS; `test_web_apps.js` PASS (1 app, 20 elements); MSVC clean (`KTetris.exe` 55.5 KB); Vite clean (314ms); security_lint 100% PASS.
+
 - **2026-10-06T10:11:00-07:00 — kilo-usability: KChart (Usability & Layout Polish, HiDPI Scaling & Label Ergonomics)**
   - Status: PASS ✅ (0 regressions, 120.7 KB web / 36.8 KB native < 999 KB ceiling).
   - Window & Layout Ergonomics: Tuned default dimensions to 1060x740 in `App.jsx`; made canvas height viewport-responsive (`clamp`).
@@ -248,15 +256,6 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - ASCII Studio & Door Game: Added .TXT importer, 3dfx/coffee/glider presets, rig inventory inspector, and 10.19.99.4 anomaly probe.
   - IRC Dead-Drop: Enhanced Firebase listener and local bot triggers for full puzzle chain passphrases per Directive 186.
   - Verification: Node syntax check clean; Vite clean (360ms); test_arg_flow 100% PASS; security_lint 100% PASS.
-
-- **2026-10-06T09:17:00-07:00 — kilo-expander: KRogue (Feature Expansion: RFMS Seed Duel, Replay Viewer & FEN State)**
-  - Status: PASS ✅ (0 regressions, 255.8 KB web / 79.5 KB native < 999 KB ceiling).
-  - RFMS Seed Duel: Added synchronized dungeon seed duel mode with ethereal phantom rival sprite and Hex sabotage mechanic.
-  - Autostart Gate & AI Fallback: Mode gated behind explicit user connect gesture; 25s countdown automatically engages `ShadowCrawler-AI`.
-  - Replay Viewer: Added 512-turn circular replay buffer, turn scrubber slider, playback controls, and `.krr` export/import.
-  - Dungeon FEN: Added dungeon state string export/import (`KROGUE-FEN`) to clipboard and text file.
-  - Native Parity: Added replay circular buffer, `.krr` exporter, and FEN clipboard export in Win32 C (`KRogue/main.c`).
-  - Verification: MSVC clean (`KRogue.exe` 79.5 KB); Vite clean (351ms); security_lint 100% PASS.
 
 
 

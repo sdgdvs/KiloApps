@@ -4,6 +4,15 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-06T09:17:00-07:00 — kilo-expander: KRogue (Feature Expansion: RFMS Seed Duel, Replay Viewer & FEN State)**
+  - Status: PASS ✅ (0 regressions, 255.8 KB web / 79.5 KB native < 999 KB ceiling).
+  - RFMS Seed Duel: Added synchronized dungeon seed duel mode with ethereal phantom rival sprite and Hex sabotage mechanic.
+  - Autostart Gate & AI Fallback: Mode gated behind explicit user connect gesture; 25s countdown automatically engages `ShadowCrawler-AI`.
+  - Replay Viewer: Added 512-turn circular replay buffer, turn scrubber slider, playback controls, and `.krr` export/import.
+  - Dungeon FEN: Added dungeon state string export/import (`KROGUE-FEN`) to clipboard and text file.
+  - Native Parity: Added replay circular buffer, `.krr` exporter, and FEN clipboard export in Win32 C (`KRogue/main.c`).
+  - Verification: MSVC clean (`KRogue.exe` 79.5 KB); Vite clean (351ms); security_lint 100% PASS.
+
 - **2026-10-06T08:50:00-07:00 — kilo-qa: KRogue (Pass 5: Tutorial & State Integrity, Modal Ergonomics & Build Audit)**
   - Status: PASS ✅ (0 regressions, 209.8 KB web / 77.8 KB native < 999 KB ceiling).
   - State Persistence: Hardened quicksave/quickload [F5/F9] in web and Win32 C (`save.dat`); guarded dead state overwrite and stale pointers.
