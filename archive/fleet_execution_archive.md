@@ -4,6 +4,15 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-06T11:46:00-07:00 — kilo-tester: KCalc (UI Element Audit, Scientific Notation Parser & State Integrity Fixes)**
+  - Status: PASS ✅ (0 regressions, 117.2 KB web < 999 KB ceiling).
+  - Parser & Evaluator: Fixed implicit mult regex to protect scientific notation (`6.626e-34`, `1e5`); added full constants to `ctx` (`N_A`, `k_B`, `phi`, etc.).
+  - Persistence & State: Corrected `fvFreq` typo in session/quicksave; added active financial & stats subtool persistence across reloads/snapshots.
+  - Formula & Keypad UX: Wired real-time formula mirroring to main display; enhanced `toggleSign` to wrap expressions; added `lastAns` fallback to memory store.
+  - Accessibility & Ergonomics: Added keyboard navigation/ARIA to constant cards; added Up/Down history recall and Delete/C shortcuts; wired stats "Use In Calc" buttons.
+  - Verification: `test_app_startup.py` PASS; `test_web_apps.js` PASS (159 elements); Vite clean (362ms); security_lint 100% PASS.
+  - Queue: Advanced `kilo_tester` to `KMine`; rotation advanced to `kilo-usability`.
+
 - **2026-10-06T11:10:00-07:00 — kilo-creator: kweb://10.19.99.4/classified (Aethel Skunkworks Intranet, Seismic Interferometer & Tier 3 Puzzle Lock)**
   - Status: PASS ✅ (0 regressions, 210.6 KB web < 999 KB ceiling).
   - Tab 9 Seismic Interferometer: Built 2D lithospheric wave interference & Salado halite standing wave cavity resonator with depth/frequency/phase sliders.

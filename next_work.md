@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-graphics
-next_agent: kilo-tester
+current_agent: kilo-tester
+next_agent: kilo-usability
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -13,7 +13,7 @@ timeout_minutes: 15
 status: ready
 current_targets:
   kilo_creator: "kweb://deep-core"
-  kilo_graphics: KPac
+  kilo_graphics: KQuest
   kilo_tester: KMine
   kilo_usability: KChess
   kilo_qa: KPac
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-creator
-  app: "kweb://echo-subsystem.net"
-  timestamp: "2026-10-06T12:44:00-07:00"
+  agent: kilo-graphics
+  app: KPac
+  timestamp: "2026-10-06T12:50:00-07:00"
 last_planner_run: "2026-10-06T14:20:00Z"
 ---
 
@@ -109,9 +109,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
 - **EXCLUSIVE MISSION**: Replace programmer vector art with Imagen 3 generated sprites and backgrounds via the 2-stage asset pipeline. If the target app is not appropriate for raster/sprite replacement (e.g. wireframe classics or abstract board games), skip the turn immediately.
-- **Current Target**: `KPac`
+- **Current Target**: `KQuest`
 - **Upcoming Queue**:
-  `KQuest`, `KRogue`, `KColosseum`, `KAbyss`, `KBreakout`, `KAsteroids`, `KSpace` *(Note: Pure vector/wireframe or abstract board targets skip automatically per Mandate 15. Completed: KQuest Phases 1-5, KSpace)*.
+  `KRogue`, `KColosseum`, `KAbyss`, `KBreakout`, `KAsteroids`, `KSpace`, `KPac` *(Note: Pure vector/wireframe or abstract board targets skip automatically per Mandate 15. Completed: KQuest Phases 1-5, KSpace)*.
 
 ### 3. App Tester Queue (`kilo-tester`)
 - **Current Target**: `KMine`
@@ -217,6 +217,14 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-06T12:50:00-07:00 — kilo-graphics: KPac (Skip Turn — Inappropriate Target & Glint/Dot Audit)**
+  - Status: ⏭️ Skip — Imagen 3 asset replacement not appropriate for KPac
+  - Rationale: Authentic retro arcade classic maze game (Loop 9+); already mature & locked in human review queue.
+  - Glint & Dot Ban: Verified zero rotating specular glints or traveling perimeter border dots in web or Win32 C.
+  - Icon Uniqueness: `check_icons.py` verified 100% unique across all 105 apps (Rule 13 compliant).
+  - Verification: Vite build clean (325ms); `security_lint.py` 100% PASS; web (127.4 KB) < 999 KB ceiling.
+  - Queue: Advanced `kilo_graphics` to `KQuest`; rotation advanced to `kilo-tester`.
+
 - **2026-10-06T12:44:00-07:00 — kilo-creator: kweb://echo-subsystem.net (Deep Expansion: Tab 10 Helmholtz Cavity & 4-Track Tape Deck)**
   - Status: PASS ✅ (0 regressions, 294.6 KB web < 999 KB ceiling, Anti-Potemkin compliant).
   - Tab 10 Addition: Built Helmholtz Cavity Resonator & 4-Track Reel-to-Reel Tape Deck with analog tape saturation & wow/flutter.
@@ -254,12 +262,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Toast & Native Parity: Centered non-occluding click-to-dismiss toast (Directive 185); added Help button (F1), dialog, and hotkeys to Win32 C (`KColor.exe`).
   - Verification: `test_web_apps.js` PASS (57 elements, 0 errors); Vite clean (307ms); `check_icons.py` PASS; `security_lint.py` 100% PASS.
   - Queue: Advanced `kilo_usability` to `KChess`; rotation advanced to `kilo-qa`.
-
-- **2026-10-06T11:46:00-07:00 — kilo-tester: KCalc (UI Element Audit, Scientific Notation Parser & State Integrity Fixes)**
-  - Status: PASS ✅ (0 regressions, 117.2 KB web < 999 KB ceiling).
-  - Parser & Evaluator: Fixed implicit mult regex to protect scientific notation (`6.626e-34`, `1e5`); added full constants to `ctx` (`N_A`, `k_B`, `phi`, etc.).
-  - Persistence & State: Corrected `fvFreq` typo in session/quicksave; added active financial & stats subtool persistence across reloads/snapshots.
-  - Formula & Keypad UX: Wired real-time formula mirroring to main display; enhanced `toggleSign` to wrap expressions; added `lastAns` fallback to memory store.
-  - Accessibility & Ergonomics: Added keyboard navigation/ARIA to constant cards; added Up/Down history recall and Delete/C shortcuts; wired stats "Use In Calc" buttons.
-  - Verification: `test_app_startup.py` PASS; `test_web_apps.js` PASS (159 elements); Vite clean (362ms); security_lint 100% PASS.
-  - Queue: Advanced `kilo_tester` to `KMine`; rotation advanced to `kilo-usability`.
