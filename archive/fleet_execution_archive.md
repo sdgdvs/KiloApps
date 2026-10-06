@@ -4,6 +4,16 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-06T11:55:00-07:00 — kilo-usability: KColor (Window Sizing, Onboarding & Dynamic Slider Ergonomics)**
+  - Status: PASS ✅ (0 regressions, 61.3 KB web / 16.0 KB native < 999 KB ceiling).
+  - Window & Layout Ergonomics: Tuned default window dimensions to 880x660 in `App.jsx` to show full 2-panel studio; added responsive header wrapping for narrow views.
+  - Onboarding & Tutorial: Added first-run guide (`kcolor_tutorialSeen`) with auto-opening modal, "Don't show on startup" option, and F1/H key navigation.
+  - Real-Time Track Feedback: Wired live gradient tracks to RGB/HSL/HSV sliders mirroring color components; added 1-9 keyboard badges to swatches.
+  - Color Comparison & Revert: Added previous vs current color comparison bar in preview box with one-click restoration (`revertToPrevColor`).
+  - Toast & Native Parity: Centered non-occluding click-to-dismiss toast (Directive 185); added Help button (F1), dialog, and hotkeys to Win32 C (`KColor.exe`).
+  - Verification: `test_web_apps.js` PASS (57 elements, 0 errors); Vite clean (307ms); `check_icons.py` PASS; `security_lint.py` 100% PASS.
+  - Queue: Advanced `kilo_usability` to `KChess`; rotation advanced to `kilo-qa`.
+
 - **2026-10-06T11:46:00-07:00 — kilo-tester: KCalc (UI Element Audit, Scientific Notation Parser & State Integrity Fixes)**
   - Status: PASS ✅ (0 regressions, 117.2 KB web < 999 KB ceiling).
   - Parser & Evaluator: Fixed implicit mult regex to protect scientific notation (`6.626e-34`, `1e5`); added full constants to `ctx` (`N_A`, `k_B`, `phi`, etc.).

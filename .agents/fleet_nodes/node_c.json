@@ -16,9 +16,9 @@
   "session_end": null,
   "session_limit_enabled": false,
   "timer_enabled": false,
-  "turns_executed": 168,
+  "turns_executed": 169,
   "last_turn_timestamp": "2026-10-04T16:55:00-07:00",
-  "last_heartbeat": "2026-10-06T19:45:24.380602+00:00",
-  "current_target": "kweb://echo-subsystem.net",
+  "last_heartbeat": "2026-10-06T19:51:05.528135+00:00",
+  "current_target": "KPac",
   "remote_command": "none"
 }

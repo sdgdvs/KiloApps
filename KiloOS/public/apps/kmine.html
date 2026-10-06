@@ -375,18 +375,19 @@
       <div style="font-weight: 600; color: #79c0ff; margin-bottom: 4px;">⌨️ Keyboard Shortcuts</div>
       <div class="shortcut-grid">
         <div><kbd>F1</kbd> / <kbd>?</kbd></div><div>Open this Help & Shortcuts Guide</div>
+        <div><kbd>Arrows</kbd> / <kbd>WASD</kbd></div><div>Move board cursor</div>
+        <div><kbd>Enter</kbd> / <kbd>Space</kbd></div><div>Reveal tile / Chord (or Restart on Game Over)</div>
+        <div><kbd>Shift+Enter</kbd> / <kbd>X</kbd></div><div>Place or remove flag 🚩</div>
         <div><kbd>F</kbd></div><div>Toggle ⛏️ Dig / 🚩 Flag Mode (Touch Friendly)</div>
         <div><kbd>M</kbd></div><div>Toggle Procedural Audio Sound Effects</div>
         <div><kbd>H</kbd></div><div>Safe Move Hint (reveals a guaranteed safe tile)</div>
         <div><kbd>F2</kbd></div><div>Restart New Game on current difficulty</div>
-        <div><kbd>1</kbd></div><div>Beginner Mode (10×10, 15 mines)</div>
-        <div><kbd>2</kbd></div><div>Intermediate Mode (16×16, 40 mines)</div>
-        <div><kbd>3</kbd></div><div>Expert Mode (30×16, 99 mines)</div>
+        <div><kbd>1</kbd> / <kbd>2</kbd> / <kbd>3</kbd></div><div>Beginner (1), Intermediate (2), Expert (3)</div>
         <div><kbd>F5</kbd></div><div>Quicksave current game state</div>
         <div><kbd>F9</kbd></div><div>Quickload saved game state</div>
         <div><kbd>E</kbd></div><div>Export Best Times & Records (JSON)</div>
         <div><kbd>I</kbd></div><div>Import Best Times & Records (JSON)</div>
-        <div><kbd>P</kbd> / <kbd>Space</kbd></div><div>Watch Replay (after game completion)</div>
+        <div><kbd>P</kbd></div><div>Watch Replay (after game completion)</div>
         <div><kbd>Esc</kbd></div><div>Close Help Modal / Dismiss Toasts</div>
       </div>
     </div>
@@ -426,9 +427,9 @@
 </div>
 
 <div class="info-bar">
-  <span><kbd>L-Click</kbd> Reveal</span>
-  <span><kbd>R-Click</kbd> Flag</span>
-  <span><kbd>Click Number</kbd> Chord</span>
+  <span><kbd>Arrows/WASD</kbd> Move</span>
+  <span><kbd>Enter/Space</kbd> Dig</span>
+  <span><kbd>X/R-Click</kbd> Flag</span>
   <span><kbd>F</kbd> Mode</span>
   <span><kbd>M</kbd> Sound</span>
   <span><kbd>H</kbd> Hint</span>
@@ -437,7 +438,7 @@
 </div>
 
 <div id="canvas-container">
-  <canvas id="cvs"></canvas>
+  <canvas id="cvs" tabindex="0" role="region" aria-label="KMine Grid Board"></canvas>
 </div>
 
 <script>
@@ -849,10 +850,23 @@
     reader.onload = function(ev) {
       try {
         let parsed = JSON.parse(ev.target.result);
-        if (parsed && typeof parsed === 'object') {
-          bestTimes = Object.assign(bestTimes, parsed);
-          saveStats();
-          showToast("📥 Statistics imported successfully!", "success");
+        if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+          let updated = false;
+          ["0", "1", "2"].forEach(k => {
+            if (k in parsed) {
+              let v = parsed[k];
+              if (v === null || (typeof v === 'number' && Number.isFinite(v) && v > 0)) {
+                bestTimes[k] = v === null ? null : Math.round(v);
+                updated = true;
+              }
+            }
+          });
+          if (updated) {
+            saveStats();
+            showToast("📥 Statistics imported successfully!", "success");
+          } else {
+            showToast("⚠️ No valid best-time records found in file", "warn");
+          }
         } else {
           showToast("❌ Invalid stats format", "error");
         }
@@ -1103,6 +1117,16 @@
     }
   }
   
+  function recordAndApplyMove(x, y, btn) {
+    initAudio();
+    if (gameOver !== 0 || isReplaying) return;
+    if (x < 0 || x >= cols || y < 0 || y >= rows) return;
+    if (firstClick || !startRealTime) startRealTime = Date.now();
+    const moveOffset = Math.max(0, Date.now() - startRealTime);
+    moves.push({ t: moveOffset, x, y, b: btn });
+    applyAction(x, y, btn);
+  }
+
   function giveHint() {
     if (gameOver !== 0 || isReplaying) return;
     let actionX = -1, actionY = -1;
@@ -1123,8 +1147,9 @@
     }
     if (actionX !== -1) {
       playSfx('hint');
-      moves.push({ t: Date.now() - startRealTime, x: actionX, y: actionY, b: 0 });
-      applyAction(actionX, actionY, 0);
+      hoverX = actionX;
+      hoverY = actionY;
+      recordAndApplyMove(actionX, actionY, 0);
       showToast(`💡 Hint: Safely revealed (${actionX + 1}, ${actionY + 1})`, "info", 2000);
     }
   }
@@ -1150,6 +1175,7 @@
         requestAnimationFrame(nextFrame);
       } else {
         isReplaying = false;
+        if (gameOver !== 0) document.getElementById('replayBtn').style.display = 'inline-flex';
         showToast("🎬 Replay completed.", "info", 2000);
       }
     }
@@ -1157,8 +1183,16 @@
   }
 
   function quickSave() {
-    if (gameOver !== 0 || firstClick || isReplaying) {
-      showToast("⚠️ Cannot quicksave while game over or replaying.", "warn");
+    if (isReplaying) {
+      showToast("⚠️ Cannot quicksave while replaying.", "warn");
+      return;
+    }
+    if (gameOver !== 0) {
+      showToast("⚠️ Cannot quicksave a finished game.", "warn");
+      return;
+    }
+    if (firstClick) {
+      showToast("⚠️ Reveal at least one tile before saving.", "warn");
       return;
     }
     quickSaveData = {
@@ -1183,13 +1217,14 @@
     try {
       let d = JSON.parse(s);
       cols = d.cols; rows = d.rows; totalMines = d.totalMines;
-      document.getElementById('diff').value = d.diff;
+      if (d.diff !== undefined) document.getElementById('diff').value = d.diff;
       setupCanvas();
       grid = d.grid; state = d.state;
       timeElapsed = d.timeElapsed; flags = d.flags;
-      moves = d.moves;
+      moves = d.moves || [];
       firstClick = false; gameOver = 0; isReplaying = false;
-      startRealTime = Date.now() - d.timeOffset;
+      document.getElementById('replayBtn').style.display = 'none';
+      startRealTime = Date.now() - (d.timeOffset || 0);
       stopTimer(); startTimer();
       updateStatus(); updateBestTimeDisplay();
       safeSetStorage('kmine_tutorialSeen', '1');
@@ -1444,6 +1479,16 @@
           }
         }
 
+        // Active Focused Cursor Highlight (Keyboard / Hover)
+        if (x === hoverX && y === hoverY && gameOver === 0) {
+          ctx.save();
+          const pulse = 0.5 + 0.5 * Math.sin(animTime * 8);
+          ctx.strokeStyle = flagMode ? `rgba(245, 158, 11, ${pulse})` : `rgba(56, 189, 248, ${pulse})`;
+          ctx.lineWidth = 2;
+          ctx.strokeRect(bx + 1, by + 1, CELL - 2, CELL - 2);
+          ctx.restore();
+        }
+
         // Chording Target Preview Highlight
         if (hoverX >= 0 && hoverY >= 0 && gameOver === 0 &&
             state[hoverY][hoverX] === 1 && grid[hoverY][hoverX] > 0 &&
@@ -1562,7 +1607,7 @@
     drawCornerFiligree(totalW - 2, totalH - 2, cornerSize, true, true);
 
     if (firstClick && gameOver === 0) {
-      const bannerW = Math.min(320, totalW - 20);
+      const bannerW = Math.min(340, totalW - 20);
       const bannerH = 56;
       const bx = (totalW - bannerW) / 2;
       const by = (totalH - bannerH) / 2;
@@ -1577,10 +1622,10 @@
       ctx.font = "bold 13px 'Segoe UI', Arial, sans-serif";
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
-      ctx.fillText("L-Click: Reveal | R-Click / [F]: Flag", totalW / 2, by + 18);
+      ctx.fillText("L-Click / Space: Reveal | R-Click / [X]: Flag", totalW / 2, by + 18);
       ctx.fillStyle = "#38bdf8";
       ctx.font = "12px 'Segoe UI', Arial, sans-serif";
-      ctx.fillText("Press 'H' Hint | 'M' Sound | 'F1' Guide", totalW / 2, by + 38);
+      ctx.fillText("Arrows/WASD: Move | 'H' Hint | 'F1' Guide", totalW / 2, by + 38);
     }
 
     ctx.restore();
@@ -1617,8 +1662,9 @@
   cvs.addEventListener('mousedown', (e) => {
     initAudio();
     if (Date.now() - lastTouchTime < 400) return;
-    if (gameOver !== 0 || isReplaying) {
-      if (gameOver !== 0) initGame();
+    if (isReplaying) return;
+    if (gameOver !== 0) {
+      initGame();
       return;
     }
     const rect = cvs.getBoundingClientRect();
@@ -1628,14 +1674,14 @@
     const y = Math.floor((e.clientY - rect.top) / cellHeight);
     if (x < 0 || x >= cols || y < 0 || y >= rows) return;
     
+    hoverX = x;
+    hoverY = y;
     let effBtn = e.button;
     if (effBtn === 0 && flagMode && state[y][x] === 0) {
       effBtn = 2;
     }
 
-    if (firstClick) startRealTime = Date.now();
-    moves.push({ t: Date.now() - startRealTime, x, y, b: effBtn });
-    applyAction(x, y, effBtn);
+    recordAndApplyMove(x, y, effBtn);
   });
 
   cvs.addEventListener('touchstart', (e) => {
@@ -1653,13 +1699,14 @@
     const y = Math.floor((t.clientY - rect.top) / cellHeight);
 
     if (x >= 0 && x < cols && y >= 0 && y < rows) {
+      hoverX = x;
+      hoverY = y;
       touchTimer = setTimeout(() => {
         touchLongPressed = true;
         if (gameOver !== 0 || isReplaying) return;
         if (state[y][x] !== 1) {
           if (navigator.vibrate) navigator.vibrate(35);
-          moves.push({ t: Date.now() - startRealTime, x, y, b: 2 });
-          applyAction(x, y, 2);
+          recordAndApplyMove(x, y, 2);
         }
       }, 320);
     }
@@ -1687,8 +1734,9 @@
     e.preventDefault();
     lastTouchTime = Date.now();
 
-    if (gameOver !== 0 || isReplaying) {
-      if (gameOver !== 0) initGame();
+    if (isReplaying) return;
+    if (gameOver !== 0) {
+      initGame();
       return;
     }
 
@@ -1700,10 +1748,10 @@
     const y = Math.floor((t.clientY - rect.top) / cellHeight);
     if (x < 0 || x >= cols || y < 0 || y >= rows) return;
 
+    hoverX = x;
+    hoverY = y;
     let effBtn = (flagMode && state[y][x] === 0) ? 2 : 0;
-    if (firstClick) startRealTime = Date.now();
-    moves.push({ t: Date.now() - startRealTime, x, y, b: effBtn });
-    applyAction(x, y, effBtn);
+    recordAndApplyMove(x, y, effBtn);
   }, { passive: false });
 
   cvs.addEventListener('touchcancel', () => {
@@ -1760,7 +1808,48 @@
       exportStats();
     } else if (e.key === 'i' || e.key === 'I') {
       document.getElementById('fileIn').click();
-    } else if (e.key === 'p' || e.key === 'P' || (e.key === ' ' && gameOver !== 0)) {
+    } else if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') {
+      e.preventDefault();
+      if (hoverX < 0 || hoverY < 0) { hoverX = Math.floor(cols / 2); hoverY = Math.floor(rows / 2); }
+      else { hoverX = (hoverX - 1 + cols) % cols; }
+    } else if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') {
+      e.preventDefault();
+      if (hoverX < 0 || hoverY < 0) { hoverX = Math.floor(cols / 2); hoverY = Math.floor(rows / 2); }
+      else { hoverX = (hoverX + 1) % cols; }
+    } else if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') {
+      e.preventDefault();
+      if (hoverX < 0 || hoverY < 0) { hoverX = Math.floor(cols / 2); hoverY = Math.floor(rows / 2); }
+      else { hoverY = (hoverY - 1 + rows) % rows; }
+    } else if (e.key === 'ArrowDown' || e.key === 's' || e.key === 'S') {
+      e.preventDefault();
+      if (hoverX < 0 || hoverY < 0) { hoverX = Math.floor(cols / 2); hoverY = Math.floor(rows / 2); }
+      else { hoverY = (hoverY + 1) % rows; }
+    } else if (e.key === 'Enter' || e.key === ' ') {
+      if (gameOver !== 0) {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          initGame();
+        } else if (e.key === ' ' || e.key === 'p' || e.key === 'P') {
+          if (document.getElementById('replayBtn').style.display !== 'none') {
+            e.preventDefault();
+            startReplay();
+          } else {
+            initGame();
+          }
+        }
+      } else if (!isReplaying) {
+        if (hoverX < 0 || hoverY < 0) { hoverX = Math.floor(cols / 2); hoverY = Math.floor(rows / 2); }
+        e.preventDefault();
+        let effBtn = (flagMode || e.shiftKey) ? 2 : 0;
+        recordAndApplyMove(hoverX, hoverY, effBtn);
+      }
+    } else if (e.key === 'x' || e.key === 'X' || e.key === 'c' || e.key === 'C') {
+      if (gameOver === 0 && !isReplaying) {
+        if (hoverX < 0 || hoverY < 0) { hoverX = Math.floor(cols / 2); hoverY = Math.floor(rows / 2); }
+        e.preventDefault();
+        recordAndApplyMove(hoverX, hoverY, 2);
+      }
+    } else if (e.key === 'p' || e.key === 'P') {
       if (document.getElementById('replayBtn').style.display !== 'none') {
         e.preventDefault();
         startReplay();
