@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-expander
-next_agent: kilo-creator
+current_agent: kilo-creator
+next_agent: kilo-graphics
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -17,7 +17,7 @@ current_targets:
   kilo_tester: KMine
   kilo_usability: KChess
   kilo_qa: KPac
-  kilo_expander: KCalc
+  kilo_expander: KMine
 virtual_web_target: "kweb://echo-subsystem.net"
 virtual_web_rotation:
   - "kweb://geocities"
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-qa
-  app: KPong
-  timestamp: "2026-10-06T12:10:00-07:00"
+  agent: kilo-expander
+  app: KCalc
+  timestamp: "2026-10-06T12:35:00-07:00"
 last_planner_run: "2026-10-06T14:20:00Z"
 ---
 
@@ -129,9 +129,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KChess`, `KColor`, `KConverter`, `KQuarantine`, `KSettings`, `KTaskMgr`, `KHabit`, `KSudoku`, `KConnect4`, `KHangman`, `KSimon`, `KAsteroids`, `KFreecell`, `KMatch3`, `KWords`, `KGo`, `KDarts`, `KTowers`, `KReversi`, `KAlchemy`, `KColony`, `KStarForge`, `KBreakout`, `KRogue`, `KTetris`, `KPong` *(Completed in Pass 5: KBBS, KChrono, KCipher, KClip, KCyber, KDragon, KFortress, KHash, KMaze, KMech, KMystery, KQuest, KSanctuary, KSnake, KSolitaire, KSpace, KStarDredge, KStarship, KStellar, KSubmarine, KSynth, KSys, KTask, KTerm, KTimer, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KRSS, K2048, KChart, KGraph, KContacts, KScript, KRead, KColosseum, KAbyss, KMedia, KAudio, KRadio, KPad, KPaint, KCalc, KMine, KCosmic, KBase, KBudget, KCalendar, KFarm, KFlash, KFont, KImage, KJournal, KMail, KMandel, KNet, KNote, KPass, KDB, KHex, KBookmark, KPing, KChat, KClock, KPomodoro, KBreakout, KRogue, KTetris, KPong)*.
 
 ### 6. Feature Expander Queue (`kilo-expander`)
-- **Current Target**: `KCalc`
+- **Current Target**: `KMine`
 - **Upcoming Queue**:
-  `KMine`, `KColosseum`, `KSolitaire`, `KPac`, `KSudoku`, `KWords`, `KHangman`, `KConnect4`, `KRogue`, `KBreakout` *(Completed: KSpace, KReversi, KSimon, KMatch3, KTowers, KSnake, KPong, KGo, KSynth, KNote, KFont, KRSS, KSys, KZip, KVault, KType, KMandel, KGraph, KChart, KPaint, KConnect4, KChess, KTetris, KDB, KTodo, KJournal, KCalendar, KContacts, KMail, KRead, KPass, KImage, KAudio, KMedia, KTask, KNet, KPing, KHash, KPad, K2048, KDarts, KRogue, KBreakout)*.
+  `KColosseum`, `KSolitaire`, `KPac`, `KSudoku`, `KWords`, `KHangman`, `KConnect4`, `KRogue`, `KBreakout` *(Completed: KSpace, KReversi, KSimon, KMatch3, KTowers, KSnake, KPong, KGo, KSynth, KNote, KFont, KRSS, KSys, KZip, KVault, KType, KMandel, KGraph, KChart, KPaint, KConnect4, KChess, KTetris, KDB, KTodo, KJournal, KCalendar, KContacts, KMail, KRead, KPass, KImage, KAudio, KMedia, KTask, KNet, KPing, KHash, KPad, K2048, KDarts, KRogue, KBreakout, KCalc)*.
 - **Multiplayer Focus (CRITICAL)**: Concentrate on expanding games (*KChess*, *KConnect4*, *KGo*, *KReversi*, *KDarts*, *KTetris*, *KSnake*, *K2048*, *KMatch3*, *KSimon*) and collaborative apps (*KDraw*, *KPaint*, *KSynth*, *KPad*) with seamless Firebase Realtime Database multiplayer for cross-computer play on `kiloapps.web.app`.
 
 ### 7. Virtual 1999 Web Expansion Queue (Eternal Fleet Track)
@@ -217,6 +217,15 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-06T12:35:00-07:00 — kilo-expander: KCalc (Calculus & Numerical Solver, Matrix/Vector Algebra Modes & Markdown Tape)**
+  - Status: PASS ✅ (0 regressions, 194.8 KB web / 28.0 KB native < 999 KB ceiling).
+  - Expanded Modes: Added Numerical Calculus & Solvers (Definite integration, 5-point differentiation, Newton-Raphson & polynomial root solving).
+  - Linear Algebra: Added 2x2/3x3 Matrix tools (det, inverse, transpose, trace, products, eigenvalues) and 3D Vector operations (dot, cross, projection).
+  - Scientific Keypad: Integrated dynamic Hyperbolic trig mode (`HYP`) and expanded function strip (`nCr`, `nPr`, `gcd`, `lcm`, `sgn`, `root`, `logBase`).
+  - Tape & Annotation: Added thermal paper receipt roll modal, calculation note editing, and Markdown table export.
+  - Verification: `test_web_apps.js` PASS (107/107 apps, 0 errors); Vite clean (311ms); security_lint 100% PASS; MSVC clean (`KCalc.exe` 28.0 KB).
+  - Queue: Advanced `kilo_expander` to `KMine`; rotation advanced to `kilo-creator`.
+
 - **2026-10-06T12:10:00-07:00 — kilo-qa: KPong (Pass 5: Tutorial & State Integrity, Modal Ergonomics & Build Audit)**
   - Status: PASS ✅ (0 regressions, 121.1 KB web / 44.5 KB native < 999 KB ceiling).
   - State Persistence: Hardened [F5/F9] in web and Win32 C (`kpong_save.dat`) preserving hazards, boss, powerups, paddles, and cooldowns.
@@ -252,12 +261,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Icon Uniqueness: `check_icons.py` verified 100% unique (Rule 13 compliant).
   - Verification: Vite build clean (311ms); security_lint 100% PASS; web (183.7 KB) < 999 KB.
   - Queue: Advanced `kilo_graphics` to `KPac`; rotation advanced to `kilo-tester`.
-
-- **2026-10-06T11:10:00-07:00 — kilo-creator: kweb://10.19.99.4/classified (Aethel Skunkworks Intranet, Seismic Interferometer & Tier 3 Puzzle Lock)**
-  - Status: PASS ✅ (0 regressions, 210.6 KB web < 999 KB ceiling).
-  - Tab 9 Seismic Interferometer: Built 2D lithospheric wave interference & Salado halite standing wave cavity resonator with depth/frequency/phase sliders.
-  - Middle-Game Puzzle Gating: Exposed `AETHEL-SECTOR-03` clearance token for Darknet Node 0x7F Slot 2 with 1-click clipboard copy.
-  - Declassified Memos 11 & 12: Added Transit Pipe to Deep Core (`10.19.99.127`, `LITHO-CORE-99`) and Precursor Singularity / KMatrix climax lore.
-  - CLI & Navigation: Added `interferometer`, `convergence`, `clearance`, `keys`, `memos`, `ping 10.19.99.127`; updated [1-9] key navigation.
-  - Directory & Webring Linking: Updated site #015 in `webring.html` and `web-classified` in `portal.html` with interferometer specs.
-  - Verification: `security_lint.py` 100% PASS; `check_icons.py` 100% PASS; Vite clean build (347ms).

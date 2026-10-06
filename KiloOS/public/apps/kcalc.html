@@ -855,7 +855,98 @@
   ::-webkit-scrollbar { width: 6px; height: 6px; }
   ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.15); border-radius: 3px; }
-  ::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.3); }
+  /* Advanced Functions Strip */
+  .adv-funcs-strip {
+    display: flex;
+    gap: 6px;
+    padding: 2px 0 6px 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .adv-funcs-strip::-webkit-scrollbar { display: none; }
+
+  /* Matrix and Vector Styles */
+  .matrix-box-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    align-items: flex-start;
+  }
+  .matrix-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    background: rgba(0,0,0,0.35);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    padding: 12px;
+  }
+  .matrix-grid-2 {
+    display: grid;
+    grid-template-columns: repeat(2, 60px);
+    gap: 6px;
+  }
+  .matrix-grid-3 {
+    display: grid;
+    grid-template-columns: repeat(3, 52px);
+    gap: 5px;
+  }
+  .matrix-cell {
+    width: 100%;
+    height: 32px;
+    background: rgba(0, 0, 0, 0.5);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    color: #fff;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    text-align: center;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  .matrix-cell:focus {
+    border-color: #6366f1;
+    background: rgba(99, 102, 241, 0.1);
+  }
+  .matrix-bracket-box {
+    border-left: 2px solid #818cf8;
+    border-right: 2px solid #818cf8;
+    padding: 4px 6px;
+    border-radius: 4px;
+    display: inline-block;
+  }
+
+  /* Thermal Receipt Paper Roll */
+  .receipt-roll {
+    background: #fdfbf7;
+    color: #1e293b;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    padding: 16px;
+    max-height: 420px;
+    overflow-y: auto;
+    box-shadow: inset 0 2px 6px rgba(0,0,0,0.1), 0 4px 12px rgba(0,0,0,0.15);
+    white-space: pre-wrap;
+    line-height: 1.4;
+    user-select: text;
+  }
+  .hist-note-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 10px;
+    background: rgba(245, 158, 11, 0.15);
+    color: #fbbf24;
+    border: 1px solid rgba(245, 158, 11, 0.3);
+    padding: 1px 6px;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  .hist-note-badge:hover {
+    background: rgba(245, 158, 11, 0.25);
+  }
 
   @media (max-width: 680px) {
     .header { flex-direction: column; align-items: stretch; }
@@ -888,13 +979,21 @@
         <span>Statistics</span>
         <span class="tab-badge">3</span>
       </button>
+      <button class="tab-btn" id="nav-btn-calculus" onclick="switchView('calculus')">
+        <span>Calculus</span>
+        <span class="tab-badge">4</span>
+      </button>
+      <button class="tab-btn" id="nav-btn-matrix" onclick="switchView('matrix')">
+        <span>Matrix</span>
+        <span class="tab-badge">5</span>
+      </button>
       <button class="tab-btn" id="nav-btn-constants" onclick="switchView('constants')">
         <span>Constants</span>
-        <span class="tab-badge">4</span>
+        <span class="tab-badge">6</span>
       </button>
       <button class="tab-btn" id="nav-btn-history" onclick="switchView('history')">
         <span>History</span>
-        <span class="tab-badge">5</span>
+        <span class="tab-badge">7</span>
       </button>
     </nav>
 
@@ -903,6 +1002,7 @@
       <button class="badge-btn" onclick="quickloadState()" title="Restore Quicksaved State (F9)">📂 Load [F9]</button>
       <button class="badge-btn" onclick="openHelpModal()" title="Help & Keyboard Shortcuts (H / F1)">Help [F1]</button>
       <button id="degRadBtn" class="badge-btn active" onclick="toggleDegRad()" title="Toggle Degrees / Radians (D)">DEG</button>
+      <button id="hypBtn" class="badge-btn" onclick="toggleHypMode()" title="Toggle Hyperbolic Trigonometry [Y]">HYP</button>
       <button id="memBadge" class="badge-btn" onclick="openMemoryModal()" title="Memory Registers (M)">M: 0</button>
     </div>
   </header>
@@ -914,6 +1014,7 @@
       <div class="display-card" title="Click display to copy value (Ctrl+C)" onclick="copyMainDisplay()">
         <div class="display-status">
           <span id="angleChip" class="status-chip highlight">DEG</span>
+          <span id="hypChip" class="status-chip" style="display:none; color:#f59e0b; border-color:rgba(245,158,11,0.4);">HYP</span>
           <span id="memChip" class="status-chip" style="display:none;">MEM</span>
           <button class="status-chip copy-btn" onclick="event.stopPropagation(); copyMainDisplay()" title="Copy result to clipboard (Ctrl+C)">📋 Copy</button>
         </div>
@@ -931,6 +1032,16 @@
 
       <!-- View 1: Scientific Calculator Keypad -->
       <div id="view-scientific" class="view-panel active">
+        <!-- Quick Advanced Math Strip -->
+        <div class="adv-funcs-strip">
+          <button class="mini-btn" onclick="append('nCr(')" title="Combinations: nCr(n, r)">nCr</button>
+          <button class="mini-btn" onclick="append('nPr(')" title="Permutations: nPr(n, r)">nPr</button>
+          <button class="mini-btn" onclick="append('gcd(')" title="Greatest Common Divisor: gcd(a, b)">gcd</button>
+          <button class="mini-btn" onclick="append('lcm(')" title="Least Common Multiple: lcm(a, b)">lcm</button>
+          <button class="mini-btn" onclick="append('sgn(')" title="Signum Function: sgn(x)">sgn</button>
+          <button class="mini-btn" onclick="append('root(')" title="N-th Root: root(n, x)">root(n,x)</button>
+          <button class="mini-btn" onclick="append('logBase(')" title="Logarithm with Base: logBase(base, x)">logBase</button>
+        </div>
         <div class="keypad-grid">
           <!-- Row 0: Memory & Clear -->
           <button class="calc-btn mem" onclick="memClear()" title="Memory Clear (MC)">MC</button>
@@ -942,12 +1053,12 @@
           <button class="calc-btn danger" onclick="clearAll()" title="Clear All (Esc)">C</button>
 
           <!-- Row 1: Trigonometric -->
-          <button class="calc-btn func" onclick="append('sin(')" title="Sine: sin(x)">sin</button>
-          <button class="calc-btn func" onclick="append('cos(')" title="Cosine: cos(x)">cos</button>
-          <button class="calc-btn func" onclick="append('tan(')" title="Tangent: tan(x)">tan</button>
-          <button class="calc-btn func" onclick="append('asin(')" title="Arcsine / Inverse Sine: asin(x)">asin</button>
-          <button class="calc-btn func" onclick="append('acos(')" title="Arccosine / Inverse Cosine: acos(x)">acos</button>
-          <button class="calc-btn func" onclick="append('atan(')" title="Arctangent / Inverse Tangent: atan(x)">atan</button>
+          <button class="calc-btn func" id="trig-sin" onclick="append('sin(')" title="Sine: sin(x)">sin</button>
+          <button class="calc-btn func" id="trig-cos" onclick="append('cos(')" title="Cosine: cos(x)">cos</button>
+          <button class="calc-btn func" id="trig-tan" onclick="append('tan(')" title="Tangent: tan(x)">tan</button>
+          <button class="calc-btn func" id="trig-asin" onclick="append('asin(')" title="Arcsine / Inverse Sine: asin(x)">asin</button>
+          <button class="calc-btn func" id="trig-acos" onclick="append('acos(')" title="Arccosine / Inverse Cosine: acos(x)">acos</button>
+          <button class="calc-btn func" id="trig-atan" onclick="append('atan(')" title="Arctangent / Inverse Tangent: atan(x)">atan</button>
           <button class="calc-btn op" onclick="append('(')" title="Open Parenthesis: (">(</button>
 
           <!-- Row 2: Powers & Logs -->
@@ -1274,20 +1385,382 @@
         </div>
       </div>
 
-      <!-- View 3: Scientific Constants Library -->
+      <!-- View 4: Calculus & Equation Solver -->
+      <div id="view-calculus" class="view-panel">
+        <div class="stats-container">
+          <div class="fin-tool-nav">
+            <button id="tab-calc-integ" class="fin-tab active" onclick="switchCalcTool('integ')">Numerical Integration (∫)</button>
+            <button id="tab-calc-deriv" class="fin-tab" onclick="switchCalcTool('deriv')">Differentiation (d/dx)</button>
+            <button id="tab-calc-solver" class="fin-tab" onclick="switchCalcTool('solver')">Equation Root Finder</button>
+            <button id="tab-calc-poly" class="fin-tab" onclick="switchCalcTool('poly')">Polynomial Roots</button>
+          </div>
+
+          <!-- Tool 1: Integration -->
+          <div id="calc-integ-card" class="fin-card">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+              <h3 style="margin:0;">Definite Numerical Integration (Simpson's 1/3 Rule)</h3>
+              <div style="display:flex; gap:6px;">
+                <button class="mini-btn" onclick="loadIntegPreset('gauss')">Gaussian e^(-x²)</button>
+                <button class="mini-btn" onclick="loadIntegPreset('sin')">sin(x) [0..π]</button>
+                <button class="mini-btn" onclick="loadIntegPreset('circle')">Quarter Circle</button>
+              </div>
+            </div>
+            <div class="fin-form-grid">
+              <div class="form-group" style="grid-column: span 2;">
+                <label>Integrand Function f(x):</label>
+                <input type="text" id="integ-fx" value="sin(x)" placeholder="e.g. sin(x), x^2, exp(-x^2)..." onkeydown="if(event.key==='Enter')calcIntegral()">
+              </div>
+              <div class="form-group">
+                <label>Lower Limit (a):</label>
+                <input type="text" id="integ-a" value="0" placeholder="0" onkeydown="if(event.key==='Enter')calcIntegral()">
+              </div>
+              <div class="form-group">
+                <label>Upper Limit (b):</label>
+                <input type="text" id="integ-b" value="pi" placeholder="pi" onkeydown="if(event.key==='Enter')calcIntegral()">
+              </div>
+              <div class="form-group">
+                <label>Subintervals (n, even):</label>
+                <input type="number" id="integ-n" value="200" step="2" min="4" onkeydown="if(event.key==='Enter')calcIntegral()">
+              </div>
+            </div>
+            <button class="action-btn" style="background:var(--primary); color:#fff; align-self:flex-start;" onclick="calcIntegral()">Compute Definite Integral</button>
+
+            <div class="fin-result-box">
+              <div>
+                <div style="font-size:12px; color:var(--text-muted);">Definite Integral ∫[a,b] f(x) dx:</div>
+                <div id="integ-res" class="fin-res-val" data-raw-val="2">2.000000000</div>
+              </div>
+              <div style="text-align:right;">
+                <div style="font-size:11px; color:var(--text-muted);" id="integ-details">n=200 steps | Simpson 1/3</div>
+                <button class="mini-btn" onclick="sendToCalc(document.getElementById('integ-res').dataset.rawVal)">Use Result In Calc</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tool 2: Differentiation -->
+          <div id="calc-deriv-card" class="fin-card" style="display:none;">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+              <h3 style="margin:0;">Numerical Differentiation (5-Point Central Stencil)</h3>
+              <div style="display:flex; gap:6px;">
+                <button class="mini-btn" onclick="loadDerivPreset('cubic')">Cubic x³ - 3x + 2</button>
+                <button class="mini-btn" onclick="loadDerivPreset('exp')">exp(x) at x=1</button>
+              </div>
+            </div>
+            <div class="fin-form-grid">
+              <div class="form-group" style="grid-column: span 2;">
+                <label>Function f(x):</label>
+                <input type="text" id="deriv-fx" value="x^3 - 3*x + 2" placeholder="e.g. x^3 - 3*x + 2" onkeydown="if(event.key==='Enter')calcDerivative()">
+              </div>
+              <div class="form-group">
+                <label>Point of Evaluation (x₀):</label>
+                <input type="text" id="deriv-x0" value="2" placeholder="2" onkeydown="if(event.key==='Enter')calcDerivative()">
+              </div>
+              <div class="form-group">
+                <label>Step Size (h):</label>
+                <input type="text" id="deriv-h" value="0.00001" placeholder="1e-5" onkeydown="if(event.key==='Enter')calcDerivative()">
+              </div>
+            </div>
+            <button class="action-btn" style="background:var(--primary); color:#fff; align-self:flex-start;" onclick="calcDerivative()">Compute Derivatives</button>
+
+            <div class="stats-grid">
+              <div class="stat-tile">
+                <div class="stat-label">First Derivative f'(x₀) [Slope]</div>
+                <div id="deriv-d1-res" class="stat-val" style="color:#34d399;" data-raw-val="9">9.000000000</div>
+                <div class="stat-btn-row"><button class="mini-btn" onclick="sendToCalc(document.getElementById('deriv-d1-res').dataset.rawVal)">Use In Calc</button></div>
+              </div>
+              <div class="stat-tile">
+                <div class="stat-label">Second Derivative f''(x₀) [Curvature]</div>
+                <div id="deriv-d2-res" class="stat-val" style="color:#818cf8;" data-raw-val="12">12.00000000</div>
+                <div class="stat-btn-row"><button class="mini-btn" onclick="sendToCalc(document.getElementById('deriv-d2-res').dataset.rawVal)">Use In Calc</button></div>
+              </div>
+              <div class="stat-tile" style="grid-column: span 2;">
+                <div class="stat-label">Tangent Line & Point Coordinates:</div>
+                <div id="deriv-tangent" class="stat-val" style="font-size:13px; color:#cbd5e1;">Tangent: y = 9x - 14 (f(2)=4)</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tool 3: Equation Solver -->
+          <div id="calc-solver-card" class="fin-card" style="display:none;">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+              <h3 style="margin:0;">Nonlinear Equation Root Finder f(x) = 0</h3>
+              <div style="display:flex; gap:6px;">
+                <button class="mini-btn" onclick="loadSolverPreset('dottie')">cos(x) - x = 0</button>
+                <button class="mini-btn" onclick="loadSolverPreset('poly')">x³ - x - 2 = 0</button>
+                <button class="mini-btn" onclick="loadSolverPreset('sqrt5')">x² - 5 = 0</button>
+              </div>
+            </div>
+            <div class="fin-form-grid">
+              <div class="form-group" style="grid-column: span 2;">
+                <label>Equation Expression f(x) = 0:</label>
+                <input type="text" id="solve-fx" value="x^3 - x - 2" placeholder="e.g. x^3 - x - 2 or cos(x) - x" onkeydown="if(event.key==='Enter')calcEquationRoot()">
+              </div>
+              <div class="form-group">
+                <label>Initial Guess (x₀):</label>
+                <input type="text" id="solve-x0" value="1.5" placeholder="1.5" onkeydown="if(event.key==='Enter')calcEquationRoot()">
+              </div>
+            </div>
+            <button class="action-btn" style="background:var(--primary); color:#fff; align-self:flex-start;" onclick="calcEquationRoot()">Find Root (Newton-Raphson)</button>
+
+            <div class="fin-result-box">
+              <div>
+                <div style="font-size:12px; color:var(--text-muted);">Calculated Root (x*):</div>
+                <div id="solve-res" class="fin-res-val" data-raw-val="1.521379707">1.521379707</div>
+              </div>
+              <div style="text-align:right;">
+                <div style="font-size:11px; color:var(--text-muted);" id="solve-details">Iterations: 4 | Residual: ~1e-12</div>
+                <button class="mini-btn" onclick="sendToCalc(document.getElementById('solve-res').dataset.rawVal)">Use Root In Calc</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tool 4: Polynomial Roots -->
+          <div id="calc-poly-card" class="fin-card" style="display:none;">
+            <h3 style="margin:0;">Exact Polynomial Solver (Quadratic & Cubic)</h3>
+            
+            <div style="border-bottom:1px solid var(--border-color); padding-bottom:12px;">
+              <h4 style="margin:0 0 8px 0; color:#818cf8; font-size:13px;">1. Quadratic Equation: ax² + bx + c = 0</h4>
+              <div class="fin-form-grid">
+                <div class="form-group">
+                  <label>Coefficient a:</label>
+                  <input type="number" id="poly-q-a" value="1" placeholder="1" onkeydown="if(event.key==='Enter')calcQuadratic()">
+                </div>
+                <div class="form-group">
+                  <label>Coefficient b:</label>
+                  <input type="number" id="poly-q-b" value="-5" placeholder="-5" onkeydown="if(event.key==='Enter')calcQuadratic()">
+                </div>
+                <div class="form-group">
+                  <label>Coefficient c:</label>
+                  <input type="number" id="poly-q-c" value="6" placeholder="6" onkeydown="if(event.key==='Enter')calcQuadratic()">
+                </div>
+              </div>
+              <button class="action-btn" style="background:var(--primary); color:#fff; align-self:flex-start; margin-top:8px;" onclick="calcQuadratic()">Solve Quadratic</button>
+              
+              <div class="stats-grid" style="margin-top:8px;">
+                <div class="stat-tile">
+                  <div class="stat-label">Root x₁</div>
+                  <div id="poly-q-x1" class="stat-val" style="color:#34d399;" data-raw-val="3">3.0000</div>
+                  <div class="stat-btn-row"><button class="mini-btn" onclick="sendToCalc(document.getElementById('poly-q-x1').dataset.rawVal)">Use x₁</button></div>
+                </div>
+                <div class="stat-tile">
+                  <div class="stat-label">Root x₂</div>
+                  <div id="poly-q-x2" class="stat-val" style="color:#34d399;" data-raw-val="2">2.0000</div>
+                  <div class="stat-btn-row"><button class="mini-btn" onclick="sendToCalc(document.getElementById('poly-q-x2').dataset.rawVal)">Use x₂</button></div>
+                </div>
+                <div class="stat-tile" style="grid-column: span 2;">
+                  <div class="stat-label">Discriminant (Δ) & Parabola Vertex:</div>
+                  <div id="poly-q-details" class="stat-val" style="font-size:13px; color:#cbd5e1;">Δ = 1.0000 (2 Real Roots) | Vertex: (2.5, -0.25)</div>
+                </div>
+              </div>
+            </div>
+
+            <div style="margin-top:8px;">
+              <h4 style="margin:0 0 8px 0; color:#818cf8; font-size:13px;">2. Cubic Equation: ax³ + bx² + cx + d = 0</h4>
+              <div class="fin-form-grid">
+                <div class="form-group">
+                  <label>a:</label>
+                  <input type="number" id="poly-c-a" value="1" placeholder="1" onkeydown="if(event.key==='Enter')calcCubic()">
+                </div>
+                <div class="form-group">
+                  <label>b:</label>
+                  <input type="number" id="poly-c-b" value="-6" placeholder="-6" onkeydown="if(event.key==='Enter')calcCubic()">
+                </div>
+                <div class="form-group">
+                  <label>c:</label>
+                  <input type="number" id="poly-c-c" value="11" placeholder="11" onkeydown="if(event.key==='Enter')calcCubic()">
+                </div>
+                <div class="form-group">
+                  <label>d:</label>
+                  <input type="number" id="poly-c-d" value="-6" placeholder="-6" onkeydown="if(event.key==='Enter')calcCubic()">
+                </div>
+              </div>
+              <button class="action-btn" style="background:var(--primary); color:#fff; align-self:flex-start; margin-top:8px;" onclick="calcCubic()">Solve Cubic (Cardano)</button>
+              
+              <div class="stats-grid" style="margin-top:8px;">
+                <div class="stat-tile">
+                  <div class="stat-label">Root x₁</div>
+                  <div id="poly-c-x1" class="stat-val" style="color:#34d399;" data-raw-val="1">1.0000</div>
+                  <div class="stat-btn-row"><button class="mini-btn" onclick="sendToCalc(document.getElementById('poly-c-x1').dataset.rawVal)">Use x₁</button></div>
+                </div>
+                <div class="stat-tile">
+                  <div class="stat-label">Root x₂</div>
+                  <div id="poly-c-x2" class="stat-val" style="color:#34d399;" data-raw-val="2">2.0000</div>
+                  <div class="stat-btn-row"><button class="mini-btn" onclick="sendToCalc(document.getElementById('poly-c-x2').dataset.rawVal)">Use x₂</button></div>
+                </div>
+                <div class="stat-tile">
+                  <div class="stat-label">Root x₃</div>
+                  <div id="poly-c-x3" class="stat-val" style="color:#34d399;" data-raw-val="3">3.0000</div>
+                  <div class="stat-btn-row"><button class="mini-btn" onclick="sendToCalc(document.getElementById('poly-c-x3').dataset.rawVal)">Use x₃</button></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- View 5: Matrix & Vector Algebra -->
+      <div id="view-matrix" class="view-panel">
+        <div class="stats-container">
+          <div class="fin-tool-nav">
+            <button id="tab-mat-matrix" class="fin-tab active" onclick="switchMatrixTool('matrix')">Matrix Algebra (2x2 / 3x3)</button>
+            <button id="tab-mat-vector" class="fin-tab" onclick="switchMatrixTool('vector')">3D Vector Operations</button>
+          </div>
+
+          <!-- Tool 1: Matrix Operations -->
+          <div id="mat-matrix-card" class="fin-card">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+              <h3 style="margin:0;">Matrix Operations (A & B)</h3>
+              <div style="display:flex; gap:6px; align-items:center;">
+                <span style="font-size:11px; color:var(--text-muted); font-weight:600;">DIM:</span>
+                <button class="mini-btn active" id="btn-mat-dim2" onclick="setMatrixDim(2)">2 × 2</button>
+                <button class="mini-btn" id="btn-mat-dim3" onclick="setMatrixDim(3)">3 × 3</button>
+                <button class="mini-btn" onclick="loadMatrixPreset('identity')">Identity (I)</button>
+                <button class="mini-btn" onclick="loadMatrixPreset('zero')">Zero (0)</button>
+                <button class="mini-btn" onclick="swapMatrixAB()">Swap A ↔ B</button>
+              </div>
+            </div>
+
+            <div class="matrix-box-container">
+              <!-- Matrix A -->
+              <div class="matrix-wrapper">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                  <strong style="color:#818cf8; font-size:13px;">Matrix A</strong>
+                  <button class="mini-btn" style="padding:1px 6px; font-size:10px;" onclick="clearMatrixInputs('A')">Clear</button>
+                </div>
+                <div class="matrix-bracket-box">
+                  <div id="mat-grid-A" class="matrix-grid-2">
+                    <!-- Populated by JS -->
+                  </div>
+                </div>
+              </div>
+
+              <!-- Matrix B -->
+              <div class="matrix-wrapper">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                  <strong style="color:#34d399; font-size:13px;">Matrix B</strong>
+                  <button class="mini-btn" style="padding:1px 6px; font-size:10px;" onclick="clearMatrixInputs('B')">Clear</button>
+                </div>
+                <div class="matrix-bracket-box">
+                  <div id="mat-grid-B" class="matrix-grid-2">
+                    <!-- Populated by JS -->
+                  </div>
+                </div>
+              </div>
+
+              <!-- Scalar Multiplier Input -->
+              <div class="matrix-wrapper" style="min-width:130px;">
+                <strong style="color:#f59e0b; font-size:13px;">Scalar (k)</strong>
+                <input type="number" id="mat-scalar-k" value="2" class="matrix-cell" style="width:100%; margin-top:4px;">
+                <button class="mini-btn" style="margin-top:6px;" onclick="executeMatrixOp('scalar')">Compute k · A</button>
+              </div>
+            </div>
+
+            <!-- Operations Row -->
+            <div style="display:flex; flex-wrap:wrap; gap:6px; margin-top:4px;">
+              <button class="action-btn" onclick="executeMatrixOp('detA')">det(A)</button>
+              <button class="action-btn" onclick="executeMatrixOp('detB')">det(B)</button>
+              <button class="action-btn" onclick="executeMatrixOp('invA')">A⁻¹ (Inverse)</button>
+              <button class="action-btn" onclick="executeMatrixOp('transA')">Aᵀ (Transpose)</button>
+              <button class="action-btn" onclick="executeMatrixOp('trA')">tr(A) (Trace)</button>
+              <button class="action-btn" onclick="executeMatrixOp('add')">A + B</button>
+              <button class="action-btn" onclick="executeMatrixOp('sub')">A - B</button>
+              <button class="action-btn" style="background:var(--primary); color:#fff;" onclick="executeMatrixOp('mul')">A × B</button>
+              <button class="action-btn" onclick="executeMatrixOp('eigenA')">Eigenvalues (A)</button>
+            </div>
+
+            <!-- Matrix Result Panel -->
+            <div class="fin-result-box" style="flex-direction:column; align-items:stretch; gap:8px;">
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <div style="font-size:12px; color:var(--text-muted);" id="mat-op-title">Result: det(A)</div>
+                <div style="display:flex; gap:6px;" id="mat-result-actions">
+                  <button class="mini-btn" onclick="useActiveMatrixResult()">Use In Calc</button>
+                </div>
+              </div>
+              <div id="mat-result-display" style="font-family:'JetBrains Mono',monospace; font-size:16px; color:#34d399; font-weight:700;">
+                det(A) = 0.0000
+              </div>
+            </div>
+          </div>
+
+          <!-- Tool 2: 3D Vector Operations -->
+          <div id="mat-vector-card" class="fin-card" style="display:none;">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+              <h3 style="margin:0;">3D Vector Operations (u & v)</h3>
+              <div style="display:flex; gap:6px;">
+                <button class="mini-btn" onclick="loadVectorPreset('example')">Example Vectors</button>
+                <button class="mini-btn" onclick="loadVectorPreset('orthogonal')">Orthogonal (i, j)</button>
+              </div>
+            </div>
+
+            <div class="fin-form-grid">
+              <div class="form-group">
+                <label style="color:#818cf8;">Vector u: [ ux, uy, uz ]</label>
+                <div style="display:flex; gap:6px;">
+                  <input type="number" id="vec-ux" value="2" class="matrix-cell" placeholder="ux" onkeydown="if(event.key==='Enter')calcVectorOps()">
+                  <input type="number" id="vec-uy" value="3" class="matrix-cell" placeholder="uy" onkeydown="if(event.key==='Enter')calcVectorOps()">
+                  <input type="number" id="vec-uz" value="-1" class="matrix-cell" placeholder="uz" onkeydown="if(event.key==='Enter')calcVectorOps()">
+                </div>
+              </div>
+              <div class="form-group">
+                <label style="color:#34d399;">Vector v: [ vx, vy, vz ]</label>
+                <div style="display:flex; gap:6px;">
+                  <input type="number" id="vec-vx" value="4" class="matrix-cell" placeholder="vx" onkeydown="if(event.key==='Enter')calcVectorOps()">
+                  <input type="number" id="vec-vy" value="-2" class="matrix-cell" placeholder="vy" onkeydown="if(event.key==='Enter')calcVectorOps()">
+                  <input type="number" id="vec-vz" value="5" class="matrix-cell" placeholder="vz" onkeydown="if(event.key==='Enter')calcVectorOps()">
+                </div>
+              </div>
+            </div>
+            <button class="action-btn" style="background:var(--primary); color:#fff; align-self:flex-start;" onclick="calcVectorOps()">Compute Vector Operations</button>
+
+            <div class="stats-grid">
+              <div class="stat-tile">
+                <div class="stat-label">Dot Product (u · v)</div>
+                <div id="vec-res-dot" class="stat-val" style="color:#34d399;" data-raw-val="-3">-3.0000</div>
+                <div class="stat-btn-row"><button class="mini-btn" onclick="sendToCalc(document.getElementById('vec-res-dot').dataset.rawVal)">Use In Calc</button></div>
+              </div>
+              <div class="stat-tile">
+                <div class="stat-label">Cross Product (u × v)</div>
+                <div id="vec-res-cross" class="stat-val" style="font-size:13px; color:#818cf8;">[ 13, -14, -16 ]</div>
+              </div>
+              <div class="stat-tile">
+                <div class="stat-label">Magnitude ||u||</div>
+                <div id="vec-res-magu" class="stat-val" data-raw-val="3.741657">3.7417</div>
+                <div class="stat-btn-row"><button class="mini-btn" onclick="sendToCalc(document.getElementById('vec-res-magu').dataset.rawVal)">Use In Calc</button></div>
+              </div>
+              <div class="stat-tile">
+                <div class="stat-label">Magnitude ||v||</div>
+                <div id="vec-res-magv" class="stat-val" data-raw-val="6.708204">6.7082</div>
+                <div class="stat-btn-row"><button class="mini-btn" onclick="sendToCalc(document.getElementById('vec-res-magv').dataset.rawVal)">Use In Calc</button></div>
+              </div>
+              <div class="stat-tile" style="grid-column: span 2;">
+                <div class="stat-label">Angle Between Vectors (θ):</div>
+                <div id="vec-res-angle" class="stat-val" style="font-size:13px; color:#cbd5e1;">θ = 96.8670° (1.6906 rad)</div>
+              </div>
+              <div class="stat-tile" style="grid-column: span 2;">
+                <div class="stat-label">Vector Projection of u onto v:</div>
+                <div id="vec-res-proj" class="stat-val" style="font-size:13px; color:#cbd5e1;">proj_v(u) = [ -0.2667, 0.1333, -0.3333 ]</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- View 6: Scientific Constants Library -->
       <div id="view-constants" class="view-panel">
         <div class="constants-grid" id="constantsGrid">
           <!-- Populated by JavaScript -->
         </div>
       </div>
 
-      <!-- View 4: Calculation History Tape -->
+      <!-- View 7: Calculation History Tape -->
       <div id="view-history" class="view-panel">
         <div class="history-container">
           <div class="history-toolbar">
             <input type="text" id="histSearch" class="search-input" placeholder="Search calculation history..." oninput="renderHistory()" onkeydown="if(event.key==='Escape'){this.value='';renderHistory();this.blur();}">
+            <button class="action-btn" onclick="openReceiptRollModal()" title="View thermal paper receipt roll">📜 Receipt Roll</button>
             <button class="action-btn" onclick="exportHistoryCSV()">Export CSV</button>
             <button class="action-btn" onclick="exportHistoryTXT()">Export TXT</button>
+            <button class="action-btn" onclick="exportHistoryMarkdown()">Export MD</button>
             <button class="action-btn" onclick="exportStateJSON()" title="Export complete workspace snapshot JSON">Export JSON</button>
             <button class="action-btn" onclick="importStateJSON()" title="Import workspace snapshot JSON">Import JSON</button>
             <input type="file" id="stateFileInput" accept=".json" style="display:none;" onchange="handleStateFileImport(event)">
@@ -1305,6 +1778,22 @@
 
 <!-- Modal Dialogs -->
 <div id="modalOverlay" class="modal-overlay" onclick="handleBackdropClick(event)">
+  <!-- Thermal Receipt Paper Roll Modal -->
+  <div id="receiptModal" class="modal-content" style="display:none; max-width: 500px;" role="dialog" aria-modal="false" aria-labelledby="receiptModalTitle">
+    <div class="modal-header">
+      <div class="modal-title" id="receiptModalTitle">
+        <div class="logo-icon" style="width:20px; height:20px; font-size:11px;">📜</div>
+        <span>Thermal Paper Receipt Tape</span>
+      </div>
+      <button class="close-btn" onclick="closeModals()">✕</button>
+    </div>
+    <div class="receipt-roll" id="receiptRollText"></div>
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+      <button class="action-btn" onclick="copyReceiptRoll()">📋 Copy Receipt Text</button>
+      <button class="action-btn" style="background:var(--primary); color:#fff;" onclick="closeModals()">Close Roll</button>
+    </div>
+  </div>
+
   <!-- Help Modal -->
   <div id="helpModal" class="modal-content" style="display:none;" role="dialog" aria-modal="false" aria-labelledby="helpModalTitle">
     <div class="modal-header">
@@ -1318,7 +1807,7 @@
     <div>
       <h4 style="margin:0 0 8px 0; color:#818cf8; font-size:13px;">Overview & Calculator Modes</h4>
       <p style="margin:0 0 12px 0; font-size:12px; color:var(--text-muted); line-height:1.5;">
-        KCalc Pro provides 5 comprehensive calculation environments: Scientific Keypad with formula bar, Financial calculators (PMT, FV, Margin, CAGR), Statistics & Regression suite, Scientific Constants library, and calculation History Tape.
+        KCalc Pro provides 7 comprehensive calculation environments: Scientific Keypad (with Hyperbolic Trig & Combinatorics), Financial Calculators (PMT, FV, Margin, CAGR), Statistics & Regression suite, Calculus & Equation Solver (Simpson's 1/3 integration, differentiation, Newton-Raphson root finder, Quadratic & Cubic solvers), Matrix & Vector suite (2x2/3x3 matrix algebra, determinant, inverse, transpose, eigenvalues, 3D vector ops), Scientific Constants library, and calculation History Tape (with printable thermal paper receipt roll & Markdown export).
       </p>
 
       <table class="shortcut-table">
@@ -1329,7 +1818,7 @@
           </tr>
         </thead>
         <tbody>
-          <tr><td><span class="kbd-key">Alt</span>+<span class="kbd-key">1</span> - <span class="kbd-key">5</span></td><td>Switch Calculator Modes (or <span class="kbd-key">1</span>-<span class="kbd-key">5</span> outside Scientific)</td></tr>
+          <tr><td><span class="kbd-key">Alt</span>+<span class="kbd-key">1</span> - <span class="kbd-key">7</span></td><td>Switch Calculator Modes (or <span class="kbd-key">1</span>-<span class="kbd-key">7</span> outside text inputs)</td></tr>
           <tr><td><span class="kbd-key">0</span> - <span class="kbd-key">9</span>, <span class="kbd-key">.</span></td><td>Enter numbers and decimals</td></tr>
           <tr><td><span class="kbd-key">+</span>, <span class="kbd-key">-</span>, <span class="kbd-key">*</span>, <span class="kbd-key">/</span>, <span class="kbd-key">%</span>, <span class="kbd-key">^</span></td><td>Standard and power arithmetic operators</td></tr>
           <tr><td><span class="kbd-key">(</span> , <span class="kbd-key">)</span></td><td>Parentheses for order of operations</td></tr>
@@ -1342,6 +1831,7 @@
           <tr><td><span class="kbd-key">Ctrl</span>+<span class="kbd-key">V</span></td><td>Paste numbers / expression from clipboard</td></tr>
           <tr><td><span class="kbd-key">±</span></td><td>Toggle positive / negative sign (±)</td></tr>
           <tr><td><span class="kbd-key">D</span></td><td>Toggle Trigonometric Degrees / Radians mode</td></tr>
+          <tr><td><span class="kbd-key">Y</span></td><td>Toggle Hyperbolic Trigonometry mode (sinh, cosh, tanh)</td></tr>
           <tr><td><span class="kbd-key">M</span></td><td>Open Memory Registers Management Dialog</td></tr>
           <tr><td><span class="kbd-key">H</span> or <span class="kbd-key">F1</span></td><td>Open this Help & Shortcuts Dialog</td></tr>
         </tbody>
@@ -1450,6 +1940,11 @@
   let memoryStore = 0.0;
   let multiMemory = { M1: 0, M2: 0, M3: 0 };
   let isDeg = true;
+  let isHyp = false;
+  let activeCalcTool = 'integ';
+  let activeMatrixTool = 'matrix';
+  let matrixDim = 2;
+  let lastMatrixResult = 0;
   let historyTape = [];
   let justCalculated = false;
   let historyNavIndex = -1;
@@ -1737,7 +2232,37 @@
     const panel = document.getElementById('view-' + viewName);
     if (panel) panel.classList.add('active');
 
+    if (viewName === 'matrix') renderMatrixInputs();
     if (viewName === 'history') renderHistory();
+  }
+
+  function toggleHypMode() {
+    isHyp = !isHyp;
+    const btn = document.getElementById('hypBtn');
+    const chip = document.getElementById('hypChip');
+    if (btn) btn.classList.toggle('active', isHyp);
+    if (chip) chip.style.display = isHyp ? 'inline-block' : 'none';
+
+    const trigMap = [
+      { id: 'trig-sin', norm: 'sin', hyp: 'sinh', normApp: 'sin(', hypApp: 'sinh(' },
+      { id: 'trig-cos', norm: 'cos', hyp: 'cosh', normApp: 'cos(', hypApp: 'cosh(' },
+      { id: 'trig-tan', norm: 'tan', hyp: 'tanh', normApp: 'tan(', hypApp: 'tanh(' },
+      { id: 'trig-asin', norm: 'asin', hyp: 'asinh', normApp: 'asin(', hypApp: 'asinh(' },
+      { id: 'trig-acos', norm: 'acos', hyp: 'acosh', normApp: 'acos(', hypApp: 'acosh(' },
+      { id: 'trig-atan', norm: 'atan', hyp: 'atanh', normApp: 'atan(', hypApp: 'atanh(' }
+    ];
+
+    trigMap.forEach(item => {
+      const el = document.getElementById(item.id);
+      if (el) {
+        el.textContent = isHyp ? item.hyp : item.norm;
+        el.title = isHyp ? `Hyperbolic ${item.hyp}(x)` : `${item.norm}(x)`;
+        el.onclick = () => append(isHyp ? item.hypApp : item.normApp);
+      }
+    });
+
+    showToast(`Hyperbolic Mode: ${isHyp ? 'ON (sinh, cosh, tanh)' : 'OFF'}`, 'info', 1800);
+    autoSaveSession();
   }
 
   function toggleDegRad() {
@@ -1778,7 +2303,10 @@
     justCalculated = false;
     if (expr === 'Error' || expr.startsWith('ERR')) { expr = ''; render(); return; }
     
-    const keywords = ['sin(', 'cos(', 'tan(', 'asin(', 'acos(', 'atan(', 'ln(', 'log(', 'log2(', 'sqrt(', 'cbrt(', 'fact(', 'abs(', 'floor(', 'ceil(', '10^(', 'e^(', '^2', '^3', 'rnd', 'Ans', ' mod '];
+    const keywords = [
+      'sinh(', 'cosh(', 'tanh(', 'asinh(', 'acosh(', 'atanh(', 'nPr(', 'nCr(', 'gcd(', 'lcm(', 'sgn(', 'root(', 'logBase(',
+      'sin(', 'cos(', 'tan(', 'asin(', 'acos(', 'atan(', 'ln(', 'log(', 'log2(', 'sqrt(', 'cbrt(', 'fact(', 'abs(', 'floor(', 'ceil(', '10^(', 'e^(', '^2', '^3', 'rnd', 'Ans', ' mod '
+    ];
     let removed = false;
     for (let k of keywords) {
       if (expr.endsWith(k)) {
@@ -1865,9 +2393,13 @@
         memoryStore,
         multiMemory: { ...multiMemory },
         isDeg,
+        isHyp,
         activeViewName,
-        activeFinTool: document.querySelector('.fin-tab.active')?.id?.replace('tab-fin-', '') || 'pmt',
+        activeFinTool: document.querySelector('#view-financial .fin-tab.active')?.id?.replace('tab-fin-', '') || 'pmt',
         activeStatsTool: document.querySelector('#view-statistics .fin-tab.active')?.id?.replace('tab-stat-', '') || '1var',
+        activeCalcTool: document.querySelector('#view-calculus .fin-tab.active')?.id?.replace('tab-calc-', '') || activeCalcTool,
+        activeMatrixTool: document.querySelector('#view-matrix .fin-tab.active')?.id?.replace('tab-mat-', '') || activeMatrixTool,
+        matrixDim,
         finInputs: {
           pmtPrincipal: document.getElementById('pmt-principal')?.value || '',
           pmtRate: document.getElementById('pmt-rate')?.value || '',
@@ -1886,6 +2418,33 @@
           stat1Var: document.getElementById('stat-1var-input')?.value || '',
           stat2Var: document.getElementById('stat-2var-input')?.value || '',
           regPredX: document.getElementById('reg-pred-x')?.value || ''
+        },
+        calcInputs: {
+          integFx: document.getElementById('integ-fx')?.value || '',
+          integA: document.getElementById('integ-a')?.value || '',
+          integB: document.getElementById('integ-b')?.value || '',
+          integN: document.getElementById('integ-n')?.value || '200',
+          derivFx: document.getElementById('deriv-fx')?.value || '',
+          derivX0: document.getElementById('deriv-x0')?.value || '',
+          derivH: document.getElementById('deriv-h')?.value || '0.00001',
+          solveFx: document.getElementById('solve-fx')?.value || '',
+          solveX0: document.getElementById('solve-x0')?.value || '',
+          polyQA: document.getElementById('poly-q-a')?.value || '1',
+          polyQB: document.getElementById('poly-q-b')?.value || '-5',
+          polyQC: document.getElementById('poly-q-c')?.value || '6',
+          polyCA: document.getElementById('poly-c-a')?.value || '1',
+          polyCB: document.getElementById('poly-c-b')?.value || '-6',
+          polyCC: document.getElementById('poly-c-c')?.value || '11',
+          polyCD: document.getElementById('poly-c-d')?.value || '-6'
+        },
+        matrixInputs: {
+          scalarK: document.getElementById('mat-scalar-k')?.value || '2',
+          vecUx: document.getElementById('vec-ux')?.value || '2',
+          vecUy: document.getElementById('vec-uy')?.value || '3',
+          vecUz: document.getElementById('vec-uz')?.value || '-1',
+          vecVx: document.getElementById('vec-vx')?.value || '4',
+          vecVy: document.getElementById('vec-vy')?.value || '-2',
+          vecVz: document.getElementById('vec-vz')?.value || '5'
         }
       };
       localStorage.setItem('kcalc_session', JSON.stringify(state));
@@ -1914,6 +2473,12 @@
           if (btn) { btn.textContent = isDeg ? 'DEG' : 'RAD'; btn.classList.toggle('active', isDeg); }
           if (chip) { chip.textContent = isDeg ? 'DEG' : 'RAD'; chip.classList.toggle('highlight', isDeg); }
         }
+        if (s.isHyp !== undefined && s.isHyp !== isHyp) {
+          toggleHypMode();
+        }
+        if (s.matrixDim !== undefined) {
+          setMatrixDim(s.matrixDim === 3 ? 3 : 2);
+        }
         if (s.finInputs && typeof s.finInputs === 'object') {
           if (document.getElementById('pmt-principal') && s.finInputs.pmtPrincipal !== undefined) document.getElementById('pmt-principal').value = s.finInputs.pmtPrincipal;
           if (document.getElementById('pmt-rate') && s.finInputs.pmtRate !== undefined) document.getElementById('pmt-rate').value = s.finInputs.pmtRate;
@@ -1935,8 +2500,37 @@
           if (document.getElementById('stat-2var-input') && s.statsInputs.stat2Var !== undefined) document.getElementById('stat-2var-input').value = s.statsInputs.stat2Var;
           if (document.getElementById('reg-pred-x') && s.statsInputs.regPredX !== undefined) document.getElementById('reg-pred-x').value = s.statsInputs.regPredX;
         }
+        if (s.calcInputs && typeof s.calcInputs === 'object') {
+          if (document.getElementById('integ-fx') && s.calcInputs.integFx !== undefined) document.getElementById('integ-fx').value = s.calcInputs.integFx;
+          if (document.getElementById('integ-a') && s.calcInputs.integA !== undefined) document.getElementById('integ-a').value = s.calcInputs.integA;
+          if (document.getElementById('integ-b') && s.calcInputs.integB !== undefined) document.getElementById('integ-b').value = s.calcInputs.integB;
+          if (document.getElementById('integ-n') && s.calcInputs.integN !== undefined) document.getElementById('integ-n').value = s.calcInputs.integN;
+          if (document.getElementById('deriv-fx') && s.calcInputs.derivFx !== undefined) document.getElementById('deriv-fx').value = s.calcInputs.derivFx;
+          if (document.getElementById('deriv-x0') && s.calcInputs.derivX0 !== undefined) document.getElementById('deriv-x0').value = s.calcInputs.derivX0;
+          if (document.getElementById('deriv-h') && s.calcInputs.derivH !== undefined) document.getElementById('deriv-h').value = s.calcInputs.derivH;
+          if (document.getElementById('solve-fx') && s.calcInputs.solveFx !== undefined) document.getElementById('solve-fx').value = s.calcInputs.solveFx;
+          if (document.getElementById('solve-x0') && s.calcInputs.solveX0 !== undefined) document.getElementById('solve-x0').value = s.calcInputs.solveX0;
+          if (document.getElementById('poly-q-a') && s.calcInputs.polyQA !== undefined) document.getElementById('poly-q-a').value = s.calcInputs.polyQA;
+          if (document.getElementById('poly-q-b') && s.calcInputs.polyQB !== undefined) document.getElementById('poly-q-b').value = s.calcInputs.polyQB;
+          if (document.getElementById('poly-q-c') && s.calcInputs.polyQC !== undefined) document.getElementById('poly-q-c').value = s.calcInputs.polyQC;
+          if (document.getElementById('poly-c-a') && s.calcInputs.polyCA !== undefined) document.getElementById('poly-c-a').value = s.calcInputs.polyCA;
+          if (document.getElementById('poly-c-b') && s.calcInputs.polyCB !== undefined) document.getElementById('poly-c-b').value = s.calcInputs.polyCB;
+          if (document.getElementById('poly-c-c') && s.calcInputs.polyCC !== undefined) document.getElementById('poly-c-c').value = s.calcInputs.polyCC;
+          if (document.getElementById('poly-c-d') && s.calcInputs.polyCD !== undefined) document.getElementById('poly-c-d').value = s.calcInputs.polyCD;
+        }
+        if (s.matrixInputs && typeof s.matrixInputs === 'object') {
+          if (document.getElementById('mat-scalar-k') && s.matrixInputs.scalarK !== undefined) document.getElementById('mat-scalar-k').value = s.matrixInputs.scalarK;
+          if (document.getElementById('vec-ux') && s.matrixInputs.vecUx !== undefined) document.getElementById('vec-ux').value = s.matrixInputs.vecUx;
+          if (document.getElementById('vec-uy') && s.matrixInputs.vecUy !== undefined) document.getElementById('vec-uy').value = s.matrixInputs.vecUy;
+          if (document.getElementById('vec-uz') && s.matrixInputs.vecUz !== undefined) document.getElementById('vec-uz').value = s.matrixInputs.vecUz;
+          if (document.getElementById('vec-vx') && s.matrixInputs.vecVx !== undefined) document.getElementById('vec-vx').value = s.matrixInputs.vecVx;
+          if (document.getElementById('vec-vy') && s.matrixInputs.vecVy !== undefined) document.getElementById('vec-vy').value = s.matrixInputs.vecVy;
+          if (document.getElementById('vec-vz') && s.matrixInputs.vecVz !== undefined) document.getElementById('vec-vz').value = s.matrixInputs.vecVz;
+        }
         if (s.activeFinTool) switchFinTool(s.activeFinTool);
         if (s.activeStatsTool) switchStatsTool(s.activeStatsTool);
+        if (s.activeCalcTool) switchCalcTool(s.activeCalcTool);
+        if (s.activeMatrixTool) switchMatrixTool(s.activeMatrixTool);
         if (s.activeViewName && s.activeViewName !== 'scientific') {
           switchView(s.activeViewName);
         }
@@ -1953,9 +2547,13 @@
       memoryStore: memoryStore,
       multiMemory: { ...multiMemory },
       isDeg: isDeg,
+      isHyp: isHyp,
       activeViewName: activeViewName,
-      activeFinTool: document.querySelector('.fin-tab.active')?.id?.replace('tab-fin-', '') || 'pmt',
+      activeFinTool: document.querySelector('#view-financial .fin-tab.active')?.id?.replace('tab-fin-', '') || 'pmt',
       activeStatsTool: document.querySelector('#view-statistics .fin-tab.active')?.id?.replace('tab-stat-', '') || '1var',
+      activeCalcTool: document.querySelector('#view-calculus .fin-tab.active')?.id?.replace('tab-calc-', '') || activeCalcTool,
+      activeMatrixTool: document.querySelector('#view-matrix .fin-tab.active')?.id?.replace('tab-mat-', '') || activeMatrixTool,
+      matrixDim: matrixDim,
       historyTape: [...historyTape],
       subDisp: document.getElementById('subDisp')?.textContent || '',
       finInputs: {
@@ -1976,6 +2574,33 @@
         stat1Var: document.getElementById('stat-1var-input')?.value || '',
         stat2Var: document.getElementById('stat-2var-input')?.value || '',
         regPredX: document.getElementById('reg-pred-x')?.value || ''
+      },
+      calcInputs: {
+        integFx: document.getElementById('integ-fx')?.value || '',
+        integA: document.getElementById('integ-a')?.value || '',
+        integB: document.getElementById('integ-b')?.value || '',
+        integN: document.getElementById('integ-n')?.value || '200',
+        derivFx: document.getElementById('deriv-fx')?.value || '',
+        derivX0: document.getElementById('deriv-x0')?.value || '',
+        derivH: document.getElementById('deriv-h')?.value || '0.00001',
+        solveFx: document.getElementById('solve-fx')?.value || '',
+        solveX0: document.getElementById('solve-x0')?.value || '',
+        polyQA: document.getElementById('poly-q-a')?.value || '1',
+        polyQB: document.getElementById('poly-q-b')?.value || '-5',
+        polyQC: document.getElementById('poly-q-c')?.value || '6',
+        polyCA: document.getElementById('poly-c-a')?.value || '1',
+        polyCB: document.getElementById('poly-c-b')?.value || '-6',
+        polyCC: document.getElementById('poly-c-c')?.value || '11',
+        polyCD: document.getElementById('poly-c-d')?.value || '-6'
+      },
+      matrixInputs: {
+        scalarK: document.getElementById('mat-scalar-k')?.value || '2',
+        vecUx: document.getElementById('vec-ux')?.value || '2',
+        vecUy: document.getElementById('vec-uy')?.value || '3',
+        vecUz: document.getElementById('vec-uz')?.value || '-1',
+        vecVx: document.getElementById('vec-vx')?.value || '4',
+        vecVy: document.getElementById('vec-vy')?.value || '-2',
+        vecVz: document.getElementById('vec-vz')?.value || '5'
       }
     };
   }
@@ -1998,6 +2623,12 @@
       const chip = document.getElementById('angleChip');
       if (btn) { btn.textContent = isDeg ? 'DEG' : 'RAD'; btn.classList.toggle('active', isDeg); }
       if (chip) { chip.textContent = isDeg ? 'DEG' : 'RAD'; chip.classList.toggle('highlight', isDeg); }
+    }
+    if (snap.isHyp !== undefined && snap.isHyp !== isHyp) {
+      toggleHypMode();
+    }
+    if (snap.matrixDim !== undefined) {
+      setMatrixDim(snap.matrixDim === 3 ? 3 : 2);
     }
     if (Array.isArray(snap.historyTape)) {
       historyTape = snap.historyTape;
@@ -2034,8 +2665,41 @@
       calc1VarStats(true);
       calc2VarRegression(true);
     }
+    if (snap.calcInputs && typeof snap.calcInputs === 'object') {
+      if (document.getElementById('integ-fx') && snap.calcInputs.integFx !== undefined) document.getElementById('integ-fx').value = snap.calcInputs.integFx;
+      if (document.getElementById('integ-a') && snap.calcInputs.integA !== undefined) document.getElementById('integ-a').value = snap.calcInputs.integA;
+      if (document.getElementById('integ-b') && snap.calcInputs.integB !== undefined) document.getElementById('integ-b').value = snap.calcInputs.integB;
+      if (document.getElementById('integ-n') && snap.calcInputs.integN !== undefined) document.getElementById('integ-n').value = snap.calcInputs.integN;
+      if (document.getElementById('deriv-fx') && snap.calcInputs.derivFx !== undefined) document.getElementById('deriv-fx').value = snap.calcInputs.derivFx;
+      if (document.getElementById('deriv-x0') && snap.calcInputs.derivX0 !== undefined) document.getElementById('deriv-x0').value = snap.calcInputs.derivX0;
+      if (document.getElementById('deriv-h') && snap.calcInputs.derivH !== undefined) document.getElementById('deriv-h').value = snap.calcInputs.derivH;
+      if (document.getElementById('solve-fx') && snap.calcInputs.solveFx !== undefined) document.getElementById('solve-fx').value = snap.calcInputs.solveFx;
+      if (document.getElementById('solve-x0') && snap.calcInputs.solveX0 !== undefined) document.getElementById('solve-x0').value = snap.calcInputs.solveX0;
+      if (document.getElementById('poly-q-a') && snap.calcInputs.polyQA !== undefined) document.getElementById('poly-q-a').value = snap.calcInputs.polyQA;
+      if (document.getElementById('poly-q-b') && snap.calcInputs.polyQB !== undefined) document.getElementById('poly-q-b').value = snap.calcInputs.polyQB;
+      if (document.getElementById('poly-q-c') && snap.calcInputs.polyQC !== undefined) document.getElementById('poly-q-c').value = snap.calcInputs.polyQC;
+      if (document.getElementById('poly-c-a') && snap.calcInputs.polyCA !== undefined) document.getElementById('poly-c-a').value = snap.calcInputs.polyCA;
+      if (document.getElementById('poly-c-b') && snap.calcInputs.polyCB !== undefined) document.getElementById('poly-c-b').value = snap.calcInputs.polyCB;
+      if (document.getElementById('poly-c-c') && snap.calcInputs.polyCC !== undefined) document.getElementById('poly-c-c').value = snap.calcInputs.polyCC;
+      if (document.getElementById('poly-c-d') && snap.calcInputs.polyCD !== undefined) document.getElementById('poly-c-d').value = snap.calcInputs.polyCD;
+      calcIntegral(true);
+      calcDerivative(true);
+      calcQuadratic(true);
+    }
+    if (snap.matrixInputs && typeof snap.matrixInputs === 'object') {
+      if (document.getElementById('mat-scalar-k') && snap.matrixInputs.scalarK !== undefined) document.getElementById('mat-scalar-k').value = snap.matrixInputs.scalarK;
+      if (document.getElementById('vec-ux') && snap.matrixInputs.vecUx !== undefined) document.getElementById('vec-ux').value = snap.matrixInputs.vecUx;
+      if (document.getElementById('vec-uy') && snap.matrixInputs.vecUy !== undefined) document.getElementById('vec-uy').value = snap.matrixInputs.vecUy;
+      if (document.getElementById('vec-uz') && snap.matrixInputs.vecUz !== undefined) document.getElementById('vec-uz').value = snap.matrixInputs.vecUz;
+      if (document.getElementById('vec-vx') && snap.matrixInputs.vecVx !== undefined) document.getElementById('vec-vx').value = snap.matrixInputs.vecVx;
+      if (document.getElementById('vec-vy') && snap.matrixInputs.vecVy !== undefined) document.getElementById('vec-vy').value = snap.matrixInputs.vecVy;
+      if (document.getElementById('vec-vz') && snap.matrixInputs.vecVz !== undefined) document.getElementById('vec-vz').value = snap.matrixInputs.vecVz;
+      calcVectorOps(true);
+    }
     if (snap.activeFinTool) switchFinTool(snap.activeFinTool);
     if (snap.activeStatsTool) switchStatsTool(snap.activeStatsTool);
+    if (snap.activeCalcTool) switchCalcTool(snap.activeCalcTool);
+    if (snap.activeMatrixTool) switchMatrixTool(snap.activeMatrixTool);
     if (snap.activeViewName) {
       switchView(snap.activeViewName);
     } else {
@@ -2239,6 +2903,37 @@
       asin: (x) => Math.asin(x) * radMultiplier,
       acos: (x) => Math.acos(x) * radMultiplier,
       atan: (x) => Math.atan(x) * radMultiplier,
+      sinh: (x) => Math.sinh(x),
+      cosh: (x) => Math.cosh(x),
+      tanh: (x) => Math.tanh(x),
+      asinh: (x) => Math.asinh(x),
+      acosh: (x) => Math.acosh(x),
+      atanh: (x) => Math.atanh(x),
+      nPr: (n, r) => {
+        n = Math.floor(n); r = Math.floor(r);
+        if (r < 0 || r > n) return 0;
+        return fact(n) / fact(n - r);
+      },
+      nCr: (n, r) => {
+        n = Math.floor(n); r = Math.floor(r);
+        if (r < 0 || r > n) return 0;
+        return fact(n) / (fact(r) * fact(n - r));
+      },
+      gcd: (a, b) => {
+        a = Math.abs(Math.round(a)); b = Math.abs(Math.round(b));
+        while (b) { let t = b; b = a % b; a = t; }
+        return a;
+      },
+      lcm: (a, b) => {
+        a = Math.abs(Math.round(a)); b = Math.abs(Math.round(b));
+        if (!a || !b) return 0;
+        let x = a, y = b;
+        while (y) { let t = y; y = x % y; x = t; }
+        return Math.abs(a * b) / x;
+      },
+      sgn: (x) => Math.sign(x),
+      root: (n, x) => Math.pow(x, 1 / n),
+      logBase: (b, x) => Math.log(x) / Math.log(b),
       ln: (x) => Math.log(x),
       log: (x) => Math.log10(x),
       log2: (x) => Math.log2(x),
@@ -2276,6 +2971,86 @@
       }
     `);
     
+    return fn(ctx);
+  }
+
+  function evalExpressionWithX(inputStr, xVal, forceRad = true) {
+    if (!inputStr) return 0;
+    let sanitized = inputStr.trim();
+    sanitized = sanitized.replace(/e\^\(/g, 'exp(');
+    sanitized = sanitized.replace(/(\d+(?:\.\d+)?|\([^\)]+\))!/g, 'fact($1)');
+    sanitized = sanitized.replace(/\bmod\b/gi, '%');
+    sanitized = sanitized.replace(/(\d+(?:\.\d+)?|\([^\)]+\))%(?=\s*(?:[\+\-\*\/\^\),]|}|$))/g, '($1/100)');
+    sanitized = sanitized.replace(/\brnd\b(?!\()/g, 'rnd()');
+
+    const degMult = (isDeg && !forceRad) ? (Math.PI / 180) : 1;
+    const radMult = (isDeg && !forceRad) ? (180 / Math.PI) : 1;
+
+    const ctx = {
+      x: xVal,
+      X: xVal,
+      e: Math.E,
+      E: Math.E,
+      pi: Math.PI,
+      PI: Math.PI,
+      c: 299792458,
+      h: 6.62607015e-34,
+      G: 6.67430e-11,
+      g: 9.80665,
+      N_A: 6.02214076e23,
+      k_B: 1.380649e-23,
+      R: 8.314462618,
+      phi: 1.618033988749895,
+      e_charge: 1.602176634e-19,
+      m_e: 9.1093837e-31,
+      m_p: 1.6726219e-27,
+      eps_0: 8.8541878e-12,
+      Ans: lastAns,
+      ans: lastAns,
+      sin: (v) => Math.sin(v * degMult),
+      cos: (v) => Math.cos(v * degMult),
+      tan: (v) => Math.tan(v * degMult),
+      asin: (v) => Math.asin(v * radMult),
+      acos: (v) => Math.acos(v * radMult),
+      atan: (v) => Math.atan(v * radMult),
+      sinh: (v) => Math.sinh(v),
+      cosh: (v) => Math.cosh(v),
+      tanh: (v) => Math.tanh(v),
+      asinh: (v) => Math.asinh(v),
+      acosh: (v) => Math.acosh(v),
+      atanh: (v) => Math.atanh(v),
+      nPr: (n, r) => { n = Math.floor(n); r = Math.floor(r); return (r < 0 || r > n) ? 0 : fact(n) / fact(n - r); },
+      nCr: (n, r) => { n = Math.floor(n); r = Math.floor(r); return (r < 0 || r > n) ? 0 : fact(n) / (fact(r) * fact(n - r)); },
+      gcd: (a, b) => { a = Math.abs(Math.round(a)); b = Math.abs(Math.round(b)); while (b) { let t = b; b = a % b; a = t; } return a; },
+      lcm: (a, b) => { a = Math.abs(Math.round(a)); b = Math.abs(Math.round(b)); if (!a || !b) return 0; let x = a, y = b; while (y) { let t = y; y = x % y; x = t; } return Math.abs(a * b) / x; },
+      sgn: (v) => Math.sign(v),
+      root: (n, v) => Math.pow(v, 1 / n),
+      logBase: (b, v) => Math.log(v) / Math.log(b),
+      ln: (v) => Math.log(v),
+      log: (v) => Math.log10(v),
+      log2: (v) => Math.log2(v),
+      sqrt: (v) => Math.sqrt(v),
+      cbrt: (v) => Math.cbrt(v),
+      exp: (v) => Math.exp(v),
+      abs: (v) => Math.abs(v),
+      floor: (v) => Math.floor(v),
+      ceil: (v) => Math.ceil(v),
+      fact: (v) => fact(v),
+      rnd: () => Math.random()
+    };
+
+    sanitized = sanitized.replace(/\^/g, '**');
+    sanitized = sanitized.replace(/([0-9])(?=[a-df-zA-DF-Z\(]|e(?![+-]?\d)|E(?![+-]?\d))/g, '$1*');
+    sanitized = sanitized.replace(/(\))(?=[a-zA-Z0-9\(])/g, '$1*');
+
+    let openParen = (sanitized.match(/\(/g) || []).length;
+    let closeParen = (sanitized.match(/\)/g) || []).length;
+    while (openParen > closeParen) {
+      sanitized += ')';
+      closeParen++;
+    }
+
+    const fn = new Function('ctx', `with (ctx) { return (${sanitized}); }`);
     return fn(ctx);
   }
 
@@ -2707,6 +3482,646 @@
     }
   }
 
+  // ==========================================
+  // VIEW 4: CALCULUS & EQUATION SOLVER LOGIC
+  // ==========================================
+  function switchCalcTool(tool) {
+    dismissActiveToasts();
+    activeCalcTool = tool;
+    document.querySelectorAll('#view-calculus .fin-tab').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('#view-calculus .fin-card').forEach(c => c.style.display = 'none');
+
+    const tabBtn = document.getElementById('tab-calc-' + tool);
+    if (tabBtn) tabBtn.classList.add('active');
+
+    const card = document.getElementById('calc-' + tool + '-card');
+    if (card) card.style.display = 'flex';
+
+    autoSaveSession();
+  }
+
+  function loadIntegPreset(type) {
+    if (type === 'gauss') {
+      document.getElementById('integ-fx').value = 'exp(-x^2)';
+      document.getElementById('integ-a').value = '0';
+      document.getElementById('integ-b').value = '1';
+      document.getElementById('integ-n').value = '200';
+    } else if (type === 'sin') {
+      document.getElementById('integ-fx').value = 'sin(x)';
+      document.getElementById('integ-a').value = '0';
+      document.getElementById('integ-b').value = 'pi';
+      document.getElementById('integ-n').value = '200';
+    } else if (type === 'circle') {
+      document.getElementById('integ-fx').value = 'sqrt(1 - x^2)';
+      document.getElementById('integ-a').value = '0';
+      document.getElementById('integ-b').value = '1';
+      document.getElementById('integ-n').value = '300';
+    }
+    calcIntegral();
+  }
+
+  function calcIntegral(silent = false) {
+    const fx = document.getElementById('integ-fx').value.trim();
+    const aStr = document.getElementById('integ-a').value.trim();
+    const bStr = document.getElementById('integ-b').value.trim();
+    let n = parseInt(document.getElementById('integ-n').value.trim(), 10) || 200;
+    if (n < 4) n = 4;
+    if (n % 2 !== 0) n += 1;
+
+    try {
+      const a = evalExpression(aStr);
+      const b = evalExpression(bStr);
+      if (isNaN(a) || isNaN(b) || !isFinite(a) || !isFinite(b)) {
+        if (!silent) showToast('Invalid integration limits a or b', 'warning');
+        return;
+      }
+      const h = (b - a) / n;
+      const fa = evalExpressionWithX(fx, a, true);
+      const fb = evalExpressionWithX(fx, b, true);
+      if (isNaN(fa) || isNaN(fb)) throw new Error('Evaluation error at limits');
+
+      let sumOdd = 0;
+      let sumEven = 0;
+      for (let i = 1; i < n; i++) {
+        const xi = a + i * h;
+        const fxi = evalExpressionWithX(fx, xi, true);
+        if (isNaN(fxi)) throw new Error('Evaluation error at step ' + i);
+        if (i % 2 === 1) sumOdd += fxi;
+        else sumEven += fxi;
+      }
+      const simpson = (h / 3) * (fa + 4 * sumOdd + 2 * sumEven + fb);
+      const trap = (h / 2) * (fa + 2 * (sumOdd + sumEven) + fb);
+      const errEst = Math.abs(simpson - trap);
+
+      const formatted = Number(simpson.toPrecision(10));
+      document.getElementById('integ-res').textContent = formatted;
+      document.getElementById('integ-res').dataset.rawVal = formatted;
+      document.getElementById('integ-details').textContent = `n=${n} steps, h=${Number(h.toPrecision(4))} | Est Error: ~${errEst.toExponential(2)}`;
+      if (!silent) {
+        addHistoryEntry(`∫[${aStr}..${bStr}] ${fx} dx`, formatted);
+        showToast(`Definite Integral = ${formatted}`, 'success', 2000);
+      }
+      autoSaveSession();
+    } catch (err) {
+      document.getElementById('integ-res').textContent = 'Error';
+      document.getElementById('integ-details').textContent = err.message || 'Check formula syntax';
+      if (!silent) showToast('Integration error: ' + err.message, 'warning');
+    }
+  }
+
+  function loadDerivPreset(type) {
+    if (type === 'cubic') {
+      document.getElementById('deriv-fx').value = 'x^3 - 3*x + 2';
+      document.getElementById('deriv-x0').value = '2';
+      document.getElementById('deriv-h').value = '0.00001';
+    } else if (type === 'exp') {
+      document.getElementById('deriv-fx').value = 'exp(x)';
+      document.getElementById('deriv-x0').value = '1';
+      document.getElementById('deriv-h').value = '0.00001';
+    }
+    calcDerivative();
+  }
+
+  function calcDerivative(silent = false) {
+    const fx = document.getElementById('deriv-fx').value.trim();
+    const x0Str = document.getElementById('deriv-x0').value.trim();
+    const h = parseFloat(document.getElementById('deriv-h').value.trim()) || 1e-5;
+
+    try {
+      const x0 = evalExpression(x0Str);
+      if (isNaN(x0) || !isFinite(x0)) {
+        if (!silent) showToast('Invalid evaluation point x₀', 'warning');
+        return;
+      }
+      const f_p2 = evalExpressionWithX(fx, x0 + 2 * h, true);
+      const f_p1 = evalExpressionWithX(fx, x0 + h, true);
+      const f_0  = evalExpressionWithX(fx, x0, true);
+      const f_m1 = evalExpressionWithX(fx, x0 - h, true);
+      const f_m2 = evalExpressionWithX(fx, x0 - 2 * h, true);
+
+      const d1 = (-f_p2 + 8 * f_p1 - 8 * f_m1 + f_m2) / (12 * h);
+      const d2 = (-f_p2 + 16 * f_p1 - 30 * f_0 + 16 * f_m1 - f_m2) / (12 * h * h);
+
+      const d1Formatted = Number(d1.toPrecision(10));
+      const d2Formatted = Number(d2.toPrecision(10));
+      const f0Formatted = Number(f_0.toPrecision(8));
+
+      document.getElementById('deriv-d1-res').textContent = d1Formatted;
+      document.getElementById('deriv-d1-res').dataset.rawVal = d1Formatted;
+      document.getElementById('deriv-d2-res').textContent = d2Formatted;
+      document.getElementById('deriv-d2-res').dataset.rawVal = d2Formatted;
+
+      const b = f_0 - d1 * x0;
+      const sign = b >= 0 ? '+' : '-';
+      document.getElementById('deriv-tangent').textContent = `Tangent: y = ${d1Formatted}x ${sign} ${Math.abs(Number(b.toPrecision(6)))} (f(${x0})=${f0Formatted})`;
+      if (!silent) {
+        addHistoryEntry(`d/dx [${fx}] at x=${x0}`, `f'=${d1Formatted}, f''=${d2Formatted}`);
+        showToast(`Derivative: f'(${x0}) = ${d1Formatted}`, 'success', 2000);
+      }
+      autoSaveSession();
+    } catch (err) {
+      document.getElementById('deriv-d1-res').textContent = 'Error';
+      document.getElementById('deriv-d2-res').textContent = 'Error';
+      document.getElementById('deriv-tangent').textContent = err.message || 'Check formula syntax';
+      if (!silent) showToast('Derivative error: ' + err.message, 'warning');
+    }
+  }
+
+  function loadSolverPreset(type) {
+    if (type === 'dottie') {
+      document.getElementById('solve-fx').value = 'cos(x) - x';
+      document.getElementById('solve-x0').value = '0.5';
+    } else if (type === 'poly') {
+      document.getElementById('solve-fx').value = 'x^3 - x - 2';
+      document.getElementById('solve-x0').value = '1.5';
+    } else if (type === 'sqrt5') {
+      document.getElementById('solve-fx').value = 'x^2 - 5';
+      document.getElementById('solve-x0').value = '2.0';
+    }
+    calcEquationRoot();
+  }
+
+  function calcEquationRoot(silent = false) {
+    const fx = document.getElementById('solve-fx').value.trim();
+    let x = parseFloat(document.getElementById('solve-x0').value.trim());
+    if (isNaN(x)) x = 1.0;
+    const tol = 1e-11;
+    const maxIter = 100;
+    const h = 1e-6;
+
+    try {
+      let iter = 0;
+      let fxVal = evalExpressionWithX(fx, x, true);
+      while (iter < maxIter && Math.abs(fxVal) > tol) {
+        const fPlus = evalExpressionWithX(fx, x + h, true);
+        const fMinus = evalExpressionWithX(fx, x - h, true);
+        let df = (fPlus - fMinus) / (2 * h);
+        if (Math.abs(df) < 1e-14) {
+          df = df < 0 ? -1e-10 : 1e-10;
+        }
+        const xNew = x - fxVal / df;
+        if (isNaN(xNew) || !isFinite(xNew)) throw new Error('Diverged at iteration ' + iter);
+        x = xNew;
+        fxVal = evalExpressionWithX(fx, x, true);
+        iter++;
+      }
+      const rootFormatted = Number(x.toPrecision(10));
+      document.getElementById('solve-res').textContent = rootFormatted;
+      document.getElementById('solve-res').dataset.rawVal = rootFormatted;
+      document.getElementById('solve-details').textContent = `Iterations: ${iter} | Residual |f(x*)| = ${Math.abs(fxVal).toExponential(3)}`;
+      if (!silent) {
+        addHistoryEntry(`Root [${fx}=0]`, rootFormatted);
+        showToast(`Root found: x = ${rootFormatted}`, 'success', 2000);
+      }
+      autoSaveSession();
+    } catch (err) {
+      document.getElementById('solve-res').textContent = 'Error';
+      document.getElementById('solve-details').textContent = err.message || 'Could not converge to root';
+      if (!silent) showToast('Solver error: ' + err.message, 'warning');
+    }
+  }
+
+  function calcQuadratic(silent = false) {
+    const a = parseFloat(document.getElementById('poly-q-a').value);
+    const b = parseFloat(document.getElementById('poly-q-b').value);
+    const c = parseFloat(document.getElementById('poly-q-c').value);
+
+    if (isNaN(a) || isNaN(b) || isNaN(c)) {
+      if (!silent) showToast('Invalid quadratic coefficients', 'warning');
+      return;
+    }
+    if (a === 0) {
+      if (b === 0) {
+        document.getElementById('poly-q-x1').textContent = 'No solution';
+        document.getElementById('poly-q-x2').textContent = '-';
+        document.getElementById('poly-q-details').textContent = 'Degenerate equation';
+      } else {
+        const root = -c / b;
+        document.getElementById('poly-q-x1').textContent = root.toFixed(4);
+        document.getElementById('poly-q-x1').dataset.rawVal = root;
+        document.getElementById('poly-q-x2').textContent = '-';
+        document.getElementById('poly-q-details').textContent = 'Linear equation root: x = -c/b';
+      }
+      return;
+    }
+
+    const disc = b * b - 4 * a * c;
+    const vx = -b / (2 * a);
+    const vy = c - (b * b) / (4 * a);
+
+    if (disc > 0) {
+      const x1 = (-b + Math.sqrt(disc)) / (2 * a);
+      const x2 = (-b - Math.sqrt(disc)) / (2 * a);
+      document.getElementById('poly-q-x1').textContent = x1.toFixed(4);
+      document.getElementById('poly-q-x1').dataset.rawVal = x1;
+      document.getElementById('poly-q-x2').textContent = x2.toFixed(4);
+      document.getElementById('poly-q-x2').dataset.rawVal = x2;
+      document.getElementById('poly-q-details').textContent = `Δ = ${disc.toFixed(4)} (2 Real Roots) | Vertex: (${vx.toFixed(2)}, ${vy.toFixed(2)})`;
+    } else if (disc === 0) {
+      const x = -b / (2 * a);
+      document.getElementById('poly-q-x1').textContent = x.toFixed(4);
+      document.getElementById('poly-q-x1').dataset.rawVal = x;
+      document.getElementById('poly-q-x2').textContent = x.toFixed(4);
+      document.getElementById('poly-q-x2').dataset.rawVal = x;
+      document.getElementById('poly-q-details').textContent = `Δ = 0 (1 Double Real Root) | Vertex: (${vx.toFixed(2)}, ${vy.toFixed(2)})`;
+    } else {
+      const real = -b / (2 * a);
+      const imag = Math.sqrt(-disc) / (2 * a);
+      document.getElementById('poly-q-x1').textContent = `${real.toFixed(4)} + ${Math.abs(imag).toFixed(4)}i`;
+      document.getElementById('poly-q-x1').dataset.rawVal = real;
+      document.getElementById('poly-q-x2').textContent = `${real.toFixed(4)} − ${Math.abs(imag).toFixed(4)}i`;
+      document.getElementById('poly-q-x2').dataset.rawVal = real;
+      document.getElementById('poly-q-details').textContent = `Δ = ${disc.toFixed(4)} (Complex Conjugate Roots) | Vertex: (${vx.toFixed(2)}, ${vy.toFixed(2)})`;
+    }
+
+    if (!silent) {
+      addHistoryEntry(`Quadratic ${a}x² + ${b}x + ${c} = 0`, `x₁=${document.getElementById('poly-q-x1').textContent}, x₂=${document.getElementById('poly-q-x2').textContent}`);
+      showToast('Quadratic roots computed', 'success');
+    }
+    autoSaveSession();
+  }
+
+  function calcCubic(silent = false) {
+    const a = parseFloat(document.getElementById('poly-c-a').value);
+    const b = parseFloat(document.getElementById('poly-c-b').value);
+    const c = parseFloat(document.getElementById('poly-c-c').value);
+    const d = parseFloat(document.getElementById('poly-c-d').value);
+
+    if (isNaN(a) || isNaN(b) || isNaN(c) || isNaN(d) || a === 0) {
+      if (!silent) showToast('Invalid cubic coefficients (a must be nonzero)', 'warning');
+      return;
+    }
+
+    const p = (3 * a * c - b * b) / (3 * a * a);
+    const q = (2 * b * b * b - 9 * a * b * c + 27 * a * a * d) / (27 * a * a * a);
+    const shift = b / (3 * a);
+    const disc = (q * q / 4) + (p * p * p / 27);
+
+    let r1, r2, r3;
+    if (Math.abs(disc) < 1e-12) {
+      if (Math.abs(q) < 1e-12) {
+        r1 = -shift; r2 = -shift; r3 = -shift;
+      } else {
+        const u = Math.cbrt(-q / 2);
+        r1 = 2 * u - shift;
+        r2 = -u - shift;
+        r3 = -u - shift;
+      }
+    } else if (disc < 0) {
+      const r = Math.sqrt(-(p * p * p) / 27);
+      const phi = Math.acos(-q / (2 * r));
+      const m = 2 * Math.cbrt(r);
+      r1 = m * Math.cos(phi / 3) - shift;
+      r2 = m * Math.cos((phi + 2 * Math.PI) / 3) - shift;
+      r3 = m * Math.cos((phi + 4 * Math.PI) / 3) - shift;
+    } else {
+      const sqrtDisc = Math.sqrt(disc);
+      const u = Math.cbrt(-q / 2 + sqrtDisc);
+      const v = Math.cbrt(-q / 2 - sqrtDisc);
+      r1 = (u + v) - shift;
+      const real = -0.5 * (u + v) - shift;
+      const imag = (Math.sqrt(3) / 2) * Math.abs(u - v);
+      r2 = `${real.toFixed(4)} + ${imag.toFixed(4)}i`;
+      r3 = `${real.toFixed(4)} − ${imag.toFixed(4)}i`;
+    }
+
+    const fmt1 = typeof r1 === 'number' ? r1.toFixed(4) : r1;
+    const fmt2 = typeof r2 === 'number' ? r2.toFixed(4) : r2;
+    const fmt3 = typeof r3 === 'number' ? r3.toFixed(4) : r3;
+
+    document.getElementById('poly-c-x1').textContent = fmt1;
+    document.getElementById('poly-c-x1').dataset.rawVal = typeof r1 === 'number' ? r1 : parseFloat(r1);
+    document.getElementById('poly-c-x2').textContent = fmt2;
+    document.getElementById('poly-c-x2').dataset.rawVal = typeof r2 === 'number' ? r2 : parseFloat(r2);
+    document.getElementById('poly-c-x3').textContent = fmt3;
+    document.getElementById('poly-c-x3').dataset.rawVal = typeof r3 === 'number' ? r3 : parseFloat(r3);
+
+    if (!silent) {
+      addHistoryEntry(`Cubic ${a}x³ + ${b}x² + ${c}x + ${d} = 0`, `x₁=${fmt1}, x₂=${fmt2}, x₃=${fmt3}`);
+      showToast('Cubic roots computed', 'success');
+    }
+    autoSaveSession();
+  }
+
+  // ==========================================
+  // VIEW 5: MATRIX & VECTOR ALGEBRA LOGIC
+  // ==========================================
+  function switchMatrixTool(tool) {
+    dismissActiveToasts();
+    activeMatrixTool = tool;
+    document.querySelectorAll('#view-matrix .fin-tab').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('#view-matrix .fin-card').forEach(c => c.style.display = 'none');
+
+    const tabBtn = document.getElementById('tab-mat-' + tool);
+    if (tabBtn) tabBtn.classList.add('active');
+
+    const card = document.getElementById('mat-' + tool + '-card');
+    if (card) card.style.display = 'flex';
+
+    autoSaveSession();
+  }
+
+  function setMatrixDim(dim) {
+    matrixDim = dim;
+    document.getElementById('btn-mat-dim2').classList.toggle('active', dim === 2);
+    document.getElementById('btn-mat-dim3').classList.toggle('active', dim === 3);
+    renderMatrixInputs();
+  }
+
+  function renderMatrixInputs() {
+    const gridA = document.getElementById('mat-grid-A');
+    const gridB = document.getElementById('mat-grid-B');
+    if (!gridA || !gridB) return;
+
+    gridA.className = matrixDim === 2 ? 'matrix-grid-2' : 'matrix-grid-3';
+    gridB.className = matrixDim === 2 ? 'matrix-grid-2' : 'matrix-grid-3';
+
+    const defaultA2 = [[1, 2], [3, 4]];
+    const defaultB2 = [[5, 6], [7, 8]];
+    const defaultA3 = [[1, 2, 3], [0, 1, 4], [5, 6, 0]];
+    const defaultB3 = [[1, 0, 0], [0, 1, 0], [0, 0, 1]];
+
+    let htmlA = '';
+    let htmlB = '';
+    for (let r = 0; r < matrixDim; r++) {
+      for (let c = 0; c < matrixDim; c++) {
+        const defValA = matrixDim === 2 ? defaultA2[r][c] : defaultA3[r][c];
+        const defValB = matrixDim === 2 ? defaultB2[r][c] : defaultB3[r][c];
+        htmlA += `<input type="number" id="mat-A-${r}-${c}" value="${defValA}" class="matrix-cell">`;
+        htmlB += `<input type="number" id="mat-B-${r}-${c}" value="${defValB}" class="matrix-cell">`;
+      }
+    }
+    gridA.innerHTML = htmlA;
+    gridB.innerHTML = htmlB;
+  }
+
+  function clearMatrixInputs(name) {
+    for (let r = 0; r < matrixDim; r++) {
+      for (let c = 0; c < matrixDim; c++) {
+        const el = document.getElementById(`mat-${name}-${r}-${c}`);
+        if (el) el.value = '0';
+      }
+    }
+  }
+
+  function loadMatrixPreset(type) {
+    for (let r = 0; r < matrixDim; r++) {
+      for (let c = 0; c < matrixDim; c++) {
+        const elA = document.getElementById(`mat-A-${r}-${c}`);
+        if (elA) {
+          if (type === 'identity') elA.value = (r === c) ? '1' : '0';
+          else if (type === 'zero') elA.value = '0';
+        }
+      }
+    }
+    executeMatrixOp('detA');
+  }
+
+  function swapMatrixAB() {
+    for (let r = 0; r < matrixDim; r++) {
+      for (let c = 0; c < matrixDim; c++) {
+        const elA = document.getElementById(`mat-A-${r}-${c}`);
+        const elB = document.getElementById(`mat-B-${r}-${c}`);
+        if (elA && elB) {
+          const temp = elA.value;
+          elA.value = elB.value;
+          elB.value = temp;
+        }
+      }
+    }
+    showToast('Swapped Matrix A ↔ B', 'info');
+  }
+
+  function getMatrixValues(name) {
+    const mat = [];
+    for (let r = 0; r < matrixDim; r++) {
+      const row = [];
+      for (let c = 0; c < matrixDim; c++) {
+        const el = document.getElementById(`mat-${name}-${r}-${c}`);
+        row.push(el ? (parseFloat(el.value) || 0) : 0);
+      }
+      mat.push(row);
+    }
+    return mat;
+  }
+
+  function formatMatrixOutput(mat) {
+    return mat.map(row => '[ ' + row.map(v => Number(v.toFixed(4))).join(', ') + ' ]').join('\n');
+  }
+
+  function executeMatrixOp(op) {
+    const A = getMatrixValues('A');
+    const B = getMatrixValues('B');
+    const k = parseFloat(document.getElementById('mat-scalar-k').value) || 1;
+    const titleEl = document.getElementById('mat-op-title');
+    const dispEl = document.getElementById('mat-result-display');
+
+    try {
+      if (op === 'detA' || op === 'detB') {
+        const M = op === 'detA' ? A : B;
+        const label = op === 'detA' ? 'det(A)' : 'det(B)';
+        let det = 0;
+        if (matrixDim === 2) {
+          det = M[0][0] * M[1][1] - M[0][1] * M[1][0];
+        } else {
+          det = M[0][0] * (M[1][1] * M[2][2] - M[1][2] * M[2][1])
+              - M[0][1] * (M[1][0] * M[2][2] - M[1][2] * M[2][0])
+              + M[0][2] * (M[1][0] * M[2][1] - M[1][1] * M[2][0]);
+        }
+        lastMatrixResult = Number(det.toFixed(6));
+        titleEl.textContent = `Result: ${label}`;
+        dispEl.textContent = `${label} = ${lastMatrixResult}`;
+        addHistoryEntry(label, lastMatrixResult);
+        showToast(`${label} = ${lastMatrixResult}`, 'success');
+      } else if (op === 'trA') {
+        let tr = 0;
+        for (let i = 0; i < matrixDim; i++) tr += A[i][i];
+        lastMatrixResult = Number(tr.toFixed(6));
+        titleEl.textContent = 'Result: Trace tr(A)';
+        dispEl.textContent = `tr(A) = ${lastMatrixResult}`;
+        addHistoryEntry('tr(A)', lastMatrixResult);
+        showToast(`tr(A) = ${lastMatrixResult}`, 'success');
+      } else if (op === 'transA') {
+        const trans = [];
+        for (let r = 0; r < matrixDim; r++) {
+          const row = [];
+          for (let c = 0; c < matrixDim; c++) row.push(A[c][r]);
+          trans.push(row);
+        }
+        lastMatrixResult = trans[0][0];
+        titleEl.textContent = 'Result: Transpose Aᵀ';
+        dispEl.textContent = 'Aᵀ =\n' + formatMatrixOutput(trans);
+        showToast('Matrix Transpose computed', 'success');
+      } else if (op === 'invA') {
+        let det = 0;
+        if (matrixDim === 2) {
+          det = A[0][0] * A[1][1] - A[0][1] * A[1][0];
+        } else {
+          det = A[0][0] * (A[1][1] * A[2][2] - A[1][2] * A[2][1])
+              - A[0][1] * (A[1][0] * A[2][2] - A[1][2] * A[2][0])
+              + A[0][2] * (A[1][0] * A[2][1] - A[1][1] * A[2][0]);
+        }
+        if (Math.abs(det) < 1e-12) {
+          dispEl.textContent = 'Singular matrix (non-invertible, det=0)';
+          showToast('Matrix is singular (non-invertible)', 'warning');
+          return;
+        }
+        let inv = [];
+        if (matrixDim === 2) {
+          inv = [
+            [A[1][1] / det, -A[0][1] / det],
+            [-A[1][0] / det, A[0][0] / det]
+          ];
+        } else {
+          const c00 = A[1][1] * A[2][2] - A[1][2] * A[2][1];
+          const c01 = -(A[1][0] * A[2][2] - A[1][2] * A[2][0]);
+          const c02 = A[1][0] * A[2][1] - A[1][1] * A[2][0];
+          const c10 = -(A[0][1] * A[2][2] - A[0][2] * A[2][1]);
+          const c11 = A[0][0] * A[2][2] - A[0][2] * A[2][0];
+          const c12 = -(A[0][0] * A[2][1] - A[0][1] * A[2][0]);
+          const c20 = A[0][1] * A[1][2] - A[0][2] * A[1][1];
+          const c21 = -(A[0][0] * A[1][2] - A[0][2] * A[1][0]);
+          const c22 = A[0][0] * A[1][1] - A[0][1] * A[1][0];
+          inv = [
+            [c00 / det, c10 / det, c20 / det],
+            [c01 / det, c11 / det, c21 / det],
+            [c02 / det, c12 / det, c22 / det]
+          ];
+        }
+        lastMatrixResult = Number(inv[0][0].toFixed(4));
+        titleEl.textContent = `Result: Inverse A⁻¹ (det = ${det.toFixed(4)})`;
+        dispEl.textContent = 'A⁻¹ =\n' + formatMatrixOutput(inv);
+        showToast('Matrix Inverse computed', 'success');
+      } else if (op === 'add' || op === 'sub') {
+        const sign = op === 'add' ? 1 : -1;
+        const res = [];
+        for (let r = 0; r < matrixDim; r++) {
+          const row = [];
+          for (let c = 0; c < matrixDim; c++) row.push(A[r][c] + sign * B[r][c]);
+          res.push(row);
+        }
+        lastMatrixResult = res[0][0];
+        const label = op === 'add' ? 'A + B' : 'A - B';
+        titleEl.textContent = `Result: ${label}`;
+        dispEl.textContent = `${label} =\n` + formatMatrixOutput(res);
+        showToast(`${label} computed`, 'success');
+      } else if (op === 'mul') {
+        const res = [];
+        for (let r = 0; r < matrixDim; r++) {
+          const row = [];
+          for (let c = 0; c < matrixDim; c++) {
+            let sum = 0;
+            for (let kIdx = 0; kIdx < matrixDim; kIdx++) sum += A[r][kIdx] * B[kIdx][c];
+            row.push(sum);
+          }
+          res.push(row);
+        }
+        lastMatrixResult = res[0][0];
+        titleEl.textContent = 'Result: A × B';
+        dispEl.textContent = 'A × B =\n' + formatMatrixOutput(res);
+        addHistoryEntry('Matrix Mul A × B', `[0,0]=${res[0][0]}`);
+        showToast('Matrix Multiplication computed', 'success');
+      } else if (op === 'scalar') {
+        const res = A.map(row => row.map(v => v * k));
+        lastMatrixResult = res[0][0];
+        titleEl.textContent = `Result: ${k} · A`;
+        dispEl.textContent = `${k} · A =\n` + formatMatrixOutput(res);
+        showToast('Scalar Multiplication computed', 'success');
+      } else if (op === 'eigenA') {
+        if (matrixDim !== 2) {
+          dispEl.textContent = 'Eigenvalues currently supported for 2 × 2 matrices';
+          showToast('2 × 2 matrix required for eigenvalues', 'info');
+          return;
+        }
+        const T = A[0][0] + A[1][1];
+        const D = A[0][0] * A[1][1] - A[0][1] * A[1][0];
+        const disc = T * T - 4 * D;
+        titleEl.textContent = 'Result: Eigenvalues (A)';
+        if (disc >= 0) {
+          const l1 = (T + Math.sqrt(disc)) / 2;
+          const l2 = (T - Math.sqrt(disc)) / 2;
+          lastMatrixResult = Number(l1.toFixed(4));
+          dispEl.textContent = `λ₁ = ${l1.toFixed(4)},  λ₂ = ${l2.toFixed(4)}`;
+          addHistoryEntry('Eigenvalues(A)', `λ₁=${l1.toFixed(4)}, λ₂=${l2.toFixed(4)}`);
+        } else {
+          const real = T / 2;
+          const imag = Math.sqrt(-disc) / 2;
+          lastMatrixResult = Number(real.toFixed(4));
+          dispEl.textContent = `λ = ${real.toFixed(4)} ± ${imag.toFixed(4)}i`;
+          addHistoryEntry('Eigenvalues(A)', `λ=${real.toFixed(4)} ± ${imag.toFixed(4)}i`);
+        }
+        showToast('Eigenvalues computed', 'success');
+      }
+    } catch (err) {
+      dispEl.textContent = 'Error computing matrix operation: ' + err.message;
+      showToast('Matrix calculation error', 'error');
+    }
+  }
+
+  function useActiveMatrixResult() {
+    sendToCalc(lastMatrixResult);
+  }
+
+  function loadVectorPreset(type) {
+    if (type === 'example') {
+      document.getElementById('vec-ux').value = '2';
+      document.getElementById('vec-uy').value = '3';
+      document.getElementById('vec-uz').value = '-1';
+      document.getElementById('vec-vx').value = '4';
+      document.getElementById('vec-vy').value = '-2';
+      document.getElementById('vec-vz').value = '5';
+    } else if (type === 'orthogonal') {
+      document.getElementById('vec-ux').value = '1';
+      document.getElementById('vec-uy').value = '0';
+      document.getElementById('vec-uz').value = '0';
+      document.getElementById('vec-vx').value = '0';
+      document.getElementById('vec-vy').value = '1';
+      document.getElementById('vec-vz').value = '0';
+    }
+    calcVectorOps();
+  }
+
+  function calcVectorOps(silent = false) {
+    const ux = parseFloat(document.getElementById('vec-ux').value) || 0;
+    const uy = parseFloat(document.getElementById('vec-uy').value) || 0;
+    const uz = parseFloat(document.getElementById('vec-uz').value) || 0;
+    const vx = parseFloat(document.getElementById('vec-vx').value) || 0;
+    const vy = parseFloat(document.getElementById('vec-vy').value) || 0;
+    const vz = parseFloat(document.getElementById('vec-vz').value) || 0;
+
+    const dot = ux * vx + uy * vy + uz * vz;
+    const cross = [
+      uy * vz - uz * vy,
+      uz * vx - ux * vz,
+      ux * vy - uy * vx
+    ];
+    const magU = Math.sqrt(ux * ux + uy * uy + uz * uz);
+    const magV = Math.sqrt(vx * vx + vy * vy + vz * vz);
+
+    const cosTheta = (magU > 0 && magV > 0) ? Math.max(-1, Math.min(1, dot / (magU * magV))) : 0;
+    const rad = Math.acos(cosTheta);
+    const deg = rad * 180 / Math.PI;
+
+    const projScalar = (magV > 0) ? dot / (magV * magV) : 0;
+    const proj = [projScalar * vx, projScalar * vy, projScalar * vz];
+
+    document.getElementById('vec-res-dot').textContent = dot.toFixed(4);
+    document.getElementById('vec-res-dot').dataset.rawVal = dot;
+    document.getElementById('vec-res-cross').textContent = `[ ${cross[0].toFixed(2)}, ${cross[1].toFixed(2)}, ${cross[2].toFixed(2)} ]`;
+    document.getElementById('vec-res-magu').textContent = magU.toFixed(4);
+    document.getElementById('vec-res-magu').dataset.rawVal = magU;
+    document.getElementById('vec-res-magv').textContent = magV.toFixed(4);
+    document.getElementById('vec-res-magv').dataset.rawVal = magV;
+    document.getElementById('vec-res-angle').textContent = `θ = ${deg.toFixed(4)}° (${rad.toFixed(4)} rad)`;
+    document.getElementById('vec-res-proj').textContent = `proj_v(u) = [ ${proj[0].toFixed(4)}, ${proj[1].toFixed(4)}, ${proj[2].toFixed(4)} ]`;
+
+    if (!silent) {
+      addHistoryEntry(`Vectors u·v`, dot.toFixed(4));
+      showToast(`Vector Dot Product: u · v = ${dot.toFixed(2)}`, 'success');
+    }
+    autoSaveSession();
+  }
+
   function sendToCalc(val) {
     if (val !== undefined && val !== null && val !== '' && val !== '-') {
       const cleanVal = String(val).replace(/[$,%]/g, '').trim();
@@ -2771,7 +4186,7 @@
     const query = (document.getElementById('histSearch')?.value || '').toLowerCase();
     list.innerHTML = '';
 
-    const filtered = historyTape.filter(h => h.formula.toLowerCase().includes(query) || String(h.result).includes(query));
+    const filtered = historyTape.filter(h => h.formula.toLowerCase().includes(query) || String(h.result).includes(query) || (h.note && h.note.toLowerCase().includes(query)));
 
     if (filtered.length === 0) {
       list.innerHTML = '<div style="text-align:center; color:var(--text-muted); padding:20px; font-size:13px;">No calculation history available</div>';
@@ -2784,7 +4199,26 @@
       
       const meta = document.createElement('div');
       meta.className = 'hist-meta';
-      meta.innerHTML = `<span>Formula</span><span>${escapeHtml(h.time)}</span>`;
+      
+      const timeSpan = document.createElement('span');
+      timeSpan.textContent = h.time;
+      
+      const noteBadge = document.createElement('span');
+      if (h.note) {
+        noteBadge.className = 'hist-note-badge';
+        noteBadge.textContent = '✎ ' + h.note;
+        noteBadge.title = 'Click to edit annotation';
+      } else {
+        noteBadge.className = 'mini-btn';
+        noteBadge.style.padding = '1px 6px';
+        noteBadge.style.fontSize = '10px';
+        noteBadge.textContent = '+ Note';
+        noteBadge.title = 'Add annotation to this entry';
+      }
+      noteBadge.onclick = (e) => { e.stopPropagation(); editHistoryNote(historyTape.indexOf(h)); };
+
+      meta.appendChild(timeSpan);
+      meta.appendChild(noteBadge);
       
       const exprDiv = document.createElement('div');
       exprDiv.className = 'hist-expr';
@@ -2819,6 +4253,18 @@
     });
   }
 
+  function editHistoryNote(idx) {
+    if (idx < 0 || idx >= historyTape.length) return;
+    const currentNote = historyTape[idx].note || '';
+    const newNote = prompt('Enter annotation/note for this calculation:', currentNote);
+    if (newNote !== null) {
+      historyTape[idx].note = newNote.trim();
+      saveHistoryToStorage();
+      renderHistory();
+      showToast('Annotation updated', 'info');
+    }
+  }
+
   function recallFormula(f) {
     switchView('scientific');
     expr = f;
@@ -2851,9 +4297,10 @@
   // Export Tape to CSV
   function exportHistoryCSV() {
     if (historyTape.length === 0) { showToast('History tape is empty!', 'warning'); return; }
-    let csv = 'Time,Expression,Result\n';
+    let csv = 'Time,Expression,Result,Notes\n';
     historyTape.forEach(h => {
-      csv += `"${h.time}","${String(h.formula).replace(/"/g, '""')}","${String(h.result).replace(/"/g, '""')}"\n`;
+      const noteStr = h.note ? h.note.replace(/"/g, '""') : '';
+      csv += `"${h.time}","${String(h.formula).replace(/"/g, '""')}","${String(h.result).replace(/"/g, '""')}","${noteStr}"\n`;
     });
     downloadFile('kcalc_history.csv', csv, 'text/csv');
     showToast('Exported history to kcalc_history.csv', 'success');
@@ -2864,10 +4311,86 @@
     if (historyTape.length === 0) { showToast('History tape is empty!', 'warning'); return; }
     let txt = '=== KCalc Pro Calculation History ===\n\n';
     historyTape.forEach(h => {
-      txt += `[${h.time}] ${h.formula} = ${h.result}\n`;
+      const noteStr = h.note ? ` [Note: ${h.note}]` : '';
+      txt += `[${h.time}] ${h.formula} = ${h.result}${noteStr}\n`;
     });
     downloadFile('kcalc_history.txt', txt, 'text/plain');
     showToast('Exported history to kcalc_history.txt', 'success');
+  }
+
+  // Export Tape to Markdown
+  function exportHistoryMarkdown() {
+    if (historyTape.length === 0) { showToast('History tape is empty!', 'warning'); return; }
+    let md = '# KCalc Pro — Calculation History Tape\n\n';
+    md += `*Generated: ${new Date().toLocaleString()}*\n\n`;
+    md += '| # | Time | Expression | Result | Notes |\n';
+    md += '|---|---|---|---|---|\n';
+    historyTape.forEach((h, idx) => {
+      const num = idx + 1;
+      const formulaEsc = String(h.formula).replace(/\|/g, '\\|');
+      const resultEsc = String(h.result).replace(/\|/g, '\\|');
+      const noteEsc = h.note ? String(h.note).replace(/\|/g, '\\|') : '';
+      md += `| ${num} | ${h.time} | \`${formulaEsc}\` | **${resultEsc}** | ${noteEsc} |\n`;
+    });
+    md += `\n*Total Records: ${historyTape.length}*\n`;
+    downloadFile('kcalc_history.md', md, 'text/markdown');
+    showToast('Exported history to kcalc_history.md', 'success');
+  }
+
+  // Thermal Paper Receipt Roll View
+  function openReceiptRollModal() {
+    dismissActiveToasts();
+    const modal = document.getElementById('receiptModal');
+    const overlay = document.getElementById('modalOverlay');
+    const target = document.getElementById('receiptRollText');
+    if (!modal || !target) return;
+
+    const dateStr = new Date().toLocaleDateString();
+    const timeStr = new Date().toLocaleTimeString();
+    let text = `========================================\n`;
+    text += `             KCALC PRO TAPE             \n`;
+    text += `      High-Precision Retro Engine       \n`;
+    text += `   Date: ${dateStr}  Time: ${timeStr}   \n`;
+    text += `========================================\n\n`;
+
+    if (historyTape.length === 0) {
+      text += `          * NO HISTORY ENTRIES *        \n`;
+    } else {
+      const reversed = [...historyTape].reverse();
+      reversed.forEach((entry, idx) => {
+        const num = String(idx + 1).padStart(3, '0');
+        text += `[${num}] ${entry.time}\n`;
+        text += `  EXPR: ${entry.formula}\n`;
+        if (entry.note) text += `  NOTE: ${entry.note}\n`;
+        text += `  RSLT: = ${entry.result}\n`;
+        text += `----------------------------------------\n`;
+      });
+      text += `\nTOTAL CALCULATIONS: ${historyTape.length}\n`;
+    }
+    text += `========================================\n`;
+    text += `          THANK YOU FOR USING           \n`;
+    text += `              KCALC PRO                 \n`;
+    text += `========================================\n`;
+
+    target.textContent = text;
+    document.querySelectorAll('#modalOverlay .modal-content').forEach(m => m.style.display = 'none');
+    modal.style.display = 'flex';
+    overlay.classList.add('active');
+  }
+
+  function copyReceiptRoll() {
+    const target = document.getElementById('receiptRollText');
+    if (!target) return;
+    const text = target.textContent;
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(() => {
+        showToast('Copied receipt roll to clipboard!', 'success');
+      }).catch(() => {
+        fallbackCopy(text);
+      });
+    } else {
+      fallbackCopy(text);
+    }
   }
 
   function downloadFile(filename, text, mimeType) {
@@ -2944,6 +4467,12 @@
     if (e.key === 'd' || e.key === 'D') {
       e.preventDefault();
       toggleDegRad();
+      return;
+    }
+
+    if (e.key === 'y' || e.key === 'Y') {
+      e.preventDefault();
+      toggleHypMode();
       return;
     }
 
@@ -3024,14 +4553,16 @@
       return;
     }
 
-    // Numbers 1-5 for mode switching: with Alt/Ctrl anywhere, or plain 1-5 when outside Scientific mode
+    // Numbers 1-7 for mode switching: with Alt/Ctrl anywhere, or plain 1-7 when outside Scientific mode
     const isModeSwitch = e.altKey || e.ctrlKey || activeViewName !== 'scientific';
     if (isModeSwitch) {
       if (e.key === '1') { e.preventDefault(); switchView('scientific'); return; }
       else if (e.key === '2') { e.preventDefault(); switchView('financial'); return; }
       else if (e.key === '3') { e.preventDefault(); switchView('statistics'); return; }
-      else if (e.key === '4') { e.preventDefault(); switchView('constants'); return; }
-      else if (e.key === '5') { e.preventDefault(); switchView('history'); return; }
+      else if (e.key === '4') { e.preventDefault(); switchView('calculus'); return; }
+      else if (e.key === '5') { e.preventDefault(); switchView('matrix'); return; }
+      else if (e.key === '6') { e.preventDefault(); switchView('constants'); return; }
+      else if (e.key === '7') { e.preventDefault(); switchView('history'); return; }
     }
 
     // Scientific keypad shortcuts
