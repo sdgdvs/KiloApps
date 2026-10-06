@@ -4,6 +4,15 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-06T12:10:00-07:00 — kilo-qa: KPong (Pass 5: Tutorial & State Integrity, Modal Ergonomics & Build Audit)**
+  - Status: PASS ✅ (0 regressions, 121.1 KB web / 44.5 KB native < 999 KB ceiling).
+  - State Persistence: Hardened [F5/F9] in web and Win32 C (`kpong_save.dat`) preserving hazards, boss, powerups, paddles, and cooldowns.
+  - Tutorial Integrity: Gated first-run guide behind `kpong_tutorialSeen` / `kpong_tutorial.dat`; restored saves bypass tutorial.
+  - Overlays & Ergonomics: Wired Esc, Enter, Space across help, stats, and game over overlays; updated guide key legends.
+  - Toast Occlusion Remediation: Centered non-occluding click-to-dismiss toast (Directive 185); timer conflict resolved.
+  - Verification: `test_web_apps.js` PASS (46 elements, 0 errors); MSVC clean (`KPong.exe` 44.5 KB); Vite clean (498ms); security_lint 100% PASS.
+  - Queue: Advanced `kilo_qa` to `KPac`; rotation advanced to `kilo-expander`.
+
 - **2026-10-06T11:55:00-07:00 — kilo-usability: KColor (Window Sizing, Onboarding & Dynamic Slider Ergonomics)**
   - Status: PASS ✅ (0 regressions, 61.3 KB web / 16.0 KB native < 999 KB ceiling).
   - Window & Layout Ergonomics: Tuned default window dimensions to 880x660 in `App.jsx` to show full 2-panel studio; added responsive header wrapping for narrow views.

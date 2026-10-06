@@ -1,6 +1,8 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>KChess - Advanced AI & Utility Chess Engine</title>
 <style>
   :root {
@@ -173,8 +175,9 @@
 
   /* Toast Notifications */
   #toast-container {
-    position: fixed; bottom: 20px; right: 20px; z-index: 9999;
+    position: fixed; top: 48px; right: 20px; z-index: 9999;
     display: flex; flex-direction: column; gap: 8px; pointer-events: none;
+    max-width: 320px;
   }
   .toast {
     background: rgba(15, 23, 42, 0.95);
@@ -186,12 +189,13 @@
     font-size: 13px;
     font-weight: 500;
     pointer-events: auto;
+    cursor: pointer;
     animation: toastIn 0.25s ease-out forwards;
     backdrop-filter: blur(8px);
     display: flex;
     align-items: center;
     gap: 10px;
-    max-width: 360px;
+    max-width: 320px;
   }
   .toast.success { border-color: #4ade80; box-shadow: 0 8px 24px rgba(0,0,0,0.6), 0 0 12px rgba(74, 222, 128, 0.3); }
   .toast.warn { border-color: #f59e0b; box-shadow: 0 8px 24px rgba(0,0,0,0.6), 0 0 12px rgba(245, 158, 11, 0.3); }
@@ -579,24 +583,29 @@
   
   const W = 760;
   const H = 860;
+  let canvasScale = 1.0;
   function updateCanvasDPI() {
     const dpr = window.devicePixelRatio || 1;
-    cvs.style.width = W + 'px';
-    cvs.style.height = H + 'px';
-    cvs.width = Math.round(W * dpr);
-    cvs.height = Math.round(H * dpr);
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const menuBar = document.getElementById('kchess-menu-bar');
+    const hudBar = document.getElementById('online-hud-bar');
+    const hudH = (hudBar && hudBar.style.display !== 'none') ? 44 : 0;
+    const availW = Math.max(320, window.innerWidth - 16);
+    const availH = Math.max(380, window.innerHeight - 56 - hudH);
+    canvasScale = Math.min(1.0, availW / W, availH / H);
+    const displayW = Math.round(W * canvasScale);
+    const displayH = Math.round(H * canvasScale);
+
+    cvs.style.width = displayW + 'px';
+    cvs.style.height = displayH + 'px';
+    if (menuBar) menuBar.style.width = displayW + 'px';
+    if (hudBar) hudBar.style.width = displayW + 'px';
+
+    cvs.width = Math.round(W * dpr * canvasScale);
+    cvs.height = Math.round(H * dpr * canvasScale);
+    ctx.setTransform(dpr * canvasScale, 0, 0, dpr * canvasScale, 0, 0);
   }
   updateCanvasDPI();
   window.addEventListener('resize', updateCanvasDPI);
-  
-  setTimeout(() => {
-    try {
-      let dw = (W + 40) - window.innerWidth;
-      let dh = (H + 50) - window.innerHeight;
-      if (Math.abs(dw) > 0 || Math.abs(dh) > 0) window.resizeBy(dw, dh);
-    } catch (e) {}
-  }, 50);
 
   const TS = 70;
   const OX = 100;
@@ -2352,17 +2361,24 @@
       if (!container) return;
       const toast = document.createElement('div');
       toast.className = `toast ${type}`;
+      toast.title = "Click to dismiss";
       
-      let icon = '&#9873;';
-      if (type === 'success') icon = '&#10003;';
-      if (type === 'warn') icon = '&#9888;';
+      let icon = 'ℹ️';
+      if (type === 'success') icon = '✅';
+      else if (type === 'warn') icon = '⚠️';
       
-      toast.innerHTML = `<span style="font-size:15px;">${icon}</span> <span>${msg}</span>`;
+      toast.innerHTML = `<span style="font-size:15px;">${icon}</span> <span style="flex:1;">${msg}</span><span style="opacity:0.6;font-size:12px;margin-left:6px;">✕</span>`;
+      toast.onclick = () => {
+          toast.style.animation = 'toastOut 0.15s ease-in forwards';
+          setTimeout(() => { if (toast.parentNode) toast.parentNode.removeChild(toast); }, 150);
+      };
       container.appendChild(toast);
       
       setTimeout(() => {
-          toast.style.animation = 'toastOut 0.25s ease-in forwards';
-          setTimeout(() => { if (toast.parentNode) toast.parentNode.removeChild(toast); }, 250);
+          if (toast.parentNode) {
+              toast.style.animation = 'toastOut 0.25s ease-in forwards';
+              setTimeout(() => { if (toast.parentNode) toast.parentNode.removeChild(toast); }, 250);
+          }
       }, duration);
   }
 
@@ -3014,6 +3030,64 @@
       } catch(e) {}
   }
 
+  function getBottomButtons() {
+      const isOnline = isOnlineGame;
+      return [
+          { id: 'help', x: 28, y: 740, w: 78, h: 36, text: `Help [F1]`, color: '#1e293b', border: '#5eead4', action: () => openHelpModal() },
+          { id: 'undo', x: 114, y: 740, w: 76, h: 36, text: `Undo [U]`, color: '#1e293b', border: '#5eead4', action: () => undoMove() },
+          { id: 'redo', x: 198, y: 740, w: 76, h: 36, text: `Redo [Y]`, color: '#1e293b', border: '#5eead4', action: () => redoMove() },
+          { id: 'hint', x: 282, y: 740, w: 82, h: 36, text: isOnline ? `Room [O]` : `Hint [H]`, color: isOnline ? '#064e3b' : '#1e293b', border: isOnline ? '#10b981' : '#5eead4', action: () => { if (isOnline) openMultiplayerModal(); else handleHotkey('h'); } },
+          { id: 'save', x: 372, y: 740, w: 78, h: 36, text: `Save [F5]`, color: '#1e293b', border: '#5eead4', action: () => saveGameState() },
+          { id: 'load', x: 458, y: 740, w: 78, h: 36, text: `Load [F9]`, color: '#1e293b', border: '#5eead4', action: () => loadGameState() },
+          { id: 'ai',   x: 544, y: 740, w: 100, h: 36, text: `AI: ${difficultyNames[aiPersonality - 1]} [P]`, color: '#1e293b', border: '#5eead4', action: () => handleHotkey('p') },
+          { id: 'fen',  x: 652, y: 740, w: 78, h: 36, text: `FEN [E]`, color: '#1e293b', border: '#5eead4', action: () => openFENModal() }
+      ];
+  }
+
+  let hoverBtnId = null;
+  cvs.onpointermove = (e) => {
+      const rect = cvs.getBoundingClientRect();
+      const mx = (e.clientX - rect.left) * (W / rect.width);
+      const my = (e.clientY - rect.top) * (H / rect.height);
+
+      let cursor = 'default';
+      let foundBtn = null;
+
+      // Check bottom action buttons
+      const btns = getBottomButtons();
+      for (let btn of btns) {
+          if (mx >= btn.x && mx <= btn.x + btn.w && my >= btn.y && my <= btn.y + btn.h) {
+              foundBtn = btn.id;
+              cursor = 'pointer';
+              break;
+          }
+      }
+
+      // Check top title / mode toggle
+      if (my >= 15 && my <= 45 && mx >= 25 && mx <= 280) cursor = 'pointer';
+      // Check top Help button
+      if (my >= 15 && my <= 45 && mx >= W / 2 - 90 && mx <= W / 2 + 90) cursor = 'pointer';
+      // Check bottom status bar
+      if (my >= 800 && my <= 845 && mx >= 50 && mx <= W - 50) cursor = 'pointer';
+
+      // Check board squares
+      const tx = Math.floor((mx - OX) / TS);
+      const ty = Math.floor((my - OY) / TS);
+      if (tx >= 0 && tx < 8 && ty >= 0 && ty < 8) {
+          if (board[ty][tx] !== 0 || (selX !== -1 && isValidMove(selX, selY, tx, ty, false))) {
+              cursor = 'pointer';
+          }
+      }
+
+      hoverBtnId = foundBtn;
+      cvs.style.cursor = cursor;
+  };
+
+  cvs.onpointerleave = () => {
+      hoverBtnId = null;
+      cvs.style.cursor = 'default';
+  };
+
   cvs.onmousedown = (e) => {
       const rect = cvs.getBoundingClientRect();
       const mx = (e.clientX - rect.left) * (W / rect.width);
@@ -3038,19 +3112,12 @@
       }
 
       // Bottom skill & action buttons (Y: 740..776)
-      if (my >= 740 && my <= 776) {
-          if (mx >= 30 && mx <= 110) { openHelpModal(); return; }
-          if (mx >= 118 && mx <= 198) { undoMove(); return; }
-          if (mx >= 206 && mx <= 286) { redoMove(); return; }
-          if (mx >= 294 && mx <= 384) {
-              if (isOnlineGame) openMultiplayerModal();
-              else handleHotkey('h');
+      const btns = getBottomButtons();
+      for (let btn of btns) {
+          if (mx >= btn.x && mx <= btn.x + btn.w && my >= btn.y && my <= btn.y + btn.h) {
+              btn.action();
               return;
           }
-          if (mx >= 392 && mx <= 470) { saveGameState(); return; }
-          if (mx >= 478 && mx <= 556) { loadGameState(); return; }
-          if (mx >= 564 && mx <= 652) { handleHotkey('p'); return; }
-          if (mx >= 660 && mx <= 730) { openFENModal(); return; }
       }
 
       // Bottom status bar click (Restart or Hint or Rematch)
@@ -3838,32 +3905,24 @@
       }
 
       // Bottom Skill & Action Buttons Row
-      let buttons = [
-          { x: 30, y: 740, w: 80, h: 36, text: `Help [F1]`, color: '#1e293b', border: '#5eead4' },
-          { x: 118, y: 740, w: 80, h: 36, text: `Undo [U]`, color: '#1e293b', border: '#5eead4' },
-          { x: 206, y: 740, w: 80, h: 36, text: `Redo [Y]`, color: '#1e293b', border: '#5eead4' },
-          { x: 294, y: 740, w: 90, h: 36, text: isOnlineGame ? `Room [O]` : `Hint [H]`, color: isOnlineGame ? '#064e3b' : '#1e293b', border: isOnlineGame ? '#10b981' : '#5eead4' },
-          { x: 392, y: 740, w: 78, h: 36, text: `Save [F5]`, color: '#1e293b', border: '#5eead4' },
-          { x: 478, y: 740, w: 78, h: 36, text: `Load [F9]`, color: '#1e293b', border: '#5eead4' },
-          { x: 564, y: 740, w: 88, h: 36, text: `AI: ${difficultyNames[aiPersonality - 1]} [P]`, color: '#1e293b', border: '#5eead4' },
-          { x: 660, y: 740, w: 70, h: 36, text: `FEN [E]`, color: '#1e293b', border: '#5eead4' }
-      ];
+      let buttons = getBottomButtons();
 
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
       ctx.font = "bold 13px 'Inter', sans-serif";
 
       for (let btn of buttons) {
-          ctx.fillStyle = btn.color;
+          const isHovered = (hoverBtnId === btn.id);
+          ctx.fillStyle = isHovered ? '#334155' : btn.color;
           ctx.beginPath();
           ctx.roundRect(btn.x, btn.y, btn.w, btn.h, 6);
           ctx.fill();
-          ctx.strokeStyle = btn.border;
-          ctx.lineWidth = 1;
+          ctx.strokeStyle = isHovered ? '#38bdf8' : btn.border;
+          ctx.lineWidth = isHovered ? 2 : 1;
           ctx.stroke();
-          drawOrnateCornerFiligree(ctx, btn.x, btn.y, btn.w, btn.h, 6, btn.border, '#ffffff');
+          drawOrnateCornerFiligree(ctx, btn.x, btn.y, btn.w, btn.h, 6, isHovered ? '#38bdf8' : btn.border, '#ffffff');
 
-          ctx.fillStyle = '#ffffff';
+          ctx.fillStyle = isHovered ? '#38bdf8' : '#ffffff';
           ctx.fillText(btn.text, btn.x + btn.w / 2, btn.y + btn.h / 2);
       }
 
