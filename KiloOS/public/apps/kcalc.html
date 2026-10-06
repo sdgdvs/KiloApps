@@ -1108,7 +1108,10 @@
               <div style="text-align:right;">
                 <div style="font-size:12px; color:var(--text-muted);" id="margin-pct">Margin: 0%</div>
                 <div style="font-size:12px; color:var(--text-muted);" id="markup-pct">Markup: 0%</div>
-                <button class="mini-btn" style="margin-top:4px;" onclick="sendToCalc(document.getElementById('margin-profit').dataset.rawVal)">Use Result</button>
+                <div style="display:flex; gap:6px; margin-top:4px; justify-content:flex-end;">
+                  <button class="mini-btn" onclick="sendToCalc(document.getElementById('margin-profit').dataset.rawVal)">Use Profit</button>
+                  <button class="mini-btn" onclick="sendToCalc(document.getElementById('margin-pct').textContent)">Use Margin %</button>
+                </div>
               </div>
             </div>
           </div>
@@ -1202,14 +1205,17 @@
               <div class="stat-tile">
                 <div class="stat-label">Pop Std Dev (σ)</div>
                 <div id="stat-pdev" class="stat-val">15.8117</div>
+                <div class="stat-btn-row"><button class="mini-btn" onclick="sendToCalc(document.getElementById('stat-pdev').textContent)">Use In Calc</button></div>
               </div>
               <div class="stat-tile">
                 <div class="stat-label">Sample Variance (s²)</div>
                 <div id="stat-svar" class="stat-val">277.7889</div>
+                <div class="stat-btn-row"><button class="mini-btn" onclick="sendToCalc(document.getElementById('stat-svar').textContent)">Use In Calc</button></div>
               </div>
               <div class="stat-tile">
                 <div class="stat-label">Standard Error (SE)</div>
                 <div id="stat-stderr" class="stat-val">5.2705</div>
+                <div class="stat-btn-row"><button class="mini-btn" onclick="sendToCalc(document.getElementById('stat-stderr').textContent)">Use In Calc</button></div>
               </div>
             </div>
           </div>
@@ -1247,10 +1253,12 @@
               <div class="stat-tile">
                 <div class="stat-label">Pearson Correlation (r)</div>
                 <div id="reg-r" class="stat-val">0.9998</div>
+                <div class="stat-btn-row"><button class="mini-btn" onclick="sendToCalc(document.getElementById('reg-r').textContent)">Use In Calc</button></div>
               </div>
               <div class="stat-tile">
                 <div class="stat-label">Determination (R²)</div>
                 <div id="reg-r2" class="stat-val">0.9996</div>
+                <div class="stat-btn-row"><button class="mini-btn" onclick="sendToCalc(document.getElementById('reg-r2').textContent)">Use In Calc</button></div>
               </div>
               <div class="stat-tile" style="grid-column: span 2;">
                 <div class="stat-label">Estimate y given x:</div>
@@ -1277,7 +1285,7 @@
       <div id="view-history" class="view-panel">
         <div class="history-container">
           <div class="history-toolbar">
-            <input type="text" id="histSearch" class="search-input" placeholder="Search calculation history..." oninput="renderHistory()">
+            <input type="text" id="histSearch" class="search-input" placeholder="Search calculation history..." oninput="renderHistory()" onkeydown="if(event.key==='Escape'){this.value='';renderHistory();this.blur();}">
             <button class="action-btn" onclick="exportHistoryCSV()">Export CSV</button>
             <button class="action-btn" onclick="exportHistoryTXT()">Export TXT</button>
             <button class="action-btn" onclick="exportStateJSON()" title="Export complete workspace snapshot JSON">Export JSON</button>
@@ -1677,10 +1685,11 @@
 
   function storeMultiMem(reg) {
     try {
-      let val = evalExpression(expr || '0');
+      let val = evalExpression(expr || (lastAns ? String(lastAns) : '0'));
       if (!isNaN(val) && isFinite(val)) {
         multiMemory[reg] = val;
         updateModalMemVals();
+        render();
         showToast(`Stored ${val} in ${reg}`, 'success');
       }
     } catch {}
@@ -1694,6 +1703,7 @@
   function clearMultiMem(reg) {
     multiMemory[reg] = 0;
     updateModalMemVals();
+    render();
     showToast(`Cleared ${reg}`, 'info');
   }
 
@@ -1799,9 +1809,15 @@
   function toggleSign() {
     dismissActiveToasts();
     justCalculated = false;
-    if (!expr) { expr = '-'; }
-    else if (expr.startsWith('-')) { expr = expr.substring(1); }
-    else { expr = '-' + expr; }
+    if (!expr) {
+      expr = '-';
+    } else if (/^-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?$/.test(expr)) {
+      expr = expr.startsWith('-') ? expr.slice(1) : '-' + expr;
+    } else if (expr.startsWith('-(') && expr.endsWith(')')) {
+      expr = expr.slice(2, -1);
+    } else {
+      expr = '-(' + expr + ')';
+    }
     render();
   }
 
@@ -1850,6 +1866,8 @@
         multiMemory: { ...multiMemory },
         isDeg,
         activeViewName,
+        activeFinTool: document.querySelector('.fin-tab.active')?.id?.replace('tab-fin-', '') || 'pmt',
+        activeStatsTool: document.querySelector('#view-statistics .fin-tab.active')?.id?.replace('tab-stat-', '') || '1var',
         finInputs: {
           pmtPrincipal: document.getElementById('pmt-principal')?.value || '',
           pmtRate: document.getElementById('pmt-rate')?.value || '',
@@ -1857,7 +1875,7 @@
           fvPrincipal: document.getElementById('fv-principal')?.value || '',
           fvRate: document.getElementById('fv-rate')?.value || '',
           fvYears: document.getElementById('fv-years')?.value || '',
-          fvMonthly: document.getElementById('fv-monthly')?.value || '',
+          fvFreq: document.getElementById('fv-freq')?.value || '12',
           marginCost: document.getElementById('margin-cost')?.value || '',
           marginSell: document.getElementById('margin-sell')?.value || '',
           cagrStart: document.getElementById('cagr-start')?.value || '',
@@ -1903,7 +1921,9 @@
           if (document.getElementById('fv-principal') && s.finInputs.fvPrincipal !== undefined) document.getElementById('fv-principal').value = s.finInputs.fvPrincipal;
           if (document.getElementById('fv-rate') && s.finInputs.fvRate !== undefined) document.getElementById('fv-rate').value = s.finInputs.fvRate;
           if (document.getElementById('fv-years') && s.finInputs.fvYears !== undefined) document.getElementById('fv-years').value = s.finInputs.fvYears;
-          if (document.getElementById('fv-monthly') && s.finInputs.fvMonthly !== undefined) document.getElementById('fv-monthly').value = s.finInputs.fvMonthly;
+          if (document.getElementById('fv-freq') && (s.finInputs.fvFreq !== undefined || s.finInputs.fvMonthly !== undefined)) {
+            document.getElementById('fv-freq').value = s.finInputs.fvFreq || s.finInputs.fvMonthly || '12';
+          }
           if (document.getElementById('margin-cost') && s.finInputs.marginCost !== undefined) document.getElementById('margin-cost').value = s.finInputs.marginCost;
           if (document.getElementById('margin-sell') && s.finInputs.marginSell !== undefined) document.getElementById('margin-sell').value = s.finInputs.marginSell;
           if (document.getElementById('cagr-start') && s.finInputs.cagrStart !== undefined) document.getElementById('cagr-start').value = s.finInputs.cagrStart;
@@ -1915,6 +1935,8 @@
           if (document.getElementById('stat-2var-input') && s.statsInputs.stat2Var !== undefined) document.getElementById('stat-2var-input').value = s.statsInputs.stat2Var;
           if (document.getElementById('reg-pred-x') && s.statsInputs.regPredX !== undefined) document.getElementById('reg-pred-x').value = s.statsInputs.regPredX;
         }
+        if (s.activeFinTool) switchFinTool(s.activeFinTool);
+        if (s.activeStatsTool) switchStatsTool(s.activeStatsTool);
         if (s.activeViewName && s.activeViewName !== 'scientific') {
           switchView(s.activeViewName);
         }
@@ -1932,6 +1954,8 @@
       multiMemory: { ...multiMemory },
       isDeg: isDeg,
       activeViewName: activeViewName,
+      activeFinTool: document.querySelector('.fin-tab.active')?.id?.replace('tab-fin-', '') || 'pmt',
+      activeStatsTool: document.querySelector('#view-statistics .fin-tab.active')?.id?.replace('tab-stat-', '') || '1var',
       historyTape: [...historyTape],
       subDisp: document.getElementById('subDisp')?.textContent || '',
       finInputs: {
@@ -1941,7 +1965,7 @@
         fvPrincipal: document.getElementById('fv-principal')?.value || '',
         fvRate: document.getElementById('fv-rate')?.value || '',
         fvYears: document.getElementById('fv-years')?.value || '',
-        fvMonthly: document.getElementById('fv-monthly')?.value || '',
+        fvFreq: document.getElementById('fv-freq')?.value || '12',
         marginCost: document.getElementById('margin-cost')?.value || '',
         marginSell: document.getElementById('margin-sell')?.value || '',
         cagrStart: document.getElementById('cagr-start')?.value || '',
@@ -1990,7 +2014,9 @@
       if (document.getElementById('fv-principal') && snap.finInputs.fvPrincipal !== undefined) document.getElementById('fv-principal').value = snap.finInputs.fvPrincipal;
       if (document.getElementById('fv-rate') && snap.finInputs.fvRate !== undefined) document.getElementById('fv-rate').value = snap.finInputs.fvRate;
       if (document.getElementById('fv-years') && snap.finInputs.fvYears !== undefined) document.getElementById('fv-years').value = snap.finInputs.fvYears;
-      if (document.getElementById('fv-monthly') && snap.finInputs.fvMonthly !== undefined) document.getElementById('fv-monthly').value = snap.finInputs.fvMonthly;
+      if (document.getElementById('fv-freq') && (snap.finInputs.fvFreq !== undefined || snap.finInputs.fvMonthly !== undefined)) {
+        document.getElementById('fv-freq').value = snap.finInputs.fvFreq || snap.finInputs.fvMonthly || '12';
+      }
       if (document.getElementById('margin-cost') && snap.finInputs.marginCost !== undefined) document.getElementById('margin-cost').value = snap.finInputs.marginCost;
       if (document.getElementById('margin-sell') && snap.finInputs.marginSell !== undefined) document.getElementById('margin-sell').value = snap.finInputs.marginSell;
       if (document.getElementById('cagr-start') && snap.finInputs.cagrStart !== undefined) document.getElementById('cagr-start').value = snap.finInputs.cagrStart;
@@ -2008,6 +2034,8 @@
       calc1VarStats(true);
       calc2VarRegression(true);
     }
+    if (snap.activeFinTool) switchFinTool(snap.activeFinTool);
+    if (snap.activeStatsTool) switchStatsTool(snap.activeStatsTool);
     if (snap.activeViewName) {
       switchView(snap.activeViewName);
     } else {
@@ -2099,7 +2127,7 @@
 
   function memStore() {
     try {
-      let val = evalExpression(expr || '0');
+      let val = evalExpression(expr || (lastAns ? String(lastAns) : '0'));
       if (!isNaN(val) && isFinite(val)) {
         memoryStore = val;
         showToast(`Stored ${val} in Memory`, 'success');
@@ -2110,7 +2138,7 @@
 
   function memAdd() {
     try {
-      let val = evalExpression(expr || '0');
+      let val = evalExpression(expr || (lastAns ? String(lastAns) : '0'));
       if (!isNaN(val) && isFinite(val)) {
         memoryStore += val;
         showToast(`Added ${val} to Memory (Total: ${memoryStore})`, 'success');
@@ -2121,7 +2149,7 @@
 
   function memSub() {
     try {
-      let val = evalExpression(expr || '0');
+      let val = evalExpression(expr || (lastAns ? String(lastAns) : '0'));
       if (!isNaN(val) && isFinite(val)) {
         memoryStore -= val;
         showToast(`Subtracted ${val} from Memory (Total: ${memoryStore})`, 'success');
@@ -2185,6 +2213,14 @@
       h: 6.62607015e-34,
       G: 6.67430e-11,
       g: 9.80665,
+      N_A: 6.02214076e23,
+      k_B: 1.380649e-23,
+      R: 8.314462618,
+      phi: 1.618033988749895,
+      e_charge: 1.602176634e-19,
+      m_e: 9.1093837e-31,
+      m_p: 1.6726219e-27,
+      eps_0: 8.8541878e-12,
       Ans: lastAns,
       ans: lastAns,
       sin: (x) => {
@@ -2219,9 +2255,11 @@
     // Replace caret with power operator
     sanitized = sanitized.replace(/\^/g, '**');
 
-    // Auto-insert implicit multiplication: e.g. 5( -> 5*( or 5sin -> 5*sin or 5pi -> 5*pi or (2)3 -> (2)*3
-    sanitized = sanitized.replace(/([0-9\)])(?=[a-zA-Z\(])/g, '$1*');
-    sanitized = sanitized.replace(/(\))(?=[0-9])/g, '$1*');
+    // Auto-insert implicit multiplication:
+    // Numbers followed by letter or '(' BUT NOT scientific notation e/E followed by optional sign and digit
+    sanitized = sanitized.replace(/([0-9])(?=[a-df-zA-DF-Z\(]|e(?![+-]?\d)|E(?![+-]?\d))/g, '$1*');
+    // Closing parenthesis followed by number, letter, or opening parenthesis
+    sanitized = sanitized.replace(/(\))(?=[a-zA-Z0-9\(])/g, '$1*');
 
     // Auto balance parentheses
     let openParen = (sanitized.match(/\(/g) || []).length;
@@ -2275,7 +2313,12 @@
       evalFormulaInput();
     } else if (e.key === 'Escape') {
       e.preventDefault();
-      clearFormulaInput();
+      const fi = document.getElementById('formulaInput');
+      if (fi && fi.value === '') {
+        fi.blur();
+      } else {
+        clearFormulaInput();
+      }
     } else if (e.key === 'ArrowUp') {
       if (historyTape && historyTape.length > 0) {
         e.preventDefault();
@@ -2309,6 +2352,7 @@
     expr = val;
     historyNavIndex = -1;
     updateFormulaClearBtn();
+    render();
   }
 
   function updateFormulaClearBtn() {
@@ -2367,6 +2411,7 @@
       const card = document.getElementById('fin-' + t);
       if (card) card.style.display = (t === toolId) ? 'flex' : 'none';
     });
+    autoSaveSession();
   }
 
   function calcPMT(silent = false) {
@@ -2394,6 +2439,7 @@
     pmtElem.dataset.rawVal = pmt.toFixed(4);
     document.getElementById('pmt-total-interest').textContent = `Total Interest: $${Math.max(0, totalInterest).toFixed(2)}`;
     if (!silent) showToast(`PMT Calculated: $${pmt.toFixed(2)}/mo`, 'success');
+    autoSaveSession();
   }
 
   function calcFV(silent = false) {
@@ -2412,6 +2458,7 @@
     fvElem.dataset.rawVal = fv.toFixed(4);
     document.getElementById('fv-growth').textContent = `Total Growth: $${(fv - P).toFixed(2)}`;
     if (!silent) showToast(`Future Value: $${fv.toFixed(2)}`, 'success');
+    autoSaveSession();
   }
 
   function calcMargin(silent = false) {
@@ -2432,6 +2479,7 @@
     document.getElementById('margin-pct').textContent = `Margin: ${marginPct.toFixed(2)}%`;
     document.getElementById('markup-pct').textContent = `Markup: ${markupPct.toFixed(2)}%`;
     if (!silent) showToast(`Gross Profit: $${profit.toFixed(2)} (${marginPct.toFixed(1)}% margin)`, 'success');
+    autoSaveSession();
   }
 
   function calcCAGR(silent = false) {
@@ -2448,6 +2496,7 @@
     cagrElem.textContent = cagr.toFixed(2) + '%';
     cagrElem.dataset.rawVal = cagr.toFixed(4);
     if (!silent) showToast(`CAGR Rate: ${cagr.toFixed(2)}%`, 'success');
+    autoSaveSession();
   }
 
   // Statistics & Regression Suite Logic
@@ -2458,6 +2507,7 @@
     document.getElementById('tab-stat-2var').classList.toggle('active', toolId === '2var');
     document.getElementById('stat-1var-card').style.display = toolId === '1var' ? 'flex' : 'none';
     document.getElementById('stat-2var-card').style.display = toolId === '2var' ? 'flex' : 'none';
+    autoSaveSession();
   }
 
   function loadSample1VarData() {
@@ -2581,6 +2631,7 @@
       addHistoryEntry(`1-Var Stats (N=${n})`, `Mean=${mean.toFixed(4)}, s=${sampleStdDev.toFixed(4)}`);
       showToast(`Descriptive Stats Computed (N=${n}, Mean=${mean.toFixed(2)})`, 'success');
     }
+    autoSaveSession();
   }
 
   function calc2VarRegression(silent = false) {
@@ -2642,6 +2693,7 @@
       addHistoryEntry(`LinReg (N=${n})`, `y=${m.toFixed(4)}x${sign}${Math.abs(b).toFixed(4)}, r=${r.toFixed(4)}`);
       showToast(`Linear Model Computed: y = ${m.toFixed(2)}x ${sign} ${Math.abs(b).toFixed(2)}`, 'success');
     }
+    autoSaveSession();
   }
 
   function predictRegressionY() {
@@ -2678,10 +2730,19 @@
     SCI_CONSTANTS.forEach(c => {
       const card = document.createElement('div');
       card.className = 'constant-card';
+      card.setAttribute('tabindex', '0');
+      card.setAttribute('role', 'button');
+      card.setAttribute('aria-label', `${c.name} (${c.symbol}): ${c.val} ${c.unit}`);
       card.onclick = () => {
         switchView('scientific');
         append(String(c.val));
         showToast(`Inserted constant ${c.symbol} (${c.name})`, 'info');
+      };
+      card.onkeydown = (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          card.onclick();
+        }
       };
       card.innerHTML = `
         <div>
@@ -2834,7 +2895,7 @@
 
     // If modal is open, handle toggling and dismissal shortcuts
     if (document.getElementById('modalOverlay').classList.contains('active')) {
-      if (e.key === 'Escape') {
+      if (e.key === 'Escape' || e.key === 'Enter') {
         e.preventDefault();
         closeModals();
         return;
@@ -2866,7 +2927,13 @@
       return;
     }
 
-    if (isInput) return;
+    if (isInput) {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        document.activeElement.blur();
+      }
+      return;
+    }
 
     if (e.key === 'h' || e.key === 'H' || e.key === 'F1') {
       e.preventDefault();
@@ -2886,10 +2953,56 @@
       return;
     }
 
+    // ArrowUp / ArrowDown to browse history formulas
+    if (e.key === 'ArrowUp') {
+      if (historyTape && historyTape.length > 0) {
+        e.preventDefault();
+        if (historyNavIndex < historyTape.length - 1) {
+          historyNavIndex++;
+          const f = historyTape[historyNavIndex].formula;
+          expr = f;
+          const fi = document.getElementById('formulaInput');
+          if (fi) { fi.value = f; updateFormulaClearBtn(); }
+          render();
+        }
+      }
+      return;
+    }
+
+    if (e.key === 'ArrowDown') {
+      if (historyNavIndex > 0) {
+        e.preventDefault();
+        historyNavIndex--;
+        const f = historyTape[historyNavIndex].formula;
+        expr = f;
+        const fi = document.getElementById('formulaInput');
+        if (fi) { fi.value = f; updateFormulaClearBtn(); }
+        render();
+      } else if (historyNavIndex === 0) {
+        e.preventDefault();
+        historyNavIndex = -1;
+        clearFormulaInput();
+      }
+      return;
+    }
+
     // Ctrl+C to copy current display value
     if ((e.ctrlKey || e.metaKey) && (e.key === 'c' || e.key === 'C')) {
       e.preventDefault();
       copyMainDisplay();
+      return;
+    }
+
+    // Plain 'c' or 'C' or Delete to clear display
+    if ((e.key === 'c' || e.key === 'C') && !e.ctrlKey && !e.metaKey && !e.altKey) {
+      e.preventDefault();
+      clearAll();
+      return;
+    }
+
+    if (e.key === 'Delete') {
+      e.preventDefault();
+      clearAll();
       return;
     }
 

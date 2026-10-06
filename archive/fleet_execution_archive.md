@@ -4,6 +4,15 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-06T10:11:00-07:00 — kilo-usability: KChart (Usability & Layout Polish, HiDPI Scaling & Label Ergonomics)**
+  - Status: PASS ✅ (0 regressions, 120.7 KB web / 36.8 KB native < 999 KB ceiling).
+  - Window & Layout Ergonomics: Tuned default dimensions to 1060x740 in `App.jsx`; made canvas height viewport-responsive (`clamp`).
+  - Label Collision Avoidance: Implemented -40° angle rotation, right alignment, and smart truncation for dense/long Cartesian labels.
+  - Responsive Scaling & Sizing: Added dynamic `padL` for horizontal bar mode and adaptive row heights with overflow truncation on legends.
+  - Hit-Testing & Accessibility: Added DPI scaling normalization for pointer coordinates, canvas `:focus-visible` ring, and `?` help shortcut.
+  - Toast & Modal Ergonomics: Canvas interaction dismisses active toasts; verified clean modal Esc/backdrop dismissal (Directive 185).
+  - Verification: `test_web_apps.js` PASS (64 elements); MSVC clean (`KChart.exe` 36.8 KB); Vite clean (383ms); security_lint 100% PASS.
+
 - **2026-10-06T09:54:00-07:00 — kilo-tester: KCipher (Interactive UI Audit & Inline Repairs)**
   - Status: PASS ✅ (4 issues, 4 fixed; 106.6 KB web / 11.5 KB native < 999 KB ceiling).
   - Modal Ergonomics: Added dedicated close buttons (`#btnSplashClose`, `#btnTutClose`) to splash and tutorial modals.

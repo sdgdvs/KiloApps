@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-tester
-next_agent: kilo-usability
+current_agent: kilo-usability
+next_agent: kilo-qa
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -14,7 +14,7 @@ status: ready
 current_targets:
   kilo_creator: "kweb://echo-subsystem.net"
   kilo_graphics: KPac
-  kilo_tester: KCalc
+  kilo_tester: KMine
   kilo_usability: KColor
   kilo_qa: KPong
   kilo_expander: KCalc
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-graphics
-  app: KSpace
-  timestamp: "2026-10-06T11:21:00-07:00"
+  agent: kilo-tester
+  app: KCalc
+  timestamp: "2026-10-06T11:46:00-07:00"
 last_planner_run: "2026-10-06T14:20:00Z"
 ---
 
@@ -114,9 +114,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KQuest`, `KRogue`, `KColosseum`, `KAbyss`, `KBreakout`, `KAsteroids`, `KSpace` *(Note: Pure vector/wireframe or abstract board targets skip automatically per Mandate 15. Completed: KQuest Phases 1-5, KSpace)*.
 
 ### 3. App Tester Queue (`kilo-tester`)
-- **Current Target**: `KCalc`
+- **Current Target**: `KMine`
 - **Upcoming Queue**:
-  `KMine`, `KSnake`, `KTetris`, `KPong`, `KMaze`, `KSolitaire`, `KChess`, `KColor`, `KTimer`, `KConverter`, `KQuarantine`, `KSettings`, `KTaskMgr`, `K2048`, `KSudoku`, `KConnect4`, `KHangman`, `KSimon`, `KFreecell`, `KMatch3`, `KWords`, `KGo`, `KDarts`, `KRSS`, `KClip`, `KCipher` *(Completed: KStarForge, KTask, KChrono, KSys, KSynth, KCyber, KCosmic, KContacts, KDB, KDragon, KFlash, KFont, KFortress, KGraph, KHabit, KHex, KImage, KJournal, KMail, KMandel, KMech, KMedia, KMystery, KNet, KNote, KPad, KPaint, KPass, KPing, KQuest, KRadio, KRead, KSanctuary, KScript, KStarDredge, KStarship, KStellar, KSubmarine, KTerm, KHash, KRSS, KClip, KCipher)*.
+  `KSnake`, `KTetris`, `KPong`, `KMaze`, `KSolitaire`, `KChess`, `KColor`, `KTimer`, `KConverter`, `KQuarantine`, `KSettings`, `KTaskMgr`, `K2048`, `KSudoku`, `KConnect4`, `KHangman`, `KSimon`, `KFreecell`, `KMatch3`, `KWords`, `KGo`, `KDarts`, `KRSS`, `KClip`, `KCipher`, `KCalc` *(Completed: KStarForge, KTask, KChrono, KSys, KSynth, KCyber, KCosmic, KContacts, KDB, KDragon, KFlash, KFont, KFortress, KGraph, KHabit, KHex, KImage, KJournal, KMail, KMandel, KMech, KMedia, KMystery, KNet, KNote, KPad, KPaint, KPass, KPing, KQuest, KRadio, KRead, KSanctuary, KScript, KStarDredge, KStarship, KStellar, KSubmarine, KTerm, KHash, KRSS, KClip, KCipher, KCalc)*.
 
 ### 4. Usability & UX Queue (`kilo-usability`)
 - **Current Target**: `KColor`
@@ -217,6 +217,15 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-06T11:46:00-07:00 — kilo-tester: KCalc (UI Element Audit, Scientific Notation Parser & State Integrity Fixes)**
+  - Status: PASS ✅ (0 regressions, 117.2 KB web < 999 KB ceiling).
+  - Parser & Evaluator: Fixed implicit mult regex to protect scientific notation (`6.626e-34`, `1e5`); added full constants to `ctx` (`N_A`, `k_B`, `phi`, etc.).
+  - Persistence & State: Corrected `fvFreq` typo in session/quicksave; added active financial & stats subtool persistence across reloads/snapshots.
+  - Formula & Keypad UX: Wired real-time formula mirroring to main display; enhanced `toggleSign` to wrap expressions; added `lastAns` fallback to memory store.
+  - Accessibility & Ergonomics: Added keyboard navigation/ARIA to constant cards; added Up/Down history recall and Delete/C shortcuts; wired stats "Use In Calc" buttons.
+  - Verification: `test_app_startup.py` PASS; `test_web_apps.js` PASS (159 elements); Vite clean (362ms); security_lint 100% PASS.
+  - Queue: Advanced `kilo_tester` to `KMine`; rotation advanced to `kilo-usability`.
+
 - **2026-10-06T11:21:00-07:00 — kilo-graphics: KSpace (Skip Turn — Inappropriate Target & Glint/Dot Audit)**
   - Status: ⏭️ Skip — Imagen 3 asset replacement not appropriate for KSpace
   - Rationale: Mature custom art; all 13 entity sprites and celestial backgrounds already Imagen 3 generated.
@@ -250,12 +259,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Overlays & Ergonomics: Wired Esc, Enter, Space across help, game over, victory, and leaderboard overlays; updated guide key legends.
   - Toast Occlusion Remediation: Set default `pointer-events: none` on toast; canvas interaction auto-dismisses toast (Directive 185).
   - Verification: `test_app_startup.py` PASS; `test_web_apps.js` PASS (1 app, 20 elements); MSVC clean (`KTetris.exe` 55.5 KB); Vite clean (314ms); security_lint 100% PASS.
-
-- **2026-10-06T10:11:00-07:00 — kilo-usability: KChart (Usability & Layout Polish, HiDPI Scaling & Label Ergonomics)**
-  - Status: PASS ✅ (0 regressions, 120.7 KB web / 36.8 KB native < 999 KB ceiling).
-  - Window & Layout Ergonomics: Tuned default dimensions to 1060x740 in `App.jsx`; made canvas height viewport-responsive (`clamp`).
-  - Label Collision Avoidance: Implemented -40° angle rotation, right alignment, and smart truncation for dense/long Cartesian labels.
-  - Responsive Scaling & Sizing: Added dynamic `padL` for horizontal bar mode and adaptive row heights with overflow truncation on legends.
-  - Hit-Testing & Accessibility: Added DPI scaling normalization for pointer coordinates, canvas `:focus-visible` ring, and `?` help shortcut.
-  - Toast & Modal Ergonomics: Canvas interaction dismisses active toasts; verified clean modal Esc/backdrop dismissal (Directive 185).
-  - Verification: `test_web_apps.js` PASS (64 elements); MSVC clean (`KChart.exe` 36.8 KB); Vite clean (383ms); security_lint 100% PASS.
