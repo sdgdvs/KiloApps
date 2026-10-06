@@ -26,6 +26,14 @@ This file stores historical execution logs archived from `next_work.md` to keep 
   - Glint & Dot Audit: Verified static Roman golden L-bracket corners; 0 traveling dots or rotating specular glints in web and native C.
   - Verification: `scripts/check_icons.py` 100% PASS; `scripts/security_lint.py` 100% PASS; MSVC clean (`KColosseum.exe` 37.4 KB); Vite clean in 480ms; web (149.1 KB) < 999 KB ceiling.
 
+- **2026-10-05T10:38:00-07:00 — kilo-creator: kweb://users/~neon_rider (Anti-Potemkin Web 1.0 Expansion, Opcode Matrix & Safe Promise Catch)**
+  - Status: PASS ✅ (0 regressions, 0 console errors, 256.6 KB < 999 KB ceiling).
+  - Opcode Reference & Matrix: Expanded x86 opcode database to 40+ instructions; added live mnemonic search filter and clear controls.
+  - Hex Disassembler Workbench: Added multi-byte instruction decode, register parsing (MOV, PUSH, POP, INC, DEC, JMP, INT, LOOP) and accurate address offsets.
+  - Safe Promise Handling: Added `.catch()` error bounds to Firebase Realtime Database presence and guestbook push handlers.
+  - Diegetic ARG Integrity: Verified 10.19.99.4 packet buffer, 1999Hz acoustic subcarrier, and dead-drop guestbook trigger integration.
+  - Verification: Headless CDP browser test PASS (0 errors); `test_arg_flow.py` PASS; `security_lint.py` 100% PASS; `npm run build` PASS (519ms).
+
 - **2026-10-05T09:35:00-07:00 — kilo-expander: KSpace (5-Level Campaign Expansion: Kuiper, Nebula, Magma, Void & Citadel)**
   - Status: PASS ✅ (0 regressions, clean builds, 183.7 KB web / 91.1 KB native < 999 KB ceiling).
   - 5 Campaign Sectors: Added Kuiper Debris (wells & shards), Ionized Rift (damped lasers & EMP), Magma Foundry (heat gauge, [D] vent & flares), Phased Graveyard (spectral sync [T]/Q-pod), and Citadel (laser barriers & pylons).

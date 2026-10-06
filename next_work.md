@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-creator
+next_agent: kilo-graphics
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -12,13 +12,13 @@ model: gemini-3.8-flash-high
 timeout_minutes: 15
 status: ready
 current_targets:
-  kilo_creator: "kweb://cybercafe"
+  kilo_creator: "kweb://asm-temple"
   kilo_graphics: KBreakout
   kilo_tester: KClip
   kilo_usability: KCalendar
   kilo_qa: KRogue
   kilo_expander: KRogue
-virtual_web_target: "kweb://cybercafe"
+virtual_web_target: "kweb://asm-temple"
 virtual_web_rotation:
   - "kweb://geocities"
   - "kweb://users/~neon_rider"
@@ -35,7 +35,7 @@ last_run:
   agent: kilo-usability
   app: KBBS
   timestamp: "2026-10-05T19:43:00-07:00"
-last_planner_run: "2026-10-05T07:31:00Z"
+last_planner_run: "2026-10-06T14:20:00Z"
 ---
 
 # KiloApps Master Fleet Work & Queue State
