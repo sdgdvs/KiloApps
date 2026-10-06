@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-creator
-next_agent: kilo-graphics
+current_agent: kilo-tester
+next_agent: kilo-usability
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -12,13 +12,13 @@ model: gemini-3.8-flash-high
 timeout_minutes: 15
 status: ready
 current_targets:
-  kilo_creator: "kweb://asm-temple"
-  kilo_graphics: KAbyss
+  kilo_creator: "kweb://cybercafe"
+  kilo_graphics: KBreakout
   kilo_tester: KRSS
   kilo_usability: KBBS
   kilo_qa: KRogue
   kilo_expander: KRogue
-virtual_web_target: "kweb://asm-temple"
+virtual_web_target: "kweb://cybercafe"
 virtual_web_rotation:
   - "kweb://geocities"
   - "kweb://users/~neon_rider"
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-expander
-  app: KConnect4
-  timestamp: "2026-10-05T15:39:00-07:00"
+  agent: kilo-graphics
+  app: KAbyss
+  timestamp: "2026-10-05T17:35:00-07:00"
 last_planner_run: "2026-10-05T07:31:00Z"
 ---
 
@@ -109,9 +109,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
 - **EXCLUSIVE MISSION**: Replace programmer vector art with Imagen 3 generated sprites and backgrounds via the 2-stage asset pipeline. If the target app is not appropriate for raster/sprite replacement (e.g. wireframe classics or abstract board games), skip the turn immediately.
-- **Current Target**: `KAbyss`
+- **Current Target**: `KBreakout`
 - **Upcoming Queue**:
-  `KBreakout`, `KAsteroids`, `KSpace`, `KPac`, `KQuest`, `KRogue`, `KColosseum` *(Note: Pure vector/wireframe or abstract board targets skip automatically per Mandate 15. Completed: KQuest Phases 1-5, KSpace)*.
+  `KAsteroids`, `KSpace`, `KPac`, `KQuest`, `KRogue`, `KColosseum`, `KAbyss` *(Note: Pure vector/wireframe or abstract board targets skip automatically per Mandate 15. Completed: KQuest Phases 1-5, KSpace)*.
 
 ### 3. App Tester Queue (`kilo-tester`)
 - **Current Target**: `KRSS`
@@ -217,6 +217,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-05T17:35:00-07:00 — kilo-graphics: KAbyss (Skip Turn — Inappropriate Target & Glint/Dot Audit)**
+  - Status: ⏭️ Skip — Imagen 3 asset replacement not appropriate for KAbyss
+  - Rationale: Mature procedural dual-engine (HTML5 Canvas / Win32 GDI); 1:1 parity and dynamic equipment/ward rigs preclude raster replacement.
+  - Glint & Dot Audit: Verified 0 rotating specular glints or traveling perimeter dots across web and native C.
+  - Verification: `scripts/check_icons.py` 100% PASS; `scripts/security_lint.py` 100% PASS; MSVC clean (`KAbyss.exe` 242.5 KB); Vite clean in 442ms; web (448.4 KB) < 999 KB ceiling.
+
 - **2026-10-05T15:39:00-07:00 — kilo-expander: KConnect4 (Firebase RTDB Multiplayer Expansion & RFMS Standardization)**
   - Status: PASS ✅ (0 regressions, 160.5 KB web / 186.0 KB native < 999 KB ceiling).
   - RFMS Standard Integration: Standardized on `RetroMultiplayer` with 25s auto-fallback to Subnet AI Cyber-Bot (Mandate 12).
@@ -249,11 +255,5 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Interactive UI Audit: Verified 79 interactive elements (6 tabs, file dropzone, manifests, benchmarks, forensics).
   - Modal & Shortcut Ergonomics: Verified Escape/Enter dismissals, F5/F9 save/load, and tutorial flag gating.
   - Verification: `test_app_startup.py` PASS; `test_web_apps.js` PASS (79 elements); Vite clean in 515ms; security_lint 100% PASS.
-
-- **2026-10-05T11:34:00-07:00 — kilo-graphics: KColosseum (Skip Turn — Inappropriate Target & Glint/Dot Audit)**
-  - Status: ⏭️ Skip — Imagen 3 asset replacement not appropriate for KColosseum
-  - Rationale: Mature procedural dual-engine (HTML5 Canvas / Win32 GDI); 1:1 parity and layered equipment rigs preclude raster replacement.
-  - Glint & Dot Audit: Verified static Roman golden L-bracket corners; 0 traveling dots or rotating specular glints in web and native C.
-  - Verification: `scripts/check_icons.py` 100% PASS; `scripts/security_lint.py` 100% PASS; MSVC clean (`KColosseum.exe` 37.4 KB); Vite clean in 480ms; web (149.1 KB) < 999 KB ceiling.
 
 

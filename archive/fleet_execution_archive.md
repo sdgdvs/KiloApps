@@ -4,6 +4,12 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-05T11:34:00-07:00 — kilo-graphics: KColosseum (Skip Turn — Inappropriate Target & Glint/Dot Audit)**
+  - Status: ⏭️ Skip — Imagen 3 asset replacement not appropriate for KColosseum
+  - Rationale: Mature procedural dual-engine (HTML5 Canvas / Win32 GDI); 1:1 parity and layered equipment rigs preclude raster replacement.
+  - Glint & Dot Audit: Verified static Roman golden L-bracket corners; 0 traveling dots or rotating specular glints in web and native C.
+  - Verification: `scripts/check_icons.py` 100% PASS; `scripts/security_lint.py` 100% PASS; MSVC clean (`KColosseum.exe` 37.4 KB); Vite clean in 480ms; web (149.1 KB) < 999 KB ceiling.
+
 - **2026-10-05T09:35:00-07:00 — kilo-expander: KSpace (5-Level Campaign Expansion: Kuiper, Nebula, Magma, Void & Citadel)**
   - Status: PASS ✅ (0 regressions, clean builds, 183.7 KB web / 91.1 KB native < 999 KB ceiling).
   - 5 Campaign Sectors: Added Kuiper Debris (wells & shards), Ionized Rift (damped lasers & EMP), Magma Foundry (heat gauge, [D] vent & flares), Phased Graveyard (spectral sync [T]/Q-pod), and Citadel (laser barriers & pylons).

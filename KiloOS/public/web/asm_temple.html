@@ -691,9 +691,12 @@
 
   <!-- Header -->
   <header>
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; flex-wrap:wrap; gap:6px;">
       <span style="font-size:11px; color:var(--text-muted);">Sanctuary Node: <strong style="color:var(--gold-bright);">kweb://asm-temple</strong></span>
-      <button class="btn-retro" id="btnToggleCRT" style="font-size:10px; padding:2px 8px;">CRT Scanlines: ON</button>
+      <div style="display:flex; gap:6px;">
+        <button class="btn-retro" id="btnToggleSFX" style="font-size:10px; padding:2px 8px;">Audio SFX: ON</button>
+        <button class="btn-retro" id="btnToggleCRT" style="font-size:10px; padding:2px 8px;">CRT Scanlines: ON</button>
+      </div>
     </div>
     <pre class="ascii-banner">
   _____                 _         ____   __  ___  __    ___                     _      
@@ -707,7 +710,7 @@
     <div style="margin-top: 8px; font-size: 11px; color: var(--text-muted);">
       Initiates Visited: <span id="lblCounter" style="color:var(--cyan); font-weight:bold;">0032481</span> | 
       Privilege: <span class="status-pill online">Ring 0 Active</span> | 
-      Instruction Lexicon: <span style="color:var(--emerald-bright); font-weight:bold;" id="lblHeaderOpCount">118 Opcodes</span> | 
+      Instruction Lexicon: <span style="color:var(--emerald-bright); font-weight:bold;" id="lblHeaderOpCount">142 Opcodes</span> | 
       PE Engine: <span style="color:var(--gold-bright); font-weight:bold;">PE32 Native</span>
     </div>
   </header>
@@ -718,9 +721,10 @@
     <button class="nav-btn" data-tab="tab-converter">[2] ⚙️ Assembler &amp; Micro-CPU Stepper</button>
     <button class="nav-btn" data-tab="tab-altar">[3] 🧮 Bitwise Radix Altar</button>
     <button class="nav-btn" data-tab="tab-pe">[4] 🏛️ Win32 PE Dissector &amp; Builder</button>
-    <button class="nav-btn" data-tab="tab-audio">[5] 🎵 YM2612 &amp; SPC700 Jukebox</button>
-    <button class="nav-btn" data-tab="tab-guestbook">[6] 🕯️ Acolyte Guestbook</button>
-    <button class="nav-btn" data-tab="tab-webring">[7] 🌐 Webring &amp; Network</button>
+    <button class="nav-btn" data-tab="tab-demoscene">[5] 📺 VGA Mode 13h Demoscene Lab</button>
+    <button class="nav-btn" data-tab="tab-audio">[6] 🎵 YM2612 &amp; SPC700 Jukebox</button>
+    <button class="nav-btn" data-tab="tab-guestbook">[7] 🕯️ Acolyte Guestbook</button>
+    <button class="nav-btn" data-tab="tab-webring">[8] 🌐 Webring &amp; Network</button>
   </div>
 
   <!-- TAB 1: Opcode Oracle -->
@@ -788,6 +792,117 @@
             <!-- Dynamically populated with 142+ instructions -->
           </tbody>
         </table>
+      </div>
+
+      <!-- Interactive ModR/M & SIB Hardware Encoding Laboratory -->
+      <div style="margin-top:14px; background:#080d17; border:1px solid #1e293b; padding:12px; border-radius:4px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; flex-wrap:wrap; gap:6px;">
+          <strong style="color:var(--gold-bright); font-size:13px;">🔬 Interactive ModR/M &amp; SIB Hardware Encoding Laboratory</strong>
+          <span style="font-size:11px; color:var(--cyan);">Intel IA-32 Two-Byte Addressing Deconstruction</span>
+        </div>
+        <p style="font-size:11px; color:var(--text-muted); margin-bottom:10px;">
+          Deconstruct the sacred silicon ModR/M and Scale-Index-Base (SIB) byte formats. Choose addressing mode, registers, scaling factors, and offsets to watch the binary bit fields, machine hex bytes, and Intel assembly syntax synthesize live.
+        </p>
+
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:10px; margin-bottom:12px;">
+          <div>
+            <label style="font-size:10px; color:var(--gold-bright); font-weight:bold;">Addressing Mode (MOD bits [7:6]):</label>
+            <select id="modrmMod" style="width:100%; margin-top:2px;">
+              <option value="00">00: Indirect [reg] (or [disp32] if EBP)</option>
+              <option value="01">01: Byte Displacement [reg + disp8]</option>
+              <option value="10">10: Dword Displacement [reg + disp32]</option>
+              <option value="11" selected>11: Direct Register reg2</option>
+            </select>
+          </div>
+          <div>
+            <label style="font-size:10px; color:var(--cyan); font-weight:bold;">Reg / Opcode Field (REG bits [5:3]):</label>
+            <select id="modrmReg" style="width:100%; margin-top:2px;">
+              <option value="0">000: EAX (Accumulator)</option>
+              <option value="1">001: ECX (Counter)</option>
+              <option value="2">010: EDX (Data)</option>
+              <option value="3" selected>011: EBX (Base)</option>
+              <option value="4">100: ESP (Stack Pointer)</option>
+              <option value="5">101: EBP (Frame Pointer)</option>
+              <option value="6">110: ESI (Source Index)</option>
+              <option value="7">111: EDI (Dest Index)</option>
+            </select>
+          </div>
+          <div>
+            <label style="font-size:10px; color:var(--emerald); font-weight:bold;">R/M Field (R/M bits [2:0]):</label>
+            <select id="modrmRm" style="width:100%; margin-top:2px;">
+              <option value="0" selected>000: EAX (or [EAX])</option>
+              <option value="1">001: ECX (or [ECX])</option>
+              <option value="2">010: EDX (or [EDX])</option>
+              <option value="3">011: EBX (or [EBX])</option>
+              <option value="4">100: SIB Byte Follows (ESP indicator)</option>
+              <option value="5">101: EBP (or [EBP+disp] / [disp32])</option>
+              <option value="6">110: ESI (or [ESI])</option>
+              <option value="7">111: EDI (or [EDI])</option>
+            </select>
+          </div>
+          <div>
+            <label style="font-size:10px; color:var(--gold-bright); font-weight:bold;">Displacement Value (Hex):</label>
+            <input type="text" id="modrmDisp" value="0x00" placeholder="e.g. 0x20 or 0x00401000" style="width:100%; margin-top:2px;" />
+          </div>
+        </div>
+
+        <!-- SIB Row (Conditional display if R/M == 4 and MOD != 11) -->
+        <div id="sibRow" style="display:none; background:#0e1626; border:1px solid #1e293b; padding:8px 10px; margin-bottom:12px; border-radius:3px;">
+          <div style="font-size:11px; font-weight:bold; color:var(--cyan); margin-bottom:6px;">
+            🔀 Scale-Index-Base (SIB) Byte Fields:
+          </div>
+          <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap:10px;">
+            <div>
+              <label style="font-size:10px; color:var(--text-muted);">Scale Multiplier (SCALE [7:6]):</label>
+              <select id="sibScale" style="width:100%; margin-top:2px;">
+                <option value="0">00: *1 (No Scale)</option>
+                <option value="1">01: *2 (Word Index)</option>
+                <option value="2" selected>10: *4 (Dword Index - Array)</option>
+                <option value="3">11: *8 (Qword Index)</option>
+              </select>
+            </div>
+            <div>
+              <label style="font-size:10px; color:var(--text-muted);">Index Register (INDEX [5:3]):</label>
+              <select id="sibIndex" style="width:100%; margin-top:2px;">
+                <option value="0">000: EAX</option>
+                <option value="1" selected>001: ECX</option>
+                <option value="2">010: EDX</option>
+                <option value="3">011: EBX</option>
+                <option value="4">100: None (Illegal ESP index)</option>
+                <option value="5">101: EBP</option>
+                <option value="6">110: ESI</option>
+                <option value="7">111: EDI</option>
+              </select>
+            </div>
+            <div>
+              <label style="font-size:10px; color:var(--text-muted);">Base Register (BASE [2:0]):</label>
+              <select id="sibBase" style="width:100%; margin-top:2px;">
+                <option value="0">000: EAX</option>
+                <option value="1">001: ECX</option>
+                <option value="2">010: EDX</option>
+                <option value="3" selected>011: EBX</option>
+                <option value="4">100: ESP</option>
+                <option value="5">101: EBP / [disp32]</option>
+                <option value="6">110: ESI</option>
+                <option value="7">111: EDI</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Live Bit & Hex Layout Display -->
+        <div style="display:flex; justify-content:space-between; align-items:center; background:#05080f; padding:8px 12px; border:1px solid #1e293b; border-radius:3px; flex-wrap:wrap; gap:10px;">
+          <div>
+            <div style="font-size:10px; color:var(--text-muted);">Calculated Machine Encoding:</div>
+            <div id="modrmHexResult" style="font-size:15px; font-weight:bold; color:var(--emerald);">89 D8</div>
+            <div id="modrmBitsResult" style="font-size:10px; color:var(--cyan); margin-top:2px;">MOD: 11 | REG: 011 | R/M: 000</div>
+          </div>
+          <div>
+            <div style="font-size:10px; color:var(--text-muted);">Intel Syntax Instruction (Sample MOV):</div>
+            <div id="modrmAsmResult" style="font-size:14px; font-weight:bold; color:var(--gold-bright);">MOV EAX, EBX</div>
+          </div>
+          <button class="btn-retro btn-cyan" id="btnModrmToAsm">Load Into Live Assembler ➔</button>
+        </div>
       </div>
     </div>
   </section>
@@ -1068,6 +1183,7 @@
               <button class="btn-retro" style="font-size:11px; padding:3px 8px;" id="btnLoadSampleMsgbox">2. GUI MessageBoxA (2.0 KB)</button>
               <button class="btn-retro" style="font-size:11px; padding:3px 8px;" id="btnLoadSampleDemo">3. Demoscene Flame Stub (1.5 KB)</button>
               <button class="btn-retro btn-emerald" style="font-size:11px; padding:3px 8px;" id="btnLoadSampleAnom">4. Subnet 10.19.99.4 Telemetry (Tier 3 Strings)</button>
+              <button class="btn-retro btn-cyan" style="font-size:11px; padding:3px 8px;" id="btnLoadSampleDriver">5. Kernel SysRelay 0x7F (Subcarrier Driver)</button>
             </div>
             <button class="btn-retro" id="btnDownloadLoadedPE" style="font-size:11px; padding:3px 8px;">💾 Export Loaded .EXE</button>
           </div>
@@ -1361,7 +1477,91 @@
     </div>
   </section>
 
-  <!-- TAB 5: YM2612 & SPC700 Jukebox -->
+  <!-- TAB 5: VGA Mode 13h (320x200x256) Demoscene Framebuffer Lab -->
+  <section id="tab-demoscene" class="section-tab">
+    <div class="panel-box gold-accent">
+      <div class="panel-title">
+        <span>📺 VGA Mode 13h (320x200x256) Demoscene Framebuffer Lab</span>
+        <span class="status-pill online">Mode 13h (0xA000:0000) Active // 60 FPS Emulated</span>
+      </div>
+      <p style="font-size:12px; color:var(--text-muted); margin-bottom:12px;">
+        In 1999, the ultimate rite of passage was writing pure x86 real-mode assembly directly to VGA segment <code>0xA000</code>. Experience live procedural software-rendered effects: classic Doom fire, trigonometric sine plasma, copper IRQ raster bars, 3D starfield warp, rotating wireframe cube, and subterranean 1999Hz subcarrier signal spectrogram.
+      </p>
+
+      <!-- Framebuffer & Bezel Display -->
+      <div style="display:grid; grid-template-columns: 1fr 320px; gap:16px; align-items:start;">
+        <div>
+          <!-- Screen Frame -->
+          <div style="background:#04070e; border:3px solid #334155; border-radius:6px; padding:8px; box-shadow:0 0 25px rgba(0,0,0,0.8), inset 0 0 10px rgba(0,0,0,0.9); position:relative;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; font-size:10px; color:var(--text-muted); flex-wrap:wrap; gap:4px;">
+              <span>CRT Sync: <strong style="color:var(--emerald);">31.5 kHz / 70 Hz</strong></span>
+              <span>Buffer: <strong style="color:var(--gold-bright);">64,000 Bytes (320x200x8bpp)</strong></span>
+              <span>Palette: <strong id="lblActivePaletteName" style="color:var(--cyan);">Classic Fire</strong></span>
+            </div>
+            <div style="text-align:center; background:#000; position:relative; overflow:hidden; border:1px solid #1e293b;">
+              <canvas id="demosceneCanvas" width="320" height="200" style="width:100%; aspect-ratio:320/200; image-rendering:pixelated; display:block; margin:0 auto;"></canvas>
+            </div>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:6px; font-size:10px; color:var(--text-muted);">
+              <span id="lblDemosceneFps">FPS: 60.0</span>
+              <span id="lblDemosceneFrameCount">Frames: 00000</span>
+              <button class="btn-retro" id="btnToggleDemoScanlines" style="font-size:9px; padding:1px 6px;">CRT Scanlines: ON</button>
+            </div>
+          </div>
+
+          <!-- Demoscene Controls Toolbar -->
+          <div style="margin-top:12px; background:#090e18; border:1px solid #1e293b; padding:10px; border-radius:4px; display:flex; flex-wrap:wrap; gap:10px; align-items:center;">
+            <div style="display:flex; gap:6px;">
+              <button class="btn-retro btn-gold" id="btnDemoPlay">▶ Play</button>
+              <button class="btn-retro" id="btnDemoPause">⏸ Pause</button>
+              <button class="btn-retro" id="btnDemoClear">⏹ Clear</button>
+            </div>
+            <div style="display:flex; align-items:center; gap:6px; font-size:11px;">
+              <span style="color:var(--text-muted);">Speed:</span>
+              <input type="range" id="sliderDemoSpeed" min="1" max="5" value="2" style="width:80px;" />
+              <span id="lblDemoSpeedVal" style="color:var(--gold-bright); width:28px;">1.0x</span>
+            </div>
+            <div style="display:flex; align-items:center; gap:6px; font-size:11px;">
+              <span style="color:var(--text-muted);">Palette:</span>
+              <select id="selDemoPalette" style="font-size:11px; padding:2px 6px;">
+                <option value="fire">🔥 Inferno Fire</option>
+                <option value="matrix">💻 Matrix Cyber</option>
+                <option value="amber">⚡ Amber CRT</option>
+                <option value="neon">🌆 Neon Synthwave</option>
+                <option value="ice">❄️ Arctic Frost</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: Effect Selection & x86 Assembly Code Viewer -->
+        <div>
+          <div style="font-size:11px; font-weight:bold; color:var(--gold-bright); margin-bottom:6px;">
+            🎮 Select Procedural Assembly Effect:
+          </div>
+          <div style="display:flex; flex-direction:column; gap:4px; margin-bottom:12px;">
+            <button class="btn-retro btn-gold" id="btnFxFire" style="text-align:left; font-size:11px;">1. 🔥 Doom / Megademo Fire</button>
+            <button class="btn-retro" id="btnFxPlasma" style="text-align:left; font-size:11px;">2. 🌊 Trigonometric Sine Plasma</button>
+            <button class="btn-retro" id="btnFxCopper" style="text-align:left; font-size:11px;">3. 🌈 Copper Raster IRQ Bars</button>
+            <button class="btn-retro" id="btnFxStarfield" style="text-align:left; font-size:11px;">4. ✨ 3D Starfield Warp (256 Stars)</button>
+            <button class="btn-retro" id="btnFxCube" style="text-align:left; font-size:11px;">5. 🧊 3D Wireframe Silicon Cube</button>
+            <button class="btn-retro btn-emerald" id="btnFxSignal" style="text-align:left; font-size:11px;">6. 📡 1999Hz Subcarrier Spectrogram</button>
+          </div>
+
+          <div style="font-size:11px; font-weight:bold; color:var(--cyan); margin-bottom:4px;">
+            📜 Hand-Crafted x86 Assembly Implementation:
+          </div>
+          <div id="demoAsmCodeBox" style="background:#05080f; border:1px solid #1e293b; padding:8px; font-size:10px; color:var(--emerald); height:160px; overflow-y:auto; font-family:var(--font-mono); white-space:pre; line-height:1.35;">
+; Active assembly code will display here...
+          </div>
+          <button class="btn-retro btn-cyan" id="btnLoadDemoAsmToConverter" style="width:100%; margin-top:8px; font-size:11px;">
+            Load Routine into Live Assembler ➔
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TAB 6: YM2612 & SPC700 Jukebox -->
   <section id="tab-audio" class="section-tab">
     <div class="panel-box gold-accent">
       <div class="panel-title">
@@ -1430,7 +1630,7 @@
     </div>
   </section>
 
-  <!-- TAB 6: Acolyte Guestbook -->
+  <!-- TAB 7: Acolyte Guestbook -->
   <section id="tab-guestbook" class="section-tab">
     <div class="panel-box cyan-accent">
       <div class="panel-title">
@@ -1440,6 +1640,12 @@
       <p style="font-size:12px; color:var(--text-muted); margin-bottom:12px;">
         Leave your digital signature, your favorite x86 mnemonic, and your assembly wisdom upon the temple scrolls. Persists in client-side storage.
       </p>
+
+      <!-- Diegetic Network Dead-Drop Callout -->
+      <div style="background:#0e1626; border:1px solid #1e293b; padding:8px 10px; margin-bottom:12px; border-radius:3px; font-size:11px; color:var(--text-muted);">
+        <strong style="color:var(--gold-bright);">📻 Subterranean Acolyte Transmission Gate:</strong>
+        The scrolls are wired directly into the KiloNet internal relay. Certain high-frequency mnemonic passphrases and telemetry keys echo across the subterranean subnet...
+      </div>
 
       <!-- Guestbook Form -->
       <div style="background:#090e18; border:1px solid #1e293b; padding:12px; margin-bottom:14px; border-radius:4px;">
@@ -1467,7 +1673,7 @@
     </div>
   </section>
 
-  <!-- TAB 7: Webring & Network -->
+  <!-- TAB 8: Webring & Network -->
   <section id="tab-webring" class="section-tab">
     <div class="panel-box gold-accent">
       <div class="panel-title">
@@ -1568,7 +1774,66 @@
       document.body.classList.remove('crt-scanlines');
       btnToggleCRT.textContent = 'CRT Scanlines: OFF';
     }
+    playUiClick('click');
   });
+
+  // Audio SFX Toggle & Procedural Sound Effects
+  const btnToggleSFX = document.getElementById('btnToggleSFX');
+  let sfxActive = true;
+  if (btnToggleSFX) {
+    btnToggleSFX.addEventListener('click', () => {
+      sfxActive = !sfxActive;
+      btnToggleSFX.textContent = sfxActive ? 'Audio SFX: ON' : 'Audio SFX: OFF';
+      if (sfxActive) playUiClick('click');
+    });
+  }
+
+  function playUiClick(type = 'click') {
+    if (!sfxActive) return;
+    try {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (!AudioCtx) return;
+      if (!window.__uiAudioCtx) window.__uiAudioCtx = new AudioCtx();
+      const ctx = window.__uiAudioCtx;
+      if (ctx.state === 'suspended') ctx.resume();
+      const now = ctx.currentTime;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+
+      if (type === 'bit') {
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(1100, now);
+        gain.gain.setValueAtTime(0.04, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.025);
+        osc.start(now);
+        osc.stop(now + 0.03);
+      } else if (type === 'step') {
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(440, now);
+        osc.frequency.exponentialRampToValueAtTime(880, now + 0.04);
+        gain.gain.setValueAtTime(0.05, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
+        osc.start(now);
+        osc.stop(now + 0.06);
+      } else if (type === 'echo') {
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(1999, now);
+        gain.gain.setValueAtTime(0.08, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
+        osc.start(now);
+        osc.stop(now + 0.13);
+      } else {
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(750, now);
+        gain.gain.setValueAtTime(0.03, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.02);
+        osc.start(now);
+        osc.stop(now + 0.025);
+      }
+    } catch {}
+  }
 
   // Visitor Counter
   let visits = parseInt(localStorage.getItem('kweb_asm_temple_visits') || '32481', 10);
@@ -1877,6 +2142,126 @@
 
   renderOracleTable();
   selectOpcodeForInspection(OPCODES_DB[0]);
+
+  // ModR/M & SIB Workbench Interactive Engine
+  const modrmMod = document.getElementById('modrmMod');
+  const modrmReg = document.getElementById('modrmReg');
+  const modrmRm = document.getElementById('modrmRm');
+  const modrmDisp = document.getElementById('modrmDisp');
+  const sibRow = document.getElementById('sibRow');
+  const sibScale = document.getElementById('sibScale');
+  const sibIndex = document.getElementById('sibIndex');
+  const sibBase = document.getElementById('sibBase');
+  const modrmHexResult = document.getElementById('modrmHexResult');
+  const modrmBitsResult = document.getElementById('modrmBitsResult');
+  const modrmAsmResult = document.getElementById('modrmAsmResult');
+  const btnModrmToAsm = document.getElementById('btnModrmToAsm');
+
+  const REG_NAMES = ['EAX', 'ECX', 'EDX', 'EBX', 'ESP', 'EBP', 'ESI', 'EDI'];
+
+  function updateModrmWorkbench() {
+    if (!modrmMod || !modrmReg || !modrmRm) return;
+    const modVal = parseInt(modrmMod.value, 2);
+    const regVal = parseInt(modrmReg.value, 10);
+    const rmVal = parseInt(modrmRm.value, 10);
+    const dispStr = modrmDisp ? modrmDisp.value.trim() : '0x00';
+    const dispNum = parseHexNum(dispStr) || 0;
+
+    const hasSib = (rmVal === 4 && modVal !== 3);
+    if (sibRow) sibRow.style.display = hasSib ? 'block' : 'none';
+
+    // Calculate ModR/M byte: [MOD: 2][REG: 3][R/M: 3]
+    const modrmByte = ((modVal & 3) << 6) | ((regVal & 7) << 3) | (rmVal & 7);
+    let bytes = [modrmByte];
+    let asmTarget = '';
+
+    if (modVal === 3) {
+      // Direct register to register
+      asmTarget = REG_NAMES[rmVal];
+    } else if (hasSib) {
+      const scaleVal = sibScale ? parseInt(sibScale.value, 10) : 0;
+      const indexVal = sibIndex ? parseInt(sibIndex.value, 10) : 0;
+      const baseVal = sibBase ? parseInt(sibBase.value, 10) : 0;
+      const sibByte = ((scaleVal & 3) << 6) | ((indexVal & 7) << 3) | (baseVal & 7);
+      bytes.push(sibByte);
+
+      const scaleMult = Math.pow(2, scaleVal);
+      let parts = [];
+      if (baseVal === 5 && modVal === 0) {
+        // [disp32 + index*scale]
+      } else {
+        parts.push(REG_NAMES[baseVal]);
+      }
+      if (indexVal !== 4) {
+        parts.push(`${REG_NAMES[indexVal]}${scaleMult > 1 ? '*' + scaleMult : ''}`);
+      }
+      if (modVal === 1) {
+        bytes.push(dispNum & 0xFF);
+        parts.push(`0x${(dispNum & 0xFF).toString(16).toUpperCase()}`);
+      } else if (modVal === 2 || (modVal === 0 && baseVal === 5)) {
+        bytes.push(dispNum & 0xFF, (dispNum >> 8) & 0xFF, (dispNum >> 16) & 0xFF, (dispNum >> 24) & 0xFF);
+        parts.push(`0x${(dispNum >>> 0).toString(16).toUpperCase()}`);
+      }
+      asmTarget = `[${parts.join(' + ')}]`;
+    } else {
+      let baseName = REG_NAMES[rmVal];
+      if (modVal === 0 && rmVal === 5) {
+        // [disp32]
+        bytes.push(dispNum & 0xFF, (dispNum >> 8) & 0xFF, (dispNum >> 16) & 0xFF, (dispNum >> 24) & 0xFF);
+        asmTarget = `[0x${(dispNum >>> 0).toString(16).toUpperCase()}]`;
+      } else if (modVal === 0) {
+        asmTarget = `[${baseName}]`;
+      } else if (modVal === 1) {
+        bytes.push(dispNum & 0xFF);
+        asmTarget = `[${baseName} + 0x${(dispNum & 0xFF).toString(16).toUpperCase()}]`;
+      } else if (modVal === 2) {
+        bytes.push(dispNum & 0xFF, (dispNum >> 8) & 0xFF, (dispNum >> 16) & 0xFF, (dispNum >> 24) & 0xFF);
+        asmTarget = `[${baseName} + 0x${(dispNum >>> 0).toString(16).toUpperCase()}]`;
+      }
+    }
+
+    const regName = REG_NAMES[regVal];
+    const sampleOpcode = (modVal === 3) ? 0x89 : 0x8B;
+    const fullBytes = [sampleOpcode, ...bytes];
+
+    if (modrmHexResult) {
+      modrmHexResult.textContent = fullBytes.map(b => b.toString(16).padStart(2, '0').toUpperCase()).join(' ');
+    }
+    if (modrmBitsResult) {
+      const bMod = modVal.toString(2).padStart(2, '0');
+      const bReg = regVal.toString(2).padStart(3, '0');
+      const bRm = rmVal.toString(2).padStart(3, '0');
+      modrmBitsResult.textContent = `MOD: ${bMod} | REG: ${bReg} (${regName}) | R/M: ${bRm} ${hasSib ? '(+SIB)' : ''}`;
+    }
+    if (modrmAsmResult) {
+      if (modVal === 3) {
+        modrmAsmResult.textContent = `MOV ${asmTarget}, ${regName}`;
+      } else {
+        modrmAsmResult.textContent = `MOV ${regName}, ${asmTarget}`;
+      }
+    }
+  }
+
+  [modrmMod, modrmReg, modrmRm, modrmDisp, sibScale, sibIndex, sibBase].forEach(el => {
+    if (el) {
+      el.addEventListener('change', updateModrmWorkbench);
+      el.addEventListener('input', updateModrmWorkbench);
+    }
+  });
+
+  if (btnModrmToAsm) {
+    btnModrmToAsm.addEventListener('click', () => {
+      document.querySelector('[data-tab="tab-converter"]').click();
+      const txt = modrmAsmResult ? modrmAsmResult.textContent : '';
+      if (txt && converterInput) {
+        converterInput.value = (converterInput.value.trim() ? converterInput.value.trim() + '\n' : '') + txt;
+        convertInput();
+        playUiClick('click');
+      }
+    });
+  }
+
+  updateModrmWorkbench();
 
   // ==========================================
   // 3. Live Assembler & Disassembler Engine
@@ -2910,6 +3295,11 @@
         for (let i = 0; i < anonTelemetry.length; i++) pe[rd + 0x80 + i] = anonTelemetry.charCodeAt(i);
         const subcarrierStr = "SUBCARRIER_MONITOR: 1999Hz tone detected on echo-subsystem.net. Node 0x7F telemetry acknowledged.\0";
         for (let i = 0; i < subcarrierStr.length; i++) pe[rd + 0x80 + anonTelemetry.length + i] = subcarrierStr.charCodeAt(i);
+      } else if (type === 'driver') {
+        const driverTelemetry = "SYS_RELAY: Driver initialized on node 10.19.99.4. Relay chain: kweb://echo-subsystem.net -> kweb://10.19.99.4/classified -> kweb://darknet (Node 0x7F) -> kweb://deep-core (10.19.99.127)\0";
+        for (let i = 0; i < driverTelemetry.length; i++) pe[rd + 0x80 + i] = driverTelemetry.charCodeAt(i);
+        const subStr = "SUBCARRIER_MONITOR: 1999Hz carrier resonance locked. Machine telemetry active. ECHO_PULSE 0F3F acknowledged.\0";
+        for (let i = 0; i < subStr.length; i++) pe[rd + 0x80 + driverTelemetry.length + i] = subStr.charCodeAt(i);
       }
     }
 
@@ -3341,7 +3731,17 @@
   document.getElementById('btnLoadSampleAnom').onclick = () => {
     const bytes = generatePEBinary('anomaly', 3, 0);
     displayPEData(parsePE(bytes, "anomaly_10_19_99_4.exe"), bytes);
+    playUiClick('click');
   };
+
+  const btnLoadSampleDriver = document.getElementById('btnLoadSampleDriver');
+  if (btnLoadSampleDriver) {
+    btnLoadSampleDriver.onclick = () => {
+      const bytes = generatePEBinary('driver', 3, 0);
+      displayPEData(parsePE(bytes, "sysrelay_driver_0x7f.sys"), bytes);
+      playUiClick('click');
+    };
+  }
 
   // Download loaded PE
   document.getElementById('btnDownloadLoadedPE').onclick = () => {
@@ -3878,8 +4278,33 @@
 
     const list = getGuestbook();
     list.unshift({ alias, opcode, msg, time: timeStr });
-    localStorage.setItem('kweb_asm_temple_guestbook', JSON.stringify(list));
 
+    // Diegetic Dead-Drop Relay Gate (Directive 208 / TINAG Compliant)
+    const combined = (alias + ' ' + opcode + ' ' + msg).toUpperCase();
+    const isSecretTrigger = combined.includes('1999HZ') || combined.includes('1999 HZ') ||
+                            combined.includes('10.19.99.4') || combined.includes('0X7F199942') ||
+                            combined.includes('LITHO-CORE-99') || combined.includes('ECHO-1999') ||
+                            combined.includes('0X7F') || combined.includes('SUBCARRIER');
+
+    if (isSecretTrigger) {
+      setTimeout(() => {
+        const secretList = getGuestbook();
+        secretList.unshift({
+          alias: "Transponder_0x7F [AUTONOMOUS RELAY]",
+          opcode: "ECHO_PULSE [0F 3F]",
+          msg: "⚡ [TRANSMISSION VERIFIED // 1999Hz SUBCARRIER LOCKED]: Subnet parity check PASSED. Sequence trajectory: echo-subsystem.net (acoustic sensor) ➔ 10.19.99.4/classified (telemetry buffer) ➔ darknet (transponder 0x7F) ➔ deep-core (10.19.99.127). The machine preserves what the world forgot.",
+          time: "1999-12-31 23:59:58"
+        });
+        localStorage.setItem('kweb_asm_temple_guestbook', JSON.stringify(secretList));
+        renderGuestbook();
+        playUiClick('echo');
+      }, 400);
+      playUiClick('echo');
+    } else {
+      playUiClick('click');
+    }
+
+    localStorage.setItem('kweb_asm_temple_guestbook', JSON.stringify(list));
     document.getElementById('gbMsg').value = '';
     renderGuestbook();
   };
@@ -3887,10 +4312,593 @@
   document.getElementById('btnResetGuestbook').onclick = () => {
     localStorage.setItem('kweb_asm_temple_guestbook', JSON.stringify(INITIAL_GUESTBOOK));
     renderGuestbook();
+    playUiClick('click');
   };
 
   renderGuestbook();
 
+  // ==========================================
+  // 9. VGA Mode 13h (320x200) Demoscene Framebuffer Engine
+  // ==========================================
+  const demoCanvas = document.getElementById('demosceneCanvas');
+  const demoCtx = demoCanvas ? demoCanvas.getContext('2d', { alpha: false }) : null;
+  const demoImgData = demoCtx ? demoCtx.createImageData(320, 200) : null;
+  const demoU32 = demoImgData ? new Uint32Array(demoImgData.data.buffer) : null;
+
+  let demoRunning = true;
+  let demoActiveFx = 'fire';
+  let demoActivePalette = 'fire';
+  let demoSpeed = 1.0;
+  let demoFrameCount = 0;
+  let demoLastTime = performance.now();
+  let demoFps = 60.0;
+  let demoScanlinesOn = true;
+
+  // Precomputed 256-Color Palette Atlases (RGBA / Little Endian Uint32: ABGR)
+  function createPalettes() {
+    const makeColor = (r, g, b) => (0xFF000000 | (b << 16) | (g << 8) | r) >>> 0;
+    const pals = { fire: new Uint32Array(256), matrix: new Uint32Array(256), amber: new Uint32Array(256), neon: new Uint32Array(256), ice: new Uint32Array(256) };
+
+    for (let i = 0; i < 256; i++) {
+      const f = i / 255.0;
+      // Fire
+      if (i < 64) {
+        const c = Math.floor((i / 64) * 255);
+        pals.fire[i] = makeColor(c, 0, 0);
+      } else if (i < 128) {
+        const c = Math.floor(((i - 64) / 64) * 255);
+        pals.fire[i] = makeColor(255, c, 0);
+      } else if (i < 192) {
+        const c = Math.floor(((i - 128) / 64) * 255);
+        pals.fire[i] = makeColor(255, 255, c);
+      } else {
+        pals.fire[i] = makeColor(255, 255, 255);
+      }
+      // Matrix
+      pals.matrix[i] = makeColor(Math.floor(f * 30), Math.floor(Math.pow(f, 0.7) * 255), Math.floor(f * 40));
+      // Amber CRT
+      pals.amber[i] = makeColor(Math.floor(Math.pow(f, 0.8) * 255), Math.floor(Math.pow(f, 1.2) * 165), Math.floor(f * 15));
+      // Neon Synthwave
+      if (i < 128) {
+        const c = i / 128;
+        pals.neon[i] = makeColor(Math.floor(c * 200), 0, Math.floor(c * 255));
+      } else {
+        const c = (i - 128) / 128;
+        pals.neon[i] = makeColor(Math.floor(200 + c * 55), Math.floor(c * 255), 255);
+      }
+      // Ice Arctic Frost
+      pals.ice[i] = makeColor(Math.floor(f * 80), Math.floor(Math.pow(f, 0.8) * 210), Math.floor(Math.pow(f, 0.6) * 255));
+    }
+    pals.fire[0] = makeColor(0, 0, 0);
+    pals.matrix[0] = makeColor(0, 0, 0);
+    pals.amber[0] = makeColor(0, 0, 0);
+    pals.neon[0] = makeColor(0, 0, 0);
+    pals.ice[0] = makeColor(0, 0, 0);
+    return pals;
+  }
+
+  const PALETTES = createPalettes();
+
+  // 1999 x86 Assembly Routines Documentation
+  const DEMO_ASM_SOURCES = {
+    fire: `; ===================================================
+; VGA Mode 13h Doom / Megademo Fire Loop (1999)
+; 320x200x8bpp @ 0xA000:0000
+; ===================================================
+PROC Fire_Frame
+    PUSH ES
+    MOV AX, 0A000h         ; Video segment 0xA000
+    MOV ES, AX
+    MOV EDI, 320 * 199     ; Seed bottom heat scanline
+    MOV CX, 320 / 4
+.SeedHeat:
+    CALL Random_Dword      ; Pseudo-random entropy
+    STOSD
+    LOOP .SeedHeat
+    ; Upward smoothing & cooling filter
+    MOV ESI, 320           ; Row pitch
+    MOV ECX, 320 * 198
+.SmoothLoop:
+    MOVZX EAX, BYTE [ES:ESI-1]
+    MOVZX EBX, BYTE [ES:ESI+1]
+    ADD EAX, EBX
+    MOVZX EBX, BYTE [ES:ESI+320]
+    ADD EAX, EBX
+    MOVZX EBX, BYTE [ES:ESI]
+    ADD EAX, EBX
+    SHR EAX, 2             ; Average 4 neighbors
+    JZ .StoreZero
+    DEC AL                 ; Cooling decay factor
+.StoreZero:
+    MOV [ES:ESI-320], AL   ; Propagate upward
+    INC ESI
+    LOOP .SmoothLoop
+    POP ES
+    RET
+ENDP`,
+    plasma: `; ===================================================
+; 1999 Trigonometric Sine Plasma Generator
+; Quad-Wave Phase Offset Interference Math
+; ===================================================
+PROC Plasma_Frame
+    PUSH ES
+    MOV AX, 0A000h
+    MOV ES, AX
+    XOR EDI, EDI           ; Pixel index 0..63999
+    MOV EBX, [TimeTick]    ; Global phase variable
+    XOR EDX, EDX           ; Y coord (0..199)
+.RowLoop:
+    XOR ECX, ECX           ; X coord (0..319)
+.ColLoop:
+    ; C = sin(X/16 + t) + cos(Y/12 - t) + sin((X+Y)/24 + t)
+    MOV EAX, ECX
+    SHR EAX, 4
+    ADD EAX, EBX
+    CALL Sin_Lookup        ; Returns -64..+64 in AL
+    MOV AH, AL
+    MOV EAX, EDX
+    SHR EAX, 3
+    SUB EAX, EBX
+    CALL Sin_Lookup
+    ADD AH, AL
+    ADD AH, 128            ; Bias to 0..255 palette index
+    MOV [ES:EDI], AH
+    INC EDI
+    INC ECX
+    CMP ECX, 320
+    JL .ColLoop
+    INC EDX
+    CMP EDX, 200
+    JL .RowLoop
+    POP ES
+    RET
+ENDP`,
+    copper: `; ===================================================
+; Copper IRQ Raster Bar Beam Synchronizer
+; Emulated Amiga Copper / VGA Raster Interrupt
+; ===================================================
+PROC Copper_Frame
+    PUSH ES
+    MOV AX, 0A000h
+    MOV ES, AX
+    ; Wait for Vertical Retrace (Port 0x3DA bit 3)
+    MOV DX, 03DAh
+.WaitVBL:
+    IN AL, DX
+    TEST AL, 08h
+    JZ .WaitVBL
+    ; Clear frame buffer
+    XOR EAX, EAX
+    XOR EDI, EDI
+    MOV ECX, 16000         ; 64000 / 4 dwords
+    REP STOSD
+    ; Render Copper Bars via sine offset
+    MOV EAX, [BeamSine]
+    ; Modulate palette registers directly on port 0x3C8
+    MOV DX, 03C8h
+    XOR AL, AL
+    OUT DX, AL
+    MOV DX, 03C9h          ; DAC Palette Data
+    ; Write 3-byte RGB tuples into hardware DAC
+    POP ES
+    RET
+ENDP`,
+    starfield: `; ===================================================
+; 3D Perspective Starfield Warp (256 Stars)
+; Real-Mode Division: X' = (X * 160) / Z
+; ===================================================
+PROC Starfield_Frame
+    PUSH ES
+    MOV AX, 0A000h
+    MOV ES, AX
+    MOV ESI, OFFSET StarTable
+    MOV ECX, 256
+.StarLoop:
+    ; Erase old star position
+    MOV EDI, [ESI+12]      ; Previous screen offset
+    MOV BYTE [ES:EDI], 0
+    ; Update depth Z
+    SUB DWORD [ESI+8], 4   ; Z -= Speed
+    JG .Project
+    MOV DWORD [ESI+8], 300 ; Reset star to far plane
+.Project:
+    MOV EAX, [ESI]         ; Star X (-160..+160)
+    IMUL EAX, 160
+    CDQ
+    IDIV DWORD [ESI+8]     ; Divide by Z
+    ADD EAX, 160           ; Screen Center X
+    ; Repeat projection for Y, plot pixel
+    POP ES
+    RET
+ENDP`,
+    cube: `; ===================================================
+; 3D Wireframe Silicon Cube (Bresenham Pipeline)
+; 8 Vertices, 12 Edges with Euler Matrix Rotation
+; ===================================================
+PROC Cube_3D_Frame
+    PUSH ES
+    MOV AX, 0A000h
+    MOV ES, AX
+    ; Clear video buffer
+    XOR EAX, EAX
+    XOR EDI, EDI
+    MOV ECX, 16000
+    REP STOSD
+    ; Rotate 8 Vertices via 3D matrix math:
+    ; X' = X*cos(b) - Z*sin(b)
+    ; Z' = X*sin(b) + Z*cos(b)
+    ; Perspective Projection: Xproj = (X*256)/(Z+Dist)
+    ; Draw 12 Edges with Bresenham Line Routine
+    POP ES
+    RET
+ENDP`,
+    signal: `; ===================================================
+; 1999Hz Subcarrier Harmonic Spectrogram (Node 0x7F)
+; Subterranean Telemetry Bus FFT & Waveform Scanner
+; ===================================================
+PROC Subcarrier_Spectrogram
+    PUSH ES
+    MOV AX, 0A000h
+    MOV ES, AX
+    ; Read hardware telemetry port
+    MOV DX, 01999h         ; Subcarrier I/O Gateway
+    IN AL, DX
+    ; Scroll waterfall buffer up by 1 scanline
+    MOV ESI, 320
+    XOR EDI, EDI
+    MOV ECX, (320 * 199) / 4
+    REP MOVSD
+    ; Plot active 1999Hz carrier resonance at bottom
+    MOV EDI, 320 * 199
+    MOV ECX, 320
+.PlotRF:
+    ; Modulate carrier peak at bin 160 (1999Hz center)
+    MOV AL, [TelemetrySignal]
+    STOSB
+    LOOP .PlotRF
+    POP ES
+    RET
+ENDP`
+  };
+
+  // State buffers for effects
+  const fireBuffer = new Uint8Array(320 * 200);
+  const stars = [];
+  for (let s = 0; s < 256; s++) {
+    stars.push({
+      x: (Math.random() - 0.5) * 400,
+      y: (Math.random() - 0.5) * 300,
+      z: Math.random() * 300 + 10,
+      oldOff: -1
+    });
+  }
+
+  // Cube Vertices
+  const CUBE_VERTS = [
+    [-45, -45, -45], [45, -45, -45], [45, 45, -45], [-45, 45, -45],
+    [-45, -45, 45],  [45, -45, 45],  [45, 45, 45],  [-45, 45, 45]
+  ];
+  const CUBE_EDGES = [
+    [0,1],[1,2],[2,3],[3,0],
+    [4,5],[5,6],[6,7],[7,4],
+    [0,4],[1,5],[2,6],[3,7]
+  ];
+  let cubeRotX = 0, cubeRotY = 0, cubeRotZ = 0;
+
+  function setPixel(x, y, colorU32) {
+    if (x >= 0 && x < 320 && y >= 0 && y < 200) {
+      demoU32[y * 320 + x] = colorU32;
+    }
+  }
+
+  function drawLine(x0, y0, x1, y1, colorU32) {
+    x0 = Math.round(x0); y0 = Math.round(y0);
+    x1 = Math.round(x1); y1 = Math.round(y1);
+    const dx = Math.abs(x1 - x0);
+    const dy = Math.abs(y1 - y0);
+    const sx = x0 < x1 ? 1 : -1;
+    const sy = y0 < y1 ? 1 : -1;
+    let err = dx - dy;
+
+    while (true) {
+      setPixel(x0, y0, colorU32);
+      if (x0 === x1 && y0 === y1) break;
+      const e2 = 2 * err;
+      if (e2 > -dy) { err -= dy; x0 += sx; }
+      if (e2 < dx) { err += dx; y0 += sy; }
+    }
+  }
+
+  function renderDemosceneFrame(t) {
+    if (!demoU32) return;
+    const activePal = PALETTES[demoActivePalette] || PALETTES.fire;
+
+    if (demoActiveFx === 'fire') {
+      // Seed bottom row
+      const bottomRow = 320 * 199;
+      for (let x = 0; x < 320; x++) {
+        fireBuffer[bottomRow + x] = Math.random() > 0.45 ? Math.floor(Math.random() * 256) : 0;
+      }
+      // Upward heat transfer
+      for (let y = 1; y < 200; y++) {
+        const row = y * 320;
+        const targetRow = (y - 1) * 320;
+        for (let x = 0; x < 320; x++) {
+          const left = x > 0 ? fireBuffer[row + x - 1] : fireBuffer[row + x];
+          const right = x < 319 ? fireBuffer[row + x + 1] : fireBuffer[row + x];
+          const center = fireBuffer[row + x];
+          const below = (y < 198) ? fireBuffer[(y + 2) * 320 + x] : center;
+          const avg = ((left + right + center + below) >> 2) - 1;
+          const heat = avg > 0 ? avg : 0;
+          fireBuffer[targetRow + x] = heat;
+          demoU32[targetRow + x] = activePal[heat];
+        }
+      }
+    } else if (demoActiveFx === 'plasma') {
+      const time = t * 0.002 * demoSpeed;
+      let ptr = 0;
+      for (let y = 0; y < 200; y++) {
+        for (let x = 0; x < 320; x++) {
+          const v1 = Math.sin(x / 16 + time);
+          const v2 = Math.sin(y / 12 - time * 0.8);
+          const v3 = Math.sin((x + y) / 22 + time * 1.3);
+          const v4 = Math.sin(Math.sqrt((x-160)*(x-160) + (y-100)*(y-100)) / 14 - time * 1.5);
+          const index = Math.floor(128 + 32 * (v1 + v2 + v3 + v4)) & 0xFF;
+          demoU32[ptr++] = activePal[index];
+        }
+      }
+    } else if (demoActiveFx === 'copper') {
+      demoU32.fill(0xFF05080F);
+      const time = t * 0.003 * demoSpeed;
+
+      // Draw subtle background grid
+      for (let x = 0; x < 320; x += 32) {
+        for (let y = 0; y < 200; y++) demoU32[y * 320 + x] = 0xFF1E293B;
+      }
+      for (let y = 0; y < 200; y += 20) {
+        for (let x = 0; x < 320; x++) demoU32[y * 320 + x] = 0xFF1E293B;
+      }
+
+      // 4 Copper bars
+      for (let b = 0; b < 4; b++) {
+        const centerY = Math.floor(100 + Math.sin(time + b * 1.2) * 70);
+        const barHeight = 16;
+        for (let h = -barHeight; h <= barHeight; h++) {
+          const y = centerY + h;
+          if (y >= 0 && y < 200) {
+            const intensity = Math.floor((1.0 - Math.abs(h) / barHeight) * 255);
+            const color = activePal[intensity];
+            const rowOff = y * 320;
+            for (let x = 0; x < 320; x++) demoU32[rowOff + x] = color;
+          }
+        }
+      }
+    } else if (demoActiveFx === 'starfield') {
+      demoU32.fill(0xFF000000);
+      const spd = 4 * demoSpeed;
+
+      stars.forEach(st => {
+        st.z -= spd;
+        if (st.z <= 1) {
+          st.z = 300;
+          st.x = (Math.random() - 0.5) * 400;
+          st.y = (Math.random() - 0.5) * 300;
+        }
+
+        const sx = Math.floor(160 + (st.x / st.z) * 160);
+        const sy = Math.floor(100 + (st.y / st.z) * 100);
+
+        if (sx >= 0 && sx < 320 && sy >= 0 && sy < 200) {
+          const intensity = Math.floor(((300 - st.z) / 300) * 255);
+          demoU32[sy * 320 + sx] = activePal[intensity];
+          // Length streak
+          const pz = st.z + spd * 1.8;
+          const px = Math.floor(160 + (st.x / pz) * 160);
+          const py = Math.floor(100 + (st.y / pz) * 100);
+          if (px >= 0 && px < 320 && py >= 0 && py < 200) {
+            demoU32[py * 320 + px] = activePal[Math.floor(intensity * 0.5)];
+          }
+        }
+      });
+    } else if (demoActiveFx === 'cube') {
+      demoU32.fill(0xFF04070D);
+      cubeRotX += 0.02 * demoSpeed;
+      cubeRotY += 0.025 * demoSpeed;
+      cubeRotZ += 0.015 * demoSpeed;
+
+      const cosX = Math.cos(cubeRotX), sinX = Math.sin(cubeRotX);
+      const cosY = Math.cos(cubeRotY), sinY = Math.sin(cubeRotY);
+      const cosZ = Math.cos(cubeRotZ), sinZ = Math.sin(cubeRotZ);
+
+      const projVerts = [];
+      CUBE_VERTS.forEach(v => {
+        let x = v[0], y = v[1], z = v[2];
+        // Rotate X
+        let y1 = y * cosX - z * sinX;
+        let z1 = y * sinX + z * cosX;
+        // Rotate Y
+        let x2 = x * cosY + z1 * sinY;
+        let z2 = -x * sinY + z1 * cosY;
+        // Rotate Z
+        let x3 = x2 * cosZ - y1 * sinZ;
+        let y3 = x2 * sinZ + y1 * cosZ;
+        // Project
+        const pz = z2 + 180;
+        const sx = 160 + (x3 * 220) / pz;
+        const sy = 100 + (y3 * 220) / pz;
+        projVerts.push([sx, sy]);
+      });
+
+      const edgeColor = activePal[230];
+      const cornerColor = activePal[255];
+
+      CUBE_EDGES.forEach(e => {
+        const p0 = projVerts[e[0]];
+        const p1 = projVerts[e[1]];
+        drawLine(p0[0], p0[1], p1[0], p1[1], edgeColor);
+      });
+
+      projVerts.forEach(p => {
+        setPixel(Math.round(p[0]), Math.round(p[1]), cornerColor);
+        setPixel(Math.round(p[0]+1), Math.round(p[1]), cornerColor);
+        setPixel(Math.round(p[0]), Math.round(p[1]+1), cornerColor);
+      });
+    } else if (demoActiveFx === 'signal') {
+      // 1999Hz Subcarrier Spectrogram
+      // Scroll up
+      demoU32.copyWithin(0, 320, 320 * 200);
+      const bottomRow = 320 * 199;
+      const time = t * 0.005 * demoSpeed;
+
+      for (let x = 0; x < 320; x++) {
+        let sig = Math.sin(x * 0.12 + time) * 30 + Math.random() * 40;
+        // 1999Hz carrier resonance peak near center (bin 160)
+        const distToCenter = Math.abs(x - 160);
+        if (distToCenter < 18) {
+          const peak = (1.0 - distToCenter / 18) * 160;
+          sig += peak * (0.8 + 0.2 * Math.sin(time * 8));
+        }
+        // Occasional packet burst
+        if ((Math.floor(time) % 4 === 0) && Math.abs(x - 240) < 12) {
+          sig += 110;
+        }
+        const colorIdx = Math.min(255, Math.max(0, Math.floor(sig)));
+        demoU32[bottomRow + x] = activePal[colorIdx];
+      }
+    }
+
+    if (demoScanlinesOn) {
+      for (let y = 0; y < 200; y += 2) {
+        const off = y * 320;
+        for (let x = 0; x < 320; x++) {
+          const col = demoU32[off + x];
+          const a = (col >>> 24) & 0xFF;
+          const b = Math.floor(((col >>> 16) & 0xFF) * 0.65);
+          const g = Math.floor(((col >>> 8) & 0xFF) * 0.65);
+          const r = Math.floor((col & 0xFF) * 0.65);
+          demoU32[off + x] = ((a << 24) | (b << 16) | (g << 8) | r) >>> 0;
+        }
+      }
+    }
+
+    demoCtx.putImageData(demoImgData, 0, 0);
+
+    // Frame metrics
+    demoFrameCount++;
+    const now = performance.now();
+    if (now - demoLastTime >= 500) {
+      demoFps = (demoFrameCount / ((now - demoLastTime) / 1000));
+      demoFrameCount = 0;
+      demoLastTime = now;
+      const lblFps = document.getElementById('lblDemosceneFps');
+      if (lblFps) lblFps.textContent = `FPS: ${demoFps.toFixed(1)}`;
+    }
+  }
+
+  function demoAnimationLoop(t) {
+    if (demoRunning) {
+      renderDemosceneFrame(t);
+    }
+    requestAnimationFrame(demoAnimationLoop);
+  }
+
+  requestAnimationFrame(demoAnimationLoop);
+
+  // Demoscene UI Controls
+  const btnDemoPlay = document.getElementById('btnDemoPlay');
+  const btnDemoPause = document.getElementById('btnDemoPause');
+  const btnDemoClear = document.getElementById('btnDemoClear');
+  const sliderDemoSpeed = document.getElementById('sliderDemoSpeed');
+  const lblDemoSpeedVal = document.getElementById('lblDemoSpeedVal');
+  const selDemoPalette = document.getElementById('selDemoPalette');
+  const lblActivePaletteName = document.getElementById('lblActivePaletteName');
+  const btnToggleDemoScanlines = document.getElementById('btnToggleDemoScanlines');
+  const demoAsmCodeBox = document.getElementById('demoAsmCodeBox');
+  const btnLoadDemoAsmToConverter = document.getElementById('btnLoadDemoAsmToConverter');
+
+  function updateActiveDemoAsm() {
+    if (demoAsmCodeBox && DEMO_ASM_SOURCES[demoActiveFx]) {
+      demoAsmCodeBox.textContent = DEMO_ASM_SOURCES[demoActiveFx];
+    }
+  }
+
+  if (btnDemoPlay) btnDemoPlay.onclick = () => { demoRunning = true; playUiClick('click'); };
+  if (btnDemoPause) btnDemoPause.onclick = () => { demoRunning = false; playUiClick('click'); };
+  if (btnDemoClear) {
+    btnDemoClear.onclick = () => {
+      if (demoU32) demoU32.fill(0xFF000000);
+      fireBuffer.fill(0);
+      if (demoCtx && demoImgData) demoCtx.putImageData(demoImgData, 0, 0);
+      playUiClick('click');
+    };
+  }
+
+  if (sliderDemoSpeed) {
+    sliderDemoSpeed.oninput = () => {
+      const spdMap = { 1: 0.5, 2: 1.0, 3: 1.5, 4: 2.0, 5: 3.0 };
+      demoSpeed = spdMap[sliderDemoSpeed.value] || 1.0;
+      if (lblDemoSpeedVal) lblDemoSpeedVal.textContent = demoSpeed.toFixed(1) + 'x';
+    };
+  }
+
+  if (selDemoPalette) {
+    selDemoPalette.onchange = () => {
+      demoActivePalette = selDemoPalette.value;
+      if (lblActivePaletteName) lblActivePaletteName.textContent = selDemoPalette.options[selDemoPalette.selectedIndex].text;
+      playUiClick('click');
+    };
+  }
+
+  if (btnToggleDemoScanlines) {
+    btnToggleDemoScanlines.onclick = () => {
+      demoScanlinesOn = !demoScanlinesOn;
+      btnToggleDemoScanlines.textContent = demoScanlinesOn ? 'CRT Scanlines: ON' : 'CRT Scanlines: OFF';
+      playUiClick('click');
+    };
+  }
+
+  // Effect switcher buttons
+  const fxBtns = {
+    fire: document.getElementById('btnFxFire'),
+    plasma: document.getElementById('btnFxPlasma'),
+    copper: document.getElementById('btnFxCopper'),
+    starfield: document.getElementById('btnFxStarfield'),
+    cube: document.getElementById('btnFxCube'),
+    signal: document.getElementById('btnFxSignal')
+  };
+
+  Object.keys(fxBtns).forEach(fxKey => {
+    const btn = fxBtns[fxKey];
+    if (btn) {
+      btn.onclick = () => {
+        demoActiveFx = fxKey;
+        Object.values(fxBtns).forEach(b => {
+          if (b) { b.classList.remove('btn-gold', 'btn-cyan', 'btn-emerald'); b.classList.add('btn-retro'); }
+        });
+        btn.classList.remove('btn-retro');
+        btn.classList.add(fxKey === 'signal' ? 'btn-emerald' : 'btn-gold');
+        updateActiveDemoAsm();
+        if (fxKey === 'signal') {
+          playUiClick('echo');
+        } else {
+          playUiClick('click');
+        }
+      };
+    }
+  });
+
+  if (btnLoadDemoAsmToConverter) {
+    btnLoadDemoAsmToConverter.onclick = () => {
+      document.querySelector('[data-tab="tab-converter"]').click();
+      if (converterInput && DEMO_ASM_SOURCES[demoActiveFx]) {
+        converterInput.value = DEMO_ASM_SOURCES[demoActiveFx];
+        convertInput();
+        playUiClick('click');
+      }
+    };
+  }
+
+  updateActiveDemoAsm();
 </script>
 </body>
 </html>
