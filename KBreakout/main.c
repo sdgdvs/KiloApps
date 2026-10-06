@@ -500,53 +500,6 @@ void DrawGDIBrick(HDC hdc, int r, int c, int type, int bx, int by, int hp) {
     LineTo(hdc, bx + BR_W - 2, by + BR_H - 2);
     LineTo(hdc, bx + 1, by + BR_H - 2);
 
-    // Sculpted brick glossy specular sheen highlight traversing block bevels
-    int sheen_phase = (int)((frame_counter * 2 + c * 8 + r * 14) % 180);
-    if (sheen_phase >= 0 && sheen_phase <= BR_W + 8) {
-        HPEN sheenPen = CreatePen(PS_SOLID, 1, RGB(255, 255, 255));
-        HGDIOBJ oSheenP = SelectObject(hdc, sheenPen);
-        int sx1 = bx + sheen_phase - 4;
-        int sx2 = bx + sheen_phase + 4;
-        if (sx1 >= bx + 1 && sx2 <= bx + BR_W - 2) {
-            MoveToEx(hdc, sx1, by + BR_H - 3, NULL);
-            LineTo(hdc, sx2, by + 2);
-        }
-        SelectObject(hdc, oSheenP);
-        DeleteObject(sheenPen);
-    }
-
-    int min_dist = 999999;
-    Ball* closest_ball = NULL;
-    for (int i = 0; i < MAX_BALLS; i++) {
-        if (balls[i].active) {
-            float dx = balls[i].x - (bx + BR_W / 2);
-            float dy = balls[i].y - (by + BR_H / 2);
-            int dist = (int)(dx*dx + dy*dy);
-            if (dist < min_dist) { min_dist = dist; closest_ball = &balls[i]; }
-        }
-    }
-    if (closest_ball && min_dist < 15000) {
-        float dist_f = 1.0f - ((float)min_dist / 15000.0f);
-        if (dist_f > 0) {
-            float dx = closest_ball->x - (bx + BR_W / 2);
-            float dy = closest_ball->y - (by + BR_H / 2);
-            int spec_x = bx + BR_W / 2 + (int)(dx * 0.15f);
-            int spec_y = by + BR_H / 2 + (int)(dy * 0.3f);
-            int size = (int)(4.0f * dist_f);
-            if (size > 0) {
-                HPEN sPen = CreatePen(PS_SOLID, 1, RGB(255, 255, 255));
-                HBRUSH sBr = CreateSolidBrush(RGB(255, 255, 255));
-                HGDIOBJ oldP2 = SelectObject(hdc, sPen);
-                HGDIOBJ oldB2 = SelectObject(hdc, sBr);
-                Ellipse(hdc, spec_x - size, spec_y - size, spec_x + size, spec_y + size);
-                SelectObject(hdc, oldP2);
-                SelectObject(hdc, oldB2);
-                DeleteObject(sPen);
-                DeleteObject(sBr);
-            }
-        }
-    }
-
     if (type == 11) {
         // Quantum Resonance Brick: pulsing core + concentric harmonic rings
         int pulse = (frame_counter % 20 < 10) ? 1 : 0;
@@ -949,15 +902,9 @@ void DrawBoss(HDC hdc) {
 
 void DrawHUDCornerReticles(HDC hdc) {
     const int size = 16;
-    int diode_pulse = FastSin((frame_counter * 3) % 16);
-    COLORREF diode_clr = (diode_pulse > 0) ? RGB(0, 255, 220) : RGB(0, 180, 160);
-    if (chaos_mode) diode_clr = (diode_pulse > 0) ? RGB(255, 60, 255) : RGB(180, 40, 180);
-
     HPEN brPen = CreatePen(PS_SOLID, 2, RGB(0, 255, 255));
     HPEN tickPen = CreatePen(PS_SOLID, 1, RGB(0, 180, 220));
-    HBRUSH dBr = CreateSolidBrush(diode_clr);
     HGDIOBJ oP = SelectObject(hdc, brPen);
-    HGDIOBJ oB = SelectObject(hdc, dBr);
 
     int corners[4][4] = {
         { 5, 33, 1, 1 }, { W - 5, 33, -1, 1 },
@@ -978,19 +925,11 @@ void DrawHUDCornerReticles(HDC hdc) {
         SelectObject(hdc, tickPen);
         MoveToEx(hdc, cx + dx * 6, cy + dy * 3, NULL);
         LineTo(hdc, cx + dx * 12, cy + dy * 3);
-
-        // Glowing status diode
-        SelectObject(hdc, dBr);
-        int px = cx + dx * 3, py = cy + dy * 3;
-        Ellipse(hdc, px - 2, py - 2, px + 2, py + 2);
-        SetPixel(hdc, px, py, RGB(255, 255, 255));
     }
 
     SelectObject(hdc, oP);
-    SelectObject(hdc, oB);
     DeleteObject(brPen);
     DeleteObject(tickPen);
-    DeleteObject(dBr);
 }
 
 void DrawPerimeterInlay(HDC hdc) {
@@ -2299,12 +2238,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             }
             SelectObject(memDC, oldP2);
             DeleteObject(gridPen);
-            
-            for(int i = 0; i < 20; i++) {
-                int dx = (i * 73 + frame_counter) % W;
-                int dy = (i * 37 + frame_counter / 3) % H;
-                SetPixel(memDC, dx, dy, chaos_mode ? RGB(255, 100, 255) : RGB(100, 150, 255));
-            }
 
             DrawSpeedDustMotes(memDC);
             DrawPerimeterInlay(memDC);
@@ -2613,21 +2546,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 RECT coreRc = { dp_x + dp_w / 2 - coreWidth / 2, dp_y + dp_h / 2 - 1, dp_x + dp_w / 2 + coreWidth / 2, dp_y + dp_h / 2 + 1 };
                 FillRect(memDC, &coreRc, coreBr);
                 DeleteObject(coreBr);
-
-                // Sculpted paddle specular sheen highlight traversing top bevel
-                int sheen_pad_x = (int)((frame_counter * 3) % (dp_w + 30)) - 15;
-                if (sheen_pad_x > -8 && sheen_pad_x < dp_w + 8) {
-                    HPEN pSheenPen = CreatePen(PS_SOLID, 1, RGB(255, 255, 255));
-                    HGDIOBJ oldPS = SelectObject(memDC, pSheenPen);
-                    int sx1 = dp_x + sheen_pad_x - 6; if (sx1 < dp_x + 2) sx1 = dp_x + 2;
-                    int sx2 = dp_x + sheen_pad_x + 6; if (sx2 > dp_x + dp_w - 2) sx2 = dp_x + dp_w - 2;
-                    if (sx2 > sx1) {
-                        MoveToEx(memDC, sx1, dp_y + 1, NULL);
-                        LineTo(memDC, sx2, dp_y + 1);
-                    }
-                    SelectObject(memDC, oldPS);
-                    DeleteObject(pSheenPen);
-                }
 
                 // Dual ion thruster nozzles & flickering exhaust flame motes at underside
                 int thrust_flicker = (frame_counter % 4 < 2) ? 6 : 4;

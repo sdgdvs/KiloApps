@@ -959,7 +959,7 @@ function drawBrick(r, c, type, bx, by, hp) {
         ctx.fillStyle = '#160824';
         ctx.fillRect(bx + 1, by + 1, BR_W - 2, BR_H - 2);
 
-        // Spinning subatomic orbital ellipse
+        // Subatomic orbital ellipse
         let qAng = frame * 0.1 + (r + c);
         ctx.save();
         ctx.translate(bx + BR_W / 2, by + BR_H / 2);
@@ -968,14 +968,6 @@ function drawBrick(r, c, type, bx, by, hp) {
         ctx.beginPath();
         ctx.ellipse(0, 0, BR_W * 0.38, BR_H * 0.32, qAng, 0, Math.PI * 2);
         ctx.stroke();
-
-        // Orbiting subatomic quantum lepton particle
-        let lx = Math.cos(qAng) * (BR_W * 0.38);
-        let ly = Math.sin(qAng) * (BR_H * 0.32);
-        ctx.fillStyle = '#00ffff';
-        ctx.beginPath();
-        ctx.arc(lx, ly, 1.8, 0, Math.PI * 2);
-        ctx.fill();
 
         // Pulsing antimatter core
         let qPulse = (frame % 20 < 10) ? '#ffccff' : '#00ffff';
@@ -1054,23 +1046,6 @@ function drawBrick(r, c, type, bx, by, hp) {
         ctx.moveTo(bx + 7, by + 3); ctx.lineTo(bx + 7, by + BR_H - 3);
         ctx.moveTo(bx + BR_W - 7, by + 3); ctx.lineTo(bx + BR_W - 7, by + BR_H - 3);
         ctx.stroke();
-    }
-
-    let sheenPhase = ((frame * 1.5 + c * 8 + r * 14) % 180);
-    if (sheenPhase >= 0 && sheenPhase <= BR_W + 10) {
-        ctx.save();
-        ctx.beginPath();
-        ctx.rect(bx + 1, by + 1, BR_W - 2, BR_H - 2);
-        ctx.clip();
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
-        ctx.beginPath();
-        ctx.moveTo(bx + sheenPhase - 6, by + BR_H);
-        ctx.lineTo(bx + sheenPhase - 1, by + BR_H);
-        ctx.lineTo(bx + sheenPhase + 7, by);
-        ctx.lineTo(bx + sheenPhase + 2, by);
-        ctx.closePath();
-        ctx.fill();
-        ctx.restore();
     }
 }
 
@@ -1571,7 +1546,6 @@ function drawPerimeterInlay(ctx) {
 function drawHUDCornerReticles(ctx) {
     ctx.save();
     const size = 16;
-    const diodePulse = Math.sin(frame * 0.1) * 0.3 + 0.7;
     const corners = [
         { x: 5, y: 33, dx: 1, dy: 1 },
         { x: w - 5, y: 33, dx: -1, dy: 1 },
@@ -1594,16 +1568,6 @@ function drawHUDCornerReticles(ctx) {
         ctx.moveTo(c.x + c.dx * 6, c.y + c.dy * 3);
         ctx.lineTo(c.x + c.dx * 12, c.y + c.dy * 3);
         ctx.stroke();
-
-        let diodeColor = chaos_mode ? `rgba(255, 60, 255, ${diodePulse})` : `rgba(0, 255, 200, ${diodePulse})`;
-        ctx.fillStyle = diodeColor;
-        ctx.beginPath();
-        ctx.arc(c.x + c.dx * 3, c.y + c.dy * 3, 2, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.fillStyle = '#ffffff';
-        ctx.beginPath();
-        ctx.arc(c.x + c.dx * 3, c.y + c.dy * 3, 0.8, 0, Math.PI * 2);
-        ctx.fill();
     }
     ctx.restore();
 }
@@ -1649,17 +1613,6 @@ function drawSculptedPaddle(ctx, px, py, pw, ph) {
     let corePulse = Math.sin(frame * 0.15) * 0.25 + 0.75;
     ctx.fillStyle = `rgba(255, 255, 255, ${corePulse * 0.9})`;
     ctx.fillRect(coreX, py + 3, coreW, ph - 6);
-
-    // Traveling specular sheen highlight traversing paddle top bevel
-    let pSheenX = ((frame * 2.5) % (pw + 30)) - 15;
-    if (pSheenX > -10 && pSheenX < pw + 10) {
-        let sGrad = ctx.createLinearGradient(px + pSheenX - 8, py, px + pSheenX + 8, py);
-        sGrad.addColorStop(0, 'rgba(255,255,255,0)');
-        sGrad.addColorStop(0.5, 'rgba(255,255,255,0.85)');
-        sGrad.addColorStop(1, 'rgba(255,255,255,0)');
-        ctx.fillStyle = sGrad;
-        ctx.fillRect(px + 2, py + 1, pw - 4, 2);
-    }
     ctx.restore();
 }
 

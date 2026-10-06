@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-graphics
-next_agent: kilo-tester
+current_agent: kilo-tester
+next_agent: kilo-usability
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -13,7 +13,7 @@ timeout_minutes: 15
 status: ready
 current_targets:
   kilo_creator: "kweb://cybercafe"
-  kilo_graphics: KBreakout
+  kilo_graphics: KAsteroids
   kilo_tester: KClip
   kilo_usability: KCalendar
   kilo_qa: KRogue
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-creator
-  app: "kweb://asm-temple"
-  timestamp: "2026-10-06T07:45:00-07:00"
+  agent: kilo-graphics
+  app: KBreakout
+  timestamp: "2026-10-06T07:54:00-07:00"
 last_planner_run: "2026-10-06T14:20:00Z"
 ---
 
@@ -109,9 +109,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
 - **EXCLUSIVE MISSION**: Replace programmer vector art with Imagen 3 generated sprites and backgrounds via the 2-stage asset pipeline. If the target app is not appropriate for raster/sprite replacement (e.g. wireframe classics or abstract board games), skip the turn immediately.
-- **Current Target**: `KBreakout`
+- **Current Target**: `KAsteroids`
 - **Upcoming Queue**:
-  `KAsteroids`, `KSpace`, `KPac`, `KQuest`, `KRogue`, `KColosseum`, `KAbyss` *(Note: Pure vector/wireframe or abstract board targets skip automatically per Mandate 15. Completed: KQuest Phases 1-5, KSpace)*.
+  `KSpace`, `KPac`, `KQuest`, `KRogue`, `KColosseum`, `KAbyss`, `KBreakout` *(Note: Pure vector/wireframe or abstract board targets skip automatically per Mandate 15. Completed: KQuest Phases 1-5, KSpace)*.
 
 ### 3. App Tester Queue (`kilo-tester`)
 - **Current Target**: `KClip`
@@ -217,6 +217,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-06T07:54:00-07:00 — kilo-graphics: KBreakout (Skip Turn — Inappropriate Target & Glint/Dot Purge)**
+  - Status: ⏭️ Skip — Imagen 3 asset replacement not appropriate for KBreakout
+  - Rationale: Mature arcade classic (Loop 11+); dynamic 40-stage procedural brick engine and Win32 GDI 1:1 parity preclude raster replacement.
+  - Glint & Dot Purge: Purged brick specular sheen, ball-proximity glints, paddle bevel sheen, quantum lepton dot, background travel dots, and corner diodes.
+  - Verification: `scripts/check_icons.py` 100% PASS; `scripts/security_lint.py` 100% PASS; MSVC clean (`KBreakout.exe` 55.3 KB); Vite clean in 320ms; web (91.6 KB) < 999 KB ceiling.
+
 - **2026-10-06T07:45:00-07:00 — kilo-creator: kweb://asm-temple (Virtual 1999 Web Deep Expansion & Anti-Potemkin Overhaul)**
   - Status: PASS ✅ (0 regressions, 264.4 KB < 999 KB ceiling; Tier 2 Linked Community Node #005).
   - Opcode Oracle Expansion: Expanded lexicon to 177 instructions (+35 ops: CMOVcc, MMX SIMD, FPU transcendental, atomics).
@@ -250,13 +256,5 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Glint & Dot Audit: Verified 0 rotating specular glints or traveling perimeter dots across web and native C.
   - Verification: `scripts/check_icons.py` 100% PASS; `scripts/security_lint.py` 100% PASS; MSVC clean (`KAbyss.exe` 242.5 KB); Vite clean in 442ms; web (448.4 KB) < 999 KB ceiling.
 
-- **2026-10-05T15:39:00-07:00 — kilo-expander: KConnect4 (Firebase RTDB Multiplayer Expansion & RFMS Standardization)**
-  - Status: PASS ✅ (0 regressions, 160.5 KB web / 186.0 KB native < 999 KB ceiling).
-  - RFMS Standard Integration: Standardized on `RetroMultiplayer` with 25s auto-fallback to Subnet AI Cyber-Bot (Mandate 12).
-  - Deep Feature Expansion: Added multi-grid hosting (7x6, 8x7, 9x7, 10x8), turn clock (Blitz 15s / Speed 30s), and live spectator counter.
-  - Tactical Emote & Chat System: Added diegetic quick-chat reactions, custom tactical message input, and resign modal.
-  - Network State & Powerup Sync: Synced bomb/drill/magnet animations and freeze skill lockout across remote peers.
-  - Pilot Career Tracking: Added Elo rating, rank titles (Cadet to Grandmaster), and win/loss/streak records in localStorage.
-  - Verification: `test_web_apps.js` PASS (59 elements); MSVC clean (`KConnect4.exe` 186 KB); Vite clean in 458ms; security_lint 100% PASS.
 
 
