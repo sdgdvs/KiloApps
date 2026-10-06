@@ -4,6 +4,15 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-06T13:28:00-07:00 — kilo-usability: KChess (UI/UX, Responsive HiDPI Canvas, UTF-8 Encoding & Toast Occlusion)**
+  - Status: PASS ✅ (0 regressions, 172.4 KB web / 53.8 KB native < 999 KB ceiling).
+  - Mojibake & Encoding: Added `<meta charset="UTF-8">` and viewport meta tags; eliminated mojibake across symbols and menus.
+  - Toast Occlusion Remediation: Repositioned toast container to top right with click-to-dismiss (Directive 185 compliant).
+  - Canvas & HiDPI Ergonomics: Proportional viewport scaling in `updateCanvasDPI` and tuned default window height (800x940) in `App.jsx`.
+  - Button Layout & Hover: Dynamic `getBottomButtons` with 100px AI button, pointer cursor, and active hover state feedback.
+  - Verification: `test_web_apps.js` PASS (71 interactive elements, 0 errors); MSVC clean (`KChess.exe` 53.8 KB); Vite clean (334ms); security_lint 100% PASS.
+  - Queue: Advanced `kilo_usability` to `KConnect4`; rotation advanced to `kilo-qa`.
+
 - **2026-10-06T13:06:00-07:00 — kilo-tester: KMine (Interactive UI Audit, Keyboard Board Navigation & State Integrity Fixes)**
   - Status: PASS ✅ (0 regressions, 58.0 KB web / 26.5 KB native < 999 KB ceiling).
   - Move Timing & Replay: Fixed `startRealTime` uninitialized zero bug in `giveHint` and touch long-press; replay playback now functions reliably.
