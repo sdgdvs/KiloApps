@@ -4,6 +4,15 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-06T13:06:00-07:00 — kilo-tester: KMine (Interactive UI Audit, Keyboard Board Navigation & State Integrity Fixes)**
+  - Status: PASS ✅ (0 regressions, 58.0 KB web / 26.5 KB native < 999 KB ceiling).
+  - Move Timing & Replay: Fixed `startRealTime` uninitialized zero bug in `giveHint` and touch long-press; replay playback now functions reliably.
+  - State & Persistence: Fixed replay button remaining visible on quickload; added granular status checks to quicksave; sanitized stats import.
+  - Keyboard & Ergonomics: Added full Arrow/WASD board cursor navigation, Enter/Space dig, and Shift+Enter/X flag controls with active focus indicator.
+  - Accessibility & Polish: Added tabindex/ARIA attributes to canvas; documented all new hotkeys in Help guide and shortcut bar.
+  - Verification: `test_app_startup.py` PASS; `test_web_apps.js` PASS (15 elements); MSVC clean (`KMine.exe` 26.5 KB); Vite clean (452ms); security_lint 100% PASS.
+  - Queue: Advanced `kilo_tester` to `KSnake`; rotation advanced to `kilo-usability`.
+
 - **2026-10-06T12:44:00-07:00 — kilo-creator: kweb://echo-subsystem.net (Deep Expansion: Tab 10 Helmholtz Cavity & 4-Track Tape Deck)**
   - Status: PASS ✅ (0 regressions, 294.6 KB web < 999 KB ceiling, Anti-Potemkin compliant).
   - Tab 10 Addition: Built Helmholtz Cavity Resonator & 4-Track Reel-to-Reel Tape Deck with analog tape saturation & wow/flutter.

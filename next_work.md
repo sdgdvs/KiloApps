@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-graphics
-next_agent: kilo-tester
+current_agent: kilo-tester
+next_agent: kilo-usability
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -13,7 +13,7 @@ timeout_minutes: 15
 status: ready
 current_targets:
   kilo_creator: "kweb://darknet"
-  kilo_graphics: KQuest
+  kilo_graphics: KRogue
   kilo_tester: KSnake
   kilo_usability: KConnect4
   kilo_qa: KChess
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-creator
-  app: "kweb://deep-core"
-  timestamp: "2026-10-06T14:10:00-07:00"
+  agent: kilo-graphics
+  app: KQuest
+  timestamp: "2026-10-06T14:22:00-07:00"
 last_planner_run: "2026-10-06T14:20:00Z"
 ---
 
@@ -109,9 +109,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
 - **EXCLUSIVE MISSION**: Replace programmer vector art with Imagen 3 generated sprites and backgrounds via the 2-stage asset pipeline. If the target app is not appropriate for raster/sprite replacement (e.g. wireframe classics or abstract board games), skip the turn immediately.
-- **Current Target**: `KQuest`
+- **Current Target**: `KRogue`
 - **Upcoming Queue**:
-  `KRogue`, `KColosseum`, `KAbyss`, `KBreakout`, `KAsteroids`, `KSpace`, `KPac` *(Note: Pure vector/wireframe or abstract board targets skip automatically per Mandate 15. Completed: KQuest Phases 1-5, KSpace)*.
+  `KColosseum`, `KAbyss`, `KBreakout`, `KAsteroids`, `KSpace`, `KPac`, `KQuest` *(Note: Pure vector/wireframe or abstract board targets skip automatically per Mandate 15. Completed: KQuest Phases 1-5, KSpace)*.
 
 ### 3. App Tester Queue (`kilo-tester`)
 - **Current Target**: `KSnake`
@@ -217,6 +217,13 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-06T14:22:00-07:00 — kilo-graphics: KQuest (Skip Turn — Mature Imagen 3 Assets & Glint/Dot Audit)**
+  - Status: ⏭️ Skip — Imagen 3 asset replacement not appropriate for KQuest
+  - Rationale: Mature custom art; all 12 backgrounds, 5 hero classes, 12 monsters, 5 NPCs, and 4 FX already fully generated and integrated.
+  - Glint & Dot Audit: Verified static medieval filigree brackets with 0 traveling perimeter dots or rotating specular glints in web and native C.
+  - Verification: `scripts/check_icons.py` 100% PASS; `scripts/security_lint.py` 100% PASS; MSVC clean (`KQuest.exe` 97.0 KB); Vite clean (367ms); web (304.8 KB) < 999 KB ceiling.
+  - Queue: Advanced `kilo_graphics` to `KRogue`; rotation advanced to `kilo-tester`.
+
 - **2026-10-06T14:10:00-07:00 — kilo-creator: kweb://deep-core (Tier 3 Deep Expansion, x86 CPU Stepper, 650m Seismic Sonar & Wiretap PCAP)**
   - Status: PASS ✅ (0 regressions, 199.9 KB < 999 KB ceiling, Vite 384ms).
   - x86 Disassembler Deck (Tab 7): 14-instruction Ring-0 Protected Mode CPU stepper with register bank (EAX-ESP, EFLAGS, CR0), breakpoints, and patcher.
@@ -253,12 +260,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Button Layout & Hover: Dynamic `getBottomButtons` with 100px AI button, pointer cursor, and active hover state feedback.
   - Verification: `test_web_apps.js` PASS (71 interactive elements, 0 errors); MSVC clean (`KChess.exe` 53.8 KB); Vite clean (334ms); security_lint 100% PASS.
   - Queue: Advanced `kilo_usability` to `KConnect4`; rotation advanced to `kilo-qa`.
-
-- **2026-10-06T13:06:00-07:00 — kilo-tester: KMine (Interactive UI Audit, Keyboard Board Navigation & State Integrity Fixes)**
-  - Status: PASS ✅ (0 regressions, 58.0 KB web / 26.5 KB native < 999 KB ceiling).
-  - Move Timing & Replay: Fixed `startRealTime` uninitialized zero bug in `giveHint` and touch long-press; replay playback now functions reliably.
-  - State & Persistence: Fixed replay button remaining visible on quickload; added granular status checks to quicksave; sanitized stats import.
-  - Keyboard & Ergonomics: Added full Arrow/WASD board cursor navigation, Enter/Space dig, and Shift+Enter/X flag controls with active focus indicator.
-  - Accessibility & Polish: Added tabindex/ARIA attributes to canvas; documented all new hotkeys in Help guide and shortcut bar.
-  - Verification: `test_app_startup.py` PASS; `test_web_apps.js` PASS (15 elements); MSVC clean (`KMine.exe` 26.5 KB); Vite clean (452ms); security_lint 100% PASS.
-  - Queue: Advanced `kilo_tester` to `KSnake`; rotation advanced to `kilo-usability`.
