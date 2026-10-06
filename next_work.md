@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-qa
+current_agent: kilo-qa
+next_agent: kilo-expander
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -15,7 +15,7 @@ current_targets:
   kilo_creator: "kweb://cybercafe"
   kilo_graphics: KBreakout
   kilo_tester: KClip
-  kilo_usability: KBBS
+  kilo_usability: KCalendar
   kilo_qa: KRogue
   kilo_expander: KRogue
 virtual_web_target: "kweb://cybercafe"
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-tester
-  app: KRSS
-  timestamp: "2026-10-05T18:41:00-07:00"
+  agent: kilo-usability
+  app: KBBS
+  timestamp: "2026-10-05T19:43:00-07:00"
 last_planner_run: "2026-10-05T07:31:00Z"
 ---
 
@@ -119,9 +119,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KCipher`, `KCalc`, `KMine`, `KSnake`, `KTetris`, `KPong`, `KMaze`, `KSolitaire`, `KChess`, `KColor`, `KTimer`, `KConverter`, `KQuarantine`, `KSettings`, `KTaskMgr`, `K2048`, `KSudoku`, `KConnect4`, `KHangman`, `KSimon`, `KFreecell`, `KMatch3`, `KWords`, `KGo`, `KDarts`, `KRSS` *(Completed: KStarForge, KTask, KChrono, KSys, KSynth, KCyber, KCosmic, KContacts, KDB, KDragon, KFlash, KFont, KFortress, KGraph, KHabit, KHex, KImage, KJournal, KMail, KMandel, KMech, KMedia, KMystery, KNet, KNote, KPad, KPaint, KPass, KPing, KQuest, KRadio, KRead, KSanctuary, KScript, KStarDredge, KStarship, KStellar, KSubmarine, KTerm, KHash, KRSS)*.
 
 ### 4. Usability & UX Queue (`kilo-usability`)
-- **Current Target**: `KBBS`
+- **Current Target**: `KCalendar`
 - **Upcoming Queue**:
-  `KCalendar`, `KChart`, `KColor`, `KChess`, `KConnect4`, `KConverter`, `KFreecell`, `KHangman`, `KMatch3`, `KPong`, `KSettings`, `KSimon`, `KSnake`, `KSolitaire`, `KSudoku`, `KTetris`, `KWords` *(Completed: KCalc, KPomodoro, KTimer, KClock, KHash, KMystery, KMandel, KFont, KPing, KAudio, KSynth, KScript, KRead, KRadio, KSys, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KChrono, KTask, KStarForge, KPad, KBookmark, KRSS, KClip, KHex, KHabit, KFarm, KPaint, KGraph, KImage, KJournal, KMail, KMedia, KNet, KNote, KPass, KMine)*.
+  `KChart`, `KColor`, `KChess`, `KConnect4`, `KConverter`, `KFreecell`, `KHangman`, `KMatch3`, `KPong`, `KSettings`, `KSimon`, `KSnake`, `KSolitaire`, `KSudoku`, `KTetris`, `KWords`, `KBBS` *(Completed: KCalc, KPomodoro, KTimer, KClock, KHash, KMystery, KMandel, KFont, KPing, KAudio, KSynth, KScript, KRead, KRadio, KSys, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KChrono, KTask, KStarForge, KPad, KBookmark, KRSS, KClip, KHex, KHabit, KFarm, KPaint, KGraph, KImage, KJournal, KMail, KMedia, KNet, KNote, KPass, KMine, KBBS)*.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
 - **Current Target**: `KRogue`
@@ -217,6 +217,15 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-05T19:43:00-07:00 — kilo-usability: KBBS (Usability & Layout Polish, Modal Ergonomics & HiDPI Scaling)**
+  - Status: PASS ✅ (0 regressions, 162.2 KB web / 101.9 KB native < 999 KB ceiling).
+  - Window Dimension Tuning: Expanded default dimensions to 960x680 in `App.jsx`, preventing 800px modal clipping.
+  - Toast Occlusion Remediation: Relocated `#toastContainer` to safe bottom-right (32px/20px) per Directive 185; wired modal auto-clear.
+  - Double-Modal Stacking Prevention: Enforced `closeAllModalsExcept` across dialogs, preventing modal stacking (Directive 185).
+  - Modal Navigation Ergonomics: Added hotkeys [1]-[4] and [T] for Door Games, and [↑]/[↓], [R], [N], [T] for EchoNet message reader.
+  - HiDPI Canvas & CRT Polish: Crisp `devicePixelRatio` scaling on terminal & art canvas; removed expensive software drop-shadow.
+  - Verification: `test_web_apps.js` PASS (96 elements); MSVC clean (`KBBS.exe` 101.9 KB); Vite clean in 546ms; security_lint 100% PASS.
+
 - **2026-10-05T18:41:00-07:00 — kilo-tester: KRSS (Interactive UI Audit & Event Handling Polish)**
   - Status: PASS ✅ (6 issues, 6 fixed; 164.2 KB < 999 KB ceiling).
   - Toast & Modal Ergonomics: Prevented hidden toast click capture (`pointer-events`), added modal toast auto-dismissal (Directive 185).
@@ -248,14 +257,5 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Tactical Pause & Navigation: Added pause state with keyboard/mouse navigation ([P]/[Esc]), resume, quicksave, and quickload.
   - Visuals & Directives: Verified zero traveling glints or perimeter dots; non-occluding top toast bar with auto-dismissal.
   - Verification: `test_web_apps.js` PASS (23 interactive elements); MSVC clean (`KBreakout.exe` 57.3 KB); Vite clean in 514ms; security_lint 100% PASS.
-
-- **2026-10-05T13:35:00-07:00 — kilo-usability: KMine (Usability & Layout Polish, Touch Dig/Flag Mode & Procedural SFX)**
-  - Status: PASS ✅ (0 regressions, 57.8 KB web / 27.6 KB native < 999 KB ceiling).
-  - Window Dimension Tuning: Expanded default dimensions to 1040x740 in `App.jsx`, preventing Expert mode layout scrollbars.
-  - Touch & Mode Ergonomics: Added Dig ⛏️ / Flag 🚩 mode toggle button with [F] hotkey, touch-action, and haptic long-press flagging.
-  - Interactive Hover & Chording: Added cell hover highlight and live chording target preview highlighting on adjacent unrevealed tiles.
-  - Universal Audio Engine: Added procedural Web Audio FM/synthesizer sound effects (reveal click, flag chime, chord, boom, victory) with [M] mute toggle.
-  - Responsive & Toast Polish: Added @media queries for mobile/small viewports and toast auto-dismissal on modal open (Directive 185).
-  - Verification: `node scripts/test_web_apps.js --app kmine` PASS (15 elements); MSVC clean (`KMine.exe`); Vite clean in 509ms; security_lint 100% PASS.
 
 

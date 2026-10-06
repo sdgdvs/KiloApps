@@ -109,20 +109,20 @@
         /* Art Canvas Preview */
         #artPreviewCanvas { background: #000; image-rendering: pixelated; border: 1px solid #27272a; border-radius: 6px; }
 
-        /* Toast Notifications */
+        /* Toast Notifications - Safe Bottom-Right Placement */
         #toastContainer {
-            position: fixed; top: 48px; right: 20px; z-index: 9999;
-            display: flex; flex-direction: column; gap: 8px; pointer-events: none;
+            position: fixed; bottom: 32px; right: 20px; z-index: 9999;
+            display: flex; flex-direction: column-reverse; gap: 8px; pointer-events: none;
         }
         .kbbs-toast {
-            background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
+            background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
             border: 1px solid rgba(56, 189, 248, 0.4);
             border-left: 4px solid #38bdf8;
             color: #f1f5f9; padding: 10px 16px; border-radius: 8px;
             font-size: 12px; font-weight: 500; display: flex; align-items: center; gap: 10px;
             box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.6), 0 0 15px rgba(56, 189, 248, 0.2);
-            opacity: 0; transform: translateY(-8px) scale(0.96);
+            opacity: 0; transform: translateY(8px) scale(0.96);
             transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
             pointer-events: auto; max-width: 380px; line-height: 1.4;
             cursor: pointer; user-select: none;
@@ -131,6 +131,27 @@
         .kbbs-toast.success { border-color: rgba(16, 185, 129, 0.4); border-left-color: #10b981; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.6), 0 0 15px rgba(16, 185, 129, 0.2); }
         .kbbs-toast.warning { border-color: rgba(245, 158, 11, 0.4); border-left-color: #f59e0b; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.6), 0 0 15px rgba(245, 158, 11, 0.2); }
         .kbbs-toast.error { border-color: rgba(239, 68, 68, 0.4); border-left-color: #ef4444; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.6), 0 0 15px rgba(239, 68, 68, 0.2); }
+
+        /* Responsive Layout & Ergonomics */
+        @media (max-width: 900px) {
+            .conn-bar { padding: 8px 10px; gap: 4px; }
+            #host { width: 130px; }
+            #port { width: 44px; }
+            .conn-bar button { padding: 4px 8px; font-size: 10px; }
+        }
+        @media (max-width: 720px) {
+            .modal-card { width: 95% !important; height: 90% !important; max-height: 90vh !important; }
+            #dialingDir .modal-card > div:nth-child(3),
+            #msgBaseModal .modal-card > div:nth-child(3),
+            #macrosDir .modal-card > div:nth-child(2) {
+                flex-direction: column !important;
+            }
+            #dirList, #msgListPane, #macroList {
+                width: 100% !important; height: 160px !important; border-right: none !important; border-bottom: 1px solid #27272a !important;
+            }
+            #toastContainer { right: 10px; left: 10px; bottom: 32px; }
+            .kbbs-toast { max-width: 100%; }
+        }
     </style>
 </head>
 <body>
@@ -555,6 +576,10 @@ SEND:"secret\r"'></textarea>
     function safeSetStorage(key, val) {
         try { localStorage.setItem(key, val); return true; } catch (e) { return false; }
     }
+    function escapeHTML(str) {
+        if (typeof str !== 'string') return '';
+        return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+    }
 
     // Global Constants and Setup
     const DEFAULT_COLORS = [
@@ -587,7 +612,7 @@ SEND:"secret\r"'></textarea>
     function toggleCRT(persist = true) {
         const crt = document.getElementById('crtToggle').checked;
         document.querySelector('.term-wrap').style.setProperty('--crt-display', crt ? 'block' : 'none');
-        document.getElementById('terminal').style.filter = crt ? 'contrast(1.1) brightness(1.2) drop-shadow(0 0 1px rgba(255,255,255,0.3))' : 'none';
+        document.getElementById('terminal').style.filter = crt ? 'contrast(1.1) brightness(1.2)' : 'none';
         if (persist) safeSetStorage('kbbs_crt_enabled', crt ? '1' : '0');
     }
 
@@ -600,7 +625,14 @@ SEND:"secret\r"'></textarea>
         showToast(`Local Echo ${checked ? 'ON' : 'OFF'}`, "info", 2000);
     }
 
-    function showToast(message, type = 'info', duration = 3800) {
+    function dismissAllToasts() {
+        const container = document.getElementById('toastContainer');
+        if (container) {
+            container.querySelectorAll('.kbbs-toast').forEach(t => t.remove());
+        }
+    }
+
+    function showToast(message, type = 'info', duration = 3500) {
         const container = document.getElementById('toastContainer');
         if (!container) return;
         const toast = document.createElement('div');
@@ -612,14 +644,14 @@ SEND:"secret\r"'></textarea>
         else if (type === 'warning') icon = '⚠️';
         else if (type === 'error') icon = '❌';
 
-        toast.innerHTML = `<span>${icon}</span><span>${message}</span>`;
+        toast.innerHTML = `<span>${icon}</span><span>${escapeHTML(message)}</span>`;
         let removeTimer = null;
         const dismiss = () => {
             if (removeTimer) clearTimeout(removeTimer);
             toast.classList.remove('visible');
             setTimeout(() => {
                 if (toast.parentNode) toast.parentNode.removeChild(toast);
-            }, 250);
+            }, 200);
         };
         toast.onclick = dismiss;
         container.appendChild(toast);
@@ -693,6 +725,9 @@ SEND:"secret\r"'></textarea>
                     <div><kbd style="background:#27272a; padding:2px 6px; border-radius:4px;">M</kbd></div><div>Open Script Macros</div>
                     <div><kbd style="background:#27272a; padding:2px 6px; border-radius:4px;">S</kbd></div><div>Open Display Settings</div>
                     <div><kbd style="background:#27272a; padding:2px 6px; border-radius:4px;">C</kbd></div><div>Toggle Session Capture</div>
+                    <div><kbd style="background:#27272a; padding:2px 6px; border-radius:4px;">1 - 4</kbd></div><div>Quick action hotkeys in Door Games</div>
+                    <div><kbd style="background:#27272a; padding:2px 6px; border-radius:4px;">↑ / ↓</kbd></div><div>Browse messages in EchoNet reader</div>
+                    <div><kbd style="background:#27272a; padding:2px 6px; border-radius:4px;">T</kbd></div><div>Stream Door / EchoNet / Art to Terminal</div>
                     <div><kbd style="background:#27272a; padding:2px 6px; border-radius:4px;">F1 / H</kbd></div><div>Show this Help & Tutorial</div>
                     <div><kbd style="background:#27272a; padding:2px 6px; border-radius:4px;">Esc</kbd></div><div>Dismiss active modal dialog</div>
                 </div>
@@ -702,12 +737,25 @@ SEND:"secret\r"'></textarea>
     function nextTutorialStep() { if (currentTutStep < 4) switchTutorialStep(currentTutStep + 1); }
     function prevTutorialStep() { if (currentTutStep > 1) switchTutorialStep(currentTutStep - 1); }
 
+    function closeAllModalsExcept(exceptId) {
+        const modals = ['dialingDir', 'doorGamesModal', 'ansiArtModal', 'msgBaseModal', 'captureModal', 'macrosDir', 'settingsModal', 'helpModal', 'composeMsgModal'];
+        modals.forEach(id => {
+            if (id !== exceptId) {
+                const el = document.getElementById(id);
+                if (el && el.style.display === 'flex') el.style.display = 'none';
+            }
+        });
+    }
+
     function showHelp() {
+        closeAllModalsExcept('helpModal');
+        dismissAllToasts();
         switchTutorialStep(1);
         document.getElementById('helpModal').style.display = 'flex';
     }
     function closeHelp() {
         document.getElementById('helpModal').style.display = 'none';
+        dismissAllToasts();
         if (typeof canvas !== 'undefined') canvas.focus();
     }
 
@@ -778,11 +826,6 @@ SEND:"secret\r"'></textarea>
     const ctx = canvas.getContext('2d');
     let ws = null, bytesRx = 0, bytesTx = 0;
     
-    function escapeHTML(str) {
-        if (typeof str !== 'string') return '';
-        return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
-    }
-
     let screen = [];
     let curX = 0, curY = 0;
     let savedX = 0, savedY = 0;
@@ -800,14 +843,11 @@ SEND:"secret\r"'></textarea>
     }
 
     function resizeCanvas() {
-        const wrap = document.querySelector('.term-wrap');
-        const w = wrap.clientWidth - 16;
-        const h = wrap.clientHeight;
         CELL_H = kbbsSettings.fontSize || 16;
         CELL_W = Math.max(1, Math.floor(CELL_H / 2));
         const dpr = window.devicePixelRatio || 1;
-        canvas.width = COLS * CELL_W * dpr;
-        canvas.height = ROWS * CELL_H * dpr;
+        canvas.width = Math.round(COLS * CELL_W * dpr);
+        canvas.height = Math.round(ROWS * CELL_H * dpr);
         canvas.style.width = (COLS * CELL_W) + 'px';
         canvas.style.height = (ROWS * CELL_H) + 'px';
         ctx.setTransform(1, 0, 0, 1, 0, 0); // Reset transform
@@ -819,7 +859,7 @@ SEND:"secret\r"'></textarea>
     function render() {
         if (!screen.length) return;
         ctx.fillStyle = COLORS[0];
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillRect(0, 0, COLS * CELL_W, ROWS * CELL_H);
         ctx.font = CELL_H + 'px Consolas, monospace';
         ctx.textBaseline = 'top';
 
@@ -1299,11 +1339,19 @@ SEND:"secret\r"'></textarea>
     function saveDirectory() { safeSetStorage('kbbs_directory_v3', JSON.stringify(dirEntries)); }
 
     function showDialingDir() {
+        closeAllModalsExcept('dialingDir');
+        dismissAllToasts();
         document.getElementById('dialingDir').style.display = 'flex';
         renderDirList();
         if (dirEntries.length > 0 && selectedDirIndex < 0) selectEntry(0);
+        const search = document.getElementById('dirSearchInput');
+        if (search) search.focus();
     }
-    function closeDialingDir() { document.getElementById('dialingDir').style.display = 'none'; canvas.focus(); }
+    function closeDialingDir() {
+        document.getElementById('dialingDir').style.display = 'none';
+        dismissAllToasts();
+        if (typeof canvas !== 'undefined') canvas.focus();
+    }
 
     function renderDirList() {
         const list = document.getElementById('dirList');
@@ -1517,10 +1565,16 @@ SEND:"secret\r"'></textarea>
     window.captureByteCount = 0;
 
     function showCaptureManager() {
+        closeAllModalsExcept('captureModal');
+        dismissAllToasts();
         document.getElementById('captureModal').style.display = 'flex';
         updateCaptureUI();
     }
-    function closeCaptureManager() { document.getElementById('captureModal').style.display = 'none'; if (typeof canvas !== 'undefined') canvas.focus(); }
+    function closeCaptureManager() {
+        document.getElementById('captureModal').style.display = 'none';
+        dismissAllToasts();
+        if (typeof canvas !== 'undefined') canvas.focus();
+    }
 
     function toggleCaptureState() {
         window.captureActive = !window.captureActive;
@@ -1647,9 +1701,17 @@ SEND:"secret\r"'></textarea>
     function saveMacros() { safeSetStorage('kbbs_macros_v2', JSON.stringify(dynMacros)); }
 
     function showMacros() {
-        document.getElementById('macrosDir').style.display = 'flex'; renderMacroList(); selectMacro(selectedMacroIndex);
+        closeAllModalsExcept('macrosDir');
+        dismissAllToasts();
+        document.getElementById('macrosDir').style.display = 'flex';
+        renderMacroList();
+        selectMacro(selectedMacroIndex);
     }
-    function closeMacros() { document.getElementById('macrosDir').style.display = 'none'; canvas.focus(); }
+    function closeMacros() {
+        document.getElementById('macrosDir').style.display = 'none';
+        dismissAllToasts();
+        if (typeof canvas !== 'undefined') canvas.focus();
+    }
 
     function renderMacroList() {
         let lst = document.getElementById('macroList'); lst.innerHTML = '';
@@ -1788,10 +1850,16 @@ SEND:"secret\r"'></textarea>
     }
 
     function showDoorGames() {
+        closeAllModalsExcept('doorGamesModal');
+        dismissAllToasts();
         document.getElementById('doorGamesModal').style.display = 'flex';
         switchDoorTab(currentDoorGame || 'lord');
     }
-    function closeDoorGames() { document.getElementById('doorGamesModal').style.display = 'none'; if (typeof canvas !== 'undefined') canvas.focus(); }
+    function closeDoorGames() {
+        document.getElementById('doorGamesModal').style.display = 'none';
+        dismissAllToasts();
+        if (typeof canvas !== 'undefined') canvas.focus();
+    }
 
     function switchDoorTab(game) {
         currentDoorGame = game;
@@ -1818,10 +1886,10 @@ SEND:"secret\r"'></textarea>
                         </div>
                     </div>
                     <div style="flex:1; display:flex; flex-direction:column; gap:8px;">
-                        <button class="btn-action" style="background:#be185d;" onclick="lordAction('forest')">🌲 Hunt in Forest</button>
-                        <button class="btn-secondary" onclick="lordAction('inn')">🍺 Visit Tavern / Inn (Rest)</button>
-                        <button class="btn-secondary" onclick="lordAction('armory')">⚔️ Weapon Smith & Armory</button>
-                        <button class="btn-secondary" onclick="lordAction('bank')">🏦 Royal Bank (Deposit All)</button>
+                        <button class="btn-action" style="background:#be185d;" onclick="lordAction('forest')">[1] 🌲 Hunt in Forest</button>
+                        <button class="btn-secondary" onclick="lordAction('inn')">[2] 🍺 Visit Tavern / Inn (Rest)</button>
+                        <button class="btn-secondary" onclick="lordAction('armory')">[3] ⚔️ Weapon Smith & Armory</button>
+                        <button class="btn-secondary" onclick="lordAction('bank')">[4] 🏦 Royal Bank (Deposit All)</button>
                     </div>
                 </div>
                 <div style="display:flex; gap:8px; align-items:center;">
@@ -1848,10 +1916,10 @@ SEND:"secret\r"'></textarea>
                         </div>
                     </div>
                     <div style="flex:1; display:flex; flex-direction:column; gap:8px;">
-                        <button class="btn-action" onclick="twAction('warp')">🌌 Warp Sector</button>
-                        <button class="btn-secondary" onclick="twAction('port')">🛰️ Trade at Space Port</button>
-                        <button class="btn-secondary" onclick="twAction('pirate')">🏴‍☠️ Hunt Space Pirates</button>
-                        <button class="btn-secondary" onclick="twAction('shield')">🛡️ Recharge Shields ($100)</button>
+                        <button class="btn-action" onclick="twAction('warp')">[1] 🌌 Warp Sector</button>
+                        <button class="btn-secondary" onclick="twAction('port')">[2] 🛰️ Trade at Space Port</button>
+                        <button class="btn-secondary" onclick="twAction('pirate')">[3] 🏴‍☠️ Hunt Space Pirates</button>
+                        <button class="btn-secondary" onclick="twAction('shield')">[4] 🛡️ Recharge Shields ($100)</button>
                     </div>
                 </div>
                 <div style="display:flex; gap:8px; align-items:center;">
@@ -2025,17 +2093,39 @@ SEND:"secret\r"'></textarea>
     let artCanvas = document.getElementById('artPreviewCanvas');
     let artCtx = artCanvas.getContext('2d');
 
+    function resizeArtCanvas() {
+        let ac = document.getElementById('artPreviewCanvas');
+        if (!ac) return;
+        let dpr = window.devicePixelRatio || 1;
+        ac.width = Math.round(640 * dpr);
+        ac.height = Math.round(400 * dpr);
+        ac.style.width = '640px';
+        ac.style.height = '400px';
+        let actx = ac.getContext('2d');
+        actx.setTransform(1, 0, 0, 1, 0, 0);
+        actx.scale(dpr, dpr);
+        actx.imageSmoothingEnabled = false;
+        return actx;
+    }
+
     function showAnsiArtViewer() {
+        closeAllModalsExcept('ansiArtModal');
+        dismissAllToasts();
         document.getElementById('ansiArtModal').style.display = 'flex';
         loadArtPreset();
     }
-    function closeAnsiArtViewer() { document.getElementById('ansiArtModal').style.display = 'none'; if (typeof canvas !== 'undefined') canvas.focus(); }
+    function closeAnsiArtViewer() {
+        document.getElementById('ansiArtModal').style.display = 'none';
+        dismissAllToasts();
+        if (typeof canvas !== 'undefined') canvas.focus();
+    }
 
     function loadArtPreset() {
+        let actx = resizeArtCanvas() || artCtx;
         let type = document.getElementById('artPresetSelect').value;
         let pal = document.getElementById('artPaletteSelect').value;
-        artCtx.fillStyle = '#000'; artCtx.fillRect(0,0,artCanvas.width,artCanvas.height);
-        artCtx.font = '16px Consolas, monospace'; artCtx.textBaseline = 'top';
+        actx.fillStyle = '#000'; actx.fillRect(0, 0, 640, 400);
+        actx.font = '16px Consolas, monospace'; actx.textBaseline = 'top';
 
         let c1 = '#0ea5e9', c2 = '#ec4899';
         if (pal === 'amber') { c1 = '#ffb000'; c2 = '#f59e0b'; }
@@ -2043,21 +2133,24 @@ SEND:"secret\r"'></textarea>
         else if (pal === 'cyber') { c1 = '#38bdf8'; c2 = '#f43f5e'; }
 
         if (type === 'cyber') {
-            artCtx.fillStyle = c1; artCtx.fillText(" ╔══════════════════════════════════════════════╗", 20, 20);
-            artCtx.fillStyle = c2; artCtx.fillText(" ║   K I L O  O S  -  C Y B E R  P U N K   B B S ║", 20, 40);
-            artCtx.fillStyle = c1; artCtx.fillText(" ╚══════════════════════════════════════════════╝", 20, 60);
+            actx.fillStyle = c1; actx.fillText(" ╔══════════════════════════════════════════════╗", 20, 20);
+            actx.fillStyle = c2; actx.fillText(" ║   K I L O  O S  -  C Y B E R  P U N K   B B S ║", 20, 40);
+            actx.fillStyle = c1; actx.fillText(" ╚══════════════════════════════════════════════╝", 20, 60);
         } else if (type === 'dragon') {
-            artCtx.fillStyle = (pal === 'dos') ? '#ef4444' : c1; artCtx.fillText("   (===>  RED DRAGON ANSI ART  <===)", 20, 20);
-            artCtx.fillStyle = (pal === 'dos') ? '#f59e0b' : c2; artCtx.fillText("         /\\_/\\  ( S L A Y E R )", 20, 40);
+            actx.fillStyle = (pal === 'dos') ? '#ef4444' : c1; actx.fillText("   (===>  RED DRAGON ANSI ART  <===)", 20, 20);
+            actx.fillStyle = (pal === 'dos') ? '#f59e0b' : c2; actx.fillText("         /\\_/\\  ( S L A Y E R )", 20, 40);
+            actx.fillStyle = (pal === 'dos') ? '#ef4444' : c1; actx.fillText("       ( o.o )   [FIRE BREATH]", 20, 60);
+            actx.fillStyle = (pal === 'dos') ? '#ef4444' : c1; actx.fillText("        > ^ <    ================", 20, 80);
         } else if (type === 'sunset') {
-            artCtx.fillStyle = (pal === 'dos') ? '#f43f5e' : c2; artCtx.fillText("   ~-._.-~-._.-~ RETROWAVE 1984 ~-._.-~-._.-~", 20, 20);
-            artCtx.fillStyle = (pal === 'dos') ? '#8b5cf6' : c1; artCtx.fillText("   [═══ SYNTH SKYLINE & TAPE DECKS ═══]", 20, 40);
+            actx.fillStyle = (pal === 'dos') ? '#f43f5e' : c2; actx.fillText("   ~-._.-~-._.-~ RETROWAVE 1984 ~-._.-~-._.-~", 20, 20);
+            actx.fillStyle = (pal === 'dos') ? '#8b5cf6' : c1; actx.fillText("   [═══ SYNTH SKYLINE & TAPE DECKS ═══]", 20, 40);
+            actx.fillStyle = (pal === 'dos') ? '#0ea5e9' : c1; actx.fillText("    ▲ ▲ ▲ ▲ ▲   | | | | |   ▲ ▲ ▲ ▲ ▲", 20, 60);
         } else if (type === 'acid') {
-            artCtx.fillStyle = (pal === 'dos') ? '#10b981' : c1; artCtx.fillText("   ▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄", 20, 20);
-            artCtx.fillStyle = (pal === 'dos') ? '#0ea5e9' : c2; artCtx.fillText("   █  A C i D   P R O D U C T i O N S   █", 20, 40);
-            artCtx.fillStyle = (pal === 'dos') ? '#10b981' : c1; artCtx.fillText("   ▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀", 20, 60);
+            actx.fillStyle = (pal === 'dos') ? '#10b981' : c1; actx.fillText("   ▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄", 20, 20);
+            actx.fillStyle = (pal === 'dos') ? '#0ea5e9' : c2; actx.fillText("   █  A C i D   P R O D U C T i O N S   █", 20, 40);
+            actx.fillStyle = (pal === 'dos') ? '#10b981' : c1; actx.fillText("   ▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀", 20, 60);
         } else {
-            artCtx.fillStyle = c1; artCtx.fillText(" [ RETROWAVE SYNTH BBS SYSTEM v2.0 ]", 20, 20);
+            actx.fillStyle = c1; actx.fillText(" [ RETROWAVE SYNTH BBS SYSTEM v2.0 ]", 20, 20);
         }
     }
 
@@ -2065,8 +2158,9 @@ SEND:"secret\r"'></textarea>
         let file = e.target.files[0]; if (!file) return;
         let reader = new FileReader();
         reader.onload = (evt) => {
-            artCtx.fillStyle = '#000'; artCtx.fillRect(0,0,artCanvas.width,artCanvas.height);
-            artCtx.fillStyle = '#10b981'; artCtx.fillText("Loaded: " + file.name, 20, 20);
+            let actx = resizeArtCanvas() || artCtx;
+            actx.fillStyle = '#000'; actx.fillRect(0,0,640,400);
+            actx.fillStyle = '#10b981'; actx.fillText("Loaded: " + file.name, 20, 20);
             showToast(`Loaded ${file.name} into Art Viewer!`, "success");
         }; reader.readAsText(file);
     }
@@ -2078,7 +2172,30 @@ SEND:"secret\r"'></textarea>
     function playArtAnimation() { loadArtPreset(); showToast("ANSI animation replayed!", "info"); }
     function renderArtToTerminal() {
         closeAnsiArtViewer();
-        processData("\x1B[1;35m[ANSI Art Rendered to Terminal Screen]\r\n");
+        initScreen();
+        let type = document.getElementById('artPresetSelect').value;
+        let ansiArt = "";
+        if (type === 'cyber') {
+            ansiArt = "\x1B[1;36m ╔══════════════════════════════════════════════╗\r\n" +
+                      "\x1B[1;35m ║   K I L O  O S  -  C Y B E R  P U N K   B B S ║\r\n" +
+                      "\x1B[1;36m ╚══════════════════════════════════════════════╝\x1B[0m\r\n";
+        } else if (type === 'dragon') {
+            ansiArt = "\x1B[1;31m   (===>  RED DRAGON ANSI ART  <===)\r\n" +
+                      "\x1B[1;33m         /\\_/\\  ( S L A Y E R )\r\n" +
+                      "\x1B[0;31m       ( o.o )   [FIRE BREATH]\r\n" +
+                      "\x1B[1;31m        > ^ <    ================\x1B[0m\r\n";
+        } else if (type === 'sunset') {
+            ansiArt = "\x1B[1;35m   ~-._.-~-._.-~ RETROWAVE 1984 ~-._.-~-._.-~\r\n" +
+                      "\x1B[1;34m   [═══ SYNTH SKYLINE & TAPE DECKS ═══]\r\n" +
+                      "\x1B[1;36m    ▲ ▲ ▲ ▲ ▲   | | | | |   ▲ ▲ ▲ ▲ ▲\x1B[0m\r\n";
+        } else if (type === 'acid') {
+            ansiArt = "\x1B[1;32m   ▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄\r\n" +
+                      "\x1B[1;36m   █  A C i D   P R O D U C T i O N S   █\r\n" +
+                      "\x1B[1;32m   ▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀\x1B[0m\r\n";
+        } else {
+            ansiArt = "\x1B[1;36m [ RETROWAVE SYNTH BBS SYSTEM v2.0 ]\x1B[0m\r\n";
+        }
+        processData(ansiArt);
         showToast("Rendered ANSI Art to main terminal screen!", "success");
     }
     function downloadArtPNG() {
@@ -2186,6 +2303,8 @@ SEND:"secret\r"'></textarea>
     }
 
     function showMsgBase() {
+        closeAllModalsExcept('msgBaseModal');
+        dismissAllToasts();
         document.getElementById('msgBaseModal').style.display = 'flex';
         document.getElementById('msgAreaSelect').value = currentMsgArea;
         renderMsgList();
@@ -2194,7 +2313,26 @@ SEND:"secret\r"'></textarea>
 
     function closeMsgBase() {
         document.getElementById('msgBaseModal').style.display = 'none';
+        dismissAllToasts();
         if (typeof canvas !== 'undefined') canvas.focus();
+    }
+
+    function selectPrevMsg() {
+        let areaMsgs = bbsMessages.filter(m => m.area === currentMsgArea);
+        if (!areaMsgs.length) return;
+        let idx = areaMsgs.findIndex(m => m.id === selectedMsgId);
+        if (idx > 0) {
+            selectMsg(areaMsgs[idx - 1].id);
+        }
+    }
+
+    function selectNextMsg() {
+        let areaMsgs = bbsMessages.filter(m => m.area === currentMsgArea);
+        if (!areaMsgs.length) return;
+        let idx = areaMsgs.findIndex(m => m.id === selectedMsgId);
+        if (idx >= 0 && idx < areaMsgs.length - 1) {
+            selectMsg(areaMsgs[idx + 1].id);
+        }
     }
 
     function changeMsgArea() {
@@ -2294,17 +2432,21 @@ SEND:"secret\r"'></textarea>
     }
 
     function openNewMsgModal() {
+        dismissAllToasts();
         document.getElementById('composeModalTitle').textContent = 'Compose BBS EchoMail Message';
         document.getElementById('compAreaSelect').value = currentMsgArea;
         document.getElementById('compTo').value = 'All';
         document.getElementById('compSubject').value = '';
         document.getElementById('compBody').value = '\n\n--- KBBS EchoReader v2.0\n* Origin: KiloBBS Caller Station (1:100/42.99)';
         document.getElementById('composeMsgModal').style.display = 'flex';
+        const subj = document.getElementById('compSubject');
+        if (subj) subj.focus();
     }
 
     function openReplyModal() {
         let msg = getSelectedMsg();
         if (!msg) return;
+        dismissAllToasts();
         document.getElementById('composeModalTitle').textContent = `Reply to Msg #${msg.id}`;
         document.getElementById('compAreaSelect').value = msg.area;
         document.getElementById('compTo').value = msg.from;
@@ -2318,11 +2460,15 @@ SEND:"secret\r"'></textarea>
 
         document.getElementById('compBody').value = `${quoted}\n\n\n--- KBBS EchoReader v2.0\n* Origin: KiloBBS Caller Station (1:100/42.99)`;
         document.getElementById('composeMsgModal').style.display = 'flex';
+        const body = document.getElementById('compBody');
+        if (body) { body.focus(); body.setSelectionRange(0, 0); }
     }
 
     function closeComposeModal() {
         document.getElementById('composeMsgModal').style.display = 'none';
-        if (typeof canvas !== 'undefined') canvas.focus();
+        dismissAllToasts();
+        const s = document.getElementById('msgSearchInput');
+        if (s) s.focus();
     }
 
     function saveComposedMessage() {
@@ -2472,6 +2618,8 @@ SEND:"secret\r"'></textarea>
         showToast("Display settings saved!", "success");
     }
     function showSettings() {
+        closeAllModalsExcept('settingsModal');
+        dismissAllToasts();
         document.getElementById('setFontSize').value = kbbsSettings.fontSize;
         document.getElementById('setBlinkRate').value = kbbsSettings.blinkRateMs || 500;
         document.getElementById('setBaudRate').value = kbbsSettings.baudRate;
@@ -2497,7 +2645,11 @@ SEND:"secret\r"'></textarea>
             cont.appendChild(inp);
         });
     }
-    function closeSettings() { document.getElementById('settingsModal').style.display = 'none'; if (typeof canvas !== 'undefined') canvas.focus(); }
+    function closeSettings() {
+        document.getElementById('settingsModal').style.display = 'none';
+        dismissAllToasts();
+        if (typeof canvas !== 'undefined') canvas.focus();
+    }
     function resetPalette() {
         COLORS = [...DEFAULT_COLORS];
         kbbsSettings.palette = [...DEFAULT_COLORS];
@@ -2579,6 +2731,9 @@ SEND:"secret\r"'></textarea>
         let composeEl = document.getElementById('composeMsgModal');
         if (composeEl && composeEl.style.display === 'flex') {
             composeEl.style.display = 'none';
+            const s = document.getElementById('msgSearchInput');
+            if (s) s.focus();
+            dismissAllToasts();
             return true;
         }
 
@@ -2592,8 +2747,19 @@ SEND:"secret\r"'></textarea>
                 break; // Close only one modal at a time!
             }
         }
+        dismissAllToasts();
         if (closedAny && typeof canvas !== 'undefined') canvas.focus();
         return closedAny;
+    }
+
+    function isModalOpen(id) {
+        let el = document.getElementById(id);
+        return el && el.style.display === 'flex';
+    }
+
+    function isAnyModalOpen() {
+        let modals = ['dialingDir', 'doorGamesModal', 'ansiArtModal', 'msgBaseModal', 'captureModal', 'macrosDir', 'settingsModal', 'helpModal', 'composeMsgModal'];
+        return modals.some(m => isModalOpen(m));
     }
 
     window.addEventListener('keydown', (e) => {
@@ -2635,8 +2801,70 @@ SEND:"secret\r"'></textarea>
                 return;
             }
         }
+
+        // Modal-specific hotkey navigation
+        if (isModalOpen('doorGamesModal')) {
+            if (e.key === '1') {
+                if (currentDoorGame === 'lord') lordAction('forest'); else twAction('warp');
+                e.preventDefault(); return;
+            }
+            if (e.key === '2') {
+                if (currentDoorGame === 'lord') lordAction('inn'); else twAction('port');
+                e.preventDefault(); return;
+            }
+            if (e.key === '3') {
+                if (currentDoorGame === 'lord') lordAction('armory'); else twAction('pirate');
+                e.preventDefault(); return;
+            }
+            if (e.key === '4') {
+                if (currentDoorGame === 'lord') lordAction('bank'); else twAction('shield');
+                e.preventDefault(); return;
+            }
+            if (e.key === 't' || e.key === 'T') {
+                streamDoorToTerminal();
+                e.preventDefault(); return;
+            }
+            if (e.key === 'Tab') {
+                switchDoorTab(currentDoorGame === 'lord' ? 'tradewars' : 'lord');
+                e.preventDefault(); return;
+            }
+        }
+
+        if (isModalOpen('msgBaseModal') && !isModalOpen('composeMsgModal')) {
+            if (e.key === 'ArrowUp' || e.key === 'k' || e.key === 'K') {
+                selectPrevMsg();
+                e.preventDefault(); return;
+            }
+            if (e.key === 'ArrowDown' || e.key === 'j' || e.key === 'J') {
+                selectNextMsg();
+                e.preventDefault(); return;
+            }
+            if (e.key === 'r' || e.key === 'R') {
+                openReplyModal();
+                e.preventDefault(); return;
+            }
+            if (e.key === 'n' || e.key === 'N') {
+                openNewMsgModal();
+                e.preventDefault(); return;
+            }
+            if (e.key === 't' || e.key === 'T') {
+                streamMsgToTerminal();
+                e.preventDefault(); return;
+            }
+        }
+
+        if (isModalOpen('ansiArtModal')) {
+            if (e.key === 't' || e.key === 'T') {
+                renderArtToTerminal();
+                e.preventDefault(); return;
+            }
+            if (e.key === 'p' || e.key === 'P') {
+                playArtAnimation();
+                e.preventDefault(); return;
+            }
+        }
         
-        if (!ws || ws.readyState !== 1) {
+        if (!isAnyModalOpen() && (!ws || ws.readyState !== 1)) {
             if (e.key === 'h' || e.key === 'H' || e.key === 'F1') {
                 showHelp();
                 e.preventDefault();

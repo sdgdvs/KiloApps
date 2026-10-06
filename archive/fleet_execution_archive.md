@@ -4,6 +4,15 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-05T13:35:00-07:00 — kilo-usability: KMine (Usability & Layout Polish, Touch Dig/Flag Mode & Procedural SFX)**
+  - Status: PASS ✅ (0 regressions, 57.8 KB web / 27.6 KB native < 999 KB ceiling).
+  - Window Dimension Tuning: Expanded default dimensions to 1040x740 in `App.jsx`, preventing Expert mode layout scrollbars.
+  - Touch & Mode Ergonomics: Added Dig ⛏️ / Flag 🚩 mode toggle button with [F] hotkey, touch-action, and haptic long-press flagging.
+  - Interactive Hover & Chording: Added cell hover highlight and live chording target preview highlighting on adjacent unrevealed tiles.
+  - Universal Audio Engine: Added procedural Web Audio FM/synthesizer sound effects (reveal click, flag chime, chord, boom, victory) with [M] mute toggle.
+  - Responsive & Toast Polish: Added @media queries for mobile/small viewports and toast auto-dismissal on modal open (Directive 185).
+  - Verification: `node scripts/test_web_apps.js --app kmine` PASS (15 elements); MSVC clean (`KMine.exe`); Vite clean in 509ms; security_lint 100% PASS.
+
 - **2026-10-05T12:32:00-07:00 — kilo-tester: KHash (Interactive UI Audit & CSS Syntax Repair)**
   - Status: PASS ✅ (1 issue, 1 fixed; 141.0 KB < 999 KB ceiling).
   - CSS Brace Balance: Fixed unclosed `@media (max-width: 840px)` rule restoring stylesheet integrity.
