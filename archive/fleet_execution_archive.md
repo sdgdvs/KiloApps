@@ -4,6 +4,15 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-05T19:43:00-07:00 — kilo-usability: KBBS (Usability & Layout Polish, Modal Ergonomics & HiDPI Scaling)**
+  - Status: PASS ✅ (0 regressions, 162.2 KB web / 101.9 KB native < 999 KB ceiling).
+  - Window Dimension Tuning: Expanded default dimensions to 960x680 in `App.jsx`, preventing 800px modal clipping.
+  - Toast Occlusion Remediation: Relocated `#toastContainer` to safe bottom-right (32px/20px) per Directive 185; wired modal auto-clear.
+  - Double-Modal Stacking Prevention: Enforced `closeAllModalsExcept` across dialogs, preventing modal stacking (Directive 185).
+  - Modal Navigation Ergonomics: Added hotkeys [1]-[4] and [T] for Door Games, and [↑]/[↓], [R], [N], [T] for EchoNet message reader.
+  - HiDPI Canvas & CRT Polish: Crisp `devicePixelRatio` scaling on terminal & art canvas; removed expensive software drop-shadow.
+  - Verification: `test_web_apps.js` PASS (96 elements); MSVC clean (`KBBS.exe` 101.9 KB); Vite clean in 546ms; security_lint 100% PASS.
+
 - **2026-10-05T18:41:00-07:00 — kilo-tester: KRSS (Interactive UI Audit & Event Handling Polish)**
   - Status: PASS ✅ (6 issues, 6 fixed; 164.2 KB < 999 KB ceiling).
   - Toast & Modal Ergonomics: Prevented hidden toast click capture (`pointer-events`), added modal toast auto-dismissal (Directive 185).

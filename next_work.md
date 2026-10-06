@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-creator
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -16,7 +16,7 @@ current_targets:
   kilo_graphics: KAsteroids
   kilo_tester: KCipher
   kilo_usability: KChart
-  kilo_qa: KRogue
+  kilo_qa: KTetris
   kilo_expander: KRogue
 virtual_web_target: "kweb://cybercafe"
 virtual_web_rotation:
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-usability
-  app: KCalendar
-  timestamp: "2026-10-06T08:28:00-07:00"
+  agent: kilo-qa
+  app: KRogue
+  timestamp: "2026-10-06T08:50:00-07:00"
 last_planner_run: "2026-10-06T14:20:00Z"
 ---
 
@@ -124,9 +124,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KColor`, `KChess`, `KConnect4`, `KConverter`, `KFreecell`, `KHangman`, `KMatch3`, `KPong`, `KSettings`, `KSimon`, `KSnake`, `KSolitaire`, `KSudoku`, `KTetris`, `KWords`, `KBBS`, `KCalendar` *(Completed: KCalc, KPomodoro, KTimer, KClock, KHash, KMystery, KMandel, KFont, KPing, KAudio, KSynth, KScript, KRead, KRadio, KSys, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KChrono, KTask, KStarForge, KPad, KBookmark, KRSS, KClip, KHex, KHabit, KFarm, KPaint, KGraph, KImage, KJournal, KMail, KMedia, KNet, KNote, KPass, KMine, KBBS, KCalendar)*.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
-- **Current Target**: `KRogue`
+- **Current Target**: `KTetris`
 - **Upcoming Queue**:
-  `KTetris`, `KPong`, `KPac`, `KChess`, `KColor`, `KConverter`, `KQuarantine`, `KSettings`, `KTaskMgr`, `KHabit`, `KSudoku`, `KConnect4`, `KHangman`, `KSimon`, `KAsteroids`, `KFreecell`, `KMatch3`, `KWords`, `KGo`, `KDarts`, `KTowers`, `KReversi`, `KAlchemy`, `KColony`, `KStarForge`, `KBreakout` *(Completed in Pass 5: KBBS, KChrono, KCipher, KClip, KCyber, KDragon, KFortress, KHash, KMaze, KMech, KMystery, KQuest, KSanctuary, KSnake, KSolitaire, KSpace, KStarDredge, KStarship, KStellar, KSubmarine, KSynth, KSys, KTask, KTerm, KTimer, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KRSS, K2048, KChart, KGraph, KContacts, KScript, KRead, KColosseum, KAbyss, KMedia, KAudio, KRadio, KPad, KPaint, KCalc, KMine, KCosmic, KBase, KBudget, KCalendar, KFarm, KFlash, KFont, KImage, KJournal, KMail, KMandel, KNet, KNote, KPass, KDB, KHex, KBookmark, KPing, KChat, KClock, KPomodoro, KBreakout)*.
+  `KPong`, `KPac`, `KChess`, `KColor`, `KConverter`, `KQuarantine`, `KSettings`, `KTaskMgr`, `KHabit`, `KSudoku`, `KConnect4`, `KHangman`, `KSimon`, `KAsteroids`, `KFreecell`, `KMatch3`, `KWords`, `KGo`, `KDarts`, `KTowers`, `KReversi`, `KAlchemy`, `KColony`, `KStarForge`, `KBreakout`, `KRogue` *(Completed in Pass 5: KBBS, KChrono, KCipher, KClip, KCyber, KDragon, KFortress, KHash, KMaze, KMech, KMystery, KQuest, KSanctuary, KSnake, KSolitaire, KSpace, KStarDredge, KStarship, KStellar, KSubmarine, KSynth, KSys, KTask, KTerm, KTimer, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KRSS, K2048, KChart, KGraph, KContacts, KScript, KRead, KColosseum, KAbyss, KMedia, KAudio, KRadio, KPad, KPaint, KCalc, KMine, KCosmic, KBase, KBudget, KCalendar, KFarm, KFlash, KFont, KImage, KJournal, KMail, KMandel, KNet, KNote, KPass, KDB, KHex, KBookmark, KPing, KChat, KClock, KPomodoro, KBreakout, KRogue)*.
 
 ### 6. Feature Expander Queue (`kilo-expander`)
 - **Current Target**: `KRogue`
@@ -217,6 +217,14 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-06T08:50:00-07:00 — kilo-qa: KRogue (Pass 5: Tutorial & State Integrity, Modal Ergonomics & Build Audit)**
+  - Status: PASS ✅ (0 regressions, 209.8 KB web / 77.8 KB native < 999 KB ceiling).
+  - State Persistence: Hardened quicksave/quickload [F5/F9] in web and Win32 C (`save.dat`); guarded dead state overwrite and stale pointers.
+  - Tutorial Integrity: Gated first-run prompts behind `krogue_tutorialSeen` / `krogue_tutorial.dat`; restored saves bypass tutorial.
+  - Overlays & Ergonomics: Added interactive "Resume Saved Run" buttons; wired Return/Space/Esc across help, game over, victory, and modal screens.
+  - Toast Occlusion Remediation: Relocated toast container to non-occluding z-index with `clearAllToasts` and `closeAllModalsExcept` (Directive 185).
+  - Verification: `test_web_apps.js` PASS (1 app, 67 elements); MSVC clean (`KRogue.exe` 77.8 KB); Vite clean (383ms); security_lint 100% PASS.
+
 - **2026-10-06T08:28:00-07:00 — kilo-usability: KCalendar (Usability & Layout Polish, Navigation & Modal Ergonomics)**
   - Status: PASS ✅ (0 regressions, 113.7 KB web / 24.5 KB native < 999 KB ceiling).
   - Window Dimension Tuning: Expanded default dimensions to 1020x720 in `App.jsx`, preventing toolbar wrapping & month grid clipping.
@@ -248,15 +256,6 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - VGA Mode 13h Lab: Added 3D Polar Texture Tunnel & Dual-Wave Ripple effects with hand-crafted assembly source listings.
   - Ergonomics & Network: Added F7/F8/F2/1-8 hotkeys; linked in KNet, portal.html, and webring.html (Node #005).
   - Verification: Node syntax check clean; Vite clean (335ms); security_lint 100% PASS.
-
-- **2026-10-05T19:43:00-07:00 — kilo-usability: KBBS (Usability & Layout Polish, Modal Ergonomics & HiDPI Scaling)**
-  - Status: PASS ✅ (0 regressions, 162.2 KB web / 101.9 KB native < 999 KB ceiling).
-  - Window Dimension Tuning: Expanded default dimensions to 960x680 in `App.jsx`, preventing 800px modal clipping.
-  - Toast Occlusion Remediation: Relocated `#toastContainer` to safe bottom-right (32px/20px) per Directive 185; wired modal auto-clear.
-  - Double-Modal Stacking Prevention: Enforced `closeAllModalsExcept` across dialogs, preventing modal stacking (Directive 185).
-  - Modal Navigation Ergonomics: Added hotkeys [1]-[4] and [T] for Door Games, and [↑]/[↓], [R], [N], [T] for EchoNet message reader.
-  - HiDPI Canvas & CRT Polish: Crisp `devicePixelRatio` scaling on terminal & art canvas; removed expensive software drop-shadow.
-  - Verification: `test_web_apps.js` PASS (96 elements); MSVC clean (`KBBS.exe` 101.9 KB); Vite clean in 546ms; security_lint 100% PASS.
 
 
 

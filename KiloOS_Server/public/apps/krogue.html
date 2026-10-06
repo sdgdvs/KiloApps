@@ -193,8 +193,9 @@
 
         /* Toast Notifications */
         #toast-container {
-            position: absolute; top: 16px; right: 16px; z-index: 9999;
-            display: flex; flex-direction: column; gap: 8px; pointer-events: none;
+            position: absolute; bottom: 42px; right: 16px; z-index: 45;
+            display: flex; flex-direction: column-reverse; gap: 8px; pointer-events: none;
+            max-width: 380px;
         }
         .toast {
             background: rgba(17, 21, 32, 0.96);
@@ -705,8 +706,17 @@
             setTimeout(dismiss, duration);
         }
 
+        function clearAllToasts() {
+            const container = document.getElementById('toast-container');
+            if (container) container.innerHTML = '';
+        }
+
         function waitTurnAction() {
-            if (state === 1 && !isAnyModalOpen()) {
+            if (state !== 1) {
+                showToast("Start or resume a run first to wait a turn!", "warning");
+                return;
+            }
+            if (!isAnyModalOpen()) {
                 addMsg("You pause and wait a turn.", 'msg-latest');
                 endTurn();
             }
@@ -720,12 +730,14 @@
 
         function updateMsgBox() {
             const box = document.getElementById('msg-box');
+            if (!box) return;
             box.innerHTML = msgs.slice(-4).map((m, idx, arr) => {
+                let text = typeof m === 'object' && m !== null ? (m.text || '') : String(m || '');
                 let cls = idx === arr.length - 1 ? 'msg-latest' : '';
-                if (m.text.includes('hit') || m.text.includes('starved') || m.text.includes('dies') || m.text.includes('triggers')) cls += ' msg-combat';
-                if (m.text.includes('glows') || m.text.includes('pick') || m.text.includes('level') || m.text.includes('Saved') || m.text.includes('Blessing') || m.text.includes('SLAIN')) cls += ' msg-good';
-                if (m.text.includes('METEOR') || m.text.includes('Invisibility') || m.text.includes('Miracle') || m.text.includes('Berserk') || m.text.includes('Arcane') || m.text.includes('Shadow')) cls += ' msg-magic';
-                return `<div class="${cls.trim()}">${m.text}</div>`;
+                if (text.includes('hit') || text.includes('starved') || text.includes('dies') || text.includes('triggers')) cls += ' msg-combat';
+                if (text.includes('glows') || text.includes('pick') || text.includes('level') || text.includes('Saved') || text.includes('Blessing') || text.includes('SLAIN')) cls += ' msg-good';
+                if (text.includes('METEOR') || text.includes('Invisibility') || text.includes('Miracle') || text.includes('Berserk') || text.includes('Arcane') || text.includes('Shadow')) cls += ' msg-magic';
+                return `<div class="${cls.trim()}">${escapeHTML(text)}</div>`;
             }).join('');
         }
 
@@ -878,8 +890,12 @@
             return 'True Celestial Sanctuary';
         }
 
+        let tutorialTimeout = null;
+
         // Setup Character Select Modal
         function openCharSelect() {
+            closeAllModalsExcept('modal-char-select');
+            clearAllToasts();
             document.getElementById('modal-char-select').style.display = 'flex';
             renderLoadoutCards();
         }
@@ -969,7 +985,7 @@
             let seenTutorial = localStorage.getItem('krogue_tutorialSeen');
             if (!seenTutorial) {
                 localStorage.setItem('krogue_tutorialSeen', 'true');
-                setTimeout(() => { openHelp(); }, 350);
+                tutorialTimeout = setTimeout(() => { openHelp(); }, 350);
             }
 
             equipment = { weapon: null, armor: null, shield: null, ring: null };
@@ -2185,6 +2201,8 @@
                 showToast("Start or resume a run first to access inventory!", "warning");
                 return;
             }
+            closeAllModalsExcept('modal-inventory');
+            clearAllToasts();
             let eqWeapon = equipment.weapon ? `${equipment.weapon.name} (+${equipment.weapon.val} ATK)` : "None";
             let eqArmor = equipment.armor ? `${equipment.armor.name} (+${equipment.armor.val} DEF)` : "None";
             let eqShield = equipment.shield ? `${equipment.shield.name} (+${equipment.shield.val} DEF)` : "None";
@@ -2288,6 +2306,8 @@
                 showToast("Start or resume a run first to view spells!", "warning");
                 return;
             }
+            closeAllModalsExcept('modal-spellbook');
+            clearAllToasts();
             let container = document.getElementById('spell-list-container');
             let spells = [
                 { key: 'missile', name: 'Magic Missile', cost: 3, desc: 'Single target energy bolt' },
@@ -2426,6 +2446,8 @@
         let rebindingAction = null;
 
         function openKeybinds() {
+            closeAllModalsExcept('modal-keybinds');
+            clearAllToasts();
             renderKeybindsList();
             document.getElementById('keybinds-notice').innerText = '';
             document.getElementById('modal-keybinds').style.display = 'flex';
@@ -2531,6 +2553,8 @@
         }
 
         function openLeaderboard() {
+            closeAllModalsExcept('modal-leaderboard');
+            clearAllToasts();
             let history = JSON.parse(localStorage.getItem('krogue_leaderboard') || '[]');
             let tbody = document.getElementById('lead-tbody');
             if (history.length === 0) {
@@ -2564,9 +2588,15 @@
             localStorage.setItem('krogue_leaderboard', JSON.stringify(history));
         }
 
-        function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+        function closeModal(id) {
+            let el = document.getElementById(id);
+            if (el) el.style.display = 'none';
+        }
 
         function openHelp() {
+            localStorage.setItem('krogue_tutorialSeen', 'true');
+            closeAllModalsExcept('modal-help');
+            clearAllToasts();
             document.getElementById('modal-help').style.display = 'flex';
         }
 
@@ -2714,6 +2744,16 @@
             });
         }
 
+        function closeAllModalsExcept(excludeId = null) {
+            const modalIds = ['modal-char-select', 'modal-inventory', 'modal-spellbook', 'modal-leaderboard', 'modal-keybinds', 'modal-help', 'modal-altar', 'modal-pet', 'modal-anvil'];
+            modalIds.forEach(id => {
+                if (id !== excludeId) {
+                    let el = document.getElementById(id);
+                    if (el) el.style.display = 'none';
+                }
+            });
+        }
+
         function saveGame() {
             if (state !== 1) {
                 showToast("You can only save during an active run!", "warning");
@@ -2728,8 +2768,8 @@
                 addMsg("Run Saved to Storage!", 'good');
                 showToast("Run Saved to Storage!", 'success');
             } catch(e) { 
-                addMsg("Failed to save."); 
-                showToast("Failed to save run.", 'error');
+                addMsg("Failed to save run."); 
+                showToast("Failed to save: " + (e.name === 'QuotaExceededError' ? "Storage quota exceeded" : (e.message || "Unknown error")), 'error');
             }
         }
 
@@ -2738,6 +2778,12 @@
                 let s = localStorage.getItem('krogue_save');
                 if (s) {
                     let d = JSON.parse(s);
+                    if (tutorialTimeout) {
+                        clearTimeout(tutorialTimeout);
+                        tutorialTimeout = null;
+                    }
+                    closeAllModalsExcept(null);
+                    clearAllToasts();
                     player = d.player;
                     equipment = d.equipment || { weapon: null, armor: null, shield: null, ring: null };
                     inventory = d.inventory || [];
@@ -2771,13 +2817,19 @@
                     showToast("No saved run found.", 'warning');
                 }
             } catch(e) { 
-                addMsg("Failed to load."); 
-                showToast("Failed to load run.", 'error');
+                addMsg("Failed to load run."); 
+                showToast("Failed to load run: " + (e.message || "Corrupted save file"), 'error');
             }
         }
 
         // Enchanting Altar, Companion Pet & Challenge Vault Functions
         function openAltarModal() {
+            if (state !== 1) {
+                showToast("Start or resume a run first to use the Altar!", "warning");
+                return;
+            }
+            closeAllModalsExcept('modal-altar');
+            clearAllToasts();
             let container = document.getElementById('altar-equip-sockets');
             let gemsList = document.getElementById('altar-gems-list');
             if (!container || !gemsList) return;
@@ -2880,6 +2932,12 @@
         }
 
         function openPetModal() {
+            if (state !== 1) {
+                showToast("Start or resume a run first to visit the Pet Sanctuary!", "warning");
+                return;
+            }
+            closeAllModalsExcept('modal-pet');
+            clearAllToasts();
             let content = document.getElementById('pet-modal-content');
             if (!content) return;
             
@@ -3006,6 +3064,12 @@
         let activeAnvilY = -1;
 
         function openAnvilModal(itIdx, x, y) {
+            if (state !== 1) {
+                showToast("Start or resume a run first to use the Anvil!", "warning");
+                return;
+            }
+            closeAllModalsExcept('modal-anvil');
+            clearAllToasts();
             activeAnvilIdx = itIdx;
             activeAnvilX = x;
             activeAnvilY = y;
@@ -3551,7 +3615,25 @@
             if (e.key === 'Escape') {
                 closeModal('modal-inventory'); closeModal('modal-spellbook'); closeModal('modal-leaderboard'); closeModal('modal-char-select'); closeModal('modal-help'); closeModal('modal-keybinds'); closeModal('modal-altar'); closeModal('modal-pet'); closeModal('modal-anvil');
                 if (state === 4) { state = 1; addMsg("Targeting cancelled."); }
+                else if (state === 2 || state === 3) { state = 0; }
                 return;
+            }
+
+            // Quick close help with Enter or Space
+            let helpModal = document.getElementById('modal-help');
+            if (helpModal && helpModal.style.display !== 'none' && (e.key === 'Enter' || e.key === ' ')) {
+                e.preventDefault();
+                closeModal('modal-help');
+                return;
+            }
+
+            // Quick actions for Anvil modal with 1-4
+            let anvilModal = document.getElementById('modal-anvil');
+            if (anvilModal && anvilModal.style.display !== 'none') {
+                if (e.key === '1') { craftAtAnvil('hone'); e.preventDefault(); return; }
+                if (e.key === '2') { craftAtAnvil('reinforce'); e.preventDefault(); return; }
+                if (e.key === '3') { craftAtAnvil('socket'); e.preventDefault(); return; }
+                if (e.key === '4') { craftAtAnvil('temper'); e.preventDefault(); return; }
             }
 
             // Don't intercept shortcuts when user is typing in inputs
@@ -3649,6 +3731,7 @@
             } else if (state === 2 || state === 3) {
                 if (e.key === 'r' || e.key === 'R' || e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openCharSelect(); }
                 if (e.key === 't' || e.key === 'T') openLeaderboard();
+                if (isActionKey(e, 'loadState') || e.key === 'F9' || e.key === 'l' || e.key === 'L') { e.preventDefault(); loadGame(); }
             }
         });
 
@@ -3657,9 +3740,28 @@
             const rect = canvas.getBoundingClientRect();
             const clickX = Math.floor(((e.clientX - rect.left) / rect.width * C_WIDTH) / TILE);
             const clickY = Math.floor(((e.clientY - rect.top) / rect.height * C_HEIGHT) / TILE);
+            const pxX = (e.clientX - rect.left) / rect.width * C_WIDTH;
+            const pxY = (e.clientY - rect.top) / rect.height * C_HEIGHT;
 
-            if (state === 0 || state === 2 || state === 3) {
+            if (state === 0) {
+                let hasSave = !!localStorage.getItem('krogue_save');
+                if (hasSave && pxY >= 270 && pxY <= 308) {
+                    loadGame();
+                    return;
+                }
+                if (pxY >= 315 && pxY <= 348) {
+                    if (pxX < C_WIDTH / 2 - 80) openHelp();
+                    else if (pxX > C_WIDTH / 2 + 80) openKeybinds();
+                    else openLeaderboard();
+                    return;
+                }
                 openCharSelect();
+            } else if (state === 2 || state === 3) {
+                if (pxY >= 290 && pxY <= 330 && pxX > C_WIDTH / 2 + 30) {
+                    openLeaderboard();
+                } else {
+                    openCharSelect();
+                }
             } else if (state === 4) {
                 targetX = Math.max(1, Math.min(COLS - 2, clickX));
                 targetY = Math.max(1, Math.min(ROWS - 2, clickY));
@@ -3680,7 +3782,13 @@
         // Start Loop
         gameLoop();
         setTimeout(() => {
-            showToast("Welcome to KRogue! Press [H/F1] for Help or click 'New Run' to begin.", "info", 5000);
+            let hasSave = !!localStorage.getItem('krogue_save');
+            let seenTutorial = !!localStorage.getItem('krogue_tutorialSeen');
+            if (hasSave) {
+                showToast("Saved run detected! Press [F9] or click Resume to continue.", "info", 4500);
+            } else if (!seenTutorial) {
+                showToast("Welcome to KRogue! Press [H/F1] for Help or click 'New Run' to begin.", "info", 5000);
+            }
         }, 500);
     </script>
 </body>

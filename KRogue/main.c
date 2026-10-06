@@ -633,6 +633,9 @@ void enter_challenge_vault(int vault_type);
 void exit_challenge_vault();
 void socket_gem_into_gear(int gear_slot, int inv_idx);
 void unsocket_gear(int gear_slot);
+int has_save_file(void);
+int has_seen_tutorial(void);
+void mark_tutorial_seen(void);
 
 // Minimal LCG Random
 unsigned int g_seed = 12345;
@@ -1470,6 +1473,7 @@ void init_game() {
 }
 
 void finalize_character() {
+    mark_tutorial_seen();
     g.state = 0;
     g.dlevel = 1;
     Entity* p = get_player();
@@ -2743,7 +2747,33 @@ void exit_challenge_vault() {
     calc_fov_bresenham();
 }
 
+int has_save_file(void) {
+    DWORD attr = GetFileAttributesA("save.dat");
+    return (attr != INVALID_FILE_ATTRIBUTES && !(attr & FILE_ATTRIBUTE_DIRECTORY));
+}
+
+int has_seen_tutorial(void) {
+    DWORD attr = GetFileAttributesA("krogue_tutorial.dat");
+    return (attr != INVALID_FILE_ATTRIBUTES && !(attr & FILE_ATTRIBUTE_DIRECTORY));
+}
+
+void mark_tutorial_seen(void) {
+    HANDLE h = CreateFileA("krogue_tutorial.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (h != INVALID_HANDLE_VALUE) {
+        const char msg[] = "KRogue Tutorial Seen\r\n";
+        DWORD written = 0;
+        WriteFile(h, msg, sizeof(msg) - 1, &written, NULL);
+        CloseHandle(h);
+    }
+}
+
 void save_game() {
+    if (g.state == 1 || g.state == 10 || g.state == 4) {
+        add_msg("You can only save during an active run.");
+        show_toast("Cannot save now!", RGB(255, 100, 100), 2000);
+        return;
+    }
+    g.active_shopkeeper = NULL;
     HANDLE hFile = CreateFileA("save.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
     if(hFile != INVALID_HANDLE_VALUE) {
         DWORD written;
@@ -2763,6 +2793,9 @@ void load_game() {
         DWORD read;
         ReadFile(hFile, &g, sizeof(GameState), &read, NULL);
         CloseHandle(hFile);
+        g.active_shopkeeper = NULL;
+        if(g.state != 0) g.state = 0;
+        mark_tutorial_seen();
         add_msg("Game loaded.");
         calc_fov_bresenham();
         show_toast("Game Loaded Successfully!", RGB(100, 255, 100), 2500);
@@ -3344,13 +3377,22 @@ void draw_game(HDC hdc) {
             SetTextColor(memDC, RGB(255,0,0));
             SetBkColor(memDC, RGB(0,0,0));
             TextOutA(memDC, g.target_x * char_w, g.target_y * char_h, "X", 1);
+        } else if(g.state == 1) {
+            SetTextColor(memDC, RGB(229, 62, 62)); // Red color
+            SetBkColor(memDC, RGB(0,0,0));
+            TextOutA(memDC, W/2 * char_w - 90, H/2 * char_h - 24, "Y O U   D I E D", 15);
+            SetTextColor(memDC, RGB(200, 200, 200));
+            TextOutA(memDC, W/2 * char_w - 150, H/2 * char_h, "The darkness of the dungeon claims your soul.", 45);
+            SetTextColor(memDC, RGB(255, 215, 0));
+            TextOutA(memDC, W/2 * char_w - 165, H/2 * char_h + 24, "Press [R / Enter / Space] to Restart | [F9] Load", 48);
         } else if(g.state == 10) {
             SetTextColor(memDC, RGB(255, 215, 0)); // Gold color
             SetBkColor(memDC, RGB(0,0,0));
-            TextOutA(memDC, W/2 * char_w - 150, H/2 * char_h - 20, "V I C T O R Y !", 15);
-            SetTextColor(memDC, RGB(255, 255, 255));
-            TextOutA(memDC, W/2 * char_w - 200, H/2 * char_h, "You have defeated the Chaos God!", 32);
-            TextOutA(memDC, W/2 * char_w - 150, H/2 * char_h + 20, "Press 'R' to restart.", 21);
+            TextOutA(memDC, W/2 * char_w - 100, H/2 * char_h - 24, "V I C T O R Y !", 15);
+            SetTextColor(memDC, RGB(104, 211, 145));
+            TextOutA(memDC, W/2 * char_w - 140, H/2 * char_h, "You have vanquished True Astaroth!", 34);
+            SetTextColor(memDC, RGB(200, 200, 200));
+            TextOutA(memDC, W/2 * char_w - 165, H/2 * char_h + 24, "Press [R / Enter / Space] to Restart | [F9] Load", 48);
         }
     } else if(g.state == 9 && g.active_shopkeeper) { // shop
         SetTextColor(memDC, RGB(255,255,255));
@@ -3464,6 +3506,21 @@ void draw_game(HDC hdc) {
         SetBkMode(memDC, TRANSPARENT);
         SetTextColor(memDC, RGB(100, 255, 140));
         TextOutA(memDC, 26, 226, ">>> CLICK HERE or Press ENTER to Begin Journey <<<", 50);
+        if (has_save_file()) {
+            RECT load_r = {18, 256, 530, 282};
+            HBRUSH lb = CreateSolidBrush(RGB(20, 35, 60));
+            FillRect(memDC, &load_r, lb);
+            DeleteObject(lb);
+            HPEN lp = CreatePen(PS_SOLID, 1, RGB(70, 140, 240));
+            HPEN oldLP = (HPEN)SelectObject(memDC, lp);
+            HBRUSH oldLB = (HBRUSH)SelectObject(memDC, nullB);
+            Rectangle(memDC, load_r.left, load_r.top, load_r.right, load_r.bottom);
+            SelectObject(memDC, oldLP);
+            SelectObject(memDC, oldLB);
+            DeleteObject(lp);
+            SetTextColor(memDC, RGB(120, 200, 255));
+            TextOutA(memDC, 26, 260, ">>> [F9] Resume Saved Run (save.dat detected) <<<", 49);
+        }
     } else if(g.state == 11) { // Leaderboard screen
         SetTextColor(memDC, RGB(255, 215, 0));
         SetBkColor(memDC, RGB(0,0,0));
@@ -4085,7 +4142,12 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             load_keybinds();
             init_game();
             SetTimer(hwnd, 1, 33, NULL);
-            show_toast("Welcome to KRogue! Press 'H' or F1 for Help.", RGB(100, 220, 255), 5000);
+            if (has_save_file()) {
+                show_toast("Saved run detected! Press [F9] to resume.", RGB(100, 220, 255), 4500);
+            } else if (!has_seen_tutorial()) {
+                show_toast("Welcome to KRogue! Press 'H' or F1 for Help.", RGB(100, 220, 255), 5000);
+                mark_tutorial_seen();
+            }
             return 0;
         }
         case WM_TIMER: {
@@ -4169,9 +4231,12 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     else if (px < 300) g.state = 12;
                     else g.state = 7;
                 }
-                else if (py >= 215 && py <= 255) {
+                else if (py >= 215 && py <= 250) {
                     finalize_character();
                     show_toast("Welcome to Floor 1! Defeat monsters & find stairs >", RGB(100, 255, 100), 4000);
+                }
+                else if (has_save_file() && py >= 254 && py <= 286 && px >= 18 && px <= 530) {
+                    load_game();
                 }
                 InvalidateRect(hwnd, NULL, FALSE);
                 return 0;
@@ -4221,8 +4286,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
         case WM_KEYDOWN: {
             if (GetKeyState(VK_CONTROL) < 0 || GetKeyState(VK_MENU) < 0) break;
             if(g.state == 1 || g.state == 10) { // dead or victory
-                if(wParam == 'R') init_game();
-                if(wParam == VK_F9) load_game();
+                if(wParam == 'R' || wParam == VK_RETURN || wParam == VK_SPACE || wParam == VK_ESCAPE) init_game();
+                if(wParam == VK_F9 || wParam == 'L') load_game();
             } else if(g.state == 0) { // play
                 if(wParam == g_keybinds.up || wParam == VK_UP || wParam == VK_NUMPAD8) move_player(0, -1);
                 else if(wParam == g_keybinds.down || wParam == VK_DOWN || wParam == VK_NUMPAD2) move_player(0, 1);
@@ -4287,15 +4352,16 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             } else if(g.state == 4) { // create char
                 if(wParam == 'R') g.char_race = (g.char_race + 1) % 3;
                 else if(wParam == 'C') { g.char_class = (g.char_class + 1) % 3; g.char_loadout = 0; }
-                else if(wParam == 'L') g.char_loadout = (g.char_loadout + 1) % 3;
+                else if(wParam == 'L') { if (has_save_file() && (GetKeyState(VK_SHIFT) & 0x8000)) load_game(); else g.char_loadout = (g.char_loadout + 1) % 3; }
                 else if(wParam == 'D') g.difficulty = (g.difficulty + 1) % 3;
                 else if(wParam == 'S') g.seed = (g.seed * 3 + 1234) % 90000 + 1000;
                 else if(wParam == 'T') g.state = 11;
                 else if(wParam == 'K') g.state = 12;
                 else if(wParam == VK_OEM_2 || wParam == 'H' || wParam == VK_F1) g.state = 7;
-                else if(wParam == VK_RETURN) finalize_character();
+                else if(wParam == VK_RETURN || wParam == VK_SPACE) finalize_character();
+                else if(wParam == VK_F9) load_game();
             } else if(g.state == 11) { // leaderboard
-                if(wParam == VK_ESCAPE || wParam == 'T') g.state = (g.dlevel == 0 ? 4 : 0);
+                if(wParam == VK_ESCAPE || wParam == 'T' || wParam == VK_RETURN || wParam == VK_SPACE) g.state = (g.dlevel == 0 ? 4 : 0);
                 else if(wParam == 'X') { export_leaderboard_json(); }
                 else if(wParam == 'I') { import_leaderboard_json(); }
                 else if(wParam == 'C') { clear_leaderboard(); }
@@ -4323,7 +4389,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     }
                 }
             } else if(g.state == 5) { // char sheet
-                if(wParam == VK_ESCAPE || wParam == 'C') g.state = 0;
+                if(wParam == VK_ESCAPE || wParam == 'C' || wParam == VK_RETURN || wParam == VK_SPACE) g.state = 0;
             } else if(g.state == 6) { // spells
                 if(wParam == VK_ESCAPE || wParam == 'M') g.state = 0;
                 else if(wParam == 'A' && g.known_spells[S_MISSILE]) {
@@ -4445,12 +4511,12 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     }
                 }
             } else if(g.state == 7) { // help
-                if(wParam == VK_ESCAPE || wParam == VK_OEM_2 || wParam == 'H' || wParam == VK_F1) g.state = g.dlevel == 0 ? 4 : 0;
+                if(wParam == VK_ESCAPE || wParam == VK_OEM_2 || wParam == 'H' || wParam == VK_F1 || wParam == VK_RETURN || wParam == VK_SPACE) g.state = g.dlevel == 0 ? 4 : 0;
             } else if(g.state == 8) { // message log
-                if(wParam == VK_ESCAPE || wParam == 'V') g.state = 0;
+                if(wParam == VK_ESCAPE || wParam == 'V' || wParam == VK_RETURN || wParam == VK_SPACE) g.state = 0;
             } else if(g.state == 13) { // altar
                 static int altar_sel = 1;
-                if(wParam == VK_ESCAPE || wParam == 'E') {
+                if(wParam == VK_ESCAPE || wParam == 'E' || wParam == VK_SPACE) {
                     g.state = 0;
                 } else if(wParam == '1') {
                     altar_sel = 1;
@@ -4467,7 +4533,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     socket_gem_into_gear(altar_sel, idx);
                 }
             } else if(g.state == 14) { // pet sanctuary
-                if(wParam == VK_ESCAPE || wParam == 'P') {
+                if(wParam == VK_ESCAPE || wParam == 'P' || wParam == VK_SPACE) {
                     g.state = 0;
                 } else if(wParam >= '1' && wParam <= '4') {
                     adopt_pet((int)(wParam - '0'));
