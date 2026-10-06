@@ -737,13 +737,14 @@
       opacity: 0;
       transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
       cursor: pointer;
-      pointer-events: auto;
+      pointer-events: none;
       user-select: none;
       white-space: nowrap;
     }
     .toast.show {
       opacity: 1;
       transform: translateX(-50%) translateY(0);
+      pointer-events: auto;
     }
 
     /* Win98 Theme Custom Overrides */
@@ -1023,8 +1024,9 @@
       + Add Clip
     </button>
     <div style="width: 1px; height: 20px; background: var(--border); margin: 0 4px;"></div>
-    <div class="input-wrap" style="max-width: 220px;">
-      <input type="text" id="inputSearch" class="text-input" placeholder="🔍 Search clips... (Ctrl+F)">
+    <div class="input-wrap" style="max-width: 220px; position: relative;">
+      <input type="text" id="inputSearch" class="text-input" placeholder="🔍 Search clips... (Ctrl+F)" style="padding-right: 22px;">
+      <button id="btnSearchClear" title="Clear search (Esc)" aria-label="Clear search" style="position: absolute; right: 6px; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--text-muted); font-size: 14px; cursor: pointer; display: none; line-height: 1; padding: 2px;">&times;</button>
     </div>
     <div class="filter-pills" id="filterPills">
       <button class="pill active" data-cat="all">All</button>
@@ -1091,6 +1093,9 @@
           <div style="width: 1px; height: 16px; background: var(--border); margin: 0 2px;"></div>
           <button class="btn btn-sm" id="btnFontSmaller" title="Decrease Editor Font Size (Ctrl+Minus)">
             A-
+          </button>
+          <button class="btn btn-sm" id="btnFontReset" title="Reset Editor Font Size to 13px (Ctrl+0)">
+            13px
           </button>
           <button class="btn btn-sm" id="btnFontBigger" title="Increase Editor Font Size (Ctrl+Plus)">
             A+
@@ -1666,6 +1671,20 @@
           newClip.pinned = old.pinned || pinned;
         }
 
+        // If current filter or search query would hide this new clip, reset to 'all' and clear search
+        if (state.activeFilter !== 'all' && state.activeFilter !== cat && (!newClip.pinned || state.activeFilter !== 'pinned')) {
+          state.activeFilter = 'all';
+          const pills = document.querySelectorAll('#filterPills .pill');
+          pills.forEach(function(p) { p.classList.toggle('active', p.dataset.cat === 'all'); });
+        }
+        if (state.searchQuery && !content.toLowerCase().includes(state.searchQuery.toLowerCase())) {
+          state.searchQuery = '';
+          const sInp = document.getElementById('inputSearch');
+          if (sInp) sInp.value = '';
+          const sClr = document.getElementById('btnSearchClear');
+          if (sClr) sClr.style.display = 'none';
+        }
+
         state.clips.unshift(newClip);
         state.selectedClipId = newClip.id;
 
@@ -1837,6 +1856,7 @@
             try {
               transformed = btoa(unescape(encodeURIComponent(content)));
             } catch (e) {
+              playSoundEffect('error');
               showToast('Base64 encoding error');
               return;
             }
@@ -1845,6 +1865,7 @@
             try {
               transformed = decodeURIComponent(escape(atob(content.trim())));
             } catch (e) {
+              playSoundEffect('error');
               showToast('Invalid Base64 payload');
               return;
             }
@@ -1856,6 +1877,7 @@
             try {
               transformed = decodeURIComponent(content);
             } catch (e) {
+              playSoundEffect('error');
               showToast('Invalid URL encoding');
               return;
             }
@@ -1865,6 +1887,7 @@
               const obj = JSON.parse(content);
               transformed = JSON.stringify(obj, null, 2);
             } catch (e) {
+              playSoundEffect('error');
               showToast('Invalid JSON structure');
               return;
             }
@@ -1874,6 +1897,7 @@
               const obj = JSON.parse(content);
               transformed = JSON.stringify(obj);
             } catch (e) {
+              playSoundEffect('error');
               showToast('Invalid JSON structure');
               return;
             }
@@ -1897,6 +1921,8 @@
           renderClipList();
           updateInspector();
           updateStatus();
+        } else {
+          showToast('Content unchanged (' + action + ')');
         }
       }
 
@@ -2016,6 +2042,7 @@
           const pinBtn = document.createElement('button');
           pinBtn.className = 'card-pin-btn' + (clip.pinned ? ' is-pinned' : '');
           pinBtn.title = clip.pinned ? 'Unpin' : 'Pin to top';
+          pinBtn.setAttribute('aria-label', clip.pinned ? 'Unpin clip' : 'Pin clip');
           pinBtn.innerHTML = clip.pinned ? '⭐' : '☆';
           pinBtn.addEventListener('click', function(e) {
             e.stopPropagation();
@@ -2039,6 +2066,16 @@
           stats.innerHTML = '<span>' + clip.content.length + ' chars</span><span>' + clip.content.split('\n').length + ' lines</span>';
           card.appendChild(stats);
 
+          card.setAttribute('tabindex', '0');
+          card.setAttribute('role', 'button');
+          card.setAttribute('aria-label', (clip.pinned ? 'Pinned ' : '') + clip.category + ' clip: ' + clip.content.substring(0, 40).replace(/\n/g, ' '));
+          card.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              card.click();
+            }
+          });
+
           card.addEventListener('click', function() {
             state.selectedClipId = clip.id;
             playSoundEffect('click');
@@ -2055,6 +2092,19 @@
 
           container.appendChild(card);
         });
+      }
+
+      function updateCursorPosition() {
+        const editor = document.getElementById('editorClipContent');
+        const statCursor = document.getElementById('statCursor');
+        if (!editor || !statCursor) return;
+        const pos = editor.selectionStart || 0;
+        const val = editor.value || '';
+        const sub = val.substring(0, pos);
+        const lines = sub.split('\n');
+        const ln = lines.length;
+        const col = lines[lines.length - 1].length + 1;
+        statCursor.textContent = 'Ln ' + ln + ', Col ' + col;
       }
 
       function updateInspector() {
@@ -2084,8 +2134,10 @@
           return;
         }
 
-        // Avoid re-assigning editor value if actively focused to preserve cursor position
-        if (editor && document.activeElement !== editor) editor.value = sel.content;
+        // Avoid re-assigning editor value if actively focused and content hasn't changed to preserve cursor position
+        if (editor && (document.activeElement !== editor || editor.value !== sel.content)) {
+          editor.value = sel.content;
+        }
         if (hexViewer) hexViewer.textContent = generateHexDump(sel.content);
 
         const chars = sel.content.length;
@@ -2100,7 +2152,7 @@
         if (statType) statType.textContent = sel.category.toUpperCase();
         if (statChecksum) statChecksum.textContent = computeCrc32(sel.content);
         if (btnPin) btnPin.innerHTML = sel.pinned ? '⭐ Unpin' : '☆ Pin';
-        if (typeof updateCursorPosition === 'function') updateCursorPosition();
+        updateCursorPosition();
       }
 
       function updateStatus() {
@@ -2337,6 +2389,13 @@
         const m = document.getElementById(id);
         if (!m) return;
 
+        // Dismiss any active toast when opening a modal to prevent occlusions
+        const toast = document.getElementById('toastNotice');
+        if (toast) {
+          if (toastTimer) clearTimeout(toastTimer);
+          toast.classList.remove('show');
+        }
+
         // Auto-mark tutorial seen if moving to another modal
         const modalTutorial = document.getElementById('modalTutorial');
         if (modalTutorial && (modalTutorial.style.display === 'flex' || modalTutorial.classList.contains('active')) && id !== 'modalTutorial') {
@@ -2461,10 +2520,25 @@
 
         // Search Box
         const inputSearch = document.getElementById('inputSearch');
+        const btnSearchClear = document.getElementById('btnSearchClear');
         if (inputSearch) {
           inputSearch.addEventListener('input', function(e) {
             state.searchQuery = e.target.value;
+            if (btnSearchClear) {
+              btnSearchClear.style.display = state.searchQuery ? 'block' : 'none';
+            }
             renderClipList();
+          });
+        }
+        if (btnSearchClear) {
+          btnSearchClear.addEventListener('click', function() {
+            state.searchQuery = '';
+            if (inputSearch) inputSearch.value = '';
+            btnSearchClear.style.display = 'none';
+            renderClipList();
+            updateInspector();
+            inputSearch?.focus();
+            playSoundEffect('click');
           });
         }
 
@@ -2589,8 +2663,10 @@
           editorFontSize = Math.min(26, Math.max(10, size));
           const editor = document.getElementById('editorClipContent');
           const hex = document.getElementById('hexViewerContainer');
+          const btnReset = document.getElementById('btnFontReset');
           if (editor) editor.style.fontSize = editorFontSize + 'px';
           if (hex) hex.style.fontSize = Math.max(10, editorFontSize - 1) + 'px';
+          if (btnReset) btnReset.textContent = editorFontSize + 'px';
           try {
             localStorage.setItem('kclip_fontsize', editorFontSize);
           } catch (e) {}
@@ -2601,6 +2677,11 @@
           applyEditorFontSize(editorFontSize - 1);
           playSoundEffect('click');
           showToast('Editor Font: ' + editorFontSize + 'px');
+        });
+        document.getElementById('btnFontReset')?.addEventListener('click', function() {
+          applyEditorFontSize(13);
+          playSoundEffect('click');
+          showToast('Editor Font reset to 13px');
         });
         document.getElementById('btnFontBigger')?.addEventListener('click', function() {
           applyEditorFontSize(editorFontSize + 1);
@@ -2640,18 +2721,6 @@
         });
 
         // Cursor Position Tracking
-        function updateCursorPosition() {
-          const editor = document.getElementById('editorClipContent');
-          const statCursor = document.getElementById('statCursor');
-          if (!editor || !statCursor) return;
-          const pos = editor.selectionStart || 0;
-          const val = editor.value || '';
-          const sub = val.substring(0, pos);
-          const lines = sub.split('\n');
-          const ln = lines.length;
-          const col = lines[lines.length - 1].length + 1;
-          statCursor.textContent = 'Ln ' + ln + ', Col ' + col;
-        }
         const editorEl = document.getElementById('editorClipContent');
         if (editorEl) {
           editorEl.addEventListener('keyup', updateCursorPosition);
@@ -2781,22 +2850,13 @@
         const tabHex = document.getElementById('tabViewHex');
         const hexViewer = document.getElementById('hexViewerContainer');
 
-        if (tabText && tabHex && editor && hexViewer) {
+        if (tabText && tabHex) {
           tabText.addEventListener('click', function() {
-            state.viewMode = 'text';
-            tabText.classList.add('active');
-            tabHex.classList.remove('active');
-            editor.style.display = 'block';
-            hexViewer.style.display = 'none';
+            applyViewMode('text');
             playSoundEffect('click');
           });
           tabHex.addEventListener('click', function() {
-            state.viewMode = 'hex';
-            tabHex.classList.add('active');
-            tabText.classList.remove('active');
-            editor.style.display = 'none';
-            hexViewer.style.display = 'block';
-            hexViewer.textContent = generateHexDump(editor.value);
+            applyViewMode('hex');
             playSoundEffect('click');
           });
         }
@@ -3016,6 +3076,8 @@
             if (search && (search.value || state.searchQuery)) {
               search.value = '';
               state.searchQuery = '';
+              const btnClear = document.getElementById('btnSearchClear');
+              if (btnClear) btnClear.style.display = 'none';
               search.blur();
               renderClipList();
               updateInspector();
@@ -3201,7 +3263,7 @@
         loadSettingsPreferences();
         const loaded = loadWorkstationState(false);
         if (!loaded || state.clips.length === 0) {
-          state.clips = DEFAULT_CLIPS.slice();
+          state.clips = DEFAULT_CLIPS.map(function(c) { return Object.assign({}, c); });
           state.selectedClipId = state.clips[0].id;
         }
 

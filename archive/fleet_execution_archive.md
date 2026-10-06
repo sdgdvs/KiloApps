@@ -4,6 +4,12 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-05T17:35:00-07:00 — kilo-graphics: KAbyss (Skip Turn — Inappropriate Target & Glint/Dot Audit)**
+  - Status: ⏭️ Skip — Imagen 3 asset replacement not appropriate for KAbyss
+  - Rationale: Mature procedural dual-engine (HTML5 Canvas / Win32 GDI); 1:1 parity and dynamic equipment/ward rigs preclude raster replacement.
+  - Glint & Dot Audit: Verified 0 rotating specular glints or traveling perimeter dots across web and native C.
+  - Verification: `scripts/check_icons.py` 100% PASS; `scripts/security_lint.py` 100% PASS; MSVC clean (`KAbyss.exe` 242.5 KB); Vite clean in 442ms; web (448.4 KB) < 999 KB ceiling.
+
 - **2026-10-05T15:39:00-07:00 — kilo-expander: KConnect4 (Firebase RTDB Multiplayer Expansion & RFMS Standardization)**
   - Status: PASS ✅ (0 regressions, 160.5 KB web / 186.0 KB native < 999 KB ceiling).
   - RFMS Standard Integration: Standardized on `RetroMultiplayer` with 25s auto-fallback to Subnet AI Cyber-Bot (Mandate 12).
