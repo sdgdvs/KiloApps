@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-creator
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -16,7 +16,7 @@ current_targets:
   kilo_graphics: KPac
   kilo_tester: KMine
   kilo_usability: KChess
-  kilo_qa: KPong
+  kilo_qa: KPac
   kilo_expander: KCalc
 virtual_web_target: "kweb://echo-subsystem.net"
 virtual_web_rotation:
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-usability
-  app: KColor
-  timestamp: "2026-10-06T11:55:00-07:00"
+  agent: kilo-qa
+  app: KPong
+  timestamp: "2026-10-06T12:10:00-07:00"
 last_planner_run: "2026-10-06T14:20:00Z"
 ---
 
@@ -124,9 +124,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KConnect4`, `KConverter`, `KFreecell`, `KHangman`, `KMatch3`, `KPong`, `KSettings`, `KSimon`, `KSnake`, `KSolitaire`, `KSudoku`, `KTetris`, `KWords`, `KBBS`, `KCalendar` *(Completed: KCalc, KPomodoro, KTimer, KClock, KHash, KMystery, KMandel, KFont, KPing, KAudio, KSynth, KScript, KRead, KRadio, KSys, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KChrono, KTask, KStarForge, KPad, KBookmark, KRSS, KClip, KHex, KHabit, KFarm, KPaint, KGraph, KImage, KJournal, KMail, KMedia, KNet, KNote, KPass, KMine, KBBS, KCalendar, KChart, KColor)*.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
-- **Current Target**: `KPong`
+- **Current Target**: `KPac`
 - **Upcoming Queue**:
-  `KPac`, `KChess`, `KColor`, `KConverter`, `KQuarantine`, `KSettings`, `KTaskMgr`, `KHabit`, `KSudoku`, `KConnect4`, `KHangman`, `KSimon`, `KAsteroids`, `KFreecell`, `KMatch3`, `KWords`, `KGo`, `KDarts`, `KTowers`, `KReversi`, `KAlchemy`, `KColony`, `KStarForge`, `KBreakout`, `KRogue`, `KTetris` *(Completed in Pass 5: KBBS, KChrono, KCipher, KClip, KCyber, KDragon, KFortress, KHash, KMaze, KMech, KMystery, KQuest, KSanctuary, KSnake, KSolitaire, KSpace, KStarDredge, KStarship, KStellar, KSubmarine, KSynth, KSys, KTask, KTerm, KTimer, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KRSS, K2048, KChart, KGraph, KContacts, KScript, KRead, KColosseum, KAbyss, KMedia, KAudio, KRadio, KPad, KPaint, KCalc, KMine, KCosmic, KBase, KBudget, KCalendar, KFarm, KFlash, KFont, KImage, KJournal, KMail, KMandel, KNet, KNote, KPass, KDB, KHex, KBookmark, KPing, KChat, KClock, KPomodoro, KBreakout, KRogue, KTetris)*.
+  `KChess`, `KColor`, `KConverter`, `KQuarantine`, `KSettings`, `KTaskMgr`, `KHabit`, `KSudoku`, `KConnect4`, `KHangman`, `KSimon`, `KAsteroids`, `KFreecell`, `KMatch3`, `KWords`, `KGo`, `KDarts`, `KTowers`, `KReversi`, `KAlchemy`, `KColony`, `KStarForge`, `KBreakout`, `KRogue`, `KTetris`, `KPong` *(Completed in Pass 5: KBBS, KChrono, KCipher, KClip, KCyber, KDragon, KFortress, KHash, KMaze, KMech, KMystery, KQuest, KSanctuary, KSnake, KSolitaire, KSpace, KStarDredge, KStarship, KStellar, KSubmarine, KSynth, KSys, KTask, KTerm, KTimer, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KRSS, K2048, KChart, KGraph, KContacts, KScript, KRead, KColosseum, KAbyss, KMedia, KAudio, KRadio, KPad, KPaint, KCalc, KMine, KCosmic, KBase, KBudget, KCalendar, KFarm, KFlash, KFont, KImage, KJournal, KMail, KMandel, KNet, KNote, KPass, KDB, KHex, KBookmark, KPing, KChat, KClock, KPomodoro, KBreakout, KRogue, KTetris, KPong)*.
 
 ### 6. Feature Expander Queue (`kilo-expander`)
 - **Current Target**: `KCalc`
@@ -217,6 +217,15 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-06T12:10:00-07:00 — kilo-qa: KPong (Pass 5: Tutorial & State Integrity, Modal Ergonomics & Build Audit)**
+  - Status: PASS ✅ (0 regressions, 121.1 KB web / 44.5 KB native < 999 KB ceiling).
+  - State Persistence: Hardened [F5/F9] in web and Win32 C (`kpong_save.dat`) preserving hazards, boss, powerups, paddles, and cooldowns.
+  - Tutorial Integrity: Gated first-run guide behind `kpong_tutorialSeen` / `kpong_tutorial.dat`; restored saves bypass tutorial.
+  - Overlays & Ergonomics: Wired Esc, Enter, Space across help, stats, and game over overlays; updated guide key legends.
+  - Toast Occlusion Remediation: Centered non-occluding click-to-dismiss toast (Directive 185); timer conflict resolved.
+  - Verification: `test_web_apps.js` PASS (46 elements, 0 errors); MSVC clean (`KPong.exe` 44.5 KB); Vite clean (498ms); security_lint 100% PASS.
+  - Queue: Advanced `kilo_qa` to `KPac`; rotation advanced to `kilo-expander`.
+
 - **2026-10-06T11:55:00-07:00 — kilo-usability: KColor (Window Sizing, Onboarding & Dynamic Slider Ergonomics)**
   - Status: PASS ✅ (0 regressions, 61.3 KB web / 16.0 KB native < 999 KB ceiling).
   - Window & Layout Ergonomics: Tuned default window dimensions to 880x660 in `App.jsx` to show full 2-panel studio; added responsive header wrapping for narrow views.
@@ -252,12 +261,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - CLI & Navigation: Added `interferometer`, `convergence`, `clearance`, `keys`, `memos`, `ping 10.19.99.127`; updated [1-9] key navigation.
   - Directory & Webring Linking: Updated site #015 in `webring.html` and `web-classified` in `portal.html` with interferometer specs.
   - Verification: `security_lint.py` 100% PASS; `check_icons.py` 100% PASS; Vite clean build (347ms).
-
-- **2026-10-06T10:48:00-07:00 — kilo-expander: KBreakout (Arcade Cyber-Duel Arena, RFMS Real-Time Multiplayer, Replay Theater & Keybinding)**
-  - Status: PASS ✅ (0 regressions, 150.1 KB web / 55.8 KB native < 999 KB ceiling).
-  - RFMS Multiplayer: Added Firebase RTDB real-time multiplayer duel with ephemeral room matchmaking, dual-link `#room=CODE`, and lobby browser.
-  - Autostart Gate & AI Fallback: Mode gated behind explicit connect action (Mandate 12); 25s timeout transitions to local Subnet AI Cyber-Bot.
-  - Arcade Cyber-Duel: Built side-by-side dual arena (720x420) with live paddle/ball physics, attack surge missiles, disruption blocks, and BO3/BO5 KOs.
-  - Replay Theater & Board Tools: Added mission event recorder, 1x/2x/4x replay viewer, `.kbrk` export/import, and board state clipboard tools.
-  - Custom Key Rebinding: Built custom keybinding configuration with persistent `localStorage` mapping, rebind modal, and default resets.
-  - Verification: `test_web_apps.js` PASS (1 app, 49 elements); MSVC clean (`KBreakout.exe` 55.8 KB); Vite clean (329ms); security_lint 100% PASS.

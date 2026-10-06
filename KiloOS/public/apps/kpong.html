@@ -161,10 +161,10 @@
   .modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
 
   .toast {
-    position: fixed; bottom: 20px; right: 20px; background: rgba(0, 229, 255, 0.9);
-    color: #000; padding: 10px 16px; border-radius: 8px; font-weight: 700; font-size: 13px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.4); opacity: 0; transition: opacity 0.3s ease; pointer-events: none;
-    z-index: 200;
+    position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: rgba(0, 229, 255, 0.95);
+    color: #000; padding: 10px 18px; border-radius: 8px; font-weight: 700; font-size: 13px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.5); opacity: 0; transition: opacity 0.25s ease; pointer-events: auto;
+    cursor: pointer; z-index: 250; max-width: 90vw; text-align: center;
   }
   .toast.active { opacity: 1; }
 </style>
@@ -239,8 +239,11 @@
       <tr><th>Stats</th><td>[L] Stats Modal | JSON Export & Import</td></tr>
       <tr><th>Save/Load</th><td>[F5] Save Game | [F9] Load Game</td></tr>
     </table>
-    <div class="modal-actions">
-      <button class="btn-sm modal-close btn-close help-btn-close" id="btn-close-help" onclick="closeHelpModal()">Got it!</button>
+    <div class="modal-actions" style="justify-content: space-between; align-items: center;">
+      <label style="font-size: 11px; color: #aaa; display: flex; align-items: center; gap: 6px; cursor: pointer;">
+        <input type="checkbox" id="chkDoNotShowTutorial" onchange="safeSetStorage('kpong_tutorialSeen', this.checked ? '1' : '')"> Don't show on startup
+      </label>
+      <button class="btn-sm modal-close btn-close help-btn-close" id="btn-close-help" onclick="closeHelpModal()">Got it! [Enter/Esc]</button>
     </div>
   </div>
 </div>
@@ -357,7 +360,7 @@
   </div>
 </div>
 
-<div class="toast" id="toast">Message</div>
+<div class="toast" id="toast" onclick="this.classList.remove('active')" role="status" aria-live="polite" title="Click to dismiss">Message</div>
 
 <script>
   // Exception-Safe LocalStorage Helpers
@@ -434,11 +437,17 @@
       } catch (e) {}
   }
 
+  let toastTimer = null;
   function showToast(msg) {
       const t = document.getElementById('toast');
+      if (!t) return;
       t.innerText = msg;
       t.classList.add('active');
-      setTimeout(() => t.classList.remove('active'), 2500);
+      if (toastTimer) clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => {
+          t.classList.remove('active');
+          toastTimer = null;
+      }, 2600);
   }
 
   const canvas = document.getElementById('gameCanvas');
@@ -854,8 +863,10 @@
           }
           if (code && /^[A-Za-z0-9_-]{3,10}$/.test(code)) {
               showInvitePrompt(code.toUpperCase());
+              return true;
           }
       } catch(e) {}
+      return false;
   }
 
   function handleRemoteMove(moveData) {
@@ -1409,13 +1420,17 @@
 
       // If a modal is open, prevent background game key inputs
       if (isHelpActive || isStatsActive || isMpActive || isInviteActive) {
-          if ((e.key === 'h' || e.key === 'H' || e.key === 'F1') && isHelpActive) {
-              if (e.key === 'F1') e.preventDefault();
+          if ((e.key === 'h' || e.key === 'H' || e.key === 'F1' || e.key === 'Enter' || e.key === ' ') && isHelpActive) {
+              if (e.key === 'F1' || e.key === ' ') e.preventDefault();
               closeHelpModal();
-          } else if ((e.key === 'l' || e.key === 'L') && isStatsActive) {
+          } else if ((e.key === 'l' || e.key === 'L' || e.key === 'Enter' || e.key === ' ') && isStatsActive) {
+              if (e.key === ' ') e.preventDefault();
               closeStatsModal();
           } else if ((e.key === 'o' || e.key === 'O') && isMpActive) {
               closeMultiplayerModal();
+          } else if (isInviteActive && (e.key === 'Enter' || e.key === ' ')) {
+              if (e.key === ' ') e.preventDefault();
+              acceptInvite();
           }
           return;
       }
@@ -1436,7 +1451,8 @@
           return;
       }
 
-      if (gameOver && (e.key === 'r' || e.key === 'R')) {
+      if (gameOver && (e.key === 'r' || e.key === 'R' || e.key === ' ' || e.key === 'Enter')) {
+          if (e.key === ' ') e.preventDefault();
           if (isOnline && rMultiplayer) {
               rMultiplayer.requestRematch();
           } else {
@@ -1469,8 +1485,19 @@
   document.addEventListener('keyup', e => { keys[e.key] = false; });
   window.addEventListener('blur', () => { for(let k in keys) keys[k] = false; });
 
-  function openHelpModal() { document.getElementById('helpModal').classList.add('active'); }
-  function closeHelpModal() { document.getElementById('helpModal').classList.remove('active'); }
+  function openHelpModal() {
+      const modal = document.getElementById('helpModal');
+      if (modal) modal.classList.add('active');
+      const chk = document.getElementById('chkDoNotShowTutorial');
+      if (chk) chk.checked = !!safeGetStorage('kpong_tutorialSeen');
+  }
+  function closeHelpModal() {
+      const modal = document.getElementById('helpModal');
+      if (modal) modal.classList.remove('active');
+      safeSetStorage('kpong_tutorialSeen', '1');
+      const chk = document.getElementById('chkDoNotShowTutorial');
+      if (chk) chk.checked = true;
+  }
 
   // Modal Backdrop Click Dismissal
   document.getElementById('helpModal').addEventListener('click', function(e) {
@@ -1579,24 +1606,22 @@
       e.preventDefault();
   }, { passive: false });
 
-  // Auto-open help on first load & Startup welcome toast
-  if (!safeGetStorage('kpong_has_played', false)) {
-      openHelpModal();
-      safeSetStorage('kpong_has_played', true);
-  } else {
-      setTimeout(() => {
-          showToast("Welcome to KPONG! [Space] Pause | [F1/H] Help | [M] Mode | [U] Sound");
-      }, 300);
-  }
-
-  // Persistence: Save / Load State
+  // Persistence: Save / Load State (Pass 5 Full State Integrity)
   function saveGameState() {
       const state = {
-          s1, s2, rally, p1y, p2y, gameMode, isPvP, campaignLevel,
-          balls, difficulty, themeIndex,
+          s1, s2, rally, p1y, p2y, p1Vy, p2Vy, p1PadH, p2PadH,
+          gameMode, isPvP, campaignLevel, difficulty, themeIndex,
+          balls: balls.map(b => ({
+              x: b.x, y: b.y, dx: b.dx, dy: b.dy, active: b.active,
+              is_fireball: b.is_fireball, trail_count: b.trail_count, last_hitter: b.last_hitter
+          })),
+          powerupX, powerupY, powerupActive, powerupType,
+          obsY, obsDy, obs1Active, obs1Respawn, obs2X, obs2Dx, obs2Active, obs2Respawn, portalCooldown,
+          bossShieldHp, bossShieldTimer, bossShieldY, bossShieldDy,
           p1BuffTimer, p2BuffTimer, p1DebuffTimer, p2DebuffTimer,
           p1FreezeTimer, p2FreezeTimer, p1ShieldTimer, p2ShieldTimer,
-          skillSlowTimer, skillSlowCooldown, skillMegaTimer, skillMegaCooldown, skillFireballReady, skillFireballCooldown
+          skillSlowTimer, skillSlowCooldown, skillMegaTimer, skillMegaCooldown, skillFireballReady, skillFireballCooldown,
+          gameOver, winScreen, isPaused
       };
       safeSetStorage('kpong_saved_state', state);
       showToast("Game State Saved (F5)!");
@@ -1604,15 +1629,37 @@
 
   function loadGameState() {
       const state = safeGetStorage('kpong_saved_state', null);
-      if (!state) { showToast("No Saved Game Found!"); return; }
+      if (!state) { showToast("No Saved Game Found (F5 to save)!"); return; }
       try {
           s1 = state.s1 || 0; s2 = state.s2 || 0; rally = state.rally || 0;
-          p1y = state.p1y || H/2 - 25; p2y = state.p2y || H/2 - 25;
-          gameMode = state.gameMode || 0; isPvP = !!state.isPvP;
+          p1y = (typeof state.p1y === 'number') ? state.p1y : H/2 - 25;
+          p2y = (typeof state.p2y === 'number') ? state.p2y : H/2 - 25;
+          p1Vy = state.p1Vy || 0; p2Vy = state.p2Vy || 0;
+          p1PadH = state.p1PadH || 50; p2PadH = state.p2PadH || 50;
+          gameMode = (typeof state.gameMode === 'number') ? state.gameMode : 0;
+          if (gameMode < 0 || gameMode >= MODE_NAMES.length) gameMode = 0;
+          isPvP = !!state.isPvP;
           campaignLevel = state.campaignLevel || 1;
-          balls = state.balls || [];
+          balls = Array.isArray(state.balls) ? state.balls : [];
           difficulty = state.difficulty || 2;
           themeIndex = state.themeIndex || 0;
+          powerupX = (typeof state.powerupX === 'number') ? state.powerupX : -1;
+          powerupY = (typeof state.powerupY === 'number') ? state.powerupY : -1;
+          powerupActive = state.powerupActive || 0;
+          powerupType = state.powerupType || 0;
+          obsY = (typeof state.obsY === 'number') ? state.obsY : H/2 - 20;
+          obsDy = state.obsDy || 3;
+          obs1Active = state.obs1Active !== undefined ? !!state.obs1Active : true;
+          obs1Respawn = state.obs1Respawn || 0;
+          obs2X = (typeof state.obs2X === 'number') ? state.obs2X : W/2 - 20;
+          obs2Dx = state.obs2Dx || 4;
+          obs2Active = state.obs2Active !== undefined ? !!state.obs2Active : true;
+          obs2Respawn = state.obs2Respawn || 0;
+          portalCooldown = state.portalCooldown || 0;
+          bossShieldHp = (typeof state.bossShieldHp === 'number') ? state.bossShieldHp : 3;
+          bossShieldTimer = state.bossShieldTimer || 0;
+          bossShieldY = (typeof state.bossShieldY === 'number') ? state.bossShieldY : H/2 - 50;
+          bossShieldDy = state.bossShieldDy || 2;
           p1BuffTimer = state.p1BuffTimer || 0; p2BuffTimer = state.p2BuffTimer || 0;
           p1DebuffTimer = state.p1DebuffTimer || 0; p2DebuffTimer = state.p2DebuffTimer || 0;
           p1FreezeTimer = state.p1FreezeTimer || 0; p2FreezeTimer = state.p2FreezeTimer || 0;
@@ -1620,8 +1667,11 @@
           skillSlowTimer = state.skillSlowTimer || 0; skillSlowCooldown = state.skillSlowCooldown || 0;
           skillMegaTimer = state.skillMegaTimer || 0; skillMegaCooldown = state.skillMegaCooldown || 0;
           skillFireballReady = !!state.skillFireballReady; skillFireballCooldown = state.skillFireballCooldown || 0;
+          gameOver = !!state.gameOver;
+          winScreen = !!state.winScreen;
+          isPaused = !!state.isPaused;
 
-          document.body.className = THEME_CLASSES[themeIndex];
+          document.body.className = THEME_CLASSES[themeIndex] || THEME_CLASSES[0];
           document.getElementById('s1').innerText = s1;
           document.getElementById('s2').innerText = s2;
           document.getElementById('btn-pvp').innerText = isPvP ? "👥 2P Local PvP [V]" : "👤 1P vs AI [V]";
@@ -1630,8 +1680,7 @@
           if (btnDiff) btnDiff.innerText = `⚡ Diff: ${DIFF_NAMES[difficulty]} [1-3]`;
           updateBadge();
           if (activeBallCount() === 0) resetBalls();
-          gameOver = false; isPaused = false;
-          safeSetStorage('kpong_has_played', true);
+          closeHelpModal();
           showToast("Game State Loaded (F9)!");
       } catch (e) {
           showToast("Failed to load saved state.");
@@ -2754,7 +2803,18 @@
 
   // Initialize RFMS Multiplayer service & URL invite detection (Rule 12 connect gate compliant)
   initRetroMultiplayer();
-  checkUrlInvite();
+  const hasInvite = checkUrlInvite();
+
+  // First-run Tutorial Integrity (Pass 5)
+  setTimeout(() => {
+      const tutorialSeen = safeGetStorage('kpong_tutorialSeen') || safeGetStorage('kpong_has_played');
+      const hasSaved = !!safeGetStorage('kpong_saved_state');
+      if (!tutorialSeen && !hasSaved && !hasInvite) {
+          openHelpModal();
+      } else {
+          showToast("Welcome to KPONG! [Space] Pause | [F1/H] Help | [F5/F9] Save/Load");
+      }
+  }, 250);
 
   function gameLoop(timestamp) {
       update();

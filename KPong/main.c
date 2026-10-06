@@ -76,6 +76,7 @@ typedef struct {
     int p1_score, p2_score;
     int rally;
     int p1_y, p2_y;
+    int p1_pad_h, p2_pad_h;
     int game_mode;
     int is_pvp;
     int campaign_level;
@@ -88,6 +89,10 @@ typedef struct {
     int skill_slow_timer, skill_slow_cooldown;
     int skill_mega_timer, skill_mega_cooldown;
     int skill_fireball_ready, skill_fireball_cooldown;
+    int powerup_x, powerup_y, powerup_active, powerup_type;
+    int obs_y, obs_dy, obs1_active, obs2_x, obs2_dx, obs2_active;
+    int boss_shield_hp, boss_shield_timer, boss_shield_y, boss_shield_dy;
+    int game_over, is_paused, win_screen;
     Ball balls[MAX_BALLS];
 } SaveState;
 
@@ -579,6 +584,14 @@ void SaveGameState() {
         s.skill_slow_timer = skill_slow_timer; s.skill_slow_cooldown = skill_slow_cooldown;
         s.skill_mega_timer = skill_mega_timer; s.skill_mega_cooldown = skill_mega_cooldown;
         s.skill_fireball_ready = skill_fireball_ready; s.skill_fireball_cooldown = skill_fireball_cooldown;
+        s.p1_pad_h = p1_pad_h; s.p2_pad_h = p2_pad_h;
+        s.powerup_x = powerup_x; s.powerup_y = powerup_y;
+        s.powerup_active = powerup_active; s.powerup_type = powerup_type;
+        s.obs_y = obs_y; s.obs_dy = obs_dy; s.obs1_active = obs1_active;
+        s.obs2_x = obs2_x; s.obs2_dx = obs2_dx; s.obs2_active = obs2_active;
+        s.boss_shield_hp = boss_shield_hp; s.boss_shield_timer = boss_shield_timer;
+        s.boss_shield_y = boss_shield_y; s.boss_shield_dy = boss_shield_dy;
+        s.game_over = game_over; s.is_paused = is_paused; s.win_screen = win_screen;
         for (int i = 0; i < MAX_BALLS; i++) s.balls[i] = balls[i];
         fwrite(&s, sizeof(SaveState), 1, f);
         fclose(f);
@@ -586,6 +599,14 @@ void SaveGameState() {
         SetStatusMessage("Game State Saved (F5)!");
     } else {
         SetStatusMessage("Failed to save game state!");
+    }
+}
+
+void MarkTutorialSeen() {
+    FILE* f = fopen("kpong_tutorial.dat", "wb");
+    if (f) {
+        fputc(1, f);
+        fclose(f);
     }
 }
 
@@ -604,8 +625,17 @@ void LoadGameState() {
             skill_slow_timer = s.skill_slow_timer; skill_slow_cooldown = s.skill_slow_cooldown;
             skill_mega_timer = s.skill_mega_timer; skill_mega_cooldown = s.skill_mega_cooldown;
             skill_fireball_ready = s.skill_fireball_ready; skill_fireball_cooldown = s.skill_fireball_cooldown;
+            p1_pad_h = (s.p1_pad_h > 0) ? s.p1_pad_h : 50;
+            p2_pad_h = (s.p2_pad_h > 0) ? s.p2_pad_h : 50;
+            powerup_x = s.powerup_x; powerup_y = s.powerup_y;
+            powerup_active = s.powerup_active; powerup_type = s.powerup_type;
+            obs_y = s.obs_y; obs_dy = s.obs_dy; obs1_active = s.obs1_active;
+            obs2_x = s.obs2_x; obs2_dx = s.obs2_dx; obs2_active = s.obs2_active;
+            boss_shield_hp = s.boss_shield_hp; boss_shield_timer = s.boss_shield_timer;
+            boss_shield_y = s.boss_shield_y; boss_shield_dy = s.boss_shield_dy;
+            game_over = s.game_over; is_paused = s.is_paused; win_screen = s.win_screen;
+            show_help_overlay = 0;
             for (int i = 0; i < MAX_BALLS; i++) balls[i] = s.balls[i];
-            game_over = 0; is_paused = 0;
             PlayGameSound(MB_OK);
             SetStatusMessage("Game State Loaded (F9)!");
         }
@@ -674,7 +704,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             msg_timer = 120;
             break;
         case WM_LBUTTONDOWN:
-            if (show_help_overlay) { show_help_overlay = 0; InvalidateRect(hwnd, NULL, FALSE); break; }
+            if (show_help_overlay) { show_help_overlay = 0; MarkTutorialSeen(); InvalidateRect(hwnd, NULL, FALSE); break; }
             if (show_stats_overlay) { show_stats_overlay = 0; InvalidateRect(hwnd, NULL, FALSE); break; }
             if (is_replaying) { StopReplay(); break; }
             if (game_over) {
@@ -724,7 +754,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 break;
             }
             if (wParam == VK_ESCAPE) {
-                if (show_help_overlay) { show_help_overlay = 0; InvalidateRect(hwnd, NULL, FALSE); break; }
+                if (show_help_overlay) { show_help_overlay = 0; MarkTutorialSeen(); InvalidateRect(hwnd, NULL, FALSE); break; }
                 if (show_stats_overlay) { show_stats_overlay = 0; InvalidateRect(hwnd, NULL, FALSE); break; }
                 is_paused = !is_paused;
                 SetStatusMessage(is_paused ? "Game Paused" : "Game Resumed");
@@ -732,9 +762,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             }
 
             if (show_help_overlay || show_stats_overlay) {
-                if ((wParam == 'H' || wParam == VK_F1) && show_help_overlay) {
-                    show_help_overlay = 0; InvalidateRect(hwnd, NULL, FALSE);
-                } else if (wParam == 'L' && show_stats_overlay) {
+                if ((wParam == 'H' || wParam == VK_F1 || wParam == VK_SPACE || wParam == VK_RETURN) && show_help_overlay) {
+                    show_help_overlay = 0; MarkTutorialSeen(); InvalidateRect(hwnd, NULL, FALSE);
+                } else if ((wParam == 'L' || wParam == VK_SPACE || wParam == VK_RETURN) && show_stats_overlay) {
                     show_stats_overlay = 0; InvalidateRect(hwnd, NULL, FALSE);
                 } else if (show_stats_overlay) {
                     if (wParam == 'E') ExportStatsJSON();
@@ -745,7 +775,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             if (game_over) {
                 if (wParam == 'P') { StartReplay(); break; }
-                if (wParam == 'R') {
+                if (wParam == 'R' || wParam == VK_SPACE || wParam == VK_RETURN) {
                     p1_score = 0; p2_score = 0; rally = 0;
                     game_over = 0; win_screen = 0;
                     skill_slow_timer = 0; skill_slow_cooldown = 0;
@@ -763,6 +793,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     InvalidateRect(hwnd, NULL, FALSE);
                     break;
                 }
+                break;
             }
 
             if (wParam == 'P') { StartReplay(); break; }
@@ -787,9 +818,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (wParam == '2') { difficulty = 2; SetStatusMessage("AI Difficulty: Normal"); }
             if (wParam == '3') { difficulty = 3; SetStatusMessage("AI Difficulty: Hard"); }
             if (wParam == 'L') show_stats_overlay = !show_stats_overlay;
-            if (wParam == 'H' || wParam == VK_F1) show_help_overlay = !show_help_overlay;
+            if (wParam == 'H' || wParam == VK_F1) {
+                show_help_overlay = !show_help_overlay;
+                if (!show_help_overlay) MarkTutorialSeen();
+                InvalidateRect(hwnd, NULL, FALSE);
+            }
             if (wParam == VK_F5) SaveGameState();
-            if (wParam == VK_F9) LoadGameState();
+            if (wParam == VK_F9) { LoadGameState(); InvalidateRect(hwnd, NULL, FALSE); }
             break;
 
         case WM_TIMER:
@@ -1820,7 +1855,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     SetTextColor(memDC, RGB(255, 215, 0));
                     TextOutA(memDC, 40, H - 65, "[E] Export kpong_stats.json  |  [I] Import JSON", 47);
                     SetTextColor(memDC, RGB(180, 180, 180));
-                    TextOutA(memDC, 40, H - 45, "Press 'L' or Esc to Close Overlay", 33);
+                    TextOutA(memDC, 40, H - 45, "Press 'L', Esc, Space, or Enter to Close", 41);
                 }
 
                 if (show_help_overlay) {
@@ -1842,7 +1877,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     TextOutA(memDC, 40, 158, "Save:   [F5] Save Game  |  [F9] Load Game", 41);
                     
                     SetTextColor(memDC, RGB(200, 200, 200));
-                    TextOutA(memDC, 40, H - 45, "Press F1, 'H', Esc, or Click to Close Help", 42);
+                    TextOutA(memDC, 40, H - 45, "Press F1, 'H', Esc, Space, Enter, or Click to Close", 52);
                 }
 
                 if (is_paused) {
@@ -1871,8 +1906,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         TextOutA(memDC, W / 2 - 45, H / 2 - 25, winStr, lstrlenA(winStr));
                     }
                     SetTextColor(memDC, RGB(255, 255, 255));
-                    char* restartStr = "[P] Match Replay  |  [R] Restart";
-                    TextOutA(memDC, W / 2 - 80, H / 2 + 5, restartStr, lstrlenA(restartStr));
+                    char* restartStr = "[P] Match Replay  |  [R / Space / Enter] Restart";
+                    TextOutA(memDC, W / 2 - 125, H / 2 + 5, restartStr, lstrlenA(restartStr));
                 }
             }
 
@@ -1917,6 +1952,23 @@ void MainEntry() {
     HINSTANCE hInstance = GetModuleHandle(NULL);
     WNDCLASS wc = {0};
     LoadStats();
+
+    FILE* ft = fopen("kpong_tutorial.dat", "rb");
+    if (ft) {
+        show_help_overlay = 0;
+        fclose(ft);
+    } else {
+        FILE* fs = fopen("kpong_save.dat", "rb");
+        if (fs) {
+            show_help_overlay = 0;
+            fclose(fs);
+        } else if (stats.total_games > 0) {
+            show_help_overlay = 0;
+        } else {
+            show_help_overlay = 1;
+        }
+    }
+
     wc.lpfnWndProc = WndProc;
     wc.hInstance = hInstance;
     wc.lpszClassName = "KPongApp";
