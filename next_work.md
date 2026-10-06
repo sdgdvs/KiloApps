@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-graphics
-next_agent: kilo-tester
+current_agent: kilo-tester
+next_agent: kilo-usability
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -13,7 +13,7 @@ timeout_minutes: 15
 status: ready
 current_targets:
   kilo_creator: "kweb://echo-subsystem.net"
-  kilo_graphics: KSpace
+  kilo_graphics: KPac
   kilo_tester: KCalc
   kilo_usability: KColor
   kilo_qa: KPong
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-creator
-  app: "kweb://10.19.99.4/classified"
-  timestamp: "2026-10-06T11:10:00-07:00"
+  agent: kilo-graphics
+  app: KSpace
+  timestamp: "2026-10-06T11:21:00-07:00"
 last_planner_run: "2026-10-06T14:20:00Z"
 ---
 
@@ -109,9 +109,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
 - **EXCLUSIVE MISSION**: Replace programmer vector art with Imagen 3 generated sprites and backgrounds via the 2-stage asset pipeline. If the target app is not appropriate for raster/sprite replacement (e.g. wireframe classics or abstract board games), skip the turn immediately.
-- **Current Target**: `KSpace`
+- **Current Target**: `KPac`
 - **Upcoming Queue**:
-  `KPac`, `KQuest`, `KRogue`, `KColosseum`, `KAbyss`, `KBreakout`, `KAsteroids` *(Note: Pure vector/wireframe or abstract board targets skip automatically per Mandate 15. Completed: KQuest Phases 1-5, KSpace)*.
+  `KQuest`, `KRogue`, `KColosseum`, `KAbyss`, `KBreakout`, `KAsteroids`, `KSpace` *(Note: Pure vector/wireframe or abstract board targets skip automatically per Mandate 15. Completed: KQuest Phases 1-5, KSpace)*.
 
 ### 3. App Tester Queue (`kilo-tester`)
 - **Current Target**: `KCalc`
@@ -217,6 +217,14 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-06T11:21:00-07:00 — kilo-graphics: KSpace (Skip Turn — Inappropriate Target & Glint/Dot Audit)**
+  - Status: ⏭️ Skip — Imagen 3 asset replacement not appropriate for KSpace
+  - Rationale: Mature custom art; all 13 entity sprites and celestial backgrounds already Imagen 3 generated.
+  - Glint & Dot Ban: Verified zero traveling border dots or specular glints in web or Win32 C (Rule 11 compliant).
+  - Icon Uniqueness: `check_icons.py` verified 100% unique (Rule 13 compliant).
+  - Verification: Vite build clean (311ms); security_lint 100% PASS; web (183.7 KB) < 999 KB.
+  - Queue: Advanced `kilo_graphics` to `KPac`; rotation advanced to `kilo-tester`.
+
 - **2026-10-06T11:10:00-07:00 — kilo-creator: kweb://10.19.99.4/classified (Aethel Skunkworks Intranet, Seismic Interferometer & Tier 3 Puzzle Lock)**
   - Status: PASS ✅ (0 regressions, 210.6 KB web < 999 KB ceiling).
   - Tab 9 Seismic Interferometer: Built 2D lithospheric wave interference & Salado halite standing wave cavity resonator with depth/frequency/phase sliders.
@@ -251,14 +259,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Hit-Testing & Accessibility: Added DPI scaling normalization for pointer coordinates, canvas `:focus-visible` ring, and `?` help shortcut.
   - Toast & Modal Ergonomics: Canvas interaction dismisses active toasts; verified clean modal Esc/backdrop dismissal (Directive 185).
   - Verification: `test_web_apps.js` PASS (64 elements); MSVC clean (`KChart.exe` 36.8 KB); Vite clean (383ms); security_lint 100% PASS.
-
-- **2026-10-06T09:54:00-07:00 — kilo-tester: KCipher (Interactive UI Audit & Inline Repairs)**
-  - Status: PASS ✅ (4 issues, 4 fixed; 106.6 KB web / 11.5 KB native < 999 KB ceiling).
-  - Modal Ergonomics: Added dedicated close buttons (`#btnSplashClose`, `#btnTutClose`) to splash and tutorial modals.
-  - Startup Flow: Fixed stuck startup modal bug; decoupled tutorial pop-up from "Start New Session" button.
-  - State & Persistence: Handled first-run flags on splash close/backdrop click; reset file inputs on upload.
-  - Keybinds: Guarded Space/Enter on focused buttons during splash; enabled Escape dismissal across all dialogs.
-  - Verification: `test_app_startup.py` PASS; `test_web_apps.js` PASS (60 elements); MSVC clean (`KCipher.exe` 11.5 KB); Vite clean (330ms); security_lint 100% PASS.
-
-
-
