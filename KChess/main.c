@@ -911,6 +911,49 @@ typedef struct {
     HistoryState history[256];
 } KChessSaveState;
 
+static void MarkTutorialSeenNative(void) {
+    char szPath[MAX_PATH];
+    GetModuleFileNameA(NULL, szPath, MAX_PATH);
+    char* lastSlash = my_strrchr(szPath, '\\');
+    if (lastSlash) *(lastSlash + 1) = '\0';
+    lstrcatA(szPath, "kchess_tutorial.dat");
+    HANDLE h = CreateFileA(szPath, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (h != INVALID_HANDLE_VALUE) {
+        char flag = 1;
+        DWORD w = 0;
+        WriteFile(h, &flag, 1, &w, NULL);
+        CloseHandle(h);
+    }
+}
+
+static int IsTutorialSeenNative(void) {
+    char szPath[MAX_PATH];
+    GetModuleFileNameA(NULL, szPath, MAX_PATH);
+    char* lastSlash = my_strrchr(szPath, '\\');
+    if (lastSlash) *(lastSlash + 1) = '\0';
+    lstrcatA(szPath, "kchess_tutorial.dat");
+    HANDLE h = CreateFileA(szPath, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (h != INVALID_HANDLE_VALUE) {
+        CloseHandle(h);
+        return 1;
+    }
+    return 0;
+}
+
+static int HasQuicksaveNative(void) {
+    char szPath[MAX_PATH];
+    GetModuleFileNameA(NULL, szPath, MAX_PATH);
+    char* lastSlash = my_strrchr(szPath, '\\');
+    if (lastSlash) *(lastSlash + 1) = '\0';
+    lstrcatA(szPath, "kchess_save.dat");
+    HANDLE h = CreateFileA(szPath, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (h != INVALID_HANDLE_VALUE) {
+        CloseHandle(h);
+        return 1;
+    }
+    return 0;
+}
+
 static int SaveGameStateToFile(void) {
     char szPath[MAX_PATH];
     GetModuleFileNameA(NULL, szPath, MAX_PATH);
@@ -954,6 +997,7 @@ static int SaveGameStateToFile(void) {
     DWORD bytesWritten = 0;
     WriteFile(hFile, &state, sizeof(state), &bytesWritten, NULL);
     CloseHandle(hFile);
+    MarkTutorialSeenNative();
     return 1;
 }
 
@@ -1002,6 +1046,7 @@ static int LoadGameStateFromFile(void) {
         g_historyIndex = -1;
     }
     selX = -1; selY = -1; hintActive = 0;
+    MarkTutorialSeenNative();
     return 1;
 }
 
@@ -1979,15 +2024,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SelectObject(memDC, oldPenG);
             DeleteObject(grainPen);
 
-            // Dust motes
-            for (int i = 0; i < 45; i++) {
-                int mx = (i * 73 + (GetTickCount()/40) * ((i%3)+1)) % W;
-                int my = (i * 89 - (GetTickCount()/25) * ((i%2)+1)) % H;
-                if (my < 0) my += H;
-                SetPixel(memDC, mx, my, RGB(212, 175, 55));
-                SetPixel(memDC, mx+1, my, RGB(180, 140, 80));
-            }
-
             HBRUSH frameBrush = CreateSolidBrush(RGB(45, 24, 16));
             RECT frameRc = {12, 12, W - 12, H - 12};
             FillRect(memDC, &frameRc, frameBrush);
@@ -2743,6 +2779,12 @@ void MainEntry(void) {
 
     ShowWindow(hwnd, SW_SHOW);
     UpdateWindow(hwnd);
+
+    // First-run Tutorial Integrity: Prompt only on fresh sessions without quicksave
+    if (!IsTutorialSeenNative() && !HasQuicksaveNative()) {
+        MarkTutorialSeenNative();
+        ShowHelpDialog(hwnd);
+    }
 
     MSG msg;
     while (GetMessage(&msg, NULL, 0, 0) > 0) {

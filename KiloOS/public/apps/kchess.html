@@ -420,7 +420,7 @@
       </div>
 
       <div class="btn-group" style="margin-top:16px;">
-        <button class="primary" onclick="closeModals()">Got It (Esc)</button>
+        <button id="help-close-btn" class="primary modal-close" onclick="closeModals()">Got It (Esc)</button>
       </div>
     </div>
   </div>
@@ -644,16 +644,35 @@
   let aiPersonality = 1; // 1=Easy, 2=Medium, 3=Hard, 4=Master (Default: Easy AI)
   const difficultyNames = ["Easy", "Medium", "Hard", "Master"];
 
-  let statsWins = parseInt(localStorage.getItem('kchess_wins') || '0') || 0;
-  let statsLosses = parseInt(localStorage.getItem('kchess_losses') || '0') || 0;
-  let statsDraws = parseInt(localStorage.getItem('kchess_draws') || '0') || 0;
+  const TUTORIAL_KEY = 'kchess_tutorialSeen';
+  function safeGetStorage(key, fallback = null) {
+      try {
+          const val = localStorage.getItem(key);
+          return val !== null ? val : fallback;
+      } catch (e) {
+          return fallback;
+      }
+  }
+  function safeSetStorage(key, val) {
+      try {
+          localStorage.setItem(key, val);
+          return true;
+      } catch (e) {
+          console.warn("Storage write failed for key:", key, e);
+          return false;
+      }
+  }
+
+  let statsWins = parseInt(safeGetStorage('kchess_wins', '0'), 10) || 0;
+  let statsLosses = parseInt(safeGetStorage('kchess_losses', '0'), 10) || 0;
+  let statsDraws = parseInt(safeGetStorage('kchess_draws', '0'), 10) || 0;
 
   // Online Multiplayer State (Firebase RTDB)
   let isOnlineGame = false;
   let currentRoomId = null;
   let currentRoomStatus = 'none'; // 'none', 'waiting', 'playing', 'finished'
   let myPlayerNum = 0; // 0 = Spectator, 1 = White (P1), 2 = Black (P2)
-  let myPlayerName = localStorage.getItem('kchess_playerName') || ('Grandmaster_' + Math.floor(1000 + Math.random() * 9000));
+  let myPlayerName = safeGetStorage('kchess_playerName') || ('Grandmaster_' + Math.floor(1000 + Math.random() * 9000));
   let opponentName = 'Opponent';
   let isHost = false;
   let activeRoomRef = null;
@@ -786,11 +805,9 @@
   }
 
   function saveStats() {
-      try {
-          localStorage.setItem('kchess_wins', statsWins);
-          localStorage.setItem('kchess_losses', statsLosses);
-          localStorage.setItem('kchess_draws', statsDraws);
-      } catch (e) {}
+      safeSetStorage('kchess_wins', statsWins);
+      safeSetStorage('kchess_losses', statsLosses);
+      safeSetStorage('kchess_draws', statsDraws);
   }
 
   function getPST(pType, x, y, isWhite, isEndgame = false) {
@@ -1401,7 +1418,8 @@
               moveHistoryStack: moveHistoryStack,
               historyIndex: historyIndex
           };
-          localStorage.setItem('kchess_save_state', JSON.stringify(state));
+          safeSetStorage('kchess_save_state', JSON.stringify(state));
+          safeSetStorage(TUTORIAL_KEY, '1');
           hintText = "Game State Saved (F5)!";
           hintActive = true;
           playSound('move');
@@ -1419,7 +1437,7 @@
           return false;
       }
       try {
-          const data = localStorage.getItem('kchess_save_state');
+          const data = safeGetStorage('kchess_save_state');
           if (!data) {
               hintText = "No Saved State Found (F9)!";
               hintActive = true;
@@ -1451,6 +1469,11 @@
           hintActive = true;
           hintText = "Game State Loaded (F9)!";
           moveAnimation = null;
+          particles = [];
+          shockwaves = [];
+          lastTick = performance.now();
+          safeSetStorage(TUTORIAL_KEY, '1');
+          updateMenuIndicators();
           playSound('move');
           updateAriaStatus("Game state loaded");
           showToast("Game state loaded (F9)!", "success");
@@ -1802,12 +1825,45 @@
       }
   }
 
+  function getActiveModal() {
+      const ids = ['help-modal', 'fen-modal', 'pgn-modal', 'multiplayer-modal', 'invite-modal'];
+      for (const id of ids) {
+          const el = document.getElementById(id);
+          if (el && (el.style.display === 'flex' || el.style.display === 'block')) {
+              return el;
+          }
+      }
+      return null;
+  }
+
   window.addEventListener('keydown', (e) => {
+      const activeModal = getActiveModal();
       if (document.activeElement && (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA')) {
           if (e.key === 'Escape') closeModals();
           return;
       }
       const k = e.key;
+      if (activeModal) {
+          if (k === 'Escape') {
+              e.preventDefault();
+              closeModals();
+              return;
+          }
+          if (k === 'Enter' || k === ' ') {
+              e.preventDefault();
+              const primaryBtn = activeModal.querySelector('button.primary, button.modal-close, button');
+              if (primaryBtn) primaryBtn.click();
+              else closeModals();
+              return;
+          }
+          if (k === 'F1' || k === '?' || k === 'Esc') {
+              e.preventDefault();
+              closeModals();
+              return;
+          }
+          return;
+      }
+
       if (k === 'F1' || k === 'F5' || k === 'F9') e.preventDefault();
       if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' ', 'Enter', 'Escape'].includes(k)) {
           e.preventDefault();
@@ -2414,6 +2470,7 @@
       if (mp) mp.style.display = 'none';
       const inv = document.getElementById('invite-modal');
       if (inv) inv.style.display = 'none';
+      safeSetStorage(TUTORIAL_KEY, '1');
       if (activeLobbyRef && activeLobbyListener && window.fb) {
           try { window.fb.off(activeLobbyRef, 'value', activeLobbyListener); } catch(e) {}
           activeLobbyRef = null;
@@ -2512,7 +2569,7 @@
       const name = input.value.trim();
       if (name.length > 0) {
           myPlayerName = name;
-          localStorage.setItem('kchess_playerName', name);
+          safeSetStorage('kchess_playerName', name);
           showToast(`Call-sign updated to "${name}"`, 'success');
       }
   }
@@ -3375,23 +3432,7 @@
       return { whiteCaptured, blackCaptured, diff };
   }
 
-  let dustMotes = null;
-  function initDustMotes() {
-      if (dustMotes) return;
-      dustMotes = [];
-      for (let i = 0; i < 45; i++) {
-          dustMotes.push({
-              x: Math.random() * W, y: Math.random() * H,
-              speed: 0.2 + Math.random() * 0.45,
-              phase: Math.random() * Math.PI * 2,
-              size: 0.6 + Math.random() * 1.6
-          });
-      }
-  }
-
   function drawBoard() {
-      initDustMotes();
-      
       ctx.save();
       if (performance.now() < screenShakeUntil) {
           let elapsed = performance.now() - screenShakeStartTime;
@@ -3428,17 +3469,6 @@
       lightGrad.addColorStop(1, 'rgba(251, 146, 60, 0)');
       ctx.fillStyle = lightGrad;
       ctx.fillRect(0, 0, W, H);
-
-      // Dust motes
-      ctx.fillStyle = 'rgba(253, 230, 138, 0.4)';
-      for (let mote of dustMotes) {
-          mote.y -= mote.speed;
-          mote.x += Math.sin(mote.phase + mote.y * 0.02) * 0.5;
-          if (mote.y < 0) { mote.y = H; mote.x = Math.random() * W; }
-          ctx.beginPath();
-          ctx.arc(mote.x, mote.y, mote.size, 0, Math.PI * 2);
-          ctx.fill();
-      }
 
       // Wood frame border
       const frameGrad = ctx.createLinearGradient(0, 0, W, H);
@@ -3962,6 +3992,7 @@
   function gameLoop(now) {
       let dt = (now - lastTick) / 1000.0;
       lastTick = now;
+      if (dt > 0.5) dt = 0.016;
 
       if (gameMode === 3 && !gameOver) {
           if (whiteTurn) {
@@ -3992,12 +4023,17 @@
       window.onFirebaseLoaded();
   }
 
-  const TUTORIAL_KEY = 'kchess_tutorialSeen';
-  try { localStorage.setItem(TUTORIAL_KEY, '1'); } catch(e) {}
+  // First-run Tutorial Integrity: Only prompt on fresh sessions; never interrupt restored state
+  const tutorialSeen = safeGetStorage(TUTORIAL_KEY) === '1';
+  const hasQuicksave = !!safeGetStorage('kchess_save_state');
 
-  setTimeout(() => {
-      showToast("KChess: Standard Game vs Easy AI — White to move.", "info", 4000);
-  }, 350);
+  if (!tutorialSeen && !hasQuicksave) {
+      setTimeout(() => {
+          openHelpModal();
+          showToast("Welcome to KChess! Review rules & controls to begin.", "info", 5000);
+          safeSetStorage(TUTORIAL_KEY, '1');
+      }, 400);
+  }
 </script>
 </body>
 </html>

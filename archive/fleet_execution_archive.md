@@ -4,6 +4,16 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-06T13:59:00-07:00 — kilo-expander: KMine (Cyber Duel Arena, RFMS Real-Time Multiplayer, CyberBot AI & Custom Grid)**
+  - Status: PASS ✅ (0 regressions, 106.7 KB web / 26.5 KB native < 999 KB ceiling).
+  - RFMS Multiplayer: Standardized Firebase RTDB duel race (`MIN-XXXX`) on synchronized seeded board with dual links (`#room=MIN-XXXX`).
+  - Connect Gate & AI Fallback: Mode gated behind explicit connect action (Mandate 12); 25s timeout auto-engages CyberBot-99 AI solver.
+  - Tactical Radar HUD & Comms: Live 210x130 opponent CRT radar feed, real-time progress % and flags sync, 5 tactical radio comms, and rematch.
+  - Procedural Audio: Yamaha YM2612 2-op FM duel fanfare, resonant radar ping, and SNES warm chord synthesis (Directive 9 compliant).
+  - Custom Configuration: Built custom grid dialog (8-30 cols, 8-24 rows, 1-180 mines) with dynamic density validation and presets.
+  - Verification: `test_app_startup.py` PASS; `test_web_apps.js` PASS (107/107 apps, 0 errors); MSVC clean (`KMine.exe` 26.5 KB); Vite clean (327ms).
+  - Queue: Advanced `kilo_expander` to `KColosseum`; rotation advanced to `kilo-creator`.
+
 - **2026-10-06T13:45:00-07:00 — kilo-qa: KPac (Pass 5: Tutorial & State Integrity, Modal Ergonomics & Build Audit)**
   - Status: PASS ✅ (0 regressions, 131.5 KB web / 50.0 KB native < 999 KB ceiling).
   - State Persistence: Hardened [F5/F9] in web and Win32 C (`kpac_save.dat`) preserving full board tiles, player, ghosts, skills, traps, and boss state.

@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-creator
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -16,7 +16,7 @@ current_targets:
   kilo_graphics: KRogue
   kilo_tester: KTetris
   kilo_usability: KConverter
-  kilo_qa: KChess
+  kilo_qa: KColor
   kilo_expander: KColosseum
 virtual_web_target: "kweb://darknet"
 virtual_web_rotation:
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-usability
-  app: KConnect4
-  timestamp: "2026-10-06T14:57:00-07:00"
+  agent: kilo-qa
+  app: KChess
+  timestamp: "2026-10-06T15:10:00-07:00"
 last_planner_run: "2026-10-06T14:20:00Z"
 ---
 
@@ -124,9 +124,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KFreecell`, `KHangman`, `KMatch3`, `KPong`, `KSettings`, `KSimon`, `KSnake`, `KSolitaire`, `KSudoku`, `KTetris`, `KWords`, `KBBS`, `KCalendar`, `KChess` *(Completed: KCalc, KPomodoro, KTimer, KClock, KHash, KMystery, KMandel, KFont, KPing, KAudio, KSynth, KScript, KRead, KRadio, KSys, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KChrono, KTask, KStarForge, KPad, KBookmark, KRSS, KClip, KHex, KHabit, KFarm, KPaint, KGraph, KImage, KJournal, KMail, KMedia, KNet, KNote, KPass, KMine, KBBS, KCalendar, KChart, KColor, KChess, KConnect4)*.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
-- **Current Target**: `KChess`
+- **Current Target**: `KColor`
 - **Upcoming Queue**:
-  `KColor`, `KConverter`, `KQuarantine`, `KSettings`, `KTaskMgr`, `KHabit`, `KSudoku`, `KConnect4`, `KHangman`, `KSimon`, `KAsteroids`, `KFreecell`, `KMatch3`, `KWords`, `KGo`, `KDarts`, `KTowers`, `KReversi`, `KAlchemy`, `KColony`, `KStarForge`, `KBreakout`, `KRogue`, `KTetris`, `KPong`, `KPac` *(Completed in Pass 5: KBBS, KChrono, KCipher, KClip, KCyber, KDragon, KFortress, KHash, KMaze, KMech, KMystery, KQuest, KSanctuary, KSnake, KSolitaire, KSpace, KStarDredge, KStarship, KStellar, KSubmarine, KSynth, KSys, KTask, KTerm, KTimer, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KRSS, K2048, KChart, KGraph, KContacts, KScript, KRead, KColosseum, KAbyss, KMedia, KAudio, KRadio, KPad, KPaint, KCalc, KMine, KCosmic, KBase, KBudget, KCalendar, KFarm, KFlash, KFont, KImage, KJournal, KMail, KMandel, KNet, KNote, KPass, KDB, KHex, KBookmark, KPing, KChat, KClock, KPomodoro, KBreakout, KRogue, KTetris, KPong, KPac)*.
+  `KConverter`, `KQuarantine`, `KSettings`, `KTaskMgr`, `KHabit`, `KSudoku`, `KConnect4`, `KHangman`, `KSimon`, `KAsteroids`, `KFreecell`, `KMatch3`, `KWords`, `KGo`, `KDarts`, `KTowers`, `KReversi`, `KAlchemy`, `KColony`, `KStarForge`, `KBreakout`, `KRogue`, `KTetris`, `KPong`, `KPac`, `KChess` *(Completed in Pass 5: KBBS, KChrono, KCipher, KClip, KCyber, KDragon, KFortress, KHash, KMaze, KMech, KMystery, KQuest, KSanctuary, KSnake, KSolitaire, KSpace, KStarDredge, KStarship, KStellar, KSubmarine, KSynth, KSys, KTask, KTerm, KTimer, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KRSS, K2048, KChart, KGraph, KContacts, KScript, KRead, KColosseum, KAbyss, KMedia, KAudio, KRadio, KPad, KPaint, KCalc, KMine, KCosmic, KBase, KBudget, KCalendar, KFarm, KFlash, KFont, KImage, KJournal, KMail, KMandel, KNet, KNote, KPass, KDB, KHex, KBookmark, KPing, KChat, KClock, KPomodoro, KBreakout, KRogue, KTetris, KPong, KPac, KChess)*.
 
 ### 6. Feature Expander Queue (`kilo-expander`)
 - **Current Target**: `KColosseum`
@@ -217,6 +217,16 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-06T15:10:00-07:00 — kilo-qa: KChess (Pass 5: Tutorial & State Integrity, Dust Ban, Modal Isolation & Build Audit)**
+  - Status: PASS ✅ (0 regressions, 169.6 KB web / 53.8 KB native < 999 KB ceiling).
+  - State Persistence: Hardened [F5/F9] in web and Win32 C (`kchess_save.dat`); refreshed menu indicators, FX clearing, and blitz delta clamping.
+  - Tutorial Integrity: Gated first-run guide behind `kchess_tutorialSeen` / `kchess_tutorial.dat`; restored saves bypass tutorial prompts.
+  - Modal Isolation & Shortcuts: Wired Esc, Enter, Space to overlay buttons; blocked underlying board interaction while modals open.
+  - Glint & Dust Ban: Removed 45 floating dust motes loop in web and Win32 C per Mandate 11 / Directive 177; kept static wood/brass filigree.
+  - Safety & Storage: Wrapped localStorage in safe accessors handling quota errors gracefully; updated help close button accessibility.
+  - Verification: `test_app_startup.py` PASS; `test_web_apps.js` PASS (71 elements, 0 errors); MSVC clean (`KChess.exe` 53.8 KB); Vite clean (350ms); security_lint 100% PASS.
+  - Queue: Advanced `kilo_qa` to `KColor`; rotation advanced to `kilo-expander`.
+
 - **2026-10-06T14:57:00-07:00 — kilo-usability: KConnect4 (UI/UX, Layout De-occlusion, Glint Ban & SyntaxError Remediation)**
   - Status: PASS ✅ (0 regressions, 163.6 KB web / 184.3 KB native < 999 KB ceiling).
   - SyntaxError Fix: Removed duplicate `pendingInviteRoom` declaration unblocking page script and board DOM rendering.
@@ -250,13 +260,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Procedural Audio: Added Track 5 ("Echoes of the Millennium") FM bell choir; added CPU step, seismic impulse, and packet audio SFX.
   - Navigation & Verification: Linked in portal catalog and knet admin bar; `test_arg_flow.py` PASS; `security_lint.py` 100% PASS; build clean.
   - Queue: Advanced `kilo_creator` and `virtual_web_target` to `kweb://darknet`; rotation advanced to `kilo-graphics`.
-
-- **2026-10-06T13:59:00-07:00 — kilo-expander: KMine (Cyber Duel Arena, RFMS Real-Time Multiplayer, CyberBot AI & Custom Grid)**
-  - Status: PASS ✅ (0 regressions, 106.7 KB web / 26.5 KB native < 999 KB ceiling).
-  - RFMS Multiplayer: Standardized Firebase RTDB duel race (`MIN-XXXX`) on synchronized seeded board with dual links (`#room=MIN-XXXX`).
-  - Connect Gate & AI Fallback: Mode gated behind explicit connect action (Mandate 12); 25s timeout auto-engages CyberBot-99 AI solver.
-  - Tactical Radar HUD & Comms: Live 210x130 opponent CRT radar feed, real-time progress % and flags sync, 5 tactical radio comms, and rematch.
-  - Procedural Audio: Yamaha YM2612 2-op FM duel fanfare, resonant radar ping, and SNES warm chord synthesis (Directive 9 compliant).
-  - Custom Configuration: Built custom grid dialog (8-30 cols, 8-24 rows, 1-180 mines) with dynamic density validation and presets.
-  - Verification: `test_app_startup.py` PASS; `test_web_apps.js` PASS (107/107 apps, 0 errors); MSVC clean (`KMine.exe` 26.5 KB); Vite clean (327ms).
-  - Queue: Advanced `kilo_expander` to `KColosseum`; rotation advanced to `kilo-creator`.
