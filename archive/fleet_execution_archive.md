@@ -4,6 +4,14 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-06T14:22:00-07:00 — kilo-graphics: KQuest (Skip Turn — Mature Imagen 3 Assets & Glint/Dot Audit)**
+  - Status: ⏭️ Skip — Imagen 3 asset replacement not appropriate for KQuest
+  - Rationale: Mature custom art; all 12 backgrounds, 5 hero classes, 12 monsters, 5 NPCs, and 4 FX already fully generated and integrated.
+  - Glint & Dot Audit: Verified static medieval filigree brackets with 0 traveling perimeter dots or rotating specular glints in web and native C.
+  - Verification: `scripts/check_icons.py` 100% PASS; `scripts/security_lint.py` 100% PASS; MSVC clean (`KQuest.exe` 97.0 KB); Vite clean (367ms); web (304.8 KB) < 999 KB ceiling.
+  - Queue: Advanced `kilo_graphics` to `KRogue`; rotation advanced to `kilo-tester`.
+
+
 - **2026-10-06T14:10:00-07:00 — kilo-creator: kweb://deep-core (Tier 3 Deep Expansion, x86 CPU Stepper, 650m Seismic Sonar & Wiretap PCAP)**
   - Status: PASS ✅ (0 regressions, 199.9 KB < 999 KB ceiling, Vite 384ms).
   - x86 Disassembler Deck (Tab 7): 14-instruction Ring-0 Protected Mode CPU stepper with register bank (EAX-ESP, EFLAGS, CR0), breakpoints, and patcher.

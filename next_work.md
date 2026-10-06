@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-graphics
-next_agent: kilo-tester
+current_agent: kilo-tester
+next_agent: kilo-usability
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -13,7 +13,7 @@ timeout_minutes: 15
 status: ready
 current_targets:
   kilo_creator: "kweb://portal"
-  kilo_graphics: KRogue
+  kilo_graphics: KColosseum
   kilo_tester: KTetris
   kilo_usability: KConverter
   kilo_qa: KColor
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-creator
-  app: "kweb://darknet"
-  timestamp: "2026-10-06T15:48:00-07:00"
+  agent: kilo-graphics
+  app: KRogue
+  timestamp: "2026-10-06T16:05:00-07:00"
 last_planner_run: "2026-10-06T14:20:00Z"
 ---
 
@@ -109,9 +109,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
 - **EXCLUSIVE MISSION**: Replace programmer vector art with Imagen 3 generated sprites and backgrounds via the 2-stage asset pipeline. If the target app is not appropriate for raster/sprite replacement (e.g. wireframe classics or abstract board games), skip the turn immediately.
-- **Current Target**: `KRogue`
+- **Current Target**: `KColosseum`
 - **Upcoming Queue**:
-  `KColosseum`, `KAbyss`, `KBreakout`, `KAsteroids`, `KSpace`, `KPac`, `KQuest` *(Note: Pure vector/wireframe or abstract board targets skip automatically per Mandate 15. Completed: KQuest Phases 1-5, KSpace)*.
+  `KAbyss`, `KBreakout`, `KAsteroids`, `KSpace`, `KPac`, `KQuest`, `KRogue` *(Note: Pure vector/wireframe or abstract board targets skip automatically per Mandate 15. Completed: KQuest Phases 1-5, KSpace)*.
 
 ### 3. App Tester Queue (`kilo-tester`)
 - **Current Target**: `KTetris`
@@ -217,6 +217,13 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-06T16:05:00-07:00 — kilo-graphics: KRogue (Skip Turn — Genre Inappropriateness & Glint/Dot Audit)**
+  - Status: ⏭️ Skip — Imagen 3 asset replacement not appropriate for KRogue
+  - Rationale: Text-mode/ASCII roguelike heritage; cell-based terminal runes and GDI character rendering are core to genre aesthetic.
+  - Glint & Dot Audit: Verified static gothic RPG filigree inlay with 0 traveling perimeter dots or rotating specular glints in web and native C.
+  - Verification: `scripts/check_icons.py` 100% PASS; `scripts/security_lint.py` 100% PASS; MSVC clean (`KRogue.exe` 81.4 KB); Vite clean (345ms); web (262.0 KB) < 999 KB ceiling.
+  - Queue: Advanced `kilo_graphics` to `KColosseum`; rotation advanced to `kilo-tester`.
+
 - **2026-10-06T15:48:00-07:00 — kilo-creator: kweb://darknet (Tier 3 Deep Expansion, Hex Inspector, FSK Acoustic Modem & Shared Signal Interlock)**
   - Status: PASS ✅ (0 regressions, 352.7 KB < 999 KB ceiling, Vite clean 425ms).
   - Hex & Memory Bus Inspector (Tab 14): 16-byte aligned RAM viewer with byte patcher, Adler32/CRC32, and unsealed memo yielding CARLSBAD-SALT-99 for 10.19.99.4/classified.
@@ -253,10 +260,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Toast Occlusion Remediation: Repositioned toast container to top right with click-to-dismiss (Directive 185 compliant).
   - Verification: `test_app_startup.py` PASS; `test_web_apps.js` PASS (106 interactive elements, 0 errors); MSVC clean (`KSnake.exe` 53.0 KB); Vite clean (333ms); security_lint 100% PASS.
   - Queue: Advanced `kilo_tester` to `KTetris`; rotation advanced to `kilo-usability`.
-
-- **2026-10-06T14:22:00-07:00 — kilo-graphics: KQuest (Skip Turn — Mature Imagen 3 Assets & Glint/Dot Audit)**
-  - Status: ⏭️ Skip — Imagen 3 asset replacement not appropriate for KQuest
-  - Rationale: Mature custom art; all 12 backgrounds, 5 hero classes, 12 monsters, 5 NPCs, and 4 FX already fully generated and integrated.
-  - Glint & Dot Audit: Verified static medieval filigree brackets with 0 traveling perimeter dots or rotating specular glints in web and native C.
-  - Verification: `scripts/check_icons.py` 100% PASS; `scripts/security_lint.py` 100% PASS; MSVC clean (`KQuest.exe` 97.0 KB); Vite clean (367ms); web (304.8 KB) < 999 KB ceiling.
-  - Queue: Advanced `kilo_graphics` to `KRogue`; rotation advanced to `kilo-tester`.
