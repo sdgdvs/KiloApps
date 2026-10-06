@@ -42,7 +42,7 @@
     background: rgba(15, 15, 20, 0.85);
     backdrop-filter: blur(14px);
     border-bottom: 1px solid var(--card-border);
-    padding: 10px 20px;
+    padding: 8px 16px;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -54,47 +54,58 @@
   .logo-title {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
     font-weight: 700;
-    font-size: 17px;
+    font-size: 16px;
     letter-spacing: -0.02em;
     color: #ffffff;
     flex-shrink: 0;
   }
 
   .logo-icon {
-    width: 28px;
-    height: 28px;
+    width: 26px;
+    height: 26px;
     background: linear-gradient(135deg, #3b82f6, #8b5cf6);
-    border-radius: 8px;
+    border-radius: 7px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 14px;
+    font-size: 13px;
     box-shadow: 0 0 12px rgba(59, 130, 246, 0.4);
   }
 
   .header-actions {
     display: flex;
-    gap: 8px;
+    gap: 6px;
     align-items: center;
     flex-wrap: wrap;
     justify-content: flex-end;
   }
 
+  .header-actions button, .header-actions .btn {
+    padding: 5px 9px;
+    font-size: 11px;
+    gap: 4px;
+  }
+
+  .header-actions select {
+    padding: 5px 8px;
+    font-size: 11px;
+  }
+
   /* Main Workspace Layout */
   .workspace {
     display: grid;
-    grid-template-columns: 1fr 350px;
-    gap: 18px;
-    padding: 18px;
+    grid-template-columns: 1fr 340px;
+    gap: 14px;
+    padding: 14px 16px;
     flex: 1;
     max-width: 1640px;
     width: 100%;
     margin: 0 auto;
   }
 
-  @media (max-width: 1060px) {
+  @media (max-width: 1024px) {
     .workspace {
       grid-template-columns: 1fr;
     }
@@ -104,14 +115,14 @@
   .panel-card {
     background: var(--card-bg);
     border: 1px solid var(--card-border);
-    border-radius: 14px;
-    padding: 18px;
+    border-radius: 12px;
+    padding: 14px 16px;
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
     box-shadow: 0 10px 30px rgba(0,0,0,0.5);
     display: flex;
     flex-direction: column;
-    gap: 14px;
+    gap: 10px;
   }
 
   .panel-title {
@@ -208,9 +219,9 @@
   .canvas-container {
     position: relative;
     width: 100%;
-    height: 480px;
+    height: clamp(340px, 46vh, 430px);
     background: rgba(0, 0, 0, 0.28);
-    border-radius: 12px;
+    border-radius: 10px;
     border: 1px solid rgba(255, 255, 255, 0.08);
     overflow: hidden;
   }
@@ -224,6 +235,11 @@
     display: block;
     outline: none;
     touch-action: none;
+  }
+
+  canvas:focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: -2px;
   }
 
   /* Stats Grid */
@@ -768,7 +784,7 @@
         <div class="help-section-title">⌨️ 6. Keyboard Shortcuts</div>
         <table class="shortcut-table">
           <tbody>
-            <tr><td>F1 / H</td><td>Open / Close this Help Guide</td></tr>
+            <tr><td>F1 / H / ?</td><td>Open / Close this Help Guide</td></tr>
             <tr><td>F5</td><td>QuickSave snapshot to local browser storage</td></tr>
             <tr><td>F9</td><td>QuickLoad snapshot from local browser storage</td></tr>
             <tr><td>1 – 9, 0</td><td>Select Chart Mode (Bar, Line, Area, Pie, Donut, Radar, HBar, Step, Scatter, Polar)</td></tr>
@@ -800,7 +816,7 @@
 <div id="toastContainer" aria-live="polite"></div>
 
 <script>
-  window.resizeTo(1024, 768);
+  window.resizeTo(1060, 740);
 
   // Palettes
   const THEMES = {
@@ -920,6 +936,7 @@
   const targetKpi = document.getElementById('targetKpi');
 
   let canvasW = 600, canvasH = 480;
+  let currentHBarPadL = 100;
 
   // ==========================================
   // SEGA GENESIS YM2612 2-OP FM SYNTH & SPC700 DELAY
@@ -1394,9 +1411,36 @@
 
   // 1. Cartesian Views (Bar, Line, Area, Step, Scatter)
   function renderAxesAndCartesian() {
-    const padL = 50, padR = 25, padT = 30, padB = 45;
+    const n = data.length;
+    const maxLabelLen = Math.max(...data.map(d => (d.label || '').length), 0);
+    const approxStep = (canvasW - 75) / Math.max(1, n);
+    const needsRotate = (approxStep < 65 && maxLabelLen > 4) || approxStep < 38;
+    const padL = 50, padR = 25, padT = 30, padB = needsRotate ? 58 : 42;
     const chartW = canvasW - padL - padR;
     const chartH = canvasH - padT - padB;
+    const step = chartW / n;
+
+    function drawCartesianXLabel(label, x, y, isHov) {
+      ctx.save();
+      ctx.fillStyle = isHov ? "#ffffff" : "#a1a1aa";
+      ctx.font = isHov ? "600 11px 'Inter', sans-serif" : "400 11px 'Inter', sans-serif";
+      if (needsRotate) {
+        ctx.translate(x, y + 2);
+        ctx.rotate(-Math.PI / 4.2);
+        ctx.textAlign = "right";
+        ctx.textBaseline = "middle";
+        let lbl = label || '';
+        if (lbl.length > 15) lbl = lbl.slice(0, 14) + '…';
+        ctx.fillText(lbl, 0, 0);
+      } else {
+        ctx.textAlign = "center";
+        ctx.textBaseline = "top";
+        let lbl = label || '';
+        if (step < 50 && lbl.length > 8) lbl = lbl.slice(0, 7) + '…';
+        ctx.fillText(lbl, x, y);
+      }
+      ctx.restore();
+    }
 
     const vals = data.map(d => Math.max(0, Number(d.value) || 0));
     const maxVal = Math.max(1, ...vals);
@@ -1432,14 +1476,9 @@
     ctx.lineWidth = 1.5;
     ctx.stroke();
 
-    const n = data.length;
-    const step = chartW / n;
     const barW = Math.min(48, Math.max(16, step * 0.6));
 
     if (chartType === 'bar') {
-      ctx.textAlign = "center";
-      ctx.textBaseline = "top";
-
       for (let i = 0; i < n; i++) {
         const val = vals[i];
         const bh = (val / maxVal) * chartH;
@@ -1456,9 +1495,7 @@
         }
 
         ctx.shadowBlur = 0;
-        ctx.fillStyle = isHov ? "#ffffff" : "#a1a1aa";
-        ctx.font = isHov ? "600 12px 'Inter', sans-serif" : "400 12px 'Inter', sans-serif";
-        ctx.fillText(data[i].label, bx + barW / 2, padT + chartH + 8);
+        drawCartesianXLabel(data[i].label, bx + barW / 2, padT + chartH + 8, isHov);
       }
     } else if (chartType === 'line' || chartType === 'area') {
       const pts = [];
@@ -1495,8 +1532,6 @@
       ctx.stroke();
 
       // Dots & Labels
-      ctx.textAlign = "center";
-      ctx.textBaseline = "top";
       pts.forEach((p, i) => {
         const isHov = hoveredIndex === i;
         ctx.beginPath();
@@ -1507,9 +1542,7 @@
         ctx.fill();
 
         ctx.shadowBlur = 0;
-        ctx.fillStyle = isHov ? "#ffffff" : "#a1a1aa";
-        ctx.font = isHov ? "600 12px 'Inter', sans-serif" : "400 12px 'Inter', sans-serif";
-        ctx.fillText(data[i].label, p.x, padT + chartH + 8);
+        drawCartesianXLabel(data[i].label, p.x, padT + chartH + 8, isHov);
       });
     } else if (chartType === 'step') {
       // Stepped Waveform
@@ -1553,8 +1586,6 @@
       ctx.stroke();
 
       // Step Corner Markers
-      ctx.textAlign = "center";
-      ctx.textBaseline = "top";
       pts.forEach((p, i) => {
         const isHov = hoveredIndex === i;
         ctx.beginPath();
@@ -1562,15 +1593,10 @@
         ctx.fillStyle = getColor(i);
         ctx.fill();
 
-        ctx.fillStyle = isHov ? "#ffffff" : "#a1a1aa";
-        ctx.font = isHov ? "600 12px 'Inter', sans-serif" : "400 12px 'Inter', sans-serif";
-        ctx.fillText(data[i].label, p.x, padT + chartH + 8);
+        drawCartesianXLabel(data[i].label, p.x, padT + chartH + 8, isHov);
       });
     } else if (chartType === 'scatter') {
       // Scatter Plot with Crosshair Inspection
-      ctx.textAlign = "center";
-      ctx.textBaseline = "top";
-
       for (let i = 0; i < n; i++) {
         const val = vals[i];
         const bh = (val / maxVal) * chartH;
@@ -1602,9 +1628,7 @@
         ctx.fillStyle = getColor(i);
         ctx.fill();
 
-        ctx.fillStyle = isHov ? "#ffffff" : "#a1a1aa";
-        ctx.font = isHov ? "600 12px 'Inter', sans-serif" : "400 12px 'Inter', sans-serif";
-        ctx.fillText(data[i].label, px, padT + chartH + 8);
+        drawCartesianXLabel(data[i].label, px, padT + chartH + 8, isHov);
       }
     }
 
@@ -1638,13 +1662,17 @@
 
   // 2. Horizontal Bar Chart (hbar)
   function renderHorizontalBar() {
-    const padL = 100, padR = 40, padT = 30, padB = 40;
-    const chartW = canvasW - padL - padR;
-    const chartH = canvasH - padT - padB;
     const n = data.length;
-
     const vals = data.map(d => Math.max(0, Number(d.value) || 0));
     const maxVal = Math.max(1, ...vals);
+
+    ctx.font = "11px 'Inter', sans-serif";
+    const maxLabW = Math.max(50, ...data.map(d => ctx.measureText(d.label || '').width));
+    const padL = Math.max(90, Math.min(135, Math.round(maxLabW + 18)));
+    currentHBarPadL = padL;
+    const padR = 40, padT = 30, padB = 40;
+    const chartW = canvasW - padL - padR;
+    const chartH = canvasH - padT - padB;
 
     // Vertical grid ticks across X axis
     ctx.font = "11px 'Inter', sans-serif";
@@ -1701,8 +1729,15 @@
       ctx.textAlign = "right";
       ctx.textBaseline = "middle";
       ctx.fillStyle = isHov ? "#ffffff" : "#a1a1aa";
-      ctx.font = isHov ? "600 12px 'Inter', sans-serif" : "400 12px 'Inter', sans-serif";
-      ctx.fillText(data[i].label, padL - 10, by + barH / 2);
+      ctx.font = isHov ? "600 11px 'Inter', sans-serif" : "400 11px 'Inter', sans-serif";
+      let lbl = data[i].label || '';
+      if (ctx.measureText(lbl).width > padL - 14) {
+        while (lbl.length > 3 && ctx.measureText(lbl + '…').width > padL - 14) {
+          lbl = lbl.slice(0, -1);
+        }
+        lbl += '…';
+      }
+      ctx.fillText(lbl, padL - 10, by + barH / 2);
 
       // Value badge on right
       ctx.textAlign = "left";
@@ -1812,24 +1847,33 @@
     }
 
     // Legend on right
-    const legX = canvasW - 130;
-    const legY = cy - (n * 22) / 2;
-    ctx.font = "12px 'Inter', sans-serif";
+    const legX = canvasW - 140;
+    const maxLegW = canvasW - legX - 16;
+    const rowH = Math.min(22, Math.max(15, (canvasH - 60) / Math.max(1, data.length)));
+    const legY = cy - (n * rowH) / 2;
+    ctx.font = "11px 'Inter', sans-serif";
     ctx.textAlign = "left";
     ctx.textBaseline = "middle";
 
     data.forEach((item, i) => {
-      const y = legY + i * 22;
+      const y = legY + i * rowH;
       const isHov = hoveredIndex === i;
 
       ctx.fillStyle = getColor(i);
       ctx.beginPath();
-      ctx.arc(legX, y, 5, 0, Math.PI * 2);
+      ctx.arc(legX, y, 4.5, 0, Math.PI * 2);
       ctx.fill();
 
       ctx.fillStyle = isHov ? "#ffffff" : "#a1a1aa";
-      ctx.font = isHov ? "600 12px 'Inter', sans-serif" : "400 12px 'Inter', sans-serif";
-      ctx.fillText(`${item.label}: ${item.value}`, legX + 12, y);
+      ctx.font = isHov ? "600 11px 'Inter', sans-serif" : "400 11px 'Inter', sans-serif";
+      let legTxt = `${item.label}: ${item.value}`;
+      if (ctx.measureText(legTxt).width > maxLegW) {
+        while (legTxt.length > 4 && ctx.measureText(legTxt + '…').width > maxLegW) {
+          legTxt = legTxt.slice(0, -1);
+        }
+        legTxt += '…';
+      }
+      ctx.fillText(legTxt, legX + 12, y);
     });
 
     drawTooltipPolar(cx, cy, maxR, 0, vals.reduce((a, b) => a + b, 0));
@@ -2065,25 +2109,34 @@
     }
 
     // Legend
-    const legX = canvasW - 130;
-    const legY = cy - (data.length * 22) / 2;
-    ctx.font = "12px 'Inter', sans-serif";
+    const legX = canvasW - 140;
+    const maxLegW = canvasW - legX - 16;
+    const rowH = Math.min(22, Math.max(15, (canvasH - 60) / Math.max(1, data.length)));
+    const legY = cy - (data.length * rowH) / 2;
+    ctx.font = "11px 'Inter', sans-serif";
     ctx.textAlign = "left";
     ctx.textBaseline = "middle";
 
     data.forEach((item, i) => {
-      const y = legY + i * 22;
+      const y = legY + i * rowH;
       const isHov = hoveredIndex === i;
 
       ctx.fillStyle = getColor(i);
       ctx.beginPath();
-      ctx.arc(legX, y, 5, 0, Math.PI * 2);
+      ctx.arc(legX, y, 4.5, 0, Math.PI * 2);
       ctx.fill();
 
       ctx.fillStyle = isHov ? "#ffffff" : "#a1a1aa";
-      ctx.font = isHov ? "600 12px 'Inter', sans-serif" : "400 12px 'Inter', sans-serif";
+      ctx.font = isHov ? "600 11px 'Inter', sans-serif" : "400 11px 'Inter', sans-serif";
       const pct = Math.round(((Number(item.value) || 0) / total) * 100);
-      ctx.fillText(`${item.label}: ${item.value} (${pct}%)`, legX + 12, y);
+      let legTxt = `${item.label}: ${item.value} (${pct}%)`;
+      if (ctx.measureText(legTxt).width > maxLegW) {
+        while (legTxt.length > 4 && ctx.measureText(legTxt + '…').width > maxLegW) {
+          legTxt = legTxt.slice(0, -1);
+        }
+        legTxt += '…';
+      }
+      ctx.fillText(legTxt, legX + 12, y);
     });
 
     drawTooltipPolar(cx, cy, outerR, innerR, total);
@@ -2243,8 +2296,10 @@
 
   function handlePointerMove(clientX, clientY) {
     const rect = canvas.getBoundingClientRect();
-    hoverX = clientX - rect.left;
-    hoverY = clientY - rect.top;
+    const scaleX = rect.width > 0 ? canvasW / rect.width : 1;
+    const scaleY = rect.height > 0 ? canvasH / rect.height : 1;
+    hoverX = (clientX - rect.left) * scaleX;
+    hoverY = (clientY - rect.top) * scaleY;
 
     let newHover = -1;
     const n = data.length;
@@ -2313,7 +2368,7 @@
         }
       }
     } else if (chartType === 'hbar') {
-      const padL = 100, padR = 40, padT = 30, padB = 40;
+      const padL = currentHBarPadL, padR = 40, padT = 30, padB = 40;
       const chartH = canvasH - padT - padB;
       const stepY = chartH / n;
       const barH = Math.min(34, Math.max(14, stepY * 0.65));
@@ -2345,7 +2400,11 @@
   }
 
   canvas.onpointermove = (e) => handlePointerMove(e.clientX, e.clientY);
-  canvas.onpointerdown = (e) => handlePointerMove(e.clientX, e.clientY);
+  canvas.onpointerdown = (e) => {
+    dismissAllToasts();
+    canvas.focus();
+    handlePointerMove(e.clientX, e.clientY);
+  };
   canvas.onpointerleave = () => {
     if (hoveredIndex !== -1) {
       hoveredIndex = -1;
@@ -3283,7 +3342,7 @@
       return;
     }
 
-    if (e.key === 'F1' || e.key === 'h' || e.key === 'H') {
+    if (e.key === 'F1' || e.key === 'h' || e.key === 'H' || e.key === '?') {
       e.preventDefault();
       toggleHelpModal();
     } else if (e.key === '1') {

@@ -46,7 +46,7 @@ const APPS = [
   { id: 'kscript', title: 'KScript', url: '/apps/kscript.html', exeUrl: '/exe/KScript.exe', icon: '/assets/icons/kscript.ico', w: 1040, h: 680, folder: 'Dev' },
   { id: 'kchess', title: 'KChess', url: '/apps/kchess.html', exeUrl: '/exe/KChess.exe', icon: '/assets/icons/kchess.ico', w: 800, h: 920, folder: 'Games' },
   { id: 'ktype', title: 'KType', url: '/apps/ktype.html', exeUrl: '/exe/KType.exe', icon: '/assets/icons/ktype.ico', w: 1000, h: 760, folder: 'Dev' },
-  { id: 'kchart', title: 'KChart', url: '/apps/kchart.html', exeUrl: '/exe/KChart.exe', icon: '/assets/icons/kchart.ico', w: 1024, h: 768, folder: 'Media' },
+  { id: 'kchart', title: 'KChart', url: '/apps/kchart.html', exeUrl: '/exe/KChart.exe', icon: '/assets/icons/kchart.ico', w: 1060, h: 740, folder: 'Media' },
   { id: 'kzip', title: 'KZip', url: '/apps/kzip.html', exeUrl: '/exe/KZip.exe', icon: '/assets/icons/kzip.ico', w: 980, h: 700, folder: 'System' },
   { id: 'knote', title: 'KNote', url: '/apps/knote.html', exeUrl: '/exe/KNote.exe', icon: '/assets/icons/knote.ico', w: 980, h: 680, folder: 'Office' },
   { id: 'kcolor', title: 'KColor', url: '/apps/kcolor.html', exeUrl: '/exe/KColor.exe', icon: '/assets/icons/kcolor.ico', w: 400, h: 300, folder: 'Media' },

@@ -4,6 +4,14 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-06T08:50:00-07:00 — kilo-qa: KRogue (Pass 5: Tutorial & State Integrity, Modal Ergonomics & Build Audit)**
+  - Status: PASS ✅ (0 regressions, 209.8 KB web / 77.8 KB native < 999 KB ceiling).
+  - State Persistence: Hardened quicksave/quickload [F5/F9] in web and Win32 C (`save.dat`); guarded dead state overwrite and stale pointers.
+  - Tutorial Integrity: Gated first-run prompts behind `krogue_tutorialSeen` / `krogue_tutorial.dat`; restored saves bypass tutorial.
+  - Overlays & Ergonomics: Added interactive "Resume Saved Run" buttons; wired Return/Space/Esc across help, game over, victory, and modal screens.
+  - Toast Occlusion Remediation: Relocated toast container to non-occluding z-index with `clearAllToasts` and `closeAllModalsExcept` (Directive 185).
+  - Verification: `test_web_apps.js` PASS (1 app, 67 elements); MSVC clean (`KRogue.exe` 77.8 KB); Vite clean (383ms); security_lint 100% PASS.
+
 - **2026-10-06T08:28:00-07:00 — kilo-usability: KCalendar (Usability & Layout Polish, Navigation & Modal Ergonomics)**
   - Status: PASS ✅ (0 regressions, 113.7 KB web / 24.5 KB native < 999 KB ceiling).
   - Window Dimension Tuning: Expanded default dimensions to 1020x720 in `App.jsx`, preventing toolbar wrapping & month grid clipping.
