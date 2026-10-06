@@ -449,9 +449,18 @@
 
   .more-indicator {
     font-size: 10px;
-    color: var(--text-muted);
-    font-weight: 600;
+    color: var(--accent);
+    font-weight: 700;
     margin-top: 2px;
+    padding: 1px 4px;
+    border-radius: 4px;
+    display: inline-block;
+    transition: background 0.15s ease, color 0.15s ease;
+  }
+  .more-indicator:hover, .more-indicator:focus-visible {
+    background: rgba(245, 158, 11, 0.25);
+    color: #fff;
+    outline: none;
   }
 
   /* Week View */
@@ -860,8 +869,8 @@
   /* Toast Notification System */
   .toast-container {
     position: fixed;
-    bottom: 16px;
-    right: 20px;
+    bottom: 24px;
+    right: 24px;
     left: auto;
     transform: none;
     display: flex;
@@ -869,7 +878,7 @@
     gap: 8px;
     z-index: 9999;
     pointer-events: none;
-    max-width: calc(100vw - 40px);
+    max-width: min(420px, calc(100vw - 48px));
   }
 
   .toast {
@@ -982,6 +991,7 @@
     <select class="category-select" id="tagFilter" aria-label="Filter by Tag">
       <option value="ALL">All Tags</option>
     </select>
+    <button id="resetFiltersBtn" class="btn btn-sm" title="Reset all filters and search" style="display:none; padding:4px 8px; font-size:11px;" aria-label="Reset all filters">✕ Reset</button>
   </div>
 </div>
 
@@ -1146,7 +1156,11 @@
             <span class="shortcut-desc">Create New Event</span>
           </div>
           <div class="shortcut-row">
-            <span class="key-badge">F5</span>
+            <span class="key-badge">Ctrl+Enter</span>
+            <span class="shortcut-desc">Save Event (in Modal)</span>
+          </div>
+          <div class="shortcut-row">
+            <span class="key-badge">Ctrl+S / F5</span>
             <span class="shortcut-desc">Quicksave Snapshot</span>
           </div>
           <div class="shortcut-row">
@@ -1170,7 +1184,7 @@
             <span class="shortcut-desc">Show this Help Guide</span>
           </div>
           <div class="shortcut-row">
-            <span class="key-badge">← / →</span>
+            <span class="key-badge">← / → or [ / ]</span>
             <span class="shortcut-desc">Prev / Next Date</span>
           </div>
           <div class="shortcut-row">
@@ -1183,7 +1197,7 @@
       <div class="help-card">
         <h4>📋 Features & Capabilities</h4>
         <div style="color:var(--text-muted); line-height:1.5; font-size:12px;">
-          • <strong>Interactive Views:</strong> Click any day or time slot to instantly schedule an event.<br/>
+          • <strong>Interactive Views & Day Jump:</strong> Click any day or time slot to schedule an event. Click a day number or "+X more" badge to jump straight to that day's schedule in Day View.<br/>
           • <strong>Task Checklist & Completion:</strong> Click the <span style="color:#10b981; font-weight:700;">[✓]</span> button in Day, Week, or Agenda view to toggle Done/Pending. Progress is tracked in real-time with progress meters.<br/>
           • <strong>Tagging & Search Index:</strong> Tag events with <code>#tags</code> (e.g. <code>#ops, #meeting, #y2k</code>). Filter instantly with the Tag dropdown or interactive tag chips.<br/>
           • <strong>Locations & Virtual Links:</strong> Assign physical rooms or click <code>kweb://</code> virtual links directly to browse KiloNet nodes.<br/>
@@ -1220,10 +1234,15 @@
 <script>
   // Resize window on open if running in a popup
   if (window.resizeTo) {
-    window.resizeTo(800, 600);
+    window.resizeTo(1020, 720);
   }
 
   // Toast Notification System (Non-occluding, max 2 concurrent, click-to-dismiss)
+  function clearAllToasts() {
+    const container = document.getElementById('toastContainer');
+    if (container) container.innerHTML = '';
+  }
+
   function showToast(message, type = 'info', duration = 3500) {
     const container = document.getElementById('toastContainer');
     if (!container) return;
@@ -1491,9 +1510,40 @@
     });
   }
 
+  function updateFilterResetVisibility() {
+    const btn = document.getElementById('resetFiltersBtn');
+    if (!btn) return;
+    const hasFilter = Boolean(searchQuery) || activeCategoryFilter !== 'ALL' || activePriorityFilter !== 'ALL' || activeStatusFilter !== 'ALL' || activeTagFilter !== 'ALL';
+    btn.style.display = hasFilter ? 'inline-flex' : 'none';
+  }
+
+  function resetAllFilters() {
+    searchQuery = '';
+    activeCategoryFilter = 'ALL';
+    activePriorityFilter = 'ALL';
+    activeStatusFilter = 'ALL';
+    activeTagFilter = 'ALL';
+    const searchInp = document.getElementById('searchInput');
+    if (searchInp) searchInp.value = '';
+    const clearBtn = document.getElementById('clearSearchBtn');
+    if (clearBtn) clearBtn.style.display = 'none';
+    const catSel = document.getElementById('categoryFilter');
+    if (catSel) catSel.value = 'ALL';
+    const prioSel = document.getElementById('priorityFilter');
+    if (prioSel) prioSel.value = 'ALL';
+    const statSel = document.getElementById('statusFilter');
+    if (statSel) statSel.value = 'ALL';
+    const tagSel = document.getElementById('tagFilter');
+    if (tagSel) tagSel.value = 'ALL';
+    updateFilterResetVisibility();
+    renderApp();
+    showToast('Filters reset to default', 'info', 1500);
+  }
+
   // Rendering Routing
   function renderApp() {
     updateTagFilterOptions();
+    updateFilterResetVisibility();
     updateHeaderTitle();
     const mainContent = document.getElementById('mainContent');
     mainContent.innerHTML = '';
@@ -1598,6 +1648,13 @@
     const numSpan = document.createElement('span');
     numSpan.className = 'day-num';
     numSpan.textContent = dayNum;
+    numSpan.title = `Jump to Day View for ${dateStr} [3]`;
+    numSpan.style.cursor = 'pointer';
+    numSpan.onclick = (e) => {
+      e.stopPropagation();
+      selectedDate = parseDateStr(dateStr);
+      switchView('day');
+    };
     header.appendChild(numSpan);
     cell.appendChild(header);
 
@@ -1650,6 +1707,23 @@
       const more = document.createElement('div');
       more.className = 'more-indicator';
       more.textContent = `+${dayEvents.length - maxVisible} more`;
+      more.title = `View all ${dayEvents.length} events for ${dateStr} in Day View [3]`;
+      more.style.cursor = 'pointer';
+      more.setAttribute('tabindex', '0');
+      more.setAttribute('role', 'button');
+      more.onclick = (e) => {
+        e.stopPropagation();
+        selectedDate = parseDateStr(dateStr);
+        switchView('day');
+      };
+      more.onkeydown = (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          e.stopPropagation();
+          selectedDate = parseDateStr(dateStr);
+          switchView('day');
+        }
+      };
       pillList.appendChild(more);
     }
 
@@ -2026,9 +2100,10 @@
   const duplicateEventBtn = document.getElementById('duplicateEventBtn');
 
   function openModal(eventId = null, defaultDateStr = null, defaultTimeStr = '') {
+    clearAllToasts();
     closeHelpModal();
     closeStatsModal();
-    closeDeleteModal();
+    closeDeleteModal(false);
     editingEventId = eventId;
 
     if (eventId) {
@@ -2120,24 +2195,28 @@
     renderApp();
   }
 
-  // Delete modal dialog
+  // Delete modal dialog (non-stacked: closes event modal while active, restores if cancelled)
   const deleteModalOverlay = document.getElementById('deleteModalOverlay');
   let pendingDeleteId = null;
 
   function promptDeleteEvent(eventId) {
+    clearAllToasts();
     closeHelpModal();
     closeStatsModal();
     pendingDeleteId = eventId;
     const ev = events.find(e => e.id === eventId);
     const title = ev ? ev.title : 'this event';
     document.getElementById('deleteModalPrompt').textContent = `Are you sure you want to delete "${title}"?`;
-    deleteModalOverlay.style.zIndex = '150';
+    eventModalOverlay.classList.remove('active');
     deleteModalOverlay.classList.add('active');
     setTimeout(() => document.getElementById('confirmDeleteBtn').focus(), 50);
   }
 
-  function closeDeleteModal() {
+  function closeDeleteModal(restoreEventModal = false) {
     deleteModalOverlay.classList.remove('active');
+    if (restoreEventModal && editingEventId) {
+      eventModalOverlay.classList.add('active');
+    }
     pendingDeleteId = null;
   }
 
@@ -2145,15 +2224,15 @@
     if (pendingDeleteId) {
       events = events.filter(e => e.id !== pendingDeleteId);
       saveEvents();
-      closeDeleteModal();
+      closeDeleteModal(false);
       closeModal();
       renderApp();
       showToast('Event deleted from calendar', 'info');
     }
   };
 
-  document.getElementById('cancelDeleteBtn').onclick = closeDeleteModal;
-  document.getElementById('closeDeleteModalBtn').onclick = closeDeleteModal;
+  document.getElementById('cancelDeleteBtn').onclick = () => closeDeleteModal(true);
+  document.getElementById('closeDeleteModalBtn').onclick = () => closeDeleteModal(true);
 
   function deleteEventFromModal() {
     if (editingEventId) {
@@ -2166,6 +2245,10 @@
   const statsModalBody = document.getElementById('statsModalBody');
 
   function openStatsModal() {
+    clearAllToasts();
+    closeModal();
+    closeHelpModal();
+    closeDeleteModal(false);
     const totalEvents = events.length;
     const now = new Date();
     const curYear = now.getFullYear();
@@ -2314,9 +2397,10 @@
   // --- HELP MODAL ---
   const helpModalOverlay = document.getElementById('helpModalOverlay');
   function openHelpModal() {
+    clearAllToasts();
     closeModal();
     closeStatsModal();
-    closeDeleteModal();
+    closeDeleteModal(false);
     helpModalOverlay.classList.add('active');
   }
   function closeHelpModal() {
@@ -2821,6 +2905,8 @@
     renderApp();
   };
 
+  document.getElementById('resetFiltersBtn').onclick = resetAllFilters;
+
   document.getElementById('newEventBtn').onclick = () => openModal();
   document.getElementById('closeModalBtn').onclick = closeModal;
   document.getElementById('cancelModalBtn').onclick = closeModal;
@@ -2849,13 +2935,20 @@
     showToast(`Duplicated event as "${title}"`, 'success');
   };
 
-  [eventTitleInput, eventDateInput, eventTimeInput].forEach(inp => {
+  [eventTitleInput, eventDateInput, eventTimeInput, eventLocationInput, eventTagsInput].forEach(inp => {
     inp.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') {
         e.preventDefault();
         saveEventFromModal();
       }
     });
+  });
+
+  eventDescInput.addEventListener('keydown', (e) => {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+      e.preventDefault();
+      saveEventFromModal();
+    }
   });
 
   // Export dropdown controls
@@ -2914,7 +3007,7 @@
   eventModalOverlay.addEventListener('click', (e) => { if (e.target === eventModalOverlay) closeModal(); });
   statsModalOverlay.addEventListener('click', (e) => { if (e.target === statsModalOverlay) closeStatsModal(); });
   helpModalOverlay.addEventListener('click', (e) => { if (e.target === helpModalOverlay) closeHelpModal(); });
-  deleteModalOverlay.addEventListener('click', (e) => { if (e.target === deleteModalOverlay) closeDeleteModal(); });
+  deleteModalOverlay.addEventListener('click', (e) => { if (e.target === deleteModalOverlay) closeDeleteModal(true); });
 
   // Global Keyboard Shortcuts
   window.addEventListener('keydown', (e) => {
@@ -2924,7 +3017,7 @@
         return;
       }
       if (deleteModalOverlay.classList.contains('active')) {
-        closeDeleteModal();
+        closeDeleteModal(true);
         return;
       }
       if (eventModalOverlay.classList.contains('active')) closeModal();
@@ -2943,6 +3036,12 @@
       e.preventDefault();
       if (helpModalOverlay.classList.contains('active')) closeHelpModal();
       else openHelpModal();
+      return;
+    }
+
+    if ((e.ctrlKey || e.metaKey) && (e.key === 's' || e.key === 'S')) {
+      e.preventDefault();
+      quicksaveState();
       return;
     }
 
@@ -2993,8 +3092,8 @@
         searchInputElem.focus();
         searchInputElem.select();
       }
-      else if (e.key === 'ArrowLeft') { navigateDate(-1); }
-      else if (e.key === 'ArrowRight') { navigateDate(1); }
+      else if (e.key === 'ArrowLeft' || e.key === '[' || e.key === 'PageUp') { navigateDate(-1); }
+      else if (e.key === 'ArrowRight' || e.key === ']' || e.key === 'PageDown') { navigateDate(1); }
     }
   });
 
