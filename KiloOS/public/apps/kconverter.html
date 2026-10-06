@@ -27,6 +27,28 @@
 
   * { box-sizing: border-box; }
 
+  /* Custom sleek retro scrollbars */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  ::-webkit-scrollbar-track {
+    background: rgba(15, 23, 42, 0.6);
+    border-radius: 4px;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: rgba(56, 189, 248, 0.3);
+    border-radius: 4px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(56, 189, 248, 0.55);
+  }
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(56, 189, 248, 0.3) rgba(15, 23, 42, 0.6);
+  }
+
   body, html { 
     margin: 0; padding: 0; width: 100%; height: 100%; 
     font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
@@ -297,6 +319,8 @@
   /* Batch Conversion Table */
   .table-wrapper {
     overflow-x: auto;
+    overflow-y: auto;
+    max-height: 400px;
     border: 1px solid var(--panel-border);
     border-radius: var(--radius-md);
     background: var(--card-bg);
@@ -315,11 +339,16 @@
   }
 
   th {
-    background: rgba(15, 23, 42, 0.8);
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    background: rgba(15, 23, 42, 0.95);
+    backdrop-filter: blur(8px);
     color: var(--text-muted);
     font-size: 11px;
     text-transform: uppercase;
     letter-spacing: 0.5px;
+    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.1);
   }
 
   tr:hover td {
@@ -355,6 +384,7 @@
   .fav-header {
     display: flex;
     justify-content: space-between;
+    align-items: center;
     font-size: 11px;
     color: var(--text-muted);
   }
@@ -365,21 +395,21 @@
     color: var(--accent-blue);
   }
 
-  /* Toast Notification */
+  /* Toast Notification (Directive 185 compliant: bottom-center non-occluding pill) */
   .toast {
     position: fixed;
-    bottom: 24px;
-    right: 24px;
-    background: rgba(15, 23, 42, 0.95);
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%) translateY(8px) scale(0.98);
+    background: rgba(15, 23, 42, 0.96);
     border: 1px solid rgba(56, 189, 248, 0.5);
     color: var(--text-primary);
-    padding: 10px 16px;
-    border-radius: var(--radius-md);
-    font-size: 13px;
+    padding: 8px 18px;
+    border-radius: 20px;
+    font-size: 12px;
     font-weight: 500;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.65);
     opacity: 0;
-    transform: translateY(12px) scale(0.98);
     transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
     pointer-events: none;
     z-index: 2000;
@@ -387,11 +417,13 @@
     align-items: center;
     gap: 10px;
     backdrop-filter: blur(12px);
+    cursor: pointer;
+    white-space: nowrap;
   }
 
   .toast.show {
     opacity: 1;
-    transform: translateY(0) scale(1);
+    transform: translateX(-50%) translateY(0) scale(1);
     pointer-events: auto;
   }
 
@@ -687,11 +719,13 @@
           <button class="swap-btn" onclick="swapUnits()" title="Swap Units (⇄ / X)" aria-label="Swap units">⇄</button>
 
           <div class="row">
-            <label for="outputVal">To (Result)</label>
-            <div style="display: flex; gap: 6px;">
-              <input type="text" id="outputVal" readonly style="flex:1; background: rgba(0,0,0,0.4);" aria-label="Converted output" aria-live="polite" />
-              <button onclick="copyToClipboard(document.getElementById('outputVal').value)" title="Copy Result [C]" aria-label="Copy result">📋 Copy [C]</button>
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <label for="outputVal">To (Result)</label>
+              <div class="quick-val-bar">
+                <button class="btn-sm" onclick="copyToClipboard(document.getElementById('outputVal').value)" title="Copy Result [C]" aria-label="Copy result">📋 Copy [C]</button>
+              </div>
             </div>
+            <input type="text" id="outputVal" readonly style="background: rgba(0,0,0,0.4);" aria-label="Converted output" aria-live="polite" />
             <select id="unitTo" onchange="convert()" aria-label="Unit to"></select>
           </div>
         </div>
@@ -835,10 +869,11 @@
           <table>
             <thead>
               <tr>
-                <th>Time</th>
-                <th>Category</th>
+                <th style="width: 90px;">Time</th>
+                <th style="width: 120px;">Category</th>
                 <th>From</th>
                 <th>To (Result)</th>
+                <th style="width: 80px; text-align: center;">Action</th>
               </tr>
             </thead>
             <tbody id="historyTableBody"></tbody>
@@ -894,7 +929,7 @@
     </div>
   </div>
 
-  <div id="toast" class="toast">
+  <div id="toast" class="toast" onclick="dismissToast(event)" role="status" aria-live="polite" title="Click to dismiss">
     <span id="toastMsg">Copied to clipboard!</span>
     <button class="toast-close-btn" onclick="dismissToast(event)" title="Dismiss [✕]">✕</button>
   </div>
@@ -1289,7 +1324,7 @@
       document.addEventListener('keydown', (e) => {
         const isEditing = e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA';
         
-        // Escape closes Help Modal, dismisses toast, or unfocuses
+        // Escape closes Help Modal, dismisses toast, or clears/unfocuses input
         if (e.key === 'Escape') {
           const helpModal = document.getElementById('helpModal');
           if (helpModal && helpModal.classList.contains('open')) {
@@ -1298,7 +1333,11 @@
           }
           dismissToast();
           if (isEditing) {
-            e.target.blur();
+            if (e.target.id === 'inputVal' && e.target.value !== '') {
+              clearInputValue();
+            } else {
+              e.target.blur();
+            }
             return;
           }
         }
@@ -1797,14 +1836,16 @@
 
       valStr = valStr.replace(/^(?:convert|calc|calculate|what is|how many)\s+/i, '');
 
+      let numVal = 1;
+      let rest = valStr;
       const numMatch = valStr.match(/^([-+]?[0-9]*\.?[0-9]+(?:[eE][-+]?[0-9]+)?)\s*(.*)$/);
-      if (!numMatch) {
+      if (numMatch && numMatch[1] !== '') {
+        numVal = parseFloat(numMatch[1]);
+        rest = numMatch[2].trim();
+      } else if (!valStr.match(/^[a-zA-Z]/)) {
         card.innerHTML = `<div style="color: #f87171; font-weight: 500;">⚠️ Invalid expression layout. Format: "&lt;number&gt; &lt;unit1&gt; to &lt;unit2&gt;"</div>`;
         return;
       }
-
-      const numVal = parseFloat(numMatch[1]);
-      const rest = numMatch[2].trim();
 
       const parts = rest.split(/\s*(?:to|->|=|in)\s*/i);
       if (parts.length < 2) {
@@ -2109,7 +2150,7 @@
       );
 
       if (filtered.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color: var(--text-muted);">No history log available.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color: var(--text-muted);">No history log available.</td></tr>';
         return;
       }
 
@@ -2120,6 +2161,9 @@
           <td>${escapeHTML(h.category)}</td>
           <td>${escapeHTML(h.from)}</td>
           <td style="color: var(--accent-blue); font-weight:600;">${escapeHTML(h.to)}</td>
+          <td style="text-align: center;">
+            <button class="btn-sm" title="Copy result value" onclick="copyToClipboard('${escapeHTML(h.to)}')">📋 Copy</button>
+          </td>
         `;
         tbody.appendChild(tr);
       });

@@ -4,6 +4,16 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-06T14:57:00-07:00 — kilo-usability: KConnect4 (UI/UX, Layout De-occlusion, Glint Ban & SyntaxError Remediation)**
+  - Status: PASS ✅ (0 regressions, 163.6 KB web / 184.3 KB native < 999 KB ceiling).
+  - SyntaxError Fix: Removed duplicate `pendingInviteRoom` declaration unblocking page script and board DOM rendering.
+  - Layout & Stand De-occlusion: Restructured `#tableSurface` base stand and tuned `#boardWrapper` margin (24px) eliminating button occlusion.
+  - Single-Line Ergonomics: Compacted controls-row width and button padding; all 3 button strips align on single lines without wrapping.
+  - Glint & Dust Ban: Removed traveling specular sheen sweep and floating dust motes per Mandate 11 / Directive 177; kept static brass filigree.
+  - Toast Occlusion & Help: Repositioned toast container to top right with click-to-dismiss (Directive 185); updated help modal and hotkeys.
+  - Verification: `test_app_startup.py` PASS; `test_web_apps.js` PASS (59 elements, 0 errors); MSVC clean (`KConnect4.exe` 184.3 KB); Vite clean (430ms); security_lint 100% PASS.
+  - Queue: Advanced `kilo_usability` to `KConverter`; rotation advanced to `kilo-qa`.
+
 - **2026-10-06T14:44:00-07:00 — kilo-tester: KSnake (Interactive UI Audit, Map Editor Occlusion & Modal Isolation)**
   - Status: PASS ✅ (3 issues, 3 fixed).
   - Map Editor Layout: Restructured editor panel outside canvas wrapper to eliminate canvas occlusion; restored canvas drawing hit-tests and menu return.
