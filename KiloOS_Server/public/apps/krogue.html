@@ -223,6 +223,7 @@
             to { opacity: 1; transform: translateY(0); }
         }
     </style>
+    <script src="../assets/js/retro_multiplayer.js"></script>
 </head>
 <body>
     <div id="game-container">
@@ -264,8 +265,24 @@
                     <span style="color: #a0aec0; font-size: 10px;">SEED:<span id="val-seed">---</span></span>
                 </div>
             </div>
+            <!-- Duel Rival Status Bar -->
+            <div id="duel-hud" style="display: none; align-items: center; justify-content: space-between; background: #0c1424; border: 1px solid #3182ce; padding: 6px 12px; border-radius: 8px; font-size: 12px; color: #bee3f8; margin-top: 4px; box-shadow: 0 4px 12px rgba(0,0,0,0.5); flex-wrap: wrap; gap: 8px;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <span id="duel-rival-icon" style="font-size: 16px;">⚔️</span>
+                    <span style="font-weight: bold; color: #63b3ed;" id="duel-rival-name">Rival: Searching...</span>
+                    <span id="duel-rival-stats" style="color: #cbd5e0; font-family: monospace;">Floor 1 | HP 25/25 | Score: 0</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+                    <button class="btn-action" style="font-size: 11px; padding: 2px 8px; border-color: #b794f4; background: #3b2158;" id="btn-duel-hex" onclick="castDungeonHex()" title="Cast Hex on Rival">⚡ Hex [0]</button>
+                    <button class="btn-action" style="font-size: 11px; padding: 2px 8px;" onclick="sendQuickTaunt('stairs')">🚩 "Stairs!"</button>
+                    <button class="btn-action" style="font-size: 11px; padding: 2px 8px;" onclick="sendQuickTaunt('cheer')">⚔️ "Good luck!"</button>
+                    <button class="btn-action" style="font-size: 11px; padding: 2px 8px; border-color: #e53e3e; background: #742a2a;" onclick="leaveDuelMatch()">Exit Duel</button>
+                </div>
+            </div>
             <div class="action-buttons">
                 <button id="btn-start-run" class="btn-action" style="border-color: #48bb78; background: #1c4532; color: #9ae6b4;" onclick="openCharSelect()">⚔️ New Run [Enter]</button>
+                <button class="btn-action" style="border-color: #63b3ed; background: #1a365d; color: #bee3f8;" onclick="openMultiplayerModal()">🌐 Duel</button>
+                <button class="btn-action" style="border-color: #ecc94b; background: #554415; color: #fefcbf;" onclick="openReplayModal()">🎥 Replay</button>
                 <button id="btn-class-ability" class="btn-action btn-ability" onclick="useClassAbility()">[A] Berserk Slash</button>
                 <button class="btn-action btn-spell" onclick="openSpellbook()">[M] Spellbook</button>
                 <button class="btn-action btn-inv" onclick="openInventory()">[I] Inventory</button>
@@ -346,8 +363,9 @@
                     <button class="btn-modal-close" onclick="generateRandomSeed()">🎲 Random Seed</button>
                 </div>
 
-                <div class="modal-close" style="display: flex; gap: 10px; justify-content: center;">
+                <div class="modal-close" style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
                     <button class="btn-action btn-ability" style="padding: 10px 24px; font-size: 14px;" onclick="confirmStartGame()">Begin Dungeon Crawl</button>
+                    <button class="btn-action" style="border-color: #63b3ed; background: #1a365d; color: #bee3f8; padding: 10px 18px; font-size: 13px;" onclick="closeModal('modal-char-select'); openMultiplayerModal();">🌐 Seed Duel</button>
                     <button class="btn-modal-close" onclick="closeModal('modal-char-select')">Cancel [ESC]</button>
                 </div>
             </div>
@@ -387,7 +405,9 @@
                     <!-- Populated dynamically -->
                 </div>
 
-                <div class="modal-close">
+                <div class="modal-close" style="display: flex; gap: 8px; justify-content: center; flex-wrap: wrap;">
+                    <button class="btn-modal-close" style="border-color: #63b3ed; color: #63b3ed;" onclick="exportDungeonFEN()">📋 Export FEN</button>
+                    <button class="btn-modal-close" style="border-color: #ecc94b; color: #ecc94b;" onclick="importDungeonFENPrompt()">📥 Import FEN</button>
                     <button class="btn-modal-close" onclick="closeModal('modal-inventory')">Close [ESC]</button>
                 </div>
             </div>
@@ -430,6 +450,7 @@
                     </table>
                 </div>
                 <div class="modal-close" style="display: flex; gap: 8px; justify-content: center; flex-wrap: wrap;">
+                    <button class="btn-modal-close" style="border-color: #ecc94b; background: #443711; color: #fefcbf;" onclick="openReplayModal()">🎥 Replay Viewer</button>
                     <button class="btn-modal-close" onclick="exportLeaderboardJSON()">📤 Export JSON</button>
                     <button class="btn-modal-close" onclick="importLeaderboardJSON()">📥 Import JSON</button>
                     <button class="btn-modal-close" style="border-color: #e53e3e; background: #742a2a;" onclick="clearLeaderboard()">🗑️ Clear History</button>
@@ -533,6 +554,99 @@
             </div>
         </div>
 
+        <!-- Multiplayer Seed Duel Modal -->
+        <div id="modal-multiplayer" class="modal-overlay" style="display: none;" onclick="if(event.target === this) closeModal('modal-multiplayer')">
+            <div class="modal-card" style="border-color: #63b3ed; background: #0c1322; box-shadow: 0 10px 30px rgba(99, 179, 237, 0.25); width: 620px; max-width: 95%;">
+                <div class="modal-header" style="color: #63b3ed;">🌐 SEED DUEL & PHANTOM RACE 🌐</div>
+                <div style="font-size: 12px; color: #a0aec0; margin-bottom: 14px; text-align: center; line-height: 1.5;">
+                    Challenge another dungeon crawler across the internet! Both crawlers enter the <b>exact same dungeon seed</b>.<br>
+                    Race to descend deepest, slay beasts, and survive with the greatest score!
+                </div>
+
+                <div style="display: flex; gap: 10px; margin-bottom: 14px; align-items: center;">
+                    <label style="font-size: 12px; color: #cbd5e0; font-weight: bold; width: 110px;">Hero Handle:</label>
+                    <input type="text" id="mp-player-name" class="seed-input" maxlength="16" placeholder="Hero" style="font-size: 13px; padding: 5px 10px;" onchange="saveMultiplayerName()">
+                </div>
+
+                <div style="background: #111a2e; border: 1px solid #1e2d4d; border-radius: 8px; padding: 12px; margin-bottom: 14px;">
+                    <div style="font-size: 13px; font-weight: bold; color: #ecc94b; margin-bottom: 8px;">⚔️ Matchmaking & Lobby</div>
+                    <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px;">
+                        <button class="btn-action" style="border-color: #48bb78; background: #1c4532; color: #9ae6b4; flex: 1; justify-content: center; padding: 8px 12px;" id="btn-quick-match" onclick="startQuickMatch()">⚡ Instant Matchmaking</button>
+                        <button class="btn-action" style="border-color: #63b3ed; background: #1a365d; color: #bee3f8; flex: 1; justify-content: center; padding: 8px 12px;" onclick="createHostRoom()">🏰 Host Custom Room</button>
+                    </div>
+                    
+                    <div style="display: flex; gap: 8px; align-items: center; margin-top: 8px;">
+                        <input type="text" id="mp-room-input" class="seed-input" placeholder="Room Code (e.g. ROG-1234)" style="text-transform: uppercase;">
+                        <button class="btn-action" style="padding: 6px 14px;" onclick="joinRoomByInput()">Join Room</button>
+                    </div>
+                </div>
+
+                <div id="mp-status-box" style="display: none; background: #162035; border: 1px solid #2b436e; border-radius: 8px; padding: 12px; margin-bottom: 12px;">
+                    <div style="font-weight: bold; font-size: 13px; color: #63b3ed; display: flex; justify-content: space-between; align-items: center;" id="mp-status-title">
+                        <span>Room: <span id="mp-status-room-code" style="color: #ecc94b; font-family: monospace;">---</span></span>
+                        <span id="mp-fallback-timer" style="color: #f6ad55; font-size: 12px;">Waiting... (25s)</span>
+                    </div>
+                    <div style="font-size: 12px; color: #a0aec0; margin-top: 6px;" id="mp-status-desc">
+                        Scanning lobby for a challenger... If no peer connects in 25s, local AI Cyber-Crawler engages!
+                    </div>
+                    <div style="margin-top: 10px; display: flex; gap: 8px;">
+                        <button class="btn-modal-close" style="font-size: 11px; padding: 4px 12px;" id="btn-copy-room-link" onclick="copyDuelInviteLink()">📋 Copy Duel Link</button>
+                        <button class="btn-modal-close" style="font-size: 11px; padding: 4px 12px; border-color: #e53e3e; color: #fc8181;" onclick="cancelMultiplayerMatch()">Cancel</button>
+                    </div>
+                </div>
+
+                <div class="modal-close" style="display: flex; justify-content: center; gap: 8px;">
+                    <button class="btn-modal-close" onclick="closeModal('modal-multiplayer')">Close [ESC]</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Replay Viewer Modal -->
+        <div id="modal-replay" class="modal-overlay" style="display: none;" onclick="if(event.target === this) closeModal('modal-replay')">
+            <div class="modal-card" style="border-color: #ecc94b; background: #16140e; box-shadow: 0 10px 30px rgba(236, 201, 75, 0.25); width: 680px; max-width: 95%;">
+                <div class="modal-header" style="color: #ecc94b;">🎥 DUNGEON RUN REPLAY VIEWER 🎥</div>
+                <div style="font-size: 12px; color: #a0aec0; margin-bottom: 12px; text-align: center;">
+                    Step through and analyze your recorded dungeon explorations turn by turn!
+                </div>
+
+                <div id="replay-header-info" style="background: #231f13; border: 1px solid #4a3e20; border-radius: 6px; padding: 8px 12px; font-size: 12px; color: #f6ad55; display: flex; justify-content: space-between; margin-bottom: 12px;">
+                    <span id="replay-hero-info">Hero (Warrior L1) | Seed: KR-7492</span>
+                    <span id="replay-turn-info" style="font-family: monospace;">Turn: 0 / 0</span>
+                </div>
+
+                <!-- Scrubber bar -->
+                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
+                    <input type="range" id="replay-scrubber" min="0" max="0" value="0" style="flex: 1; cursor: pointer;" oninput="onReplayScrub(this.value)">
+                </div>
+
+                <!-- Replay Controls -->
+                <div style="display: flex; gap: 8px; justify-content: center; margin-bottom: 14px; flex-wrap: wrap;">
+                    <button class="btn-action" style="padding: 6px 12px;" onclick="replaySeekStart()">⏮ First</button>
+                    <button class="btn-action" style="padding: 6px 12px;" onclick="replayStep(-1)">◀ Prev Step</button>
+                    <button class="btn-action" style="border-color: #48bb78; background: #1c4532; color: #9ae6b4; padding: 6px 16px;" id="btn-replay-play" onclick="replayTogglePlay()">▶ Play</button>
+                    <button class="btn-action" style="padding: 6px 12px;" onclick="replayStep(1)">▶ Next Step</button>
+                    <button class="btn-action" style="padding: 6px 12px;" onclick="replaySeekEnd()">⏭ Last</button>
+                    <select id="replay-speed" style="background: #21262d; color: #e2e8f0; border: 1px solid #30363d; border-radius: 4px; padding: 4px 8px; font-size: 12px;" onchange="updateReplaySpeed(this.value)">
+                        <option value="400">1x Speed</option>
+                        <option value="200">2x Speed</option>
+                        <option value="100">4x Speed</option>
+                    </select>
+                </div>
+
+                <!-- Replay Current Turn Log / Snapshot -->
+                <div id="replay-log-box" style="background: #0d0c07; border: 1px solid #2d2616; border-radius: 6px; padding: 8px 12px; font-family: monospace; font-size: 12px; color: #cbd5e0; min-height: 48px; margin-bottom: 14px;">
+                    Turn snapshot details...
+                </div>
+
+                <div class="modal-close" style="display: flex; justify-content: center; gap: 8px; flex-wrap: wrap;">
+                    <button class="btn-modal-close" style="border-color: #ecc94b; color: #ecc94b;" onclick="exportReplayFile()">📤 Export Replay (.krr)</button>
+                    <button class="btn-modal-close" onclick="document.getElementById('import-replay-file').click()">📥 Import Replay</button>
+                    <button class="btn-modal-close" onclick="closeModal('modal-replay')">Close [ESC]</button>
+                </div>
+            </div>
+        </div>
+        <input type="file" id="import-replay-file" accept=".krr,.json" style="display: none;" onchange="handleImportReplayFile(event)">
+
     </div>
 
     <script>
@@ -614,6 +728,48 @@
         let inVault = false;
         let currentVault = null;
         let savedFloorData = null;
+
+        // Multiplayer Duel & Phantom Race State
+        let rMultiplayer = null;
+        let myPlayerName = localStorage.getItem('krogue_player_name') || ("Hero_" + Math.floor(1000 + Math.random() * 9000));
+        let isDuelMode = false;
+        let isDuelOnline = false;
+        let isCyberBotDuel = false;
+        let myPlayerSlot = null; // 'p1' | 'p2' | 'spectator'
+        let currentRoomId = null;
+        let soloFallbackTimer = null;
+        let soloFallbackSecondsLeft = 25;
+        let cyberBotTimer = null;
+        let duelHexCharges = 0;
+        let lastDuelMoveSentTs = 0;
+        let duelOpponent = {
+            name: 'Challenger',
+            class: 'warrior',
+            floor: 1,
+            x: 2,
+            y: 2,
+            hp: 25,
+            max_hp: 25,
+            score: 0,
+            kills: 0,
+            gold: 0,
+            level: 1,
+            status: 'Ready'
+        };
+
+        // Dungeon Run Replay State
+        let currentReplay = {
+            heroName: "Hero",
+            class: 'warrior',
+            race: 'human',
+            loadout: 0,
+            seedStr: 'KR-7492',
+            date: new Date().toLocaleDateString(),
+            steps: []
+        };
+        let replayCurrentStep = 0;
+        let replayPlayTimer = null;
+        let replaySpeedMs = 400;
 
         const GEMS_DEF = {
             ruby: { name: 'Ruby of Flame', color: '#e53e3e', icon: '♦', stat: '+4 Fire ATK, Burn chance', defStat: '+4 Flame Aura Thorns & Fire Res' },
@@ -1059,8 +1215,14 @@
             state = 1;
             let lName = LOADOUT_DATA[cls] && LOADOUT_DATA[cls][loadout] ? LOADOUT_DATA[cls][loadout].title : "Standard";
             addMsg(`Journey Begun! Class: ${cls.toUpperCase()} (${lName}) | Seed: ${seedStr}`, 'good');
-            addMsg("Descend 50 floors & conquer True Astaroth! Use [A] for Class Ability.");
             initMap();
+            if (typeof initNewReplay === 'function') {
+                initNewReplay(cls, race, seedStr, loadout);
+            }
+            if (typeof isDuelMode !== 'undefined' && isDuelMode) {
+                updateDuelHud();
+                broadcastDuelState('start');
+            }
         }
 
         function initMap() {
@@ -1542,6 +1704,53 @@
             }
         }
 
+        function drawOpponentPhantomSprite(px, py, cls = 'warrior', name = 'Rival') {
+            let cx = px + TILE / 2;
+            let bob = Math.sin(frameCount * 0.12) * 2;
+            let cy = py + TILE / 2 + bob;
+            let pulse = (Math.sin(frameCount * 0.15) + 1) * 0.5;
+
+            ctx.save();
+            // Ethereal shadow
+            ctx.fillStyle = 'rgba(99, 179, 237, 0.25)';
+            ctx.beginPath(); ctx.ellipse(cx, py + TILE - 3, 7, 3, 0, 0, Math.PI * 2); ctx.fill();
+
+            // Phantom cloak glow
+            ctx.shadowColor = '#63b3ed';
+            ctx.shadowBlur = 8 + pulse * 6;
+            ctx.globalAlpha = 0.72 + pulse * 0.18;
+
+            ctx.fillStyle = cls === 'mage' ? '#44337a' : (cls === 'rogue' ? '#234e52' : '#1a365d');
+            ctx.beginPath();
+            ctx.moveTo(cx - 7, cy + 9);
+            ctx.lineTo(cx - 5, cy - 2);
+            ctx.lineTo(cx, cy - 8);
+            ctx.lineTo(cx + 5, cy - 2);
+            ctx.lineTo(cx + 7, cy + 9);
+            ctx.lineTo(cx + 3, cy + 6);
+            ctx.lineTo(cx, cy + 9);
+            ctx.lineTo(cx - 3, cy + 6);
+            ctx.closePath();
+            ctx.fill();
+
+            // Glowing phantom eyes
+            ctx.fillStyle = '#63b3ed';
+            ctx.fillRect(cx - 3, cy - 4, 2, 2);
+            ctx.fillRect(cx + 1, cy - 4, 2, 2);
+
+            // Floating nameplate above phantom
+            ctx.shadowBlur = 0;
+            ctx.globalAlpha = 0.95;
+            ctx.font = 'bold 9px monospace';
+            ctx.textAlign = 'center';
+            ctx.fillStyle = '#000000';
+            ctx.fillText(`👻 ${name}`, cx + 1, cy - 11);
+            ctx.fillStyle = '#bee3f8';
+            ctx.fillText(`👻 ${name}`, cx, cy - 12);
+
+            ctx.restore();
+        }
+
         function drawPetSprite(px, py) {
             if (!pet) return;
             let cx = px + TILE / 2;
@@ -1898,6 +2107,9 @@
             monsters.forEach(m => drawMonsterSprite(m));
             if (pet && pet.hp > 0) drawPetSprite(pet.x * TILE, pet.y * TILE);
             drawPlayerSprite(player.x * TILE, player.y * TILE);
+            if (typeof isDuelMode !== 'undefined' && isDuelMode && duelOpponent && duelOpponent.floor === dlevel) {
+                drawOpponentPhantomSprite(duelOpponent.x * TILE, duelOpponent.y * TILE, duelOpponent.class, duelOpponent.name);
+            }
 
             // Shimmering Challenge Vault HUD Banner
             if (inVault) {
@@ -2632,6 +2844,9 @@
                 if (m.hp <= 0) {
                     if (m.finalBoss) {
                         addExplosion(m.x, m.y, 3.0);
+                        if (typeof isDuelMode !== 'undefined' && isDuelMode && isDuelOnline && rMultiplayer) {
+                            rMultiplayer.sendMove({ action: 'finish', outcome: 'victory', floor: dlevel, kills: total_kills, gold: player.gold });
+                        }
                         setTimeout(() => { state = 3; saveRunToLeaderboard('VICTORY'); }, 2000);
                     } else if (m.isFloorBoss) {
                         addExplosion(m.x, m.y, 2.2);
@@ -2642,6 +2857,10 @@
                         addMsg(`LEGENDARY VICTORY: ${m.name} has fallen! (+${bXp} XP, +${bGold}G)`, 'msg-good');
                         showToast(`${m.name} Defeated! (+${bXp} XP)`, 'success');
                         items.push(generateRandomLoot(m.x, m.y));
+                        if (typeof isDuelMode !== 'undefined' && isDuelMode) {
+                            duelHexCharges = Math.min(3, duelHexCharges + 1);
+                            updateDuelHud();
+                        }
                     } else {
                         addParticles(m.x, m.y, '#fc8181', 15);
                     }
@@ -2709,6 +2928,13 @@
             if (equipment.ring && equipment.ring.sockets && equipment.ring.sockets.includes('amethyst') && player.turn_parity % 3 === 0) {
                 if (player.mp < player.max_mp) player.mp++;
             }
+            if (typeof recordReplayStep === 'function') {
+                recordReplayStep('turn');
+            }
+            if (typeof isDuelMode !== 'undefined' && isDuelMode) {
+                broadcastDuelState();
+                updateDuelHud();
+            }
         }
 
         function triggerGameOver() {
@@ -2724,6 +2950,9 @@
                 return;
             }
             state = 2;
+            if (typeof isDuelMode !== 'undefined' && isDuelMode && isDuelOnline && rMultiplayer) {
+                rMultiplayer.sendMove({ action: 'finish', outcome: 'defeat', floor: dlevel, kills: total_kills, gold: player.gold });
+            }
             saveRunToLeaderboard('DEFEAT');
         }
 
@@ -2737,7 +2966,7 @@
         }
 
         function isAnyModalOpen() {
-            const modalIds = ['modal-char-select', 'modal-inventory', 'modal-spellbook', 'modal-leaderboard', 'modal-keybinds', 'modal-help', 'modal-altar', 'modal-pet', 'modal-anvil'];
+            const modalIds = ['modal-char-select', 'modal-inventory', 'modal-spellbook', 'modal-leaderboard', 'modal-keybinds', 'modal-help', 'modal-altar', 'modal-pet', 'modal-anvil', 'modal-multiplayer', 'modal-replay'];
             return modalIds.some(id => {
                 let el = document.getElementById(id);
                 return el && el.style.display && el.style.display !== 'none';
@@ -2745,7 +2974,7 @@
         }
 
         function closeAllModalsExcept(excludeId = null) {
-            const modalIds = ['modal-char-select', 'modal-inventory', 'modal-spellbook', 'modal-leaderboard', 'modal-keybinds', 'modal-help', 'modal-altar', 'modal-pet', 'modal-anvil'];
+            const modalIds = ['modal-char-select', 'modal-inventory', 'modal-spellbook', 'modal-leaderboard', 'modal-keybinds', 'modal-help', 'modal-altar', 'modal-pet', 'modal-anvil', 'modal-multiplayer', 'modal-replay'];
             modalIds.forEach(id => {
                 if (id !== excludeId) {
                     let el = document.getElementById(id);
@@ -2819,6 +3048,699 @@
             } catch(e) { 
                 addMsg("Failed to load run."); 
                 showToast("Failed to load run: " + (e.message || "Corrupted save file"), 'error');
+            }
+        }
+
+        /* --- RETRO FIREBASE MULTIPLAYER SERVICE (RFMS) INTEGRATION --- */
+        function initRetroMultiplayer() {
+            if (typeof RetroMultiplayer === 'undefined') {
+                console.warn("[KRogue] RetroMultiplayer not loaded.");
+                return;
+            }
+            if (rMultiplayer) return;
+
+            try {
+                rMultiplayer = new RetroMultiplayer({
+                    gameId: 'krogue',
+                    prefix: 'ROG',
+                    playerName: myPlayerName,
+                    soloTimeoutMs: 25000,
+                    onMove: (moveData, lastMove) => {
+                        handleRemoteDuelMove(moveData, lastMove);
+                    },
+                    onStateChange: (room) => {
+                        handleRemoteRoomState(room);
+                    },
+                    onOpponentJoin: ({ slot, name }) => {
+                        handleOpponentJoined(slot, name);
+                    },
+                    onOpponentLeave: ({ slot, name }) => {
+                        handleOpponentLeft(slot, name);
+                    },
+                    onChat: ({ text, by, name }) => {
+                        handleDuelChat(text, by, name);
+                    },
+                    onSoloFallback: ({ reason }) => {
+                        handleDuelSoloFallback();
+                    },
+                    onStatusMsg: (msg, type) => {
+                        showToast(msg, type === 'error' ? 'error' : (type === 'warning' ? 'warning' : 'info'));
+                        const descEl = document.getElementById('mp-status-desc');
+                        if (descEl) descEl.innerText = msg;
+                    }
+                });
+                window.krogueMultiplayer = rMultiplayer;
+                if (rMultiplayer && typeof rMultiplayer.init === 'function') {
+                    rMultiplayer.init().then(({ onlineAvailable, inviteCode }) => {
+                        if (inviteCode) {
+                            openMultiplayerModal();
+                            const roomInput = document.getElementById('mp-room-input');
+                            if (roomInput) roomInput.value = inviteCode.trim().toUpperCase();
+                            const descEl = document.getElementById('mp-status-desc');
+                            if (descEl) descEl.innerText = `Challenger invited you to room ${inviteCode.trim().toUpperCase()}! Click 'Join by Code' to accept.`;
+                            showToast(`Duel invite detected for room ${inviteCode}!`, 'info', 6000);
+                        }
+                    }).catch(e => console.warn("[KRogue] mp init err:", e));
+                }
+            } catch(err) {
+                console.warn("[KRogue] RetroMultiplayer init failed:", err);
+            }
+        }
+
+        function openMultiplayerModal() {
+            initRetroMultiplayer();
+            closeAllModalsExcept('modal-multiplayer');
+            clearAllToasts();
+            const nameInput = document.getElementById('mp-player-name');
+            if (nameInput) nameInput.value = myPlayerName;
+            document.getElementById('modal-multiplayer').style.display = 'flex';
+        }
+
+        function saveMultiplayerName() {
+            const input = document.getElementById('mp-player-name');
+            if (!input) return;
+            const val = input.value.trim().substring(0, 16);
+            if (val) {
+                myPlayerName = val;
+                localStorage.setItem('krogue_player_name', val);
+                if (rMultiplayer) rMultiplayer.playerName = val;
+                showToast(`Hero name set to: ${myPlayerName}`, 'info');
+            }
+        }
+
+        function startSoloFallbackCountdown() {
+            stopSoloFallbackCountdown();
+            soloFallbackSecondsLeft = 25;
+            const timerEl = document.getElementById('mp-fallback-timer');
+            if (timerEl) timerEl.innerText = `Waiting... (${soloFallbackSecondsLeft}s)`;
+            
+            soloFallbackTimer = setInterval(() => {
+                soloFallbackSecondsLeft--;
+                const tEl = document.getElementById('mp-fallback-timer');
+                if (tEl) tEl.innerText = `Waiting... (${soloFallbackSecondsLeft}s)`;
+                if (soloFallbackSecondsLeft <= 0) {
+                    stopSoloFallbackCountdown();
+                }
+            }, 1000);
+        }
+
+        function stopSoloFallbackCountdown() {
+            if (soloFallbackTimer) {
+                clearInterval(soloFallbackTimer);
+                soloFallbackTimer = null;
+            }
+            if (rMultiplayer) rMultiplayer.stopSoloFallbackTimer();
+        }
+
+        async function startQuickMatch() {
+            saveMultiplayerName();
+            initRetroMultiplayer();
+            const box = document.getElementById('mp-status-box');
+            if (box) box.style.display = 'block';
+            document.getElementById('mp-status-room-code').innerText = "Scanning...";
+            document.getElementById('mp-status-desc').innerText = "Scanning public lobby for an open duel... If no peer connects in 25s, AI Cyber-Crawler engages!";
+            startSoloFallbackCountdown();
+
+            if (rMultiplayer) {
+                try {
+                    const res = await rMultiplayer.quickMatch({
+                        seed: player.seedStr,
+                        class: selectedClass,
+                        race: selectedRace,
+                        loadout: selectedLoadout
+                    });
+                    if (res && res.success) {
+                        currentRoomId = res.roomId;
+                        myPlayerSlot = res.slot;
+                        document.getElementById('mp-status-room-code').innerText = currentRoomId;
+                        if (res.slot === 'p2') {
+                            stopSoloFallbackCountdown();
+                            const hostSeed = (res.room && res.room.customData && res.room.customData.seed) ? res.room.customData.seed : player.seedStr;
+                            startDuelMatch(currentRoomId, hostSeed, res.room ? res.room.p1.name : 'Host', false);
+                        }
+                    }
+                } catch(err) {
+                    console.warn("[KRogue] quickMatch error:", err);
+                }
+            } else {
+                handleDuelSoloFallback();
+            }
+        }
+
+        async function createHostRoom() {
+            saveMultiplayerName();
+            initRetroMultiplayer();
+            const box = document.getElementById('mp-status-box');
+            if (box) box.style.display = 'block';
+            document.getElementById('mp-status-room-code').innerText = "Generating...";
+            startSoloFallbackCountdown();
+
+            if (rMultiplayer) {
+                try {
+                    const res = await rMultiplayer.createRoom({
+                        seed: player.seedStr,
+                        class: selectedClass,
+                        race: selectedRace,
+                        loadout: selectedLoadout
+                    }, true);
+                    if (res && res.success) {
+                        currentRoomId = res.roomId;
+                        myPlayerSlot = 'p1';
+                        document.getElementById('mp-status-room-code').innerText = currentRoomId;
+                        document.getElementById('mp-status-desc').innerText = `Room created! Share room code ${currentRoomId} with a friend. Waiting for Challenger...`;
+                    }
+                } catch(err) {
+                    console.warn("[KRogue] createRoom error:", err);
+                }
+            } else {
+                handleDuelSoloFallback();
+            }
+        }
+
+        async function joinRoomByInput() {
+            saveMultiplayerName();
+            initRetroMultiplayer();
+            const input = document.getElementById('mp-room-input');
+            const code = input ? input.value.trim().toUpperCase() : '';
+            if (!code) {
+                showToast("Please enter a room code!", "warning");
+                return;
+            }
+            if (rMultiplayer) {
+                try {
+                    const res = await rMultiplayer.joinRoom(code);
+                    if (res && res.success) {
+                        currentRoomId = code;
+                        myPlayerSlot = res.slot;
+                        stopSoloFallbackCountdown();
+                        const hostSeed = (res.room && res.room.customData && res.room.customData.seed) ? res.room.customData.seed : player.seedStr;
+                        startDuelMatch(code, hostSeed, res.room && res.room.p1 ? res.room.p1.name : 'Host', false);
+                    }
+                } catch(err) {
+                    showToast("Failed to join room: " + err.message, "error");
+                }
+            }
+        }
+
+        function copyDuelInviteLink() {
+            let url = window.location.href.split('#')[0].split('?')[0];
+            let link = currentRoomId ? `${url}#room=${currentRoomId}` : url;
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(link);
+            }
+            showToast(`📋 Copied duel link: ${link}`, 'success');
+        }
+
+        function cancelMultiplayerMatch() {
+            stopSoloFallbackCountdown();
+            if (rMultiplayer) rMultiplayer.leaveRoom(false);
+            const box = document.getElementById('mp-status-box');
+            if (box) box.style.display = 'none';
+            showToast("Multiplayer matchmaking cancelled.", "info");
+        }
+
+        function handleOpponentJoined(slot, name) {
+            stopSoloFallbackCountdown();
+            duelOpponent.name = name || 'Challenger';
+            duelOpponent.class = 'warrior';
+            duelOpponent.floor = 1;
+            duelOpponent.status = 'Ready';
+            showToast(`⚔️ Challenger ${duelOpponent.name} joined! SEED DUEL BEGINS!`, 'success', 5000);
+            startDuelMatch(currentRoomId, player.seedStr, duelOpponent.name, true);
+        }
+
+        function handleOpponentLeft(slot, name) {
+            showToast(`⚠️ Opponent ${name || 'Rival'} disconnected. Continuing crawl in solo mode.`, 'warning', 4500);
+            isDuelOnline = false;
+            if (duelOpponent) duelOpponent.status = 'Disconnected';
+            updateDuelHud();
+        }
+
+        function handleDuelSoloFallback() {
+            stopSoloFallbackCountdown();
+            closeModal('modal-multiplayer');
+            showToast("🤖 No peer connected in 25s. Engaging Subnet AI Cyber-Crawler [ShadowCrawler-AI]!", 'warning', 5500);
+            startCyberBotDuel();
+        }
+
+        function startDuelMatch(roomId, seedStr, oppName, isHostPlayer) {
+            closeModal('modal-multiplayer');
+            isDuelMode = true;
+            isDuelOnline = true;
+            isCyberBotDuel = false;
+            stopCyberBotDuel();
+
+            duelOpponent = {
+                name: oppName || 'Challenger',
+                class: 'warrior',
+                floor: 1,
+                x: 2,
+                y: 2,
+                hp: 25,
+                max_hp: 25,
+                score: 0,
+                kills: 0,
+                gold: 0,
+                level: 1,
+                status: 'Exploring'
+            };
+            duelHexCharges = 0;
+
+            startNewGame(selectedClass, selectedRace, seedStr, selectedLoadout);
+            updateDuelHud();
+            document.getElementById('duel-hud').style.display = 'flex';
+
+            if (isHostPlayer && rMultiplayer) {
+                rMultiplayer.sendMove({
+                    type: 'start',
+                    seed: seedStr,
+                    hostName: myPlayerName,
+                    hostClass: selectedClass
+                });
+            }
+        }
+
+        function startCyberBotDuel() {
+            isDuelMode = true;
+            isDuelOnline = false;
+            isCyberBotDuel = true;
+            stopCyberBotDuel();
+
+            duelOpponent = {
+                name: 'ShadowCrawler-AI',
+                class: 'rogue',
+                floor: 1,
+                x: 3,
+                y: 3,
+                hp: 25,
+                max_hp: 25,
+                score: 0,
+                kills: 0,
+                gold: 0,
+                level: 1,
+                status: 'Exploring'
+            };
+            duelHexCharges = 0;
+
+            let seedVal = document.getElementById('seed-input') ? document.getElementById('seed-input').value.trim() : "KR-7492";
+            startNewGame(selectedClass, selectedRace, seedVal, selectedLoadout);
+            updateDuelHud();
+            document.getElementById('duel-hud').style.display = 'flex';
+
+            let botTurnsOnFloor = 0;
+            cyberBotTimer = setInterval(() => {
+                if (state !== 1 || !isCyberBotDuel) return;
+                botTurnsOnFloor++;
+                let dx = Math.floor(Math.random() * 3) - 1;
+                let dy = Math.floor(Math.random() * 3) - 1;
+                duelOpponent.x = Math.max(1, Math.min(COLS - 2, duelOpponent.x + dx));
+                duelOpponent.y = Math.max(1, Math.min(ROWS - 2, duelOpponent.y + dy));
+
+                if (Math.random() < 0.25) {
+                    duelOpponent.kills++;
+                    duelOpponent.score += 35;
+                    duelOpponent.hp = Math.max(8, duelOpponent.hp - Math.floor(Math.random() * 3));
+                }
+                if (Math.random() < 0.15) {
+                    duelOpponent.gold += 12;
+                    duelOpponent.score += 12;
+                    duelOpponent.hp = Math.min(duelOpponent.max_hp, duelOpponent.hp + 5);
+                }
+                if (botTurnsOnFloor >= 18) {
+                    botTurnsOnFloor = 0;
+                    duelOpponent.floor++;
+                    duelOpponent.score += 150;
+                    duelOpponent.level = Math.min(10, Math.floor(duelOpponent.floor / 2) + 1);
+                    duelOpponent.max_hp += 4;
+                    addMsg(`🚩 ShadowCrawler-AI descended to Floor ${duelOpponent.floor}!`, 'msg-magic');
+                    showToast(`🚩 Rival reached Floor ${duelOpponent.floor}!`, 'warning');
+                    if (duelOpponent.floor >= 10) {
+                        showToast("☠️ ShadowCrawler-AI reached Floor 10 first!", "warning", 6000);
+                        stopCyberBotDuel();
+                    }
+                }
+                updateDuelHud();
+            }, 1900);
+        }
+
+        function stopCyberBotDuel() {
+            if (cyberBotTimer) {
+                clearInterval(cyberBotTimer);
+                cyberBotTimer = null;
+            }
+        }
+
+        function updateDuelHud() {
+            const hud = document.getElementById('duel-hud');
+            if (!hud || !isDuelMode) return;
+            const nameEl = document.getElementById('duel-rival-name');
+            const statsEl = document.getElementById('duel-rival-stats');
+            const hexBtn = document.getElementById('btn-duel-hex');
+
+            if (nameEl) nameEl.innerText = `${duelOpponent.name} (${duelOpponent.class.toUpperCase()})`;
+            if (statsEl) {
+                statsEl.innerText = `DLVL ${duelOpponent.floor} | HP ${duelOpponent.hp}/${duelOpponent.max_hp} | L${duelOpponent.level} | Score: ${duelOpponent.score}`;
+            }
+            if (hexBtn) hexBtn.innerText = `⚡ Hex [${duelHexCharges}]`;
+        }
+
+        function broadcastDuelState() {
+            if (!isDuelMode || !isDuelOnline || !rMultiplayer) return;
+            const now = Date.now();
+            if (now - lastDuelMoveSentTs < 160) return;
+            lastDuelMoveSentTs = now;
+
+            rMultiplayer.sendMove({
+                type: 'turn',
+                x: player.x,
+                y: player.y,
+                floor: dlevel,
+                hp: player.hp,
+                max_hp: player.max_hp,
+                level: player.level,
+                kills: total_kills,
+                gold: player.gold,
+                score: calcCurrentScore(),
+                class: player.class,
+                name: myPlayerName
+            });
+        }
+
+        function handleRemoteDuelMove(data) {
+            if (!data) return;
+            if (data.type === 'start') {
+                if (data.seed && data.seed !== player.seedStr) {
+                    startNewGame(selectedClass, selectedRace, data.seed, selectedLoadout);
+                }
+                duelOpponent.name = data.hostName || 'Host';
+                duelOpponent.class = data.hostClass || 'warrior';
+                updateDuelHud();
+            } else if (data.type === 'turn') {
+                duelOpponent.x = data.x;
+                duelOpponent.y = data.y;
+                duelOpponent.floor = data.floor;
+                duelOpponent.hp = data.hp;
+                duelOpponent.max_hp = data.max_hp;
+                duelOpponent.level = data.level;
+                duelOpponent.kills = data.kills;
+                duelOpponent.gold = data.gold;
+                duelOpponent.score = data.score;
+                duelOpponent.class = data.class;
+                updateDuelHud();
+            } else if (data.type === 'stairs') {
+                duelOpponent.floor = data.floor;
+                addMsg(`🚩 Rival ${data.name || 'Challenger'} reached Floor ${data.floor}!`, 'msg-magic');
+                showToast(`🚩 Rival reached Floor ${data.floor}!`, 'info');
+                updateDuelHud();
+            } else if (data.type === 'boss_kill') {
+                addMsg(`⚔️ Rival slayed ${data.name} on Floor ${data.floor}!`, 'msg-good');
+                showToast(`⚔️ Rival slayed ${data.name}!`, 'info');
+            } else if (data.type === 'curse') {
+                player.poisoned_turns = (player.poisoned_turns || 0) + 3;
+                addMsg(`⚡ ${data.from || 'Rival'} cast Hex of Confusion on you! (3 turns)`, 'msg-combat');
+                showToast(`⚡ Hex of Confusion cast on you!`, 'warning');
+                addFloatText(player.x, player.y, "HEXED!", '#e53e3e');
+            } else if (data.type === 'finish') {
+                if (data.result === 'victory') {
+                    showToast(`🏆 Rival ${duelOpponent.name} claimed the Amulet on Floor 10!`, 'warning', 6000);
+                } else if (data.result === 'death') {
+                    showToast(`☠️ Rival ${duelOpponent.name} perished on Floor ${data.floor}! You are the survivor!`, 'good', 6000);
+                }
+            }
+        }
+
+        function handleRemoteRoomState(room) {
+        }
+
+        function handleDuelChat(text, by, name) {
+            addMsg(`💬 ${name || 'Rival'}: "${text}"`, 'msg-magic');
+            showToast(`💬 ${name || 'Rival'}: "${text}"`, 'info', 3500);
+        }
+
+        function sendQuickTaunt(type) {
+            let text = "Good luck!";
+            if (type === 'stairs') text = "Found the stairs! Moving downward!";
+            else if (type === 'cheer') text = "May the best crawler conquer the caverns!";
+            
+            if (isDuelOnline && rMultiplayer) {
+                rMultiplayer.sendChat(text);
+            }
+            addMsg(`💬 You: "${text}"`, 'msg-good');
+            showToast(`Sent: "${text}"`, 'info');
+        }
+
+        function castDungeonHex() {
+            if (duelHexCharges <= 0) {
+                showToast("No Hex charges! Clear floors or slay bosses to earn Hexes.", "warning");
+                return;
+            }
+            duelHexCharges--;
+            updateDuelHud();
+
+            if (isDuelOnline && rMultiplayer) {
+                rMultiplayer.sendMove({ type: 'curse', from: myPlayerName });
+            } else if (isCyberBotDuel) {
+                duelOpponent.score = Math.max(0, duelOpponent.score - 50);
+            }
+            addMsg("⚡ You cast a Hex of Disorientation onto your rival!", 'msg-magic');
+            showToast("⚡ Hex dispatched to rival!", 'success');
+        }
+
+        function leaveDuelMatch() {
+            isDuelMode = false;
+            isDuelOnline = false;
+            isCyberBotDuel = false;
+            stopCyberBotDuel();
+            stopSoloFallbackCountdown();
+            if (rMultiplayer) rMultiplayer.leaveRoom(false);
+            const hud = document.getElementById('duel-hud');
+            if (hud) hud.style.display = 'none';
+            showToast("Exited Duel mode. Crawl continues in Solo mode.", "info");
+        }
+
+        function calcCurrentScore() {
+            let p = player || {};
+            return (dlevel * 100) + (total_kills * 25) + ((p.gold || 0) * 2) + ((p.level || 1) * 50);
+        }
+
+        /* --- DUNGEON RUN REPLAY RECORDER & VIEWER --- */
+        function initNewReplay(cls, race, seedStr, loadout) {
+            currentReplay = {
+                heroName: myPlayerName || "Hero",
+                class: cls,
+                race: race,
+                loadout: loadout,
+                seedStr: seedStr,
+                date: new Date().toLocaleDateString(),
+                steps: []
+            };
+            recordReplayStep('start', 'Dungeon crawl initiated');
+        }
+
+        function recordReplayStep(action, note) {
+            if (!currentReplay || !currentReplay.steps) return;
+            if (currentReplay.steps.length >= 1000) return;
+            currentReplay.steps.push({
+                turn: currentReplay.steps.length + 1,
+                dlevel: dlevel,
+                x: player ? player.x : 2,
+                y: player ? player.y : 2,
+                hp: player ? player.hp : 25,
+                max_hp: player ? player.max_hp : 25,
+                mp: player ? player.mp : 30,
+                gold: player ? player.gold : 0,
+                kills: total_kills,
+                act: action,
+                msg: note || (msgs.length > 0 ? msgs[msgs.length - 1] : '')
+            });
+        }
+
+        function openReplayModal() {
+            closeAllModalsExcept('modal-replay');
+            clearAllToasts();
+            replayCurrentStep = 0;
+            const scrubber = document.getElementById('replay-scrubber');
+            const maxStep = Math.max(0, currentReplay.steps.length - 1);
+            if (scrubber) {
+                scrubber.max = maxStep;
+                scrubber.value = 0;
+            }
+            const heroInfo = document.getElementById('replay-hero-info');
+            if (heroInfo) {
+                heroInfo.innerText = `${currentReplay.heroName} (${currentReplay.class.toUpperCase()} ${currentReplay.race}) | Seed: ${currentReplay.seedStr} | Total Turns: ${currentReplay.steps.length}`;
+            }
+            updateReplayStepView();
+            document.getElementById('modal-replay').style.display = 'flex';
+        }
+
+        function onReplayScrub(val) {
+            replayCurrentStep = parseInt(val) || 0;
+            updateReplayStepView();
+        }
+
+        function replayStep(delta) {
+            const maxStep = Math.max(0, currentReplay.steps.length - 1);
+            replayCurrentStep = Math.max(0, Math.min(maxStep, replayCurrentStep + delta));
+            const scrubber = document.getElementById('replay-scrubber');
+            if (scrubber) scrubber.value = replayCurrentStep;
+            updateReplayStepView();
+        }
+
+        function replaySeekStart() {
+            replayCurrentStep = 0;
+            const scrubber = document.getElementById('replay-scrubber');
+            if (scrubber) scrubber.value = 0;
+            updateReplayStepView();
+        }
+
+        function replaySeekEnd() {
+            replayCurrentStep = Math.max(0, currentReplay.steps.length - 1);
+            const scrubber = document.getElementById('replay-scrubber');
+            if (scrubber) scrubber.value = replayCurrentStep;
+            updateReplayStepView();
+        }
+
+        function updateReplayStepView() {
+            const turnInfo = document.getElementById('replay-turn-info');
+            const logBox = document.getElementById('replay-log-box');
+            if (currentReplay.steps.length === 0) {
+                if (turnInfo) turnInfo.innerText = "Turn: 0 / 0";
+                if (logBox) logBox.innerText = "No recorded turns in active replay.";
+                return;
+            }
+            const step = currentReplay.steps[replayCurrentStep];
+            if (turnInfo) turnInfo.innerText = `Turn: ${replayCurrentStep + 1} / ${currentReplay.steps.length} | Floor: ${step.dlevel}`;
+            if (logBox) {
+                logBox.innerHTML = `<b>Turn #${step.turn}</b> [Floor ${step.dlevel}, Pos (${step.x}, ${step.y})] | HP: <span style="color:#68d391;">${step.hp}/${step.max_hp}</span> | Gold: <span style="color:#f6e05e;">${step.gold}</span> | Kills: ${step.kills}<br><span style="color:#a0aec0;">Action: ${step.act} — "${escapeHTML(step.msg || 'Exploration')}"</span>`;
+            }
+        }
+
+        function replayTogglePlay() {
+            const btn = document.getElementById('btn-replay-play');
+            if (replayPlayTimer) {
+                clearInterval(replayPlayTimer);
+                replayPlayTimer = null;
+                if (btn) btn.innerText = "▶ Play";
+            } else {
+                if (btn) btn.innerText = "⏸ Pause";
+                replayPlayTimer = setInterval(() => {
+                    if (replayCurrentStep >= currentReplay.steps.length - 1) {
+                        clearInterval(replayPlayTimer);
+                        replayPlayTimer = null;
+                        if (btn) btn.innerText = "▶ Play";
+                        return;
+                    }
+                    replayStep(1);
+                }, replaySpeedMs);
+            }
+        }
+
+        function updateReplaySpeed(val) {
+            replaySpeedMs = parseInt(val) || 400;
+            if (replayPlayTimer) {
+                clearInterval(replayPlayTimer);
+                replayPlayTimer = setInterval(() => {
+                    if (replayCurrentStep >= currentReplay.steps.length - 1) {
+                        clearInterval(replayPlayTimer);
+                        replayPlayTimer = null;
+                        const btn = document.getElementById('btn-replay-play');
+                        if (btn) btn.innerText = "▶ Play";
+                        return;
+                    }
+                    replayStep(1);
+                }, replaySpeedMs);
+            }
+        }
+
+        function exportReplayFile() {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(currentReplay, null, 2));
+            const dl = document.createElement('a');
+            dl.setAttribute("href", dataStr);
+            dl.setAttribute("download", `krogue_replay_${currentReplay.seedStr}.krr`);
+            document.body.appendChild(dl);
+            dl.click();
+            dl.remove();
+            showToast("Replay file exported as .krr!", "success");
+        }
+
+        function handleImportReplayFile(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const parsed = JSON.parse(e.target.result);
+                    if (parsed && Array.isArray(parsed.steps)) {
+                        currentReplay = parsed;
+                        openReplayModal();
+                        showToast(`Imported replay with ${currentReplay.steps.length} turns!`, 'success');
+                    } else {
+                        showToast("Invalid replay format!", 'error');
+                    }
+                } catch(err) {
+                    showToast("Failed to parse replay file: " + err.message, 'error');
+                }
+            };
+            reader.readAsText(file);
+            event.target.value = '';
+        }
+
+        /* --- DUNGEON FEN (BOARD STATE EXPORT/IMPORT) --- */
+        function exportDungeonFEN() {
+            if (state !== 1) {
+                showToast("Start or resume a run first to export Dungeon FEN!", "warning");
+                return;
+            }
+            const monsterCount = monsters.filter(m => m.hp > 0).length;
+            const itemCount = items.length;
+            const fen = `KROGUE-FEN:1:KR-${player.seedStr}:POS=${player.x},${player.y}:HP=${player.hp}/${player.max_hp}:MP=${player.mp}/${player.max_mp}:GLD=${player.gold}:KLS=${total_kills}:M=${monsterCount}:I=${itemCount}`;
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(fen);
+            }
+            addMsg("Dungeon FEN: " + fen, 'good');
+            showToast("📋 Dungeon FEN copied to clipboard!", "success");
+        }
+
+        function importDungeonFENPrompt() {
+            const fenStr = prompt("Paste KROGUE-FEN String:", "");
+            if (!fenStr) return;
+            importDungeonFEN(fenStr);
+        }
+
+        function importDungeonFEN(fenStr) {
+            if (!fenStr.startsWith("KROGUE-FEN:")) {
+                showToast("Invalid FEN format!", "error");
+                return;
+            }
+            try {
+                const parts = fenStr.split(':');
+                let floor = 1, seed = "KR-7492", px = 2, py = 2, hp = 25, maxHp = 25, mp = 30, maxMp = 30, gold = 0, kills = 0;
+                for (let p of parts) {
+                    if (p.startsWith("KR-")) seed = p;
+                    else if (p.startsWith("POS=")) {
+                        const coords = p.split('=')[1].split(',');
+                        px = parseInt(coords[0]); py = parseInt(coords[1]);
+                    } else if (p.startsWith("HP=")) {
+                        const hpVals = p.split('=')[1].split('/');
+                        hp = parseInt(hpVals[0]); maxHp = parseInt(hpVals[1]);
+                    } else if (p.startsWith("MP=")) {
+                        const mpVals = p.split('=')[1].split('/');
+                        mp = parseInt(mpVals[0]); maxMp = parseInt(mpVals[1]);
+                    } else if (p.startsWith("GLD=")) gold = parseInt(p.split('=')[1]) || 0;
+                    else if (p.startsWith("KLS=")) kills = parseInt(p.split('=')[1]) || 0;
+                }
+                closeModal('modal-inventory');
+                startNewGame(selectedClass, selectedRace, seed, selectedLoadout || 0);
+                dlevel = floor;
+                player.x = px; player.y = py;
+                player.hp = hp; player.max_hp = maxHp;
+                player.mp = mp; player.max_mp = maxMp;
+                player.gold = gold;
+                total_kills = kills;
+                addMsg(`Loaded Dungeon FEN Challenge! Floor ${floor}, Seed: ${seed}`, 'good');
+                showToast(`Loaded FEN challenge on Seed ${seed}!`, "success");
+            } catch(err) {
+                showToast("Failed to parse Dungeon FEN: " + err.message, "error");
             }
         }
 
@@ -3501,6 +4423,17 @@
                         dlevel++;
                         addMsg(`You descend deeper into floor ${dlevel}...`, 'msg-good');
                         showToast(`Descended to Floor ${dlevel}`, 'info');
+                        if (typeof isDuelMode !== 'undefined' && isDuelMode) {
+                            duelHexCharges = Math.min(3, duelHexCharges + 1);
+                            if (isDuelOnline && rMultiplayer) {
+                                rMultiplayer.sendMove({ action: 'stairs', floor: dlevel, kills: total_kills, gold: player.gold });
+                                if (dlevel >= 10) {
+                                    rMultiplayer.sendMove({ action: 'finish', outcome: 'victory', floor: dlevel, kills: total_kills, gold: player.gold });
+                                    showToast('🏆 DUEL VICTORY! Floor 10 reached first!', 'success', 6000);
+                                }
+                            }
+                            updateDuelHud();
+                        }
                         initMap();
                         return;
                     } else if (it.type === 'altar') {
@@ -3613,7 +4546,7 @@
             }
 
             if (e.key === 'Escape') {
-                closeModal('modal-inventory'); closeModal('modal-spellbook'); closeModal('modal-leaderboard'); closeModal('modal-char-select'); closeModal('modal-help'); closeModal('modal-keybinds'); closeModal('modal-altar'); closeModal('modal-pet'); closeModal('modal-anvil');
+                closeModal('modal-inventory'); closeModal('modal-spellbook'); closeModal('modal-leaderboard'); closeModal('modal-char-select'); closeModal('modal-help'); closeModal('modal-keybinds'); closeModal('modal-altar'); closeModal('modal-pet'); closeModal('modal-anvil'); closeModal('modal-multiplayer'); closeModal('modal-replay');
                 if (state === 4) { state = 1; addMsg("Targeting cancelled."); }
                 else if (state === 2 || state === 3) { state = 0; }
                 return;
@@ -3782,6 +4715,7 @@
         // Start Loop
         gameLoop();
         setTimeout(() => {
+            initRetroMultiplayer();
             let hasSave = !!localStorage.getItem('krogue_save');
             let seenTutorial = !!localStorage.getItem('krogue_tutorialSeen');
             if (hasSave) {

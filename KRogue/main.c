@@ -636,6 +636,10 @@ void unsocket_gear(int gear_slot);
 int has_save_file(void);
 int has_seen_tutorial(void);
 void mark_tutorial_seen(void);
+Entity* get_player(void);
+void export_dungeon_fen(void);
+void export_replay_krr(void);
+void record_replay_step(void);
 
 // Minimal LCG Random
 unsigned int g_seed = 12345;
@@ -891,6 +895,101 @@ void import_leaderboard_json() {
     char msg[64];
     wsprintfA(msg, "Imported %d score records!", imported);
     add_msg(msg);
+}
+
+typedef struct {
+    int turn;
+    int dlevel;
+    int x, y;
+    int hp, max_hp;
+    int gold;
+    int kills;
+} ReplayStep;
+
+#define MAX_REPLAY_STEPS 512
+ReplayStep g_replay[MAX_REPLAY_STEPS];
+int g_replay_count = 0;
+
+void record_replay_step() {
+    if (g_replay_count >= MAX_REPLAY_STEPS) return;
+    Entity* p = get_player();
+    if (!p) return;
+    g_replay[g_replay_count].turn = g_replay_count + 1;
+    g_replay[g_replay_count].dlevel = g.dlevel;
+    g_replay[g_replay_count].x = p->x;
+    g_replay[g_replay_count].y = p->y;
+    g_replay[g_replay_count].hp = p->hp;
+    g_replay[g_replay_count].max_hp = p->max_hp;
+    g_replay[g_replay_count].gold = p->gold;
+    g_replay[g_replay_count].kills = g.total_kills;
+    g_replay_count++;
+}
+
+void export_replay_krr() {
+    HANDLE hFile = CreateFileA("replay_export.krr", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile == INVALID_HANDLE_VALUE) {
+        add_msg("Failed to export replay file!");
+        return;
+    }
+    DWORD written;
+    char header[256];
+    Entity* p = get_player();
+    wsprintfA(header, "{\n  \"heroName\": \"%s\",\n  \"class_id\": %d,\n  \"race\": %d,\n  \"seed\": %u,\n  \"totalTurns\": %d,\n  \"steps\": [\n",
+              p->name[0] ? p->name : "Hero", g.char_class, g.char_race, g.seed, g_replay_count);
+    WriteFile(hFile, header, (DWORD)str_len(header), &written, NULL);
+
+    for (int i = 0; i < g_replay_count; i++) {
+        char line[128];
+        wsprintfA(line, "    {\"turn\": %d, \"dlevel\": %d, \"x\": %d, \"y\": %d, \"hp\": %d, \"gold\": %d}%s\n",
+                  g_replay[i].turn, g_replay[i].dlevel, g_replay[i].x, g_replay[i].y, g_replay[i].hp, g_replay[i].gold,
+                  (i < g_replay_count - 1) ? "," : "");
+        WriteFile(hFile, line, (DWORD)str_len(line), &written, NULL);
+    }
+    char footer[] = "  ]\n}\n";
+    WriteFile(hFile, footer, (DWORD)str_len(footer), &written, NULL);
+    CloseHandle(hFile);
+    add_msg("Replay exported to replay_export.krr!");
+    show_toast("Replay Exported (.krr)!", RGB(255, 215, 0), 3000);
+}
+
+void export_dungeon_fen() {
+    Entity* p = get_player();
+    char fen[256];
+    int monster_cnt = 0;
+    for (int i = 1; i < MAX_ENTITIES; i++) {
+        if (g.entities[i].active && g.entities[i].hp > 0) monster_cnt++;
+    }
+    int item_cnt = 0;
+    for (int i = 0; i < MAX_ITEMS; i++) {
+        if (g.items[i].active) item_cnt++;
+    }
+    wsprintfA(fen, "KROGUE-FEN:1:KR-%u:POS=%d,%d:HP=%d/%d:MP=%d/%d:GLD=%d:KLS=%d:M=%d:I=%d",
+              g.seed, p->x, p->y, p->hp, p->max_hp, p->mp, p->max_mp, p->gold, g.total_kills, monster_cnt, item_cnt);
+
+    HANDLE hFile = CreateFileA("dungeon_fen.txt", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile != INVALID_HANDLE_VALUE) {
+        DWORD written;
+        WriteFile(hFile, fen, (DWORD)str_len(fen), &written, NULL);
+        CloseHandle(hFile);
+    }
+
+    if (OpenClipboard(NULL)) {
+        EmptyClipboard();
+        int len = str_len(fen) + 1;
+        HGLOBAL hGlob = GlobalAlloc(GMEM_MOVEABLE, len);
+        if (hGlob) {
+            char* dest = (char*)GlobalLock(hGlob);
+            if (dest) {
+                str_cpy(dest, fen);
+                GlobalUnlock(hGlob);
+                SetClipboardData(CF_TEXT, hGlob);
+            }
+        }
+        CloseClipboard();
+    }
+
+    add_msg("Dungeon FEN saved to dungeon_fen.txt & Clipboard!");
+    show_toast("Dungeon FEN Copied!", RGB(100, 255, 200), 3000);
 }
 
 void init_default_keybinds() {
@@ -1476,6 +1575,8 @@ void finalize_character() {
     mark_tutorial_seen();
     g.state = 0;
     g.dlevel = 1;
+    g_replay_count = 0;
+    record_replay_step();
     Entity* p = get_player();
     p->active = 1;
     p->ch = '@';
@@ -2173,6 +2274,7 @@ void monsters_turn() {
         if(rand_range(0, 100) < 20) add_msg("You are starving!");
         if(p->hp <= 0) handle_death(p, NULL);
     }
+    record_replay_step();
 }
 
 void move_player(int dx, int dy) {
@@ -4288,6 +4390,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             if(g.state == 1 || g.state == 10) { // dead or victory
                 if(wParam == 'R' || wParam == VK_RETURN || wParam == VK_SPACE || wParam == VK_ESCAPE) init_game();
                 if(wParam == VK_F9 || wParam == 'L') load_game();
+                if(wParam == 'P') export_replay_krr();
+                if(wParam == 'X') export_dungeon_fen();
             } else if(g.state == 0) { // play
                 if(wParam == g_keybinds.up || wParam == VK_UP || wParam == VK_NUMPAD8) move_player(0, -1);
                 else if(wParam == g_keybinds.down || wParam == VK_DOWN || wParam == VK_NUMPAD2) move_player(0, 1);
@@ -4310,6 +4414,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 else if(wParam == g_keybinds.load || wParam == VK_F9) load_game();
                 else if(wParam == 'E') g.state = 13;
                 else if(wParam == 'P') g.state = 14;
+                else if(wParam == 'X') export_dungeon_fen();
+                else if(wParam == 'J') export_replay_krr();
                 else if(wParam == 'F') {
                     if(g.equip_weapon.active && g.equip_weapon.subtype == W_BOW) {
                         g.state = 3; 
@@ -4323,6 +4429,12 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 }
             } else if(g.state == 2) { // inventory
                 if(wParam == VK_ESCAPE) {
+                    g.state = 0;
+                } else if(wParam == 'X') {
+                    export_dungeon_fen();
+                    g.state = 0;
+                } else if(wParam == 'J') {
+                    export_replay_krr();
                     g.state = 0;
                 } else if(wParam >= '1' && wParam <= '4') {
                     unequip_item(wParam - '0');
@@ -4365,6 +4477,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 else if(wParam == 'X') { export_leaderboard_json(); }
                 else if(wParam == 'I') { import_leaderboard_json(); }
                 else if(wParam == 'C') { clear_leaderboard(); }
+                else if(wParam == 'P') { export_replay_krr(); }
             } else if(g.state == 12) { // keybindings screen
                 if(g_rebinding_idx != -1) {
                     if(wParam != VK_ESCAPE) {
