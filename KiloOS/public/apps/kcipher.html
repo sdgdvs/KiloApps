@@ -555,6 +555,7 @@
     }
 
     .splash-card {
+      position: relative;
       background: var(--surface);
       border: 2px solid var(--primary);
       box-shadow: 0 0 25px rgba(56, 189, 248, 0.25);
@@ -566,6 +567,32 @@
       display: flex;
       flex-direction: column;
       gap: 16px;
+    }
+
+    .modal-close-icon {
+      position: absolute;
+      top: 10px;
+      right: 12px;
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      width: 26px;
+      height: 26px;
+      border-radius: 4px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      line-height: 1;
+      padding: 0;
+      transition: background 0.15s, color 0.15s;
+      z-index: 10;
+    }
+    .modal-close-icon:hover {
+      background: var(--danger);
+      color: #fff;
+      border-color: var(--danger);
     }
 
     .splash-title {
@@ -601,6 +628,7 @@
     }
 
     .tutorial-card {
+      position: relative;
       background: var(--surface);
       border: 2px solid var(--accent);
       border-radius: 8px;
@@ -1014,6 +1042,7 @@
   <!-- Splash Screen Overlay -->
   <div id="splashOverlay" class="splash-overlay">
     <div class="splash-card">
+      <button class="btn-close close modal-close modal-close-icon" id="btnSplashClose" title="Enter Workbench [Esc]">✕</button>
       <div class="splash-title">KCipher 1999</div>
       <div class="splash-subtitle">
         Cryptographic Cipher Suite &amp; Steganography Workbench<br>
@@ -1039,7 +1068,8 @@
   <!-- Onboarding Tutorial Modal -->
   <div id="tutorialOverlay" class="tutorial-overlay">
     <div class="tutorial-card">
-      <div style="display: flex; justify-content: space-between; align-items: center;">
+      <button class="btn-close close modal-close modal-close-icon" id="btnTutClose" title="Close [Esc]">✕</button>
+      <div style="display: flex; justify-content: space-between; align-items: center; padding-right: 28px;">
         <div style="font-weight: bold; color: var(--accent); font-size: 14px;" id="tutStepTitle">Step 1: Workbench</div>
         <span style="font-size: 11px; color: var(--text-muted);" id="tutStepIndicator">1 / 4</span>
       </div>
@@ -2234,6 +2264,7 @@
     ];
 
     function showTutorialStep(step) {
+      if (elements.toast) elements.toast.classList.remove('show');
       state.tutorialStep = step;
       const data = TUTORIAL_STEPS[step - 1];
       document.getElementById('tutStepTitle').textContent = data.title;
@@ -2264,16 +2295,17 @@
         document.getElementById('btnSplashContinue').disabled = false;
       }
 
-      // Check tutorial flag
-      const tutorialSeen = localStorage.getItem('kcipher_tutorialSeen');
-
       // Splash Buttons
+      document.getElementById('btnSplashClose')?.addEventListener('click', () => {
+        elements.splashOverlay.style.display = 'none';
+        try { localStorage.setItem('kcipher_tutorialSeen', '1'); } catch (e) {}
+        audio.playClick();
+      });
+
       document.getElementById('btnSplashNew').addEventListener('click', () => {
         elements.splashOverlay.style.display = 'none';
+        try { localStorage.setItem('kcipher_tutorialSeen', '1'); } catch (e) {}
         audio.playClick();
-        if (!tutorialSeen) {
-          showTutorialStep(1);
-        }
       });
 
       document.getElementById('btnSplashContinue').addEventListener('click', () => {
@@ -2284,9 +2316,15 @@
       document.getElementById('btnSplashTutorial').addEventListener('click', () => {
         elements.splashOverlay.style.display = 'none';
         showTutorialStep(1);
+        audio.playClick();
       });
 
       // Tutorial Controls
+      document.getElementById('btnTutClose')?.addEventListener('click', () => {
+        closeTutorial();
+        audio.playClick();
+      });
+
       document.getElementById('btnTutNext').addEventListener('click', () => {
         if (state.tutorialStep < TUTORIAL_STEPS.length) {
           showTutorialStep(state.tutorialStep + 1);
@@ -2578,6 +2616,7 @@
           img.src = evt.target.result;
         };
         reader.readAsDataURL(file);
+        e.target.value = '';
       });
 
       // 1999 Lore Intercepts
@@ -2769,6 +2808,7 @@
           }
         };
         reader.readAsText(file);
+        e.target.value = '';
       });
 
       // Audio Toggle
@@ -2814,6 +2854,7 @@
       elements.splashOverlay.addEventListener('click', (e) => {
         if (e.target === elements.splashOverlay) {
           elements.splashOverlay.style.display = 'none';
+          try { localStorage.setItem('kcipher_tutorialSeen', '1'); } catch (err) {}
           audio.playClick();
         }
       });
@@ -2855,9 +2896,10 @@
           if (e.key === 'Escape') {
             e.preventDefault();
             elements.splashOverlay.style.display = 'none';
+            try { localStorage.setItem('kcipher_tutorialSeen', '1'); } catch (err) {}
             return;
           }
-          if (e.key === 'Enter' || e.key === ' ') {
+          if ((e.key === 'Enter' || e.key === ' ') && e.target?.tagName !== 'BUTTON') {
             e.preventDefault();
             const btnCont = document.getElementById('btnSplashContinue');
             if (btnCont && !btnCont.disabled) {

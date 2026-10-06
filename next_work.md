@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-tester
-next_agent: kilo-usability
+current_agent: kilo-usability
+next_agent: kilo-qa
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -14,7 +14,7 @@ status: ready
 current_targets:
   kilo_creator: "kweb://10.19.99.4/classified"
   kilo_graphics: KSpace
-  kilo_tester: KCipher
+  kilo_tester: KCalc
   kilo_usability: KChart
   kilo_qa: KTetris
   kilo_expander: KBreakout
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-graphics
-  app: KAsteroids
-  timestamp: "2026-10-06T09:40:00-07:00"
+  agent: kilo-tester
+  app: KCipher
+  timestamp: "2026-10-06T09:54:00-07:00"
 last_planner_run: "2026-10-06T14:20:00Z"
 ---
 
@@ -114,9 +114,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KPac`, `KQuest`, `KRogue`, `KColosseum`, `KAbyss`, `KBreakout`, `KAsteroids` *(Note: Pure vector/wireframe or abstract board targets skip automatically per Mandate 15. Completed: KQuest Phases 1-5, KSpace)*.
 
 ### 3. App Tester Queue (`kilo-tester`)
-- **Current Target**: `KCipher`
+- **Current Target**: `KCalc`
 - **Upcoming Queue**:
-  `KCalc`, `KMine`, `KSnake`, `KTetris`, `KPong`, `KMaze`, `KSolitaire`, `KChess`, `KColor`, `KTimer`, `KConverter`, `KQuarantine`, `KSettings`, `KTaskMgr`, `K2048`, `KSudoku`, `KConnect4`, `KHangman`, `KSimon`, `KFreecell`, `KMatch3`, `KWords`, `KGo`, `KDarts`, `KRSS`, `KClip` *(Completed: KStarForge, KTask, KChrono, KSys, KSynth, KCyber, KCosmic, KContacts, KDB, KDragon, KFlash, KFont, KFortress, KGraph, KHabit, KHex, KImage, KJournal, KMail, KMandel, KMech, KMedia, KMystery, KNet, KNote, KPad, KPaint, KPass, KPing, KQuest, KRadio, KRead, KSanctuary, KScript, KStarDredge, KStarship, KStellar, KSubmarine, KTerm, KHash, KRSS, KClip)*.
+  `KMine`, `KSnake`, `KTetris`, `KPong`, `KMaze`, `KSolitaire`, `KChess`, `KColor`, `KTimer`, `KConverter`, `KQuarantine`, `KSettings`, `KTaskMgr`, `K2048`, `KSudoku`, `KConnect4`, `KHangman`, `KSimon`, `KFreecell`, `KMatch3`, `KWords`, `KGo`, `KDarts`, `KRSS`, `KClip`, `KCipher` *(Completed: KStarForge, KTask, KChrono, KSys, KSynth, KCyber, KCosmic, KContacts, KDB, KDragon, KFlash, KFont, KFortress, KGraph, KHabit, KHex, KImage, KJournal, KMail, KMandel, KMech, KMedia, KMystery, KNet, KNote, KPad, KPaint, KPass, KPing, KQuest, KRadio, KRead, KSanctuary, KScript, KStarDredge, KStarship, KStellar, KSubmarine, KTerm, KHash, KRSS, KClip, KCipher)*.
 
 ### 4. Usability & UX Queue (`kilo-usability`)
 - **Current Target**: `KChart`
@@ -217,6 +217,14 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-06T09:54:00-07:00 — kilo-tester: KCipher (Interactive UI Audit & Inline Repairs)**
+  - Status: PASS ✅ (4 issues, 4 fixed; 106.6 KB web / 11.5 KB native < 999 KB ceiling).
+  - Modal Ergonomics: Added dedicated close buttons (`#btnSplashClose`, `#btnTutClose`) to splash and tutorial modals.
+  - Startup Flow: Fixed stuck startup modal bug; decoupled tutorial pop-up from "Start New Session" button.
+  - State & Persistence: Handled first-run flags on splash close/backdrop click; reset file inputs on upload.
+  - Keybinds: Guarded Space/Enter on focused buttons during splash; enabled Escape dismissal across all dialogs.
+  - Verification: `test_app_startup.py` PASS; `test_web_apps.js` PASS (60 elements); MSVC clean (`KCipher.exe` 11.5 KB); Vite clean (330ms); security_lint 100% PASS.
+
 - **2026-10-06T09:40:00-07:00 — kilo-graphics: KAsteroids (Skip Turn — Inappropriate Target & Glint/Dot Audit)**
   - Status: ⏭️ Skip — Imagen 3 asset replacement not appropriate for KAsteroids
   - Rationale: Pure vector arcade classic; authentic line-art aesthetic and Win32 GDI 1:1 parity preclude raster replacement.
@@ -248,15 +256,6 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Overlays & Ergonomics: Added interactive "Resume Saved Run" buttons; wired Return/Space/Esc across help, game over, victory, and modal screens.
   - Toast Occlusion Remediation: Relocated toast container to non-occluding z-index with `clearAllToasts` and `closeAllModalsExcept` (Directive 185).
   - Verification: `test_web_apps.js` PASS (1 app, 67 elements); MSVC clean (`KRogue.exe` 77.8 KB); Vite clean (383ms); security_lint 100% PASS.
-
-- **2026-10-06T08:28:00-07:00 — kilo-usability: KCalendar (Usability & Layout Polish, Navigation & Modal Ergonomics)**
-  - Status: PASS ✅ (0 regressions, 113.7 KB web / 24.5 KB native < 999 KB ceiling).
-  - Window Dimension Tuning: Expanded default dimensions to 1020x720 in `App.jsx`, preventing toolbar wrapping & month grid clipping.
-  - Toast Occlusion Remediation: Relocated `#toastContainer` to safe 24px/24px with `clearAllToasts` on modal open (Directive 185).
-  - Double-Modal Stacking Prevention: Enforced non-stacked delete confirmation with auto-restoration on cancel (Directive 185).
-  - Navigation & Day Jump: Added direct Day view jumps on day number click and `+X more` badge click in Month view.
-  - Controls & Shortcuts: Added `#resetFiltersBtn`, form `Ctrl+Enter` save, `[`/`]` date navigation, and `Ctrl+S` quicksave.
-  - Verification: `test_web_apps.js` PASS (107 apps, 7359 elements); MSVC clean (`KCalendar.exe` 24.5 KB); Vite clean (441ms); security_lint 100% PASS.
 
 
 

@@ -4,6 +4,15 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-06T08:28:00-07:00 — kilo-usability: KCalendar (Usability & Layout Polish, Navigation & Modal Ergonomics)**
+  - Status: PASS ✅ (0 regressions, 113.7 KB web / 24.5 KB native < 999 KB ceiling).
+  - Window Dimension Tuning: Expanded default dimensions to 1020x720 in `App.jsx`, preventing toolbar wrapping & month grid clipping.
+  - Toast Occlusion Remediation: Relocated `#toastContainer` to safe 24px/24px with `clearAllToasts` on modal open (Directive 185).
+  - Double-Modal Stacking Prevention: Enforced non-stacked delete confirmation with auto-restoration on cancel (Directive 185).
+  - Navigation & Day Jump: Added direct Day view jumps on day number click and `+X more` badge click in Month view.
+  - Controls & Shortcuts: Added `#resetFiltersBtn`, form `Ctrl+Enter` save, `[`/`]` date navigation, and `Ctrl+S` quicksave.
+  - Verification: `test_web_apps.js` PASS (107 apps, 7359 elements); MSVC clean (`KCalendar.exe` 24.5 KB); Vite clean (441ms); security_lint 100% PASS.
+
 - **2026-10-06T08:07:00-07:00 — kilo-tester: KClip (Interactive UI Audit & Inline Repairs)**
   - Status: PASS ✅ (6 issues, 6 fixed; 121.1 KB < 999 KB ceiling).
   - Toast & Modal Ergonomics: Prevented hidden toast click capture (`pointer-events`), wired modal toast auto-dismissal (Directive 185).
