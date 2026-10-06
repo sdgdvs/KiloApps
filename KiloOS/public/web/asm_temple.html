@@ -717,7 +717,7 @@
 
   <!-- Navigation Tabs -->
   <div class="nav-bar">
-    <button class="nav-btn active" data-tab="tab-oracle">[1] 📜 Opcode Oracle (142 Ops)</button>
+    <button class="nav-btn active" data-tab="tab-oracle">[1] 📜 Opcode Oracle (177 Ops)</button>
     <button class="nav-btn" data-tab="tab-converter">[2] ⚙️ Assembler &amp; Micro-CPU Stepper</button>
     <button class="nav-btn" data-tab="tab-altar">[3] 🧮 Bitwise Radix Altar</button>
     <button class="nav-btn" data-tab="tab-pe">[4] 🏛️ Win32 PE Dissector &amp; Builder</button>
@@ -732,7 +732,7 @@
     <div class="panel-box gold-accent">
       <div class="panel-title">
         <span>📜 The x86 / i386 Sacred Instruction Lexicon &amp; Encoding Deconstructor</span>
-        <span style="font-size:11px; font-weight:normal; color:var(--text-muted);" id="lblOpcodeCount">Showing 142 instructions</span>
+        <span style="font-size:11px; font-weight:normal; color:var(--text-muted);" id="lblOpcodeCount">Showing 177 instructions</span>
       </div>
       <p style="font-size:12px; color:var(--text-muted); margin-bottom:12px;">
         Query the sacred silicon registers and instruction encodings. Search by mnemonic, byte opcode, category, or affected EFLAGS. Click any instruction row to inspect its hardware encoding deconstruction or load it directly into the assembler workbench!
@@ -761,17 +761,17 @@
       <div style="display:flex; gap:10px; margin-bottom:12px; flex-wrap:wrap;">
         <input type="text" id="oracleSearch" placeholder="Search mnemonic (e.g. NOP, XOR, MOV), hex byte (e.g. 90, 31, C3), flags, description..." style="flex:1; min-width:240px;" />
         <select id="oracleCatFilter" style="width:170px;">
-          <option value="ALL">All Categories (142)</option>
+          <option value="ALL">All Categories (177)</option>
           <option value="Data">Data Movement (22)</option>
           <option value="Arithmetic">Arithmetic (25)</option>
           <option value="Logic">Logic &amp; Bit Testing (12)</option>
           <option value="Shift">Shift &amp; Rotate (15)</option>
           <option value="Flow">Control Flow (26)</option>
-          <option value="Condition">Conditional (CMOV/SET) (20)</option>
+          <option value="Condition">Conditional (CMOV/SET) (29)</option>
           <option value="String">String Operations (15)</option>
           <option value="Stack">Stack &amp; Frame (10)</option>
-          <option value="System">System &amp; Traps (20)</option>
-          <option value="FPU">FPU &amp; MMX (16)</option>
+          <option value="System">System &amp; Traps (27)</option>
+          <option value="FPU">FPU &amp; MMX (36)</option>
         </select>
         <button class="btn-retro" id="btnResetOracle">Reset Filter</button>
       </div>
@@ -1100,14 +1100,29 @@
         </div>
       </div>
 
+      <!-- Advanced Bit Metrics Card -->
+      <div style="background:#090e18; border:1px solid #1e293b; padding:10px; border-radius:3px; margin-top:10px;">
+        <div style="font-size:11px; font-weight:bold; color:var(--gold-bright); margin-bottom:4px;">
+          🔬 Silicon Bit Metrics &amp; Micro-Optimization Properties:
+        </div>
+        <div style="display:flex; gap:16px; font-size:11px; flex-wrap:wrap;">
+          <div>POPCNT (Hamming Weight): <strong id="valPopcnt" style="color:var(--emerald);">0 set bits</strong></div>
+          <div>BSF (Trailing Zeros): <strong id="valBsf" style="color:var(--cyan);">32</strong></div>
+          <div>BSR (Highest Set Bit): <strong id="valBsr" style="color:var(--gold-bright);">None</strong></div>
+          <div>Gray Code (Binary Reflect): <strong id="valGray" style="color:#a855f7;">0x00000000</strong></div>
+        </div>
+      </div>
+
       <!-- Quick Operations Bar -->
       <div style="margin-top:14px; display:flex; gap:6px; flex-wrap:wrap; align-items:center;">
         <span style="font-size:11px; font-weight:bold; color:var(--gold-bright);">Bit Manipulations:</span>
         <button class="btn-retro" id="btnShl">SHL 1 (&lt;&lt;)</button>
         <button class="btn-retro" id="btnShr">SHR 1 (&gt;&gt;)</button>
+        <button class="btn-retro" id="btnSar">SAR 1 (&gt;&gt; Sign)</button>
         <button class="btn-retro" id="btnRol">ROL 1</button>
         <button class="btn-retro" id="btnRor">ROR 1</button>
         <button class="btn-retro" id="btnNot">NOT (Invert ~)</button>
+        <button class="btn-retro btn-cyan" id="btnBitReverse">Reverse Bits</button>
         <button class="btn-retro btn-cyan" id="btnEndianFlip">Swap Endian</button>
         <button class="btn-retro btn-gold" id="btnSetAllBits">Set All 1s (0xFFFFFFFF)</button>
       </div>
@@ -1545,6 +1560,8 @@
             <button class="btn-retro" id="btnFxStarfield" style="text-align:left; font-size:11px;">4. ✨ 3D Starfield Warp (256 Stars)</button>
             <button class="btn-retro" id="btnFxCube" style="text-align:left; font-size:11px;">5. 🧊 3D Wireframe Silicon Cube</button>
             <button class="btn-retro btn-emerald" id="btnFxSignal" style="text-align:left; font-size:11px;">6. 📡 1999Hz Subcarrier Spectrogram</button>
+            <button class="btn-retro" id="btnFxTunnel" style="text-align:left; font-size:11px;">7. 🌀 3D Polar Coordinate Warp Tunnel</button>
+            <button class="btn-retro" id="btnFxRipple" style="text-align:left; font-size:11px;">8. 💧 Dual-Wave Interference Ripple</button>
           </div>
 
           <div style="font-size:11px; font-weight:bold; color:var(--cyan); margin-bottom:4px;">
@@ -1678,10 +1695,10 @@
     <div class="panel-box gold-accent">
       <div class="panel-title">
         <span>🌐 Central KiloNet Webring &amp; Hypermedia Interconnect</span>
-        <span class="badge-opcode">Ring Node #007</span>
+        <span class="badge-opcode">Ring Node #005</span>
       </div>
       <p style="font-size:12px; color:var(--text-muted); margin-bottom:12px;">
-        The Temple of the x86 Opcodes is node #007 in the Central KiloNet 1999 Webring. Journey between sister nodes, demoscene devlogs, and underground shrines.
+        The Temple of the x86 Opcodes is node #005 in the Central KiloNet 1999 Webring. Journey between sister nodes, demoscene devlogs, and underground shrines.
       </p>
 
       <!-- Webring Navigation Controls -->
@@ -1995,6 +2012,9 @@
     { mnem: "CMOVS reg, reg", hex: "0F 48 /r", cat: "Condition", cycles: "1", flags: "None", desc: "Conditional Move if Sign / Negative (SF=1).", enc: { p: "None", o: "0F 48", m: "ModR/M", s: "None", d: "None", i: "None" } },
     { mnem: "CMOVNS reg, reg", hex: "0F 49 /r", cat: "Condition", cycles: "1", flags: "None", desc: "Conditional Move if Not Sign (SF=0).", enc: { p: "None", o: "0F 49", m: "ModR/M", s: "None", d: "None", i: "None" } },
     { mnem: "CMOVG reg, reg", hex: "0F 4F /r", cat: "Condition", cycles: "1", flags: "None", desc: "Conditional Move if Greater signed (ZF=0 and SF=OF).", enc: { p: "None", o: "0F 4F", m: "ModR/M", s: "None", d: "None", i: "None" } },
+    { mnem: "CMOVGE reg, reg", hex: "0F 4D /r", cat: "Condition", cycles: "1", flags: "None", desc: "Conditional Move if Greater or Equal signed (SF=OF).", enc: { p: "None", o: "0F 4D", m: "ModR/M", s: "None", d: "None", i: "None" } },
+    { mnem: "CMOVL reg, reg", hex: "0F 4C /r", cat: "Condition", cycles: "1", flags: "None", desc: "Conditional Move if Less signed (SF != OF).", enc: { p: "None", o: "0F 4C", m: "ModR/M", s: "None", d: "None", i: "None" } },
+    { mnem: "CMOVLE reg, reg", hex: "0F 4E /r", cat: "Condition", cycles: "1", flags: "None", desc: "Conditional Move if Less or Equal signed (ZF=1 or SF!=OF).", enc: { p: "None", o: "0F 4E", m: "ModR/M", s: "None", d: "None", i: "None" } },
 
     // STRING OPERATIONS
     { mnem: "MOVSB", hex: "A4", cat: "String", cycles: "3", flags: "None", desc: "Move byte from string: [EDI] = [ESI]; update ESI/EDI.", enc: { p: "None", o: "A4", m: "None", s: "None", d: "None", i: "None" } },
@@ -2038,6 +2058,13 @@
     { mnem: "OUT DX, EAX", hex: "EF", cat: "System", cycles: "7", flags: "None", desc: "Write 32-bit doubleword in EAX to variable I/O port in DX.", enc: { p: "None", o: "EF", m: "None", s: "None", d: "None", i: "None" } },
     { mnem: "SYSENTER", hex: "0F 34", cat: "System", cycles: "9", flags: "None", desc: "Fast transition from Ring 3 user mode to Ring 0 kernel privilege (Pentium II+).", enc: { p: "None", o: "0F 34", m: "None", s: "None", d: "None", i: "None" } },
     { mnem: "SYSEXIT", hex: "0F 35", cat: "System", cycles: "9", flags: "None", desc: "Fast transition from Ring 0 kernel handler back to Ring 3 user space (Pentium II+).", enc: { p: "None", o: "0F 35", m: "None", s: "None", d: "None", i: "None" } },
+    { mnem: "CMPXCHG reg, reg", hex: "0F B1 /r", cat: "System", cycles: "6", flags: "ZF,CF,PF,AF,SF,OF", desc: "Compare and Exchange: atomic compare EAX with dest; if equal dest=src else EAX=dest.", enc: { p: "None", o: "0F B1", m: "ModR/M", s: "None", d: "None", i: "None" } },
+    { mnem: "XADD reg, reg", hex: "0F C1 /r", cat: "System", cycles: "4", flags: "ZF,CF,PF,AF,SF,OF", desc: "Exchange and Add: swaps operands and stores sum in destination (InterlockedIncrement).", enc: { p: "None", o: "0F C1", m: "ModR/M", s: "None", d: "None", i: "None" } },
+    { mnem: "RDMSR", hex: "0F 32", cat: "System", cycles: "12", flags: "None", desc: "Read Model Specific Register: loads 64-bit MSR index in ECX into EDX:EAX (Ring 0).", enc: { p: "None", o: "0F 32", m: "None", s: "None", d: "None", i: "None" } },
+    { mnem: "WRMSR", hex: "0F 30", cat: "System", cycles: "18", flags: "None", desc: "Write Model Specific Register: writes EDX:EAX into 64-bit MSR index in ECX (Ring 0).", enc: { p: "None", o: "0F 30", m: "None", s: "None", d: "None", i: "None" } },
+    { mnem: "RDPMC", hex: "0F 33", cat: "System", cycles: "9", flags: "None", desc: "Read Performance Monitoring Counter specified by ECX into EDX:EAX (Pentium Pro+).", enc: { p: "None", o: "0F 33", m: "None", s: "None", d: "None", i: "None" } },
+    { mnem: "BOUND reg, [mem]", hex: "62 /r", cat: "System", cycles: "7", flags: "None", desc: "Check Array Index: verifies register falls within [mem] signed bounds, traps to INT 5.", enc: { p: "None", o: "62", m: "ModR/M", s: "Optional", d: "0-4B", i: "None" } },
+    { mnem: "INVLPG [mem]", hex: "0F 01 /7", cat: "System", cycles: "25", flags: "None", desc: "Invalidate TLB Entry: flushes translation lookaside buffer page containing [mem] (Ring 0).", enc: { p: "None", o: "0F 01", m: "ModR/M (/7)", s: "None", d: "0-4B", i: "None" } },
     { mnem: "RSM", hex: "0F AA", cat: "System", cycles: "30", flags: "All", desc: "Resume from System Management Mode (SMM state restore).", enc: { p: "None", o: "0F AA", m: "None", s: "None", d: "None", i: "None" } },
     { mnem: "UD2", hex: "0F 0B", cat: "System", cycles: "1", flags: "None", desc: "Defined Undefined Instruction: intentionally triggers Invalid Opcode (#UD) exception.", enc: { p: "None", o: "0F 0B", m: "None", s: "None", d: "None", i: "None" } },
     { mnem: "LOADALL", hex: "0F 07", cat: "System", cycles: "195", flags: "All", desc: "Undocumented 286/386 opcode: loads all CPU registers and hidden descriptor caches from memory.", enc: { p: "None", o: "0F 07", m: "None", s: "None", d: "None", i: "None" } },
@@ -2048,17 +2075,36 @@
     { mnem: "FNOP", hex: "D9 D0", cat: "FPU", cycles: "1", flags: "None", desc: "Floating-Point No Operation.", enc: { p: "None", o: "D9 D0", m: "None", s: "None", d: "None", i: "None" } },
     { mnem: "FLD ST(i)", hex: "D9 C0+i", cat: "FPU", cycles: "1", flags: "None", desc: "Push floating-point register ST(i) onto FPU stack.", enc: { p: "None", o: "D9 C0+i", m: "None", s: "None", d: "None", i: "None" } },
     { mnem: "FSTP ST(i)", hex: "DD D8+i", cat: "FPU", cycles: "1", flags: "None", desc: "Store ST(0) into ST(i) and pop FPU stack.", enc: { p: "None", o: "DD D8+i", m: "None", s: "None", d: "None", i: "None" } },
+    { mnem: "FST ST(i)", hex: "DD D0+i", cat: "FPU", cycles: "1", flags: "None", desc: "Store ST(0) into ST(i) without popping FPU stack.", enc: { p: "None", o: "DD D0+i", m: "None", s: "None", d: "None", i: "None" } },
+    { mnem: "FXCH ST(i)", hex: "D9 C8+i", cat: "FPU", cycles: "1", flags: "None", desc: "Exchange contents of ST(0) and ST(i).", enc: { p: "None", o: "D9 C8+i", m: "None", s: "None", d: "None", i: "None" } },
     { mnem: "FADD ST(0), ST(i)", hex: "D8 C0+i", cat: "FPU", cycles: "3", flags: "C1", desc: "Add ST(i) to ST(0).", enc: { p: "None", o: "D8 C0+i", m: "None", s: "None", d: "None", i: "None" } },
     { mnem: "FSUB ST(0), ST(i)", hex: "D8 E0+i", cat: "FPU", cycles: "3", flags: "C1", desc: "Subtract ST(i) from ST(0).", enc: { p: "None", o: "D8 E0+i", m: "None", s: "None", d: "None", i: "None" } },
     { mnem: "FMUL ST(0), ST(i)", hex: "D8 C8+i", cat: "FPU", cycles: "3", flags: "C1", desc: "Multiply ST(0) by ST(i).", enc: { p: "None", o: "D8 C8+i", m: "None", s: "None", d: "None", i: "None" } },
     { mnem: "FDIV ST(0), ST(i)", hex: "D8 F0+i", cat: "FPU", cycles: "39", flags: "C1", desc: "Divide ST(0) by ST(i).", enc: { p: "None", o: "D8 F0+i", m: "None", s: "None", d: "None", i: "None" } },
+    { mnem: "FSQRT", hex: "D9 FA", cat: "FPU", cycles: "70", flags: "C1", desc: "Compute square root of ST(0).", enc: { p: "None", o: "D9 FA", m: "None", s: "None", d: "None", i: "None" } },
     { mnem: "FSIN", hex: "D9 FE", cat: "FPU", cycles: "65", flags: "C2", desc: "Compute trigonometric sine of ST(0) in radians.", enc: { p: "None", o: "D9 FE", m: "None", s: "None", d: "None", i: "None" } },
     { mnem: "FCOS", hex: "D9 FF", cat: "FPU", cycles: "65", flags: "C2", desc: "Compute trigonometric cosine of ST(0) in radians.", enc: { p: "None", o: "D9 FF", m: "None", s: "None", d: "None", i: "None" } },
     { mnem: "FPATAN", hex: "D9 F3", cat: "FPU", cycles: "75", flags: "C1", desc: "Partial arctangent: ST(1) = arctan(ST(1) / ST(0)) and pop.", enc: { p: "None", o: "D9 F3", m: "None", s: "None", d: "None", i: "None" } },
+    { mnem: "FYL2X", hex: "D9 F1", cat: "FPU", cycles: "100", flags: "C1", desc: "Compute y * log2(x): ST(1) = ST(1) * log2(ST(0)) and pop.", enc: { p: "None", o: "D9 F1", m: "None", s: "None", d: "None", i: "None" } },
+    { mnem: "FABS", hex: "D9 E1", cat: "FPU", cycles: "1", flags: "None", desc: "Compute absolute value: ST(0) = |ST(0)|.", enc: { p: "None", o: "D9 E1", m: "None", s: "None", d: "None", i: "None" } },
+    { mnem: "FCHS", hex: "D9 E0", cat: "FPU", cycles: "1", flags: "None", desc: "Change sign / negate: ST(0) = -ST(0).", enc: { p: "None", o: "D9 E0", m: "None", s: "None", d: "None", i: "None" } },
+    { mnem: "FCOM ST(i)", hex: "D8 D0+i", cat: "FPU", cycles: "1", flags: "C0,C2,C3", desc: "Compare Real ST(0) with ST(i).", enc: { p: "None", o: "D8 D0+i", m: "None", s: "None", d: "None", i: "None" } },
+    { mnem: "FCOMP ST(i)", hex: "D8 D8+i", cat: "FPU", cycles: "1", flags: "C0,C2,C3", desc: "Compare Real ST(0) with ST(i) and pop stack.", enc: { p: "None", o: "D8 D8+i", m: "None", s: "None", d: "None", i: "None" } },
+    { mnem: "FCOMPP", hex: "DE D9", cat: "FPU", cycles: "1", flags: "C0,C2,C3", desc: "Compare Real ST(0) with ST(1) and pop both operands.", enc: { p: "None", o: "DE D9", m: "None", s: "None", d: "None", i: "None" } },
+    { mnem: "FRNDINT", hex: "D9 FC", cat: "FPU", cycles: "9", flags: "C1", desc: "Round ST(0) to nearest integer according to RC rounding control.", enc: { p: "None", o: "D9 FC", m: "None", s: "None", d: "None", i: "None" } },
+    { mnem: "F2XM1", hex: "D9 F0", cat: "FPU", cycles: "60", flags: "C1", desc: "Compute exponential: ST(0) = 2^(ST(0)) - 1.", enc: { p: "None", o: "D9 F0", m: "None", s: "None", d: "None", i: "None" } },
     { mnem: "EMMS", hex: "0F 77", cat: "FPU", cycles: "1", flags: "None", desc: "Empty MMX State: marks all FPU registers as empty after MMX.", enc: { p: "None", o: "0F 77", m: "None", s: "None", d: "None", i: "None" } },
     { mnem: "PXOR mm, mm", hex: "0F EF /r", cat: "FPU", cycles: "1", flags: "None", desc: "MMX bitwise exclusive OR between two 64-bit vector registers.", enc: { p: "None", o: "0F EF", m: "ModR/M", s: "None", d: "None", i: "None" } },
+    { mnem: "POR mm, mm", hex: "0F EB /r", cat: "FPU", cycles: "1", flags: "None", desc: "MMX bitwise inclusive OR between two 64-bit vector registers.", enc: { p: "None", o: "0F EB", m: "ModR/M", s: "None", d: "None", i: "None" } },
+    { mnem: "PAND mm, mm", hex: "0F DB /r", cat: "FPU", cycles: "1", flags: "None", desc: "MMX bitwise AND between two 64-bit vector registers.", enc: { p: "None", o: "0F DB", m: "ModR/M", s: "None", d: "None", i: "None" } },
+    { mnem: "PANDN mm, mm", hex: "0F DF /r", cat: "FPU", cycles: "1", flags: "None", desc: "MMX bitwise AND NOT: dest = (~dest) & src.", enc: { p: "None", o: "0F DF", m: "ModR/M", s: "None", d: "None", i: "None" } },
     { mnem: "PADDB mm, mm", hex: "0F FC /r", cat: "FPU", cycles: "1", flags: "None", desc: "MMX packed addition of eight 8-bit bytes with wraparound.", enc: { p: "None", o: "0F FC", m: "ModR/M", s: "None", d: "None", i: "None" } },
-    { mnem: "PADDD mm, mm", hex: "0F FE /r", cat: "FPU", cycles: "1", flags: "None", desc: "MMX packed addition of two 32-bit doublewords.", enc: { p: "None", o: "0F FE", m: "ModR/M", s: "None", d: "None", i: "None" } }
+    { mnem: "PADDW mm, mm", hex: "0F FD /r", cat: "FPU", cycles: "1", flags: "None", desc: "MMX packed addition of four 16-bit words with wraparound.", enc: { p: "None", o: "0F FD", m: "ModR/M", s: "None", d: "None", i: "None" } },
+    { mnem: "PADDD mm, mm", hex: "0F FE /r", cat: "FPU", cycles: "1", flags: "None", desc: "MMX packed addition of two 32-bit doublewords.", enc: { p: "None", o: "0F FE", m: "ModR/M", s: "None", d: "None", i: "None" } },
+    { mnem: "PSUBB mm, mm", hex: "0F F8 /r", cat: "FPU", cycles: "1", flags: "None", desc: "MMX packed subtraction of eight 8-bit bytes with wraparound.", enc: { p: "None", o: "0F F8", m: "ModR/M", s: "None", d: "None", i: "None" } },
+    { mnem: "PSUBW mm, mm", hex: "0F F9 /r", cat: "FPU", cycles: "1", flags: "None", desc: "MMX packed subtraction of four 16-bit words.", enc: { p: "None", o: "0F F9", m: "ModR/M", s: "None", d: "None", i: "None" } },
+    { mnem: "PSUBD mm, mm", hex: "0F FA /r", cat: "FPU", cycles: "1", flags: "None", desc: "MMX packed subtraction of two 32-bit doublewords.", enc: { p: "None", o: "0F FA", m: "ModR/M", s: "None", d: "None", i: "None" } },
+    { mnem: "PMULLW mm, mm", hex: "0F D5 /r", cat: "FPU", cycles: "3", flags: "None", desc: "MMX packed multiply low: multiplies four signed 16-bit words.", enc: { p: "None", o: "0F D5", m: "ModR/M", s: "None", d: "None", i: "None" } }
   ];
 
   function renderOracleTable(filterText = '', catFilter = 'ALL') {
@@ -2718,10 +2764,96 @@
     eax: 0, ebx: 0, ecx: 0, edx: 0, esi: 0x00402000, edi: 0x00402100,
     ebp: 0x0012FFF0, esp: 0x0012FFF0, eip: 0x00401000,
     zf: 1, sf: 0, cf: 0, of: 0, pf: 1,
-    cycles: 0, instrCount: 0,
+    cycles: 0, instrCount: 0, pc: 0,
     stack: [0x00000000, 0x77E81AF4, 0x00000000, 0x00000000],
     isRunning: false, timer: null
   };
+
+  function isReg(name) {
+    if (!name) return false;
+    const r = name.toUpperCase();
+    return ['EAX','EBX','ECX','EDX','ESI','EDI','EBP','ESP','EIP',
+            'AX','BX','CX','DX','SI','DI','BP','SP',
+            'AL','AH','BL','BH','CL','CH','DL','DH'].includes(r);
+  }
+
+  function getRegVal(name) {
+    if (!name) return 0;
+    const r = name.toUpperCase();
+    switch (r) {
+      case 'EAX': return cpu.eax >>> 0;
+      case 'EBX': return cpu.ebx >>> 0;
+      case 'ECX': return cpu.ecx >>> 0;
+      case 'EDX': return cpu.edx >>> 0;
+      case 'ESI': return cpu.esi >>> 0;
+      case 'EDI': return cpu.edi >>> 0;
+      case 'EBP': return cpu.ebp >>> 0;
+      case 'ESP': return cpu.esp >>> 0;
+      case 'EIP': return cpu.eip >>> 0;
+      case 'AX': return (cpu.eax & 0xFFFF) >>> 0;
+      case 'BX': return (cpu.ebx & 0xFFFF) >>> 0;
+      case 'CX': return (cpu.ecx & 0xFFFF) >>> 0;
+      case 'DX': return (cpu.edx & 0xFFFF) >>> 0;
+      case 'SI': return (cpu.esi & 0xFFFF) >>> 0;
+      case 'DI': return (cpu.edi & 0xFFFF) >>> 0;
+      case 'BP': return (cpu.ebp & 0xFFFF) >>> 0;
+      case 'SP': return (cpu.esp & 0xFFFF) >>> 0;
+      case 'AL': return (cpu.eax & 0xFF) >>> 0;
+      case 'AH': return ((cpu.eax >>> 8) & 0xFF) >>> 0;
+      case 'BL': return (cpu.ebx & 0xFF) >>> 0;
+      case 'BH': return ((cpu.ebx >>> 8) & 0xFF) >>> 0;
+      case 'CL': return (cpu.ecx & 0xFF) >>> 0;
+      case 'CH': return ((cpu.ecx >>> 8) & 0xFF) >>> 0;
+      case 'DL': return (cpu.edx & 0xFF) >>> 0;
+      case 'DH': return ((cpu.edx >>> 8) & 0xFF) >>> 0;
+      default: return parseHexNum(name) || 0;
+    }
+  }
+
+  function setRegVal(name, val) {
+    if (!name) return;
+    const r = name.toUpperCase();
+    const u = val >>> 0;
+    switch (r) {
+      case 'EAX': cpu.eax = u; break;
+      case 'EBX': cpu.ebx = u; break;
+      case 'ECX': cpu.ecx = u; break;
+      case 'EDX': cpu.edx = u; break;
+      case 'ESI': cpu.esi = u; break;
+      case 'EDI': cpu.edi = u; break;
+      case 'EBP': cpu.ebp = u; break;
+      case 'ESP': cpu.esp = u; break;
+      case 'EIP': cpu.eip = u; break;
+      case 'AX': cpu.eax = ((cpu.eax & 0xFFFF0000) | (u & 0xFFFF)) >>> 0; break;
+      case 'BX': cpu.ebx = ((cpu.ebx & 0xFFFF0000) | (u & 0xFFFF)) >>> 0; break;
+      case 'CX': cpu.ecx = ((cpu.ecx & 0xFFFF0000) | (u & 0xFFFF)) >>> 0; break;
+      case 'DX': cpu.edx = ((cpu.edx & 0xFFFF0000) | (u & 0xFFFF)) >>> 0; break;
+      case 'SI': cpu.esi = ((cpu.esi & 0xFFFF0000) | (u & 0xFFFF)) >>> 0; break;
+      case 'DI': cpu.edi = ((cpu.edi & 0xFFFF0000) | (u & 0xFFFF)) >>> 0; break;
+      case 'BP': cpu.ebp = ((cpu.ebp & 0xFFFF0000) | (u & 0xFFFF)) >>> 0; break;
+      case 'SP': cpu.esp = ((cpu.esp & 0xFFFF0000) | (u & 0xFFFF)) >>> 0; break;
+      case 'AL': cpu.eax = ((cpu.eax & 0xFFFFFF00) | (u & 0xFF)) >>> 0; break;
+      case 'AH': cpu.eax = ((cpu.eax & 0xFFFF00FF) | ((u & 0xFF) << 8)) >>> 0; break;
+      case 'BL': cpu.ebx = ((cpu.ebx & 0xFFFFFF00) | (u & 0xFF)) >>> 0; break;
+      case 'BH': cpu.ebx = ((cpu.ebx & 0xFFFF00FF) | ((u & 0xFF) << 8)) >>> 0; break;
+      case 'CL': cpu.ecx = ((cpu.ecx & 0xFFFFFF00) | (u & 0xFF)) >>> 0; break;
+      case 'CH': cpu.ecx = ((cpu.ecx & 0xFFFF00FF) | ((u & 0xFF) << 8)) >>> 0; break;
+      case 'DL': cpu.edx = ((cpu.edx & 0xFFFFFF00) | (u & 0xFF)) >>> 0; break;
+      case 'DH': cpu.edx = ((cpu.edx & 0xFFFF00FF) | ((u & 0xFF) << 8)) >>> 0; break;
+      default: break;
+    }
+  }
+
+  function parseSignedHex(txt) {
+    if (!txt) return 0;
+    const clean = txt.replace(/^0x/i, '');
+    let val = parseInt(clean, 16);
+    if (isNaN(val)) val = parseInt(txt, 10);
+    if (isNaN(val)) return 0;
+    if (val >= 0x80 && val <= 0xFF) return val - 0x100;
+    if (val >= 0x8000 && val <= 0xFFFF) return val - 0x10000;
+    return val;
+  }
 
   function updateCpuUI() {
     const regNames = ['EAX','EBX','ECX','EDX','ESI','EDI','EBP','ESP','EIP'];
@@ -2755,11 +2887,36 @@
   }
 
   function stepCpu() {
-    const lines = converterInput.value.split('\n').map(l => l.replace(/;.*$/, '').trim()).filter(Boolean);
-    if (!lines.length) return;
+    const rawLines = converterInput.value.split('\n');
+    const prog = [];
+    const labelMap = {};
 
-    const currentLineIdx = cpu.instrCount % lines.length;
-    const line = lines[currentLineIdx];
+    rawLines.forEach(raw => {
+      const stripped = raw.replace(/;.*$/, '').trim();
+      if (!stripped) return;
+      if (stripped.endsWith(':')) {
+        labelMap[stripped.slice(0, -1).trim().toLowerCase()] = prog.length;
+      } else {
+        const m = stripped.match(/^([a-zA-Z0-9_]+):\s*(.+)$/);
+        if (m) {
+          labelMap[m[1].toLowerCase()] = prog.length;
+          prog.push(m[2].trim());
+        } else {
+          prog.push(stripped);
+        }
+      }
+    });
+
+    if (!prog.length) return;
+
+    if (cpu.pc >= prog.length || cpu.pc < 0) {
+      cpu.pc = 0;
+    }
+
+    const currentPc = cpu.pc;
+    const line = prog[currentPc];
+    let nextPc = currentPc + 1;
+
     const parts = line.split(/[,\s]+/).map(s => s.trim()).filter(Boolean);
     const mnem = parts[0].toUpperCase();
     const op1 = (parts[1] || '').toUpperCase();
@@ -2770,140 +2927,272 @@
     if (mnem === 'NOP') {
       cpu.cycles += 1;
     } else if (mnem === 'XOR') {
-      if (op1 === op2 && cpu[op1.toLowerCase()] !== undefined) {
-        cpu[op1.toLowerCase()] = 0;
+      if (op1 === op2 && isReg(op1)) {
+        setRegVal(op1, 0);
         cpu.zf = 1; cpu.sf = 0; cpu.cf = 0; cpu.of = 0; cpu.pf = 1;
+      } else if (isReg(op1)) {
+        const res = (getRegVal(op1) ^ getRegVal(op2)) >>> 0;
+        setRegVal(op1, res);
+        cpu.zf = (res === 0) ? 1 : 0;
+        cpu.sf = (res & 0x80000000) ? 1 : 0;
+        cpu.cf = 0; cpu.of = 0;
       }
       cpu.cycles += 1;
     } else if (mnem === 'MOV') {
-      if (cpu[op1.toLowerCase()] !== undefined) {
-        if (cpu[op2.toLowerCase()] !== undefined) {
-          cpu[op1.toLowerCase()] = cpu[op2.toLowerCase()];
-        } else {
-          const imm = parseHexNum(op2);
-          if (!isNaN(imm)) cpu[op1.toLowerCase()] = imm >>> 0;
-        }
+      if (isReg(op1)) {
+        setRegVal(op1, getRegVal(op2));
       }
       cpu.cycles += 1;
     } else if (mnem === 'ADD') {
-      if (cpu[op1.toLowerCase()] !== undefined) {
-        const val = cpu[op2.toLowerCase()] !== undefined ? cpu[op2.toLowerCase()] : (parseHexNum(op2) || 0);
-        cpu[op1.toLowerCase()] = (cpu[op1.toLowerCase()] + val) >>> 0;
-        cpu.zf = (cpu[op1.toLowerCase()] === 0) ? 1 : 0;
+      if (isReg(op1)) {
+        const v1 = getRegVal(op1);
+        const v2 = getRegVal(op2);
+        const res = (v1 + v2) >>> 0;
+        setRegVal(op1, res);
+        cpu.zf = (res === 0) ? 1 : 0;
+        cpu.cf = (res < v1) ? 1 : 0;
+        cpu.sf = (res & 0x80000000) ? 1 : 0;
+      }
+      cpu.cycles += 1;
+    } else if (mnem === 'ADC') {
+      if (isReg(op1)) {
+        const v1 = getRegVal(op1);
+        const v2 = getRegVal(op2) + cpu.cf;
+        const res = (v1 + v2) >>> 0;
+        setRegVal(op1, res);
+        cpu.zf = (res === 0) ? 1 : 0;
+        cpu.cf = (res < v1) ? 1 : 0;
       }
       cpu.cycles += 1;
     } else if (mnem === 'INC') {
-      if (cpu[op1.toLowerCase()] !== undefined) {
-        cpu[op1.toLowerCase()] = (cpu[op1.toLowerCase()] + 1) >>> 0;
-        cpu.zf = (cpu[op1.toLowerCase()] === 0) ? 1 : 0;
+      if (isReg(op1)) {
+        const res = (getRegVal(op1) + 1) >>> 0;
+        setRegVal(op1, res);
+        cpu.zf = (res === 0) ? 1 : 0;
+        cpu.sf = (res & 0x80000000) ? 1 : 0;
       }
       cpu.cycles += 1;
     } else if (mnem === 'DEC') {
-      if (cpu[op1.toLowerCase()] !== undefined) {
-        cpu[op1.toLowerCase()] = (cpu[op1.toLowerCase()] - 1) >>> 0;
-        cpu.zf = (cpu[op1.toLowerCase()] === 0) ? 1 : 0;
+      if (isReg(op1)) {
+        const res = (getRegVal(op1) - 1) >>> 0;
+        setRegVal(op1, res);
+        cpu.zf = (res === 0) ? 1 : 0;
+        cpu.sf = (res & 0x80000000) ? 1 : 0;
       }
       cpu.cycles += 1;
     } else if (mnem === 'PUSH') {
-      const val = cpu[op1.toLowerCase()] !== undefined ? cpu[op1.toLowerCase()] : (parseHexNum(op1) || 0);
+      const val = isReg(op1) ? getRegVal(op1) : (parseHexNum(op1) || 0);
       cpu.stack.unshift(val >>> 0);
       cpu.esp = (cpu.esp - 4) >>> 0;
       cpu.cycles += 1;
     } else if (mnem === 'POP') {
       if (cpu.stack.length > 0) {
         const val = cpu.stack.shift();
-        if (cpu[op1.toLowerCase()] !== undefined) cpu[op1.toLowerCase()] = val;
+        if (isReg(op1)) setRegVal(op1, val);
         cpu.esp = (cpu.esp + 4) >>> 0;
       }
       cpu.cycles += 1;
     } else if (mnem === 'SUB') {
-      if (cpu[op1.toLowerCase()] !== undefined) {
-        const val = cpu[op2.toLowerCase()] !== undefined ? cpu[op2.toLowerCase()] : (parseHexNum(op2) || 0);
-        cpu[op1.toLowerCase()] = (cpu[op1.toLowerCase()] - val) >>> 0;
-        cpu.zf = (cpu[op1.toLowerCase()] === 0) ? 1 : 0;
-        cpu.sf = (cpu[op1.toLowerCase()] & 0x80000000) ? 1 : 0;
-      }
-      cpu.cycles += 1;
-    } else if (mnem === 'AND') {
-      if (cpu[op1.toLowerCase()] !== undefined) {
-        const val = cpu[op2.toLowerCase()] !== undefined ? cpu[op2.toLowerCase()] : (parseHexNum(op2) || 0);
-        cpu[op1.toLowerCase()] = (cpu[op1.toLowerCase()] & val) >>> 0;
-        cpu.zf = (cpu[op1.toLowerCase()] === 0) ? 1 : 0;
-        cpu.cf = 0; cpu.of = 0;
-      }
-      cpu.cycles += 1;
-    } else if (mnem === 'OR') {
-      if (cpu[op1.toLowerCase()] !== undefined) {
-        const val = cpu[op2.toLowerCase()] !== undefined ? cpu[op2.toLowerCase()] : (parseHexNum(op2) || 0);
-        cpu[op1.toLowerCase()] = (cpu[op1.toLowerCase()] | val) >>> 0;
-        cpu.zf = (cpu[op1.toLowerCase()] === 0) ? 1 : 0;
-        cpu.cf = 0; cpu.of = 0;
-      }
-      cpu.cycles += 1;
-    } else if (mnem === 'NOT') {
-      if (cpu[op1.toLowerCase()] !== undefined) {
-        cpu[op1.toLowerCase()] = (~cpu[op1.toLowerCase()]) >>> 0;
-      }
-      cpu.cycles += 1;
-    } else if (mnem === 'NEG') {
-      if (cpu[op1.toLowerCase()] !== undefined) {
-        cpu.cf = (cpu[op1.toLowerCase()] !== 0) ? 1 : 0;
-        cpu[op1.toLowerCase()] = (-cpu[op1.toLowerCase()]) >>> 0;
-        cpu.zf = (cpu[op1.toLowerCase()] === 0) ? 1 : 0;
-      }
-      cpu.cycles += 1;
-    } else if (mnem === 'SHL') {
-      if (cpu[op1.toLowerCase()] !== undefined) {
-        const amt = op2 ? (parseHexNum(op2) || 1) : 1;
-        cpu[op1.toLowerCase()] = (cpu[op1.toLowerCase()] << amt) >>> 0;
-        cpu.zf = (cpu[op1.toLowerCase()] === 0) ? 1 : 0;
-      }
-      cpu.cycles += 1;
-    } else if (mnem === 'SHR') {
-      if (cpu[op1.toLowerCase()] !== undefined) {
-        const amt = op2 ? (parseHexNum(op2) || 1) : 1;
-        cpu[op1.toLowerCase()] = (cpu[op1.toLowerCase()] >>> amt);
-        cpu.zf = (cpu[op1.toLowerCase()] === 0) ? 1 : 0;
-      }
-      cpu.cycles += 1;
-    } else if (mnem === 'ROL') {
-      if (cpu[op1.toLowerCase()] !== undefined) {
-        const val = cpu[op1.toLowerCase()];
-        cpu[op1.toLowerCase()] = ((val << 1) | (val >>> 31)) >>> 0;
-      }
-      cpu.cycles += 1;
-    } else if (mnem === 'ROR') {
-      if (cpu[op1.toLowerCase()] !== undefined) {
-        const val = cpu[op1.toLowerCase()];
-        cpu[op1.toLowerCase()] = ((val >>> 1) | (val << 31)) >>> 0;
-      }
-      cpu.cycles += 1;
-    } else if (mnem === 'XCHG') {
-      if (cpu[op1.toLowerCase()] !== undefined && cpu[op2.toLowerCase()] !== undefined) {
-        const tmp = cpu[op1.toLowerCase()];
-        cpu[op1.toLowerCase()] = cpu[op2.toLowerCase()];
-        cpu[op2.toLowerCase()] = tmp;
-      }
-      cpu.cycles += 3;
-    } else if (mnem === 'CMP') {
-      if (cpu[op1.toLowerCase()] !== undefined) {
-        const val1 = cpu[op1.toLowerCase()];
-        const val2 = cpu[op2.toLowerCase()] !== undefined ? cpu[op2.toLowerCase()] : (parseHexNum(op2) || 0);
-        const res = (val1 - val2) >>> 0;
-        cpu.zf = (val1 === val2) ? 1 : 0;
-        cpu.cf = (val1 < val2) ? 1 : 0;
+      if (isReg(op1)) {
+        const v1 = getRegVal(op1);
+        const v2 = getRegVal(op2);
+        const res = (v1 - v2) >>> 0;
+        setRegVal(op1, res);
+        cpu.zf = (res === 0) ? 1 : 0;
+        cpu.cf = (v1 < v2) ? 1 : 0;
         cpu.sf = (res & 0x80000000) ? 1 : 0;
       }
       cpu.cycles += 1;
-    } else if (mnem === 'TEST') {
-      if (cpu[op1.toLowerCase()] !== undefined) {
-        const val1 = cpu[op1.toLowerCase()];
-        const val2 = cpu[op2.toLowerCase()] !== undefined ? cpu[op2.toLowerCase()] : (parseHexNum(op2) || 0);
-        const res = val1 & val2;
+    } else if (mnem === 'AND') {
+      if (isReg(op1)) {
+        const res = (getRegVal(op1) & getRegVal(op2)) >>> 0;
+        setRegVal(op1, res);
         cpu.zf = (res === 0) ? 1 : 0;
         cpu.cf = 0; cpu.of = 0;
       }
       cpu.cycles += 1;
+    } else if (mnem === 'OR') {
+      if (isReg(op1)) {
+        const res = (getRegVal(op1) | getRegVal(op2)) >>> 0;
+        setRegVal(op1, res);
+        cpu.zf = (res === 0) ? 1 : 0;
+        cpu.cf = 0; cpu.of = 0;
+      }
+      cpu.cycles += 1;
+    } else if (mnem === 'NOT') {
+      if (isReg(op1)) {
+        setRegVal(op1, (~getRegVal(op1)) >>> 0);
+      }
+      cpu.cycles += 1;
+    } else if (mnem === 'NEG') {
+      if (isReg(op1)) {
+        const v = getRegVal(op1);
+        cpu.cf = (v !== 0) ? 1 : 0;
+        const res = (-v) >>> 0;
+        setRegVal(op1, res);
+        cpu.zf = (res === 0) ? 1 : 0;
+      }
+      cpu.cycles += 1;
+    } else if (mnem === 'SHL') {
+      if (isReg(op1)) {
+        const amt = op2 ? (getRegVal(op2) || 1) : 1;
+        const res = (getRegVal(op1) << amt) >>> 0;
+        setRegVal(op1, res);
+        cpu.zf = (res === 0) ? 1 : 0;
+      }
+      cpu.cycles += 1;
+    } else if (mnem === 'SHR') {
+      if (isReg(op1)) {
+        const amt = op2 ? (getRegVal(op2) || 1) : 1;
+        const res = (getRegVal(op1) >>> amt);
+        setRegVal(op1, res);
+        cpu.zf = (res === 0) ? 1 : 0;
+      }
+      cpu.cycles += 1;
+    } else if (mnem === 'ROL') {
+      if (isReg(op1)) {
+        const val = getRegVal(op1);
+        setRegVal(op1, ((val << 1) | (val >>> 31)) >>> 0);
+      }
+      cpu.cycles += 1;
+    } else if (mnem === 'ROR') {
+      if (isReg(op1)) {
+        const val = getRegVal(op1);
+        setRegVal(op1, ((val >>> 1) | (val << 31)) >>> 0);
+      }
+      cpu.cycles += 1;
+    } else if (mnem === 'XCHG') {
+      if (isReg(op1) && isReg(op2)) {
+        const tmp = getRegVal(op1);
+        setRegVal(op1, getRegVal(op2));
+        setRegVal(op2, tmp);
+      }
+      cpu.cycles += 3;
+    } else if (mnem === 'CMP') {
+      const v1 = getRegVal(op1);
+      const v2 = isReg(op2) ? getRegVal(op2) : (parseHexNum(op2) || 0);
+      const res = (v1 - v2) >>> 0;
+      cpu.zf = (v1 === v2) ? 1 : 0;
+      cpu.cf = (v1 < v2) ? 1 : 0;
+      cpu.sf = (res & 0x80000000) ? 1 : 0;
+      cpu.cycles += 1;
+    } else if (mnem === 'TEST') {
+      const v1 = getRegVal(op1);
+      const v2 = isReg(op2) ? getRegVal(op2) : (parseHexNum(op2) || 0);
+      const res = v1 & v2;
+      cpu.zf = (res === 0) ? 1 : 0;
+      cpu.cf = 0; cpu.of = 0;
+      cpu.cycles += 1;
+    } else if (mnem === 'LOOP' || mnem === 'LOOPE' || mnem === 'LOOPNE') {
+      cpu.ecx = (cpu.ecx - 1) >>> 0;
+      const cond = (mnem === 'LOOP') ? (cpu.ecx !== 0) :
+                   (mnem === 'LOOPE') ? (cpu.ecx !== 0 && cpu.zf === 1) :
+                   (cpu.ecx !== 0 && cpu.zf === 0);
+      if (cond) {
+        if (labelMap[op1.toLowerCase()] !== undefined) {
+          nextPc = labelMap[op1.toLowerCase()];
+        } else {
+          nextPc = Math.max(0, currentPc + parseSignedHex(op1));
+        }
+        cpu.cycles += 5;
+      } else {
+        cpu.cycles += 2;
+      }
+    } else if (mnem === 'JMP') {
+      if (labelMap[op1.toLowerCase()] !== undefined) nextPc = labelMap[op1.toLowerCase()];
+      else nextPc = Math.max(0, currentPc + parseSignedHex(op1));
+      cpu.cycles += 1;
+    } else if (mnem === 'JZ' || mnem === 'JE') {
+      if (cpu.zf === 1) {
+        if (labelMap[op1.toLowerCase()] !== undefined) nextPc = labelMap[op1.toLowerCase()];
+        else nextPc = Math.max(0, currentPc + parseSignedHex(op1));
+        cpu.cycles += 3;
+      } else cpu.cycles += 1;
+    } else if (mnem === 'JNZ' || mnem === 'JNE') {
+      if (cpu.zf === 0) {
+        if (labelMap[op1.toLowerCase()] !== undefined) nextPc = labelMap[op1.toLowerCase()];
+        else nextPc = Math.max(0, currentPc + parseSignedHex(op1));
+        cpu.cycles += 3;
+      } else cpu.cycles += 1;
+    } else if (mnem === 'JC' || mnem === 'JB') {
+      if (cpu.cf === 1) {
+        if (labelMap[op1.toLowerCase()] !== undefined) nextPc = labelMap[op1.toLowerCase()];
+        else nextPc = Math.max(0, currentPc + parseSignedHex(op1));
+        cpu.cycles += 3;
+      } else cpu.cycles += 1;
+    } else if (mnem === 'JNC' || mnem === 'JAE') {
+      if (cpu.cf === 0) {
+        if (labelMap[op1.toLowerCase()] !== undefined) nextPc = labelMap[op1.toLowerCase()];
+        else nextPc = Math.max(0, currentPc + parseSignedHex(op1));
+        cpu.cycles += 3;
+      } else cpu.cycles += 1;
+    } else if (mnem === 'JS') {
+      if (cpu.sf === 1) {
+        if (labelMap[op1.toLowerCase()] !== undefined) nextPc = labelMap[op1.toLowerCase()];
+        else nextPc = Math.max(0, currentPc + parseSignedHex(op1));
+        cpu.cycles += 3;
+      } else cpu.cycles += 1;
+    } else if (mnem === 'JNS') {
+      if (cpu.sf === 0) {
+        if (labelMap[op1.toLowerCase()] !== undefined) nextPc = labelMap[op1.toLowerCase()];
+        else nextPc = Math.max(0, currentPc + parseSignedHex(op1));
+        cpu.cycles += 3;
+      } else cpu.cycles += 1;
+    } else if (mnem === 'CALL') {
+      cpu.stack.unshift((cpu.eip + 2) >>> 0);
+      cpu.esp = (cpu.esp - 4) >>> 0;
+      if (labelMap[op1.toLowerCase()] !== undefined) nextPc = labelMap[op1.toLowerCase()];
+      cpu.cycles += 3;
+    } else if (mnem === 'RET') {
+      if (cpu.stack.length > 0) {
+        const retAddr = cpu.stack.shift();
+        cpu.esp = (cpu.esp + 4) >>> 0;
+      }
+      cpu.cycles += 2;
+    } else if (mnem === 'CPUID') {
+      cpu.eax = 1;
+      cpu.ebx = 0x756E6547; // "Genu"
+      cpu.edx = 0x49656E69; // "ineI"
+      cpu.ecx = 0x6C65746E; // "ntel"
+      cpu.cycles += 14;
+    } else if (mnem === 'BSWAP') {
+      if (isReg(op1)) setRegVal(op1, swapEndian32(getRegVal(op1)));
+      cpu.cycles += 1;
+    } else if (mnem === 'CMOVZ' || mnem === 'CMOVE') {
+      if (cpu.zf === 1 && isReg(op1)) setRegVal(op1, getRegVal(op2));
+      cpu.cycles += 1;
+    } else if (mnem === 'CMOVNZ' || mnem === 'CMOVNE') {
+      if (cpu.zf === 0 && isReg(op1)) setRegVal(op1, getRegVal(op2));
+      cpu.cycles += 1;
+    } else if (mnem === 'IMUL' || mnem === 'MUL') {
+      if (isReg(op1)) {
+        const v1 = getRegVal(op1);
+        const v2 = op2 ? getRegVal(op2) : cpu.eax;
+        const prod = (v1 * v2) >>> 0;
+        setRegVal(op1, prod);
+        cpu.zf = (prod === 0) ? 1 : 0;
+      }
+      cpu.cycles += 10;
+    } else if (mnem === 'DIV' || mnem === 'IDIV') {
+      const divisor = getRegVal(op1) || 1;
+      const quot = Math.floor(cpu.eax / divisor) >>> 0;
+      const rem = (cpu.eax % divisor) >>> 0;
+      cpu.eax = quot;
+      cpu.edx = rem;
+      cpu.cycles += 39;
+    } else if (mnem === 'LEA') {
+      const imm = parseHexNum(op2.replace(/[^0-9a-fA-Fx]/g, '')) || 0;
+      const baseReg = op2.replace(/[\[\]0-9a-fA-Fx\+\-\s]/gi, '').toUpperCase();
+      const base = isReg(baseReg) ? getRegVal(baseReg) : 0;
+      setRegVal(op1, (base + imm) >>> 0);
+      cpu.cycles += 1;
+    } else if (mnem === 'LODSB') {
+      cpu.eax = ((cpu.eax & 0xFFFFFF00) | 0x7F) >>> 0;
+      cpu.esi = (cpu.esi + 1) >>> 0;
+      cpu.cycles += 2;
+    } else if (mnem === 'STOSD') {
+      cpu.edi = (cpu.edi + 4) >>> 0;
+      cpu.cycles += 3;
     } else if (mnem === 'CLC') {
       cpu.cf = 0;
       cpu.cycles += 1;
@@ -2921,6 +3210,7 @@
       cpu.cycles += 1;
     }
 
+    cpu.pc = nextPc;
     cpu.instrCount++;
     cpu.eip += 2;
 
@@ -2945,7 +3235,7 @@
       eax: 0, ebx: 0, ecx: 0, edx: 0, esi: 0x00402000, edi: 0x00402100,
       ebp: 0x0012FFF0, esp: 0x0012FFF0, eip: 0x00401000,
       zf: 1, sf: 0, cf: 0, of: 0, pf: 1,
-      cycles: 0, instrCount: 0,
+      cycles: 0, instrCount: 0, pc: 0,
       stack: [0x00000000, 0x77E81AF4, 0x00000000, 0x00000000],
       isRunning: false, timer: null
     };
@@ -2963,12 +3253,12 @@
       document.getElementById('btnCpuRun').textContent = '⏸ Pause';
       cpu.timer = setInterval(() => {
         stepCpu();
-        if (cpu.instrCount >= 32) {
+        if (cpu.instrCount >= 64) {
           clearInterval(cpu.timer);
           cpu.isRunning = false;
           document.getElementById('btnCpuRun').textContent = '▶ Run Program';
         }
-      }, 150);
+      }, 120);
     }
   };
 
@@ -3088,14 +3378,63 @@
       flagPF.textContent = p ? '1 (Even)' : '0 (Odd)';
       flagPF.style.color = p ? 'var(--emerald)' : 'var(--text-muted)';
     }
+
+    // Micro-Optimization Metrics
+    const lblPopcnt = document.getElementById('valPopcnt');
+    if (lblPopcnt) {
+      let cnt = 0;
+      for (let i = 0; i < 32; i++) if ((u32 >>> i) & 1) cnt++;
+      lblPopcnt.textContent = `${cnt} set bit${cnt === 1 ? '' : 's'}`;
+    }
+
+    const lblBsf = document.getElementById('valBsf');
+    if (lblBsf) {
+      if (u32 === 0) {
+        lblBsf.textContent = '32 (Undefined/Zero)';
+      } else {
+        let b = 0;
+        while ((u32 & (1 << b)) === 0) b++;
+        lblBsf.textContent = `Bit ${b} (Index ${b})`;
+      }
+    }
+
+    const lblBsr = document.getElementById('valBsr');
+    if (lblBsr) {
+      if (u32 === 0) {
+        lblBsr.textContent = 'None (Zero)';
+      } else {
+        let b = 31;
+        while (b >= 0 && (u32 & (1 << b)) === 0) b--;
+        lblBsr.textContent = `Bit ${b} (2^${b})`;
+      }
+    }
+
+    const lblGray = document.getElementById('valGray');
+    if (lblGray) {
+      const gray = (u32 ^ (u32 >>> 1)) >>> 0;
+      lblGray.textContent = '0x' + gray.toString(16).toUpperCase().padStart(8, '0');
+    }
+  }
+
+  function reverseBits32(n) {
+    let r = 0;
+    for (let i = 0; i < 32; i++) {
+      r = ((r << 1) | (n & 1)) >>> 0;
+      n >>>= 1;
+    }
+    return r >>> 0;
   }
 
   document.getElementById('btnResetBits').onclick = () => { registerState = 0; updateRadixDisplay(); };
   document.getElementById('btnShl').onclick = () => { registerState = (registerState << 1) >>> 0; updateRadixDisplay(); };
   document.getElementById('btnShr').onclick = () => { registerState = (registerState >>> 1); updateRadixDisplay(); };
+  const btnSar = document.getElementById('btnSar');
+  if (btnSar) btnSar.onclick = () => { registerState = (registerState >> 1) >>> 0; updateRadixDisplay(); };
   document.getElementById('btnRol').onclick = () => { registerState = ((registerState << 1) | (registerState >>> 31)) >>> 0; updateRadixDisplay(); };
   document.getElementById('btnRor').onclick = () => { registerState = ((registerState >>> 1) | (registerState << 31)) >>> 0; updateRadixDisplay(); };
   document.getElementById('btnNot').onclick = () => { registerState = (~registerState) >>> 0; updateRadixDisplay(); };
+  const btnBitReverse = document.getElementById('btnBitReverse');
+  if (btnBitReverse) btnBitReverse.onclick = () => { registerState = reverseBits32(registerState); updateRadixDisplay(); };
   document.getElementById('btnEndianFlip').onclick = () => { registerState = swapEndian32(registerState); updateRadixDisplay(); };
   document.getElementById('btnSetAllBits').onclick = () => { registerState = 0xFFFFFFFF; updateRadixDisplay(); };
 
@@ -4558,6 +4897,51 @@ PROC Subcarrier_Spectrogram
     LOOP .PlotRF
     POP ES
     RET
+ENDP`,
+    tunnel: `; ===================================================
+; 3D Polar Coordinate Warp Tunnel (Distance/Angle LUT)
+; Classic 1999 Demoscene Roto-Tunnel Routine
+; ===================================================
+PROC Tunnel_3D_Frame
+    PUSH ES
+    MOV AX, 0A000h
+    MOV ES, AX
+    MOV ESI, OFFSET PolarLUT  ; Precalculated angle & distance
+    XOR EDI, EDI              ; Screen offset (0..63999)
+    MOV EBX, [TunnelAngleShift]
+    MOV EDX, [TunnelZShift]
+.PixelLoop:
+    LODSW                     ; AL = Angle (0..255), AH = Distance
+    ADD AL, BL                ; Rotate angle
+    ADD AH, DL                ; Move along Z tunnel axis
+    XOR AL, AH                ; Sample procedural checker texture
+    STOSB                     ; Write pixel to VGA 0xA000:EDI
+    INC EDI
+    CMP EDI, 64000
+    JB .PixelLoop
+    POP ES
+    RET
+ENDP`,
+    ripple: `; ===================================================
+; Dual-Wave Trigonometric Interference Ripple
+; 2D Liquid Surface Physics Simulation
+; ===================================================
+PROC Surface_Ripple_Frame
+    PUSH ES
+    MOV AX, 0A000h
+    MOV ES, AX
+    XOR EDI, EDI
+    MOV EBX, [TimeStep]
+.YLoop:
+    ; For each scanline, calculate distance to wave source 1 & 2
+    ; Height = sin(dist1 - t) + sin(dist2 - t*1.2)
+    ; Shading = Height + Ambient
+    STOSB
+    INC EDI
+    CMP EDI, 64000
+    JB .YLoop
+    POP ES
+    RET
 ENDP`
   };
 
@@ -4765,6 +5149,39 @@ ENDP`
         const colorIdx = Math.min(255, Math.max(0, Math.floor(sig)));
         demoU32[bottomRow + x] = activePal[colorIdx];
       }
+    } else if (demoActiveFx === 'tunnel') {
+      const time = t * 0.003 * demoSpeed;
+      const angleShift = Math.floor(time * 30);
+      const zShift = Math.floor(time * 60);
+      let ptr = 0;
+      for (let y = 0; y < 200; y++) {
+        const dy = y - 100;
+        for (let x = 0; x < 320; x++) {
+          const dx = x - 160;
+          const dist = Math.floor(2800 / (Math.sqrt(dx * dx + dy * dy) + 1));
+          const angle = Math.floor((Math.atan2(dy, dx) / Math.PI + 1.0) * 128);
+          const u = (angle + angleShift) & 0xFF;
+          const v = (dist + zShift) & 0xFF;
+          const tex = (u ^ v) & 0xFF;
+          demoU32[ptr++] = activePal[tex];
+        }
+      }
+    } else if (demoActiveFx === 'ripple') {
+      const time = t * 0.004 * demoSpeed;
+      let ptr = 0;
+      const src1X = 110 + Math.sin(time * 0.7) * 30;
+      const src1Y = 80 + Math.cos(time * 0.8) * 20;
+      const src2X = 210 + Math.cos(time * 0.6) * 30;
+      const src2Y = 120 + Math.sin(time * 0.9) * 20;
+      for (let y = 0; y < 200; y++) {
+        for (let x = 0; x < 320; x++) {
+          const d1 = Math.sqrt((x - src1X) * (x - src1X) + (y - src1Y) * (y - src1Y));
+          const d2 = Math.sqrt((x - src2X) * (x - src2X) + (y - src2Y) * (y - src2Y));
+          const wave = Math.sin(d1 * 0.2 - time * 4) + Math.sin(d2 * 0.25 - time * 3.5);
+          const intensity = Math.min(255, Math.max(0, Math.floor(128 + wave * 60)));
+          demoU32[ptr++] = activePal[intensity];
+        }
+      }
     }
 
     if (demoScanlinesOn) {
@@ -4864,7 +5281,9 @@ ENDP`
     copper: document.getElementById('btnFxCopper'),
     starfield: document.getElementById('btnFxStarfield'),
     cube: document.getElementById('btnFxCube'),
-    signal: document.getElementById('btnFxSignal')
+    signal: document.getElementById('btnFxSignal'),
+    tunnel: document.getElementById('btnFxTunnel'),
+    ripple: document.getElementById('btnFxRipple')
   };
 
   Object.keys(fxBtns).forEach(fxKey => {
@@ -4899,6 +5318,44 @@ ENDP`
   }
 
   updateActiveDemoAsm();
+
+  // Global Shrine Keyboard Ergonomics (F7=Step, F8=Run, F2=Reset, 1-8=Tabs, Esc=Stop)
+  window.addEventListener('keydown', (e) => {
+    const tag = document.activeElement ? document.activeElement.tagName.toUpperCase() : '';
+    if (tag === 'INPUT' || tag === 'TEXTAREA') {
+      if (e.key === 'F7') {
+        e.preventDefault();
+        stepCpu();
+      } else if (e.key === 'F8') {
+        e.preventDefault();
+        document.getElementById('btnCpuRun').click();
+      }
+      return;
+    }
+
+    if (e.key === 'F7') {
+      e.preventDefault();
+      stepCpu();
+    } else if (e.key === 'F8') {
+      e.preventDefault();
+      document.getElementById('btnCpuRun').click();
+    } else if (e.key === 'F2') {
+      e.preventDefault();
+      document.getElementById('btnCpuReset').click();
+    } else if (e.key >= '1' && e.key <= '8') {
+      const idx = parseInt(e.key, 10) - 1;
+      const tabList = document.querySelectorAll('.nav-bar .nav-btn');
+      if (tabList[idx]) {
+        e.preventDefault();
+        tabList[idx].click();
+      }
+    } else if (e.key === 'Escape') {
+      const btnPause = document.getElementById('btnDemoPause');
+      if (btnPause) btnPause.click();
+      const btnStop = document.getElementById('btnAudioStop');
+      if (btnStop) btnStop.click();
+    }
+  });
 </script>
 </body>
 </html>
