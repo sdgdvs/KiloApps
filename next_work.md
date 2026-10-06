@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-graphics
-next_agent: kilo-tester
+current_agent: kilo-tester
+next_agent: kilo-usability
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -13,7 +13,7 @@ timeout_minutes: 15
 status: ready
 current_targets:
   kilo_creator: "kweb://10.19.99.4/classified"
-  kilo_graphics: KAsteroids
+  kilo_graphics: KSpace
   kilo_tester: KCipher
   kilo_usability: KChart
   kilo_qa: KTetris
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-creator
-  app: "kweb://cybercafe"
-  timestamp: "2026-10-06T09:29:00-07:00"
+  agent: kilo-graphics
+  app: KAsteroids
+  timestamp: "2026-10-06T09:40:00-07:00"
 last_planner_run: "2026-10-06T14:20:00Z"
 ---
 
@@ -109,9 +109,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
 - **EXCLUSIVE MISSION**: Replace programmer vector art with Imagen 3 generated sprites and backgrounds via the 2-stage asset pipeline. If the target app is not appropriate for raster/sprite replacement (e.g. wireframe classics or abstract board games), skip the turn immediately.
-- **Current Target**: `KAsteroids`
+- **Current Target**: `KSpace`
 - **Upcoming Queue**:
-  `KSpace`, `KPac`, `KQuest`, `KRogue`, `KColosseum`, `KAbyss`, `KBreakout` *(Note: Pure vector/wireframe or abstract board targets skip automatically per Mandate 15. Completed: KQuest Phases 1-5, KSpace)*.
+  `KPac`, `KQuest`, `KRogue`, `KColosseum`, `KAbyss`, `KBreakout`, `KAsteroids` *(Note: Pure vector/wireframe or abstract board targets skip automatically per Mandate 15. Completed: KQuest Phases 1-5, KSpace)*.
 
 ### 3. App Tester Queue (`kilo-tester`)
 - **Current Target**: `KCipher`
@@ -217,6 +217,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-06T09:40:00-07:00 — kilo-graphics: KAsteroids (Skip Turn — Inappropriate Target & Glint/Dot Audit)**
+  - Status: ⏭️ Skip — Imagen 3 asset replacement not appropriate for KAsteroids
+  - Rationale: Pure vector arcade classic; authentic line-art aesthetic and Win32 GDI 1:1 parity preclude raster replacement.
+  - Glint & Dot Audit: Verified 0 rotating specular glints or traveling perimeter dots across web and native C.
+  - Verification: `scripts/check_icons.py` 100% PASS; `scripts/security_lint.py` 100% PASS; MSVC clean (`KAsteroids.exe` 55.3 KB); Vite clean (350ms); web (145.5 KB) < 999 KB ceiling.
+
 - **2026-10-06T09:29:00-07:00 — kilo-creator: kweb://cybercafe (Virtual 1999 Web Deep Expansion & Anti-Potemkin Upgrade)**
   - Status: PASS ✅ (0 regressions, 252.9 KB < 999 KB ceiling; Tier 2 Community Node #006).
   - Terminal Lounge: Added direct booth click CRT synchronization, CLI command history, and telnet/route/ifconfig/dmesg shell directives.
@@ -251,14 +257,6 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Navigation & Day Jump: Added direct Day view jumps on day number click and `+X more` badge click in Month view.
   - Controls & Shortcuts: Added `#resetFiltersBtn`, form `Ctrl+Enter` save, `[`/`]` date navigation, and `Ctrl+S` quicksave.
   - Verification: `test_web_apps.js` PASS (107 apps, 7359 elements); MSVC clean (`KCalendar.exe` 24.5 KB); Vite clean (441ms); security_lint 100% PASS.
-
-- **2026-10-06T08:07:00-07:00 — kilo-tester: KClip (Interactive UI Audit & Inline Repairs)**
-  - Status: PASS ✅ (6 issues, 6 fixed; 121.1 KB < 999 KB ceiling).
-  - Toast & Modal Ergonomics: Prevented hidden toast click capture (`pointer-events`), wired modal toast auto-dismissal (Directive 185).
-  - UI Controls & State Sync: Added search clear button, font reset [13px] button, and auto-reset of conflicting filters on clip add.
-  - Keyboard & Card Accessibility: Added tabindex and Enter/Space keyboard selection to clip cards; added card/pin aria-labels.
-  - Editor & Scope Repairs: Fixed cursor tracker scope, safe editor value assignment on active focus, and DEFAULT_CLIPS clone isolation.
-  - Verification: `test_app_startup.py` PASS; `test_web_apps.js` PASS (92 elements); Vite clean (625ms); security_lint 100% PASS.
 
 
 

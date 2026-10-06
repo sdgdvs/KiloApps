@@ -16,9 +16,9 @@
   "session_end": null,
   "session_limit_enabled": false,
   "timer_enabled": false,
-  "turns_executed": 155,
+  "turns_executed": 156,
   "last_turn_timestamp": "2026-10-04T16:55:00-07:00",
-  "last_heartbeat": "2026-10-06T16:17:04.232540+00:00",
-  "current_target": "KRogue",
+  "last_heartbeat": "2026-10-06T16:31:32.452763+00:00",
+  "current_target": "kweb://cybercafe",
   "remote_command": "none"
 }
