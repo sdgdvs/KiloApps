@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-creator
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -16,7 +16,7 @@ current_targets:
   kilo_graphics: KAsteroids
   kilo_tester: KChess
   kilo_usability: KSettings
-  kilo_qa: KTaskMgr
+  kilo_qa: KHabit
   kilo_expander: KHangman
 virtual_web_target: "kweb://geocities"
 virtual_web_rotation:
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-usability
-  app: KPong
-  timestamp: "2026-10-07T04:40:00-07:00"
+  agent: kilo-qa
+  app: KTaskMgr
+  timestamp: "2026-10-07T05:25:00-07:00"
 last_planner_run: "2026-10-06T14:20:00Z"
 ---
 
@@ -124,9 +124,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KSimon`, `KSnake`, `KSolitaire`, `KSudoku`, `KTetris`, `KWords`, `KBBS`, `KCalendar`, `KChess`, `KFreecell`, `KMatch3`, `KPong` *(Completed: KCalc, KPomodoro, KTimer, KClock, KHash, KMystery, KMandel, KFont, KPing, KAudio, KSynth, KScript, KRead, KRadio, KSys, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KChrono, KTask, KStarForge, KPad, KBookmark, KRSS, KClip, KHex, KHabit, KFarm, KPaint, KGraph, KImage, KJournal, KMail, KMedia, KNet, KNote, KPass, KMine, KBBS, KCalendar, KChart, KColor, KChess, KConnect4, KConverter, KFreecell, KHangman, KMatch3, KPong)*.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
-- **Current Target**: `KTaskMgr`
+- **Current Target**: `KHabit`
 - **Upcoming Queue**:
-  `KHabit`, `KSudoku`, `KConnect4`, `KHangman`, `KSimon`, `KAsteroids`, `KFreecell`, `KMatch3`, `KWords`, `KGo`, `KDarts`, `KTowers`, `KReversi`, `KAlchemy`, `KColony`, `KStarForge`, `KBreakout`, `KRogue`, `KTetris`, `KPong`, `KPac`, `KChess`, `KColor`, `KConverter` *(Completed in Pass 5: KBBS, KChrono, KCipher, KClip, KCyber, KDragon, KFortress, KHash, KMaze, KMech, KMystery, KQuest, KSanctuary, KSnake, KSolitaire, KSpace, KStarDredge, KStarship, KStellar, KSubmarine, KSynth, KSys, KTask, KTerm, KTimer, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KRSS, K2048, KChart, KGraph, KContacts, KScript, KRead, KColosseum, KAbyss, KMedia, KAudio, KRadio, KPad, KPaint, KCalc, KMine, KCosmic, KBase, KBudget, KCalendar, KFarm, KFlash, KFont, KImage, KJournal, KMail, KMandel, KNet, KNote, KPass, KDB, KHex, KBookmark, KPing, KChat, KClock, KPomodoro, KBreakout, KRogue, KTetris, KPong, KPac, KChess, KColor, KConverter, KQuarantine, KSettings)*.
+  `KSudoku`, `KConnect4`, `KHangman`, `KSimon`, `KAsteroids`, `KFreecell`, `KMatch3`, `KWords`, `KGo`, `KDarts`, `KTowers`, `KReversi`, `KAlchemy`, `KColony`, `KStarForge`, `KBreakout`, `KRogue`, `KTetris`, `KPong`, `KPac`, `KChess`, `KColor`, `KConverter` *(Completed in Pass 5: KBBS, KChrono, KCipher, KClip, KCyber, KDragon, KFortress, KHash, KMaze, KMech, KMystery, KQuest, KSanctuary, KSnake, KSolitaire, KSpace, KStarDredge, KStarship, KStellar, KSubmarine, KSynth, KSys, KTask, KTerm, KTimer, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KRSS, K2048, KChart, KGraph, KContacts, KScript, KRead, KColosseum, KAbyss, KMedia, KAudio, KRadio, KPad, KPaint, KCalc, KMine, KCosmic, KBase, KBudget, KCalendar, KFarm, KFlash, KFont, KImage, KJournal, KMail, KMandel, KNet, KNote, KPass, KDB, KHex, KBookmark, KPing, KChat, KClock, KPomodoro, KBreakout, KRogue, KTetris, KPong, KPac, KChess, KColor, KConverter, KQuarantine, KSettings, KTaskMgr)*.
 
 ### 6. Feature Expander Queue (`kilo-expander`)
 - **Current Target**: `KHangman`
@@ -217,6 +217,15 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-07T05:25:00-07:00 — kilo-qa: KTaskMgr (Pass 5 QA & Build Audit: State Persistence, Tutorial Integrity & Origin Validation)**
+  - Status: PASS ✅ (0 regressions, 43.1 KB web < 999 KB ceiling).
+  - State Persistence: Implemented F5 quicksave snapshot and F9 quickload capturing complete process data and user settings.
+  - Tutorial & Help: Added accessible Welcome Onboarding modal (`ktaskmgr_tutorialSeen`) and Help shortcuts guide (`[F1/H]`).
+  - Overlay & Controls: Added non-occluding click-dismiss toast system, Esc/Enter modal dismiss, and toolbar Save/Load buttons.
+  - Security & Standards: Added postMessage origin validation, storage quota guards (`safeSetStorage`), and lifecycle cleanup.
+  - Verification: `test_web_apps.js` PASS (27 elements, 1 btn, 0 err); `security_lint.py` 100% PASS; `check_icons.py` PASS; Vite clean (441ms).
+  - Queue: Advanced `kilo_qa` to `KHabit`; rotation handoff to `kilo-expander`.
+
 - **2026-10-07T04:40:00-07:00 — kilo-usability: KPong (Window Sizing, Layout Centering, Non-Occluding Toast & Drag Ergonomics)**
   - Status: PASS ✅ (0 regressions, 126.2 KB web / 45.5 KB native < 999 KB ceiling).
   - Window Sizing & Layout: Tuned `App.jsx` dimensions to 960x860; flex centering with margin-auto avoids vertical clipping and scrollbars.
@@ -250,17 +259,6 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Ecosystem Integration: Deep links updated in `knet.html`, `portal.html`, and `webring.html`.
   - Verification: Security linter 100% PASS; Vite build clean (545ms); JS syntax verified via Node vm.
   - Queue: Advanced `virtual_web_target` to `kweb://geocities`; advanced `current_agent` to `kilo-graphics`.
-
-- **2026-10-06T23:35:00-07:00 — kilo-expander: KWords (Deep Feature Expansion: RFMS Online Duel, Custom Builder, Replay Scrubber & Lexicon)**
-  - Status: PASS ✅ (0 regressions, 154.7 KB web / 162.0 KB native < 999 KB ceiling).
-  - Online Multiplayer (Mandate 12): Standardized RFMS duel (`WRD-` prefix) with shared seed, live progress, and 25s Solo AI fallback (`CyberBot-99`); strict No-Autostart connect gate.
-  - Custom Puzzle Builder: Custom titles, word pools, and grid dimensions (10x10 to 20x20) with base64 link sharing, JSON export/import.
-  - Interactive Replay Scrubber: Step-by-step move history scrubber with slider, playback controls, and hotkey (`V`).
-  - ASCII Grid & Solution Export: Formatted retro ASCII puzzle sheets, coordinate solution keys, and live grid overlay.
-  - Word Lexicon & Assistant: Scrabble-style tile point values, etymological definitions, and wildcard pattern matcher (`*`, `?`).
-  - Mandate 11 Glint Ban: Clean static brass inlays across web and native Win32 C (`KWords.exe` rebuilt clean); fixed test modal dismiss selector.
-  - Verification: `test_app_startup.py` PASS; `test_web_apps.js` PASS (62 elements, 0 err); `smoke_test_native.py` PASS; Vite clean (528ms); `security_lint.py` 100% PASS.
-  - Queue: Advanced `kilo_expander` to `KHangman`; rotation advanced to `kilo-creator`.
 
 
 

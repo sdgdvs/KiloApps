@@ -242,25 +242,37 @@
 
   .toast {
     position: fixed;
-    bottom: 16px;
-    right: 16px;
+    bottom: 30px;
+    right: 20px;
     background: #1e293b;
     border: 1px solid var(--border-color);
     color: #fff;
-    padding: 8px 14px;
+    padding: 8px 16px;
     border-radius: 6px;
     font-size: 12px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+    box-shadow: 0 4px 14px rgba(0,0,0,0.5);
     opacity: 0;
     transform: translateY(10px);
-    transition: all 0.25s ease;
-    pointer-events: none;
-    z-index: 100;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    pointer-events: auto;
+    cursor: pointer;
+    z-index: 300;
+    max-width: 80vw;
   }
 
   .toast.show {
     opacity: 1;
     transform: translateY(0);
+  }
+
+  kbd {
+    font-family: monospace;
+    font-size: 11px;
+    background: rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 3px;
+    padding: 1px 5px;
+    color: #e2e8f0;
   }
 
   .modal-overlay {
@@ -278,12 +290,13 @@
     background: var(--card-bg);
     border: 1px solid var(--border-color);
     border-radius: 8px;
-    width: 380px;
-    max-width: 90vw;
+    width: 440px;
+    max-width: 92vw;
+    max-height: 85vh;
     box-shadow: 0 12px 28px rgba(0, 0, 0, 0.5);
     display: flex;
     flex-direction: column;
-    overflow: hidden;
+    overflow-y: auto;
   }
 
   .modal-header {
@@ -356,8 +369,10 @@
         <input type="checkbox" id="autoRefreshToggle" checked onchange="toggleAutoRefresh()"> Auto
       </label>
 
-      <button class="btn" onclick="refresh()" aria-label="Refresh Task List (Hotkey: R or F5)">Refresh</button>
+      <button class="btn" onclick="handleRefreshBtn()" aria-label="Refresh and Quicksave Snapshot (Hotkey: F5 or R)" title="Refresh &amp; Quicksave [F5]">Refresh [F5]</button>
+      <button class="btn" onclick="quickLoadState()" aria-label="Quickload Snapshot (Hotkey: F9)" title="Quickload Snapshot [F9]">Load [F9]</button>
       <button class="btn" onclick="exportTasks()" aria-label="Export or Copy Task List" title="Copy tasks list to clipboard">Copy List</button>
+      <button class="btn" onclick="openHelpModal()" aria-label="Help and Shortcuts (Hotkey: F1 or H)" title="Help &amp; Shortcuts [F1/H]">Help</button>
     </div>
   </div>
 
@@ -384,7 +399,7 @@
     </table>
   </div>
 
-  <div id="toast" class="toast" role="alert" aria-live="assertive"></div>
+  <div id="toast" class="toast" role="alert" aria-live="assertive" onclick="dismissToast()" title="Click to dismiss"></div>
 
   <!-- Run New Task Modal -->
   <div id="runModal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="runModalTitle" style="display: none;" onclick="handleModalOverlayClick(event)">
@@ -423,6 +438,85 @@
     </div>
   </div>
 
+  <!-- Help & Shortcuts Modal -->
+  <div id="helpModal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="helpModalTitle" style="display: none;" onclick="handleModalOverlayClick(event)">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 id="helpModalTitle" style="margin: 0; font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 6px;">
+          <span>❓</span> Task Manager Help &amp; Shortcuts
+        </h3>
+        <button class="modal-close-btn" onclick="closeHelpModal()" aria-label="Close help">&times;</button>
+      </div>
+      <div class="modal-body" style="font-size: 12px; line-height: 1.5;">
+        <table style="width: 100%; border-collapse: collapse; margin-bottom: 12px; font-size: 12px;">
+          <thead>
+            <tr>
+              <th style="padding: 4px 8px; border-bottom: 1px solid var(--border-color); color: var(--text-muted);">Shortcut</th>
+              <th style="padding: 4px 8px; border-bottom: 1px solid var(--border-color); color: var(--text-muted);">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td style="padding: 5px 8px;"><kbd>F5</kbd> / <kbd>R</kbd></td><td style="padding: 5px 8px;">Refresh processes &amp; quicksave snapshot</td></tr>
+            <tr><td style="padding: 5px 8px;"><kbd>F9</kbd></td><td style="padding: 5px 8px;">Quickload snapshot state</td></tr>
+            <tr><td style="padding: 5px 8px;"><kbd>Ctrl+N</kbd></td><td style="padding: 5px 8px;">Open "Create New Task" dialog</td></tr>
+            <tr><td style="padding: 5px 8px;"><kbd>Del</kbd> / <kbd>Enter</kbd></td><td style="padding: 5px 8px;">Terminate selected process</td></tr>
+            <tr><td style="padding: 5px 8px;"><kbd>↑</kbd> / <kbd>↓</kbd></td><td style="padding: 5px 8px;">Navigate process table rows</td></tr>
+            <tr><td style="padding: 5px 8px;"><kbd>Home</kbd> / <kbd>End</kbd></td><td style="padding: 5px 8px;">Select first / last process</td></tr>
+            <tr><td style="padding: 5px 8px;"><kbd>Esc</kbd></td><td style="padding: 5px 8px;">Close dialog / Clear search filter</td></tr>
+            <tr><td style="padding: 5px 8px;"><kbd>F1</kbd> / <kbd>H</kbd></td><td style="padding: 5px 8px;">Open this help guide</td></tr>
+          </tbody>
+        </table>
+        <p style="margin: 0; color: var(--text-muted); font-size: 11px;">
+          In standalone mode, local mock kernel tasks can be added, inspected, and terminated.
+        </p>
+      </div>
+      <div class="modal-footer">
+        <button id="btn-close-help" class="btn btn-primary" onclick="closeHelpModal()">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- First-Run Tutorial Modal -->
+  <div id="tutorialModal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="tutorialModalTitle" style="display: none;" onclick="handleModalOverlayClick(event)">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 id="tutorialModalTitle" style="margin: 0; font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 6px;">
+          <span>📋</span> Welcome to Task Manager
+        </h3>
+        <button class="modal-close-btn" onclick="closeTutorialModal()" aria-label="Close tutorial">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p style="margin-top: 0; font-size: 12px; color: var(--text-muted); line-height: 1.5;">
+          Inspect live active applications, monitor CPU/RAM metrics, and manage runtime tasks across KiloOS.
+        </p>
+        <div style="background: rgba(0,0,0,0.25); border: 1px solid var(--border-color); border-radius: 6px; padding: 10px 12px; margin-bottom: 12px; font-size: 12px;">
+          <div style="display: flex; gap: 8px; margin-bottom: 8px;">
+            <span style="color: var(--primary); font-weight: 600;">⚡</span>
+            <div><strong>Process List:</strong> Filter by title or PID, and click headers to sort ascending/descending.</div>
+          </div>
+          <div style="display: flex; gap: 8px; margin-bottom: 8px;">
+            <span style="color: var(--danger); font-weight: 600;">🛑</span>
+            <div><strong>End Task:</strong> Select any row and click "End Task" or press <kbd>Del</kbd> to terminate.</div>
+          </div>
+          <div style="display: flex; gap: 8px; margin-bottom: 8px;">
+            <span style="color: var(--success); font-weight: 600;">🚀</span>
+            <div><strong>New Task:</strong> Launch programs with <kbd>Ctrl+N</kbd> or the toolbar button.</div>
+          </div>
+          <div style="display: flex; gap: 8px;">
+            <span style="color: #fbbf24; font-weight: 600;">💾</span>
+            <div><strong>State Snapshot:</strong> Press <kbd>F5</kbd> to quicksave snapshot, <kbd>F9</kbd> to quickload state.</div>
+          </div>
+        </div>
+        <label style="display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--text-muted); cursor: pointer;">
+          <input type="checkbox" id="chkDoNotShowTutorial" checked> Do not show this guide on startup
+        </label>
+      </div>
+      <div class="modal-footer">
+        <button id="btn-get-started" class="btn btn-primary" onclick="closeTutorialModal()">Get Started</button>
+      </div>
+    </div>
+  </div>
+
   <script>
     const isStandalone = (window.parent === window);
     let currentReqId = 0;
@@ -443,7 +537,39 @@
       { id: '3108', title: 'File Browser (kexplorer)' }
     ];
 
+    /**
+     * Safely reads an item from localStorage.
+     * @param {string} key
+     * @param {string|null} [fallback=null]
+     * @returns {string|null}
+     */
+    function safeGetStorage(key, fallback = null) {
+      try {
+        const val = localStorage.getItem(key);
+        return val !== null ? val : fallback;
+      } catch (e) {
+        return fallback;
+      }
+    }
+
+    /**
+     * Safely stores an item into localStorage with error handling.
+     * @param {string} key
+     * @param {any} value
+     * @returns {boolean}
+     */
+    function safeSetStorage(key, value) {
+      try {
+        localStorage.setItem(key, typeof value === 'string' ? value : JSON.stringify(value));
+        return true;
+      } catch (e) {
+        console.warn('[KTaskMgr] Storage write failed:', e);
+        return false;
+      }
+    }
+
     window.addEventListener('message', (e) => {
+      if (window.location.origin && window.location.origin !== 'null' && e.origin !== window.location.origin) return;
       const msg = e.data;
       if (typeof msg === 'object' && msg !== null && msg.type === 'OS_LIST_TASKS_DONE' && callbacks[msg.requestId]) {
         callbacks[msg.requestId](msg.tasks);
@@ -497,13 +623,24 @@
         .replace(/'/g, '&#39;');
     }
 
+    function dismissToast() {
+      const t = document.getElementById('toast');
+      if (t) {
+        t.classList.remove('show');
+        if (toastTimer) {
+          clearTimeout(toastTimer);
+          toastTimer = null;
+        }
+      }
+    }
+
     function showToast(msg) {
       const t = document.getElementById('toast');
       if (!t) return;
       t.textContent = msg;
       t.classList.add('show');
       if (toastTimer) clearTimeout(toastTimer);
-      toastTimer = setTimeout(() => t.classList.remove('show'), 2500);
+      toastTimer = setTimeout(() => t.classList.remove('show'), 2600);
     }
 
     async function refresh() {
@@ -589,6 +726,7 @@
         currentSortDir = 'asc';
       }
       syncSortSelect();
+      saveUserSettings();
       render();
     }
 
@@ -603,6 +741,7 @@
       const parts = val.split('-');
       currentSortField = parts[0];
       currentSortDir = parts[1] || 'asc';
+      saveUserSettings();
       render();
     }
 
@@ -774,6 +913,7 @@
 
     function toggleAutoRefresh() {
       const isChecked = document.getElementById('autoRefreshToggle')?.checked;
+      saveUserSettings();
       if (isChecked) startAutoRefresh();
       else stopAutoRefresh();
     }
@@ -793,6 +933,7 @@
     }
 
     function openRunModal() {
+      closeAllModals();
       const modal = document.getElementById('runModal');
       const input = document.getElementById('runAppInput');
       if (!modal) return;
@@ -811,12 +952,67 @@
 
     function isRunModalOpen() {
       const modal = document.getElementById('runModal');
-      return modal && modal.style.display !== 'none';
+      return modal && modal.style.display === 'flex';
+    }
+
+    function openHelpModal() {
+      closeAllModals();
+      const modal = document.getElementById('helpModal');
+      if (!modal) return;
+      modal.style.display = 'flex';
+      const closeBtn = document.getElementById('btn-close-help');
+      if (closeBtn) setTimeout(() => closeBtn.focus(), 50);
+    }
+
+    function closeHelpModal() {
+      const modal = document.getElementById('helpModal');
+      if (modal) modal.style.display = 'none';
+      document.querySelector('.table-container')?.focus();
+    }
+
+    function openTutorialModal() {
+      closeAllModals();
+      const modal = document.getElementById('tutorialModal');
+      if (!modal) return;
+      modal.style.display = 'flex';
+      const chk = document.getElementById('chkDoNotShowTutorial');
+      if (chk) chk.checked = !!safeGetStorage('ktaskmgr_tutorialSeen');
+      const startBtn = document.getElementById('btn-get-started');
+      if (startBtn) setTimeout(() => startBtn.focus(), 50);
+    }
+
+    function closeTutorialModal() {
+      const modal = document.getElementById('tutorialModal');
+      if (modal) modal.style.display = 'none';
+      const chk = document.getElementById('chkDoNotShowTutorial');
+      if (chk && chk.checked) {
+        safeSetStorage('ktaskmgr_tutorialSeen', '1');
+      }
+      document.querySelector('.table-container')?.focus();
+    }
+
+    function closeAllModals() {
+      const runM = document.getElementById('runModal');
+      const helpM = document.getElementById('helpModal');
+      const tutM = document.getElementById('tutorialModal');
+      if (runM) runM.style.display = 'none';
+      if (helpM) helpM.style.display = 'none';
+      if (tutM) tutM.style.display = 'none';
+      document.querySelector('.table-container')?.focus();
+    }
+
+    function anyModalOpen() {
+      const runM = document.getElementById('runModal');
+      const helpM = document.getElementById('helpModal');
+      const tutM = document.getElementById('tutorialModal');
+      return (runM && runM.style.display === 'flex') ||
+             (helpM && helpM.style.display === 'flex') ||
+             (tutM && tutM.style.display === 'flex');
     }
 
     function handleModalOverlayClick(e) {
-      if (e.target.id === 'runModal') {
-        closeRunModal();
+      if (e.target.classList.contains('modal-overlay')) {
+        closeAllModals();
       }
     }
 
@@ -879,12 +1075,117 @@
       document.body.removeChild(ta);
     }
 
+    /**
+     * Captures complete state snapshot into localStorage.
+     */
+    function quickSaveState() {
+      try {
+        const payload = {
+          timestamp: Date.now(),
+          tasks: tasksData,
+          standaloneTasks: standaloneTasks,
+          selectedTaskId: selectedTaskId,
+          searchQuery: document.getElementById('searchInput')?.value || '',
+          sortField: currentSortField,
+          sortDir: currentSortDir,
+          autoRefresh: document.getElementById('autoRefreshToggle')?.checked ?? true
+        };
+        const ok = safeSetStorage('ktaskmgr_quicksave', JSON.stringify(payload));
+        if (!ok) {
+          showToast('⚠️ Storage quota exceeded or save failed.');
+          return;
+        }
+        safeSetStorage('ktaskmgr_tutorialSeen', '1');
+        const timeStr = new Date().toLocaleTimeString();
+        showToast(`★ Quicksave snapshot created at ${timeStr} [F5]`);
+      } catch (err) {
+        showToast('Failed to create quicksave snapshot.');
+      }
+    }
+
+    /**
+     * Restores state snapshot from localStorage.
+     */
+    function quickLoadState() {
+      try {
+        const raw = safeGetStorage('ktaskmgr_quicksave');
+        if (!raw) {
+          showToast('No quicksave snapshot found. Press F5 to save one.');
+          return;
+        }
+        const data = JSON.parse(raw);
+        if (!Array.isArray(data.tasks)) {
+          showToast('Quicksave snapshot is corrupted.');
+          return;
+        }
+        stopAutoRefresh();
+        const toggle = document.getElementById('autoRefreshToggle');
+        if (toggle) toggle.checked = false;
+        saveUserSettings();
+
+        tasksData = data.tasks;
+        if (Array.isArray(data.standaloneTasks)) {
+          standaloneTasks = data.standaloneTasks;
+        }
+        if (data.searchQuery !== undefined && document.getElementById('searchInput')) {
+          document.getElementById('searchInput').value = data.searchQuery;
+        }
+        if (data.sortField) {
+          currentSortField = data.sortField;
+          currentSortDir = data.sortDir || 'asc';
+          syncSortSelect();
+        }
+        selectedTaskId = data.selectedTaskId || (tasksData[0] ? String(tasksData[0].id) : null);
+        render();
+        if (selectedTaskId) selectTask(selectedTaskId);
+
+        safeSetStorage('ktaskmgr_tutorialSeen', '1');
+        const timeStr = new Date(data.timestamp || Date.now()).toLocaleTimeString();
+        showToast(`📂 Loaded snapshot from ${timeStr} [F9] (Auto paused)`);
+      } catch (err) {
+        showToast('Failed to load quicksave snapshot.');
+      }
+    }
+
+    function handleRefreshBtn() {
+      refresh();
+      quickSaveState();
+    }
+
+    function saveUserSettings() {
+      try {
+        const settings = {
+          autoRefresh: document.getElementById('autoRefreshToggle')?.checked ?? true,
+          sortField: currentSortField,
+          sortDir: currentSortDir
+        };
+        safeSetStorage('ktaskmgr_settings', JSON.stringify(settings));
+      } catch (e) {}
+    }
+
+    function loadUserSettings() {
+      try {
+        const raw = safeGetStorage('ktaskmgr_settings');
+        if (!raw) return;
+        const settings = JSON.parse(raw);
+        if (settings.autoRefresh !== undefined) {
+          const toggle = document.getElementById('autoRefreshToggle');
+          if (toggle) toggle.checked = !!settings.autoRefresh;
+        }
+        if (settings.sortField) {
+          currentSortField = settings.sortField;
+          currentSortDir = settings.sortDir || 'asc';
+          syncSortSelect();
+        }
+      } catch (e) {}
+    }
+
     document.addEventListener('keydown', (e) => {
       // If focus is inside an input or select
       if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') {
         if (e.key === 'Escape') {
-          if (isRunModalOpen()) {
-            closeRunModal();
+          if (anyModalOpen()) {
+            closeAllModals();
           } else if (e.target.id === 'searchInput') {
             e.target.value = '';
             render();
@@ -902,18 +1203,28 @@
         return;
       }
 
-      if (e.key === 'r' || e.key === 'R' || e.key === 'F5') {
-        e.preventDefault();
-        refresh();
-      } else if (e.key === 'h' || e.key === 'H') {
-        e.preventDefault();
-        showToast('Shortcuts: [R/F5] Refresh, [Del/Enter] End Task, [↑/↓] Navigate, [Ctrl+N] New Task, [Esc] Clear filter/close modal');
-      } else if (e.key === 'Escape') {
-        if (isRunModalOpen()) {
-          closeRunModal();
+      if (e.key === 'Escape') {
+        if (anyModalOpen()) {
+          closeAllModals();
         } else {
           clearSearch();
         }
+        return;
+      }
+
+      if (anyModalOpen()) {
+        return;
+      }
+
+      if (e.key === 'r' || e.key === 'R' || e.key === 'F5') {
+        e.preventDefault();
+        handleRefreshBtn();
+      } else if (e.key === 'F9') {
+        e.preventDefault();
+        quickLoadState();
+      } else if (e.key === 'h' || e.key === 'H' || e.key === 'F1') {
+        e.preventDefault();
+        openHelpModal();
       }
     });
 
@@ -925,8 +1236,17 @@
     window.addEventListener('pagehide', stopAutoRefresh);
     window.addEventListener('beforeunload', stopAutoRefresh);
 
+    loadUserSettings();
     refresh();
-    startAutoRefresh();
+    if (document.getElementById('autoRefreshToggle')?.checked) {
+      startAutoRefresh();
+    }
+
+    // Check first-run tutorial flag
+    const tutorialSeen = safeGetStorage('ktaskmgr_tutorialSeen');
+    if (!tutorialSeen) {
+      setTimeout(openTutorialModal, 150);
+    }
   </script>
 </body>
 </html>

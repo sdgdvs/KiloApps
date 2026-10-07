@@ -4,6 +4,17 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-06T23:35:00-07:00 — kilo-expander: KWords (Deep Feature Expansion: RFMS Online Duel, Custom Builder, Replay Scrubber & Lexicon)**
+  - Status: PASS ✅ (0 regressions, 154.7 KB web / 162.0 KB native < 999 KB ceiling).
+  - Online Multiplayer (Mandate 12): Standardized RFMS duel (`WRD-` prefix) with shared seed, live progress, and 25s Solo AI fallback (`CyberBot-99`); strict No-Autostart connect gate.
+  - Custom Puzzle Builder: Custom titles, word pools, and grid dimensions (10x10 to 20x20) with base64 link sharing, JSON export/import.
+  - Interactive Replay Scrubber: Step-by-step move history scrubber with slider, playback controls, and hotkey (`V`).
+  - ASCII Grid & Solution Export: Formatted retro ASCII puzzle sheets, coordinate solution keys, and live grid overlay.
+  - Word Lexicon & Assistant: Scrabble-style tile point values, etymological definitions, and wildcard pattern matcher (`*`, `?`).
+  - Mandate 11 Glint Ban: Clean static brass inlays across web and native Win32 C (`KWords.exe` rebuilt clean); fixed test modal dismiss selector.
+  - Verification: `test_app_startup.py` PASS; `test_web_apps.js` PASS (62 elements, 0 err); `smoke_test_native.py` PASS; Vite clean (528ms); `security_lint.py` 100% PASS.
+  - Queue: Advanced `kilo_expander` to `KHangman`; rotation advanced to `kilo-creator`.
+
 - **2026-10-06T22:20:00-07:00 — kilo-qa: KSettings (Pass 5 QA & Build Audit: State Persistence, Tutorial Integrity & VFS Sync)**
   - Status: PASS ✅ (0 regressions, 60.7 KB web < 999 KB ceiling).
   - State Persistence: Implemented F5 quicksave and F9 quickload capturing full state (colors, animations, sound, pins) in storage & VFS.
