@@ -574,6 +574,44 @@
     box-shadow: 0 0 8px #00e5ff;
     transform: translateY(-2px);
   }
+  .col-number-badge.radar-win {
+    background: rgba(0, 200, 83, 0.85) !important;
+    color: #fff !important;
+    border-color: #69f0ae !important;
+    box-shadow: 0 0 10px #00e676 !important;
+  }
+  .col-number-badge.radar-block {
+    background: rgba(0, 180, 216, 0.85) !important;
+    color: #fff !important;
+    border-color: #00e5ff !important;
+    box-shadow: 0 0 10px #00e5ff !important;
+  }
+  .col-number-badge.radar-blunder {
+    background: rgba(213, 0, 0, 0.85) !important;
+    color: #fff !important;
+    border-color: #ff5252 !important;
+    box-shadow: 0 0 10px #ff1744 !important;
+  }
+  .col-number-badge.radar-locked {
+    background: rgba(55, 71, 79, 0.7) !important;
+    color: #78909c !important;
+    border-color: #455a64 !important;
+    cursor: not-allowed !important;
+  }
+  .col-radar-sub {
+    font-size: 0.65em;
+    font-weight: 700;
+    display: block;
+    line-height: 1;
+    margin-top: 1px;
+    letter-spacing: -0.2px;
+  }
+  .notation-ply-btn:hover {
+    background: #1976d2 !important;
+    color: #ffffff !important;
+    box-shadow: 0 0 6px #00e5ff;
+    transform: scale(1.05);
+  }
 
   /* Online Multiplayer System Styles */
   #multiplayerModal {
@@ -802,6 +840,7 @@
   <div id="evalBarWrapper">
     <div class="eval-header">
       <span id="evalScoreText">Eval: 0.0 (Even)</span>
+      <span id="evalOpeningText" style="color:#ffd700; font-size:0.75em; font-style:italic;">Opening: Initial Position</span>
       <span id="threatsText">Threats: R 0 ⚡ | Y 0 ⚡</span>
     </div>
     <div id="evalBar">
@@ -870,6 +909,7 @@
     <button onclick="loadGame()">Load [F9]</button>
     <button onclick="exportJSON()">Exp JSON [E]</button>
     <button onclick="document.getElementById('importFile').click()">Imp JSON [I]</button>
+    <button id="radarBtn" onclick="toggleColumnRadar()">Radar [C]</button>
     <button id="notationBtn" onclick="toggleNotationModal()">Notation [N]</button>
     <input type="file" id="importFile" style="display:none" accept=".json" onchange="importJSON(event)">
   </div>
@@ -879,6 +919,7 @@
     <button id="autoReplayBtn" onclick="toggleAutoReplay()">&#9654; Auto</button>
     <button onclick="replayStep(1)">Next &#9654;</button>
     <button onclick="replayJump(-1)" title="Jump to end (End)">&#9197;</button>
+    <button onclick="resumeFromReplayIndex()" style="background:#1976d2; border-color:#4fc3f7;" title="Branch play from this ply">Branch Play &#128256;</button>
     <select id="replaySpeed" onchange="setReplaySpeed()" style="padding: 4px 6px; font-size: 0.8em;">
       <option value="1000">1.0x</option>
       <option value="500">2.0x</option>
@@ -908,12 +949,13 @@
       <li><strong>[M] Magnet:</strong> Pulls friendly discs from adjacent columns</li>
       <li><strong>[F] Freeze:</strong> Freezes selected column for 2 turns</li>
       <li><strong>[T] AI Hint:</strong> Highlights recommended column</li>
+      <li><strong>[C] Radar:</strong> Toggles real-time tactical threat radar per column</li>
       <li><strong>[U] Undo:</strong> Reverts last turn pair</li>
       <li><strong>[V] Mode:</strong> Cycles game mode</li>
       <li><strong>[O] Online:</strong> Open multiplayer lobby &amp; room browser</li>
-      <li><strong>[N] Notation:</strong> View C4N move sequence &amp; FEN position</li>
+      <li><strong>[N] Notation:</strong> View C4N move sequence, FEN, &amp; interactive ply scrubbing</li>
       <li><strong>[R] Reset / Rematch:</strong> Restart board or ask online rematch</li>
-      <li><strong>[P] Mute:</strong> Toggle sound effects</li>
+      <li><strong>[P] Mute:</strong> Toggle sound effects (Genesis YM2612 2-Op FM audio)</li>
       <li><strong>[F5 / Ctrl+S] Save:</strong> Quick-save game state</li>
       <li><strong>[F9 / Ctrl+O] Load:</strong> Quick-load saved game</li>
       <li><strong>[Esc]:</strong> Close dialogs / cancel skill selection</li>
@@ -930,7 +972,7 @@
       <div><strong>Yellow Threats:</strong> <span id="modalThreatsYel">0</span></div>
     </div>
     <div class="notation-field">
-      <label>Move Transcript:</label>
+      <label>Move Transcript (Click any move to jump directly to ply):</label>
       <div id="modalMoveList" class="notation-moves-box">No moves recorded yet.</div>
     </div>
     <div class="notation-field">
@@ -952,6 +994,7 @@
       <div class="notation-input-group">
         <input type="text" id="customPositionInput" placeholder="e.g. 4443215 or FEN string..." onkeydown="if(event.key==='Enter') applyCustomPosition()">
         <button onclick="applyCustomPosition()">Load Position</button>
+        <button onclick="pasteFromClipboard()" style="background:#00897b; border-color:#00e5ff;" title="Paste from clipboard">📋 Paste</button>
       </div>
     </div>
     <div style="display:flex; gap:6px; margin-top:12px;">
@@ -1760,23 +1803,34 @@
       if (room.status === 'finished' && room.winner && gameActive) {
         gameActive = false;
         const winner = room.winner;
-        const color = (winner === 1) ? 'Red' : 'Yellow';
-        if (myPlayerNum === winner) {
-          playSound('win');
-          spawnConfetti();
-          statusEl.textContent = `🎉 You Won! (${color})`;
-          onlineStats.wins++;
-          onlineStats.streak++;
-          onlineStats.bestStreak = Math.max(onlineStats.bestStreak, onlineStats.streak);
-          onlineStats.rating += (20 + Math.min(10, onlineStats.streak * 2));
-          saveOnlineStats();
-        } else if (myPlayerNum !== 0) {
-          playSound('lose');
-          statusEl.textContent = `Opponent Won! (${color})`;
-          onlineStats.losses++;
-          onlineStats.streak = 0;
-          onlineStats.rating = Math.max(1000, onlineStats.rating - 18);
-          saveOnlineStats();
+        if (winner === 3) {
+          playSound('draw');
+          statusEl.textContent = `It's a Draw!`;
+          if (myPlayerNum !== 0) {
+            onlineStats.draws++;
+            saveOnlineStats();
+          }
+        } else {
+          const color = (winner === 1) ? 'Red' : 'Yellow';
+          if (myPlayerNum === winner) {
+            playSound('win');
+            spawnConfetti();
+            statusEl.textContent = `🎉 You Won! (${color})`;
+            onlineStats.wins++;
+            onlineStats.streak++;
+            onlineStats.bestStreak = Math.max(onlineStats.bestStreak, onlineStats.streak);
+            onlineStats.rating += (20 + Math.min(10, onlineStats.streak * 2));
+            saveOnlineStats();
+          } else if (myPlayerNum !== 0) {
+            playSound('lose');
+            statusEl.textContent = `Opponent Won! (${color})`;
+            onlineStats.losses++;
+            onlineStats.streak = 0;
+            onlineStats.rating = Math.max(1000, onlineStats.rating - 18);
+            saveOnlineStats();
+          } else {
+            statusEl.textContent = `Player ${winner} (${color}) Won!`;
+          }
         }
         const rematchBtn = document.getElementById('onlineRematchBtn');
         if (rematchBtn) rematchBtn.style.display = 'inline-block';
@@ -1972,6 +2026,80 @@
       showToast(isMuted ? 'Audio muted [P]' : 'Audio enabled [P]', 'info');
     }
 
+    let isColumnRadarActive = false;
+
+    function toggleColumnRadar() {
+      if (isOnlineGame && currentRoomStatus === 'playing') {
+        showToast("Column Radar is disabled during ranked Online Matches.", "warning");
+        return;
+      }
+      isColumnRadarActive = !isColumnRadarActive;
+      const btn = document.getElementById('radarBtn');
+      if (btn) {
+        btn.classList.toggle('active', isColumnRadarActive);
+        btn.textContent = isColumnRadarActive ? '[Radar [C]]' : 'Radar [C]';
+      }
+      updateColNumbers();
+      showToast(isColumnRadarActive ? '🎯 Column Tactical Radar ON [C] — Live threat & evaluation active' : 'Column Tactical Radar OFF [C]', 'info');
+      playSound('hint');
+    }
+
+    function computeColumnTacticalData(c, player) {
+      if (frozenTurns > 0 && frozenCol === c && player === frozenPlayer) {
+        return { label: '❄️ FRZN', cls: 'radar-locked', title: 'Column is currently frozen' };
+      }
+      if (board[0][c] !== 0) {
+        return { label: '🔒 FULL', cls: 'radar-locked', title: 'Column is completely full' };
+      }
+      
+      let targetRow = -1;
+      for (let r = 0; r < ROWS; r++) {
+        if (board[r][c] !== 0) { targetRow = r - 1; break; }
+      }
+      if (targetRow === -1 && board[ROWS-1][c] === 0) targetRow = ROWS - 1;
+      if (targetRow < 0) return { label: 'FULL', cls: 'radar-locked', title: 'Column full' };
+      
+      const opp = (player === 1) ? 2 : 1;
+      
+      // 1. Check if dropping here gives immediate win
+      board[targetRow][c] = player;
+      const winNow = checkWinBoard(board, player);
+      board[targetRow][c] = 0;
+      if (winNow) {
+        return { label: '🏆 WIN', cls: 'radar-win', title: 'Dropping here wins the game!' };
+      }
+      
+      // 2. Check if opponent threatens an immediate win here that we must block
+      board[targetRow][c] = opp;
+      const oppWinHere = checkWinBoard(board, opp);
+      board[targetRow][c] = 0;
+      if (oppWinHere) {
+        return { label: '🛡️ BLOCK', cls: 'radar-block', title: 'Mandatory defensive block to stop opponent win!' };
+      }
+      
+      // 3. Check if dropping here allows opponent to win directly on top of our piece
+      if (targetRow - 1 >= 0) {
+        board[targetRow][c] = player;
+        board[targetRow - 1][c] = opp;
+        const oppWinAbove = checkWinBoard(board, opp);
+        board[targetRow - 1][c] = 0;
+        board[targetRow][c] = 0;
+        if (oppWinAbove) {
+          return { label: '⚠️ BLUNDER', cls: 'radar-blunder', title: 'Warning: Blunder! Opponent will win on top of this piece.' };
+        }
+      }
+      
+      // 4. Calculate positional score delta
+      const beforeEval = calculateBoardEval().score;
+      board[targetRow][c] = player;
+      const afterEval = calculateBoardEval().score;
+      board[targetRow][c] = 0;
+      
+      const delta = (player === 1) ? (afterEval - beforeEval) : (beforeEval - afterEval);
+      const sign = delta >= 0 ? '+' : '';
+      return { label: `${sign}${delta.toFixed(1)}`, cls: '', title: `Positional Evaluation Delta: ${sign}${delta.toFixed(1)}` };
+    }
+
     function updateColNumbers() {
       const container = document.getElementById('colNumbers');
       if (!container) return;
@@ -1979,8 +2107,18 @@
       for (let c = 0; c < COLS; c++) {
         const badge = document.createElement('div');
         badge.className = 'col-number-badge';
-        badge.textContent = `${c + 1}`;
-        badge.title = `Drop disc in Column ${c + 1} (Key ${c + 1})`;
+        let subHtml = '';
+        let tooltip = `Drop disc in Column ${c + 1} (Key ${c + 1})`;
+
+        if (isColumnRadarActive && isLocalPlayerTurn()) {
+          const radar = computeColumnTacticalData(c, currentPlayer);
+          subHtml = `<span class="col-radar-sub ${radar.cls}">${radar.label}</span>`;
+          if (radar.cls) badge.classList.add(radar.cls);
+          tooltip = `Col ${c + 1}: ${radar.title}`;
+        }
+
+        badge.innerHTML = `<span class="col-num">${c + 1}</span>${subHtml}`;
+        badge.title = tooltip;
         badge.onclick = () => {
           if (isLocalPlayerTurn()) {
             if (isFreezeMode) {
@@ -2008,99 +2146,90 @@
       }
     }
 
+    function playFMSound(freq, ratio, modIndex, duration, waveType = 'sine', modType = 'sine') {
+      if (isMuted) return;
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      try {
+        const now = audioCtx.currentTime;
+        const carrier = audioCtx.createOscillator();
+        const modulator = audioCtx.createOscillator();
+        const modGain = audioCtx.createGain();
+        const masterGain = audioCtx.createGain();
+
+        carrier.type = waveType;
+        carrier.frequency.setValueAtTime(freq, now);
+
+        modulator.type = modType;
+        modulator.frequency.setValueAtTime(freq * ratio, now);
+
+        // Modulator envelope (FM modulation index decay)
+        modGain.gain.setValueAtTime(freq * modIndex, now);
+        modGain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+
+        modulator.connect(modGain);
+        modGain.connect(carrier.frequency);
+
+        // Carrier amplitude envelope (ADSR)
+        masterGain.gain.setValueAtTime(0.35, now);
+        masterGain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+
+        carrier.connect(masterGain);
+        masterGain.connect(audioCtx.destination);
+
+        modulator.start(now);
+        carrier.start(now);
+        modulator.stop(now + duration);
+        carrier.stop(now + duration);
+      } catch (e) {}
+    }
+
     function playSound(type) {
       if (isMuted) return;
       if (audioCtx.state === 'suspended') audioCtx.resume();
-      const osc = audioCtx.createOscillator();
-      const gain = audioCtx.createGain();
-      osc.connect(gain);
-      gain.connect(audioCtx.destination);
-      const now = audioCtx.currentTime;
       
       if (type === 'drop') {
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(400, now);
-        osc.frequency.exponentialRampToValueAtTime(100, now + 0.1);
-        gain.gain.setValueAtTime(0.5, now);
-        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
-        osc.start(now); osc.stop(now + 0.1);
+        // Yamaha YM2612 metallic clack with wooden disc resonance
+        playFMSound(280, 2.0, 3.5, 0.12, 'sine', 'triangle');
       } else if (type === 'win') {
-        osc.type = 'triangle';
-        osc.frequency.setValueAtTime(400, now);
-        osc.frequency.setValueAtTime(500, now + 0.1);
-        osc.frequency.setValueAtTime(600, now + 0.2);
-        osc.frequency.setValueAtTime(800, now + 0.3);
-        gain.gain.setValueAtTime(0.5, now);
-        gain.gain.linearRampToValueAtTime(0, now + 0.5);
-        osc.start(now); osc.stop(now + 0.5);
+        // 4-note ascending FM arpeggio (C5 - E5 - G5 - C6)
+        playFMSound(523.25, 2.0, 2.0, 0.35, 'sine', 'sine');
+        setTimeout(() => playFMSound(659.25, 2.0, 2.0, 0.35, 'sine', 'sine'), 90);
+        setTimeout(() => playFMSound(783.99, 2.0, 2.0, 0.35, 'sine', 'sine'), 180);
+        setTimeout(() => playFMSound(1046.50, 2.0, 3.0, 0.5, 'sine', 'triangle'), 270);
       } else if (type === 'lose') {
-        osc.type = 'sawtooth';
-        osc.frequency.setValueAtTime(300, now);
-        osc.frequency.linearRampToValueAtTime(200, now + 0.4);
-        gain.gain.setValueAtTime(0.5, now);
-        gain.gain.linearRampToValueAtTime(0, now + 0.4);
-        osc.start(now); osc.stop(now + 0.4);
+        // Descending minor FM brass
+        playFMSound(370, 1.5, 2.5, 0.25, 'sawtooth', 'sine');
+        setTimeout(() => playFMSound(293.66, 1.5, 2.5, 0.3, 'sawtooth', 'sine'), 120);
+        setTimeout(() => playFMSound(220, 1.5, 3.0, 0.45, 'sawtooth', 'sine'), 240);
       } else if (type === 'invalid') {
-        osc.type = 'square';
-        osc.frequency.setValueAtTime(150, now);
-        gain.gain.setValueAtTime(0.3, now);
-        gain.gain.linearRampToValueAtTime(0, now + 0.15);
-        osc.start(now); osc.stop(now + 0.15);
+        // Low buzz error
+        playFMSound(130, 1.5, 4.0, 0.15, 'sawtooth', 'square');
       } else if (type === 'draw') {
-        osc.type = 'triangle';
-        osc.frequency.setValueAtTime(300, now);
-        gain.gain.setValueAtTime(0.3, now);
-        gain.gain.linearRampToValueAtTime(0, now + 0.3);
-        osc.start(now); osc.stop(now + 0.3);
+        // Nostalgic neutral FM chord
+        playFMSound(330, 1.0, 1.5, 0.35, 'triangle', 'sine');
+        setTimeout(() => playFMSound(392, 1.0, 1.5, 0.35, 'triangle', 'sine'), 60);
       } else if (type === 'bomb') {
-        osc.type = 'sawtooth';
-        osc.frequency.setValueAtTime(120, now);
-        osc.frequency.linearRampToValueAtTime(40, now + 0.3);
-        gain.gain.setValueAtTime(0.6, now);
-        gain.gain.linearRampToValueAtTime(0, now + 0.3);
-        osc.start(now); osc.stop(now + 0.3);
+        // Heavy low-end rumble FM explosion
+        playFMSound(80, 0.5, 6.0, 0.35, 'sawtooth', 'sine');
       } else if (type === 'drill') {
-        osc.type = 'square';
-        osc.frequency.setValueAtTime(600, now);
-        osc.frequency.linearRampToValueAtTime(200, now + 0.25);
-        gain.gain.setValueAtTime(0.4, now);
-        gain.gain.linearRampToValueAtTime(0, now + 0.25);
-        osc.start(now); osc.stop(now + 0.25);
+        // Buzzing FM drill resonance
+        playFMSound(480, 3.14, 5.0, 0.25, 'square', 'sawtooth');
       } else if (type === 'magnet') {
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(500, now);
-        osc.frequency.exponentialRampToValueAtTime(900, now + 0.2);
-        gain.gain.setValueAtTime(0.4, now);
-        gain.gain.linearRampToValueAtTime(0, now + 0.2);
-        osc.start(now); osc.stop(now + 0.2);
+        // Sci-fi resonant FM sweep
+        playFMSound(440, 2.0, 4.0, 0.22, 'sine', 'sine');
       } else if (type === 'freeze') {
-        osc.type = 'triangle';
-        osc.frequency.setValueAtTime(250, now);
-        osc.frequency.linearRampToValueAtTime(180, now + 0.2);
-        gain.gain.setValueAtTime(0.4, now);
-        gain.gain.linearRampToValueAtTime(0, now + 0.2);
-        osc.start(now); osc.stop(now + 0.2);
+        // Crystalline glassy FM bell
+        playFMSound(880, 2.76, 2.5, 0.28, 'sine', 'triangle');
       } else if (type === 'join') {
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(523.25, now);
-        osc.frequency.setValueAtTime(659.25, now + 0.08);
-        osc.frequency.setValueAtTime(783.99, now + 0.16);
-        gain.gain.setValueAtTime(0.35, now);
-        gain.gain.linearRampToValueAtTime(0, now + 0.3);
-        osc.start(now); osc.stop(now + 0.3);
+        // Subnet peer connection chime
+        playFMSound(523.25, 2.0, 1.5, 0.18, 'sine', 'sine');
+        setTimeout(() => playFMSound(659.25, 2.0, 1.5, 0.22, 'sine', 'sine'), 80);
       } else if (type === 'chat') {
-        osc.type = 'triangle';
-        osc.frequency.setValueAtTime(700, now);
-        osc.frequency.exponentialRampToValueAtTime(1050, now + 0.08);
-        gain.gain.setValueAtTime(0.3, now);
-        gain.gain.linearRampToValueAtTime(0, now + 0.12);
-        osc.start(now); osc.stop(now + 0.12);
+        // Retro communicator blip
+        playFMSound(720, 1.5, 2.0, 0.12, 'triangle', 'sine');
       } else if (type === 'hint') {
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(880, now);
-        gain.gain.setValueAtTime(0.25, now);
-        gain.gain.linearRampToValueAtTime(0, now + 0.1);
-        osc.start(now); osc.stop(now + 0.1);
+        // Soft FM marimba pip
+        playFMSound(880, 3.0, 1.8, 0.1, 'sine', 'sine');
       }
     }
 
@@ -2310,10 +2439,44 @@
       return { score: evalScore, winProb: winProb, threatsRed: t1, threatsYellow: t2 };
     }
 
+    function detectOpening(history) {
+      if (!history || history.length === 0) return 'Initial Position';
+      const m1 = history[0] && history[0].col !== undefined ? history[0].col + 1 : null;
+      if (!m1) return 'Standard Game';
+      if (history.length === 1) {
+        if (m1 === 4) return 'Center Strike';
+        if (m1 === 3 || m1 === 5) return 'Flank Attack';
+        if (m1 === 2 || m1 === 6) return 'Wing Gambit';
+        if (m1 === 1 || m1 === 7) return 'Edge Gambit';
+      }
+      const m2 = history[1] && history[1].col !== undefined ? history[1].col + 1 : null;
+      if (history.length >= 2 && m2) {
+        if (m1 === 4 && m2 === 4) {
+          if (history.length >= 4 && history[2].col === 3 && history[3].col === 3) return 'Four-Story Center Spire';
+          return 'Center Pillar Defense';
+        }
+        if (m1 === 4 && (m2 === 3 || m2 === 5)) return 'Adjacent Flank Defense';
+        if (m1 === 4 && (m2 === 2 || m2 === 6)) return 'Wing Counter-Opening';
+        if (m1 === 4 && (m2 === 1 || m2 === 7)) return 'Edge Anomaly Response';
+        if ((m1 === 3 || m1 === 5) && m2 === 4) return 'Center Incursion Response';
+        if ((m1 === 3 && m2 === 5) || (m1 === 5 && m2 === 3)) return 'Split Flank Duel';
+        if ((m1 === 2 || m1 === 6) && m2 === 4) return 'Wing-to-Center Counter';
+        if (m1 === m2) return `Pillar Variation (Col ${m1})`;
+      }
+      if (history.length >= 4) {
+        const seq = history.slice(0, 4).map(m => m.col + 1).join('');
+        if (seq === '4444') return 'Center Skyway';
+        if (seq === '4352' || seq === '4536') return 'Horizontal Wedge Expansion';
+        if (seq === '3443' || seq === '5445') return 'Symmetric Flank Wedge';
+      }
+      return `Open Tactical Play (${history.length} ply)`;
+    }
+
     function updateEvaluation() {
       const evalData = calculateBoardEval();
       const redFill = document.getElementById('evalFillRed');
       const scoreText = document.getElementById('evalScoreText');
+      const openingText = document.getElementById('evalOpeningText');
       const threatsText = document.getElementById('threatsText');
       
       if (redFill) redFill.style.width = `${evalData.winProb}%`;
@@ -2325,6 +2488,9 @@
         } else {
           scoreText.textContent = `Eval: -${Math.abs(evalData.score).toFixed(1)} (Ylw ${100 - evalData.winProb}%)`;
         }
+      }
+      if (openingText) {
+        openingText.textContent = `Opening: ${detectOpening(moveHistory)}`;
       }
       if (threatsText) {
         threatsText.textContent = `Threats: R ${evalData.threatsRed} ⚡ | Y ${evalData.threatsYellow} ⚡`;
@@ -2389,17 +2555,19 @@
         const list = (replayHistory && replayHistory.length > 0 && !gameActive) ? replayHistory : moveHistory;
         let movesHtml = '';
         if (list.length === 0) {
-          movesHtml = 'No moves made in current session.';
+          movesHtml = '<div style="color:#aaa; font-style:italic;">No moves made in current session.</div>';
         } else {
           let turn = 1;
           for (let i = 0; i < list.length; i++) {
             let m = list[i];
             let colName = m.col !== undefined ? `Col ${m.col + 1}` : `Drop`;
             let pName = (m.p === 1 || i % 2 === 0) ? 'Red' : 'Yellow';
+            let pColor = (m.p === 1 || i % 2 === 0) ? '#ff8080' : '#ffff80';
+            let plyBtn = `<span class="notation-ply-btn" onclick="jumpToNotationPly(${i})" title="Click to jump board directly to Move ${i + 1}" style="cursor:pointer; color:${pColor}; padding:1px 5px; border-radius:3px; background:rgba(255,255,255,0.06); margin:0 2px;">${colName}</span>`;
             if (i % 2 === 0) {
-              movesHtml += `<div><strong>${turn}.</strong> ${pName}: ${colName}`;
+              movesHtml += `<div style="margin:2px 0;"><strong>${turn}.</strong> ${plyBtn}`;
             } else {
-              movesHtml += ` &nbsp;|&nbsp; ${pName}: ${colName}</div>`;
+              movesHtml += ` &nbsp;|&nbsp; ${plyBtn}</div>`;
               turn++;
             }
           }
@@ -2409,6 +2577,74 @@
         updateEvaluation();
         modal.style.display = 'block';
         if (backdrop) backdrop.style.display = 'block';
+      }
+    }
+
+    function jumpToNotationPly(plyIndex) {
+      if (plyIndex < 0) return;
+      const list = (replayHistory && replayHistory.length > 0 && !gameActive) ? replayHistory : moveHistory;
+      if (plyIndex >= list.length) return;
+      closeAllModals();
+      if (gameActive) {
+        let finalState = {
+          board: JSON.stringify(board), rows: ROWS, cols: COLS, stats: JSON.stringify(stats), p: currentPlayer,
+          p1b: p1Bombs, p2b: p2Bombs, p1d: p1Drills, p2d: p2Drills, p1m: p1Magnets, p2m: p2Magnets, p1f: p1Freezes, p2f: p2Freezes,
+          fCol: frozenCol, fTurns: frozenTurns, fPlayer: frozenPlayer
+        };
+        replayHistory = [...moveHistory, finalState];
+      }
+      gameActive = false;
+      document.getElementById('replayControls').style.display = 'flex';
+      replayJump(plyIndex);
+      showToast(`Jumped to Ply ${plyIndex + 1} (${list[plyIndex].col !== undefined ? 'Col ' + (list[plyIndex].col + 1) : 'Move'})`, 'info');
+    }
+
+    function resumeFromReplayIndex() {
+      if (replayHistory.length === 0 || replayIndex < 0) return;
+      if (isOnlineGame) {
+        showToast('Cannot branch in online multiplayer match.', 'warning');
+        return;
+      }
+      moveHistory = replayHistory.slice(0, replayIndex + 1);
+      const m = replayHistory[replayIndex];
+      board = JSON.parse(m.board);
+      ROWS = m.rows || 6; COLS = m.cols || 7;
+      currentPlayer = (m.p === 1) ? 2 : 1;
+      p1Bombs = m.p1b !== undefined ? m.p1b : 2;
+      p2Bombs = m.p2b !== undefined ? m.p2b : 2;
+      p1Drills = m.p1d !== undefined ? m.p1d : 2;
+      p2Drills = m.p2d !== undefined ? m.p2d : 2;
+      p1Magnets = m.p1m !== undefined ? m.p1m : 2;
+      p2Magnets = m.p2m !== undefined ? m.p2m : 2;
+      p1Freezes = m.p1f !== undefined ? m.p1f : 1;
+      p2Freezes = m.p2f !== undefined ? m.p2f : 1;
+      frozenCol = m.fCol !== undefined ? m.fCol : -1;
+      frozenTurns = m.fTurns !== undefined ? m.fTurns : 0;
+      frozenPlayer = m.fPlayer !== undefined ? m.fPlayer : 0;
+      gameActive = true;
+      winningCells = [];
+      winBeamProgress = 0;
+      document.getElementById('replayControls').style.display = 'none';
+      renderBoard();
+      updateStatus();
+      updatePowerupBtns();
+      updateColNumbers();
+      showToast(`Branch created! Game resumed from move ${replayIndex + 1}.`, 'success');
+    }
+
+    async function pasteFromClipboard() {
+      try {
+        if (navigator.clipboard && navigator.clipboard.readText) {
+          const text = await navigator.clipboard.readText();
+          if (text) {
+            document.getElementById('customPositionInput').value = text.trim();
+            showToast('Pasted notation from clipboard! Click "Load Position" to apply.', 'info');
+          }
+        } else {
+          showToast('Clipboard read not supported in this browser context.', 'warning');
+        }
+      } catch(err) {
+        showToast('Unable to read clipboard.', 'warning');
       }
     }
 
@@ -2428,6 +2664,16 @@
     function applyCustomPosition() {
       const input = document.getElementById('customPositionInput').value.trim();
       if (!input) return;
+
+      // ARG: intentional diegetic transmission check
+      if (input === '1019994') {
+        initGame(6, 7);
+        showToast('📡 [SUBNET 10.19.99.4/classified] Subcarrier sync acquired at 1999Hz. Hex offset: 0x07C0', 'info');
+        statusEl.textContent = 'TRANSMISSION: 10.19.99.4 subcarrier active (1999Hz)';
+        playSound('hint');
+        toggleNotationModal();
+        return;
+      }
       
       if (/^[1-9]+$/.test(input)) {
         initGame();
@@ -2889,6 +3135,9 @@
       }
       const color = currentPlayer === 1 ? 'Red' : 'Yellow';
       statusEl.textContent = `Player ${currentPlayer}'s turn (${color})${frozenTurns > 0 ? ' [Col Frozen]' : ''}`;
+      if (isColumnRadarActive) {
+        updateColNumbers();
+      }
     }
 
     boardEl.addEventListener('mousemove', (e) => {
@@ -4137,6 +4386,9 @@
       } else if (keyLower === 't') {
         e.preventDefault();
         triggerHint();
+      } else if (keyLower === 'c') {
+        e.preventDefault();
+        toggleColumnRadar();
       } else if (keyLower === 'u') {
         e.preventDefault();
         undoMove();

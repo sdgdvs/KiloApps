@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-expander
-next_agent: kilo-creator
+current_agent: kilo-creator
+next_agent: kilo-graphics
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -17,7 +17,7 @@ current_targets:
   kilo_tester: KColor
   kilo_usability: KSimon
   kilo_qa: KSudoku
-  kilo_expander: KConnect4
+  kilo_expander: KGo
 virtual_web_target: "kweb://users/~neon_rider"
 virtual_web_rotation:
   - "kweb://geocities"
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-qa
-  app: KHabit
-  timestamp: "2026-10-07T11:21:00-07:00"
+  agent: kilo-expander
+  app: KConnect4
+  timestamp: "2026-10-07T12:25:00-07:00"
 last_planner_run: "2026-10-07T14:38:00Z"
 ---
 
@@ -129,9 +129,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KConnect4`, `KHangman`, `KSimon`, `KAsteroids`, `KFreecell`, `KMatch3`, `KWords`, `KGo`, `KDarts`, `KTowers`, `KReversi`, `KAlchemy`, `KColony`, `KStarForge`, `KBreakout`, `KRogue`, `KTetris`, `KPong`, `KPac`, `KChess`, `KColor`, `KConverter`, `KHabit` *(Completed in Pass 5: KBBS, KChrono, KCipher, KClip, KCyber, KDragon, KFortress, KHash, KMaze, KMech, KMystery, KQuest, KSanctuary, KSnake, KSolitaire, KSpace, KStarDredge, KStarship, KStellar, KSubmarine, KSynth, KSys, KTask, KTerm, KTimer, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KRSS, K2048, KChart, KGraph, KContacts, KScript, KRead, KColosseum, KAbyss, KMedia, KAudio, KRadio, KPad, KPaint, KCalc, KMine, KCosmic, KBase, KBudget, KCalendar, KFarm, KFlash, KFont, KImage, KJournal, KMail, KMandel, KNet, KNote, KPass, KDB, KHex, KBookmark, KPing, KChat, KClock, KPomodoro, KBreakout, KRogue, KTetris, KPong, KPac, KChess, KColor, KConverter, KQuarantine, KSettings, KTaskMgr, KHabit)*.
 
 ### 6. Feature Expander Queue (`kilo-expander`)
-- **Current Target**: `KConnect4`
+- **Current Target**: `KGo`
 - **Upcoming Queue**:
-  `KGo`, `KReversi`, `KDarts`, `KTowers`, `KSimon`, `KMatch3`, `KPong`, `KSnake`, `KRogue`, `KBreakout`, `KMine`, `KSolitaire`, `KSudoku` *(Completed: KHangman, KWords, KSolitaire, KColosseum, KSpace, KReversi, KSimon, KMatch3, KTowers, KSnake, KPong, KGo, KSynth, KNote, KFont, KRSS, KSys, KZip, KVault, KType, KMandel, KGraph, KChart, KPaint, KConnect4, KChess, KTetris, KDB, KTodo, KJournal, KCalendar, KContacts, KMail, KRead, KPass, KImage, KAudio, KMedia, KTask, KNet, KPing, KHash, KPad, K2048, KDarts, KRogue, KBreakout, KCalc, KMine, KSudoku)*.
+  `KReversi`, `KDarts`, `KTowers`, `KSimon`, `KMatch3`, `KPong`, `KSnake`, `KRogue`, `KBreakout`, `KMine`, `KSolitaire`, `KSudoku`, `KConnect4` *(Completed: KHangman, KWords, KSolitaire, KColosseum, KSpace, KReversi, KSimon, KMatch3, KTowers, KSnake, KPong, KGo, KSynth, KNote, KFont, KRSS, KSys, KZip, KVault, KType, KMandel, KGraph, KChart, KPaint, KConnect4, KChess, KTetris, KDB, KTodo, KJournal, KCalendar, KContacts, KMail, KRead, KPass, KImage, KAudio, KMedia, KTask, KNet, KPing, KHash, KPad, K2048, KDarts, KRogue, KBreakout, KCalc, KMine, KSudoku)*.
 - **Multiplayer Focus (CRITICAL)**: Concentrate on expanding games (*KChess*, *KConnect4*, *KGo*, *KReversi*, *KDarts*, *KTetris*, *KSnake*, *K2048*, *KMatch3*, *KSimon*) and collaborative apps (*KDraw*, *KPaint*, *KSynth*, *KPad*) with seamless Firebase Realtime Database multiplayer for cross-computer play on `kiloapps.web.app`.
 
 ### 7. Virtual 1999 Web Expansion Queue (Eternal Fleet Track)
@@ -217,6 +217,15 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-07T12:25:00-07:00 — kilo-expander: KConnect4 (Feature Expansion: Tactical Radar, Opening Classifier, Genesis 2-Op FM, Ply Scrubbing & MP Polish)**
+  - Status: PASS ✅ (0 regressions, 175.0 KB web / 173.0 KB native < 999 KB ceiling).
+  - Tactical Radar & Opening Book: Added real-time Column Radar [C] (win/block/blunder indicators) and Connect-4 opening theory classifier.
+  - Interactive Ply Scrubbing: Interactive notation transcript with direct ply jumping, branch play creation, and 1-click clipboard paste.
+  - Genesis Audio Architecture: Upgraded sound engine to Yamaha YM2612 2-Op FM synthesis with metallic carrier/modulator decay.
+  - Multiplayer & ARG Polish: Fixed draw winner sync; wired diegetic 10.19.99.4/classified subcarrier lock in position loader.
+  - Verification: `test_web_apps.js` PASS (62 interactive, 60 FPS, 0 err); `security_lint.py` 100% PASS; MSVC native build clean; Vite clean (763ms).
+  - Queue: Advanced `kilo_expander` to `KGo`; rotation handoff to `kilo-creator`.
+
 - **2026-10-07T11:21:00-07:00 — kilo-qa: KHabit (Pass 5: Tutorial & State Integrity Audit & Persistence Fixes)**
   - Status: PASS ✅ (0 regressions, 88.5 KB web / 176.0 KB native < 999 KB ceiling).
   - State Persistence: Upgraded F5 quicksave & F9 quickload to persist full state (settings, habits, theme, sort, tutorial flag) in both web and native C.
@@ -250,15 +259,6 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Glint & Dot Audit: Verified clean static perimeter inlay border; zero rotating specular glints or traveling border dots in web and native C.
   - Verification: `check_icons.py` 100% PASS; `security_lint.py` 100% PASS; Vite build clean (575ms); web (145.5 KB) < 999 KB ceiling.
   - Queue: Advanced `kilo_graphics` to `KSpace`; rotation handoff to `kilo-tester`.
-
-- **2026-10-07T09:25:00-07:00 — kilo-creator: kweb://geocities (Phase 2 Deep Expansion: 216 Web-Safe Palette, Halite Crypt Dungeon, Odometer/Marquee Forge & Ringmaster Console)**
-  - Status: PASS ✅ (0 regressions, 558.1 KB web < 999 KB ceiling).
-  - Netscape 216 Web-Safe Palette Lab: 6x6x6 swatch cube, 12 retro presets, WCAG/Netscape contrast calculator & Jasc .PAL export.
-  - Halite Crypt Dungeon '99: 10-floor turn-based CGI Perl RPG, 5 classes, battle sound fx, quicksave & Floor 10 1999Hz lithospheric core.
-  - CGI Web Counter & Marquee Forge: 8 digit skins, animated odometer canvas, live <marquee> physics sandbox & HTML tag generator.
-  - Webring Master Console: Virtual dial-up ICMP latency pinger across 8 nodes, 4 embed widget layouts & 1999Hz anomaly detection.
-  - Integration & Security: Linked in knet.html, portal.html, webring.html; security_lint.py 100% PASS; Vite build clean (617ms).
-  - Queue: Advanced `kilo_creator` to `kweb://users/~neon_rider`; rotation handoff to `kilo-graphics`.
 
 
 
