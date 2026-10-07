@@ -4,6 +4,15 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-06T16:26:00-07:00 — kilo-tester: KTetris (Interactive UI Audit, Modal Input Isolation & Glint/Dot Ban)**
+  - Status: PASS ✅ (4 issues, 4 fixed).
+  - Modal Input Isolation: Isolated modal input/select keydown events preventing hotkey leakage to game engine.
+  - Modal Ergonomics: Wired Escape key dismissal for multiplayer and duel invite modals; guarded canvas clicks.
+  - Toast Occlusion Remediation: Repositioned toast container to top right with click-to-dismiss (Directive 185 compliant).
+  - Glint & Dust Ban: Removed traveling specular sheen sweep on blocks and disabled dust motes per Mandate 11 / Directive 177.
+  - Verification: `test_app_startup.py` PASS; `test_web_apps.js` PASS (20 interactive elements, 0 errors); Vite clean (359ms); web (187.6 KB) < 999 KB ceiling; security_lint 100% PASS.
+  - Queue: Advanced `kilo_tester` to `KPong`; rotation advanced to `kilo-usability`.
+
 - **2026-10-06T15:48:00-07:00 — kilo-creator: kweb://darknet (Tier 3 Deep Expansion, Hex Inspector, FSK Acoustic Modem & Shared Signal Interlock)**
   - Status: PASS ✅ (0 regressions, 352.7 KB < 999 KB ceiling, Vite clean 425ms).
   - Hex & Memory Bus Inspector (Tab 14): 16-byte aligned RAM viewer with byte patcher, Adler32/CRC32, and unsealed memo yielding CARLSBAD-SALT-99 for 10.19.99.4/classified.

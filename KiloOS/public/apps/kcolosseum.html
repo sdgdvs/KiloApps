@@ -2773,15 +2773,6 @@
       ctx.closePath();
       ctx.fill();
 
-      // Atmospheric Dust Motes drifting in Sunbeams
-      ctx.fillStyle = (arenaLevel >= 9) ? 'rgba(255, 220, 120, 0.55)' : 'rgba(255, 230, 160, 0.45)';
-      for (let m = 0; m < 16; m++) {
-        let mx = (40 + m * 42 + Math.sin(time * 0.6 + m * 1.7) * 16 + time * 8) % (width * 0.88);
-        let my = (15 + (m * 21 + time * 14) % (height * 0.82));
-        ctx.beginPath();
-        ctx.arc(mx, my, (m % 3 === 0) ? 1.4 : 0.9, 0, Math.PI * 2);
-        ctx.fill();
-      }
       ctx.restore();
 
       // Crowd Tier Silhouettes & Dynamic Cheering

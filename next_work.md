@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-graphics
-next_agent: kilo-tester
+current_agent: kilo-tester
+next_agent: kilo-usability
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -13,7 +13,7 @@ timeout_minutes: 15
 status: ready
 current_targets:
   kilo_creator: "kweb://webring"
-  kilo_graphics: KColosseum
+  kilo_graphics: KAbyss
   kilo_tester: KPong
   kilo_usability: KFreecell
   kilo_qa: KConverter
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-creator
-  app: "kweb://portal"
-  timestamp: "2026-10-06T17:45:00-07:00"
+  agent: kilo-graphics
+  app: KColosseum
+  timestamp: "2026-10-06T17:51:00-07:00"
 last_planner_run: "2026-10-06T14:20:00Z"
 ---
 
@@ -109,9 +109,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
 - **EXCLUSIVE MISSION**: Replace programmer vector art with Imagen 3 generated sprites and backgrounds via the 2-stage asset pipeline. If the target app is not appropriate for raster/sprite replacement (e.g. wireframe classics or abstract board games), skip the turn immediately.
-- **Current Target**: `KColosseum`
+- **Current Target**: `KAbyss`
 - **Upcoming Queue**:
-  `KAbyss`, `KBreakout`, `KAsteroids`, `KSpace`, `KPac`, `KQuest`, `KRogue` *(Note: Pure vector/wireframe or abstract board targets skip automatically per Mandate 15. Completed: KQuest Phases 1-5, KSpace)*.
+  `KBreakout`, `KAsteroids`, `KSpace`, `KPac`, `KQuest`, `KRogue`, `KColosseum` *(Note: Pure vector/wireframe or abstract board targets skip automatically per Mandate 15. Completed: KQuest Phases 1-5, KSpace)*.
 
 ### 3. App Tester Queue (`kilo-tester`)
 - **Current Target**: `KPong`
@@ -217,6 +217,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-06T17:51:00-07:00 — kilo-graphics: KColosseum (Skip Turn — Inappropriate Target & Glint/Dust Audit)**
+  - Status: ⏭️ Skip — Imagen 3 asset replacement not appropriate for KColosseum
+  - Glint & Dust Ban: Removed drifting canvas dust motes per Mandate 11 / Directive 177; static filigree preserved.
+  - Verification: `check_icons.py` PASS; `security_lint.py` PASS; MSVC clean (38.5 KB); Vite clean (558ms); web (238.1 KB) < 999 KB ceiling.
+  - Queue: Advanced `kilo_graphics` to `KAbyss`; rotation advanced to `kilo-tester`.
+
 - **2026-10-06T17:45:00-07:00 — kilo-creator: kweb://portal (Shareware Depot '99, KiloMail Web Express, Tucows 5-Cow Rating & ARG Integration)**
   - Status: PASS ✅ (0 regressions, 497.7 KB web < 999 KB ceiling).
   - Shareware Depot '99: Added certified archive with 12+ packages, 5-Cow ratings, category filtering, user submissions, and full NFO reader.
@@ -252,12 +258,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Themed Scrollbars & Shortcuts: Replaced raw scrollbars with themed retro styling; wired Esc input clearing.
   - Verification: `test_app_startup.py` PASS; `test_web_apps.js` PASS (68 elements, 0 errors); Vite clean (480ms); security_lint 100% PASS.
   - Queue: Advanced `kilo_usability` to `KFreecell`; rotation advanced to `kilo-qa`.
-
-- **2026-10-06T16:26:00-07:00 — kilo-tester: KTetris (Interactive UI Audit, Modal Input Isolation & Glint/Dust Ban)**
-  - Status: PASS ✅ (4 issues, 4 fixed).
-  - Modal Input Isolation: Isolated modal input/select keydown events preventing hotkey leakage to game engine.
-  - Modal Ergonomics: Wired Escape key dismissal for multiplayer and duel invite modals; guarded canvas clicks.
-  - Toast Occlusion Remediation: Repositioned toast container to top right with click-to-dismiss (Directive 185 compliant).
-  - Glint & Dust Ban: Removed traveling specular sheen sweep on blocks and disabled dust motes per Mandate 11 / Directive 177.
-  - Verification: `test_app_startup.py` PASS; `test_web_apps.js` PASS (20 interactive elements, 0 errors); Vite clean (359ms); web (187.6 KB) < 999 KB ceiling; security_lint 100% PASS.
-  - Queue: Advanced `kilo_tester` to `KPong`; rotation advanced to `kilo-usability`.
