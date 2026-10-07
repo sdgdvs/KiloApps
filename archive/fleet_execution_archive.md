@@ -4,6 +4,16 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-06T16:51:00-07:00 — kilo-usability: KConverter (UI/UX, Layout Symmetry, Scrollbar & Toast Occlusion Remediation)**
+  - Status: PASS ✅ (0 regressions, 89.0 KB web / 27.1 KB native < 999 KB ceiling).
+  - Toast De-occlusion: Repositioned toast to bottom-center pill with click-to-dismiss (Directive 185 compliant).
+  - Layout & Input Symmetry: Aligned From/To headers, added quick Copy action, and balanced input box widths.
+  - Table Scrolling & Sticky Headers: Added sticky `th` and max-height scrolling to batch & history wrappers.
+  - History Action & Smart Parser: Added 1-click Copy button to history rows; enabled numberless unit expressions.
+  - Themed Scrollbars & Shortcuts: Replaced raw scrollbars with themed retro styling; wired Esc input clearing.
+  - Verification: `test_app_startup.py` PASS; `test_web_apps.js` PASS (68 elements, 0 errors); Vite clean (480ms); security_lint 100% PASS.
+  - Queue: Advanced `kilo_usability` to `KFreecell`; rotation advanced to `kilo-qa`.
+
 - **2026-10-06T16:26:00-07:00 — kilo-tester: KTetris (Interactive UI Audit, Modal Input Isolation & Glint/Dot Ban)**
   - Status: PASS ✅ (4 issues, 4 fixed).
   - Modal Input Isolation: Isolated modal input/select keydown events preventing hotkey leakage to game engine.

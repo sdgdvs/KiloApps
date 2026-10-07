@@ -177,7 +177,7 @@
     <div class="top-controls">
       <button class="btn-sm" onclick="toggleSound()" id="btn-sound" title="Toggle Sound FX (U)">🔊 Sound [U]</button>
       <button class="btn-sm" onclick="openMultiplayerModal()" id="btn-multiplayer" title="Online Multiplayer & Matchmaking [O]">🌐 Online [O]</button>
-      <button class="btn-sm" onclick="togglePvPMode()" id="btn-pvp" title="Toggle 1P vs AI / 2P Local PvP (V)">👥 1P vs AI [V]</button>
+      <button class="btn-sm" onclick="togglePvPMode()" id="btn-pvp" title="Toggle 1P vs AI / 2P Local PvP (V)">👤 1P vs AI [V]</button>
       <button class="btn-sm" onclick="cycleGameMode()" id="btn-mode" title="Cycle Game Modes (M)">🎮 Mode: Classic [M]</button>
       <button class="btn-sm" onclick="cycleDifficulty()" id="btn-diff" title="Cycle AI Difficulty (1-3)">⚡ Diff: Normal [1-3]</button>
       <button class="btn-sm" onclick="cycleTheme()" id="btn-theme" title="Cycle Visual Themes (T)">🎨 Theme [T]</button>
@@ -294,7 +294,7 @@
     <!-- Handle Configuration -->
     <div style="display: flex; gap: 8px; align-items: center; margin-bottom: 14px; background: rgba(255,255,255,0.05); padding: 8px 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);">
       <label for="mpPlayerName" style="font-size: 12px; font-weight: 700; color: var(--accent);">Handle:</label>
-      <input type="text" id="mpPlayerName" maxlength="16" style="flex: 1; background: rgba(0,0,0,0.5); border: 1px solid var(--primary); color: #fff; padding: 4px 8px; border-radius: 4px; font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 600;" onchange="updateMpName(this.value)">
+      <input type="text" id="mpPlayerName" maxlength="16" style="flex: 1; background: rgba(0,0,0,0.5); border: 1px solid var(--primary); color: #fff; padding: 4px 8px; border-radius: 4px; font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 600;" onchange="updateMpName(this.value)" onkeydown="if(event.key==='Enter') this.blur()">
     </div>
 
     <!-- Matchmaking Actions (when not in a room) -->
@@ -556,7 +556,7 @@
 
   function updateMpName(val) {
       if (!val) return;
-      myPlayerName = val.trim().substring(0, 16);
+      myPlayerName = val.trim().substring(0, 16) || ('CyberPaddle_' + Math.floor(1000 + Math.random() * 9000));
       safeSetStorage('kpong_player_name', myPlayerName);
       if (rMultiplayer) rMultiplayer.playerName = myPlayerName;
   }
@@ -1396,6 +1396,22 @@
       // Protect essential browser accelerators
       if (e.ctrlKey || e.altKey || e.metaKey) return;
 
+      const isInput = e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.isContentEditable);
+      if (isInput) {
+          if (e.key === 'Escape') {
+              e.target.blur();
+              const helpModalEl = document.getElementById('helpModal');
+              const statsModalEl = document.getElementById('statsModal');
+              const mpModalEl = document.getElementById('multiplayerModal');
+              const inviteModalEl = document.getElementById('inviteModal');
+              if (inviteModalEl && inviteModalEl.classList.contains('active')) { declineInvite(); return; }
+              if (mpModalEl && mpModalEl.classList.contains('active')) { closeMultiplayerModal(); return; }
+              if (helpModalEl && helpModalEl.classList.contains('active')) { closeHelpModal(); return; }
+              if (statsModalEl && statsModalEl.classList.contains('active')) { closeStatsModal(); return; }
+          }
+          return;
+      }
+
       keys[e.key] = true;
       if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','w','s','W','S',' '].includes(e.key)) e.preventDefault();
 
@@ -1494,9 +1510,13 @@
   function closeHelpModal() {
       const modal = document.getElementById('helpModal');
       if (modal) modal.classList.remove('active');
-      safeSetStorage('kpong_tutorialSeen', '1');
       const chk = document.getElementById('chkDoNotShowTutorial');
-      if (chk) chk.checked = true;
+      if (chk && !chk.checked) {
+          safeRemoveStorage('kpong_tutorialSeen');
+      } else {
+          safeSetStorage('kpong_tutorialSeen', '1');
+          if (chk) chk.checked = true;
+      }
   }
 
   // Modal Backdrop Click Dismissal
@@ -1589,9 +1609,15 @@
       }
   }
   canvas.addEventListener('click', () => {
+      if (isReplaying) {
+          toggleReplayPause();
+          return;
+      }
       if (gameOver) {
           if (isOnline && rMultiplayer) rMultiplayer.requestRematch();
           else restartGame();
+      } else if (isPaused) {
+          togglePause();
       }
   });
   canvas.addEventListener('mousemove', e => {
@@ -1612,8 +1638,8 @@
           s1, s2, rally, p1y, p2y, p1Vy, p2Vy, p1PadH, p2PadH,
           gameMode, isPvP, campaignLevel, difficulty, themeIndex,
           balls: balls.map(b => ({
-              x: b.x, y: b.y, dx: b.dx, dy: b.dy, active: b.active,
-              is_fireball: b.is_fireball, trail_count: b.trail_count, last_hitter: b.last_hitter
+              x: b.x, y: b.y, dx: b.dx, dy: b.dy, active: !!b.active,
+              isFireball: !!b.isFireball, lastHitter: b.lastHitter || 0
           })),
           powerupX, powerupY, powerupActive, powerupType,
           obsY, obsDy, obs1Active, obs1Respawn, obs2X, obs2Dx, obs2Active, obs2Respawn, portalCooldown,
@@ -1640,9 +1666,18 @@
           if (gameMode < 0 || gameMode >= MODE_NAMES.length) gameMode = 0;
           isPvP = !!state.isPvP;
           campaignLevel = state.campaignLevel || 1;
-          balls = Array.isArray(state.balls) ? state.balls : [];
           difficulty = state.difficulty || 2;
           themeIndex = state.themeIndex || 0;
+          balls = Array.isArray(state.balls) ? state.balls.map(b => ({
+              x: (typeof b.x === 'number') ? b.x : W/2 - BALL_SIZE/2,
+              y: (typeof b.y === 'number') ? b.y : H/2 - BALL_SIZE/2,
+              dx: (typeof b.dx === 'number') ? b.dx : 5,
+              dy: (typeof b.dy === 'number') ? b.dy : 0,
+              active: b.active !== undefined ? !!b.active : true,
+              isFireball: !!(b.isFireball || b.is_fireball),
+              lastHitter: b.lastHitter || b.last_hitter || 0,
+              trail: []
+          })) : [];
           powerupX = (typeof state.powerupX === 'number') ? state.powerupX : -1;
           powerupY = (typeof state.powerupY === 'number') ? state.powerupY : -1;
           powerupActive = state.powerupActive || 0;
@@ -1678,6 +1713,8 @@
           document.getElementById('btn-mode').innerText = "🎮 Mode: " + MODE_NAMES[gameMode] + " [M]";
           const btnDiff = document.getElementById('btn-diff');
           if (btnDiff) btnDiff.innerText = `⚡ Diff: ${DIFF_NAMES[difficulty]} [1-3]`;
+          const btnPause = document.getElementById('btn-pause');
+          if (btnPause) btnPause.innerText = isPaused ? "▶️ Resume [Space]" : "⏸️ Pause [Space]";
           updateBadge();
           if (activeBallCount() === 0) resetBalls();
           closeHelpModal();
@@ -2797,6 +2834,8 @@
   if (btnDiffInit) btnDiffInit.innerText = `⚡ Diff: ${DIFF_NAMES[difficulty]} [1-3]`;
   const btnModeInit = document.getElementById('btn-mode');
   if (btnModeInit) btnModeInit.innerText = "🎮 Mode: " + MODE_NAMES[gameMode] + " [M]";
+  const btnPvpInit = document.getElementById('btn-pvp');
+  if (btnPvpInit) btnPvpInit.innerText = isPvP ? "👥 2P Local PvP [V]" : "👤 1P vs AI [V]";
   updateBadge();
   updateSoundUI();
   resetBalls();
