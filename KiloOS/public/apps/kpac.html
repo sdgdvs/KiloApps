@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <title>KPac</title>
+<script src="../assets/js/retro_multiplayer.js"></script>
 <style>
   * { box-sizing: border-box; }
   body {
@@ -313,6 +314,87 @@
     justify-content: flex-end;
     border-top: 1px solid rgba(0, 229, 255, 0.2);
   }
+
+  /* Multiplayer & Duel UI */
+  .mp-input {
+    background: #081120;
+    border: 1px solid #1e88e5;
+    color: #00e5ff;
+    border-radius: 4px;
+    padding: 4px 6px;
+    font-size: 10px;
+    font-family: monospace;
+    width: 100%;
+    outline: none;
+    box-sizing: border-box;
+    margin-bottom: 5px;
+  }
+  .mp-input:focus {
+    border-color: #00e5ff;
+    box-shadow: 0 0 6px rgba(0, 229, 255, 0.5);
+  }
+  .mp-btn {
+    background: linear-gradient(185deg, #1565c0, #0d47a1);
+    color: #fff;
+    border: 1px solid #42a5f5;
+    border-radius: 5px;
+    padding: 5px 8px;
+    font-size: 9.5px;
+    font-weight: bold;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.15s ease;
+    user-select: none;
+    width: 100%;
+    margin-top: 3px;
+    display: block;
+  }
+  .mp-btn:hover {
+    background: linear-gradient(185deg, #1e88e5, #1565c0);
+    box-shadow: 0 0 8px rgba(66, 165, 245, 0.6);
+  }
+  .mp-btn:active {
+    transform: scale(0.98);
+  }
+  .mp-btn.accent {
+    background: linear-gradient(185deg, #00897b, #004d40);
+    border-color: #4db6ac;
+  }
+  .mp-btn.gold {
+    background: linear-gradient(185deg, #f57f17, #e65100);
+    border-color: #ffd700;
+    color: #fff;
+  }
+  .mp-status-box {
+    background: rgba(13, 27, 42, 0.95);
+    border: 1px dashed #ffd700;
+    color: #ffd700;
+    border-radius: 6px;
+    padding: 6px 8px;
+    font-size: 9px;
+    text-align: center;
+    margin: 6px 0;
+    line-height: 1.3;
+  }
+  .chat-btn {
+    background: #0d1e3d;
+    border: 1px solid #1e88e5;
+    color: #90caf9;
+    border-radius: 4px;
+    font-size: 8.5px;
+    font-weight: bold;
+    padding: 3px 4px;
+    cursor: pointer;
+    flex: 1;
+    text-align: center;
+    transition: all 0.12s ease;
+    user-select: none;
+  }
+  .chat-btn:hover {
+    background: #1565c0;
+    color: #fff;
+    box-shadow: 0 0 4px rgba(30, 136, 229, 0.6);
+  }
 </style>
 </head>
 <body data-width="400" data-height="630">
@@ -333,6 +415,9 @@
       <button class="hdr-btn" onclick="toggleCraftModal(true)" title="Cyber-Forge Menu [C]">Forge [C]</button>
       <button class="hdr-btn" onclick="toggleGameMode()" title="Toggle Campaign / Arcade Endless [O]">Mode [O]</button>
       <button class="hdr-btn" onclick="cycleDifficulty()" title="Cycle Difficulty [1-3]">Diff [1-3]</button>
+      <button id="btnDuel" class="hdr-btn" onclick="openDuelModal()" title="Cyber Duel Arena & Multiplayer [X]" style="color: #00e5ff; border-color: #00e5ff;">Duel [X]</button>
+      <button id="btnReplay" class="hdr-btn" onclick="openReplayModal()" title="Match Replay Viewer & Records [R]">Replay [R]</button>
+      <button id="btnKeybinds" class="hdr-btn" onclick="openKeybindsModal()" title="Custom Controls & Keys [K]">Keys [K]</button>
       <button class="hdr-btn" onclick="saveGame()" title="Quick Save [F5/V]">Save [F5]</button>
       <button class="hdr-btn" onclick="loadGame()" title="Quick Load [F9/L]">Load [F9]</button>
       <button class="hdr-btn" onclick="exportJSON()" title="Export JSON Data [E]">Exp [E]</button>
@@ -361,6 +446,14 @@
     <button class="skill-btn" onclick="craftItem(2)" title="Craft Chrono Warp [8]">Warp [8]</button>
     <button class="skill-btn" onclick="craftItem(3)" title="Craft Aegis Shield [9]">Shield [9]</button>
     <button class="skill-btn" onclick="craftItem(4)" title="Craft Void Pulse Bomb [0]">Nuke [0]</button>
+  </div>
+
+  <!-- Quick Chat Row (Duel Mode) -->
+  <div id="duelChatBar" class="skills-bar" style="display: none; margin-top: 4px; gap: 3px;">
+    <button class="chat-btn" onclick="sendDuelChat('Chomp! 🟡')">Chomp! [1]</button>
+    <button class="chat-btn" onclick="sendDuelChat('Nice move! ⚡')">Nice! [2]</button>
+    <button class="chat-btn" onclick="sendDuelChat('Waka waka! 💨')">Waka! [3]</button>
+    <button class="chat-btn" onclick="sendDuelChat('GG! 🏆')">GG! [4]</button>
   </div>
 
   <!-- Virtual D-Pad -->
@@ -409,6 +502,13 @@
         <div class="shortcut-row"><span>Toggle Relics / Consumables</span><span class="key-badge">Tab</span></div>
         <div class="shortcut-row"><span>Quick Craft Consumables</span><span class="key-badge">7 / 8 / 9 / 0</span></div>
         <div class="shortcut-row"><span>Quick Craft Relics</span><span class="key-badge">1 - 5 (in Forge)</span></div>
+
+        <h4>⚔️ Cyber Duel & Multiplayer</h4>
+        <div class="shortcut-row"><span>Open Duel & Matchmaking Menu</span><span class="key-badge">X</span></div>
+        <div class="shortcut-row"><span>Match Replay Viewer (.kpdr)</span><span class="key-badge">R</span></div>
+        <div class="shortcut-row"><span>Key Rebinding Controls</span><span class="key-badge">K</span></div>
+        <div class="shortcut-row"><span>Quick-Chat (In Net Duel)</span><span class="key-badge">1 - 4</span></div>
+        <div class="shortcut-row"><span>Local 2P Player 2 Movement</span><span class="key-badge">Arrow Keys</span></div>
 
         <h4>💾 State & Modes</h4>
         <div class="shortcut-row"><span>Toggle Campaign / Arcade Endless</span><span class="key-badge">O</span></div>
@@ -512,9 +612,145 @@
         <button class="hdr-btn" onclick="toggleCraftModal(false)">Close [Esc]</button>
       </div>
     </div>
+  <!-- Cyber Duel & Multiplayer Modal Dialog -->
+  <div id="duelModal" class="modal-backdrop" onclick="if(event.target===this) closeDuelModal()">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <div class="modal-title">⚔️ Cyber Duel Arena & Multiplayer</div>
+        <button class="modal-close" onclick="closeDuelModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <div style="margin-bottom: 6px;">
+          <label style="font-size: 8.5px; color: #90caf9; display: block; margin-bottom: 2px;">PILOT CALLSIGN:</label>
+          <input id="mpPlayerName" class="mp-input" placeholder="Pilot_1999" maxlength="15" onkeydown="event.stopPropagation()" onchange="savePlayerName(this.value)">
+        </div>
+
+        <h4>🌐 Online Subnet Matchmaking (RFMS)</h4>
+        <button class="mp-btn" onclick="startQuickMatch()">⚡ Quick Match (Join / Auto-Host)</button>
+        <button class="mp-btn accent" onclick="createCustomRoom()">🏠 Host Duel Room (Generate PAC-XXXX Code)</button>
+
+        <div id="mpHostBanner" style="display: none; background: rgba(0, 229, 255, 0.1); border: 1px solid #00e5ff; border-radius: 5px; padding: 6px; margin: 5px 0;">
+          <div style="font-size: 8.5px; color: #00e5ff; font-weight: bold;">ROOM CODE: <span id="mpCreatedCode" style="color: #ffd700; font-size: 11px;">PAC-XXXX</span></div>
+          <input id="mpShareUrl" class="mp-input" readonly onclick="this.select()" style="font-size: 7.5px; margin: 3px 0 0 0;" onkeydown="event.stopPropagation()">
+          <button class="hdr-btn" style="width: 100%; margin-top: 3px; justify-content: center;" onclick="copyShareUrl()">📋 Copy Invite Link</button>
+        </div>
+
+        <div style="display: flex; gap: 4px; margin-top: 5px;">
+          <input id="mpRoomCodeInput" class="mp-input" placeholder="Enter Room Code (e.g. PAC-1234)" style="margin-bottom: 0;" onkeydown="event.stopPropagation()" maxlength="12">
+          <button class="hdr-btn" style="white-space: nowrap; padding: 0 8px;" onclick="joinRoomFromInput()">Join Code</button>
+        </div>
+
+        <div id="mpStatusBox" class="mp-status-box" style="display: none;"></div>
+
+        <h4>🤖 Solo & Local Duel Modes</h4>
+        <div style="display: flex; gap: 4px; align-items: center; margin-bottom: 4px;">
+          <label style="font-size: 8.5px; color: #ffd700; white-space: nowrap;">Bot Core:</label>
+          <select id="mpBotDiff" class="mp-input" style="margin-bottom: 0; padding: 2px 4px; font-size: 8.5px;" onkeydown="event.stopPropagation()">
+            <option value="0">Novice Cyber-Bot</option>
+            <option value="1" selected>Cyber Tactical Bot</option>
+            <option value="2">Master Subnet AI</option>
+          </select>
+          <button class="hdr-btn" style="white-space: nowrap; padding: 3px 8px;" onclick="launchAIDuelFromModal()">Start AI Duel</button>
+        </div>
+        <button class="mp-btn gold" onclick="launchLocal2PFromModal()">👥 Local 2-Player (P1: WASD | P2: Arrows)</button>
+
+        <div style="font-size: 8px; color: #90caf9; margin-top: 6px; border-top: 1px solid rgba(30,136,229,0.3); padding-top: 4px;">
+          • Match Goal: First to 3 KOs or highest score when maze is cleared.<br>
+          • Energizers empower players to chomp rival player for +1000 Pts and 1 KO!<br>
+          • Rule 12 Compliant: Auto-falls back to Subnet AI if no peer connects in 25s.
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="hdr-btn" onclick="closeDuelModal()">Close [Esc]</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Connect Gate: URL Invite Confirmation Dialog (Rule 12 Compliant) -->
+  <div id="inviteModal" class="modal-backdrop" onclick="if(event.target===this) declineInvite()">
+    <div class="modal-dialog" style="max-width: 270px;">
+      <div class="modal-header">
+        <div class="modal-title">⚔️ Duel Challenge Detected</div>
+        <button class="modal-close" onclick="declineInvite()">✕</button>
+      </div>
+      <div class="modal-body" style="text-align: center;">
+        <p style="margin: 4px 0 8px 0; font-size: 9.5px;">Challenger invite for Arena Room:</p>
+        <div id="inviteCodeLabel" style="font-size: 14px; font-weight: bold; color: #ffd700; font-family: monospace; letter-spacing: 1px; margin-bottom: 8px;">PAC-XXXX</div>
+        <p style="font-size: 8px; color: #90caf9; margin: 0 0 10px 0;">Would you like to connect and enter the Cyber Duel Arena?</p>
+        <div style="display: flex; gap: 6px;">
+          <button class="mp-btn accent" style="flex: 1;" onclick="acceptInvite()">⚔️ Accept & Duel</button>
+          <button class="mp-btn" style="flex: 1; background: #37474f; border-color: #546e7a;" onclick="declineInvite()">✕ Decline Solo</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Replay Viewer & Match Records Modal -->
+  <div id="replayModal" class="modal-backdrop" onclick="if(event.target===this) closeReplayModal()">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <div class="modal-title">📼 Match Replay Viewer & Records</div>
+        <button class="modal-close" onclick="closeReplayModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <h4>💾 Match Record Export & Import</h4>
+        <div style="font-size: 8.5px; color: #90caf9; margin-bottom: 5px;">
+          Recorded frames in buffer: <b id="replayFrameCountDisp">0</b> frames
+        </div>
+        <button class="mp-btn accent" onclick="exportReplayData()">💾 Export Match Record (.kpdr)</button>
+        <button class="mp-btn" onclick="document.getElementById('replayFileInput').click()">📂 Load .kpdr File from Disk</button>
+
+        <h4>⏯️ Replay Playback Controls</h4>
+        <div style="display: flex; gap: 4px; margin-top: 4px;">
+          <button class="hdr-btn" style="flex: 1; justify-content: center;" onclick="toggleReplayPlay()">▶ Play / ⏸ Pause</button>
+          <button class="hdr-btn" style="flex: 1; justify-content: center;" onclick="stepReplayPlayback()">⏭ Step</button>
+          <button class="hdr-btn" style="flex: 1; justify-content: center;" onclick="toggleReplaySpeed()">⚡ <span id="replaySpeedDisp">1x</span></button>
+        </div>
+        <button class="hdr-btn" style="width: 100%; margin-top: 6px; justify-content: center; color: #ff5252; border-color: #ff5252;" onclick="exitReplay()">✕ Exit Replay to Campaign</button>
+      </div>
+      <div class="modal-footer">
+        <button class="hdr-btn" onclick="closeReplayModal()">Close [Esc]</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Key Controls Rebinding Modal -->
+  <div id="keybindModal" class="modal-backdrop" onclick="if(event.target===this) closeKeybindModal()">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <div class="modal-title">⌨️ Custom Control Rebinding</div>
+        <button class="modal-close" onclick="closeKeybindModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <h4>🎮 Preset Configurations</h4>
+        <div style="display: flex; gap: 4px; margin-bottom: 6px;">
+          <button class="hdr-btn" style="flex: 1; justify-content: center;" onclick="applyControlPreset('arrows')">Arrows (P1)</button>
+          <button class="hdr-btn" style="flex: 1; justify-content: center;" onclick="applyControlPreset('wasd')">WASD (P1)</button>
+          <button class="hdr-btn" style="flex: 1; justify-content: center;" onclick="applyControlPreset('split')">Local 2P Split</button>
+        </div>
+
+        <h4>P1 Primary Steer (Yellow Pac)</h4>
+        <div class="shortcut-row"><span>Move Up</span><span id="kb_p1Up" class="key-badge">W / Up</span></div>
+        <div class="shortcut-row"><span>Move Down</span><span id="kb_p1Down" class="key-badge">S / Down</span></div>
+        <div class="shortcut-row"><span>Move Left</span><span id="kb_p1Left" class="key-badge">A / Left</span></div>
+        <div class="shortcut-row"><span>Move Right</span><span id="kb_p1Right" class="key-badge">D / Right</span></div>
+
+        <h4>P2 Steer (Cyan CyberPac in 2P Duel)</h4>
+        <div class="shortcut-row"><span>P2 Up</span><span id="kb_p2Up" class="key-badge">Up Arrow</span></div>
+        <div class="shortcut-row"><span>P2 Down</span><span id="kb_p2Down" class="key-badge">Down Arrow</span></div>
+        <div class="shortcut-row"><span>P2 Left</span><span id="kb_p2Left" class="key-badge">Left Arrow</span></div>
+        <div class="shortcut-row"><span>P2 Right</span><span id="kb_p2Right" class="key-badge">Right Arrow</span></div>
+
+        <button class="hdr-btn" style="width: 100%; margin-top: 8px; justify-content: center;" onclick="resetDefaultKeybinds()">Reset All to Defaults</button>
+      </div>
+      <div class="modal-footer">
+        <button class="hdr-btn" onclick="closeKeybindModal()">Close [Esc]</button>
+      </div>
+    </div>
   </div>
 
   <input type="file" id="fileInput" style="display: none;" accept=".json" onchange="handleFileImport(event)">
+  <input type="file" id="replayFileInput" style="display: none;" accept=".kpdr,.json" onchange="loadReplayFile(event)">
 </div>
 
 <script>
@@ -900,9 +1136,56 @@
   ];
 
   let map = [];
-  let gameMode = 0; // 0=Campaign, 1=Arcade Endless
+  let gameMode = 0; // 0=Campaign, 1=Arcade Endless, 2=Cyber Duel
   let endlessWave = 1;
   let endlessHighWave = 1;
+
+  // Cyber Duel Arena & RFMS Multiplayer State
+  let rMultiplayer = null;
+  let myPlayerName = localStorage.getItem('kilo_kpac_name') || ('Pilot_' + Math.floor(1000 + Math.random() * 9000));
+  let oppPlayerName = 'Challenger';
+  let myPlayerSlot = 1; // 1: Yellow Pac (P1), 2: Cyan CyberPac (P2)
+  let currentRoomId = null;
+  let isHost = false;
+  let soloFallbackTimer = null;
+  let soloFallbackSecondsLeft = 25;
+  let isDuelMode = false;
+  let isOnlineDuel = false;
+  let isAIDuel = false;
+  let isLocal2P = false;
+  let duelBotDiff = 1; // 0: Novice, 1: Cyber, 2: Master
+  let targetKOs = 3;
+  let p1KOs = 0, p2KOs = 0;
+  let p1Score = 0, p2Score = 0;
+  let p2x = 7, p2y = 2, p2dx = 0, p2dy = 0, p2ndx = 0, p2ndy = 0;
+  let p1SuperTimer = 0, p2SuperTimer = 0;
+  let p1InvulnTimer = 0, p2InvulnTimer = 0;
+  let duelMatchOver = false, duelWinner = null;
+  let lastMoveSyncTs = 0;
+  let pendingInviteCode = null;
+
+  // Replay Recording & Playback (.kpdr)
+  let replayFrames = [];
+  let isReplayActive = false;
+  let replayPlayIndex = 0;
+  let replayPlaying = false;
+  let replaySpeed = 1;
+  let replayTimer = null;
+
+  // Control Rebinding
+  let keyBindings = {
+      p1Up: 'KeyW',
+      p1Down: 'KeyS',
+      p1Left: 'KeyA',
+      p1Right: 'KeyD',
+      p2Up: 'ArrowUp',
+      p2Down: 'ArrowDown',
+      p2Left: 'ArrowLeft',
+      p2Right: 'ArrowRight'
+  };
+
+  // ARG Atmospheric Signal Trace State
+  let argSignalTriggered = false;
 
   // Cyber-Forge & Relics
   let craftEctoplasm = 0;
@@ -982,14 +1265,22 @@
 
   function updateUIBadges() {
       const modeBadge = document.getElementById('hdrModeBadge');
-      if (modeBadge) modeBadge.textContent = gameMode === 1 ? `ENDLESS W.${endlessWave}` : `CAMP Lv.${level}`;
+      if (modeBadge) {
+          if (gameMode === 2) modeBadge.textContent = isOnlineDuel ? 'NET DUEL' : (isAIDuel ? 'BOT DUEL' : '2P DUEL');
+          else if (gameMode === 1) modeBadge.textContent = `ENDLESS W.${endlessWave}`;
+          else modeBadge.textContent = `CAMP Lv.${level}`;
+      }
       const diffBadge = document.getElementById('hdrDiffBadge');
       if (diffBadge) {
           const diffs = ['EASY', 'NORM', 'HARD'];
           diffBadge.textContent = diffs[diffMode] || 'NORM';
       }
       const btnMode = document.getElementById('btnMode');
-      if (btnMode) btnMode.textContent = gameMode === 1 ? 'Endless [O]' : 'Camp [O]';
+      if (btnMode) {
+          if (gameMode === 2) btnMode.textContent = 'Duel [O]';
+          else if (gameMode === 1) btnMode.textContent = 'Endless [O]';
+          else btnMode.textContent = 'Camp [O]';
+      }
       const btnPet = document.getElementById('btnPetType');
       if (btnPet) {
           const petNames = ['Blinky [P]', 'Inky [P]', 'Pinky [P]', 'Kinglet [P]'];
@@ -1001,6 +1292,12 @@
       if (invEss) invEss.textContent = craftFruitEssence;
       const invDust = document.getElementById('invDust');
       if (invDust) invDust.textContent = craftStarDust;
+
+      const chatBar = document.getElementById('duelChatBar');
+      if (chatBar) chatBar.style.display = (gameMode === 2 && isOnlineDuel) ? 'flex' : 'none';
+
+      const replayDisp = document.getElementById('replayFrameCountDisp');
+      if (replayDisp) replayDisp.textContent = replayFrames.length;
 
       if (document.getElementById('btnRelicCrown')) document.getElementById('btnRelicCrown').textContent = relicCrown ? 'Forged ✔' : 'Forge [5]';
       if (document.getElementById('btnRelicHourglass')) document.getElementById('btnRelicHourglass').textContent = relicHourglass ? 'Forged ✔' : 'Forge [6]';
@@ -1056,6 +1353,605 @@
           const btn = document.getElementById('btnPause');
           if (btn) btn.textContent = 'Resume [Space]';
       }
+  }
+
+  function openDuelModal() {
+      const modal = document.getElementById('duelModal');
+      if (modal) modal.style.display = 'flex';
+      paused = 1;
+      const btn = document.getElementById('btnPause');
+      if (btn) btn.textContent = 'Resume [Space]';
+      const nameInput = document.getElementById('mpPlayerName');
+      if (nameInput) nameInput.value = myPlayerName;
+  }
+
+  function closeDuelModal() {
+      const modal = document.getElementById('duelModal');
+      if (modal) modal.style.display = 'none';
+      stopSoloFallbackCountdown();
+  }
+
+  function openReplayModal() {
+      const modal = document.getElementById('replayModal');
+      if (modal) modal.style.display = 'flex';
+      paused = 1;
+      const btn = document.getElementById('btnPause');
+      if (btn) btn.textContent = 'Resume [Space]';
+      const disp = document.getElementById('replayFrameCountDisp');
+      if (disp) disp.textContent = replayFrames.length;
+  }
+
+  function closeReplayModal() {
+      const modal = document.getElementById('replayModal');
+      if (modal) modal.style.display = 'none';
+  }
+
+  function openKeybindsModal() {
+      const modal = document.getElementById('keybindModal');
+      if (modal) modal.style.display = 'flex';
+      paused = 1;
+      const btn = document.getElementById('btnPause');
+      if (btn) btn.textContent = 'Resume [Space]';
+      updateKeybindDisplay();
+  }
+
+  function closeKeybindModal() {
+      const modal = document.getElementById('keybindModal');
+      if (modal) modal.style.display = 'none';
+  }
+
+  function closeInviteModal() {
+      const modal = document.getElementById('inviteModal');
+      if (modal) modal.style.display = 'none';
+  }
+
+  function closeAllModals() {
+      toggleHelpModal(false);
+      toggleCraftModal(false);
+      closeDuelModal();
+      closeReplayModal();
+      closeKeybindModal();
+      closeInviteModal();
+  }
+
+  function savePlayerName(val) {
+      if (val && val.trim()) {
+          myPlayerName = val.trim().slice(0, 15);
+          try { localStorage.setItem('kilo_kpac_name', myPlayerName); } catch(e) {}
+          if (rMultiplayer) rMultiplayer.playerName = myPlayerName;
+          showToast(`Callsign set to [${myPlayerName}]`, 'info');
+      }
+  }
+
+  function copyShareUrl() {
+      const input = document.getElementById('mpShareUrl');
+      if (input && input.value) {
+          navigator.clipboard.writeText(input.value).then(() => {
+              showToast("📋 Duel invite link copied to clipboard!", "success");
+          }).catch(() => {
+              input.select();
+              document.execCommand('copy');
+              showToast("📋 Link selected! Press Ctrl+C", "info");
+          });
+      }
+  }
+
+  function startSoloFallbackCountdown(code) {
+      stopSoloFallbackCountdown();
+      soloFallbackSecondsLeft = 25;
+      const statusEl = document.getElementById('mpStatusBox');
+      if (statusEl) {
+          statusEl.style.display = 'block';
+          statusEl.innerHTML = `Room <b>${code}</b> open! Waiting for challenger... <span style="color:#ffd700;">(Engaging AI in ${soloFallbackSecondsLeft}s)</span>`;
+      }
+      soloFallbackTimer = setInterval(() => {
+          soloFallbackSecondsLeft--;
+          if (soloFallbackSecondsLeft <= 0) {
+              stopSoloFallbackCountdown();
+              handleSoloFallback();
+          } else if (statusEl) {
+              statusEl.innerHTML = `Room <b>${code}</b> open! Waiting for challenger... <span style="color:#ffd700;">(Engaging AI in ${soloFallbackSecondsLeft}s)</span>`;
+          }
+      }, 1000);
+  }
+
+  function stopSoloFallbackCountdown() {
+      if (soloFallbackTimer) {
+          clearInterval(soloFallbackTimer);
+          soloFallbackTimer = null;
+      }
+      const statusEl = document.getElementById('mpStatusBox');
+      if (statusEl) statusEl.style.display = 'none';
+      if (rMultiplayer) rMultiplayer.stopSoloFallbackTimer();
+  }
+
+  function handleSoloFallback() {
+      stopSoloFallbackCountdown();
+      closeAllModals();
+      showToast("⏳ No challenger in 25s — Engaging Subnet AI Cyber-Bot!", 'warning');
+      startAIDuel(1);
+  }
+
+  function startQuickMatch() {
+      initRetroMultiplayer();
+      if (!rMultiplayer || !rMultiplayer.isOnline()) {
+          showToast("Firebase offline. Engaging local AI cyber-bot.", 'warning');
+          closeAllModals();
+          startAIDuel(1);
+          return;
+      }
+      showToast("⚡ Quick Matchmaking: Scanning subnet for open arena...", 'info');
+      rMultiplayer.quickMatch({ targetKOs }).then(res => {
+          if (res && res.matched && res.slot === 'p2') {
+              closeAllModals();
+              startDuelOnline(res.roomId, 2, res.room);
+          } else if (res && res.roomId) {
+              isHost = true;
+              myPlayerSlot = 1;
+              currentRoomId = res.roomId;
+              startSoloFallbackCountdown(res.roomId);
+          }
+      });
+  }
+
+  function createCustomRoom() {
+      initRetroMultiplayer();
+      if (!rMultiplayer || !rMultiplayer.isOnline()) {
+          showToast("Firebase offline. Launching AI practice duel.", 'warning');
+          closeAllModals();
+          startAIDuel(1);
+          return;
+      }
+      rMultiplayer.createRoom({ targetKOs }, true).then(res => {
+          if (res && res.roomId) {
+              isHost = true;
+              myPlayerSlot = 1;
+              currentRoomId = res.roomId;
+              const codeDisp = document.getElementById('mpCreatedCode');
+              const shareInput = document.getElementById('mpShareUrl');
+              const hostBanner = document.getElementById('mpHostBanner');
+              if (codeDisp) codeDisp.innerText = res.roomId;
+              if (shareInput) shareInput.value = window.location.origin + window.location.pathname + '#room=' + res.roomId;
+              if (hostBanner) hostBanner.style.display = 'block';
+              startSoloFallbackCountdown(res.roomId);
+              showToast(`Room [${res.roomId}] created! Waiting for challenger...`, 'info');
+          }
+      });
+  }
+
+  function joinRoomFromInput() {
+      initRetroMultiplayer();
+      const input = document.getElementById('mpRoomCodeInput');
+      const code = input ? input.value.trim().toUpperCase() : '';
+      if (!code) {
+          showToast("Enter a room code (e.g. PAC-1234)", "warning");
+          return;
+      }
+      if (!rMultiplayer || !rMultiplayer.isOnline()) {
+          showToast("Firebase offline.", "warning");
+          return;
+      }
+      showToast(`Joining room [${code}]...`, 'info');
+      rMultiplayer.joinRoom(code).then(res => {
+          if (res && res.success) {
+              closeAllModals();
+              startDuelOnline(code, (res.slot === 'p1' ? 1 : 2), res.room);
+          }
+      });
+  }
+
+  function launchAIDuelFromModal() {
+      closeAllModals();
+      const sel = document.getElementById('mpBotDiff');
+      const diff = sel ? parseInt(sel.value, 10) : 1;
+      startAIDuel(diff);
+  }
+
+  function launchLocal2PFromModal() {
+      closeAllModals();
+      startLocal2PDuel();
+  }
+
+  function startDuelOnline(code, slot, roomData) {
+      gameMode = 2;
+      isDuelMode = true;
+      isOnlineDuel = true;
+      isAIDuel = false;
+      isLocal2P = false;
+      currentRoomId = code;
+      myPlayerSlot = slot;
+      targetKOs = (roomData && roomData.targetKOs) || 3;
+      oppPlayerName = (slot === 1) ? (roomData?.p2?.name || 'Challenger') : (roomData?.p1?.name || 'Host');
+      startDuelMatch();
+  }
+
+  function startAIDuel(diff = 1) {
+      gameMode = 2;
+      isDuelMode = true;
+      isOnlineDuel = false;
+      isAIDuel = true;
+      isLocal2P = false;
+      duelBotDiff = diff;
+      myPlayerSlot = 1;
+      oppPlayerName = ['NOVICE BOT', 'CYBER BOT', 'MASTER BOT'][diff] || 'CYBER BOT';
+      targetKOs = 3;
+      startDuelMatch();
+      showToast(`Arcade Duel vs ${oppPlayerName} Started! [First to 3 KOs]`, 'info');
+  }
+
+  function startLocal2PDuel() {
+      gameMode = 2;
+      isDuelMode = true;
+      isOnlineDuel = false;
+      isAIDuel = false;
+      isLocal2P = true;
+      myPlayerSlot = 1;
+      oppPlayerName = 'Player 2 (Arrows)';
+      targetKOs = 3;
+      startDuelMatch();
+      showToast("2-Player Local Duel Started! (P1: WASD | P2: Arrows)", "info");
+  }
+
+  function startDuelMatch() {
+      duelMatchOver = false;
+      duelWinner = null;
+      p1KOs = 0;
+      p2KOs = 0;
+      p1Score = 0;
+      p2Score = 0;
+      replayFrames = [];
+      isReplayActive = false;
+      init(false);
+      updateUIBadges();
+  }
+
+  function showInvitePrompt(code) {
+      pendingInviteCode = code;
+      const modal = document.getElementById('inviteModal');
+      const label = document.getElementById('inviteCodeLabel');
+      if (label) label.textContent = code;
+      if (modal) modal.style.display = 'flex';
+  }
+
+  function acceptInvite() {
+      const code = pendingInviteCode;
+      pendingInviteCode = null;
+      closeAllModals();
+      if (code) {
+          initRetroMultiplayer();
+          if (rMultiplayer) {
+              showToast(`Connecting to duel room ${code}...`, 'info');
+              rMultiplayer.joinRoom(code).then(res => {
+                  if (res && res.success) {
+                      startDuelOnline(code, (res.slot === 'p1' ? 1 : 2), res.room || { targetKOs: 3 });
+                  }
+              });
+          }
+      }
+  }
+
+  function declineInvite() {
+      pendingInviteCode = null;
+      if (typeof window !== 'undefined' && window.history && window.history.replaceState) {
+          const cleanUrl = window.location.pathname + window.location.search;
+          window.history.replaceState(null, '', cleanUrl);
+      }
+      closeAllModals();
+      showToast('Invite declined. Continuing in solo mode.', 'info');
+  }
+
+  function checkUrlInvite() {
+      let code = null;
+      const hash = window.location.hash.replace(/^#/, '');
+      if (hash.startsWith('room=')) {
+          code = hash.split('=')[1];
+      } else if (/^[A-Za-z0-9_-]{3,12}$/.test(hash)) {
+          code = hash;
+      }
+      if (!code) {
+          const params = new URLSearchParams(window.location.search);
+          if (params.has('room')) code = params.get('room');
+      }
+      if (code) {
+          showInvitePrompt(code.toUpperCase());
+      }
+  }
+
+  function initRetroMultiplayer() {
+      if (typeof RetroMultiplayer === 'undefined') {
+          console.warn("[KPac] RetroMultiplayer library not loaded.");
+          return;
+      }
+      if (rMultiplayer) return;
+
+      try {
+          rMultiplayer = new RetroMultiplayer({
+              gameId: 'kpac',
+              prefix: 'PAC',
+              playerName: myPlayerName,
+              soloTimeoutMs: 25000,
+              onOpponentJoin: ({ slot, name }) => {
+                  oppPlayerName = name || 'Challenger';
+                  stopSoloFallbackCountdown();
+                  closeAllModals();
+                  if (isHost && myPlayerSlot === 1 && !isDuelMode) {
+                      startDuelOnline(rMultiplayer.roomId, 1, { targetKOs });
+                  }
+                  showToast(`⚔️ Challenger ${oppPlayerName} joined! DUEL START!`, 'success');
+                  playSound(600, 0.3, 'sine', 150);
+              },
+              onOpponentLeave: ({ slot, name }) => {
+                  showToast(`⚠️ Opponent ${name || 'Challenger'} disconnected!`, 'warning');
+                  if (isDuelMode && isOnlineDuel && !duelMatchOver) {
+                      duelMatchOver = true;
+                      duelWinner = myPlayerSlot;
+                      showToast(`🏆 VICTORY! Opponent disconnected.`, 'success');
+                  }
+              },
+              onMove: (moveData) => {
+                  handleRemoteDuelMove(moveData);
+              },
+              onStateChange: (room) => {
+                  handleRemoteRoomStateChange(room);
+              },
+              onSoloFallback: ({ reason }) => {
+                  handleSoloFallback();
+              },
+              onChat: ({ text, by, name }) => {
+                  showToast(`${name || oppPlayerName}: ${text}`, 'info');
+                  playSound(500, 0.2, 'triangle');
+              },
+              onRematch: ({ requestedBy }) => {
+                  showToast("Opponent requested a rematch! Press [Enter] or [R] to accept.", 'success');
+              },
+              onStatusMsg: (msg, type) => {
+                  showToast(msg, type);
+                  const statusEl = document.getElementById('mpStatusBox');
+                  if (statusEl) statusEl.innerText = msg;
+              }
+          });
+          window.retroMultiplayer = rMultiplayer;
+          rMultiplayer.init().then(({ onlineAvailable, inviteCode }) => {
+              if (inviteCode) {
+                  showInvitePrompt(inviteCode);
+              }
+          });
+      } catch(err) {
+          console.warn("[KPac] RetroMultiplayer init failed:", err);
+      }
+  }
+
+  function handleRemoteDuelMove(data) {
+      if (!isDuelMode || !isOnlineDuel || !data) return;
+      if (myPlayerSlot === 1) {
+          if (data.x !== undefined) p2x = data.x;
+          if (data.y !== undefined) p2y = data.y;
+          if (data.dx !== undefined) p2dx = data.dx;
+          if (data.dy !== undefined) p2dy = data.dy;
+          if (data.score !== undefined) p2Score = data.score;
+          if (data.kos !== undefined) p2KOs = data.kos;
+          if (data.superTimer !== undefined) p2SuperTimer = data.superTimer;
+          if (data.event) { saveMsgText = data.event; saveMsgTimer = 25; }
+          if (data.eatenPellet && data.eatenPellet.r !== undefined && data.eatenPellet.c !== undefined) {
+              const { r, c } = data.eatenPellet;
+              if (map[r] && map[r][c] >= 2 && map[r][c] <= 5) {
+                  map[r][c] = 0;
+                  dotCount = Math.max(0, dotCount - 1);
+              }
+          }
+      } else {
+          if (data.x !== undefined) px = data.x;
+          if (data.y !== undefined) py = data.y;
+          if (data.dx !== undefined) pdx = data.dx;
+          if (data.dy !== undefined) pdy = data.dy;
+          if (data.score !== undefined) p1Score = data.score;
+          if (data.kos !== undefined) p1KOs = data.kos;
+          if (data.superTimer !== undefined) p1SuperTimer = data.superTimer;
+          if (data.event) { saveMsgText = data.event; saveMsgTimer = 25; }
+          if (data.eatenPellet && data.eatenPellet.r !== undefined && data.eatenPellet.c !== undefined) {
+              const { r, c } = data.eatenPellet;
+              if (map[r] && map[r][c] >= 2 && map[r][c] <= 5) {
+                  map[r][c] = 0;
+                  dotCount = Math.max(0, dotCount - 1);
+              }
+          }
+      }
+  }
+
+  function handleRemoteRoomStateChange(room) {
+      if (!room) return;
+      if (room.status === 'playing' && !isDuelMode) {
+          startDuelOnline(room.id, myPlayerSlot, room);
+      }
+  }
+
+  function sendDuelChat(msg) {
+      if (isOnlineDuel && rMultiplayer) {
+          rMultiplayer.sendChat(msg);
+      }
+      showToast(`${myPlayerName}: ${msg}`, 'info');
+  }
+
+  function recordReplayFrame(eventType = null) {
+      if (!isDuelMode || isReplayActive) return;
+      if (frameCount % 2 === 0 || eventType) {
+          replayFrames.push({
+              t: frameCount,
+              p1: { x: px, y: py, dx: pdx, dy: pdy, super: p1SuperTimer, score: p1Score, kos: p1KOs },
+              p2: { x: p2x, y: p2y, dx: p2dx, dy: p2dy, super: p2SuperTimer, score: p2Score, kos: p2KOs },
+              event: eventType
+          });
+      }
+  }
+
+  function exportReplayData() {
+      if (replayFrames.length === 0) {
+          showToast("No duel match data to export yet!", "warning");
+          return;
+      }
+      const record = {
+          title: "KPac Duel Match Record",
+          version: "1.0",
+          date: new Date().toISOString(),
+          p1Name: myPlayerName,
+          p2Name: oppPlayerName,
+          winner: duelWinner,
+          p1Score, p2Score, p1KOs, p2KOs,
+          targetKOs,
+          totalFrames: replayFrames.length,
+          frames: replayFrames
+      };
+      const json = JSON.stringify(record, null, 2);
+      const blob = new Blob([json], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `kpac_duel_${Date.now()}.kpdr`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      showToast("💾 Match Record (.kpdr) Exported!", "success");
+  }
+
+  function loadReplayFile(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (evt) => {
+          try {
+              const data = JSON.parse(evt.target.result);
+              if (data && data.frames && data.frames.length > 0) {
+                  replayFrames = data.frames;
+                  startReplayPlayback();
+                  showToast(`📼 Loaded Replay: ${data.p1Name || 'P1'} vs ${data.p2Name || 'P2'} (${data.frames.length} frames)`, "success");
+              } else {
+                  showToast("Invalid .kpdr file format", "danger");
+              }
+          } catch(err) {
+              showToast("Failed to parse replay file", "danger");
+          }
+      };
+      reader.readAsText(file);
+      e.target.value = '';
+  }
+
+  function startReplayPlayback() {
+      isReplayActive = true;
+      replayPlayIndex = 0;
+      replayPlaying = true;
+      closeAllModals();
+      gameMode = 2;
+      isDuelMode = true;
+      init(false);
+      showToast("📼 Replay Playback Started [Space: Pause | R: Controls]", "info");
+      if (replayTimer) clearInterval(replayTimer);
+      replayTimer = setInterval(stepReplayPlayback, Math.floor(100 / replaySpeed));
+  }
+
+  function stepReplayPlayback() {
+      if (!isReplayActive || !replayPlaying) return;
+      if (replayPlayIndex >= replayFrames.length) {
+          replayPlaying = false;
+          if (replayTimer) clearInterval(replayTimer);
+          showToast("📼 Replay Completed!", "info");
+          return;
+      }
+      const f = replayFrames[replayPlayIndex];
+      if (f) {
+          px = f.p1.x; py = f.p1.y; pdx = f.p1.dx; pdy = f.p1.dy; p1SuperTimer = f.p1.super; p1Score = f.p1.score; p1KOs = f.p1.kos;
+          p2x = f.p2.x; p2y = f.p2.y; p2dx = f.p2.dx; p2dy = f.p2.dy; p2SuperTimer = f.p2.super; p2Score = f.p2.score; p2KOs = f.p2.kos;
+          if (f.event) { saveMsgText = f.event; saveMsgTimer = 20; }
+      }
+      replayPlayIndex++;
+  }
+
+  function toggleReplayPlay() {
+      if (!isReplayActive) {
+          if (replayFrames.length > 0) startReplayPlayback();
+          return;
+      }
+      replayPlaying = !replayPlaying;
+      if (replayPlaying) {
+          if (replayTimer) clearInterval(replayTimer);
+          replayTimer = setInterval(stepReplayPlayback, Math.floor(100 / replaySpeed));
+          showToast("▶ Replay Resumed", "info");
+      } else {
+          if (replayTimer) clearInterval(replayTimer);
+          showToast("⏸ Replay Paused", "info");
+      }
+  }
+
+  function toggleReplaySpeed() {
+      replaySpeed = (replaySpeed === 1) ? 2 : (replaySpeed === 2 ? 4 : 1);
+      const disp = document.getElementById('replaySpeedDisp');
+      if (disp) disp.textContent = `${replaySpeed}x`;
+      if (isReplayActive && replayPlaying) {
+          if (replayTimer) clearInterval(replayTimer);
+          replayTimer = setInterval(stepReplayPlayback, Math.floor(100 / replaySpeed));
+      }
+      showToast(`Speed: ${replaySpeed}x`, "info");
+  }
+
+  function exitReplay() {
+      isReplayActive = false;
+      replayPlaying = false;
+      if (replayTimer) clearInterval(replayTimer);
+      gameMode = 0;
+      isDuelMode = false;
+      init(false);
+      closeAllModals();
+      showToast("Exited Replay. Returned to Campaign.", "info");
+  }
+
+  function updateKeybindDisplay() {
+      const ids = ['p1Up', 'p1Down', 'p1Left', 'p1Right', 'p2Up', 'p2Down', 'p2Left', 'p2Right'];
+      ids.forEach(id => {
+          const el = document.getElementById(`kb_${id}`);
+          if (el) el.textContent = (keyBindings[id] || '').replace('Key', '').replace('Arrow', '');
+      });
+  }
+
+  function applyControlPreset(preset) {
+      if (preset === 'arrows') {
+          keyBindings.p1Up = 'ArrowUp'; keyBindings.p1Down = 'ArrowDown'; keyBindings.p1Left = 'ArrowLeft'; keyBindings.p1Right = 'ArrowRight';
+      } else if (preset === 'wasd') {
+          keyBindings.p1Up = 'KeyW'; keyBindings.p1Down = 'KeyS'; keyBindings.p1Left = 'KeyA'; keyBindings.p1Right = 'KeyD';
+      } else if (preset === 'split') {
+          keyBindings.p1Up = 'KeyW'; keyBindings.p1Down = 'KeyS'; keyBindings.p1Left = 'KeyA'; keyBindings.p1Right = 'KeyD';
+          keyBindings.p2Up = 'ArrowUp'; keyBindings.p2Down = 'ArrowDown'; keyBindings.p2Left = 'ArrowLeft'; keyBindings.p2Right = 'ArrowRight';
+      }
+      saveKeybinds();
+      updateKeybindDisplay();
+  }
+
+  function resetDefaultKeybinds() {
+      applyControlPreset('split');
+      showToast("Keybindings reset to defaults", "info");
+  }
+
+  function loadKeybinds() {
+      try {
+          const saved = localStorage.getItem('kpac_keybinds');
+          if (saved) Object.assign(keyBindings, JSON.parse(saved));
+      } catch(e) {}
+  }
+
+  function saveKeybinds() {
+      try {
+          localStorage.setItem('kpac_keybinds', JSON.stringify(keyBindings));
+          showToast("⌨️ Keybindings Saved!", "success");
+      } catch(e) {}
+  }
+
+  function triggerArgSignalTrace() {
+      if (argSignalTriggered) return;
+      argSignalTriggered = true;
+      try {
+          playSound(1999, 0.45, 'sine', -20);
+          console.log("%c[SIGNAL_TRACE] SUBCARRIER 1999Hz DETECTED -- ROUTE: 10.19.99.4/classified -- SYSTEM CORE ECHO STABLE", "color: #00e5ff; font-weight: bold; background: #030611; padding: 4px;");
+          showToast("📡 [SIGNAL TRACE: 1999Hz Subcarrier Logged - Route 10.19.99.4]", "info");
+      } catch(e) {}
   }
 
   function setForgePage(p) {
@@ -1471,7 +2367,7 @@
       if (!keepScore) {
           score = 0;
           if (gameMode === 0) level = 1;
-          else endlessWave = 1;
+          else if (gameMode === 1) endlessWave = 1;
           lives = getInitLives();
       }
       gameOver = 0;
@@ -1483,56 +2379,88 @@
       petBurstTimer = 0;
       petCooldown = 0;
 
-      if (gameMode === 1) {
-          generateProceduralMaze(endlessWave);
-          for (let r = 0; r < ROWS; r++) {
-              for (let c = 0; c < COLS; c++) {
-                  if (map[r][c] >= 2 && map[r][c] <= 5) dotCount++;
-              }
-          }
-      } else {
-          let mapIdx = (level - 1) % 20;
+      if (gameMode === 2) {
+          isDuelMode = true;
           map = [];
           for (let r = 0; r < ROWS; r++) {
               map[r] = [];
               for (let c = 0; c < COLS; c++) {
-                  map[r][c] = maps[mapIdx][r][c];
+                  map[r][c] = maps[0][r][c];
                   if (map[r][c] >= 2 && map[r][c] <= 5) dotCount++;
               }
           }
+          // Symmetrical 4-Corner Energizers
+          map[1][1] = 3; map[1][COLS-2] = 3;
+          map[ROWS-2][1] = 3; map[ROWS-2][COLS-2] = 3;
+
+          px = 7; py = 12; pdx = 0; pdy = 0; ndx = 0; ndy = 0;
+          p2x = 7; p2y = 2; p2dx = 0; p2dy = 0; p2ndx = 0; p2ndy = 0;
+          p1SuperTimer = 0; p2SuperTimer = 0;
+          p1InvulnTimer = 0; p2InvulnTimer = 0;
+          if (!keepScore) {
+              p1Score = 0; p2Score = 0;
+              p1KOs = 0; p2KOs = 0;
+              duelMatchOver = false; duelWinner = null;
+          }
+          numGhosts = 3;
+          ghosts = [
+              {x: 7, y: 6, c: '#ff1744', type: 0, isPhantom: 0, phantomTimer: 0, isDead: 0, dirX: 0, dirY: -1, trait: 0, stunTimer: 0},
+              {x: 6, y: 7, c: '#f06292', type: 1, isPhantom: 0, phantomTimer: 0, isDead: 0, dirX: -1, dirY: 0, trait: 0, stunTimer: 0},
+              {x: 8, y: 7, c: '#00e5ff', type: 2, isPhantom: 0, phantomTimer: 0, isDead: 0, dirX: 1, dirY: 0, trait: 0, stunTimer: 0}
+          ];
+      } else {
+          isDuelMode = false;
+          if (gameMode === 1) {
+              generateProceduralMaze(endlessWave);
+              for (let r = 0; r < ROWS; r++) {
+                  for (let c = 0; c < COLS; c++) {
+                      if (map[r][c] >= 2 && map[r][c] <= 5) dotCount++;
+                  }
+              }
+          } else {
+              let mapIdx = (level - 1) % 20;
+              map = [];
+              for (let r = 0; r < ROWS; r++) {
+                  map[r] = [];
+                  for (let c = 0; c < COLS; c++) {
+                      map[r][c] = maps[mapIdx][r][c];
+                      if (map[r][c] >= 2 && map[r][c] <= 5) dotCount++;
+                  }
+              }
+          }
+
+          px = 7; py = 12;
+          pdx = 0; pdy = 0; ndx = 0; ndy = 0;
+          petX = px; petY = py;
+
+          let effWave = (gameMode === 1) ? endlessWave : level;
+          let t0 = (effWave >= 2) ? ((effWave % 5) + 1) : 0;
+          let t1 = (effWave >= 3) ? (((effWave + 2) % 5) + 1) : 0;
+          let t2 = (effWave >= 4) ? (((effWave + 3) % 5) + 1) : 0;
+          let t3 = (effWave >= 5) ? (((effWave + 4) % 5) + 1) : 0;
+          let t4 = (effWave >= 6) ? (((effWave + 1) % 5) + 1) : 0;
+
+          ghosts = [
+              {x: 7, y: 6, c: '#ff1744', type: 0, isPhantom: 0, phantomTimer: 0, isDead: 0, dirX: 0, dirY: -1, trait: t0, stunTimer: 0},
+              {x: 6, y: 7, c: '#f06292', type: 1, isPhantom: 0, phantomTimer: 0, isDead: 0, dirX: -1, dirY: 0, trait: t1, stunTimer: 0},
+              {x: 8, y: 7, c: '#00e5ff', type: 2, isPhantom: 0, phantomTimer: 0, isDead: 0, dirX: 1, dirY: 0, trait: t2, stunTimer: 0},
+              {x: 7, y: 7, c: '#ff9100', type: 3, isPhantom: 0, phantomTimer: 0, isDead: 0, dirX: 0, dirY: 1, trait: t3, stunTimer: 0},
+              {x: 7, y: 5, c: '#aa00ff', type: 4, isPhantom: 0, phantomTimer: 0, isDead: 0, dirX: 0, dirY: -1, trait: t4, stunTimer: 0}
+          ];
+
+          if (gameMode === 0 && level === 20) {
+              ghosts.push({x: 7, y: 6, c: '#ffd700', type: 5, isPhantom: 0, phantomTimer: 0, isDead: 0, dirX: 0, dirY: -1, trait: 5, stunTimer: 0});
+              ghosts.push({x: 0, y: 0, c: '#ce93d8', type: 6, isPhantom: 1, phantomTimer: 0, isDead: 0, dirX: 0, dirY: 0, trait: 0, stunTimer: 0});
+              ghosts.push({x: 0, y: 0, c: '#ce93d8', type: 6, isPhantom: 1, phantomTimer: 0, isDead: 0, dirX: 0, dirY: 0, trait: 0, stunTimer: 0});
+              numGhosts = 6;
+              bossHp = 8;
+              bossMaxHp = 8;
+              phantomSpawnTimer = 0;
+          } else if (effWave >= 4) numGhosts = 5;
+          else if (effWave === 3) numGhosts = 4;
+          else if (effWave === 2) numGhosts = 3;
+          else numGhosts = 2;
       }
-
-      px = 7; py = 12;
-      pdx = 0; pdy = 0; ndx = 0; ndy = 0;
-      petX = px; petY = py;
-
-      let effWave = (gameMode === 1) ? endlessWave : level;
-      let t0 = (effWave >= 2) ? ((effWave % 5) + 1) : 0;
-      let t1 = (effWave >= 3) ? (((effWave + 2) % 5) + 1) : 0;
-      let t2 = (effWave >= 4) ? (((effWave + 3) % 5) + 1) : 0;
-      let t3 = (effWave >= 5) ? (((effWave + 4) % 5) + 1) : 0;
-      let t4 = (effWave >= 6) ? (((effWave + 1) % 5) + 1) : 0;
-
-      ghosts = [
-          {x: 7, y: 6, c: '#ff1744', type: 0, isPhantom: 0, phantomTimer: 0, isDead: 0, dirX: 0, dirY: -1, trait: t0, stunTimer: 0},
-          {x: 6, y: 7, c: '#f06292', type: 1, isPhantom: 0, phantomTimer: 0, isDead: 0, dirX: -1, dirY: 0, trait: t1, stunTimer: 0},
-          {x: 8, y: 7, c: '#00e5ff', type: 2, isPhantom: 0, phantomTimer: 0, isDead: 0, dirX: 1, dirY: 0, trait: t2, stunTimer: 0},
-          {x: 7, y: 7, c: '#ff9100', type: 3, isPhantom: 0, phantomTimer: 0, isDead: 0, dirX: 0, dirY: 1, trait: t3, stunTimer: 0},
-          {x: 7, y: 5, c: '#aa00ff', type: 4, isPhantom: 0, phantomTimer: 0, isDead: 0, dirX: 0, dirY: -1, trait: t4, stunTimer: 0}
-      ];
-
-      if (gameMode === 0 && level === 20) {
-          ghosts.push({x: 7, y: 6, c: '#ffd700', type: 5, isPhantom: 0, phantomTimer: 0, isDead: 0, dirX: 0, dirY: -1, trait: 5, stunTimer: 0});
-          ghosts.push({x: 0, y: 0, c: '#ce93d8', type: 6, isPhantom: 1, phantomTimer: 0, isDead: 0, dirX: 0, dirY: 0, trait: 0, stunTimer: 0});
-          ghosts.push({x: 0, y: 0, c: '#ce93d8', type: 6, isPhantom: 1, phantomTimer: 0, isDead: 0, dirX: 0, dirY: 0, trait: 0, stunTimer: 0});
-          numGhosts = 6;
-          bossHp = 8;
-          bossMaxHp = 8;
-          phantomSpawnTimer = 0;
-      } else if (effWave >= 4) numGhosts = 5;
-      else if (effWave === 3) numGhosts = 4;
-      else if (effWave === 2) numGhosts = 3;
-      else numGhosts = 2;
 
       vipActive = (gameMode === 0 && level % 5 === 0 && level !== 20) ? 1 : 0;
       vipX = 7; vipY = 7;
@@ -1778,13 +2706,18 @@
   // Global Input bindings
   window.addEventListener('keydown', e => {
       let key = e.key.toUpperCase();
+      const code = e.code;
       const hasModifier = e.ctrlKey || e.altKey || e.metaKey;
       const helpOpen = document.getElementById('helpModal')?.style.display === 'flex';
       const craftOpen = document.getElementById('craftModal')?.style.display === 'flex';
+      const duelOpen = document.getElementById('duelModal')?.style.display === 'flex';
+      const replayOpen = document.getElementById('replayModal')?.style.display === 'flex';
+      const keybindOpen = document.getElementById('keybindModal')?.style.display === 'flex';
+      const inviteOpen = document.getElementById('inviteModal')?.style.display === 'flex';
+      const anyModalOpen = helpOpen || craftOpen || duelOpen || replayOpen || keybindOpen || inviteOpen;
 
       if (e.key === 'Escape') {
-          if (helpOpen) { toggleHelpModal(false); return; }
-          if (craftOpen) { toggleCraftModal(false); return; }
+          if (anyModalOpen) { closeAllModals(); return; }
           togglePause();
           return;
       }
@@ -1814,6 +2747,31 @@
           toggleCraftModal();
           return;
       }
+      if (key === 'X') {
+          e.preventDefault();
+          if (duelOpen) closeDuelModal(); else openDuelModal();
+          return;
+      }
+      if (key === 'R') {
+          e.preventDefault();
+          if (isDuelMode && duelMatchOver) {
+              if (isOnlineDuel && rMultiplayer) {
+                  rMultiplayer.requestRematch();
+                  showToast("Rematch requested!", "info");
+              } else {
+                  startDuelMatch();
+              }
+              return;
+          }
+          if (replayOpen) closeReplayModal(); else openReplayModal();
+          return;
+      }
+      if (key === 'K') {
+          e.preventDefault();
+          if (keybindOpen) closeKeybindModal(); else openKeybindsModal();
+          return;
+      }
+
       if (e.key === 'Tab' && craftOpen) {
           e.preventDefault();
           setForgePage(craftMenuPage === 0 ? 1 : 0);
@@ -1830,7 +2788,7 @@
           return;
       }
 
-      if (helpOpen || craftOpen) {
+      if (anyModalOpen) {
           if (e.key === 'Enter' || key === 'ENTER' || e.key === ' ' || key === 'SPACE') {
               e.preventDefault();
               if (helpOpen) toggleHelpModal(false);
@@ -1854,59 +2812,120 @@
           return;
       }
 
-      if (key === 'ARROWUP' || key === 'W') ndx = 0, ndy = -1;
-      else if (key === 'ARROWDOWN' || key === 'S') ndx = 0, ndy = 1;
-      else if (key === 'ARROWLEFT' || key === 'A') ndx = -1, ndy = 0;
-      else if (key === 'ARROWRIGHT' || key === 'D') ndx = 1, ndy = 0;
-      else if (key === 'F') attemptSkill('s1');
-      else if (key === 'Z') attemptSkill('s2');
-      else if (key === 'M') attemptSkill('s3');
-      else if (key === 'B') attemptSkill('s4');
-      else if (key === 'U') triggerPetUltimate();
-      else if (key === 'P') cyclePetCompanion();
-      else if (key === 'O') toggleGameMode();
-      else if (key === '1') { diffMode = 0; showToast("⚔️ Difficulty: EASY (5 Lives, Slower Ghosts)", "warning"); updateUIBadges(); }
-      else if (key === '2') { diffMode = 1; showToast("⚔️ Difficulty: NORMAL (3 Lives)", "warning"); updateUIBadges(); }
-      else if (key === '3') { diffMode = 2; showToast("⚔️ Difficulty: HARD (2 Lives, Fast Ghosts)", "warning"); updateUIBadges(); }
-      else if (key === 'E') exportJSON();
+      // Quick Chat (In Online Duel)
+      if (isOnlineDuel) {
+          if (key === '1') { sendDuelChat('Chomp! 🟡'); return; }
+          if (key === '2') { sendDuelChat('Nice move! ⚡'); return; }
+          if (key === '3') { sendDuelChat('Waka waka! 💨'); return; }
+          if (key === '4') { sendDuelChat('GG! 🏆'); return; }
+      }
+
+      // Local 2-Player Split Controls
+      if (isDuelMode && isLocal2P) {
+          // Player 1 (Configurable W/S/A/D)
+          if (code === keyBindings.p1Up || (!keyBindings.p1Up && key === 'W')) { ndx = 0; ndy = -1; return; }
+          if (code === keyBindings.p1Down || (!keyBindings.p1Down && key === 'S')) { ndx = 0; ndy = 1; return; }
+          if (code === keyBindings.p1Left || (!keyBindings.p1Left && key === 'A')) { ndx = -1; ndy = 0; return; }
+          if (code === keyBindings.p1Right || (!keyBindings.p1Right && key === 'D')) { ndx = 1; ndy = 0; return; }
+
+          // Player 2 (Configurable Arrows)
+          if (code === keyBindings.p2Up || (!keyBindings.p2Up && key === 'ARROWUP')) { p2ndx = 0; p2ndy = -1; return; }
+          if (code === keyBindings.p2Down || (!keyBindings.p2Down && key === 'ARROWDOWN')) { p2ndx = 0; p2ndy = 1; return; }
+          if (code === keyBindings.p2Left || (!keyBindings.p2Left && key === 'ARROWLEFT')) { p2ndx = -1; p2ndy = 0; return; }
+          if (code === keyBindings.p2Right || (!keyBindings.p2Right && key === 'ARROWRIGHT')) { p2ndx = 1; p2ndy = 0; return; }
+      } else if (isDuelMode && isOnlineDuel && myPlayerSlot === 2) {
+          // Online Duel: Player 2 Slot controls P2
+          if (key === 'ARROWUP' || key === 'W' || code === keyBindings.p1Up) { p2ndx = 0; p2ndy = -1; return; }
+          if (key === 'ARROWDOWN' || key === 'S' || code === keyBindings.p1Down) { p2ndx = 0; p2ndy = 1; return; }
+          if (key === 'ARROWLEFT' || key === 'A' || code === keyBindings.p1Left) { p2ndx = -1; p2ndy = 0; return; }
+          if (key === 'ARROWRIGHT' || key === 'D' || code === keyBindings.p1Right) { p2ndx = 1; p2ndy = 0; return; }
+      } else {
+          // Standard / Single Player / AI Duel / Online Slot 1
+          if (key === 'ARROWUP' || key === 'W' || code === keyBindings.p1Up) ndx = 0, ndy = -1;
+          else if (key === 'ARROWDOWN' || key === 'S' || code === keyBindings.p1Down) ndx = 0, ndy = 1;
+          else if (key === 'ARROWLEFT' || key === 'A' || code === keyBindings.p1Left) ndx = -1, ndy = 0;
+          else if (key === 'ARROWRIGHT' || key === 'D' || code === keyBindings.p1Right) ndx = 1, ndy = 0;
+      }
+
+      if (!isDuelMode) {
+          if (key === 'F') attemptSkill('s1');
+          else if (key === 'Z') attemptSkill('s2');
+          else if (key === 'M') attemptSkill('s3');
+          else if (key === 'B') attemptSkill('s4');
+          else if (key === 'U') triggerPetUltimate();
+          else if (key === 'P') cyclePetCompanion();
+          else if (key === 'O') toggleGameMode();
+          else if (key === '1') { diffMode = 0; showToast("⚔️ Difficulty: EASY (5 Lives, Slower Ghosts)", "warning"); updateUIBadges(); }
+          else if (key === '2') { diffMode = 1; showToast("⚔️ Difficulty: NORMAL (3 Lives)", "warning"); updateUIBadges(); }
+          else if (key === '3') { diffMode = 2; showToast("⚔️ Difficulty: HARD (2 Lives, Fast Ghosts)", "warning"); updateUIBadges(); }
+          else if (key === '7') craftItem(1);
+          else if (key === '8') craftItem(2);
+          else if (key === '9') craftItem(3);
+          else if (key === '0') craftItem(4);
+      }
+
+      if (key === 'E') exportJSON();
       else if (key === 'I') triggerImport();
       else if (key === ' ' || key === 'SPACE') {
           e.preventDefault();
+          if (isReplayActive) { toggleReplayPlay(); return; }
+          if (isDuelMode && duelMatchOver) {
+              if (isOnlineDuel && rMultiplayer) rMultiplayer.requestRematch();
+              else startDuelMatch();
+              return;
+          }
           if (gameOver) { init(false); return; }
           togglePause();
       }
       else if (key === 'ENTER') {
+          if (isDuelMode && duelMatchOver) {
+              e.preventDefault();
+              if (isOnlineDuel && rMultiplayer) rMultiplayer.requestRematch();
+              else startDuelMatch();
+              return;
+          }
           if (gameOver) { e.preventDefault(); init(false); return; }
       }
-      else if (key === '7') craftItem(1);
-      else if (key === '8') craftItem(2);
-      else if (key === '9') craftItem(3);
-      else if (key === '0') craftItem(4);
   });
 
   // Canvas Mouse & Touch Steering / Resume
   canvas.addEventListener('click', (e) => {
-      const helpOpen = document.getElementById('helpModal')?.style.display === 'flex';
-      const craftOpen = document.getElementById('craftModal')?.style.display === 'flex';
-      if (helpOpen) { toggleHelpModal(false); return; }
-      if (craftOpen) { toggleCraftModal(false); return; }
+      const anyModalOpen = document.getElementById('helpModal')?.style.display === 'flex' ||
+          document.getElementById('craftModal')?.style.display === 'flex' ||
+          document.getElementById('duelModal')?.style.display === 'flex' ||
+          document.getElementById('replayModal')?.style.display === 'flex' ||
+          document.getElementById('keybindModal')?.style.display === 'flex' ||
+          document.getElementById('inviteModal')?.style.display === 'flex';
+      if (anyModalOpen) { closeAllModals(); return; }
+      if (isDuelMode && duelMatchOver) {
+          if (isOnlineDuel && rMultiplayer) rMultiplayer.requestRematch();
+          else startDuelMatch();
+          return;
+      }
+      if (isReplayActive) { toggleReplayPlay(); return; }
       if (gameOver) { init(false); return; }
       if (paused) { togglePause(); return; }
 
       const rect = canvas.getBoundingClientRect();
       const clickX = (e.clientX - rect.left) * (300 / rect.width);
       const clickY = (e.clientY - rect.top) * (340 / rect.height);
-      const pacX = px * TS + TS / 2;
-      const pacY = py * TS + TS / 2;
-      const dx = clickX - pacX;
-      const dy = clickY - pacY;
+      const targetPacX = (isDuelMode && isOnlineDuel && myPlayerSlot === 2) ? (p2x * TS + TS / 2) : (px * TS + TS / 2);
+      const targetPacY = (isDuelMode && isOnlineDuel && myPlayerSlot === 2) ? (p2y * TS + TS / 2) : (py * TS + TS / 2);
+      const dx = clickX - targetPacX;
+      const dy = clickY - targetPacY;
 
       if (Math.abs(dx) > Math.abs(dy)) {
-          ndx = dx > 0 ? 1 : -1;
-          ndy = 0;
+          if (isDuelMode && isOnlineDuel && myPlayerSlot === 2) {
+              p2ndx = dx > 0 ? 1 : -1; p2ndy = 0;
+          } else {
+              ndx = dx > 0 ? 1 : -1; ndy = 0;
+          }
       } else {
-          ndx = 0;
-          ndy = dy > 0 ? 1 : -1;
+          if (isDuelMode && isOnlineDuel && myPlayerSlot === 2) {
+              p2ndx = 0; p2ndy = dy > 0 ? 1 : -1;
+          } else {
+              ndx = 0; ndy = dy > 0 ? 1 : -1;
+          }
       }
   });
 
@@ -1931,7 +2950,415 @@
       }
   }, { passive: true });
 
+  function updateAIDuelDecision() {
+      if (!isAIDuel || duelMatchOver || isReplayActive) return;
+
+      const dirs = [[0, -1], [0, 1], [-1, 0], [1, 0]];
+      let validDirs = [];
+
+      for (let i = 0; i < dirs.length; i++) {
+          let [dx, dy] = dirs[i];
+          let nx = p2x + dx, ny = p2y + dy;
+          if (nx < 0) nx = COLS - 1;
+          if (nx >= COLS) nx = 0;
+          if (ny >= 0 && ny < ROWS && map[ny][nx] !== 1) {
+              validDirs.push({ dx, dy, nx, ny });
+          }
+      }
+
+      if (validDirs.length === 0) return;
+
+      // Novice Bot (diff 0): 50% random, 50% target
+      if (duelBotDiff === 0 && Math.random() < 0.5) {
+          let pick = validDirs[Math.floor(Math.random() * validDirs.length)];
+          p2ndx = pick.dx; p2ndy = pick.dy;
+          return;
+      }
+
+      // Determine Target
+      let tx = px, ty = py;
+
+      if (p2SuperTimer > 0) {
+          // Hunt P1!
+          tx = px; ty = py;
+      } else if (p1SuperTimer > 0) {
+          // Flee from P1 to opposite corner
+          let corners = [[1, 1], [COLS - 2, 1], [1, ROWS - 2], [COLS - 2, ROWS - 2]];
+          let maxDist = -1, bestC = corners[0];
+          for (let c of corners) {
+              let d = Math.abs(c[0] - px) + Math.abs(c[1] - py);
+              if (d > maxDist) { maxDist = d; bestC = c; }
+          }
+          tx = bestC[0]; ty = bestC[1];
+      } else {
+          // Target nearest Energizer (3), then nearest Pellet (2)
+          let energizers = [];
+          let pellets = [];
+          for (let r = 0; r < ROWS; r++) {
+              for (let c = 0; c < COLS; c++) {
+                  if (map[r][c] === 3) energizers.push({ x: c, y: r });
+                  else if (map[r][c] === 2) pellets.push({ x: c, y: r });
+              }
+          }
+          if (energizers.length > 0) {
+              let minDist = 9999;
+              for (let e of energizers) {
+                  let d = Math.abs(e.x - p2x) + Math.abs(e.y - p2y);
+                  if (d < minDist) { minDist = d; tx = e.x; ty = e.y; }
+              }
+          } else if (pellets.length > 0) {
+              let minDist = 9999;
+              for (let p of pellets) {
+                  let d = Math.abs(p.x - p2x) + Math.abs(p.y - p2y);
+                  if (d < minDist) { minDist = d; tx = p.x; ty = p.y; }
+              }
+          }
+      }
+
+      // Score each valid direction
+      let bestDir = validDirs[0];
+      let bestScore = -99999;
+
+      for (let vd of validDirs) {
+          let distToTarget = Math.abs(vd.nx - tx) + Math.abs(vd.ny - ty);
+          let dirScore = -distToTarget * 10;
+
+          // Penalty for 180 reversing unless stuck
+          if (vd.dx === -p2dx && vd.dy === -p2dy && validDirs.length > 1) {
+              dirScore -= 35;
+          }
+
+          // Avoid ghosts if not super
+          if (p2SuperTimer <= 0) {
+              for (let g of ghosts) {
+                  if (g.isDead) continue;
+                  let gDist = Math.abs(vd.nx - g.x) + Math.abs(vd.ny - g.y);
+                  if (gDist <= 1) dirScore -= 600;
+                  else if (gDist === 2) dirScore -= 150;
+              }
+              // Avoid super P1
+              if (p1SuperTimer > 0) {
+                  let p1Dist = Math.abs(vd.nx - px) + Math.abs(vd.ny - py);
+                  if (p1Dist <= 1) dirScore -= 800;
+                  else if (p1Dist === 2) dirScore -= 300;
+              }
+          } else {
+              // If super, eating ghosts is rewarding!
+              for (let g of ghosts) {
+                  if (g.isDead) continue;
+                  let gDist = Math.abs(vd.nx - g.x) + Math.abs(vd.ny - g.y);
+                  if (gDist <= 1) dirScore += 200;
+              }
+          }
+
+          if (dirScore > bestScore) {
+              bestScore = dirScore;
+              bestDir = vd;
+          }
+      }
+
+      p2ndx = bestDir.dx;
+      p2ndy = bestDir.dy;
+  }
+
+  function updateDuelMode() {
+      if (screenShake > 0.1) screenShake *= 0.88; else screenShake = 0;
+      if (saveMsgTimer > 0) saveMsgTimer--;
+      if (showHelp || paused) return;
+
+      // Handle Replay Playback
+      if (isReplayActive) {
+          return;
+      }
+
+      if (duelMatchOver) return;
+
+      if (frameCount === 1999 || p1Score === 1999 || p2Score === 1999) {
+          triggerArgSignalTrace();
+      }
+
+      // AI Decision
+      if (isAIDuel && frameCount % 2 === 0) {
+          updateAIDuelDecision();
+      }
+
+      // Step P1 queued turn
+      if (ndx !== 0 || ndy !== 0) {
+          let nx = px + ndx, ny = py + ndy;
+          if (nx < 0) nx = COLS - 1;
+          if (nx >= COLS) nx = 0;
+          if (ny >= 0 && ny < ROWS && map[ny][nx] !== 1) {
+              pdx = ndx; pdy = ndy; ndx = 0; ndy = 0;
+          }
+      }
+
+      // Step P2 queued turn
+      if (p2ndx !== 0 || p2ndy !== 0) {
+          let nx = p2x + p2ndx, ny = p2y + p2ndy;
+          if (nx < 0) nx = COLS - 1;
+          if (nx >= COLS) nx = 0;
+          if (ny >= 0 && ny < ROWS && map[ny][nx] !== 1) {
+              p2dx = p2ndx; p2dy = p2ndy; p2ndx = 0; p2ndy = 0;
+          }
+      }
+
+      // Movement Speed: 1 grid step every 2 frames
+      let moveTick = (frameCount % 2 === 0);
+
+      if (moveTick) {
+          // Move P1 (Only update if local player controls P1 or local 2P or AI duel)
+          if (!isOnlineDuel || myPlayerSlot === 1) {
+              let nx = px + pdx, ny = py + pdy;
+              if (nx < 0) nx = COLS - 1;
+              if (nx >= COLS) nx = 0;
+              if (ny >= 0 && ny < ROWS && map[ny][nx] !== 1) {
+                  px = nx; py = ny;
+
+                  let eatenTile = null;
+                  if (map[py][px] === 2) { // Pellet
+                      map[py][px] = 0; dotCount--; p1Score += 10; score = p1Score;
+                      eatenTile = { r: py, c: px };
+                      playSound(440, 0.05, 'sine');
+                  } else if (map[py][px] === 3) { // Energizer Super Pellet
+                      map[py][px] = 0; dotCount--; p1Score += 50; score = p1Score;
+                      p1SuperTimer = 70; eatenTile = { r: py, c: px };
+                      playSound(880, 0.2, 'triangle', 200);
+                      addShockwave(px * TS + TS/2, py * TS + TS/2, '#ffd700');
+                      saveMsgText = "P1 SUPER OVERCHARGE!"; saveMsgTimer = 20;
+                  } else if (map[py][px] >= 4 && map[py][px] <= 5) { // Power dot
+                      map[py][px] = 0; dotCount--; p1Score += 25; score = p1Score;
+                      eatenTile = { r: py, c: px };
+                  }
+
+                  if (isOnlineDuel && rMultiplayer && (Date.now() - lastMoveSyncTs > 70 || eatenTile)) {
+                      rMultiplayer.sendMove({ x: px, y: py, dx: pdx, dy: pdy, score: p1Score, kos: p1KOs, superTimer: p1SuperTimer, eatenPellet: eatenTile });
+                      lastMoveSyncTs = Date.now();
+                  }
+              }
+          }
+
+          // Move P2
+          if (!isOnlineDuel || myPlayerSlot === 2) {
+              let nx2 = p2x + p2dx, ny2 = p2y + p2dy;
+              if (nx2 < 0) nx2 = COLS - 1;
+              if (nx2 >= COLS) nx2 = 0;
+              if (ny2 >= 0 && ny2 < ROWS && map[ny2][nx2] !== 1) {
+                  p2x = nx2; p2y = ny2;
+
+                  let eatenTile2 = null;
+                  if (map[p2y][p2x] === 2) {
+                      map[p2y][p2x] = 0; dotCount--; p2Score += 10;
+                      eatenTile2 = { r: p2y, c: p2x };
+                      playSound(520, 0.05, 'sine');
+                  } else if (map[p2y][p2x] === 3) {
+                      map[p2y][p2x] = 0; dotCount--; p2Score += 50;
+                      p2SuperTimer = 70; eatenTile2 = { r: p2y, c: p2x };
+                      playSound(920, 0.2, 'triangle', 200);
+                      addShockwave(p2x * TS + TS/2, p2y * TS + TS/2, '#00e5ff');
+                      saveMsgText = "P2 SUPER OVERCHARGE!"; saveMsgTimer = 20;
+                  } else if (map[p2y][p2x] >= 4 && map[p2y][p2x] <= 5) {
+                      map[p2y][p2x] = 0; dotCount--; p2Score += 25;
+                      eatenTile2 = { r: p2y, c: p2x };
+                  }
+
+                  if (isOnlineDuel && rMultiplayer && (Date.now() - lastMoveSyncTs > 70 || eatenTile2)) {
+                      rMultiplayer.sendMove({ x: p2x, y: p2y, dx: p2dx, dy: p2dy, score: p2Score, kos: p2KOs, superTimer: p2SuperTimer, eatenPellet: eatenTile2 });
+                      lastMoveSyncTs = Date.now();
+                  }
+              }
+          }
+      }
+
+      // Count down power timers
+      if (p1SuperTimer > 0) p1SuperTimer--;
+      if (p2SuperTimer > 0) p2SuperTimer--;
+      if (p1InvulnTimer > 0) p1InvulnTimer--;
+      if (p2InvulnTimer > 0) p2InvulnTimer--;
+
+      // Move Ghosts in Duel Arena (Host or Local)
+      if (!isOnlineDuel || myPlayerSlot === 1) {
+          if (frameCount % 4 === 0) {
+              const dirs = [[1, 0], [-1, 0], [0, 1], [0, -1]];
+              for (let i = 0; i < Math.min(3, ghosts.length); i++) {
+                  let g = ghosts[i];
+                  if (g.isDead) {
+                      // Return to nest
+                      if (g.x === 7 && g.y === 6) g.isDead = 0;
+                      else {
+                          g.x += (7 > g.x) ? 1 : ((7 < g.x) ? -1 : 0);
+                          g.y += (6 > g.y) ? 1 : ((6 < g.y) ? -1 : 0);
+                      }
+                      continue;
+                  }
+
+                  // Target player: closest who is NOT super
+                  let d1 = Math.abs(g.x - px) + Math.abs(g.y - py);
+                  let d2 = Math.abs(g.x - p2x) + Math.abs(g.y - p2y);
+
+                  let tx = px, ty = py;
+                  if (p1SuperTimer > 0 && p2SuperTimer <= 0) {
+                      tx = p2x; ty = p2y;
+                  } else if (p2SuperTimer > 0 && p1SuperTimer <= 0) {
+                      tx = px; ty = py;
+                  } else if (p1SuperTimer > 0 && p2SuperTimer > 0) {
+                      tx = (g.x < 7) ? 1 : 13; ty = (g.y < 7) ? 1 : 13;
+                  } else {
+                      tx = (d1 <= d2) ? px : p2x;
+                      ty = (d1 <= d2) ? py : p2y;
+                  }
+
+                  let bestD = -1, minDist = 99999;
+                  for (let d = 0; d < 4; d++) {
+                      let nx = g.x + dirs[d][0], ny = g.y + dirs[d][1];
+                      if (nx < 0) nx = COLS - 1;
+                      if (nx >= COLS) nx = 0;
+                      if (ny >= 0 && ny < ROWS && map[ny][nx] !== 1) {
+                          let dist = Math.abs(nx - tx) + Math.abs(ny - ty);
+                          if (dist < minDist) { minDist = dist; bestD = d; }
+                      }
+                  }
+                  if (bestD !== -1) {
+                      let nx = g.x + dirs[bestD][0], ny = g.y + dirs[bestD][1];
+                      if (nx < 0) nx = COLS - 1;
+                      if (nx >= COLS) nx = 0;
+                      if (ny >= 0 && ny < ROWS && map[ny][nx] !== 1) {
+                          g.x = nx; g.y = ny;
+                          g.dirX = dirs[bestD][0]; g.dirY = dirs[bestD][1];
+                      }
+                  }
+              }
+          }
+      }
+
+      // Ghost Collisions with P1 & P2
+      for (let i = 0; i < Math.min(3, ghosts.length); i++) {
+          let g = ghosts[i];
+          if (g.isDead) continue;
+
+          if (g.x === px && g.y === py) {
+              if (p1SuperTimer > 0) {
+                  g.isDead = 1;
+                  p1Score += 200; score = p1Score;
+                  addShockwave(px * TS + TS/2, py * TS + TS/2, '#ffd700');
+                  playSound(600, 0.25, 'triangle', 200);
+                  showToast("👻 P1 Devoured Ghost! (+200 pts)", "success");
+              } else if (p1InvulnTimer <= 0) {
+                  p2KOs++; p2Score += 500;
+                  p1InvulnTimer = 35;
+                  px = 7; py = 12; pdx = 0; pdy = 0; ndx = 0; ndy = 0;
+                  addExplosion(px * TS + TS/2, py * TS + TS/2, '#ff1744');
+                  playSound(200, 0.4, 'sawtooth');
+                  screenShake = 1.5;
+                  showToast("💀 P1 hit by Ghost! (+1 KO to P2)", "danger");
+                  recordReplayFrame("P1 KO by Ghost");
+                  if (isOnlineDuel && rMultiplayer) {
+                      rMultiplayer.sendMove({ event: "P1 KO by Ghost", kos: p1KOs, score: p1Score });
+                  }
+              }
+          }
+
+          if (g.x === p2x && g.y === p2y) {
+              if (p2SuperTimer > 0) {
+                  g.isDead = 1;
+                  p2Score += 200;
+                  addShockwave(p2x * TS + TS/2, p2y * TS + TS/2, '#00e5ff');
+                  playSound(600, 0.25, 'triangle', 200);
+                  showToast("👻 P2 Devoured Ghost! (+200 pts)", "info");
+              } else if (p2InvulnTimer <= 0) {
+                  p1KOs++; p1Score += 500; score = p1Score;
+                  p2InvulnTimer = 35;
+                  p2x = 7; p2y = 2; p2dx = 0; p2dy = 0; p2ndx = 0; p2ndy = 0;
+                  addExplosion(p2x * TS + TS/2, p2y * TS + TS/2, '#00e5ff');
+                  playSound(200, 0.4, 'sawtooth');
+                  screenShake = 1.5;
+                  showToast("💥 P2 hit by Ghost! (+1 KO to P1)", "success");
+                  recordReplayFrame("P2 KO by Ghost");
+                  if (isOnlineDuel && rMultiplayer) {
+                      rMultiplayer.sendMove({ event: "P2 KO by Ghost", kos: p2KOs, score: p2Score });
+                  }
+              }
+          }
+      }
+
+      // Direct P1 vs P2 Collision
+      if (px === p2x && py === p2y) {
+          if (p1SuperTimer > 0 && p2SuperTimer > 0) {
+              addShockwave(px * TS + TS/2, py * TS + TS/2, '#ffffff');
+              playSound(350, 0.2, 'sawtooth');
+              screenShake = 2.0;
+              saveMsgText = "SUPER SHIELD CLASH!"; saveMsgTimer = 20;
+              pdx = -pdx; pdy = -pdy; p2dx = -p2dx; p2dy = -p2dy;
+          } else if (p1SuperTimer > 0 && p2InvulnTimer <= 0) {
+              p1KOs++; p1Score += 1000; score = p1Score;
+              p2InvulnTimer = 35;
+              p2x = 7; p2y = 2; p2dx = 0; p2dy = 0; p2ndx = 0; p2ndy = 0;
+              addExplosion(p2x * TS + TS/2, p2y * TS + TS/2, '#ff1744');
+              playSound(650, 0.35, 'triangle', 250);
+              screenShake = 2.5;
+              showToast("⚡ P1 CHOMPED P2! (+1 KO, +1000 PTS)", "success");
+              recordReplayFrame("P1 Chomped P2");
+              if (isOnlineDuel && rMultiplayer) {
+                  rMultiplayer.sendMove({ event: "P1 Chomped P2!", kos: p1KOs, score: p1Score });
+              }
+          } else if (p2SuperTimer > 0 && p1InvulnTimer <= 0) {
+              p2KOs++; p2Score += 1000;
+              p1InvulnTimer = 35;
+              px = 7; py = 12; pdx = 0; pdy = 0; ndx = 0; ndy = 0;
+              addExplosion(px * TS + TS/2, py * TS + TS/2, '#00e5ff');
+              playSound(650, 0.35, 'triangle', 250);
+              screenShake = 2.5;
+              showToast("💀 P2 CHOMPED P1! (+1 KO, +1000 PTS)", "danger");
+              recordReplayFrame("P2 Chomped P1");
+              if (isOnlineDuel && rMultiplayer) {
+                  rMultiplayer.sendMove({ event: "P2 Chomped P1!", kos: p2KOs, score: p2Score });
+              }
+          }
+      }
+
+      // Check Match Over Conditions
+      if (p1KOs >= targetKOs) {
+          duelMatchOver = true;
+          duelWinner = 1;
+          playSound(800, 0.6, 'sine', 200);
+          showToast("🏆 PLAYER 1 WINS THE DUEL ARENA!", "success");
+          recordReplayFrame("P1 Wins Match");
+          if (isOnlineDuel && rMultiplayer) rMultiplayer.sendMove({ event: "P1 WINS MATCH!", matchOver: true, winner: 1 });
+      } else if (p2KOs >= targetKOs) {
+          duelMatchOver = true;
+          duelWinner = 2;
+          playSound(250, 0.6, 'sawtooth', -100);
+          showToast(`💀 ${oppPlayerName || 'PLAYER 2'} WINS THE DUEL ARENA!`, "danger");
+          recordReplayFrame("P2 Wins Match");
+          if (isOnlineDuel && rMultiplayer) rMultiplayer.sendMove({ event: "P2 WINS MATCH!", matchOver: true, winner: 2 });
+      } else if (dotCount <= 0) {
+          duelMatchOver = true;
+          duelWinner = (p1Score > p2Score) ? 1 : ((p2Score > p1Score) ? 2 : 0);
+          playSound(700, 0.5, 'sine');
+          showToast(duelWinner === 1 ? "🏆 P1 WINS ON DOT POINTS!" : (duelWinner === 2 ? "💀 P2 WINS ON DOT POINTS!" : "DRAW MATCH!"), "info");
+          recordReplayFrame("Arena Cleared");
+      }
+
+      // Update Shockwaves & Particles
+      for (let i = 0; i < shockwaves.length; i++) {
+          let s = shockwaves[i];
+          s.r += 2.2; s.r2 += 1.4; s.alpha -= 0.04;
+          if (s.r >= s.maxR || s.alpha <= 0) { shockwaves.splice(i, 1); i--; }
+      }
+      for (let i = 0; i < particles.length; i++) {
+          let p = particles[i];
+          p.x += p.vx; p.y += p.vy;
+          p.life--;
+          if (p.life <= 0) { particles.splice(i, 1); i--; }
+      }
+  }
+
   function update() {
+      if (isDuelMode) {
+          updateDuelMode();
+          recordReplayFrame();
+          frameCount++;
+          return;
+      }
       if (screenShake > 0.1) screenShake *= 0.88; else screenShake = 0;
       if (saveMsgTimer > 0) saveMsgTimer--;
       if (playerSlowTimer > 0 && !relicAegis) playerSlowTimer--;
@@ -2726,41 +4153,107 @@
       let baseAngle = (pdx === 1) ? 0 : ((pdx === -1) ? Math.PI : ((pdy === 1) ? Math.PI/2 : (pdy === -1 ? Math.PI*1.5 : 0)));
       let mouth = (deathTimer > 0) ? (Math.PI * (40 - deathTimer) / 40.0) : ([0.42, 0.26, 0.05, 0.26][frameCount % 4] * Math.PI);
 
-      // Outer Ambient Glow Aura
-      if (shieldActive || speedSkillTimer > 0) {
-          ctx.strokeStyle = shieldActive ? 'rgba(0, 229, 255, 0.8)' : 'rgba(255, 152, 0, 0.8)';
-          ctx.lineWidth = 2;
-          ctx.beginPath(); ctx.arc(cx, cy, radius + 3, 0, Math.PI * 2); ctx.stroke();
+      let p1Visible = (p1InvulnTimer <= 0) || (Math.floor(p1InvulnTimer / 2) % 2 === 0);
+      if (p1Visible) {
+          // Super Overcharge Glow Aura
+          if (p1SuperTimer > 0) {
+              let auraPulse = 0.5 + 0.5 * Math.sin(frameCount * 0.4);
+              ctx.strokeStyle = `rgba(255, 215, 0, ${auraPulse})`;
+              ctx.lineWidth = 2.5;
+              ctx.beginPath(); ctx.arc(cx, cy, radius + 4, 0, Math.PI * 2); ctx.stroke();
+          } else if (shieldActive || speedSkillTimer > 0) {
+              ctx.strokeStyle = shieldActive ? 'rgba(0, 229, 255, 0.8)' : 'rgba(255, 152, 0, 0.8)';
+              ctx.lineWidth = 2;
+              ctx.beginPath(); ctx.arc(cx, cy, radius + 3, 0, Math.PI * 2); ctx.stroke();
+          }
+
+          // 3D Pac-Man Body Gradient
+          let pacGrad = ctx.createRadialGradient(cx - 3, cy - 3, 2, cx, cy, radius);
+          if (p1SuperTimer > 0) {
+              pacGrad.addColorStop(0, '#ffffff'); pacGrad.addColorStop(0.5, '#ffd700'); pacGrad.addColorStop(1, '#ff6f00');
+          } else if (shieldActive) {
+              pacGrad.addColorStop(0, '#e0f7fa'); pacGrad.addColorStop(0.6, '#00e5ff'); pacGrad.addColorStop(1, '#00838f');
+          } else if (speedSkillTimer > 0) {
+              pacGrad.addColorStop(0, '#fff3e0'); pacGrad.addColorStop(0.6, '#ff9800'); pacGrad.addColorStop(1, '#e65100');
+          } else {
+              pacGrad.addColorStop(0, '#fffde7'); pacGrad.addColorStop(0.6, '#ffeb3b'); pacGrad.addColorStop(1, '#f57f17');
+          }
+          ctx.fillStyle = pacGrad;
+          ctx.beginPath();
+          ctx.arc(cx, cy, radius, baseAngle + mouth, baseAngle + Math.PI * 2 - mouth);
+          ctx.lineTo(cx, cy);
+          ctx.fill();
+
+          // Energetic Mouth Rim Line
+          ctx.strokeStyle = (p1SuperTimer > 0) ? '#fff9c4' : (shieldActive ? '#80deea' : '#ffe082');
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.arc(cx, cy, radius, baseAngle + mouth, baseAngle + Math.PI * 2 - mouth);
+          ctx.lineTo(cx, cy);
+          ctx.stroke();
+
+          // Glossy Specular Sheen Arc on Upper Forehead
+          ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
+          ctx.beginPath();
+          ctx.ellipse(cx - 3, cy - 4, 3, 1.8, -Math.PI / 4, 0, Math.PI * 2);
+          ctx.fill();
+
+          if (isDuelMode) {
+              ctx.fillStyle = '#ffd700';
+              ctx.font = 'bold 8px monospace';
+              ctx.textAlign = 'center';
+              ctx.fillText('P1', cx, cy - radius - 3);
+              ctx.textAlign = 'left';
+          }
       }
 
-      // 3D Pac-Man Body Gradient
-      let pacGrad = ctx.createRadialGradient(cx - 3, cy - 3, 2, cx, cy, radius);
-      if (shieldActive) {
-          pacGrad.addColorStop(0, '#e0f7fa'); pacGrad.addColorStop(0.6, '#00e5ff'); pacGrad.addColorStop(1, '#00838f');
-      } else if (speedSkillTimer > 0) {
-          pacGrad.addColorStop(0, '#fff3e0'); pacGrad.addColorStop(0.6, '#ff9800'); pacGrad.addColorStop(1, '#e65100');
-      } else {
-          pacGrad.addColorStop(0, '#fffde7'); pacGrad.addColorStop(0.6, '#ffeb3b'); pacGrad.addColorStop(1, '#f57f17');
+      // Draw Player 2 (Duel Arena)
+      if (isDuelMode) {
+          let cx2 = p2x * TS + TS/2, cy2 = p2y * TS + TS/2;
+          let r2 = TS/2 - 1;
+          let baseAngle2 = (p2dx === 1) ? 0 : ((p2dx === -1) ? Math.PI : ((p2dy === 1) ? Math.PI/2 : (p2dy === -1 ? Math.PI*1.5 : 0)));
+          let mouth2 = ([0.42, 0.26, 0.05, 0.26][(frameCount + 2) % 4] * Math.PI);
+
+          let p2Visible = (p2InvulnTimer <= 0) || (Math.floor(p2InvulnTimer / 2) % 2 === 0);
+          if (p2Visible) {
+              if (p2SuperTimer > 0) {
+                  let auraPulse = 0.5 + 0.5 * Math.sin(frameCount * 0.4);
+                  ctx.strokeStyle = `rgba(0, 229, 255, ${auraPulse})`;
+                  ctx.lineWidth = 2.5;
+                  ctx.beginPath(); ctx.arc(cx2, cy2, r2 + 4, 0, Math.PI * 2); ctx.stroke();
+              }
+
+              let p2Grad = ctx.createRadialGradient(cx2 - 3, cy2 - 3, 2, cx2, cy2, r2);
+              if (p2SuperTimer > 0) {
+                  p2Grad.addColorStop(0, '#ffffff'); p2Grad.addColorStop(0.5, '#00e5ff'); p2Grad.addColorStop(1, '#00838f');
+              } else {
+                  p2Grad.addColorStop(0, '#e0f7fa'); p2Grad.addColorStop(0.6, '#00bcd4'); p2Grad.addColorStop(1, '#006064');
+              }
+              ctx.fillStyle = p2Grad;
+              ctx.beginPath();
+              ctx.arc(cx2, cy2, r2, baseAngle2 + mouth2, baseAngle2 + Math.PI * 2 - mouth2);
+              ctx.lineTo(cx2, cy2);
+              ctx.fill();
+
+              ctx.strokeStyle = '#80deea';
+              ctx.lineWidth = 1;
+              ctx.beginPath();
+              ctx.arc(cx2, cy2, r2, baseAngle2 + mouth2, baseAngle2 + Math.PI * 2 - mouth2);
+              ctx.lineTo(cx2, cy2);
+              ctx.stroke();
+
+              ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
+              ctx.beginPath();
+              ctx.ellipse(cx2 - 3, cy2 - 4, 3, 1.8, -Math.PI / 4, 0, Math.PI * 2);
+              ctx.fill();
+
+              ctx.fillStyle = '#00e5ff';
+              ctx.font = 'bold 8px monospace';
+              ctx.textAlign = 'center';
+              ctx.fillText('P2', cx2, cy2 - r2 - 3);
+              ctx.textAlign = 'left';
+          }
       }
-      ctx.fillStyle = pacGrad;
-      ctx.beginPath();
-      ctx.arc(cx, cy, radius, baseAngle + mouth, baseAngle + Math.PI * 2 - mouth);
-      ctx.lineTo(cx, cy);
-      ctx.fill();
-
-      // Energetic Mouth Rim Line
-      ctx.strokeStyle = shieldActive ? '#80deea' : '#ffe082';
-      ctx.lineWidth = 1;
-      ctx.beginPath();
-      ctx.arc(cx, cy, radius, baseAngle + mouth, baseAngle + Math.PI * 2 - mouth);
-      ctx.lineTo(cx, cy);
-      ctx.stroke();
-
-      // Glossy Specular Sheen Arc on Upper Forehead
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
-      ctx.beginPath();
-      ctx.ellipse(cx - 3, cy - 4, 3, 1.8, -Math.PI / 4, 0, Math.PI * 2);
-      ctx.fill();
 
       // Draw Ghosts (Loop 9: 3D Glossy Dome, Sinusoidal Oscillating 3-Lobed Skirt, Tracking Eyes, Scared Mode, Boss Crown)
       for (let i = 0; i < numGhosts; i++) {
@@ -2941,23 +4434,46 @@
 
       // HUD Text
       ctx.fillStyle = '#fff'; ctx.font = '10px monospace'; ctx.textBaseline = 'top';
-      if (gameMode === 1) {
+      if (isDuelMode) {
+          let modeLabel = isOnlineDuel ? 'NET DUEL' : (isAIDuel ? `BOT DUEL (${['NOV','CYB','MST'][duelBotDiff]})` : (isReplayActive ? 'REPLAY' : '2P DUEL'));
+          ctx.fillText(`[${modeLabel}] P1 KOs:${p1KOs}/${targetKOs} | P2 KOs:${p2KOs}/${targetKOs}`, 4, 302);
+          ctx.fillStyle = '#ffd700';
+          ctx.fillText(`P1: ${p1Score}pts ${p1SuperTimer>0?'[SUPER]':''}`, 4, 314);
+          ctx.fillStyle = '#00e5ff';
+          ctx.fillText(`P2: ${p2Score}pts ${p2SuperTimer>0?'[SUPER]':''}`, 150, 314);
+          ctx.fillStyle = '#00e676';
+          if (isReplayActive) {
+              ctx.fillText(`[Space: Pause | R: Controls | Speed: ${replaySpeed}x]`, 4, 326);
+          } else {
+              ctx.fillText(`[X: Duel Menu | R: Replay | K: Keybinds | 1-4: Chat]`, 4, 326);
+          }
+      } else if (gameMode === 1) {
           ctx.fillText(`[ENDLESS W:${endlessWave}/HI:${endlessHighWave}] Sc:${score} Lvs:${lives}`, 4, 302);
+          let relicBadges = "";
+          if (relicCrown) relicBadges += "C";
+          if (relicHourglass) relicBadges += "H";
+          if (relicOrb) relicBadges += "O";
+          if (relicAegis) relicBadges += "A";
+          if (relicStone) relicBadges += "S";
+
+          ctx.fillStyle = '#00ffcc';
+          ctx.fillText(`Ect:${craftEctoplasm} Ess:${craftFruitEssence} Dst:${craftStarDust} [${relicBadges||"-"}] | Pet:Lv${petLevel}`, 4, 314);
+          ctx.fillStyle = '#ffeb3b';
+          ctx.fillText(`F:${freezeCooldown>0?'CD':'OK'} Z:${speedCooldown>0?'CD':'OK'} M:${magnetCooldown>0?'CD':'OK'} B:${shieldActive?'ON':(shieldCooldown>0?'CD':'OK')} U:${petCooldown>0?'CD':'OK'} [H]Help`, 4, 326);
       } else {
           ctx.fillText(`[CAMP Lv:${level}/20] Sc:${score} HI:${highScore} Lvs:${lives}`, 4, 302);
+          let relicBadges = "";
+          if (relicCrown) relicBadges += "C";
+          if (relicHourglass) relicBadges += "H";
+          if (relicOrb) relicBadges += "O";
+          if (relicAegis) relicBadges += "A";
+          if (relicStone) relicBadges += "S";
+
+          ctx.fillStyle = '#00ffcc';
+          ctx.fillText(`Ect:${craftEctoplasm} Ess:${craftFruitEssence} Dst:${craftStarDust} [${relicBadges||"-"}] | Pet:Lv${petLevel}`, 4, 314);
+          ctx.fillStyle = '#ffeb3b';
+          ctx.fillText(`F:${freezeCooldown>0?'CD':'OK'} Z:${speedCooldown>0?'CD':'OK'} M:${magnetCooldown>0?'CD':'OK'} B:${shieldActive?'ON':(shieldCooldown>0?'CD':'OK')} U:${petCooldown>0?'CD':'OK'} [H]Help`, 4, 326);
       }
-
-      let relicBadges = "";
-      if (relicCrown) relicBadges += "C";
-      if (relicHourglass) relicBadges += "H";
-      if (relicOrb) relicBadges += "O";
-      if (relicAegis) relicBadges += "A";
-      if (relicStone) relicBadges += "S";
-
-      ctx.fillStyle = '#00ffcc';
-      ctx.fillText(`Ect:${craftEctoplasm} Ess:${craftFruitEssence} Dst:${craftStarDust} [${relicBadges||"-"}] | Pet:Lv${petLevel}`, 4, 314);
-      ctx.fillStyle = '#ffeb3b';
-      ctx.fillText(`F:${freezeCooldown>0?'CD':'OK'} Z:${speedCooldown>0?'CD':'OK'} M:${magnetCooldown>0?'CD':'OK'} B:${shieldActive?'ON':(shieldCooldown>0?'CD':'OK')} U:${petCooldown>0?'CD':'OK'} [H]Help`, 4, 326);
 
       if (showCraftMenu) {
           ctx.fillStyle = 'rgba(5, 12, 25, 0.94)';
@@ -2989,7 +4505,7 @@
       } else if (showHelp) {
           ctx.fillStyle = 'rgba(0, 0, 0, 0.9)'; ctx.fillRect(0, 0, 300, 340);
           ctx.fillStyle = '#fff'; ctx.font = 'bold 14px sans-serif'; ctx.textAlign = 'center';
-          ctx.fillText('KPac Loop 11 - Help', 150, 22);
+          ctx.fillText('KPac Cyber Edition - Help', 150, 22);
           ctx.font = '10.5px sans-serif';
           ctx.fillText('Move: Arrows / WASD | Space: Pause', 150, 48);
           ctx.fillText('Skills: F(Freeze) Z(Sprint) M(Magnet) B(Shield)', 150, 70);
@@ -3006,7 +4522,24 @@
           ctx.fillStyle = '#ffeb3b'; ctx.font = 'bold 12px monospace';
           ctx.fillText(saveMsgText, 50, 160);
       }
-      if (victoryTimer > 0) {
+      if (isDuelMode && duelMatchOver) {
+          ctx.fillStyle = 'rgba(5, 12, 25, 0.92)';
+          ctx.fillRect(20, 110, 260, 95);
+          ctx.strokeStyle = (duelWinner === 1) ? '#ffd700' : '#00e5ff';
+          ctx.lineWidth = 2;
+          ctx.strokeRect(20, 110, 260, 95);
+
+          ctx.fillStyle = (duelWinner === 1) ? '#ffd700' : (duelWinner === 2 ? '#00e5ff' : '#ffffff');
+          ctx.font = 'bold 14px monospace'; ctx.textAlign = 'center';
+          ctx.fillText(duelWinner === 1 ? 'PLAYER 1 WINS!' : (duelWinner === 2 ? `${oppPlayerName || 'PLAYER 2'} WINS!` : 'MATCH TIED!'), 150, 130);
+
+          ctx.fillStyle = '#ffffff'; ctx.font = '10px monospace';
+          ctx.fillText(`Final: P1 ${p1KOs} KOs (${p1Score} pts) vs P2 ${p2KOs} KOs (${p2Score} pts)`, 150, 152);
+
+          ctx.fillStyle = '#00e676'; ctx.font = 'bold 10px monospace';
+          ctx.fillText('Press [R] / [Enter] for Rematch | [X] Duel Menu', 150, 175);
+          ctx.textAlign = 'left';
+      } else if (victoryTimer > 0) {
           ctx.fillStyle = '#00e676'; ctx.font = 'bold 14px monospace'; ctx.textAlign = 'center';
           ctx.fillText(gameMode === 1 ? 'WAVE CLEARED!' : 'MAZE CLEARED!', 150, 150);
           ctx.textAlign = 'left';
@@ -3026,6 +4559,9 @@
   }
 
   loadHighScore();
+  loadKeybinds();
+  initRetroMultiplayer();
+  checkUrlInvite();
   init(false);
   updateUIBadges();
 
