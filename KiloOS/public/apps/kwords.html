@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <title>KWords</title>
+<script src="../assets/js/retro_multiplayer.js"></script>
 <style>
   body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -135,27 +136,90 @@
     background: radial-gradient(circle, #fef08a 30%, #b45309 100%);
     box-shadow: 0 0 3px #f59e0b;
   }
+  /* Static brass perimeter trim (Mandate 11: clean static border without traveling glint) */
   .perimeter-shimmer {
     position: absolute;
-    top: 0; left: 0; right: 0; height: 3px;
-    background: linear-gradient(90deg, transparent, rgba(250, 204, 21, 0.95), transparent);
-    background-size: 200% 100%;
-    animation: goldShimmer 3s linear infinite;
+    top: 0; left: 0; right: 0; height: 2px;
+    background: rgba(245, 158, 11, 0.65);
+    box-shadow: 0 0 3px rgba(245, 158, 11, 0.4);
     pointer-events: none;
     z-index: 13;
   }
   .perimeter-shimmer-bot {
     position: absolute;
-    bottom: 0; left: 0; right: 0; height: 3px;
-    background: linear-gradient(90deg, transparent, rgba(250, 204, 21, 0.95), transparent);
-    background-size: 200% 100%;
-    animation: goldShimmer 3s linear infinite reverse;
+    bottom: 0; left: 0; right: 0; height: 2px;
+    background: rgba(245, 158, 11, 0.65);
+    box-shadow: 0 0 3px rgba(245, 158, 11, 0.4);
     pointer-events: none;
     z-index: 13;
   }
-  @keyframes goldShimmer {
-    0% { background-position: -200% 0; }
-    100% { background-position: 200% 0; }
+  /* Duel & Modal additions */
+  .duel-badge {
+    padding: 2px 7px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: bold;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .modal-dialog {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: #1e212b;
+    border: 2px solid #2d3748;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.85), inset 0 1px 0 rgba(255,255,255,0.1);
+    padding: 20px;
+    max-height: 85%;
+    overflow-y: auto;
+    border-radius: 10px;
+    box-sizing: border-box;
+    color: #e2e8f0;
+  }
+  .modal-btn {
+    background: #3182ce;
+    color: white;
+    border: none;
+    padding: 6px 14px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background 0.15s;
+  }
+  .modal-btn:hover { background: #2b6cb0; }
+  .modal-btn-alt { background: #4a5568; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; }
+  .modal-btn-alt:hover { background: #2d3748; }
+  .modal-input {
+    background: #0f131a;
+    border: 1px solid #4a5568;
+    color: #e2e8f0;
+    padding: 6px 10px;
+    border-radius: 4px;
+    font-family: inherit;
+    font-size: 13px;
+    box-sizing: border-box;
+    width: 100%;
+  }
+  .modal-input:focus {
+    border-color: #63b3ed;
+    outline: none;
+  }
+  .cell.solution-overlay {
+    outline: 2px dashed #ecc94b !important;
+    background: rgba(236, 201, 75, 0.28) !important;
+  }
+  .cell.duel-opp-found {
+    border: 2px solid #fc8181 !important;
+    background: rgba(229, 62, 62, 0.25) !important;
+  }
+  .words-list li {
+    cursor: pointer;
+  }
+  .words-list li:hover {
+    color: #63b3ed;
+    text-decoration: underline;
   }
   .words-list {
     flex: 1;
@@ -502,9 +566,11 @@
         <option value="zen">Zen Mode</option>
         <option value="time_attack">Time Attack</option>
         <option value="campaign">Campaign</option>
+        <option value="custom">Custom Puzzle</option>
+        <option value="duel">Online Duel</option>
       </select>
     </div>
-    <div style="display:flex; align-items:center; gap:3px;">
+    <div style="display:flex; align-items:center; gap:3px; flex-wrap:wrap;">
       <button class="diff-btn" id="btn-easy" onclick="setDifficulty('easy')">Easy</button>
       <button class="diff-btn active" id="btn-medium" onclick="setDifficulty('medium')">Medium</button>
       <button class="diff-btn" id="btn-hard" onclick="setDifficulty('hard')">Hard</button>
@@ -512,6 +578,11 @@
       <button class="diff-btn" id="btn-radar" onclick="useRadar()" style="background-color: #9f7aea; color: white; font-weight: bold;">Radar (R)</button>
       <button class="diff-btn" id="btn-path" onclick="usePathfinder()" style="background-color: #38a169; color: white; font-weight: bold;">Path (P)</button>
       <button class="diff-btn" id="btn-freeze" onclick="useFreeze()" style="background-color: #38b2ac; color: #1a202c; font-weight: bold;">Freeze (F)</button>
+      <button class="diff-btn" id="btn-duel" onclick="openMultiplayerModal()" style="background-color: #805ad5; color: white; font-weight: bold; margin-left: 3px;">Duel (M)</button>
+      <button class="diff-btn" id="btn-custom" onclick="openCustomModal()">Custom (C)</button>
+      <button class="diff-btn" id="btn-replay" onclick="openReplayModal()">Replay (V)</button>
+      <button class="diff-btn" id="btn-export" onclick="openExportModal()">Export (E)</button>
+      <button class="diff-btn" id="btn-lexicon" onclick="openLexiconModal()">Lexicon</button>
       <button class="diff-btn" onclick="saveGame()" style="margin-left: 3px;">Save</button>
       <button class="diff-btn" onclick="loadGame()">Load</button>
       <button class="diff-btn" onclick="showStatsModal()">Stats</button>
@@ -525,6 +596,55 @@
       Skills: <span id="powerup-info">R:3 P:3 F:3 H:3</span>
     </div>
   </div>
+
+  <!-- Non-intrusive invite notice when room link opened (Mandate 12 Connect Gate) -->
+  <div id="invite-notification" style="display:none; margin-bottom:8px; padding:8px 12px; background:linear-gradient(90deg, #553c9a, #44337a); border:2px solid #b794f4; border-radius:6px; color:#f7fafc; justify-content:space-between; align-items:center;">
+    <span>⚔️ <strong>Word Search Duel Invitation</strong> detected! Room Code: <strong id="invite-code-text" style="font-family:monospace; color:#fef08a;">WRD-????</strong></span>
+    <div style="display:flex; gap:6px;">
+      <button onclick="acceptInvite()" style="background:#48bb78; color:white; border:none; padding:4px 12px; border-radius:4px; font-weight:bold; cursor:pointer;">Join Duel</button>
+      <button onclick="dismissInvite()" style="background:#4a5568; color:white; border:none; padding:4px 8px; border-radius:4px; cursor:pointer;">Dismiss</button>
+    </div>
+  </div>
+
+  <!-- Real-time Online Duel HUD -->
+  <div id="duel-bar" style="display:none; margin-bottom:8px; padding:6px 12px; background:linear-gradient(90deg, #1a202c, #2d3748); border:1px solid #805ad5; border-radius:6px; color:#e2e8f0; font-size:12px;">
+    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+      <div style="display:flex; align-items:center; gap:8px;">
+        <span style="font-weight:bold; color:#a78bfa;">⚔️ DUEL MODE</span>
+        <span id="duel-status-badge" class="duel-badge" style="background:#2b6cb0; color:white;">Lobby Active</span>
+        <span id="duel-room-badge" style="background:#4a5568; color:#f7fafc; padding:2px 6px; border-radius:4px; font-family:monospace; font-size:11px;">ROOM: ----</span>
+      </div>
+      <div style="display:flex; align-items:center; gap:4px;">
+        <span style="font-size:10px; color:#a0aec0; margin-right:4px;">Quick Chat:</span>
+        <button class="diff-btn" onclick="sendDuelChat('Good luck!')" style="font-size:10px; padding:2px 5px;">Good luck!</button>
+        <button class="diff-btn" onclick="sendDuelChat('Found one!')" style="font-size:10px; padding:2px 5px;">Found one!</button>
+        <button class="diff-btn" onclick="sendDuelChat('Almost done!')" style="font-size:10px; padding:2px 5px;">Almost done!</button>
+        <button class="diff-btn" onclick="sendDuelChat('GG!')" style="font-size:10px; padding:2px 5px;">GG!</button>
+        <button class="diff-btn" onclick="leaveMultiplayer()" style="font-size:10px; padding:2px 6px; background:#e53e3e; color:white; font-weight:bold; margin-left:6px;">Leave Duel</button>
+      </div>
+    </div>
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:6px;">
+      <div>
+        <div style="display:flex; justify-content:space-between; font-size:11px; margin-bottom:2px;">
+          <span id="duel-p1-label" style="font-weight:bold; color:#68d391;">You (Player)</span>
+          <span>Found: <strong id="duel-p1-found">0</strong>/<span id="duel-p1-total">0</span> | <span id="duel-p1-score">0</span> pts</span>
+        </div>
+        <div style="height:6px; background:#171923; border-radius:3px; overflow:hidden;">
+          <div id="duel-p1-bar" style="height:100%; width:0%; background:#48bb78; transition:width 0.3s;"></div>
+        </div>
+      </div>
+      <div>
+        <div style="display:flex; justify-content:space-between; font-size:11px; margin-bottom:2px;">
+          <span id="duel-p2-label" style="font-weight:bold; color:#fc8181;">Opponent: Waiting...</span>
+          <span>Found: <strong id="duel-p2-found">0</strong>/<span id="duel-p2-total">0</span> | <span id="duel-p2-score">0</span> pts</span>
+        </div>
+        <div style="height:6px; background:#171923; border-radius:3px; overflow:hidden;">
+          <div id="duel-p2-bar" style="height:100%; width:0%; background:#e53e3e; transition:width 0.3s;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div class="container">
     <div class="grid-container">
       <div class="perimeter-shimmer"></div>
@@ -552,7 +672,7 @@
     <div style="position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); background:#1e212b; border:2px solid #2d3748; padding:20px; width:420px; max-height:80%; overflow-y:auto; border-radius:10px;">
       <h2 id="stats-title" style="margin-top:0; color:#63b3ed;">Statistics</h2>
       <div id="stats-content"></div>
-      <button onclick="document.getElementById('stats-modal').style.display='none'" style="margin-top:15px; width:100%;">Close</button>
+      <button id="stats-close-btn" class="modal-close btn-help-footer-close" onclick="document.getElementById('stats-modal').style.display='none'" style="margin-top:15px; width:100%;">Close</button>
     </div>
   </div>
 
@@ -582,7 +702,212 @@
         <li style="width: auto;"><strong>Fog of War:</strong> Dark cells hide letters until revealed by search or skills.</li>
         <li style="width: auto;"><strong>Bonus Secret Words:</strong> Hidden bonus words award +500 PTS!</li>
       </ul>
-      <button onclick="document.getElementById('help-modal').style.display='none'" style="margin-top:15px; width: 100%;">Close</button>
+      <button id="help-close-btn" class="modal-close btn-help-footer-close" onclick="document.getElementById('help-modal').style.display='none'" style="margin-top:15px; width: 100%;">Close</button>
+    </div>
+  </div>
+
+  <!-- Online Multiplayer Duel Modal -->
+  <div id="multiplayer-modal" role="dialog" aria-modal="true" aria-labelledby="mp-title" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:110;">
+    <div class="modal-dialog" style="width:460px;">
+      <h2 id="mp-title" style="margin-top:0; color:#a78bfa; display:flex; align-items:center; gap:8px;">⚔️ Online Word Search Duel</h2>
+      <p style="font-size:13px; color:#cbd5e0; margin-bottom:14px;">Challenge players anywhere across the internet in real-time word search races! Both players solve the exact same board simultaneously.</p>
+      
+      <div style="background:#171923; border:1px solid #4a5568; border-radius:6px; padding:12px; margin-bottom:14px;">
+        <label style="font-size:12px; font-weight:bold; color:#a0aec0; display:block; margin-bottom:4px;">YOUR PILOT HANDLE</label>
+        <input id="duel-player-name" class="modal-input" maxlength="16" placeholder="Player Name" value="WordSeeker">
+      </div>
+
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:14px;">
+        <button class="modal-btn" onclick="startQuickMatch()" style="background:#805ad5; padding:10px; font-size:13px;">⚡ Quick Match</button>
+        <button class="modal-btn" onclick="createDuelRoom()" style="background:#319795; padding:10px; font-size:13px;">🏠 Host Room</button>
+      </div>
+
+      <div style="background:#171923; border:1px solid #4a5568; border-radius:6px; padding:12px; margin-bottom:14px;">
+        <label style="font-size:12px; font-weight:bold; color:#a0aec0; display:block; margin-bottom:4px;">JOIN SPECIFIC ROOM CODE</label>
+        <div style="display:flex; gap:6px;">
+          <input id="duel-join-code-input" class="modal-input" placeholder="e.g. WRD-4892" style="font-family:monospace; text-transform:uppercase;">
+          <button class="modal-btn" onclick="joinDuelRoomFromInput()" style="white-space:nowrap;">Join</button>
+        </div>
+      </div>
+
+      <!-- Live Room Status Card -->
+      <div id="duel-room-card" style="display:none; background:#1a202c; border:1px solid #6b46c1; border-radius:6px; padding:12px; margin-bottom:14px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+          <span style="font-size:12px; font-weight:bold; color:#d6bcfa;">ROOM CODE:</span>
+          <span id="duel-active-room-code" style="font-size:16px; font-family:monospace; font-weight:bold; color:#fef08a;">----</span>
+        </div>
+        <div style="font-size:12px; color:#e2e8f0; margin-bottom:8px;" id="duel-active-status">Connecting to lobby...</div>
+        <div id="duel-fallback-countdown" style="font-size:11px; color:#f6ad55; margin-bottom:8px;">Solo AI CyberBot-99 fallback in 25s...</div>
+        <div style="display:flex; gap:6px;">
+          <button class="modal-btn-alt" onclick="copyDuelRoomLink()" style="flex:1; font-size:11px;">📋 Copy Invite Link</button>
+          <button class="modal-btn-alt" onclick="startSoloCyberBotDuel()" style="flex:1; font-size:11px; background:#44337a;">🤖 Play CyberBot Now</button>
+        </div>
+      </div>
+
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px;">
+        <span style="font-size:11px; color:#718096;">*Mandate 12 Compliant: Auto AI engages after 25s</span>
+        <button class="modal-btn-alt" onclick="closeMultiplayerModal()">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Custom Puzzle Creator Modal -->
+  <div id="custom-modal" role="dialog" aria-modal="true" aria-labelledby="custom-title" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:110;">
+    <div class="modal-dialog" style="width:480px;">
+      <h2 id="custom-title" style="margin-top:0; color:#4fd1c5;">🧩 Custom Puzzle Builder</h2>
+      <p style="font-size:13px; color:#cbd5e0; margin-bottom:12px;">Construct your own word search puzzle with custom words, themes, and dimensions!</p>
+
+      <div style="margin-bottom:10px;">
+        <label style="font-size:12px; font-weight:bold; color:#a0aec0; display:block; margin-bottom:4px;">PUZZLE TITLE & THEME</label>
+        <input id="custom-puzzle-title" class="modal-input" placeholder="e.g. 1999 Hacker Culture" value="Custom Mission">
+      </div>
+
+      <div style="margin-bottom:10px;">
+        <label style="font-size:12px; font-weight:bold; color:#a0aec0; display:block; margin-bottom:4px;">GRID DIMENSIONS</label>
+        <select id="custom-puzzle-size" class="modal-input" style="cursor:pointer;">
+          <option value="10">10 x 10 (Compact)</option>
+          <option value="12">12 x 12 (Standard)</option>
+          <option value="15" selected>15 x 15 (Classic)</option>
+          <option value="18">18 x 18 (Large)</option>
+          <option value="20">20 x 20 (Master)</option>
+        </select>
+      </div>
+
+      <div style="margin-bottom:12px;">
+        <label style="font-size:12px; font-weight:bold; color:#a0aec0; display:block; margin-bottom:4px;">WORD BANK (comma or line separated, 3-20 words)</label>
+        <textarea id="custom-puzzle-words" class="modal-input" rows="4" style="resize:vertical;" placeholder="CYBERSPACE, MAINFRAME, PROTOCOL, FIREWALL, KERNEL, ROUTER"></textarea>
+      </div>
+
+      <div style="display:flex; gap:8px; margin-bottom:12px;">
+        <button class="modal-btn" onclick="buildAndPlayCustomPuzzle()" style="flex:2; background:#319795;">▶ Generate & Play</button>
+        <button class="modal-btn-alt" onclick="shareCustomPuzzle()" style="flex:1;">🔗 Share Link</button>
+        <button class="modal-btn-alt" onclick="exportCustomJson()" style="flex:1;">💾 Export JSON</button>
+      </div>
+
+      <div style="border-top:1px solid #2d3748; padding-top:10px; margin-top:10px;">
+        <label style="font-size:11px; font-weight:bold; color:#a0aec0; display:block; margin-bottom:4px;">IMPORT PUZZLE (PASTE CODE OR JSON)</label>
+        <div style="display:flex; gap:6px;">
+          <input id="custom-import-input" class="modal-input" placeholder="Paste Base64 code or JSON string here...">
+          <button class="modal-btn-alt" onclick="importCustomPuzzle()">Import</button>
+        </div>
+      </div>
+
+      <div style="margin-top:14px; text-align:right;">
+        <button class="modal-btn-alt" onclick="closeCustomModal()">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Replay Scrubber Modal -->
+  <div id="replay-modal" role="dialog" aria-modal="true" aria-labelledby="replay-title" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:110;">
+    <div class="modal-dialog" style="width:480px;">
+      <h2 id="replay-title" style="margin-top:0; color:#f6ad55;">📼 Word Search Replay Scrubber</h2>
+      <p style="font-size:13px; color:#cbd5e0; margin-bottom:12px;">Review each move and word discovery chronological sequence!</p>
+
+      <div id="replay-status-card" style="background:#171923; border:1px solid #4a5568; border-radius:6px; padding:12px; margin-bottom:14px;">
+        <div style="display:flex; justify-content:space-between; font-size:13px; margin-bottom:6px;">
+          <span style="font-weight:bold; color:#ecc94b;" id="replay-step-info">Step 0 / 0</span>
+          <span id="replay-time-info" style="color:#a0aec0;">Time: 00:00</span>
+        </div>
+        <div style="font-size:15px; font-weight:bold; color:#68d391; margin-bottom:4px;" id="replay-word-info">No moves recorded yet</div>
+        <div style="font-size:12px; color:#cbd5e0;" id="replay-pts-info">Score: 0 pts</div>
+      </div>
+
+      <div style="margin-bottom:14px;">
+        <input id="replay-slider" type="range" min="0" max="0" value="0" oninput="scrubReplayTo(parseInt(this.value))" style="width:100%; cursor:pointer;">
+      </div>
+
+      <div style="display:flex; justify-content:center; gap:8px; margin-bottom:14px;">
+        <button class="modal-btn-alt" onclick="replayFirst()">⏮ First</button>
+        <button class="modal-btn-alt" onclick="replayPrev()">◀ Prev</button>
+        <button class="modal-btn" id="replay-play-btn" onclick="toggleReplayPlay()" style="background:#dd6b20; min-width:80px;">▶ Play</button>
+        <button class="modal-btn-alt" onclick="replayNext()">Next ▶</button>
+        <button class="modal-btn-alt" onclick="replayLast()">Last ⏭</button>
+      </div>
+
+      <div style="text-align:right;">
+        <button class="modal-btn-alt" onclick="closeReplayModal()">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ASCII Grid & Solution Export Modal -->
+  <div id="export-modal" role="dialog" aria-modal="true" aria-labelledby="export-title" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:110;">
+    <div class="modal-dialog" style="width:520px;">
+      <h2 id="export-title" style="margin-top:0; color:#63b3ed;">📄 ASCII Grid & Solution Export</h2>
+      <p style="font-size:13px; color:#cbd5e0; margin-bottom:10px;">Formatted printable retro ASCII puzzle sheet and coordinate solution key.</p>
+
+      <div style="display:flex; gap:6px; margin-bottom:10px;">
+        <button class="modal-btn" onclick="showExportTab('ascii')" id="tab-btn-ascii" style="background:#2b6cb0; font-size:12px;">ASCII Puzzle Grid</button>
+        <button class="modal-btn-alt" onclick="showExportTab('solution')" id="tab-btn-sol" style="font-size:12px;">Solution Key Sheet</button>
+        <button class="modal-btn-alt" onclick="toggleSolutionMapOverlay()" id="btn-toggle-overlay" style="font-size:12px; background:#4a5568;">👁️ Overlay On Grid</button>
+      </div>
+
+      <textarea id="export-text-area" readonly class="modal-input" rows="14" style="font-family:monospace; font-size:11px; white-space:pre; tab-size:2; line-height:1.2;"></textarea>
+
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-top:12px;">
+        <div style="display:flex; gap:6px;">
+          <button class="modal-btn" onclick="copyExportText()">📋 Copy Text</button>
+          <button class="modal-btn-alt" onclick="downloadExportText()">💾 Download .TXT</button>
+        </div>
+        <button class="modal-btn-alt" onclick="closeExportModal()">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Interactive Word Lexicon & Pattern Assistant Modal -->
+  <div id="lexicon-modal" role="dialog" aria-modal="true" aria-labelledby="lex-title" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:110;">
+    <div class="modal-dialog" style="width:480px;">
+      <h2 id="lex-title" style="margin-top:0; color:#ecc94b;">📖 Word Lexicon & Clue Assistant</h2>
+      <p style="font-size:13px; color:#cbd5e0; margin-bottom:12px;">Inspect definitions, tile score breakdowns, and practice wildcard pattern matching.</p>
+
+      <div id="lexicon-word-card" style="background:#171923; border:1px solid #d69e2e; border-radius:6px; padding:12px; margin-bottom:14px;">
+        <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:6px;">
+          <span id="lex-word-name" style="font-size:18px; font-weight:bold; color:#fef08a;">WORD</span>
+          <span id="lex-word-score" style="font-size:12px; color:#a0aec0;">10 Tile Pts | 8 Letters</span>
+        </div>
+        <div id="lex-word-def" style="font-size:13px; color:#e2e8f0; line-height:1.4; margin-bottom:8px;">Select a word to view definition and etymology.</div>
+        <div id="lex-word-tiles" style="display:flex; gap:4px; flex-wrap:wrap;"></div>
+      </div>
+
+      <div style="background:#171923; border:1px solid #4a5568; border-radius:6px; padding:12px; margin-bottom:14px;">
+        <label style="font-size:12px; font-weight:bold; color:#a0aec0; display:block; margin-bottom:4px;">WILDCARD PATTERN SOLVER (* for any chars, ? for 1 char)</label>
+        <div style="display:flex; gap:6px; margin-bottom:8px;">
+          <input id="lex-pattern-input" class="modal-input" placeholder="e.g. *GEN or C???ON" style="font-family:monospace; text-transform:uppercase;">
+          <button class="modal-btn" onclick="runLexiconPatternSearch()">Search</button>
+        </div>
+        <div id="lex-pattern-results" style="font-size:12px; color:#cbd5e0; max-height:80px; overflow-y:auto; line-height:1.4;"></div>
+      </div>
+
+      <div style="text-align:right;">
+        <button class="modal-btn-alt" onclick="closeLexiconModal()">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Duel Match Victory / Defeat Modal -->
+  <div id="duel-finish-modal" role="dialog" aria-modal="true" aria-labelledby="df-title" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:115;">
+    <div class="modal-dialog" style="width:420px; text-align:center;">
+      <h2 id="df-title" style="margin-top:0; color:#48bb78; font-size:24px;">⚔️ Duel Victory!</h2>
+      <p id="df-subtitle" style="font-size:14px; color:#cbd5e0; margin-bottom:16px;">You out-searched your challenger!</p>
+      
+      <div style="background:#171923; border:1px solid #4a5568; border-radius:6px; padding:14px; margin-bottom:16px; display:grid; grid-template-columns:1fr 1fr; gap:12px; text-align:left;">
+        <div>
+          <div style="font-size:11px; color:#a0aec0; font-weight:bold;">YOUR SCORE</div>
+          <div id="df-p1-score" style="font-size:20px; font-weight:bold; color:#68d391;">0</div>
+          <div id="df-p1-found" style="font-size:11px; color:#cbd5e0;">0 words found</div>
+        </div>
+        <div>
+          <div style="font-size:11px; color:#a0aec0; font-weight:bold;" id="df-p2-label">OPPONENT</div>
+          <div id="df-p2-score" style="font-size:20px; font-weight:bold; color:#fc8181;">0</div>
+          <div id="df-p2-found" style="font-size:11px; color:#cbd5e0;">0 words found</div>
+        </div>
+      </div>
+
+      <div style="display:flex; justify-content:center; gap:8px;">
+        <button class="modal-btn" onclick="startDuelRematch()" style="background:#805ad5; padding:8px 18px;">🔄 Rematch</button>
+        <button class="modal-btn-alt" onclick="closeDuelFinishModal()">Exit Duel</button>
+      </div>
     </div>
   </div>
 
@@ -648,8 +973,59 @@
             osc.start(now);
             osc.stop(now + 1.0);
             osc.onended = () => { try { osc.disconnect(); gainNode.disconnect(); } catch (e) {} };
+        } else if (type === 'bell') {
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(1046.5, now);
+            osc.frequency.setValueAtTime(1318.5, now + 0.08);
+            gainNode.gain.setValueAtTime(0.12, now);
+            gainNode.gain.exponentialRampToValueAtTime(0.001, now + 0.6);
+            osc.start(now);
+            osc.stop(now + 0.6);
+            osc.onended = () => { try { osc.disconnect(); gainNode.disconnect(); } catch (e) {} };
+        } else if (type === 'alert') {
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(320, now);
+            osc.frequency.exponentialRampToValueAtTime(180, now + 0.18);
+            gainNode.gain.setValueAtTime(0.08, now);
+            gainNode.gain.exponentialRampToValueAtTime(0.005, now + 0.18);
+            osc.start(now);
+            osc.stop(now + 0.18);
+            osc.onended = () => { try { osc.disconnect(); gainNode.disconnect(); } catch (e) {} };
+        } else if (type === 'chat') {
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(660, now);
+            osc.frequency.setValueAtTime(880, now + 0.06);
+            gainNode.gain.setValueAtTime(0.08, now);
+            gainNode.gain.exponentialRampToValueAtTime(0.005, now + 0.2);
+            osc.start(now);
+            osc.stop(now + 0.2);
+            osc.onended = () => { try { osc.disconnect(); gainNode.disconnect(); } catch (e) {} };
         }
       } catch (e) {}
+    }
+
+    function showToast(msg, type = 'info') {
+      const existing = document.getElementById('kwords-toast');
+      if (existing) existing.remove();
+      const t = document.createElement('div');
+      t.id = 'kwords-toast';
+      t.style.position = 'fixed';
+      t.style.bottom = '18px';
+      t.style.left = '50%';
+      t.style.transform = 'translateX(-50%)';
+      t.style.background = type === 'success' ? '#276749' : (type === 'warning' ? '#c05621' : '#2b6cb0');
+      t.style.border = '1px solid ' + (type === 'success' ? '#48bb78' : (type === 'warning' ? '#ed8936' : '#63b3ed'));
+      t.style.color = '#fff';
+      t.style.padding = '8px 16px';
+      t.style.borderRadius = '6px';
+      t.style.fontSize = '12px';
+      t.style.fontWeight = 'bold';
+      t.style.boxShadow = '0 6px 16px rgba(0,0,0,0.6)';
+      t.style.zIndex = '999';
+      t.style.pointerEvents = 'none';
+      t.textContent = msg;
+      document.body.appendChild(t);
+      setTimeout(() => { if (t.parentNode) t.remove(); }, 3200);
     }
 
     const THEMES = {
@@ -719,6 +1095,26 @@
     let seconds = 0;
     let justFoundWord = null;
 
+    // Feature Expansion Variables: Duel / Replay / Custom / Export / Lexicon
+    let moveHistory = [];
+    let customPuzzleData = null;
+    let solutionOverlayActive = false;
+    let currentExportTab = 'ascii';
+    let myPlayerName = safeGetStorage('kwords_player_name') || ('Seeker_' + Math.floor(1000 + Math.random() * 9000));
+    let rMultiplayer = null;
+    let isDuelActive = false;
+    let isCyberBotActive = false;
+    let currentRoomCode = '';
+    let duelOpponentName = 'Waiting...';
+    let duelOpponentScore = 0;
+    let duelOpponentFound = 0;
+    let soloFallbackTimer = null;
+    let soloFallbackSeconds = 25;
+    let cyberBotTimer = null;
+    let pendingInviteCode = null;
+    let replayIndex = 0;
+    let replayTimer = null;
+
     function spawnFloatingScore(scoreVal, x, y) {
         const el = document.createElement('div');
         el.className = 'floating-score';
@@ -742,11 +1138,18 @@
 
     document.addEventListener('keydown', (e) => {
       if (e.ctrlKey || e.altKey || e.metaKey) return;
+      if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT')) {
+        if (e.key === 'Escape') e.target.blur();
+        return;
+      }
       if (e.key === 'Escape') {
-        const statsM = document.getElementById('stats-modal');
-        const helpM = document.getElementById('help-modal');
-        if (statsM && statsM.style.display === 'block') { statsM.style.display = 'none'; return; }
-        if (helpM && helpM.style.display === 'block') { helpM.style.display = 'none'; return; }
+        const modalIds = ['stats-modal', 'help-modal', 'multiplayer-modal', 'custom-modal', 'replay-modal', 'export-modal', 'lexicon-modal', 'duel-finish-modal'];
+        let closedAny = false;
+        modalIds.forEach(id => {
+          const el = document.getElementById(id);
+          if (el && el.style.display === 'block') { el.style.display = 'none'; closedAny = true; }
+        });
+        if (closedAny) return;
         if (isSelecting) {
           isSelecting = false;
           currentSelection = [];
@@ -754,7 +1157,12 @@
         }
         return;
       }
-      if (document.getElementById('stats-modal').style.display === 'block' || document.getElementById('help-modal').style.display === 'block') return;
+      const isAnyModalOpen = ['stats-modal', 'help-modal', 'multiplayer-modal', 'custom-modal', 'replay-modal', 'export-modal', 'lexicon-modal', 'duel-finish-modal'].some(id => {
+        const el = document.getElementById(id);
+        return el && el.style.display === 'block';
+      });
+      if (isAnyModalOpen) return;
+
       const key = e.key.toLowerCase();
       if (key === 'r' || key === 'w') useRadar();
       else if (key === 'p') usePathfinder();
@@ -762,6 +1170,10 @@
       else if (key === 'h' || key === '?') useHint();
       else if (key === 's') saveGame();
       else if (key === 'l') loadGame();
+      else if (key === 'm') openMultiplayerModal();
+      else if (key === 'c') openCustomModal();
+      else if (key === 'v') openReplayModal();
+      else if (key === 'e' || key === 'x') openExportModal();
     });
 
     function setMode(mode) {
@@ -773,6 +1185,17 @@
             freezeCharges = 3;
             hintCharges = 3;
             score = 0;
+            isDuelActive = false;
+            document.getElementById('duel-bar').style.display = 'none';
+        } else if (gameMode === 'duel') {
+            openMultiplayerModal();
+            return;
+        } else if (gameMode === 'custom') {
+            openCustomModal();
+            return;
+        } else {
+            isDuelActive = false;
+            document.getElementById('duel-bar').style.display = 'none';
         }
         initGame();
     }
@@ -829,6 +1252,33 @@
             pathfinderCharges = 3;
             freezeCharges = 3;
             hintCharges = 3;
+        } else if (gameMode === "custom" && customPuzzleData) {
+            gridSize = customPuzzleData.gridSize || 15;
+            numWordsToFind = customPuzzleData.words.length;
+            seconds = 0;
+            currentTheme = customPuzzleData.title || "Custom";
+            numFrozen = 0;
+            isFogStage = false;
+            document.getElementById('stg-info').style.display = 'none';
+            document.getElementById('stage-title-text').textContent = customPuzzleData.title || "Custom Words";
+            radarCharges = 3;
+            pathfinderCharges = 3;
+            freezeCharges = 3;
+            hintCharges = 3;
+        } else if (gameMode === "duel") {
+            gridSize = 15;
+            numWordsToFind = 8;
+            seconds = 0;
+            numFrozen = 2;
+            isFogStage = false;
+            document.getElementById('stg-info').style.display = 'none';
+            document.getElementById('stage-title-text').textContent = "Duel: " + currentTheme;
+            document.getElementById('duel-bar').style.display = 'block';
+            updateDuelHud();
+            radarCharges = 3;
+            pathfinderCharges = 3;
+            freezeCharges = 3;
+            hintCharges = 3;
         } else {
             document.getElementById('stg-info').style.display = 'none';
             document.getElementById('stage-title-text').textContent = "Words to Find";
@@ -844,7 +1294,9 @@
         }
 
         wordsToFind = [];
-        if (currentTheme === "Polyglot") {
+        if (gameMode === "custom" && customPuzzleData) {
+            wordsToFind = [...customPuzzleData.words];
+        } else if (currentTheme === "Polyglot") {
             const themeKeys = Object.keys(THEMES);
             let pool = [];
             themeKeys.forEach(k => pool.push(...THEMES[k]));
@@ -956,9 +1408,22 @@
             }
         }, 1000);
 
+        moveHistory = [];
+        solutionOverlayActive = false;
         activeParticles = [];
         renderGrid();
         renderWordList();
+        if (isDuelActive && rMultiplayer && rMultiplayer.isHost && rMultiplayer.status === 'playing') {
+            rMultiplayer.sendMove({
+                type: 'puzzle_init',
+                theme: currentTheme,
+                gridSize: gridSize,
+                wordsToFind: wordsToFind,
+                grid: grid,
+                premiumGrid: premiumGrid,
+                frozenGrid: frozenGrid
+            });
+        }
     }
 
     function updateTimerDisplay() {
@@ -1094,6 +1559,8 @@
         wordsToFind.forEach(word => {
             const li = document.createElement('li');
             li.textContent = word;
+            li.title = `Click to inspect '${word}' in Lexicon`;
+            li.addEventListener('click', () => openLexiconModal(word));
             if (foundWords.some(fw => fw.word === word)) {
                 li.className = 'found';
                 if (justFoundWord === word) li.classList.add('just-found');
@@ -1256,6 +1723,19 @@
                     }
 
                     justFoundWord = word;
+                    moveHistory.push({
+                        step: foundWords.length,
+                        word: word,
+                        cells: currentSelection.map(c => ({ r: c.r, c: c.c })),
+                        score: score,
+                        ptsAdded: (gameMode !== "zen") ? totalPts : 0,
+                        time: seconds,
+                        timestamp: Date.now()
+                    });
+                    if (isDuelActive) {
+                        sendDuelWordFound(word, (gameMode !== "zen") ? totalPts : 0, currentSelection);
+                    }
+
                     // Thaw adjacent frozen tiles & unfog surrounding area
                     currentSelection.forEach(c => {
                         if (isFogStage) unfogArea(c.r, c.c, 2);
@@ -1320,6 +1800,19 @@
             let hs = parseInt(safeGetStorage('kwords_highscore', '0'));
             if (score > hs) {
                 safeSetStorage('kwords_highscore', score.toString());
+            }
+
+            if (isDuelActive) {
+                if (rMultiplayer && rMultiplayer.status === 'playing') {
+                    rMultiplayer.sendMove({
+                        type: 'duel_finished',
+                        winner: myPlayerName,
+                        score: score,
+                        foundCount: foundWords.length
+                    });
+                }
+                showDuelVictory(true, 'You completed all target words first!');
+                return;
             }
 
             if (gameMode === "campaign" && campaignStage < CAMPAIGN_STAGES.length) {
@@ -1765,19 +2258,7 @@
             canvas.height = canvas.parentElement.clientHeight;
         }
 
-        if (type === 'dust') {
-            for(let i=0; i<40; i++) {
-                activeParticles.push({
-                    x: Math.random() * canvas.width,
-                    y: Math.random() * canvas.height,
-                    vx: (Math.random() - 0.5) * 0.5,
-                    vy: -(Math.random() * 0.5 + 0.2),
-                    color: 'rgba(255, 230, 180, 0.6)',
-                    size: Math.random() * 2.5 + 0.5,
-                    life: 1.0, decay: 0, layer: 'dust'
-                });
-            }
-        } else if (type === 'ice') {
+        if (type === 'ice') {
             triggerScreenShake(8, 15);
             spawnShockwave(x, y, 65, '#b3f2ff');
             spawnExplosionLayers(x, y, '#b3f2ff', 6);
@@ -1981,6 +2462,1000 @@
 
     window.addEventListener('mouseup', handleMouseUp);
 
+    // ==========================================
+    // ⚔️ RETRO MULTIPLAYER DUEL (RFMS, Mandate 12)
+    // ==========================================
+    function initRetroMultiplayer() {
+      if (typeof RetroMultiplayer === 'undefined') return;
+      if (rMultiplayer) return;
+      try {
+        rMultiplayer = new RetroMultiplayer({
+          gameId: 'kwords',
+          prefix: 'WRD',
+          playerName: myPlayerName,
+          soloTimeoutMs: 25000,
+          onMove: (moveData) => handleRemoteDuelMove(moveData),
+          onStateChange: (room) => handleRoomStateChange(room),
+          onOpponentJoin: ({ slot, name }) => handleOpponentJoined(slot, name),
+          onOpponentLeave: ({ slot, name }) => handleOpponentLeft(slot, name),
+          onChat: (msg) => {
+            playSound('chat');
+            showToast(`💬 ${duelOpponentName}: ${msg}`, 'info');
+          },
+          onRematch: (rematchData) => handleDuelRematch(rematchData),
+          onSoloFallback: ({ reason }) => handleSoloFallback(reason),
+          onStatusMsg: (msg, type) => showToast(msg, type)
+        });
+        rMultiplayer.init().then(({ onlineAvailable, inviteCode }) => {
+          if (inviteCode) {
+            promptInviteDetected(inviteCode.toUpperCase());
+          }
+        });
+      } catch (err) {
+        console.warn("[KWords] RetroMultiplayer init failed:", err);
+      }
+    }
+
+    function promptInviteDetected(code) {
+      pendingInviteCode = code;
+      const invNotif = document.getElementById('invite-notification');
+      const invText = document.getElementById('invite-code-text');
+      if (invNotif && invText) {
+        invText.textContent = code;
+        invNotif.style.display = 'flex';
+      }
+      showToast(`⚔️ Duel invite to room [${code}] detected! Click 'Join Duel' to play.`, 'info');
+    }
+
+    function acceptInvite() {
+      const invNotif = document.getElementById('invite-notification');
+      if (invNotif) invNotif.style.display = 'none';
+      if (pendingInviteCode) {
+        openMultiplayerModal();
+        const joinInp = document.getElementById('duel-join-code-input');
+        if (joinInp) joinInp.value = pendingInviteCode;
+        joinDuelRoom(pendingInviteCode);
+      }
+    }
+
+    function dismissInvite() {
+      const invNotif = document.getElementById('invite-notification');
+      if (invNotif) invNotif.style.display = 'none';
+      pendingInviteCode = null;
+    }
+
+    function openMultiplayerModal() {
+      const m = document.getElementById('multiplayer-modal');
+      if (m) m.style.display = 'block';
+      const nameInput = document.getElementById('duel-player-name');
+      if (nameInput) nameInput.value = myPlayerName;
+    }
+
+    function closeMultiplayerModal() {
+      const m = document.getElementById('multiplayer-modal');
+      if (m) m.style.display = 'none';
+    }
+
+    function startSoloFallbackCountdown() {
+      stopSoloFallbackCountdown();
+      soloFallbackSeconds = 25;
+      const fbEl = document.getElementById('duel-fallback-countdown');
+      if (fbEl) {
+        fbEl.textContent = `Solo AI CyberBot-99 fallback in ${soloFallbackSeconds}s...`;
+        fbEl.style.display = 'block';
+      }
+      soloFallbackTimer = setInterval(() => {
+        soloFallbackSeconds--;
+        if (fbEl) fbEl.textContent = `Solo AI CyberBot-99 fallback in ${soloFallbackSeconds}s...`;
+        if (soloFallbackSeconds <= 0) {
+          stopSoloFallbackCountdown();
+          handleSoloFallback("timeout");
+        }
+      }, 1000);
+    }
+
+    function stopSoloFallbackCountdown() {
+      if (soloFallbackTimer) {
+        clearInterval(soloFallbackTimer);
+        soloFallbackTimer = null;
+      }
+      const fbEl = document.getElementById('duel-fallback-countdown');
+      if (fbEl) fbEl.style.display = 'none';
+    }
+
+    function handleSoloFallback(reason) {
+      stopSoloFallbackCountdown();
+      if (!isDuelActive && (!rMultiplayer || rMultiplayer.status !== 'waiting')) return;
+      showToast("🤖 No human challenger connected within 25s. Engaging CyberBot-99!", 'warning');
+      startSoloCyberBotDuel();
+    }
+
+    function startQuickMatch() {
+      savePlayerHandle();
+      if (!rMultiplayer) initRetroMultiplayer();
+      if (!rMultiplayer || !rMultiplayer.isOnlineAvailable) {
+        showToast("Multiplayer offline. Starting Solo CyberBot duel!", "warning");
+        startSoloCyberBotDuel();
+        return;
+      }
+      showDuelRoomCard("Searching for available room...");
+      startSoloFallbackCountdown();
+      rMultiplayer.quickMatch();
+    }
+
+    function createDuelRoom() {
+      savePlayerHandle();
+      if (!rMultiplayer) initRetroMultiplayer();
+      if (!rMultiplayer || !rMultiplayer.isOnlineAvailable) {
+        showToast("Multiplayer offline. Starting Solo CyberBot duel!", "warning");
+        startSoloCyberBotDuel();
+        return;
+      }
+      showDuelRoomCard("Generating ephemeral room...");
+      startSoloFallbackCountdown();
+      rMultiplayer.createRoom().then(room => {
+        if (room && room.id) {
+          currentRoomCode = room.id;
+          updateActiveRoomCode(room.id);
+        }
+      });
+    }
+
+    function joinDuelRoomFromInput() {
+      savePlayerHandle();
+      const codeInp = document.getElementById('duel-join-code-input');
+      const code = (codeInp ? codeInp.value : '').trim().toUpperCase();
+      if (!code) {
+        showToast("Please enter a room code", "warning");
+        return;
+      }
+      joinDuelRoom(code);
+    }
+
+    function joinDuelRoom(code) {
+      if (!rMultiplayer) initRetroMultiplayer();
+      if (!rMultiplayer || !rMultiplayer.isOnlineAvailable) {
+        showToast("Multiplayer offline. Playing vs CyberBot!", "warning");
+        startSoloCyberBotDuel();
+        return;
+      }
+      showDuelRoomCard(`Connecting to room ${code}...`);
+      rMultiplayer.joinRoom(code);
+    }
+
+    function showDuelRoomCard(statusText) {
+      const card = document.getElementById('duel-room-card');
+      const statusEl = document.getElementById('duel-active-status');
+      if (card) card.style.display = 'block';
+      if (statusEl) statusEl.textContent = statusText;
+    }
+
+    function updateActiveRoomCode(code) {
+      const el = document.getElementById('duel-active-room-code');
+      if (el) el.textContent = code;
+      const badge = document.getElementById('duel-room-badge');
+      if (badge) badge.textContent = `ROOM: ${code}`;
+    }
+
+    function savePlayerHandle() {
+      const nameInput = document.getElementById('duel-player-name');
+      if (nameInput && nameInput.value.trim()) {
+        myPlayerName = nameInput.value.trim().slice(0, 16);
+        safeSetStorage('kwords_player_name', myPlayerName);
+        if (rMultiplayer) rMultiplayer.playerName = myPlayerName;
+      }
+    }
+
+    function copyDuelRoomLink() {
+      const code = currentRoomCode || rMultiplayer?.roomId || '';
+      if (!code) return;
+      const shareUrl = `${window.location.origin}${window.location.pathname}#room=${code}`;
+      navigator.clipboard?.writeText(shareUrl).then(() => {
+        showToast(`📋 Duel invite link copied: ${code}`, 'success');
+      }).catch(() => {
+        showToast(`Room Code: ${code}`, 'info');
+      });
+    }
+
+    function handleRoomStateChange(room) {
+      if (!room) return;
+      currentRoomCode = room.id || currentRoomCode;
+      updateActiveRoomCode(currentRoomCode);
+
+      if (room.status === 'playing') {
+        stopSoloFallbackCountdown();
+        const opponentSlot = rMultiplayer.mySlot === 'p1' ? 'p2' : 'p1';
+        const oppData = room[opponentSlot];
+        duelOpponentName = oppData?.name || 'Challenger';
+        closeMultiplayerModal();
+        startDuelMatchSession();
+      }
+    }
+
+    function handleOpponentJoined(slot, name) {
+      stopSoloFallbackCountdown();
+      duelOpponentName = name || 'Challenger';
+      playSound('bell');
+      showToast(`⚔️ ${duelOpponentName} joined the duel! Match launching...`, 'success');
+      closeMultiplayerModal();
+      startDuelMatchSession();
+    }
+
+    function handleOpponentLeft(slot, name) {
+      showToast(`Opponent ${name || 'Challenger'} disconnected.`, 'warning');
+      const oppLabel = document.getElementById('duel-p2-label');
+      if (oppLabel) oppLabel.textContent = `Opponent: Left Match`;
+    }
+
+    function startDuelMatchSession() {
+      isDuelActive = true;
+      isCyberBotActive = false;
+      gameMode = 'duel';
+      document.getElementById('mode-select').value = 'duel';
+      document.getElementById('duel-bar').style.display = 'block';
+      duelOpponentFound = 0;
+      duelOpponentScore = 0;
+      updateDuelHud();
+      playSound('bell');
+      initGame();
+    }
+
+    function startSoloCyberBotDuel() {
+      stopSoloFallbackCountdown();
+      closeMultiplayerModal();
+      isDuelActive = true;
+      isCyberBotActive = true;
+      duelOpponentName = 'CyberBot-99';
+      currentRoomCode = 'SOLO-BOT';
+      updateActiveRoomCode('SOLO-BOT');
+      gameMode = 'duel';
+      document.getElementById('mode-select').value = 'duel';
+      document.getElementById('duel-bar').style.display = 'block';
+      duelOpponentFound = 0;
+      duelOpponentScore = 0;
+      updateDuelHud();
+      playSound('bell');
+      showToast("🤖 CyberBot-99 connected! Duel starting...", 'success');
+      initGame();
+      scheduleNextCyberBotMove();
+    }
+
+    function scheduleNextCyberBotMove() {
+      if (cyberBotTimer) clearTimeout(cyberBotTimer);
+      if (!isDuelActive || !isCyberBotActive) return;
+      const delayMs = 12000 + Math.floor(Math.random() * 9000);
+      cyberBotTimer = setTimeout(() => {
+        if (!isDuelActive || !isCyberBotActive) return;
+        stepCyberBot();
+        scheduleNextCyberBotMove();
+      }, delayMs);
+    }
+
+    function stepCyberBot() {
+      if (!isDuelActive || !isCyberBotActive) return;
+      if (duelOpponentFound >= wordsToFind.length) return;
+      duelOpponentFound++;
+      const botPts = 420 + Math.floor(Math.random() * 260);
+      duelOpponentScore += botPts;
+      const unfound = wordsToFind.filter(w => !foundWords.some(fw => fw.word === w));
+      const botWord = unfound[Math.floor(Math.random() * unfound.length)] || wordsToFind[duelOpponentFound - 1];
+      playSound('alert');
+      showToast(`🤖 CyberBot-99 found '${botWord}'! (+${botPts} pts)`, 'info');
+      updateDuelHud();
+
+      if (duelOpponentFound >= wordsToFind.length) {
+        showDuelVictory(false, "CyberBot-99 found all words first!");
+      }
+    }
+
+    function updateDuelHud() {
+      const p1Label = document.getElementById('duel-p1-label');
+      const p1Found = document.getElementById('duel-p1-found');
+      const p1Total = document.getElementById('duel-p1-total');
+      const p1Score = document.getElementById('duel-p1-score');
+      const p1Bar = document.getElementById('duel-p1-bar');
+
+      const p2Label = document.getElementById('duel-p2-label');
+      const p2Found = document.getElementById('duel-p2-found');
+      const p2Total = document.getElementById('duel-p2-total');
+      const p2Score = document.getElementById('duel-p2-score');
+      const p2Bar = document.getElementById('duel-p2-bar');
+
+      const total = wordsToFind.length || 8;
+      if (p1Label) p1Label.textContent = `You (${myPlayerName})`;
+      if (p1Found) p1Found.textContent = foundWords.length;
+      if (p1Total) p1Total.textContent = total;
+      if (p1Score) p1Score.textContent = score;
+      if (p1Bar) p1Bar.style.width = Math.min(100, Math.floor((foundWords.length / total) * 100)) + '%';
+
+      if (p2Label) p2Label.textContent = `Opponent (${duelOpponentName})`;
+      if (p2Found) p2Found.textContent = duelOpponentFound;
+      if (p2Total) p2Total.textContent = total;
+      if (p2Score) p2Score.textContent = duelOpponentScore;
+      if (p2Bar) p2Bar.style.width = Math.min(100, Math.floor((duelOpponentFound / total) * 100)) + '%';
+    }
+
+    function sendDuelWordFound(word, pts, cells) {
+      updateDuelHud();
+      if (rMultiplayer && rMultiplayer.status === 'playing') {
+        rMultiplayer.sendMove({
+          type: 'word_found',
+          word: word,
+          points: pts,
+          foundCount: foundWords.length,
+          score: score,
+          totalWords: wordsToFind.length
+        });
+      }
+    }
+
+    function handleRemoteDuelMove(moveData) {
+      if (!moveData) return;
+      if (moveData.type === 'word_found') {
+        duelOpponentFound = moveData.foundCount;
+        duelOpponentScore = moveData.score;
+        playSound('alert');
+        showToast(`⚔️ ${duelOpponentName} found '${moveData.word}'! (+${moveData.points} pts)`, 'info');
+        updateDuelHud();
+        if (duelOpponentFound >= wordsToFind.length) {
+          showDuelVictory(false, `${duelOpponentName} found all target words first!`);
+        }
+      } else if (moveData.type === 'puzzle_init') {
+        loadSyncedDuelPuzzle(moveData);
+      } else if (moveData.type === 'duel_finished') {
+        showDuelVictory(false, `${duelOpponentName} finished the duel!`);
+      }
+    }
+
+    function loadSyncedDuelPuzzle(data) {
+      if (!data || !data.wordsToFind || !data.grid) return;
+      gridSize = data.gridSize;
+      currentTheme = data.theme;
+      wordsToFind = [...data.wordsToFind];
+      grid = data.grid.map(row => [...row]);
+      premiumGrid = data.premiumGrid ? data.premiumGrid.map(row => [...row]) : Array(gridSize).fill(null).map(() => Array(gridSize).fill(0));
+      frozenGrid = data.frozenGrid ? data.frozenGrid.map(row => [...row]) : Array(gridSize).fill(null).map(() => Array(gridSize).fill(0));
+      unfoggedGrid = Array(gridSize).fill(null).map(() => Array(gridSize).fill(true));
+      radarGrid = Array(gridSize).fill(null).map(() => Array(gridSize).fill(false));
+      pathfinderGrid = Array(gridSize).fill(null).map(() => Array(gridSize).fill(false));
+      secretGrid = Array(gridSize).fill(null).map(() => Array(gridSize).fill(false));
+      foundWords = [];
+      hintedWords = [];
+      score = 0;
+      seconds = 0;
+      updateDuelHud();
+      renderGrid();
+      renderWordList();
+      showToast("🧩 Synchronized identical board from duel host!", "info");
+    }
+
+    function sendDuelChat(msg) {
+      if (rMultiplayer && rMultiplayer.status === 'playing') {
+        rMultiplayer.sendChat(msg);
+      }
+      showToast(`💬 You: ${msg}`, 'success');
+      playSound('chat');
+    }
+
+    function leaveMultiplayer() {
+      if (cyberBotTimer) clearTimeout(cyberBotTimer);
+      stopSoloFallbackCountdown();
+      if (rMultiplayer) {
+        try { rMultiplayer.leaveRoom(); } catch (e) {}
+      }
+      isDuelActive = false;
+      isCyberBotActive = false;
+      document.getElementById('duel-bar').style.display = 'none';
+      setMode('classic');
+      showToast("Exited Duel Mode. Switched to Classic.", 'info');
+    }
+
+    function showDuelVictory(isWinner, customMsg = '') {
+      if (cyberBotTimer) clearTimeout(cyberBotTimer);
+      const m = document.getElementById('duel-finish-modal');
+      const title = document.getElementById('df-title');
+      const subtitle = document.getElementById('df-subtitle');
+      const p1Score = document.getElementById('df-p1-score');
+      const p1Found = document.getElementById('df-p1-found');
+      const p2Label = document.getElementById('df-p2-label');
+      const p2Score = document.getElementById('df-p2-score');
+      const p2Found = document.getElementById('df-p2-found');
+
+      if (title) {
+        title.textContent = isWinner ? "⚔️ Duel Victory!" : "⚔️ Duel Defeat";
+        title.style.color = isWinner ? "#48bb78" : "#fc8181";
+      }
+      if (subtitle) {
+        subtitle.textContent = customMsg || (isWinner ? "You out-searched your opponent!" : "Your opponent finished first.");
+      }
+      if (p1Score) p1Score.textContent = score;
+      if (p1Found) p1Found.textContent = `${foundWords.length} words found`;
+      if (p2Label) p2Label.textContent = (duelOpponentName || 'OPPONENT').toUpperCase();
+      if (p2Score) p2Score.textContent = duelOpponentScore;
+      if (p2Found) p2Found.textContent = `${duelOpponentFound} words found`;
+
+      if (isWinner) {
+        playSound('fanfare');
+        startConfetti();
+      } else {
+        playSound('alert');
+      }
+
+      if (m) m.style.display = 'block';
+    }
+
+    function closeDuelFinishModal() {
+      const m = document.getElementById('duel-finish-modal');
+      if (m) m.style.display = 'none';
+      leaveMultiplayer();
+    }
+
+    function startDuelRematch() {
+      const m = document.getElementById('duel-finish-modal');
+      if (m) m.style.display = 'none';
+      if (isCyberBotActive) {
+        startSoloCyberBotDuel();
+      } else {
+        duelOpponentFound = 0;
+        duelOpponentScore = 0;
+        updateDuelHud();
+        initGame();
+        showToast("🔄 Duel Rematch started!", "success");
+      }
+    }
+
+    function handleDuelRematch() {
+      duelOpponentFound = 0;
+      duelOpponentScore = 0;
+      updateDuelHud();
+      initGame();
+      showToast("🔄 Opponent accepted rematch!", "success");
+    }
+
+    // ==========================================
+    // 🧩 CUSTOM PUZZLE BUILDER & MANAGER
+    // ==========================================
+    function openCustomModal() {
+      const m = document.getElementById('custom-modal');
+      if (m) m.style.display = 'block';
+    }
+
+    function closeCustomModal() {
+      const m = document.getElementById('custom-modal');
+      if (m) m.style.display = 'none';
+    }
+
+    function buildAndPlayCustomPuzzle() {
+      const title = (document.getElementById('custom-puzzle-title')?.value || 'Custom Puzzle').trim();
+      const size = parseInt(document.getElementById('custom-puzzle-size')?.value || '15', 10);
+      const text = document.getElementById('custom-puzzle-words')?.value || '';
+      
+      const words = text
+        .toUpperCase()
+        .replace(/[^A-Z,\n ]/g, '')
+        .split(/[,\n ]+/)
+        .map(w => w.trim())
+        .filter(w => w.length >= 3 && w.length <= size);
+
+      const uniqueWords = Array.from(new Set(words));
+      if (uniqueWords.length < 3) {
+        showToast("Please enter at least 3 valid words (length 3 to " + size + ")", "warning");
+        return;
+      }
+
+      customPuzzleData = {
+        title: title,
+        gridSize: size,
+        words: uniqueWords.slice(0, 20),
+        date: new Date().toISOString()
+      };
+
+      closeCustomModal();
+      gameMode = 'custom';
+      document.getElementById('mode-select').value = 'custom';
+      initGame();
+      showToast(`🧩 Loaded custom puzzle '${title}' with ${customPuzzleData.words.length} words!`, 'success');
+    }
+
+    function shareCustomPuzzle() {
+      if (!customPuzzleData) {
+        const text = document.getElementById('custom-puzzle-words')?.value || '';
+        if (!text.trim()) {
+          showToast("Create or enter words first to share", "warning");
+          return;
+        }
+        buildAndPlayCustomPuzzle();
+      }
+      if (!customPuzzleData) return;
+      const jsonStr = JSON.stringify(customPuzzleData);
+      const b64 = btoa(unescape(encodeURIComponent(jsonStr)));
+      const url = `${window.location.origin}${window.location.pathname}#puzzle=${b64}`;
+      navigator.clipboard?.writeText(url).then(() => {
+        showToast("🔗 Custom puzzle link copied to clipboard!", "success");
+      }).catch(() => {
+        showToast("Code: " + b64.slice(0, 16) + "...", "info");
+      });
+    }
+
+    function exportCustomJson() {
+      const data = customPuzzleData || {
+        title: currentTheme,
+        gridSize: gridSize,
+        words: wordsToFind,
+        date: new Date().toISOString()
+      };
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `kwords_${data.title.toLowerCase().replace(/\s+/g, '_')}.json`;
+      a.click();
+      showToast("💾 Exported custom puzzle JSON!", "success");
+    }
+
+    function importCustomPuzzle() {
+      const input = document.getElementById('custom-import-input')?.value || '';
+      if (!input.trim()) return;
+      try {
+        let parsed = null;
+        if (input.startsWith('{')) {
+          parsed = JSON.parse(input);
+        } else {
+          // Attempt base64 decode
+          const raw = decodeURIComponent(escape(atob(input.replace(/^#puzzle=/, ''))));
+          parsed = JSON.parse(raw);
+        }
+        if (parsed && Array.isArray(parsed.words) && parsed.words.length >= 3) {
+          customPuzzleData = parsed;
+          closeCustomModal();
+          gameMode = 'custom';
+          document.getElementById('mode-select').value = 'custom';
+          initGame();
+          showToast(`🧩 Imported puzzle '${parsed.title || 'Custom'}' successfully!`, 'success');
+        } else {
+          showToast("Invalid puzzle data structure", "warning");
+        }
+      } catch (err) {
+        showToast("Failed to parse puzzle code: " + err.message, "warning");
+      }
+    }
+
+    // ==========================================
+    // 📼 INTERACTIVE REPLAY SCRUBBER
+    // ==========================================
+    function openReplayModal() {
+      const m = document.getElementById('replay-modal');
+      if (m) m.style.display = 'block';
+      const slider = document.getElementById('replay-slider');
+      if (slider) {
+        slider.max = moveHistory.length;
+        slider.value = moveHistory.length;
+      }
+      scrubReplayTo(moveHistory.length);
+    }
+
+    function closeReplayModal() {
+      if (replayTimer) {
+        clearInterval(replayTimer);
+        replayTimer = null;
+      }
+      const m = document.getElementById('replay-modal');
+      if (m) m.style.display = 'none';
+      renderGrid();
+    }
+
+    function scrubReplayTo(step) {
+      replayIndex = step;
+      const stepInfo = document.getElementById('replay-step-info');
+      const timeInfo = document.getElementById('replay-time-info');
+      const wordInfo = document.getElementById('replay-word-info');
+      const ptsInfo = document.getElementById('replay-pts-info');
+      const slider = document.getElementById('replay-slider');
+      if (slider) slider.value = step;
+
+      if (moveHistory.length === 0) {
+        if (stepInfo) stepInfo.textContent = "Step 0 / 0";
+        if (wordInfo) wordInfo.textContent = "No words found yet";
+        if (ptsInfo) ptsInfo.textContent = "Score: 0 pts";
+        return;
+      }
+
+      if (step === 0) {
+        if (stepInfo) stepInfo.textContent = `Start of Game (0/${moveHistory.length})`;
+        if (timeInfo) timeInfo.textContent = "Time: 00:00";
+        if (wordInfo) wordInfo.textContent = "Initial Board State";
+        if (ptsInfo) ptsInfo.textContent = "Score: 0 pts";
+      } else {
+        const item = moveHistory[Math.min(moveHistory.length - 1, step - 1)];
+        if (stepInfo) stepInfo.textContent = `Step ${step} / ${moveHistory.length}`;
+        const m = Math.floor(item.time / 60).toString().padStart(2, '0');
+        const s = (item.time % 60).toString().padStart(2, '0');
+        if (timeInfo) timeInfo.textContent = `Time: ${m}:${s}`;
+        if (wordInfo) wordInfo.textContent = `Found: ${item.word} (+${item.ptsAdded} pts)`;
+        if (ptsInfo) ptsInfo.textContent = `Score at step: ${item.score} pts`;
+      }
+
+      // Highlight grid to reflect state up to step
+      document.querySelectorAll('.cell').forEach(cell => {
+        const r = parseInt(cell.dataset.r, 10);
+        const c = parseInt(cell.dataset.c, 10);
+        let foundInReplay = false;
+        for (let i = 0; i < step; i++) {
+          if (moveHistory[i].cells.some(cellPos => cellPos.r === r && cellPos.c === c)) {
+            foundInReplay = true;
+            break;
+          }
+        }
+        if (foundInReplay) {
+          cell.classList.add('found');
+        } else {
+          cell.classList.remove('found');
+        }
+      });
+    }
+
+    function replayFirst() { scrubReplayTo(0); }
+    function replayPrev() { scrubReplayTo(Math.max(0, replayIndex - 1)); }
+    function replayNext() { scrubReplayTo(Math.min(moveHistory.length, replayIndex + 1)); }
+    function replayLast() { scrubReplayTo(moveHistory.length); }
+
+    function toggleReplayPlay() {
+      const btn = document.getElementById('replay-play-btn');
+      if (replayTimer) {
+        clearInterval(replayTimer);
+        replayTimer = null;
+        if (btn) btn.textContent = "▶ Play";
+      } else {
+        if (replayIndex >= moveHistory.length) scrubReplayTo(0);
+        if (btn) btn.textContent = "⏸ Pause";
+        replayTimer = setInterval(() => {
+          if (replayIndex < moveHistory.length) {
+            scrubReplayTo(replayIndex + 1);
+            playSound('tick');
+          } else {
+            clearInterval(replayTimer);
+            replayTimer = null;
+            if (btn) btn.textContent = "▶ Play";
+          }
+        }, 800);
+      }
+    }
+
+    // ==========================================
+    // 📄 ASCII GRID & SOLUTION EXPORT
+    // ==========================================
+    function openExportModal() {
+      const m = document.getElementById('export-modal');
+      if (m) m.style.display = 'block';
+      showExportTab(currentExportTab);
+    }
+
+    function closeExportModal() {
+      const m = document.getElementById('export-modal');
+      if (m) m.style.display = 'none';
+    }
+
+    function showExportTab(tab) {
+      currentExportTab = tab;
+      const txt = document.getElementById('export-text-area');
+      const bAscii = document.getElementById('tab-btn-ascii');
+      const bSol = document.getElementById('tab-btn-sol');
+      if (bAscii && bSol) {
+        bAscii.className = tab === 'ascii' ? 'modal-btn' : 'modal-btn-alt';
+        bSol.className = tab === 'solution' ? 'modal-btn' : 'modal-btn-alt';
+      }
+      if (txt) {
+        txt.value = tab === 'ascii' ? generateAsciiPuzzle() : generateSolutionKey();
+      }
+    }
+
+    function generateAsciiPuzzle() {
+      let out = `========================================================\n`;
+      out += `  KWORDS RETRO PUZZLE: ${currentTheme.toUpperCase()}\n`;
+      out += `  Grid: ${gridSize}x${gridSize} | Words: ${wordsToFind.length}\n`;
+      out += `========================================================\n\n    `;
+      for (let c = 0; c < gridSize; c++) {
+        out += (c + 1).toString().padStart(2, '0') + ' ';
+      }
+      out += '\n  +' + '---'.repeat(gridSize) + '+\n';
+      for (let r = 0; r < gridSize; r++) {
+        out += (r + 1).toString().padStart(2, '0') + '| ';
+        for (let c = 0; c < gridSize; c++) {
+          out += (grid[r][c] || ' ') + '  ';
+        }
+        out += '|\n';
+      }
+      out += '  +' + '---'.repeat(gridSize) + '+\n\n';
+      out += `WORDS TO FIND (${wordsToFind.length}):\n`;
+      wordsToFind.forEach((w, i) => {
+        out += `  [ ] ${(i + 1).toString().padStart(2, '0')}. ${w.padEnd(14)} (${w.length} letters, ${calculateWordPoints(w)} pts)\n`;
+      });
+      out += `\nGenerated via KWords 1999 Engine | kiloapps.web.app\n`;
+      return out;
+    }
+
+    function generateSolutionKey() {
+      const dirs = [[0,1], [1,0], [1,1], [-1,1], [1,-1], [-1,-1], [0,-1], [-1,0]];
+      const dirNames = {
+        '0,1': 'Across (Right)',
+        '1,0': 'Down',
+        '1,1': 'Diag Down-Right',
+        '-1,1': 'Diag Up-Right',
+        '1,-1': 'Diag Down-Left',
+        '-1,-1': 'Diag Up-Left',
+        '0,-1': 'Across (Left)',
+        '-1,0': 'Up'
+      };
+
+      let out = `========================================================\n`;
+      out += `  KWORDS SOLUTION KEY: ${currentTheme.toUpperCase()}\n`;
+      out += `========================================================\n\n`;
+
+      wordsToFind.forEach((word, idx) => {
+        let loc = 'Location Unknown';
+        for (let r = 0; r < gridSize; r++) {
+          for (let c = 0; c < gridSize; c++) {
+            for (let d of dirs) {
+              let match = true;
+              for (let i = 0; i < word.length; i++) {
+                let nr = r + i * d[0];
+                let nc = c + i * d[1];
+                if (nr < 0 || nr >= gridSize || nc < 0 || nc >= gridSize || grid[nr][nc] !== word[i]) {
+                  match = false;
+                  break;
+                }
+              }
+              if (match) {
+                const dKey = `${d[0]},${d[1]}`;
+                loc = `Row ${(r + 1).toString().padStart(2, '0')}, Col ${(c + 1).toString().padStart(2, '0')} -> ${dirNames[dKey] || 'Vector'}`;
+                break;
+              }
+            }
+          }
+        }
+        out += `${(idx + 1).toString().padStart(2, '0')}. ${word.padEnd(14)}: ${loc}\n`;
+      });
+
+      if (secretWords && secretWords.length > 0) {
+        out += `\nSECRET BONUS WORDS:\n`;
+        secretWords.forEach(sw => {
+          out += `* ${sw.padEnd(14)}: Hidden in grid (+500 pts)\n`;
+        });
+      }
+      return out;
+    }
+
+    function copyExportText() {
+      const txt = document.getElementById('export-text-area')?.value;
+      if (!txt) return;
+      navigator.clipboard?.writeText(txt).then(() => {
+        showToast("📋 Copied text sheet to clipboard!", "success");
+      });
+    }
+
+    function downloadExportText() {
+      const txt = document.getElementById('export-text-area')?.value;
+      if (!txt) return;
+      const blob = new Blob([txt], { type: 'text/plain' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `kwords_${currentTheme.toLowerCase()}_${currentExportTab}.txt`;
+      a.click();
+      showToast("💾 Downloaded puzzle text file!", "success");
+    }
+
+    function toggleSolutionMapOverlay() {
+      solutionOverlayActive = !solutionOverlayActive;
+      const btn = document.getElementById('btn-toggle-overlay');
+      if (btn) {
+        btn.textContent = solutionOverlayActive ? "👁️ Hide Solution" : "👁️ Overlay On Grid";
+        btn.style.background = solutionOverlayActive ? "#d69e2e" : "#4a5568";
+      }
+
+      const dirs = [[0,1], [1,0], [1,1], [-1,1], [1,-1], [-1,-1], [0,-1], [-1,0]];
+      const solCells = new Set();
+
+      if (solutionOverlayActive) {
+        wordsToFind.forEach(word => {
+          for (let r = 0; r < gridSize; r++) {
+            for (let c = 0; c < gridSize; c++) {
+              for (let d of dirs) {
+                let match = true;
+                for (let i = 0; i < word.length; i++) {
+                  let nr = r + i * d[0];
+                  let nc = c + i * d[1];
+                  if (nr < 0 || nr >= gridSize || nc < 0 || nc >= gridSize || grid[nr][nc] !== word[i]) {
+                    match = false;
+                    break;
+                  }
+                }
+                if (match) {
+                  for (let i = 0; i < word.length; i++) {
+                    solCells.add(`${r + i * d[0]},${c + i * d[1]}`);
+                  }
+                }
+              }
+            }
+          }
+        });
+      }
+
+      document.querySelectorAll('.cell').forEach(cell => {
+        const key = `${cell.dataset.r},${cell.dataset.c}`;
+        if (solCells.has(key)) {
+          cell.classList.add('solution-overlay');
+        } else {
+          cell.classList.remove('solution-overlay');
+        }
+      });
+    }
+
+    // ==========================================
+    // 📖 INTERACTIVE WORD LEXICON & PATTERNS
+    // ==========================================
+    const WORD_DEFINITIONS = {
+      // Elements
+      "HYDROGEN": "Atomic number 1. Lightest and most abundant chemical substance in the universe.",
+      "HELIUM": "Atomic number 2. Colorless, odorless noble gas used in cryogenics and balloon flight.",
+      "LITHIUM": "Atomic number 3. Soft, silvery alkali metal with the lowest density of any solid element.",
+      "CARBON": "Atomic number 6. Tetravalent element forming the organic molecular foundation of all life.",
+      "NITROGEN": "Atomic number 7. Colorless diatomic gas constituting 78% of Earth's atmosphere.",
+      "OXYGEN": "Atomic number 8. Highly reactive chalcogen supporting cellular respiration and combustion.",
+      "SODIUM": "Atomic number 11. Soft, silvery-white reactive alkali metal essential for cellular osmosis.",
+      "SILICON": "Atomic number 14. Hard, brittle semiconductor metalloid fundamental to microprocessor fabrication.",
+      "IRON": "Atomic number 26. Ferromagnetic transition metal essential for steel and hemoglobin.",
+      "COPPER": "Atomic number 29. Ductile metal with exceptionally high thermal and electrical conductivity.",
+      "GOLD": "Atomic number 79. Dense, noble metal prized for unreactive corrosion resistance and lustre.",
+      "SILVER": "Atomic number 47. Lustrous transition metal exhibiting highest electrical and thermal conductivity.",
+      "PLATINUM": "Atomic number 78. Dense, malleable catalytic metal widely used in chemical synthesis.",
+      "URANIUM": "Atomic number 92. Radioactive actinide element providing fuel for nuclear fission.",
+      "TITANIUM": "Atomic number 22. High strength-to-density ratio transition metal used in aerospace.",
+      "NEON": "Atomic number 10. Noble gas glowing reddish-orange in high-voltage electric discharge.",
+      // Tech
+      "ALGORITHM": "A finite, unambiguous sequence of instructions for solving a computational problem.",
+      "COMPILER": "A software program that translates human-readable source code into machine bytecode.",
+      "DEBUG": "The systematic process of finding and resolving defects or flaws in computer code.",
+      "FUNCTION": "A reusable subroutine or block of code designed to perform a dedicated computation.",
+      "PROTOCOL": "A standardized convention governing data transmission and packet format over networks.",
+      "ROUTER": "A networking device that forwards data packets between interconnected subnets.",
+      "KERNEL": "The primary core of an operating system managing CPU scheduling, memory, and devices.",
+      "MEMORY": "Volatile semiconductor storage (RAM) enabling high-speed random access reads and writes.",
+      "SOCKET": "A bidirectional endpoint for network communication between distinct IP processes.",
+      "PACKET": "A formatted unit of data carried by a packet-switched communication network.",
+      // Sci-Fi
+      "CYBORG": "A cybernetic organism combining living tissue with biomechatronic prosthetic devices.",
+      "ANDROID": "A humanoid robot designed to approximate human appearance and behavior.",
+      "HOLOGRAM": "A 3D photographic projection created via the interference of coherent light beams.",
+      "HYPERDRIVE": "A theoretical faster-than-light propulsion drive navigating through hyperspace.",
+      "WARP": "A spacetime manipulation drive contracting space in front and expanding space behind.",
+      "CYBERSPACE": "A virtual computer-mediated environment allowing telepresence and neural links.",
+      // Myth
+      "ZEUS": "King of Mount Olympus and ruler of the sky, weather, and thunder in Greek mythology.",
+      "HERCULES": "Famed demigod celebrated for his superhuman strength and the Twelve Labors.",
+      "ODYSSEY": "The ten-year homeward journey of Odysseus to Ithaca following the Trojan War.",
+      "THOR": "Norse hammer-bearing god associated with thunder, lightning, and storms.",
+      "ODIN": "All-father god in Norse mythology associated with wisdom, royalty, and poetry.",
+      // Animals
+      "ELEPHANT": "Largest extant terrestrial mammal, equipped with prehensile trunk and tusks.",
+      "DOLPHIN": "Highly intelligent marine cetacean known for echolocation and social pods.",
+      "TIGER": "Apex feline predator distinguished by reddish-orange fur with dark vertical stripes.",
+      "PENGUIN": "Flightless aquatic bird inhabiting the Southern Hemisphere, adapted for swimming."
+    };
+
+    function calculateWordPoints(word) {
+      return word.split('').reduce((sum, ch) => sum + getLetterScore(ch), 0);
+    }
+
+    function openLexiconModal(word) {
+      const m = document.getElementById('lexicon-modal');
+      if (m) m.style.display = 'block';
+      const targetWord = word || wordsToFind[0] || 'WORD';
+      lookupWord(targetWord);
+    }
+
+    function closeLexiconModal() {
+      const m = document.getElementById('lexicon-modal');
+      if (m) m.style.display = 'none';
+    }
+
+    function lookupWord(word) {
+      const upper = word.toUpperCase();
+      const nameEl = document.getElementById('lex-word-name');
+      const scoreEl = document.getElementById('lex-word-score');
+      const defEl = document.getElementById('lex-word-def');
+      const tilesEl = document.getElementById('lex-word-tiles');
+
+      const pts = calculateWordPoints(upper);
+      if (nameEl) nameEl.textContent = upper;
+      if (scoreEl) scoreEl.textContent = `${pts} Tile Pts | ${upper.length} Letters`;
+
+      const def = WORD_DEFINITIONS[upper] || 
+        `Key vocabulary term from the ${currentTheme} taxonomy. Scrabble base value of ${pts} points with ${upper.length} letters.`;
+      if (defEl) defEl.textContent = def;
+
+      if (tilesEl) {
+        tilesEl.innerHTML = '';
+        upper.split('').forEach(ch => {
+          const badge = document.createElement('div');
+          badge.style.background = '#2d3748';
+          badge.style.border = '1px solid #4a5568';
+          badge.style.borderRadius = '4px';
+          badge.style.padding = '3px 6px';
+          badge.style.fontSize = '12px';
+          badge.style.fontWeight = 'bold';
+          badge.style.color = '#fef08a';
+          badge.textContent = `${ch}:${getLetterScore(ch)}`;
+          tilesEl.appendChild(badge);
+        });
+      }
+    }
+
+    function runLexiconPatternSearch() {
+      const rawPattern = document.getElementById('lex-pattern-input')?.value || '';
+      const pattern = rawPattern.trim().toUpperCase();
+      const resultsEl = document.getElementById('lex-pattern-results');
+      if (!pattern) return;
+
+      const regexStr = '^' + pattern.replace(/\*/g, '.*').replace(/\?/g, '.') + '$';
+      let regex;
+      try {
+        regex = new RegExp(regexStr);
+      } catch (e) {
+        if (resultsEl) resultsEl.textContent = "Invalid pattern syntax";
+        return;
+      }
+
+      const pool = THEMES[currentTheme] || Object.values(THEMES).flat();
+      const matches = Array.from(new Set(pool)).filter(w => regex.test(w));
+
+      if (resultsEl) {
+        if (matches.length === 0) {
+          resultsEl.textContent = `No words in ${currentTheme} match pattern '${pattern}'.`;
+        } else {
+          resultsEl.innerHTML = matches.map(m => 
+            `<span style="display:inline-block; margin:2px 4px; padding:2px 6px; background:#2d3748; border-radius:3px; cursor:pointer;" onclick="lookupWord('${m}')">${m} (${calculateWordPoints(m)}pts)</span>`
+          ).join('');
+        }
+      }
+    }
+
+    // ==========================================
+    // 🌐 URL QUERY / HASH DETECTOR (Strict No-Autostart)
+    // ==========================================
+    function checkUrlHashParams() {
+      try {
+        const hash = window.location.hash.replace(/^#/, '');
+        const search = window.location.search.replace(/^\?/, '');
+        const combined = new URLSearchParams(hash.includes('=') ? hash : search);
+
+        // Check for room invite
+        let roomCode = combined.get('room');
+        if (!roomCode && /^[A-Za-z0-9_-]{3,10}$/.test(hash)) {
+          roomCode = hash;
+        }
+        if (roomCode) {
+          promptInviteDetected(roomCode.toUpperCase());
+        }
+
+        // Check for custom shared puzzle
+        const puzzleB64 = combined.get('puzzle');
+        if (puzzleB64) {
+          try {
+            const raw = decodeURIComponent(escape(atob(puzzleB64)));
+            const parsed = JSON.parse(raw);
+            if (parsed && Array.isArray(parsed.words)) {
+              customPuzzleData = parsed;
+              showToast(`🧩 Shared custom puzzle '${parsed.title || 'Custom'}' detected! Use 'Custom (C)' to load.`, 'info');
+            }
+          } catch(e) {}
+        }
+      } catch (err) {}
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      initRetroMultiplayer();
+      checkUrlHashParams();
+    });
+
     initGame();
     
     // First-run tutorial persistence
@@ -1989,11 +3464,6 @@
         const helpM = document.getElementById('help-modal');
         if (helpM) helpM.style.display = 'block';
     }
-    
-    // Spawn ambient dust motes
-    setTimeout(() => {
-        spawnParticles(0, 0, 'dust');
-    }, 500);
 
     // Start 60 FPS continuous animation loop
     requestAnimationFrame(continuousAnimationLoop);

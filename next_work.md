@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-expander
-next_agent: kilo-creator
+current_agent: kilo-creator
+next_agent: kilo-graphics
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -17,7 +17,7 @@ current_targets:
   kilo_tester: KSolitaire
   kilo_usability: KPong
   kilo_qa: KTaskMgr
-  kilo_expander: KWords
+  kilo_expander: KHangman
 virtual_web_target: "kweb://warez"
 virtual_web_rotation:
   - "kweb://geocities"
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-qa
-  app: KSettings
-  timestamp: "2026-10-06T22:20:00-07:00"
+  agent: kilo-expander
+  app: KWords
+  timestamp: "2026-10-06T23:35:00-07:00"
 last_planner_run: "2026-10-06T14:20:00Z"
 ---
 
@@ -129,9 +129,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KHabit`, `KSudoku`, `KConnect4`, `KHangman`, `KSimon`, `KAsteroids`, `KFreecell`, `KMatch3`, `KWords`, `KGo`, `KDarts`, `KTowers`, `KReversi`, `KAlchemy`, `KColony`, `KStarForge`, `KBreakout`, `KRogue`, `KTetris`, `KPong`, `KPac`, `KChess`, `KColor`, `KConverter` *(Completed in Pass 5: KBBS, KChrono, KCipher, KClip, KCyber, KDragon, KFortress, KHash, KMaze, KMech, KMystery, KQuest, KSanctuary, KSnake, KSolitaire, KSpace, KStarDredge, KStarship, KStellar, KSubmarine, KSynth, KSys, KTask, KTerm, KTimer, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KRSS, K2048, KChart, KGraph, KContacts, KScript, KRead, KColosseum, KAbyss, KMedia, KAudio, KRadio, KPad, KPaint, KCalc, KMine, KCosmic, KBase, KBudget, KCalendar, KFarm, KFlash, KFont, KImage, KJournal, KMail, KMandel, KNet, KNote, KPass, KDB, KHex, KBookmark, KPing, KChat, KClock, KPomodoro, KBreakout, KRogue, KTetris, KPong, KPac, KChess, KColor, KConverter, KQuarantine, KSettings)*.
 
 ### 6. Feature Expander Queue (`kilo-expander`)
-- **Current Target**: `KWords`
+- **Current Target**: `KHangman`
 - **Upcoming Queue**:
-  `KHangman`, `KConnect4`, `KRogue`, `KBreakout`, `KMine`, `KSolitaire`, `KSudoku` *(Completed: KSolitaire, KColosseum, KSpace, KReversi, KSimon, KMatch3, KTowers, KSnake, KPong, KGo, KSynth, KNote, KFont, KRSS, KSys, KZip, KVault, KType, KMandel, KGraph, KChart, KPaint, KConnect4, KChess, KTetris, KDB, KTodo, KJournal, KCalendar, KContacts, KMail, KRead, KPass, KImage, KAudio, KMedia, KTask, KNet, KPing, KHash, KPad, K2048, KDarts, KRogue, KBreakout, KCalc, KMine, KSudoku)*.
+  `KConnect4`, `KRogue`, `KBreakout`, `KMine`, `KSolitaire`, `KSudoku` *(Completed: KWords, KSolitaire, KColosseum, KSpace, KReversi, KSimon, KMatch3, KTowers, KSnake, KPong, KGo, KSynth, KNote, KFont, KRSS, KSys, KZip, KVault, KType, KMandel, KGraph, KChart, KPaint, KConnect4, KChess, KTetris, KDB, KTodo, KJournal, KCalendar, KContacts, KMail, KRead, KPass, KImage, KAudio, KMedia, KTask, KNet, KPing, KHash, KPad, K2048, KDarts, KRogue, KBreakout, KCalc, KMine, KSudoku)*.
 - **Multiplayer Focus (CRITICAL)**: Concentrate on expanding games (*KChess*, *KConnect4*, *KGo*, *KReversi*, *KDarts*, *KTetris*, *KSnake*, *K2048*, *KMatch3*, *KSimon*) and collaborative apps (*KDraw*, *KPaint*, *KSynth*, *KPad*) with seamless Firebase Realtime Database multiplayer for cross-computer play on `kiloapps.web.app`.
 
 ### 7. Virtual 1999 Web Expansion Queue (Eternal Fleet Track)
@@ -217,6 +217,17 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-06T23:35:00-07:00 — kilo-expander: KWords (Deep Feature Expansion: RFMS Online Duel, Custom Builder, Replay Scrubber & Lexicon)**
+  - Status: PASS ✅ (0 regressions, 154.7 KB web / 162.0 KB native < 999 KB ceiling).
+  - Online Multiplayer (Mandate 12): Standardized RFMS duel (`WRD-` prefix) with shared seed, live progress, and 25s Solo AI fallback (`CyberBot-99`); strict No-Autostart connect gate.
+  - Custom Puzzle Builder: Custom titles, word pools, and grid dimensions (10x10 to 20x20) with base64 link sharing, JSON export/import.
+  - Interactive Replay Scrubber: Step-by-step move history scrubber with slider, playback controls, and hotkey (`V`).
+  - ASCII Grid & Solution Export: Formatted retro ASCII puzzle sheets, coordinate solution keys, and live grid overlay.
+  - Word Lexicon & Assistant: Scrabble-style tile point values, etymological definitions, and wildcard pattern matcher (`*`, `?`).
+  - Mandate 11 Glint Ban: Clean static brass inlays across web and native Win32 C (`KWords.exe` rebuilt clean); fixed test modal dismiss selector.
+  - Verification: `test_app_startup.py` PASS; `test_web_apps.js` PASS (62 elements, 0 err); `smoke_test_native.py` PASS; Vite clean (528ms); `security_lint.py` 100% PASS.
+  - Queue: Advanced `kilo_expander` to `KHangman`; rotation advanced to `kilo-creator`.
+
 - **2026-10-06T22:20:00-07:00 — kilo-qa: KSettings (Pass 5 QA & Build Audit: State Persistence, Tutorial Integrity & VFS Sync)**
   - Status: PASS ✅ (0 regressions, 60.7 KB web < 999 KB ceiling).
   - State Persistence: Implemented F5 quicksave and F9 quickload capturing full state (colors, animations, sound, pins) in storage & VFS.
@@ -255,14 +266,5 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Mandate 11 Glint Ban: Removed floating canvas dust motes across web and native Win32 C (`KSudoku.exe` rebuilt clean).
   - Verification: `test_app_startup.py` PASS; `test_web_apps.js` PASS (70 elements, 0 err); `security_lint.py` 100% PASS; Vite build clean (316ms).
   - Queue: Advanced `kilo_expander` to `KWords`; rotation advanced to `kilo-creator`.
-
-- **2026-10-06T20:06:00-07:00 — kilo-qa: KQuarantine (Pass 5 QA & Build Audit: State Persistence, Tutorial Integrity & TINAG Fix)**
-  - Status: PASS ✅ (0 regressions, 42.5 KB web < 999 KB ceiling).
-  - State Persistence: Implemented F5 quicksave and F9 quickload capturing complete session state, logs, history, and status flags.
-  - Tutorial & Help: Added accessible Help & Mission Briefing modal with first-run onboarding check (`kquarantine_tutorialSeen`).
-  - Overlay & Controls: Added non-occluding toast system, header Save/Load buttons, Esc/Enter modal dismiss, and F1 hotkey.
-  - TINAG & Lore Integrity: Cleaned un-diegetic ARG reference in button title; verified zero meta-spoilers and full mystery preservation.
-  - Verification: `test_app_startup.py` PASS (modal dismiss clean); `test_web_apps.js` PASS (11 elements, 0 err); `test_arg_flow.py` PASS; Vite clean (479ms); `security_lint.py` 100% PASS.
-  - Queue: Advanced `kilo_qa` to `KSettings`; handoff to `kilo-expander`.
 
 

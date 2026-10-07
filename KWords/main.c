@@ -1755,10 +1755,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             MoveToEx(hdc, boardRight - 16, boardBottom, NULL); LineTo(hdc, boardRight, boardBottom); LineTo(hdc, boardRight, boardBottom - 16);
             Ellipse(hdc, boardRight - 7, boardBottom - 7, boardRight - 2, boardBottom - 2);
 
-            // Pulsating golden perimeter inlay shimmer
-            int shimG = (int)(180 + 60 * sinf(animTick * 0.12f));
-            if (shimG > 255) shimG = 255;
-            HPEN shimPen = CreatePen(PS_SOLID, 1, RGB(250, shimG, 21));
+            // Static brass perimeter inlay (Mandate 11: clean static border without traveling glint or sinf pulse)
+            HPEN shimPen = CreatePen(PS_SOLID, 1, RGB(212, 175, 55));
             SelectObject(hdc, shimPen);
             MoveToEx(hdc, boardLeft + 16, boardTop + 2, NULL); LineTo(hdc, boardRight - 16, boardTop + 2);
             MoveToEx(hdc, boardLeft + 16, boardBottom - 2, NULL); LineTo(hdc, boardRight - 16, boardBottom - 2);
@@ -1901,11 +1899,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     MoveToEx(hdc, tileRc.left + 2, tileRc.top + 2, NULL);
                     LineTo(hdc, tileRc.left + (tileRc.right - tileRc.left) / 2, tileRc.top + 2);
 
-                    // Periodic diagonal specular sheen sweep highlight across tiles
-                    if (((r + c + (int)(animTick / 3)) % 22) == 0 && !isFogged) {
-                        MoveToEx(hdc, tileRc.left + 2, tileRc.bottom - 4, NULL);
-                        LineTo(hdc, tileRc.right - 4, tileRc.top + 2);
-                    }
                     SelectObject(hdc, oldP2);
                     DeleteObject(sheenPen);
 

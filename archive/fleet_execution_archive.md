@@ -4,6 +4,15 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-06T20:06:00-07:00 — kilo-qa: KQuarantine (Pass 5 QA & Build Audit: State Persistence, Tutorial Integrity & TINAG Fix)**
+  - Status: PASS ✅ (0 regressions, 42.5 KB web < 999 KB ceiling).
+  - State Persistence: Implemented F5 quicksave and F9 quickload capturing complete session state, logs, history, and status flags.
+  - Tutorial & Help: Added accessible Help & Mission Briefing modal with first-run onboarding check (`kquarantine_tutorialSeen`).
+  - Overlay & Controls: Added non-occluding toast system, header Save/Load buttons, Esc/Enter modal dismiss, and F1 hotkey.
+  - TINAG & Lore Integrity: Cleaned un-diegetic ARG reference in button title; verified zero meta-spoilers and full mystery preservation.
+  - Verification: `test_app_startup.py` PASS (modal dismiss clean); `test_web_apps.js` PASS (11 elements, 0 err); `test_arg_flow.py` PASS; Vite clean (479ms); `security_lint.py` 100% PASS.
+  - Queue: Advanced `kilo_qa` to `KSettings`; handoff to `kilo-expander`.
+
 - **2026-10-06T19:54:00-07:00 — kilo-usability: KHangman (Layout & Sizing, HiDPI DPR Scaling, Hotkey Collision Fix & Mandate 11)**
   - Status: PASS ✅ (0 regressions, 92.0 KB web / 35.0 KB native < 999 KB ceiling).
   - Window Sizing: Adjusted default dimensions to 620x600 in `App.jsx`; optimized container padding to eliminate internal scrollbars.
