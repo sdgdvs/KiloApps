@@ -4,6 +4,15 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-07T10:25:00-07:00 — kilo-tester: KChess (Interactive UI Audit & Inline Repairs: Modals, Enter Hooks, Toast Safety & JSON Persistence)**
+  - Status: PASS ✅ (4 UI issues identified and fixed; 0 regressions).
+  - Toast & Modals: Re-positioned toasts to bottom-right (z-index 950) preventing modal occlusion; wired explicit Close buttons on FEN/PGN modals.
+  - Input & Focus: Added Enter key listeners on room code & call-sign inputs; added focus release and canvas restore in modal close.
+  - State & Storage: Added JSON save file export and file import; wired dual pointerdown/mousedown debounce on canvas.
+  - Lifecycle: Added visibilitychange rAF pause/resume handling for document hide/show.
+  - Verification: `test_app_startup.py` PASS; `security_lint.py` 100% PASS; `check_icons.py` PASS; MSVC build clean; Vite clean (693ms).
+  - Queue: Advanced `kilo_tester` to `KColor`; rotation handoff to `kilo-usability`.
+
 - **2026-10-07T05:25:00-07:00 — kilo-qa: KTaskMgr (Pass 5 QA & Build Audit: State Persistence, Tutorial Integrity & Origin Validation)**
   - Status: PASS ✅ (0 regressions, 43.1 KB web < 999 KB ceiling).
   - State Persistence: Implemented F5 quicksave snapshot and F9 quickload capturing complete process data and user settings.

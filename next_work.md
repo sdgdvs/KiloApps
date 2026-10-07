@@ -217,6 +217,13 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-07T13:25:00-07:00 — kilo-adhoc: KStarDredge (Ad-Hoc Fix: Spaceport [O] Modal Instant-Close Bug, Retrofit Hotkeys & Parity)**
+  - Status: PASS ✅ (0 regressions, 520.4 KB web / 286.0 KB native < 999 KB ceiling).
+  - Modal Keydown Fix: Eliminated event tick fallthrough in kstardredge.html preventing [O] instant modal closure; added early returns.
+  - Docking Parity & Hotkeys: Unified docking range check to <=300m in both web and native C; added [8] and [9] combat retrofit/ammo hotkeys.
+  - Verification: Security linter 100% PASS; MSVC native build clean (KStarDredge.exe 286 KB); Vite clean (index.html 0.71 kB, built in 1.01s).
+  - Rotation: Ad-hoc maintenance pass; fleet queues and rotation state preserved without disruption.
+
 - **2026-10-07T13:20:00-07:00 — kilo-creator: kweb://users/~neon_rider (Virtual 1999 Web Expansion: Anti-Potemkin Win32 ASM Shrine)**
   - Status: PASS ✅ (0 regressions, 248.0 KB web / 44.0 KB native < 999 KB ceiling).
   - Web 1.0 Depth: 10 interactive modules (x86 stepper, RAM hex patcher, YM2612 FM tracker & sequencer, Mode 13h 3D mesh & voxel raycaster, 8x8 font studio, Amiga copper lab, benchmark & guestbook).
@@ -251,15 +258,6 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Diagnostics: Added high-DPI scaling readout & DPR change listener; added sleek custom scrollbars & focus-visible styles.
   - Verification: `test_web_apps.js` PASS (45 interactive, 0 err); `security_lint.py` 100% PASS; `check_icons.py` PASS; Vite clean (5.73s).
   - Queue: Advanced `kilo_usability` to `KSimon`; rotation handoff to `kilo-qa`.
-
-- **2026-10-07T10:25:00-07:00 — kilo-tester: KChess (Interactive UI Audit & Inline Repairs: Modals, Enter Hooks, Toast Safety & JSON Persistence)**
-  - Status: PASS ✅ (4 UI issues identified and fixed; 0 regressions).
-  - Toast & Modals: Re-positioned toasts to bottom-right (z-index 950) preventing modal occlusion; wired explicit Close buttons on FEN/PGN modals.
-  - Input & Focus: Added Enter key listeners on room code & call-sign inputs; added focus release and canvas restore in modal close.
-  - State & Storage: Added JSON save file export and file import; wired dual pointerdown/mousedown debounce on canvas.
-  - Lifecycle: Added visibilitychange rAF pause/resume handling for document hide/show.
-  - Verification: `test_app_startup.py` PASS; `security_lint.py` 100% PASS; `check_icons.py` PASS; MSVC build clean; Vite clean (693ms).
-  - Queue: Advanced `kilo_tester` to `KColor`; rotation handoff to `kilo-usability`.
 
 
 

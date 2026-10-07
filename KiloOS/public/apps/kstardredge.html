@@ -6522,7 +6522,7 @@
         function openStationModal() {
             if (state.station) {
                 const dist = Math.hypot(state.station.x - state.ship.x, state.station.y - state.ship.y);
-                if (dist < 320) {
+                if (dist <= 300) {
                     state.station.docked = true;
                     state.ship.vx = 0;
                     state.ship.vy = 0;
@@ -6545,7 +6545,7 @@
                 addLog("⚓ DOCKING RELEASE: Clamps disengaged. Free orbital drift restored.", "system");
             } else {
                 const dist = Math.hypot(state.station.x - state.ship.x, state.station.y - state.ship.y);
-                if (dist < 320) {
+                if (dist <= 300) {
                     state.station.docked = true;
                     state.ship.vx = 0;
                     state.ship.vy = 0;
@@ -6832,6 +6832,18 @@
             updateDefenseModalUI();
         }
 
+        function buyCurrentSectorCombatRetrofit() {
+            const sector = state.currentSectorIndex;
+            const weaponKeys = ['railgun', 'emp', 'pdl', 'aegis'];
+            buyCombatUpgrade(weaponKeys[sector] || 'railgun');
+        }
+
+        function buyCurrentSectorAmmo() {
+            const sector = state.currentSectorIndex;
+            const ammoKeys = ['slugs', 'empCharges', 'slugs', 'empCharges'];
+            buyCombatUpgrade(ammoKeys[sector] || 'slugs');
+        }
+
         function claimContract(contractId) {
             const stDef = STATION_DEFS[state.currentSectorIndex];
             const contract = stDef.contracts.find(c => c.id === contractId);
@@ -6989,11 +7001,11 @@
                                 </button>
                             ` : `
                                 <button class="btn btn-upgrade" onclick="buyCombatUpgrade('${weaponKey}')" style="padding: 3px 12px; font-size: 9px; border-color: #ef4444; color: #fee2e2;">
-                                    <span>INSTALL RETROFIT [${weaponCost.toLocaleString()} CR]</span>
+                                    <span>INSTALL RETROFIT [8] (${weaponCost.toLocaleString()} CR)</span>
                                 </button>
                             `}
                             <button class="btn btn-barter" onclick="buyCombatUpgrade('${ammoType}')" style="padding: 3px 10px; font-size: 9px;">
-                                <span>📦 ${ammoName} (${ammoCost} CR)</span>
+                                <span>📦 ${ammoName} [9] (${ammoCost} CR)</span>
                             </button>
                         </div>
                     </div>
@@ -7445,24 +7457,43 @@
                 const stationModal = document.getElementById('stationModal');
                 if (stationModal && stationModal.classList.contains('open')) {
                     closeStationModal();
-                } else if (state.station) {
+                    return;
+                }
+                if (state.station) {
                     const dist = Math.hypot(state.station.x - state.ship.x, state.station.y - state.ship.y);
-                    if (state.station.docked || dist < 280) {
+                    if (state.station.docked || dist <= 300) {
+                        if (!state.station.docked) {
+                            state.station.docked = true;
+                            state.ship.vx = 0;
+                            state.ship.vy = 0;
+                            audio.playDock();
+                            addLog(`🛰️ DOCKING SECURED: Magnetic clamps locked onto ${STATION_DEFS[state.currentSectorIndex].name}!`, "success");
+                        }
                         openStationModal();
+                        return;
+                    } else {
+                        audio.playBeep(220, 'square', 0.1, 0.1);
+                        addLog(`⚠️ SPACEPORT OUT OF RANGE (${Math.round(dist)}m). Approach within 300m to dock [O].`, "warning");
+                        return;
                     }
+                } else {
+                    addLog("⚠️ No orbital spaceport detected in this sector.", "warning");
+                    return;
                 }
             }
             if (document.getElementById('stationModal').classList.contains('open')) {
-                if (e.code === 'Digit1') serviceRepairHull();
-                if (e.code === 'Digit2') serviceRechargeShield();
-                if (e.code === 'Digit3') serviceRefuel();
-                if (e.code === 'Digit4') serviceDecontaminate();
-                if (e.code === 'Digit5') { const stDef = STATION_DEFS[state.currentSectorIndex]; if (stDef.contracts[0]) claimContract(stDef.contracts[0].id); }
-                if (e.code === 'Digit6') { const stDef = STATION_DEFS[state.currentSectorIndex]; if (stDef.contracts[1]) claimContract(stDef.contracts[1].id); }
-                if (e.code === 'Digit7') { const stDef = STATION_DEFS[state.currentSectorIndex]; if (stDef.contracts[2]) claimContract(stDef.contracts[2].id); }
-                if (e.code === 'KeyS') barterSellAllWithTariff();
-                if (e.code === 'KeyU') toggleDocking();
-                if (e.code === 'Escape' || e.code === 'KeyO') closeStationModal();
+                if (e.code === 'Digit1') { serviceRepairHull(); return; }
+                if (e.code === 'Digit2') { serviceRechargeShield(); return; }
+                if (e.code === 'Digit3') { serviceRefuel(); return; }
+                if (e.code === 'Digit4') { serviceDecontaminate(); return; }
+                if (e.code === 'Digit5') { const stDef = STATION_DEFS[state.currentSectorIndex]; if (stDef.contracts[0]) claimContract(stDef.contracts[0].id); return; }
+                if (e.code === 'Digit6') { const stDef = STATION_DEFS[state.currentSectorIndex]; if (stDef.contracts[1]) claimContract(stDef.contracts[1].id); return; }
+                if (e.code === 'Digit7') { const stDef = STATION_DEFS[state.currentSectorIndex]; if (stDef.contracts[2]) claimContract(stDef.contracts[2].id); return; }
+                if (e.code === 'Digit8') { buyCurrentSectorCombatRetrofit(); return; }
+                if (e.code === 'Digit9') { buyCurrentSectorAmmo(); return; }
+                if (e.code === 'KeyS') { barterSellAllWithTariff(); return; }
+                if (e.code === 'KeyU') { toggleDocking(); return; }
+                if (e.code === 'Escape') { closeStationModal(); return; }
             }
             if (document.getElementById('refineryModal').classList.contains('open')) {
                 if (e.code === 'Digit1') smeltRecipe(REFINERY_RECIPES[0].id, 1);
@@ -7728,8 +7759,24 @@
         document.getElementById('btnStation').addEventListener('click', () => {
             audio.init();
             const modal = document.getElementById('stationModal');
-            if (modal.classList.contains('open')) closeStationModal();
-            else openStationModal();
+            if (modal.classList.contains('open')) {
+                closeStationModal();
+            } else if (state.station) {
+                const dist = Math.hypot(state.station.x - state.ship.x, state.station.y - state.ship.y);
+                if (state.station.docked || dist <= 300) {
+                    if (!state.station.docked) {
+                        state.station.docked = true;
+                        state.ship.vx = 0;
+                        state.ship.vy = 0;
+                        audio.playDock();
+                        addLog(`🛰️ DOCKING SECURED: Magnetic clamps locked onto ${STATION_DEFS[state.currentSectorIndex].name}!`, "success");
+                    }
+                    openStationModal();
+                } else {
+                    audio.playBeep(220, 'square', 0.1, 0.1);
+                    addLog(`⚠️ SPACEPORT OUT OF RANGE (${Math.round(dist)}m). Approach within 300m to dock [O].`, "warning");
+                }
+            }
         });
 
         document.getElementById('btnCloseStation').addEventListener('click', () => {
@@ -10190,7 +10237,7 @@
             // Docking Proximity Alert & Prompt HUD
             if (state.station) {
                 const distToSt = Math.hypot(state.station.x - state.ship.x, state.station.y - state.ship.y);
-                if (distToSt < 280) {
+                if (state.station.docked || distToSt <= 300) {
                     ctx.save();
                     ctx.fillStyle = 'rgba(15, 28, 63, 0.9)';
                     ctx.strokeStyle = state.station.docked ? '#10b981' : '#38bdf8';

@@ -4965,7 +4965,7 @@ void RenderGame(HDC hdc, RECT* clientRect) {
     {
         float stDist = (float)sqrt((g_state.stationX - g_state.shipX) * (g_state.stationX - g_state.shipX) +
                                    (g_state.stationY - g_state.shipY) * (g_state.stationY - g_state.shipY));
-        if (stDist < 280.0f || g_state.stationDocked) {
+        if (stDist <= 300.0f || g_state.stationDocked) {
             int hudW = 420;
             int hudH = 30;
             int hudX = viewportX + (viewportW - hudW) / 2;
@@ -8684,15 +8684,17 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 case 'O': {
                     float stDist = (float)sqrt((g_state.stationX - g_state.shipX) * (g_state.stationX - g_state.shipX) +
                                                (g_state.stationY - g_state.shipY) * (g_state.stationY - g_state.shipY));
-                    if (stDist < 280.0f && !g_state.stationDocked) {
+                    if (stDist <= 300.0f && !g_state.stationDocked) {
                         ToggleDocking();
                         g_state.showStation = 1;
                         g_state.showStarChart = 0; g_state.showUpgrades = 0; g_state.showSpectrometer = 0; g_state.showEva = 0; g_state.showCrisis = 0; g_state.showRefinery = 0;
                     } else if (g_state.stationDocked) {
-                        g_state.showStation = !g_state.showStation;
-                        if (g_state.showStation) {
-                            g_state.showStarChart = 0; g_state.showUpgrades = 0; g_state.showSpectrometer = 0; g_state.showEva = 0; g_state.showCrisis = 0; g_state.showRefinery = 0;
-                        }
+                        g_state.showStation = 1;
+                        g_state.showStarChart = 0; g_state.showUpgrades = 0; g_state.showSpectrometer = 0; g_state.showEva = 0; g_state.showCrisis = 0; g_state.showRefinery = 0;
+                    } else {
+                        char outRange[128];
+                        sprintf(outRange, "SPACEPORT OUT OF RANGE (%dm). Approach within 300m to dock [O].", (int)stDist);
+                        AddLog(outRange, 3);
                     }
                     InvalidateRect(hwnd, NULL, FALSE);
                     return 0;
