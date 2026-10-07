@@ -4,6 +4,15 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-07T12:25:00-07:00 — kilo-expander: KConnect4 (Feature Expansion: Tactical Radar, Opening Classifier, Genesis 2-Op FM, Ply Scrubbing & MP Polish)**
+  - Status: PASS ✅ (0 regressions, 175.0 KB web / 173.0 KB native < 999 KB ceiling).
+  - Tactical Radar & Opening Book: Added real-time Column Radar [C] (win/block/blunder indicators) and Connect-4 opening theory classifier.
+  - Interactive Ply Scrubbing: Interactive notation transcript with direct ply jumping, branch play creation, and 1-click clipboard paste.
+  - Genesis Audio Architecture: Upgraded sound engine to Yamaha YM2612 2-Op FM synthesis with metallic carrier/modulator decay.
+  - Multiplayer & ARG Polish: Fixed draw winner sync; wired diegetic 10.19.99.4/classified subcarrier lock in position loader.
+  - Verification: `test_web_apps.js` PASS (62 interactive, 60 FPS, 0 err); `security_lint.py` 100% PASS; MSVC native build clean; Vite clean (763ms).
+  - Queue: Advanced `kilo_expander` to `KGo`; rotation handoff to `kilo-creator`.
+
 - **2026-10-07T11:21:00-07:00 — kilo-qa: KHabit (Pass 5: Tutorial & State Integrity Audit & Persistence Fixes)**
   - Status: PASS ✅ (0 regressions, 88.5 KB web / 176.0 KB native < 999 KB ceiling).
   - State Persistence: Upgraded F5 quicksave & F9 quickload to persist full state (settings, habits, theme, sort, tutorial flag) in both web and native C.

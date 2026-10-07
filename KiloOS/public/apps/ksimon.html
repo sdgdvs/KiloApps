@@ -17,12 +17,20 @@
     color: #e0e0e0;
     user-select: none;
     overflow-x: hidden;
+    overflow-y: auto;
+  }
+  button, select, input {
+    touch-action: manipulation;
+  }
+  button:focus-visible, select:focus-visible, input:focus-visible {
+    outline: 2px solid #00ffcc;
+    outline-offset: 2px;
   }
   #game-container {
     text-align: center;
     max-width: 560px;
     width: 100%;
-    padding: 15px;
+    padding: 10px 15px;
     box-sizing: border-box;
   }
   h1 {
@@ -46,7 +54,7 @@
     position: relative;
     width: 480px;
     height: 390px;
-    margin: 10px auto;
+    margin: 6px auto;
     border-radius: 50%;
     box-shadow: 0 15px 35px rgba(0,0,0,0.8), inset 0 0 15px rgba(255,255,255,0.1);
   }
@@ -69,9 +77,9 @@
   }
 
   #controls {
-    margin-top: 10px;
+    margin-top: 8px;
     background: rgba(20, 20, 26, 0.8);
-    padding: 12px;
+    padding: 10px 12px;
     border-radius: 12px;
     border: 1px solid #333340;
     box-shadow: 0 8px 20px rgba(0,0,0,0.5);
@@ -174,7 +182,7 @@
   /* Toast Notification */
   #ksimon-toast {
     position: fixed;
-    top: 15px;
+    bottom: 18px;
     left: 50%;
     transform: translateX(-50%);
     padding: 8px 18px;
@@ -189,6 +197,9 @@
     pointer-events: auto;
     cursor: pointer;
     transition: opacity 0.2s ease;
+    max-width: 90%;
+    text-align: center;
+    box-sizing: border-box;
   }
   #ksimon-toast.toast-error { border-color: #ff3366; box-shadow: 0 4px 18px rgba(255, 51, 102, 0.4); color: #ff88a3; }
   #ksimon-toast.toast-success { border-color: #00ff88; box-shadow: 0 4px 18px rgba(0, 255, 136, 0.4); color: #88ffbb; }
@@ -384,6 +395,9 @@
   <div class="header-stats">
     Score: <span id="score">0</span> | High Score (<span id="high-score-mode">4-Button Classic</span>): <span id="high-score">0</span>
   </div>
+  <div style="font-size:12px; color:#88aacc; margin-bottom:6px; letter-spacing:0.3px;">
+    Press <kbd style="background:#223044; padding:1px 5px; border-radius:3px; border:1px solid #446088; color:#00ffcc; font-size:11px;">[F1]</kbd> or <kbd style="background:#223044; padding:1px 5px; border-radius:3px; border:1px solid #446088; color:#00ffcc; font-size:11px;">[H]</kbd> for Rules &amp; Hotkeys
+  </div>
   <div id="campaign-stage" style="display:none; color:#00ffcc; margin-top:3px; font-weight:bold;">
     Campaign Stage: <span id="stage-val">1</span>/20 [<span id="stage-mod-val">NORMAL</span>] (Target: <span id="stage-target-val">4</span> | Btns: <span id="stage-btns-val">4</span>)
   </div>
@@ -502,7 +516,7 @@
     </div>
   </div>
 
-  <div id="status">Press Start (or Space)</div>
+  <div id="status">Press Start (or Space) — [F1 for Help]</div>
   <div id="stats" style="margin-top: 10px; font-size: 13px; color: #888;">
     Games: <span id="stat-games">0</span> | Streak: <span id="stat-streak">0</span> | Best Time: <span id="stat-time">0</span>s
   </div>
@@ -680,6 +694,24 @@
       { targetLen: 30, numColors: 8, speedMs: 100, modifier: 3 }
   ];
 
+  let toastTimer = null;
+  function showToast(msg, type = 'info') {
+    const toast = document.getElementById('ksimon-toast');
+    if (!toast) return;
+    toast.innerText = msg;
+    toast.className = '';
+    if (type === 'error') toast.classList.add('toast-error');
+    else if (type === 'success') toast.classList.add('toast-success');
+    else if (type === 'warning') toast.classList.add('toast-warning');
+    toast.style.display = 'block';
+    toast.style.opacity = '1';
+    if (toastTimer) clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => {
+      toast.style.opacity = '0';
+      setTimeout(() => { toast.style.display = 'none'; }, 200);
+    }, 3200);
+  }
+
   function getStat(key) { return parseInt(localStorage.getItem('KSimon_Stat_' + key)) || 0; }
   function setStat(key, value) { localStorage.setItem('KSimon_Stat_' + key, value); }
   
@@ -726,9 +758,21 @@
     return 6;
   }
 
-  // --- CANVAS GRAPHICS & SPRITE ENGINE (LOOP 8 POLISH) ---
+  // --- CANVAS GRAPHICS & SPRITE ENGINE (HiDPI RETINA SCALING) ---
+  const CANVAS_LOGICAL_WIDTH = 480;
+  const CANVAS_LOGICAL_HEIGHT = 390;
   const canvas = document.getElementById('simon-canvas');
   const ctx = canvas.getContext('2d');
+
+  function resizeCanvasForHiDPI() {
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = Math.round(CANVAS_LOGICAL_WIDTH * dpr);
+    canvas.height = Math.round(CANVAS_LOGICAL_HEIGHT * dpr);
+    canvas.style.width = CANVAS_LOGICAL_WIDTH + 'px';
+    canvas.style.height = CANVAS_LOGICAL_HEIGHT + 'px';
+  }
+  resizeCanvasForHiDPI();
+  window.addEventListener('resize', resizeCanvasForHiDPI);
 
   const buttonConfigs = [
     { id: 0, label: 'Q', name: 'Green',  baseColor: '#00aa33', flashColor: '#33ff66', glowColor: '#00ff66', icon: 'clef' },
@@ -766,8 +810,8 @@
   // Initialize Cyber Dust
   for (let i = 0; i < 35; i++) {
     cyberDust.push({
-      x: Math.random() * canvas.width,
-      y: Math.random() * canvas.height,
+      x: Math.random() * CANVAS_LOGICAL_WIDTH,
+      y: Math.random() * CANVAS_LOGICAL_HEIGHT,
       vx: (Math.random() - 0.5) * 0.4,
       vy: (Math.random() - 0.5) * 0.4 - 0.1,
       size: 1.0 + Math.random() * 2.0,
@@ -778,8 +822,8 @@
   }
 
   function layoutButtons() {
-    const cx = canvas.width / 2;
-    const cy = canvas.height / 2;
+    const cx = CANVAS_LOGICAL_WIDTH / 2;
+    const cy = CANVAS_LOGICAL_HEIGHT / 2;
     const numBtns = getActiveButtonCount();
 
     if (numBtns === 4) {
@@ -923,8 +967,8 @@
   }
 
   function triggerVictoryFireworks() {
-    const cx = canvas.width / 2;
-    const cy = canvas.height / 2;
+    const cx = CANVAS_LOGICAL_WIDTH / 2;
+    const cy = CANVAS_LOGICAL_HEIGHT / 2;
     addTrauma(0.65);
     triggerDualShockwave(cx, cy, '#ffd700');
     triggerDualShockwave(cx, cy, '#00ffcc');
@@ -941,8 +985,8 @@
   }
 
   function triggerErrorBurst() {
-    const cx = canvas.width / 2;
-    const cy = canvas.height / 2;
+    const cx = CANVAS_LOGICAL_WIDTH / 2;
+    const cy = CANVAS_LOGICAL_HEIGHT / 2;
     addTrauma(0.85);
     triggerDualShockwave(cx, cy, '#ff2244');
     trigger4LayerBurst(cx, cy, '#ff2244', 2.2);
@@ -1126,12 +1170,14 @@
   }
 
   function renderCanvas() {
-    const w = canvas.width;
-    const h = canvas.height;
+    const dpr = window.devicePixelRatio || 1;
+    const w = CANVAS_LOGICAL_WIDTH;
+    const h = CANVAS_LOGICAL_HEIGHT;
     const cx = w / 2;
     const cy = h / 2;
     const now = Date.now();
 
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.clearRect(0, 0, w, h);
 
     // Procedural Screen Shake Physics Decay & Rotational Damping
@@ -1622,8 +1668,8 @@
     if (isPlayingSequence || sequence.length === 0) return;
     if (audioCtx.state === 'suspended') audioCtx.resume();
     const rect = canvas.getBoundingClientRect();
-    const mx = (clientX - rect.left) * (canvas.width / rect.width);
-    const my = (clientY - rect.top) * (canvas.height / rect.height);
+    const mx = (clientX - rect.left) * (CANVAS_LOGICAL_WIDTH / rect.width);
+    const my = (clientY - rect.top) * (CANVAS_LOGICAL_HEIGHT / rect.height);
 
     const activeCount = getActiveButtonCount();
     for (let i = 0; i < activeCount; i++) {
@@ -1650,10 +1696,20 @@
   canvas.addEventListener('mouseup', () => {
     buttonStates.forEach((_, i) => releaseButtonFlash(i));
   });
+  canvas.addEventListener('mouseleave', () => {
+    buttonStates.forEach((_, i) => releaseButtonFlash(i));
+  });
   canvas.addEventListener('touchend', (e) => {
     e.preventDefault();
     buttonStates.forEach((_, i) => releaseButtonFlash(i));
   }, { passive: false });
+  canvas.addEventListener('touchcancel', (e) => {
+    e.preventDefault();
+    buttonStates.forEach((_, i) => releaseButtonFlash(i));
+  }, { passive: false });
+  window.addEventListener('blur', () => {
+    buttonStates.forEach((_, i) => releaseButtonFlash(i));
+  });
 
   // --- UNIVERSAL AUDIO ARCHITECTURE (YM2612 FM & SPC700 DELAY) ---
   let soundArchitecture = localStorage.getItem('ksimon_sound_arch') || 'ym2612'; // 'ym2612' | 'spc700' | 'classic'
@@ -1843,14 +1899,23 @@
   helpModal.addEventListener('click', (e) => {
     if (e.target === helpModal) closeHelp();
   });
+  document.getElementById('keybinds-modal')?.addEventListener('click', (e) => {
+    if (e.target.id === 'keybinds-modal') closeKeybindsModal();
+  });
+  document.getElementById('mp-modal')?.addEventListener('click', (e) => {
+    if (e.target.id === 'mp-modal') closeMpModal();
+  });
+  document.getElementById('invite-modal')?.addEventListener('click', (e) => {
+    if (e.target.id === 'invite-modal') declineInvite();
+  });
 
   function useHint() {
       if (!isPlayingSequence && sequence.length > 0 && hintsRemaining > 0) {
           hintsRemaining--;
           playerSequence = [];
           addTrauma(0.35);
-          triggerDualShockwave(canvas.width / 2, canvas.height / 2, '#ffd700');
-          trigger4LayerBurst(canvas.width / 2, canvas.height / 2, '#ffd700', 1.0);
+          triggerDualShockwave(CANVAS_LOGICAL_WIDTH / 2, CANVAS_LOGICAL_HEIGHT / 2, '#ffd700');
+          trigger4LayerBurst(CANVAS_LOGICAL_WIDTH / 2, CANVAS_LOGICAL_HEIGHT / 2, '#ffd700', 1.0);
           updateDisplays();
           statusDisplay.innerText = "Hint: Watch...";
           playSequence();
@@ -1863,8 +1928,8 @@
           playerSequence = [];
           isSlowmoActive = true;
           addTrauma(0.35);
-          triggerDualShockwave(canvas.width / 2, canvas.height / 2, '#00b3b3');
-          trigger4LayerBurst(canvas.width / 2, canvas.height / 2, '#44ffff', 1.0);
+          triggerDualShockwave(CANVAS_LOGICAL_WIDTH / 2, CANVAS_LOGICAL_HEIGHT / 2, '#00b3b3');
+          trigger4LayerBurst(CANVAS_LOGICAL_WIDTH / 2, CANVAS_LOGICAL_HEIGHT / 2, '#44ffff', 1.0);
           updateDisplays();
           statusDisplay.innerText = "Slow-Mo Active! Watch...";
           playSequence();
@@ -1874,8 +1939,8 @@
   function useShield() {
       if (shieldsRemaining > 0) {
           addTrauma(0.25);
-          triggerDualShockwave(canvas.width / 2, canvas.height / 2, '#33aaff');
-          trigger4LayerBurst(canvas.width / 2, canvas.height / 2, '#33aaff', 0.8);
+          triggerDualShockwave(CANVAS_LOGICAL_WIDTH / 2, CANVAS_LOGICAL_HEIGHT / 2, '#33aaff');
+          trigger4LayerBurst(CANVAS_LOGICAL_WIDTH / 2, CANVAS_LOGICAL_HEIGHT / 2, '#33aaff', 0.8);
           statusDisplay.innerText = `Passive Shield Active: Auto-absorbs next error! (${shieldsRemaining} left)`;
       }
   }
@@ -1885,8 +1950,8 @@
           freezesRemaining--;
           isTimeFrozen = true;
           addTrauma(0.4);
-          triggerDualShockwave(canvas.width / 2, canvas.height / 2, '#00ffff');
-          trigger4LayerBurst(canvas.width / 2, canvas.height / 2, '#00ffff', 1.2);
+          triggerDualShockwave(CANVAS_LOGICAL_WIDTH / 2, CANVAS_LOGICAL_HEIGHT / 2, '#00ffff');
+          trigger4LayerBurst(CANVAS_LOGICAL_WIDTH / 2, CANVAS_LOGICAL_HEIGHT / 2, '#00ffff', 1.2);
           statusDisplay.innerText = `Time Frozen! (${freezesRemaining} Freezes left)`;
           updateDisplays();
       }
@@ -1909,8 +1974,8 @@
                   if (shieldsRemaining > 0) {
                       shieldsRemaining--;
                       addTrauma(0.45);
-                      triggerDualShockwave(canvas.width / 2, canvas.height / 2, '#33aaff');
-                      trigger4LayerBurst(canvas.width / 2, canvas.height / 2, '#33aaff', 1.2);
+                      triggerDualShockwave(CANVAS_LOGICAL_WIDTH / 2, CANVAS_LOGICAL_HEIGHT / 2, '#33aaff');
+                      trigger4LayerBurst(CANVAS_LOGICAL_WIDTH / 2, CANVAS_LOGICAL_HEIGHT / 2, '#33aaff', 1.2);
                       playTone(750, 300);
                       statusDisplay.innerText = "Time Expired! Shield Absorbed Error!";
                       playerSequence = [];
@@ -2075,10 +2140,40 @@
 
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
-      if (helpModal.style.display === 'flex') {
+      let closed = false;
+      if (helpModal && helpModal.style.display === 'flex') {
         closeHelp();
+        closed = true;
+      }
+      const kbModal = document.getElementById('keybinds-modal');
+      if (kbModal && kbModal.style.display === 'flex') {
+        closeKeybindsModal();
+        closed = true;
+      }
+      const mpM = document.getElementById('mp-modal');
+      if (mpM && mpM.style.display === 'flex') {
+        closeMpModal();
+        closed = true;
+      }
+      const invM = document.getElementById('invite-modal');
+      if (invM && invM.style.display === 'flex') {
+        declineInvite();
+        closed = true;
+      }
+      const repBar = document.getElementById('replay-bar');
+      if (repBar && repBar.style.display === 'block') {
+        closeReplay();
+        closed = true;
+      }
+      if (closed) {
+        e.preventDefault();
         return;
       }
+    }
+    if (e.key === 'F1') {
+      e.preventDefault();
+      helpModal.style.display = 'flex';
+      return;
     }
     if (e.key === 'F5') {
       e.preventDefault();
@@ -2096,7 +2191,11 @@
         return;
     }
     if (e.key.toLowerCase() === 'h') {
-        useHint();
+        if (sequence.length > 0) {
+          useHint();
+        } else {
+          helpModal.style.display = 'flex';
+        }
         return;
     }
     if (e.key.toLowerCase() === 'l') {
@@ -2335,8 +2434,8 @@
       if (shieldsRemaining > 0) {
           shieldsRemaining--;
           addTrauma(0.45);
-          triggerDualShockwave(canvas.width / 2, canvas.height / 2, '#33aaff');
-          trigger4LayerBurst(canvas.width / 2, canvas.height / 2, '#33aaff', 1.2);
+          triggerDualShockwave(CANVAS_LOGICAL_WIDTH / 2, CANVAS_LOGICAL_HEIGHT / 2, '#33aaff');
+          trigger4LayerBurst(CANVAS_LOGICAL_WIDTH / 2, CANVAS_LOGICAL_HEIGHT / 2, '#33aaff', 1.2);
           playTone(750, 300);
           playerSequence = [];
           statusDisplay.innerText = `Shield Absorbed Error! (${shieldsRemaining} Shields left)`;
@@ -2584,12 +2683,12 @@
   function triggerSubnetAnomaly() {
     addTrauma(0.5);
     playTone(1999, 650);
-    triggerDualShockwave(canvas.width / 2, canvas.height / 2, '#00e5ff');
+    triggerDualShockwave(CANVAS_LOGICAL_WIDTH / 2, CANVAS_LOGICAL_HEIGHT / 2, '#00e5ff');
     statusDisplay.innerText = "[ANOMALOUS SUBNET SIGNAL 1999Hz]: Memory offset 0x1999 locked. Echo origin: kweb://echo-subsystem.net";
     showToast("📡 Anomaly detected at 1999Hz: Echo Subnet link verified.", "info");
     setTimeout(() => {
       if (statusDisplay.innerText.includes("1999Hz")) {
-        statusDisplay.innerText = "Press Start (or Space)";
+        statusDisplay.innerText = "Press Start (or Space) — [F1 for Help]";
       }
     }, 6500);
   }
@@ -2947,7 +3046,7 @@
       if (shieldsRemaining > 0) {
         shieldsRemaining--;
         addTrauma(0.4);
-        triggerDualShockwave(canvas.width / 2, canvas.height / 2, '#33aaff');
+        triggerDualShockwave(CANVAS_LOGICAL_WIDTH / 2, CANVAS_LOGICAL_HEIGHT / 2, '#33aaff');
         playTone(750, 280);
         playerSequence = [];
         statusDisplay.innerText = `Shield Absorbed Error! (${shieldsRemaining} left)`;
@@ -3221,7 +3320,7 @@
     saveBtn.disabled = true;
     sequence = [];
     playerSequence = [];
-    statusDisplay.innerText = "Press Start (or Space)";
+    statusDisplay.innerText = "Press Start (or Space) — [F1 for Help]";
     showToast('Multiplayer session ended. Returned to solo mode.', 'info');
   }
 

@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-qa
+current_agent: kilo-qa
+next_agent: kilo-expander
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -15,7 +15,7 @@ current_targets:
   kilo_creator: "kweb://asm-temple"
   kilo_graphics: KFarm
   kilo_tester: KTimer
-  kilo_usability: KSimon
+  kilo_usability: KSnake
   kilo_qa: KSudoku
   kilo_expander: KGo
 virtual_web_target: "kweb://asm-temple"
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-tester
-  app: KColor
-  timestamp: "2026-10-07T14:20:00-07:00"
+  agent: kilo-usability
+  app: KSimon
+  timestamp: "2026-10-07T15:25:00-07:00"
 last_planner_run: "2026-10-07T14:38:00Z"
 ---
 
@@ -119,9 +119,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KConverter`, `KQuarantine`, `KSettings`, `KTaskMgr`, `K2048`, `KSudoku`, `KConnect4`, `KHangman`, `KSimon`, `KFreecell`, `KMatch3`, `KWords`, `KGo`, `KDarts`, `KRSS`, `KClip`, `KCipher`, `KCalc`, `KMine`, `KSnake`, `KTetris`, `KPong`, `KMaze`, `KSolitaire`, `KChess` *(Completed: KChess, KMaze, KPong, KStarForge, KTask, KChrono, KSys, KSynth, KCyber, KCosmic, KContacts, KDB, KDragon, KFlash, KFont, KFortress, KGraph, KHabit, KHex, KImage, KJournal, KMail, KMandel, KMech, KMedia, KMystery, KNet, KNote, KPad, KPaint, KPass, KPing, KQuest, KRadio, KRead, KSanctuary, KScript, KStarDredge, KStarship, KStellar, KSubmarine, KTerm, KHash, KRSS, KClip, KCipher, KCalc, KMine, KSnake, KTetris, KSolitaire, KColor)*.
 
 ### 4. Usability & UX Queue (`kilo-usability`)
-- **Current Target**: `KSimon`
+- **Current Target**: `KSnake`
 - **Upcoming Queue**:
-  `KSnake`, `KSolitaire`, `KSudoku`, `KTetris`, `KWords`, `KBBS`, `KCalendar`, `KChess`, `KFreecell`, `KMatch3`, `KPong` *(Completed: KCalc, KPomodoro, KTimer, KClock, KHash, KMystery, KMandel, KFont, KPing, KAudio, KSynth, KScript, KRead, KRadio, KSys, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KChrono, KTask, KStarForge, KPad, KBookmark, KRSS, KClip, KHex, KHabit, KFarm, KPaint, KGraph, KImage, KJournal, KMail, KMedia, KNet, KNote, KPass, KMine, KBBS, KCalendar, KChart, KColor, KChess, KConnect4, KConverter, KFreecell, KHangman, KMatch3, KPong, KSettings)*.
+  `KSolitaire`, `KSudoku`, `KTetris`, `KWords`, `KBBS`, `KCalendar`, `KChess`, `KFreecell`, `KMatch3`, `KPong`, `KSimon` *(Completed: KCalc, KPomodoro, KTimer, KClock, KHash, KMystery, KMandel, KFont, KPing, KAudio, KSynth, KScript, KRead, KRadio, KSys, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KChrono, KTask, KStarForge, KPad, KBookmark, KRSS, KClip, KHex, KHabit, KFarm, KPaint, KGraph, KImage, KJournal, KMail, KMedia, KNet, KNote, KPass, KMine, KBBS, KCalendar, KChart, KColor, KChess, KConnect4, KConverter, KFreecell, KHangman, KMatch3, KPong, KSettings, KSimon)*.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
 - **Current Target**: `KSudoku`
@@ -217,6 +217,16 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-07T15:25:00-07:00 — kilo-usability: KSimon (UI/UX Pass: Window Dimensions, HiDPI Retina Canvas, Modal Dismissal & Toast Safety)**
+  - Status: PASS ✅ (0 regressions, 121.7 KB web / 145.4 KB native < 999 KB ceiling).
+  - Window & Layout: Tuned default dimensions to 600x740 in App.jsx; eliminated vertical clipping and awkward scrollbars.
+  - Canvas HiDPI Crispness: Added devicePixelRatio auto-scaling and resize handler; decoupled logical coords (480x390) for sub-pixel sharpness.
+  - Toast Occlusion & Safety: Implemented auto-fading `showToast()` positioned safely at bottom-viewport; fixed missing function reference.
+  - Keyboard & Accessibility: Added `[F1]` help shortcut, title-screen `[H]` fallback, all-modal `Escape` and backdrop click dismissal.
+  - Touch & Pointer Ergonomics: Added `touch-action: manipulation`, focus-visible outlines, and canvas pointer leave/cancel flash release.
+  - Verification: `test_web_apps.js` PASS (55 elements, 0 err, 60 FPS); `security_lint.py` 100% PASS; MSVC native clean; Vite clean (452ms).
+  - Queue: Advanced `kilo_usability` to `KSnake`; rotation handoff to `kilo-qa`.
+
 - **2026-10-07T14:20:00-07:00 — kilo-tester: KColor (Interactive UI Audit: Dialog Roles, Palette JSON Import, Focus & Keyboard Parity)**
   - Status: PASS ✅ (5 UI issues identified and fixed; 0 regressions).
   - Palette Library: Added JSON palette file import (`importJsonBtn` + FileReader) with auto-parsing and duplicate filtering.
@@ -248,14 +258,6 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Verification: `security_lint.py` 100% PASS; `check_sizes.py` PASS; Vite build clean (450ms).
   - Queue: Advanced `kilo_creator` & `virtual_web_target` to `kweb://asm-temple`; handoff to `kilo-graphics`.
 
-- **2026-10-07T12:25:00-07:00 — kilo-expander: KConnect4 (Feature Expansion: Tactical Radar, Opening Classifier, Genesis 2-Op FM, Ply Scrubbing & MP Polish)**
-  - Status: PASS ✅ (0 regressions, 175.0 KB web / 173.0 KB native < 999 KB ceiling).
-  - Tactical Radar & Opening Book: Added real-time Column Radar [C] (win/block/blunder indicators) and Connect-4 opening theory classifier.
-  - Interactive Ply Scrubbing: Interactive notation transcript with direct ply jumping, branch play creation, and 1-click clipboard paste.
-  - Genesis Audio Architecture: Upgraded sound engine to Yamaha YM2612 2-Op FM synthesis with metallic carrier/modulator decay.
-  - Multiplayer & ARG Polish: Fixed draw winner sync; wired diegetic 10.19.99.4/classified subcarrier lock in position loader.
-  - Verification: `test_web_apps.js` PASS (62 interactive, 60 FPS, 0 err); `security_lint.py` 100% PASS; MSVC native build clean; Vite clean (763ms).
-  - Queue: Advanced `kilo_expander` to `KGo`; rotation handoff to `kilo-creator`.
 
 
 
