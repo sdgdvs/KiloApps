@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-graphics
-next_agent: kilo-tester
+current_agent: kilo-tester
+next_agent: kilo-usability
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -13,7 +13,7 @@ timeout_minutes: 15
 status: ready
 current_targets:
   kilo_creator: "kweb://warez"
-  kilo_graphics: KAbyss
+  kilo_graphics: KBreakout
   kilo_tester: KMaze
   kilo_usability: KHangman
   kilo_qa: KQuarantine
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-creator
-  app: "kweb://webring"
-  timestamp: "2026-10-06T19:08:00-07:00"
+  agent: kilo-graphics
+  app: KAbyss
+  timestamp: "2026-10-06T19:25:00-07:00"
 last_planner_run: "2026-10-06T14:20:00Z"
 ---
 
@@ -109,9 +109,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
 - **EXCLUSIVE MISSION**: Replace programmer vector art with Imagen 3 generated sprites and backgrounds via the 2-stage asset pipeline. If the target app is not appropriate for raster/sprite replacement (e.g. wireframe classics or abstract board games), skip the turn immediately.
-- **Current Target**: `KAbyss`
+- **Current Target**: `KBreakout`
 - **Upcoming Queue**:
-  `KBreakout`, `KAsteroids`, `KSpace`, `KPac`, `KQuest`, `KRogue`, `KColosseum` *(Note: Pure vector/wireframe or abstract board targets skip automatically per Mandate 15. Completed: KQuest Phases 1-5, KSpace)*.
+  `KAsteroids`, `KSpace`, `KPac`, `KQuest`, `KRogue`, `KColosseum`, `KAbyss` *(Note: Pure vector/wireframe or abstract board targets skip automatically per Mandate 15. Completed: KQuest Phases 1-5, KSpace)*.
 
 ### 3. App Tester Queue (`kilo-tester`)
 - **Current Target**: `KMaze`
@@ -217,6 +217,13 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-06T19:25:00-07:00 — kilo-graphics: KAbyss (Skip Turn — Inappropriate Target & Glint/Dust Audit)**
+  - Status: ⏭️ Skip — Imagen 3 asset replacement not appropriate for KAbyss
+  - Rationale: Procedural dungeon crawler with dynamic FOV/lighting and 1:1 Win32 GDI C parity; mature custom art and multi-zone styling.
+  - Glint & Dust Ban: Removed ambient drifting canvas dust motes per Mandate 11 / Directive 177; static dungeon aesthetic preserved.
+  - Verification: `check_icons.py` 100% PASS; `security_lint.py` 100% PASS; MSVC clean (`KAbyss.exe` 242.2 KB); Vite clean (345ms); web (458.9 KB) < 999 KB ceiling.
+  - Queue: Advanced `kilo_graphics` to `KBreakout`; rotation advanced to `kilo-tester`.
+
 - **2026-10-06T19:08:00-07:00 — kilo-creator: kweb://webring (Virtual Net & ARG Expansion: AS-1999 BGP Routing Matrix & Subterranean Packet Router)**
   - Status: PASS ✅ (0 regressions, 308.6 KB web < 999 KB ceiling).
   - AS-1999 BGP Routing Matrix (Tab 10): Built 8-entry live RIB/FIB routing table with CIDR inspection and protocol filtering (BGP-4, RIP-2, OSPF-2, Direct, Anomalous).
@@ -251,11 +258,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Glint & Dust Ban: Removed traveling specular glints, sheen sweeps, drifting dust motes, and screen shake in web and Win32 C.
   - Verification: test_app_startup.py PASS; test_web_apps.js PASS (25 elements, 0 err); MSVC clean (122.5 KB); Vite clean (414ms); security_lint 100% PASS.
   - Queue: Advanced kilo_usability to KHangman; rotation advanced to kilo-qa.
-
-- **2026-10-06T18:07:00-07:00 — kilo-tester: KPong (Interactive UI Audit, Input Focus Isolation, Save/Load Ball Trail Fix)**
-  - Status: PASS ✅ (4 issues, 4 fixed).
-  - Modal & Input Isolation: Isolated text input events (`mpPlayerName`, `joinCodeInput`) preventing accidental hotkey triggers, w/s/space keyblock, and premature modal closing.
-  - State Integrity & Crash Fix: Fixed ball serialization property names and initialized `trail: []` on state load, eliminating TypeError crash on F9 restore.
-  - Interactive Polish: Added canvas click-to-resume and replay pause toggle; synchronized `btn-pvp` initial button text; respected unchecked tutorial preference.
-  - Verification: `test_app_startup.py` PASS; `test_web_apps.js` PASS (46 elements, 0 errors); MSVC clean (45.5 KB); Vite clean (375ms); web (123.3 KB) < 999 KB ceiling; security_lint 100% PASS.
-  - Queue: Advanced `kilo_tester` to `KMaze`; rotation advanced to `kilo-usability`.

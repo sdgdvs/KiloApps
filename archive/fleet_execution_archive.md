@@ -4,6 +4,14 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-06T18:07:00-07:00 — kilo-tester: KPong (Interactive UI Audit, Input Focus Isolation, Save/Load Ball Trail Fix)**
+  - Status: PASS ✅ (4 issues, 4 fixed).
+  - Modal & Input Isolation: Isolated text input events (`mpPlayerName`, `joinCodeInput`) preventing accidental hotkey triggers, w/s/space keyblock, and premature modal closing.
+  - State Integrity & Crash Fix: Fixed ball serialization property names and initialized `trail: []` on state load, eliminating TypeError crash on F9 restore.
+  - Interactive Polish: Added canvas click-to-resume and replay pause toggle; synchronized `btn-pvp` initial button text; respected unchecked tutorial preference.
+  - Verification: `test_app_startup.py` PASS; `test_web_apps.js` PASS (46 elements, 0 errors); MSVC clean (45.5 KB); Vite clean (375ms); web (123.3 KB) < 999 KB ceiling; security_lint 100% PASS.
+  - Queue: Advanced `kilo_tester` to `KMaze`; rotation advanced to `kilo-usability`.
+
 - **2026-10-06T17:31:00-07:00 — kilo-expander: KSolitaire (RFMS Duel Arena, Replay Studio, Deal Numbers, Mandate 11 Glint/Dust Ban)**
   - Status: PASS ✅ (0 regressions, 152.7 KB web / 49.1 KB native < 999 KB ceiling).
   - Online Multiplayer: Added Cyber Duel Arena with RFMS matchmaking, 25s CyberBot solo fallback, live duel HUD, chat taunts, and URL room invites.

@@ -7264,13 +7264,6 @@
                 spawnEmber(playerSX + 16, playerSY + 16, true);
             }
 
-            // Spawn ambient subterranean zone motes
-            if (Math.random() < 0.25) {
-                const rx = playerSX + (Math.random() - 0.5) * 360;
-                const ry = playerSY + (Math.random() - 0.5) * 260;
-                spawnEmber(rx, ry, false);
-            }
-
             // Draw & Update Embers Particles
             for (let i = torchParticles.length - 1; i >= 0; i--) {
                 const p = torchParticles[i];
