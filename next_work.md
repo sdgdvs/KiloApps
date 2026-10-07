@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-graphics
-next_agent: kilo-tester
+current_agent: kilo-tester
+next_agent: kilo-usability
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -13,7 +13,7 @@ timeout_minutes: 15
 status: ready
 current_targets:
   kilo_creator: "kweb://geocities"
-  kilo_graphics: KBreakout
+  kilo_graphics: KAsteroids
   kilo_tester: KSolitaire
   kilo_usability: KPong
   kilo_qa: KTaskMgr
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-creator
-  app: "kweb://warez"
-  timestamp: "2026-10-07T02:25:00-07:00"
+  agent: kilo-graphics
+  app: KBreakout
+  timestamp: "2026-10-07T02:36:00-07:00"
 last_planner_run: "2026-10-06T14:20:00Z"
 ---
 
@@ -109,9 +109,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
 - **EXCLUSIVE MISSION**: Replace programmer vector art with Imagen 3 generated sprites and backgrounds via the 2-stage asset pipeline. If the target app is not appropriate for raster/sprite replacement (e.g. wireframe classics or abstract board games), skip the turn immediately.
-- **Current Target**: `KBreakout`
+- **Current Target**: `KAsteroids`
 - **Upcoming Queue**:
-  `KAsteroids`, `KSpace`, `KPac`, `KQuest`, `KRogue`, `KColosseum`, `KAbyss` *(Note: Pure vector/wireframe or abstract board targets skip automatically per Mandate 15. Completed: KQuest Phases 1-5, KSpace)*.
+  `KSpace`, `KPac`, `KQuest`, `KRogue`, `KColosseum`, `KAbyss`, `KBreakout` *(Note: Pure vector/wireframe or abstract board targets skip automatically per Mandate 15. Completed: KQuest Phases 1-5, KSpace)*.
 
 ### 3. App Tester Queue (`kilo-tester`)
 - **Current Target**: `KSolitaire`
@@ -217,6 +217,13 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-07T02:36:00-07:00 — kilo-graphics: KBreakout (Skip Turn — Inappropriate Target & Visual Quality Audit)**
+  - Status: ⏭️ Skip — Imagen 3 asset replacement not appropriate for KBreakout
+  - Target Suitability: Procedural brick-breaker classic; 40 dynamic stages & Win32 GDI 1:1 parity preclude raster replacement.
+  - Glint & Border Ban: Audited zero rotating specular glints or traveling perimeter border dots; cleaned paddle sheen comment.
+  - Verification: `check_icons.py` PASS; `security_lint.py` PASS; `test_app_startup.py` PASS; Vite clean; build clean.
+  - Queue: Advanced `kilo_graphics` to `KAsteroids`; handoff to `kilo-tester`.
+
 - **2026-10-07T02:25:00-07:00 — kilo-creator: kweb://warez (Anti-Potemkin Web 1.0 Expansion: FXP Top-Site Race & PE-Pack '99 Entropy Lab)**
   - Status: PASS ✅ (0 regressions, 406 KB < 999 KB ceiling).
   - 0xRELEASE glFTPd Top-Site & FXP Courier Race: Multi-threaded site-to-site racing (4-thread stripe), live speed monitor, glFTPd v1.18 terminal (`site who/speed/groups/rules`), ratio tracking, and race proof download.
@@ -257,15 +264,6 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Mandate 11 Glint Ban: Removed moving dust drift and sweeping glint sheen across web and native Win32 C (`KMatch3.exe` rebuilt clean).
   - Verification: `test_app_startup.py` PASS; MSVC clean (37.5 KB); Vite clean (516ms); `security_lint.py` 100% PASS.
   - Queue: Advanced `kilo_usability` to `KPong`; handoff to `kilo-qa`.
-
-- **2026-10-06T20:40:00-07:00 — kilo-tester: KMaze (Interactive UI Audit, Keybinds Overlay Fix, Persistence & Ability Feedback)**
-  - Status: PASS ✅ (5 issues, 5 fixed).
-  - Overlay & Modal: Fixed Keybinds overlay occlusion from startup splash; wired canvas [✕ Close] and [↺ Defaults] click actions.
-  - Storage & Persistence: Persisted custom keybinds to `kmaze_keybinds` in localStorage; restored in export/import JSON.
-  - Interactive Reactivity: Added ability depletion/range warning toasts for Pickaxe, Pathfinder, Speed, Stun, Freeze, and Crouch.
-  - Button State Sync: Dynamic pickaxe counter badge in HUD; synced `.active` state on Keybinds and Help buttons.
-  - Verification: `test_app_startup.py` PASS; `test_web_apps.js` PASS (20 elements, 0 err); MSVC clean (60.4 KB); Vite clean; `security_lint.py` 100% PASS.
-  - Queue: Maintained `kilo_tester` on `KSolitaire`; handoff to `kilo-usability`.
 
 
 

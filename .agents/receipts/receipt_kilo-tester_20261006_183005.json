@@ -1,0 +1,10 @@
+{
+  "timestamp": "2026-10-06T18:30:05.261968+00:00",
+  "agent": "kilo-tester",
+  "model": "gemini-3.8-flash-high",
+  "target": "KCalc",
+  "duration_seconds": 2.22,
+  "returncode": 3,
+  "success": false,
+  "provenance": null
+}

@@ -1,0 +1,10 @@
+{
+  "timestamp": "2026-10-06T15:30:05.707130+00:00",
+  "agent": "kilo-creator",
+  "model": "gemini-3.8-flash-high",
+  "target": "kweb://asm-temple",
+  "duration_seconds": 2.89,
+  "returncode": 3,
+  "success": false,
+  "provenance": null
+}

@@ -5,7 +5,7 @@
   "hostname": "DESKTOP-HSSS709",
   "model_tier": "Gemini Pro",
   "cadence": "1 turn/hour",
-  "status": "error",
+  "status": "active",
   "schedule_minutes": [
     30
   ],
@@ -13,9 +13,9 @@
   "session_end": null,
   "session_limit_enabled": false,
   "timer_enabled": false,
-  "turns_executed": 53,
+  "turns_executed": 59,
   "last_turn_timestamp": "2026-09-28T17:56:12Z",
-  "last_heartbeat": "2026-10-07T02:30:07.446256+00:00",
-  "current_target": "KMaze",
+  "last_heartbeat": "2026-10-07T08:45:04.478478+00:00",
+  "current_target": "kweb://warez",
   "remote_command": "none"
 }
