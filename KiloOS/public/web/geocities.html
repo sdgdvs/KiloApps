@@ -1709,6 +1709,380 @@
     box-shadow: 0 0 15px rgba(170, 0, 255, 0.35);
   }
 
+  /* RingSurfer '99 & Web Crawler Deck */
+  .ring-surfer-deck {
+    background: linear-gradient(180deg, #1b263b 0%, #0d1322 100%);
+    border: 2px outset #38bdf8;
+    padding: 8px 12px;
+    margin-bottom: 12px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: inset 0 0 10px rgba(56, 189, 248, 0.2);
+  }
+  .ring-surfer-controls {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .ring-surfer-btn {
+    background: #002b40;
+    color: #38bdf8;
+    border: 1px outset #38bdf8;
+    font-family: 'Courier New', monospace;
+    font-size: 11px;
+    font-weight: bold;
+    padding: 4px 8px;
+    cursor: pointer;
+    transition: all 0.1s;
+  }
+  .ring-surfer-btn:hover {
+    background: #38bdf8;
+    color: #000;
+  }
+  .ring-surfer-btn:active, .ring-surfer-btn.active {
+    border-style: inset;
+    background: #ff00aa;
+    color: #fff;
+  }
+  .passport-pill {
+    background: #04121e;
+    border: 1px solid #00ffcc;
+    color: #00ffcc;
+    font-family: 'Courier New', monospace;
+    font-size: 11px;
+    padding: 3px 8px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+  }
+  .passport-pill:hover {
+    background: #00384d;
+  }
+  .passport-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.85);
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+  }
+  .passport-modal-box {
+    background: #07101e;
+    border: 3px double #ffd700;
+    max-width: 600px;
+    width: 100%;
+    padding: 16px;
+    color: #f1f5f9;
+    font-family: 'Courier New', monospace;
+    box-shadow: 0 0 30px rgba(255, 215, 0, 0.35);
+  }
+  .passport-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+    gap: 8px;
+    margin: 12px 0;
+  }
+  .passport-stamp {
+    background: #0a192f;
+    border: 1px dashed #64748b;
+    padding: 8px;
+    text-align: center;
+    font-size: 10px;
+    opacity: 0.45;
+    border-radius: 2px;
+  }
+  .passport-stamp.unlocked {
+    opacity: 1;
+    border: 1px solid #38bdf8;
+    box-shadow: 0 0 10px rgba(56, 189, 248, 0.3);
+    background: #06213a;
+  }
+
+  /* 56k V.90 Dial-Up Modem Acoustic Synthesizer */
+  .modem-synth-box {
+    border: 2px inset #00ffff;
+    background: linear-gradient(180deg, #09131f 0%, #030810 100%);
+    padding: 14px;
+    margin-bottom: 16px;
+    box-shadow: 0 0 15px rgba(0, 255, 255, 0.15);
+  }
+  .modem-bezel {
+    background: #1e293b;
+    border: 3px outset #64748b;
+    border-radius: 4px;
+    padding: 12px;
+    margin-bottom: 12px;
+    box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.8), 0 4px 12px rgba(0, 0, 0, 0.5);
+  }
+  .modem-panel-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2px groove #475569;
+    padding-bottom: 8px;
+    margin-bottom: 10px;
+  }
+  .modem-logo {
+    font-family: Arial, sans-serif;
+    font-weight: 900;
+    font-size: 14px;
+    letter-spacing: 1px;
+    color: #cbd5e1;
+    text-shadow: 1px 1px 0 #000;
+  }
+  .modem-leds-cluster {
+    display: flex;
+    gap: 8px;
+    background: #0f172a;
+    padding: 4px 10px;
+    border: 1px inset #334155;
+    border-radius: 2px;
+  }
+  .modem-led-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+  }
+  .modem-led-label {
+    font-size: 8px;
+    font-family: Arial, sans-serif;
+    font-weight: bold;
+    color: #94a3b8;
+  }
+  .modem-led {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #331111;
+    border: 1px solid #111;
+    box-shadow: inset 0 0 2px #000;
+    transition: background 0.1s, box-shadow 0.1s;
+  }
+  .modem-led.lit-red {
+    background: #ef4444;
+    box-shadow: 0 0 8px #ef4444, inset 0 0 2px #fff;
+  }
+  .modem-led.lit-green {
+    background: #22c55e;
+    box-shadow: 0 0 8px #22c55e, inset 0 0 2px #fff;
+  }
+  .modem-led.lit-amber {
+    background: #f59e0b;
+    box-shadow: 0 0 8px #f59e0b, inset 0 0 2px #fff;
+  }
+  .modem-screen {
+    background: #01060c;
+    border: 1px solid #005577;
+    color: #00ffcc;
+    font-family: 'Courier New', monospace;
+    font-size: 11px;
+    line-height: 1.35;
+    padding: 8px;
+    height: 96px;
+    overflow-y: auto;
+    box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.9);
+  }
+  .modem-grid-responsive {
+    display: grid;
+    grid-template-columns: 1fr 140px;
+    gap: 8px;
+  }
+  @media (max-width: 600px) {
+    .modem-grid-responsive {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  /* Guestbook Enhanced Tools Bar */
+  .gb-tools-bar {
+    background: #040d18;
+    border: 1px solid #005577;
+    padding: 6px 10px;
+    margin-top: 8px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+    justify-content: space-between;
+  /* ========================================================================== */
+  /* PHASE 2 DEEP EXPANSION: WEB-SAFE PALETTE LAB, HALITE CRYPT, COUNTER & RINGMASTER */
+  /* ========================================================================== */
+
+  /* 14. Netscape 216 Web-Safe Palette & Contrast Matrix */
+  .palette-lab-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  @media (max-width: 768px) {
+    .palette-lab-grid { grid-template-columns: 1fr; }
+  }
+  .palette-swatch-cube {
+    display: grid;
+    grid-template-columns: repeat(18, 1fr);
+    gap: 2px;
+    background: #000;
+    padding: 6px;
+    border: 2px inset #0088aa;
+    max-height: 230px;
+    overflow-y: auto;
+  }
+  .swatch-chip {
+    width: 100%;
+    aspect-ratio: 1;
+    border: 1px solid rgba(255,255,255,0.2);
+    cursor: pointer;
+    transition: transform 0.08s;
+  }
+  .swatch-chip:hover {
+    transform: scale(1.3);
+    z-index: 5;
+    border-color: #fff;
+    box-shadow: 0 0 6px #fff;
+  }
+  .netscape-crt-preview {
+    background: #000033;
+    color: #00ffcc;
+    border: 3px outset #ffffff;
+    box-shadow: 2px 2px 10px rgba(0,0,0,0.6);
+    font-family: 'Times New Roman', serif;
+    padding: 10px;
+    min-height: 190px;
+    transition: all 0.15s;
+  }
+  .netscape-preview-windowbar {
+    background: linear-gradient(90deg, #000080, #1084d0);
+    color: #fff;
+    font-family: 'Courier New', monospace;
+    font-weight: bold;
+    font-size: 11px;
+    padding: 3px 6px;
+    margin: -10px -10px 8px -10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  /* 15. The Subterranean Halite Crypt Dungeon '99 */
+  .dungeon-container {
+    background: #040810;
+    border: 2px ridge #9333ea;
+    padding: 12px;
+    color: #e2e8f0;
+  }
+  .dungeon-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px dashed #7e22ce;
+    padding-bottom: 6px;
+    margin-bottom: 8px;
+    font-family: 'Courier New', monospace;
+    font-size: 11px;
+  }
+  .dungeon-stats-bar {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 6px;
+    background: #0b1120;
+    border: 1px solid #4338ca;
+    padding: 8px;
+    margin-bottom: 8px;
+    font-family: 'Courier New', monospace;
+    font-size: 11px;
+  }
+  .dungeon-log-box {
+    background: #020617;
+    border: 2px inset #312e81;
+    color: #a5f3fc;
+    font-family: 'Courier New', monospace;
+    font-size: 11px;
+    padding: 8px;
+    height: 130px;
+    overflow-y: auto;
+    line-height: 1.4;
+    margin-bottom: 8px;
+    white-space: pre-wrap;
+  }
+  .dungeon-actions-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+  }
+  .dungeon-btn {
+    background: #1e1b4b;
+    color: #c084fc;
+    border: 2px outset #a855f7;
+    font-family: 'Courier New', monospace;
+    font-size: 11px;
+    font-weight: bold;
+    padding: 4px 10px;
+    cursor: pointer;
+    transition: all 0.1s;
+  }
+  .dungeon-btn:hover {
+    background: #a855f7;
+    color: #000;
+  }
+  .dungeon-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    background: #111;
+    border-color: #444;
+  }
+
+  /* 16. Odometer & Marquee Forge */
+  .forge-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  @media (max-width: 768px) {
+    .forge-grid { grid-template-columns: 1fr; }
+  }
+  .odometer-display-box {
+    background: #000;
+    border: 3px inset #38bdf8;
+    padding: 10px;
+    text-align: center;
+    margin-bottom: 8px;
+  }
+  .marquee-live-canvas {
+    background: #030d1a;
+    border: 2px dashed #00ffff;
+    padding: 10px;
+    margin-bottom: 8px;
+    overflow: hidden;
+  }
+
+  /* 17. Ringmaster CGI Console */
+  .ringmaster-box {
+    background: #03140e;
+    border: 2px ridge #10b981;
+    padding: 12px;
+  }
+  .pinger-terminal {
+    background: #010a06;
+    border: 2px inset #059669;
+    color: #34d399;
+    font-family: 'Courier New', monospace;
+    font-size: 11px;
+    padding: 8px;
+    height: 110px;
+    overflow-y: auto;
+    line-height: 1.35;
+    margin-bottom: 8px;
+  }
+
 </style>
 </head>
 <body class="theme-siliconvalley">
@@ -1744,6 +2118,7 @@
   <nav class="retro-nav">
     <a href="#shrine-welcome" class="nav-btn">🔮 Home</a>
     <a href="#neighborhood-explorer" class="nav-btn" style="color:#f0abfc; border-color:#f0abfc;">🏘️ Homestead Explorer</a>
+    <a href="#ringsurfer-deck" class="nav-btn" style="color:#38bdf8; border-color:#38bdf8;">🧭 RingSurfer '99</a>
     <a href="#neighborhood-watch-section" class="nav-btn" style="color:#ffff00; border-color:#ffff00;">📢 Neighborhood Watch</a>
     <a href="#jukebox-section" class="nav-btn">📻 MIDI Jukebox</a>
     <a href="#mod-vault" class="nav-btn">💾 MOD Downloads</a>
@@ -1754,12 +2129,16 @@
     <a href="#sample-sculptor-section" class="nav-btn">🎚️ Sample Sculptor</a>
     <a href="#sfx-lab-section" class="nav-btn" style="color:#38bdf8; border-color:#38bdf8;">🔊 16-Bit SFX Lab</a>
     <a href="#subcarrier-lab" class="nav-btn" style="color:#39ff14; border-color:#39ff14;">📡 Subcarrier Lab</a>
+    <a href="#modem-synth-section" class="nav-btn" style="color:#00ff66; border-color:#00ff66;">📞 56k Modem Lab</a>
     <a href="#oracle-section" class="nav-btn">🔮 Silicon Oracle '99</a>
     <a href="#y2k-diagnostic" class="nav-btn">⏱️ Y2K Diagnostic</a>
     <a href="#banner-studio" class="nav-btn">🚧 Banner Studio</a>
     <a href="#page-builder" class="nav-btn">🏗️ Page Builder</a>
     <a href="#cyber-poll-section" class="nav-btn">📊 Cyber Poll</a>
-    <a href="#diskmag-section" class="nav-btn" style="color:#f43f5e; border-color:#f43f5e;">📰 Silicon Echoes '99 Diskmag</a>
+    <a href="#websafe-palette-section" class="nav-btn" style="color:#facc15; border-color:#facc15;">🎨 216 Web-Safe Palette</a>
+    <a href="#halite-dungeon-section" class="nav-btn" style="color:#a855f7; border-color:#a855f7;">⚔️ Halite Crypt Dungeon '99</a>
+    <a href="#counter-marquee-section" class="nav-btn" style="color:#38bdf8; border-color:#38bdf8;">📟 Odometer &amp; Marquee Forge</a>
+    <a href="#ringmaster-console-section" class="nav-btn" style="color:#34d399; border-color:#34d399;">🌐 Ringmaster CGI Console</a>
     <a href="#guestbook-section" class="nav-btn">📖 Live Shoutbox</a>
     <a href="#bookmarks-section" class="nav-btn">⭐ Bookmarks</a>
   </nav>
@@ -1822,6 +2201,26 @@
       </div>
     </div>
 
+    <!-- GeoCities RingSurfer '99 & Web Crawler Deck -->
+    <div class="ring-surfer-deck" id="ringsurfer-deck">
+      <div style="display:flex; align-items:center; gap:8px;">
+        <span style="font-weight:bold; color:#ffff00; font-family:'Courier New', monospace; font-size:11px;">🧭 RINGSURFER '99:</span>
+        <div class="ring-surfer-controls">
+          <button class="ring-surfer-btn" onclick="ringSurferPrev()">⏮️ Prev Site</button>
+          <button class="ring-surfer-btn" onclick="ringSurferRandom()">🎲 Random Site</button>
+          <button class="ring-surfer-btn" onclick="ringSurferNext()">⏭️ Next Site</button>
+          <button class="ring-surfer-btn" id="btnFastCrawl" onclick="toggleFastCrawl()">⏩ Fast Crawl [OFF]</button>
+        </div>
+      </div>
+      <div style="display:flex; align-items:center; gap:8px;">
+        <div class="passport-pill" onclick="openPassportModal()" title="Click to view your Cyberspace Passport">
+          <span>📜 Cyberspace Passport:</span>
+          <strong id="passportBadgeCount" style="color:#ffff00;">0/7 Stamps</strong>
+          <span id="passportProgressPct" style="color:#38bdf8;">(0%)</span>
+        </div>
+      </div>
+    </div>
+
     <!-- Homestead Grid -->
     <div class="homestead-grid" id="homesteadGrid">
       <!-- Populated dynamically via renderHomesteadGrid() -->
@@ -1842,6 +2241,29 @@
       </div>
       <div class="homestead-modal-viewport" id="hsModalViewport">
         <!-- Rendered dynamically -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Cyberspace Passport Modal Overlay -->
+  <div id="passportModal" class="passport-modal-overlay" style="display:none;" onclick="closePassportModalOnBackdrop(event)">
+    <div class="passport-modal-box" onclick="event.stopPropagation()">
+      <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px dashed #ffd700; padding-bottom:6px; margin-bottom:10px;">
+        <span style="color:#ffd700; font-weight:bold; font-size:13px;">📜 OFFICIAL 1999 CYBERSPACE VOYAGER PASSPORT</span>
+        <button class="homestead-modal-close" onclick="closePassportModal()">✕</button>
+      </div>
+      <p style="font-size:11px; color:#94a3b8; margin:0 0 10px 0;">
+        Issued by the KiloNet Webring &amp; GeoCities Homestead Consortium. Explore neighborhoods, inspect anomalous carrier nodes, and dial virtual gateways to unlock all 7 commemorative stamps!
+      </p>
+      <div class="passport-grid" id="passportGrid">
+        <!-- Rendered dynamically -->
+      </div>
+      <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px dashed #334155; padding-top:8px; margin-top:10px;">
+        <span style="font-size:10px; color:#64748b;" id="passportTotalVisits">Visited: 0 / 25 Homesteads</span>
+        <div style="display:flex; gap:6px;">
+          <button class="tool-btn" style="background:#004466; color:#38bdf8;" onclick="downloadPassportTxt()">💾 Download Passport (.TXT)</button>
+          <button class="tool-btn" style="background:#334155; color:#fff;" onclick="closePassportModal()">Close</button>
+        </div>
       </div>
     </div>
   </div>
@@ -2830,6 +3252,93 @@
     </div>
   </div>
 
+  <!-- 8c. 56k V.90 Dial-Up Modem Acoustic Synthesizer & AT Station -->
+  <div class="section-box" id="modem-synth-section">
+    <div class="section-title">
+      <span>📞 56k V.90 DIAL-UP MODEM ACOUSTIC SYNTHESIZER &amp; AT STATION</span>
+      <span style="font-size:11px; color:#00ff66;" id="modemRateBadge">[READY • HAYES AT COMMAND COMPATIBLE]</span>
+    </div>
+    <p style="font-size:12px; margin:0 0 10px 0; line-height:1.5;">
+      Experience the authentic, unadulterated sound of 1999 dial-up Internet! Procedurally synthesized client-side via Web Audio API—complete with 350Hz+440Hz dial tone, DTMF touch-tones, ringback cadence, 2100Hz CED answer tone, V.8 dual-tone line probing, phase-shift keying training noise, and final V.90 carrier lock. Zero external audio files required!
+    </p>
+
+    <div class="modem-bezel">
+      <div class="modem-panel-top">
+        <div class="modem-logo">
+          ⚡ SPORTSTER 56K VOICE FAXMODEM <span style="font-size:10px; color:#38bdf8; font-weight:normal;">[V.90 / ITU-T]</span>
+        </div>
+        <div class="modem-leds-cluster">
+          <div class="modem-led-item"><span class="modem-led-label">HS</span><div class="modem-led" id="ledHS"></div></div>
+          <div class="modem-led-item"><span class="modem-led-label">AA</span><div class="modem-led" id="ledAA"></div></div>
+          <div class="modem-led-item"><span class="modem-led-label">CD</span><div class="modem-led" id="ledCD"></div></div>
+          <div class="modem-led-item"><span class="modem-led-label">OH</span><div class="modem-led" id="ledOH"></div></div>
+          <div class="modem-led-item"><span class="modem-led-label">RD</span><div class="modem-led" id="ledRD"></div></div>
+          <div class="modem-led-item"><span class="modem-led-label">SD</span><div class="modem-led" id="ledSD"></div></div>
+          <div class="modem-led-item"><span class="modem-led-label">TR</span><div class="modem-led" id="ledTR"></div></div>
+          <div class="modem-led-item"><span class="modem-led-label">MR</span><div class="modem-led lit-red" id="ledMR"></div></div>
+        </div>
+      </div>
+
+      <!-- Controls Row -->
+      <div style="display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-bottom:10px; background:#0f172a; padding:8px; border:1px solid #334155;">
+        <div style="display:flex; align-items:center; gap:6px;">
+          <label style="color:#aaffee; font-size:11px; font-weight:bold;">Phonebook Dial:</label>
+          <select id="modemPhonebookSelect" onchange="onModemPhonebookChange(this.value)" style="background:#020617; color:#38bdf8; border:1px solid #0284c7; font-size:11px; padding:3px; font-family:'Courier New', monospace;">
+            <option value="1800KILONET">1-800-KILONET (KiloNet Surface Access POP)</option>
+            <option value="5550199">555-0199 (GeoCities SiliconValley ISP)</option>
+            <option value="9991999">999-1999 (Area 51 Bedrock Transponder Node)</option>
+            <option value="1019994">10-19-99-4 (Carlsbad Intranet Demarcation)</option>
+            <option value="custom">Custom Number...</option>
+          </select>
+        </div>
+
+        <input type="text" id="modemNumberInput" value="1-800-545-6638" style="background:#020617; color:#ffff00; border:1px solid #334155; font-family:'Courier New', monospace; font-size:11px; padding:3px 6px; width:130px;" />
+
+        <div style="display:flex; align-items:center; gap:6px;">
+          <label style="color:#aaffee; font-size:11px;">Standard:</label>
+          <select id="modemStandardSelect" style="background:#020617; color:#fff; border:1px solid #334155; font-size:11px; padding:3px;">
+            <option value="v90">56,000 bps V.90 / K56flex</option>
+            <option value="v34">33,600 bps V.34+</option>
+            <option value="v32">14,400 bps V.32bis</option>
+          </select>
+        </div>
+
+        <div style="display:flex; align-items:center; gap:6px;">
+          <label style="color:#aaffee; font-size:11px;">Speaker:</label>
+          <select id="modemSpeakerSelect" style="background:#020617; color:#fff; border:1px solid #334155; font-size:11px; padding:3px;">
+            <option value="high">ATM2 (High)</option>
+            <option value="med" selected>ATM1 (Medium)</option>
+            <option value="low">ATM1 (Low)</option>
+            <option value="off">ATM0 (Muted)</option>
+          </select>
+        </div>
+
+        <div style="display:flex; gap:6px; margin-left:auto;">
+          <button class="tool-btn" id="btnModemDial" style="background:#005500; border-color:#00ff66; color:#aaffaa; font-weight:bold;" onclick="startModemDialSequence()">⚡ Dial Connection [ATDT]</button>
+          <button class="tool-btn" id="btnModemHangup" style="background:#550000; border-color:#ff4444; color:#ffaaaa;" onclick="hangupModem()">⏹ Hang Up [ATH0]</button>
+        </div>
+      </div>
+
+      <!-- Real-Time Handshake Spectrogram & Status Screen -->
+      <div class="modem-grid-responsive">
+        <div class="modem-screen" id="modemTerminalScreen">
+[MODEM DAEMON READY] Sportster 56K V.90 External Faxmodem.
+Type or select a phonebook destination above, then click 'Dial Connection [ATDT]'.
+Commands recognized: ATZ, ATDT, ATH0, ATI4.
+        </div>
+        <div style="background:#020612; border:1px solid #005577; padding:4px; display:flex; flex-direction:column; align-items:center; justify-content:center;">
+          <canvas id="modemOscCanvas" width="130" height="60" style="background:#000; border:1px solid #003344;"></canvas>
+          <span id="modemPhaseLabel" style="font-size:9px; color:#38bdf8; font-family:'Courier New', monospace; margin-top:4px;">STATUS: IDLE</span>
+        </div>
+      </div>
+
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px; font-size:10px; color:#64748b;">
+        <span>Hayes Command Set • Full V.42bis Data Compression Simulation</span>
+        <button class="tool-btn" style="font-size:9px;" onclick="downloadModemSessionLog()">📜 Download Session Log (.LOG)</button>
+      </div>
+    </div>
+  </div>
+
   <!-- 9. The Silicon Oracle '99 & Y2K Diagnostic -->
   <div class="section-box" id="oracle-section">
     <div class="section-title">
@@ -3350,6 +3859,336 @@
         </div>
       </div>
     </div>
+  <!-- 14. Netscape 216 Web-Safe Palette & Contrast Matrix -->
+  <div class="section-box" id="websafe-palette-section">
+    <div class="section-title">
+      <span>🎨 NETSCAPE 216 WEB-SAFE PALETTE &amp; CONTRAST MATRIX (HTML 4.01)</span>
+      <span style="font-size:11px; color:#facc15;" id="paletteComplianceBadge">[NETSCAPE 4.08 COMPATIBLE • 216/216 CUBE]</span>
+    </div>
+    <p style="font-size:12px; margin:0 0 10px 0; line-height:1.5;">
+      In 1999, graphics adapters running in 256-color (8-bit) mode violently dither any RGB color outside the <strong>Netscape 216 Web-Safe Cube</strong> ($6 \times 6 \times 6$ steps of <code>00</code>, <code>33</code>, <code>66</code>, <code>99</code>, <code>CC</code>, <code>FF</code>). Test color contrasts against Netscape Navigator 4.08 and Internet Explorer 5.0, audit WCAG 1.0 legibility, preview vintage HTML markup, and copy certified Web 1.0 <code>&lt;body&gt;</code> tags!
+    </p>
+
+    <div class="palette-lab-grid">
+      <!-- Left: Interactive 216 Swatch Cube & Neighborhood Presets -->
+      <div style="background:#020b14; border:2px inset #0088aa; padding:10px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; border-bottom:1px solid #004466; padding-bottom:4px;">
+          <span style="font-size:12px; font-weight:bold; color:#00ffcc;">Hex Swatch Cube (216 Colors)</span>
+          <span style="font-size:10px; color:#ffff00;" id="swatchHoverLabel">HOVER: #000033 (rgb: 0, 0, 51)</span>
+        </div>
+
+        <!-- Target paint selector -->
+        <div style="display:flex; gap:6px; flex-wrap:wrap; align-items:center; margin-bottom:8px;">
+          <span style="font-size:11px; color:#aaffee;">Target:</span>
+          <button class="tool-btn active" id="btnTargetBg" onclick="setPaletteTarget('bg')" style="padding:2px 8px; font-size:10px; background:#005577;">Background</button>
+          <button class="tool-btn" id="btnTargetText" onclick="setPaletteTarget('text')" style="padding:2px 8px; font-size:10px;">Text</button>
+          <button class="tool-btn" id="btnTargetLink" onclick="setPaletteTarget('link')" style="padding:2px 8px; font-size:10px;">Link</button>
+          <button class="tool-btn" id="btnTargetVlink" onclick="setPaletteTarget('vlink')" style="padding:2px 8px; font-size:10px;">VLink</button>
+        </div>
+
+        <!-- Swatch Cube Matrix -->
+        <div class="palette-swatch-cube" id="swatchCubeContainer">
+          <!-- Populated by JS -->
+        </div>
+
+        <!-- GeoCities Neighborhood Presets -->
+        <div style="margin-top:8px;">
+          <span style="font-size:10px; color:#ffff00; font-weight:bold;">1999 GeoCities Presets:</span>
+          <div style="display:flex; flex-wrap:wrap; gap:4px; margin-top:4px;">
+            <button class="quick-stamp-btn" onclick="applyPalettePreset('silicon')">⚡ SiliconValley</button>
+            <button class="quick-stamp-btn" onclick="applyPalettePreset('area51')">🛸 Area51 Phosphor</button>
+            <button class="quick-stamp-btn" onclick="applyPalettePreset('beverly')">💎 BeverlyHills</button>
+            <button class="quick-stamp-btn" onclick="applyPalettePreset('soho')">🎨 SoHo Acid</button>
+            <button class="quick-stamp-btn" onclick="applyPalettePreset('forest')">🌲 EnchantedForest</button>
+            <button class="quick-stamp-btn" onclick="applyPalettePreset('hotdog')">🌭 Hotdog Stand '95</button>
+            <button class="quick-stamp-btn" onclick="applyPalettePreset('amiga')">💾 Amiga WB 1.3</button>
+            <button class="quick-stamp-btn" onclick="applyPalettePreset('halite')">⛰️ Salado Halite '99</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: Netscape 4.08 CRT Preview & Contrast Matrix -->
+      <div style="background:#020b14; border:2px inset #0088aa; padding:10px; display:flex; flex-direction:column; justify-content:space-between;">
+        <div>
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; border-bottom:1px solid #004466; padding-bottom:4px;">
+            <span style="font-size:12px; font-weight:bold; color:#facc15;">Netscape 4.08 CRT Live View</span>
+            <span id="contrastRatioBadge" style="font-size:10px; color:#39ff14; font-weight:bold;">CONTRAST: 12.8:1 [OPTIMAL]</span>
+          </div>
+
+          <!-- Simulated Netscape Window -->
+          <div class="netscape-crt-preview" id="netscapePalettePreview">
+            <div class="netscape-preview-windowbar">
+              <span>Netscape Communicator - [Homestead Preview]</span>
+              <span>[ - □ ✕ ]</span>
+            </div>
+            <div style="font-size:11px; margin-bottom:6px; border-bottom:1px solid rgba(255,255,255,0.2); padding-bottom:4px;">
+              <strong>&lt;H1&gt;Welcome to My Homestead!&lt;/H1&gt;</strong>
+            </div>
+            <p style="font-size:11px; margin:0 0 6px 0; line-height:1.4;" id="palettePreviewText">
+              Under construction since December 1999. Tested on 800x600 SVGA with 16-bit High Color. No dither artifacts detected!
+            </p>
+            <div style="font-size:11px;">
+              <a href="#guestbook-section" id="palettePreviewLink">★ Click Here to Sign Guestbook</a> | 
+              <span id="palettePreviewVlink" style="text-decoration:underline; cursor:pointer;">Visited Webring Node</span>
+            </div>
+          </div>
+
+          <!-- Color Hex Readout -->
+          <div style="margin-top:8px; display:grid; grid-template-columns: repeat(4, 1fr); gap:4px; font-family:'Courier New', monospace; font-size:10px; text-align:center;">
+            <div style="background:#000; border:1px solid #334155; padding:3px;"><span style="color:#88aacc;">BG:</span> <strong id="lblHexBg" style="color:#00ffcc;">#000033</strong></div>
+            <div style="background:#000; border:1px solid #334155; padding:3px;"><span style="color:#88aacc;">TEXT:</span> <strong id="lblHexText" style="color:#ffff00;">#00ffcc</strong></div>
+            <div style="background:#000; border:1px solid #334155; padding:3px;"><span style="color:#88aacc;">LINK:</span> <strong id="lblHexLink" style="color:#ff00aa;">#ffff00</strong></div>
+            <div style="background:#000; border:1px solid #334155; padding:3px;"><span style="color:#88aacc;">VLINK:</span> <strong id="lblHexVlink" style="color:#ffcc00;">#ff00aa</strong></div>
+          </div>
+        </div>
+
+        <!-- Export Actions -->
+        <div style="margin-top:8px; display:flex; flex-wrap:wrap; gap:4px; align-items:center;">
+          <button class="tool-btn" style="background:#004422; color:#00ff66;" onclick="copyPaletteBodyTag()">📋 Copy &lt;body&gt; Tag</button>
+          <button class="tool-btn" style="background:#002244; color:#38bdf8;" onclick="copyPaletteCss()">📋 Copy CSS Block</button>
+          <button class="tool-btn" style="background:#440044; color:#f472b6;" onclick="downloadJascPalette()">💾 Download .PAL</button>
+          <span id="paletteCopyFeedback" style="font-size:10px; color:#39ff14; font-family:'Courier New', monospace;"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 15. The Subterranean Halite Crypt Dungeon '99 -->
+  <div class="section-box" id="halite-dungeon-section">
+    <div class="section-title">
+      <span>⚔️ THE SUBTERRANEAN HALITE CRYPT '99: CGI PERL DUNGEON CRAWLER</span>
+      <span style="font-size:11px; color:#a855f7;" id="dungeonFloorBadge">[DEPTH: 2,150 FT • BEDROCK HALITE STRATA]</span>
+    </div>
+    <p style="font-size:12px; margin:0 0 10px 0; line-height:1.5;">
+      Drawn into the subterranean salt mines beneath Carlsbad by persistent 1999.0 Hz acoustic emissions, your party enters the <strong>Halite Crypt</strong>. Battle rogue 56k dial-up daemons, demoscene vector golems, and the Y2K millennium bug in this turn-based Web 1.0 CGI-BIN dungeon crawler. Defeat the Floor 10 Transponder Guardian to recover the classified lithospheric salt core telemetry fragment!
+    </p>
+
+    <div class="dungeon-container">
+      <!-- Dungeon Header & Class Select -->
+      <div class="dungeon-header">
+        <div>
+          <span style="color:#facc15; font-weight:bold;">CHARACTER:</span> 
+          <span id="dungeonCharName" style="color:#38bdf8;">x86 Assembly Hacker</span> 
+          <span id="dungeonLevelBadge" style="color:#a855f7;">(LVL 1)</span>
+        </div>
+        <div style="display:flex; gap:6px; align-items:center;">
+          <label style="font-size:10px; color:#aaffee;">Class:</label>
+          <select id="dungeonClassSelect" onchange="changeDungeonClass(this.value)" style="background:#000; color:#c084fc; border:1px solid #7e22ce; font-size:10px; padding:2px;">
+            <option value="hacker">x86 Assembly Hacker (Tech/Exploit)</option>
+            <option value="bard">Paula Tracker Bard (Sonic Agility)</option>
+            <option value="sigint">Area 51 SIGINT Agent (XOR-0x7F Decrypt)</option>
+            <option value="trader">Silicon Valley Day Trader (Gold/Burst)</option>
+            <option value="warrior">Overclocked Cyber-Warrior (Heavy Tank)</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Stats Bar -->
+      <div class="dungeon-stats-bar">
+        <div>HP: <strong id="dungeonHp" style="color:#ef4444;">100/100</strong></div>
+        <div>MP: <strong id="dungeonMp" style="color:#38bdf8;">50/50</strong></div>
+        <div>FLOOR: <strong id="dungeonFloor" style="color:#facc15;">01 / 10</strong></div>
+        <div>XP: <strong id="dungeonXp" style="color:#4ade80;">0 / 100</strong></div>
+        <div>GOLD: <strong id="dungeonGold" style="color:#f59e0b;">50 Bytes</strong></div>
+        <div>RELICS: <strong id="dungeonRelics" style="color:#c084fc;">Salado Salt (x2)</strong></div>
+      </div>
+
+      <!-- Encounter Status & ASCII Monster Frame -->
+      <div style="display:grid; grid-template-columns: 140px 1fr; gap:8px; margin-bottom:8px; background:#020617; border:1px solid #1e1b4b; padding:8px;">
+        <!-- ASCII Monster Sprite -->
+        <pre id="dungeonMonsterAscii" style="background:#000; color:#ef4444; font-family:'Courier New', monospace; font-size:10px; margin:0; padding:6px; border:1px solid #312e81; text-align:center; height:90px; overflow:hidden; line-height:1.2;"></pre>
+        <!-- Monster Details -->
+        <div style="display:flex; flex-direction:column; justify-content:space-around;">
+          <div>
+            <div style="font-size:12px; font-weight:bold; color:#f87171;" id="dungeonMonsterName">Rogue 56k Dial-Up Daemon</div>
+            <div style="font-size:10px; color:#94a3b8;" id="dungeonMonsterDesc">A screeching V.90 carrier frequency incarnated in crystalline brine.</div>
+          </div>
+          <div>
+            <div style="font-size:10px; color:#aaffee;">Enemy Health: <span id="dungeonMonsterHpText" style="color:#ef4444; font-weight:bold;">45 / 45 HP</span></div>
+            <div style="background:#220011; border:1px solid #ef4444; height:8px; width:100%; margin-top:2px;">
+              <div id="dungeonMonsterHpBar" style="background:#ef4444; height:100%; width:100%; transition:width 0.2s;"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Dungeon Event Log -->
+      <div id="dungeonLog" class="dungeon-log-box"></div>
+
+      <!-- Action Panel & Controls -->
+      <div class="dungeon-actions-row">
+        <button class="dungeon-btn" id="btnDungeonAttack" onclick="dungeonAction('attack')">⚔️ Attack</button>
+        <button class="dungeon-btn" id="btnDungeonSpecial" onclick="dungeonAction('special')">✨ Special Exploit (15 MP)</button>
+        <button class="dungeon-btn" id="btnDungeonItem" onclick="dungeonAction('item')">🧪 Use Salt Relic</button>
+        <button class="dungeon-btn" id="btnDungeonRest" onclick="dungeonAction('rest')">💤 Overclock / Rest</button>
+        <button class="dungeon-btn" id="btnDungeonFlee" onclick="dungeonAction('flee')">🏃 Flee Chamber</button>
+        <button class="dungeon-btn" id="btnDungeonNextFloor" onclick="dungeonAction('next')" style="background:#059669; color:#fff; display:none;">🪜 Descend to Next Depth &raquo;</button>
+        
+        <div style="margin-left:auto; display:flex; gap:4px;">
+          <button class="tool-btn" style="font-size:10px; padding:2px 6px;" onclick="quicksaveDungeon()">💾 Quicksave</button>
+          <button class="tool-btn" style="font-size:10px; padding:2px 6px;" onclick="quickloadDungeon()">📂 Quickload</button>
+          <button class="tool-btn" style="font-size:10px; padding:2px 6px;" onclick="exportDungeonCertificate()">📜 Victory Scroll</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 16. Retro CGI Web Counter & Marquee Ticker Forge -->
+  <div class="section-box" id="counter-marquee-section">
+    <div class="section-title">
+      <span>📟 RETRO CGI WEB COUNTER &amp; MARQUEE TICKER FORGE (DIGITS.CGI &amp; &lt;MARQUEE&gt;)</span>
+      <span style="font-size:11px; color:#38bdf8;">[1999 WEBMASTER ESSENTIALS]</span>
+    </div>
+    <p style="font-size:12px; margin:0 0 10px 0; line-height:1.5;">
+      No GeoCities homestead was complete without an authentic odometer hit counter and a neon scrolling <code>&lt;marquee&gt;</code> ticker. Customize vintage CGI odometer digit styles, test real-time ticker physics, and export copy-paste HTML markup for your personal retro page!
+    </p>
+
+    <div class="forge-grid">
+      <!-- Left: Odometer Counter Studio -->
+      <div style="background:#020b14; border:2px inset #0088aa; padding:10px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; border-bottom:1px solid #004466; padding-bottom:4px;">
+          <span style="font-size:12px; font-weight:bold; color:#00ffcc;">CGI Hit Counter Forge (digits.cgi)</span>
+          <span style="font-size:10px; color:#38bdf8;">SKIN: <span id="odometerSkinLabel">GREEN PHOSPHOR VFD</span></span>
+        </div>
+
+        <!-- Live Canvas Display -->
+        <div class="odometer-display-box">
+          <canvas id="odometerForgeCanvas" width="340" height="60" style="width:100%; max-width:340px; height:60px; display:inline-block;"></canvas>
+        </div>
+
+        <!-- Counter Controls -->
+        <div style="display:flex; gap:4px; flex-wrap:wrap; align-items:center; margin-bottom:8px;">
+          <button class="tool-btn" onclick="stepOdometerForge(1)">+1 Hit</button>
+          <button class="tool-btn" onclick="stepOdometerForge(10)">+10 Hits</button>
+          <button class="tool-btn" onclick="stepOdometerForge(100)">+100 Hits</button>
+          <button class="tool-btn" onclick="randomizeOdometerForge()">🎲 Random</button>
+          <button class="tool-btn" onclick="resetOdometerForge()">↺ Reset (1999)</button>
+        </div>
+
+        <!-- Skin Selector -->
+        <div style="display:flex; gap:4px; flex-wrap:wrap; align-items:center; margin-bottom:8px;">
+          <span style="font-size:10px; color:#ffff00;">Digit Skin:</span>
+          <button class="quick-stamp-btn" onclick="setOdometerSkin('green_vfd')">🟢 Green VFD</button>
+          <button class="quick-stamp-btn" onclick="setOdometerSkin('red_led')">🔴 Red LED</button>
+          <button class="quick-stamp-btn" onclick="setOdometerSkin('amiga_copper')">📀 Amiga Copper</button>
+          <button class="quick-stamp-btn" onclick="setOdometerSkin('wood_3d')">🪵 Wood 3D</button>
+          <button class="quick-stamp-btn" onclick="setOdometerSkin('cyber_blue')">🔵 Cyber Blue</button>
+          <button class="quick-stamp-btn" onclick="setOdometerSkin('cassette')">📼 Cassette Tape</button>
+        </div>
+
+        <button class="tool-btn" style="background:#004422; color:#00ff66; width:100%; margin-top:4px;" onclick="copyOdometerHtml()">
+          📋 Copy &lt;img src="/cgi-bin/counter.cgi"&gt; Snippet
+        </button>
+      </div>
+
+      <!-- Right: Marquee Ticker Forge -->
+      <div style="background:#020b14; border:2px inset #0088aa; padding:10px; display:flex; flex-direction:column; justify-content:space-between;">
+        <div>
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; border-bottom:1px solid #004466; padding-bottom:4px;">
+            <span style="font-size:12px; font-weight:bold; color:#ffff00;">&lt;marquee&gt; Ticker Studio</span>
+            <span style="font-size:10px; color:#ff00aa;">MICROSOFT IE 4.0 / NETSCAPE 4.0 EXTENSION</span>
+          </div>
+
+          <!-- Live Marquee Sandbox -->
+          <div class="marquee-live-canvas" id="marqueeSandboxContainer">
+            <marquee id="marqueeSandbox" scrollamount="4" scrolldelay="60" direction="left" behavior="scroll" style="color:#00ffcc; font-family:'Comic Sans MS', sans-serif; font-size:14px; font-weight:bold;">
+              ✨ WELCOME TO CYBERSPIRE'S 1999 HOMESTEAD! BEST VIEWED AT 800x600 RESOLUTION • 1999Hz HALITE SUBCARRIER DETECTED! ✨
+            </marquee>
+          </div>
+
+          <!-- Marquee Config Controls -->
+          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:6px; margin-bottom:6px;">
+            <div>
+              <label style="font-size:10px; color:#aaffee;">Direction:</label>
+              <select id="mqDirection" onchange="updateMarqueeForge()" style="width:100%; background:#000; color:#fff; border:1px solid #005577; font-size:10px;">
+                <option value="left">Left</option>
+                <option value="right">Right</option>
+                <option value="up">Up</option>
+                <option value="down">Down</option>
+              </select>
+            </div>
+            <div>
+              <label style="font-size:10px; color:#aaffee;">Behavior:</label>
+              <select id="mqBehavior" onchange="updateMarqueeForge()" style="width:100%; background:#000; color:#fff; border:1px solid #005577; font-size:10px;">
+                <option value="scroll">Scroll (Loop)</option>
+                <option value="alternate">Alternate (Bounce)</option>
+                <option value="slide">Slide (Once)</option>
+              </select>
+            </div>
+          </div>
+
+          <div style="margin-bottom:6px;">
+            <label style="font-size:10px; color:#aaffee;">Ticker Text:</label>
+            <input type="text" id="mqText" oninput="updateMarqueeForge()" value="✨ WELCOME TO CYBERSPIRE'S 1999 HOMESTEAD! BEST VIEWED AT 800x600 • 1999Hz HALITE SUBCARRIER DETECTED! ✨" style="width:100%; background:#000; color:#ffff00; border:1px solid #005577; font-size:11px; padding:2px 4px;" />
+          </div>
+        </div>
+
+        <button class="tool-btn" style="background:#003366; color:#38bdf8; width:100%; margin-top:4px;" onclick="copyMarqueeHtml()">
+          📋 Copy &lt;marquee&gt; HTML Tag
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 17. Ringmaster CGI Console & Node Health Pinger -->
+  <div class="section-box" id="ringmaster-console-section">
+    <div class="section-title">
+      <span>🌐 WEBRING MASTER CGI CONSOLE &amp; NODE HEALTH PINGER (WEBRING.CGI)</span>
+      <span style="font-size:11px; color:#34d399;">[AS-1999 BGP &amp; DIAL-UP HOP MONITOR]</span>
+    </div>
+    <p style="font-size:12px; margin:0 0 10px 0; line-height:1.5;">
+      Simulating the 1999 Perl CGI backbone (<code>webring.cgi</code>) that powers cross-site navigation across the KiloNet Webring. Ping member sites across simulated V.32 to T1 leased lines, inspect hop latencies, and generate authentic multi-layout navigation snippets for your site!
+    </p>
+
+    <div class="ringmaster-box">
+      <!-- Pinger Controls -->
+      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px; margin-bottom:8px; border-bottom:1px dashed #059669; padding-bottom:6px;">
+        <div style="display:flex; gap:6px; align-items:center;">
+          <span style="font-size:11px; color:#aaffee;">Dial-Up Interface:</span>
+          <select id="pingerBaudSelect" style="background:#000; color:#34d399; border:1px solid #059669; font-size:10px; padding:2px;">
+            <option value="9600">V.32 (9600 bps) • 280ms latency</option>
+            <option value="28800">V.34 (28.8 kbps) • 160ms latency</option>
+            <option value="56000" selected>V.90 (56 kbps) • 110ms latency</option>
+            <option value="128000">ISDN BRI (128 kbps) • 45ms latency</option>
+            <option value="1544000">T1 Leased (1.544 Mbps) • 18ms latency</option>
+          </select>
+        </div>
+        <div style="display:flex; gap:4px;">
+          <button class="tool-btn" style="background:#065f46; color:#a7f3d0;" onclick="pingWebringNode('all')">⚡ Ping All Webring Nodes</button>
+          <button class="tool-btn" style="background:#1e1b4b; color:#c084fc;" onclick="pingHaliteGateway()">⛰️ Ping 10.19.99.4 Halite Demarcation</button>
+          <button class="tool-btn" style="background:#222; color:#ccc;" onclick="clearPingerTerminal()">🧹 Clear</button>
+        </div>
+      </div>
+
+      <!-- Pinger Phosphor Output Screen -->
+      <div id="pingerLog" class="pinger-terminal">
+[00:00:00] WEBRING CGI DAEMON 1.4 INITIALIZED. CONNECTED TO RING #002 (KILONET CENTRAL).
+[00:00:00] 18 NODES VERIFIED. 2 UNMAPPED BEACONS AT 1999Hz DETECTED IN HALITE STRATA.
+[00:00:00] SELECT "PING ALL WEBRING NODES" ABOVE TO MEASURE SYNTHETIC LATENCIES...
+      </div>
+
+      <!-- Webring Widget Snippet Builder -->
+      <div style="background:#02150a; border:1px solid #059669; padding:8px; margin-top:8px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+          <span style="font-size:11px; font-weight:bold; color:#ffff00;">Webring Embed Widget Generator:</span>
+          <div style="display:flex; gap:4px;">
+            <button class="tool-btn" style="font-size:10px; padding:2px 6px;" onclick="setWidgetStyle('bracket')">[ Bracket Nav ]</button>
+            <button class="tool-btn" style="font-size:10px; padding:2px 6px;" onclick="setWidgetStyle('table')">📊 3D Table Box</button>
+            <button class="tool-btn" style="font-size:10px; padding:2px 6px;" onclick="setWidgetStyle('dropdown')">📜 Select Menu</button>
+            <button class="tool-btn" style="font-size:10px; padding:2px 6px;" onclick="setWidgetStyle('badge')">🏷️ 88x31 Button</button>
+          </div>
+        </div>
+
+        <!-- Live Widget Preview Area -->
+        <div id="widgetPreviewArea" style="background:#000; border:1px dashed #34d399; padding:8px; text-align:center; margin-bottom:6px;">
+          <!-- Rendered dynamically -->
+        </div>
+
+        <button class="tool-btn" style="background:#004422; color:#00ff66; width:100%;" onclick="copyWidgetSnippet()">
+          📋 Copy HTML Webring Snippet to Clipboard
+        </button>
+      </div>
+    </div>
   </div>
 
   <!-- 12. CyberSpire Bookmark Vault -->
@@ -3405,10 +4244,10 @@
       <button class="btn-sign" onclick="addGuestbookEntry()">Sign Guestbook [✍️]</button>
     </div>
 
-    <!-- Shoutbox Neighborhood Filter Bar -->
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px; flex-wrap:wrap; gap:6px;">
-      <div style="display:flex; align-items:center; gap:6px; font-size:11px;">
-        <span style="color:#aaffee;">Filter Shouts:</span>
+    <!-- Shoutbox Enhanced Filter & Archive Tools Bar -->
+    <div class="gb-tools-bar">
+      <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+        <span style="color:#aaffee;">Filter:</span>
         <select id="gbFilterNeighborhood" onchange="filterGuestbook(this.value)" style="background:#000; color:#00ffcc; border:1px solid #00ffcc; font-size:11px; padding:2px;">
           <option value="all">All Neighborhoods (Global)</option>
           <option value="siliconvalley">SiliconValley</option>
@@ -3417,8 +4256,17 @@
           <option value="soho">SoHo</option>
           <option value="enchantedforest">EnchantedForest</option>
         </select>
+        <input type="text" id="gbSearchInput" placeholder="Search shouts (e.g. 1999Hz, FLARELIGHT)..." oninput="searchGuestbook(this.value)" style="background:#000; color:#ffff00; border:1px solid #005577; font-size:11px; padding:2px 6px; font-family:'Courier New', monospace; width:190px;" />
+        <select id="gbSortOrder" onchange="changeGuestbookSort(this.value)" style="background:#000; color:#fff; border:1px solid #334155; font-size:11px; padding:2px;">
+          <option value="newest">Newest First</option>
+          <option value="oldest">Oldest First</option>
+        </select>
       </div>
-      <span style="font-size:10px; color:#88aacc;">Total Shouts: <span id="gbTotalCount">0</span></span>
+      <div style="display:flex; align-items:center; gap:6px;">
+        <span style="font-size:10px; color:#88aacc;">Total Shouts: <span id="gbTotalCount">0</span></span>
+        <button class="tool-btn" style="background:#004422; color:#00ff66; font-size:10px; padding:2px 6px;" onclick="exportGuestbookTxt()">💾 Export TXT</button>
+        <button class="tool-btn" style="background:#002244; color:#38bdf8; font-size:10px; padding:2px 6px;" onclick="exportGuestbookHtml()">🌐 Export HTML</button>
+      </div>
     </div>
 
     <div id="guestbookList" style="margin-top:8px;"></div>
@@ -9478,6 +10326,17 @@ const HOMESTEADS_DATA = {
       views: 12150,
       badge: "AUDIO WARS",
       contentHtml: `<div style="background:#0a0520; color:#d8b4fe; font-family:'Courier New', monospace; padding:14px; border:2px outset #a855f7;"><h2 style="color:#f0abfc; text-align:center; margin:0 0 6px 0;">🔊 PAULA (AMIGA) VS AWE64 GOLD: THE 16-BIT AUDIO SHOWDOWN</h2><p style="font-size:11px; line-height:1.5;">Commodore Paula (MOS 8364) features 4 DMA channels, independent 8-bit DACs, hardware panning, and dynamic clock rate (3.54 MHz PAL). The warmth of Paula comes from its hardware 4.4 kHz RC lowpass filter. Audition our 5 .MOD tracker modules below!</p></div>`
+    },
+    {
+      id: "hs_sv_05",
+      title: "Win32 PE Dissector, Interrupt Vector Table & 16-Bit BIOS Int 10h Explorer",
+      webmaster: "~ring0_alchemist",
+      address: "http://www.geocities.com/SiliconValley/Ring0/1999/",
+      desc: "Interactive BIOS interrupt vector reference, Mode 13h DAC palette register cycling, and Win32 PE Portable Executable header dissector. Greets to ~neon_rider & ASM Temple!",
+      tags: ["Ring0", "Interrupts", "Mode13h", "PE32", "NASM"],
+      views: 8940,
+      badge: "RING 0 ASM",
+      contentHtml: `<div style="background:#021105; color:#aaffaa; font-family:'Courier New', monospace; padding:14px; border:2px solid #00ff66;"><h2 style="color:#ffff00; text-align:center; margin:0 0 6px 0;">⚡ WIN32 PE &amp; BIOS REAL-MODE INTERRUPT WORKBENCH ⚡</h2><p style="font-size:12px; margin:0 0 8px 0; line-height:1.5;">Welcome to the Ring 0 sanctuary! In DOS real mode, interrupts are indexed directly from memory segment 0x0000:0x0000 where each 4-byte vector points to an ISR handler.</p><div style="background:#00220a; border:1px solid #00aa44; padding:8px; margin:8px 0; font-size:11px;"><div style="color:#ffff00; font-weight:bold; margin-bottom:4px;">Interactive Real-Mode Vector Inspector:</div><div style="display:flex; gap:6px; margin-bottom:6px; flex-wrap:wrap;"><button class="tool-btn" onclick="showIntDesc('int10')">INT 10h (Video/VGA)</button><button class="tool-btn" onclick="showIntDesc('int13')">INT 13h (Disk I/O)</button><button class="tool-btn" onclick="showIntDesc('int21')">INT 21h (DOS API)</button><button class="tool-btn" onclick="showIntDesc('int33')">INT 33h (Mouse)</button></div><div id="intDescOutput" style="background:#000; padding:6px; color:#00ffcc; border:1px solid #004422; min-height:48px;">Select an interrupt vector above to view CPU register calling conventions.</div></div><div style="font-size:11px; color:#aaffee;">Greets to ~neon_rider! See the full Win32 assembly shrine at <a href="/web/users/neon_rider.html" style="color:#ffff00;">kweb://users/~neon_rider</a> or <a href="/web/asm_temple.html" style="color:#00ffcc;">kweb://asm-temple</a>.</div></div>`
     }
   ],
   area51: [
@@ -9524,6 +10383,17 @@ const HOMESTEADS_DATA = {
       views: 14200,
       badge: "PACKET LOG",
       contentHtml: `<div style="background:#02060f; color:#38bdf8; font-family:'Courier New', monospace; padding:14px; border:2px solid #0088cc;"><h2 style="color:#ffff00; text-align:center; margin:0 0 6px 0;">🌐 SUBNET 10.19.99.x PACKET LOG ARCHIVE</h2><p style="font-size:11px; color:#cbd5e1; margin:0 0 8px 0;">Captured via 56k dial-up PPP interface using libpcap. Non-routable IP packets escaping the local access network:</p><pre style="background:#000; border:1px solid #004466; color:#00ffcc; padding:8px; font-size:10px; line-height:1.3; overflow-x:auto;">1999-12-31 23:59:58.420199 IP 10.19.99.4.1999 > 209.85.128.42.1999: UDP, length 64\n0x0000:  4500 0054 1999 4000 3b11 7f42 0a13 6304  E..T..@.;..B..c.\n0x0010:  d155 802a 07cf 07cf 0040 1999 6b77 6562  .U.*.....@..kweb\n0x0020:  3a2f 2f31 302e 3139 2e39 392e 342f 636c  ://10.19.99.4/cl\n0x0030:  6173 7369 6669 6564 2048 414c 4954 4521  assified.HALITE!\n0x0040:  007f 1999 dead beef c001 d00d 0000 0000  ................</pre><p style="font-size:11px; color:#ff00aa;">Notice ASCII string decoded at offset 0x001c: <code>kweb://10.19.99.4/classified HALITE!</code></p></div>`
+    },
+    {
+      id: "hs_a51_05",
+      title: "Permian Salt Bed Halite Acoustic Sensor: The 1999.0 Hz Rock Transponder",
+      webmaster: "~halite_watcher",
+      address: "http://www.geocities.com/Area51/Halite/1999/",
+      desc: "Subterranean acoustic transducer logs from 2,150 ft underground in Carlsbad, New Mexico. Continuous 1999.0 Hz harmonic carrier propagating through Permian Basin Salado halite salt beds.",
+      tags: ["Halite", "1999Hz", "Carlsbad", "Acoustic", "Bedrock"],
+      views: 19400,
+      badge: "HALITE SENSOR",
+      contentHtml: `<div style="background:#050d03; color:#aaffee; font-family:'Courier New', monospace; padding:14px; border:2px solid #39ff14;"><h2 style="color:#ffff00; text-align:center; margin:0 0 6px 0;">⛰️ PERMIAN SALADO HALITE: THE 1999.0 Hz ACOUSTIC SENSOR ⛰️</h2><div style="background:#002b11; border:1px solid #00ff66; padding:8px; color:#39ff14; font-size:11px; margin-bottom:10px;">★ LITHOSPHERIC PIEZO-ACOUSTIC ARRAY • DEPTH: 2,150 FT HALITE BED ★</div><p style="font-size:12px; line-height:1.5; margin:0 0 8px 0;">Our borehole geophone station in Eddy County, NM has intercepted an unflagged carrier oscillating through solid rock. Unlike EM surface radiation, this signal propagates mechanically at 4,400 m/s through crystalline sodium chloride strata at exactly <strong>1999.0 Hz</strong>.</p><div style="background:#00150a; padding:10px; border-left:4px solid #38bdf8; margin-bottom:10px; font-size:11px; line-height:1.5;"><p style="margin:0 0 4px 0; color:#ffffaa;"><strong>Acoustic Diagnostic Telemetry:</strong></p><p style="margin:0 0 4px 0;">• Propagation Velocity: 4,420 m/s (dry halite compression wave)</p><p style="margin:0 0 4px 0;">• Harmonic Modulation: 1999.0 Hz subcarrier with phase shift keying</p><p style="margin:0 0 4px 0;">• Demarcation Gateway: <code>kweb://10.19.99.4/classified</code> (Intranet Subnet 10.19.99.x)</p><p style="margin:0; color:#38bdf8;">• Primary Acoustic Facility: <code>kweb://echo-subsystem.net</code> (ESARL Hydrophone Grid)</p></div><div style="display:flex; gap:6px; flex-wrap:wrap; justify-content:center;"><button class="tool-btn" onclick="testHaliteProbeSound()" style="background:#004422; color:#39ff14;">🔊 Probe 1999Hz Halite Tone</button><a href="/web/echo_subsystem.html" class="nav-btn" style="background:#002244; color:#38bdf8;">🔊 Access Echo Subsystem</a><a href="/web/classified.html" class="nav-btn" style="background:#330022; color:#ff66cc;">🔒 Probe 10.19.99.4 Gateway</a></div></div>`
     }
   ],
   beverlyhills: [
@@ -9570,6 +10440,17 @@ const HOMESTEADS_DATA = {
       views: 11200,
       badge: "STREETWEAR",
       contentHtml: `<div style="background:#0a0a0f; color:#00ffff; font-family:'Courier New', monospace; padding:14px; border:2px solid #00ffff;"><h2 style="color:#ff00aa; text-align:center; margin:0 0 6px 0;">🕶️ CYBER COUTURE 1999: NETRUNNER LOOKBOOK</h2><div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; font-size:11px; margin-top:8px;"><div style="background:#111; padding:6px; border:1px solid #333;"><strong style="color:#ffff00;">Vinyl Matrix Duster</strong><br>Floor-length black polyvinyl chloride coat with internal pocket sized specifically for a Nokia 8110 slider.</div><div style="background:#111; padding:6px; border:1px solid #333;"><strong style="color:#ffff00;">Phosphor LED Watch</strong><br>Green electroluminescent backlight with countdown timer ticking toward midnight 2000.</div></div></div>`
+    },
+    {
+      id: "hs_bh_05",
+      title: "Dot-Com Venture Capital Valuation Engine '99 (Eyeballs to Billions)",
+      webmaster: "~angel_investor",
+      address: "http://www.geocities.com/BeverlyHills/Valuation/1999/",
+      desc: "Interactive 1999 dot-com startup valuation calculator. Enter your startup's monthly pageviews and Super Bowl ad budget to compute your pre-money NASDAQ IPO valuation!",
+      tags: ["VC", "DotCom", "Valuation", "NASDAQ", "Eyeballs"],
+      views: 15300,
+      badge: "VC ENGINE",
+      contentHtml: `<div style="background:#0c091f; color:#ffd700; font-family:Arial, sans-serif; padding:14px; border:2px outset #ffd700;"><h2 style="color:#ffffff; text-align:center; margin:0 0 6px 0;">💎 DOT-COM VC VALUATION ENGINE '99: EYEBALLS TO BILLIONS 💎</h2><p style="font-size:12px; line-height:1.5; color:#cbd5e1; margin:0 0 8px 0;">Why worry about earnings when pageviews rule the earth? In late 1999, the more capital you burn, the higher your pre-money series B valuation!</p><div style="background:rgba(255,215,0,0.1); border:1px solid #ffd700; padding:10px; font-size:11px;"><div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px; margin-bottom:8px;"><div><label style="color:#aaffee;">Monthly Eyeballs (Pageviews):</label><input type="range" id="vcEyeballs" min="10000" max="50000000" step="50000" value="2500000" oninput="calcVcValuation()" style="width:100%;"><span id="vcEyeballsVal" style="color:#00ffcc;">2.5M Pageviews</span></div><div><label style="color:#aaffee;">Monthly Burn Rate:</label><input type="range" id="vcBurn" min="20000" max="2000000" step="20000" value="450000" oninput="calcVcValuation()" style="width:100%;"><span id="vcBurnVal" style="color:#ff00aa;">$450,000 / mo</span></div></div><div style="background:#000; padding:8px; border:1px solid #00ffcc; text-align:center;"><div style="color:#aaffee; font-size:10px;">IMPLIED PRE-MONEY NASDAQ VALUATION:</div><div id="vcValuationOutput" style="color:#39ff14; font-size:18px; font-weight:bold; font-family:'Courier New', monospace;">$385,000,000 USD</div><div id="vcVerdict" style="color:#ffff00; font-size:10px; margin-top:2px;">★ STRONG BUY: PROCEED IMMEDIATELY TO SUPER BOWL COMMERCIAL! ★</div></div></div></div>`
     }
   ],
   soho: [
@@ -9616,6 +10497,17 @@ const HOMESTEADS_DATA = {
       views: 8400,
       badge: "GLITCH ART",
       contentHtml: `<div style="background:#000; color:#00ffcc; font-family:'Courier New', monospace; padding:14px; border:2px dotted #ff00ff;"><h2 style="color:#ff00aa; text-align:center; margin:0 0 6px 0;">👾 GLITCH POETICS: DISCRETE COSINE TRANSFORM ANOMALIES</h2><p style="font-size:12px; margin:0 0 8px 0; line-height:1.5;">By opening an 800x600 JPEG inside a hex editor and randomly overwriting bytes between offsets 0x0100 and 0x0400, the Huffman decoding trees desynchronize, yielding chromatic smears.</p></div>`
+    },
+    {
+      id: "hs_so_05",
+      title: "Amiga Paula Tracker Workshop & 4-Channel Acid Chord Matrix",
+      webmaster: "~demobeat_99",
+      address: "http://www.geocities.com/SoHo/AmigaBeats/1999/",
+      desc: "8-bit signed PCM sampling theory, ProTracker finetune tables (Amiga PAL clock 3546895 Hz), and interactive CP437 ASCII demoscene banner showcase.",
+      tags: ["Paula", "ProTracker", "Finetune", "Amiga", "AcidBeats"],
+      views: 13600,
+      badge: "AMIGA BEATS",
+      contentHtml: `<div style="background:#13041c; color:#f0abfc; font-family:'Courier New', monospace; padding:14px; border:2px outset #c084fc;"><h2 style="color:#ffff00; text-align:center; margin:0 0 6px 0;">🔊 PAULA 4-CHANNEL TRACKER &amp; FINETUNE LAB '99 🔊</h2><p style="font-size:12px; line-height:1.5; margin:0 0 8px 0;">Commodore Amiga's custom sound chip Paula uses hardware period counters divided from the PAL clock (3,546,895 Hz) or NTSC clock (3,579,545 Hz). Period = Clock / (2 * Frequency).</p><div style="background:#07010d; border:1px solid #a855f7; padding:8px; font-size:11px; margin-bottom:8px;"><div style="color:#ffff00; font-weight:bold; margin-bottom:4px;">Period Lookup (C-1 to B-3):</div><div style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:6px;"><button class="tool-btn" onclick="lookupPaulaNote('C-1', 856)">C-1 (856)</button><button class="tool-btn" onclick="lookupPaulaNote('A-1', 508)">A-1 (508)</button><button class="tool-btn" onclick="lookupPaulaNote('C-2', 428)">C-2 (428)</button><button class="tool-btn" onclick="lookupPaulaNote('A-2', 254)">A-2 (254)</button><button class="tool-btn" onclick="lookupPaulaNote('C-3', 214)">C-3 (214)</button></div><div id="paulaNoteOutput" style="color:#00ffcc; font-size:11px; background:#12021a; padding:6px; border:1px solid #7e22ce;">C-2: Period 428 • Pitch: 4143.5 Hz (PAL) • Standard Amiga Middle C</div></div></div>`
     }
   ],
   enchantedforest: [
@@ -9662,6 +10554,17 @@ const HOMESTEADS_DATA = {
       views: 7900,
       badge: "DRUID CODEX",
       contentHtml: `<div style="background:#051a0d; color:#86efac; font-family:Times, serif; padding:14px; border:2px outset #10b981;"><h2 style="color:#34d399; text-align:center; margin:0 0 6px 0;">🌿 THE DIGITAL DRUID'S SOLSTICE SANCTUARY 🌿</h2><p style="font-size:12px; line-height:1.6; margin:0 0 8px 0;">Blessed be! In harmony with the silicon motherboard and the green earth, we celebrate the solstice before the turning of the millennium wheel.</p></div>`
+    },
+    {
+      id: "hs_ef_05",
+      title: "The ANSI BBS Roguelike Tavern & 3d6 Character Roller",
+      webmaster: "~tavern_keeper",
+      address: "http://www.geocities.com/EnchantedForest/Tavern/1999/",
+      desc: "Roll your 1999 BBS door game hero! Roll 3d6 for Strength, Dexterity, Constitution, Intelligence, Wisdom, and Charisma with retro dice sound effects and ANSI ASCII portrait.",
+      tags: ["BBS", "DoorGames", "3d6", "Roguelike", "Character"],
+      views: 12400,
+      badge: "3D6 ROLLER",
+      contentHtml: `<div style="background:#071207; color:#86efac; font-family:'Courier New', monospace; padding:14px; border:2px solid #16a34a;"><h2 style="color:#fde047; text-align:center; margin:0 0 6px 0;">⚔️ THE ANSI BBS TAVERN: 3d6 HERO ROLLER ⚔️</h2><p style="font-size:12px; margin:0 0 8px 0; line-height:1.5;">Step forward, adventurer! Roll your attributes for the underground BBS door games (Legend of the Red Dragon, Usurper, NetHack). Pure 3d6 Bell-curve generation!</p><div style="background:#020902; border:1px solid #22c55e; padding:8px; font-size:11px; margin-bottom:8px;"><div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;"><button class="tool-btn" onclick="roll3d6HeroStats()" style="background:#15803d; color:#fff; font-weight:bold;">🎲 Roll 3d6 Attributes</button><span id="heroClassOutput" style="color:#fde047; font-weight:bold;">Class: Novice Warrior</span></div><div id="heroStatsOutput" style="display:grid; grid-template-columns:repeat(3, 1fr); gap:4px; font-family:'Courier New', monospace; font-size:11px; background:#000; padding:6px; border:1px solid #14532d;"><div>STR: 14</div><div>DEX: 12</div><div>CON: 15</div><div>INT: 10</div><div>WIS: 11</div><div>CHA: 13</div></div></div></div>`
     }
   ]
 };
@@ -9799,6 +10702,8 @@ function openHomesteadModal(id) {
   if (modal) {
     modal.style.display = 'flex';
   }
+  currentActiveHomesteadId = item.id;
+  markHomesteadVisited(item.id);
   playDemosceneChime();
 }
 
@@ -9812,6 +10717,728 @@ function closeHomesteadModalOnBackdrop(e) {
   if (e.target.id === 'homesteadModal') {
     closeHomesteadModal();
   }
+}
+
+// ============================================================================
+// RINGSURFER '99 & CYBERSPACE PASSPORT SYSTEM
+// ============================================================================
+let currentActiveHomesteadId = 'hs_sv_01';
+let isFastCrawling = false;
+let fastCrawlTimer = null;
+
+function getAllHomesteadList() {
+  const all = [];
+  ['siliconvalley', 'area51', 'beverlyhills', 'soho', 'enchantedforest'].forEach(nh => {
+    if (HOMESTEADS_DATA[nh]) {
+      all.push(...HOMESTEADS_DATA[nh]);
+    }
+  });
+  return all;
+}
+
+function markHomesteadVisited(id) {
+  let visited = [];
+  try {
+    visited = JSON.parse(localStorage.getItem('geocities_visited_homesteads') || '[]');
+  } catch(e) { visited = []; }
+  if (!visited.includes(id)) {
+    visited.push(id);
+    try {
+      localStorage.setItem('geocities_visited_homesteads', JSON.stringify(visited));
+    } catch(e) {}
+  }
+  updatePassportBadges();
+}
+
+function updatePassportBadges() {
+  let visited = [];
+  try {
+    visited = JSON.parse(localStorage.getItem('geocities_visited_homesteads') || '[]');
+  } catch(e) { visited = []; }
+
+  const stamps = getPassportStampDefinitions();
+  let unlockedCount = 0;
+  stamps.forEach(s => {
+    if (s.isUnlocked(visited)) unlockedCount++;
+  });
+
+  const countEl = document.getElementById('passportBadgeCount');
+  const pctEl = document.getElementById('passportProgressPct');
+  const totalVisitsEl = document.getElementById('passportTotalVisits');
+
+  if (countEl) countEl.textContent = `${unlockedCount}/${stamps.length} Stamps`;
+  const pct = Math.round((unlockedCount / stamps.length) * 100);
+  if (pctEl) pctEl.textContent = `(${pct}%)`;
+  if (totalVisitsEl) totalVisitsEl.textContent = `Visited: ${visited.length} / 25 Homesteads`;
+}
+
+function getPassportStampDefinitions() {
+  return [
+    {
+      id: "stamp_surfer",
+      icon: "🌐",
+      title: "56k Web Surfer",
+      desc: "Visit at least 5 different GeoCities homesteads.",
+      isUnlocked: (v) => v.length >= 5
+    },
+    {
+      id: "stamp_silicon",
+      icon: "⚡",
+      title: "Silicon Pioneer",
+      desc: "Explore all 5 SiliconValley homesteads.",
+      isUnlocked: (v) => ['hs_sv_01', 'hs_sv_02', 'hs_sv_03', 'hs_sv_04', 'hs_sv_05'].every(id => v.includes(id))
+    },
+    {
+      id: "stamp_area51",
+      icon: "🛸",
+      title: "Area 51 Truthseeker",
+      desc: "Explore all 5 Area51 research homesteads.",
+      isUnlocked: (v) => ['hs_a51_01', 'hs_a51_02', 'hs_a51_03', 'hs_a51_04', 'hs_a51_05'].every(id => v.includes(id))
+    },
+    {
+      id: "stamp_beverly",
+      icon: "💎",
+      title: "Dot-Com Mogul",
+      desc: "Visit all 5 BeverlyHills mansions & pitch decks.",
+      isUnlocked: (v) => ['hs_bh_01', 'hs_bh_02', 'hs_bh_03', 'hs_bh_04', 'hs_bh_05'].every(id => v.includes(id))
+    },
+    {
+      id: "stamp_soho",
+      icon: "🎨",
+      title: "SoHo Bohemian",
+      desc: "Visit all 5 SoHo textmode & acid synth studios.",
+      isUnlocked: (v) => ['hs_so_01', 'hs_so_02', 'hs_so_03', 'hs_so_04', 'hs_so_05'].every(id => v.includes(id))
+    },
+    {
+      id: "stamp_forest",
+      icon: "🌲",
+      title: "Enchanted Druid",
+      desc: "Visit all 5 EnchantedForest MUD & lore shrines.",
+      isUnlocked: (v) => ['hs_ef_01', 'hs_ef_02', 'hs_ef_03', 'hs_ef_04', 'hs_ef_05'].every(id => v.includes(id))
+    },
+    {
+      id: "stamp_carrier",
+      icon: "📡",
+      title: "Lithospheric Carrier Lock",
+      desc: "Probe 1999.0 Hz halite resonance or dial transponder gateway.",
+      isUnlocked: () => localStorage.getItem('geocities_carrier_locked') === 'true'
+    }
+  ];
+}
+
+function openPassportModal() {
+  playUiBeep(1200, 0.04);
+  const modal = document.getElementById('passportModal');
+  const grid = document.getElementById('passportGrid');
+  if (!modal || !grid) return;
+
+  let visited = [];
+  try {
+    visited = JSON.parse(localStorage.getItem('geocities_visited_homesteads') || '[]');
+  } catch(e) { visited = []; }
+
+  const stamps = getPassportStampDefinitions();
+  grid.innerHTML = stamps.map(s => {
+    const unlocked = s.isUnlocked(visited);
+    return `
+      <div class="passport-stamp ${unlocked ? 'unlocked' : ''}">
+        <div style="font-size:22px; margin-bottom:4px;">${s.icon}</div>
+        <div style="font-weight:bold; color:${unlocked ? '#ffd700' : '#888'}; font-size:11px;">${escapeHtml(s.title)}</div>
+        <div style="font-size:9px; color:${unlocked ? '#aaffee' : '#64748b'}; margin-top:2px;">${escapeHtml(s.desc)}</div>
+        <div style="margin-top:6px; font-size:9px; font-weight:bold; color:${unlocked ? '#00ff66' : '#ff4444'};">
+          ${unlocked ? '★ STAMPED ★' : 'LOCKED'}
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  updatePassportBadges();
+  modal.style.display = 'flex';
+}
+
+function closePassportModal() {
+  const modal = document.getElementById('passportModal');
+  if (modal) modal.style.display = 'none';
+  playUiBeep(900, 0.04);
+}
+
+function closePassportModalOnBackdrop(e) {
+  if (e.target.id === 'passportModal') {
+    closePassportModal();
+  }
+}
+
+function downloadPassportTxt() {
+  playUiBeep(1300, 0.05);
+  let visited = [];
+  try {
+    visited = JSON.parse(localStorage.getItem('geocities_visited_homesteads') || '[]');
+  } catch(e) { visited = []; }
+
+  const stamps = getPassportStampDefinitions();
+  let txt = `====================================================================\n`;
+  txt += `      KILONET 1999 CYBERSPACE VOYAGER OFFICIAL PASSPORT\n`;
+  txt += `       GeoCities Homestead Consortium • Node #002 Shrine\n`;
+  txt += `====================================================================\n`;
+  txt += `Voyager ID:       ${localStorage.getItem('cyberspire_voyager_id') || 'Voyager-99'}\n`;
+  txt += `Issue Date:       December 31, 1999\n`;
+  txt += `Total Homesteads Visited: ${visited.length} / 25\n`;
+  txt += `--------------------------------------------------------------------\n`;
+  txt += `COMMEMORATIVE STAMPS:\n`;
+  stamps.forEach((s, i) => {
+    const unl = s.isUnlocked(visited);
+    txt += `  [${unl ? 'X' : ' '}] ${i+1}. ${s.title.padEnd(28)} - ${unl ? 'VALIDATED' : 'LOCKED'}\n`;
+    txt += `      Requirement: ${s.desc}\n`;
+  });
+  txt += `--------------------------------------------------------------------\n`;
+  txt += `VISITED HOMESTEAD IDENTIFIERS:\n`;
+  visited.forEach(id => {
+    txt += `  • ${id}\n`;
+  });
+  txt += `====================================================================\n`;
+  txt += `Preserved natively in KiloOS • Under 999KB Web 1.0 Heritage\n`;
+
+  const blob = new Blob([txt], { type: 'text/plain;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `KiloNet_1999_Passport.txt`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function ringSurferNext() {
+  const all = getAllHomesteadList();
+  if (all.length === 0) return;
+  const idx = all.findIndex(h => h.id === currentActiveHomesteadId);
+  const nextIdx = (idx >= 0 && idx < all.length - 1) ? idx + 1 : 0;
+  openHomesteadModal(all[nextIdx].id);
+}
+
+function ringSurferPrev() {
+  const all = getAllHomesteadList();
+  if (all.length === 0) return;
+  const idx = all.findIndex(h => h.id === currentActiveHomesteadId);
+  const prevIdx = (idx > 0) ? idx - 1 : all.length - 1;
+  openHomesteadModal(all[prevIdx].id);
+}
+
+function ringSurferRandom() {
+  const all = getAllHomesteadList();
+  if (all.length === 0) return;
+  const randIdx = Math.floor(Math.random() * all.length);
+  openHomesteadModal(all[randIdx].id);
+}
+
+function toggleFastCrawl() {
+  const btn = document.getElementById('btnFastCrawl');
+  isFastCrawling = !isFastCrawling;
+  if (isFastCrawling) {
+    if (btn) {
+      btn.textContent = '⏸ Pause Crawl';
+      btn.classList.add('active');
+    }
+    ringSurferNext();
+    fastCrawlTimer = setInterval(() => {
+      ringSurferNext();
+    }, 4500);
+  } else {
+    if (btn) {
+      btn.textContent = '⏩ Fast Crawl [OFF]';
+      btn.classList.remove('active');
+    }
+    if (fastCrawlTimer) {
+      clearInterval(fastCrawlTimer);
+      fastCrawlTimer = null;
+    }
+  }
+  playUiBeep(1100, 0.04);
+}
+
+// ============================================================================
+// 56k V.90 DIAL-UP MODEM ACOUSTIC SYNTHESIZER ENGINE
+// ============================================================================
+let isModemDialing = false;
+let modemDialStepTimer = null;
+let modemOscNodes = [];
+let modemSessionLog = [];
+
+function setModemLed(ledId, colorClass) {
+  const led = document.getElementById(ledId);
+  if (!led) return;
+  led.className = 'modem-led' + (colorClass ? ' ' + colorClass : '');
+}
+
+function resetModemLeds() {
+  ['ledHS', 'ledAA', 'ledCD', 'ledOH', 'ledRD', 'ledSD', 'ledTR'].forEach(id => {
+    setModemLed(id, '');
+  });
+  setModemLed('ledMR', 'lit-red');
+}
+
+function appendModemTerminal(line) {
+  const screen = document.getElementById('modemTerminalScreen');
+  if (screen) {
+    screen.innerHTML += `\n${line}`;
+    screen.scrollTop = screen.scrollHeight;
+  }
+  modemSessionLog.push(`[${new Date().toLocaleTimeString()}] ${line}`);
+}
+
+function onModemPhonebookChange(val) {
+  const numInput = document.getElementById('modemNumberInput');
+  if (!numInput) return;
+  const map = {
+    '1800KILONET': '1-800-545-6638',
+    '5550199': '555-0199',
+    '9991999': '999-1999',
+    '1019994': '10-19-99-4',
+    'custom': ''
+  };
+  if (val in map) {
+    numInput.value = map[val];
+    if (val === 'custom') numInput.focus();
+  }
+  playUiBeep(1200, 0.03);
+}
+
+function stopModemAudio() {
+  modemOscNodes.forEach(node => {
+    try { node.stop(); node.disconnect(); } catch(e) {}
+  });
+  modemOscNodes = [];
+}
+
+function playDualTone(f1, f2, dur, gainVal = 0.08) {
+  if (!audioCtx) initAudioCtx();
+  const spk = document.getElementById('modemSpeakerSelect')?.value || 'med';
+  let mult = 1.0;
+  if (spk === 'high') mult = 1.6;
+  else if (spk === 'low') mult = 0.45;
+  else if (spk === 'off') mult = 0.0;
+  if (mult === 0.0) return;
+
+  const now = audioCtx.currentTime;
+  const osc1 = audioCtx.createOscillator();
+  const osc2 = audioCtx.createOscillator();
+  const g = audioCtx.createGain();
+
+  osc1.type = 'sine';
+  osc2.type = 'sine';
+  osc1.frequency.setValueAtTime(f1, now);
+  osc2.frequency.setValueAtTime(f2, now);
+
+  g.gain.setValueAtTime(gainVal * mult, now);
+  g.gain.setValueAtTime(gainVal * mult, now + dur - 0.01);
+  g.gain.linearRampToValueAtTime(0.0001, now + dur);
+
+  osc1.connect(g);
+  osc2.connect(g);
+  g.connect(masterGain);
+
+  osc1.start(now);
+  osc2.start(now);
+  osc1.stop(now + dur);
+  osc2.stop(now + dur);
+
+  modemOscNodes.push(osc1, osc2);
+}
+
+function playModemNoiseBurst(dur, centerFreq = 1800, q = 2.0, gainVal = 0.07) {
+  if (!audioCtx) initAudioCtx();
+  const spk = document.getElementById('modemSpeakerSelect')?.value || 'med';
+  let mult = 1.0;
+  if (spk === 'high') mult = 1.6;
+  else if (spk === 'low') mult = 0.45;
+  else if (spk === 'off') mult = 0.0;
+  if (mult === 0.0) return;
+
+  const now = audioCtx.currentTime;
+  const src = audioCtx.createBufferSource();
+  src.buffer = noiseBuf;
+  src.loop = true;
+
+  const filter = audioCtx.createBiquadFilter();
+  filter.type = 'bandpass';
+  filter.frequency.setValueAtTime(centerFreq, now);
+  filter.Q.setValueAtTime(q, now);
+
+  const g = audioCtx.createGain();
+  g.gain.setValueAtTime(gainVal * mult, now);
+  g.gain.linearRampToValueAtTime(0.0001, now + dur);
+
+  src.connect(filter);
+  filter.connect(g);
+  g.connect(masterGain);
+
+  src.start(now);
+  src.stop(now + dur);
+  modemOscNodes.push(src);
+}
+
+function startModemDialSequence() {
+  if (isModemDialing) return;
+  initAudioCtx();
+  isModemDialing = true;
+
+  const num = (document.getElementById('modemNumberInput')?.value || '1-800-KILONET').trim();
+  const btnDial = document.getElementById('btnModemDial');
+  const phaseLabel = document.getElementById('modemPhaseLabel');
+  if (btnDial) btnDial.classList.add('active');
+
+  // Reset LEDs
+  setModemLed('ledTR', 'lit-green');
+  setModemLed('ledMR', 'lit-red');
+  setModemLed('ledOH', 'lit-red');
+
+  appendModemTerminal(`ATZ\nOK\nATDT ${num}`);
+  if (phaseLabel) phaseLabel.textContent = 'DIALING...';
+
+  // 1. Dial Tone: 350 Hz + 440 Hz for 1.2s
+  playDualTone(350, 440, 1.2, 0.09);
+
+  // 2. DTMF Tones after dial tone
+  modemDialStepTimer = setTimeout(() => {
+    if (!isModemDialing) return;
+    setModemLed('ledSD', 'lit-green');
+    playDtmfSequence(num, () => {
+      if (!isModemDialing) return;
+      setModemLed('ledSD', '');
+      
+      // 3. Ringback tone (440Hz + 480Hz)
+      if (phaseLabel) phaseLabel.textContent = 'RINGING...';
+      appendModemTerminal(`RING...`);
+      playDualTone(440, 480, 1.6, 0.08);
+
+      modemDialStepTimer = setTimeout(() => {
+        if (!isModemDialing) return;
+        
+        // 4. Remote answer tone: 2100 Hz CED tone
+        if (phaseLabel) phaseLabel.textContent = 'ANSWER CED...';
+        appendModemTerminal(`CARRIER DETECTED: 2100Hz CED.`);
+        setModemLed('ledCD', 'lit-green');
+        playDualTone(2100, 2100, 1.4, 0.10);
+
+        modemDialStepTimer = setTimeout(() => {
+          if (!isModemDialing) return;
+
+          // 5. V.8 Line probing dual chirps (1375Hz and 2000Hz)
+          if (phaseLabel) phaseLabel.textContent = 'V.8 PROBING...';
+          appendModemTerminal(`PROBING LINE: V.8 dual-tone exchange.`);
+          setModemLed('ledRD', 'lit-green');
+          playDualTone(1375, 2000, 0.8, 0.08);
+
+          modemDialStepTimer = setTimeout(() => {
+            if (!isModemDialing) return;
+
+            // 6. Scrambler / training sequence
+            if (phaseLabel) phaseLabel.textContent = 'TRAINING QAM...';
+            appendModemTerminal(`MODULATION TRAINING: V.90 Symbol Rate 8000.`);
+            setModemLed('ledRD', 'lit-green');
+            setModemLed('ledSD', 'lit-green');
+            playModemNoiseBurst(2.2, 1800, 2.0, 0.08);
+
+            modemDialStepTimer = setTimeout(() => {
+              if (!isModemDialing) return;
+
+              // 7. Carrier lock!
+              completeModemConnection(num);
+            }, 2300);
+          }, 900);
+        }, 1500);
+      }, 1800);
+    });
+  }, 1300);
+}
+
+function playDtmfSequence(numStr, onComplete) {
+  const digits = numStr.replace(/[^0-9A-D#*]/gi, '').split('');
+  if (digits.length === 0) {
+    if (onComplete) onComplete();
+    return;
+  }
+
+  const dtmfMap = {
+    '1': [697, 1209], '2': [697, 1336], '3': [697, 1477],
+    '4': [770, 1209], '5': [770, 1336], '6': [770, 1477],
+    '7': [852, 1209], '8': [852, 1336], '9': [852, 1477],
+    '*': [941, 1209], '0': [941, 1336], '#': [941, 1477]
+  };
+
+  let idx = 0;
+  function stepDigit() {
+    if (!isModemDialing || idx >= digits.length) {
+      if (onComplete) onComplete();
+      return;
+    }
+    const d = digits[idx].toUpperCase();
+    const freqs = dtmfMap[d] || [697, 1209];
+    playDualTone(freqs[0], freqs[1], 0.07, 0.09);
+    idx++;
+    modemDialStepTimer = setTimeout(stepDigit, 110);
+  }
+  stepDigit();
+}
+
+function completeModemConnection(num) {
+  isModemDialing = false;
+  const phaseLabel = document.getElementById('modemPhaseLabel');
+  const btnDial = document.getElementById('btnModemDial');
+  if (btnDial) btnDial.classList.remove('active');
+
+  setModemLed('ledHS', 'lit-green');
+  setModemLed('ledCD', 'lit-green');
+  setModemLed('ledOH', 'lit-red');
+  setModemLed('ledTR', 'lit-green');
+  setModemLed('ledRD', '');
+  setModemLed('ledSD', '');
+
+  const standard = document.getElementById('modemStandardSelect')?.value || 'v90';
+  const speedStr = (standard === 'v90') ? '53,333 bps V.90/LAPM/V42BIS' : (standard === 'v34' ? '33,600 bps V.34/MNP5' : '14,400 bps V.32bis');
+  
+  if (phaseLabel) phaseLabel.textContent = 'CONNECTED';
+  appendModemTerminal(`CONNECT ${speedStr}`);
+  appendModemTerminal(`PROTOCOL: COMPRESSION V.42bis ENABLED. MTU: 1500.`);
+
+  playDemosceneChime();
+
+  // Check for secret/anomalous destination
+  const clean = num.replace(/[^0-9]/g, '');
+  if (clean.includes('1999') || clean.includes('1019994')) {
+    appendModemTerminal(`\n*** [ALERT]: ACOUSTIC CARRIER LOCK 1999.0 Hz DETECTED ***`);
+    appendModemTerminal(`*** Gateway reached: Carlsbad Subterranean Lithospheric Transponder ***`);
+    appendModemTerminal(`*** Non-routable packet bursts available on subnet 10.19.99.x. ***`);
+    try {
+      localStorage.setItem('geocities_carrier_locked', 'true');
+    } catch(e) {}
+    updatePassportBadges();
+  }
+}
+
+function hangupModem() {
+  if (modemDialStepTimer) {
+    clearTimeout(modemDialStepTimer);
+    modemDialStepTimer = null;
+  }
+  isModemDialing = false;
+  stopModemAudio();
+  resetModemLeds();
+
+  const phaseLabel = document.getElementById('modemPhaseLabel');
+  const btnDial = document.getElementById('btnModemDial');
+  if (btnDial) btnDial.classList.remove('active');
+  if (phaseLabel) phaseLabel.textContent = 'DISCONNECTED';
+
+  appendModemTerminal(`+++ATH0\nOK (DISCONNECTED)`);
+  playUiBeep(700, 0.05);
+}
+
+function downloadModemSessionLog() {
+  playUiBeep(1200, 0.04);
+  const logContent = modemSessionLog.join('\n') || `[MODEM SESSION LOG - DECEMBER 1999]\nNo activity recorded.`;
+  const blob = new Blob([logContent], { type: 'text/plain;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `MODEM_DIAL_LOG.TXT`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+// ============================================================================
+// INTERACTIVE HOMESTEAD TOOLS (hs_sv_05, hs_a51_05, hs_bh_05, hs_so_05, hs_ef_05)
+// ============================================================================
+function showIntDesc(intName) {
+  playUiBeep(1300, 0.03);
+  const out = document.getElementById('intDescOutput');
+  if (!out) return;
+  const map = {
+    'int10': `INT 10h Video BIOS: AH=00h AL=13h (Set 320x200 256 colors) • ES:DI framebuffer 0xA0000 • Port 3C8h/3C9h DAC palette.`,
+    'int13': `INT 13h Disk BIOS: AH=02h (Read Sectors) • AL=SectorCount, CH=Cylinder, CL=Sector, DH=Head, DL=Drive (00h=Floppy, 80h=HDD).`,
+    'int21': `INT 21h DOS API: AH=09h (Print '$'-terminated string at DS:DX) • AH=4Ch (Exit process with AL return code).`,
+    'int33': `INT 33h Mouse Driver: AX=0000h (Initialize mouse) • AX=0003h (Get pointer status: BX=Buttons, CX=X, DX=Y).`
+  };
+  out.innerHTML = map[intName] || `Unknown interrupt vector.`;
+}
+
+function testHaliteProbeSound() {
+  playFm1999Carrier(0.5);
+  try {
+    localStorage.setItem('geocities_carrier_locked', 'true');
+  } catch(e) {}
+  updatePassportBadges();
+  showDeadDropNotification();
+}
+
+function calcVcValuation() {
+  const eyeballs = parseInt(document.getElementById('vcEyeballs')?.value || '2500000');
+  const burn = parseInt(document.getElementById('vcBurn')?.value || '450000');
+
+  const eyeballsEl = document.getElementById('vcEyeballsVal');
+  const burnEl = document.getElementById('vcBurnVal');
+  const valOut = document.getElementById('vcValuationOutput');
+  const verdict = document.getElementById('vcVerdict');
+
+  if (eyeballsEl) eyeballsEl.textContent = (eyeballs / 1000000).toFixed(1) + 'M Pageviews';
+  if (burnEl) burnEl.textContent = '$' + burn.toLocaleString() + ' / mo';
+
+  // 1999 dot-com formula: $120 per monthly pageview + 80x annual burn rate!
+  const valuation = Math.round((eyeballs * 115) + (burn * 12 * 45));
+  if (valOut) valOut.textContent = '$' + valuation.toLocaleString() + ' USD';
+
+  if (verdict) {
+    if (valuation > 500000000) {
+      verdict.textContent = '★ UNICORN LEVEL: SCHEDULE MORGAN STANLEY ROADSHOW IMMEDIATELY! ★';
+      verdict.style.color = '#39ff14';
+    } else {
+      verdict.textContent = '★ STRONG BUY: PROCEED IMMEDIATELY TO SUPER BOWL COMMERCIAL! ★';
+      verdict.style.color = '#ffff00';
+    }
+  }
+}
+
+function lookupPaulaNote(note, period) {
+  playUiBeep(1400, 0.03);
+  const out = document.getElementById('paulaNoteOutput');
+  if (!out) return;
+  // PAL clock frequency: 3546895 / (2 * period)
+  const palFreq = Math.round((3546895 / (2 * period)) * 10) / 10;
+  out.innerHTML = `<strong>${note}</strong>: Hardware Period <strong>${period}</strong> • Sampling Rate: <strong>${palFreq} Hz</strong> • PAL Clock: 3.546895 MHz.`;
+}
+
+function roll3d6HeroStats() {
+  playUiBeep(1200, 0.04);
+  function roll3d6() {
+    return Math.floor(Math.random()*6 + 1) + Math.floor(Math.random()*6 + 1) + Math.floor(Math.random()*6 + 1);
+  }
+  const str = roll3d6(), dex = roll3d6(), con = roll3d6(), int_ = roll3d6(), wis = roll3d6(), cha = roll3d6();
+  const out = document.getElementById('heroStatsOutput');
+  const clsOut = document.getElementById('heroClassOutput');
+
+  if (out) {
+    out.innerHTML = `<div>STR: ${str}</div><div>DEX: ${dex}</div><div>CON: ${con}</div><div>INT: ${int_}</div><div>WIS: ${wis}</div><div>CHA: ${cha}</div>`;
+  }
+  if (clsOut) {
+    let bestCls = 'Novice Warrior';
+    if (int_ >= 14) bestCls = 'Elven Wizard';
+    else if (dex >= 14) bestCls = 'Shadow Thief';
+    else if (wis >= 14) bestCls = 'Solar Cleric';
+    else if (str >= 14 && cha >= 13) bestCls = 'Grand Paladin';
+    else if (str >= 14) bestCls = 'Berserker';
+    clsOut.textContent = `Class: ${bestCls}`;
+  }
+}
+
+// ============================================================================
+// ENHANCED GUESTBOOK ARCHIVE & SEARCH ENGINE
+// ============================================================================
+let currentGuestbookSort = 'newest';
+let currentGuestbookSearch = '';
+
+function searchGuestbook(query) {
+  currentGuestbookSearch = (query || '').toLowerCase().trim();
+  applyGuestbookFilters();
+}
+
+function changeGuestbookSort(order) {
+  currentGuestbookSort = order;
+  applyGuestbookFilters();
+}
+
+function applyGuestbookFilters() {
+  let saved = [];
+  try {
+    saved = JSON.parse(localStorage.getItem('knet_guestbook') || '[]');
+  } catch(e) { saved = []; }
+  if (!Array.isArray(saved) || saved.length === 0) saved = defaultEntries;
+
+  let filtered = saved;
+  if (currentGuestbookFilter !== 'all') {
+    filtered = filtered.filter(e => {
+      const eNh = (e.neighborhood || '').toLowerCase();
+      const isCorrupted = (e.time === '1999-12-31 23:59:58' || (e.alias && e.alias.includes('Null_Daemon')));
+      const isDeadDrop = (e.alias === 'Carlsbad_Relay_04');
+      return eNh === currentGuestbookFilter || isCorrupted || isDeadDrop;
+    });
+  }
+
+  if (currentGuestbookSearch) {
+    filtered = filtered.filter(e => {
+      const text = (e.text || '').toLowerCase();
+      const alias = (e.alias || '').toLowerCase();
+      const nh = (e.neighborhood || '').toLowerCase();
+      return text.includes(currentGuestbookSearch) || alias.includes(currentGuestbookSearch) || nh.includes(currentGuestbookSearch);
+    });
+  }
+
+  if (currentGuestbookSort === 'oldest') {
+    filtered = [...filtered].reverse();
+  }
+
+  const countBadge = document.getElementById('gbTotalCount');
+  if (countBadge) countBadge.textContent = filtered.length;
+
+  renderGuestbook(filtered);
+}
+
+function exportGuestbookTxt() {
+  playUiBeep(1300, 0.04);
+  let saved = [];
+  try {
+    saved = JSON.parse(localStorage.getItem('knet_guestbook') || '[]');
+  } catch(e) { saved = []; }
+  if (!Array.isArray(saved) || saved.length === 0) saved = defaultEntries;
+
+  let txt = `====================================================================\n`;
+  txt += `   CYBERSPIRE RETRO SHRINE & MOD VAULT - GUESTBOOK ARCHIVE '99\n`;
+  txt += `====================================================================\n`;
+  txt += `Total Preserved Entries: ${saved.length}\n`;
+  txt += `Export Timestamp: ${new Date().toISOString()}\n`;
+  txt += `--------------------------------------------------------------------\n\n`;
+
+  saved.forEach((e, idx) => {
+    txt += `[#${idx+1}] ALIAS: ${e.alias} | NEIGHBORHOOD: ${e.neighborhood || 'Global'} | TIME: ${e.time}\n`;
+    txt += `MESSAGE: ${e.text}\n\n`;
+  });
+
+  const blob = new Blob([txt], { type: 'text/plain;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `CYBERSPIRE_GUESTBOOK_ARCHIVE.TXT`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function exportGuestbookHtml() {
+  playUiBeep(1300, 0.04);
+  let saved = [];
+  try {
+    saved = JSON.parse(localStorage.getItem('knet_guestbook') || '[]');
+  } catch(e) { saved = []; }
+  if (!Array.isArray(saved) || saved.length === 0) saved = defaultEntries;
+
+  let html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>CyberSpire Guestbook Archive 1999</title><style>body{background:#000;color:#00ffcc;font-family:'Courier New',monospace;padding:20px;}.entry{border:1px solid #005577;padding:8px;margin-bottom:8px;background:#05101a;}</style></head><body><h1>📖 CyberSpire Guestbook Archive 1999</h1>`;
+  saved.forEach(e => {
+    html += `<div class="entry"><strong>${escapeHtml(e.alias)}</strong> (${escapeHtml(e.neighborhood || 'Global')}) - <em>${escapeHtml(e.time)}</em><br>${escapeHtml(e.text)}</div>`;
+  });
+  html += `</body></html>`;
+
+  const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `CYBERSPIRE_GUESTBOOK_ARCHIVE.HTML`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
 }
 
 function copyHomesteadUrl() {
@@ -10083,6 +11710,814 @@ function checkUrlParameters() {
   }
 }
 
+// ============================================================================
+// 14. NETSCAPE 216 WEB-SAFE PALETTE & CONTRAST MATRIX LABORATORY
+// ============================================================================
+const WEB_SAFE_LEVELS = [0x00, 0x33, 0x66, 0x99, 0xCC, 0xFF];
+let paletteState = {
+  target: 'bg',
+  bg: '#000033',
+  text: '#00ffcc',
+  link: '#ffff00',
+  vlink: '#ff00aa'
+};
+
+const PALETTE_PRESETS = {
+  silicon: { bg: '#000033', text: '#00ffcc', link: '#ffff00', vlink: '#ff00aa' },
+  area51:  { bg: '#000000', text: '#33ff33', link: '#00ffff', vlink: '#006600' },
+  beverly: { bg: '#330033', text: '#ffcc00', link: '#ff00ff', vlink: '#990099' },
+  soho:    { bg: '#000033', text: '#ff0099', link: '#00ffcc', vlink: '#ffcc00' },
+  forest:  { bg: '#003300', text: '#ccff99', link: '#ffff66', vlink: '#669933' },
+  hotdog:  { bg: '#ff0000', text: '#ffff00', link: '#ffffff', vlink: '#000000' },
+  amiga:   { bg: '#006699', text: '#ff9900', link: '#ffffff', vlink: '#000000' },
+  halite:  { bg: '#000033', text: '#ff99cc', link: '#00ffff', vlink: '#ffff33' }
+};
+
+function hexToRgb(hex) {
+  let c = hex.replace('#', '');
+  if (c.length === 3) c = c.split('').map(x => x + x).join('');
+  const num = parseInt(c, 16);
+  return { r: (num >> 16) & 255, g: (num >> 8) & 255, b: num & 255 };
+}
+
+function getRelativeLuminance(rgb) {
+  const srgb = [rgb.r / 255, rgb.g / 255, rgb.b / 255].map(v => {
+    return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+  });
+  return 0.2126 * srgb[0] + 0.7152 * srgb[1] + 0.0722 * srgb[2];
+}
+
+function calculateContrastRatio(hex1, hex2) {
+  const l1 = getRelativeLuminance(hexToRgb(hex1));
+  const l2 = getRelativeLuminance(hexToRgb(hex2));
+  const brightest = Math.max(l1, l2);
+  const darkest = Math.min(l1, l2);
+  return (brightest + 0.05) / (darkest + 0.05);
+}
+
+function initWebSafePaletteLab() {
+  const container = document.getElementById('swatchCubeContainer');
+  if (!container) return;
+  container.innerHTML = '';
+
+  WEB_SAFE_LEVELS.forEach(r => {
+    WEB_SAFE_LEVELS.forEach(g => {
+      WEB_SAFE_LEVELS.forEach(b => {
+        const hex = '#' + [r, g, b].map(v => v.toString(16).padStart(2, '0')).join('');
+        const chip = document.createElement('div');
+        chip.className = 'swatch-chip';
+        chip.style.backgroundColor = hex;
+        chip.title = `${hex} (rgb: ${r}, ${g}, ${b})`;
+        chip.onmouseenter = () => {
+          const lbl = document.getElementById('swatchHoverLabel');
+          if (lbl) lbl.textContent = `HOVER: ${hex.toUpperCase()} (rgb: ${r}, ${g}, ${b})`;
+        };
+        chip.onclick = () => {
+          paletteState[paletteState.target] = hex;
+          playUiBeep(1100, 0.03, 'sine');
+          updatePalettePreview();
+        };
+        container.appendChild(chip);
+      });
+    });
+  });
+
+  updatePalettePreview();
+}
+
+function setPaletteTarget(targetKey) {
+  paletteState.target = targetKey;
+  ['bg', 'text', 'link', 'vlink'].forEach(k => {
+    const btn = document.getElementById('btnTarget' + k.charAt(0).toUpperCase() + k.slice(1));
+    if (btn) {
+      if (k === targetKey) {
+        btn.classList.add('active');
+        btn.style.background = '#005577';
+      } else {
+        btn.classList.remove('active');
+        btn.style.background = '';
+      }
+    }
+  });
+  playUiBeep(880, 0.03, 'square');
+}
+
+function applyPalettePreset(key) {
+  if (PALETTE_PRESETS[key]) {
+    paletteState = { ...paletteState, ...PALETTE_PRESETS[key] };
+    playUiBeep(1200, 0.04, 'triangle');
+    updatePalettePreview();
+  }
+}
+
+function updatePalettePreview() {
+  const preview = document.getElementById('netscapePalettePreview');
+  const textEl = document.getElementById('palettePreviewText');
+  const linkEl = document.getElementById('palettePreviewLink');
+  const vlinkEl = document.getElementById('palettePreviewVlink');
+
+  if (preview) preview.style.backgroundColor = paletteState.bg;
+  if (textEl) textEl.style.color = paletteState.text;
+  if (linkEl) linkEl.style.color = paletteState.link;
+  if (vlinkEl) vlinkEl.style.color = paletteState.vlink;
+
+  const lblBg = document.getElementById('lblHexBg');
+  const lblText = document.getElementById('lblHexText');
+  const lblLink = document.getElementById('lblHexLink');
+  const lblVlink = document.getElementById('lblHexVlink');
+  if (lblBg) lblBg.textContent = paletteState.bg.toUpperCase();
+  if (lblText) lblText.textContent = paletteState.text.toUpperCase();
+  if (lblLink) lblLink.textContent = paletteState.link.toUpperCase();
+  if (lblVlink) lblVlink.textContent = paletteState.vlink.toUpperCase();
+
+  const ratio = calculateContrastRatio(paletteState.bg, paletteState.text);
+  const ratioBadge = document.getElementById('contrastRatioBadge');
+  if (ratioBadge) {
+    let qual = 'OPTIMAL';
+    let color = '#39ff14';
+    if (ratio < 3.0) {
+      qual = 'POOR DITHER';
+      color = '#ef4444';
+    } else if (ratio < 4.5) {
+      qual = 'FAIR';
+      color = '#f59e0b';
+    } else if (ratio < 7.0) {
+      qual = 'GOOD';
+      color = '#38bdf8';
+    }
+    ratioBadge.textContent = `CONTRAST: ${ratio.toFixed(1)}:1 [${qual}]`;
+    ratioBadge.style.color = color;
+  }
+}
+
+function copyPaletteBodyTag() {
+  const tag = `<body bgcolor="${paletteState.bg.toUpperCase()}" text="${paletteState.text.toUpperCase()}" link="${paletteState.link.toUpperCase()}" vlink="${paletteState.vlink.toUpperCase()}">`;
+  try {
+    navigator.clipboard.writeText(tag);
+    showPaletteFeedback('Copied <body> tag!');
+  } catch(e) {
+    prompt('Copy <body> Tag:', tag);
+  }
+}
+
+function copyPaletteCss() {
+  const css = `body {\n  background-color: ${paletteState.bg};\n  color: ${paletteState.text};\n}\na:link {\n  color: ${paletteState.link};\n}\na:visited {\n  color: ${paletteState.vlink};\n}`;
+  try {
+    navigator.clipboard.writeText(css);
+    showPaletteFeedback('Copied CSS block!');
+  } catch(e) {
+    prompt('Copy CSS Block:', css);
+  }
+}
+
+function downloadJascPalette() {
+  let content = "JASC-PAL\r\n0100\r\n216\r\n";
+  WEB_SAFE_LEVELS.forEach(r => {
+    WEB_SAFE_LEVELS.forEach(g => {
+      WEB_SAFE_LEVELS.forEach(b => {
+        content += `${r} ${g} ${b}\r\n`;
+      });
+    });
+  });
+  const blob = new Blob([content], { type: "text/plain" });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = "netscape_216_websafe.pal";
+  a.click();
+  showPaletteFeedback('Downloaded .PAL!');
+}
+
+function showPaletteFeedback(msg) {
+  const el = document.getElementById('paletteCopyFeedback');
+  if (el) {
+    el.textContent = msg;
+    setTimeout(() => { if (el) el.textContent = ''; }, 2500);
+  }
+  playUiBeep(1400, 0.03, 'sine');
+}
+
+// ============================================================================
+// 15. THE SUBTERRANEAN HALITE CRYPT '99 (CGI PERL DUNGEON RPG)
+// ============================================================================
+const DUNGEON_CLASSES = {
+  hacker: {
+    name: 'x86 Assembly Hacker',
+    hp: 95, maxHp: 95,
+    mp: 60, maxMp: 60,
+    atk: 14,
+    specName: '0x90 NOP Sled Exploit',
+    specCost: 15,
+    specDesc: 'Freezes target processor cycles (32 dmg + stun).'
+  },
+  bard: {
+    name: 'Paula Tracker Bard',
+    hp: 105, maxHp: 105,
+    mp: 50, maxMp: 50,
+    atk: 12,
+    specName: 'OctaMED 4-Ch Sonic Wave',
+    specCost: 12,
+    specDesc: 'Stereo acoustic resonance (26 dmg + drains 5 MP).'
+  },
+  sigint: {
+    name: 'Area 51 SIGINT Agent',
+    hp: 110, maxHp: 110,
+    mp: 45, maxMp: 45,
+    atk: 13,
+    specName: 'XOR-0x7F Decrypt Strike',
+    specCost: 14,
+    specDesc: 'Penetrates encrypted armor (34 piercing dmg).'
+  },
+  trader: {
+    name: 'Silicon Valley Day Trader',
+    hp: 90, maxHp: 90,
+    mp: 40, maxMp: 40,
+    atk: 15,
+    specName: 'Dot-Com IPO Cash Burn',
+    specCost: 10,
+    specDesc: 'Wild capital explosion (15-45 burst dmg).'
+  },
+  warrior: {
+    name: 'Overclocked Cyber-Warrior',
+    hp: 135, maxHp: 135,
+    mp: 25, maxMp: 25,
+    atk: 16,
+    specName: 'Liquid Nitrogen Overload',
+    specCost: 10,
+    specDesc: 'Superconductive blade slice (28 dmg + 6 HP leech).'
+  }
+};
+
+const DUNGEON_FLOORS = [
+  { name: 'Dial-Up Demarcation Vault', enemy: 'Corrupted 28.8k Baud Bug', hp: 35, atk: 7, ascii: "  [0101]\n /====\\\n | 56k |\n \\====/" },
+  { name: 'Floppy Disk Catacombs', enemy: 'Bad Sector Wraith', hp: 48, atk: 9, ascii: "  .----.\n  |HD..|\n  |____|\n  /_.._\\" },
+  { name: 'Copper Sinewave Antechamber', enemy: 'Amiga Copper Golem', hp: 62, atk: 11, ascii: "  /====\\\n [~O~~O~]\n  |====|\n  (____)" },
+  { name: '28.8k Modem Echo Caverns', enemy: 'Rogue 56k V.90 Daemon', hp: 76, atk: 13, ascii: " <(X__X)>\n  /|  |\\\n / |  | \\\n  /    \\" },
+  { name: 'Y2K Millennium Bug Hive', enemy: 'Clock Skew Larva', hp: 92, atk: 15, ascii: "  {Y2K!}\n -(o..o)-\n  /||||\\\n =\"=\"=\"=" },
+  { name: '16-Bit Paula Sound Matrix', enemy: 'Channel 4 Sine Spectre', hp: 112, atk: 18, ascii: "  ~^~^~ \n (~o.o~)\n  ) | ( \n (~_~_~)" },
+  { name: 'Silicon Valley Stock Crypt', enemy: 'Day Trader Lich', hp: 135, atk: 21, ascii: " [NASDAQ]\n  (O..O)\n  <|$$|>\n  /    \\" },
+  { name: 'Area 51 Subcarrier Corridor', enemy: 'SIGINT Microwave Phantom', hp: 160, atk: 24, ascii: "  /1999\\\n |(o)(o)|\n  \\_==_/\n   /||\\" },
+  { name: 'Permian Salado Halite Brine Reservoir', enemy: 'Crystalline Halite Titan', hp: 190, atk: 27, ascii: " /######\\\n[#O####O#]\n|########|\n \\######/" },
+  { name: 'Lithospheric Demarcation Gate', enemy: 'Subnet 10.19.99.4 Transponder Core', hp: 260, atk: 32, ascii: " [10.19.99.4]\n  {1999Hz}\n <[CORE]>\n  =======" }
+];
+
+let dungeonState = {
+  classKey: 'hacker',
+  level: 1,
+  floor: 1,
+  hp: 95,
+  maxHp: 95,
+  mp: 60,
+  maxMp: 60,
+  xp: 0,
+  gold: 50,
+  relics: 2,
+  enemyHp: 35,
+  enemyMaxHp: 35,
+  inCombat: true,
+  turn: 1,
+  defeatedBoss: false
+};
+
+function initHaliteDungeon() {
+  try {
+    const saved = JSON.parse(localStorage.getItem('geocities_dungeon_save') || 'null');
+    if (saved && saved.level) {
+      dungeonState = { ...dungeonState, ...saved };
+    } else {
+      resetDungeonState();
+    }
+  } catch(e) {
+    resetDungeonState();
+  }
+  updateDungeonUi();
+  logDungeon("=== WELCOME TO THE SUBTERRANEAN HALITE CRYPT '99 ===");
+  logDungeon("You enter 2,150 ft beneath Carlsbad. 1999.0 Hz acoustic vibrations resonate through the rock.");
+}
+
+function resetDungeonState() {
+  const cls = DUNGEON_CLASSES[dungeonState.classKey] || DUNGEON_CLASSES.hacker;
+  dungeonState.level = 1;
+  dungeonState.floor = 1;
+  dungeonState.hp = cls.hp;
+  dungeonState.maxHp = cls.maxHp;
+  dungeonState.mp = cls.mp;
+  dungeonState.maxMp = cls.maxMp;
+  dungeonState.xp = 0;
+  dungeonState.gold = 50;
+  dungeonState.relics = 2;
+  dungeonState.defeatedBoss = false;
+  spawnFloorEnemy(1);
+}
+
+function spawnFloorEnemy(floorNum) {
+  const fl = DUNGEON_FLOORS[floorNum - 1] || DUNGEON_FLOORS[0];
+  dungeonState.enemyHp = fl.hp;
+  dungeonState.enemyMaxHp = fl.hp;
+  dungeonState.inCombat = true;
+  updateDungeonUi();
+}
+
+function changeDungeonClass(key) {
+  if (DUNGEON_CLASSES[key]) {
+    dungeonState.classKey = key;
+    const cls = DUNGEON_CLASSES[key];
+    dungeonState.hp = cls.hp;
+    dungeonState.maxHp = cls.maxHp;
+    dungeonState.mp = cls.mp;
+    dungeonState.maxMp = cls.maxMp;
+    updateDungeonUi();
+    logDungeon(`* Re-equipped as: ${cls.name}. Skill: ${cls.specName} *`);
+    playUiBeep(1000, 0.04, 'triangle');
+  }
+}
+
+function dungeonAction(action) {
+  if (!dungeonState.inCombat && action !== 'next') {
+    logDungeon("Chamber cleared! Press 'Descend to Next Depth' to proceed.");
+    return;
+  }
+
+  const cls = DUNGEON_CLASSES[dungeonState.classKey];
+  const curFloor = DUNGEON_FLOORS[dungeonState.floor - 1];
+
+  if (action === 'attack') {
+    const dmg = Math.floor(cls.atk * (0.85 + Math.random() * 0.3) + dungeonState.level * 2);
+    dungeonState.enemyHp = Math.max(0, dungeonState.enemyHp - dmg);
+    logDungeon(`> You strike ${curFloor.enemy} for ${dmg} damage!`);
+    playUiBeep(440, 0.05, 'square');
+  } else if (action === 'special') {
+    if (dungeonState.mp < cls.specCost) {
+      logDungeon(`! Not enough MP! (Requires ${cls.specCost} MP)`);
+      playUiBeep(220, 0.08, 'sawtooth');
+      return;
+    }
+    dungeonState.mp -= cls.specCost;
+    let specDmg = Math.floor(cls.atk * 2.2 + dungeonState.level * 4);
+    if (dungeonState.classKey === 'trader') {
+      specDmg = Math.floor(15 + Math.random() * 30 + dungeonState.level * 5);
+    }
+    dungeonState.enemyHp = Math.max(0, dungeonState.enemyHp - specDmg);
+    logDungeon(`> EXPLOIT ACTIVATED: ${cls.specName}! Dealt ${specDmg} critical damage!`);
+    playUiBeep(1400, 0.08, 'sawtooth');
+
+    if (dungeonState.classKey === 'warrior') {
+      dungeonState.hp = Math.min(dungeonState.maxHp, dungeonState.hp + 8);
+      logDungeon(`> Absorbed 8 HP through cryogenic heat sink.`);
+    }
+  } else if (action === 'item') {
+    if (dungeonState.relics <= 0) {
+      logDungeon(`! You have no Salado Salt Crystals remaining.`);
+      playUiBeep(220, 0.08, 'sawtooth');
+      return;
+    }
+    dungeonState.relics--;
+    const heal = 45;
+    dungeonState.hp = Math.min(dungeonState.maxHp, dungeonState.hp + heal);
+    dungeonState.mp = Math.min(dungeonState.maxMp, dungeonState.mp + 20);
+    logDungeon(`> You consumed a Salado Salt Crystal! Restored ${heal} HP and 20 MP.`);
+    playUiBeep(1200, 0.06, 'sine');
+  } else if (action === 'rest') {
+    dungeonState.mp = Math.min(dungeonState.maxMp, dungeonState.mp + 12);
+    logDungeon(`> You overclock your CPU and rest a turn (+12 MP).`);
+    playUiBeep(600, 0.04, 'sine');
+  } else if (action === 'flee') {
+    if (Math.random() > 0.4) {
+      logDungeon(`> Escaped backward into the salt corridor!`);
+      dungeonState.inCombat = false;
+      updateDungeonUi();
+      return;
+    } else {
+      logDungeon(`! Escape blocked by brine stalactites!`);
+    }
+  } else if (action === 'next') {
+    if (dungeonState.floor >= 10) {
+      logDungeon("You have already conquered Floor 10! The lithospheric core is secured.");
+      return;
+    }
+    dungeonState.floor++;
+    spawnFloorEnemy(dungeonState.floor);
+    logDungeon(`\n--- DESCENDING TO DEPTH ${dungeonState.floor}: ${DUNGEON_FLOORS[dungeonState.floor - 1].name} ---`);
+    playUiBeep(900, 0.06, 'triangle');
+    updateDungeonUi();
+    return;
+  }
+
+  // Check if enemy defeated
+  if (dungeonState.enemyHp <= 0) {
+    dungeonState.inCombat = false;
+    const gainedXp = 25 + dungeonState.floor * 15;
+    const gainedGold = 10 + dungeonState.floor * 8;
+    dungeonState.xp += gainedXp;
+    dungeonState.gold += gainedGold;
+    logDungeon(`★ VICTORY! ${curFloor.enemy} disintegrated into raw bytes!`);
+    logDungeon(`★ Rewarded: +${gainedXp} XP, +${gainedGold} Bytes.`);
+
+    if (Math.random() > 0.4) {
+      dungeonState.relics++;
+      logDungeon(`★ Found a Salado Salt Crystal in the crystal bed!`);
+    }
+
+    if (dungeonState.xp >= dungeonState.level * 80) {
+      dungeonState.level++;
+      dungeonState.maxHp += 15;
+      dungeonState.hp = dungeonState.maxHp;
+      dungeonState.maxMp += 10;
+      dungeonState.mp = dungeonState.maxMp;
+      logDungeon(`\n⚡ LEVEL UP! Advanced to Level ${dungeonState.level}! HP/MP expanded and refilled.`);
+      playOracleChime();
+    }
+
+    if (dungeonState.floor === 10) {
+      dungeonState.defeatedBoss = true;
+      logDungeon("\n=======================================================");
+      logDungeon("★ LITHOSPHERIC SALDO HALITE CORE RECOVERED! ★");
+      logDungeon("Demarcation Gate Solved: 1999.0 Hz Carrier Confirmed.");
+      logDungeon("Classified Coordinates: kweb://10.19.99.4/classified");
+      logDungeon("Acoustic Monitoring: kweb://echo-subsystem.net");
+      logDungeon("=======================================================");
+      playOracleChime();
+      playFm1999Carrier(0.5);
+    }
+
+    updateDungeonUi();
+    return;
+  }
+
+  // Enemy Counter-Attack
+  const eAtk = Math.max(3, Math.floor(curFloor.atk * (0.8 + Math.random() * 0.4)));
+  dungeonState.hp = Math.max(0, dungeonState.hp - eAtk);
+  logDungeon(`! ${curFloor.enemy} retaliates for ${eAtk} damage!`);
+  playUiBeep(260, 0.05, 'sawtooth');
+
+  // Check if Player Defeated
+  if (dungeonState.hp <= 0) {
+    dungeonState.inCombat = false;
+    logDungeon(`\n💀 YOU WERE DEFEATED! System memory dumped to floppy.`);
+    logDungeon(`Rebooting at Floor 1 with full health...`);
+    dungeonState.hp = cls.hp;
+    dungeonState.mp = cls.mp;
+    dungeonState.floor = 1;
+    spawnFloorEnemy(1);
+    playUiBeep(130, 0.2, 'sawtooth');
+  }
+
+  updateDungeonUi();
+}
+
+function updateDungeonUi() {
+  const cls = DUNGEON_CLASSES[dungeonState.classKey];
+  const curFloor = DUNGEON_FLOORS[dungeonState.floor - 1] || DUNGEON_FLOORS[0];
+
+  const charNameEl = document.getElementById('dungeonCharName');
+  const lvlBadgeEl = document.getElementById('dungeonLevelBadge');
+  const hpEl = document.getElementById('dungeonHp');
+  const mpEl = document.getElementById('dungeonMp');
+  const floorEl = document.getElementById('dungeonFloor');
+  const xpEl = document.getElementById('dungeonXp');
+  const goldEl = document.getElementById('dungeonGold');
+  const relicsEl = document.getElementById('dungeonRelics');
+  const monsterAsciiEl = document.getElementById('dungeonMonsterAscii');
+  const monsterNameEl = document.getElementById('dungeonMonsterName');
+  const monsterDescEl = document.getElementById('dungeonMonsterDesc');
+  const monsterHpTextEl = document.getElementById('dungeonMonsterHpText');
+  const monsterHpBarEl = document.getElementById('dungeonMonsterHpBar');
+  const btnNextFloor = document.getElementById('btnDungeonNextFloor');
+
+  if (charNameEl) charNameEl.textContent = cls.name;
+  if (lvlBadgeEl) lvlBadgeEl.textContent = `(LVL ${dungeonState.level})`;
+  if (hpEl) hpEl.textContent = `${dungeonState.hp}/${dungeonState.maxHp}`;
+  if (mpEl) mpEl.textContent = `${dungeonState.mp}/${dungeonState.maxMp}`;
+  if (floorEl) floorEl.textContent = `${dungeonState.floor.toString().padStart(2, '0')} / 10`;
+  if (xpEl) xpEl.textContent = `${dungeonState.xp} / ${dungeonState.level * 80}`;
+  if (goldEl) goldEl.textContent = `${dungeonState.gold} Bytes`;
+  if (relicsEl) relicsEl.textContent = `Salado Salt (x${dungeonState.relics})`;
+
+  if (monsterAsciiEl) monsterAsciiEl.textContent = curFloor.ascii;
+  if (monsterNameEl) monsterNameEl.textContent = curFloor.enemy;
+  if (monsterDescEl) monsterDescEl.textContent = `Chamber: ${curFloor.name}`;
+
+  if (monsterHpTextEl) monsterHpTextEl.textContent = `${dungeonState.enemyHp} / ${dungeonState.enemyMaxHp} HP`;
+  if (monsterHpBarEl) {
+    const pct = Math.max(0, Math.min(100, (dungeonState.enemyHp / dungeonState.enemyMaxHp) * 100));
+    monsterHpBarEl.style.width = pct + '%';
+  }
+
+  if (btnNextFloor) {
+    btnNextFloor.style.display = (!dungeonState.inCombat && dungeonState.floor < 10) ? 'inline-block' : 'none';
+  }
+}
+
+function logDungeon(msg) {
+  const box = document.getElementById('dungeonLog');
+  if (box) {
+    box.textContent += (box.textContent ? '\n' : '') + msg;
+    box.scrollTop = box.scrollHeight;
+  }
+}
+
+function quicksaveDungeon() {
+  try {
+    localStorage.setItem('geocities_dungeon_save', JSON.stringify(dungeonState));
+    logDungeon("💾 State saved to client-side localStorage.");
+    playUiBeep(1200, 0.04, 'triangle');
+  } catch(e) {
+    logDungeon("! Quicksave failed: " + e.message);
+  }
+}
+
+function quickloadDungeon() {
+  try {
+    const data = JSON.parse(localStorage.getItem('geocities_dungeon_save') || 'null');
+    if (data) {
+      dungeonState = { ...dungeonState, ...data };
+      updateDungeonUi();
+      logDungeon("📂 Quicksave loaded successfully.");
+      playUiBeep(1400, 0.04, 'triangle');
+    } else {
+      logDungeon("! No quicksave found in client storage.");
+    }
+  } catch(e) {
+    logDungeon("! Quickload failed: " + e.message);
+  }
+}
+
+function exportDungeonCertificate() {
+  const cls = DUNGEON_CLASSES[dungeonState.classKey];
+  const dateStr = new Date().toISOString().split('T')[0];
+  const content = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Halite Crypt Champion Scroll (1999)</title><style>body{background:#000;color:#00ffcc;font-family:'Courier New',monospace;padding:24px;text-align:center;}.scroll{border:4px double #9333ea;padding:20px;max-width:600px;margin:0 auto;background:#050a14;}</style></head><body><div class="scroll"><h1>⚔️ CYBER DUNGEON CERTIFICATE 1999 ⚔️</h1><p>This certifies that <strong>${cls.name}</strong> has ventured 2,150 feet into the Permian Salado Halite salt formations.</p><p>Level: ${dungeonState.level} | Max Depth Reached: Depth ${dungeonState.floor}/10 | Wealth: ${dungeonState.gold} Bytes</p><p style="color:#facc15;">★ 1999.0 Hz Subterranean Lithospheric Telemetry Verified Nominal ★</p><p><small>Issued by CyberSpire Retro Shrine • Date: ${dateStr}</small></p></div></body></html>`;
+  const blob = new Blob([content], { type: "text/html" });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = "halite_crypt_certificate_1999.html";
+  a.click();
+  playOracleChime();
+}
+
+// ============================================================================
+// 16. RETRO CGI WEB COUNTER & MARQUEE TICKER FORGE
+// ============================================================================
+let odometerVal = 19284;
+let odometerSkin = 'green_vfd';
+
+const ODOMETER_SKINS = {
+  green_vfd:    { bg: '#011508', border: '#00aa44', text: '#00ff66', glow: '#00ff66' },
+  red_led:      { bg: '#150101', border: '#aa0000', text: '#ff2222', glow: '#ff2222' },
+  amiga_copper: { bg: '#1f1300', border: '#d97706', text: '#fde047', glow: '#f59e0b' },
+  wood_3d:      { bg: '#291809', border: '#78350f', text: '#fef3c7', glow: 'none' },
+  cyber_blue:   { bg: '#021024', border: '#0284c7', text: '#38bdf8', glow: '#38bdf8' },
+  cassette:     { bg: '#111827', border: '#475569', text: '#f1f5f9', glow: 'none' }
+};
+
+function initCounterMarqueeForge() {
+  drawOdometerForge();
+  updateMarqueeForge();
+}
+
+function setOdometerSkin(skinKey) {
+  if (ODOMETER_SKINS[skinKey]) {
+    odometerSkin = skinKey;
+    const lbl = document.getElementById('odometerSkinLabel');
+    if (lbl) lbl.textContent = skinKey.toUpperCase().replace('_', ' ');
+    drawOdometerForge();
+    playUiBeep(1200, 0.03, 'sine');
+  }
+}
+
+function stepOdometerForge(delta) {
+  odometerVal = (odometerVal + delta) % 1000000;
+  drawOdometerForge();
+  playUiBeep(1400, 0.02, 'triangle');
+}
+
+function randomizeOdometerForge() {
+  odometerVal = Math.floor(Math.random() * 999999);
+  drawOdometerForge();
+  playUiBeep(1600, 0.03, 'triangle');
+}
+
+function resetOdometerForge() {
+  odometerVal = 1999;
+  drawOdometerForge();
+  playUiBeep(880, 0.03, 'sine');
+}
+
+function drawOdometerForge() {
+  const canvas = document.getElementById('odometerForgeCanvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const w = canvas.width;
+  const h = canvas.height;
+  const skin = ODOMETER_SKINS[odometerSkin] || ODOMETER_SKINS.green_vfd;
+
+  ctx.fillStyle = '#050505';
+  ctx.fillRect(0, 0, w, h);
+
+  const numStr = odometerVal.toString().padStart(6, '0');
+  const digitW = (w - 20) / 6;
+
+  for (let i = 0; i < 6; i++) {
+    const x = 10 + i * digitW;
+    const y = 8;
+    const dw = digitW - 4;
+    const dh = h - 16;
+
+    // Digit box
+    ctx.fillStyle = skin.bg;
+    ctx.fillRect(x, y, dw, dh);
+    ctx.strokeStyle = skin.border;
+    ctx.lineWidth = 2;
+    ctx.strokeRect(x, y, dw, dh);
+
+    // Bevel highlights
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
+    ctx.fillRect(x + 1, y + 1, dw - 2, 2);
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
+    ctx.fillRect(x + 1, y + dh - 3, dw - 2, 2);
+
+    // Digit text
+    ctx.fillStyle = skin.text;
+    ctx.font = 'bold 30px "Courier New", monospace';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    if (skin.glow !== 'none') {
+      ctx.shadowColor = skin.glow;
+      ctx.shadowBlur = 8;
+    } else {
+      ctx.shadowBlur = 0;
+    }
+    ctx.fillText(numStr[i], x + dw / 2, y + dh / 2 + 2);
+    ctx.shadowBlur = 0;
+  }
+}
+
+function copyOdometerHtml() {
+  const tag = `<!-- CyberSpire 1999 Hit Counter -->\n<img src="http://www.geocities.com/cgi-bin/counter.cgi?df=cyberspire.dat&style=${odometerSkin}&digits=6" alt="Visitor Counter" border="0">`;
+  try {
+    navigator.clipboard.writeText(tag);
+    alert("Copied 1999 Counter CGI HTML to clipboard!");
+  } catch(e) {
+    prompt("Copy 1999 Counter CGI Snippet:", tag);
+  }
+}
+
+function updateMarqueeForge() {
+  const mq = document.getElementById('marqueeSandbox');
+  const dirSelect = document.getElementById('mqDirection');
+  const behSelect = document.getElementById('mqBehavior');
+  const txtInput = document.getElementById('mqText');
+
+  if (mq && dirSelect && behSelect && txtInput) {
+    mq.direction = dirSelect.value;
+    mq.behavior = behSelect.value;
+    mq.textContent = txtInput.value;
+  }
+}
+
+function copyMarqueeHtml() {
+  const dir = document.getElementById('mqDirection')?.value || 'left';
+  const beh = document.getElementById('mqBehavior')?.value || 'scroll';
+  const txt = document.getElementById('mqText')?.value || '';
+  const snippet = `<marquee direction="${dir}" behavior="${beh}" scrollamount="4" scrolldelay="60" style="color:#00ffcc; font-family:'Comic Sans MS', cursive; font-weight:bold;">${escapeHtml(txt)}</marquee>`;
+  try {
+    navigator.clipboard.writeText(snippet);
+    alert("Copied <marquee> tag to clipboard!");
+  } catch(e) {
+    prompt("Copy <marquee> Tag:", snippet);
+  }
+}
+
+// ============================================================================
+// 17. WEBRING MASTER CGI CONSOLE & NODE HEALTH PINGER (WEBRING.CGI)
+// ============================================================================
+const WEBRING_NODES = [
+  { id: '#001', name: 'KiloNet Portal 1999', url: '/web/portal.html', ip: '209.85.128.1' },
+  { id: '#002', name: 'CyberSpire Retro Shrine', url: '/web/geocities.html', ip: '209.85.128.42' },
+  { id: '#003', name: '0xRELEASE Scene Vault', url: '/web/warez.html', ip: '198.51.100.77' },
+  { id: '#004', name: '~neon_rider ASM Shrine', url: '/web/users/neon_rider.html', ip: '203.0.113.19' },
+  { id: '#005', name: 'Temple of Win32 ASM', url: '/web/asm_temple.html', ip: '192.0.2.86' },
+  { id: '#006', name: 'Neon Oasis Cybercafé', url: '/web/cybercafe.html', ip: '198.18.0.33' },
+  { id: '#019', name: '10.19.99.4 Carlsbad Demarcation', url: '/web/classified.html', ip: '10.19.99.4' },
+  { id: '#020', name: 'ESARL Echo Subsystem (Acoustic)', url: '/web/echo_subsystem.html', ip: '10.19.99.19' }
+];
+
+let activeWidgetStyle = 'bracket';
+
+function initRingmasterConsole() {
+  renderWidgetPreview();
+}
+
+function setWidgetStyle(styleKey) {
+  activeWidgetStyle = styleKey;
+  renderWidgetPreview();
+  playUiBeep(1200, 0.03, 'sine');
+}
+
+function renderWidgetPreview() {
+  const area = document.getElementById('widgetPreviewArea');
+  if (!area) return;
+
+  if (activeWidgetStyle === 'bracket') {
+    area.innerHTML = `
+      <div style="font-family:'Courier New', monospace; font-size:12px; color:#00ffcc;">
+        [ <a href="/web/portal.html" style="color:#ffff00;">&laquo; Previous Site</a> | 
+        <a href="/web/webring.html" style="color:#ff00aa;">KiloNet Webring Hub</a> | 
+        <a href="/web/warez.html" style="color:#00ff66;">Next Site &raquo;</a> ]
+      </div>
+    `;
+  } else if (activeWidgetStyle === 'table') {
+    area.innerHTML = `
+      <table border="2" cellpadding="4" cellspacing="0" style="margin:0 auto; background:#001122; border-color:#00ffcc; color:#aaffee; font-size:11px;">
+        <tr><th colspan="3" style="background:#003355; color:#ffff00;">KiloNet Member Site #002: CyberSpire</th></tr>
+        <tr>
+          <td><a href="/web/portal.html" style="color:#38bdf8;">[« Prev]</a></td>
+          <td><a href="/web/webring.html" style="color:#f472b6;">[Webring Hub]</a></td>
+          <td><a href="/web/warez.html" style="color:#34d399;">[Next »]</a></td>
+        </tr>
+      </table>
+    `;
+  } else if (activeWidgetStyle === 'dropdown') {
+    area.innerHTML = `
+      <div style="font-size:11px; color:#38bdf8;">
+        <span>Jump to Webring Site: </span>
+        <select onchange="if(this.value) window.location.href=this.value;" style="background:#000; color:#00ffcc; border:1px solid #00ffcc; font-size:11px;">
+          <option value="">-- Select Member Site --</option>
+          <option value="/web/portal.html">#001: KiloNet Central Directory</option>
+          <option value="/web/geocities.html" selected>#002: CyberSpire Shrine</option>
+          <option value="/web/warez.html">#003: 0xRELEASE Scene Vault</option>
+          <option value="/web/users/neon_rider.html">#004: ~neon_rider ASM</option>
+          <option value="/web/asm_temple.html">#005: Temple of Win32 ASM</option>
+          <option value="/web/webring.html">#Hub: Webring Directory Hub</option>
+        </select>
+      </div>
+    `;
+  } else if (activeWidgetStyle === 'badge') {
+    area.innerHTML = `
+      <div style="display:inline-flex; align-items:center; gap:6px; background:#110022; border:2px ridge #aa00ff; padding:4px 8px;">
+        <span style="font-size:9px; color:#ff00ff; font-weight:bold;">KILONET WEBRING</span>
+        <a href="/web/portal.html" class="nav-btn" style="font-size:9px; padding:1px 4px;">«</a>
+        <a href="/web/webring.html" class="nav-btn" style="font-size:9px; padding:1px 4px;">HUB</a>
+        <a href="/web/warez.html" class="nav-btn" style="font-size:9px; padding:1px 4px;">»</a>
+      </div>
+    `;
+  }
+}
+
+function copyWidgetSnippet() {
+  let snippet = "";
+  if (activeWidgetStyle === 'bracket') {
+    snippet = `<div align="center">[ <a href="/web/portal.html">&laquo; Prev</a> | <a href="/web/webring.html">KiloNet Webring Hub</a> | <a href="/web/warez.html">Next &raquo;</a> ]</div>`;
+  } else if (activeWidgetStyle === 'table') {
+    snippet = `<table border="2" cellpadding="4" cellspacing="0" align="center" bgcolor="#001122" bordercolor="#00FFCC"><tr><th colspan="3" bgcolor="#003355"><font color="#FFFF00">KiloNet Member Site #002</font></th></tr><tr><td><a href="/web/portal.html">[&laquo; Prev]</a></td><td><a href="/web/webring.html">[Webring Hub]</a></td><td><a href="/web/warez.html">[Next &raquo;</a></td></tr></table>`;
+  } else if (activeWidgetStyle === 'dropdown') {
+    snippet = `<select onchange="if(this.value) location.href=this.value;"><option value="/web/portal.html">&laquo; Prev Site</option><option value="/web/webring.html">Webring Hub</option><option value="/web/warez.html">Next Site &raquo;</option></select>`;
+  } else {
+    snippet = `<div align="center"><a href="/web/portal.html">&laquo;</a> <a href="/web/webring.html">KILONET WEBRING #002</a> <a href="/web/warez.html">&raquo;</a></div>`;
+  }
+
+  try {
+    navigator.clipboard.writeText(snippet);
+    alert("Copied Webring HTML snippet to clipboard!");
+  } catch(e) {
+    prompt("Copy Webring HTML Snippet:", snippet);
+  }
+}
+
+function pingWebringNode(target) {
+  const baud = parseInt(document.getElementById('pingerBaudSelect')?.value || '56000');
+  const baseLat = baud <= 9600 ? 280 : (baud <= 28800 ? 160 : (baud <= 56000 ? 110 : (baud <= 128000 ? 45 : 18)));
+  const log = document.getElementById('pingerLog');
+  if (!log) return;
+
+  log.textContent += `\n--- PROBING WEBRING TOPOLOGY [BAUD: ${baud} BPS] ---`;
+
+  WEBRING_NODES.forEach((node, idx) => {
+    setTimeout(() => {
+      const rtt = Math.floor(baseLat + (Math.random() * 25 - 12));
+      const ttl = 64 - idx * 2;
+      log.textContent += `\n[PING ${node.id}] ${node.ip} (${node.name}): bytes=32 time=${rtt}ms TTL=${ttl} [OK]`;
+      log.scrollTop = log.scrollHeight;
+      playUiBeep(880, 0.02, 'sine');
+    }, idx * 120);
+  });
+}
+
+function pingHaliteGateway() {
+  const log = document.getElementById('pingerLog');
+  if (!log) return;
+  log.textContent += `\n[SIGINT PING] 10.19.99.4 [CARLSBAD GATEWAY]: non-routable transit...`;
+  setTimeout(() => {
+    log.textContent += `\n[SIGINT PING] 10.19.99.4: Subterranean Halite acoustic carrier locked at 1999.0 Hz [99.4% COHERENCE]`;
+    log.textContent += `\n[SIGINT PING] Offset: 0x0040:0x1999 • Mask: XOR-0x7F • Demarcation: kweb://10.19.99.4/classified`;
+    log.scrollTop = log.scrollHeight;
+    playOracleChime();
+  }, 350);
+}
+
+function clearPingerTerminal() {
+  const log = document.getElementById('pingerLog');
+  if (log) log.textContent = '[00:00:00] WEBRING CGI DAEMON STANDBY. READY FOR ICMP HOPS.';
+}
+
 // Initialize Everything
 setNeighborhood(currentNeighborhood);
 renderSwatches();
@@ -10109,6 +12544,11 @@ loadSignalsState();
 renderHomesteadGrid();
 updateUserHomesteadCounter();
 checkUrlParameters();
+updatePassportBadges();
+initWebSafePaletteLab();
+initHaliteDungeon();
+initCounterMarqueeForge();
+initRingmasterConsole();
 
 // Auto-unlock audio context on user interaction
 document.body.addEventListener('click', () => {
