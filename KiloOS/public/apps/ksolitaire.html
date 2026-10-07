@@ -786,6 +786,7 @@
 
 <canvas id="fx-canvas"></canvas>
 <canvas id="win-canvas"></canvas>
+<div id="toast" role="status" aria-live="polite"></div>
 
 <header>
   <div class="header-top">
@@ -995,6 +996,7 @@
       <div><strong>• [W] Wand:</strong> Move card | <strong>[X] X-Ray:</strong> Reveal | <strong>[S]:</strong> Shuffle Stock</div>
       <div><strong>• [U] / [Ctrl+Z]:</strong> Undo | <strong>[Ctrl+Y / Ctrl+Shift+Z]:</strong> Redo | <strong>[Ctrl+F]:</strong> Auto-Finish</div>
       <div><strong>• [M]:</strong> Toggle Audio Mute | <strong>[T]:</strong> Cycle Card Deck Theme</div>
+      <div><strong>• [Arrow Keys]:</strong> Navigate columns and foundation piles | <strong>[Enter/Space]:</strong> Select/Move</div>
       <div><strong>• [Esc]:</strong> Close Modals / Victory Banner, Clear Selection, Dismiss Toast.</div>
     </div>
     <div style="display:flex; justify-content: flex-end; margin-top: 14px;">
@@ -1338,8 +1340,12 @@ function broadcastDuelProgress(desc) {
 
 // Deal Modal UI Handlers
 function openDealModal() {
+  closeAllModals();
   const input = document.getElementById('deal-input');
-  if (input) input.value = currentDealSeed;
+  if (input) {
+    input.value = currentDealSeed;
+    setTimeout(() => input.focus(), 50);
+  }
   const modal = document.getElementById('deal-modal');
   if (modal) modal.classList.add('active');
 }
@@ -1382,6 +1388,7 @@ function copyDealLink() {
 
 // Replay Studio UI Handlers
 function openReplayModal() {
+  closeAllModals();
   isReplayMode = false;
   if (replayInterval) {
     clearInterval(replayInterval);
@@ -1392,7 +1399,10 @@ function openReplayModal() {
 
   updateReplayUI();
   const modal = document.getElementById('replay-modal');
-  if (modal) modal.classList.add('active');
+  if (modal) {
+    modal.classList.add('active');
+    setTimeout(() => { if (playBtn) playBtn.focus(); }, 50);
+  }
 }
 
 function closeReplayModal() {
@@ -1558,10 +1568,15 @@ function importReplayFile(event) {
 
 // Multiplayer & Duel Handlers
 function openMultiplayerModal() {
+  closeAllModals();
   const callsign = document.getElementById('mp-callsign-display');
   if (callsign) callsign.textContent = myPlayerName;
   const modal = document.getElementById('mp-modal');
-  if (modal) modal.classList.add('active');
+  if (modal) {
+    modal.classList.add('active');
+    const input = document.getElementById('mp-join-input');
+    if (input) setTimeout(() => input.focus(), 50);
+  }
 }
 
 function closeMultiplayerModal() {
@@ -2107,6 +2122,14 @@ function toggleHelpModal() {
   }
 }
 
+function closeAllModals() {
+  closeHelpModal();
+  closeStatsModal();
+  closeDealModal();
+  closeReplayModal();
+  closeMultiplayerModal();
+}
+
 // --- Storage Helpers ---
 function safeGetStorage(key, defVal = null) {
   try {
@@ -2312,11 +2335,55 @@ function init() {
         if (sel) sel.value = 'campaign';
       }
       else if (k === 't') { cycleDeckTheme(); }
+      else if (e.key === 'ArrowLeft' || e.key === 'ArrowRight' || e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+        e.preventDefault();
+        handleArrowNavigation(e.key);
+      }
     }
   });
 
   initRetroMultiplayer();
   checkUrlInvite();
+}
+
+let keyboardNavFocus = { area: 'tableau', col: 0 };
+function handleArrowNavigation(key) {
+  if (key === 'ArrowLeft') {
+    if (keyboardNavFocus.area === 'tableau') {
+      keyboardNavFocus.col = (keyboardNavFocus.col - 1 + 7) % 7;
+    } else if (keyboardNavFocus.area === 'foundation') {
+      keyboardNavFocus.col = (keyboardNavFocus.col - 1 + 4) % 4;
+    }
+  } else if (key === 'ArrowRight') {
+    if (keyboardNavFocus.area === 'tableau') {
+      keyboardNavFocus.col = (keyboardNavFocus.col + 1) % 7;
+    } else if (keyboardNavFocus.area === 'foundation') {
+      keyboardNavFocus.col = (keyboardNavFocus.col + 1) % 4;
+    }
+  } else if (key === 'ArrowUp') {
+    if (keyboardNavFocus.area === 'tableau') {
+      keyboardNavFocus.area = 'foundation';
+      keyboardNavFocus.col = Math.min(3, Math.floor(keyboardNavFocus.col * 4 / 7));
+    }
+  } else if (key === 'ArrowDown') {
+    if (keyboardNavFocus.area === 'foundation') {
+      keyboardNavFocus.area = 'tableau';
+      keyboardNavFocus.col = Math.min(6, Math.floor(keyboardNavFocus.col * 7 / 4));
+    }
+  }
+
+  if (keyboardNavFocus.area === 'tableau') {
+    let col = keyboardNavFocus.col;
+    let pile = tableau[col];
+    if (pile && pile.length > 0) {
+      handleCardClick('tableau', col, pile.length - 1);
+    } else {
+      handlePileClick('tableau', col);
+    }
+  } else if (keyboardNavFocus.area === 'foundation') {
+    let f = keyboardNavFocus.col;
+    handlePileClick('foundation', f);
+  }
 }
 
 function populateStageSelect() {
@@ -4296,6 +4363,7 @@ function toggleSound() {
 }
 
 function openStatsModal() {
+  closeAllModals();
   let played = stats.played;
   let wins = stats.wins;
   let winrate = played > 0 ? Math.round((wins / played) * 100) : 0;
@@ -4319,7 +4387,12 @@ function openStatsModal() {
   document.getElementById('st-besttime1').textContent = fmtTime(stats.bestTimeD1);
   document.getElementById('st-besttime3').textContent = fmtTime(stats.bestTimeD3);
 
-  document.getElementById('stats-modal').classList.add('active');
+  const modal = document.getElementById('stats-modal');
+  if (modal) {
+    modal.classList.add('active');
+    const closeBtn = document.getElementById('stats-modal-close');
+    if (closeBtn) setTimeout(() => closeBtn.focus(), 50);
+  }
 }
 
 function closeStatsModal() {
@@ -4327,8 +4400,14 @@ function closeStatsModal() {
 }
 
 function openHelpModal() {
+  closeAllModals();
   safeSetStorage('ksolitaire_tutorialSeen', '1');
-  document.getElementById('help-modal').classList.add('active');
+  const modal = document.getElementById('help-modal');
+  if (modal) {
+    modal.classList.add('active');
+    const gotItBtn = document.getElementById('help-got-it-btn');
+    if (gotItBtn) setTimeout(() => gotItBtn.focus(), 50);
+  }
 }
 
 function closeHelpModal() {

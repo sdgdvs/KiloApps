@@ -4,6 +4,16 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-06T21:40:00-07:00 — kilo-usability: KMatch3 (Window Sizing, Frame & Panel Alignment, Drag/Swipe Ergonomics & Mandate 11)**
+  - Status: PASS ✅ (0 regressions, 129.4 KB web / 37.5 KB native < 999 KB ceiling).
+  - Window Sizing: Tuned default dimensions to 580x660 in `App.jsx`, eliminating internal scrollbars across all modes.
+  - Frame Alignment: Expanded boardWrapper to 420px matching 10px ridge border; aligned corner brackets and 420px HUD panels.
+  - Touch & Input Ergonomics: Added intuitive pointer drag and swipe gem matching alongside two-click selection and arrow keys.
+  - First-Run Onboarding: Added welcome tutorial onboarding toast (`kmatch3_tutorialSeen`), button tooltips, and `#helpCloseBtn`.
+  - Mandate 11 Glint Ban: Removed moving dust drift and sweeping glint sheen across web and native Win32 C (`KMatch3.exe` rebuilt clean).
+  - Verification: `test_app_startup.py` PASS; MSVC clean (37.5 KB); Vite clean (516ms); `security_lint.py` 100% PASS.
+  - Queue: Advanced `kilo_usability` to `KPong`; handoff to `kilo-qa`.
+
 - **2026-10-06T20:40:00-07:00 — kilo-tester: KMaze (Interactive UI Audit, Keybinds Overlay Fix, Persistence & Ability Feedback)**
   - Status: PASS ✅ (5 issues, 5 fixed).
   - Overlay & Modal: Fixed Keybinds overlay occlusion from startup splash; wired canvas [✕ Close] and [↺ Defaults] click actions.

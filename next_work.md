@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-tester
-next_agent: kilo-usability
+current_agent: kilo-usability
+next_agent: kilo-qa
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -14,7 +14,7 @@ status: ready
 current_targets:
   kilo_creator: "kweb://geocities"
   kilo_graphics: KAsteroids
-  kilo_tester: KSolitaire
+  kilo_tester: KChess
   kilo_usability: KPong
   kilo_qa: KTaskMgr
   kilo_expander: KHangman
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-graphics
-  app: KBreakout
-  timestamp: "2026-10-07T02:36:00-07:00"
+  agent: kilo-tester
+  app: KSolitaire
+  timestamp: "2026-10-07T03:45:00-07:00"
 last_planner_run: "2026-10-06T14:20:00Z"
 ---
 
@@ -114,9 +114,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KSpace`, `KPac`, `KQuest`, `KRogue`, `KColosseum`, `KAbyss`, `KBreakout` *(Note: Pure vector/wireframe or abstract board targets skip automatically per Mandate 15. Completed: KQuest Phases 1-5, KSpace)*.
 
 ### 3. App Tester Queue (`kilo-tester`)
-- **Current Target**: `KSolitaire`
+- **Current Target**: `KChess`
 - **Upcoming Queue**:
-  `KChess`, `KColor`, `KTimer`, `KConverter`, `KQuarantine`, `KSettings`, `KTaskMgr`, `K2048`, `KSudoku`, `KConnect4`, `KHangman`, `KSimon`, `KFreecell`, `KMatch3`, `KWords`, `KGo`, `KDarts`, `KRSS`, `KClip`, `KCipher`, `KCalc`, `KMine`, `KSnake`, `KTetris`, `KPong`, `KMaze` *(Completed: KMaze, KPong, KStarForge, KTask, KChrono, KSys, KSynth, KCyber, KCosmic, KContacts, KDB, KDragon, KFlash, KFont, KFortress, KGraph, KHabit, KHex, KImage, KJournal, KMail, KMandel, KMech, KMedia, KMystery, KNet, KNote, KPad, KPaint, KPass, KPing, KQuest, KRadio, KRead, KSanctuary, KScript, KStarDredge, KStarship, KStellar, KSubmarine, KTerm, KHash, KRSS, KClip, KCipher, KCalc, KMine, KSnake, KTetris)*.
+  `KColor`, `KTimer`, `KConverter`, `KQuarantine`, `KSettings`, `KTaskMgr`, `K2048`, `KSudoku`, `KConnect4`, `KHangman`, `KSimon`, `KFreecell`, `KMatch3`, `KWords`, `KGo`, `KDarts`, `KRSS`, `KClip`, `KCipher`, `KCalc`, `KMine`, `KSnake`, `KTetris`, `KPong`, `KMaze`, `KSolitaire` *(Completed: KMaze, KPong, KStarForge, KTask, KChrono, KSys, KSynth, KCyber, KCosmic, KContacts, KDB, KDragon, KFlash, KFont, KFortress, KGraph, KHabit, KHex, KImage, KJournal, KMail, KMandel, KMech, KMedia, KMystery, KNet, KNote, KPad, KPaint, KPass, KPing, KQuest, KRadio, KRead, KSanctuary, KScript, KStarDredge, KStarship, KStellar, KSubmarine, KTerm, KHash, KRSS, KClip, KCipher, KCalc, KMine, KSnake, KTetris, KSolitaire)*.
 
 ### 4. Usability & UX Queue (`kilo-usability`)
 - **Current Target**: `KPong`
@@ -217,6 +217,14 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-07T03:45:00-07:00 — kilo-tester: KSolitaire (Interactive UI Audit & Inline Fixes)**
+  - Status: PASS ✅ (3 issues fixed, 155.4 KB web / 38.0 KB native < 999 KB ceiling).
+  - Modal Stacking & Focus: Added `closeAllModals()` to prevent multi-dialog overlap; added auto-focus hooks across all 5 dialogs.
+  - Toast & Navigation: Added static accessible `#toast` container; wired full keyboard Arrow Keys navigation between tableau & foundations.
+  - Controls & Help: Updated help shortcuts documentation; verified zero ARG/TINAG leaks or glint violations.
+  - Verification: `test_app_startup.py` PASS; `test_web_apps.js` PASS (82 interactive elements, 0 err); MSVC build clean; Vite clean (4.66s).
+  - Queue: Advanced `kilo_tester` to `KChess`; handoff to `kilo-usability`.
+
 - **2026-10-07T02:36:00-07:00 — kilo-graphics: KBreakout (Skip Turn — Inappropriate Target & Visual Quality Audit)**
   - Status: ⏭️ Skip — Imagen 3 asset replacement not appropriate for KBreakout
   - Target Suitability: Procedural brick-breaker classic; 40 dynamic stages & Win32 GDI 1:1 parity preclude raster replacement.
@@ -254,16 +262,6 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Storage & VFS: Added VFS file inspector with JSON backup export/import and system defaults reset.
   - Verification: `test_app_startup.py` PASS; `test_web_apps.js` PASS (44 elements, 0 err); Vite clean (658ms); `security_lint.py` 100% PASS.
   - Queue: Advanced `kilo_qa` to `KTaskMgr`; handoff to `kilo-expander`.
-
-- **2026-10-06T21:40:00-07:00 — kilo-usability: KMatch3 (Window Sizing, Frame & Panel Alignment, Drag/Swipe Ergonomics & Mandate 11)**
-  - Status: PASS ✅ (0 regressions, 129.4 KB web / 37.5 KB native < 999 KB ceiling).
-  - Window Sizing: Tuned default dimensions to 580x660 in `App.jsx`, eliminating internal scrollbars across all modes.
-  - Frame Alignment: Expanded boardWrapper to 420px matching 10px ridge border; aligned corner brackets and 420px HUD panels.
-  - Touch & Input Ergonomics: Added intuitive pointer drag and swipe gem matching alongside two-click selection and arrow keys.
-  - First-Run Onboarding: Added welcome tutorial onboarding toast (`kmatch3_tutorialSeen`), button tooltips, and `#helpCloseBtn`.
-  - Mandate 11 Glint Ban: Removed moving dust drift and sweeping glint sheen across web and native Win32 C (`KMatch3.exe` rebuilt clean).
-  - Verification: `test_app_startup.py` PASS; MSVC clean (37.5 KB); Vite clean (516ms); `security_lint.py` 100% PASS.
-  - Queue: Advanced `kilo_usability` to `KPong`; handoff to `kilo-qa`.
 
 
 
