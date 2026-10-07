@@ -4,6 +4,15 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-07T11:21:00-07:00 — kilo-qa: KHabit (Pass 5: Tutorial & State Integrity Audit & Persistence Fixes)**
+  - Status: PASS ✅ (0 regressions, 88.5 KB web / 176.0 KB native < 999 KB ceiling).
+  - State Persistence: Upgraded F5 quicksave & F9 quickload to persist full state (settings, habits, theme, sort, tutorial flag) in both web and native C.
+  - Tutorial Integrity: Enforced first-run tutorial flag (`khabit_tutorialSeen` / `.dat`) firing only on fresh sessions, never interrupting restored save states.
+  - Storage & Safety: Standardized safe storage wrappers (`safeGet`, `safeSet`, `safeRemove`) across all local storage calls with quota guards.
+  - Keyboard & Modals: Enhanced Enter/Space/Escape keyboard modal dismissal and navigation; wired visibilitychange refresh and audio gesture resume.
+  - Verification: `test_web_apps.js` PASS (35 elements, 0 err); `security_lint.py` 100% PASS; MSVC native build clean; Vite clean (752ms).
+  - Queue: Advanced `kilo_qa` to `KSudoku`; rotation handoff to `kilo-expander`.
+
 - **2026-10-07T10:45:00-07:00 — kilo-usability: KSettings (UI/UX & Usability Pass: Window Dimensions, Layout Ergonomics & Audio Polish)**
   - Status: PASS ✅ (0 regressions, 70.5 KB web < 999 KB ceiling).
   - Window & Layout: Tuned default dimensions to 700x560 in App.jsx; eliminated tab-bar clipping and overflow.

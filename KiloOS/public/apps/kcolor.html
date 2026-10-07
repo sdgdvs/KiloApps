@@ -448,10 +448,10 @@
 </header>
 
 <!-- Help & Shortcuts Modal -->
-<div id="helpModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.7); backdrop-filter:blur(4px); z-index:999; justify-content:center; align-items:center; padding:16px;">
+<div id="helpModal" role="dialog" aria-modal="true" aria-labelledby="helpModalTitle" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.7); backdrop-filter:blur(4px); z-index:999; justify-content:center; align-items:center; padding:16px;">
   <div class="card" style="max-width:500px; width:100%; max-height:90vh; overflow-y:auto; gap:14px;">
     <div class="card-title">
-      <span style="font-weight:700; color:var(--text-main); font-size:0.95rem;">🎨 KColor Quick Guide &amp; Shortcuts</span>
+      <span id="helpModalTitle" style="font-weight:700; color:var(--text-main); font-size:0.95rem;">🎨 KColor Quick Guide &amp; Shortcuts</span>
       <button class="copy-btn" id="closeHelpBtn" aria-label="Close Help">✕</button>
     </div>
     <div style="font-size:0.85rem; line-height:1.5; color:var(--text-muted); display:flex; flex-direction:column; gap:10px;">
@@ -462,7 +462,7 @@
         <li>Real-time WCAG 2.1 AA/AAA contrast ratios against white &amp; dark text</li>
         <li>Harmonies generator (Complementary, Analogous, Triadic, Tetradic)</li>
         <li>9-step dynamic Tints &amp; Shades scale</li>
-        <li>Palette library with localStorage persistence, CSS/JSON export, and right-click removal</li>
+        <li>Palette library with localStorage persistence, CSS/JSON export &amp; JSON import</li>
         <li>Previous / current color comparison with one-click revert</li>
       </ul>
       <p><strong style="color:var(--text-main);">Keyboard Shortcuts:</strong></p>
@@ -473,7 +473,11 @@
         <li><kbd style="background:rgba(255,255,255,0.1); padding:2px 5px; border-radius:3px;">R</kbd> — Generate random color</li>
         <li><kbd style="background:rgba(255,255,255,0.1); padding:2px 5px; border-radius:3px;">I</kbd> — Invert active color</li>
         <li><kbd style="background:rgba(255,255,255,0.1); padding:2px 5px; border-radius:3px;">C</kbd> — Copy active HEX code</li>
+        <li><kbd style="background:rgba(255,255,255,0.1); padding:2px 5px; border-radius:3px;">E</kbd> — Activate Eyedropper / Screen sampler</li>
+        <li><kbd style="background:rgba(255,255,255,0.1); padding:2px 5px; border-radius:3px;">+</kbd> / <kbd style="background:rgba(255,255,255,0.1); padding:2px 5px; border-radius:3px;">A</kbd> — Add active color to palette library</li>
+        <li><kbd style="background:rgba(255,255,255,0.1); padding:2px 5px; border-radius:3px;">Z</kbd> / <kbd style="background:rgba(255,255,255,0.1); padding:2px 5px; border-radius:3px;">U</kbd> — Revert / restore previous color</li>
         <li><kbd style="background:rgba(255,255,255,0.1); padding:2px 5px; border-radius:3px;">1</kbd>–<kbd style="background:rgba(255,255,255,0.1); padding:2px 5px; border-radius:3px;">9</kbd> — Quick-select palette swatches 1–9</li>
+        <li><kbd style="background:rgba(255,255,255,0.1); padding:2px 5px; border-radius:3px;">Del</kbd> / <kbd style="background:rgba(255,255,255,0.1); padding:2px 5px; border-radius:3px;">Backspace</kbd> — Remove focused saved swatch</li>
         <li><kbd style="background:rgba(255,255,255,0.1); padding:2px 5px; border-radius:3px;">Esc</kbd> / <kbd style="background:rgba(255,255,255,0.1); padding:2px 5px; border-radius:3px;">Enter</kbd> — Close modal / blur inputs / dismiss toast</li>
       </ul>
     </div>
@@ -674,9 +678,11 @@
     <div class="card">
       <div class="card-title">
         <span>Palette Library (1-9 Hotkeys)</span>
-        <div style="display:flex; gap:6px;">
+        <div style="display:flex; gap:6px; flex-wrap:wrap;">
           <button class="copy-btn" id="exportCssBtn" title="Copy all swatches as CSS variables">Copy CSS</button>
           <button class="copy-btn" id="exportJsonBtn" title="Copy all swatches as JSON array">Copy JSON</button>
+          <button class="copy-btn" id="importJsonBtn" title="Import swatches from JSON file">Import JSON</button>
+          <input type="file" id="importJsonFileInput" accept=".json,application/json" style="display:none;" aria-label="Import JSON Palette File">
           <button class="copy-btn" id="clearSwatchesBtn" aria-label="Clear Saved Swatches">Clear Saved</button>
         </div>
       </div>
@@ -806,6 +812,9 @@
   function parseColorString(str) {
     if (!str) return null;
     str = str.replace(/^--[\w-]+\s*:\s*/, '').replace(/;+$/, '').trim();
+    if (/^0x[0-9a-fA-F]+/i.test(str)) {
+      str = '#' + str.slice(2);
+    }
 
     // 1. Check HEX formats (#RGB, #RGBA, #RRGGBB, #RRGGBBAA)
     const hexMatch = str.match(/^#?([0-9a-fA-F]{3}|[0-9a-fA-F]{4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/);
@@ -826,8 +835,8 @@
       }
     }
 
-    // 2. Check rgb / rgba
-    const rgbMatch = str.match(/^rgba?\s*\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/i);
+    // 2. Check rgb / rgba (supports comma or space separation)
+    const rgbMatch = str.match(/^rgba?\s*\(\s*(\d+)(?:[\s,]+)(\d+)(?:[\s,]+)(\d+)/i);
     if (rgbMatch) {
       return {
         r: clamp(parseInt(rgbMatch[1]), 0, 255),
@@ -836,22 +845,22 @@
       };
     }
 
-    // 3. Check hsl / hsla
-    const hslMatch = str.match(/^hsla?\s*\(\s*(\d+)(?:deg|°)?\s*,\s*(\d+)%?\s*,\s*(\d+)%?/i);
+    // 3. Check hsl / hsla (supports decimals, deg/°, commas/spaces)
+    const hslMatch = str.match(/^hsla?\s*\(\s*([\d.]+)(?:deg|°)?(?:[\s,]+)([\d.]+)%?(?:[\s,]+)([\d.]+)%?/i);
     if (hslMatch) {
-      return hslToRgb(parseInt(hslMatch[1]), parseInt(hslMatch[2]), parseInt(hslMatch[3]));
+      return hslToRgb(parseFloat(hslMatch[1]), parseFloat(hslMatch[2]), parseFloat(hslMatch[3]));
     }
 
     // 4. Check hsv / hsva
-    const hsvMatch = str.match(/^hsva?\s*\(\s*(\d+)(?:deg|°)?\s*,\s*(\d+)%?\s*,\s*(\d+)%?/i);
+    const hsvMatch = str.match(/^hsva?\s*\(\s*([\d.]+)(?:deg|°)?(?:[\s,]+)([\d.]+)%?(?:[\s,]+)([\d.]+)%?/i);
     if (hsvMatch) {
-      return hsvToRgb(parseInt(hsvMatch[1]), parseInt(hsvMatch[2]), parseInt(hsvMatch[3]));
+      return hsvToRgb(parseFloat(hsvMatch[1]), parseFloat(hsvMatch[2]), parseFloat(hsvMatch[3]));
     }
 
     // 5. Check cmyk
-    const cmykMatch = str.match(/^cmyk\s*\(\s*(\d+)%?\s*,\s*(\d+)%?\s*,\s*(\d+)%?\s*,\s*(\d+)%?\s*\)/i);
+    const cmykMatch = str.match(/^cmyk\s*\(\s*([\d.]+)%?(?:[\s,]+)([\d.]+)%?(?:[\s,]+)([\d.]+)%?(?:[\s,]+)([\d.]+)%?\s*\)/i);
     if (cmykMatch) {
-      return cmykToRgb(parseInt(cmykMatch[1]), parseInt(cmykMatch[2]), parseInt(cmykMatch[3]), parseInt(cmykMatch[4]));
+      return cmykToRgb(parseFloat(cmykMatch[1]), parseFloat(cmykMatch[2]), parseFloat(cmykMatch[3]), parseFloat(cmykMatch[4]));
     }
 
     // 6. Canvas fallback for CSS named colors (e.g. coral, dodgerblue, tomato)
@@ -1138,6 +1147,7 @@
       el.onkeydown = (e) => {
         if (e.key === 'Enter' || e.key === ' ') {
           e.preventDefault();
+          capturePrevState();
           state = stepRgb;
           updateAll();
         }
@@ -1206,8 +1216,8 @@
       swatch.tabIndex = 0;
       const isSaved = savedSwatches.includes(hex);
       const hotkeyHint = idx < 9 ? ` [Key ${idx + 1}]` : '';
-      swatch.title = isSaved ? `Swatch ${hex}${hotkeyHint} (Click to select, Right-click to remove)` : `Preset ${hex}${hotkeyHint}`;
-      swatch.setAttribute('aria-label', `Palette Swatch ${hex}${hotkeyHint}`);
+      swatch.title = isSaved ? `Swatch ${hex}${hotkeyHint} (Click to select, Right-click or Del to remove)` : `Preset ${hex}${hotkeyHint}`;
+      swatch.setAttribute('aria-label', `Palette Swatch ${hex}${hotkeyHint}${isSaved ? ', Del to remove' : ''}`);
       swatch.onclick = () => {
         capturePrevState();
         const rgb = parseColorString(hex);
@@ -1226,6 +1236,17 @@
         }
       };
       swatch.onkeydown = (e) => {
+        if (isSaved && (e.key === 'Delete' || e.key === 'Backspace')) {
+          e.preventDefault();
+          const sIdx = savedSwatches.indexOf(hex);
+          if (sIdx !== -1) {
+            savedSwatches.splice(sIdx, 1);
+            safeSetStorage('kcolor_saved_swatches', savedSwatches);
+            renderSwatches();
+            showToast(`Removed ${hex} from library`);
+          }
+          return;
+        }
         if (e.key === 'Enter' || e.key === ' ') {
           e.preventDefault();
           capturePrevState();
@@ -1321,6 +1342,7 @@
   ];
   allSliders.forEach(input => {
     input.addEventListener('pointerdown', capturePrevState);
+    input.addEventListener('focus', capturePrevState);
   });
 
   // RGB Sliders
@@ -1368,10 +1390,26 @@
   });
 
   // Universal Color Direct Input Parser
+  let hexInputFocused = false;
+  customHexInput.addEventListener('focus', () => {
+    if (!hexInputFocused) {
+      capturePrevState();
+      hexInputFocused = true;
+    }
+  });
+  customHexInput.addEventListener('blur', () => {
+    hexInputFocused = false;
+  });
+  customHexInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      customHexInput.blur();
+      showToast(`Active color: ${rgbToHex(state.r, state.g, state.b)}`);
+    }
+  });
   customHexInput.addEventListener('input', () => {
     const parsed = parseColorString(customHexInput.value);
     if (parsed) {
-      capturePrevState();
       state = parsed;
       updateAll('customHexInput');
     }
@@ -1418,13 +1456,13 @@
 
   // Eyedropper API with Native Fallback
   document.getElementById('eyedropperBtn').addEventListener('click', async () => {
+    capturePrevState();
     if ('EyeDropper' in window) {
       try {
         const eyeDropper = new EyeDropper();
         const result = await eyeDropper.open();
         const rgb = parseColorString(result.sRGBHex);
         if (rgb) {
-          capturePrevState();
           state = rgb;
           updateAll();
           showToast(`Sampled ${result.sRGBHex}`);
@@ -1552,11 +1590,58 @@
     });
   }
 
+  // Palette Import
+  const importJsonBtn = document.getElementById('importJsonBtn');
+  const importJsonFileInput = document.getElementById('importJsonFileInput');
+  if (importJsonBtn && importJsonFileInput) {
+    importJsonBtn.addEventListener('click', () => {
+      importJsonFileInput.click();
+    });
+    importJsonFileInput.addEventListener('change', (e) => {
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        try {
+          const data = JSON.parse(ev.target.result);
+          let count = 0;
+          const candidates = Array.isArray(data)
+            ? data
+            : (data && typeof data === 'object' && Array.isArray(data.savedSwatches))
+              ? data.savedSwatches
+              : (data && typeof data === 'object')
+                ? Object.values(data)
+                : [];
+          candidates.forEach(item => {
+            const str = typeof item === 'string' ? item : (item && (item.hex || item.color));
+            const parsed = parseColorString(str);
+            if (parsed) {
+              const hex = rgbToHex(parsed.r, parsed.g, parsed.b);
+              if (!savedSwatches.includes(hex)) {
+                savedSwatches.unshift(hex);
+                count++;
+              }
+            }
+          });
+          if (savedSwatches.length > 24) savedSwatches = savedSwatches.slice(0, 24);
+          safeSetStorage('kcolor_saved_swatches', savedSwatches);
+          renderSwatches();
+          showToast(`Imported ${count} new swatch${count === 1 ? '' : 'es'} from JSON`);
+        } catch (err) {
+          showToast('Failed to parse JSON file');
+        }
+        importJsonFileInput.value = '';
+      };
+      reader.readAsText(file);
+    });
+  }
+
   // Clipboard Helpers
   function copyValue(elementId) {
     const text = document.getElementById(elementId).textContent;
     copyStringToClipboard(text);
   }
+  window.copyValue = copyValue;
 
   function copyStringToClipboard(text) {
     if (navigator.clipboard && window.isSecureContext) {
@@ -1567,6 +1652,7 @@
       fallbackCopy(text);
     }
   }
+  window.copyStringToClipboard = copyStringToClipboard;
 
   function fallbackCopy(text) {
     const ta = document.createElement('textarea');
@@ -1726,6 +1812,17 @@
       e.preventDefault();
       const hex = rgbToHex(state.r, state.g, state.b);
       copyStringToClipboard(hex);
+    } else if (e.key === 'e' || e.key === 'E') {
+      e.preventDefault();
+      const eyeBtn = document.getElementById('eyedropperBtn');
+      if (eyeBtn) eyeBtn.click();
+    } else if (e.key === '+' || e.key === '=' || e.key === 'a' || e.key === 'A') {
+      e.preventDefault();
+      const addBtn = document.getElementById('addSwatchBtn');
+      if (addBtn) addBtn.click();
+    } else if (e.key === 'z' || e.key === 'Z' || e.key === 'u' || e.key === 'U') {
+      e.preventDefault();
+      revertToPrevColor();
     } else if (e.key === 'h' || e.key === 'H' || e.key === '?') {
       e.preventDefault();
       toggleHelp();
