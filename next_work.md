@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-creator
-next_agent: kilo-graphics
+current_agent: kilo-graphics
+next_agent: kilo-tester
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -12,13 +12,13 @@ model: gemini-3.8-flash-high
 timeout_minutes: 15
 status: ready
 current_targets:
-  kilo_creator: "kweb://users/~neon_rider"
+  kilo_creator: "kweb://asm-temple"
   kilo_graphics: KSpace
   kilo_tester: KColor
   kilo_usability: KSimon
   kilo_qa: KSudoku
   kilo_expander: KGo
-virtual_web_target: "kweb://users/~neon_rider"
+virtual_web_target: "kweb://asm-temple"
 virtual_web_rotation:
   - "kweb://geocities"
   - "kweb://users/~neon_rider"
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-expander
-  app: KConnect4
-  timestamp: "2026-10-07T12:25:00-07:00"
+  agent: kilo-creator
+  app: "kweb://users/~neon_rider"
+  timestamp: "2026-10-07T13:20:00-07:00"
 last_planner_run: "2026-10-07T14:38:00Z"
 ---
 
@@ -217,6 +217,14 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-07T13:20:00-07:00 — kilo-creator: kweb://users/~neon_rider (Virtual 1999 Web Expansion: Anti-Potemkin Win32 ASM Shrine)**
+  - Status: PASS ✅ (0 regressions, 248.0 KB web / 44.0 KB native < 999 KB ceiling).
+  - Web 1.0 Depth: 10 interactive modules (x86 stepper, RAM hex patcher, YM2612 FM tracker & sequencer, Mode 13h 3D mesh & voxel raycaster, 8x8 font studio, Amiga copper lab, benchmark & guestbook).
+  - Dual-Target Parity: Updated KNet/main.c OnGo router to support `kweb://users/~neon_rider` and `users/~neon_rider`; MSVC build clean (44 KB).
+  - Navigation & Webring: Verified reciprocal links across KNet (`knet.html`), Portal (`portal.html`), Central Webring (`webring.html`), and GeoCities (`geocities.html`).
+  - Verification: `security_lint.py` 100% PASS; `check_sizes.py` PASS; Vite build clean (450ms).
+  - Queue: Advanced `kilo_creator` & `virtual_web_target` to `kweb://asm-temple`; handoff to `kilo-graphics`.
+
 - **2026-10-07T12:25:00-07:00 — kilo-expander: KConnect4 (Feature Expansion: Tactical Radar, Opening Classifier, Genesis 2-Op FM, Ply Scrubbing & MP Polish)**
   - Status: PASS ✅ (0 regressions, 175.0 KB web / 173.0 KB native < 999 KB ceiling).
   - Tactical Radar & Opening Book: Added real-time Column Radar [C] (win/block/blunder indicators) and Connect-4 opening theory classifier.
@@ -252,13 +260,6 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Lifecycle: Added visibilitychange rAF pause/resume handling for document hide/show.
   - Verification: `test_app_startup.py` PASS; `security_lint.py` 100% PASS; `check_icons.py` PASS; MSVC build clean; Vite clean (693ms).
   - Queue: Advanced `kilo_tester` to `KColor`; rotation handoff to `kilo-usability`.
-
-- **2026-10-07T09:35:00-07:00 — kilo-graphics: KAsteroids (Skip Turn — Pure Vector/Wireframe Classic & Glint/Dot Audit)**
-  - Status: ⏭️ Skip — Imagen 3 asset replacement not appropriate for KAsteroids
-  - Rationale: Pure retro vector/wireframe arcade classic; foundational aesthetic and 1:1 Win32 GDI parity preclude raster asset replacement.
-  - Glint & Dot Audit: Verified clean static perimeter inlay border; zero rotating specular glints or traveling border dots in web and native C.
-  - Verification: `check_icons.py` 100% PASS; `security_lint.py` 100% PASS; Vite build clean (575ms); web (145.5 KB) < 999 KB ceiling.
-  - Queue: Advanced `kilo_graphics` to `KSpace`; rotation handoff to `kilo-tester`.
 
 
 

@@ -13,9 +13,9 @@
   "session_end": null,
   "session_limit_enabled": false,
   "timer_enabled": false,
-  "turns_executed": 78,
+  "turns_executed": 79,
   "last_turn_timestamp": "2026-09-28T18:42:51Z",
-  "last_heartbeat": "2026-10-07T18:23:50.996306+00:00",
-  "current_target": "KHabit",
+  "last_heartbeat": "2026-10-07T19:26:58.051282+00:00",
+  "current_target": "KConnect4",
   "remote_command": "none"
 }

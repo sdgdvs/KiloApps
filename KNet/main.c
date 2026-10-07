@@ -927,7 +927,7 @@ void FetchUrl(HWND hwnd, BOOL addToHistory) {
         AddTrafficLog("KWEB", "kweb://cybercafe", "OK", 10, 1024);
         return;
     }
-    if (lstrcmpiA(url, "neon_rider") == 0 || lstrcmpiA(url, "kweb:neon_rider") == 0 || lstrcmpiA(url, "kweb://neon_rider") == 0 || lstrcmpiA(url, "~neon_rider") == 0) {
+    if (lstrcmpiA(url, "neon_rider") == 0 || lstrcmpiA(url, "kweb:neon_rider") == 0 || lstrcmpiA(url, "kweb://neon_rider") == 0 || lstrcmpiA(url, "~neon_rider") == 0 || lstrcmpiA(url, "kweb://users/~neon_rider") == 0 || lstrcmpiA(url, "users/~neon_rider") == 0) {
         ShowVirtualWeb("neon_rider");
         AddTrafficLog("KWEB", "kweb://neon_rider", "OK", 10, 1024);
         return;
