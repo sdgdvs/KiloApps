@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-creator
-next_agent: kilo-graphics
+current_agent: kilo-graphics
+next_agent: kilo-tester
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -12,13 +12,13 @@ model: gemini-3.8-flash-high
 timeout_minutes: 15
 status: ready
 current_targets:
-  kilo_creator: "kweb://portal"
+  kilo_creator: "kweb://webring"
   kilo_graphics: KColosseum
   kilo_tester: KPong
   kilo_usability: KFreecell
   kilo_qa: KConverter
   kilo_expander: KPac
-virtual_web_target: "kweb://portal"
+virtual_web_target: "kweb://webring"
 virtual_web_rotation:
   - "kweb://geocities"
   - "kweb://users/~neon_rider"
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-expander
-  app: KSolitaire
-  timestamp: "2026-10-06T17:31:00-07:00"
+  agent: kilo-creator
+  app: "kweb://portal"
+  timestamp: "2026-10-06T17:45:00-07:00"
 last_planner_run: "2026-10-06T14:20:00Z"
 ---
 
@@ -102,9 +102,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ### 1. Virtual 1999 Web & ARG Node Creator (`kilo-creator`)
 - **DIRECTOR MANDATE — STANDALONE OS APP CREATION HALTED**: Standalone OS app creation is frozen at 92 native / 99 web apps. All creator turns are now exclusively channeled into building real, interactive Virtual 1999 Web sites (`KiloOS/public/web/`) and ARG mystery nodes per `arg_plan.md`. Zero shallow stubs; every page must be a functioning Web 1.0 experience with working forms, generators, Web Audio, or mini-tools (<999KB).
-- **Current Target**: `kweb://portal`
+- **Current Target**: `kweb://webring`
 - **Upcoming Queue**:
-  `kweb://webring`, `kweb://warez`, `kweb://geocities`, `kweb://users/~neon_rider`, `kweb://asm-temple`, `kweb://cybercafe`, `kweb://10.19.99.4/classified`, `kweb://echo-subsystem.net`, `kweb://deep-core`, `kweb://darknet`
+  `kweb://warez`, `kweb://geocities`, `kweb://users/~neon_rider`, `kweb://asm-temple`, `kweb://cybercafe`, `kweb://10.19.99.4/classified`, `kweb://echo-subsystem.net`, `kweb://deep-core`, `kweb://darknet`, `kweb://portal`
   *(Completed: kweb://geocities, kweb://portal, kweb://cybercafe, kweb://asm-temple, kweb://users/~neon_rider, kweb://darknet, kweb://deep-core, kweb://echo-subsystem.net, kweb://10.19.99.4/classified, kweb://webring, kweb://warez)*.
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
@@ -135,8 +135,8 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Multiplayer Focus (CRITICAL)**: Concentrate on expanding games (*KChess*, *KConnect4*, *KGo*, *KReversi*, *KDarts*, *KTetris*, *KSnake*, *K2048*, *KMatch3*, *KSimon*) and collaborative apps (*KDraw*, *KPaint*, *KSynth*, *KPad*) with seamless Firebase Realtime Database multiplayer for cross-computer play on `kiloapps.web.app`.
 
 ### 7. Virtual 1999 Web Expansion Queue (Eternal Fleet Track)
-- **Current Active Target**: `kweb://portal` (`KiloOS/public/web/portal.html`)
-  - *Next in Rotation*: `kweb://webring` ➔ `kweb://warez` ➔ `kweb://geocities` ➔ `kweb://users/~neon_rider` ➔ `kweb://asm-temple` ➔ `kweb://cybercafe` ➔ `kweb://10.19.99.4/classified` ➔ `kweb://echo-subsystem.net` ➔ `kweb://deep-core` ➔ `kweb://darknet`.
+- **Current Active Target**: `kweb://webring` (`KiloOS/public/web/webring.html`)
+  - *Next in Rotation*: `kweb://warez` ➔ `kweb://geocities` ➔ `kweb://users/~neon_rider` ➔ `kweb://asm-temple` ➔ `kweb://cybercafe` ➔ `kweb://10.19.99.4/classified` ➔ `kweb://echo-subsystem.net` ➔ `kweb://deep-core` ➔ `kweb://darknet` ➔ `kweb://portal`.
 - **Anti-Potemkin Quality Standard**:
   - All 11 Virtual 1999 Web destinations are live, interactive, and feature-complete.
   - See [archive/virtual_web_completed.md](archive/virtual_web_completed.md) for full historical breakdown of completed content mandates across all sites.
@@ -217,6 +217,15 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-06T17:45:00-07:00 — kilo-creator: kweb://portal (Shareware Depot '99, KiloMail Web Express, Tucows 5-Cow Rating & ARG Integration)**
+  - Status: PASS ✅ (0 regressions, 497.7 KB web < 999 KB ceiling).
+  - Shareware Depot '99: Added certified archive with 12+ packages, 5-Cow ratings, category filtering, user submissions, and full NFO reader.
+  - File Download Engine: Integrated Win98 transfer modal, animated paper flight, dialup speed emulator (14.4k-T1), and real Blob disk saving.
+  - KiloMail Web Express '99: Added free 2MB webmail simulator with folder navigation, compose modal, simulated SMTP handshake, and drafts.
+  - ARG & Diegetic Telemetry: Integrated Carlsbad SIGINT suite (0x7F1999 offset, 1999Hz subcarrier NFO) and automated echo-daemon email bounce.
+  - Verification: Vite clean (390ms); security_lint 100% PASS; webring registry synchronized.
+  - Queue: Advanced `kilo_creator` and `virtual_web_target` to `kweb://webring`; rotation advanced to `kilo-graphics`.
+
 - **2026-10-06T17:31:00-07:00 — kilo-expander: KSolitaire (RFMS Duel Arena, Replay Studio, Deal Numbers, Mandate 11 Glint/Dust Ban)**
   - Status: PASS ✅ (0 regressions, 152.7 KB web / 49.1 KB native < 999 KB ceiling).
   - Online Multiplayer: Added Cyber Duel Arena with RFMS matchmaking, 25s CyberBot solo fallback, live duel HUD, chat taunts, and URL room invites.
@@ -252,10 +261,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Glint & Dust Ban: Removed traveling specular sheen sweep on blocks and disabled dust motes per Mandate 11 / Directive 177.
   - Verification: `test_app_startup.py` PASS; `test_web_apps.js` PASS (20 interactive elements, 0 errors); Vite clean (359ms); web (187.6 KB) < 999 KB ceiling; security_lint 100% PASS.
   - Queue: Advanced `kilo_tester` to `KPong`; rotation advanced to `kilo-usability`.
-
-- **2026-10-06T16:05:00-07:00 — kilo-graphics: KRogue (Skip Turn — Genre Inappropriateness & Glint/Dot Audit)**
-  - Status: ⏭️ Skip — Imagen 3 asset replacement not appropriate for KRogue
-  - Rationale: Text-mode/ASCII roguelike heritage; cell-based terminal runes and GDI character rendering are core to genre aesthetic.
-  - Glint & Dot Audit: Verified static gothic RPG filigree inlay with 0 traveling perimeter dots or rotating specular glints in web and native C.
-  - Verification: `scripts/check_icons.py` 100% PASS; `scripts/security_lint.py` 100% PASS; MSVC clean (`KRogue.exe` 81.4 KB); Vite clean (345ms); web (262.0 KB) < 999 KB ceiling.
-  - Queue: Advanced `kilo_graphics` to `KColosseum`; rotation advanced to `kilo-tester`.
