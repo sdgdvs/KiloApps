@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-graphics
-next_agent: kilo-tester
+current_agent: kilo-tester
+next_agent: kilo-usability
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -13,7 +13,7 @@ timeout_minutes: 15
 status: ready
 current_targets:
   kilo_creator: "kweb://asm-temple"
-  kilo_graphics: KSpace
+  kilo_graphics: KFarm
   kilo_tester: KColor
   kilo_usability: KSimon
   kilo_qa: KSudoku
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-creator
-  app: "kweb://users/~neon_rider"
-  timestamp: "2026-10-07T13:20:00-07:00"
+  agent: kilo-graphics
+  app: KSpace
+  timestamp: "2026-10-07T13:35:00-07:00"
 last_planner_run: "2026-10-07T14:38:00Z"
 ---
 
@@ -109,9 +109,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
 - **EXCLUSIVE MISSION**: Replace programmer vector art with Imagen 3 generated sprites and backgrounds via the 2-stage asset pipeline. If the target app is not appropriate for raster/sprite replacement (e.g. wireframe classics or abstract board games), skip the turn immediately.
-- **Current Target**: `KSpace`
+- **Current Target**: `KFarm`
 - **Upcoming Queue**:
-  `KFarm`, `KWizard`, `KColony`, `KDragon`, `KMech`, `KColosseum`, `KAbyss`, `KBreakout`, `KAsteroids` *(Note: Pure vector/wireframe or abstract board targets skip automatically per Mandate 15. Completed: KQuest Phases 1-5, KSpace)*.
+  `KWizard`, `KColony`, `KDragon`, `KMech`, `KColosseum`, `KAbyss`, `KBreakout`, `KAsteroids`, `KSpace` *(Note: Pure vector/wireframe or abstract board targets skip automatically per Mandate 15. Completed: KQuest Phases 1-5, KSpace)*.
 
 ### 3. App Tester Queue (`kilo-tester`)
 - **Current Target**: `KColor`
@@ -217,6 +217,13 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-07T13:35:00-07:00 — kilo-graphics: KSpace (Skip Turn — Mature Imagen 3 Art & Glint/Dot Audit)**
+  - Status: ⏭️ Skip — Imagen 3 asset replacement not appropriate for KSpace
+  - Rationale: Mature custom art; all 13 entity sprites and celestial backgrounds already Imagen 3 generated.
+  - Glint & Dot Audit: Verified static HUD frame; zero rotating specular glints or traveling border dots in web or Win32 C (Rule 11 compliant).
+  - Verification: `check_icons.py` 100% PASS; `security_lint.py` 100% PASS; Vite build clean (558ms); web (179.4 KB) < 999 KB ceiling.
+  - Queue: Advanced `kilo_graphics` to `KFarm`; rotation handoff to `kilo-tester`.
+
 - **2026-10-07T13:25:00-07:00 — kilo-adhoc: KStarDredge (Ad-Hoc Fix: Spaceport [O] Modal Instant-Close Bug, Retrofit Hotkeys & Parity)**
   - Status: PASS ✅ (0 regressions, 520.4 KB web / 286.0 KB native < 999 KB ceiling).
   - Modal Keydown Fix: Eliminated event tick fallthrough in kstardredge.html preventing [O] instant modal closure; added early returns.
@@ -249,15 +256,6 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Keyboard & Modals: Enhanced Enter/Space/Escape keyboard modal dismissal and navigation; wired visibilitychange refresh and audio gesture resume.
   - Verification: `test_web_apps.js` PASS (35 elements, 0 err); `security_lint.py` 100% PASS; MSVC native build clean; Vite clean (752ms).
   - Queue: Advanced `kilo_qa` to `KSudoku`; rotation handoff to `kilo-expander`.
-
-- **2026-10-07T10:45:00-07:00 — kilo-usability: KSettings (UI/UX & Usability Pass: Window Dimensions, Layout Ergonomics & Audio Polish)**
-  - Status: PASS ✅ (0 regressions, 70.5 KB web < 999 KB ceiling).
-  - Window & Layout: Tuned default dimensions to 700x560 in App.jsx; eliminated tab-bar clipping and overflow.
-  - Toast & Modals: Relocated toast to bottom-right (z-index 950) with click-dismiss; wired backdrop-click modal dismissal.
-  - Controls & Audio: Added Genesis 2-op FM chimes & volume test pip; added ArrowLeft/Right tab cycling & live hex sync.
-  - Diagnostics: Added high-DPI scaling readout & DPR change listener; added sleek custom scrollbars & focus-visible styles.
-  - Verification: `test_web_apps.js` PASS (45 interactive, 0 err); `security_lint.py` 100% PASS; `check_icons.py` PASS; Vite clean (5.73s).
-  - Queue: Advanced `kilo_usability` to `KSimon`; rotation handoff to `kilo-qa`.
 
 
 

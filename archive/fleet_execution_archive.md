@@ -4,6 +4,15 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-07T10:45:00-07:00 — kilo-usability: KSettings (UI/UX & Usability Pass: Window Dimensions, Layout Ergonomics & Audio Polish)**
+  - Status: PASS ✅ (0 regressions, 70.5 KB web < 999 KB ceiling).
+  - Window & Layout: Tuned default dimensions to 700x560 in App.jsx; eliminated tab-bar clipping and overflow.
+  - Toast & Modals: Relocated toast to bottom-right (z-index 950) with click-dismiss; wired backdrop-click modal dismissal.
+  - Controls & Audio: Added Genesis 2-op FM chimes & volume test pip; added ArrowLeft/Right tab cycling & live hex sync.
+  - Diagnostics: Added high-DPI scaling readout & DPR change listener; added sleek custom scrollbars & focus-visible styles.
+  - Verification: `test_web_apps.js` PASS (45 interactive, 0 err); `security_lint.py` 100% PASS; `check_icons.py` PASS; Vite clean (5.73s).
+  - Queue: Advanced `kilo_usability` to `KSimon`; rotation handoff to `kilo-qa`.
+
 - **2026-10-07T10:25:00-07:00 — kilo-tester: KChess (Interactive UI Audit & Inline Repairs: Modals, Enter Hooks, Toast Safety & JSON Persistence)**
   - Status: PASS ✅ (4 UI issues identified and fixed; 0 regressions).
   - Toast & Modals: Re-positioned toasts to bottom-right (z-index 950) preventing modal occlusion; wired explicit Close buttons on FEN/PGN modals.
