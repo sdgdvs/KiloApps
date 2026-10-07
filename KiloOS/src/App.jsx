@@ -66,7 +66,7 @@ const APPS = [
   { id: 'kread', title: 'KRead', url: '/apps/kread.html', exeUrl: '/exe/KRead.exe', icon: '/assets/icons/kread.ico', w: 940, h: 680, folder: 'System' },
   { id: 'kbase', title: 'KBase', url: '/apps/kbase.html', exeUrl: '/exe/KBase.exe', icon: '/assets/icons/kbase.ico', w: 900, h: 600, folder: 'System' },
   { id: 'kquarantine', title: 'Q̷u̷a̷r̷a̷n̷t̷i̷n̷e̷', url: '#', exeUrl: null, icon: '/assets/icons/kquarantine.ico', w: 300, h: 200, folder: 'Hidden' },
-  { id: 'ksettings', title: 'Settings', url: '/apps/ksettings.html', exeUrl: null, icon: '/assets/icons/ksettings.ico', w: 600, h: 500, folder: 'System' },
+  { id: 'ksettings', title: 'Settings', url: '/apps/ksettings.html', exeUrl: null, icon: '/assets/icons/ksettings.ico', w: 700, h: 560, folder: 'System' },
   { id: 'ktaskmgr', title: 'Task Manager', url: '/apps/ktaskmgr.html', exeUrl: null, icon: '/assets/icons/ktaskmgr.ico', w: 650, h: 500, folder: 'System' },
   { id: 'kvault', title: 'KVault', url: '/apps/kvault.html', exeUrl: '/exe/KVault.exe', icon: '/assets/icons/kvault.ico', w: 900, h: 660, folder: 'System' },
   { id: 'kjournal', title: 'KJournal', url: '/apps/kjournal.html', exeUrl: '/exe/KJournal.exe', icon: '/assets/icons/kjournal.ico', w: 1100, h: 750, folder: 'Office' },

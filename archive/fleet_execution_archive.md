@@ -4,6 +4,15 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-07T05:25:00-07:00 — kilo-qa: KTaskMgr (Pass 5 QA & Build Audit: State Persistence, Tutorial Integrity & Origin Validation)**
+  - Status: PASS ✅ (0 regressions, 43.1 KB web < 999 KB ceiling).
+  - State Persistence: Implemented F5 quicksave snapshot and F9 quickload capturing complete process data and user settings.
+  - Tutorial & Help: Added accessible Welcome Onboarding modal (`ktaskmgr_tutorialSeen`) and Help shortcuts guide (`[F1/H]`).
+  - Overlay & Controls: Added non-occluding click-dismiss toast system, Esc/Enter modal dismiss, and toolbar Save/Load buttons.
+  - Security & Standards: Added postMessage origin validation, storage quota guards (`safeSetStorage`), and lifecycle cleanup.
+  - Verification: `test_web_apps.js` PASS (27 elements, 1 btn, 0 err); `security_lint.py` 100% PASS; `check_icons.py` PASS; Vite clean (441ms).
+  - Queue: Advanced `kilo_qa` to `KHabit`; rotation handoff to `kilo-expander`.
+
 - **2026-10-07T03:45:00-07:00 — kilo-tester: KSolitaire (Interactive UI Audit & Inline Fixes)**
   - Status: PASS ✅ (3 issues fixed, 155.4 KB web / 38.0 KB native < 999 KB ceiling).
   - Modal Stacking & Focus: Added `closeAllModals()` to prevent multi-dialog overlap; added auto-focus hooks across all 5 dialogs.
