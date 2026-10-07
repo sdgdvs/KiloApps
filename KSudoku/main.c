@@ -66,8 +66,12 @@ void TriggerScreenShake(int intensity) {
     }
 }
 
-HWND hBtnNew, hBtnNotes, hBtnValidate, hBtnHint, hBtnUndo, hBtnRedo, hBtnSettings, hBtnAutoFill, hBtnCampaign, hBtnMagic, hBtnShield, hBtnFreeze, hBtnRush;
+HWND hBtnNew, hBtnNotes, hBtnValidate, hBtnHint, hBtnUndo, hBtnRedo, hBtnSettings, hBtnAutoFill, hBtnCampaign, hBtnMagic, hBtnShield, hBtnFreeze, hBtnRush, hBtnHelp;
 HFONT hFont, hFontSmall, hFontTiny;
+
+void ShowHelpDialog(HWND hwnd);
+void QuickSaveGame(HWND hwnd);
+int QuickLoadGame(HWND hwnd);
 
 typedef struct {
     int theme;
@@ -715,6 +719,117 @@ void UpdatePowerupButtons() {
     }
 }
 
+void ShowHelpDialog(HWND hwnd) {
+    const char* helpText =
+        "=== KSUDOKU GUIDE & CONTROLS ===\n\n"
+        "GOAL:\n"
+        "Fill every row, column, and block with unique digits (1-9 or hex 1-G).\n\n"
+        "CONTROLS & SHORTCUTS:\n"
+        "- 1-9 / A-G: Place number / hex digit\n"
+        "- Backspace / Delete / 0: Clear cell or pencil notes\n"
+        "- Arrow Keys / Left Click: Select grid cell\n"
+        "- P: Auto-fill valid candidate notes\n"
+        "- N: Toggle Pencil Notes mode\n"
+        "- H: Smart Hint (-150 pts)\n"
+        "- W: Magic Wand random solve (+50 pts)\n"
+        "- S: Mistake Shield power-up\n"
+        "- F: Time Freeze power-up (20s)\n"
+        "- Ctrl+Z / Ctrl+Y: Undo / Redo move\n"
+        "- F5 / F9: Quicksave / Quickload game state\n"
+        "- F1: Open this Help manual\n\n"
+        "GAME MODES:\n"
+        "- New: Classic Sudoku (Easy, Medium, Hard)\n"
+        "- Campaign: 20 progressive challenge stages with fog & cages\n"
+        "- Rush: Beat the countdown timer with time bonuses\n"
+        "- Daily: Seeded daily challenge matching calendar date\n";
+    MessageBoxA(hwnd, helpText, "KSudoku - How to Play & Controls", MB_OK | MB_ICONINFORMATION);
+}
+
+void QuickSaveGame(HWND hwnd) {
+    if (!gameActive) {
+        MessageBoxA(hwnd, "No active game to save!", "Quicksave", MB_OK | MB_ICONEXCLAMATION);
+        return;
+    }
+    SaveGameState();
+    FILE *fsrc = fopen("ksudoku_save.dat", "rb");
+    if (fsrc) {
+        FILE *fdst = fopen("ksudoku_quicksave.dat", "wb");
+        if (fdst) {
+            char buf[512];
+            size_t n;
+            while ((n = fread(buf, 1, sizeof(buf), fsrc)) > 0) {
+                fwrite(buf, 1, n, fdst);
+            }
+            fclose(fdst);
+        }
+        fclose(fsrc);
+    }
+    PlaySudokuSound(5);
+    SetWindowTextA(hwnd, "KSudoku - ★ QUICK-SAVE RECORDED (F5)");
+    SetTimer(hwnd, 3, 2000, NULL);
+}
+
+int QuickLoadGame(HWND hwnd) {
+    FILE *f = fopen("ksudoku_quicksave.dat", "rb");
+    if (!f) f = fopen("ksudoku_save.dat", "rb");
+    if (!f) {
+        MessageBoxA(hwnd, "No save data found!", "Quickload", MB_OK | MB_ICONEXCLAMATION);
+        return 0;
+    }
+    GameState state;
+    if (fread(&state, sizeof(GameState), 1, f) == 1 && state.gameActive) {
+        gridSize = state.gridSize > 0 ? state.gridSize : 9;
+        boxW = state.boxW > 0 ? state.boxW : 3;
+        boxH = state.boxH > 0 ? state.boxH : 3;
+        num_cages = state.num_cages;
+
+        for(int r=0; r<gridSize; r++) {
+            for(int c=0; c<gridSize; c++) {
+                board[r][c] = state.board[r][c];
+                solution[r][c] = state.solution[r][c];
+                fixed[r][c] = state.fixed[r][c];
+                awarded[r][c] = state.awarded[r][c];
+                fog_cells[r][c] = state.fog_cells[r][c];
+                cage_id[r][c] = state.cage_id[r][c];
+                cage_is_topleft[r][c] = state.cage_is_topleft[r][c];
+                error_cells[r][c] = 0;
+                for(int i=0; i<=16; i++) notes[r][c][i] = state.notes[r][c][i];
+            }
+        }
+        for(int k=0; k<=num_cages; k++) cage_sum[k] = state.cage_sum[k];
+
+        elapsedTime = state.elapsedTime;
+        freezeTime = state.freezeTime;
+        score = state.score;
+        currentDiffIdx = state.currentDiffIdx;
+        gameActive = 1;
+        isDailyGame = state.isDailyGame;
+        isCampaignMode = state.isCampaignMode;
+        campaignStage = state.campaignStage;
+        magicWands = state.magicWands;
+        shields = state.shields;
+        shieldActive = state.shieldActive;
+        freezeCharges = state.freezeCharges;
+        strikes = state.strikes;
+        isRushMode = state.isRushMode;
+        timerActive = 1;
+        undoCount = 0;
+        redoCount = 0;
+        fclose(f);
+
+        SaveGameState();
+        UpdatePowerupButtons();
+        PlaySudokuSound(3);
+        SetWindowTextA(hwnd, "KSudoku - ★ QUICK-SAVE LOADED (F9)");
+        SetTimer(hwnd, 3, 2000, NULL);
+        InvalidateRect(hwnd, NULL, TRUE);
+        return 1;
+    }
+    fclose(f);
+    MessageBoxA(hwnd, "Corrupted save file!", "Quickload", MB_OK | MB_ICONERROR);
+    return 0;
+}
+
 int IsValidPlacement(int r, int c, int num) {
     for(int i=0; i<gridSize; i++) {
         if(i != c && board[r][i] == num) return 0;
@@ -1173,11 +1288,22 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             LoadDailyStats();
             LoadCampaignStats();
             LoadPrefs();
-            if(!LoadGameState()) {
+            int loadedSave = LoadGameState();
+            if(!loadedSave) {
                 currentDiffIdx = 1;
                 stats[currentDiffIdx].played++;
                 SaveStats();
                 GenerateBoardEx(9, 40, 0, 0, 0, 0);
+
+                // Auto-show tutorial guide only on fresh session (never interrupting restored save)
+                FILE *ftut = fopen("ksudoku_tutorialSeen.dat", "rb");
+                if(!ftut) {
+                    FILE *fout = fopen("ksudoku_tutorialSeen.dat", "wb");
+                    if(fout) { fputc(1, fout); fclose(fout); }
+                    ShowHelpDialog(hwnd);
+                } else {
+                    fclose(ftut);
+                }
             }
             HWND hComboDifficulty = CreateWindowA("COMBOBOX", "", WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST | WS_VSCROLL, 10, 8, 65, 100, hwnd, (HMENU)4, NULL, NULL);
             SendMessageA(hComboDifficulty, CB_ADDSTRING, 0, (LPARAM)"Easy");
@@ -1191,6 +1317,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             HWND hBtnDaily = CreateWindowA("BUTTON", "Daily", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 245, 8, 40, 28, hwnd, (HMENU)10, NULL, NULL);
             HWND hBtnStats = CreateWindowA("BUTTON", "Stats", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 290, 8, 45, 28, hwnd, (HMENU)6, NULL, NULL);
             hBtnSettings = CreateWindowA("BUTTON", "Settings", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 340, 8, 55, 28, hwnd, (HMENU)9, NULL, NULL);
+            hBtnHelp = CreateWindowA("BUTTON", "Help (F1)", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 400, 8, 65, 28, hwnd, (HMENU)17, NULL, NULL);
             
             hBtnNotes = CreateWindowA("BUTTON", "Notes: OFF", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 10, 40, 65, 28, hwnd, (HMENU)3, NULL, NULL);
             hBtnValidate = CreateWindowA("BUTTON", "Validate", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 80, 40, 50, 28, hwnd, (HMENU)2, NULL, NULL);
@@ -1285,6 +1412,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 }
                 SaveGameState();
                 InvalidateRect(hwnd, NULL, TRUE);
+            } else if (wParam == 3) {
+                KillTimer(hwnd, 3);
+                SetWindowTextA(hwnd, "KSudoku");
             }
             break;
         }
@@ -1490,12 +1620,18 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     ShowWindow(hSettingsWnd, SW_SHOW);
                 }
                 SetFocus(hSettingsWnd);
+            } else if (LOWORD(wParam) == 17) { // Help (F1)
+                ShowHelpDialog(hwnd);
                 return 0;
             }
             SetFocus(hwnd);
             break;
         }
         case WM_KEYDOWN: {
+            if (wParam == VK_F1) { ShowHelpDialog(hwnd); return 0; }
+            if (wParam == VK_F5) { QuickSaveGame(hwnd); return 0; }
+            if (wParam == VK_F9) { QuickLoadGame(hwnd); return 0; }
+
             if(sel_r == -1) sel_r = 0, sel_c = 0;
             else {
                 if(wParam == VK_UP) sel_r = max(0, sel_r - 1);
@@ -1785,14 +1921,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     if(r == sel_r && c == sel_c) {
                         cellBg = CreateSolidBrush(RGB(37, 99, 235));
                     } else if(sel_r >= 0 && (r == sel_r || c == sel_c || (r/boxH == sel_r/boxH && c/boxW == sel_c/boxW))) {
-                        DWORD tc = GetTickCount();
-                        float wave = (sinf((tc % 2500) / 2500.0f * 3.14159f * 2.0f - (r + c) * 0.3f) + 1.0f) * 0.5f;
-                        COLORREF baseHl = themes[prefs.theme][T_HL];
-                        int r_c = GetRValue(baseHl) + (int)(45 * wave);
-                        int g_c = GetGValue(baseHl) + (int)(55 * wave);
-                        int b_c = GetBValue(baseHl) + (int)(70 * wave);
-                        if(r_c>255) r_c=255; if(g_c>255) g_c=255; if(b_c>255) b_c=255;
-                        cellBg = CreateSolidBrush(RGB(r_c, g_c, b_c));
+                        cellBg = CreateSolidBrush(themes[prefs.theme][T_HL]);
                     } else if(prefs.highlightSame && highlight_val && board[r][c] == highlight_val) {
                         cellBg = CreateSolidBrush(themes[prefs.theme][T_HL]);
                     } else if(cage_id[r][c] > 0) {
@@ -1847,27 +1976,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         DeleteObject(hErrPen);
                     }
 
-                    // Selected Aura
+                    // Selected Cell Border
                     if(r == sel_r && c == sel_c) {
-                        DWORD tc = GetTickCount();
-                        float pulse = (sinf((tc % 1500) / 1500.0f * 3.14159f * 2.0f) + 1.0f) * 0.5f;
-                        int ext = 2 + (int)(4.0f * pulse);
-                        HPEN hSelPen = CreatePen(PS_SOLID, 2, RGB((int)(147 + 50*pulse), (int)(197 + 50*pulse), 253));
+                        HPEN hSelPen = CreatePen(PS_SOLID, 2, RGB(147, 197, 253));
                         oldPen = (HPEN)SelectObject(hdcMem, hSelPen);
                         HBRUSH hNullB = (HBRUSH)GetStockObject(NULL_BRUSH);
                         HBRUSH oldB = (HBRUSH)SelectObject(hdcMem, hNullB);
-                        // Dynamic drop-shadow
-                        for (int i=1; i<=ext; i++) {
-                            int rCol = (int)(59 * (1.0f - i/(float)ext));
-                            int gCol = (int)(130 * (1.0f - i/(float)ext));
-                            int bCol = (int)(246 * (1.0f - i/(float)ext));
-                            HPEN hShad = CreatePen(PS_SOLID, 1, RGB(rCol, gCol, bCol));
-                            HPEN o = (HPEN)SelectObject(hdcMem, hShad);
-                            Rectangle(hdcMem, rc.left - i, rc.top - i, rc.right + i, rc.bottom + i);
-                            SelectObject(hdcMem, o);
-                            DeleteObject(hShad);
-                        }
-                        
                         Rectangle(hdcMem, rc.left, rc.top, rc.right, rc.bottom);
                         SelectObject(hdcMem, oldB);
                         SelectObject(hdcMem, oldPen);

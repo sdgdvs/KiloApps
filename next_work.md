@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-creator
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -16,7 +16,7 @@ current_targets:
   kilo_graphics: KFarm
   kilo_tester: KTimer
   kilo_usability: KSnake
-  kilo_qa: KSudoku
+  kilo_qa: KConnect4
   kilo_expander: KGo
 virtual_web_target: "kweb://asm-temple"
 virtual_web_rotation:
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-usability
-  app: KSimon
-  timestamp: "2026-10-07T15:25:00-07:00"
+  agent: kilo-qa
+  app: KSudoku
+  timestamp: "2026-10-07T16:25:00-07:00"
 last_planner_run: "2026-10-07T14:38:00Z"
 ---
 
@@ -124,9 +124,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KSolitaire`, `KSudoku`, `KTetris`, `KWords`, `KBBS`, `KCalendar`, `KChess`, `KFreecell`, `KMatch3`, `KPong`, `KSimon` *(Completed: KCalc, KPomodoro, KTimer, KClock, KHash, KMystery, KMandel, KFont, KPing, KAudio, KSynth, KScript, KRead, KRadio, KSys, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KChrono, KTask, KStarForge, KPad, KBookmark, KRSS, KClip, KHex, KHabit, KFarm, KPaint, KGraph, KImage, KJournal, KMail, KMedia, KNet, KNote, KPass, KMine, KBBS, KCalendar, KChart, KColor, KChess, KConnect4, KConverter, KFreecell, KHangman, KMatch3, KPong, KSettings, KSimon)*.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
-- **Current Target**: `KSudoku`
+- **Current Target**: `KConnect4`
 - **Upcoming Queue**:
-  `KConnect4`, `KHangman`, `KSimon`, `KAsteroids`, `KFreecell`, `KMatch3`, `KWords`, `KGo`, `KDarts`, `KTowers`, `KReversi`, `KAlchemy`, `KColony`, `KStarForge`, `KBreakout`, `KRogue`, `KTetris`, `KPong`, `KPac`, `KChess`, `KColor`, `KConverter`, `KHabit` *(Completed in Pass 5: KBBS, KChrono, KCipher, KClip, KCyber, KDragon, KFortress, KHash, KMaze, KMech, KMystery, KQuest, KSanctuary, KSnake, KSolitaire, KSpace, KStarDredge, KStarship, KStellar, KSubmarine, KSynth, KSys, KTask, KTerm, KTimer, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KRSS, K2048, KChart, KGraph, KContacts, KScript, KRead, KColosseum, KAbyss, KMedia, KAudio, KRadio, KPad, KPaint, KCalc, KMine, KCosmic, KBase, KBudget, KCalendar, KFarm, KFlash, KFont, KImage, KJournal, KMail, KMandel, KNet, KNote, KPass, KDB, KHex, KBookmark, KPing, KChat, KClock, KPomodoro, KBreakout, KRogue, KTetris, KPong, KPac, KChess, KColor, KConverter, KQuarantine, KSettings, KTaskMgr, KHabit)*.
+  `KHangman`, `KSimon`, `KAsteroids`, `KFreecell`, `KMatch3`, `KWords`, `KGo`, `KDarts`, `KTowers`, `KReversi`, `KAlchemy`, `KColony`, `KStarForge`, `KBreakout`, `KRogue`, `KTetris`, `KPong`, `KPac`, `KChess`, `KColor`, `KConverter`, `KHabit` *(Completed in Pass 5: KBBS, KChrono, KCipher, KClip, KCyber, KDragon, KFortress, KHash, KMaze, KMech, KMystery, KQuest, KSanctuary, KSnake, KSolitaire, KSpace, KStarDredge, KStarship, KStellar, KSubmarine, KSynth, KSys, KTask, KTerm, KTimer, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KRSS, K2048, KChart, KGraph, KContacts, KScript, KRead, KColosseum, KAbyss, KMedia, KAudio, KRadio, KPad, KPaint, KCalc, KMine, KCosmic, KBase, KBudget, KCalendar, KFarm, KFlash, KFont, KImage, KJournal, KMail, KMandel, KNet, KNote, KPass, KDB, KHex, KBookmark, KPing, KChat, KClock, KPomodoro, KBreakout, KRogue, KTetris, KPong, KPac, KChess, KColor, KConverter, KQuarantine, KSettings, KTaskMgr, KHabit, KSudoku)*.
 
 ### 6. Feature Expander Queue (`kilo-expander`)
 - **Current Target**: `KGo`
@@ -217,6 +217,16 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-07T16:25:00-07:00 — kilo-qa: KSudoku (Pass 5: Tutorial & State Integrity, Quicksave/Load Parity, Rule 11 Clean Borders)**
+  - Status: PASS ✅ (0 regressions, 193.1 KB web / 46.1 KB native < 999 KB ceiling).
+  - State Persistence: Implemented F5 quicksave and F9 quickload parity across web and Win32 C with title feedback.
+  - Tutorial Integrity: Guarded first-run tutorial to only show on fresh sessions, never interrupting restored saves.
+  - UI & Controls: Added F1 help hotkey, toolbar Help button, and Esc/Enter/Space modal dismiss without background clicks.
+  - Visual Polish: Removed traveling glint animation and sine waves from cell highlighting (Rule 11 compliant).
+  - Storage Safety: Wrapped all web storage access with try/catch helpers; tagged ARG relay with `// ARG: intentional`.
+  - Verification: `security_lint.py` 100% PASS; `test_web_apps.js` PASS (107/107); MSVC native clean; Vite clean (675ms).
+  - Queue: Advanced `kilo_qa` to `KConnect4`; rotation handoff to `kilo-expander`.
+
 - **2026-10-07T15:25:00-07:00 — kilo-usability: KSimon (UI/UX Pass: Window Dimensions, HiDPI Retina Canvas, Modal Dismissal & Toast Safety)**
   - Status: PASS ✅ (0 regressions, 121.7 KB web / 145.4 KB native < 999 KB ceiling).
   - Window & Layout: Tuned default dimensions to 600x740 in App.jsx; eliminated vertical clipping and awkward scrollbars.
@@ -249,14 +259,6 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Docking Parity & Hotkeys: Unified docking range check to <=300m in both web and native C; added [8] and [9] combat retrofit/ammo hotkeys.
   - Verification: Security linter 100% PASS; MSVC native build clean (KStarDredge.exe 286 KB); Vite clean (index.html 0.71 kB, built in 1.01s).
   - Rotation: Ad-hoc maintenance pass; fleet queues and rotation state preserved without disruption.
-
-- **2026-10-07T13:20:00-07:00 — kilo-creator: kweb://users/~neon_rider (Virtual 1999 Web Expansion: Anti-Potemkin Win32 ASM Shrine)**
-  - Status: PASS ✅ (0 regressions, 248.0 KB web / 44.0 KB native < 999 KB ceiling).
-  - Web 1.0 Depth: 10 interactive modules (x86 stepper, RAM hex patcher, YM2612 FM tracker & sequencer, Mode 13h 3D mesh & voxel raycaster, 8x8 font studio, Amiga copper lab, benchmark & guestbook).
-  - Dual-Target Parity: Updated KNet/main.c OnGo router to support `kweb://users/~neon_rider` and `users/~neon_rider`; MSVC build clean (44 KB).
-  - Navigation & Webring: Verified reciprocal links across KNet (`knet.html`), Portal (`portal.html`), Central Webring (`webring.html`), and GeoCities (`geocities.html`).
-  - Verification: `security_lint.py` 100% PASS; `check_sizes.py` PASS; Vite build clean (450ms).
-  - Queue: Advanced `kilo_creator` & `virtual_web_target` to `kweb://asm-temple`; handoff to `kilo-graphics`.
 
 
 

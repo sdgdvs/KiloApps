@@ -616,25 +616,9 @@
             border: 1px solid #93c5fd;
         }
 
-        @keyframes highlightPulseGlint {
-            0% { 
-                background-position: 200% center; 
-                box-shadow: inset 0 0 8px rgba(59, 130, 246, 0.3);
-            }
-            50% { 
-                box-shadow: inset 0 0 18px rgba(59, 130, 246, 0.65);
-            }
-            100% { 
-                background-position: -200% center; 
-                box-shadow: inset 0 0 8px rgba(59, 130, 246, 0.3);
-            }
-        }
-
         .cell.highlight {
-            background: linear-gradient(120deg, rgba(59, 130, 246, 0.25) 0%, rgba(147, 197, 253, 0.45) 50%, rgba(30, 64, 112, 0.25) 100%);
-            background-size: 300% 300%;
-            animation: highlightPulseGlint 3s infinite linear;
-            border-color: rgba(59, 130, 246, 0.4);
+            background: rgba(59, 130, 246, 0.28);
+            border-color: rgba(59, 130, 246, 0.5);
         }
 
         .cell.error {
@@ -1135,7 +1119,7 @@
                     <li><strong>N / Space:</strong> Toggle Pencil Notes mode</li>
                     <li><strong>Ctrl+Z / Ctrl+Y:</strong> Undo / Redo</li>
                     <li><strong>F5 / F9:</strong> Quicksave / Quickload</li>
-                    <li><strong>? / M:</strong> Toggle this Help manual</li>
+                    <li><strong>F1 / ? / M:</strong> Toggle this Help manual</li>
                     <li><strong>Esc:</strong> Close modal, HUD, or deselect cell</li>
                 </ul>
             </div>
@@ -1348,7 +1332,31 @@
         let awarded = [];
         let originalBoard = [];
 
-        let stats = JSON.parse(localStorage.getItem('ksudoku_stats')) || {
+        // Safe Storage Helpers (Quality Standards Rule 2)
+        function safeGet(key, fallback) {
+            try {
+                const item = localStorage.getItem(key);
+                return item ? JSON.parse(item) : fallback;
+            } catch { return fallback; }
+        }
+        function safeSet(key, value) {
+            try { localStorage.setItem(key, JSON.stringify(value)); }
+            catch (e) { console.warn('[KSudoku] Storage write failed:', e.message); }
+        }
+        function safeGetRaw(key, fallback = null) {
+            try { return localStorage.getItem(key) ?? fallback; }
+            catch { return fallback; }
+        }
+        function safeSetRaw(key, val) {
+            try { localStorage.setItem(key, val); }
+            catch (e) { console.warn('[KSudoku] Storage write failed:', e.message); }
+        }
+        function safeRemove(key) {
+            try { localStorage.removeItem(key); }
+            catch (e) { console.warn('[KSudoku] Storage remove failed:', e.message); }
+        }
+
+        let stats = safeGet('ksudoku_stats', {
             30: { played: 0, won: 0, bestTime: Infinity, bestScore: 0 },
             40: { played: 0, won: 0, bestTime: Infinity, bestScore: 0 },
             50: { played: 0, won: 0, bestTime: Infinity, bestScore: 0 },
@@ -1358,7 +1366,7 @@
             maxCampaignStage: 0,
             totalWandsUsed: 0,
             totalShieldsUsed: 0
-        };
+        });
         if (!stats.rush) stats.rush = { played: 0, won: 0, bestTime: 0, bestScore: 0 };
         if (stats.dailyStreak === undefined) stats.dailyStreak = 0;
         if (stats.lastDailyDate === undefined) stats.lastDailyDate = 0;
@@ -1402,17 +1410,17 @@
             { gSize: 16, removal: 165, fog: 12, cages: 12 }
         ];
 
-        let settings = JSON.parse(localStorage.getItem('ksudoku_prefs')) || {
+        let settings = safeGet('ksudoku_prefs', {
             theme: 'classic-dark',
             highlightSame: true,
             soundEnabled: true
-        };
+        });
 
         // --- EXPANSION: Real-Time Duel, Logic Explainer, Replay & Puzzle Manager ---
         let rMultiplayer = null;
         let isDuelActive = false;
         let isOnlineDuel = false;
-        let myPlayerName = localStorage.getItem('ksudoku_playerName') || ('Sudoku-' + Math.floor(100 + Math.random() * 900));
+        let myPlayerName = safeGetRaw('ksudoku_playerName') || ('Sudoku-' + Math.floor(100 + Math.random() * 900));
         let oppPlayerName = 'Opponent';
         let duelTotalEmpty = 40;
         let localDuelSolved = 0;
@@ -1641,7 +1649,7 @@
             puzzlesModal.style.display = 'none';
             playSound('powerup');
             
-            // ARG Transmission Detection
+            // ARG: intentional - Anomalous Transmission Detection
             if (title.includes("Anomalous Transmission #1999")) {
                 showToast("[K-NET RELAY: Intercepted anomalous packet echo at 1999Hz from 10.19.99.4/classified]", 4000);
             } else {
@@ -2268,27 +2276,26 @@
         }
 
         function savePrefs() {
-            localStorage.setItem('ksudoku_prefs', JSON.stringify(settings));
+            safeSet('ksudoku_prefs', settings);
             applySettings();
         }
 
         function saveGameState() {
             if (!gameActive) {
-                localStorage.removeItem('ksudoku_save');
+                safeRemove('ksudoku_save');
                 return;
             }
             const state = {
                 gridSize, boxW, boxH, board, solution, notes, fog, cageId, cageSum, cageTopLeft, elapsedTime, freezeTime, score, awarded, originalBoard, undoStack, redoStack, isDailyGame,
                 isCampaignMode, campaignStage, magicWands, shields, shieldActive, freezeCharges, strikes, isRushMode, currentDifficulty, notesMode
             };
-            localStorage.setItem('ksudoku_save', JSON.stringify(state));
+            safeSet('ksudoku_save', state);
         }
 
         function loadGameState() {
-            const saved = localStorage.getItem('ksudoku_save');
-            if (!saved) return false;
+            const state = safeGet('ksudoku_save', null);
+            if (!state) return false;
             try {
-                const state = JSON.parse(saved);
                 gridSize = state.gridSize || 9;
                 boxW = state.boxW || 3;
                 boxH = state.boxH || 3;
@@ -2343,19 +2350,19 @@
                 isCampaignMode, campaignStage, magicWands, shields, shieldActive, freezeCharges, strikes, isRushMode, currentDifficulty, notesMode,
                 savedAt: new Date().toISOString()
             };
-            localStorage.setItem('ksudoku_quicksave', JSON.stringify(state));
+            safeSet('ksudoku_quicksave', state);
             playSound('powerup');
             showToast(isQuick ? "★ QUICK-SAVE RECORDED (F5)" : "★ GAME SAVED");
         }
 
         function quickLoad(isQuick = true) {
-            const raw = localStorage.getItem('ksudoku_quicksave') || localStorage.getItem('ksudoku_save');
+            const raw = safeGet('ksudoku_quicksave', null) || safeGet('ksudoku_save', null);
             if (!raw) {
                 showToast("⚠ NO SAVE DATA FOUND");
                 return;
             }
             try {
-                localStorage.setItem('ksudoku_save', raw);
+                safeSet('ksudoku_save', raw);
                 if (loadGameState()) {
                     playSound('correct');
                     showToast(isQuick ? "★ QUICK-SAVE LOADED (F9)" : "★ GAME LOADED");
@@ -2374,8 +2381,8 @@
                     version: 1,
                     app: 'KSudoku',
                     exportedAt: new Date().toISOString(),
-                    save: localStorage.getItem('ksudoku_save'),
-                    quicksave: localStorage.getItem('ksudoku_quicksave'),
+                    save: safeGet('ksudoku_save', null),
+                    quicksave: safeGet('ksudoku_quicksave', null),
                     stats: stats,
                     prefs: settings
                 };
@@ -2413,10 +2420,10 @@
                         savePrefs();
                     }
                     if (data.save) {
-                        localStorage.setItem('ksudoku_save', typeof data.save === 'string' ? data.save : JSON.stringify(data.save));
+                        safeSet('ksudoku_save', data.save);
                     }
                     if (data.quicksave) {
-                        localStorage.setItem('ksudoku_quicksave', typeof data.quicksave === 'string' ? data.quicksave : JSON.stringify(data.quicksave));
+                        safeSet('ksudoku_quicksave', data.quicksave);
                     }
                     if (!loadGameState()) {
                         generateBoard(9, false, false);
@@ -2477,7 +2484,7 @@
         }
 
         function saveStats() {
-            localStorage.setItem('ksudoku_stats', JSON.stringify(stats));
+            safeSet('ksudoku_stats', stats);
         }
 
         function showStats() {
@@ -3734,7 +3741,7 @@
                     if (m && (m.style.display === 'flex' || m.style.display === 'block')) {
                         m.style.display = 'none';
                         closedAny = true;
-                        if (m === helpModal) localStorage.setItem('ksudoku_tutorialSeen', 'true');
+                        if (m === helpModal) safeSetRaw('ksudoku_tutorialSeen', 'true');
                     }
                 });
                 if (logicBanner && logicBanner.style.display === 'block') {
@@ -3752,6 +3759,21 @@
                     updateHighlights();
                 }
                 return;
+            }
+
+            // If a modal is open, Enter or Space dismisses it unless interacting with an inner form control
+            const activeOpenModal = [statsModal, settingsModal, helpModal, duelModal, puzzlesModal].find(m => m && (m.style.display === 'flex' || m.style.display === 'block'));
+            if (activeOpenModal) {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    if (e.target && (e.target.tagName === 'BUTTON' || e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT')) {
+                        return;
+                    }
+                    e.preventDefault();
+                    activeOpenModal.style.display = 'none';
+                    if (activeOpenModal === helpModal) safeSetRaw('ksudoku_tutorialSeen', 'true');
+                    playSound('select');
+                    return;
+                }
             }
 
             // Quicksave F5
@@ -3805,11 +3827,11 @@
             if (keyUpper === 'N') { btnNotes.click(); return; }
             if (keyUpper === 'L') { btnLogic.click(); return; }
             if (keyUpper === 'R') { btnReplay.click(); return; }
-            if (e.key === '?' || keyUpper === 'M') {
+            if (e.key === 'F1' || e.key === '?' || keyUpper === 'M') {
                 e.preventDefault();
-                if (helpModal && helpModal.style.display === 'flex') {
+                if (helpModal && (helpModal.style.display === 'flex' || helpModal.style.display === 'block')) {
                     helpModal.style.display = 'none';
-                    localStorage.setItem('ksudoku_tutorialSeen', 'true');
+                    safeSetRaw('ksudoku_tutorialSeen', 'true');
                 } else if (helpModal) {
                     helpModal.style.display = 'flex';
                 }
@@ -4064,7 +4086,7 @@
             btnCloseHelp.addEventListener('click', () => {
                 playSound('select');
                 helpModal.style.display = 'none';
-                localStorage.setItem('ksudoku_tutorialSeen', 'true');
+                safeSetRaw('ksudoku_tutorialSeen', 'true');
             });
         }
 
@@ -4075,7 +4097,7 @@
                 if (e.target === modal) {
                     playSound('select');
                     modal.style.display = 'none';
-                    if (modal === helpModal) localStorage.setItem('ksudoku_tutorialSeen', 'true');
+                    if (modal === helpModal) safeSetRaw('ksudoku_tutorialSeen', 'true');
                 }
             });
         });
@@ -4133,7 +4155,8 @@
                 let name = (duelCallsignInput.value || '').trim();
                 if (name) {
                     myPlayerName = name;
-                    localStorage.setItem('ksudoku_callsign', name);
+                    safeSetRaw('ksudoku_callsign', name);
+                    safeSetRaw('ksudoku_playerName', name);
                     if (rMultiplayer) rMultiplayer.setPlayerName(name);
                     showToast(`Call-Sign saved: ${name}`);
                 }
@@ -4317,24 +4340,24 @@
         chkHighlight.addEventListener('change', (e) => { settings.highlightSame = e.target.checked; savePrefs(); });
         chkSound.addEventListener('change', (e) => { settings.soundEnabled = e.target.checked; savePrefs(); });
 
-        if (!loadGameState()) {
+        const loadedSave = loadGameState();
+        if (!loadedSave) {
             generateBoard(9, false, false);
             applySettings();
+            // Auto-show tutorial guide only on fresh session (never interrupting restored save)
+            const tutorialSeen = safeGetRaw('ksudoku_tutorialSeen');
+            if (!tutorialSeen) {
+                setTimeout(() => {
+                    if (helpModal) helpModal.style.display = 'flex';
+                    safeSetRaw('ksudoku_tutorialSeen', 'true');
+                }, 350);
+            }
         } else {
             applySettings();
         }
 
-        // Auto-show tutorial guide on first visit
-        const tutorialSeen = localStorage.getItem('ksudoku_tutorialSeen');
-        if (!tutorialSeen) {
-            setTimeout(() => {
-                if (helpModal) helpModal.style.display = 'flex';
-                localStorage.setItem('ksudoku_tutorialSeen', 'true');
-            }, 350);
-        }
-
         // Initialize stored Call-Sign
-        let storedCallsign = localStorage.getItem('ksudoku_callsign');
+        let storedCallsign = safeGetRaw('ksudoku_callsign');
         if (storedCallsign) {
             myPlayerName = storedCallsign;
             if (duelCallsignInput) duelCallsignInput.value = storedCallsign;
