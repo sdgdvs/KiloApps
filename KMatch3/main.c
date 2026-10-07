@@ -766,7 +766,7 @@ void DrawBoard(HDC hdc) {
         DeleteObject(fBorder);
     }
 
-    // 3D Outer Frame with Ornate Filigree & Traveling Glint
+    // 3D Outer Frame with Ornate Filigree
     RECT outerFrame = { BOARD_X - 10, BOARD_Y - 10, BOARD_X + cols * cellSize + 10, BOARD_Y + rows * cellSize + 10 };
     HBRUSH frameBrush = CreateSolidBrush(RGB(180, 130, 20));
     FillRect(hdc, &outerFrame, frameBrush);
@@ -1761,18 +1761,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             RECT arch = { 20, rect.bottom - 180, 100, rect.bottom - 150 };
             FillRect(memDC, &arch, ruinsBrush);
             DeleteObject(ruinsBrush);
-            
-            // Atmospheric magical dust with gentle trigonometric drift
-            DWORD tickDust = GetTickCount();
-            for (int i = 0; i < 150; i++) {
-                int sx = (int)((i * 137 + (int)(sinf((tickDust + i*200) * 0.001f) * 20.0f)) % rect.right);
-                if (sx < 0) sx += rect.right;
-                int sy = (int)((i * 251 - (int)((tickDust * 0.02f) + i * 5)) % rect.bottom);
-                if (sy < 0) sy += rect.bottom;
-                int c = 100 + ((i * 73) % 155);
-                SetPixel(memDC, sx, sy, RGB(c, c, 255));
-                if (i % 3 == 0) SetPixel(memDC, sx+1, sy, RGB(c, c, 255));
-            }
             
             DrawBoard(memDC);
             

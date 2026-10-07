@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-qa
+current_agent: kilo-qa
+next_agent: kilo-expander
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -15,7 +15,7 @@ current_targets:
   kilo_creator: "kweb://warez"
   kilo_graphics: KBreakout
   kilo_tester: KSolitaire
-  kilo_usability: KMatch3
+  kilo_usability: KPong
   kilo_qa: KSettings
   kilo_expander: KWords
 virtual_web_target: "kweb://warez"
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-tester
-  app: KMaze
-  timestamp: "2026-10-06T20:40:00-07:00"
+  agent: kilo-usability
+  app: KMatch3
+  timestamp: "2026-10-06T21:40:00-07:00"
 last_planner_run: "2026-10-06T14:20:00Z"
 ---
 
@@ -119,9 +119,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KChess`, `KColor`, `KTimer`, `KConverter`, `KQuarantine`, `KSettings`, `KTaskMgr`, `K2048`, `KSudoku`, `KConnect4`, `KHangman`, `KSimon`, `KFreecell`, `KMatch3`, `KWords`, `KGo`, `KDarts`, `KRSS`, `KClip`, `KCipher`, `KCalc`, `KMine`, `KSnake`, `KTetris`, `KPong`, `KMaze` *(Completed: KMaze, KPong, KStarForge, KTask, KChrono, KSys, KSynth, KCyber, KCosmic, KContacts, KDB, KDragon, KFlash, KFont, KFortress, KGraph, KHabit, KHex, KImage, KJournal, KMail, KMandel, KMech, KMedia, KMystery, KNet, KNote, KPad, KPaint, KPass, KPing, KQuest, KRadio, KRead, KSanctuary, KScript, KStarDredge, KStarship, KStellar, KSubmarine, KTerm, KHash, KRSS, KClip, KCipher, KCalc, KMine, KSnake, KTetris)*.
 
 ### 4. Usability & UX Queue (`kilo-usability`)
-- **Current Target**: `KMatch3`
+- **Current Target**: `KPong`
 - **Upcoming Queue**:
-  `KPong`, `KSettings`, `KSimon`, `KSnake`, `KSolitaire`, `KSudoku`, `KTetris`, `KWords`, `KBBS`, `KCalendar`, `KChess`, `KFreecell` *(Completed: KCalc, KPomodoro, KTimer, KClock, KHash, KMystery, KMandel, KFont, KPing, KAudio, KSynth, KScript, KRead, KRadio, KSys, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KChrono, KTask, KStarForge, KPad, KBookmark, KRSS, KClip, KHex, KHabit, KFarm, KPaint, KGraph, KImage, KJournal, KMail, KMedia, KNet, KNote, KPass, KMine, KBBS, KCalendar, KChart, KColor, KChess, KConnect4, KConverter, KFreecell, KHangman)*.
+  `KSettings`, `KSimon`, `KSnake`, `KSolitaire`, `KSudoku`, `KTetris`, `KWords`, `KBBS`, `KCalendar`, `KChess`, `KFreecell`, `KMatch3` *(Completed: KCalc, KPomodoro, KTimer, KClock, KHash, KMystery, KMandel, KFont, KPing, KAudio, KSynth, KScript, KRead, KRadio, KSys, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KChrono, KTask, KStarForge, KPad, KBookmark, KRSS, KClip, KHex, KHabit, KFarm, KPaint, KGraph, KImage, KJournal, KMail, KMedia, KNet, KNote, KPass, KMine, KBBS, KCalendar, KChart, KColor, KChess, KConnect4, KConverter, KFreecell, KHangman, KMatch3)*.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
 - **Current Target**: `KSettings`
@@ -217,6 +217,16 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-06T21:40:00-07:00 — kilo-usability: KMatch3 (Window Sizing, Frame & Panel Alignment, Drag/Swipe Ergonomics & Mandate 11)**
+  - Status: PASS ✅ (0 regressions, 129.4 KB web / 37.5 KB native < 999 KB ceiling).
+  - Window Sizing: Tuned default dimensions to 580x660 in `App.jsx`, eliminating internal scrollbars across all modes.
+  - Frame Alignment: Expanded boardWrapper to 420px matching 10px ridge border; aligned corner brackets and 420px HUD panels.
+  - Touch & Input Ergonomics: Added intuitive pointer drag and swipe gem matching alongside two-click selection and arrow keys.
+  - First-Run Onboarding: Added welcome tutorial onboarding toast (`kmatch3_tutorialSeen`), button tooltips, and `#helpCloseBtn`.
+  - Mandate 11 Glint Ban: Removed moving dust drift and sweeping glint sheen across web and native Win32 C (`KMatch3.exe` rebuilt clean).
+  - Verification: `test_app_startup.py` PASS; MSVC clean (37.5 KB); Vite clean (516ms); `security_lint.py` 100% PASS.
+  - Queue: Advanced `kilo_usability` to `KPong`; handoff to `kilo-qa`.
+
 - **2026-10-06T20:40:00-07:00 — kilo-tester: KMaze (Interactive UI Audit, Keybinds Overlay Fix, Persistence & Ability Feedback)**
   - Status: PASS ✅ (5 issues, 5 fixed).
   - Overlay & Modal: Fixed Keybinds overlay occlusion from startup splash; wired canvas [✕ Close] and [↺ Defaults] click actions.
@@ -254,13 +264,4 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Mandate 11 Glint Ban: Removed moving specular sheen sweep and floating dust motes across web and native Win32 C; clean static border preserved.
   - Verification: `test_app_startup.py` PASS; `test_web_apps.js` PASS (48 interactive, 0 err); MSVC clean (35.0 KB); Vite clean (335ms); `security_lint.py` 100% PASS.
   - Queue: Advanced `kilo_usability` to `KMatch3`; rotation advanced to `kilo-qa`.
-
-- **2026-10-06T19:44:00-07:00 — kilo-tester: KMaze (Interactive UI Audit, Startup Modal Fix, F5/F9 State Hotkeys & Mandate 11)**
-  - Status: PASS ✅ (4 issues, 4 fixed).
-  - Startup Modal & Focus: Replaced blocking startup help modal on new game with clean welcome toast, resolving unclosable modal test failure.
-  - Hotkeys & Navigation: Added F5 quicksave, F9 quickload, 1-6 ability keys, Esc to start/return, and Space to restart after escape.
-  - Interactive Polish: Added F5/F9 button badges in splash & HUD, live status bar indicator, and instant splash refresh on stats import.
-  - Mandate 11 Glint Ban: Removed moving specular sweep on key block texture in web and native Win32 C; clean static gold preserved.
-  - Verification: `test_app_startup.py` PASS; `test_web_apps.js` PASS (20 elements, 0 err); MSVC clean (60.4 KB); Vite clean (395ms); web (129.0 KB) < 999 KB ceiling; `security_lint.py` 100% PASS.
-  - Queue: Advanced `kilo_tester` to `KSolitaire`; rotation advanced to `kilo-usability`.
 

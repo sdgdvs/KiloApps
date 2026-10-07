@@ -81,7 +81,7 @@ const APPS = [
   { id: 'ksimon', title: 'KSimon', url: '/apps/ksimon.html', exeUrl: '/exe/KSimon.exe', icon: '/assets/icons/ksimon.ico', w: 600, h: 600, folder: 'Games' },
   { id: 'kasteroids', title: 'KAsteroids', url: '/apps/kasteroids.html', exeUrl: '/exe/KAsteroids.exe', icon: '/assets/icons/kasteroids.ico', w: 800, h: 600, folder: 'Games' },
   { id: 'kfreecell', title: 'KFreecell', url: '/apps/kfreecell.html', exeUrl: '/exe/KFreecell.exe', icon: '/assets/icons/kfreecell.ico', w: 920, h: 740, folder: 'Games' },
-  { id: 'kmatch3', title: 'KMatch3', url: '/apps/kmatch3.html', exeUrl: '/exe/KMatch3.exe', icon: '/assets/icons/kmatch3.ico', w: 600, h: 600, folder: 'Games' },
+  { id: 'kmatch3', title: 'KMatch3', url: '/apps/kmatch3.html', exeUrl: '/exe/KMatch3.exe', icon: '/assets/icons/kmatch3.ico', w: 580, h: 660, folder: 'Games' },
   { id: 'kwords', title: 'KWords', url: '/apps/kwords.html', exeUrl: '/exe/KWords.exe', icon: '/assets/icons/kwords.ico', w: 600, h: 600, folder: 'Games' },
   { id: 'kgo', title: 'KGo', url: '/apps/kgo.html', exeUrl: '/exe/KGo.exe', icon: '/assets/icons/kgo.ico', w: 700, h: 760, folder: 'Games' },
   { id: 'kdarts', title: 'KDarts', url: '/apps/kdarts.html', exeUrl: '/exe/KDarts.exe', icon: '/assets/icons/kdarts.ico', w: 600, h: 600, folder: 'Games' },

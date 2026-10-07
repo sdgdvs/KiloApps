@@ -13,10 +13,10 @@
     margin: 10px 0 5px 0; font-size: 26px; text-shadow: 0 0 10px rgba(255, 215, 0, 0.5), 0 2px 4px rgba(0,0,0,0.8);
     background: linear-gradient(135deg, #ffd700 0%, #ff8c00 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;
   }
-  .info { display: flex; justify-content: space-between; width: 400px; margin-bottom: 4px; font-size: 13px; font-weight: bold; text-shadow: 0 1px 3px rgba(0,0,0,0.8); }
+  .info { display: flex; justify-content: space-between; width: 420px; margin-bottom: 4px; font-size: 13px; font-weight: bold; text-shadow: 0 1px 3px rgba(0,0,0,0.8); }
   
   #bossBarContainer {
-    width: 400px; height: 14px; background: #331111; border: 1.5px solid #ffd700; border-radius: 4px; overflow: hidden; margin-bottom: 4px; display: none; position: relative;
+    width: 420px; height: 14px; background: #331111; border: 1.5px solid #ffd700; border-radius: 4px; overflow: hidden; margin-bottom: 4px; display: none; position: relative;
   }
   #bossBarFill {
     width: 100%; height: 100%; background: linear-gradient(90deg, #ff3333 0%, #ff8800 100%); transition: width 0.3s ease-out;
@@ -26,7 +26,7 @@
   }
 
   #boardWrapper {
-    position: relative; width: 400px; height: 400px; margin: 0 auto;
+    position: relative; width: 420px; height: 420px; margin: 0 auto; box-sizing: border-box;
   }
   #board {
     width: 400px; height: 400px;
@@ -34,15 +34,16 @@
     border: 10px ridge #ffd700; border-radius: 12px;
     box-shadow: 0 0 40px rgba(0,0,0,0.9), inset 0 0 30px rgba(0,0,0,0.95), 0 0 30px rgba(255,215,0,0.4), inset 0 0 25px rgba(255,215,0,0.3);
     position: relative; touch-action: none; user-select: none; overflow: hidden;
+    box-sizing: content-box;
   }
 
   .corner-bracket {
     position: absolute; width: 22px; height: 22px; pointer-events: none; z-index: 110;
   }
-  .corner-bracket.top-left { top: -6px; left: -6px; border-top: 3px solid #ffd700; border-left: 3px solid #ffd700; border-top-left-radius: 6px; box-shadow: -2px -2px 8px rgba(255,215,0,0.6); }
-  .corner-bracket.top-right { top: -6px; right: -6px; border-top: 3px solid #ffd700; border-right: 3px solid #ffd700; border-top-right-radius: 6px; box-shadow: 2px -2px 8px rgba(255,215,0,0.6); }
-  .corner-bracket.bottom-left { bottom: -6px; left: -6px; border-bottom: 3px solid #ffd700; border-left: 3px solid #ffd700; border-bottom-left-radius: 6px; box-shadow: -2px 2px 8px rgba(255,215,0,0.6); }
-  .corner-bracket.bottom-right { bottom: -6px; right: -6px; border-bottom: 3px solid #ffd700; border-right: 3px solid #ffd700; border-bottom-right-radius: 6px; box-shadow: 2px 2px 8px rgba(255,215,0,0.6); }
+  .corner-bracket.top-left { top: -4px; left: -4px; border-top: 3px solid #ffd700; border-left: 3px solid #ffd700; border-top-left-radius: 6px; box-shadow: -2px -2px 8px rgba(255,215,0,0.6); }
+  .corner-bracket.top-right { top: -4px; right: -4px; border-top: 3px solid #ffd700; border-right: 3px solid #ffd700; border-top-right-radius: 6px; box-shadow: 2px -2px 8px rgba(255,215,0,0.6); }
+  .corner-bracket.bottom-left { bottom: -4px; left: -4px; border-bottom: 3px solid #ffd700; border-left: 3px solid #ffd700; border-bottom-left-radius: 6px; box-shadow: -2px 2px 8px rgba(255,215,0,0.6); }
+  .corner-bracket.bottom-right { bottom: -4px; right: -4px; border-bottom: 3px solid #ffd700; border-right: 3px solid #ffd700; border-bottom-right-radius: 6px; box-shadow: 2px 2px 8px rgba(255,215,0,0.6); }
   .corner-bracket::after {
     content: ''; position: absolute; width: 4px; height: 4px; background: #ffffff; border-radius: 50%; box-shadow: 0 0 5px #ffd700;
   }
@@ -150,13 +151,7 @@
       radial-gradient(2px 2px at 80% 80%, #aaffff, transparent),
       radial-gradient(2px 2px at 50% 50%, #ffaaff, transparent);
     background-size: 150px 150px;
-    animation: dustAnim 30s linear infinite;
-    opacity: 0.5;
-  }
-  @keyframes dustAnim {
-    0% { transform: translateY(0px) translateX(0px); }
-    50% { transform: translateY(-75px) translateX(20px); }
-    100% { transform: translateY(-150px) translateX(0px); }
+    opacity: 0.25;
   }
   @keyframes spinRing {
     to { transform: rotate(360deg); }
@@ -172,13 +167,6 @@
   .bomb-icon {
     transform-origin: 24px 24px;
     animation: pulseBomb 1s ease-in-out infinite;
-  }
-  @keyframes sheenSweep {
-    0% { transform: translateX(-100%) rotate(25deg); }
-    100% { transform: translateX(200%) rotate(25deg); }
-  }
-  .sheen-band {
-    animation: sheenSweep 3s cubic-bezier(0.4, 0, 0.2, 1) infinite;
   }
 
   /* Toast Notification Bar */
@@ -196,7 +184,7 @@
 
   /* Duel Arena HUD */
   .duel-container {
-    width: 400px; background: rgba(30, 20, 45, 0.95); border: 1.5px solid #00d9ff; border-radius: 6px;
+    width: 420px; background: rgba(30, 20, 45, 0.95); border: 1.5px solid #00d9ff; border-radius: 6px;
     padding: 6px 8px; margin-bottom: 5px; box-sizing: border-box; display: none; box-shadow: 0 0 15px rgba(0,217,255,0.25);
   }
   .duel-bar-wrap {
@@ -258,12 +246,12 @@
   </svg>
   <div class="ruins-bg"></div>
   <div class="magic-dust"></div>
-  <div style="width: 400px; display: flex; justify-content: space-between; align-items: center; margin-top: 4px;">
+  <div style="width: 420px; display: flex; justify-content: space-between; align-items: center; margin-top: 4px;">
     <h1 style="margin: 2px 0;">KMatch3</h1>
     <div style="display:flex; gap: 4px;">
       <button onclick="openMultiplayerModal()" class="powerup-btn" style="color:#00d9ff; border-color:#00d9ff;" title="Online Multiplayer Duel or Practice vs AI">⚔️ Duel</button>
       <button onclick="openSaveModal()" class="powerup-btn" style="color:#ffd700; border-color:#ffd700;" title="Quicksave / Load / Export">💾 State</button>
-      <button onclick="showHelp()" style="background:#444; color:#fff; border:1px solid #777; padding:3px 8px; cursor:pointer; border-radius:4px; font-weight:bold; font-size:11px;">Help [F1]</button>
+      <button onclick="showHelp()" id="helpBtn" style="background:#444; color:#fff; border:1px solid #777; padding:3px 8px; cursor:pointer; border-radius:4px; font-weight:bold; font-size:11px;" title="Instructions & Shortcuts [F1]">Help [F1]</button>
     </div>
   </div>
   <div class="info">
@@ -306,10 +294,10 @@
     <span>Best: <span id="bestScore">0</span> | Combo: x<span id="maxCombo">1</span></span>
   </div>
   <div class="info" style="justify-content: space-between; margin-top: 2px; margin-bottom: 4px;">
-    <button class="powerup-btn" onclick="useHammer()" id="btnHammer">[H] Hammer</button>
-    <button class="powerup-btn" onclick="useExtraMoves()" id="btnMoves">[E] +Moves</button>
-    <button class="powerup-btn" onclick="useShuffle()" id="btnShuffle">[S] Shuffle</button>
-    <button class="powerup-btn" onclick="useColorNuke()" id="btnNuke">[L] Color Nuke</button>
+    <button class="powerup-btn" onclick="useHammer()" id="btnHammer" title="Destroy any single tile (Cost: 300 pts) [Hotkey: H]">[H] Hammer</button>
+    <button class="powerup-btn" onclick="useExtraMoves()" id="btnMoves" title="Add +5 moves or +15s (Cost: 300 pts) [Hotkey: E]">[E] +Moves</button>
+    <button class="powerup-btn" onclick="useShuffle()" id="btnShuffle" title="Shuffle all gems on the board (Cost: 300 pts) [Hotkey: S]">[S] Shuffle</button>
+    <button class="powerup-btn" onclick="useColorNuke()" id="btnNuke" title="Nuke all gems of selected color (Cost: 300 pts) [Hotkey: L]">[L] Color Nuke</button>
   </div>
   <div id="boardWrapper">
     <div class="corner-bracket top-left"></div>
@@ -343,12 +331,13 @@
       - <b>[S] Shuffle:</b> Rearrange all board gems.<br/>
       - <b>[L] Color Nuke:</b> Nuke all gems of target color.</p>
       <p><b>Shortcuts & State Management:</b><br/>
+      - <b>[F1] / [?]:</b> View this instructions guide.<br/>
       - <b>[F5]:</b> Quicksave State snapshot.<br/>
       - <b>[F9]:</b> Quickload State snapshot.<br/>
       - <b>[R]:</b> Watch move replay viewer.<br/>
       - <b>[Esc]:</b> Deselect or close modals.</p>
       <div style="text-align:center; margin-top:15px;">
-        <button onclick="hideHelp()" class="modal-btn">Close</button>
+        <button onclick="hideHelp()" class="modal-btn" id="helpCloseBtn">Close</button>
       </div>
     </div>
   </div>
@@ -481,8 +470,16 @@
   </div>
 
   <script>
-    function showHelp() { document.getElementById('helpModal').style.display = 'flex'; }
-    function hideHelp() { document.getElementById('helpModal').style.display = 'none'; }
+    function showHelp() {
+      const modal = document.getElementById('helpModal');
+      if (modal) modal.style.display = 'flex';
+      safeSetStorage('kmatch3_tutorialSeen', '1');
+    }
+    function hideHelp() {
+      const modal = document.getElementById('helpModal');
+      if (modal) modal.style.display = 'none';
+      safeSetStorage('kmatch3_tutorialSeen', '1');
+    }
 
     const CAMPAIGN_STAGES = [
       { targetScore: 800,  moves: 20, timeLimit: 0,  iceCount: 0,  stoneCount: 0,  ironCount: 0, redTarget: 0, greenTarget: 0, blueTarget: 0, bossHP: 0,   rows: 6,  cols: 6,  name: "1: Gem Starter" },
@@ -1766,6 +1763,11 @@
           }
         });
 
+        cell.addEventListener('pointerdown', (e) => {
+          if (isProcessing || e.button !== 0) return;
+          cellPointerStart = { x: e.clientX, y: e.clientY, r, c };
+        });
+
         cell.addEventListener('click', onCellClick);
         return cell;
     }
@@ -2143,8 +2145,43 @@
       return false;
     }
 
+    let cellPointerStart = null;
+    let gestureSwapped = false;
+
+    document.addEventListener('pointermove', (e) => {
+      if (!cellPointerStart || isProcessing) return;
+      const dx = e.clientX - cellPointerStart.x;
+      const dy = e.clientY - cellPointerStart.y;
+      const dist = Math.hypot(dx, dy);
+      if (dist > 22) {
+        const { r, c } = cellPointerStart;
+        let tr = r, tc = c;
+        if (Math.abs(dx) > Math.abs(dy)) {
+          tc = c + (dx > 0 ? 1 : -1);
+        } else {
+          tr = r + (dy > 0 ? 1 : -1);
+        }
+        cellPointerStart = null;
+        gestureSwapped = true;
+        if (tr >= 0 && tr < ROWS && tc >= 0 && tc < COLS && powerupMode === 0) {
+          swapAndCheck(r, c, tr, tc);
+        }
+      }
+    });
+
+    document.addEventListener('pointerup', () => {
+      cellPointerStart = null;
+    });
+    document.addEventListener('pointercancel', () => {
+      cellPointerStart = null;
+    });
+
     function onCellClick(e) {
       if (isProcessing) return;
+      if (gestureSwapped) {
+        gestureSwapped = false;
+        return;
+      }
       hintTimer = 0;
       clearHint();
       let target = e.currentTarget;
@@ -2941,6 +2978,11 @@
     };
     if (!loadGame()) {
       initStage(1);
+    }
+    // First-run tutorial onboarding check
+    if (!safeGetStorage('kmatch3_tutorialSeen')) {
+      showToast('✨ Welcome to KMatch3! Swap or drag adjacent gems. Press F1 or Help for guides.', 'info', 5000);
+      safeSetStorage('kmatch3_tutorialSeen', '1');
     }
   </script>
 </body>
