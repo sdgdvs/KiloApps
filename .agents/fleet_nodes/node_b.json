@@ -13,9 +13,9 @@
   "session_end": null,
   "session_limit_enabled": false,
   "timer_enabled": false,
-  "turns_executed": 61,
+  "turns_executed": 64,
   "last_turn_timestamp": "2026-09-28T17:56:12Z",
-  "last_heartbeat": "2026-10-07T10:44:54.189499+00:00",
-  "current_target": "KSolitaire",
+  "last_heartbeat": "2026-10-07T13:45:06.887952+00:00",
+  "current_target": "kweb://geocities",
   "remote_command": "none"
 }
