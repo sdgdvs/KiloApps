@@ -19,6 +19,8 @@
 #define IDC_BTN_RANDOM   111
 #define IDC_BTN_INVERT   112
 #define IDC_BTN_HELP     113
+#define IDC_BTN_SAVE     114
+#define IDC_BTN_LOAD     115
 
 // Swatch rect count
 #define NUM_SWATCHES 10
@@ -45,6 +47,7 @@ static HWND g_hValH, g_hValS, g_hValL;
 static HWND g_hEditHex;
 static HWND g_hBtnCopyHex, g_hBtnCopyRgb, g_hBtnCopyHsl;
 static HWND g_hBtnRandom, g_hBtnInvert, g_hBtnHelp;
+static HWND g_hBtnSave, g_hBtnLoad;
 static HWND g_hStatus;
 
 static HFONT g_hFontNormal = NULL;
@@ -223,6 +226,126 @@ static void CopyTextToClipboard(HWND hwndOwner, const char* text) {
     }
 }
 
+#define KCOLOR_SAVE_MAGIC 0x4B434C52 // 'KCLR'
+
+typedef struct {
+    DWORD magic;
+    int r;
+    int g;
+    int b;
+    int h;
+    int s;
+    int l;
+    COLORREF swatches[NUM_SWATCHES];
+} KColorSaveState;
+
+static char* my_strrchr(const char* s, int c) {
+    const char* last = NULL;
+    while (s && *s) {
+        if (*s == (char)c) last = s;
+        s++;
+    }
+    return (char*)last;
+}
+
+static void MarkTutorialSeenNative(void) {
+    char szPath[MAX_PATH];
+    GetModuleFileNameA(NULL, szPath, MAX_PATH);
+    char* lastSlash = my_strrchr(szPath, '\\');
+    if (lastSlash) *(lastSlash + 1) = '\0';
+    lstrcatA(szPath, "kcolor_tutorial.dat");
+    HANDLE h = CreateFileA(szPath, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (h != INVALID_HANDLE_VALUE) {
+        char flag = 1;
+        DWORD w = 0;
+        WriteFile(h, &flag, 1, &w, NULL);
+        CloseHandle(h);
+    }
+}
+
+static int IsTutorialSeenNative(void) {
+    char szPath[MAX_PATH];
+    GetModuleFileNameA(NULL, szPath, MAX_PATH);
+    char* lastSlash = my_strrchr(szPath, '\\');
+    if (lastSlash) *(lastSlash + 1) = '\0';
+    lstrcatA(szPath, "kcolor_tutorial.dat");
+    HANDLE h = CreateFileA(szPath, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (h != INVALID_HANDLE_VALUE) {
+        CloseHandle(h);
+        return 1;
+    }
+    return 0;
+}
+
+static int HasQuicksaveNative(void) {
+    char szPath[MAX_PATH];
+    GetModuleFileNameA(NULL, szPath, MAX_PATH);
+    char* lastSlash = my_strrchr(szPath, '\\');
+    if (lastSlash) *(lastSlash + 1) = '\0';
+    lstrcatA(szPath, "kcolor_save.dat");
+    HANDLE h = CreateFileA(szPath, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (h != INVALID_HANDLE_VALUE) {
+        CloseHandle(h);
+        return 1;
+    }
+    return 0;
+}
+
+static int SaveGameStateToFile(void) {
+    char szPath[MAX_PATH];
+    GetModuleFileNameA(NULL, szPath, MAX_PATH);
+    char* lastSlash = my_strrchr(szPath, '\\');
+    if (lastSlash) *(lastSlash + 1) = '\0';
+    lstrcatA(szPath, "kcolor_save.dat");
+
+    HANDLE hFile = CreateFileA(szPath, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile == INVALID_HANDLE_VALUE) return 0;
+
+    KColorSaveState state;
+    state.magic = KCOLOR_SAVE_MAGIC;
+    state.r = g_r;
+    state.g = g_g;
+    state.b = g_b;
+    state.h = g_h;
+    state.s = g_s;
+    state.l = g_l;
+    for (int i = 0; i < NUM_SWATCHES; i++) {
+        state.swatches[i] = g_swatches[i].color;
+    }
+
+    DWORD written = 0;
+    BOOL ok = WriteFile(hFile, &state, sizeof(state), &written, NULL);
+    CloseHandle(hFile);
+    return (ok && written == sizeof(state)) ? 1 : 0;
+}
+
+static int LoadGameStateFromFile(void) {
+    char szPath[MAX_PATH];
+    GetModuleFileNameA(NULL, szPath, MAX_PATH);
+    char* lastSlash = my_strrchr(szPath, '\\');
+    if (lastSlash) *(lastSlash + 1) = '\0';
+    lstrcatA(szPath, "kcolor_save.dat");
+
+    HANDLE hFile = CreateFileA(szPath, GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile == INVALID_HANDLE_VALUE) return 0;
+
+    KColorSaveState state;
+    DWORD readBytes = 0;
+    BOOL ok = ReadFile(hFile, &state, sizeof(state), &readBytes, NULL);
+    CloseHandle(hFile);
+
+    if (ok && readBytes == sizeof(state) && state.magic == KCOLOR_SAVE_MAGIC) {
+        g_r = clamp_int(state.r, 0, 255);
+        g_g = clamp_int(state.g, 0, 255);
+        g_b = clamp_int(state.b, 0, 255);
+        for (int i = 0; i < NUM_SWATCHES; i++) {
+            g_swatches[i].color = state.swatches[i];
+        }
+        return 1;
+    }
+    return 0;
+}
+
 static void ShowHelpDialog(HWND hwnd) {
     MessageBoxA(hwnd,
         "KColor - Advanced Color Picker & Palette Studio\n\n"
@@ -230,7 +353,9 @@ static void ShowHelpDialog(HWND hwnd) {
         "  - R: Generate Random Color\n"
         "  - I: Invert Active Color\n"
         "  - C: Copy Active HEX code\n"
-        "  - 1..9: Quick-select Swatches 1..9\n"
+        "  - F5 / Ctrl+S: Quicksave active color & swatches\n"
+        "  - F9 / Ctrl+O: Quickload saved state\n"
+        "  - 1..9: Quick-select Swatches 1..9 (0 for 10)\n"
         "  - Left-Click Swatch: Select color\n"
         "  - Right-Click Swatch: Save current color to swatch\n"
         "  - F1 / H: Open this Help guide\n\n"
@@ -251,6 +376,13 @@ static LRESULT CALLBACK HexEditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, 
             return CallWindowProcA(g_OldEditProc, hwnd, msg, wParam, lParam);
         }
         MessageBeep(MB_OK);
+        return 0;
+    }
+    if (msg == WM_KEYDOWN && (wParam == VK_F5 || wParam == VK_F9)) {
+        HWND hParent = GetParent(hwnd);
+        if (hParent) {
+            SendMessageA(hParent, WM_KEYDOWN, wParam, lParam);
+        }
         return 0;
     }
     if (msg == WM_KEYDOWN && wParam == VK_RETURN) {
@@ -383,8 +515,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             g_hBtnInvert = CreateWindowExA(0, "BUTTON", "Invert (I)", WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_PUSHBUTTON, 325, 192, 95, 26, hwnd, (HMENU)IDC_BTN_INVERT, NULL, NULL);
             g_hBtnHelp = CreateWindowExA(0, "BUTTON", "Help (F1)", WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_PUSHBUTTON, 425, 192, 95, 26, hwnd, (HMENU)IDC_BTN_HELP, NULL, NULL);
 
+            // Quicksave & Quickload Buttons
+            g_hBtnSave = CreateWindowExA(0, "BUTTON", "Save (F5)", WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_PUSHBUTTON, 225, 305, 95, 26, hwnd, (HMENU)IDC_BTN_SAVE, NULL, NULL);
+            g_hBtnLoad = CreateWindowExA(0, "BUTTON", "Load (F9)", WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_PUSHBUTTON, 325, 305, 95, 26, hwnd, (HMENU)IDC_BTN_LOAD, NULL, NULL);
+
             // Status Bar
-            g_hStatus = CreateWindowExA(0, "STATIC", "Ready (L-Click select, R-Click save, F1: Help, R: Random, I: Invert)", WS_CHILD | WS_VISIBLE | SS_SUNKEN, 10, 380, 525, 22, hwnd, NULL, NULL, NULL);
+            g_hStatus = CreateWindowExA(0, "STATIC", "Ready (F5: Save, F9: Load, F1: Help, R: Random, I: Invert, 1..9: Swatches)", WS_CHILD | WS_VISIBLE | SS_SUNKEN, 10, 380, 525, 22, hwnd, NULL, NULL, NULL);
 
             // Apply font to all controls
             EnumChildWindows(hwnd, (WNDENUMPROC)SendMessageA, (LPARAM)WM_SETFONT);
@@ -481,12 +617,34 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 if (g_hStatus) SetWindowTextA(g_hStatus, "Inverted Active Color");
             } else if (id == IDC_BTN_HELP) {
                 ShowHelpDialog(hwnd);
+            } else if (id == IDC_BTN_SAVE) {
+                if (SaveGameStateToFile()) {
+                    if (g_hStatus) SetWindowTextA(g_hStatus, "Saved State to kcolor_save.dat (F5)!");
+                    MessageBeep(MB_OK);
+                } else {
+                    if (g_hStatus) SetWindowTextA(g_hStatus, "Failed to Save State!");
+                    MessageBeep(MB_ICONWARNING);
+                }
+            } else if (id == IDC_BTN_LOAD) {
+                if (LoadGameStateFromFile()) {
+                    SyncControlsFromRgb(hwnd, TRUE);
+                    InvalidateRect(hwnd, NULL, FALSE);
+                    if (g_hStatus) SetWindowTextA(g_hStatus, "Restored State from kcolor_save.dat (F9)!");
+                    MessageBeep(MB_OK);
+                } else {
+                    if (g_hStatus) SetWindowTextA(g_hStatus, "No Saved State Found (F9)!");
+                    MessageBeep(MB_ICONWARNING);
+                }
             }
             break;
         }
 
         case WM_KEYDOWN: {
-            if (wParam == VK_F1 || wParam == 'H' || wParam == 'h') {
+            if (wParam == VK_F5 || ((GetKeyState(VK_CONTROL) & 0x8000) && (wParam == 'S' || wParam == 's'))) {
+                SendMessageA(hwnd, WM_COMMAND, MAKEWPARAM(IDC_BTN_SAVE, 0), 0);
+            } else if (wParam == VK_F9 || ((GetKeyState(VK_CONTROL) & 0x8000) && (wParam == 'O' || wParam == 'o'))) {
+                SendMessageA(hwnd, WM_COMMAND, MAKEWPARAM(IDC_BTN_LOAD, 0), 0);
+            } else if (wParam == VK_F1 || wParam == 'H' || wParam == 'h') {
                 ShowHelpDialog(hwnd);
             } else if (wParam == 'R' || wParam == 'r') {
                 SendMessageA(hwnd, WM_COMMAND, MAKEWPARAM(IDC_BTN_RANDOM, 0), 0);
@@ -660,6 +818,12 @@ void MainEntry() {
 
     ShowWindow(hwnd, SW_SHOW);
     UpdateWindow(hwnd);
+
+    // First-run Tutorial Integrity: Prompt only on fresh sessions without quicksave
+    if (!IsTutorialSeenNative() && !HasQuicksaveNative()) {
+        MarkTutorialSeenNative();
+        ShowHelpDialog(hwnd);
+    }
 
     MSG msg;
     while (GetMessageA(&msg, NULL, 0, 0) > 0) {

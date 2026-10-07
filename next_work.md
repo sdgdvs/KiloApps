@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-creator
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -16,7 +16,7 @@ current_targets:
   kilo_graphics: KColosseum
   kilo_tester: KPong
   kilo_usability: KFreecell
-  kilo_qa: KColor
+  kilo_qa: KConverter
   kilo_expander: KSolitaire
 virtual_web_target: "kweb://portal"
 virtual_web_rotation:
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-usability
-  app: KConverter
-  timestamp: "2026-10-06T16:51:00-07:00"
+  agent: kilo-qa
+  app: KColor
+  timestamp: "2026-10-06T17:07:00-07:00"
 last_planner_run: "2026-10-06T14:20:00Z"
 ---
 
@@ -124,9 +124,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KHangman`, `KMatch3`, `KPong`, `KSettings`, `KSimon`, `KSnake`, `KSolitaire`, `KSudoku`, `KTetris`, `KWords`, `KBBS`, `KCalendar`, `KChess` *(Completed: KCalc, KPomodoro, KTimer, KClock, KHash, KMystery, KMandel, KFont, KPing, KAudio, KSynth, KScript, KRead, KRadio, KSys, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KChrono, KTask, KStarForge, KPad, KBookmark, KRSS, KClip, KHex, KHabit, KFarm, KPaint, KGraph, KImage, KJournal, KMail, KMedia, KNet, KNote, KPass, KMine, KBBS, KCalendar, KChart, KColor, KChess, KConnect4, KConverter)*.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
-- **Current Target**: `KColor`
+- **Current Target**: `KConverter`
 - **Upcoming Queue**:
-  `KConverter`, `KQuarantine`, `KSettings`, `KTaskMgr`, `KHabit`, `KSudoku`, `KConnect4`, `KHangman`, `KSimon`, `KAsteroids`, `KFreecell`, `KMatch3`, `KWords`, `KGo`, `KDarts`, `KTowers`, `KReversi`, `KAlchemy`, `KColony`, `KStarForge`, `KBreakout`, `KRogue`, `KTetris`, `KPong`, `KPac`, `KChess` *(Completed in Pass 5: KBBS, KChrono, KCipher, KClip, KCyber, KDragon, KFortress, KHash, KMaze, KMech, KMystery, KQuest, KSanctuary, KSnake, KSolitaire, KSpace, KStarDredge, KStarship, KStellar, KSubmarine, KSynth, KSys, KTask, KTerm, KTimer, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KRSS, K2048, KChart, KGraph, KContacts, KScript, KRead, KColosseum, KAbyss, KMedia, KAudio, KRadio, KPad, KPaint, KCalc, KMine, KCosmic, KBase, KBudget, KCalendar, KFarm, KFlash, KFont, KImage, KJournal, KMail, KMandel, KNet, KNote, KPass, KDB, KHex, KBookmark, KPing, KChat, KClock, KPomodoro, KBreakout, KRogue, KTetris, KPong, KPac, KChess)*.
+  `KQuarantine`, `KSettings`, `KTaskMgr`, `KHabit`, `KSudoku`, `KConnect4`, `KHangman`, `KSimon`, `KAsteroids`, `KFreecell`, `KMatch3`, `KWords`, `KGo`, `KDarts`, `KTowers`, `KReversi`, `KAlchemy`, `KColony`, `KStarForge`, `KBreakout`, `KRogue`, `KTetris`, `KPong`, `KPac`, `KChess`, `KColor` *(Completed in Pass 5: KBBS, KChrono, KCipher, KClip, KCyber, KDragon, KFortress, KHash, KMaze, KMech, KMystery, KQuest, KSanctuary, KSnake, KSolitaire, KSpace, KStarDredge, KStarship, KStellar, KSubmarine, KSynth, KSys, KTask, KTerm, KTimer, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KRSS, K2048, KChart, KGraph, KContacts, KScript, KRead, KColosseum, KAbyss, KMedia, KAudio, KRadio, KPad, KPaint, KCalc, KMine, KCosmic, KBase, KBudget, KCalendar, KFarm, KFlash, KFont, KImage, KJournal, KMail, KMandel, KNet, KNote, KPass, KDB, KHex, KBookmark, KPing, KChat, KClock, KPomodoro, KBreakout, KRogue, KTetris, KPong, KPac, KChess, KColor)*.
 
 ### 6. Feature Expander Queue (`kilo-expander`)
 - **Current Target**: `KSolitaire`
@@ -217,6 +217,14 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-06T17:07:00-07:00 — kilo-qa: KColor (Pass 5: Tutorial & State Integrity, Quicksave/Load & Build Audit)**
+  - Status: PASS ✅ (0 regressions, 67.4 KB web / 17.9 KB native < 999 KB ceiling).
+  - State Persistence: Implemented [F5/F9] quicksave/quickload across web (`kcolor_quicksave`) and Win32 C (`kcolor_save.dat`); added UI buttons.
+  - Tutorial Integrity: Gated first-run guide behind `kcolor_tutorialSeen` / `kcolor_tutorial.dat`; restored saves bypass tutorial popup.
+  - Modal Isolation & Shortcuts: Wired Esc, Enter, Space for dialogs; isolated background hotkeys during open modals; improved color picker cleanup.
+  - Verification: `test_app_startup.py` PASS; `test_web_apps.js` PASS (59 elements, 0 errors); MSVC clean (`KColor.exe` 17.9 KB); Vite clean (554ms); security_lint 100% PASS.
+  - Queue: Advanced `kilo_qa` to `KConverter`; rotation advanced to `kilo-expander`.
+
 - **2026-10-06T16:51:00-07:00 — kilo-usability: KConverter (UI/UX, Layout Symmetry, Scrollbar & Toast Occlusion Remediation)**
   - Status: PASS ✅ (0 regressions, 89.0 KB web / 27.1 KB native < 999 KB ceiling).
   - Toast De-occlusion: Repositioned toast to bottom-center pill with click-to-dismiss (Directive 185 compliant).
@@ -251,13 +259,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Dead Drop Secret Responder: Passphrase listener triggers classified incoming whisper drop from SYSOP_0x7F in Tab 13.
   - Verification: `test_arg_flow.py` PASS; `check_icons.py` PASS; `security_lint.py` 100% PASS; build clean.
   - Queue: Advanced `kilo_creator` and `virtual_web_target` to `kweb://portal`; rotation advanced to `kilo-graphics`.
-
-- **2026-10-06T15:10:00-07:00 — kilo-qa: KChess (Pass 5: Tutorial & State Integrity, Dust Ban, Modal Isolation & Build Audit)**
-  - Status: PASS ✅ (0 regressions, 169.6 KB web / 53.8 KB native < 999 KB ceiling).
-  - State Persistence: Hardened [F5/F9] in web and Win32 C (`kchess_save.dat`); refreshed menu indicators, FX clearing, and blitz delta clamping.
-  - Tutorial Integrity: Gated first-run guide behind `kchess_tutorialSeen` / `kchess_tutorial.dat`; restored saves bypass tutorial prompts.
-  - Modal Isolation & Shortcuts: Wired Esc, Enter, Space to overlay buttons; blocked underlying board interaction while modals open.
-  - Glint & Dust Ban: Removed 45 floating dust motes loop in web and Win32 C per Mandate 11 / Directive 177; kept static wood/brass filigree.
-  - Safety & Storage: Wrapped localStorage in safe accessors handling quota errors gracefully; updated help close button accessibility.
-  - Verification: `test_app_startup.py` PASS; `test_web_apps.js` PASS (71 elements, 0 errors); MSVC clean (`KChess.exe` 53.8 KB); Vite clean (350ms); security_lint 100% PASS.
-  - Queue: Advanced `kilo_qa` to `KColor`; rotation advanced to `kilo-expander`.

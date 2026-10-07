@@ -4,6 +4,16 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-06T15:10:00-07:00 — kilo-qa: KChess (Pass 5: Tutorial & State Integrity, Dust Ban, Modal Isolation & Build Audit)**
+  - Status: PASS ✅ (0 regressions, 169.6 KB web / 53.8 KB native < 999 KB ceiling).
+  - State Persistence: Hardened [F5/F9] in web and Win32 C (`kchess_save.dat`); refreshed menu indicators, FX clearing, and blitz delta clamping.
+  - Tutorial Integrity: Gated first-run guide behind `kchess_tutorialSeen` / `kchess_tutorial.dat`; restored saves bypass tutorial prompts.
+  - Modal Isolation & Shortcuts: Wired Esc, Enter, Space to overlay buttons; blocked underlying board interaction while modals open.
+  - Glint & Dust Ban: Removed 45 floating dust motes loop in web and Win32 C per Mandate 11 / Directive 177; kept static wood/brass filigree.
+  - Safety & Storage: Wrapped localStorage in safe accessors handling quota errors gracefully; updated help close button accessibility.
+  - Verification: `test_app_startup.py` PASS; `test_web_apps.js` PASS (71 elements, 0 errors); MSVC clean (`KChess.exe` 53.8 KB); Vite clean (350ms); security_lint 100% PASS.
+  - Queue: Advanced `kilo_qa` to `KColor`; rotation advanced to `kilo-expander`.
+
 - **2026-10-06T14:57:00-07:00 — kilo-usability: KConnect4 (UI/UX, Layout De-occlusion, Glint Ban & SyntaxError Remediation)**
   - Status: PASS ✅ (0 regressions, 163.6 KB web / 184.3 KB native < 999 KB ceiling).
   - SyntaxError Fix: Removed duplicate `pendingInviteRoom` declaration unblocking page script and board DOM rendering.

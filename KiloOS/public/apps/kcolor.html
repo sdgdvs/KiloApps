@@ -425,6 +425,12 @@
     </div>
   </div>
   <div class="header-actions">
+    <button class="action-btn" id="quicksaveBtn" title="Quicksave Palette &amp; State (Hotkey: F5, Ctrl+S)" aria-label="Quicksave State">
+      💾 Save <span style="font-size:0.75rem; opacity:0.75; font-weight:600;">(F5)</span>
+    </button>
+    <button class="action-btn" id="quickloadBtn" title="Quickload State (Hotkey: F9, Ctrl+O)" aria-label="Quickload State">
+      📂 Load <span style="font-size:0.75rem; opacity:0.75; font-weight:600;">(F9)</span>
+    </button>
     <button class="action-btn" id="randomBtn" title="Generate Random Color (Hotkey: R)" aria-label="Generate Random Color">
       🎲 Random
     </button>
@@ -462,11 +468,13 @@
       <p><strong style="color:var(--text-main);">Keyboard Shortcuts:</strong></p>
       <ul style="padding-left:18px; display:flex; flex-direction:column; gap:3px;">
         <li><kbd style="background:rgba(255,255,255,0.1); padding:2px 5px; border-radius:3px;">F1</kbd>, <kbd style="background:rgba(255,255,255,0.1); padding:2px 5px; border-radius:3px;">H</kbd>, or <kbd style="background:rgba(255,255,255,0.1); padding:2px 5px; border-radius:3px;">?</kbd> — Open this Help guide</li>
+        <li><kbd style="background:rgba(255,255,255,0.1); padding:2px 5px; border-radius:3px;">F5</kbd> / <kbd style="background:rgba(255,255,255,0.1); padding:2px 5px; border-radius:3px;">Ctrl+S</kbd> — Quicksave palette &amp; active color</li>
+        <li><kbd style="background:rgba(255,255,255,0.1); padding:2px 5px; border-radius:3px;">F9</kbd> / <kbd style="background:rgba(255,255,255,0.1); padding:2px 5px; border-radius:3px;">Ctrl+O</kbd> — Quickload saved state</li>
         <li><kbd style="background:rgba(255,255,255,0.1); padding:2px 5px; border-radius:3px;">R</kbd> — Generate random color</li>
         <li><kbd style="background:rgba(255,255,255,0.1); padding:2px 5px; border-radius:3px;">I</kbd> — Invert active color</li>
         <li><kbd style="background:rgba(255,255,255,0.1); padding:2px 5px; border-radius:3px;">C</kbd> — Copy active HEX code</li>
         <li><kbd style="background:rgba(255,255,255,0.1); padding:2px 5px; border-radius:3px;">1</kbd>–<kbd style="background:rgba(255,255,255,0.1); padding:2px 5px; border-radius:3px;">9</kbd> — Quick-select palette swatches 1–9</li>
-        <li><kbd style="background:rgba(255,255,255,0.1); padding:2px 5px; border-radius:3px;">Esc</kbd> — Close modal / blur inputs / dismiss toast</li>
+        <li><kbd style="background:rgba(255,255,255,0.1); padding:2px 5px; border-radius:3px;">Esc</kbd> / <kbd style="background:rgba(255,255,255,0.1); padding:2px 5px; border-radius:3px;">Enter</kbd> — Close modal / blur inputs / dismiss toast</li>
       </ul>
     </div>
     <div style="display:flex; justify-content:space-between; align-items:center; padding-top:10px; border-top:1px solid var(--card-border); margin-top:4px;">
@@ -1383,22 +1391,28 @@
   if (revertColorBtn) revertColorBtn.addEventListener('click', revertToPrevColor);
 
   // Tabs Switching
+  function switchTab(tab) {
+    if (!tab) return;
+    activeTab = tab;
+    document.querySelectorAll('.tab-btn').forEach(b => {
+      const isMatch = b.getAttribute('data-tab') === tab;
+      b.classList.toggle('active', isMatch);
+      b.setAttribute('aria-selected', isMatch ? 'true' : 'false');
+    });
+    const sRgb = document.getElementById('slidersRgb');
+    const sHsl = document.getElementById('slidersHsl');
+    const sHsv = document.getElementById('slidersHsv');
+    const sCmyk = document.getElementById('slidersCmyk');
+    if (sRgb) sRgb.style.display = tab === 'rgb' ? 'flex' : 'none';
+    if (sHsl) sHsl.style.display = tab === 'hsl' ? 'flex' : 'none';
+    if (sHsv) sHsv.style.display = tab === 'hsv' ? 'flex' : 'none';
+    if (sCmyk) sCmyk.style.display = tab === 'cmyk' ? 'flex' : 'none';
+  }
+
   document.querySelectorAll('.tab-btn').forEach(btn => {
     btn.addEventListener('click', (e) => {
-      document.querySelectorAll('.tab-btn').forEach(b => {
-        b.classList.remove('active');
-        b.setAttribute('aria-selected', 'false');
-      });
-      e.target.classList.add('active');
-      e.target.setAttribute('aria-selected', 'true');
-
-      const tab = e.target.getAttribute('data-tab');
-      activeTab = tab;
-      
-      document.getElementById('slidersRgb').style.display = tab === 'rgb' ? 'flex' : 'none';
-      document.getElementById('slidersHsl').style.display = tab === 'hsl' ? 'flex' : 'none';
-      document.getElementById('slidersHsv').style.display = tab === 'hsv' ? 'flex' : 'none';
-      document.getElementById('slidersCmyk').style.display = tab === 'cmyk' ? 'flex' : 'none';
+      const tab = e.currentTarget.getAttribute('data-tab');
+      switchTab(tab);
     });
   });
 
@@ -1427,6 +1441,9 @@
       picker.style.opacity = '0';
       picker.style.pointerEvents = 'none';
       document.body.appendChild(picker);
+      const cleanupPicker = () => {
+        try { if (picker.parentNode) document.body.removeChild(picker); } catch (err) {}
+      };
       picker.addEventListener('input', (e) => {
         const rgb = parseColorString(e.target.value);
         if (rgb) {
@@ -1435,9 +1452,8 @@
           updateAll();
         }
       });
-      picker.addEventListener('change', () => {
-        try { document.body.removeChild(picker); } catch (err) {}
-      });
+      picker.addEventListener('change', cleanupPicker);
+      picker.addEventListener('blur', () => setTimeout(cleanupPicker, 300));
       picker.click();
     }
   });
@@ -1584,6 +1600,62 @@
     });
   }
 
+  // Full State Persistence: Quicksave (F5) & Quickload (F9)
+  function quicksaveState() {
+    const saveData = {
+      version: 1,
+      state: { r: state.r, g: state.g, b: state.b },
+      prevState: { r: prevState.r, g: prevState.g, b: prevState.b },
+      activeTab: activeTab,
+      savedSwatches: [...savedSwatches],
+      savedAt: Date.now()
+    };
+    safeSetStorage('kcolor_quicksave', saveData);
+    const hex = rgbToHex(state.r, state.g, state.b);
+    showToast(`Quicksaved state (${hex}) [F5]`);
+  }
+
+  function quickloadState() {
+    const saveData = safeGetStorage('kcolor_quicksave', null);
+    if (!saveData || !saveData.state) {
+      showToast('No saved state found (Press F5 to save)');
+      return false;
+    }
+    state = {
+      r: clamp(saveData.state.r, 0, 255),
+      g: clamp(saveData.state.g, 0, 255),
+      b: clamp(saveData.state.b, 0, 255)
+    };
+    if (saveData.prevState) {
+      prevState = {
+        r: clamp(saveData.prevState.r, 0, 255),
+        g: clamp(saveData.prevState.g, 0, 255),
+        b: clamp(saveData.prevState.b, 0, 255)
+      };
+    } else {
+      prevState = { ...state };
+    }
+    if (Array.isArray(saveData.savedSwatches)) {
+      savedSwatches = saveData.savedSwatches;
+      safeSetStorage('kcolor_saved_swatches', savedSwatches);
+      renderSwatches();
+    }
+    if (saveData.activeTab && ['rgb', 'hsl', 'hsv', 'cmyk'].includes(saveData.activeTab)) {
+      switchTab(saveData.activeTab);
+    }
+    updateAll();
+    updatePrevDisplay();
+    const hex = rgbToHex(state.r, state.g, state.b);
+    showToast(`Restored state (${hex}) [F9]`);
+    return true;
+  }
+
+  const quicksaveBtn = document.getElementById('quicksaveBtn');
+  if (quicksaveBtn) quicksaveBtn.addEventListener('click', quicksaveState);
+
+  const quickloadBtn = document.getElementById('quickloadBtn');
+  if (quickloadBtn) quickloadBtn.addEventListener('click', quickloadState);
+
   // Global Keyboard Shortcuts
   window.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
@@ -1601,7 +1673,38 @@
       }
     }
 
+    // Modal isolation: block underlying hotkeys when modal is open; Enter/Space confirms
+    if (helpModal && helpModal.style.display !== 'none') {
+      if (e.key === 'Enter' || e.key === ' ') {
+        if (e.target !== chkDoNotShow) {
+          e.preventDefault();
+          toggleHelp(false);
+        }
+      }
+      return;
+    }
+
+    // Hotkeys inside input fields
     if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+      if (e.key === 'F5' || e.key === 'f5') {
+        e.preventDefault();
+        quicksaveState();
+      } else if (e.key === 'F9' || e.key === 'f9') {
+        e.preventDefault();
+        quickloadState();
+      }
+      return;
+    }
+
+    // Quicksave & Quickload hotkeys (F5 / F9 / Ctrl+S / Ctrl+O)
+    if (e.key === 'F5' || e.key === 'f5' || ((e.ctrlKey || e.metaKey) && (e.key === 's' || e.key === 'S'))) {
+      e.preventDefault();
+      quicksaveState();
+      return;
+    }
+    if (e.key === 'F9' || e.key === 'f9' || ((e.ctrlKey || e.metaKey) && (e.key === 'o' || e.key === 'O'))) {
+      e.preventDefault();
+      quickloadState();
       return;
     }
 
@@ -1643,11 +1746,13 @@
 
   // Init
   const tutorialSeen = safeGetStorage('kcolor_tutorialSeen', false);
+  const existingSave = safeGetStorage('kcolor_quicksave', null);
   if (chkDoNotShow) chkDoNotShow.checked = !!tutorialSeen;
   renderSwatches();
   updateAll();
   updatePrevDisplay();
-  if (!tutorialSeen) {
+  // First-run Tutorial Integrity: Ensure tutorial prompts fire only on fresh sessions without existing quicksave
+  if (!tutorialSeen && !existingSave) {
     toggleHelp(true);
   }
 </script>
