@@ -12,7 +12,7 @@
     --brass-border: #d4af37;
   }
   body {
-    margin: 0; padding: 25px;
+    margin: 0; padding: 8px 12px 10px 12px;
     background: linear-gradient(135deg, #4a2111 0%, #2b1104 40%, #1a0a03 60%, #3e1f0e 100%);
     box-shadow: inset 0 0 50px rgba(0,0,0,0.9);
     color: #ffffff;
@@ -27,15 +27,12 @@
     flex-grow: 1;
     background: radial-gradient(circle at 50% 35%, var(--felt-green) 0%, var(--felt-dark) 80%, #051d0d 100%);
     border-radius: 12px;
-    border: 8px solid #1a0a03;
-    box-shadow: inset 0 0 120px rgba(0,0,0,0.8), 0 20px 40px rgba(0,0,0,0.9);
+    border: 6px solid #1a0a03;
+    box-shadow: inset 0 0 100px rgba(0,0,0,0.8), 0 15px 35px rgba(0,0,0,0.9);
     display: flex;
     flex-direction: column;
     overflow: hidden;
-  }
-  @keyframes glint {
-    0%, 100% { opacity: 0.1; }
-    50% { opacity: 0.35; }
+    min-height: 0;
   }
   .felt-board::before {
     content: "";
@@ -45,84 +42,107 @@
       repeating-linear-gradient(-45deg, rgba(255,255,255,0.015) 0px, rgba(255,255,255,0.015) 2px, transparent 2px, transparent 4px);
     pointer-events: none; z-index: 1;
   }
-  .felt-board::after {
-    content: "";
-    position: absolute; top: 0; left: 0; right: 0; bottom: 0;
-    background-image: 
-      radial-gradient(1px 1px at 20px 30px, #fff, rgba(0,0,0,0)),
-      radial-gradient(1px 1px at 40px 70px, #fff, rgba(0,0,0,0)),
-      radial-gradient(1.5px 1.5px at 50px 160px, #fff, rgba(0,0,0,0)),
-      radial-gradient(1px 1px at 90px 40px, #fff, rgba(0,0,0,0)),
-      radial-gradient(2px 2px at 120px 120px, rgba(255,215,0,0.8), rgba(0,0,0,0));
-    background-repeat: repeat;
-    background-size: 150px 150px;
-    animation: glint 4s infinite alternate ease-in-out;
-    pointer-events: none;
-    z-index: 1;
-    mix-blend-mode: screen;
-  }
-  @keyframes shake {
-    0% { transform: translate(1px, 1px) rotate(0deg); }
-    10% { transform: translate(-1px, -2px) rotate(-1deg); }
-    20% { transform: translate(-3px, 0px) rotate(1deg); }
-    30% { transform: translate(3px, 2px) rotate(0deg); }
-    40% { transform: translate(1px, -1px) rotate(1deg); }
-    50% { transform: translate(-1px, 2px) rotate(-1deg); }
-    60% { transform: translate(-3px, 1px) rotate(0deg); }
-    70% { transform: translate(3px, 1px) rotate(-1deg); }
-    80% { transform: translate(-1px, -1px) rotate(1deg); }
-    90% { transform: translate(1px, 2px) rotate(0deg); }
-    100% { transform: translate(1px, -2px) rotate(-1deg); }
-  }
-  .shake-anim {
-    animation: shake 0.25s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
-  }
-  .shake-heavy {
-    animation: shake 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
-  }
-
 
   .header {
-    background: rgba(15, 23, 42, 0.88);
+    background: rgba(15, 23, 42, 0.92);
     backdrop-filter: blur(12px);
-    padding: 8px 16px;
+    padding: 6px 14px;
     border-bottom: 1px solid rgba(212, 175, 55, 0.4);
-    display: flex; justify-content: space-between; align-items: center;
+    display: flex; flex-direction: column; gap: 6px;
     position: relative; z-index: 1000;
     box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+    flex-shrink: 0;
   }
-  .header h1 {
-    margin: 0; font-size: 20px; font-weight: 800;
+  .header-top {
+    display: flex; justify-content: space-between; align-items: center;
+    flex-wrap: wrap; gap: 8px;
+  }
+  .header-top h1 {
+    margin: 0; font-size: 18px; font-weight: 800;
     color: var(--gold-accent);
     text-shadow: 0 2px 4px rgba(0,0,0,0.8), 0 0 10px rgba(255,215,0,0.3);
-    letter-spacing: 1px;
-    display: flex; align-items: center; gap: 8px;
+    letter-spacing: 0.5px;
+    display: flex; align-items: center; gap: 6px;
   }
+  .game-status-bar {
+    display: flex; align-items: center; gap: 10px;
+    font-size: 12.5px; font-weight: 700; color: #e2e8f0;
+  }
+  .status-badge {
+    background: rgba(0,0,0,0.45);
+    padding: 3px 8px; border-radius: 4px;
+    border: 1px solid rgba(212, 175, 55, 0.25);
+  }
+  .header-alerts {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 12.5px; font-weight: 800;
+  }
+  .help-key-hint {
+    color: #94a3b8; font-size: 11.5px; font-weight: normal; cursor: pointer;
+  }
+  .help-key-hint:hover { color: var(--gold-accent); text-decoration: underline; }
+  .toolbar {
+    display: flex; flex-wrap: wrap; gap: 5px; align-items: center;
+  }
+  .toolbar-sep {
+    width: 1px; height: 18px; background: rgba(212, 175, 55, 0.3); margin: 0 2px;
+  }
+  .onboarding-bar {
+    background: rgba(18, 48, 28, 0.95);
+    border: 1px solid rgba(212, 175, 55, 0.5);
+    border-radius: 6px;
+    padding: 5px 12px;
+    margin: 6px 14px 0 14px;
+    font-size: 12px;
+    color: #f1f5f9;
+    display: flex; justify-content: space-between; align-items: center;
+    box-shadow: 0 3px 8px rgba(0,0,0,0.5);
+    z-index: 999;
+    flex-shrink: 0;
+  }
+  .onboarding-bar b { color: var(--gold-accent); }
+  .onboarding-close {
+    background: none; border: none; color: #94a3b8; cursor: pointer;
+    font-size: 16px; font-weight: bold; padding: 0 4px; line-height: 1;
+  }
+  .onboarding-close:hover { color: #ffffff; }
+
   .btn {
     background: linear-gradient(180deg, #3a3f4d 0%, #1f232d 100%);
     color: #fff; border: 1px solid rgba(255,255,255,0.2);
-    padding: 5px 10px; cursor: pointer; border-radius: 5px;
-    font-size: 13px; font-weight: 600;
+    padding: 4px 8px; cursor: pointer; border-radius: 4px;
+    font-size: 12px; font-weight: 600;
     display: inline-flex; align-items: center; gap: 4px;
-    transition: all 0.2s ease;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.15);
+    transition: all 0.15s ease;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.15);
   }
   .btn:hover {
     background: linear-gradient(180deg, #4a5061 0%, #2b303d 100%);
     border-color: var(--gold-accent);
     transform: translateY(-1px);
-    box-shadow: 0 4px 8px rgba(0,0,0,0.5);
+    box-shadow: 0 3px 6px rgba(0,0,0,0.5);
   }
+  .btn:active {
+    transform: translateY(0);
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.6);
+  }
+  .btn:focus-visible {
+    outline: 2px solid var(--gold-accent);
+    outline-offset: 1px;
+  }
+
   .game-board {
-    flex-grow: 1; padding: 20px;
-    display: flex; flex-direction: column; gap: 24px;
+    flex-grow: 1; padding: 10px 16px 14px 16px;
+    display: flex; flex-direction: column; gap: 14px;
     position: relative; z-index: 2;
-    max-width: 1100px; margin: 0 auto; width: 100%; box-sizing: border-box;
+    max-width: 1050px; margin: 0 auto; width: 100%; box-sizing: border-box;
+    min-height: 0;
   }
   .top-row {
     display: flex; justify-content: space-between; align-items: center;
+    flex-shrink: 0;
   }
-  .group { display: flex; gap: 12px; }
+  .group { display: flex; gap: 10px; }
   .cell {
     width: 74px; height: 106px;
     border: 2px solid rgba(212, 175, 55, 0.5);
@@ -249,89 +269,159 @@
     position: absolute; top: 0; left: 0; width: 100%; height: 100%;
     pointer-events: none; z-index: 900;
   }
+
+  /* Accessible Modal Overlays */
+  .modal-overlay {
+    display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0, 0, 0, 0.82);
+    backdrop-filter: blur(4px);
+    justify-content: center; align-items: center;
+    z-index: 2000; padding: 16px;
+    box-sizing: border-box;
+  }
+  .modal-box {
+    background: #1e2530; padding: 20px 24px; border-radius: 10px;
+    border: 2px solid #d4af37; box-shadow: 0 0 35px rgba(0,0,0,0.85);
+    max-height: 90vh; overflow-y: auto; color: #f1f5f9; box-sizing: border-box;
+  }
+  .modal-header-row {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 12px; border-bottom: 1px solid rgba(212, 175, 55, 0.3);
+    padding-bottom: 8px;
+  }
+  .modal-title {
+    margin: 0; font-size: 18px; color: var(--gold-accent); font-weight: 700;
+  }
+  .modal-close-btn {
+    background: none; border: none; color: #94a3b8; font-size: 22px;
+    cursor: pointer; padding: 0 4px; line-height: 1;
+  }
+  .modal-close-btn:hover { color: #fff; }
 </style>
 </head>
 <body>
   <div class="felt-board">
   <canvas id="fx-canvas"></canvas>
   <div class="header">
-    <div style="display:flex;gap:8px;align-items:center;">
-      <button class="btn" onclick="initGame()">New Game</button>
-      <select id="game-mode" class="btn" style="background:#2d2d30; color:#fff;" onchange="updateModeUI(); initGame();">
+    <div class="header-top">
+      <h1>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="#ffd700" aria-hidden="true"><path d="M12 2C9.5 6 4 10.5 4 14.5C4 17.5 6.5 19 9 19C10.5 19 11.5 18.2 12 17.5C12.5 18.2 13.5 19 15 19C17.5 19 20 17.5 20 14.5C20 10.5 14.5 6 12 2Z"/><path d="M12 16L9 22H15L12 16Z"/></svg>
+        KFreecell
+      </h1>
+      <div class="game-status-bar">
+        <div id="game-info" class="status-badge" role="status" aria-live="polite">Time: 00:00 | Moves: 0</div>
+      </div>
+      <div class="header-alerts">
+        <div id="status" role="status" aria-live="polite" style="color: #ffd700;"></div>
+        <span class="help-key-hint" onclick="showHelp()" title="Open Help and Controls [F1]" tabindex="0" role="button" onkeydown="if(event.key==='Enter'||event.key===' ')showHelp()">[F1 / H] Help</span>
+      </div>
+    </div>
+    <div class="toolbar" role="toolbar" aria-label="Game Controls">
+      <button class="btn" onclick="initGame()" title="Start New Deal [F2 / N]" aria-label="New Game (F2 or N)">⚡ New [F2]</button>
+      <select id="game-mode" class="btn" style="background:#2d2d30; color:#fff;" onchange="updateModeUI(); initGame();" aria-label="Game Mode">
         <option value="random">Random Deal</option>
         <option value="numbered">Numbered Deal</option>
         <option value="campaign">Campaign Mode</option>
         <option value="timeattack">Time Attack</option>
       </select>
-      <input type="number" id="seed-input" class="btn" style="width: 60px; display: none; background:#2d2d30; color:#fff;" value="1" min="1" max="1000000" onchange="initGame()">
-      <button class="btn" onclick="undoMove()" title="Free Unlimited Undo [U]">Undo [U]</button>
-      <button class="btn" onclick="autoSolvePowerup()" title="Auto-Solve Safe Cards [A]">Auto-Solve [A]</button>
-      <button class="btn" onclick="wandPowerup()" title="Magic Wand: Auto-detect safe card [W]">Wand [W]</button>
-      <button class="btn" onclick="extraCellPowerup()" title="Extra Cell: Unlocks +1 Free Cell slot for 30s [E]">+1 Cell [E]</button>
-      <button class="btn" onclick="shufflePowerup()" title="Shuffle Tableau Cards [P]">Shuffle [P]</button>
-      <button class="btn" onclick="saveGame()">Save</button>
-      <button class="btn" onclick="loadGame()">Load</button>
-      <button class="btn" onclick="showStats()">Stats</button>
-      <button class="btn" onclick="showSettings()">Settings</button>
-      <button class="btn" onclick="showHelp()">Help</button>
+      <input type="number" id="seed-input" class="btn" style="width: 65px; display: none; background:#2d2d30; color:#fff;" value="1" min="1" max="1000000" onchange="initGame()" aria-label="Deal Seed Number">
+      <div class="toolbar-sep"></div>
+      <button class="btn" onclick="undoMove()" title="Free Unlimited Undo [U / Ctrl+Z]" aria-label="Undo Move (U)">↶ Undo [U]</button>
+      <button class="btn" onclick="autoSolvePowerup()" title="Auto-Solve Safe Foundation Cards [A]" aria-label="Auto-Solve Safe Cards (A)">✨ Auto [A]</button>
+      <button class="btn" onclick="wandPowerup()" title="Magic Wand: Auto-detect & play optimal safe card [W]" aria-label="Magic Wand (W)">🪄 Wand [W]</button>
+      <button class="btn" onclick="extraCellPowerup()" title="Extra Cell: Unlocks +1 Free Cell slot for 30s [E]" aria-label="Extra Cell (+1) (E)">➕ Cell [E]</button>
+      <button class="btn" onclick="shufflePowerup()" title="Shuffle Tableau Cards in Place [P]" aria-label="Shuffle Tableau (P)">🔀 Shuffle [P]</button>
+      <div class="toolbar-sep"></div>
+      <button class="btn" onclick="saveGame()" title="Quick Save Game [F5]" aria-label="Save Game (F5)">💾 Save [F5]</button>
+      <button class="btn" onclick="loadGame()" title="Quick Load Game [F9]" aria-label="Load Game (F9)">📂 Load [F9]</button>
+      <button class="btn" onclick="showStats()" title="View Game Statistics" aria-label="View Statistics">🏆 Stats</button>
+      <button class="btn" onclick="showSettings()" title="Card Back Design Settings [S]" aria-label="Settings (S)">⚙️ Settings</button>
+      <button class="btn" onclick="showHelp()" title="How to Play & Keyboard Shortcuts [F1 / H]" aria-label="Help (F1 or H)">📖 Help [F1]</button>
     </div>
-    <h1><svg width="22" height="22" viewBox="0 0 24 24" fill="#ffd700"><path d="M12 2C9.5 6 4 10.5 4 14.5C4 17.5 6.5 19 9 19C10.5 19 11.5 18.2 12 17.5C12.5 18.2 13.5 19 15 19C17.5 19 20 17.5 20 14.5C20 10.5 14.5 6 12 2Z"/><path d="M12 16L9 22H15L12 16Z"/></svg> KFreecell</h1>
-    <div id="game-info" style="font-size: 14px; margin: 0 15px; font-weight: 700; color: #e0e0e0;">Time: 00:00 | Moves: 0</div>
-    <div id="status" style="font-size: 14px; font-weight: 800; color: #ffd700;"></div>
   </div>
 
-  <div id="stats-modal" style="display:none; position:absolute; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.8); justify-content:center; align-items:center; z-index:2000;" onclick="if(event.target===this)this.style.display='none'">
-    <div style="background:#1e2530; padding:24px; border-radius:10px; border:2px solid #d4af37; text-align:center; box-shadow: 0 0 30px rgba(0,0,0,0.8);">
-      <h2 style="margin-top:0; color:#ffd700;">Statistics</h2>
+  <div id="onboarding-banner" class="onboarding-bar" style="display:none;">
+    <span>💡 <b>Welcome to KFreecell:</b> Build foundations from Ace to King. Press <b>[F1]</b> or <b>[H]</b> for Help. Double-click or right-click to quick-play.</span>
+    <button class="onboarding-close" onclick="dismissOnboarding()" title="Dismiss Tip" aria-label="Dismiss Tip">&times;</button>
+  </div>
+
+  <div id="stats-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="stats-modal-title" onclick="if(event.target===this)this.style.display='none'">
+    <div class="modal-box" style="text-align:center; min-width: 320px;">
+      <div class="modal-header-row">
+        <h2 id="stats-modal-title" class="modal-title">🏆 Statistics</h2>
+        <button class="modal-close-btn" onclick="document.getElementById('stats-modal').style.display='none'" aria-label="Close statistics">&times;</button>
+      </div>
       <p>Games Played: <span id="stat-played">0</span></p>
       <p>Wins: <span id="stat-wins">0</span> (<span id="stat-winpct">0</span>%)</p>
       <p>Current Streak: <span id="stat-streak">0</span> | Best Streak: <span id="stat-best">0</span></p>
       <p>Best Time: <span id="stat-besttime">--</span></p>
       <p>Campaign Progress: Stage <span id="stat-campaign">1</span> / 20</p>
       <p>Time Attack Wins: <span id="stat-tawins">0</span> (Best Win: <span id="stat-tabest">--</span>)</p>
-      <button class="btn" style="margin-top:12px;" onclick="document.getElementById('stats-modal').style.display='none'">Close</button>
-      <button class="btn" style="margin-top:12px; margin-left:8px; background:linear-gradient(180deg,#7f1d1d,#450a0a); border-color:#ef4444;" onclick="resetStats()">Reset Stats</button>
+      <div style="margin-top:16px; display:flex; justify-content:center; gap:8px;">
+        <button class="btn" onclick="document.getElementById('stats-modal').style.display='none'">Close</button>
+        <button class="btn" style="background:linear-gradient(180deg,#7f1d1d,#450a0a); border-color:#ef4444;" onclick="resetStats()">Reset Stats</button>
+      </div>
     </div>
   </div>
 
-  <div id="settings-modal" style="display:none; position:absolute; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.8); justify-content:center; align-items:center; z-index:2000;" onclick="if(event.target===this)this.style.display='none'">
-    <div style="background:#1e2530; padding:24px; border-radius:10px; border:2px solid #d4af37; text-align:center; box-shadow: 0 0 30px rgba(0,0,0,0.8);">
-      <h2 style="margin-top:0; color:#ffd700;">Settings</h2>
-      <p>Select Card Back Design:</p>
-      <div style="display:flex; gap:12px; justify-content:center; margin-bottom: 20px;" id="card-back-options">
+  <div id="settings-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="settings-modal-title" onclick="if(event.target===this)this.style.display='none'">
+    <div class="modal-box" style="text-align:center; min-width: 320px;">
+      <div class="modal-header-row">
+        <h2 id="settings-modal-title" class="modal-title">⚙️ Settings</h2>
+        <button class="modal-close-btn" onclick="document.getElementById('settings-modal').style.display='none'" aria-label="Close settings">&times;</button>
       </div>
+      <p>Select Card Back Design:</p>
+      <div style="display:flex; gap:12px; justify-content:center; margin-bottom: 20px;" id="card-back-options"></div>
       <button class="btn" onclick="document.getElementById('settings-modal').style.display='none'">Close</button>
     </div>
   </div>
 
-  <div id="help-modal" style="display:none; position:absolute; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.8); justify-content:center; align-items:center; z-index:2000;" onclick="if(event.target===this)this.style.display='none'">
-    <div style="background:#1e2530; padding:24px; border-radius:10px; border:2px solid #d4af37; max-width:540px; text-align:left; box-shadow: 0 0 30px rgba(0,0,0,0.8);">
-      <h2 style="margin-top:0; text-align:center; color:#ffd700;">How to Play Freecell (Loop 7 Expansion)</h2>
-      <p><b>Rules:</b></p>
-      <ul style="margin: 0; padding-left: 20px;">
-        <li>Build all 4 foundations from Ace to King by suit.</li>
-        <li>Move cards between tableau columns (Alt colors or Baker's Suit rules).</li>
-        <li>Use Free Cells at the top left to store single cards. Extra cells can be unlocked temporarily.</li>
-        <li>Moving multiple cards requires enough empty free cells/columns.</li>
-        <li>Some campaign stages restrict empty tableau slots to Kings only or contain Frozen cards.</li>
-        <li>Frozen cards thaw when exposed at column top or when adjacent plays occur.</li>
-      </ul>
-      <p><b>Active Skills & Assistance:</b></p>
-      <ul style="margin: 0; padding-left: 20px;">
-        <li><b>[W] Magic Wand:</b> Auto-detects and plays 1 optimal safe card to Foundation or Freecell.</li>
-        <li><b>[E] Extra Cell:</b> Unlocks +1 temporary Free Cell slot for 30 seconds!</li>
-        <li><b>[A] Auto-Solve:</b> Continuously moves safe cards to Foundations.</li>
-        <li><b>[U] / [Z] Free Undo:</b> Unlimited move undo.</li>
-        <li><b>[P] Shuffle:</b> Shuffles remaining tableau cards in place.</li>
-      </ul>
-      <p><b>Modes:</b></p>
-      <ul style="margin: 0; padding-left: 20px;">
-        <li><b>Random / Numbered Deal.</b></li>
-        <li><b>Campaign Mode:</b> 20 stages featuring 4-cell, 3-cell, 2-cell constraints, Baker's rules, King-only spaces, Frozen cards, and Stage 20 Grandmaster Challenge.</li>
-        <li><b>Time Attack:</b> 180s countdown timer! Foundations add +15s bonus time.</li>
-      </ul>
-      <div style="text-align:center; margin-top:15px;">
-        <button class="btn" onclick="document.getElementById('help-modal').style.display='none'">Close</button>
+  <div id="help-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="help-modal-title" onclick="if(event.target===this)this.style.display='none'">
+    <div class="modal-box" style="max-width:560px; text-align:left;">
+      <div class="modal-header-row">
+        <h2 id="help-modal-title" class="modal-title">📖 How to Play KFreecell</h2>
+        <button class="modal-close-btn" onclick="document.getElementById('help-modal').style.display='none'" aria-label="Close help">&times;</button>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:12px; font-size:13px; line-height:1.5;">
+        <div>
+          <b style="color:var(--gold-accent);">Objective &amp; Rules:</b>
+          <ul style="margin: 4px 0 0 0; padding-left: 20px;">
+            <li>Build all 4 foundations from Ace to King by suit (Spades, Hearts, Clubs, Diamonds).</li>
+            <li>In the tableau, build downward in alternating colors (or same suit under Baker's rules).</li>
+            <li>Use the 4 Free Cells at top left to temporarily store single cards.</li>
+            <li>Moving multiple cards requires enough open free cells and empty tableau columns: <code>(free + 1) &times; 2<sup>empty_cols</sup></code>.</li>
+            <li>Frozen cards thaw when exposed at column end or when adjacent cards are played.</li>
+          </ul>
+        </div>
+        <div>
+          <b style="color:var(--gold-accent);">Active Assistance:</b>
+          <ul style="margin: 4px 0 0 0; padding-left: 20px;">
+            <li><b>[W] Magic Wand:</b> Auto-detects and plays 1 safe optimal card to Foundation or Freecell.</li>
+            <li><b>[E] Extra Cell:</b> Unlocks +1 temporary Free Cell slot for 30 seconds!</li>
+            <li><b>[A] Auto-Solve:</b> Continuously auto-advances safe cards to Foundations.</li>
+            <li><b>[U] / [Ctrl+Z]:</b> Unlimited move undo.</li>
+            <li><b>[P] Shuffle:</b> Shuffles remaining tableau cards in place.</li>
+          </ul>
+        </div>
+        <div>
+          <b style="color:var(--gold-accent);">Keyboard &amp; Mouse Shortcuts:</b>
+          <table style="width:100%; border-collapse:collapse; margin-top:4px; font-size:12px;">
+            <tr style="border-bottom:1px solid rgba(212,175,55,0.2);"><td style="padding:2px 4px;"><b>[F1] / [H] / [?]</b></td><td>Open Help &amp; Controls</td></tr>
+            <tr style="border-bottom:1px solid rgba(212,175,55,0.2);"><td style="padding:2px 4px;"><b>[F2] / [N]</b></td><td>New Game</td></tr>
+            <tr style="border-bottom:1px solid rgba(212,175,55,0.2);"><td style="padding:2px 4px;"><b>[U] / [Ctrl+Z]</b></td><td>Undo Move</td></tr>
+            <tr style="border-bottom:1px solid rgba(212,175,55,0.2);"><td style="padding:2px 4px;"><b>[A]</b></td><td>Auto-Solve Safe Cards</td></tr>
+            <tr style="border-bottom:1px solid rgba(212,175,55,0.2);"><td style="padding:2px 4px;"><b>[W]</b></td><td>Magic Wand Assist</td></tr>
+            <tr style="border-bottom:1px solid rgba(212,175,55,0.2);"><td style="padding:2px 4px;"><b>[E]</b></td><td>Extra Free Cell (+1)</td></tr>
+            <tr style="border-bottom:1px solid rgba(212,175,55,0.2);"><td style="padding:2px 4px;"><b>[P]</b></td><td>Shuffle Tableau</td></tr>
+            <tr style="border-bottom:1px solid rgba(212,175,55,0.2);"><td style="padding:2px 4px;"><b>[F5] / [F9]</b></td><td>Quick Save / Quick Load</td></tr>
+            <tr style="border-bottom:1px solid rgba(212,175,55,0.2);"><td style="padding:2px 4px;"><b>[S]</b></td><td>Card Back Settings</td></tr>
+            <tr style="border-bottom:1px solid rgba(212,175,55,0.2);"><td style="padding:2px 4px;"><b>[Esc]</b></td><td>Deselect Card / Close Dialogs</td></tr>
+            <tr><td style="padding:2px 4px;"><b>Double / Right Click</b></td><td>Quick-send card to Foundation or Freecell</td></tr>
+          </table>
+        </div>
+      </div>
+      <div style="text-align:center; margin-top:16px;">
+        <button class="btn" onclick="document.getElementById('help-modal').style.display='none'">Got It</button>
       </div>
     </div>
   </div>
@@ -375,7 +465,7 @@
     }
     let screenShakeAmp = 0;
     function triggerScreenShake(intensity) {
-      screenShakeAmp = Math.max(screenShakeAmp, intensity);
+      // Screen shake disabled per App Maturity & Visual Restraint Protocol
     }
 
     function playSound(type) {
@@ -681,6 +771,27 @@
         }
       }
 
+      if (e.key === 'F1') {
+        e.preventDefault();
+        showHelp();
+        return;
+      }
+      if (e.key === 'F2') {
+        e.preventDefault();
+        initGame();
+        return;
+      }
+      if (e.key === 'F5') {
+        e.preventDefault();
+        saveGame();
+        return;
+      }
+      if (e.key === 'F9') {
+        e.preventDefault();
+        loadGame();
+        return;
+      }
+
       if (document.activeElement && (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'SELECT')) {
         return;
       }
@@ -906,7 +1017,22 @@
       document.getElementById('settings-modal').style.display = 'flex';
     }
 
+    function checkOnboarding() {
+      const seen = localStorage.getItem('kfreecell_tutorial_seen');
+      const banner = document.getElementById('onboarding-banner');
+      if (!seen && banner) {
+        banner.style.display = 'flex';
+      }
+    }
+
+    function dismissOnboarding() {
+      localStorage.setItem('kfreecell_tutorial_seen', '1');
+      const banner = document.getElementById('onboarding-banner');
+      if (banner) banner.style.display = 'none';
+    }
+
     function showHelp() {
+      dismissOnboarding();
       document.getElementById('help-modal').style.display = 'flex';
     }
 
@@ -1400,24 +1526,11 @@
 
     let fxParticles = [];
     let fxShockwaves = [];
-    let dustMotes = [];
     let fxCanvas = null;
     let fxCtx = null;
 
     function initDustMotes() {
-      dustMotes = [];
-      for (let i = 0; i < 45; i++) {
-        dustMotes.push({
-          x: Math.random() * window.innerWidth,
-          y: Math.random() * window.innerHeight,
-          vx: (Math.random() - 0.5) * 0.4,
-          vy: -Math.random() * 0.35 - 0.1,
-          size: Math.random() * 2.5 + 1.0,
-          alpha: Math.random() * 0.5 + 0.15,
-          phase: Math.random() * Math.PI * 2,
-          color: ['#ffd700', '#fff8e7', '#e0f7fa', '#d4af37'][Math.floor(Math.random() * 4)]
-        });
-      }
+      // Dust motes removed per Mandate 11 / Directive 177
     }
 
     function ensureFxCanvas() {
@@ -1425,9 +1538,15 @@
         fxCanvas = document.getElementById('fx-canvas');
         if (fxCanvas) fxCtx = fxCanvas.getContext('2d');
       }
-      if (fxCanvas && (fxCanvas.width !== fxCanvas.offsetWidth || fxCanvas.height !== fxCanvas.offsetHeight)) {
-        fxCanvas.width = fxCanvas.offsetWidth;
-        fxCanvas.height = fxCanvas.offsetHeight;
+      if (fxCanvas && fxCtx) {
+        const dpr = window.devicePixelRatio || 1;
+        const dw = fxCanvas.offsetWidth;
+        const dh = fxCanvas.offsetHeight;
+        if (dw > 0 && dh > 0 && (fxCanvas.width !== Math.floor(dw * dpr) || fxCanvas.height !== Math.floor(dh * dpr))) {
+          fxCanvas.width = Math.floor(dw * dpr);
+          fxCanvas.height = Math.floor(dh * dpr);
+          fxCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        }
       }
       return fxCanvas;
     }
@@ -1523,60 +1642,18 @@
       ctx.restore();
     }
 
-    // Pulsating Gold Energy Perimeter Inlay Border with Traveling Specular Glint
-    function drawPerimeterInlay(ctx, w, h, time) {
+    // Static Clean Gold Perimeter Inlay Border (No traveling comets/glints per Mandate 11 / Directive 177)
+    function drawPerimeterInlay(ctx, w, h) {
       const pad = 8;
       const x = pad;
       const y = pad;
       const bw = w - pad * 2;
       const bh = h - pad * 2;
 
-      const pulse = Math.sin(time * 3.0) * 0.25 + 0.75;
       ctx.save();
-      ctx.strokeStyle = `rgba(255, 215, 0, ${(0.4 * pulse).toFixed(3)})`;
+      ctx.strokeStyle = 'rgba(212, 175, 55, 0.4)';
+      ctx.lineWidth = 1;
       ctx.strokeRect(x, y, bw, bh);
-      ctx.restore();
-    }
-
-    // Diagonal Traveling Specular Sheen Sweeps
-    function drawDiagonalSheenSweeps(ctx, w, h, time) {
-      const sweepPhase = (time * 0.35) % 1.0;
-      const sweepX = w * (sweepPhase * 1.6 - 0.3);
-
-      ctx.save();
-      ctx.beginPath();
-      ctx.rect(0, 0, w, h);
-      ctx.clip();
-
-      let grad = ctx.createLinearGradient(sweepX - 60, 0, sweepX + 60, h);
-      grad.addColorStop(0, 'rgba(255,255,255,0)');
-      grad.addColorStop(0.5, 'rgba(255,215,0,0.06)');
-      grad.addColorStop(1, 'rgba(255,255,255,0)');
-      ctx.fillStyle = grad;
-      ctx.fillRect(0, 0, w, h);
-      ctx.restore();
-    }
-
-    // Atmospheric Floating Casino Velvet Dust Motes
-    function drawAmbientDustMotes(ctx, w, h, time) {
-      ctx.save();
-      for (let i = 0; i < dustMotes.length; i++) {
-        let m = dustMotes[i];
-        m.x += m.vx + Math.sin(m.phase + time * 2) * 0.3;
-        m.y += m.vy;
-        m.phase += 0.03;
-
-        if (m.y < 0) { m.y = h; m.x = Math.random() * w; }
-        if (m.x < 0) m.x = w;
-        if (m.x > w) m.x = 0;
-
-        let alpha = m.alpha * (Math.sin(m.phase * 2) * 0.3 + 0.7);
-        ctx.fillStyle = m.color;
-        ctx.globalAlpha = Math.max(0, Math.min(1, alpha));
-        ctx.beginPath();
-        ctx.arc(m.x, m.y, m.size, 0, Math.PI * 2);
-        ctx.fill();
-      }
       ctx.restore();
     }
 
@@ -1591,19 +1668,15 @@
         return;
       }
 
-      const w = canvas.width;
-      const h = canvas.height;
+      const w = canvas.offsetWidth;
+      const h = canvas.offsetHeight;
       const time = timestamp ? timestamp * 0.001 : Date.now() * 0.001;
 
       fxCtx.clearRect(0, 0, w, h);
 
-      // 1. Ambient Casino Velvet Dust Motes
-      drawAmbientDustMotes(fxCtx, w, h, time);
-
-      // 2. Ornate HUD Corners, Perimeter Inlay & Sheen Sweeps
+      // 1. Ornate HUD Corners & Clean Perimeter Inlay (No traveling glints/dust motes)
       drawOrnateHUDCorners(fxCtx, w, h);
-      drawPerimeterInlay(fxCtx, w, h, time);
-      drawDiagonalSheenSweeps(fxCtx, w, h, time);
+      drawPerimeterInlay(fxCtx, w, h);
 
       // 3. Render Dual-Tier Concentric Shockwaves
       for (let i = fxShockwaves.length - 1; i >= 0; i--) {
@@ -1752,22 +1825,10 @@
         }
       }
 
-      // 5. Procedural Screen Shake Decay (Quadratic physics & rotational damping)
+      // 5. Board transform reset (screen shake disabled per Mandate)
       const boardEl = document.querySelector('.felt-board');
-      if (screenShakeAmp > 0.08) {
-        let decay = screenShakeAmp;
-        let dx = (Math.random() * 2 - 1) * decay;
-        let dy = (Math.random() * 2 - 1) * decay;
-        let drot = (Math.random() * 2 - 1) * decay * 0.08;
-        if (boardEl) {
-          boardEl.style.transform = `translate(${dx.toFixed(2)}px, ${dy.toFixed(2)}px) rotate(${drot.toFixed(3)}deg)`;
-        }
-        screenShakeAmp *= 0.88; // Quadratic-like rapid decay
-      } else {
-        screenShakeAmp = 0;
-        if (boardEl && boardEl.style.transform !== '') {
-          boardEl.style.transform = '';
-        }
+      if (boardEl && boardEl.style.transform !== '') {
+        boardEl.style.transform = '';
       }
 
       // 6. Victory Cascade Cards Render
@@ -2254,9 +2315,25 @@
           updateGameInfo();
           autoComplete();
           checkWin();
+          state.selected = null;
+        } else {
+          let reselected = false;
+          if (type === 'tab' && !isTarget) {
+            let group = getDraggableGroup(index, cardIdx);
+            if (group && group.length <= getMaxMoveCount()) {
+              state.selected = { type, index, cardIdx };
+              playSound('flip');
+              reselected = true;
+            }
+          } else if (type === 'free' && state.free[index]) {
+            state.selected = { type, index, cardIdx: 0 };
+            playSound('flip');
+            reselected = true;
+          }
+          if (!reselected) {
+            state.selected = null;
+          }
         }
-        
-        state.selected = null;
       }
       render();
     }
@@ -2426,8 +2503,11 @@
         handleCardClick(type, index, cardIdx);
       };
 
-      el.ondblclick = (e) => {
-        e.stopPropagation();
+      const quickPlay = (e) => {
+        if (e) {
+          e.preventDefault();
+          e.stopPropagation();
+        }
         if (c.frozen) {
           playSound('error');
           return;
@@ -2472,6 +2552,9 @@
           }
         }
       };
+
+      el.ondblclick = quickPlay;
+      el.oncontextmenu = quickPlay;
     }
 
     function render() {
@@ -2510,13 +2593,24 @@
         }
       });
 
+      const tabEl = document.getElementById('tableau');
+      const tabRect = tabEl ? tabEl.getBoundingClientRect() : { top: 200, height: 400 };
+      const maxColLen = Math.max(7, ...state.tab.map(col => col.length));
+      const feltEl = document.querySelector('.felt-board');
+      const feltBottom = feltEl ? feltEl.getBoundingClientRect().bottom - 16 : window.innerHeight - 20;
+      const availH = Math.max(260, feltBottom - tabRect.top);
+      let vertSpacing = 24;
+      if (maxColLen > 1) {
+        vertSpacing = Math.min(24, Math.max(14, Math.floor((availH - 106) / (maxColLen - 1))));
+      }
+
       document.querySelectorAll('#tableau .column').forEach((el, i) => {
         el.onclick = (e) => { handleBgClick('tab', i); };
         let rect = el.getBoundingClientRect();
         state.tab[i].forEach((c, j) => {
           let cardRect = {
             left: rect.left,
-            top: rect.top + j * 24,
+            top: rect.top + j * vertSpacing,
             width: rect.width,
             height: rect.height
           };
@@ -2533,6 +2627,7 @@
     updateCardBackUI();
     updateModeUI();
     initGame();
+    checkOnboarding();
   </script>
 </body>
 </html>

@@ -64,14 +64,7 @@ int shakeTicks = 0;
 int shakeMaxTicks = 0;
 
 void TriggerScreenShake(int intensity) {
-    float fIntensity = (float)intensity;
-    if (fIntensity > shakeTrauma) {
-        shakeTrauma = fIntensity;
-        shakeMaxTrauma = fIntensity;
-        shakeTicks = 0;
-        shakeMaxTicks = (int)(fIntensity * 3.5f + 6.0f);
-        if (shakeMaxTicks > 30) shakeMaxTicks = 30;
-    }
+    (void)intensity;
 }
 
 int moves = 0;
@@ -1828,23 +1821,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 }
             }
             
-            // Draw Animated Procedural Fabric Glint Effect
-            for(int i=0; i<MAX_DUST; i++) {
-                if (dustInit) {
-                    float glintAlpha = dustMotes[i].alpha * 1.5f;
-                    if (glintAlpha > 1.0f) glintAlpha = 1.0f;
-                    int r = (int)(255 * glintAlpha);
-                    int g = (int)(215 * glintAlpha);
-                    int b = (int)(100 * glintAlpha);
-                    HBRUSH dbr = CreateSolidBrush(RGB(r, g, b));
-                    int gcx = (int)dustMotes[i].x;
-                    int gcy = (int)dustMotes[i].y;
-                    RECT dr = { gcx, gcy, gcx + dustMotes[i].size, gcy + dustMotes[i].size };
-                    FillRect(hdcMem, &dr, dbr);
-                    DeleteObject(dbr);
-                }
-            }
-
             if (cascadeActive) {
                 for(int i=0; i<MAX_CASCADE; i++) {
                     if (cascadeCards[i].active) {
@@ -1853,20 +1829,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 }
             }
             
-            int shakeX = 0;
-            int shakeY = 0;
-            if (shakeTrauma > 0.01f && shakeMaxTicks > 0) {
-                float progress = (float)shakeTicks / (float)shakeMaxTicks;
-                if (progress > 1.0f) progress = 1.0f;
-                float decay = 1.0f - progress;
-                float currentAmp = shakeMaxTrauma * (decay * decay);
-                int iAmp = (int)currentAmp;
-                if (iAmp > 0) {
-                    shakeX = (rand() % (iAmp * 2 + 1)) - iAmp;
-                    shakeY = (rand() % (iAmp * 2 + 1)) - iAmp;
-                }
-            }
-            BitBlt(hdc, shakeX, shakeY, clientRect.right, clientRect.bottom, hdcMem, 0, 0, SRCCOPY);
+            BitBlt(hdc, 0, 0, clientRect.right, clientRect.bottom, hdcMem, 0, 0, SRCCOPY);
             
             SelectObject(hdcMem, hbmOld);
             DeleteObject(hbmMem);
@@ -2037,7 +2000,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         }
         
         case WM_KEYDOWN:
-            if(wParam == 'R' || wParam == 'N') {
+            if(wParam == 'R' || wParam == 'N' || wParam == VK_F2) {
                 InitGame();
                 InvalidateRect(hwnd, NULL, TRUE);
             } else if(wParam == 'Z' || wParam == 'U') {
@@ -2110,36 +2073,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         case WM_TIMER: {
             int active = 0;
             DWORD now = GetTickCount();
-            
-            // Atmospheric Dust Motes logic
-            RECT crDust; GetClientRect(hwnd, &crDust);
-            int dustW = crDust.right > 0 ? crDust.right : 800;
-            int dustH = crDust.bottom > 0 ? crDust.bottom : 600;
-            if(!dustInit && dustW > 0 && dustH > 0) {
-                dustInit = 1;
-                for(int i=0; i<MAX_DUST; i++) {
-                    dustMotes[i].x = (float)(rand() % dustW);
-                    dustMotes[i].y = (float)(rand() % dustH);
-                    dustMotes[i].vx = (float)((rand()%100)*0.005f - 0.2f);
-                    dustMotes[i].vy = (float)(-((rand()%100)*0.005f) - 0.1f);
-                    dustMotes[i].size = 1 + rand()%2;
-                    dustMotes[i].alpha = (float)(rand()%100)*0.01f;
-                    dustMotes[i].da = (float)((rand()%100)*0.0004f - 0.0002f);
-                }
-            }
-            if(dustInit) {
-                for(int i=0; i<MAX_DUST; i++) {
-                    dustMotes[i].x += dustMotes[i].vx;
-                    dustMotes[i].y += dustMotes[i].vy;
-                    dustMotes[i].alpha += dustMotes[i].da;
-                    if(dustMotes[i].alpha > 1.0f) { dustMotes[i].alpha = 1.0f; dustMotes[i].da = -dustMotes[i].da; }
-                    if(dustMotes[i].alpha < 0.1f) { dustMotes[i].alpha = 0.1f; dustMotes[i].da = -dustMotes[i].da; }
-                    if(dustMotes[i].y < 0) dustMotes[i].y = (float)dustH;
-                    if(dustMotes[i].x < 0) dustMotes[i].x = (float)dustW;
-                    if(dustMotes[i].x > dustW) dustMotes[i].x = 0;
-                }
-                active = 1;
-            }
             
             for(int i=0; i<MAX_ANIMS; i++) {
                 if(anims[i].active) {

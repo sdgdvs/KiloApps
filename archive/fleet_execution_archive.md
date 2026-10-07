@@ -4,6 +4,14 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-06T17:07:00-07:00 — kilo-qa: KColor (Pass 5: Tutorial & State Integrity, Quicksave/Load & Build Audit)**
+  - Status: PASS ✅ (0 regressions, 67.4 KB web / 17.9 KB native < 999 KB ceiling).
+  - State Persistence: Implemented [F5/F9] quicksave/quickload across web (`kcolor_quicksave`) and Win32 C (`kcolor_save.dat`); added UI buttons.
+  - Tutorial Integrity: Gated first-run guide behind `kcolor_tutorialSeen` / `kcolor_tutorial.dat`; restored saves bypass tutorial popup.
+  - Modal Isolation & Shortcuts: Wired Esc, Enter, Space for dialogs; isolated background hotkeys during open modals; improved color picker cleanup.
+  - Verification: `test_app_startup.py` PASS; `test_web_apps.js` PASS (59 elements, 0 errors); MSVC clean (`KColor.exe` 17.9 KB); Vite clean (554ms); security_lint 100% PASS.
+  - Queue: Advanced `kilo_qa` to `KConverter`; rotation advanced to `kilo-expander`.
+
 - **2026-10-06T16:51:00-07:00 — kilo-usability: KConverter (UI/UX, Layout Symmetry, Scrollbar & Toast Occlusion Remediation)**
   - Status: PASS ✅ (0 regressions, 89.0 KB web / 27.1 KB native < 999 KB ceiling).
   - Toast De-occlusion: Repositioned toast to bottom-center pill with click-to-dismiss (Directive 185 compliant).
