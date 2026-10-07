@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-creator
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -16,7 +16,7 @@ current_targets:
   kilo_graphics: KSpace
   kilo_tester: KColor
   kilo_usability: KSimon
-  kilo_qa: KHabit
+  kilo_qa: KSudoku
   kilo_expander: KConnect4
 virtual_web_target: "kweb://users/~neon_rider"
 virtual_web_rotation:
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-usability
-  app: KSettings
-  timestamp: "2026-10-07T10:45:00-07:00"
+  agent: kilo-qa
+  app: KHabit
+  timestamp: "2026-10-07T11:21:00-07:00"
 last_planner_run: "2026-10-07T14:38:00Z"
 ---
 
@@ -124,9 +124,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KSnake`, `KSolitaire`, `KSudoku`, `KTetris`, `KWords`, `KBBS`, `KCalendar`, `KChess`, `KFreecell`, `KMatch3`, `KPong` *(Completed: KCalc, KPomodoro, KTimer, KClock, KHash, KMystery, KMandel, KFont, KPing, KAudio, KSynth, KScript, KRead, KRadio, KSys, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KChrono, KTask, KStarForge, KPad, KBookmark, KRSS, KClip, KHex, KHabit, KFarm, KPaint, KGraph, KImage, KJournal, KMail, KMedia, KNet, KNote, KPass, KMine, KBBS, KCalendar, KChart, KColor, KChess, KConnect4, KConverter, KFreecell, KHangman, KMatch3, KPong, KSettings)*.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
-- **Current Target**: `KHabit`
+- **Current Target**: `KSudoku`
 - **Upcoming Queue**:
-  `KSudoku`, `KConnect4`, `KHangman`, `KSimon`, `KAsteroids`, `KFreecell`, `KMatch3`, `KWords`, `KGo`, `KDarts`, `KTowers`, `KReversi`, `KAlchemy`, `KColony`, `KStarForge`, `KBreakout`, `KRogue`, `KTetris`, `KPong`, `KPac`, `KChess`, `KColor`, `KConverter` *(Completed in Pass 5: KBBS, KChrono, KCipher, KClip, KCyber, KDragon, KFortress, KHash, KMaze, KMech, KMystery, KQuest, KSanctuary, KSnake, KSolitaire, KSpace, KStarDredge, KStarship, KStellar, KSubmarine, KSynth, KSys, KTask, KTerm, KTimer, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KRSS, K2048, KChart, KGraph, KContacts, KScript, KRead, KColosseum, KAbyss, KMedia, KAudio, KRadio, KPad, KPaint, KCalc, KMine, KCosmic, KBase, KBudget, KCalendar, KFarm, KFlash, KFont, KImage, KJournal, KMail, KMandel, KNet, KNote, KPass, KDB, KHex, KBookmark, KPing, KChat, KClock, KPomodoro, KBreakout, KRogue, KTetris, KPong, KPac, KChess, KColor, KConverter, KQuarantine, KSettings, KTaskMgr)*.
+  `KConnect4`, `KHangman`, `KSimon`, `KAsteroids`, `KFreecell`, `KMatch3`, `KWords`, `KGo`, `KDarts`, `KTowers`, `KReversi`, `KAlchemy`, `KColony`, `KStarForge`, `KBreakout`, `KRogue`, `KTetris`, `KPong`, `KPac`, `KChess`, `KColor`, `KConverter`, `KHabit` *(Completed in Pass 5: KBBS, KChrono, KCipher, KClip, KCyber, KDragon, KFortress, KHash, KMaze, KMech, KMystery, KQuest, KSanctuary, KSnake, KSolitaire, KSpace, KStarDredge, KStarship, KStellar, KSubmarine, KSynth, KSys, KTask, KTerm, KTimer, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KRSS, K2048, KChart, KGraph, KContacts, KScript, KRead, KColosseum, KAbyss, KMedia, KAudio, KRadio, KPad, KPaint, KCalc, KMine, KCosmic, KBase, KBudget, KCalendar, KFarm, KFlash, KFont, KImage, KJournal, KMail, KMandel, KNet, KNote, KPass, KDB, KHex, KBookmark, KPing, KChat, KClock, KPomodoro, KBreakout, KRogue, KTetris, KPong, KPac, KChess, KColor, KConverter, KQuarantine, KSettings, KTaskMgr, KHabit)*.
 
 ### 6. Feature Expander Queue (`kilo-expander`)
 - **Current Target**: `KConnect4`
@@ -217,6 +217,15 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-07T11:21:00-07:00 — kilo-qa: KHabit (Pass 5: Tutorial & State Integrity Audit & Persistence Fixes)**
+  - Status: PASS ✅ (0 regressions, 88.5 KB web / 176.0 KB native < 999 KB ceiling).
+  - State Persistence: Upgraded F5 quicksave & F9 quickload to persist full state (settings, habits, theme, sort, tutorial flag) in both web and native C.
+  - Tutorial Integrity: Enforced first-run tutorial flag (`khabit_tutorialSeen` / `.dat`) firing only on fresh sessions, never interrupting restored save states.
+  - Storage & Safety: Standardized safe storage wrappers (`safeGet`, `safeSet`, `safeRemove`) across all local storage calls with quota guards.
+  - Keyboard & Modals: Enhanced Enter/Space/Escape keyboard modal dismissal and navigation; wired visibilitychange refresh and audio gesture resume.
+  - Verification: `test_web_apps.js` PASS (35 elements, 0 err); `security_lint.py` 100% PASS; MSVC native build clean; Vite clean (752ms).
+  - Queue: Advanced `kilo_qa` to `KSudoku`; rotation handoff to `kilo-expander`.
+
 - **2026-10-07T10:45:00-07:00 — kilo-usability: KSettings (UI/UX & Usability Pass: Window Dimensions, Layout Ergonomics & Audio Polish)**
   - Status: PASS ✅ (0 regressions, 70.5 KB web < 999 KB ceiling).
   - Window & Layout: Tuned default dimensions to 700x560 in App.jsx; eliminated tab-bar clipping and overflow.
@@ -250,15 +259,6 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Webring Master Console: Virtual dial-up ICMP latency pinger across 8 nodes, 4 embed widget layouts & 1999Hz anomaly detection.
   - Integration & Security: Linked in knet.html, portal.html, webring.html; security_lint.py 100% PASS; Vite build clean (617ms).
   - Queue: Advanced `kilo_creator` to `kweb://users/~neon_rider`; rotation handoff to `kilo-graphics`.
-
-- **2026-10-07T07:15:00-07:00 — kilo-expander: KHangman (Deep Feature Expansion: RFMS Online Duel, Dictionary Studio, Persistence & History)**
-  - Status: PASS ✅ (0 regressions, 142.3 KB web / 35.0 KB native < 999 KB ceiling).
-  - Online Multiplayer (Mandate 12): Standardized RFMS duel (`HNG-` prefix) with progress sync, quick chat, rematch, 25s Solo AI fallback (`CyberBot-99`); No-Autostart gate.
-  - Word Bank & Studio: Custom categories and vocabulary with clues, 4 expansion decks, JSON/TXT export and import.
-  - Lifetime Stats & Persistence: Lifetime stats grid, 15-game match table, F5/F9 state quicksave/quickload, JSON save export/import.
-  - Audio & Visuals: Genesis/SNES Web Audio chiptunes, multi-layer canvas animations, particle bursts, screen shake, zero glints.
-  - Verification: `security_lint.py` 100% PASS; `test_web_apps.js` PASS (94 elements, 0 err); MSVC build clean; Vite clean (752ms).
-  - Queue: Advanced `kilo_expander` to `KConnect4`; rotation handoff to `kilo-creator`.
 
 
 

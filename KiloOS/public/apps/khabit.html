@@ -1067,11 +1067,63 @@
     </div>
 
     <script>
+        /**
+         * @typedef {Object} HabitItem
+         * @property {string} id
+         * @property {string} name
+         * @property {string} description
+         * @property {string} category
+         * @property {number} targetStreak
+         * @property {string[]} completions
+         */
+
+        /**
+         * Safely retrieve and parse item from localStorage with fallback
+         * @param {string} key
+         * @param {*} fallback
+         * @returns {*}
+         */
+        function safeGet(key, fallback) {
+            try {
+                const raw = localStorage.getItem(key);
+                if (raw === null || raw === undefined) return fallback;
+                try { return JSON.parse(raw); } catch { return raw; }
+            } catch {
+                return fallback;
+            }
+        }
+
+        /**
+         * Safely store item in localStorage
+         * @param {string} key
+         * @param {*} value
+         */
+        function safeSet(key, value) {
+            try {
+                const s = typeof value === 'string' ? value : JSON.stringify(value);
+                localStorage.setItem(key, s);
+            } catch (e) {
+                console.warn('[KHabit] Storage write error:', e);
+                showToast("Storage quota warning");
+            }
+        }
+
+        /**
+         * Safely remove item from localStorage
+         * @param {string} key
+         */
+        function safeRemove(key) {
+            try {
+                localStorage.removeItem(key);
+            } catch (e) {}
+        }
+
         // State
+        /** @type {HabitItem[]} */
         let habits = [];
         let selectedHabitIndex = -1;
         let lastDeletedHabit = null;
-        let soundEnabled = localStorage.getItem('khabit_sound') !== '0';
+        let soundEnabled = String(safeGet('khabit_sound', '1')) !== '0';
         const STORAGE_KEY = 'khabit_data';
         const QUICKSAVE_KEY = 'khabit_quicksave';
 
@@ -1280,13 +1332,18 @@
         const generateId = () => 'h_' + Date.now().toString(36) + '_' + Math.random().toString(36).substr(2, 6);
 
         // Core Storage & State
+        /**
+         * Load habits from sovereign local storage or seed defaults
+         */
         const loadHabits = () => {
-            const data = localStorage.getItem(STORAGE_KEY);
-            if (data) {
+            const data = safeGet(STORAGE_KEY, null);
+            if (data && Array.isArray(data)) {
+                habits = data;
+            } else if (typeof data === 'string') {
                 try {
-                    habits = JSON.parse(data);
-                    if (!Array.isArray(habits)) habits = [];
-                } catch (e) {
+                    const parsed = JSON.parse(data);
+                    habits = Array.isArray(parsed) ? parsed : [];
+                } catch {
                     habits = [];
                 }
             } else {
@@ -1312,12 +1369,11 @@
             }
         };
 
+        /**
+         * Persist habits array to local storage safely
+         */
         const saveHabits = () => {
-            try {
-                localStorage.setItem(STORAGE_KEY, JSON.stringify(habits));
-            } catch (e) {
-                showToast("Storage quota warning");
-            }
+            safeSet(STORAGE_KEY, habits);
         };
 
         const renderHabits = () => {
@@ -1648,6 +1704,9 @@
         };
 
         const closeAllModals = () => {
+            if (checkTutorialSeen && checkTutorialSeen.checked) {
+                safeSet('khabit_tutorialSeen', '1');
+            }
             modal.classList.remove('active');
             settingsModal.classList.remove('active');
             statsModal.classList.remove('active');
@@ -1664,7 +1723,7 @@
             rose: { main: '#f43f5e', hover: '#e11d48' }
         };
 
-        let currentColor = localStorage.getItem('khabit_color') || 'purple';
+        let currentColor = String(safeGet('khabit_color', 'purple'));
 
         const applyColor = (colorKey) => {
             const c = colors[colorKey] || colors.purple;
@@ -1686,13 +1745,16 @@
             el.addEventListener('click', () => {
                 const c = el.dataset.color;
                 currentColor = c;
-                localStorage.setItem('khabit_color', c);
+                safeSet('khabit_color', c);
                 applyColor(c);
                 playSound('save');
             });
         });
 
         // QuickSave & QuickLoad
+        /**
+         * Create snapshot of complete app state and save to local storage
+         */
         const quickSaveState = () => {
             try {
                 const payload = {
@@ -1701,9 +1763,11 @@
                     habits: habits,
                     sort: sortSelect ? sortSelect.value : 'none',
                     color: currentColor,
-                    sound: soundEnabled
+                    sound: soundEnabled,
+                    search: searchInput ? searchInput.value : '',
+                    tutorialSeen: safeGet('khabit_tutorialSeen', '0')
                 };
-                localStorage.setItem(QUICKSAVE_KEY, JSON.stringify(payload));
+                safeSet(QUICKSAVE_KEY, payload);
                 saveHabits();
                 playSound('save');
                 showToast("State QuickSaved! [F5] 💾");
@@ -1712,30 +1776,46 @@
             }
         };
 
+        /**
+         * Restore snapshot of complete app state from local storage
+         */
         const quickLoadState = () => {
             try {
-                const raw = localStorage.getItem(QUICKSAVE_KEY);
-                if (!raw) {
+                const payload = safeGet(QUICKSAVE_KEY, null);
+                if (!payload) {
                     showToast("No quicksave found. Press F5 to save first.");
                     return;
                 }
-                const payload = JSON.parse(raw);
                 if (payload && Array.isArray(payload.habits)) {
                     habits = payload.habits;
                     saveHabits();
                     if (payload.sort && sortSelect) {
                         sortSelect.value = payload.sort;
-                        localStorage.setItem('khabit_sort', payload.sort);
+                        safeSet('khabit_sort', payload.sort);
                     }
                     if (payload.color) {
                         currentColor = payload.color;
-                        localStorage.setItem('khabit_color', currentColor);
+                        safeSet('khabit_color', currentColor);
                         applyColor(currentColor);
+                    }
+                    if (payload.sound !== undefined) {
+                        soundEnabled = Boolean(payload.sound);
+                        safeSet('khabit_sound', soundEnabled ? '1' : '0');
+                        if (audioToggle) audioToggle.checked = soundEnabled;
+                    }
+                    if (payload.search !== undefined && searchInput) {
+                        searchInput.value = payload.search;
+                    }
+                    if (payload.tutorialSeen !== undefined) {
+                        safeSet('khabit_tutorialSeen', String(payload.tutorialSeen));
+                        if (checkTutorialSeen) checkTutorialSeen.checked = String(payload.tutorialSeen) === '1';
                     }
                     sortHabits();
                     renderHabits();
                     playSound('load');
                     showToast("State QuickLoaded! [F9] ⚡");
+                } else {
+                    showToast("QuickLoad invalid format");
                 }
             } catch (e) {
                 showToast("QuickLoad parsing error");
@@ -1745,7 +1825,7 @@
         // Sort Logic
         const sortHabits = () => {
             const val = sortSelect ? sortSelect.value : 'none';
-            localStorage.setItem('khabit_sort', val);
+            safeSet('khabit_sort', val);
             if (val === 'alpha') {
                 habits.sort((a, b) => a.name.localeCompare(b.name));
             } else if (val === 'streak') {
@@ -1755,7 +1835,7 @@
             }
         };
 
-        sortSelect.value = localStorage.getItem('khabit_sort') || 'none';
+        sortSelect.value = String(safeGet('khabit_sort', 'none'));
         sortSelect.addEventListener('change', () => {
             sortHabits();
             saveHabits();
@@ -1783,8 +1863,8 @@
         });
         document.getElementById('modal-reset-btn').addEventListener('click', () => {
             if (confirm("Reset all habits and statistics back to starter defaults?")) {
-                localStorage.removeItem(STORAGE_KEY);
-                localStorage.removeItem(QUICKSAVE_KEY);
+                safeRemove(STORAGE_KEY);
+                safeRemove(QUICKSAVE_KEY);
                 loadHabits();
                 renderHabits();
                 closeAllModals();
@@ -1938,7 +2018,7 @@
         const openHelp = () => {
             closeAllModals();
             if (checkTutorialSeen) {
-                checkTutorialSeen.checked = localStorage.getItem('khabit_tutorialSeen') === '1';
+                checkTutorialSeen.checked = String(safeGet('khabit_tutorialSeen', '0')) === '1';
             }
             helpModal.classList.add('active');
             playSound('modal');
@@ -1946,25 +2026,35 @@
 
         helpBtn.addEventListener('click', openHelp);
         closeHelpBtn.addEventListener('click', () => {
-            if (checkTutorialSeen.checked) {
-                localStorage.setItem('khabit_tutorialSeen', '1');
+            if (checkTutorialSeen && checkTutorialSeen.checked) {
+                safeSet('khabit_tutorialSeen', '1');
             }
             helpModal.classList.remove('active');
         });
         xHelpBtn.addEventListener('click', () => {
-            if (checkTutorialSeen.checked) {
-                localStorage.setItem('khabit_tutorialSeen', '1');
+            if (checkTutorialSeen && checkTutorialSeen.checked) {
+                safeSet('khabit_tutorialSeen', '1');
             }
             helpModal.classList.remove('active');
         });
         helpModal.addEventListener('click', (e) => {
             if (e.target === helpModal) {
-                if (checkTutorialSeen.checked) {
-                    localStorage.setItem('khabit_tutorialSeen', '1');
+                if (checkTutorialSeen && checkTutorialSeen.checked) {
+                    safeSet('khabit_tutorialSeen', '1');
                 }
                 helpModal.classList.remove('active');
             }
         });
+
+        if (checkTutorialSeen) {
+            checkTutorialSeen.addEventListener('change', () => {
+                if (checkTutorialSeen.checked) {
+                    safeSet('khabit_tutorialSeen', '1');
+                } else {
+                    safeRemove('khabit_tutorialSeen');
+                }
+            });
+        }
 
         // Settings Modal
         settingsBtn.addEventListener('click', () => {
@@ -1981,7 +2071,7 @@
         audioToggle.checked = soundEnabled;
         audioToggle.addEventListener('change', () => {
             soundEnabled = audioToggle.checked;
-            localStorage.setItem('khabit_sound', soundEnabled ? '1' : '0');
+            safeSet('khabit_sound', soundEnabled ? '1' : '0');
             if (soundEnabled) playSound('check');
         });
 
@@ -2043,6 +2133,22 @@
                     searchInput.blur();
                     return;
                 }
+            }
+
+            // Enter inside info modals dismisses
+            if (e.key === 'Enter') {
+                if (helpModal.classList.contains('active') || statsModal.classList.contains('active') || settingsModal.classList.contains('active')) {
+                    e.preventDefault();
+                    closeAllModals();
+                    return;
+                }
+            }
+
+            // Space inside help modal dismisses
+            if (e.key === ' ' && helpModal.classList.contains('active')) {
+                e.preventDefault();
+                closeAllModals();
+                return;
             }
 
             // F1 / Help
@@ -2147,6 +2253,22 @@
             }
         });
 
+        // Lifecycle & Audio Resume
+        const resumeAudio = () => {
+            if (audioCtx && audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        };
+        window.addEventListener('click', resumeAudio, { once: true });
+        window.addEventListener('keydown', resumeAudio, { once: true });
+
+        // Guard against stale day streak state on tab switch
+        document.addEventListener('visibilitychange', () => {
+            if (!document.hidden) {
+                renderHabits();
+            }
+        });
+
         // Init
         applyColor(currentColor);
         loadHabits();
@@ -2154,9 +2276,9 @@
         renderHabits();
 
         // First-run tutorial flag
-        const tutorialSeen = localStorage.getItem('khabit_tutorialSeen');
+        const tutorialSeen = safeGet('khabit_tutorialSeen', null);
         if (!tutorialSeen && habits.length <= 2) {
-            checkTutorialSeen.checked = true;
+            if (checkTutorialSeen) checkTutorialSeen.checked = true;
             openHelp();
         }
     </script>

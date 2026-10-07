@@ -166,11 +166,13 @@ void UpdateList() {
 void QuickSaveHabits(HWND hwnd) {
     FILE *f = fopen("khabit_quicksave.dat", "w");
     if (!f) return;
+    fprintf(f, "#QUICKSAVE_V2|%d|%d|%d\n", current_color_index, current_sort_index, habitCount);
     for (int i = 0; i < habitCount; i++) {
         fprintf(f, "%s|%d|%d|%s|%d\n", habits[i].name, habits[i].streak, habits[i].last_check_day, habits[i].category, habits[i].target_streak);
     }
     fclose(f);
     SaveHabits();
+    SaveSettings();
     MessageBox(hwnd, "State QuickSaved to snapshot! [F5]", "QuickSave", MB_OK | MB_ICONINFORMATION);
 }
 
@@ -182,7 +184,20 @@ void QuickLoadHabits(HWND hwnd) {
     }
     habitCount = 0;
     char line[256];
+    int isFirstLine = 1;
     while (fgets(line, sizeof(line), f)) {
+        if (isFirstLine && strncmp(line, "#QUICKSAVE_V2", 13) == 0) {
+            int col = 0, srt = 0, cnt = 0;
+            if (sscanf(line, "#QUICKSAVE_V2|%d|%d|%d", &col, &srt, &cnt) >= 2) {
+                if (col >= 0 && col <= 3) current_color_index = col;
+                if (srt >= 0 && srt <= 2) current_sort_index = srt;
+                SaveSettings();
+            }
+            isFirstLine = 0;
+            continue;
+        }
+        isFirstLine = 0;
+
         char name[128] = {0};
         int streak = 0, last = 0, target_streak = 0;
         char cat[32] = "Other";
@@ -198,10 +213,39 @@ void QuickLoadHabits(HWND hwnd) {
         }
     }
     fclose(f);
+    HWND hSortCombo = GetDlgItem(hMainWnd, ID_COMBO_SORT);
+    if (hSortCombo) {
+        SendMessage(hSortCombo, CB_SETCURSEL, current_sort_index, 0);
+    }
     SortHabits();
     SaveHabits();
     UpdateList();
+    InvalidateRect(hMainWnd, NULL, TRUE);
+    UpdateWindow(hMainWnd);
     MessageBox(hwnd, "State QuickLoaded from snapshot! [F9]", "QuickLoad", MB_OK | MB_ICONINFORMATION);
+}
+
+void CheckFirstRun(HWND hwnd) {
+    FILE *f = fopen("khabit_tutorial.dat", "r");
+    if (!f) {
+        FILE *fw = fopen("khabit_tutorial.dat", "w");
+        if (fw) {
+            fprintf(fw, "1\n");
+            fclose(fw);
+        }
+        if (habitCount <= 0) {
+            MessageBox(hwnd,
+                "Welcome to KHabit Tracker!\n\n"
+                "• Type a habit name and click '+ New' (or press Enter)\n"
+                "• Select a habit and press Space to toggle daily checkmark\n"
+                "• Set categories and streak target milestones\n"
+                "• Press F5 to QuickSave, F9 to QuickLoad state\n"
+                "• Press F1 anytime for help and keyboard shortcuts",
+                "KHabit Quick Tour", MB_OK | MB_ICONINFORMATION);
+        }
+    } else {
+        fclose(f);
+    }
 }
 
 HBRUSH hbgBrush;
@@ -341,6 +385,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             CheckStreaks();
             SortHabits();
             UpdateList();
+            CheckFirstRun(hwnd);
             return 0;
         }
         case WM_CTLCOLORLISTBOX: {
@@ -791,7 +836,11 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
                 SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_HELP, BN_CLICKED), 0);
                 bHandled = TRUE;
             } else if (msg.wParam == VK_ESCAPE) {
-                if (GetFocus() == hSearchEdit) {
+                HWND hSet = FindWindow("KHabitSettingsClass", NULL);
+                if (hSet) {
+                    DestroyWindow(hSet);
+                    bHandled = TRUE;
+                } else if (GetFocus() == hSearchEdit) {
                     SetWindowText(hSearchEdit, "");
                     SetFocus(hList);
                     bHandled = TRUE;
