@@ -185,15 +185,6 @@ void UpdateShockwaves() {
 }
 
 void InitDustMotes() {
-    for (int i = 0; i < MAX_DUST; i++) {
-        dustMotes[i].x = (float)(CustomRand() % W);
-        dustMotes[i].y = (float)(CustomRand() % H);
-        dustMotes[i].vx = (float)(CustomRand() % 100 - 50) / 150.0f;
-        dustMotes[i].vy = (float)(CustomRand() % 100 - 50) / 150.0f - 0.05f;
-        dustMotes[i].size = CustomRand() % 2 + 1;
-        dustMotes[i].phase = (float)(CustomRand() % 628) / 100.0f;
-        dustMotes[i].color = RGB(210, 230, 255);
-    }
     dust_init = 1;
 }
 
@@ -898,16 +889,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         case WM_TIMER:
             if (wParam == 1) {
                 anim_ticks++;
-                if (!dust_init) InitDustMotes();
-                for (int d = 0; d < MAX_DUST; d++) {
-                    dustMotes[d].x += dustMotes[d].vx;
-                    dustMotes[d].y += dustMotes[d].vy;
-                    dustMotes[d].phase += 0.04f;
-                    if (dustMotes[d].x < 0) dustMotes[d].x += W;
-                    if (dustMotes[d].x > W) dustMotes[d].x -= W;
-                    if (dustMotes[d].y < 0) dustMotes[d].y += H;
-                    if (dustMotes[d].y > H) dustMotes[d].y -= H;
-                }
                 UpdateShockwaves();
                 UpdateParticles();
 
@@ -978,19 +959,19 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             break;
 
         case WM_KEYDOWN: {
-            if (wParam == 'V' && vowel_reveals > 0 && !game_over) {
+            if ((wParam == '1' || wParam == VK_NUMPAD1) && vowel_reveals > 0 && !game_over) {
                 UseVowelReveal();
                 InvalidateRect(hwnd, NULL, TRUE);
-            } else if (wParam == 'H' && consonant_radars > 0 && !game_over) {
+            } else if ((wParam == '2' || wParam == VK_NUMPAD2) && consonant_radars > 0 && !game_over) {
                 UseConsonantRadar();
                 InvalidateRect(hwnd, NULL, TRUE);
-            } else if (wParam == 'S' && shields > 0 && !game_over) {
+            } else if ((wParam == '3' || wParam == VK_NUMPAD3) && shields > 0 && !game_over) {
                 UseShield();
                 InvalidateRect(hwnd, NULL, TRUE);
-            } else if (wParam == 'F' && freezes > 0 && !game_over) {
+            } else if ((wParam == '4' || wParam == VK_NUMPAD4) && freezes > 0 && !game_over) {
                 UseFreezeTimer();
                 InvalidateRect(hwnd, NULL, TRUE);
-            } else if (wParam == 'B' && bombs > 0 && !game_over) {
+            } else if ((wParam == '5' || wParam == VK_NUMPAD5) && bombs > 0 && !game_over) {
                 UseBomb();
                 InvalidateRect(hwnd, NULL, TRUE);
             } else if (wParam >= 'A' && wParam <= 'Z') {
@@ -1092,11 +1073,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     " • Campaign: 20 Stages across 10 categories ending in Stage 20 Grandmaster Polymath Challenge.\n"
                     " • Time Attack Blitz: 60s timer! Solve as many words as you can!\n\n"
                     "Active Skills & Power-ups:\n"
-                    " • Vowel Reveal [V]: Reveals 1 hidden vowel in target word.\n"
-                    " • Consonant Radar [H]: Reveals 1 hidden consonant.\n"
-                    " • Strike Shield [S]: Absorbs 1 wrong letter penalty.\n"
-                    " • Freeze Timer [F]: Freezes stage/blitz timer for 15s.\n"
-                    " • Bomb Nuke [B]: Eliminates 3 incorrect letters.",
+                    " • [1] Vowel Reveal: Reveals 1 hidden vowel in target word.\n"
+                    " • [2] Consonant Radar: Reveals 1 hidden consonant.\n"
+                    " • [3] Strike Shield: Absorbs 1 wrong letter penalty.\n"
+                    " • [4] Freeze Timer: Freezes stage/blitz timer for 15s.\n"
+                    " • [5] Bomb Nuke: Eliminates 3 incorrect letters.\n"
+                    " • A - Z: Guess letters directly via keyboard.",
                     "Help / How to Play", MB_OK | MB_ICONINFORMATION);
                 break;
             }
@@ -1247,28 +1229,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             DeleteObject(hill1Brush);
             DeleteObject(hill2Brush);
             DeleteObject(treePen);
-
-            // Ambient Dust / Chalk Motes
-            for (int d = 0; d < MAX_DUST; d++) {
-                int dx = (int)dustMotes[d].x;
-                int dy = (int)dustMotes[d].y;
-                int alpha = (int)(120 + 80 * sinf(dustMotes[d].phase));
-                COLORREF dCol = RGB(alpha * 200 / 255, alpha * 220 / 255, alpha * 240 / 255);
-                SetPixel(memDC, dx, dy, dCol);
-                if (dustMotes[d].size > 1) {
-                    SetPixel(memDC, dx + 1, dy, dCol);
-                    SetPixel(memDC, dx, dy + 1, dCol);
-                }
-            }
-
-            // Diagonal Specular Sheen Sweep
-            int sheenPos = (anim_ticks * 3) % (W + H + 200) - 100;
-            HPEN sheenPen = CreatePen(PS_SOLID, 1, RGB(40, 60, 90));
-            HPEN oldSheen = (HPEN)SelectObject(memDC, sheenPen);
-            MoveToEx(memDC, sheenPos, 0, NULL);
-            LineTo(memDC, sheenPos - 150, H);
-            SelectObject(memDC, oldSheen);
-            DeleteObject(sheenPen);
 
             // Dual-Tier Shockwaves
             for (int s = 0; s < shockwave_count; s++) {
@@ -1695,44 +1655,44 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SelectObject(memDC, hFontSmall);
 
             // Row 1 Active Skill Buttons (y: 515..545)
-            // Vowel [V] (10..100)
+            // Vowel [1] (10..100)
             RECT vRc = {10, 515, 100, 545};
             HBRUSH vBg = CreateSolidBrush((vowel_reveals <= 0 || game_over) ? RGB(45, 52, 65) : RGB(0, 150, 136));
             FillRect(memDC, &vRc, vBg); DeleteObject(vBg);
             SetTextColor(memDC, RGB(255, 255, 255));
-            char vBuf[32]; wsprintfA(vBuf, "Vowel[V](%d)", vowel_reveals);
+            char vBuf[32]; wsprintfA(vBuf, "Vowel[1](%d)", vowel_reveals);
             DrawTextA(memDC, vBuf, -1, &vRc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
 
-            // Radar [H] (105..195)
+            // Radar [2] (105..195)
             RECT hRc = {105, 515, 195, 545};
             HBRUSH hBg = CreateSolidBrush((consonant_radars <= 0 || game_over) ? RGB(45, 52, 65) : RGB(251, 140, 0));
             FillRect(memDC, &hRc, hBg); DeleteObject(hBg);
             SetTextColor(memDC, RGB(255, 255, 255));
-            char hBuf[32]; wsprintfA(hBuf, "Radar[H](%d)", consonant_radars);
+            char hBuf[32]; wsprintfA(hBuf, "Radar[2](%d)", consonant_radars);
             DrawTextA(memDC, hBuf, -1, &hRc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
 
-            // Shield [S] (200..290)
+            // Shield [3] (200..290)
             RECT sRc = {200, 515, 290, 545};
             HBRUSH sBg = CreateSolidBrush((shields <= 0 || game_over) ? RGB(45, 52, 65) : RGB(142, 36, 170));
             FillRect(memDC, &sRc, sBg); DeleteObject(sBg);
             SetTextColor(memDC, RGB(255, 255, 255));
-            char sBuf[32]; wsprintfA(sBuf, "Shield[S](%d)", shields);
+            char sBuf[32]; wsprintfA(sBuf, "Shield[3](%d)", shields);
             DrawTextA(memDC, sBuf, -1, &sRc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
 
-            // Freeze [F] (295..385)
+            // Freeze [4] (295..385)
             RECT fRc = {295, 515, 385, 545};
             HBRUSH fBg = CreateSolidBrush((freezes <= 0 || game_over) ? RGB(45, 52, 65) : RGB(3, 169, 244));
             FillRect(memDC, &fRc, fBg); DeleteObject(fBg);
             SetTextColor(memDC, RGB(255, 255, 255));
-            char fBuf[32]; wsprintfA(fBuf, "Freeze[F](%d)", freezes);
+            char fBuf[32]; wsprintfA(fBuf, "Freeze[4](%d)", freezes);
             DrawTextA(memDC, fBuf, -1, &fRc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
 
-            // Bomb [B] (390..480)
+            // Bomb [5] (390..480)
             RECT bRc = {390, 515, 480, 545};
             HBRUSH bBg = CreateSolidBrush((bombs <= 0 || game_over) ? RGB(45, 52, 65) : RGB(229, 57, 53));
             FillRect(memDC, &bRc, bBg); DeleteObject(bBg);
             SetTextColor(memDC, RGB(255, 255, 255));
-            char bBuf[32]; wsprintfA(bBuf, "Bomb[B](%d)", bombs);
+            char bBuf[32]; wsprintfA(bBuf, "Bomb[5](%d)", bombs);
             DrawTextA(memDC, bBuf, -1, &bRc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
 
             // Row 2 Game Modes (y: 555..585)

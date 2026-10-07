@@ -77,7 +77,7 @@ const APPS = [
   { id: 'k2048', title: 'K2048', url: '/apps/k2048.html', exeUrl: '/exe/K2048.exe', icon: '/assets/icons/k2048.ico', w: 380, h: 480, folder: 'Games' },
   { id: 'ksudoku', title: 'KSudoku', url: '/apps/ksudoku.html', exeUrl: '/exe/KSudoku.exe', icon: '/assets/icons/ksudoku.ico', w: 600, h: 600, folder: 'Games' },
   { id: 'kconnect4', title: 'KConnect4', url: '/apps/kconnect4.html', exeUrl: '/exe/KConnect4.exe', icon: '/assets/icons/kconnect4.ico', w: 580, h: 780, folder: 'Games' },
-  { id: 'khangman', title: 'KHangman', url: '/apps/khangman.html', exeUrl: '/exe/KHangman.exe', icon: '/assets/icons/khangman.ico', w: 600, h: 500, folder: 'Games' },
+  { id: 'khangman', title: 'KHangman', url: '/apps/khangman.html', exeUrl: '/exe/KHangman.exe', icon: '/assets/icons/khangman.ico', w: 620, h: 600, folder: 'Games' },
   { id: 'ksimon', title: 'KSimon', url: '/apps/ksimon.html', exeUrl: '/exe/KSimon.exe', icon: '/assets/icons/ksimon.ico', w: 600, h: 600, folder: 'Games' },
   { id: 'kasteroids', title: 'KAsteroids', url: '/apps/kasteroids.html', exeUrl: '/exe/KAsteroids.exe', icon: '/assets/icons/kasteroids.ico', w: 800, h: 600, folder: 'Games' },
   { id: 'kfreecell', title: 'KFreecell', url: '/apps/kfreecell.html', exeUrl: '/exe/KFreecell.exe', icon: '/assets/icons/kfreecell.ico', w: 920, h: 740, folder: 'Games' },
