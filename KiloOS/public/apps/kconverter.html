@@ -629,6 +629,78 @@
     border-color: #38bdf8;
   }
 
+  .btn-save {
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.25), rgba(5, 150, 105, 0.35));
+    border-color: rgba(16, 185, 129, 0.5);
+    color: #a7f3d0;
+  }
+
+  .btn-save:hover {
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.45), rgba(5, 150, 105, 0.55));
+    border-color: #10b981;
+  }
+
+  .btn-load {
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.25), rgba(217, 119, 6, 0.35));
+    border-color: rgba(245, 158, 11, 0.5);
+    color: #fde68a;
+  }
+
+  .btn-load:hover {
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.45), rgba(217, 119, 6, 0.55));
+    border-color: #f59e0b;
+  }
+
+  /* First-run Onboarding / Tutorial Banner */
+  .tutorial-banner {
+    background: linear-gradient(135deg, rgba(30, 41, 59, 0.95), rgba(15, 23, 42, 0.95));
+    border: 1px solid rgba(56, 189, 248, 0.45);
+    border-radius: var(--radius-md);
+    padding: 10px 14px;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+    animation: modalPop 0.25s ease;
+  }
+  .tutorial-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .tutorial-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--accent-blue);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .tutorial-body {
+    font-size: 12px;
+    color: var(--text-secondary);
+    line-height: 1.45;
+  }
+  .tutorial-shortcuts {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-top: 8px;
+  }
+  .tutorial-shortcuts span {
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 11px;
+    color: var(--text-primary);
+  }
+  .tutorial-shortcuts kbd {
+    font-family: monospace;
+    color: var(--accent-blue);
+    font-weight: 700;
+  }
+
   .nav-tab .badge {
     font-size: 10px;
     background: rgba(255, 255, 255, 0.1);
@@ -667,6 +739,8 @@
             <option value="sci">Scientific</option>
           </select>
         </div>
+        <button class="btn-sm btn-save" onclick="quicksaveState()" title="Quicksave Workspace Snapshot (F5)" aria-label="Quicksave State">💾 Save [F5]</button>
+        <button class="btn-sm btn-load" onclick="quickloadState()" title="Restore Quicksaved Snapshot (F9)" aria-label="Restore State">📂 Load [F9]</button>
         <button class="btn-sm btn-help" onclick="toggleHelpModal(true)" title="Help & Reference (F1 / H)">❓ Help [F1]</button>
       </div>
     </header>
@@ -683,6 +757,33 @@
 
     <!-- Main Content Panel -->
     <main class="main-panel">
+      <!-- First-run Onboarding / Tutorial Banner -->
+      <div id="tutorialBanner" class="tutorial-banner" style="display: none;">
+        <div class="tutorial-content">
+          <div class="tutorial-header">
+            <span class="tutorial-title">⚡ Welcome to KConverter Pro</span>
+            <div style="display: flex; gap: 8px; align-items: center;">
+              <label style="display: flex; align-items: center; gap: 4px; font-size: 11px; color: var(--text-muted); cursor: pointer;">
+                <input type="checkbox" id="chkTutorialSeen" checked style="accent-color: var(--accent-blue);" /> Don't show again
+              </label>
+              <button class="btn-sm" onclick="dismissTutorial(true)" title="Dismiss Tutorial">Got It ✕</button>
+            </div>
+          </div>
+          <div class="tutorial-body">
+            Fast, high-precision engineering & unit conversion across <strong>9 physical categories</strong>, real-time <strong>Batch tables</strong>, natural language <strong>Smart Expression Parser</strong>, and <strong>Custom scale factors</strong>.
+            <div class="tutorial-shortcuts">
+              <span><kbd>1</kbd>–<kbd>6</kbd> Modes</span>
+              <span><kbd>X</kbd>/<kbd>S</kbd> Swap</span>
+              <span><kbd>P</kbd> Pin Fav</span>
+              <span><kbd>C</kbd> Copy</span>
+              <span><kbd>F5</kbd> Quicksave</span>
+              <span><kbd>F9</kbd> Quickload</span>
+              <span><kbd>F1</kbd>/<kbd>H</kbd> Guide</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- Category Tabs (shared for single/batch) -->
       <div class="cat-tabs" id="categoryContainer"></div>
 
@@ -901,6 +1002,8 @@
             <span class="key-badge">X</span> or <span class="key-badge">S</span> Swap Units &nbsp;|&nbsp;
             <span class="key-badge">P</span> Pin to Favs &nbsp;|&nbsp;
             <span class="key-badge">C</span> Copy Result &nbsp;|&nbsp;
+            <span class="key-badge">F5</span> Quicksave &nbsp;|&nbsp;
+            <span class="key-badge">F9</span> Quickload &nbsp;|&nbsp;
             <span class="key-badge">I</span> or <span class="key-badge">/</span> Focus Input &nbsp;|&nbsp;
             <span class="key-badge">H</span> / <span class="key-badge">F1</span> Help &nbsp;|&nbsp;
             <span class="key-badge">Esc</span> Clear / Close
@@ -916,6 +1019,7 @@
             <li><strong>Favorites:</strong> Pin frequent conversion pairs with ⭐ for 1-click loading.</li>
             <li><strong>Custom Units:</strong> Add proprietary or custom engineering scale factors.</li>
             <li><strong>History Log:</strong> Automatic audit trail with export to CSV/JSON.</li>
+            <li><strong>Quicksave & Restore:</strong> Press <span class="key-badge">F5</span> anytime to capture complete workspace state. Press <span class="key-badge">F9</span> to instantly restore.</li>
           </ul>
         </div>
 
@@ -1249,6 +1353,141 @@
     let customUnits = safeGetStorage('kconv_custom_units', []);
     let historyLog = safeGetStorage('kconv_history', []);
     let isInitialLoad = false;
+    const viewNames = ['single', 'batch', 'express', 'fav', 'custom', 'history'];
+
+    function getFullStateSnapshot() {
+      return {
+        category: currentCategory,
+        inputVal: document.getElementById('inputVal') ? document.getElementById('inputVal').value : '1',
+        unitFrom: document.getElementById('unitFrom') ? document.getElementById('unitFrom').value : '',
+        unitTo: document.getElementById('unitTo') ? document.getElementById('unitTo').value : '',
+        precision: document.getElementById('precisionSel') ? document.getElementById('precisionSel').value : '4',
+        notation: document.getElementById('notationSel') ? document.getElementById('notationSel').value : 'std',
+        activeView: viewNames.find(v => {
+          const p = document.getElementById(`view-${v}`);
+          return p && p.classList.contains('active');
+        }) || 'single',
+        batchInputVal: document.getElementById('batchInputVal') ? document.getElementById('batchInputVal').value : '1',
+        batchUnitFrom: document.getElementById('batchUnitFrom') ? document.getElementById('batchUnitFrom').value : '',
+        batchSearch: document.getElementById('batchSearch') ? document.getElementById('batchSearch').value : '',
+        expressInput: document.getElementById('expressInput') ? document.getElementById('expressInput').value : '100 km/h to m/s',
+        favorites: Array.isArray(favorites) ? JSON.parse(JSON.stringify(favorites)) : [],
+        customUnits: Array.isArray(customUnits) ? JSON.parse(JSON.stringify(customUnits)) : [],
+        historyLog: Array.isArray(historyLog) ? JSON.parse(JSON.stringify(historyLog)) : [],
+        timestamp: Date.now()
+      };
+    }
+
+    function quicksaveState() {
+      try {
+        const snap = getFullStateSnapshot();
+        safeSetStorage('kconverter_quicksave', snap);
+        showToast('★ Workspace snapshot saved [F5]', 'success');
+        return true;
+      } catch (err) {
+        showToast('⚠️ Failed to save quicksave state', 'warning');
+        return false;
+      }
+    }
+
+    function quickloadState() {
+      try {
+        const snap = safeGetStorage('kconverter_quicksave', null);
+        if (!snap) {
+          showToast('⚠️ No quicksaved state found [Press F5 to save]', 'warning');
+          return false;
+        }
+        restoreFullStateSnapshot(snap);
+        dismissTutorial(false);
+        showToast('★ Restored quicksaved workspace [F9]', 'success');
+        return true;
+      } catch (err) {
+        showToast('⚠️ Failed to restore quicksave', 'warning');
+        return false;
+      }
+    }
+
+    function restoreFullStateSnapshot(snap) {
+      if (!snap) return false;
+      
+      if (snap.precision && document.getElementById('precisionSel')) {
+        document.getElementById('precisionSel').value = snap.precision;
+      }
+      if (snap.notation && document.getElementById('notationSel')) {
+        document.getElementById('notationSel').value = snap.notation;
+      }
+      if (Array.isArray(snap.customUnits)) {
+        customUnits = snap.customUnits;
+        safeSetStorage('kconv_custom_units', customUnits);
+        renderCustomUnitsTable();
+      }
+      if (Array.isArray(snap.favorites)) {
+        favorites = snap.favorites;
+        safeSetStorage('kconv_favs', favorites);
+        renderFavorites();
+      }
+      if (Array.isArray(snap.historyLog)) {
+        historyLog = snap.historyLog;
+        safeSetStorage('kconv_history', historyLog);
+        renderHistory();
+      }
+      if (snap.category && categories[snap.category]) {
+        currentCategory = snap.category;
+      }
+      renderCategories();
+      populateDropdowns();
+
+      if (snap.unitFrom && document.getElementById('unitFrom')) {
+        document.getElementById('unitFrom').value = snap.unitFrom;
+      }
+      if (snap.unitTo && document.getElementById('unitTo')) {
+        document.getElementById('unitTo').value = snap.unitTo;
+      }
+      if (snap.inputVal !== undefined && document.getElementById('inputVal')) {
+        document.getElementById('inputVal').value = snap.inputVal;
+      }
+
+      if (snap.batchInputVal !== undefined && document.getElementById('batchInputVal')) {
+        document.getElementById('batchInputVal').value = snap.batchInputVal;
+      }
+      if (snap.batchUnitFrom && document.getElementById('batchUnitFrom')) {
+        document.getElementById('batchUnitFrom').value = snap.batchUnitFrom;
+      }
+      if (snap.batchSearch !== undefined && document.getElementById('batchSearch')) {
+        document.getElementById('batchSearch').value = snap.batchSearch;
+      }
+
+      if (snap.expressInput !== undefined && document.getElementById('expressInput')) {
+        document.getElementById('expressInput').value = snap.expressInput;
+      }
+
+      convert();
+      renderBatch();
+      parseExpressInput();
+
+      if (snap.activeView && viewNames.includes(snap.activeView)) {
+        switchView(snap.activeView);
+      }
+
+      return true;
+    }
+
+    function checkTutorial() {
+      const seen = safeGetStorage('kconverter_tutorialSeen', null);
+      const hasQuicksave = !!safeGetStorage('kconverter_quicksave', null);
+      const banner = document.getElementById('tutorialBanner');
+      if (!seen && !hasQuicksave && banner) {
+        banner.style.display = 'block';
+      }
+    }
+
+    function dismissTutorial(markSeen = true) {
+      const banner = document.getElementById('tutorialBanner');
+      if (banner) banner.style.display = 'none';
+      if (markSeen) {
+        safeSetStorage('kconverter_tutorialSeen', '1');
+      }
+    }
 
     function escapeHTML(str) {
       if (str === null || str === undefined) return '';
@@ -1273,6 +1512,7 @@
       convert();
       parseExpressInput();
       isInitialLoad = false;
+      checkTutorial();
 
       // Enter key shortcut for custom units
       const nameInp = document.getElementById('customUnitName');
@@ -1323,6 +1563,18 @@
       // Global keyboard navigation
       document.addEventListener('keydown', (e) => {
         const isEditing = e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA';
+
+        // Global F5 Quicksave & F9 Quickload
+        if (e.key === 'F5') {
+          e.preventDefault();
+          quicksaveState();
+          return;
+        }
+        if (e.key === 'F9') {
+          e.preventDefault();
+          quickloadState();
+          return;
+        }
         
         // Escape closes Help Modal, dismisses toast, or clears/unfocuses input
         if (e.key === 'Escape') {
@@ -1391,7 +1643,6 @@
       }, 350);
     };
 
-    const viewNames = ['single', 'batch', 'express', 'fav', 'custom', 'history'];
     function cycleTab(direction) {
       const currentActive = viewNames.find(v => {
         const p = document.getElementById(`view-${v}`);

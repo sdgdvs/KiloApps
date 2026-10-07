@@ -23,17 +23,20 @@ typedef double (__cdecl *atof_t)(const char*);
 typedef void* (__cdecl *fopen_t)(const char*, const char*);
 typedef int (__cdecl *fputs_t)(const char*, void*);
 typedef int (__cdecl *fclose_t)(void*);
+typedef char* (__cdecl *fgets_t)(char*, int, void*);
 
 sprintf_t m_sprintf;
 atof_t m_atof;
 fopen_t m_fopen;
 fputs_t m_fputs;
 fclose_t m_fclose;
+fgets_t m_fgets;
 
 HMODULE hMsvcrt = NULL;
 HWND hCategory, hInput, hOutput, hFrom, hTo, hPrecision, hFormat;
 HWND hBatchOutput, hHistoryOutput, hFavCombo, hFormulaStatic;
 HWND hBtnSingle, hBtnBatch, hBtnFavs, hBtnHistory, hBtnExpress, hBtnHelp;
+HWND hBtnSave = NULL, hBtnLoad = NULL;
 HWND hBtnLoadFav = NULL, hBtnRemoveFav = NULL, hBtnDemoFavs = NULL;
 HWND hExpressInput, hExpressOutput, hExpressPresetBtns[6];
 HWND hLblInput = NULL, hLblFrom = NULL, hLblTo = NULL, hLblResult = NULL;
@@ -52,6 +55,12 @@ void ShowHelpDialog(HWND hwnd);
 void ShowNativeStatus(const char* msg);
 void CopyToClipboardNative(HWND hwnd, const char* text);
 void LoadDefaultFavoritesNative();
+void QuicksaveNative();
+void QuickloadNative();
+void CheckTutorialNative();
+void UpdateViewVisibility();
+void DoConvert();
+void DoExpressParse();
 
 // Categories and Units
 const char* catNames[] = {"Length", "Weight", "Temperature", "Data Storage", "Speed", "Area", "Volume", "Time", "Pressure"};
@@ -572,6 +581,121 @@ void LoadDefaultFavoritesNative() {
     ShowNativeStatus("⭐ Standard favorite pairs loaded!");
 }
 
+void QuicksaveNative() {
+    if (!m_fopen || !m_fputs || !m_fclose) return;
+    void* f = m_fopen("kconverter_save.dat", "w");
+    if (!f) {
+        ShowNativeStatus("⚠️ Failed to write quicksave file!");
+        return;
+    }
+    int catIdx = (int)SendMessageA(hCategory, CB_GETCURSEL, 0, 0);
+    int precIdx = (int)SendMessageA(hPrecision, CB_GETCURSEL, 0, 0);
+    int fmtIdx = (int)SendMessageA(hFormat, CB_GETCURSEL, 0, 0);
+    int fromIdx = (int)SendMessageA(hFrom, CB_GETCURSEL, 0, 0);
+    int toIdx = (int)SendMessageA(hTo, CB_GETCURSEL, 0, 0);
+    char inVal[128] = {0};
+    GetWindowTextA(hInput, inVal, 127);
+    char expVal[256] = {0};
+    GetWindowTextA(hExpressInput, expVal, 255);
+
+    char line[512];
+    m_sprintf(line, "%d,%d,%d,%d,%d,%d\n", catIdx, precIdx, fmtIdx, fromIdx, toIdx, currentMode);
+    m_fputs(line, f);
+    m_sprintf(line, "%s\n", inVal[0] ? inVal : "1");
+    m_fputs(line, f);
+    m_sprintf(line, "%s\n", expVal[0] ? expVal : "100 km/h to m/s");
+    m_fputs(line, f);
+    m_fputs(historyBuffer, f);
+    m_fclose(f);
+    ShowNativeStatus("💾 State saved to disk [F5]!");
+}
+
+void QuickloadNative() {
+    if (!m_fopen || !m_fgets || !m_fclose) return;
+    void* f = m_fopen("kconverter_save.dat", "r");
+    if (!f) {
+        ShowNativeStatus("⚠️ No quicksaved state found [Press F5 to save]");
+        return;
+    }
+    char line1[256] = {0};
+    char line2[128] = {0};
+    char line3[256] = {0};
+    if (!m_fgets(line1, sizeof(line1) - 1, f)) {
+        m_fclose(f);
+        ShowNativeStatus("⚠️ Corrupt save file!");
+        return;
+    }
+    m_fgets(line2, sizeof(line2) - 1, f);
+    m_fgets(line3, sizeof(line3) - 1, f);
+
+    historyBuffer[0] = '\0';
+    char hLine[256];
+    while (m_fgets(hLine, sizeof(hLine) - 1, f)) {
+        if (lstrlenA(historyBuffer) + lstrlenA(hLine) < 3900) {
+            lstrcatA(historyBuffer, hLine);
+        }
+    }
+    m_fclose(f);
+
+    int l2Len = lstrlenA(line2);
+    while (l2Len > 0 && (line2[l2Len - 1] == '\r' || line2[l2Len - 1] == '\n')) {
+        line2[--l2Len] = '\0';
+    }
+    int l3Len = lstrlenA(line3);
+    while (l3Len > 0 && (line3[l3Len - 1] == '\r' || line3[l3Len - 1] == '\n')) {
+        line3[--l3Len] = '\0';
+    }
+
+    int catIdx = 0, precIdx = 0, fmtIdx = 0, fromIdx = 0, toIdx = 0, mode = 0;
+    char* ptr = line1;
+    catIdx = (int)m_atof(ptr);
+    while (*ptr && *ptr != ',') ptr++; if (*ptr == ',') ptr++;
+    precIdx = (int)m_atof(ptr);
+    while (*ptr && *ptr != ',') ptr++; if (*ptr == ',') ptr++;
+    fmtIdx = (int)m_atof(ptr);
+    while (*ptr && *ptr != ',') ptr++; if (*ptr == ',') ptr++;
+    fromIdx = (int)m_atof(ptr);
+    while (*ptr && *ptr != ',') ptr++; if (*ptr == ',') ptr++;
+    toIdx = (int)m_atof(ptr);
+    while (*ptr && *ptr != ',') ptr++; if (*ptr == ',') ptr++;
+    mode = (int)m_atof(ptr);
+
+    if (catIdx >= 0 && catIdx < numCats) {
+        SendMessageA(hCategory, CB_SETCURSEL, catIdx, 0);
+        PopulateUnits(catIdx);
+    }
+    if (precIdx >= 0) SendMessageA(hPrecision, CB_SETCURSEL, precIdx, 0);
+    if (fmtIdx >= 0) SendMessageA(hFormat, CB_SETCURSEL, fmtIdx, 0);
+    int uCnt = GetUnitCount(catIdx);
+    if (fromIdx >= 0 && fromIdx < uCnt) SendMessageA(hFrom, CB_SETCURSEL, fromIdx, 0);
+    if (toIdx >= 0 && toIdx < uCnt) SendMessageA(hTo, CB_SETCURSEL, toIdx, 0);
+
+    SetWindowTextA(hInput, line2[0] ? line2 : "1");
+    SetWindowTextA(hExpressInput, line3[0] ? line3 : "100 km/h to m/s");
+    SetWindowTextA(hHistoryOutput, historyBuffer);
+
+    if (mode >= 0 && mode <= 4) currentMode = mode;
+    UpdateViewVisibility();
+    DoConvert();
+    DoExpressParse();
+    ShowNativeStatus("📂 Restored quicksaved state [F9]!");
+}
+
+void CheckTutorialNative() {
+    if (!m_fopen || !m_fclose) return;
+    void* f = m_fopen("kconverter_tutorial.dat", "r");
+    if (f) {
+        m_fclose(f);
+    } else {
+        void* fw = m_fopen("kconverter_tutorial.dat", "w");
+        if (fw) {
+            if (m_fputs) m_fputs("seen=1\n", fw);
+            m_fclose(fw);
+        }
+        ShowNativeStatus("★ Welcome! [F1] Help | [F5] Save | [F9] Load | [X] Swap | [P] Pin | [C] Copy");
+    }
+}
+
 void UpdateViewVisibility() {
     BOOL isSingle = (currentMode == 0);
     BOOL isBatch = (currentMode == 1);
@@ -613,7 +737,7 @@ void UpdateViewVisibility() {
     }
 }
 
-// Subclass Edit Proc to handle ENTER, ESC, and F1 keys in Input box
+// Subclass Edit Proc to handle ENTER, ESC, F1, F5, F9 keys in Input box
 LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     if (msg == WM_KEYDOWN) {
         if (wParam == VK_RETURN) {
@@ -625,6 +749,12 @@ LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
             return 0;
         } else if (wParam == VK_F1) {
             ShowHelpDialog(GetParent(hwnd));
+            return 0;
+        } else if (wParam == VK_F5) {
+            QuicksaveNative();
+            return 0;
+        } else if (wParam == VK_F9) {
+            QuickloadNative();
             return 0;
         } else if (wParam == VK_ESCAPE) {
             if (hwnd == hInput) {
@@ -651,13 +781,16 @@ void ShowHelpDialog(HWND hwnd) {
         "  [X] or [S]   : Swap From and To units\r\n"
         "  [P]          : Pin current conversion pair to Favorites\r\n"
         "  [C]          : Copy conversion result to Windows Clipboard\r\n"
+        "  [F5]         : Quicksave state to disk (kconverter_save.dat)\r\n"
+        "  [F9]         : Quickload state from disk\r\n"
         "  [Esc]        : Reset input or clear expression\r\n\r\n"
         "FEATURES:\r\n"
         "  - Single Convert : Bi-directional unit conversion with live formula\r\n"
         "  - Batch Mode     : Real-time calculation across all units in category\r\n"
         "  - Favorites      : Instant recall of pinned unit pairs\r\n"
         "  - History Log    : Conversion audit trail with export to text\r\n"
-        "  - Smart Parser   : Evaluates phrases like '100 km/h to m/s' or '50 psi to bar'\r\n\r\n"
+        "  - Smart Parser   : Evaluates phrases like '100 km/h to m/s' or '50 psi to bar'\r\n"
+        "  - State Save/Load: Full quicksave (F5) and quickload (F9) persistence\r\n\r\n"
         "PHYSICAL CATEGORIES (9 total):\r\n"
         "  Length, Weight, Temperature, Data Storage, Speed, Area, Volume, Time, Pressure",
         "KConverter Pro Help", MB_OK | MB_ICONINFORMATION);
@@ -673,21 +806,24 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 m_fopen = (fopen_t)GetProcAddress(hMsvcrt, "fopen");
                 m_fputs = (fputs_t)GetProcAddress(hMsvcrt, "fputs");
                 m_fclose = (fclose_t)GetProcAddress(hMsvcrt, "fclose");
+                m_fgets = (fgets_t)GetProcAddress(hMsvcrt, "fgets");
             }
 
             historyBuffer[0] = '\0';
 
             // Top bar controls
             CreateWindowA("STATIC", "Category:", WS_CHILD | WS_VISIBLE, 10, 10, 60, 20, hwnd, NULL, NULL, NULL);
-            hCategory = CreateWindowA("COMBOBOX", NULL, WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST | WS_TABSTOP, 75, 8, 120, 150, hwnd, (HMENU)1002, NULL, NULL);
+            hCategory = CreateWindowA("COMBOBOX", NULL, WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST | WS_TABSTOP, 72, 8, 115, 150, hwnd, (HMENU)1002, NULL, NULL);
 
-            CreateWindowA("STATIC", "Prec:", WS_CHILD | WS_VISIBLE, 205, 10, 35, 20, hwnd, NULL, NULL, NULL);
-            hPrecision = CreateWindowA("COMBOBOX", NULL, WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST | WS_TABSTOP, 245, 8, 70, 150, hwnd, (HMENU)1003, NULL, NULL);
+            CreateWindowA("STATIC", "Prec:", WS_CHILD | WS_VISIBLE, 192, 10, 35, 20, hwnd, NULL, NULL, NULL);
+            hPrecision = CreateWindowA("COMBOBOX", NULL, WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST | WS_TABSTOP, 228, 8, 68, 150, hwnd, (HMENU)1003, NULL, NULL);
 
-            CreateWindowA("STATIC", "Fmt:", WS_CHILD | WS_VISIBLE, 325, 10, 30, 20, hwnd, NULL, NULL, NULL);
-            hFormat = CreateWindowA("COMBOBOX", NULL, WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST | WS_TABSTOP, 360, 8, 95, 150, hwnd, (HMENU)1004, NULL, NULL);
+            CreateWindowA("STATIC", "Fmt:", WS_CHILD | WS_VISIBLE, 302, 10, 30, 20, hwnd, NULL, NULL, NULL);
+            hFormat = CreateWindowA("COMBOBOX", NULL, WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST | WS_TABSTOP, 334, 8, 85, 150, hwnd, (HMENU)1004, NULL, NULL);
 
-            hBtnHelp = CreateWindowA("BUTTON", "Help [F1]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 465, 8, 80, 24, hwnd, (HMENU)6001, NULL, NULL);
+            hBtnSave = CreateWindowA("BUTTON", "Save [F5]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 426, 8, 70, 24, hwnd, (HMENU)6002, NULL, NULL);
+            hBtnLoad = CreateWindowA("BUTTON", "Load [F9]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 500, 8, 70, 24, hwnd, (HMENU)6003, NULL, NULL);
+            hBtnHelp = CreateWindowA("BUTTON", "Help [F1]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 574, 8, 72, 24, hwnd, (HMENU)6001, NULL, NULL);
 
             // Mode Tab Buttons
             hBtnSingle = CreateWindowA("BUTTON", "[1] Single", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 10, 38, 80, 24, hwnd, (HMENU)2001, NULL, NULL);
@@ -749,9 +885,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hExpressOutput = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD | WS_BORDER | ES_MULTILINE | ES_READONLY | WS_VSCROLL | WS_TABSTOP, 10, 126, 625, 250, hwnd, NULL, NULL, NULL);
 
             // Bottom Status Bar
-            hStatusBar = CreateWindowExA(WS_EX_STATICEDGE, "STATIC", " Ready. [F1] Help | [1-5] Tabs | [X] Swap | [P] Pin | [C] Copy | [Enter] Calc", WS_CHILD | WS_VISIBLE | SS_LEFT, 10, 392, 625, 22, hwnd, NULL, NULL, NULL);
+            hStatusBar = CreateWindowExA(WS_EX_STATICEDGE, "STATIC", " Ready. [F1] Help | [F5] Save | [F9] Load | [1-5] Tabs | [X] Swap | [P] Pin | [C] Copy", WS_CHILD | WS_VISIBLE | SS_LEFT, 10, 392, 625, 22, hwnd, NULL, NULL, NULL);
 
             RegisterHotKey(hwnd, 1, 0, VK_F1);
+            RegisterHotKey(hwnd, 5, 0, VK_F5);
+            RegisterHotKey(hwnd, 9, 0, VK_F9);
 
             // Populate Category Combo
             for (int i = 0; i < numCats; i++) {
@@ -781,6 +919,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SendMessageA(hPrecision, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessageA(hFormat, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessageA(hBtnHelp, WM_SETFONT, (WPARAM)hFont, TRUE);
+            if (hBtnSave) SendMessageA(hBtnSave, WM_SETFONT, (WPARAM)hFont, TRUE);
+            if (hBtnLoad) SendMessageA(hBtnLoad, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessageA(hBtnSingle, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessageA(hBtnBatch, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessageA(hBtnFavs, WM_SETFONT, (WPARAM)hFont, TRUE);
@@ -819,6 +959,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             UpdateViewVisibility();
             DoConvert();
             DoExpressParse();
+            CheckTutorialNative();
             break;
         }
         case WM_COMMAND: {
@@ -827,6 +968,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             if (wmId == 6001) { // Help Button
                 ShowHelpDialog(hwnd);
+            } else if (wmId == 6002) { // Save Button
+                QuicksaveNative();
+            } else if (wmId == 6003) { // Load Button
+                QuickloadNative();
             } else if (wmId == 1001) { // Convert Button
                 DoConvert();
             } else if (wmId == 1005 && wmEvent == EN_CHANGE) { // Live input update
@@ -938,6 +1083,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (wParam == VK_F1) {
                 ShowHelpDialog(hwnd);
                 return 0;
+            } else if (wParam == VK_F5) {
+                QuicksaveNative();
+                return 0;
+            } else if (wParam == VK_F9) {
+                QuickloadNative();
+                return 0;
             }
             if (!isEditing) {
                 if (wParam >= '1' && wParam <= '5') {
@@ -965,6 +1116,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         case WM_HOTKEY: {
             if (wParam == 1) {
                 ShowHelpDialog(hwnd);
+            } else if (wParam == 5) {
+                QuicksaveNative();
+            } else if (wParam == 9) {
+                QuickloadNative();
             }
             break;
         }
@@ -981,6 +1136,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (hFontBold) { DeleteObject(hFontBold); hFontBold = NULL; }
             if (hMsvcrt) { FreeLibrary(hMsvcrt); hMsvcrt = NULL; }
             UnregisterHotKey(hwnd, 1);
+            UnregisterHotKey(hwnd, 5);
+            UnregisterHotKey(hwnd, 9);
             PostQuitMessage(0);
             return 0;
     }
@@ -1005,7 +1162,7 @@ void __stdcall MainEntry() {
     
     RECT rect = { 0, 0, 660, 440 };
     AdjustWindowRect(&rect, WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX, FALSE);
-    HWND hwnd = CreateWindowExA(0, "KConvClass", "KConverter Pro - [F1] Help | [1-5] Tabs | [X] Swap | [P] Pin | [C] Copy", WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX | WS_CLIPCHILDREN, CW_USEDEFAULT, CW_USEDEFAULT, rect.right - rect.left, rect.bottom - rect.top, NULL, NULL, wc.hInstance, NULL);
+    HWND hwnd = CreateWindowExA(0, "KConvClass", "KConverter Pro - [F1] Help | [F5] Save | [F9] Load | [1-5] Tabs | [X] Swap | [P] Pin | [C] Copy", WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX | WS_CLIPCHILDREN, CW_USEDEFAULT, CW_USEDEFAULT, rect.right - rect.left, rect.bottom - rect.top, NULL, NULL, wc.hInstance, NULL);
 
     ShowWindow(hwnd, SW_SHOW);
     UpdateWindow(hwnd);
@@ -1015,6 +1172,14 @@ void __stdcall MainEntry() {
         if (msg.message == WM_KEYDOWN) {
             if (msg.wParam == VK_F1) {
                 ShowHelpDialog(hwnd);
+                continue;
+            }
+            if (msg.wParam == VK_F5) {
+                QuicksaveNative();
+                continue;
+            }
+            if (msg.wParam == VK_F9) {
+                QuickloadNative();
                 continue;
             }
             HWND hFoc = GetFocus();

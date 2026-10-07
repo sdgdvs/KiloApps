@@ -4,6 +4,15 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-06T17:31:00-07:00 — kilo-expander: KSolitaire (RFMS Duel Arena, Replay Studio, Deal Numbers, Mandate 11 Glint/Dust Ban)**
+  - Status: PASS ✅ (0 regressions, 152.7 KB web / 49.1 KB native < 999 KB ceiling).
+  - Online Multiplayer: Added Cyber Duel Arena with RFMS matchmaking, 25s CyberBot solo fallback, live duel HUD, chat taunts, and URL room invites.
+  - Deal Number System: Integrated deterministic Mulberry32 PRNG with deal seeds #1-#1000000, deep links (#deal=X), and status bar indicator.
+  - Replay Studio: Added full move tracking, playback controls (1x/2x/4x), step scrubber, and .ksol JSON import/export.
+  - Mandate 11 Glint & Dust Ban: Removed metallic shine keyframes and eliminated all canvas/DOM dust motes.
+  - Verification: `test_app_startup.py` PASS; `test_web_apps.js` PASS (82 elements, 0 err); MSVC clean (`KSolitaire.exe` 49.1 KB); Vite clean (327ms); security_lint 100% PASS.
+  - Queue: Advanced `kilo_expander` to `KPac`; rotation advanced to `kilo-creator`.
+
 - **2026-10-06T17:07:00-07:00 — kilo-qa: KColor (Pass 5: Tutorial & State Integrity, Quicksave/Load & Build Audit)**
   - Status: PASS ✅ (0 regressions, 67.4 KB web / 17.9 KB native < 999 KB ceiling).
   - State Persistence: Implemented [F5/F9] quicksave/quickload across web (`kcolor_quicksave`) and Win32 C (`kcolor_save.dat`); added UI buttons.
