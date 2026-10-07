@@ -774,8 +774,7 @@ void UpdateTextures() {
             int isShaft = (x >= 7 && x <= 8 && by >= 6 && by <= 13);
             int isWard = (x >= 9 && x <= 11 && (by == 9 || by == 12 || by == 13));
             if (isShaft || (isBowOuter && !isBowInner) || isWard) {
-                int glint = ((x + by + (animFrameCount * 7 / 20)) % 9 == 0);
-                textures[3][y * 16 + x] = glint ? RGB(255, 255, 210) : RGB(225, 185, 25);
+                textures[3][y * 16 + x] = RGB(255, 215, 0);
             } else {
                 textures[3][y * 16 + x] = RGB(20, 15, 15);
             }
@@ -1731,7 +1730,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             }
             
             if (gameState == 1 && activeKeyCooldown <= 0) {
-                if (GetAsyncKeyState(keyBinds.crouch) & 0x8000 || GetAsyncKeyState(VK_CONTROL) & 0x8000) {
+                if (GetAsyncKeyState(keyBinds.crouch) & 0x8000 || GetAsyncKeyState(VK_CONTROL) & 0x8000 || GetAsyncKeyState('6') & 0x8000) {
                     isCrouching = !isCrouching;
                     if (isCrouching) {
                         strcpy(msgText, "Stealth Crouch Active (Sneaking / Silenced)!");
@@ -1744,7 +1743,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     }
                     activeKeyCooldown = 250;
                 }
-                if (GetAsyncKeyState(keyBinds.pickaxe) & 0x8000) {
+                if ((GetAsyncKeyState(keyBinds.pickaxe) & 0x8000) || (GetAsyncKeyState('1') & 0x8000)) {
                     if (hasPickaxe > 0) {
                         int tx = (int)(pX + dX * 0.8f);
                         int ty = (int)(pY + dY * 0.8f);
@@ -1811,7 +1810,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         }
                     }
                 }
-                if (GetAsyncKeyState(keyBinds.pathfinder) & 0x8000) {
+                if ((GetAsyncKeyState(keyBinds.pathfinder) & 0x8000) || (GetAsyncKeyState('2') & 0x8000)) {
                     if (pathfinderCharges > 0) {
                         pathfinderCharges--;
                         pathfinderTimer = 10000;
@@ -1823,7 +1822,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         activeKeyCooldown = 300;
                     }
                 }
-                if ((GetAsyncKeyState(keyBinds.speed) & 0x8000) || (GetAsyncKeyState('B') & 0x8000)) {
+                if ((GetAsyncKeyState(keyBinds.speed) & 0x8000) || (GetAsyncKeyState('B') & 0x8000) || (GetAsyncKeyState('3') & 0x8000)) {
                     if (speedShoesCharges > 0 || speedBoost) {
                         if (speedShoesCharges > 0) speedShoesCharges--;
                         speedShoesTimer = 8000;
@@ -1834,7 +1833,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         activeKeyCooldown = 300;
                     }
                 }
-                if (GetAsyncKeyState(keyBinds.stun) & 0x8000) {
+                if ((GetAsyncKeyState(keyBinds.stun) & 0x8000) || (GetAsyncKeyState('4') & 0x8000)) {
                     if (stunSprayCharges > 0) {
                         stunSprayCharges--;
                         stunSprayTimer = 10000;
@@ -1847,7 +1846,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         muzzleFlashTimer = 8;
                     }
                 }
-                if (GetAsyncKeyState(keyBinds.freeze) & 0x8000) {
+                if ((GetAsyncKeyState(keyBinds.freeze) & 0x8000) || (GetAsyncKeyState('5') & 0x8000)) {
                     if (timeFreezeCharges > 0) {
                         timeFreezeCharges--;
                         timeFreezeTimer = 10000;
@@ -1858,14 +1857,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         activeKeyCooldown = 300;
                     }
                 }
-                if (GetAsyncKeyState('V') & 0x8000) {
+                if ((GetAsyncKeyState('V') & 0x8000) || (GetAsyncKeyState(VK_F5) & 0x8000)) {
                     SaveCheckpoint();
                     strcpy(msgText, "Game Saved to Checkpoint!");
                     msgTimer = 60;
                     activeKeyCooldown = 1000;
                     MessageBeep(MB_OK);
                 }
-                if (GetAsyncKeyState('L') & 0x8000) {
+                if ((GetAsyncKeyState('L') & 0x8000) || (GetAsyncKeyState(VK_F9) & 0x8000)) {
                     LoadCheckpoint();
                     activeKeyCooldown = 500;
                 }
@@ -2590,8 +2589,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             // Active Items Legend HUD
             if (gameState == 1) {
-                char itemText[160];
-                wsprintfA(itemText, "[P]Break [C]Path:%ds [S]Speed:%ds [F]Stun:%ds [T]Freeze:%ds [X]Crouch:%s [V]Save [L]Load", pathfinderTimer/1000, speedShoesTimer/1000, stunSprayTimer/1000, timeFreezeTimer/1000, isCrouching ? "ON" : "OFF");
+                char itemText[180];
+                wsprintfA(itemText, "[1/P]Break [2/C]Path:%ds [3/S]Speed:%ds [4/F]Stun:%ds [5/T]Freeze:%ds [6/X]Crouch:%s [F5/V]Save [F9/L]Load", pathfinderTimer/1000, speedShoesTimer/1000, stunSprayTimer/1000, timeFreezeTimer/1000, isCrouching ? "ON" : "OFF");
                 SetTextColor(hdc, RGB(0, 0, 0));
                 TextOutA(hdc, 22, clientRect.bottom - 28, itemText, lstrlenA(itemText));
                 SetTextColor(hdc, RGB(0, 255, 255));
@@ -2618,8 +2617,16 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 ShowHelpDialog(hwnd);
                 break;
             }
+            if (wParam == VK_F5) {
+                if (gameState == 1) SaveCheckpoint();
+                break;
+            }
+            if (wParam == VK_F9) {
+                if (gameState == 0 || gameState == 1) LoadCheckpoint();
+                break;
+            }
             if (gameState == 0) {
-                if (wParam == VK_RETURN || wParam == VK_SPACE || wParam == 'N' || wParam == 'n') {
+                if (wParam == VK_ESCAPE || wParam == VK_RETURN || wParam == VK_SPACE || wParam == 'N' || wParam == 'n') {
                     StartNewGame(hwnd);
                     break;
                 }
@@ -2629,6 +2636,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 }
             }
             if (gameState == 2) {
+                if (wParam == VK_ESCAPE) {
+                    gameState = 0;
+                    break;
+                }
                 if (wParam == VK_RETURN || wParam == VK_SPACE || wParam == 'N' || wParam == 'n') {
                     StartNewGame(hwnd);
                     break;

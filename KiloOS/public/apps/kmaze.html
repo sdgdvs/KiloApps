@@ -352,7 +352,7 @@
       <div class="splashSubtitle">Tactical 3D Raycaster Labyrinth • 45 Challenging Chambers</div>
       <div class="splashBtnGroup">
         <button id="btnSplashNew" class="splashBtn primary" onclick="startNewGame()"><span class="badge">Enter / N</span> ⚔️ New Game</button>
-        <button id="btnSplashContinue" class="splashBtn" onclick="loadCheckpointGame()"><span class="badge">L</span> 💾 Continue Checkpoint</button>
+        <button id="btnSplashContinue" class="splashBtn" onclick="loadCheckpointGame()"><span class="badge">F9 / L</span> 💾 Continue Checkpoint</button>
         <button id="btnSplashHelp" class="splashBtn" onclick="toggleHelpModal(true)"><span class="badge">F1 / H</span> 📖 Codex & Guide</button>
         <button id="btnSplashKeys" class="splashBtn" onclick="toggleKeybinds()"><span class="badge">K</span> ⌨️ Keybinds</button>
       </div>
@@ -368,8 +368,8 @@
     <button id="btnStun" class="hudBtn" onclick="useStunSpray()" title="Stun and freeze hunting Minotaurs (10s)"><span class="badge">F</span> Stun Spray</button>
     <button id="btnFreeze" class="hudBtn" onclick="useTimeFreeze()" title="Halt all monsters in the dungeon (10s)"><span class="badge">T</span> Time Freeze</button>
     <button id="btnCrouch" class="hudBtn" onclick="toggleCrouch()" title="Stealth crouch: silence footsteps and cushion trap damage"><span class="badge">X/Ctrl</span> Crouch</button>
-    <button id="btnSave" class="hudBtn" onclick="saveCheckpointGame()" title="Save current dungeon descent to checkpoint"><span class="badge">V</span> Save</button>
-    <button id="btnLoad" class="hudBtn" onclick="loadCheckpointGame()" title="Continue last saved checkpoint descent"><span class="badge">L</span> Continue</button>
+    <button id="btnSave" class="hudBtn" onclick="saveCheckpointGame()" title="Save current dungeon descent to checkpoint (F5)"><span class="badge">F5/V</span> Save</button>
+    <button id="btnLoad" class="hudBtn" onclick="loadCheckpointGame()" title="Continue last saved checkpoint descent (F9)"><span class="badge">F9/L</span> Continue</button>
     <button id="btnHelp" class="hudBtn" onclick="toggleHelpModal()" title="View comprehensive guide, tile codex, and tips"><span class="badge">F1/H</span> Guide</button>
     <button id="btnKeys" class="hudBtn" onclick="toggleKeybinds()" title="Rebind control keys"><span class="badge">K</span> Keybinds</button>
     <button id="btnExport" class="hudBtn" onclick="exportStats()" title="Export best times and statistics to JSON"><span class="badge">E</span> Export</button>
@@ -734,8 +734,7 @@
       let tutorialSeen = safeGetStorage('kmaze_tutorialSeen') === '1';
       if (!tutorialSeen) {
           safeSetStorage('kmaze_tutorialSeen', '1');
-          toggleHelpModal(true);
-          showToast("Welcome to KMaze! Codex Opened. Press Esc to Start.", "info", 5000);
+          showToast("🛡️ Welcome to KMaze! WASD/Arrows to Move, [F1] for Codex & Guide", "info", 5000);
       } else {
           showToast("Descent Begun! Press F1 or H for Guide", "info");
       }
@@ -813,6 +812,7 @@
               safeSetStorage('kmaze_escapes', totalEscapes);
               safeSetStorage('kmaze_score', totalScore);
               msgText = "Stats Imported!"; msgTimer = 60;
+              updateSplashOverlay();
               showToast("Statistics successfully imported!", "success");
           } catch (err) {
               msgText = "Import Failed!"; msgTimer = 60;
@@ -1217,8 +1217,7 @@
               let isShaft = (x >= 7 && x <= 8 && by >= 6 && by <= 13);
               let isWard = (x >= 9 && x <= 11 && (by === 9 || by === 12 || by === 13));
               if (isShaft || (isBowOuter && !isBowInner) || isWard) {
-                  let glint = ((x + by + Math.floor(frameCount * 0.35)) % 9 === 0);
-                  let r3 = glint ? 255 : 225, g3 = glint ? 255 : 185, b3 = glint ? 210 : 25;
+                  let r3 = 255, g3 = 215, b3 = 0;
                   textures[3][y * 16 + x] = (255 << 24) | (b3 << 16) | (g3 << 8) | r3;
               } else {
                   textures[3][y * 16 + x] = (255 << 24) | (15 << 16) | (15 << 8) | 20;
@@ -1877,11 +1876,29 @@
               return;
           }
           if (gameState === 3) { gameState = 2; return; }
+          if (gameState === 0) { startNewGame(); return; }
+          if (gameState === 2) { gameState = 0; updateSplashOverlay(); return; }
       }
 
-      if (isModalOpen) return;
+      if (isModalOpen) {
+          if (e.key === 'Enter' || e.key === ' ') {
+              toggleHelpModal(false);
+          }
+          return;
+      }
 
       const hasMod = e.ctrlKey || e.altKey || e.metaKey;
+
+      if (e.key === 'F5') {
+          e.preventDefault();
+          if (gameState === 1) saveCheckpointGame();
+          return;
+      }
+      if (e.key === 'F9') {
+          e.preventDefault();
+          if (gameState === 0 || gameState === 1) loadCheckpointGame();
+          return;
+      }
 
       if (!hasMod) {
           keys[e.key] = true;
@@ -1895,7 +1912,7 @@
           gameState = 3;
           replayLevelIdx = replayLevels.length - 1;
           replayFrameIdx = 0;
-      } else if (!hasMod && (e.key === 'Enter' || (gameState === 0 && (e.key === ' ' || e.key === 'n' || e.key === 'N')) || (gameState === 2 && (e.key === 'n' || e.key === 'N')))) {
+      } else if (!hasMod && (e.key === 'Enter' || ((gameState === 0 || gameState === 2) && (e.key === ' ' || e.key === 'n' || e.key === 'N')))) {
           if (gameState === 0 || gameState === 2) {
               startNewGame();
           }
@@ -1930,12 +1947,12 @@
       } else if (gameState === 1) {
           if (!hasMod) {
               let k = e.key.toLowerCase();
-              if (k === (keyBinds.pickaxe || 'p').toLowerCase()) usePickaxe();
-              if (k === (keyBinds.pathfinder || 'c').toLowerCase()) usePathfinder();
-              if (k === (keyBinds.speed || 's').toLowerCase() || k === 'b') useSpeedShoes();
-              if (k === (keyBinds.stun || 'f').toLowerCase()) useStunSpray();
-              if (k === (keyBinds.freeze || 't').toLowerCase()) useTimeFreeze();
-              if (k === (keyBinds.crouch || 'x').toLowerCase()) toggleCrouch();
+              if (k === (keyBinds.pickaxe || 'p').toLowerCase() || k === '1') usePickaxe();
+              if (k === (keyBinds.pathfinder || 'c').toLowerCase() || k === '2') usePathfinder();
+              if (k === (keyBinds.speed || 's').toLowerCase() || k === 'b' || k === '3') useSpeedShoes();
+              if (k === (keyBinds.stun || 'f').toLowerCase() || k === '4') useStunSpray();
+              if (k === (keyBinds.freeze || 't').toLowerCase() || k === '5') useTimeFreeze();
+              if (k === (keyBinds.crouch || 'x').toLowerCase() || k === '6') toggleCrouch();
               if (k === 'v') saveCheckpointGame();
               if (k === 'l') loadCheckpointGame();
           } else if (e.key === 'Control' && !e.altKey && !e.metaKey) {
@@ -2813,7 +2830,7 @@
           uiCtx.fillText(`Lvl:${currentLevel+1}/45 [${biome}] K:${keysHeld} P:${hasPickaxe} C:${pathfinderCharges} S:${speedShoesCharges} F:${stunSprayCharges} T:${timeFreezeCharges} [${isCrouching ? "CROUCH" : "STAND"}]`, 10, 15);
           uiCtx.fillStyle = 'white';
           uiCtx.fillText(`Score:${score} Time:${elapsed.toFixed(1)}s Torch:${Math.max(0, Math.floor(torchTimer/1000))}s`, 10, 30);
-          uiCtx.fillText("V:Save L:Load", W - 90, 15);
+          uiCtx.fillText("F5:Save F9:Load", W - 110, 15);
           
           if (msgTimer > 0) {
               uiCtx.fillStyle = 'yellow';

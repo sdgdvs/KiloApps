@@ -4,6 +4,15 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-06T18:32:00-07:00 — kilo-usability: KFreecell (UI/UX, Window Tuning, HiDPI Canvas & Mandate 11 Glint Ban)**
+  - Status: PASS ✅ (0 regressions, 104.3 KB web / 122.5 KB native < 999 KB ceiling).
+  - Window & Layout Polish: Adjusted default window in App.jsx to 920x740; trimmed margins; structured toolbar & status bar.
+  - HiDPI & Adaptive Layout: Wired devicePixelRatio scaling into fxCanvas; implemented dynamic vertical card cascade overlap (16-24px).
+  - Ergonomics & Shortcuts: Added F1/F2/F5/F9 hotkeys, right-click quickplay, single-click reselection, and first-run tutorial banner.
+  - Glint & Dust Ban: Removed traveling specular glints, sheen sweeps, drifting dust motes, and screen shake in web and Win32 C.
+  - Verification: test_app_startup.py PASS; test_web_apps.js PASS (25 elements, 0 err); MSVC clean (122.5 KB); Vite clean (414ms); security_lint 100% PASS.
+  - Queue: Advanced kilo_usability to KHangman; rotation advanced to kilo-qa.
+
 - **2026-10-06T18:07:00-07:00 — kilo-tester: KPong (Interactive UI Audit, Input Focus Isolation, Save/Load Ball Trail Fix)**
   - Status: PASS ✅ (4 issues, 4 fixed).
   - Modal & Input Isolation: Isolated text input events (`mpPlayerName`, `joinCodeInput`) preventing accidental hotkey triggers, w/s/space keyblock, and premature modal closing.
