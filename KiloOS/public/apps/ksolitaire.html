@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>KSolitaire - Klondike Solitaire (Press [F1] for Help, [H] for Hint)</title>
+<script src="../assets/js/retro_multiplayer.js"></script>
 <style>
   :root {
     --bg-color: #0d5c2e;
@@ -375,16 +376,9 @@
   .card.face-down::after {
     content: '';
     position: absolute;
-    top: -150%; left: -150%;
-    width: 300%; height: 300%;
-    background: linear-gradient(45deg, rgba(255,255,255,0) 35%, rgba(255,215,0,0.6) 50%, rgba(255,255,255,0) 65%);
-    animation: metallicShine 3s infinite linear;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(255,255,255,0.12) 0%, transparent 60%);
     pointer-events: none;
-    mix-blend-mode: overlay;
-  }
-  @keyframes metallicShine {
-    0% { transform: translateY(-30%) translateX(-30%) rotate(45deg); }
-    100% { transform: translateY(30%) translateX(30%) rotate(45deg); }
   }
   .card.face-down * { display: none; }
 
@@ -448,7 +442,7 @@
     top: 0; left: 0; right: 0; bottom: 0;
     background: rgba(0,0,0,0.75);
     backdrop-filter: blur(6px);
-    display: flex;
+    display: none;
     align-items: center;
     justify-content: center;
     z-index: 1000;
@@ -458,8 +452,109 @@
   }
 
   .modal-overlay.active {
+    display: flex;
     opacity: 1;
     pointer-events: auto;
+  }
+
+  /* Duel HUD Bar */
+  #duel-hud {
+    display: none;
+    background: linear-gradient(180deg, rgba(15, 23, 42, 0.95) 0%, rgba(30, 41, 59, 0.95) 100%);
+    border: 1px solid rgba(239, 68, 68, 0.6);
+    border-radius: 10px;
+    padding: 8px 16px;
+    margin: 6px auto 10px auto;
+    max-width: 920px;
+    min-width: 760px;
+    width: 100%;
+    box-shadow: 0 4px 18px rgba(220, 38, 38, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    color: #f8fafc;
+    font-size: 13px;
+    z-index: 50;
+  }
+  #duel-hud.active {
+    display: flex;
+  }
+  .duel-pill {
+    background: rgba(0, 0, 0, 0.45);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 6px;
+    padding: 5px 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .duel-progress-wrap {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    max-width: 300px;
+  }
+  .duel-bar-bg {
+    width: 100%;
+    height: 10px;
+    background: rgba(0, 0, 0, 0.55);
+    border-radius: 5px;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+  }
+  .duel-bar-fill {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, #ef4444 0%, #f59e0b 50%, #10b981 100%);
+    transition: width 0.3s ease;
+  }
+  .duel-actions {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+  }
+
+  /* Replay Viewer Styles */
+  .replay-log-box {
+    max-height: 200px;
+    overflow-y: auto;
+    background: #090d16;
+    border: 1px solid #334155;
+    border-radius: 6px;
+    padding: 8px;
+    font-family: monospace;
+    font-size: 12.5px;
+    color: #cbd5e1;
+    margin-bottom: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .replay-entry {
+    padding: 4px 8px;
+    border-radius: 4px;
+    display: flex;
+    justify-content: space-between;
+    cursor: pointer;
+    transition: background 0.15s ease;
+  }
+  .replay-entry:hover {
+    background: rgba(255, 255, 255, 0.08);
+  }
+  .replay-entry.current {
+    background: rgba(56, 189, 248, 0.2);
+    border-left: 3px solid #38bdf8;
+    color: #38bdf8;
+    font-weight: bold;
+  }
+  .replay-controls {
+    display: flex;
+    gap: 6px;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
   }
 
   .modal {
@@ -627,21 +722,7 @@
     border-image: linear-gradient(45deg, #2c1205, #5a2e15, #2c1205) 1;
     box-shadow: inset 0 0 40px rgba(0,0,0,0.8);
   }
-  .dust-mote {
-    position: fixed;
-    background: radial-gradient(circle, rgba(255,215,0,0.6) 0%, rgba(255,215,0,0) 70%);
-    border-radius: 50%;
-    pointer-events: none;
-    z-index: 5;
-    animation: floatMote linear infinite;
-    opacity: 0;
-  }
-  @keyframes floatMote {
-    0% { transform: translateY(110vh) scale(0.5); opacity: 0; }
-    20% { opacity: 0.5; }
-    80% { opacity: 0.5; }
-    100% { transform: translateY(-10vh) scale(1.2); opacity: 0; }
-  }
+
 
   /* Toast Notification */
   #toast {
@@ -717,6 +798,7 @@
       <div class="status-item">Time: <span id="timer-val" class="status-val">00:00</span></div>
       <div class="status-item">Moves: <span id="moves-val" class="status-val">0</span></div>
       <div class="status-item"><span id="score-label">Score</span>: <span id="score-val" class="status-val">0</span></div>
+      <div class="status-item">Deal: <span id="deal-seed-val" class="status-val">#1</span></div>
     </div>
   </div>
 
@@ -765,6 +847,9 @@
       <option value="#450a0a">Felt: Deep Crimson</option>
     </select>
 
+    <button class="btn btn-warning" onclick="openDealModal()" title="Select Deal Number [F3]" aria-label="Select deal seed">🎲 Deal [F3]</button>
+    <button class="btn" onclick="openReplayModal()" title="Move History & Replay Studio [F4]" aria-label="Move history and replay">🎬 Replay [F4]</button>
+    <button id="duel-btn" class="btn" style="background: linear-gradient(180deg, #b91c1c 0%, #7f1d1d 100%); border-color: #f87171;" onclick="openMultiplayerModal()" title="Head-to-Head Solitaire Duel [F6]" aria-label="Solitaire multiplayer duel">⚔️ Duel [F6]</button>
     <button class="btn" onclick="openStatsModal()" title="Game Statistics" aria-label="Open statistics dialog">📊 Stats</button>
     <button class="btn" onclick="openHelpModal()" title="How to Play & Rules [F1]" aria-label="Open help and rules dialog">📖 Help [F1]</button>
     <button class="btn" onclick="toggleSound()" title="Toggle Sound [M]" aria-label="Toggle sound mute"><span id="sound-icon">🔊</span> [M]</button>
@@ -775,6 +860,35 @@
     <span id="sub-info"></span>
   </div>
 </header>
+
+<div id="duel-hud">
+  <div class="duel-pill">
+    <span id="duel-opp-status-dot" style="color: #22c55e;">🟢</span>
+    <span id="duel-opp-name" style="font-weight:700; color:#ffd700;">CyberBot-99</span>
+  </div>
+  <div class="duel-progress-wrap">
+    <div style="display:flex; justify-content:space-between; font-size:11.5px; font-weight:700;">
+      <span>Opponent Progress</span>
+      <span id="duel-opp-foundation-cnt" style="color:#38bdf8;">0 / 52</span>
+    </div>
+    <div class="duel-bar-bg">
+      <div id="duel-opp-bar" class="duel-bar-fill"></div>
+    </div>
+  </div>
+  <div class="duel-pill">
+    <span>Score: <b id="duel-opp-score" style="color:#ffd700;">0</b></span>
+    <span>Moves: <b id="duel-opp-moves" style="color:#e2e8f0;">0</b></span>
+  </div>
+  <div class="duel-pill" style="flex:1; max-width:240px; overflow:hidden; white-space:nowrap; text-overflow:ellipsis;">
+    <span style="color:#94a3b8; font-size:11.5px;">Last:</span>
+    <span id="duel-opp-last-action" style="color:#f1f5f9; font-size:12px;">Ready</span>
+  </div>
+  <div class="duel-actions">
+    <button class="btn btn-warning" style="padding:4px 8px; font-size:11.5px;" onclick="sendDuelChat('Nice move! 🔥')" title="Send Taunt">🔥 Nice!</button>
+    <button class="btn btn-warning" style="padding:4px 8px; font-size:11.5px;" onclick="sendDuelChat('Almost done! ⚡')" title="Send Taunt">⚡ Fast!</button>
+    <button class="btn" style="padding:4px 8px; font-size:11.5px; background:#450a0a; border-color:#ef4444;" onclick="leaveDuel()" title="Leave Duel">✕ Exit</button>
+  </div>
+</div>
 
 <div id="board">
   <!-- Top Row: Stock, Waste, Foundations -->
@@ -820,7 +934,7 @@
   <div class="modal">
     <div class="modal-header">
       <div id="stats-modal-title" class="modal-title">Game Statistics</div>
-      <button class="modal-close" aria-label="Close statistics dialog" onclick="closeStatsModal()">&times;</button>
+      <button id="stats-modal-close" class="modal-close" aria-label="Close statistics dialog" onclick="closeStatsModal()">&times;</button>
     </div>
     <div class="stats-grid">
       <div class="stat-card"><div class="lbl">Games Played</div><div id="st-played" class="val">0</div></div>
@@ -854,7 +968,7 @@
   <div class="modal" style="max-width: 540px;">
     <div class="modal-header">
       <div id="help-modal-title" class="modal-title">📖 How to Play & Rules</div>
-      <button class="modal-close" aria-label="Close help dialog" onclick="closeHelpModal()">&times;</button>
+      <button id="help-modal-close" class="modal-close" aria-label="Close help dialog" onclick="closeHelpModal()">&times;</button>
     </div>
     <div style="max-height: 65vh; overflow-y: auto; font-size: 13.5px; line-height: 1.6; color: #e2e8f0; display: flex; flex-direction: column; gap: 10px; text-align: left; padding-right: 6px;">
       <div style="color:#ffd700; font-weight:700; font-size:14px; border-bottom:1px solid rgba(255,215,0,0.25); padding-bottom:3px;">Objective</div>
@@ -876,6 +990,7 @@
       <div><strong>• [Space] / [D]:</strong> Draw card from stock pile / recycle stock.</div>
       <div><strong>• [F1] / [?]:</strong> Open/Close Help | <strong>[H] / [Ctrl+H]:</strong> Smart Hint</div>
       <div><strong>• [F2] / [N]:</strong> New Game | <strong>[F5 / Ctrl+S]:</strong> Quick Save | <strong>[F9]:</strong> Quick Load</div>
+      <div><strong>• [F3]:</strong> Select Deal Number | <strong>[F4]:</strong> Replay Studio | <strong>[F6]:</strong> Solitaire Duel Arena</div>
       <div><strong>• [1-3]:</strong> Modes (Classic, Vegas, Campaign)</div>
       <div><strong>• [W] Wand:</strong> Move card | <strong>[X] X-Ray:</strong> Reveal | <strong>[S]:</strong> Shuffle Stock</div>
       <div><strong>• [U] / [Ctrl+Z]:</strong> Undo | <strong>[Ctrl+Y / Ctrl+Shift+Z]:</strong> Redo | <strong>[Ctrl+F]:</strong> Auto-Finish</div>
@@ -883,7 +998,116 @@
       <div><strong>• [Esc]:</strong> Close Modals / Victory Banner, Clear Selection, Dismiss Toast.</div>
     </div>
     <div style="display:flex; justify-content: flex-end; margin-top: 14px;">
-      <button class="btn btn-primary" onclick="closeHelpModal()">Got it!</button>
+      <button id="help-got-it-btn" class="btn btn-primary" onclick="closeHelpModal()">Got it!</button>
+    </div>
+  </div>
+</div>
+
+<!-- Deal Seed Modal -->
+<div id="deal-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="deal-modal-title" onclick="if(event.target===this)closeDealModal()">
+  <div class="modal" style="max-width: 440px;">
+    <div class="modal-header">
+      <div id="deal-modal-title" class="modal-title">🎲 Select Deal Number</div>
+      <button id="deal-modal-close" class="modal-close" aria-label="Close deal dialog" onclick="closeDealModal()">&times;</button>
+    </div>
+    <div style="font-size: 13.5px; color: #cbd5e1; line-height: 1.5; margin-bottom: 14px;">
+      Enter a game deal number (#1 to #1,000,000) to play an exact Klondike card layout, or generate a random deal:
+    </div>
+    <div style="display:flex; gap: 8px; margin-bottom: 16px;">
+      <input type="number" id="deal-input" min="1" max="1000000" class="btn" style="flex:1; padding:8px 12px; font-size:15px; background:#0f172a; border-color:#475569; color:#ffd700;" placeholder="Deal # (e.g. 1999)" />
+      <button class="btn btn-primary" onclick="applyCustomDeal()">Play Deal</button>
+    </div>
+    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+      <div style="display:flex; gap:6px;">
+        <button class="btn" onclick="applyRandomDeal()">🎲 Random Deal</button>
+        <button class="btn" onclick="copyDealLink()">🔗 Copy Link</button>
+      </div>
+      <button class="btn btn-primary" onclick="closeDealModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- Replay Studio Modal -->
+<div id="replay-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="replay-modal-title" onclick="if(event.target===this)closeReplayModal()">
+  <div class="modal" style="max-width: 520px;">
+    <div class="modal-header">
+      <div id="replay-modal-title" class="modal-title">🎬 Solitaire Replay Studio</div>
+      <button id="replay-modal-close" class="modal-close" aria-label="Close replay dialog" onclick="closeReplayModal()">&times;</button>
+    </div>
+    <div style="font-size: 12.5px; color: #94a3b8; margin-bottom: 8px; display:flex; justify-content:space-between;">
+      <span>Recorded Moves: <b id="replay-total-moves" style="color:#ffd700;">0</b></span>
+      <span>Step: <b id="replay-current-step" style="color:#38bdf8;">0 / 0</b></span>
+      <span>Seed: <b id="replay-seed-lbl" style="color:#ffd700;">#0</b></span>
+    </div>
+    <div id="replay-log-box" class="replay-log-box">
+      <!-- Dynamically filled with recorded moves -->
+    </div>
+    <div class="replay-controls">
+      <button class="btn" onclick="replayGoStart()" title="Jump to Start">⏮️ First</button>
+      <button class="btn" onclick="replayStepBack()" title="Step Back">◀ Prev</button>
+      <button id="replay-play-btn" class="btn btn-primary" onclick="toggleReplayPlay()" title="Play / Pause Replay">▶ Play</button>
+      <button class="btn" onclick="replayStepForward()" title="Step Forward">Next ▶</button>
+      <button class="btn" onclick="replayGoEnd()" title="Jump to End">⏭️ Last</button>
+      <select id="replay-speed" class="btn" style="padding:6px 10px;" onchange="changeReplaySpeed(this.value)" title="Playback Speed">
+        <option value="1000">1x Speed</option>
+        <option value="500">2x Speed</option>
+        <option value="250">4x Speed</option>
+      </select>
+    </div>
+    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; border-top:1px solid #334155; padding-top:12px;">
+      <div style="display:flex; gap:6px;">
+        <button class="btn btn-primary" onclick="exportReplayFile()" title="Export Replay (.ksol)">Export .ksol</button>
+        <button class="btn btn-primary" onclick="document.getElementById('import-replay-file').click()" title="Import Replay (.ksol)">Import .ksol</button>
+        <input type="file" id="import-replay-file" style="display:none;" accept=".ksol,.json" onchange="importReplayFile(event)">
+      </div>
+      <button class="btn btn-primary" onclick="closeReplayModal()">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- Cyber Duel Arena Modal (RFMS Online Multiplayer & CyberBot AI) -->
+<div id="mp-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="mp-modal-title" onclick="if(event.target===this)closeMultiplayerModal()">
+  <div class="modal" style="max-width: 500px;">
+    <div class="modal-header">
+      <div id="mp-modal-title" class="modal-title">⚔️ Solitaire Cyber Duel Arena</div>
+      <button id="mp-modal-close" class="modal-close" aria-label="Close duel dialog" onclick="closeMultiplayerModal()">&times;</button>
+    </div>
+    <div style="font-size: 13.5px; color: #cbd5e1; line-height: 1.5; margin-bottom: 14px;">
+      Compete head-to-head on the <strong>identical card deal</strong> in real-time! First player to build all foundations (or score highest) wins the match.
+    </div>
+    
+    <div style="background:#0f172a; border:1px solid #334155; border-radius:8px; padding:12px; margin-bottom:14px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+        <span style="font-size:12px; font-weight:700; color:#94a3b8;">YOUR CALL-SIGN:</span>
+        <button class="btn" style="padding:2px 8px; font-size:11px;" onclick="savePlayerNamePrompt()">Edit</button>
+      </div>
+      <div id="mp-callsign-display" style="font-size:16px; font-weight:800; color:#ffd700;">CardShark_99</div>
+    </div>
+
+    <!-- Matchmaking Actions -->
+    <div style="display:flex; flex-direction:column; gap:10px; margin-bottom:16px;">
+      <button class="btn btn-primary" style="padding:10px; font-size:14px; justify-content:center;" onclick="startQuickMatch()">⚡ Quick Match (Find Any Peer)</button>
+      
+      <div style="display:flex; gap:8px;">
+        <button class="btn btn-success" style="flex:1; justify-content:center;" onclick="startCreateRoom()">🏠 Host Duel Room</button>
+        <button class="btn btn-warning" style="flex:1; justify-content:center;" onclick="startCyberBotDuel()">🤖 Duel CyberBot-99</button>
+      </div>
+
+      <div style="display:flex; gap:8px; align-items:center;">
+        <input type="text" id="mp-join-input" class="btn" style="flex:1; padding:8px 12px; background:#0f172a; border-color:#475569; color:#38bdf8; text-transform:uppercase;" placeholder="Room Code (e.g. SOL-4829)" />
+        <button class="btn btn-primary" onclick="startJoinRoom()">Join Room</button>
+      </div>
+    </div>
+
+    <!-- Matchmaking Status Notice -->
+    <div id="mp-status-box" style="display:none; background:rgba(30, 41, 59, 0.7); border:1px dashed #38bdf8; border-radius:6px; padding:10px; text-align:center; font-size:13px; color:#38bdf8; margin-bottom:12px;">
+      <div id="mp-status-msg">Searching for opponent...</div>
+      <div id="mp-fallback-timer" style="font-size:11px; color:#94a3b8; margin-top:4px;">Solo fallback to CyberBot in 25s</div>
+      <button class="btn" style="margin-top:8px; padding:4px 10px; font-size:12px;" onclick="cancelMatchmaking()">Cancel</button>
+    </div>
+
+    <div style="display:flex; justify-content:flex-end;">
+      <button class="btn btn-primary" onclick="closeMultiplayerModal()">Close</button>
     </div>
   </div>
 </div>
@@ -1033,6 +1257,792 @@ let stats = {
   bestTimeD3: null
 };
 
+// --- Seed & Deal Number System (Mulberry32 PRNG) ---
+let currentDealSeed = Math.floor(Math.random() * 999999) + 1;
+let currentPRNG = createPRNG(currentDealSeed);
+
+function createPRNG(seed) {
+  let s = Math.abs(seed | 0) || 123456789;
+  return function() {
+    s = (s + 0x6D2B79F5) | 0;
+    let t = Math.imul(s ^ (s >>> 15), 1 | s);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+// --- Move History & Replay System ---
+let moveHistory = [];
+let isReplayMode = false;
+let replayStep = 0;
+let replayInterval = null;
+let replaySpeedMs = 1000;
+
+// --- RFMS Online Multiplayer & Speed Duel State ---
+let rMultiplayer = null;
+let isDuelActive = false;
+let duelType = 'none'; // 'none' | 'online' | 'cyberbot'
+let myPlayerName = safeGetStorage('ksolitaire_playerName') || ('CardShark_' + Math.floor(100 + Math.random() * 900));
+let duelOpponent = {
+  name: 'CyberBot-99',
+  foundationCount: 0,
+  score: 0,
+  moves: 0,
+  lastAction: 'Ready',
+  connected: true
+};
+let cyberBotTimer = null;
+let cyberBotState = null;
+let mpFallbackTimer = null;
+let mpFallbackCount = 25;
+
+function recordMove(action, desc) {
+  try {
+    let snapshot = {
+      stock: JSON.parse(JSON.stringify(stock)),
+      waste: JSON.parse(JSON.stringify(waste)),
+      foundations: JSON.parse(JSON.stringify(foundations)),
+      tableau: JSON.parse(JSON.stringify(tableau)),
+      movesCount,
+      scoreCount,
+      timerSeconds
+    };
+    moveHistory.push({
+      step: moveHistory.length + 1,
+      action: action || 'move',
+      desc: desc || 'Card move',
+      snapshot,
+      time: timerSeconds
+    });
+    if (isDuelActive) {
+      broadcastDuelProgress(desc);
+    }
+  } catch(e) {}
+}
+
+function broadcastDuelProgress(desc) {
+  try {
+    const fCount = foundations.reduce((acc, f) => acc + f.length, 0);
+    if (duelType === 'online' && rMultiplayer) {
+      rMultiplayer.sendMove({
+        type: 'progress',
+        foundationCount: fCount,
+        moves: movesCount,
+        score: scoreCount,
+        lastAction: desc || 'Moved card',
+        isWin: gameWon
+      });
+    }
+  } catch(e) {}
+}
+
+// Deal Modal UI Handlers
+function openDealModal() {
+  const input = document.getElementById('deal-input');
+  if (input) input.value = currentDealSeed;
+  const modal = document.getElementById('deal-modal');
+  if (modal) modal.classList.add('active');
+}
+
+function closeDealModal() {
+  const modal = document.getElementById('deal-modal');
+  if (modal) modal.classList.remove('active');
+}
+
+function applyCustomDeal() {
+  const input = document.getElementById('deal-input');
+  let val = parseInt(input.value);
+  if (isNaN(val) || val < 1 || val > 1000000) {
+    showToast("Please enter a valid deal number between 1 and 1,000,000.", 3000);
+    return;
+  }
+  closeDealModal();
+  newGame(val);
+  showToast(`🎲 Loaded Deal #${val}!`, 2500);
+}
+
+function applyRandomDeal() {
+  closeDealModal();
+  newGame();
+  showToast(`🎲 Generated Random Deal #${currentDealSeed}!`, 2500);
+}
+
+function copyDealLink() {
+  const url = `${window.location.origin}${window.location.pathname}#deal=${currentDealSeed}`;
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(url).then(() => {
+      showToast(`🔗 Deal #${currentDealSeed} link copied to clipboard!`, 2500);
+    }).catch(() => {
+      showToast(`Deal #${currentDealSeed}`, 2500);
+    });
+  } else {
+    showToast(`Deal #${currentDealSeed}`, 2500);
+  }
+}
+
+// Replay Studio UI Handlers
+function openReplayModal() {
+  isReplayMode = false;
+  if (replayInterval) {
+    clearInterval(replayInterval);
+    replayInterval = null;
+  }
+  const playBtn = document.getElementById('replay-play-btn');
+  if (playBtn) playBtn.textContent = '▶ Play';
+
+  updateReplayUI();
+  const modal = document.getElementById('replay-modal');
+  if (modal) modal.classList.add('active');
+}
+
+function closeReplayModal() {
+  if (replayInterval) {
+    clearInterval(replayInterval);
+    replayInterval = null;
+  }
+  const modal = document.getElementById('replay-modal');
+  if (modal) modal.classList.remove('active');
+}
+
+function updateReplayUI() {
+  const totalEl = document.getElementById('replay-total-moves');
+  if (totalEl) totalEl.textContent = moveHistory.length;
+  const curEl = document.getElementById('replay-current-step');
+  if (curEl) curEl.textContent = `${replayStep} / ${moveHistory.length}`;
+  const seedEl = document.getElementById('replay-seed-lbl');
+  if (seedEl) seedEl.textContent = `#${currentDealSeed}`;
+
+  const box = document.getElementById('replay-log-box');
+  if (!box) return;
+  box.innerHTML = '';
+  if (moveHistory.length === 0) {
+    box.innerHTML = '<div style="padding:10px; color:#64748b; text-align:center;">No moves recorded yet in this game.</div>';
+    return;
+  }
+  moveHistory.forEach((m, idx) => {
+    const row = document.createElement('div');
+    row.className = `replay-entry ${idx === replayStep - 1 ? 'current' : ''}`;
+    row.innerHTML = `<span><strong>${m.step}.</strong> ${m.desc}</span><span style="color:#64748b;">${m.time}s</span>`;
+    row.onclick = () => replayJumpTo(idx + 1);
+    box.appendChild(row);
+  });
+  if (box.children[replayStep - 1]) {
+    box.children[replayStep - 1].scrollIntoView({ block: 'nearest' });
+  }
+}
+
+function replayJumpTo(step) {
+  if (step < 1 || step > moveHistory.length) return;
+  replayStep = step;
+  const m = moveHistory[step - 1];
+  if (m && m.snapshot) {
+    restoreReplaySnapshot(m.snapshot);
+  }
+  updateReplayUI();
+}
+
+function restoreReplaySnapshot(snap) {
+  stock = JSON.parse(JSON.stringify(snap.stock));
+  waste = JSON.parse(JSON.stringify(snap.waste));
+  foundations = JSON.parse(JSON.stringify(snap.foundations));
+  tableau = JSON.parse(JSON.stringify(snap.tableau));
+  movesCount = snap.movesCount;
+  scoreCount = snap.scoreCount;
+  timerSeconds = snap.timerSeconds;
+  updateTimerDisplay();
+  render();
+}
+
+function replayGoStart() {
+  if (moveHistory.length > 0) replayJumpTo(1);
+}
+
+function replayStepBack() {
+  if (replayStep > 1) replayJumpTo(replayStep - 1);
+}
+
+function replayStepForward() {
+  if (replayStep < moveHistory.length) replayJumpTo(replayStep + 1);
+}
+
+function replayGoEnd() {
+  if (moveHistory.length > 0) replayJumpTo(moveHistory.length);
+}
+
+function toggleReplayPlay() {
+  const btn = document.getElementById('replay-play-btn');
+  if (replayInterval) {
+    clearInterval(replayInterval);
+    replayInterval = null;
+    if (btn) btn.textContent = '▶ Play';
+  } else {
+    if (replayStep >= moveHistory.length) replayStep = 0;
+    if (btn) btn.textContent = '⏸️ Pause';
+    replayInterval = setInterval(() => {
+      if (replayStep < moveHistory.length) {
+        replayStepForward();
+      } else {
+        clearInterval(replayInterval);
+        replayInterval = null;
+        if (btn) btn.textContent = '▶ Play';
+      }
+    }, replaySpeedMs);
+  }
+}
+
+function changeReplaySpeed(val) {
+  replaySpeedMs = parseInt(val) || 1000;
+  if (replayInterval) {
+    clearInterval(replayInterval);
+    toggleReplayPlay();
+    toggleReplayPlay();
+  }
+}
+
+function exportReplayFile() {
+  try {
+    const replayData = {
+      app: "KSolitaire",
+      version: 1,
+      dealSeed: currentDealSeed,
+      gameMode,
+      drawMode,
+      movesCount,
+      scoreCount,
+      timerSeconds,
+      gameWon,
+      history: moveHistory
+    };
+    const jsonStr = JSON.stringify(replayData, null, 2);
+    const blob = new Blob([jsonStr], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const dl = document.createElement('a');
+    dl.href = url;
+    dl.download = `ksolitaire_replay_deal${currentDealSeed}.ksol`;
+    document.body.appendChild(dl);
+    dl.click();
+    document.body.removeChild(dl);
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    showToast("Replay recording exported (.ksol)!");
+  } catch(e) {
+    showToast("Error exporting replay.");
+  }
+}
+
+function importReplayFile(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (data && Array.isArray(data.history) && data.dealSeed) {
+        currentDealSeed = data.dealSeed;
+        moveHistory = data.history;
+        replayStep = 1;
+        if (moveHistory.length > 0 && moveHistory[0].snapshot) {
+          restoreReplaySnapshot(moveHistory[0].snapshot);
+        }
+        updateReplayUI();
+        showToast(`Loaded replay for Deal #${currentDealSeed} (${moveHistory.length} moves)!`);
+      } else {
+        showToast("Invalid .ksol replay file.");
+      }
+    } catch(err) {
+      showToast("Error parsing replay file.");
+    }
+  };
+  reader.readAsText(file);
+  event.target.value = '';
+}
+
+// Multiplayer & Duel Handlers
+function openMultiplayerModal() {
+  const callsign = document.getElementById('mp-callsign-display');
+  if (callsign) callsign.textContent = myPlayerName;
+  const modal = document.getElementById('mp-modal');
+  if (modal) modal.classList.add('active');
+}
+
+function closeMultiplayerModal() {
+  const modal = document.getElementById('mp-modal');
+  if (modal) modal.classList.remove('active');
+}
+
+function savePlayerNamePrompt() {
+  const newName = prompt("Enter your multiplayer call-sign:", myPlayerName);
+  if (newName && newName.trim()) {
+    myPlayerName = newName.trim().slice(0, 16);
+    safeSetStorage('ksolitaire_playerName', myPlayerName);
+    const callsign = document.getElementById('mp-callsign-display');
+    if (callsign) callsign.textContent = myPlayerName;
+    if (rMultiplayer) rMultiplayer.playerName = myPlayerName;
+    showToast(`Call-sign updated to "${myPlayerName}"`, 2000);
+  }
+}
+
+function initRetroMultiplayer() {
+  if (typeof RetroMultiplayer === 'undefined') return;
+  if (rMultiplayer) return;
+
+  try {
+    rMultiplayer = new RetroMultiplayer({
+      gameId: 'ksolitaire',
+      prefix: 'SOL',
+      playerName: myPlayerName,
+      soloTimeoutMs: 25000,
+      onMove: (data) => handleRemoteDuelMove(data),
+      onOpponentJoin: ({ slot, name }) => {
+        duelOpponent.name = name || 'Challenger';
+        duelOpponent.connected = true;
+        duelOpponent.lastAction = 'Joined Duel';
+        updateDuelHUD();
+        showToast(`⚔️ Opponent ${duelOpponent.name} connected! Match starting!`, 3500);
+        closeMultiplayerModal();
+        startOnlineDuelGame();
+      },
+      onOpponentLeave: ({ slot, name }) => {
+        duelOpponent.connected = false;
+        duelOpponent.lastAction = 'Disconnected';
+        updateDuelHUD();
+        showToast(`⚠️ Opponent ${name || 'Challenger'} disconnected.`, 3000);
+      },
+      onSoloFallback: () => {
+        showToast("⏳ 25s elapsed without online peer. Engaging CyberBot-99!", 3500);
+        cancelMatchmaking();
+        closeMultiplayerModal();
+        startCyberBotDuel();
+      },
+      onStatusMsg: (msg, type) => {
+        showToast(msg, 2500);
+      },
+      onChat: ({ text, from }) => {
+        showToast(`💬 ${from}: ${text}`, 3000);
+        duelOpponent.lastAction = `Chat: ${text}`;
+        updateDuelHUD();
+      }
+    });
+
+    rMultiplayer.init().then(({ onlineAvailable, inviteCode }) => {
+      if (inviteCode) {
+        showDuelInvitePrompt(inviteCode.toUpperCase());
+      }
+    });
+  } catch(err) {
+    console.warn("[KSolitaire] RetroMultiplayer init error:", err);
+  }
+}
+
+function showDuelInvitePrompt(code) {
+  showToast(`⚔️ Solitaire Duel Invite: Room ${code}! Click [Duel F6] to join.`, 8000);
+  const input = document.getElementById('mp-join-input');
+  if (input) input.value = code;
+}
+
+function startQuickMatch() {
+  if (!rMultiplayer) initRetroMultiplayer();
+  if (!rMultiplayer || !rMultiplayer.isOnlineAvailable) {
+    showToast("Online servers offline. Launching CyberBot-99 duel!", 3000);
+    closeMultiplayerModal();
+    startCyberBotDuel();
+    return;
+  }
+  showMatchmakingStatus("Searching public lobby for Solitaire duel...");
+  startFallbackCountdown();
+  rMultiplayer.quickMatch();
+}
+
+function startCreateRoom() {
+  if (!rMultiplayer) initRetroMultiplayer();
+  if (!rMultiplayer || !rMultiplayer.isOnlineAvailable) {
+    showToast("Online servers offline. Launching CyberBot-99 duel!", 3000);
+    closeMultiplayerModal();
+    startCyberBotDuel();
+    return;
+  }
+  showMatchmakingStatus("Creating room... waiting for challenger...");
+  rMultiplayer.createRoom().then(room => {
+    if (room && room.id) {
+      showMatchmakingStatus(`Room ${room.id} created! Waiting for peer...`);
+      startFallbackCountdown();
+    }
+  });
+}
+
+function startJoinRoom(forceCode) {
+  if (!rMultiplayer) initRetroMultiplayer();
+  const input = document.getElementById('mp-join-input');
+  const code = (forceCode || (input ? input.value : '')).trim().toUpperCase();
+  if (!code) {
+    showToast("Please enter a room code (e.g. SOL-XXXX)", 2500);
+    return;
+  }
+  showMatchmakingStatus(`Connecting to room ${code}...`);
+  rMultiplayer.joinRoom(code).then(joined => {
+    if (joined) {
+      closeMultiplayerModal();
+    } else {
+      showToast(`Failed to join room ${code}. Check code or try CyberBot.`, 3000);
+      cancelMatchmaking();
+    }
+  });
+}
+
+function showMatchmakingStatus(msg) {
+  const box = document.getElementById('mp-status-box');
+  const txt = document.getElementById('mp-status-msg');
+  if (box && txt) {
+    box.style.display = 'block';
+    txt.textContent = msg;
+  }
+}
+
+function cancelMatchmaking() {
+  if (mpFallbackTimer) {
+    clearInterval(mpFallbackTimer);
+    mpFallbackTimer = null;
+  }
+  const box = document.getElementById('mp-status-box');
+  if (box) box.style.display = 'none';
+  if (rMultiplayer) rMultiplayer.leaveRoom();
+}
+
+function startFallbackCountdown() {
+  if (mpFallbackTimer) clearInterval(mpFallbackTimer);
+  mpFallbackCount = 25;
+  const label = document.getElementById('mp-fallback-timer');
+  if (label) label.textContent = `Solo fallback to CyberBot in ${mpFallbackCount}s`;
+
+  mpFallbackTimer = setInterval(() => {
+    mpFallbackCount--;
+    if (label) label.textContent = `Solo fallback to CyberBot in ${mpFallbackCount}s`;
+    if (mpFallbackCount <= 0) {
+      clearInterval(mpFallbackTimer);
+      mpFallbackTimer = null;
+      if (rMultiplayer && rMultiplayer.status === 'waiting') {
+        rMultiplayer.onSoloFallback();
+      }
+    }
+  }, 1000);
+}
+
+function handleRemoteDuelMove(data) {
+  if (!data || !isDuelActive) return;
+  if (data.type === 'sync_seed') {
+    newGame(data.dealSeed);
+    return;
+  }
+  if (data.type === 'progress') {
+    duelOpponent.foundationCount = data.foundationCount || 0;
+    duelOpponent.moves = data.moves || 0;
+    duelOpponent.score = data.score || 0;
+    duelOpponent.lastAction = data.lastAction || 'Moving';
+    updateDuelHUD();
+
+    if (data.isWin) {
+      handleOpponentWin(duelOpponent.name);
+    }
+  }
+}
+
+function updateDuelHUD() {
+  const hud = document.getElementById('duel-hud');
+  if (!hud) return;
+  if (!isDuelActive) {
+    hud.classList.remove('active');
+    return;
+  }
+  hud.classList.add('active');
+
+  const dot = document.getElementById('duel-opp-status-dot');
+  if (dot) dot.textContent = duelOpponent.connected ? '🟢' : '🔴';
+
+  const nameEl = document.getElementById('duel-opp-name');
+  if (nameEl) nameEl.textContent = duelOpponent.name;
+
+  const countEl = document.getElementById('duel-opp-foundation-cnt');
+  if (countEl) countEl.textContent = `${duelOpponent.foundationCount} / 52`;
+
+  const bar = document.getElementById('duel-opp-bar');
+  if (bar) {
+    const pct = Math.min(100, Math.round((duelOpponent.foundationCount / 52) * 100));
+    bar.style.width = `${pct}%`;
+  }
+
+  const scEl = document.getElementById('duel-opp-score');
+  if (scEl) scEl.textContent = duelOpponent.score;
+
+  const mvEl = document.getElementById('duel-opp-moves');
+  if (mvEl) mvEl.textContent = duelOpponent.moves;
+
+  const actEl = document.getElementById('duel-opp-last-action');
+  if (actEl) actEl.textContent = duelOpponent.lastAction;
+}
+
+function sendDuelChat(text) {
+  if (!isDuelActive) return;
+  if (duelType === 'online' && rMultiplayer) {
+    rMultiplayer.sendChat(text);
+    showToast(`You: ${text}`, 2000);
+  } else if (duelType === 'cyberbot') {
+    showToast(`You: ${text}`, 2000);
+    setTimeout(() => {
+      const botReplies = ["Beep boop! Calculating card trajectory.", "Affirmative.", "Optimal move executed.", "Nice speed, human!"];
+      const reply = botReplies[Math.floor(Math.random() * botReplies.length)];
+      duelOpponent.lastAction = `Chat: ${reply}`;
+      updateDuelHUD();
+      showToast(`🤖 CyberBot-99: ${reply}`, 2500);
+    }, 1200);
+  }
+}
+
+function leaveDuel() {
+  isDuelActive = false;
+  duelType = 'none';
+  if (cyberBotTimer) {
+    clearInterval(cyberBotTimer);
+    cyberBotTimer = null;
+  }
+  if (rMultiplayer) {
+    rMultiplayer.leaveRoom();
+  }
+  updateDuelHUD();
+  showToast("Left Solitaire Duel. Returning to solo play.", 2000);
+}
+
+function handleOpponentWin(name) {
+  if (gameWon) return;
+  playSound('error');
+  showToast(`⚡ ${name} completed the Solitaire Duel first!`, 5000);
+  let banner = document.getElementById('win-banner');
+  if (banner) {
+    document.getElementById('win-title').textContent = `⚔️ ${name.toUpperCase()} WINS!`;
+    document.getElementById('win-details').textContent = `Opponent finished in ${timerSeconds}s. Better luck next deal!`;
+    banner.classList.add('active');
+  }
+}
+
+function startOnlineDuelGame() {
+  isDuelActive = true;
+  duelType = 'online';
+  cancelMatchmaking();
+
+  if (rMultiplayer.isHost) {
+    const seed = Math.floor(Math.random() * 999999) + 1;
+    rMultiplayer.sendMove({ type: 'sync_seed', dealSeed: seed });
+    newGame(seed);
+  }
+  updateDuelHUD();
+}
+
+function startCyberBotDuel() {
+  if (rMultiplayer) rMultiplayer.leaveRoom();
+  cancelMatchmaking();
+  closeMultiplayerModal();
+
+  isDuelActive = true;
+  duelType = 'cyberbot';
+  duelOpponent.name = 'CyberBot-99';
+  duelOpponent.foundationCount = 0;
+  duelOpponent.score = 0;
+  duelOpponent.moves = 0;
+  duelOpponent.lastAction = 'Analyzing deal...';
+  duelOpponent.connected = true;
+
+  const sharedSeed = Math.floor(Math.random() * 999999) + 1;
+  newGame(sharedSeed);
+  updateDuelHUD();
+  initCyberBotEngine(sharedSeed);
+  showToast("🤖 CyberBot-99 Duel Started! Same Deal # Seed.", 3000);
+}
+
+function initCyberBotEngine(seed) {
+  if (cyberBotTimer) clearInterval(cyberBotTimer);
+
+  const rng = createPRNG(seed);
+  const deck = [];
+  let id = 1;
+  for (let s = 0; s < 4; s++) {
+    for (let r = 1; r <= 13; r++) {
+      deck.push({ id: id++, suit: s, rank: r, faceUp: false });
+    }
+  }
+  for (let i = deck.length - 1; i > 0; i--) {
+    let j = Math.floor(rng() * (i + 1));
+    [deck[i], deck[j]] = [deck[j], deck[i]];
+  }
+
+  const cbFoundations = [[], [], [], []];
+  const cbTableau = [[], [], [], [], [], [], []];
+  let cbWaste = [];
+  let cbStock = deck;
+
+  for (let col = 0; col < 7; col++) {
+    for (let row = 0; row <= col; row++) {
+      let card = cbStock.pop();
+      if (row === col) card.faceUp = true;
+      cbTableau[col].push(card);
+    }
+  }
+
+  cyberBotState = {
+    stock: cbStock,
+    waste: cbWaste,
+    foundations: cbFoundations,
+    tableau: cbTableau,
+    moves: 0,
+    score: 0,
+    foundationsCount: 0,
+    cycleStalls: 0
+  };
+
+  cyberBotTimer = setInterval(() => {
+    if (!isDuelActive || duelType !== 'cyberbot' || gameWon) {
+      clearInterval(cyberBotTimer);
+      cyberBotTimer = null;
+      return;
+    }
+    cyberBotTick();
+  }, 1900 + Math.random() * 500);
+}
+
+function cyberBotTick() {
+  if (!cyberBotState) return;
+  const cb = cyberBotState;
+
+  // 1. Try to move to Foundation from Tableau
+  for (let t = 0; t < 7; t++) {
+    const col = cb.tableau[t];
+    if (col.length > 0) {
+      const top = col[col.length - 1];
+      if (top.faceUp) {
+        for (let f = 0; f < 4; f++) {
+          const fPile = cb.foundations[f];
+          const canFit = (fPile.length === 0 && top.rank === 1) ||
+                         (fPile.length > 0 && fPile[fPile.length - 1].suit === top.suit && top.rank === fPile[fPile.length - 1].rank + 1);
+          if (canFit) {
+            fPile.push(col.pop());
+            if (col.length > 0) col[col.length - 1].faceUp = true;
+            cb.moves++;
+            cb.score += 10;
+            cb.foundationsCount++;
+            duelOpponent.foundationCount = cb.foundationsCount;
+            duelOpponent.score = cb.score;
+            duelOpponent.moves = cb.moves;
+            duelOpponent.lastAction = `Moved ${RANKS[top.rank]}${SUITS[top.suit].symbol} to Foundation`;
+            updateDuelHUD();
+            if (cb.foundationsCount >= 52) handleOpponentWin('CyberBot-99');
+            return;
+          }
+        }
+      }
+    }
+  }
+
+  // 2. Try to move from Waste to Foundation
+  if (cb.waste.length > 0) {
+    const wCard = cb.waste[cb.waste.length - 1];
+    for (let f = 0; f < 4; f++) {
+      const fPile = cb.foundations[f];
+      const canFit = (fPile.length === 0 && wCard.rank === 1) ||
+                     (fPile.length > 0 && fPile[fPile.length - 1].suit === wCard.suit && wCard.rank === fPile[fPile.length - 1].rank + 1);
+      if (canFit) {
+        fPile.push(cb.waste.pop());
+        cb.moves++;
+        cb.score += 10;
+        cb.foundationsCount++;
+        duelOpponent.foundationCount = cb.foundationsCount;
+        duelOpponent.score = cb.score;
+        duelOpponent.moves = cb.moves;
+        duelOpponent.lastAction = `Waste ${RANKS[wCard.rank]}${SUITS[wCard.suit].symbol} to Foundation`;
+        updateDuelHUD();
+        if (cb.foundationsCount >= 52) handleOpponentWin('CyberBot-99');
+        return;
+      }
+    }
+  }
+
+  // 3. Try to move between Tableau columns
+  for (let sCol = 0; sCol < 7; sCol++) {
+    const srcPile = cb.tableau[sCol];
+    const firstFaceUp = srcPile.findIndex(c => c.faceUp);
+    if (firstFaceUp >= 0 && (firstFaceUp > 0 || srcPile[firstFaceUp].rank !== 13)) {
+      const moveCard = srcPile[firstFaceUp];
+      for (let dCol = 0; dCol < 7; dCol++) {
+        if (sCol === dCol) continue;
+        const dstPile = cb.tableau[dCol];
+        let canTableau = false;
+        if (dstPile.length === 0) {
+          canTableau = moveCard.rank === 13;
+        } else {
+          const dstCard = dstPile[dstPile.length - 1];
+          canTableau = (SUITS[dstCard.suit].color !== SUITS[moveCard.suit].color) && (dstCard.rank === moveCard.rank + 1);
+        }
+        if (canTableau) {
+          const moving = srcPile.splice(firstFaceUp);
+          dstPile.push(...moving);
+          if (srcPile.length > 0) srcPile[srcPile.length - 1].faceUp = true;
+          cb.moves++;
+          cb.score += 5;
+          duelOpponent.moves = cb.moves;
+          duelOpponent.score = cb.score;
+          duelOpponent.lastAction = `Shifted ${RANKS[moveCard.rank]}${SUITS[moveCard.suit].symbol} to Col ${dCol + 1}`;
+          updateDuelHUD();
+          return;
+        }
+      }
+    }
+  }
+
+  // 4. Draw from stock
+  if (cb.stock.length > 0) {
+    const draw = cb.stock.pop();
+    draw.faceUp = true;
+    cb.waste.push(draw);
+    cb.moves++;
+    duelOpponent.moves = cb.moves;
+    duelOpponent.lastAction = `Drew from stock (${cb.stock.length} left)`;
+    updateDuelHUD();
+  } else if (cb.waste.length > 0) {
+    cb.stock = cb.waste.reverse();
+    cb.waste = [];
+    cb.stock.forEach(c => c.faceUp = false);
+    cb.moves++;
+    duelOpponent.moves = cb.moves;
+    duelOpponent.lastAction = 'Recycled stock pile';
+    updateDuelHUD();
+  } else {
+    cb.cycleStalls++;
+    if (cb.cycleStalls > 4 && cb.foundationsCount < 48) {
+      cb.foundationsCount++;
+      cb.score += 10;
+      duelOpponent.foundationCount = cb.foundationsCount;
+      duelOpponent.score = cb.score;
+      duelOpponent.lastAction = 'Used AI Magic Wand';
+      cb.cycleStalls = 0;
+      updateDuelHUD();
+      if (cb.foundationsCount >= 52) handleOpponentWin('CyberBot-99');
+    }
+  }
+}
+
+function checkUrlInvite() {
+  const hash = window.location.hash || '';
+  const search = window.location.search || '';
+  let match = hash.match(/room=([A-Za-z0-9_-]+)/i) || search.match(/room=([A-Za-z0-9_-]+)/i);
+  if (match && match[1]) {
+    showDuelInvitePrompt(match[1].toUpperCase());
+  }
+  let dealMatch = hash.match(/deal=(\d+)/i) || search.match(/deal=(\d+)/i);
+  if (dealMatch && dealMatch[1]) {
+    let dNum = parseInt(dealMatch[1]);
+    if (dNum >= 1 && dNum <= 1000000) {
+      newGame(dNum);
+      showToast(`🎲 Loaded Deal #${dNum} from link!`, 3000);
+    }
+  }
+}
+
 // Audio Synthesizer
 let audioCtx = null;
 function playTone(freq, type, duration) {
@@ -1164,7 +2174,10 @@ function init() {
     let isWinBannerActive = winBanner && winBanner.classList.contains('active');
     let helpActive = document.getElementById('help-modal')?.classList.contains('active');
     let statsActive = document.getElementById('stats-modal')?.classList.contains('active');
-    let anyModal = helpActive || statsActive;
+    let dealActive = document.getElementById('deal-modal')?.classList.contains('active');
+    let replayActive = document.getElementById('replay-modal')?.classList.contains('active');
+    let mpActive = document.getElementById('mp-modal')?.classList.contains('active');
+    let anyModal = helpActive || statsActive || dealActive || replayActive || mpActive;
 
     if (e.key === 'Escape') {
       let toast = document.getElementById('toast');
@@ -1179,6 +2192,9 @@ function init() {
       if (anyModal) {
         closeHelpModal();
         closeStatsModal();
+        closeDealModal();
+        closeReplayModal();
+        closeMultiplayerModal();
       } else {
         selectedSelection = null;
         clearHints();
@@ -1187,7 +2203,7 @@ function init() {
       return;
     }
 
-    if (e.key === 'Enter' || e.key === ' ') {
+    if (e.key === 'Enter') {
       if (isWinBannerActive) {
         e.preventDefault();
         let nextBtn = document.getElementById('next-stage-btn');
@@ -1198,10 +2214,18 @@ function init() {
         }
         return;
       }
+      if (dealActive) {
+        e.preventDefault();
+        applyCustomDeal();
+        return;
+      }
       if (anyModal) {
         e.preventDefault();
         closeHelpModal();
         closeStatsModal();
+        closeDealModal();
+        closeReplayModal();
+        closeMultiplayerModal();
         return;
       }
     }
@@ -1212,9 +2236,27 @@ function init() {
       return;
     }
 
+    if (e.key === 'F3') {
+      e.preventDefault();
+      openDealModal();
+      return;
+    }
+
+    if (e.key === 'F4') {
+      e.preventDefault();
+      openReplayModal();
+      return;
+    }
+
     if (e.key === 'F5') {
       e.preventDefault();
       quickSave();
+      return;
+    }
+
+    if (e.key === 'F6') {
+      e.preventDefault();
+      openMultiplayerModal();
       return;
     }
 
@@ -1272,6 +2314,9 @@ function init() {
       else if (k === 't') { cycleDeckTheme(); }
     }
   });
+
+  initRetroMultiplayer();
+  checkUrlInvite();
 }
 
 function populateStageSelect() {
@@ -1312,9 +2357,10 @@ function createDeck() {
   return deck;
 }
 
-function shuffle(deck) {
+function shuffle(deck, rng) {
+  let r = (typeof rng === 'function') ? rng : (currentPRNG || Math.random);
   for (let i = deck.length - 1; i > 0; i--) {
-    let j = Math.floor(Math.random() * (i + 1));
+    let j = Math.floor(r() * (i + 1));
     [deck[i], deck[j]] = [deck[j], deck[i]];
   }
   return deck;
@@ -1349,7 +2395,18 @@ function isDealFair(tab, stk) {
   return false;
 }
 
-function newGame() {
+function newGame(forcedSeed = null) {
+  if (forcedSeed !== null) {
+    currentDealSeed = Math.max(1, Math.min(1000000, parseInt(forcedSeed) || 1));
+  } else if (!isDuelActive) {
+    currentDealSeed = Math.floor(Math.random() * 999999) + 1;
+  }
+  currentPRNG = createPRNG(currentDealSeed);
+  const dealValEl = document.getElementById('deal-seed-val');
+  if (dealValEl) dealValEl.textContent = `#${currentDealSeed}`;
+  moveHistory = [];
+  replayStep = 0;
+
   // If previous game was active and abandoned, record in stats & bankroll
   if (gameStarted && !gameWon && movesCount > 0) {
     stats.played++;
@@ -1433,7 +2490,7 @@ function newGame() {
 
   while (!fair && attempts < 15) {
     attempts++;
-    deck = shuffle(createDeck());
+    deck = shuffle(createDeck(), currentPRNG);
     foundations = [[], [], [], []];
     tableau = [[], [], [], [], [], [], []];
     waste = [];
@@ -1452,7 +2509,7 @@ function newGame() {
       let freezeAttempts = 0;
       while (placed < frozenCount && freezeAttempts < 50) {
         freezeAttempts++;
-        let col = Math.floor(Math.random() * 7);
+        let col = Math.floor(currentPRNG() * 7);
         let topCard = tableau[col][tableau[col].length - 1];
         if (!topCard.isFrozen) {
           topCard.isFrozen = true;
@@ -1469,6 +2526,7 @@ function newGame() {
   isDealing = true;
   render();
   isDealing = false;
+  recordMove('deal', `Dealt board (Deal #${currentDealSeed})`);
   saveState();
 }
 
@@ -1531,6 +2589,7 @@ function saveState(recordUndo = false) {
     suitLocked,
     targetCards,
     maxStockPasses,
+    currentDealSeed,
     undoStack: undoStack.slice(-25)
   };
 
@@ -1575,6 +2634,11 @@ function loadSavedGame() {
         suitLocked = snapshot.suitLocked !== undefined ? snapshot.suitLocked : false;
         targetCards = snapshot.targetCards || 52;
         maxStockPasses = snapshot.maxStockPasses || 0;
+        if (snapshot.currentDealSeed) {
+          currentDealSeed = snapshot.currentDealSeed;
+          let seedEl = document.getElementById('deal-seed-val');
+          if (seedEl) seedEl.textContent = `#${currentDealSeed}`;
+        }
         if (Array.isArray(snapshot.undoStack)) undoStack = snapshot.undoStack;
 
         // Synchronize UI dropdowns and labels
@@ -1637,6 +2701,7 @@ function getGameStateSnapshot() {
     suitLocked,
     targetCards,
     maxStockPasses,
+    currentDealSeed,
     undoStack: undoStack.slice(-30),
     redoStack: redoStack.slice(-30)
   };
@@ -1669,6 +2734,11 @@ function restoreGameState(snapshot) {
   suitLocked = snapshot.suitLocked !== undefined ? snapshot.suitLocked : false;
   targetCards = snapshot.targetCards || 52;
   maxStockPasses = snapshot.maxStockPasses || 0;
+  if (snapshot.currentDealSeed) {
+    currentDealSeed = snapshot.currentDealSeed;
+    let seedEl = document.getElementById('deal-seed-val');
+    if (seedEl) seedEl.textContent = `#${currentDealSeed}`;
+  }
   undoStack = Array.isArray(snapshot.undoStack) ? snapshot.undoStack : [];
   redoStack = Array.isArray(snapshot.redoStack) ? snapshot.redoStack : [];
   selectedSelection = null;
@@ -2052,6 +3122,7 @@ function useShuffleStock() {
   movesCount++;
   playSound('skill');
   showToast("🔀 Stock and waste piles reshuffled!");
+  recordMove('skill', 'Shuffled stock & waste piles');
   isDealing = true;
   render();
   isDealing = false;
@@ -2080,6 +3151,7 @@ function handleStockClick() {
       stock.push(card);
     }
     playSound('flip');
+    recordMove('recycle', 'Recycled waste pile to stock');
   } else {
     let count = Math.min(drawMode, stock.length);
     for (let i = 0; i < count; i++) {
@@ -2088,6 +3160,7 @@ function handleStockClick() {
       waste.push(card);
     }
     playSound('flip');
+    recordMove('draw', `Drew ${count} card(s) from stock`);
   }
 
   movesCount++;
@@ -2116,6 +3189,7 @@ function handleCardClick(type, pileIdx, cardIdx, event) {
       if (!vegasRules) scoreCount += 5;
       movesCount++;
       playSound('flip');
+      recordMove('flip', `Flipped Col ${pileIdx + 1} card`);
       render();
       checkWin();
       return;
@@ -2201,6 +3275,7 @@ function handleCardDoubleClick(type, pileIdx, cardIdx, event) {
 
       selectedSelection = null;
       spawnParticles(f, 'foundation');
+      recordMove('foundation', `Auto-move ${RANKS[card.rank]}${SUITS[card.suit].symbol} to Foundation`);
       render();
       saveState();
       checkWin();
@@ -2274,6 +3349,7 @@ function attemptMove(src, dstType, dstPileIdx, recordUndo = true) {
 
   movesCount++;
   if (dstType === 'foundation') spawnParticles(dstPileIdx, 'foundation');
+  recordMove(dstType === 'foundation' ? 'foundation' : 'tableau', `${RANKS[cardsToMove[0].rank]}${SUITS[cardsToMove[0].suit].symbol} to ${dstType === 'foundation' ? 'Foundation' : 'Col ' + (dstPileIdx + 1)}`);
   render();
   saveState();
   checkWin();
@@ -2432,7 +3508,6 @@ let fxCanvas = document.getElementById('fx-canvas');
 let fxCtx = fxCanvas ? fxCanvas.getContext('2d') : null;
 let fxParticles = [];
 let fxShockwaves = [];
-let fxMotes = [];
 let screenShakeAmp = 0;
 
 function initFXSystem() {
@@ -2446,23 +3521,6 @@ function initFXSystem() {
   }
   window.addEventListener('resize', resizeFX);
   resizeFX();
-
-  // Initialize atmospheric velvet dust motes
-  fxMotes = [];
-  for (let i = 0; i < 35; i++) {
-    fxMotes.push({
-      x: Math.random() * window.innerWidth,
-      y: Math.random() * window.innerHeight,
-      radius: Math.random() * 2.5 + 1.0,
-      vx: (Math.random() - 0.5) * 0.4,
-      vy: -(Math.random() * 0.35 + 0.15),
-      alpha: Math.random() * 0.6 + 0.2,
-      baseAlpha: Math.random() * 0.5 + 0.2,
-      pulseSpeed: Math.random() * 0.03 + 0.01,
-      phase: Math.random() * Math.PI * 2,
-      color: Math.random() < 0.6 ? '#ffd700' : (Math.random() < 0.5 ? '#67e8f9' : '#ffffff')
-    });
-  }
 
   requestAnimationFrame(fxLoop);
 }
@@ -2627,31 +3685,7 @@ function fxLoop(timestamp) {
 
   fxCtx.clearRect(0, 0, w, h);
 
-  // 1. Render Atmospheric Velvet Dust Motes (fast alpha, zero shadowBlur)
-  for (let i = 0; i < fxMotes.length; i++) {
-    let m = fxMotes[i];
-    m.x += m.vx + Math.sin(time * 2.0 + m.phase) * 0.25;
-    m.y += m.vy;
-    m.phase += m.pulseSpeed;
-    m.alpha = m.baseAlpha + Math.sin(m.phase) * 0.2;
-
-    if (m.y < -20) {
-      m.y = h + 20;
-      m.x = Math.random() * w;
-    }
-    if (m.x < -20) m.x = w + 20;
-    if (m.x > w + 20) m.x = -20;
-
-    fxCtx.save();
-    fxCtx.globalAlpha = Math.max(0, Math.min(1, m.alpha));
-    fxCtx.fillStyle = m.color;
-    fxCtx.beginPath();
-    fxCtx.arc(m.x, m.y, m.radius, 0, Math.PI * 2);
-    fxCtx.fill();
-    fxCtx.restore();
-  }
-
-  // 2. Render Ornate Luxury HUD Corner Filigree L-Brackets on Board (Cached Rect)
+  // 1. Render Ornate Luxury HUD Corner Filigree L-Brackets on Board (Cached Rect)
   const bRect = getBoardRect();
   if (bRect && bRect.width > 0 && bRect.height > 0) {
     drawOrnateHUDCorners(fxCtx, bRect, time);
@@ -2901,6 +3935,13 @@ function checkWin() {
     stopXRay();
     playSound('win');
 
+    recordMove('win', `Completed solitaire in ${movesCount} moves!`);
+    broadcastDuelProgress('🏆 Solitaire Complete!');
+    if (isDuelActive && duelType === 'cyberbot' && cyberBotTimer) {
+      clearInterval(cyberBotTimer);
+      cyberBotTimer = null;
+    }
+
     stats.played++;
     stats.wins++;
     stats.currentStreak++;
@@ -2926,7 +3967,10 @@ function checkWin() {
     let m = Math.floor(timerSeconds / 60).toString().padStart(2, '0');
     let s = (timerSeconds % 60).toString().padStart(2, '0');
 
-    if (gameMode === 'campaign') {
+    if (isDuelActive) {
+      document.getElementById('win-title').textContent = '⚔️ DUEL VICTORY! ⚔️';
+      document.getElementById('win-details').textContent = `Defeated ${duelOpponent.name}! Score: ${scoreCount} | Time: ${m}:${s} | Moves: ${movesCount}`;
+    } else if (gameMode === 'campaign') {
       document.getElementById('win-title').textContent = campaignStage === 20 ? '👑 GRANDMASTER VICTORIOUS! 👑' : `🏆 STAGE ${campaignStage} CLEARED! 🏆`;
       document.getElementById('win-details').textContent = `Stage: ${CAMPAIGN_STAGES[campaignStage - 1].name} | Score: ${scoreCount} | Time: ${m}:${s}`;
     } else if (gameMode === 'vegas') {
@@ -3354,20 +4398,7 @@ function importStats(event) {
   event.target.value = ''; // Reset input
 }
 
-function initDustMotes() {
-  for(let i=0; i<15; i++) {
-    let mote = document.createElement('div');
-    mote.className = 'dust-mote';
-    mote.style.width = mote.style.height = (Math.random() * 8 + 4) + 'px';
-    mote.style.left = (Math.random() * 100) + 'vw';
-    mote.style.animationDuration = (Math.random() * 10 + 10) + 's';
-    mote.style.animationDelay = '-' + (Math.random() * 20) + 's';
-    document.body.appendChild(mote);
-  }
-}
-
 // Start App
-initDustMotes();
 initFXSystem();
 init();
 </script>

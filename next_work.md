@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-expander
-next_agent: kilo-creator
+current_agent: kilo-creator
+next_agent: kilo-graphics
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -17,7 +17,7 @@ current_targets:
   kilo_tester: KPong
   kilo_usability: KFreecell
   kilo_qa: KConverter
-  kilo_expander: KSolitaire
+  kilo_expander: KPac
 virtual_web_target: "kweb://portal"
 virtual_web_rotation:
   - "kweb://geocities"
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-qa
-  app: KColor
-  timestamp: "2026-10-06T17:07:00-07:00"
+  agent: kilo-expander
+  app: KSolitaire
+  timestamp: "2026-10-06T17:31:00-07:00"
 last_planner_run: "2026-10-06T14:20:00Z"
 ---
 
@@ -129,9 +129,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KQuarantine`, `KSettings`, `KTaskMgr`, `KHabit`, `KSudoku`, `KConnect4`, `KHangman`, `KSimon`, `KAsteroids`, `KFreecell`, `KMatch3`, `KWords`, `KGo`, `KDarts`, `KTowers`, `KReversi`, `KAlchemy`, `KColony`, `KStarForge`, `KBreakout`, `KRogue`, `KTetris`, `KPong`, `KPac`, `KChess`, `KColor` *(Completed in Pass 5: KBBS, KChrono, KCipher, KClip, KCyber, KDragon, KFortress, KHash, KMaze, KMech, KMystery, KQuest, KSanctuary, KSnake, KSolitaire, KSpace, KStarDredge, KStarship, KStellar, KSubmarine, KSynth, KSys, KTask, KTerm, KTimer, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KRSS, K2048, KChart, KGraph, KContacts, KScript, KRead, KColosseum, KAbyss, KMedia, KAudio, KRadio, KPad, KPaint, KCalc, KMine, KCosmic, KBase, KBudget, KCalendar, KFarm, KFlash, KFont, KImage, KJournal, KMail, KMandel, KNet, KNote, KPass, KDB, KHex, KBookmark, KPing, KChat, KClock, KPomodoro, KBreakout, KRogue, KTetris, KPong, KPac, KChess, KColor)*.
 
 ### 6. Feature Expander Queue (`kilo-expander`)
-- **Current Target**: `KSolitaire`
+- **Current Target**: `KPac`
 - **Upcoming Queue**:
-  `KPac`, `KSudoku`, `KWords`, `KHangman`, `KConnect4`, `KRogue`, `KBreakout`, `KMine` *(Completed: KColosseum, KSpace, KReversi, KSimon, KMatch3, KTowers, KSnake, KPong, KGo, KSynth, KNote, KFont, KRSS, KSys, KZip, KVault, KType, KMandel, KGraph, KChart, KPaint, KConnect4, KChess, KTetris, KDB, KTodo, KJournal, KCalendar, KContacts, KMail, KRead, KPass, KImage, KAudio, KMedia, KTask, KNet, KPing, KHash, KPad, K2048, KDarts, KRogue, KBreakout, KCalc, KMine)*.
+  `KSudoku`, `KWords`, `KHangman`, `KConnect4`, `KRogue`, `KBreakout`, `KMine`, `KSolitaire` *(Completed: KSolitaire, KColosseum, KSpace, KReversi, KSimon, KMatch3, KTowers, KSnake, KPong, KGo, KSynth, KNote, KFont, KRSS, KSys, KZip, KVault, KType, KMandel, KGraph, KChart, KPaint, KConnect4, KChess, KTetris, KDB, KTodo, KJournal, KCalendar, KContacts, KMail, KRead, KPass, KImage, KAudio, KMedia, KTask, KNet, KPing, KHash, KPad, K2048, KDarts, KRogue, KBreakout, KCalc, KMine)*.
 - **Multiplayer Focus (CRITICAL)**: Concentrate on expanding games (*KChess*, *KConnect4*, *KGo*, *KReversi*, *KDarts*, *KTetris*, *KSnake*, *K2048*, *KMatch3*, *KSimon*) and collaborative apps (*KDraw*, *KPaint*, *KSynth*, *KPad*) with seamless Firebase Realtime Database multiplayer for cross-computer play on `kiloapps.web.app`.
 
 ### 7. Virtual 1999 Web Expansion Queue (Eternal Fleet Track)
@@ -217,6 +217,15 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-06T17:31:00-07:00 — kilo-expander: KSolitaire (RFMS Duel Arena, Replay Studio, Deal Numbers, Mandate 11 Glint/Dust Ban)**
+  - Status: PASS ✅ (0 regressions, 152.7 KB web / 49.1 KB native < 999 KB ceiling).
+  - Online Multiplayer: Added Cyber Duel Arena with RFMS matchmaking, 25s CyberBot solo fallback, live duel HUD, chat taunts, and URL room invites.
+  - Deal Number System: Integrated deterministic Mulberry32 PRNG with deal seeds #1-#1000000, deep links (#deal=X), and status bar indicator.
+  - Replay Studio: Added full move tracking, playback controls (1x/2x/4x), step scrubber, and .ksol JSON import/export.
+  - Mandate 11 Glint & Dust Ban: Removed metallic shine keyframes and eliminated all canvas/DOM dust motes.
+  - Verification: `test_app_startup.py` PASS; `test_web_apps.js` PASS (82 elements, 0 err); MSVC clean (`KSolitaire.exe` 49.1 KB); Vite clean (327ms); security_lint 100% PASS.
+  - Queue: Advanced `kilo_expander` to `KPac`; rotation advanced to `kilo-creator`.
+
 - **2026-10-06T17:07:00-07:00 — kilo-qa: KColor (Pass 5: Tutorial & State Integrity, Quicksave/Load & Build Audit)**
   - Status: PASS ✅ (0 regressions, 67.4 KB web / 17.9 KB native < 999 KB ceiling).
   - State Persistence: Implemented [F5/F9] quicksave/quickload across web (`kcolor_quicksave`) and Win32 C (`kcolor_save.dat`); added UI buttons.
@@ -250,12 +259,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Glint & Dot Audit: Verified static gothic RPG filigree inlay with 0 traveling perimeter dots or rotating specular glints in web and native C.
   - Verification: `scripts/check_icons.py` 100% PASS; `scripts/security_lint.py` 100% PASS; MSVC clean (`KRogue.exe` 81.4 KB); Vite clean (345ms); web (262.0 KB) < 999 KB ceiling.
   - Queue: Advanced `kilo_graphics` to `KColosseum`; rotation advanced to `kilo-tester`.
-
-- **2026-10-06T15:48:00-07:00 — kilo-creator: kweb://darknet (Tier 3 Deep Expansion, Hex Inspector, FSK Acoustic Modem & Shared Signal Interlock)**
-  - Status: PASS ✅ (0 regressions, 352.7 KB < 999 KB ceiling, Vite clean 425ms).
-  - Hex & Memory Bus Inspector (Tab 14): 16-byte aligned RAM viewer with byte patcher, Adler32/CRC32, and unsealed memo yielding CARLSBAD-SALT-99 for 10.19.99.4/classified.
-  - Bell 103/202 FSK Acoustic Modem (Tab 15): Procedural FM audio carrier, waterfall spectrogram, Lissajous phase scope & 300-baud streaming teletype.
-  - Shared Signal Interlock (Tab 16): Dual-presence transponder lock (25s solo fallback) & Firebase signal board unsealing Precursor Blueprint Memo #7F.
-  - Dead Drop Secret Responder: Passphrase listener triggers classified incoming whisper drop from SYSOP_0x7F in Tab 13.
-  - Verification: `test_arg_flow.py` PASS; `check_icons.py` PASS; `security_lint.py` 100% PASS; build clean.
-  - Queue: Advanced `kilo_creator` and `virtual_web_target` to `kweb://portal`; rotation advanced to `kilo-graphics`.
