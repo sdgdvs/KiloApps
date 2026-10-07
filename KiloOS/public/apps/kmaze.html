@@ -657,7 +657,7 @@
   }
 
   // Keybindings
-  let keyBinds = {
+  const DEFAULT_KEYBINDS = {
       up: 'ArrowUp',
       down: 'ArrowDown',
       left: 'ArrowLeft',
@@ -669,6 +669,33 @@
       freeze: 't',
       crouch: 'x'
   };
+  let keyBinds = Object.assign({}, DEFAULT_KEYBINDS);
+  let savedBinds = safeGetStorage('kmaze_keybinds', null);
+  if (savedBinds) {
+      try {
+          let parsedBinds = JSON.parse(savedBinds);
+          if (parsedBinds && typeof parsedBinds === 'object') {
+              Object.assign(keyBinds, parsedBinds);
+          }
+      } catch (e) {}
+  }
+  function resetKeybindsToDefault() {
+      Object.assign(keyBinds, DEFAULT_KEYBINDS);
+      safeSetStorage('kmaze_keybinds', JSON.stringify(keyBinds));
+      showToast("Keybindings reset to default controls", "info");
+  }
+  function updateKeybindsButtonState() {
+      const btnKeys = document.getElementById('btnKeys');
+      const btnSplashKeys = document.getElementById('btnSplashKeys');
+      if (btnKeys) {
+          if (gameState === 4) btnKeys.classList.add('active');
+          else btnKeys.classList.remove('active');
+      }
+      if (btnSplashKeys) {
+          if (gameState === 4) btnSplashKeys.classList.add('active');
+          else btnSplashKeys.classList.remove('active');
+      }
+  }
   let waitingForKey = null;
   let replayLevels = [];
   let replayLevelIdx = 0;
@@ -682,6 +709,8 @@
           prevState = gameState;
           gameState = 4;
       }
+      updateSplashOverlay();
+      updateKeybindsButtonState();
   }
   function updateSplashOverlay() {
       const splash = document.getElementById('splashOverlay');
@@ -778,13 +807,24 @@
       } else {
           modal.classList.remove('open');
       }
-      if (!modal.classList.contains('open')) {
+      const isOpen = modal.classList.contains('open');
+      const btnHelp = document.getElementById('btnHelp');
+      const btnSplashHelp = document.getElementById('btnSplashHelp');
+      if (btnHelp) {
+          if (isOpen) btnHelp.classList.add('active');
+          else btnHelp.classList.remove('active');
+      }
+      if (btnSplashHelp) {
+          if (isOpen) btnSplashHelp.classList.add('active');
+          else btnSplashHelp.classList.remove('active');
+      }
+      if (!isOpen) {
           safeSetStorage('kmaze_tutorialSeen', '1');
       }
   }
 
   function exportStats() {
-      let data = { bestTime, totalGames, totalEscapes, totalScore };
+      let data = { bestTime, totalGames, totalEscapes, totalScore, keyBinds };
       let blob = new Blob([JSON.stringify(data, null, 2)], {type: "application/json"});
       let a = document.createElement('a');
       let url = URL.createObjectURL(blob);
@@ -807,6 +847,10 @@
               if (typeof data.totalGames === 'number' && Number.isFinite(data.totalGames) && data.totalGames >= 0) totalGames = Math.floor(data.totalGames);
               if (typeof data.totalEscapes === 'number' && Number.isFinite(data.totalEscapes) && data.totalEscapes >= 0) totalEscapes = Math.floor(data.totalEscapes);
               if (typeof data.totalScore === 'number' && Number.isFinite(data.totalScore)) totalScore = Math.floor(data.totalScore);
+              if (data.keyBinds && typeof data.keyBinds === 'object') {
+                  Object.assign(keyBinds, data.keyBinds);
+                  safeSetStorage('kmaze_keybinds', JSON.stringify(keyBinds));
+              }
               safeSetStorage('kmaze_best', bestTime);
               safeSetStorage('kmaze_games', totalGames);
               safeSetStorage('kmaze_escapes', totalEscapes);
@@ -1731,7 +1775,10 @@
   }
 
   function toggleCrouch() {
-      if (gameState !== 1) return;
+      if (gameState !== 1) {
+          showToast("Start a dungeon descent first to crouch!", "warning");
+          return;
+      }
       isCrouching = !isCrouching;
       if (isCrouching) {
           msgText = "Stealth Crouch Active (Sneaking / Silenced)!";
@@ -1748,7 +1795,14 @@
   }
 
   function usePickaxe() {
-      if (gameState !== 1 || hasPickaxe <= 0) return;
+      if (gameState !== 1) {
+          showToast("Start a dungeon descent first to use pickaxe!", "warning");
+          return;
+      }
+      if (hasPickaxe <= 0) {
+          showToast("No pickaxes remaining! Find shrines or breakables to restock.", "warning");
+          return;
+      }
       let tx = Math.floor(pX + dX * 0.8);
       let ty = Math.floor(pY + dY * 0.8);
       let tVal = map[tx] && map[tx][ty];
@@ -1808,11 +1862,16 @@
               showToast(`Minotaur Boss struck! (${bossHP} HP remaining)`, "warning");
           }
           msgTimer = 60;
+      } else {
+          showToast("No destructible wall or monster in front to strike!", "warning");
       }
   }
 
   function usePathfinder() {
-      if (gameState !== 1) return;
+      if (gameState !== 1) {
+          showToast("Start a dungeon descent first to use Pathfinder!", "warning");
+          return;
+      }
       if (pathfinderCharges > 0) {
           pathfinderCharges--;
           pathfinderTimer = 10000;
@@ -1821,11 +1880,16 @@
           addParticles(W/2, H/2, '#00ffff', 25);
           msgText = "Pathfinder Active (10s)!"; msgTimer = 60;
           showToast("Pathfinder: Shortest trail to key/exit revealed (10s)!", "info");
+      } else {
+          showToast("No Pathfinder charges remaining! Visit a Shrine to restock.", "warning");
       }
   }
 
   function useSpeedShoes() {
-      if (gameState !== 1) return;
+      if (gameState !== 1) {
+          showToast("Start a dungeon descent first to use Speed!", "warning");
+          return;
+      }
       if (speedShoesCharges > 0 || speedBoost) {
           if (speedShoesCharges > 0) speedShoesCharges--;
           speedShoesTimer = 8000;
@@ -1833,11 +1897,20 @@
           addParticles(W/2, H/2, '#ffff00', 25);
           msgText = "Speed Shoes Active (8s)!"; msgTimer = 60;
           showToast("Speed Shoes: Velocity doubled (8s)!", "info");
+      } else {
+          showToast("No Speed charges remaining! Visit a Shrine to restock.", "warning");
       }
   }
 
   function useStunSpray() {
-      if (gameState !== 1 || stunSprayCharges <= 0) return;
+      if (gameState !== 1) {
+          showToast("Start a dungeon descent first to use Stun Spray!", "warning");
+          return;
+      }
+      if (stunSprayCharges <= 0) {
+          showToast("No Stun Spray charges remaining! Visit a Shrine to restock.", "warning");
+          return;
+      }
       stunSprayCharges--;
       stunSprayTimer = 10000;
       playTone(500, 'square', 0.3);
@@ -1848,7 +1921,14 @@
       muzzleFlashTimer = 8;
   }
   function useTimeFreeze() {
-      if (gameState !== 1 || timeFreezeCharges <= 0) return;
+      if (gameState !== 1) {
+          showToast("Start a dungeon descent first to use Time Freeze!", "warning");
+          return;
+      }
+      if (timeFreezeCharges <= 0) {
+          showToast("No Time Freeze charges remaining! Visit a Shrine to restock.", "warning");
+          return;
+      }
       timeFreezeCharges--;
       timeFreezeTimer = 10000;
       playTone(600, 'square', 0.3);
@@ -1872,7 +1952,7 @@
           }
           if (gameState === 4) {
               if (waitingForKey) { waitingForKey = null; }
-              else { gameState = prevState; }
+              else { gameState = prevState; updateSplashOverlay(); updateKeybindsButtonState(); }
               return;
           }
           if (gameState === 3) { gameState = 2; return; }
@@ -1926,8 +2006,15 @@
       }
       if (gameState === 4) {
           if (waitingForKey) {
-              keyBinds[waitingForKey] = e.key;
-              waitingForKey = null;
+              if (e.key === 'Escape') {
+                  waitingForKey = null;
+              } else {
+                  keyBinds[waitingForKey] = e.key;
+                  safeSetStorage('kmaze_keybinds', JSON.stringify(keyBinds));
+                  showToast(`Bound [${waitingForKey}] to key '${e.key}'`, "success");
+                  waitingForKey = null;
+              }
+              return;
           }
       } else if (gameState === 3 && !hasMod) {
           if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') {
@@ -1978,16 +2065,36 @@
           let rect = canvas.getBoundingClientRect();
           let cx = (e.clientX - rect.left) * (canvas.width / rect.width);
           let cy = (e.clientY - rect.top) * (canvas.height / rect.height);
+          // Check [✕ Close] button in top right
+          if (cx >= 230 && cx <= 298 && cy >= 10 && cy <= 28) {
+              gameState = prevState;
+              waitingForKey = null;
+              updateSplashOverlay();
+              updateKeybindsButtonState();
+              return;
+          }
+          // Check [↺ Defaults] button in bottom right
+          if (cx >= 212 && cx <= 298 && cy >= H - 28 && cy <= H - 8) {
+              resetKeybindsToDefault();
+              waitingForKey = null;
+              return;
+          }
           if (cx >= 30 && cx <= 280) {
               let y = 40;
+              let clickedRow = false;
               for (let k in keyBinds) {
                   if (cy >= y - 10 && cy <= y + 5) {
                       waitingForKey = k;
+                      clickedRow = true;
                       break;
                   }
                   y += 15;
               }
+              if (!clickedRow) waitingForKey = null;
+          } else {
+              waitingForKey = null;
           }
+          return;
       }
   });
 
@@ -2809,7 +2916,16 @@
           uiCtx.strokeStyle = '#00f0ff';
           uiCtx.strokeRect(20, 8, W - 40, H - 16);
           uiCtx.fillStyle = '#00f0ff';
-          uiCtx.fillText("KEYBINDS (Click to Rebind)", W/2 - 85, 24);
+          uiCtx.fillText("KEYBINDS", 35, 23);
+
+          // Clickable [✕ Close] button in top right
+          uiCtx.fillStyle = 'rgba(255, 68, 102, 0.2)';
+          uiCtx.fillRect(234, 12, 60, 14);
+          uiCtx.strokeStyle = '#ff4466';
+          uiCtx.strokeRect(234, 12, 60, 14);
+          uiCtx.fillStyle = '#ff6b85';
+          uiCtx.fillText("✕ Close", 242, 23);
+
           let y = 42;
           for (let k in keyBinds) {
               uiCtx.fillStyle = (waitingForKey === k) ? '#ffff00' : 'white';
@@ -2817,7 +2933,15 @@
               y += 15;
           }
           uiCtx.fillStyle = '#94a3b8';
-          uiCtx.fillText("Click to rebind. ESC or [K] to return.", 30, H - 16);
+          uiCtx.fillText("Click row to rebind. ESC to cancel.", 30, H - 16);
+
+          // Clickable [↺ Defaults] button in bottom right
+          uiCtx.fillStyle = 'rgba(0, 240, 255, 0.2)';
+          uiCtx.fillRect(216, H - 24, 78, 14);
+          uiCtx.strokeStyle = '#00f0ff88';
+          uiCtx.strokeRect(216, H - 24, 78, 14);
+          uiCtx.fillStyle = '#00f0ff';
+          uiCtx.fillText("↺ Defaults", 224, H - 13);
       } else {
           let elapsed = (Date.now() - startTime) / 1000;
           let biome = "Catacombs";

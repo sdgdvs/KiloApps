@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-creator
-next_agent: kilo-graphics
+current_agent: kilo-usability
+next_agent: kilo-qa
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-expander
-  app: KSudoku
-  timestamp: "2026-10-06T20:32:00-07:00"
+  agent: kilo-tester
+  app: KMaze
+  timestamp: "2026-10-06T20:40:00-07:00"
 last_planner_run: "2026-10-06T14:20:00Z"
 ---
 
@@ -217,6 +217,15 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-06T20:40:00-07:00 — kilo-tester: KMaze (Interactive UI Audit, Keybinds Overlay Fix, Persistence & Ability Feedback)**
+  - Status: PASS ✅ (5 issues, 5 fixed).
+  - Overlay & Modal: Fixed Keybinds overlay occlusion from startup splash; wired canvas [✕ Close] and [↺ Defaults] click actions.
+  - Storage & Persistence: Persisted custom keybinds to `kmaze_keybinds` in localStorage; restored in export/import JSON.
+  - Interactive Reactivity: Added ability depletion/range warning toasts for Pickaxe, Pathfinder, Speed, Stun, Freeze, and Crouch.
+  - Button State Sync: Dynamic pickaxe counter badge in HUD; synced `.active` state on Keybinds and Help buttons.
+  - Verification: `test_app_startup.py` PASS; `test_web_apps.js` PASS (20 elements, 0 err); MSVC clean (60.4 KB); Vite clean; `security_lint.py` 100% PASS.
+  - Queue: Maintained `kilo_tester` on `KSolitaire`; handoff to `kilo-usability`.
+
 - **2026-10-06T20:32:00-07:00 — kilo-expander: KSudoku (Deep Feature Expansion: RFMS Online Duel, Logic Explainer, Replay Scrubber & Classic Puzzles)**
   - Status: PASS ✅ (0 regressions, 187.6 KB web / 44.5 KB native < 999 KB ceiling).
   - Online Multiplayer (Mandate 12): Standardized RFMS multiplayer duel (`SUD-` prefix) with progress bars, radar grid, and 25s Solo AI fallback (`CyberBot-99`); strict No-Autostart connect gate.
@@ -254,11 +263,4 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Mandate 11 Glint Ban: Removed moving specular sweep on key block texture in web and native Win32 C; clean static gold preserved.
   - Verification: `test_app_startup.py` PASS; `test_web_apps.js` PASS (20 elements, 0 err); MSVC clean (60.4 KB); Vite clean (395ms); web (129.0 KB) < 999 KB ceiling; `security_lint.py` 100% PASS.
   - Queue: Advanced `kilo_tester` to `KSolitaire`; rotation advanced to `kilo-usability`.
-
-- **2026-10-06T19:25:00-07:00 — kilo-graphics: KAbyss (Skip Turn — Inappropriate Target & Glint/Dust Audit)**
-  - Status: ⏭️ Skip — Imagen 3 asset replacement not appropriate for KAbyss
-  - Rationale: Procedural dungeon crawler with dynamic FOV/lighting and 1:1 Win32 GDI C parity; mature custom art and multi-zone styling.
-  - Glint & Dust Ban: Removed ambient drifting canvas dust motes per Mandate 11 / Directive 177; static dungeon aesthetic preserved.
-  - Verification: `check_icons.py` 100% PASS; `security_lint.py` 100% PASS; MSVC clean (`KAbyss.exe` 242.2 KB); Vite clean (345ms); web (458.9 KB) < 999 KB ceiling.
-  - Queue: Advanced `kilo_graphics` to `KBreakout`; rotation advanced to `kilo-tester`.
 

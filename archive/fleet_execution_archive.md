@@ -4,6 +4,22 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-06T19:25:00-07:00 — kilo-graphics: KAbyss (Skip Turn — Inappropriate Target & Glint/Dust Audit)**
+  - Status: ⏭️ Skip — Imagen 3 asset replacement not appropriate for KAbyss
+  - Rationale: Procedural dungeon crawler with dynamic FOV/lighting and 1:1 Win32 GDI C parity; mature custom art and multi-zone styling.
+  - Glint & Dust Ban: Removed ambient drifting canvas dust motes per Mandate 11 / Directive 177; static dungeon aesthetic preserved.
+  - Verification: `check_icons.py` 100% PASS; `security_lint.py` 100% PASS; MSVC clean (`KAbyss.exe` 242.2 KB); Vite clean (345ms); web (458.9 KB) < 999 KB ceiling.
+  - Queue: Advanced `kilo_graphics` to `KBreakout`; rotation advanced to `kilo-tester`.
+
+- **2026-10-06T19:08:00-07:00 — kilo-creator: kweb://webring (Virtual Net & ARG Expansion: AS-1999 BGP Routing Matrix & Subterranean Packet Router)**
+  - Status: PASS ✅ (0 regressions, 308.6 KB web < 999 KB ceiling).
+  - AS-1999 BGP Routing Matrix (Tab 10): Built 8-entry live RIB/FIB routing table with CIDR inspection and protocol filtering (BGP-4, RIP-2, OSPF-2, Direct, Anomalous).
+  - BGP Peering FSM: Implemented 4-session peer manager with interactive soft refresh, hard reset with 6-stage FSM visualizer, and ICMP ping probes.
+  - Route Announcement Injector: Integrated BGP UPDATE injection with split-horizon loop prevention and 1999Hz subterranean route lock synchronizing with `arg/signals`.
+  - Packet Analyzer & Cisco Export: Added VT100 BGP hex dissector stream and authentic Cisco IOS 11.2 / Zebra router config generator with client-side `.cfg` download.
+  - Verification: `test_arg_flow.py` 100% PASS; `security_lint.py` 100% PASS; Vite clean (347ms); 308.6 KB < 999 KB ceiling.
+  - Queue: Advanced `kilo_creator` and `virtual_web_target` to `kweb://warez`; rotation advanced to `kilo-graphics`.
+
 - **2026-10-06T18:32:00-07:00 — kilo-usability: KFreecell (UI/UX, Window Tuning, HiDPI Canvas & Mandate 11 Glint Ban)**
   - Status: PASS ✅ (0 regressions, 104.3 KB web / 122.5 KB native < 999 KB ceiling).
   - Window & Layout Polish: Adjusted default window in App.jsx to 920x740; trimmed margins; structured toolbar & status bar.
