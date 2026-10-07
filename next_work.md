@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-tester
-next_agent: kilo-usability
+current_agent: kilo-usability
+next_agent: kilo-qa
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -14,7 +14,7 @@ status: ready
 current_targets:
   kilo_creator: "kweb://users/~neon_rider"
   kilo_graphics: KSpace
-  kilo_tester: KChess
+  kilo_tester: KColor
   kilo_usability: KSettings
   kilo_qa: KHabit
   kilo_expander: KConnect4
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-graphics
-  app: KAsteroids
-  timestamp: "2026-10-07T09:35:00-07:00"
+  agent: kilo-tester
+  app: KChess
+  timestamp: "2026-10-07T10:25:00-07:00"
 last_planner_run: "2026-10-07T14:38:00Z"
 ---
 
@@ -114,9 +114,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KFarm`, `KWizard`, `KColony`, `KDragon`, `KMech`, `KColosseum`, `KAbyss`, `KBreakout`, `KAsteroids` *(Note: Pure vector/wireframe or abstract board targets skip automatically per Mandate 15. Completed: KQuest Phases 1-5, KSpace)*.
 
 ### 3. App Tester Queue (`kilo-tester`)
-- **Current Target**: `KChess`
+- **Current Target**: `KColor`
 - **Upcoming Queue**:
-  `KColor`, `KTimer`, `KConverter`, `KQuarantine`, `KSettings`, `KTaskMgr`, `K2048`, `KSudoku`, `KConnect4`, `KHangman`, `KSimon`, `KFreecell`, `KMatch3`, `KWords`, `KGo`, `KDarts`, `KRSS`, `KClip`, `KCipher`, `KCalc`, `KMine`, `KSnake`, `KTetris`, `KPong`, `KMaze`, `KSolitaire` *(Completed: KMaze, KPong, KStarForge, KTask, KChrono, KSys, KSynth, KCyber, KCosmic, KContacts, KDB, KDragon, KFlash, KFont, KFortress, KGraph, KHabit, KHex, KImage, KJournal, KMail, KMandel, KMech, KMedia, KMystery, KNet, KNote, KPad, KPaint, KPass, KPing, KQuest, KRadio, KRead, KSanctuary, KScript, KStarDredge, KStarship, KStellar, KSubmarine, KTerm, KHash, KRSS, KClip, KCipher, KCalc, KMine, KSnake, KTetris, KSolitaire)*.
+  `KTimer`, `KConverter`, `KQuarantine`, `KSettings`, `KTaskMgr`, `K2048`, `KSudoku`, `KConnect4`, `KHangman`, `KSimon`, `KFreecell`, `KMatch3`, `KWords`, `KGo`, `KDarts`, `KRSS`, `KClip`, `KCipher`, `KCalc`, `KMine`, `KSnake`, `KTetris`, `KPong`, `KMaze`, `KSolitaire`, `KChess` *(Completed: KChess, KMaze, KPong, KStarForge, KTask, KChrono, KSys, KSynth, KCyber, KCosmic, KContacts, KDB, KDragon, KFlash, KFont, KFortress, KGraph, KHabit, KHex, KImage, KJournal, KMail, KMandel, KMech, KMedia, KMystery, KNet, KNote, KPad, KPaint, KPass, KPing, KQuest, KRadio, KRead, KSanctuary, KScript, KStarDredge, KStarship, KStellar, KSubmarine, KTerm, KHash, KRSS, KClip, KCipher, KCalc, KMine, KSnake, KTetris, KSolitaire)*.
 
 ### 4. Usability & UX Queue (`kilo-usability`)
 - **Current Target**: `KSettings`
@@ -217,6 +217,15 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-07T10:25:00-07:00 — kilo-tester: KChess (Interactive UI Audit & Inline Repairs: Modals, Enter Hooks, Toast Safety & JSON Persistence)**
+  - Status: PASS ✅ (4 UI issues identified and fixed; 0 regressions).
+  - Toast & Modals: Re-positioned toasts to bottom-right (z-index 950) preventing modal occlusion; wired explicit Close buttons on FEN/PGN modals.
+  - Input & Focus: Added Enter key listeners on room code & call-sign inputs; added focus release and canvas restore in modal close.
+  - State & Storage: Added JSON save file export and file import; wired dual pointerdown/mousedown debounce on canvas.
+  - Lifecycle: Added visibilitychange rAF pause/resume handling for document hide/show.
+  - Verification: `test_app_startup.py` PASS; `security_lint.py` 100% PASS; `check_icons.py` PASS; MSVC build clean; Vite clean (693ms).
+  - Queue: Advanced `kilo_tester` to `KColor`; rotation handoff to `kilo-usability`.
+
 - **2026-10-07T09:35:00-07:00 — kilo-graphics: KAsteroids (Skip Turn — Pure Vector/Wireframe Classic & Glint/Dot Audit)**
   - Status: ⏭️ Skip — Imagen 3 asset replacement not appropriate for KAsteroids
   - Rationale: Pure retro vector/wireframe arcade classic; foundational aesthetic and 1:1 Win32 GDI parity preclude raster asset replacement.
@@ -250,15 +259,6 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Security & Standards: Added postMessage origin validation, storage quota guards (`safeSetStorage`), and lifecycle cleanup.
   - Verification: `test_web_apps.js` PASS (27 elements, 1 btn, 0 err); `security_lint.py` 100% PASS; `check_icons.py` PASS; Vite clean (441ms).
   - Queue: Advanced `kilo_qa` to `KHabit`; rotation handoff to `kilo-expander`.
-
-- **2026-10-07T04:40:00-07:00 — kilo-usability: KPong (Window Sizing, Layout Centering, Non-Occluding Toast & Drag Ergonomics)**
-  - Status: PASS ✅ (0 regressions, 126.2 KB web / 45.5 KB native < 999 KB ceiling).
-  - Window Sizing & Layout: Tuned `App.jsx` dimensions to 960x860; flex centering with margin-auto avoids vertical clipping and scrollbars.
-  - Toast Occlusion Remediation: Moved `#toast` to bottom:68px with default pointer-events:none, eliminating button obstruction.
-  - Modal Stacking & Focus: Added `closeAllModals()` to prevent multi-dialog overlap; wired auto-focus and canvas restore hooks.
-  - Input & Canvas Ergonomics: Added pointer capture on canvas for seamless fast-drag paddle tracking; high-DPI image smoothing enabled.
-  - Verification: `test_app_startup.py` PASS; `test_web_apps.js` PASS (46 elements, 0 err); MSVC build clean; Vite clean (4.70s).
-  - Queue: Advanced `kilo_usability` to `KSettings`; rotation handoff to `kilo-qa`.
 
 
 

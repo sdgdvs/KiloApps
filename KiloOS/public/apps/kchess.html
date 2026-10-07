@@ -173,9 +173,9 @@
   .close-btn { cursor: pointer; color: #94a3b8; font-size: 18px; font-weight: bold; }
   .close-btn:hover { color: #ef4444; }
 
-  /* Toast Notifications */
+  /* Toast Notifications (Positioned safely below modals to avoid occlusion) */
   #toast-container {
-    position: fixed; top: 48px; right: 20px; z-index: 9999;
+    position: fixed; bottom: 24px; right: 20px; z-index: 950;
     display: flex; flex-direction: column; gap: 8px; pointer-events: none;
     max-width: 320px;
   }
@@ -206,7 +206,7 @@
   }
   @keyframes toastOut {
     from { opacity: 1; transform: translateY(0) scale(1); }
-    to { opacity: 0; transform: translateY(-8px) scale(0.95); }
+    to { opacity: 0; transform: translateY(8px) scale(0.95); }
   }
 
   /* Help Modal Specifics */
@@ -267,6 +267,13 @@
         </div>
         <div class="menu-dropdown-entry" onclick="loadGameState()">
           <span>📂 Quick Load State</span><span class="shortcut">F9 / L</span>
+        </div>
+        <div class="menu-divider"></div>
+        <div class="menu-dropdown-entry" onclick="exportSaveJSON()">
+          <span>📤 Export Save File (.json)</span>
+        </div>
+        <div class="menu-dropdown-entry" onclick="triggerImportJSON()">
+          <span>📥 Import Save File (.json)</span>
         </div>
       </div>
     </div>
@@ -435,6 +442,7 @@
         <button onclick="openPGNModal()">PGN View [G]</button>
         <button onclick="copyFEN()">Copy FEN</button>
         <button class="primary" onclick="applyFEN()">Load FEN</button>
+        <button class="modal-close" onclick="closeModals()">Close [Esc]</button>
       </div>
     </div>
   </div>
@@ -449,6 +457,7 @@
         <button onclick="openFENModal()">FEN View [E]</button>
         <button onclick="copyPGN()">Copy PGN</button>
         <button class="primary" onclick="applyPGN()">Import PGN</button>
+        <button class="modal-close" onclick="closeModals()">Close [Esc]</button>
       </div>
     </div>
   </div>
@@ -465,7 +474,7 @@
       <div style="background: rgba(30, 41, 59, 0.7); border: 1px solid #334155; border-radius: 8px; padding: 10px 12px; margin-bottom: 10px;">
         <label style="font-size: 12px; font-weight: bold; color: #cbd5e1; display: block; margin-bottom: 6px;">Your Grandmaster Call-Sign:</label>
         <div style="display: flex; gap: 8px;">
-          <input type="text" id="mp-player-name" maxlength="16" placeholder="Grandmaster_..." style="margin-bottom: 0; flex: 1;">
+          <input type="text" id="mp-player-name" maxlength="16" placeholder="Grandmaster_..." style="margin-bottom: 0; flex: 1;" onkeydown="if(event.key==='Enter') savePlayerName()">
           <button onclick="savePlayerName()" style="background: #0284c7; border-color: #38bdf8;">Save</button>
         </div>
       </div>
@@ -487,7 +496,7 @@
           <button onclick="createCustomRoom(false)" style="flex: 1; background: #312e81; border-color: #6366f1;">🔒 Host Private Room</button>
         </div>
         <div style="display: flex; gap: 8px;">
-          <input type="text" id="mp-join-code-input" maxlength="10" placeholder="Enter Room Code (e.g. KC-4892)" style="margin-bottom: 0; flex: 1; text-transform: uppercase;">
+          <input type="text" id="mp-join-code-input" maxlength="10" placeholder="Enter Room Code (e.g. KC-4892)" style="margin-bottom: 0; flex: 1; text-transform: uppercase;" onkeydown="if(event.key==='Enter') joinRoomByInput()">
           <button onclick="joinRoomByInput()" style="background: #0d9488; border-color: #14b8a6;">Join Match</button>
         </div>
       </div>
@@ -538,6 +547,8 @@
       </div>
     </div>
   </div>
+
+  <input type="file" id="import-file-input" accept=".json" style="display:none;" onchange="handleFileImport(event)">
 <script src="../assets/js/retro_multiplayer.js"></script>
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
@@ -1483,6 +1494,119 @@
           showToast("Error loading game state!", "warn");
           return false;
       }
+  }
+
+  function exportSaveJSON() {
+      if (isOnlineGame) {
+          showToast("Game export disabled during Online Multiplayer match", "warn");
+          return;
+      }
+      try {
+          const state = {
+              board: board.map(row => [...row]),
+              whiteTurn: whiteTurn,
+              wKingMoved: wKingMoved, wRookLMoved: wRookLMoved, wRookRMoved: wRookRMoved,
+              bKingMoved: bKingMoved, bRookLMoved: bRookLMoved, bRookRMoved: bRookRMoved,
+              epX: epX, epY: epY,
+              lastMoveSx: lastMoveSx, lastMoveSy: lastMoveSy, lastMoveTx: lastMoveTx, lastMoveTy: lastMoveTy,
+              gameMode: gameMode,
+              currentStage: currentStage,
+              puzzleIndex: puzzleIndex,
+              aiPersonality: aiPersonality,
+              aiMode: aiMode,
+              gameOver: gameOver,
+              winner: winner,
+              blitzTimeWhite: blitzTimeWhite,
+              blitzTimeBlack: blitzTimeBlack,
+              freezePowerups: freezePowerups,
+              blackFrozen: blackFrozen,
+              moveHistoryStack: moveHistoryStack,
+              historyIndex: historyIndex,
+              exportTime: new Date().toISOString()
+          };
+          const jsonStr = JSON.stringify(state, null, 2);
+          const blob = new Blob([jsonStr], { type: 'application/json' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `kchess_save_${Date.now()}.json`;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+          showToast("Saved game state exported to JSON file!", "success");
+      } catch (e) {
+          console.error(e);
+          showToast("Failed to export save state: " + e.message, "warn");
+      }
+  }
+
+  function triggerImportJSON() {
+      if (isOnlineGame) {
+          showToast("Game import disabled during Online Multiplayer match", "warn");
+          return;
+      }
+      const fileInput = document.getElementById('import-file-input');
+      if (fileInput) fileInput.click();
+  }
+
+  function handleFileImport(e) {
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (event) => {
+          try {
+              const state = JSON.parse(event.target.result);
+              if (!state || !Array.isArray(state.board) || state.board.length !== 8) {
+                  throw new Error("Invalid KChess save data structure");
+              }
+              board = state.board.map(row => [...row]);
+              whiteTurn = Boolean(state.whiteTurn);
+              wKingMoved = Boolean(state.wKingMoved);
+              wRookLMoved = Boolean(state.wRookLMoved);
+              wRookRMoved = Boolean(state.wRookRMoved);
+              bKingMoved = Boolean(state.bKingMoved);
+              bRookLMoved = Boolean(state.bRookLMoved);
+              bRookRMoved = Boolean(state.bRookRMoved);
+              epX = state.epX !== undefined ? state.epX : -1;
+              epY = state.epY !== undefined ? state.epY : -1;
+              lastMoveSx = state.lastMoveSx !== undefined ? state.lastMoveSx : -1;
+              lastMoveSy = state.lastMoveSy !== undefined ? state.lastMoveSy : -1;
+              lastMoveTx = state.lastMoveTx !== undefined ? state.lastMoveTx : -1;
+              lastMoveTy = state.lastMoveTy !== undefined ? state.lastMoveTy : -1;
+              gameMode = state.gameMode !== undefined ? state.gameMode : 1;
+              currentStage = state.currentStage || 1;
+              puzzleIndex = state.puzzleIndex || 0;
+              aiPersonality = state.aiPersonality || 1;
+              aiMode = state.aiMode !== undefined ? state.aiMode : true;
+              gameOver = Boolean(state.gameOver);
+              winner = state.winner || 0;
+              blitzTimeWhite = state.blitzTimeWhite || 180.0;
+              blitzTimeBlack = state.blitzTimeBlack || 180.0;
+              freezePowerups = state.freezePowerups !== undefined ? state.freezePowerups : 3;
+              blackFrozen = Boolean(state.blackFrozen);
+              moveHistoryStack = state.moveHistoryStack || [];
+              historyIndex = state.historyIndex !== undefined ? state.historyIndex : (moveHistoryStack.length - 1);
+              selX = -1; selY = -1;
+              hintActive = true;
+              hintText = "Imported JSON Loaded!";
+              moveAnimation = null;
+              particles = [];
+              shockwaves = [];
+              lastTick = performance.now();
+              safeSetStorage(TUTORIAL_KEY, '1');
+              safeSetStorage('kchess_save_state', JSON.stringify(state));
+              updateMenuIndicators();
+              playSound('move');
+              updateAriaStatus("Imported game state loaded");
+              showToast("JSON save imported successfully!", "success");
+          } catch (err) {
+              console.error(err);
+              showToast("Failed to parse KChess JSON save: " + err.message, "warn");
+          }
+      };
+      reader.readAsText(file);
+      e.target.value = '';
   }
 
   // --------------------------------------------------------------------------
@@ -2470,11 +2594,18 @@
       if (mp) mp.style.display = 'none';
       const inv = document.getElementById('invite-modal');
       if (inv) inv.style.display = 'none';
+      pendingInviteRoom = null;
       safeSetStorage(TUTORIAL_KEY, '1');
       if (activeLobbyRef && activeLobbyListener && window.fb) {
           try { window.fb.off(activeLobbyRef, 'value', activeLobbyListener); } catch(e) {}
           activeLobbyRef = null;
           activeLobbyListener = null;
+      }
+      if (document.activeElement && typeof document.activeElement.blur === 'function') {
+          document.activeElement.blur();
+      }
+      if (cvs && typeof cvs.focus === 'function') {
+          cvs.focus();
       }
   }
 
@@ -3044,6 +3175,7 @@
 
   function showInvitePrompt(code) {
       pendingInviteRoom = code;
+      closeModals();
       const modal = document.getElementById('invite-modal');
       const label = document.getElementById('invite-code-label');
       if (label) label.textContent = code;
@@ -3145,7 +3277,7 @@
       cvs.style.cursor = 'default';
   };
 
-  cvs.onmousedown = (e) => {
+  function handleCanvasClick(e) {
       const rect = cvs.getBoundingClientRect();
       const mx = (e.clientX - rect.left) * (W / rect.width);
       const my = (e.clientY - rect.top) * (H / rect.height);
@@ -3192,8 +3324,17 @@
       const ty = Math.floor((my - OY) / TS);
       kbX = tx; kbY = ty; kbActive = false;
       handleSquareClick(tx, ty);
+  }
+
+  let lastPointerDownTime = 0;
+  cvs.onpointerdown = (e) => {
+      lastPointerDownTime = performance.now();
+      handleCanvasClick(e);
   };
-  cvs.onpointerdown = cvs.onmousedown;
+  cvs.onmousedown = (e) => {
+      if (performance.now() - lastPointerDownTime < 300) return; // Debounce dual pointerdown + mousedown events
+      handleCanvasClick(e);
+  };
 
   function drawChessPieceSprite(ctx, p, x, y, size, alpha = 1.0, scale = 1.0) {
       if (p === 0) return;
@@ -3989,6 +4130,7 @@
   }
 
   let lastTick = performance.now();
+  let rafId = null;
   function gameLoop(now) {
       let dt = (now - lastTick) / 1000.0;
       lastTick = now;
@@ -4005,12 +4147,31 @@
       }
 
       drawBoard();
-      requestAnimationFrame(gameLoop);
+      rafId = requestAnimationFrame(gameLoop);
   }
+
+  function startLoop() {
+      if (!rafId) {
+          lastTick = performance.now();
+          rafId = requestAnimationFrame(gameLoop);
+      }
+  }
+
+  function stopLoop() {
+      if (rafId) {
+          cancelAnimationFrame(rafId);
+          rafId = null;
+      }
+  }
+
+  document.addEventListener('visibilitychange', () => {
+      if (document.hidden) stopLoop();
+      else startLoop();
+  });
 
   resetGame();
   updateMenuIndicators();
-  requestAnimationFrame(gameLoop);
+  startLoop();
 
   window.onFirebaseLoaded = function() {
       checkUrlAutoJoin();
