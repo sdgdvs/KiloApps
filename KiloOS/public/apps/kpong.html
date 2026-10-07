@@ -51,7 +51,8 @@
   * { box-sizing: border-box; }
   body { 
     margin: 0; background-color: var(--bg-color); overflow-x: hidden; 
-    display: flex; justify-content: center; align-items: center; min-height: 100vh; 
+    display: flex; justify-content: center; align-items: flex-start; min-height: 100vh; 
+    padding: 10px 8px; box-sizing: border-box;
     color: var(--text-color); font-family: 'Inter', sans-serif; 
     background: var(--bg-gradient); transition: background 0.3s ease;
     text-rendering: optimizeLegibility;
@@ -60,14 +61,15 @@
   }
 
   .container {
-    padding: 18px;
+    padding: 12px 16px;
     background: var(--card-bg);
-    border-radius: 16px;
+    border-radius: 14px;
     backdrop-filter: blur(12px);
     border: 1px solid rgba(255, 255, 255, 0.12);
     box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6);
-    display: flex; flex-direction: column; align-items: center; gap: 10px;
+    display: flex; flex-direction: column; align-items: center; gap: 8px;
     max-width: 940px; width: 100%;
+    margin: auto;
   }
 
   .header-bar {
@@ -79,6 +81,7 @@
     font-size: 20px; font-weight: 900; letter-spacing: 1.5px;
     background: linear-gradient(45deg, var(--primary), var(--secondary));
     -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    user-select: none; -webkit-user-select: none;
   }
 
   .top-controls {
@@ -88,18 +91,25 @@
   .btn-sm {
     background: rgba(255, 255, 255, 0.08);
     border: 1px solid rgba(255, 255, 255, 0.2);
-    color: #fff; border-radius: 6px; padding: 4px 8px; font-size: 11px;
+    color: #fff; border-radius: 6px; padding: 5px 9px; font-size: 11px;
+    min-height: 28px;
     font-weight: 600; cursor: pointer; transition: all 0.2s ease;
     display: flex; align-items: center; gap: 4px;
+    user-select: none; -webkit-user-select: none;
   }
   .btn-sm:hover {
     background: rgba(255, 255, 255, 0.2);
     border-color: var(--primary); color: var(--primary);
   }
+  .btn-sm:focus-visible, .skill-btn:focus-visible, canvas:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+  }
 
   .score-board {
     display: flex; width: 100%; justify-content: space-between; font-size: 28px; font-weight: 900;
     padding: 0 20px;
+    user-select: none; -webkit-user-select: none;
   }
   .p1-score { color: var(--primary); text-shadow: 0 0 12px var(--primary); }
   .p2-score { color: var(--secondary); text-shadow: 0 0 12px var(--secondary); }
@@ -108,6 +118,7 @@
     font-size: 12px; font-weight: 700; color: var(--accent);
     background: rgba(0, 0, 0, 0.3); padding: 4px 10px; border-radius: 20px;
     border: 1px solid rgba(255, 215, 0, 0.3);
+    user-select: none; -webkit-user-select: none;
   }
 
   canvas { 
@@ -116,6 +127,7 @@
     border: 1px solid rgba(255, 255, 255, 0.1);
     box-shadow: inset 0 0 24px rgba(0,0,0,0.8);
     touch-action: none;
+    aspect-ratio: 900 / 640;
   }
 
   .skills-bar {
@@ -126,12 +138,14 @@
     border: 1px solid var(--primary);
     color: var(--primary);
     padding: 6px 12px;
+    min-height: 30px;
     border-radius: 8px;
     font-family: 'Inter', sans-serif;
     font-size: 11px; font-weight: 700;
     cursor: pointer;
     transition: all 0.2s ease;
     display: flex; align-items: center; gap: 5px;
+    user-select: none; -webkit-user-select: none;
   }
   .skill-btn:hover:not(:disabled) {
     background: rgba(0, 229, 255, 0.25);
@@ -161,12 +175,13 @@
   .modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
 
   .toast {
-    position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: rgba(0, 229, 255, 0.95);
-    color: #000; padding: 10px 18px; border-radius: 8px; font-weight: 700; font-size: 13px;
-    box-shadow: 0 6px 20px rgba(0,0,0,0.5); opacity: 0; transition: opacity 0.25s ease; pointer-events: auto;
-    cursor: pointer; z-index: 250; max-width: 90vw; text-align: center;
+    position: fixed; bottom: 68px; left: 50%; transform: translateX(-50%); background: rgba(0, 229, 255, 0.95);
+    color: #000; padding: 8px 16px; border-radius: 8px; font-weight: 700; font-size: 12px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.6); opacity: 0; transition: opacity 0.25s ease, transform 0.25s ease;
+    pointer-events: none; cursor: pointer; z-index: 250; max-width: 90vw; text-align: center;
+    user-select: none; -webkit-user-select: none;
   }
-  .toast.active { opacity: 1; }
+  .toast.active { opacity: 1; pointer-events: auto; }
 </style>
 </head>
 <body class="theme-cyberpunk">
@@ -238,6 +253,7 @@
       <tr><th>Replay</th><td>[P] Match Replay | [Space] Pause | [←/→] Scrub | [1/2/3] Speed</td></tr>
       <tr><th>Stats</th><td>[L] Stats Modal | JSON Export & Import</td></tr>
       <tr><th>Save/Load</th><td>[F5] Save Game | [F9] Load Game</td></tr>
+      <tr><th>Rematch</th><td>[R] or Click/Tap Canvas to restart when Game Over</td></tr>
     </table>
     <div class="modal-actions" style="justify-content: space-between; align-items: center;">
       <label style="font-size: 11px; color: #aaa; display: flex; align-items: center; gap: 6px; cursor: pointer;">
@@ -629,28 +645,38 @@
   }
 
   function openMultiplayerModal() {
+      closeAllModals();
       initRetroMultiplayer();
       const pNameInput = document.getElementById('mpPlayerName');
       if (pNameInput) pNameInput.value = myPlayerName;
       updateMultiplayerUI();
-      document.getElementById('multiplayerModal').classList.add('active');
+      const modal = document.getElementById('multiplayerModal');
+      if (modal) modal.classList.add('active');
+      const closeBtn = document.getElementById('btn-close-mp');
+      if (closeBtn) closeBtn.focus();
   }
 
   function closeMultiplayerModal() {
-      document.getElementById('multiplayerModal').classList.remove('active');
+      const modal = document.getElementById('multiplayerModal');
+      if (modal) modal.classList.remove('active');
+      if (canvas) canvas.focus();
   }
 
   function showInvitePrompt(code) {
+      closeAllModals();
       pendingInviteCode = code;
       const modal = document.getElementById('inviteModal');
       const label = document.getElementById('inviteCodeLabel');
       if (label) label.textContent = code;
       if (modal) modal.classList.add('active');
+      const declineBtn = document.getElementById('btn-decline-invite');
+      if (declineBtn) declineBtn.focus();
   }
 
   function closeInviteModal() {
       const modal = document.getElementById('inviteModal');
       if (modal) modal.classList.remove('active');
+      if (canvas) canvas.focus();
   }
 
   function acceptInvite() {
@@ -1501,11 +1527,25 @@
   document.addEventListener('keyup', e => { keys[e.key] = false; });
   window.addEventListener('blur', () => { for(let k in keys) keys[k] = false; });
 
+  function closeAllModals() {
+      const helpModalEl = document.getElementById('helpModal');
+      const statsModalEl = document.getElementById('statsModal');
+      const mpModalEl = document.getElementById('multiplayerModal');
+      const inviteModalEl = document.getElementById('inviteModal');
+      if (helpModalEl) helpModalEl.classList.remove('active');
+      if (statsModalEl) statsModalEl.classList.remove('active');
+      if (mpModalEl) mpModalEl.classList.remove('active');
+      if (inviteModalEl) inviteModalEl.classList.remove('active');
+  }
+
   function openHelpModal() {
+      closeAllModals();
       const modal = document.getElementById('helpModal');
       if (modal) modal.classList.add('active');
       const chk = document.getElementById('chkDoNotShowTutorial');
       if (chk) chk.checked = !!safeGetStorage('kpong_tutorialSeen');
+      const closeBtn = document.getElementById('btn-close-help');
+      if (closeBtn) closeBtn.focus();
   }
   function closeHelpModal() {
       const modal = document.getElementById('helpModal');
@@ -1517,6 +1557,7 @@
           safeSetStorage('kpong_tutorialSeen', '1');
           if (chk) chk.checked = true;
       }
+      if (canvas) canvas.focus();
   }
 
   // Modal Backdrop Click Dismissal
@@ -1620,8 +1661,27 @@
           togglePause();
       }
   });
+  let isPointerDragging = false;
+  canvas.addEventListener('pointerdown', e => {
+      if (e.button !== 0 && e.pointerType === 'mouse') return;
+      isPointerDragging = true;
+      try { canvas.setPointerCapture(e.pointerId); } catch(err) {}
+      handleCanvasPointer(e);
+  });
+  canvas.addEventListener('pointermove', e => {
+      if (isPointerDragging || (!isPvP && e.pointerType === 'mouse')) {
+          handleCanvasPointer(e);
+      }
+  });
+  const stopPointerDrag = e => {
+      isPointerDragging = false;
+      try { if (e && e.pointerId && canvas.hasPointerCapture(e.pointerId)) canvas.releasePointerCapture(e.pointerId); } catch(err) {}
+  };
+  canvas.addEventListener('pointerup', stopPointerDrag);
+  canvas.addEventListener('pointercancel', stopPointerDrag);
+
   canvas.addEventListener('mousemove', e => {
-      if (e.buttons === 1 || !isPvP) handleCanvasPointer(e);
+      if (!isPointerDragging && (e.buttons === 1 || !isPvP)) handleCanvasPointer(e);
   });
   canvas.addEventListener('touchstart', e => {
       handleCanvasPointer(e);
@@ -1778,11 +1838,17 @@
               </tr>
           `).join('');
       }
-      document.getElementById('statsModal').classList.add('active');
+      closeAllModals();
+      const modal = document.getElementById('statsModal');
+      if (modal) modal.classList.add('active');
+      const closeBtn = document.getElementById('btn-close-stats');
+      if (closeBtn) closeBtn.focus();
   }
 
   function closeStatsModal() {
-      document.getElementById('statsModal').classList.remove('active');
+      const modal = document.getElementById('statsModal');
+      if (modal) modal.classList.remove('active');
+      if (canvas) canvas.focus();
   }
 
   function resetStatsData() {
@@ -2391,6 +2457,7 @@
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       ctx.save();
       ctx.scale(2 * dpr, 2 * dpr);
+      ctx.imageSmoothingQuality = 'high';
 
       if (isReplaying && replayFrames.length > 0) {
           let rf = replayFrames[replayCurFrame] || replayFrames[0];

@@ -29,7 +29,7 @@ const APPS = [
   { id: 'krogue', title: 'KRogue', url: '/apps/krogue.html', exeUrl: '/exe/KRogue.exe', icon: '/assets/icons/krogue.ico', w: 1000, h: 720, folder: 'Games' },
   { id: 'ksnake', title: 'KSnake', url: '/apps/ksnake.html', exeUrl: '/exe/KSnake.exe', icon: '/assets/icons/ksnake.ico', w: 540, h: 680, folder: 'Games' },
   { id: 'ktetris', title: 'KTetris', url: '/apps/ktetris.html', exeUrl: '/exe/KTetris.exe', icon: '/assets/icons/ktetris.ico', w: 520, h: 720, folder: 'Games' },
-  { id: 'kpong', title: 'KPong', url: '/apps/kpong.html', exeUrl: '/exe/KPong.exe', icon: '/assets/icons/kpong.ico', w: 940, h: 780, folder: 'Games' },
+  { id: 'kpong', title: 'KPong', url: '/apps/kpong.html', exeUrl: '/exe/KPong.exe', icon: '/assets/icons/kpong.ico', w: 960, h: 860, folder: 'Games' },
   { id: 'kterm', title: 'KTerm', url: '/apps/kterm.html', exeUrl: '/exe/KTerm.exe', icon: '/assets/icons/kterm.ico', w: 960, h: 600, folder: 'System' },
   { id: 'kmaze', title: 'KMaze', url: '/apps/kmaze.html', exeUrl: '/exe/KMaze.exe', icon: '/assets/icons/kmaze.ico', w: 800, h: 700, folder: 'Games' },
   { id: 'kaudio', title: 'KAudio', url: '/apps/kaudio.html', exeUrl: '/exe/KAudio.exe', icon: '/assets/icons/kaudio.ico', w: 1040, h: 860, folder: 'Media' },

@@ -4,6 +4,16 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-06T22:20:00-07:00 — kilo-qa: KSettings (Pass 5 QA & Build Audit: State Persistence, Tutorial Integrity & VFS Sync)**
+  - Status: PASS ✅ (0 regressions, 60.7 KB web < 999 KB ceiling).
+  - State Persistence: Implemented F5 quicksave and F9 quickload capturing full state (colors, animations, sound, pins) in storage & VFS.
+  - Tutorial & Help: Added accessible Welcome Onboarding modal (`ksettings_tutorialSeen`) and Help hotkey dialog (`[F1]`).
+  - Overlay & Controls: Added non-blocking toast alerts, Esc/Enter modal dismiss, and live accent preview box.
+  - Audio & Taskbar: Added Web Audio 1999 chime synth diagnostics, volume slider, and pinned taskbar apps manager.
+  - Storage & VFS: Added VFS file inspector with JSON backup export/import and system defaults reset.
+  - Verification: `test_app_startup.py` PASS; `test_web_apps.js` PASS (44 elements, 0 err); Vite clean (658ms); `security_lint.py` 100% PASS.
+  - Queue: Advanced `kilo_qa` to `KTaskMgr`; handoff to `kilo-expander`.
+
 - **2026-10-06T21:40:00-07:00 — kilo-usability: KMatch3 (Window Sizing, Frame & Panel Alignment, Drag/Swipe Ergonomics & Mandate 11)**
   - Status: PASS ✅ (0 regressions, 129.4 KB web / 37.5 KB native < 999 KB ceiling).
   - Window Sizing: Tuned default dimensions to 580x660 in `App.jsx`, eliminating internal scrollbars across all modes.
