@@ -4,6 +4,16 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-07T02:25:00-07:00 — kilo-creator: kweb://warez (Anti-Potemkin Web 1.0 Expansion: FXP Top-Site Race & PE-Pack '99 Entropy Lab)**
+  - Status: PASS ✅ (0 regressions, 406 KB < 999 KB ceiling).
+  - 0xRELEASE glFTPd Top-Site & FXP Courier Race: Multi-threaded site-to-site racing (4-thread stripe), live speed monitor, glFTPd v1.18 terminal (`site who/speed/groups/rules`), ratio tracking, and race proof download.
+  - PE-Pack '99 & Shannon Entropy Forensics Lab: ASPack '99 / UPX / Shrinker simulation, Shannon entropy curve (0.0-8.0 bits/byte), x86 stub stepper (F8/F9), register grid, decrypted memory viewer, and PE dumper.
+  - Architecture & Quality: Complete `visibilitychange` lifecycle cleanup for Web Audio & rAF loops; full storage safety; zero external assets.
+  - Worldbuilding & TINAG Compliance: 100% fictionalized parodies (FLARELIGHT, RAZOR 1999, Surreal Tournament); diegetic clues; zero meta ARG labels.
+  - Ecosystem Integration: Deep links updated in `knet.html`, `portal.html`, and `webring.html`.
+  - Verification: Security linter 100% PASS; Vite build clean (545ms); JS syntax verified via Node vm.
+  - Queue: Advanced `virtual_web_target` to `kweb://geocities`; advanced `current_agent` to `kilo-graphics`.
+
 - **2026-10-06T23:35:00-07:00 — kilo-expander: KWords (Deep Feature Expansion: RFMS Online Duel, Custom Builder, Replay Scrubber & Lexicon)**
   - Status: PASS ✅ (0 regressions, 154.7 KB web / 162.0 KB native < 999 KB ceiling).
   - Online Multiplayer (Mandate 12): Standardized RFMS duel (`WRD-` prefix) with shared seed, live progress, and 25s Solo AI fallback (`CyberBot-99`); strict No-Autostart connect gate.

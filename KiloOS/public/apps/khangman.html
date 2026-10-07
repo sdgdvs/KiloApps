@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>KHangman</title>
+    <script src="../assets/js/retro_multiplayer.js"></script>
     <style>
         body {
             background-color: #0b0e14;
@@ -27,6 +28,25 @@
         ::-webkit-scrollbar-track { background: #0e1219; }
         ::-webkit-scrollbar-thumb { background: #2d3848; border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: #4facfe; }
+
+        #invite-notification {
+            display: none;
+            background: linear-gradient(90deg, #4a148c 0%, #1a237e 100%);
+            border: 1px solid #7c4dff;
+            color: #fff;
+            padding: 6px 14px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-bottom: 8px;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+            max-width: 580px;
+            width: 100%;
+            box-sizing: border-box;
+            justify-content: space-between;
+        }
 
         #game-container {
             background: #161c26;
@@ -54,6 +74,9 @@
             font-size: 22px;
             letter-spacing: 1px;
             text-shadow: 0 2px 8px rgba(79, 172, 254, 0.4);
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
         #upper-panel {
             display: flex;
@@ -95,6 +118,10 @@
             width: 100%;
             box-sizing: border-box;
             box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);
+            cursor: pointer;
+        }
+        #stats:hover {
+            border-color: #4facfe;
         }
         #stats span {
             font-weight: bold;
@@ -142,6 +169,44 @@
             justify-content: center;
             margin: 0;
         }
+        #hint-text {
+            display: none;
+            font-size: 11px;
+            color: #ffb74d;
+            background: rgba(40, 25, 10, 0.6);
+            border: 1px dashed #ffa726;
+            border-radius: 5px;
+            padding: 3px 6px;
+            line-height: 1.3;
+        }
+
+        /* ⚔️ Multiplayer Duel HUD */
+        #duel-hud {
+            display: none;
+            background: rgba(15, 20, 32, 0.95);
+            border: 1px solid #673ab7;
+            border-radius: 8px;
+            padding: 8px 10px;
+            margin-bottom: 8px;
+            box-sizing: border-box;
+        }
+        .duel-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 12px;
+            gap: 8px;
+        }
+        .duel-badge {
+            background: #281a44;
+            border: 1px solid #9575cd;
+            color: #d1c4e9;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: bold;
+        }
+
         #keyboard {
             display: grid;
             grid-template-columns: repeat(7, 1fr);
@@ -235,6 +300,32 @@
             border-color: #1e2530 !important;
             box-shadow: none !important;
         }
+
+        /* Safe non-occluding toast notification */
+        #toast {
+            position: fixed;
+            bottom: 68px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #1c2432;
+            border: 1px solid #4facfe;
+            color: #e0e6ed;
+            padding: 6px 14px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: bold;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.8);
+            z-index: 9999;
+            pointer-events: none;
+            display: none;
+            text-align: center;
+            max-width: 90vw;
+        }
+        .toast-success { border-color: #4caf50 !important; color: #81c784 !important; }
+        .toast-error { border-color: #f44336 !important; color: #e57373 !important; }
+        .toast-warning { border-color: #ff9800 !important; color: #ffb74d !important; }
+        .toast-info { border-color: #4facfe !important; color: #90caf9 !important; }
+
         @keyframes shake {
             0%, 100% { transform: translateX(0); }
             20%, 60% { transform: translateX(-10px); }
@@ -252,6 +343,38 @@
             animation: pulse 1.5s infinite;
             display: inline-block;
         }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.85);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            box-sizing: border-box;
+            padding: 12px;
+        }
+        .modal-card {
+            background: #161c26;
+            padding: 20px;
+            border-radius: 12px;
+            max-width: 500px;
+            width: 100%;
+            text-align: left;
+            border: 2px solid #3a485c;
+            color: #e0e6ed;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.8);
+            max-height: 85vh;
+            overflow-y: auto;
+            position: relative;
+            box-sizing: border-box;
+        }
+
         @media (max-width: 520px) {
             #upper-panel {
                 flex-direction: column;
@@ -272,9 +395,17 @@
 </head>
 <body>
 
+<div id="invite-notification">
+    <span>⚔️ Challenger room invite [<span id="invite-code-text">????</span>] detected!</span>
+    <button class="btn" onclick="acceptInvite()" style="background-color: #00e676; color: #000; padding: 4px 10px;">Join Duel</button>
+</div>
+
 <div id="game-container">
     <div id="header-row">
-        <h1>KHangman</h1>
+        <h1>
+            <span>KHangman</span>
+            <span id="duel-status-tag" style="display:none; font-size:11px; padding:2px 6px; background:#4a148c; border:1px solid #7c4dff; border-radius:4px; color:#e1bee7;">⚔️ DUEL</span>
+        </h1>
         <div style="display: flex; gap: 6px; align-items: center;">
             <button class="btn" onclick="toggleMute()" id="mute-btn" style="background-color: #455a64; padding: 4px 8px; font-size: 11px;">🔊 Sound</button>
             <button class="btn" onclick="showHelp()" style="background-color: #1e88e5; padding: 4px 8px; font-size: 11px;">Help [F1]</button>
@@ -306,7 +437,13 @@
             <div id="word-display">_ _ _ _ _</div>
             <div id="message">Guess a letter to start</div>
             
-            <div id="stats">
+            <div style="display:flex; justify-content:center; gap:6px; align-items:center;">
+                <button class="btn" onclick="toggleHint()" id="hint-btn" style="background-color: #f57c00; font-size: 10px; padding: 3px 8px;">💡 Hint [H]</button>
+                <button class="btn" onclick="showDefinitionModal()" id="def-btn" style="display:none; background-color: #5c6bc0; font-size: 10px; padding: 3px 8px;">📖 Definition</button>
+            </div>
+            <div id="hint-text"></div>
+            
+            <div id="stats" onclick="openStatsModal()" title="Click to view detailed lifetime stats & match history">
                 <div>Wins: <span id="stat-wins">0</span></div>
                 <div>Losses: <span id="stat-losses">0</span></div>
                 <div>Streak: <span id="stat-streak">0</span></div>
@@ -316,6 +453,29 @@
         </div>
     </div>
     
+    <!-- ⚔️ Live Opponent Duel HUD -->
+    <div id="duel-hud">
+        <div class="duel-row" style="margin-bottom: 4px;">
+            <div>
+                <span class="duel-badge">CHALLENGER</span>
+                <strong id="duel-opp-name" style="color:#ce93d8; margin-left:4px;">Opponent</strong>
+            </div>
+            <div id="duel-opp-strikes" style="font-weight:bold; color:#ef5350;">Strikes: 0/6</div>
+        </div>
+        <div class="duel-row">
+            <div id="duel-opp-progress" style="font-family:monospace; letter-spacing:2px; font-weight:bold; color:#b39ddb; font-size:14px;">_ _ _ _ _</div>
+            <div id="duel-opp-status" style="color:#9e9e9e; font-size:11px;">Waiting for move...</div>
+        </div>
+        <!-- Quick chat presets -->
+        <div style="display:flex; gap:4px; margin-top:6px; justify-content:flex-end;">
+            <button class="btn" onclick="sendDuelChat('Good luck!')" style="background:#311b92; font-size:10px; padding:2px 6px;">GL!</button>
+            <button class="btn" onclick="sendDuelChat('Nice guess!')" style="background:#311b92; font-size:10px; padding:2px 6px;">Nice!</button>
+            <button class="btn" onclick="sendDuelChat('Close one!')" style="background:#311b92; font-size:10px; padding:2px 6px;">Close!</button>
+            <button class="btn" onclick="sendDuelChat('Good game!')" style="background:#311b92; font-size:10px; padding:2px 6px;">GG!</button>
+            <button class="btn" onclick="requestRematchDuel()" id="duel-rematch-btn" style="background:#00897b; font-size:10px; padding:2px 6px;">Rematch</button>
+        </div>
+    </div>
+
     <div id="keyboard"></div>
     
     <!-- Row 1: Active Skills -->
@@ -331,11 +491,14 @@
     <div style="display: flex; justify-content: center; flex-wrap: wrap; gap: 5px; margin-bottom: 5px;">
         <button class="btn" onclick="startCampaign()" id="campaign-btn" style="background-color: #00897b;">Campaign (20)</button>
         <button class="btn" onclick="startBlitz()" id="blitz-btn" style="background-color: #d81b60;">Blitz Mode</button>
-        <button class="btn" onclick="gameMode = 0; initGame()" style="background-color: #0288d1;">Freeplay</button>
+        <button class="btn" onclick="setModeFreeplay()" id="freeplay-btn" style="background-color: #0288d1;">Freeplay</button>
+        <button class="btn" onclick="openMultiplayerModal()" id="duel-mode-btn" style="background-color: #7b1fa2;">⚔️ Duel Online</button>
     </div>
 
-    <!-- Row 3: Utility, Quicksave & Data Persistence -->
+    <!-- Row 3: Utility, Word Bank & Data Persistence -->
     <div style="display: flex; justify-content: center; flex-wrap: wrap; gap: 5px;">
+        <button class="btn" onclick="openDictionaryModal()" id="dict-btn" style="background-color: #00838f;" title="Word Bank & Custom Category Studio">📚 Word Bank</button>
+        <button class="btn" onclick="openStatsModal()" id="stats-btn" style="background-color: #37474f;" title="Lifetime Statistics & Match History">📊 History</button>
         <button class="btn" onclick="saveGameState()" title="Quicksave [F5]" style="background-color: #43a047;">Save [F5]</button>
         <button class="btn" onclick="loadGameState()" title="Quickload [F9]" style="background-color: #6a1b9a;">Load [F9]</button>
         <button class="btn" onclick="exportSaveJSON()" title="Export Save JSON" style="background-color: #388e3c;">Export</button>
@@ -345,16 +508,20 @@
     </div>
 </div>
 
-<div id="help-modal" class="modal overlay" role="dialog" aria-modal="true" aria-labelledby="help-title" onclick="if(event.target === this) hideHelp();" style="display:none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 1000; align-items: center; justify-content: center; flex-direction: column;">
-    <div style="background: #161c26; padding: 22px; border-radius: 12px; max-width: 480px; text-align: left; border: 2px solid #3a485c; color: #e0e6ed; box-shadow: 0 8px 32px rgba(0,0,0,0.8); max-height: 85vh; overflow-y: auto; position: relative;">
-        <button id="modal-close-x" class="btn modal-close close" onclick="hideHelp()" aria-label="Close Help" style="position: absolute; top: 12px; right: 14px; background: none; border: none; color: #8899a6; font-size: 18px; cursor: pointer; font-weight: bold; line-height: 1; padding: 4px 8px;">✕</button>
+<div id="toast">Notification</div>
+
+<!-- 1. Help Modal -->
+<div id="help-modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="help-title" onclick="if(event.target === this) hideHelp();">
+    <div class="modal-card">
+        <button class="btn" onclick="hideHelp()" aria-label="Close Help" style="position: absolute; top: 12px; right: 14px; background: none; border: none; color: #8899a6; font-size: 18px; cursor: pointer; padding: 4px 8px;">✕</button>
         <h2 id="help-title" style="color: #4facfe; margin-top: 0; padding-right: 30px;">How to Play KHangman</h2>
         <p><strong>Rules:</strong> Guess the hidden word letter by letter before your strikes run out.</p>
         <p><strong>Game Modes:</strong></p>
         <ul>
             <li><strong>Freeplay:</strong> Classic Hangman mode with custom or chosen categories.</li>
-            <li><strong>Campaign Mode:</strong> 20 stages across 10 categories (4-14 letters, 3-6 strikes) ending in Stage 20 Polymath Grandmaster Challenge!</li>
+            <li><strong>Campaign Mode:</strong> 20 stages across 10 categories (4-14 letters, 3-6 strikes) ending in Stage 20 Polymath Grandmaster!</li>
             <li><strong>Time Attack Blitz:</strong> 60s timer! +2s per correct letter, +15s per word solved!</li>
+            <li><strong>⚔️ Online Duel (RFMS):</strong> Real-time cross-computer 1v1 battle! Race to solve the word first. Includes 25s auto-fallback to CyberBot-99!</li>
         </ul>
         <p><strong>Active Skills & Power-Ups:</strong></p>
         <ul>
@@ -363,23 +530,225 @@
             <li><strong>[3] Strike Shield:</strong> Absorbs 1 incorrect letter guess strike.</li>
             <li><strong>[4] Freeze Timer:</strong> Freezes stage/blitz timer for 15 seconds.</li>
             <li><strong>[5] Bomb Nuke:</strong> Eliminates 3 incorrect letters from keyboard.</li>
+            <li><strong>[H] Hint:</strong> Displays a diegetic, non-spoiling contextual clue.</li>
         </ul>
         <p><strong>Keyboard Shortcuts:</strong></p>
         <ul>
-            <li><strong>A - Z:</strong> Guess letter (all letters directly guessable without consuming skills)</li>
+            <li><strong>A - Z:</strong> Guess letter on keyboard</li>
             <li><strong>1 - 5:</strong> Activate skills (1: Vowel, 2: Radar, 3: Shield, 4: Freeze, 5: Bomb)</li>
+            <li><strong>H:</strong> Toggle word clue / hint</li>
             <li><strong>F5 / F9:</strong> Quicksave / Quickload game state</li>
             <li><strong>Space / Enter:</strong> Restart game or advance to next campaign stage</li>
-            <li><strong>F1 / ?:</strong> Help modal & tutorial (Escape / Enter / Space to close)</li>
+            <li><strong>F1 / ?:</strong> Help modal & tutorial (Escape to close any modal)</li>
         </ul>
         <div style="text-align: right; margin-top: 16px;">
-            <button id="help-close-btn" onclick="hideHelp()" class="btn modal-close close btn-close" style="background-color: #e53935; padding: 6px 16px;">Close [Esc]</button>
+            <button onclick="hideHelp()" class="btn" style="background-color: #e53935; padding: 6px 16px;">Close [Esc]</button>
+        </div>
+    </div>
+</div>
+
+<!-- 2. Retro Multiplayer Modal (Mandate 12) -->
+<div id="multiplayer-modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="mp-title" onclick="if(event.target === this) closeAllModals();">
+    <div class="modal-card" style="max-width: 520px;">
+        <button class="btn" onclick="closeAllModals()" style="position: absolute; top: 12px; right: 14px; background: none; border: none; color: #8899a6; font-size: 18px; cursor: pointer; padding: 4px 8px;">✕</button>
+        <h2 id="mp-title" style="color: #ba68c8; margin-top: 0;">⚔️ Retro Multiplayer Duel</h2>
+        <p style="font-size: 12px; color: #b0bec5; margin-top: -6px;">Cross-computer 1v1 Hangman powered by Firebase Realtime Database. Never autostarts; always user-gated.</p>
+        
+        <div style="margin-bottom: 12px;">
+            <label style="font-size: 11px; font-weight: bold; color: #90caf9;">YOUR CALLSIGN / NICKNAME:</label>
+            <input type="text" id="duel-player-name" maxlength="16" placeholder="Guesser_1999" style="width: 100%; box-sizing: border-box; padding: 6px 8px; margin-top: 4px; background: #0e1219; color: white; border: 1px solid #3a485c; border-radius: 6px; font-size: 13px;">
+        </div>
+
+        <!-- Room Action Buttons -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px;">
+            <button class="btn" onclick="startQuickMatch()" style="background-color: #7b1fa2; padding: 8px 10px; font-size: 12px;">⚡ Quick Match</button>
+            <button class="btn" onclick="createDuelRoom()" style="background-color: #1976d2; padding: 8px 10px; font-size: 12px;">🏠 Create Room</button>
+        </div>
+
+        <div style="background: rgba(10, 14, 20, 0.7); border: 1px solid #2d3848; border-radius: 6px; padding: 10px; margin-bottom: 12px;">
+            <div style="font-size: 11px; font-weight: bold; color: #81c784; margin-bottom: 6px;">JOIN BY ROOM CODE:</div>
+            <div style="display: flex; gap: 6px;">
+                <input type="text" id="duel-join-code-input" placeholder="e.g. HNG-7K4X" maxlength="10" style="flex: 1; padding: 6px 8px; background: #1c2432; color: white; border: 1px solid #3a485c; border-radius: 5px; font-size: 12px; text-transform: uppercase;">
+                <button class="btn" onclick="joinDuelRoomFromInput()" style="background-color: #388e3c; padding: 6px 12px;">🚀 Join</button>
+            </div>
+        </div>
+
+        <!-- Active Room Status Card -->
+        <div id="duel-room-card" style="display: none; background: #0e1219; border: 1px solid #7c4dff; border-radius: 8px; padding: 10px; margin-bottom: 12px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                <span style="font-size: 11px; color: #b39ddb; font-weight: bold;">ROOM CODE:</span>
+                <span id="duel-active-room-code" style="font-size: 15px; font-weight: bold; color: #4facfe; font-family: monospace; letter-spacing: 1px;">----</span>
+                <button class="btn" onclick="copyDuelRoomLink()" style="background: #4527a0; font-size: 10px; padding: 3px 6px;">📋 Copy Link</button>
+            </div>
+            <div id="duel-active-status" style="font-size: 12px; color: #ffb74d; margin-bottom: 6px;">Waiting for challenger...</div>
+            <div id="duel-fallback-countdown" style="font-size: 11px; color: #a5d6a7; margin-bottom: 6px;">⏳ Auto-fallback to CyberBot-99 in 25s...</div>
+            <div style="display: flex; gap: 6px; justify-content: flex-end;">
+                <button class="btn" onclick="startSoloCyberBotDuel()" style="background-color: #f57c00; font-size: 11px; padding: 4px 8px;">🤖 Play vs CyberBot Now</button>
+                <button class="btn" onclick="leaveMultiplayerMatch()" style="background-color: #c62828; font-size: 11px; padding: 4px 8px;">❌ Cancel</button>
+            </div>
+        </div>
+
+        <div style="text-align: right; margin-top: 8px;">
+            <button onclick="closeAllModals()" class="btn" style="background-color: #546e7a; padding: 6px 14px;">Back to Solo</button>
+        </div>
+    </div>
+</div>
+
+<!-- 3. Word Bank & Dictionary Studio Modal -->
+<div id="dictionary-modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="dict-title" onclick="if(event.target === this) closeAllModals();">
+    <div class="modal-card" style="max-width: 540px;">
+        <button class="btn" onclick="closeAllModals()" style="position: absolute; top: 12px; right: 14px; background: none; border: none; color: #8899a6; font-size: 18px; cursor: pointer; padding: 4px 8px;">✕</button>
+        <h2 id="dict-title" style="color: #00acc1; margin-top: 0;">📚 Word Bank & Dictionary Studio</h2>
+        <p style="font-size: 12px; color: #b0bec5; margin-top: -6px;">Manage categories, add custom vocabulary with hints, and install retro expansion decks.</p>
+        
+        <!-- Category Selector in Studio -->
+        <div style="display: flex; gap: 8px; align-items: center; margin-bottom: 10px;">
+            <select id="studio-category-select" onchange="renderStudioWordList()" style="flex: 1; padding: 6px; background: #0e1219; color: white; border: 1px solid #3a485c; border-radius: 6px; font-size: 12px; font-weight: bold;"></select>
+            <button class="btn" onclick="promptNewCategory()" style="background-color: #00897b; padding: 6px 10px; font-size: 11px;">➕ New Category</button>
+        </div>
+
+        <!-- Add Word to Category -->
+        <div style="background: rgba(10, 14, 20, 0.7); border: 1px solid #2d3848; border-radius: 6px; padding: 8px; margin-bottom: 10px;">
+            <div style="font-size: 11px; font-weight: bold; color: #80cbc4; margin-bottom: 4px;">ADD WORD TO ACTIVE CATEGORY:</div>
+            <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                <input type="text" id="studio-new-word" placeholder="WORD (A-Z)" maxlength="16" style="flex: 1; min-width: 120px; padding: 4px 6px; background: #1c2432; color: white; border: 1px solid #3a485c; border-radius: 5px; font-size: 12px; text-transform: uppercase;">
+                <input type="text" id="studio-new-hint" placeholder="Optional Hint / Clue" style="flex: 2; min-width: 160px; padding: 4px 6px; background: #1c2432; color: white; border: 1px solid #3a485c; border-radius: 5px; font-size: 12px;">
+                <button class="btn" onclick="addWordToActiveCategory()" style="background-color: #009688; padding: 4px 10px;">Add</button>
+            </div>
+        </div>
+
+        <!-- Word List Preview -->
+        <div style="margin-bottom: 10px;">
+            <div style="display: flex; justify-content: space-between; font-size: 11px; color: #90caf9; margin-bottom: 4px;">
+                <span>WORDS IN CATEGORY (<span id="studio-word-count">0</span>):</span>
+                <span id="studio-cat-type" style="color: #b0bec5;">Built-in</span>
+            </div>
+            <div id="studio-word-chips" style="max-height: 140px; overflow-y: auto; background: #0e1219; border: 1px solid #2d3848; border-radius: 6px; padding: 6px; display: flex; flex-wrap: wrap; gap: 4px;"></div>
+        </div>
+
+        <!-- 1-Click Expansion Decks -->
+        <div style="background: rgba(22, 28, 38, 0.9); border: 1px dashed #00acc1; border-radius: 6px; padding: 8px; margin-bottom: 10px;">
+            <div style="font-size: 11px; font-weight: bold; color: #ffca28; margin-bottom: 6px;">⚡ PRE-PACKAGED EXPANSION DECKS (1-CLICK INSTALL):</div>
+            <div style="display: flex; flex-wrap: wrap; gap: 5px;">
+                <button class="btn" onclick="installDeck('Retro Net 99')" style="background-color: #5c6bc0; font-size: 10px; padding: 3px 8px;">💾 Retro Net '99 (30)</button>
+                <button class="btn" onclick="installDeck('World Capitals')" style="background-color: #26a69a; font-size: 10px; padding: 3px 8px;">🌍 World Capitals (30)</button>
+                <button class="btn" onclick="installDeck('Grandmaster Vocab')" style="background-color: #ab47bc; font-size: 10px; padding: 3px 8px;">🧠 Grandmaster Vocab (20)</button>
+                <button class="btn" onclick="installDeck('Retro Arcade 99')" style="background-color: #ef5350; font-size: 10px; padding: 3px 8px;">🕹️ Retro Arcade '99 (20)</button>
+            </div>
+        </div>
+
+        <!-- Export & Import Controls -->
+        <div style="display: flex; justify-content: space-between; align-items: center; gap: 6px; flex-wrap: wrap;">
+            <div style="display: flex; gap: 5px;">
+                <button class="btn" onclick="exportDictionaryJSON()" style="background-color: #2e7d32; font-size: 10px; padding: 4px 8px;">Export JSON</button>
+                <button class="btn" onclick="exportDictionaryTXT()" style="background-color: #1565c0; font-size: 10px; padding: 4px 8px;">Export TXT</button>
+                <button class="btn" onclick="document.getElementById('import-dict-file').click()" style="background-color: #6a1b9a; font-size: 10px; padding: 4px 8px;">Import Word Bank</button>
+                <input type="file" id="import-dict-file" accept=".json,.txt" style="display:none;" onchange="importDictionaryFile(event)">
+            </div>
+            <button onclick="closeAllModals()" class="btn" style="background-color: #546e7a; padding: 5px 12px;">Close</button>
+        </div>
+    </div>
+</div>
+
+<!-- 4. Lifetime Stats & Match History Modal -->
+<div id="stats-modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="stats-title" onclick="if(event.target === this) closeAllModals();">
+    <div class="modal-card" style="max-width: 520px;">
+        <button class="btn" onclick="closeAllModals()" style="position: absolute; top: 12px; right: 14px; background: none; border: none; color: #8899a6; font-size: 18px; cursor: pointer; padding: 4px 8px;">✕</button>
+        <h2 id="stats-title" style="color: #4facfe; margin-top: 0;">📊 Statistics & Match History</h2>
+        
+        <!-- Lifetime Stats Grid -->
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-bottom: 12px;">
+            <div style="background:#0e1219; border:1px solid #2d3848; border-radius:6px; padding:6px; text-align:center;">
+                <div style="font-size:10px; color:#90caf9;">GAMES PLAYED</div>
+                <div id="stat-total-games" style="font-size:16px; font-weight:bold; color:white;">0</div>
+            </div>
+            <div style="background:#0e1219; border:1px solid #2d3848; border-radius:6px; padding:6px; text-align:center;">
+                <div style="font-size:10px; color:#81c784;">WIN RATE</div>
+                <div id="stat-win-rate" style="font-size:16px; font-weight:bold; color:#81c784;">0%</div>
+            </div>
+            <div style="background:#0e1219; border:1px solid #2d3848; border-radius:6px; padding:6px; text-align:center;">
+                <div style="font-size:10px; color:#ffb74d;">GUESS ACCURACY</div>
+                <div id="stat-accuracy" style="font-size:16px; font-weight:bold; color:#ffb74d;">0%</div>
+            </div>
+            <div style="background:#0e1219; border:1px solid #2d3848; border-radius:6px; padding:6px; text-align:center;">
+                <div style="font-size:10px; color:#ce93d8;">BEST STREAK</div>
+                <div id="stat-grid-best" style="font-size:16px; font-weight:bold; color:#ce93d8;">0</div>
+            </div>
+            <div style="background:#0e1219; border:1px solid #2d3848; border-radius:6px; padding:6px; text-align:center;">
+                <div style="font-size:10px; color:#f48fb1;">BLITZ RECORD</div>
+                <div id="stat-grid-blitz" style="font-size:16px; font-weight:bold; color:#f48fb1;">0 words</div>
+            </div>
+            <div style="background:#0e1219; border:1px solid #2d3848; border-radius:6px; padding:6px; text-align:center;">
+                <div style="font-size:10px; color:#80deea;">DUEL RECORD</div>
+                <div id="stat-grid-duels" style="font-size:16px; font-weight:bold; color:#80deea;">0W - 0L</div>
+            </div>
+        </div>
+
+        <!-- Recent Matches Table -->
+        <div style="margin-bottom: 12px;">
+            <div style="font-size: 11px; font-weight: bold; color: #90caf9; margin-bottom: 4px;">RECENT MATCH HISTORY (LAST 15):</div>
+            <div id="history-container" style="max-height: 160px; overflow-y: auto; background: #0e1219; border: 1px solid #2d3848; border-radius: 6px; font-size: 11px;">
+                <table style="width: 100%; border-collapse: collapse; text-align: left;">
+                    <thead>
+                        <tr style="border-bottom: 1px solid #2d3848; color: #8899a6; font-size: 10px;">
+                            <th style="padding: 4px 6px;">MODE</th>
+                            <th style="padding: 4px 6px;">CATEGORY</th>
+                            <th style="padding: 4px 6px;">WORD</th>
+                            <th style="padding: 4px 6px;">STRIKES</th>
+                            <th style="padding: 4px 6px;">RESULT</th>
+                        </tr>
+                    </thead>
+                    <tbody id="history-table-body"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <button class="btn" onclick="clearMatchHistory()" style="background-color: #c62828; font-size: 10px; padding: 4px 8px;">Clear History</button>
+            <button onclick="closeAllModals()" class="btn" style="background-color: #546e7a; padding: 6px 14px;">Close</button>
+        </div>
+    </div>
+</div>
+
+<!-- 5. Word Definition & Etymology Modal -->
+<div id="definition-modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="def-title" onclick="if(event.target === this) closeAllModals();">
+    <div class="modal-card" style="max-width: 440px;">
+        <button class="btn" onclick="closeAllModals()" style="position: absolute; top: 12px; right: 14px; background: none; border: none; color: #8899a6; font-size: 18px; cursor: pointer; padding: 4px 8px;">✕</button>
+        <h2 id="def-title" style="color: #4facfe; margin-top: 0; margin-bottom: 4px;">WORD DEFINITION</h2>
+        <div id="def-category-badge" style="display: inline-block; background: #263238; border: 1px solid #455a64; color: #80cbc4; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: bold; margin-bottom: 10px;">Category</div>
+        <p id="def-content" style="font-size: 13px; line-height: 1.5; color: #e0e6ed; background: #0e1219; border: 1px solid #2d3848; border-radius: 6px; padding: 10px; margin: 0 0 10px 0;"></p>
+        <div id="def-stats" style="font-size: 11px; color: #90caf9; margin-bottom: 12px;"></div>
+        <div style="text-align: right;">
+            <button onclick="closeAllModals()" class="btn" style="background-color: #007acc; padding: 5px 14px;">Got It</button>
         </div>
     </div>
 </div>
 
 <script>
-    const CATEGORIES = {
+    // ==========================================
+    // 🛡️ STORAGE & QUALITY GUARDS (Rule 2)
+    // ==========================================
+    function safeGetStorage(key, fallback) {
+        try {
+            const raw = localStorage.getItem(key);
+            return raw !== null ? JSON.parse(raw) : fallback;
+        } catch (e) {
+            return fallback;
+        }
+    }
+
+    function safeSetStorage(key, value) {
+        try {
+            localStorage.setItem(key, JSON.stringify(value));
+        } catch (e) {
+            console.warn('[KHangman] Storage write failed:', e);
+        }
+    }
+
+    // ==========================================
+    // 📖 CATEGORIES & BUILT-IN DICTIONARY
+    // ==========================================
+    const DEFAULT_CATEGORIES = {
         "Animals": ["BEAR", "DEER", "LION", "PUMA", "WOLF", "TIGER", "ZEBRA", "MONKEY", "EAGLE", "RABBIT", "FALCON", "JAGUAR", "WALRUS", "ELEPHANT", "GIRAFFE", "KANGAROO", "PENGUIN", "DOLPHIN", "CHEETAH", "GORILLA", "OCTOPUS", "PANTHER", "LEOPARD", "ALLIGATOR", "PLATYPUS", "CHIMPANZEE", "HIPPOPOTAMUS", "RHINOCEROS", "SALAMANDER", "RATTLESNAKE"],
         "Science": ["ATOM", "CELL", "ACID", "WAVE", "MASS", "GENE", "PROTON", "PHYSICS", "BIOLOGY", "GEOLOGY", "GRAVITY", "QUANTUM", "CHEMISTRY", "ASTRONOMY", "MOLECULE", "RADIATION", "ECOLOGY", "GENETICS", "EVOLUTION", "VELOCITY", "PARTICLE", "NEUROLOGY", "BACTERIA", "TELESCOPE", "THERMODYNAMICS", "PHOTOSYNTHESIS", "ASTROPHYSICS", "CHROMOSOME", "NEUROSCIENCE", "SPECTROSCOPY"],
         "Countries": ["EGYPT", "CHILE", "INDIA", "ITALY", "JAPAN", "MEXICO", "SPAIN", "DENMARK", "FRANCE", "GREECE", "NORWAY", "SWEDEN", "AUSTRALIA", "BRAZIL", "CANADA", "GERMANY", "ARGENTINA", "BELGIUM", "PORTUGAL", "THAILAND", "VIETNAM", "COLOMBIA", "SWITZERLAND", "PHILIPPINES", "NETHERLANDS", "MADAGASCAR", "AFGHANISTAN", "LIECHTENSTEIN", "AZERBAIJAN", "LUXEMBOURG"],
@@ -391,7 +760,188 @@
         "Space": ["MOON", "STAR", "MARS", "ORBIT", "COMET", "NEBULA", "METEOR", "COSMOS", "ASTEROID", "EXOPLANET", "ANDROMEDA", "GALAXY", "SATELLITE", "ECLIPSE", "TACHYON", "HUBBLE", "QUASAR", "PULSAR", "PARSEC", "GRAVITY", "SUPERNOVA", "METEORITE", "CONSTELLATION", "ASTROPHYSICS", "EXOSPHERE", "PLANETARIUM", "INTERSTELLAR", "UNIVERSE", "SINGULARITY", "MICROGRAVITY"],
         "Sports": ["GOLF", "BOXING", "RUGBY", "TENNIS", "SOCCER", "HOCKEY", "RACING", "SKIING", "BASEBALL", "FOOTBALL", "CRICKET", "SWIMMING", "WRESTLING", "CYCLING", "ARCHERY", "FENCING", "SURFING", "MARATHON", "BASKETBALL", "VOLLEYBALL", "BADMINTON", "GYMNASTICS", "SKATEBOARDING", "SNOWBOARDING", "WEIGHTLIFTING", "BOBSLEDDING", "EQUESTRIAN", "DECATHLON", "BODYBUILDING", "TRIATHLON"]
     };
-    
+
+    let CATEGORIES = JSON.parse(JSON.stringify(DEFAULT_CATEGORIES));
+
+    // Diegetic hint clues dictionary
+    const WORD_CLUES = {
+        "BEAR": "Large heavy mammal with thick fur and a very short tail.",
+        "DEER": "Graceful hoofed animal with antlers.",
+        "LION": "King of the savannah with a majestic golden mane.",
+        "PUMA": "Large wild cat native to the Americas, also known as cougar.",
+        "WOLF": "Pack-hunting wild canine with haunting nocturnal howls.",
+        "TIGER": "Largest wild cat with bold vertical black stripes.",
+        "ZEBRA": "African equine famous for black-and-white striped coats.",
+        "MONKEY": "Agile primate with nimble hands and prehensile tail.",
+        "EAGLE": "Majestic bird of prey with keen eyesight and soaring wings.",
+        "RABBIT": "Small burrowing mammal with long ears and fluffy tail.",
+        "FALCON": "High-speed bird of prey capable of steep diving swoops.",
+        "JAGUAR": "Spotted big cat of the Americas with a formidable bite.",
+        "WALRUS": "Large flippered marine mammal with prominent ivory tusks.",
+        "ELEPHANT": "World's largest land mammal with a prehensile trunk.",
+        "GIRAFFE": "Tallest living terrestrial animal with an elongated neck.",
+        "KANGAROO": "Australian marsupial known for hopping and maternal pouch.",
+        "PENGUIN": "Flightless aquatic bird thriving in polar waters.",
+        "DOLPHIN": "Highly intelligent marine mammal known for playful leaps.",
+        "CHEETAH": "Fastest land mammal capable of rapid acceleration.",
+        "GORILLA": "Ground-dwelling herbivorous ape of central Africa.",
+        "OCTOPUS": "Eight-armed cephalopod with remarkable camouflage.",
+        "ATOM": "Fundamental building block of chemical elements.",
+        "CELL": "Basic structural and functional unit of all living organisms.",
+        "ACID": "Chemical substance that donates hydrogen ions (pH < 7).",
+        "WAVE": "Oscillating disturbance traveling through a medium or space.",
+        "MASS": "Quantity of matter in a physical body.",
+        "GENE": "Basic physical and functional unit of biological heredity.",
+        "PROTON": "Positively charged subatomic particle inside the nucleus.",
+        "PHYSICS": "Fundamental science of matter, energy, and spacetime.",
+        "GRAVITY": "Universal attraction force proportional to mass.",
+        "QUANTUM": "Discrete minimum packet of physical energy or matter.",
+        "CHEMISTRY": "Science of atomic composition, bonds, and reactions.",
+        "ASTRONOMY": "Celestial science observing planets, stars, and galaxies.",
+        "MOLECULE": "Electrically neutral group of two or more bonded atoms.",
+        "EGYPT": "North African nation famous for the Nile and pyramids.",
+        "CHILE": "Long narrow South American nation along the Andes mountains.",
+        "INDIA": "South Asian country known for rich history and the Himalayas.",
+        "ITALY": "Boot-shaped European nation famous for Rome and the Renaissance.",
+        "JAPAN": "East Asian island nation with Tokyo as its capital.",
+        "SPAIN": "Iberian European nation known for Madrid and flamenco.",
+        "FRANCE": "Western European country famous for Paris and the Eiffel Tower.",
+        "GREECE": "Cradle of Western philosophy, democracy, and Olympic games.",
+        "NORWAY": "Nordic country celebrated for dramatic fjords and auroras.",
+        "AUSTRALIA": "Island continent home to the Great Barrier Reef and Outback.",
+        "CANADA": "Vast North American federation stretching from Atlantic to Pacific.",
+        "JAWS": "1975 classic thriller featuring a terrifying great white shark.",
+        "ALIEN": "Sci-fi horror aboard the commercial starship Nostromo.",
+        "MATRIX": "Cyberpunk action masterpiece about simulated reality and the red pill.",
+        "TITANIC": "Epic romantic disaster film chronicling the 1912 voyage.",
+        "INCEPTION": "Mind-bending heist thriller delving through dreams within dreams.",
+        "TERMINATOR": "Cyborg assassin sent back in time to 1984.",
+        "BYTE": "Unit of digital information consisting of 8 bits.",
+        "DATA": "Quantities, characters, or symbols on which computer operations are performed.",
+        "ROUTER": "Networking device forwarding data packets between networks.",
+        "SERVER": "Computer system serving resources to network clients.",
+        "BROWSER": "Application software for navigating and displaying web pages.",
+        "NETWORK": "Collection of computers connected to share data and packets.",
+        "DATABASE": "Organized collection of structured data held in a computer.",
+        "ALGORITHM": "Step-by-step procedural recipe solving a computation.",
+        "CYBERSECURITY": "Protection of computer systems and networks from intrusion.",
+        "ZEUS": "Supreme god of Olympus wielding thunderbolts.",
+        "THOR": "Norse god of thunder wielding the hammer Mjolnir.",
+        "LOKI": "Norse trickster god capable of shapeshifting.",
+        "HADES": "Greek lord of the Underworld and brother of Zeus.",
+        "MEDUSA": "Gorgon with venomous snakes for hair whose gaze turns to stone.",
+        "PIZZA": "Flatbread topped with tomato sauce, cheese, and toppings.",
+        "BURGER": "Round patty served in a sliced bun with condiments.",
+        "SUSHI": "Japanese dish featuring seasoned vinegared rice and fresh fish.",
+        "PASTA": "Italian staple made from durum wheat flour dough.",
+        "CHOCOLATE": "Sweet confection crafted from roasted and ground cacao beans.",
+        "HAMLET": "Shakespearean tragedy featuring the Prince of Denmark.",
+        "ORWELL": "English novelist authoring 1984 and Animal Farm.",
+        "GATSBY": "F. Scott Fitzgerald novel depicting the Roaring Twenties.",
+        "DRACULA": "Bram Stoker's gothic epistolary novel introducing the Count.",
+        "SHERLOCK": "Arthur Conan Doyle's brilliant consulting detective of Baker St.",
+        "FRANKENSTEIN": "Mary Shelley's masterpiece of Gothic science and creation.",
+        "MOON": "Natural satellite orbiting planet Earth.",
+        "STAR": "Luminous sphere of plasma held together by gravity.",
+        "MARS": "The Red Planet; fourth from the Sun.",
+        "NEBULA": "Interstellar cloud of dust, hydrogen, and ionized gases.",
+        "ASTEROID": "Minor rocky planet of the inner Solar System.",
+        "GALAXY": "Gravitationally bound system of stars, remnants, and dark matter.",
+        "QUASAR": "Extremely luminous active galactic nucleus powered by black hole.",
+        "PULSAR": "Rotating neutron star emitting beams of electromagnetic radiation.",
+        "SUPERNOVA": "Powerful catastrophic explosion of a massive dying star.",
+        "SOCCER": "Most popular global sport played with eleven players per side.",
+        "TENNIS": "Racket sport played across a netted court with felted balls.",
+        "BASKETBALL": "Fast-paced game where teams shoot a ball through a hoop.",
+        "MARATHON": "Long-distance road race of official length 42.195 km.",
+        "FENCING": "Combat sport of swordplay using foil, épée, or sabre."
+    };
+
+    const PRESET_DECKS = {
+        "Retro Net 99": {
+            words: ["DIALUP", "NETSCAPE", "GEOCITIES", "DISKETTE", "PENTIUM", "CYBERSPACE", "Y2K", "IRC", "USENET", "LINUX", "MODEM", "WIN98", "MAINFRAME", "CDROM", "TELNET", "FIREWALL", "PHREAKING", "BITMAP", "SILICON", "EMULATOR", "TRACKER", "ZIPDRIVE", "BBS", "PROTOCOL", "PACKET", "DEMOSCENE", "CHIPTUNE", "SUBNET", "GATEWAY", "KILONET"],
+            clues: {
+                "DIALUP": "Auditory 56k modem handshake connection to the World Wide Web.",
+                "NETSCAPE": "Pioneering 1990s web browser that popularized JavaScript.",
+                "GEOCITIES": "Web hosting service organizing homesteads by themed neighborhoods.",
+                "DISKETTE": "Magnetic 3.5-inch floppy disk holding 1.44 megabytes.",
+                "PENTIUM": "Iconic Intel x86 microprocessor family dominating late 1990s PCs.",
+                "CYBERSPACE": "Virtual computer realm popularized in cyberpunk fiction.",
+                "Y2K": "Millennium bug concern regarding two-digit year representations in software.",
+                "IRC": "Internet Relay Chat protocol for live multi-user text channels.",
+                "USENET": "Distributed worldwide discussion system organized into newsgroups.",
+                "LINUX": "Unix-like open-source operating system kernel created by Linus Torvalds.",
+                "MODEM": "Modulator-demodulator converting digital data to audio tones.",
+                "WIN98": "Second Edition release of the ubiquitous late 1990s desktop operating system.",
+                "MAINFRAME": "High-throughput enterprise computer powering bank and airline databases.",
+                "CDROM": "Optical disc format holding approximately 650 megabytes of multimedia.",
+                "TELNET": "Terminal protocol providing bidirectional interactive text communication.",
+                "FIREWALL": "Network security system monitoring and filtering packet traffic.",
+                "PHREAKING": "Subculture exploring and manipulating telecommunication systems.",
+                "BITMAP": "Raster graphics image format mapping pixels directly to bits.",
+                "SILICON": "Semiconductor chemical element forming the substrate of microchips.",
+                "EMULATOR": "Software recreating the hardware architecture of vintage gaming consoles.",
+                "TRACKER": "Music sequencing tool arranging sample-based patterns in columns.",
+                "ZIPDRIVE": "Iomega removable magnetic disk storage offering 100MB capacity.",
+                "BBS": "Bulletin Board System dialed via phone lines by computer enthusiasts.",
+                "PROTOCOL": "Standardized set of rules governing data transmission between devices.",
+                "PACKET": "Formatted unit of data routed across packet-switched networks.",
+                "DEMOSCENE": "International computer art subculture creating real-time visual audiovisual demos.",
+                "CHIPTUNE": "Synthesized electronic music produced using vintage sound generator chips.",
+                "SUBNET": "Logical subdivision of an IP network (e.g. non-routable 10.19.99.x).",
+                "GATEWAY": "Network node acting as an entrance point between distinct network architectures.",
+                "KILONET": "Autonomous intranet backbone connecting fleet subsystems."
+            }
+        },
+        "World Capitals": {
+            words: ["TOKYO", "PARIS", "LONDON", "OTTAWA", "CANBERRA", "MADRID", "ROME", "BERLIN", "NAIROBI", "CAIRO", "DUBLIN", "LISBON", "ANKARA", "ATHENS", "BANGKOK", "BEIJING", "BOGOTA", "BRUSSELS", "BUDAPEST", "COPENHAGEN", "HELSINKI", "JAKARTA", "LIMA", "MANILA", "OSLO", "PRAGUE", "SEOUL", "STOCKHOLM", "VIENNA", "WARSAW"],
+            clues: {
+                "TOKYO": "Capital of Japan and the world's most populous metropolitan area.",
+                "PARIS": "Capital of France known as the City of Light.",
+                "LONDON": "Capital of the United Kingdom situated on the River Thames.",
+                "OTTAWA": "Bilingual capital city of Canada located in Ontario.",
+                "CANBERRA": "Planned inland capital territory of Australia.",
+                "MADRID": "Capital of Spain located in the geographical center of the peninsula.",
+                "ROME": "Capital of Italy and historic center of the Roman Empire.",
+                "BERLIN": "Capital of Germany famed for the Brandenburg Gate and museum island.",
+                "NAIROBI": "Capital of Kenya known as the Safari Capital of the World.",
+                "CAIRO": "Vast capital of Egypt on the banks of the Nile.",
+                "DUBLIN": "Capital of the Republic of Ireland with rich literary heritage.",
+                "LISBON": "Coastal capital of Portugal renowned for pastel architecture.",
+                "SEOUL": "Metropolitan capital of South Korea on the Han River."
+            }
+        },
+        "Grandmaster Vocab": {
+            words: ["EPHEMERAL", "UBIQUITOUS", "SERENDIPITY", "MELLIFLUOUS", "QUINTESSENCE", "PARADIGM", "ESOTERIC", "SURREPTITIOUS", "ANACHRONISM", "IDIOSYNCRASY", "PERSPICACIOUS", "INEFFABLE", "RECALCITRANT", "TACITURN", "EQUANIMITY", "SYCOPHANT", "PELLUCID", "INCHOATE", "OBSEQUIOUS", "PULCHRITUDE"],
+            clues: {
+                "EPHEMERAL": "Lasting for a very short time; fleeting and transitory.",
+                "UBIQUITOUS": "Present, appearing, or found everywhere simultaneously.",
+                "SERENDIPITY": "Occurrence of finding valuable or agreeable things not sought for.",
+                "MELLIFLUOUS": "Sweet or musical; pleasant to hear.",
+                "QUINTESSENCE": "Most perfect or typical example of a quality or class.",
+                "PARADIGM": "Distinct set of concepts or thought patterns in a discipline.",
+                "ESOTERIC": "Intended for or understood by only a small group with specialized knowledge.",
+                "SURREPTITIOUS": "Kept secret, especially because it would not be approved of.",
+                "ANACHRONISM": "Thing belonging or appropriate to a period other than that in which it exists.",
+                "IDIOSYNCRASY": "Distinctive mode of behavior or way of thought peculiar to an individual."
+            }
+        },
+        "Retro Arcade 99": {
+            words: ["TREMOR", "VOIDCRAFT", "SURREAL", "PACMAN", "TETRIS", "DOOM", "QUAKE", "HALFCYCLE", "FROGGER", "ASTEROIDS", "CENTIPEDE", "DONKEYKONG", "DEFENDER", "GALAGA", "JOUST", "DIGDUG", "TEMPEST", "POPEYE", "PITFALL", "ARKANOID"],
+            clues: {
+                "TREMOR": "Parody fast-paced 1999 deathmatch shooter on planetary arenas.",
+                "VOIDCRAFT": "Fictionalized RTS space battle across galactic star sectors.",
+                "SURREAL": "Alternate-universe arena tournament champion FPS.",
+                "PACMAN": "Classic 1980 maze game evading Blinky, Pinky, Inky, and Clyde.",
+                "TETRIS": "Legendary falling tetromino puzzle game designed in Moscow.",
+                "HALFCYCLE": "Parody late-90s sci-fi hazard course and research facility adventure.",
+                "ASTEROIDS": "Vector graphics arcade smash blasting space rocks and saucers.",
+                "GALAGA": "Iconic space invader arcade shooter fighting tractor-beam bosses.",
+                "ARKANOID": "Brick-breaker arcade evolution featuring the Vaus starship."
+            }
+        }
+    };
+
     const CAMPAIGN_STAGES = [
         { stage: 1,  cat: "Animals",    name: "Stage 1: Safari Starter",       minLen: 4,  maxLen: 6,  maxErrors: 6 },
         { stage: 2,  cat: "Science",    name: "Stage 2: Lab Foundations",     minLen: 4,  maxLen: 6,  maxErrors: 6 },
@@ -415,13 +965,14 @@
         { stage: 20, cat: "Polymath",   name: "Stage 20: Polymath Grandmaster",minLen: 10, maxLen: 14, maxErrors: 4 }
     ];
 
-    let gameMode = 0; // 0: Freeplay, 1: Campaign (20 Stages), 2: Time Attack Blitz
+    let gameMode = 0; // 0: Freeplay, 1: Campaign, 2: Blitz, 3: Online Duel
     let maxErrors = 6;
     let word = "";
     let guessed = new Set();
     let errors = 0;
     let gameEnded = false;
     let campaignLevel = 1;
+    let hintRevealed = false;
     
     // Active Skills
     let vowelReveals = 2;
@@ -434,13 +985,27 @@
     let blitzTime = 60;
     let blitzWords = 0;
     let blitzTimerId = null;
-    let stats = { wins: 0, losses: 0, streak: 0, best: 0, blitzBest: 0 };
+    
+    // Statistics & History
+    let stats = {
+        wins: 0,
+        losses: 0,
+        streak: 0,
+        best: 0,
+        blitzBest: 0,
+        totalGuesses: 0,
+        correctGuesses: 0,
+        duelWins: 0,
+        duelLosses: 0,
+        duelDraws: 0
+    };
+    let matchHistory = [];
 
+    // Audio & Visual Effects
     const AudioContext = window.AudioContext || window.webkitAudioContext;
     let audioCtx = null;
     let isMuted = false;
 
-    // Visual FX, Shockwaves, Dust Motes & Particle System State (Loop 8)
     let particles = [];
     let dustMotes = [];
     let shockwaves = [];
@@ -457,16 +1022,108 @@
     let ropeAngularVelocity = 0;
     let ropeAngularAcceleration = 0;
     let windForce = 0;
+    let animFrameId = null;
+    let isLoopStopped = false;
+
+    // ==========================================
+    // ⚔️ RETRO MULTIPLAYER 1v1 DUEL STATE
+    // ==========================================
+    let rMultiplayer = null;
+    let myPlayerName = 'Guesser_' + Math.floor(1000 + Math.random() * 9000);
+    let duelOpponentName = 'Waiting...';
+    let duelOpponentStrikes = 0;
+    let duelOpponentProgress = '-----';
+    let duelOpponentSolved = false;
+    let duelActive = false;
+    let isSoloBotDuel = false;
+    let soloBotTimer = null;
+    let soloFallbackInterval = null;
+    let soloFallbackRemaining = 25;
+    let botGuessed = new Set();
+    let botErrors = 0;
+
+    // ==========================================
+    // 🔔 TOAST SYSTEM (Zero Occlusion)
+    // ==========================================
+    let toastTimeout = null;
+    function showToast(msg, type = 'info', duration = 3000) {
+        const toast = document.getElementById('toast');
+        if (!toast) return;
+        toast.textContent = msg;
+        toast.className = 'toast show toast-' + type;
+        toast.style.display = 'block';
+        if (toastTimeout) clearTimeout(toastTimeout);
+        toastTimeout = setTimeout(() => {
+            toast.style.display = 'none';
+        }, duration);
+    }
+
+    // ==========================================
+    // 🚪 MODAL MANAGEMENT
+    // ==========================================
+    function closeAllModals() {
+        ['help-modal', 'multiplayer-modal', 'dictionary-modal', 'stats-modal', 'definition-modal'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.style.display = 'none';
+        });
+    }
 
     function showHelp() {
+        closeAllModals();
         document.getElementById('help-modal').style.display = 'flex';
     }
 
     function hideHelp() {
         document.getElementById('help-modal').style.display = 'none';
-        try { localStorage.setItem('khangman_tutorial_seen', '1'); } catch (e) {}
+        safeSetStorage('khangman_tutorial_seen', '1');
     }
 
+    function openMultiplayerModal() {
+        closeAllModals();
+        const inp = document.getElementById('duel-player-name');
+        if (inp) inp.value = myPlayerName;
+        document.getElementById('multiplayer-modal').style.display = 'flex';
+        initRetroMultiplayer();
+    }
+
+    function openDictionaryModal() {
+        closeAllModals();
+        renderStudioCategorySelect();
+        renderStudioWordList();
+        document.getElementById('dictionary-modal').style.display = 'flex';
+    }
+
+    function openStatsModal() {
+        closeAllModals();
+        renderStatsModal();
+        document.getElementById('stats-modal').style.display = 'flex';
+    }
+
+    function showDefinitionModal() {
+        closeAllModals();
+        const defModal = document.getElementById('definition-modal');
+        const defTitle = document.getElementById('def-title');
+        const defCat = document.getElementById('def-category-badge');
+        const defContent = document.getElementById('def-content');
+        const defStats = document.getElementById('def-stats');
+
+        const cat = document.getElementById('category').value;
+        const clue = getWordClue(word, cat);
+
+        if (defTitle) defTitle.innerText = word;
+        if (defCat) defCat.innerText = cat;
+        if (defContent) defContent.innerText = clue;
+        if (defStats) {
+            const vowels = [...word].filter(c => ['A','E','I','O','U'].includes(c)).length;
+            const consonants = word.length - vowels;
+            defStats.innerText = `Length: ${word.length} letters | Vowels: ${vowels} | Consonants: ${consonants}`;
+        }
+        if (defModal) defModal.style.display = 'flex';
+    }
+
+    // ==========================================
+    // 🎵 AUDIO SYNTHESIS ENGINE
+    // ==========================================
     function initAudio() {
         if (!audioCtx) {
             audioCtx = new AudioContext();
@@ -476,6 +1133,7 @@
     function toggleMute() {
         isMuted = !isMuted;
         document.getElementById('mute-btn').innerText = isMuted ? '🔇 Muted' : '🔊 Sound';
+        showToast(isMuted ? 'Sound muted' : 'Sound unmuted', 'info', 1500);
     }
 
     function playSound(type) {
@@ -558,25 +1216,66 @@
                 gain.gain.linearRampToValueAtTime(0, now + 0.2);
                 osc.start(now);
                 osc.stop(now + 0.2);
+            } else if (type === 'chat') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(720, now);
+                osc.frequency.setValueAtTime(960, now + 0.05);
+                gain.gain.setValueAtTime(0.1, now);
+                gain.gain.linearRampToValueAtTime(0, now + 0.12);
+                osc.start(now);
+                osc.stop(now + 0.12);
             }
         } catch (e) {}
     }
 
-    function loadStats() {
-        const saved = localStorage.getItem('khangman_stats');
-        if (saved) {
-            try {
-                stats = JSON.parse(saved);
-                if (stats.blitzBest === undefined) stats.blitzBest = 0;
-            } catch (e) {}
+    // ==========================================
+    // 💡 HINT & CLUE SYSTEM
+    // ==========================================
+    function getWordClue(targetWord, targetCategory) {
+        if (WORD_CLUES[targetWord]) return WORD_CLUES[targetWord];
+        
+        // Search in preset decks
+        for (const deckKey in PRESET_DECKS) {
+            const deck = PRESET_DECKS[deckKey];
+            if (deck.clues && deck.clues[targetWord]) return deck.clues[targetWord];
         }
+
+        // Search custom category clues
+        const customCatData = safeGetStorage('khangman_custom_categories_data', {});
+        if (customCatData[targetCategory] && customCatData[targetCategory].clues && customCatData[targetCategory].clues[targetWord]) {
+            return customCatData[targetCategory].clues[targetWord];
+        }
+
+        return `A ${targetWord.length}-letter word in the ${targetCategory} category.`;
+    }
+
+    function toggleHint() {
+        hintRevealed = !hintRevealed;
+        const hintEl = document.getElementById('hint-text');
+        const cat = document.getElementById('category').value;
+        if (hintRevealed) {
+            hintEl.innerText = `💡 Hint: ${getWordClue(word, cat)}`;
+            hintEl.style.display = 'block';
+            playSound('valid');
+        } else {
+            hintEl.style.display = 'none';
+        }
+    }
+
+    // ==========================================
+    // 📊 STATS & MATCH HISTORY
+    // ==========================================
+    function loadStats() {
+        stats = safeGetStorage('khangman_stats', stats);
+        matchHistory = safeGetStorage('khangman_history', []);
+        myPlayerName = safeGetStorage('kilo_khangman_name', myPlayerName);
+        loadCustomCategories();
         updateStatsDisplay();
     }
     
     function saveStats() {
-        try {
-            localStorage.setItem('khangman_stats', JSON.stringify(stats));
-        } catch (e) {}
+        safeSetStorage('khangman_stats', stats);
+        safeSetStorage('khangman_history', matchHistory);
         updateStatsDisplay();
     }
     
@@ -593,20 +1292,85 @@
         if (elBlitzBest) elBlitzBest.innerText = stats.blitzBest;
     }
 
-    function resetStats() {
-        if (confirm("Reset all lifetime statistics?")) {
-            stats = { wins: 0, losses: 0, streak: 0, best: 0, blitzBest: 0 };
+    function recordMatch(outcome, modeName) {
+        const entry = {
+            date: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            mode: modeName,
+            category: document.getElementById('category').value,
+            word: word,
+            strikes: errors,
+            outcome: outcome
+        };
+        matchHistory.unshift(entry);
+        if (matchHistory.length > 20) matchHistory.pop();
+        saveStats();
+    }
+
+    function renderStatsModal() {
+        const totalGames = stats.wins + stats.losses;
+        const winRate = totalGames > 0 ? Math.round((stats.wins / totalGames) * 100) : 0;
+        const accuracy = stats.totalGuesses > 0 ? Math.round((stats.correctGuesses / stats.totalGuesses) * 100) : 0;
+
+        document.getElementById('stat-total-games').innerText = totalGames;
+        document.getElementById('stat-win-rate').innerText = winRate + '%';
+        document.getElementById('stat-accuracy').innerText = accuracy + '%';
+        document.getElementById('stat-grid-best').innerText = stats.best;
+        document.getElementById('stat-grid-blitz').innerText = stats.blitzBest + ' words';
+        document.getElementById('stat-grid-duels').innerText = `${stats.duelWins || 0}W - ${stats.duelLosses || 0}L`;
+
+        const tbody = document.getElementById('history-table-body');
+        if (!tbody) return;
+        tbody.innerHTML = '';
+        if (matchHistory.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:12px; color:#5c687a;">No recorded matches yet. Play a game!</td></tr>';
+            return;
+        }
+
+        matchHistory.slice(0, 15).forEach(m => {
+            const tr = document.createElement('tr');
+            tr.style.borderBottom = '1px solid #1e2633';
+            const isWin = m.outcome.toLowerCase().includes('win');
+            const color = isWin ? '#81c784' : '#e57373';
+            tr.innerHTML = `
+                <td style="padding: 4px 6px; color: #90caf9;">${m.mode}</td>
+                <td style="padding: 4px 6px; color: #b0bec5;">${m.category}</td>
+                <td style="padding: 4px 6px; font-weight: bold; font-family: monospace;">${m.word}</td>
+                <td style="padding: 4px 6px; color: #ffb74d;">${m.strikes}/${maxErrors}</td>
+                <td style="padding: 4px 6px; font-weight: bold; color: ${color};">${m.outcome}</td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    function clearMatchHistory() {
+        if (confirm("Clear recent match history?")) {
+            matchHistory = [];
             saveStats();
+            renderStatsModal();
+            showToast("Match history cleared.", "info");
         }
     }
 
+    function resetStats() {
+        if (confirm("Reset all lifetime statistics & records?")) {
+            stats = {
+                wins: 0, losses: 0, streak: 0, best: 0, blitzBest: 0,
+                totalGuesses: 0, correctGuesses: 0,
+                duelWins: 0, duelLosses: 0, duelDraws: 0
+            };
+            matchHistory = [];
+            saveStats();
+            showToast("Lifetime stats reset.", "info");
+        }
+    }
+
+    // ==========================================
+    // 💾 STATE PERSISTENCE (F5 / F9 / JSON)
+    // ==========================================
     function saveGameState() {
         const msgEl = document.getElementById('message');
         if (gameEnded) {
-            if (msgEl) {
-                msgEl.innerText = "Cannot save a finished game.";
-                msgEl.style.color = "#f44336";
-            }
+            showToast("Cannot save a finished game.", "warning");
             return;
         }
         const state = {
@@ -626,56 +1390,39 @@
             blitzTime: blitzTime,
             blitzWords: blitzWords
         };
-        try {
-            localStorage.setItem('khangman_save', JSON.stringify(state));
-            if (msgEl) {
-                msgEl.innerText = "💾 Game saved to local storage!";
-                msgEl.style.color = "#81c784";
-            }
-        } catch (e) {
-            if (msgEl) {
-                msgEl.innerText = "⚠️ Failed to save game.";
-                msgEl.style.color = "#f44336";
-            }
-        }
+        safeSetStorage('khangman_save', state);
+        showToast("💾 Game saved [F5]!", "success");
     }
 
     function loadGameState() {
-        const saved = localStorage.getItem('khangman_save');
-        const msgEl = document.getElementById('message');
-        if (saved) {
+        const state = safeGetStorage('khangman_save', null);
+        if (state) {
             try {
-                const state = JSON.parse(saved);
                 if (blitzTimerId) clearInterval(blitzTimerId);
                 word = state.word;
                 document.getElementById('category').value = state.category;
-                if (state.category === "Custom") {
-                    document.getElementById('custom-container').style.display = 'block';
-                    if (!CATEGORIES["Custom"] || !CATEGORIES["Custom"].includes(state.word)) {
-                        CATEGORIES["Custom"] = [state.word];
-                    }
-                } else {
-                    document.getElementById('custom-container').style.display = 'none';
-                }
                 guessed = new Set(state.guessed);
                 errors = state.errors;
-                gameMode = state.gameMode || 0;
+                gameMode = state.gameMode;
                 campaignLevel = state.campaignLevel || 1;
                 maxErrors = state.maxErrors || 6;
-                vowelReveals = state.vowelReveals !== undefined ? state.vowelReveals : 2;
-                consonantRadars = state.consonantRadars !== undefined ? state.consonantRadars : 2;
-                shields = state.shields !== undefined ? state.shields : 2;
-                freezes = state.freezes !== undefined ? state.freezes : 2;
-                bombs = state.bombs !== undefined ? state.bombs : 2;
+                vowelReveals = state.vowelReveals || 0;
+                consonantRadars = state.consonantRadars || 0;
+                shields = state.shields || 0;
+                freezes = state.freezes || 0;
+                bombs = state.bombs || 0;
                 freezeTimerSeconds = state.freezeTimerSeconds || 0;
                 blitzTime = state.blitzTime || 60;
                 blitzWords = state.blitzWords || 0;
                 gameEnded = false;
-                
+                hintRevealed = false;
+                document.getElementById('hint-text').style.display = 'none';
+
                 updateSkillButtons();
+                const msgEl = document.getElementById('message');
                 if (msgEl) {
-                    msgEl.innerText = "📂 Game loaded. Guess a letter";
-                    msgEl.style.color = "#e0e6ed";
+                    msgEl.innerText = "Game restored from quicksave!";
+                    msgEl.style.color = "#81c784";
                 }
                 document.getElementById('word-display').classList.remove('win-animation');
                 document.getElementById('hangman-canvas').classList.remove('shake-animation');
@@ -684,17 +1431,12 @@
                 initKeyboard();
                 if (gameMode === 2) startBlitzTimer();
                 updateDisplay();
+                showToast("📂 Game loaded [F9]!", "success");
             } catch (e) {
-                if (msgEl) {
-                    msgEl.innerText = "⚠️ Failed to load saved game.";
-                    msgEl.style.color = "#f44336";
-                }
+                showToast("⚠️ Failed to load saved game.", "error");
             }
         } else {
-            if (msgEl) {
-                msgEl.innerText = "⚠️ No saved game found.";
-                msgEl.style.color = "#f44336";
-            }
+            showToast("⚠️ No saved game found.", "warning");
         }
     }
 
@@ -728,17 +1470,9 @@
             a.click();
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
-            const msgEl = document.getElementById('message');
-            if (msgEl) {
-                msgEl.innerText = "💾 Save exported to JSON file!";
-                msgEl.style.color = "#81c784";
-            }
+            showToast("💾 Save exported to JSON!", "success");
         } catch (e) {
-            const msgEl = document.getElementById('message');
-            if (msgEl) {
-                msgEl.innerText = "⚠️ Failed to export save.";
-                msgEl.style.color = "#f44336";
-            }
+            showToast("⚠️ Failed to export save.", "error");
         }
     }
 
@@ -754,951 +1488,703 @@
                     saveStats();
                 }
                 if (state.word) {
-                    localStorage.setItem('khangman_save', JSON.stringify(state));
+                    safeSetStorage('khangman_save', state);
                     loadGameState();
                 }
-                const msgEl = document.getElementById('message');
-                if (msgEl) {
-                    msgEl.innerText = "📂 JSON save file imported successfully!";
-                    msgEl.style.color = "#81c784";
-                }
+                showToast("📂 Save imported successfully!", "success");
             } catch (err) {
-                const msgEl = document.getElementById('message');
-                if (msgEl) {
-                    msgEl.innerText = "⚠️ Invalid JSON save file.";
-                    msgEl.style.color = "#f44336";
-                }
+                showToast("⚠️ Invalid save file format.", "error");
             }
         };
         reader.readAsText(file);
         event.target.value = '';
     }
 
-    function updateSkillButtons() {
-        const vBtn = document.getElementById('vowel-btn');
-        if (vBtn) {
-            vBtn.innerText = `Vowel [1] (${vowelReveals})`;
-            vBtn.disabled = vowelReveals <= 0 || gameEnded;
+    // ==========================================
+    // 📚 CUSTOM DICTIONARY & STUDIO
+    // ==========================================
+    function loadCustomCategories() {
+        const savedCustom = safeGetStorage('khangman_custom_categories', null);
+        if (savedCustom) {
+            for (const catName in savedCustom) {
+                CATEGORIES[catName] = savedCustom[catName];
+            }
         }
-        const rBtn = document.getElementById('radar-btn');
-        if (rBtn) {
-            rBtn.innerText = `Radar [2] (${consonantRadars})`;
-            rBtn.disabled = consonantRadars <= 0 || gameEnded;
+        updateCategoryDropdown();
+    }
+
+    function updateCategoryDropdown() {
+        const select = document.getElementById('category');
+        if (!select) return;
+        const currentVal = select.value;
+        select.innerHTML = '';
+        for (const cat in CATEGORIES) {
+            const opt = document.createElement('option');
+            opt.value = cat;
+            opt.innerText = cat;
+            select.appendChild(opt);
         }
-        const sBtn = document.getElementById('shield-btn');
-        if (sBtn) {
-            sBtn.innerText = `Shield [3] (${shields})`;
-            sBtn.disabled = shields <= 0 || gameEnded;
+        if (!CATEGORIES["Custom"]) {
+            const opt = document.createElement('option');
+            opt.value = "Custom";
+            opt.innerText = "Custom";
+            select.appendChild(opt);
         }
-        const fBtn = document.getElementById('freeze-btn');
-        if (fBtn) {
-            fBtn.innerText = `Freeze [4] (${freezes})`;
-            fBtn.disabled = freezes <= 0 || gameEnded;
-        }
-        const bBtn = document.getElementById('bomb-btn');
-        if (bBtn) {
-            bBtn.innerText = `Bomb [5] (${bombs})`;
-            bBtn.disabled = bombs <= 0 || gameEnded;
+        select.value = CATEGORIES[currentVal] ? currentVal : Object.keys(CATEGORIES)[0];
+    }
+
+    function renderStudioCategorySelect() {
+        const sel = document.getElementById('studio-category-select');
+        if (!sel) return;
+        sel.innerHTML = '';
+        for (const cat in CATEGORIES) {
+            const opt = document.createElement('option');
+            opt.value = cat;
+            opt.innerText = cat;
+            sel.appendChild(opt);
         }
     }
 
-    function initDustMotes() {
-        dustMotes = [];
-    }
+    function renderStudioWordList() {
+        const sel = document.getElementById('studio-category-select');
+        if (!sel) return;
+        const cat = sel.value;
+        const words = CATEGORIES[cat] || [];
+        const chipsContainer = document.getElementById('studio-word-chips');
+        const countEl = document.getElementById('studio-word-count');
+        const typeEl = document.getElementById('studio-cat-type');
 
-    function triggerScreenShake(amp = 14) {
-        screenShake = Math.max(screenShake, amp);
-        shakeAngle = Math.random() * Math.PI * 2;
-    }
+        if (countEl) countEl.innerText = words.length;
+        const isBuiltIn = Boolean(DEFAULT_CATEGORIES[cat]);
+        if (typeEl) typeEl.innerText = isBuiltIn ? "Built-in Deck" : "Custom Deck";
 
-    function spawnShockwave(x, y, maxR = 60, color = '#ffd700') {
-        shockwaves.push({
-            x, y, r: 2, maxR,
-            speed: maxR / 16,
-            color: color,
-            life: 1.0,
-            decay: 0.045
+        if (!chipsContainer) return;
+        chipsContainer.innerHTML = '';
+        words.forEach(w => {
+            const chip = document.createElement('div');
+            chip.style.cssText = 'background:#1a2332; border:1px solid #3a485c; border-radius:4px; padding:2px 6px; font-size:11px; font-family:monospace; display:flex; align-items:center; gap:4px;';
+            chip.innerHTML = `<span>${w}</span>`;
+            if (!isBuiltIn) {
+                const delBtn = document.createElement('span');
+                delBtn.innerText = '✕';
+                delBtn.style.cssText = 'color:#e57373; cursor:pointer; font-weight:bold; margin-left:3px;';
+                delBtn.onclick = () => removeWordFromCategory(cat, w);
+                chip.appendChild(delBtn);
+            }
+            chipsContainer.appendChild(chip);
         });
     }
 
-    // --- Loop 8 Multi-Layered Kinematic Particle Engine ---
-    function spawnWinParticles() {
-        const colors = ['#ffd700', '#ffeb3b', '#00e676', '#00b0ff', '#e040fb', '#ffffff'];
-        const burstX = 120 + (Math.random() * 40 - 20);
-        const burstY = 70 + (Math.random() * 30 - 15);
-        triggerScreenShake(14);
-        spawnShockwave(burstX, burstY, 90, '#ffd700');
-        spawnShockwave(burstX, burstY, 55, '#00ffff');
-
-        // Layer 1: Incandescent Core Needle Sparks
-        for (let i = 0; i < 40; i++) {
-            const angle = Math.random() * Math.PI * 2;
-            const speed = Math.random() * 10 + 3;
-            particles.push({
-                x: burstX, y: burstY,
-                vx: Math.cos(angle) * speed,
-                vy: Math.sin(angle) * speed,
-                size: Math.random() * 3 + 1.5,
-                color: '#ffffff',
-                glowColor: colors[Math.floor(Math.random() * colors.length)],
-                type: 'spark',
-                drag: 0.93,
-                life: 0,
-                maxLife: 35 + Math.random() * 20
-            });
+    function promptNewCategory() {
+        const name = prompt("Enter new Custom Category name:");
+        if (!name) return;
+        const clean = name.trim();
+        if (!clean) return;
+        if (CATEGORIES[clean]) {
+            showToast("Category already exists!", "warning");
+            return;
         }
-
-        // Layer 2: Expanding Buoyant Celebration Puffs
-        for (let i = 0; i < 20; i++) {
-            const angle = Math.random() * Math.PI * 2;
-            const speed = Math.random() * 3 + 1;
-            particles.push({
-                x: burstX, y: burstY,
-                vx: Math.cos(angle) * speed,
-                vy: Math.sin(angle) * speed - 0.8,
-                size: Math.random() * 6 + 4,
-                color: colors[Math.floor(Math.random() * colors.length)],
-                type: 'smoke',
-                sizeGrow: 0.25,
-                life: 0,
-                maxLife: 45 + Math.random() * 20
-            });
-        }
-
-        // Layer 3: Radiant Golden Celebration Energy Stars (5-Pointed)
-        for (let i = 0; i < 25; i++) {
-            const angle = Math.random() * Math.PI * 2;
-            const speed = Math.random() * 6 + 2;
-            particles.push({
-                x: burstX, y: burstY,
-                vx: Math.cos(angle) * speed,
-                vy: Math.sin(angle) * speed,
-                size: Math.random() * 6 + 4,
-                color: '#ffd700',
-                rotation: Math.random() * Math.PI * 2,
-                vRot: (Math.random() - 0.5) * 0.25,
-                type: 'star',
-                life: 0,
-                maxLife: 60 + Math.random() * 30
-            });
-        }
-
-        // Layer 4: Confetti Shower
-        for (let i = 0; i < 35; i++) {
-            particles.push({
-                x: Math.random() * 240,
-                y: -10,
-                vx: (Math.random() - 0.5) * 3,
-                vy: Math.random() * 2.5 + 1.5,
-                size: Math.random() * 4 + 2.5,
-                color: colors[Math.floor(Math.random() * colors.length)],
-                rotation: Math.random() * Math.PI * 2,
-                vRot: (Math.random() - 0.5) * 0.2,
-                type: 'confetti',
-                life: 0,
-                maxLife: 100 + Math.random() * 40
-            });
-        }
+        CATEGORIES[clean] = [];
+        saveCustomCategories();
+        updateCategoryDropdown();
+        renderStudioCategorySelect();
+        document.getElementById('studio-category-select').value = clean;
+        renderStudioWordList();
+        showToast(`Category '${clean}' created!`, "success");
     }
 
-    function spawnLossParticles() {
-        triggerScreenShake(16);
-        spawnShockwave(165, 100, 75, '#ff5252');
-        for (let i = 0; i < 35; i++) {
-            particles.push({
-                x: Math.random() * 240,
-                y: Math.random() * 200,
-                vx: -0.5 + Math.random() * 0.5,
-                vy: 4 + Math.random() * 4,
-                size: Math.random() * 2 + 1,
-                color: 'rgba(100, 180, 255, 0.6)',
-                type: 'rain',
-                life: 0,
-                maxLife: 60 + Math.random() * 40
-            });
+    function addWordToActiveCategory() {
+        const sel = document.getElementById('studio-category-select');
+        const wordInp = document.getElementById('studio-new-word');
+        const hintInp = document.getElementById('studio-new-hint');
+        if (!sel || !wordInp) return;
+
+        const cat = sel.value;
+        const cleanWord = wordInp.value.trim().toUpperCase().replace(/[^A-Z]/g, '');
+        if (!cleanWord || cleanWord.length < 3) {
+            showToast("Word must be at least 3 letters (A-Z).", "warning");
+            return;
         }
+
+        if (!CATEGORIES[cat]) CATEGORIES[cat] = [];
+        if (CATEGORIES[cat].includes(cleanWord)) {
+            showToast("Word already in category!", "warning");
+            return;
+        }
+
+        CATEGORIES[cat].push(cleanWord);
+        const hintText = hintInp ? hintInp.value.trim() : '';
+        if (hintText) {
+            const customData = safeGetStorage('khangman_custom_categories_data', {});
+            if (!customData[cat]) customData[cat] = { clues: {} };
+            if (!customData[cat].clues) customData[cat].clues = {};
+            customData[cat].clues[cleanWord] = hintText;
+            safeSetStorage('khangman_custom_categories_data', customData);
+        }
+
+        saveCustomCategories();
+        wordInp.value = '';
+        if (hintInp) hintInp.value = '';
+        renderStudioWordList();
+        showToast(`Added '${cleanWord}' to ${cat}!`, "success");
     }
 
-    function spawnSparkParticles() {
-        const colors = ['#00ffff', '#ffeb3b', '#00e676', '#ffffff'];
-        for (let i = 0; i < 24; i++) {
-            const angle = Math.random() * Math.PI * 2;
-            const speed = Math.random() * 6 + 2;
-            particles.push({
-                x: 120 + (Math.random() * 60 - 30),
-                y: 90 + (Math.random() * 30 - 15),
-                vx: Math.cos(angle) * speed,
-                vy: Math.sin(angle) * speed,
-                size: Math.random() * 2.5 + 1,
-                color: '#ffffff',
-                glowColor: colors[Math.floor(Math.random() * colors.length)],
-                drag: 0.94,
-                type: 'spark',
-                life: 0,
-                maxLife: 25 + Math.random() * 15
-            });
-        }
+    function removeWordFromCategory(cat, w) {
+        if (!CATEGORIES[cat]) return;
+        CATEGORIES[cat] = CATEGORIES[cat].filter(item => item !== w);
+        saveCustomCategories();
+        renderStudioWordList();
+        showToast(`Removed '${w}' from ${cat}.`, "info");
     }
 
-    function updateAndDrawParticles(ctx) {
-        // Ambient celebration sparkles during win state
-        if (gameEnded && isWin() && Math.random() < 0.35) {
-            const colors = ['#ffd700', '#ffeb3b', '#00e676', '#00b0ff', '#ffffff'];
-            particles.push({
-                x: Math.random() * 240,
-                y: -5,
-                vx: (Math.random() - 0.5) * 2,
-                vy: Math.random() * 2 + 1.5,
-                size: Math.random() * 5 + 3,
-                color: colors[Math.floor(Math.random() * colors.length)],
-                rotation: Math.random() * Math.PI * 2,
-                vRot: (Math.random() - 0.5) * 0.25,
-                type: Math.random() > 0.4 ? 'star' : 'confetti',
-                life: 0,
-                maxLife: 80
-            });
-        }
-
-        // Particle updates
-        for (let i = particles.length - 1; i >= 0; i--) {
-            let p = particles[i];
-            p.life++;
-            if (p.drag) { p.vx *= p.drag; p.vy *= p.drag; }
-            p.x += p.vx;
-            p.y += p.vy;
-            if (p.sizeGrow) p.size += p.sizeGrow;
-            
-            if (p.type === 'spark') {
-                p.vy += 0.08;
-                ctx.save();
-                ctx.globalAlpha = Math.max(0, 1 - (p.life / p.maxLife));
-                ctx.fillStyle = p.color || '#ffffff';
-                ctx.shadowColor = p.glowColor || '#00ffff';
-                ctx.shadowBlur = 6;
-                ctx.beginPath();
-                ctx.arc(p.x, p.y, Math.max(0.5, p.size), 0, Math.PI * 2);
-                ctx.fill();
-                // Velocity needle streak
-                ctx.strokeStyle = p.glowColor || '#00ffff';
-                ctx.lineWidth = Math.max(0.5, p.size * 0.7);
-                ctx.beginPath();
-                ctx.moveTo(p.x, p.y);
-                ctx.lineTo(p.x - p.vx * 2, p.y - p.vy * 2);
-                ctx.stroke();
-                ctx.restore();
-            } else if (p.type === 'smoke') {
-                p.vy -= 0.04; // Negative gravity / buoyant rise
-                ctx.save();
-                ctx.globalAlpha = Math.max(0, (1 - (p.life / p.maxLife)) * 0.6);
-                ctx.fillStyle = p.color;
-                ctx.beginPath();
-                ctx.arc(p.x, p.y, Math.max(1, p.size), 0, Math.PI * 2);
-                ctx.fill();
-                ctx.restore();
-            } else if (p.type === 'star') {
-                // Radiant 5-Pointed Golden Celebration Energy Star
-                p.rotation += p.vRot;
-                p.vy += 0.05;
-                ctx.save();
-                ctx.globalCompositeOperation = 'lighter';
-                ctx.globalAlpha = Math.max(0, 1 - (p.life / p.maxLife));
-                ctx.fillStyle = p.color || '#ffd700';
-                ctx.shadowColor = '#ffd700';
-                ctx.shadowBlur = 8;
-                ctx.translate(p.x, p.y);
-                ctx.rotate(p.rotation);
-                ctx.beginPath();
-                for (let s = 0; s < 5; s++) {
-                    const aOuter = (s * 72 - 90) * Math.PI / 180;
-                    const aInner = (s * 72 + 36 - 90) * Math.PI / 180;
-                    const rOuter = p.size;
-                    const rInner = p.size * 0.42;
-                    if (s === 0) ctx.moveTo(Math.cos(aOuter) * rOuter, Math.sin(aOuter) * rOuter);
-                    else ctx.lineTo(Math.cos(aOuter) * rOuter, Math.sin(aOuter) * rOuter);
-                    ctx.lineTo(Math.cos(aInner) * rInner, Math.sin(aInner) * rInner);
-                }
-                ctx.closePath();
-                ctx.fill();
-                ctx.restore();
-            } else if (p.type === 'confetti') {
-                p.rotation += p.vRot;
-                p.vy += 0.08;
-                ctx.save();
-                ctx.globalAlpha = Math.max(0, 1 - (p.life / p.maxLife));
-                ctx.translate(p.x, p.y);
-                ctx.rotate(p.rotation);
-                ctx.fillStyle = p.color;
-                ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size * 0.6);
-                ctx.restore();
-            } else if (p.type === 'rain') {
-                ctx.strokeStyle = p.color;
-                ctx.lineWidth = 1.5;
-                ctx.beginPath();
-                ctx.moveTo(p.x, p.y);
-                ctx.lineTo(p.x + p.vx * 2, p.y + p.size * 4);
-                ctx.stroke();
-            } else if (p.type === 'shooting_star') {
-                ctx.strokeStyle = p.color;
-                ctx.lineWidth = p.size;
-                ctx.beginPath();
-                ctx.moveTo(p.x, p.y);
-                ctx.lineTo(p.x - p.vx * 3, p.y - p.vy * 3);
-                ctx.stroke();
-            } else if (p.type === 'debris') {
-                p.rotation += p.vRot;
-                p.vy += 0.45; // heavy gravity
-                p.vx *= 0.96;
-                if (p.y > 185) {
-                    p.y = 185;
-                    p.vy = -p.vy * 0.42;
-                    p.vx *= 0.65;
-                    p.vRot *= 0.65;
-                }
-                ctx.save();
-                ctx.globalAlpha = Math.max(0, 1 - (p.life / p.maxLife));
-                ctx.translate(p.x, p.y);
-                ctx.rotate(p.rotation);
-                ctx.fillStyle = p.color;
-                ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size);
-                if (p.size > 4) {
-                    ctx.fillStyle = 'rgba(0,0,0,0.5)';
-                    ctx.fillRect(-p.size / 4, -p.size / 4, p.size / 2, p.size / 2);
-                }
-                ctx.restore();
-            }
-
-            if (p.life >= p.maxLife || p.y > 210) {
-                particles.splice(i, 1);
+    function saveCustomCategories() {
+        const toSave = {};
+        for (const cat in CATEGORIES) {
+            if (!DEFAULT_CATEGORIES[cat]) {
+                toSave[cat] = CATEGORIES[cat];
             }
         }
-
-        // Dual-Tier Concentric Shockwaves
-        for (let i = shockwaves.length - 1; i >= 0; i--) {
-            const sw = shockwaves[i];
-            sw.r += sw.speed;
-            sw.life -= sw.decay;
-            if (sw.life <= 0 || sw.r >= sw.maxR) {
-                shockwaves.splice(i, 1);
-                continue;
-            }
-            ctx.save();
-            ctx.globalCompositeOperation = 'lighter';
-            // Outer dispersion halo
-            ctx.strokeStyle = sw.color;
-            ctx.lineWidth = 2.5 * sw.life;
-            ctx.globalAlpha = sw.life * 0.7;
-            ctx.beginPath();
-            ctx.arc(sw.x, sw.y, sw.r, 0, Math.PI * 2);
-            ctx.stroke();
-            // Inner compression wave
-            ctx.strokeStyle = '#ffffff';
-            ctx.lineWidth = 1.5 * sw.life;
-            ctx.globalAlpha = sw.life * 0.9;
-            ctx.beginPath();
-            ctx.arc(sw.x, sw.y, Math.max(1, sw.r * 0.65), 0, Math.PI * 2);
-            ctx.stroke();
-            ctx.restore();
-        }
+        safeSetStorage('khangman_custom_categories', toSave);
+        updateCategoryDropdown();
     }
 
-    function renderHangmanCanvas() {
-        const canvas = document.getElementById('hangman-canvas');
-        if (!canvas) return;
-        const ctx = canvas.getContext('2d');
-        const dpr = window.devicePixelRatio || 1;
-        const logicalW = 240;
-        const logicalH = 200;
-        if (canvas.width !== Math.round(logicalW * dpr) || canvas.height !== Math.round(logicalH * dpr)) {
-            canvas.width = Math.round(logicalW * dpr);
-            canvas.height = Math.round(logicalH * dpr);
-        }
-        animTime += 0.03;
+    function installDeck(deckName) {
+        const deck = PRESET_DECKS[deckName];
+        if (!deck) return;
+        CATEGORIES[deckName] = [...deck.words];
         
-        // Blink logic
-        blinkTimer += 0.03;
-        if (blinkTimer > 3.5) {
-            isBlinking = true;
-            if (blinkTimer > 3.7) {
-                isBlinking = false;
-                blinkTimer = 0;
-            }
-        }
-
-        ctx.save();
-        ctx.scale(dpr, dpr);
-        const w = logicalW, h = logicalH;
-        ctx.clearRect(0, 0, w, h);
-
-        ctx.save();
-        if (screenShake > 0) {
-            const rot = Math.sin(shakeAngle * 0.8) * screenShake * 0.03 * (Math.PI / 180);
-            ctx.translate(w / 2, h / 2);
-            ctx.rotate(rot);
-            ctx.translate(-w / 2 + Math.cos(shakeAngle) * screenShake, -h / 2 + Math.sin(shakeAngle * 1.2) * screenShake);
-            screenShake *= 0.88;
-            shakeAngle += 1.4;
-            if (screenShake < 0.4) screenShake = 0;
-        }
-
-        // 1. Spooky Environmental Background
-        // Night Sky Gradient
-        const skyGrad = ctx.createLinearGradient(0, 0, 0, 200);
-        if (lightningFlash > 0.5) {
-            skyGrad.addColorStop(0, '#2a3550');
-            skyGrad.addColorStop(1, '#1a1025');
-        } else {
-            skyGrad.addColorStop(0, '#0b1021');
-            skyGrad.addColorStop(1, '#1a1025');
-        }
-        ctx.fillStyle = skyGrad;
-        ctx.fillRect(-20, -20, 280, 240); // slightly larger to cover shake bounds
-
-        if (lightningFlash > 0) {
-            lightningFlash -= 0.1;
-        }
-        if (lightningFlash > 0.5) {
-            ctx.strokeStyle = '#ffffff';
-            ctx.lineWidth = 3;
-            ctx.beginPath();
-            ctx.moveTo(100, -20);
-            ctx.lineTo(120, 50);
-            ctx.lineTo(105, 60);
-            ctx.lineTo(140, 130);
-            ctx.lineTo(120, 140);
-            ctx.lineTo(150, 200);
-            ctx.stroke();
-            ctx.fillStyle = `rgba(255, 255, 255, ${lightningFlash * 0.2})`;
-            ctx.fillRect(-20, -20, 280, 240);
-        }
-
-        // Stars
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
-        for (let i = 0; i < 20; i++) {
-            const sx = (i * 12345) % 240;
-            const sy = (i * 54321) % 150;
-            ctx.beginPath();
-            ctx.arc(sx, sy, (i % 2 === 0) ? 1 : 0.5, 0, Math.PI * 2);
-            ctx.fill();
-        }
-
-        // Aurora
-        const auroraPhase = animTime * 0.5;
-        const auroraGrad = ctx.createLinearGradient(0, 0, 0, 150);
-        const aColor1 = `rgba(0, 255, 128, ${0.05 + Math.sin(auroraPhase)*0.03})`;
-        const aColor2 = `rgba(128, 0, 255, ${0.03 + Math.cos(auroraPhase)*0.02})`;
-        auroraGrad.addColorStop(0, aColor1);
-        auroraGrad.addColorStop(0.5, aColor2);
-        auroraGrad.addColorStop(1, 'transparent');
+        // Save clues
+        const customData = safeGetStorage('khangman_custom_categories_data', {});
+        customData[deckName] = { clues: deck.clues || {} };
+        safeSetStorage('khangman_custom_categories_data', customData);
         
-        ctx.fillStyle = auroraGrad;
-        ctx.beginPath();
-        ctx.moveTo(0, 50 + Math.sin(auroraPhase)*20);
-        ctx.bezierCurveTo(80, 20 + Math.cos(auroraPhase)*30, 160, 80 + Math.sin(auroraPhase)*20, 240, 40 + Math.cos(auroraPhase)*30);
-        ctx.lineTo(240, 0);
-        ctx.lineTo(0, 0);
-        ctx.fill();
-
-        // Shooting Stars Generation
-        if (Math.random() < 0.02) {
-            particles.push({
-                x: Math.random() * 240,
-                y: Math.random() * 80,
-                vx: -5 - Math.random() * 5,
-                vy: 2 + Math.random() * 3,
-                size: Math.random() * 1.5 + 0.5,
-                color: '#ffffff',
-                rotation: 0, vRot: 0,
-                type: 'shooting_star',
-                life: 0,
-                maxLife: 20
-            });
-        }
-
-        // Moon
-        ctx.fillStyle = '#f4f6f0';
-        ctx.beginPath();
-        ctx.arc(200, 40, 25, 0, Math.PI * 2);
-        ctx.fill();
-        // Moon craters
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
-        ctx.beginPath(); ctx.arc(195, 35, 4, 0, Math.PI * 2); ctx.fill();
-        ctx.beginPath(); ctx.arc(210, 45, 6, 0, Math.PI * 2); ctx.fill();
-        ctx.beginPath(); ctx.arc(190, 50, 3, 0, Math.PI * 2); ctx.fill();
-
-        // Fog Layer
-        const fogX = (animTime * 10) % 240;
-        ctx.fillStyle = 'rgba(200, 200, 220, 0.05)';
-        for (let i = 0; i < 4; i++) {
-            ctx.beginPath();
-            ctx.ellipse((fogX + i * 80) % 320 - 40, 150, 60, 20, 0, 0, Math.PI * 2);
-            ctx.fill();
-        }
-
-        // Terrain Hills
-        ctx.fillStyle = '#110a12';
-        ctx.beginPath();
-        ctx.moveTo(0, 200);
-        ctx.lineTo(0, 160);
-        ctx.quadraticCurveTo(60, 130, 120, 165);
-        ctx.quadraticCurveTo(180, 190, 240, 150);
-        ctx.lineTo(240, 200);
-        ctx.fill();
-
-        ctx.fillStyle = '#0a050b';
-        ctx.beginPath();
-        ctx.moveTo(0, 200);
-        ctx.lineTo(0, 180);
-        ctx.quadraticCurveTo(80, 160, 150, 185);
-        ctx.quadraticCurveTo(200, 195, 240, 175);
-        ctx.lineTo(240, 200);
-        ctx.fill();
-
-        // Dead tree silhouette
-        ctx.strokeStyle = '#050205';
-        ctx.lineWidth = 3;
-        ctx.beginPath();
-        ctx.moveTo(210, 180);
-        ctx.lineTo(210, 130);
-        ctx.lineTo(195, 110);
-        ctx.moveTo(210, 120);
-        ctx.lineTo(225, 105);
-        ctx.stroke();
-
-        // 2. 3D Wooden Gallows
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
-        ctx.fillRect(15, 185, 210, 10);
-
-        const dark = errors * 15;
-        const gColor = (r, g, b) => `rgb(${Math.max(0, r - dark)}, ${Math.max(0, g - dark)}, ${Math.max(0, b - dark)})`;
-
-        let baseGrad = ctx.createLinearGradient(20, 175, 20, 185);
-        baseGrad.addColorStop(0, gColor(139, 90, 43));
-        baseGrad.addColorStop(0.5, gColor(92, 58, 33));
-        baseGrad.addColorStop(1, gColor(61, 35, 18));
-        ctx.fillStyle = baseGrad;
-        ctx.fillRect(20, 175, 200, 10);
-        ctx.strokeStyle = gColor(170, 116, 64);
-        ctx.lineWidth = 1;
-        ctx.strokeRect(20, 175, 200, 10);
-
-        let postGrad = ctx.createLinearGradient(45, 0, 61, 0);
-        postGrad.addColorStop(0, gColor(170, 116, 64));
-        postGrad.addColorStop(0.3, gColor(115, 70, 36));
-        postGrad.addColorStop(1, gColor(61, 35, 18));
-        ctx.fillStyle = postGrad;
-        ctx.fillRect(45, 18, 16, 157);
-
-        ctx.strokeStyle = 'rgba(40, 20, 10, 0.6)';
-        ctx.lineWidth = 1;
-        ctx.beginPath();
-        ctx.moveTo(49, 18); ctx.lineTo(49, 175);
-        ctx.moveTo(57, 18); ctx.lineTo(57, 175);
-        ctx.stroke();
-
-        let beamGrad = ctx.createLinearGradient(45, 16, 45, 30);
-        beamGrad.addColorStop(0, gColor(158, 103, 50));
-        beamGrad.addColorStop(0.5, gColor(105, 62, 27));
-        beamGrad.addColorStop(1, gColor(61, 35, 18));
-        ctx.fillStyle = beamGrad;
-        ctx.fillRect(45, 16, 130, 14);
-
-        ctx.save();
-        ctx.fillStyle = gColor(105, 62, 27);
-        ctx.beginPath();
-        ctx.moveTo(45, 55);
-        ctx.lineTo(85, 16);
-        ctx.lineTo(95, 16);
-        ctx.lineTo(45, 67);
-        ctx.closePath();
-        ctx.fill();
-        ctx.strokeStyle = gColor(164, 111, 56);
-        ctx.stroke();
-        ctx.restore();
-
-        if (errors >= 3) {
-            ctx.strokeStyle = 'rgba(0, 0, 0, 0.8)';
-            ctx.lineWidth = 1;
-            ctx.beginPath();
-            ctx.moveTo(45, 100); ctx.lineTo(52, 105); ctx.lineTo(48, 115);
-            ctx.moveTo(61, 80); ctx.lineTo(55, 88); ctx.lineTo(58, 95);
-            ctx.moveTo(100, 30); ctx.lineTo(105, 25); ctx.lineTo(110, 30);
-            if (errors >= 5) {
-                ctx.moveTo(45, 140); ctx.lineTo(55, 142); ctx.lineTo(50, 150);
-                ctx.moveTo(130, 30); ctx.lineTo(125, 22); ctx.lineTo(135, 26);
-            }
-            ctx.stroke();
-        }
-
-        ctx.fillStyle = '#d4af37';
-        ctx.fillRect(43, 14, 20, 18);
-        ctx.fillRect(43, 165, 20, 12);
-        ctx.fillStyle = '#4a3707';
-        ctx.beginPath();
-        ctx.arc(48, 20, 2, 0, Math.PI * 2);
-        ctx.arc(58, 20, 2, 0, Math.PI * 2);
-        ctx.arc(48, 171, 2, 0, Math.PI * 2);
-        ctx.arc(58, 171, 2, 0, Math.PI * 2);
-        ctx.fill();
-
-        ctx.fillStyle = '#d4af37';
-        ctx.beginPath();
-        ctx.arc(165, 23, 9, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.fillStyle = '#3d2312';
-        ctx.beginPath();
-        ctx.arc(165, 23, 3, 0, Math.PI * 2);
-        ctx.fill();
-
-        // 3. Rope & Noose Physics
-        if (Math.random() < 0.02) {
-            windForce = (Math.random() - 0.5) * 0.02; // random wind gusts
-        }
-        ropeAngularAcceleration = -0.05 * Math.sin(ropeAngle) + windForce;
-        ropeAngularVelocity += ropeAngularAcceleration;
-        ropeAngularVelocity *= 0.95; // damping
-        ropeAngle += ropeAngularVelocity;
-
-        let nooseSway = ropeAngle;
-        if (gameEnded && isWin()) nooseSway = Math.sin(animTime * 6) * 0.08;
-        
-        const ropeStartX = 165;
-        const ropeStartY = 23;
-        const ropeLen = 30;
-        const hangX = ropeStartX + Math.sin(nooseSway) * ropeLen;
-        const hangY = ropeStartY + Math.cos(nooseSway) * ropeLen;
-
-        ctx.strokeStyle = '#d2b48c';
-        ctx.lineWidth = 3.5;
-        ctx.beginPath();
-        ctx.moveTo(ropeStartX, ropeStartY);
-        ctx.lineTo(hangX, hangY);
-        ctx.stroke();
-
-        ctx.strokeStyle = '#8b7355';
-        ctx.lineWidth = 1;
-        ctx.beginPath();
-        ctx.moveTo(ropeStartX - 1, ropeStartY);
-        ctx.lineTo(hangX - 1, hangY);
-        ctx.stroke();
-
-        // 4. Character Sprite Rendering
-        const cx = hangX;
-        const cy = hangY;
-        const idleBounce = (gameEnded && isWin()) ? Math.abs(Math.sin(animTime * 8)) * 12 : Math.sin(animTime * 3) * 2;
-
-        if (errors > 0) {
-            // Head (Error 1)
-            const headY = cy + 16 - idleBounce;
-            const headR = 15;
-
-            const faceHealth = Math.max(0, 1 - (errors / maxErrors));
-            const shadowIntensity = (1 - faceHealth) * 0.8;
-            const headGrad = ctx.createRadialGradient(cx - 3, headY - 3, 2, cx, headY, headR);
-            headGrad.addColorStop(0, '#ffdfc4');
-            headGrad.addColorStop(0.7, '#f5c6a1');
-            headGrad.addColorStop(1, `rgba(100, 50, 50, ${shadowIntensity})`);
-
-            ctx.fillStyle = headGrad;
-            ctx.beginPath();
-            ctx.arc(cx, headY, headR, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.strokeStyle = '#37474f';
-            ctx.lineWidth = 2.5;
-            ctx.stroke();
-
-            ctx.fillStyle = '#0288d1';
-            ctx.beginPath();
-            ctx.arc(cx, headY - 4, headR - 1, Math.PI, Math.PI * 2);
-            ctx.fill();
-            ctx.fillRect(cx - headR - 2, headY - 5, (headR + 2) * 2, 4);
-
-            ctx.fillStyle = 'rgba(255, 120, 120, 0.55)';
-            ctx.beginPath();
-            ctx.arc(cx - 7, headY + 3, 3.5, 0, Math.PI * 2);
-            ctx.arc(cx + 7, headY + 3, 3.5, 0, Math.PI * 2);
-            ctx.fill();
-
-            // Eyes
-            ctx.fillStyle = '#1a237e';
-            if (gameEnded && isWin()) {
-                ctx.strokeStyle = '#1b5e20';
-                ctx.lineWidth = 2;
-                ctx.beginPath();
-                ctx.arc(cx - 6, headY - 1, 3, Math.PI, Math.PI * 2);
-                ctx.arc(cx + 6, headY - 1, 3, Math.PI, Math.PI * 2);
-                ctx.stroke();
-            } else if (gameEnded && !isWin()) {
-                ctx.strokeStyle = '#b71c1c';
-                ctx.lineWidth = 2;
-                ctx.beginPath();
-                ctx.moveTo(cx - 8, headY - 4); ctx.lineTo(cx - 3, headY + 1);
-                ctx.moveTo(cx - 3, headY - 4); ctx.lineTo(cx - 8, headY + 1);
-                ctx.moveTo(cx + 3, headY - 4); ctx.lineTo(cx + 8, headY + 1);
-                ctx.moveTo(cx + 8, headY - 4); ctx.lineTo(cx + 3, headY + 1);
-                ctx.stroke();
-            } else if (screenShake > 0) {
-                ctx.beginPath();
-                ctx.arc(cx - 6, headY - 1, 4.5, 0, Math.PI * 2);
-                ctx.arc(cx + 6, headY - 1, 4.5, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.fillStyle = '#ffffff';
-                ctx.beginPath();
-                ctx.arc(cx - 6, headY - 1, 2, 0, Math.PI * 2);
-                ctx.arc(cx + 6, headY - 1, 2, 0, Math.PI * 2);
-                ctx.fill();
-            } else if (isBlinking) {
-                ctx.strokeStyle = '#263238';
-                ctx.lineWidth = 2;
-                ctx.beginPath();
-                ctx.moveTo(cx - 8, headY - 1); ctx.lineTo(cx - 3, headY - 1);
-                ctx.moveTo(cx + 3, headY - 1); ctx.lineTo(cx + 8, headY - 1);
-                ctx.stroke();
-            } else {
-                const eyeR = (errors >= maxErrors - 1) ? 4 : 3;
-                ctx.beginPath();
-                ctx.arc(cx - 6, headY - 1, eyeR, 0, Math.PI * 2);
-                ctx.arc(cx + 6, headY - 1, eyeR, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.fillStyle = '#ffffff';
-                ctx.beginPath();
-                ctx.arc(cx - 7, headY - 2, 1, 0, Math.PI * 2);
-                ctx.arc(cx + 5, headY - 2, 1, 0, Math.PI * 2);
-                ctx.fill();
-            }
-
-            // Mouth Expressions
-            ctx.strokeStyle = '#8e0000';
-            ctx.lineWidth = 2;
-            ctx.beginPath();
-            if (gameEnded && isWin()) {
-                ctx.arc(cx, headY + 4, 5, 0, Math.PI);
-            } else if (gameEnded && !isWin()) {
-                ctx.arc(cx, headY + 7, 4, Math.PI, Math.PI * 2);
-            } else if (errors >= 4) {
-                ctx.arc(cx, headY + 5, 3, 0, Math.PI * 2);
-            } else {
-                ctx.arc(cx, headY + 4, 3, 0, Math.PI);
-            }
-            ctx.stroke();
-
-            // Torso (Error 2)
-            if (errors > 1) {
-                const bodyY1 = headY + headR;
-                const bodyY2 = bodyY1 + 35;
-                
-                const torsoGrad = ctx.createLinearGradient(cx - 8, bodyY1, cx + 8, bodyY1);
-                torsoGrad.addColorStop(0, '#00695c');
-                torsoGrad.addColorStop(0.5, '#00897b');
-                torsoGrad.addColorStop(1, '#004d40');
-
-                ctx.fillStyle = torsoGrad;
-                ctx.fillRect(cx - 8, bodyY1, 16, 35);
-                ctx.strokeStyle = '#004d40';
-                ctx.lineWidth = 2;
-                ctx.strokeRect(cx - 8, bodyY1, 16, 35);
-
-                ctx.strokeStyle = 'rgba(0,0,0,0.3)';
-                ctx.lineWidth = 1;
-                ctx.beginPath();
-                ctx.moveTo(cx - 5, bodyY1 + 5); ctx.lineTo(cx - 2, bodyY1 + 15);
-                ctx.moveTo(cx + 6, bodyY1 + 8); ctx.lineTo(cx + 3, bodyY1 + 18);
-                ctx.moveTo(cx - 4, bodyY1 + 25); ctx.lineTo(cx - 1, bodyY1 + 30);
-                ctx.stroke();
-
-                ctx.fillStyle = '#ffeb3b';
-                ctx.beginPath();
-                ctx.arc(cx, bodyY1 + 8, 2.5, 0, Math.PI * 2);
-                ctx.arc(cx, bodyY1 + 18, 2.5, 0, Math.PI * 2);
-                ctx.arc(cx, bodyY1 + 28, 2.5, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.fillStyle = '#bc9b00';
-                ctx.beginPath();
-                ctx.arc(cx + 1, bodyY1 + 9, 1, 0, Math.PI * 2);
-                ctx.arc(cx + 1, bodyY1 + 19, 1, 0, Math.PI * 2);
-                ctx.arc(cx + 1, bodyY1 + 29, 1, 0, Math.PI * 2);
-                ctx.fill();
-
-                // Left Arm (Error 3)
-                if (errors > 2) {
-                    ctx.strokeStyle = '#004d40';
-                    ctx.lineWidth = 3.5;
-                    ctx.beginPath();
-                    const lArmAngle = (gameEnded && isWin()) ? -Math.PI * 0.75 : (screenShake > 0 ? Math.sin(animTime * 20) * 0.8 + 0.3 : Math.sin(animTime * 3) * 0.2 + 0.3);
-                    ctx.moveTo(cx - 8, bodyY1 + 6);
-                    ctx.lineTo(cx - 8 - Math.cos(lArmAngle) * 20, bodyY1 + 6 + Math.sin(lArmAngle) * 20);
-                    ctx.stroke();
-                }
-
-                // Right Arm (Error 4)
-                if (errors > 3) {
-                    ctx.strokeStyle = '#004d40';
-                    ctx.lineWidth = 3.5;
-                    ctx.beginPath();
-                    const rArmAngle = (gameEnded && isWin()) ? -Math.PI * 0.25 : (screenShake > 0 ? -Math.sin(animTime * 22) * 0.8 - 0.3 : -Math.sin(animTime * 3) * 0.2 - 0.3);
-                    ctx.moveTo(cx + 8, bodyY1 + 6);
-                    ctx.lineTo(cx + 8 + Math.cos(rArmAngle) * 20, bodyY1 + 6 + Math.sin(rArmAngle) * 20);
-                    ctx.stroke();
-                }
-
-                // Left Leg (Error 5)
-                if (errors > 4) {
-                    ctx.strokeStyle = '#37474f';
-                    ctx.lineWidth = 4;
-                    ctx.beginPath();
-                    const lLegX = (gameEnded && isWin()) ? cx - 12 : (screenShake > 0 ? cx - 10 + Math.sin(animTime * 15) * 6 : cx - 10 + Math.sin(animTime * 4) * 2);
-                    ctx.moveTo(cx - 5, bodyY2);
-                    ctx.lineTo(lLegX, bodyY2 + 25);
-                    ctx.stroke();
-                    ctx.fillStyle = '#3e2723';
-                    ctx.fillRect(lLegX - 4, bodyY2 + 23, 7, 5);
-                }
-
-                // Right Leg (Error 6)
-                if (errors > 5) {
-                    ctx.strokeStyle = '#37474f';
-                    ctx.lineWidth = 4;
-                    ctx.beginPath();
-                    const rLegX = (gameEnded && isWin()) ? cx + 12 : (screenShake > 0 ? cx + 10 - Math.sin(animTime * 17) * 6 : cx + 10 - Math.sin(animTime * 4) * 2);
-                    ctx.moveTo(cx + 5, bodyY2);
-                    ctx.lineTo(rLegX, bodyY2 + 25);
-                    ctx.stroke();
-                    ctx.fillStyle = '#3e2723';
-                    ctx.fillRect(rLegX - 3, bodyY2 + 23, 7, 5);
-                }
-            }
-        }
-
-        // 4.5. Ghost floating up on loss (Loop 2)
-        if (gameEnded && !isWin()) {
-            lossAnimTimer += 1;
-            const ghostY = cy - 20 - lossAnimTimer * 0.8;
-            const ghostAlpha = Math.max(0, 1.0 - lossAnimTimer / 150);
-            if (ghostAlpha > 0) {
-                ctx.save();
-                ctx.globalAlpha = ghostAlpha;
-                ctx.fillStyle = 'rgba(224, 247, 250, 0.85)';
-                ctx.shadowColor = '#80deea';
-                ctx.shadowBlur = 10;
-                ctx.beginPath();
-                ctx.arc(cx, ghostY, 14, Math.PI, 0);
-                const sway = Math.sin(lossAnimTimer * 0.15) * 3;
-                ctx.lineTo(cx + 14 + sway, ghostY + 22);
-                ctx.lineTo(cx + 7 + sway, ghostY + 17);
-                ctx.lineTo(cx + sway, ghostY + 22);
-                ctx.lineTo(cx - 7 + sway, ghostY + 17);
-                ctx.lineTo(cx - 14 + sway, ghostY + 22);
-                ctx.closePath();
-                ctx.fill();
-                
-                ctx.shadowBlur = 0;
-                ctx.fillStyle = '#006064';
-                ctx.beginPath();
-                ctx.arc(cx - 5 + sway*0.5, ghostY - 3, 2.5, 0, Math.PI * 2);
-                ctx.arc(cx + 5 + sway*0.5, ghostY - 3, 2.5, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.beginPath();
-                ctx.ellipse(cx + sway*0.5, ghostY + 5, 2.5, 4, 0, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.restore();
-            }
-        } else {
-            lossAnimTimer = 0;
-        }
-
-        // 5. Update and Draw Particles
-        updateAndDrawParticles(ctx);
-
-        // Clean static inlay perimeter border (Mandate 11: no moving sheen or glints)
-        ctx.strokeStyle = 'rgba(79, 172, 254, 0.4)';
-        ctx.lineWidth = 1.5;
-        ctx.strokeRect(4, 4, w - 8, h - 8);
-
-        // 9. Ornate Western / Spooky Gallows HUD Corner Filigree L-Brackets with Brass Rivet Studs
-        const cornerSize = 16;
-        const corners = [
-            { x: 3, y: 3, dx: 1, dy: 1 },
-            { x: w - 3, y: 3, dx: -1, dy: 1 },
-            { x: 3, y: h - 3, dx: 1, dy: -1 },
-            { x: w - 3, y: h - 3, dx: -1, dy: -1 }
-        ];
-        corners.forEach(c => {
-            ctx.save();
-            ctx.strokeStyle = '#d4af37';
-            ctx.lineWidth = 2;
-            ctx.shadowColor = '#d4af37';
-            ctx.shadowBlur = 3;
-            ctx.beginPath();
-            ctx.moveTo(c.x + c.dx * cornerSize, c.y);
-            ctx.lineTo(c.x, c.y);
-            ctx.lineTo(c.x, c.y + c.dy * cornerSize);
-            ctx.stroke();
-
-            // Inner rustic notch
-            ctx.strokeStyle = 'rgba(79, 172, 254, 0.7)';
-            ctx.lineWidth = 1;
-            ctx.beginPath();
-            ctx.moveTo(c.x + c.dx * (cornerSize - 4), c.y + c.dy * 3);
-            ctx.lineTo(c.x + c.dx * 3, c.y + c.dy * 3);
-            ctx.lineTo(c.x + c.dx * 3, c.y + c.dy * (cornerSize - 4));
-            ctx.stroke();
-
-            // Brass rivet pin with highlight
-            const rx = c.x + c.dx * 6;
-            const ry = c.y + c.dy * 6;
-            ctx.shadowBlur = 0;
-            ctx.fillStyle = '#b8860b';
-            ctx.beginPath();
-            ctx.arc(rx, ry, 1.8, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.fillStyle = '#ffffff';
-            ctx.beginPath();
-            ctx.arc(rx - 0.5, ry - 0.5, 0.7, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.restore();
-        });
-
-        ctx.restore(); // screenShake restore
-        ctx.restore(); // dpr scale restore
-
-        requestAnimationFrame(renderHangmanCanvas);
+        saveCustomCategories();
+        renderStudioCategorySelect();
+        document.getElementById('studio-category-select').value = deckName;
+        renderStudioWordList();
+        showToast(`Installed '${deckName}' expansion deck!`, "success");
     }
 
-    function updateKeyboardStates() {
-        for (let i = 0; i < 26; i++) {
-            const letter = String.fromCharCode(65 + i);
-            const btn = document.getElementById('key-' + letter);
-            if (btn) {
-                btn.classList.remove('key-correct', 'key-wrong');
-                if (guessed.has(letter)) {
-                    btn.disabled = true;
-                    if (word.includes(letter)) {
-                        btn.classList.add('key-correct');
-                        btn.setAttribute('data-badge', '✓');
-                    } else {
-                        btn.classList.add('key-wrong');
-                        btn.setAttribute('data-badge', '✗');
+    function exportDictionaryJSON() {
+        const toExport = {};
+        for (const cat in CATEGORIES) {
+            toExport[cat] = CATEGORIES[cat];
+        }
+        const blob = new Blob([JSON.stringify(toExport, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `khangman_wordbank_${Date.now()}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        showToast("Exported word bank to JSON!", "success");
+    }
+
+    function exportDictionaryTXT() {
+        const sel = document.getElementById('studio-category-select');
+        const cat = sel ? sel.value : "Animals";
+        const words = CATEGORIES[cat] || [];
+        const blob = new Blob([words.join('\n')], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `khangman_${cat.toLowerCase()}_words.txt`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        showToast(`Exported ${cat} words to TXT!`, "success");
+    }
+
+    function importDictionaryFile(event) {
+        const file = event.target.files && event.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            try {
+                if (file.name.endsWith('.json')) {
+                    const parsed = JSON.parse(e.target.result);
+                    let count = 0;
+                    for (const cat in parsed) {
+                        if (Array.isArray(parsed[cat])) {
+                            CATEGORIES[cat] = parsed[cat].map(w => String(w).toUpperCase().replace(/[^A-Z]/g, '')).filter(w => w.length >= 3);
+                            count++;
+                        }
                     }
+                    saveCustomCategories();
+                    renderStudioCategorySelect();
+                    renderStudioWordList();
+                    showToast(`Imported ${count} categories from JSON!`, "success");
                 } else {
-                    btn.disabled = gameEnded;
-                    btn.removeAttribute('data-badge');
+                    // Plain text format
+                    const catName = file.name.replace(/\.[^/.]+$/, "").replace(/[^a-zA-Z0-9_]/g, " ").trim() || "Imported";
+                    const words = e.target.result.split('\n').map(w => w.trim().toUpperCase().replace(/[^A-Z]/g, '')).filter(w => w.length >= 3);
+                    if (words.length > 0) {
+                        CATEGORIES[catName] = words;
+                        saveCustomCategories();
+                        renderStudioCategorySelect();
+                        document.getElementById('studio-category-select').value = catName;
+                        renderStudioWordList();
+                        showToast(`Imported ${words.length} words into '${catName}'!`, "success");
+                    }
                 }
+            } catch (err) {
+                showToast("⚠️ Failed to parse dictionary file.", "error");
+            }
+        };
+        reader.readAsText(file);
+        event.target.value = '';
+    }
+
+    // ==========================================
+    // ⚔️ RETRO MULTIPLAYER 1v1 DUEL LOGIC
+    // ==========================================
+    function initRetroMultiplayer() {
+        if (typeof RetroMultiplayer === 'undefined') return;
+        if (rMultiplayer) return;
+        try {
+            rMultiplayer = new RetroMultiplayer({
+                gameId: 'khangman',
+                prefix: 'HNG',
+                playerName: myPlayerName,
+                soloTimeoutMs: 25000,
+                onMove: (moveData) => handleRemoteDuelMove(moveData),
+                onStateChange: (room) => handleRoomStateChange(room),
+                onOpponentJoin: ({ slot, name }) => handleOpponentJoined(slot, name),
+                onOpponentLeave: ({ slot, name }) => handleOpponentLeft(slot, name),
+                onChat: (chat) => {
+                    playSound('chat');
+                    showToast(`💬 ${duelOpponentName}: ${chat.text}`, 'info', 3500);
+                },
+                onRematch: (rematchData) => handleDuelRematch(rematchData),
+                onSoloFallback: ({ reason }) => handleSoloFallback(reason),
+                onStatusMsg: (msg, type) => showToast(msg, type)
+            });
+            rMultiplayer.init().then(({ onlineAvailable, inviteCode }) => {
+                if (inviteCode) {
+                    promptInviteDetected(inviteCode.toUpperCase());
+                }
+            });
+        } catch (err) {
+            console.warn("[KHangman] RetroMultiplayer init failed:", err);
+        }
+    }
+
+    function promptInviteDetected(code) {
+        pendingInviteCode = code;
+        const invNotif = document.getElementById('invite-notification');
+        const invText = document.getElementById('invite-code-text');
+        if (invNotif && invText) {
+            invText.textContent = code;
+            invNotif.style.display = 'flex';
+        }
+        showToast(`⚔️ Challenger invite to room [${code}] detected! Click 'Join Duel'.`, 'info', 4000);
+    }
+
+    function acceptInvite() {
+        const invNotif = document.getElementById('invite-notification');
+        if (invNotif) invNotif.style.display = 'none';
+        if (pendingInviteCode) {
+            openMultiplayerModal();
+            const joinInp = document.getElementById('duel-join-code-input');
+            if (joinInp) joinInp.value = pendingInviteCode;
+            joinDuelRoom(pendingInviteCode);
+        }
+    }
+
+    function savePlayerHandle() {
+        const inp = document.getElementById('duel-player-name');
+        if (inp && inp.value.trim()) {
+            myPlayerName = inp.value.trim().slice(0, 16);
+            safeSetStorage('kilo_khangman_name', myPlayerName);
+            if (rMultiplayer) rMultiplayer.playerName = myPlayerName;
+        }
+    }
+
+    function startSoloFallbackCountdown() {
+        stopSoloFallbackCountdown();
+        soloFallbackRemaining = 25;
+        const fbEl = document.getElementById('duel-fallback-countdown');
+        if (fbEl) {
+            fbEl.innerText = `⏳ Auto-fallback to CyberBot-99 in ${soloFallbackRemaining}s...`;
+            fbEl.style.display = 'block';
+        }
+        soloFallbackInterval = setInterval(() => {
+            soloFallbackRemaining--;
+            if (fbEl) fbEl.innerText = `⏳ Auto-fallback to CyberBot-99 in ${soloFallbackRemaining}s...`;
+            if (soloFallbackRemaining <= 0) {
+                stopSoloFallbackCountdown();
+            }
+        }, 1000);
+    }
+
+    function stopSoloFallbackCountdown() {
+        if (soloFallbackInterval) {
+            clearInterval(soloFallbackInterval);
+            soloFallbackInterval = null;
+        }
+        const fbEl = document.getElementById('duel-fallback-countdown');
+        if (fbEl) fbEl.style.display = 'none';
+    }
+
+    function handleSoloFallback(reason) {
+        stopSoloFallbackCountdown();
+        if (!duelActive && (!rMultiplayer || rMultiplayer.status !== 'waiting')) return;
+        showToast("🤖 No human challenger connected within 25s. Engaging CyberBot-99!", 'warning');
+        startSoloCyberBotDuel();
+    }
+
+    function startQuickMatch() {
+        savePlayerHandle();
+        if (!rMultiplayer) initRetroMultiplayer();
+        if (!rMultiplayer || !rMultiplayer.isOnlineAvailable) {
+            showToast("Multiplayer offline. Starting Solo CyberBot duel!", "warning");
+            startSoloCyberBotDuel();
+            return;
+        }
+        showDuelRoomCard("Searching for available room...");
+        startSoloFallbackCountdown();
+        rMultiplayer.quickMatch();
+    }
+
+    function createDuelRoom() {
+        savePlayerHandle();
+        if (!rMultiplayer) initRetroMultiplayer();
+        if (!rMultiplayer || !rMultiplayer.isOnlineAvailable) {
+            showToast("Multiplayer offline. Starting Solo CyberBot duel!", "warning");
+            startSoloCyberBotDuel();
+            return;
+        }
+        showDuelRoomCard("Generating ephemeral room...");
+        startSoloFallbackCountdown();
+        rMultiplayer.createRoom().then(res => {
+            if (res && res.roomId) {
+                currentRoomCode = res.roomId;
+                updateActiveRoomCode(res.roomId);
+            }
+        });
+    }
+
+    function joinDuelRoomFromInput() {
+        savePlayerHandle();
+        const codeInp = document.getElementById('duel-join-code-input');
+        const code = (codeInp ? codeInp.value : '').trim().toUpperCase();
+        if (!code) {
+            showToast("Please enter a room code", "warning");
+            return;
+        }
+        joinDuelRoom(code);
+    }
+
+    function joinDuelRoom(code) {
+        if (!rMultiplayer) initRetroMultiplayer();
+        if (!rMultiplayer || !rMultiplayer.isOnlineAvailable) {
+            showToast("Multiplayer offline. Playing vs CyberBot!", "warning");
+            startSoloCyberBotDuel();
+            return;
+        }
+        showDuelRoomCard(`Connecting to room [${code}]...`);
+        rMultiplayer.joinRoom(code);
+    }
+
+    function showDuelRoomCard(statusText) {
+        const card = document.getElementById('duel-room-card');
+        const statusEl = document.getElementById('duel-active-status');
+        if (card) card.style.display = 'block';
+        if (statusEl) statusEl.textContent = statusText;
+    }
+
+    function updateActiveRoomCode(code) {
+        const el = document.getElementById('duel-active-room-code');
+        if (el) el.textContent = code;
+    }
+
+    function copyDuelRoomLink() {
+        const code = rMultiplayer ? rMultiplayer.roomId : currentRoomCode;
+        if (!code) return;
+        const url = `${window.location.origin}${window.location.pathname}#room=${code}`;
+        navigator.clipboard.writeText(url).then(() => {
+            showToast(`Room invite link copied! [${code}]`, 'success');
+        }).catch(() => {
+            showToast(`Room code: ${code}`, 'info');
+        });
+    }
+
+    function leaveMultiplayerMatch() {
+        stopSoloFallbackCountdown();
+        stopSoloBot();
+        if (rMultiplayer) rMultiplayer.leaveRoom(true);
+        duelActive = false;
+        isSoloBotDuel = false;
+        closeAllModals();
+        document.getElementById('duel-hud').style.display = 'none';
+        document.getElementById('duel-status-tag').style.display = 'none';
+        document.getElementById('duel-room-card').style.display = 'none';
+        gameMode = 0;
+        initGame();
+        showToast("Returned to solo play.", "info");
+    }
+
+    function handleOpponentJoined(slot, name) {
+        stopSoloFallbackCountdown();
+        duelOpponentName = name || 'Challenger';
+        showToast(`⚔️ ${duelOpponentName} joined the duel! Match launching...`, 'success');
+        startOnlineDuelMatch();
+    }
+
+    function handleOpponentLeft(slot, name) {
+        showToast(`Opponent ${name || 'Challenger'} disconnected.`, 'warning');
+        const oppStatus = document.getElementById('duel-opp-status');
+        if (oppStatus) oppStatus.innerText = "Opponent disconnected";
+    }
+
+    function handleRoomStateChange(room) {
+        if (!room) return;
+        if (room.status === 'playing' && !duelActive) {
+            const oppSlot = rMultiplayer.mySlot === 'p1' ? 'p2' : 'p1';
+            if (room[oppSlot]) {
+                duelOpponentName = room[oppSlot].name || 'Challenger';
+            }
+            startOnlineDuelMatch(room);
+        }
+    }
+
+    function startOnlineDuelMatch(room = null) {
+        stopSoloFallbackCountdown();
+        closeAllModals();
+        duelActive = true;
+        isSoloBotDuel = false;
+        gameMode = 3; // Duel Mode
+        maxErrors = 6;
+        duelOpponentStrikes = 0;
+        duelOpponentSolved = false;
+        duelOpponentProgress = '';
+
+        // Synchronize word: Host picks or Guest adopts
+        if (rMultiplayer && rMultiplayer.isHost) {
+            selectNewWord();
+            rMultiplayer.sendMove({
+                type: 'init_duel',
+                word: word,
+                category: document.getElementById('category').value
+            });
+        } else if (room && room.lastMove && room.lastMove.data && room.lastMove.data.type === 'init_duel') {
+            word = room.lastMove.data.word;
+            document.getElementById('category').value = room.lastMove.data.category;
+            guessed.clear();
+            errors = 0;
+        } else {
+            selectNewWord();
+        }
+
+        setupDuelHUD();
+        gameEnded = false;
+        initKeyboard();
+        updateDisplay();
+        showToast(`⚔️ Duel live against ${duelOpponentName}! First to solve wins!`, 'info');
+    }
+
+    function setupDuelHUD() {
+        document.getElementById('duel-hud').style.display = 'block';
+        document.getElementById('duel-status-tag').style.display = 'inline-block';
+        document.getElementById('duel-opp-name').innerText = duelOpponentName;
+        document.getElementById('duel-opp-strikes').innerText = `Strikes: 0/${maxErrors}`;
+        document.getElementById('duel-opp-progress').innerText = word.split('').map(() => '_').join(' ');
+        document.getElementById('duel-opp-status').innerText = 'Ready to guess...';
+    }
+
+    function handleRemoteDuelMove(data) {
+        if (!data || !duelActive) return;
+        if (data.type === 'init_duel') {
+            word = data.word;
+            document.getElementById('category').value = data.category;
+            guessed.clear();
+            errors = 0;
+            setupDuelHUD();
+            updateDisplay();
+            initKeyboard();
+            return;
+        }
+
+        if (data.type === 'guess') {
+            duelOpponentStrikes = data.errors || 0;
+            duelOpponentProgress = data.progress || '';
+            
+            const strikesEl = document.getElementById('duel-opp-strikes');
+            const progEl = document.getElementById('duel-opp-progress');
+            const statusEl = document.getElementById('duel-opp-status');
+
+            if (strikesEl) strikesEl.innerText = `Strikes: ${duelOpponentStrikes}/${maxErrors}`;
+            if (progEl) progEl.innerText = duelOpponentProgress;
+            if (statusEl) statusEl.innerText = `Guessed '${data.letter}' (${data.correct ? 'Hit!' : 'Miss!'})`;
+
+            playSound(data.correct ? 'valid' : 'invalid');
+
+            if (data.solved) {
+                duelOpponentSolved = true;
+                finishDuelMatch(false, `${duelOpponentName} solved the word first!`);
+            } else if (data.hung) {
+                showToast(`💀 ${duelOpponentName} was hung! Solve the word to claim victory!`, 'warning');
             }
         }
     }
 
-    function initKeyboard() {
-        const keyboard = document.getElementById('keyboard');
-        keyboard.innerHTML = '';
-        for (let i = 0; i < 26; i++) {
-            const letter = String.fromCharCode(65 + i);
-            const btn = document.createElement('button');
-            btn.className = 'key';
-            btn.innerText = letter;
-            btn.onclick = () => guess(letter);
-            btn.id = 'key-' + letter;
-            keyboard.appendChild(btn);
+    function sendDuelChat(text) {
+        if (!duelActive) return;
+        playSound('chat');
+        showToast(`💬 You: ${text}`, 'info', 2000);
+        if (rMultiplayer && rMultiplayer.isOnline()) {
+            rMultiplayer.sendChat(text);
+        } else if (isSoloBotDuel) {
+            setTimeout(() => {
+                const botReplies = ["I am calculating probabilities...", "Target word is intriguing!", "Good match human!"];
+                const reply = botReplies[Math.floor(Math.random() * botReplies.length)];
+                playSound('chat');
+                showToast(`💬 CyberBot-99: ${reply}`, 'info', 3000);
+            }, 1000);
         }
-        updateKeyboardStates();
+    }
+
+    function requestRematchDuel() {
+        if (isSoloBotDuel) {
+            startSoloCyberBotDuel();
+            return;
+        }
+        if (rMultiplayer) {
+            rMultiplayer.requestRematch();
+            showToast("Rematch requested! Waiting for peer...", "info");
+        }
+    }
+
+    function handleDuelRematch(data) {
+        showToast("🔄 Rematch accepted! Starting new round...", "success");
+        startOnlineDuelMatch();
+    }
+
+    function finishDuelMatch(isVictory, customMsg) {
+        gameEnded = true;
+        disableAllKeys();
+        const msgEl = document.getElementById('message');
+        if (isVictory) {
+            msgEl.innerText = customMsg || `🏆 Victory! You defeated ${duelOpponentName}!`;
+            msgEl.style.color = '#4caf50';
+            playSound('win');
+            spawnWinParticles();
+            stats.wins++;
+            stats.streak++;
+            stats.duelWins = (stats.duelWins || 0) + 1;
+            if (stats.streak > stats.best) stats.best = stats.streak;
+            recordMatch('Duel Win', 'Online Duel');
+        } else {
+            msgEl.innerText = customMsg || `💀 Defeat! ${duelOpponentName} finished first!`;
+            msgEl.style.color = '#f44336';
+            playSound('lose');
+            spawnLossParticles();
+            stats.losses++;
+            stats.streak = 0;
+            stats.duelLosses = (stats.duelLosses || 0) + 1;
+            recordMatch('Duel Loss', 'Online Duel');
+        }
+        saveStats();
+        document.getElementById('def-btn').style.display = 'inline-block';
+    }
+
+    // ==========================================
+    // 🤖 CYBERBOT-99 SOLO AI DUEL (Rule 12 Fallback)
+    // ==========================================
+    function startSoloCyberBotDuel() {
+        stopSoloFallbackCountdown();
+        closeAllModals();
+        duelActive = true;
+        isSoloBotDuel = true;
+        duelOpponentName = 'CyberBot-99';
+        gameMode = 3;
+        maxErrors = 6;
+        duelOpponentStrikes = 0;
+        duelOpponentSolved = false;
+
+        selectNewWord();
+        setupDuelHUD();
+        gameEnded = false;
+        initKeyboard();
+        updateDisplay();
+
+        botGuessed.clear();
+        botErrors = 0;
+        stopSoloBot();
+
+        // Realistic typing bot loop: guesses every 2.6 - 3.8s
+        soloBotTimer = setInterval(botGuessTick, 3000);
+        showToast("🤖 CyberBot-99 duel started! First to solve wins!", "info");
+    }
+
+    function stopSoloBot() {
+        if (soloBotTimer) {
+            clearInterval(soloBotTimer);
+            soloBotTimer = null;
+        }
+    }
+
+    function botGuessTick() {
+        if (!duelActive || !isSoloBotDuel || gameEnded) {
+            stopSoloBot();
+            return;
+        }
+
+        // Letter frequency table
+        const letterPool = ['E','T','A','O','I','N','S','H','R','D','L','C','U','M','W','F','G','Y','P','B','V','K','J','X','Q','Z'];
+        const remainingInWord = [...new Set([...word])].filter(ch => !botGuessed.has(ch));
+        
+        let chosenLetter = null;
+        // 75% smart guess, 25% random guess
+        if (Math.random() < 0.75 && remainingInWord.length > 0) {
+            chosenLetter = remainingInWord[Math.floor(Math.random() * remainingInWord.length)];
+        } else {
+            const unGuessed = letterPool.filter(ch => !botGuessed.has(ch));
+            chosenLetter = unGuessed[0] || 'A';
+        }
+
+        botGuessed.add(chosenLetter);
+        const isCorrect = word.includes(chosenLetter);
+        if (!isCorrect) botErrors++;
+
+        // Update Opponent HUD
+        const strikesEl = document.getElementById('duel-opp-strikes');
+        const progEl = document.getElementById('duel-opp-progress');
+        const statusEl = document.getElementById('duel-opp-status');
+
+        if (strikesEl) strikesEl.innerText = `Strikes: ${botErrors}/${maxErrors}`;
+        if (progEl) {
+            progEl.innerText = word.split('').map(ch => botGuessed.has(ch) ? ch : '_').join(' ');
+        }
+        if (statusEl) statusEl.innerText = `CyberBot guessed '${chosenLetter}' (${isCorrect ? 'Hit!' : 'Miss!'})`;
+
+        playSound(isCorrect ? 'valid' : 'invalid');
+
+        const botSolved = [...word].every(ch => botGuessed.has(ch));
+        if (botSolved) {
+            stopSoloBot();
+            finishDuelMatch(false, `CyberBot-99 solved the word first!`);
+        } else if (botErrors >= maxErrors) {
+            stopSoloBot();
+            showToast("💀 CyberBot-99 was hung! You have the chance to win!", "warning");
+        }
+    }
+
+    // ==========================================
+    // 🎮 GAMEPLAY MODES & LOGIC
+    // ==========================================
+    function setModeFreeplay() {
+        duelActive = false;
+        isSoloBotDuel = false;
+        stopSoloBot();
+        document.getElementById('duel-hud').style.display = 'none';
+        document.getElementById('duel-status-tag').style.display = 'none';
+        gameMode = 0;
+        initGame();
+        showToast("Freeplay Mode activated.", "info");
     }
 
     function handleCategoryChange() {
@@ -1708,11 +2194,17 @@
         } else {
             document.getElementById('custom-container').style.display = 'none';
         }
-        gameMode = 0; // Manual selection switches to Freeplay
+        if (gameMode !== 3) gameMode = 0;
         initGame();
     }
 
     function startCampaign() {
+        duelActive = false;
+        isSoloBotDuel = false;
+        stopSoloBot();
+        document.getElementById('duel-hud').style.display = 'none';
+        document.getElementById('duel-status-tag').style.display = 'none';
+
         if (gameEnded && isWin() && gameMode === 1 && campaignLevel < 20) {
             campaignLevel++;
         } else {
@@ -1723,6 +2215,12 @@
     }
 
     function startBlitz() {
+        duelActive = false;
+        isSoloBotDuel = false;
+        stopSoloBot();
+        document.getElementById('duel-hud').style.display = 'none';
+        document.getElementById('duel-status-tag').style.display = 'none';
+
         gameMode = 2;
         blitzTime = 60;
         blitzWords = 0;
@@ -1775,6 +2273,8 @@
                     stats.streak = 0;
                     if (blitzWords > stats.blitzBest) stats.blitzBest = blitzWords;
                     saveStats();
+                    recordMatch('Blitz Loss', 'Time Attack Blitz');
+                    document.getElementById('def-btn').style.display = 'inline-block';
                 }
             } else {
                 clearInterval(blitzTimerId);
@@ -1784,13 +2284,13 @@
 
     function selectNewWord() {
         let words = [];
-        if (gameMode === 1) { // Campaign stage selection based on length
+        if (gameMode === 1) { // Campaign
             const st = CAMPAIGN_STAGES[campaignLevel - 1];
             maxErrors = st.maxErrors;
             
             if (st.cat !== "Polymath") {
                 document.getElementById('category').value = st.cat;
-                words = CATEGORIES[st.cat].filter(w => w.length >= st.minLen && w.length <= st.maxLen);
+                words = (CATEGORIES[st.cat] || []).filter(w => w.length >= st.minLen && w.length <= st.maxLen);
             } else { // Stage 20 Polymath Grandmaster
                 document.getElementById('category').value = "Animals";
                 let allWords = [];
@@ -1811,23 +2311,19 @@
                     if (parsedWords.length > 0) {
                         CATEGORIES["Custom"] = parsedWords;
                         words = parsedWords;
-                    } else {
-                        CATEGORIES["Custom"] = ["CUSTOM"];
-                        words = CATEGORIES["Custom"];
                     }
-                } else {
-                    if (!CATEGORIES["Custom"] || CATEGORIES["Custom"].length === 0) {
-                        CATEGORIES["Custom"] = ["CUSTOM"];
-                    }
-                    words = CATEGORIES["Custom"];
                 }
             }
         }
 
+        if (!words || words.length === 0) words = ["HANGMAN"];
         word = words[Math.floor(Math.random() * words.length)];
         guessed.clear();
         errors = 0;
         particles = [];
+        hintRevealed = false;
+        document.getElementById('hint-text').style.display = 'none';
+        document.getElementById('def-btn').style.display = 'none';
     }
 
     function initGame() {
@@ -1848,6 +2344,13 @@
             freezes = 2;
             bombs = 2;
             document.getElementById('campaign-btn').innerText = "Campaign (20)";
+        } else if (gameMode === 3) { // Duel
+            maxErrors = 6;
+            vowelReveals = 1;
+            consonantRadars = 1;
+            shields = 1;
+            freezes = 0;
+            bombs = 1;
         } else { // Freeplay
             maxErrors = 6;
             vowelReveals = 2;
@@ -1873,8 +2376,11 @@
             msgEl.innerText = `⚡ Blitz Time: ${blitzTime}s | Words Solved: ${blitzWords}`;
             msgEl.style.color = "#4facfe";
             startBlitzTimer();
+        } else if (gameMode === 3) {
+            msgEl.innerText = `⚔️ Duel active vs ${duelOpponentName}!`;
+            msgEl.style.color = "#ba68c8";
         } else {
-            msgEl.innerText = "Guess a letter";
+            msgEl.innerText = "Guess a letter to start";
             msgEl.style.color = "#e0e6ed";
         }
         
@@ -1882,6 +2388,37 @@
         document.getElementById('hangman-canvas').classList.remove('shake-animation');
         initKeyboard();
         updateDisplay();
+    }
+
+    // ==========================================
+    // ⚡ SKILL ABILITIES
+    // ==========================================
+    function updateSkillButtons() {
+        const vBtn = document.getElementById('vowel-btn');
+        if (vBtn) {
+            vBtn.innerText = `Vowel [1] (${vowelReveals})`;
+            vBtn.disabled = vowelReveals <= 0 || gameEnded;
+        }
+        const rBtn = document.getElementById('radar-btn');
+        if (rBtn) {
+            rBtn.innerText = `Radar [2] (${consonantRadars})`;
+            rBtn.disabled = consonantRadars <= 0 || gameEnded;
+        }
+        const sBtn = document.getElementById('shield-btn');
+        if (sBtn) {
+            sBtn.innerText = `Shield [3] (${shields})`;
+            sBtn.disabled = shields <= 0 || gameEnded;
+        }
+        const fBtn = document.getElementById('freeze-btn');
+        if (fBtn) {
+            fBtn.innerText = `Freeze [4] (${freezes})`;
+            fBtn.disabled = freezes <= 0 || gameEnded;
+        }
+        const bBtn = document.getElementById('bomb-btn');
+        if (bBtn) {
+            bBtn.innerText = `Bomb [5] (${bombs})`;
+            bBtn.disabled = bombs <= 0 || gameEnded;
+        }
     }
 
     function useVowelReveal() {
@@ -1895,6 +2432,8 @@
             spawnShockwave(120, 100, 70, '#00e676');
             const targetChar = unGuessedVowels[Math.floor(Math.random() * unGuessedVowels.length)];
             guess(targetChar);
+        } else {
+            showToast("No hidden vowels remaining!", "warning");
         }
     }
 
@@ -1909,6 +2448,8 @@
             spawnShockwave(120, 100, 70, '#fb8c00');
             const targetChar = unGuessedConsonants[Math.floor(Math.random() * unGuessedConsonants.length)];
             guess(targetChar);
+        } else {
+            showToast("No hidden consonants remaining!", "warning");
         }
     }
 
@@ -1933,7 +2474,7 @@
         triggerScreenShake(10);
         spawnShockwave(120, 100, 80, '#03a9f4');
         if (gameMode !== 2 && !blitzTimerId) {
-            startBlitzTimer(); // Enable ticker for freeze timer duration
+            startBlitzTimer();
         }
     }
 
@@ -1949,7 +2490,6 @@
         spawnShockwave(burstX, burstY, 65, '#ffeb3b');
         lightningFlash = 1.0;
 
-        // Layer 1: Incandescent needle core sparks
         for (let i = 0; i < 25; i++) {
             const angle = Math.random() * Math.PI * 2;
             const speed = Math.random() * 12 + 4;
@@ -1967,7 +2507,6 @@
             });
         }
 
-        // Layer 2: Expanding buoyant smoke/plasma puffs
         for (let i = 0; i < 20; i++) {
             const angle = Math.random() * Math.PI * 2;
             const speed = Math.random() * 4 + 1;
@@ -1985,7 +2524,6 @@
             });
         }
 
-        // Layer 3: Heavy kinematic wooden splinter & rope debris chunks
         for (let i = 0; i < 25; i++) {
             const angle = Math.random() * Math.PI * 2;
             const speed = Math.random() * 11 + 3;
@@ -2031,15 +2569,59 @@
         updateDisplay();
     }
 
+    // ==========================================
+    // 🔤 KEYBOARD & GUESS ENGINE
+    // ==========================================
+    function updateKeyboardStates() {
+        for (let i = 0; i < 26; i++) {
+            const letter = String.fromCharCode(65 + i);
+            const btn = document.getElementById('key-' + letter);
+            if (btn) {
+                btn.classList.remove('key-correct', 'key-wrong');
+                if (guessed.has(letter)) {
+                    btn.disabled = true;
+                    if (word.includes(letter)) {
+                        btn.classList.add('key-correct');
+                        btn.setAttribute('data-badge', '✓');
+                    } else {
+                        btn.classList.add('key-wrong');
+                        btn.setAttribute('data-badge', '✗');
+                    }
+                } else {
+                    btn.disabled = gameEnded;
+                    btn.removeAttribute('data-badge');
+                }
+            }
+        }
+    }
+
+    function initKeyboard() {
+        const keyboard = document.getElementById('keyboard');
+        keyboard.innerHTML = '';
+        for (let i = 0; i < 26; i++) {
+            const letter = String.fromCharCode(65 + i);
+            const btn = document.createElement('button');
+            btn.className = 'key';
+            btn.innerText = letter;
+            btn.onclick = () => guess(letter);
+            btn.id = 'key-' + letter;
+            keyboard.appendChild(btn);
+        }
+        updateKeyboardStates();
+    }
+
     function guess(letter) {
         if (guessed.has(letter) || errors >= maxErrors || isWin() || gameEnded) return;
         
         initAudio();
-        
         guessed.add(letter);
+        stats.totalGuesses++;
         updateKeyboardStates();
         
-        if (!word.includes(letter)) {
+        const isCorrect = word.includes(letter);
+        if (isCorrect) stats.correctGuesses++;
+
+        if (!isCorrect) {
             if (shields > 0) {
                 shields--;
                 updateSkillButtons();
@@ -2053,14 +2635,14 @@
                 }
             } else {
                 errors++;
-                ropeAngularVelocity += (Math.random() > 0.5 ? 0.3 : -0.3); // Add sudden sway on error
+                ropeAngularVelocity += (Math.random() > 0.5 ? 0.3 : -0.3);
                 triggerScreenShake(15);
                 spawnShockwave(165, 50, 70, '#f44336');
                 lightningFlash = 1.0;
                 if (errors < maxErrors) playSound('invalid');
             }
         } else {
-            if (gameMode === 2) blitzTime += 2; // +2s per correct letter in Blitz
+            if (gameMode === 2) blitzTime += 2;
             if (!isWin()) {
                 playSound('valid');
                 spawnSparkParticles();
@@ -2068,15 +2650,37 @@
         }
         
         updateDisplay();
+
+        // Broadcast to multiplayer opponent
+        if (duelActive) {
+            const displayStr = getDisplayStr();
+            const payload = {
+                type: 'guess',
+                letter: letter,
+                correct: isCorrect,
+                errors: errors,
+                progress: displayStr,
+                solved: isWin(),
+                hung: errors >= maxErrors
+            };
+            if (rMultiplayer && rMultiplayer.isOnline()) {
+                rMultiplayer.sendMove(payload);
+            }
+        }
+
         checkGameState();
     }
 
-    function updateDisplay() {
+    function getDisplayStr() {
         let displayStr = "";
         for (let char of word) {
             displayStr += guessed.has(char) ? char + " " : "_ ";
         }
-        document.getElementById('word-display').innerText = displayStr.trim();
+        return displayStr.trim();
+    }
+
+    function updateDisplay() {
+        document.getElementById('word-display').innerText = getDisplayStr();
     }
 
     function isWin() {
@@ -2086,9 +2690,9 @@
     function checkGameState() {
         const msgEl = document.getElementById('message');
         if (isWin()) {
-            if (gameMode === 2) { // Time Attack Blitz continuation
+            if (gameMode === 2) { // Blitz solve
                 blitzWords++;
-                blitzTime += 15; // +15s bonus for word solve
+                blitzTime += 15;
                 playSound('win');
                 spawnWinParticles();
                 stats.wins++;
@@ -2099,6 +2703,11 @@
                 selectNewWord();
                 initKeyboard();
                 updateDisplay();
+                return;
+            }
+
+            if (gameMode === 3) { // Duel win
+                finishDuelMatch(true, `🏆 Victory! You solved the word first!`);
                 return;
             }
 
@@ -2119,8 +2728,15 @@
                 stats.streak++;
                 if (stats.streak > stats.best) stats.best = stats.streak;
                 saveStats();
+                recordMatch('Win', gameMode === 1 ? `Campaign (${campaignLevel})` : 'Freeplay');
+                document.getElementById('def-btn').style.display = 'inline-block';
             }
         } else if (errors >= maxErrors) {
+            if (gameMode === 3) {
+                finishDuelMatch(false, `💀 You were hung! The word was ${word}`);
+                return;
+            }
+
             msgEl.innerText = "Game Over! Word was " + word;
             msgEl.style.color = "#f44336";
             disableAllKeys();
@@ -2138,6 +2754,8 @@
                 stats.streak = 0;
                 if (gameMode === 2 && blitzWords > stats.blitzBest) stats.blitzBest = blitzWords;
                 saveStats();
+                recordMatch('Loss', gameMode === 2 ? 'Blitz' : 'Freeplay');
+                document.getElementById('def-btn').style.display = 'inline-block';
             }
         }
     }
@@ -2146,18 +2764,388 @@
         document.querySelectorAll('.key').forEach(btn => btn.disabled = true);
     }
 
+    // ==========================================
+    // 🎨 CANVAS ANIMATION & VISUAL ENGINE
+    // ==========================================
+    function triggerScreenShake(amp = 14) {
+        screenShake = Math.max(screenShake, amp);
+        shakeAngle = Math.random() * Math.PI * 2;
+    }
+
+    function spawnShockwave(x, y, maxR = 60, color = '#ffd700') {
+        shockwaves.push({
+            x, y, r: 2, maxR,
+            speed: maxR / 16,
+            color: color,
+            life: 1.0,
+            decay: 0.045
+        });
+    }
+
+    function spawnWinParticles() {
+        const colors = ['#ffd700', '#ffeb3b', '#00e676', '#00b0ff', '#e040fb', '#ffffff'];
+        const burstX = 120 + (Math.random() * 40 - 20);
+        const burstY = 70 + (Math.random() * 30 - 15);
+        triggerScreenShake(14);
+        spawnShockwave(burstX, burstY, 90, '#ffd700');
+
+        for (let i = 0; i < 40; i++) {
+            const angle = Math.random() * Math.PI * 2;
+            const speed = Math.random() * 7 + 2;
+            particles.push({
+                x: burstX, y: burstY,
+                vx: Math.cos(angle) * speed,
+                vy: Math.sin(angle) * speed - 1.5,
+                size: Math.random() * 5 + 3,
+                rotation: Math.random() * Math.PI * 2,
+                vRot: (Math.random() - 0.5) * 0.4,
+                color: colors[Math.floor(Math.random() * colors.length)],
+                type: 'confetti',
+                drag: 0.98,
+                life: 0,
+                maxLife: 60 + Math.random() * 30
+            });
+        }
+    }
+
+    function spawnLossParticles() {
+        triggerScreenShake(20);
+        spawnShockwave(165, 140, 80, '#f44336');
+        for (let i = 0; i < 35; i++) {
+            const angle = Math.random() * Math.PI + Math.PI;
+            const speed = Math.random() * 4 + 1;
+            particles.push({
+                x: 165 + (Math.random() * 40 - 20),
+                y: 120 + (Math.random() * 20 - 10),
+                vx: Math.cos(angle) * speed,
+                vy: Math.sin(angle) * speed + 2,
+                size: Math.random() * 4 + 2,
+                color: '#f44336',
+                type: 'rain',
+                life: 0,
+                maxLife: 50 + Math.random() * 25
+            });
+        }
+    }
+
+    function spawnSparkParticles() {
+        for (let i = 0; i < 15; i++) {
+            const angle = Math.random() * Math.PI * 2;
+            const speed = Math.random() * 5 + 1.5;
+            particles.push({
+                x: 165 + (Math.random() * 10 - 5),
+                y: 90 + (Math.random() * 10 - 5),
+                vx: Math.cos(angle) * speed,
+                vy: Math.sin(angle) * speed,
+                size: Math.random() * 2.5 + 1,
+                color: '#4caf50',
+                glowColor: '#81c784',
+                type: 'spark',
+                drag: 0.94,
+                life: 0,
+                maxLife: 25 + Math.random() * 15
+            });
+        }
+    }
+
+    function renderHangmanCanvas() {
+        const canvas = document.getElementById('hangman-canvas');
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        const dpr = window.devicePixelRatio || 1;
+        const logicalW = 240;
+        const logicalH = 200;
+        if (canvas.width !== Math.round(logicalW * dpr) || canvas.height !== Math.round(logicalH * dpr)) {
+            canvas.width = Math.round(logicalW * dpr);
+            canvas.height = Math.round(logicalH * dpr);
+        }
+        animTime += 0.03;
+        
+        blinkTimer += 0.03;
+        if (blinkTimer > 3.5) {
+            isBlinking = true;
+            if (blinkTimer > 3.7) {
+                isBlinking = false;
+                blinkTimer = 0;
+            }
+        }
+
+        ctx.save();
+        ctx.scale(dpr, dpr);
+        const w = logicalW, h = logicalH;
+        ctx.clearRect(0, 0, w, h);
+
+        ctx.save();
+        if (screenShake > 0) {
+            const rot = Math.sin(shakeAngle * 0.8) * screenShake * 0.03 * (Math.PI / 180);
+            ctx.translate(w / 2, h / 2);
+            ctx.rotate(rot);
+            ctx.translate(-w / 2 + Math.cos(shakeAngle) * screenShake, -h / 2 + Math.sin(shakeAngle * 1.2) * screenShake);
+            screenShake *= 0.88;
+            shakeAngle += 1.4;
+            if (screenShake < 0.1) screenShake = 0;
+        }
+
+        // 1. Sky & Aurora Backdrop
+        const skyGrad = ctx.createLinearGradient(0, 0, 0, 200);
+        skyGrad.addColorStop(0, '#090d15');
+        skyGrad.addColorStop(1, '#111722');
+        ctx.fillStyle = skyGrad;
+        ctx.fillRect(-20, -20, 280, 240);
+
+        const auroraGrad = ctx.createLinearGradient(0, 0, 0, 150);
+        const auroraShift = Math.sin(animTime * 0.5) * 0.08;
+        auroraGrad.addColorStop(0, `rgba(13, 71, 161, ${0.12 + auroraShift})`);
+        auroraGrad.addColorStop(0.5, `rgba(0, 150, 136, ${0.08 + auroraShift * 0.5})`);
+        auroraGrad.addColorStop(1, 'rgba(0,0,0,0)');
+        ctx.fillStyle = auroraGrad;
+        ctx.fillRect(0, 0, w, 150);
+
+        // 2. Gallows Construction
+        let baseGrad = ctx.createLinearGradient(20, 175, 20, 185);
+        baseGrad.addColorStop(0, '#4e342e');
+        baseGrad.addColorStop(0.5, '#3e2723');
+        baseGrad.addColorStop(1, '#271916');
+        ctx.fillStyle = baseGrad;
+        ctx.fillRect(20, 175, 140, 10);
+
+        let postGrad = ctx.createLinearGradient(45, 0, 61, 0);
+        postGrad.addColorStop(0, '#4e342e');
+        postGrad.addColorStop(0.5, '#5d4037');
+        postGrad.addColorStop(1, '#3e2723');
+        ctx.fillStyle = postGrad;
+        ctx.fillRect(45, 20, 16, 155);
+
+        let beamGrad = ctx.createLinearGradient(45, 16, 45, 30);
+        beamGrad.addColorStop(0, '#4e342e');
+        beamGrad.addColorStop(1, '#2b1d1a');
+        ctx.fillStyle = beamGrad;
+        ctx.fillRect(45, 16, 125, 14);
+
+        ctx.strokeStyle = '#3e2723';
+        ctx.lineWidth = 12;
+        ctx.lineCap = 'round';
+        ctx.beginPath();
+        ctx.moveTo(61, 55);
+        ctx.lineTo(85, 30);
+        ctx.stroke();
+
+        // 3. Rope Physics
+        const anchorX = 165;
+        const anchorY = 30;
+        windForce = Math.sin(animTime * 0.8) * 0.003;
+        ropeAngularAcceleration = -0.06 * Math.sin(ropeAngle) + windForce;
+        ropeAngularVelocity += ropeAngularAcceleration;
+        ropeAngularVelocity *= 0.96;
+        ropeAngle += ropeAngularVelocity;
+
+        const ropeLen = 22;
+        const nooseX = anchorX + Math.sin(ropeAngle) * ropeLen;
+        const nooseY = anchorY + Math.cos(ropeAngle) * ropeLen;
+
+        ctx.strokeStyle = '#d7ccc8';
+        ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        ctx.moveTo(anchorX, anchorY);
+        ctx.lineTo(nooseX, nooseY);
+        ctx.stroke();
+
+        ctx.strokeStyle = '#a1887f';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(nooseX, nooseY + 3, 4, 0, Math.PI * 2);
+        ctx.stroke();
+
+        // 4. Stick Figure (errors 1 to 6)
+        if (errors > 0) {
+            ctx.save();
+            ctx.translate(nooseX, nooseY);
+            ctx.rotate(ropeAngle * 0.8);
+
+            const cx = 0;
+            const headY = 16;
+            const headR = 12;
+
+            // Head (Strike 1)
+            ctx.fillStyle = '#cfd8dc';
+            ctx.beginPath();
+            ctx.arc(cx, headY, headR, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Eyes & Expression
+            if (errors >= maxErrors) {
+                ctx.strokeStyle = '#263238';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(cx - 7, headY - 4); ctx.lineTo(cx - 2, headY + 1);
+                ctx.moveTo(cx - 2, headY - 4); ctx.lineTo(cx - 7, headY + 1);
+                ctx.moveTo(cx + 2, headY - 4); ctx.lineTo(cx + 7, headY + 1);
+                ctx.moveTo(cx + 7, headY - 4); ctx.lineTo(cx + 2, headY + 1);
+                ctx.stroke();
+            } else if (isBlinking) {
+                ctx.strokeStyle = '#263238';
+                ctx.lineWidth = 1.5;
+                ctx.beginPath();
+                ctx.moveTo(cx - 6, headY - 1); ctx.lineTo(cx - 2, headY - 1);
+                ctx.moveTo(cx + 2, headY - 1); ctx.lineTo(cx + 6, headY - 1);
+                ctx.stroke();
+            } else {
+                ctx.fillStyle = '#263238';
+                ctx.beginPath();
+                ctx.arc(cx - 4, headY - 1, 1.8, 0, Math.PI * 2);
+                ctx.arc(cx + 4, headY - 1, 1.8, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            // Torso (Strike 2)
+            if (errors > 1) {
+                const bodyY1 = headY + headR;
+                const bodyY2 = bodyY1 + 38;
+                ctx.strokeStyle = '#cfd8dc';
+                ctx.lineWidth = 6;
+                ctx.lineCap = 'round';
+                ctx.beginPath();
+                ctx.moveTo(cx, bodyY1);
+                ctx.lineTo(cx, bodyY2);
+                ctx.stroke();
+
+                // Left Arm (Strike 3)
+                if (errors > 2) {
+                    ctx.beginPath();
+                    ctx.moveTo(cx, bodyY1 + 8);
+                    ctx.lineTo(cx - 16, bodyY1 + 28);
+                    ctx.stroke();
+                }
+
+                // Right Arm (Strike 4)
+                if (errors > 3) {
+                    ctx.beginPath();
+                    ctx.moveTo(cx, bodyY1 + 8);
+                    ctx.lineTo(cx + 16, bodyY1 + 28);
+                    ctx.stroke();
+                }
+
+                // Left Leg (Strike 5)
+                if (errors > 4) {
+                    ctx.beginPath();
+                    ctx.moveTo(cx, bodyY2);
+                    ctx.lineTo(cx - 14, bodyY2 + 32);
+                    ctx.stroke();
+                }
+
+                // Right Leg (Strike 6)
+                if (errors > 5) {
+                    ctx.beginPath();
+                    ctx.moveTo(cx, bodyY2);
+                    ctx.lineTo(cx + 14, bodyY2 + 32);
+                    ctx.stroke();
+                }
+            }
+            ctx.restore();
+        }
+
+        // 5. Particles Engine
+        for (let i = particles.length - 1; i >= 0; i--) {
+            const p = particles[i];
+            p.life++;
+            if (p.drag) { p.vx *= p.drag; p.vy *= p.drag; }
+            if (p.type === 'confetti' || p.type === 'debris') p.vy += 0.15;
+            p.x += p.vx;
+            p.y += p.vy;
+
+            const alpha = Math.max(0, 1 - (p.life / p.maxLife));
+            ctx.save();
+            ctx.globalAlpha = alpha;
+            ctx.fillStyle = p.color;
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.size || 2, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+
+            if (p.life >= p.maxLife) particles.splice(i, 1);
+        }
+
+        // 6. Shockwaves
+        for (let i = shockwaves.length - 1; i >= 0; i--) {
+            const sw = shockwaves[i];
+            sw.r += sw.speed;
+            sw.life -= sw.decay;
+            if (sw.life <= 0 || sw.r >= sw.maxR) {
+                shockwaves.splice(i, 1);
+                continue;
+            }
+            ctx.save();
+            ctx.globalAlpha = sw.life;
+            ctx.strokeStyle = sw.color;
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.arc(sw.x, sw.y, sw.r, 0, Math.PI * 2);
+            ctx.stroke();
+            ctx.restore();
+        }
+
+        // 7. Lightning Flash
+        if (lightningFlash > 0) {
+            ctx.fillStyle = `rgba(255, 255, 255, ${lightningFlash * 0.35})`;
+            ctx.fillRect(0, 0, w, h);
+            lightningFlash *= 0.85;
+            if (lightningFlash < 0.02) lightningFlash = 0;
+        }
+
+        // 8. Static Ornamental Corner Brackets
+        const cornerSize = 10;
+        const corners = [
+            { x: 3, y: 3, dx: 1, dy: 1 },
+            { x: w - 3, y: 3, dx: -1, dy: 1 },
+            { x: 3, y: h - 3, dx: 1, dy: -1 },
+            { x: w - 3, y: h - 3, dx: -1, dy: -1 }
+        ];
+        corners.forEach(c => {
+            ctx.save();
+            ctx.strokeStyle = '#d4af37';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(c.x + c.dx * cornerSize, c.y);
+            ctx.lineTo(c.x, c.y);
+            ctx.lineTo(c.x, c.y + c.dy * cornerSize);
+            ctx.stroke();
+            ctx.restore();
+        });
+
+        ctx.restore(); // screenShake restore
+        ctx.restore(); // dpr scale restore
+
+        if (!isLoopStopped) {
+            animFrameId = requestAnimationFrame(renderHangmanCanvas);
+        }
+    }
+
+    function stopLoop() {
+        isLoopStopped = true;
+        if (animFrameId) {
+            cancelAnimationFrame(animFrameId);
+            animFrameId = null;
+        }
+    }
+
+    function startLoop() {
+        if (isLoopStopped) {
+            isLoopStopped = false;
+            animFrameId = requestAnimationFrame(renderHangmanCanvas);
+        }
+    }
+
+    // ==========================================
+    // ⌨️ INPUT SHORTCUTS & EVENT LISTENERS
+    // ==========================================
     document.addEventListener('keydown', (e) => {
         if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT')) {
             if (e.key === 'Escape') e.target.blur();
             return;
         }
 
-        const helpModal = document.getElementById('help-modal');
-        if (helpModal && helpModal.style.display !== 'none') {
-            if (e.key === 'Escape' || e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                hideHelp();
-            }
+        if (e.key === 'Escape') {
+            closeAllModals();
             return;
         }
 
@@ -2180,6 +3168,12 @@
             return;
         }
 
+        if (e.key === 'h' || e.key === 'H') {
+            e.preventDefault();
+            toggleHint();
+            return;
+        }
+
         if (gameEnded) {
             if (e.key === ' ' || e.key === 'Enter') {
                 e.preventDefault();
@@ -2187,6 +3181,8 @@
                     startCampaign();
                 } else if (gameMode === 2) {
                     startBlitz();
+                } else if (gameMode === 3) {
+                    requestRematchDuel();
                 } else {
                     initGame();
                 }
@@ -2204,22 +3200,57 @@
             useFreezeTimer();
         } else if (e.key === '5' && bombs > 0 && !gameEnded) {
             useBomb();
-        } else if (e.key.length === 1 && keyUpper >= 'A' && keyUpper <= 'Z') {
-            guess(keyUpper);
+        } else if (e.key && e.key.length === 1) {
+            const keyUpper = e.key.toUpperCase();
+            if (keyUpper >= 'A' && keyUpper <= 'Z') {
+                guess(keyUpper);
+            }
+        }
+    });
+
+    // Architecture Rule 2: visibilitychange guard
+    document.addEventListener('visibilitychange', () => {
+        if (document.hidden) {
+            stopLoop();
+        } else {
+            startLoop();
         }
     });
 
     function checkFirstRunTutorial() {
-        if (!localStorage.getItem('khangman_tutorial_seen')) {
+        if (!safeGetStorage('khangman_tutorial_seen', null)) {
             showHelp();
-            localStorage.setItem('khangman_tutorial_seen', '1');
+            safeSetStorage('khangman_tutorial_seen', '1');
         }
     }
 
+    function checkUrlHashParams() {
+        try {
+            const hash = window.location.hash.replace(/^#/, '');
+            let roomCode = null;
+            if (hash.startsWith('room=')) {
+                roomCode = hash.split('room=')[1];
+            } else if (/^[A-Za-z0-9_-]{3,10}$/.test(hash)) {
+                roomCode = hash;
+            }
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.has('room')) {
+                roomCode = urlParams.get('room');
+            }
+            if (roomCode) {
+                promptInviteDetected(roomCode.toUpperCase());
+            }
+        } catch (err) {}
+    }
+
+    // ==========================================
+    // 🚀 INITIALIZATION
+    // ==========================================
     loadStats();
     initGame();
     checkFirstRunTutorial();
-    requestAnimationFrame(renderHangmanCanvas);
+    checkUrlHashParams();
+    animFrameId = requestAnimationFrame(renderHangmanCanvas);
 </script>
 </body>
 </html>
