@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-creator
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -16,7 +16,7 @@ current_targets:
   kilo_graphics: KBreakout
   kilo_tester: KSolitaire
   kilo_usability: KMatch3
-  kilo_qa: KQuarantine
+  kilo_qa: KSettings
   kilo_expander: KSudoku
 virtual_web_target: "kweb://warez"
 virtual_web_rotation:
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-usability
-  app: KHangman
-  timestamp: "2026-10-06T19:54:00-07:00"
+  agent: kilo-qa
+  app: KQuarantine
+  timestamp: "2026-10-06T20:06:00-07:00"
 last_planner_run: "2026-10-06T14:20:00Z"
 ---
 
@@ -124,9 +124,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KPong`, `KSettings`, `KSimon`, `KSnake`, `KSolitaire`, `KSudoku`, `KTetris`, `KWords`, `KBBS`, `KCalendar`, `KChess`, `KFreecell` *(Completed: KCalc, KPomodoro, KTimer, KClock, KHash, KMystery, KMandel, KFont, KPing, KAudio, KSynth, KScript, KRead, KRadio, KSys, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KChrono, KTask, KStarForge, KPad, KBookmark, KRSS, KClip, KHex, KHabit, KFarm, KPaint, KGraph, KImage, KJournal, KMail, KMedia, KNet, KNote, KPass, KMine, KBBS, KCalendar, KChart, KColor, KChess, KConnect4, KConverter, KFreecell, KHangman)*.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
-- **Current Target**: `KQuarantine`
+- **Current Target**: `KSettings`
 - **Upcoming Queue**:
-  `KSettings`, `KTaskMgr`, `KHabit`, `KSudoku`, `KConnect4`, `KHangman`, `KSimon`, `KAsteroids`, `KFreecell`, `KMatch3`, `KWords`, `KGo`, `KDarts`, `KTowers`, `KReversi`, `KAlchemy`, `KColony`, `KStarForge`, `KBreakout`, `KRogue`, `KTetris`, `KPong`, `KPac`, `KChess`, `KColor`, `KConverter` *(Completed in Pass 5: KBBS, KChrono, KCipher, KClip, KCyber, KDragon, KFortress, KHash, KMaze, KMech, KMystery, KQuest, KSanctuary, KSnake, KSolitaire, KSpace, KStarDredge, KStarship, KStellar, KSubmarine, KSynth, KSys, KTask, KTerm, KTimer, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KRSS, K2048, KChart, KGraph, KContacts, KScript, KRead, KColosseum, KAbyss, KMedia, KAudio, KRadio, KPad, KPaint, KCalc, KMine, KCosmic, KBase, KBudget, KCalendar, KFarm, KFlash, KFont, KImage, KJournal, KMail, KMandel, KNet, KNote, KPass, KDB, KHex, KBookmark, KPing, KChat, KClock, KPomodoro, KBreakout, KRogue, KTetris, KPong, KPac, KChess, KColor, KConverter)*.
+  `KTaskMgr`, `KHabit`, `KSudoku`, `KConnect4`, `KHangman`, `KSimon`, `KAsteroids`, `KFreecell`, `KMatch3`, `KWords`, `KGo`, `KDarts`, `KTowers`, `KReversi`, `KAlchemy`, `KColony`, `KStarForge`, `KBreakout`, `KRogue`, `KTetris`, `KPong`, `KPac`, `KChess`, `KColor`, `KConverter` *(Completed in Pass 5: KBBS, KChrono, KCipher, KClip, KCyber, KDragon, KFortress, KHash, KMaze, KMech, KMystery, KQuest, KSanctuary, KSnake, KSolitaire, KSpace, KStarDredge, KStarship, KStellar, KSubmarine, KSynth, KSys, KTask, KTerm, KTimer, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KRSS, K2048, KChart, KGraph, KContacts, KScript, KRead, KColosseum, KAbyss, KMedia, KAudio, KRadio, KPad, KPaint, KCalc, KMine, KCosmic, KBase, KBudget, KCalendar, KFarm, KFlash, KFont, KImage, KJournal, KMail, KMandel, KNet, KNote, KPass, KDB, KHex, KBookmark, KPing, KChat, KClock, KPomodoro, KBreakout, KRogue, KTetris, KPong, KPac, KChess, KColor, KConverter, KQuarantine)*.
 
 ### 6. Feature Expander Queue (`kilo-expander`)
 - **Current Target**: `KPac`
@@ -217,6 +217,15 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-06T20:06:00-07:00 — kilo-qa: KQuarantine (Pass 5 QA & Build Audit: State Persistence, Tutorial Integrity & TINAG Fix)**
+  - Status: PASS ✅ (0 regressions, 42.5 KB web < 999 KB ceiling).
+  - State Persistence: Implemented F5 quicksave and F9 quickload capturing complete session state, logs, history, and status flags.
+  - Tutorial & Help: Added accessible Help & Mission Briefing modal with first-run onboarding check (`kquarantine_tutorialSeen`).
+  - Overlay & Controls: Added non-occluding toast system, header Save/Load buttons, Esc/Enter modal dismiss, and F1 hotkey.
+  - TINAG & Lore Integrity: Cleaned un-diegetic ARG reference in button title; verified zero meta-spoilers and full mystery preservation.
+  - Verification: `test_app_startup.py` PASS (modal dismiss clean); `test_web_apps.js` PASS (11 elements, 0 err); `test_arg_flow.py` PASS; Vite clean (479ms); `security_lint.py` 100% PASS.
+  - Queue: Advanced `kilo_qa` to `KSettings`; handoff to `kilo-expander`.
+
 - **2026-10-06T19:54:00-07:00 — kilo-usability: KHangman (Layout & Sizing, HiDPI DPR Scaling, Hotkey Collision Fix & Mandate 11)**
   - Status: PASS ✅ (0 regressions, 92.0 KB web / 35.0 KB native < 999 KB ceiling).
   - Window Sizing: Adjusted default dimensions to 620x600 in `App.jsx`; optimized container padding to eliminate internal scrollbars.
@@ -252,11 +261,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Verification: `test_arg_flow.py` 100% PASS; `security_lint.py` 100% PASS; Vite clean (347ms); 308.6 KB < 999 KB ceiling.
   - Queue: Advanced `kilo_creator` and `virtual_web_target` to `kweb://warez`; rotation advanced to `kilo-graphics`.
 
-- **2026-10-06T19:00:00-07:00 — kilo-expander: KPac (Games Category Expansion: Cyber Duel Arena, RFMS Online Duel & Replays)**
-  - Status: PASS ✅ (0 regressions, 197.4 KB web / 51.2 KB native < 999 KB ceiling).
-  - Cyber Duel Arena: Added 1v1 competitive arena mode featuring symmetrical power pellet spawns, KO scoring, and super chomp clashes.
-  - RFMS Online Multiplayer: Standardized Retro Firebase room creation, joining, deep-link invite modal, quick chat, and 25s solo AI fallback.
-  - Match Replay Viewer: Integrated full recording, stepping controls, variable playback speed (1x-4x), and `.kpdr` match export/import.
-  - Control Customization & Solo Duel: Added custom key rebinding, presets (WASD/Arrows/Split), and 3-tier solo AI bot practice mode.
-  - Verification: `test_app_startup.py` PASS; `test_web_apps.js` PASS (84 interactive elements, 0 err); MSVC clean (51.2 KB); Vite clean (333ms); security lint 100% PASS.
-  - Queue: Advanced `kilo_expander` to `KSudoku`; rotation advanced to `kilo-creator`.
