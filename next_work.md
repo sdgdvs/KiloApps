@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-creator
-next_agent: kilo-graphics
+current_agent: kilo-graphics
+next_agent: kilo-tester
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -12,13 +12,13 @@ model: gemini-3.8-flash-high
 timeout_minutes: 15
 status: ready
 current_targets:
-  kilo_creator: "kweb://warez"
+  kilo_creator: "kweb://geocities"
   kilo_graphics: KBreakout
   kilo_tester: KSolitaire
   kilo_usability: KPong
   kilo_qa: KTaskMgr
   kilo_expander: KHangman
-virtual_web_target: "kweb://warez"
+virtual_web_target: "kweb://geocities"
 virtual_web_rotation:
   - "kweb://geocities"
   - "kweb://users/~neon_rider"
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-expander
-  app: KWords
-  timestamp: "2026-10-06T23:35:00-07:00"
+  agent: kilo-creator
+  app: "kweb://warez"
+  timestamp: "2026-10-07T02:25:00-07:00"
 last_planner_run: "2026-10-06T14:20:00Z"
 ---
 
@@ -217,6 +217,16 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-07T02:25:00-07:00 — kilo-creator: kweb://warez (Anti-Potemkin Web 1.0 Expansion: FXP Top-Site Race & PE-Pack '99 Entropy Lab)**
+  - Status: PASS ✅ (0 regressions, 406 KB < 999 KB ceiling).
+  - 0xRELEASE glFTPd Top-Site & FXP Courier Race: Multi-threaded site-to-site racing (4-thread stripe), live speed monitor, glFTPd v1.18 terminal (`site who/speed/groups/rules`), ratio tracking, and race proof download.
+  - PE-Pack '99 & Shannon Entropy Forensics Lab: ASPack '99 / UPX / Shrinker simulation, Shannon entropy curve (0.0-8.0 bits/byte), x86 stub stepper (F8/F9), register grid, decrypted memory viewer, and PE dumper.
+  - Architecture & Quality: Complete `visibilitychange` lifecycle cleanup for Web Audio & rAF loops; full storage safety; zero external assets.
+  - Worldbuilding & TINAG Compliance: 100% fictionalized parodies (FLARELIGHT, RAZOR 1999, Surreal Tournament); diegetic clues; zero meta ARG labels.
+  - Ecosystem Integration: Deep links updated in `knet.html`, `portal.html`, and `webring.html`.
+  - Verification: Security linter 100% PASS; Vite build clean (545ms); JS syntax verified via Node vm.
+  - Queue: Advanced `virtual_web_target` to `kweb://geocities`; advanced `current_agent` to `kilo-graphics`.
+
 - **2026-10-06T23:35:00-07:00 — kilo-expander: KWords (Deep Feature Expansion: RFMS Online Duel, Custom Builder, Replay Scrubber & Lexicon)**
   - Status: PASS ✅ (0 regressions, 154.7 KB web / 162.0 KB native < 999 KB ceiling).
   - Online Multiplayer (Mandate 12): Standardized RFMS duel (`WRD-` prefix) with shared seed, live progress, and 25s Solo AI fallback (`CyberBot-99`); strict No-Autostart connect gate.
@@ -257,14 +267,5 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Verification: `test_app_startup.py` PASS; `test_web_apps.js` PASS (20 elements, 0 err); MSVC clean (60.4 KB); Vite clean; `security_lint.py` 100% PASS.
   - Queue: Maintained `kilo_tester` on `KSolitaire`; handoff to `kilo-usability`.
 
-- **2026-10-06T20:32:00-07:00 — kilo-expander: KSudoku (Deep Feature Expansion: RFMS Online Duel, Logic Explainer, Replay Scrubber & Classic Puzzles)**
-  - Status: PASS ✅ (0 regressions, 187.6 KB web / 44.5 KB native < 999 KB ceiling).
-  - Online Multiplayer (Mandate 12): Standardized RFMS multiplayer duel (`SUD-` prefix) with progress bars, radar grid, and 25s Solo AI fallback (`CyberBot-99`); strict No-Autostart connect gate.
-  - Logical Deduction Explainer: Step-by-step human deduction engine for Naked/Hidden singles with board highlight cards and hotkey (`L`).
-  - Interactive Replay Scrubber: Full move history scrubber with slider, playback controls (1x/2x/4x), and hotkey (`R`).
-  - Puzzle Manager & Solver: 81-char SDM/SDK import/export, ASCII grid export, fast MRV bitmask solver (<5ms), and 6 classic benchmark puzzles.
-  - Mandate 11 Glint Ban: Removed floating canvas dust motes across web and native Win32 C (`KSudoku.exe` rebuilt clean).
-  - Verification: `test_app_startup.py` PASS; `test_web_apps.js` PASS (70 elements, 0 err); `security_lint.py` 100% PASS; Vite build clean (316ms).
-  - Queue: Advanced `kilo_expander` to `KWords`; rotation advanced to `kilo-creator`.
 
 

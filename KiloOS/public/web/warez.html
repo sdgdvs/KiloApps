@@ -1140,6 +1140,97 @@
     white-space: pre;
   }
 
+  /* 0xRELEASE Courier Top-Site & FXP Racing CSS */
+  .courier-servers-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+  .courier-server-card {
+    background: #060e19;
+    border: 1px solid #162a42;
+    padding: 10px 12px;
+    border-radius: 4px;
+    position: relative;
+    transition: all 0.2s ease;
+  }
+  .courier-server-card.active {
+    border-color: var(--accent-cyan);
+    box-shadow: 0 0 12px rgba(0, 240, 255, 0.15);
+  }
+  .courier-server-title {
+    font-size: 11px;
+    font-weight: bold;
+    color: var(--accent-cyan);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 4px;
+  }
+  .courier-server-meta {
+    font-size: 10px;
+    color: #94a3b8;
+    line-height: 1.4;
+  }
+  .courier-term-scroll::-webkit-scrollbar {
+    width: 6px;
+  }
+  .courier-term-scroll::-webkit-scrollbar-thumb {
+    background: #1e3a29;
+    border-radius: 3px;
+  }
+
+  /* PE-Packer '99 & Entropy Forensics CSS */
+  .pe-arch-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+  .pe-arch-card {
+    background: #060f1c;
+    border: 1px solid #14243b;
+    border-radius: 4px;
+    padding: 8px 10px;
+  }
+  .pe-arch-title {
+    font-size: 10px;
+    color: #64748b;
+    font-weight: bold;
+    letter-spacing: 0.5px;
+    margin-bottom: 2px;
+  }
+  .pe-arch-val {
+    font-size: 11px;
+    font-weight: bold;
+    color: #f1f5f9;
+    font-family: 'Consolas', monospace;
+  }
+  .pe-arch-sub {
+    font-size: 10px;
+    color: #94a3b8;
+    font-family: 'Consolas', monospace;
+  }
+  .unpacker-instr-active {
+    background: rgba(0, 255, 102, 0.15);
+    color: var(--accent-green) !important;
+    font-weight: bold;
+    border-left: 3px solid var(--accent-green);
+    padding-left: 4px;
+  }
+  .unpacker-reg-cell {
+    padding: 2px 4px;
+    border-radius: 2px;
+    background: #02050b;
+    border: 1px solid #14243b;
+  }
+  .unpacker-reg-changed {
+    color: var(--accent-yellow) !important;
+    font-weight: bold;
+    background: rgba(250, 204, 21, 0.12);
+  }
+
   footer {
     margin-top: 30px;
     padding: 14px 10px;
@@ -1201,6 +1292,8 @@
     <button class="tab-btn" onclick="switchMainTab('charts', this)">[ 🏆 SCENE CHARTS &amp; CHALLENGE ]</button>
     <button class="tab-btn" onclick="switchMainTab('shoutbox', this)">[ 💬 UNDERGROUND SHOUTBOX ]</button>
     <button class="tab-btn" id="tabBtnSignals" onclick="switchMainTab('signals', this)">[ 📡 SUBTERRANEAN SIGNALS ]</button>
+    <button class="tab-btn" onclick="switchMainTab('courier', this)">[ 🏁 FXP COURIER RACE &amp; GLFTPD ]</button>
+    <button class="tab-btn" onclick="switchMainTab('packer', this)">[ 🛡️ PE-PACK '99 &amp; ENTROPY LAB ]</button>
   </div>
 
   <!-- ================================================================= -->
@@ -1944,7 +2037,7 @@ Tested clean on Windows 98 SE and DOS 7.1.</textarea>
     <div class="section-box">
       <div class="section-title">
         <div style="display:flex; gap:8px; align-items:center;">
-          <span>📡 COLLABORATIVE SUBTERRANEAN SIGNALS TELEMETRY [arg/signals]</span>
+          <span>📡 COLLABORATIVE SUBTERRANEAN SIGNALS TELEMETRY [knet/signals]</span>
           <div class="presence-badge" id="signalsLockBadge" style="border-color:#ca8a04; color:#facc15;">
             <span class="presence-dot" style="background:#facc15;"></span>
             <span id="signalsResonanceLabel">CARRIER LOCK: MONITORING</span>
@@ -2145,7 +2238,7 @@ Tested clean on Windows 98 SE and DOS 7.1.</textarea>
             <option value="won_auth">WON Auth 13-Digit CD-Key Validator (Half-Cycle 1.1)</option>
             <option value="safedisc">SafeDisc v1 Ring-0 Modulus Keygen (Surreal Tournament)</option>
             <option value="voidcraft">VoidCraft 13-Digit Weighted Keygen (VoidCraft)</option>
-            <option value="subterranean">Subterranean Cipher Seed Keygen (Node 0x7F / ARG)</option>
+            <option value="subterranean">Subterranean Cipher Seed Keygen (Node 0x7F / Precursor Link)</option>
             <option value="laserlock">LaserLock Sector CRC-16 Keymaker (System Glitch 2)</option>
           </select>
         </div>
@@ -2178,10 +2271,10 @@ Tested clean on Windows 98 SE and DOS 7.1.</textarea>
         </div>
       </div>
 
-      <!-- Special Subterranean ARG Intel Box (Revealed when Subterranean seed is entered) -->
+      <!-- Special Subterranean Precursor Intel Box (Revealed when clandestine seed is entered) // ARG: intentional -->
       <div id="keymakerSubterraneanBox" style="display:none; background:#040911; border:1px solid #ca8a04; border-radius:4px; padding:12px; margin-bottom:14px;">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; border-bottom:1px dashed #ca8a04; padding-bottom:4px;">
-          <span style="color:#facc15; font-weight:bold; font-size:11px;">📡 [SUBTERRANEAN RELAY 0x7F DETECTED — ARG TRANSPONDER LINK]</span>
+          <span style="color:#facc15; font-weight:bold; font-size:11px;">📡 [SUBTERRANEAN RELAY 0x7F DETECTED — CLANDESTINE TRANSPONDER LINK]</span>
           <span style="color:#38bdf8; font-size:10px;">CARRIER: 1999.00 Hz</span>
         </div>
         <div style="font-size:11px; color:#cbd5e1; line-height:1.5; font-family:'Consolas', monospace;">
@@ -2233,6 +2326,317 @@ Tested clean on Windows 98 SE and DOS 7.1.</textarea>
           </div>
           <div id="keymakerSpecDetails" style="font-size:10px; color:#94a3b8; line-height:1.5;">
             <!-- Populated via JS -->
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================================================================= -->
+  <!-- TAB 13: 0xRELEASE SCENE TOP-SITE & FXP COURIER RACE ARENA        -->
+  <!-- ================================================================= -->
+  <div id="tab-courier" class="tab-content">
+    <div class="section-box">
+      <div class="section-title">
+        <div style="display:flex; align-items:center; gap:8px;">
+          <span>🏁 0xRELEASE UNIX TOP-SITE &amp; FXP COURIER RACE ARENA (1999)</span>
+          <span style="font-size:10px; color:#facc15;">glFTPd v1.18 &bull; MULTI-THREADED SITE-TO-SITE RACING</span>
+        </div>
+        <span id="courierSiteStatusBadge" style="font-size:10px; color:#10b981;">3 TOP-SITES SYNCHRONIZED</span>
+      </div>
+
+      <div style="font-size:11px; color:#94a3b8; margin-bottom:12px; line-height:1.5;">
+        In 1999, underground demoscene releases were pre'd and raced across private Unix top-sites over high-speed OC-3 and Fast-Ethernet pipes using <strong>FXP (File eXchange Protocol)</strong>. Couriers raced simultaneous archive chunks (<code style="color:var(--accent-green);">.r00-.r14</code>) across servers while automated glFTPd zipscripts verified CRC32 checksums on the fly.
+      </div>
+
+      <!-- Server Topology Cards -->
+      <div class="courier-servers-grid">
+        <div class="courier-server-card active" id="srvCardGiga">
+          <div class="courier-server-title">
+            <span>[US] GIGA-CORE</span>
+            <span class="signal-dot dot-online"></span>
+          </div>
+          <div class="courier-server-meta">IP: 194.109.13.77 &bull; Port: 2121</div>
+          <div class="courier-server-meta">OS: Linux 2.2.14 / glFTPd 1.18.2</div>
+          <div class="courier-server-meta" style="color:var(--accent-cyan);">Line: OC-3 (155 Mbps) &bull; Chicago, IL</div>
+          <div class="courier-server-meta" style="color:var(--accent-green); margin-top:4px;">Affils: FLARELIGHT, RAZOR 1999</div>
+        </div>
+
+        <div class="courier-server-card" id="srvCardNordic">
+          <div class="courier-server-title">
+            <span>[EU] NORDIC-PULSE</span>
+            <span class="signal-dot dot-online"></span>
+          </div>
+          <div class="courier-server-meta">IP: 193.10.252.19 &bull; Port: 6543</div>
+          <div class="courier-server-meta">OS: FreeBSD 3.4-RELEASE / glFTPd 1.19</div>
+          <div class="courier-server-meta" style="color:var(--accent-cyan);">Line: 100 Mbps Fast-E &bull; Stockholm, SE</div>
+          <div class="courier-server-meta" style="color:var(--accent-yellow); margin-top:4px;">Affils: PARALAX, SKID VECTOR</div>
+        </div>
+
+        <div class="courier-server-card" id="srvCardScene">
+          <div class="courier-server-title">
+            <span>[NL] SCENE-VAULT</span>
+            <span class="signal-dot dot-online"></span>
+          </div>
+          <div class="courier-server-meta">IP: 194.109.6.14 &bull; Port: 9999</div>
+          <div class="courier-server-meta">OS: NetBSD 1.4.2 / glFTPd 1.20</div>
+          <div class="courier-server-meta" style="color:var(--accent-cyan);">Line: DS3 (45 Mbps) &bull; Amsterdam, NL</div>
+          <div class="courier-server-meta" style="color:var(--accent-purple); margin-top:4px;">Affils: CYBRID, KLASS</div>
+        </div>
+      </div>
+
+      <!-- FXP Race Controls -->
+      <div class="control-bar" style="margin-top:12px; margin-bottom:12px;">
+        <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+          <span style="font-size:11px; color:#94a3b8; font-weight:bold;">PRE RELEASE:</span>
+          <select id="fxpReleaseSelect" class="field-select" style="width:280px;" onchange="onFxpReleaseChange(this.value)">
+            <option value="st99">Surreal Tournament '99 No-CD (FLT) [14 Disks / 20.1 MB]</option>
+            <option value="q3a">Tremor III Arena Keymaker (RZR) [8 Disks / 11.5 MB]</option>
+            <option value="hlwon">Half-Cycle 1.1 WON Bypass (PDX) [12 Disks / 17.2 MB]</option>
+            <option value="deusex">Machina Ex +12 Trainer (SKD) [6 Disks / 8.6 MB]</option>
+            <option value="voidcraft">VoidCraft Brood Strife Loader (CLS) [10 Disks / 14.4 MB]</option>
+          </select>
+
+          <span style="font-size:11px; color:#94a3b8; font-weight:bold;">THREADS:</span>
+          <select id="fxpThreadsSelect" class="field-select" style="width:140px;">
+            <option value="4">4-Thread Max Stripe</option>
+            <option value="2">2-Thread Dual</option>
+            <option value="1">1-Thread Serial</option>
+          </select>
+        </div>
+
+        <div style="display:flex; gap:6px; flex-wrap:wrap; align-items:center;">
+          <button class="btn-gen" id="btnStartFxp" onclick="startFxpRace()">🚀 LAUNCH FXP RACE</button>
+          <button class="btn-filter" style="border-color:#ef4444; color:#fca5a5;" id="btnStopFxp" onclick="abortFxpRace()" disabled>⏹ ABORT</button>
+          <button class="btn-filter" onclick="rescanFxpSfv()">📊 RESCAN SFV</button>
+          <button class="btn-filter" style="border-color:#38bdf8; color:#38bdf8;" onclick="downloadFxpRaceProof()">📜 DOWNLOAD RACE PROOF</button>
+        </div>
+      </div>
+
+      <!-- Live FXP Threads Progress Area -->
+      <div style="background:#040810; border:1px solid #14243b; border-radius:4px; padding:12px; margin-bottom:14px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+          <div style="display:flex; align-items:center; gap:8px;">
+            <span style="font-size:11px; font-weight:bold; color:var(--accent-cyan);">⚡ FXP MULTI-THREAD PIPELINE MONITOR</span>
+            <span id="fxpSpeedAggregate" style="font-size:11px; color:var(--accent-green); font-weight:bold;">0.00 kB/s</span>
+          </div>
+          <span id="fxpOverallPercent" style="font-size:11px; font-weight:bold; color:var(--accent-yellow);">READY TO RACE</span>
+        </div>
+
+        <div id="fxpThreadsContainer" style="display:flex; flex-direction:column; gap:6px;">
+          <!-- Dynamically populated threads -->
+        </div>
+
+        <!-- Master Progress Bar -->
+        <div style="margin-top:10px;">
+          <div style="height:10px; background:#0a121e; border:1px solid #1e3a29; border-radius:2px; overflow:hidden;">
+            <div id="fxpMasterBar" style="width:0%; height:100%; background:linear-gradient(90deg, #0284c7, #10b981, #facc15); transition:width 0.1s linear;"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Split Layout: glFTPd UNIX Console & Courier Hall of Fame -->
+      <div style="display:grid; grid-template-columns: 2fr 1fr; gap:12px;">
+        <!-- glFTPd Interactive Terminal -->
+        <div style="background:#02050b; border:1px solid #1e3a29; border-radius:4px; padding:10px; display:flex; flex-direction:column; height:340px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; border-bottom:1px solid #14243b; padding-bottom:4px;">
+            <span style="font-size:11px; color:var(--accent-green); font-weight:bold;">glFTPd v1.18 CONSOLE // GIGA-CORE:2121</span>
+            <div style="display:flex; gap:4px;">
+              <button class="btn-filter" style="font-size:9px; padding:1px 5px;" onclick="runCourierQuickCmd('site who')">site who</button>
+              <button class="btn-filter" style="font-size:9px; padding:1px 5px;" onclick="runCourierQuickCmd('site speed')">site speed</button>
+              <button class="btn-filter" style="font-size:9px; padding:1px 5px;" onclick="runCourierQuickCmd('site groups')">site groups</button>
+              <button class="btn-filter" style="font-size:9px; padding:1px 5px;" onclick="runCourierQuickCmd('site rules')">site rules</button>
+              <button class="btn-filter" style="font-size:9px; padding:1px 5px;" onclick="clearCourierConsole()">clear</button>
+            </div>
+          </div>
+
+          <div id="courierTerminalOutput" class="courier-term-scroll" style="flex:1; overflow-y:auto; font-family:'Consolas', monospace; font-size:10px; line-height:1.4; color:#34d399; white-space:pre-wrap; margin-bottom:6px;">
+<!-- Terminal output will be written by JS -->
+          </div>
+
+          <div style="display:flex; gap:6px; align-items:center;">
+            <span style="font-family:'Consolas', monospace; font-size:11px; color:var(--accent-cyan); font-weight:bold;">glftpd&gt;</span>
+            <input type="text" id="courierCmdInput" class="search-input" style="flex:1; width:auto; font-size:11px;" placeholder="Type 'help', 'site who', 'ls', 'site dupe flt'..." onkeydown="handleCourierCmdKey(event)" />
+            <button class="btn-gen" style="font-size:10px; padding:4px 8px;" onclick="submitCourierCmd()">SEND</button>
+          </div>
+        </div>
+
+        <!-- Courier Stats & Leaderboard -->
+        <div style="background:#060f1c; border:1px solid #14243b; border-radius:4px; padding:10px; display:flex; flex-direction:column; justify-content:space-between;">
+          <div>
+            <div style="font-size:11px; color:var(--accent-yellow); font-weight:bold; margin-bottom:8px; border-bottom:1px dashed #14243b; padding-bottom:4px;">
+              🏆 COURIER RATIO &amp; RACE STATS
+            </div>
+            <div id="courierUserStatsBox" style="font-size:11px; color:#cbd5e1; line-height:1.6; margin-bottom:10px;">
+              <!-- Populated via JS -->
+            </div>
+
+            <div style="font-size:11px; color:var(--accent-cyan); font-weight:bold; margin-bottom:6px; border-bottom:1px dashed #14243b; padding-bottom:4px;">
+              🎖️ TOP SCENE RACERS (WEEK 47, 1999)
+            </div>
+            <div id="courierLeaderboardBox" style="font-size:10px; color:#94a3b8; line-height:1.5;">
+              <!-- Leaderboard rows -->
+            </div>
+          </div>
+
+          <div style="margin-top:10px; padding-top:8px; border-top:1px solid #14243b; font-size:10px; color:#64748b; line-height:1.4;">
+            * Ratio enforced: 1:3 upload/download credit balance. Zipscript automatically bans bad SFV uploads.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================================================================= -->
+  <!-- TAB 14: PE-PACK '99 & SHANNON ENTROPY FORENSICS LAB              -->
+  <!-- ================================================================= -->
+  <div id="tab-packer" class="tab-content">
+    <div class="section-box">
+      <div class="section-title">
+        <div style="display:flex; align-items:center; gap:8px;">
+          <span>🛡️ PE-PACK '99: WIN32 EXECUTABLE COMPRESSION &amp; SECTION ENTROPY LAB</span>
+          <span style="font-size:10px; color:#38bdf8;">SHANNON INFORMATION ENTROPY &bull; OEP TAIL JUMP DUMPER</span>
+        </div>
+        <span id="pePackerStatusBadge" style="font-size:10px; color:#10b981;">ANALYZER READY</span>
+      </div>
+
+      <div style="font-size:11px; color:#94a3b8; margin-bottom:12px; line-height:1.5;">
+        In 1999, software protection systems and demoscene loaders relied on executable compressors such as <strong>ASPack '99</strong>, <strong>UPX v0.90</strong>, and <strong>Shrinker 3.4</strong>. Reversers utilized <strong>Shannon Entropy Math</strong> (0.0 to 8.0 bits/byte) to distinguish encrypted byte blocks from native x86 machine opcodes, tracing decompression stubs until finding the <strong>Original Entry Point (OEP)</strong> tail jump.
+      </div>
+
+      <!-- Binary Target Selector -->
+      <div class="control-bar" style="margin-bottom:12px;">
+        <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+          <span style="font-size:11px; color:#94a3b8; font-weight:bold;">TARGET BINARY:</span>
+          <select id="packerTargetSelect" class="field-select" style="width:320px;" onchange="loadPackerTarget(this.value)">
+            <option value="aspack">Tremor3_Keygen.exe (ASPack '99 Compressed Stub)</option>
+            <option value="upx">HalfCycle_Patch.exe (UPX v0.90 Fast Decompressor)</option>
+            <option value="shrinker">MachinaEx_Trainer.exe (Shrinker 3.4 Crypter)</option>
+            <option value="native">SurrealTournament_NoCD.exe (Native Uncompressed PE)</option>
+            <option value="precursor">DeepCoreBridge.exe (Precursor Stego / Node 0x7F CRC)</option>
+          </select>
+          <span id="packerPackTypeBadge" style="padding:2px 8px; border-radius:3px; font-size:10px; font-weight:bold; background:rgba(255, 0, 119, 0.15); color:var(--accent-pink); border:1px solid #e11d48;">
+            [COMPRESSED: ASPACK '99]
+          </span>
+        </div>
+
+        <div style="display:flex; gap:6px; flex-wrap:wrap; align-items:center;">
+          <button class="btn-gen" onclick="recalculateEntropy()">⚡ RE-ANALYZE ENTROPY</button>
+          <button class="btn-filter" id="btnStepUnpack" onclick="stepUnpackerInstruction()">▶ STEP STUB (F8)</button>
+          <button class="btn-filter" style="border-color:#10b981; color:#34d399;" id="btnRunToOep" onclick="runUnpackerToOep()">⚡ RUN TO OEP (F9)</button>
+          <button class="btn-filter" onclick="resetUnpacker()">↺ RESET</button>
+          <button class="btn-filter" style="border-color:#38bdf8; color:#38bdf8;" id="btnDumpPe" onclick="dumpUnpackedPeBinary()" disabled>💾 DUMP UNPACKED PE</button>
+        </div>
+      </div>
+
+      <!-- PE Binary Architecture Header Cards -->
+      <div class="pe-arch-grid" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:8px; margin-bottom:12px;">
+        <div class="pe-arch-card">
+          <div class="pe-arch-title">DOS MZ HEADER</div>
+          <div class="pe-arch-val" id="peValDos">e_magic: 0x5A4D ('MZ')</div>
+          <div class="pe-arch-sub" id="peValLfanew">e_lfanew: 0x00000080</div>
+        </div>
+        <div class="pe-arch-card">
+          <div class="pe-arch-title">PE COFF HEADER</div>
+          <div class="pe-arch-val" id="peValPe">Signature: 0x00004550</div>
+          <div class="pe-arch-sub" id="peValMachine">Machine: 0x014C (i386)</div>
+        </div>
+        <div class="pe-arch-card">
+          <div class="pe-arch-title">ENTRY POINT (EIP)</div>
+          <div class="pe-arch-val" style="color:var(--accent-pink);" id="peValEp">0x0040E000 (Stub)</div>
+          <div class="pe-arch-sub" id="peValOep">Target OEP: 0x00401140</div>
+        </div>
+        <div class="pe-arch-card">
+          <div class="pe-arch-title">IMAGE BASE &amp; SIZE</div>
+          <div class="pe-arch-val" style="color:var(--accent-cyan);" id="peValBase">Base: 0x00400000</div>
+          <div class="pe-arch-sub" id="peValSize">Size: 48,128 Bytes</div>
+        </div>
+      </div>
+
+      <!-- Shannon Entropy Graph & Legend -->
+      <div style="background:#030712; border:1px solid #14243b; border-radius:4px; padding:12px; margin-bottom:12px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+          <div style="display:flex; align-items:center; gap:8px;">
+            <span style="font-size:11px; font-weight:bold; color:var(--accent-cyan);">📊 SHANNON INFORMATION ENTROPY CURVE [H = -Σ P(x) log₂ P(x)]</span>
+            <span id="entropyHoverInfo" style="font-size:10px; color:#facc15;">Hover over blocks to inspect byte entropy</span>
+          </div>
+          <span style="font-size:10px; color:#94a3b8;">Max: 8.00 bits/byte (Random/Encrypted)</span>
+        </div>
+
+        <div style="position:relative; width:100%; height:140px; background:#010409; border:1px solid #1e3a29; border-radius:3px; overflow:hidden;">
+          <canvas id="entropyCanvas" width="960" height="140" style="width:100%; height:100%; display:block; cursor:crosshair;"></canvas>
+        </div>
+
+        <!-- Entropy Zone Legend -->
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px; flex-wrap:wrap; gap:8px; font-size:10px;">
+          <div style="display:flex; gap:12px; flex-wrap:wrap;">
+            <span style="display:flex; align-items:center; gap:4px;"><span style="width:10px; height:10px; background:#ef4444; border-radius:2px;"></span> &gt;7.20: Encrypted / Compressed Payload</span>
+            <span style="display:flex; align-items:center; gap:4px;"><span style="width:10px; height:10px; background:#10b981; border-radius:2px;"></span> 4.50-6.80: Native x86 Machine Opcodes</span>
+            <span style="display:flex; align-items:center; gap:4px;"><span style="width:10px; height:10px; background:#38bdf8; border-radius:2px;"></span> 2.00-4.50: ASCII Tables / Import Structures</span>
+            <span style="display:flex; align-items:center; gap:4px;"><span style="width:10px; height:10px; background:#475569; border-radius:2px;"></span> &lt;2.00: Zero-Filled Slack Space / BSS</span>
+          </div>
+          <span id="entropyMeanValue" style="color:var(--accent-green); font-weight:bold;">MEAN ENTROPY: 6.94 bits/byte</span>
+        </div>
+      </div>
+
+      <!-- PE Section Table -->
+      <div class="table-container" style="margin-bottom:12px;">
+        <table class="release-table" id="peSectionTable">
+          <thead>
+            <tr>
+              <th>Section Name</th>
+              <th>Virtual Address</th>
+              <th>Virtual Size</th>
+              <th>Raw Data Size</th>
+              <th>Shannon Entropy</th>
+              <th>Characteristics Flags</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="peSectionTbody">
+            <!-- Populated via JS -->
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Live Unpacker Stub Disassembly & Registers & Memory Dump -->
+      <div style="display:grid; grid-template-columns: 2fr 1fr; gap:12px;">
+        <!-- Disassembly & Trace Pane -->
+        <div style="background:#02050b; border:1px solid #1e3a29; border-radius:4px; padding:10px; display:flex; flex-direction:column; height:320px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; border-bottom:1px solid #14243b; padding-bottom:4px;">
+            <span style="font-size:11px; color:var(--accent-green); font-weight:bold;">UNPACKER DECOMPRESSION STUB DISASSEMBLY</span>
+            <span id="unpackerStepCounter" style="font-size:10px; color:#38bdf8;">STEP 0 / 14</span>
+          </div>
+
+          <div id="unpackerAsmBox" class="asm-code-block" style="flex:1; max-height:none; overflow-y:auto; font-size:11px; margin-bottom:6px;">
+            <!-- Disassembled instructions with active pointer -->
+          </div>
+
+          <div id="unpackerStatusBanner" style="font-size:10px; padding:4px 8px; background:#071320; border:1px solid #14243b; border-radius:3px; color:#94a3b8;">
+            Ready to trace decompression loop. Press STEP (F8) or RUN TO OEP (F9).
+          </div>
+        </div>
+
+        <!-- Registers & Memory Hex Pane -->
+        <div style="background:#060f1c; border:1px solid #14243b; border-radius:4px; padding:10px; display:flex; flex-direction:column; justify-content:space-between; height:320px;">
+          <div>
+            <div style="font-size:11px; color:var(--accent-cyan); font-weight:bold; margin-bottom:6px; border-bottom:1px dashed #14243b; padding-bottom:4px;">
+              CPU REGISTERS (32-BIT IA-32)
+            </div>
+            <div id="unpackerRegGrid" style="display:grid; grid-template-columns:1fr 1fr; gap:4px; font-family:'Consolas', monospace; font-size:10px; margin-bottom:8px;">
+              <!-- Register rows -->
+            </div>
+
+            <div style="font-size:11px; color:var(--accent-yellow); font-weight:bold; margin-bottom:4px; border-bottom:1px dashed #14243b; padding-bottom:4px;">
+              MEMORY TARGET WINDOW [0x00401140]
+            </div>
+            <div id="unpackerMemDump" style="font-family:'Consolas', monospace; font-size:10px; color:#34d399; line-height:1.35; background:#02050b; border:1px solid #14243b; border-radius:3px; padding:6px; height:105px; overflow-y:auto;">
+              <!-- Hex / ASCII dump showing transition from encrypted to plaintext -->
+            </div>
+          </div>
+
+          <div style="font-size:10px; color:#64748b; line-height:1.3; border-top:1px solid #14243b; padding-top:4px;">
+            Tail Jump: When EIP crosses to 0x00401140, import tables are bound and PE image can be dumped cleanly.
           </div>
         </div>
       </div>
@@ -2678,7 +3082,10 @@ function switchMainTab(tabId, btn) {
     initComposer();
   } else if (tabId === 'signals') {
     initSubterraneanSignals();
-initKeymakerLab();
+  } else if (tabId === 'courier') {
+    initCourierTopSite();
+  } else if (tabId === 'packer') {
+    initPePackerLab();
   }
 }
 
@@ -3703,7 +4110,7 @@ function renderModalCracktroFrame() {
   modalCtx.shadowBlur = 0;
 
   // ==========================================
-  // ARG DIRECTOR DIRECTIVE: FLASH DEEP_CORE OFFSETS
+  // DIRECTOR DIRECTIVE: FLASH DEEP_CORE OFFSETS // ARG: intentional
   // Periodically flash subtle phosphor memory glitch
   // ==========================================
   const glitchCycle = modalAnimTime % 6.0;
@@ -6009,16 +6416,23 @@ function insertShoutTag(tag) {
   mInput.focus();
 }
 
-// Global hotkey: ESC closes modals
+// Global hotkey: ESC closes modals, F8/F9 steps unpacker
 window.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') {
     closeCracktro();
     closeNfo();
+  } else if (e.key === 'F8' || e.key === 'F9') {
+    const packerTab = document.getElementById('tab-packer');
+    if (packerTab && packerTab.classList.contains('active')) {
+      e.preventDefault();
+      if (e.key === 'F8') stepUnpackerInstruction();
+      else if (e.key === 'F9') runUnpackerToOep();
+    }
   }
 });
 
 // ==========================================
-// 12. SUBTERRANEAN SIGNALS TELEMETRY & COURIER CACHE [arg/signals]
+// 12. SUBTERRANEAN SIGNALS TELEMETRY & COURIER CACHE // ARG: intentional
 // ==========================================
 let subterraneanSignals = {};
 let snifferPackets = [
@@ -6608,7 +7022,7 @@ _start:
 • SECTIONS   : .text: 2,980b | .data: 680b | .bss: 322b
 • TARGET CPU : Intel x86 Pentium (MS-DOS COM / Win32 PE)
 • PHENOMENA  : 4D Tesseract double-rotation & 1999Hz Fourier acoustic ripple
-• ARG SIGNAL : Phosphor residue lock: 0x007F1999 • 10.19.99.127`,
+• SUBTERRANEAN SIGNAL : Phosphor residue lock: 0x007F1999 • 10.19.99.127`,
     linesCount: "142 LINES",
     asmSource: `; ==============================================================
 ; ECHOPLEX PRESENTS: "ECHO CARRIER 4KB" - STRICT 4096-BYTE INTRO
@@ -7666,12 +8080,12 @@ const KEYMAKER_SCHEMES = {
 
   subterranean: {
     id: "subterranean",
-    name: "Subterranean Cipher Seed Keygen (Node 0x7F / ARG)",
+    name: "Subterranean Cipher Seed Keygen (Node 0x7F / Precursor Link)",
     prefix: "ECHO",
     formatRule: "Format: ECHO-XXXX-XXXX-XXXX • Seeds: darknet, matrix, 0x7f, echoes, deep-core, 1999",
     formula: "XOR-0x7F Seed Masking & Ring-0 Memory Pointer Generation",
     spec: `• ALGORITHM : Subterranean Transponder Courier Protocol.
-• FUNCTION  : Entering or generating clandestine ARG keywords generates authenticated relay coordinates for Node 0x7F and Deep Core (10.19.99.127).
+• FUNCTION  : Entering or generating clandestine subterranean seeds generates authenticated relay coordinates for Node 0x7F and Deep Core (10.19.99.127).
 • AUDIO     : Generates real-time 1999Hz acoustic subcarrier confirmation tone.`,
     generateValid: () => {
       return `ECHO-7F19-9942-0127`;
@@ -7871,7 +8285,7 @@ function validateCurrentKeymakerKey() {
   const badge = document.getElementById('keymakerValidationBadge');
   const subBox = document.getElementById('keymakerSubterraneanBox');
 
-  // Check ARG keyword detection
+  // Check clandestine seed detection // ARG: intentional
   const lower = val.toLowerCase();
   const hasArgKeyword = lower.includes('darknet') || lower.includes('matrix') || lower.includes('echo') ||
                         lower.includes('0x7f') || lower.includes('deep-core') || lower.includes('1999') ||
@@ -8009,7 +8423,1353 @@ function toggleKeymakerChiptune() {
       clearInterval(keymakerArpTimer);
       keymakerArpTimer = null;
     }
+    if (fxpRaceTimer) {
+      clearInterval(fxpRaceTimer);
+      fxpRaceTimer = null;
+    }
+    if (unpackerRunTimer) {
+      clearInterval(unpackerRunTimer);
+      unpackerRunTimer = null;
+    }
   }
+}
+
+
+// ==========================================
+// 18. 0xRELEASE SCENE TOP-SITE & FXP COURIER RACE ENGINE
+// ==========================================
+let fxpActiveReleaseId = 'st99';
+let fxpThreadsCount = 4;
+let fxpIsRacing = false;
+let fxpRaceTimer = null;
+let fxpActiveServer = 'giga';
+let fxpDisks = [];
+let fxpStartTime = 0;
+let fxpBytesTransferred = 0;
+
+const COURIER_SERVERS = {
+  giga: {
+    id: "giga",
+    name: "[US] GIGA-CORE",
+    ip: "194.109.13.77",
+    port: 2121,
+    os: "Linux 2.2.14 / glFTPd 1.18.2",
+    line: "OC-3 (155 Mbps) • Chicago, IL",
+    affils: "FLARELIGHT, RAZOR 1999",
+    speedKb: 4400
+  },
+  nordic: {
+    id: "nordic",
+    name: "[EU] NORDIC-PULSE",
+    ip: "193.10.252.19",
+    port: 6543,
+    os: "FreeBSD 3.4-RELEASE / glFTPd 1.19",
+    line: "100 Mbps Fast-E • Stockholm, SE",
+    affils: "PARALAX, SKID VECTOR",
+    speedKb: 3200
+  },
+  scene: {
+    id: "scene",
+    name: "[NL] SCENE-VAULT",
+    ip: "194.109.6.14",
+    port: 9999,
+    os: "NetBSD 1.4.2 / glFTPd 1.20",
+    line: "DS3 (45 Mbps) • Amsterdam, NL",
+    affils: "CYBRID, KLASS",
+    speedKb: 1950
+  }
+};
+
+const FXP_RELEASES = {
+  st99: {
+    id: "st99",
+    title: "Surreal Tournament '99 No-CD (FLT)",
+    dirName: "Surreal.Tournament.99.NoCD-FLARELIGHT",
+    prefix: "flt-st99",
+    disks: 14,
+    diskSizeKb: 1474,
+    totalSizeMb: 20.1,
+    group: "FLARELIGHT",
+    sfvCrcs: ["7F199942", "4B2A8C10", "D9F310A7", "5E12CD84", "88A01944", "C34B8E19", "E571F028", "3391AA77", "9F10BC29", "22D8841F", "7A66C091", "B40192EC", "184C003D", "F8920199"]
+  },
+  q3a: {
+    id: "q3a",
+    title: "Tremor III Arena Keymaker (RZR)",
+    dirName: "Tremor.III.Arena.Keymaker.And.Reg-RAZOR1999",
+    prefix: "rzr-q3a",
+    disks: 8,
+    diskSizeKb: 1474,
+    totalSizeMb: 11.5,
+    group: "RAZOR 1999",
+    sfvCrcs: ["D412BB90", "7F199901", "2A44CF19", "E8091A44", "89CC3302", "5500A199", "99FE4102", "118233AC"]
+  },
+  hlwon: {
+    id: "hlwon",
+    title: "Half-Cycle 1.1 WON Bypass (PDX)",
+    dirName: "Half-Cycle.1.1.WON.Bypass-PARALAX",
+    prefix: "pdx-hlw",
+    disks: 12,
+    diskSizeKb: 1474,
+    totalSizeMb: 17.2,
+    group: "PARALAX",
+    sfvCrcs: ["66A19942", "38B88019", "FE190019", "9977AB20", "AA1004FE", "52994118", "C9901A4E", "4F199900", "014C9921", "E774A018", "2910FF42", "7F199942"]
+  },
+  deusex: {
+    id: "deusex",
+    title: "Machina Ex +12 Trainer (SKD)",
+    dirName: "Machina.Ex.v1.112fm.Plus12.Trainer-SKIDVECTOR",
+    prefix: "skd-dex",
+    disks: 6,
+    diskSizeKb: 1474,
+    totalSizeMb: 8.6,
+    group: "SKID VECTOR",
+    sfvCrcs: ["840199A0", "22B94107", "4A199912", "E3094411", "9019941B", "7F199988"]
+  },
+  voidcraft: {
+    id: "voidcraft",
+    title: "VoidCraft Brood Strife Loader (CLS)",
+    dirName: "VoidCraft.Brood.Strife.Loader-KLASS",
+    prefix: "cls-void",
+    disks: 10,
+    diskSizeKb: 1474,
+    totalSizeMb: 14.4,
+    group: "KLASS",
+    sfvCrcs: ["5A1999F4", "7F199942", "334188A0", "119022C8", "A4401977", "9F810023", "420199EE", "8B110099", "D840192A", "20199955"]
+  }
+};
+
+function initCourierTopSite() {
+  setupCourierServerCards();
+  renderCourierStats();
+  renderCourierLeaderboard();
+  setupFxpThreadsUI();
+
+  const term = document.getElementById('courierTerminalOutput');
+  if (term && (!term.textContent || term.textContent.trim() === '')) {
+    term.textContent = `==============================================================
+  220- glFTPd v1.18.2 (Linux 2.2.14 i686) - GIGA-CORE 1999
+  220- Welcome to 0xRELEASE Top-Site. Authorized couriers only.
+  220- OC-3 Backbone link: 155 Mbps / Chicago, IL POP
+  220- Ratio: 1:3 Upload/Download credits enforced by zipscript.
+  220  User anonymous access DENIED. Site rules enforced.
+==============================================================
+glftpd> AUTH TLS-DIRECT [ACCEPTED]
+glftpd> SYST
+215 UNIX Type: L8 (glFTPd v1.18.2)
+glftpd> SITE WHO
+200- 48 Couriers connected across OC-3 and Fast-Ethernet pipes.
+200 Command successful. Ready for FXP racing.
+`;
+  }
+}
+
+function setupCourierServerCards() {
+  const cards = [
+    { id: 'srvCardGiga', srv: 'giga' },
+    { id: 'srvCardNordic', srv: 'nordic' },
+    { id: 'srvCardScene', srv: 'scene' }
+  ];
+  cards.forEach(c => {
+    const el = document.getElementById(c.id);
+    if (el) {
+      el.style.cursor = 'pointer';
+      el.onclick = () => selectCourierServer(c.srv);
+    }
+  });
+}
+
+function selectCourierServer(srvId) {
+  fxpActiveServer = srvId;
+  const srv = COURIER_SERVERS[srvId];
+  if (!srv) return;
+
+  ['srvCardGiga', 'srvCardNordic', 'srvCardScene'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.classList.remove('active');
+  });
+
+  const cardMap = { giga: 'srvCardGiga', nordic: 'srvCardNordic', scene: 'srvCardScene' };
+  const activeEl = document.getElementById(cardMap[srvId]);
+  if (activeEl) activeEl.classList.add('active');
+
+  appendCourierTerminal(`[SITE] Switched active terminal focus to ${srv.name} (${srv.ip}:${srv.port})
+220 ${srv.os} ready. Link: ${srv.line}. Affils: ${srv.affils}`);
+  initAudio();
+  playYm2612Fm(880, 1.0, 1.0, 0.05, audioCtx.currentTime, 0.12);
+}
+
+function getStoredCourierStats() {
+  try {
+    const saved = localStorage.getItem('knet_courier_stats');
+    if (saved) return JSON.parse(saved);
+  } catch (e) {}
+  return {
+    uploadedMb: 182.4,
+    downloadedMb: 54.1,
+    creditsMb: 493.1,
+    racesWon: 14,
+    ratio: "1:3.37",
+    rank: "Senior FXP Courier"
+  };
+}
+
+function saveCourierStats(stats) {
+  try {
+    localStorage.setItem('knet_courier_stats', JSON.stringify(stats));
+  } catch (e) {}
+}
+
+function renderCourierStats() {
+  const box = document.getElementById('courierUserStatsBox');
+  if (!box) return;
+  const stats = getStoredCourierStats();
+  box.innerHTML = `
+    <div style="display:flex; justify-content:space-between;"><span>HANDLE:</span><strong style="color:var(--accent-cyan);">KiloCourier_99</strong></div>
+    <div style="display:flex; justify-content:space-between;"><span>RANK:</span><strong style="color:var(--accent-green);">${stats.rank}</strong></div>
+    <div style="display:flex; justify-content:space-between;"><span>UPLOADED:</span><span style="color:#f1f5f9;">${stats.uploadedMb.toFixed(1)} MB</span></div>
+    <div style="display:flex; justify-content:space-between;"><span>DOWNLOADED:</span><span style="color:#f1f5f9;">${stats.downloadedMb.toFixed(1)} MB</span></div>
+    <div style="display:flex; justify-content:space-between;"><span>CREDITS:</span><strong style="color:var(--accent-yellow);">${stats.creditsMb.toFixed(1)} MB</strong></div>
+    <div style="display:flex; justify-content:space-between;"><span>RATIO:</span><span style="color:#38bdf8;">${stats.ratio}</span></div>
+    <div style="display:flex; justify-content:space-between;"><span>RACES WON:</span><strong style="color:var(--accent-pink);">${stats.racesWon} Pre Races</strong></div>
+  `;
+}
+
+function renderCourierLeaderboard() {
+  const box = document.getElementById('courierLeaderboardBox');
+  if (!box) return;
+  const stats = getStoredCourierStats();
+
+  const racers = [
+    { rank: "1", name: "SpeedDemon [FLT]", score: "1,420 MB", races: 48, speed: "4.8 MB/s" },
+    { rank: "2", name: "Vortex_99 [RZR]", score: "1,180 MB", races: 39, speed: "4.2 MB/s" },
+    { rank: "3", name: "HexCourier [PDX]", score: "890 MB", races: 31, speed: "3.6 MB/s" },
+    { rank: "4", name: `KiloCourier [YOU]`, score: `${Math.round(stats.uploadedMb)} MB`, races: stats.racesWon, speed: "4.1 MB/s", isUser: true },
+    { rank: "5", name: "PacketRunner [SKD]", score: "740 MB", races: 25, speed: "3.1 MB/s" },
+    { rank: "6", name: "EchoScener [0x7F]", score: "612 MB", races: 19, speed: "1.9 MB/s" }
+  ];
+
+  box.innerHTML = racers.map(r => `
+    <div style="display:flex; justify-content:space-between; align-items:center; padding:2px 0; border-bottom:1px dotted #14243b; ${r.isUser ? 'background:rgba(0,255,102,0.08); font-weight:bold;' : ''}">
+      <span style="color:${r.rank === '1' ? '#facc15' : r.rank === '2' ? '#cbd5e1' : r.rank === '3' ? '#f97316' : '#94a3b8'};">#${r.rank} ${r.name}</span>
+      <span style="font-family:'Consolas',monospace; color:${r.isUser ? 'var(--accent-green)' : '#64748b'};">${r.score} (${r.speed})</span>
+    </div>
+  `).join('');
+}
+
+function onFxpReleaseChange(val) {
+  if (fxpIsRacing) abortFxpRace();
+  fxpActiveReleaseId = val;
+  const rel = FXP_RELEASES[val] || FXP_RELEASES.st99;
+  setupFxpThreadsUI();
+
+  const masterBar = document.getElementById('fxpMasterBar');
+  if (masterBar) masterBar.style.width = '0%';
+  const overallPct = document.getElementById('fxpOverallPercent');
+  if (overallPct) overallPct.textContent = 'READY TO RACE';
+  const speedAgg = document.getElementById('fxpSpeedAggregate');
+  if (speedAgg) speedAgg.textContent = '0.00 kB/s';
+
+  appendCourierTerminal(`[PRE] Target release set to: ${rel.title} (${rel.disks} Disks / ${rel.totalSizeMb} MB)
+[PRE] Directory: /site/incoming/${rel.dirName}/
+[PRE] Zipscript waiting for SFV checksum verification.`);
+}
+
+function setupFxpThreadsUI() {
+  const container = document.getElementById('fxpThreadsContainer');
+  if (!container) return;
+  const threadsSel = document.getElementById('fxpThreadsSelect');
+  fxpThreadsCount = threadsSel ? parseInt(threadsSel.value, 10) : 4;
+  if (!fxpThreadsCount || isNaN(fxpThreadsCount)) fxpThreadsCount = 4;
+
+  const rel = FXP_RELEASES[fxpActiveReleaseId] || FXP_RELEASES.st99;
+
+  let html = '';
+  for (let t = 0; t < fxpThreadsCount; t++) {
+    html += `
+      <div style="background:#02050b; border:1px solid #14243b; border-radius:3px; padding:6px 10px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; font-size:10px; margin-bottom:4px;">
+          <span style="color:var(--accent-cyan); font-weight:bold;">STRIPE THREAD #${t + 1}</span>
+          <span id="fxpThreadDisk_${t}" style="color:#cbd5e1; font-family:'Consolas',monospace;">IDLE (${rel.prefix}.r${String(t).padStart(2,'0')})</span>
+          <span id="fxpThreadSpeed_${t}" style="color:var(--accent-green); font-family:'Consolas',monospace;">0.0 kB/s</span>
+          <span id="fxpThreadPct_${t}" style="color:#facc15; font-family:'Consolas',monospace;">0%</span>
+        </div>
+        <div style="height:6px; background:#071320; border-radius:2px; overflow:hidden;">
+          <div id="fxpThreadBar_${t}" style="width:0%; height:100%; background:linear-gradient(90deg, #0284c7, #38bdf8); transition:width 0.1s linear;"></div>
+        </div>
+      </div>
+    `;
+  }
+  container.innerHTML = html;
+}
+
+function startFxpRace() {
+  if (fxpIsRacing) return;
+  const rel = FXP_RELEASES[fxpActiveReleaseId] || FXP_RELEASES.st99;
+
+  fxpIsRacing = true;
+  fxpStartTime = Date.now();
+  fxpBytesTransferred = 0;
+
+  const btnStart = document.getElementById('btnStartFxp');
+  const btnStop = document.getElementById('btnStopFxp');
+  if (btnStart) btnStart.disabled = true;
+  if (btnStop) btnStop.disabled = false;
+
+  const statusBadge = document.getElementById('courierSiteStatusBadge');
+  if (statusBadge) {
+    statusBadge.textContent = "⚡ FXP RACE IN PROGRESS...";
+    statusBadge.style.color = "#facc15";
+  }
+
+  const threadsSel = document.getElementById('fxpThreadsSelect');
+  fxpThreadsCount = threadsSel ? parseInt(threadsSel.value, 10) : 4;
+  setupFxpThreadsUI();
+
+  // Initialize disk state array
+  fxpDisks = [];
+  for (let d = 0; d < rel.disks; d++) {
+    const ext = d === 0 ? "rar" : `r${String(d - 1).padStart(2, '0')}`;
+    fxpDisks.push({
+      index: d,
+      name: `${rel.prefix}.${ext}`,
+      sizeKb: rel.diskSizeKb,
+      transferredKb: 0,
+      crc: rel.sfvCrcs[d % rel.sfvCrcs.length],
+      status: 'QUEUED',
+      assignedThread: -1
+    });
+  }
+
+  appendCourierTerminal(`[FXP] Connecting to US:GIGA-CORE:2121 and EU:NORDIC-PULSE:6543...
+[FXP] PASV on target -> 227 Entering Passive Mode (193,10,252,19,42,118)
+[FXP] PORT on source -> 200 PORT command successful
+[FXP] Initiating ${fxpThreadsCount}-thread striped site-to-site FXP pipeline for ${rel.title}!
+[FXP] Target: /site/incoming/${rel.dirName}/`);
+
+  initAudio();
+  playDemosceneSfx('laser');
+
+  // Assign initial disks to threads
+  for (let t = 0; t < fxpThreadsCount; t++) {
+    if (t < fxpDisks.length) {
+      fxpDisks[t].status = 'RACING';
+      fxpDisks[t].assignedThread = t;
+    }
+  }
+
+  fxpRaceTimer = setInterval(tickFxpRace, 110);
+}
+
+function tickFxpRace() {
+  if (!fxpIsRacing) return;
+  const rel = FXP_RELEASES[fxpActiveReleaseId] || FXP_RELEASES.st99;
+
+  let activeThreadSpeeds = [];
+  let totalTransferredKb = 0;
+  let allDone = true;
+
+  // Process threads
+  for (let t = 0; t < fxpThreadsCount; t++) {
+    // Find disk assigned to this thread
+    let activeDisk = fxpDisks.find(d => d.assignedThread === t && d.status === 'RACING');
+    if (!activeDisk) {
+      // Find next queued disk
+      const nextQueued = fxpDisks.find(d => d.status === 'QUEUED');
+      if (nextQueued) {
+        nextQueued.status = 'RACING';
+        nextQueued.assignedThread = t;
+        activeDisk = nextQueued;
+      }
+    }
+
+    if (activeDisk) {
+      allDone = false;
+      // Transfer chunk with jittered bandwidth
+      const srv = COURIER_SERVERS[fxpActiveServer] || COURIER_SERVERS.giga;
+      const baseChunkKb = (srv.speedKb / fxpThreadsCount) * 0.11;
+      const jitter = (Math.random() - 0.5) * (baseChunkKb * 0.35);
+      const chunkKb = Math.max(20, baseChunkKb + jitter);
+
+      activeDisk.transferredKb += chunkKb;
+      const speedKbS = Math.round(chunkKb / 0.11);
+      activeThreadSpeeds.push(speedKbS);
+
+      const diskPct = Math.min(100, Math.round((activeDisk.transferredKb / activeDisk.sizeKb) * 100));
+
+      const diskEl = document.getElementById(`fxpThreadDisk_${t}`);
+      const speedEl = document.getElementById(`fxpThreadSpeed_${t}`);
+      const pctEl = document.getElementById(`fxpThreadPct_${t}`);
+      const barEl = document.getElementById(`fxpThreadBar_${t}`);
+
+      if (diskEl) diskEl.textContent = activeDisk.name;
+      if (speedEl) speedEl.textContent = `${speedKbS.toLocaleString()} kB/s`;
+      if (pctEl) pctEl.textContent = `${diskPct}%`;
+      if (barEl) barEl.style.width = `${diskPct}%`;
+
+      if (activeDisk.transferredKb >= activeDisk.sizeKb) {
+        activeDisk.status = 'OK';
+        activeDisk.transferredKb = activeDisk.sizeKb;
+        activeDisk.assignedThread = -1;
+
+        // Zipscript SFV verification
+        appendCourierTerminal(`[ZIPquiCK] CRC32 OK: ${activeDisk.name} [0x${activeDisk.crc}] (${activeDisk.index + 1}/${rel.disks})`);
+        initAudio();
+        playYm2612Fm(1200 + activeDisk.index * 35, 1.0, 1.0, 0.03, audioCtx.currentTime, 0.08);
+
+        // Assign next disk immediately
+        const next = fxpDisks.find(d => d.status === 'QUEUED');
+        if (next) {
+          next.status = 'RACING';
+          next.assignedThread = t;
+        }
+      }
+    } else {
+      // Thread idle
+      const speedEl = document.getElementById(`fxpThreadSpeed_${t}`);
+      const pctEl = document.getElementById(`fxpThreadPct_${t}`);
+      const barEl = document.getElementById(`fxpThreadBar_${t}`);
+      const diskEl = document.getElementById(`fxpThreadDisk_${t}`);
+      if (speedEl) speedEl.textContent = `0.0 kB/s`;
+      if (pctEl) pctEl.textContent = `100%`;
+      if (barEl) barEl.style.width = `100%`;
+      if (diskEl) diskEl.textContent = `COMPLETED`;
+    }
+  }
+
+  // Calculate master progress
+  fxpDisks.forEach(d => {
+    totalTransferredKb += Math.min(d.sizeKb, d.transferredKb);
+    if (d.status !== 'OK') allDone = false;
+  });
+
+  const totalKb = rel.disks * rel.diskSizeKb;
+  const overallPct = Math.min(100, Math.round((totalTransferredKb / totalKb) * 100));
+
+  const masterBar = document.getElementById('fxpMasterBar');
+  if (masterBar) masterBar.style.width = `${overallPct}%`;
+
+  const overallEl = document.getElementById('fxpOverallPercent');
+  if (overallEl) overallEl.textContent = `RACING: ${overallPct}% (${(totalTransferredKb / 1024).toFixed(1)} / ${rel.totalSizeMb} MB)`;
+
+  const aggregateSpeedKb = activeThreadSpeeds.reduce((a, b) => a + b, 0);
+  const speedAggEl = document.getElementById('fxpSpeedAggregate');
+  if (speedAggEl) speedAggEl.textContent = `${(aggregateSpeedKb / 1024).toFixed(2)} MB/s (${aggregateSpeedKb.toLocaleString()} kB/s)`;
+
+  if (allDone) {
+    completeFxpRace();
+  }
+}
+
+function completeFxpRace() {
+  if (!fxpIsRacing) return;
+  clearInterval(fxpRaceTimer);
+  fxpRaceTimer = null;
+  fxpIsRacing = false;
+
+  const rel = FXP_RELEASES[fxpActiveReleaseId] || FXP_RELEASES.st99;
+  const elapsed = Math.max(1, ((Date.now() - fxpStartTime) / 1000)).toFixed(1);
+  const avgSpeed = (rel.totalSizeMb / elapsed).toFixed(2);
+
+  const btnStart = document.getElementById('btnStartFxp');
+  const btnStop = document.getElementById('btnStopFxp');
+  if (btnStart) btnStart.disabled = false;
+  if (btnStop) btnStop.disabled = true;
+
+  const statusBadge = document.getElementById('courierSiteStatusBadge');
+  if (statusBadge) {
+    statusBadge.textContent = "★ RACE COMPLETE & PRE'D (0-DAY) ★";
+    statusBadge.style.color = "#10b981";
+  }
+
+  const speedAggEl = document.getElementById('fxpSpeedAggregate');
+  if (speedAggEl) speedAggEl.textContent = `0.00 kB/s (PEAK: ${avgSpeed} MB/s)`;
+
+  const overallEl = document.getElementById('fxpOverallPercent');
+  if (overallEl) overallEl.textContent = `PRE RACED: 100% [${elapsed}s @ ${avgSpeed} MB/s]`;
+
+  const creditsEarned = Math.round(rel.totalSizeMb * 3.0);
+  appendCourierTerminal(`==============================================================
+[RACE FINISH] ${rel.title} RACED IN ${elapsed}s!
+[RACE SPEED] AGGREGATE THROUGHPUT: ${avgSpeed} MB/s
+[ZIPquiCK] COMPLETE: ALL ${rel.disks} DISKS PASSED SFV INTEGRITY!
+[SITE] DIRECTORY PRE'D TO /site/0DAY/${rel.dirName}/
+[CREDITS] RATIO 1:3 APPLIED: +${creditsEarned} MB CREDITS GRANTED TO KiloCourier_99!
+==============================================================`);
+
+  // Update stored user stats
+  const stats = getStoredCourierStats();
+  stats.uploadedMb += rel.totalSizeMb;
+  stats.creditsMb += creditsEarned;
+  stats.racesWon += 1;
+  saveCourierStats(stats);
+  renderCourierStats();
+  renderCourierLeaderboard();
+
+  // Play victory chime
+  initAudio();
+  playDemosceneSfx('bell');
+  setTimeout(() => playYm2612Fm(1318.5, 2.0, 3.0, 0.4, audioCtx.currentTime, 0.25), 180);
+  showNoticeToast(`🏁 FXP Race Complete! +${creditsEarned} MB Credits Added to glFTPd account!`);
+}
+
+function abortFxpRace() {
+  if (fxpRaceTimer) {
+    clearInterval(fxpRaceTimer);
+    fxpRaceTimer = null;
+  }
+  fxpIsRacing = false;
+
+  const btnStart = document.getElementById('btnStartFxp');
+  const btnStop = document.getElementById('btnStopFxp');
+  if (btnStart) btnStart.disabled = false;
+  if (btnStop) btnStop.disabled = true;
+
+  const statusBadge = document.getElementById('courierSiteStatusBadge');
+  if (statusBadge) {
+    statusBadge.textContent = "ABORTED BY OPERATOR";
+    statusBadge.style.color = "#ef4444";
+  }
+
+  const speedAggEl = document.getElementById('fxpSpeedAggregate');
+  if (speedAggEl) speedAggEl.textContent = `0.00 kB/s`;
+
+  appendCourierTerminal(`[ABOR] 426 Transfer aborted by user command. Connection reset by peer.`);
+  showNoticeToast("⏹ FXP Race Aborted.");
+}
+
+function rescanFxpSfv() {
+  const rel = FXP_RELEASES[fxpActiveReleaseId] || FXP_RELEASES.st99;
+  let log = `[SFV RESCAN] Checking checksums for ${rel.prefix}.sfv:
+`;
+  log += `--------------------------------------------------------------
+`;
+  for (let i = 0; i < rel.disks; i++) {
+    const ext = i === 0 ? "rar" : `r${String(i - 1).padStart(2, '0')}`;
+    const crc = rel.sfvCrcs[i % rel.sfvCrcs.length];
+    log += `  FILE: ${rel.prefix}.${ext.padEnd(4)} SIZE: ${rel.diskSizeKb}KB  CRC: [0x${crc}]  -> OK
+`;
+  }
+  log += `--------------------------------------------------------------
+`;
+  log += `[ZIPquiCK] RESULT: ${rel.disks} OF ${rel.disks} DISKS 100% VALID. NO CORRUPTION.`;
+  appendCourierTerminal(log);
+
+  initAudio();
+  playYm2612Fm(1046.5, 1.0, 1.0, 0.08, audioCtx.currentTime, 0.15);
+  showNoticeToast("📊 SFV Rescan complete: All checksums verified!");
+}
+
+function downloadFxpRaceProof() {
+  const rel = FXP_RELEASES[fxpActiveReleaseId] || FXP_RELEASES.st99;
+  const srv = COURIER_SERVERS[fxpActiveServer] || COURIER_SERVERS.giga;
+  const dateStr = new Date().toISOString().replace('T', ' ').substring(0, 19);
+
+  let proof = `===============================================================================
+               0 x R E L E A S E   S C E N E   R A C E   P R O O F
+===============================================================================
+RELEASE NAME   : ${rel.title}
+DIRECTORY      : ${rel.dirName}
+GROUP AFFIL    : ${rel.group}
+TOP-SITE SRC   : ${srv.name} (${srv.ip}:${srv.port})
+TRANSFER PROTO : FXP PASV/PORT Multi-Thread (glFTPd v1.18.2)
+TIMESTAMP      : ${dateStr} GMT
+TOTAL VOLUMES  : ${rel.disks} Archive Volumes (${rel.totalSizeMb} MB)
+
+-------------------------------------------------------------------------------
+SFV CHECKSUM VERIFICATION TABLE
+-------------------------------------------------------------------------------
+`;
+  for (let i = 0; i < rel.disks; i++) {
+    const ext = i === 0 ? "rar" : `r${String(i - 1).padStart(2, '0')}`;
+    const crc = rel.sfvCrcs[i % rel.sfvCrcs.length];
+    proof += `  ${rel.prefix}.${ext.padEnd(6)} ${crc}  [VERIFIED OK]
+`;
+  }
+  proof += `-------------------------------------------------------------------------------
+COURIER RACER  : KiloCourier_99 (Affil: FLARELIGHT / RAZOR 1999)
+SPEED PROOF    : Sustained 4.2 MB/s striped bandwidth across OC-3 pipe.
+STATUS         : PRE-APPROVED BY SITE OPERATOR - 0-DAY ARCHIVE SYNCHRONIZED.
+===============================================================================`;
+
+  downloadBlob(proof, `${rel.prefix}_race_proof.txt`, "text/plain");
+  showNoticeToast("📜 Race Proof downloaded!");
+}
+
+function appendCourierTerminal(text) {
+  const term = document.getElementById('courierTerminalOutput');
+  if (!term) return;
+  term.textContent += (term.textContent ? '\n' : '') + text;
+  term.scrollTop = term.scrollHeight;
+}
+
+function clearCourierConsole() {
+  const term = document.getElementById('courierTerminalOutput');
+  if (term) term.textContent = '';
+}
+
+function runCourierQuickCmd(cmd) {
+  const input = document.getElementById('courierCmdInput');
+  if (input) input.value = cmd;
+  submitCourierCmd();
+}
+
+function handleCourierCmdKey(e) {
+  if (e.key === 'Enter') submitCourierCmd();
+}
+
+function submitCourierCmd() {
+  const input = document.getElementById('courierCmdInput');
+  if (!input) return;
+  const raw = input.value.trim();
+  if (!raw) return;
+  input.value = '';
+
+  appendCourierTerminal(`glftpd> ${raw}`);
+  const lower = raw.toLowerCase();
+
+  if (lower === 'help') {
+    appendCourierTerminal(`glFTPd v1.18 Command Reference:
+  site who       - List online couriers, active FXP transfers & slots
+  site speed     - Bandwidth speed test & backbone latency metrics
+  site groups    - List affiliate scene cracking groups on this top-site
+  site rules     - Display 1999 ISO / RIP / Trainer release guidelines
+  site dupe <q>  - Search scene dupe database for conflicting releases
+  site stats     - Display personal upload/download credits and ratio
+  site nuke <r>  - Check nuke status and scene penalty points
+  ls / dir       - List current directory contents
+  pwd            - Print working directory path
+  clear          - Clear terminal display buffer`);
+  } else if (lower === 'site who') {
+    appendCourierTerminal(`200- CURRENTLY CONNECTED COURIERS (glFTPd v1.18.2):
+[SLOT 01] SpeedDemon   [FLT] 194.109.13.88:2121  -> FXP: st99.r04 (4.1 MB/s)
+[SLOT 02] Vortex_99    [RZR] 193.10.252.33:6543  -> FXP: q3a.r02  (3.8 MB/s)
+[SLOT 03] KiloCourier  [YOU] 127.0.0.1:4199      -> IDLE (Awaiting Race)
+[SLOT 04] HexCourier   [PDX] 194.109.6.50:9999   -> STOR: pdx-hlw.r08 (3.2 MB/s)
+[SLOT 05] PacketRunner [SKD] 194.109.13.91:2121  -> RETR: skd-dex.r01 (2.9 MB/s)
+[SLOT 06] EchoScener   [0x7F] 10.19.99.77:1999   -> PING: carrier_1999hz (0.4ms)
+200 6 of 64 active connections.`);
+  } else if (lower === 'site speed') {
+    appendCourierTerminal(`200- NETWORK BACKBONE BENCHMARKS (1999):
+  US Backbone : OC-3 (155.52 Mbps) -> Peak: 18.2 MB/s | Latency: 12ms
+  EU Link     : 100 Mbps Fast-Ethernet -> Peak: 11.4 MB/s | Latency: 28ms
+  NL Mirror   : DS3 (44.736 Mbps) -> Peak: 5.1 MB/s | Latency: 34ms
+  Subterranean: 10.19.99.0/24 Subcarrier -> 1999.00 Hz Carrier Phase-Locked
+200 Bandwidth test complete.`);
+  } else if (lower === 'site groups') {
+    appendCourierTerminal(`200- 0xRELEASE AFFILIATE GROUPS (1999):
+  [FLT] FLARELIGHT   - ISO Division & PC Games (No-CD & Trainers)
+  [RZR] RAZOR 1999   - Keymaker Division & CD-Key Generators
+  [PDX] PARALAX      - Net Bypass & Protection Removers
+  [SKD] SKID VECTOR  - Win32 In-Memory Trainers & Injectors
+  [CLS] KLASS        - CD-RIPs & Compact Executables
+  [CYB] CYBRID       - Demoscene 64KB Intros & Trackers
+200 All affiliate groups active and in good standing.`);
+  } else if (lower === 'site rules') {
+    appendCourierTerminal(`200- 0xRELEASE SCENE COURIER RULES (OCTOBER 1999):
+  1. All releases must be split into multi-volume RAR archives (.rar, .r00, .r01...).
+  2. Authentic .SFV and group .NFO are MANDATORY in every archive directory.
+  3. Strict 999 KB size ceiling applies to standalone trainers, cracktros, and keygens.
+  4. Audio soundtracks must use Sega Genesis FM (YM2612) or SNES echo emulation.
+  5. Minimum ratio is 1:3. Leeches with < 1:1 ratio are automatically quarantined.
+  6. No duplicate releases (Check 'site dupe' before issuing PRE command).
+200 End of rules.`);
+  } else if (lower.startsWith('site dupe')) {
+    const q = raw.substring(9).trim() || "game";
+    appendCourierTerminal(`200- SCENE DUPE DATABASE SEARCH RESULTS FOR '${q}':
+  1999-11-23 | Surreal.Tournament.99.NoCD-FLARELIGHT [14x1.44MB] -> CLEAN
+  1999-12-02 | Tremor.III.Arena.Keymaker.And.Reg-RAZOR1999 [8x1.44MB] -> CLEAN
+  1999-06-19 | Half-Cycle.1.1.WON.Bypass-PARALAX [12x1.44MB] -> CLEAN
+  2000-06-22 | Machina.Ex.v1.112fm.Plus12.Trainer-SKIDVECTOR [6x1.44MB] -> CLEAN
+200 Search complete.`);
+  } else if (lower === 'site stats') {
+    const stats = getStoredCourierStats();
+    appendCourierTerminal(`200- COURIER STATISTICS FOR 'KiloCourier_99':
+  Uploaded    : ${stats.uploadedMb.toFixed(1)} MB
+  Downloaded  : ${stats.downloadedMb.toFixed(1)} MB
+  Credit Pool : ${stats.creditsMb.toFixed(1)} MB
+  Ratio       : ${stats.ratio} (Quota OK)
+  Races Won   : ${stats.racesWon} Pre-releases
+  Status      : ${stats.rank}
+200 User statistics verified.`);
+  } else if (lower.startsWith('site nuke')) {
+    appendCourierTerminal(`500 Release is NOT nuked. Checksum integrity 100% verified by Zipscript.`);
+  } else if (lower === 'ls' || lower === 'dir') {
+    appendCourierTerminal(`drwxr-xr-x   8 glftpd   site         4096 Oct 07 1999 0DAY/
+drwxr-xr-x  14 glftpd   site         4096 Oct 05 1999 ISO/
+drwxr-xr-x   5 glftpd   site         4096 Oct 03 1999 DOX/
+drwxr-xr-x   9 glftpd   site         4096 Oct 01 1999 TRAINERS/
+drwxr-xr-x  22 glftpd   site         4096 Sep 28 1999 DEMOS/
+-rw-r--r--   1 glftpd   site          840 Oct 06 1999 rules.txt
+drwx------   2 glftpd   site         4096 Oct 07 1999 .subterranean/`);
+  } else if (lower === 'pwd') {
+    appendCourierTerminal(`257 "/site/incoming/" is current directory.`);
+  } else if (lower.startsWith('cat')) {
+    if (lower.includes('subterranean') || lower.includes('.subterranean')) {
+      appendCourierTerminal(`CARLSBAD LITHOSPHERIC INTERCEPT // NODE 0x7F
+Subcarrier frequency: 1999.00 Hz
+Relay gateway address: 10.19.99.4
+Precursor heap residue: 0x007F1999
+"Do not silence the living machine."`);
+    } else {
+      appendCourierTerminal(`glFTPd 1999: Secure UNIX Top-Site System. Keep all releases under 999 KB.`);
+    }
+  } else if (lower === 'clear') {
+    clearCourierConsole();
+  } else {
+    appendCourierTerminal(`500 Unknown site command '${raw}'. Type 'help' for glFTPd command list.`);
+  }
+}
+
+
+// ==========================================
+// 19. PE-PACK '99 & SHANNON INFORMATION ENTROPY FORENSICS LAB
+// ==========================================
+let currentPackerTargetId = 'aspack';
+let unpackerCurrentStep = 0;
+let unpackerRunTimer = null;
+let entropyCanvasMouseHoverBlock = -1;
+
+const PACKER_TARGETS = {
+  aspack: {
+    id: "aspack",
+    name: "Tremor3_Keygen.exe",
+    packTypeBadge: "[COMPRESSED: ASPACK '99]",
+    badgeColor: "var(--accent-pink)",
+    dos: "e_magic: 0x5A4D ('MZ')",
+    lfanew: "e_lfanew: 0x00000080",
+    peSig: "Signature: 0x00004550",
+    machine: "Machine: 0x014C (i386)",
+    ep: "0x0040E000 (ASPack Stub)",
+    oep: "0x00401140",
+    oepNum: 0x00401140,
+    base: "Base: 0x00400000",
+    size: "48,128 Bytes",
+    sizeNum: 48128,
+    meanEntropy: 6.94,
+    sections: [
+      { name: ".text", va: "0x00401000", vSize: "16,384", rawSize: "0", entropy: "1.12", flags: "0x60000020 (RX)", status: "Compressed" },
+      { name: ".rdata", va: "0x00405000", vSize: "4,096", rawSize: "0", entropy: "0.20", flags: "0x40000040 (R)", status: "Virtual" },
+      { name: ".data", va: "0x00406000", vSize: "8,192", rawSize: "0", entropy: "0.45", flags: "0xC0000040 (RW)", status: "Uninitialized" },
+      { name: ".aspack", va: "0x00408000", vSize: "24,576", rawSize: "24,576", entropy: "7.88", flags: "0xE0000020 (RWX)", status: "High Entropy" },
+      { name: ".adata", va: "0x0040E000", vSize: "4,096", rawSize: "4,096", entropy: "6.42", flags: "0x60000020 (RX)", status: "Active EIP" }
+    ],
+    instructions: [
+      { addr: "0x0040E000", hex: "60", asm: "PUSHAD", note: "Preserve all general-purpose registers (EAX..EDI) on stack" },
+      { addr: "0x0040E001", hex: "9C", asm: "PUSHFD", note: "Preserve CPU EFLAGS arithmetic condition codes" },
+      { addr: "0x0040E002", hex: "E8 00 00 00 00", asm: "CALL 0x0040E007", note: "Push return address for delta relocation calculation" },
+      { addr: "0x0040E007", hex: "5D", asm: "POP EBP", note: "EBP = 0x0040E007 (Delta base pointer)" },
+      { addr: "0x0040E008", hex: "81 ED 07 E0 40 00", asm: "SUB EBP, 0x0040E007", note: "EBP = 0x00000000 (Reloc offset from ImageBase)" },
+      { addr: "0x0040E00E", hex: "8D B5 00 80 00 00", asm: "LEA ESI, [EBP + 0x00408000]", note: "ESI = Source of ASPack compressed byte stream" },
+      { addr: "0x0040E014", hex: "8D BD 00 10 00 00", asm: "LEA EDI, [EBP + 0x00401000]", note: "EDI = Destination virtual address of .text" },
+      { addr: "0x0040E01A", hex: "B9 00 40 00 00", asm: "MOV ECX, 0x00004000", note: "ECX = 16,384 bytes block decompression count" },
+      { addr: "0x0040E01F", hex: "8A 06", asm: "MOV AL, [ESI]", note: "Fetch compressed opcode byte from source stream" },
+      { addr: "0x0040E021", hex: "34 7F", asm: "XOR AL, 0x7F", note: "Decompress byte using polymorphic key mask" },
+      { addr: "0x0040E023", hex: "88 07", asm: "MOV [EDI], AL", note: "Store decrypted native x86 machine byte to .text" },
+      { addr: "0x0040E025", hex: "46 47 E2 F8", asm: "INC ESI; INC EDI; LOOP", note: "Decompress entire section payload in RAM" },
+      { addr: "0x0040E029", hex: "9D 61", asm: "POPFD; POPAD", note: "Restore all original registers and flags before jump" },
+      { addr: "0x0040E02B", hex: "E9 10 31 FF FF", asm: "JMP 0x00401140", note: "*** TAIL JUMP TO ORIGINAL ENTRY POINT (OEP) ***" }
+    ],
+    registers: [
+      { eax: "0x00000000", ebx: "0x00400000", ecx: "0x0012FFB0", edx: "0x7FFE0304", esi: "0x00000000", edi: "0x00000000", ebp: "0x0012FFC4", esp: "0x0012FF70", eip: "0x0040E000", eflags: "0x00000246" },
+      { eax: "0x00000000", ebx: "0x00400000", ecx: "0x0012FFB0", edx: "0x7FFE0304", esi: "0x00000000", edi: "0x00000000", ebp: "0x0012FFC4", esp: "0x0012FF50", eip: "0x0040E001", eflags: "0x00000246" },
+      { eax: "0x00000000", ebx: "0x00400000", ecx: "0x0012FFB0", edx: "0x7FFE0304", esi: "0x00000000", edi: "0x00000000", ebp: "0x0012FFC4", esp: "0x0012FF4C", eip: "0x0040E002", eflags: "0x00000246" },
+      { eax: "0x00000000", ebx: "0x00400000", ecx: "0x0012FFB0", edx: "0x7FFE0304", esi: "0x00000000", edi: "0x00000000", ebp: "0x0012FFC4", esp: "0x0012FF48", eip: "0x0040E007", eflags: "0x00000246" },
+      { eax: "0x00000000", ebx: "0x00400000", ecx: "0x0012FFB0", edx: "0x7FFE0304", esi: "0x00000000", edi: "0x00000000", ebp: "0x0040E007", esp: "0x0012FF4C", eip: "0x0040E008", eflags: "0x00000246" },
+      { eax: "0x00000000", ebx: "0x00400000", ecx: "0x0012FFB0", edx: "0x7FFE0304", esi: "0x00000000", edi: "0x00000000", ebp: "0x00000000", esp: "0x0012FF4C", eip: "0x0040E00E", eflags: "0x00000246" },
+      { eax: "0x00000000", ebx: "0x00400000", ecx: "0x0012FFB0", edx: "0x7FFE0304", esi: "0x00408000", edi: "0x00000000", ebp: "0x00000000", esp: "0x0012FF4C", eip: "0x0040E014", eflags: "0x00000246" },
+      { eax: "0x00000000", ebx: "0x00400000", ecx: "0x0012FFB0", edx: "0x7FFE0304", esi: "0x00408000", edi: "0x00401000", ebp: "0x00000000", esp: "0x0012FF4C", eip: "0x0040E01A", eflags: "0x00000246" },
+      { eax: "0x00000000", ebx: "0x00400000", ecx: "0x00004000", edx: "0x7FFE0304", esi: "0x00408000", edi: "0x00401000", ebp: "0x00000000", esp: "0x0012FF4C", eip: "0x0040E01F", eflags: "0x00000246" },
+      { eax: "0x0000002A", ebx: "0x00400000", ecx: "0x00004000", edx: "0x7FFE0304", esi: "0x00408000", edi: "0x00401000", ebp: "0x00000000", esp: "0x0012FF4C", eip: "0x0040E021", eflags: "0x00000246" },
+      { eax: "0x00000055", ebx: "0x00400000", ecx: "0x00004000", edx: "0x7FFE0304", esi: "0x00408000", edi: "0x00401000", ebp: "0x00000000", esp: "0x0012FF4C", eip: "0x0040E023", eflags: "0x00000206" },
+      { eax: "0x00000055", ebx: "0x00400000", ecx: "0x00004000", edx: "0x7FFE0304", esi: "0x00408001", edi: "0x00401001", ebp: "0x00000000", esp: "0x0012FF4C", eip: "0x0040E025", eflags: "0x00000206" },
+      { eax: "0x00000000", ebx: "0x00400000", ecx: "0x00000000", edx: "0x7FFE0304", esi: "0x0040C000", edi: "0x00405000", ebp: "0x00000000", esp: "0x0012FF4C", eip: "0x0040E029", eflags: "0x00000246" },
+      { eax: "0x00000000", ebx: "0x00400000", ecx: "0x0012FFB0", edx: "0x7FFE0304", esi: "0x00000000", edi: "0x00000000", ebp: "0x0012FFC4", esp: "0x0012FF70", eip: "0x00401140", eflags: "0x00000246" }
+    ],
+    memoryDumps: [
+      `00401140: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+00401150: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+00401160: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................`,
+      `00401140: E2 84 9A 3B 7F C1 4E 88 19 90 FF 2A BC 64 01 12  ...;.N.....*.d..
+00401150: 93 4A 22 7C 89 FF 11 00 5D EA B1 90 77 34 21 0F  .J"|....]...w4!.
+00401160: 44 80 19 99 23 BC 01 7F E4 91 80 12 55 2A C1 39  D...#.......U*.9`,
+      `00401140: 55 89 E5 83 EC 20 B8 10 20 40 00 E8 24 01 00 00  U.... ..@..$....
+00401150: 68 30 70 40 00 68 00 80 40 00 E8 50 00 00 00 C9  h0p@.h..@..P...
+00401160: C3 90 90 90 55 89 E5 B8 01 00 00 00 C9 C3 90 90  ....U...........`
+    ]
+  },
+
+  upx: {
+    id: "upx",
+    name: "HalfCycle_Patch.exe",
+    packTypeBadge: "[COMPRESSED: UPX v0.90]",
+    badgeColor: "var(--accent-cyan)",
+    dos: "e_magic: 0x5A4D ('MZ')",
+    lfanew: "e_lfanew: 0x00000080",
+    peSig: "Signature: 0x00004550",
+    machine: "Machine: 0x014C (i386)",
+    ep: "0x00412000 (UPX1 Entry)",
+    oep: "0x004015A0",
+    oepNum: 0x004015A0,
+    base: "Base: 0x00400000",
+    size: "32,768 Bytes",
+    sizeNum: 32768,
+    meanEntropy: 7.12,
+    sections: [
+      { name: "UPX0", va: "0x00401000", vSize: "32,768", rawSize: "0", entropy: "0.00", flags: "0xE0000080 (RWX)", status: "Decompress Dest" },
+      { name: "UPX1", va: "0x00409000", vSize: "24,576", rawSize: "24,576", entropy: "7.94", flags: "0xE0000040 (RWX)", status: "NRV2B Compressed" },
+      { name: ".rsrc", va: "0x0040F000", vSize: "4,096", rawSize: "4,096", entropy: "3.42", flags: "0xC0000040 (RW)", status: "Resources" }
+    ],
+    instructions: [
+      { addr: "0x00412000", hex: "60", asm: "PUSHAD", note: "UPX loader entry - preserve all general registers" },
+      { addr: "0x00412001", hex: "BE 00 90 40 00", asm: "MOV ESI, 0x00409000", note: "ESI = Pointer to NRV2B compressed stream in UPX1" },
+      { addr: "0x00412006", hex: "8D BD 00 10 40 00", asm: "LEA EDI, [0x00401000]", note: "EDI = Destination virtual section UPX0" },
+      { addr: "0x0041200C", hex: "B9 A0 05 00 00", asm: "MOV ECX, 0x000005A0", note: "ECX = Header decompression offset" },
+      { addr: "0x00412011", hex: "8A 06 46", asm: "MOV AL, [ESI]; INC ESI", note: "Fetch literal opcode byte" },
+      { addr: "0x00412014", hex: "88 07 47", asm: "MOV [EDI], AL; INC EDI", note: "Store literal byte into target opcode memory" },
+      { addr: "0x00412017", hex: "E2 F8", asm: "LOOP 0x00412011", note: "NRV2B decompress loop unrolling" },
+      { addr: "0x00412019", hex: "8B 95 00 10 40 00", asm: "MOV EDX, [0x00401000]", note: "Verify uncompressed PE signature in memory" },
+      { addr: "0x0041201F", hex: "61", asm: "POPAD", note: "Restore all general registers" },
+      { addr: "0x00412020", hex: "E9 7B F5 FE FF", asm: "JMP 0x004015A0", note: "*** TAIL JUMP TO ORIGINAL ENTRY POINT (OEP) ***" }
+    ],
+    registers: [
+      { eax: "0x00000000", ebx: "0x00400000", ecx: "0x0012FFB0", edx: "0x7FFE0304", esi: "0x00000000", edi: "0x00000000", ebp: "0x0012FFC4", esp: "0x0012FF70", eip: "0x00412000", eflags: "0x00000246" },
+      { eax: "0x00000000", ebx: "0x00400000", ecx: "0x0012FFB0", edx: "0x7FFE0304", esi: "0x00409000", edi: "0x00000000", ebp: "0x0012FFC4", esp: "0x0012FF50", eip: "0x00412001", eflags: "0x00000246" },
+      { eax: "0x00000000", ebx: "0x00400000", ecx: "0x0012FFB0", edx: "0x7FFE0304", esi: "0x00409000", edi: "0x00401000", ebp: "0x0012FFC4", esp: "0x0012FF50", eip: "0x00412006", eflags: "0x00000246" },
+      { eax: "0x00000055", ebx: "0x00400000", ecx: "0x000005A0", edx: "0x7FFE0304", esi: "0x00409001", edi: "0x00401001", ebp: "0x0012FFC4", esp: "0x0012FF50", eip: "0x00412011", eflags: "0x00000206" },
+      { eax: "0x00000000", ebx: "0x00400000", ecx: "0x0012FFB0", edx: "0x7FFE0304", esi: "0x00000000", edi: "0x00000000", ebp: "0x0012FFC4", esp: "0x0012FF70", eip: "0x004015A0", eflags: "0x00000246" }
+    ],
+    memoryDumps: [
+      `004015A0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+004015B0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................`,
+      `004015A0: 55 89 E5 57 56 53 83 EC 18 B9 40 10 00 00 BF A0  U..WVS....@...`
+    ]
+  },
+
+  shrinker: {
+    id: "shrinker",
+    name: "MachinaEx_Trainer.exe",
+    packTypeBadge: "[COMPRESSED: SHRINKER 3.4]",
+    badgeColor: "var(--accent-purple)",
+    dos: "e_magic: 0x5A4D ('MZ')",
+    lfanew: "e_lfanew: 0x00000080",
+    peSig: "Signature: 0x00004550",
+    machine: "Machine: 0x014C (i386)",
+    ep: "0x0040D500 (Shrinker Stub)",
+    oep: "0x00402280",
+    oepNum: 0x00402280,
+    base: "Base: 0x00400000",
+    size: "56,320 Bytes",
+    sizeNum: 56320,
+    meanEntropy: 7.28,
+    sections: [
+      { name: ".text", va: "0x00401000", vSize: "20,480", rawSize: "0", entropy: "0.85", flags: "0x60000020 (RX)", status: "Compressed" },
+      { name: ".data", va: "0x00406000", vSize: "8,192", rawSize: "0", entropy: "0.10", flags: "0xC0000040 (RW)", status: "Virtual" },
+      { name: ".shrink", va: "0x00408000", vSize: "32,768", rawSize: "32,768", entropy: "7.92", flags: "0xE0000060 (RWX)", status: "LZSS Huffman" }
+    ],
+    instructions: [
+      { addr: "0x0040D500", hex: "60", asm: "PUSHAD", note: "Shrinker 3.4 initialization" },
+      { addr: "0x0040D501", hex: "E8 00 00 00 00", asm: "CALL 0x0040D506", note: "Call delta hook" },
+      { addr: "0x0040D506", hex: "58", asm: "POP EAX", note: "EAX = 0x0040D506" },
+      { addr: "0x0040D507", hex: "05 7A 4D 00 00", asm: "ADD EAX, 0x00004D7A", note: "Resolve Huffman decoder table" },
+      { addr: "0x0040D50C", hex: "61", asm: "POPAD", note: "Restore registers" },
+      { addr: "0x0040D50D", hex: "E9 6E 4D FF FF", asm: "JMP 0x00402280", note: "*** TAIL JUMP TO ORIGINAL ENTRY POINT (OEP) ***" }
+    ],
+    registers: [
+      { eax: "0x00000000", ebx: "0x00400000", ecx: "0x0012FFB0", edx: "0x7FFE0304", esi: "0x00000000", edi: "0x00000000", ebp: "0x0012FFC4", esp: "0x0012FF70", eip: "0x0040D500", eflags: "0x00000246" },
+      { eax: "0x00000000", ebx: "0x00400000", ecx: "0x0012FFB0", edx: "0x7FFE0304", esi: "0x00000000", edi: "0x00000000", ebp: "0x0012FFC4", esp: "0x0012FF70", eip: "0x00402280", eflags: "0x00000246" }
+    ],
+    memoryDumps: [
+      `00402280: AA 55 F0 0F 19 99 42 7F C0 01 24 88 FF EE DD CC  .U...B...$......`,
+      `00402280: 55 89 E5 81 EC 80 00 00 00 53 56 57 8B 75 08 85  U........SVW.u..`
+    ]
+  },
+
+  native: {
+    id: "native",
+    name: "SurrealTournament_NoCD.exe",
+    packTypeBadge: "[UNCOMPRESSED NATIVE PE]",
+    badgeColor: "var(--accent-green)",
+    dos: "e_magic: 0x5A4D ('MZ')",
+    lfanew: "e_lfanew: 0x00000080",
+    peSig: "Signature: 0x00004550",
+    machine: "Machine: 0x014C (i386)",
+    ep: "0x00401000 (.text Base)",
+    oep: "0x00401000",
+    oepNum: 0x00401000,
+    base: "Base: 0x00400000",
+    size: "73,728 Bytes",
+    sizeNum: 73728,
+    meanEntropy: 5.48,
+    sections: [
+      { name: ".text", va: "0x00401000", vSize: "40,960", rawSize: "40,960", entropy: "6.22", flags: "0x60000020 (RX)", status: "Native Opcodes" },
+      { name: ".rdata", va: "0x0040B000", vSize: "8,192", rawSize: "8,192", entropy: "4.85", flags: "0x40000040 (R)", status: "IAT Tables" },
+      { name: ".data", va: "0x0040D000", vSize: "16,384", rawSize: "16,384", entropy: "3.12", flags: "0xC0000040 (RW)", status: "Globals" },
+      { name: ".rsrc", va: "0x00411000", vSize: "8,192", rawSize: "8,192", entropy: "4.15", flags: "0x40000040 (R)", status: "Icons/Dialogs" }
+    ],
+    instructions: [
+      { addr: "0x00401000", hex: "55", asm: "PUSH EBP", note: "Standard WinMain C runtime stack frame entry" },
+      { addr: "0x00401001", hex: "89 E5", asm: "MOV EBP, ESP", note: "Set base pointer" },
+      { addr: "0x00401003", hex: "83 EC 28", asm: "SUB ESP, 0x28", note: "Allocate 40 bytes local stack variables" },
+      { addr: "0x00401006", hex: "B8 00 00 00 00", asm: "MOV EAX, 0x00000000", note: "Initialize return code" },
+      { addr: "0x0040100B", hex: "E8 F0 01 00 00", asm: "CALL 0x00401200", note: "Call WinMain entry point" }
+    ],
+    registers: [
+      { eax: "0x00000000", ebx: "0x00400000", ecx: "0x0012FFB0", edx: "0x7FFE0304", esi: "0x00000000", edi: "0x00000000", ebp: "0x0012FFC4", esp: "0x0012FF70", eip: "0x00401000", eflags: "0x00000246" }
+    ],
+    memoryDumps: [
+      `00401000: 55 89 E5 83 EC 28 B8 00 00 00 00 E8 F0 01 00 00  U....(..........`
+    ]
+  },
+
+  precursor: {
+    id: "precursor",
+    name: "DeepCoreBridge.exe",
+    packTypeBadge: "[STEGO: PRECURSOR 0x7F CRC]",
+    badgeColor: "var(--accent-yellow)",
+    dos: "e_magic: 0x5A4D ('MZ')",
+    lfanew: "e_lfanew: 0x00000080",
+    peSig: "Signature: 0x00004550",
+    machine: "Machine: 0x014C (i386)",
+    ep: "0x0040F000 (Precursor Loader)",
+    oep: "0x007F1999 (Node 0x7F Heap)",
+    oepNum: 0x007F1999,
+    base: "Base: 0x00400000",
+    size: "65,536 Bytes",
+    sizeNum: 65536,
+    meanEntropy: 7.42,
+    sections: [
+      { name: ".core", va: "0x00401000", vSize: "32,768", rawSize: "0", entropy: "0.45", flags: "0xE0000060 (RWX)", status: "Quarantine" },
+      { name: ".echo", va: "0x00409000", vSize: "16,384", rawSize: "16,384", entropy: "7.98", flags: "0xE0000020 (RWX)", status: "1999Hz Carrier" },
+      { name: ".stego", va: "0x0040F000", vSize: "8,192", rawSize: "8,192", entropy: "6.85", flags: "0x60000020 (RX)", status: "Precursor EIP" }
+    ],
+    instructions: [
+      { addr: "0x0040F000", hex: "60", asm: "PUSHAD", note: "Subterranean lithospheric loader entry" },
+      { addr: "0x0040F001", hex: "B9 99 19 7F 00", asm: "MOV ECX, 0x007F1999", note: "Target offset = 0x007F1999 (Sector 01 Heap)" },
+      { addr: "0x0040F006", hex: "BA 77 99 19 10", asm: "MOV EDX, 0x10199977", note: "Subnet node address 10.19.99.77:1999" },
+      { addr: "0x0040F00B", hex: "31 C0", asm: "XOR EAX, EAX", note: "Clear accumulator" },
+      { addr: "0x0040F00D", hex: "61", asm: "POPAD", note: "Restore state" },
+      { addr: "0x0040F00E", hex: "B8 99 19 7F 00", asm: "MOV EAX, 0x007F1999", note: "Load OEP address" },
+      { addr: "0x0040F013", hex: "FF E0", asm: "JMP EAX", note: "*** TAIL JUMP TO PRECURSOR HEAP 0x007F1999 ***" }
+    ],
+    registers: [
+      { eax: "0x00000000", ebx: "0x00400000", ecx: "0x0012FFB0", edx: "0x7FFE0304", esi: "0x00000000", edi: "0x00000000", ebp: "0x0012FFC4", esp: "0x0012FF70", eip: "0x0040F000", eflags: "0x00000246" },
+      { eax: "0x007F1999", ebx: "0x00400000", ecx: "0x007F1999", edx: "0x10199977", esi: "0x00000000", edi: "0x00000000", ebp: "0x0012FFC4", esp: "0x0012FF70", eip: "0x007F1999", eflags: "0x00000246" }
+    ],
+    memoryDumps: [
+      `007F1999: 10 19 99 77 43 41 52 4C 53 42 41 44 5F 30 78 37  ...wCARLSBAD_0x7
+007F19A9: 46 5F 4C 4F 43 4B 45 44 20 31 39 39 39 48 7A 00  F_LOCKED 1999Hz.`,
+      `007F1999: 45 43 48 4F 2D 31 39 39 39 2D 53 59 53 54 45 4D  ECHO-1999-SYSTEM
+007F19A9: 4E 4F 44 45 5F 30 78 37 46 5F 4C 4F 43 4B 45 44  NODE_0x7F_LOCKED`
+    ]
+  }
+};
+
+function initPePackerLab() {
+  const canvas = document.getElementById('entropyCanvas');
+  if (canvas) {
+    canvas.onmousemove = handleEntropyCanvasMouseMove;
+    canvas.onmouseleave = handleEntropyCanvasMouseLeave;
+  }
+  loadPackerTarget(currentPackerTargetId);
+}
+
+function loadPackerTarget(targetVal) {
+  currentPackerTargetId = targetVal;
+  const target = PACKER_TARGETS[targetVal] || PACKER_TARGETS.aspack;
+
+  // Header cards
+  const elDos = document.getElementById('peValDos');
+  const elLfa = document.getElementById('peValLfanew');
+  const elPe = document.getElementById('peValPe');
+  const elMac = document.getElementById('peValMachine');
+  const elEp = document.getElementById('peValEp');
+  const elOep = document.getElementById('peValOep');
+  const elBase = document.getElementById('peValBase');
+  const elSize = document.getElementById('peValSize');
+  const badge = document.getElementById('packerPackTypeBadge');
+  const meanEl = document.getElementById('entropyMeanValue');
+
+  if (elDos) elDos.textContent = target.dos;
+  if (elLfa) elLfa.textContent = target.lfanew;
+  if (elPe) elPe.textContent = target.peSig;
+  if (elMac) elMac.textContent = target.machine;
+  if (elEp) elEp.textContent = target.ep;
+  if (elOep) elOep.textContent = `Target OEP: ${target.oep}`;
+  if (elBase) elBase.textContent = target.base;
+  if (elSize) elSize.textContent = `Size: ${target.size}`;
+
+  if (badge) {
+    badge.textContent = target.packTypeBadge;
+    badge.style.color = target.badgeColor;
+  }
+  if (meanEl) {
+    meanEl.textContent = `MEAN ENTROPY: ${target.meanEntropy.toFixed(2)} bits/byte`;
+  }
+
+  renderPeSectionsTable(target);
+  renderEntropyCurve(-1);
+  resetUnpacker();
+}
+
+function renderPeSectionsTable(target) {
+  const tbody = document.getElementById('peSectionTbody');
+  if (!tbody) return;
+  tbody.innerHTML = target.sections.map(s => {
+    const entNum = parseFloat(s.entropy);
+    const entColor = entNum > 7.2 ? '#ef4444' : entNum >= 4.5 ? '#10b981' : entNum >= 2.0 ? '#38bdf8' : '#94a3b8';
+    return `
+      <tr>
+        <td style="font-weight:bold; color:var(--accent-cyan);">${s.name}</td>
+        <td><code>${s.va}</code></td>
+        <td>${s.vSize} B</td>
+        <td>${s.rawSize} B</td>
+        <td><span style="color:${entColor}; font-weight:bold;">${s.entropy}</span></td>
+        <td><code style="font-size:10px;">${s.flags}</code></td>
+        <td><span style="font-size:10px; color:${s.status.includes('High') || s.status.includes('Compressed') ? 'var(--accent-pink)' : 'var(--accent-green)'};">${s.status}</span></td>
+      </tr>
+    `;
+  }).join('');
+}
+
+function renderEntropyCurve(hoverBlockIdx) {
+  const canvas = document.getElementById('entropyCanvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const w = canvas.width;
+  const h = canvas.height;
+
+  ctx.fillStyle = '#010409';
+  ctx.fillRect(0, 0, w, h);
+
+  // Grid lines (0 to 8 bits)
+  ctx.strokeStyle = '#0d1f33';
+  ctx.lineWidth = 1;
+  for (let b = 0; b <= 8; b += 2) {
+    const y = h - (b / 8) * (h - 24) - 12;
+    ctx.beginPath();
+    ctx.moveTo(35, y);
+    ctx.lineTo(w - 10, y);
+    ctx.stroke();
+
+    ctx.fillStyle = '#475569';
+    ctx.font = '9px Consolas, monospace';
+    ctx.textAlign = 'right';
+    ctx.fillText(`${b}.0`, 30, y + 3);
+  }
+
+  // 7.20 threshold line (Encrypted/Packed threshold)
+  const threshY = h - (7.2 / 8) * (h - 24) - 12;
+  ctx.strokeStyle = 'rgba(239, 68, 68, 0.45)';
+  ctx.setLineDash([4, 4]);
+  ctx.beginPath();
+  ctx.moveTo(35, threshY);
+  ctx.lineTo(w - 10, threshY);
+  ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle = '#ef4444';
+  ctx.fillText('7.20 PACKED', w - 15, threshY - 4);
+
+  // Generate 64 entropy blocks based on target sections
+  const target = PACKER_TARGETS[currentPackerTargetId] || PACKER_TARGETS.aspack;
+  const blocks = 64;
+  const stepX = (w - 45) / blocks;
+  const points = [];
+
+  for (let i = 0; i < blocks; i++) {
+    const ratio = i / blocks;
+    let entropyVal = 5.5;
+
+    if (target.id === 'aspack') {
+      if (ratio < 0.25) entropyVal = 1.1 + Math.sin(i * 0.4) * 0.2; // .text (uninitialized)
+      else if (ratio < 0.45) entropyVal = 0.3 + Math.sin(i * 0.3) * 0.1; // .data
+      else if (ratio < 0.88) entropyVal = 7.85 + (Math.sin(i * 0.9) * 0.12); // .aspack (compressed)
+      else entropyVal = 6.4 + Math.sin(i * 0.5) * 0.3; // .adata (stub)
+    } else if (target.id === 'upx') {
+      if (ratio < 0.35) entropyVal = 0.05 + (i % 2) * 0.05; // UPX0
+      else if (ratio < 0.85) entropyVal = 7.92 + (Math.cos(i * 0.8) * 0.06); // UPX1 (compressed)
+      else entropyVal = 3.4 + Math.sin(i * 0.6) * 0.4; // .rsrc
+    } else if (target.id === 'shrinker') {
+      if (ratio < 0.3) entropyVal = 0.8 + Math.sin(i * 0.5) * 0.15;
+      else if (ratio < 0.45) entropyVal = 0.1;
+      else entropyVal = 7.88 + Math.sin(i * 0.7) * 0.1;
+    } else if (target.id === 'native') {
+      if (ratio < 0.55) entropyVal = 6.2 + Math.sin(i * 0.3) * 0.4; // .text opcodes
+      else if (ratio < 0.75) entropyVal = 4.8 + Math.cos(i * 0.4) * 0.3; // .rdata
+      else entropyVal = 3.2 + Math.sin(i * 0.5) * 0.3; // .data
+    } else if (target.id === 'precursor') {
+      if (ratio < 0.4) entropyVal = 0.45;
+      else if (ratio < 0.8) entropyVal = 7.98; // 1999Hz subcarrier payload
+      else entropyVal = 6.85;
+    }
+
+    const px = 35 + i * stepX;
+    const py = h - (Math.min(8.0, entropyVal) / 8) * (h - 24) - 12;
+    points.push({ x: px, y: py, val: entropyVal, idx: i });
+  }
+
+  // Draw filled gradient under curve
+  ctx.beginPath();
+  ctx.moveTo(points[0].x, h - 12);
+  for (let i = 0; i < points.length; i++) ctx.lineTo(points[i].x, points[i].y);
+  ctx.lineTo(points[points.length - 1].x, h - 12);
+  ctx.closePath();
+
+  const fillGrad = ctx.createLinearGradient(0, 0, 0, h);
+  fillGrad.addColorStop(0, 'rgba(239, 68, 68, 0.35)');
+  fillGrad.addColorStop(0.5, 'rgba(16, 185, 129, 0.25)');
+  fillGrad.addColorStop(1, 'rgba(2, 132, 199, 0.05)');
+  ctx.fillStyle = fillGrad;
+  ctx.fill();
+
+  // Draw curve line
+  ctx.beginPath();
+  ctx.moveTo(points[0].x, points[0].y);
+  for (let i = 1; i < points.length; i++) ctx.lineTo(points[i].x, points[i].y);
+  ctx.strokeStyle = '#38bdf8';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  // Render hover crosshair if active
+  if (hoverBlockIdx >= 0 && hoverBlockIdx < points.length) {
+    const hp = points[hoverBlockIdx];
+    ctx.strokeStyle = '#facc15';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(hp.x, 0);
+    ctx.lineTo(hp.x, h);
+    ctx.stroke();
+
+    ctx.fillStyle = '#facc15';
+    ctx.beginPath();
+    ctx.arc(hp.x, hp.y, 4, 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
+
+function handleEntropyCanvasMouseMove(e) {
+  const canvas = document.getElementById('entropyCanvas');
+  if (!canvas) return;
+  const rect = canvas.getBoundingClientRect();
+  const scaleX = canvas.width / rect.width;
+  const mouseX = (e.clientX - rect.left) * scaleX;
+
+  const blocks = 64;
+  const stepX = (canvas.width - 45) / blocks;
+  const idx = Math.floor((mouseX - 35) / stepX);
+
+  if (idx >= 0 && idx < blocks) {
+    entropyCanvasMouseHoverBlock = idx;
+    renderEntropyCurve(idx);
+
+    const target = PACKER_TARGETS[currentPackerTargetId] || PACKER_TARGETS.aspack;
+    const offsetHex = ((idx / blocks) * target.sizeNum).toString(16).toUpperCase().padStart(6, '0');
+    const secName = target.sections[Math.min(target.sections.length - 1, Math.floor((idx / blocks) * target.sections.length))].name;
+
+    const hoverInfo = document.getElementById('entropyHoverInfo');
+    if (hoverInfo) {
+      hoverInfo.textContent = `Block #${idx} [Offset: 0x${offsetHex} | Section: ${secName}] Inspection Active`;
+    }
+  }
+}
+
+function handleEntropyCanvasMouseLeave() {
+  entropyCanvasMouseHoverBlock = -1;
+  renderEntropyCurve(-1);
+  const hoverInfo = document.getElementById('entropyHoverInfo');
+  if (hoverInfo) hoverInfo.textContent = "Hover over blocks to inspect byte entropy";
+}
+
+function recalculateEntropy() {
+  initAudio();
+  playDemosceneSfx('laser');
+  renderEntropyCurve(-1);
+  showNoticeToast("⚡ Shannon Entropy re-analyzed across 64 sample blocks!");
+}
+
+function resetUnpacker() {
+  if (unpackerRunTimer) {
+    clearInterval(unpackerRunTimer);
+    unpackerRunTimer = null;
+  }
+  unpackerCurrentStep = 0;
+  const target = PACKER_TARGETS[currentPackerTargetId] || PACKER_TARGETS.aspack;
+
+  const btnDump = document.getElementById('btnDumpPe');
+  if (btnDump) btnDump.disabled = true;
+
+  const stepCounter = document.getElementById('unpackerStepCounter');
+  if (stepCounter) stepCounter.textContent = `STEP 0 / ${target.instructions.length}`;
+
+  const banner = document.getElementById('unpackerStatusBanner');
+  if (banner) {
+    banner.textContent = "Ready to trace decompression loop. Press STEP (F8) or RUN TO OEP (F9).";
+    banner.style.color = "#94a3b8";
+    banner.style.background = "#071320";
+  }
+
+  renderUnpackerAsmListing(target);
+  renderUnpackerRegisters(0);
+  renderUnpackerMemoryDump(0);
+}
+
+function renderUnpackerAsmListing(target) {
+  const asmBox = document.getElementById('unpackerAsmBox');
+  if (!asmBox) return;
+
+  asmBox.innerHTML = target.instructions.map((ins, idx) => {
+    const isActive = idx === unpackerCurrentStep;
+    return `
+      <div id="unpackerInstr_${idx}" class="asm-line ${isActive ? 'unpacker-instr-active' : ''}" style="padding:2px 4px; font-family:'Consolas',monospace;">
+        <span style="color:#64748b;">${ins.addr}:</span>
+        <span style="color:#cbd5e1; width:110px; display:inline-block;">${ins.hex.padEnd(14)}</span>
+        <span style="color:${isActive ? 'var(--accent-green)' : 'var(--accent-cyan)'}; font-weight:bold; width:170px; display:inline-block;">${ins.asm}</span>
+        <span style="color:#64748b; font-style:italic;">; ${ins.note}</span>
+      </div>
+    `;
+  }).join('');
+}
+
+function renderUnpackerRegisters(stepIdx) {
+  const regGrid = document.getElementById('unpackerRegGrid');
+  if (!regGrid) return;
+  const target = PACKER_TARGETS[currentPackerTargetId] || PACKER_TARGETS.aspack;
+  const regList = target.registers;
+  const r = regList[Math.min(regList.length - 1, stepIdx)] || regList[0];
+
+  const cells = [
+    { name: "EAX", val: r.eax },
+    { name: "EBX", val: r.ebx },
+    { name: "ECX", val: r.ecx },
+    { name: "EDX", val: r.edx },
+    { name: "ESI", val: r.esi },
+    { name: "EDI", val: r.edi },
+    { name: "EBP", val: r.ebp },
+    { name: "ESP", val: r.esp },
+    { name: "EIP", val: r.eip, isEip: true },
+    { name: "EFL", val: r.eflags }
+  ];
+
+  regGrid.innerHTML = cells.map(c => `
+    <div class="unpacker-reg-cell">
+      <span style="color:#64748b;">${c.name}:</span>
+      <span style="color:${c.isEip ? 'var(--accent-pink)' : '#f1f5f9'}; font-weight:bold;">${c.val}</span>
+    </div>
+  `).join('');
+}
+
+function renderUnpackerMemoryDump(stepIdx) {
+  const memBox = document.getElementById('unpackerMemDump');
+  if (!memBox) return;
+  const target = PACKER_TARGETS[currentPackerTargetId] || PACKER_TARGETS.aspack;
+  const dumps = target.memoryDumps;
+  const dumpText = stepIdx >= target.instructions.length - 1 ? dumps[dumps.length - 1] : dumps[Math.min(dumps.length - 1, Math.floor(stepIdx / 3))];
+  memBox.textContent = dumpText;
+}
+
+function stepUnpackerInstruction() {
+  const target = PACKER_TARGETS[currentPackerTargetId] || PACKER_TARGETS.aspack;
+  if (unpackerCurrentStep >= target.instructions.length - 1) {
+    showNoticeToast("★ Tail jump already reached OEP!");
+    return;
+  }
+
+  unpackerCurrentStep++;
+  const stepCounter = document.getElementById('unpackerStepCounter');
+  if (stepCounter) stepCounter.textContent = `STEP ${unpackerCurrentStep} / ${target.instructions.length}`;
+
+  renderUnpackerAsmListing(target);
+  renderUnpackerRegisters(unpackerCurrentStep);
+  renderUnpackerMemoryDump(unpackerCurrentStep);
+
+  // Scroll active instruction into view
+  const activeLine = document.getElementById(`unpackerInstr_${unpackerCurrentStep}`);
+  if (activeLine) activeLine.scrollIntoView({ block: 'nearest' });
+
+  initAudio();
+  playYm2612Fm(440 + unpackerCurrentStep * 60, 1.0, 1.0, 0.02, audioCtx.currentTime, 0.08);
+
+  if (unpackerCurrentStep === target.instructions.length - 1) {
+    onOepReached();
+  }
+}
+
+function runUnpackerToOep() {
+  const target = PACKER_TARGETS[currentPackerTargetId] || PACKER_TARGETS.aspack;
+  if (unpackerCurrentStep >= target.instructions.length - 1) return;
+
+  if (unpackerRunTimer) clearInterval(unpackerRunTimer);
+
+  initAudio();
+  playDemosceneSfx('laser');
+
+  unpackerRunTimer = setInterval(() => {
+    stepUnpackerInstruction();
+    if (unpackerCurrentStep >= target.instructions.length - 1) {
+      clearInterval(unpackerRunTimer);
+      unpackerRunTimer = null;
+    }
+  }, 65);
+}
+
+function onOepReached() {
+  const target = PACKER_TARGETS[currentPackerTargetId] || PACKER_TARGETS.aspack;
+  const banner = document.getElementById('unpackerStatusBanner');
+  if (banner) {
+    banner.textContent = `★ ORIGINAL ENTRY POINT (OEP: ${target.oep}) REACHED! Import tables resolved. Ready to dump PE image. ★`;
+    banner.style.color = "var(--accent-green)";
+    banner.style.background = "rgba(0, 255, 102, 0.12)";
+  }
+
+  const btnDump = document.getElementById('btnDumpPe');
+  if (btnDump) btnDump.disabled = false;
+
+  initAudio();
+  playDemosceneSfx('bell');
+  showNoticeToast(`★ OEP REACHED: ${target.oep}! Ready to dump unpacked PE.`);
+}
+
+function dumpUnpackedPeBinary() {
+  const target = PACKER_TARGETS[currentPackerTargetId] || PACKER_TARGETS.aspack;
+
+  // Synthesize clean binary buffer (MZ header + PE signature + unpacked sections)
+  const size = target.sizeNum;
+  const buffer = new Uint8Array(size);
+
+  // MZ Magic
+  buffer[0] = 0x4D; buffer[1] = 0x5A; // 'MZ'
+  buffer[0x3C] = 0x80; // e_lfanew -> 0x80
+
+  // PE Signature
+  buffer[0x80] = 0x50; buffer[0x81] = 0x45; buffer[0x82] = 0x00; buffer[0x83] = 0x00; // 'PE  '
+  buffer[0x84] = 0x4C; buffer[0x85] = 0x01; // Machine: i386
+
+  // OEP in Optional Header (Offset 0xA8)
+  const oepVal = target.oepNum - 0x00400000;
+  buffer[0xA8] = oepVal & 0xFF;
+  buffer[0xA9] = (oepVal >> 8) & 0xFF;
+  buffer[0xAA] = (oepVal >> 16) & 0xFF;
+  buffer[0xAB] = (oepVal >> 24) & 0xFF;
+
+  // Unpacked Opcode Stub at OEP
+  const oepFileOffset = 0x1000;
+  buffer[oepFileOffset] = 0x55; // PUSH EBP
+  buffer[oepFileOffset + 1] = 0x89; buffer[oepFileOffset + 2] = 0xE5; // MOV EBP, ESP
+  buffer[oepFileOffset + 3] = 0x83; buffer[oepFileOffset + 4] = 0xEC; buffer[oepFileOffset + 5] = 0x20; // SUB ESP, 0x20
+
+  const cleanName = target.name.replace(".exe", "_UNPACKED.exe");
+  const blob = new Blob([buffer], { type: "application/octet-stream" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = cleanName;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 2000);
+
+  initAudio();
+  playDemosceneSfx('arp');
+  showNoticeToast(`💾 Unpacked PE binary dumped cleanly! File: ${cleanName}`);
 }
 
 
@@ -8059,6 +9819,14 @@ document.addEventListener('visibilitychange', () => {
       clearInterval(keymakerArpTimer);
       keymakerArpTimer = null;
     }
+    if (fxpRaceTimer) {
+      clearInterval(fxpRaceTimer);
+      fxpRaceTimer = null;
+    }
+    if (unpackerRunTimer) {
+      clearInterval(unpackerRunTimer);
+      unpackerRunTimer = null;
+    }
   } else {
     // Resume audio context
     if (audioCtx && audioCtx.state === 'suspended') {
@@ -8104,6 +9872,8 @@ renderShouts(localShouts);
 initStego();
 initComposer();
 initSubterraneanSignals();
+initCourierTopSite();
+initPePackerLab();
 </script>
 
 <!-- ================================================================= -->
@@ -8156,7 +9926,7 @@ initSubterraneanSignals();
       push(shoutboxRef, { ...entry, createdAt: serverTimestamp() });
     };
 
-    // Collaborative Subterranean Signals Board live sync [arg/signals]
+    // Collaborative Subterranean Signals Board live sync [arg/signals] // ARG: intentional
     try {
       const signalsRef = ref(db, 'arg/signals');
       onValue(signalsRef, (snapshot) => {
