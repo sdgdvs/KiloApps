@@ -1308,6 +1308,152 @@
     box-shadow: inset 0 0 10px rgba(217, 119, 6, 0.2);
   }
 
+  /* TAB 10: AS-1999 BGP Routing Matrix & Subterranean Packet Router */
+  .bgp-stats-bar {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 8px;
+    background: #060a14;
+    border: 1px solid var(--border-med);
+    padding: 10px;
+    margin-bottom: 12px;
+  }
+  .bgp-stat-card {
+    background: #0c1222;
+    border: 1px solid var(--border-dark);
+    padding: 8px 10px;
+    border-radius: 2px;
+  }
+  .bgp-stat-label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .bgp-stat-val {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-weight: bold;
+    color: var(--cyan);
+    margin-top: 2px;
+  }
+  .bgp-peers-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+  .bgp-peer-card {
+    background: #070c18;
+    border: 1px solid var(--border-med);
+    padding: 10px;
+    border-radius: 2px;
+    position: relative;
+    transition: border-color 0.2s;
+  }
+  .bgp-peer-card:hover {
+    border-color: var(--cyan);
+  }
+  .bgp-peer-card.active-peer {
+    border-left: 3px solid var(--green-bright);
+  }
+  .bgp-peer-card.flapping-peer {
+    border-left: 3px solid var(--amber-bright);
+  }
+  .bgp-peer-card.connect-peer {
+    border-left: 3px solid var(--cyan);
+  }
+  .bgp-peer-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+  }
+  .bgp-peer-badge {
+    font-size: 9px;
+    font-weight: bold;
+    padding: 2px 6px;
+    border-radius: 2px;
+    text-transform: uppercase;
+    font-family: var(--font-mono);
+  }
+  .bgp-peer-badge.est {
+    background: rgba(16, 185, 129, 0.2);
+    color: var(--green-bright);
+    border: 1px solid #059669;
+  }
+  .bgp-peer-badge.flap {
+    background: rgba(245, 158, 11, 0.2);
+    color: var(--amber-bright);
+    border: 1px solid #d97706;
+  }
+  .bgp-peer-badge.conn {
+    background: rgba(56, 189, 248, 0.2);
+    color: var(--cyan);
+    border: 1px solid #0284c7;
+  }
+  .bgp-peer-badge.idle {
+    background: rgba(239, 68, 68, 0.2);
+    color: #ef4444;
+    border: 1px solid #b91c1c;
+  }
+  .fsm-stepper-wrap {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-wrap: wrap;
+    background: #040710;
+    border: 1px solid var(--border-dark);
+    padding: 6px 8px;
+    margin: 8px 0;
+    font-family: var(--font-mono);
+    font-size: 10px;
+  }
+  .fsm-step-pill {
+    padding: 2px 6px;
+    border-radius: 2px;
+    color: var(--text-dim);
+    background: #0f172a;
+    border: 1px solid #1e293b;
+    transition: all 0.2s;
+  }
+  .fsm-step-pill.active {
+    background: #0369a1;
+    color: #ffffff;
+    border-color: #38bdf8;
+    font-weight: bold;
+    box-shadow: 0 0 8px rgba(56, 189, 248, 0.4);
+  }
+  .bgp-hex-console {
+    background: #02050b;
+    border: 1px solid #1e293b;
+    color: #a7f3d0;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    line-height: 1.45;
+    padding: 10px;
+    height: 170px;
+    overflow-y: auto;
+    border-radius: 2px;
+    white-space: pre-wrap;
+    box-shadow: inset 0 0 12px rgba(16, 185, 129, 0.15);
+  }
+  .bgp-route-inspector {
+    background: #050914;
+    border: 1px solid var(--border-med);
+    padding: 10px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    border-radius: 2px;
+  }
+  .route-row-selected {
+    background: rgba(56, 189, 248, 0.18) !important;
+    border-left: 2px solid var(--cyan) !important;
+  }
+
   /* Footer */
   footer {
     border-top: 1px solid var(--border-med);
@@ -1414,6 +1560,9 @@
     </button>
     <button class="tab-btn" data-tab="tab-validator" onclick="switchTab('tab-validator')">
       <span>🛡️</span> [9] Ringmaster Validator
+    </button>
+    <button class="tab-btn" data-tab="tab-bgp" onclick="switchTab('tab-bgp')">
+      <span>🔀</span> [10] AS-1999 BGP Matrix
     </button>
   </div>
 
@@ -2377,6 +2526,242 @@ All 18 registered consortium nodes and custom submissions are checked against th
     </div>
   </section>
 
+  <!-- TAB 10: AS-1999 BGP Routing Matrix & Subterranean Packet Router -->
+  <section id="tab-bgp" class="tab-pane">
+    <div class="panel-box">
+      <div class="panel-header">
+        <div class="panel-title">
+          <span>🔀</span> AS-1999 Border Gateway Protocol (BGP-4) &amp; RIP-2 Routing Matrix
+        </div>
+        <div style="display:flex; gap:6px; flex-wrap:wrap;">
+          <button class="btn-action" onclick="sendBgpKeepaliveWave()">
+            <span>⚡</span> Emit BGP Keepalive Wave
+          </button>
+          <button class="btn-action" onclick="softResetAllBgpPeers()">
+            <span>🔄</span> Soft Refresh All (ORF)
+          </button>
+          <button class="btn-action" onclick="reconvergeBgpRib()">
+            <span>🛡️</span> Re-converge RIB
+          </button>
+        </div>
+      </div>
+      <div class="panel-desc">
+        Authentic 1999 Autonomous System border router console (RFC 1771 BGP-4 / RFC 2453 RIP-2). Inspect the active Routing Information Base (RIB) and Forwarding Table (FIB), monitor live BGP peering finite state machines (FSM), inject route announcements across the ring topology, analyze raw hex packet captures, and export downloadable Cisco IOS 11.2 configurations.
+      </div>
+
+      <!-- Autonomous System Top Metrics Bar -->
+      <div class="bgp-stats-bar">
+        <div class="bgp-stat-card">
+          <div class="bgp-stat-label">LOCAL AUTONOMOUS SYSTEM</div>
+          <div class="bgp-stat-val" style="color:var(--amber-bright);">AS-1999 (KiloNet Backbone)</div>
+        </div>
+        <div class="bgp-stat-card">
+          <div class="bgp-stat-label">ROUTER IDENTIFIER (BGP-ID)</div>
+          <div class="bgp-stat-val">10.19.99.1</div>
+        </div>
+        <div class="bgp-stat-card">
+          <div class="bgp-stat-label">BGP PEER SESSIONS</div>
+          <div class="bgp-stat-val" id="bgpActivePeersText" style="color:var(--green-bright);">3 / 4 ESTABLISHED</div>
+        </div>
+        <div class="bgp-stat-card">
+          <div class="bgp-stat-label">ACTIVE RIB PREFIXES</div>
+          <div class="bgp-stat-val" id="bgpTotalRoutesText">8 Routes (1 Anomalous)</div>
+        </div>
+        <div class="bgp-stat-card">
+          <div class="bgp-stat-label">ROUTE CONVERGENCE</div>
+          <div class="bgp-stat-val" id="bgpConvergenceText" style="color:var(--cyan);">99.8% (Loop-Free)</div>
+        </div>
+      </div>
+
+      <!-- Interactive BGP Peering Sessions Grid -->
+      <div style="margin-top:14px;">
+        <div class="panel-header" style="margin-bottom:8px; border-bottom:1px dashed var(--border-med);">
+          <div class="panel-title" style="font-size:12px;">
+            <span>🤝</span> BGP-4 Neighbor Peering Sessions &amp; Finite State Machines (FSM)
+          </div>
+          <div style="font-family:var(--font-mono); font-size:10px; color:var(--text-muted);">
+            Port 179/TCP • HoldTime / Keepalive Negotiation
+          </div>
+        </div>
+        <div class="bgp-peers-grid" id="bgpPeersGrid">
+          <!-- Populated dynamically -->
+        </div>
+
+        <!-- Visual BGP FSM Stepper -->
+        <div class="fsm-stepper-wrap" id="fsmStepperTrail">
+          <span style="color:var(--text-muted); font-weight:bold; margin-right:4px;">BGP FSM CYCLE:</span>
+          <span class="fsm-step-pill" id="fsmStepIdle">1. IDLE</span>
+          <span>➔</span>
+          <span class="fsm-step-pill" id="fsmStepConnect">2. CONNECT</span>
+          <span>➔</span>
+          <span class="fsm-step-pill" id="fsmStepActive">3. ACTIVE</span>
+          <span>➔</span>
+          <span class="fsm-step-pill" id="fsmStepOpenSent">4. OPENSENT</span>
+          <span>➔</span>
+          <span class="fsm-step-pill" id="fsmStepOpenConfirm">5. OPENCONFIRM</span>
+          <span>➔</span>
+          <span class="fsm-step-pill active" id="fsmStepEstablished">6. ESTABLISHED</span>
+        </div>
+      </div>
+
+      <!-- Routing Information Base (RIB / FIB) Table -->
+      <div style="margin-top:16px;">
+        <div class="panel-header" style="margin-bottom:8px; border-bottom:1px dashed var(--border-med);">
+          <div class="panel-title" style="font-size:12px;">
+            <span>📋</span> Routing Information Base (RIB) &amp; Forwarding Information Base (FIB)
+          </div>
+          <div style="font-family:var(--font-mono); font-size:10px; color:var(--text-muted);">
+            AS-Path Vector Routing • Split-Horizon • Poison Reverse
+          </div>
+        </div>
+
+        <div class="filter-row" style="margin-bottom:8px;">
+          <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap; flex:1;">
+            <label style="font-family:var(--font-mono); font-size:11px; font-weight:bold; color:var(--cyan);">FILTER PROTOCOL:</label>
+            <button class="pill-btn active" id="btnBgpProtoAll" onclick="filterBgpRoutes('all')">All</button>
+            <button class="pill-btn" id="btnBgpProtoBgp" onclick="filterBgpRoutes('BGP-4')">BGP-4</button>
+            <button class="pill-btn" id="btnBgpProtoRip" onclick="filterBgpRoutes('RIP-2')">RIP-2</button>
+            <button class="pill-btn" id="btnBgpProtoOspf" onclick="filterBgpRoutes('OSPF-2')">OSPF-2</button>
+            <button class="pill-btn" id="btnBgpProtoDirect" onclick="filterBgpRoutes('DIRECT')">Direct</button>
+            <button class="pill-btn" id="btnBgpProtoAnom" onclick="filterBgpRoutes('ANOMALOUS')">⚠️ Anomalous</button>
+          </div>
+          <div style="display:flex; gap:6px; align-items:center;">
+            <input type="text" class="form-control" id="bgpRouteSearchInput" placeholder="Search prefix or AS..." oninput="searchBgpRoutes(this.value)" style="width:200px;">
+          </div>
+        </div>
+
+        <div class="table-responsive">
+          <table class="ring-table" id="bgpRoutingTable">
+            <thead>
+              <tr>
+                <th style="width:130px;">Prefix / CIDR</th>
+                <th style="width:75px;">Protocol</th>
+                <th style="width:160px;">Next-Hop Gateway</th>
+                <th>AS-Path Vector</th>
+                <th style="width:50px;">MED</th>
+                <th style="width:60px;">LocalPref</th>
+                <th style="width:110px;">Status</th>
+                <th style="width:80px; text-align:center;">Action</th>
+              </tr>
+            </thead>
+            <tbody id="bgpRoutingTableBody">
+              <!-- Populated dynamically -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Selected Route Inspector Card -->
+        <div style="margin-top:10px;" id="bgpRouteInspectorWrap">
+          <div class="bgp-route-inspector" id="bgpRouteInspector">
+            <!-- Populated dynamically on row click -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Route Injection & AS-Path Vector Simulator -->
+      <div style="margin-top:16px; background:#070c18; border:1px solid var(--border-med); padding:12px; border-radius:2px;">
+        <div class="panel-header" style="margin-bottom:8px;">
+          <div class="panel-title" style="font-size:12px;">
+            <span>💉</span> Interactive BGP UPDATE Route Announcement Injector
+          </div>
+          <div style="display:flex; gap:6px; flex-wrap:wrap;">
+            <button class="pill-btn" onclick="loadBgpPreset('subterranean')">Preset: Subterranean 1999Hz</button>
+            <button class="pill-btn" onclick="loadBgpPreset('campus')">Preset: Campus POP</button>
+            <button class="pill-btn" onclick="loadBgpPreset('testbed')">Preset: Lab Testbed</button>
+          </div>
+        </div>
+        <div class="panel-desc" style="margin-bottom:8px; font-size:11px;">
+          Inject synthetic BGP UPDATE advertisements into AS-1999's RIB. Specify network prefix, AS-Path attribute vector, and multi-exit discriminator (MED). Route loop detection (AS-Path prepending and split-horizon) is simulated in real time.
+        </div>
+
+        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:8px; margin-bottom:10px;">
+          <div class="form-group" style="margin-bottom:0;">
+            <label class="form-label" for="injectBgpPrefix">NETWORK PREFIX (CIDR)</label>
+            <input type="text" class="form-control" id="injectBgpPrefix" placeholder="e.g. 10.19.99.64/26" value="10.19.99.64/26">
+          </div>
+          <div class="form-group" style="margin-bottom:0;">
+            <label class="form-label" for="injectBgpNextHop">NEXT-HOP GATEWAY</label>
+            <select class="form-control" id="injectBgpNextHop">
+              <option value="10.19.99.7 [echo-gw-07]">10.19.99.7 (echo-gw-07.kilonet.internal)</option>
+              <option value="192.168.1.1">192.168.1.1 (Consortium POP Gateway)</option>
+              <option value="204.71.200.1">204.71.200.1 (MCI WorldCom Transit)</option>
+              <option value="10.19.99.127">10.19.99.127 (Deep Core Ring-0)</option>
+            </select>
+          </div>
+          <div class="form-group" style="margin-bottom:0;">
+            <label class="form-label" for="injectBgpAsPath">AS-PATH VECTOR</label>
+            <input type="text" class="form-control" id="injectBgpAsPath" placeholder="e.g. 1999 65001 0x7F" value="1999 65001 0x7F">
+          </div>
+          <div class="form-group" style="margin-bottom:0;">
+            <label class="form-label" for="injectBgpMed">MED (METRIC)</label>
+            <input type="number" class="form-control" id="injectBgpMed" value="50" min="0" max="65535">
+          </div>
+          <div class="form-group" style="margin-bottom:0;">
+            <label class="form-label" for="injectBgpLocalPref">LOCAL PREFERENCE</label>
+            <input type="number" class="form-control" id="injectBgpLocalPref" value="100" min="0" max="1000">
+          </div>
+        </div>
+
+        <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+          <button class="btn-teleport" onclick="injectBgpRouteAnnouncement()" style="background:linear-gradient(180deg, #10b981 0%, #059669 100%); border-color:#34d399;">
+            <span>📢</span> Announce Route (BGP UPDATE)
+          </button>
+          <button class="btn-teleport alt" onclick="withdrawSelectedBgpRoute()">
+            <span>🚫</span> Withdraw Active Prefix
+          </button>
+          <span id="bgpInjectionNotice" style="font-family:var(--font-mono); font-size:11px; color:var(--text-muted);">
+            Ready to broadcast BGP UPDATE datagram.
+          </span>
+        </div>
+      </div>
+
+      <!-- Live VT100 BGP Packet Hex Analyzer Stream -->
+      <div style="margin-top:16px;">
+        <div class="panel-header" style="margin-bottom:8px; border-bottom:1px dashed var(--border-med);">
+          <div class="panel-title" style="font-size:12px;">
+            <span>💻</span> Live VT100 BGP-4 Frame &amp; Packet Hex Dissector
+          </div>
+          <div style="display:flex; gap:6px; flex-wrap:wrap;">
+            <button class="pill-btn" id="btnToggleBgpStream" onclick="toggleBgpPacketStream()">⏸️ Pause Stream</button>
+            <button class="pill-btn" onclick="stepBgpPacket()">⏭️ Step Packet</button>
+            <button class="pill-btn" onclick="injectBgpKeepalivePacket()">⚡ Inject Keepalive</button>
+            <button class="pill-btn" onclick="injectBgpNotificationPacket()">⚠️ Inject Notification</button>
+            <button class="pill-btn" onclick="clearBgpPacketLog()">Clear</button>
+          </div>
+        </div>
+        <div class="panel-desc" style="margin-bottom:8px; font-size:11px;">
+          Live socket monitor capturing TCP/179 packet frames across AS-1999 peers. Inspect 16-byte BGP marker sync vectors, payload byte offsets, and decoded protocol flags in real-time.
+        </div>
+        <div class="bgp-hex-console" id="bgpHexConsole">
+[AS-1999 BGP PACKET SNIFFER INITIALIZED]
+Interface: eth0 / BGP-4 daemon (RFC 1771) listening on 0.0.0.0:179
+Monitoring transit sessions...
+        </div>
+      </div>
+
+      <!-- Authentic Cisco IOS 11.2 / Zebra BGP Router Config Generator -->
+      <div style="margin-top:16px; background:#070a14; border:1px solid var(--border-med); padding:12px; border-radius:3px;">
+        <div class="panel-header" style="margin-bottom:8px;">
+          <div class="panel-title" style="font-size:12px;">
+            <span>📜</span> Authentic Cisco IOS 11.2 / Zebra Router Configuration (AS-1999)
+          </div>
+          <div style="display:flex; gap:6px;">
+            <button class="btn-teleport" onclick="copyCiscoConfig()">
+              <span>📋</span> Copy Cisco Config
+            </button>
+            <button class="btn-teleport alt" onclick="downloadCiscoConfig()">
+              <span>💾</span> Download cisco_as1999.cfg
+            </button>
+          </div>
+        </div>
+        <div class="panel-desc" style="margin-bottom:8px; font-size:11px;">
+          Production-grade Cisco IOS 11.2 / Zebra configuration synthesized dynamically reflecting active AS-1999 peer statements, prefix route maps, and lithospheric subcarrier filters.
+        </div>
+        <textarea class="code-output" id="ciscoConfigBox" readonly style="height:140px; font-size:10px; line-height:1.4;"></textarea>
+      </div>
+    </div>
+  </section>
+
   <!-- 88x31 Micro Buttons Carousel Strip -->
   <div class="panel-box" style="margin-top:14px; text-align:center;">
     <div style="font-family:var(--font-mono); font-size:10px; color:var(--text-dim); text-transform:uppercase; margin-bottom:8px;">
@@ -3202,13 +3587,15 @@ function switchTab(targetId) {
     if (typeof renderSurfViewport === 'function') renderSurfViewport();
   } else if (targetId === 'tab-validator') {
     if (typeof initRingmasterValidator === 'function') initRingmasterValidator();
+  } else if (targetId === 'tab-bgp') {
+    if (typeof initBgpRoutingMatrix === 'function') initBgpRoutingMatrix();
   }
 }
 
-// Global hotkeys: 1-9 for tabs
+// Global hotkeys: 1-9, 0 for tabs
 window.addEventListener('keydown', (e) => {
   if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
-  if (e.key >= '1' && e.key <= '9') {
+  if ((e.key >= '1' && e.key <= '9') || e.key === '0') {
     const tabMap = {
       '1': 'tab-directory',
       '2': 'tab-teleport',
@@ -3218,7 +3605,8 @@ window.addEventListener('keydown', (e) => {
       '6': 'tab-guestbook',
       '7': 'tab-topology',
       '8': 'tab-surf',
-      '9': 'tab-validator'
+      '9': 'tab-validator',
+      '0': 'tab-bgp'
     };
     switchTab(tabMap[e.key]);
   } else if (e.key === 'Escape') {
@@ -6847,7 +7235,773 @@ window.addEventListener('DOMContentLoaded', () => {
 });
 
 /* =========================================================================
-   17. ARCH-05: BACKGROUND TAB VISIBILITY & TIMER DRIFT
+   20. AS-1999 BGP-4 & RIP-2 AUTONOMOUS SYSTEM ROUTING MATRIX & PACKET ROUTER (TAB 10)
+   ========================================================================= */
+let bgpRoutes = [
+  {
+    prefix: "192.168.1.0/24",
+    proto: "DIRECT",
+    nexthop: "192.168.1.1",
+    aspath: "LOCAL",
+    med: 0,
+    localpref: 100,
+    status: "ACTIVE",
+    community: "1999:LOCAL",
+    netmask: "255.255.255.0",
+    broadcast: "192.168.1.255",
+    reason: "Directly connected Ethernet interface eth0 (Consortium LAN)"
+  },
+  {
+    prefix: "204.71.200.0/24",
+    proto: "BGP-4",
+    nexthop: "204.71.200.1",
+    aspath: "1999 701",
+    med: 10,
+    localpref: 100,
+    status: "ESTABLISHED",
+    community: "701:INTERNET",
+    netmask: "255.255.255.0",
+    broadcast: "204.71.200.255",
+    reason: "eBGP route announced from MCI WorldCom Tier-1 transit gateway"
+  },
+  {
+    prefix: "10.19.99.0/24",
+    proto: "BGP-4",
+    nexthop: "10.19.99.7 [echo-gw-07]",
+    aspath: "1999 0x7F 1999",
+    med: 1999,
+    localpref: 250,
+    status: "ANOMALOUS",
+    community: "1999:0x7F",
+    netmask: "255.255.255.0",
+    broadcast: "10.19.99.255",
+    reason: "Subterranean lithospheric mesh route oscillating at 1999Hz"
+  },
+  {
+    prefix: "10.19.99.4/32",
+    proto: "RIP-2",
+    nexthop: "10.19.99.7 [echo-gw-07]",
+    aspath: "1999 0x7F",
+    med: 40,
+    localpref: 100,
+    status: "REACHABLE",
+    community: "1999:CARLSBAD",
+    netmask: "255.255.255.255",
+    broadcast: "10.19.99.4",
+    reason: "Carlsbad skunkworks corporate leak sector 0x7F"
+  },
+  {
+    prefix: "10.19.99.8/32",
+    proto: "OSPF-2",
+    nexthop: "10.19.99.7 [echo-gw-07]",
+    aspath: "1999 0x7F",
+    med: 16,
+    localpref: 100,
+    status: "REACHABLE",
+    community: "1999:ACOUSTIC",
+    netmask: "255.255.255.255",
+    broadcast: "10.19.99.8",
+    reason: "Echo Subsystem Acoustic Research Lab node #016"
+  },
+  {
+    prefix: "10.19.99.127/32",
+    proto: "BGP-4",
+    nexthop: "10.19.99.7 [echo-gw-07]",
+    aspath: "1999 0x7F 65127",
+    med: 127,
+    localpref: 50,
+    status: "QUARANTINED",
+    community: "1999:RING0",
+    netmask: "255.255.255.255",
+    broadcast: "10.19.99.127",
+    reason: "Deep Core Ring-0 relay, quarantined precursor subsystem"
+  },
+  {
+    prefix: "127.0.0.1/32",
+    proto: "DIRECT",
+    nexthop: "127.0.0.1",
+    aspath: "LOCAL",
+    med: 0,
+    localpref: 100,
+    status: "LOOPBACK",
+    community: "LOCAL:LO0",
+    netmask: "255.255.255.255",
+    broadcast: "127.0.0.1",
+    reason: "Internal loopback interface lo0"
+  },
+  {
+    prefix: "0.0.0.0/0",
+    proto: "STATIC",
+    nexthop: "192.168.1.1",
+    aspath: "1999",
+    med: 1,
+    localpref: 100,
+    status: "DEFAULT",
+    community: "DEFAULT:GW",
+    netmask: "0.0.0.0",
+    broadcast: "255.255.255.255",
+    reason: "Default static gateway via local consortium router"
+  }
+];
+
+let bgpPeers = [
+  {
+    id: "peer-up",
+    ip: "204.71.200.1",
+    as: "AS-701",
+    name: "MCI WorldCom Tier-1 Upstream",
+    state: "ESTABLISHED",
+    prefixes: 142,
+    holdTime: 180,
+    keepalive: 60,
+    uptime: "42d 18h",
+    flaps: 0,
+    type: "eBGP"
+  },
+  {
+    id: "peer-local",
+    ip: "192.168.1.1",
+    as: "AS-1999",
+    name: "Consortium Internal iBGP Mesh",
+    state: "ESTABLISHED",
+    prefixes: 18,
+    holdTime: 90,
+    keepalive: 30,
+    uptime: "99d 04h",
+    flaps: 0,
+    type: "iBGP"
+  },
+  {
+    id: "peer-echo",
+    ip: "10.19.99.7",
+    as: "AS-0x7F",
+    name: "echo-gw-07.kilonet.internal",
+    state: "FLAPPING",
+    prefixes: 3,
+    holdTime: 1999,
+    keepalive: 199,
+    uptime: "1999s",
+    flaps: 1999,
+    carrier: 1999.0,
+    type: "eBGP (Subterranean)"
+  },
+  {
+    id: "peer-core",
+    ip: "10.19.99.127",
+    as: "AS-65127",
+    name: "deep-core.kilonet.internal",
+    state: "CONNECT",
+    prefixes: 0,
+    holdTime: 240,
+    keepalive: 80,
+    uptime: "0s",
+    flaps: 14,
+    type: "eBGP (Ring-0)"
+  }
+];
+
+let selectedBgpRouteIndex = 0;
+let bgpFilterProto = "all";
+let bgpSearchTerm = "";
+let isBgpStreamActive = true;
+let bgpStreamInterval = null;
+let bgpPacketSeq = 1001;
+let isBgpInitialized = false;
+
+function initBgpRoutingMatrix() {
+  if (!isBgpInitialized) {
+    isBgpInitialized = true;
+    renderBgpPeers();
+    renderBgpRoutingTable();
+    selectBgpRoute(0);
+    renderCiscoConfig();
+    startBgpPacketStream();
+  }
+}
+
+function renderBgpPeers() {
+  const container = document.getElementById('bgpPeersGrid');
+  if (!container) return;
+
+  let activeCount = 0;
+  let html = '';
+
+  bgpPeers.forEach(peer => {
+    if (peer.state === 'ESTABLISHED') activeCount++;
+    const isFlapping = peer.state.includes('FLAP');
+    const isConn = peer.state === 'CONNECT';
+    const isEst = peer.state === 'ESTABLISHED';
+
+    let cardClass = 'bgp-peer-card';
+    let badgeClass = 'bgp-peer-badge';
+
+    if (isEst) {
+      cardClass += ' active-peer';
+      badgeClass += ' est';
+    } else if (isFlapping) {
+      cardClass += ' flapping-peer';
+      badgeClass += ' flap';
+    } else if (isConn) {
+      cardClass += ' connect-peer';
+      badgeClass += ' conn';
+    } else {
+      badgeClass += ' idle';
+    }
+
+    html += `
+      <div class="${cardClass}" id="peerCard_${peer.id}">
+        <div class="bgp-peer-head">
+          <div style="font-weight:bold; color:var(--text-primary);">${peer.name}</div>
+          <span class="${badgeClass}">${peer.state}</span>
+        </div>
+        <div style="font-family:var(--font-mono); font-size:10px; color:var(--text-muted); margin-bottom:8px; line-height:1.5;">
+          <div><strong>IP / AS:</strong> <span style="color:var(--cyan);">${peer.ip}</span> • <span style="color:var(--amber-bright);">${peer.as}</span> (${peer.type})</div>
+          <div><strong>Prefixes Recv:</strong> <span style="color:var(--green-bright);">${peer.prefixes}</span> • <strong>HoldTime:</strong> ${peer.holdTime}s / ${peer.keepalive}s</div>
+          <div><strong>Session Uptime:</strong> ${peer.uptime} • <strong>Flaps:</strong> ${peer.flaps}</div>
+        </div>
+        <div style="display:flex; gap:6px; flex-wrap:wrap;">
+          <button class="pill-btn" onclick="softRefreshBgpPeer('${peer.id}')" style="font-size:10px; padding:2px 6px;">Soft Refresh</button>
+          <button class="pill-btn" onclick="hardResetBgpPeer('${peer.id}')" style="font-size:10px; padding:2px 6px;">Hard Reset</button>
+          <button class="pill-btn" onclick="pingBgpPeer('${peer.id}')" style="font-size:10px; padding:2px 6px;">Ping Peer</button>
+        </div>
+      </div>
+    `;
+  });
+
+  container.innerHTML = html;
+
+  const activeTextEl = document.getElementById('bgpActivePeersText');
+  if (activeTextEl) {
+    activeTextEl.textContent = `${activeCount} / ${bgpPeers.length} ESTABLISHED`;
+    activeTextEl.style.color = activeCount === bgpPeers.length ? 'var(--green-bright)' : 'var(--amber-bright)';
+  }
+}
+
+function renderBgpRoutingTable() {
+  const tbody = document.getElementById('bgpRoutingTableBody');
+  if (!tbody) return;
+
+  let filtered = bgpRoutes.filter(r => {
+    if (bgpFilterProto !== 'all' && r.proto !== bgpFilterProto && !(bgpFilterProto === 'ANOMALOUS' && r.status.includes('ANOMALOUS'))) {
+      return false;
+    }
+    if (bgpSearchTerm) {
+      const q = bgpSearchTerm.toLowerCase();
+      return r.prefix.toLowerCase().includes(q) || r.aspath.toLowerCase().includes(q) || r.nexthop.toLowerCase().includes(q);
+    }
+    return true;
+  });
+
+  let html = '';
+  filtered.forEach((r, idx) => {
+    const originalIndex = bgpRoutes.indexOf(r);
+    const isSelected = originalIndex === selectedBgpRouteIndex;
+    const isAnom = r.status.includes('ANOMALOUS') || r.med === 1999;
+
+    let statusBadge = `<span style="color:var(--green-bright);">● ${r.status}</span>`;
+    if (isAnom) {
+      statusBadge = `<span style="color:var(--amber-bright); font-weight:bold;">⚠️ 1999Hz FLAP</span>`;
+    } else if (r.status === 'QUARANTINED') {
+      statusBadge = `<span style="color:var(--magenta); font-weight:bold;">🔒 RING-0</span>`;
+    } else if (r.status === 'LOOPBACK') {
+      statusBadge = `<span style="color:var(--cyan);">LO0</span>`;
+    }
+
+    html += `
+      <tr class="${isSelected ? 'route-row-selected' : ''}" onclick="selectBgpRoute(${originalIndex})" style="cursor:pointer;">
+        <td style="font-family:var(--font-mono); font-weight:bold; color:${isAnom ? 'var(--amber-bright)' : 'var(--cyan)'};">${r.prefix}</td>
+        <td><span class="badge-cat ${r.proto.toLowerCase()}">${r.proto}</span></td>
+        <td style="font-family:var(--font-mono); font-size:11px;">${r.nexthop}</td>
+        <td style="font-family:var(--font-mono); font-size:11px; color:${isAnom ? 'var(--amber-bright)' : 'var(--text-primary)'};">${r.aspath}</td>
+        <td style="font-family:var(--font-mono); font-size:11px;">${r.med}</td>
+        <td style="font-family:var(--font-mono); font-size:11px;">${r.localpref}</td>
+        <td style="font-family:var(--font-mono); font-size:10px;">${statusBadge}</td>
+        <td style="text-align:center;">
+          <button class="pill-btn" onclick="event.stopPropagation(); selectBgpRoute(${originalIndex})" style="font-size:9px; padding:1px 5px;">Inspect</button>
+        </td>
+      </tr>
+    `;
+  });
+
+  if (filtered.length === 0) {
+    html = `<tr><td colspan="8" style="text-align:center; color:var(--text-dim); padding:16px;">No routing prefixes match active filter criteria.</td></tr>`;
+  }
+
+  tbody.innerHTML = html;
+
+  const totalEl = document.getElementById('bgpTotalRoutesText');
+  if (totalEl) {
+    const anomCount = bgpRoutes.filter(r => r.status.includes('ANOMALOUS') || r.med === 1999).length;
+    totalEl.textContent = `${bgpRoutes.length} Routes (${anomCount} Anomalous)`;
+  }
+}
+
+function selectBgpRoute(index) {
+  if (index < 0 || index >= bgpRoutes.length) return;
+  selectedBgpRouteIndex = index;
+  const route = bgpRoutes[index];
+  playSfx('click');
+
+  renderBgpRoutingTable();
+
+  const inspector = document.getElementById('bgpRouteInspector');
+  if (!inspector) return;
+
+  const isAnom = route.status.includes('ANOMALOUS') || route.med === 1999;
+  inspector.innerHTML = `
+    <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border-dark); padding-bottom:6px; margin-bottom:8px;">
+      <div style="font-size:12px; font-weight:bold; color:${isAnom ? 'var(--amber-bright)' : 'var(--cyan)'};">
+        PREFIX INSPECTOR: <strong>${route.prefix}</strong> via ${route.nexthop}
+      </div>
+      <div style="font-size:10px; color:var(--text-muted);">Protocol: ${route.proto} • Status: ${route.status}</div>
+    </div>
+    <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:8px; line-height:1.5;">
+      <div>
+        <div><strong>Subnet Mask:</strong> <span style="color:var(--text-primary);">${route.netmask}</span></div>
+        <div><strong>Broadcast IP:</strong> <span style="color:var(--text-primary);">${route.broadcast}</span></div>
+        <div><strong>Next-Hop Router:</strong> <span style="color:var(--cyan);">${route.nexthop}</span></div>
+      </div>
+      <div>
+        <div><strong>AS-Path Attribute:</strong> <span style="color:var(--amber-bright); font-weight:bold;">${route.aspath}</span></div>
+        <div><strong>Multi-Exit Disc (MED):</strong> <span style="color:var(--text-primary);">${route.med}</span></div>
+        <div><strong>Local Preference:</strong> <span style="color:var(--green-bright);">${route.localpref}</span></div>
+      </div>
+      <div>
+        <div><strong>BGP Communities:</strong> <span style="color:var(--cyan);">${route.community}</span></div>
+        <div><strong>Loop Status:</strong> <span style="color:var(--green-bright);">Pass (No loop detected in vector)</span></div>
+        <div><strong>Routing Rationale:</strong> <span style="color:var(--text-muted);">${route.reason}</span></div>
+      </div>
+    </div>
+  `;
+}
+
+function filterBgpRoutes(proto) {
+  playSfx('click');
+  bgpFilterProto = proto;
+
+  ['All', 'Bgp', 'Rip', 'Ospf', 'Direct', 'Anom'].forEach(key => {
+    const btn = document.getElementById('btnBgpProto' + key);
+    if (btn) btn.classList.remove('active');
+  });
+
+  const activeMap = {
+    'all': 'btnBgpProtoAll',
+    'BGP-4': 'btnBgpProtoBgp',
+    'RIP-2': 'btnBgpProtoRip',
+    'OSPF-2': 'btnBgpProtoOspf',
+    'DIRECT': 'btnBgpProtoDirect',
+    'ANOMALOUS': 'btnBgpProtoAnom'
+  };
+  const activeBtn = document.getElementById(activeMap[proto]);
+  if (activeBtn) activeBtn.classList.add('active');
+
+  renderBgpRoutingTable();
+}
+
+function searchBgpRoutes(val) {
+  bgpSearchTerm = val;
+  renderBgpRoutingTable();
+}
+
+function softRefreshBgpPeer(peerId) {
+  const peer = bgpPeers.find(p => p.id === peerId);
+  if (!peer) return;
+
+  playFmTone(587.33, 1.0, 0.5, 0.08, 0.06, true);
+  logBgpPacket(`[BGP-4 ROUTE-REFRESH] Sent to ${peer.ip} (${peer.as}). AFI: 1 (IPv4), SAFI: 1 (Unicast). RIB resynchronized.`);
+  showNoticeToast(`🔄 BGP Route-Refresh sent to ${peer.ip}`);
+  renderBgpPeers();
+}
+
+function hardResetBgpPeer(peerId) {
+  const peer = bgpPeers.find(p => p.id === peerId);
+  if (!peer) return;
+
+  playFmTone(220, 2.0, 1.2, 0.15, 0.08, false);
+  peer.state = "IDLE";
+  peer.flaps++;
+  renderBgpPeers();
+  updateFsmVisualizer("IDLE");
+  logBgpPacket(`[BGP NOTIFICATION] Code 6 (Cease), Subcode 3 (Peer Deconfigured/Reset). Peer ${peer.ip} connection terminated.`);
+
+  // Step through FSM with visual feedback
+  setTimeout(() => {
+    peer.state = "CONNECT";
+    renderBgpPeers();
+    updateFsmVisualizer("CONNECT");
+    logBgpPacket(`[BGP TCP 179] SYN packet dispatched to ${peer.ip}:179. Awaiting 3-way handshake.`);
+  }, 400);
+
+  setTimeout(() => {
+    peer.state = "OPENSENT";
+    renderBgpPeers();
+    updateFsmVisualizer("OPENSENT");
+    logBgpPacket(`[BGP-4 OPEN] Version: 4, Local-AS: 1999, BGP-ID: 10.19.99.1, HoldTime: ${peer.holdTime}s sent to ${peer.ip}.`);
+  }, 900);
+
+  setTimeout(() => {
+    peer.state = "OPENCONFIRM";
+    renderBgpPeers();
+    updateFsmVisualizer("OPENCONFIRM");
+    logBgpPacket(`[BGP-4 KEEPALIVE] Sent to ${peer.ip}. Negotiating capabilities.`);
+  }, 1400);
+
+  setTimeout(() => {
+    if (peer.id === 'peer-echo') {
+      peer.state = "FLAPPING";
+      showNoticeToast(`⚠️ Peer ${peer.ip} returned anomalous carrier at 1999Hz`);
+    } else {
+      peer.state = "ESTABLISHED";
+      showNoticeToast(`🟢 Peer ${peer.ip} session ESTABLISHED!`);
+    }
+    renderBgpPeers();
+    updateFsmVisualizer(peer.state === 'ESTABLISHED' ? "ESTABLISHED" : "ACTIVE");
+    logBgpPacket(`[BGP FSM] Session with ${peer.ip} (${peer.as}) transitioned to ${peer.state}.`);
+  }, 1900);
+}
+
+function pingBgpPeer(peerId) {
+  const peer = bgpPeers.find(p => p.id === peerId);
+  if (!peer) return;
+
+  playSfx('traceroute');
+  let simulatedMs = (Math.random() * 8 + 4).toFixed(1);
+  if (peer.id === 'peer-echo') simulatedMs = "1999.0";
+
+  showNoticeToast(`⚡ ICMP echo to ${peer.ip}: RTT ${simulatedMs}ms`);
+  logBgpPacket(`[ICMP ECHO] 64 bytes from ${peer.ip}: icmp_seq=1 ttl=60 time=${simulatedMs} ms`);
+}
+
+function softResetAllBgpPeers() {
+  playSfx('warp');
+  bgpPeers.forEach(p => {
+    logBgpPacket(`[BGP ROUTE-REFRESH] Outbound ORF to ${p.ip} (${p.as})`);
+  });
+  showNoticeToast("🔄 Soft Route Refresh dispatched to all BGP peers!");
+  renderBgpPeers();
+}
+
+function sendBgpKeepaliveWave() {
+  playFmTone(880, 1.0, 0.4, 0.08, 0.08, true);
+  bgpPeers.forEach(p => {
+    if (p.state === 'ESTABLISHED') {
+      logBgpPacket(`[BGP KEEPALIVE] 19-byte frame emitted to ${p.ip}`);
+    }
+  });
+  updateFsmVisualizer("ESTABLISHED");
+  showNoticeToast("⚡ BGP Keepalive Wave transmitted across all active sessions!");
+}
+
+function reconvergeBgpRib() {
+  playFmTone(523.25, 1.5, 0.8, 0.12, 0.08, true);
+  const convEl = document.getElementById('bgpConvergenceText');
+  if (convEl) convEl.textContent = "100.0% (Re-converged)";
+  showNoticeToast("🛡️ BGP Routing Information Base re-converged!");
+  renderBgpRoutingTable();
+}
+
+function updateFsmVisualizer(stateName) {
+  const map = {
+    'IDLE': 'fsmStepIdle',
+    'CONNECT': 'fsmStepConnect',
+    'ACTIVE': 'fsmStepActive',
+    'OPENSENT': 'fsmStepOpenSent',
+    'OPENCONFIRM': 'fsmStepOpenConfirm',
+    'ESTABLISHED': 'fsmStepEstablished'
+  };
+
+  ['fsmStepIdle', 'fsmStepConnect', 'fsmStepActive', 'fsmStepOpenSent', 'fsmStepOpenConfirm', 'fsmStepEstablished'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.classList.remove('active');
+  });
+
+  const activeId = map[stateName];
+  if (activeId) {
+    const el = document.getElementById(activeId);
+    if (el) el.classList.add('active');
+  }
+}
+
+function loadBgpPreset(type) {
+  playSfx('click');
+  const pfxEl = document.getElementById('injectBgpPrefix');
+  const nhEl = document.getElementById('injectBgpNextHop');
+  const asEl = document.getElementById('injectBgpAsPath');
+  const medEl = document.getElementById('injectBgpMed');
+  const prefEl = document.getElementById('injectBgpLocalPref');
+
+  if (type === 'subterranean') {
+    if (pfxEl) pfxEl.value = "10.19.99.0/24";
+    if (nhEl) nhEl.value = "10.19.99.7 [echo-gw-07]";
+    if (asEl) asEl.value = "1999 0x7F 1999";
+    if (medEl) medEl.value = "1999";
+    if (prefEl) prefEl.value = "250";
+  } else if (type === 'campus') {
+    if (pfxEl) pfxEl.value = "192.168.99.0/24";
+    if (nhEl) nhEl.value = "192.168.1.1";
+    if (asEl) asEl.value = "1999 65002";
+    if (medEl) medEl.value = "20";
+    if (prefEl) prefEl.value = "100";
+  } else if (type === 'testbed') {
+    if (pfxEl) pfxEl.value = "172.16.19.0/24";
+    if (nhEl) nhEl.value = "204.71.200.1";
+    if (asEl) asEl.value = "1999 701 64512";
+    if (medEl) medEl.value = "100";
+    if (prefEl) prefEl.value = "90";
+  }
+}
+
+function injectBgpRouteAnnouncement() {
+  const pfx = (document.getElementById('injectBgpPrefix')?.value || "").trim();
+  const nh = document.getElementById('injectBgpNextHop')?.value || "192.168.1.1";
+  const aspath = (document.getElementById('injectBgpAsPath')?.value || "LOCAL").trim();
+  const med = parseInt(document.getElementById('injectBgpMed')?.value || "50", 10);
+  const localpref = parseInt(document.getElementById('injectBgpLocalPref')?.value || "100", 10);
+  const noticeEl = document.getElementById('bgpInjectionNotice');
+
+  if (!pfx || !pfx.includes('/')) {
+    alert("Please enter a valid CIDR prefix (e.g. 10.19.99.64/26)");
+    return;
+  }
+
+  // Check for route loop (AS-Path split horizon)
+  const asTokens = aspath.split(/\s+/);
+  const asCounts = {};
+  let hasLoop = false;
+  asTokens.forEach(t => {
+    asCounts[t] = (asCounts[t] || 0) + 1;
+    if (asCounts[t] > 2) hasLoop = true;
+  });
+
+  const existingIdx = bgpRoutes.findIndex(r => r.prefix === pfx);
+  const newRoute = {
+    prefix: pfx,
+    proto: "BGP-4",
+    nexthop: nh,
+    aspath: aspath,
+    med: med,
+    localpref: localpref,
+    status: pfx.startsWith('10.19.99') ? "ANOMALOUS" : "ESTABLISHED",
+    community: pfx.startsWith('10.19.99') ? "1999:0x7F" : "1999:INJECTED",
+    netmask: "255.255.255.0",
+    broadcast: pfx.split('/')[0].replace(/\.\d+$/, '.255'),
+    reason: `Manually announced via BGP UPDATE (AS-Path: ${aspath})`
+  };
+
+  if (existingIdx >= 0) {
+    bgpRoutes[existingIdx] = newRoute;
+  } else {
+    bgpRoutes.push(newRoute);
+  }
+
+  // Special ARG Subterranean Resonance Hook:
+  if (pfx === '10.19.99.0/24' && (aspath.includes('0x7F') || aspath.includes('1999'))) {
+    playFmTone(1999, 1.0, 0.4, 0.25, 0.12, true);
+    const echoPeer = bgpPeers.find(p => p.id === 'peer-echo');
+    if (echoPeer) {
+      echoPeer.state = "ESTABLISHED";
+      echoPeer.uptime = "LOCKED @ 1999Hz";
+    }
+    renderBgpPeers();
+    if (noticeEl) {
+      noticeEl.innerHTML = `<span style="color:var(--green-bright); font-weight:bold;">🟢 HARMONIC PHASE LOCK: Subterranean AS-0x7F Route Converged at 1999Hz!</span>`;
+    }
+    showNoticeToast("🟢 BGP Phase Lock Acquired on echo-gw-07 (1999Hz)!");
+
+    // Broadcast signal into shared Firebase RTDB and localStorage
+    if (typeof broadcastWebringSignal === 'function') {
+      broadcastWebringSignal('bgp_subterranean_route_locked', {
+        prefix: pfx,
+        aspath: aspath,
+        gateway: "echo-gw-07.kilonet.internal",
+        harmonic: 1999
+      });
+    }
+  } else {
+    playFmTone(660, 1.5, 0.6, 0.1, 0.08, true);
+    if (noticeEl) {
+      noticeEl.textContent = `Announced ${pfx} via ${nh}. AS-Path: [${aspath}].`;
+    }
+    showNoticeToast(`📢 Announced BGP route ${pfx}`);
+  }
+
+  logBgpPacket(`[BGP-4 UPDATE] NLRI: ${pfx}, Next-Hop: ${nh}, AS-Path: [${aspath}], MED: ${med}, LocalPref: ${localpref}.`);
+  renderBgpRoutingTable();
+  selectBgpRoute(existingIdx >= 0 ? existingIdx : bgpRoutes.length - 1);
+  renderCiscoConfig();
+}
+
+function withdrawSelectedBgpRoute() {
+  if (selectedBgpRouteIndex < 0 || selectedBgpRouteIndex >= bgpRoutes.length) return;
+  const route = bgpRoutes[selectedBgpRouteIndex];
+
+  if (route.proto === 'DIRECT' || route.proto === 'STATIC') {
+    alert("Cannot withdraw directly connected or default routes.");
+    return;
+  }
+
+  playFmTone(330, 1.0, 0.4, 0.1, 0.08, false);
+  logBgpPacket(`[BGP-4 UPDATE / WITHDRAW] Withdrawn Routes: ${route.prefix}. Forwarding entries purged.`);
+  showNoticeToast(`🚫 Withdrawn BGP prefix ${route.prefix}`);
+
+  bgpRoutes.splice(selectedBgpRouteIndex, 1);
+  selectedBgpRouteIndex = Math.max(0, selectedBgpRouteIndex - 1);
+  renderBgpRoutingTable();
+  selectBgpRoute(selectedBgpRouteIndex);
+  renderCiscoConfig();
+}
+
+function logBgpPacket(line) {
+  const consoleEl = document.getElementById('bgpHexConsole');
+  if (!consoleEl) return;
+
+  const ts = new Date().toTimeString().split(' ')[0];
+  consoleEl.textContent += `\n[${ts}] ${line}`;
+  consoleEl.scrollTop = consoleEl.scrollHeight;
+}
+
+function startBgpPacketStream() {
+  if (bgpStreamInterval) return;
+  bgpStreamInterval = setInterval(() => {
+    if (!isBgpStreamActive || document.hidden) return;
+    emitSyntheticBgpPacket();
+  }, 2800);
+}
+
+function toggleBgpPacketStream() {
+  isBgpStreamActive = !isBgpStreamActive;
+  playSfx('click');
+  const btn = document.getElementById('btnToggleBgpStream');
+  if (btn) {
+    btn.textContent = isBgpStreamActive ? "⏸️ Pause Stream" : "▶️ Resume Stream";
+  }
+}
+
+function stepBgpPacket() {
+  playSfx('click');
+  emitSyntheticBgpPacket();
+}
+
+function emitSyntheticBgpPacket() {
+  const consoleEl = document.getElementById('bgpHexConsole');
+  if (!consoleEl) return;
+
+  bgpPacketSeq++;
+  const types = ['KEEPALIVE', 'UPDATE', 'KEEPALIVE', 'ROUTE-REFRESH'];
+  const pType = types[bgpPacketSeq % types.length];
+
+  let hex = '';
+  if (pType === 'KEEPALIVE') {
+    hex = `0000  ff ff ff ff ff ff ff ff  ff ff ff ff ff ff ff ff  ................\n0010  00 13 04                                          ...`;
+  } else if (pType === 'UPDATE') {
+    hex = `0000  ff ff ff ff ff ff ff ff  ff ff ff ff ff ff ff ff  ................\n0010  00 2b 02 00 00 00 14 40  01 01 00 40 02 06 02 01  .+.....@...@....\n0020  07 cf 40 03 04 cc 47 c8  01 18 0a 13 63           ..@...G....c`;
+  } else {
+    hex = `0000  ff ff ff ff ff ff ff ff  ff ff ff ff ff ff ff ff  ................\n0010  00 17 05 00 01 00 01                               .......`;
+  }
+
+  const peer = bgpPeers[bgpPacketSeq % bgpPeers.length];
+  logBgpPacket(`FRAME #${bgpPacketSeq} | ${peer.ip}:179 -> 10.19.99.1:179 [BGP-4 ${pType}]\n${hex}`);
+}
+
+function injectBgpKeepalivePacket() {
+  playFmTone(784, 1.0, 0.4, 0.05, 0.05, true);
+  bgpPacketSeq++;
+  const hex = `0000  ff ff ff ff ff ff ff ff  ff ff ff ff ff ff ff ff  ................\n0010  00 13 04                                          ...`;
+  logBgpPacket(`FRAME #${bgpPacketSeq} | 10.19.99.1:179 -> 204.71.200.1:179 [BGP-4 KEEPALIVE]\n${hex}`);
+  showNoticeToast("⚡ BGP Keepalive frame injected");
+}
+
+function injectBgpNotificationPacket() {
+  playFmTone(240, 2.0, 1.0, 0.1, 0.07, false);
+  bgpPacketSeq++;
+  const hex = `0000  ff ff ff ff ff ff ff ff  ff ff ff ff ff ff ff ff  ................\n0010  00 15 03 06 04                                    .....`;
+  logBgpPacket(`FRAME #${bgpPacketSeq} | 10.19.99.1:179 -> 10.19.99.7:179 [BGP-4 NOTIFICATION: Hold Timer Expired (06/04)]\n${hex}`);
+  showNoticeToast("⚠️ BGP Notification error frame injected");
+}
+
+function clearBgpPacketLog() {
+  playSfx('click');
+  const consoleEl = document.getElementById('bgpHexConsole');
+  if (consoleEl) {
+    consoleEl.textContent = `[AS-1999 BGP PACKET SNIFFER INITIALIZED]\nInterface: eth0 / BGP-4 daemon (RFC 1771) listening on 0.0.0.0:179\nMonitoring transit sessions...`;
+  }
+}
+
+function renderCiscoConfig() {
+  const box = document.getElementById('ciscoConfigBox');
+  if (!box) return;
+
+  let cfg = `! Cisco IOS Software, 7500 Software (C7500-JS-M), Version 11.2(8a), RELEASE SOFTWARE\n`;
+  cfg += `! Compiled Mon 14-Jun-99 12:44 by consortium-netops\n`;
+  cfg += `version 11.2\n`;
+  cfg += `no service password-encryption\n`;
+  cfg += `hostname kilonet-as1999-gw\n`;
+  cfg += `!\n`;
+  cfg += `ip subnet-zero\n`;
+  cfg += `ip classless\n`;
+  cfg += `!\n`;
+  cfg += `router bgp 1999\n`;
+  cfg += ` bgp router-id 10.19.99.1\n`;
+
+  bgpPeers.forEach(p => {
+    cfg += ` neighbor ${p.ip} remote-as ${p.as.replace('AS-', '')}\n`;
+    cfg += ` neighbor ${p.ip} description ${p.name.replace(/\s+/g, '_')}\n`;
+    cfg += ` neighbor ${p.ip} soft-reconfiguration inbound\n`;
+  });
+
+  bgpRoutes.forEach(r => {
+    if (r.proto !== 'DIRECT' && r.prefix !== '0.0.0.0/0' && r.prefix !== '127.0.0.1/32') {
+      const parts = r.prefix.split('/');
+      const ip = parts[0];
+      cfg += ` network ${ip} mask ${r.netmask}\n`;
+    }
+  });
+
+  cfg += `!\n`;
+  cfg += `route-map SUBTERRANEAN_1999 permit 10\n`;
+  cfg += ` match ip address prefix-list SUBTERRANEAN_PFX\n`;
+  cfg += ` set metric 1999\n`;
+  cfg += ` set local-preference 250\n`;
+  cfg += ` set community 1999:0x7F\n`;
+  cfg += `!\n`;
+  cfg += `end\n`;
+
+  box.value = cfg;
+}
+
+function copyCiscoConfig() {
+  playSfx('click');
+  const box = document.getElementById('ciscoConfigBox');
+  if (box) {
+    box.select();
+    try {
+      navigator.clipboard.writeText(box.value);
+    } catch (e) {
+      document.execCommand('copy');
+    }
+    showNoticeToast("📋 Cisco IOS configuration copied to clipboard!");
+  }
+}
+
+function downloadCiscoConfig() {
+  playSfx('badge');
+  const box = document.getElementById('ciscoConfigBox');
+  if (!box) return;
+
+  const blob = new Blob([box.value], { type: 'text/plain;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'cisco_as1999.cfg';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showNoticeToast("💾 cisco_as1999.cfg generated & downloaded!");
+}
+
+/* =========================================================================
+   21. ARCH-05: BACKGROUND TAB VISIBILITY & TIMER DRIFT
    ========================================================================= */
 document.addEventListener('visibilitychange', () => {
   if (document.hidden) {
@@ -6877,6 +8031,10 @@ document.addEventListener('visibilitychange', () => {
       clearInterval(dwellIntervalTimer);
       dwellIntervalTimer = null;
     }
+    if (bgpStreamInterval) {
+      clearInterval(bgpStreamInterval);
+      bgpStreamInterval = null;
+    }
   } else {
     // Tab foregrounded: restore animation frame loops and audio clock
     if (!topoAnimFrame && typeof initTopologyMap === 'function') {
@@ -6904,6 +8062,9 @@ document.addEventListener('visibilitychange', () => {
     }
     if (currentActiveTab && currentActiveTab.id === 'tab-surf' && isAutoTourRunning && !dwellIntervalTimer) {
       startDwellCountdown();
+    }
+    if (currentActiveTab && currentActiveTab.id === 'tab-bgp' && isBgpStreamActive && !bgpStreamInterval) {
+      startBgpPacketStream();
     }
     if (isAudioEnabled && isBgmPlaying && !bgmTimer && typeof startProceduralBgm === 'function') {
       startProceduralBgm();
