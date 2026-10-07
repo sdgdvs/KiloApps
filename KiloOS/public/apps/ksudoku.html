@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>KSudoku</title>
+    <script src="../assets/js/retro_multiplayer.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
 
@@ -80,13 +81,207 @@
             position: relative;
         }
 
-        #dust-motes-canvas {
-            position: absolute;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            pointer-events: none;
-            z-index: -1;
-            opacity: 0.8;
+        /* Duel Mode HUD & Progress Radar */
+        .duel-hud {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            background: rgba(15, 23, 42, 0.7);
+            border: 1px solid var(--accent);
+            border-radius: 12px;
+            padding: 8px 12px;
+            margin-bottom: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+            animation: fadeIn 0.3s ease;
+        }
+        .duel-player-box {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            flex: 1;
+            min-width: 90px;
+        }
+        .duel-player-box.remote-box {
+            text-align: right;
+            align-items: flex-end;
+        }
+        .duel-name {
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: var(--text-main);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 110px;
+        }
+        .duel-stat {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--accent);
+        }
+        .duel-bar-wrap {
+            width: 100%;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+            overflow: hidden;
+            margin-top: 2px;
+        }
+        .duel-bar {
+            height: 100%;
+            transition: width 0.3s ease;
+        }
+        .local-bar {
+            background: linear-gradient(90deg, #3b82f6, #60a5fa);
+        }
+        .opp-bar {
+            background: linear-gradient(90deg, #f59e0b, #fbbf24);
+        }
+        .duel-center {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            padding: 0 4px;
+        }
+        .duel-badge {
+            font-size: 0.65rem;
+            font-weight: 800;
+            letter-spacing: 0.05em;
+            background: rgba(239, 68, 68, 0.2);
+            color: #f87171;
+            border: 1px solid rgba(239, 68, 68, 0.5);
+            padding: 2px 6px;
+            border-radius: 4px;
+            text-transform: uppercase;
+        }
+        .duel-status-ticker {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            white-space: nowrap;
+            text-align: center;
+            max-width: 140px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .duel-mini-btn {
+            font-size: 0.65rem;
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+        .duel-radar-canvas-wrap {
+            margin-top: 2px;
+            display: inline-block;
+        }
+        #opp-radar-canvas {
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(250, 204, 21, 0.4);
+            border-radius: 3px;
+            vertical-align: middle;
+        }
+
+        /* Logical Step Explainer Banner */
+        .logic-banner {
+            background: rgba(15, 23, 42, 0.85);
+            border: 1px solid #38bdf8;
+            border-radius: 12px;
+            padding: 8px 12px;
+            margin-bottom: 8px;
+            box-shadow: 0 4px 15px rgba(56, 189, 248, 0.2);
+            animation: fadeIn 0.25s ease;
+        }
+        .logic-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.85rem;
+            color: #38bdf8;
+            margin-bottom: 4px;
+        }
+        .logic-close-btn {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 1.1rem;
+            cursor: pointer;
+            padding: 0 4px;
+            box-shadow: none;
+        }
+        .logic-close-btn:hover {
+            color: #f8fafc;
+            transform: none;
+            box-shadow: none;
+        }
+        .logic-body {
+            font-size: 0.8rem;
+            color: var(--text-main);
+            line-height: 1.4;
+            margin-bottom: 6px;
+        }
+        .logic-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 6px;
+        }
+        .logic-apply-btn {
+            background: linear-gradient(135deg, rgba(56, 189, 248, 0.3), rgba(14, 165, 233, 0.5));
+            border-color: #38bdf8;
+            color: #ffffff;
+            font-size: 0.75rem;
+            padding: 4px 10px;
+        }
+
+        /* Replay Scrubber Bar */
+        .replay-bar {
+            background: rgba(15, 23, 42, 0.85);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 8px 12px;
+            margin-top: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+            animation: fadeIn 0.25s ease;
+        }
+        .replay-info {
+            font-size: 0.75rem;
+            color: var(--accent);
+            text-align: center;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        .replay-controls {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+        .replay-controls button {
+            font-size: 0.75rem;
+            padding: 3px 8px;
+        }
+        .replay-controls input[type="range"] {
+            flex: 1;
+            max-width: 220px;
+            accent-color: var(--accent);
+        }
+
+        /* Logic Highlights on Board */
+        .cell.logic-target {
+            box-shadow: inset 0 0 10px #38bdf8, 0 0 12px #38bdf8 !important;
+            border: 1.5px solid #38bdf8 !important;
+            animation: logicPulse 1.2s infinite alternate ease-in-out;
+            z-index: 5;
+        }
+        .cell.logic-unit {
+            background: rgba(56, 189, 248, 0.2) !important;
+        }
+        @keyframes logicPulse {
+            0% { transform: scale(1); filter: brightness(1); }
+            100% { transform: scale(1.05); filter: brightness(1.3); }
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-4px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         .app-container {
@@ -658,7 +853,6 @@
     </style>
 </head>
 <body>
-    <canvas id="dust-motes-canvas"></canvas>
     <div class="app-container">
         <header>
             <h1>KSudoku</h1>
@@ -674,6 +868,8 @@
                 <option value="50">Hard</option>
             </select>
             <button id="btn-new">New</button>
+            <button id="btn-duel" title="Sudoku Duel (Online / CyberBot)" style="border-color: rgba(239, 68, 68, 0.6); color: #fca5a5;">⚔️ Duel</button>
+            <button id="btn-puzzles" title="Puzzle Manager & Classic Library" style="border-color: rgba(168, 85, 247, 0.6); color: #d8b4fe;">🧩 Puzzles</button>
             <button id="btn-campaign">Campaign</button>
             <button id="btn-rush">Rush</button>
             <button id="btn-daily">Daily</button>
@@ -684,14 +880,59 @@
         <div class="controls">
             <button id="btn-notes">Notes: OFF</button>
             <button id="btn-validate">Validate</button>
+            <button id="btn-logic" title="Logical Deduction Step Explainer (L)" style="border-color: #38bdf8; color: #7dd3fc;">💡 Logic (L)</button>
             <button id="btn-hint" title="Smart Hint (H)">Hint (H)</button>
             <button id="btn-magic" title="Magic Wand (W)">Wand (3)</button>
             <button id="btn-shield" title="Mistake Shield (S)">Shield (1)</button>
             <button id="btn-autofill" title="Pencil Auto-Fill (P)">Auto (P)</button>
             <button id="btn-freeze" title="Time Freeze (F)">Freeze (F)</button>
+            <button id="btn-replay" title="Game Move Replay (R)">⏪ Replay (R)</button>
             <button id="btn-undo" title="Undo (Ctrl+Z)">Undo</button>
             <button id="btn-redo" title="Redo (Ctrl+Y)">Redo</button>
         </div>
+
+        <!-- Real-Time Duel HUD -->
+        <div id="duel-hud" class="duel-hud" style="display:none;">
+            <div class="duel-player-box local-box">
+                <div class="duel-name" id="duel-local-name">Player</div>
+                <div class="duel-stat" id="duel-local-stat">0/81 (0%)</div>
+                <div class="duel-bar-wrap"><div class="duel-bar local-bar" id="duel-local-bar" style="width:0%"></div></div>
+            </div>
+            <div class="duel-center">
+                <div class="duel-badge" id="duel-badge">⚔️ RACE</div>
+                <div class="duel-status-ticker" id="duel-status-ticker">Duel Active! Race to finish first!</div>
+                <div style="display:flex; gap:4px; margin-top:2px;">
+                    <button id="btn-leave-duel" class="duel-mini-btn" style="border-color:#ef4444; color:#f87171;">Leave</button>
+                    <button id="btn-rematch-duel" class="duel-mini-btn" style="display:none; border-color:#22c55e; color:#86efac;">Rematch</button>
+                </div>
+            </div>
+            <div class="duel-player-box remote-box">
+                <div class="duel-name" id="duel-opp-name">Opponent</div>
+                <div class="duel-stat" id="duel-opp-stat">0/81 (0%)</div>
+                <div class="duel-bar-wrap"><div class="duel-bar opp-bar" id="duel-opp-bar" style="width:0%"></div></div>
+                <div class="duel-radar-canvas-wrap">
+                    <canvas id="opp-radar-canvas" width="45" height="45" title="Opponent Grid Radar"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step-by-Step Logical Deduction Explainer Banner -->
+        <div id="logic-banner" class="logic-banner" style="display:none;">
+            <div class="logic-header">
+                <div style="display:flex; align-items:center; gap:6px;">
+                    <span>💡</span>
+                    <strong id="logic-title">Logical Deduction: Naked Single</strong>
+                </div>
+                <button id="btn-close-logic" class="logic-close-btn" title="Close">&times;</button>
+            </div>
+            <div class="logic-body" id="logic-body">
+                Cell R3C5 can only contain digit 7 because numbers 1-6 and 8-9 already appear in its row, column, and block.
+            </div>
+            <div class="logic-actions">
+                <button id="btn-apply-logic" class="logic-apply-btn">Apply Deduction</button>
+            </div>
+        </div>
+
         <div class="main-content">
             <div class="sudoku-board grid-9" id="board">
                 <!-- Cells generated by JS -->
@@ -699,6 +940,21 @@
             
             <div class="numpad np-9" id="numpad">
                 <!-- Buttons generated by JS -->
+            </div>
+        </div>
+
+        <!-- Replay Scrubber Bar -->
+        <div id="replay-bar" class="replay-bar" style="display:none;">
+            <div class="replay-info" id="replay-info">Move 0 / 0 | Time: 00:00</div>
+            <div class="replay-controls">
+                <button id="btn-replay-first" title="First Move">⏮</button>
+                <button id="btn-replay-prev" title="Step Back">◀</button>
+                <button id="btn-replay-play" title="Play/Pause">▶</button>
+                <button id="btn-replay-next" title="Step Forward">▶</button>
+                <button id="btn-replay-last" title="Last Move">⏭</button>
+                <input type="range" id="replay-slider" min="0" max="0" value="0">
+                <button id="btn-replay-speed" title="Playback Speed">1x</button>
+                <button id="btn-replay-exit" title="Exit Replay" style="border-color:#ef4444; color:#f87171;">Exit</button>
             </div>
         </div>
     </div>
@@ -744,6 +1000,92 @@
         </div>
     </div>
 
+    <!-- Duel / Multiplayer Modal -->
+    <div id="duel-modal" class="modal">
+        <div class="modal-content" style="max-width: 460px;">
+            <h2>⚔️ Sudoku Duel (Online / CyberBot)</h2>
+            <p style="font-size: 0.82rem; color: var(--text-muted); margin-top: -6px; line-height: 1.4;">
+                Head-to-head speed puzzle race! Both players solve the exact same board in real-time. First to solve all empty cells wins.
+            </p>
+            <div class="settings-group">
+                <label for="duel-callsign">Your Call-Sign:</label>
+                <div style="display:flex; gap:6px;">
+                    <input type="text" id="duel-callsign" maxlength="16" style="flex:1; padding:6px 10px; background:var(--glass-bg); border:1px solid var(--glass-border); border-radius:8px; color:var(--text-main); font-weight:600;" value="Sudoku-99">
+                    <button id="btn-save-callsign" style="padding:6px 12px;">Save</button>
+                </div>
+            </div>
+            <div class="settings-group">
+                <label>Matchmaking &amp; Lobby:</label>
+                <div style="display:flex; flex-direction:column; gap:8px;">
+                    <button id="btn-mp-quick" style="background:linear-gradient(135deg, rgba(59,130,246,0.35), rgba(37,99,235,0.45)); border-color:var(--accent); font-size:0.85rem; padding:8px;">
+                        ⚡ Quick Match (Find Online Challenger)
+                    </button>
+                    <div style="display:flex; gap:6px;">
+                        <button id="btn-mp-host" style="flex:1;">🏠 Host Room</button>
+                        <button id="btn-mp-cyberbot" style="flex:1; border-color:rgba(234,179,8,0.5); color:#fef08a;">🤖 Practice vs CyberBot</button>
+                    </div>
+                </div>
+            </div>
+            <div class="settings-group">
+                <label for="duel-room-code">Join Specific Room:</label>
+                <div style="display:flex; gap:6px;">
+                    <input type="text" id="duel-room-code" placeholder="SUD-XXXX" maxlength="10" style="flex:1; padding:6px 10px; background:var(--glass-bg); border:1px solid var(--glass-border); border-radius:8px; color:var(--text-main); text-transform:uppercase; font-family:monospace; font-weight:700;">
+                    <button id="btn-mp-join">Join Room</button>
+                </div>
+            </div>
+            <div id="duel-status-box" style="display:none; background:rgba(0,0,0,0.4); border:1px solid var(--accent); border-radius:8px; padding:10px; margin-top:12px; text-align:center;">
+                <div id="duel-status-label" style="font-size:0.85rem; font-weight:600; color:var(--accent);">Connecting...</div>
+                <div id="duel-room-display" style="font-size:1.15rem; font-family:monospace; font-weight:700; margin:4px 0; color:#facc15;"></div>
+                <div id="duel-fallback-timer" style="font-size:0.75rem; color:#94a3b8; margin-top:4px;">Solo AI Fallback in 25s</div>
+                <div style="display:flex; justify-content:center; gap:8px; margin-top:8px;">
+                    <button id="btn-copy-room-link" style="display:none; font-size:0.75rem;">📋 Copy Invite Link</button>
+                    <button id="btn-cancel-match" style="font-size:0.75rem; border-color:#ef4444; color:#f87171;">Cancel</button>
+                </div>
+            </div>
+            <button class="modal-close" id="btn-close-duel" style="margin-top:14px;">Close</button>
+        </div>
+    </div>
+
+    <!-- Puzzle Manager & Classics Modal -->
+    <div id="puzzles-modal" class="modal">
+        <div class="modal-content" style="max-width: 480px;">
+            <h2>🧩 Puzzle Manager &amp; Classics</h2>
+            <div class="settings-group">
+                <label>Historic &amp; Famous Classics:</label>
+                <div style="display:flex; gap:6px;">
+                    <select id="sel-classic-puzzle" style="flex:1;">
+                        <option value="escargot">AI Escargot (Arto Inkala, 2006)</option>
+                        <option value="blonde">Platinum Blonde (Extreme Logical Depth)</option>
+                        <option value="master">Daily Masterpiece (Championship 2005)</option>
+                        <option value="min17">17-Clue Minimum Mystery (Minimal Givens)</option>
+                        <option value="easter">Easter Monster (Famous Hardest)</option>
+                        <option value="arg1999">Anomalous Transmission #1999 (K-Net Relay)</option>
+                    </select>
+                    <button id="btn-load-classic">Load</button>
+                </div>
+            </div>
+            <div class="settings-group">
+                <label for="puzzle-string-input">Import 81-Character String (0 or . for empty):</label>
+                <textarea id="puzzle-string-input" rows="3" style="width:100%; box-sizing:border-box; font-family:monospace; font-size:0.75rem; background:rgba(0,0,0,0.3); border:1px solid var(--glass-border); border-radius:8px; color:var(--text-main); padding:6px; resize:vertical;" placeholder="530070000600195000098000060800060003400803001700020006060000280000419005000080079"></textarea>
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-top:6px; flex-wrap:wrap; gap:4px;">
+                    <div id="puzzle-import-status" style="font-size:0.75rem; color:var(--text-muted);">Paste 81 chars to validate.</div>
+                    <div style="display:flex; gap:6px;">
+                        <button id="btn-validate-import">Validate</button>
+                        <button id="btn-play-import" disabled>Play Puzzle</button>
+                    </div>
+                </div>
+            </div>
+            <div class="settings-group">
+                <label>Export Current Board:</label>
+                <div style="display:flex; gap:6px; flex-wrap:wrap;">
+                    <button id="btn-export-81" style="flex:1;">📋 Copy 81-Char String</button>
+                    <button id="btn-export-ascii" style="flex:1;">📝 Copy ASCII Grid</button>
+                </div>
+            </div>
+            <button class="modal-close" id="btn-close-puzzles" style="margin-top:14px;">Close</button>
+        </div>
+    </div>
+
     <div id="help-modal" class="modal">
         <div class="modal-content">
             <h2>KSudoku Guide &amp; Rules</h2>
@@ -758,14 +1100,17 @@
 
                 <div class="stat-diff">Game Modes</div>
                 <ul style="padding-left: 18px; margin: 6px 0 10px 0;">
-                    <li><strong>Classic:</strong> Relaxed play with customizable difficulty.</li>
+                    <li><strong>⚔️ Sudoku Duel:</strong> Real-time race against online peers or local CyberBot-99! Features live progress meters and opponent radar.</li>
+                    <li><strong>🧩 Puzzles:</strong> Import &amp; export 81-character puzzle strings or play legendary classics (AI Escargot, Platinum Blonde, etc.).</li>
                     <li><strong>Campaign:</strong> 20 progressive stages with expanding grids, Fog of War, Killer Cages, and a 3-strike limit!</li>
                     <li><strong>Rush Mode:</strong> 3-minute survival sprint! Correct cells grant +10s; mistakes penalize -15s!</li>
                     <li><strong>Daily Challenge:</strong> Unique seeded puzzle each calendar day with streak tracking.</li>
                 </ul>
 
-                <div class="stat-diff">Special Mechanics</div>
+                <div class="stat-diff">Special Mechanics &amp; Tools</div>
                 <ul style="padding-left: 18px; margin: 6px 0 10px 0;">
+                    <li><strong>💡 Logic Explainer (L):</strong> Analyzes candidates to explain human deduction steps (Naked Singles, Hidden Singles, Pairs) with live highlighting!</li>
+                    <li><strong>⏪ Game Replay (R):</strong> Scrub through your entire solving history step-by-step with variable playback speeds.</li>
                     <li><strong>Killer Cages:</strong> Outlined dashed cells must sum to the number shown in the top-left corner.</li>
                     <li><strong>Fog of War:</strong> Hidden cells marked '?'. Correct adjacent values reveal the mystery.</li>
                     <li><strong>Pencil Notes:</strong> Toggle notes (N or Space) to pencil in candidate numbers.</li>
@@ -785,11 +1130,13 @@
                     <li><strong>1–9 / A–G:</strong> Place number or hex letter</li>
                     <li><strong>Backspace / Del / 0:</strong> Clear cell or notes</li>
                     <li><strong>Arrow Keys:</strong> Move grid cursor</li>
+                    <li><strong>L:</strong> Logical Deduction Step Explainer</li>
+                    <li><strong>R:</strong> Toggle Move Replay scrubber</li>
                     <li><strong>N / Space:</strong> Toggle Pencil Notes mode</li>
                     <li><strong>Ctrl+Z / Ctrl+Y:</strong> Undo / Redo</li>
                     <li><strong>F5 / F9:</strong> Quicksave / Quickload</li>
                     <li><strong>? / M:</strong> Toggle this Help manual</li>
-                    <li><strong>Esc:</strong> Close modal or deselect cell</li>
+                    <li><strong>Esc:</strong> Close modal, HUD, or deselect cell</li>
                 </ul>
             </div>
             <button class="modal-close" id="btn-close-help">Got it!</button>
@@ -831,6 +1178,69 @@
         const btnResetStats = document.getElementById('btn-reset-stats');
         const fileImportSave = document.getElementById('file-import-save');
         const toastEl = document.getElementById('toast');
+
+        // Duel Mode Elements
+        const btnDuel = document.getElementById('btn-duel');
+        const duelModal = document.getElementById('duel-modal');
+        const btnCloseDuel = document.getElementById('btn-close-duel');
+        const btnMpQuick = document.getElementById('btn-mp-quick');
+        const btnMpHost = document.getElementById('btn-mp-host');
+        const btnMpCyberbot = document.getElementById('btn-mp-cyberbot');
+        const btnMpJoin = document.getElementById('btn-mp-join');
+        const duelRoomCodeInput = document.getElementById('duel-room-code');
+        const duelCallsignInput = document.getElementById('duel-callsign');
+        const btnSaveCallsign = document.getElementById('btn-save-callsign');
+        const duelStatusBox = document.getElementById('duel-status-box');
+        const duelStatusLabel = document.getElementById('duel-status-label');
+        const duelRoomDisplay = document.getElementById('duel-room-display');
+        const duelFallbackTimer = document.getElementById('duel-fallback-timer');
+        const btnCopyRoomLink = document.getElementById('btn-copy-room-link');
+        const btnCancelMatch = document.getElementById('btn-cancel-match');
+        const duelHud = document.getElementById('duel-hud');
+        const duelLocalName = document.getElementById('duel-local-name');
+        const duelLocalStat = document.getElementById('duel-local-stat');
+        const duelLocalBar = document.getElementById('duel-local-bar');
+        const duelOppName = document.getElementById('duel-opp-name');
+        const duelOppStat = document.getElementById('duel-opp-stat');
+        const duelOppBar = document.getElementById('duel-opp-bar');
+        const oppRadarCanvas = document.getElementById('opp-radar-canvas');
+        const duelStatusTicker = document.getElementById('duel-status-ticker');
+        const btnLeaveDuel = document.getElementById('btn-leave-duel');
+        const btnRematchDuel = document.getElementById('btn-rematch-duel');
+
+        // Puzzle Manager Elements
+        const btnPuzzles = document.getElementById('btn-puzzles');
+        const puzzlesModal = document.getElementById('puzzles-modal');
+        const btnClosePuzzles = document.getElementById('btn-close-puzzles');
+        const selClassicPuzzle = document.getElementById('sel-classic-puzzle');
+        const btnLoadClassic = document.getElementById('btn-load-classic');
+        const puzzleStringInput = document.getElementById('puzzle-string-input');
+        const puzzleImportStatus = document.getElementById('puzzle-import-status');
+        const btnValidateImport = document.getElementById('btn-validate-import');
+        const btnPlayImport = document.getElementById('btn-play-import');
+        const btnExport81 = document.getElementById('btn-export-81');
+        const btnExportAscii = document.getElementById('btn-export-ascii');
+
+        // Logic Explainer Elements
+        const btnLogic = document.getElementById('btn-logic');
+        const logicBanner = document.getElementById('logic-banner');
+        const logicTitle = document.getElementById('logic-title');
+        const logicBody = document.getElementById('logic-body');
+        const btnCloseLogic = document.getElementById('btn-close-logic');
+        const btnApplyLogic = document.getElementById('btn-apply-logic');
+
+        // Replay Scrubber Elements
+        const btnReplay = document.getElementById('btn-replay');
+        const replayBar = document.getElementById('replay-bar');
+        const replayInfo = document.getElementById('replay-info');
+        const replaySlider = document.getElementById('replay-slider');
+        const btnReplayFirst = document.getElementById('btn-replay-first');
+        const btnReplayPrev = document.getElementById('btn-replay-prev');
+        const btnReplayPlay = document.getElementById('btn-replay-play');
+        const btnReplayNext = document.getElementById('btn-replay-next');
+        const btnReplayLast = document.getElementById('btn-replay-last');
+        const btnReplaySpeed = document.getElementById('btn-replay-speed');
+        const btnReplayExit = document.getElementById('btn-replay-exit');
 
         let toastTimer = null;
         function showToast(msg, duration = 2400) {
@@ -997,6 +1407,840 @@
             highlightSame: true,
             soundEnabled: true
         };
+
+        // --- EXPANSION: Real-Time Duel, Logic Explainer, Replay & Puzzle Manager ---
+        let rMultiplayer = null;
+        let isDuelActive = false;
+        let isOnlineDuel = false;
+        let myPlayerName = localStorage.getItem('ksudoku_playerName') || ('Sudoku-' + Math.floor(100 + Math.random() * 900));
+        let oppPlayerName = 'Opponent';
+        let duelTotalEmpty = 40;
+        let localDuelSolved = 0;
+        let oppDuelSolved = 0;
+        let oppRadarGrid = Array(9).fill().map(() => Array(9).fill(false));
+        let cyberBotInterval = null;
+        let soloFallbackTimer = null;
+        let soloFallbackSeconds = 25;
+        let currentRoomCode = null;
+
+        let moveHistory = [];
+        let isReplayMode = false;
+        let replayStep = 0;
+        let replayInterval = null;
+        let replaySpeed = 1;
+
+        let activeDeduction = null;
+
+        // Verified Classic Masterpieces (Instant Solve with Fast MRV)
+        const CLASSIC_PUZZLES = {
+            escargot: {
+                name: "AI Escargot (Arto Inkala, 2006)",
+                puzzle: "100007090030020008009600500005300900010080002600004000300000010040000007007000300"
+            },
+            blonde: {
+                name: "Platinum Blonde (Extreme Logical Depth)",
+                puzzle: "000000012000000003002300400001800005060070800000009000008500000900040500470006000"
+            },
+            master: {
+                name: "Daily Masterpiece (Championship 2005)",
+                puzzle: "003020600900305001001806400008102900700000008006708200002609500800203009005010300"
+            },
+            min17: {
+                name: "17-Clue Minimum Mystery (Minimal Givens)",
+                puzzle: "000000010400000000020000000000050407008000300001090000300400200050100000000806000"
+            },
+            easter: {
+                name: "Easter Monster (Famous Hardest)",
+                puzzle: "100000002090000030008000500000700000000020000000001004005000600040000070300000008"
+            },
+            arg1999: {
+                name: "Anomalous Transmission #1999 (K-Net Relay)",
+                puzzle: "020000000000600003074080000000003002080040010600500000000010780500009000000000040"
+            }
+        };
+
+        // Fast Backtracking Solver using Minimum Remaining Values (MRV) Bitmasking
+        function solveSudokuFast(grid, maxSolutions = 1) {
+            let rMask = new Array(9).fill(0);
+            let cMask = new Array(9).fill(0);
+            let bMask = new Array(9).fill(0);
+            let empties = 0;
+            for (let r = 0; r < 9; r++) {
+                for (let c = 0; c < 9; c++) {
+                    let v = grid[r][c];
+                    if (v > 0) {
+                        let b = Math.floor(r / 3) * 3 + Math.floor(c / 3);
+                        let bit = 1 << (v - 1);
+                        if ((rMask[r] & bit) || (cMask[c] & bit) || (bMask[b] & bit)) return { count: 0, solution: null };
+                        rMask[r] |= bit; cMask[c] |= bit; bMask[b] |= bit;
+                    } else {
+                        empties++;
+                    }
+                }
+            }
+            let solutions = [];
+            let steps = 0;
+            function search(rem) {
+                if (++steps > 150000) return true;
+                if (rem === 0) {
+                    solutions.push(grid.map(row => [...row]));
+                    return solutions.length >= maxSolutions;
+                }
+                let bestR = -1, bestC = -1, bestB = -1, minCand = 10, bestCandMask = 0;
+                for (let r = 0; r < 9; r++) {
+                    for (let c = 0; c < 9; c++) {
+                        if (grid[r][c] === 0) {
+                            let b = Math.floor(r / 3) * 3 + Math.floor(c / 3);
+                            let used = rMask[r] | cMask[c] | bMask[b];
+                            let cand = (~used) & 0x1ff;
+                            let count = 0;
+                            for (let t = cand; t > 0; t &= t - 1) count++;
+                            if (count === 0) return false;
+                            if (count < minCand) {
+                                minCand = count;
+                                bestR = r; bestC = c; bestB = b; bestCandMask = cand;
+                                if (count === 1) break;
+                            }
+                        }
+                    }
+                    if (minCand === 1) break;
+                }
+                for (let num = 1; num <= 9; num++) {
+                    let bit = 1 << (num - 1);
+                    if (bestCandMask & bit) {
+                        grid[bestR][bestC] = num;
+                        rMask[bestR] |= bit; cMask[bestC] |= bit; bMask[bestB] |= bit;
+                        if (search(rem - 1)) return true;
+                        grid[bestR][bestC] = 0;
+                        rMask[bestR] &= ~bit; cMask[bestC] &= ~bit; bMask[bestB] &= ~bit;
+                    }
+                }
+                return false;
+            }
+            search(empties);
+            return { count: solutions.length, solution: solutions[0] || null };
+        }
+
+        // 81-Character String Exporter & Formatter
+        function exportCurrentPuzzle81() {
+            let s = '';
+            for (let r = 0; r < gridSize; r++) {
+                for (let c = 0; c < gridSize; c++) {
+                    s += originalBoard[r] ? (originalBoard[r][c] || 0) : 0;
+                }
+            }
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(s).then(() => {
+                    showToast("📋 81-char puzzle copied to clipboard!");
+                }).catch(() => {
+                    prompt("Current 81-char puzzle string:", s);
+                });
+            } else {
+                prompt("Current 81-char puzzle string:", s);
+            }
+            return s;
+        }
+
+        function exportCurrentPuzzleAscii() {
+            let out = '+-------+-------+-------+\n';
+            for (let r = 0; r < 9; r++) {
+                out += '| ';
+                for (let c = 0; c < 9; c++) {
+                    let v = (originalBoard[r] && originalBoard[r][c] !== 0) ? originalBoard[r][c] : (board[r] && board[r][c] ? board[r][c] : '.');
+                    out += v + ' ';
+                    if (c % 3 === 2) out += '| ';
+                }
+                out += '\n';
+                if (r % 3 === 2) out += '+-------+-------+-------+\n';
+            }
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(out).then(() => {
+                    showToast("📝 Formatted ASCII grid copied!");
+                }).catch(() => {
+                    prompt("Formatted ASCII grid:", out);
+                });
+            } else {
+                prompt("Formatted ASCII grid:", out);
+            }
+        }
+
+        function parsePuzzleString(str) {
+            if (!str) return null;
+            let clean = str.replace(/[^0-9.]/g, '').replace(/\./g, '0');
+            if (clean.length < 81) return null;
+            let digits = clean.slice(0, 81).split('').map(x => parseInt(x, 10));
+            return Array(9).fill().map((_, r) => digits.slice(r * 9, (r + 1) * 9));
+        }
+
+        function validateImportedPuzzle() {
+            const raw = (puzzleStringInput.value || '').trim();
+            const grid = parsePuzzleString(raw);
+            if (!grid) {
+                puzzleImportStatus.textContent = "⚠ Must contain 81 characters (digits 1-9, and 0 or . for empty).";
+                puzzleImportStatus.style.color = "#f87171";
+                btnPlayImport.disabled = true;
+                return;
+            }
+            let givens = 0;
+            for (let r = 0; r < 9; r++) for (let c = 0; c < 9; c++) if (grid[r][c] > 0) givens++;
+            
+            puzzleImportStatus.textContent = "Analyzing puzzle...";
+            puzzleImportStatus.style.color = "var(--text-muted)";
+            
+            setTimeout(() => {
+                const res = solveSudokuFast(grid.map(r => [...r]), 2);
+                if (res.count === 0) {
+                    puzzleImportStatus.textContent = `❌ Invalid puzzle (${givens} clues): No solution exists.`;
+                    puzzleImportStatus.style.color = "#f87171";
+                    btnPlayImport.disabled = true;
+                } else if (res.count === 1) {
+                    puzzleImportStatus.textContent = `✅ Valid unique puzzle (${givens} clues): Exactly 1 solution found!`;
+                    puzzleImportStatus.style.color = "#4ade80";
+                    btnPlayImport.disabled = false;
+                } else {
+                    puzzleImportStatus.textContent = `⚠️ Ambiguous puzzle (${givens} clues): Multiple solutions exist!`;
+                    puzzleImportStatus.style.color = "#fbbf24";
+                    btnPlayImport.disabled = false;
+                }
+            }, 20);
+        }
+
+        function playImportedPuzzle(grid, title = "Custom Puzzle") {
+            if (!grid) return;
+            const res = solveSudokuFast(grid.map(r => [...r]), 1);
+            if (!res.solution) {
+                showToast("⚠ Puzzle has no solution!");
+                return;
+            }
+            gridSize = 9; boxW = 3; boxH = 3;
+            board = grid.map(r => [...r]);
+            originalBoard = grid.map(r => [...r]);
+            solution = res.solution;
+            awarded = Array(9).fill().map(() => Array(9).fill(false));
+            fog = Array(9).fill().map(() => Array(9).fill(false));
+            cageId = Array(9).fill().map(() => Array(9).fill(0));
+            cageTopLeft = Array(9).fill().map(() => Array(9).fill(false));
+            cageSum = [0];
+            notes = Array(9).fill().map(() => Array(9).fill().map(() => Array(10).fill(false)));
+            elapsedTime = 0;
+            freezeTime = 0;
+            score = 0;
+            undoStack = [];
+            redoStack = [];
+            moveHistory = [];
+            if (isReplayMode) exitReplayMode();
+            closeLogicBanner();
+            isCampaignMode = false;
+            isRushMode = false;
+            isDailyGame = false;
+            gameActive = true;
+            startTimer();
+            initUI();
+            updateUIState();
+            saveGameState();
+            puzzlesModal.style.display = 'none';
+            playSound('powerup');
+            
+            // ARG Transmission Detection
+            if (title.includes("Anomalous Transmission #1999")) {
+                showToast("[K-NET RELAY: Intercepted anomalous packet echo at 1999Hz from 10.19.99.4/classified]", 4000);
+            } else {
+                showToast(`★ Loaded: ${title}`);
+            }
+        }
+
+        // Logical Deduction Technique Explainer Engine
+        function getCandidates(r, c) {
+            if (board[r][c] !== 0) return [];
+            let used = new Set();
+            for (let i = 0; i < gridSize; i++) {
+                if (board[r][i] !== 0) used.add(board[r][i]);
+                if (board[i][c] !== 0) used.add(board[i][c]);
+            }
+            let br = Math.floor(r / boxH) * boxH;
+            let bc = Math.floor(c / boxW) * boxW;
+            for (let i = 0; i < boxH; i++) {
+                for (let j = 0; j < boxW; j++) {
+                    if (board[br + i][bc + j] !== 0) used.add(board[br + i][bc + j]);
+                }
+            }
+            let cands = [];
+            for (let num = 1; num <= gridSize; num++) {
+                if (!used.has(num)) cands.push(num);
+            }
+            return cands;
+        }
+
+        function clearLogicHighlights() {
+            cells.forEach(c => {
+                if (c) c.classList.remove('logic-target', 'logic-unit');
+            });
+        }
+
+        function analyzeLogicalStep() {
+            if (!gameActive || gridSize !== 9) {
+                showToast("Logical analyzer available for 9x9 Classic/Custom puzzles.");
+                return;
+            }
+            clearLogicHighlights();
+
+            // 1. Check for Naked Single (only 1 candidate in cell)
+            for (let r = 0; r < 9; r++) {
+                for (let c = 0; c < 9; c++) {
+                    if (board[r][c] === 0) {
+                        let cands = getCandidates(r, c);
+                        if (cands.length === 1) {
+                            let val = cands[0];
+                            activeDeduction = {
+                                type: 'naked_single',
+                                r, c, val,
+                                title: `Naked Single: Digit ${val}`,
+                                desc: `Cell at Row ${r + 1}, Column ${c + 1} has only one valid candidate: ${val}. All other numbers (1-9) already appear in its row, column, or 3x3 block.`
+                            };
+                            displayDeduction(activeDeduction);
+                            return;
+                        }
+                    }
+                }
+            }
+
+            // 2. Check for Hidden Single in 3x3 Box
+            for (let b = 0; b < 9; b++) {
+                let br = Math.floor(b / 3) * 3;
+                let bc = (b % 3) * 3;
+                for (let num = 1; num <= 9; num++) {
+                    let possibleCells = [];
+                    for (let i = 0; i < 3; i++) {
+                        for (let j = 0; j < 3; j++) {
+                            let r = br + i, c = bc + j;
+                            if (board[r][c] === 0) {
+                                let cands = getCandidates(r, c);
+                                if (cands.includes(num)) possibleCells.push({ r, c });
+                            }
+                        }
+                    }
+                    if (possibleCells.length === 1) {
+                        let cell = possibleCells[0];
+                        activeDeduction = {
+                            type: 'hidden_single_box',
+                            r: cell.r, c: cell.c, val: num, b,
+                            title: `Hidden Single: Block ${b + 1}`,
+                            desc: `In 3x3 Block ${b + 1}, digit ${num} can only fit at Row ${cell.r + 1}, Column ${cell.c + 1}. No other cell in this block can contain ${num}.`
+                        };
+                        displayDeduction(activeDeduction);
+                        return;
+                    }
+                }
+            }
+
+            // 3. Check for Hidden Single in Row
+            for (let r = 0; r < 9; r++) {
+                for (let num = 1; num <= 9; num++) {
+                    let possibleCols = [];
+                    for (let c = 0; c < 9; c++) {
+                        if (board[r][c] === 0) {
+                            let cands = getCandidates(r, c);
+                            if (cands.includes(num)) possibleCols.push(c);
+                        }
+                    }
+                    if (possibleCols.length === 1) {
+                        let c = possibleCols[0];
+                        activeDeduction = {
+                            type: 'hidden_single_row',
+                            r, c, val: num,
+                            title: `Hidden Single: Row ${r + 1}`,
+                            desc: `In Row ${r + 1}, digit ${num} can only appear in Column ${c + 1}.`
+                        };
+                        displayDeduction(activeDeduction);
+                        return;
+                    }
+                }
+            }
+
+            // 4. Check for Hidden Single in Column
+            for (let c = 0; c < 9; c++) {
+                for (let num = 1; num <= 9; num++) {
+                    let possibleRows = [];
+                    for (let r = 0; r < 9; r++) {
+                        if (board[r][c] === 0) {
+                            let cands = getCandidates(r, c);
+                            if (cands.includes(num)) possibleRows.push(r);
+                        }
+                    }
+                    if (possibleRows.length === 1) {
+                        let r = possibleRows[0];
+                        activeDeduction = {
+                            type: 'hidden_single_col',
+                            r, c, val: num,
+                            title: `Hidden Single: Column ${c + 1}`,
+                            desc: `In Column ${c + 1}, digit ${num} can only appear in Row ${r + 1}.`
+                        };
+                        displayDeduction(activeDeduction);
+                        return;
+                    }
+                }
+            }
+
+            // 5. Fallback logical guide from solution
+            let firstEmpty = null;
+            for (let r = 0; r < 9; r++) {
+                for (let c = 0; c < 9; c++) {
+                    if (board[r][c] === 0) {
+                        firstEmpty = { r, c, val: solution[r][c] };
+                        break;
+                    }
+                }
+                if (firstEmpty) break;
+            }
+
+            if (firstEmpty) {
+                activeDeduction = {
+                    type: 'advanced_nudge',
+                    r: firstEmpty.r, c: firstEmpty.c, val: firstEmpty.val,
+                    title: `Advanced Deduction: Row ${firstEmpty.r + 1}, Col ${firstEmpty.c + 1}`,
+                    desc: `Look closely at cell R${firstEmpty.r + 1}C${firstEmpty.c + 1}. Use pencil notes (N) or Auto (P) to test candidate eliminations: digit ${firstEmpty.val} resolves here!`
+                };
+                displayDeduction(activeDeduction);
+            } else {
+                showToast("Puzzle is already completely solved!");
+            }
+        }
+
+        function displayDeduction(ded) {
+            if (!ded) return;
+            logicTitle.textContent = ded.title;
+            logicBody.textContent = ded.desc;
+            logicBanner.style.display = 'block';
+
+            let targetIdx = ded.r * gridSize + ded.c;
+            if (cells[targetIdx]) cells[targetIdx].classList.add('logic-target');
+
+            cells.forEach((cell) => {
+                let cr = parseInt(cell.dataset.r);
+                let cc = parseInt(cell.dataset.c);
+                if (ded.type.includes('row') && cr === ded.r) cell.classList.add('logic-unit');
+                else if (ded.type.includes('col') && cc === ded.c) cell.classList.add('logic-unit');
+                else if (ded.type.includes('box')) {
+                    let br = Math.floor(ded.r / 3) * 3;
+                    let bc = Math.floor(ded.c / 3) * 3;
+                    if (cr >= br && cr < br + 3 && cc >= bc && cc < bc + 3) cell.classList.add('logic-unit');
+                }
+            });
+
+            playSound('select');
+        }
+
+        function applyLogicalDeduction() {
+            if (!activeDeduction) return;
+            let { r, c, val } = activeDeduction;
+            selectCell(r, c);
+            inputNumber(val);
+            closeLogicBanner();
+            playSound('correct');
+            showToast(`★ Applied: Digit ${val} at R${r + 1}C${c + 1}`);
+        }
+
+        function closeLogicBanner() {
+            logicBanner.style.display = 'none';
+            clearLogicHighlights();
+            activeDeduction = null;
+        }
+
+        // Replay Scrubber Controller
+        function toggleReplayMode() {
+            if (isReplayMode) {
+                exitReplayMode();
+            } else {
+                openReplayMode();
+            }
+        }
+
+        function openReplayMode() {
+            if (moveHistory.length === 0) {
+                showToast("No moves recorded yet in this puzzle!");
+                return;
+            }
+            isReplayMode = true;
+            replayBar.style.display = 'block';
+            btnReplay.style.borderColor = 'var(--accent)';
+            replaySlider.max = moveHistory.length;
+            replaySlider.value = moveHistory.length;
+            setReplayStep(moveHistory.length);
+            showToast("⏪ Replay mode active. Scrub slider to review moves!");
+        }
+
+        function exitReplayMode() {
+            if (replayInterval) {
+                clearInterval(replayInterval);
+                replayInterval = null;
+            }
+            isReplayMode = false;
+            replayBar.style.display = 'none';
+            btnReplay.style.borderColor = '';
+            btnReplayPlay.textContent = '▶';
+            for (let r = 0; r < gridSize; r++) {
+                for (let c = 0; c < gridSize; c++) {
+                    renderCell(r, c);
+                }
+            }
+            updateHighlights();
+            updateBlockSolvedStates(false);
+        }
+
+        function setReplayStep(step) {
+            if (step < 0) step = 0;
+            if (step > moveHistory.length) step = moveHistory.length;
+            replayStep = step;
+            replaySlider.value = step;
+
+            let replayBoard = originalBoard.map(row => [...row]);
+            for (let i = 0; i < step; i++) {
+                let m = moveHistory[i];
+                if (m) replayBoard[m.r][m.c] = m.val;
+            }
+
+            for (let r = 0; r < gridSize; r++) {
+                for (let c = 0; c < gridSize; c++) {
+                    let cell = cells[r * gridSize + c];
+                    let v = replayBoard[r][c];
+                    cell.innerHTML = '';
+                    if (v !== 0) {
+                        cell.appendChild(document.createTextNode(v));
+                    }
+                }
+            }
+
+            let mInfo = step === 0 ? "Initial Board" : `Move ${step} / ${moveHistory.length} (R${moveHistory[step-1].r+1}C${moveHistory[step-1].c+1}: ${moveHistory[step-1].val})`;
+            replayInfo.textContent = `${mInfo} | Time: ${Math.floor(elapsedTime / 60)}:${(elapsedTime % 60).toString().padStart(2, '0')}`;
+        }
+
+        function toggleReplayPlay() {
+            if (replayInterval) {
+                clearInterval(replayInterval);
+                replayInterval = null;
+                btnReplayPlay.textContent = '▶';
+            } else {
+                if (replayStep >= moveHistory.length) setReplayStep(0);
+                btnReplayPlay.textContent = '⏸';
+                let delay = Math.max(100, Math.floor(600 / replaySpeed));
+                replayInterval = setInterval(() => {
+                    if (replayStep < moveHistory.length) {
+                        setReplayStep(replayStep + 1);
+                        playSound('select');
+                    } else {
+                        clearInterval(replayInterval);
+                        replayInterval = null;
+                        btnReplayPlay.textContent = '▶';
+                    }
+                }, delay);
+            }
+        }
+
+        // RFMS Online Multiplayer & CyberBot-99 Simulation Engine
+        function initRetroMultiplayer() {
+            if (typeof RetroMultiplayer === 'undefined') return;
+            if (rMultiplayer) return;
+            try {
+                rMultiplayer = new RetroMultiplayer({
+                    gameId: 'ksudoku',
+                    prefix: 'SUD',
+                    playerName: myPlayerName,
+                    soloTimeoutMs: 25000,
+                    onMove: (moveData) => handleRemoteDuelMove(moveData),
+                    onStateChange: (room) => handleRoomStateChange(room),
+                    onOpponentJoin: ({ slot, name }) => handleOpponentJoined(slot, name),
+                    onOpponentLeave: ({ slot, name }) => handleOpponentLeft(slot, name),
+                    onRematch: (rematchData) => handleDuelRematch(rematchData),
+                    onSoloFallback: ({ reason }) => handleSoloFallback(reason),
+                    onStatusMsg: (msg, type) => showToast(msg)
+                });
+                rMultiplayer.init().then(({ onlineAvailable, inviteCode }) => {
+                    if (inviteCode) {
+                        showInvitePrompt(inviteCode.toUpperCase());
+                    }
+                });
+            } catch (err) {
+                console.warn("[KSudoku] RetroMultiplayer init error:", err);
+            }
+        }
+
+        function showInvitePrompt(code) {
+            currentRoomCode = code;
+            if (duelRoomCodeInput) duelRoomCodeInput.value = code;
+            showToast(`⚔️ Invitation to Sudoku Duel [${code}] received! Open Duel to join.`, 5000);
+        }
+
+        function startSoloFallbackCountdown() {
+            stopSoloFallbackCountdown();
+            soloFallbackSeconds = 25;
+            duelFallbackTimer.textContent = `Solo AI Fallback in ${soloFallbackSeconds}s`;
+            duelFallbackTimer.style.display = 'block';
+            soloFallbackTimer = setInterval(() => {
+                soloFallbackSeconds--;
+                duelFallbackTimer.textContent = `Solo AI Fallback in ${soloFallbackSeconds}s`;
+                if (soloFallbackSeconds <= 0) {
+                    stopSoloFallbackCountdown();
+                    handleSoloFallback("timeout");
+                }
+            }, 1000);
+        }
+
+        function stopSoloFallbackCountdown() {
+            if (soloFallbackTimer) {
+                clearInterval(soloFallbackTimer);
+                soloFallbackTimer = null;
+            }
+            if (duelFallbackTimer) duelFallbackTimer.style.display = 'none';
+        }
+
+        function startQuickMatch() {
+            if (!rMultiplayer) initRetroMultiplayer();
+            if (!rMultiplayer) {
+                showToast("Multiplayer offline. Starting CyberBot duel!", "warn");
+                startSoloCyberBotDuel();
+                return;
+            }
+            duelStatusBox.style.display = 'block';
+            duelStatusLabel.textContent = "Searching for challenger...";
+            duelRoomDisplay.textContent = "Connecting to public lobby...";
+            btnCopyRoomLink.style.display = 'none';
+            startSoloFallbackCountdown();
+            rMultiplayer.quickMatch();
+        }
+
+        function startCreateRoom() {
+            if (!rMultiplayer) initRetroMultiplayer();
+            if (!rMultiplayer) {
+                showToast("Multiplayer offline. Starting CyberBot duel!", "warn");
+                startSoloCyberBotDuel();
+                return;
+            }
+            rMultiplayer.createRoom().then(code => {
+                currentRoomCode = code;
+                duelStatusBox.style.display = 'block';
+                duelStatusLabel.textContent = "Room Created! Waiting for challenger...";
+                duelRoomDisplay.textContent = code;
+                btnCopyRoomLink.style.display = 'inline-block';
+                startSoloFallbackCountdown();
+            });
+        }
+
+        function startJoinRoom(forceCode) {
+            if (!rMultiplayer) initRetroMultiplayer();
+            const code = (forceCode || duelRoomCodeInput.value || '').trim().toUpperCase();
+            if (!code) {
+                showToast("Please enter a room code (e.g. SUD-XXXX)");
+                return;
+            }
+            duelStatusBox.style.display = 'block';
+            duelStatusLabel.textContent = `Connecting to ${code}...`;
+            duelRoomDisplay.textContent = code;
+            btnCopyRoomLink.style.display = 'none';
+            startSoloFallbackCountdown();
+            rMultiplayer.joinRoom(code);
+        }
+
+        function handleSoloFallback(reason) {
+            stopSoloFallbackCountdown();
+            duelModal.style.display = 'none';
+            showToast("🤖 No peer joined. Summoning CyberBot-99 AI Opponent!", 3000);
+            startSoloCyberBotDuel();
+        }
+
+        function startSoloCyberBotDuel() {
+            duelModal.style.display = 'none';
+            oppPlayerName = "CyberBot-99";
+            isDuelActive = true;
+            isOnlineDuel = false;
+            startDuelSession();
+            startCyberBotLoop();
+        }
+
+        function handleOpponentJoined(slot, name) {
+            stopSoloFallbackCountdown();
+            oppPlayerName = name || "Challenger";
+            duelModal.style.display = 'none';
+            showToast(`⚔️ ${oppPlayerName} entered the Duel! Match starting!`, 3000);
+            isDuelActive = true;
+            isOnlineDuel = true;
+            startDuelSession();
+        }
+
+        function handleOpponentLeft(slot, name) {
+            showToast(`Opponent ${name || 'Challenger'} left the Duel.`);
+            duelStatusTicker.textContent = `${name || 'Opponent'} disconnected.`;
+        }
+
+        function handleRoomStateChange(room) {
+            if (room && room.status === 'playing' && !isDuelActive) {
+                oppPlayerName = (rMultiplayer && rMultiplayer.mySlot === 'p1' ? room.p2?.name : room.p1?.name) || 'Opponent';
+                isDuelActive = true;
+                isOnlineDuel = true;
+                startDuelSession();
+            }
+        }
+
+        function handleDuelRematch(rematchData) {
+            showToast(`⚔️ Rematch initiated!`);
+            startDuelSession();
+            if (!isOnlineDuel) startCyberBotLoop();
+        }
+
+        function handleRemoteDuelMove(data) {
+            if (!data || !isDuelActive) return;
+            if (data.type === 'start_duel') {
+                // start session
+            } else if (data.type === 'cell_solved') {
+                oppDuelSolved = data.solvedCount;
+                if (data.r !== undefined && data.c !== undefined) {
+                    oppRadarGrid[data.r][data.c] = true;
+                }
+                updateDuelHud();
+                drawOpponentRadar();
+                playSound('select');
+                duelStatusTicker.textContent = `${oppPlayerName} placed a number! (${oppDuelSolved}/${duelTotalEmpty})`;
+            } else if (data.type === 'cell_error') {
+                showToast(`⚡ ${oppPlayerName} made an error! (-50 penalty)`);
+            } else if (data.type === 'match_win') {
+                handleOpponentWin(data.name || oppPlayerName);
+            } else if (data.type === 'rematch') {
+                showToast(`⚔️ ${oppPlayerName} requested a Rematch!`);
+                btnRematchDuel.style.display = 'inline-block';
+            }
+        }
+
+        function startDuelSession() {
+            isCampaignMode = false;
+            isRushMode = false;
+            isDailyGame = false;
+            generateBoard(9, false, false);
+            
+            duelTotalEmpty = 0;
+            for (let r = 0; r < 9; r++) {
+                for (let c = 0; c < 9; c++) {
+                    if (originalBoard[r][c] === 0) duelTotalEmpty++;
+                }
+            }
+            localDuelSolved = 0;
+            oppDuelSolved = 0;
+            oppRadarGrid = Array(9).fill().map(() => Array(9).fill(false));
+            
+            duelLocalName.textContent = myPlayerName;
+            duelOppName.textContent = oppPlayerName;
+            duelHud.style.display = 'flex';
+            btnRematchDuel.style.display = 'none';
+            duelStatusTicker.textContent = "⚔️ Race to complete all empty cells!";
+            updateDuelHud();
+            drawOpponentRadar();
+            playSound('powerup');
+        }
+
+        function updateDuelHud() {
+            if (!isDuelActive) return;
+            let localPct = Math.round((localDuelSolved / Math.max(1, duelTotalEmpty)) * 100);
+            let oppPct = Math.round((oppDuelSolved / Math.max(1, duelTotalEmpty)) * 100);
+            
+            duelLocalStat.textContent = `${localDuelSolved}/${duelTotalEmpty} (${localPct}%)`;
+            duelLocalBar.style.width = `${Math.min(100, localPct)}%`;
+            
+            duelOppStat.textContent = `${oppDuelSolved}/${duelTotalEmpty} (${oppPct}%)`;
+            duelOppBar.style.width = `${Math.min(100, oppPct)}%`;
+        }
+
+        function drawOpponentRadar() {
+            if (!oppRadarCanvas) return;
+            const ctx = oppRadarCanvas.getContext('2d');
+            ctx.clearRect(0, 0, 45, 45);
+            const sz = 5;
+            for (let r = 0; r < 9; r++) {
+                for (let c = 0; c < 9; c++) {
+                    if (originalBoard[r] && originalBoard[r][c] !== 0) {
+                        ctx.fillStyle = 'rgba(255, 255, 255, 0.25)';
+                    } else if (oppRadarGrid[r][c]) {
+                        ctx.fillStyle = '#fbbf24';
+                    } else {
+                        ctx.fillStyle = 'rgba(15, 23, 42, 0.6)';
+                    }
+                    ctx.fillRect(c * sz, r * sz, sz - 1, sz - 1);
+                }
+            }
+        }
+
+        function startCyberBotLoop() {
+            stopCyberBotLoop();
+            function tick() {
+                if (!isDuelActive || isOnlineDuel) return;
+                let empties = [];
+                for (let r = 0; r < 9; r++) {
+                    for (let c = 0; c < 9; c++) {
+                        if (originalBoard[r][c] === 0 && !oppRadarGrid[r][c]) {
+                            empties.push({ r, c });
+                        }
+                    }
+                }
+                if (empties.length > 0) {
+                    if (Math.random() < 0.08) {
+                        duelStatusTicker.textContent = `CyberBot-99 made a mistake! (delayed)`;
+                    } else {
+                        let cell = empties[Math.floor(Math.random() * empties.length)];
+                        oppRadarGrid[cell.r][cell.c] = true;
+                        oppDuelSolved++;
+                        updateDuelHud();
+                        drawOpponentRadar();
+                        duelStatusTicker.textContent = `CyberBot-99 solved a cell! (${oppDuelSolved}/${duelTotalEmpty})`;
+                        if (oppDuelSolved >= duelTotalEmpty) {
+                            handleOpponentWin("CyberBot-99");
+                            return;
+                        }
+                    }
+                    let nextDelay = 3000 + Math.random() * 2500;
+                    cyberBotInterval = setTimeout(tick, nextDelay);
+                }
+            }
+            cyberBotInterval = setTimeout(tick, 3500);
+        }
+
+        function stopCyberBotLoop() {
+            if (cyberBotInterval) {
+                clearTimeout(cyberBotInterval);
+                cyberBotInterval = null;
+            }
+        }
+
+        function handleOpponentWin(winnerName) {
+            stopCyberBotLoop();
+            gameActive = false;
+            playSound('fail');
+            duelStatusTicker.textContent = `🏁 ${winnerName} won the Sudoku Duel!`;
+            btnRematchDuel.style.display = 'inline-block';
+            alert(`🏁 Duel Complete!\n${winnerName} solved the puzzle first!`);
+        }
+
+        function handleLocalDuelWin() {
+            stopCyberBotLoop();
+            gameActive = false;
+            playSound('win');
+            if (isOnlineDuel && rMultiplayer) {
+                rMultiplayer.sendMove({ type: 'match_win', name: myPlayerName, time: elapsedTime, score });
+            }
+            duelStatusTicker.textContent = "🏆 VICTORY! You won the Sudoku Duel!";
+            btnRematchDuel.style.display = 'inline-block';
+            triggerScreenShake(8.0, 400);
+            showToast(`🏆 VICTORY! You solved the puzzle first! (${elapsedTime}s)`, 4000);
+            boardEl.classList.add('board-win');
+            setTimeout(() => {
+                boardEl.classList.remove('board-win');
+            }, 3000);
+        }
+
+        function leaveDuel() {
+            stopCyberBotLoop();
+            isDuelActive = false;
+            isOnlineDuel = false;
+            duelHud.style.display = 'none';
+            if (rMultiplayer) rMultiplayer.leaveRoom();
+            showToast("Left Duel match. Returned to solo play.");
+        }
 
         function updateUIState() {
             let freezeStr = freezeTime > 0 ? ` [FROZEN ${freezeTime}s]` : '';
@@ -1559,6 +2803,9 @@
             notes = Array(gridSize).fill().map(() => Array(gridSize).fill().map(() => Array(gridSize + 1).fill(false)));
             undoStack = [];
             redoStack = [];
+            moveHistory = [];
+            if (isReplayMode) exitReplayMode();
+            closeLogicBanner();
             initUI();
             saveGameState();
         }
@@ -1772,6 +3019,10 @@
             let cell = cells[selectedCell.r * gridSize + selectedCell.c];
             if (cell.classList.contains('fixed')) return;
             
+            if (isReplayMode) exitReplayMode();
+            clearLogicHighlights();
+            closeLogicBanner();
+
             if (notesMode && num !== 0) {
                 if (board[selectedCell.r][selectedCell.c] !== 0) return;
                 pushState();
@@ -1784,6 +3035,7 @@
             if (num === 0) {
                 if (board[selectedCell.r][selectedCell.c] !== 0) {
                     pushState();
+                    moveHistory.push({ r: selectedCell.r, c: selectedCell.c, val: 0, time: elapsedTime });
                     board[selectedCell.r][selectedCell.c] = 0;
                     playSound('input');
                 } else {
@@ -1798,7 +3050,11 @@
             } else {
                 if (board[selectedCell.r][selectedCell.c] !== num) {
                     pushState();
+                    moveHistory.push({ r: selectedCell.r, c: selectedCell.c, val: num, time: elapsedTime });
                     if (!isValidPlacement(selectedCell.r, selectedCell.c, num)) {
+                        if (isDuelActive && isOnlineDuel && rMultiplayer) {
+                            rMultiplayer.sendMove({ type: 'cell_error', r: selectedCell.r, c: selectedCell.c });
+                        }
                         if (shieldActive) {
                             shieldActive = false;
                             updateUIState();
@@ -1844,6 +3100,25 @@
                             awarded[selectedCell.r][selectedCell.c] = true;
                             score += 100;
                             if (isRushMode) elapsedTime += 10;
+                        }
+                    }
+                    if (isDuelActive) {
+                        let solvedCount = 0;
+                        for (let r = 0; r < 9; r++) {
+                            for (let c = 0; c < 9; c++) {
+                                if (originalBoard[r] && originalBoard[r][c] === 0 && board[r][c] === solution[r][c]) {
+                                    solvedCount++;
+                                }
+                            }
+                        }
+                        localDuelSolved = solvedCount;
+                        updateDuelHud();
+                        if (isOnlineDuel && rMultiplayer) {
+                            rMultiplayer.sendMove({ type: 'cell_solved', r: selectedCell.r, c: selectedCell.c, solvedCount: localDuelSolved });
+                        }
+                        if (localDuelSolved >= duelTotalEmpty) {
+                            handleLocalDuelWin();
+                            return;
                         }
                     }
                     updateBlockSolvedStates();
@@ -2349,6 +3624,10 @@
             }
             
             if (correct) {
+                if (isDuelActive) {
+                    handleLocalDuelWin();
+                    return;
+                }
                 if (timerInterval) {
                     clearInterval(timerInterval);
                     timerInterval = null;
@@ -2451,13 +3730,21 @@
             if (e.key === 'Escape') {
                 e.preventDefault();
                 let closedAny = false;
-                [statsModal, settingsModal, helpModal].forEach(m => {
-                    if (m && m.style.display === 'flex') {
+                [statsModal, settingsModal, helpModal, duelModal, puzzlesModal].forEach(m => {
+                    if (m && (m.style.display === 'flex' || m.style.display === 'block')) {
                         m.style.display = 'none';
                         closedAny = true;
                         if (m === helpModal) localStorage.setItem('ksudoku_tutorialSeen', 'true');
                     }
                 });
+                if (logicBanner && logicBanner.style.display === 'block') {
+                    closeLogicBanner();
+                    closedAny = true;
+                }
+                if (isReplayMode) {
+                    exitReplayMode();
+                    closedAny = true;
+                }
                 if (closedAny) {
                     playSound('select');
                 } else if (selectedCell) {
@@ -2481,8 +3768,8 @@
                 return;
             }
 
-            // Ignore gameplay hotkeys if typing in inputs/selects
-            if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
+            // Ignore gameplay hotkeys if typing in inputs/selects/textareas
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') return;
 
             if (e.ctrlKey && e.key === 'z') {
                 e.preventDefault();
@@ -2516,6 +3803,8 @@
             if (keyUpper === 'F' && !e.shiftKey) { btnFreeze.click(); return; }
             if (keyUpper === 'W') { btnMagic.click(); return; }
             if (keyUpper === 'N') { btnNotes.click(); return; }
+            if (keyUpper === 'L') { btnLogic.click(); return; }
+            if (keyUpper === 'R') { btnReplay.click(); return; }
             if (e.key === '?' || keyUpper === 'M') {
                 e.preventDefault();
                 if (helpModal && helpModal.style.display === 'flex') {
@@ -2780,7 +4069,7 @@
         }
 
         // Modal backdrop click dismissal
-        [statsModal, settingsModal, helpModal].forEach(modal => {
+        [statsModal, settingsModal, helpModal, duelModal, puzzlesModal].forEach(modal => {
             if (!modal) return;
             modal.addEventListener('click', (e) => {
                 if (e.target === modal) {
@@ -2802,6 +4091,228 @@
         }
         if (btnResetStats) btnResetStats.addEventListener('click', resetStats);
 
+        // Duel Mode Listeners
+        if (btnDuel) {
+            btnDuel.addEventListener('click', () => {
+                playSound('select');
+                duelModal.style.display = 'flex';
+            });
+        }
+        if (btnCloseDuel) {
+            btnCloseDuel.addEventListener('click', () => {
+                playSound('select');
+                duelModal.style.display = 'none';
+            });
+        }
+        if (btnMpQuick) {
+            btnMpQuick.addEventListener('click', () => {
+                playSound('select');
+                startQuickMatch();
+            });
+        }
+        if (btnMpHost) {
+            btnMpHost.addEventListener('click', () => {
+                playSound('select');
+                startCreateRoom();
+            });
+        }
+        if (btnMpCyberbot) {
+            btnMpCyberbot.addEventListener('click', () => {
+                playSound('select');
+                startSoloCyberBotDuel();
+            });
+        }
+        if (btnMpJoin) {
+            btnMpJoin.addEventListener('click', () => {
+                playSound('select');
+                startJoinRoom();
+            });
+        }
+        if (btnSaveCallsign) {
+            btnSaveCallsign.addEventListener('click', () => {
+                let name = (duelCallsignInput.value || '').trim();
+                if (name) {
+                    myPlayerName = name;
+                    localStorage.setItem('ksudoku_callsign', name);
+                    if (rMultiplayer) rMultiplayer.setPlayerName(name);
+                    showToast(`Call-Sign saved: ${name}`);
+                }
+            });
+        }
+        if (btnCancelMatch) {
+            btnCancelMatch.addEventListener('click', () => {
+                playSound('select');
+                stopSoloFallbackCountdown();
+                if (rMultiplayer) rMultiplayer.leaveRoom();
+                duelStatusBox.style.display = 'none';
+                showToast("Matchmaking cancelled.");
+            });
+        }
+        if (btnCopyRoomLink) {
+            btnCopyRoomLink.addEventListener('click', () => {
+                if (rMultiplayer && currentRoomCode) {
+                    rMultiplayer.copyInviteLink();
+                } else if (currentRoomCode) {
+                    navigator.clipboard.writeText(window.location.origin + window.location.pathname + '?room=' + currentRoomCode);
+                    showToast("Invite link copied to clipboard!");
+                }
+            });
+        }
+        if (btnLeaveDuel) {
+            btnLeaveDuel.addEventListener('click', () => {
+                playSound('select');
+                leaveDuel();
+            });
+        }
+        if (btnRematchDuel) {
+            btnRematchDuel.addEventListener('click', () => {
+                playSound('powerup');
+                if (isOnlineDuel && rMultiplayer) {
+                    rMultiplayer.sendMove({ type: 'rematch' });
+                }
+                startDuelSession();
+                if (!isOnlineDuel) startCyberBotLoop();
+            });
+        }
+
+        // Puzzle Manager Listeners
+        if (btnPuzzles) {
+            btnPuzzles.addEventListener('click', () => {
+                playSound('select');
+                puzzlesModal.style.display = 'flex';
+            });
+        }
+        if (btnClosePuzzles) {
+            btnClosePuzzles.addEventListener('click', () => {
+                playSound('select');
+                puzzlesModal.style.display = 'none';
+            });
+        }
+        if (btnLoadClassic) {
+            btnLoadClassic.addEventListener('click', () => {
+                playSound('select');
+                let key = selClassicPuzzle.value;
+                let p = CLASSIC_PUZZLES[key];
+                if (p) {
+                    let parsed = parsePuzzleString(p.puzzle);
+                    if (parsed) {
+                        playImportedPuzzle(parsed, p.name);
+                    }
+                }
+            });
+        }
+        if (btnValidateImport) {
+            btnValidateImport.addEventListener('click', () => {
+                playSound('select');
+                validateImportedPuzzle();
+            });
+        }
+        if (btnPlayImport) {
+            btnPlayImport.addEventListener('click', () => {
+                playSound('select');
+                let raw = (puzzleStringInput.value || '').trim();
+                let parsed = parsePuzzleString(raw);
+                if (!parsed) {
+                    showToast("Invalid puzzle format!");
+                    return;
+                }
+                playImportedPuzzle(parsed, "Custom Imported Puzzle");
+            });
+        }
+        if (btnExport81) {
+            btnExport81.addEventListener('click', () => {
+                playSound('select');
+                exportCurrentPuzzle81();
+            });
+        }
+        if (btnExportAscii) {
+            btnExportAscii.addEventListener('click', () => {
+                playSound('select');
+                exportCurrentPuzzleAscii();
+            });
+        }
+
+        // Logic Explainer Listeners
+        if (btnLogic) {
+            btnLogic.addEventListener('click', () => {
+                playSound('select');
+                analyzeLogicalStep();
+            });
+        }
+        if (btnCloseLogic) {
+            btnCloseLogic.addEventListener('click', () => {
+                playSound('select');
+                closeLogicBanner();
+            });
+        }
+        if (btnApplyLogic) {
+            btnApplyLogic.addEventListener('click', () => {
+                applyLogicalDeduction();
+            });
+        }
+
+        // Replay Scrubber Listeners
+        if (btnReplay) {
+            btnReplay.addEventListener('click', () => {
+                playSound('select');
+                toggleReplayMode();
+            });
+        }
+        if (btnReplayFirst) {
+            btnReplayFirst.addEventListener('click', () => {
+                playSound('select');
+                setReplayStep(0);
+            });
+        }
+        if (btnReplayPrev) {
+            btnReplayPrev.addEventListener('click', () => {
+                playSound('select');
+                setReplayStep(replayStep - 1);
+            });
+        }
+        if (btnReplayPlay) {
+            btnReplayPlay.addEventListener('click', () => {
+                playSound('select');
+                toggleReplayPlay();
+            });
+        }
+        if (btnReplayNext) {
+            btnReplayNext.addEventListener('click', () => {
+                playSound('select');
+                setReplayStep(replayStep + 1);
+            });
+        }
+        if (btnReplayLast) {
+            btnReplayLast.addEventListener('click', () => {
+                playSound('select');
+                setReplayStep(moveHistory.length);
+            });
+        }
+        if (btnReplaySpeed) {
+            btnReplaySpeed.addEventListener('click', () => {
+                playSound('select');
+                if (replaySpeed === 1) replaySpeed = 2;
+                else if (replaySpeed === 2) replaySpeed = 4;
+                else replaySpeed = 1;
+                btnReplaySpeed.textContent = `${replaySpeed}x`;
+                if (replayInterval) {
+                    toggleReplayPlay();
+                    toggleReplayPlay();
+                }
+            });
+        }
+        if (btnReplayExit) {
+            btnReplayExit.addEventListener('click', () => {
+                playSound('select');
+                exitReplayMode();
+            });
+        }
+        if (replaySlider) {
+            replaySlider.addEventListener('input', (e) => {
+                setReplayStep(parseInt(e.target.value));
+            });
+        }
+
         selTheme.addEventListener('change', (e) => { settings.theme = e.target.value; savePrefs(); });
         chkHighlight.addEventListener('change', (e) => { settings.highlightSame = e.target.checked; savePrefs(); });
         chkSound.addEventListener('change', (e) => { settings.soundEnabled = e.target.checked; savePrefs(); });
@@ -2822,50 +4333,17 @@
             }, 350);
         }
 
-        // Dust Motes Animation
-        const dustCanvas = document.getElementById('dust-motes-canvas');
-        const dustCtx = dustCanvas.getContext('2d');
-        let dustMotes = [];
-        const numMotes = 100;
-        
-        function resizeDustCanvas() {
-            dustCanvas.width = window.innerWidth;
-            dustCanvas.height = window.innerHeight;
-        }
-        window.addEventListener('resize', resizeDustCanvas);
-        resizeDustCanvas();
-
-        for (let i = 0; i < numMotes; i++) {
-            dustMotes.push({
-                x: Math.random() * window.innerWidth,
-                y: Math.random() * window.innerHeight,
-                vx: (Math.random() - 0.5) * 0.5,
-                vy: (Math.random() - 0.5) * 0.5 - 0.2,
-                size: Math.random() * 2 + 0.5,
-                alpha: Math.random() * 0.5 + 0.1,
-                blinkCycle: Math.random() * Math.PI * 2
-            });
+        // Initialize stored Call-Sign
+        let storedCallsign = localStorage.getItem('ksudoku_callsign');
+        if (storedCallsign) {
+            myPlayerName = storedCallsign;
+            if (duelCallsignInput) duelCallsignInput.value = storedCallsign;
         }
 
-        function animateDust() {
-            dustCtx.clearRect(0, 0, dustCanvas.width, dustCanvas.height);
-            dustMotes.forEach(m => {
-                m.x += m.vx;
-                m.y += m.vy;
-                m.blinkCycle += 0.02;
-                if (m.y < -10) m.y = window.innerHeight + 10;
-                if (m.x < -10) m.x = window.innerWidth + 10;
-                if (m.x > window.innerWidth + 10) m.x = -10;
-                
-                dustCtx.beginPath();
-                dustCtx.arc(m.x, m.y, m.size, 0, Math.PI * 2);
-                const currentAlpha = m.alpha + Math.sin(m.blinkCycle) * 0.2;
-                dustCtx.fillStyle = `rgba(255, 230, 180, ${Math.max(0, currentAlpha)})`;
-                dustCtx.fill();
-            });
-            requestAnimationFrame(animateDust);
-        }
-        animateDust();
+        // Initialize RetroMultiplayer safely (strict NO AUTOSTART gate)
+        setTimeout(() => {
+            initRetroMultiplayer();
+        }, 150);
     </script>
 </body>
 </html>

@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-expander
-next_agent: kilo-creator
+current_agent: kilo-creator
+next_agent: kilo-graphics
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -17,7 +17,7 @@ current_targets:
   kilo_tester: KSolitaire
   kilo_usability: KMatch3
   kilo_qa: KSettings
-  kilo_expander: KSudoku
+  kilo_expander: KWords
 virtual_web_target: "kweb://warez"
 virtual_web_rotation:
   - "kweb://geocities"
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-qa
-  app: KQuarantine
-  timestamp: "2026-10-06T20:06:00-07:00"
+  agent: kilo-expander
+  app: KSudoku
+  timestamp: "2026-10-06T20:32:00-07:00"
 last_planner_run: "2026-10-06T14:20:00Z"
 ---
 
@@ -129,9 +129,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KTaskMgr`, `KHabit`, `KSudoku`, `KConnect4`, `KHangman`, `KSimon`, `KAsteroids`, `KFreecell`, `KMatch3`, `KWords`, `KGo`, `KDarts`, `KTowers`, `KReversi`, `KAlchemy`, `KColony`, `KStarForge`, `KBreakout`, `KRogue`, `KTetris`, `KPong`, `KPac`, `KChess`, `KColor`, `KConverter` *(Completed in Pass 5: KBBS, KChrono, KCipher, KClip, KCyber, KDragon, KFortress, KHash, KMaze, KMech, KMystery, KQuest, KSanctuary, KSnake, KSolitaire, KSpace, KStarDredge, KStarship, KStellar, KSubmarine, KSynth, KSys, KTask, KTerm, KTimer, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KRSS, K2048, KChart, KGraph, KContacts, KScript, KRead, KColosseum, KAbyss, KMedia, KAudio, KRadio, KPad, KPaint, KCalc, KMine, KCosmic, KBase, KBudget, KCalendar, KFarm, KFlash, KFont, KImage, KJournal, KMail, KMandel, KNet, KNote, KPass, KDB, KHex, KBookmark, KPing, KChat, KClock, KPomodoro, KBreakout, KRogue, KTetris, KPong, KPac, KChess, KColor, KConverter, KQuarantine)*.
 
 ### 6. Feature Expander Queue (`kilo-expander`)
-- **Current Target**: `KPac`
+- **Current Target**: `KWords`
 - **Upcoming Queue**:
-  `KSudoku`, `KWords`, `KHangman`, `KConnect4`, `KRogue`, `KBreakout`, `KMine`, `KSolitaire` *(Completed: KSolitaire, KColosseum, KSpace, KReversi, KSimon, KMatch3, KTowers, KSnake, KPong, KGo, KSynth, KNote, KFont, KRSS, KSys, KZip, KVault, KType, KMandel, KGraph, KChart, KPaint, KConnect4, KChess, KTetris, KDB, KTodo, KJournal, KCalendar, KContacts, KMail, KRead, KPass, KImage, KAudio, KMedia, KTask, KNet, KPing, KHash, KPad, K2048, KDarts, KRogue, KBreakout, KCalc, KMine)*.
+  `KHangman`, `KConnect4`, `KRogue`, `KBreakout`, `KMine`, `KSolitaire`, `KSudoku` *(Completed: KSolitaire, KColosseum, KSpace, KReversi, KSimon, KMatch3, KTowers, KSnake, KPong, KGo, KSynth, KNote, KFont, KRSS, KSys, KZip, KVault, KType, KMandel, KGraph, KChart, KPaint, KConnect4, KChess, KTetris, KDB, KTodo, KJournal, KCalendar, KContacts, KMail, KRead, KPass, KImage, KAudio, KMedia, KTask, KNet, KPing, KHash, KPad, K2048, KDarts, KRogue, KBreakout, KCalc, KMine, KSudoku)*.
 - **Multiplayer Focus (CRITICAL)**: Concentrate on expanding games (*KChess*, *KConnect4*, *KGo*, *KReversi*, *KDarts*, *KTetris*, *KSnake*, *K2048*, *KMatch3*, *KSimon*) and collaborative apps (*KDraw*, *KPaint*, *KSynth*, *KPad*) with seamless Firebase Realtime Database multiplayer for cross-computer play on `kiloapps.web.app`.
 
 ### 7. Virtual 1999 Web Expansion Queue (Eternal Fleet Track)
@@ -217,6 +217,16 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-06T20:32:00-07:00 — kilo-expander: KSudoku (Deep Feature Expansion: RFMS Online Duel, Logic Explainer, Replay Scrubber & Classic Puzzles)**
+  - Status: PASS ✅ (0 regressions, 187.6 KB web / 44.5 KB native < 999 KB ceiling).
+  - Online Multiplayer (Mandate 12): Standardized RFMS multiplayer duel (`SUD-` prefix) with progress bars, radar grid, and 25s Solo AI fallback (`CyberBot-99`); strict No-Autostart connect gate.
+  - Logical Deduction Explainer: Step-by-step human deduction engine for Naked/Hidden singles with board highlight cards and hotkey (`L`).
+  - Interactive Replay Scrubber: Full move history scrubber with slider, playback controls (1x/2x/4x), and hotkey (`R`).
+  - Puzzle Manager & Solver: 81-char SDM/SDK import/export, ASCII grid export, fast MRV bitmask solver (<5ms), and 6 classic benchmark puzzles.
+  - Mandate 11 Glint Ban: Removed floating canvas dust motes across web and native Win32 C (`KSudoku.exe` rebuilt clean).
+  - Verification: `test_app_startup.py` PASS; `test_web_apps.js` PASS (70 elements, 0 err); `security_lint.py` 100% PASS; Vite build clean (316ms).
+  - Queue: Advanced `kilo_expander` to `KWords`; rotation advanced to `kilo-creator`.
+
 - **2026-10-06T20:06:00-07:00 — kilo-qa: KQuarantine (Pass 5 QA & Build Audit: State Persistence, Tutorial Integrity & TINAG Fix)**
   - Status: PASS ✅ (0 regressions, 42.5 KB web < 999 KB ceiling).
   - State Persistence: Implemented F5 quicksave and F9 quickload capturing complete session state, logs, history, and status flags.
@@ -251,13 +261,4 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Glint & Dust Ban: Removed ambient drifting canvas dust motes per Mandate 11 / Directive 177; static dungeon aesthetic preserved.
   - Verification: `check_icons.py` 100% PASS; `security_lint.py` 100% PASS; MSVC clean (`KAbyss.exe` 242.2 KB); Vite clean (345ms); web (458.9 KB) < 999 KB ceiling.
   - Queue: Advanced `kilo_graphics` to `KBreakout`; rotation advanced to `kilo-tester`.
-
-- **2026-10-06T19:08:00-07:00 — kilo-creator: kweb://webring (Virtual Net & ARG Expansion: AS-1999 BGP Routing Matrix & Subterranean Packet Router)**
-  - Status: PASS ✅ (0 regressions, 308.6 KB web < 999 KB ceiling).
-  - AS-1999 BGP Routing Matrix (Tab 10): Built 8-entry live RIB/FIB routing table with CIDR inspection and protocol filtering (BGP-4, RIP-2, OSPF-2, Direct, Anomalous).
-  - BGP Peering FSM: Implemented 4-session peer manager with interactive soft refresh, hard reset with 6-stage FSM visualizer, and ICMP ping probes.
-  - Route Announcement Injector: Integrated BGP UPDATE injection with split-horizon loop prevention and 1999Hz subterranean route lock synchronizing with `arg/signals`.
-  - Packet Analyzer & Cisco Export: Added VT100 BGP hex dissector stream and authentic Cisco IOS 11.2 / Zebra router config generator with client-side `.cfg` download.
-  - Verification: `test_arg_flow.py` 100% PASS; `security_lint.py` 100% PASS; Vite clean (347ms); 308.6 KB < 999 KB ceiling.
-  - Queue: Advanced `kilo_creator` and `virtual_web_target` to `kweb://warez`; rotation advanced to `kilo-graphics`.
 

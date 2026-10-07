@@ -145,31 +145,8 @@ void UpdateShockwaves() {
     if (!anyAlive) shockwavesActive = 0;
 }
 
-#define MAX_DUST 100
-WinParticle dustParticles[MAX_DUST];
+// Ambient dust motes removed per Mandate 11 / Directive 177
 
-void InitDustParticles() {
-    for (int i=0; i<MAX_DUST; i++) {
-        dustParticles[i].x = (float)(rand() % 800);
-        dustParticles[i].y = (float)(rand() % 600);
-        dustParticles[i].vx = (rand() % 100 - 50) / 100.0f;
-        dustParticles[i].vy = (rand() % 100 - 50) / 100.0f - 0.2f;
-        dustParticles[i].color = RGB(255, 230, 180);
-        dustParticles[i].size = 2 + rand() % 3;
-        dustParticles[i].life = rand() % 100;
-    }
-}
-
-void UpdateDustParticles() {
-    for (int i=0; i<MAX_DUST; i++) {
-        dustParticles[i].x += dustParticles[i].vx;
-        dustParticles[i].y += dustParticles[i].vy;
-        dustParticles[i].life++;
-        if (dustParticles[i].x < -10) dustParticles[i].x = 800;
-        if (dustParticles[i].x > 810) dustParticles[i].x = 0;
-        if (dustParticles[i].y < -10) dustParticles[i].y = 600;
-    }
-}
 
 void SpawnParticle(int type, float x, float y, float vx, float vy, COLORREF color, float size, int maxLife, float gravity, float drag, float rotSpeed) {
     for(int i = 0; i < MAX_WIN_PARTICLES; i++) {
@@ -1229,7 +1206,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hFontSmall = CreateFontA(14, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, "Arial");
             hFontTiny = CreateFontA(10, 0, 0, 0, FW_BOLD, 0, 0, 0, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, "Arial");
 
-            InitDustParticles();
             SetTimer(hwnd, 1, 1000, NULL);
             SetTimer(hwnd, 2, 30, NULL);
             UpdatePowerupButtons();
@@ -1276,7 +1252,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         }
         case WM_TIMER: {
             if (wParam == 2) {
-                UpdateDustParticles();
                 if (shockwavesActive) {
                     UpdateShockwaves();
                 }
@@ -1707,25 +1682,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 HBRUSH hWood = CreateSolidBrush(RGB(r, g, b));
                 FillRect(hdcMem, &row, hWood);
                 DeleteObject(hWood);
-            }
-            
-            // Render Dust Motes
-            for (int i=0; i<MAX_DUST; i++) {
-                int phase = dustParticles[i].life % 40;
-                if (phase > 20) phase = 40 - phase;
-                if (phase > 5) {
-                    HBRUSH hDust = CreateSolidBrush(dustParticles[i].color);
-                    HPEN hDustPen = CreatePen(PS_SOLID, 1, dustParticles[i].color);
-                    HBRUSH oldB = (HBRUSH)SelectObject(hdcMem, hDust);
-                    HPEN oldP = (HPEN)SelectObject(hdcMem, hDustPen);
-                    Ellipse(hdcMem, (int)dustParticles[i].x, (int)dustParticles[i].y, 
-                                 (int)dustParticles[i].x + (int)dustParticles[i].size, 
-                                 (int)dustParticles[i].y + (int)dustParticles[i].size);
-                    SelectObject(hdcMem, oldB);
-                    SelectObject(hdcMem, oldP);
-                    DeleteObject(hDust);
-                    DeleteObject(hDustPen);
-                }
             }
             
             HFONT oldFont = (HFONT)SelectObject(hdcMem, hFont);
