@@ -4,6 +4,16 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-06T19:54:00-07:00 — kilo-usability: KHangman (Layout & Sizing, HiDPI DPR Scaling, Hotkey Collision Fix & Mandate 11)**
+  - Status: PASS ✅ (0 regressions, 92.0 KB web / 35.0 KB native < 999 KB ceiling).
+  - Window Sizing: Adjusted default dimensions to 620x600 in `App.jsx`; optimized container padding to eliminate internal scrollbars.
+  - Startup Modal & Help: Added `#help-close-btn` and modal-close classes, resolving startup modal dismissal failure in test suite.
+  - Controls & Ergonomics: Mapped skills to row numbers `[1]-[5]` in web and native C, freeing letters A-Z for conflict-free typing.
+  - High-DPI Crispness: Added `window.devicePixelRatio` canvas backing scale for crisp rendering across all display scales.
+  - Mandate 11 Glint Ban: Removed moving specular sheen sweep and floating dust motes across web and native Win32 C; clean static border preserved.
+  - Verification: `test_app_startup.py` PASS; `test_web_apps.js` PASS (48 interactive, 0 err); MSVC clean (35.0 KB); Vite clean (335ms); `security_lint.py` 100% PASS.
+  - Queue: Advanced `kilo_usability` to `KMatch3`; rotation advanced to `kilo-qa`.
+
 - **2026-10-06T19:25:00-07:00 — kilo-graphics: KAbyss (Skip Turn — Inappropriate Target & Glint/Dust Audit)**
   - Status: ⏭️ Skip — Imagen 3 asset replacement not appropriate for KAbyss
   - Rationale: Procedural dungeon crawler with dynamic FOV/lighting and 1:1 Win32 GDI C parity; mature custom art and multi-zone styling.

@@ -1,58 +1,1162 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="utf-8">
-<title>KSettings</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KSettings - System Settings & Control Panel</title>
 <style>
-  body, html { margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #fafafa; color: #333; }
-  .container { padding: 20px; }
-  h1 { font-size: 20px; font-weight: 600; margin-bottom: 20px; color: #111; border-bottom: 1px solid #ddd; padding-bottom: 10px; }
-  .setting-group { margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; background: #fff; padding: 15px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-  .setting-info { flex: 1; }
-  .setting-title { font-weight: 600; font-size: 14px; margin-bottom: 4px; }
-  .setting-desc { font-size: 12px; color: #666; }
-  
-  /* Toggle Switch */
-  .switch { position: relative; display: inline-block; width: 40px; height: 24px; }
-  .switch input { opacity: 0; width: 0; height: 0; }
-  .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .2s; border-radius: 24px; }
-  .slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 4px; bottom: 4px; background-color: white; transition: .2s; border-radius: 50%; }
-  input:checked + .slider { background-color: #2196F3; }
-  input:checked + .slider:before { transform: translateX(16px); }
+  :root {
+    --accent: #2196F3;
+    --accent-hover: #1976D2;
+    --bg-dark: #111827;
+    --card-bg: #1f2937;
+    --card-border: #374151;
+    --text-main: #f9fafb;
+    --text-muted: #9ca3af;
+    --success: #10b981;
+    --danger: #ef4444;
+    --warning: #f59e0b;
+    --radius: 8px;
+    --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -2px rgba(0, 0, 0, 0.3);
+  }
 
-  input[type="color"] { border: none; width: 40px; height: 40px; padding: 0; border-radius: 4px; cursor: pointer; background: transparent; }
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+  }
+
+  body, html {
+    width: 100%;
+    height: 100%;
+    background-color: var(--bg-dark);
+    color: var(--text-main);
+    overflow: hidden;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  .app-container {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    max-width: 100%;
+  }
+
+  /* Header */
+  header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 16px;
+    background: #0f172a;
+    border-bottom: 1px solid var(--card-border);
+    flex-shrink: 0;
+  }
+
+  .title-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .title-icon {
+    font-size: 22px;
+    line-height: 1;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4));
+  }
+
+  h1 {
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    color: #ffffff;
+  }
+
+  .subtitle {
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+
+  .header-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  /* Buttons */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    padding: 5px 10px;
+    font-size: 12px;
+    font-weight: 600;
+    border-radius: var(--radius);
+    border: 1px solid var(--card-border);
+    background: var(--card-bg);
+    color: var(--text-main);
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s, transform 0.05s;
+    outline: none;
+  }
+
+  .btn:hover {
+    background: #374151;
+    border-color: #4b5563;
+  }
+
+  .btn:active {
+    transform: scale(0.98);
+  }
+
+  .btn-primary {
+    background: var(--accent);
+    border-color: var(--accent-hover);
+    color: #ffffff;
+  }
+
+  .btn-primary:hover {
+    background: var(--accent-hover);
+    border-color: #0d47a1;
+  }
+
+  .btn-danger {
+    background: rgba(239, 68, 68, 0.2);
+    border-color: var(--danger);
+    color: #fca5a5;
+  }
+
+  .btn-danger:hover {
+    background: var(--danger);
+    color: #ffffff;
+  }
+
+  .btn-sm {
+    padding: 3px 8px;
+    font-size: 11px;
+  }
+
+  /* Tab Navigation */
+  .tab-bar {
+    display: flex;
+    gap: 2px;
+    padding: 6px 16px 0 16px;
+    background: #1e293b;
+    border-bottom: 1px solid var(--card-border);
+    overflow-x: auto;
+    flex-shrink: 0;
+  }
+
+  .tab-btn {
+    padding: 7px 14px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-muted);
+    background: transparent;
+    border: 1px solid transparent;
+    border-bottom: none;
+    border-top-left-radius: 6px;
+    border-top-right-radius: 6px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: color 0.15s, background 0.15s;
+    outline: none;
+  }
+
+  .tab-btn:hover {
+    color: var(--text-main);
+    background: rgba(255, 255, 255, 0.04);
+  }
+
+  .tab-btn.active {
+    color: #ffffff;
+    background: var(--card-bg);
+    border-color: var(--card-border);
+    border-bottom: 1px solid var(--card-bg);
+    margin-bottom: -1px;
+    box-shadow: 0 -2px 5px rgba(0,0,0,0.15);
+  }
+
+  /* Content Area */
+  .content-area {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px;
+    background: var(--bg-dark);
+  }
+
+  .tab-panel {
+    display: none;
+    flex-direction: column;
+    gap: 14px;
+    max-width: 720px;
+    margin: 0 auto;
+  }
+
+  .tab-panel.active {
+    display: flex;
+  }
+
+  /* Card Components */
+  .card {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    box-shadow: var(--shadow);
+  }
+
+  .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .card-title {
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--accent);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .setting-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  }
+
+  .setting-row:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+  }
+
+  .setting-info {
+    flex: 1;
+    padding-right: 14px;
+  }
+
+  .setting-title {
+    font-weight: 600;
+    font-size: 13px;
+    margin-bottom: 2px;
+    color: #ffffff;
+  }
+
+  .setting-desc {
+    font-size: 11px;
+    color: var(--text-muted);
+    line-height: 1.4;
+  }
+
+  /* Color Swatches */
+  .swatch-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 8px;
+    align-items: center;
+  }
+
+  .swatch-btn {
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    border: 2px solid transparent;
+    cursor: pointer;
+    outline: none;
+    transition: transform 0.1s, border-color 0.15s;
+  }
+
+  .swatch-btn:hover {
+    transform: scale(1.12);
+  }
+
+  .swatch-btn.active {
+    border-color: #ffffff;
+    box-shadow: 0 0 10px var(--accent);
+  }
+
+  .color-picker-input {
+    border: 1px solid var(--card-border);
+    width: 32px;
+    height: 28px;
+    padding: 0;
+    border-radius: 4px;
+    cursor: pointer;
+    background: transparent;
+  }
+
+  .hex-input {
+    background: #111827;
+    border: 1px solid var(--card-border);
+    border-radius: 4px;
+    color: #ffffff;
+    padding: 4px 8px;
+    font-size: 11px;
+    font-family: monospace;
+    width: 72px;
+    text-transform: uppercase;
+  }
+
+  /* Live Preview Box */
+  .preview-box {
+    margin-top: 10px;
+    border: 1.5px solid var(--accent);
+    border-radius: 6px;
+    padding: 10px 12px;
+    background: #0f172a;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .preview-titlebar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 11px;
+    font-weight: 700;
+    color: #ffffff;
+  }
+
+  .preview-buttons {
+    display: flex;
+    gap: 4px;
+  }
+
+  .preview-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #374151;
+  }
+
+  .preview-body {
+    font-size: 11px;
+    color: var(--text-muted);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  /* Toggle Switch */
+  .switch {
+    position: relative;
+    display: inline-block;
+    width: 42px;
+    height: 24px;
+    flex-shrink: 0;
+  }
+
+  .switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+
+  .slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #374151;
+    transition: .2s;
+    border-radius: 24px;
+    border: 1px solid #4b5563;
+  }
+
+  .slider:before {
+    position: absolute;
+    content: "";
+    height: 16px;
+    width: 16px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    transition: .2s;
+    border-radius: 50%;
+  }
+
+  input:checked + .slider {
+    background-color: var(--accent);
+    border-color: var(--accent-hover);
+  }
+
+  input:checked + .slider:before {
+    transform: translateX(18px);
+  }
+
+  /* Range Sliders */
+  input[type="range"] {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 140px;
+    height: 6px;
+    border-radius: 3px;
+    background: #374151;
+    outline: none;
+  }
+
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--accent);
+    cursor: pointer;
+    border: 2px solid #ffffff;
+  }
+
+  /* Grid lists */
+  .items-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+    gap: 8px;
+    margin-top: 8px;
+  }
+
+  .grid-card {
+    background: #111827;
+    border: 1px solid var(--card-border);
+    border-radius: 6px;
+    padding: 8px 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 11px;
+  }
+
+  .grid-card-name {
+    font-weight: 600;
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  /* Table styling */
+  .vfs-table-wrap {
+    max-height: 160px;
+    overflow-y: auto;
+    border: 1px solid var(--card-border);
+    border-radius: 6px;
+    margin-top: 8px;
+  }
+
+  .vfs-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 11px;
+    text-align: left;
+  }
+
+  .vfs-table th {
+    background: #0f172a;
+    padding: 6px 10px;
+    color: var(--text-muted);
+    font-weight: 600;
+    position: sticky;
+    top: 0;
+    border-bottom: 1px solid var(--card-border);
+  }
+
+  .vfs-table td {
+    padding: 5px 10px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+    color: #ffffff;
+    font-family: monospace;
+  }
+
+  .vfs-table tr:hover {
+    background: rgba(255, 255, 255, 0.03);
+  }
+
+  /* Specs List */
+  .spec-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-top: 6px;
+  }
+
+  .spec-item {
+    background: #111827;
+    border: 1px solid var(--card-border);
+    border-radius: 6px;
+    padding: 8px 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .spec-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--text-muted);
+  }
+
+  .spec-val {
+    font-size: 12px;
+    font-weight: 600;
+    color: #ffffff;
+    font-family: monospace;
+  }
+
+  /* Status Footer */
+  footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 16px;
+    background: #0f172a;
+    border-top: 1px solid var(--card-border);
+    font-size: 11px;
+    color: var(--text-muted);
+    flex-shrink: 0;
+  }
+
+  .status-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .status-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--success);
+    display: inline-block;
+  }
+
+  /* Modals */
+  .modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.75);
+    backdrop-filter: blur(2px);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+  }
+
+  .modal-box {
+    background: #1e293b;
+    border: 1px solid var(--card-border);
+    border-radius: var(--radius);
+    max-width: 500px;
+    width: 100%;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.6);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    background: #0f172a;
+    border-bottom: 1px solid var(--card-border);
+  }
+
+  .modal-header h2 {
+    font-size: 14px;
+    font-weight: 700;
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .modal-close {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    font-size: 16px;
+    cursor: pointer;
+    line-height: 1;
+    padding: 2px 6px;
+    border-radius: 4px;
+  }
+
+  .modal-close:hover {
+    color: #ffffff;
+    background: #374151;
+  }
+
+  .modal-body {
+    padding: 16px;
+    font-size: 12px;
+    line-height: 1.5;
+    color: #e2e8f0;
+    max-height: 380px;
+    overflow-y: auto;
+  }
+
+  .modal-body ul {
+    margin: 8px 0 8px 18px;
+  }
+
+  .modal-footer {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+    padding: 10px 16px;
+    background: #0f172a;
+    border-top: 1px solid var(--card-border);
+  }
+
+  /* Toast Notification */
+  #toast {
+    position: fixed;
+    bottom: 34px;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: #1e293b;
+    color: #ffffff;
+    border: 1px solid var(--accent);
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s, transform 0.2s;
+    z-index: 2000;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  #toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+    pointer-events: auto;
+  }
 </style>
 </head>
 <body>
-  <div class="container">
-    <h1>System Settings</h1>
-    
-    <div class="setting-group">
-      <div class="setting-info">
-        <div class="setting-title">System Accent Color</div>
-        <div class="setting-desc">Personalize your window borders and highlights.</div>
+  <div class="app-container">
+    <!-- Header -->
+    <header>
+      <div class="title-group">
+        <span class="title-icon">⚙️</span>
+        <div>
+          <h1>System Settings</h1>
+          <div class="subtitle">KiloOS Control Panel & Environment Configuration</div>
+        </div>
       </div>
-      <input type="color" id="accentColor" value="#2196F3" onchange="updateAccent()">
-    </div>
-    
-    <div class="setting-group">
-      <div class="setting-info">
-        <div class="setting-title">UI Animations</div>
-        <div class="setting-desc">Enable dynamic background gradients and transitions.</div>
+      <div class="header-actions">
+        <button id="btnQuicksave" class="btn btn-sm" onclick="quicksaveState()" title="Quicksave State [F5]">💾 Save [F5]</button>
+        <button id="btnQuickload" class="btn btn-sm" onclick="quickloadState()" title="Quickload State [F9]">📂 Load [F9]</button>
+        <button id="btnStateModal" class="btn btn-sm" onclick="openStateModal()" title="Export & Import Options">⚙️ State</button>
+        <button id="btnHelp" class="btn btn-sm btn-primary" onclick="openHelp()" title="Help & Hotkeys [F1]">❓ Help [F1]</button>
       </div>
-      <label class="switch">
-        <input type="checkbox" id="animToggle" checked onchange="updateAnim()">
-        <span class="slider"></span>
-      </label>
+    </header>
+
+    <!-- Tab Navigation -->
+    <nav class="tab-bar" role="tablist" aria-label="Settings Categories">
+      <button class="tab-btn active" role="tab" id="tabPersonalization" aria-selected="true" onclick="switchTab('personalization')">🎨 Personalization [1]</button>
+      <button class="tab-btn" role="tab" id="tabAudio" aria-selected="false" onclick="switchTab('audio')">🔊 Sound & Audio [2]</button>
+      <button class="tab-btn" role="tab" id="tabTaskbar" aria-selected="false" onclick="switchTab('taskbar')">📌 Taskbar & Apps [3]</button>
+      <button class="tab-btn" role="tab" id="tabStorage" aria-selected="false" onclick="switchTab('storage')">💾 Storage & VFS [4]</button>
+      <button class="tab-btn" role="tab" id="tabSpecs" aria-selected="false" onclick="switchTab('specs')">ℹ️ System Specs [5]</button>
+    </nav>
+
+    <!-- Content Panels -->
+    <main class="content-area">
+      <!-- Panel 1: Personalization -->
+      <section class="tab-panel active" id="panel-personalization" role="tabpanel" aria-labelledby="tabPersonalization">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">🎨 System Accent & Colors</div>
+            <span style="font-size:11px; color:var(--text-muted);">Stored in VFS (/.sys_settings_accent)</span>
+          </div>
+          
+          <div class="setting-row">
+            <div class="setting-info">
+              <div class="setting-title">Primary Accent Color</div>
+              <div class="setting-desc">Sets active window borders, focused buttons, and system highlights.</div>
+              <div class="swatch-grid" id="swatchGrid">
+                <!-- Color swatches populated dynamically -->
+              </div>
+            </div>
+            <div style="display:flex; align-items:center; gap:8px;">
+              <input type="color" id="accentColor" class="color-picker-input" value="#2196F3" onchange="onColorPickerChange(this.value)" title="Choose Custom Color">
+              <input type="text" id="accentHex" class="hex-input" value="#2196F3" maxlength="7" onchange="onHexInputChange(this.value)">
+            </div>
+          </div>
+
+          <!-- Live Window Preview -->
+          <div class="preview-box" id="previewBox">
+            <div class="preview-titlebar">
+              <span id="previewTitle">🗔 Live Theme Preview</span>
+              <div class="preview-buttons">
+                <div class="preview-dot"></div>
+                <div class="preview-dot"></div>
+                <div class="preview-dot" style="background:var(--accent);"></div>
+              </div>
+            </div>
+            <div class="preview-body">
+              <span>Accent color actively linked to KiloOS desktop styling.</span>
+              <button class="btn btn-sm btn-primary" id="previewBtn">Active Button</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">✨ Visual Effects & Transitions</div>
+            <span style="font-size:11px; color:var(--text-muted);">VFS (/.sys_settings_animations)</span>
+          </div>
+
+          <div class="setting-row">
+            <div class="setting-info">
+              <div class="setting-title">Dynamic UI Animations</div>
+              <div class="setting-desc">Enable smooth animated background gradients and window transitions. Disabling optimizes rendering performance.</div>
+            </div>
+            <label class="switch">
+              <input type="checkbox" id="animToggle" checked onchange="updateAnimations(this.checked)">
+              <span class="slider"></span>
+            </label>
+          </div>
+
+          <div class="setting-row">
+            <div class="setting-info">
+              <div class="setting-title">High Contrast Borders</div>
+              <div class="setting-desc">Enhances window boundary definition for improved legibility.</div>
+            </div>
+            <label class="switch">
+              <input type="checkbox" id="contrastToggle" onchange="updateHighContrast(this.checked)">
+              <span class="slider"></span>
+            </label>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">🖼️ Desktop Wallpaper Presets</div>
+          </div>
+          <div class="setting-desc" style="margin-bottom:8px;">Choose a retro palette preset for system styling:</div>
+          <div class="items-grid">
+            <button class="btn btn-sm" onclick="applyPreset('#2196F3', true)">Default Blue</button>
+            <button class="btn btn-sm" onclick="applyPreset('#008080', true)">1999 Classic Teal</button>
+            <button class="btn btn-sm" onclick="applyPreset('#00E676', false)">Matrix Phosphor</button>
+            <button class="btn btn-sm" onclick="applyPreset('#FF9100', true)">Amber CRT</button>
+            <button class="btn btn-sm" onclick="applyPreset('#E040FB', true)">Cyber Neon</button>
+            <button class="btn btn-sm" onclick="applyPreset('#00E5FF', true)">Midnight Ice</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Panel 2: Sound & Audio -->
+      <section class="tab-panel" id="panel-audio" role="tabpanel" aria-labelledby="tabAudio">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">🔊 Master Audio Settings</div>
+          </div>
+
+          <div class="setting-row">
+            <div class="setting-info">
+              <div class="setting-title">System Sound Effects</div>
+              <div class="setting-desc">Enable retro FM synthesizer chimes, notification bells, and event audio.</div>
+            </div>
+            <label class="switch">
+              <input type="checkbox" id="soundToggle" checked onchange="updateSoundEnabled(this.checked)">
+              <span class="slider"></span>
+            </label>
+          </div>
+
+          <div class="setting-row">
+            <div class="setting-info">
+              <div class="setting-title">Master Output Volume</div>
+              <div class="setting-desc">Adjust audio gain for procedural synthesizer playback.</div>
+            </div>
+            <div style="display:flex; align-items:center; gap:10px;">
+              <input type="range" id="volumeSlider" min="0" max="100" value="80" oninput="updateVolume(this.value)">
+              <span id="volumeLabel" style="font-size:11px; font-family:monospace; width:32px;">80%</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">🎹 Retro Audio Synthesizer Diagnostics</div>
+          </div>
+          <div class="setting-desc" style="margin-bottom:12px;">Test procedural polyphonic chimes generated entirely via Web Audio API (zero external audio files):</div>
+          <div style="display:flex; flex-wrap:wrap; gap:8px;">
+            <button class="btn btn-primary btn-sm" onclick="playChime('startup')">▶ Play Startup Chime (1999)</button>
+            <button class="btn btn-sm" onclick="playChime('notify')">🔔 Play Notification Ping</button>
+            <button class="btn btn-sm" onclick="playChime('alert')">⚠️ Play Alert Beep</button>
+            <button class="btn btn-sm" onclick="playChime('success')">✨ Play Victory Chord</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Panel 3: Taskbar & Apps -->
+      <section class="tab-panel" id="panel-taskbar" role="tabpanel" aria-labelledby="tabTaskbar">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">📌 Pinned Taskbar Shortcuts</div>
+            <span style="font-size:11px; color:var(--text-muted);">VFS (/.sys_pinned_apps)</span>
+          </div>
+          <div class="setting-desc" style="margin-bottom:8px;">
+            Manage shortcuts pinned to the KiloOS desktop taskbar for instant launch.
+          </div>
+          <div id="pinnedListContainer" class="items-grid" style="margin-bottom:12px;">
+            <!-- Populated dynamically -->
+          </div>
+
+          <div class="card-header" style="margin-top:14px; margin-bottom:8px;">
+            <div class="card-title" style="font-size:11px;">Available Apps to Pin</div>
+          </div>
+          <div class="items-grid" id="availableAppsGrid">
+            <!-- Available apps populated dynamically -->
+          </div>
+        </div>
+      </section>
+
+      <!-- Panel 4: Storage & VFS -->
+      <section class="tab-panel" id="panel-storage" role="tabpanel" aria-labelledby="tabStorage">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">💾 Virtual Filesystem (VFS) Overview</div>
+            <button class="btn btn-sm" onclick="refreshVfsList()">🔄 Scan VFS</button>
+          </div>
+          <div style="display:flex; justify-content:space-between; font-size:11px; margin-bottom:6px;">
+            <span id="vfsFileCount">Indexed Files: Scanning...</span>
+            <span id="vfsSizeEst">Estimated VFS Size: ~0 KB</span>
+          </div>
+
+          <div class="vfs-table-wrap">
+            <table class="vfs-table">
+              <thead>
+                <tr>
+                  <th>VFS Path</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="vfsTableBody">
+                <tr><td colspan="2" style="color:var(--text-muted); text-align:center;">Scanning virtual storage...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">🛠️ System Maintenance & Backup</div>
+          </div>
+          <div class="setting-desc" style="margin-bottom:10px;">
+            Backup your settings configuration to JSON, restore previous archives, or reset to factory defaults:
+          </div>
+          <div style="display:flex; flex-wrap:wrap; gap:8px;">
+            <button class="btn btn-sm btn-primary" onclick="exportSettingsJson()">📥 Export Settings JSON</button>
+            <button class="btn btn-sm" onclick="openImportDialog()">📤 Import Settings JSON</button>
+            <button class="btn btn-sm btn-danger" onclick="openResetModal()">⚠️ Reset System Defaults</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Panel 5: System Specs -->
+      <section class="tab-panel" id="panel-specs" role="tabpanel" aria-labelledby="tabSpecs">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">ℹ️ KiloOS System Architecture</div>
+            <span style="font-size:11px; color:var(--success);">● System Online</span>
+          </div>
+          
+          <div class="spec-grid">
+            <div class="spec-item">
+              <span class="spec-label">Operating System</span>
+              <span class="spec-val">KiloOS Retro 1999 (v1.0.4)</span>
+            </div>
+            <div class="spec-item">
+              <span class="spec-label">Build Tag</span>
+              <span class="spec-val">1999.12.31-RTM</span>
+            </div>
+            <div class="spec-item">
+              <span class="spec-label">Hypervisor Core</span>
+              <span class="spec-val">WebAssembly / x86 Emulation</span>
+            </div>
+            <div class="spec-item">
+              <span class="spec-label">Memory Architecture</span>
+              <span class="spec-val">64.0 MB Virtual RAM Pool</span>
+            </div>
+            <div class="spec-item">
+              <span class="spec-label">App Boundary Constraint</span>
+              <span class="spec-val">&lt; 999 KB Per-Application</span>
+            </div>
+            <div class="spec-item">
+              <span class="spec-label">Display Resolution</span>
+              <span class="spec-val" id="specResolution">1024 x 768</span>
+            </div>
+            <div class="spec-item">
+              <span class="spec-label">Display DPR Scale</span>
+              <span class="spec-val" id="specDpr">1.0x</span>
+            </div>
+            <div class="spec-item">
+              <span class="spec-label">Diegetic Subnet Gateway</span>
+              <span class="spec-val">10.19.99.1 [Carrier OK]</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">📡 Diegetic Telemetry Monitor</div>
+          </div>
+          <div class="setting-desc" style="line-height:1.5;">
+            Subcarrier frequency lock: <b>14.4 kHz Nominal</b>.<br>
+            Internal packet latency: <b>&lt; 12ms</b> across virtual bus.<br>
+            Security validation: <b>Algorithmic Sandboxing Verified</b>.
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Status Footer -->
+    <footer>
+      <div class="status-left">
+        <span class="status-dot"></span>
+        <span id="footerStatus">VFS Synchronized | Ready</span>
+      </div>
+      <div>
+        <span id="footerSaveInfo">State: Idle</span>
+      </div>
+    </footer>
+  </div>
+
+  <!-- Toast Notification -->
+  <div id="toast" role="status" aria-live="polite">
+    <span id="toastIcon">✨</span>
+    <span id="toastMsg">Ready</span>
+  </div>
+
+  <!-- Tutorial / Onboarding Modal -->
+  <div id="tutorialModal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="tutorialTitle" style="display:none;">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h2 id="tutorialTitle">⚙️ Welcome to KSettings</h2>
+        <button class="modal-close" id="btnTutorialClose" onclick="closeTutorial()" aria-label="Close">✕</button>
+      </div>
+      <div class="modal-body">
+        <p><b>KSettings</b> is your centralized Control Panel for KiloOS.</p>
+        <ul>
+          <li><b>🎨 Personalization:</b> Customize system accent colors, desktop gradients, and wallpaper styles.</li>
+          <li><b>🔊 Sound & Audio:</b> Configure retro synth audio levels and preview system chimes.</li>
+          <li><b>📌 Taskbar & Apps:</b> Manage pinned shortcuts and quick-launch utilities.</li>
+          <li><b>💾 Storage & VFS:</b> Inspect virtual filesystem storage, export backups, or reset defaults.</li>
+          <li><b>ℹ️ System Specs:</b> View 1999 environment metrics and live display diagnostics.</li>
+        </ul>
+        <p style="font-size: 11px; color: var(--text-muted); margin-top: 10px;">
+          <b>Shortcuts:</b> [F1] Help | [F5] Quicksave | [F9] Quickload | [1-5] Switch Tabs | [Esc] Close Modals
+        </p>
+      </div>
+      <div class="modal-footer" style="display:flex; justify-content:space-between; align-items:center;">
+        <label style="font-size:11px; color:var(--text-muted); display:flex; align-items:center; gap:6px; cursor:pointer;">
+          <input type="checkbox" id="chkDoNotShowTutorial"> Don't show on startup
+        </label>
+        <button id="btnDismissTutorial" class="btn btn-primary modal-close" onclick="closeTutorial()">Get Started</button>
+      </div>
     </div>
   </div>
 
+  <!-- Help & Hotkeys Modal -->
+  <div id="helpModal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="helpTitle" style="display:none;">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h2 id="helpTitle">📖 KSettings Reference & Keyboard Guide</h2>
+        <button class="modal-close" id="btnHelpClose" onclick="closeHelp()" aria-label="Close">✕</button>
+      </div>
+      <div class="modal-body">
+        <table style="width:100%; border-collapse:collapse; font-size:12px; margin-bottom:12px;">
+          <tr style="border-bottom:1px solid var(--card-border);">
+            <th style="text-align:left; padding:4px 0; color:var(--accent);">Key</th>
+            <th style="text-align:left; padding:4px 0; color:var(--accent);">Action</th>
+          </tr>
+          <tr><td style="padding:4px 0; font-family:monospace;"><b>F1 / H / ?</b></td><td>Open this Help & Shortcuts guide</td></tr>
+          <tr><td style="padding:4px 0; font-family:monospace;"><b>F5 / Ctrl+S</b></td><td>Quicksave current settings state</td></tr>
+          <tr><td style="padding:4px 0; font-family:monospace;"><b>F9 / Ctrl+O</b></td><td>Quickload saved settings state</td></tr>
+          <tr><td style="padding:4px 0; font-family:monospace;"><b>1 - 5</b></td><td>Switch between categories (1: Colors ... 5: Specs)</td></tr>
+          <tr><td style="padding:4px 0; font-family:monospace;"><b>Esc</b></td><td>Close any active modal or dialog</td></tr>
+          <tr><td style="padding:4px 0; font-family:monospace;"><b>Enter / Space</b></td><td>Confirm dialog or dismiss tutorial</td></tr>
+        </table>
+        <p style="font-size:11px; color:var(--text-muted);">
+          All settings synchronize continuously with KiloOS virtual filesystem (VFS) and browser localStorage for zero state loss.
+        </p>
+      </div>
+      <div class="modal-footer">
+        <button id="btnHelpDismiss" class="btn btn-primary modal-close" onclick="closeHelp()">Close [Esc]</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Reset Confirmation Modal -->
+  <div id="resetModal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="resetTitle" style="display:none;">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h2 id="resetTitle">⚠️ Reset System Defaults</h2>
+        <button class="modal-close" onclick="closeResetModal()" aria-label="Close">✕</button>
+      </div>
+      <div class="modal-body">
+        <p>Are you sure you want to restore KiloOS settings to default values?</p>
+        <p style="font-size: 11px; color: var(--danger); margin-top: 8px;">
+          This will restore the standard accent color (#2196F3), re-enable UI animations, and reset pinned apps.
+        </p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary modal-close" onclick="closeResetModal()">Cancel</button>
+        <button id="btnConfirmReset" class="btn btn-danger" onclick="confirmResetDefaults()">Reset Defaults</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- VFS File Viewer Modal -->
+  <div id="fileViewerModal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="fileViewerTitle" style="display:none;">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h2 id="fileViewerTitle">📄 Inspect VFS File</h2>
+        <button class="modal-close" onclick="closeFileViewer()" aria-label="Close">✕</button>
+      </div>
+      <div class="modal-body">
+        <div id="fileViewerPath" style="font-family:monospace; font-size:11px; color:var(--accent); margin-bottom:8px;"></div>
+        <pre id="fileViewerContent" style="background:#0f172a; padding:10px; border-radius:4px; border:1px solid var(--card-border); font-family:monospace; font-size:11px; color:#ffffff; white-space:pre-wrap; word-break:break-all; max-height:220px; overflow-y:auto;"></pre>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-primary modal-close" onclick="closeFileViewer()">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- State & JSON Modal -->
+  <div id="stateModal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="stateTitle" style="display:none;">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h2 id="stateTitle">💾 Settings State & Backup</h2>
+        <button class="modal-close" onclick="closeStateModal()" aria-label="Close">✕</button>
+      </div>
+      <div class="modal-body">
+        <p style="margin-bottom:8px;">Copy the JSON configuration below to backup your preferences, or paste JSON to import:</p>
+        <textarea id="stateJsonText" style="width:100%; height:140px; background:#0f172a; border:1px solid var(--card-border); border-radius:4px; color:#ffffff; font-family:monospace; font-size:11px; padding:8px; resize:vertical;"></textarea>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-sm" onclick="copyStateJson()">📋 Copy JSON</button>
+        <button class="btn btn-sm btn-primary" onclick="importStateJson()">📥 Apply JSON</button>
+        <button class="btn btn-sm modal-close" onclick="closeStateModal()">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Script Logic -->
   <script>
+    /**
+     * @typedef {{
+     *   accentColor: string,
+     *   animationsEnabled: boolean,
+     *   highContrast: boolean,
+     *   soundEnabled: boolean,
+     *   soundVolume: number,
+     *   activeTab: string,
+     *   pinnedApps: string[],
+     *   timestamp: number
+     * }} SettingsState
+     */
+
+    // Palette Swatches
+    const PRESET_SWATCHES = [
+      { name: 'Sky Blue', hex: '#2196F3' },
+      { name: 'Matrix Green', hex: '#00E676' },
+      { name: 'Amber Glow', hex: '#FF9100' },
+      { name: 'Cyber Purple', hex: '#E040FB' },
+      { name: 'Neon Cyan', hex: '#00E5FF' },
+      { name: 'Crimson Red', hex: '#FF5252' },
+      { name: 'Rose Pink', hex: '#E11D48' },
+      { name: 'Deep Violet', hex: '#8B5CF6' },
+      { name: 'Classic Teal', hex: '#008080' },
+      { name: 'Emerald', hex: '#10B981' }
+    ];
+
+    // Standard Available KiloApps for taskbar pinning
+    const AVAILABLE_APPS = [
+      { id: 'kpad', title: 'KPad', icon: '📝' },
+      { id: 'kcalc', title: 'KCalc', icon: '🔢' },
+      { id: 'kterminal', title: 'KTerminal', icon: '💻' },
+      { id: 'knet', title: 'KNet', icon: '🌐' },
+      { id: 'kchat', title: 'KChat', icon: '💬' },
+      { id: 'kpaint', title: 'KPaint', icon: '🎨' },
+      { id: 'kfile', title: 'KFile', icon: '📁' },
+      { id: 'kaudio', title: 'KAudio', icon: '🎵' },
+      { id: 'ktodo', title: 'KTodo', icon: '✅' },
+      { id: 'kclock', title: 'KClock', icon: '⏰' }
+    ];
+
+    // State
+    let state = {
+      accentColor: '#2196F3',
+      animationsEnabled: true,
+      highContrast: false,
+      soundEnabled: true,
+      soundVolume: 80,
+      activeTab: 'personalization',
+      pinnedApps: ['kpad', 'kcalc', 'knet'],
+      timestamp: Date.now()
+    };
+
     let currentReqId = 0;
     const callbacks = {};
+    let toastTimeout = null;
+    let audioCtx = null;
+    let knownVfsFiles = [];
 
+    // Storage Helpers (Safe try/catch wrapped)
+    function safeGetStorage(key, fallback) {
+      try {
+        const item = localStorage.getItem(key);
+        if (item === null || item === undefined) return fallback;
+        return JSON.parse(item);
+      } catch (e) {
+        return fallback;
+      }
+    }
+
+    function safeSetStorage(key, value) {
+      try {
+        localStorage.setItem(key, JSON.stringify(value));
+      } catch (e) {
+        console.warn('[KSettings] LocalStorage write failed:', e);
+      }
+    }
+
+    // OS Bridge
     window.addEventListener('message', (e) => {
       const msg = e.data;
+      if (!msg || typeof msg !== 'object') return;
       if (callbacks[msg.requestId]) {
         callbacks[msg.requestId](msg);
         delete callbacks[msg.requestId];
@@ -63,30 +1167,701 @@
       return new Promise((resolve) => {
         const id = ++currentReqId;
         callbacks[id] = resolve;
-        window.parent.postMessage({ ...msg, requestId: id }, '*');
+        if (window.parent && window.parent !== window) {
+          window.parent.postMessage({ ...msg, requestId: id }, '*');
+        }
+        // Fallback timeout for standalone browser preview
+        setTimeout(() => {
+          if (callbacks[id]) {
+            delete callbacks[id];
+            resolve({ data: null, error: 'timeout' });
+          }
+        }, 350);
       });
     }
 
+    // Toast Notification
+    function showToast(message, icon = '✨', duration = 3000) {
+      const el = document.getElementById('toast');
+      const iconEl = document.getElementById('toastIcon');
+      const msgEl = document.getElementById('toastMsg');
+      if (!el || !msgEl) return;
+
+      if (iconEl) iconEl.textContent = icon;
+      msgEl.textContent = message;
+      el.classList.add('show');
+
+      if (toastTimeout) clearTimeout(toastTimeout);
+      toastTimeout = setTimeout(() => {
+        el.classList.remove('show');
+      }, duration);
+    }
+
+    // Web Audio Synthesizer (Zero external files, SNES/Genesis style FM/additive chime)
+    function getAudioContext() {
+      if (!audioCtx) {
+        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        if (AudioContextClass) {
+          audioCtx = new AudioContextClass();
+        }
+      }
+      if (audioCtx && audioCtx.state === 'suspended') {
+        audioCtx.resume().catch(() => {});
+      }
+      return audioCtx;
+    }
+
+    function playTone(freq, type = 'sine', duration = 0.2, gainLevel = 0.2, delay = 0) {
+      if (!state.soundEnabled) return;
+      const ctx = getAudioContext();
+      if (!ctx) return;
+
+      const masterVol = (state.soundVolume / 100) * gainLevel;
+      const startTime = ctx.currentTime + delay;
+
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      osc.type = type;
+      osc.frequency.setValueAtTime(freq, startTime);
+
+      gain.gain.setValueAtTime(0.001, startTime);
+      gain.gain.exponentialRampToValueAtTime(Math.max(0.001, masterVol), startTime + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, startTime + duration);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+
+      osc.start(startTime);
+      osc.stop(startTime + duration + 0.05);
+    }
+
+    function playChime(kind) {
+      if (!state.soundEnabled) {
+        showToast('System sounds are currently muted in settings.', '🔇');
+        return;
+      }
+
+      if (kind === 'startup') {
+        // Authentic 1999 polyphonic boot chime: F3, C4, F4, A4, C5
+        playTone(174.61, 'triangle', 0.6, 0.25, 0.0);
+        playTone(261.63, 'sine', 0.6, 0.2, 0.08);
+        playTone(349.23, 'sine', 0.8, 0.22, 0.16);
+        playTone(440.00, 'triangle', 0.9, 0.24, 0.24);
+        playTone(523.25, 'sine', 1.2, 0.28, 0.32);
+        showToast('Playing 1999 Retro Startup Chime...', '🔊');
+      } else if (kind === 'notify') {
+        // Classic double ping
+        playTone(1046.50, 'sine', 0.15, 0.2, 0.0);
+        playTone(1318.51, 'sine', 0.3, 0.22, 0.1);
+        showToast('Playing Notification Tone', '🔔');
+      } else if (kind === 'alert') {
+        // Two-tone FM-style alert beep
+        playTone(880.0, 'sawtooth', 0.12, 0.18, 0.0);
+        playTone(440.0, 'square', 0.18, 0.14, 0.1);
+        showToast('Playing Alert Beep', '⚠️');
+      } else if (kind === 'success') {
+        // Arpeggiated chord
+        playTone(523.25, 'triangle', 0.3, 0.2, 0.0);
+        playTone(659.25, 'triangle', 0.3, 0.2, 0.08);
+        playTone(783.99, 'triangle', 0.3, 0.2, 0.16);
+        playTone(1046.50, 'sine', 0.5, 0.25, 0.24);
+        showToast('Playing Success Chime', '✨');
+      }
+    }
+
+    // Tab Switching
+    function switchTab(tabId) {
+      state.activeTab = tabId;
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.id === `tab${tabId.charAt(0).toUpperCase() + tabId.slice(1)}`);
+        btn.setAttribute('aria-selected', btn.id === `tab${tabId.charAt(0).toUpperCase() + tabId.slice(1)}` ? 'true' : 'false');
+      });
+
+      document.querySelectorAll('.tab-panel').forEach(panel => {
+        panel.classList.toggle('active', panel.id === `panel-${tabId}`);
+      });
+
+      if (tabId === 'storage') {
+        refreshVfsList();
+      } else if (tabId === 'specs') {
+        updateSpecsReadout();
+      }
+    }
+
+    // Accent Color Management
+    function renderSwatches() {
+      const grid = document.getElementById('swatchGrid');
+      if (!grid) return;
+      grid.innerHTML = '';
+
+      PRESET_SWATCHES.forEach(sw => {
+        const btn = document.createElement('button');
+        btn.className = `swatch-btn ${sw.hex.toLowerCase() === state.accentColor.toLowerCase() ? 'active' : ''}`;
+        btn.style.backgroundColor = sw.hex;
+        btn.title = `${sw.name} (${sw.hex})`;
+        btn.onclick = () => setAccentColor(sw.hex);
+        grid.appendChild(btn);
+      });
+    }
+
+    async function setAccentColor(color) {
+      if (!color || !/^#[0-9A-Fa-f]{6}$/.test(color)) return;
+      state.accentColor = color;
+
+      // Update UI elements
+      document.documentElement.style.setProperty('--accent', color);
+      const colorInput = document.getElementById('accentColor');
+      const hexInput = document.getElementById('accentHex');
+      if (colorInput) colorInput.value = color;
+      if (hexInput) hexInput.value = color;
+
+      renderSwatches();
+      updatePreview();
+
+      // Write to VFS and LocalStorage
+      await sendToOS({ type: 'VFS_WRITE', path: '/.sys_settings_accent', data: color });
+      safeSetStorage('kiloos_accent', color);
+      safeSetStorage('ksettings_accent', color);
+
+      showToast(`Accent color updated: ${color}`, '🎨');
+    }
+
+    function onColorPickerChange(val) {
+      setAccentColor(val);
+    }
+
+    function onHexInputChange(val) {
+      let hex = val.trim();
+      if (!hex.startsWith('#')) hex = '#' + hex;
+      if (/^#[0-9A-Fa-f]{6}$/.test(hex)) {
+        setAccentColor(hex);
+      } else {
+        showToast('Invalid hex color format (use #RRGGBB)', '⚠️');
+        if (document.getElementById('accentHex')) {
+          document.getElementById('accentHex').value = state.accentColor;
+        }
+      }
+    }
+
+    function updatePreview() {
+      const title = document.getElementById('previewTitle');
+      const previewBox = document.getElementById('previewBox');
+      const previewBtn = document.getElementById('previewBtn');
+      if (previewBox) previewBox.style.borderColor = state.accentColor;
+      if (previewBtn) previewBtn.style.backgroundColor = state.accentColor;
+    }
+
+    function applyPreset(color, anim) {
+      setAccentColor(color);
+      updateAnimations(anim);
+      const animToggle = document.getElementById('animToggle');
+      if (animToggle) animToggle.checked = anim;
+      showToast(`Preset applied: ${color}`, '🖼️');
+    }
+
+    // Animation & Visuals
+    async function updateAnimations(enabled) {
+      state.animationsEnabled = Boolean(enabled);
+      await sendToOS({ type: 'VFS_WRITE', path: '/.sys_settings_animations', data: enabled ? 'true' : 'false' });
+      safeSetStorage('kiloos_animations', enabled);
+      showToast(`Dynamic animations: ${enabled ? 'Enabled' : 'Disabled'}`, '✨');
+    }
+
+    function updateHighContrast(enabled) {
+      state.highContrast = Boolean(enabled);
+      safeSetStorage('ksettings_highContrast', enabled);
+      if (enabled) {
+        document.body.style.filter = 'contrast(1.2)';
+      } else {
+        document.body.style.filter = 'none';
+      }
+      showToast(`High contrast mode: ${enabled ? 'Enabled' : 'Disabled'}`, '👁️');
+    }
+
+    // Audio State
+    function updateSoundEnabled(enabled) {
+      state.soundEnabled = Boolean(enabled);
+      safeSetStorage('ksettings_soundEnabled', enabled);
+      showToast(`System sounds: ${enabled ? 'Enabled' : 'Muted'}`, enabled ? '🔊' : '🔇');
+    }
+
+    function updateVolume(val) {
+      const v = parseInt(val, 10);
+      state.soundVolume = isNaN(v) ? 80 : Math.max(0, Math.min(100, v));
+      const lbl = document.getElementById('volumeLabel');
+      if (lbl) lbl.textContent = `${state.soundVolume}%`;
+      safeSetStorage('ksettings_soundVolume', state.soundVolume);
+    }
+
+    // Taskbar Pinned Apps Management
+    function renderPinnedApps() {
+      const container = document.getElementById('pinnedListContainer');
+      const availableGrid = document.getElementById('availableAppsGrid');
+      if (!container || !availableGrid) return;
+
+      container.innerHTML = '';
+      availableGrid.innerHTML = '';
+
+      if (state.pinnedApps.length === 0) {
+        container.innerHTML = '<div style="font-size:11px; color:var(--text-muted); grid-column:1/-1;">No pinned apps on taskbar. Add shortcuts below.</div>';
+      } else {
+        state.pinnedApps.forEach(id => {
+          const appDef = AVAILABLE_APPS.find(a => a.id === id) || { id, title: id, icon: '📦' };
+          const card = document.createElement('div');
+          card.className = 'grid-card';
+          card.innerHTML = `
+            <span class="grid-card-name">${appDef.icon} ${appDef.title}</span>
+            <button class="btn btn-sm btn-danger" style="padding:2px 6px;" onclick="unpinApp('${id}')" title="Unpin from Taskbar">✕</button>
+          `;
+          container.appendChild(card);
+        });
+      }
+
+      AVAILABLE_APPS.forEach(app => {
+        const isPinned = state.pinnedApps.includes(app.id);
+        const card = document.createElement('div');
+        card.className = 'grid-card';
+        card.innerHTML = `
+          <span class="grid-card-name">${app.icon} ${app.title}</span>
+          <button class="btn btn-sm ${isPinned ? 'btn-danger' : 'btn-primary'}" style="padding:2px 6px;" onclick="${isPinned ? `unpinApp('${app.id}')` : `pinApp('${app.id}')`}">
+            ${isPinned ? 'Unpin' : 'Pin'}
+          </button>
+        `;
+        availableGrid.appendChild(card);
+      });
+    }
+
+    async function pinApp(id) {
+      if (!state.pinnedApps.includes(id)) {
+        state.pinnedApps.push(id);
+        await savePinnedApps();
+        renderPinnedApps();
+        showToast(`Pinned ${id.toUpperCase()} to taskbar`, '📌');
+      }
+    }
+
+    async function unpinApp(id) {
+      state.pinnedApps = state.pinnedApps.filter(a => a !== id);
+      await savePinnedApps();
+      renderPinnedApps();
+      showToast(`Unpinned ${id.toUpperCase()} from taskbar`, '📌');
+    }
+
+    async function savePinnedApps() {
+      const data = JSON.stringify(state.pinnedApps);
+      await sendToOS({ type: 'VFS_WRITE', path: '/.sys_pinned_apps', data });
+      safeSetStorage('kiloos_pinned_apps', state.pinnedApps);
+    }
+
+    // Storage & VFS Scan
+    async function refreshVfsList() {
+      const tbody = document.getElementById('vfsTableBody');
+      const countEl = document.getElementById('vfsFileCount');
+      const sizeEl = document.getElementById('vfsSizeEst');
+      if (tbody) tbody.innerHTML = '<tr><td colspan="2" style="color:var(--text-muted); text-align:center;">Scanning virtual filesystem...</td></tr>';
+
+      const res = await sendToOS({ type: 'VFS_LIST' });
+      let files = (res && Array.isArray(res.files)) ? res.files : [];
+      
+      // If standalone fallback or empty list, populate standard known system files
+      if (files.length === 0) {
+        files = ['/.sys_settings_accent', '/.sys_settings_animations', '/.sys_pinned_apps'];
+      }
+      knownVfsFiles = files;
+
+      if (countEl) countEl.textContent = `Indexed Files: ${files.length} items`;
+      if (sizeEl) sizeEl.textContent = `Estimated VFS Size: ~${(files.length * 0.4 + 1.2).toFixed(1)} KB`;
+
+      if (tbody) {
+        tbody.innerHTML = '';
+        files.forEach(f => {
+          const row = document.createElement('tr');
+          row.innerHTML = `
+            <td>${f}</td>
+            <td style="text-align:right;">
+              <button class="btn btn-sm" onclick="inspectVfsFile('${f}')" style="padding:2px 6px;">Inspect</button>
+            </td>
+          `;
+          tbody.appendChild(row);
+        });
+      }
+    }
+
+    async function inspectVfsFile(path) {
+      const res = await sendToOS({ type: 'VFS_READ', path });
+      const content = (res && res.data !== undefined) ? res.data : '(Empty or Unreachable File)';
+      
+      const pathEl = document.getElementById('fileViewerPath');
+      const contentEl = document.getElementById('fileViewerContent');
+      const modal = document.getElementById('fileViewerModal');
+
+      if (pathEl) pathEl.textContent = path;
+      if (contentEl) contentEl.textContent = typeof content === 'string' ? content : JSON.stringify(content, null, 2);
+      if (modal) modal.style.display = 'flex';
+    }
+
+    function closeFileViewer() {
+      const modal = document.getElementById('fileViewerModal');
+      if (modal) modal.style.display = 'none';
+    }
+
+    // System Specs Readout
+    function updateSpecsReadout() {
+      const resEl = document.getElementById('specResolution');
+      const dprEl = document.getElementById('specDpr');
+      if (resEl) resEl.textContent = `${window.innerWidth || 1024} x ${window.innerHeight || 768}`;
+      if (dprEl) dprEl.textContent = `${(window.devicePixelRatio || 1).toFixed(1)}x`;
+    }
+
+    // Full Game / App State Persistence (Pass 5 Focus: Quicksave F5 & Quickload F9)
+    async function quicksaveState() {
+      state.timestamp = Date.now();
+      safeSetStorage('ksettings_quicksave', state);
+
+      // Sync key system values to VFS
+      await sendToOS({ type: 'VFS_WRITE', path: '/.sys_settings_accent', data: state.accentColor });
+      await sendToOS({ type: 'VFS_WRITE', path: '/.sys_settings_animations', data: state.animationsEnabled ? 'true' : 'false' });
+      await sendToOS({ type: 'VFS_WRITE', path: '/.sys_pinned_apps', data: JSON.stringify(state.pinnedApps) });
+
+      const saveInfo = document.getElementById('footerSaveInfo');
+      if (saveInfo) saveInfo.textContent = `Saved: ${new Date().toLocaleTimeString()}`;
+
+      showToast('💾 Quicksaved settings state (F5)', '💾');
+      playTone(880, 'sine', 0.15, 0.2);
+    }
+
+    async function quickloadState() {
+      const loaded = safeGetStorage('ksettings_quicksave', null);
+      if (!loaded) {
+        showToast('No quicksaved state found (F5 to save)', '⚠️');
+        return;
+      }
+
+      state = { ...state, ...loaded };
+
+      // Apply loaded state to DOM
+      setAccentColor(state.accentColor);
+      const animToggle = document.getElementById('animToggle');
+      if (animToggle) animToggle.checked = state.animationsEnabled;
+      updateAnimations(state.animationsEnabled);
+
+      const soundToggle = document.getElementById('soundToggle');
+      if (soundToggle) soundToggle.checked = state.soundEnabled;
+      
+      const volSlider = document.getElementById('volumeSlider');
+      if (volSlider) {
+        volSlider.value = state.soundVolume;
+        updateVolume(state.soundVolume);
+      }
+
+      renderPinnedApps();
+      switchTab(state.activeTab || 'personalization');
+
+      const saveInfo = document.getElementById('footerSaveInfo');
+      if (saveInfo) saveInfo.textContent = `Loaded: ${new Date(state.timestamp).toLocaleTimeString()}`;
+
+      showToast('📂 Quickloaded settings state (F9)', '📂');
+      playTone(523.25, 'triangle', 0.2, 0.2);
+    }
+
+    // State JSON Export / Import Modal
+    function openStateModal() {
+      const modal = document.getElementById('stateModal');
+      const txt = document.getElementById('stateJsonText');
+      if (txt) txt.value = JSON.stringify(state, null, 2);
+      if (modal) modal.style.display = 'flex';
+    }
+
+    function closeStateModal() {
+      const modal = document.getElementById('stateModal');
+      if (modal) modal.style.display = 'none';
+    }
+
+    function copyStateJson() {
+      const txt = document.getElementById('stateJsonText');
+      if (txt) {
+        navigator.clipboard.writeText(txt.value).then(() => {
+          showToast('Settings JSON copied to clipboard', '📋');
+        }).catch(() => {
+          txt.select();
+          document.execCommand('copy');
+          showToast('Settings JSON copied', '📋');
+        });
+      }
+    }
+
+    async function importStateJson() {
+      const txt = document.getElementById('stateJsonText');
+      if (!txt) return;
+      try {
+        const parsed = JSON.parse(txt.value);
+        if (typeof parsed !== 'object' || parsed === null) throw new Error('Invalid JSON shape');
+        state = { ...state, ...parsed };
+        await quicksaveState();
+        closeStateModal();
+        showToast('Settings JSON applied successfully', '✅');
+      } catch (e) {
+        showToast('Invalid JSON structure: ' + e.message, '⚠️');
+      }
+    }
+
+    function exportSettingsJson() {
+      const jsonStr = JSON.stringify(state, null, 2);
+      const blob = new Blob([jsonStr], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `ksettings_backup_${Date.now()}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      showToast('Settings backup JSON exported', '📥');
+    }
+
+    function openImportDialog() {
+      openStateModal();
+      showToast('Paste JSON backup and click Apply', '📤');
+    }
+
+    // Reset Defaults Modal
+    function openResetModal() {
+      const modal = document.getElementById('resetModal');
+      if (modal) modal.style.display = 'flex';
+    }
+
+    function closeResetModal() {
+      const modal = document.getElementById('resetModal');
+      if (modal) modal.style.display = 'none';
+    }
+
+    async function confirmResetDefaults() {
+      state.accentColor = '#2196F3';
+      state.animationsEnabled = true;
+      state.highContrast = false;
+      state.soundEnabled = true;
+      state.soundVolume = 80;
+      state.pinnedApps = ['kpad', 'kcalc', 'knet'];
+
+      setAccentColor('#2196F3');
+      updateAnimations(true);
+      const animToggle = document.getElementById('animToggle');
+      if (animToggle) animToggle.checked = true;
+
+      const contrastToggle = document.getElementById('contrastToggle');
+      if (contrastToggle) contrastToggle.checked = false;
+      updateHighContrast(false);
+
+      const soundToggle = document.getElementById('soundToggle');
+      if (soundToggle) soundToggle.checked = true;
+
+      const volSlider = document.getElementById('volumeSlider');
+      if (volSlider) {
+        volSlider.value = 80;
+        updateVolume(80);
+      }
+
+      await savePinnedApps();
+      renderPinnedApps();
+      closeResetModal();
+
+      showToast('System settings reset to defaults', '🔄');
+    }
+
+    // First-run Tutorial Integrity & Onboarding Modal
+    function openTutorial() {
+      const modal = document.getElementById('tutorialModal');
+      if (modal) modal.style.display = 'flex';
+    }
+
+    function closeTutorial() {
+      const modal = document.getElementById('tutorialModal');
+      const chk = document.getElementById('chkDoNotShowTutorial');
+      if (chk && chk.checked) {
+        safeSetStorage('ksettings_tutorialSeen', true);
+      } else {
+        safeSetStorage('ksettings_tutorialSeen', true);
+      }
+      if (modal) modal.style.display = 'none';
+      showToast('Welcome to KSettings!', '🚀');
+    }
+
+    // Help Modal
+    function openHelp() {
+      const modal = document.getElementById('helpModal');
+      if (modal) modal.style.display = 'flex';
+    }
+
+    function closeHelp() {
+      const modal = document.getElementById('helpModal');
+      if (modal) modal.style.display = 'none';
+    }
+
+    // Keyboard Navigation & Shortcuts
+    window.addEventListener('keydown', (e) => {
+      // Escape closes open modals in priority order
+      if (e.key === 'Escape') {
+        const fileViewer = document.getElementById('fileViewerModal');
+        if (fileViewer && fileViewer.style.display !== 'none') {
+          closeFileViewer();
+          return;
+        }
+        const stateModal = document.getElementById('stateModal');
+        if (stateModal && stateModal.style.display !== 'none') {
+          closeStateModal();
+          return;
+        }
+        const resetModal = document.getElementById('resetModal');
+        if (resetModal && resetModal.style.display !== 'none') {
+          closeResetModal();
+          return;
+        }
+        const helpModal = document.getElementById('helpModal');
+        if (helpModal && helpModal.style.display !== 'none') {
+          closeHelp();
+          return;
+        }
+        const tutModal = document.getElementById('tutorialModal');
+        if (tutModal && tutModal.style.display !== 'none') {
+          closeTutorial();
+          return;
+        }
+      }
+
+      // Enter / Space confirms active modal
+      const tutModal = document.getElementById('tutorialModal');
+      if (tutModal && tutModal.style.display !== 'none') {
+        if (e.key === 'Enter' || e.key === ' ') {
+          if (e.target !== document.getElementById('chkDoNotShowTutorial')) {
+            e.preventDefault();
+            closeTutorial();
+            return;
+          }
+        }
+      }
+
+      const helpModal = document.getElementById('helpModal');
+      if (helpModal && helpModal.style.display !== 'none') {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          closeHelp();
+          return;
+        }
+      }
+
+      // If user is focused on an input/textarea, bypass tab and hotkeys
+      if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) {
+        if (e.key === 'F5') {
+          e.preventDefault();
+          quicksaveState();
+        } else if (e.key === 'F9') {
+          e.preventDefault();
+          quickloadState();
+        }
+        return;
+      }
+
+      // Global hotkeys
+      if (e.key === 'F1' || e.key === 'h' || e.key === 'H' || e.key === '?') {
+        e.preventDefault();
+        openHelp();
+      } else if (e.key === 'F5' || ((e.ctrlKey || e.metaKey) && (e.key === 's' || e.key === 'S'))) {
+        e.preventDefault();
+        quicksaveState();
+      } else if (e.key === 'F9' || ((e.ctrlKey || e.metaKey) && (e.key === 'o' || e.key === 'O'))) {
+        e.preventDefault();
+        quickloadState();
+      } else if (e.key === '1') {
+        e.preventDefault();
+        switchTab('personalization');
+      } else if (e.key === '2') {
+        e.preventDefault();
+        switchTab('audio');
+      } else if (e.key === '3') {
+        e.preventDefault();
+        switchTab('taskbar');
+      } else if (e.key === '4') {
+        e.preventDefault();
+        switchTab('storage');
+      } else if (e.key === '5') {
+        e.preventDefault();
+        switchTab('specs');
+      }
+    });
+
+    // Visibility Lifecycle Cleanup
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) {
+        if (audioCtx && audioCtx.state === 'running') {
+          audioCtx.suspend().catch(() => {});
+        }
+      }
+    });
+
+    // Window resize observer
+    window.addEventListener('resize', () => {
+      updateSpecsReadout();
+    });
+
+    // Initialization
     async function init() {
+      // 1. Load initial values from VFS or localStorage
       const accentRes = await sendToOS({ type: 'VFS_READ', path: '/.sys_settings_accent' });
-      if (accentRes.data) {
-        document.getElementById('accentColor').value = accentRes.data;
+      if (accentRes && accentRes.data) {
+        state.accentColor = accentRes.data;
+      } else {
+        const localAccent = safeGetStorage('kiloos_accent', safeGetStorage('ksettings_accent', '#2196F3'));
+        state.accentColor = localAccent;
       }
 
       const animRes = await sendToOS({ type: 'VFS_READ', path: '/.sys_settings_animations' });
-      if (animRes.data === 'false') {
-        document.getElementById('animToggle').checked = false;
+      if (animRes && animRes.data !== undefined) {
+        state.animationsEnabled = animRes.data !== 'false';
       }
-    }
 
-    async function updateAccent() {
-      const color = document.getElementById('accentColor').value;
-      await sendToOS({ type: 'VFS_WRITE', path: '/.sys_settings_accent', data: color });
-    }
+      const pinsRes = await sendToOS({ type: 'VFS_READ', path: '/.sys_pinned_apps' });
+      if (pinsRes && pinsRes.data) {
+        try {
+          const parsed = JSON.parse(pinsRes.data);
+          if (Array.isArray(parsed)) state.pinnedApps = parsed;
+        } catch (e) {}
+      }
 
-    async function updateAnim() {
-      const enabled = document.getElementById('animToggle').checked;
-      await sendToOS({ type: 'VFS_WRITE', path: '/.sys_settings_animations', data: enabled ? 'true' : 'false' });
+      // Check stored audio preferences
+      state.soundEnabled = safeGetStorage('ksettings_soundEnabled', true);
+      state.soundVolume = safeGetStorage('ksettings_soundVolume', 80);
+      state.highContrast = safeGetStorage('ksettings_highContrast', false);
+
+      // Apply state to DOM controls
+      setAccentColor(state.accentColor);
+      
+      const animToggle = document.getElementById('animToggle');
+      if (animToggle) animToggle.checked = state.animationsEnabled;
+
+      const contrastToggle = document.getElementById('contrastToggle');
+      if (contrastToggle) contrastToggle.checked = state.highContrast;
+      updateHighContrast(state.highContrast);
+
+      const soundToggle = document.getElementById('soundToggle');
+      if (soundToggle) soundToggle.checked = state.soundEnabled;
+
+      const volSlider = document.getElementById('volumeSlider');
+      if (volSlider) {
+        volSlider.value = state.soundVolume;
+        updateVolume(state.soundVolume);
+      }
+
+      renderSwatches();
+      renderPinnedApps();
+      updateSpecsReadout();
+
+      // Check first-run tutorial integrity
+      const tutorialSeen = safeGetStorage('ksettings_tutorialSeen', false);
+      const existingSave = safeGetStorage('ksettings_quicksave', null);
+      if (!tutorialSeen && !existingSave) {
+        openTutorial();
+      }
     }
 
     init();
