@@ -4,6 +4,15 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-07T03:45:00-07:00 — kilo-tester: KSolitaire (Interactive UI Audit & Inline Fixes)**
+  - Status: PASS ✅ (3 issues fixed, 155.4 KB web / 38.0 KB native < 999 KB ceiling).
+  - Modal Stacking & Focus: Added `closeAllModals()` to prevent multi-dialog overlap; added auto-focus hooks across all 5 dialogs.
+  - Toast & Navigation: Added static accessible `#toast` container; wired full keyboard Arrow Keys navigation between tableau & foundations.
+  - Controls & Help: Updated help shortcuts documentation; verified zero ARG/TINAG leaks or glint violations.
+  - Verification: `test_app_startup.py` PASS; `test_web_apps.js` PASS (82 interactive elements, 0 err); MSVC build clean; Vite clean (4.66s).
+  - Queue: Advanced `kilo_tester` to `KChess`; handoff to `kilo-usability`.
+
+
 - **2026-10-07T02:25:00-07:00 — kilo-creator: kweb://warez (Anti-Potemkin Web 1.0 Expansion: FXP Top-Site Race & PE-Pack '99 Entropy Lab)**
   - Status: PASS ✅ (0 regressions, 406 KB < 999 KB ceiling).
   - 0xRELEASE glFTPd Top-Site & FXP Courier Race: Multi-threaded site-to-site racing (4-thread stripe), live speed monitor, glFTPd v1.18 terminal (`site who/speed/groups/rules`), ratio tracking, and race proof download.

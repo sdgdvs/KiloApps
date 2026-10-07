@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-graphics
-next_agent: kilo-tester
+current_agent: kilo-tester
+next_agent: kilo-usability
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -13,7 +13,7 @@ timeout_minutes: 15
 status: ready
 current_targets:
   kilo_creator: "kweb://users/~neon_rider"
-  kilo_graphics: KAsteroids
+  kilo_graphics: KSpace
   kilo_tester: KChess
   kilo_usability: KSettings
   kilo_qa: KHabit
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-creator
-  app: "kweb://geocities"
-  timestamp: "2026-10-07T09:25:00-07:00"
+  agent: kilo-graphics
+  app: KAsteroids
+  timestamp: "2026-10-07T09:35:00-07:00"
 last_planner_run: "2026-10-07T14:38:00Z"
 ---
 
@@ -109,9 +109,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
 - **EXCLUSIVE MISSION**: Replace programmer vector art with Imagen 3 generated sprites and backgrounds via the 2-stage asset pipeline. If the target app is not appropriate for raster/sprite replacement (e.g. wireframe classics or abstract board games), skip the turn immediately.
-- **Current Target**: `KAsteroids`
+- **Current Target**: `KSpace`
 - **Upcoming Queue**:
-  `KSpace`, `KFarm`, `KWizard`, `KColony`, `KDragon`, `KMech`, `KColosseum`, `KAbyss`, `KBreakout` *(Note: Pure vector/wireframe or abstract board targets skip automatically per Mandate 15. Completed: KQuest Phases 1-5, KSpace)*.
+  `KFarm`, `KWizard`, `KColony`, `KDragon`, `KMech`, `KColosseum`, `KAbyss`, `KBreakout`, `KAsteroids` *(Note: Pure vector/wireframe or abstract board targets skip automatically per Mandate 15. Completed: KQuest Phases 1-5, KSpace)*.
 
 ### 3. App Tester Queue (`kilo-tester`)
 - **Current Target**: `KChess`
@@ -217,6 +217,13 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-07T09:35:00-07:00 — kilo-graphics: KAsteroids (Skip Turn — Pure Vector/Wireframe Classic & Glint/Dot Audit)**
+  - Status: ⏭️ Skip — Imagen 3 asset replacement not appropriate for KAsteroids
+  - Rationale: Pure retro vector/wireframe arcade classic; foundational aesthetic and 1:1 Win32 GDI parity preclude raster asset replacement.
+  - Glint & Dot Audit: Verified clean static perimeter inlay border; zero rotating specular glints or traveling border dots in web and native C.
+  - Verification: `check_icons.py` 100% PASS; `security_lint.py` 100% PASS; Vite build clean (575ms); web (145.5 KB) < 999 KB ceiling.
+  - Queue: Advanced `kilo_graphics` to `KSpace`; rotation handoff to `kilo-tester`.
+
 - **2026-10-07T09:25:00-07:00 — kilo-creator: kweb://geocities (Phase 2 Deep Expansion: 216 Web-Safe Palette, Halite Crypt Dungeon, Odometer/Marquee Forge & Ringmaster Console)**
   - Status: PASS ✅ (0 regressions, 558.1 KB web < 999 KB ceiling).
   - Netscape 216 Web-Safe Palette Lab: 6x6x6 swatch cube, 12 retro presets, WCAG/Netscape contrast calculator & Jasc .PAL export.
@@ -252,14 +259,6 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Input & Canvas Ergonomics: Added pointer capture on canvas for seamless fast-drag paddle tracking; high-DPI image smoothing enabled.
   - Verification: `test_app_startup.py` PASS; `test_web_apps.js` PASS (46 elements, 0 err); MSVC build clean; Vite clean (4.70s).
   - Queue: Advanced `kilo_usability` to `KSettings`; rotation handoff to `kilo-qa`.
-
-- **2026-10-07T03:45:00-07:00 — kilo-tester: KSolitaire (Interactive UI Audit & Inline Fixes)**
-  - Status: PASS ✅ (3 issues fixed, 155.4 KB web / 38.0 KB native < 999 KB ceiling).
-  - Modal Stacking & Focus: Added `closeAllModals()` to prevent multi-dialog overlap; added auto-focus hooks across all 5 dialogs.
-  - Toast & Navigation: Added static accessible `#toast` container; wired full keyboard Arrow Keys navigation between tableau & foundations.
-  - Controls & Help: Updated help shortcuts documentation; verified zero ARG/TINAG leaks or glint violations.
-  - Verification: `test_app_startup.py` PASS; `test_web_apps.js` PASS (82 interactive elements, 0 err); MSVC build clean; Vite clean (4.66s).
-  - Queue: Advanced `kilo_tester` to `KChess`; handoff to `kilo-usability`.
 
 
 
