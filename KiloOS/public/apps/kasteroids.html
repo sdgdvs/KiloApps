@@ -505,8 +505,17 @@
             }
         });
 
+        function safeGet(key, fallback) {
+            try { return JSON.parse(localStorage.getItem(key)) ?? fallback; }
+            catch (e) { return fallback; }
+        }
+        function safeSet(key, value) {
+            try { localStorage.setItem(key, JSON.stringify(value)); }
+            catch (e) { console.warn('[KiloApp] Storage write failed:', e.message); }
+        }
+
         let score = 0;
-        let stats = JSON.parse(localStorage.getItem('kasteroids_stats')) || {
+        let stats = safeGet('kasteroids_stats', {
             highScoreClassic: 0,
             highScoreTimeAttack: 0,
             highScoreHardcore: 0,
@@ -517,7 +526,7 @@
             shotsHit: 0,
             bestAccuracy: 0,
             campaignWins: 0
-        };
+        });
         let gameMode = 0; // 0=Classic, 1=TimeAttack, 2=Hardcore, 3=Campaign
         let timeLeft = 0;
         let lastTick = 0;
@@ -545,7 +554,7 @@
         highScoreSpan.innerText = getHighScore();
 
         function saveStats() {
-            localStorage.setItem('kasteroids_stats', JSON.stringify(stats));
+            safeSet('kasteroids_stats', stats);
         }
 
         function updateHighScore() {
