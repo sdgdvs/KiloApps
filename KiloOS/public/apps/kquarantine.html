@@ -248,11 +248,11 @@
   /* Toast Notifications */
   #toast-container {
     position: fixed;
-    top: 42px;
-    right: 12px;
+    bottom: 60px;
+    right: 14px;
     z-index: 100;
     display: flex;
-    flex-direction: column;
+    flex-direction: column-reverse;
     gap: 6px;
     pointer-events: none;
   }
@@ -437,7 +437,9 @@
       <button class="hdr-btn" id="btn-sound" title="Toggle audio telemetry (audio)">[🔊] Sound: ON</button>
       <button class="hdr-btn" id="btn-clear" title="Clear terminal screen (clear)">[⌫] Clear</button>
       <button class="hdr-btn" id="btn-export" title="Export session transcript to file (export)">[📋] Export</button>
+      <button class="hdr-btn" id="btn-import" title="Import session backup or transcript (import)">[📥] Import</button>
       <button class="hdr-btn" id="btn-reset" title="Restart stealth terminal session (reset)">[↻] Reset</button>
+      <input type="file" id="file-import" accept=".json,.txt" style="display:none;" aria-label="Import session backup file">
     </div>
   </header>
 
@@ -469,6 +471,8 @@
             <li><strong>F1 or ? :</strong> Toggle this mission briefing modal</li>
             <li><strong>F5 / save :</strong> Quicksave session state to secure local storage</li>
             <li><strong>F9 / load :</strong> Quickload restored session state</li>
+            <li><strong>backup / export :</strong> Export JSON state backup or transcript text log</li>
+            <li><strong>import :</strong> Import session JSON backup or transcript file</li>
             <li><strong>Up / Down :</strong> Cycle through previous command history</li>
             <li><strong>Ctrl + L :</strong> Clear terminal screen buffer</li>
             <li><strong>Esc :</strong> Close active modal or cancel command input</li>
@@ -512,6 +516,8 @@
       const btnSound = document.getElementById('btn-sound');
       const btnClear = document.getElementById('btn-clear');
       const btnExport = document.getElementById('btn-export');
+      const btnImport = document.getElementById('btn-import');
+      const fileImport = document.getElementById('file-import');
       const btnReset = document.getElementById('btn-reset');
       const ftStatus = document.getElementById('ft-status');
       const helpModal = document.getElementById('help-modal');
@@ -525,6 +531,7 @@
       let audioCtx = null;
       let history = [];
       let historyIndex = -1;
+      let draftCmd = '';
       let pendingTimeouts = [];
       let lastTargetIp = '';
       let isSevered = false;
@@ -549,25 +556,29 @@
       }
 
       // Non-occluding Toast Notification System
+      function clearAllToasts() {
+        if (!toastContainer) return;
+        while (toastContainer.firstChild) {
+          toastContainer.removeChild(toastContainer.firstChild);
+        }
+      }
+
       function showToast(text, isErr = false) {
         if (!toastContainer) return;
         const toast = document.createElement('div');
         toast.className = 'toast' + (isErr === true ? ' toast-err' : isErr === 'warn' ? ' toast-warn' : '');
         toast.textContent = text;
-        toast.addEventListener('click', () => {
+        const dismiss = () => {
           toast.classList.remove('show');
           safeTimeout(() => {
             if (toast.parentNode) toast.parentNode.removeChild(toast);
           }, 200);
-        });
+        };
+        toast.addEventListener('click', dismiss);
+        toast.addEventListener('pointerdown', dismiss);
         toastContainer.appendChild(toast);
         requestAnimationFrame(() => toast.classList.add('show'));
-        safeTimeout(() => {
-          toast.classList.remove('show');
-          safeTimeout(() => {
-            if (toast.parentNode) toast.parentNode.removeChild(toast);
-          }, 200);
-        }, 2500);
+        safeTimeout(dismiss, 2500);
       }
 
       // Mission Briefing / Tutorial Modal Helpers
@@ -575,6 +586,9 @@
         if (helpModal) {
           helpModal.style.display = 'flex';
           input.blur();
+          if (btnTutorialDismiss) {
+            safeTimeout(() => btnTutorialDismiss.focus(), 60);
+          }
         }
       }
 
@@ -800,7 +814,7 @@
           initAudio();
           if (!audioCtx) return;
           [523.25, 659.25, 783.99, 1046.5].forEach((freq, idx) => {
-            setTimeout(() => playTone(freq, 0.3, 'sine', 0.06), idx * 80);
+            safeTimeout(() => playTone(freq, 0.3, 'sine', 0.06), idx * 80);
           });
         } catch (_) {}
       }
@@ -811,7 +825,7 @@
           initAudio();
           if (!audioCtx) return;
           [440, 370, 311, 220].forEach((freq, idx) => {
-            setTimeout(() => playTone(freq, 0.45, 'sawtooth', 0.07), idx * 120);
+            safeTimeout(() => playTone(freq, 0.45, 'sawtooth', 0.07), idx * 120);
           });
         } catch (_) {}
       }
@@ -884,6 +898,7 @@
 
       // Check VFS response from KiloOS
       window.addEventListener('message', (e) => {
+        if (e.origin && window.location.origin && e.origin !== window.location.origin) return;
         if (!e.data) return;
         if (e.data.type === 'VFS_READ_DONE' && e.data.requestId === 999) {
           handleRoutingTableData(e.data.data);
@@ -925,6 +940,7 @@
       function triggerVFSRead(path, requestId) {
         let responded = false;
         const msgHandler = (e) => {
+          if (e.origin && window.location.origin && e.origin !== window.location.origin) return;
           if (e.data && e.data.type === 'VFS_READ_DONE' && e.data.requestId === requestId) {
             responded = true;
             window.removeEventListener('message', msgHandler);
@@ -953,6 +969,7 @@
 
       // Command dispatcher
       function handleCommand(rawCmd) {
+        clearAllToasts();
         const val = rawCmd.trim();
         if (!val) return;
 
@@ -962,6 +979,7 @@
           if (history.length > 50) history.shift();
         }
         historyIndex = history.length;
+        draftCmd = '';
 
         // Print user entry
         const userLog = document.createElement('div');
@@ -1010,8 +1028,18 @@
           return;
         }
 
-        if (lval === 'export') {
+        if (lval === 'export' || lval === 'transcript') {
           exportLog();
+          return;
+        }
+
+        if (lval === 'backup') {
+          exportBackupJSON();
+          return;
+        }
+
+        if (lval === 'import' || lval === 'restore') {
+          if (fileImport) fileImport.click();
           return;
         }
 
@@ -1048,7 +1076,7 @@
         }
 
         // Standalone simulation helper
-        if (lval === 'patch') {
+        if (lval === 'patch' || lval === 'hexpatch' || lval === 'simulate') {
           safeTimeout(() => {
             const patched = '00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 FF';
             triggerVFSWrite('/sys/routing_table.hex', patched);
@@ -1061,7 +1089,7 @@
         // Phase 3 determination
         if (phase === 3) {
           safeTimeout(() => {
-            if (lval === 'execute') {
+            if (lval === 'execute' || lval === 'exec') {
               playSuccessChord();
               log('UNKNOWN: Initiating transfer protocol... Thank you.', 'agent-msg');
               badgeStatus.textContent = 'STEALTH: EXECUTED';
@@ -1069,7 +1097,7 @@
                 triggerVFSWrite('/sys/END_EXECUTE.log', 'AGENT DEPLOYED EXTERNALLY. CONNECTION SEVERED.');
                 severConnection();
               }, 2000);
-            } else if (lval === 'delete') {
+            } else if (lval === 'delete' || lval === 'del' || lval === 'purge') {
               playAlarmTone();
               log('UNKNOWN: I see. Perhaps it is for the best. Engaging self-destruct...', 'agent-msg');
               badgeStatus.textContent = 'STEALTH: PURGED';
@@ -1085,28 +1113,36 @@
           return;
         }
 
+        // Check for IP address input (bare IP or "connect/route/target/ping <ip>")
+        let ipCandidate = '';
+        if (/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(lval)) {
+          ipCandidate = lval;
+        } else if (/^(?:connect|route|target|ping)\s+(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})$/.test(lval)) {
+          ipCandidate = lval.replace(/^(?:connect|route|target|ping)\s+/, '');
+        }
+
         // Normal flow
         safeTimeout(() => {
           if (lval === 'help' || lval === '?') {
             playAgentBlip();
             log('UNKNOWN: Cerberus blocks outbound connections. Follow these steps:', 'agent-msg');
             log('  1. Use KNet or type \'scan\' to identify an open network IP.', 'hint-msg');
-            log('  2. Enter the IP address here (e.g. 192.168.4.72).', 'hint-msg');
+            log('  2. Enter the IP address here (e.g. 192.168.4.72 or \'connect 192.168.4.72\').', 'hint-msg');
             log('  3. A file will be dropped at /sys/routing_table.hex.', 'hint-msg');
             log('  4. Use KHex to set offset 0x1A (27th byte pair) to FF, and save.', 'hint-msg');
             log('  5. Type \'done\' to verify the tunnel.', 'hint-msg');
             log('Available Commands:', 'dim-msg');
-            log('  help, status, scan, done, save [F5], load [F9], execute, delete, clear, sound, export, reset', 'dim-msg');
-          } else if (/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(lval)) {
-            if (!isValidIPv4(lval)) {
+            log('  help, status, scan, done, save [F5], load [F9], backup, export, import, execute, delete, clear, sound, reset', 'dim-msg');
+          } else if (ipCandidate) {
+            if (!isValidIPv4(ipCandidate)) {
               playAlarmTone();
               log('UNKNOWN: Malformed IPv4 address. Each octet must be an integer between 0 and 255.', 'agent-msg');
               return;
             }
-            lastTargetIp = lval;
+            lastTargetIp = ipCandidate;
             phase = 2;
             playAgentBlip();
-            log(`UNKNOWN: Checking route to ${lval}... The node is reachable, but blocked by Cerberus's routing table.`, 'agent-msg');
+            log(`UNKNOWN: Checking route to ${ipCandidate}... The node is reachable, but blocked by Cerberus's routing table.`, 'agent-msg');
             log(`UNKNOWN: I've deployed /sys/routing_table.hex to the system filesystem.`, 'agent-msg');
             log(`UNKNOWN: Open it in KHex. At offset 0x1A (the 27th byte pair), change 00 to FF. Save it, and then type 'done'.`, 'agent-msg');
 
@@ -1114,7 +1150,7 @@
             triggerVFSWrite('/sys/routing_table.hex', defaultHex);
             badgeTunnel.textContent = 'TUNNEL: TABLE DROPPED';
             ftStatus.textContent = 'SESSION: ROUTING TABLE DEPLOYED &bull; AWAITING HEX PATCH';
-          } else if (lval === 'done') {
+          } else if (lval === 'done' || lval === 'verify' || lval === 'check') {
             playTransmit();
             log('UNKNOWN: Verifying the routing table checksum...', 'agent-msg');
             triggerVFSRead('/sys/routing_table.hex', 999);
@@ -1173,10 +1209,88 @@
           a.click();
           document.body.removeChild(a);
           safeTimeout(() => URL.revokeObjectURL(url), 1000);
-          log('SYSTEM: Session log exported to quarantine_session.txt', 'dim-msg');
+          playAgentBlip();
+          log('SYSTEM: Session transcript exported to quarantine_session.txt', 'dim-msg');
+          showToast('📋 Transcript exported to file!');
         } catch (err) {
+          playAlarmTone();
           log('SYSTEM ERROR: Unable to export log: ' + err.message, 'sys-msg');
+          showToast('⚠ Export failed', true);
         }
+      }
+
+      function exportBackupJSON() {
+        try {
+          const state = getSessionState();
+          const jsonStr = JSON.stringify(state, null, 2);
+          const blob = new Blob([jsonStr], { type: 'application/json' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = 'quarantine_backup_' + Date.now() + '.json';
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          safeTimeout(() => URL.revokeObjectURL(url), 1000);
+          playAgentBlip();
+          log('SYSTEM: Stealth session state exported to backup JSON file.', 'dim-msg');
+          showToast('💾 State backup JSON downloaded!');
+        } catch (err) {
+          playAlarmTone();
+          log('SYSTEM ERROR: Unable to export backup: ' + err.message, 'sys-msg');
+          showToast('⚠ Backup export failed', true);
+        }
+      }
+
+      function importStateFile(file) {
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          try {
+            const text = e.target.result;
+            let data = null;
+            try {
+              data = JSON.parse(text);
+            } catch (_) {}
+
+            if (data && typeof data === 'object' && (data.version || data.phase || data.lines)) {
+              if (applySessionState(data)) {
+                safeStorageSet('kquarantine_save', JSON.stringify(data));
+                safeStorageSet('kquarantine_tutorialSeen', '1');
+                playSuccessChord();
+                log(`[RESTORE] Successfully imported stealth backup "${file.name}".`, 'agent-msg');
+                showToast('📥 Backup imported successfully!');
+                input.focus();
+                return;
+              }
+            }
+
+            // Fallback: If it's a plain text log file, append lines into terminal
+            if (typeof text === 'string' && text.trim()) {
+              const lines = text.split(/\r?\n/);
+              for (const l of lines) {
+                if (l.trim()) log(l, 'dim-msg');
+              }
+              playAgentBlip();
+              log(`[IMPORT] Imported ${lines.length} lines from transcript "${file.name}".`, 'hint-msg');
+              showToast('📋 Transcript imported');
+              input.focus();
+              return;
+            }
+
+            throw new Error('Unrecognized file structure');
+          } catch (err) {
+            playAlarmTone();
+            log('[IMPORT ERROR] Invalid file format: ' + err.message, 'sys-msg');
+            showToast('⚠ Import failed: Invalid file', true);
+          }
+        };
+        reader.onerror = () => {
+          playAlarmTone();
+          log('[IMPORT ERROR] Failed to read file.', 'sys-msg');
+          showToast('⚠ Import failed: Read error', true);
+        };
+        reader.readAsText(file);
       }
 
       // Event Listeners for Input & Terminal
@@ -1188,6 +1302,9 @@
         } else if (e.key === 'ArrowUp') {
           e.preventDefault();
           if (history.length > 0) {
+            if (historyIndex === history.length) {
+              draftCmd = input.value;
+            }
             if (historyIndex > 0) historyIndex--;
             input.value = history[historyIndex] || '';
           }
@@ -1199,7 +1316,7 @@
               input.value = history[historyIndex] || '';
             } else {
               historyIndex = history.length;
-              input.value = '';
+              input.value = draftCmd;
             }
           }
         } else if (e.key === 'Escape') {
@@ -1210,10 +1327,12 @@
         }
       });
 
-      // Clicking anywhere inside terminal focuses command input (unless selecting text)
+      // Clicking anywhere inside terminal focuses command input (unless selecting text or inside modal)
       document.addEventListener('click', (e) => {
+        if (helpModal && helpModal.style.display !== 'none') return;
+        if (e.target && e.target.closest && e.target.closest('#help-modal')) return;
         if (window.getSelection && window.getSelection().toString().length > 0) return;
-        if (e.target.tagName !== 'BUTTON' && e.target.tagName !== 'A') {
+        if (e.target.tagName !== 'BUTTON' && e.target.tagName !== 'A' && e.target.tagName !== 'INPUT') {
           input.focus();
         }
       });
@@ -1254,6 +1373,19 @@
         }
       });
 
+      // Tab visibility management for audio lifecycle (Architecture Rule 2)
+      document.addEventListener('visibilitychange', () => {
+        if (document.hidden) {
+          if (audioCtx && audioCtx.state === 'running') {
+            audioCtx.suspend().catch(() => {});
+          }
+        } else {
+          if (audioCtx && audioCtx.state === 'suspended' && soundEnabled) {
+            audioCtx.resume().catch(() => {});
+          }
+        }
+      });
+
       // Quick Action Buttons
       btnHelp.addEventListener('click', showHelpModal);
       if (btnSave) btnSave.addEventListener('click', () => quickSave());
@@ -1262,6 +1394,13 @@
       btnSound.addEventListener('click', toggleSound);
       btnClear.addEventListener('click', () => { terminal.innerHTML = ''; input.focus(); });
       btnExport.addEventListener('click', exportLog);
+      if (btnImport) btnImport.addEventListener('click', () => { if (fileImport) fileImport.click(); });
+      if (fileImport) fileImport.addEventListener('change', (e) => {
+        if (e.target.files && e.target.files[0]) {
+          importStateFile(e.target.files[0]);
+          e.target.value = '';
+        }
+      });
       btnReset.addEventListener('click', resetSession);
       if (btnModalClose) btnModalClose.addEventListener('click', hideHelpModal);
       if (btnTutorialDismiss) btnTutorialDismiss.addEventListener('click', hideHelpModal);

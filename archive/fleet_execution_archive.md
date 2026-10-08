@@ -4,6 +4,15 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-08T02:22:00-07:00 — kilo-usability: KSolitaire (UI/UX Pass: Responsive Dimensions, HiDPI Retina Crispness, Toast Non-Occlusion & Toolbar Layout)**
+  - Status: PASS ✅ (0 regressions, 157.1 KB web / 48.0 KB native < 999 KB ceiling).
+  - Window & Layout: Tuned dimensions to 940x800 in App.jsx and Win32 C; reduced felt border to 10px; dynamic tableau stack min-height eliminates launch scrollbars.
+  - HiDPI Crispness & Lifecycle: Implemented dynamic DPR scaling on fxCanvas; added visibilitychange listener pausing 60 FPS fxLoop when document hidden.
+  - Toast Occlusion Remediation: Relocated toast to safe bottom-right corner; added pointerdown dismiss on board/cards and snappier 3.5s timeout.
+  - Toolbar Ergonomics: Reorganized 21 toolbar controls into clear visual sections with dividers and focus-visible keyboard navigation outlines.
+  - Verification: Security linter 100% PASS; check_icons 100% PASS; test_app_startup PASS (0 JS err); MSVC clean; Vite build clean (630ms).
+  - Queue: Advanced kilo_usability to KSudoku; rotation handoff to kilo-qa.
+
 - **2026-10-08T01:45:00-07:00 — kilo-tester: KConverter (Interactive UI Audit: Smart Parser Delimiter Fix, JSON Portability & State Ergonomics)**
   - Status: PASS ✅ (6 issues identified and fixed; 0 regressions).
   - Parser Fix: Implemented `splitExpressUnits` resolving collision where unit `in` (inches) broke expression splitting into empty tokens.
