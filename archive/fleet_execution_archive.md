@@ -4,6 +4,15 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-08T05:25:00-07:00 — kilo-tester: KQuarantine (Interactive UI Audit: Toast Non-Occlusion, State Backup/Import, Command Ergonomics & Lifecycle)**
+  - Status: PASS ✅ (0 regressions, 48.6 KB web < 999 KB hard ceiling).
+  - Toast Non-Occlusion: Relocated toasts to bottom-right (60px from base) with pointerdown & input clear dismiss, eliminating toolbar occlusion.
+  - State Backup & Import: Added `[📥] Import` header action, JSON backup download (`backup`), file import (`import`), and transcript export (`export`).
+  - Command & History Ergonomics: Supported `connect/route/target/ping <ip>`, `patch/simulate`, `done/verify`, `exec/purge`; preserved draft command on Up/Down arrow.
+  - Lifecycle & Focus: Added `visibilitychange` audio suspend/resume, prevented modal focus-stealing on click, and secured postMessage origins.
+  - Verification: `test_app_startup.py` PASS; `test_arg_flow.py` PASS; `check_icons.py` PASS; Vite build clean (1.39s); ARG integrity 100% preserved.
+  - Queue: Advanced `kilo_tester` to `KSettings`; rotation handoff to `kilo-usability`.
+
 - **2026-10-08T04:25:00-07:00 — kilo-creator: kweb://10.19.99.4/classified (Deep Expansion: Transponder CAD Schematic & RF Test Bench)**
   - Status: PASS ✅ (0 regressions, 253.6 KB < 999 KB hard ceiling).
   - Anti-Potemkin CAD Bench: Implemented Tab 10 vector CRT CAD schematic with 8 probe points, live phosphor scope, and LC tank calculator.
