@@ -727,7 +727,7 @@
       <span>• INTRANET GATEWAY 10.19.99.4:1999</span>
     </div>
     <div style="display:flex; align-items:center; gap:12px;">
-      <span style="font-size:10px; color:#cbd5e1; font-weight:normal;">[1-9] Tabs &bull; [M] Audio &bull; [Space] Sniffer</span>
+      <span style="font-size:10px; color:#cbd5e1; font-weight:normal;">[1-9,0] Tabs &bull; [M] Audio &bull; [Space] Sniffer</span>
       <span>CARLSBAD SKUNKWORKS RELAY [STATION 0x7F]</span>
     </div>
   </div>
@@ -770,6 +770,7 @@
     <button class="tab-btn" onclick="switchTab('verify')">🔐 Hash Verification <kbd style="font-size:10px; opacity:0.75; margin-left:3px;">[7]</kbd></button>
     <button class="tab-btn" onclick="switchTab('airgap')">⚡ Deep Airgap &amp; Dual Resonance <kbd style="font-size:10px; opacity:0.75; margin-left:3px;">[8]</kbd></button>
     <button class="tab-btn" onclick="switchTab('interferometer')">🔬 Seismic Interferometer &amp; Resonator <kbd style="font-size:10px; opacity:0.75; margin-left:3px;">[9]</kbd></button>
+    <button class="tab-btn" onclick="switchTab('cad')">📐 Transponder CAD &amp; RF Bench <kbd style="font-size:10px; opacity:0.75; margin-left:3px;">[0]</kbd></button>
   </nav>
 
   <!-- TAB 1: CLASSIFIED MEMOS -->
@@ -1615,6 +1616,167 @@ The third precursor hash is hereby committed to the Carlsbad bedrock memory regi
           <button class="btn-retro" onclick="copyClearanceToken()">📋 Copy AETHEL-SECTOR-03 Token</button>
           <button class="btn-retro" onclick="exportSeismicSig()">💾 Export Seismic Record (.SIG)</button>
           <a href="/web/deep_core.html" class="btn-retro" style="text-align:center; text-decoration:none; color:var(--cyan-net);">🚀 Proceed to Deep Core (10.19.99.127) &raquo;</a>
+        </div>
+  <!-- TAB 10: TRANSPONDER CAD SCHEMATIC & RF TEST BENCH -->
+  <div id="tab-cad" class="tab-pane">
+    <div style="background:#090e1a; border:1px solid var(--border); padding:10px 14px; margin-bottom:14px; border-radius:4px; font-size:12px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+      <div>
+        <strong style="color:var(--amber-bright); font-size:13px;">📐 AETHEL DYNAMICS SKUNKWORKS // STATION 0x7F TRANSPONDER CAD SCHEMATIC &amp; RF BENCH:</strong>
+        <p style="color:var(--text-muted); margin-top:2px;">
+          Interactive vector schematic of the Permian Halite lithospheric transponder &amp; 1999Hz demodulator motherboard.
+          Probe 8 test points with live vector oscilloscope, tune resonant LC tank, simulate fault injections, and export SPICE netlist.
+        </p>
+      </div>
+      <div style="display:flex; gap:8px; align-items:center;">
+        <span class="badge-tag" id="badgeCadStatus" style="border-color:var(--border-amber); color:var(--amber-bright);">BOARD: REV 4.2-ECHO</span>
+        <button class="btn-retro" onclick="autoCalibrateCad()">🎯 Auto-Calibrate 1999Hz Tank</button>
+      </div>
+    </div>
+
+    <!-- Main CAD Layout -->
+    <div style="display:grid; grid-template-columns: 1fr; gap:16px;">
+      <!-- Vector Schematic Canvas Container -->
+      <div style="background:#02050e; border:1px solid var(--border-amber); border-radius:4px; padding:10px; position:relative;">
+        <div style="display:flex; justify-content:space-between; align-items:center; font-size:11px; margin-bottom:6px;">
+          <span style="color:var(--cyan-net); font-weight:bold;">MOTHERBOARD SCHEMATIC // VECTOR CRT CAD DISPLAY</span>
+          <span id="lblCadHoverInfo" style="color:var(--amber-bright); font-family:monospace;">CLICK ANY TEST POINT (TP1 - TP8) TO ATTACH SCOPE PROBE</span>
+        </div>
+        <canvas id="cadSchematicCanvas" width="700" height="360" style="width:100%; height:360px; background:#010309; display:block; cursor:crosshair;"></canvas>
+        
+        <!-- Legend below canvas -->
+        <div style="display:flex; justify-content:space-between; align-items:center; font-size:10px; color:var(--text-muted); margin-top:6px; flex-wrap:wrap; gap:6px;">
+          <div>
+            <span style="color:#fbbf24; font-weight:bold;">● TP1-TP8:</span> Probed Test Points &bull;
+            <span style="color:#38bdf8;">─ Trace:</span> RF / Audio Bus &bull;
+            <span style="color:#10b981;">─ Digital:</span> Clock / Logic &bull;
+            <span style="color:#ef4444; border-bottom:1px dashed #ef4444;">- - Airgap:</span> Galvanic Trench (-750m)
+          </div>
+          <div style="display:flex; gap:4px; flex-wrap:wrap;">
+            <button class="btn-retro" style="font-size:10px; padding:2px 6px;" onclick="selectTestPoint(1)">TP1: Ant</button>
+            <button class="btn-retro" style="font-size:10px; padding:2px 6px;" onclick="selectTestPoint(2)">TP2: Tank</button>
+            <button class="btn-retro" style="font-size:10px; padding:2px 6px;" onclick="selectTestPoint(3)">TP3: Pre</button>
+            <button class="btn-retro" style="font-size:10px; padding:2px 6px;" onclick="selectTestPoint(4)">TP4: FM</button>
+            <button class="btn-retro" style="font-size:10px; padding:2px 6px;" onclick="selectTestPoint(5)">TP5: Echo</button>
+            <button class="btn-retro" style="font-size:10px; padding:2px 6px;" onclick="selectTestPoint(6)">TP6: Opto</button>
+            <button class="btn-retro" style="font-size:10px; padding:2px 6px;" onclick="selectTestPoint(7)">TP7: TCXO</button>
+            <button class="btn-retro" style="font-size:10px; padding:2px 6px;" onclick="selectTestPoint(8)">TP8: Eth</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Lower Bench: Oscilloscope Display & Circuit Tuning Controls -->
+      <div style="display:grid; grid-template-columns: 1fr 340px; gap:16px;">
+        <!-- Left: Probed Signal Oscilloscope -->
+        <div style="background:var(--bg-card); border:1px solid var(--border); padding:12px; border-radius:4px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; flex-wrap:wrap; gap:6px;">
+            <div>
+              <strong style="color:var(--cyan-net);" id="cadProbeTitle">ACTIVE PROBE: TP2 [LC RESONANT TANK]</strong>
+              <div style="font-size:11px; color:var(--text-muted);" id="cadProbeDesc">Tuned parallel LC bandpass filter output (1999.0 Hz).</div>
+            </div>
+            <div style="display:flex; gap:6px;">
+              <button class="btn-retro" id="btnAuditionProbe" onclick="toggleProbeAudition()" style="font-size:11px;">🔊 Audition Probed Audio</button>
+            </div>
+          </div>
+
+          <!-- Scope Canvas -->
+          <canvas id="cadScopeCanvas" width="560" height="170" style="width:100%; height:170px; background:#010408; border:1px solid #1e293b; border-radius:3px; display:block;"></canvas>
+
+          <!-- Scope Measurement Readouts & Controls -->
+          <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap:8px; margin-top:8px; font-size:11px; font-family:monospace; background:#040710; padding:6px 10px; border-radius:3px; border:1px solid var(--border);">
+            <div>Freq: <strong id="scopeMeasFreq" style="color:var(--amber-bright);">1999.0 Hz</strong></div>
+            <div>Vp-p: <strong id="scopeMeasVpp" style="color:var(--green-bright);">3.80 V</strong></div>
+            <div>Vrms: <strong id="scopeMeasVrms" style="color:var(--cyan-net);">1.34 V</strong></div>
+            <div>SNR: <strong id="scopeMeasSnr" style="color:#cbd5e1;">41.8 dB</strong></div>
+          </div>
+
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px; font-size:11px; flex-wrap:wrap; gap:8px;">
+            <div style="display:flex; align-items:center; gap:6px;">
+              <span style="color:var(--text-muted);">Timebase:</span>
+              <select id="cadScopeTimebase" class="input-retro" style="font-size:10px; padding:2px 4px;" onchange="updateCadScopeParams()">
+                <option value="0.2">0.2 ms/div</option>
+                <option value="0.5" selected>0.5 ms/div</option>
+                <option value="1.0">1.0 ms/div</option>
+                <option value="2.0">2.0 ms/div</option>
+                <option value="5.0">5.0 ms/div</option>
+              </select>
+            </div>
+            <div style="display:flex; align-items:center; gap:6px;">
+              <span style="color:var(--text-muted);">Volts/Div:</span>
+              <select id="cadScopeVolts" class="input-retro" style="font-size:10px; padding:2px 4px;" onchange="updateCadScopeParams()">
+                <option value="0.5">0.5 V/div</option>
+                <option value="1.0" selected>1.0 V/div</option>
+                <option value="2.0">2.0 V/div</option>
+                <option value="5.0">5.0 V/div</option>
+              </select>
+            </div>
+            <div style="display:flex; align-items:center; gap:6px;">
+              <span style="color:var(--text-muted);">Trigger:</span>
+              <select id="cadScopeTrigger" class="input-retro" style="font-size:10px; padding:2px 4px;" onchange="updateCadScopeParams()">
+                <option value="auto" selected>Auto</option>
+                <option value="norm">Normal</option>
+                <option value="single">Single</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: Circuit Parameter Tuner & Diagnostics Matrix -->
+        <div style="background:var(--bg-card); border:1px solid var(--border); padding:12px; border-radius:4px; font-size:12px; display:flex; flex-direction:column; gap:12px;">
+          <h4 style="color:var(--amber-bright); border-bottom:1px solid var(--border); padding-bottom:4px;">
+            🎛️ LC Tank Resonant Calculator &amp; Tuner
+          </h4>
+
+          <!-- Inductance Slider -->
+          <div>
+            <div style="display:flex; justify-content:space-between; margin-bottom:2px;">
+              <span style="color:var(--text-muted);">Inductor L1 (Ferrite):</span>
+              <span id="lblCadL1" style="color:var(--amber-bright); font-weight:bold; font-family:monospace;">63.3 mH</span>
+            </div>
+            <input type="range" class="slider-retro" id="rngCadL1" min="10" max="100" step="0.1" value="63.3" oninput="updateCadCircuitTuning()" />
+          </div>
+
+          <!-- Capacitance Slider -->
+          <div>
+            <div style="display:flex; justify-content:space-between; margin-bottom:2px;">
+              <span style="color:var(--text-muted);">Capacitor C1 (Poly):</span>
+              <span id="lblCadC1" style="color:var(--cyan-net); font-weight:bold; font-family:monospace;">0.100 μF</span>
+            </div>
+            <input type="range" class="slider-retro" id="rngCadC1" min="0.01" max="0.25" step="0.001" value="0.100" oninput="updateCadCircuitTuning()" />
+          </div>
+
+          <!-- Resonant Frequency Calculation Output Box -->
+          <div style="background:#040710; border:1px solid var(--border-amber); padding:8px 10px; border-radius:3px;">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <span style="color:var(--text-muted); font-size:11px;">Resonant Freq (f₀ = 1/2π√LC):</span>
+              <strong id="cadCalcResFreq" style="color:var(--green-bright); font-family:monospace; font-size:13px;">1999.0 Hz</strong>
+            </div>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:4px; font-size:11px;">
+              <span style="color:var(--text-muted);">Carrier Lock Delta:</span>
+              <span id="cadCalcDelta" style="color:var(--green-bright); font-weight:bold;">0.0 Hz (PERFECT RESONANCE)</span>
+            </div>
+            <div id="cadLockIndicator" style="margin-top:6px; font-size:10px; color:var(--green-bright); font-weight:bold; display:flex; align-items:center; gap:4px;">
+              <span>● TANK RESONANCE LOCKED (REG_0x7F: 0x1999AA)</span>
+            </div>
+          </div>
+
+          <!-- Fault Injection Matrix -->
+          <div>
+            <strong style="color:var(--red-alert); font-size:11px; display:block; margin-bottom:4px;">⚡ FAULT INJECTION &amp; STRESS TESTING:</strong>
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:6px;">
+              <button class="btn-retro" style="font-size:10px; padding:3px 6px;" onclick="injectCadFault('moisture')">🌧️ Salt Moisture</button>
+              <button class="btn-retro" style="font-size:10px; padding:3px 6px;" onclick="injectCadFault('drift')">🌡️ Thermal Drift</button>
+              <button class="btn-retro" style="font-size:10px; padding:3px 6px;" onclick="injectCadFault('shock')">💥 Ground Shock</button>
+              <button class="btn-retro" style="font-size:10px; padding:3px 6px;" onclick="injectCadFault('none')">🔄 Factory Calibrate</button>
+            </div>
+            <div id="cadFaultStatus" style="font-size:10px; color:var(--text-muted); margin-top:4px;">Fault status: Pristine calibration (Zero circuit anomalies).</div>
+          </div>
+
+          <!-- Export Actions -->
+          <div style="display:flex; flex-direction:column; gap:6px; margin-top:2px; border-top:1px dashed var(--border); padding-top:8px;">
+            <button class="btn-retro" onclick="downloadSpiceNetlist()">💾 Export SPICE Netlist (.CIR)</button>
+            <button class="btn-retro" onclick="downloadHardwareBom()">📄 Download Hardware BOM (.TXT)</button>
+            <button class="btn-retro" onclick="copyCadRegisterToken()">📋 Copy Register Token (0x7F1999)</button>
+          </div>
         </div>
       </div>
     </div>
@@ -3447,6 +3609,12 @@ function execTermCommand(rawCmd) {
   revert        - Revert active sector to pristine factory ROM state
   download      - Download active sector raw image as .DMP binary
   audio <mode>  - Toggle audio subcarrier (on, off, 1999hz, 432hz, slapbass, spc_echo)
+  cad / schematic - Launch Transponder CAD Schematic & RF Test Bench (Tab 10)
+  probe <1-8>   - Attach scope probe to Test Points 1 through 8
+  tune <L> <C>  - Tune LC resonant tank parameters in mH and uF (e.g. 'tune 63.3 0.1')
+  netlist       - Generate and export SPICE circuit simulation deck (.CIR)
+  bom           - Generate and export Hardware Bill of Materials (.TXT)
+  fault <type>  - Simulate circuit fault (moisture, drift, shock, none)
   matrix        - Probe gateway socket for residual anomalous packets
   clear         - Flush terminal display buffer`;
   } else if (cmd === 'status') {
@@ -3649,6 +3817,54 @@ ROTATION PROTOCOL: Sequential single-app execution cycle.`;
   } else if (cmd === 'export' && (arg === 'memo' || arg === 'memo9')) {
     exportDeepMemoTxt();
     res += `Exporting Deep Airgap Memo #09 as plain text file.`;
+  } else if (cmd === 'cad' || cmd === 'schematic') {
+    switchTab('cad');
+    res += `Engaging Station 0x7F Transponder CAD Schematic & RF Test Bench.`;
+  } else if (cmd === 'probe') {
+    const tpNum = parseInt(arg);
+    if (!isNaN(tpNum) && tpNum >= 1 && tpNum <= 8) {
+      selectTestPoint(tpNum);
+      const tp = TEST_POINTS[tpNum];
+      res += `Probe attached to ${tp.name}.\nStage: ${tp.desc}\nMeasured: ${tp.baseFreq} Hz | ${tp.vpp} Vp-p | SNR: ${tp.snr} dB`;
+    } else {
+      res += `Usage: probe <1-8> (e.g. 'probe 2' for LC Resonant Tank)`;
+    }
+  } else if (cmd === 'tune') {
+    const parts = arg.split(' ');
+    if (parts.length >= 2) {
+      const l = parseFloat(parts[0]);
+      const c = parseFloat(parts[1]);
+      if (!isNaN(l) && l >= 10 && l <= 100 && !isNaN(c) && c >= 0.01 && c <= 0.25) {
+        cadL1 = l;
+        cadC1 = c;
+        const sliderL = document.getElementById('rngCadL1');
+        const sliderC = document.getElementById('rngCadC1');
+        if (sliderL) sliderL.value = l;
+        if (sliderC) sliderC.value = c;
+        updateCadCircuitTuning();
+        res += `LC Tank tuned: L1=${l}mH, C1=${c}uF. Resonant freq: ${document.getElementById('cadCalcResFreq').textContent}`;
+      } else {
+        res += `Usage: tune <L_in_mH> <C_in_uF> (e.g. 'tune 63.3 0.1')`;
+      }
+    } else {
+      res += `Usage: tune <L_in_mH> <C_in_uF> (e.g. 'tune 63.3 0.1')`;
+    }
+  } else if (cmd === 'netlist') {
+    downloadSpiceNetlist();
+    res += `Exporting SPICE circuit simulation deck STATION_0x7F.CIR.`;
+  } else if (cmd === 'bom') {
+    downloadHardwareBom();
+    res += `Exporting Carlsbad Skunkworks Hardware Bill of Materials.`;
+  } else if (cmd === 'fault') {
+    if (['moisture', 'drift', 'shock', 'none'].includes(arg)) {
+      injectCadFault(arg);
+      res += `Circuit fault status set to: ${arg}.`;
+    } else {
+      res += `Usage: fault <moisture|drift|shock|none>`;
+    }
+  } else if (cmd === 'calibrate') {
+    autoCalibrateCad();
+    res += `Circuit trimmers restored to factory 1999.0 Hz laboratory spec.`;
   } else if (cmd === 'clear') {
     out.textContent = '';
     return;
@@ -4784,6 +5000,817 @@ function renderInterferometer() {
 }
 
 /* =========================================================================
+   10. SKUNKWORKS TRANSPONDER CAD SCHEMATIC & RF TEST BENCH
+   ========================================================================= */
+let currentTestPoint = 2; // Default TP2 (LC Resonant Tank)
+let cadL1 = 63.3; // mH
+let cadC1 = 0.100; // uF
+let cadFault = 'none'; // 'moisture', 'drift', 'shock', 'none'
+let cadAnimId = null;
+let cadScopeAnimId = null;
+let cadTimebase = 0.5; // ms/div
+let cadVoltsPerDiv = 1.0; // V/div
+let cadTrigger = 'auto';
+let cadHoveredTestPoint = null;
+let cadT = 0;
+let isProbeAuditioning = false;
+let probeOscNode = null;
+let probeModNode = null;
+let probeGainNode = null;
+
+const TEST_POINTS = {
+  1: { id: 1, name: "TP1 [ANT-1 GROUND LOOP]", desc: "Permian Salado Halite ground wave pickup (-650m). High noise floor, 1999Hz carrier bleed.", x: 65, y: 150, baseFreq: 1999, vpp: 0.85, wave: 'noisy_sine', snr: 14.2 },
+  2: { id: 2, name: "TP2 [LC RESONANT TANK]", desc: "Tuned parallel LC bandpass filter output. Harmonic resonance locks at f0 = 1/(2*pi*sqrt(L*C)).", x: 155, y: 150, baseFreq: 1999, vpp: 3.80, wave: 'sine', snr: 41.8 },
+  3: { id: 3, name: "TP3 [2N5485 JFET PREAMP]", desc: "Low-noise JFET preamplifier stage. +24 dB gain, high input impedance buffer.", x: 245, y: 150, baseFreq: 1999, vpp: 4.50, wave: 'sine', snr: 38.6 },
+  4: { id: 4, name: "TP4 [YM2612 FM OPERATOR]", desc: "Yamaha OPN2 FM synthesized subcarrier. 2-Operator FM modulation with 19.99Hz sidebands.", x: 420, y: 95, baseFreq: 1999, vpp: 4.20, wave: 'fm', snr: 45.2 },
+  5: { id: 5, name: "TP5 [SPC700 ECHO DELAY]", desc: "Sony 8-bit audio DSP delay line buffer. 190ms ring buffer echo with 28% feedback.", x: 420, y: 245, baseFreq: 1999, vpp: 3.40, wave: 'echo', snr: 40.1 },
+  6: { id: 6, name: "TP6 [4N25 OPTOCOUPLER AIRGAP]", desc: "Galvanic airgap isolation trench (-750m deep vault link). 1999 baud square pulse train.", x: 535, y: 170, baseFreq: 1999, vpp: 5.00, wave: 'square', snr: 52.0 },
+  7: { id: 7, name: "TP7 [TCXO REFERENCE CLOCK]", desc: "Oven-controlled crystal oscillator (TCXO). High-precision 1.999 kHz reference clock.", x: 330, y: 265, baseFreq: 1999, vpp: 5.00, wave: 'clock', snr: 58.4 },
+  8: { id: 8, name: "TP8 [10BASE-T ETHERNET FRAMING]", desc: "Manchester encoded packet bursts routed across non-routable interface 10.19.99.4:1999.", x: 635, y: 170, baseFreq: 1999, vpp: 2.50, wave: 'manchester', snr: 48.7 }
+};
+
+function calcCadResonantFreq(l_mH, c_uF) {
+  const l = l_mH * 1e-3;
+  const c = c_uF * 1e-6;
+  return 1 / (2 * Math.PI * Math.sqrt(l * c));
+}
+
+function initCadCanvas() {
+  const cvs = document.getElementById('cadSchematicCanvas');
+  if (!cvs) return;
+
+  cvs.addEventListener('mousemove', (e) => {
+    const rect = cvs.getBoundingClientRect();
+    const scaleX = cvs.width / rect.width;
+    const scaleY = cvs.height / rect.height;
+    const mx = (e.clientX - rect.left) * scaleX;
+    const my = (e.clientY - rect.top) * scaleY;
+
+    let found = null;
+    for (let id in TEST_POINTS) {
+      const tp = TEST_POINTS[id];
+      const dx = mx - tp.x;
+      const dy = my - tp.y;
+      if (Math.hypot(dx, dy) <= 18) {
+        found = tp.id;
+        break;
+      }
+    }
+    cadHoveredTestPoint = found;
+    cvs.style.cursor = found ? 'pointer' : 'crosshair';
+
+    const info = document.getElementById('lblCadHoverInfo');
+    if (info) {
+      if (found) {
+        const tp = TEST_POINTS[found];
+        info.textContent = `HOVER: ${tp.name} — ${tp.desc}`;
+        info.style.color = '#38bdf8';
+      } else {
+        const cur = TEST_POINTS[currentTestPoint];
+        info.textContent = `ATTACHED PROBE: ${cur.name} (${cur.baseFreq} Hz)`;
+        info.style.color = '#fbbf24';
+      }
+    }
+  });
+
+  cvs.addEventListener('click', (e) => {
+    const rect = cvs.getBoundingClientRect();
+    const scaleX = cvs.width / rect.width;
+    const scaleY = cvs.height / rect.height;
+    const mx = (e.clientX - rect.left) * scaleX;
+    const my = (e.clientY - rect.top) * scaleY;
+
+    for (let id in TEST_POINTS) {
+      const tp = TEST_POINTS[id];
+      const dx = mx - tp.x;
+      const dy = my - tp.y;
+      if (Math.hypot(dx, dy) <= 18) {
+        selectTestPoint(tp.id);
+        break;
+      }
+    }
+  });
+
+  if (!cadAnimId) renderCadSchematic();
+  if (!cadScopeAnimId) startCadScope();
+}
+
+function selectTestPoint(id) {
+  if (!TEST_POINTS[id]) return;
+  currentTestPoint = id;
+  const tp = TEST_POINTS[id];
+
+  const titleEl = document.getElementById('cadProbeTitle');
+  const descEl = document.getElementById('cadProbeDesc');
+  if (titleEl) titleEl.textContent = `ACTIVE PROBE: ${tp.name}`;
+  if (descEl) descEl.textContent = tp.desc;
+
+  updateCadUI();
+  if (isProbeAuditioning) {
+    updateProbeAuditionTone();
+  }
+  playKeystrokeTone();
+}
+
+function updateCadCircuitTuning() {
+  const sliderL = document.getElementById('rngCadL1');
+  const sliderC = document.getElementById('rngCadC1');
+  if (sliderL) cadL1 = parseFloat(sliderL.value);
+  if (sliderC) cadC1 = parseFloat(sliderC.value);
+
+  const lblL = document.getElementById('lblCadL1');
+  const lblC = document.getElementById('lblCadC1');
+  if (lblL) lblL.textContent = `${cadL1.toFixed(1)} mH`;
+  if (lblC) lblC.textContent = `${cadC1.toFixed(3)} μF`;
+
+  const f0 = calcCadResonantFreq(cadL1, cadC1);
+  const delta = Math.abs(f0 - 1999.0);
+
+  const freqEl = document.getElementById('cadCalcResFreq');
+  const deltaEl = document.getElementById('cadCalcDelta');
+  const lockEl = document.getElementById('cadLockIndicator');
+
+  if (freqEl) freqEl.textContent = `${f0.toFixed(1)} Hz`;
+  if (deltaEl) {
+    if (delta <= 5.0) {
+      deltaEl.textContent = `${delta.toFixed(1)} Hz (PERFECT RESONANCE)`;
+      deltaEl.style.color = '#10b981';
+      if (lockEl) {
+        lockEl.style.display = 'flex';
+        lockEl.innerHTML = `<span>● TANK RESONANCE LOCKED (REG_0x7F: 0x1999AA)</span>`;
+      }
+    } else {
+      deltaEl.textContent = `${delta.toFixed(1)} Hz (DETUNED)`;
+      deltaEl.style.color = '#f59e0b';
+      if (lockEl) {
+        lockEl.style.display = 'none';
+      }
+    }
+  }
+
+  // Update TP2 and TP3 frequencies
+  TEST_POINTS[2].baseFreq = Math.round(f0);
+  TEST_POINTS[3].baseFreq = Math.round(f0);
+
+  if (isProbeAuditioning) {
+    updateProbeAuditionTone();
+  }
+}
+
+function autoCalibrateCad() {
+  cadL1 = 63.3;
+  cadC1 = 0.100;
+  cadFault = 'none';
+
+  const sliderL = document.getElementById('rngCadL1');
+  const sliderC = document.getElementById('rngCadC1');
+  if (sliderL) sliderL.value = 63.3;
+  if (sliderC) sliderC.value = 0.100;
+
+  updateCadCircuitTuning();
+
+  const statusEl = document.getElementById('cadFaultStatus');
+  if (statusEl) {
+    statusEl.textContent = 'Fault status: Pristine calibration (Zero circuit anomalies). All trimmers locked to 1999.0 Hz.';
+    statusEl.style.color = '#10b981';
+  }
+
+  playKeystrokeTone();
+}
+
+function injectCadFault(type) {
+  cadFault = type;
+  const statusEl = document.getElementById('cadFaultStatus');
+  if (!statusEl) return;
+
+  if (type === 'moisture') {
+    statusEl.textContent = 'FAULT: Halite brine moisture intrusion detected in antenna well. Q-factor degraded to 4.5. 60Hz hum induced.';
+    statusEl.style.color = '#ef4444';
+  } else if (type === 'drift') {
+    statusEl.textContent = 'FAULT: Geothermal gradient spike (+42°C). TCXO crystal drift active (+19 Hz offset: 2018 Hz carrier).';
+    statusEl.style.color = '#f59e0b';
+  } else if (type === 'shock') {
+    statusEl.textContent = 'FAULT: Lithospheric micro-seismic shockwave detected (-650m fault slip). High amplitude ground transients active.';
+    statusEl.style.color = '#ef4444';
+  } else {
+    autoCalibrateCad();
+    return;
+  }
+  playKeystrokeTone();
+}
+
+function updateCadScopeParams() {
+  const tb = document.getElementById('cadScopeTimebase');
+  const v = document.getElementById('cadScopeVolts');
+  const tr = document.getElementById('cadScopeTrigger');
+  if (tb) cadTimebase = parseFloat(tb.value);
+  if (v) cadVoltsPerDiv = parseFloat(v.value);
+  if (tr) cadTrigger = tr.value;
+}
+
+function updateCadUI() {
+  const tp = TEST_POINTS[currentTestPoint];
+  const measFreq = document.getElementById('scopeMeasFreq');
+  const measVpp = document.getElementById('scopeMeasVpp');
+  const measVrms = document.getElementById('scopeMeasVrms');
+  const measSnr = document.getElementById('scopeMeasSnr');
+
+  let freq = tp.baseFreq;
+  let vpp = tp.vpp;
+  let snr = tp.snr;
+
+  if (cadFault === 'drift' && (tp.id === 7 || tp.id === 4)) {
+    freq += 19;
+  }
+  if (cadFault === 'moisture') {
+    vpp *= 0.45;
+    snr = Math.max(8.0, snr - 20.0);
+  }
+
+  const vrms = (vpp / (2 * Math.SQRT2)).toFixed(2);
+
+  if (measFreq) measFreq.textContent = `${freq}.0 Hz`;
+  if (measVpp) measVpp.textContent = `${vpp.toFixed(2)} V`;
+  if (measVrms) measVrms.textContent = `${vrms} V`;
+  if (measSnr) measSnr.textContent = `${snr.toFixed(1)} dB`;
+}
+
+function renderCadSchematic() {
+  const cvs = document.getElementById('cadSchematicCanvas');
+  if (!cvs) return;
+  cadAnimId = requestAnimationFrame(renderCadSchematic);
+  cadT++;
+
+  const ctx = cvs.getContext('2d');
+  const w = cvs.width;
+  const h = cvs.height;
+
+  // Background
+  ctx.fillStyle = '#020610';
+  ctx.fillRect(0, 0, w, h);
+
+  // Vector CRT grid
+  ctx.strokeStyle = '#0a1628';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  for (let x = 0; x < w; x += 25) {
+    ctx.moveTo(x, 0); ctx.lineTo(x, h);
+  }
+  for (let y = 0; y < h; y += 25) {
+    ctx.moveTo(0, y); ctx.lineTo(w, y);
+  }
+  ctx.stroke();
+
+  // PCB Board Edge & Corners
+  ctx.strokeStyle = '#1e293b';
+  ctx.lineWidth = 2;
+  ctx.strokeRect(10, 10, w - 20, h - 20);
+
+  // Corner mounting holes
+  ctx.fillStyle = '#1e293b';
+  [[20, 20], [w - 20, 20], [20, h - 20], [w - 20, h - 20]].forEach(([px, py]) => {
+    ctx.beginPath();
+    ctx.arc(px, py, 4, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = '#334155';
+    ctx.stroke();
+  });
+
+  // Salado Halite Ground Plane Fill at bottom
+  ctx.fillStyle = '#061324';
+  ctx.fillRect(12, h - 35, w - 24, 23);
+  ctx.fillStyle = '#38bdf8';
+  ctx.font = '9px monospace';
+  ctx.fillText('⚡ PERMIAN SALADO HALITE CAPACITIVE GROUND DIELECTRIC PLANE (-650m STRATA // εr = 5.9 // Z0 = 50Ω)', 24, h - 20);
+
+  // Airgap Trench (-750m Vault Boundary)
+  const trenchX = 490;
+  ctx.strokeStyle = 'rgba(239, 68, 68, 0.4)';
+  ctx.lineWidth = 1;
+  ctx.setLineDash([4, 4]);
+  ctx.strokeRect(trenchX, 25, 20, h - 65);
+  ctx.setLineDash([]);
+  ctx.fillStyle = 'rgba(239, 68, 68, 0.15)';
+  ctx.fillRect(trenchX, 25, 20, h - 65);
+
+  ctx.save();
+  ctx.translate(trenchX + 13, 170);
+  ctx.rotate(-Math.PI / 2);
+  ctx.fillStyle = '#f87171';
+  ctx.font = 'bold 9px monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText('AIRGAP GALVANIC TRENCH (-750m VAULT)', 0, 0);
+  ctx.restore();
+
+  // Draw Traces
+  ctx.strokeStyle = '#38bdf8';
+  ctx.lineWidth = 2;
+
+  // Main RF Bus from Ant -> Tank -> Preamp -> BPF
+  ctx.beginPath();
+  ctx.moveTo(65, 150);
+  ctx.lineTo(155, 150);
+  ctx.lineTo(245, 150);
+  ctx.lineTo(330, 150);
+  ctx.stroke();
+
+  // BPF -> Split to YM2612 (up) and SPC700 (down)
+  ctx.beginPath();
+  ctx.moveTo(330, 150);
+  ctx.lineTo(365, 150);
+  ctx.lineTo(365, 95);
+  ctx.lineTo(420, 95);
+  ctx.moveTo(365, 150);
+  ctx.lineTo(365, 245);
+  ctx.lineTo(420, 245);
+  ctx.stroke();
+
+  // TCXO -> YM2612 clock feed
+  ctx.strokeStyle = '#10b981';
+  ctx.beginPath();
+  ctx.moveTo(330, 265);
+  ctx.lineTo(380, 265);
+  ctx.lineTo(380, 115);
+  ctx.lineTo(420, 115);
+  ctx.stroke();
+
+  // YM2612 & SPC700 -> Optocoupler
+  ctx.strokeStyle = '#38bdf8';
+  ctx.beginPath();
+  ctx.moveTo(465, 95);
+  ctx.lineTo(480, 95);
+  ctx.lineTo(480, 170);
+  ctx.lineTo(535, 170);
+  ctx.moveTo(465, 245);
+  ctx.lineTo(480, 245);
+  ctx.lineTo(480, 170);
+  ctx.stroke();
+
+  // Optocoupler -> Ethernet PHY
+  ctx.strokeStyle = '#fbbf24';
+  ctx.beginPath();
+  ctx.moveTo(560, 170);
+  ctx.lineTo(635, 170);
+  ctx.stroke();
+
+  // Animated Electron Dots flowing on traces
+  ctx.fillStyle = '#fbbf24';
+  const pulseOff = (cadT * 1.5) % 30;
+  for (let x = 65 + pulseOff; x < 330; x += 30) {
+    ctx.beginPath();
+    ctx.arc(x, 150, 2, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  for (let x = 560 + pulseOff; x < 635; x += 25) {
+    ctx.beginPath();
+    ctx.arc(x, 170, 2, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Draw Component Chips & Schematic Symbols
+
+  // 1. ANT-1 (Ground Loop)
+  ctx.fillStyle = '#09152a';
+  ctx.strokeStyle = '#38bdf8';
+  ctx.strokeRect(35, 125, 30, 50);
+  ctx.fillRect(35, 125, 30, 50);
+  ctx.fillStyle = '#e2e8f0';
+  ctx.font = 'bold 9px monospace';
+  ctx.fillText('ANT-1', 38, 142);
+  ctx.font = '8px monospace';
+  ctx.fillStyle = '#94a3b8';
+  ctx.fillText('LOOP', 40, 158);
+
+  // 2. L1 & C1 Resonant Tank
+  ctx.fillStyle = '#09152a';
+  ctx.strokeStyle = '#f59e0b';
+  ctx.strokeRect(125, 115, 30, 70);
+  ctx.fillRect(125, 115, 30, 70);
+  ctx.fillStyle = '#fbbf24';
+  ctx.font = 'bold 9px monospace';
+  ctx.fillText('L1/C1', 128, 133);
+  ctx.font = '8px monospace';
+  ctx.fillStyle = '#94a3b8';
+  ctx.fillText('TANK', 128, 148);
+  ctx.fillText(`${cadL1.toFixed(0)}mH`, 128, 162);
+  ctx.fillText(`${(cadC1 * 1000).toFixed(0)}nF`, 128, 174);
+
+  // 3. U1 (2N5485 JFET Preamp)
+  ctx.fillStyle = '#09152a';
+  ctx.strokeStyle = '#38bdf8';
+  ctx.strokeRect(215, 125, 30, 50);
+  ctx.fillRect(215, 125, 30, 50);
+  ctx.fillStyle = '#e2e8f0';
+  ctx.font = 'bold 9px monospace';
+  ctx.fillText('U1', 224, 142);
+  ctx.font = '8px monospace';
+  ctx.fillStyle = '#94a3b8';
+  ctx.fillText('JFET', 220, 158);
+
+  // 4. BPF-1999 (Ceramic Filter)
+  ctx.fillStyle = '#09152a';
+  ctx.strokeStyle = '#10b981';
+  ctx.strokeRect(305, 125, 30, 50);
+  ctx.fillRect(305, 125, 30, 50);
+  ctx.fillStyle = '#34d399';
+  ctx.font = 'bold 9px monospace';
+  ctx.fillText('BPF', 312, 142);
+  ctx.font = '8px monospace';
+  ctx.fillStyle = '#94a3b8';
+  ctx.fillText('1999', 310, 158);
+
+  // 5. U2 (YM2612 OPN2 ASIC DIP-24)
+  ctx.fillStyle = '#040b18';
+  ctx.strokeStyle = '#38bdf8';
+  ctx.strokeRect(390, 70, 75, 50);
+  ctx.fillRect(390, 70, 75, 50);
+  ctx.fillStyle = '#38bdf8';
+  ctx.font = 'bold 9px monospace';
+  ctx.fillText('YM2612 OPN2', 396, 88);
+  ctx.font = '8px monospace';
+  ctx.fillStyle = '#94a3b8';
+  ctx.fillText('CH6 1999Hz FM', 396, 102);
+
+  // 6. U3 (SPC700 DSP QFP-64)
+  ctx.fillStyle = '#040b18';
+  ctx.strokeStyle = '#f59e0b';
+  ctx.strokeRect(390, 220, 75, 50);
+  ctx.fillRect(390, 220, 75, 50);
+  ctx.fillStyle = '#fbbf24';
+  ctx.font = 'bold 9px monospace';
+  ctx.fillText('SPC700 DSP', 398, 238);
+  ctx.font = '8px monospace';
+  ctx.fillStyle = '#94a3b8';
+  ctx.fillText('190ms ECHO', 398, 252);
+
+  // 7. U4 (TCXO 1.999kHz Clock Can)
+  ctx.fillStyle = '#1e293b';
+  ctx.strokeStyle = '#10b981';
+  ctx.strokeRect(290, 245, 45, 40);
+  ctx.fillRect(290, 245, 45, 40);
+  ctx.fillStyle = '#34d399';
+  ctx.font = 'bold 9px monospace';
+  ctx.fillText('TCXO', 300, 262);
+  ctx.font = '8px monospace';
+  ctx.fillStyle = '#cbd5e1';
+  ctx.fillText('1.999k', 296, 276);
+
+  // 8. ISO-1 (4N25 Optocoupler)
+  ctx.fillStyle = '#090e1a';
+  ctx.strokeStyle = '#f87171';
+  ctx.strokeRect(520, 145, 30, 50);
+  ctx.fillRect(520, 145, 30, 50);
+  ctx.fillStyle = '#f87171';
+  ctx.font = 'bold 9px monospace';
+  ctx.fillText('4N25', 525, 162);
+  ctx.font = '8px monospace';
+  ctx.fillStyle = '#cbd5e1';
+  ctx.fillText('OPTO', 525, 178);
+
+  // 9. PHY-1 (10BASE-T Ethernet RJ45 Transceiver)
+  ctx.fillStyle = '#09152a';
+  ctx.strokeStyle = '#38bdf8';
+  ctx.strokeRect(615, 140, 60, 60);
+  ctx.fillRect(615, 140, 60, 60);
+  ctx.fillStyle = '#38bdf8';
+  ctx.font = 'bold 9px monospace';
+  ctx.fillText('DP8390', 624, 158);
+  ctx.font = '8px monospace';
+  ctx.fillStyle = '#94a3b8';
+  ctx.fillText('10BASE-T', 620, 172);
+  ctx.fillText('10.19.99.4', 618, 186);
+
+  // Draw Test Points TP1 through TP8
+  for (let id in TEST_POINTS) {
+    const tp = TEST_POINTS[id];
+    const isSelected = (tp.id === currentTestPoint);
+    const isHovered = (tp.id === cadHoveredTestPoint);
+
+    // Outer glow ring
+    if (isSelected) {
+      ctx.strokeStyle = 'rgba(245, 158, 11, 0.8)';
+      ctx.lineWidth = 2;
+      const pulseR = 12 + Math.sin(cadT * 0.15) * 3;
+      ctx.beginPath();
+      ctx.arc(tp.x, tp.y, pulseR, 0, Math.PI * 2);
+      ctx.stroke();
+    } else if (isHovered) {
+      ctx.strokeStyle = '#38bdf8';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.arc(tp.x, tp.y, 14, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+
+    // Pad circle
+    ctx.fillStyle = isSelected ? '#f59e0b' : (isHovered ? '#38bdf8' : '#1e293b');
+    ctx.beginPath();
+    ctx.arc(tp.x, tp.y, 9, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.strokeStyle = isSelected ? '#fbbf24' : '#cbd5e1';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    // Pad label
+    ctx.fillStyle = isSelected ? '#000' : '#fff';
+    ctx.font = 'bold 8px monospace';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(`T${tp.id}`, tp.x, tp.y);
+    ctx.textAlign = 'start';
+    ctx.textBaseline = 'alphabetic';
+  }
+}
+
+function startCadScope() {
+  const cvs = document.getElementById('cadScopeCanvas');
+  if (!cvs) return;
+  cadScopeAnimId = requestAnimationFrame(startCadScope);
+
+  const ctx = cvs.getContext('2d');
+  const w = cvs.width;
+  const h = cvs.height;
+
+  // Background
+  ctx.fillStyle = '#01050a';
+  ctx.fillRect(0, 0, w, h);
+
+  // Phosphor Scope Reticle Grid (10 div x 8 div)
+  ctx.strokeStyle = 'rgba(16, 185, 129, 0.2)';
+  ctx.lineWidth = 1;
+  const divW = w / 10;
+  const divH = h / 8;
+
+  ctx.beginPath();
+  for (let x = 0; x <= w; x += divW) {
+    ctx.moveTo(x, 0); ctx.lineTo(x, h);
+  }
+  for (let y = 0; y <= h; y += divH) {
+    ctx.moveTo(0, y); ctx.lineTo(w, y);
+  }
+  ctx.stroke();
+
+  // Center axes hash marks
+  ctx.strokeStyle = 'rgba(16, 185, 129, 0.45)';
+  ctx.beginPath();
+  ctx.moveTo(w / 2, 0); ctx.lineTo(w / 2, h);
+  ctx.moveTo(0, h / 2); ctx.lineTo(w, h / 2);
+  ctx.stroke();
+
+  const tp = TEST_POINTS[currentTestPoint];
+  let freq = tp.baseFreq;
+  let vpp = tp.vpp;
+
+  if (cadFault === 'drift' && (tp.id === 7 || tp.id === 4)) {
+    freq += 19;
+  }
+  if (cadFault === 'moisture') {
+    vpp *= 0.45;
+  }
+
+  // Waveform calculation
+  const totalMs = 10 * cadTimebase; // total ms across display
+  const cy = h / 2;
+  const vScale = (divH / cadVoltsPerDiv); // pixels per volt
+
+  ctx.strokeStyle = '#34d399';
+  ctx.shadowColor = '#10b981';
+  ctx.shadowBlur = 6;
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+
+  for (let px = 0; px < w; px++) {
+    const tMs = (px / w) * totalMs;
+    const tSec = (tMs / 1000) + (cadT * 0.001);
+
+    let volt = 0;
+    const amp = vpp / 2;
+
+    if (tp.wave === 'sine') {
+      volt = amp * Math.sin(2 * Math.PI * freq * tSec);
+    } else if (tp.wave === 'noisy_sine') {
+      const noise = (Math.random() - 0.5) * 0.35;
+      volt = (amp * Math.sin(2 * Math.PI * freq * tSec)) + noise;
+    } else if (tp.wave === 'fm') {
+      const mod = 1.8 * Math.sin(2 * Math.PI * 19.99 * tSec);
+      volt = amp * Math.sin(2 * Math.PI * freq * tSec + mod);
+    } else if (tp.wave === 'echo') {
+      const p1 = amp * 0.7 * Math.sin(2 * Math.PI * freq * tSec);
+      const p2 = amp * 0.3 * Math.sin(2 * Math.PI * freq * (tSec - 0.00019));
+      volt = p1 + p2;
+    } else if (tp.wave === 'square' || tp.wave === 'clock') {
+      volt = (Math.sin(2 * Math.PI * freq * tSec) >= 0 ? 1 : -1) * amp * 0.95;
+    } else if (tp.wave === 'manchester') {
+      const bitClock = Math.sin(2 * Math.PI * 1999 * tSec);
+      const dataClock = Math.sin(2 * Math.PI * 999.5 * tSec);
+      volt = (bitClock * (dataClock >= 0 ? 1 : -1) >= 0 ? 1 : -1) * amp * 0.9;
+    }
+
+    // Apply Fault distortions
+    if (cadFault === 'moisture') {
+      volt += 0.2 * Math.sin(2 * Math.PI * 60 * tSec); // 60Hz ground hum
+    } else if (cadFault === 'shock') {
+      const shockDecay = Math.exp(-((cadT % 120) * 0.05));
+      volt += Math.sin(cadT * 0.5) * 1.5 * shockDecay;
+    }
+
+    const py = cy - volt * vScale;
+    if (px === 0) ctx.moveTo(px, py);
+    else ctx.lineTo(px, py);
+  }
+
+  ctx.stroke();
+  ctx.shadowBlur = 0;
+}
+
+function toggleProbeAudition() {
+  isProbeAuditioning = !isProbeAuditioning;
+  const btn = document.getElementById('btnAuditionProbe');
+
+  if (isProbeAuditioning) {
+    initAudio();
+    startProbeAuditionTone();
+    if (btn) {
+      btn.textContent = '🛑 Silence Probe Audio';
+      btn.classList.add('active');
+    }
+  } else {
+    stopProbeAuditionTone();
+    if (btn) {
+      btn.textContent = '🔊 Audition Probed Audio';
+      btn.classList.remove('active');
+    }
+  }
+}
+
+function stopProbeAuditionTone() {
+  if (probeOscNode) {
+    try { probeOscNode.stop(); probeOscNode.disconnect(); } catch (e) {}
+    probeOscNode = null;
+  }
+  if (probeModNode) {
+    try { probeModNode.stop(); probeModNode.disconnect(); } catch (e) {}
+    probeModNode = null;
+  }
+  if (probeGainNode) {
+    try { probeGainNode.disconnect(); } catch (e) {}
+    probeGainNode = null;
+  }
+}
+
+function startProbeAuditionTone() {
+  if (!audioCtx) return;
+  stopProbeAuditionTone();
+
+  const tp = TEST_POINTS[currentTestPoint];
+  const now = audioCtx.currentTime;
+
+  probeGainNode = audioCtx.createGain();
+  probeGainNode.gain.setValueAtTime(0.04, now);
+  probeGainNode.connect(audioCtx.destination);
+
+  probeOscNode = audioCtx.createOscillator();
+  let freq = tp.baseFreq;
+  if (cadFault === 'drift' && (tp.id === 7 || tp.id === 4)) freq += 19;
+
+  probeOscNode.frequency.setValueAtTime(freq, now);
+
+  if (tp.wave === 'square' || tp.wave === 'clock' || tp.wave === 'manchester') {
+    probeOscNode.type = 'square';
+  } else {
+    probeOscNode.type = 'sine';
+  }
+
+  if (tp.wave === 'fm') {
+    probeModNode = audioCtx.createOscillator();
+    const modGain = audioCtx.createGain();
+    probeModNode.frequency.setValueAtTime(19.99, now);
+    modGain.gain.setValueAtTime(40, now);
+    probeModNode.connect(modGain);
+    modGain.connect(probeOscNode.frequency);
+    probeModNode.start(now);
+  }
+
+  probeOscNode.connect(probeGainNode);
+  probeOscNode.start(now);
+}
+
+function updateProbeAuditionTone() {
+  if (!isProbeAuditioning || !audioCtx) return;
+  startProbeAuditionTone();
+}
+
+function downloadSpiceNetlist() {
+  const content = `* AETHEL DYNAMICS // CARLSBAD SKUNKWORKS INTRANET
+* STATION 0x7F TRANSPONDER DEMODULATOR MOTHERBOARD
+* REV: 4.2-ECHO | TARGET NODE: 10.19.99.4 [SECTOR 0x7F]
+* DATE: 1999-12-31 23:59:00 UTC
+* CEILING: 999KB HARD ENFORCED | WATCHDOG: ACTIVE
+.TITLE CARLSBAD STATION 0x7F 1999HZ LITHOSPHERIC TRANSPONDER BOARD
+*
+* --- SUBNET & GROUND INTERFACE ---
+* ANT-1: Ground Wave Loop Ant (-650m Salado Halite Strata)
+V_ANT   ANT_IN 0 AC 0.05 SIN(0 0.85 1999.0)
+R_ANT   ANT_IN 1 50
+*
+* --- RESONANT LC TANK BANDPASS ---
+L1      1 0 ${cadL1}mH
+C1      1 0 ${cadC1}uF
+R_DAMP  1 0 100k
+*
+* --- JFET PREAMPLIFIER (2N5485) ---
+J1      DRAIN 1 SOURCE 2N5485
+RD      VCC_12V DRAIN 2.2k
+RS      SOURCE 0 470
+CS      SOURCE 0 10uF
+*
+* --- CERAMIC ACTIVE BANDPASS FILTER (1999 Hz, Q=25) ---
+X_BPF   DRAIN BPF_OUT VCC_12V GND BPF_1999_STAGE
+*
+* --- FM SUBCARRIER DEMODULATOR (YM2612 CH6 FM ASIC) ---
+X_YM    BPF_OUT FM_OUT CLK_1999 YM2612_OPN2_CH6
+*
+* --- SONY SPC700 8-BIT STEREO DELAY BUFFER (190ms / 28% FB) ---
+X_SPC   FM_OUT ECHO_OUT SPC700_ECHO_STAGE
+*
+* --- GALVANIC AIRGAP OPTICAL ISOLATOR (4N25) ---
+X_OPTO  ECHO_OUT AIRGAP_TX VCC_5V 0 4N25_ISOLATOR
+*
+* --- ETHERNET CONTROLLER (10BASE-T INTERFACE 10.19.99.4) ---
+X_PHY   AIRGAP_TX ETH_TX_P ETH_TX_N DP8390_ETHERNET
+*
+.MODEL 2N5485 NJF(Vto=-1.5 Beta=1.2m Lambda=2m)
+.TRAN 0.01m 20m 0m 0.01m
+.AC DEC 100 100 10000
+.PROBE V(ANT_IN) V(1) V(DRAIN) V(BPF_OUT) V(FM_OUT) V(AIRGAP_TX)
+.END
+`;
+
+  const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'STATION_0x7F.CIR';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function downloadHardwareBom() {
+  const content = `=============================================================================
+AETHEL DYNAMICS CARLSBAD SKUNKWORKS // BILL OF MATERIALS
+STATION 0x7F ACOUSTIC & RF TRANSPONDER BOARD (REV 4.2-ECHO)
+LOCATION: CARLSBAD VAULT -650M HALITE CAVITY (10.19.99.4)
+DATE: 1999-12-31 23:59:00 UTC
+=============================================================================
+REFDES   QTY  DESCRIPTION                    PART NUMBER      MIL-SPEC / NOTES
+-----------------------------------------------------------------------------
+ANT1      1   Salado Halite Loop Antenna     AD-HALITE-650    Subsurface Ground Loop
+L1        1   Inductor ${cadL1.toFixed(1)}mH Ferrite Core   JW-1999-${Math.round(cadL1)}M     MIL-C-15305 / Q=25
+C1        1   Capacitor ${(cadC1*1000).toFixed(0)}nF Polypropylene  WIMA-MKP-100N    MIL-C-19978 / 1% Tol
+U1        1   JFET Low Noise Preamplifier    2N5485-TO92      JAN-TX2N5485 (+24dB)
+U2        1   Yamaha OPN2 FM Sound ASIC      YM2612-DIP24     Commercial (Ch6 1999Hz)
+U3        1   Sony 8-Bit Audio DSP & Echo    SPC700-QFP64     Commercial (190ms ring)
+U4        1   Oven-Controlled TCXO 1.999kHz  FOX-TCXO-1999K   MIL-PRF-55310
+ISO1      1   High-Isolation Optocoupler     4N25-DIP6        MIL-PRF-38534 (5000V)
+PHY1      1   10BASE-T Ethernet Controller   DP8390-PLCC      IEEE-802.3 (10.19.99.4)
+R1-R12   12   Metal Film Resistors 1%        RN55C-SERIES     MIL-R-10509
+C2-C10    8   Tantalum Bypass Capacitors     CSR13-SERIES     MIL-C-39003
+-----------------------------------------------------------------------------
+OPERATING ENVIRONMENT:
+- Pressure: 1.1 atm (Hermetically potted enclosure).
+- Stratum: Permian Basin Delaware Group Salado Formation (-650m depth).
+- Ground Dielectric Permittivity: εr = 5.9 (Bedded Halite Rock Salt).
+- Firmware Watchdog: Strictly enforces 999KB ROM memory ceiling.
+- Galvanic Trench: 5000V RMS airgap isolation to deep core vault (10.19.99.127).
+=============================================================================
+`;
+
+  const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'CARLSBAD_STATION_0x7F_BOM.TXT';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function copyCadRegisterToken() {
+  const token = 'CARLSBAD-CAD-0x7F1999';
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(token).then(() => {
+      alert(`📋 Copied Register Token to clipboard: ${token}`);
+    });
+  } else {
+    alert(`Token: ${token}`);
+  }
+}
+
+/* =========================================================================
    7. TAB NAVIGATION CONTROLLER & KEYBOARD SHORTCUTS
    ========================================================================= */
 function switchTab(tabId) {
@@ -4805,8 +5832,12 @@ function switchTab(tabId) {
   } else if (tabId === 'interferometer') {
     if (!interferometerAnimId) initInterferometerCanvas();
     updateInterferometerUI();
+  } else if (tabId === 'cad') {
+    if (!cadAnimId) initCadCanvas();
+    updateCadUI();
   }
 
+  try { history.replaceState(null, '', `#tab-${tabId}`); } catch (e) {}
   playKeystrokeTone();
 }
 
@@ -4819,6 +5850,9 @@ window.addEventListener('keydown', (e) => {
   if (key >= '1' && key <= '9') {
     const tabs = ['memos', 'hex', 'signal', 'map', 'packets', 'terminal', 'verify', 'airgap', 'interferometer'];
     switchTab(tabs[parseInt(key) - 1]);
+    e.preventDefault();
+  } else if (key === '0') {
+    switchTab('cad');
     e.preventDefault();
   } else if (key === 'm' || key === 'M') {
     toggleAudio();
@@ -4840,11 +5874,15 @@ document.addEventListener('visibilitychange', () => {
     if (strataAnimId) cancelAnimationFrame(strataAnimId);
     if (stegoAnimId) cancelAnimationFrame(stegoAnimId);
     if (interferometerAnimId) cancelAnimationFrame(interferometerAnimId);
+    if (cadAnimId) cancelAnimationFrame(cadAnimId);
+    if (cadScopeAnimId) cancelAnimationFrame(cadScopeAnimId);
     animFrameMini = null;
     animFrameLarge = null;
     strataAnimId = null;
     stegoAnimId = null;
     interferometerAnimId = null;
+    cadAnimId = null;
+    cadScopeAnimId = null;
   } else {
     if (audioCtx && audioEnabled && audioCtx.state === 'suspended') {
       audioCtx.resume();
@@ -4858,6 +5896,9 @@ document.addEventListener('visibilitychange', () => {
       if (stegoDemodActive && !stegoAnimId) runStegoAnimation();
     } else if (activeTab && activeTab.id === 'tab-interferometer') {
       if (!interferometerAnimId) initInterferometerCanvas();
+    } else if (activeTab && activeTab.id === 'tab-cad') {
+      if (!cadAnimId) initCadCanvas();
+      if (!cadScopeAnimId) startCadScope();
     }
   }
 });
@@ -4892,6 +5933,16 @@ window.addEventListener('DOMContentLoaded', () => {
   initStegoDemodulator();
   checkArtifactSlots();
   initInterferometerCanvas();
+  initCadCanvas();
+  updateCadUI();
+
+  // URL hash navigation support
+  if (window.location.hash) {
+    const rawHash = window.location.hash.replace('#tab-', '').replace('#', '').toLowerCase();
+    const validTabs = ['memos', 'hex', 'signal', 'map', 'packets', 'terminal', 'verify', 'airgap', 'interferometer', 'cad', 'schematic'];
+    if (rawHash === 'schematic') switchTab('cad');
+    else if (validTabs.includes(rawHash)) switchTab(rawHash);
+  }
 });
 </script>
 </body>

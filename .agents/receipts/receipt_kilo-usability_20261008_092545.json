@@ -1,0 +1,10 @@
+{
+  "timestamp": "2026-10-08T09:25:45.790653+00:00",
+  "agent": "kilo-usability",
+  "model": "gemini-3.8-flash-high",
+  "target": "KSolitaire",
+  "duration_seconds": 823.07,
+  "returncode": 0,
+  "success": true,
+  "provenance": null
+}
