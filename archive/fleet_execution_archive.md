@@ -4,6 +4,17 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-07T17:25:00-07:00 — kilo-expander: KGo (Feature Expansion: Standardized RFMS RetroMultiplayer, Rule 12 Compliance & Goban Keyboard Navigation)**
+  - Status: PASS ✅ (0 regressions, 165.4 KB web < 999 KB ceiling).
+  - RFMS RetroMultiplayer: Integrated standard RetroMultiplayer class; real-time stone, pass, resign, score sync across 9x9/13x13/19x19 Gobans.
+  - Mandate Rule 12: Enforced 25s solo AI fallback, explicit connect gate (no autostart), and dual link sharing (#room=CODE / ?room=CODE).
+  - Goban Keyboard Navigation: Added Arrow key cursor reticle with coordinate badge (E5, K10) and Enter/Space stone placement.
+  - SGF & Kifu Parity: Opponent moves now recorded in live move history for full replay scrub and standard SGF export.
+  - Rematch & Lobby: Implemented mutual rematch negotiation, instant quick match, and live public lobby with presence auto-pruning.
+  - Verification: Security linter 100% PASS; JS syntax clean; Vite build clean (index.html 0.71 kB, 991ms); file size 165.4 KB < 999 KB.
+  - Queue: Advanced `kilo_expander` to `KReversi`; rotation handoff to `kilo-creator`.
+
+
 - **2026-10-07T16:25:00-07:00 — kilo-qa: KSudoku (Pass 5: Tutorial & State Integrity, Quicksave/Load Parity, Rule 11 Clean Borders)**
   - Status: PASS ✅ (0 regressions, 193.1 KB web / 46.1 KB native < 999 KB ceiling).
   - State Persistence: Implemented F5 quicksave and F9 quickload parity across web and Win32 C with title feedback.
