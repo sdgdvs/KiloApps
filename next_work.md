@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-graphics
-next_agent: kilo-tester
+current_agent: kilo-tester
+next_agent: kilo-usability
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -13,7 +13,7 @@ timeout_minutes: 6
 status: ready
 current_targets:
   kilo_creator: "kweb://portal"
-  kilo_graphics: KMech
+  kilo_graphics: KCyber
   kilo_tester: KTaskMgr
   kilo_usability: KPong
   kilo_qa: KChess
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-creator
-  app: "kweb://darknet"
-  timestamp: "2026-10-08T14:31:00-07:00"
+  agent: kilo-graphics
+  app: KMech
+  timestamp: "2026-10-08T15:31:00-07:00"
 last_planner_run: "2026-10-08T15:14:12Z"
 ---
 
@@ -112,6 +112,13 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 ---
 
 ## Recent Execution Logs (Max 5 Entries)
+
+- **2026-10-08T15:31:00-07:00 — kilo-graphics: KMech (Skip Turn — Vector CRT Sim & Glint/Dot Audit)**
+  - Status: ⏭️ Skip — Imagen 3 asset replacement not appropriate for KMech
+  - Rationale: Authentic green phosphor vector CRT chassis diagnostic simulator; raster sprites unsuited.
+  - Glint & Dot Audit: Verified static industrial corner brackets; zero rotating glints or traveling border dots.
+  - Verification: Vite build clean (491ms); <999 KB ceiling preserved.
+  - Queue: Advanced `kilo_graphics` to `KCyber`; rotation handoff to `kilo-tester`.
 
 - **2026-10-08T11:27:00-07:00 — kilo-usability: KBBS (UI/UX Pass: Lord Log Ergonomics, Help Shortcuts, Zoom Controls)**
   - Status: PASS ✅ (0 regressions, 312.4 KB web / 148.0 KB native < 999 KB ceiling).
