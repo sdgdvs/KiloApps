@@ -316,6 +316,30 @@ void SaveGame(HWND hwnd) {
     }
 }
 
+void ShowHelpDialog(HWND hwnd) {
+    MessageBoxA(hwnd,
+        "KHangman - Rules & Game Modes\n\n"
+        "Rules: Guess the word letter by letter.\n\n"
+        "Modes:\n"
+        " • Freeplay: Classic Hangman mode.\n"
+        " • Campaign: 20 Stages across 10 categories ending in Stage 20 Grandmaster Polymath Challenge.\n"
+        " • Time Attack Blitz: 60s timer! Solve as many words as you can!\n\n"
+        "Active Skills & Power-ups:\n"
+        " • [1] Vowel Reveal: Reveals 1 hidden vowel in target word.\n"
+        " • [2] Consonant Radar: Reveals 1 hidden consonant.\n"
+        " • [3] Strike Shield: Absorbs 1 wrong letter penalty.\n"
+        " • [4] Freeze Timer: Freezes stage/blitz timer for 15s.\n"
+        " • [5] Bomb Nuke: Eliminates 3 incorrect letters.\n"
+        " • A - Z: Guess letters directly via keyboard.\n\n"
+        "Shortcuts:\n"
+        " • F5 / Ctrl+S: Quicksave game state\n"
+        " • F9 / Ctrl+O: Quickload game state\n"
+        " • F1: Help & tutorial\n"
+        " • Space / Enter: Play again / Advance campaign stage\n"
+        " • Esc: Dismiss custom category input focus",
+        "Help / How to Play", MB_OK | MB_ICONINFORMATION);
+}
+
 void LoadGame(HWND hwnd) {
     FILE* f = fopen("khangman_save.dat", "rb");
     if (f) {
@@ -338,6 +362,11 @@ void LoadGame(HWND hwnd) {
             freeze_timer_seconds = st.freeze_timer_seconds;
             blitz_time = st.blitz_time;
             blitz_words = st.blitz_words;
+            if (hCustomEdit) {
+                if (current_category == TOTAL_CAT_COUNT - 1) ShowWindow(hCustomEdit, SW_SHOW);
+                else ShowWindow(hCustomEdit, SW_HIDE);
+            }
+            InvalidateRect(hwnd, NULL, TRUE);
             MessageBoxA(hwnd, "Game loaded successfully.", "Load", MB_OK);
         }
         fclose(f);
@@ -959,7 +988,25 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             break;
 
         case WM_KEYDOWN: {
-            if ((wParam == '1' || wParam == VK_NUMPAD1) && vowel_reveals > 0 && !game_over) {
+            if (wParam == VK_F5 || ((GetKeyState(VK_CONTROL) & 0x8000) && (wParam == 'S' || wParam == 's'))) {
+                SaveGame(hwnd);
+                InvalidateRect(hwnd, NULL, TRUE);
+            } else if (wParam == VK_F9 || ((GetKeyState(VK_CONTROL) & 0x8000) && (wParam == 'O' || wParam == 'o'))) {
+                LoadGame(hwnd);
+                InvalidateRect(hwnd, NULL, TRUE);
+            } else if (wParam == VK_F1) {
+                ShowHelpDialog(hwnd);
+            } else if (wParam == VK_SPACE || wParam == VK_RETURN) {
+                if (game_over) {
+                    if (game_mode == 1 && won && campaign_level < 20) {
+                        campaign_level++;
+                    }
+                    InitGame();
+                    InvalidateRect(hwnd, NULL, TRUE);
+                }
+            } else if (wParam == VK_ESCAPE) {
+                SetFocus(hwnd);
+            } else if ((wParam == '1' || wParam == VK_NUMPAD1) && vowel_reveals > 0 && !game_over) {
                 UseVowelReveal();
                 InvalidateRect(hwnd, NULL, TRUE);
             } else if ((wParam == '2' || wParam == VK_NUMPAD2) && consonant_radars > 0 && !game_over) {
@@ -1065,21 +1112,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             }
             // Help (195..275)
             if (x >= 195 && x <= 275 && y >= 595 && y <= 625) {
-                MessageBoxA(hwnd,
-                    "KHangman - Rules & Game Modes\n\n"
-                    "Rules: Guess the word letter by letter.\n\n"
-                    "Modes:\n"
-                    " • Freeplay: Classic Hangman mode.\n"
-                    " • Campaign: 20 Stages across 10 categories ending in Stage 20 Grandmaster Polymath Challenge.\n"
-                    " • Time Attack Blitz: 60s timer! Solve as many words as you can!\n\n"
-                    "Active Skills & Power-ups:\n"
-                    " • [1] Vowel Reveal: Reveals 1 hidden vowel in target word.\n"
-                    " • [2] Consonant Radar: Reveals 1 hidden consonant.\n"
-                    " • [3] Strike Shield: Absorbs 1 wrong letter penalty.\n"
-                    " • [4] Freeze Timer: Freezes stage/blitz timer for 15s.\n"
-                    " • [5] Bomb Nuke: Eliminates 3 incorrect letters.\n"
-                    " • A - Z: Guess letters directly via keyboard.",
-                    "Help / How to Play", MB_OK | MB_ICONINFORMATION);
+                ShowHelpDialog(hwnd);
                 break;
             }
             // Sound (285..365)
@@ -1723,19 +1756,19 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             HBRUSH saveBg = CreateSolidBrush(RGB(67, 160, 71));
             FillRect(memDC, &saveRect, saveBg); DeleteObject(saveBg);
             SetTextColor(memDC, RGB(255, 255, 255));
-            DrawTextA(memDC, "Save", -1, &saveRect, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+            DrawTextA(memDC, "Save [F5]", -1, &saveRect, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
 
             RECT loadRect = {105, 595, 185, 625};
             HBRUSH loadBg = CreateSolidBrush(RGB(106, 27, 154));
             FillRect(memDC, &loadRect, loadBg); DeleteObject(loadBg);
             SetTextColor(memDC, RGB(255, 255, 255));
-            DrawTextA(memDC, "Load", -1, &loadRect, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+            DrawTextA(memDC, "Load [F9]", -1, &loadRect, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
 
             RECT helpRect = {195, 595, 275, 625};
             HBRUSH helpBg = CreateSolidBrush(RGB(30, 136, 229));
             FillRect(memDC, &helpRect, helpBg); DeleteObject(helpBg);
             SetTextColor(memDC, RGB(255, 255, 255));
-            DrawTextA(memDC, "Help", -1, &helpRect, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+            DrawTextA(memDC, "Help [F1]", -1, &helpRect, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
 
             RECT muteRect = {285, 595, 365, 625};
             HBRUSH muteBg = CreateSolidBrush(RGB(69, 90, 100));
@@ -1911,6 +1944,16 @@ void MainEntry() {
 
     ShowWindow(hwnd, SW_SHOW);
     UpdateWindow(hwnd);
+
+    // First-run tutorial integrity: show on fresh session only
+    FILE *ftut = fopen("khangman_tutorialSeen.dat", "rb");
+    if (!ftut) {
+        FILE *fout = fopen("khangman_tutorialSeen.dat", "wb");
+        if (fout) { fputc(1, fout); fclose(fout); }
+        ShowHelpDialog(hwnd);
+    } else {
+        fclose(ftut);
+    }
 
     MSG msg;
     while (GetMessage(&msg, NULL, 0, 0) > 0) {

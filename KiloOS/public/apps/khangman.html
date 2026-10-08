@@ -304,9 +304,8 @@
         /* Safe non-occluding toast notification */
         #toast {
             position: fixed;
-            bottom: 68px;
-            left: 50%;
-            transform: translateX(-50%);
+            bottom: 14px;
+            right: 14px;
             background: #1c2432;
             border: 1px solid #4facfe;
             color: #e0e6ed;
@@ -316,10 +315,11 @@
             font-weight: bold;
             box-shadow: 0 4px 16px rgba(0,0,0,0.8);
             z-index: 9999;
-            pointer-events: none;
+            cursor: pointer;
+            pointer-events: auto;
             display: none;
             text-align: center;
-            max-width: 90vw;
+            max-width: 320px;
         }
         .toast-success { border-color: #4caf50 !important; color: #81c784 !important; }
         .toast-error { border-color: #f44336 !important; color: #e57373 !important; }
@@ -438,7 +438,7 @@
             <div id="message">Guess a letter to start</div>
             
             <div style="display:flex; justify-content:center; gap:6px; align-items:center;">
-                <button class="btn" onclick="toggleHint()" id="hint-btn" style="background-color: #f57c00; font-size: 10px; padding: 3px 8px;">💡 Hint [H]</button>
+                <button class="btn" onclick="toggleHint()" id="hint-btn" style="background-color: #f57c00; font-size: 10px; padding: 3px 8px;">💡 Hint [F2]</button>
                 <button class="btn" onclick="showDefinitionModal()" id="def-btn" style="display:none; background-color: #5c6bc0; font-size: 10px; padding: 3px 8px;">📖 Definition</button>
             </div>
             <div id="hint-text"></div>
@@ -530,13 +530,13 @@
             <li><strong>[3] Strike Shield:</strong> Absorbs 1 incorrect letter guess strike.</li>
             <li><strong>[4] Freeze Timer:</strong> Freezes stage/blitz timer for 15 seconds.</li>
             <li><strong>[5] Bomb Nuke:</strong> Eliminates 3 incorrect letters from keyboard.</li>
-            <li><strong>[H] Hint:</strong> Displays a diegetic, non-spoiling contextual clue.</li>
+            <li><strong>[F2] Hint:</strong> Displays a diegetic, non-spoiling contextual clue.</li>
         </ul>
         <p><strong>Keyboard Shortcuts:</strong></p>
         <ul>
             <li><strong>A - Z:</strong> Guess letter on keyboard</li>
             <li><strong>1 - 5:</strong> Activate skills (1: Vowel, 2: Radar, 3: Shield, 4: Freeze, 5: Bomb)</li>
-            <li><strong>H:</strong> Toggle word clue / hint</li>
+            <li><strong>F2 / Alt+H:</strong> Toggle word clue / hint</li>
             <li><strong>F5 / F9:</strong> Quicksave / Quickload game state</li>
             <li><strong>Space / Enter:</strong> Restart game or advance to next campaign stage</li>
             <li><strong>F1 / ?:</strong> Help modal & tutorial (Escape to close any modal)</li>
@@ -1052,6 +1052,7 @@
         toast.textContent = msg;
         toast.className = 'toast show toast-' + type;
         toast.style.display = 'block';
+        toast.onclick = () => { toast.style.display = 'none'; };
         if (toastTimeout) clearTimeout(toastTimeout);
         toastTimeout = setTimeout(() => {
             toast.style.display = 'none';
@@ -1388,7 +1389,8 @@
             bombs: bombs,
             freezeTimerSeconds: freezeTimerSeconds,
             blitzTime: blitzTime,
-            blitzWords: blitzWords
+            blitzWords: blitzWords,
+            hintRevealed: hintRevealed
         };
         safeSetStorage('khangman_save', state);
         showToast("💾 Game saved [F5]!", "success");
@@ -1415,8 +1417,16 @@
                 blitzTime = state.blitzTime || 60;
                 blitzWords = state.blitzWords || 0;
                 gameEnded = false;
-                hintRevealed = false;
-                document.getElementById('hint-text').style.display = 'none';
+                hintRevealed = !!state.hintRevealed;
+                const hintEl = document.getElementById('hint-text');
+                if (hintEl) {
+                    if (hintRevealed) {
+                        hintEl.innerText = `💡 Hint: ${getWordClue(word, state.category)}`;
+                        hintEl.style.display = 'block';
+                    } else {
+                        hintEl.style.display = 'none';
+                    }
+                }
 
                 updateSkillButtons();
                 const msgEl = document.getElementById('message');
@@ -3149,18 +3159,16 @@
             return;
         }
 
-        if (e.key === 'F5') {
+        if (e.key === 'F5' || ((e.ctrlKey || e.metaKey) && (e.key === 's' || e.key === 'S'))) {
             e.preventDefault();
             saveGameState();
             return;
         }
-        if (e.key === 'F9') {
+        if (e.key === 'F9' || ((e.ctrlKey || e.metaKey) && (e.key === 'o' || e.key === 'O'))) {
             e.preventDefault();
             loadGameState();
             return;
         }
-
-        if (e.ctrlKey || e.altKey || e.metaKey) return;
 
         if (e.key === '?' || e.key === 'F1') {
             e.preventDefault();
@@ -3168,11 +3176,13 @@
             return;
         }
 
-        if (e.key === 'h' || e.key === 'H') {
+        if (e.key === 'F2' || ((e.ctrlKey || e.altKey) && (e.key === 'h' || e.key === 'H'))) {
             e.preventDefault();
             toggleHint();
             return;
         }
+
+        if (e.ctrlKey || e.altKey || e.metaKey) return;
 
         if (gameEnded) {
             if (e.key === ' ' || e.key === 'Enter') {
@@ -3205,6 +3215,13 @@
             if (keyUpper >= 'A' && keyUpper <= 'Z') {
                 guess(keyUpper);
             }
+        }
+    });
+
+    document.addEventListener('pointerdown', (e) => {
+        const toast = document.getElementById('toast');
+        if (toast && toast.style.display === 'block' && e.target !== toast) {
+            toast.style.display = 'none';
         }
     });
 

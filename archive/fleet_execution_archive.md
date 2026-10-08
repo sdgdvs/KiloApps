@@ -4,6 +4,15 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-07T23:20:00-07:00 — kilo-qa: KConnect4 (Pass 5: Tutorial & State Integrity, Quicksave/Load Parity, Rule 11 Clean Borders)**
+  - Status: PASS ✅ (0 regressions, 179.2 KB web / 191.0 KB native < 999 KB ceiling).
+  - Full State Persistence: F5 quicksave and F9 quickload parity across web and Win32 C with state feedback.
+  - Tutorial & Overlay Integrity: First-run tutorial flag `kconnect4_tutorialSeen` / `.dat` guards fresh sessions; Esc/Enter/Space modal dismiss.
+  - Visual Quality & Polish: Clean static perimeter border in web and native (Rule 11 compliant).
+  - Storage & Resource Safety: Wrapped local storage with safe getters/setters; visibilitychange loop pausing.
+  - Verification: `security_lint.py` 100% PASS; `test_web_apps.js` PASS (107/107); MSVC native clean; Vite clean (646ms).
+  - Queue: Advanced `kilo_qa` to `KHangman`; rotation handoff to `kilo-expander`.
+
 - **2026-10-07T19:22:00-07:00 — kilo-graphics: KFarm (Skip Turn — Inappropriate Target & Glint/Sheen Ban)**
   - Status: ⏭️ Skip — Imagen 3 asset replacement not appropriate for KFarm
   - Rationale: Procedural 8x8 farm sim locked in human review queue with 1:1 Win32 GDI C parity.
