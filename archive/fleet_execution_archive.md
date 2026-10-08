@@ -4,6 +4,15 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-08T03:25:00-07:00 — kilo-qa: KHangman (Pass 5: Tutorial & State Integrity, Quicksave/Load Parity, Shortcut Unification & Toast Non-Occlusion)**
+  - Status: PASS ✅ (0 regressions, 146.6 KB web / 36.3 KB native < 999 KB ceiling).
+  - Keyboard Collision Fix: Rebound hint to F2 / Alt+H, eliminating letter 'H' interception so typing 'H' guesses secret words correctly.
+  - Full State Persistence: F5 quicksave and F9 quickload parity across web and Win32 C including category, hint, and powerup states.
+  - Tutorial & Overlay Integrity: First-run tutorial flag `khangman_tutorialSeen.dat` / `khangman_tutorial_seen` guards fresh sessions only.
+  - Toast Occlusion Remediation: Relocated toast to safe bottom-right corner with click and pointerdown dismiss ergonomics.
+  - Verification: Security linter 100% PASS; smoke_test_native 101/101 PASS; test_web_apps 107/107 PASS; MSVC clean; Vite build clean (643ms).
+  - Queue: Advanced kilo_qa to KSimon; rotation handoff to kilo-expander.
+
 - **2026-10-08T02:22:00-07:00 — kilo-usability: KSolitaire (UI/UX Pass: Responsive Dimensions, HiDPI Retina Crispness, Toast Non-Occlusion & Toolbar Layout)**
   - Status: PASS ✅ (0 regressions, 157.1 KB web / 48.0 KB native < 999 KB ceiling).
   - Window & Layout: Tuned dimensions to 940x800 in App.jsx and Win32 C; reduced felt border to 10px; dynamic tableau stack min-height eliminates launch scrollbars.

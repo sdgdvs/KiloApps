@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-qa
+current_agent: kilo-qa
+next_agent: kilo-expander
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -15,7 +15,7 @@ current_targets:
   kilo_creator: "kweb://echo-subsystem.net"
   kilo_graphics: KDragon
   kilo_tester: KSettings
-  kilo_usability: KSudoku
+  kilo_usability: KTetris
   kilo_qa: KSimon
   kilo_expander: KTowers
 virtual_web_target: "kweb://echo-subsystem.net"
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-tester
-  app: KQuarantine
-  timestamp: "2026-10-08T05:25:00-07:00"
+  agent: kilo-usability
+  app: KSudoku
+  timestamp: "2026-10-08T05:42:00-07:00"
 last_planner_run: "2026-10-07T14:38:00Z"
 ---
 
@@ -119,9 +119,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KTaskMgr`, `K2048`, `KSudoku`, `KConnect4`, `KHangman`, `KSimon`, `KFreecell`, `KMatch3`, `KWords`, `KGo`, `KDarts`, `KRSS`, `KClip`, `KCipher`, `KCalc`, `KMine`, `KSnake`, `KTetris`, `KPong`, `KMaze`, `KSolitaire`, `KChess`, `KTimer`, `KConverter`, `KQuarantine` *(Completed: KChess, KMaze, KPong, KStarForge, KTask, KChrono, KSys, KSynth, KCyber, KCosmic, KContacts, KDB, KDragon, KFlash, KFont, KFortress, KGraph, KHabit, KHex, KImage, KJournal, KMail, KMandel, KMech, KMedia, KMystery, KNet, KNote, KPad, KPaint, KPass, KPing, KQuest, KRadio, KRead, KSanctuary, KScript, KStarDredge, KStarship, KStellar, KSubmarine, KTerm, KHash, KRSS, KClip, KCipher, KCalc, KMine, KSnake, KTetris, KSolitaire, KColor, KTimer, KConverter, KQuarantine)*.
 
 ### 4. Usability & UX Queue (`kilo-usability`)
-- **Current Target**: `KSudoku`
+- **Current Target**: `KTetris`
 - **Upcoming Queue**:
-  `KTetris`, `KWords`, `KBBS`, `KCalendar`, `KChess`, `KFreecell`, `KMatch3`, `KPong`, `KSimon`, `KSnake` *(Completed: KCalc, KPomodoro, KTimer, KClock, KHash, KMystery, KMandel, KFont, KPing, KAudio, KSynth, KScript, KRead, KRadio, KSys, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KChrono, KTask, KStarForge, KPad, KBookmark, KRSS, KClip, KHex, KHabit, KFarm, KPaint, KGraph, KImage, KJournal, KMail, KMedia, KNet, KNote, KPass, KMine, KBBS, KCalendar, KChart, KColor, KChess, KConnect4, KConverter, KFreecell, KHangman, KMatch3, KPong, KSettings, KSimon, KSnake, KSolitaire)*.
+  `KWords`, `KBBS`, `KCalendar`, `KChess`, `KFreecell`, `KMatch3`, `KPong`, `KSimon`, `KSnake` *(Completed: KCalc, KPomodoro, KTimer, KClock, KHash, KMystery, KMandel, KFont, KPing, KAudio, KSynth, KScript, KRead, KRadio, KSys, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KChrono, KTask, KStarForge, KPad, KBookmark, KRSS, KClip, KHex, KHabit, KFarm, KPaint, KGraph, KImage, KJournal, KMail, KMedia, KNet, KNote, KPass, KMine, KBBS, KCalendar, KChart, KColor, KChess, KConnect4, KConverter, KFreecell, KHangman, KMatch3, KPong, KSettings, KSimon, KSnake, KSolitaire, KSudoku)*.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
 - **Current Target**: `KSimon`
@@ -217,6 +217,16 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-08T05:42:00-07:00 — kilo-usability: KSudoku (UI/UX Pass: Window Dimensions, HiDPI Retina Crispness, Header Help Discovery & Numpad Ergonomics)**
+  - Status: PASS ✅ (0 regressions, 193.4 KB web / 45.0 KB native < 999 KB ceiling).
+  - Window & Layout: Tuned dimensions from 600x600 to 620x760 in App.jsx; added custom-styled overflow-y container scrolling eliminating clipped numpad.
+  - Help Discovery: Added atmospheric header guide shortcut prompt (`F1 / ?`) and updated button label to `Help (F1)` for immediate hotkey awareness.
+  - HiDPI Crispness: Implemented devicePixelRatio canvas scaling for duel opponent radar and victory/error shockwave particle effects.
+  - Numpad Ergonomics: Added active digit blue glow (.np-active) and green checkmark completion status (.np-complete) when all digits are placed.
+  - Input Navigation: Defaulted unselected arrow key navigation to (0,0); added C/X cell clear key shortcuts with accessible numpad labels.
+  - Verification: Security linter 100% PASS; check_icons 100% PASS; smoke_test_native 101/101 PASS; MSVC clean; Vite build clean (437ms).
+  - Queue: Advanced kilo_usability to KTetris; rotation handoff to kilo-qa.
+
 - **2026-10-08T05:25:00-07:00 — kilo-tester: KQuarantine (Interactive UI Audit: Toast Non-Occlusion, State Backup/Import, Command Ergonomics & Lifecycle)**
   - Status: PASS ✅ (0 regressions, 48.6 KB web < 999 KB hard ceiling).
   - Toast Non-Occlusion: Relocated toasts to bottom-right (60px from base) with pointerdown & input clear dismiss, eliminating toolbar occlusion.
@@ -247,15 +257,6 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Parity & Standards: Full RFMS RetroMultiplayer, Rule 11 clean borders, F5/F9 state parity, Sisal board replay & JSON export.
   - Verification: `security_lint.py` 100% PASS; `smoke_test_native.py` 101/101 PASS; MSVC clean; Vite build clean (511ms).
   - Queue: Advanced `kilo_expander` to `KTowers`; rotation handoff to `kilo-creator`.
-
-- **2026-10-08T03:25:00-07:00 — kilo-qa: KHangman (Pass 5: Tutorial & State Integrity, Quicksave/Load Parity, Shortcut Unification & Toast Non-Occlusion)**
-  - Status: PASS ✅ (0 regressions, 146.6 KB web / 36.3 KB native < 999 KB ceiling).
-  - Keyboard Collision Fix: Rebound hint to F2 / Alt+H, eliminating letter 'H' interception so typing 'H' guesses secret words correctly.
-  - Full State Persistence: F5 quicksave and F9 quickload parity across web and Win32 C including category, hint, and powerup states.
-  - Tutorial & Overlay Integrity: First-run tutorial flag `khangman_tutorialSeen.dat` / `khangman_tutorial_seen` guards fresh sessions only.
-  - Toast Occlusion Remediation: Relocated toast to safe bottom-right corner with click and pointerdown dismiss ergonomics.
-  - Verification: Security linter 100% PASS; smoke_test_native 101/101 PASS; test_web_apps 107/107 PASS; MSVC clean; Vite build clean (643ms).
-  - Queue: Advanced kilo_qa to KSimon; rotation handoff to kilo-expander.
 
 
 

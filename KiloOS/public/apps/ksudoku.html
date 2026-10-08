@@ -299,6 +299,37 @@
             flex-direction: column;
             padding: 16px;
             box-sizing: border-box;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+
+        .app-container::-webkit-scrollbar {
+            width: 6px;
+        }
+        .app-container::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 4px;
+        }
+        .app-container::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+        }
+        .app-container::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.35);
+        }
+
+        .help-sub-hint {
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            margin-top: 3px;
+            cursor: pointer;
+            user-select: none;
+            transition: color 0.2s;
+            display: inline-block;
+        }
+        .help-sub-hint:hover {
+            color: var(--accent);
+            text-decoration: underline;
         }
 
         header {
@@ -706,6 +737,28 @@
             background: linear-gradient(145deg, rgba(220, 38, 38, 0.8), rgba(153, 27, 27, 0.9));
         }
 
+        .numpad button.np-active {
+            border-color: #60a5fa !important;
+            box-shadow: 0 0 12px rgba(59, 130, 246, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.4) !important;
+            background: linear-gradient(145deg, rgba(37, 99, 235, 0.85), rgba(29, 78, 216, 0.95)) !important;
+            color: #ffffff !important;
+        }
+
+        .numpad button.np-complete {
+            opacity: 0.45;
+            filter: grayscale(0.5);
+            border-color: rgba(255, 255, 255, 0.08);
+        }
+        .numpad button.np-complete::after {
+            content: '✓';
+            position: absolute;
+            top: 2px;
+            right: 4px;
+            font-size: 0.65rem;
+            color: #4ade80;
+            font-weight: 800;
+        }
+
         .notes-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
@@ -840,6 +893,7 @@
     <div class="app-container">
         <header>
             <h1>KSudoku</h1>
+            <div class="help-sub-hint" id="help-hint-btn" title="Click or press F1 / ? for Rules &amp; Controls">Press <strong>F1</strong> or <strong>?</strong> for Rules &amp; Controls</div>
         </header>
         <div class="info-bar">
             <div id="timer">Time: 00:00</div>
@@ -859,7 +913,7 @@
             <button id="btn-daily">Daily</button>
             <button id="btn-stats">Stats</button>
             <button id="btn-settings">Settings</button>
-            <button id="btn-help" title="Rules & Help (?)">Help (?)</button>
+            <button id="btn-help" title="Rules &amp; Controls (F1 / ?)">Help (F1)</button>
         </div>
         <div class="controls">
             <button id="btn-notes">Notes: OFF</button>
@@ -1112,7 +1166,7 @@
                 <div class="stat-diff">Keyboard Shortcuts</div>
                 <ul style="padding-left: 18px; margin: 6px 0 10px 0;">
                     <li><strong>1–9 / A–G:</strong> Place number or hex letter</li>
-                    <li><strong>Backspace / Del / 0:</strong> Clear cell or notes</li>
+                    <li><strong>Backspace / Del / 0 / C:</strong> Clear cell or notes</li>
                     <li><strong>Arrow Keys:</strong> Move grid cursor</li>
                     <li><strong>L:</strong> Logical Deduction Step Explainer</li>
                     <li><strong>R:</strong> Toggle Move Replay scrubber</li>
@@ -2157,7 +2211,18 @@
 
         function drawOpponentRadar() {
             if (!oppRadarCanvas) return;
+            const dpr = window.devicePixelRatio || 1;
+            const targetW = Math.round(45 * dpr);
+            const targetH = Math.round(45 * dpr);
+            if (oppRadarCanvas.width !== targetW || oppRadarCanvas.height !== targetH) {
+                oppRadarCanvas.width = targetW;
+                oppRadarCanvas.height = targetH;
+                oppRadarCanvas.style.width = '45px';
+                oppRadarCanvas.style.height = '45px';
+            }
             const ctx = oppRadarCanvas.getContext('2d');
+            ctx.save();
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
             ctx.clearRect(0, 0, 45, 45);
             const sz = 5;
             for (let r = 0; r < 9; r++) {
@@ -2172,6 +2237,7 @@
                     ctx.fillRect(c * sz, r * sz, sz - 1, sz - 1);
                 }
             }
+            ctx.restore();
         }
 
         function startCyberBotLoop() {
@@ -2947,13 +3013,18 @@
             for (let i = 1; i <= gridSize; i++) {
                 let btn = document.createElement('button');
                 btn.dataset.val = i;
-                btn.textContent = (gridSize === 16 && i >= 10) ? String.fromCharCode(65 + i - 10) : i;
+                let char = (gridSize === 16 && i >= 10) ? String.fromCharCode(65 + i - 10) : i;
+                btn.textContent = char;
+                btn.title = `Input ${char} (Key: ${char})`;
+                btn.setAttribute('aria-label', `Input ${char}`);
                 numpadEl.appendChild(btn);
             }
             let btnClear = document.createElement('button');
             btnClear.dataset.val = 0;
             btnClear.className = 'clear';
-            btnClear.textContent = 'Clear';
+            btnClear.textContent = 'Clear (Del/0)';
+            btnClear.title = 'Clear cell value or notes (Backspace / Delete / 0 / C)';
+            btnClear.setAttribute('aria-label', 'Clear cell value or notes');
             numpadEl.appendChild(btnClear);
         }
         
@@ -3019,6 +3090,29 @@
                     cell.classList.add('highlight');
                 }
             });
+
+            // Update numpad buttons: active digit highlight & completion tracker
+            if (numpadEl) {
+                let digitCounts = {};
+                if (gameActive && board && solution) {
+                    for (let r = 0; r < gridSize; r++) {
+                        for (let c = 0; c < gridSize; c++) {
+                            let cellVal = board[r][c];
+                            if (cellVal > 0 && solution[r] && cellVal === solution[r][c]) {
+                                digitCounts[cellVal] = (digitCounts[cellVal] || 0) + 1;
+                            }
+                        }
+                    }
+                }
+                Array.from(numpadEl.children).forEach(btn => {
+                    let bVal = parseInt(btn.dataset.val);
+                    if (bVal > 0) {
+                        btn.classList.toggle('np-active', val === bVal);
+                        let isComplete = digitCounts[bVal] === gridSize;
+                        btn.classList.toggle('np-complete', isComplete);
+                    }
+                });
+            }
         }
         
         function inputNumber(num) {
@@ -3195,8 +3289,13 @@
                 document.querySelector('.app-container').appendChild(fxCanvas);
             }
             const containerRect = document.querySelector('.app-container').getBoundingClientRect();
-            fxCanvas.width = containerRect.width;
-            fxCanvas.height = containerRect.height;
+            const dpr = window.devicePixelRatio || 1;
+            fxCanvas.width = Math.round(containerRect.width * dpr);
+            fxCanvas.height = Math.round(containerRect.height * dpr);
+            fxCanvas.style.width = containerRect.width + 'px';
+            fxCanvas.style.height = containerRect.height + 'px';
+            fxCanvas._logicalWidth = containerRect.width;
+            fxCanvas._logicalHeight = containerRect.height;
             return fxCanvas.getContext('2d');
         }
 
@@ -3217,8 +3316,14 @@
         }
 
         function updateAndDrawFx() {
+            if (!fxCanvas) return;
             const ctx = fxCanvas.getContext('2d');
-            ctx.clearRect(0, 0, fxCanvas.width, fxCanvas.height);
+            const dpr = window.devicePixelRatio || 1;
+            const logW = fxCanvas._logicalWidth || fxCanvas.width;
+            const logH = fxCanvas._logicalHeight || fxCanvas.height;
+            ctx.save();
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+            ctx.clearRect(0, 0, logW, logH);
             let alive = false;
 
             // Render Dual-Tier Concentric Shockwaves
@@ -3264,13 +3369,13 @@
                 p.life -= p.decay;
 
                 // Floor bounce physics for debris shards
-                if (p.type === 'debris' && p.y > fxCanvas.height - 15) {
-                    p.y = fxCanvas.height - 15;
+                if (p.type === 'debris' && p.y > logH - 15) {
+                    p.y = logH - 15;
                     p.vy = -Math.abs(p.vy) * 0.45;
                     p.vx *= 0.75;
                 }
 
-                if (p.y < fxCanvas.height + 60 && p.life > 0) alive = true;
+                if (p.y < logH + 60 && p.life > 0) alive = true;
 
                 ctx.save();
                 ctx.translate(p.x, p.y);
@@ -3319,6 +3424,8 @@
                 }
                 ctx.restore();
             });
+
+            ctx.restore(); // Restore outer HiDPI transform
 
             if (alive) {
                 fxAnimId = requestAnimationFrame(updateAndDrawFx);
@@ -3845,19 +3952,20 @@
 
             if (val > 0) {
                 inputNumber(val);
-            } else if (e.key === 'Backspace' || e.key === 'Delete' || e.key === '0') {
+            } else if (e.key === 'Backspace' || e.key === 'Delete' || e.key === '0' || keyUpper === 'C' || keyUpper === 'X') {
                 inputNumber(0);
-            } else if (selectedCell) {
-                let r = selectedCell.r;
-                let c = selectedCell.c;
-                if (e.key === 'ArrowUp') r = Math.max(0, r - 1);
-                if (e.key === 'ArrowDown') r = Math.min(gridSize - 1, r + 1);
-                if (e.key === 'ArrowLeft') c = Math.max(0, c - 1);
-                if (e.key === 'ArrowRight') c = Math.min(gridSize - 1, c + 1);
-                
-                if (e.key.startsWith('Arrow')) {
-                    e.preventDefault();
+            } else if (e.key.startsWith('Arrow')) {
+                e.preventDefault();
+                if (selectedCell) {
+                    let r = selectedCell.r;
+                    let c = selectedCell.c;
+                    if (e.key === 'ArrowUp') r = Math.max(0, r - 1);
+                    if (e.key === 'ArrowDown') r = Math.min(gridSize - 1, r + 1);
+                    if (e.key === 'ArrowLeft') c = Math.max(0, c - 1);
+                    if (e.key === 'ArrowRight') c = Math.min(gridSize - 1, c + 1);
                     selectCell(r, c);
+                } else {
+                    selectCell(0, 0);
                 }
             }
         });
@@ -4078,6 +4186,13 @@
         btnCloseSettings.addEventListener('click', () => { playSound('select'); settingsModal.style.display = 'none'; });
         if (btnHelp) {
             btnHelp.addEventListener('click', () => {
+                playSound('select');
+                helpModal.style.display = 'flex';
+            });
+        }
+        const helpHintBtn = document.getElementById('help-hint-btn');
+        if (helpHintBtn) {
+            helpHintBtn.addEventListener('click', () => {
                 playSound('select');
                 helpModal.style.display = 'flex';
             });

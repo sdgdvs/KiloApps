@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { DEFAULT_VFS } from './defaultVfs';
 import './App.css';
-const MICROS_VERSION = '0.4.26';
+const MICROS_VERSION = '0.4.27';
 
 const FOLDER_ICON = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><defs><linearGradient id='f1' x1='0%' y1='0%' x2='0%' y2='100%'><stop offset='0%' stop-color='%2364B5F6'/><stop offset='100%' stop-color='%231E88E5'/></linearGradient><linearGradient id='f2' x1='0%' y1='0%' x2='0%' y2='100%'><stop offset='0%' stop-color='%2390CAF9'/><stop offset='100%' stop-color='%232196F3'/></linearGradient></defs><path fill='url(%23f1)' d='M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z'/><path fill='url(%23f2)' d='M2 8h20v10c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V8z'/></svg>";
 const HELP_ICON = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%232196F3' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><circle cx='12' cy='12' r='10'></circle><path d='M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3'></path><line x1='12' y1='17' x2='12.01' y2='17'></line></svg>";
@@ -75,7 +75,7 @@ const APPS = [
   { id: 'khabit', title: 'KHabit', url: '/apps/khabit.html', exeUrl: '/exe/KHabit.exe', icon: '/assets/icons/khabit.ico', w: 880, h: 640, folder: 'Office' },
   { id: 'kflash', title: 'KFlash', url: '/apps/kflash.html', exeUrl: '/exe/KFlash.exe', icon: '/assets/icons/kflash.ico', w: 600, h: 500, folder: 'Office' },
   { id: 'k2048', title: 'K2048', url: '/apps/k2048.html', exeUrl: '/exe/K2048.exe', icon: '/assets/icons/k2048.ico', w: 380, h: 480, folder: 'Games' },
-  { id: 'ksudoku', title: 'KSudoku', url: '/apps/ksudoku.html', exeUrl: '/exe/KSudoku.exe', icon: '/assets/icons/ksudoku.ico', w: 600, h: 600, folder: 'Games' },
+  { id: 'ksudoku', title: 'KSudoku', url: '/apps/ksudoku.html', exeUrl: '/exe/KSudoku.exe', icon: '/assets/icons/ksudoku.ico', w: 620, h: 760, folder: 'Games' },
   { id: 'kconnect4', title: 'KConnect4', url: '/apps/kconnect4.html', exeUrl: '/exe/KConnect4.exe', icon: '/assets/icons/kconnect4.ico', w: 580, h: 780, folder: 'Games' },
   { id: 'khangman', title: 'KHangman', url: '/apps/khangman.html', exeUrl: '/exe/KHangman.exe', icon: '/assets/icons/khangman.ico', w: 620, h: 600, folder: 'Games' },
   { id: 'ksimon', title: 'KSimon', url: '/apps/ksimon.html', exeUrl: '/exe/KSimon.exe', icon: '/assets/icons/ksimon.ico', w: 600, h: 740, folder: 'Games' },
