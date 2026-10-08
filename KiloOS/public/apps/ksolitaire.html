@@ -92,6 +92,19 @@
     box-shadow: 0 2px 5px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.1);
   }
 
+  .btn:focus-visible, select.btn:focus-visible {
+    outline: 2px solid #ffd700;
+    outline-offset: 2px;
+  }
+
+  .toolbar-divider {
+    width: 1px;
+    height: 22px;
+    background: rgba(255, 255, 255, 0.2);
+    margin: 0 2px;
+    align-self: center;
+  }
+
   .btn:hover:not(:disabled) {
     background: linear-gradient(180deg, #4a5061 0%, #2b303d 100%);
     border-color: rgba(255,215,0,0.5);
@@ -189,10 +202,10 @@
     flex: 1;
     position: relative;
     max-width: 920px;
-    min-width: 760px;
+    min-width: 680px;
     width: 100%;
-    margin: 16px auto;
-    padding: 0 16px 250px 16px;
+    margin: 14px auto 0 auto;
+    padding: 0 16px 40px 16px;
   }
 
   .top-row {
@@ -718,31 +731,36 @@
 
   /* Environmental Art: Mahogany Table Border & Dust Motes */
   body {
-    border: 16px solid #4a2511;
+    border: 10px solid #4a2511;
     border-image: linear-gradient(45deg, #2c1205, #5a2e15, #2c1205) 1;
-    box-shadow: inset 0 0 40px rgba(0,0,0,0.8);
+    box-shadow: inset 0 0 30px rgba(0,0,0,0.8);
+  }
+  @media (max-width: 900px) {
+    body { border-width: 6px; }
   }
 
 
-  /* Toast Notification */
+  /* Toast Notification - Non-Occluding Usability Safe Positioning */
   #toast {
     position: fixed;
-    bottom: 24px;
-    left: 50%;
-    transform: translateX(-50%) translateY(50px);
+    bottom: 18px;
+    right: 20px;
+    left: auto;
+    max-width: 420px;
+    transform: translateY(40px);
     background: rgba(15, 23, 42, 0.95);
     color: #ffd700;
     border: 1px solid rgba(255, 215, 0, 0.4);
     box-shadow: 0 8px 24px rgba(0,0,0,0.6), 0 0 12px rgba(255, 215, 0, 0.2);
     border-radius: 8px;
-    padding: 10px 20px;
-    font-size: 13.5px;
+    padding: 8px 16px;
+    font-size: 13px;
     font-weight: 600;
     z-index: 10000;
     pointer-events: auto;
     cursor: pointer;
     opacity: 0;
-    transition: opacity 0.25s ease, transform 0.25s ease;
+    transition: opacity 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275), transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     display: flex;
     align-items: center;
     gap: 8px;
@@ -769,7 +787,7 @@
   }
   #toast.show {
     opacity: 1;
-    transform: translateX(-50%) translateY(0);
+    transform: translateY(0);
   }
   #fx-canvas {
     position: fixed;
@@ -803,7 +821,8 @@
     </div>
   </div>
 
-  <div class="toolbar">
+  <div class="toolbar" role="toolbar" aria-label="Game controls">
+    <!-- Game Setup -->
     <button class="btn btn-primary" onclick="newGame()" title="Start New Game [F2 / N]" aria-label="Start new game (F2 or N)">⚡ New [F2]</button>
     
     <select id="mode-select" class="btn" onchange="changeGameMode(this.value)" aria-label="Select game mode">
@@ -821,11 +840,9 @@
       <option value="3">Draw 3</option>
     </select>
 
-    <!-- Active Skills -->
-    <button id="wand-btn" class="btn btn-skill" onclick="useMagicWand()" title="Magic Wand [W]: Auto play 1 card to foundation" aria-label="Magic Wand skill">🪄 Wand [W] (<span id="wand-cnt">3</span>)</button>
-    <button id="xray-btn" class="btn btn-skill" onclick="useXRayVision()" title="X-Ray Vision [X]: Reveal face-down cards for 5s" aria-label="X-Ray Vision skill">👁️ X-Ray [X] (<span id="xray-cnt">3</span>)</button>
-    <button id="shuffle-btn" class="btn btn-skill" onclick="useShuffleStock()" title="Shuffle Stock [S]: Reshuffle waste/stock pile" aria-label="Shuffle Stock skill">🔀 Shuffle [S] (<span id="shuf-cnt">3</span>)</button>
+    <div class="toolbar-divider" aria-hidden="true"></div>
 
+    <!-- Play Controls -->
     <button id="undo-btn" class="btn" onclick="undoMove()" disabled title="Undo Move [U / Ctrl+Z]" aria-label="Undo move">↩ Undo [U]</button>
     <button id="redo-btn" class="btn" onclick="redoMove()" disabled title="Redo Move [Ctrl+Y]" aria-label="Redo move">↪ Redo [Ctrl+Y]</button>
     <button class="btn btn-warning" onclick="giveHint()" title="Smart Hint [H / Ctrl+H]" aria-label="Show hint">💡 Hint [H]</button>
@@ -833,6 +850,16 @@
     <button class="btn" onclick="quickSave()" title="Quicksave Game [F5]" aria-label="Quicksave game">💾 Save [F5]</button>
     <button class="btn" onclick="quickLoad()" title="Quickload Game [F9]" aria-label="Quickload game">📂 Load [F9]</button>
 
+    <div class="toolbar-divider" aria-hidden="true"></div>
+
+    <!-- Active Skills -->
+    <button id="wand-btn" class="btn btn-skill" onclick="useMagicWand()" title="Magic Wand [W]: Auto play 1 card to foundation" aria-label="Magic Wand skill">🪄 Wand [W] (<span id="wand-cnt">3</span>)</button>
+    <button id="xray-btn" class="btn btn-skill" onclick="useXRayVision()" title="X-Ray Vision [X]: Reveal face-down cards for 5s" aria-label="X-Ray Vision skill">👁️ X-Ray [X] (<span id="xray-cnt">3</span>)</button>
+    <button id="shuffle-btn" class="btn btn-skill" onclick="useShuffleStock()" title="Shuffle Stock [S]: Reshuffle waste/stock pile" aria-label="Shuffle Stock skill">🔀 Shuffle [S] (<span id="shuf-cnt">3</span>)</button>
+
+    <div class="toolbar-divider" aria-hidden="true"></div>
+
+    <!-- Options & Modals -->
     <select id="theme-select" class="btn" onchange="changeTheme(this.value)" title="Deck Theme [T to cycle]" aria-label="Select card deck theme">
       <option value="theme-navy">Deck: Navy [T]</option>
       <option value="theme-crimson">Deck: Crimson</option>
@@ -2094,6 +2121,17 @@ function playSound(name) {
 
 // --- Toast Notification System ---
 let toastTimeout = null;
+function dismissToast() {
+  let toast = document.getElementById('toast');
+  if (toast && toast.classList.contains('show')) {
+    toast.classList.remove('show');
+    if (toastTimeout) {
+      clearTimeout(toastTimeout);
+      toastTimeout = null;
+    }
+  }
+}
+
 function showToast(msg, duration = 3000) {
   let toast = document.getElementById('toast');
   if (!toast) {
@@ -2101,15 +2139,13 @@ function showToast(msg, duration = 3000) {
     toast.id = 'toast';
     document.body.appendChild(toast);
   }
-  toast.innerHTML = `<span style="flex:1;">${msg}</span><span class="toast-close" title="Dismiss">&times;</span>`;
-  toast.onclick = () => {
-    toast.classList.remove('show');
-    if (toastTimeout) clearTimeout(toastTimeout);
-  };
+  toast.innerHTML = `<span style="flex:1;">${msg}</span><span class="toast-close" title="Dismiss" aria-label="Dismiss toast">&times;</span>`;
+  toast.onclick = () => dismissToast();
   toast.classList.add('show');
   if (toastTimeout) clearTimeout(toastTimeout);
   toastTimeout = setTimeout(() => {
     toast.classList.remove('show');
+    toastTimeout = null;
   }, duration);
 }
 
@@ -2185,9 +2221,15 @@ function init() {
   if (!tutorialSeen && !hasSavedGame) {
     safeSetStorage('ksolitaire_tutorialSeen', '1');
     openHelpModal();
-    showToast("Welcome to KSolitaire! Review rules & shortcuts [F1/Esc/Enter].", 5000);
+    showToast("Welcome to KSolitaire! Review rules & shortcuts [F1/Esc/Enter].", 3500);
   } else {
-    showToast("Welcome to KSolitaire! Press [F1] for Help & Rules, [H] for Hint, [F2] New Game, [Space/D] Draw.", 4500);
+    showToast("Welcome to KSolitaire! Press [F1] for Help & Rules, [H] for Hint, [F2] New Game, [Space/D] Draw.", 3500);
+  }
+
+  // Board pointer interaction immediately dismisses toasts to prevent occluding cards
+  const boardEl = document.getElementById('board');
+  if (boardEl) {
+    boardEl.addEventListener('pointerdown', dismissToast, { passive: true });
   }
 
   window.addEventListener('beforeunload', () => saveState());
@@ -2203,11 +2245,7 @@ function init() {
     let anyModal = helpActive || statsActive || dealActive || replayActive || mpActive;
 
     if (e.key === 'Escape') {
-      let toast = document.getElementById('toast');
-      if (toast && toast.classList.contains('show')) {
-        toast.classList.remove('show');
-        if (toastTimeout) clearTimeout(toastTimeout);
-      }
+      dismissToast();
       if (isWinBannerActive) {
         dismissWinBanner();
         return;
@@ -3576,6 +3614,7 @@ let fxCtx = fxCanvas ? fxCanvas.getContext('2d') : null;
 let fxParticles = [];
 let fxShockwaves = [];
 let screenShakeAmp = 0;
+let fxAnimId = null;
 
 function initFXSystem() {
   if (!fxCanvas) fxCanvas = document.getElementById('fx-canvas');
@@ -3583,13 +3622,33 @@ function initFXSystem() {
   fxCtx = fxCanvas.getContext('2d');
   
   function resizeFX() {
-    fxCanvas.width = window.innerWidth;
-    fxCanvas.height = window.innerHeight;
+    const dpr = window.devicePixelRatio || 1;
+    fxCanvas.width = Math.round(window.innerWidth * dpr);
+    fxCanvas.height = Math.round(window.innerHeight * dpr);
+    if (fxCtx) {
+      fxCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
   }
-  window.addEventListener('resize', resizeFX);
+  window.addEventListener('resize', resizeFX, { passive: true });
   resizeFX();
 
-  requestAnimationFrame(fxLoop);
+  if (!fxAnimId) {
+    fxAnimId = requestAnimationFrame(fxLoop);
+  }
+
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+      if (fxAnimId) {
+        cancelAnimationFrame(fxAnimId);
+        fxAnimId = null;
+      }
+    } else {
+      if (!fxAnimId) {
+        resizeFX();
+        fxAnimId = requestAnimationFrame(fxLoop);
+      }
+    }
+  });
 }
 
 function triggerScreenShake(amp) {
@@ -3742,12 +3801,12 @@ window.addEventListener('resize', () => { cachedBoardRect = null; }, { passive: 
 
 function fxLoop(timestamp) {
   if (!fxCtx || !fxCanvas) {
-    requestAnimationFrame(fxLoop);
+    fxAnimId = requestAnimationFrame(fxLoop);
     return;
   }
 
-  const w = fxCanvas.width;
-  const h = fxCanvas.height;
+  const w = window.innerWidth;
+  const h = window.innerHeight;
   const time = timestamp * 0.001;
 
   fxCtx.clearRect(0, 0, w, h);
@@ -3906,7 +3965,7 @@ function fxLoop(timestamp) {
     }
   }
 
-  requestAnimationFrame(fxLoop);
+  fxAnimId = requestAnimationFrame(fxLoop);
 }
 
 function draw4PointStar(ctx, cx, cy, outerRadius, innerRadius) {
@@ -4251,6 +4310,8 @@ function render() {
 
       tSlot.appendChild(cardEl);
     }
+    const stackHeight = Math.max(118, offsetY + (tPile.length > 0 ? 118 : 0));
+    tSlot.style.minHeight = `${stackHeight}px`;
   }
 
   updateUIStats();

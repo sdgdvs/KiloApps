@@ -2878,7 +2878,7 @@ void MainEntry() {
 
     SetProcessDPIAware();
 
-    RECT rc = {0, 0, 920, 800};
+    RECT rc = {0, 0, 940, 800};
     AdjustWindowRect(&rc, WS_OVERLAPPEDWINDOW, TRUE); // TRUE because we have a menu
 
     HWND hwnd = CreateWindowEx(0, "KSolitaireApp", "KSolitaire - Klondike Solitaire (Press [F1] for Help, [H] for Hint)", WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN,
