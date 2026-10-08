@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-tester
-next_agent: kilo-usability
+current_agent: kilo-usability
+next_agent: kilo-qa
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -14,7 +14,7 @@ status: ready
 current_targets:
   kilo_creator: "kweb://10.19.99.4/classified"
   kilo_graphics: KColony
-  kilo_tester: KConverter
+  kilo_tester: KQuarantine
   kilo_usability: KSolitaire
   kilo_qa: KHangman
   kilo_expander: KDarts
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-graphics
-  app: KWizard
-  timestamp: "2026-10-08T01:20:00-07:00"
+  agent: kilo-tester
+  app: KConverter
+  timestamp: "2026-10-08T01:45:00-07:00"
 last_planner_run: "2026-10-07T14:38:00Z"
 ---
 
@@ -114,9 +114,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KDragon`, `KMech`, `KColosseum`, `KAbyss`, `KBreakout`, `KAsteroids`, `KSpace`, `KFarm`, `KWizard` *(Note: Pure vector/wireframe or abstract board targets skip automatically per Mandate 15. Completed: KQuest Phases 1-5, KSpace)*.
 
 ### 3. App Tester Queue (`kilo-tester`)
-- **Current Target**: `KConverter`
+- **Current Target**: `KQuarantine`
 - **Upcoming Queue**:
-  `KQuarantine`, `KSettings`, `KTaskMgr`, `K2048`, `KSudoku`, `KConnect4`, `KHangman`, `KSimon`, `KFreecell`, `KMatch3`, `KWords`, `KGo`, `KDarts`, `KRSS`, `KClip`, `KCipher`, `KCalc`, `KMine`, `KSnake`, `KTetris`, `KPong`, `KMaze`, `KSolitaire`, `KChess`, `KTimer` *(Completed: KChess, KMaze, KPong, KStarForge, KTask, KChrono, KSys, KSynth, KCyber, KCosmic, KContacts, KDB, KDragon, KFlash, KFont, KFortress, KGraph, KHabit, KHex, KImage, KJournal, KMail, KMandel, KMech, KMedia, KMystery, KNet, KNote, KPad, KPaint, KPass, KPing, KQuest, KRadio, KRead, KSanctuary, KScript, KStarDredge, KStarship, KStellar, KSubmarine, KTerm, KHash, KRSS, KClip, KCipher, KCalc, KMine, KSnake, KTetris, KSolitaire, KColor, KTimer)*.
+  `KSettings`, `KTaskMgr`, `K2048`, `KSudoku`, `KConnect4`, `KHangman`, `KSimon`, `KFreecell`, `KMatch3`, `KWords`, `KGo`, `KDarts`, `KRSS`, `KClip`, `KCipher`, `KCalc`, `KMine`, `KSnake`, `KTetris`, `KPong`, `KMaze`, `KSolitaire`, `KChess`, `KTimer`, `KConverter` *(Completed: KChess, KMaze, KPong, KStarForge, KTask, KChrono, KSys, KSynth, KCyber, KCosmic, KContacts, KDB, KDragon, KFlash, KFont, KFortress, KGraph, KHabit, KHex, KImage, KJournal, KMail, KMandel, KMech, KMedia, KMystery, KNet, KNote, KPad, KPaint, KPass, KPing, KQuest, KRadio, KRead, KSanctuary, KScript, KStarDredge, KStarship, KStellar, KSubmarine, KTerm, KHash, KRSS, KClip, KCipher, KCalc, KMine, KSnake, KTetris, KSolitaire, KColor, KTimer, KConverter)*.
 
 ### 4. Usability & UX Queue (`kilo-usability`)
 - **Current Target**: `KSolitaire`
@@ -217,6 +217,16 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-08T01:45:00-07:00 — kilo-tester: KConverter (Interactive UI Audit: Smart Parser Delimiter Fix, JSON Portability & State Ergonomics)**
+  - Status: PASS ✅ (6 issues identified and fixed; 0 regressions).
+  - Parser Fix: Implemented `splitExpressUnits` resolving collision where unit `in` (inches) broke expression splitting into empty tokens.
+  - Express Ergonomics: Added `12 in ➔ cm` preset; wired `X`/`S` swap shortcut in Express mode; clear button resets empty card state.
+  - Workspace Portability: Added full workspace JSON export and file import with schema validation inside Help modal.
+  - State & Safety: Added dropdown option fallbacks in `populateDropdowns`; fixed `dismissTutorial` respecting checkbox state.
+  - Accessibility & Focus: Added focus trapping and restoration for Help modal with `btnCloseHelp` element ID.
+  - Verification: `test_app_startup.py` PASS; `test_web_apps.js` PASS (75 controls); MSVC clean; Vite build clean (510ms); web 102.2 KB < 999 KB ceiling.
+  - Queue: Advanced `kilo_tester` to `KQuarantine`; rotation handoff to `kilo-usability`.
+
 - **2026-10-08T01:20:00-07:00 — kilo-graphics: KWizard (Skip Turn — Inappropriate Target & Glint/Border Audit)**
   - Status: ⏭️ Skip — Imagen 3 asset replacement not appropriate for KWizard
   - Rationale: Fantasy dueling card game locked in human review queue with 1:1 dual-target Win32 GDI C parity and procedural mage archetypes.
@@ -250,14 +260,6 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Verification: Security linter 100% PASS; test_app_startup PASS; MSVC native clean; Vite clean (5.99s).
   - Queue: Advanced kilo_usability to KSolitaire; rotation handoff to kilo-qa.
 
-- **2026-10-07T20:22:00-07:00 — kilo-tester: KTimer (Interactive UI Audit: Snapshot Restore Bug Fix, JSON Portability, Preset Ergonomics & Aria Polish)**
-  - Status: PASS ✅ (5 issues identified and fixed; 0 regressions).
-  - Snapshot Restore: Fixed `ReferenceError: renderPresets is not defined` crash in `restoreFullStateSnapshot` by invoking `renderCustomPresets()`.
-  - Preset Ergonomics: Implemented `applyTimerPreset()` to automatically reset/update timer and time display when clicking presets while active.
-  - JSON Backup & Portability: Added full workspace JSON export and file import with schema validation inside Help modal.
-  - Accessibility & Focus: Added focus management for Help/Tutorial dialogs; added aria labels across nav, export, and multi-timer controls.
-  - Verification: `test_app_startup.py` PASS (0 JS err, CSS valid); `security_lint.py` PASS; Vite clean (670ms); web 109.3 KB < 999 KB ceiling.
-  - Queue: Advanced `kilo_tester` to `KConverter`; rotation handoff to `kilo-usability`.
 
 
 
