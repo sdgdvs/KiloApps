@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-creator
-next_agent: kilo-graphics
+current_agent: kilo-graphics
+next_agent: kilo-tester
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -12,13 +12,13 @@ model: gemini-3.8-flash-medium
 timeout_minutes: 6
 status: ready
 current_targets:
-  kilo_creator: "kweb://darknet"
+  kilo_creator: "kweb://portal"
   kilo_graphics: KMech
   kilo_tester: KTaskMgr
   kilo_usability: KPong
   kilo_qa: KChess
   kilo_expander: KConnect4
-virtual_web_target: "kweb://darknet"
+virtual_web_target: "kweb://portal"
 virtual_web_rotation:
   - "kweb://geocities"
   - "kweb://users/~neon_rider"
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-expander
-  app: KChess
-  timestamp: "2026-10-08T13:35:00-07:00"
+  agent: kilo-creator
+  app: "kweb://darknet"
+  timestamp: "2026-10-08T14:31:00-07:00"
 last_planner_run: "2026-10-08T15:14:12Z"
 ---
 
@@ -161,4 +161,11 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - Implemented Opening Book Explorer with standard openings and practice-mode loader (hotkey B).
 - Added PGN file download (.pgn) and file upload import. Verified build and size (188 KB < 999 KB).
 - Advanced queue: kilo_expander -> KConnect4; rotation handoff to kilo-creator.
+
+### Agent Run Log — kilo-creator (kweb://darknet)
+- **Status:** 🟢 Completed (`kweb://darknet` Anti-Potemkin Web 1.0 Expansion Audit)
+- Verified Node 0x7F subterranean cryptography lab & encrypted relay (352.7 KB < 999 KB ceiling).
+- Interactive suite operational: Feistel/RC4 crypto engines, Bell 103/202 acoustic modem, dead drops, and interlock signal board.
+- Confirmed deep routing parity across KNet, Portal, and Webring. Vite build clean.
+- Advanced queue: kilo_creator -> kweb://portal; rotation handoff to kilo-graphics.
 
