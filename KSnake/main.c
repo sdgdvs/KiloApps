@@ -3064,9 +3064,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 }
                 DeleteObject(bg1); DeleteObject(bg2); DeleteObject(detail);
 
-                // Pulsating Energy Perimeter Inlay Border
-                int periPulse = 120 + (FastSin(anim_tick * 2) * 60) / 100;
-                HPEN periPen = CreatePen(PS_SOLID, 1, RGB(10, periPulse / 2, periPulse));
+                // Clean Static Cybernetic Arcade Perimeter Border (Rule 11 compliant)
+                HPEN periPen = CreatePen(PS_SOLID, 1, RGB(10, 80, 160));
                 HPEN oldPeriP = (HPEN)SelectObject(hdc, periPen);
                 SelectObject(hdc, (HBRUSH)GetStockObject(HOLLOW_BRUSH));
                 Rectangle(hdc, 2, 47, 498, 543);

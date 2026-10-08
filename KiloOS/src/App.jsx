@@ -27,7 +27,7 @@ const APPS = [
   { id: 'ktask', title: 'KTask', url: '/apps/ktask.html', exeUrl: '/exe/KTask.exe', icon: '/assets/icons/ktask.ico', w: 1040, h: 700, folder: 'System' },
   { id: 'kbbs', title: 'KBBS', url: '/apps/kbbs.html', exeUrl: '/exe/KBBS.exe', icon: '/assets/icons/kbbs.ico', w: 960, h: 680, folder: 'Network' },
   { id: 'krogue', title: 'KRogue', url: '/apps/krogue.html', exeUrl: '/exe/KRogue.exe', icon: '/assets/icons/krogue.ico', w: 1000, h: 720, folder: 'Games' },
-  { id: 'ksnake', title: 'KSnake', url: '/apps/ksnake.html', exeUrl: '/exe/KSnake.exe', icon: '/assets/icons/ksnake.ico', w: 540, h: 680, folder: 'Games' },
+  { id: 'ksnake', title: 'KSnake', url: '/apps/ksnake.html', exeUrl: '/exe/KSnake.exe', icon: '/assets/icons/ksnake.ico', w: 860, h: 720, folder: 'Games' },
   { id: 'ktetris', title: 'KTetris', url: '/apps/ktetris.html', exeUrl: '/exe/KTetris.exe', icon: '/assets/icons/ktetris.ico', w: 520, h: 720, folder: 'Games' },
   { id: 'kpong', title: 'KPong', url: '/apps/kpong.html', exeUrl: '/exe/KPong.exe', icon: '/assets/icons/kpong.ico', w: 960, h: 860, folder: 'Games' },
   { id: 'kterm', title: 'KTerm', url: '/apps/kterm.html', exeUrl: '/exe/KTerm.exe', icon: '/assets/icons/kterm.ico', w: 960, h: 600, folder: 'System' },

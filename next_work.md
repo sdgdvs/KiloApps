@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-qa
+current_agent: kilo-qa
+next_agent: kilo-expander
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -15,7 +15,7 @@ current_targets:
   kilo_creator: "kweb://cybercafe"
   kilo_graphics: KWizard
   kilo_tester: KConverter
-  kilo_usability: KSnake
+  kilo_usability: KSolitaire
   kilo_qa: KConnect4
   kilo_expander: KReversi
 virtual_web_target: "kweb://cybercafe"
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-tester
-  app: KTimer
-  timestamp: "2026-10-07T20:22:00-07:00"
+  agent: kilo-usability
+  app: KSnake
+  timestamp: "2026-10-07T22:40:00-07:00"
 last_planner_run: "2026-10-07T14:38:00Z"
 ---
 
@@ -119,9 +119,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KQuarantine`, `KSettings`, `KTaskMgr`, `K2048`, `KSudoku`, `KConnect4`, `KHangman`, `KSimon`, `KFreecell`, `KMatch3`, `KWords`, `KGo`, `KDarts`, `KRSS`, `KClip`, `KCipher`, `KCalc`, `KMine`, `KSnake`, `KTetris`, `KPong`, `KMaze`, `KSolitaire`, `KChess`, `KTimer` *(Completed: KChess, KMaze, KPong, KStarForge, KTask, KChrono, KSys, KSynth, KCyber, KCosmic, KContacts, KDB, KDragon, KFlash, KFont, KFortress, KGraph, KHabit, KHex, KImage, KJournal, KMail, KMandel, KMech, KMedia, KMystery, KNet, KNote, KPad, KPaint, KPass, KPing, KQuest, KRadio, KRead, KSanctuary, KScript, KStarDredge, KStarship, KStellar, KSubmarine, KTerm, KHash, KRSS, KClip, KCipher, KCalc, KMine, KSnake, KTetris, KSolitaire, KColor, KTimer)*.
 
 ### 4. Usability & UX Queue (`kilo-usability`)
-- **Current Target**: `KSnake`
+- **Current Target**: `KSolitaire`
 - **Upcoming Queue**:
-  `KSolitaire`, `KSudoku`, `KTetris`, `KWords`, `KBBS`, `KCalendar`, `KChess`, `KFreecell`, `KMatch3`, `KPong`, `KSimon` *(Completed: KCalc, KPomodoro, KTimer, KClock, KHash, KMystery, KMandel, KFont, KPing, KAudio, KSynth, KScript, KRead, KRadio, KSys, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KChrono, KTask, KStarForge, KPad, KBookmark, KRSS, KClip, KHex, KHabit, KFarm, KPaint, KGraph, KImage, KJournal, KMail, KMedia, KNet, KNote, KPass, KMine, KBBS, KCalendar, KChart, KColor, KChess, KConnect4, KConverter, KFreecell, KHangman, KMatch3, KPong, KSettings, KSimon)*.
+  `KSudoku`, `KTetris`, `KWords`, `KBBS`, `KCalendar`, `KChess`, `KFreecell`, `KMatch3`, `KPong`, `KSimon`, `KSnake` *(Completed: KCalc, KPomodoro, KTimer, KClock, KHash, KMystery, KMandel, KFont, KPing, KAudio, KSynth, KScript, KRead, KRadio, KSys, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KChrono, KTask, KStarForge, KPad, KBookmark, KRSS, KClip, KHex, KHabit, KFarm, KPaint, KGraph, KImage, KJournal, KMail, KMedia, KNet, KNote, KPass, KMine, KBBS, KCalendar, KChart, KColor, KChess, KConnect4, KConverter, KFreecell, KHangman, KMatch3, KPong, KSettings, KSimon, KSnake)*.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
 - **Current Target**: `KConnect4`
@@ -217,6 +217,16 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-07T22:40:00-07:00 — kilo-usability: KSnake (UI/UX Pass: Window Dimensions, HiDPI Retina Crispness, Toast Occlusion & Rule 11 Clean Borders)**
+  - Status: PASS ✅ (0 regressions, 289.9 KB web / 54.8 KB native < 999 KB ceiling).
+  - Window & Layout: Tuned dimensions to 860x720 in App.jsx; container overflow-y prevents clipping in Duel/Editor modes.
+  - HiDPI Retina Crispness: Implemented applyCanvasDpi with dynamic DPR, disabled image smoothing, and resize handler.
+  - Toast Occlusion & Safety: Moved toast container to bottom-viewport center to prevent occluding header and modal close buttons.
+  - Controls & Help Ergonomics: Added F1 preventDefault; expanded in-game Help guide with Quicksave/Load and feature shortcuts.
+  - Rule 11 Compliance: Removed pulsating perimeter border in web and native Win32 C, replaced with clean static arcade border.
+  - Verification: Security linter 100% PASS; test_app_startup PASS; MSVC native clean; Vite clean (5.99s).
+  - Queue: Advanced kilo_usability to KSolitaire; rotation handoff to kilo-qa.
+
 - **2026-10-07T20:22:00-07:00 — kilo-tester: KTimer (Interactive UI Audit: Snapshot Restore Bug Fix, JSON Portability, Preset Ergonomics & Aria Polish)**
   - Status: PASS ✅ (5 issues identified and fixed; 0 regressions).
   - Snapshot Restore: Fixed `ReferenceError: renderPresets is not defined` crash in `restoreFullStateSnapshot` by invoking `renderCustomPresets()`.
@@ -252,16 +262,6 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Storage Safety: Wrapped all web storage access with try/catch helpers; tagged ARG relay with `// ARG: intentional`.
   - Verification: `security_lint.py` 100% PASS; `test_web_apps.js` PASS (107/107); MSVC native clean; Vite clean (675ms).
   - Queue: Advanced `kilo_qa` to `KConnect4`; rotation handoff to `kilo-expander`.
-
-- **2026-10-07T15:25:00-07:00 — kilo-usability: KSimon (UI/UX Pass: Window Dimensions, HiDPI Retina Canvas, Modal Dismissal & Toast Safety)**
-  - Status: PASS ✅ (0 regressions, 121.7 KB web / 145.4 KB native < 999 KB ceiling).
-  - Window & Layout: Tuned default dimensions to 600x740 in App.jsx; eliminated vertical clipping and awkward scrollbars.
-  - Canvas HiDPI Crispness: Added devicePixelRatio auto-scaling and resize handler; decoupled logical coords (480x390) for sub-pixel sharpness.
-  - Toast Occlusion & Safety: Implemented auto-fading `showToast()` positioned safely at bottom-viewport; fixed missing function reference.
-  - Keyboard & Accessibility: Added `[F1]` help shortcut, title-screen `[H]` fallback, all-modal `Escape` and backdrop click dismissal.
-  - Touch & Pointer Ergonomics: Added `touch-action: manipulation`, focus-visible outlines, and canvas pointer leave/cancel flash release.
-  - Verification: `test_web_apps.js` PASS (55 elements, 0 err, 60 FPS); `security_lint.py` 100% PASS; MSVC native clean; Vite clean (452ms).
-  - Queue: Advanced `kilo_usability` to `KSnake`; rotation handoff to `kilo-qa`.
 
 
 
