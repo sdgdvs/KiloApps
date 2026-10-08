@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-creator
-next_agent: kilo-graphics
+current_agent: kilo-graphics
+next_agent: kilo-tester
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -12,13 +12,13 @@ model: gemini-3.8-flash-high
 timeout_minutes: 15
 status: ready
 current_targets:
-  kilo_creator: "kweb://echo-subsystem.net"
+  kilo_creator: "kweb://deep-core"
   kilo_graphics: KDragon
   kilo_tester: KSettings
   kilo_usability: KTetris
   kilo_qa: KAsteroids
   kilo_expander: KChess
-virtual_web_target: "kweb://echo-subsystem.net"
+virtual_web_target: "kweb://deep-core"
 virtual_web_rotation:
   - "kweb://geocities"
   - "kweb://users/~neon_rider"
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-expander
-  app: KTowers
-  timestamp: "2026-10-08T07:18:00-07:00"
+  agent: kilo-creator
+  app: echo-subsystem.net
+  timestamp: "2026-10-08T07:37:00-07:00"
 last_planner_run: "2026-10-07T14:38:00Z"
 ---
 
@@ -102,10 +102,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ### 1. Virtual 1999 Web & ARG Node Creator (`kilo-creator`)
 - **DIRECTOR MANDATE — STANDALONE OS APP CREATION HALTED**: Standalone OS app creation is frozen at 92 native / 99 web apps. All creator turns are now exclusively channeled into building real, interactive Virtual 1999 Web sites (`KiloOS/public/web/`) and ARG mystery nodes per `arg_plan.md`. Zero shallow stubs; every page must be a functioning Web 1.0 experience with working forms, generators, Web Audio, or mini-tools (<999KB).
-- **Current Target**: `kweb://echo-subsystem.net`
+- **Current Target**: `kweb://deep-core`
 - **Upcoming Queue**:
-  `kweb://deep-core`, `kweb://darknet`, `kweb://portal`, `kweb://webring`, `kweb://warez`, `kweb://geocities`, `kweb://users/~neon_rider`, `kweb://asm-temple`, `kweb://cybercafe`, `kweb://10.19.99.4/classified`
-  *(Completed Phase 1 & 2 Builds: kweb://geocities, kweb://cybercafe, kweb://10.19.99.4/classified deep expansion complete. Active: Surface-site ARG breadcrumbs & middle-game puzzle gating)*.
+  `kweb://darknet`, `kweb://portal`, `kweb://webring`, `kweb://warez`, `kweb://geocities`, `kweb://users/~neon_rider`, `kweb://asm-temple`, `kweb://cybercafe`, `kweb://10.19.99.4/classified`, `kweb://echo-subsystem.net`
+  *(Completed Phase 1 & 2 Builds: kweb://geocities, kweb://cybercafe, kweb://10.19.99.4/classified, kweb://echo-subsystem.net deep expansion complete. Active: Surface-site ARG breadcrumbs & middle-game puzzle gating)*.
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
 - **EXCLUSIVE MISSION**: Replace programmer vector art with Imagen 3 generated sprites and backgrounds via the 2-stage asset pipeline. If the target app is not appropriate for raster/sprite replacement (e.g. wireframe classics or abstract board games), skip the turn immediately.
@@ -217,6 +217,14 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-08T07:37:00-07:00 — kilo-creator: echo-subsystem.net (Deep Expansion, Middle-Game Puzzle Gating & KNet Routing)**
+  - Status: PASS ✅ (294.7 KB web < 999 KB hard ceiling).
+  - Puzzle Gating & ARG: Bound default Morse telemetry burst to `OFFSET 0x007F1990` linking to Darknet memory inspector.
+  - Journal & Lore: Synced field journal entry to reflect 0x007F1990 offset uncovering classified Carlsbad subnet.
+  - KNet Routing: Expanded address bar resolution for trailing slashes, www prefixes, and 10.19.99.19 station IP.
+  - Verification: Security linter 100% PASS; Vite build clean (508ms); test_arg_flow.py 100% PASS (7/7 stages).
+  - Queue: Advanced `kilo_creator` to `kweb://deep-core`; rotation handoff to `kilo-graphics`.
+
 - **2026-10-08T07:18:00-07:00 — kilo-expander: KTowers (Skip Turn — Mature 5+ Passes & Locked in Human Review Queue)**
   - Status: ⏭️ Skip — app is feature-complete and mature.
   - Review Queue: Verified locked in `docs/human_review_queue.md` (60 FPS, 17ms pacing, 180.8 KB < 999 KB ceiling).
@@ -249,13 +257,6 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Lifecycle & Focus: Added `visibilitychange` audio suspend/resume, prevented modal focus-stealing on click, and secured postMessage origins.
   - Verification: `test_app_startup.py` PASS; `test_arg_flow.py` PASS; `check_icons.py` PASS; Vite build clean (1.39s); ARG integrity 100% preserved.
   - Queue: Advanced `kilo_tester` to `KSettings`; rotation handoff to `kilo-usability`.
-
-- **2026-10-08T04:35:00-07:00 — kilo-graphics: KColony (Skip Turn — Inappropriate Target & Glint/Dot Audit)**
-  - Status: ⏭️ Skip — Imagen 3 asset replacement not appropriate for KColony
-  - Rationale: 20x20 micro-tile planetary grid sim with mature custom vector art and 1:1 Win32 GDI C parity; downscaled raster sprites unsuited.
-  - Glint & Dot Audit: Verified clean static framing border (Rule 11); zero rotating specular glints or traveling border dots in web and native C.
-  - Verification: `check_icons.py` 100% PASS; `security_lint.py` 100% PASS; MSVC clean (`KColony.exe` 174.1 KB); Vite clean (480ms); web (131.8 KB) < 999 KB ceiling.
-  - Queue: Advanced `kilo_graphics` to `KDragon`; rotation handoff to `kilo-tester`.
 
 
 

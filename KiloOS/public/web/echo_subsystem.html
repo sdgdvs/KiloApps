@@ -1083,7 +1083,7 @@
           </div>
           <h2 class="journal-title">Subcarrier Beacon 1999 Hz: The Ghost Tone in KSynth</h2>
           <div class="journal-body">
-            By tuning the Yamaha YM2612 2-Operator FM synthesis engine in <code>KSynth</code> to 1999 Hz with a 2.0 ratio modulator, the faint audio subcarrier begins modulating into Morse code. We decoded the pulses: they spell out internal coordinates pointing toward the classified Carlsbad subnet (<span class="redacted">10.19.99.4/classified</span>) and our domain (<span class="redacted">kweb://echo-subsystem.net</span>). The system is broadcasting its own network topology through audible sound.
+            By tuning the Yamaha YM2612 2-Operator FM synthesis engine in <code>KSynth</code> to 1999 Hz with a 2.0 ratio modulator, the faint audio subcarrier begins modulating into Morse code. We decoded the pulses: they spell out internal coordinates pointing toward the classified Carlsbad subnet (<span class="redacted">10.19.99.4/classified</span>), our domain (<span class="redacted">kweb://echo-subsystem.net</span>), and an unmapped memory bus offset (<span class="redacted">0x007F1990</span>). The system is broadcasting its own network topology through audible sound.
           </div>
           <div style="margin-top:8px;">
             <button class="btn-retro btn-amber" style="font-size:11px; padding:2px 8px;" onclick="loadPresetToDecoder(1999, 2.0, 500); startMorseDemodulation();">Demodulate 1999Hz Morse</button>
@@ -2801,7 +2801,7 @@ END TRANSMISSION // ESARL 1999</div>
     '.': '.-.-.-', ':': '---...', '/': '-..-.', '-': '-....-'
   };
 
-  const defaultTelemetryMessage = "ECHO-SUBSYSTEM.NET 10.19.99.4 1999HZ";
+  const defaultTelemetryMessage = "ECHO-SUBSYSTEM.NET 10.19.99.4 1999HZ OFFSET 0x007F1990";
 
   function startMorseDemodulation(customText) {
     if (!isAudioPowered) toggleAudioEngine();
