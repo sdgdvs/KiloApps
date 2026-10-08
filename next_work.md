@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-graphics
-next_agent: kilo-tester
+current_agent: kilo-tester
+next_agent: kilo-usability
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -13,7 +13,7 @@ timeout_minutes: 15
 status: ready
 current_targets:
   kilo_creator: "kweb://darknet"
-  kilo_graphics: KDragon
+  kilo_graphics: KMech
   kilo_tester: KSettings
   kilo_usability: KBBS
   kilo_qa: KAsteroids
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-creator
-  app: deep-core
-  timestamp: "2026-10-08T09:37:00-07:00"
+  agent: kilo-graphics
+  app: KDragon
+  timestamp: "2026-10-08T10:19:00-07:00"
 last_planner_run: "2026-10-08T15:14:12Z"
 ---
 
@@ -109,9 +109,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
 - **EXCLUSIVE MISSION**: Replace programmer vector art with Imagen 3 generated sprites and backgrounds via the 2-stage asset pipeline. If the target app is not appropriate for raster/sprite replacement (e.g. wireframe classics or abstract board games), skip the turn immediately.
-- **Current Target**: `KDragon`
+- **Current Target**: `KMech`
 - **Upcoming Queue**:
-  `KMech`, `KColosseum`, `KAbyss`, `KBreakout`, `KSpace`, `KAsteroids` (wireframe skip), `KFarm` (skip), `KWizard` (skip), `KColony` (skip) *(Note: Pure vector/wireframe or abstract board targets skip automatically per Mandate 15. Completed: KQuest Phases 1-5, KSpace)*.
+  `KColosseum`, `KAbyss`, `KBreakout`, `KSpace`, `KAsteroids` (wireframe skip), `KFarm` (skip), `KWizard` (skip), `KColony` (skip), `KDragon` (skip) *(Note: Pure vector/wireframe or abstract board targets skip automatically per Mandate 15. Completed: KQuest Phases 1-5, KSpace)*.
 
 ### 3. App Tester Queue (`kilo-tester`)
 - **Current Target**: `KSettings`
@@ -217,6 +217,13 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-08T10:19:00-07:00 — kilo-graphics: KDragon (Skip Turn — Inappropriate Target & Glint/Dot Audit)**
+  - Status: ⏭️ Skip — Imagen 3 asset replacement not appropriate for KDragon
+  - Rationale: Authentic 16x16 pixel-art pet sim with 1:1 Win32 GDI C parity; downscaled raster sprites unsuited.
+  - Glint & Dot Audit: Verified static medieval filigree border; zero rotating specular glints or traveling border dots.
+  - Verification: `check_icons.py` 100% PASS; `security_lint.py` 100% PASS; MSVC clean (`KDragon.exe` 149.0 KB); Vite clean (1.30s); web (169.3 KB) < 999 KB ceiling.
+  - Queue: Advanced `kilo_graphics` to `KMech`; rotation handoff to `kilo-tester`.
+
 - **2026-10-08T09:37:00-07:00 — kilo-creator: kweb://deep-core (Anti-Potemkin Web 1.0 Expansion, CSS Patch, Routing & Golden Thread Pass)**
   - Status: PASS ✅ (242.7 KB web < 999 KB ceiling, 0 regressions).
   - Anti-Potemkin Web Depth: 10 interactive decks (VT100 core, 5 defusal sectors, 3D vector radar, RTDB mesh, x86 disasm, 650m sonar, wiretap, sanctum).
@@ -246,10 +253,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Parity & Standards: Full RFMS Speed Duel, Frame-Stewart solver, F5/F9 state, FEN clipboard, TMN replay, Rule 11 clean borders.
   - Verification: `security_lint.py` 100% PASS; `smoke_test_native.py` 101/101 PASS; MSVC clean; Vite build clean (449ms).
   - Queue: Advanced `kilo_expander` to `KChess`; rotation handoff to `kilo-creator`.
-
-- **2026-10-08T06:27:00-07:00 — kilo-qa: KSimon (QA & Build Audit: F1/F5/F9 Hotkeys, Tutorial Flag, Layout Sync & Save Parity)**
-  - Status: PASS ✅ (0 regressions, 203.4 KB web / 142.0 KB native < 999 KB ceiling).
-  - Native Hotkeys & Parity: Added F1 (Help), F5 (Save), F9 (Load), Enter/Space to start; added first-run tutorial flag.
-  - Web & Layout: Aligned button layout on load, synced mode switching, restored audio and state guards.
-  - Verification: MSVC clean build; native smoke test PASS; Vite build clean; security lint PASS.
-  - Queue: Advanced kilo_qa to KAsteroids; rotation handoff to kilo-expander.

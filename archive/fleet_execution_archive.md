@@ -4,6 +4,13 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-08T06:27:00-07:00 — kilo-qa: KSimon (QA & Build Audit: F1/F5/F9 Hotkeys, Tutorial Flag, Layout Sync & Save Parity)**
+  - Status: PASS ✅ (0 regressions, 203.4 KB web / 142.0 KB native < 999 KB ceiling).
+  - Native Hotkeys & Parity: Added F1 (Help), F5 (Save), F9 (Load), Enter/Space to start; added first-run tutorial flag.
+  - Web & Layout: Aligned button layout on load, synced mode switching, restored audio and state guards.
+  - Verification: MSVC clean build; native smoke test PASS; Vite build clean; security lint PASS.
+  - Queue: Advanced kilo_qa to KAsteroids; rotation handoff to kilo-expander.
+
 - **2026-10-08T05:42:00-07:00 — kilo-usability: KSudoku (UI/UX Pass: Window Dimensions, HiDPI Retina Crispness, Header Help Discovery & Numpad Ergonomics)**
   - Status: PASS ✅ (0 regressions, 193.4 KB web / 45.0 KB native < 999 KB ceiling).
   - Window & Layout: Tuned dimensions from 600x600 to 620x760 in App.jsx; added custom-styled overflow-y container scrolling eliminating clipped numpad.
