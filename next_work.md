@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-expander
-next_agent: kilo-creator
+current_agent: kilo-creator
+next_agent: kilo-graphics
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -17,7 +17,7 @@ current_targets:
   kilo_tester: KSettings
   kilo_usability: KTetris
   kilo_qa: KAsteroids
-  kilo_expander: KTowers
+  kilo_expander: KChess
 virtual_web_target: "kweb://echo-subsystem.net"
 virtual_web_rotation:
   - "kweb://geocities"
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-qa
-  app: KSimon
-  timestamp: "2026-10-08T06:27:00-07:00"
+  agent: kilo-expander
+  app: KTowers
+  timestamp: "2026-10-08T07:18:00-07:00"
 last_planner_run: "2026-10-07T14:38:00Z"
 ---
 
@@ -217,6 +217,13 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-08T07:18:00-07:00 — kilo-expander: KTowers (Skip Turn — Mature 5+ Passes & Locked in Human Review Queue)**
+  - Status: ⏭️ Skip — app is feature-complete and mature.
+  - Review Queue: Verified locked in `docs/human_review_queue.md` (60 FPS, 17ms pacing, 180.8 KB < 999 KB ceiling).
+  - Parity & Standards: Full RFMS Speed Duel, Frame-Stewart solver, F5/F9 state, FEN clipboard, TMN replay, Rule 11 clean borders.
+  - Verification: `security_lint.py` 100% PASS; `smoke_test_native.py` 101/101 PASS; MSVC clean; Vite build clean (449ms).
+  - Queue: Advanced `kilo_expander` to `KChess`; rotation handoff to `kilo-creator`.
+
 - **2026-10-08T06:27:00-07:00 — kilo-qa: KSimon (QA & Build Audit: F1/F5/F9 Hotkeys, Tutorial Flag, Layout Sync & Save Parity)**
   - Status: PASS ✅ (0 regressions, 203.4 KB web / 142.0 KB native < 999 KB ceiling).
   - Native Hotkeys & Parity: Added F1 (Help), F5 (Save), F9 (Load), Enter/Space to start; added first-run tutorial flag.
@@ -249,21 +256,6 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Glint & Dot Audit: Verified clean static framing border (Rule 11); zero rotating specular glints or traveling border dots in web and native C.
   - Verification: `check_icons.py` 100% PASS; `security_lint.py` 100% PASS; MSVC clean (`KColony.exe` 174.1 KB); Vite clean (480ms); web (131.8 KB) < 999 KB ceiling.
   - Queue: Advanced `kilo_graphics` to `KDragon`; rotation handoff to `kilo-tester`.
-
-- **2026-10-08T04:25:00-07:00 — kilo-creator: kweb://10.19.99.4/classified (Deep Expansion: Transponder CAD Schematic & RF Test Bench)**
-  - Status: PASS ✅ (0 regressions, 253.6 KB < 999 KB hard ceiling).
-  - Anti-Potemkin CAD Bench: Implemented Tab 10 vector CRT CAD schematic with 8 probe points, live phosphor scope, and LC tank calculator.
-  - Interactive Resonance & Faults: Probed signals audition via Web Audio API; simulated salt moisture, drift, and ground shock faults.
-  - In-Memory Artifacts: Added client-side SPICE netlist (`.CIR`) and hardware BOM (`.TXT`) downloads; integrated terminal commands.
-  - Verification: Security linter 100% PASS; Vite build clean (453ms); URL hash routing wired in KNet, portal, and webring.
-  - Queue: Advanced `kilo_creator` and `virtual_web_target` to `kweb://echo-subsystem.net`; rotation handoff to `kilo-graphics`.
-
-- **2026-10-08T03:35:00-07:00 — kilo-expander: KDarts (Skip Turn — Mature 5+ Passes & Locked in Human Review Queue)**
-  - Status: ⏭️ Skip — app is feature-complete and mature.
-  - Review Queue: Verified locked in `docs/human_review_queue.md` (60 FPS, 17ms pacing, 151.9 KB < 999 KB).
-  - Parity & Standards: Full RFMS RetroMultiplayer, Rule 11 clean borders, F5/F9 state parity, Sisal board replay & JSON export.
-  - Verification: `security_lint.py` 100% PASS; `smoke_test_native.py` 101/101 PASS; MSVC clean; Vite build clean (511ms).
-  - Queue: Advanced `kilo_expander` to `KTowers`; rotation handoff to `kilo-creator`.
 
 
 

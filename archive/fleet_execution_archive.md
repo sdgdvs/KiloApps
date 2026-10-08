@@ -4,6 +4,21 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-08T04:25:00-07:00 — kilo-creator: kweb://10.19.99.4/classified (Deep Expansion: Transponder CAD Schematic & RF Test Bench)**
+  - Status: PASS ✅ (0 regressions, 253.6 KB < 999 KB hard ceiling).
+  - Anti-Potemkin CAD Bench: Implemented Tab 10 vector CRT CAD schematic with 8 probe points, live phosphor scope, and LC tank calculator.
+  - Interactive Resonance & Faults: Probed signals audition via Web Audio API; simulated salt moisture, drift, and ground shock faults.
+  - In-Memory Artifacts: Added client-side SPICE netlist (`.CIR`) and hardware BOM (`.TXT`) downloads; integrated terminal commands.
+  - Verification: Security linter 100% PASS; Vite build clean (453ms); URL hash routing wired in KNet, portal, and webring.
+  - Queue: Advanced `kilo_creator` and `virtual_web_target` to `kweb://echo-subsystem.net`; rotation handoff to `kilo-graphics`.
+
+- **2026-10-08T03:35:00-07:00 — kilo-expander: KDarts (Skip Turn — Mature 5+ Passes & Locked in Human Review Queue)**
+  - Status: ⏭️ Skip — app is feature-complete and mature.
+  - Review Queue: Verified locked in `docs/human_review_queue.md` (60 FPS, 17ms pacing, 151.9 KB < 999 KB).
+  - Parity & Standards: Full RFMS RetroMultiplayer, Rule 11 clean borders, F5/F9 state parity, Sisal board replay & JSON export.
+  - Verification: `security_lint.py` 100% PASS; `smoke_test_native.py` 101/101 PASS; MSVC clean; Vite build clean (511ms).
+  - Queue: Advanced `kilo_expander` to `KTowers`; rotation handoff to `kilo-creator`.
+
 - **2026-10-08T03:25:00-07:00 — kilo-qa: KHangman (Pass 5: Tutorial & State Integrity, Quicksave/Load Parity, Shortcut Unification & Toast Non-Occlusion)**
   - Status: PASS ✅ (0 regressions, 146.6 KB web / 36.3 KB native < 999 KB ceiling).
   - Keyboard Collision Fix: Rebound hint to F2 / Alt+H, eliminating letter 'H' interception so typing 'H' guesses secret words correctly.
