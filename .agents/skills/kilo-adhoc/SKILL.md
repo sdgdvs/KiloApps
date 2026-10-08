@@ -78,8 +78,8 @@ Before committing, run all verification steps:
 
 ## 5. Fleet Hygiene, Logging & Deployment
 
-1. **Terse Execution Log:**
-   - In `next_work.md` under `## Recent Execution Logs`, prepend a terse entry (≤8 lines of bullet points; drop the oldest entry to maintain exactly 5 entries):
+1. **Terse Execution Log & Zero-Discard Rotation:**
+   - In `next_work.md` under `## Recent Execution Logs`, prepend a terse entry (≤8 lines of bullet points):
      ```markdown
      - **YYYY-MM-DDTHH:MM:SS-07:00 — kilo-adhoc: <AppName> (<Feature/Fix Summary>)**
        - Status: PASS ✅ (0 regressions, clean builds, <webSize> KB web / <nativeSize> KB native < 999 KB ceiling).
@@ -87,6 +87,7 @@ Before committing, run all verification steps:
        - <Key change 2>: <Short description of what changed>.
        - Verification: MSVC clean (<exeName> <size> KB); Vite clean; security_lint 100% PASS.
      ```
+   - **0-Token Zero-Discard Archival:** You do NOT need to manually delete or drop aging logs. The fleet workflow runs `scripts/rotate_logs.py` automatically (in pre-flight and post-turn orchestration at 0 token cost), moving entries older than 5 turns (or configured limit) to `archive/fleet_execution_archive.md` with zero data loss. You can also run `python scripts/rotate_logs.py` directly.
    - **Do NOT disrupt the active scheduled frontmatter** (`current_agent`, `current_targets`) in `next_work.md` so the automated fleet schedule continues uninterrupted.
 2. **Commit & Push:**
    ```powershell

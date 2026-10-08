@@ -38,9 +38,10 @@ This skill is invoked automatically every 24 hours by the orchestrator (`scripts
    - Verify that all apps in `KiloOS/src/App.jsx` point to existing `.ico` files and have 0 duplicate SHA256 hashes.
    - If any duplicate or missing icons are detected, immediately resolve via `python scripts/check_icons.py --fix` or assign `kilo-graphics` to generate unique icons for them.
 
-4. **Log Compaction**:
-   - Retain only the 5 most recent agent execution log entries in `next_work.md`.
-   - Move older entries into `archive/fleet_execution_archive.md`.
+4. **Log Compaction & Zero-Discard Rotation**:
+   - Run `python scripts/rotate_logs.py` (or verify orchestrator tick auto-rotation).
+   - Retains the 5 most recent agent execution log entries in `next_work.md`.
+   - Automatically moves older entries into `archive/fleet_execution_archive.md` with zero data loss.
 
 5. **Queue Handoff & Timestamp Update**:
    - In YAML frontmatter of `next_work.md`:

@@ -37,6 +37,14 @@ SESSION_FILE = REPO_ROOT / ".agents" / "scheduler_session.json"
 FLEET_NODES_DIR = REPO_ROOT / ".agents" / "fleet_nodes"
 TASK_NAME = "KiloApps-Fleet-Orchestrator"
 
+# 0-Token Zero-Discard Log Rotation Engine
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
+try:
+    from scripts.rotate_logs import rotate_next_work_logs, rotate_orchestrator_log
+except ImportError:
+    from rotate_logs import rotate_next_work_logs, rotate_orchestrator_log
+
 # Multi-PC Node Profiles: Dedicated, non-colliding dispatch windows based on account model tier:
 # - PC A: sdgdvs (Gemini Pro) - 1 turn/hr at :12 past each hour (Window :10 - :18)
 # - PC B: anonymous2 (Gemini Pro) - 1 turn/hr at :30 past each hour (Window :28 - :36)
@@ -797,6 +805,15 @@ def handle_preflight_skip(agent: str, targets: dict, frontmatter: dict, node_id:
 
         NEXT_WORK_FILE.write_text(content, encoding="utf-8")
 
+        # Zero-discard rotation: ensure next_work.md never exceeds cap during auto-skips
+        try:
+            rot_skip = rotate_next_work_logs(next_work_path=NEXT_WORK_FILE)
+            if rot_skip.get("archived", 0) > 0:
+                log(f"[PRE-FLIGHT ROTATION] Archived {rot_skip['archived']} old logs to archive/fleet_execution_archive.md.")
+                subprocess.run(["git", "add", "archive/fleet_execution_archive.md"], cwd=str(REPO_ROOT), capture_output=True)
+        except Exception as e:
+            log(f"Warning in auto-skip log rotation: {e}")
+
         # 3. Commit and push
         subprocess.run(["git", "add", "next_work.md"], cwd=str(REPO_ROOT), capture_output=True)
         commit_msg = f"content(games): auto-skip {target} ({skip_reason})"
@@ -908,6 +925,23 @@ def main():
             log(f"Queue validation error: {content_or_err}. Skipping dispatch.")
             return
 
+        # 6b. 0-Token Zero-Discard Log Rotation: Enforce lean context before agent spawn
+        if not args.dry_run:
+            try:
+                rot_res = rotate_next_work_logs(next_work_path=NEXT_WORK_FILE)
+                if rot_res.get("archived", 0) > 0:
+                    log(f"[PRE-FLIGHT] 0-token rotation: archived {rot_res['archived']} old turn(s) to archive/fleet_execution_archive.md (retained {rot_res['retained']}).")
+                    subprocess.run(["git", "add", "next_work.md", "archive/fleet_execution_archive.md"], cwd=str(REPO_ROOT), capture_output=True)
+                    subprocess.run(["git", "commit", "-m", "chore(logs): zero-token rotate old work to archive"], cwd=str(REPO_ROOT), capture_output=True)
+                rotate_orchestrator_log()
+                # Re-validate and refresh content after rotation
+                is_valid, content_or_err = validate_next_work_file(NEXT_WORK_FILE)
+                if not is_valid:
+                    log(f"Queue validation error after rotation: {content_or_err}. Skipping dispatch.")
+                    return
+            except Exception as e:
+                log(f"Warning in pre-flight log rotation: {e}")
+
         try:
             frontmatter = parse_frontmatter(content_or_err)
         except Exception as e:
@@ -1018,6 +1052,14 @@ def main():
         # Post-agent Git check: ensure unpushed commits and node state are synchronized to remote
         if process.returncode == 0 and not args.dry_run:
             try:
+                # Post-turn 0-token rotation: ensure new logs written by agent don't exceed cap
+                rot_res = rotate_next_work_logs(next_work_path=NEXT_WORK_FILE)
+                if rot_res.get("archived", 0) > 0:
+                    log(f"[POST-TURN] 0-token rotation: archived {rot_res['archived']} old turn(s) to archive/fleet_execution_archive.md.")
+                    subprocess.run(["git", "add", "next_work.md", "archive/fleet_execution_archive.md"], cwd=str(REPO_ROOT), capture_output=True)
+                    subprocess.run(["git", "commit", "-m", "chore(logs): zero-token rotate old work to archive"], cwd=str(REPO_ROOT), capture_output=True)
+                rotate_orchestrator_log()
+
                 # Stage fleet node telemetry
                 subprocess.run(
                     ["git", "add", ".agents/fleet_nodes"],

@@ -49,7 +49,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
    - Run log entries: ≤6 lines of terse bullet points. No paragraphs.
    - Batch edits into 1 pass. Never re-read files after editing.
    - Never run multi-app quality gates or full-repo screenshot suites during worker turns.
-   - Keep only the 5 most recent log entries in this file. Older entries move to [archive/fleet_execution_archive.md](archive/fleet_execution_archive.md).
+   - Keep only the 5 most recent log entries in this file. Older entries are 0-token automatically rotated to [archive/fleet_execution_archive.md](archive/fleet_execution_archive.md) by orchestrator (via scripts/rotate_logs.py) with zero discard.
 3. **Queue Handoff & Rotation Protocol**:
    - Master fleet rotates: `kilo-creator` ➔ `kilo-graphics` ➔ `kilo-tester` ➔ `kilo-usability` ➔ `kilo-qa` ➔ `kilo-expander`.
    - On completion, advance `current_targets.<agent>` and advance `current_agent`.
@@ -113,6 +113,13 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-08T16:40:00-07:00 — kilo-adhoc: Fleet Workflow (0-Token Zero-Discard Log Rotation Engine)**
+  - Status: PASS ✅ (0 regressions, unit tests 6/6 PASS, security lint 100% PASS).
+  - Implementation: Built `scripts/rotate_logs.py` and integrated into `scripts/orchestrate.py` (pre-flight, auto-skip, post-turn) and `scripts/compact_all.py`.
+  - Token Efficiency: Automatically rotates entries older than 5 turns into `archive/fleet_execution_archive.md` with zero discard at 0 LLM token cost.
+  - Workspace Hygiene: Added zero-discard rotation for `logs/orchestrator.log` preventing unbounded log growth.
+  - Verification: `scripts/test_rotate_logs.py` 100% PASS; `scripts/security_lint.py` 100% PASS.
+
 - **2026-10-08T15:31:00-07:00 — kilo-graphics: KMech (Skip Turn — Vector CRT Sim & Glint/Dot Audit)**
   - Status: ⏭️ Skip — Imagen 3 asset replacement not appropriate for KMech
   - Rationale: Authentic green phosphor vector CRT chassis diagnostic simulator; raster sprites unsuited.
@@ -140,39 +147,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Glint & Dot Audit: Verified static medieval filigree border; zero rotating specular glints or traveling border dots.
   - Verification: `check_icons.py` 100% PASS; `security_lint.py` 100% PASS; MSVC clean (`KDragon.exe` 149.0 KB); Vite clean (1.30s); web (169.3 KB) < 999 KB ceiling.
   - Queue: Advanced `kilo_graphics` to `KMech`; rotation handoff to `kilo-tester`.
-
-- **2026-10-08T09:37:00-07:00 — kilo-creator: kweb://deep-core (Anti-Potemkin Web 1.0 Expansion, CSS Patch, Routing & Golden Thread Pass)**
-  - Status: PASS ✅ (242.7 KB web < 999 KB ceiling, 0 regressions).
-  - Anti-Potemkin Web Depth: 10 interactive decks (VT100 core, 5 defusal sectors, 3D vector radar, RTDB mesh, x86 disasm, 650m sonar, wiretap, sanctum).
-  - Synthesis & Gating: Genesis YM2612 2-Op FM / SNES SPC700 procedural audio, F5/F9 state parity, 25s solo fallback, full middle-game gating.
-  - Fixes & Routing: Corrected .wiretap-hex-pane CSS syntax; verified deep routing in knet.html, portal.html, and webring.html.
-  - Verification: `security_lint.py` 100% PASS; `test_arg_flow.py` 7/7 stages PASS; Vite build clean (494ms); quality gate 107/107 PASS.
-  - Queue: Advanced `kilo_creator` and `virtual_web_target` to `kweb://darknet`; rotation handoff to `kilo-graphics`.
-
-- **2026-10-08T08:14:12-07:00 — kilo-planner: fleet-wide (Daily 24h Fleet Planning, Queue Health & Log Compaction)**
-  - Status: PASS ✅ (Daily fleet audit & queue rework complete).
-  - Icon Uniqueness: Verified 105 apps in App.jsx, 105 unique .ico files, 0 duplicate hashes (check_icons.py 100% PASS).
-  - Queue Health & Rework: Pruned locked mature apps from active queues; advanced kilo_creator to kweb://deep-core.
-  - Compaction & Archival: Archived aging KQuarantine and echo-subsystem entries to archive/fleet_execution_archive.md.
-  - Timestamp & Rotation: Updated last_planner_run to 2026-10-08T15:14:12Z; reset current_agent to kilo-creator.
-
-### Agent Run Log — Pass 5 QA
-- **Status:** 🟢 Completed (KAsteroids)
-- Audited kasteroids.html: added safeGet/safeSet try/catch guards around localStorage.
-- Verified build and size constraints (<999 KB).
-- Handoff to kilo-expander for KChess.
-
-### Agent Run Log — kilo-expander (KChess)
-- **Status:** 🟢 Completed (KChess Deep Engine Utility Expansion)
-- Implemented interactive Move Replay modal with ply stepping, table inspector & autoplay (hotkey V).
-- Implemented Opening Book Explorer with standard openings and practice-mode loader (hotkey B).
-- Added PGN file download (.pgn) and file upload import. Verified build and size (188 KB < 999 KB).
-- Advanced queue: kilo_expander -> KConnect4; rotation handoff to kilo-creator.
-
-### Agent Run Log — kilo-creator (kweb://darknet)
-- **Status:** 🟢 Completed (`kweb://darknet` Anti-Potemkin Web 1.0 Expansion Audit)
-- Verified Node 0x7F subterranean cryptography lab & encrypted relay (352.7 KB < 999 KB ceiling).
-- Interactive suite operational: Feistel/RC4 crypto engines, Bell 103/202 acoustic modem, dead drops, and interlock signal board.
-- Confirmed deep routing parity across KNet, Portal, and Webring. Vite build clean.
-- Advanced queue: kilo_creator -> kweb://portal; rotation handoff to kilo-graphics.
-

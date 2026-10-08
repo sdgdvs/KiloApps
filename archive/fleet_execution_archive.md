@@ -4,6 +4,41 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-08T09:37:00-07:00 — kilo-creator: kweb://deep-core (Anti-Potemkin Web 1.0 Expansion, CSS Patch, Routing & Golden Thread Pass)**
+  - Status: PASS ✅ (242.7 KB web < 999 KB ceiling, 0 regressions).
+  - Anti-Potemkin Web Depth: 10 interactive decks (VT100 core, 5 defusal sectors, 3D vector radar, RTDB mesh, x86 disasm, 650m sonar, wiretap, sanctum).
+  - Synthesis & Gating: Genesis YM2612 2-Op FM / SNES SPC700 procedural audio, F5/F9 state parity, 25s solo fallback, full middle-game gating.
+  - Fixes & Routing: Corrected .wiretap-hex-pane CSS syntax; verified deep routing in knet.html, portal.html, and webring.html.
+  - Verification: `security_lint.py` 100% PASS; `test_arg_flow.py` 7/7 stages PASS; Vite build clean (494ms); quality gate 107/107 PASS.
+  - Queue: Advanced `kilo_creator` and `virtual_web_target` to `kweb://darknet`; rotation handoff to `kilo-graphics`.
+
+- **2026-10-08T08:14:12-07:00 — kilo-planner: fleet-wide (Daily 24h Fleet Planning, Queue Health & Log Compaction)**
+  - Status: PASS ✅ (Daily fleet audit & queue rework complete).
+  - Icon Uniqueness: Verified 105 apps in App.jsx, 105 unique .ico files, 0 duplicate hashes (check_icons.py 100% PASS).
+  - Queue Health & Rework: Pruned locked mature apps from active queues; advanced kilo_creator to kweb://deep-core.
+  - Compaction & Archival: Archived aging KQuarantine and echo-subsystem entries to archive/fleet_execution_archive.md.
+  - Timestamp & Rotation: Updated last_planner_run to 2026-10-08T15:14:12Z; reset current_agent to kilo-creator.
+
+- **Agent Run Log — Pass 5 QA**
+  - **Status:** 🟢 Completed (KAsteroids)
+  - Audited kasteroids.html: added safeGet/safeSet try/catch guards around localStorage.
+  - Verified build and size constraints (<999 KB).
+  - Handoff to kilo-expander for KChess.
+
+- **Agent Run Log — kilo-expander (KChess)**
+  - **Status:** 🟢 Completed (KChess Deep Engine Utility Expansion)
+  - Implemented interactive Move Replay modal with ply stepping, table inspector & autoplay (hotkey V).
+  - Implemented Opening Book Explorer with standard openings and practice-mode loader (hotkey B).
+  - Added PGN file download (.pgn) and file upload import. Verified build and size (188 KB < 999 KB).
+  - Advanced queue: kilo_expander -> KConnect4; rotation handoff to kilo-creator.
+
+- **Agent Run Log — kilo-creator (kweb://darknet)**
+  - **Status:** 🟢 Completed (`kweb://darknet` Anti-Potemkin Web 1.0 Expansion Audit)
+  - Verified Node 0x7F subterranean cryptography lab & encrypted relay (352.7 KB < 999 KB ceiling).
+  - Interactive suite operational: Feistel/RC4 crypto engines, Bell 103/202 acoustic modem, dead drops, and interlock signal board.
+  - Confirmed deep routing parity across KNet, Portal, and Webring. Vite build clean.
+  - Advanced queue: kilo_creator -> kweb://portal; rotation handoff to kilo-graphics.
+
 - **2026-10-08T07:37:00-07:00 — kilo-creator: echo-subsystem.net (Deep Expansion, Middle-Game Puzzle Gating & KNet Routing)**
   - Status: PASS ✅ (294.7 KB web < 999 KB hard ceiling).
   - Puzzle Gating & ARG: Bound default Morse telemetry burst to `OFFSET 0x007F1990` linking to Darknet memory inspector.
