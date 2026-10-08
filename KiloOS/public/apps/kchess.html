@@ -343,6 +343,13 @@
           <span>↪️ Redo Move</span><span class="shortcut">Y</span>
         </div>
         <div class="menu-divider"></div>
+        <div class="menu-dropdown-entry" onclick="openReplayModal()">
+          <span>📼 Interactive Move Replay</span><span class="shortcut">V</span>
+        </div>
+        <div class="menu-dropdown-entry" onclick="openBookModal()">
+          <span>📖 Opening Book Explorer</span><span class="shortcut">B</span>
+        </div>
+        <div class="menu-divider"></div>
         <div class="menu-dropdown-entry" onclick="openFENModal()">
           <span>📋 FEN Position Manager</span><span class="shortcut">E</span>
         </div>
@@ -411,6 +418,8 @@
         <tr><td><kbd>H</kbd></td><td>Calculate & Display Best AI Move Hint</td></tr>
         <tr><td><kbd>F</kbd></td><td>Activate Time Freeze Skill (Skip AI turn / +15s Blitz)</td></tr>
         <tr><td><kbd>U</kbd> / <kbd>Y</kbd></td><td>Undo / Redo Move (interactive stack)</td></tr>
+        <tr><td><kbd>V</kbd></td><td>Interactive Move Replay &amp; History Inspector</td></tr>
+        <tr><td><kbd>B</kbd></td><td>Opening Book Explorer (learn &amp; practice openings)</td></tr>
         <tr><td><kbd>S</kbd> / <kbd>F5</kbd></td><td>Quick Save Game State to storage</td></tr>
         <tr><td><kbd>L</kbd> / <kbd>F9</kbd></td><td>Quick Load Saved Game State</td></tr>
         <tr><td><kbd>M</kbd></td><td>Switch Game Mode (Standard / Campaign / Puzzle / Blitz)</td></tr>
@@ -453,11 +462,72 @@
       <h3>PGN Move History <span class="close-btn" onclick="closeModals()">&times;</span></h3>
       <p style="font-size:12px; color:#94a3b8; margin-top:0;">Portable Game Notation (PGN) format:</p>
       <textarea id="pgn-input" rows="8" spellcheck="false"></textarea>
-      <div class="btn-group">
+      <div class="btn-group" style="flex-wrap: wrap;">
         <button onclick="openFENModal()">FEN View [E]</button>
+        <button onclick="downloadPGNFile()">💾 Download .pgn</button>
+        <button onclick="triggerImportPGN()">📂 Open .pgn File</button>
         <button onclick="copyPGN()">Copy PGN</button>
-        <button class="primary" onclick="applyPGN()">Import PGN</button>
+        <button class="primary" onclick="applyPGN()">Import Text</button>
         <button class="modal-close" onclick="closeModals()">Close [Esc]</button>
+      </div>
+    </div>
+  </div>
+  <input type="file" id="import-pgn-input" accept=".pgn,.txt" style="display:none;" onchange="handlePGNFileImport(event)">
+
+  <!-- Interactive Replay & Move Inspector Modal -->
+  <div id="replay-modal" class="modal-overlay" onclick="handleBackdropClick(event, 'replay-modal')">
+    <div class="modal-card" style="width: 520px; max-height: 88vh; display: flex; flex-direction: column;">
+      <h3>📼 Game Replay &amp; Move Inspector <span class="close-btn" onclick="closeModals()">&times;</span></h3>
+      <p style="font-size: 12px; color: #94a3b8; margin: -4px 0 10px 0;">Step through move history, jump to any ply, or autoplay game:</p>
+      
+      <!-- Replay Controls -->
+      <div style="display: flex; gap: 6px; justify-content: center; align-items: center; background: #1e293b; padding: 8px 12px; border-radius: 8px; margin-bottom: 12px; border: 1px solid #334155;">
+        <button onclick="replayStepTo(0)" title="Start (|<<)">|&lt;&lt;</button>
+        <button onclick="replayStepPrev()" title="Previous Ply (&lt;)">&lt;</button>
+        <button id="replay-play-btn" onclick="toggleReplayPlay()" class="primary" style="min-width: 86px;">▶ Play</button>
+        <button onclick="replayStepNext()" title="Next Ply (&gt;)">&gt;</button>
+        <button onclick="replayStepTo(moveHistoryStack.length - 1)" title="End (&gt;&gt;|)">&gt;&gt;|</button>
+        <span id="replay-ply-badge" style="font-size: 12px; font-weight: bold; color: #5eead4; margin-left: 8px;">Ply: 0 / 0</span>
+      </div>
+
+      <!-- Move Table -->
+      <div id="replay-table-container" style="flex: 1; max-height: 220px; overflow-y: auto; background: #0b1120; border: 1px solid #334155; border-radius: 6px; padding: 4px; font-family: monospace; font-size: 12px;">
+        <table id="replay-move-table" style="width: 100%; border-collapse: collapse; text-align: left;">
+          <thead>
+            <tr style="color: #94a3b8; border-bottom: 1px solid #1e293b;">
+              <th style="padding: 4px 8px; width: 44px;">#</th>
+              <th style="padding: 4px 8px;">White Move</th>
+              <th style="padding: 4px 8px;">Black Move</th>
+            </tr>
+          </thead>
+          <tbody id="replay-move-tbody"></tbody>
+        </table>
+      </div>
+
+      <div style="margin-top: 8px; font-size: 11px; color: #94a3b8; display: flex; justify-content: space-between;">
+        <span id="replay-info-status">Click any move to jump directly</span>
+        <span>Hotkeys: &larr; / &rarr; to step</span>
+      </div>
+
+      <div class="btn-group" style="margin-top: 12px;">
+        <button onclick="openPGNModal()">Export PGN [G]</button>
+        <button class="modal-close primary" onclick="closeModals()">Close [Esc]</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Opening Book Explorer Modal -->
+  <div id="book-modal" class="modal-overlay" onclick="handleBackdropClick(event, 'book-modal')">
+    <div class="modal-card" style="width: 520px; max-height: 88vh; display: flex; flex-direction: column;">
+      <h3>📖 Opening Book Explorer <span class="close-btn" onclick="closeModals()">&times;</span></h3>
+      <p style="font-size: 12px; color: #94a3b8; margin: -4px 0 10px 0;">Select a standard classical opening to study and load onto the board:</p>
+      
+      <div id="book-list-container" style="flex: 1; max-height: 300px; overflow-y: auto; background: #0b1120; border: 1px solid #334155; border-radius: 6px; padding: 6px; display: flex; flex-direction: column; gap: 6px;">
+        <!-- Filled dynamically -->
+      </div>
+
+      <div class="btn-group" style="margin-top: 12px;">
+        <button class="modal-close primary" onclick="closeModals()">Close [Esc]</button>
       </div>
     </div>
   </div>
@@ -1946,11 +2016,15 @@
           openFENModal();
       } else if (k === 'g') {
           openPGNModal();
+      } else if (k === 'v') {
+          openReplayModal();
+      } else if (k === 'b') {
+          openBookModal();
       }
   }
 
   function getActiveModal() {
-      const ids = ['help-modal', 'fen-modal', 'pgn-modal', 'multiplayer-modal', 'invite-modal'];
+      const ids = ['help-modal', 'fen-modal', 'pgn-modal', 'replay-modal', 'book-modal', 'multiplayer-modal', 'invite-modal'];
       for (const id of ids) {
           const el = document.getElementById(id);
           if (el && (el.style.display === 'flex' || el.style.display === 'block')) {
@@ -2588,6 +2662,11 @@
   function closeModals() {
       document.getElementById('fen-modal').style.display = 'none';
       document.getElementById('pgn-modal').style.display = 'none';
+      const rep = document.getElementById('replay-modal');
+      if (rep) rep.style.display = 'none';
+      const bk = document.getElementById('book-modal');
+      if (bk) bk.style.display = 'none';
+      stopReplayPlay();
       const help = document.getElementById('help-modal');
       if (help) help.style.display = 'none';
       const mp = document.getElementById('multiplayer-modal');
@@ -2653,6 +2732,38 @@
       showToast("PGN copied to clipboard!", "success");
   }
 
+  function downloadPGNFile() {
+      const pgn = getPGN();
+      const blob = new Blob([pgn], { type: 'application/x-chess-pgn;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `kchess_${new Date().toISOString().slice(0, 10)}.pgn`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      showToast("PGN file downloaded!", "success");
+  }
+
+  function triggerImportPGN() {
+      const inp = document.getElementById('import-pgn-input');
+      if (inp) inp.click();
+  }
+
+  function handlePGNFileImport(e) {
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+          const content = evt.target.result;
+          document.getElementById('pgn-input').value = content;
+          applyPGN();
+      };
+      reader.readAsText(file);
+      e.target.value = '';
+  }
+
   function applyPGN() {
       if (isOnlineGame) {
           showToast("Importing PGN disabled during active Online match", "warn");
@@ -2668,6 +2779,275 @@
           showToast("PGN move history imported successfully!", "success");
       } else {
           showToast("Could not parse or execute all PGN moves!", "warn");
+      }
+  }
+
+  // --------------------------------------------------------------------------
+  // Interactive Replay & Move Inspector Subsystem
+  // --------------------------------------------------------------------------
+  let replayTimer = null;
+
+  function openReplayModal() {
+      closeModals();
+      const modal = document.getElementById('replay-modal');
+      if (modal) {
+          modal.style.display = 'flex';
+          renderReplayTable();
+      }
+  }
+
+  function renderReplayTable() {
+      const tbody = document.getElementById('replay-move-tbody');
+      const badge = document.getElementById('replay-ply-badge');
+      const status = document.getElementById('replay-info-status');
+      if (!tbody) return;
+
+      tbody.innerHTML = '';
+      const totalPlies = Math.max(0, moveHistoryStack.length - 1);
+      const curPly = Math.max(0, historyIndex);
+      if (badge) badge.textContent = `Ply: ${curPly} / ${totalPlies}`;
+
+      if (totalPlies === 0) {
+          tbody.innerHTML = '<tr><td colspan="3" style="text-align:center; padding:16px; color:#64748b; font-style:italic;">No moves played yet.</td></tr>';
+          if (status) status.textContent = "Start a game to inspect moves";
+          return;
+      }
+
+      // Group plies by full move number (1-based)
+      const numMoves = Math.ceil(totalPlies / 2);
+      for (let m = 1; m <= numMoves; m++) {
+          const whitePly = (m - 1) * 2 + 1;
+          const blackPly = (m - 1) * 2 + 2;
+
+          const tr = document.createElement('tr');
+          tr.style.borderBottom = '1px solid rgba(51, 65, 85, 0.4)';
+
+          const tdNum = document.createElement('td');
+          tdNum.style.padding = '4px 8px';
+          tdNum.style.color = '#94a3b8';
+          tdNum.textContent = m + '.';
+          tr.appendChild(tdNum);
+
+          // White move cell
+          const tdW = document.createElement('td');
+          tdW.style.padding = '4px 8px';
+          tdW.style.cursor = 'pointer';
+          const wMove = moveHistoryStack[whitePly];
+          if (wMove) {
+              tdW.textContent = wMove.moveSAN || `Ply ${whitePly}`;
+              if (curPly === whitePly) {
+                  tdW.style.background = '#0284c7';
+                  tdW.style.color = '#ffffff';
+                  tdW.style.fontWeight = 'bold';
+                  tdW.style.borderRadius = '3px';
+              } else {
+                  tdW.style.color = '#f8fafc';
+              }
+              tdW.onclick = () => replayStepTo(whitePly);
+          } else {
+              tdW.textContent = '-';
+          }
+          tr.appendChild(tdW);
+
+          // Black move cell
+          const tdB = document.createElement('td');
+          tdB.style.padding = '4px 8px';
+          tdB.style.cursor = 'pointer';
+          const bMove = moveHistoryStack[blackPly];
+          if (bMove) {
+              tdB.textContent = bMove.moveSAN || `Ply ${blackPly}`;
+              if (curPly === blackPly) {
+                  tdB.style.background = '#0284c7';
+                  tdB.style.color = '#ffffff';
+                  tdB.style.fontWeight = 'bold';
+                  tdB.style.borderRadius = '3px';
+              } else {
+                  tdB.style.color = '#cbd5e1';
+              }
+              tdB.onclick = () => replayStepTo(blackPly);
+          } else {
+              tdB.textContent = '-';
+          }
+          tr.appendChild(tdB);
+
+          tbody.appendChild(tr);
+      }
+
+      if (status) {
+          const activeEntry = moveHistoryStack[curPly];
+          status.textContent = activeEntry && activeEntry.moveSAN ? `Selected: ${activeEntry.moveSAN}` : "Position: Initial board";
+      }
+
+      // Auto scroll active row into view
+      setTimeout(() => {
+          const container = document.getElementById('replay-table-container');
+          const highlighted = tbody.querySelector('td[style*="background: rgb(2, 132, 199)"]');
+          if (container && highlighted) {
+              highlighted.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+          }
+      }, 30);
+  }
+
+  function replayStepTo(targetIndex) {
+      if (isOnlineGame) {
+          showToast("Replay stepping disabled in Online match", "warn");
+          return;
+      }
+      if (targetIndex < 0 || targetIndex >= moveHistoryStack.length) return;
+      restoreHistoryState(targetIndex);
+      playSound('move');
+      renderReplayTable();
+  }
+
+  function replayStepPrev() {
+      if (historyIndex > 0) {
+          replayStepTo(historyIndex - 1);
+      }
+  }
+
+  function replayStepNext() {
+      if (historyIndex < moveHistoryStack.length - 1) {
+          replayStepTo(historyIndex + 1);
+      } else {
+          stopReplayPlay();
+      }
+  }
+
+  function toggleReplayPlay() {
+      if (replayTimer) {
+          stopReplayPlay();
+      } else {
+          const playBtn = document.getElementById('replay-play-btn');
+          if (playBtn) {
+              playBtn.textContent = '⏸ Pause';
+              playBtn.style.background = '#dc2626';
+          }
+          if (historyIndex >= moveHistoryStack.length - 1) {
+              replayStepTo(0);
+          }
+          replayTimer = setInterval(() => {
+              if (historyIndex < moveHistoryStack.length - 1) {
+                  replayStepNext();
+              } else {
+                  stopReplayPlay();
+              }
+          }, 800);
+      }
+  }
+
+  function stopReplayPlay() {
+      if (replayTimer) {
+          clearInterval(replayTimer);
+          replayTimer = null;
+      }
+      const playBtn = document.getElementById('replay-play-btn');
+      if (playBtn) {
+          playBtn.textContent = '▶ Play';
+          playBtn.style.background = '#0284c7';
+      }
+  }
+
+  // --------------------------------------------------------------------------
+  // Opening Book Explorer Subsystem
+  // --------------------------------------------------------------------------
+  function openBookModal() {
+      closeModals();
+      const modal = document.getElementById('book-modal');
+      if (modal) {
+          modal.style.display = 'flex';
+          renderBookList();
+      }
+  }
+
+  function renderBookList() {
+      const container = document.getElementById('book-list-container');
+      if (!container) return;
+      container.innerHTML = '';
+
+      chessOpenings.forEach((op, index) => {
+          const card = document.createElement('div');
+          card.style.background = 'rgba(30, 41, 59, 0.7)';
+          card.style.border = '1px solid #334155';
+          card.style.borderRadius = '6px';
+          card.style.padding = '8px 12px';
+          card.style.display = 'flex';
+          card.style.justifyContent = 'space-between';
+          card.style.alignItems = 'center';
+          card.style.gap = '8px';
+
+          const info = document.createElement('div');
+          info.style.flex = '1';
+
+          const titleLine = document.createElement('div');
+          titleLine.style.display = 'flex';
+          titleLine.style.alignItems = 'center';
+          titleLine.style.gap = '6px';
+          titleLine.style.marginBottom = '3px';
+
+          const ecoBadge = document.createElement('span');
+          ecoBadge.style.fontSize = '10px';
+          ecoBadge.style.fontWeight = 'bold';
+          ecoBadge.style.background = '#0284c7';
+          ecoBadge.style.color = '#fff';
+          ecoBadge.style.padding = '1px 5px';
+          ecoBadge.style.borderRadius = '3px';
+          ecoBadge.textContent = op.eco;
+
+          const nameSpan = document.createElement('span');
+          nameSpan.style.fontWeight = 'bold';
+          nameSpan.style.color = '#5eead4';
+          nameSpan.style.fontSize = '13px';
+          nameSpan.textContent = op.name;
+
+          titleLine.appendChild(ecoBadge);
+          titleLine.appendChild(nameSpan);
+          info.appendChild(titleLine);
+
+          const movesSpan = document.createElement('div');
+          movesSpan.style.fontFamily = 'monospace';
+          movesSpan.style.fontSize = '11px';
+          movesSpan.style.color = '#cbd5e1';
+          // Format moves as standard notation 1. e4 c5 ...
+          let formattedMoves = '';
+          op.moves.forEach((m, i) => {
+              if (i % 2 === 0) formattedMoves += (Math.floor(i / 2) + 1) + '. ' + m + ' ';
+              else formattedMoves += m + ' ';
+          });
+          movesSpan.textContent = formattedMoves.trim();
+          info.appendChild(movesSpan);
+
+          card.appendChild(info);
+
+          const loadBtn = document.createElement('button');
+          loadBtn.className = 'primary';
+          loadBtn.style.padding = '5px 10px';
+          loadBtn.style.fontSize = '11px';
+          loadBtn.textContent = 'Practice ♟️';
+          loadBtn.onclick = () => loadOpeningToBoard(op);
+          card.appendChild(loadBtn);
+
+          container.appendChild(card);
+      });
+  }
+
+  function loadOpeningToBoard(op) {
+      if (isOnlineGame) {
+          showToast("Cannot load opening during active Online match", "warn");
+          return;
+      }
+      resetGame();
+      gameMode = 1;
+      aiMode = true;
+      let pgnStr = '';
+      op.moves.forEach((m, i) => {
+          if (i % 2 === 0) pgnStr += (Math.floor(i / 2) + 1) + '. ' + m + ' ';
+          else pgnStr += m + ' ';
+      });
+      if (loadPGN(pgnStr.trim())) {
+          closeModals();
+          showToast(`Loaded ${op.name} [${op.eco}]! White to move.`, "success");
+      } else {
+          showToast(`Could not load opening sequence`, "warn");
       }
   }
 

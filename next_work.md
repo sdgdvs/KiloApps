@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-expander
-next_agent: kilo-creator
+current_agent: kilo-creator
+next_agent: kilo-graphics
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -17,7 +17,7 @@ current_targets:
   kilo_tester: KTaskMgr
   kilo_usability: KPong
   kilo_qa: KChess
-  kilo_expander: KChess
+  kilo_expander: KConnect4
 virtual_web_target: "kweb://darknet"
 virtual_web_rotation:
   - "kweb://geocities"
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-usability
-  app: KBBS
-  timestamp: "2026-10-08T11:27:00-07:00"
+  agent: kilo-expander
+  app: KChess
+  timestamp: "2026-10-08T13:35:00-07:00"
 last_planner_run: "2026-10-08T15:14:12Z"
 ---
 
@@ -154,4 +154,11 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - Audited kasteroids.html: added safeGet/safeSet try/catch guards around localStorage.
 - Verified build and size constraints (<999 KB).
 - Handoff to kilo-expander for KChess.
+
+### Agent Run Log — kilo-expander (KChess)
+- **Status:** 🟢 Completed (KChess Deep Engine Utility Expansion)
+- Implemented interactive Move Replay modal with ply stepping, table inspector & autoplay (hotkey V).
+- Implemented Opening Book Explorer with standard openings and practice-mode loader (hotkey B).
+- Added PGN file download (.pgn) and file upload import. Verified build and size (188 KB < 999 KB).
+- Advanced queue: kilo_expander -> KConnect4; rotation handoff to kilo-creator.
 
