@@ -636,6 +636,23 @@ def validate_next_work_file(path: Path) -> tuple[bool, str]:
     return True, content
 
 
+TOKEN_EFFICIENCY_SUFFIX = (
+    " TOKEN EFFICIENCY DIRECTIVE (STRICT BUDGET): "
+    "Complete this turn in <= 10 tool calls. "
+    "Inspect the target app file ONCE. Batch all edits in a single pass. "
+    "Do NOT re-read files after editing. "
+    "Do NOT read archive files (archive/), receipt files, or unrelated apps. "
+    "Run ONLY target app build verification (npm run build). NEVER run full-repo test suites like quality_gate.js or screenshot generation. "
+    "Update next_work.md with a <=5 line terse log, commit, push, and STOP immediately."
+)
+
+INAPPROPRIATE_IMAGEN_TARGETS = {
+    "kasteroids", "kchess", "kgo", "kreversi", "ktowers", "kconnect4",
+    "kterm", "kscript", "khex", "kdragon", "kcolony", "kwizard", "kfarm",
+    "kwords", "khangman", "ksudoku", "kcalc", "kmine", "kmines", "knetmap"
+}
+
+
 def build_agent_prompt(agent: str, targets: dict) -> str:
     if agent == "kilo-tester":
         target = targets.get("kilo_tester", "the next app in queue")
@@ -643,6 +660,7 @@ def build_agent_prompt(agent: str, targets: dict) -> str:
             f"Activate skill 'kilo-tester'. "
             f"Perform interactive UI audit and inline fixes for target app '{target}' per next_work.md. "
             f"Verify builds, advance queue, update next_work.md, and git commit/push. Process 1 app only then STOP."
+            + TOKEN_EFFICIENCY_SUFFIX
         )
     elif agent == "kilo-qa":
         target = targets.get("kilo_qa", "the next app in queue")
@@ -650,6 +668,7 @@ def build_agent_prompt(agent: str, targets: dict) -> str:
             f"Activate skill 'kilo-qa'. "
             f"Perform Pass 5 audit and fixes for target app '{target}' per next_work.md. "
             f"Verify builds, advance queue, update next_work.md, and git commit/push. Process 1 app only then STOP."
+            + TOKEN_EFFICIENCY_SUFFIX
         )
     elif agent == "kilo-creator":
         target = targets.get("kilo_creator", "the next virtual web / ARG concept per next_work.md")
@@ -658,11 +677,13 @@ def build_agent_prompt(agent: str, targets: dict) -> str:
                 f"Activate skill 'kilo-creator'. "
                 f"Design and implement Virtual 1999 Web destination or deep expansion for '{target}' in KiloOS/public/web/ per next_work.md and arg_plan.md (Anti-Potemkin standard: fully functioning interactive Web 1.0 experience, <999KB). "
                 f"Link in KNet/portal/webring, verify builds, advance queue, update next_work.md, and git commit/push. Process 1 target only then STOP."
+                + TOKEN_EFFICIENCY_SUFFIX
             )
         return (
             f"Activate skill 'kilo-creator'. "
             f"Design and implement new application or deep expansion for '{target}' per next_work.md. "
             f"Verify builds (<999KB), register in App.jsx, advance queue, update next_work.md, and git commit/push. Process 1 app only then STOP."
+            + TOKEN_EFFICIENCY_SUFFIX
         )
     elif agent == "kilo-graphics":
         target = targets.get("kilo_graphics", "the next game in queue")
@@ -672,6 +693,7 @@ def build_agent_prompt(agent: str, targets: dict) -> str:
             f"If Imagen 3 asset replacement is not appropriate for '{target}', skip turn cleanly with format: '⏭️ Skip — Imagen 3 asset replacement not appropriate for {target}'. "
             f"Search for and remove any rotating specular glints or traveling perimeter border dots. "
             f"Verify builds, advance queue, update next_work.md, and git commit/push. Process 1 app only then STOP."
+            + TOKEN_EFFICIENCY_SUFFIX
         )
     elif agent == "kilo-usability":
         target = targets.get("kilo_usability", "the next app in queue")
@@ -679,6 +701,7 @@ def build_agent_prompt(agent: str, targets: dict) -> str:
             f"Activate skill 'kilo-usability'. "
             f"Perform UI/UX and usability pass for target app '{target}' per next_work.md. "
             f"Verify builds, advance queue, update next_work.md, and git commit/push. Process 1 app only then STOP."
+            + TOKEN_EFFICIENCY_SUFFIX
         )
     elif agent == "kilo-expander":
         target = targets.get("kilo_expander", "the next app in queue")
@@ -686,6 +709,7 @@ def build_agent_prompt(agent: str, targets: dict) -> str:
             f"Activate skill 'kilo-expander'. "
             f"Perform deep feature expansion for target app '{target}' per next_work.md. "
             f"Verify builds, advance queue, update next_work.md, and git commit/push. Process 1 app only then STOP."
+            + TOKEN_EFFICIENCY_SUFFIX
         )
     elif agent == "kilo-planner":
         return (
@@ -698,7 +722,100 @@ def build_agent_prompt(agent: str, targets: dict) -> str:
         return (
             f"Activate skill '{agent}'. "
             f"Execute scheduled task per instructions in next_work.md, git commit/push, then STOP."
+            + TOKEN_EFFICIENCY_SUFFIX
         )
+
+
+def handle_preflight_skip(agent: str, targets: dict, frontmatter: dict, node_id: str) -> bool:
+    """Pre-flight check in Python to auto-skip known inappropriate targets with 0 LLM tokens."""
+    target = str(targets.get(agent.replace("-", "_"), ""))
+    is_skip = False
+    skip_reason = ""
+
+    if agent == "kilo-graphics":
+        if target.lower() in INAPPROPRIATE_IMAGEN_TARGETS or "(skip)" in target.lower():
+            is_skip = True
+            skip_reason = f"Imagen 3 asset replacement not appropriate for {target} (pure vector, board game, or mature art)"
+
+    if not is_skip:
+        return False
+
+    log(f"[PRE-FLIGHT] Auto-skipping turn for agent '{agent}', target '{target}': {skip_reason}")
+    now_utc = datetime.datetime.now(datetime.timezone.utc)
+    now_iso = now_utc.strftime("%Y-%m-%dT%H:%M:%S%z")
+
+    try:
+        # 1. Advance rotation
+        rotation = frontmatter.get("agent_rotation", [
+            "kilo-creator", "kilo-graphics", "kilo-tester", "kilo-usability", "kilo-qa", "kilo-expander"
+        ])
+        curr_idx = rotation.index(agent) if agent in rotation else 0
+        next_agent = rotation[(curr_idx + 1) % len(rotation)]
+
+        # 2. Advance target queue in next_work.md
+        content = NEXT_WORK_FILE.read_text(encoding="utf-8")
+        import re
+        queue_match = re.search(r"### 2\. Game Content & Graphics Queue.*?\n- \*\*Current Target\*\*:.*?\n- \*\*Upcoming Queue\*\*: ([^\n]+)", content)
+        next_target = ""
+        if queue_match:
+            upcoming_items = [x.strip() for x in queue_match.group(1).split(",")]
+            if upcoming_items:
+                next_target = upcoming_items[0].split()[0]
+                new_upcoming = ", ".join(upcoming_items[1:] + [target])
+                content = content.replace(f"- **Current Target**: {target}", f"- **Current Target**: {next_target}")
+                content = content.replace(queue_match.group(1), new_upcoming)
+
+        if not next_target:
+            next_target = target
+
+        # Update frontmatter YAML in content
+        parts = content.split("---", 2)
+        if len(parts) >= 3:
+            import yaml
+            fm_data = yaml.safe_load(parts[1])
+            fm_data["current_agent"] = next_agent
+            if "current_targets" in fm_data and isinstance(fm_data["current_targets"], dict):
+                fm_data["current_targets"]["kilo_graphics"] = next_target
+            fm_data["last_run"] = {
+                "agent": agent,
+                "app": target,
+                "timestamp": now_iso
+            }
+            new_fm_str = yaml.dump(fm_data, sort_keys=False).strip()
+            content = f"---\n{new_fm_str}\n---" + parts[2]
+
+        # Insert log entry
+        log_entry = (
+            f"- **{now_iso} — {agent}: {target} (Zero-Token Auto-Skip — Inappropriate Target)**\n"
+            f"  - Status: ⏭️ Skip — {skip_reason}.\n"
+            f"  - Optimization: Handled via orchestrator pre-flight zero-token auto-skip.\n"
+            f"  - Queue: Advanced `{agent}` to `{next_target}`; rotation handoff to `{next_agent}`.\n\n"
+        )
+        marker = "## Recent Execution Logs (Max 5 Entries)\n\n"
+        if marker in content:
+            content = content.replace(marker, marker + log_entry)
+
+        NEXT_WORK_FILE.write_text(content, encoding="utf-8")
+
+        # 3. Commit and push
+        subprocess.run(["git", "add", "next_work.md"], cwd=str(REPO_ROOT), capture_output=True)
+        commit_msg = f"content(games): auto-skip {target} ({skip_reason})"
+        subprocess.run(["git", "commit", "-m", commit_msg], cwd=str(REPO_ROOT), capture_output=True)
+        push_env = os.environ.copy()
+        push_env["GIT_TERMINAL_PROMPT"] = "0"
+        push_env["GCM_INTERACTIVE"] = "never"
+        subprocess.run(["git", "push", "origin", "main"], cwd=str(REPO_ROOT), capture_output=True, env=push_env)
+
+        # 4. Receipt & Session
+        write_turn_receipt(agent=agent, model="orchestrator-preflight", duration=0.1, returncode=0, target=target)
+        record_turn_in_session()
+        broadcast_node_heartbeat(node_id, status="active", target=target)
+        log(f"[PRE-FLIGHT] Auto-skip completed in 0.1s. 0 tokens consumed.")
+        return True
+    except Exception as e:
+        log(f"Warning in pre-flight skip handling: {e}")
+        return False
+
 
 
 def write_turn_receipt(agent: str, model: str, duration: float, returncode: int, target: str = "") -> Path:
@@ -820,8 +937,8 @@ def main():
             agent = args.force_agent or frontmatter.get("current_agent", "kilo-tester")
 
         status = frontmatter.get("status", "ready")
-        model = os.environ.get("AGY_MODEL") or frontmatter.get("model", "gemini-3.8-flash-high")
-        timeout_min = int(frontmatter.get("timeout_minutes", 15))
+        model = os.environ.get("AGY_MODEL") or frontmatter.get("model", "gemini-3.8-flash-medium")
+        timeout_min = int(frontmatter.get("timeout_minutes", 6))
         targets = frontmatter.get("current_targets", {})
         if isinstance(targets, str):
             targets = {}
@@ -830,6 +947,10 @@ def main():
 
         if status != "ready" and not args.force_agent and not should_run_planner:
             log(f"Task status is '{status}' (not 'ready'). Skipping dispatch.")
+            return
+
+        # Pre-flight auto-skip check: avoid spending millions of tokens on known skip targets
+        if not args.dry_run and not args.force_agent and handle_preflight_skip(agent, targets, frontmatter, node_id):
             return
 
         prompt = build_agent_prompt(agent, targets)
@@ -843,6 +964,8 @@ def main():
             prompt,
             "--model",
             model,
+            "--effort",
+            "medium",
             "--dangerously-skip-permissions",
             f"--print-timeout={timeout_min}m",
         ]

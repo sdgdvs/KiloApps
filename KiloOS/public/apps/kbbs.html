@@ -7,22 +7,42 @@
         * { margin:0; padding:0; box-sizing:border-box; }
         body { background:#09090b; font-family:'Inter', system-ui, sans-serif; font-size:13px; height:100vh; display:flex; flex-direction:column; overflow:hidden; color: #a1a1aa; text-rendering: optimizeLegibility; -webkit-font-smoothing: antialiased; }
 
+        .app-header {
+            display: flex; flex-direction: column; z-index: 10;
+            background: rgba(24, 24, 27, 0.9); backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+        }
         .conn-bar { 
-            display:flex; align-items:center; gap:6px; padding:10px 14px; 
-            background:rgba(24, 24, 27, 0.85); backdrop-filter:blur(10px); 
-            -webkit-backdrop-filter:blur(10px);
-            border-bottom:1px solid rgba(255, 255, 255, 0.08); 
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4); z-index: 10;
+            display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 7px 12px; 
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
             flex-wrap: wrap;
         }
-        .conn-bar span { font-weight: 600; color: #d4d4d8; text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px; }
-        .conn-bar input[type="text"], .conn-bar select { 
-            background: rgba(0, 0, 0, 0.5); color: #0ea5e9; border: 1px solid rgba(14, 165, 233, 0.3); 
-            padding: 5px 8px; border-radius: 6px; font-family: 'Inter', sans-serif; font-size: 12px; transition: all 0.2s; outline: none;
+        .conn-group, .services-group, .header-right {
+            display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
         }
-        .conn-bar input[type="text"]:focus, .conn-bar select:focus { border-color: #0ea5e9; box-shadow: 0 0 8px rgba(14, 165, 233, 0.3); }
+        .sub-bar {
+            display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 5px 12px;
+            background: rgba(15, 15, 18, 0.85); flex-wrap: wrap;
+        }
+        .sub-group {
+            display: flex; align-items: center; gap: 5px; flex-wrap: wrap;
+        }
+        .bar-label, .sub-label {
+            font-weight: 600; color: #a1a1aa; text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px;
+        }
+        .toggle-label {
+            color: #d4d4d8; display: flex; align-items: center; gap: 4px; font-size: 11px;
+            text-transform: uppercase; font-weight: 600; cursor: pointer; user-select: none;
+        }
+        .conn-bar input[type="text"], .conn-bar select, .sub-bar select { 
+            background: rgba(0, 0, 0, 0.5); color: #0ea5e9; border: 1px solid rgba(14, 165, 233, 0.3); 
+            padding: 4px 8px; border-radius: 6px; font-family: 'Inter', sans-serif; font-size: 12px; transition: all 0.2s; outline: none;
+        }
+        .conn-bar input[type="text"]:focus, .conn-bar select:focus, .sub-bar select:focus { border-color: #0ea5e9; box-shadow: 0 0 8px rgba(14, 165, 233, 0.3); }
         .conn-bar input:disabled { background:rgba(255, 255, 255, 0.02); color:#52525b; border-color: rgba(255, 255, 255, 0.05); cursor:not-allowed; }
-        .conn-bar select option { background: #18181b; color: #e4e4e7; }
+        .conn-bar select option, .sub-bar select option { background: #18181b; color: #e4e4e7; }
         
         .conn-bar button { 
             font-family:'Inter', sans-serif; font-weight: 600; font-size:11px; padding:5px 12px; cursor:pointer; 
@@ -33,9 +53,21 @@
         }
         .conn-bar button:hover { filter: brightness(1.1); transform: translateY(-1px); }
         .conn-bar button:active { transform: translateY(1px); box-shadow: inset 0 2px 4px rgba(0,0,0,0.3); }
+
+        .btn-sub {
+            font-family: 'Inter', sans-serif; font-weight: 600; font-size: 11px; padding: 4px 9px; cursor: pointer;
+            background: #27272a; color: #e4e4e7; border: 1px solid #3f3f46; border-radius: 5px;
+            transition: all 0.15s; display: inline-flex; align-items: center; gap: 3px; white-space: nowrap;
+        }
+        .btn-sub:hover { background: #3f3f46; color: #fff; transform: translateY(-1px); }
+        .btn-sub:active { transform: translateY(1px); }
+        .btn-state { background: rgba(5, 150, 105, 0.2); border-color: #059669; color: #34d399; }
+        .btn-state:hover { background: #059669; color: #fff; }
+        .btn-zoom { padding: 3px 8px; min-width: 24px; justify-content: center; }
+        .zoom-indicator { font-family: monospace; font-size: 11px; color: #38bdf8; font-weight: 600; min-width: 34px; text-align: center; }
         
-        #host { width:160px; }
-        #port { width:50px; text-align: center; }
+        #host { width:170px; }
+        #port { width:52px; text-align: center; }
 
         /* Main area */
         .main { flex:1; display:flex; overflow:hidden; position: relative; }
@@ -109,10 +141,10 @@
         /* Art Canvas Preview */
         #artPreviewCanvas { background: #000; image-rendering: pixelated; border: 1px solid #27272a; border-radius: 6px; }
 
-        /* Toast Notifications - Safe Bottom-Right Placement */
+        /* Toast Notifications - Safe Top-Right Placement */
         #toastContainer {
-            position: fixed; bottom: 32px; right: 20px; z-index: 9999;
-            display: flex; flex-direction: column-reverse; gap: 8px; pointer-events: none;
+            position: fixed; top: 76px; right: 20px; z-index: 9999;
+            display: flex; flex-direction: column; gap: 8px; pointer-events: none;
         }
         .kbbs-toast {
             background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(8px);
@@ -122,7 +154,7 @@
             color: #f1f5f9; padding: 10px 16px; border-radius: 8px;
             font-size: 12px; font-weight: 500; display: flex; align-items: center; gap: 10px;
             box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.6), 0 0 15px rgba(56, 189, 248, 0.2);
-            opacity: 0; transform: translateY(8px) scale(0.96);
+            opacity: 0; transform: translateY(-8px) scale(0.96);
             transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
             pointer-events: auto; max-width: 380px; line-height: 1.4;
             cursor: pointer; user-select: none;
@@ -134,10 +166,10 @@
 
         /* Responsive Layout & Ergonomics */
         @media (max-width: 900px) {
-            .conn-bar { padding: 8px 10px; gap: 4px; }
+            .conn-bar, .sub-bar { padding: 6px 10px; gap: 6px; }
             #host { width: 130px; }
             #port { width: 44px; }
-            .conn-bar button { padding: 4px 8px; font-size: 10px; }
+            .conn-bar button, .btn-sub { padding: 4px 7px; font-size: 10px; }
         }
         @media (max-width: 720px) {
             .modal-card { width: 95% !important; height: 90% !important; max-height: 90vh !important; }
@@ -149,44 +181,70 @@
             #dirList, #msgListPane, #macroList {
                 width: 100% !important; height: 160px !important; border-right: none !important; border-bottom: 1px solid #27272a !important;
             }
-            #toastContainer { right: 10px; left: 10px; bottom: 32px; }
+            #toastContainer { right: 10px; left: 10px; top: 76px; }
             .kbbs-toast { max-width: 100%; }
         }
     </style>
 </head>
 <body>
     <div id="toastContainer"></div>
-    <div class="conn-bar">
-        <span>Host:</span>
-        <input type="text" id="host" placeholder="e.g. vert.synchro.net or telehack.com" value="vert.synchro.net" onkeydown="if(event.key==='Enter') { initAudio(); toggleConnect(); }">
-        <span>Port:</span>
-        <input type="text" id="port" value="23" onkeydown="if(event.key==='Enter') { initAudio(); toggleConnect(); }">
-        <label style="color: #d4d4d8; display: flex; align-items: center; gap: 4px; font-size: 11px; text-transform: uppercase; font-weight: 600; cursor: pointer; user-select: none; margin: 0 2px;">
-            <input type="checkbox" id="localEcho" onchange="toggleLocalEcho(this.checked)"> Echo
-        </label>
-        <label style="color: #d4d4d8; display: flex; align-items: center; gap: 4px; font-size: 11px; text-transform: uppercase; font-weight: 600; cursor: pointer; user-select: none; margin: 0 2px;">
-            <input type="checkbox" id="crtToggle" checked onchange="toggleCRT()"> CRT
-        </label>
-        <button id="btnConn" onclick="initAudio(); toggleConnect()">Connect [Enter]</button>
-        <button id="btnDir" onclick="showDialingDir()">Directory [D]</button>
-        <button id="btnMacros" onclick="showMacros()">Macros [M]</button>
-        <button id="btnDoorGames" onclick="showDoorGames()" style="background: linear-gradient(180deg, #ec4899 0%, #be185d 100%); border-color: #9d174d;">Door Games [G]</button>
-        <button id="btnAnsiArt" onclick="showAnsiArtViewer()" style="background: linear-gradient(180deg, #6366f1 0%, #4338ca 100%); border-color: #3730a3;">ANSI Art [A]</button>
-        <button id="btnMsgBase" onclick="showMsgBase()" style="background: linear-gradient(180deg, #f59e0b 0%, #d97706 100%); border-color: #b45309;">EchoNet [E]</button>
-        <button id="btnSave" onclick="masterQuicksave()" style="background: linear-gradient(180deg, #059669 0%, #047857 100%); border-color: #065f46;">Save [F5]</button>
-        <button id="btnLoad" onclick="masterQuickload()" style="background: linear-gradient(180deg, #0284c7 0%, #0369a1 100%); border-color: #075985;">Load [F9]</button>
-        <button id="btnXmDl" onclick="startTransfer(1)" title="XMODEM Download" style="background: linear-gradient(180deg, #10b981 0%, #059669 100%); border-color: #047857; margin-left:4px;">DL (XM)</button>
-        <button id="btnXmUl" onclick="startTransfer(2)" title="XMODEM Upload" style="background: linear-gradient(180deg, #f59e0b 0%, #d97706 100%); border-color: #b45309;">UL (XM)</button>
-        <button id="btnZmDl" onclick="startTransfer(3)" title="ZMODEM Download" style="background: linear-gradient(180deg, #0ea5e9 0%, #0284c7 100%); border-color: #0369a1;">DL (ZM)</button>
-        <button id="btnZmUl" onclick="startTransfer(4)" title="ZMODEM Upload" style="background: linear-gradient(180deg, #8b5cf6 0%, #6d28d9 100%); border-color: #5b21b6;">UL (ZM)</button>
-        <button id="btnSettings" onclick="showSettings()">Settings [S]</button>
-        <button id="btnCapture" onclick="showCaptureManager()" style="background: linear-gradient(180deg, #52525b 0%, #3f3f46 100%); border-color: #27272a;">Capture: OFF [C]</button>
-        <button id="btnHelp" onclick="showHelp()" style="background: linear-gradient(180deg, #8b5cf6 0%, #6d28d9 100%); border-color: #5b21b6;">Help [F1]</button>
+    <header class="app-header">
+        <div class="conn-bar">
+            <div class="conn-group">
+                <span class="bar-label">Host:</span>
+                <input type="text" id="host" placeholder="vert.synchro.net or telehack.com" value="vert.synchro.net" onkeydown="if(event.key==='Enter') { initAudio(); toggleConnect(); }">
+                <span class="bar-label">Port:</span>
+                <input type="text" id="port" value="23" onkeydown="if(event.key==='Enter') { initAudio(); toggleConnect(); }">
+                <button id="btnConn" onclick="initAudio(); toggleConnect()">Connect [Enter]</button>
+                <button id="btnDir" onclick="showDialingDir()">Directory [D]</button>
+            </div>
+            <div class="services-group">
+                <button id="btnDoorGames" onclick="showDoorGames()" style="background: linear-gradient(180deg, #ec4899 0%, #be185d 100%); border-color: #9d174d;">Door Games [G]</button>
+                <button id="btnMsgBase" onclick="showMsgBase()" style="background: linear-gradient(180deg, #f59e0b 0%, #d97706 100%); border-color: #b45309;">EchoNet [E]</button>
+                <button id="btnAnsiArt" onclick="showAnsiArtViewer()" style="background: linear-gradient(180deg, #6366f1 0%, #4338ca 100%); border-color: #3730a3;">ANSI Art [A]</button>
+            </div>
+            <div class="header-right">
+                <button id="btnHelp" onclick="showHelp()" style="background: linear-gradient(180deg, #8b5cf6 0%, #6d28d9 100%); border-color: #5b21b6;">Help [F1]</button>
+            </div>
+        </div>
+        <div class="sub-bar">
+            <div class="sub-group">
+                <span class="sub-label">Transfer:</span>
+                <button id="btnXmDl" class="btn-sub" onclick="startTransfer(1)" title="XMODEM Download">DL (XM)</button>
+                <button id="btnXmUl" class="btn-sub" onclick="startTransfer(2)" title="XMODEM Upload">UL (XM)</button>
+                <button id="btnZmDl" class="btn-sub" onclick="startTransfer(3)" title="ZMODEM Download">DL (ZM)</button>
+                <button id="btnZmUl" class="btn-sub" onclick="startTransfer(4)" title="ZMODEM Upload">UL (ZM)</button>
+            </div>
+            <div class="sub-group">
+                <button id="btnMacros" class="btn-sub" onclick="showMacros()">Macros [M]</button>
+                <button id="btnCapture" class="btn-sub" onclick="showCaptureManager()">Capture: OFF [C]</button>
+            </div>
+            <div class="sub-group">
+                <button id="btnSave" class="btn-sub btn-state" onclick="masterQuicksave()" title="Quicksave session state & screen [F5]">Save [F5]</button>
+                <button id="btnLoad" class="btn-sub btn-state" onclick="masterQuickload()" title="Quickload session state & screen [F9]">Load [F9]</button>
+            </div>
+            <div class="sub-group zoom-group">
+                <span class="sub-label">Font:</span>
+                <button class="btn-sub btn-zoom" onclick="zoomOut()" title="Decrease terminal font size [Ctrl+-]">−</button>
+                <span id="zoomLabel" class="zoom-indicator">16px</span>
+                <button class="btn-sub btn-zoom" onclick="zoomIn()" title="Increase terminal font size [Ctrl++]">+</button>
+                <button class="btn-sub btn-zoom" onclick="zoomReset()" title="Reset font size to default 16px [Ctrl+0]">1x</button>
+            </div>
+            <div class="sub-group sub-toggles">
+                <label class="toggle-label" title="Toggle CRT scanline raster overlay effect">
+                    <input type="checkbox" id="crtToggle" checked onchange="toggleCRT()"> CRT
+                </label>
+                <label class="toggle-label" title="Toggle local echo of typed characters">
+                    <input type="checkbox" id="localEcho" onchange="toggleLocalEcho(this.checked)"> Echo
+                </label>
+                <button id="btnSettings" class="btn-sub" onclick="showSettings()">Settings [S]</button>
+            </div>
+        </div>
         <input type="file" id="fileUpload" style="display:none" onchange="handleFileUpload(event)">
         <input type="file" id="ansFileUpload" accept=".ans,.txt,.ice" style="display:none" onchange="loadAnsFile(event)">
         <input type="file" id="dirImportUpload" accept=".json" style="display:none" onchange="importDirectoryJSON(event)">
         <input type="file" id="msgImportUpload" accept=".json" style="display:none" onchange="importMsgBaseJSON(event)">
-    </div>
+    </header>
     <div class="main">
         <div class="term-wrap">
             <div id="scriptBanner">
@@ -207,7 +265,7 @@
             <div class="modal-card" style="width: 680px; max-width: 95%; height: 540px; max-height: 95%;">
                 <div class="modal-header">
                     <span>Multi-Node Dialing Directory Manager</span>
-                    <button class="modal-close" onclick="closeDialingDir()">X</button>
+                    <button class="modal-close" id="btnCloseDir" aria-label="Close Dialing Directory" onclick="closeDialingDir()">X</button>
                 </div>
                 <div style="padding: 10px 16px; border-bottom: 1px solid rgba(255,255,255,0.08); display: flex; gap: 8px; background: rgba(0,0,0,0.3); flex-wrap: wrap;">
                     <input type="text" id="dirSearchInput" placeholder="Search BBS by name, host, or tag (#games, #retro)..." style="flex:1; min-width:180px; background:#09090b; border:1px solid #27272a; color:#fff; padding:6px 10px; border-radius:6px; outline:none;" oninput="renderDirList()">
@@ -276,7 +334,7 @@
             <div class="modal-card" style="width: 720px; max-width: 95%; height: 560px; max-height: 95%;">
                 <div class="modal-header" style="background: linear-gradient(90deg, #be185d 0%, #831843 100%);">
                     <span>🎮 Door Games Mini-Suite (BBS Text Adventures)</span>
-                    <button class="modal-close" onclick="closeDoorGames()">X</button>
+                    <button class="modal-close" id="btnCloseDoors" aria-label="Close Door Games Suite" onclick="closeDoorGames()">X</button>
                 </div>
                 <div style="padding: 10px 16px; display: flex; gap: 10px; border-bottom: 1px solid rgba(255,255,255,0.08); background: rgba(0,0,0,0.4);">
                     <div class="door-tab active" id="tabLord" onclick="switchDoorTab('lord')">🐉 Legend of the Red Dragon (L.O.R.D.)</div>
@@ -297,7 +355,7 @@
             <div class="modal-card" style="width: 760px; max-width: 95%; height: 580px; max-height: 95%;">
                 <div class="modal-header" style="background: linear-gradient(90deg, #4338ca 0%, #312e81 100%);">
                     <span>🎨 ANSI Color & Art Viewer Mode</span>
-                    <button class="modal-close" onclick="closeAnsiArtViewer()">X</button>
+                    <button class="modal-close" id="btnCloseArt" aria-label="Close ANSI Art Viewer" onclick="closeAnsiArtViewer()">X</button>
                 </div>
                 <div style="padding: 10px 16px; display: flex; gap: 12px; border-bottom: 1px solid rgba(255,255,255,0.08); align-items: center; flex-wrap: wrap;">
                     <span>Gallery:</span>
@@ -340,7 +398,7 @@
             <div class="modal-card" style="width: 600px; max-width: 95%; height: 480px; max-height: 95%;">
                 <div class="modal-header">
                     <span>Session Log Capture & Export Manager</span>
-                    <button class="modal-close" onclick="closeCaptureManager()">X</button>
+                    <button class="modal-close" id="btnCloseCapture" aria-label="Close Capture Manager" onclick="closeCaptureManager()">X</button>
                 </div>
                 <div style="padding: 12px 16px; display: flex; flex-direction: column; gap: 12px; flex: 1;">
                     <div style="display: flex; gap: 12px; align-items: center;">
@@ -375,7 +433,7 @@
             <div class="modal-card" style="width: 650px; max-width: 95%; height: 520px; max-height: 95%;">
                 <div class="modal-header">
                     <span>Custom BBS Script Macro Auto-Login Engine</span>
-                    <button class="modal-close" onclick="closeMacros()">X</button>
+                    <button class="modal-close" id="btnCloseMacros" aria-label="Close Macro Manager" onclick="closeMacros()">X</button>
                 </div>
                 <div style="flex: 1; display: flex; overflow: hidden;">
                     <div style="width: 220px; border-right: 1px solid rgba(255,255,255,0.1); overflow-y: auto;" id="macroList"></div>
@@ -413,7 +471,7 @@ SEND:"secret\r"'></textarea>
             <div class="modal-card" style="width: 340px; max-width: 95%;">
                 <div class="modal-header">
                     <span>Display Settings</span>
-                    <button class="modal-close" onclick="closeSettings()">X</button>
+                    <button class="modal-close" id="btnCloseSettings" aria-label="Close Display Settings" onclick="closeSettings()">X</button>
                 </div>
                 <div style="padding: 16px; display: flex; flex-direction: column; gap: 10px;">
                     <div>
@@ -451,13 +509,12 @@ SEND:"secret\r"'></textarea>
             </div>
         </div>
 
-        <!-- Help Modal -->
         <!-- Help & Quickstart Tutorial Modal -->
         <div id="helpModal" class="modal-overlay">
             <div class="modal-card" style="width: 580px; max-width: 95%; max-height: 90%;">
                 <div class="modal-header" style="background: linear-gradient(90deg, #6d28d9 0%, #4c1d95 100%);">
                     <span>📚 KBBS Interactive Guide & Quickstart Tutorial</span>
-                    <button class="modal-close" onclick="closeHelp()">X</button>
+                    <button class="modal-close help-control-btn help-btn-close" id="btnCloseHelp" aria-label="Close Help & Tutorial" onclick="closeHelp()">X</button>
                 </div>
                 <div style="padding: 10px 16px; display: flex; gap: 8px; border-bottom: 1px solid rgba(255,255,255,0.08); background: rgba(0,0,0,0.3); flex-wrap: wrap;">
                     <button class="door-tab active" id="tabTut1" onclick="switchTutorialStep(1)">1. Connect & Dial</button>
@@ -473,7 +530,7 @@ SEND:"secret\r"'></textarea>
                     <div style="display:flex; gap: 8px;">
                         <button class="btn-secondary" id="tutBackBtn" onclick="prevTutorialStep()" style="display:none;">&lt; Back</button>
                         <button class="btn-action" id="tutNextBtn" onclick="nextTutorialStep()">Next &gt;</button>
-                        <button class="btn-action" style="background:#10b981;" onclick="closeHelp()">Start Exploring [Esc]</button>
+                        <button class="btn-action help-control-btn help-btn-close" id="btnHelpDismiss" style="background:#10b981;" onclick="closeHelp()">Start Exploring [Esc]</button>
                     </div>
                 </div>
             </div>
@@ -484,7 +541,7 @@ SEND:"secret\r"'></textarea>
             <div class="modal-card" style="width: 800px; max-width: 95%; height: 590px; max-height: 95%;">
                 <div class="modal-header" style="background: linear-gradient(90deg, #b45309 0%, #78350f 100%);">
                     <span>📬 BBS Message Base & FidoNet EchoMail Conference Reader</span>
-                    <button class="modal-close" onclick="closeMsgBase()">X</button>
+                    <button class="modal-close" id="btnCloseMsg" aria-label="Close Message Base" onclick="closeMsgBase()">X</button>
                 </div>
                 <div style="padding: 10px 16px; border-bottom: 1px solid rgba(255,255,255,0.08); display: flex; gap: 8px; background: rgba(0,0,0,0.3); align-items: center; flex-wrap: wrap;">
                     <span style="font-size:11px; font-weight:600; color:#d4d4d8; text-transform:uppercase;">Area:</span>
@@ -526,7 +583,7 @@ SEND:"secret\r"'></textarea>
             <div class="modal-card" style="width: 580px; max-width: 95%; height: 490px; max-height: 95%;">
                 <div class="modal-header" style="background: linear-gradient(90deg, #d97706 0%, #b45309 100%);">
                     <span id="composeModalTitle">Compose BBS EchoMail Message</span>
-                    <button class="modal-close" onclick="closeComposeModal()">X</button>
+                    <button class="modal-close" id="btnCloseCompose" aria-label="Close Compose Dialog" onclick="closeComposeModal()">X</button>
                 </div>
                 <div style="padding: 14px; display: flex; flex-direction: column; gap: 10px; flex: 1;">
                     <div style="display: flex; gap: 10px;">
@@ -714,8 +771,10 @@ SEND:"secret\r"'></textarea>
         } else {
             body.innerHTML = `
                 <h4 style="color:#a855f7;">⌨️ Keyboard Shortcuts & Quick Reference</h4>
-                <div style="display:grid; grid-template-columns: 120px 1fr; gap:6px; font-size:11px; margin-top:6px;">
+                <div style="display:grid; grid-template-columns: 140px 1fr; gap:6px; font-size:11px; margin-top:6px;">
                     <div><kbd style="background:#27272a; padding:2px 6px; border-radius:4px;">Enter</kbd></div><div>Connect / submit host</div>
+                    <div><kbd style="background:#27272a; padding:2px 6px; border-radius:4px;">Ctrl + / -</kbd></div><div>Zoom in / zoom out terminal font</div>
+                    <div><kbd style="background:#27272a; padding:2px 6px; border-radius:4px;">Ctrl + 0</kbd></div><div>Reset terminal font zoom (16px)</div>
                     <div><kbd style="background:#27272a; padding:2px 6px; border-radius:4px;">F5</kbd></div><div>Quicksave all state & screen</div>
                     <div><kbd style="background:#27272a; padding:2px 6px; border-radius:4px;">F9</kbd></div><div>Quickload all state & screen</div>
                     <div><kbd style="background:#27272a; padding:2px 6px; border-radius:4px;">D</kbd></div><div>Open Dialing Directory</div>
@@ -727,6 +786,7 @@ SEND:"secret\r"'></textarea>
                     <div><kbd style="background:#27272a; padding:2px 6px; border-radius:4px;">C</kbd></div><div>Toggle Session Capture</div>
                     <div><kbd style="background:#27272a; padding:2px 6px; border-radius:4px;">1 - 4</kbd></div><div>Quick action hotkeys in Door Games</div>
                     <div><kbd style="background:#27272a; padding:2px 6px; border-radius:4px;">↑ / ↓</kbd></div><div>Browse messages in EchoNet reader</div>
+                    <div><kbd style="background:#27272a; padding:2px 6px; border-radius:4px;">← / →</kbd></div><div>Navigate tutorial steps in Help</div>
                     <div><kbd style="background:#27272a; padding:2px 6px; border-radius:4px;">T</kbd></div><div>Stream Door / EchoNet / Art to Terminal</div>
                     <div><kbd style="background:#27272a; padding:2px 6px; border-radius:4px;">F1 / H</kbd></div><div>Show this Help & Tutorial</div>
                     <div><kbd style="background:#27272a; padding:2px 6px; border-radius:4px;">Esc</kbd></div><div>Dismiss active modal dialog</div>
@@ -842,6 +902,43 @@ SEND:"secret\r"'></textarea>
         curX = 0; curY = 0; savedX = 0; savedY = 0; scrollOffset = 0;
     }
 
+    const ZOOM_STEPS = [12, 14, 16, 18, 20, 22, 24];
+    function updateZoomUI() {
+        const lbl = document.getElementById('zoomLabel');
+        if (lbl) lbl.textContent = (kbbsSettings.fontSize || 16) + 'px';
+        const inp = document.getElementById('setFontSize');
+        if (inp) inp.value = kbbsSettings.fontSize || 16;
+    }
+
+    function zoomIn() {
+        let cur = kbbsSettings.fontSize || 16;
+        let next = ZOOM_STEPS.find(s => s > cur) || ZOOM_STEPS[ZOOM_STEPS.length - 1];
+        if (next !== cur) {
+            kbbsSettings.fontSize = next;
+            safeSetStorage('kbbs_display_settings', JSON.stringify(kbbsSettings));
+            resizeCanvas();
+            showToast(`Terminal Font: ${next}px (${COLS * Math.floor(next/2)}x${ROWS * next})`, "info", 1800);
+        }
+    }
+
+    function zoomOut() {
+        let cur = kbbsSettings.fontSize || 16;
+        let prev = [...ZOOM_STEPS].reverse().find(s => s < cur) || ZOOM_STEPS[0];
+        if (prev !== cur) {
+            kbbsSettings.fontSize = prev;
+            safeSetStorage('kbbs_display_settings', JSON.stringify(kbbsSettings));
+            resizeCanvas();
+            showToast(`Terminal Font: ${prev}px (${COLS * Math.floor(prev/2)}x${ROWS * prev})`, "info", 1800);
+        }
+    }
+
+    function zoomReset() {
+        kbbsSettings.fontSize = 16;
+        safeSetStorage('kbbs_display_settings', JSON.stringify(kbbsSettings));
+        resizeCanvas();
+        showToast("Terminal Font reset to 16px (640x400)", "info", 1800);
+    }
+
     function resizeCanvas() {
         CELL_H = kbbsSettings.fontSize || 16;
         CELL_W = Math.max(1, Math.floor(CELL_H / 2));
@@ -853,6 +950,7 @@ SEND:"secret\r"'></textarea>
         ctx.setTransform(1, 0, 0, 1, 0, 0); // Reset transform
         ctx.scale(dpr, dpr);
         ctx.imageSmoothingEnabled = false;
+        updateZoomUI();
         render();
     }
 
@@ -877,7 +975,7 @@ SEND:"secret\r"'></textarea>
                     ctx.fillRect(x, y, CELL_W, CELL_H);
                 }
                 ctx.fillStyle = COLORS[cell.fg & 0x0F];
-                ctx.fillText(cell.ch, x, y);
+                ctx.fillText(cell.ch, x, y, CELL_W);
             }
         }
         // Draw cursor
@@ -1825,6 +1923,17 @@ SEND:"secret\r"'></textarea>
     let currentDoorGame = 'lord';
     let lordPlayer = { name: 'Warrior', level: 1, hp: 20, maxHp: 20, gold: 100, bank: 0, fights: 15, weapon: 'Stick', armor: 'Rags' };
     let twPlayer = { sector: 1, credits: 1000, holds: 10, ore: 2, organics: 5, equipment: 0, shields: 100 };
+    let lordLogHistory = ["[L.O.R.D. Door Server Active - Auto-saving to LocalStorage]"];
+    let twLogHistory = ["[TradeWars 2015 Active - Auto-saving to LocalStorage]"];
+
+    function addLordLog(msg) {
+        lordLogHistory.push(msg);
+        if (lordLogHistory.length > 30) lordLogHistory.shift();
+    }
+    function addTwLog(msg) {
+        twLogHistory.push(msg);
+        if (twLogHistory.length > 30) twLogHistory.shift();
+    }
 
     function saveDoorState() {
         safeSetStorage('kbbs_lord_state', JSON.stringify(lordPlayer));
@@ -1839,10 +1948,12 @@ SEND:"secret\r"'></textarea>
     function resetDoorGame(game) {
         if (game === 'lord') {
             lordPlayer = { name: 'Warrior', level: 1, hp: 20, maxHp: 20, gold: 100, bank: 0, fights: 15, weapon: 'Stick', armor: 'Rags' };
+            lordLogHistory = ["[L.O.R.D. Door Server Active - Auto-saving to LocalStorage]"];
             saveDoorState();
             showToast("L.O.R.D. progress reset to new warrior!", "info");
         } else {
             twPlayer = { sector: 1, credits: 1000, holds: 10, ore: 2, organics: 5, equipment: 0, shields: 100 };
+            twLogHistory = ["[TradeWars 2015 Active - Auto-saving to LocalStorage]"];
             saveDoorState();
             showToast("TradeWars progress reset to new ship!", "info");
         }
@@ -1898,7 +2009,7 @@ SEND:"secret\r"'></textarea>
                     <button class="btn-danger" style="margin-left:auto;" onclick="resetDoorGame('lord')">🔄 New Game</button>
                 </div>
                 <div id="lordLog" style="background:#000; color:#10b981; padding:10px; border-radius:6px; font-family:monospace; height:120px; overflow-y:auto; font-size:11px;">
-                    [L.O.R.D. Door Server Active - Auto-saving to LocalStorage]
+                    ${lordLogHistory.join('<br>')}
                 </div>
             `;
         } else {
@@ -1928,18 +2039,22 @@ SEND:"secret\r"'></textarea>
                     <button class="btn-danger" style="margin-left:auto;" onclick="resetDoorGame('tradewars')">🔄 New Game</button>
                 </div>
                 <div id="twLog" style="background:#000; color:#38bdf8; padding:10px; border-radius:6px; font-family:monospace; height:120px; overflow-y:auto; font-size:11px;">
-                    [TradeWars 2015 Active - Auto-saving to LocalStorage]
+                    ${twLogHistory.join('<br>')}
                 </div>
             `;
         }
+        const lLog = document.getElementById('lordLog');
+        if (lLog) lLog.scrollTop = lLog.scrollHeight;
+        const tLog = document.getElementById('twLog');
+        if (tLog) tLog.scrollTop = tLog.scrollHeight;
     }
 
     function lordAction(act) {
-        let log = document.getElementById('lordLog');
         if (act === 'forest') {
             if (lordPlayer.fights <= 0) {
-                if (log) log.innerHTML += "<br>You have no forest fights left today! Rest at the Tavern.";
+                addLordLog("You have no forest fights left today! Rest at the Tavern.");
                 showToast("No forest fights remaining today!", "warning");
+                renderDoorContent();
                 return;
             }
             lordPlayer.fights--;
@@ -1951,39 +2066,39 @@ SEND:"secret\r"'></textarea>
             lordPlayer.hp = Math.max(1, lordPlayer.hp - dmg);
             if (lordPlayer.gold >= 250 && lordPlayer.level === 1) {
                 lordPlayer.level = 2; lordPlayer.maxHp = 35; lordPlayer.hp = 35;
-                if (log) log.innerHTML += `<br>⭐ LEVEL UP! You reached Level 2! Max HP increased to 35!`;
+                addLordLog("⭐ LEVEL UP! You reached Level 2! Max HP increased to 35!");
                 showToast("Level Up! Reached Level 2 Warrior!", "success");
             }
-            if (log) log.innerHTML += `<br>🌲 You defeated a ${foe}! +${gain} Gold (took ${dmg} damage)`;
+            addLordLog(`🌲 You defeated a ${foe}! +${gain} Gold (took ${dmg} damage)`);
             showToast(`Defeated ${foe}! +${gain} Gold`, "success");
         } else if (act === 'inn') {
             lordPlayer.hp = lordPlayer.maxHp;
             lordPlayer.fights = Math.min(25, lordPlayer.fights + 5);
-            if (log) log.innerHTML += "<br>🍺 You rest at the Inn. HP fully restored & +5 Fights!";
+            addLordLog("🍺 You rest at the Inn. HP fully restored & +5 Fights!");
             showToast("Rested at the Inn. HP fully restored!", "success");
         } else if (act === 'bank') {
             lordPlayer.bank += lordPlayer.gold;
             let dep = lordPlayer.gold;
             lordPlayer.gold = 0;
-            if (log) log.innerHTML += `<br>🏦 Deposited ${dep} gold into the Royal Bank! (Balance: ${lordPlayer.bank})`;
+            addLordLog(`🏦 Deposited ${dep} gold into the Royal Bank! (Balance: ${lordPlayer.bank})`);
             showToast(`Deposited ${dep} gold into Royal Bank`, "info");
         } else if (act === 'armory') {
             if (lordPlayer.weapon === 'Stick') {
                 if (lordPlayer.gold >= 50) {
                     lordPlayer.gold -= 50; lordPlayer.weapon = "Iron Blade";
-                    if (log) log.innerHTML += "<br>⚔️ Upgraded weapon to Iron Blade!";
+                    addLordLog("⚔️ Upgraded weapon to Iron Blade!");
                     showToast("Upgraded weapon to Iron Blade!", "success");
                 } else {
-                    if (log) log.innerHTML += "<br>Not enough gold for Iron Blade (need 50 gold)!";
+                    addLordLog("Not enough gold for Iron Blade (need 50 gold)!");
                     showToast("Need 50 gold for Iron Blade!", "warning");
                 }
             } else if (lordPlayer.weapon === 'Iron Blade') {
                 if (lordPlayer.gold >= 150) {
                     lordPlayer.gold -= 150; lordPlayer.weapon = "Steel Longsword";
-                    if (log) log.innerHTML += "<br>⚔️ Upgraded weapon to Steel Longsword!";
+                    addLordLog("⚔️ Upgraded weapon to Steel Longsword!");
                     showToast("Upgraded weapon to Steel Longsword!", "success");
                 } else {
-                    if (log) log.innerHTML += "<br>Not enough gold for Steel Longsword (need 150 gold)!";
+                    addLordLog("Not enough gold for Steel Longsword (need 150 gold)!");
                     showToast("Need 150 gold for Steel Longsword!", "warning");
                 }
             } else {
@@ -1991,48 +2106,46 @@ SEND:"secret\r"'></textarea>
                     if (lordPlayer.gold >= 75) {
                         lordPlayer.gold -= 75; lordPlayer.armor = "Leather Armor";
                         lordPlayer.maxHp += 15; lordPlayer.hp += 15;
-                        if (log) log.innerHTML += "<br>🛡️ Fitted Leather Armor (+15 Max HP)!";
+                        addLordLog("🛡️ Fitted Leather Armor (+15 Max HP)!");
                         showToast("Fitted Leather Armor (+15 Max HP)!", "success");
                     } else {
-                        if (log) log.innerHTML += "<br>Need 75 gold for Leather Armor!";
+                        addLordLog("Need 75 gold for Leather Armor!");
                         showToast("Need 75 gold for Leather Armor!", "warning");
                     }
                 } else if (lordPlayer.armor === 'Leather Armor') {
                     if (lordPlayer.gold >= 175) {
                         lordPlayer.gold -= 175; lordPlayer.armor = "Chainmail";
                         lordPlayer.maxHp += 25; lordPlayer.hp += 25;
-                        if (log) log.innerHTML += "<br>🛡️ Forged Chainmail armor (+25 Max HP)!";
+                        addLordLog("🛡️ Forged Chainmail armor (+25 Max HP)!");
                         showToast("Forged Chainmail (+25 Max HP)!", "success");
                     } else {
-                        if (log) log.innerHTML += "<br>Need 175 gold for Chainmail!";
+                        addLordLog("Need 175 gold for Chainmail!");
                         showToast("Need 175 gold for Chainmail!", "warning");
                     }
                 } else if (lordPlayer.armor === 'Chainmail') {
                     if (lordPlayer.gold >= 350) {
                         lordPlayer.gold -= 350; lordPlayer.armor = "Plate Mail";
                         lordPlayer.maxHp += 40; lordPlayer.hp += 40;
-                        if (log) log.innerHTML += "<br>🛡️ Donned Masterwork Plate Mail (+40 Max HP)!";
+                        addLordLog("🛡️ Donned Masterwork Plate Mail (+40 Max HP)!");
                         showToast("Donned Plate Mail (+40 Max HP)!", "success");
                     } else {
-                        if (log) log.innerHTML += "<br>Need 350 gold for Plate Mail!";
+                        addLordLog("Need 350 gold for Plate Mail!");
                         showToast("Need 350 gold for Plate Mail!", "warning");
                     }
                 } else {
-                    if (log) log.innerHTML += "<br>⚔️ You already wield the finest masterwork weapons & plate mail!";
+                    addLordLog("⚔️ You already wield the finest masterwork weapons & plate mail!");
                     showToast("Already wielding masterwork armory equipment!", "info");
                 }
             }
         }
         saveDoorState();
-        if (log) log.scrollTop = log.scrollHeight;
         renderDoorContent();
     }
 
     function twAction(act) {
-        let log = document.getElementById('twLog');
         if (act === 'warp') {
             twPlayer.sector = Math.floor(Math.random() * 10) + 1;
-            if (log) log.innerHTML += `<br>🌌 Warped to Sector ${twPlayer.sector}! Navigation stabilized.`;
+            addTwLog(`🌌 Warped to Sector ${twPlayer.sector}! Navigation stabilized.`);
             showToast(`Warped to Sector ${twPlayer.sector}`, "info");
         } else if (act === 'port') {
             let profit = (twPlayer.ore * 25) + (twPlayer.organics * 30) + (twPlayer.equipment * 60);
@@ -2041,12 +2154,13 @@ SEND:"secret\r"'></textarea>
             twPlayer.ore = Math.floor(Math.random() * 4) + 1;
             twPlayer.organics = Math.floor(Math.random() * 6) + 1;
             twPlayer.equipment = Math.floor(Math.random() * 3) + 1;
-            if (log) log.innerHTML += `<br>🛰️ Traded at Space Port! +$${profit + 100} Credits (sold ${oldEqp} Eqp)! New commodities loaded.`;
+            addTwLog(`🛰️ Traded at Space Port! +$${profit + 100} Credits (sold ${oldEqp} Eqp)! New commodities loaded.`);
             showToast(`Traded at Space Port! +$${profit + 100} Credits`, "success");
         } else if (act === 'pirate') {
             if (twPlayer.shields <= 0) {
-                if (log) log.innerHTML += "<br>⚠️ Shields depleted! Recharge shields at port before engaging!";
+                addTwLog("⚠️ Shields depleted! Recharge shields at port before engaging!");
                 showToast("Shields depleted! Recharge shields first", "warning");
+                renderDoorContent();
                 return;
             }
             let dmg = Math.floor(Math.random() * 25) + 10;
@@ -2057,26 +2171,26 @@ SEND:"secret\r"'></textarea>
                 twPlayer.equipment = Math.min(10, twPlayer.equipment + 1);
                 lootBonus = " +1 Salvaged Equipment";
             }
-            if (log) log.innerHTML += `<br>🏴‍☠️ Destroyed Pirate Raider! +$450 Bounty!${lootBonus} Shields took ${dmg}% damage.`;
+            addTwLog(`🏴‍☠️ Destroyed Pirate Raider! +$450 Bounty!${lootBonus} Shields took ${dmg}% damage.`);
             showToast(`Destroyed Pirate! +$450 Bounty${lootBonus}`, "success");
         } else if (act === 'shield') {
             if (twPlayer.shields >= 100) {
-                if (log) log.innerHTML += "<br>Shields are already at 100% capacity!";
+                addTwLog("Shields are already at 100% capacity!");
                 showToast("Shields already at 100%!", "info");
+                renderDoorContent();
                 return;
             }
             if (twPlayer.credits >= 100) {
                 twPlayer.credits -= 100;
                 twPlayer.shields = Math.min(100, twPlayer.shields + 50);
-                if (log) log.innerHTML += `<br>🛡️ Shields recharged to ${twPlayer.shields}% (-$100 Credits)`;
+                addTwLog(`🛡️ Shields recharged to ${twPlayer.shields}% (-$100 Credits)`);
                 showToast(`Shields recharged to ${twPlayer.shields}%`, "success");
             } else {
-                if (log) log.innerHTML += "<br>Not enough credits to recharge shields ($100 required)!";
+                addTwLog("Not enough credits to recharge shields ($100 required)!");
                 showToast("Need $100 credits to recharge shields!", "warning");
             }
         }
         saveDoorState();
-        if (log) log.scrollTop = log.scrollHeight;
         renderDoorContent();
     }
 
@@ -2790,6 +2904,33 @@ SEND:"secret\r"'></textarea>
             e.preventDefault();
             masterQuickload();
             return;
+        }
+
+        if (e.ctrlKey && (e.key === '=' || e.key === '+')) {
+            e.preventDefault();
+            zoomIn();
+            return;
+        }
+        if (e.ctrlKey && (e.key === '-' || e.key === '_')) {
+            e.preventDefault();
+            zoomOut();
+            return;
+        }
+        if (e.ctrlKey && e.key === '0') {
+            e.preventDefault();
+            zoomReset();
+            return;
+        }
+
+        if (isModalOpen('helpModal')) {
+            if (e.key === 'ArrowLeft') {
+                prevTutorialStep();
+                e.preventDefault(); return;
+            }
+            if (e.key === 'ArrowRight') {
+                nextTutorialStep();
+                e.preventDefault(); return;
+            }
         }
 
         if (e.altKey && e.key) {

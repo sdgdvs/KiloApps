@@ -5,7 +5,7 @@
   "hostname": "P10700",
   "model_tier": "Gemini Pro",
   "cadence": "1 turn/hour",
-  "status": "active",
+  "status": "quota_paused",
   "schedule_minutes": [
     12
   ],
@@ -13,9 +13,9 @@
   "session_end": null,
   "session_limit_enabled": false,
   "timer_enabled": false,
-  "turns_executed": 98,
+  "turns_executed": 102,
   "last_turn_timestamp": "2026-09-28T18:42:51Z",
-  "last_heartbeat": "2026-10-08T14:20:14.976133+00:00",
-  "current_target": "KTowers",
+  "last_heartbeat": "2026-10-08T18:39:12.570122+00:00",
+  "current_target": "KBBS",
   "remote_command": "none"
 }

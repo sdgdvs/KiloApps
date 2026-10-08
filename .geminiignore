@@ -1,0 +1,16 @@
+# Antigravity & Gemini CLI workspace ignore file
+# Excludes heavy binary, log, receipt, archive, and image files from being scanned into context
+
+archive/
+logs/
+.agents/receipts/
+.agents/fleet_nodes/
+docs/gallery/
+crinkler.zip
+nasm.zip
+*.exe
+*.obj
+*.o
+node_modules/
+dist/
+build/

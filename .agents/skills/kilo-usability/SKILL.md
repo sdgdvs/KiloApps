@@ -11,6 +11,14 @@ description: >-
 
 This skill executes usability, layout, and UX enhancements on exactly ONE application per turn (or KiloOS shell).
 
+## Token Efficiency Directive (STRICT BUDGET: <= 10 Tool Calls)
+- **Tool Budget**: Complete this turn in **<= 10 tool calls**.
+- **Batch Edits**: Inspect the target HTML/C file ONCE. Plan and apply all usability fixes in a single edit block.
+- **No Re-reads**: Never call `view_file` on files you just edited.
+- **Single-App Build Only**: Run only `cd KiloOS && npm run build`. NEVER run repository-wide suites (no `quality_gate.js`, no screenshot regeneration).
+- **No Archives/Receipts**: Never read `archive/` or `.agents/receipts/`.
+- Advance queue in `next_work.md`, commit, push, and STOP immediately.
+
 ## Pre-flight
 1. Ensure git working tree is clean: `git status`.
 2. Pull latest changes: `git pull --rebase`.

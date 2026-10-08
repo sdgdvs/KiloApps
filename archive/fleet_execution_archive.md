@@ -4,6 +4,15 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-08T07:37:00-07:00 — kilo-creator: echo-subsystem.net (Deep Expansion, Middle-Game Puzzle Gating & KNet Routing)**
+  - Status: PASS ✅ (294.7 KB web < 999 KB hard ceiling).
+  - Puzzle Gating & ARG: Bound default Morse telemetry burst to `OFFSET 0x007F1990` linking to Darknet memory inspector.
+  - Journal & Lore: Synced field journal entry to reflect 0x007F1990 offset uncovering classified Carlsbad subnet.
+  - KNet Routing: Expanded address bar resolution for trailing slashes, www prefixes, and 10.19.99.19 station IP.
+  - Verification: Security linter 100% PASS; Vite build clean (508ms); test_arg_flow.py 100% PASS (7/7 stages).
+  - Queue: Advanced `kilo_creator` to `kweb://deep-core`; rotation handoff to `kilo-graphics`.
+
+
 - **2026-10-08T07:18:00-07:00 — kilo-expander: KTowers (Skip Turn — Mature 5+ Passes & Locked in Human Review Queue)**
   - Status: ⏭️ Skip — app is feature-complete and mature.
   - Review Queue: Verified locked in `docs/human_review_queue.md` (60 FPS, 17ms pacing, 180.8 KB < 999 KB ceiling).
