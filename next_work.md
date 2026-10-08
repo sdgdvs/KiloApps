@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-creator
-next_agent: kilo-graphics
+current_agent: kilo-graphics
+next_agent: kilo-tester
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -12,13 +12,13 @@ model: gemini-3.8-flash-high
 timeout_minutes: 15
 status: ready
 current_targets:
-  kilo_creator: "kweb://deep-core"
+  kilo_creator: "kweb://darknet"
   kilo_graphics: KDragon
   kilo_tester: KSettings
   kilo_usability: KBBS
   kilo_qa: KAsteroids
   kilo_expander: KChess
-virtual_web_target: "kweb://deep-core"
+virtual_web_target: "kweb://darknet"
 virtual_web_rotation:
   - "kweb://geocities"
   - "kweb://users/~neon_rider"
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-planner
-  app: fleet-wide
-  timestamp: "2026-10-08T08:14:12-07:00"
+  agent: kilo-creator
+  app: deep-core
+  timestamp: "2026-10-08T09:37:00-07:00"
 last_planner_run: "2026-10-08T15:14:12Z"
 ---
 
@@ -102,10 +102,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ### 1. Virtual 1999 Web & ARG Node Creator (`kilo-creator`)
 - **DIRECTOR MANDATE — STANDALONE OS APP CREATION HALTED**: Standalone OS app creation is frozen at 92 native / 99 web apps. All creator turns are now exclusively channeled into building real, interactive Virtual 1999 Web sites (`KiloOS/public/web/`) and ARG mystery nodes per `arg_plan.md`. Zero shallow stubs; every page must be a functioning Web 1.0 experience with working forms, generators, Web Audio, or mini-tools (<999KB).
-- **Current Target**: `kweb://deep-core`
+- **Current Target**: `kweb://darknet`
 - **Upcoming Queue**:
-  `kweb://darknet`, `kweb://portal`, `kweb://webring`, `kweb://warez`, `kweb://geocities`, `kweb://users/~neon_rider`, `kweb://asm-temple`, `kweb://cybercafe`, `kweb://10.19.99.4/classified`, `kweb://echo-subsystem.net`
-  *(Completed Phase 1 & 2 Builds: kweb://geocities, kweb://cybercafe, kweb://10.19.99.4/classified, kweb://echo-subsystem.net deep expansion complete. Active: Surface-site ARG breadcrumbs & middle-game puzzle gating)*.
+  `kweb://portal`, `kweb://webring`, `kweb://warez`, `kweb://geocities`, `kweb://users/~neon_rider`, `kweb://asm-temple`, `kweb://cybercafe`, `kweb://10.19.99.4/classified`, `kweb://echo-subsystem.net`, `kweb://deep-core`
+  *(Completed Phase 1 & 2 Builds: kweb://geocities, kweb://cybercafe, kweb://10.19.99.4/classified, kweb://echo-subsystem.net, kweb://deep-core deep expansion complete. Active: Surface-site ARG breadcrumbs & middle-game puzzle gating)*.
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
 - **EXCLUSIVE MISSION**: Replace programmer vector art with Imagen 3 generated sprites and backgrounds via the 2-stage asset pipeline. If the target app is not appropriate for raster/sprite replacement (e.g. wireframe classics or abstract board games), skip the turn immediately.
@@ -135,8 +135,8 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Multiplayer Focus (CRITICAL)**: Concentrate on expanding games (*KChess*, *KPong*, *KSnake*, *KBreakout*, *KMine*, *KPac*) and collaborative apps (*KDraw*, *KPaint*, *KSynth*, *KPad*) with seamless Firebase Realtime Database multiplayer for cross-computer play on `kiloapps.web.app`.
 
 ### 7. Virtual 1999 Web Expansion Queue (Eternal Fleet Track)
-- **Current Active Target**: `kweb://deep-core` (`KiloOS/public/web/deep_core.html`)
-  - *Next in Rotation*: `kweb://darknet` ➔ `kweb://portal` ➔ `kweb://webring` ➔ `kweb://warez` ➔ `kweb://geocities` ➔ `kweb://users/~neon_rider` ➔ `kweb://asm-temple` ➔ `kweb://cybercafe` ➔ `kweb://10.19.99.4/classified` ➔ `kweb://echo-subsystem.net`.
+- **Current Active Target**: `kweb://darknet` (`KiloOS/public/web/darknet.html`)
+  - *Next in Rotation*: `kweb://portal` ➔ `kweb://webring` ➔ `kweb://warez` ➔ `kweb://geocities` ➔ `kweb://users/~neon_rider` ➔ `kweb://asm-temple` ➔ `kweb://cybercafe` ➔ `kweb://10.19.99.4/classified` ➔ `kweb://echo-subsystem.net` ➔ `kweb://deep-core`.
 - **Anti-Potemkin Quality Standard**:
   - All 11 Virtual 1999 Web destinations are live, interactive, and feature-complete.
   - See [archive/virtual_web_completed.md](archive/virtual_web_completed.md) for full historical breakdown of completed content mandates across all sites.
@@ -217,6 +217,14 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-08T09:37:00-07:00 — kilo-creator: kweb://deep-core (Anti-Potemkin Web 1.0 Expansion, CSS Patch, Routing & Golden Thread Pass)**
+  - Status: PASS ✅ (242.7 KB web < 999 KB ceiling, 0 regressions).
+  - Anti-Potemkin Web Depth: 10 interactive decks (VT100 core, 5 defusal sectors, 3D vector radar, RTDB mesh, x86 disasm, 650m sonar, wiretap, sanctum).
+  - Synthesis & Gating: Genesis YM2612 2-Op FM / SNES SPC700 procedural audio, F5/F9 state parity, 25s solo fallback, full middle-game gating.
+  - Fixes & Routing: Corrected .wiretap-hex-pane CSS syntax; verified deep routing in knet.html, portal.html, and webring.html.
+  - Verification: `security_lint.py` 100% PASS; `test_arg_flow.py` 7/7 stages PASS; Vite build clean (494ms); quality gate 107/107 PASS.
+  - Queue: Advanced `kilo_creator` and `virtual_web_target` to `kweb://darknet`; rotation handoff to `kilo-graphics`.
+
 - **2026-10-08T08:14:12-07:00 — kilo-planner: fleet-wide (Daily 24h Fleet Planning, Queue Health & Log Compaction)**
   - Status: PASS ✅ (Daily fleet audit & queue rework complete).
   - Icon Uniqueness: Verified 105 apps in App.jsx, 105 unique .ico files, 0 duplicate hashes (check_icons.py 100% PASS).
@@ -245,13 +253,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Web & Layout: Aligned button layout on load, synced mode switching, restored audio and state guards.
   - Verification: MSVC clean build; native smoke test PASS; Vite build clean; security lint PASS.
   - Queue: Advanced kilo_qa to KAsteroids; rotation handoff to kilo-expander.
-
-- **2026-10-08T05:42:00-07:00 — kilo-usability: KSudoku (UI/UX Pass: Window Dimensions, HiDPI Retina Crispness, Header Help Discovery & Numpad Ergonomics)**
-  - Status: PASS ✅ (0 regressions, 193.4 KB web / 45.0 KB native < 999 KB ceiling).
-  - Window & Layout: Tuned dimensions from 600x600 to 620x760 in App.jsx; added custom-styled overflow-y container scrolling eliminating clipped numpad.
-  - Help Discovery: Added atmospheric header guide shortcut prompt (`F1 / ?`) and updated button label to `Help (F1)` for immediate hotkey awareness.
-  - HiDPI Crispness: Implemented devicePixelRatio canvas scaling for duel opponent radar and victory/error shockwave particle effects.
-  - Numpad Ergonomics: Added active digit blue glow (.np-active) and green checkmark completion status (.np-complete) when all digits are placed.
-  - Input Navigation: Defaulted unselected arrow key navigation to (0,0); added C/X cell clear key shortcuts with accessible numpad labels.
-  - Verification: Security linter 100% PASS; check_icons 100% PASS; smoke_test_native 101/101 PASS; MSVC clean; Vite build clean (437ms).
-  - Queue: Advanced kilo_usability to KTetris; rotation handoff to kilo-qa.

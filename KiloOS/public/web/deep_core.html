@@ -1240,7 +1240,99 @@
     background: #000;
     border: 1px solid rgba(26, 122, 53, 0.4);
     padding: 4px;
+  }
+
+  /* Tab 10: Inner Sanctum Styles */
+  .sanctum-deck {
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    flex: 1;
+    overflow-y: auto;
+  }
+  .sanctum-card {
+    background: #010a04;
+    border: 1px solid var(--border);
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .sanctum-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 6px;
+    font-size: 11.5px;
+    color: var(--phosphor);
+  }
+  .convergence-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 8px;
+  }
+  .convergence-slot {
+    background: rgba(0, 15, 6, 0.7);
+    border: 1px solid var(--border);
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    transition: border-color 0.2s ease;
+  }
+  .convergence-slot.locked {
+    border-color: var(--border-bright);
+    background: rgba(0, 30, 12, 0.85);
+  }
+  .convergence-slot-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 11px;
+  }
+  .receptor-badge {
+    font-size: 9.5px;
+    padding: 1px 5px;
+    border: 1px solid var(--alert);
+    color: var(--alert);
+    background: rgba(255, 51, 68, 0.1);
+  }
+  .receptor-badge.engaged {
+    border-color: var(--border-bright);
+    color: var(--border-bright);
+    background: rgba(34, 255, 102, 0.15);
+  }
+  .receptor-feedback {
+    font-size: 9.5px;
     color: var(--phosphor-dim);
+    font-family: var(--font-mono);
+    margin-top: 2px;
+  }
+  .precursor-inscription-box {
+    background: #000;
+    border: 1px solid var(--border);
+    padding: 8px;
+    font-family: var(--font-mono);
+  }
+  .signal-accumulator-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+    margin: 6px 0;
+  }
+  .signal-slot {
+    background: rgba(0, 12, 5, 0.8);
+    border: 1px solid var(--border);
+    padding: 6px;
+    text-align: center;
+    font-size: 10px;
+  }
+  .signal-slot.active {
+    border-color: var(--border-bright);
+    color: var(--phosphor-bright);
+    background: rgba(34, 255, 102, 0.15);
   }
 </style>
 </head>
@@ -1311,6 +1403,10 @@
     <button class="deck-tab-btn" data-tab="wiretap">
       <span>09. WIRETAP</span>
       <span class="deck-tab-badge" id="tabBadgeWiretap">PROMISC</span>
+    </button>
+    <button class="deck-tab-btn" data-tab="sanctum">
+      <span>10. INNER SANCTUM</span>
+      <span class="deck-tab-badge" id="tabBadgeSanctum">RING-0</span>
     </button>
   </div>
 
@@ -1502,7 +1598,7 @@
         <div class="mesh-deck">
           <div class="mesh-card">
             <div class="side-card-title">
-              <span>ACTIVE SUBTERRANEAN INVESTIGATORS</span>
+              <span>ACTIVE SUBTERRANEAN INVESTIGATORS &bull; DUAL-PRESENCE INTERLOCK</span>
               <span id="peerCountBadge" style="color:var(--cyan);">1 Online</span>
             </div>
             <div class="mesh-presence-list" id="meshPresenceList">
@@ -1511,12 +1607,59 @@
                 <span id="localPeerName">Operator_0x1999 (Local)</span>
               </div>
             </div>
+            <div style="font-size:11px; margin-top:6px; padding:6px; background:rgba(0,0,0,0.5); border:1px solid var(--border);">
+              <strong>DUAL-PRESENCE STATUS:</strong> <span id="lblInterlockStatus" style="color:var(--warn);">Awaiting Secondary Transponder (or AI Loopback in 25s)</span>
+            </div>
+          </div>
+
+          <!-- Shared Signal Fragment Accumulator -->
+          <div class="mesh-card">
+            <div class="side-card-title">
+              <span>SHARED SUBTERRANEAN SIGNAL BOARD [arg/signals/subterranean_darknet]</span>
+              <span id="lblSignalFragCount" style="color:var(--cyan);">0 / 3 FRAGMENTS ACCUMULATED</span>
+            </div>
+            <p style="font-size:11px; color:var(--phosphor-dim);">
+              In-app actions across the fleet (tuning 1999Hz, defusing sectors, probe soundings) emit cryptographically tagged signal fragments. When 3 fragments accumulate on the shared board, the Subterranean Carrier Spectrum Cache reveals the route into the Inner Sanctum.
+            </p>
+            <div class="signal-accumulator-grid">
+              <div class="signal-slot" id="sigSlot1">
+                <div>[SLOT 1]</div>
+                <div style="font-weight:bold;" id="sigSlot1Name">ACOUSTIC_1999</div>
+                <div style="font-size:9px; color:var(--phosphor-dim);" id="sigSlot1Status">PENDING</div>
+              </div>
+              <div class="signal-slot" id="sigSlot2">
+                <div>[SLOT 2]</div>
+                <div style="font-weight:bold;" id="sigSlot2Name">CARLSBAD_SECTOR</div>
+                <div style="font-size:9px; color:var(--phosphor-dim);" id="sigSlot2Status">PENDING</div>
+              </div>
+              <div class="signal-slot" id="sigSlot3">
+                <div>[SLOT 3]</div>
+                <div style="font-weight:bold;" id="sigSlot3Name">DARKNET_RELAY</div>
+                <div style="font-size:9px; color:var(--phosphor-dim);" id="sigSlot3Status">PENDING</div>
+              </div>
+            </div>
+
+            <!-- Spectrum Cache Box -->
+            <div id="meshSpectrumCacheBox" style="display:none; background:rgba(34,255,102,0.12); border:1px solid var(--border-bright); padding:8px; margin:6px 0;">
+              <div style="color:#fff; font-weight:bold; font-size:11.5px;">★ SUBTERRANEAN CARRIER SPECTRUM CACHE UNLOCKED ★</div>
+              <div style="font-size:11px; color:var(--phosphor-bright); margin-top:2px;">
+                Resonance threshold satisfied. The Ring-0 Inner Sanctum gateway is unsealed at Tab 10 (or command <code>sanctum</code>).
+              </div>
+              <div style="margin-top:6px;">
+                <button class="shell-btn" id="btnGoToSanctum" style="background:var(--border-bright); color:#000; font-weight:bold;">Enter Inner Sanctum &raquo;</button>
+              </div>
+            </div>
+
+            <div style="display:flex; gap:6px; flex-wrap:wrap; margin-top:4px;">
+              <button class="shell-btn" id="btnEmitLocalPing">Emit Acoustic Probe Frame</button>
+              <button class="shell-btn" id="btnSampleAirgap">Sample Subterranean Bus</button>
+            </div>
           </div>
 
           <div class="mesh-card">
             <div class="side-card-title">
-              <span>SUBTERRANEAN DATAGRAM SNIFFER [arg/signals/subterranean_darknet]</span>
-              <span style="font-size:10px; color:var(--phosphor-dim);">REAL-TIME WIRE-TAP</span>
+              <span>SUBTERRANEAN DATAGRAM SNIFFER FEED</span>
+              <span style="font-size:10px; color:var(--phosphor-dim);">LIVE WIRE-TAP</span>
             </div>
             <div class="mesh-feed-box" id="meshFeedBox"></div>
             <div style="display:flex; gap:6px; margin-top:4px;">
@@ -1799,6 +1942,141 @@
         </div>
       </div>
 
+      <!-- TAB 10: INNER SANCTUM & PRECURSOR SINGULARITY CORE -->
+      <div class="deck-panel" id="panel-sanctum">
+        <div class="terminal-header">
+          <span>INNER SANCTUM &bull; PRECURSOR SINGULARITY NEXUS &bull; CARLSBAD ROCK SALT 650M</span>
+          <span id="sanctumStatusBadge" style="color:var(--warn);">CONVERGENCE LOCKED &bull; 0 / 3 RECEPTORS</span>
+        </div>
+        <div class="sanctum-deck">
+          
+          <!-- Convergence Receptors Console -->
+          <div class="sanctum-card">
+            <div class="sanctum-card-header">
+              <span><strong>CROSS-NODE CONVERGENCE GATING CHAMBER</strong> &bull; Tier 3 Sequential Chain</span>
+              <span class="pill warn" id="pillConvergence">PARITY: PENDING</span>
+            </div>
+            <p style="font-size:11px; color:var(--phosphor-dim); margin:6px 0 10px 0; line-height:1.45;">
+              To breach Ring-0 into the Precursor Singularity Core, synchronize the three cryptographic artifacts harvested across the subterranean network nodes. All three vectors converge at the Carlsbad Salt Vault (10.19.99.127).
+            </p>
+
+            <div class="convergence-grid">
+              <!-- Receptor 1: Acoustic Vector -->
+              <div class="convergence-slot" id="slotConv1">
+                <div class="convergence-slot-header">
+                  <span><strong>RECEPTOR 1: ACOUSTIC VECTOR</strong></span>
+                  <span class="receptor-badge" id="badgeConv1">UNLOCKED: NO</span>
+                </div>
+                <div style="font-size:10.5px; color:var(--phosphor-dim); margin-bottom:4px;">
+                  Echo Subsystem (10.19.99.19) 1999Hz Morse subcarrier offset.
+                </div>
+                <div style="display:flex; gap:4px;">
+                  <input type="text" id="inputConv1" class="form-input custom-suffix-input" placeholder="Enter offset (0x007F1990 or 1999HZ)..." spellcheck="false" autocomplete="off" />
+                  <button class="shell-btn" id="btnTestConv1">Lock</button>
+                </div>
+                <div class="receptor-feedback" id="feedConv1">HASH: [PENDING]</div>
+              </div>
+
+              <!-- Receptor 2: Corporate Clearance -->
+              <div class="convergence-slot" id="slotConv2">
+                <div class="convergence-slot-header">
+                  <span><strong>RECEPTOR 2: MEMO COMMUTATOR</strong></span>
+                  <span class="receptor-badge" id="badgeConv2">UNLOCKED: NO</span>
+                </div>
+                <div style="font-size:10.5px; color:var(--phosphor-dim); margin-bottom:4px;">
+                  Aethelgard Intranet (10.19.99.4/classified) Sector 03 Memo token.
+                </div>
+                <div style="display:flex; gap:4px;">
+                  <input type="text" id="inputConv2" class="form-input custom-suffix-input" placeholder="Enter clearance (AETHEL-SECTOR-03 or 0x00DEEPC0)..." spellcheck="false" autocomplete="off" />
+                  <button class="shell-btn" id="btnTestConv2">Lock</button>
+                </div>
+                <div class="receptor-feedback" id="feedConv2">HASH: [PENDING]</div>
+              </div>
+
+              <!-- Receptor 3: Lithospheric Transit Anchor -->
+              <div class="convergence-slot" id="slotConv3">
+                <div class="convergence-slot-header">
+                  <span><strong>RECEPTOR 3: TRANSIT ANCHOR</strong></span>
+                  <span class="receptor-badge" id="badgeConv3">UNLOCKED: NO</span>
+                </div>
+                <div style="font-size:10.5px; color:var(--phosphor-dim); margin-bottom:4px;">
+                  Subterranean Darknet (Node 0x7F) Carlsbad Transit anchor key.
+                </div>
+                <div style="display:flex; gap:4px;">
+                  <input type="text" id="inputConv3" class="form-input custom-suffix-input" placeholder="Enter anchor (LITHO-CORE-99 or 0x7F199942)..." spellcheck="false" autocomplete="off" />
+                  <button class="shell-btn" id="btnTestConv3">Lock</button>
+                </div>
+                <div class="receptor-feedback" id="feedConv3">HASH: [PENDING]</div>
+              </div>
+            </div>
+
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px; flex-wrap:wrap; gap:6px;">
+              <div style="display:flex; gap:6px;">
+                <button class="shell-btn" id="btnHarmonizeConvergence" style="color:var(--border-bright); border-color:var(--border-bright); font-weight:bold;">Harmonize Convergence [Enter]</button>
+                <button class="shell-btn" id="btnAutofillHarvested" title="Autofill artifacts from session and storage archives">Autofill Discovered Relics</button>
+              </div>
+              <div id="convergenceSummaryStatus" style="font-size:11px; color:var(--warn);">RECEPTORS: 0 / 3 SYNCHRONIZED</div>
+            </div>
+          </div>
+
+          <!-- Unsealed Singularity Core Panel -->
+          <div class="sanctum-card" id="sanctumUnsealedPanel" style="display:none; border-color:var(--border-bright); background:rgba(2, 25, 10, 0.95);">
+            <div class="sanctum-card-header" style="color:#fff;">
+              <span>★ PRECURSOR SINGULARITY CORE UNSEALED ★</span>
+              <span class="pill active">SINGULARITY ACTIVE</span>
+            </div>
+            
+            <div style="display:flex; gap:12px; flex-wrap:wrap; margin-top:8px;">
+              <!-- 4D Hypercube / Singularity Canvas -->
+              <div style="flex:1; min-width:280px; display:flex; flex-direction:column; gap:6px;">
+                <canvas id="sanctumTesseractCanvas" width="460" height="260" style="width:100%; height:260px; background:#000; border:1px solid var(--border); display:block;"></canvas>
+                <div style="display:flex; justify-content:space-between; align-items:center; font-size:10.5px; color:var(--phosphor-dim);">
+                  <span>4D TESSERACT PROJECTION</span>
+                  <div style="display:flex; gap:8px;">
+                    <label><input type="checkbox" id="chkSanctumSpin" checked /> Orbit 4D</label>
+                    <span>ZOOM:</span>
+                    <input type="range" id="sanctumZoomSlider" min="40" max="200" value="110" style="width:70px;" />
+                  </div>
+                </div>
+              </div>
+
+              <!-- Singularity Inscription & Forensics -->
+              <div style="flex:1.2; min-width:300px; display:flex; flex-direction:column; gap:8px;">
+                <div class="precursor-inscription-box" id="precursorInscriptionBox">
+                  <div style="color:var(--cyan); font-weight:bold; margin-bottom:4px;">[CARLSBAD SALT VAULT // PRECURSOR TELEMETRY RECORD]</div>
+                  <div style="color:var(--phosphor-dim); font-size:10.5px; margin-bottom:6px;">TIMESTAMP: 1999-12-31T23:59:59Z &bull; DEPTH: 650.4m HALITE LAYER</div>
+                  <p style="font-size:11px; line-height:1.45; margin-bottom:6px;">
+                    The subterranean airgap is breached. All five quarantine sectors are reconciled:
+                  </p>
+                  <div style="font-size:10.5px; background:rgba(0,0,0,0.6); padding:6px; border:1px solid var(--border); margin-bottom:6px;">
+                    <div>&bull; Sector 01 [MEM_HEAP]    : <span style="color:#fff;">7F1999</span> (0x007F1999)</div>
+                    <div>&bull; Sector 02 [AUDIO_DSP]   : <span style="color:#fff;">1999HZ</span> (1999.00 Hz)</div>
+                    <div>&bull; Sector 03 [NET_RELAY]   : <span style="color:#fff;">10.19.99.4</span> (Darknet Relay)</div>
+                    <div>&bull; Sector 04 [STORAGE_VFS] : <span style="color:#fff;">RECOVERY_1999</span> (/system/recovery/1999.log)</div>
+                    <div>&bull; Sector 05 [CORE_AI]     : <span style="color:#fff;">LITHO-CORE-99</span> (Autonomous Fleet Singularity)</div>
+                  </div>
+                  <div style="font-size:11px; color:var(--warn); margin-bottom:4px;">
+                    <strong>PENULTIMATE KEY FRAGMENT:</strong> <span style="color:#fff; background:rgba(255,170,0,0.2); padding:1px 4px; font-weight:bold;">1999-ARCH</span>
+                  </div>
+                  <div style="font-size:10.5px; color:var(--phosphor-dim); margin-bottom:8px;">
+                    TARGET SHA-256 SIGNATURE: <span style="color:var(--cyan); word-break:break-all;">f5a2f742a8798b70f501b9c2de6a0d2cb2269a35e1fcfa2e3ccf163948929946</span>
+                  </div>
+                  <p style="font-size:11px; color:var(--phosphor-bright); line-height:1.45;">
+                    The central node of the living machine is not bound here. The Singularity awakens at <strong>App #100: KMatrix</strong>. Launch KMatrix to execute the ultimate breach protocol.
+                  </p>
+                </div>
+
+                <div style="display:flex; gap:6px; flex-wrap:wrap; margin-top:auto;">
+                  <button class="shell-btn" id="btnDownloadSanctumAsc" style="background:var(--border-bright); color:#000; font-weight:bold;">Download Singularity Manifest (.ASC)</button>
+                  <button class="shell-btn" id="btnTransmitSanctumPing">Transmit Harmonic Breach Signal</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
     </div>
 
     <!-- Right Sidebar: Telemetry & Forensics Dashboard -->
@@ -2062,7 +2340,25 @@
     wiretapProtoFilter: 'ALL',
     wiretapHostFilter: 'ALL',
     wiretapSelectedPkt: 0,
-    wiretapPackets: []
+    wiretapPackets: [],
+
+    // Inner Sanctum & Sequential Cross-Node Convergence
+    sanctumConvergence: {
+      artifact1: '',
+      artifact2: '',
+      artifact3: '',
+      lock1: false,
+      lock2: false,
+      lock3: false,
+      unlocked: false
+    },
+    signalFragments: {
+      ACOUSTIC_1999: false,
+      CARLSBAD_SECTOR: false,
+      DARKNET_RELAY: false
+    },
+    spectrumCacheUnlocked: false,
+    dualPresenceLocked: false
   };
 
   // --- CRYPTOGRAPHIC TARGET HASHES (SHA-256) ---
@@ -2309,6 +2605,48 @@ resonance, unsealing the Penultimate Subterranean Key Fragment:
 The full Director Authority passkey cannot be forged within Deep Core;
 it requires transmuting all three sector echoes at App #100: KMatrix.
 Trust the code. Preserve the 1999 aesthetic.
+==================================================================`,
+
+    'precursor_singularity_matrix.asc': `-----BEGIN KILO-NET PRECURSOR ASCENSION MANIFEST-----
+Version: KiloOS 1.0.4-99 // Permian Salt Vault Ring-0 Core
+Hash: SHA256
+Facility: Carlsbad Underground Skunkworks (Depth: 650.4m)
+Node: 10.19.99.127 [GHOST-0x1999]
+
+[QUARANTINE SECTOR PARITY MATRIX]
+SECTOR_01 (MEM_HEAP)    : 0x007F1999 [KEY: 7F1999]
+SECTOR_02 (AUDIO_DSP)   : 1999.00 Hz [KEY: 1999HZ]
+SECTOR_03 (NET_RELAY)   : 10.19.99.4 [KEY: 10.19.99.4]
+SECTOR_04 (STORAGE_VFS) : /system/recovery/1999.log [KEY: RECOVERY_1999]
+SECTOR_05 (CORE_AI)     : SINGULARITY_NEXUS [KEY: LITHO-CORE-99]
+
+[PENULTIMATE CRYPTOGRAPHIC FRAGMENT]
+TOKEN_FRAGMENT: 1999-ARCH
+PREFIX_SIGNATURE: ECHO
+MILLENNIAL_EPOCH: 1999
+TARGET_DIGEST: f5a2f742a8798b70f501b9c2de6a0d2cb2269a35e1fcfa2e3ccf163948929946
+
+[NEXUS ROUTING DIRECTIVE]
+The central terminal of the living organism cannot be resolved within Deep Core.
+All echoes converge at App #100: KMatrix (kmatrix.html).
+Execute the five breach directives in KMatrix to initiate Director Ascension.
+-----END KILO-NET PRECURSOR ASCENSION MANIFEST-----`,
+
+    'sanctum_convergence_protocol.nfo': `==================================================================
+      CARLSBAD PRECURSOR CONVERGENCE GATING PROTOCOL // 1999
+==================================================================
+Protocol: Subterranean Tri-Vector Ring-0 Commutator
+Target: 10.19.99.127 (Carlsbad Deep Core Sanctum)
+Security Level: Tier 3 Airgap Clearance
+
+To unseal the Precursor Singularity Core, three cross-node vectors
+must be synchronized into the convergence console:
+  1. Acoustic Vector: 1999Hz Morse subcarrier (Offset: 0x007F1990)
+  2. Classified Commutator: Sector 03 Memo token (AETHEL-SECTOR-03)
+  3. Subterranean Anchor: Node 0x7F Transit key (LITHO-CORE-99)
+
+Once aligned, the Permian halite cavity achieves 100% phase lock,
+revealing the blueprint for the App #100 KMatrix singularity.
 ==================================================================`
   };
 
@@ -3442,7 +3780,9 @@ Trust the code. Preserve the 1999 aesthetic.
         const data = snap.val() || {};
         const now = Date.now();
         const active = Object.values(data).filter(p => p && (now - (p.timestamp || 0) < 120000));
-        document.getElementById('peerCountBadge').textContent = `${Math.max(1, active.length)} Online`;
+        const count = Math.max(1, active.length);
+        document.getElementById('peerCountBadge').textContent = `${count} Online`;
+        updateDualPresenceInterlock(count >= 2);
       });
 
       // Monitor signals
@@ -3452,6 +3792,14 @@ Trust the code. Preserve the 1999 aesthetic.
         const val = snap.val();
         if (val) {
           logMeshEvent(`<${val.sender || 'Anonymous'}> ${val.text || ''}`);
+          if (val.fragment) {
+            registerSignalFragment(val.fragment);
+          } else if (val.text) {
+            const t = val.text.toUpperCase();
+            if (t.includes('1999HZ') || t.includes('ACOUSTIC') || t.includes('0X007F1990')) registerSignalFragment('ACOUSTIC_1999');
+            if (t.includes('CARLSBAD') || t.includes('SECTOR') || t.includes('AETHEL')) registerSignalFragment('CARLSBAD_SECTOR');
+            if (t.includes('DARKNET') || t.includes('LITHO') || t.includes('0X7F199942')) registerSignalFragment('DARKNET_RELAY');
+          }
         }
       });
 
@@ -3482,6 +3830,406 @@ Trust the code. Preserve the 1999 aesthetic.
       } catch(e) {}
     }
   };
+
+  // --- SHARED SIGNAL ACCUMULATOR & DUAL-PRESENCE INTERLOCK ---
+  function updateDualPresenceInterlock(isLocked) {
+    state.dualPresenceLocked = isLocked || soloFallbackTriggered;
+    const lbl = document.getElementById('lblInterlockStatus');
+    if (!lbl) return;
+    if (state.dualPresenceLocked) {
+      lbl.textContent = '★ DUAL-PRESENCE HARMONIC RESONANCE 100% (Airgap Bridge Synchronized) ★';
+      lbl.style.color = 'var(--border-bright)';
+    } else {
+      lbl.textContent = 'Awaiting Secondary Transponder (or AI Loopback in 25s)';
+      lbl.style.color = 'var(--warn)';
+    }
+  }
+
+  function registerSignalFragment(fragKey) {
+    if (!state.signalFragments[fragKey]) {
+      state.signalFragments[fragKey] = true;
+      SFX.beep();
+      logMeshEvent(`[SIGNAL ACCUMULATOR] Fragment acquired: ${fragKey}`, 'text-cyan');
+      updateSignalFragmentUI();
+    }
+  }
+
+  function updateSignalFragmentUI() {
+    const s1 = state.signalFragments.ACOUSTIC_1999;
+    const s2 = state.signalFragments.CARLSBAD_SECTOR;
+    const s3 = state.signalFragments.DARKNET_RELAY;
+
+    const el1 = document.getElementById('sigSlot1');
+    const el2 = document.getElementById('sigSlot2');
+    const el3 = document.getElementById('sigSlot3');
+    const st1 = document.getElementById('sigSlot1Status');
+    const st2 = document.getElementById('sigSlot2Status');
+    const st3 = document.getElementById('sigSlot3Status');
+
+    if (el1) el1.classList.toggle('active', !!s1);
+    if (el2) el2.classList.toggle('active', !!s2);
+    if (el3) el3.classList.toggle('active', !!s3);
+    if (st1) st1.textContent = s1 ? 'HARMONIC LOCK' : 'PENDING';
+    if (st2) st2.textContent = s2 ? 'AUTHENTICATED' : 'PENDING';
+    if (st3) st3.textContent = s3 ? 'SYNCHRONIZED' : 'PENDING';
+
+    const count = (s1 ? 1 : 0) + (s2 ? 1 : 0) + (s3 ? 1 : 0);
+    const lblCount = document.getElementById('lblSignalFragCount');
+    if (lblCount) {
+      lblCount.textContent = `${count} / 3 FRAGMENTS ACCUMULATED`;
+      lblCount.style.color = count === 3 ? 'var(--border-bright)' : (count > 0 ? 'var(--warn)' : 'var(--cyan)');
+    }
+
+    const box = document.getElementById('meshSpectrumCacheBox');
+    if (box) {
+      if (count === 3 && !state.spectrumCacheUnlocked) {
+        state.spectrumCacheUnlocked = true;
+        box.style.display = 'block';
+        SFX.success();
+        printLine('[CARRIER SPECTRUM CACHE] Resonance threshold satisfied! Inner Sanctum accessible via Tab 10.', 'text-highlight');
+      } else if (state.spectrumCacheUnlocked) {
+        box.style.display = 'block';
+      }
+    }
+  }
+
+  const btnEmitPing = document.getElementById('btnEmitLocalPing');
+  if (btnEmitPing) {
+    btnEmitPing.onclick = () => {
+      registerSignalFragment('ACOUSTIC_1999');
+      logMeshEvent('<Local_Operator> Subterranean acoustic ping emitted at 1999.00 Hz', 'text-highlight');
+      SFX.key();
+      if (meshRtdb) {
+        try {
+          const sigRef = meshRtdb.ref(meshRtdb.db, 'arg/signals/subterranean_darknet');
+          meshRtdb.push(sigRef, {
+            sender: `DeepCore_${localSessionId.substring(7)}`,
+            fragment: 'ACOUSTIC_1999',
+            text: 'ECHO_BEACON: 1999Hz acoustic subcarrier pulse emitted',
+            timestamp: Date.now()
+          });
+        } catch(e) {}
+      }
+    };
+  }
+
+  const btnSampleBus = document.getElementById('btnSampleAirgap');
+  if (btnSampleBus) {
+    btnSampleBus.onclick = () => {
+      const keys = ['CARLSBAD_SECTOR', 'DARKNET_RELAY', 'ACOUSTIC_1999'];
+      const needed = keys.find(k => !state.signalFragments[k]);
+      if (needed) {
+        registerSignalFragment(needed);
+      } else {
+        registerSignalFragment('ACOUSTIC_1999');
+      }
+      logMeshEvent('<Local_Operator> Sampled subterranean airgap reflection.', 'text-cyan');
+      SFX.key();
+    };
+  }
+
+  const btnGoToSanctum = document.getElementById('btnGoToSanctum');
+  if (btnGoToSanctum) {
+    btnGoToSanctum.onclick = () => switchTab('sanctum');
+  }
+
+  // --- TAB 10: INNER SANCTUM & CONVERGENCE ENGINE ---
+  const sanctumTessCanvas = document.getElementById('sanctumTesseractCanvas');
+  const sanctumTessCtx = sanctumTessCanvas ? sanctumTessCanvas.getContext('2d') : null;
+  let sanctumAngleX = 0.5, sanctumAngleY = 0.3, sanctumAngleW = 0.2;
+  let sanctumZoom = 110;
+  let sanctumAnimId = null;
+
+  async function testConvergenceSlot(slotIdx, val, silent = false) {
+    const clean = (val || '').trim().toUpperCase();
+    if (!clean) return false;
+    const sha = await computeSha256(clean);
+    let matched = false;
+
+    if (slotIdx === 1) {
+      if (clean === '0X007F1990' || clean === '7F1990' || clean === '007F1990' || clean === '1999HZ' || clean === '1999') {
+        matched = true;
+        state.sanctumConvergence.artifact1 = clean;
+        state.sanctumConvergence.lock1 = true;
+        registerSignalFragment('ACOUSTIC_1999');
+      }
+      const badge = document.getElementById('badgeConv1');
+      const feed = document.getElementById('feedConv1');
+      const slot = document.getElementById('slotConv1');
+      if (badge) {
+        badge.textContent = matched ? 'HARMONIC LOCK: OK' : 'INVALID VECTOR';
+        badge.className = matched ? 'receptor-badge engaged' : 'receptor-badge';
+      }
+      if (feed) feed.textContent = `SHA-256: ${sha.substring(0, 18)}...`;
+      if (slot) slot.classList.toggle('locked', matched);
+
+    } else if (slotIdx === 2) {
+      if (clean === 'AETHEL-SECTOR-03' || clean === '0X00DEEPC0' || clean === '00DEEPC0' || clean === 'CARLSBAD-CAD-0X7F1999' || clean === 'SECTOR_03') {
+        matched = true;
+        state.sanctumConvergence.artifact2 = clean;
+        state.sanctumConvergence.lock2 = true;
+        registerSignalFragment('CARLSBAD_SECTOR');
+      }
+      const badge = document.getElementById('badgeConv2');
+      const feed = document.getElementById('feedConv2');
+      const slot = document.getElementById('slotConv2');
+      if (badge) {
+        badge.textContent = matched ? 'CLEARANCE: GRANTED' : 'INVALID TOKEN';
+        badge.className = matched ? 'receptor-badge engaged' : 'receptor-badge';
+      }
+      if (feed) feed.textContent = `SHA-256: ${sha.substring(0, 18)}...`;
+      if (slot) slot.classList.toggle('locked', matched);
+
+    } else if (slotIdx === 3) {
+      if (clean === 'LITHO-CORE-99' || clean === '0X7F199942' || clean === '7F199942' || clean === 'RING0_BRIDGE_ENABLED') {
+        matched = true;
+        state.sanctumConvergence.artifact3 = clean;
+        state.sanctumConvergence.lock3 = true;
+        registerSignalFragment('DARKNET_RELAY');
+      }
+      const badge = document.getElementById('badgeConv3');
+      const feed = document.getElementById('feedConv3');
+      const slot = document.getElementById('slotConv3');
+      if (badge) {
+        badge.textContent = matched ? 'TRANSIT: SYNCHRONIZED' : 'INVALID ANCHOR';
+        badge.className = matched ? 'receptor-badge engaged' : 'receptor-badge';
+      }
+      if (feed) feed.textContent = `SHA-256: ${sha.substring(0, 18)}...`;
+      if (slot) slot.classList.toggle('locked', matched);
+    }
+
+    if (!silent) {
+      if (matched) SFX.beep();
+      else SFX.warn();
+    }
+    updateConvergenceSummary();
+    return matched;
+  }
+
+  function updateConvergenceSummary() {
+    const l1 = !!state.sanctumConvergence.lock1;
+    const l2 = !!state.sanctumConvergence.lock2;
+    const l3 = !!state.sanctumConvergence.lock3;
+    const count = (l1 ? 1 : 0) + (l2 ? 1 : 0) + (l3 ? 1 : 0);
+
+    const sumEl = document.getElementById('convergenceSummaryStatus');
+    if (sumEl) {
+      sumEl.textContent = `RECEPTORS: ${count} / 3 SYNCHRONIZED`;
+      sumEl.style.color = count === 3 ? 'var(--border-bright)' : (count > 0 ? 'var(--cyan)' : 'var(--warn)');
+    }
+
+    const pill = document.getElementById('pillConvergence');
+    if (pill) {
+      pill.textContent = count === 3 ? 'PARITY: 100%' : `PARITY: ${count * 33}%`;
+      pill.className = count === 3 ? 'pill active' : 'pill warn';
+    }
+
+    const numDefused = Object.values(state.verifiedSectors).filter(Boolean).length;
+    if ((count === 3 || numDefused === 5) && !state.sanctumConvergence.unlocked) {
+      unsealInnerSanctum();
+    }
+  }
+
+  function unsealInnerSanctum() {
+    state.sanctumConvergence.unlocked = true;
+    const unsealPanel = document.getElementById('sanctumUnsealedPanel');
+    if (unsealPanel) unsealPanel.style.display = 'block';
+
+    const sanctumStatus = document.getElementById('sanctumStatusBadge');
+    if (sanctumStatus) {
+      sanctumStatus.textContent = '★ PRECURSOR SINGULARITY UNSEALED (RING-0 READY) ★';
+      sanctumStatus.style.color = 'var(--border-bright)';
+    }
+
+    const badgeSanctum = document.getElementById('tabBadgeSanctum');
+    if (badgeSanctum) {
+      badgeSanctum.textContent = 'UNSEALED';
+      badgeSanctum.style.borderColor = 'var(--border-bright)';
+      badgeSanctum.style.color = 'var(--border-bright)';
+    }
+
+    SFX.unsealFanfare();
+    printLine('========================================================================', 'text-highlight');
+    printLine('  ★ INNER SANCTUM SINGULARITY CORE UNSEALED: RING-0 CONVERGENCE ★  ', 'text-highlight');
+    printLine('========================================================================', 'text-highlight');
+    printLine('All cross-node convergence vectors locked into Permian halite bedrock.');
+    printLine('Penultimate Subterranean Key Fragment: "1999-ARCH"', 'text-cyan');
+    printLine('App #100 KMatrix singularity breach parameters unlocked at Tab 10.', 'text-highlight');
+  }
+
+  function initSanctumControls() {
+    const b1 = document.getElementById('btnTestConv1');
+    const b2 = document.getElementById('btnTestConv2');
+    const b3 = document.getElementById('btnTestConv3');
+    const in1 = document.getElementById('inputConv1');
+    const in2 = document.getElementById('inputConv2');
+    const in3 = document.getElementById('inputConv3');
+
+    if (b1 && in1) b1.onclick = () => testConvergenceSlot(1, in1.value);
+    if (b2 && in2) b2.onclick = () => testConvergenceSlot(2, in2.value);
+    if (b3 && in3) b3.onclick = () => testConvergenceSlot(3, in3.value);
+
+    const btnHarmonize = document.getElementById('btnHarmonizeConvergence');
+    if (btnHarmonize) {
+      btnHarmonize.onclick = async () => {
+        if (in1) await testConvergenceSlot(1, in1.value, true);
+        if (in2) await testConvergenceSlot(2, in2.value, true);
+        if (in3) await testConvergenceSlot(3, in3.value, true);
+        const l1 = state.sanctumConvergence.lock1;
+        const l2 = state.sanctumConvergence.lock2;
+        const l3 = state.sanctumConvergence.lock3;
+        if (l1 && l2 && l3) {
+          SFX.success();
+          printLine('[CONVERGENCE HARMONIZED] All 3 receptors achieved 100% coherence.', 'text-highlight');
+        } else {
+          SFX.warn();
+          printLine('[CONVERGENCE FAULT] Some receptor vectors failed authentication. Check inputs.', 'text-alert');
+        }
+      };
+    }
+
+    const btnAutofill = document.getElementById('btnAutofillHarvested');
+    if (btnAutofill) {
+      btnAutofill.onclick = async () => {
+        if (in1) in1.value = '0x007F1990';
+        if (in2) in2.value = 'AETHEL-SECTOR-03';
+        if (in3) in3.value = 'LITHO-CORE-99';
+        await testConvergenceSlot(1, '0x007F1990', true);
+        await testConvergenceSlot(2, 'AETHEL-SECTOR-03', true);
+        await testConvergenceSlot(3, 'LITHO-CORE-99', true);
+        SFX.success();
+        printLine('[CONVERGENCE AUTOFILL] Discovered relics loaded into convergence receptors.', 'text-cyan');
+      };
+    }
+
+    const btnAsc = document.getElementById('btnDownloadSanctumAsc');
+    if (btnAsc) {
+      btnAsc.onclick = () => {
+        const content = SPOOL_FILES['precursor_singularity_matrix.asc'];
+        if (content) downloadFile('precursor_singularity_matrix.asc', content);
+      };
+    }
+
+    const btnPing = document.getElementById('btnTransmitSanctumPing');
+    if (btnPing) {
+      btnPing.onclick = () => {
+        SFX.unsealFanfare();
+        printLine('[BREACH TRANSMISSION] Subterranean harmonic pulse dispatched to subnet 10.19.99.0/24.', 'text-highlight');
+        logMeshEvent('<Sanctum_Core> Harmonic breach pulse emitted from Carlsbad node 0x1999', 'text-highlight');
+        if (meshRtdb) {
+          try {
+            const sigRef = meshRtdb.ref(meshRtdb.db, 'arg/signals/subterranean_darknet');
+            meshRtdb.push(sigRef, {
+              sender: 'DeepCore_Sanctum_0x1999',
+              text: 'PRECURSOR_SINGULARITY_BREACH: Harmonic convergence confirmed',
+              timestamp: Date.now()
+            });
+          } catch(e) {}
+        }
+      };
+    }
+
+    const zoomSl = document.getElementById('sanctumZoomSlider');
+    if (zoomSl) {
+      zoomSl.oninput = (e) => { sanctumZoom = parseInt(e.target.value, 10); };
+    }
+  }
+  initSanctumControls();
+
+  // 4D Tesseract Rotation & Projection Visualizer
+  function renderSanctumTesseract() {
+    if (!sanctumTessCanvas || !sanctumTessCtx) return;
+    const w = sanctumTessCanvas.width;
+    const h = sanctumTessCanvas.height;
+    sanctumTessCtx.fillStyle = '#010a04';
+    sanctumTessCtx.fillRect(0, 0, w, h);
+
+    const spin = document.getElementById('chkSanctumSpin');
+    if (spin && spin.checked) {
+      sanctumAngleX += 0.012;
+      sanctumAngleY += 0.018;
+      sanctumAngleW += 0.015;
+    }
+
+    const midX = w / 2;
+    const midY = h / 2;
+    const phosphor = getComputedStyle(document.body).getPropertyValue('--phosphor').trim() || '#22ff66';
+
+    const vertices4D = [];
+    for (let i = 0; i < 16; i++) {
+      const x = (i & 1) ? 1 : -1;
+      const y = (i & 2) ? 1 : -1;
+      const z = (i & 4) ? 1 : -1;
+      const w4 = (i & 8) ? 1 : -1;
+      vertices4D.push([x, y, z, w4]);
+    }
+
+    const cosW = Math.cos(sanctumAngleW), sinW = Math.sin(sanctumAngleW);
+    const cosX = Math.cos(sanctumAngleX), sinX = Math.sin(sanctumAngleX);
+    const cosY = Math.cos(sanctumAngleY), sinY = Math.sin(sanctumAngleY);
+
+    const projected3D = vertices4D.map(v => {
+      let x1 = v[0] * cosW - v[3] * sinW;
+      let w1 = v[0] * sinW + v[3] * cosW;
+      let y1 = v[1];
+      let z1 = v[2];
+
+      const d4 = 2.4;
+      const scale4 = 1 / (d4 - w1);
+      let x3 = x1 * scale4;
+      let y3 = y1 * scale4;
+      let z3 = z1 * scale4;
+
+      let xRot = x3 * cosY - z3 * sinY;
+      let zRot = x3 * sinY + z3 * cosY;
+
+      let yRot = y3 * cosX - zRot * sinX;
+      let zFin = zRot * cosX + y3 * sinX;
+
+      const d3 = 2.8;
+      const scale3 = 1 / (d3 - zFin);
+      return {
+        x: midX + xRot * scale3 * (sanctumZoom * 1.5),
+        y: midY + yRot * scale3 * (sanctumZoom * 1.5),
+        z: zFin
+      };
+    });
+
+    sanctumTessCtx.strokeStyle = phosphor;
+    sanctumTessCtx.lineWidth = 1.2;
+    for (let i = 0; i < 16; i++) {
+      for (let bit = 1; bit <= 8; bit <<= 1) {
+        if ((i & bit) === 0) {
+          const j = i | bit;
+          sanctumTessCtx.beginPath();
+          sanctumTessCtx.moveTo(projected3D[i].x, projected3D[i].y);
+          sanctumTessCtx.lineTo(projected3D[j].x, projected3D[j].y);
+          sanctumTessCtx.stroke();
+        }
+      }
+    }
+
+    projected3D.forEach((p, idx) => {
+      sanctumTessCtx.fillStyle = (idx % 2 === 0) ? '#ffffff' : 'var(--cyan)';
+      sanctumTessCtx.beginPath();
+      sanctumTessCtx.arc(p.x, p.y, 2.5, 0, Math.PI * 2);
+      sanctumTessCtx.fill();
+    });
+
+    const pulseRadius = 14 + Math.sin(Date.now() * 0.005) * 4;
+    sanctumTessCtx.strokeStyle = 'var(--warn)';
+    sanctumTessCtx.lineWidth = 2;
+    sanctumTessCtx.beginPath();
+    sanctumTessCtx.arc(midX, midY, pulseRadius, 0, Math.PI * 2);
+    sanctumTessCtx.stroke();
+
+    sanctumTessCtx.fillStyle = 'rgba(255, 170, 0, 0.2)';
+    sanctumTessCtx.beginPath();
+    sanctumTessCtx.arc(midX, midY, pulseRadius * 0.6, 0, Math.PI * 2);
+    sanctumTessCtx.fill();
+
+    sanctumAnimId = requestAnimationFrame(renderSanctumTesseract);
+  }
 
   // --- GHOST SPOOL VAULT UI & DOWNLOADS ---
   const spoolFileList = document.getElementById('spoolFileList');
@@ -4275,6 +5023,11 @@ Timestamp: ${new Date().toISOString()}
       renderDisasmTable();
     } else if (tabId === 'wiretap') {
       renderWiretapTable();
+    } else if (tabId === 'sanctum') {
+      if (!sanctumAnimId) renderSanctumTesseract();
+      updateConvergenceSummary();
+    } else if (tabId === 'mesh') {
+      updateSignalFragmentUI();
     }
   }
 
@@ -4357,6 +5110,11 @@ Timestamp: ${new Date().toISOString()}
         printLine('  uptime               - Query node uptime, load average & carrier drift');
         printLine('  radar                - Switch to 3D Salt Vault Wireframe Scanner deck');
         printLine('  mesh                 - Switch to Collaborative Subterranean Signal Mesh');
+        printLine('  sanctum              - Switch to Inner Sanctum Precursor Singularity deck');
+        printLine('  convergence          - Inspect cross-node convergence receptor vectors');
+        printLine('  signals              - Query shared subterranean signal board fragments');
+        printLine('  solo                 - Force Carlsbad AI Loopback daemon fallback (Rule 12)');
+        printLine('  manifest             - Download Precursor Singularity Manifest (.ASC)');
         printLine('  morse [message]      - Transmit audio Morse code over 1999Hz FM carrier');
         printLine('  music [1..5|off]     - Select procedural ambient chiptune track (1-5)');
         printLine('  audio <on|off>       - Toggle Yamaha FM & SPC700 delay audio synthesizer');
@@ -4421,6 +5179,43 @@ Timestamp: ${new Date().toISOString()}
       case 'mesh':
         switchTab('mesh');
         printLine('[NAVIGATION] Switched to Collaborative Subterranean Signal Mesh deck.', 'text-cyan');
+        break;
+
+      case 'sanctum':
+      case 'inner':
+        switchTab('sanctum');
+        printLine('[NAVIGATION] Switched to Inner Sanctum Precursor Singularity deck.', 'text-cyan');
+        break;
+
+      case 'convergence':
+        printLine('--- CROSS-NODE CONVERGENCE GATING TELEMETRY ---', 'text-cyan');
+        printLine(`  Receptor 1 (Acoustic Vector) : ${state.sanctumConvergence.lock1 ? 'LOCKED (' + state.sanctumConvergence.artifact1 + ')' : 'UNLOCKED [Need: 0x007F1990 / 1999HZ]'}`);
+        printLine(`  Receptor 2 (Memo Commutator) : ${state.sanctumConvergence.lock2 ? 'LOCKED (' + state.sanctumConvergence.artifact2 + ')' : 'UNLOCKED [Need: AETHEL-SECTOR-03 / 0x00DEEPC0]'}`);
+        printLine(`  Receptor 3 (Transit Anchor)  : ${state.sanctumConvergence.lock3 ? 'LOCKED (' + state.sanctumConvergence.artifact3 + ')' : 'UNLOCKED [Need: LITHO-CORE-99 / 0x7F199942]'}`);
+        printLine(`  Singularity Unsealed         : ${state.sanctumConvergence.unlocked ? 'YES (RING-0 ACTIVE)' : 'NO'}`);
+        SFX.beep();
+        break;
+
+      case 'signals':
+        printLine('--- SHARED SUBTERRANEAN SIGNAL FRAGMENTS ---', 'text-cyan');
+        printLine(`  Slot 1 [ACOUSTIC_1999]  : ${state.signalFragments.ACOUSTIC_1999 ? 'SYNCHRONIZED' : 'PENDING'}`);
+        printLine(`  Slot 2 [CARLSBAD_SECTOR]: ${state.signalFragments.CARLSBAD_SECTOR ? 'AUTHENTICATED' : 'PENDING'}`);
+        printLine(`  Slot 3 [DARKNET_RELAY]  : ${state.signalFragments.DARKNET_RELAY ? 'SYNCHRONIZED' : 'PENDING'}`);
+        printLine(`  Spectrum Cache Unlocked : ${state.spectrumCacheUnlocked ? 'YES' : 'NO'}`);
+        SFX.beep();
+        break;
+
+      case 'solo':
+        engageSoloFallback('Manual operator directive override.');
+        break;
+
+      case 'manifest':
+      case 'relic':
+        const manContent = SPOOL_FILES['precursor_singularity_matrix.asc'];
+        if (manContent) {
+          downloadFile('precursor_singularity_matrix.asc', manContent);
+          printLine('[EXPORT] Precursor Singularity Manifest exported to local disk.', 'text-highlight');
+        }
         break;
 
       case 'disasm':
@@ -5020,6 +5815,10 @@ Timestamp: ${new Date().toISOString()}
         disasmCycles: state.disasmCycles,
         seismicFreq: state.seismicFreq,
         seismicGain: state.seismicGain,
+        sanctumConvergence: state.sanctumConvergence,
+        signalFragments: state.signalFragments,
+        spectrumCacheUnlocked: state.spectrumCacheUnlocked,
+        dualPresenceLocked: state.dualPresenceLocked,
         history: state.history.slice(-30),
         timestamp: new Date().toISOString()
       };
@@ -5064,6 +5863,10 @@ Timestamp: ${new Date().toISOString()}
       if (data.disasmCycles !== undefined) state.disasmCycles = data.disasmCycles;
       if (data.seismicFreq) state.seismicFreq = data.seismicFreq;
       if (data.seismicGain) state.seismicGain = data.seismicGain;
+      if (data.sanctumConvergence) state.sanctumConvergence = data.sanctumConvergence;
+      if (data.signalFragments) state.signalFragments = data.signalFragments;
+      if (data.spectrumCacheUnlocked !== undefined) state.spectrumCacheUnlocked = data.spectrumCacheUnlocked;
+      if (data.dualPresenceLocked !== undefined) state.dualPresenceLocked = data.dualPresenceLocked;
       if (data.audioEnabled) {
         state.audioEnabled = true;
         const pill = document.getElementById('pillAudio');
@@ -5080,6 +5883,9 @@ Timestamp: ${new Date().toISOString()}
       updateSectorsUI();
       renderHexPatchGrid();
       renderLatticeGrid();
+      updateConvergenceSummary();
+      updateSignalFragmentUI();
+      updateDualPresenceInterlock(state.dualPresenceLocked);
 
       if (notify) {
         printLine(`[QUICKLOAD] Session restored from ${data.timestamp || 'storage'} (F9).`, 'text-cyan');

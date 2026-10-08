@@ -4,6 +4,16 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-08T05:42:00-07:00 — kilo-usability: KSudoku (UI/UX Pass: Window Dimensions, HiDPI Retina Crispness, Header Help Discovery & Numpad Ergonomics)**
+  - Status: PASS ✅ (0 regressions, 193.4 KB web / 45.0 KB native < 999 KB ceiling).
+  - Window & Layout: Tuned dimensions from 600x600 to 620x760 in App.jsx; added custom-styled overflow-y container scrolling eliminating clipped numpad.
+  - Help Discovery: Added atmospheric header guide shortcut prompt (`F1 / ?`) and updated button label to `Help (F1)` for immediate hotkey awareness.
+  - HiDPI Crispness: Implemented devicePixelRatio canvas scaling for duel opponent radar and victory/error shockwave particle effects.
+  - Numpad Ergonomics: Added active digit blue glow (.np-active) and green checkmark completion status (.np-complete) when all digits are placed.
+  - Input Navigation: Defaulted unselected arrow key navigation to (0,0); added C/X cell clear key shortcuts with accessible numpad labels.
+  - Verification: Security linter 100% PASS; check_icons 100% PASS; smoke_test_native 101/101 PASS; MSVC clean; Vite build clean (437ms).
+  - Queue: Advanced kilo_usability to KTetris; rotation handoff to kilo-qa.
+
 - **2026-10-08T05:25:00-07:00 — kilo-tester: KQuarantine (Interactive UI Audit: Toast Non-Occlusion, State Backup/Import, Command Ergonomics & Lifecycle)**
   - Status: PASS ✅ (0 regressions, 48.6 KB web < 999 KB hard ceiling).
   - Toast Non-Occlusion: Relocated toasts to bottom-right (60px from base) with pointerdown & input clear dismiss, eliminating toolbar occlusion.
