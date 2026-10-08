@@ -4,6 +4,13 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-07T23:36:00-07:00 — kilo-expander: KReversi (Skip Turn — Mature 5+ Passes & Locked in Human Review Queue)**
+  - Status: ⏭️ Skip — app is feature-complete and mature.
+  - Review Queue: Verified locked in `docs/human_review_queue.md` (60 FPS, 17ms pacing, 222 KB < 999 KB).
+  - Parity & Standards: Full RFMS RetroMultiplayer, Rule 11 clean borders, F5/F9 state parity, opening book & FEN engine active.
+  - Verification: `security_lint.py` 100% PASS; `test_app_startup.py` PASS (0 JS err); MSVC clean; Vite build clean (642ms).
+  - Queue: Advanced `kilo_expander` to `KDarts`; rotation handoff to `kilo-creator`.
+
 - **2026-10-07T23:20:00-07:00 — kilo-qa: KConnect4 (Pass 5: Tutorial & State Integrity, Quicksave/Load Parity, Rule 11 Clean Borders)**
   - Status: PASS ✅ (0 regressions, 179.2 KB web / 191.0 KB native < 999 KB ceiling).
   - Full State Persistence: F5 quicksave and F9 quickload parity across web and Win32 C with state feedback.

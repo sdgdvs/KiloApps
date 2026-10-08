@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-expander
-next_agent: kilo-creator
+current_agent: kilo-creator
+next_agent: kilo-graphics
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -17,7 +17,7 @@ current_targets:
   kilo_tester: KQuarantine
   kilo_usability: KSudoku
   kilo_qa: KSimon
-  kilo_expander: KDarts
+  kilo_expander: KTowers
 virtual_web_target: "kweb://10.19.99.4/classified"
 virtual_web_rotation:
   - "kweb://geocities"
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-qa
-  app: KHangman
-  timestamp: "2026-10-08T03:25:00-07:00"
+  agent: kilo-expander
+  app: KDarts
+  timestamp: "2026-10-08T03:35:00-07:00"
 last_planner_run: "2026-10-07T14:38:00Z"
 ---
 
@@ -129,9 +129,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KAsteroids`, `KFreecell`, `KMatch3`, `KWords`, `KGo`, `KDarts`, `KTowers`, `KReversi`, `KAlchemy`, `KColony`, `KStarForge`, `KBreakout`, `KRogue`, `KTetris`, `KPong`, `KPac`, `KChess`, `KColor`, `KConverter`, `KHabit` *(Completed in Pass 5: KBBS, KChrono, KCipher, KClip, KCyber, KDragon, KFortress, KHash, KMaze, KMech, KMystery, KQuest, KSanctuary, KSnake, KSolitaire, KSpace, KStarDredge, KStarship, KStellar, KSubmarine, KSynth, KSys, KTask, KTerm, KTimer, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KRSS, K2048, KChart, KGraph, KContacts, KScript, KRead, KColosseum, KAbyss, KMedia, KAudio, KRadio, KPad, KPaint, KCalc, KMine, KCosmic, KBase, KBudget, KCalendar, KFarm, KFlash, KFont, KImage, KJournal, KMail, KMandel, KNet, KNote, KPass, KDB, KHex, KBookmark, KPing, KChat, KClock, KPomodoro, KBreakout, KRogue, KTetris, KPong, KPac, KChess, KColor, KConverter, KQuarantine, KSettings, KTaskMgr, KHabit, KSudoku, KConnect4, KHangman)*.
 
 ### 6. Feature Expander Queue (`kilo-expander`)
-- **Current Target**: `KDarts`
+- **Current Target**: `KTowers`
 - **Upcoming Queue**:
-  `KTowers`, `KSimon`, `KMatch3`, `KPong`, `KSnake`, `KRogue`, `KBreakout`, `KMine`, `KSolitaire`, `KSudoku`, `KConnect4`, `KGo`, `KReversi` *(Completed: KHangman, KWords, KSolitaire, KColosseum, KSpace, KReversi, KSimon, KMatch3, KTowers, KSnake, KPong, KGo, KSynth, KNote, KFont, KRSS, KSys, KZip, KVault, KType, KMandel, KGraph, KChart, KPaint, KConnect4, KChess, KTetris, KDB, KTodo, KJournal, KCalendar, KContacts, KMail, KRead, KPass, KImage, KAudio, KMedia, KTask, KNet, KPing, KHash, KPad, K2048, KDarts, KRogue, KBreakout, KCalc, KMine, KSudoku)*.
+  `KSimon`, `KMatch3`, `KPong`, `KSnake`, `KRogue`, `KBreakout`, `KMine`, `KSolitaire`, `KSudoku`, `KConnect4`, `KGo`, `KReversi`, `KDarts` *(Completed: KHangman, KWords, KSolitaire, KColosseum, KSpace, KReversi, KSimon, KMatch3, KTowers, KSnake, KPong, KGo, KSynth, KNote, KFont, KRSS, KSys, KZip, KVault, KType, KMandel, KGraph, KChart, KPaint, KConnect4, KChess, KTetris, KDB, KTodo, KJournal, KCalendar, KContacts, KMail, KRead, KPass, KImage, KAudio, KMedia, KTask, KNet, KPing, KHash, KPad, K2048, KDarts, KRogue, KBreakout, KCalc, KMine, KSudoku)*.
 - **Multiplayer Focus (CRITICAL)**: Concentrate on expanding games (*KChess*, *KConnect4*, *KGo*, *KReversi*, *KDarts*, *KTetris*, *KSnake*, *K2048*, *KMatch3*, *KSimon*) and collaborative apps (*KDraw*, *KPaint*, *KSynth*, *KPad*) with seamless Firebase Realtime Database multiplayer for cross-computer play on `kiloapps.web.app`.
 
 ### 7. Virtual 1999 Web Expansion Queue (Eternal Fleet Track)
@@ -217,6 +217,13 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-08T03:35:00-07:00 — kilo-expander: KDarts (Skip Turn — Mature 5+ Passes & Locked in Human Review Queue)**
+  - Status: ⏭️ Skip — app is feature-complete and mature.
+  - Review Queue: Verified locked in `docs/human_review_queue.md` (60 FPS, 17ms pacing, 151.9 KB < 999 KB).
+  - Parity & Standards: Full RFMS RetroMultiplayer, Rule 11 clean borders, F5/F9 state parity, Sisal board replay & JSON export.
+  - Verification: `security_lint.py` 100% PASS; `smoke_test_native.py` 101/101 PASS; MSVC clean; Vite build clean (511ms).
+  - Queue: Advanced `kilo_expander` to `KTowers`; rotation handoff to `kilo-creator`.
+
 - **2026-10-08T03:25:00-07:00 — kilo-qa: KHangman (Pass 5: Tutorial & State Integrity, Quicksave/Load Parity, Shortcut Unification & Toast Non-Occlusion)**
   - Status: PASS ✅ (0 regressions, 146.6 KB web / 36.3 KB native < 999 KB ceiling).
   - Keyboard Collision Fix: Rebound hint to F2 / Alt+H, eliminating letter 'H' interception so typing 'H' guesses secret words correctly.
@@ -251,13 +258,6 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Glint & Border Ban: Verified static arena frame; zero rotating specular glints or traveling perimeter border dots in web or native C (Rule 11 compliant).
   - Verification: `check_icons.py` 100% PASS; `security_lint.py` 100% PASS; MSVC clean (12.9 KB); `test_app_startup.py` PASS; web (129.3 KB) < 999 KB ceiling.
   - Queue: Advanced `kilo_graphics` to `KColony`; rotation handoff to `kilo-tester`.
-
-- **2026-10-07T23:36:00-07:00 — kilo-expander: KReversi (Skip Turn — Mature 5+ Passes & Locked in Human Review Queue)**
-  - Status: ⏭️ Skip — app is feature-complete and mature.
-  - Review Queue: Verified locked in `docs/human_review_queue.md` (60 FPS, 17ms pacing, 222 KB < 999 KB).
-  - Parity & Standards: Full RFMS RetroMultiplayer, Rule 11 clean borders, F5/F9 state parity, opening book & FEN engine active.
-  - Verification: `security_lint.py` 100% PASS; `test_app_startup.py` PASS (0 JS err); MSVC clean; Vite build clean (642ms).
-  - Queue: Advanced `kilo_expander` to `KDarts`; rotation handoff to `kilo-creator`.
 
 
 
