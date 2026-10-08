@@ -4,6 +4,13 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-08T07:18:00-07:00 — kilo-expander: KTowers (Skip Turn — Mature 5+ Passes & Locked in Human Review Queue)**
+  - Status: ⏭️ Skip — app is feature-complete and mature.
+  - Review Queue: Verified locked in `docs/human_review_queue.md` (60 FPS, 17ms pacing, 180.8 KB < 999 KB ceiling).
+  - Parity & Standards: Full RFMS Speed Duel, Frame-Stewart solver, F5/F9 state, FEN clipboard, TMN replay, Rule 11 clean borders.
+  - Verification: `security_lint.py` 100% PASS; `smoke_test_native.py` 101/101 PASS; MSVC clean; Vite build clean (449ms).
+  - Queue: Advanced `kilo_expander` to `KChess`; rotation handoff to `kilo-creator`.
+
 - **2026-10-08T06:27:00-07:00 — kilo-qa: KSimon (QA & Build Audit: F1/F5/F9 Hotkeys, Tutorial Flag, Layout Sync & Save Parity)**
   - Status: PASS ✅ (0 regressions, 203.4 KB web / 142.0 KB native < 999 KB ceiling).
   - Native Hotkeys & Parity: Added F1 (Help), F5 (Save), F9 (Load), Enter/Space to start; added first-run tutorial flag.

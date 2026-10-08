@@ -788,7 +788,7 @@
               </div>
             </div>
             <div style="display:flex; align-items:center; gap:8px;">
-              <input type="color" id="accentColor" class="color-picker-input" value="#2196F3" onchange="onColorPickerChange(this.value)" title="Choose Custom Color">
+              <input type="color" id="accentColor" class="color-picker-input" value="#2196F3" oninput="onColorPickerChange(this.value)" onchange="onColorPickerChange(this.value)" title="Choose Custom Color">
               <input type="text" id="accentHex" class="hex-input" value="#2196F3" maxlength="7" oninput="onHexInputLive(this.value)" onchange="onHexInputChange(this.value)">
             </div>
           </div>
@@ -1002,7 +1002,7 @@
               <span class="spec-val" id="specDpr">1.0x</span>
             </div>
             <div class="spec-item">
-              <span class="spec-label">Diegetic Subnet Gateway</span>
+              <span class="spec-label">Internal Subnet Gateway</span>
               <span class="spec-val">10.19.99.1 [Carrier OK]</span>
             </div>
           </div>
@@ -1010,7 +1010,7 @@
 
         <div class="card">
           <div class="card-header">
-            <div class="card-title">📡 Diegetic Telemetry Monitor</div>
+            <div class="card-title">📡 Subsystem Telemetry Monitor</div>
           </div>
           <div class="setting-desc" style="line-height:1.5;">
             Subcarrier frequency lock: <b>14.4 kHz Nominal</b>.<br>
@@ -1062,9 +1062,9 @@
       </div>
       <div class="modal-footer" style="display:flex; justify-content:space-between; align-items:center;">
         <label style="font-size:11px; color:var(--text-muted); display:flex; align-items:center; gap:6px; cursor:pointer;">
-          <input type="checkbox" id="chkDoNotShowTutorial"> Don't show on startup
+          <input type="checkbox" id="chkDoNotShowTutorial" checked> Don't show on startup
         </label>
-        <button id="btnDismissTutorial" class="btn btn-primary modal-close" onclick="closeTutorial()">Get Started</button>
+        <button id="btnDismissTutorial" class="btn btn-primary" onclick="closeTutorial()">Get Started</button>
       </div>
     </div>
   </div>
@@ -1094,7 +1094,7 @@
         </p>
       </div>
       <div class="modal-footer">
-        <button id="btnHelpDismiss" class="btn btn-primary modal-close" onclick="closeHelp()">Close [Esc]</button>
+        <button id="btnHelpDismiss" class="btn btn-primary" onclick="closeHelp()">Close [Esc]</button>
       </div>
     </div>
   </div>
@@ -1113,7 +1113,7 @@
         </p>
       </div>
       <div class="modal-footer">
-        <button class="btn btn-secondary modal-close" onclick="closeResetModal()">Cancel</button>
+        <button class="btn btn-secondary" onclick="closeResetModal()">Cancel</button>
         <button id="btnConfirmReset" class="btn btn-danger" onclick="confirmResetDefaults()">Reset Defaults</button>
       </div>
     </div>
@@ -1131,7 +1131,7 @@
         <pre id="fileViewerContent" style="background:#0f172a; padding:10px; border-radius:4px; border:1px solid var(--card-border); font-family:monospace; font-size:11px; color:#ffffff; white-space:pre-wrap; word-break:break-all; max-height:220px; overflow-y:auto;"></pre>
       </div>
       <div class="modal-footer">
-        <button class="btn btn-primary modal-close" onclick="closeFileViewer()">Close</button>
+        <button class="btn btn-primary" onclick="closeFileViewer()">Close</button>
       </div>
     </div>
   </div>
@@ -1148,9 +1148,11 @@
         <textarea id="stateJsonText" style="width:100%; height:140px; background:#0f172a; border:1px solid var(--card-border); border-radius:4px; color:#ffffff; font-family:monospace; font-size:11px; padding:8px; resize:vertical;"></textarea>
       </div>
       <div class="modal-footer">
+        <input type="file" id="jsonFileInput" accept=".json" style="display:none;" onchange="handleJsonFileImport(event)">
+        <button class="btn btn-sm" onclick="chooseJsonFile()">📁 Load File</button>
         <button class="btn btn-sm" onclick="copyStateJson()">📋 Copy JSON</button>
         <button class="btn btn-sm btn-primary" onclick="importStateJson()">📥 Apply JSON</button>
-        <button class="btn btn-sm modal-close" onclick="closeStateModal()">Close</button>
+        <button class="btn btn-sm" onclick="closeStateModal()">Close</button>
       </div>
     </div>
   </div>
@@ -1188,11 +1190,11 @@
     const AVAILABLE_APPS = [
       { id: 'kpad', title: 'KPad', icon: '📝' },
       { id: 'kcalc', title: 'KCalc', icon: '🔢' },
-      { id: 'kterminal', title: 'KTerminal', icon: '💻' },
+      { id: 'kterm', title: 'KTerm', icon: '💻' },
       { id: 'knet', title: 'KNet', icon: '🌐' },
       { id: 'kchat', title: 'KChat', icon: '💬' },
       { id: 'kpaint', title: 'KPaint', icon: '🎨' },
-      { id: 'kfile', title: 'KFile', icon: '📁' },
+      { id: 'knote', title: 'KNote', icon: '📋' },
       { id: 'kaudio', title: 'KAudio', icon: '🎵' },
       { id: 'ktodo', title: 'KTodo', icon: '✅' },
       { id: 'kclock', title: 'KClock', icon: '⏰' }
@@ -1237,6 +1239,7 @@
 
     // OS Bridge
     window.addEventListener('message', (e) => {
+      if (window.location.origin && window.location.origin !== 'null' && e.origin !== window.location.origin) return;
       const msg = e.data;
       if (!msg || typeof msg !== 'object') return;
       if (callbacks[msg.requestId]) {
@@ -1435,7 +1438,7 @@
       });
     }
 
-    async function setAccentColor(color) {
+    async function setAccentColor(color, silent = false) {
       if (!color || !/^#[0-9A-Fa-f]{6}$/.test(color)) return;
       state.accentColor = color;
 
@@ -1454,7 +1457,7 @@
       safeSetStorage('kiloos_accent', color);
       safeSetStorage('ksettings_accent', color);
 
-      showToast(`Accent color updated: ${color}`, '🎨');
+      if (!silent) showToast(`Accent color updated: ${color}`, '🎨');
     }
 
     function onColorPickerChange(val) {
@@ -1491,22 +1494,22 @@
     }
 
     function applyPreset(color, anim) {
-      setAccentColor(color);
-      updateAnimations(anim);
+      setAccentColor(color, true);
+      updateAnimations(anim, true);
       const animToggle = document.getElementById('animToggle');
       if (animToggle) animToggle.checked = anim;
       showToast(`Preset applied: ${color}`, '🖼️');
     }
 
     // Animation & Visuals
-    async function updateAnimations(enabled) {
+    async function updateAnimations(enabled, silent = false) {
       state.animationsEnabled = Boolean(enabled);
       await sendToOS({ type: 'VFS_WRITE', path: '/.sys_settings_animations', data: enabled ? 'true' : 'false' });
       safeSetStorage('kiloos_animations', enabled);
-      showToast(`Dynamic animations: ${enabled ? 'Enabled' : 'Disabled'}`, '✨');
+      if (!silent) showToast(`Dynamic animations: ${enabled ? 'Enabled' : 'Disabled'}`, '✨');
     }
 
-    function updateHighContrast(enabled) {
+    function updateHighContrast(enabled, silent = false) {
       state.highContrast = Boolean(enabled);
       safeSetStorage('ksettings_highContrast', enabled);
       if (enabled) {
@@ -1514,7 +1517,7 @@
       } else {
         document.body.style.filter = 'none';
       }
-      showToast(`High contrast mode: ${enabled ? 'Enabled' : 'Disabled'}`, '👁️');
+      if (!silent) showToast(`High contrast mode: ${enabled ? 'Enabled' : 'Disabled'}`, '👁️');
     }
 
     // Audio State
@@ -1688,10 +1691,14 @@
       state = { ...state, ...loaded };
 
       // Apply loaded state to DOM
-      setAccentColor(state.accentColor);
+      setAccentColor(state.accentColor, true);
       const animToggle = document.getElementById('animToggle');
       if (animToggle) animToggle.checked = state.animationsEnabled;
-      updateAnimations(state.animationsEnabled);
+      updateAnimations(state.animationsEnabled, true);
+
+      const contrastToggle = document.getElementById('contrastToggle');
+      if (contrastToggle) contrastToggle.checked = state.highContrast;
+      updateHighContrast(state.highContrast, true);
 
       const soundToggle = document.getElementById('soundToggle');
       if (soundToggle) soundToggle.checked = state.soundEnabled;
@@ -1738,6 +1745,32 @@
       }
     }
 
+    function chooseJsonFile() {
+      const fileInput = document.getElementById('jsonFileInput');
+      if (fileInput) fileInput.click();
+    }
+
+    function handleJsonFileImport(e) {
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = async (ev) => {
+        try {
+          const parsed = JSON.parse(ev.target.result);
+          if (typeof parsed !== 'object' || parsed === null) throw new Error('Invalid JSON shape');
+          state = { ...state, ...parsed };
+          await quicksaveState();
+          quickloadState();
+          closeStateModal();
+          showToast('Settings file imported successfully', '✅');
+        } catch (err) {
+          showToast('Failed to parse settings JSON file: ' + err.message, '⚠️');
+        }
+      };
+      reader.readAsText(file);
+      e.target.value = '';
+    }
+
     async function importStateJson() {
       const txt = document.getElementById('stateJsonText');
       if (!txt) return;
@@ -1746,6 +1779,7 @@
         if (typeof parsed !== 'object' || parsed === null) throw new Error('Invalid JSON shape');
         state = { ...state, ...parsed };
         await quicksaveState();
+        quickloadState();
         closeStateModal();
         showToast('Settings JSON applied successfully', '✅');
       } catch (e) {
@@ -1769,7 +1803,7 @@
 
     function openImportDialog() {
       openStateModal();
-      showToast('Paste JSON backup and click Apply', '📤');
+      showToast('Paste JSON backup or load file and click Apply', '📤');
     }
 
     const TABS = ['personalization', 'audio', 'taskbar', 'storage', 'specs'];
@@ -1797,14 +1831,14 @@
       state.soundVolume = 80;
       state.pinnedApps = ['kpad', 'kcalc', 'knet'];
 
-      setAccentColor('#2196F3');
-      updateAnimations(true);
+      setAccentColor('#2196F3', true);
+      updateAnimations(true, true);
       const animToggle = document.getElementById('animToggle');
       if (animToggle) animToggle.checked = true;
 
       const contrastToggle = document.getElementById('contrastToggle');
       if (contrastToggle) contrastToggle.checked = false;
-      updateHighContrast(false);
+      updateHighContrast(false, true);
 
       const soundToggle = document.getElementById('soundToggle');
       if (soundToggle) soundToggle.checked = true;
@@ -1838,7 +1872,7 @@
       if (chk && chk.checked) {
         safeSetStorage('ksettings_tutorialSeen', true);
       } else {
-        safeSetStorage('ksettings_tutorialSeen', true);
+        safeSetStorage('ksettings_tutorialSeen', false);
       }
       if (modal) modal.style.display = 'none';
       showToast('Welcome to KSettings!', '🚀');
@@ -2033,6 +2067,9 @@
           const parsed = JSON.parse(pinsRes.data);
           if (Array.isArray(parsed)) state.pinnedApps = parsed;
         } catch (e) {}
+      } else {
+        const localPins = safeGetStorage('kiloos_pinned_apps', safeGetStorage('ksettings_pinned_apps', null));
+        if (Array.isArray(localPins)) state.pinnedApps = localPins;
       }
 
       // Check stored audio preferences
@@ -2041,14 +2078,14 @@
       state.highContrast = safeGetStorage('ksettings_highContrast', false);
 
       // Apply state to DOM controls
-      setAccentColor(state.accentColor);
+      setAccentColor(state.accentColor, true);
       
       const animToggle = document.getElementById('animToggle');
       if (animToggle) animToggle.checked = state.animationsEnabled;
 
       const contrastToggle = document.getElementById('contrastToggle');
       if (contrastToggle) contrastToggle.checked = state.highContrast;
-      updateHighContrast(state.highContrast);
+      updateHighContrast(state.highContrast, true);
 
       const soundToggle = document.getElementById('soundToggle');
       if (soundToggle) soundToggle.checked = state.soundEnabled;
