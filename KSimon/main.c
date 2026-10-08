@@ -146,6 +146,8 @@ int stat_longest_streak = 0;
 int stat_best_time = 0;
 time_t start_time = 0;
 
+void LayoutButtons(int width, int height);
+
 int GetActiveButtonCount() {
     if (current_mode == MODE_4BTN_CLASSIC) return 4;
     if (current_mode == MODE_6BTN_HEX) return 6;
@@ -524,7 +526,16 @@ void SaveStats() {
 }
 
 void SaveGameState() {
-    if (sequence_length == 0 || is_playing_sequence) return;
+    if (sequence_length == 0) {
+        strcpy(status_text, "Cannot save: start a game first!");
+        InvalidateRect(hwndMain, NULL, FALSE);
+        return;
+    }
+    if (is_playing_sequence) {
+        strcpy(status_text, "Cannot save while sequence is playing!");
+        InvalidateRect(hwndMain, NULL, FALSE);
+        return;
+    }
     char str[2048] = {0};
     char temp[16];
     for(int i = 0; i < sequence_length; i++) {
@@ -548,7 +559,7 @@ void SaveGameState() {
     WritePrivateProfileString("GameState", "Freezes", temp, ".\\ksimon.ini");
     sprintf(temp, "%d", current_stage);
     WritePrivateProfileString("GameState", "Stage", temp, ".\\ksimon.ini");
-    strcpy(status_text, "Game Saved!");
+    strcpy(status_text, "Game Saved! (F5)");
     InvalidateRect(hwndMain, NULL, FALSE);
 }
 
@@ -580,6 +591,7 @@ void LoadGameState() {
     }
     
     SendMessage(hwndModeBox, CB_SETCURSEL, current_mode, 0);
+    RECT rc; GetClientRect(hwndMain, &rc); LayoutButtons(rc.right, rc.bottom);
     EnableWindow(hwndModeBox, FALSE);
     EnableWindow(hwndSaveBtn, FALSE);
     
@@ -1487,10 +1499,10 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             SendMessage(hwndModeBox, CB_ADDSTRING, 0, (LPARAM)"Chaos Mode");
             SendMessage(hwndModeBox, CB_SETCURSEL, current_mode, 0);
 
-            hwndSaveBtn   = CreateWindowEx(0, "BUTTON", "Save", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 175, 110, 45, 25, hwnd, (HMENU)1002, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
-            hwndLoadBtn   = CreateWindowEx(0, "BUTTON", "Load", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 223, 110, 45, 25, hwnd, (HMENU)1003, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
-            hwndResetBtn  = CreateWindowEx(0, "BUTTON", "Reset", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 271, 110, 45, 25, hwnd, (HMENU)1004, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
-            hwndHelpBtn   = CreateWindowEx(0, "BUTTON", "Help", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 319, 110, 45, 25, hwnd, (HMENU)1005, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+            hwndSaveBtn   = CreateWindowEx(0, "BUTTON", "Save (F5)", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 175, 110, 65, 25, hwnd, (HMENU)1002, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+            hwndLoadBtn   = CreateWindowEx(0, "BUTTON", "Load (F9)", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 245, 110, 65, 25, hwnd, (HMENU)1003, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+            hwndResetBtn  = CreateWindowEx(0, "BUTTON", "Reset", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 315, 110, 48, 25, hwnd, (HMENU)1004, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+            hwndHelpBtn   = CreateWindowEx(0, "BUTTON", "Help (F1)", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 368, 110, 65, 25, hwnd, (HMENU)1005, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
 
             hwndHintBtn   = CreateWindowEx(0, "BUTTON", "Hint (H)", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 10, 140, 75, 25, hwnd, (HMENU)1006, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
             hwndSlowBtn   = CreateWindowEx(0, "BUTTON", "Slow (S)", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 90, 140, 75, 25, hwnd, (HMENU)1007, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
@@ -1517,7 +1529,10 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                                  "Controls:\n"
                                  "Mouse: Click colored buttons.\n"
                                  "Keyboard: Q,W,E,R (Top) / A,S,D,F (Bottom) or 1-8 keys.\n"
-                                 "Space: Start game.\n"
+                                 "Space / Enter: Start game.\n"
+                                 "F1: Help / How to play.\n"
+                                 "F5: Quick Save game state.\n"
+                                 "F9: Quick Load game state.\n"
                                  "H: Sequence Replay Hint (Replays sequence at slow speed).\n"
                                  "S / L: Slow-Motion Flash (Halves flash playback speed).\n"
                                  "B / J: Strike Shield (Protects against 1 wrong button).\n"
@@ -1558,15 +1573,21 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             break;
         }
         case WM_KEYDOWN:
-            if (wParam == VK_SPACE && sequence_length == 0) {
+            if (wParam == VK_F1) {
+                SendMessage(hwnd, WM_COMMAND, 1005, 0);
+            } else if (wParam == VK_F5) {
+                SaveGameState();
+            } else if (wParam == VK_F9) {
+                LoadGameState();
+            } else if ((wParam == VK_SPACE || wParam == VK_RETURN) && sequence_length == 0) {
                 StartGame();
             } else if (wParam == 'H') {
                 UseHint();
-            } else if (wParam == 'L') {
+            } else if (wParam == 'L' || wParam == 'S') {
                 UseSlowmo();
             } else if (wParam == 'B' || wParam == 'J') {
                 UseShield();
-            } else if (wParam == 'T') {
+            } else if (wParam == 'T' || (wParam == 'F' && GetActiveButtonCount() < 8)) {
                 UseFreeze();
             } else if (!is_playing_sequence && sequence_length > 0) {
                 int num_btns = GetActiveButtonCount();
@@ -1763,6 +1784,13 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR pCmdLine,
 
     if (hwnd == NULL) return 0;
     ShowWindow(hwnd, nCmdShow);
+    UpdateWindow(hwnd);
+
+    int tutorial_seen = GetPrivateProfileInt("Settings", "TutorialSeen", 0, ".\\ksimon.ini");
+    if (!tutorial_seen) {
+        WritePrivateProfileString("Settings", "TutorialSeen", "1", ".\\ksimon.ini");
+        PostMessage(hwnd, WM_COMMAND, 1005, 0);
+    }
 
     MSG msg = {0};
     while (GetMessage(&msg, NULL, 0, 0)) {

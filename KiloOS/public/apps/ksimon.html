@@ -180,30 +180,31 @@
   .close-btn:hover { background-color: #ff3366; }
 
   /* Toast Notification */
+  /* Toast Notification (Non-occluding Top-Right) */
   #ksimon-toast {
     position: fixed;
-    bottom: 18px;
-    left: 50%;
-    transform: translateX(-50%);
-    padding: 8px 18px;
+    top: 14px;
+    right: 14px;
+    padding: 8px 16px;
     background: rgba(14, 20, 32, 0.96);
     border: 1px solid #00ffcc;
     border-radius: 6px;
     color: #ffffff;
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 600;
     z-index: 1000;
     box-shadow: 0 4px 18px rgba(0, 255, 204, 0.4);
     pointer-events: auto;
     cursor: pointer;
     transition: opacity 0.2s ease;
-    max-width: 90%;
-    text-align: center;
+    max-width: 320px;
+    text-align: left;
     box-sizing: border-box;
   }
   #ksimon-toast.toast-error { border-color: #ff3366; box-shadow: 0 4px 18px rgba(255, 51, 102, 0.4); color: #ff88a3; }
   #ksimon-toast.toast-success { border-color: #00ff88; box-shadow: 0 4px 18px rgba(0, 255, 136, 0.4); color: #88ffbb; }
   #ksimon-toast.toast-warning { border-color: #ffbb00; box-shadow: 0 4px 18px rgba(255, 187, 0, 0.4); color: #ffe066; }
+  #ksimon-toast.toast-info { border-color: #00e5ff; box-shadow: 0 4px 18px rgba(0, 229, 255, 0.4); color: #9cf2ff; }
 
   /* Multiplayer HUD */
   #mp-hud {
@@ -703,6 +704,7 @@
     if (type === 'error') toast.classList.add('toast-error');
     else if (type === 'success') toast.classList.add('toast-success');
     else if (type === 'warning') toast.classList.add('toast-warning');
+    else if (type === 'info') toast.classList.add('toast-info');
     toast.style.display = 'block';
     toast.style.opacity = '1';
     if (toastTimer) clearTimeout(toastTimer);
@@ -712,8 +714,46 @@
     }, 3200);
   }
 
-  function getStat(key) { return parseInt(localStorage.getItem('KSimon_Stat_' + key)) || 0; }
-  function setStat(key, value) { localStorage.setItem('KSimon_Stat_' + key, value); }
+  /* Storage Safety Helpers (Quality Standards Rule 2) */
+  function safeGet(key, fallback = null) {
+    try {
+      const val = localStorage.getItem(key);
+      return val ? JSON.parse(val) : fallback;
+    } catch {
+      return fallback;
+    }
+  }
+  function safeSet(key, value) {
+    try {
+      localStorage.setItem(key, JSON.stringify(value));
+    } catch (e) {
+      console.warn('[KSimon] Storage write failed:', e.message);
+    }
+  }
+  function safeGetRaw(key, fallback = null) {
+    try {
+      return localStorage.getItem(key) ?? fallback;
+    } catch {
+      return fallback;
+    }
+  }
+  function safeSetRaw(key, value) {
+    try {
+      localStorage.setItem(key, value);
+    } catch (e) {
+      console.warn('[KSimon] Storage write failed:', e.message);
+    }
+  }
+  function safeRemove(key) {
+    try {
+      localStorage.removeItem(key);
+    } catch (e) {
+      console.warn('[KSimon] Storage remove failed:', e.message);
+    }
+  }
+
+  function getStat(key) { return parseInt(safeGetRaw('KSimon_Stat_' + key, '0')) || 0; }
+  function setStat(key, value) { safeSetRaw('KSimon_Stat_' + key, String(value)); }
   
   let statsGamesPlayed = getStat('gamesPlayed');
   let statsLongestStreak = getStat('longestStreak');
@@ -1712,7 +1752,7 @@
   });
 
   // --- UNIVERSAL AUDIO ARCHITECTURE (YM2612 FM & SPC700 DELAY) ---
-  let soundArchitecture = localStorage.getItem('ksimon_sound_arch') || 'ym2612'; // 'ym2612' | 'spc700' | 'classic'
+  let soundArchitecture = safeGetRaw('ksimon_sound_arch', 'ym2612'); // 'ym2612' | 'spc700' | 'classic'
   const synthToggleBtn = document.getElementById('synth-toggle-btn');
   function updateSynthButtonLabel() {
     if (!synthToggleBtn) return;
@@ -1726,7 +1766,7 @@
     if (soundArchitecture === 'ym2612') soundArchitecture = 'spc700';
     else if (soundArchitecture === 'spc700') soundArchitecture = 'classic';
     else soundArchitecture = 'ym2612';
-    localStorage.setItem('ksimon_sound_arch', soundArchitecture);
+    safeSetRaw('ksimon_sound_arch', soundArchitecture);
     updateSynthButtonLabel();
     showToast(`Audio Synth Architecture switched to: ${soundArchitecture.toUpperCase()}`, 'info');
     playTone(440, 250);
@@ -1848,10 +1888,10 @@
   }
 
   function getHighScore(mode) {
-    return parseInt(localStorage.getItem('KSimon_HighScore_' + mode)) || 0;
+    return parseInt(safeGetRaw('KSimon_HighScore_' + mode, '0')) || 0;
   }
   function setHighScore(mode, score) {
-    localStorage.setItem('KSimon_HighScore_' + mode, score);
+    safeSetRaw('KSimon_HighScore_' + mode, String(score));
   }
   function updateHighScoreDisplay() {
     highScoreModeDisplay.innerText = modeSelect.options[modeSelect.selectedIndex].text.replace('Mode: ', '');
@@ -1884,7 +1924,7 @@
 
   function closeHelp() {
     helpModal.style.display = 'none';
-    localStorage.setItem('ksimon_tutorialSeen', '1');
+    safeSetRaw('ksimon_tutorialSeen', '1');
   }
 
   startBtn.addEventListener('click', startGame);
@@ -1990,7 +2030,21 @@
   }
 
   function saveGameState() {
-    if (sequence.length === 0 || isPlayingSequence) return;
+    if (sequence.length === 0) {
+      statusDisplay.innerText = "Cannot save: start a game first!";
+      showToast("Cannot save: start a game first!", "warning");
+      return;
+    }
+    if (isPlayingSequence) {
+      statusDisplay.innerText = "Cannot save while sequence is playing!";
+      showToast("Cannot save while sequence is playing!", "warning");
+      return;
+    }
+    if (isMultiplayerActive) {
+      statusDisplay.innerText = "Saving is disabled in Online Duel.";
+      showToast("Saving is disabled in Online Duel.", "warning");
+      return;
+    }
     const gameState = {
       sequence: sequence,
       currentMode: currentMode,
@@ -1999,22 +2053,29 @@
       slowmoRemaining: slowmoRemaining,
       shieldsRemaining: shieldsRemaining,
       freezesRemaining: freezesRemaining,
-      elapsedTime: Date.now() - startTime
+      elapsedTime: Date.now() - startTime,
+      score: sequence.length - 1
     };
-    localStorage.setItem('KSimon_GameState', JSON.stringify(gameState));
+    safeSet('KSimon_GameState', gameState);
     statusDisplay.innerText = "Game Saved! (F5)";
+    showToast("Game Saved! (F5)", "success");
   }
 
   function loadGameState() {
-    const saved = localStorage.getItem('KSimon_GameState');
-    if (!saved) {
+    if (isMultiplayerActive) {
+      showToast("Loading is disabled in Online Duel.", "warning");
+      return;
+    }
+    const gameState = safeGet('KSimon_GameState');
+    if (!gameState) {
       statusDisplay.innerText = "No saved game found.";
+      showToast("No saved game found.", "warning");
       return;
     }
     try {
-      const gameState = JSON.parse(saved);
       if (!gameState || !Array.isArray(gameState.sequence) || gameState.sequence.length === 0) {
         statusDisplay.innerText = "Saved game has no active sequence.";
+        showToast("Saved game has no active sequence.", "warning");
         return;
       }
       sequence = gameState.sequence;
@@ -2039,9 +2100,11 @@
       
       playerSequence = [];
       statusDisplay.innerText = "Game Loaded! Watch...";
+      showToast("Game Loaded! (F9)", "info");
       playSequence();
     } catch (err) {
       statusDisplay.innerText = "Corrupt saved game state.";
+      showToast("Corrupt saved game state.", "error");
     }
   }
 
@@ -2050,7 +2113,7 @@
       app: 'KSimon',
       version: 1,
       exportedAt: new Date().toISOString(),
-      gameState: localStorage.getItem('KSimon_GameState'),
+      gameState: safeGet('KSimon_GameState'),
       highScores: {
         '4btn': getHighScore('4btn'),
         '6btn': getHighScore('6btn'),
@@ -2074,8 +2137,9 @@
     a.href = url;
     a.download = 'ksimon_save.json';
     a.click();
-    URL.revokeObjectURL(url);
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
     statusDisplay.innerText = "Game & Stats Exported!";
+    showToast("Game & Stats Exported!", "success");
   }
 
   function importSave(e) {
@@ -2086,7 +2150,11 @@
       try {
         const data = JSON.parse(evt.target.result);
         if (data.gameState) {
-          localStorage.setItem('KSimon_GameState', data.gameState);
+          if (typeof data.gameState === 'object') {
+            safeSet('KSimon_GameState', data.gameState);
+          } else {
+            safeSetRaw('KSimon_GameState', data.gameState);
+          }
         }
         if (data.highScores) {
           Object.keys(data.highScores).forEach(mode => {
@@ -2095,23 +2163,25 @@
         }
         if (data.stats) {
           if (data.stats.gamesPlayed !== undefined) {
-            statsGamesPlayed = data.stats.gamesPlayed;
+            statsGamesPlayed = Number(data.stats.gamesPlayed) || 0;
             setStat('gamesPlayed', statsGamesPlayed);
           }
           if (data.stats.longestStreak !== undefined) {
-            statsLongestStreak = data.stats.longestStreak;
+            statsLongestStreak = Number(data.stats.longestStreak) || 0;
             setStat('longestStreak', statsLongestStreak);
           }
           if (data.stats.bestTime !== undefined) {
-            statsBestTime = data.stats.bestTime;
+            statsBestTime = Number(data.stats.bestTime) || 0;
             setStat('bestTime', statsBestTime);
           }
           updateStatsDisplay();
         }
         updateHighScoreDisplay();
         statusDisplay.innerText = "Save imported! Click Load Game or F9.";
+        showToast("Save imported! Click Load Game or F9.", "success");
       } catch (err) {
         statusDisplay.innerText = "Invalid JSON save file.";
+        showToast("Invalid JSON save file.", "error");
       }
       importFile.value = '';
     };
@@ -2119,14 +2189,15 @@
   }
 
   function resetStats() {
-    localStorage.removeItem('KSimon_Stat_gamesPlayed');
-    localStorage.removeItem('KSimon_Stat_longestStreak');
-    localStorage.removeItem('KSimon_Stat_bestTime');
+    safeRemove('KSimon_Stat_gamesPlayed');
+    safeRemove('KSimon_Stat_longestStreak');
+    safeRemove('KSimon_Stat_bestTime');
     statsGamesPlayed = 0;
     statsLongestStreak = 0;
     statsBestTime = 0;
     updateStatsDisplay();
     statusDisplay.innerText = "Stats Reset!";
+    showToast("Stats Reset!", "info");
   }
 
   btns.forEach((btn, index) => {
@@ -2165,9 +2236,41 @@
         closeReplay();
         closed = true;
       }
+      const toast = document.getElementById('ksimon-toast');
+      if (toast && toast.style.display !== 'none') {
+        toast.style.display = 'none';
+        closed = true;
+      }
       if (closed) {
         e.preventDefault();
         return;
+      }
+    }
+    if (e.key === 'Enter') {
+      const invM = document.getElementById('invite-modal');
+      if (invM && invM.style.display === 'flex') {
+        e.preventDefault();
+        acceptInvite();
+        return;
+      }
+      if (helpModal && helpModal.style.display === 'flex') {
+        e.preventDefault();
+        closeHelp();
+        return;
+      }
+      const kbModal = document.getElementById('keybinds-modal');
+      if (kbModal && kbModal.style.display === 'flex') {
+        e.preventDefault();
+        closeKeybindsModal();
+        return;
+      }
+      if (sequence.length === 0 && !isMultiplayerActive) {
+        const mpM = document.getElementById('mp-modal');
+        if (!mpM || mpM.style.display !== 'flex') {
+          e.preventDefault();
+          startGame();
+          return;
+        }
       }
     }
     if (e.key === 'F1') {
@@ -2274,8 +2377,8 @@
     if (audioCtx.state === 'suspended') {
       audioCtx.resume();
     }
-    if (!localStorage.getItem('ksimon_tutorialSeen')) {
-      localStorage.setItem('ksimon_tutorialSeen', '1');
+    if (!safeGetRaw('ksimon_tutorialSeen')) {
+      safeSetRaw('ksimon_tutorialSeen', '1');
       helpModal.style.display = 'flex';
       return;
     }
@@ -2608,7 +2711,7 @@
     0: 'q', 1: 'w', 2: 'e', 3: 'r',
     4: 'a', 5: 's', 6: 'd', 7: 'f'
   };
-  let keybinds = JSON.parse(localStorage.getItem('ksimon_keybinds') || 'null') || { ...defaultKeybinds };
+  let keybinds = safeGet('ksimon_keybinds', { ...defaultKeybinds });
   let listeningKeySlot = null;
 
   function openKeybindsModal() {
@@ -2625,7 +2728,7 @@
 
   function resetKeybinds() {
     keybinds = { ...defaultKeybinds };
-    localStorage.removeItem('ksimon_keybinds');
+    safeRemove('ksimon_keybinds');
     renderKeybindsList();
     showToast('Controls reset to default (QWER / ASDF).', 'info');
   }
@@ -2663,7 +2766,7 @@
       const k = e.key.toLowerCase();
       if (k !== 'escape') {
         keybinds[listeningKeySlot] = k;
-        localStorage.setItem('ksimon_keybinds', JSON.stringify(keybinds));
+        safeSet('ksimon_keybinds', keybinds);
         showToast(`Button ${listeningKeySlot + 1} bound to "${k.toUpperCase()}".`, 'success');
       }
       listeningKeySlot = null;
@@ -2717,7 +2820,7 @@
   let rMultiplayer = null;
   let isMultiplayerActive = false;
   let mpMode = 'speed'; // 'speed' | 'volley'
-  let myPlayerName = localStorage.getItem('ksimon_player_name') || ('Player_' + Math.floor(1000 + Math.random() * 9000));
+  let myPlayerName = safeGetRaw('ksimon_player_name') || ('Player_' + Math.floor(1000 + Math.random() * 9000));
   let opponentName = 'Challenger';
   let myRole = 'p1'; // 'p1' | 'p2' | 'spectator'
   let mpP1Score = 0;
@@ -2796,7 +2899,23 @@
     if (audioCtx.state === 'suspended') audioCtx.resume();
     initRetroMultiplayer();
     const input = document.getElementById('mp-player-name-input');
-    if (input) input.value = myPlayerName;
+    if (input) {
+      input.value = myPlayerName;
+      input.onkeydown = (e) => {
+        if (e.key === 'Enter') {
+          savePlayerNameFromModal();
+          input.blur();
+        }
+      };
+    }
+    const joinInput = document.getElementById('mp-join-input');
+    if (joinInput) {
+      joinInput.onkeydown = (e) => {
+        if (e.key === 'Enter') {
+          joinRoomByCode();
+        }
+      };
+    }
     const modal = document.getElementById('mp-modal');
     if (modal) modal.style.display = 'flex';
   }
@@ -2811,7 +2930,7 @@
     const input = document.getElementById('mp-player-name-input');
     if (input && input.value.trim()) {
       myPlayerName = input.value.trim().slice(0, 16);
-      localStorage.setItem('ksimon_player_name', myPlayerName);
+      safeSetRaw('ksimon_player_name', myPlayerName);
       if (rMultiplayer) rMultiplayer.playerName = myPlayerName;
     }
   }
@@ -3333,10 +3452,11 @@
   }
 
   // --- INITIALIZATION HOOKS ---
-  initRetroMultiplayer();
-  window.addEventListener('load', () => {
+  if (document.readyState === 'loading') {
+    window.addEventListener('DOMContentLoaded', initRetroMultiplayer);
+  } else {
     initRetroMultiplayer();
-  });
+  }
 </script>
 
 </body>

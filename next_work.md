@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-creator
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -16,7 +16,7 @@ current_targets:
   kilo_graphics: KDragon
   kilo_tester: KSettings
   kilo_usability: KTetris
-  kilo_qa: KSimon
+  kilo_qa: KAsteroids
   kilo_expander: KTowers
 virtual_web_target: "kweb://echo-subsystem.net"
 virtual_web_rotation:
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-usability
-  app: KSudoku
-  timestamp: "2026-10-08T05:42:00-07:00"
+  agent: kilo-qa
+  app: KSimon
+  timestamp: "2026-10-08T06:27:00-07:00"
 last_planner_run: "2026-10-07T14:38:00Z"
 ---
 
@@ -216,6 +216,13 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 ---
 
 ## Recent Execution Logs (Max 5 Entries)
+
+- **2026-10-08T06:27:00-07:00 — kilo-qa: KSimon (QA & Build Audit: F1/F5/F9 Hotkeys, Tutorial Flag, Layout Sync & Save Parity)**
+  - Status: PASS ✅ (0 regressions, 203.4 KB web / 142.0 KB native < 999 KB ceiling).
+  - Native Hotkeys & Parity: Added F1 (Help), F5 (Save), F9 (Load), Enter/Space to start; added first-run tutorial flag.
+  - Web & Layout: Aligned button layout on load, synced mode switching, restored audio and state guards.
+  - Verification: MSVC clean build; native smoke test PASS; Vite build clean; security lint PASS.
+  - Queue: Advanced kilo_qa to KAsteroids; rotation handoff to kilo-expander.
 
 - **2026-10-08T05:42:00-07:00 — kilo-usability: KSudoku (UI/UX Pass: Window Dimensions, HiDPI Retina Crispness, Header Help Discovery & Numpad Ergonomics)**
   - Status: PASS ✅ (0 regressions, 193.4 KB web / 45.0 KB native < 999 KB ceiling).
