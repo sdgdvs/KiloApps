@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-creator
-next_agent: kilo-graphics
+current_agent: kilo-tester
+next_agent: kilo-usability
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -12,13 +12,13 @@ model: gemini-3.8-flash-high
 timeout_minutes: 15
 status: ready
 current_targets:
-  kilo_creator: "kweb://cybercafe"
-  kilo_graphics: KWizard
+  kilo_creator: "kweb://10.19.99.4/classified"
+  kilo_graphics: KColony
   kilo_tester: KConverter
   kilo_usability: KSolitaire
   kilo_qa: KHangman
   kilo_expander: KDarts
-virtual_web_target: "kweb://cybercafe"
+virtual_web_target: "kweb://10.19.99.4/classified"
 virtual_web_rotation:
   - "kweb://geocities"
   - "kweb://users/~neon_rider"
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-expander
-  app: KReversi
-  timestamp: "2026-10-07T23:36:00-07:00"
+  agent: kilo-graphics
+  app: KWizard
+  timestamp: "2026-10-08T01:20:00-07:00"
 last_planner_run: "2026-10-07T14:38:00Z"
 ---
 
@@ -102,16 +102,16 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ### 1. Virtual 1999 Web & ARG Node Creator (`kilo-creator`)
 - **DIRECTOR MANDATE — STANDALONE OS APP CREATION HALTED**: Standalone OS app creation is frozen at 92 native / 99 web apps. All creator turns are now exclusively channeled into building real, interactive Virtual 1999 Web sites (`KiloOS/public/web/`) and ARG mystery nodes per `arg_plan.md`. Zero shallow stubs; every page must be a functioning Web 1.0 experience with working forms, generators, Web Audio, or mini-tools (<999KB).
-- **Current Target**: `kweb://users/~neon_rider`
+- **Current Target**: `kweb://10.19.99.4/classified`
 - **Upcoming Queue**:
-  `kweb://asm-temple`, `kweb://cybercafe`, `kweb://10.19.99.4/classified`, `kweb://echo-subsystem.net`, `kweb://deep-core`, `kweb://darknet`, `kweb://portal`, `kweb://webring`, `kweb://warez`, `kweb://geocities`
-  *(Completed Phase 1 & 2 Builds: kweb://geocities Phase 2 deep expansion complete. Active: Surface-site ARG breadcrumbs & puzzle gating)*.
+  `kweb://echo-subsystem.net`, `kweb://deep-core`, `kweb://darknet`, `kweb://portal`, `kweb://webring`, `kweb://warez`, `kweb://geocities`, `kweb://users/~neon_rider`, `kweb://asm-temple`, `kweb://cybercafe`
+  *(Completed Phase 1 & 2 Builds: kweb://geocities, kweb://cybercafe deep expansion complete. Active: Surface-site ARG breadcrumbs & middle-game puzzle gating)*.
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
 - **EXCLUSIVE MISSION**: Replace programmer vector art with Imagen 3 generated sprites and backgrounds via the 2-stage asset pipeline. If the target app is not appropriate for raster/sprite replacement (e.g. wireframe classics or abstract board games), skip the turn immediately.
-- **Current Target**: `KWizard`
+- **Current Target**: `KColony`
 - **Upcoming Queue**:
-  `KColony`, `KDragon`, `KMech`, `KColosseum`, `KAbyss`, `KBreakout`, `KAsteroids`, `KSpace`, `KFarm` *(Note: Pure vector/wireframe or abstract board targets skip automatically per Mandate 15. Completed: KQuest Phases 1-5, KSpace)*.
+  `KDragon`, `KMech`, `KColosseum`, `KAbyss`, `KBreakout`, `KAsteroids`, `KSpace`, `KFarm`, `KWizard` *(Note: Pure vector/wireframe or abstract board targets skip automatically per Mandate 15. Completed: KQuest Phases 1-5, KSpace)*.
 
 ### 3. App Tester Queue (`kilo-tester`)
 - **Current Target**: `KConverter`
@@ -217,6 +217,13 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-08T01:20:00-07:00 — kilo-graphics: KWizard (Skip Turn — Inappropriate Target & Glint/Border Audit)**
+  - Status: ⏭️ Skip — Imagen 3 asset replacement not appropriate for KWizard
+  - Rationale: Fantasy dueling card game locked in human review queue with 1:1 dual-target Win32 GDI C parity and procedural mage archetypes.
+  - Glint & Border Ban: Verified static arena frame; zero rotating specular glints or traveling perimeter border dots in web or native C (Rule 11 compliant).
+  - Verification: `check_icons.py` 100% PASS; `security_lint.py` 100% PASS; MSVC clean (12.9 KB); `test_app_startup.py` PASS; web (129.3 KB) < 999 KB ceiling.
+  - Queue: Advanced `kilo_graphics` to `KColony`; rotation handoff to `kilo-tester`.
+
 - **2026-10-07T23:36:00-07:00 — kilo-expander: KReversi (Skip Turn — Mature 5+ Passes & Locked in Human Review Queue)**
   - Status: ⏭️ Skip — app is feature-complete and mature.
   - Review Queue: Verified locked in `docs/human_review_queue.md` (60 FPS, 17ms pacing, 222 KB < 999 KB).
@@ -252,12 +259,6 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Verification: `test_app_startup.py` PASS (0 JS err, CSS valid); `security_lint.py` PASS; Vite clean (670ms); web 109.3 KB < 999 KB ceiling.
   - Queue: Advanced `kilo_tester` to `KConverter`; rotation handoff to `kilo-usability`.
 
-- **2026-10-07T19:22:00-07:00 — kilo-graphics: KFarm (Skip Turn — Inappropriate Target & Glint/Sheen Ban)**
-  - Status: ⏭️ Skip — Imagen 3 asset replacement not appropriate for KFarm
-  - Rationale: Procedural 8x8 farm sim locked in human review queue with 1:1 Win32 GDI C parity.
-  - Glint & Border Ban: Removed traveling crop specular sheen sweep and pulsating border; enforced static frame (Rule 11).
-  - Verification: `check_icons.py` 100% PASS; `security_lint.py` 100% PASS; MSVC clean; Vite clean (445ms); web 91.6 KB < 999 KB.
-  - Queue: Advanced `kilo_graphics` to `KWizard`; rotation handoff to `kilo-tester`.
 
 
 

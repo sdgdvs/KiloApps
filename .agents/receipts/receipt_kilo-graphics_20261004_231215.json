@@ -1,0 +1,10 @@
+{
+  "timestamp": "2026-10-04T23:12:15.412848+00:00",
+  "agent": "kilo-graphics",
+  "model": "gemini-3.8-flash-high",
+  "target": "KPac",
+  "duration_seconds": 2.85,
+  "returncode": 3,
+  "success": false,
+  "provenance": null
+}

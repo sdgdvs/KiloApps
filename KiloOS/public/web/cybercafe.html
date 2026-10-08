@@ -1388,6 +1388,238 @@
     margin: 8px 0;
   }
 
+  /* ------------------- 1999 LAN ARENA TAB ------------------- */
+  .lan-arena-grid {
+    display: grid;
+    grid-template-columns: 1fr 340px;
+    gap: 14px;
+  }
+  @media (max-width: 820px) {
+    .lan-arena-grid { grid-template-columns: 1fr; }
+  }
+  .lan-bracket {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    background: #02060c;
+    border: 1px solid var(--border);
+    padding: 12px;
+    border-radius: 4px;
+    overflow-x: auto;
+  }
+  .bracket-round {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+    min-width: 130px;
+    gap: 10px;
+  }
+  .bracket-match {
+    background: #08111f;
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 4px;
+  }
+  .bracket-seed {
+    display: flex;
+    justify-content: space-between;
+    font-size: 10px;
+    padding: 3px 6px;
+    border-radius: 2px;
+    color: var(--text-muted);
+  }
+  .bracket-seed.active {
+    color: #fff;
+    font-weight: bold;
+  }
+  .bracket-seed.winner {
+    background: rgba(16, 185, 129, 0.2);
+    color: var(--green-bright);
+    font-weight: bold;
+    border-left: 2px solid var(--green);
+  }
+  .lan-canvas-wrap {
+    background: #000;
+    border: 1px solid var(--border-bright);
+    border-radius: 4px;
+    overflow: hidden;
+    position: relative;
+    box-shadow: 0 0 10px rgba(56, 189, 248, 0.2);
+  }
+  #lanArenaCanvas {
+    display: block;
+    width: 100%;
+    height: 180px;
+    background: #020508;
+  }
+  .frag-feed-box {
+    background: #010408;
+    border: 1px solid var(--border);
+    color: #38bdf8;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    line-height: 1.4;
+    padding: 8px;
+    height: 120px;
+    overflow-y: auto;
+    white-space: pre-wrap;
+    border-radius: 3px;
+  }
+
+  /* ------------------- VISITOR GUESTBOOK TAB ------------------- */
+  .odometer-wrap {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    background: #000;
+    border: 1px solid var(--border);
+    padding: 2px 6px;
+    border-radius: 3px;
+  }
+  .odometer-digit {
+    background: #0f172a;
+    color: var(--amber-bright);
+    font-family: var(--font-mono);
+    font-weight: bold;
+    font-size: 13px;
+    padding: 2px 5px;
+    border-radius: 2px;
+    border-top: 1px solid #334155;
+    border-bottom: 1px solid #000;
+  }
+  .guestbook-layout {
+    display: grid;
+    grid-template-columns: 320px 1fr;
+    gap: 14px;
+  }
+  @media (max-width: 768px) {
+    .guestbook-layout { grid-template-columns: 1fr; }
+  }
+  .guestbook-form-box {
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    padding: 12px;
+    border-radius: 4px;
+  }
+  .guestbook-feed {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-height: 520px;
+    overflow-y: auto;
+    padding-right: 4px;
+  }
+  .guestbook-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--amber);
+    padding: 10px 12px;
+    border-radius: 3px;
+    font-size: 11px;
+  }
+  .guestbook-card.deaddrop {
+    border-left: 3px solid var(--cyan-bright);
+    background: #071224;
+  }
+  .guestbook-header {
+    display: flex;
+    justify-content: space-between;
+    font-size: 10px;
+    color: var(--text-muted);
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    padding-bottom: 4px;
+    margin-bottom: 6px;
+  }
+
+  /* ------------------- OVERCLOCK & 3D BENCHMARK TAB ------------------- */
+  .overclock-grid {
+    display: grid;
+    grid-template-columns: 1.1fr 1fr;
+    gap: 14px;
+  }
+  @media (max-width: 768px) {
+    .overclock-grid { grid-template-columns: 1fr; }
+  }
+  .jumper-panel {
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    padding: 12px;
+    border-radius: 4px;
+  }
+  .jumper-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+    font-size: 11px;
+  }
+  .specs-readout-card {
+    background: #030712;
+    border: 1px solid #1f2937;
+    padding: 10px;
+    border-radius: 3px;
+    margin-bottom: 10px;
+  }
+  .temp-gauge-bar {
+    height: 10px;
+    background: #111827;
+    border: 1px solid #374151;
+    border-radius: 2px;
+    overflow: hidden;
+    margin: 4px 0;
+  }
+  .temp-gauge-fill {
+    height: 100%;
+    width: 35%;
+    background: linear-gradient(90deg, #10b981, #f59e0b, #ef4444);
+    transition: width 0.2s ease;
+  }
+  .cybermark-canvas-wrap {
+    background: #000;
+    border: 2px solid var(--cyan);
+    border-radius: 4px;
+    box-shadow: 0 0 14px rgba(6, 182, 212, 0.3);
+    position: relative;
+    overflow: hidden;
+    margin-bottom: 10px;
+  }
+  #cybermarkCanvas {
+    width: 100%;
+    height: 200px;
+    display: block;
+    background: #010408;
+  }
+
+  /* ------------------- TARIFF & BANDWIDTH TAB ------------------- */
+  .tariff-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+  @media (max-width: 768px) {
+    .tariff-grid { grid-template-columns: 1fr; }
+  }
+  .tariff-calc-panel {
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    padding: 12px;
+    border-radius: 4px;
+  }
+  .tariff-results-card {
+    background: #050a14;
+    border: 1px dashed var(--border-bright);
+    padding: 12px;
+    border-radius: 4px;
+    font-size: 11px;
+  }
+  .download-sim-wrap {
+    background: #02050a;
+    border: 1px solid #1e293b;
+    border-radius: 4px;
+    padding: 12px;
+    margin-top: 10px;
+  }
+
   footer {
     text-align: center;
     font-size: 10px;
@@ -1514,6 +1746,10 @@
     <button class="tab-btn" onclick="switchTab('tab-irc')">📟 IRC CHAT (mIRC)</button>
     <button class="tab-btn" onclick="switchTab('tab-game')">⚔️ BBS DOOR GAME</button>
     <button class="tab-btn" onclick="switchTab('tab-vault')">💾 FLOPPY ARCHIVES</button>
+    <button class="tab-btn" onclick="switchTab('tab-lan')">🏆 1999 LAN ARENA</button>
+    <button class="tab-btn" onclick="switchTab('tab-guestbook')">📖 VISITOR GUESTBOOK</button>
+    <button class="tab-btn" onclick="switchTab('tab-overclock')">⚡ OVERCLOCK &amp; 3D BENCH</button>
+    <button class="tab-btn" onclick="switchTab('tab-tariff')">💰 TARIFF &amp; BANDWIDTH</button>
   </nav>
 
   <!-- PANE 1: TERMINAL LOUNGE -->
@@ -2302,6 +2538,16 @@ Choose an option below to initialize your carrier!
             <button class="btn-retro" style="color:var(--cyan-bright); border-color:var(--cyan);" onclick="openZmodemModal('CARLSBAD_MEM_DUMP')">⚡ ZMODEM DL</button>
           </td>
         </tr>
+        <tr>
+          <td><strong>GHOST_PACKETS_TRACE_1019994.TXT</strong></td>
+          <td>2.3 KB</td>
+          <td>1999-11-28</td>
+          <td>Packet Sniffer</td>
+          <td>
+            <button class="btn-retro" onclick="viewVaultFile('GHOST_PACKETS_TRACE')">VIEW</button>
+            <button class="btn-retro" style="color:var(--cyan-bright); border-color:var(--cyan);" onclick="openZmodemModal('GHOST_PACKETS_TRACE')">⚡ ZMODEM DL</button>
+          </td>
+        </tr>
       </tbody>
     </table>
 
@@ -2315,6 +2561,420 @@ Choose an option below to initialize your carrier!
         </div>
       </div>
       <pre id="vaultFileContent" style="color:var(--green-bright); font-size:11px; line-height:1.4; white-space:pre-wrap; max-height:300px; overflow-y:auto;"></pre>
+    </div>
+  </section>
+
+  <!-- PANE 7: 1999 LAN DEATHMATCH ARENA & BRACKET FORGE -->
+  <section id="tab-lan" class="pane-content">
+    <div class="section-title">
+      <span>🏆 1999 LAN DEATHMATCH ARENA &amp; TOURNAMENT BRACKET</span>
+      <span style="font-size:11px; color:var(--amber-bright);">TREMOR III • SURREAL TOURNAMENT • VOIDCRAFT</span>
+    </div>
+
+    <div class="lan-arena-grid">
+      <!-- Left: Bracket & Match Controls -->
+      <div>
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:10px; background:var(--bg-panel); padding:8px 12px; border:1px solid var(--border);">
+          <div style="display:flex; align-items:center; gap:8px;">
+            <label style="font-size:11px; font-weight:bold; color:var(--cyan-bright);">DISCIPLINE:</label>
+            <select id="lanGameSelect" class="form-select" onchange="changeLanGame(this.value)">
+              <option value="tremor3" selected>Tremor III Arena (q3dm17 - Longest Yard)</option>
+              <option value="surreal">Surreal Tournament (DM-FacingWorlds)</option>
+              <option value="voidcraft">VoidCraft: Bloodline (Lost Temple)</option>
+              <option value="halfcycle">Half-Cycle DM (crossfire)</option>
+            </select>
+          </div>
+          <div style="display:flex; gap:6px; flex-wrap:wrap;">
+            <button class="btn-retro green" id="btnSimMatch" onclick="simulateNextLanMatch()">⚔️ SIMULATE MATCH</button>
+            <button class="btn-retro amber" onclick="autoResolveLanTournament()">⚡ AUTO-RESOLVE ALL</button>
+            <button class="btn-retro" onclick="resetLanTournament()">🔄 RESET SEEDS</button>
+            <button class="btn-retro" onclick="exportLanScoreSheet()">📋 EXPORT BRACKET (.TXT)</button>
+          </div>
+        </div>
+
+        <!-- 8-Player Elimination Bracket Tree -->
+        <div class="lan-bracket" id="lanBracketContainer">
+          <!-- Quarterfinals -->
+          <div class="bracket-round">
+            <div style="font-size:10px; font-weight:bold; color:var(--amber-bright); text-align:center;">QUARTERFINALS</div>
+            <div class="bracket-match" id="match0">
+              <div class="bracket-seed" id="seed0_0"><span>1. ~neon_rider</span><span class="seed-score">-</span></div>
+              <div class="bracket-seed" id="seed0_1"><span>8. Guest_1999</span><span class="seed-score">-</span></div>
+            </div>
+            <div class="bracket-match" id="match1">
+              <div class="bracket-seed" id="seed1_0"><span>4. DialUpGhost</span><span class="seed-score">-</span></div>
+              <div class="bracket-seed" id="seed1_1"><span>5. VoodooQueen</span><span class="seed-score">-</span></div>
+            </div>
+            <div class="bracket-match" id="match2">
+              <div class="bracket-seed" id="seed2_0"><span>2. PhosphorGlow</span><span class="seed-score">-</span></div>
+              <div class="bracket-seed" id="seed2_1"><span>7. SysOp_0x7F</span><span class="seed-score">-</span></div>
+            </div>
+            <div class="bracket-match" id="match3">
+              <div class="bracket-seed" id="seed3_0"><span>3. FragKing_99</span><span class="seed-score">-</span></div>
+              <div class="bracket-seed" id="seed3_1"><span>6. KernelPanic</span><span class="seed-score">-</span></div>
+            </div>
+          </div>
+
+          <!-- Semifinals -->
+          <div class="bracket-round">
+            <div style="font-size:10px; font-weight:bold; color:var(--cyan-bright); text-align:center;">SEMIFINALS</div>
+            <div class="bracket-match" id="match4">
+              <div class="bracket-seed" id="seed4_0"><span>TBD Match 1</span><span class="seed-score">-</span></div>
+              <div class="bracket-seed" id="seed4_1"><span>TBD Match 2</span><span class="seed-score">-</span></div>
+            </div>
+            <div class="bracket-match" id="match5">
+              <div class="bracket-seed" id="seed5_0"><span>TBD Match 3</span><span class="seed-score">-</span></div>
+              <div class="bracket-seed" id="seed5_1"><span>TBD Match 4</span><span class="seed-score">-</span></div>
+            </div>
+          </div>
+
+          <!-- Finals -->
+          <div class="bracket-round">
+            <div style="font-size:10px; font-weight:bold; color:var(--green-bright); text-align:center;">CHAMPIONSHIP</div>
+            <div class="bracket-match" id="match6" style="border-color:var(--amber);">
+              <div class="bracket-seed" id="seed6_0"><span>TBD Finalist 1</span><span class="seed-score">-</span></div>
+              <div class="bracket-seed" id="seed6_1"><span>TBD Finalist 2</span><span class="seed-score">-</span></div>
+            </div>
+            <div style="text-align:center; padding:6px; background:#071409; border:1px solid #10b981; border-radius:3px; margin-top:6px;">
+              <div style="font-size:9px; color:var(--text-muted);">🏆 TOURNAMENT CHAMPION:</div>
+              <div id="lanChampionDisplay" style="font-size:12px; font-weight:bold; color:var(--green-bright);">[PENDING MATCHES]</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: Real-time 2D Canvas Deathmatch Arena & Live Frag Feed -->
+      <div>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+          <span style="font-size:10px; font-weight:bold; color:var(--cyan-bright);">2D DEATHMATCH RADAR CANVAS</span>
+          <span id="lanMapTitle" style="font-size:10px; color:var(--text-muted);">MAP: q3dm17</span>
+        </div>
+        <div class="lan-canvas-wrap">
+          <canvas id="lanArenaCanvas" width="340" height="180"></canvas>
+        </div>
+
+        <div style="display:flex; justify-content:space-between; align-items:center; margin:8px 0 4px 0;">
+          <span style="font-size:10px; font-weight:bold; color:var(--amber-bright);">LIVE FRAG STREAM &amp; COMBAT LOG</span>
+          <span id="lanFragsRemaining" style="font-size:10px; color:var(--green-bright);">ROUND: 1 / 7</span>
+        </div>
+        <div class="frag-feed-box" id="lanFragFeedLog">[LAN TOURNAMENT PROTOCOL INITIALIZED]
+Server: 10.19.99.1:27960 (Tremor III Dedicated Linux 2.2)
+Client Ping: 0.8ms (10Base-T UTP Cat5 Switch)
+Ready for Quarterfinals. Click 'SIMULATE MATCH'.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PANE 8: VISITOR GUESTBOOK & DIEGETIC DEAD-DROP -->
+  <section id="tab-guestbook" class="pane-content">
+    <div class="section-title">
+      <span>📖 CYBERCAFE '99 OFFICIAL VISITOR GUESTBOOK</span>
+      <div style="display:flex; align-items:center; gap:8px;">
+        <span style="font-size:10px; color:var(--text-muted);">HITS:</span>
+        <div class="odometer-wrap">
+          <span class="odometer-digit">0</span>
+          <span class="odometer-digit">4</span>
+          <span class="odometer-digit">2</span>
+          <span class="odometer-digit">8</span>
+          <span class="odometer-digit">9</span>
+          <span class="odometer-digit">9</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="guestbook-layout">
+      <!-- Left: Sign Guestbook Form -->
+      <div class="guestbook-form-box">
+        <h4 style="font-size:12px; color:var(--amber-bright); margin-bottom:6px;">✍️ SIGN THE 1999 GUESTBOOK</h4>
+        <p style="font-size:10px; color:var(--text-muted); margin-bottom:10px;">
+          Leave your stamp for the subterranean community. Inquiries matching anomalous carrier passphrases awaken system responses.
+        </p>
+
+        <div class="form-row">
+          <label>YOUR HANDLE / ALIAS:</label>
+          <input type="text" id="gbHandle" class="form-input" placeholder="e.g. HexMaster_99" value="Guest_1999">
+        </div>
+
+        <div class="form-row">
+          <label>SUBNET / ORIGIN NODE:</label>
+          <input type="text" id="gbOrigin" class="form-input" placeholder="e.g. Node 212 - New York / Station #8" value="Terminal Booth #8">
+        </div>
+
+        <div class="form-row">
+          <label>CONNECTION MEDIUM:</label>
+          <select id="gbConnection" class="form-select">
+            <option value="56K USR V.90">56K USRobotics V.90</option>
+            <option value="Dual ISDN 128k">Dual ISDN 128 kbps</option>
+            <option value="10Base-T LAN">10Base-T Fast Ethernet</option>
+            <option value="Acoustic Coupler 300">Acoustic Coupler (Bell 103)</option>
+            <option value="Fractional T1">Fractional T1 Lease</option>
+          </select>
+        </div>
+
+        <div class="form-row">
+          <label>FAVORITE CAFE FUEL:</label>
+          <select id="gbFuel" class="form-select">
+            <option value="Baud Roast Coffee">Baud Roast Coffee</option>
+            <option value="Jolt Cola (16oz)">Jolt Cola</option>
+            <option value="Surge Citrus">Surge Citrus</option>
+            <option value="Bawls Cobalt">Bawls Guarana</option>
+            <option value="Hot Pocket Byte">Hot Pocket Byte</option>
+          </select>
+        </div>
+
+        <div class="form-row">
+          <label>YOUR MESSAGE:</label>
+          <textarea id="gbMessage" class="form-textarea" placeholder="Sign the guestbook... Share greetings, rig specs, or signal observations." style="height:70px;"></textarea>
+        </div>
+
+        <div style="display:flex; gap:6px; margin-top:8px;">
+          <button class="btn-retro amber" style="flex:1;" onclick="submitGuestbookEntry()">✍️ SIGN BOOK</button>
+          <button class="btn-retro" onclick="exportGuestbookJson()">💾 EXPORT</button>
+          <button class="btn-retro" onclick="document.getElementById('gbImportFile').click()">📂 IMPORT</button>
+          <input type="file" id="gbImportFile" accept=".json" style="display:none" onchange="importGuestbookJson(event)">
+        </div>
+      </div>
+
+      <!-- Right: Guestbook Feed -->
+      <div>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+          <span style="font-size:11px; font-weight:bold; color:var(--cyan-bright);">VISITOR LOG ARCHIVE (<span id="gbCountDisplay">5</span> ENTRIES)</span>
+          <span style="font-size:10px; color:var(--green-bright);">● DAEMON LISTENER ACTIVE</span>
+        </div>
+        <div class="guestbook-feed" id="guestbookFeed">
+          <!-- Injected by JS -->
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PANE 9: 1999 SILICON OVERCLOCK & CYBERMARK 3D BENCHMARK -->
+  <section id="tab-overclock" class="pane-content">
+    <div class="section-title">
+      <span>⚡ 1999 HARDWARE OVERCLOCKING WORKBENCH &amp; CYBERMARK 3D TEST</span>
+      <span style="font-size:11px; color:var(--green-bright);">ABIT BP6 DUAL-SOCKET JUMPERS • 3dfx GLIDE 3.0 FILLRATE BENCH</span>
+    </div>
+
+    <div class="overclock-grid">
+      <!-- Left: Motherboard Jumpers & Specs Controls -->
+      <div class="jumper-panel">
+        <h4 style="font-size:12px; color:var(--amber-bright); margin-bottom:8px;">🎛️ MOTHERBOARD JUMPER &amp; VOLTAGE SELECTOR</h4>
+
+        <div class="jumper-row">
+          <span style="color:var(--cyan-bright); font-weight:bold;">PROCESSOR SILICON:</span>
+          <select id="ocCpuSelect" class="form-select" style="font-size:10px;" onchange="updateOverclockSpecs()">
+            <option value="celeron" selected>Intel Celeron 300A (Mendocino 128K L2)</option>
+            <option value="p3">Intel Pentium III 500 (Katmai 512K Off-Die)</option>
+            <option value="k6">AMD K6-2 450 (Chomper Extended 3DNow!)</option>
+          </select>
+        </div>
+
+        <div class="jumper-row">
+          <span style="color:var(--cyan-bright); font-weight:bold;">FRONT SIDE BUS (FSB):</span>
+          <select id="ocFsbSelect" class="form-select" style="font-size:10px;" onchange="updateOverclockSpecs()">
+            <option value="66">66 MHz (Standard Celeron)</option>
+            <option value="75">75 MHz (Mild Boost)</option>
+            <option value="83">83 MHz (PCI 41.5MHz - Risky)</option>
+            <option value="100" selected>100 MHz (Golden 450MHz Mod!)</option>
+            <option value="112">112 MHz (High FSB)</option>
+            <option value="133">133 MHz (Aggressive Bus)</option>
+          </select>
+        </div>
+
+        <div class="jumper-row">
+          <span style="color:var(--cyan-bright); font-weight:bold;">CLOCK MULTIPLIER:</span>
+          <select id="ocMultSelect" class="form-select" style="font-size:10px;" onchange="updateOverclockSpecs()">
+            <option value="3.0">3.0x Multiplier</option>
+            <option value="3.5">3.5x Multiplier</option>
+            <option value="4.0">4.0x Multiplier</option>
+            <option value="4.5" selected>4.5x Multiplier (300A Standard)</option>
+            <option value="5.0">5.0x Multiplier</option>
+          </select>
+        </div>
+
+        <div class="jumper-row">
+          <span style="color:var(--cyan-bright); font-weight:bold;">VCORE CORE VOLTAGE:</span>
+          <select id="ocVcoreSelect" class="form-select" style="font-size:10px;" onchange="updateOverclockSpecs()">
+            <option value="2.0" selected>2.00 V (Nominal Stock)</option>
+            <option value="2.10">2.10 V (+0.10V Overdrive)</option>
+            <option value="2.20">2.20 V (+0.20V High Heat)</option>
+            <option value="2.30">2.30 V (+0.30V Silicon Degradation)</option>
+          </select>
+        </div>
+
+        <div class="jumper-row">
+          <span style="color:var(--cyan-bright); font-weight:bold;">COOLING ASSEMBLY:</span>
+          <select id="ocCoolingSelect" class="form-select" style="font-size:10px;" onchange="updateOverclockSpecs()">
+            <option value="stock">Stock Aluminum + 40mm Screamer (45W Max)</option>
+            <option value="orb" selected>Golden Orb Dual-Fan Cooler (65W Cap)</option>
+            <option value="alpha">Alpha PAL6035 Copper Core (85W Cap)</option>
+            <option value="ln2">Peltier Element + Liquid Nitrogen (150W Cap)</option>
+          </select>
+        </div>
+
+        <div class="jumper-row">
+          <span style="color:var(--cyan-bright); font-weight:bold;">3D ACCELERATOR:</span>
+          <select id="ocGpuSelect" class="form-select" style="font-size:10px;" onchange="updateOverclockSpecs()">
+            <option value="voodoo3" selected>3dfx Voodoo3 3000 AGP (166MHz Glide)</option>
+            <option value="tnt2">Riva TNT2 Ultra 32MB (150/183MHz 32-Bit)</option>
+            <option value="g400">Matrox Millennium G400 MAX (DualHead)</option>
+          </select>
+        </div>
+
+        <div class="specs-readout-card">
+          <div style="display:flex; justify-content:space-between; font-size:11px; margin-bottom:4px;">
+            <span>EFFECTIVE CORE CLOCK:</span>
+            <span id="ocClockDisplay" style="color:var(--amber-bright); font-weight:bold;">450.0 MHz (+50%)</span>
+          </div>
+          <div style="display:flex; justify-content:space-between; font-size:11px; margin-bottom:2px;">
+            <span>DIE JUNCTION TEMPERATURE:</span>
+            <span id="ocTempDisplay" style="color:var(--green-bright); font-weight:bold;">48.5 °C (STABLE)</span>
+          </div>
+          <div class="temp-gauge-bar">
+            <div id="ocTempBar" class="temp-gauge-fill" style="width:38%;"></div>
+          </div>
+          <div style="display:flex; justify-content:space-between; font-size:10px; color:var(--text-muted); margin-top:4px;">
+            <span>STABILITY RATING: <strong id="ocStabilityDisplay" style="color:var(--green-bright);">98% OK</strong></span>
+            <span>PCI BUS: <strong id="ocPciDisplay" style="color:#fff;">33.3 MHz</strong></span>
+          </div>
+        </div>
+
+        <div style="display:flex; gap:6px;">
+          <button class="btn-retro green" style="flex:1;" id="btnRunCyberMark" onclick="runCyberMarkBenchmark()">⚡ RUN CYBERMARK '99</button>
+          <button class="btn-retro" onclick="resetOverclockCmos()">🔄 RESET CMOS</button>
+          <button class="btn-retro" onclick="exportBenchmarkCert()">📄 EXPORT CERT (.TXT)</button>
+        </div>
+      </div>
+
+      <!-- Right: Real-time 3D Canvas CyberMark Benchmark -->
+      <div>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+          <span style="font-size:10px; font-weight:bold; color:var(--cyan-bright);">CYBERMARK '99 // 3D RASTER BENCHMARK</span>
+          <span id="ocWireframeToggle" style="font-size:10px; color:var(--text-muted); cursor:pointer;" onclick="toggleWireframeMode()">[TOGGLE WIREFRAME]</span>
+        </div>
+        <div class="cybermark-canvas-wrap">
+          <canvas id="cybermarkCanvas" width="400" height="200"></canvas>
+        </div>
+
+        <div style="background:#030712; border:1px solid var(--border); padding:8px 10px; border-radius:3px; font-size:10px; line-height:1.4;">
+          <div style="display:flex; justify-content:space-between; margin-bottom:3px;">
+            <span style="color:var(--amber-bright); font-weight:bold;">CYBERMARK '99 SCORE:</span>
+            <span id="ocScoreDisplay" style="color:var(--cyan-bright); font-weight:bold; font-size:12px;">3,420 3DMarks</span>
+          </div>
+          <div style="display:flex; justify-content:space-between; color:var(--text-muted);">
+            <span>PEAK FILLRATE: <strong id="ocFillrateDisplay" style="color:#fff;">332 MPixels/s</strong></span>
+            <span>TRIANGLE RATE: <strong id="ocPolyDisplay" style="color:#fff;">4.5 MPolys/s</strong></span>
+          </div>
+          <div style="color:var(--text-muted); font-size:9px; margin-top:4px; border-top:1px dashed #1e293b; padding-top:4px;">
+            Pass 1: Gouraud Shaded Torus • Pass 2: Multi-Textured Faceted Gem • Pass 3: 16-Bit Z-Buffer Stress.
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PANE 10: 1999 DIAL-UP TARIFF & BANDWIDTH COST CALCULATOR -->
+  <section id="tab-tariff" class="pane-content">
+    <div class="section-title">
+      <span>💰 1999 ISP TARIFF &amp; BANDWIDTH COST CALCULATOR</span>
+      <span style="font-size:11px; color:var(--amber-bright);">MODEM DOWNLOAD ESTIMATOR • TELCO TOLL COST MATRIX</span>
+    </div>
+
+    <div class="tariff-grid">
+      <!-- Left: Calculator Inputs -->
+      <div class="tariff-calc-panel">
+        <h4 style="font-size:12px; color:var(--amber-bright); margin-bottom:8px;">📡 CONNECTION &amp; TARIFF PARAMETERS</h4>
+
+        <div class="form-row">
+          <label>MODEM / LINE HARDWARE:</label>
+          <select id="tariffBaudSelect" class="form-select" onchange="calculateTariff()">
+            <option value="14.4">14,400 bps V.32bis (1.4 KB/s)</option>
+            <option value="28.8">28,800 bps V.34 (2.8 KB/s)</option>
+            <option value="33.6">33,600 bps V.34+ (3.3 KB/s)</option>
+            <option value="56.0" selected>56,000 bps V.90 (5.4 KB/s Effective)</option>
+            <option value="128.0">Dual-Channel ISDN 128 kbps (15.5 KB/s)</option>
+            <option value="384.0">Fractional T1 Lease 384 kbps (46.0 KB/s)</option>
+          </select>
+        </div>
+
+        <div class="form-row">
+          <label>ISP SUBSCRIPTION PLAN:</label>
+          <select id="tariffPlanSelect" class="form-select" onchange="calculateTariff()">
+            <option value="unlimited" selected>Unlimited Dial-up ($19.95 / Month)</option>
+            <option value="hourly10">10-Hour Value Pack ($9.95 / Mo + $2.50/hr overage)</option>
+            <option value="permin">Metred CyberCafe Access ($0.05 / Minute)</option>
+          </select>
+        </div>
+
+        <div class="form-row">
+          <label>TELCO LOCAL PHONE LINE TOLL:</label>
+          <select id="tariffTollSelect" class="form-select" onchange="calculateTariff()">
+            <option value="0" selected>Free Local Calling Area ($0.00 / Min)</option>
+            <option value="0.03">Off-Peak Metred Local Call ($0.03 / Min)</option>
+            <option value="0.08">Peak Hours Daytime Toll ($0.08 / Min)</option>
+          </select>
+        </div>
+
+        <div class="form-row">
+          <label>FILE SIZE PRESET TO TRANSFER:</label>
+          <div style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:4px;">
+            <button class="btn-retro" style="font-size:10px;" onclick="selectFilePreset(48, 'Tremor III Demo')">Tremor III (48MB)</button>
+            <button class="btn-retro" style="font-size:10px;" onclick="selectFilePreset(18, 'Netscape 4.7')">Netscape 4.7 (18MB)</button>
+            <button class="btn-retro" style="font-size:10px;" onclick="selectFilePreset(42, 'MP3 Album')">MP3 Album (42MB)</button>
+            <button class="btn-retro" style="font-size:10px;" onclick="selectFilePreset(6.5, 'DirectX 7.0a')">DirectX 7.0a (6.5MB)</button>
+            <button class="btn-retro" style="font-size:10px;" onclick="selectFilePreset(1.2, 'WinZip 7.0')">WinZip (1.2MB)</button>
+          </div>
+          <div style="display:flex; align-items:center; gap:8px;">
+            <input type="number" id="tariffFileSize" class="form-input" style="width:100px;" value="48" step="0.5" min="0.1" max="1000" oninput="calculateTariff()">
+            <span style="font-size:11px; color:var(--text-muted);">Megabytes (MB)</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: Calculated Results & Simulated Download -->
+      <div>
+        <div class="tariff-results-card">
+          <h4 style="font-size:12px; color:var(--green-bright); margin-bottom:6px;">📊 BANDWIDTH &amp; COST PROJECTIONS</h4>
+          <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+            <span>ESTIMATED TRANSFER DURATION:</span>
+            <strong id="tariffDurationDisplay" style="color:var(--amber-bright); font-size:12px;">2 hrs 28 mins 08 secs</strong>
+          </div>
+          <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+            <span>EFFECTIVE THROUGHPUT:</span>
+            <strong id="tariffSpeedDisplay" style="color:var(--cyan-bright);">5.40 KB/s (43.2 kbps)</strong>
+          </div>
+          <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+            <span>ESTIMATED TELCO CALL CHARGES:</span>
+            <strong id="tariffTollCostDisplay" style="color:#fff;">$0.00</strong>
+          </div>
+          <div style="display:flex; justify-content:space-between; border-top:1px dashed #1e293b; padding-top:4px; margin-top:4px;">
+            <span>TOTAL ESTIMATED SESSION COST:</span>
+            <strong id="tariffTotalCostDisplay" style="color:var(--green-bright); font-size:13px;">$19.95 (Plan Included)</strong>
+          </div>
+        </div>
+
+        <!-- Interactive 1999 Download Window Simulator -->
+        <div class="download-sim-wrap">
+          <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #1e293b; padding-bottom:4px; margin-bottom:8px;">
+            <span style="font-size:11px; color:var(--cyan-bright); font-weight:bold;">💾 DOWNLOADING: <span id="dlSimFileName">tremor3_point_release_1999.exe</span></span>
+            <span id="dlSimPctDisplay" style="font-size:10px; color:var(--amber-bright); font-weight:bold;">0%</span>
+          </div>
+
+          <div style="background:#000; border:1px solid var(--border); height:14px; border-radius:2px; overflow:hidden; margin-bottom:6px;">
+            <div id="dlSimProgressBar" style="height:100%; width:0%; background:linear-gradient(90deg, #0284c7, #38bdf8); transition:width 0.1s linear;"></div>
+          </div>
+
+          <div style="font-size:10px; color:var(--text-muted); line-height:1.4;" id="dlSimStats">
+            Transferred: 0.0 MB of 48.0 MB (At 5.4 KB/sec)<br>
+            Estimated time left: 2 hr 28 min • Line noise: 0 CRC retransmits
+          </div>
+
+          <div style="display:flex; gap:6px; margin-top:8px;">
+            <button class="btn-retro green" id="btnStartDlSim" onclick="startDownloadSimulator()">▶ SIMULATE TRANSFER</button>
+            <button class="btn-retro" id="btnCancelDlSim" onclick="cancelDownloadSimulator()">⏹ CANCEL / RESET</button>
+          </div>
+        </div>
+      </div>
     </div>
   </section>
 
@@ -2896,6 +3556,10 @@ window.addEventListener('keydown', (e) => {
   if (e.key === '5') { switchTab('tab-irc'); return; }
   if (e.key === '6') { switchTab('tab-game'); return; }
   if (e.key === '7') { switchTab('tab-vault'); return; }
+  if (e.key === '8') { switchTab('tab-lan'); return; }
+  if (e.key === '9') { switchTab('tab-guestbook'); return; }
+  if (e.key === '0') { switchTab('tab-overclock'); return; }
+  if (e.key === '-' || e.key === '_') { switchTab('tab-tariff'); return; }
   if (e.key === 'm' || e.key === 'M') { toggleBgmPlayback(); return; }
   if (e.key === 's' || e.key === 'S') { toggleAudioEngine(); return; }
   if (e.key === '?' || e.key === 'F1') { e.preventDefault(); openHelpModal(); return; }
@@ -2930,7 +3594,11 @@ function switchTab(tabId) {
     'tab-ascii': 3,
     'tab-irc': 4,
     'tab-game': 5,
-    'tab-vault': 6
+    'tab-vault': 6,
+    'tab-lan': 7,
+    'tab-guestbook': 8,
+    'tab-overclock': 9,
+    'tab-tariff': 10
   };
   const buttons = document.querySelectorAll('.tab-btn');
   if (buttons[btnMap[tabId]]) {
@@ -2944,6 +3612,14 @@ function switchTab(tabId) {
   } else if (tabId === 'tab-lounge') {
     initStationCrt();
     initSteamCanvas();
+  } else if (tabId === 'tab-lan') {
+    initLanCanvas();
+  } else if (tabId === 'tab-guestbook') {
+    renderGuestbookEntries();
+  } else if (tabId === 'tab-overclock') {
+    initOverclockCanvas();
+  } else if (tabId === 'tab-tariff') {
+    calculateTariff();
   }
 }
 
@@ -6410,7 +7086,26 @@ OFFSET    00 01 02 03 04 05 06 07  08 09 0A 0B 0C 0D 0E 0F  ASCII
 0x00A0    45 41 43 48 45 44 00 00  7F 19 99 42 00 00 00 00  EACHED...B......
 ------------------------------------------------------------------------
 CRC-32: 0x7F199942 [MATCHES WAREZ RELEASE & PRECURSOR CHECKSUM]
-NOTE: Telemetry confirms loopback link between 10.19.99.4 and KMatrix core.`
+NOTE: Telemetry confirms loopback link between 10.19.99.4 and KMatrix core.`,
+
+  GHOST_PACKETS_TRACE: `[PACKET CAPTURE: GHOST_PACKETS_TRACE_1019994.TXT // 1999-11-28]
+========================================================================
+CYBERCAFE STATION #4 PACKET SNIFFER LOG // PROMISCUOUS MODE CAPTURE
+Interface: 10Base-T Ethernet [3Com 3C905B-TX Fast EtherLink XL]
+Filter: src host 10.19.99.4 and port 1999
+========================================================================
+TIMESTAMP     SRC_IP       DST_IP        PROTO  PORT  FLAGS  PAYLOAD_HASH
+------------------------------------------------------------------------
+03:14:02.000  10.19.99.4   10.19.99.14   UDP    1999  [SYN]  0x7F199902
+03:14:04.000  10.19.99.4   10.19.99.14   UDP    1999  [ACK]  0x7F199904
+03:14:08.000  10.19.99.4   10.19.99.14   UDP    1999  [DATA] 0x7F199908
+03:14:16.000  10.19.99.4   10.19.99.14   UDP    1999  [PSH]  0x7F199916
+------------------------------------------------------------------------
+DIAGNOSTIC NOTE:
+Inter-arrival deltas form an exact powers-of-two progression (2s, 4s, 8s).
+Payload stream contains carrier headers originating from subterranean
+halite formations. Reverse traceroute resolves to Carlsbad research node.
+To query status on terminal, invoke 'ping 10.19.99.4' in station VNC console.`
 };
 
 let currentVaultKey = null;
@@ -6601,6 +7296,939 @@ function broadcastArgSignalFragment(freq, tag) {
 }
 
 /* =========================================================================
+   11D. STORAGE DEFENSE HELPERS
+   ========================================================================= */
+function safeGet(key, fallback) {
+  try {
+    const val = localStorage.getItem(key);
+    return val !== null ? JSON.parse(val) : fallback;
+  } catch (e) {
+    return fallback;
+  }
+}
+
+function safeSet(key, value) {
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+  } catch (e) {
+    console.warn('[CyberCafe] Storage write error:', e);
+  }
+}
+
+/* =========================================================================
+   13. 1999 LAN DEATHMATCH ARENA & BRACKET FORGE
+   ========================================================================= */
+const LAN_CONTENDERS = [
+  { seed: 1, name: '~neon_rider', rig: 'PIII 500 / Voodoo3', skill: 94, ping: 12 },
+  { seed: 2, name: 'PhosphorGlow', rig: 'Celeron 450 / TNT2 Ultra', skill: 89, ping: 15 },
+  { seed: 3, name: 'FragKing_99', rig: 'Dual Celeron 450 BP6', skill: 88, ping: 14 },
+  { seed: 4, name: 'DialUpGhost', rig: 'K6-2 450 / 3DNow!', skill: 85, ping: 19 },
+  { seed: 5, name: 'VoodooQueen', rig: 'PIII 450 / Dual Voodoo2 SLI', skill: 83, ping: 18 },
+  { seed: 6, name: 'KernelPanic', rig: 'Linux 2.2 Slackware', skill: 81, ping: 11 },
+  { seed: 7, name: 'SysOp_0x7F', rig: 'USR Dual ISDN 128k', skill: 79, ping: 8 },
+  { seed: 8, name: 'Guest_1999', rig: 'Terminal Booth #8', skill: 86, ping: 10 }
+];
+
+let lanTournamentState = {
+  game: 'tremor3',
+  currentMatchIdx: 0,
+  matches: [
+    { p1: LAN_CONTENDERS[0], p2: LAN_CONTENDERS[7], score1: null, score2: null, winner: null },
+    { p1: LAN_CONTENDERS[3], p2: LAN_CONTENDERS[4], score1: null, score2: null, winner: null },
+    { p1: LAN_CONTENDERS[1], p2: LAN_CONTENDERS[6], score1: null, score2: null, winner: null },
+    { p1: LAN_CONTENDERS[2], p2: LAN_CONTENDERS[5], score1: null, score2: null, winner: null },
+    { p1: null, p2: null, score1: null, score2: null, winner: null },
+    { p1: null, p2: null, score1: null, score2: null, winner: null },
+    { p1: null, p2: null, score1: null, score2: null, winner: null }
+  ],
+  champion: null
+};
+
+let lanCanvasAnimId = null;
+let lanPlayers = [];
+let lanProjectiles = [];
+
+function initLanTournament() {
+  renderLanBracket();
+  initLanCanvas();
+}
+
+function changeLanGame(gameId) {
+  playKeyClick();
+  lanTournamentState.game = gameId;
+  const mapTitle = document.getElementById('lanMapTitle');
+  const maps = {
+    tremor3: 'MAP: q3dm17 (The Longest Yard)',
+    surreal: 'MAP: DM-FacingWorlds',
+    voidcraft: 'MAP: Lost Temple (Choke Arena)',
+    halfcycle: 'MAP: crossfire (Bunker Siren)'
+  };
+  if (mapTitle) mapTitle.textContent = maps[gameId] || 'MAP: q3dm17';
+  logLanFrag(`*** Game switched to ${gameId.toUpperCase()} - Arena rules refreshed.`);
+}
+
+function renderLanBracket() {
+  for (let i = 0; i < 7; i++) {
+    const m = lanTournamentState.matches[i];
+    const s1 = document.getElementById(`seed${i}_0`);
+    const s2 = document.getElementById(`seed${i}_1`);
+    if (!s1 || !s2) continue;
+
+    s1.classList.remove('winner', 'active');
+    s2.classList.remove('winner', 'active');
+
+    const p1Name = m.p1 ? `${m.p1.seed}. ${m.p1.name}` : `TBD Winner`;
+    const p2Name = m.p2 ? `${m.p2.seed}. ${m.p2.name}` : `TBD Winner`;
+    const score1 = m.score1 !== null ? m.score1 : '-';
+    const score2 = m.score2 !== null ? m.score2 : '-';
+
+    s1.innerHTML = `<span>${p1Name}</span><span class="seed-score">${score1}</span>`;
+    s2.innerHTML = `<span>${p2Name}</span><span class="seed-score">${score2}</span>`;
+
+    if (m.winner) {
+      if (m.winner === m.p1) s1.classList.add('winner');
+      else if (m.winner === m.p2) s2.classList.add('winner');
+    } else if (i === lanTournamentState.currentMatchIdx && m.p1 && m.p2) {
+      s1.classList.add('active');
+      s2.classList.add('active');
+    }
+  }
+
+  const champDisplay = document.getElementById('lanChampionDisplay');
+  if (champDisplay) {
+    if (lanTournamentState.champion) {
+      champDisplay.textContent = `👑 ${lanTournamentState.champion.name} (${lanTournamentState.champion.rig})`;
+      champDisplay.style.color = '#34d399';
+    } else {
+      champDisplay.textContent = `[MATCH ${lanTournamentState.currentMatchIdx + 1} / 7 READY]`;
+      champDisplay.style.color = 'var(--text-muted)';
+    }
+  }
+
+  const fragsRem = document.getElementById('lanFragsRemaining');
+  if (fragsRem) {
+    fragsRem.textContent = `ROUND: ${Math.min(7, lanTournamentState.currentMatchIdx + 1)} / 7`;
+  }
+}
+
+function simulateNextLanMatch() {
+  if (lanTournamentState.currentMatchIdx >= 7) {
+    playChime(660, 0.1);
+    logLanFrag(`*** TOURNAMENT COMPLETE! Champion is ${lanTournamentState.champion ? lanTournamentState.champion.name : 'Unknown'}.`);
+    return;
+  }
+
+  const idx = lanTournamentState.currentMatchIdx;
+  const match = lanTournamentState.matches[idx];
+  if (!match.p1 || !match.p2) {
+    logLanFrag(`*** Cannot simulate Match #${idx + 1}: Waiting for contenders.`);
+    return;
+  }
+
+  playFmTone(440, 2.5, 4.0, 0.25, 0.15, true);
+
+  const targetFrags = 15;
+  const variance1 = Math.floor(Math.random() * 6);
+  const variance2 = Math.floor(Math.random() * 6);
+  const power1 = match.p1.skill + variance1;
+  const power2 = match.p2.skill + variance2;
+
+  let score1, score2, winner;
+  if (power1 >= power2) {
+    score1 = targetFrags;
+    score2 = Math.max(5, targetFrags - Math.floor(Math.random() * 6) - 1);
+    winner = match.p1;
+  } else {
+    score2 = targetFrags;
+    score1 = Math.max(5, targetFrags - Math.floor(Math.random() * 6) - 1);
+    winner = match.p2;
+  }
+
+  match.score1 = score1;
+  match.score2 = score2;
+  match.winner = winner;
+
+  if (idx === 0) lanTournamentState.matches[4].p1 = winner;
+  else if (idx === 1) lanTournamentState.matches[4].p2 = winner;
+  else if (idx === 2) lanTournamentState.matches[5].p1 = winner;
+  else if (idx === 3) lanTournamentState.matches[5].p2 = winner;
+  else if (idx === 4) lanTournamentState.matches[6].p1 = winner;
+  else if (idx === 5) lanTournamentState.matches[6].p2 = winner;
+  else if (idx === 6) {
+    lanTournamentState.champion = winner;
+    playChime(880, 0.4);
+    broadcastArgSignalFragment(1999, 'LAN_CHAMPION_' + winner.name.replace(/[^a-zA-Z0-9]/g, ''));
+  }
+
+  lanTournamentState.currentMatchIdx++;
+  renderLanBracket();
+
+  const loser = (winner === match.p1) ? match.p2 : match.p1;
+  const fragWeapon = lanTournamentState.game === 'tremor3' ? 'railgun slug' : lanTournamentState.game === 'surreal' ? 'shock combo' : 'siege tank blast';
+  logLanFrag(`[MATCH #${idx + 1}] ${winner.name} defeated ${loser.name} (${Math.max(score1, score2)} to ${Math.min(score1, score2)}) with a decisive ${fragWeapon}!`);
+
+  spawnLanFragEffects(winner.name, loser.name);
+}
+
+function autoResolveLanTournament() {
+  while (lanTournamentState.currentMatchIdx < 7) {
+    simulateNextLanMatch();
+  }
+}
+
+function resetLanTournament() {
+  playKeyClick();
+  lanTournamentState.currentMatchIdx = 0;
+  lanTournamentState.champion = null;
+  lanTournamentState.matches = [
+    { p1: LAN_CONTENDERS[0], p2: LAN_CONTENDERS[7], score1: null, score2: null, winner: null },
+    { p1: LAN_CONTENDERS[3], p2: LAN_CONTENDERS[4], score1: null, score2: null, winner: null },
+    { p1: LAN_CONTENDERS[1], p2: LAN_CONTENDERS[6], score1: null, score2: null, winner: null },
+    { p1: LAN_CONTENDERS[2], p2: LAN_CONTENDERS[5], score1: null, score2: null, winner: null },
+    { p1: null, p2: null, score1: null, score2: null, winner: null },
+    { p1: null, p2: null, score1: null, score2: null, winner: null },
+    { p1: null, p2: null, score1: null, score2: null, winner: null }
+  ];
+  renderLanBracket();
+  logLanFrag(`*** TOURNAMENT BRACKET RESET: New seeds staged for 1999 LAN cup.`);
+}
+
+function logLanFrag(text) {
+  const feed = document.getElementById('lanFragFeedLog');
+  if (!feed) return;
+  const time = new Date().toTimeString().slice(0, 5);
+  feed.textContent += `\n[${time}] ${text}`;
+  feed.scrollTop = feed.scrollHeight;
+}
+
+function exportLanScoreSheet() {
+  playChime(750, 0.1);
+  const lines = [
+    "========================================================================",
+    "       CYBERCAFE '99 // OFFICIAL LAN TOURNAMENT BRACKET SHEET           ",
+    "========================================================================",
+    `Discipline: ${lanTournamentState.game.toUpperCase()}`,
+    `Date: ${new Date().toISOString().slice(0, 10)}`,
+    `Champion: ${lanTournamentState.champion ? lanTournamentState.champion.name + ' (' + lanTournamentState.champion.rig + ')' : 'UNFINISHED'}`,
+    "------------------------------------------------------------------------",
+    "QUARTERFINALS:",
+    `  Match 1: ${lanTournamentState.matches[0].p1.name} (${lanTournamentState.matches[0].score1 ?? '-'}) vs ${lanTournamentState.matches[0].p2.name} (${lanTournamentState.matches[0].score2 ?? '-'}) -> Winner: ${lanTournamentState.matches[0].winner?.name || 'TBD'}`,
+    `  Match 2: ${lanTournamentState.matches[1].p1.name} (${lanTournamentState.matches[1].score1 ?? '-'}) vs ${lanTournamentState.matches[1].p2.name} (${lanTournamentState.matches[1].score2 ?? '-'}) -> Winner: ${lanTournamentState.matches[1].winner?.name || 'TBD'}`,
+    `  Match 3: ${lanTournamentState.matches[2].p1.name} (${lanTournamentState.matches[2].score1 ?? '-'}) vs ${lanTournamentState.matches[2].p2.name} (${lanTournamentState.matches[2].score2 ?? '-'}) -> Winner: ${lanTournamentState.matches[2].winner?.name || 'TBD'}`,
+    `  Match 4: ${lanTournamentState.matches[3].p1.name} (${lanTournamentState.matches[3].score1 ?? '-'}) vs ${lanTournamentState.matches[3].p2.name} (${lanTournamentState.matches[3].score2 ?? '-'}) -> Winner: ${lanTournamentState.matches[3].winner?.name || 'TBD'}`,
+    "------------------------------------------------------------------------",
+    "SEMIFINALS:",
+    `  Match 5: ${lanTournamentState.matches[4].p1?.name || 'TBD'} (${lanTournamentState.matches[4].score1 ?? '-'}) vs ${lanTournamentState.matches[4].p2?.name || 'TBD'} (${lanTournamentState.matches[4].score2 ?? '-'}) -> Winner: ${lanTournamentState.matches[4].winner?.name || 'TBD'}`,
+    `  Match 6: ${lanTournamentState.matches[5].p1?.name || 'TBD'} (${lanTournamentState.matches[5].score1 ?? '-'}) vs ${lanTournamentState.matches[5].p2?.name || 'TBD'} (${lanTournamentState.matches[5].score2 ?? '-'}) -> Winner: ${lanTournamentState.matches[5].winner?.name || 'TBD'}`,
+    "------------------------------------------------------------------------",
+    "CHAMPIONSHIP FINAL:",
+    `  Match 7: ${lanTournamentState.matches[6].p1?.name || 'TBD'} (${lanTournamentState.matches[6].score1 ?? '-'}) vs ${lanTournamentState.matches[6].p2?.name || 'TBD'} (${lanTournamentState.matches[6].score2 ?? '-'}) -> Champion: ${lanTournamentState.champion?.name || 'TBD'}`,
+    "========================================================================"
+  ].join("\n");
+
+  const blob = new Blob([lines], { type: 'text/plain' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `LAN_BRACKET_${lanTournamentState.game.toUpperCase()}_1999.TXT`;
+  a.click();
+}
+
+function initLanCanvas() {
+  const cvs = document.getElementById('lanArenaCanvas');
+  if (!cvs) return;
+  lanPlayers = [
+    { x: 50, y: 50, vx: 1.2, vy: 0.8, color: '#38bdf8', name: 'P1' },
+    { x: 280, y: 130, vx: -1.0, vy: -0.9, color: '#f59e0b', name: 'P2' },
+    { x: 170, y: 90, vx: 0.6, vy: -1.1, color: '#10b981', name: 'P3' },
+    { x: 90, y: 140, vx: -0.8, vy: 1.2, color: '#ec4899', name: 'P4' }
+  ];
+  lanProjectiles = [];
+
+  if (lanCanvasAnimId) cancelAnimationFrame(lanCanvasAnimId);
+  lanCanvasAnimId = requestAnimationFrame(renderLanCanvasLoop);
+}
+
+function spawnLanFragEffects(wName, lName) {
+  lanProjectiles.push({
+    x0: 50 + Math.random() * 240,
+    y0: 30 + Math.random() * 120,
+    x1: 50 + Math.random() * 240,
+    y1: 30 + Math.random() * 120,
+    color: '#22d3ee',
+    life: 25,
+    text: `+1 FRAG [${wName}]`
+  });
+}
+
+function renderLanCanvasLoop() {
+  const cvs = document.getElementById('lanArenaCanvas');
+  if (!cvs || cvs.offsetParent === null) {
+    lanCanvasAnimId = requestAnimationFrame(renderLanCanvasLoop);
+    return;
+  }
+  const ctx = cvs.getContext('2d');
+  ctx.fillStyle = 'rgba(2, 5, 10, 0.25)';
+  ctx.fillRect(0, 0, cvs.width, cvs.height);
+
+  ctx.strokeStyle = '#0f172a';
+  ctx.lineWidth = 1;
+  for (let x = 0; x < cvs.width; x += 30) {
+    ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, cvs.height); ctx.stroke();
+  }
+  for (let y = 0; y < cvs.height; y += 30) {
+    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(cvs.width, y); ctx.stroke();
+  }
+
+  ctx.fillStyle = '#1e293b';
+  ctx.fillRect(60, 60, 30, 30);
+  ctx.fillRect(250, 90, 30, 30);
+  ctx.fillRect(150, 40, 40, 15);
+  ctx.fillRect(150, 125, 40, 15);
+
+  lanPlayers.forEach((p, idx) => {
+    p.x += p.vx;
+    p.y += p.vy;
+    if (p.x < 10 || p.x > cvs.width - 10) p.vx *= -1;
+    if (p.y < 10 || p.y > cvs.height - 10) p.vy *= -1;
+
+    ctx.fillStyle = p.color;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, 4, 0, Math.PI * 2);
+    ctx.fill();
+
+    if (Math.random() < 0.03) {
+      const target = lanPlayers[(idx + 1) % lanPlayers.length];
+      ctx.strokeStyle = p.color;
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(p.x, p.y);
+      ctx.lineTo(target.x, target.y);
+      ctx.stroke();
+    }
+  });
+
+  for (let i = lanProjectiles.length - 1; i >= 0; i--) {
+    const pr = lanProjectiles[i];
+    pr.life--;
+    ctx.strokeStyle = pr.color;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(pr.x0, pr.y0);
+    ctx.lineTo(pr.x1, pr.y1);
+    ctx.stroke();
+
+    ctx.fillStyle = '#fbbf24';
+    ctx.font = '9px Consolas, monospace';
+    ctx.fillText(pr.text, pr.x1 - 20, pr.y1 - 6);
+
+    if (pr.life <= 0) lanProjectiles.splice(i, 1);
+  }
+
+  lanCanvasAnimId = requestAnimationFrame(renderLanCanvasLoop);
+}
+
+/* =========================================================================
+   14. VISITOR GUESTBOOK & DIEGETIC DEAD-DROP
+   ========================================================================= */
+const DEFAULT_GUESTBOOK = [
+  {
+    handle: 'DialUpGhost',
+    origin: 'Station #4 // 10.19.99.14',
+    connection: '10Base-T LAN',
+    fuel: 'Baud Roast Coffee',
+    message: 'Every night at precisely 03:14:02, ghost packets arrive from 10.19.99.4 on port 1999. The inter-arrival times form a binary sequence (2s, 4s, 8s, 16s). Is anyone else capturing this payload?',
+    date: '1999-11-23 03:14:02',
+    deaddrop: true
+  },
+  {
+    handle: 'AcousticPhreak',
+    origin: 'Bell 202 Coupler',
+    connection: 'Acoustic Coupler 300',
+    fuel: 'Jolt Cola (16oz)',
+    message: 'Tuned the acoustic receiver to 1999.04Hz. The carrier tone is pure synthesis with a 432Hz subcarrier. It originates from the Carlsbad formation skunkworks.',
+    date: '1999-11-23 03:14:04',
+    deaddrop: false
+  },
+  {
+    handle: 'SysOp_0x7F',
+    origin: 'Master Console',
+    connection: 'Dual ISDN 128k',
+    fuel: 'Hot Pocket Byte',
+    message: 'Welcome to the new CyberCafe guestbook. Please wipe keyboard grease after Tremor III matches. Note: If you leave passphrases in this registry, our automated daemon will answer.',
+    date: '1999-11-23 03:14:08',
+    deaddrop: false
+  },
+  {
+    handle: 'PhosphorGlow',
+    origin: 'Station #2 // Trinitron',
+    connection: '56K USR V.90',
+    fuel: 'Bawls Cobalt',
+    message: 'Calibrated my Sony Trinitron 17" aperture grille display to 1280x1024 @ 75Hz. The black levels in Tremor III Arena and Surreal Tournament are glorious.',
+    date: '1999-11-23 03:14:16',
+    deaddrop: false
+  },
+  {
+    handle: '~neon_rider',
+    origin: 'Station #1 // Voodoo3',
+    connection: '10Base-T LAN',
+    fuel: 'Baud Roast Coffee',
+    message: 'Coding 256-byte demoscene intros in the terminal lounge while sipping coffee. Drop by booth #1 if you want to trade x86 opcodes or test Glide 3.0 demos.',
+    date: '1999-11-23 03:22:00',
+    deaddrop: false
+  }
+];
+
+let guestbookEntries = [];
+
+function loadGuestbookData() {
+  const saved = safeGet('kweb_cybercafe_guestbook', null);
+  if (saved && Array.isArray(saved) && saved.length > 0) {
+    guestbookEntries = saved;
+  } else {
+    guestbookEntries = [...DEFAULT_GUESTBOOK];
+  }
+  renderGuestbookEntries();
+}
+
+function saveGuestbookData() {
+  safeSet('kweb_cybercafe_guestbook', guestbookEntries);
+}
+
+function renderGuestbookEntries() {
+  const container = document.getElementById('guestbookFeed');
+  if (!container) return;
+
+  const countDisplay = document.getElementById('gbCountDisplay');
+  if (countDisplay) countDisplay.textContent = guestbookEntries.length;
+
+  container.innerHTML = guestbookEntries.map((e, idx) => `
+    <div class="guestbook-card ${e.deaddrop ? 'deaddrop' : ''}">
+      <div class="guestbook-header">
+        <span style="color:${e.deaddrop ? 'var(--cyan-bright)' : 'var(--amber-bright)'}; font-weight:bold;">
+          #${guestbookEntries.length - idx} &bull; ${escapeHtml(e.handle)}
+          <span style="color:var(--text-muted); font-size:9px; font-weight:normal; margin-left:6px;">[${escapeHtml(e.origin)}]</span>
+        </span>
+        <span>${escapeHtml(e.date)}</span>
+      </div>
+      <div style="font-size:10px; color:var(--text-muted); margin-bottom:4px;">
+        Line: <span style="color:#cbd5e1;">${escapeHtml(e.connection)}</span> &bull; Fuel: <span style="color:var(--amber-bright);">${escapeHtml(e.fuel)}</span>
+      </div>
+      <div style="color:#e2e8f0; line-height:1.45; white-space:pre-wrap;">${escapeHtml(e.message)}</div>
+    </div>
+  `).join('');
+}
+
+function submitGuestbookEntry() {
+  const handleInput = document.getElementById('gbHandle');
+  const originInput = document.getElementById('gbOrigin');
+  const connSelect = document.getElementById('gbConnection');
+  const fuelSelect = document.getElementById('gbFuel');
+  const msgInput = document.getElementById('gbMessage');
+
+  const handle = (handleInput?.value || '').trim() || 'Guest_1999';
+  const origin = (originInput?.value || '').trim() || 'Terminal Booth';
+  const connection = connSelect?.value || '56K USR V.90';
+  const fuel = fuelSelect?.value || 'Baud Roast Coffee';
+  const message = (msgInput?.value || '').trim();
+
+  if (!message) {
+    alert('Please enter a message to sign the guestbook!');
+    return;
+  }
+
+  playKeyClick();
+  const now = new Date();
+  const dateStr = `1999-11-23 ${now.toTimeString().slice(0, 8)}`;
+
+  const newEntry = {
+    handle,
+    origin,
+    connection,
+    fuel,
+    message,
+    date: dateStr,
+    deaddrop: false
+  };
+
+  guestbookEntries.unshift(newEntry);
+  saveGuestbookData();
+  renderGuestbookEntries();
+  if (msgInput) msgInput.value = '';
+
+  playChime(770, 0.15);
+
+  const lower = message.toLowerCase();
+  const hasDeaddropClue = lower.includes('ghost packets') ||
+    lower.includes('10.19.99.4') ||
+    lower.includes('1999hz') ||
+    lower.includes('carlsbad') ||
+    lower.includes('subcarrier-litho') ||
+    lower.includes('0x7f199942') ||
+    lower.includes('echo-harmonic');
+
+  if (hasDeaddropClue) {
+    safeSet('kweb_cybercafe_deaddrop_unlocked', 'true');
+    broadcastArgSignalFragment(1999, 'GUESTBOOK_DEAD_DROP_TRIGGER');
+
+    setTimeout(() => {
+      playFmTone(999.5, 2.0, 3.5, 0.4, 0.15, true);
+      const replyEntry = {
+        handle: 'EchoDaemon',
+        origin: 'Subnet 10.19.99.4 [NO PHYSICAL INTERFACE]',
+        connection: 'Memory Loopback 0x0040',
+        fuel: 'Lithospheric RF Resonator',
+        message: '*** [DIEGETIC DEAD-DROP CONFIRMED] Passphrase verified. Packet sequence synchronized. Telemetry header at offset 0x0040 unlocked: "FACILITY=CARLSBAD OFFSET=0x0040 SUBCARRIER=1999HZ". Dossier available at kweb://10.19.99.4/classified.',
+        date: `1999-11-23 ${new Date().toTimeString().slice(0, 8)}`,
+        deaddrop: true
+      };
+      guestbookEntries.unshift(replyEntry);
+      saveGuestbookData();
+      renderGuestbookEntries();
+    }, 600);
+  }
+}
+
+function exportGuestbookJson() {
+  playChime(750, 0.1);
+  const dataStr = JSON.stringify(guestbookEntries, null, 2);
+  const blob = new Blob([dataStr], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'CYBERCAFE_1999_GUESTBOOK.JSON';
+  a.click();
+}
+
+function importGuestbookJson(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    try {
+      const parsed = JSON.parse(ev.target.result);
+      if (Array.isArray(parsed)) {
+        guestbookEntries = parsed;
+        saveGuestbookData();
+        renderGuestbookEntries();
+        playChime(880, 0.2);
+        alert(`Successfully imported ${parsed.length} guestbook entries!`);
+      }
+    } catch (err) {
+      alert('Failed to parse guestbook JSON file.');
+    }
+  };
+  reader.readAsText(file);
+}
+
+/* =========================================================================
+   15. 1999 SILICON OVERCLOCKING BENCH & CYBERMARK 3D TEST
+   ========================================================================= */
+let overclockState = {
+  cpu: 'celeron',
+  fsb: 100,
+  mult: 4.5,
+  vcore: 2.0,
+  cooling: 'orb',
+  gpu: 'voodoo3',
+  effectiveClock: 450,
+  tempC: 48.5,
+  stability: 98,
+  pciClock: 33.3,
+  score: 3420,
+  isBenchmarking: false,
+  isBsod: false,
+  wireframe: false
+};
+
+let cybermarkAnimId = null;
+let cybermarkAngleX = 0;
+let cybermarkAngleY = 0;
+
+function initOverclockStation() {
+  updateOverclockSpecs();
+  initOverclockCanvas();
+}
+
+function updateOverclockSpecs() {
+  const cpuSel = document.getElementById('ocCpuSelect');
+  const fsbSel = document.getElementById('ocFsbSelect');
+  const multSel = document.getElementById('ocMultSelect');
+  const vcoreSel = document.getElementById('ocVcoreSelect');
+  const coolSel = document.getElementById('ocCoolingSelect');
+  const gpuSel = document.getElementById('ocGpuSelect');
+
+  overclockState.cpu = cpuSel ? cpuSel.value : 'celeron';
+  overclockState.fsb = parseFloat(fsbSel ? fsbSel.value : 100);
+  overclockState.mult = parseFloat(multSel ? multSel.value : 4.5);
+  overclockState.vcore = parseFloat(vcoreSel ? vcoreSel.value : 2.0);
+  overclockState.cooling = coolSel ? coolSel.value : 'orb';
+  overclockState.gpu = gpuSel ? gpuSel.value : 'voodoo3';
+
+  overclockState.effectiveClock = overclockState.fsb * overclockState.mult;
+  overclockState.pciClock = (overclockState.fsb >= 100) ? (overclockState.fsb / 3) : (overclockState.fsb / 2);
+
+  const coolingWatts = { stock: 45, orb: 65, alpha: 85, ln2: 150 }[overclockState.cooling] || 65;
+  const powerFactor = (overclockState.vcore * overclockState.vcore / 4.0) * (overclockState.effectiveClock / 300);
+  const baselineTemp = 28.0;
+  overclockState.tempC = Math.round((baselineTemp + (powerFactor * 32.0 * (65 / coolingWatts))) * 10) / 10;
+
+  let stab = 100;
+  if (overclockState.tempC > 75) stab -= (overclockState.tempC - 75) * 4;
+  if (overclockState.fsb === 83) stab -= 15;
+  if (overclockState.effectiveClock > 500 && overclockState.vcore < 2.1) stab -= 25;
+  overclockState.stability = Math.max(10, Math.min(100, Math.round(stab)));
+
+  const gpuMulti = { voodoo3: 1.2, tnt2: 1.15, g400: 1.05 }[overclockState.gpu] || 1.1;
+  overclockState.score = Math.round((overclockState.effectiveClock * 6.5 + overclockState.fsb * 4.0) * gpuMulti);
+
+  const clockDisp = document.getElementById('ocClockDisplay');
+  const tempDisp = document.getElementById('ocTempDisplay');
+  const tempBar = document.getElementById('ocTempBar');
+  const stabDisp = document.getElementById('ocStabilityDisplay');
+  const pciDisp = document.getElementById('ocPciDisplay');
+  const scoreDisp = document.getElementById('ocScoreDisplay');
+  const fillrateDisp = document.getElementById('ocFillrateDisplay');
+  const polyDisp = document.getElementById('ocPolyDisplay');
+
+  if (clockDisp) clockDisp.textContent = `${overclockState.effectiveClock.toFixed(1)} MHz`;
+  if (tempDisp) {
+    tempDisp.textContent = `${overclockState.tempC.toFixed(1)} °C ${overclockState.tempC > 75 ? '(OVERHEAT DANGER!)' : '(STABLE)'}`;
+    tempDisp.style.color = overclockState.tempC > 75 ? '#ef4444' : overclockState.tempC > 60 ? '#f59e0b' : '#34d399';
+  }
+  if (tempBar) {
+    const pct = Math.min(100, Math.max(10, (overclockState.tempC / 100) * 100));
+    tempBar.style.width = pct + '%';
+  }
+  if (stabDisp) {
+    stabDisp.textContent = `${overclockState.stability}% ${overclockState.stability < 60 ? 'UNSTABLE' : 'OK'}`;
+    stabDisp.style.color = overclockState.stability < 60 ? '#ef4444' : '#34d399';
+  }
+  if (pciDisp) pciDisp.textContent = `${overclockState.pciClock.toFixed(1)} MHz`;
+  if (scoreDisp) scoreDisp.textContent = `${overclockState.score.toLocaleString()} 3DMarks`;
+  if (fillrateDisp) fillrateDisp.textContent = `${Math.round(overclockState.score * 0.098)} MPixels/s`;
+  if (polyDisp) polyDisp.textContent = `${(overclockState.score * 0.0013).toFixed(1)} MPolys/s`;
+}
+
+function runCyberMarkBenchmark() {
+  if (overclockState.isBenchmarking) return;
+  overclockState.isBenchmarking = true;
+  overclockState.isBsod = false;
+
+  playModemChirp();
+  const btn = document.getElementById('btnRunCyberMark');
+  if (btn) btn.disabled = true;
+
+  let frames = 0;
+  const testInterval = setInterval(() => {
+    frames += 10;
+    if (overclockState.tempC > 78 || Math.random() * 100 > overclockState.stability) {
+      clearInterval(testInterval);
+      overclockState.isBenchmarking = false;
+      overclockState.isBsod = true;
+      playNoiseBurst(0.6, 200);
+      if (btn) btn.disabled = false;
+      return;
+    }
+
+    if (frames >= 100) {
+      clearInterval(testInterval);
+      overclockState.isBenchmarking = false;
+      if (btn) btn.disabled = false;
+      playChime(980, 0.3);
+      alert(`CYBERMARK '99 BENCHMARK COMPLETE!\nScore: ${overclockState.score} 3DMarks\nClock: ${overclockState.effectiveClock} MHz\nTemp: ${overclockState.tempC}°C\nStability: 100% Passed without memory faults.`);
+    }
+  }, 100);
+}
+
+function resetOverclockCmos() {
+  playKeyClick();
+  overclockState.isBsod = false;
+  const cpuSel = document.getElementById('ocCpuSelect');
+  const fsbSel = document.getElementById('ocFsbSelect');
+  const multSel = document.getElementById('ocMultSelect');
+  const vcoreSel = document.getElementById('ocVcoreSelect');
+  const coolSel = document.getElementById('ocCoolingSelect');
+  if (cpuSel) cpuSel.value = 'celeron';
+  if (fsbSel) fsbSel.value = '100';
+  if (multSel) multSel.value = '4.5';
+  if (vcoreSel) vcoreSel.value = '2.0';
+  if (coolSel) coolSel.value = 'orb';
+  updateOverclockSpecs();
+  playChime(550, 0.1);
+}
+
+function toggleWireframeMode() {
+  overclockState.wireframe = !overclockState.wireframe;
+  const toggle = document.getElementById('ocWireframeToggle');
+  if (toggle) toggle.textContent = overclockState.wireframe ? '[TOGGLE SOLID]' : '[TOGGLE WIREFRAME]';
+}
+
+function exportBenchmarkCert() {
+  playChime(750, 0.1);
+  const text = [
+    "========================================================================",
+    "       CYBERMARK '99 // 3D GRAPHICS & SILICON BENCHMARK CERTIFICATE     ",
+    "========================================================================",
+    `Processor: ${overclockState.cpu.toUpperCase()}`,
+    `Core Clock: ${overclockState.effectiveClock} MHz (FSB: ${overclockState.fsb} MHz x ${overclockState.mult})`,
+    `Core VCore: ${overclockState.vcore} V`,
+    `Junction Temp: ${overclockState.tempC} °C`,
+    `Cooling Rig: ${overclockState.cooling.toUpperCase()}`,
+    `3D Accelerator: ${overclockState.gpu.toUpperCase()}`,
+    "------------------------------------------------------------------------",
+    `CYBERMARK '99 SCORE: ${overclockState.score} 3DMarks`,
+    `Pixel Fillrate: ${Math.round(overclockState.score * 0.098)} MPixels/sec`,
+    `Geometric Throughput: ${(overclockState.score * 0.0013).toFixed(1)} MPolys/sec`,
+    "------------------------------------------------------------------------",
+    "Status: 100% 3dfx Glide 3.0 / DirectX 7.0 Verified",
+    "========================================================================"
+  ].join("\n");
+
+  const blob = new Blob([text], { type: 'text/plain' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `CYBERMARK_99_${overclockState.effectiveClock}MHZ.TXT`;
+  a.click();
+}
+
+function initOverclockCanvas() {
+  const cvs = document.getElementById('cybermarkCanvas');
+  if (!cvs) return;
+  if (cybermarkAnimId) cancelAnimationFrame(cybermarkAnimId);
+  cybermarkAnimId = requestAnimationFrame(renderOverclockCanvasLoop);
+}
+
+function renderOverclockCanvasLoop() {
+  const cvs = document.getElementById('cybermarkCanvas');
+  if (!cvs || cvs.offsetParent === null) {
+    cybermarkAnimId = requestAnimationFrame(renderOverclockCanvasLoop);
+    return;
+  }
+  const ctx = cvs.getContext('2d');
+
+  if (overclockState.isBsod) {
+    ctx.fillStyle = '#0000aa';
+    ctx.fillRect(0, 0, cvs.width, cvs.height);
+    ctx.fillStyle = '#ffffff';
+    ctx.font = '10px Consolas, monospace';
+    ctx.fillText('*** STOP: 0x0000000A (IRQL_NOT_LESS_OR_EQUAL) ***', 20, 40);
+    ctx.fillText('THERMAL JUNCTION EXCEEDED // SILICON CRASH AT 0x0028:C0011999', 20, 65);
+    ctx.fillText('The system halted to prevent permanent damage to CPU core.', 20, 90);
+    ctx.fillText('Click [RESET CMOS] button to clear motherboard jumpers.', 20, 115);
+    cybermarkAnimId = requestAnimationFrame(renderOverclockCanvasLoop);
+    return;
+  }
+
+  ctx.fillStyle = '#01050a';
+  ctx.fillRect(0, 0, cvs.width, cvs.height);
+
+  cybermarkAngleX += 0.015 * (overclockState.effectiveClock / 300);
+  cybermarkAngleY += 0.02 * (overclockState.effectiveClock / 300);
+
+  const cx = cvs.width / 2;
+  const cy = cvs.height / 2;
+  const scale = 55;
+
+  const vertices = [
+    [0, -1.2, 0], [1, 0, 0], [0, 0, 1], [-1, 0, 0], [0, 0, -1], [0, 1.2, 0]
+  ];
+
+  const faces = [
+    [0, 1, 2], [0, 2, 3], [0, 3, 4], [0, 4, 1],
+    [5, 2, 1], [5, 3, 2], [5, 4, 3], [5, 1, 4]
+  ];
+
+  const projected = vertices.map(v => {
+    let [x, y, z] = v;
+    let cosY = Math.cos(cybermarkAngleY), sinY = Math.sin(cybermarkAngleY);
+    let x1 = x * cosY + z * sinY;
+    let z1 = -x * sinY + z * cosY;
+    let cosX = Math.cos(cybermarkAngleX), sinX = Math.sin(cybermarkAngleX);
+    let y2 = y * cosX - z1 * sinX;
+    let z2 = y * sinX + z1 * cosX;
+
+    const fov = 3.5;
+    const factor = fov / (fov + z2);
+    return {
+      x: cx + x1 * scale * factor,
+      y: cy + y2 * scale * factor,
+      z: z2
+    };
+  });
+
+  faces.forEach((f, idx) => {
+    const p0 = projected[f[0]];
+    const p1 = projected[f[1]];
+    const p2 = projected[f[2]];
+
+    const normalZ = (p1.x - p0.x) * (p2.y - p0.y) - (p1.y - p0.y) * (p2.x - p0.x);
+    if (normalZ > 0) {
+      ctx.beginPath();
+      ctx.moveTo(p0.x, p0.y);
+      ctx.lineTo(p1.x, p1.y);
+      ctx.lineTo(p2.x, p2.y);
+      ctx.closePath();
+
+      if (overclockState.wireframe) {
+        ctx.strokeStyle = '#22d3ee';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+      } else {
+        const shade = Math.floor(60 + (idx * 22) % 180);
+        ctx.fillStyle = `rgb(${Math.floor(shade * 0.2)}, ${Math.floor(shade * 0.8)}, ${shade})`;
+        ctx.fill();
+        ctx.strokeStyle = '#0284c7';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+      }
+    }
+  });
+
+  ctx.fillStyle = '#38bdf8';
+  ctx.font = '10px Consolas, monospace';
+  ctx.fillText(`3dfx Glide 3.0 // ${overclockState.effectiveClock.toFixed(0)}MHz`, 10, 18);
+  ctx.fillText(`FPS: ${(58 + (overclockState.effectiveClock / 40)).toFixed(1)}`, cvs.width - 70, 18);
+
+  cybermarkAnimId = requestAnimationFrame(renderOverclockCanvasLoop);
+}
+
+/* =========================================================================
+   16. 1999 ISP TARIFF & BANDWIDTH COST CALCULATOR
+   ========================================================================= */
+let downloadSimTimer = null;
+let downloadSimProgress = 0;
+
+function calculateTariff() {
+  const baudSel = document.getElementById('tariffBaudSelect');
+  const planSel = document.getElementById('tariffPlanSelect');
+  const tollSel = document.getElementById('tariffTollSelect');
+  const sizeInput = document.getElementById('tariffFileSize');
+
+  const kbps = parseFloat(baudSel ? baudSel.value : 56.0);
+  const plan = planSel ? planSel.value : 'unlimited';
+  const tollPerMin = parseFloat(tollSel ? tollSel.value : 0.0);
+  const sizeMb = parseFloat(sizeInput ? sizeInput.value : 48.0);
+
+  const bytesPerSec = (kbps * 1000 / 8) * 0.85;
+  const totalBytes = sizeMb * 1024 * 1024;
+  const seconds = Math.max(1, Math.round(totalBytes / bytesPerSec));
+
+  const hrs = Math.floor(seconds / 3600);
+  const mins = Math.floor((seconds % 3600) / 60);
+  const secs = seconds % 60;
+
+  const durationStr = `${hrs} hr ${mins} min ${secs} sec`;
+  const totalMinutes = seconds / 60;
+  const tollCost = totalMinutes * tollPerMin;
+
+  let planCost = 0;
+  let planDesc = '';
+  if (plan === 'unlimited') {
+    planCost = 19.95;
+    planDesc = '(Flat Plan)';
+  } else if (plan === 'hourly10') {
+    const hours = totalMinutes / 60;
+    planCost = 9.95 + (hours > 10 ? (hours - 10) * 2.50 : 0);
+    planDesc = '(10hr Base)';
+  } else if (plan === 'permin') {
+    planCost = totalMinutes * 0.05;
+    planDesc = '(Metred Access)';
+  }
+
+  const totalCost = planCost + tollCost;
+
+  const durDisp = document.getElementById('tariffDurationDisplay');
+  const speedDisp = document.getElementById('tariffSpeedDisplay');
+  const tollDisp = document.getElementById('tariffTollCostDisplay');
+  const totalDisp = document.getElementById('tariffTotalCostDisplay');
+
+  if (durDisp) durDisp.textContent = durationStr;
+  if (speedDisp) speedDisp.textContent = `${(bytesPerSec / 1024).toFixed(2)} KB/s (${(kbps * 0.85).toFixed(1)} kbps eff)`;
+  if (tollDisp) tollDisp.textContent = `$${tollCost.toFixed(2)}`;
+  if (totalDisp) totalDisp.textContent = `$${totalCost.toFixed(2)} ${planDesc}`;
+
+  const simStats = document.getElementById('dlSimStats');
+  if (simStats && !downloadSimTimer) {
+    simStats.innerHTML = `Transferred: 0.0 MB of ${sizeMb.toFixed(1)} MB (At ${(bytesPerSec / 1024).toFixed(1)} KB/sec)<br>Estimated time left: ${hrs} hr ${mins} min &bull; Line noise: 0 CRC retransmits`;
+  }
+}
+
+function selectFilePreset(sizeMb, name) {
+  playKeyClick();
+  const sizeInput = document.getElementById('tariffFileSize');
+  const fileName = document.getElementById('dlSimFileName');
+  if (sizeInput) sizeInput.value = sizeMb;
+  if (fileName) fileName.textContent = `${name.toLowerCase().replace(/[^a-z0-9]/g, '_')}_1999.zip`;
+  calculateTariff();
+}
+
+function startDownloadSimulator() {
+  if (downloadSimTimer) return;
+  playModemChirp();
+  downloadSimProgress = 0;
+
+  const sizeInput = document.getElementById('tariffFileSize');
+  const sizeMb = parseFloat(sizeInput ? sizeInput.value : 48.0);
+  const baudSel = document.getElementById('tariffBaudSelect');
+  const kbps = parseFloat(baudSel ? baudSel.value : 56.0);
+  const bytesPerSec = (kbps * 1000 / 8) * 0.85;
+
+  const startBtn = document.getElementById('btnStartDlSim');
+  if (startBtn) startBtn.disabled = true;
+
+  downloadSimTimer = setInterval(() => {
+    downloadSimProgress += 1.5;
+    const pct = Math.min(100, Math.round(downloadSimProgress));
+
+    const bar = document.getElementById('dlSimProgressBar');
+    const pctDisp = document.getElementById('dlSimPctDisplay');
+    const stats = document.getElementById('dlSimStats');
+
+    if (bar) bar.style.width = pct + '%';
+    if (pctDisp) pctDisp.textContent = pct + '%';
+
+    const currentMb = ((sizeMb * pct) / 100).toFixed(1);
+    const remSeconds = Math.max(0, Math.round(((100 - pct) / 100) * (sizeMb * 1024 * 1024 / bytesPerSec)));
+    const remMins = Math.floor(remSeconds / 60);
+
+    if (stats) {
+      stats.innerHTML = `Transferred: ${currentMb} MB of ${sizeMb.toFixed(1)} MB (At ${(bytesPerSec / 1024).toFixed(1)} KB/sec)<br>Estimated time left: ${remMins} min &bull; Line noise: ${Math.floor(pct / 20)} CRC retransmits`;
+    }
+
+    if (downloadSimProgress >= 100) {
+      clearInterval(downloadSimTimer);
+      downloadSimTimer = null;
+      if (startBtn) startBtn.disabled = false;
+      playChime(880, 0.3);
+      alert('SIMULATED DOWNLOAD COMPLETE!\nFile integrity 100% verified over dialup connection.');
+    }
+  }, 120);
+}
+
+function cancelDownloadSimulator() {
+  if (downloadSimTimer) {
+    clearInterval(downloadSimTimer);
+    downloadSimTimer = null;
+  }
+  downloadSimProgress = 0;
+  const bar = document.getElementById('dlSimProgressBar');
+  const pctDisp = document.getElementById('dlSimPctDisplay');
+  const startBtn = document.getElementById('btnStartDlSim');
+  if (bar) bar.style.width = '0%';
+  if (pctDisp) pctDisp.textContent = '0%';
+  if (startBtn) startBtn.disabled = false;
+  calculateTariff();
+}
+
+/* =========================================================================
+   17. LIFECYCLE & VISIBILITY SAFETY (Rule 2)
+   ========================================================================= */
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) {
+    if (typeof bgmPlaying !== 'undefined' && bgmPlaying) stopBgm();
+  }
+});
+
+/* =========================================================================
    12. INITIALIZATION
    ========================================================================= */
 window.addEventListener('DOMContentLoaded', () => {
@@ -6614,6 +8242,10 @@ window.addEventListener('DOMContentLoaded', () => {
   initStationCrt();
   initSteamCanvas();
   updateBaristaStats();
+  initLanTournament();
+  loadGuestbookData();
+  initOverclockStation();
+  calculateTariff();
 
   // Attach Piano key clicks
   document.querySelectorAll('.piano-key').forEach(k => {

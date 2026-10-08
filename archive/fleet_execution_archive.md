@@ -4,6 +4,13 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-07T19:22:00-07:00 — kilo-graphics: KFarm (Skip Turn — Inappropriate Target & Glint/Sheen Ban)**
+  - Status: ⏭️ Skip — Imagen 3 asset replacement not appropriate for KFarm
+  - Rationale: Procedural 8x8 farm sim locked in human review queue with 1:1 Win32 GDI C parity.
+  - Glint & Border Ban: Removed traveling crop specular sheen sweep and pulsating border; enforced static frame (Rule 11).
+  - Verification: `check_icons.py` 100% PASS; `security_lint.py` 100% PASS; MSVC clean; Vite clean (445ms); web 91.6 KB < 999 KB.
+  - Queue: Advanced `kilo_graphics` to `KWizard`; rotation handoff to `kilo-tester`.
+
 - **2026-10-07T17:25:00-07:00 — kilo-expander: KGo (Feature Expansion: Standardized RFMS RetroMultiplayer, Rule 12 Compliance & Goban Keyboard Navigation)**
   - Status: PASS ✅ (0 regressions, 165.4 KB web < 999 KB ceiling).
   - RFMS RetroMultiplayer: Integrated standard RetroMultiplayer class; real-time stone, pass, resign, score sync across 9x9/13x13/19x19 Gobans.

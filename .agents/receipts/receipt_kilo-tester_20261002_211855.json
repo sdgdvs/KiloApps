@@ -1,0 +1,10 @@
+{
+  "timestamp": "2026-10-02T21:18:55.317563+00:00",
+  "agent": "kilo-tester",
+  "model": "gemini-3.8-flash-high",
+  "target": "KPass",
+  "duration_seconds": 413.65,
+  "returncode": 0,
+  "success": true,
+  "provenance": null
+}
