@@ -1082,20 +1082,6 @@
                 ctx.fillRect(-2, -8, 4, 6);
             }
 
-            // Specular sheen sweep traversing ripe crops
-            const sheenPos = ((time * 0.001 + (x * 7 + y * 13) * 0.1) % 2) - 1;
-            if (sheenPos > -0.5 && sheenPos < 0.5) {
-                ctx.save();
-                ctx.globalAlpha = 0.35 * (1 - Math.abs(sheenPos) * 2);
-                ctx.strokeStyle = '#FFFFFF';
-                ctx.lineWidth = 2.5;
-                ctx.beginPath();
-                ctx.moveTo(-10 + sheenPos * 25, 10);
-                ctx.lineTo(5 + sheenPos * 25, -12);
-                ctx.stroke();
-                ctx.restore();
-            }
-
             ctx.restore();
         }
 
@@ -1353,14 +1339,13 @@
             ctx.restore();
         }
 
-        // Ornate Corner Filigree L-Brackets and Pulsating Border with Traveling Specular Glint
-        function drawOrnateBorderAndGlint(ctx, time) {
+        // Ornate Corner Filigree L-Brackets and Static Border (Clean Border Ban Compliant)
+        function drawOrnateBorder(ctx) {
             const w = 400;
             const h = 400;
 
-            // Pulsating golden/wood border
-            const pulse = (Math.sin(time * 0.004) + 1) * 0.5;
-            ctx.strokeStyle = `rgba(255, 215, 0, ${0.4 + pulse * 0.35})`;
+            // Static clean golden/wood border
+            ctx.strokeStyle = '#D4AF37';
             ctx.lineWidth = 2;
             ctx.strokeRect(3, 3, w - 6, h - 6);
 
@@ -1789,8 +1774,8 @@
                 }
             }
 
-            // Ornate Corner Filigree & Pulsating Perimeter Inlay with Specular Glint
-            drawOrnateBorderAndGlint(ctx, timestamp);
+            // Ornate Corner Filigree & Static Inlay Border (Clean Border Ban Compliant)
+            drawOrnateBorder(ctx);
 
             ctx.restore();
             requestAnimationFrame(draw);

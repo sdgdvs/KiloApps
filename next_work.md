@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-expander
-next_agent: kilo-creator
+current_agent: kilo-tester
+next_agent: kilo-usability
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -12,13 +12,13 @@ model: gemini-3.8-flash-high
 timeout_minutes: 15
 status: ready
 current_targets:
-  kilo_creator: "kweb://asm-temple"
-  kilo_graphics: KFarm
+  kilo_creator: "kweb://cybercafe"
+  kilo_graphics: KWizard
   kilo_tester: KTimer
   kilo_usability: KSnake
   kilo_qa: KConnect4
-  kilo_expander: KGo
-virtual_web_target: "kweb://asm-temple"
+  kilo_expander: KReversi
+virtual_web_target: "kweb://cybercafe"
 virtual_web_rotation:
   - "kweb://geocities"
   - "kweb://users/~neon_rider"
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-qa
-  app: KSudoku
-  timestamp: "2026-10-07T16:25:00-07:00"
+  agent: kilo-graphics
+  app: KFarm
+  timestamp: "2026-10-07T19:22:00-07:00"
 last_planner_run: "2026-10-07T14:38:00Z"
 ---
 
@@ -109,9 +109,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
 - **EXCLUSIVE MISSION**: Replace programmer vector art with Imagen 3 generated sprites and backgrounds via the 2-stage asset pipeline. If the target app is not appropriate for raster/sprite replacement (e.g. wireframe classics or abstract board games), skip the turn immediately.
-- **Current Target**: `KFarm`
+- **Current Target**: `KWizard`
 - **Upcoming Queue**:
-  `KWizard`, `KColony`, `KDragon`, `KMech`, `KColosseum`, `KAbyss`, `KBreakout`, `KAsteroids`, `KSpace` *(Note: Pure vector/wireframe or abstract board targets skip automatically per Mandate 15. Completed: KQuest Phases 1-5, KSpace)*.
+  `KColony`, `KDragon`, `KMech`, `KColosseum`, `KAbyss`, `KBreakout`, `KAsteroids`, `KSpace`, `KFarm` *(Note: Pure vector/wireframe or abstract board targets skip automatically per Mandate 15. Completed: KQuest Phases 1-5, KSpace)*.
 
 ### 3. App Tester Queue (`kilo-tester`)
 - **Current Target**: `KTimer`
@@ -129,9 +129,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KHangman`, `KSimon`, `KAsteroids`, `KFreecell`, `KMatch3`, `KWords`, `KGo`, `KDarts`, `KTowers`, `KReversi`, `KAlchemy`, `KColony`, `KStarForge`, `KBreakout`, `KRogue`, `KTetris`, `KPong`, `KPac`, `KChess`, `KColor`, `KConverter`, `KHabit` *(Completed in Pass 5: KBBS, KChrono, KCipher, KClip, KCyber, KDragon, KFortress, KHash, KMaze, KMech, KMystery, KQuest, KSanctuary, KSnake, KSolitaire, KSpace, KStarDredge, KStarship, KStellar, KSubmarine, KSynth, KSys, KTask, KTerm, KTimer, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KRSS, K2048, KChart, KGraph, KContacts, KScript, KRead, KColosseum, KAbyss, KMedia, KAudio, KRadio, KPad, KPaint, KCalc, KMine, KCosmic, KBase, KBudget, KCalendar, KFarm, KFlash, KFont, KImage, KJournal, KMail, KMandel, KNet, KNote, KPass, KDB, KHex, KBookmark, KPing, KChat, KClock, KPomodoro, KBreakout, KRogue, KTetris, KPong, KPac, KChess, KColor, KConverter, KQuarantine, KSettings, KTaskMgr, KHabit, KSudoku)*.
 
 ### 6. Feature Expander Queue (`kilo-expander`)
-- **Current Target**: `KGo`
+- **Current Target**: `KReversi`
 - **Upcoming Queue**:
-  `KReversi`, `KDarts`, `KTowers`, `KSimon`, `KMatch3`, `KPong`, `KSnake`, `KRogue`, `KBreakout`, `KMine`, `KSolitaire`, `KSudoku`, `KConnect4` *(Completed: KHangman, KWords, KSolitaire, KColosseum, KSpace, KReversi, KSimon, KMatch3, KTowers, KSnake, KPong, KGo, KSynth, KNote, KFont, KRSS, KSys, KZip, KVault, KType, KMandel, KGraph, KChart, KPaint, KConnect4, KChess, KTetris, KDB, KTodo, KJournal, KCalendar, KContacts, KMail, KRead, KPass, KImage, KAudio, KMedia, KTask, KNet, KPing, KHash, KPad, K2048, KDarts, KRogue, KBreakout, KCalc, KMine, KSudoku)*.
+  `KDarts`, `KTowers`, `KSimon`, `KMatch3`, `KPong`, `KSnake`, `KRogue`, `KBreakout`, `KMine`, `KSolitaire`, `KSudoku`, `KConnect4`, `KGo` *(Completed: KHangman, KWords, KSolitaire, KColosseum, KSpace, KReversi, KSimon, KMatch3, KTowers, KSnake, KPong, KGo, KSynth, KNote, KFont, KRSS, KSys, KZip, KVault, KType, KMandel, KGraph, KChart, KPaint, KConnect4, KChess, KTetris, KDB, KTodo, KJournal, KCalendar, KContacts, KMail, KRead, KPass, KImage, KAudio, KMedia, KTask, KNet, KPing, KHash, KPad, K2048, KDarts, KRogue, KBreakout, KCalc, KMine, KSudoku)*.
 - **Multiplayer Focus (CRITICAL)**: Concentrate on expanding games (*KChess*, *KConnect4*, *KGo*, *KReversi*, *KDarts*, *KTetris*, *KSnake*, *K2048*, *KMatch3*, *KSimon*) and collaborative apps (*KDraw*, *KPaint*, *KSynth*, *KPad*) with seamless Firebase Realtime Database multiplayer for cross-computer play on `kiloapps.web.app`.
 
 ### 7. Virtual 1999 Web Expansion Queue (Eternal Fleet Track)
@@ -217,6 +217,23 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-07T19:22:00-07:00 — kilo-graphics: KFarm (Skip Turn — Inappropriate Target & Glint/Sheen Ban)**
+  - Status: ⏭️ Skip — Imagen 3 asset replacement not appropriate for KFarm
+  - Rationale: Procedural 8x8 farm sim locked in human review queue with 1:1 Win32 GDI C parity.
+  - Glint & Border Ban: Removed traveling crop specular sheen sweep and pulsating border; enforced static frame (Rule 11).
+  - Verification: `check_icons.py` 100% PASS; `security_lint.py` 100% PASS; MSVC clean; Vite clean (445ms); web 91.6 KB < 999 KB.
+  - Queue: Advanced `kilo_graphics` to `KWizard`; rotation handoff to `kilo-tester`.
+
+- **2026-10-07T17:25:00-07:00 — kilo-expander: KGo (Feature Expansion: Standardized RFMS RetroMultiplayer, Rule 12 Compliance & Goban Keyboard Navigation)**
+  - Status: PASS ✅ (0 regressions, 165.4 KB web < 999 KB ceiling).
+  - RFMS RetroMultiplayer: Integrated standard RetroMultiplayer class; real-time stone, pass, resign, score sync across 9x9/13x13/19x19 Gobans.
+  - Mandate Rule 12: Enforced 25s solo AI fallback, explicit connect gate (no autostart), and dual link sharing (#room=CODE / ?room=CODE).
+  - Goban Keyboard Navigation: Added Arrow key cursor reticle with coordinate badge (E5, K10) and Enter/Space stone placement.
+  - SGF & Kifu Parity: Opponent moves now recorded in live move history for full replay scrub and standard SGF export.
+  - Rematch & Lobby: Implemented mutual rematch negotiation, instant quick match, and live public lobby with presence auto-pruning.
+  - Verification: Security linter 100% PASS; JS syntax clean; Vite build clean (index.html 0.71 kB, 991ms); file size 165.4 KB < 999 KB.
+  - Queue: Advanced `kilo_expander` to `KReversi`; rotation handoff to `kilo-creator`.
+
 - **2026-10-07T16:25:00-07:00 — kilo-qa: KSudoku (Pass 5: Tutorial & State Integrity, Quicksave/Load Parity, Rule 11 Clean Borders)**
   - Status: PASS ✅ (0 regressions, 193.1 KB web / 46.1 KB native < 999 KB ceiling).
   - State Persistence: Implemented F5 quicksave and F9 quickload parity across web and Win32 C with title feedback.
@@ -245,20 +262,6 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Hotkeys & Navigation: Added `E` (eyedropper), `Z`/`U` (revert color); added `Enter` blur on universal hex input; added dialog accessibility.
   - Verification: `test_app_startup.py` PASS (0 JS err, CSS valid); `test_web_apps.js` PASS (61 elements, 0 err); Vite clean (788ms); web 70.7 KB < 999 KB.
   - Queue: Advanced `kilo_tester` to `KTimer`; rotation handoff to `kilo-usability`.
-
-- **2026-10-07T13:35:00-07:00 — kilo-graphics: KSpace (Skip Turn — Mature Imagen 3 Art & Glint/Dot Audit)**
-  - Status: ⏭️ Skip — Imagen 3 asset replacement not appropriate for KSpace
-  - Rationale: Mature custom art; all 13 entity sprites and celestial backgrounds already Imagen 3 generated.
-  - Glint & Dot Audit: Verified static HUD frame; zero rotating specular glints or traveling border dots in web or Win32 C (Rule 11 compliant).
-  - Verification: `check_icons.py` 100% PASS; `security_lint.py` 100% PASS; Vite build clean (558ms); web (179.4 KB) < 999 KB ceiling.
-  - Queue: Advanced `kilo_graphics` to `KFarm`; rotation handoff to `kilo-tester`.
-
-- **2026-10-07T13:25:00-07:00 — kilo-adhoc: KStarDredge (Ad-Hoc Fix: Spaceport [O] Modal Instant-Close Bug, Retrofit Hotkeys & Parity)**
-  - Status: PASS ✅ (0 regressions, 520.4 KB web / 286.0 KB native < 999 KB ceiling).
-  - Modal Keydown Fix: Eliminated event tick fallthrough in kstardredge.html preventing [O] instant modal closure; added early returns.
-  - Docking Parity & Hotkeys: Unified docking range check to <=300m in both web and native C; added [8] and [9] combat retrofit/ammo hotkeys.
-  - Verification: Security linter 100% PASS; MSVC native build clean (KStarDredge.exe 286 KB); Vite clean (index.html 0.71 kB, built in 1.01s).
-  - Rotation: Ad-hoc maintenance pass; fleet queues and rotation state preserved without disruption.
 
 
 

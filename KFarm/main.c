@@ -1218,12 +1218,6 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                                 DeleteObject(hOrange);
                                 DeleteObject(hDarkOrange);
                             }
-
-                            // Specular sheen sweep on crops
-                            HPEN hSheenPen = CreatePen(PS_SOLID, 2, RGB(255, 255, 255));
-                            SelectObject(hdc, hSheenPen);
-                            MoveToEx(hdc, cx - 6, cy - 4, NULL); LineTo(hdc, cx - 2, cy - 8);
-                            DeleteObject(hSheenPen);
                         }
                         ModifyWorldTransform(hdc, NULL, MWT_IDENTITY);
                         SetGraphicsMode(hdc, GM_COMPATIBLE);
@@ -1513,7 +1507,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 }
             }
 
-            // Ornate Rustic Corner Filigree L-Brackets and Pulsating Perimeter Inlay Border
+            // Ornate Rustic Corner Filigree L-Brackets and Static Perimeter Inlay Border (Rule 11 Compliant)
             int gridW = GRID_COLS * CELL_SIZE;
             int gridH = GRID_ROWS * CELL_SIZE;
             int left = OFFSET_X;
@@ -1521,10 +1515,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             int right = OFFSET_X + gridW;
             int bottom = OFFSET_Y + gridH;
 
-            // Pulsating golden border
-            DWORD bTick = GetTickCount();
-            int bPulse = (int)(sin(bTick * 0.004f) * 40.0f + 200.0f);
-            HPEN hBorderPen = CreatePen(PS_SOLID, 2, RGB(255, bPulse, 0));
+            // Static clean golden border
+            HPEN hBorderPen = CreatePen(PS_SOLID, 2, RGB(212, 175, 55));
             HPEN hOldBPen = (HPEN)SelectObject(hdc, hBorderPen);
             SelectObject(hdc, GetStockObject(NULL_BRUSH));
             Rectangle(hdc, left - 2, top - 2, right + 2, bottom + 2);

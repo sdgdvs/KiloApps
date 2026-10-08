@@ -1197,8 +1197,8 @@
               <button class="btn-retro" style="font-size:11px; padding:3px 8px;" id="btnLoadSampleReturn42">1. Console Return 42 (1.5 KB)</button>
               <button class="btn-retro" style="font-size:11px; padding:3px 8px;" id="btnLoadSampleMsgbox">2. GUI MessageBoxA (2.0 KB)</button>
               <button class="btn-retro" style="font-size:11px; padding:3px 8px;" id="btnLoadSampleDemo">3. Demoscene Flame Stub (1.5 KB)</button>
-              <button class="btn-retro btn-emerald" style="font-size:11px; padding:3px 8px;" id="btnLoadSampleAnom">4. Subnet 10.19.99.4 Telemetry (Tier 3 Strings)</button>
-              <button class="btn-retro btn-cyan" style="font-size:11px; padding:3px 8px;" id="btnLoadSampleDriver">5. Kernel SysRelay 0x7F (Subcarrier Driver)</button>
+              <button class="btn-retro btn-emerald" style="font-size:11px; padding:3px 8px;" id="btnLoadSampleAnom">4. Subnet 10.19.99.4 Daemon Diagnostic (1.5 KB)</button>
+              <button class="btn-retro btn-cyan" style="font-size:11px; padding:3px 8px;" id="btnLoadSampleDriver">5. Kernel SysRelay 0x7F Subcarrier Driver (1.5 KB)</button>
             </div>
             <button class="btn-retro" id="btnDownloadLoadedPE" style="font-size:11px; padding:3px 8px;">💾 Export Loaded .EXE</button>
           </div>
@@ -1308,6 +1308,7 @@
             </div>
             <div style="display:flex; gap:6px;">
               <input type="text" id="strSearchInput" placeholder="Filter strings (e.g. kweb, 10.19, http)..." style="font-size:11px; padding:2px 6px; width:220px;" />
+              <button class="btn-retro btn-emerald" id="btnFilterNetRoutes" style="font-size:10px; padding:2px 8px;">📡 Telemetry Filter</button>
               <button class="btn-retro btn-cyan" id="btnCopyStrings" style="font-size:10px; padding:2px 8px;">Copy Strings</button>
             </div>
           </div>
@@ -1713,7 +1714,6 @@
           <a href="/web/cybercafe.html">☕ [Next] CyberCafe '99 BBS »</a>
           <a href="/web/geocities.html">🌆 CyberSpire Retro Shrine</a>
           <a href="/web/warez.html">💾 0xRELEASE Scene Vault</a>
-          <a href="/web/darknet.html">🕵️ [Tier 3] Darknet Portal</a>
         </div>
       </div>
 
@@ -1852,10 +1852,42 @@
     } catch {}
   }
 
+  // Safe Storage Helpers (Rule 2 Quality Standards)
+  function safeGet(key, fallback) {
+    try {
+      const val = localStorage.getItem(key);
+      return val !== null ? JSON.parse(val) : fallback;
+    } catch {
+      return fallback;
+    }
+  }
+  function safeSet(key, value) {
+    try {
+      localStorage.setItem(key, JSON.stringify(value));
+    } catch (e) {
+      console.warn('[KiloWeb] Storage write failed:', e);
+    }
+  }
+  function safeGetInt(key, fallback) {
+    try {
+      const val = localStorage.getItem(key);
+      return val !== null ? parseInt(val, 10) : fallback;
+    } catch {
+      return fallback;
+    }
+  }
+  function safeSetInt(key, val) {
+    try {
+      localStorage.setItem(key, String(val));
+    } catch (e) {
+      console.warn('[KiloWeb] Storage write failed:', e);
+    }
+  }
+
   // Visitor Counter
-  let visits = parseInt(localStorage.getItem('kweb_asm_temple_visits') || '32481', 10);
+  let visits = safeGetInt('kweb_asm_temple_visits', 32481);
   visits++;
-  localStorage.setItem('kweb_asm_temple_visits', visits);
+  safeSetInt('kweb_asm_temple_visits', visits);
   const lblCounter = document.getElementById('lblCounter');
   if (lblCounter) lblCounter.textContent = String(visits).padStart(7, '0');
 
@@ -2452,6 +2484,51 @@
       }
     }
 
+    // System and Special Instructions
+    if (mnem === 'ECHO_PULSE') {
+      if (REG32_MAP[op1] !== undefined && REG32_MAP[op2] !== undefined) {
+        const modrm = 0xC0 | (REG32_MAP[op2] << 3) | REG32_MAP[op1];
+        return [0x0F, 0x3F, modrm];
+      }
+      return [0x0F, 0x3F, 0xC0]; // default ECHO_PULSE EAX, EAX
+    }
+    if (mnem === 'UD2') return [0x0F, 0x0B];
+    if (mnem === 'LOADALL') return [0x0F, 0x07];
+    if (mnem === 'ICEBP' || mnem === 'INT1') return [0xF1];
+    if (mnem === 'RDMSR') return [0x0F, 0x32];
+    if (mnem === 'WRMSR') return [0x0F, 0x30];
+    if (mnem === 'RDPMC') return [0x0F, 0x33];
+    if (mnem === 'SYSENTER') return [0x0F, 0x34];
+    if (mnem === 'SYSEXIT') return [0x0F, 0x35];
+    if (mnem === 'RSM') return [0x0F, 0xAA];
+
+    // Shifts and Rotates (SHL, SHR, SAR, ROL, ROR)
+    const shiftCodes = { ROL: 0, ROR: 1, RCL: 2, RCR: 3, SHL: 4, SAL: 4, SHR: 5, SAR: 7 };
+    if (shiftCodes[mnem] !== undefined && REG32_MAP[op1] !== undefined) {
+      const imm = parseHexNum(op2);
+      if (imm === 1 || !op2) {
+        return [0xD1, 0xC0 | (shiftCodes[mnem] << 3) | REG32_MAP[op1]];
+      } else if (!isNaN(imm)) {
+        return [0xC1, 0xC0 | (shiftCodes[mnem] << 3) | REG32_MAP[op1], imm & 0xFF];
+      }
+    }
+
+    // CMPXCHG and XADD
+    if (mnem === 'CMPXCHG' && REG32_MAP[op1] !== undefined && REG32_MAP[op2] !== undefined) {
+      return [0x0F, 0xB1, 0xC0 | (REG32_MAP[op2] << 3) | REG32_MAP[op1]];
+    }
+    if (mnem === 'XADD' && REG32_MAP[op1] !== undefined && REG32_MAP[op2] !== undefined) {
+      return [0x0F, 0xC1, 0xC0 | (REG32_MAP[op2] << 3) | REG32_MAP[op1]];
+    }
+
+    // LEA reg, [reg] or [disp]
+    if (mnem === 'LEA' && REG32_MAP[op1] !== undefined) {
+      const cleanOp2 = op2.replace(/[\[\]]/g, '');
+      if (REG32_MAP[cleanOp2] !== undefined) {
+        return [0x8D, 0x00 | (REG32_MAP[op1] << 3) | REG32_MAP[cleanOp2]];
+      }
+    }
+
     // Control flow branches
     const branches = {
       JMP: 0xEB,
@@ -2542,11 +2619,94 @@
         continue;
       }
 
-      // Two-byte CPUID / RDTSC
+      // Two-byte 0x0F Opcode Prefix
       if (b0 === 0x0F && i + 1 < byteArray.length) {
         const b1 = byteArray[i + 1];
         if (b1 === 0xA2) { lines.push({ off: offset, hex: '0F A2', asm: 'CPUID' }); i += 2; continue; }
         if (b1 === 0x31) { lines.push({ off: offset, hex: '0F 31', asm: 'RDTSC' }); i += 2; continue; }
+        if (b1 === 0x0B) { lines.push({ off: offset, hex: '0F 0B', asm: 'UD2' }); i += 2; continue; }
+        if (b1 === 0x07) { lines.push({ off: offset, hex: '0F 07', asm: 'LOADALL' }); i += 2; continue; }
+        if (b1 === 0x32) { lines.push({ off: offset, hex: '0F 32', asm: 'RDMSR' }); i += 2; continue; }
+        if (b1 === 0x30) { lines.push({ off: offset, hex: '0F 30', asm: 'WRMSR' }); i += 2; continue; }
+        if (b1 === 0x33) { lines.push({ off: offset, hex: '0F 33', asm: 'RDPMC' }); i += 2; continue; }
+        if (b1 === 0x34) { lines.push({ off: offset, hex: '0F 34', asm: 'SYSENTER' }); i += 2; continue; }
+        if (b1 === 0x35) { lines.push({ off: offset, hex: '0F 35', asm: 'SYSEXIT' }); i += 2; continue; }
+        if (b1 === 0xAA) { lines.push({ off: offset, hex: '0F AA', asm: 'RSM' }); i += 2; continue; }
+
+        // ECHO_PULSE (0F 3F /r)
+        if (b1 === 0x3F && i + 2 < byteArray.length) {
+          const modrm = byteArray[i + 2];
+          const dstReg = Object.keys(REG32_MAP).find(k => REG32_MAP[k] === (modrm & 7)) || 'EAX';
+          const srcReg = Object.keys(REG32_MAP).find(k => REG32_MAP[k] === ((modrm >> 3) & 7)) || 'EAX';
+          lines.push({ off: offset, hex: `0F 3F ${modrm.toString(16).padStart(2,'0').toUpperCase()}`, asm: `ECHO_PULSE ${dstReg}, ${srcReg}` });
+          i += 3;
+          continue;
+        }
+
+        // CMPXCHG (0F B1 /r) and XADD (0F C1 /r)
+        if ((b1 === 0xB1 || b1 === 0xC1) && i + 2 < byteArray.length) {
+          const modrm = byteArray[i + 2];
+          const dstReg = Object.keys(REG32_MAP).find(k => REG32_MAP[k] === (modrm & 7)) || 'EAX';
+          const srcReg = Object.keys(REG32_MAP).find(k => REG32_MAP[k] === ((modrm >> 3) & 7)) || 'EAX';
+          const mnem = (b1 === 0xB1) ? 'CMPXCHG' : 'XADD';
+          lines.push({ off: offset, hex: `0F ${b1.toString(16).padStart(2,'0').toUpperCase()} ${modrm.toString(16).padStart(2,'0').toUpperCase()}`, asm: `${mnem} ${dstReg}, ${srcReg}` });
+          i += 3;
+          continue;
+        }
+
+        // Near branches (0F 80..8F rel32)
+        const nearBranches = { 0x84: 'JZ', 0x85: 'JNZ', 0x82: 'JC', 0x83: 'JNC', 0x88: 'JS', 0x89: 'JNS' };
+        if (nearBranches[b1] && i + 5 < byteArray.length) {
+          const rel = byteArray[i+2] | (byteArray[i+3] << 8) | (byteArray[i+4] << 16) | (byteArray[i+5] << 24);
+          const targetOff = '0x' + ((i + 6 + rel) >>> 0).toString(16).padStart(4, '0').toUpperCase();
+          lines.push({ off: offset, hex: `0F ${b1.toString(16).padStart(2,'0').toUpperCase()} ...`, asm: `${nearBranches[b1]} ${targetOff}` });
+          i += 6;
+          continue;
+        }
+      }
+
+      // INT imm8 (CD imm8)
+      if (b0 === 0xCD && i + 1 < byteArray.length) {
+        const intNum = byteArray[i + 1];
+        lines.push({ off: offset, hex: `CD ${intNum.toString(16).padStart(2, '0').toUpperCase()}`, asm: `INT 0x${intNum.toString(16).toUpperCase()}` });
+        i += 2;
+        continue;
+      }
+
+      // CALL rel32 (E8 rel32)
+      if (b0 === 0xE8 && i + 4 < byteArray.length) {
+        const rel = (byteArray[i+1] | (byteArray[i+2] << 8) | (byteArray[i+3] << 16) | (byteArray[i+4] << 24));
+        const targetOff = '0x' + ((i + 5 + rel) >>> 0).toString(16).padStart(4, '0').toUpperCase();
+        const hexStr = [b0, byteArray[i+1], byteArray[i+2], byteArray[i+3], byteArray[i+4]].map(b => b.toString(16).padStart(2, '0').toUpperCase()).join(' ');
+        lines.push({ off: offset, hex: hexStr, asm: `CALL ${targetOff}` });
+        i += 5;
+        continue;
+      }
+
+      // PUSH imm32 (68 imm32)
+      if (b0 === 0x68 && i + 4 < byteArray.length) {
+        const imm = byteArray[i+1] | (byteArray[i+2] << 8) | (byteArray[i+3] << 16) | (byteArray[i+4] << 24);
+        const immHex = '0x' + (imm >>> 0).toString(16).toUpperCase().padStart(8, '0');
+        const hexStr = [b0, byteArray[i+1], byteArray[i+2], byteArray[i+3], byteArray[i+4]].map(b => b.toString(16).padStart(2, '0').toUpperCase()).join(' ');
+        lines.push({ off: offset, hex: hexStr, asm: `PUSH ${immHex}` });
+        i += 5;
+        continue;
+      }
+
+      // PUSH imm8 (6A imm8)
+      if (b0 === 0x6A && i + 1 < byteArray.length) {
+        const imm = byteArray[i + 1];
+        lines.push({ off: offset, hex: `6A ${imm.toString(16).padStart(2, '0').toUpperCase()}`, asm: `PUSH 0x${imm.toString(16).toUpperCase()}` });
+        i += 2;
+        continue;
+      }
+
+      // RET imm16 (C2 imm16)
+      if (b0 === 0xC2 && i + 2 < byteArray.length) {
+        const imm = byteArray[i+1] | (byteArray[i+2] << 8);
+        lines.push({ off: offset, hex: `C2 ${byteArray[i+1].toString(16).padStart(2,'0').toUpperCase()} ${byteArray[i+2].toString(16).padStart(2,'0').toUpperCase()}`, asm: `RET 0x${imm.toString(16).toUpperCase()}` });
+        i += 3;
+        continue;
       }
 
       // MOV reg32, imm32 (B8..BF)
@@ -2557,6 +2717,43 @@
         const hexStr = [b0, byteArray[i+1], byteArray[i+2], byteArray[i+3], byteArray[i+4]].map(b => b.toString(16).padStart(2, '0').toUpperCase()).join(' ');
         lines.push({ off: offset, hex: hexStr, asm: `MOV ${reg}, ${immHex}` });
         i += 5;
+        continue;
+      }
+
+      // Shift/Rotate reg, 1 (D1 /r)
+      if (b0 === 0xD1 && i + 1 < byteArray.length) {
+        const modrm = byteArray[i + 1];
+        if ((modrm & 0xC0) === 0xC0) {
+          const shiftNames = ['ROL', 'ROR', 'RCL', 'RCR', 'SHL', 'SHR', 'SAL', 'SAR'];
+          const shName = shiftNames[(modrm >> 3) & 7];
+          const reg = Object.keys(REG32_MAP).find(k => REG32_MAP[k] === (modrm & 7));
+          lines.push({ off: offset, hex: `D1 ${modrm.toString(16).padStart(2,'0').toUpperCase()}`, asm: `${shName} ${reg}, 1` });
+          i += 2;
+          continue;
+        }
+      }
+
+      // Shift/Rotate reg, imm8 (C1 /r imm8)
+      if (b0 === 0xC1 && i + 2 < byteArray.length) {
+        const modrm = byteArray[i + 1];
+        const imm = byteArray[i + 2];
+        if ((modrm & 0xC0) === 0xC0) {
+          const shiftNames = ['ROL', 'ROR', 'RCL', 'RCR', 'SHL', 'SHR', 'SAL', 'SAR'];
+          const shName = shiftNames[(modrm >> 3) & 7];
+          const reg = Object.keys(REG32_MAP).find(k => REG32_MAP[k] === (modrm & 7));
+          lines.push({ off: offset, hex: `C1 ${modrm.toString(16).padStart(2,'0').toUpperCase()} ${imm.toString(16).padStart(2,'0').toUpperCase()}`, asm: `${shName} ${reg}, 0x${imm.toString(16).toUpperCase()}` });
+          i += 3;
+          continue;
+        }
+      }
+
+      // LEA reg, [reg] (8D /r)
+      if (b0 === 0x8D && i + 1 < byteArray.length) {
+        const modrm = byteArray[i + 1];
+        const dstReg = Object.keys(REG32_MAP).find(k => REG32_MAP[k] === ((modrm >> 3) & 7));
+        const srcReg = Object.keys(REG32_MAP).find(k => REG32_MAP[k] === (modrm & 7));
+        lines.push({ off: offset, hex: `8D ${modrm.toString(16).padStart(2,'0').toUpperCase()}`, asm: `LEA ${dstReg}, [${srcReg}]` });
+        i += 2;
         continue;
       }
 
@@ -2735,7 +2932,7 @@
     vga: `; VGA Mode 13h (320x200x256) DOS Intro Setup\nMOV EAX, 0x0013\nINT 0x10\nPUSH 0xA000\nPOP EDX\nRET`,
     rdtsc: `; High-resolution Pentium CPU cycle benchmark\nCPUID\nRDTSC\nPUSH EDX\nPUSH EAX\nNOP\nRDTSC\nPOP EBX\nPOP ECX\nRET`,
     loopfib: `; Fibonacci Sequence Generator Loop in ECX\nXOR EAX, EAX\nMOV EBX, 0x00000001\nMOV ECX, 0x0000000A\nADD EAX, EBX\nXCHG EAX, EBX\nLOOP 0xFB\nRET`,
-    anomaly: `; [TELEMETRY CAPTURE OFFSET 0x1999FE]\nXOR EAX, EAX\nMOV EDX, 0x10199904\nMOV ECX, 0x0000007F\nTEST EDX, EDX\nJNZ 0x02\nINT 3\nRET`,
+    anomaly: `; [TELEMETRY CAPTURE OFFSET 0x1999FE]\nMOV EAX, 0x00001999\nECHO_PULSE EAX, EAX\nMOV EDX, 0x10199904\nMOV ECX, 0x0000007F\nTEST EDX, EDX\nJNZ 0x02\nINT 3\nRET`,
     plasma: `; Demoscene Plasma Palette Trigonometry Math\nXOR EAX, EAX\nMOV EBX, 0x00000040\nMOV ECX, 0x00000020\nADD EAX, EBX\nSHR EAX, 1\nSUB EBX, ECX\nRET`,
     decrypt: `; Cryptographic Byte XOR Decryption Stub\nMOV ESI, 0x00402000\nMOV ECX, 0x00000010\nMOV AL, 0x7F\nINC ESI\nDEC ECX\nJNZ 0xFB\nRET`
   };
@@ -3206,6 +3403,83 @@
       cpu.eax = (Date.now() & 0xFFFFFFFF) >>> 0;
       cpu.edx = 0x00000001;
       cpu.cycles += 9;
+    } else if (mnem === 'ECHO_PULSE') {
+      cpu.cycles += 1;
+      if (cpu.eax === 0x1999) {
+        cpu.zf = 1; cpu.pf = 1;
+        playUiClick('echo');
+        executedLog += ` <strong style="color:var(--gold-bright);">⚡ [1999Hz Subcarrier Resonance: Node 10.19.99.4/classified acknowledged]</strong>`;
+      } else {
+        cpu.zf = 0;
+        executedLog += ` <span style="color:var(--text-muted);">[ECHO_PULSE: No subcarrier lock. Set EAX=0x1999 to resonate]</span>`;
+      }
+    } else if (['SHL','SAL','SHR','SAR','ROL','ROR'].includes(mnem)) {
+      if (isReg(op1)) {
+        const count = op2 ? (parseHexNum(op2) || 1) : 1;
+        let val = getRegVal(op1);
+        if (mnem === 'SHL' || mnem === 'SAL') {
+          cpu.cf = (val >> (32 - count)) & 1;
+          val = (val << count) >>> 0;
+        } else if (mnem === 'SHR') {
+          cpu.cf = (val >> (count - 1)) & 1;
+          val = (val >>> count);
+        } else if (mnem === 'SAR') {
+          cpu.cf = (val >> (count - 1)) & 1;
+          val = (val >> count) >>> 0;
+        } else if (mnem === 'ROL') {
+          val = ((val << count) | (val >>> (32 - count))) >>> 0;
+          cpu.cf = val & 1;
+        } else if (mnem === 'ROR') {
+          val = ((val >>> count) | (val << (32 - count))) >>> 0;
+          cpu.cf = (val >> 31) & 1;
+        }
+        setRegVal(op1, val);
+        cpu.zf = (val === 0) ? 1 : 0;
+        cpu.sf = ((val >> 31) & 1);
+      }
+      cpu.cycles += 1;
+    } else if (mnem === 'CMPXCHG') {
+      if (isReg(op1) && isReg(op2)) {
+        const d = getRegVal(op1);
+        const s = getRegVal(op2);
+        if (cpu.eax === d) {
+          cpu.zf = 1;
+          setRegVal(op1, s);
+        } else {
+          cpu.zf = 0;
+          cpu.eax = d;
+        }
+      }
+      cpu.cycles += 6;
+    } else if (mnem === 'XADD') {
+      if (isReg(op1) && isReg(op2)) {
+        const d = getRegVal(op1);
+        const s = getRegVal(op2);
+        setRegVal(op1, (d + s) >>> 0);
+        setRegVal(op2, d);
+      }
+      cpu.cycles += 4;
+    } else if (mnem === 'INT') {
+      const intNum = parseHexNum(op1);
+      cpu.cycles += 16;
+      if (intNum === 0x10 || op1 === '10H' || op1 === '0X10') {
+        if ((cpu.eax & 0xFFFF) === 0x0013) {
+          executedLog += ` <span style="color:var(--emerald);">[BIOS INT 10h] VGA Controller: Mode 13h initialized (320x200x256 @ segment 0xA000)</span>`;
+        } else {
+          executedLog += ` <span style="color:var(--text-muted);">[BIOS INT 10h] Video Service Function AH=0x${((cpu.eax >> 8) & 0xFF).toString(16).toUpperCase()}</span>`;
+        }
+      } else if (intNum === 0x21 || op1 === '21H' || op1 === '0X21') {
+        const ah = (cpu.eax >> 8) & 0xFF;
+        if (ah === 0x09) {
+          executedLog += ` <span style="color:var(--cyan);">[DOS INT 21h, AH=09h] Output string from DS:DX</span>`;
+        } else if (ah === 0x4C) {
+          executedLog += ` <span style="color:var(--gold-bright);">[DOS INT 21h, AH=4Ch] Terminate process with return code ${cpu.eax & 0xFF}</span>`;
+        } else {
+          executedLog += ` <span style="color:var(--cyan);">[DOS INT 21h] Dispatch AH=0x${ah.toString(16).toUpperCase()}</span>`;
+        }
+      } else if (intNum === 3 || op1 === '3') {
+        executedLog += ` <span style="color:var(--crimson);">[TRAP INT 3] In-Circuit Breakpoint Trap #BP Triggered</span>`;
+      }
     } else {
       cpu.cycles += 1;
     }
@@ -3215,7 +3489,9 @@
     cpu.eip += 2;
 
     if (cpu.eax === 0x1999 || cpu.edx === 0x10199904 || mnem === 'ECHO_PULSE') {
-      executedLog += ` <strong style="color:var(--gold-bright);">⚡ [1999Hz Subcarrier Lock: Telemetry at 10.19.99.4/classified]</strong>`;
+      if (!executedLog.includes('1999Hz Subcarrier Resonance')) {
+        executedLog += ` <strong style="color:var(--gold-bright);">⚡ [1999Hz Subcarrier Lock: Telemetry at 10.19.99.4/classified]</strong>`;
+      }
     }
 
     const logBox = document.getElementById('cpuLogBox');
@@ -3608,8 +3884,39 @@
       for (let i = 0; i < ep.length; i++) pe[rd + 0x102 + i] = ep.charCodeAt(i);
       for (let i = 0; i < mb.length; i++) pe[rd + 0x112 + i] = mb.charCodeAt(i);
 
+    } else if (type === 'custom' && lastGeneratedBytes && lastGeneratedBytes.length > 0) {
+      // 7. Custom Machine Code Payload from Live Assembler Tab
+      const userBytes = lastGeneratedBytes.slice(0, 480);
+      for (let i = 0; i < userBytes.length; i++) pe[0x200 + i] = userBytes[i];
+
+      // If user hasn't terminated with RET (0xC3 / 0xC2) or ExitProcess, append exit epilogue
+      const lastByte = userBytes[userBytes.length - 1];
+      if (lastByte !== 0xC3 && lastByte !== 0xC2) {
+        const exitEpilogue = [
+          0x6A, exitCode & 0xFF,              // PUSH ExitCode
+          0xFF, 0x15, 0x60, 0x20, 0x40, 0x00, // CALL [0x00402060] (ExitProcess)
+          0xC3                                // RET
+        ];
+        for (let i = 0; i < exitEpilogue.length; i++) pe[0x200 + userBytes.length + i] = exitEpilogue[i];
+      }
+
+      const rd = 0x400;
+      view.setUint32(rd, 0x2030, true);      // ILT
+      view.setUint32(rd + 12, 0x2040, true); // Name
+      view.setUint32(rd + 16, 0x2060, true); // IAT
+
+      view.setUint32(rd + 0x30, 0x2050, true);
+      const k32 = "KERNEL32.dll\0";
+      for (let i = 0; i < k32.length; i++) pe[rd + 0x40 + i] = k32.charCodeAt(i);
+      const ep = "ExitProcess\0";
+      for (let i = 0; i < ep.length; i++) pe[rd + 0x52 + i] = ep.charCodeAt(i);
+      view.setUint32(rd + 0x60, 0x2050, true);
+
+      const banner = "Synthesized by Temple of the x86 Opcodes // Live Custom Assembly PE32 Image\0";
+      for (let i = 0; i < banner.length; i++) pe[rd + 0x70 + i] = banner.charCodeAt(i);
+
     } else {
-      // Console Return 42 Payload:
+      // Console Return ExitCode Payload:
       const code = [
         0x6A, exitCode & 0xFF,              // PUSH ExitCode
         0xFF, 0x15, 0x60, 0x20, 0x40, 0x00, // CALL [0x00402060] (ExitProcess)
@@ -3630,15 +3937,17 @@
       view.setUint32(rd + 0x60, 0x2050, true);
 
       if (type === 'anomaly') {
-        const anonTelemetry = "SYS_RELAY: Packet from kweb://10.19.99.4/classified routing through gateway kweb://echo-subsystem.net to core kweb://deep-core [STATUS: ACTIVE_LOOP]\0";
-        for (let i = 0; i < anonTelemetry.length; i++) pe[rd + 0x80 + i] = anonTelemetry.charCodeAt(i);
-        const subcarrierStr = "SUBCARRIER_MONITOR: 1999Hz tone detected on echo-subsystem.net. Node 0x7F telemetry acknowledged.\0";
-        for (let i = 0; i < subcarrierStr.length; i++) pe[rd + 0x80 + anonTelemetry.length + i] = subcarrierStr.charCodeAt(i);
+        const anonTelemetry = "[NET_RELAY_DAEMON]: Host 10.19.99.4/classified routing via gateway kweb://echo-subsystem.net -> core kweb://deep-core (Node 10.19.99.127). Loopback status: SYNCHRONIZED.\0";
+        for (let i = 0; i < anonTelemetry.length; i++) pe[rd + 0x70 + i] = anonTelemetry.charCodeAt(i);
+        const subcarrierStr = "[SUBCARRIER_MONITOR]: Acoustic carrier locked at 1999Hz. Hex offset 0x001999FE verified. Node 0x7F telemetry handoff accepted.\0";
+        for (let i = 0; i < subcarrierStr.length; i++) pe[rd + 0x70 + anonTelemetry.length + i] = subcarrierStr.charCodeAt(i);
+        const packetTrace = "[PACKET_TRACE]: IP=10.19.99.4 PORT=1999 SEQ=0x7F199942 STATUS=ACTIVE_PRECURSOR\0";
+        for (let i = 0; i < packetTrace.length; i++) pe[rd + 0x70 + anonTelemetry.length + subcarrierStr.length + i] = packetTrace.charCodeAt(i);
       } else if (type === 'driver') {
-        const driverTelemetry = "SYS_RELAY: Driver initialized on node 10.19.99.4. Relay chain: kweb://echo-subsystem.net -> kweb://10.19.99.4/classified -> kweb://darknet (Node 0x7F) -> kweb://deep-core (10.19.99.127)\0";
-        for (let i = 0; i < driverTelemetry.length; i++) pe[rd + 0x80 + i] = driverTelemetry.charCodeAt(i);
-        const subStr = "SUBCARRIER_MONITOR: 1999Hz carrier resonance locked. Machine telemetry active. ECHO_PULSE 0F3F acknowledged.\0";
-        for (let i = 0; i < subStr.length; i++) pe[rd + 0x80 + driverTelemetry.length + i] = subStr.charCodeAt(i);
+        const driverTelemetry = "[RING0_SYSRELAY]: Driver initialized on node 10.19.99.4. Active transit: kweb://echo-subsystem.net -> kweb://10.19.99.4/classified -> kweb://darknet (Node 0x7F) -> kweb://deep-core (10.19.99.127)\0";
+        for (let i = 0; i < driverTelemetry.length; i++) pe[rd + 0x70 + i] = driverTelemetry.charCodeAt(i);
+        const subStr = "[SUBCARRIER_DSP]: 1999Hz carrier resonance locked. Machine telemetry active. ECHO_PULSE 0F3F microcode acknowledged.\0";
+        for (let i = 0; i < subStr.length; i++) pe[rd + 0x70 + driverTelemetry.length + i] = subStr.charCodeAt(i);
       }
     }
 
@@ -4035,6 +4344,17 @@
   const strSearchInput = document.getElementById('strSearchInput');
   if (strSearchInput) {
     strSearchInput.oninput = renderExtractedStrings;
+  }
+
+  const btnFilterNetRoutes = document.getElementById('btnFilterNetRoutes');
+  if (btnFilterNetRoutes) {
+    btnFilterNetRoutes.onclick = () => {
+      if (strSearchInput) {
+        strSearchInput.value = (strSearchInput.value === '10.19') ? '' : '10.19';
+        renderExtractedStrings();
+        playUiClick('click');
+      }
+    };
   }
 
   const btnCopyStrings = document.getElementById('btnCopyStrings');
@@ -4562,16 +4882,12 @@
   ];
 
   function getGuestbook() {
-    const raw = localStorage.getItem('kweb_asm_temple_guestbook');
-    if (!raw) {
-      localStorage.setItem('kweb_asm_temple_guestbook', JSON.stringify(INITIAL_GUESTBOOK));
+    const list = safeGet('kweb_asm_temple_guestbook', null);
+    if (!list) {
+      safeSet('kweb_asm_temple_guestbook', INITIAL_GUESTBOOK);
       return INITIAL_GUESTBOOK;
     }
-    try {
-      return JSON.parse(raw);
-    } catch {
-      return INITIAL_GUESTBOOK;
-    }
+    return list;
   }
 
   function renderGuestbook() {
@@ -4634,7 +4950,7 @@
           msg: "⚡ [TRANSMISSION VERIFIED // 1999Hz SUBCARRIER LOCKED]: Subnet parity check PASSED. Sequence trajectory: echo-subsystem.net (acoustic sensor) ➔ 10.19.99.4/classified (telemetry buffer) ➔ darknet (transponder 0x7F) ➔ deep-core (10.19.99.127). The machine preserves what the world forgot.",
           time: "1999-12-31 23:59:58"
         });
-        localStorage.setItem('kweb_asm_temple_guestbook', JSON.stringify(secretList));
+        safeSet('kweb_asm_temple_guestbook', secretList);
         renderGuestbook();
         playUiClick('echo');
       }, 400);
@@ -4643,13 +4959,13 @@
       playUiClick('click');
     }
 
-    localStorage.setItem('kweb_asm_temple_guestbook', JSON.stringify(list));
+    safeSet('kweb_asm_temple_guestbook', list);
     document.getElementById('gbMsg').value = '';
     renderGuestbook();
   };
 
   document.getElementById('btnResetGuestbook').onclick = () => {
-    localStorage.setItem('kweb_asm_temple_guestbook', JSON.stringify(INITIAL_GUESTBOOK));
+    safeSet('kweb_asm_temple_guestbook', INITIAL_GUESTBOOK);
     renderGuestbook();
     playUiClick('click');
   };

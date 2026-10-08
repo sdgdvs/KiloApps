@@ -4,6 +4,20 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-07T13:35:00-07:00 — kilo-graphics: KSpace (Skip Turn — Mature Imagen 3 Art & Glint/Dot Audit)**
+  - Status: ⏭️ Skip — Imagen 3 asset replacement not appropriate for KSpace
+  - Rationale: Mature custom art; all 13 entity sprites and celestial backgrounds already Imagen 3 generated.
+  - Glint & Dot Audit: Verified static HUD frame; zero rotating specular glints or traveling border dots in web or Win32 C (Rule 11 compliant).
+  - Verification: `check_icons.py` 100% PASS; `security_lint.py` 100% PASS; Vite build clean (558ms); web (179.4 KB) < 999 KB ceiling.
+  - Queue: Advanced `kilo_graphics` to `KFarm`; rotation handoff to `kilo-tester`.
+
+- **2026-10-07T13:25:00-07:00 — kilo-adhoc: KStarDredge (Ad-Hoc Fix: Spaceport [O] Modal Instant-Close Bug, Retrofit Hotkeys & Parity)**
+  - Status: PASS ✅ (0 regressions, 520.4 KB web / 286.0 KB native < 999 KB ceiling).
+  - Modal Keydown Fix: Eliminated event tick fallthrough in kstardredge.html preventing [O] instant modal closure; added early returns.
+  - Docking Parity & Hotkeys: Unified docking range check to <=300m in both web and native C; added [8] and [9] combat retrofit/ammo hotkeys.
+  - Verification: Security linter 100% PASS; MSVC native build clean (KStarDredge.exe 286 KB); Vite clean (index.html 0.71 kB, built in 1.01s).
+  - Rotation: Ad-hoc maintenance pass; fleet queues and rotation state preserved without disruption.
+
 - **2026-10-07T12:25:00-07:00 — kilo-expander: KConnect4 (Feature Expansion: Tactical Radar, Opening Classifier, Genesis 2-Op FM, Ply Scrubbing & MP Polish)**
   - Status: PASS ✅ (0 regressions, 175.0 KB web / 173.0 KB native < 999 KB ceiling).
   - Tactical Radar & Opening Book: Added real-time Column Radar [C] (win/block/blunder indicators) and Connect-4 opening theory classifier.
