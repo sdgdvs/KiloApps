@@ -9,13 +9,13 @@
   "schedule_minutes": [
     30
   ],
-  "session_start": "2026-10-05T04:36:33.8322735Z",
+  "session_start": "2026-10-08T03:57:16.8295358Z",
   "session_end": null,
   "session_limit_enabled": false,
   "timer_enabled": false,
-  "turns_executed": 64,
+  "turns_executed": 80,
   "last_turn_timestamp": "2026-09-28T17:56:12Z",
-  "last_heartbeat": "2026-10-07T13:45:06.887952+00:00",
-  "current_target": "kweb://geocities",
+  "last_heartbeat": "2026-10-08T10:37:33.287863+00:00",
+  "current_target": "KDarts",
   "remote_command": "none"
 }

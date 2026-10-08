@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-graphics
-next_agent: kilo-tester
+current_agent: kilo-tester
+next_agent: kilo-usability
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -13,7 +13,7 @@ timeout_minutes: 15
 status: ready
 current_targets:
   kilo_creator: "kweb://echo-subsystem.net"
-  kilo_graphics: KColony
+  kilo_graphics: KDragon
   kilo_tester: KQuarantine
   kilo_usability: KSudoku
   kilo_qa: KSimon
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-creator
-  app: "kweb://10.19.99.4/classified"
-  timestamp: "2026-10-08T04:25:00-07:00"
+  agent: kilo-graphics
+  app: KColony
+  timestamp: "2026-10-08T04:35:00-07:00"
 last_planner_run: "2026-10-07T14:38:00Z"
 ---
 
@@ -109,9 +109,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
 - **EXCLUSIVE MISSION**: Replace programmer vector art with Imagen 3 generated sprites and backgrounds via the 2-stage asset pipeline. If the target app is not appropriate for raster/sprite replacement (e.g. wireframe classics or abstract board games), skip the turn immediately.
-- **Current Target**: `KColony`
+- **Current Target**: `KDragon`
 - **Upcoming Queue**:
-  `KDragon`, `KMech`, `KColosseum`, `KAbyss`, `KBreakout`, `KAsteroids`, `KSpace`, `KFarm`, `KWizard` *(Note: Pure vector/wireframe or abstract board targets skip automatically per Mandate 15. Completed: KQuest Phases 1-5, KSpace)*.
+  `KMech`, `KColosseum`, `KAbyss`, `KBreakout`, `KAsteroids`, `KSpace`, `KFarm`, `KWizard`, `KColony` *(Note: Pure vector/wireframe or abstract board targets skip automatically per Mandate 15. Completed: KQuest Phases 1-5, KSpace)*.
 
 ### 3. App Tester Queue (`kilo-tester`)
 - **Current Target**: `KQuarantine`
@@ -217,6 +217,13 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-08T04:35:00-07:00 — kilo-graphics: KColony (Skip Turn — Inappropriate Target & Glint/Dot Audit)**
+  - Status: ⏭️ Skip — Imagen 3 asset replacement not appropriate for KColony
+  - Rationale: 20x20 micro-tile planetary grid sim with mature custom vector art and 1:1 Win32 GDI C parity; downscaled raster sprites unsuited.
+  - Glint & Dot Audit: Verified clean static framing border (Rule 11); zero rotating specular glints or traveling border dots in web and native C.
+  - Verification: `check_icons.py` 100% PASS; `security_lint.py` 100% PASS; MSVC clean (`KColony.exe` 174.1 KB); Vite clean (480ms); web (131.8 KB) < 999 KB ceiling.
+  - Queue: Advanced `kilo_graphics` to `KDragon`; rotation handoff to `kilo-tester`.
+
 - **2026-10-08T04:25:00-07:00 — kilo-creator: kweb://10.19.99.4/classified (Deep Expansion: Transponder CAD Schematic & RF Test Bench)**
   - Status: PASS ✅ (0 regressions, 253.6 KB < 999 KB hard ceiling).
   - Anti-Potemkin CAD Bench: Implemented Tab 10 vector CRT CAD schematic with 8 probe points, live phosphor scope, and LC tank calculator.
@@ -249,16 +256,6 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Toolbar Ergonomics: Reorganized 21 toolbar controls into clear visual sections with dividers and focus-visible keyboard navigation outlines.
   - Verification: Security linter 100% PASS; check_icons 100% PASS; test_app_startup PASS (0 JS err); MSVC clean; Vite build clean (630ms).
   - Queue: Advanced kilo_usability to KSudoku; rotation handoff to kilo-qa.
-
-- **2026-10-08T01:45:00-07:00 — kilo-tester: KConverter (Interactive UI Audit: Smart Parser Delimiter Fix, JSON Portability & State Ergonomics)**
-  - Status: PASS ✅ (6 issues identified and fixed; 0 regressions).
-  - Parser Fix: Implemented `splitExpressUnits` resolving collision where unit `in` (inches) broke expression splitting into empty tokens.
-  - Express Ergonomics: Added `12 in ➔ cm` preset; wired `X`/`S` swap shortcut in Express mode; clear button resets empty card state.
-  - Workspace Portability: Added full workspace JSON export and file import with schema validation inside Help modal.
-  - State & Safety: Added dropdown option fallbacks in `populateDropdowns`; fixed `dismissTutorial` respecting checkbox state.
-  - Accessibility & Focus: Added focus trapping and restoration for Help modal with `btnCloseHelp` element ID.
-  - Verification: `test_app_startup.py` PASS; `test_web_apps.js` PASS (75 controls); MSVC clean; Vite build clean (510ms); web 102.2 KB < 999 KB ceiling.
-  - Queue: Advanced `kilo_tester` to `KQuarantine`; rotation handoff to `kilo-usability`.
 
 
 

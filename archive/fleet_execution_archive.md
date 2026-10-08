@@ -4,6 +4,16 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-08T01:45:00-07:00 — kilo-tester: KConverter (Interactive UI Audit: Smart Parser Delimiter Fix, JSON Portability & State Ergonomics)**
+  - Status: PASS ✅ (6 issues identified and fixed; 0 regressions).
+  - Parser Fix: Implemented `splitExpressUnits` resolving collision where unit `in` (inches) broke expression splitting into empty tokens.
+  - Express Ergonomics: Added `12 in ➔ cm` preset; wired `X`/`S` swap shortcut in Express mode; clear button resets empty card state.
+  - Workspace Portability: Added full workspace JSON export and file import with schema validation inside Help modal.
+  - State & Safety: Added dropdown option fallbacks in `populateDropdowns`; fixed `dismissTutorial` respecting checkbox state.
+  - Accessibility & Focus: Added focus trapping and restoration for Help modal with `btnCloseHelp` element ID.
+  - Verification: `test_app_startup.py` PASS; `test_web_apps.js` PASS (75 controls); MSVC clean; Vite build clean (510ms); web 102.2 KB < 999 KB ceiling.
+  - Queue: Advanced `kilo_tester` to `KQuarantine`; rotation handoff to `kilo-usability`.
+
 - **2026-10-07T23:36:00-07:00 — kilo-expander: KReversi (Skip Turn — Mature 5+ Passes & Locked in Human Review Queue)**
   - Status: ⏭️ Skip — app is feature-complete and mature.
   - Review Queue: Verified locked in `docs/human_review_queue.md` (60 FPS, 17ms pacing, 222 KB < 999 KB).
