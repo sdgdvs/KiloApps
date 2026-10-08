@@ -663,7 +663,7 @@ typedef struct {
 void UpdateDiffSelectUI();
 void ResetGame();
 
-void SaveGame() {
+void SaveGame(HWND hwnd) {
     GameState state;
     memcpy(state.board, board, sizeof(board));
     state.rows = g_rows; state.cols = g_cols;
@@ -687,7 +687,10 @@ void SaveGame() {
     if(f) {
         fwrite(&state, sizeof(GameState), 1, f);
         fclose(f);
-        MessageBox(NULL, "Game Saved Successfully!", "KConnect4", MB_OK | MB_ICONINFORMATION);
+        if (hwnd) {
+            SetWindowTextA(hwnd, "KConnect4 - ★ GAME SAVED [F5]");
+            SetTimer(hwnd, 5, 2000, NULL);
+        }
     }
 }
 
@@ -732,11 +735,17 @@ void LoadGame(HWND hwnd) {
             replayIndex = (gameActive) ? -1 : historyCount - 1;
             
             InvalidateRect(hwnd, NULL, TRUE);
-            MessageBox(hwnd, "Game Loaded Successfully!", "KConnect4", MB_OK | MB_ICONINFORMATION);
+            if (hwnd) {
+                SetWindowTextA(hwnd, "KConnect4 - ★ GAME LOADED [F9]");
+                SetTimer(hwnd, 5, 2000, NULL);
+            }
         }
         fclose(f);
     } else {
-        MessageBox(hwnd, "No saved game file found.", "KConnect4", MB_OK | MB_ICONWARNING);
+        if (hwnd) {
+            SetWindowTextA(hwnd, "KConnect4 - ⚠ No saved game found.");
+            SetTimer(hwnd, 5, 2000, NULL);
+        }
     }
 }
 
@@ -1644,6 +1653,16 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             UpdateDiffSelectUI();
             ResetGame();
             SetTimer(hwnd, 4, 30, NULL);
+
+            // First-run tutorial integrity: show on fresh session only
+            FILE *ftut = fopen("kconnect4_tutorialSeen.dat", "rb");
+            if (!ftut) {
+                FILE *fout = fopen("kconnect4_tutorialSeen.dat", "wb");
+                if (fout) { fputc(1, fout); fclose(fout); }
+                ShowHelpDialog(hwnd);
+            } else {
+                fclose(ftut);
+            }
             break;
 
         case WM_KEYDOWN: {
@@ -1821,7 +1840,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 isMuted = !isMuted;
                 SetWindowText(hMuteBtn, isMuted ? "Unmute [P]" : "Mute [P]");
             } else if (LOWORD(wParam) == 6) {
-                SaveGame();
+                SaveGame(hwnd);
             } else if (LOWORD(wParam) == 7) {
                 LoadGame(hwnd);
             } else if (LOWORD(wParam) == 8) {
@@ -1931,6 +1950,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     if (winBeamProgress > 1.0f) winBeamProgress = 1.0f;
                 }
                 InvalidateRect(hwnd, NULL, FALSE);
+            } else if (wParam == 5) {
+                KillTimer(hwnd, 5);
+                SetWindowTextA(hwnd, "KConnect4");
             }
             break;
             
@@ -2090,13 +2112,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             MoveToEx(hdcMem, boardLeft + boardW + 6, boardTop - 6, NULL); LineTo(hdcMem, boardLeft + boardW + 6, boardTop + boardH + 6); LineTo(hdcMem, boardLeft - 6, boardTop + boardH + 6);
             DeleteObject(topLight); DeleteObject(botDark);
 
-            // --- Pulsating Energy Perimeter Inlay Border ---
-            DWORD nowTicks = GetTickCount();
-            int pPulse = (int)(sinf(nowTicks * 0.003f) * 40.0f);
-            COLORREF inlayCol = RGB(50 + pPulse, 160 + pPulse, 230 + pPulse/2);
+            // --- Clean Static Perimeter Inlay Border (Rule 11 compliant: 0 traveling dots/pulses) ---
+            COLORREF inlayCol = RGB(79, 195, 247);
             HPEN inlayPen = CreatePen(PS_SOLID, 1, inlayCol);
             SelectObject(hdcMem, inlayPen);
-            HBRUSH nullB = GetStockObject(NULL_BRUSH);
+            HBRUSH nullB = (HBRUSH)GetStockObject(NULL_BRUSH);
             SelectObject(hdcMem, nullB);
             Rectangle(hdcMem, boardLeft - 4, boardTop - 4, boardLeft + boardW + 4, boardTop + boardH + 4);
             DeleteObject(inlayPen);

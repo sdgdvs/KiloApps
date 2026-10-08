@@ -4,6 +4,26 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-07T16:25:00-07:00 — kilo-qa: KSudoku (Pass 5: Tutorial & State Integrity, Quicksave/Load Parity, Rule 11 Clean Borders)**
+  - Status: PASS ✅ (0 regressions, 193.1 KB web / 46.1 KB native < 999 KB ceiling).
+  - State Persistence: Implemented F5 quicksave and F9 quickload parity across web and Win32 C with title feedback.
+  - Tutorial Integrity: Guarded first-run tutorial to only show on fresh sessions, never interrupting restored saves.
+  - UI & Controls: Added F1 help hotkey, toolbar Help button, and Esc/Enter/Space modal dismiss without background clicks.
+  - Visual Polish: Removed traveling glint animation and sine waves from cell highlighting (Rule 11 compliant).
+  - Storage Safety: Wrapped all web storage access with try/catch helpers; tagged ARG relay with `// ARG: intentional`.
+  - Verification: `security_lint.py` 100% PASS; `test_web_apps.js` PASS (107/107); MSVC native clean; Vite clean (675ms).
+  - Queue: Advanced `kilo_qa` to `KConnect4`; rotation handoff to `kilo-expander`.
+
+- **2026-10-07T15:25:00-07:00 — kilo-usability: KSimon (UI/UX Pass: Window Dimensions, HiDPI Retina Canvas, Modal Dismissal & Toast Safety)**
+  - Status: PASS ✅ (0 regressions, 121.7 KB web / 145.4 KB native < 999 KB ceiling).
+  - Window & Layout: Tuned default dimensions to 600x740 in App.jsx; eliminated vertical clipping and awkward scrollbars.
+  - Canvas HiDPI Crispness: Added devicePixelRatio auto-scaling and resize handler; decoupled logical coords (480x390) for sub-pixel sharpness.
+  - Toast Occlusion & Safety: Implemented auto-fading `showToast()` positioned safely at bottom-viewport; fixed missing function reference.
+  - Keyboard & Accessibility: Added `[F1]` help shortcut, title-screen `[H]` fallback, all-modal `Escape` and backdrop click dismissal.
+  - Touch & Pointer Ergonomics: Added `touch-action: manipulation`, focus-visible outlines, and canvas pointer leave/cancel flash release.
+  - Verification: `test_web_apps.js` PASS (55 elements, 0 err, 60 FPS); `security_lint.py` 100% PASS; MSVC native clean; Vite clean (452ms).
+  - Queue: Advanced `kilo_usability` to `KSnake`; rotation handoff to `kilo-qa`.
+
 - **2026-10-07T13:35:00-07:00 — kilo-graphics: KSpace (Skip Turn — Mature Imagen 3 Art & Glint/Dot Audit)**
   - Status: ⏭️ Skip — Imagen 3 asset replacement not appropriate for KSpace
   - Rationale: Mature custom art; all 13 entity sprites and celestial backgrounds already Imagen 3 generated.

@@ -1128,13 +1128,31 @@
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     let isMuted = false;
 
+    /* Storage Safety Helpers (Quality Standards Rule 2) */
+    function safeGet(key, fallback = null) {
+      try { return JSON.parse(localStorage.getItem(key)) ?? fallback; }
+      catch { return fallback; }
+    }
+    function safeSet(key, value) {
+      try { localStorage.setItem(key, JSON.stringify(value)); }
+      catch (e) { console.warn('[KConnect4] Storage write failed:', e.message); }
+    }
+    function safeGetRaw(key, fallback = null) {
+      try { return localStorage.getItem(key) ?? fallback; }
+      catch { return fallback; }
+    }
+    function safeSetRaw(key, value) {
+      try { localStorage.setItem(key, value); }
+      catch (e) { console.warn('[KConnect4] Storage write failed:', e.message); }
+    }
+
     /* Online Multiplayer State & RFMS Standard Integration */
     let rMultiplayer = null;
     let isOnlineGame = false;
     let currentRoomId = null;
     let currentRoomStatus = 'none'; // 'waiting', 'playing', 'finished'
     let myPlayerNum = 0; // 0=Spectator, 1=Red(P1), 2=Yellow(P2)
-    let myPlayerName = localStorage.getItem('kconnect4_playerName') || ('Player_' + Math.floor(1000 + Math.random() * 9000));
+    let myPlayerName = safeGetRaw('kconnect4_playerName') || ('Player_' + Math.floor(1000 + Math.random() * 9000));
     let opponentName = 'Opponent';
     let isHost = false;
     let activeLobbyRef = null;
@@ -1158,18 +1176,15 @@
     };
 
     function loadOnlineStats() {
-      const s = localStorage.getItem('kconnect4_online_stats');
+      const s = safeGet('kconnect4_online_stats', null);
       if (s) {
-        try {
-          const parsed = JSON.parse(s);
-          onlineStats = { ...onlineStats, ...parsed };
-        } catch(e) {}
+        onlineStats = { ...onlineStats, ...s };
       }
       updateOnlineStatsUI();
     }
 
     function saveOnlineStats() {
-      localStorage.setItem('kconnect4_online_stats', JSON.stringify(onlineStats));
+      safeSet('kconnect4_online_stats', onlineStats);
       updateOnlineStatsUI();
     }
 
@@ -1239,7 +1254,10 @@
       const mp = document.getElementById('multiplayerModal');
       const backdrop = document.getElementById('modalBackdrop');
       const inv = document.getElementById('mpInviteModal');
-      if (help) help.style.display = 'none';
+      if (help && (help.style.display === 'block' || help.style.display === 'flex')) {
+        help.style.display = 'none';
+        safeSetRaw('kconnect4_tutorialSeen', 'true');
+      }
       if (notation) notation.style.display = 'none';
       if (mp) mp.style.display = 'none';
       if (inv) inv.style.display = 'none';
@@ -1274,7 +1292,7 @@
       const name = input.value.trim();
       if (name.length > 0) {
         myPlayerName = name;
-        localStorage.setItem('kconnect4_playerName', name);
+        safeSetRaw('kconnect4_playerName', name);
         if (rMultiplayer) rMultiplayer.playerName = name;
         updateOnlineStatsUI();
         showToast(`Call-sign updated to "${escapeHtml(name)}"`, 'success');
@@ -2012,11 +2030,13 @@
     function toggleHelp() {
       const modal = document.getElementById('helpModal');
       const backdrop = document.getElementById('modalBackdrop');
-      const isOpen = modal && modal.style.display === 'block';
+      const isOpen = modal && (modal.style.display === 'block' || modal.style.display === 'flex');
       closeAllModals();
       if (!isOpen && modal) {
         modal.style.display = 'block';
         if (backdrop) backdrop.style.display = 'block';
+        safeSetRaw('kconnect4_tutorialSeen', 'true');
+        playSound('select');
       }
     }
 
@@ -2230,6 +2250,11 @@
       } else if (type === 'hint') {
         // Soft FM marimba pip
         playFMSound(880, 3.0, 1.8, 0.1, 'sine', 'sine');
+      } else if (type === 'select') {
+        playFMSound(587.33, 2.0, 1.5, 0.1, 'sine', 'sine');
+      } else if (type === 'save') {
+        playFMSound(659.25, 2.0, 1.5, 0.15, 'sine', 'triangle');
+        setTimeout(() => playFMSound(880, 2.0, 2.0, 0.2, 'sine', 'sine'), 80);
       }
     }
 
@@ -2382,15 +2407,15 @@
 
     let stats = { red: 0, yellow: 0, draws: 0, streak: 0, best: 0, lastWinner: 0, maxCampaignStage: 1 };
     function loadStats() {
-      const s = localStorage.getItem('kconnect4_stats');
+      const s = safeGet('kconnect4_stats', null);
       if(s) {
-        stats = JSON.parse(s);
+        stats = { ...stats, ...s };
         if(!stats.maxCampaignStage) stats.maxCampaignStage = 1;
       }
       updateStatsUI();
     }
     function saveStats() {
-      localStorage.setItem('kconnect4_stats', JSON.stringify(stats));
+      safeSet('kconnect4_stats', stats);
       updateStatsUI();
     }
     function updateStatsUI() {
@@ -2888,10 +2913,14 @@
     
     function exportJSON() {
       let data = {
+        app: 'KConnect4',
+        version: 1,
+        exportedAt: new Date().toISOString(),
         stats: stats,
         c4n: getC4NString(),
         fen: getFENString(),
-        history: replayHistory && replayHistory.length > 0 ? replayHistory : moveHistory
+        history: replayHistory && replayHistory.length > 0 ? replayHistory : moveHistory,
+        save: safeGet('kconnect4_save', null)
       };
       let blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
       let a = document.createElement('a');
@@ -2909,7 +2938,8 @@
       reader.onload = function(e) {
         try {
           let data = JSON.parse(e.target.result);
-          if (data.stats) { stats = data.stats; saveStats(); }
+          if (data.stats) { stats = { ...stats, ...data.stats }; saveStats(); }
+          if (data.save) { safeSet('kconnect4_save', data.save); }
           if (data.history && data.history.length > 0) {
               replayHistory = data.history;
               replayIndex = replayHistory.length - 1;
@@ -2933,6 +2963,8 @@
               updateColNumbers();
               updateReplayStatus();
               statusEl.textContent = "Imported Replay Loaded";
+          } else if (data.save) {
+              loadGame();
           }
           showToast('✓ Match data imported successfully [I]!', 'success');
         } catch(err) { showToast('Invalid JSON match file.', 'warning'); }
@@ -3494,9 +3526,13 @@
         currentPlayer, gameActive, winningCells, moveHistory,
         gameMode, aiPersonality, campaignStage,
         p1Bombs, p2Bombs, p1Drills, p2Drills, p1Magnets, p2Magnets, p1Freezes, p2Freezes,
-        frozenCol, frozenTurns, frozenPlayer
+        frozenCol, frozenTurns, frozenPlayer,
+        turnTimeLeftMs,
+        replayHistory: replayHistory && replayHistory.length > 0 ? replayHistory : moveHistory,
+        savedAt: new Date().toISOString()
       };
-      localStorage.setItem('kconnect4_save', JSON.stringify(state));
+      safeSet('kconnect4_save', state);
+      playSound('save');
       showToast('✓ Game state saved to slot [F5]!', 'success');
     }
 
@@ -3505,23 +3541,36 @@
         showToast('Quickload is disabled in Online Multiplayer.', 'warning');
         return;
       }
-      const saved = localStorage.getItem('kconnect4_save');
-      if (saved) {
-        const state = JSON.parse(saved);
+      const state = safeGet('kconnect4_save', null);
+      if (state && state.board) {
         board = state.board;
         ROWS = state.ROWS || 6; COLS = state.COLS || 7;
         currentPlayer = state.currentPlayer;
         gameActive = state.gameActive;
         winningCells = state.winningCells || [];
         moveHistory = state.moveHistory || [];
-        gameMode = state.gameMode;
+        gameMode = state.gameMode !== undefined ? state.gameMode : 1;
         aiPersonality = state.aiPersonality || 0;
         campaignStage = state.campaignStage || 1;
-        p1Bombs = state.p1Bombs; p2Bombs = state.p2Bombs;
-        p1Drills = state.p1Drills || 2; p2Drills = state.p2Drills || 2;
-        p1Magnets = state.p1Magnets || 2; p2Magnets = state.p2Magnets || 2;
-        p1Freezes = state.p1Freezes || 1; p2Freezes = state.p2Freezes || 1;
-        frozenCol = state.frozenCol || -1; frozenTurns = state.frozenTurns || 0; frozenPlayer = state.frozenPlayer || 0;
+        p1Bombs = state.p1Bombs !== undefined ? state.p1Bombs : 2;
+        p2Bombs = state.p2Bombs !== undefined ? state.p2Bombs : 2;
+        p1Drills = state.p1Drills !== undefined ? state.p1Drills : 2;
+        p2Drills = state.p2Drills !== undefined ? state.p2Drills : 2;
+        p1Magnets = state.p1Magnets !== undefined ? state.p1Magnets : 2;
+        p2Magnets = state.p2Magnets !== undefined ? state.p2Magnets : 2;
+        p1Freezes = state.p1Freezes !== undefined ? state.p1Freezes : 1;
+        p2Freezes = state.p2Freezes !== undefined ? state.p2Freezes : 1;
+        frozenCol = state.frozenCol !== undefined ? state.frozenCol : -1;
+        frozenTurns = state.frozenTurns || 0;
+        frozenPlayer = state.frozenPlayer || 0;
+        turnTimeLeftMs = state.turnTimeLeftMs !== undefined ? state.turnTimeLeftMs : 7000;
+        if (state.replayHistory && state.replayHistory.length > 0) {
+          replayHistory = state.replayHistory;
+        } else {
+          replayHistory = [...moveHistory];
+        }
+
+        safeSetRaw('kconnect4_tutorialSeen', 'true');
         
         boardEl.style.setProperty('--cols', COLS);
         boardEl.style.setProperty('--rows', ROWS);
@@ -3546,6 +3595,7 @@
         updateColNumbers();
         updateStatus();
         startSpeedTimer();
+        playSound('select');
         showToast('✓ Saved game state loaded [F9]!', 'success');
       } else {
         showToast('No saved game found.', 'warning');
@@ -4343,8 +4393,29 @@
         }
       }
 
-      requestAnimationFrame(renderFx);
+      fxAnimId = requestAnimationFrame(renderFx);
     }
+
+    let fxAnimId = null;
+    function startFxLoop() {
+      if (!fxAnimId) {
+        fxAnimId = requestAnimationFrame(renderFx);
+      }
+    }
+    function stopFxLoop() {
+      if (fxAnimId) {
+        cancelAnimationFrame(fxAnimId);
+        fxAnimId = null;
+      }
+    }
+
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) {
+        stopFxLoop();
+      } else {
+        startFxLoop();
+      }
+    });
 
     if (window.resizeTo) window.resizeTo(600, 850);
     
@@ -4356,6 +4427,33 @@
           closeAllModals();
         }
         return;
+      }
+
+      const activeModal = [
+        document.getElementById('helpModal'),
+        document.getElementById('notationModal'),
+        document.getElementById('multiplayerModal'),
+        document.getElementById('mpInviteModal')
+      ].find(m => m && (m.style.display === 'block' || m.style.display === 'flex'));
+
+      if (activeModal) {
+        if (e.key === 'Escape') {
+          e.preventDefault();
+          closeAllModals();
+          return;
+        }
+        if (e.key === 'Enter' || e.key === ' ') {
+          if (e.target && e.target.tagName === 'BUTTON') {
+            return; // let button handler run
+          }
+          e.preventDefault();
+          if (activeModal.id === 'mpInviteModal') {
+            acceptInvite();
+          } else {
+            closeAllModals();
+          }
+          return;
+        }
       }
 
       const key = e.key;
@@ -4456,6 +4554,7 @@
           }
         }
       } else if (key === ' ' || key === 'Spacebar') {
+        if (activeModal) return;
         e.preventDefault();
         if (!gameActive) {
           if (isOnlineGame) {
@@ -4494,7 +4593,7 @@
     updateDiffSelect();
     initGame();
     resizeFxCanvas();
-    requestAnimationFrame(renderFx);
+    startFxLoop();
 
     function showInvitePrompt(code) {
       pendingInviteRoom = code;
@@ -4547,6 +4646,20 @@
       loadStats();
       loadOnlineStats();
       initMultiplayerService();
+
+      // First-run tutorial integrity: show on fresh session only
+      const tutorialSeen = safeGetRaw('kconnect4_tutorialSeen');
+      if (!tutorialSeen) {
+        setTimeout(() => {
+          const modal = document.getElementById('helpModal');
+          const backdrop = document.getElementById('modalBackdrop');
+          if (modal) {
+            modal.style.display = 'block';
+            if (backdrop) backdrop.style.display = 'block';
+            safeSetRaw('kconnect4_tutorialSeen', 'true');
+          }
+        }, 350);
+      }
     });
 
     setTimeout(() => {
