@@ -2901,13 +2901,19 @@ KBASE_VALUE dq ${hexShort}
     }
 
     // Auto-restore previous state if available
-    const hasSavedState = !!(localStorage.getItem('kbase_quicksave') || localStorage.getItem('kbase_state'));
+    let hasSavedState = false;
+    try {
+      hasSavedState = !!(localStorage.getItem('kbase_quicksave') || localStorage.getItem('kbase_state'));
+    } catch(e) {}
     if (hasSavedState) {
       loadKBaseState(false);
     }
 
     // First-run tutorial display
-    const tutorialSeen = !!localStorage.getItem('kbase_tutorialSeen');
+    let tutorialSeen = false;
+    try {
+      tutorialSeen = !!localStorage.getItem('kbase_tutorialSeen');
+    } catch(e) {}
     if (!tutorialSeen && !hasSavedState) {
       setTimeout(() => {
         openHelpModal();
@@ -2953,8 +2959,6 @@ KBASE_VALUE dq ${hexShort}
       loadKBaseState(true);
       return;
     }
-
-    const isInput = e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT';
 
     // Enter key handler promised in user guide
     if (e.key === 'Enter') {
