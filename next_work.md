@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-qa
+current_agent: kilo-qa
+next_agent: kilo-expander
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -15,7 +15,7 @@ current_targets:
   kilo_creator: "kweb://webring"
   kilo_graphics: KColosseum
   kilo_tester: KTaskMgr
-  kilo_usability: KChess
+  kilo_usability: KAudio
   kilo_qa: KColor
   kilo_expander: KPong
 virtual_web_target: "kweb://webring"
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-tester
-  app: KPong
-  timestamp: "2026-10-08T20:15:00-07:00"
+  agent: kilo-usability
+  app: KChess
+  timestamp: "2026-10-08T20:31:00-07:00"
 last_planner_run: "2026-10-08T15:14:12Z"
 ---
 
@@ -86,8 +86,8 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Upcoming Queue**: `K2048`, `KBase`, `KBudget`, `KCalendar`, `KChart`, `KChat`, `KColony`, `KFortress`, `KNetMap`, `KPing`, `KSanctuary`, `KAudio`, `KStellar`, `KSubmarine`, `KTrader`, `KType`, `KVault`, `KVoid`, `KPong`.
 
 ### 4. Usability & UX Queue (`kilo-usability`)
-- **Current Target**: `KPong`
-- **Upcoming Queue**: `KCalendar`, `KSnake`, `KChess`, `KAudio`, `KBudget`, `KCalc`, `KMaze`, `KPing`, `KNetMap`, `KStarForge`.
+- **Current Target**: `KAudio`
+- **Upcoming Queue**: `KBudget`, `KCalc`, `KMaze`, `KPing`, `KNetMap`, `KStarForge`, `KPong`, `KCalendar`, `KSnake`, `KChess`.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
 - **Current Target**: `KColor`
@@ -112,6 +112,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 ---
 
 ## Recent Execution Logs (Max 5 Entries)
+
+- **2026-10-08T20:31:00-07:00 — kilo-usability: KChess (Usability & Layout Audit — Mature App Verification)**
+  - Status: ⏭️ Skip — app usability is complete and mature.
+  - Usability Audit: Verified HiDPI crisp canvas transform (`devicePixelRatio`), responsive menu bar scaling, accessible F1/? help dialogs, keyboard shortcuts, and App.jsx dimensions (800x940).
+  - Verification: Clean Vite production build (1.06s); 196.3 KB < 999 KB size ceiling.
+  - Queue: Advanced `kilo_usability` to `KAudio`; rotation handoff to `kilo-qa`.
 
 - **2026-10-08T20:15:00-07:00 — kilo-tester: KPong (UI Element Audit & Theme/State Sync)**
   - Status: PASS ✅ (0 errors, startup pass, Vite build clean).
@@ -138,10 +144,4 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Dimensions: Added board size selector (Classic 7x6, Compact 6x5, Grand 8x7, Wide 9x6, Epic 8x8).
   - Verification: Build clean, responsive layouts, save/load state preserved.
   - Queue: Advanced `kilo_expander` to `KPong`; rotation handoff to `kilo-creator`.
-
-- **2026-10-08T18:13:00-07:00 — kilo-qa: KChess (Pass 5: Tutorial & State Integrity Audit)**
-  - Status: PASS ✅ (0 regressions, 196.3 KB web < 999 KB ceiling).
-  - State & Tutorial: Verified F5 quicksave / F9 quickload persistence, tutorialSeen flag, and modal keyboard handlers.
-  - Verification: Vite build clean (`npm run build`); size ceiling (<999 KB) verified.
-  - Queue: Advanced `kilo_qa` to `KColor`; rotation handoff to `kilo-expander`.
 
