@@ -818,6 +818,7 @@
 
         tr.onclick = () => {
           selectTask(taskId);
+          document.querySelector('.table-container')?.focus();
         };
 
         tr.ondblclick = () => {
@@ -858,6 +859,10 @@
 
     function killTask(taskId, taskTitle) {
       if (!taskId) return;
+      if (String(taskId) === '1004' || (taskTitle && String(taskTitle).toLowerCase().includes('kernel'))) {
+        showToast('⚠️ Cannot terminate KiloOS Kernel (Protected Process)');
+        return;
+      }
       if (isStandalone) {
         standaloneTasks = standaloneTasks.filter(t => String(t.id) !== String(taskId));
         tasksData = [...standaloneTasks];
