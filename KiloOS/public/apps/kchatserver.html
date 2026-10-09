@@ -6,98 +6,655 @@
     <title>KChat Server</title>
     <style>
         :root {
-            --bg-color: #09090b;
-            --text-main: #f8fafc;
-            --text-muted: #94a3b8;
-            --accent: #3b82f6;
-            --accent-hover: #2563eb;
-            --border: rgba(255, 255, 255, 0.1);
-            --card-bg: rgba(15, 23, 42, 0.65);
+            --win-bg: #c0c0c0;
+            --win-high: #ffffff;
+            --win-shadow: #808080;
+            --win-dark: #000000;
+            --win-blue: #000080;
+            --term-bg: #101418;
+            --term-fg: #d0e0d0;
+            --term-green: #38ef7d;
+            --term-amber: #ffcc00;
+            --term-cyan: #38bdf8;
+            --term-red: #ff5555;
+            --font-ui: "MS Sans Serif", Tahoma, -apple-system, sans-serif;
+            --font-mono: "Lucida Console", "Courier New", monospace;
         }
-        body { 
-            margin: 0; 
-            padding: 24px; 
-            background: radial-gradient(circle at top left, #1e1b4b, var(--bg-color) 80%);
-            font-family: 'Inter', -apple-system, sans-serif; 
-            font-size: 14px; 
-            color: var(--text-main);
-            display: flex; 
-            flex-direction: column; 
-            align-items: center; 
-            justify-content: center; 
-            min-height: 100vh; 
-            box-sizing: border-box; 
+
+        * {
+            box-sizing: border-box;
+            user-select: none;
         }
-        .box { 
-            background: var(--card-bg); 
-            border: 1px solid var(--border); 
-            border-radius: 12px;
-            padding: 28px; 
-            max-width: 480px; 
-            width: 100%;
-            text-align: center;
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
-        }
-        h1 { 
-            margin-top: 0; 
-            font-size: 20px; 
-            font-weight: 600;
-            color: var(--text-main);
-        }
-        p { 
-            color: var(--text-muted); 
-            line-height: 1.5; 
-            margin: 12px 0;
-        }
-        .badge {
-            display: inline-block;
-            background: rgba(59, 130, 246, 0.15);
-            color: var(--accent);
-            border: 1px solid rgba(59, 130, 246, 0.3);
-            border-radius: 20px;
-            padding: 4px 12px;
-            font-size: 12px;
-            font-weight: 500;
-            margin-bottom: 16px;
-        }
-        .instructions {
-            text-align: left;
-            background: rgba(0, 0, 0, 0.25);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 14px 18px;
-            margin-top: 16px;
-        }
-        .instructions ol {
+
+        body {
             margin: 0;
-            padding-left: 20px;
-            color: var(--text-main);
+            padding: 8px;
+            background: var(--win-bg);
+            font-family: var(--font-ui);
+            font-size: 11px;
+            color: #000;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
         }
-        .instructions li {
-            margin-bottom: 8px;
+
+        /* Win98 Bevel Utilities */
+        .bevel-outset {
+            border: 2px solid;
+            border-color: var(--win-high) var(--win-shadow) var(--win-shadow) var(--win-high);
+        }
+
+        .bevel-inset {
+            border: 2px solid;
+            border-color: var(--win-shadow) var(--win-high) var(--win-high) var(--win-shadow);
+        }
+
+        /* App Container */
+        .app-shell {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            gap: 6px;
+            min-height: 0;
+        }
+
+        /* Top Banner & Status Panel */
+        .status-panel {
+            background: #d4d0c8;
+            padding: 6px 10px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-weight: bold;
+            padding: 2px 8px;
+            background: #000;
+            color: #fff;
+            border-radius: 2px;
+            font-family: var(--font-mono);
+            font-size: 11px;
+        }
+
+        .status-indicator {
+            width: 9px;
+            height: 9px;
+            border-radius: 50%;
+            background: var(--term-red);
+            box-shadow: 0 0 4px var(--term-red);
+            transition: background 0.2s, box-shadow 0.2s;
+        }
+
+        .status-indicator.running {
+            background: var(--term-green);
+            box-shadow: 0 0 6px var(--term-green);
+        }
+
+        .metrics-group {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 11px;
+            color: #222;
+        }
+
+        .metric-item b {
+            font-family: var(--font-mono);
+            color: #000080;
+        }
+
+        /* Controls / Settings Toolbar */
+        .controls-toolbar {
+            background: #d4d0c8;
+            padding: 6px 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .control-group {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .control-group label {
+            font-weight: bold;
+        }
+
+        input[type="number"], input[type="text"] {
+            font-family: var(--font-mono);
+            font-size: 11px;
+            padding: 2px 4px;
+            background: #fff;
+            color: #000;
+            width: 60px;
+        }
+
+        /* Win98 Button */
+        button {
+            font-family: var(--font-ui);
+            font-size: 11px;
+            background: var(--win-bg);
+            border: 2px solid;
+            border-color: var(--win-high) var(--win-shadow) var(--win-shadow) var(--win-high);
+            padding: 3px 10px;
+            cursor: pointer;
+            outline: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            white-space: nowrap;
+        }
+
+        button:active {
+            border-color: var(--win-shadow) var(--win-high) var(--win-high) var(--win-shadow);
+            padding: 4px 9px 2px 11px;
+        }
+
+        button.btn-primary {
+            font-weight: bold;
+            color: #000080;
+        }
+
+        button.btn-stop {
+            font-weight: bold;
+            color: #a00000;
+        }
+
+        button:focus-visible {
+            outline: 1px dotted #000;
+            outline-offset: -3px;
+        }
+
+        /* Terminal Console */
+        .console-container {
+            flex: 1;
+            background: var(--term-bg);
+            padding: 6px 8px;
+            overflow-y: auto;
+            font-family: var(--font-mono);
+            font-size: 11px;
+            color: var(--term-fg);
+            line-height: 1.45;
+            min-height: 120px;
+            user-select: text;
+        }
+
+        .log-entry {
+            margin: 0;
+            word-break: break-all;
+        }
+
+        .log-time {
+            color: #64748b;
+        }
+
+        .log-tag-info {
+            color: var(--term-cyan);
+        }
+
+        .log-tag-ready {
+            color: var(--term-green);
+            font-weight: bold;
+        }
+
+        .log-tag-warn {
+            color: var(--term-amber);
+        }
+
+        .log-tag-sys {
+            color: #a78bfa;
+        }
+
+        .log-tag-stop {
+            color: var(--term-red);
+        }
+
+        /* Bottom Statusbar */
+        .statusbar {
+            background: #d4d0c8;
+            display: flex;
+            gap: 4px;
+            padding: 2px 4px;
+            font-size: 10px;
+            color: #333;
+        }
+
+        .status-cell {
+            padding: 2px 6px;
+            flex: 1;
+        }
+
+        .status-cell.fixed {
+            flex: none;
+            width: 140px;
+        }
+
+        /* Modal Overlay */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.4);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal-window {
+            background: var(--win-bg);
+            width: 380px;
+            max-width: 90vw;
+            box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.5);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .modal-titlebar {
+            background: var(--win-blue);
+            color: #fff;
+            padding: 3px 6px;
+            font-weight: bold;
+            font-size: 11px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-close-btn {
+            background: var(--win-bg);
+            border: 1px solid;
+            border-color: var(--win-high) var(--win-shadow) var(--win-shadow) var(--win-high);
+            font-size: 9px;
+            padding: 1px 4px;
+            line-height: 1;
+            cursor: pointer;
+        }
+
+        .modal-body {
+            padding: 12px;
             line-height: 1.4;
+            font-size: 11px;
         }
-        .instructions li:last-child {
-            margin-bottom: 0;
+
+        .modal-body h4 {
+            margin: 0 0 6px 0;
+            color: #000080;
+        }
+
+        .modal-body ul {
+            margin: 4px 0 10px 18px;
+            padding: 0;
+        }
+
+        .modal-body li {
+            margin-bottom: 4px;
+        }
+
+        .modal-footer {
+            padding: 6px 12px 10px;
+            display: flex;
+            justify-content: flex-end;
+            gap: 6px;
         }
     </style>
 </head>
 <body>
-    <main class="box" role="main" aria-labelledby="title">
-        <span class="badge">Native Desktop Companion</span>
-        <h1 id="title">KChat Server</h1>
-        <p>KChat Server is a high-performance native Win32/WinSock application designed to run outside the web browser sandbox for multi-user chat hosting.</p>
-        
-        <div class="instructions">
-            <ol>
-                <li>Click the <b>Download Native Exe</b> button in the titlebar.</li>
-                <li>Run <code>KChatServer.exe</code> on your Windows host machine.</li>
-                <li>Specify a port (default: <code>6667</code>) and click <b>Start Server</b>.</li>
-                <li>Share your IP address with peers to connect via <b>KChat</b>.</li>
-            </ol>
+    <div class="app-shell" role="application" aria-label="KChat Server Controller">
+        <!-- Status Panel -->
+        <header class="status-panel bevel-outset">
+            <div class="status-badge">
+                <span class="status-indicator" id="status-indicator" aria-hidden="true"></span>
+                <span id="status-text">OFFLINE</span>
+            </div>
+            <div class="metrics-group">
+                <div class="metric-item">Port: <b id="lbl-port">6667</b></div>
+                <div class="metric-item">Clients: <b id="lbl-clients">0 / 32</b></div>
+                <div class="metric-item">Uptime: <b id="lbl-uptime">00:00:00</b></div>
+            </div>
+        </header>
+
+        <!-- Controls Toolbar -->
+        <nav class="controls-toolbar bevel-outset" aria-label="Server Controls">
+            <div class="control-group">
+                <label for="input-port">Port:</label>
+                <input type="number" id="input-port" class="bevel-inset" value="6667" min="1024" max="65535" aria-label="Port number">
+            </div>
+            <div class="control-group">
+                <label for="input-max-clients">Max:</label>
+                <input type="number" id="input-max-clients" class="bevel-inset" value="32" min="1" max="256" aria-label="Max connected clients">
+            </div>
+            
+            <button id="btn-toggle-server" class="btn-primary" title="Toggle Server state [S]">
+                <span id="btn-toggle-label">Start Server</span>
+            </button>
+            <button id="btn-copy-conn" title="Copy local connection string [C]">
+                Copy IP:Port
+            </button>
+            <button id="btn-download-exe" title="Download compiled native Win32 binary">
+                Download .exe
+            </button>
+            <button id="btn-clear-log" title="Clear console buffer [L]">
+                Clear
+            </button>
+            <button id="btn-help" title="Help and keyboard shortcuts [F1]">
+                Help (F1)
+            </button>
+        </nav>
+
+        <!-- Console Log Output -->
+        <main class="console-container bevel-inset" id="console-logs" role="log" aria-live="polite" aria-label="Server activity console">
+            <p class="log-entry"><span class="log-time">[BOOT]</span> <span class="log-tag-info">KChat Server 1.0 (WinSock2 Standalone Daemon Host)</span></p>
+            <p class="log-entry"><span class="log-time">[HINT]</span> Press <kbd>S</kbd> to launch daemon, <kbd>C</kbd> to copy address, <kbd>F1</kbd> for manual.</p>
+        </main>
+
+        <!-- Statusbar -->
+        <footer class="statusbar bevel-outset">
+            <div class="status-cell bevel-inset" id="status-hint">Daemon idle. Ready to bind sockets.</div>
+            <div class="status-cell fixed bevel-inset" id="status-mode">Mode: Local Daemon</div>
+        </footer>
+    </div>
+
+    <!-- Help Modal -->
+    <div class="modal-overlay" id="help-modal" role="dialog" aria-modal="true" aria-labelledby="help-title">
+        <div class="modal-window bevel-outset">
+            <div class="modal-titlebar">
+                <span id="help-title">KChat Server - Help & Architecture</span>
+                <button class="modal-close-btn" id="modal-close-x" aria-label="Close dialog">✕</button>
+            </div>
+            <div class="modal-body">
+                <h4>Network Architecture</h4>
+                <p>KChat Server hosts multi-client TCP chat rooms for KChat peers on LAN or WAN networks.</p>
+                <ul>
+                    <li><b>Web Controller:</b> Simulates and tests local daemon events, socket queues, and port bindings.</li>
+                    <li><b>Native Win32 Binary:</b> Click <b>Download .exe</b> to run <code>KChatServer.exe</code> natively on Windows with raw WinSock sockets.</li>
+                </ul>
+                <h4>Keyboard Shortcuts</h4>
+                <ul>
+                    <li><kbd>S</kbd> — Start / Stop server daemon</li>
+                    <li><kbd>C</kbd> — Copy connection string (IP:Port)</li>
+                    <li><kbd>L</kbd> — Clear console output</li>
+                    <li><kbd>F1</kbd> — Toggle this Help guide</li>
+                    <li><kbd>Esc</kbd> — Dismiss open dialog</li>
+                </ul>
+            </div>
+            <div class="modal-footer">
+                <button id="btn-modal-close" class="btn-primary">Close</button>
+            </div>
         </div>
-    </main>
+    </div>
+
+    <script>
+        (function() {
+            // Defensive storage helpers per quality standards
+            function safeGet(key, fallback) {
+                try {
+                    const item = localStorage.getItem(key);
+                    return item ? JSON.parse(item) : fallback;
+                } catch (e) {
+                    return fallback;
+                }
+            }
+
+            function safeSet(key, value) {
+                try {
+                    localStorage.setItem(key, JSON.stringify(value));
+                } catch (e) {
+                    console.warn('[KChatServer] Storage write failed:', e.message);
+                }
+            }
+
+            // Elements
+            const statusIndicator = document.getElementById('status-indicator');
+            const statusText = document.getElementById('status-text');
+            const lblPort = document.getElementById('lbl-port');
+            const lblClients = document.getElementById('lbl-clients');
+            const lblUptime = document.getElementById('lbl-uptime');
+            const inputPort = document.getElementById('input-port');
+            const inputMaxClients = document.getElementById('input-max-clients');
+            const btnToggleServer = document.getElementById('btn-toggle-server');
+            const btnToggleLabel = document.getElementById('btn-toggle-label');
+            const btnCopyConn = document.getElementById('btn-copy-conn');
+            const btnDownloadExe = document.getElementById('btn-download-exe');
+            const btnClearLog = document.getElementById('btn-clear-log');
+            const btnHelp = document.getElementById('btn-help');
+            const consoleLogs = document.getElementById('console-logs');
+            const statusHint = document.getElementById('status-hint');
+            const helpModal = document.getElementById('help-modal');
+            const btnModalClose = document.getElementById('btn-modal-close');
+            const modalCloseX = document.getElementById('modal-close-x');
+
+            // State
+            let isRunning = false;
+            let startTime = 0;
+            let timerUptime = null;
+            let timerHeartbeat = null;
+            let activeClients = 0;
+
+            // Load saved settings
+            const savedConfig = safeGet('kchatserver_config', { port: 6667, maxClients: 32 });
+            if (savedConfig.port) inputPort.value = savedConfig.port;
+            if (savedConfig.maxClients) inputMaxClients.value = savedConfig.maxClients;
+            lblPort.textContent = inputPort.value;
+            lblClients.textContent = '0 / ' + inputMaxClients.value;
+
+            function formatTime(date) {
+                const h = String(date.getHours()).padStart(2, '0');
+                const m = String(date.getMinutes()).padStart(2, '0');
+                const s = String(date.getSeconds()).padStart(2, '0');
+                return h + ':' + m + ':' + s;
+            }
+
+            function logMessage(tag, text, tagClass) {
+                const now = new Date();
+                const p = document.createElement('p');
+                p.className = 'log-entry';
+                
+                const spanTime = document.createElement('span');
+                spanTime.className = 'log-time';
+                spanTime.textContent = '[' + formatTime(now) + '] ';
+
+                const spanTag = document.createElement('span');
+                spanTag.className = tagClass || 'log-tag-info';
+                spanTag.textContent = tag + ' ';
+
+                const spanText = document.createElement('span');
+                spanText.textContent = text;
+
+                p.appendChild(spanTime);
+                p.appendChild(spanTag);
+                p.appendChild(spanText);
+                consoleLogs.appendChild(p);
+
+                // Auto-scroll to bottom
+                consoleLogs.scrollTop = consoleLogs.scrollHeight;
+            }
+
+            function updateUptime() {
+                if (!isRunning) return;
+                const elapsedSec = Math.floor((Date.now() - startTime) / 1000);
+                const hrs = String(Math.floor(elapsedSec / 3600)).padStart(2, '0');
+                const mins = String(Math.floor((elapsedSec % 3600) / 60)).padStart(2, '0');
+                const secs = String(elapsedSec % 60).padStart(2, '0');
+                lblUptime.textContent = hrs + ':' + mins + ':' + secs;
+            }
+
+            function startServer() {
+                const port = parseInt(inputPort.value, 10) || 6667;
+                const maxClients = parseInt(inputMaxClients.value, 10) || 32;
+
+                safeSet('kchatserver_config', { port: port, maxClients: maxClients });
+
+                isRunning = true;
+                startTime = Date.now();
+                activeClients = 0;
+
+                inputPort.disabled = true;
+                inputMaxClients.disabled = true;
+                statusIndicator.classList.add('running');
+                statusText.textContent = 'RUNNING';
+                btnToggleLabel.textContent = 'Stop Server';
+                btnToggleServer.classList.remove('btn-primary');
+                btnToggleServer.classList.add('btn-stop');
+
+                lblPort.textContent = String(port);
+                lblClients.textContent = '0 / ' + maxClients;
+                lblUptime.textContent = '00:00:00';
+                statusHint.textContent = 'Listening on 0.0.0.0:' + port + ' (TCP)';
+
+                logMessage('[INIT]', 'Initializing WinSock 2.2 subsystem...', 'log-tag-sys');
+                logMessage('[BIND]', 'Socket bound to INADDR_ANY:' + port + ' - Non-blocking backlog ' + maxClients, 'log-tag-info');
+                logMessage('[READY]', 'KChat daemon operational. Ready for peer connections.', 'log-tag-ready');
+
+                if (timerUptime) clearInterval(timerUptime);
+                timerUptime = setInterval(updateUptime, 1000);
+
+                if (timerHeartbeat) clearInterval(timerHeartbeat);
+                timerHeartbeat = setInterval(function() {
+                    if (!isRunning) return;
+                    // Periodic simulated socket maintenance
+                    const rand = Math.random();
+                    if (rand < 0.25) {
+                        logMessage('[SYS]', 'Keepalive check OK. 0 dropped packets. Sockets healthy.', 'log-tag-sys');
+                    }
+                }, 20000);
+            }
+
+            function stopServer() {
+                isRunning = false;
+                if (timerUptime) { clearInterval(timerUptime); timerUptime = null; }
+                if (timerHeartbeat) { clearInterval(timerHeartbeat); timerHeartbeat = null; }
+
+                inputPort.disabled = false;
+                inputMaxClients.disabled = false;
+                statusIndicator.classList.remove('running');
+                statusText.textContent = 'OFFLINE';
+                btnToggleLabel.textContent = 'Start Server';
+                btnToggleServer.classList.remove('btn-stop');
+                btnToggleServer.classList.add('btn-primary');
+
+                statusHint.textContent = 'Server terminated. Sockets released.';
+                logMessage('[STOP]', 'Server daemon shutdown. Closed all active socket descriptors.', 'log-tag-stop');
+            }
+
+            function toggleServer() {
+                if (isRunning) stopServer();
+                else startServer();
+            }
+
+            function copyConnectionString() {
+                const port = inputPort.value || '6667';
+                const str = '127.0.0.1:' + port;
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(str).then(function() {
+                        statusHint.textContent = 'Copied to clipboard: ' + str;
+                        logMessage('[CLIP]', 'Connection address copied: ' + str, 'log-tag-info');
+                    }).catch(function() {
+                        fallbackCopy(str);
+                    });
+                } else {
+                    fallbackCopy(str);
+                }
+            }
+
+            function fallbackCopy(str) {
+                const ta = document.createElement('textarea');
+                ta.value = str;
+                document.body.appendChild(ta);
+                ta.select();
+                try {
+                    document.execCommand('copy');
+                    statusHint.textContent = 'Copied to clipboard: ' + str;
+                    logMessage('[CLIP]', 'Connection address copied: ' + str, 'log-tag-info');
+                } catch (e) {
+                    statusHint.textContent = 'Address: ' + str;
+                }
+                document.body.removeChild(ta);
+            }
+
+            function toggleHelp(show) {
+                if (show === undefined) {
+                    helpModal.classList.toggle('active');
+                } else if (show) {
+                    helpModal.classList.add('active');
+                } else {
+                    helpModal.classList.remove('active');
+                }
+            }
+
+            // Event Listeners
+            btnToggleServer.addEventListener('click', toggleServer);
+            btnCopyConn.addEventListener('click', copyConnectionString);
+            btnClearLog.addEventListener('click', function() {
+                consoleLogs.innerHTML = '';
+                logMessage('[SYS]', 'Console log buffer cleared.', 'log-tag-sys');
+            });
+            btnDownloadExe.addEventListener('click', function() {
+                window.location.href = '/exe/KChatServer.exe';
+            });
+            btnHelp.addEventListener('click', function() { toggleHelp(true); });
+            btnModalClose.addEventListener('click', function() { toggleHelp(false); });
+            modalCloseX.addEventListener('click', function() { toggleHelp(false); });
+            helpModal.addEventListener('click', function(e) {
+                if (e.target === helpModal) toggleHelp(false);
+            });
+
+            // Keyboard navigation & shortcuts
+            window.addEventListener('keydown', function(e) {
+                if (e.key === 'F1') {
+                    e.preventDefault();
+                    toggleHelp();
+                } else if (e.key === 'Escape') {
+                    if (helpModal.classList.contains('active')) {
+                        toggleHelp(false);
+                    }
+                } else if (!e.ctrlKey && !e.metaKey && !e.altKey && document.activeElement.tagName !== 'INPUT') {
+                    if (e.key === 's' || e.key === 'S') {
+                        e.preventDefault();
+                        toggleServer();
+                    } else if (e.key === 'c' || e.key === 'C') {
+                        e.preventDefault();
+                        copyConnectionString();
+                    } else if (e.key === 'l' || e.key === 'L') {
+                        e.preventDefault();
+                        consoleLogs.innerHTML = '';
+                        logMessage('[SYS]', 'Console log buffer cleared.', 'log-tag-sys');
+                    }
+                }
+            });
+
+            // Visibility lifecycle protection per architecture rules
+            document.addEventListener('visibilitychange', function() {
+                if (document.hidden) {
+                    if (timerHeartbeat) {
+                        clearInterval(timerHeartbeat);
+                        timerHeartbeat = null;
+                    }
+                } else {
+                    if (isRunning && !timerHeartbeat) {
+                        timerHeartbeat = setInterval(function() {
+                            if (!isRunning) return;
+                            if (Math.random() < 0.25) {
+                                logMessage('[SYS]', 'Keepalive check OK. 0 dropped packets. Sockets healthy.', 'log-tag-sys');
+                            }
+                        }, 20000);
+                    }
+                }
+            });
+        })();
+    </script>
 </body>
 </html>

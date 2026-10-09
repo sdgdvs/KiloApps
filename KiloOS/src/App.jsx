@@ -18,7 +18,7 @@ const FOLDERS = [
 const APPS = [
   { id: 'kexplorer', title: 'File Browser', url: '/apps/kexplorer.html', exeUrl: null, icon: '/assets/icons/kexplorer.ico', w: 600, h: 450, folder: 'System' },
   { id: 'kchat', title: 'KChat', url: '/apps/kchat.html', exeUrl: '/exe/KChat.exe', icon: '/assets/icons/kchat.ico', w: 850, h: 650, folder: 'Network' },
-  { id: 'kchatserver', title: 'KChat Server', url: '/apps/kchatserver.html', exeUrl: '/exe/KChatServer.exe', icon: '/assets/icons/kchatserver.ico', w: 450, h: 350, folder: 'Network' },
+  { id: 'kchatserver', title: 'KChat Server', url: '/apps/kchatserver.html', exeUrl: '/exe/KChatServer.exe', icon: '/assets/icons/kchatserver.ico', w: 520, h: 440, folder: 'Network' },
   { id: 'kpad', title: 'KPad', url: '/apps/kpad.html', exeUrl: '/exe/KPad.exe', icon: '/assets/icons/kpad.ico', w: 1000, h: 680, folder: 'Office' },
   { id: 'kcalc', title: 'KCalc', url: '/apps/kcalc.html', exeUrl: '/exe/KCalc.exe', icon: '/assets/icons/kcalc.ico', w: 860, h: 690, folder: 'System' },
   { id: 'kpaint', title: 'KPaint', url: '/apps/kpaint.html', exeUrl: '/exe/KPaint.exe', icon: '/assets/icons/kpaint.ico', w: 1140, h: 780, folder: 'Media' },
