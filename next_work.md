@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-qa
+current_agent: kilo-qa
+next_agent: kilo-expander
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -15,7 +15,7 @@ current_targets:
   kilo_creator: "kweb://warez"
   kilo_graphics: KAbyss
   kilo_tester: K2048
-  kilo_usability: KAudio
+  kilo_usability: KBudget
   kilo_qa: KHabit
   kilo_expander: KSnake
 virtual_web_target: "kweb://warez"
@@ -113,11 +113,18 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-08T23:32:00-07:00 — kilo-usability: KAudio (UI/UX & Usability Ergonomics Audit)**
+  - Status: PASS ✅ (HiDPI visualizer visibility lifecycle guard, responsive scrolling & piano keyboard ergonomics).
+  - Usability: Guarded rAF visualizer loop with `visibilitychange` to conserve CPU when minimized; styled custom scrollbars and overflow-y for lower resolutions; responsive keyboard container.
+  - Verification: Production Vite build clean (`npm run build` 0 errors); 123 KB < 999 KB ceiling.
+  - Queue: Advanced `kilo_usability` to `KBudget`; handoff to `kilo-qa`.
+
 - **2026-10-08T23:13:00-07:00 — kilo-tester: KTaskMgr (Interactive UI & Handlers Audit)**
   - Status: PASS ✅ (Row focus on select, Kernel protection guard, all modals/shortcuts verified).
   - Audit: Tested toolbar filters/sorting, Run/Help/Tutorial modals, quicksave F5/F9, process termination.
   - Verification: Production Vite build clean (`npm run build` 0 errors); 43.4 KB < 999 KB ceiling.
   - Queue: Advanced `kilo_tester` to `K2048`; rotation handoff to `kilo-usability`.
+
 
 - **2026-10-08T22:31:00-07:00 — kilo-graphics: KColosseum (Game Content & Graphics Audit)**
   - Status: ⏭️ Skip — Imagen 3 asset replacement not appropriate for KColosseum.
@@ -125,11 +132,13 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Verification: Production Vite build clean (`npm run build` 0 errors); 243.8 KB < 999 KB ceiling.
   - Queue: Advanced `kilo_graphics` to `KAbyss`; handoff to `kilo-tester`.
 
+
 - **2026-10-08T22:14:00-07:00 — kilo-creator: kweb://webring (Virtual 1999 Web Hub & Routing Matrix)**
   - Status: PASS ✅ (Anti-Potemkin Web 1.0 hub verified, 316 KB < 999 KB ceiling).
   - Web Destination: Full interactive hub with BGP/RIP routing matrix, starfield warp teleporter, 88x31 badge studio, node validator, health monitor, guestbook & topology visualizer.
   - Verification: Dual-target linked in `knet.html` and `portal.html`; Vite production build clean (`npm run build` 0 errors).
   - Queue: Advanced `virtual_web_target` to `kweb://warez`; rotation handoff to `kilo-graphics`.
+
 
 - **2026-10-08T21:32:00-07:00 — kilo-expander: KPong (Feature Expansion & CSV Analytics)**
   - Status: PASS ✅ (Export CSV analytics, responsive stats UI, Vite build clean).
@@ -137,8 +146,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Verification: `npm run build` clean (683ms); 132.8 KB < 999 KB ceiling.
   - Queue: Advanced `kilo_expander` to `KSnake`; rotation handoff to `kilo-creator`.
 
-- **2026-10-08T21:13:00-07:00 — kilo-qa: KColor (Pass 5 QA & State Integrity Audit)**
-  - Status: PASS ✅ (Quicksave F5/F9, tutorial flag, dialog hotkeys, Vite build clean).
-  - QA Audit: Verified full state persistence (RGB/HSL/HSV/CMYK, activeTab, swatches, prevColor), first-run tutorial gating (`kcolor_tutorialSeen`), Esc/Enter/Space modal handling, zero ARG leaks.
-  - Verification: `npm run build` clean; 72.4 KB < 999 KB ceiling.
-  - Queue: Advanced `kilo_qa` to `KHabit`; rotation handoff to `kilo-expander`.

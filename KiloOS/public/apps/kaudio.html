@@ -24,7 +24,12 @@
     padding: 12px 16px;
     user-select: none;
     overflow-x: hidden;
+    overflow-y: auto;
   }
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-track { background: rgba(15, 23, 42, 0.6); }
+  ::-webkit-scrollbar-thumb { background: rgba(56, 189, 248, 0.3); border-radius: 4px; }
+  ::-webkit-scrollbar-thumb:hover { background: rgba(56, 189, 248, 0.6); }
   .app-container {
     width: 100%;
     max-width: 980px;
@@ -293,6 +298,9 @@
     display: flex;
     gap: 4px;
     padding-top: 4px;
+    max-width: 100%;
+    overflow-x: auto;
+    padding-bottom: 6px;
   }
   .key {
     width: 44px;
@@ -2172,6 +2180,7 @@
 
   // Real-Time Canvas Visualizer (Dual-Mode: Oscilloscope & 32-Band FFT Spectrum)
   let visualizerStarted = false;
+  let visAnimId = null;
   function startVisualizer() {
     if (visualizerStarted) return;
     visualizerStarted = true;
@@ -2179,7 +2188,7 @@
     const canvasCtx = canvas.getContext('2d');
 
     function draw() {
-      requestAnimationFrame(draw);
+      visAnimId = requestAnimationFrame(draw);
 
       const dpr = window.devicePixelRatio || 1;
       const displayW = canvas.clientWidth || 300;
@@ -2299,6 +2308,13 @@
       canvasCtx.restore();
     }
     draw();
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) {
+        if (visAnimId) { cancelAnimationFrame(visAnimId); visAnimId = null; }
+      } else {
+        if (!visAnimId) { draw(); }
+      }
+    });
   }
 
   // Global Keyboard Event Handlers
