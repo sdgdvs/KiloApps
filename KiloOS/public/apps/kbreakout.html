@@ -137,6 +137,7 @@ canvas { background: #10101a; border: 1px solid #282845; border-radius: 4px; cur
         <div style="display:flex; gap:3px;">
             <button id="btn-duel-toggle" onclick="openDuelModal()" style="background:#261230; border:1px solid #ff00c8; color:#ff00c8; border-radius:3px; cursor:pointer; font-size:10px; font-weight:bold; padding:2px 5px;" title="Arcade Cyber-Duel Arena [D]">⚔️</button>
             <button id="btn-replay-toggle" onclick="openReplayModal()" style="background:#142232; border:1px solid #00e5ff; color:#00e5ff; border-radius:3px; cursor:pointer; font-size:10px; font-weight:bold; padding:2px 5px;" title="Replay Theater & Board Tools [R]">📼</button>
+            <button id="btn-telemetry-toggle" onclick="openTelemetryModal()" style="background:#182618; border:1px solid #10b981; color:#10b981; border-radius:3px; cursor:pointer; font-size:10px; font-weight:bold; padding:2px 5px;" title="Tactical Telemetry & Stats [T]">📊</button>
             <button id="btn-keybind-toggle" onclick="openKeybindModal()" style="background:#2a2412; border:1px solid #f59e0b; color:#f59e0b; border-radius:3px; cursor:pointer; font-size:10px; font-weight:bold; padding:2px 5px;" title="Rebind Controls [K]">⌨️</button>
             <button id="btn-manual-toggle" onclick="openTutorial()" style="background:#1e1e36; border:1px solid #00ffff; color:#00ffff; border-radius:3px; cursor:pointer; font-size:10px; font-weight:bold; padding:2px 5px;" title="Tactical Protocol & Controls [F1/H]">?</button>
         </div>
@@ -328,7 +329,7 @@ canvas { background: #10101a; border: 1px solid #282845; border-radius: 4px; cur
     </div>
 
     <!-- Replay Theater & Board Tools Modal -->
-    <div id="replay-overlay" class="modal-overlay" style="width:380px; left:50%; transform:translateX(-50%);">
+    <div id="replay-overlay" class="modal-overlay wide" style="max-height:430px; left:50%; transform:translateX(-50%);">
         <div class="modal-title">📼 REPLAY THEATER & BOARD TOOLS 📼</div>
         <div class="manual-section">
             <b>MATCH REPLAYS:</b> Record and rewatch full tactical missions with speed controls (1x, 2x, 4x).
@@ -340,14 +341,41 @@ canvas { background: #10101a; border: 1px solid #282845; border-radius: 4px; cur
             </div>
         </div>
         <div class="manual-section">
-            <b>BOARD LAYOUT TOOLS:</b> Export active brick matrix or import custom puzzle boards.
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px; margin-top:6px;">
-                <button class="forge-btn" onclick="exportBoardState()" style="padding:4px;">📋 EXPORT BOARD</button>
-                <button class="forge-btn" onclick="importBoardPrompt()" style="padding:4px;">🧩 IMPORT BOARD</button>
+            <b>TACTICAL BOARD PRESETS:</b>
+            <div style="display:flex; gap:4px; margin-top:4px;">
+                <select id="board-preset-select" style="flex:1; background:#0c0e18; border:1px solid #00ffff; color:#00ffff; border-radius:3px; padding:3px; font-size:10px;">
+                    <option value="0">Preset 1: Space Invader Matrix</option>
+                    <option value="1">Preset 2: Quantum Diamond Bastion</option>
+                    <option value="2">Preset 3: Pyramid Citadel</option>
+                    <option value="3">Preset 4: Twin Pillar Fortresses</option>
+                    <option value="4">Preset 5: Chaos Checkerboard Maze</option>
+                </select>
+                <button class="forge-btn" onclick="applySelectedPreset()" style="padding:3px 8px;">LOAD PRESET</button>
+            </div>
+        </div>
+        <div class="manual-section">
+            <b>BOARD MATRIX JSON (6x10):</b>
+            <textarea id="board-json-box" rows="3" style="width:100%; background:#090a14; border:1px solid #446; color:#aef; font-family:monospace; font-size:9.5px; padding:4px; border-radius:3px; resize:vertical; margin-top:4px;" placeholder="Exported or imported board layout data will appear here..."></textarea>
+            <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:4px; margin-top:4px;">
+                <button class="forge-btn" onclick="exportBoardState()" style="padding:3px;">📋 EXPORT ACTIVE</button>
+                <button class="forge-btn" onclick="downloadBoardFile()" style="padding:3px;">💾 SAVE .KBRD</button>
+                <button class="forge-btn" onclick="importBoardFromBox()" style="padding:3px; background:#00d2aa; color:#000;">🧩 APPLY MATRIX</button>
             </div>
         </div>
         <div style="text-align:center; margin-top:6px;">
             <button class="forge-btn" onclick="closeReplayModal()">CLOSE [ESC]</button>
+        </div>
+    </div>
+
+    <!-- Tactical Telemetry & Stats Modal -->
+    <div id="telemetry-overlay" class="modal-overlay" style="width:380px; left:50%; transform:translateX(-50%); border-color:#10b981;">
+        <div class="modal-title" style="color:#10b981;">📊 TACTICAL MISSION TELEMETRY 📊</div>
+        <div class="manual-section" id="telemetry-stats-display" style="font-size:11px; line-height:1.6;">
+            <!-- Rendered by renderTelemetryUI() -->
+        </div>
+        <div style="display:flex; justify-content:space-between; margin-top:8px;">
+            <button class="forge-btn" onclick="resetTelemetryData()" style="background:#551122; border-color:#ff3366; padding:4px 8px;">RESET STATS</button>
+            <button class="forge-btn" onclick="closeTelemetryModal()" style="padding:4px 12px;">CLOSE [ESC]</button>
         </div>
     </div>
 
@@ -669,6 +697,28 @@ let duel_open = false;
 let replay_open = false;
 let keybind_open = false;
 let invite_prompt_open = false;
+let telemetry_open = false;
+
+// Tactical Telemetry Tracking
+let telemetry = safeGetJSON('kbreakout_telemetry') || {
+    ballsLaunched: 0,
+    paddleHits: 0,
+    bricksBroken: 0,
+    maxCombo: 0,
+    plasmaFarmed: 0,
+    quantumFarmed: 0,
+    alloyFarmed: 0,
+    forgeCrafts: 0,
+    duelsWon: 0,
+    duelsPlayed: 0
+};
+function saveTelemetry() { safeSetJSON('kbreakout_telemetry', telemetry); }
+function recordTelemetry(metric, delta = 1) {
+    if (telemetry && telemetry[metric] !== undefined) {
+        telemetry[metric] += delta;
+        saveTelemetry();
+    }
+}
 
 // Game Modes
 const MODE_CAMPAIGN = 0;
@@ -2058,6 +2108,88 @@ function closeReplayModal() {
     if (ov) ov.style.display = 'none';
 }
 
+const boardPresets = [
+    {
+        name: "Space Invader Matrix",
+        bricks: [
+            [0,0,1,0,0,0,0,1,0,0],
+            [0,0,0,1,1,1,1,0,0,0],
+            [0,1,1,2,1,1,2,1,1,0],
+            [1,1,1,1,1,1,1,1,1,1],
+            [1,0,1,1,1,1,1,1,0,1],
+            [0,0,1,0,0,0,0,1,0,0]
+        ]
+    },
+    {
+        name: "Quantum Diamond Bastion",
+        bricks: [
+            [0,0,0,0,2,2,0,0,0,0],
+            [0,0,0,2,3,3,2,0,0,0],
+            [0,0,2,3,4,4,3,2,0,0],
+            [0,0,2,3,4,4,3,2,0,0],
+            [0,0,0,2,3,3,2,0,0,0],
+            [0,0,0,0,2,2,0,0,0,0]
+        ]
+    },
+    {
+        name: "Pyramid Citadel",
+        bricks: [
+            [0,0,0,0,4,4,0,0,0,0],
+            [0,0,0,3,3,3,3,0,0,0],
+            [0,0,2,2,2,2,2,2,0,0],
+            [0,1,1,1,1,1,1,1,1,0],
+            [1,1,1,1,1,1,1,1,1,1],
+            [2,2,2,2,2,2,2,2,2,2]
+        ]
+    },
+    {
+        name: "Twin Pillar Fortresses",
+        bricks: [
+            [2,2,0,0,0,0,0,0,2,2],
+            [3,3,1,0,0,0,0,1,3,3],
+            [4,3,1,0,0,0,0,1,3,4],
+            [4,3,1,0,0,0,0,1,3,4],
+            [3,3,1,2,2,2,2,1,3,3],
+            [2,2,0,1,1,1,1,0,2,2]
+        ]
+    },
+    {
+        name: "Chaos Checkerboard Maze",
+        bricks: [
+            [1,0,2,0,3,0,2,0,1,0],
+            [0,2,0,3,0,4,0,3,0,2],
+            [3,0,4,0,1,0,1,0,4,0],
+            [0,4,0,1,0,1,0,4,0,3],
+            [2,0,3,0,4,0,3,0,2,0],
+            [0,1,0,2,0,3,0,2,0,1]
+        ]
+    }
+];
+
+function applySelectedPreset() {
+    const sel = document.getElementById('board-preset-select');
+    const idx = sel ? parseInt(sel.value, 10) : 0;
+    loadBoardPreset(idx);
+}
+
+function loadBoardPreset(idx) {
+    const p = boardPresets[idx] || boardPresets[0];
+    bricks = p.bricks.map(row => [...row]);
+    brick_hp = bricks.map(row => row.map(v => v > 0 ? (v === 4 ? 3 : (v === 3 ? 2 : 1)) : 0));
+    bricks_left = 0;
+    for (let r = 0; r < bricks.length; r++) {
+        for (let c = 0; c < bricks[r].length; c++) {
+            if (bricks[r][c] > 0) bricks_left++;
+        }
+    }
+    const box = document.getElementById('board-json-box');
+    if (box) box.value = JSON.stringify({ app: 'KBreakout', name: p.name, rows: ROWS, cols: COLS, bricks }, null, 2);
+    closeReplayModal();
+    state = 1;
+    setCanvasMode(false);
+    showToast(`🧩 Preset Loaded: ${p.name}!`, 'success', 2500);
+}
+
 function exportBoardState() {
     const layout = {
         app: 'KBreakout',
@@ -2067,32 +2199,127 @@ function exportBoardState() {
         brick_hp: brick_hp.map(row => [...row])
     };
     const jsonStr = JSON.stringify(layout, null, 2);
+    const box = document.getElementById('board-json-box');
+    if (box) box.value = jsonStr;
     try {
-        navigator.clipboard.writeText(jsonStr);
-        showToast("📋 Board state copied to clipboard!", 'success', 2500);
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(jsonStr);
+            showToast("📋 Board JSON exported & copied to clipboard!", 'success', 2500);
+        } else {
+            showToast("📋 Board JSON exported to matrix box below!", 'info', 2500);
+        }
     } catch(e) {
-        showToast("Board layout exported (clipboard write blocked)", 'info', 2500);
+        showToast("📋 Board JSON exported to matrix box below!", 'info', 2500);
     }
 }
 
-function importBoardPrompt() {
-    const jsonStr = prompt("Paste custom board JSON layout (6x10 bricks array):");
-    if (!jsonStr) return;
+function downloadBoardFile() {
+    const layout = {
+        app: 'KBreakout',
+        date: Date.now(),
+        rows: ROWS,
+        cols: COLS,
+        bricks: bricks.map(row => [...row]),
+        brick_hp: brick_hp.map(row => [...row])
+    };
+    const blob = new Blob([JSON.stringify(layout, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `kbreakout_board_${Date.now()}.kbrd`;
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    showToast("💾 Board matrix file (.kbrd) saved!", 'success', 2500);
+}
+
+function importBoardFromBox() {
+    const box = document.getElementById('board-json-box');
+    if (!box || !box.value.trim()) {
+        showToast("Paste JSON board data into the box first!", 'warning', 2500);
+        return;
+    }
     try {
-        const parsed = JSON.parse(jsonStr);
+        const parsed = JSON.parse(box.value.trim());
         if (parsed && Array.isArray(parsed.bricks)) {
             bricks = parsed.bricks.map(row => [...row]);
             if (parsed.brick_hp && Array.isArray(parsed.brick_hp)) {
                 brick_hp = parsed.brick_hp.map(row => [...row]);
+            } else {
+                brick_hp = bricks.map(row => row.map(v => v > 0 ? (v === 4 ? 3 : (v === 3 ? 2 : 1)) : 0));
+            }
+            bricks_left = 0;
+            for (let r = 0; r < bricks.length; r++) {
+                for (let c = 0; c < bricks[r].length; c++) {
+                    if (bricks[r][c] > 0) bricks_left++;
+                }
             }
             closeReplayModal();
             state = 1;
             setCanvasMode(false);
-            showToast("🧩 Custom board loaded!", 'success', 2500);
+            showToast("🧩 Custom board matrix applied!", 'success', 2500);
+        } else {
+            showToast("Invalid JSON: 'bricks' array missing!", 'error', 3000);
         }
     } catch(err) {
-        showToast("Invalid JSON board format!", 'error', 3000);
+        showToast("JSON parse error in board box!", 'error', 3000);
     }
+}
+
+function importBoardPrompt() {
+    importBoardFromBox();
+}
+
+/* =========================================================================
+   TACTICAL MISSION TELEMETRY
+   ========================================================================= */
+function openTelemetryModal() {
+    telemetry_open = true;
+    renderTelemetryUI();
+    const ov = document.getElementById('telemetry-overlay');
+    if (ov) ov.style.display = 'block';
+}
+
+function closeTelemetryModal() {
+    telemetry_open = false;
+    const ov = document.getElementById('telemetry-overlay');
+    if (ov) ov.style.display = 'none';
+}
+
+function renderTelemetryUI() {
+    const disp = document.getElementById('telemetry-stats-display');
+    if (!disp) return;
+    disp.innerHTML = `
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px;">
+            <div><b>Balls Launched:</b> <span style="color:#00ffff;">${telemetry.ballsLaunched || 0}</span></div>
+            <div><b>Paddle Hits:</b> <span style="color:#00ffff;">${telemetry.paddleHits || 0}</span></div>
+            <div><b>Bricks Destroyed:</b> <span style="color:#ffd700;">${telemetry.bricksBroken || 0}</span></div>
+            <div><b>Max Combo Streak:</b> <span style="color:#ff3366;">${telemetry.maxCombo || 0}x</span></div>
+            <div><b>Plasma Shards:</b> <span style="color:#ff0055;">${plasma_shards} (${telemetry.plasmaFarmed || 0} total)</span></div>
+            <div><b>Quantum Cores:</b> <span style="color:#00ffff;">${quantum_cores} (${telemetry.quantumFarmed || 0} total)</span></div>
+            <div><b>Nano Alloys:</b> <span style="color:#ffcc00;">${nano_alloys} (${telemetry.alloyFarmed || 0} total)</span></div>
+            <div><b>Forge Crafts:</b> <span style="color:#10b981;">${telemetry.forgeCrafts || 0}</span></div>
+            <div><b>Duels Won / Played:</b> <span style="color:#a78bfa;">${telemetry.duelsWon || 0} / ${telemetry.duelsPlayed || 0}</span></div>
+            <div><b>High Score Record:</b> <span style="color:#ffd700;">${high_score}</span></div>
+        </div>
+    `;
+}
+
+function resetTelemetryData() {
+    telemetry = {
+        ballsLaunched: 0,
+        paddleHits: 0,
+        bricksBroken: 0,
+        maxCombo: 0,
+        plasmaFarmed: 0,
+        quantumFarmed: 0,
+        alloyFarmed: 0,
+        forgeCrafts: 0,
+        duelsWon: 0,
+        duelsPlayed: 0
+    };
+    saveTelemetry();
+    renderTelemetryUI();
+    showToast("Telemetry metrics reset to zero.", 'info', 2000);
 }
 
 /* =========================================================================
@@ -3611,6 +3838,7 @@ window.addEventListener('keydown', e => {
     // Escape handling hierarchy
     if (e.code === 'Escape' || isKeyAction(e.code, 'pause') && e.code === 'Escape') {
         if (keybind_open) { closeKeybindModal(); return; }
+        if (telemetry_open) { closeTelemetryModal(); return; }
         if (replay_open) { closeReplayModal(); return; }
         if (duel_open) { closeDuelModal(); return; }
         if (invite_prompt_open) { declineInvite(); return; }
@@ -3625,6 +3853,14 @@ window.addEventListener('keydown', e => {
         }
         if (is_paused) { togglePause(); return; }
         if (state === 1) { togglePause(); return; }
+    }
+
+    // Tactical Telemetry Toggle [T]
+    if (e.code === 'KeyT' && !isReplaying) {
+        e.preventDefault();
+        if (telemetry_open) closeTelemetryModal();
+        else openTelemetryModal();
+        return;
     }
 
     // Replay controls
