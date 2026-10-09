@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-graphics
-next_agent: kilo-tester
+current_agent: kilo-tester
+next_agent: kilo-usability
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -13,7 +13,7 @@ timeout_minutes: 6
 status: ready
 current_targets:
   kilo_creator: "kweb://cybercafe"
-  kilo_graphics: KMech
+  kilo_graphics: KStellar
   kilo_tester: KBudget
   kilo_usability: KChat
   kilo_qa: KBudget
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://geocities"
   - "kweb://users/~neon_rider"
 last_run:
-  agent: kilo-creator
-  app: "kweb://asm-temple"
-  timestamp: "2026-10-09T09:13:00-07:00"
+  agent: kilo-graphics
+  app: KMech
+  timestamp: "2026-10-09T09:32:00-07:00"
 last_planner_run: "2026-10-09T15:32:00Z"
 ---
 
@@ -78,8 +78,8 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
 - **Mission**: Replace programmer art with Imagen 3 assets. Skip immediately if vector/board/mature.
-- **Current Target**: `KMech`
-- **Upcoming Queue**: `KStellar`, `KStarship`, `KSubmarine`, `KSpace`, `KQuest`, `KColony`, `KColosseum`.
+- **Current Target**: `KStellar`
+- **Upcoming Queue**: `KStarship`, `KSubmarine`, `KSpace`, `KQuest`, `KColony`, `KColosseum`, `KMech`.
 
 ### 3. App Tester Queue (`kilo-tester`)
 - **Current Target**: `KBudget`
@@ -113,6 +113,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-09T09:32:00-07:00 — kilo-graphics: KMech (Skip Turn — Inappropriate Target)**
+  - Status: ⏭️ Skip — Imagen 3 asset replacement not appropriate for KMech
+  - Audit: Tactical CRT HUD & SVG wireframe schematic renderer; no glints or perimeter dots found.
+  - Build: Production build clean (`npm run build` 0 errors).
+  - Queue: Rotated `kilo_graphics` target to `KStellar`; advanced turn to `kilo-tester`.
+
 - **2026-10-09T09:13:00-07:00 — kilo-creator: kweb://asm-temple (Virtual 1999 Web Audit & Expansion)**
   - Status: PASS ✅ (`kweb://asm-temple` Anti-Potemkin Web 1.0 audit & deep expansion verified)
   - Features: Audited x86 Opcode Temple, PE32 dissector, Mode 13h VGA canvas, YM2612 audio engine, and assembler.
@@ -135,9 +141,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Audit: Audited interactive x86 sandbox, Mode 13h VGA canvas, YM2612 tracker, 8x8 font studio, and dead-drop.
   - Verification: Confirmed strict size ceiling (<999KB: 256KB total) and clean production build.
   - Queue: Advanced queue: `virtual_web_target` to `kweb://asm-temple`; handoff to `kilo-graphics`.
-
-- **2026-10-09T06:34:00-07:00 — kilo-expander: KBreakout (Feature Expansion)**
-  - Status: PASS ✅ (`KBreakout` feature expansion completed)
-  - Features: Added Board Preset Architect (5 tactical 6x10 configurations & direct preset loader) and Board Matrix I/O.
-  - Telemetry: Implemented Tactical Mission Telemetry & Stats modal (`[T]`) tracking hits, combo streaks, and harvests.
-  - Verification: Production build clean (`npm run build` 0 errors); advanced `kilo_expander` to `KChess`.
