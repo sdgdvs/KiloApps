@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-creator
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -16,7 +16,7 @@ current_targets:
   kilo_graphics: KCyber
   kilo_tester: KPong
   kilo_usability: KChess
-  kilo_qa: KChess
+  kilo_qa: KColor
   kilo_expander: KConnect4
 virtual_web_target: "kweb://portal"
 virtual_web_rotation:
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-usability
-  app: KPong
-  timestamp: "2026-10-08T17:32:00-07:00"
+  agent: kilo-qa
+  app: KChess
+  timestamp: "2026-10-08T18:13:00-07:00"
 last_planner_run: "2026-10-08T15:14:12Z"
 ---
 
@@ -90,8 +90,8 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Upcoming Queue**: `KCalendar`, `KSnake`, `KChess`, `KAudio`, `KBudget`, `KCalc`, `KMaze`, `KPing`, `KNetMap`, `KStarForge`.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
-- **Current Target**: `KAsteroids`
-- **Upcoming Queue**: `KAlchemy`, `KColony`, `KStarForge`, `KBreakout`, `KRogue`, `KPong`, `KPac`, `KChess`, `KColor`, `KHabit`, `KBBS`, `KAudio`, `KBudget`.
+- **Current Target**: `KColor`
+- **Upcoming Queue**: `KHabit`, `KBBS`, `KAudio`, `KBudget`, `KAlchemy`, `KColony`, `KStarForge`, `KBreakout`, `KRogue`, `KPong`, `KPac`, `KChess`.
 
 ### 6. Feature Expander Queue (`kilo-expander`)
 - **Current Target**: `KChess`
@@ -112,6 +112,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 ---
 
 ## Recent Execution Logs (Max 5 Entries)
+
+- **2026-10-08T18:13:00-07:00 — kilo-qa: KChess (Pass 5: Tutorial & State Integrity Audit)**
+  - Status: PASS ✅ (0 regressions, 196.3 KB web < 999 KB ceiling).
+  - State & Tutorial: Verified F5 quicksave / F9 quickload persistence, tutorialSeen flag, and modal keyboard handlers.
+  - Verification: Vite build clean (`npm run build`); size ceiling (<999 KB) verified.
+  - Queue: Advanced `kilo_qa` to `KColor`; rotation handoff to `kilo-expander`.
 
 - **2026-10-08T16:40:00-07:00 — kilo-adhoc: Fleet Workflow (0-Token Zero-Discard Log Rotation Engine)**
   - Status: PASS ✅ (0 regressions, unit tests 6/6 PASS, security lint 100% PASS).
@@ -138,10 +144,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Verification: Vite build clean; size 129 KB < 999 KB ceiling.
   - Queue: Advanced `kilo_usability` to `KChess`; rotation handoff to `kilo-qa`.
 
-- **2026-10-08T10:38:00-07:00 — kilo-tester: KSettings (Interactive UI Audit & Inline Repairs)**
-  - Status: PASS ✅ (6 issues fixed, 0 regressions).
-  - UI Fixes: Removed modal-close class collision on modal footer buttons; added direct JSON file upload to state dialog.
-  - Parity & Standards: Corrected available app IDs (kterm, knote); added origin check to postMessage; live color oninput.
-  - TINAG Compliance: Replaced meta-labels (Internal Subnet Gateway, Subsystem Telemetry Monitor).
-  - Verification: `test_app_startup.py` 100% PASS; `security_lint.py` 100% PASS; Vite build clean (503ms); 70.6 KB < 999 KB ceiling.
-  - Queue: Advanced `kilo_tester` to `KTaskMgr`; rotation handoff to `kilo-usability`.
