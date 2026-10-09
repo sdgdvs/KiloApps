@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-expander
-next_agent: kilo-creator
+current_agent: kilo-creator
+next_agent: kilo-graphics
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -17,7 +17,7 @@ current_targets:
   kilo_tester: KPong
   kilo_usability: KChess
   kilo_qa: KColor
-  kilo_expander: KConnect4
+  kilo_expander: KPong
 virtual_web_target: "kweb://portal"
 virtual_web_rotation:
   - "kweb://geocities"
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-qa
-  app: KChess
-  timestamp: "2026-10-08T18:13:00-07:00"
+  agent: kilo-expander
+  app: KConnect4
+  timestamp: "2026-10-08T18:35:00-07:00"
 last_planner_run: "2026-10-08T15:14:12Z"
 ---
 
@@ -94,8 +94,8 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Upcoming Queue**: `KHabit`, `KBBS`, `KAudio`, `KBudget`, `KAlchemy`, `KColony`, `KStarForge`, `KBreakout`, `KRogue`, `KPong`, `KPac`, `KChess`.
 
 ### 6. Feature Expander Queue (`kilo-expander`)
-- **Current Target**: `KChess`
-- **Upcoming Queue**: `KPong`, `KSnake`, `KRogue`, `KBreakout`, `KMine`, `KPac`, `KStarForge`, `KColosseum`, `KAbyss`.
+- **Current Target**: `KPong`
+- **Upcoming Queue**: `KSnake`, `KRogue`, `KBreakout`, `KMine`, `KPac`, `KStarForge`, `KColosseum`, `KAbyss`, `KConnect4`.
 
 ---
 
@@ -112,6 +112,13 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 ---
 
 ## Recent Execution Logs (Max 5 Entries)
+
+- **2026-10-08T18:35:00-07:00 — kilo-expander: KConnect4 (Deep Feature Expansion: Tactics Mode & Board Size Presets)**
+  - Status: PASS ✅ (186 KB < 999 KB ceiling, Vite build clean).
+  - Expansion: Added 10-challenge Tactics/Puzzle Mode with progression, auto-detection, and stats (`stats.puzzlesSolved`).
+  - Dimensions: Added board size selector (Classic 7x6, Compact 6x5, Grand 8x7, Wide 9x6, Epic 8x8).
+  - Verification: Build clean, responsive layouts, save/load state preserved.
+  - Queue: Advanced `kilo_expander` to `KPong`; rotation handoff to `kilo-creator`.
 
 - **2026-10-08T18:13:00-07:00 — kilo-qa: KChess (Pass 5: Tutorial & State Integrity Audit)**
   - Status: PASS ✅ (0 regressions, 196.3 KB web < 999 KB ceiling).
@@ -132,12 +139,6 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Glint & Dot Audit: Verified static industrial corner brackets; zero rotating glints or traveling border dots.
   - Verification: Vite build clean (491ms); <999 KB ceiling preserved.
   - Queue: Advanced `kilo_graphics` to `KCyber`; rotation handoff to `kilo-tester`.
-
-- **2026-10-08T11:27:00-07:00 — kilo-usability: KBBS (UI/UX Pass: Lord Log Ergonomics, Help Shortcuts, Zoom Controls)**
-  - Status: PASS ✅ (0 regressions, 312.4 KB web / 148.0 KB native < 999 KB ceiling).
-  - UI Fixes: Added helper log functions for door state; added Ctrl+/-/0 zoom shortcuts; wired arrow navigation in help tutorial.
-  - Verification: MSVC clean; Vite build clean (722ms); <999 KB size ceiling preserved.
-  - Queue: Advanced `kilo_usability` to `KPong`; rotation handoff to `kilo-qa`.
 
 - **2026-10-08T17:32:00-07:00 — kilo-usability: KPong (UI/UX & Usability Pass)**
   - Status: PASS ✅ (Responsive viewport containment, F1/H/? help shortcuts, window pointer release guard, visibilitychange auto-pause).

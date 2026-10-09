@@ -891,6 +891,13 @@
   <div class="controls-row">
     <button id="modeBtn" onclick="toggleMode()">Mode: vs AI [V]</button>
     <button id="mpBtn" onclick="toggleMultiplayerModal()" style="background: linear-gradient(135deg, #00897b, #00acc1); color: #fff; font-weight: bold; border-color: #00e5ff;">🌐 Online [O]</button>
+    <select id="sizeSelect" onchange="changeBoardSize()" title="Board Dimensions">
+      <option value="6x7">7x6 (Classic)</option>
+      <option value="5x6">6x5 (Compact)</option>
+      <option value="7x8">8x7 (Grand)</option>
+      <option value="6x9">9x6 (Wide)</option>
+      <option value="8x8">8x8 (Epic)</option>
+    </select>
     <select id="diffSelect" onchange="changeDifficulty()"></select>
     <button id="hintBtn" onclick="triggerHint()">Hint [T]</button>
     <button id="freezeBtn" onclick="toggleFreezeSkill()">Freeze [F]</button>
@@ -934,13 +941,14 @@
     Draws: <span id="s-draws">0</span> <br>
     Streak: <span id="s-streak">0</span> |
     Best Streak: <span id="s-best">0</span> |
-    Max Stage: <span id="s-stage">1</span>/20
+    Max Stage: <span id="s-stage">1</span>/20 |
+    Puzzles: <span id="s-puzzles">0</span>/10
   </div>
   
   <div id="helpModal">
     <h2>KConnect4 - Help &amp; Controls</h2>
     <p><strong>Rules:</strong> Connect 4 discs vertically, horizontally, or diagonally!</p>
-    <p><strong>Game Modes:</strong> vs AI, 2-Player Local, 20-Stage Campaign (7x6 to 10x8), and Speed Blitz.</p>
+    <p><strong>Game Modes:</strong> vs AI, 2-Player Local, 20-Stage Campaign (7x6 to 10x8), Speed Blitz, and 10 Tactics Puzzles.</p>
     <p><strong>Controls &amp; Hotkeys:</strong></p>
     <ul>
       <li><strong>[1-7] / Numpad / Click:</strong> Drop piece in column</li>
@@ -2263,11 +2271,12 @@
         leaveOnlineGame(true);
         return;
       }
-      gameMode = (gameMode + 1) % 4;
+      gameMode = (gameMode + 1) % 5;
       if (gameMode === 0) { document.getElementById('modeBtn').textContent = 'Mode: 2P [V]'; showToast('Switched to 2 Player Mode', 'info'); }
       else if (gameMode === 1) { document.getElementById('modeBtn').textContent = 'Mode: vs AI [V]'; showToast('Switched to vs AI Mode', 'info'); }
       else if (gameMode === 2) { document.getElementById('modeBtn').textContent = 'Mode: Campaign [V]'; showToast('Switched to Campaign Mode', 'info'); }
-      else { document.getElementById('modeBtn').textContent = 'Mode: Speed [V]'; showToast('Switched to Speed Mode (7s timer)', 'warning'); }
+      else if (gameMode === 3) { document.getElementById('modeBtn').textContent = 'Mode: Speed [V]'; showToast('Switched to Speed Mode (7s timer)', 'warning'); }
+      else { document.getElementById('modeBtn').textContent = 'Mode: Tactics [V]'; showToast('Switched to Tactics Puzzle Mode (10 Challenges)', 'info'); }
       
       updateDiffSelect();
       initGame();
@@ -2287,6 +2296,14 @@
           else sel.add(new Option(`Locked ${i}`, i-1));
         }
         sel.value = campaignStage - 1;
+      } else if (gameMode === 4) {
+        sel.style.display = 'inline-block';
+        const solved = stats.puzzlesSolved || 0;
+        PUZZLES.forEach((p, i) => {
+          if (i <= solved) sel.add(new Option(p.name, i));
+          else sel.add(new Option(`Locked (${i+1})`, i));
+        });
+        sel.value = currentPuzzle;
       } else {
         sel.style.display = 'none';
       }
@@ -2305,6 +2322,28 @@
         } else {
           document.getElementById('diffSelect').value = campaignStage - 1;
         }
+      } else if (gameMode === 4) {
+        let val = parseInt(document.getElementById('diffSelect').value);
+        if (val <= (stats.puzzlesSolved || 0)) {
+          currentPuzzle = val;
+          initGame();
+          showToast(`Loaded ${PUZZLES[currentPuzzle].name}`, 'info');
+        } else {
+          document.getElementById('diffSelect').value = currentPuzzle;
+        }
+      }
+    }
+
+    function changeBoardSize() {
+      const val = document.getElementById('sizeSelect').value;
+      const [r, c] = val.split('x').map(Number);
+      selectedRows = r;
+      selectedCols = c;
+      if (gameMode !== 2 && gameMode !== 4) {
+        initGame(selectedRows, selectedCols);
+        showToast(`Board dimensions set to ${c}x${r}`, 'info');
+      } else {
+        showToast('Board size is predetermined in Campaign and Tactics modes', 'warning');
       }
     }
     
@@ -2405,12 +2444,138 @@
     const timerBar = document.getElementById('timerBar');
     let hoverCol = -1;
 
-    let stats = { red: 0, yellow: 0, draws: 0, streak: 0, best: 0, lastWinner: 0, maxCampaignStage: 1 };
+    let selectedRows = 6;
+    let selectedCols = 7;
+    let currentPuzzle = 0;
+
+    const PUZZLES = [
+      {
+        name: "1. Vertical Strike",
+        objective: "Red to move: Complete your 4-in-a-row in column 4!",
+        rows: 6, cols: 7,
+        powerups: { b: 0, d: 0, m: 0, f: 0 },
+        pieces: [
+          [5, 3, 1], [4, 3, 1], [3, 3, 1],
+          [5, 2, 2], [4, 2, 2], [5, 4, 2]
+        ]
+      },
+      {
+        name: "2. Crucial Defense",
+        objective: "Yellow threatens a horizontal 4! Block the open column.",
+        rows: 6, cols: 7,
+        powerups: { b: 0, d: 0, m: 0, f: 0 },
+        pieces: [
+          [5, 1, 2], [5, 2, 2], [5, 3, 2],
+          [5, 0, 1], [4, 1, 1], [4, 2, 1]
+        ]
+      },
+      {
+        name: "3. Diagonal Snipe",
+        objective: "Find the ascending diagonal connection from (5,1) to (2,4)!",
+        rows: 6, cols: 7,
+        powerups: { b: 0, d: 0, m: 0, f: 0 },
+        pieces: [
+          [5, 1, 1], [4, 2, 1], [3, 3, 1],
+          [5, 4, 2], [4, 4, 2], [5, 2, 2], [5, 3, 2]
+        ]
+      },
+      {
+        name: "4. Double Threat Fork",
+        objective: "Play column 4 to create an inescapable double-ended 3-in-a-row!",
+        rows: 6, cols: 7,
+        powerups: { b: 0, d: 0, m: 0, f: 0 },
+        pieces: [
+          [5, 2, 1], [5, 4, 1],
+          [5, 0, 2], [5, 6, 2], [4, 0, 2]
+        ]
+      },
+      {
+        name: "5. Bomb Clearance",
+        objective: "An obstacle stone blocks your 4! Select Bomb [B] to blast it.",
+        rows: 6, cols: 7,
+        powerups: { b: 1, d: 0, m: 0, f: 0 },
+        pieces: [
+          [5, 1, 1], [5, 2, 1], [5, 4, 1],
+          [5, 3, 3],
+          [4, 1, 2], [4, 2, 2]
+        ]
+      },
+      {
+        name: "6. Drill Demolition",
+        objective: "A cracked block sits at bottom! Use Drill [D] to penetrate.",
+        rows: 6, cols: 7,
+        powerups: { b: 0, d: 1, m: 0, f: 0 },
+        pieces: [
+          [5, 1, 1], [5, 2, 1], [5, 4, 1],
+          [5, 3, 4],
+          [4, 0, 2], [4, 5, 2]
+        ]
+      },
+      {
+        name: "7. Descending Diagonal",
+        objective: "Spot the descending diagonal connection down into column 3!",
+        rows: 6, cols: 7,
+        powerups: { b: 0, d: 0, m: 0, f: 0 },
+        pieces: [
+          [2, 2, 1], [3, 3, 1], [4, 4, 1],
+          [5, 2, 2], [4, 2, 2], [3, 2, 2],
+          [5, 3, 2], [4, 3, 2],
+          [5, 4, 2], [5, 5, 1]
+        ]
+      },
+      {
+        name: "8. Freeze Gambit",
+        objective: "Yellow is one drop away from victory! Freeze [F] their winning column.",
+        rows: 6, cols: 7,
+        powerups: { b: 0, d: 0, m: 0, f: 1 },
+        pieces: [
+          [5, 3, 2], [4, 3, 2], [3, 3, 2],
+          [5, 0, 1], [5, 1, 1], [5, 2, 1]
+        ]
+      },
+      {
+        name: "9. Magnet Sweep",
+        objective: "Drop Magnet [M] in column 4 to draw friendly discs into a 4-in-a-row!",
+        rows: 6, cols: 7,
+        powerups: { b: 0, d: 0, m: 1, f: 0 },
+        pieces: [
+          [5, 1, 1], [5, 2, 1], [5, 4, 1],
+          [4, 2, 2], [4, 4, 2]
+        ]
+      },
+      {
+        name: "10. Grandmaster Endgame",
+        objective: "Set up the winning 4-in-a-row with an unstoppable double trap!",
+        rows: 6, cols: 7,
+        powerups: { b: 0, d: 0, m: 0, f: 0 },
+        pieces: [
+          [5, 1, 1], [5, 2, 1], [4, 3, 1], [4, 2, 1],
+          [5, 0, 2], [5, 4, 2], [5, 5, 2], [4, 4, 2]
+        ]
+      }
+    ];
+
+    function loadPuzzle(idx) {
+      const p = PUZZLES[idx % PUZZLES.length];
+      ROWS = p.rows; COLS = p.cols;
+      board = Array(ROWS).fill().map(() => Array(COLS).fill(0));
+      p.pieces.forEach(([r, c, val]) => {
+        if (r >= 0 && r < ROWS && c >= 0 && c < COLS) board[r][c] = val;
+      });
+      p1Bombs = p.powerups.b; p2Bombs = 0;
+      p1Drills = p.powerups.d; p2Drills = 0;
+      p1Magnets = p.powerups.m; p2Magnets = 0;
+      p1Freezes = p.powerups.f; p2Freezes = 0;
+      statusEl.textContent = `${p.name}: ${p.objective}`;
+    }
+
+    let stats = { red: 0, yellow: 0, draws: 0, streak: 0, best: 0, lastWinner: 0, maxCampaignStage: 1, puzzlesSolved: 0 };
     function loadStats() {
       const s = safeGet('kconnect4_stats', null);
       if(s) {
         stats = { ...stats, ...s };
         if(!stats.maxCampaignStage) stats.maxCampaignStage = 1;
+        if(stats.puzzlesSolved === undefined) stats.puzzlesSolved = 0;
       }
       updateStatsUI();
     }
@@ -2425,6 +2590,8 @@
       document.getElementById('s-streak').textContent = stats.streak;
       document.getElementById('s-best').textContent = stats.best;
       document.getElementById('s-stage').textContent = stats.maxCampaignStage;
+      const pEl = document.getElementById('s-puzzles');
+      if (pEl) pEl.textContent = stats.puzzlesSolved || 0;
     }
 
     // --- Live Positional Evaluation & Threat Radar ---
@@ -3044,10 +3211,15 @@
       }, 100);
     }
     
-    function initGame(customRows = 6, customCols = 7) {
-      ROWS = customRows; COLS = customCols;
+    function initGame(customRows = null, customCols = null) {
+      if (customRows !== null && customCols !== null) {
+        ROWS = customRows; COLS = customCols;
+      } else if (gameMode !== 2 && gameMode !== 4) {
+        ROWS = selectedRows; COLS = selectedCols;
+      }
       board = Array(ROWS).fill().map(() => Array(COLS).fill(0));
       if (gameMode === 2) loadCampaignStage(campaignStage);
+      else if (gameMode === 4) loadPuzzle(currentPuzzle);
       currentPlayer = 1;
       gameActive = true;
       winningCells = [];
@@ -3456,6 +3628,12 @@
                   stats.maxCampaignStage++;
                   showToast(`🏆 Stage ${campaignStage} Cleared! Stage ${stats.maxCampaignStage} Unlocked!`, 'success');
                   updateDiffSelect();
+                } else if (!isOnlineGame && gameMode === 4 && winner === 1) {
+                  if ((stats.puzzlesSolved || 0) <= currentPuzzle && (stats.puzzlesSolved || 0) < PUZZLES.length) {
+                    stats.puzzlesSolved = currentPuzzle + 1;
+                  }
+                  showToast(`🎯 Puzzle Solved: ${PUZZLES[currentPuzzle].name}!`, 'success');
+                  updateDiffSelect();
                 }
               }
               saveStats(); updateDiffSelect();
@@ -3588,7 +3766,8 @@
         if (gameMode === 0) document.getElementById('modeBtn').textContent = 'Mode: 2P [V]';
         else if (gameMode === 1) document.getElementById('modeBtn').textContent = 'Mode: vs AI [V]';
         else if (gameMode === 2) document.getElementById('modeBtn').textContent = 'Mode: Campaign [V]';
-        else document.getElementById('modeBtn').textContent = 'Mode: Speed [V]';
+        else if (gameMode === 3) document.getElementById('modeBtn').textContent = 'Mode: Speed [V]';
+        else document.getElementById('modeBtn').textContent = 'Mode: Tactics [V]';
         
         if (aiTimeout) { clearTimeout(aiTimeout); aiTimeout = null; }
         renderBoard();
