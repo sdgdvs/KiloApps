@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-qa
+current_agent: kilo-qa
+next_agent: kilo-expander
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -15,7 +15,7 @@ current_targets:
   kilo_creator: "kweb://users/~neon_rider"
   kilo_graphics: K2048
   kilo_tester: KCards
-  kilo_usability: KCalc
+  kilo_usability: KChat
   kilo_qa: KAudio
   kilo_expander: KBreakout
 virtual_web_target: "kweb://users/~neon_rider"
@@ -32,11 +32,17 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-tester
-  app: KBase
-  timestamp: "2026-10-09T05:14:00-07:00"
+  agent: kilo-usability
+  app: KCalc
+  timestamp: "2026-10-09T05:31:00-07:00"
 last_planner_run: "2026-10-08T15:14:12Z"
 ---
+
+### Agent Run Log — 2026-10-09T05:31 (Phase 17)
+- **Status:** PASS ✅ (`KCalc` usability & responsive layout refined)
+- Tuned default window dimensions to 860x690 in `App.jsx` for unclipped formula & keypad display.
+- Enhanced narrow viewport `@media` queries with touch-scrollable tabs and compact keypad buttons.
+- Build clean (`npm run build` 0 errors); advanced `kilo_usability` to `KChat`; handoff to `kilo-qa`.
 
 ### Agent Run Log — 2026-10-09T05:14 (Phase 17)
 - **Status:** PASS ✅ (`KBase` interactive UI audit & inline fix)

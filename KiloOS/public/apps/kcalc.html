@@ -949,10 +949,23 @@
   }
 
   @media (max-width: 680px) {
-    .header { flex-direction: column; align-items: stretch; }
-    .mode-tabs { overflow-x: auto; }
+    .header { flex-direction: column; align-items: stretch; gap: 8px; }
+    .mode-tabs { overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 2px; }
+    .header-controls { flex-wrap: wrap; justify-content: center; gap: 4px; }
+    .badge-btn { padding: 4px 7px; font-size: 10px; }
+    .keypad-grid { gap: 4px; }
+    .calc-btn { font-size: 12px; min-height: 38px; }
+    .calc-btn.op, .calc-btn.num { font-size: 14px; }
+    .display-card { min-height: 80px; padding: 10px 14px; }
+    .main-display { font-size: 24px; }
+    .sub-display { font-size: 11px; }
     .mem-reg-grid { grid-template-columns: 1fr; }
     .toast-container { top: 56px; right: 12px; max-width: calc(100vw - 24px); }
+  }
+  @media (max-width: 480px) {
+    .calc-btn { font-size: 10px; min-height: 32px; padding: 2px; }
+    .calc-btn.op, .calc-btn.num { font-size: 12px; }
+    .main-display { font-size: 20px; }
   }
 </style>
 </head>
