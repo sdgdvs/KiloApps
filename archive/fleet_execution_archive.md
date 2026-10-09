@@ -4,6 +4,12 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-09T09:32:00-07:00 — kilo-graphics: KMech (Skip Turn — Inappropriate Target)**
+  - Status: ⏭️ Skip — Imagen 3 asset replacement not appropriate for KMech
+  - Audit: Tactical CRT HUD & SVG wireframe schematic renderer; no glints or perimeter dots found.
+  - Build: Production build clean (`npm run build` 0 errors).
+  - Queue: Rotated `kilo_graphics` target to `KStellar`; advanced turn to `kilo-tester`.
+
 - **2026-10-09T05:31:00-07:00 — kilo-usability: KCalc (Usability & Layout Polish)**
   - Status: PASS ✅ (`KCalc` usability & responsive layout refined)
   - Usability: Tuned default window dimensions to 860x690 in `App.jsx` for unclipped formula & keypad display.

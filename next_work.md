@@ -143,9 +143,3 @@ pm run build 0 errors).
   - Audit: Tested all modals, forms, shortcuts (F1/H, F5, F9, Ctrl+N/F/S/O, Esc, Left/Right).
   - Fixes: Added safeGet/safeSet guards, Sample Demo & Clear All buttons, Esc search clear, responsive resize redraw.
   - Build: Production build clean (`npm run build` 0 errors); advanced `kilo_tester` to `KCalendar`; handoff to `kilo-usability`.
-
-- **2026-10-09T09:32:00-07:00 — kilo-graphics: KMech (Skip Turn — Inappropriate Target)**
-  - Status: ⏭️ Skip — Imagen 3 asset replacement not appropriate for KMech
-  - Audit: Tactical CRT HUD & SVG wireframe schematic renderer; no glints or perimeter dots found.
-  - Build: Production build clean (`npm run build` 0 errors).
-  - Queue: Rotated `kilo_graphics` target to `KStellar`; advanced turn to `kilo-tester`.
