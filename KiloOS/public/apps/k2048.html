@@ -2853,6 +2853,27 @@
                 return;
             }
 
+            if (e.key === 'F1') {
+                e.preventDefault();
+                showHelp();
+                return;
+            }
+            if (e.key === 'F5') {
+                e.preventDefault();
+                saveGameState();
+                if (typeof showToast === 'function') showToast('Game saved (F5)', 'info');
+                return;
+            }
+            if (e.key === 'F9') {
+                e.preventDefault();
+                if (loadGameState()) {
+                    if (typeof showToast === 'function') showToast('Game loaded (F9)', 'info');
+                } else {
+                    if (typeof showToast === 'function') showToast('No saved game found', 'warning');
+                }
+                return;
+            }
+
             // Replay Mode Navigation
             if (typeof isReplaying !== 'undefined' && isReplaying) {
                 if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') { e.preventDefault(); replayPrev(); return; }
