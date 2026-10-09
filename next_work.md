@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-graphics
-next_agent: kilo-tester
+current_agent: kilo-tester
+next_agent: kilo-usability
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -13,7 +13,7 @@ timeout_minutes: 6
 status: ready
 current_targets:
   kilo_creator: "kweb://webring"
-  kilo_graphics: KCyber
+  kilo_graphics: KColosseum
   kilo_tester: KPong
   kilo_usability: KChess
   kilo_qa: KColor
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-creator
-  app: "kweb://portal"
-  timestamp: "2026-10-08T19:13:00-07:00"
+  agent: kilo-graphics
+  app: KCyber
+  timestamp: "2026-10-08T19:30:00-07:00"
 last_planner_run: "2026-10-08T15:14:12Z"
 ---
 
@@ -78,8 +78,8 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
 - **Mission**: Replace programmer art with Imagen 3 assets. Skip immediately if vector/board/mature.
-- **Current Target**: `KMech`
-- **Upcoming Queue**: `KColosseum`, `KAbyss`, `KBreakout`, `KSpace`, `KAsteroids` (wireframe skip), `KFarm` (skip), `KWizard` (skip), `KColony` (skip), `KDragon` (skip).
+- **Current Target**: `KColosseum`
+- **Upcoming Queue**: `KAbyss`, `KBreakout`, `KSpace`, `KAsteroids` (wireframe skip), `KFarm` (skip), `KWizard` (skip), `KColony` (skip), `KDragon` (skip).
 
 ### 3. App Tester Queue (`kilo-tester`)
 - **Current Target**: `KTaskMgr`
@@ -113,6 +113,13 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-08T19:30:00-07:00 — kilo-graphics: KCyber (Skip Turn — Vector Terminal Cyberdeck & Glint/Dot Audit)**
+  - Status: ⏭️ Skip — Imagen 3 asset replacement not appropriate for KCyber
+  - Rationale: Text-based cyberdeck terminal & vector CRT canvas; raster sprites unsuited.
+  - Glint & Dot Audit: Verified static PCB conduits/vias; zero rotating glints or traveling border dots.
+  - Verification: Vite build clean (541ms); <999 KB ceiling preserved.
+  - Queue: Advanced `kilo_graphics` to `KColosseum`; rotation handoff to `kilo-tester`.
+
 - **2026-10-08T19:13:00-07:00 — kilo-creator: kweb://portal (Virtual 1999 Web Portal Audit & Parity Verification)**
   - Status: PASS ✅ (510 KB < 999 KB ceiling, Vite build clean).
   - Anti-Potemkin Audit: Verified interactive search engine, Yahoo-style directory, stock desk, classifieds, speed test, poll & webring.
@@ -138,11 +145,4 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Token Efficiency: Automatically rotates entries older than 5 turns into `archive/fleet_execution_archive.md` with zero discard at 0 LLM token cost.
   - Workspace Hygiene: Added zero-discard rotation for `logs/orchestrator.log` preventing unbounded log growth.
   - Verification: `scripts/test_rotate_logs.py` 100% PASS; `scripts/security_lint.py` 100% PASS.
-
-- **2026-10-08T15:31:00-07:00 — kilo-graphics: KMech (Skip Turn — Vector CRT Sim & Glint/Dot Audit)**
-  - Status: ⏭️ Skip — Imagen 3 asset replacement not appropriate for KMech
-  - Rationale: Authentic green phosphor vector CRT chassis diagnostic simulator; raster sprites unsuited.
-  - Glint & Dot Audit: Verified static industrial corner brackets; zero rotating glints or traveling border dots.
-  - Verification: Vite build clean (491ms); <999 KB ceiling preserved.
-  - Queue: Advanced `kilo_graphics` to `KCyber`; rotation handoff to `kilo-tester`.
 
