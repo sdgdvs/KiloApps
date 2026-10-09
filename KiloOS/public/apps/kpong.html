@@ -210,7 +210,7 @@
     <div class="p2-score" id="s2" aria-label="Player 2 Score" aria-live="polite">0</div>
   </div>
 
-  <canvas id="gameCanvas" width="900" height="640" style="width: 900px; height: 640px; max-width: 100%; height: auto;" aria-label="Pong Game Canvas" tabindex="0"></canvas>
+  <canvas id="gameCanvas" width="900" height="640" style="max-width: 100%; max-height: calc(100vh - 170px); aspect-ratio: 900 / 640; height: auto;" aria-label="Pong Game Canvas" tabindex="0"></canvas>
 
   <!-- Replay Toolbar -->
   <div id="replay-bar" style="display: none; width: 100%; gap: 8px; justify-content: space-between; align-items: center; background: rgba(5,15,30,0.85); padding: 8px 14px; border-radius: 8px; border: 1px solid var(--primary); font-size: 12px; flex-wrap: wrap; box-shadow: 0 4px 15px rgba(0,229,255,0.2);">
@@ -250,6 +250,7 @@
       <tr><th>Online Match</th><td>[O] Online Net-Arena | Quick Match, Host & Codes</td></tr>
       <tr><th>Skills</th><td>[F] Slow-Mo | [E] Mega Paddle | [B] Fireball</td></tr>
       <tr><th>System</th><td>[Space] Pause | [M] Mode | [1-3] Diff | [V] PvP | [T] Theme | [U] Sound</td></tr>
+      <tr><th>Help & Guide</th><td>[F1], [H], or [?] to open Help at any time</td></tr>
       <tr><th>Replay</th><td>[P] Match Replay | [Space] Pause | [←/→] Scrub | [1/2/3] Speed</td></tr>
       <tr><th>Stats</th><td>[L] Stats Modal | JSON Export & Import</td></tr>
       <tr><th>Save/Load</th><td>[F5] Save Game | [F9] Load Game</td></tr>
@@ -1513,8 +1514,8 @@
       if(e.key === 'e' || e.key === 'E') triggerSkill('mega');
       if(e.key === 'b' || e.key === 'B') triggerSkill('fire');
       if(e.key === ' ') togglePause();
-      if(e.key === 'h' || e.key === 'H' || e.key === 'F1') {
-          if(e.key === 'F1') e.preventDefault();
+      if(e.key === 'h' || e.key === 'H' || e.key === 'F1' || e.key === '?' || e.key === '/') {
+          if(e.key === 'F1' || e.key === '?' || e.key === '/') e.preventDefault();
           openHelpModal();
       }
       if(e.key === 'l' || e.key === 'L') openStatsModal();
@@ -1679,6 +1680,8 @@
   };
   canvas.addEventListener('pointerup', stopPointerDrag);
   canvas.addEventListener('pointercancel', stopPointerDrag);
+  window.addEventListener('pointerup', stopPointerDrag);
+  window.addEventListener('pointercancel', stopPointerDrag);
 
   canvas.addEventListener('mousemove', e => {
       if (!isPointerDragging && (e.buttons === 1 || !isPvP)) handleCanvasPointer(e);
@@ -2922,12 +2925,28 @@
       }
   }, 250);
 
+  let animFrameId = null;
+  let isTabHidden = false;
+
   function gameLoop(timestamp) {
-      update();
-      draw();
-      requestAnimationFrame(gameLoop);
+      if (!isTabHidden) {
+          update();
+          draw();
+      }
+      animFrameId = requestAnimationFrame(gameLoop);
   }
-  requestAnimationFrame(gameLoop);
+  animFrameId = requestAnimationFrame(gameLoop);
+
+  document.addEventListener('visibilitychange', () => {
+      if (document.hidden) {
+          isTabHidden = true;
+          if (!isPaused && !gameOver && !isReplaying) {
+              togglePause();
+          }
+      } else {
+          isTabHidden = false;
+      }
+  });
 </script>
 </body>
 </html>
