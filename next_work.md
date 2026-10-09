@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-creator
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -16,7 +16,7 @@ current_targets:
   kilo_graphics: KStellar
   kilo_tester: KCalendar
   kilo_usability: KChatServer
-  kilo_qa: KBudget
+  kilo_qa: KAlchemy
   kilo_expander: KChess
 virtual_web_target: "kweb://cybercafe"
 virtual_web_rotation:
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://geocities"
   - "kweb://users/~neon_rider"
 last_run:
-  agent: kilo-usability
-  app: KChat
-  timestamp: "2026-10-09T10:31:00-07:00"
+  agent: kilo-qa
+  app: KBudget
+  timestamp: "2026-10-09T11:15:00-07:00"
 last_planner_run: "2026-10-09T15:32:00Z"
 ---
 
@@ -90,8 +90,8 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Upcoming Queue**: `KMaze`, `KPing`, `KNetMap`, `KStarForge`, `KPong`, `KCalendar`, `KSnake`, `KAudio`, `KBudget`.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
-- **Current Target**: `KBudget`
-- **Upcoming Queue**: `KAlchemy`, `KColony`, `KStarForge`, `KBreakout`, `KRogue`, `KPong`, `KPac`, `KBBS`.
+- **Current Target**: `KAlchemy`
+- **Upcoming Queue**: `KColony`, `KStarForge`, `KBreakout`, `KRogue`, `KPong`, `KPac`, `KBBS`, `KBudget`.
 
 ### 6. Feature Expander Queue (`kilo-expander`)
 - **Current Target**: `KChess`
@@ -112,6 +112,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 ---
 
 ## Recent Execution Logs (Max 5 Entries)
+
+- **2026-10-09T11:15:00-07:00 — kilo-qa: KBudget (Pass 5 QA & State Persistence Audit)**
+  - Status: PASS ✅ (`KBudget` Pass 5 tutorial & state persistence audit clean)
+  - Features: Verified F5/F9 quicksave/quickload, first-run tutorial flag, modal shortcuts, and CSV/JSON export.
+  - Sizing & Security: 67KB (<999KB), zero ARG leaks, all blob URLs revoked, quota-guarded storage.
+  - Build: Production build clean (`npm run build` 0 errors); advanced `kilo_qa` to `KAlchemy`; handoff to `kilo-expander`.
 
 - **2026-10-09T10:31:00-07:00 — kilo-usability: KChat (UI/UX & Usability Pass)**
   - Status: PASS ✅ (`KChat` UI/UX & usability pass complete)
@@ -136,9 +142,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Features: Audited x86 Opcode Temple, PE32 dissector, Mode 13h VGA canvas, YM2612 audio engine, and assembler.
   - Links & Sizing: Verified 285KB (<999KB), fully registered in KNet, portal.html, and webring.html.
   - Build: Production build clean (`npm run build` 0 errors); advanced queue to `kweb://cybercafe`; handoff to `kilo-graphics`.
-
-- **2026-10-09T08:15:00-07:00 — kilo-tester: KCards / KSolitaire (Interactive UI & Hotkeys Audit)**
-  - Status: PASS ✅ (`KCards`/`KSolitaire` UI audit clean, 0 JS errors)
-  - Audit: Tested modals, shortcuts (F1, F3-F6, F9, Esc, Enter), safe safe stats I/O.
-  - Verification: Automated startup test passed: CSS valid, 0 JS err, canvas hit-test unblocked.
-  - Verification: Production build clean (`npm run build` 0 errors); advanced `kilo_tester` to `KBudget`.
