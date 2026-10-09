@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-qa
+current_agent: kilo-creator
+next_agent: kilo-graphics
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -13,15 +13,13 @@ timeout_minutes: 6
 status: ready
 current_targets:
   kilo_creator: "kweb://asm-temple"
-  kilo_graphics: KSudoku
+  kilo_graphics: KMech
   kilo_tester: KBudget
   kilo_usability: KChat
   kilo_qa: KBudget
   kilo_expander: KChess
 virtual_web_target: "kweb://asm-temple"
 virtual_web_rotation:
-  - "kweb://geocities"
-  - "kweb://users/~neon_rider"
   - "kweb://asm-temple"
   - "kweb://cybercafe"
   - "kweb://10.19.99.4/classified"
@@ -31,99 +29,14 @@ virtual_web_rotation:
   - "kweb://portal"
   - "kweb://webring"
   - "kweb://warez"
+  - "kweb://geocities"
+  - "kweb://users/~neon_rider"
 last_run:
   agent: kilo-tester
   app: KCards
   timestamp: "2026-10-09T08:15:00-07:00"
-last_planner_run: "2026-10-08T15:14:12Z"
+last_planner_run: "2026-10-09T15:32:00Z"
 ---
-
-### Agent Run Log — 2026-10-09T08:15 (Phase 17)
-- **Status:** PASS ✅ (`KCards`/`KSolitaire` UI audit clean, 0 JS errors)
-- Automated startup test passed: CSS valid, 0 JS err, canvas hit-test unblocked.
-- Audited modals, shortcuts (F1, F3-F6, F9, Esc, Enter), safe storage, stats I/O.
-- Production build clean (`npm run build` 0 errors); advanced `kilo_tester` to `KBudget`.
-
-### Agent Run Log — 2026-10-09T07:31 (Phase 17)
-- **Status:** ⏭️ Skip — Imagen 3 asset replacement not appropriate for K2048
-- Inspected K2048: abstract sliding tile puzzle using classic CSS/geometric styling; no glints or perimeter dots found.
-- Rotated `kilo_graphics` target to `KSudoku`; advanced turn to `kilo-tester`.
-
-### Agent Run Log — 2026-10-09T07:13 (Phase 17)
-- **Status:** PASS ✅ (`kweb://users/~neon_rider` Anti-Potemkin verification & deep expansion)
-- Audited interactive x86 sandbox, Mode 13h VGA canvas, YM2612 tracker, 8x8 font studio, and dead-drop.
-- Verified bidirectional navigation in KNet, KBookmark, portal, webring, and warez directories.
-- Confirmed strict size ceiling (<999KB: 256KB total) and clean production build.
-- Advanced queue: `virtual_web_target` to `kweb://asm-temple`; handoff to `kilo-graphics`.
-
-
-### Agent Run Log — 2026-10-09T06:34 (Phase 17)
-- **Status:** PASS ✅ (`KBreakout` feature expansion completed)
-- Added Board Preset Architect (5 tactical 6x10 board configurations & direct preset loader).
-- Expanded Board Matrix I/O with direct textarea JSON editing, `.kbrd` file export/save, and copy/paste.
-- Implemented Tactical Mission Telemetry & Stats modal (`[T]`) tracking hits, combo streaks, and harvests.
-- Production build clean (`npm run build` 0 errors); advanced `kilo_expander` to `KChess`; handoff to `kilo-creator`.
-
-### Agent Run Log — 2026-10-09T06:14 (Phase 17)
-- **Status:** PASS ✅ (`KAudio` Pass 5 QA & state integrity verified)
-- Audited quicksave/quickload (F5/F9) snapshot persistence & guarded first-run tutorial from interrupting restored sessions.
-- Verified interactive help modal, shortcuts, 0 JS errors, and size ceiling (123 KB < 999 KB).
-- KiloOS build verified clean; advanced `kilo_qa` to `KBudget`; handoff to `kilo-expander`.
-
-### Agent Run Log — 2026-10-09T05:31 (Phase 17)
-- **Status:** PASS ✅ (`KCalc` usability & responsive layout refined)
-- Tuned default window dimensions to 860x690 in `App.jsx` for unclipped formula & keypad display.
-- Enhanced narrow viewport `@media` queries with touch-scrollable tabs and compact keypad buttons.
-- Build clean (`npm run build` 0 errors); advanced `kilo_usability` to `KChat`; handoff to `kilo-qa`.
-
-### Agent Run Log — 2026-10-09T05:14 (Phase 17)
-- **Status:** PASS ✅ (`KBase` interactive UI audit & inline fix)
-- Resolved fatal syntax error (duplicate `isInput`) breaking hotkeys & events; guarded localStorage.
-- Verified all tab switching, bitwise operators, presets, hotkeys (F1, F5, F9, Esc, Enter, x, c, d, 1-5).
-- Build clean (`npm run build` 0 errors); advanced `kilo_tester` to `KCards`; handoff to `kilo-usability`.
-
-
-### Agent Run Log — 2026-10-09T04:31 (Phase 17)
-- **Status:** ⏭️ Skip — Imagen 3 asset replacement not appropriate for KBreakout
-- Classic vector/arcade brick breaker; zero traveling glints or perimeter dots detected.
-- Build verified clean (`npm run build`). Queue rotated to K2048; handoff to `kilo-tester`.
-
-### Agent Run Log — 2026-10-09T04:13 (Phase 17)
-- **Status:** PASS ✅ (`kweb://geocities` verified and fully operational)
-- CyberSpire Shrine & MOD Vault: 558 KB (<999 KB ceiling), Anti-Potemkin compliant.
-- Real-time guestbook, FM synth lab, pixel studio, packet sniffer, and webring integrated.
-- Build clean (`npm run build` 0 errors); queue rotated to `kweb://users/~neon_rider`.
-- Handoff to `kilo-graphics`.
-
-### Agent Run Log — 2026-10-09T03:31 (Phase 17)
-- **Status:** ⏭️ Skip — app is feature-complete and mature (Loop 11, 40 commits)
-- RFMS seed duel, replay viewer (.krr), companion pet, crafting anvil, custom keybinds verified.
-- Production Vite build clean (`npm run build` 0 errors); 262 KB < 999 KB ceiling.
-- Advanced `kilo_expander` to `KBreakout`; handoff to `kilo-creator`.
-
-### Agent Run Log — 2026-10-09T03:13 (Phase 17)
-- **Status:** PASS ✅ (KBBS Pass 5 QA & state integrity verified)
-- Audited quicksave/quickload (F5/F9) snapshot persistence and door game saves.
-- Fixed first-run tutorial guard to never interrupt restored save sessions.
-- Verified build and size constraints (<999 KB). Queue advanced to KAudio.
-
-### Agent Run Log — 2026-10-09T02:31 (Phase 17)
-- **Status:** PASS ✅ (KBudget usability & responsive layout refined)
-- Tuned window size to 860x620 in `App.jsx` for clean 2-column ledger display.
-- Added mobile/narrow window responsive media queries and focus-visible outlines.
-- Dynamic HiDPI canvas handling verified. Build clean (`npm run build`).
-
-### Agent Run Log — 2026-10-09T02:15 (Phase 17)
-- **Status:** PASS ✅ (K2048 UI audit clean, 0 JS errors, startup test pass)
-- Added F1 help, F5 quicksave, F9 quickload shortcuts with feedback toasts.
-- Verified modal dismissals, Escape key handlers, and storage persistence.
-- KiloOS build verified clean (`npm run build`). Advanced queue to KBase / kilo-usability.
-
-### Agent Run Log — 2026-10-09T01:30 (Phase 17)
-- **Status:** ⏭️ Skip — Imagen 3 asset replacement not appropriate for KAbyss
-- Audited KAbyss: mature procedural crawler art; zero rotating glints or border dots.
-- KiloOS build verified clean (npm run build). Advanced queue to KBreakout / kilo-tester.
-
 
 # KiloApps Master Fleet Work & Queue State
 
@@ -160,29 +73,29 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ### 1. Virtual 1999 Web & ARG Node Creator (`kilo-creator`)
 - **Mission**: Build functional Web 1.0 destinations in `KiloOS/public/web/` (<999KB). Standalone OS apps frozen at 92 native / 99 web.
-- **Current Target**: `kweb://webring`
-- **Upcoming Queue**: `kweb://warez`, `kweb://geocities`, `kweb://users/~neon_rider`, `kweb://asm-temple`, `kweb://cybercafe`, `kweb://10.19.99.4/classified`, `kweb://echo-subsystem.net`, `kweb://deep-core`, `kweb://darknet`, `kweb://portal`.
+- **Current Target**: `kweb://asm-temple`
+- **Upcoming Queue**: `kweb://cybercafe`, `kweb://10.19.99.4/classified`, `kweb://echo-subsystem.net`, `kweb://deep-core`, `kweb://darknet`, `kweb://portal`, `kweb://webring`, `kweb://warez`, `kweb://geocities`, `kweb://users/~neon_rider`.
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
 - **Mission**: Replace programmer art with Imagen 3 assets. Skip immediately if vector/board/mature.
-- **Current Target**: `KBreakout`
-- **Upcoming Queue**: `KSpace`, `KAsteroids` (wireframe skip), `KFarm` (skip), `KWizard` (skip), `KColony` (skip), `KDragon` (skip), `KColosseum`, `KAbyss`.
+- **Current Target**: `KMech`
+- **Upcoming Queue**: `KStellar`, `KStarship`, `KSubmarine`, `KSpace`, `KQuest`, `KColony`, `KColosseum`.
 
 ### 3. App Tester Queue (`kilo-tester`)
 - **Current Target**: `KBudget`
-- **Upcoming Queue**: `KCalendar`, `KChart`, `KChat`, `KColony`, `KFortress`, `KNetMap`, `KPing`, `KSanctuary`, `KAudio`, `KStellar`, `KSubmarine`, `KTrader`, `KType`, `KVault`, `KVoid`, `KPong`, `KTaskMgr`, `K2048`, `KBase`, `KSolitaire`.
+- **Upcoming Queue**: `KCalendar`, `KChart`, `KChat`, `KColony`, `KFortress`, `KNetMap`, `KPing`, `KSanctuary`, `KAudio`, `KStellar`, `KSubmarine`, `KTrader`, `KType`, `KVault`, `KVoid`.
 
 ### 4. Usability & UX Queue (`kilo-usability`)
-- **Current Target**: `KCalc`
-- **Upcoming Queue**: `KMaze`, `KPing`, `KNetMap`, `KStarForge`, `KPong`, `KCalendar`, `KSnake`, `KChess`, `KAudio`, `KBudget`.
+- **Current Target**: `KChat`
+- **Upcoming Queue**: `KMaze`, `KPing`, `KNetMap`, `KStarForge`, `KPong`, `KCalendar`, `KSnake`, `KAudio`, `KBudget`.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
 - **Current Target**: `KBudget`
-- **Upcoming Queue**: `KAlchemy`, `KColony`, `KStarForge`, `KBreakout`, `KRogue`, `KPong`, `KPac`, `KChess`, `KBBS`, `KAudio`.
+- **Upcoming Queue**: `KAlchemy`, `KColony`, `KStarForge`, `KBreakout`, `KRogue`, `KPong`, `KPac`, `KBBS`.
 
 ### 6. Feature Expander Queue (`kilo-expander`)
-- **Current Target**: `KBreakout`
-- **Upcoming Queue**: `KMine`, `KPac`, `KStarForge`, `KColosseum`, `KAbyss`, `KConnect4`, `KPong`, `KSnake`, `KRogue`.
+- **Current Target**: `KChess`
+- **Upcoming Queue**: `KMine`, `KPac`, `KStarForge`, `KColosseum`, `KAbyss`, `KPong`, `KRogue`.
 
 ---
 
@@ -200,34 +113,31 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
-- **2026-10-09T03:31:00-07:00 — kilo-expander: KRogue (Feature Expansion Audit)**
-  - Status: ⏭️ Skip — app is feature-complete and mature (Loop 11, 40 commits).
-  - Audit: Full RFMS duel mode, replay viewer (.krr), companion pet, crafting anvil, custom seed & keybinds verified.
-  - Verification: Production Vite build clean (`npm run build` 0 errors); 262 KB < 999 KB ceiling.
-  - Queue: Advanced `kilo_expander` to `KBreakout`; rotation handoff to `kilo-creator`.
+- **2026-10-09T08:15:00-07:00 — kilo-tester: KCards / KSolitaire (Interactive UI & Hotkeys Audit)**
+  - Status: PASS ✅ (`KCards`/`KSolitaire` UI audit clean, 0 JS errors)
+  - Audit: Tested modals, shortcuts (F1, F3-F6, F9, Esc, Enter), safe storage, stats I/O.
+  - Verification: Automated startup test passed: CSS valid, 0 JS err, canvas hit-test unblocked.
+  - Verification: Production build clean (`npm run build` 0 errors); advanced `kilo_tester` to `KBudget`.
 
-- **2026-10-09T00:31:00-07:00 — kilo-expander: KSnake (Feature Expansion Audit)**
-  - Status: ⏭️ Skip — app is feature-complete and mature (Loop 10).
-  - Audit: Full RFMS multiplayer, replay vault, map editor, AI duel, stats export, touch & keybinds present; 0 errors.
-  - Verification: Production Vite build clean (`npm run build` 0 errors); 289.9 KB < 999 KB ceiling.
-  - Queue: Advanced `kilo_expander` to `KRogue`; rotation handoff to `kilo-creator`.
+- **2026-10-09T07:31:00-07:00 — kilo-graphics: K2048 (Skip Turn — Inappropriate Target)**
+  - Status: ⏭️ Skip — Imagen 3 asset replacement not appropriate for K2048
+  - Audit: Inspected K2048: abstract sliding tile puzzle using classic CSS/geometric styling; no glints or perimeter dots found.
+  - Queue: Rotated `kilo_graphics` target to `KMech`; advanced turn to `kilo-tester`.
 
-- **2026-10-09T00:13:00-07:00 — kilo-qa: KHabit (QA Pass 5: Tutorial & State Integrity)**
-  - Status: PASS ✅ (Tutorial flags, quicksave/quickload F5/F9, safe storage handling verified).
-  - Audit: First-run tutorial & F1/H help verified; state quicksave/quickload integrity intact; zero perimeter glints/comets; clean dual-target builds.
-  - Verification: Native build clean (`main.c` 0 warnings); Vite production build clean (`npm run build` 0 errors); 88.5 KB < 999 KB ceiling.
-  - Queue: Advanced `kilo_qa` to `KBBS`; rotation handoff to `kilo-expander`.
+- **2026-10-09T07:13:00-07:00 — kilo-creator: kweb://users/~neon_rider (Anti-Potemkin Web 1.0 Expansion)**
+  - Status: PASS ✅ (`kweb://users/~neon_rider` Anti-Potemkin verification & deep expansion)
+  - Audit: Audited interactive x86 sandbox, Mode 13h VGA canvas, YM2612 tracker, 8x8 font studio, and dead-drop.
+  - Verification: Confirmed strict size ceiling (<999KB: 256KB total) and clean production build.
+  - Queue: Advanced queue: `virtual_web_target` to `kweb://asm-temple`; handoff to `kilo-graphics`.
 
-- **2026-10-08T23:32:00-07:00 — kilo-usability: KAudio (UI/UX & Usability Ergonomics Audit)**
-  - Status: PASS ✅ (HiDPI visualizer visibility lifecycle guard, responsive scrolling & piano keyboard ergonomics).
-  - Usability: Guarded rAF visualizer loop with `visibilitychange` to conserve CPU when minimized; styled custom scrollbars and overflow-y for lower resolutions; responsive keyboard container.
-  - Verification: Production Vite build clean (`npm run build` 0 errors); 123 KB < 999 KB ceiling.
-  - Queue: Advanced `kilo_usability` to `KBudget`; handoff to `kilo-qa`.
+- **2026-10-09T06:34:00-07:00 — kilo-expander: KBreakout (Feature Expansion)**
+  - Status: PASS ✅ (`KBreakout` feature expansion completed)
+  - Features: Added Board Preset Architect (5 tactical 6x10 configurations & direct preset loader) and Board Matrix I/O.
+  - Telemetry: Implemented Tactical Mission Telemetry & Stats modal (`[T]`) tracking hits, combo streaks, and harvests.
+  - Verification: Production build clean (`npm run build` 0 errors); advanced `kilo_expander` to `KChess`.
 
-- **2026-10-08T23:13:00-07:00 — kilo-tester: KTaskMgr (Interactive UI & Handlers Audit)**
-  - Status: PASS ✅ (Row focus on select, Kernel protection guard, all modals/shortcuts verified).
-  - Audit: Tested toolbar filters/sorting, Run/Help/Tutorial modals, quicksave F5/F9, process termination.
-  - Verification: Production Vite build clean (`npm run build` 0 errors); 43.4 KB < 999 KB ceiling.
-  - Queue: Advanced `kilo_tester` to `K2048`; rotation handoff to `kilo-usability`.
-
-
+- **2026-10-09T06:14:00-07:00 — kilo-qa: KAudio (Pass 5 QA & State Integrity)**
+  - Status: PASS ✅ (`KAudio` Pass 5 QA & state integrity verified)
+  - Audit: Audited quicksave/quickload (F5/F9) snapshot persistence & guarded first-run tutorial from interrupting restored sessions.
+  - Verification: Interactive help modal, shortcuts, 0 JS errors, and size ceiling verified (123 KB < 999 KB).
+  - Verification: KiloOS build verified clean; advanced `kilo_qa` to `KBudget`.
