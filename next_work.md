@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-creator
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -16,7 +16,7 @@ current_targets:
   kilo_graphics: KColosseum
   kilo_tester: KTaskMgr
   kilo_usability: KAudio
-  kilo_qa: KColor
+  kilo_qa: KHabit
   kilo_expander: KPong
 virtual_web_target: "kweb://webring"
 virtual_web_rotation:
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-usability
-  app: KChess
-  timestamp: "2026-10-08T20:31:00-07:00"
+  agent: kilo-qa
+  app: KColor
+  timestamp: "2026-10-08T21:13:00-07:00"
 last_planner_run: "2026-10-08T15:14:12Z"
 ---
 
@@ -113,6 +113,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-08T21:13:00-07:00 — kilo-qa: KColor (Pass 5 QA & State Integrity Audit)**
+  - Status: PASS ✅ (Quicksave F5/F9, tutorial flag, dialog hotkeys, Vite build clean).
+  - QA Audit: Verified full state persistence (RGB/HSL/HSV/CMYK, activeTab, swatches, prevColor), first-run tutorial gating (`kcolor_tutorialSeen`), Esc/Enter/Space modal handling, zero ARG leaks.
+  - Verification: `npm run build` clean; 72.4 KB < 999 KB ceiling.
+  - Queue: Advanced `kilo_qa` to `KHabit`; rotation handoff to `kilo-expander`.
+
 - **2026-10-08T20:31:00-07:00 — kilo-usability: KChess (Usability & Layout Audit — Mature App Verification)**
   - Status: ⏭️ Skip — app usability is complete and mature.
   - Usability Audit: Verified HiDPI crisp canvas transform (`devicePixelRatio`), responsive menu bar scaling, accessible F1/? help dialogs, keyboard shortcuts, and App.jsx dimensions (800x940).
@@ -138,10 +144,4 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Parity & Build: Verified KNet browser integration, security lint PASS, Vite build clean.
   - Queue: Advanced `kilo_creator` / `virtual_web_target` to `kweb://webring`; handoff to `kilo-graphics`.
 
-- **2026-10-08T18:35:00-07:00 — kilo-expander: KConnect4 (Deep Feature Expansion: Tactics Mode & Board Size Presets)**
-  - Status: PASS ✅ (186 KB < 999 KB ceiling, Vite build clean).
-  - Expansion: Added 10-challenge Tactics/Puzzle Mode with progression, auto-detection, and stats (`stats.puzzlesSolved`).
-  - Dimensions: Added board size selector (Classic 7x6, Compact 6x5, Grand 8x7, Wide 9x6, Epic 8x8).
-  - Verification: Build clean, responsive layouts, save/load state preserved.
-  - Queue: Advanced `kilo_expander` to `KPong`; rotation handoff to `kilo-creator`.
 
