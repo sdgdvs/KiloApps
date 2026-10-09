@@ -1268,6 +1268,8 @@
       safeSetStorage('kpong_theme', themeIndex);
       document.body.className = THEME_CLASSES[themeIndex];
       const themeNames = ["Cyberpunk", "Retro CRT", "Vaporwave", "Matrix Code"];
+      const btnTheme = document.getElementById('btn-theme');
+      if (btnTheme) btnTheme.innerText = `🎨 Theme: ${themeNames[themeIndex]} [T]`;
       showToast("Theme: " + themeNames[themeIndex]);
   }
 
@@ -1770,6 +1772,9 @@
           isPaused = !!state.isPaused;
 
           document.body.className = THEME_CLASSES[themeIndex] || THEME_CLASSES[0];
+          const themeNames = ["Cyberpunk", "Retro CRT", "Vaporwave", "Matrix Code"];
+          const btnTheme = document.getElementById('btn-theme');
+          if (btnTheme) btnTheme.innerText = `🎨 Theme: ${themeNames[themeIndex] || 'Cyberpunk'} [T]`;
           document.getElementById('s1').innerText = s1;
           document.getElementById('s2').innerText = s2;
           document.getElementById('btn-pvp').innerText = isPvP ? "👥 2P Local PvP [V]" : "👤 1P vs AI [V]";
@@ -2899,11 +2904,14 @@
       ctx.restore();
   }
 
-  document.body.className = THEME_CLASSES[themeIndex];
-  const btnDiffInit = document.getElementById('btn-diff');
-  if (btnDiffInit) btnDiffInit.innerText = `⚡ Diff: ${DIFF_NAMES[difficulty]} [1-3]`;
+  document.body.className = THEME_CLASSES[themeIndex] || THEME_CLASSES[0];
+  const themeNames = ["Cyberpunk", "Retro CRT", "Vaporwave", "Matrix Code"];
+  const btnThemeInit = document.getElementById('btn-theme');
+  if (btnThemeInit) btnThemeInit.innerText = `🎨 Theme: ${themeNames[themeIndex] || 'Cyberpunk'} [T]`;
   const btnModeInit = document.getElementById('btn-mode');
   if (btnModeInit) btnModeInit.innerText = "🎮 Mode: " + MODE_NAMES[gameMode] + " [M]";
+  const btnDiffInit = document.getElementById('btn-diff');
+  if (btnDiffInit) btnDiffInit.innerText = `⚡ Diff: ${DIFF_NAMES[difficulty]} [1-3]`;
   const btnPvpInit = document.getElementById('btn-pvp');
   if (btnPvpInit) btnPvpInit.innerText = isPvP ? "👥 2P Local PvP [V]" : "👤 1P vs AI [V]";
   updateBadge();
