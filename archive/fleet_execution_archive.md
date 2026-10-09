@@ -4,6 +4,13 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-08T10:19:00-07:00 — kilo-graphics: KDragon (Skip Turn — Inappropriate Target & Glint/Dot Audit)**
+  - Status: ⏭️ Skip — Imagen 3 asset replacement not appropriate for KDragon
+  - Rationale: Authentic 16x16 pixel-art pet sim with 1:1 Win32 GDI C parity; downscaled raster sprites unsuited.
+  - Glint & Dot Audit: Verified static medieval filigree border; zero rotating specular glints or traveling border dots.
+  - Verification: `check_icons.py` 100% PASS; `security_lint.py` 100% PASS; MSVC clean (`KDragon.exe` 149.0 KB); Vite clean (1.30s); web (169.3 KB) < 999 KB ceiling.
+  - Queue: Advanced `kilo_graphics` to `KMech`; rotation handoff to `kilo-tester`.
+
 - **2026-10-08T09:37:00-07:00 — kilo-creator: kweb://deep-core (Anti-Potemkin Web 1.0 Expansion, CSS Patch, Routing & Golden Thread Pass)**
   - Status: PASS ✅ (242.7 KB web < 999 KB ceiling, 0 regressions).
   - Anti-Potemkin Web Depth: 10 interactive decks (VT100 core, 5 defusal sectors, 3D vector radar, RTDB mesh, x86 disasm, 650m sonar, wiretap, sanctum).
