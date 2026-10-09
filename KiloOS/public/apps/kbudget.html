@@ -596,6 +596,13 @@
                         <button type="button" class="btn btn-outline" style="flex: 1; color: white;" onclick="importJSON(); closeDataModal();">Import JSON</button>
                     </div>
                 </div>
+                <div>
+                    <h3 style="font-size: 0.95rem; margin-bottom: 0.5rem; color: #cbd5e1;">Presets &amp; Reset</h3>
+                    <div style="display: flex; gap: 0.5rem;">
+                        <button type="button" class="btn btn-outline" style="flex: 1; color: white;" onclick="loadSampleData(); closeDataModal();">Sample Demo</button>
+                        <button type="button" class="btn btn-outline text-danger" style="flex: 1; border-color: rgba(239,68,68,0.4);" onclick="clearAllData(); closeDataModal();">Clear All</button>
+                    </div>
+                </div>
             </div>
             <div class="modal-actions" style="margin-top: 1.5rem;">
                 <button type="button" class="btn btn-outline" style="color: white;" onclick="closeDataModal()">Close</button>
@@ -636,9 +643,30 @@
     <div id="toast" class="toast" role="alert" aria-live="polite"></div>
 
     <script>
-        // State
-        let transactions = JSON.parse(localStorage.getItem('kbudget_transactions')) || [];
-        let currencySymbol = localStorage.getItem('kbudget_currency') || '$';
+        // Storage Helpers & State
+        function safeGet(key, fallback) {
+            try {
+                const val = localStorage.getItem(key);
+                return val ? JSON.parse(val) : fallback;
+            } catch (e) {
+                return fallback;
+            }
+        }
+        function safeSet(key, value) {
+            try {
+                localStorage.setItem(key, typeof value === 'string' ? value : JSON.stringify(value));
+            } catch (e) {
+                console.warn('[KBudget] Storage write failed:', e.message);
+            }
+        }
+
+        let transactions = safeGet('kbudget_transactions', []);
+        let currencySymbol = '$';
+        try {
+            currencySymbol = localStorage.getItem('kbudget_currency') || '$';
+        } catch(e) {
+            currencySymbol = '$';
+        }
         let editingTransactionId = null;
         let currentPage = 1;
         const itemsPerPage = 20;
@@ -1100,6 +1128,43 @@
             input.click();
         }
 
+        function loadSampleData() {
+            if (transactions.length > 0 && !confirm("Replace current transactions with sample demo ledger?")) {
+                return;
+            }
+            const today = new Date();
+            const dStr = (offsetDays) => {
+                const d = new Date(today);
+                d.setDate(d.getDate() - offsetDays);
+                return d.toLocaleDateString('en-CA');
+            };
+            transactions = [
+                { id: 'sample-1', type: 'income', amount: 3200.00, category: 'Salary', date: dStr(1), description: 'TechCorp Monthly Paycheck' },
+                { id: 'sample-2', type: 'expense', amount: 850.00, category: 'Utilities', date: dStr(2), description: 'Apartment Rent & Power' },
+                { id: 'sample-3', type: 'expense', amount: 124.50, category: 'Food', date: dStr(3), description: 'Weekly Groceries Mart' },
+                { id: 'sample-4', type: 'expense', amount: 29.95, category: 'Utilities', date: dStr(4), description: '56k Dial-Up Internet ISP' },
+                { id: 'sample-5', type: 'expense', amount: 45.00, category: 'Transport', date: dStr(5), description: 'Gasoline Station Fill-up' },
+                { id: 'sample-6', type: 'expense', amount: 69.99, category: 'Entertainment', date: dStr(6), description: 'Tremor III Arena CD-ROM' },
+                { id: 'sample-7', type: 'income', amount: 350.00, category: 'Freelance', date: dStr(7), description: 'HTML Webpage Consulting' },
+                { id: 'sample-8', type: 'expense', amount: 84.20, category: 'Shopping', date: dStr(8), description: '128MB SDRAM DIMM Upgrade' }
+            ];
+            saveTransactions();
+            currentPage = 1;
+            render();
+            showToast("Loaded sample ledger! (8 entries)", "success");
+        }
+
+        function clearAllData() {
+            if (!confirm("Are you sure you want to clear all transactions? This cannot be undone unless quicksaved.")) {
+                return;
+            }
+            transactions = [];
+            saveTransactions();
+            currentPage = 1;
+            render();
+            showToast("Cleared all transactions.", "info");
+        }
+
         function formatCurrency(amount) {
             const isNeg = amount < 0;
             return (isNeg ? '-' : '') + currencySymbol + Math.abs(amount).toFixed(2);
@@ -1107,12 +1172,20 @@
 
         function formatDate(dateString) {
             if (!dateString) return '';
-            const parts = dateString.split('-');
-            if (parts.length === 3) {
-                const d = new Date(parts[0], parts[1] - 1, parts[2]);
-                return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
-            }
-            return new Date(dateString).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+            try {
+                const parts = String(dateString).split('-');
+                if (parts.length === 3 && !isNaN(parts[0]) && !isNaN(parts[1]) && !isNaN(parts[2])) {
+                    const d = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
+                    if (!isNaN(d.getTime())) {
+                        return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+                    }
+                }
+                const d = new Date(dateString);
+                if (!isNaN(d.getTime())) {
+                    return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+                }
+            } catch(e) {}
+            return String(dateString);
         }
 
         function render() {
@@ -1333,6 +1406,14 @@
             
             // Global Hotkeys (even when in inputs)
             if (e.key === 'Escape') {
+                const searchEl = document.getElementById('search-input');
+                if (document.activeElement === searchEl && searchEl.value) {
+                    searchEl.value = '';
+                    currentPage = 1;
+                    render();
+                    searchEl.blur();
+                    return;
+                }
                 closeModal();
                 closeSettingsModal();
                 closeHelpModal();
@@ -1407,6 +1488,11 @@
                     changePage(1);
                 }
             }
+        });
+
+        // Keep responsive chart crisp on resize
+        window.addEventListener('resize', () => {
+            render();
         });
 
         // Run

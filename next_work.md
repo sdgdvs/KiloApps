@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-tester
-next_agent: kilo-usability
+current_agent: kilo-usability
+next_agent: kilo-qa
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -14,7 +14,7 @@ status: ready
 current_targets:
   kilo_creator: "kweb://cybercafe"
   kilo_graphics: KStellar
-  kilo_tester: KBudget
+  kilo_tester: KCalendar
   kilo_usability: KChat
   kilo_qa: KBudget
   kilo_expander: KChess
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://geocities"
   - "kweb://users/~neon_rider"
 last_run:
-  agent: kilo-graphics
-  app: KMech
-  timestamp: "2026-10-09T09:32:00-07:00"
+  agent: kilo-tester
+  app: KBudget
+  timestamp: "2026-10-09T10:14:00-07:00"
 last_planner_run: "2026-10-09T15:32:00Z"
 ---
 
@@ -82,8 +82,8 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Upcoming Queue**: `KStarship`, `KSubmarine`, `KSpace`, `KQuest`, `KColony`, `KColosseum`, `KMech`.
 
 ### 3. App Tester Queue (`kilo-tester`)
-- **Current Target**: `KBudget`
-- **Upcoming Queue**: `KCalendar`, `KChart`, `KChat`, `KColony`, `KFortress`, `KNetMap`, `KPing`, `KSanctuary`, `KAudio`, `KStellar`, `KSubmarine`, `KTrader`, `KType`, `KVault`, `KVoid`.
+- **Current Target**: `KCalendar`
+- **Upcoming Queue**: `KChart`, `KChat`, `KColony`, `KFortress`, `KNetMap`, `KPing`, `KSanctuary`, `KAudio`, `KStellar`, `KSubmarine`, `KTrader`, `KType`, `KVault`, `KVoid`.
 
 ### 4. Usability & UX Queue (`kilo-usability`)
 - **Current Target**: `KChat`
@@ -113,6 +113,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-09T10:14:00-07:00 — kilo-tester: KBudget (Interactive UI Audit & Enhancements)**
+  - Status: PASS ✅ (`KBudget` interactive UI audit clean, 0 JS errors)
+  - Audit: Tested all modals, forms, shortcuts (F1/H, F5, F9, Ctrl+N/F/S/O, Esc, Left/Right).
+  - Fixes: Added safeGet/safeSet guards, Sample Demo & Clear All buttons, Esc search clear, responsive resize redraw.
+  - Build: Production build clean (`npm run build` 0 errors); advanced `kilo_tester` to `KCalendar`; handoff to `kilo-usability`.
+
 - **2026-10-09T09:32:00-07:00 — kilo-graphics: KMech (Skip Turn — Inappropriate Target)**
   - Status: ⏭️ Skip — Imagen 3 asset replacement not appropriate for KMech
   - Audit: Tactical CRT HUD & SVG wireframe schematic renderer; no glints or perimeter dots found.
@@ -135,9 +141,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Status: ⏭️ Skip — Imagen 3 asset replacement not appropriate for K2048
   - Audit: Inspected K2048: abstract sliding tile puzzle using classic CSS/geometric styling; no glints or perimeter dots found.
   - Queue: Rotated `kilo_graphics` target to `KMech`; advanced turn to `kilo-tester`.
-
-- **2026-10-09T07:13:00-07:00 — kilo-creator: kweb://users/~neon_rider (Anti-Potemkin Web 1.0 Expansion)**
-  - Status: PASS ✅ (`kweb://users/~neon_rider` Anti-Potemkin verification & deep expansion)
-  - Audit: Audited interactive x86 sandbox, Mode 13h VGA canvas, YM2612 tracker, 8x8 font studio, and dead-drop.
-  - Verification: Confirmed strict size ceiling (<999KB: 256KB total) and clean production build.
-  - Queue: Advanced queue: `virtual_web_target` to `kweb://asm-temple`; handoff to `kilo-graphics`.
