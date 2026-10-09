@@ -566,6 +566,7 @@
         <div><kbd>F5</kbd></div><div>Quicksave current game state</div>
         <div><kbd>F9</kbd></div><div>Quickload saved game state</div>
         <div><kbd>E</kbd></div><div>Export Best Times & Records (JSON)</div>
+        <div><kbd>B</kbd></div><div>Copy Board Layout ASCII Notation to Clipboard</div>
         <div><kbd>I</kbd></div><div>Import Best Times & Records (JSON)</div>
         <div><kbd>P</kbd></div><div>Watch Replay (after game completion)</div>
         <div><kbd>Esc</kbd></div><div>Close Modals / Dismiss Toasts</div>
@@ -719,7 +720,9 @@
     <button id="audioToggleBtn" onclick="toggleAudio()" title="Toggle Sound FX (M)">🔊 Sound <span class="badge">M</span></button>
     <button onclick="quickSave()" title="Save Current State (F5)">💾 Save <span class="badge">F5</span></button>
     <button onclick="quickLoad()" title="Load Saved State (F9)">📂 Load <span class="badge">F9</span></button>
-    <button onclick="exportStats()" title="Export Best Times">📤 Exp <span class="badge">E</span></button>
+    <button onclick="exportStats()" title="Export Best Times (JSON)">📤 Exp <span class="badge">E</span></button>
+    <button onclick="exportCsvReport()" title="Export Match Telemetry & Move Log (CSV)">📊 CSV</button>
+    <button onclick="copyBoardNotation()" title="Copy ASCII Field Notation to Clipboard">📋 Board</button>
     <button onclick="document.getElementById('fileIn').click()" title="Import Best Times">📥 Imp <span class="badge">I</span></button>
     <input type="file" id="fileIn" style="display:none" accept=".json" onchange="importStats(event)">
     <button id="replayBtn" style="display:none;" class="btn-accent" onclick="startReplay()">🎬 Replay <span class="badge">P</span></button>
@@ -736,6 +739,8 @@
   <span><kbd>4</kbd> Custom</span>
   <span><kbd>M</kbd> Sound</span>
   <span><kbd>H</kbd> Hint</span>
+  <span><kbd>E</kbd> JSON</span>
+  <span><kbd>B</kbd> Board</span>
   <span><kbd>1-3</kbd> Diff</span>
   <span><kbd>F1</kbd> Guide</span>
 </div>
@@ -1321,6 +1326,70 @@
     a.remove();
     setTimeout(() => URL.revokeObjectURL(a.href), 1000);
     showToast("📤 Statistics exported as JSON!", "success");
+  }
+
+  function exportCsvReport() {
+    let diffName = document.getElementById('diff').value;
+    let diffLabel = { "0": "Beginner (10x10)", "1": "Intermediate (16x16)", "2": "Expert (30x16)", "custom": "Custom" }[diffName] || diffName;
+    let totalSafe = (cols * rows) - totalMines;
+    let safeCount = countRevealedSafeTiles();
+    let statusText = gameOver === 2 ? "Victory" : (gameOver === 1 ? "Detonated" : "In Progress");
+
+    let csv = "KMine Session Telemetry & Match Report\n";
+    csv += "Timestamp,Difficulty,GridSize,MinesCount,TimeElapsedSec,FlagsPlaced,SafeRevealed,TotalSafe,GameStatus\n";
+    csv += `"${new Date().toISOString()}","${diffLabel}","${cols}x${rows}",${totalMines},${timeElapsed},${flags},${safeCount},${totalSafe},"${statusText}"\n\n`;
+    csv += "Best Records (Seconds)\n";
+    csv += "Difficulty,BestTimeSec\n";
+    csv += `Beginner,${bestTimes["0"] !== null ? bestTimes["0"] : "N/A"}\n`;
+    csv += `Intermediate,${bestTimes["1"] !== null ? bestTimes["1"] : "N/A"}\n`;
+    csv += `Expert,${bestTimes["2"] !== null ? bestTimes["2"] : "N/A"}\n\n`;
+
+    csv += "Move Log (ms,x,y,button)\n";
+    moves.forEach(m => {
+      csv += `${m.t},${m.x},${m.y},${m.b === 2 ? 'FLAG' : (m.b === 1 ? 'MIDDLE' : 'DIG')}\n`;
+    });
+
+    let blob = new Blob([csv], {type: 'text/csv;charset=utf-8;'});
+    let a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `kmine_session_${Date.now()}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+    showToast("📊 Detailed CSV session telemetry exported!", "success", 2500);
+  }
+
+  function copyBoardNotation() {
+    let ascii = `KMine Field Layout (${cols}x${rows}, ${totalMines} Mines)\n`;
+    ascii += `Difficulty: ${document.getElementById('diff').value} | Time: ${timeElapsed}s | Status: ${gameOver === 2 ? 'WIN' : (gameOver === 1 ? 'BOOM' : 'PLAY')}\n`;
+    ascii += "+".padEnd(cols * 2 + 2, "-") + "+\n";
+    for (let y = 0; y < rows; y++) {
+      ascii += "| ";
+      for (let x = 0; x < cols; x++) {
+        if (state[y][x] === 2) {
+          ascii += "F ";
+        } else if (state[y][x] === 1) {
+          if (grid[y][x] === 9) ascii += "* ";
+          else if (grid[y][x] === 0) ascii += ". ";
+          else ascii += grid[y][x] + " ";
+        } else {
+          ascii += "# ";
+        }
+      }
+      ascii += "|\n";
+    }
+    ascii += "+".padEnd(cols * 2 + 2, "-") + "+\n";
+
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(ascii).then(() => {
+        showToast("📋 Board notation copied to clipboard!", "success", 2000);
+      }).catch(() => {
+        showToast("⚠️ Clipboard write failed", "warn");
+      });
+    } else {
+      showToast("⚠️ Clipboard API not supported", "warn");
+    }
   }
   function importStats(e) {
     let file = e.target.files[0];
@@ -3049,6 +3118,8 @@
       quickLoad();
     } else if (e.key === 'e' || e.key === 'E') {
       exportStats();
+    } else if (e.key === 'b' || e.key === 'B') {
+      copyBoardNotation();
     } else if (e.key === 'i' || e.key === 'I') {
       document.getElementById('fileIn').click();
     } else if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') {

@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-expander
-next_agent: kilo-creator
+current_agent: kilo-creator
+next_agent: kilo-graphics
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -17,7 +17,7 @@ current_targets:
   kilo_tester: KCards
   kilo_usability: KMaze
   kilo_qa: KColony
-  kilo_expander: KMine
+  kilo_expander: KTetris
 virtual_web_target: "kweb://10.19.99.4/classified"
 virtual_web_rotation:
   - "kweb://asm-temple"
@@ -32,11 +32,18 @@ virtual_web_rotation:
   - "kweb://geocities"
   - "kweb://users/~neon_rider"
 last_run:
-  agent: kilo-qa
-  app: KAlchemy
-  timestamp: "2026-10-09T14:13:00-07:00"
+  agent: kilo-expander
+  app: KMine
+  timestamp: "2026-10-09T14:31:00-07:00"
 last_planner_run: "2026-10-09T15:32:00Z"
 ---
+
+### Agent Run Log — 2026-10-09T14:31 (kilo-expander)
+- **Status:** 🟢 Completed (`KMine`)
+- Deep feature expansion: added full match telemetry & move-log CSV export (`exportCsvReport`).
+- Added ASCII board layout & notation export to clipboard (`copyBoardNotation`, shortcut `B`).
+- Updated controls toolbar, info hint bar, and F1 help guide with new format capabilities.
+- Build verified (`npm run build` passed). Handoff to kilo-creator.
 
 ### Agent Run Log — 2026-10-09T14:13 (kilo-qa)
 - **Status:** 🟢 Completed (`KAlchemy`)
