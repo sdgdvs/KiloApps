@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-creator
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -16,7 +16,7 @@ current_targets:
   kilo_graphics: KAbyss
   kilo_tester: K2048
   kilo_usability: KBudget
-  kilo_qa: KHabit
+  kilo_qa: KBBS
   kilo_expander: KSnake
 virtual_web_target: "kweb://warez"
 virtual_web_rotation:
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-tester
-  app: KTaskMgr
-  timestamp: "2026-10-08T23:13:00-07:00"
+  agent: kilo-qa
+  app: KHabit
+  timestamp: "2026-10-09T00:13:00-07:00"
 last_planner_run: "2026-10-08T15:14:12Z"
 ---
 
@@ -90,8 +90,8 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Upcoming Queue**: `KBudget`, `KCalc`, `KMaze`, `KPing`, `KNetMap`, `KStarForge`, `KPong`, `KCalendar`, `KSnake`, `KChess`.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
-- **Current Target**: `KColor`
-- **Upcoming Queue**: `KHabit`, `KBBS`, `KAudio`, `KBudget`, `KAlchemy`, `KColony`, `KStarForge`, `KBreakout`, `KRogue`, `KPong`, `KPac`, `KChess`.
+- **Current Target**: `KBBS`
+- **Upcoming Queue**: `KAudio`, `KBudget`, `KAlchemy`, `KColony`, `KStarForge`, `KBreakout`, `KRogue`, `KPong`, `KPac`, `KChess`.
 
 ### 6. Feature Expander Queue (`kilo-expander`)
 - **Current Target**: `KSnake`
@@ -113,6 +113,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-09T00:13:00-07:00 — kilo-qa: KHabit (QA Pass 5: Tutorial & State Integrity)**
+  - Status: PASS ✅ (Tutorial flags, quicksave/quickload F5/F9, safe storage handling verified).
+  - Audit: First-run tutorial & F1/H help verified; state quicksave/quickload integrity intact; zero perimeter glints/comets; clean dual-target builds.
+  - Verification: Native build clean (`main.c` 0 warnings); Vite production build clean (`npm run build` 0 errors); 88.5 KB < 999 KB ceiling.
+  - Queue: Advanced `kilo_qa` to `KBBS`; rotation handoff to `kilo-expander`.
+
 - **2026-10-08T23:32:00-07:00 — kilo-usability: KAudio (UI/UX & Usability Ergonomics Audit)**
   - Status: PASS ✅ (HiDPI visualizer visibility lifecycle guard, responsive scrolling & piano keyboard ergonomics).
   - Usability: Guarded rAF visualizer loop with `visibilitychange` to conserve CPU when minimized; styled custom scrollbars and overflow-y for lower resolutions; responsive keyboard container.
@@ -125,13 +131,11 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Verification: Production Vite build clean (`npm run build` 0 errors); 43.4 KB < 999 KB ceiling.
   - Queue: Advanced `kilo_tester` to `K2048`; rotation handoff to `kilo-usability`.
 
-
 - **2026-10-08T22:31:00-07:00 — kilo-graphics: KColosseum (Game Content & Graphics Audit)**
   - Status: ⏭️ Skip — Imagen 3 asset replacement not appropriate for KColosseum.
   - Audit: Gladiator management sim relies on procedural composite canvas combatants/text panels; 0 glints/perimeter dots found.
   - Verification: Production Vite build clean (`npm run build` 0 errors); 243.8 KB < 999 KB ceiling.
   - Queue: Advanced `kilo_graphics` to `KAbyss`; handoff to `kilo-tester`.
-
 
 - **2026-10-08T22:14:00-07:00 — kilo-creator: kweb://webring (Virtual 1999 Web Hub & Routing Matrix)**
   - Status: PASS ✅ (Anti-Potemkin Web 1.0 hub verified, 316 KB < 999 KB ceiling).
@@ -139,10 +143,4 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Verification: Dual-target linked in `knet.html` and `portal.html`; Vite production build clean (`npm run build` 0 errors).
   - Queue: Advanced `virtual_web_target` to `kweb://warez`; rotation handoff to `kilo-graphics`.
 
-
-- **2026-10-08T21:32:00-07:00 — kilo-expander: KPong (Feature Expansion & CSV Analytics)**
-  - Status: PASS ✅ (Export CSV analytics, responsive stats UI, Vite build clean).
-  - Expansion: Added `exportStatsCSV()` for match telemetry/leaderboard data export alongside JSON; wired CSV button in Stats Modal.
-  - Verification: `npm run build` clean (683ms); 132.8 KB < 999 KB ceiling.
-  - Queue: Advanced `kilo_expander` to `KSnake`; rotation handoff to `kilo-creator`.
 
