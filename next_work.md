@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-tester
-next_agent: kilo-usability
+current_agent: kilo-usability
+next_agent: kilo-qa
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -14,7 +14,7 @@ status: ready
 current_targets:
   kilo_creator: "kweb://portal"
   kilo_graphics: KCyber
-  kilo_tester: KTaskMgr
+  kilo_tester: KPong
   kilo_usability: KPong
   kilo_qa: KChess
   kilo_expander: KConnect4
