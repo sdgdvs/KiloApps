@@ -349,6 +349,9 @@
         <div class="menu-dropdown-entry" onclick="openBookModal()">
           <span>📖 Opening Book Explorer</span><span class="shortcut">B</span>
         </div>
+        <div class="menu-dropdown-entry" onclick="openAnalysisModal()">
+          <span>📊 Deep Engine Analysis</span><span class="shortcut">A</span>
+        </div>
         <div class="menu-divider"></div>
         <div class="menu-dropdown-entry" onclick="openFENModal()">
           <span>📋 FEN Position Manager</span><span class="shortcut">E</span>
@@ -420,6 +423,7 @@
         <tr><td><kbd>U</kbd> / <kbd>Y</kbd></td><td>Undo / Redo Move (interactive stack)</td></tr>
         <tr><td><kbd>V</kbd></td><td>Interactive Move Replay &amp; History Inspector</td></tr>
         <tr><td><kbd>B</kbd></td><td>Opening Book Explorer (learn &amp; practice openings)</td></tr>
+        <tr><td><kbd>A</kbd></td><td>Deep Positional &amp; Tactical Engine Analysis</td></tr>
         <tr><td><kbd>S</kbd> / <kbd>F5</kbd></td><td>Quick Save Game State to storage</td></tr>
         <tr><td><kbd>L</kbd> / <kbd>F9</kbd></td><td>Quick Load Saved Game State</td></tr>
         <tr><td><kbd>M</kbd></td><td>Switch Game Mode (Standard / Campaign / Puzzle / Blitz)</td></tr>
@@ -528,6 +532,24 @@
 
       <div class="btn-group" style="margin-top: 12px;">
         <button class="modal-close primary" onclick="closeModals()">Close [Esc]</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Deep Engine Analysis Modal -->
+  <div id="analysis-modal" class="modal-overlay" onclick="handleBackdropClick(event, 'analysis-modal')">
+    <div class="modal-card" style="width: 520px; max-height: 88vh; display: flex; flex-direction: column;">
+      <h3>📊 Deep Positional Engine Analysis <span class="close-btn" onclick="closeModals()">&times;</span></h3>
+      <p style="font-size: 12px; color: #94a3b8; margin: -4px 0 10px 0;">Real-time board evaluation, material breakdown, and tactical heuristics:</p>
+      
+      <div id="analysis-content" style="flex: 1; max-height: 320px; overflow-y: auto; background: #0b1120; border: 1px solid #334155; border-radius: 6px; padding: 12px; font-size: 12px; line-height: 1.6;">
+        <!-- Filled dynamically -->
+      </div>
+
+      <div class="btn-group" style="margin-top: 12px;">
+        <button onclick="refreshAnalysisModal()" class="primary">🔄 Re-evaluate</button>
+        <button onclick="handleHotkey('h'); closeModals();">💡 Show Best Move Hint [H]</button>
+        <button class="modal-close" onclick="closeModals()">Close [Esc]</button>
       </div>
     </div>
   </div>
@@ -2020,11 +2042,13 @@
           openReplayModal();
       } else if (k === 'b') {
           openBookModal();
+      } else if (k === 'a') {
+          openAnalysisModal();
       }
   }
 
   function getActiveModal() {
-      const ids = ['help-modal', 'fen-modal', 'pgn-modal', 'replay-modal', 'book-modal', 'multiplayer-modal', 'invite-modal'];
+      const ids = ['help-modal', 'fen-modal', 'pgn-modal', 'replay-modal', 'book-modal', 'analysis-modal', 'multiplayer-modal', 'invite-modal'];
       for (const id of ids) {
           const el = document.getElementById(id);
           if (el && (el.style.display === 'flex' || el.style.display === 'block')) {
@@ -3049,6 +3073,129 @@
       } else {
           showToast(`Could not load opening sequence`, "warn");
       }
+  }
+
+  // --------------------------------------------------------------------------
+  // Deep Positional Engine Analysis Subsystem
+  // --------------------------------------------------------------------------
+  function openAnalysisModal() {
+      closeModals();
+      refreshAnalysisModal();
+      const modal = document.getElementById('analysis-modal');
+      if (modal) modal.style.display = 'flex';
+  }
+
+  function refreshAnalysisModal() {
+      const container = document.getElementById('analysis-content');
+      if (!container) return;
+
+      let whiteMat = 0, blackMat = 0;
+      let whitePieces = 0, blackPieces = 0;
+      let centerControlWhite = 0, centerControlBlack = 0;
+      const centerSquares = [[3,3], [3,4], [4,3], [4,4]]; // d4, e4, d5, e5
+
+      for (let y = 0; y < 8; y++) {
+          for (let x = 0; x < 8; x++) {
+              const p = board[y][x];
+              if (p === 0) continue;
+              const isWhite = p <= 6;
+              const val = (pieceValues && pieceValues[p]) ? pieceValues[p] : 100;
+              if (isWhite) {
+                  whiteMat += (p === 6 ? 0 : val);
+                  whitePieces++;
+                  if (centerSquares.some(([cy, cx]) => cy === y && cx === x)) centerControlWhite++;
+              } else {
+                  blackMat += (p === 12 ? 0 : val);
+                  blackPieces++;
+                  if (centerSquares.some(([cy, cx]) => cy === y && cx === x)) centerControlBlack++;
+              }
+          }
+      }
+
+      // Count legal mobility
+      let whiteMoves = 0, blackMoves = 0;
+      for (let sy = 0; sy < 8; sy++) {
+          for (let sx = 0; sx < 8; sx++) {
+              const p = board[sy][sx];
+              if (p === 0) continue;
+              const isWhite = p <= 6;
+              for (let ty = 0; ty < 8; ty++) {
+                  for (let tx = 0; tx < 8; tx++) {
+                      if (isValidMove(sx, sy, tx, ty, false) && !simulatedMoveLeavesCheck(sx, sy, tx, ty, isWhite)) {
+                          if (isWhite) whiteMoves++;
+                          else blackMoves++;
+                      }
+                  }
+              }
+          }
+      }
+
+      const matDiff = (whiteMat - blackMat) / 100;
+      const matAdvantageText = matDiff > 0 ? `+${matDiff.toFixed(1)} (White +${matDiff.toFixed(1)})` : (matDiff < 0 ? `${matDiff.toFixed(1)} (Black +${Math.abs(matDiff).toFixed(1)})` : 'Even (0.0)');
+
+      const evalRaw = typeof evaluateBoardStatic === 'function' ? evaluateBoardStatic() : (whiteMat - blackMat);
+      const evalPawns = (evalRaw / 100).toFixed(2);
+      const evalFormatted = evalRaw > 0 ? `+${evalPawns}` : evalPawns;
+
+      // Suggest best tactical move
+      let hintSan = 'None available';
+      try {
+          if (typeof getOptimalHintMove === 'function') {
+              const opt = getOptimalHintMove();
+              if (opt && opt.sx !== -1) {
+                  const p = board[opt.sy][opt.sx];
+                  hintSan = getSAN(opt.sx, opt.sy, opt.tx, opt.ty, p, board[opt.ty][opt.tx] !== 0);
+              }
+          }
+      } catch (e) {
+          hintSan = 'Calculation paused';
+      }
+
+      const activeColorName = whiteTurn ? 'White' : 'Black';
+
+      container.innerHTML = `
+        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #1e293b; padding-bottom:8px; margin-bottom:10px;">
+          <div><strong style="color:#5eead4; font-size:14px;">Static Engine Evaluation:</strong></div>
+          <div style="font-size:15px; font-weight:bold; color:${evalRaw >= 0 ? '#4ade80' : '#f87171'}; font-family:monospace;">
+            ${evalFormatted} pawns
+          </div>
+        </div>
+        <table style="width:100%; border-collapse:collapse; margin-bottom:10px; font-size:12px;">
+          <tr style="border-bottom:1px solid #1e293b;">
+            <td style="padding:4px 0; color:#94a3b8;">Active Turn:</td>
+            <td style="padding:4px 0; font-weight:bold; color:#f8fafc; text-align:right;">${activeColorName}</td>
+          </tr>
+          <tr style="border-bottom:1px solid #1e293b;">
+            <td style="padding:4px 0; color:#94a3b8;">Material Count:</td>
+            <td style="padding:4px 0; font-weight:bold; color:#f8fafc; text-align:right;">White: ${(whiteMat/100).toFixed(0)} pts | Black: ${(blackMat/100).toFixed(0)} pts</td>
+          </tr>
+          <tr style="border-bottom:1px solid #1e293b;">
+            <td style="padding:4px 0; color:#94a3b8;">Material Lead:</td>
+            <td style="padding:4px 0; font-weight:bold; color:${matDiff >= 0 ? '#4ade80' : '#f87171'}; text-align:right;">${matAdvantageText}</td>
+          </tr>
+          <tr style="border-bottom:1px solid #1e293b;">
+            <td style="padding:4px 0; color:#94a3b8;">Piece Mobility (Legal Moves):</td>
+            <td style="padding:4px 0; font-weight:bold; color:#f8fafc; text-align:right;">White: ${whiteMoves} | Black: ${blackMoves}</td>
+          </tr>
+          <tr style="border-bottom:1px solid #1e293b;">
+            <td style="padding:4px 0; color:#94a3b8;">Center Occupation (d4, e4, d5, e5):</td>
+            <td style="padding:4px 0; font-weight:bold; color:#f8fafc; text-align:right;">White: ${centerControlWhite} | Black: ${centerControlBlack}</td>
+          </tr>
+          <tr style="border-bottom:1px solid #1e293b;">
+            <td style="padding:4px 0; color:#94a3b8;">Pieces on Board:</td>
+            <td style="padding:4px 0; font-weight:bold; color:#f8fafc; text-align:right;">White: ${whitePieces} | Black: ${blackPieces} (Total: ${whitePieces + blackPieces})</td>
+          </tr>
+          <tr>
+            <td style="padding:4px 0; color:#94a3b8;">Engine Recommended Move:</td>
+            <td style="padding:4px 0; font-weight:bold; color:#fde68a; font-family:monospace; text-align:right;">${hintSan}</td>
+          </tr>
+        </table>
+        <div style="background:#1e293b; padding:8px 10px; border-radius:6px; font-size:11px; color:#cbd5e1;">
+          <strong style="color:#38bdf8;">Tactical Breakdown:</strong>
+          ${Math.abs(matDiff) >= 3 ? ' Significant material advantage.' : ' Balanced material balance.'}
+          ${whiteMoves > blackMoves ? ' White has superior spatial mobility.' : (blackMoves > whiteMoves ? ' Black maintains greater piece freedom.' : ' Equal mobility across board.')}
+        </div>
+      `;
   }
 
   // --------------------------------------------------------------------------
