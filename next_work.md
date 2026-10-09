@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-qa
+current_agent: kilo-qa
+next_agent: kilo-expander
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -15,7 +15,7 @@ current_targets:
   kilo_creator: "kweb://portal"
   kilo_graphics: KCyber
   kilo_tester: KPong
-  kilo_usability: KPong
+  kilo_usability: KChess
   kilo_qa: KChess
   kilo_expander: KConnect4
 virtual_web_target: "kweb://portal"
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-graphics
-  app: KMech
-  timestamp: "2026-10-08T15:31:00-07:00"
+  agent: kilo-usability
+  app: KPong
+  timestamp: "2026-10-08T17:32:00-07:00"
 last_planner_run: "2026-10-08T15:14:12Z"
 ---
 
@@ -132,6 +132,11 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - UI Fixes: Added helper log functions for door state; added Ctrl+/-/0 zoom shortcuts; wired arrow navigation in help tutorial.
   - Verification: MSVC clean; Vite build clean (722ms); <999 KB size ceiling preserved.
   - Queue: Advanced `kilo_usability` to `KPong`; rotation handoff to `kilo-qa`.
+
+- **2026-10-08T17:32:00-07:00 — kilo-usability: KPong (UI/UX & Usability Pass)**
+  - Status: PASS ✅ (Responsive viewport containment, F1/H/? help shortcuts, window pointer release guard, visibilitychange auto-pause).
+  - Verification: Vite build clean; size 129 KB < 999 KB ceiling.
+  - Queue: Advanced `kilo_usability` to `KChess`; rotation handoff to `kilo-qa`.
 
 - **2026-10-08T10:38:00-07:00 — kilo-tester: KSettings (Interactive UI Audit & Inline Repairs)**
   - Status: PASS ✅ (6 issues fixed, 0 regressions).
