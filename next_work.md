@@ -12,13 +12,13 @@ model: gemini-3.8-flash-medium
 timeout_minutes: 6
 status: ready
 current_targets:
-  kilo_creator: "kweb://10.19.99.4/classified"
+  kilo_creator: "kweb://echo-subsystem.net"
   kilo_graphics: KStarship
   kilo_tester: KCards
   kilo_usability: KMaze
   kilo_qa: KColony
   kilo_expander: KTetris
-virtual_web_target: "kweb://echo-subsystem.net"
+virtual_web_target: "kweb://deep-core"
 virtual_web_rotation:
   - "kweb://asm-temple"
   - "kweb://cybercafe"
@@ -34,15 +34,15 @@ virtual_web_rotation:
 last_run:
   agent: kilo-creator
   app: "kweb://10.19.99.4/classified"
-  timestamp: "2026-10-09T15:13:00-07:00"
+  timestamp: "2026-10-09T15:31:00-07:00"
 last_planner_run: "2026-10-09T15:32:00Z"
 ---
 
-### Agent Run Log — 2026-10-09T15:13 (kilo-creator)
+### Agent Run Log — 2026-10-09T15:31 (kilo-creator)
 - **Status:** 🟢 Completed (`kweb://10.19.99.4/classified`)
-- Validated Carlsbad skunkworks intranet archive: 10 interactive tabs, audio & scope canvas, sniffer, and CAD bench.
-- Deep feature expansion: added `exportClassifiedTelemetry()` dump generator with shortcut `E`.
-- Size verified (<255 KB < 999 KB ceiling). Build clean (`npm run build`). Handoff to kilo-graphics.
+- Validated Carlsbad skunkworks intranet archive (<255 KB < 999 KB ceiling) with 10 interactive tabs & telemetry export.
+- Verified live links & dispatch in KNet, KiloNet Portal directory/classifieds, and Webring.
+- Build clean (`npm run build`). Advanced queue to kilo-graphics.
 
 ### Agent Run Log — 2026-10-09T14:31 (kilo-expander)
 - **Status:** 🟢 Completed (`KMine`)
