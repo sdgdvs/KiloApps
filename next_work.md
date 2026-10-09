@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-qa
+current_agent: kilo-qa
+next_agent: kilo-expander
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -15,7 +15,7 @@ current_targets:
   kilo_creator: "kweb://geocities"
   kilo_graphics: KBreakout
   kilo_tester: KBase
-  kilo_usability: KBudget
+  kilo_usability: KCalc
   kilo_qa: KBBS
   kilo_expander: KRogue
 virtual_web_target: "kweb://geocities"
@@ -32,11 +32,17 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-tester
-  app: K2048
-  timestamp: "2026-10-09T02:15:00-07:00"
+  agent: kilo-usability
+  app: KBudget
+  timestamp: "2026-10-09T02:31:00-07:00"
 last_planner_run: "2026-10-08T15:14:12Z"
 ---
+
+### Agent Run Log — 2026-10-09T02:31 (Phase 17)
+- **Status:** PASS ✅ (KBudget usability & responsive layout refined)
+- Tuned window size to 860x620 in `App.jsx` for clean 2-column ledger display.
+- Added mobile/narrow window responsive media queries and focus-visible outlines.
+- Dynamic HiDPI canvas handling verified. Build clean (`npm run build`).
 
 ### Agent Run Log — 2026-10-09T02:15 (Phase 17)
 - **Status:** PASS ✅ (K2048 UI audit clean, 0 JS errors, startup test pass)
@@ -104,8 +110,8 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Upcoming Queue**: `KBudget`, `KCalendar`, `KChart`, `KChat`, `KColony`, `KFortress`, `KNetMap`, `KPing`, `KSanctuary`, `KAudio`, `KStellar`, `KSubmarine`, `KTrader`, `KType`, `KVault`, `KVoid`, `KPong`, `KTaskMgr`, `K2048`.
 
 ### 4. Usability & UX Queue (`kilo-usability`)
-- **Current Target**: `KAudio`
-- **Upcoming Queue**: `KBudget`, `KCalc`, `KMaze`, `KPing`, `KNetMap`, `KStarForge`, `KPong`, `KCalendar`, `KSnake`, `KChess`.
+- **Current Target**: `KCalc`
+- **Upcoming Queue**: `KMaze`, `KPing`, `KNetMap`, `KStarForge`, `KPong`, `KCalendar`, `KSnake`, `KChess`, `KAudio`, `KBudget`.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
 - **Current Target**: `KBBS`

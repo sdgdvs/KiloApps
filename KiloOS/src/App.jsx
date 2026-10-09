@@ -71,7 +71,7 @@ const APPS = [
   { id: 'kvault', title: 'KVault', url: '/apps/kvault.html', exeUrl: '/exe/KVault.exe', icon: '/assets/icons/kvault.ico', w: 900, h: 660, folder: 'System' },
   { id: 'kjournal', title: 'KJournal', url: '/apps/kjournal.html', exeUrl: '/exe/KJournal.exe', icon: '/assets/icons/kjournal.ico', w: 1100, h: 750, folder: 'Office' },
   { id: 'kbreakout', title: 'KBreakout', url: '/apps/kbreakout.html', exeUrl: '/exe/KBreakout.exe', icon: '/assets/icons/kbreakout.ico', w: 430, h: 460, folder: 'Games' },
-  { id: 'kbudget', title: 'KBudget', url: '/apps/kbudget.html', exeUrl: '/exe/KBudget.exe', icon: '/assets/icons/kbudget.ico', w: 800, h: 600, folder: 'Office' },
+  { id: 'kbudget', title: 'KBudget', url: '/apps/kbudget.html', exeUrl: '/exe/KBudget.exe', icon: '/assets/icons/kbudget.ico', w: 860, h: 620, folder: 'Office' },
   { id: 'khabit', title: 'KHabit', url: '/apps/khabit.html', exeUrl: '/exe/KHabit.exe', icon: '/assets/icons/khabit.ico', w: 880, h: 640, folder: 'Office' },
   { id: 'kflash', title: 'KFlash', url: '/apps/kflash.html', exeUrl: '/exe/KFlash.exe', icon: '/assets/icons/kflash.ico', w: 600, h: 500, folder: 'Office' },
   { id: 'k2048', title: 'K2048', url: '/apps/k2048.html', exeUrl: '/exe/K2048.exe', icon: '/assets/icons/k2048.ico', w: 380, h: 480, folder: 'Games' },

@@ -365,6 +365,38 @@
         .toast.warning { border-color: #f59e0b; }
         .toast.info { border-color: var(--primary-color); }
 
+        button:focus-visible, input:focus-visible, select:focus-visible {
+            outline: 2px solid var(--primary-color);
+            outline-offset: 2px;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                overflow-y: auto;
+            }
+            .header {
+                padding: 0.75rem 1rem;
+                flex-direction: column;
+                align-items: stretch;
+                gap: 0.75rem;
+            }
+            .header-actions {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 0.35rem;
+            }
+            .header-actions .btn {
+                padding: 0.4rem 0.65rem;
+                font-size: 0.82rem;
+            }
+            .main-content {
+                grid-template-columns: 1fr;
+                padding: 1rem;
+                gap: 1.25rem;
+                overflow-y: visible;
+            }
+        }
+
         @media print {
             body { background: white; color: black; height: auto; overflow: visible; }
             .header, aside.glass-panel, #pagination-controls, .transaction-right button, .modal-overlay, .toast { display: none !important; }
@@ -1199,12 +1231,12 @@
             
             // HiDPI sharp rendering
             const dpr = window.devicePixelRatio || 1;
-            if (!canvas._dprSetup) {
-                canvas.width = 200 * dpr;
-                canvas.height = 200 * dpr;
+            const targetPx = Math.round(200 * dpr);
+            if (canvas.width !== targetPx || canvas.height !== targetPx) {
+                canvas.width = targetPx;
+                canvas.height = targetPx;
                 canvas.style.width = '200px';
                 canvas.style.height = '200px';
-                canvas._dprSetup = true;
             }
             ctx.setTransform(1, 0, 0, 1, 0, 0);
             ctx.scale(dpr, dpr);
