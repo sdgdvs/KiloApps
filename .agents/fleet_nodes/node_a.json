@@ -5,7 +5,7 @@
   "hostname": "P10700",
   "model_tier": "Gemini Pro",
   "cadence": "1 turn/hour",
-  "status": "quota_paused",
+  "status": "active",
   "schedule_minutes": [
     12
   ],
@@ -13,9 +13,9 @@
   "session_end": null,
   "session_limit_enabled": false,
   "timer_enabled": false,
-  "turns_executed": 102,
+  "turns_executed": 122,
   "last_turn_timestamp": "2026-09-28T18:42:51Z",
-  "last_heartbeat": "2026-10-08T23:12:03.096161+00:00",
-  "current_target": "KBBS",
+  "last_heartbeat": "2026-10-09T19:17:08.013337+00:00",
+  "current_target": "kweb://cybercafe",
   "remote_command": "none"
 }
