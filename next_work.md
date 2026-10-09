@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-expander
-next_agent: kilo-creator
+current_agent: kilo-creator
+next_agent: kilo-graphics
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -17,7 +17,7 @@ current_targets:
   kilo_tester: KTaskMgr
   kilo_usability: KAudio
   kilo_qa: KHabit
-  kilo_expander: KPong
+  kilo_expander: KSnake
 virtual_web_target: "kweb://webring"
 virtual_web_rotation:
   - "kweb://geocities"
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-qa
-  app: KColor
-  timestamp: "2026-10-08T21:13:00-07:00"
+  agent: kilo-expander
+  app: KPong
+  timestamp: "2026-10-08T21:32:00-07:00"
 last_planner_run: "2026-10-08T15:14:12Z"
 ---
 
@@ -94,8 +94,8 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Upcoming Queue**: `KHabit`, `KBBS`, `KAudio`, `KBudget`, `KAlchemy`, `KColony`, `KStarForge`, `KBreakout`, `KRogue`, `KPong`, `KPac`, `KChess`.
 
 ### 6. Feature Expander Queue (`kilo-expander`)
-- **Current Target**: `KPong`
-- **Upcoming Queue**: `KSnake`, `KRogue`, `KBreakout`, `KMine`, `KPac`, `KStarForge`, `KColosseum`, `KAbyss`, `KConnect4`.
+- **Current Target**: `KSnake`
+- **Upcoming Queue**: `KRogue`, `KBreakout`, `KMine`, `KPac`, `KStarForge`, `KColosseum`, `KAbyss`, `KConnect4`, `KPong`.
 
 ---
 
@@ -112,6 +112,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 ---
 
 ## Recent Execution Logs (Max 5 Entries)
+
+- **2026-10-08T21:32:00-07:00 — kilo-expander: KPong (Feature Expansion & CSV Analytics)**
+  - Status: PASS ✅ (Export CSV analytics, responsive stats UI, Vite build clean).
+  - Expansion: Added `exportStatsCSV()` for match telemetry/leaderboard data export alongside JSON; wired CSV button in Stats Modal.
+  - Verification: `npm run build` clean (683ms); 132.8 KB < 999 KB ceiling.
+  - Queue: Advanced `kilo_expander` to `KSnake`; rotation handoff to `kilo-creator`.
 
 - **2026-10-08T21:13:00-07:00 — kilo-qa: KColor (Pass 5 QA & State Integrity Audit)**
   - Status: PASS ✅ (Quicksave F5/F9, tutorial flag, dialog hotkeys, Vite build clean).
@@ -137,11 +143,5 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Glint & Dot Audit: Verified static PCB conduits/vias; zero rotating glints or traveling border dots.
   - Verification: Vite build clean (541ms); <999 KB ceiling preserved.
   - Queue: Advanced `kilo_graphics` to `KColosseum`; rotation handoff to `kilo-tester`.
-
-- **2026-10-08T19:13:00-07:00 — kilo-creator: kweb://portal (Virtual 1999 Web Portal Audit & Parity Verification)**
-  - Status: PASS ✅ (510 KB < 999 KB ceiling, Vite build clean).
-  - Anti-Potemkin Audit: Verified interactive search engine, Yahoo-style directory, stock desk, classifieds, speed test, poll & webring.
-  - Parity & Build: Verified KNet browser integration, security lint PASS, Vite build clean.
-  - Queue: Advanced `kilo_creator` / `virtual_web_target` to `kweb://webring`; handoff to `kilo-graphics`.
 
 

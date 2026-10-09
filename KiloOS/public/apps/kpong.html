@@ -287,8 +287,9 @@
       </tbody>
     </table>
 
-    <div style="display: flex; gap: 8px; margin-top: 12px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.1);">
+    <div style="display: flex; gap: 8px; margin-top: 12px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.1); flex-wrap: wrap;">
       <button class="btn-sm" onclick="exportStatsJSON()">📥 Export JSON</button>
+      <button class="btn-sm" onclick="exportStatsCSV()">📊 Export CSV</button>
       <button class="btn-sm" onclick="document.getElementById('statsFileInput').click()">📤 Import JSON</button>
       <input type="file" id="statsFileInput" accept=".json" style="display:none" onchange="importStatsJSON(event)">
     </div>
@@ -1387,6 +1388,29 @@
       document.body.removeChild(a);
       setTimeout(() => URL.revokeObjectURL(url), 1500);
       showToast("Stats exported to kpong_stats.json!");
+  }
+
+  function exportStatsCSV() {
+      let csv = "Category,Value\n";
+      csv += `Total Games,${stats.games}\n`;
+      csv += `Wins,${stats.wins}\n`;
+      csv += `Losses,${stats.losses}\n`;
+      csv += `Win Rate,${stats.games > 0 ? Math.round((stats.wins / stats.games) * 100) : 0}%\n`;
+      csv += `Highest Rally,${stats.highRally}\n\n`;
+      csv += "Rank,Rally,Mode,Date\n";
+      leaderboard.forEach((e, idx) => {
+          csv += `${idx + 1},${e.rally},"${e.mode}",${e.date}\n`;
+      });
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'kpong_stats.csv';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 1500);
+      showToast("Stats exported to kpong_stats.csv!");
   }
 
   function importStatsJSON(event) {
