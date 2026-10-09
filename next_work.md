@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-qa
+current_agent: kilo-qa
+next_agent: kilo-expander
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -15,7 +15,7 @@ current_targets:
   kilo_creator: "kweb://cybercafe"
   kilo_graphics: KStellar
   kilo_tester: KCalendar
-  kilo_usability: KChat
+  kilo_usability: KChatServer
   kilo_qa: KBudget
   kilo_expander: KChess
 virtual_web_target: "kweb://cybercafe"
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://geocities"
   - "kweb://users/~neon_rider"
 last_run:
-  agent: kilo-tester
-  app: KBudget
-  timestamp: "2026-10-09T10:14:00-07:00"
+  agent: kilo-usability
+  app: KChat
+  timestamp: "2026-10-09T10:31:00-07:00"
 last_planner_run: "2026-10-09T15:32:00Z"
 ---
 
@@ -113,6 +113,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-09T10:31:00-07:00 — kilo-usability: KChat (UI/UX & Usability Pass)**
+  - Status: PASS ✅ (`KChat` UI/UX & usability pass complete)
+  - Layout: Added responsive CSS breakpoints (≤720px, ≤520px) for compact window tiling/resizing.
+  - Controls: Scroll-to-bottom affordance with position tracking, high-contrast `:focus-visible` rings, scrollbar polish.
+  - Build: Production build clean (`npm run build` 0 errors); advanced queue to `KChatServer`; handoff to `kilo-qa`.
+
 - **2026-10-09T10:14:00-07:00 — kilo-tester: KBudget (Interactive UI Audit & Enhancements)**
   - Status: PASS ✅ (`KBudget` interactive UI audit clean, 0 JS errors)
   - Audit: Tested all modals, forms, shortcuts (F1/H, F5, F9, Ctrl+N/F/S/O, Esc, Left/Right).
@@ -133,11 +139,6 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 - **2026-10-09T08:15:00-07:00 — kilo-tester: KCards / KSolitaire (Interactive UI & Hotkeys Audit)**
   - Status: PASS ✅ (`KCards`/`KSolitaire` UI audit clean, 0 JS errors)
-  - Audit: Tested modals, shortcuts (F1, F3-F6, F9, Esc, Enter), safe storage, stats I/O.
+  - Audit: Tested modals, shortcuts (F1, F3-F6, F9, Esc, Enter), safe safe stats I/O.
   - Verification: Automated startup test passed: CSS valid, 0 JS err, canvas hit-test unblocked.
   - Verification: Production build clean (`npm run build` 0 errors); advanced `kilo_tester` to `KBudget`.
-
-- **2026-10-09T07:31:00-07:00 — kilo-graphics: K2048 (Skip Turn — Inappropriate Target)**
-  - Status: ⏭️ Skip — Imagen 3 asset replacement not appropriate for K2048
-  - Audit: Inspected K2048: abstract sliding tile puzzle using classic CSS/geometric styling; no glints or perimeter dots found.
-  - Queue: Rotated `kilo_graphics` target to `KMech`; advanced turn to `kilo-tester`.

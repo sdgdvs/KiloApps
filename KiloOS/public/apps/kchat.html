@@ -610,6 +610,53 @@
             text-align: center;
             user-select: none;
         }
+
+        .scroll-bottom-btn {
+            position: absolute;
+            bottom: 14px;
+            right: 18px;
+            background: rgba(30, 41, 59, 0.95);
+            border: 1px solid var(--border-highlight);
+            color: #93c5fd;
+            border-radius: 20px;
+            padding: 5px 12px;
+            font-size: 12px;
+            font-weight: 600;
+            box-shadow: 0 4px 14px rgba(0,0,0,0.45);
+            display: none;
+            align-items: center;
+            gap: 4px;
+            z-index: 10;
+            cursor: pointer;
+            backdrop-filter: blur(8px);
+            transition: all 0.2s ease;
+        }
+        .scroll-bottom-btn:hover {
+            background: var(--accent);
+            color: #ffffff;
+            transform: translateY(-2px);
+        }
+        button:focus-visible, input:focus-visible, select:focus-visible {
+            outline: 2px solid var(--accent);
+            outline-offset: 2px;
+        }
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.2); }
+        ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.15); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.28); }
+        @media (max-width: 720px) {
+            body { padding: 6px; }
+            .app-header { padding: 8px 10px; gap: 6px; }
+            .row-between { gap: 6px; }
+            #searchInput { width: 110px !important; }
+            button { padding: 6px 10px; font-size: 12px; }
+        }
+        @media (max-width: 520px) {
+            .app-header { padding: 6px 8px; }
+            .channel-pill { padding: 3px 8px; font-size: 11px; }
+            .topic-row { font-size: 11px; }
+            #input { font-size: 13px; padding: 6px 8px; }
+        }
     </style>
 </head>
 <body data-width="850" data-height="650">
@@ -680,8 +727,9 @@
     </div>
 
     <!-- Main Chat Window -->
-    <div id="chatContainer">
+    <div id="chatContainer" style="position: relative;">
         <div id="log" aria-label="Chat log" role="log" aria-live="polite"></div>
+        <button id="btnScrollBottom" class="scroll-bottom-btn" onclick="window.scrollToBottom(true)" aria-label="Scroll to bottom" title="Jump to latest messages">⬇ Latest</button>
     </div>
 
     <!-- Message Composition Bar -->
@@ -1093,6 +1141,26 @@
         const topicTextEl = document.getElementById('topicText');
         const statsModalEl = document.getElementById('statsModal');
         const toastEl = document.getElementById('toast');
+        const btnScrollBottom = document.getElementById('btnScrollBottom');
+
+        window.scrollToBottom = function(smooth = false) {
+            if (!logEl) return;
+            if (smooth) logEl.scrollTo({ top: logEl.scrollHeight, behavior: 'smooth' });
+            else logEl.scrollTop = logEl.scrollHeight;
+            if (btnScrollBottom) btnScrollBottom.style.display = 'none';
+        };
+
+        if (logEl) {
+            logEl.addEventListener('scroll', () => {
+                if (!btnScrollBottom) return;
+                const distanceToBottom = logEl.scrollHeight - logEl.scrollTop - logEl.clientHeight;
+                if (distanceToBottom > 120) {
+                    btnScrollBottom.style.display = 'inline-flex';
+                } else {
+                    btnScrollBottom.style.display = 'none';
+                }
+            });
+        }
 
         let toastTimeout = null;
         function showToast(msg) {
