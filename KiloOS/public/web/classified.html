@@ -5860,8 +5860,46 @@ window.addEventListener('keydown', (e) => {
   } else if (key === ' ' || key === 'p' || key === 'P') {
     toggleSniffer();
     e.preventDefault();
+  } else if (key === 'e' || key === 'E') {
+    exportClassifiedTelemetry();
+    e.preventDefault();
   }
 });
+
+// Telemetry & Diagnostic Dump Export
+function exportClassifiedTelemetry() {
+  const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+  const content = [
+    "============================================================",
+    "AETHEL DYNAMICS // CLASSIFIED INTRANET TELEMETRY REPORT",
+    "STATION ID: 10.19.99.4 [CARLSBAD SKUNKWORKS INTRANET]",
+    "CARRIER FREQUENCY: 1999 Hz | SUB-CARRIER STATUS: LOCKED",
+    `TIMESTAMP: ${new Date().toISOString()}`,
+    "============================================================",
+    "",
+    "[SYSTEM STATE SUMMARY]",
+    `• Audio Engine: ${typeof audioEnabled !== 'undefined' && audioEnabled ? 'ONLINE (1999Hz oscillator active)' : 'STANDBY'}`,
+    `• Packet Sniffer: ${typeof snifferRunning !== 'undefined' && snifferRunning ? 'CAPTURING' : 'PAUSED'} (${typeof packets !== 'undefined' && packets ? packets.length : 0} packets buffered)`,
+    `• Active Sector: ${typeof activeSector !== 'undefined' ? activeSector : '0x1999'}`,
+    "• Integrity Check: SHA-256 / CRC-32 NOMINAL",
+    "",
+    "[BUFFERED PACKET TELEMETRY (LAST 20)]",
+    ...((typeof packets !== 'undefined' && packets) ? packets.slice(-20).map(p => `[${p.time || '1999-12-28'}] ${p.proto || 'ECHO'} ${p.src || '10.19.99.4'} -> ${p.dst || '10.19.99.255'} | ${p.info || p.data || 'PAYLOAD NOMINAL'}`) : ['No packets captured yet']),
+    "",
+    "============================================================",
+    "END OF CLASSIFIED STREAM // TRANSMISSION CODE 0x7F-1999",
+    "============================================================"
+  ].join("\r\n");
+
+  const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `telemetry_10-19-99-4_${timestamp}.txt`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(a.href);
+}
 
 // Tab Visibility & Resource Management (ARCH-05)
 document.addEventListener('visibilitychange', () => {
