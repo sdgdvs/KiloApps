@@ -3034,7 +3034,7 @@
 
   // Restore saved workstation state or trigger first-run tutorial
   const hasSavedState = loadAudioState();
-  if (!hasSavedState) {
+  if (!hasSavedState && !safeGetStorage('kaudio_quicksave')) {
     if (!safeGetStorage('kaudio_tutorialSeen')) {
       safeSetStorage('kaudio_tutorialSeen', '1');
       const m = document.getElementById('helpModal');
