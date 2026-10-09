@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-creator
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -16,7 +16,7 @@ current_targets:
   kilo_graphics: KBreakout
   kilo_tester: KBase
   kilo_usability: KCalc
-  kilo_qa: KBBS
+  kilo_qa: KAudio
   kilo_expander: KRogue
 virtual_web_target: "kweb://geocities"
 virtual_web_rotation:
@@ -32,11 +32,17 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-usability
-  app: KBudget
-  timestamp: "2026-10-09T02:31:00-07:00"
+  agent: kilo-qa
+  app: KBBS
+  timestamp: "2026-10-09T03:13:00-07:00"
 last_planner_run: "2026-10-08T15:14:12Z"
 ---
+
+### Agent Run Log — 2026-10-09T03:13 (Phase 17)
+- **Status:** PASS ✅ (KBBS Pass 5 QA & state integrity verified)
+- Audited quicksave/quickload (F5/F9) snapshot persistence and door game saves.
+- Fixed first-run tutorial guard to never interrupt restored save sessions.
+- Verified build and size constraints (<999 KB). Queue advanced to KAudio.
 
 ### Agent Run Log — 2026-10-09T02:31 (Phase 17)
 - **Status:** PASS ✅ (KBudget usability & responsive layout refined)
@@ -114,8 +120,8 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Upcoming Queue**: `KMaze`, `KPing`, `KNetMap`, `KStarForge`, `KPong`, `KCalendar`, `KSnake`, `KChess`, `KAudio`, `KBudget`.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
-- **Current Target**: `KBBS`
-- **Upcoming Queue**: `KAudio`, `KBudget`, `KAlchemy`, `KColony`, `KStarForge`, `KBreakout`, `KRogue`, `KPong`, `KPac`, `KChess`.
+- **Current Target**: `KAudio`
+- **Upcoming Queue**: `KBudget`, `KAlchemy`, `KColony`, `KStarForge`, `KBreakout`, `KRogue`, `KPong`, `KPac`, `KChess`, `KBBS`.
 
 ### 6. Feature Expander Queue (`kilo-expander`)
 - **Current Target**: `KRogue`

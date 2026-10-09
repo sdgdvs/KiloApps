@@ -867,10 +867,14 @@ SEND:"secret\r"'></textarea>
         });
 
         // Tutorial check & welcome toast
-        const hasSavedSession = !!safeGetStorage('kbbs_lord_state') || !!safeGetStorage('kbbs_last_host');
+        const hasSavedSession = !!safeGetStorage('kbbs_lord_state') || !!safeGetStorage('kbbs_tradewars_state') || !!safeGetStorage('kbbs_last_host') || !!safeGetStorage('kbbs_screen_snapshot');
         if (!safeGetStorage('kbbs_tutorialSeen')) {
             safeSetStorage('kbbs_tutorialSeen', '1');
-            showHelp();
+            if (!hasSavedSession) {
+                showHelp();
+            } else {
+                showToast("📂 Restored saved KBBS session & door games! Press [F1] for Help.", "info", 4000);
+            }
         } else {
             if (hasSavedSession) {
                 showToast("📂 Restored saved KBBS session & door games! Press [F1] for Help.", "info", 4000);
