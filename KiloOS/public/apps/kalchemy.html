@@ -5382,8 +5382,20 @@
     updateSlotsUI();
     setGameMode(gameMode);
 
-    // Minimize manual on startup, opening only when actually called for
-    minimizeHelpModal(null, true);
+    // First-run tutorial flag and startup guide
+    try {
+      const tutorialSeen = localStorage.getItem('kalchemy_tutorial_seen');
+      if (!tutorialSeen) {
+        setTimeout(() => {
+          toggleHelpModal();
+          try { localStorage.setItem('kalchemy_tutorial_seen', '1'); } catch(e){}
+        }, 400);
+      } else {
+        minimizeHelpModal(null, true);
+      }
+    } catch(e) {
+      minimizeHelpModal(null, true);
+    }
 
     // Startup Welcome Notification Toast
     setTimeout(() => {
@@ -5721,9 +5733,26 @@
         ectx.fill();
       }
 
-      requestAnimationFrame(updateParticles);
+      if (!document.hidden) {
+        animFrameId = requestAnimationFrame(updateParticles);
+      } else {
+        animFrameId = null;
+      }
     }
-    requestAnimationFrame(updateParticles);
+
+    let animFrameId = requestAnimationFrame(updateParticles);
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) {
+        if (animFrameId) {
+          cancelAnimationFrame(animFrameId);
+          animFrameId = null;
+        }
+      } else {
+        if (!animFrameId) {
+          animFrameId = requestAnimationFrame(updateParticles);
+        }
+      }
+    });
 
     function triggerTransmuteFX(color, tier = 1, isNew = false) {
       const vessel = document.getElementById('crucible-vessel');
@@ -5734,7 +5763,8 @@
     }
 
     if (window.parent && window.parent.postMessage) {
-      window.parent.postMessage({ type: 'OS_SET_WINDOW_SIZE', width: 1200, height: 800 }, '*');
+      const targetOrigin = window.location.origin && window.location.origin !== 'null' ? window.location.origin : '*';
+      window.parent.postMessage({ type: 'OS_SET_WINDOW_SIZE', width: 1200, height: 800 }, targetOrigin);
     }
   </script>
 

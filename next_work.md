@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-creator
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -16,7 +16,7 @@ current_targets:
   kilo_graphics: KStarship
   kilo_tester: KCards
   kilo_usability: KMaze
-  kilo_qa: KAlchemy
+  kilo_qa: KColony
   kilo_expander: KMine
 virtual_web_target: "kweb://10.19.99.4/classified"
 virtual_web_rotation:
@@ -32,11 +32,17 @@ virtual_web_rotation:
   - "kweb://geocities"
   - "kweb://users/~neon_rider"
 last_run:
-  agent: kilo-usability
-  app: KChatServer
-  timestamp: "2026-10-09T13:31:00-07:00"
+  agent: kilo-qa
+  app: KAlchemy
+  timestamp: "2026-10-09T14:13:00-07:00"
 last_planner_run: "2026-10-09T15:32:00Z"
 ---
+
+### Agent Run Log — 2026-10-09T14:13 (kilo-qa)
+- **Status:** 🟢 Completed (`KAlchemy`)
+- Pass 5 audit: verified state integrity, added first-run tutorial check with auto-opening guide.
+- Added `visibilitychange` lifecycle pause/resume with `cancelAnimationFrame` guard.
+- Origin-safe postMessage sizing. Build clean (`npm run build` passes). Handoff to kilo-expander.
 
 ### Agent Run Log — 2026-10-09T13:31 (kilo-usability)
 - **Status:** 🟢 Completed (`KChatServer`)
@@ -96,8 +102,8 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Upcoming Queue**: `KMaze`, `KPing`, `KNetMap`, `KStarForge`, `KPong`, `KCalendar`, `KSnake`, `KAudio`, `KBudget`.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
-- **Current Target**: `KAlchemy`
-- **Upcoming Queue**: `KColony`, `KStarForge`, `KBreakout`, `KRogue`, `KPong`, `KPac`, `KBBS`, `KBudget`.
+- **Current Target**: `KColony`
+- **Upcoming Queue**: `KStarForge`, `KBreakout`, `KRogue`, `KPong`, `KPac`, `KBBS`, `KBudget`, `KAlchemy`.
 
 ### 6. Feature Expander Queue (`kilo-expander`)
 - **Current Target**: `KMine`
