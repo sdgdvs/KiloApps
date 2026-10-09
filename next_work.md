@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-graphics
-next_agent: kilo-tester
+current_agent: kilo-tester
+next_agent: kilo-usability
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -13,7 +13,7 @@ timeout_minutes: 6
 status: ready
 current_targets:
   kilo_creator: "kweb://echo-subsystem.net"
-  kilo_graphics: KStarship
+  kilo_graphics: KSubmarine
   kilo_tester: KCards
   kilo_usability: KMaze
   kilo_qa: KColony
@@ -32,11 +32,16 @@ virtual_web_rotation:
   - "kweb://geocities"
   - "kweb://users/~neon_rider"
 last_run:
-  agent: kilo-creator
-  app: "kweb://10.19.99.4/classified"
-  timestamp: "2026-10-09T15:31:00-07:00"
+  agent: kilo-graphics
+  app: KStarship
+  timestamp: "2026-10-09T16:13:00-07:00"
 last_planner_run: "2026-10-09T15:32:00Z"
 ---
+
+### Agent Run Log — 2026-10-09T16:13 (kilo-graphics)
+- **Status:** ⏭️ Skip — Imagen 3 asset replacement not appropriate for KStarship
+- Verified authentic retro vector HUD aesthetic & confirmed zero perimeter glints/comets.
+- Rotated queue target to KSubmarine. Handoff to kilo-tester.
 
 ### Agent Run Log — 2026-10-09T15:31 (kilo-creator)
 - **Status:** 🟢 Completed (`kweb://10.19.99.4/classified`)
@@ -103,8 +108,8 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
 - **Mission**: Replace programmer art with Imagen 3 assets. Skip immediately if vector/board/mature.
-- **Current Target**: `KStarship`
-- **Upcoming Queue**: `KSubmarine`, `KSpace`, `KQuest`, `KColony`, `KColosseum`, `KMech`, `KStellar`.
+- **Current Target**: `KSubmarine`
+- **Upcoming Queue**: `KSpace`, `KQuest`, `KColony`, `KColosseum`, `KMech`, `KStellar`, `KStarship`.
 
 ### 3. App Tester Queue (`kilo-tester`)
 - **Current Target**: `KCalendar`
