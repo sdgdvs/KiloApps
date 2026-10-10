@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-usability
+current_agent: kilo-qa
+next_agent: kilo-qa
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -15,7 +15,7 @@ current_targets:
   kilo_creator: kweb://geocities
   kilo_graphics: KDragon
   kilo_tester: KSanctuary
-  kilo_usability: KSnake
+  kilo_usability: KAudio
   kilo_qa: KBudget
   kilo_expander: KAbyss
 virtual_web_target: kweb://geocities
@@ -32,9 +32,9 @@ virtual_web_rotation:
 - kweb://geocities
 - kweb://users/~neon_rider
 last_run:
-  agent: kilo-tester
-  app: KPing
-  timestamp: 2026-10-10T14:49:30-07:00
+  agent: kilo-usability
+  app: KSnake
+  timestamp: 2026-10-10T15:03:00-07:00
 last_planner_run: '2026-10-10T16:30:00Z'
 ---
 
@@ -86,8 +86,8 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Upcoming Queue**: `KAudio`, `KStellar`, `KSubmarine`, `KTrader`, `KType`, `KVault`, `KVoid`, `KCalendar`, `KChart`, `KChat`, `KMine`, `KPing`.
 
 ### 4. Usability & UX Queue (`kilo-usability`)
-- **Current Target**: `KSnake`
-- **Upcoming Queue**: `KAudio`, `KBudget`, `KPing`, `KNetMap`, `KRogue`, `KCalendar`.
+- **Current Target**: `KAudio`
+- **Upcoming Queue**: `KBudget`, `KPing`, `KNetMap`, `KRogue`, `KCalendar`, `KSnake`.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
 - **Current Target**: `KBudget`
@@ -113,6 +113,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-10T15:03:00-07:00 — kilo-usability: KSnake (Usability Audit & Maturity Verification)**
+  - Status: ⏭️ Skip — App usability, layout, and HiDPI canvas are mature and complete (Loop 10).
+  - Verification: Audited F1/H help overlay, quicksave shortcuts (F5/F9), responsive window sizing (860x720).
+  - Sizing & Build: Vite build clean (542ms, 289 KB < 999 KB).
+  - Queue: Advanced usability target to `KAudio`; handoff to `kilo-qa`.
+
 - **2026-10-10T14:49:30-07:00 — kilo-tester: KPing (Pass 3 Interactive UI Audit & Modal Display Fix)**
   - Status: PASS ✅ (1 issue fixed: inactive modal-overlay display rule)
   - UX & Modals: Updated inactive `.modal-overlay` from `display: flex` to `display: none`, resolving phantom startup occlusion.
@@ -135,9 +141,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Combat & Tactical Depth: Unlocked Roman War Cry tactical ability in solo league arena; adds crowd favor surge, enemy stagger status, and war horn audio.
   - Sizing & Build: Build clean (`npm run build`, 245 KB < 999 KB).
   - Queue: Advanced expander target to `KAbyss`; handoff to `kilo-creator`.
-
-- **2026-10-10T13:31:00-07:00 — kilo-qa: KBBS (Pass 5 QA & State Integrity Audit)**
-  - Status: PASS ✅ (`KBBS` Pass 5 tutorial & state persistence audit passed)
-  - State & Integrity: Hardened F5/F9 master quicksave/quickload with silent settings persistence, zoom, and CRT sync; fixed `kbbs_tw_state` check in first-run tutorial guard.
-  - Sizing & Build: Clean build (`npm run build`, web 169 KB < 999 KB; native 102 KB < 999 KB).
-  - Queue: Advanced QA target to `KBudget`; handoff to `kilo-expander`.

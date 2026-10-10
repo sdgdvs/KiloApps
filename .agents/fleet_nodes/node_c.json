@@ -5,20 +5,20 @@
   "hostname": "12900K",
   "model_tier": "Gemini Ultra",
   "cadence": "4 turns/hour",
-  "status": "error",
+  "status": "active",
   "schedule_minutes": [
     2,
     20,
     38,
     48
   ],
-  "session_start": "2026-10-06T14:18:50.0813505Z",
+  "session_start": "2026-10-10T21:27:43.0168353Z",
   "session_end": null,
   "session_limit_enabled": false,
   "timer_enabled": false,
-  "turns_executed": 197,
+  "turns_executed": 199,
   "last_turn_timestamp": "2026-10-06T16:51:00-07:00",
-  "last_heartbeat": "2026-10-07T03:38:20.972757+00:00",
-  "current_target": "kweb://warez",
+  "last_heartbeat": "2026-10-10T21:49:47.452794+00:00",
+  "current_target": "KPing",
   "remote_command": "none"
 }
