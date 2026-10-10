@@ -208,6 +208,7 @@
     <div class="top-controls">
       <button class="btn-sm" onclick="toggleSound()" id="btn-sound" title="Toggle Sound FX (U)">🔊 Sound [U]</button>
       <button class="btn-sm" onclick="openMultiplayerModal()" id="btn-multiplayer" title="Online Multiplayer & Matchmaking [O]">🌐 Online [O]</button>
+      <button class="btn-sm" onclick="openKeybindsModal()" id="btn-keybinds" title="Custom Key Rebinding [K]">⌨️ Keys [K]</button>
       <button class="btn-sm" onclick="togglePvPMode()" id="btn-pvp" title="Toggle 1P vs AI / 2P Local PvP (V)">👤 1P vs AI [V]</button>
       <button class="btn-sm" onclick="cycleGameMode()" id="btn-mode" title="Cycle Game Modes (M)">🎮 Mode: Classic [M]</button>
       <button class="btn-sm" onclick="cycleDifficulty()" id="btn-diff" title="Cycle AI Difficulty (1-3)">⚡ Diff: Normal [1-3]</button>
@@ -235,14 +236,17 @@
       <button class="btn-sm" onclick="toggleReplayPause()" id="btn-replay-play">⏸️ Pause</button>
       <button class="btn-sm" onclick="stepReplay(15)" title="Step Forward 15 frames (Right Arrow / D)">⏭️ +15f</button>
     </div>
-    <div style="display: flex; flex: 1; min-width: 200px; align-items: center; gap: 8px;">
+    <div style="display: flex; flex: 1; min-width: 180px; align-items: center; gap: 8px;">
       <input type="range" id="replay-scrubber" min="0" max="0" value="0" style="flex: 1; cursor: pointer;" oninput="onReplayScrub(this.value)">
       <span id="replay-frame-text" style="font-family: monospace; font-size: 11px; color: var(--primary);">0/0</span>
     </div>
-    <div style="display: flex; gap: 4px; align-items: center;">
+    <div style="display: flex; gap: 4px; align-items: center; flex-wrap: wrap;">
       <button class="btn-sm" onclick="setReplaySpeed(0.5)" id="btn-spd-05">0.5x</button>
       <button class="btn-sm" onclick="setReplaySpeed(1)" id="btn-spd-1" style="border-color: var(--accent); color: var(--accent);">1.0x</button>
       <button class="btn-sm" onclick="setReplaySpeed(2)" id="btn-spd-2">2.0x</button>
+      <button class="btn-sm" onclick="exportReplayJSON()" title="Export current replay to .kpr file">💾 Export</button>
+      <button class="btn-sm" onclick="document.getElementById('replayFileInput').click()" title="Load .kpr replay file">📂 Import</button>
+      <input type="file" id="replayFileInput" accept=".kpr,.json" style="display:none" onchange="importReplayJSON(event)">
       <button class="btn-sm" onclick="stopReplay()" style="color: #ff5555; margin-left: 6px;">✖ Close</button>
     </div>
   </div>
@@ -261,14 +265,15 @@
     <h2 id="helpTitle">📖 How to Play & Controls</h2>
     <p style="font-size: 14px; margin-bottom: 12px; color: var(--text-color);">Welcome to KPONG! The ultimate arcade pong experience.</p>
     <table>
-      <tr><th>P1 Controls</th><td>W / S, Up / Down, or Mouse / Touch Drag</td></tr>
-      <tr><th>P2 Controls</th><td>Up / Down (in 2P Local PvP mode)</td></tr>
+      <tr><th>P1 Controls</th><td>Customizable [K] (Default: W/S or Mouse/Touch)</td></tr>
+      <tr><th>P2 Controls</th><td>Customizable [K] (Default: Up/Down in 2P PvP)</td></tr>
       <tr><th>Online Match</th><td>[O] Online Net-Arena | Quick Match, Host & Codes</td></tr>
       <tr><th>Skills</th><td>[F] Slow-Mo | [E] Mega Paddle | [B] Fireball</td></tr>
+      <tr><th>Controls Setup</th><td>[K] Custom Key Rebinding for all moves & skills</td></tr>
       <tr><th>System</th><td>[Space] Pause | [M] Mode | [1-3] Diff | [V] PvP | [T] Theme | [U] Sound</td></tr>
       <tr><th>Help & Guide</th><td>[F1], [H], or [?] to open Help at any time</td></tr>
-      <tr><th>Replay</th><td>[P] Match Replay | [Space] Pause | [←/→] Scrub | [1/2/3] Speed</td></tr>
-      <tr><th>Stats</th><td>[L] Stats Modal | JSON Export & Import</td></tr>
+      <tr><th>Replay Studio</th><td>[P] Match Replay | Export/Import .kpr Replay Files</td></tr>
+      <tr><th>Stats & Telemetry</th><td>[L] Stats Modal | JSON/CSV Export & Telemetry</td></tr>
       <tr><th>Save/Load</th><td>[F5] Save Game | [F9] Load Game</td></tr>
       <tr><th>Rematch</th><td>[R] or Click/Tap Canvas to restart when Game Over</td></tr>
     </table>
@@ -285,7 +290,7 @@
 <div class="modal-overlay" id="statsModal" role="dialog" aria-modal="true" aria-labelledby="statsTitle">
   <div class="modal">
     <h2 id="statsTitle">🏆 Statistics & High Scores</h2>
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 13px; margin-bottom: 14px; background: rgba(255,255,255,0.04); padding: 10px; border-radius: 8px;">
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 13px; margin-bottom: 10px; background: rgba(255,255,255,0.04); padding: 10px; border-radius: 8px;">
       <div>Total Games: <strong id="stat-games">0</strong></div>
       <div>Wins: <strong id="stat-wins">0</strong></div>
       <div>Losses: <strong id="stat-losses">0</strong></div>
@@ -293,7 +298,15 @@
       <div style="grid-column: span 2;">Highest Rally: <strong id="stat-rally" style="color: var(--accent);">0</strong></div>
     </div>
 
-    <h3 style="margin: 10px 0 4px 0; font-size: 14px; color: var(--primary);">Leaderboard - Top Rallies</h3>
+    <h3 style="margin: 8px 0 4px 0; font-size: 13px; color: var(--primary);">Match Telemetry & Analytics</h3>
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; font-size: 12px; margin-bottom: 12px; background: rgba(0,229,255,0.05); padding: 8px; border-radius: 8px; border: 1px solid rgba(0,229,255,0.15);">
+      <div>Max Ball Speed: <strong id="stat-max-spd" style="color: var(--accent);">0.0 px/f</strong></div>
+      <div>Total Volleys: <strong id="stat-volleys">0</strong></div>
+      <div>Edge Smashes: <strong id="stat-edge-smashes">0</strong></div>
+      <div>Skills Activated: <strong id="stat-skills">0</strong></div>
+    </div>
+
+    <h3 style="margin: 8px 0 4px 0; font-size: 13px; color: var(--primary);">Leaderboard - Top Rallies</h3>
     <table>
       <thead>
         <tr><th>#</th><th>Rally</th><th>Mode</th><th>Date</th></tr>
@@ -307,12 +320,33 @@
       <button class="btn-sm" onclick="exportStatsJSON()">📥 Export JSON</button>
       <button class="btn-sm" onclick="exportStatsCSV()">📊 Export CSV</button>
       <button class="btn-sm" onclick="document.getElementById('statsFileInput').click()">📤 Import JSON</button>
+      <button class="btn-sm" onclick="document.getElementById('replayFileInput').click()">📽️ Watch .kpr</button>
       <input type="file" id="statsFileInput" accept=".json" style="display:none" onchange="importStatsJSON(event)">
     </div>
 
     <div class="modal-actions">
       <button class="btn-sm" onclick="resetStatsData()" style="color: #ff5555;">Reset Stats</button>
       <button class="btn-sm modal-close btn-close" id="btn-close-stats" onclick="closeStatsModal()">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- Keybindings Modal -->
+<div class="modal-overlay" id="keybindsModal" role="dialog" aria-modal="true" aria-labelledby="keybindsTitle">
+  <div class="modal" style="max-width: 440px;">
+    <h2 id="keybindsTitle">⌨️ Custom Key Controls</h2>
+    <p style="font-size: 12px; color: #a0c0d8; margin: 4px 0 10px 0;">Click 'Rebind' next to any action, then press your desired key.</p>
+    <table>
+      <thead>
+        <tr><th>Action</th><th>Assigned Key</th><th>Rebind</th></tr>
+      </thead>
+      <tbody id="keybinds-body">
+        <!-- Rendered dynamically -->
+      </tbody>
+    </table>
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 14px;">
+      <button class="btn-sm" onclick="resetKeybindsToDefaults()" style="color: #ffaa55;">Reset Defaults</button>
+      <button class="btn-sm modal-close btn-close" id="btn-close-keys" onclick="closeKeybindsModal()">Done [Esc]</button>
     </div>
   </div>
 </div>
@@ -525,7 +559,7 @@
   let skillMegaTimer = 0, skillMegaCooldown = 0;
   let skillFireballReady = false, skillFireballCooldown = 0;
 
-  // Stats & Persistence
+  // Stats, Telemetry & Persistence
   let stats = safeGetStorage('kpong_stats_v2', {
       games: 0, wins: 0, losses: 0, highRally: 0
   });
@@ -535,6 +569,42 @@
   if (typeof stats.highRally !== 'number') stats.highRally = 0;
   let leaderboard = safeGetStorage('kpong_leaderboard_v2', []);
   if (!Array.isArray(leaderboard)) leaderboard = [];
+
+  // Match Telemetry (Session & Lifetime analytics)
+  let telemetry = safeGetStorage('kpong_telemetry_v1', {
+      maxSpeed: 0,
+      totalVolleys: 0,
+      edgeSmashes: 0,
+      skillsUsed: 0
+  });
+  if (typeof telemetry.maxSpeed !== 'number') telemetry.maxSpeed = 0;
+  if (typeof telemetry.totalVolleys !== 'number') telemetry.totalVolleys = 0;
+  if (typeof telemetry.edgeSmashes !== 'number') telemetry.edgeSmashes = 0;
+  if (typeof telemetry.skillsUsed !== 'number') telemetry.skillsUsed = 0;
+
+  // Custom Keybindings System
+  const DEFAULT_KEYBINDS = {
+      p1Up: 'w',
+      p1Down: 's',
+      p2Up: 'ArrowUp',
+      p2Down: 'ArrowDown',
+      skillSlow: 'f',
+      skillMega: 'e',
+      skillFire: 'b',
+      pause: ' '
+  };
+  const KEYBIND_LABELS = {
+      p1Up: 'P1 Paddle Up',
+      p1Down: 'P1 Paddle Down',
+      p2Up: 'P2 Paddle Up (Local)',
+      p2Down: 'P2 Paddle Down (Local)',
+      skillSlow: 'Skill: Slow-Mo',
+      skillMega: 'Skill: Mega Paddle',
+      skillFire: 'Skill: Fireball',
+      pause: 'Pause / Resume'
+  };
+  let customKeys = Object.assign({}, DEFAULT_KEYBINDS, safeGetStorage('kpong_keybinds_v1', {}));
+  let rebindingAction = null;
 
   // Match Replay System
   let replayFrames = [];
@@ -1392,7 +1462,8 @@
           losses: stats.losses,
           win_rate: stats.games > 0 ? Math.round((stats.wins / stats.games) * 100) : 0,
           high_rally: stats.highRally,
-          top_scores: leaderboard
+          top_scores: leaderboard,
+          telemetry: telemetry
       };
       const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
@@ -1412,7 +1483,11 @@
       csv += `Wins,${stats.wins}\n`;
       csv += `Losses,${stats.losses}\n`;
       csv += `Win Rate,${stats.games > 0 ? Math.round((stats.wins / stats.games) * 100) : 0}%\n`;
-      csv += `Highest Rally,${stats.highRally}\n\n`;
+      csv += `Highest Rally,${stats.highRally}\n`;
+      csv += `Max Ball Velocity,${telemetry.maxSpeed} px/f\n`;
+      csv += `Total Volleys,${telemetry.totalVolleys}\n`;
+      csv += `Edge Smashes,${telemetry.edgeSmashes}\n`;
+      csv += `Skills Activated,${telemetry.skillsUsed}\n\n`;
       csv += "Rank,Rally,Mode,Date\n";
       leaderboard.forEach((e, idx) => {
           csv += `${idx + 1},${e.rally},"${e.mode}",${e.date}\n`;
@@ -1447,6 +1522,13 @@
               if (Array.isArray(importedScores)) {
                   leaderboard = importedScores.filter(item => item && typeof item.rally === 'number');
               }
+              if (data.telemetry && typeof data.telemetry === 'object') {
+                  if (typeof data.telemetry.maxSpeed === 'number') telemetry.maxSpeed = data.telemetry.maxSpeed;
+                  if (typeof data.telemetry.totalVolleys === 'number') telemetry.totalVolleys = data.telemetry.totalVolleys;
+                  if (typeof data.telemetry.edgeSmashes === 'number') telemetry.edgeSmashes = data.telemetry.edgeSmashes;
+                  if (typeof data.telemetry.skillsUsed === 'number') telemetry.skillsUsed = data.telemetry.skillsUsed;
+                  safeSetStorage('kpong_telemetry_v1', telemetry);
+              }
               safeSetStorage('kpong_stats_v2', stats);
               safeSetStorage('kpong_leaderboard_v2', leaderboard);
               openStatsModal();
@@ -1459,11 +1541,168 @@
       event.target.value = '';
   }
 
+  // Replay File Export & Import (.kpr)
+  function exportReplayJSON() {
+      if (replayFrames.length === 0) {
+          showToast("No replay frames recorded to export!");
+          return;
+      }
+      const replayPayload = {
+          game: "KPong",
+          version: "2.5",
+          exportedAt: new Date().toISOString(),
+          mode: MODE_NAMES[gameMode],
+          difficulty: DIFF_NAMES[difficulty],
+          finalScore: { s1, s2 },
+          highRally: stats.highRally,
+          frameCount: replayFrames.length,
+          frames: replayFrames
+      };
+      const blob = new Blob([JSON.stringify(replayPayload)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `kpong_replay_${Date.now()}.kpr`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 1500);
+      showToast(`Exported ${replayFrames.length} replay frames to .kpr!`);
+  }
+
+  function importReplayJSON(event) {
+      const file = event.target.files && event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(e) {
+          try {
+              const data = JSON.parse(e.target.result);
+              const imported = data.frames || data.replayFrames;
+              if (Array.isArray(imported) && imported.length > 0) {
+                  replayFrames = imported.map(f => ({
+                      p1y: f.p1y || 0,
+                      p2y: f.p2y || 0,
+                      p1PadH: f.p1PadH || 50,
+                      p2PadH: f.p2PadH || 50,
+                      s1: f.s1 || 0,
+                      s2: f.s2 || 0,
+                      rally: f.rally || 0,
+                      gameMode: f.gameMode !== undefined ? f.gameMode : gameMode,
+                      isPvP: !!f.isPvP,
+                      campaignLevel: f.campaignLevel || 1,
+                      balls: Array.isArray(f.balls) ? f.balls : [],
+                      obsY: f.obsY || 0,
+                      obs2X: f.obs2X || 0,
+                      obs1Active: f.obs1Active !== undefined ? f.obs1Active : true,
+                      obs2Active: f.obs2Active !== undefined ? f.obs2Active : true,
+                      bossShieldY: f.bossShieldY || 0,
+                      bossShieldHp: f.bossShieldHp !== undefined ? f.bossShieldHp : 3,
+                      powerupX: f.powerupX !== undefined ? f.powerupX : -1,
+                      powerupY: f.powerupY !== undefined ? f.powerupY : -1,
+                      powerupType: f.powerupType || 0,
+                      powerupActive: f.powerupActive || 0
+                  }));
+                  closeAllModals();
+                  startReplay();
+                  showToast(`Loaded ${replayFrames.length} replay frames! Playing recording...`);
+              } else {
+                  showToast("Invalid replay file: missing frame data!");
+              }
+          } catch(err) {
+              showToast("Failed to parse .kpr replay file!");
+          }
+      };
+      reader.readAsText(file);
+      event.target.value = '';
+  }
+
+  // Keybindings Manager
+  function formatKeyDisplay(key) {
+      if (!key) return 'None';
+      if (key === ' ') return 'Space';
+      if (key === 'ArrowUp') return '↑ Up';
+      if (key === 'ArrowDown') return '↓ Down';
+      if (key === 'ArrowLeft') return '← Left';
+      if (key === 'ArrowRight') return '→ Right';
+      return key.length === 1 ? key.toUpperCase() : key;
+  }
+
+  function renderKeybindsTable() {
+      const tbody = document.getElementById('keybinds-body');
+      if (!tbody) return;
+      tbody.innerHTML = '';
+      for (const [action, label] of Object.entries(KEYBIND_LABELS)) {
+          const boundKey = customKeys[action] || DEFAULT_KEYBINDS[action];
+          const isRebinding = rebindingAction === action;
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+              <td style="font-weight: 600;">${label}</td>
+              <td style="font-family: monospace; color: ${isRebinding ? 'var(--accent)' : 'var(--primary)'}; font-weight: 700;">
+                  ${isRebinding ? '👉 Press any key...' : formatKeyDisplay(boundKey)}
+              </td>
+              <td>
+                  <button class="btn-sm" style="padding: 3px 8px; font-size: 10px; ${isRebinding ? 'border-color: var(--accent); color: var(--accent);' : ''}" onclick="startRebindAction('${action}')">
+                      ${isRebinding ? 'Waiting...' : 'Rebind'}
+                  </button>
+              </td>
+          `;
+          tbody.appendChild(tr);
+      }
+  }
+
+  function openKeybindsModal() {
+      closeAllModals();
+      rebindingAction = null;
+      renderKeybindsTable();
+      const modal = document.getElementById('keybindsModal');
+      if (modal) modal.classList.add('active');
+      const closeBtn = document.getElementById('btn-close-keys');
+      if (closeBtn) closeBtn.focus();
+  }
+
+  function closeKeybindsModal() {
+      rebindingAction = null;
+      const modal = document.getElementById('keybindsModal');
+      if (modal) modal.classList.remove('active');
+      if (canvas) canvas.focus();
+  }
+
+  function startRebindAction(action) {
+      rebindingAction = action;
+      renderKeybindsTable();
+      showToast(`Press new key for: ${KEYBIND_LABELS[action] || action}`);
+  }
+
+  function resetKeybindsToDefaults() {
+      customKeys = Object.assign({}, DEFAULT_KEYBINDS);
+      rebindingAction = null;
+      safeSetStorage('kpong_keybinds_v1', customKeys);
+      renderKeybindsTable();
+      showToast("Keybindings reset to 1999 defaults.");
+  }
+
   // Keyboard Inputs
   const keys = {};
   document.addEventListener('keydown', e => { 
       // Protect essential browser accelerators
       if (e.ctrlKey || e.altKey || e.metaKey) return;
+
+      // Handle Key Rebinding Capture
+      if (rebindingAction) {
+          e.preventDefault();
+          if (e.key === 'Escape') {
+              rebindingAction = null;
+              renderKeybindsTable();
+              showToast("Rebind cancelled.");
+              return;
+          }
+          customKeys[rebindingAction] = e.key;
+          safeSetStorage('kpong_keybinds_v1', customKeys);
+          showToast(`Bound ${KEYBIND_LABELS[rebindingAction] || rebindingAction} to [${formatKeyDisplay(e.key)}]`);
+          rebindingAction = null;
+          renderKeybindsTable();
+          return;
+      }
 
       const isInput = e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.isContentEditable);
       if (isInput) {
@@ -1473,10 +1712,12 @@
               const statsModalEl = document.getElementById('statsModal');
               const mpModalEl = document.getElementById('multiplayerModal');
               const inviteModalEl = document.getElementById('inviteModal');
+              const keyModalEl = document.getElementById('keybindsModal');
               if (inviteModalEl && inviteModalEl.classList.contains('active')) { declineInvite(); return; }
               if (mpModalEl && mpModalEl.classList.contains('active')) { closeMultiplayerModal(); return; }
               if (helpModalEl && helpModalEl.classList.contains('active')) { closeHelpModal(); return; }
               if (statsModalEl && statsModalEl.classList.contains('active')) { closeStatsModal(); return; }
+              if (keyModalEl && keyModalEl.classList.contains('active')) { closeKeybindsModal(); return; }
           }
           return;
       }
@@ -1488,14 +1729,17 @@
       const statsModalEl = document.getElementById('statsModal');
       const mpModalEl = document.getElementById('multiplayerModal');
       const inviteModalEl = document.getElementById('inviteModal');
+      const keyModalEl = document.getElementById('keybindsModal');
       const isHelpActive = helpModalEl && helpModalEl.classList.contains('active');
       const isStatsActive = statsModalEl && statsModalEl.classList.contains('active');
       const isMpActive = mpModalEl && mpModalEl.classList.contains('active');
       const isInviteActive = inviteModalEl && inviteModalEl.classList.contains('active');
+      const isKeyActive = keyModalEl && keyModalEl.classList.contains('active');
 
       if (e.key === 'Escape') {
           if (isInviteActive) { declineInvite(); return; }
           if (isMpActive) { closeMultiplayerModal(); return; }
+          if (isKeyActive) { closeKeybindsModal(); return; }
           if (isHelpActive) { closeHelpModal(); return; }
           if (isStatsActive) { closeStatsModal(); return; }
           if (isReplaying) { stopReplay(); return; }
@@ -1504,13 +1748,15 @@
       }
 
       // If a modal is open, prevent background game key inputs
-      if (isHelpActive || isStatsActive || isMpActive || isInviteActive) {
+      if (isHelpActive || isStatsActive || isMpActive || isInviteActive || isKeyActive) {
           if ((e.key === 'h' || e.key === 'H' || e.key === 'F1' || e.key === 'Enter' || e.key === ' ') && isHelpActive) {
               if (e.key === 'F1' || e.key === ' ') e.preventDefault();
               closeHelpModal();
           } else if ((e.key === 'l' || e.key === 'L' || e.key === 'Enter' || e.key === ' ') && isStatsActive) {
               if (e.key === ' ') e.preventDefault();
               closeStatsModal();
+          } else if ((e.key === 'k' || e.key === 'K' || e.key === 'Enter') && isKeyActive) {
+              closeKeybindsModal();
           } else if ((e.key === 'o' || e.key === 'O') && isMpActive) {
               closeMultiplayerModal();
           } else if (isInviteActive && (e.key === 'Enter' || e.key === ' ')) {
@@ -1552,10 +1798,15 @@
 
       if(e.key === 'u' || e.key === 'U') toggleSound();
       if(e.key === 'o' || e.key === 'O') openMultiplayerModal();
-      if(e.key === 'f' || e.key === 'F') triggerSkill('slow');
-      if(e.key === 'e' || e.key === 'E') triggerSkill('mega');
-      if(e.key === 'b' || e.key === 'B') triggerSkill('fire');
-      if(e.key === ' ') togglePause();
+      if(e.key === 'k' || e.key === 'K') openKeybindsModal();
+
+      // Trigger Skills checking customized key or default
+      const keyLower = e.key.toLowerCase();
+      if(e.key === customKeys.skillSlow || keyLower === (customKeys.skillSlow || '').toLowerCase()) triggerSkill('slow');
+      if(e.key === customKeys.skillMega || keyLower === (customKeys.skillMega || '').toLowerCase()) triggerSkill('mega');
+      if(e.key === customKeys.skillFire || keyLower === (customKeys.skillFire || '').toLowerCase()) triggerSkill('fire');
+      if(e.key === customKeys.pause) togglePause();
+
       if(e.key === 'h' || e.key === 'H' || e.key === 'F1' || e.key === '?' || e.key === '/') {
           if(e.key === 'F1' || e.key === '?' || e.key === '/') e.preventDefault();
           openHelpModal();
@@ -1575,10 +1826,12 @@
       const statsModalEl = document.getElementById('statsModal');
       const mpModalEl = document.getElementById('multiplayerModal');
       const inviteModalEl = document.getElementById('inviteModal');
+      const keyModalEl = document.getElementById('keybindsModal');
       if (helpModalEl) helpModalEl.classList.remove('active');
       if (statsModalEl) statsModalEl.classList.remove('active');
       if (mpModalEl) mpModalEl.classList.remove('active');
       if (inviteModalEl) inviteModalEl.classList.remove('active');
+      if (keyModalEl) keyModalEl.classList.remove('active');
   }
 
   function openHelpModal() {
@@ -1616,6 +1869,12 @@
   document.getElementById('inviteModal').addEventListener('click', function(e) {
       if (e.target === this) declineInvite();
   });
+  const keyModalBackdrop = document.getElementById('keybindsModal');
+  if (keyModalBackdrop) {
+      keyModalBackdrop.addEventListener('click', function(e) {
+          if (e.target === this) closeKeybindsModal();
+      });
+  }
 
   function restartGame() {
       s1 = 0; s2 = 0; rally = 0; winScreen = false;
@@ -1870,6 +2129,15 @@
       document.getElementById('stat-winrate').innerText = wr + "%";
       document.getElementById('stat-rally').innerText = stats.highRally;
 
+      const maxSpdEl = document.getElementById('stat-max-spd');
+      if (maxSpdEl) maxSpdEl.innerText = (telemetry.maxSpeed || 0) + " px/f";
+      const volleysEl = document.getElementById('stat-volleys');
+      if (volleysEl) volleysEl.innerText = telemetry.totalVolleys || 0;
+      const edgeEl = document.getElementById('stat-edge-smashes');
+      if (edgeEl) edgeEl.innerText = telemetry.edgeSmashes || 0;
+      const skillsEl = document.getElementById('stat-skills');
+      if (skillsEl) skillsEl.innerText = telemetry.skillsUsed || 0;
+
       const escapeHTML = str => String(str).replace(/[&<>'"]/g, tag => ({
           '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
       }[tag] || tag));
@@ -1903,10 +2171,12 @@
       if (confirm("Reset all KPong statistics and leaderboard data?")) {
           stats = { games: 0, wins: 0, losses: 0, highRally: 0 };
           leaderboard = [];
+          telemetry = { maxSpeed: 0, totalVolleys: 0, edgeSmashes: 0, skillsUsed: 0 };
           safeRemoveStorage('kpong_stats_v2');
           safeRemoveStorage('kpong_leaderboard_v2');
+          safeRemoveStorage('kpong_telemetry_v1');
           openStatsModal();
-          showToast("Stats reset cleanly.");
+          showToast("Stats & Telemetry reset cleanly.");
       }
   }
 
@@ -1986,17 +2256,22 @@
       if (p1PadH < 15) p1PadH = 15;
       if (p2PadH < 15) p2PadH = 15;
 
-      // Player 1 Movement (W/S or Up/Down if 1P mode)
+      // Player 1 Movement (Check custom keys or W/S/Arrows)
       let p1PrevY = p1y;
       if (p1FreezeTimer === 0) {
+          const p1UpKey = customKeys.p1Up || 'w';
+          const p1DownKey = customKeys.p1Down || 's';
+          const isP1Up = keys[p1UpKey] || keys[p1UpKey.toLowerCase()] || keys[p1UpKey.toUpperCase()] || keys['w'] || keys['W'] || (!isPvP && keys['ArrowUp']);
+          const isP1Down = keys[p1DownKey] || keys[p1DownKey.toLowerCase()] || keys[p1DownKey.toUpperCase()] || keys['s'] || keys['S'] || (!isPvP && keys['ArrowDown']);
+
           if (isOnline) {
               if (myPlayerSlot === 1) {
-                  if (keys['w'] || keys['W'] || keys['ArrowUp']) p1y -= 6.5;
-                  if (keys['s'] || keys['S'] || keys['ArrowDown']) p1y += 6.5;
+                  if (isP1Up) p1y -= 6.5;
+                  if (isP1Down) p1y += 6.5;
               }
           } else {
-              if (keys['w'] || keys['W'] || (!isPvP && (keys['ArrowUp']))) p1y -= 6.5;
-              if (keys['s'] || keys['S'] || (!isPvP && (keys['ArrowDown']))) p1y += 6.5;
+              if (isP1Up) p1y -= 6.5;
+              if (isP1Down) p1y += 6.5;
           }
       }
       if (p1y < 0) p1y = 0;
@@ -2006,15 +2281,20 @@
       // Player 2 / AI Movement
       let p2PrevY = p2y;
       if (p2FreezeTimer === 0) {
+          const p2UpKey = customKeys.p2Up || 'ArrowUp';
+          const p2DownKey = customKeys.p2Down || 'ArrowDown';
+          const isP2Up = keys[p2UpKey] || keys[p2UpKey.toLowerCase()] || keys[p2UpKey.toUpperCase()] || keys['ArrowUp'];
+          const isP2Down = keys[p2DownKey] || keys[p2DownKey.toLowerCase()] || keys[p2DownKey.toUpperCase()] || keys['ArrowDown'];
+
           if (isOnline) {
               if (myPlayerSlot === 2) {
-                  if (keys['ArrowUp'] || keys['w'] || keys['W']) p2y -= 6.5;
-                  if (keys['ArrowDown'] || keys['s'] || keys['S']) p2y += 6.5;
+                  if (isP2Up || keys['w'] || keys['W']) p2y -= 6.5;
+                  if (isP2Down || keys['s'] || keys['S']) p2y += 6.5;
               }
           } else if (isPvP) {
               // 2-Player Local PvP Mode
-              if (keys['ArrowUp']) p2y -= 6.5;
-              if (keys['ArrowDown']) p2y += 6.5;
+              if (isP2Up) p2y -= 6.5;
+              if (isP2Down) p2y += 6.5;
           } else {
               // AI Logic
               let aiSpeed = aiSpeeds[difficulty];
@@ -2211,6 +2491,14 @@
               b.dx *= 1.08;
               rally++;
               checkHighRally(rally);
+
+              // Record Telemetry
+              telemetry.totalVolleys++;
+              let curSpd = Math.round(Math.hypot(b.dx, b.dy) * 10) / 10;
+              if (curSpd > telemetry.maxSpeed) telemetry.maxSpeed = curSpd;
+              if (Math.abs(hitPos) > 0.8) telemetry.edgeSmashes++;
+              safeSetStorage('kpong_telemetry_v1', telemetry);
+
               let pColor = b.isFireball ? '#ff6400' : getPrimaryColor();
               createParticles(b.x, b.y + BALL_SIZE/2, pColor, 18, 9);
               createShockwave(b.x, b.y + BALL_SIZE/2, pColor);
@@ -2232,6 +2520,14 @@
               b.dx *= 1.08;
               rally++;
               checkHighRally(rally);
+
+              // Record Telemetry
+              telemetry.totalVolleys++;
+              let curSpd = Math.round(Math.hypot(b.dx, b.dy) * 10) / 10;
+              if (curSpd > telemetry.maxSpeed) telemetry.maxSpeed = curSpd;
+              if (Math.abs(hitPos) > 0.8) telemetry.edgeSmashes++;
+              safeSetStorage('kpong_telemetry_v1', telemetry);
+
               createParticles(b.x + BALL_SIZE, b.y + BALL_SIZE/2, getSecondaryColor(), 18, 9);
               createShockwave(b.x + BALL_SIZE, b.y + BALL_SIZE/2, getSecondaryColor());
               if (Math.abs(hitPos) > 0.8) {
