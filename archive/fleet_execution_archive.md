@@ -4,6 +4,161 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **Agent Run Log — 2026-10-10T05:32 (kilo-usability)**
+  - **Status:** 🟢 Completed (`KPong`)
+  - UX/usability polish: added responsive media queries for compact viewports & sub-780px heights.
+  - Enforced integer DPR canvas rounding & ratio clamping to eliminate subpixel blur.
+  - Builds clean (`npm run build`, 131 KB < 999 KB). Advanced usability queue to `KRogue`; handoff to `kilo-qa`.
+
+- **Agent Run Log — 2026-10-10T05:13 (kilo-tester)**
+  - **Status:** 🟢 Completed (`KMine`)
+  - Repaired syntax errors in `computeProbabilityMap` (${h.x},${h.y} key mapping) & `cycleTheme` toast.
+  - Startup audit clean (`test_app_startup.py` PASS, 0 JS errors, 115.9 KB < 999 KB).
+  - Build clean (`npm run build`). Advanced tester queue to `KFortress`; handoff to `kilo-usability`.
+
+- **Agent Run Log — 2026-10-10T04:31 (kilo-graphics)**
+  - **Status:** ⏭️ Skip — Imagen 3 asset replacement not appropriate for KQuest
+  - Production Imagen 3 assets already in place (12 backgrounds, 5 hero classes, 12 monsters, 5 NPCs, FX).
+  - Verified static golden filigree HUD; 0 traveling dots or orbiting glints.
+  - Build clean (`npm run build`). Advanced queue to `KColony`; handoff to `kilo-tester`.
+
+- **Agent Run Log — 2026-10-10T04:15 (kilo-creator)**
+  - **Status:** 🟢 Completed (`kweb://portal`)
+  - Deep expansion: Y2K Bug Readiness Audit Lab & Millennium Rollover Simulator '99.
+  - Added live rollover clock, 5-point BIOS/COBOL diagnostic suite, compliance cert exporter, and bunker checklist.
+  - Builds clean (`npm run build`, 525 KB < 999 KB).
+  - Advanced queue: virtual web target rotated to `kweb://webring`; handoff to `kilo-graphics`.
+
+- **Agent Run Log — 2026-10-10T03:33 (kilo-expander)**
+  - **Status:** 🟢 Completed (`KAudio`)
+  - Deep format expansion: Sun/NeXT .AU / .SND binary import/export (PCM16 big-endian) & Amiga IFF-8SVX tracker sample export.
+  - DSP rack expansion: 12-bit Vintage DAC Bitcrusher (SP-1200) & Dual-LFO Stereo BBD Chorus.
+  - Micro-Tuning scale engine: 12-TET, Just Intonation, Werckmeister III, Meantone, Slendro, Maqam Rast.
+  - Build clean (`npm run build`, 142 KB < 999 KB). Advanced queue to `KMine`; handoff to `kilo-creator`.
+
+- **Agent Run Log — 2026-10-10T03:13 (kilo-qa)**
+  - **Status:** 🟢 Completed (`KRogue`)
+  - Pass 5 QA audit passed: verified F5/F9 quicksave/quickload state persistence and tutorial flags.
+  - Added cancelAnimationFrame and visibilitychange guards to main render loop for lifecycle safety.
+  - Builds clean (`npm run build` 0 errors; native `build.bat` clean). Advanced queue to `KPong`; handoff to `kilo-expander`.
+
+- **Agent Run Log — 2026-10-10T02:35 (kilo-usability)**
+  - **Status:** 🟢 Completed (`KStarForge`)
+  - UI/UX polish: responsive blueprint center & sidebars, auto-fit canvas aspect ratio.
+  - Relocated toolbar below canvas to prevent grid cell clipping; wired splash backdrop/ESC launch.
+  - Build clean (`npm run build`). Advanced queue to `KPong`; handoff to `kilo-qa`.
+
+- **Agent Run Log — 2026-10-10T02:14 (kilo-tester)**
+  - **Status:** 🟢 Completed (`KColony`)
+  - UI audit: added JSON save export/import handlers to topbar & start menu, wired key `0` import shortcut.
+  - Initialized audio context on direct quickload and file import; verified escape/backdrop modal handling.
+  - Build clean (`npm run build`). Advanced tester queue to `KMine`; handoff to `kilo-usability`.
+
+- **Agent Run Log — 2026-10-10T01:31 (kilo-graphics)**
+  - **Status:** ⏭️ Skip — Imagen 3 asset replacement not appropriate for KPac
+  - Verified classic arcade maze & sprite aesthetic; 0 traveling perimeter dots or rotating glints.
+  - Build clean (`npm run build`). Advanced graphics queue to `KQuest`; handoff to `kilo-tester`.
+
+- **Agent Run Log — 2026-10-10T01:13 (kilo-creator)**
+  - **Status:** 🟢 Completed (`kweb://darknet`)
+  - Expanded underground node with ToneLoc 1999 Subterranean Wardialer & PBX trunk scanner.
+  - Added live acoustic DTMF/carrier tone synthesis, carrier banner interceptor, and BBS export.
+  - Verified <999KB ceiling (360KB) and clean build (`npm run build`).
+  - Advanced queue: virtual web target rotated to `kweb://portal`; handoff to `kilo-graphics`.
+
+- **Agent Run Log — 2026-10-10T00:33 (kilo-expander)**
+  - **Status:** 🟢 Completed (`KImage`)
+  - Deep format expansion: added Truevision TGA (.tga) & ZSoft PCX (.pcx) binary import/export, plus GIMP (.gpl) & Adobe (.act) palette exports.
+  - Integrated optical DSP studio: Vignette falloff, Chromatic Aberration RGB split, 3x3 Median despeckle, and Histogram Equalization.
+  - Build clean (`npm run build`). Advanced queue to `KAudio`; handoff to `kilo-creator`.
+
+- **Agent Run Log — 2026-10-10T00:14 (kilo-qa)**
+  - **Status:** 🟢 Completed (`KBreakout`)
+  - Pass 5 QA audit passed: verified F5/F9 quicksave/quickload state persistence and first-run tutorial flag.
+  - Added visibilitychange rAF pause/resume guards for clean lifecycle management.
+  - Builds clean (`npm run build` 0 errors; native `build.bat` clean). Advanced queue to `KRogue`; handoff to `kilo-expander`.
+
+- **Agent Run Log — 2026-10-09T23:32 (kilo-usability)**
+  - **Status:** 🟢 Completed (`KNetMap`)
+  - UX enhancements: wired discoverable F1/H hotkeys, zoom (+/-/0) controls, and modal backdrop dismissal.
+  - Build clean (`npm run build`). Advanced queue to `KStarForge`; handoff to `kilo-qa`.
+
+- **Agent Run Log — 2026-10-09T23:15 (kilo-tester)**
+  - **Status:** 🟢 Completed (`KChat`)
+  - UI audit passed: fixed recursive socket cleanup in virtual server, guarded author parsing, and scoped `/clear` to active channel (`/clear all` supported).
+  - Build clean (`npm run build`). Advanced queue to `KColony`; handoff to `kilo-usability`.
+
+- **Agent Run Log — 2026-10-09T21:32 (kilo-expander)**
+  - **Status:** 🟢 Completed (`KPaint`)
+  - Deep format expansion: added 32-bit Truevision TGA import/export & Adobe Color Table (.ACT) palette export.
+  - Integrated TGA RLE/uncompressed binary parser with orientation decoding into asset import pipeline.
+  - Build clean (`npm run build`). Advanced queue to `KImage`; handoff to `kilo-creator`.
+
+- **Agent Run Log — 2026-10-09T21:13 (kilo-qa)**
+  - **Status:** 🟢 Completed (`KStarForge`)
+  - Pass 5 QA audit passed: reinforced F5/F9 Quicksave/Quickload state persistence (shipClass & shipName).
+  - Wrapped storage writes in defensive try/catch to gracefully trap quota limits.
+  - Build clean (`npm run build` 0 errors, 222 KB). Advanced queue to `KBreakout`; handoff to `kilo-expander`.
+
+- **Agent Run Log — 2026-10-09T20:32 (kilo-usability)**
+  - **Status:** 🟢 Completed (`KPing`)
+  - Expanded default window dimensions to 980x700 for unconstrained toolbar action layout.
+  - Added touch scrubbing & pointer telemetry inspection support to diagnostic canvas.
+  - Build clean (`npm run build`). Queue advanced to `KNetMap`; handoff to `kilo-qa`.
+
+- **Agent Run Log — 2026-10-09T20:14 (kilo-tester)**
+  - **Status:** 🟢 Completed (`KChart`)
+  - Fixed unclosable modal: updated `.modal-backdrop` CSS and toggle handlers to `display: none`/`flex`.
+  - Startup audit passed (`uv run scripts/test_app_startup.py --app KChart` PASS, 0 JS errors, 121.4 KB).
+  - Build clean (`npm run build`). Advanced queue to KChat; handoff to kilo-usability.
+
+- **Agent Run Log — 2026-10-09T19:30 (kilo-graphics)**
+  - **Status:** ⏭️ Skip — Imagen 3 asset replacement not appropriate for KSubmarine
+  - Verified authentic retro bathyscaphe dashboard HUD aesthetic & confirmed 0 perimeter glints/comets.
+  - Rotated queue target to KSpace. Handoff to kilo-tester.
+
+- **Agent Run Log — 2026-10-09T19:16 (kilo-creator)**
+  - **Status:** 🟢 Completed (`kweb://echo-subsystem.net`)
+  - Deep expansion: implemented Tab 11 (Heterodyne Downshifter & Piezo Cavitation Sonar Matrix).
+  - Interactive RF product detector with live LO beat audio, borehole strata echogram & Sector 0x1999 memory correlator.
+  - Verified build clean (313 KB, <999 KB ceiling).
+
+- **Agent Run Log — 2026-10-09T18:31 (kilo-expander)**
+  - **Status:** 🟢 Completed (KMine)
+  - Deep feature expansion: added 3BV Benchmark telemetry engine (live 3BV/s & click efficiency tracking).
+  - Implemented Tactical Deduction Scanner (Z) with real-time probability frontiers and 3 themes (Cyber, Retro 1999, Sonar).
+  - Build clean (npm run build 0 errors, <125 KB). Advanced queue to KPaint; handoff to kilo-creator.
+
+- **Agent Run Log — 2026-10-09T18:13 (kilo-qa)**
+  - **Status:** 🟢 Completed (`KColony`)
+  - Pass 5 QA audit passed: validated Quicksave (F5) / Quickload (F9) persistence across all biomes.
+  - Guarded first-run tutorial flag (`kcolony_tutorialSeen`) and added `visibilitychange` lifecycle pausing.
+  - Build clean (`npm run build` 0 errors, <132 KB). Advanced queue to KStarForge; handoff to kilo-expander.
+
+- **2026-10-09T19:30:00-07:00 — kilo-graphics: KSubmarine (Visual Audit & Style Preservation)**
+  - ⏭️ Skip — Imagen 3 asset replacement not appropriate for KSubmarine
+  - Audit: Confirmed authentic retro bathyscaphe dashboard HUD aesthetic; 0 specular glints or perimeter dots.
+  - Sizing & Build: Clean build (`npm run build` 0 errors).
+  - Queue: Advanced `kilo_graphics` to `KSpace`; handoff to `kilo-tester`.
+
+- **2026-10-09T12:30:00-07:00 — kilo-graphics: KStellar (Visual Audit & Style Preservation)**
+  - ⏭️ Skip — Imagen 3 asset replacement not appropriate for KStellar
+  - Audit: Confirmed authentic retro CRT/vector sci-fi terminal aesthetic; 0 specular glints or perimeter dots.
+  - Sizing & Build: Clean build (`npm run build` 0 errors).
+  - Queue: Advanced `kilo_graphics` to `KStarship`; handoff to `kilo-tester`.
+
+- **2026-10-09T12:17:00-07:00 — kilo-creator: kweb://cybercafe (QuickCam '99 & Photo Booth Expansion)**
+  - Status: PASS ✅ (kweb://cybercafe deep Anti-Potemkin expansion complete)
+  - Features: QuickCam Pro 320x240 video kiosk, 4 simulated CCTV feeds, 6 retro shaders/dither filters, degauss coil twang, snapshot flash, barcode ID badge composite generator with PNG export & guestbook attachment.
+  - Sizing & Build: 345KB (<999KB ceiling). Build clean (`npm run build` 0 errors).
+  - Queue: Advanced kilo_creator target to kweb://10.19.99.4/classified; handoff to kilo-graphics.
+
+- **2026-10-09T11:34:00-07:00 — kilo-expander: KChess (Deep Engine Positional Analysis Subsystem)**
+  - Status: PASS ✅ (`KChess` deep engine positional analysis and board evaluation integrated)
+  - Features: Real-time static engine eval (pawn advantage), material point differential, legal mobility counter, center control analytics, and best move hint display (`A` hotkey + Tools menu).
+  - Sizing & Build: ~201KB (<999KB ceiling). Production build clean (`npm run build` 0 errors).
+  - Queue: Advanced `kilo_expander` target to `KMine`; handoff to `kilo-creator`.
+
 - **2026-10-09T11:15:00-07:00 — kilo-qa: KBudget (Pass 5 QA & State Persistence Audit)**
   - Status: PASS ✅ (`KBudget` Pass 5 tutorial & state persistence audit clean)
   - Features: Verified F5/F9 quicksave/quickload, first-run tutorial flag, modal shortcuts, and CSV/JSON export.
