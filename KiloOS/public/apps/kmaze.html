@@ -339,6 +339,42 @@
     margin-top: 10px;
     line-height: 1.6;
   }
+  :focus-visible {
+    outline: 2px solid #00f0ff !important;
+    outline-offset: 2px !important;
+  }
+  @media (max-width: 680px) {
+    #hudControls {
+      padding: 3px 4px;
+      gap: 3px;
+    }
+    .hudBtn {
+      padding: 5px 8px;
+      font-size: 11px;
+    }
+    .splashTitle {
+      font-size: 22px;
+    }
+    .splashSubtitle {
+      font-size: 12px;
+      margin-bottom: 16px;
+    }
+    .splashBtn {
+      padding: 8px 14px;
+      font-size: 12px;
+    }
+    .modalContent {
+      max-height: 94vh;
+    }
+  }
+  @media (max-width: 480px) {
+    .grid2 {
+      grid-template-columns: 1fr;
+    }
+    .hudBtn .badge {
+      display: none;
+    }
+  }
 </style>
 </head>
 <body>
@@ -2966,10 +3002,26 @@
   }
 
   initTextures();
-  setInterval(() => {
+  let gameLoopInterval = setInterval(() => {
       update();
       draw();
   }, 30);
+
+  document.addEventListener('visibilitychange', () => {
+      if (document.hidden) {
+          if (gameLoopInterval) {
+              clearInterval(gameLoopInterval);
+              gameLoopInterval = null;
+          }
+      } else {
+          if (!gameLoopInterval) {
+              gameLoopInterval = setInterval(() => {
+                  update();
+                  draw();
+              }, 30);
+          }
+      }
+  });
 
   // Responsive UI Canvas resize
   window.addEventListener('resize', () => {

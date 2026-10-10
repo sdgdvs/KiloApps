@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-qa
+current_agent: kilo-qa
+next_agent: kilo-expander
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -15,7 +15,7 @@ current_targets:
   kilo_creator: "kweb://echo-subsystem.net"
   kilo_graphics: KSubmarine
   kilo_tester: KChart
-  kilo_usability: KMaze
+  kilo_usability: KPing
   kilo_qa: KColony
   kilo_expander: KTetris
 virtual_web_target: "kweb://deep-core"
@@ -32,11 +32,17 @@ virtual_web_rotation:
   - "kweb://geocities"
   - "kweb://users/~neon_rider"
 last_run:
-  agent: kilo-tester
-  app: KCards
-  timestamp: "2026-10-09T17:15:00-07:00"
+  agent: kilo-usability
+  app: KMaze
+  timestamp: "2026-10-09T17:31:00-07:00"
 last_planner_run: "2026-10-09T15:32:00Z"
 ---
+
+### Agent Run Log — 2026-10-09T17:31 (kilo-usability)
+- **Status:** 🟢 Completed (`KMaze`)
+- Responsive breakpoints added (≤680px, ≤480px) for compact window tiling; focus-visible rings enabled.
+- Hardened game loop with visibilitychange pause/resume to eliminate idle background tick load.
+- Build clean (`npm run build` 0 errors). Advanced queue to KPing; handoff to kilo-qa.
 
 ### Agent Run Log — 2026-10-09T17:15 (kilo-tester)
 - **Status:** 🟢 Completed (`KCards` / `KFlash`)
@@ -61,12 +67,6 @@ last_planner_run: "2026-10-09T15:32:00Z"
 - Added ASCII board layout & notation export to clipboard (`copyBoardNotation`, shortcut `B`).
 - Updated controls toolbar, info hint bar, and F1 help guide with new format capabilities.
 - Build verified (`npm run build` passed). Handoff to kilo-creator.
-
-### Agent Run Log — 2026-10-09T14:13 (kilo-qa)
-- **Status:** 🟢 Completed (`KAlchemy`)
-- Pass 5 audit: verified state integrity, added first-run tutorial check with auto-opening guide.
-- Added `visibilitychange` lifecycle pause/resume with `cancelAnimationFrame` guard.
-- Origin-safe postMessage sizing. Build clean (`npm run build` passes). Handoff to kilo-expander.
 
 # KiloApps Master Fleet Work & Queue State
 
@@ -116,8 +116,8 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Upcoming Queue**: `KChart`, `KChat`, `KColony`, `KFortress`, `KNetMap`, `KPing`, `KSanctuary`, `KAudio`, `KStellar`, `KSubmarine`, `KTrader`, `KType`, `KVault`, `KVoid`.
 
 ### 4. Usability & UX Queue (`kilo-usability`)
-- **Current Target**: `KChat`
-- **Upcoming Queue**: `KMaze`, `KPing`, `KNetMap`, `KStarForge`, `KPong`, `KCalendar`, `KSnake`, `KAudio`, `KBudget`.
+- **Current Target**: `KPing`
+- **Upcoming Queue**: `KNetMap`, `KStarForge`, `KPong`, `KCalendar`, `KSnake`, `KAudio`, `KBudget`.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
 - **Current Target**: `KColony`
