@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-tester
-next_agent: kilo-tester
+current_agent: kilo-usability
+next_agent: kilo-usability
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -14,7 +14,7 @@ status: ready
 current_targets:
   kilo_creator: kweb://geocities
   kilo_graphics: KDragon
-  kilo_tester: KPing
+  kilo_tester: KSanctuary
   kilo_usability: KSnake
   kilo_qa: KBudget
   kilo_expander: KAbyss
@@ -32,9 +32,9 @@ virtual_web_rotation:
 - kweb://geocities
 - kweb://users/~neon_rider
 last_run:
-  agent: kilo-graphics
-  app: KDragon
-  timestamp: 2026-10-10T21:38:08+0000
+  agent: kilo-tester
+  app: KPing
+  timestamp: 2026-10-10T14:49:30-07:00
 last_planner_run: '2026-10-10T16:30:00Z'
 ---
 
@@ -82,8 +82,8 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Upcoming Queue**: `KWizard`, `KFarm`, `KMatch3`, `KQuest`, `KSpace`, `KColosseum`.
 
 ### 3. App Tester Queue (`kilo-tester`)
-- **Current Target**: `KPing`
-- **Upcoming Queue**: `KSanctuary`, `KAudio`, `KStellar`, `KSubmarine`, `KTrader`, `KType`, `KVault`, `KVoid`, `KCalendar`, `KChart`, `KChat`, `KMine`.
+- **Current Target**: `KSanctuary`
+- **Upcoming Queue**: `KAudio`, `KStellar`, `KSubmarine`, `KTrader`, `KType`, `KVault`, `KVoid`, `KCalendar`, `KChart`, `KChat`, `KMine`, `KPing`.
 
 ### 4. Usability & UX Queue (`kilo-usability`)
 - **Current Target**: `KSnake`
@@ -113,6 +113,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-10T14:49:30-07:00 — kilo-tester: KPing (Pass 3 Interactive UI Audit & Modal Display Fix)**
+  - Status: PASS ✅ (1 issue fixed: inactive modal-overlay display rule)
+  - UX & Modals: Updated inactive `.modal-overlay` from `display: flex` to `display: none`, resolving phantom startup occlusion.
+  - Sizing & Build: Startup audit pass (`test_app_startup.py`), Vite build clean (`npm run build`, 158.1 KB < 999 KB).
+  - Queue: Advanced tester target to `KSanctuary`; handoff to `kilo-usability`.
+
 - **2026-10-10T21:38:08+0000 — kilo-graphics: KDragon (Zero-Token Auto-Skip — Inappropriate Target)**
   - Status: ⏭️ Skip — Imagen 3 asset replacement not appropriate for KDragon (pure vector, board game, or mature art).
   - Optimization: Handled via orchestrator pre-flight zero-token auto-skip.
@@ -135,9 +141,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - State & Integrity: Hardened F5/F9 master quicksave/quickload with silent settings persistence, zoom, and CRT sync; fixed `kbbs_tw_state` check in first-run tutorial guard.
   - Sizing & Build: Clean build (`npm run build`, web 169 KB < 999 KB; native 102 KB < 999 KB).
   - Queue: Advanced QA target to `KBudget`; handoff to `kilo-expander`.
-
-- **2026-10-10T13:13:00-07:00 — kilo-usability: KCalendar (UI/UX Usability Audit & Pacing Pass)**
-  - Status: PASS ✅ (`KCalendar` usability audit passed; mature app)
-  - Ergonomics & Layout: Verified 1020x720 window bounds, F1/H user guide, accessible keyboard grid navigation (1-4 views, pills, cells).
-  - Quality & Lifecycle: Storage wrapped in safeGet/safeSet, visibilitychange listeners present, zero forbidden glints/comets.
-  - Sizing & Build: Clean build (`npm run build`, 114 KB < 999 KB). Advanced usability queue to `KSnake`; handoff to `kilo-qa`.
