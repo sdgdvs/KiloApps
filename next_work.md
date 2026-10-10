@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-expander
-next_agent: kilo-creator
+current_agent: kilo-creator
+next_agent: kilo-graphics
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -17,7 +17,7 @@ current_targets:
   kilo_tester: KChat
   kilo_usability: KNetMap
   kilo_qa: KBreakout
-  kilo_expander: KPaint
+  kilo_expander: KImage
 virtual_web_target: "kweb://deep-core"
 virtual_web_rotation:
   - "kweb://asm-temple"
@@ -32,11 +32,17 @@ virtual_web_rotation:
   - "kweb://geocities"
   - "kweb://users/~neon_rider"
 last_run:
-  agent: kilo-qa
-  app: KStarForge
-  timestamp: "2026-10-09T21:13:00-07:00"
+  agent: kilo-expander
+  app: KPaint
+  timestamp: "2026-10-09T21:32:00-07:00"
 last_planner_run: "2026-10-09T15:32:00Z"
 ---
+
+### Agent Run Log — 2026-10-09T21:32 (kilo-expander)
+- **Status:** 🟢 Completed (`KPaint`)
+- Deep format expansion: added 32-bit Truevision TGA import/export & Adobe Color Table (.ACT) palette export.
+- Integrated TGA RLE/uncompressed binary parser with orientation decoding into asset import pipeline.
+- Build clean (`npm run build`). Advanced queue to `KImage`; handoff to `kilo-creator`.
 
 ### Agent Run Log — 2026-10-09T21:13 (kilo-qa)
 - **Status:** 🟢 Completed (`KStarForge`)

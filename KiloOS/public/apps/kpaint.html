@@ -789,6 +789,7 @@
           <a onclick="exportImage('webp')" onkeydown="handleExportKey(event, 'webp')" role="button" tabindex="0">WEBP</a>
           <a onclick="exportImage('bmp')" onkeydown="handleExportKey(event, 'bmp')" role="button" tabindex="0">BMP (24-bit)</a>
           <a onclick="exportPCX()" onkeydown="if(event.key==='Enter'||event.key===' ')exportPCX()" role="button" tabindex="0">PCX (ZSoft 24-bit)</a>
+          <a onclick="exportTGA()" onkeydown="if(event.key==='Enter'||event.key===' ')exportTGA()" role="button" tabindex="0">TGA (Truevision 32-bit)</a>
           <a onclick="exportICO()" onkeydown="if(event.key==='Enter'||event.key===' ')exportICO()" role="button" tabindex="0">Windows Icon (.ICO)</a>
           <a onclick="exportPPM()" onkeydown="if(event.key==='Enter'||event.key===' ')exportPPM()" role="button" tabindex="0">PPM (Netpbm)</a>
           <a onclick="exportANSI()" onkeydown="if(event.key==='Enter'||event.key===' ')exportANSI()" role="button" tabindex="0">ANSI Art (.ANS)</a>
@@ -798,13 +799,14 @@
           <a onclick="exportJSON()" onkeydown="if(event.key==='Enter'||event.key===' ')exportJSON()" role="button" tabindex="0">JSON Sprite</a>
           <a onclick="exportCanvasSnippet()" onkeydown="if(event.key==='Enter'||event.key===' ')exportCanvasSnippet()" role="button" tabindex="0">HTML5 Canvas Page</a>
           <a onclick="exportPaletteGPL()" onkeydown="if(event.key==='Enter'||event.key===' ')exportPaletteGPL()" role="button" tabindex="0">GIMP Palette (.GPL)</a>
+          <a onclick="exportPaletteACT()" onkeydown="if(event.key==='Enter'||event.key===' ')exportPaletteACT()" role="button" tabindex="0">Adobe Color Table (.ACT)</a>
         </div>
       </div>
 
     </div>
   </div>
 
-  <input type="file" id="img-loader" style="display:none" accept="image/*,.pcx,.bmp" onchange="importImage(event)">
+  <input type="file" id="img-loader" style="display:none" accept="image/*,.pcx,.bmp,.tga" onchange="importImage(event)">
 
   <!-- Help Modal Dialog -->
   <div id="help-modal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="help-modal-title" onclick="handleBackdropClick(event)">
@@ -2147,6 +2149,193 @@
       setTimeout(() => { a.remove(); URL.revokeObjectURL(url); }, 300);
       retroAudio.play('shape');
       showToast(`Exported GIMP Palette (.GPL) for ${presetKey}!`);
+    }
+
+
+    // 32-bit Truevision TGA Export (Uncompressed RGBA with top-left origin)
+    function exportTGA() {
+      closeExportDropdown();
+      const src = getCompositedCanvas();
+      const w = src.width;
+      const h = src.height;
+      const d = src.getContext('2d').getImageData(0, 0, w, h).data;
+
+      const header = new Uint8Array(18);
+      header[2] = 2;
+      header[12] = w & 0xFF; header[13] = (w >> 8) & 0xFF;
+      header[14] = h & 0xFF; header[15] = (h >> 8) & 0xFF;
+      header[16] = 32;
+      header[17] = 0x28;
+
+      const pixelData = new Uint8Array(w * h * 4);
+      let outIdx = 0;
+      for (let i = 0; i < d.length; i += 4) {
+        pixelData[outIdx++] = d[i + 2];
+        pixelData[outIdx++] = d[i + 1];
+        pixelData[outIdx++] = d[i];
+        pixelData[outIdx++] = d[i + 3];
+      }
+
+      const footer = new Uint8Array(26);
+      const footerStr = "\0\0\0\0\0\0\0\0TRUEVISION-XFILE.\0";
+      for (let i = 0; i < footerStr.length; i++) footer[i] = footerStr.charCodeAt(i);
+
+      const blob = new Blob([header, pixelData, footer], { type: 'image/x-tga' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.download = 'kpaint_artwork.tga';
+      a.href = url;
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(() => { a.remove(); URL.revokeObjectURL(url); }, 300);
+      retroAudio.play('shape');
+      showToast("Exported Truevision 32-bit TGA texture image!");
+    }
+
+    // Adobe Color Table (.ACT) Palette Export
+    function exportPaletteACT() {
+      closeExportDropdown();
+      const colors = PALETTES[currentPalettePreset] || PALETTES['retro16'];
+      const act = new Uint8Array(772);
+      for (let i = 0; i < 256; i++) {
+        const hex = colors[i % colors.length];
+        const rgb = hexToRgb(hex) || { r: 0, g: 0, b: 0 };
+        act[i * 3] = rgb.r;
+        act[i * 3 + 1] = rgb.g;
+        act[i * 3 + 2] = rgb.b;
+      }
+      const count = Math.min(256, colors.length);
+      act[768] = (count >> 8) & 0xFF;
+      act[769] = count & 0xFF;
+      act[770] = 0xFF; act[771] = 0xFF;
+
+      const blob = new Blob([act], { type: 'application/octet-stream' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.download = `kpaint_${currentPalettePreset}.act`;
+      a.href = url;
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(() => { a.remove(); URL.revokeObjectURL(url); }, 300);
+      retroAudio.play('shape');
+      showToast(`Exported Adobe Color Table (.ACT) for ${currentPalettePreset}!`);
+    }
+
+    // Binary TGA Decoder (Truevision 24-bit / 32-bit uncompressed & RLE)
+    function decodeTGA(buffer) {
+      const bytes = new Uint8Array(buffer);
+      if (bytes.length < 18) throw new Error("File too small for TGA header");
+      const idLength = bytes[0];
+      const colorMapType = bytes[1];
+      const imageType = bytes[2];
+      const w = bytes[12] | (bytes[13] << 8);
+      const h = bytes[14] | (bytes[15] << 8);
+      const bpp = bytes[16];
+      const descriptor = bytes[17];
+      const isTopDown = (descriptor & 0x20) !== 0;
+
+      if (w <= 0 || h <= 0 || w > 4096 || h > 4096) throw new Error("Invalid TGA dimensions");
+      if (imageType !== 2 && imageType !== 10 && imageType !== 3) {
+        throw new Error(`Unsupported TGA type (${imageType}). Supported: 2, 10 (RGB/RGBA)`);
+      }
+      if (bpp !== 24 && bpp !== 32 && bpp !== 8) {
+        throw new Error(`Unsupported TGA depth: ${bpp} bpp (Supported: 24, 32, 8)`);
+      }
+
+      const imgData = new ImageData(w, h);
+      const out = imgData.data;
+      let offset = 18 + idLength;
+      if (colorMapType === 1) {
+        const cMapLen = bytes[5] | (bytes[6] << 8);
+        const cMapEntrySize = Math.ceil(bytes[7] / 8);
+        offset += cMapLen * cMapEntrySize;
+      }
+
+      const totalPixels = w * h;
+      const pixelBuffer = new Uint8Array(totalPixels * 4);
+      let pixelIdx = 0;
+
+      if (imageType === 2 || imageType === 3) {
+        while (pixelIdx < totalPixels && offset < bytes.length) {
+          if (bpp === 32) {
+            pixelBuffer[pixelIdx * 4 + 2] = bytes[offset++];
+            pixelBuffer[pixelIdx * 4 + 1] = bytes[offset++];
+            pixelBuffer[pixelIdx * 4] = bytes[offset++];
+            pixelBuffer[pixelIdx * 4 + 3] = bytes[offset++];
+          } else if (bpp === 24) {
+            pixelBuffer[pixelIdx * 4 + 2] = bytes[offset++];
+            pixelBuffer[pixelIdx * 4 + 1] = bytes[offset++];
+            pixelBuffer[pixelIdx * 4] = bytes[offset++];
+            pixelBuffer[pixelIdx * 4 + 3] = 255;
+          } else if (bpp === 8) {
+            const gray = bytes[offset++];
+            pixelBuffer[pixelIdx * 4] = gray;
+            pixelBuffer[pixelIdx * 4 + 1] = gray;
+            pixelBuffer[pixelIdx * 4 + 2] = gray;
+            pixelBuffer[pixelIdx * 4 + 3] = 255;
+          }
+          pixelIdx++;
+        }
+      } else if (imageType === 10) {
+        while (pixelIdx < totalPixels && offset < bytes.length) {
+          const packetHeader = bytes[offset++];
+          const isRLE = (packetHeader & 0x80) !== 0;
+          const count = (packetHeader & 0x7F) + 1;
+
+          if (isRLE) {
+            let b = 0, g = 0, r = 0, a = 255;
+            if (bpp === 32) {
+              b = bytes[offset++]; g = bytes[offset++]; r = bytes[offset++]; a = bytes[offset++];
+            } else if (bpp === 24) {
+              b = bytes[offset++]; g = bytes[offset++]; r = bytes[offset++];
+            } else if (bpp === 8) {
+              r = g = b = bytes[offset++];
+            }
+            for (let i = 0; i < count && pixelIdx < totalPixels; i++) {
+              pixelBuffer[pixelIdx * 4] = r;
+              pixelBuffer[pixelIdx * 4 + 1] = g;
+              pixelBuffer[pixelIdx * 4 + 2] = b;
+              pixelBuffer[pixelIdx * 4 + 3] = a;
+              pixelIdx++;
+            }
+          } else {
+            for (let i = 0; i < count && pixelIdx < totalPixels; i++) {
+              if (bpp === 32) {
+                pixelBuffer[pixelIdx * 4 + 2] = bytes[offset++];
+                pixelBuffer[pixelIdx * 4 + 1] = bytes[offset++];
+                pixelBuffer[pixelIdx * 4] = bytes[offset++];
+                pixelBuffer[pixelIdx * 4 + 3] = bytes[offset++];
+              } else if (bpp === 24) {
+                pixelBuffer[pixelIdx * 4 + 2] = bytes[offset++];
+                pixelBuffer[pixelIdx * 4 + 1] = bytes[offset++];
+                pixelBuffer[pixelIdx * 4] = bytes[offset++];
+                pixelBuffer[pixelIdx * 4 + 3] = 255;
+              } else if (bpp === 8) {
+                const gray = bytes[offset++];
+                pixelBuffer[pixelIdx * 4] = gray;
+                pixelBuffer[pixelIdx * 4 + 1] = gray;
+                pixelBuffer[pixelIdx * 4 + 2] = gray;
+                pixelBuffer[pixelIdx * 4 + 3] = 255;
+              }
+              pixelIdx++;
+            }
+          }
+        }
+      }
+
+      for (let y = 0; y < h; y++) {
+        const srcY = isTopDown ? y : (h - 1 - y);
+        for (let x = 0; x < w; x++) {
+          const srcIdx = (srcY * w + x) * 4;
+          const dstIdx = (y * w + x) * 4;
+          out[dstIdx] = pixelBuffer[srcIdx];
+          out[dstIdx + 1] = pixelBuffer[srcIdx + 1];
+          out[dstIdx + 2] = pixelBuffer[srcIdx + 2];
+          out[dstIdx + 3] = pixelBuffer[srcIdx + 3];
+        }
+      }
+
+      return imgData;
     }
 
     // 24-bit TrueColor RLE PCX Export (ZSoft Paintbrush Standard)
@@ -4423,6 +4612,30 @@
       const file = e.target.files[0];
       if (!file) return;
 
+      if (file.name.toLowerCase().endsWith('.tga')) {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          try {
+            const imgData = decodeTGA(event.target.result);
+            if (imgData.width > 4096 || imgData.height > 4096) {
+              showToast("TGA image exceeds maximum dimensions (4096x4096).", 4000);
+              return;
+            }
+            if (imgData.width !== layers[0].canvas.width || imgData.height !== layers[0].canvas.height) {
+              resizeCanvas(imgData.width, imgData.height);
+            }
+            ctx.putImageData(imgData, 0, 0);
+            saveState();
+            retroAudio.play('shape');
+            showToast(`Imported Truevision TGA graphic (${imgData.width}x${imgData.height})!`);
+          } catch (err) {
+            showToast(`Failed to parse TGA: ${err.message}`, 4000);
+          }
+        };
+        reader.readAsArrayBuffer(file);
+        e.target.value = '';
+        return;
+      }
       if (file.name.toLowerCase().endsWith('.pcx')) {
         const reader = new FileReader();
         reader.onload = (event) => {
