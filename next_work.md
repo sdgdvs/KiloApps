@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-graphics
-next_agent: kilo-tester
+current_agent: kilo-tester
+next_agent: kilo-usability
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -13,7 +13,7 @@ timeout_minutes: 6
 status: ready
 current_targets:
   kilo_creator: kweb://warez
-  kilo_graphics: KColosseum
+  kilo_graphics: KDragon
   kilo_tester: KNetMap
   kilo_usability: KCalendar
   kilo_qa: KBBS
@@ -32,9 +32,9 @@ virtual_web_rotation:
 - kweb://geocities
 - kweb://users/~neon_rider
 last_run:
-  agent: kilo-creator
-  app: kweb://webring
-  timestamp: 2026-10-10T18:32:00+0000
+  agent: kilo-graphics
+  app: KColosseum
+  timestamp: 2026-10-10T12:13:30-07:00
 last_planner_run: '2026-10-10T16:30:00Z'
 ---
 
@@ -78,8 +78,8 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
 - **Mission**: Replace programmer art with Imagen 3 assets. Skip immediately if vector/board/mature.
-- **Current Target**: `KColosseum`
-- **Upcoming Queue**: `KDragon`, `KWizard`, `KFarm`, `KMatch3`, `KQuest`, `KSpace`.
+- **Current Target**: `KDragon`
+- **Upcoming Queue**: `KWizard`, `KFarm`, `KMatch3`, `KQuest`, `KSpace`, `KColosseum`.
 
 ### 3. App Tester Queue (`kilo-tester`)
 - **Current Target**: `KNetMap`
@@ -113,6 +113,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-10T12:13:30-07:00 — kilo-graphics: KColosseum (Turn Skip & Cleanliness Audit)**
+  - Status: ⏭️ Skip — Imagen 3 asset replacement not appropriate for KColosseum
+  - Audit: Zero rotating specular glints or traveling perimeter border dots found.
+  - Sizing & Build: Build clean (`npm run build`, 243 KB < 999 KB).
+  - Queue: Advanced `kilo-graphics` to `KDragon`; handoff to `kilo-tester`.
+
 - **2026-10-10T11:32:00-07:00 — kilo-creator: kweb://webring (Anti-Potemkin Web 1.0 Hub & Routing Verification)**
   - Status: PASS ✅ (`kweb://webring` fully operational & verified)
   - Features: Verified 10 interactive modules (Directory, Teleport, 88x31 Badges, Ping/Traceroute, Join, Guestbook, Topology, Surf, Validator, BGP-4 VT100 Dissector).
@@ -133,8 +139,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Features: Audited 24 interactive UI buttons, modals, hotkeys, and JSON save/load handlers.
   - Lifecycle: Added startLoop/stopLoop visibilitychange lifecycle guards with cancelAnimationFrame.
   - Sizing & Build: Build clean (`npm run build`, 202 KB < 999 KB). Advanced tester queue to `KNetMap`; handoff to `kilo-usability`.
-
-- **2026-10-10T15:12:06+0000 — kilo-graphics: KColony (Zero-Token Auto-Skip — Inappropriate Target)**
-  - Status: ⏭️ Skip — Imagen 3 asset replacement not appropriate for KColony (pure vector, board game, or mature art).
-  - Optimization: Handled via orchestrator pre-flight zero-token auto-skip.
-  - Queue: Advanced `kilo-graphics` to `KColony`; rotation handoff to `kilo-tester`.
