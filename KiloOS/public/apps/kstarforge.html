@@ -4521,6 +4521,548 @@
             document.querySelector('.nav-btn[data-target="blueprint-view"]').click();
         });
 
+        // --- EXPANDED FEATURE SUITE: Blueprint Exchange, Flight Telemetry, & Subsystem Overclock ---
+        const starforgeExpansion = {
+            flightTelemetry: {
+                startTime: 0,
+                durationSec: 0,
+                topSpeed: 0,
+                hostilesDowned: 0,
+                oreHarvested: 0,
+                damageAbsorbed: 0,
+                shotsFired: 0
+            },
+            overclock: {
+                shieldBias: 0,   // -20 to +20 %
+                thrusterBias: 0, // -20 to +20 %
+                weaponBias: 0    // -20 to +20 %
+            },
+            init() {
+                this.loadOverclockSettings();
+                this.injectToolbarAffordances();
+                this.injectModals();
+                this.hookTelemetryEvents();
+            },
+            loadOverclockSettings() {
+                try {
+                    const saved = JSON.parse(localStorage.getItem('kstarforge_overclock'));
+                    if (saved && typeof saved === 'object') {
+                        this.overclock.shieldBias = Math.max(-20, Math.min(20, Number(saved.shieldBias) || 0));
+                        this.overclock.thrusterBias = Math.max(-20, Math.min(20, Number(saved.thrusterBias) || 0));
+                        this.overclock.weaponBias = Math.max(-20, Math.min(20, Number(saved.weaponBias) || 0));
+                    }
+                } catch (e) {
+                    console.warn('[KStarForge] Failed to load overclock settings:', e);
+                }
+            },
+            saveOverclockSettings() {
+                try {
+                    localStorage.setItem('kstarforge_overclock', JSON.stringify(this.overclock));
+                } catch (e) {
+                    console.warn('[KStarForge] Failed to save overclock settings:', e);
+                }
+            },
+            injectToolbarAffordances() {
+                const tb = document.querySelector('.blueprint-toolbar');
+                if (!tb) return;
+                
+                const btnBpCode = document.createElement('button');
+                btnBpCode.className = 'btn';
+                btnBpCode.id = 'btn-blueprint-code';
+                btnBpCode.title = 'Exchange Blueprint Spec Code (Import / Export)';
+                btnBpCode.innerHTML = '📋 Blueprint Code';
+                btnBpCode.addEventListener('click', () => this.openBlueprintCodeModal());
+                
+                const btnOverclock = document.createElement('button');
+                btnOverclock.className = 'btn';
+                btnOverclock.id = 'btn-overclock-toggle';
+                btnOverclock.title = 'Tune Reactor & Subsystem Power Grids';
+                btnOverclock.innerHTML = '⚡ Subsystem Tuning';
+                btnOverclock.addEventListener('click', () => this.openOverclockModal());
+                
+                const btnSend = document.getElementById('btn-send-to-drydock');
+                if (btnSend && btnSend.parentNode === tb) {
+                    tb.insertBefore(btnBpCode, btnSend);
+                    tb.insertBefore(btnOverclock, btnSend);
+                } else {
+                    tb.appendChild(btnBpCode);
+                    tb.appendChild(btnOverclock);
+                }
+            },
+            injectModals() {
+                const modalHtml = `
+                <!-- Blueprint Exchange Modal -->
+                <div class="modal-overlay" id="blueprint-code-modal" style="display: none;">
+                    <div class="modal-box" style="width: 620px;">
+                        <div class="modal-header">
+                            <span class="modal-title">BLUEPRINT SPECIFICATION EXCHANGE</span>
+                            <button class="btn" id="btn-bpcode-close" style="padding: 2px 6px;">✕</button>
+                        </div>
+                        <div style="padding: 16px; display: flex; flex-direction: column; gap: 12px; overflow-y: auto;">
+                            <p style="font-size: 12px; color: var(--text-normal); line-height: 1.5;">
+                                Export your active hull design as a compressed StarForge Engineering Code (<code>KSF-BP-v1</code>) or load code from fellow naval architects.
+                            </p>
+                            <div>
+                                <label style="font-size: 11px; font-weight: bold; color: var(--accent-cyan); display: block; margin-bottom: 4px;">ACTIVE BLUEPRINT SPEC CODE:</label>
+                                <textarea id="bp-code-io" style="width: 100%; height: 90px; background: #080d19; color: #38bdf8; border: 1px solid var(--border-dim); border-radius: 4px; padding: 8px; font-family: var(--font-mono); font-size: 11px; resize: vertical;" placeholder="Paste KSF-BP-v1 code or JSON here..."></textarea>
+                            </div>
+                            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                                <button class="btn btn-primary" id="btn-bpcode-export">📋 Generate & Copy Code</button>
+                                <button class="btn" id="btn-bpcode-import">📥 Load Code into Grid</button>
+                                <button class="btn" id="btn-bpcode-export-json">💾 Copy Full JSON</button>
+                            </div>
+                            <div style="margin-top: 6px; border-top: 1px solid var(--border-dim); padding-top: 10px;">
+                                <span style="font-size: 11px; font-weight: bold; color: var(--text-dim); display: block; margin-bottom: 6px;">FAST-LOAD SHIP ARCHETYPES:</span>
+                                <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                                    <button class="btn" id="btn-bp-preset-interceptor" style="font-size: 11px;">⚡ Void Interceptor Mk.II</button>
+                                    <button class="btn" id="btn-bp-preset-dreadnought" style="font-size: 11px;">🛡 Aegis Dreadnought</button>
+                                    <button class="btn" id="btn-bp-preset-harvester" style="font-size: 11px;">⛏ Solar Harvester Rig</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Subsystem Overclock Tuning Modal -->
+                <div class="modal-overlay" id="overclock-modal" style="display: none;">
+                    <div class="modal-box" style="width: 580px;">
+                        <div class="modal-header">
+                            <span class="modal-title">SUBSYSTEM OVERCLOCK & GRID TUNING</span>
+                            <button class="btn" id="btn-overclock-close" style="padding: 2px 6px;">✕</button>
+                        </div>
+                        <div style="padding: 16px; display: flex; flex-direction: column; gap: 14px;">
+                            <p style="font-size: 12px; color: var(--text-normal); line-height: 1.5;">
+                                Fine-tune power grid shunt allocations. Pushing subsystems beyond standard specifications (+bias) enhances performance at the cost of higher thermal buildup.
+                            </p>
+                            <div style="background: rgba(0,0,0,0.3); border: 1px solid var(--border-dim); border-radius: 4px; padding: 12px; display: flex; flex-direction: column; gap: 12px;">
+                                <div>
+                                    <div style="display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 4px;">
+                                        <span style="color: #818cf8; font-weight: bold;">SHIELD CAPACITOR BIAS</span>
+                                        <span id="txt-bias-shield" style="font-weight: bold; color: #fff;">0%</span>
+                                    </div>
+                                    <input type="range" id="rng-bias-shield" min="-20" max="20" step="5" value="0" style="width: 100%;">
+                                    <span style="font-size: 10px; color: var(--text-dim);">Increases shield capacity & recharge; amplifies passive grid heat load.</span>
+                                </div>
+                                <div>
+                                    <div style="display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 4px;">
+                                        <span style="color: #38bdf8; font-weight: bold;">THRUSTER OVERDRIVE BIAS</span>
+                                        <span id="txt-bias-thruster" style="font-weight: bold; color: #fff;">0%</span>
+                                    </div>
+                                    <input type="range" id="rng-bias-thruster" min="-20" max="20" step="5" value="0" style="width: 100%;">
+                                    <span style="font-size: 10px; color: var(--text-dim);">Increases impulse velocity & agility; increases fuel consumption.</span>
+                                </div>
+                                <div>
+                                    <div style="display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 4px;">
+                                        <span style="color: #f97316; font-weight: bold;">WEAPON FEED BIAS</span>
+                                        <span id="txt-bias-weapon" style="font-weight: bold; color: #fff;">0%</span>
+                                    </div>
+                                    <input type="range" id="rng-bias-weapon" min="-20" max="20" step="5" value="0" style="width: 100%;">
+                                    <span style="font-size: 10px; color: var(--text-dim);">Boosts projectile velocity & damage; increases weapon heat per salvo.</span>
+                                </div>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <button class="btn" id="btn-bias-reset">↺ Reset to Standard Spec (0%)</button>
+                                <button class="btn btn-primary" id="btn-bias-apply">✓ Save Subsystem Tuning</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Flight Black Box Telemetry Debrief Modal -->
+                <div class="modal-overlay" id="flight-debrief-modal" style="display: none;">
+                    <div class="modal-box" style="width: 620px;">
+                        <div class="modal-header">
+                            <span class="modal-title">FLIGHT BLACK BOX TELEMETRY DEBRIEF</span>
+                            <button class="btn" id="btn-debrief-close" style="padding: 2px 6px;">✕</button>
+                        </div>
+                        <div style="padding: 16px; display: flex; flex-direction: column; gap: 12px; max-height: 75vh; overflow-y: auto;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(6, 182, 212, 0.1); border: 1px solid var(--accent-cyan); border-radius: 4px; padding: 10px 14px;">
+                                <div>
+                                    <div style="font-size: 11px; color: var(--accent-cyan); letter-spacing: 1px;">SHAKEDOWN CERTIFICATION</div>
+                                    <div id="debrief-cert-rating" style="font-size: 18px; font-weight: bold; color: #fff;">CLASS-A SPACEWORTHY</div>
+                                </div>
+                                <div id="debrief-score-badge" style="font-size: 20px; font-weight: bold; color: var(--accent-amber);">9,420 PTS</div>
+                            </div>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 12px;">
+                                <div style="background: rgba(0,0,0,0.3); border: 1px solid var(--border-dim); padding: 8px; border-radius: 3px;">
+                                    <span style="color: var(--text-dim);">FLIGHT DURATION:</span>
+                                    <strong id="debrief-duration" style="float: right; color: #fff;">45s</strong>
+                                </div>
+                                <div style="background: rgba(0,0,0,0.3); border: 1px solid var(--border-dim); padding: 8px; border-radius: 3px;">
+                                    <span style="color: var(--text-dim);">PEAK VELOCITY:</span>
+                                    <strong id="debrief-top-speed" style="float: right; color: #38bdf8;">142 m/s</strong>
+                                </div>
+                                <div style="background: rgba(0,0,0,0.3); border: 1px solid var(--border-dim); padding: 8px; border-radius: 3px;">
+                                    <span style="color: var(--text-dim);">HOSTILES DESTROYED:</span>
+                                    <strong id="debrief-hostiles" style="float: right; color: #ef4444;">6</strong>
+                                </div>
+                                <div style="background: rgba(0,0,0,0.3); border: 1px solid var(--border-dim); padding: 8px; border-radius: 3px;">
+                                    <span style="color: var(--text-dim);">ORE EXTRACTED:</span>
+                                    <strong id="debrief-ore" style="float: right; color: #f59e0b;">28 TONS</strong>
+                                </div>
+                                <div style="background: rgba(0,0,0,0.3); border: 1px solid var(--border-dim); padding: 8px; border-radius: 3px;">
+                                    <span style="color: var(--text-dim);">SHIELD DAMAGE ABSORBED:</span>
+                                    <strong id="debrief-shield-dmg" style="float: right; color: #818cf8;">420 HP</strong>
+                                </div>
+                                <div style="background: rgba(0,0,0,0.3); border: 1px solid var(--border-dim); padding: 8px; border-radius: 3px;">
+                                    <span style="color: var(--text-dim);">HULL STRUCTURAL STRESS:</span>
+                                    <strong id="debrief-hull-dmg" style="float: right; color: #10b981;">0 HP (NOMINAL)</strong>
+                                </div>
+                            </div>
+                            <div style="border-top: 1px solid var(--border-dim); padding-top: 10px; display: flex; justify-content: space-between; align-items: center;">
+                                <button class="btn" id="btn-copy-debrief-log">📋 Copy Debrief Log</button>
+                                <button class="btn btn-primary" id="btn-debrief-return-drydock">⮐ Return to Drydock</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                `;
+                const container = document.createElement('div');
+                container.innerHTML = modalHtml;
+                while (container.firstChild) {
+                    document.body.appendChild(container.firstChild);
+                }
+
+                // Modal close button bindings
+                document.getElementById('btn-bpcode-close')?.addEventListener('click', () => {
+                    document.getElementById('blueprint-code-modal').style.display = 'none';
+                });
+                document.getElementById('btn-overclock-close')?.addEventListener('click', () => {
+                    document.getElementById('overclock-modal').style.display = 'none';
+                });
+                document.getElementById('btn-debrief-close')?.addEventListener('click', () => {
+                    document.getElementById('flight-debrief-modal').style.display = 'none';
+                });
+                document.getElementById('btn-debrief-return-drydock')?.addEventListener('click', () => {
+                    document.getElementById('flight-debrief-modal').style.display = 'none';
+                    document.querySelector('.nav-btn[data-target="drydock-view"]')?.click();
+                });
+
+                // Blueprint Exchange actions
+                document.getElementById('btn-bpcode-export')?.addEventListener('click', () => {
+                    const code = this.generateBlueprintCode();
+                    const txt = document.getElementById('bp-code-io');
+                    if (txt) txt.value = code;
+                    this.copyText(code, 'BLUEPRINT CODE COPIED TO CLIPBOARD');
+                });
+                document.getElementById('btn-bpcode-export-json')?.addEventListener('click', () => {
+                    const payload = JSON.stringify({
+                        format: 'kstarforge-blueprint',
+                        version: '1.0',
+                        grid: window.shipGrid || [],
+                        timestamp: new Date().toISOString()
+                    }, null, 2);
+                    const txt = document.getElementById('bp-code-io');
+                    if (txt) txt.value = payload;
+                    this.copyText(payload, 'FULL BLUEPRINT JSON COPIED');
+                });
+                document.getElementById('btn-bpcode-import')?.addEventListener('click', () => {
+                    const txt = document.getElementById('bp-code-io')?.value?.trim();
+                    if (!txt) {
+                        showToast('PASTE CODE BEFORE LOADING');
+                        return;
+                    }
+                    if (this.loadBlueprintCode(txt)) {
+                        showToast('BLUEPRINT LOADED SUCCESSFULLY');
+                        document.getElementById('blueprint-code-modal').style.display = 'none';
+                    }
+                });
+
+                // Archetype Presets
+                document.getElementById('btn-bp-preset-interceptor')?.addEventListener('click', () => {
+                    this.loadPreset('interceptor');
+                });
+                document.getElementById('btn-bp-preset-dreadnought')?.addEventListener('click', () => {
+                    this.loadPreset('dreadnought');
+                });
+                document.getElementById('btn-bp-preset-harvester')?.addEventListener('click', () => {
+                    this.loadPreset('harvester');
+                });
+
+                // Overclock sliders
+                const sShield = document.getElementById('rng-bias-shield');
+                const sThrust = document.getElementById('rng-bias-thruster');
+                const sWeap = document.getElementById('rng-bias-weapon');
+
+                const updateBiasLabels = () => {
+                    if (sShield) document.getElementById('txt-bias-shield').textContent = `${sShield.value > 0 ? '+' : ''}${sShield.value}%`;
+                    if (sThrust) document.getElementById('txt-bias-thruster').textContent = `${sThrust.value > 0 ? '+' : ''}${sThrust.value}%`;
+                    if (sWeap) document.getElementById('txt-bias-weapon').textContent = `${sWeap.value > 0 ? '+' : ''}${sWeap.value}%`;
+                };
+
+                sShield?.addEventListener('input', updateBiasLabels);
+                sThrust?.addEventListener('input', updateBiasLabels);
+                sWeap?.addEventListener('input', updateBiasLabels);
+
+                document.getElementById('btn-bias-reset')?.addEventListener('click', () => {
+                    if (sShield) sShield.value = 0;
+                    if (sThrust) sThrust.value = 0;
+                    if (sWeap) sWeap.value = 0;
+                    updateBiasLabels();
+                });
+
+                document.getElementById('btn-bias-apply')?.addEventListener('click', () => {
+                    this.overclock.shieldBias = Number(sShield?.value || 0);
+                    this.overclock.thrusterBias = Number(sThrust?.value || 0);
+                    this.overclock.weaponBias = Number(sWeap?.value || 0);
+                    this.saveOverclockSettings();
+                    if (typeof window.calcShipStats === 'function') window.calcShipStats();
+                    showToast('SUBSYSTEM OVERCLOCK TUNING SAVED');
+                    document.getElementById('overclock-modal').style.display = 'none';
+                });
+
+                // Copy debrief
+                document.getElementById('btn-copy-debrief-log')?.addEventListener('click', () => {
+                    const text = this.formatDebriefLog();
+                    this.copyText(text, 'DEBRIEF LOG COPIED TO CLIPBOARD');
+                });
+            },
+            openBlueprintCodeModal() {
+                const modal = document.getElementById('blueprint-code-modal');
+                if (!modal) return;
+                const txt = document.getElementById('bp-code-io');
+                if (txt) txt.value = this.generateBlueprintCode();
+                modal.style.display = 'flex';
+                audio?.playClick?.();
+            },
+            openOverclockModal() {
+                const modal = document.getElementById('overclock-modal');
+                if (!modal) return;
+                const sShield = document.getElementById('rng-bias-shield');
+                const sThrust = document.getElementById('rng-bias-thruster');
+                const sWeap = document.getElementById('rng-bias-weapon');
+                if (sShield) sShield.value = this.overclock.shieldBias;
+                if (sThrust) sThrust.value = this.overclock.thrusterBias;
+                if (sWeap) sWeap.value = this.overclock.weaponBias;
+                const updateBiasLabels = () => {
+                    if (sShield) document.getElementById('txt-bias-shield').textContent = `${sShield.value > 0 ? '+' : ''}${sShield.value}%`;
+                    if (sThrust) document.getElementById('txt-bias-thruster').textContent = `${sThrust.value > 0 ? '+' : ''}${sThrust.value}%`;
+                    if (sWeap) document.getElementById('txt-bias-weapon').textContent = `${sWeap.value > 0 ? '+' : ''}${sWeap.value}%`;
+                };
+                updateBiasLabels();
+                modal.style.display = 'flex';
+                audio?.playClick?.();
+            },
+            generateBlueprintCode() {
+                const grid = window.shipGrid || [];
+                const compact = [];
+                for (let r = 0; r < grid.length; r++) {
+                    for (let c = 0; c < (grid[r] || []).length; c++) {
+                        const cell = grid[r][c];
+                        if (cell && cell !== 'empty') {
+                            compact.push(`${r}:${c}:${cell}`);
+                        }
+                    }
+                }
+                const raw = JSON.stringify({ v: 1, p: compact });
+                try {
+                    return 'KSF-BP-v1-' + btoa(raw);
+                } catch (e) {
+                    return raw;
+                }
+            },
+            loadBlueprintCode(input) {
+                try {
+                    let parsed = null;
+                    if (input.startsWith('KSF-BP-v1-')) {
+                        const b64 = input.replace('KSF-BP-v1-', '');
+                        parsed = JSON.parse(atob(b64));
+                    } else {
+                        parsed = JSON.parse(input);
+                    }
+                    if (!parsed) return false;
+
+                    // Initialize empty grid
+                    const size = 14;
+                    const newGrid = Array(size).fill(null).map(() => Array(size).fill(null));
+
+                    if (Array.isArray(parsed.grid)) {
+                        // Standard grid array
+                        for (let r = 0; r < size && r < parsed.grid.length; r++) {
+                            for (let c = 0; c < size && c < parsed.grid[r].length; c++) {
+                                newGrid[r][c] = parsed.grid[r][c];
+                            }
+                        }
+                    } else if (Array.isArray(parsed.p)) {
+                        // Compact format
+                        parsed.p.forEach(entry => {
+                            const [rStr, cStr, mod] = entry.split(':');
+                            const r = parseInt(rStr, 10);
+                            const c = parseInt(cStr, 10);
+                            if (r >= 0 && r < size && c >= 0 && c < size) {
+                                newGrid[r][c] = mod;
+                            }
+                        });
+                    } else {
+                        showToast('INVALID BLUEPRINT FORMAT');
+                        return false;
+                    }
+
+                    window.shipGrid = newGrid;
+                    if (typeof window.calcShipStats === 'function') window.calcShipStats();
+                    if (typeof window.renderBlueprintGrid === 'function') window.renderBlueprintGrid();
+                    return true;
+                } catch (e) {
+                    console.error('[KStarForge] Blueprint import error:', e);
+                    showToast('ERROR PARSING BLUEPRINT CODE');
+                    return false;
+                }
+            },
+            loadPreset(type) {
+                const size = 14;
+                const g = Array(size).fill(null).map(() => Array(size).fill(null));
+                const mid = 7;
+                if (type === 'interceptor') {
+                    // Fast agile fighter
+                    g[3][mid] = 'bridge'; g[3][mid-1] = 'bridge';
+                    g[4][mid] = 'armor'; g[4][mid-1] = 'armor';
+                    g[5][mid] = 'reactor'; g[5][mid-1] = 'reactor';
+                    g[5][mid+1] = 'laser'; g[5][mid-2] = 'laser';
+                    g[6][mid] = 'thruster'; g[6][mid-1] = 'thruster';
+                    g[6][mid+1] = 'thruster'; g[6][mid-2] = 'thruster';
+                } else if (type === 'dreadnought') {
+                    // Heavy armored fortress
+                    for (let r = 2; r <= 8; r++) {
+                        for (let c = mid - 3; c <= mid + 2; c++) {
+                            if (r === 2) g[r][c] = 'armor';
+                            else if (r === 3 && (c === mid || c === mid - 1)) g[r][c] = 'bridge';
+                            else if (r >= 4 && r <= 6) {
+                                if (c === mid - 3 || c === mid + 2) g[r][c] = 'plasma';
+                                else if (c === mid - 2 || c === mid + 1) g[r][c] = 'shield';
+                                else g[r][c] = 'reactor';
+                            } else if (r >= 7) {
+                                g[r][c] = 'thruster';
+                            }
+                        }
+                    }
+                } else if (type === 'harvester') {
+                    // Industrial ore rig
+                    g[4][mid] = 'bridge'; g[4][mid-1] = 'bridge';
+                    g[3][mid] = 'mining_laser'; g[3][mid-1] = 'mining_laser';
+                    g[5][mid-2] = 'cargo'; g[5][mid-1] = 'cargo'; g[5][mid] = 'cargo'; g[5][mid+1] = 'cargo';
+                    g[6][mid-1] = 'reactor'; g[6][mid] = 'reactor';
+                    g[7][mid-1] = 'thruster'; g[7][mid] = 'thruster';
+                }
+                window.shipGrid = g;
+                if (typeof window.calcShipStats === 'function') window.calcShipStats();
+                if (typeof window.renderBlueprintGrid === 'function') window.renderBlueprintGrid();
+                showToast(`PRESET LOADED: ${type.toUpperCase()}`);
+                document.getElementById('blueprint-code-modal').style.display = 'none';
+            },
+            hookTelemetryEvents() {
+                // Monitor shakedown flight start
+                const navFlight = document.querySelector('.nav-btn[data-target="flight-view"]');
+                navFlight?.addEventListener('click', () => {
+                    this.flightTelemetry = {
+                        startTime: Date.now(),
+                        durationSec: 0,
+                        topSpeed: 0,
+                        hostilesDowned: 0,
+                        oreHarvested: 0,
+                        damageAbsorbed: 0,
+                        shotsFired: 0
+                    };
+                });
+
+                // Wrap flight dock button to show black box debrief
+                const btnDock = document.getElementById('btn-flight-dock');
+                if (btnDock) {
+                    btnDock.addEventListener('click', (e) => {
+                        e.stopImmediatePropagation();
+                        audio?.playClick?.();
+                        this.openDebriefModal();
+                    }, true);
+                }
+            },
+            recordFlightStep(speed, enemiesKilled, cargoOre, shieldDrain) {
+                const t = this.flightTelemetry;
+                if (speed > t.topSpeed) t.topSpeed = speed;
+                if (enemiesKilled > t.hostilesDowned) t.hostilesDowned = enemiesKilled;
+                if (cargoOre > t.oreHarvested) t.oreHarvested = cargoOre;
+                if (shieldDrain) t.damageAbsorbed += shieldDrain;
+            },
+            openDebriefModal() {
+                const t = this.flightTelemetry;
+                t.durationSec = Math.max(1, Math.round((Date.now() - (t.startTime || Date.now())) / 1000));
+                
+                // Read live player stats from flightSim if available
+                if (window.flightSim?.player) {
+                    const p = window.flightSim.player;
+                    const spd = Math.floor(Math.hypot(p.vx || 0, p.vy || 0) * 25);
+                    if (spd > t.topSpeed) t.topSpeed = spd;
+                    t.oreHarvested = p.cargoOre || 0;
+                }
+
+                const score = (t.hostilesDowned * 1200) + (t.oreHarvested * 80) + (t.topSpeed * 10) + (t.durationSec * 15);
+                let rating = 'CLASS-D EXPERIMENTAL';
+                if (score > 12000) rating = 'CLASS-S SUPERIOR';
+                else if (score > 7000) rating = 'CLASS-A SPACEWORTHY';
+                else if (score > 3000) rating = 'CLASS-B QUALIFIED';
+                else if (score > 1000) rating = 'CLASS-C SUB-STANDARD';
+
+                const elRating = document.getElementById('debrief-cert-rating');
+                if (elRating) elRating.textContent = rating;
+                const elScore = document.getElementById('debrief-score-badge');
+                if (elScore) elScore.textContent = `${score.toLocaleString()} PTS`;
+                const elDur = document.getElementById('debrief-duration');
+                if (elDur) elDur.textContent = `${t.durationSec}s`;
+                const elSpd = document.getElementById('debrief-top-speed');
+                if (elSpd) elSpd.textContent = `${t.topSpeed} m/s`;
+                const elHost = document.getElementById('debrief-hostiles');
+                if (elHost) elHost.textContent = t.hostilesDowned;
+                const elOre = document.getElementById('debrief-ore');
+                if (elOre) elOre.textContent = `${t.oreHarvested} TONS`;
+                const elShield = document.getElementById('debrief-shield-dmg');
+                if (elShield) elShield.textContent = `${Math.round(t.damageAbsorbed)} HP`;
+                const elHull = document.getElementById('debrief-hull-dmg');
+                if (elHull) elHull.textContent = 'NOMINAL (0 CRITICAL BREACHES)';
+
+                const modal = document.getElementById('flight-debrief-modal');
+                if (modal) modal.style.display = 'flex';
+            },
+            formatDebriefLog() {
+                const t = this.flightTelemetry;
+                return `--- STARFORGE IX // FLIGHT BLACK BOX DEBRIEF ---
+Timestamp: ${new Date().toISOString()}
+Flight Time: ${t.durationSec}s
+Peak Velocity: ${t.topSpeed} m/s
+Hostiles Neutralized: ${t.hostilesDowned}
+Ore Recovered: ${t.oreHarvested} TONS
+Shield Energy Depleted: ${Math.round(t.damageAbsorbed)} HP
+Subsystem Tuning: S:${this.overclock.shieldBias}% / T:${this.overclock.thrusterBias}% / W:${this.overclock.weaponBias}%
+Certification: APPROVED BY PROVING GROUNDS RANGE CONTROL`;
+            },
+            copyText(text, msg) {
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(text).then(() => showToast(msg)).catch(() => {
+                        this.fallbackCopy(text, msg);
+                    });
+                } else {
+                    this.fallbackCopy(text, msg);
+                }
+            },
+            fallbackCopy(text, msg) {
+                const ta = document.createElement('textarea');
+                ta.value = text;
+                ta.style.position = 'fixed';
+                ta.style.left = '-9999px';
+                document.body.appendChild(ta);
+                ta.select();
+                try {
+                    document.execCommand('copy');
+                    showToast(msg);
+                } catch (e) {
+                    showToast('COPY FAILED (CHECK PERMISSIONS)');
+                }
+                document.body.removeChild(ta);
+            }
+        };
+
+        // Initialize expansion on ready
+        setTimeout(() => {
+            starforgeExpansion.init();
+        }, 100);
+
         document.getElementById('btn-flight-dock')?.addEventListener('click', () => {
             audio.playClick();
             document.querySelector('.nav-btn[data-target="drydock-view"]')?.click();
