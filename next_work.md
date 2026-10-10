@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-expander
-next_agent: kilo-creator
+current_agent: kilo-creator
+next_agent: kilo-graphics
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -17,7 +17,7 @@ current_targets:
   kilo_tester: KMine
   kilo_usability: KPong
   kilo_qa: KPong
-  kilo_expander: KAudio
+  kilo_expander: KMine
 virtual_web_target: "kweb://portal"
 virtual_web_rotation:
   - "kweb://asm-temple"
@@ -32,11 +32,18 @@ virtual_web_rotation:
   - "kweb://geocities"
   - "kweb://users/~neon_rider"
 last_run:
-  agent: kilo-qa
-  app: KRogue
-  timestamp: "2026-10-10T03:13:00-07:00"
+  agent: kilo-expander
+  app: KAudio
+  timestamp: "2026-10-10T03:33:00-07:00"
 last_planner_run: "2026-10-09T15:32:00Z"
 ---
+
+### Agent Run Log — 2026-10-10T03:33 (kilo-expander)
+- **Status:** 🟢 Completed (`KAudio`)
+- Deep format expansion: Sun/NeXT .AU / .SND binary import/export (PCM16 big-endian) & Amiga IFF-8SVX tracker sample export.
+- DSP rack expansion: 12-bit Vintage DAC Bitcrusher (SP-1200) & Dual-LFO Stereo BBD Chorus.
+- Micro-Tuning scale engine: 12-TET, Just Intonation, Werckmeister III, Meantone, Slendro, Maqam Rast.
+- Build clean (`npm run build`, 142 KB < 999 KB). Advanced queue to `KMine`; handoff to `kilo-creator`.
 
 ### Agent Run Log — 2026-10-10T03:13 (kilo-qa)
 - **Status:** 🟢 Completed (`KRogue`)

@@ -520,6 +520,10 @@
       <button class="btn" id="btnQuickload" onclick="quickloadState()" title="Quickload session from browser storage (F9)">🔄 Load [F9]</button>
       <button class="btn" id="btnExportWav" title="Export 4-second rendered WAV file (Ctrl+E)">💾 Export WAV [Ctrl+E]</button>
       <button class="btn" id="btnExportMidi" onclick="exportMidiFile()" title="Export 16-step pattern to Standard MIDI (.mid Type 0) File">🎹 Export MIDI [.mid]</button>
+      <button class="btn" id="btnExportAu" onclick="exportAuFile()" title="Export 4-second rendered Sun/NeXT .AU / .SND Audio File">🔊 Export AU [.au]</button>
+      <button class="btn" id="btnExport8svx" onclick="export8svxFile()" title="Export Amiga IFF-8SVX 8-Bit Tracker Sample File">💾 Export 8SVX [.iff]</button>
+      <button class="btn" id="btnImportAu" onclick="importAuPrompt()" title="Import & Audition Sun/NeXT .AU / .SND Audio File">📂 Open AU/SND</button>
+      <input type="file" id="fileInputAu" accept=".au,.snd" style="display: none;">
       <button class="btn" id="btnExportJson" title="Save synthesizer state (Ctrl+S)">📄 Save JSON [Ctrl+S]</button>
       <button class="btn" id="btnImportJson" title="Open synthesizer state (Ctrl+O)">📂 Open JSON [Ctrl+O]</button>
       <input type="file" id="fileInputJson" accept=".json" style="display: none;">
@@ -762,6 +766,54 @@
             </div>
           </div>
         </div>
+
+        <!-- Lo-Fi Vintage DAC Bitcrusher (SP-1200 / Akai S950) -->
+        <div style="border-top: 1px dashed rgba(255,255,255,0.06); margin-top: 2px; padding-top: 6px;">
+          <div class="panel-header">
+            <label style="display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; color: #a855f7; cursor: pointer;">
+              <input type="checkbox" id="chkBitcrush"> 👾 Vintage DAC Bitcrusher (B)
+            </label>
+            <span style="font-size: 10px; color: #c084fc;">1999 SP-1200 Crunch</span>
+          </div>
+          <div class="control-row">
+            <span class="control-label">Bit Depth:</span>
+            <div class="slider-container">
+              <input type="range" id="crushBits" min="4" max="16" step="1" value="12">
+              <span class="val-display" id="valCrushBits">12-bit</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Stereo Analog BBD Chorus (Juno / Boss CE-1) -->
+        <div style="border-top: 1px dashed rgba(255,255,255,0.06); margin-top: 2px; padding-top: 6px;">
+          <div class="panel-header">
+            <label style="display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; color: #2dd4bf; cursor: pointer;">
+              <input type="checkbox" id="chkChorus"> 🌊 Stereo BBD Chorus (H)
+            </label>
+            <span style="font-size: 10px; color: #5eead4;">Dual LFO Ensemble</span>
+          </div>
+          <div class="control-row">
+            <span class="control-label">Rate:</span>
+            <div class="slider-container">
+              <input type="range" id="chorusRate" min="0.2" max="5.0" step="0.1" value="1.2">
+              <span class="val-display" id="valChorusRate">1.2Hz</span>
+            </div>
+          </div>
+          <div class="control-row">
+            <span class="control-label">Depth:</span>
+            <div class="slider-container">
+              <input type="range" id="chorusDepth" min="1" max="15" step="0.5" value="6.0">
+              <span class="val-display" id="valChorusDepth">6.0ms</span>
+            </div>
+          </div>
+          <div class="control-row">
+            <span class="control-label">Chorus Mix:</span>
+            <div class="slider-container">
+              <input type="range" id="chorusMix" min="0" max="1" step="0.05" value="0.40">
+              <span class="val-display" id="valChorusMix">40%</span>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -769,7 +821,17 @@
   <!-- Keyboard Piano UI -->
   <div class="keyboard-panel">
     <div class="keyboard-status">
-      <span>Virtual Piano Keys</span>
+      <div style="display: flex; gap: 8px; align-items: center;">
+        <span>Virtual Piano Keys</span>
+        <select id="scaleTuningSelect" class="select-input" style="font-size: 11px; padding: 2px 6px;" title="Micro-Tuning Temperament Scale">
+          <option value="12tet" selected>Tuning: 12-TET Standard</option>
+          <option value="just">Just Intonation (Ptolemy)</option>
+          <option value="werckmeister">Werckmeister III (1691)</option>
+          <option value="meantone">1/4-Comma Meantone</option>
+          <option value="slendro">Slendro Pentatonic</option>
+          <option value="rast">Maqam Rast (Quartertone)</option>
+        </select>
+      </div>
       <span id="recStatus" style="color: #ef4444; font-weight: 600;">Z: Rec, X: Play</span>
     </div>
     <div class="keys-wrapper" id="keysContainer"></div>
@@ -1015,11 +1077,26 @@
   let delayWetGainNode = null;
   let driveNode = null;
   let driveGainNode = null;
+  let crushNode = null;
+  let chorusDelayNode = null;
+  let chorusLfoNode = null;
+  let chorusLfoGainNode = null;
+  let chorusWetGainNode = null;
+  let chorusDryGainNode = null;
   let visMode = 'scope'; // 'scope' or 'spectrum'
 
   // Synthesizer Key & Note Configs
   const binds = ['A', 'W', 'S', 'E', 'D', 'F', 'T', 'G', 'Y', 'H', 'U', 'J', 'K'];
-  const freqs = [261.63, 277.18, 293.66, 311.13, 329.63, 349.23, 369.99, 392.00, 415.30, 440.00, 466.16, 493.88, 523.25];
+  const freqs12TET = [261.63, 277.18, 293.66, 311.13, 329.63, 349.23, 369.99, 392.00, 415.30, 440.00, 466.16, 493.88, 523.25];
+  let freqs = [...freqs12TET];
+  const TUNING_SCALES = {
+    '12tet': { name: '12-TET Standard', ratios: [1, 1.059463, 1.122462, 1.189207, 1.259921, 1.334840, 1.414214, 1.498307, 1.587401, 1.681793, 1.781797, 1.887749, 2.0] },
+    'just': { name: 'Just Intonation', ratios: [1, 16/15, 9/8, 6/5, 5/4, 4/3, 45/32, 3/2, 8/5, 5/3, 9/5, 15/8, 2.0] },
+    'werckmeister': { name: 'Werckmeister III', ratios: [1, 1.0535, 1.1177, 1.1852, 1.2539, 1.3333, 1.4047, 1.4953, 1.5802, 1.6749, 1.7778, 1.8792, 2.0] },
+    'meantone': { name: '1/4-Comma Meantone', ratios: [1, 1.0449, 1.1180, 1.1681, 1.2500, 1.3375, 1.3975, 1.4953, 1.5625, 1.6719, 1.7469, 1.8692, 2.0] },
+    'slendro': { name: 'Slendro Pentatonic', ratios: [1, 1.074, 1.152, 1.236, 1.326, 1.423, 1.527, 1.639, 1.758, 1.887, 2.025, 2.173, 2.0] },
+    'rast': { name: 'Maqam Rast', ratios: [1, 1.059, 1.122, 1.155, 1.260, 1.335, 1.414, 1.498, 1.587, 1.635, 1.782, 1.888, 2.0] }
+  };
   const noteNames = ['C4', 'C#4', 'D4', 'D#4', 'E4', 'F4', 'F#4', 'G4', 'G#4', 'A4', 'A#4', 'B4', 'C5'];
   const isBlack = [false, true, false, true, false, false, true, false, true, false, true, false, false];
 
@@ -1351,6 +1428,76 @@
       curve[i] = ((3 + k) * x * 20 * deg) / (Math.PI + k * Math.abs(x));
     }
     return curve;
+  }
+
+  // Bitcrusher Curve Generator
+  function makeBitcrushCurve(bits = 12) {
+    let steps = Math.pow(2, Math.max(2, Math.min(16, bits)) - 1);
+    let n = 65536;
+    let curve = new Float32Array(n);
+    for (let i = 0; i < n; ++i) {
+      let x = (i * 2) / (n - 1) - 1;
+      curve[i] = Math.round(x * steps) / steps;
+    }
+    return curve;
+  }
+
+  const chkBitcrush = document.getElementById('chkBitcrush');
+  const crushBits = document.getElementById('crushBits');
+  const valCrushBits = document.getElementById('valCrushBits');
+  if (chkBitcrush && crushBits) {
+    chkBitcrush.onchange = () => {
+      if (crushNode) crushNode.curve = chkBitcrush.checked ? makeBitcrushCurve(parseInt(crushBits.value)) : null;
+      saveAudioState();
+    };
+    crushBits.oninput = () => {
+      valCrushBits.textContent = crushBits.value + '-bit';
+      if (crushNode && chkBitcrush.checked) crushNode.curve = makeBitcrushCurve(parseInt(crushBits.value));
+      saveAudioState();
+    };
+  }
+
+  // Chorus Controls
+  const chkChorus = document.getElementById('chkChorus');
+  const chorusRate = document.getElementById('chorusRate');
+  const valChorusRate = document.getElementById('valChorusRate');
+  const chorusDepth = document.getElementById('chorusDepth');
+  const valChorusDepth = document.getElementById('valChorusDepth');
+  const chorusMix = document.getElementById('chorusMix');
+  const valChorusMix = document.getElementById('valChorusMix');
+  if (chkChorus) {
+    chkChorus.onchange = () => {
+      if (chorusWetGainNode && ctx) chorusWetGainNode.gain.setValueAtTime(chkChorus.checked ? parseFloat(chorusMix.value) : 0, ctx.currentTime);
+      saveAudioState();
+    };
+    chorusRate.oninput = () => {
+      valChorusRate.textContent = chorusRate.value + 'Hz';
+      if (chorusLfoNode && ctx) chorusLfoNode.frequency.setValueAtTime(parseFloat(chorusRate.value), ctx.currentTime);
+      saveAudioState();
+    };
+    chorusDepth.oninput = () => {
+      valChorusDepth.textContent = chorusDepth.value + 'ms';
+      if (chorusLfoGainNode && ctx) chorusLfoGainNode.gain.setValueAtTime(parseFloat(chorusDepth.value) / 1000, ctx.currentTime);
+      saveAudioState();
+    };
+    chorusMix.oninput = () => {
+      valChorusMix.textContent = Math.round(parseFloat(chorusMix.value) * 100) + '%';
+      if (chorusWetGainNode && ctx && chkChorus.checked) chorusWetGainNode.gain.setValueAtTime(parseFloat(chorusMix.value), ctx.currentTime);
+      saveAudioState();
+    };
+  }
+
+  // Micro-Tuning Temperament Scale Engine
+  const scaleTuningSelect = document.getElementById('scaleTuningSelect');
+  if (scaleTuningSelect) {
+    scaleTuningSelect.onchange = () => {
+      const scaleKey = scaleTuningSelect.value;
+      const def = TUNING_SCALES[scaleKey] || TUNING_SCALES['12tet'];
+      const baseC4 = 261.625565;
+      freqs = def.ratios.map(r => +(baseC4 * r).toFixed(2));
+      showToast(`🎼 Retuned to ${def.name}!`, 'info', 3000);
+      saveAudioState();
+    };
   }
 
   chkDrive.onchange = () => {
@@ -1844,14 +1991,47 @@
       delayDampFilter.connect(delayFeedbackNode);
       delayFeedbackNode.connect(delayNode);
 
-      // Audio Graph Connections
+      // Lo-Fi Vintage DAC Bitcrusher (SP-1200 / Akai S950)
+      crushNode = ctx.createWaveShaper();
+      if (document.getElementById('chkBitcrush') && document.getElementById('chkBitcrush').checked) {
+        crushNode.curve = makeBitcrushCurve(parseInt(document.getElementById('crushBits').value));
+      }
+
+      // Stereo BBD Chorus (Juno / Boss CE-1)
+      chorusDelayNode = ctx.createDelay(0.1);
+      chorusDelayNode.delayTime.setValueAtTime(0.012, ctx.currentTime);
+      chorusLfoNode = ctx.createOscillator();
+      chorusLfoNode.type = 'sine';
+      chorusLfoNode.frequency.setValueAtTime(parseFloat(document.getElementById('chorusRate').value || '1.2'), ctx.currentTime);
+      chorusLfoGainNode = ctx.createGain();
+      let depthMs = parseFloat(document.getElementById('chorusDepth').value || '6.0');
+      chorusLfoGainNode.gain.setValueAtTime(depthMs / 1000, ctx.currentTime);
+      chorusLfoNode.connect(chorusLfoGainNode);
+      chorusLfoGainNode.connect(chorusDelayNode.delayTime);
+      try { chorusLfoNode.start(); } catch(e){}
+
+      chorusDryGainNode = ctx.createGain();
+      chorusDryGainNode.gain.setValueAtTime(1.0, ctx.currentTime);
+      chorusWetGainNode = ctx.createGain();
+      chorusWetGainNode.gain.setValueAtTime(document.getElementById('chkChorus').checked ? parseFloat(document.getElementById('chorusMix').value) : 0, ctx.currentTime);
+
+      // Audio Graph Connections: filterNode -> driveNode -> crushNode -> driveGainNode
       filterNode.connect(driveNode);
-      driveNode.connect(driveGainNode);
+      driveNode.connect(crushNode);
+      crushNode.connect(driveGainNode);
 
-      driveGainNode.connect(delayDryGainNode);
+      // Split driveGainNode into Chorus Dry/Wet
+      driveGainNode.connect(chorusDryGainNode);
+      driveGainNode.connect(chorusDelayNode);
+      chorusDelayNode.connect(chorusWetGainNode);
+
+      // Recombine chorus to delay stage
+      chorusDryGainNode.connect(delayDryGainNode);
+      chorusDryGainNode.connect(delayNode);
+      chorusWetGainNode.connect(delayDryGainNode);
+      chorusWetGainNode.connect(delayNode);
+
       delayDryGainNode.connect(masterGain);
-
-      driveGainNode.connect(delayNode);
       delayNode.connect(delayWetGainNode);
       delayWetGainNode.connect(masterGain);
 
@@ -3093,6 +3273,235 @@
       offset++;
     }
     return new Blob([buffer], {type: "audio/wav"});
+  }
+
+
+  // Sun/NeXT .AU / .SND Audio Format Exporter (Big-Endian 16-Bit Linear PCM, 44.1kHz)
+  function bufferToAu(abuffer, len) {
+    const numOfChan = abuffer.numberOfChannels;
+    const dataSize = len * numOfChan * 2;
+    const headerSize = 24;
+    const totalSize = headerSize + dataSize;
+    const buffer = new ArrayBuffer(totalSize);
+    const view = new DataView(buffer);
+
+    view.setUint32(0, 0x2E736E64, false); // Magic: ".snd"
+    view.setUint32(4, headerSize, false); // Data offset: 24 bytes
+    view.setUint32(8, dataSize, false);   // Data size in bytes
+    view.setUint32(12, 3, false);          // Encoding: 3 = 16-bit linear PCM
+    view.setUint32(16, abuffer.sampleRate, false); // Sample Rate
+    view.setUint32(20, numOfChan, false); // Channels
+
+    let pos = headerSize;
+    let channels = [];
+    for (let c = 0; c < numOfChan; c++) channels.push(abuffer.getChannelData(c));
+
+    for (let i = 0; i < len; i++) {
+      for (let ch = 0; ch < numOfChan; ch++) {
+        let sample = Math.max(-1, Math.min(1, channels[ch][i]));
+        let val = (sample < 0 ? sample * 32768 : sample * 32767) | 0;
+        view.setInt16(pos, val, false); // Big-endian
+        pos += 2;
+      }
+    }
+    return new Blob([buffer], { type: 'audio/basic' });
+  }
+
+  async function exportAuFile() {
+    initAudio();
+    const hasActiveSteps = seqTracks.some(t => t.grid.some(Boolean));
+    if (!hasActiveSteps) {
+      showToast('⚠️ Sequencer grid has no active steps! Enable steps first.', 'warning', 3000);
+      return;
+    }
+    showToast('🔊 Rendering Sun/NeXT .AU master audio...', 'info', 2000);
+    const duration = 4.0;
+    const sampleRate = 44100;
+    const offlineCtx = new OfflineAudioContext(1, sampleRate * duration, sampleRate);
+    let offFilter = offlineCtx.createBiquadFilter();
+    offFilter.type = filterType.value;
+    offFilter.frequency.setValueAtTime(parseFloat(filterCutoff.value), 0);
+    offFilter.connect(offlineCtx.destination);
+
+    const bpm = parseInt(seqBpmEl.value);
+    const stepTime = 60 / bpm / 4;
+    seqTracks.forEach(track => {
+      for (let st = 0; st < 16; st++) {
+        if (track.grid[st]) {
+          let tStart = st * stepTime;
+          let osc = offlineCtx.createOscillator();
+          osc.type = waveSelect.value;
+          let noteFreq = freqs[0];
+          if (track.notes && track.notes.length) noteFreq = 261.63 * Math.pow(2, (track.notes[st % track.notes.length] || 0) / 12);
+          osc.frequency.setValueAtTime(noteFreq, tStart);
+          let env = offlineCtx.createGain();
+          env.gain.setValueAtTime(0, tStart);
+          env.gain.linearRampToValueAtTime(0.4, tStart + 0.01);
+          env.gain.exponentialRampToValueAtTime(0.001, tStart + 0.2);
+          osc.connect(env);
+          env.connect(offFilter);
+          osc.start(tStart);
+          osc.stop(tStart + 0.25);
+        }
+      }
+    });
+
+    const rendered = await offlineCtx.startRendering();
+    const auBlob = bufferToAu(rendered, Math.floor(sampleRate * duration));
+    const url = URL.createObjectURL(auBlob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'kaudio_master.au';
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    showToast('🔊 Exported Sun/NeXT .AU audio (44.1kHz Big-Endian PCM16)!', 'success', 3500);
+  }
+
+  // Commodore Amiga IFF-8SVX Audio Sample Exporter (8-Bit Signed PCM)
+  function bufferTo8svx(abuffer, len) {
+    const sRate = abuffer.sampleRate;
+    const chanData = abuffer.getChannelData(0);
+    const nameStr = 'KAudio-Amiga-1999';
+    const nameChunkLen = nameStr.length + (nameStr.length % 2);
+    const bodyLen = len + (len % 2);
+    const totalSize = 4 + 8 + 20 + 8 + nameChunkLen + 8 + bodyLen;
+    const buffer = new ArrayBuffer(totalSize + 8);
+    const view = new DataView(buffer);
+    let pos = 0;
+
+    function writeStr(str) {
+      for (let i = 0; i < str.length; i++) view.setUint8(pos++, str.charCodeAt(i));
+    }
+
+    writeStr('FORM');
+    view.setUint32(pos, totalSize, false); pos += 4;
+    writeStr('8SVX');
+
+    // VHDR chunk
+    writeStr('VHDR');
+    view.setUint32(pos, 20, false); pos += 4;
+    view.setUint32(pos, len, false); pos += 4; // oneShotHiSamples
+    view.setUint32(pos, 0, false); pos += 4;   // repeatHiSamples
+    view.setUint32(pos, 0, false); pos += 4;   // samplesPerHiCycle
+    view.setUint16(pos, Math.min(65535, sRate), false); pos += 2; // samplesPerSec
+    view.setUint8(pos++, 1); // ctOctave
+    view.setUint8(pos++, 0); // sCompression (none)
+    view.setUint32(pos, 0x00010000, false); pos += 4; // volume: 1.0 (fixed 16.16)
+
+    // NAME chunk
+    writeStr('NAME');
+    view.setUint32(pos, nameChunkLen, false); pos += 4;
+    writeStr(nameStr);
+    if (nameStr.length % 2 !== 0) view.setUint8(pos++, 0);
+
+    // BODY chunk
+    writeStr('BODY');
+    view.setUint32(pos, bodyLen, false); pos += 4;
+    for (let i = 0; i < len; i++) {
+      let sample = Math.max(-1, Math.min(1, chanData[i]));
+      view.setInt8(pos++, (sample * 127) | 0);
+    }
+    if (len % 2 !== 0) view.setUint8(pos++, 0);
+
+    return new Blob([buffer], { type: 'application/octet-stream' });
+  }
+
+  async function export8svxFile() {
+    initAudio();
+    const duration = 2.0;
+    const sampleRate = 22050;
+    const offlineCtx = new OfflineAudioContext(1, sampleRate * duration, sampleRate);
+    let osc = offlineCtx.createOscillator();
+    osc.type = waveSelect.value;
+    osc.frequency.setValueAtTime(freqs[0], 0);
+    let env = offlineCtx.createGain();
+    env.gain.setValueAtTime(0.8, 0);
+    env.gain.exponentialRampToValueAtTime(0.001, duration - 0.05);
+    osc.connect(env);
+    env.connect(offlineCtx.destination);
+    osc.start(0);
+    osc.stop(duration);
+
+    const rendered = await offlineCtx.startRendering();
+    const iffBlob = bufferTo8svx(rendered, Math.floor(sampleRate * duration));
+    const url = URL.createObjectURL(iffBlob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'kaudio_sample.iff';
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    showToast('💾 Exported Amiga IFF-8SVX tracker sample (22.05kHz 8-bit PCM)!', 'success', 3500);
+  }
+
+  // Sun/NeXT .AU / .SND Binary File Importer & Telemetry Audition
+  function importAuPrompt() {
+    const input = document.getElementById('fileInputAu');
+    if (input) {
+      input.value = '';
+      input.click();
+    }
+  }
+
+  const fileInputAu = document.getElementById('fileInputAu');
+  if (fileInputAu) {
+    fileInputAu.onchange = async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      initAudio();
+      try {
+        const ab = await file.arrayBuffer();
+        const view = new DataView(ab);
+        const magic = view.getUint32(0, false);
+        if (magic !== 0x2E736E64) {
+          showToast('❌ Invalid .AU / .SND header magic! Expected 0x2E736E64 (".snd").', 'danger', 4000);
+          return;
+        }
+        const dataOffset = view.getUint32(4, false);
+        const dataSize = view.getUint32(8, false);
+        const encoding = view.getUint32(12, false);
+        const sampleRate = view.getUint32(16, false) || 44100;
+        const channels = Math.max(1, view.getUint32(20, false));
+
+        // Decode PCM
+        let sampleCount = (dataSize > 0 ? dataSize : ab.byteLength - dataOffset) / (encoding === 3 ? 2 : 1) / channels;
+        let audioBuf = ctx.createBuffer(channels, Math.floor(sampleCount), sampleRate);
+
+        if (encoding === 3) {
+          // 16-bit linear PCM Big-Endian
+          for (let ch = 0; ch < channels; ch++) {
+            let chData = audioBuf.getChannelData(ch);
+            let pos = dataOffset + ch * 2;
+            for (let i = 0; i < sampleCount; i++) {
+              if (pos + 1 < ab.byteLength) {
+                chData[i] = view.getInt16(pos, false) / 32768;
+                pos += channels * 2;
+              }
+            }
+          }
+        } else {
+          // 8-bit PCM / fallback
+          for (let ch = 0; ch < channels; ch++) {
+            let chData = audioBuf.getChannelData(ch);
+            let pos = dataOffset + ch;
+            for (let i = 0; i < sampleCount; i++) {
+              if (pos < ab.byteLength) {
+                chData[i] = (view.getInt8(pos) / 128);
+                pos += channels;
+              }
+            }
+          }
+        }
+
+        // Audition playback
+        let src = ctx.createBufferSource();
+        src.buffer = audioBuf;
+        src.connect(masterGain);
+        src.start();
+        showToast(`🔊 Auditioning Sun/NeXT .AU: ${file.name} (${sampleRate}Hz, ${channels}ch, ${audioBuf.duration.toFixed(2)}s, enc=${encoding})`, 'success', 4500);
+      } catch(err) {
+        showToast('❌ Failed to parse .AU / .SND binary file: ' + err.message, 'danger', 4000);
+      }
+    };
   }
 
   // Initialize visualizer idle baseline on load
