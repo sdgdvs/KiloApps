@@ -1,0 +1,10 @@
+{
+  "timestamp": "2026-10-10T22:02:47.795818+00:00",
+  "agent": "kilo-usability",
+  "model": "gemini-3.8-flash-medium",
+  "target": "KSnake",
+  "duration_seconds": 46.47,
+  "returncode": 0,
+  "success": true,
+  "provenance": null
+}

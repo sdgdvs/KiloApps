@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-expander
-next_agent: kilo-creator
+current_agent: kilo-creator
+next_agent: kilo-graphics
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -17,7 +17,7 @@ current_targets:
   kilo_tester: KSanctuary
   kilo_usability: KAudio
   kilo_qa: KAlchemy
-  kilo_expander: KAbyss
+  kilo_expander: KPong
 virtual_web_target: kweb://geocities
 virtual_web_rotation:
 - kweb://asm-temple
@@ -32,9 +32,9 @@ virtual_web_rotation:
 - kweb://geocities
 - kweb://users/~neon_rider
 last_run:
-  agent: kilo-qa
-  app: KBudget
-  timestamp: 2026-10-10T15:13:30-07:00
+  agent: kilo-expander
+  app: KAbyss
+  timestamp: 2026-10-10T15:22:00-07:00
 last_planner_run: '2026-10-10T16:30:00Z'
 ---
 
@@ -94,8 +94,8 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Upcoming Queue**: `KColony`, `KStarForge`, `KBreakout`, `KRogue`, `KPong`, `KPac`, `KBBS`, `KBudget`.
 
 ### 6. Feature Expander Queue (`kilo-expander`)
-- **Current Target**: `KColosseum`
-- **Upcoming Queue**: `KAbyss`, `KPong`, `KRogue`, `KChess`, `KMine`, `KPac`, `KStarForge`.
+- **Current Target**: `KPong`
+- **Upcoming Queue**: `KRogue`, `KChess`, `KMine`, `KPac`, `KStarForge`, `KColosseum`, `KAbyss`.
 
 ---
 
@@ -112,6 +112,11 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 ---
 
 ## Recent Execution Logs (Max 5 Entries)
+
+- **2026-10-10T15:22:00-07:00 — kilo-expander: KAbyss (Expedition Chronicle & Telemetry Expansion)**
+  - Status: PASS ✅ (Delver Chronicle tab, run seed generator, telemetry metrics, filterable event ledger, log export)
+  - Build & Size: Vite build clean (529ms); file size ~465 KB << 999 KB ceiling.
+  - Queue: Advanced expander target to `KPong`; rotation handoff to `kilo-creator`.
 
 - **2026-10-10T15:13:30-07:00 — kilo-qa: KBudget (Pass 5 QA & State Integrity Audit)**
   - Status: PASS ✅ (Zero Vite build errors; <999 KB ceiling verified: 67.4 KB)
@@ -135,9 +140,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Status: ⏭️ Skip — Imagen 3 asset replacement not appropriate for KDragon (pure vector, board game, or mature art).
   - Optimization: Handled via orchestrator pre-flight zero-token auto-skip.
   - Queue: Advanced `kilo-graphics` to `KDragon`; rotation handoff to `kilo-tester`.
-
-- **2026-10-10T14:31:30-07:00 — kilo-creator: kweb://warez (Virtual 1999 Web Scene Vault & Forensics)**
-  - Status: PASS ✅ (`kweb://warez` audited and verified; gold-standard scene vault)
-  - Features: 14 tabs (x86 sandbox, YM2612 tracker, 64KB intro arena, ANSI studio, FXP courier, PE-Pack '99).
-  - Integration: Verified `kweb://warez` in KNet, portal.html, webring.html; build clean (Vite 511ms, 415 KB < 999 KB).
-  - Queue: Advanced creator target to `kweb://geocities`; handoff to `kilo-graphics`.

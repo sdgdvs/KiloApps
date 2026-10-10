@@ -9437,13 +9437,277 @@
             e.target.value = '';
         });
 
-        // Tab Switching
-        document.querySelectorAll('.tab-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                const tab = btn.getAttribute('data-tab');
-                switchTab(tab);
+        // Tab Switching & Delver's Expedition Chronicle Expansion
+        let currentRunSeed = 'ABYSS-' + Math.floor(100000 + Math.random() * 900000);
+        const delveChronicle = [];
+        const delveStats = {
+            turns: 0,
+            monstersSlain: 0,
+            spellsCast: 0,
+            damageDealt: 0,
+            runesFound: 0,
+            potionsBrewed: 0,
+            goldAccumulated: 0
+        };
+
+        // Hook logMessage for live Chronicle tracking
+        const _baseLogMessage = typeof logMessage === 'function' ? logMessage : null;
+        if (_baseLogMessage) {
+            logMessage = function(text, type = '') {
+                _baseLogMessage(text, type);
+                try {
+                    const entry = {
+                        turn: typeof turn !== 'undefined' ? turn : 1,
+                        depth: typeof depthLevel !== 'undefined' ? depthLevel : 1,
+                        text: String(text),
+                        type: type || 'normal',
+                        timestamp: new Date().toLocaleTimeString()
+                    };
+                    delveChronicle.push(entry);
+                    if (delveChronicle.length > 300) delveChronicle.shift();
+
+                    if (type === 'combat') delveStats.damageDealt += 1;
+                    if (text.toLowerCase().includes('slain') || text.toLowerCase().includes('defeated') || text.toLowerCase().includes('crumbles')) {
+                        delveStats.monstersSlain++;
+                    }
+                    if (text.toLowerCase().includes('casts') || text.toLowerCase().includes('unleashes') || text.toLowerCase().includes('rune surge')) {
+                        delveStats.spellsCast++;
+                    }
+                    if (text.toLowerCase().includes('rune') && text.toLowerCase().includes('inscribed')) {
+                        delveStats.runesFound++;
+                    }
+                    if (text.toLowerCase().includes('brews') || text.toLowerCase().includes('cauldron')) {
+                        delveStats.potionsBrewed++;
+                    }
+
+                    const tabChron = document.getElementById('tabChronicle');
+                    if (tabChron && tabChron.style.display === 'flex') {
+                        renderChronicleEvents();
+                    }
+                } catch (err) {}
+            };
+        }
+
+        // Initialize Chronicle Tab in Sidebar DOM
+        function initChronicleSystem() {
+            const tabsHeader = document.querySelector('.tabs-header');
+            if (tabsHeader && !document.querySelector('.tab-btn[data-tab="chronicle"]')) {
+                const btn = document.createElement('button');
+                btn.className = 'tab-btn';
+                btn.setAttribute('data-tab', 'chronicle');
+                btn.textContent = 'Chronicle';
+                btn.title = 'Expedition Chronicle & Run Telemetry';
+                tabsHeader.appendChild(btn);
+            }
+
+            const sidebar = document.querySelector('.sidebar');
+            if (sidebar && !document.getElementById('tabChronicle')) {
+                const panel = document.createElement('div');
+                panel.className = 'tab-content';
+                panel.id = 'tabChronicle';
+                panel.style.display = 'none';
+                panel.innerHTML = `
+                    <div class="panel-section">
+                        <div class="section-header">
+                            <span>Delve Telemetry</span>
+                            <span id="chronSeedLabel" style="color:var(--text-gold); font-size:10px;">${currentRunSeed}</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-name">Delve Depth</span>
+                            <strong id="chronDepth" style="color:var(--accent-purple)">B1 (Caverns)</strong>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-name">Turns Elapsed</span>
+                            <strong id="chronTurns">1</strong>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-name">Horrors Vanquished</span>
+                            <strong id="chronKills" style="color:var(--accent-crimson)">0</strong>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-name">Spells Channeled</span>
+                            <strong id="chronSpells" style="color:var(--accent-cyan)">0</strong>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-name">Runes / Brews</span>
+                            <strong id="chronRunesBrews" style="color:var(--accent-emerald)">0 / 0</strong>
+                        </div>
+                        <div style="display:flex; gap:6px; margin-top:8px;">
+                            <button id="btnCopySeed" class="btn-action" style="flex:1; font-size:10px;" title="Copy current run seed">📋 Copy Seed</button>
+                            <button id="btnExportChronicle" class="btn-action" style="flex:1; font-size:10px;" title="Export Expedition log to clipboard">📤 Export Log</button>
+                        </div>
+                    </div>
+
+                    <div class="panel-section">
+                        <div class="section-header">
+                            <span>Expedition Ledger</span>
+                            <span id="chronLogCount" style="color:var(--text-dim); font-size:10px;">0 Events</span>
+                        </div>
+                        <div style="display:flex; gap:4px; margin-bottom:6px; flex-wrap:wrap;">
+                            <button class="chron-filter-btn active" data-filter="all" style="font-size:9px; padding:2px 6px;">All</button>
+                            <button class="chron-filter-btn" data-filter="combat" style="font-size:9px; padding:2px 6px;">Combat</button>
+                            <button class="chron-filter-btn" data-filter="relic" style="font-size:9px; padding:2px 6px;">Relics</button>
+                            <button class="chron-filter-btn" data-filter="important" style="font-size:9px; padding:2px 6px;">Alerts</button>
+                        </div>
+                        <input type="text" id="chronSearch" placeholder="Search delve ledger..." style="width:100%; background:#090d16; border:1px solid #1e293b; color:#cbd5e1; font-size:10px; padding:4px 6px; border-radius:3px; margin-bottom:6px;" />
+                        <div id="chronicleEventsList" style="display:flex; flex-direction:column; gap:4px; max-height:220px; overflow-y:auto; font-size:10px; font-family:var(--font-mono); background:#06080e; border:1px solid #131a29; border-radius:3px; padding:6px;">
+                            <div style="color:var(--text-dim); font-style:italic;">No logged events yet.</div>
+                        </div>
+                    </div>
+
+                    <div class="panel-section">
+                        <div class="section-header">Seed Cartography Lab</div>
+                        <div style="display:flex; gap:6px; align-items:center;">
+                            <input type="text" id="customSeedInput" placeholder="Custom Seed (e.g. ABYSS-99)" style="flex:1; background:#090d16; border:1px solid #1e293b; color:#cbd5e1; font-size:10px; padding:4px 6px; border-radius:3px;" />
+                            <button id="btnApplySeed" class="btn-primary" style="font-size:10px; padding:4px 8px;">Apply</button>
+                        </div>
+                    </div>
+                `;
+                sidebar.appendChild(panel);
+
+                // Wire up Chronicle buttons
+                document.getElementById('btnCopySeed')?.addEventListener('click', () => {
+                    try {
+                        navigator.clipboard.writeText(currentRunSeed);
+                        showToast(`Seed ${currentRunSeed} copied to clipboard!`, 'info');
+                    } catch (e) {
+                        showToast(`Seed: ${currentRunSeed}`, 'info');
+                    }
+                });
+
+                document.getElementById('btnExportChronicle')?.addEventListener('click', () => {
+                    try {
+                        const summary = [
+                            `=== KABYSS EXPEDITION REPORT ===`,
+                            `Seed: ${currentRunSeed}`,
+                            `Depth: B${typeof depthLevel !== 'undefined' ? depthLevel : 1}`,
+                            `Turns: ${typeof turn !== 'undefined' ? turn : 1}`,
+                            `Slain: ${delveStats.monstersSlain}`,
+                            `Spells Cast: ${delveStats.spellsCast}`,
+                            `Runes/Brews: ${delveStats.runesFound} / ${delveStats.potionsBrewed}`,
+                            `================================`,
+                            ...delveChronicle.slice(-50).map(e => `[T${e.turn} B${e.depth}] ${e.text}`)
+                        ].join('\n');
+                        navigator.clipboard.writeText(summary);
+                        showToast('Delve report copied to clipboard!', 'info');
+                    } catch (e) {
+                        showToast('Export generated (clipboard restricted)', 'info');
+                    }
+                });
+
+                document.getElementById('btnApplySeed')?.addEventListener('click', () => {
+                    const input = document.getElementById('customSeedInput');
+                    const val = input ? input.value.trim() : '';
+                    if (val) {
+                        currentRunSeed = val.toUpperCase();
+                        const sLabel = document.getElementById('chronSeedLabel');
+                        if (sLabel) sLabel.textContent = currentRunSeed;
+                        showToast(`Cartography tuned to seed: ${currentRunSeed}`, 'info');
+                        if (typeof generateDungeon === 'function') {
+                            generateDungeon(1);
+                            render();
+                        }
+                    }
+                });
+
+                document.querySelectorAll('.chron-filter-btn').forEach(fBtn => {
+                    fBtn.addEventListener('click', () => {
+                        document.querySelectorAll('.chron-filter-btn').forEach(b => b.classList.remove('active'));
+                        fBtn.classList.add('active');
+                        renderChronicleEvents();
+                    });
+                });
+
+                document.getElementById('chronSearch')?.addEventListener('input', () => {
+                    renderChronicleEvents();
+                });
+            }
+        }
+
+        let activeChronicleFilter = 'all';
+
+        function renderChronicleUI() {
+            const zName = typeof ZONE_INFO !== 'undefined' && ZONE_INFO[getZone(depthLevel)] ? ZONE_INFO[getZone(depthLevel)].shortName : 'Abyss';
+            const depthEl = document.getElementById('chronDepth');
+            if (depthEl) depthEl.textContent = `B${typeof depthLevel !== 'undefined' ? depthLevel : 1} (${zName})`;
+            const turnsEl = document.getElementById('chronTurns');
+            if (turnsEl) turnsEl.textContent = String(typeof turn !== 'undefined' ? turn : 1);
+            const killsEl = document.getElementById('chronKills');
+            if (killsEl) killsEl.textContent = String(delveStats.monstersSlain);
+            const spellsEl = document.getElementById('chronSpells');
+            if (spellsEl) spellsEl.textContent = String(delveStats.spellsCast);
+            const rbEl = document.getElementById('chronRunesBrews');
+            if (rbEl) rbEl.textContent = `${delveStats.runesFound} / ${delveStats.potionsBrewed}`;
+            const seedEl = document.getElementById('chronSeedLabel');
+            if (seedEl) seedEl.textContent = currentRunSeed;
+
+            renderChronicleEvents();
+        }
+
+        function renderChronicleEvents() {
+            const list = document.getElementById('chronicleEventsList');
+            if (!list) return;
+            const filterBtn = document.querySelector('.chron-filter-btn.active');
+            const filter = filterBtn ? filterBtn.getAttribute('data-filter') : 'all';
+            const searchInput = document.getElementById('chronSearch');
+            const query = searchInput ? searchInput.value.toLowerCase().trim() : '';
+
+            let filtered = delveChronicle;
+            if (filter !== 'all') {
+                filtered = filtered.filter(e => e.type === filter);
+            }
+            if (query) {
+                filtered = filtered.filter(e => e.text.toLowerCase().includes(query));
+            }
+
+            const countEl = document.getElementById('chronLogCount');
+            if (countEl) countEl.textContent = `${filtered.length} Events`;
+
+            if (filtered.length === 0) {
+                list.innerHTML = `<div style="color:var(--text-dim); font-style:italic; padding:4px;">No matching chronicle entries.</div>`;
+                return;
+            }
+
+            list.innerHTML = filtered.slice(-60).reverse().map(e => {
+                let col = '#94a3b8';
+                if (e.type === 'combat') col = '#f87171';
+                else if (e.type === 'relic') col = '#c084fc';
+                else if (e.type === 'important') col = '#fbbf24';
+                else if (e.type === 'loot') col = '#34d399';
+                return `<div style="border-bottom:1px solid rgba(255,255,255,0.04); padding-bottom:3px;">
+                    <span style="color:#64748b;">[T${e.turn} B${e.depth}]</span>
+                    <span style="color:${col};">${e.text}</span>
+                </div>`;
+            }).join('');
+        }
+
+        // Bind All Tab Switching
+        function bindAllTabs() {
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.onclick = () => {
+                    const tab = btn.getAttribute('data-tab');
+                    switchTab(tab);
+                };
             });
-        });
+        }
+
+        // Enhanced switchTab supporting Chronicle tab
+        const _baseSwitchTab = typeof switchTab === 'function' ? switchTab : null;
+        switchTab = function(tabName) {
+            if (_baseSwitchTab) _baseSwitchTab(tabName);
+            const chronPanel = document.getElementById('tabChronicle');
+            const chronBtn = document.querySelector('.tab-btn[data-tab="chronicle"]');
+            if (tabName === 'chronicle') {
+                document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                if (chronPanel) chronPanel.style.display = 'flex';
+                if (chronBtn) chronBtn.classList.add('active');
+                renderChronicleUI();
+            } else {
+                if (chronPanel) chronPanel.style.display = 'none';
+                if (chronBtn) chronBtn.classList.remove('active');
+            }
+        };
 
         // Help Modal - Delver's Tome & Survival Codex
         const modal = document.getElementById('modalHelp');
@@ -9478,6 +9742,8 @@
 
         // Initialization
         window.addEventListener('load', () => {
+            initChronicleSystem();
+            bindAllTabs();
             generateDungeon(1);
             render();
             try {
