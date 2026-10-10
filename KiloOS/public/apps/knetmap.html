@@ -1438,8 +1438,26 @@ Type 'P' to test ping, 'T' for traceroute, or select links to inject faults.
       window.addEventListener('resize', resizeCanvas);
       resizeCanvas();
       setupCanvasInput();
-      requestAnimationFrame(renderLoop);
+      startLoop();
     }
+
+    function startLoop() {
+      if (!animFrameId) {
+        lastTimestamp = performance.now();
+        animFrameId = requestAnimationFrame(renderLoop);
+      }
+    }
+
+    function stopLoop() {
+      if (animFrameId) {
+        cancelAnimationFrame(animFrameId);
+        animFrameId = null;
+      }
+    }
+
+    document.addEventListener('visibilitychange', () => {
+      document.hidden ? stopLoop() : startLoop();
+    });
 
     function resizeCanvas() {
       const container = document.getElementById('canvasContainer');
@@ -2398,6 +2416,25 @@ Type 'P' to test ping, 'T' for traceroute, or select links to inject faults.
     }
 
     /* =========================================================================
+       STORAGE DEFENSE HELPERS
+       ========================================================================= */
+    function safeGet(key, fallback) {
+      try {
+        const val = localStorage.getItem(key);
+        return val !== null ? JSON.parse(val) : fallback;
+      } catch {
+        return fallback;
+      }
+    }
+    function safeSet(key, value) {
+      try {
+        localStorage.setItem(key, JSON.stringify(value));
+      } catch (e) {
+        console.warn('[KNetMap] Storage write failed:', e.message);
+      }
+    }
+
+    /* =========================================================================
        STATE PERSISTENCE (QUICKSAVE F5, QUICKLOAD F9, JSON EXPORT/IMPORT)
        ========================================================================= */
     function saveTopologyQuicksave() {
@@ -2408,20 +2445,19 @@ Type 'P' to test ping, 'T' for traceroute, or select links to inject faults.
         version: '1.0.0',
         timestamp: Date.now()
       };
-      localStorage.setItem('knetmap_quicksave', JSON.stringify(data));
+      safeSet('knetmap_quicksave', data);
       soundLinkConnect();
       showToast('Topology Quicksaved [F5]');
       logTerminal('[STATE SAVED] Topology configuration written to local persistent storage.', 'term-info');
     }
 
     function loadTopologyQuicksave() {
-      const raw = localStorage.getItem('knetmap_quicksave');
-      if (!raw) {
+      const data = safeGet('knetmap_quicksave', null);
+      if (!data) {
         showToast('No Quicksave Found');
         return;
       }
       try {
-        const data = JSON.parse(raw);
         TOPOLOGY.nodes = data.nodes || [];
         TOPOLOGY.links = data.links || [];
         if (data.subnets) TOPOLOGY.subnets = data.subnets;
@@ -2464,7 +2500,7 @@ Type 'P' to test ping, 'T' for traceroute, or select links to inject faults.
     let currentTutStep = 0;
 
     function checkFirstRunTutorial() {
-      if (!localStorage.getItem('kknetmap_tutorialSeen')) {
+      if (!safeGet('kknetmap_tutorialSeen', null)) {
         setTimeout(openTutorial, 500);
       }
     }
@@ -2506,7 +2542,7 @@ Type 'P' to test ping, 'T' for traceroute, or select links to inject faults.
     }
 
     function dismissTutorial() {
-      localStorage.setItem('kknetmap_tutorialSeen', '1');
+      safeSet('kknetmap_tutorialSeen', '1');
       document.getElementById('tutorialModal').classList.remove('active');
       showToast('Tutorial Completed');
     }
@@ -2717,12 +2753,7 @@ Type 'P' to test ping, 'T' for traceroute, or select links to inject faults.
       });
 
       // Check for quicksave availability for splash screen
-      let hasQuicksave = false;
-      try {
-        hasQuicksave = !!localStorage.getItem('knetmap_quicksave');
-      } catch (err) {
-        hasQuicksave = false;
-      }
+      const hasQuicksave = !!safeGet('knetmap_quicksave', null);
       if (!hasQuicksave) {
         const btn = document.getElementById('splashLoadBtn');
         if (btn) btn.style.display = 'none';
