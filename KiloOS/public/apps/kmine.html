@@ -559,6 +559,8 @@
         <div><kbd>F</kbd></div><div>Toggle ⛏️ Dig / 🚩 Flag Mode (Touch Friendly)</div>
         <div><kbd>N</kbd></div><div>Cyber Duel Arena (Online Multiplayer & Local AI)</div>
         <div><kbd>4</kbd></div><div>Custom Grid Configuration Dialog</div>
+        <div><kbd>Z</kbd></div><div>Tactical Deduction Scanner (Probability & Safe Frontiers)</div>
+        <div><kbd>T</kbd></div><div>Cycle Visual Themes (Cyber / Retro 1999 / Sonar)</div>
         <div><kbd>M</kbd></div><div>Toggle Procedural Audio Sound Effects</div>
         <div><kbd>H</kbd></div><div>Safe Move Hint (reveals a guaranteed safe tile)</div>
         <div><kbd>F2</kbd></div><div>Restart New Game on current difficulty</div>
@@ -710,11 +712,14 @@
     <button onclick="giveHint()" title="Reveal Safe Tile (H)">💡 Hint <span class="badge">H</span></button>
     <button id="duelBtn" class="btn-accent" onclick="toggleMultiplayerModal(true)" title="Online & Local AI Speed Duel (N)">⚔️ Duel <span class="badge">N</span></button>
     <button id="customBtn" onclick="toggleCustomModal(true)" title="Configure Custom Grid (4)">⚙️ Custom <span class="badge">4</span></button>
+    <button id="scannerBtn" onclick="toggleTacticalScanner()" title="Toggle Probability Deduction Scanner (Z)">🔬 Scan <span class="badge">Z</span></button>
+    <button id="themeBtn" onclick="cycleTheme()" title="Switch Visual Theme (T)">🎨 Theme <span class="badge">T</span></button>
   </div>
 
   <span id="status">💣 40 | ⏱️ 0s</span>
 
   <div class="stats-box">🏆 Best: <span id="bestTime" style="color:#fff;">--</span>s</div>
+  <div class="stats-box" id="bvvBox" title="Board Benchmark Value (3BV) & Click Efficiency">⚡ 3BV: <span id="bvvVal" style="color:#fff;">--</span> (<span id="effVal" style="color:#3fb950;">--%</span>)</div>
 
   <div class="ctrl-group">
     <button id="audioToggleBtn" onclick="toggleAudio()" title="Toggle Sound FX (M)">🔊 Sound <span class="badge">M</span></button>
@@ -737,6 +742,8 @@
   <span><kbd>F</kbd> Mode</span>
   <span><kbd>N</kbd> Duel</span>
   <span><kbd>4</kbd> Custom</span>
+  <span><kbd>Z</kbd> Scanner</span>
+  <span><kbd>T</kbd> Theme</span>
   <span><kbd>M</kbd> Sound</span>
   <span><kbd>H</kbd> Hint</span>
   <span><kbd>E</kbd> JSON</span>
@@ -827,6 +834,13 @@
   let isReplaying = false;
   let startRealTime = 0;
   let quickSaveData = null;
+
+  // Deep Expansion: 3BV Benchmark Engine, Tactical Deduction Scanner & Themes
+  let current3BV = 0;
+  let totalClicks = 0;
+  let scannerActive = safeGetStorage('kmine_scanner', '0') === '1';
+  let currentTheme = safeGetStorage('kmine_theme', 'cyber'); // 'cyber' | 'retro1999' | 'sonar'
+
 
   // RFMS Multiplayer & Speed Duel State
   let rMultiplayer = null;
@@ -1563,6 +1577,126 @@
     }
   }
   
+  // --- Deep Expansion: 3BV Engine, Tactical Deduction Scanner & Themes ---
+  function calculate3BV() {
+    if (!grid || grid.length === 0) return 0;
+    const visited = Array.from({ length: rows }, () => Array(cols).fill(false));
+    let bvv = 0;
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        if (grid[r][c] === 0 && !visited[r][c]) {
+          bvv++;
+          const q = [[r, c]];
+          visited[r][c] = true;
+          while (q.length > 0) {
+            const [cr, cc] = q.pop();
+            for (let dr = -1; dr <= 1; dr++) {
+              for (let dc = -1; dc <= 1; dc++) {
+                const nr = cr + dr, nc = cc + dc;
+                if (nr >= 0 && nr < rows && nc >= 0 && nc < cols) {
+                  if (!visited[nr][nc]) {
+                    visited[nr][nc] = true;
+                    if (grid[nr][nc] === 0) q.push([nr, nc]);
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        if (grid[r][c] > 0 && !visited[r][c]) {
+          bvv++;
+        }
+      }
+    }
+    current3BV = Math.max(1, bvv);
+    update3BVDisplay();
+    return current3BV;
+  }
+
+  function update3BVDisplay() {
+    const bvvEl = document.getElementById('bvvVal');
+    const effEl = document.getElementById('effVal');
+    if (bvvEl) bvvEl.textContent = current3BV > 0 ? current3BV : '--';
+    if (effEl) {
+      if (totalClicks > 0 && current3BV > 0) {
+        const eff = Math.min(200, Math.round((current3BV / totalClicks) * 100));
+        effEl.textContent = eff + '%';
+        effEl.style.color = eff >= 100 ? '#3fb950' : (eff >= 70 ? '#58a6ff' : '#d29922');
+      } else {
+        effEl.textContent = '--%';
+      }
+    }
+  }
+
+  function toggleTacticalScanner() {
+    scannerActive = !scannerActive;
+    safeSetStorage('kmine_scanner', scannerActive ? '1' : '0');
+    const btn = document.getElementById('scannerBtn');
+    if (btn) {
+      if (scannerActive) btn.classList.add('btn-accent');
+      else btn.classList.remove('btn-accent');
+    }
+    showToast(scannerActive ? '🔬 Tactical Deduction Scanner ACTIVE' : '🔬 Tactical Scanner OFF', scannerActive ? 'success' : 'info');
+  }
+
+  function cycleTheme() {
+    const themes = ['cyber', 'retro1999', 'sonar'];
+    let idx = themes.indexOf(currentTheme);
+    currentTheme = themes[(idx + 1) % themes.length];
+    safeSetStorage('kmine_theme', currentTheme);
+    const names = { cyber: '⚡ Cyber Slate', retro1999: '💾 Retro 1999 Win98', sonar: '📡 Sonar Phosphor' };
+    showToast(🎨 Theme: , 'info');
+  }
+
+  function computeProbabilityMap() {
+    const probMap = {};
+    if (!grid || grid.length === 0) return probMap;
+    for (let y = 0; y < rows; y++) {
+      for (let x = 0; x < cols; x++) {
+        if (state[y] && state[y][x] === 1 && grid[y][x] > 0) {
+          let needed = grid[y][x];
+          const hiddenUnflagged = [];
+          for (let dy = -1; dy <= 1; dy++) {
+            for (let dx = -1; dx <= 1; dx++) {
+              if (dx === 0 && dy === 0) continue;
+              const nx = x + dx, ny = y + dy;
+              if (nx >= 0 && nx < cols && ny >= 0 && ny < rows) {
+                if (state[ny][nx] === 2) needed--;
+                else if (state[ny][nx] === 0) hiddenUnflagged.push({ x: nx, y: ny });
+              }
+            }
+          }
+          if (hiddenUnflagged.length > 0) {
+            if (needed <= 0) {
+              for (const h of hiddenUnflagged) {
+                probMap[${h.x},] = { prob: 0, safe: true, mine: false };
+              }
+            } else if (needed === hiddenUnflagged.length) {
+              for (const h of hiddenUnflagged) {
+                const k = ${h.x},;
+                if (!probMap[k] || !probMap[k].safe) {
+                  probMap[k] = { prob: 1, safe: false, mine: true };
+                }
+              }
+            } else {
+              const p = needed / hiddenUnflagged.length;
+              for (const h of hiddenUnflagged) {
+                const k = ${h.x},;
+                if (!probMap[k]) probMap[k] = { prob: p, safe: false, mine: false };
+                else if (!probMap[k].safe && !probMap[k].mine) probMap[k].prob = Math.max(probMap[k].prob, p);
+              }
+            }
+          }
+        }
+      }
+    }
+    return probMap;
+  }
+
   function initGame(keepGrid = false) {
     gameOver = 0;
     flags = 0;
@@ -1590,6 +1724,7 @@
     if (btn === 0) {
       if (firstClick) {
         firstClick = false;
+      calculate3BV();
         generateMines(x, y);
         startRealTime = Date.now();
         if (!isReplaying) startTimer();
@@ -1646,6 +1781,7 @@
   }
   
   function reveal(x, y) {
+    if (gameOver === 0) { totalClicks++; update3BVDisplay(); }
     if (x < 0 || x >= cols || y < 0 || y >= rows || state[y][x] !== 0) return;
     state[y][x] = 1;
     if (grid[y][x] === 9) {
@@ -2495,7 +2631,8 @@
       grid = d.grid; state = d.state;
       timeElapsed = d.timeElapsed; flags = d.flags;
       moves = d.moves || [];
-      firstClick = false; gameOver = 0; isReplaying = false;
+      firstClick = false;
+      calculate3BV(); gameOver = 0; isReplaying = false;
       document.getElementById('replayBtn').style.display = 'none';
       startRealTime = Date.now() - (d.timeOffset || 0);
       stopTimer(); startTimer();
@@ -2680,7 +2817,13 @@
       ctx.translate(-totalW / 2, -totalH / 2);
     }
 
-    ctx.fillStyle = "#090d16";
+    const themes = {
+      cyber: { bg: "#090d16", cell: "#1e293b", borderL: "#475569", borderD: "#0f172a" },
+      retro1999: { bg: "#c0c0c0", cell: "#c0c0c0", borderL: "#ffffff", borderD: "#808080" },
+      sonar: { bg: "#02120a", cell: "#062816", borderL: "#10b981", borderD: "#02180c" }
+    };
+    const tTheme = themes[currentTheme] || themes.cyber;
+    ctx.fillStyle = tTheme.bg;
     ctx.fillRect(0, 0, totalW, totalH);
 
     for (let mote of dustMotes) {
