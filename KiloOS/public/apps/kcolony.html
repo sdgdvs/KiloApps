@@ -621,6 +621,18 @@
             generateTerrain();
             updateUI();
             renderAll();
+
+            // First-run tutorial prompt: fire only once for fresh commanders, never on restored states
+            try {
+                if (!localStorage.getItem('kcolony_tutorialSeen')) {
+                    localStorage.setItem('kcolony_tutorialSeen', '1');
+                    setTimeout(() => {
+                        showToast("Tutorial Directive", "Build Solar Panels [1] & Farms [2] first. Press [H]/[F1] for Admin Manual, [F5] Quicksave.", "discovery", 7000);
+                    }, 500);
+                }
+            } catch (e) {
+                // Ignore localStorage errors
+            }
         }
         
         function selectType(type) {
@@ -1964,6 +1976,15 @@
                     document.getElementById('start-screen').style.display = 'flex';
                 }
             }, 2000);
+
+            document.addEventListener('visibilitychange', () => {
+                // Audio and loop idle handling on background tab
+                if (document.hidden && audioCtx && audioCtx.state === 'running') {
+                    audioCtx.suspend().catch(() => {});
+                } else if (!document.hidden && audioCtx && audioCtx.state === 'suspended') {
+                    audioCtx.resume().catch(() => {});
+                }
+            });
         }
 
         init();
