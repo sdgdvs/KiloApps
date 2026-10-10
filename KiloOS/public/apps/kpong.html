@@ -2979,22 +2979,36 @@
   let isTabHidden = false;
 
   function gameLoop(timestamp) {
-      if (!isTabHidden) {
-          update();
-          draw();
-      }
+      if (isTabHidden) return;
+      update();
+      draw();
       animFrameId = requestAnimationFrame(gameLoop);
   }
-  animFrameId = requestAnimationFrame(gameLoop);
+
+  function startLoop() {
+      if (animFrameId) cancelAnimationFrame(animFrameId);
+      isTabHidden = false;
+      animFrameId = requestAnimationFrame(gameLoop);
+  }
+
+  function stopLoop() {
+      isTabHidden = true;
+      if (animFrameId) {
+          cancelAnimationFrame(animFrameId);
+          animFrameId = null;
+      }
+  }
+
+  startLoop();
 
   document.addEventListener('visibilitychange', () => {
       if (document.hidden) {
-          isTabHidden = true;
+          stopLoop();
           if (!isPaused && !gameOver && !isReplaying) {
               togglePause();
           }
       } else {
-          isTabHidden = false;
+          startLoop();
       }
   });
 </script>
