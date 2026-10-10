@@ -4,6 +4,12 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-09T11:15:00-07:00 — kilo-qa: KBudget (Pass 5 QA & State Persistence Audit)**
+  - Status: PASS ✅ (`KBudget` Pass 5 tutorial & state persistence audit clean)
+  - Features: Verified F5/F9 quicksave/quickload, first-run tutorial flag, modal shortcuts, and CSV/JSON export.
+  - Sizing & Security: 67KB (<999KB), zero ARG leaks, all blob URLs revoked, quota-guarded storage.
+  - Build: Production build clean (`npm run build` 0 errors); advanced `kilo_qa` to `KAlchemy`; handoff to `kilo-expander`.
+
 - **2026-10-09T09:32:00-07:00 — kilo-graphics: KMech (Skip Turn — Inappropriate Target)**
   - Status: ⏭️ Skip — Imagen 3 asset replacement not appropriate for KMech
   - Audit: Tactical CRT HUD & SVG wireframe schematic renderer; no glints or perimeter dots found.
