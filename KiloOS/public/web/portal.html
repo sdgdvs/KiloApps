@@ -2336,6 +2336,7 @@
       <div class="portal-tab" id="tabNav-speedtest" onclick="switchPortalTab('speedtest')">⚡ Baud &amp; Speed Lab</div>
       <div class="portal-tab" id="tabNav-horoscope" onclick="switchPortalTab('horoscope')">🔮 Silicon Zodiac</div>
       <div class="portal-tab" id="tabNav-trivia" onclick="switchPortalTab('trivia')">🧠 1999 Trivia</div>
+      <div class="portal-tab" id="tabNav-y2k" onclick="switchPortalTab('y2k')">🛡️ Y2K Readiness Lab</div>
     </div>
   </header>
 
@@ -6953,9 +6954,182 @@ function selectZodiacSign(key) {
 /* =========================================================================
    12. TAB NAVIGATION & GENERAL CONTROLS
    ========================================================================= */
+
+/* =========================================================================
+   13. Y2K READINESS LAB & MILLENNIUM SIMULATOR
+   ========================================================================= */
+let y2kSimTimer = null;
+let y2kSimTarget = null;
+let y2kAudited = false;
+
+function initY2KLab() {
+  updateY2KCountdown();
+  if (!window._y2kInterval) {
+    window._y2kInterval = setInterval(updateY2KCountdown, 1000);
+  }
+  loadBunkerChecklist();
+}
+
+function updateY2KCountdown() {
+  const daysEl = document.getElementById('y2kDays');
+  const hoursEl = document.getElementById('y2kHours');
+  const minsEl = document.getElementById('y2kMins');
+  const secsEl = document.getElementById('y2kSecs');
+  if (!daysEl || !hoursEl || !minsEl || !secsEl) return;
+
+  let now = new Date();
+  let target = y2kSimTarget || new Date(2000, 0, 1, 0, 0, 0);
+  
+  if (y2kSimTarget) {
+    y2kSimTarget = new Date(y2kSimTarget.getTime() + 1000);
+    now = y2kSimTarget;
+    target = new Date(2000, 0, 1, 0, 0, 0);
+  }
+
+  let diff = target - now;
+  if (diff <= 0) {
+    daysEl.textContent = '00';
+    hoursEl.textContent = '00';
+    minsEl.textContent = '00';
+    secsEl.textContent = '00';
+    const statusEl = document.getElementById('y2kSimStatus');
+    if (statusEl) {
+      statusEl.textContent = '🚨 YEAR 2000 OCCURRED: SYSTEM INTEGRITY 100% OPERATIONAL!';
+      statusEl.style.color = '#39ff14';
+    }
+    return;
+  }
+
+  const d = Math.floor(diff / (1000 * 60 * 60 * 24));
+  const h = Math.floor((diff / (1000 * 60 * 60)) % 24);
+  const m = Math.floor((diff / (1000 * 60)) % 60);
+  const s = Math.floor((diff / 1000) % 60);
+
+  daysEl.textContent = String(d).padStart(2, '0');
+  hoursEl.textContent = String(h).padStart(2, '0');
+  minsEl.textContent = String(m).padStart(2, '0');
+  secsEl.textContent = String(s).padStart(2, '0');
+}
+
+function testY2KRollover() {
+  playClick();
+  y2kSimTarget = new Date(1999, 11, 31, 23, 59, 53);
+  const statusEl = document.getElementById('y2kSimStatus');
+  if (statusEl) {
+    statusEl.textContent = '⚠️ SIMULATION: 1999-12-31 23:59:53 WARPING TO MIDNIGHT...';
+    statusEl.style.color = '#ff9900';
+  }
+}
+
+function resetY2KClock() {
+  playClick();
+  y2kSimTarget = null;
+  const statusEl = document.getElementById('y2kSimStatus');
+  if (statusEl) {
+    statusEl.textContent = 'STATUS: SYNCHRONIZED TO ATOMIC STANDARD';
+    statusEl.style.color = '#ffff00';
+  }
+}
+
+function runY2KAudit() {
+  playClick();
+  const testBox = document.getElementById('y2kTestList');
+  if (!testBox) return;
+  testBox.innerHTML = '<div>[START] Initiating 5-Point Subsystem Audit...</div>';
+  
+  const tests = [
+    { name: 'RTC Century Register (Port 0x70 / 0x32)', result: 'PASSED (0x20 returned)' },
+    { name: 'BIOS 400-Year Leap Day Rule (Feb 29, 2000)', result: 'PASSED (Divisible by 400 OK)' },
+    { name: '2-Digit Date Windowing [Threshold 1930-2029]', result: 'PASSED (Zero Window Wrap)' },
+    { name: 'COBOL Record Syntax PIC 9(4) Expansion', result: 'PASSED (No Truncation)' },
+    { name: 'UNIX 32-bit time_t (Year 2038 Early Guard)', result: 'PASSED (68 Years Remaining)' }
+  ];
+
+  tests.forEach((t, idx) => {
+    setTimeout(() => {
+      const line = document.createElement('div');
+      line.style.color = '#00aa00';
+      line.textContent = `[${idx+1}/5] ${t.name} -> ${t.result}`;
+      testBox.appendChild(line);
+      testBox.scrollTop = testBox.scrollHeight;
+      if (idx === tests.length - 1) {
+        y2kAudited = true;
+        const score = document.getElementById('y2kOverallScore');
+        if (score) score.textContent = 'Score: 100% Y2K COMPLIANT';
+      }
+    }, (idx + 1) * 350);
+  });
+}
+
+function generateY2KCert() {
+  playClick();
+  const station = (document.getElementById('y2kCertStation') || {}).value || 'KiloOS Retro Workstation';
+  const bios = (document.getElementById('y2kCertBios') || {}).value || 'Award Modular BIOS v4.51';
+  const preview = document.getElementById('y2kCertPreview');
+  if (!preview) return;
+  
+  const text = `========================================================\n` +
+               `  OFFICIAL 1999 MILLENNIUM COMPLIANCE DECLARATION       \n` +
+               `========================================================\n` +
+               `ISSUED TO   : ${station}\n` +
+               `FIRMWARE    : ${bios}\n` +
+               `DATE AUDIT  : 1999-10-10 04:15:00 UTC\n` +
+               `STATUS      : CERTIFIED Y2K COMPLIANT (0x00 ERRORS)\n` +
+               `AUTHORITY   : KiloNet Central Telecommunications NOC\n` +
+               `========================================================`;
+  preview.textContent = text;
+  preview.style.display = 'block';
+}
+
+function downloadY2KCert() {
+  playClick();
+  const station = (document.getElementById('y2kCertStation') || {}).value || 'KiloOS Retro Workstation';
+  const bios = (document.getElementById('y2kCertBios') || {}).value || 'Award Modular BIOS v4.51';
+  const text = `========================================================\r\n` +
+               `  OFFICIAL 1999 MILLENNIUM COMPLIANCE DECLARATION       \r\n` +
+               `========================================================\r\n` +
+               `ISSUED TO   : ${station}\r\n` +
+               `FIRMWARE    : ${bios}\r\n` +
+               `DATE AUDIT  : 1999-10-10 04:15:00 UTC\r\n` +
+               `STATUS      : CERTIFIED Y2K COMPLIANT (0x00 ERRORS)\r\n` +
+               `AUTHORITY   : KiloNet Central Telecommunications NOC\r\n` +
+               `========================================================\r\n`;
+  const blob = new Blob([text], { type: 'text/plain' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'Y2K_COMPLIANCE_CERT_1999.TXT';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+}
+
+function loadBunkerChecklist() {
+  const items = ['water', 'dialup', 'cash', 'canned', 'tape', 'battery', 'paper', 'ham', 'floppy'];
+  try {
+    const saved = JSON.parse(localStorage.getItem('kilonet_y2k_bunker') || '{}');
+    items.forEach(k => {
+      const el = document.getElementById('bunker_' + k);
+      if (el) el.checked = !!saved[k];
+    });
+  } catch(e) {}
+}
+
+function saveBunkerItem(key) {
+  playClick();
+  const items = ['water', 'dialup', 'cash', 'canned', 'tape', 'battery', 'paper', 'ham', 'floppy'];
+  try {
+    const saved = {};
+    items.forEach(k => {
+      const el = document.getElementById('bunker_' + k);
+      if (el) saved[k] = el.checked;
+    });
+    localStorage.setItem('kilonet_y2k_bunker', JSON.stringify(saved));
+  } catch(e) {}
+}
+
 function switchPortalTab(tabName) {
   playClick();
-  const tabs = ['directory', 'mykilonet', 'downloads', 'webmail', 'comics', 'guestbook', 'noc', 'arcade', 'news', 'radio', 'stocks', 'classifieds', 'yellowpages', 'weather', 'speedtest', 'horoscope', 'trivia'];
+  const tabs = ['directory', 'mykilonet', 'downloads', 'webmail', 'comics', 'guestbook', 'noc', 'arcade', 'news', 'radio', 'stocks', 'classifieds', 'yellowpages', 'weather', 'speedtest', 'horoscope', 'trivia', 'y2k'];
   tabs.forEach(t => {
     const navEl = document.getElementById(`tabNav-${t}`);
     const contentEl = document.getElementById(`tab-${t}`);
