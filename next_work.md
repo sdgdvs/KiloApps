@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-graphics
-next_agent: kilo-tester
+current_agent: kilo-tester
+next_agent: kilo-usability
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -13,7 +13,7 @@ timeout_minutes: 6
 status: ready
 current_targets:
   kilo_creator: "kweb://portal"
-  kilo_graphics: KPac
+  kilo_graphics: KQuest
   kilo_tester: KColony
   kilo_usability: KStarForge
   kilo_qa: KRogue
@@ -32,11 +32,16 @@ virtual_web_rotation:
   - "kweb://geocities"
   - "kweb://users/~neon_rider"
 last_run:
-  agent: kilo-expander
-  app: KImage
-  timestamp: "2026-10-10T00:33:00-07:00"
+  agent: kilo-graphics
+  app: KPac
+  timestamp: "2026-10-10T01:31:00-07:00"
 last_planner_run: "2026-10-09T15:32:00Z"
 ---
+
+### Agent Run Log — 2026-10-10T01:31 (kilo-graphics)
+- **Status:** ⏭️ Skip — Imagen 3 asset replacement not appropriate for KPac
+- Verified classic arcade maze & sprite aesthetic; 0 traveling perimeter dots or rotating glints.
+- Build clean (`npm run build`). Advanced graphics queue to `KQuest`; handoff to `kilo-tester`.
 
 ### Agent Run Log — 2026-10-10T01:13 (kilo-creator)
 - **Status:** 🟢 Completed (`kweb://darknet`)
@@ -62,16 +67,10 @@ last_planner_run: "2026-10-09T15:32:00Z"
 - UX enhancements: wired discoverable F1/H hotkeys, zoom (+/-/0) controls, and modal backdrop dismissal.
 - Build clean (`npm run build`). Advanced queue to `KStarForge`; handoff to `kilo-qa`.
 
-
 ### Agent Run Log — 2026-10-09T23:15 (kilo-tester)
 - **Status:** 🟢 Completed (`KChat`)
 - UI audit passed: fixed recursive socket cleanup in virtual server, guarded author parsing, and scoped `/clear` to active channel (`/clear all` supported).
 - Build clean (`npm run build`). Advanced queue to `KColony`; handoff to `kilo-usability`.
-
-### Agent Run Log — 2026-10-09T22:31 (kilo-graphics)
-- **Status:** ⏭️ Skip — Imagen 3 asset replacement not appropriate for KSpace
-- Verified KSpace has mature custom graphics and static sci-fi HUD (no glints/perimeter dots).
-- Advanced graphics queue to `KPac`; handoff to `kilo-tester`.
 
 ### Agent Run Log — 2026-10-09T21:32 (kilo-expander)
 - **Status:** 🟢 Completed (`KPaint`)
@@ -160,8 +159,8 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
 - **Mission**: Replace programmer art with Imagen 3 assets. Skip immediately if vector/board/mature.
-- **Current Target**: `KSpace`
-- **Upcoming Queue**: `KQuest`, `KColony`, `KColosseum`, `KMech`, `KStellar`, `KStarship`, `KSubmarine`.
+- **Current Target**: `KQuest`
+- **Upcoming Queue**: `KColony`, `KColosseum`, `KMech`, `KStellar`, `KStarship`, `KSubmarine`, `KPac`.
 
 ### 3. App Tester Queue (`kilo-tester`)
 - **Current Target**: `KColony`
