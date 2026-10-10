@@ -2199,11 +2199,29 @@
       }
     }
 
+    let animFrameId = null;
     function gameLoop() {
       update();
       render();
-      requestAnimationFrame(gameLoop);
+      animFrameId = requestAnimationFrame(gameLoop);
     }
+
+    function startLoop() {
+      if (!animFrameId) {
+        animFrameId = requestAnimationFrame(gameLoop);
+      }
+    }
+
+    function stopLoop() {
+      if (animFrameId) {
+        cancelAnimationFrame(animFrameId);
+        animFrameId = null;
+      }
+    }
+
+    document.addEventListener('visibilitychange', () => {
+      document.hidden ? stopLoop() : startLoop();
+    });
 
     function update() {
       if (gameOver) return;
@@ -4687,7 +4705,7 @@
       ctx.restore();
     }
 
-    gameLoop();
+    startLoop();
     checkFirstRunTutorial();
   </script>
 </body>
