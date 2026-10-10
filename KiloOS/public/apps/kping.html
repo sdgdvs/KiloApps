@@ -782,7 +782,7 @@ Press Enter or 'P' to Ping, 'B' for BGP, 'Q' for Bloat, 'G' for Global Mesh, F5/
 
 <script>
   if (window.parent && window.parent !== window) {
-      window.parent.postMessage({ type: 'OS_SET_WINDOW_SIZE', width: 960, height: 700 }, '*');
+      window.parent.postMessage({ type: 'OS_SET_WINDOW_SIZE', width: 980, height: 700 }, '*');
   }
 
   function escapeHtml(str) {
@@ -2097,12 +2097,11 @@ Press Enter or 'P' to Ping, 'B' for BGP, 'Q' for Bloat, 'G' for Global Mesh, F5/
       ctx.fillText(`Latest (#${historyData.length})`, w - paddingRight, paddingTop - 4);
   }
 
-  // Interactive tooltip on canvas
-  canvas.addEventListener('mousemove', (e) => {
+  function handleGraphPointer(clientX, clientY) {
       if (historyData.length === 0) return;
       const rect = canvas.getBoundingClientRect();
-      const mouseX = e.clientX - rect.left;
-      const mouseY = e.clientY - rect.top;
+      const mouseX = clientX - rect.left;
+      const mouseY = clientY - rect.top;
 
       const paddingLeft = 32;
       const paddingRight = 14;
@@ -2140,9 +2139,36 @@ Press Enter or 'P' to Ping, 'B' for BGP, 'Q' for Bloat, 'G' for Global Mesh, F5/
           graphTooltip.style.display = 'none';
           drawGraph(-1);
       }
+  }
+
+  // Interactive tooltip on canvas (Mouse & Touch)
+  canvas.addEventListener('mousemove', (e) => {
+      handleGraphPointer(e.clientX, e.clientY);
   });
 
   canvas.addEventListener('mouseleave', () => {
+      graphTooltip.style.display = 'none';
+      drawGraph(-1);
+  });
+
+  canvas.addEventListener('touchstart', (e) => {
+      if (e.touches && e.touches[0]) {
+          handleGraphPointer(e.touches[0].clientX, e.touches[0].clientY);
+      }
+  }, { passive: true });
+
+  canvas.addEventListener('touchmove', (e) => {
+      if (e.touches && e.touches[0]) {
+          handleGraphPointer(e.touches[0].clientX, e.touches[0].clientY);
+      }
+  }, { passive: true });
+
+  canvas.addEventListener('touchend', () => {
+      graphTooltip.style.display = 'none';
+      drawGraph(-1);
+  });
+
+  canvas.addEventListener('touchcancel', () => {
       graphTooltip.style.display = 'none';
       drawGraph(-1);
   });
