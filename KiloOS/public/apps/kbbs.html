@@ -867,7 +867,7 @@ SEND:"secret\r"'></textarea>
         });
 
         // Tutorial check & welcome toast
-        const hasSavedSession = !!safeGetStorage('kbbs_lord_state') || !!safeGetStorage('kbbs_tradewars_state') || !!safeGetStorage('kbbs_last_host') || !!safeGetStorage('kbbs_screen_snapshot');
+        const hasSavedSession = !!safeGetStorage('kbbs_lord_state') || !!safeGetStorage('kbbs_tw_state') || !!safeGetStorage('kbbs_tradewars_state') || !!safeGetStorage('kbbs_last_host') || !!safeGetStorage('kbbs_screen_snapshot');
         if (!safeGetStorage('kbbs_tutorialSeen')) {
             safeSetStorage('kbbs_tutorialSeen', '1');
             if (!hasSavedSession) {
@@ -2724,16 +2724,26 @@ SEND:"secret\r"'></textarea>
         if (setEcho) setEcho.checked = !!kbbsSettings.localEcho;
         resizeCanvas();
     }
-    function saveSettings() {
-        kbbsSettings.fontSize = parseInt(document.getElementById('setFontSize').value) || 16;
-        kbbsSettings.blinkRateMs = parseInt(document.getElementById('setBlinkRate').value) || 500;
-        kbbsSettings.baudRate = parseInt(document.getElementById('setBaudRate').value) || 0;
-        kbbsSettings.localEcho = document.getElementById('setLocalEcho').checked;
-        document.getElementById('localEcho').checked = kbbsSettings.localEcho;
+    function saveSettings(silent = false) {
+        const fontEl = document.getElementById('setFontSize');
+        if (fontEl) kbbsSettings.fontSize = parseInt(fontEl.value) || kbbsSettings.fontSize || 16;
+        const blinkEl = document.getElementById('setBlinkRate');
+        if (blinkEl) kbbsSettings.blinkRateMs = parseInt(blinkEl.value) || kbbsSettings.blinkRateMs || 500;
+        const baudEl = document.getElementById('setBaudRate');
+        if (baudEl) kbbsSettings.baudRate = parseInt(baudEl.value) || 0;
+        const echoEl = document.getElementById('setLocalEcho');
+        if (echoEl) {
+            kbbsSettings.localEcho = echoEl.checked;
+            const le = document.getElementById('localEcho');
+            if (le) le.checked = kbbsSettings.localEcho;
+        }
         kbbsSettings.palette = [...COLORS];
         safeSetStorage('kbbs_display_settings', JSON.stringify(kbbsSettings));
-        resizeCanvas(); closeSettings();
-        showToast("Display settings saved!", "success");
+        resizeCanvas();
+        if (!silent) {
+            closeSettings();
+            showToast("Display settings saved!", "success");
+        }
     }
     function showSettings() {
         closeAllModalsExcept('settingsModal');
@@ -2792,9 +2802,11 @@ SEND:"secret\r"'></textarea>
         saveDirectory();
         saveMacros();
         saveMsgBase();
-        saveSettings();
-        const host = document.getElementById('host').value.trim();
-        const port = document.getElementById('port').value.trim();
+        saveSettings(true);
+        const hostEl = document.getElementById('host');
+        const portEl = document.getElementById('port');
+        const host = hostEl ? hostEl.value.trim() : '';
+        const port = portEl ? portEl.value.trim() : '';
         if (host) safeSetStorage('kbbs_last_host', host);
         if (port) safeSetStorage('kbbs_last_port', port);
         
@@ -2817,8 +2829,22 @@ SEND:"secret\r"'></textarea>
         
         const lastHost = safeGetStorage('kbbs_last_host');
         const lastPort = safeGetStorage('kbbs_last_port');
-        if (lastHost) document.getElementById('host').value = lastHost;
-        if (lastPort) document.getElementById('port').value = lastPort;
+        const hostEl = document.getElementById('host');
+        const portEl = document.getElementById('port');
+        if (lastHost && hostEl) hostEl.value = lastHost;
+        if (lastPort && portEl) portEl.value = lastPort;
+
+        const zoomLbl = document.getElementById('zoomLabel');
+        if (zoomLbl && kbbsSettings.fontSize) zoomLbl.textContent = kbbsSettings.fontSize + 'px';
+
+        const crtEl = document.getElementById('crtToggle');
+        if (crtEl) {
+            const savedCrt = safeGetStorage('kbbs_crt_enabled');
+            if (savedCrt !== null) {
+                crtEl.checked = savedCrt === '1';
+                toggleCRT(false);
+            }
+        }
 
         const snapStr = safeGetStorage('kbbs_screen_snapshot');
         if (snapStr) {
@@ -2836,10 +2862,14 @@ SEND:"secret\r"'></textarea>
             } catch (e) {}
         }
 
-        if (document.getElementById('doorGamesModal').style.display === 'flex') renderDoorContent();
-        if (document.getElementById('msgBaseModal').style.display === 'flex') { renderMsgList(); renderMsgViewer(); }
-        if (document.getElementById('dialingDir').style.display === 'flex') renderDirList();
-        if (document.getElementById('macrosDir').style.display === 'flex') renderMacroList();
+        const doorModal = document.getElementById('doorGamesModal');
+        if (doorModal && doorModal.style.display === 'flex') renderDoorContent();
+        const msgModal = document.getElementById('msgBaseModal');
+        if (msgModal && msgModal.style.display === 'flex') { renderMsgList(); renderMsgViewer(); }
+        const dirModal = document.getElementById('dialingDir');
+        if (dirModal && dirModal.style.display === 'flex') renderDirList();
+        const macroModal = document.getElementById('macrosDir');
+        if (macroModal && macroModal.style.display === 'flex') renderMacroList();
 
         showToast("📂 KBBS State Quickloaded! [F9]", "success");
     }

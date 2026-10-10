@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-creator
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -16,7 +16,7 @@ current_targets:
   kilo_graphics: KDragon
   kilo_tester: KPing
   kilo_usability: KSnake
-  kilo_qa: KBBS
+  kilo_qa: KBudget
   kilo_expander: KColosseum
 virtual_web_target: kweb://warez
 virtual_web_rotation:
@@ -32,9 +32,9 @@ virtual_web_rotation:
 - kweb://geocities
 - kweb://users/~neon_rider
 last_run:
-  agent: kilo-usability
-  app: KCalendar
-  timestamp: 2026-10-10T13:13:00-07:00
+  agent: kilo-qa
+  app: KBBS
+  timestamp: 2026-10-10T13:31:00-07:00
 last_planner_run: '2026-10-10T16:30:00Z'
 ---
 
@@ -90,8 +90,8 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Upcoming Queue**: `KAudio`, `KBudget`, `KPing`, `KNetMap`, `KRogue`, `KCalendar`.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
-- **Current Target**: `KBBS`
-- **Upcoming Queue**: `KBudget`, `KAlchemy`, `KColony`, `KStarForge`, `KBreakout`, `KRogue`, `KPong`, `KPac`.
+- **Current Target**: `KBudget`
+- **Upcoming Queue**: `KAlchemy`, `KColony`, `KStarForge`, `KBreakout`, `KRogue`, `KPong`, `KPac`, `KBBS`.
 
 ### 6. Feature Expander Queue (`kilo-expander`)
 - **Current Target**: `KColosseum`
@@ -112,6 +112,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 ---
 
 ## Recent Execution Logs (Max 5 Entries)
+ 
+- **2026-10-10T13:31:00-07:00 — kilo-qa: KBBS (Pass 5 QA & State Integrity Audit)**
+  - Status: PASS ✅ (`KBBS` Pass 5 tutorial & state persistence audit passed)
+  - State & Integrity: Hardened F5/F9 master quicksave/quickload with silent settings persistence, zoom, and CRT sync; fixed `kbbs_tw_state` check in first-run tutorial guard.
+  - Sizing & Build: Clean build (`npm run build`, web 169 KB < 999 KB; native 102 KB < 999 KB).
+  - Queue: Advanced QA target to `KBudget`; handoff to `kilo-expander`.
 
 - **2026-10-10T13:13:00-07:00 — kilo-usability: KCalendar (UI/UX Usability Audit & Pacing Pass)**
   - Status: PASS ✅ (`KCalendar` usability audit passed; mature app)
@@ -135,8 +141,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Status: PASS ✅ (`kweb://webring` fully operational & verified)
   - Features: Verified 10 interactive modules (Directory, Teleport, 88x31 Badges, Ping/Traceroute, Join, Guestbook, Topology, Surf, Validator, BGP-4 VT100 Dissector).
   - Sizing & Build: Build clean (`npm run build`, 316 KB < 999 KB), security lint passed. Advanced target to `kweb://warez`; handoff to `kilo-graphics`.
-
-- **2026-10-10T11:14:00-07:00 — kilo-expander: KStarForge (Blueprint Code Exchange, Flight Black Box, & Overclock Tuning)**
-  - Status: PASS ✅ (`KStarForge` deep feature expansion complete)
-  - Features: Added `KSF-BP-v1` blueprint code exchange & archetype presets; flight black box telemetry debrief modal with space-worthiness ratings; subsystem power overclock tuning.
-  - Sizing & Build: Build clean (`npm run build`, 235 KB < 999 KB). Advanced expander target to `KColosseum`; handoff to `kilo-creator`.
