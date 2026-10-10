@@ -2325,7 +2325,26 @@
             ctx.restore();
         }
 
-        function gameLoop() { render(); requestAnimationFrame(gameLoop); }
+        let animFrameId = null;
+        function gameLoop() {
+            render();
+            animFrameId = requestAnimationFrame(gameLoop);
+        }
+        function stopLoop() {
+            if (animFrameId) {
+                cancelAnimationFrame(animFrameId);
+                animFrameId = null;
+            }
+        }
+        function startLoop() {
+            if (!animFrameId) {
+                animFrameId = requestAnimationFrame(gameLoop);
+            }
+        }
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) stopLoop();
+            else startLoop();
+        });
 
         // Class Abilities
         function useClassAbility() {
