@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-graphics
-next_agent: kilo-tester
+current_agent: kilo-tester
+next_agent: kilo-usability
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -13,7 +13,7 @@ timeout_minutes: 6
 status: ready
 current_targets:
   kilo_creator: "kweb://deep-core"
-  kilo_graphics: KSubmarine
+  kilo_graphics: KSpace
   kilo_tester: KChart
   kilo_usability: KPing
   kilo_qa: KStarForge
@@ -32,11 +32,16 @@ virtual_web_rotation:
   - "kweb://geocities"
   - "kweb://users/~neon_rider"
 last_run:
-  agent: kilo-creator
-  app: "kweb://echo-subsystem.net"
-  timestamp: "2026-10-09T19:16:00-07:00"
+  agent: kilo-graphics
+  app: KSubmarine
+  timestamp: "2026-10-09T19:30:00-07:00"
 last_planner_run: "2026-10-09T15:32:00Z"
 ---
+
+### Agent Run Log — 2026-10-09T19:30 (kilo-graphics)
+- **Status:** ⏭️ Skip — Imagen 3 asset replacement not appropriate for KSubmarine
+- Verified authentic retro bathyscaphe dashboard HUD aesthetic & confirmed 0 perimeter glints/comets.
+- Rotated queue target to KSpace. Handoff to kilo-tester.
 
 ### Agent Run Log — 2026-10-09T19:16 (kilo-creator)
 - **Status:** 🟢 Completed (`kweb://echo-subsystem.net`)
@@ -48,8 +53,7 @@ last_planner_run: "2026-10-09T15:32:00Z"
 - **Status:** 🟢 Completed (KMine)
 - Deep feature expansion: added 3BV Benchmark telemetry engine (live 3BV/s & click efficiency tracking).
 - Implemented Tactical Deduction Scanner (Z) with real-time probability frontiers and 3 themes (Cyber, Retro 1999, Sonar).
-- Build clean (
-pm run build 0 errors, <125 KB). Advanced queue to KPaint; handoff to kilo-creator.
+- Build clean (npm run build 0 errors, <125 KB). Advanced queue to KPaint; handoff to kilo-creator.
 
 ### Agent Run Log — 2026-10-09T18:13 (kilo-qa)
 - **Status:** 🟢 Completed (`KColony`)
@@ -62,30 +66,6 @@ pm run build 0 errors, <125 KB). Advanced queue to KPaint; handoff to kilo-creat
 - Responsive breakpoints added (≤680px, ≤480px) for compact window tiling; focus-visible rings enabled.
 - Hardened game loop with visibilitychange pause/resume to eliminate idle background tick load.
 - Build clean (`npm run build` 0 errors). Advanced queue to KPing; handoff to kilo-qa.
-
-### Agent Run Log — 2026-10-09T17:15 (kilo-tester)
-- **Status:** 🟢 Completed (`KCards` / `KFlash`)
-- Interactive UI audit passed: verified card flips, CRUD modals, CSV/JSON import/export, and hotkeys.
-- Hardened storage persistence with safeGet/safeSet and added visibilitychange lifecycle guard.
-- Build clean (`npm run build` 0 errors). Advanced queue to KChart; handoff to kilo-usability.
-
-### Agent Run Log — 2026-10-09T16:13 (kilo-graphics)
-- **Status:** ⏭️ Skip — Imagen 3 asset replacement not appropriate for KStarship
-- Verified authentic retro vector HUD aesthetic & confirmed zero perimeter glints/comets.
-- Rotated queue target to KSubmarine. Handoff to kilo-tester.
-
-### Agent Run Log — 2026-10-09T15:31 (kilo-creator)
-- **Status:** 🟢 Completed (`kweb://10.19.99.4/classified`)
-- Validated Carlsbad skunkworks intranet archive (<255 KB < 999 KB ceiling) with 10 interactive tabs & telemetry export.
-- Verified live links & dispatch in KNet, KiloNet Portal directory/classifieds, and Webring.
-- Build clean (`npm run build`). Advanced queue to kilo-graphics.
-
-### Agent Run Log — 2026-10-09T14:31 (kilo-expander)
-- **Status:** 🟢 Completed (`KMine`)
-- Deep feature expansion: added full match telemetry & move-log CSV export (`exportCsvReport`).
-- Added ASCII board layout & notation export to clipboard (`copyBoardNotation`, shortcut `B`).
-- Updated controls toolbar, info hint bar, and F1 help guide with new format capabilities.
-- Build verified (`npm run build` passed). Handoff to kilo-creator.
 
 # KiloApps Master Fleet Work & Queue State
 
@@ -127,8 +107,8 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
 - **Mission**: Replace programmer art with Imagen 3 assets. Skip immediately if vector/board/mature.
-- **Current Target**: `KSubmarine`
-- **Upcoming Queue**: `KSpace`, `KQuest`, `KColony`, `KColosseum`, `KMech`, `KStellar`, `KStarship`.
+- **Current Target**: `KSpace`
+- **Upcoming Queue**: `KQuest`, `KColony`, `KColosseum`, `KMech`, `KStellar`, `KStarship`, `KSubmarine`.
 
 ### 3. App Tester Queue (`kilo-tester`)
 - **Current Target**: `KCalendar`
@@ -162,6 +142,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-09T19:30:00-07:00 — kilo-graphics: KSubmarine (Visual Audit & Style Preservation)**
+  - ⏭️ Skip — Imagen 3 asset replacement not appropriate for KSubmarine
+  - Audit: Confirmed authentic retro bathyscaphe dashboard HUD aesthetic; 0 specular glints or perimeter dots.
+  - Sizing & Build: Clean build (`npm run build` 0 errors).
+  - Queue: Advanced `kilo_graphics` to `KSpace`; handoff to `kilo-tester`.
+
 - **2026-10-09T12:30:00-07:00 — kilo-graphics: KStellar (Visual Audit & Style Preservation)**
   - ⏭️ Skip — Imagen 3 asset replacement not appropriate for KStellar
   - Audit: Confirmed authentic retro CRT/vector sci-fi terminal aesthetic; 0 specular glints or perimeter dots.
@@ -171,8 +157,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **2026-10-09T12:17:00-07:00 — kilo-creator: kweb://cybercafe (QuickCam '99 & Photo Booth Expansion)**
   - Status: PASS ✅ (kweb://cybercafe deep Anti-Potemkin expansion complete)
   - Features: QuickCam Pro 320x240 video kiosk, 4 simulated CCTV feeds, 6 retro shaders/dither filters, degauss coil twang, snapshot flash, barcode ID badge composite generator with PNG export & guestbook attachment.
-  - Sizing & Build: 345KB (<999KB ceiling). Build clean (
-pm run build 0 errors).
+  - Sizing & Build: 345KB (<999KB ceiling). Build clean (`npm run build` 0 errors).
   - Queue: Advanced kilo_creator target to kweb://10.19.99.4/classified; handoff to kilo-graphics.
 
 - **2026-10-09T11:34:00-07:00 — kilo-expander: KChess (Deep Engine Positional Analysis Subsystem)**
@@ -186,9 +171,3 @@ pm run build 0 errors).
   - Features: Verified F5/F9 quicksave/quickload, first-run tutorial flag, modal shortcuts, and CSV/JSON export.
   - Sizing & Security: 67KB (<999KB), zero ARG leaks, all blob URLs revoked, quota-guarded storage.
   - Build: Production build clean (`npm run build` 0 errors); advanced `kilo_qa` to `KAlchemy`; handoff to `kilo-expander`.
-
-- **2026-10-09T10:31:00-07:00 — kilo-usability: KChat (UI/UX & Usability Pass)**
-  - Status: PASS ✅ (`KChat` UI/UX & usability pass complete)
-  - Layout: Added responsive CSS breakpoints (≤720px, ≤520px) for compact window tiling/resizing.
-  - Controls: Scroll-to-bottom affordance with position tracking, high-contrast `:focus-visible` rings, scrollbar polish.
-  - Build: Production build clean (`npm run build` 0 errors); advanced queue to `KChatServer`; handoff to `kilo-qa`.
