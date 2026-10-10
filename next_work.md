@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-tester
-next_agent: kilo-usability
+current_agent: kilo-usability
+next_agent: kilo-qa
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -14,7 +14,7 @@ status: ready
 current_targets:
   kilo_creator: "kweb://portal"
   kilo_graphics: KColony
-  kilo_tester: KMine
+  kilo_tester: KFortress
   kilo_usability: KPong
   kilo_qa: KPong
   kilo_expander: KMine
@@ -32,11 +32,17 @@ virtual_web_rotation:
   - "kweb://geocities"
   - "kweb://users/~neon_rider"
 last_run:
-  agent: kilo-graphics
-  app: KQuest
-  timestamp: "2026-10-10T04:31:00-07:00"
+  agent: kilo-tester
+  app: KMine
+  timestamp: "2026-10-10T05:13:00-07:00"
 last_planner_run: "2026-10-09T15:32:00Z"
 ---
+
+### Agent Run Log — 2026-10-10T05:13 (kilo-tester)
+- **Status:** 🟢 Completed (`KMine`)
+- Repaired syntax errors in `computeProbabilityMap` (${h.x},${h.y} key mapping) & `cycleTheme` toast.
+- Startup audit clean (`test_app_startup.py` PASS, 0 JS errors, 115.9 KB < 999 KB).
+- Build clean (`npm run build`). Advanced tester queue to `KFortress`; handoff to `kilo-usability`.
 
 ### Agent Run Log — 2026-10-10T04:31 (kilo-graphics)
 - **Status:** ⏭️ Skip — Imagen 3 asset replacement not appropriate for KQuest
@@ -202,7 +208,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ### 3. App Tester Queue (`kilo-tester`)
 - **Current Target**: `KColony`
-- **Upcoming Queue**: `KFortress`, `KNetMap`, `KPing`, `KSanctuary`, `KAudio`, `KStellar`, `KSubmarine`, `KTrader`, `KType`, `KVault`, `KVoid`, `KCalendar`, `KChart`, `KChat`.
+- **Upcoming Queue**: `KNetMap`, `KPing`, `KSanctuary`, `KAudio`, `KStellar`, `KSubmarine`, `KTrader`, `KType`, `KVault`, `KVoid`, `KCalendar`, `KChart`, `KChat`, `KMine`.
 
 ### 4. Usability & UX Queue (`kilo-usability`)
 - **Current Target**: `KPong`

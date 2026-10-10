@@ -1649,7 +1649,8 @@
     currentTheme = themes[(idx + 1) % themes.length];
     safeSetStorage('kmine_theme', currentTheme);
     const names = { cyber: '⚡ Cyber Slate', retro1999: '💾 Retro 1999 Win98', sonar: '📡 Sonar Phosphor' };
-    showToast(🎨 Theme: , 'info');
+    showToast(`🎨 Theme: ${names[currentTheme]}`, 'info');
+    render();
   }
 
   function computeProbabilityMap() {
@@ -1673,11 +1674,11 @@
           if (hiddenUnflagged.length > 0) {
             if (needed <= 0) {
               for (const h of hiddenUnflagged) {
-                probMap[${h.x},] = { prob: 0, safe: true, mine: false };
+                probMap[`${h.x},${h.y}`] = { prob: 0, safe: true, mine: false };
               }
             } else if (needed === hiddenUnflagged.length) {
               for (const h of hiddenUnflagged) {
-                const k = ${h.x},;
+                const k = `${h.x},${h.y}`;
                 if (!probMap[k] || !probMap[k].safe) {
                   probMap[k] = { prob: 1, safe: false, mine: true };
                 }
@@ -1685,7 +1686,7 @@
             } else {
               const p = needed / hiddenUnflagged.length;
               for (const h of hiddenUnflagged) {
-                const k = ${h.x},;
+                const k = `${h.x},${h.y}`;
                 if (!probMap[k]) probMap[k] = { prob: p, safe: false, mine: false };
                 else if (!probMap[k].safe && !probMap[k].mine) probMap[k].prob = Math.max(probMap[k].prob, p);
               }
