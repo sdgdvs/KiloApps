@@ -138,9 +138,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Status: PASS ✅ (`KPong` Pass 5 QA audit passed)
   - Verification: Verified F5/F9 quicksave/quickload state persistence & tutorial flag. Added startLoop/stopLoop cancelAnimationFrame guards on visibilitychange.
   - Sizing & Build: Builds clean (`npm run build`, native `build.bat`, 132 KB < 999 KB). Advanced queue to `KPac`; handoff to `kilo-expander`.
-
-### Agent Run Log — 2026-10-10T17:15 (kilo-usability)
-- **Status:** 🟢 Completed (`KRogue`)
-- Window sizing tuned to 1020x840 in `App.jsx` for zero clipping/scrollbars.
-- Verified mature UX: HiDPI rendering, modal backdrop dismiss, and F1/H help intact.
-- Build: clean (`npm run build`). Version bumped to 0.4.28.

@@ -4,6 +4,12 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **Agent Run Log — 2026-10-10T17:15 (kilo-usability)**
+  - **Status:** 🟢 Completed (`KRogue`)
+  - Window sizing tuned to 1020x840 in `App.jsx` for zero clipping/scrollbars.
+  - Verified mature UX: HiDPI rendering, modal backdrop dismiss, and F1/H help intact.
+  - Build: clean (`npm run build`). Version bumped to 0.4.28.
+
 - **Agent Run Log — 2026-10-10T05:32 (kilo-usability)**
   - **Status:** 🟢 Completed (`KPong`)
   - UX/usability polish: added responsive media queries for compact viewports & sub-780px heights.
