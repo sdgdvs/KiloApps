@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-tester
-next_agent: kilo-usability
+current_agent: kilo-usability
+next_agent: kilo-qa
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -14,7 +14,7 @@ status: ready
 current_targets:
   kilo_creator: "kweb://deep-core"
   kilo_graphics: KSpace
-  kilo_tester: KChart
+  kilo_tester: KChat
   kilo_usability: KPing
   kilo_qa: KStarForge
   kilo_expander: KPaint
@@ -32,11 +32,17 @@ virtual_web_rotation:
   - "kweb://geocities"
   - "kweb://users/~neon_rider"
 last_run:
-  agent: kilo-graphics
-  app: KSubmarine
-  timestamp: "2026-10-09T19:30:00-07:00"
+  agent: kilo-tester
+  app: KChart
+  timestamp: "2026-10-09T20:14:00-07:00"
 last_planner_run: "2026-10-09T15:32:00Z"
 ---
+
+### Agent Run Log — 2026-10-09T20:14 (kilo-tester)
+- **Status:** 🟢 Completed (`KChart`)
+- Fixed unclosable modal: updated `.modal-backdrop` CSS and toggle handlers to `display: none`/`flex`.
+- Startup audit passed (`uv run scripts/test_app_startup.py --app KChart` PASS, 0 JS errors, 121.4 KB).
+- Build clean (`npm run build`). Advanced queue to KChat; handoff to kilo-usability.
 
 ### Agent Run Log — 2026-10-09T19:30 (kilo-graphics)
 - **Status:** ⏭️ Skip — Imagen 3 asset replacement not appropriate for KSubmarine
@@ -60,12 +66,6 @@ last_planner_run: "2026-10-09T15:32:00Z"
 - Pass 5 QA audit passed: validated Quicksave (F5) / Quickload (F9) persistence across all biomes.
 - Guarded first-run tutorial flag (`kcolony_tutorialSeen`) and added `visibilitychange` lifecycle pausing.
 - Build clean (`npm run build` 0 errors, <132 KB). Advanced queue to KStarForge; handoff to kilo-expander.
-
-### Agent Run Log — 2026-10-09T17:31 (kilo-usability)
-- **Status:** 🟢 Completed (`KMaze`)
-- Responsive breakpoints added (≤680px, ≤480px) for compact window tiling; focus-visible rings enabled.
-- Hardened game loop with visibilitychange pause/resume to eliminate idle background tick load.
-- Build clean (`npm run build` 0 errors). Advanced queue to KPing; handoff to kilo-qa.
 
 # KiloApps Master Fleet Work & Queue State
 
@@ -111,8 +111,8 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Upcoming Queue**: `KQuest`, `KColony`, `KColosseum`, `KMech`, `KStellar`, `KStarship`, `KSubmarine`.
 
 ### 3. App Tester Queue (`kilo-tester`)
-- **Current Target**: `KCalendar`
-- **Upcoming Queue**: `KChart`, `KChat`, `KColony`, `KFortress`, `KNetMap`, `KPing`, `KSanctuary`, `KAudio`, `KStellar`, `KSubmarine`, `KTrader`, `KType`, `KVault`, `KVoid`.
+- **Current Target**: `KChat`
+- **Upcoming Queue**: `KColony`, `KFortress`, `KNetMap`, `KPing`, `KSanctuary`, `KAudio`, `KStellar`, `KSubmarine`, `KTrader`, `KType`, `KVault`, `KVoid`, `KCalendar`, `KChart`.
 
 ### 4. Usability & UX Queue (`kilo-usability`)
 - **Current Target**: `KPing`
