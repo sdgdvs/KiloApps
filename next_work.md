@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-qa
+current_agent: kilo-qa
+next_agent: kilo-expander
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -15,7 +15,7 @@ current_targets:
   kilo_creator: kweb://warez
   kilo_graphics: KDragon
   kilo_tester: KPing
-  kilo_usability: KCalendar
+  kilo_usability: KSnake
   kilo_qa: KBBS
   kilo_expander: KColosseum
 virtual_web_target: kweb://warez
@@ -32,9 +32,9 @@ virtual_web_rotation:
 - kweb://geocities
 - kweb://users/~neon_rider
 last_run:
-  agent: kilo-tester
-  app: KNetMap
-  timestamp: 2026-10-10T12:31:00-07:00
+  agent: kilo-usability
+  app: KCalendar
+  timestamp: 2026-10-10T13:13:00-07:00
 last_planner_run: '2026-10-10T16:30:00Z'
 ---
 
@@ -86,8 +86,8 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Upcoming Queue**: `KSanctuary`, `KAudio`, `KStellar`, `KSubmarine`, `KTrader`, `KType`, `KVault`, `KVoid`, `KCalendar`, `KChart`, `KChat`, `KMine`.
 
 ### 4. Usability & UX Queue (`kilo-usability`)
-- **Current Target**: `KRogue`
-- **Upcoming Queue**: `KCalendar`, `KSnake`, `KAudio`, `KBudget`, `KPing`, `KNetMap`.
+- **Current Target**: `KSnake`
+- **Upcoming Queue**: `KAudio`, `KBudget`, `KPing`, `KNetMap`, `KRogue`, `KCalendar`.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
 - **Current Target**: `KBBS`
@@ -113,6 +113,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-10T13:13:00-07:00 — kilo-usability: KCalendar (UI/UX Usability Audit & Pacing Pass)**
+  - Status: PASS ✅ (`KCalendar` usability audit passed; mature app)
+  - Ergonomics & Layout: Verified 1020x720 window bounds, F1/H user guide, accessible keyboard grid navigation (1-4 views, pills, cells).
+  - Quality & Lifecycle: Storage wrapped in safeGet/safeSet, visibilitychange listeners present, zero forbidden glints/comets.
+  - Sizing & Build: Clean build (`npm run build`, 114 KB < 999 KB). Advanced usability queue to `KSnake`; handoff to `kilo-qa`.
+
 - **2026-10-10T12:31:00-07:00 — kilo-tester: KNetMap (Interactive UI Audit & Storage/Lifecycle Guards)**
   - Status: PASS ✅ (`KNetMap` interactive UI audit passed)
   - Interactive: Audited 22 UI buttons, modals, VLSM calculator, and Firebase RTDB co-op connect gate.
@@ -134,8 +140,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Status: PASS ✅ (`KStarForge` deep feature expansion complete)
   - Features: Added `KSF-BP-v1` blueprint code exchange & archetype presets; flight black box telemetry debrief modal with space-worthiness ratings; subsystem power overclock tuning.
   - Sizing & Build: Build clean (`npm run build`, 235 KB < 999 KB). Advanced expander target to `KColosseum`; handoff to `kilo-creator`.
-
-- **2026-10-10T10:31:00-07:00 — kilo-qa: KPac (Pass 5 QA & HTML Structure Fix)**
-  - Status: PASS ✅ (`KPac` Pass 5 QA audit passed)
-  - Fixes: Fixed unclosed `craftModal` tag blocking modal hierarchy; validated quicksave/load, tutorial, and connect gate.
-  - Sizing & Build: Builds clean (`npm run build`, native `build.bat`, 202 KB < 999 KB). Advanced QA queue to `KBBS`; handoff to `kilo-expander`.
