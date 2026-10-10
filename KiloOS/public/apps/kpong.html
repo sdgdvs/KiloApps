@@ -182,6 +182,22 @@
     user-select: none; -webkit-user-select: none;
   }
   .toast.active { opacity: 1; pointer-events: auto; }
+
+  @media (max-height: 780px) {
+    body { padding: 4px; }
+    .container { padding: 8px 12px; gap: 4px; }
+    .score-board { font-size: 22px; padding: 0 10px; }
+    .game-title { font-size: 16px; }
+    .btn-sm { padding: 3px 7px; font-size: 10px; min-height: 24px; }
+    .skill-btn { padding: 4px 8px; font-size: 10px; min-height: 26px; }
+    canvas { max-height: calc(100vh - 130px) !important; }
+  }
+  @media (max-width: 640px) {
+    .container { padding: 8px; }
+    .header-bar { flex-direction: column; gap: 6px; }
+    .top-controls { gap: 4px; }
+    .btn-sm { padding: 4px 6px; font-size: 10px; }
+  }
 </style>
 </head>
 <body class="theme-cyberpunk">
@@ -2481,10 +2497,12 @@
   }
 
   function draw() {
-      const dpr = window.devicePixelRatio || 1;
-      if (canvas.width !== 900 * dpr) {
-          canvas.width = 900 * dpr;
-          canvas.height = 640 * dpr;
+      const dpr = Math.min(window.devicePixelRatio || 1, 3);
+      const targetW = Math.round(900 * dpr);
+      const targetH = Math.round(640 * dpr);
+      if (canvas.width !== targetW || canvas.height !== targetH) {
+          canvas.width = targetW;
+          canvas.height = targetH;
       }
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       ctx.save();

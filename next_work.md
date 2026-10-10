@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-qa
+current_agent: kilo-qa
+next_agent: kilo-expander
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -15,7 +15,7 @@ current_targets:
   kilo_creator: "kweb://portal"
   kilo_graphics: KColony
   kilo_tester: KFortress
-  kilo_usability: KPong
+  kilo_usability: KRogue
   kilo_qa: KPong
   kilo_expander: KMine
 virtual_web_target: "kweb://webring"
@@ -32,11 +32,17 @@ virtual_web_rotation:
   - "kweb://geocities"
   - "kweb://users/~neon_rider"
 last_run:
-  agent: kilo-tester
-  app: KMine
-  timestamp: "2026-10-10T05:13:00-07:00"
+  agent: kilo-usability
+  app: KPong
+  timestamp: "2026-10-10T05:32:00-07:00"
 last_planner_run: "2026-10-09T15:32:00Z"
 ---
+
+### Agent Run Log — 2026-10-10T05:32 (kilo-usability)
+- **Status:** 🟢 Completed (`KPong`)
+- UX/usability polish: added responsive media queries for compact viewports & sub-780px heights.
+- Enforced integer DPR canvas rounding & ratio clamping to eliminate subpixel blur.
+- Builds clean (`npm run build`, 131 KB < 999 KB). Advanced usability queue to `KRogue`; handoff to `kilo-qa`.
 
 ### Agent Run Log — 2026-10-10T05:13 (kilo-tester)
 - **Status:** 🟢 Completed (`KMine`)
