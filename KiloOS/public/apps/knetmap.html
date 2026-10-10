@@ -578,7 +578,7 @@
       <button class="btn btn-purple" onclick="openOnlineModal()" id="onlineBtn" title="O: Real-time Online Co-op">🌐 Online Co-op</button>
       <button class="btn" onclick="openSubnetModal()" title="Subnet / CIDR Planner">🔢 Subnet Calc</button>
       <button class="btn" onclick="toggleMute()" id="muteBtn" title="M: Toggle Mute">🔊 Audio</button>
-      <button class="btn btn-primary" onclick="openHelpModal()" title="F1: Documentation">❓ Help [F1]</button>
+      <button class="btn btn-primary" onclick="openHelpModal()" title="F1 or H: Documentation &amp; Controls">❓ Help [F1/H]</button>
     </div>
   </header>
 
@@ -921,7 +921,7 @@ Type 'P' to test ping, 'T' for traceroute, or select links to inject faults.
       <div class="modal-body" style="max-height:65vh;">
         <h4 style="color:var(--cyan); margin-bottom:4px;">Keyboard Shortcuts</h4>
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px; font-family:'Consolas', monospace; font-size:11px; margin-bottom:14px;">
-          <div><span style="color:var(--cyan);">[F1]</span> Help &amp; Reference</div>
+          <div><span style="color:var(--cyan);">[F1 / H]</span> Help &amp; Reference</div>
           <div><span style="color:var(--cyan);">[F5]</span> Quicksave Topology</div>
           <div><span style="color:var(--cyan);">[F9]</span> Quickload Quicksave</div>
           <div><span style="color:var(--cyan);">[Esc]</span> Deselect / Close Modals</div>
@@ -930,6 +930,8 @@ Type 'P' to test ping, 'T' for traceroute, or select links to inject faults.
           <div><span style="color:var(--cyan);">[C]</span> Cable Link Mode</div>
           <div><span style="color:var(--cyan);">[P]</span> Ping Diagnostics Mode</div>
           <div><span style="color:var(--cyan);">[T]</span> Traceroute Path Mode</div>
+          <div><span style="color:var(--cyan);">[+ / -]</span> Zoom In / Out</div>
+          <div><span style="color:var(--cyan);">[0]</span> Reset View (1:1)</div>
           <div><span style="color:var(--cyan);">[M]</span> Toggle Audio Synthesizer</div>
           <div><span style="color:var(--cyan);">[O]</span> Online Co-op Drawer</div>
           <div><span style="color:var(--cyan);">[1 - 5]</span> Fast Hardware Placement</div>
@@ -2036,7 +2038,7 @@ Type 'P' to test ping, 'T' for traceroute, or select links to inject faults.
       // Ignore if typing in text input
       if (['INPUT', 'SELECT', 'TEXTAREA'].includes(e.target.tagName)) return;
 
-      if (e.key === 'F1') { e.preventDefault(); openHelpModal(); }
+      if (e.key === 'F1' || e.key === 'h' || e.key === 'H' || e.key === '?') { e.preventDefault(); openHelpModal(); }
       else if (e.key === 'F5') { e.preventDefault(); saveTopologyQuicksave(); }
       else if (e.key === 'F9') { e.preventDefault(); loadTopologyQuicksave(); }
       else if (e.key === 'Escape') {
@@ -2054,6 +2056,9 @@ Type 'P' to test ping, 'T' for traceroute, or select links to inject faults.
         }
       }
       else if (e.key === ' ') { e.preventDefault(); toggleSimPause(); }
+      else if (e.key === '+' || e.key === '=') { e.preventDefault(); zoomIn(); }
+      else if (e.key === '-' || e.key === '_') { e.preventDefault(); zoomOut(); }
+      else if (e.key === '0') { e.preventDefault(); resetView(); }
       else if (e.key === 'p' || e.key === 'P') { setTool('ping'); }
       else if (e.key === 't' || e.key === 'T') { setTool('trace'); }
       else if (e.key === 'c' || e.key === 'C') { setTool('connect'); }
@@ -2702,8 +2707,23 @@ Type 'P' to test ping, 'T' for traceroute, or select links to inject faults.
       loadPresetTopology('corp');
       updateCounts();
 
+      // Modal backdrop click-to-dismiss (except splash)
+      document.querySelectorAll('.modal-backdrop').forEach(backdrop => {
+        backdrop.addEventListener('click', (e) => {
+          if (e.target === backdrop && backdrop.id !== 'splashModal') {
+            backdrop.classList.remove('active');
+          }
+        });
+      });
+
       // Check for quicksave availability for splash screen
-      if (!localStorage.getItem('knetmap_quicksave')) {
+      let hasQuicksave = false;
+      try {
+        hasQuicksave = !!localStorage.getItem('knetmap_quicksave');
+      } catch (err) {
+        hasQuicksave = false;
+      }
+      if (!hasQuicksave) {
         const btn = document.getElementById('splashLoadBtn');
         if (btn) btn.style.display = 'none';
       }
