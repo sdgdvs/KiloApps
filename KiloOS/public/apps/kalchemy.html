@@ -5349,6 +5349,18 @@
       if (key === 'h' || key === '?' || evt.key === 'F1') {
         evt.preventDefault();
         toggleHelpModal();
+      } else if (evt.key === 'F5') {
+        evt.preventDefault();
+        saveState();
+        triggerToast("💾 Game Quicksaved", "Apprentice state preserved to grimoire archives", "✨");
+      } else if (evt.key === 'F9') {
+        evt.preventDefault();
+        loadState();
+        updateStats();
+        renderGrimoire();
+        updateSlotsUI();
+        setGameMode(gameMode);
+        triggerToast("📂 Game Quickloaded", "Restored apprentice state from grimoire archives", "📜");
       } else if (key === 'm') {
         const modal = document.getElementById('help-modal-overlay');
         if (modal && modal.classList.contains('show')) {
@@ -5399,7 +5411,7 @@
 
     // Startup Welcome Notification Toast
     setTimeout(() => {
-      triggerToast("🧪 Welcome Apprentice!", "Press F1 or H for Grandmaster Manual & Controls", "📘");
+      triggerToast("🧪 Welcome Apprentice!", "Press F1/H for Manual; F5 Quicksave / F9 Quickload", "📘");
     }, 600);
   
     // --- Loop 7 Multi-Layer Kinematic Particle, Shockwave & Screen-Shake Engine ---

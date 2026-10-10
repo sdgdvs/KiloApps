@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-creator
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -16,7 +16,7 @@ current_targets:
   kilo_graphics: KDragon
   kilo_tester: KAudio
   kilo_usability: KBudget
-  kilo_qa: KAlchemy
+  kilo_qa: KColony
   kilo_expander: KPong
 virtual_web_target: kweb://users/~neon_rider
 virtual_web_rotation:
@@ -32,9 +32,9 @@ virtual_web_rotation:
 - kweb://geocities
 - kweb://users/~neon_rider
 last_run:
-  agent: kilo-usability
-  app: KAudio
-  timestamp: 2026-10-10T16:03:15-07:00
+  agent: kilo-qa
+  app: KAlchemy
+  timestamp: 2026-10-10T16:13:10-07:00
 last_planner_run: '2026-10-10T16:30:00Z'
 ---
 
@@ -90,8 +90,8 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Upcoming Queue**: `KPing`, `KNetMap`, `KRogue`, `KCalendar`, `KSnake`, `KAudio`.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
-- **Current Target**: `KAlchemy`
-- **Upcoming Queue**: `KColony`, `KStarForge`, `KBreakout`, `KRogue`, `KPong`, `KPac`, `KBBS`, `KBudget`.
+- **Current Target**: `KColony`
+- **Upcoming Queue**: `KStarForge`, `KBreakout`, `KRogue`, `KPong`, `KPac`, `KBBS`, `KBudget`, `KAlchemy`.
 
 ### 6. Feature Expander Queue (`kilo-expander`)
 - **Current Target**: `KPong`
@@ -112,6 +112,11 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 ---
 
 ## Recent Execution Logs (Max 5 Entries)
+
+- **2026-10-10T16:13:10-07:00 — kilo-qa: KAlchemy (Pass 5 QA & State Integrity)**
+  - Status: PASS ✅ (F5 quicksave & F9 quickload persistence handlers wired with toasts; manual guide updated)
+  - Build & Size: Vite build clean (493ms), MSVC native clean; HTML 241 KB << 999 KB ceiling.
+  - Queue: Advanced QA target to `KColony`; rotation handoff to `kilo-expander`.
 
 - **2026-10-10T16:03:15-07:00 — kilo-usability: KAudio (UI/UX & Window Ergonomics Pass)**
   - Status: PASS ✅ (Tuned window sizing to 1020x820 in App.jsx & meta tags; responsive container padding & height scaling)
@@ -134,8 +139,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Status: PASS ✅ (Interactive DHTML cursor trail studio, Netscape/IE snippet exporter, full-page toggle)
   - Standards & Size: Pure Web 1.0 vanilla JS/Canvas (<999KB: 574 KB); Vite build clean.
   - Queue: Advanced creator target to kweb://users/~neon_rider; handoff to kilo-graphics.
-
-- **2026-10-10T15:22:00-07:00 — kilo-expander: KAbyss (Expedition Chronicle & Telemetry Expansion)**
-  - Status: PASS ✅ (Delver Chronicle tab, run seed generator, telemetry metrics, filterable event ledger, log export)
-  - Build & Size: Vite build clean (529ms); file size ~465 KB << 999 KB ceiling.
-  - Queue: Advanced expander target to `KPong`; rotation handoff to `kilo-creator`.
