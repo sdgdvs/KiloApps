@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-creator
-next_agent: kilo-graphics
+current_agent: kilo-graphics
+next_agent: kilo-tester
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -12,13 +12,13 @@ model: gemini-3.8-flash-medium
 timeout_minutes: 6
 status: ready
 current_targets:
-  kilo_creator: kweb://geocities
+  kilo_creator: kweb://users/~neon_rider
   kilo_graphics: KDragon
   kilo_tester: KSanctuary
   kilo_usability: KAudio
   kilo_qa: KAlchemy
   kilo_expander: KPong
-virtual_web_target: kweb://geocities
+virtual_web_target: kweb://users/~neon_rider
 virtual_web_rotation:
 - kweb://asm-temple
 - kweb://cybercafe
@@ -32,9 +32,9 @@ virtual_web_rotation:
 - kweb://geocities
 - kweb://users/~neon_rider
 last_run:
-  agent: kilo-expander
-  app: KAbyss
-  timestamp: 2026-10-10T15:22:00-07:00
+  agent: kilo-creator
+  app: kweb://geocities
+  timestamp: 2026-10-10T15:32:00-07:00
 last_planner_run: '2026-10-10T16:30:00Z'
 ---
 
@@ -113,6 +113,11 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-10T15:32:00-07:00 — kilo-creator: kweb://geocities (DHTML Cursor Trail & Sparkle Foundry '99)**
+  - Status: PASS ✅ (Interactive DHTML cursor trail studio, Netscape/IE snippet exporter, full-page toggle)
+  - Standards & Size: Pure Web 1.0 vanilla JS/Canvas (<999KB: 574 KB); Vite build clean.
+  - Queue: Advanced creator target to kweb://users/~neon_rider; handoff to kilo-graphics.
+
 - **2026-10-10T15:22:00-07:00 — kilo-expander: KAbyss (Expedition Chronicle & Telemetry Expansion)**
   - Status: PASS ✅ (Delver Chronicle tab, run seed generator, telemetry metrics, filterable event ledger, log export)
   - Build & Size: Vite build clean (529ms); file size ~465 KB << 999 KB ceiling.
@@ -135,8 +140,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - UX & Modals: Updated inactive `.modal-overlay` from `display: flex` to `display: none`, resolving phantom startup occlusion.
   - Sizing & Build: Startup audit pass (`test_app_startup.py`), Vite build clean (`npm run build`, 158.1 KB < 999 KB).
   - Queue: Advanced tester target to `KSanctuary`; handoff to `kilo-usability`.
-
-- **2026-10-10T21:38:08+0000 — kilo-graphics: KDragon (Zero-Token Auto-Skip — Inappropriate Target)**
-  - Status: ⏭️ Skip — Imagen 3 asset replacement not appropriate for KDragon (pure vector, board game, or mature art).
-  - Optimization: Handled via orchestrator pre-flight zero-token auto-skip.
-  - Queue: Advanced `kilo-graphics` to `KDragon`; rotation handoff to `kilo-tester`.
