@@ -3155,7 +3155,7 @@
       const tbar = document.getElementById('duelTauntBar');
       if (tbar) tbar.style.display = 'none';
       const wc = document.getElementById('btnWarCry');
-      if (wc) wc.style.display = 'none';
+      if (wc) wc.style.display = 'inline-block';
       const fl = document.getElementById('btnFlee');
       if (fl) fl.innerText = '🏃 Flee [F]';
       const ec = document.getElementById('duelEndControls');
@@ -3255,6 +3255,19 @@
       const pY = arenaCanvas.height * 0.68;
       const eX = arenaCanvas.width * 0.72;
       const eY = arenaCanvas.height * 0.68;
+
+      if (action === 'warcry') {
+        playerState.stance = 'showboat';
+        setTimeout(() => { playerState.stance = playerDefending ? 'defend' : 'idle'; }, 500);
+        playWarHorn();
+        let favorGain = 25 + Math.floor(Math.random() * 16);
+        crowdFavor += favorGain;
+        enemyStaggered = true;
+        logCombat(`<strong>${currentFighter.name}</strong> bellows a thunderous Roman War Cry! (+${favorGain}% Favor, Foe Staggered)`);
+        addFloatingText(`WAR CRY! +${favorGain}%`, pX, pY - 30, '#ffd700');
+        spawnParticles(pX, pY - 20, 20, 'sparks', '#ffd700');
+        checkCrowdFavor();
+      }
 
       if (action === 'flee') {
         logCombat(`${currentFighter.name} flees the arena in disgrace!`);
