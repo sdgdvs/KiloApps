@@ -53,6 +53,7 @@
         <button class="btn" style="margin:4px; padding:10px; width:460px; text-align:center; font-size:13px;" onclick="startGame(5)">[6] 100-Day Survival Challenge<br><small>Survive 100 Full Days</small></button>
         <button class="btn" style="margin:4px; padding:10px; width:460px; text-align:center; font-size:13px;" onclick="startGame(6)">[7] Resource Rush Challenge<br><small>Gather 1000 Mat & 100 AdvM by Day 50</small></button>
         <button class="btn" style="margin:4px; padding:10px; width:460px; text-align:center; font-size:13px;" onclick="quickLoad()">[9 / F9] Resume / Load Quicksave<br><small>Restore previous colony command state from storage</small></button>
+        <button class="btn" style="margin:4px; padding:10px; width:460px; text-align:center; font-size:13px;" onclick="importSave()">[0] Import Colony State (.json)<br><small>Load saved expedition backup from file</small></button>
         <button class="btn" style="margin:4px; padding:10px; width:460px; text-align:center; font-size:13px;" onclick="toggleHelp()">[8 / H / F1] Administrator's Manual & Tech Spec Sheet<br><small>Full Rules, Shortcuts, Structures & Tech Guide</small></button>
     </div>
 
@@ -126,6 +127,8 @@
         <div>
             <button class="btn" onclick="quickSave()" style="padding:2px 8px; font-size:10px; margin:-2px 2px;">[Save F5]</button>
             <button class="btn" onclick="quickLoad()" style="padding:2px 8px; font-size:10px; margin:-2px 2px;">[Load F9]</button>
+            <button class="btn" onclick="exportSave()" style="padding:2px 8px; font-size:10px; margin:-2px 2px;">[Export]</button>
+            <button class="btn" onclick="importSave()" style="padding:2px 8px; font-size:10px; margin:-2px 2px;">[Import]</button>
             <button class="btn" onclick="returnToMenu()" style="padding:2px 8px; font-size:10px; margin:-2px 0;">[Menu]</button>
         </div>
     </div>
@@ -334,6 +337,8 @@
                     toggleHelp();
                 } else if (e.key === '9') {
                     quickLoad();
+                } else if (e.key === '0') {
+                    importSave();
                 }
                 return;
             }
@@ -496,6 +501,7 @@
         }
 
         function quickLoad() {
+            initAudio();
             const raw = localStorage.getItem('kcolony_quicksave');
             if (!raw) {
                 showToast("No Save Found", "No quicksave data found in storage. Press [Save F5] first.", "warning", 3000);
@@ -547,6 +553,55 @@
             } catch (err) {
                 showToast("Load Error", "Failed to deserialize quicksave data.", "danger", 3000);
             }
+        }
+
+        function exportSave() {
+            const raw = localStorage.getItem('kcolony_quicksave');
+            if (!raw) {
+                showToast("No Save Data", "Create a colony quicksave [F5] before exporting.", "warning", 3000);
+                return;
+            }
+            try {
+                const blob = new Blob([raw], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `kcolony_save_day${day || 1}.json`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                showToast("Colony Exported", "Save file downloaded successfully.", "success", 2500);
+            } catch (e) {
+                showToast("Export Failed", "Could not export save file: " + e.message, "danger", 3000);
+            }
+        }
+
+        function importSave() {
+            initAudio();
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.json,application/json';
+            input.onchange = (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = (evt) => {
+                    try {
+                        const parsed = JSON.parse(evt.target.result);
+                        if (!parsed || parsed.food === undefined || parsed.grid === undefined) {
+                            throw new Error("Invalid colony save structure");
+                        }
+                        localStorage.setItem('kcolony_quicksave', evt.target.result);
+                        quickLoad();
+                        showToast("Colony Imported", "Save file imported and loaded!", "success", 2500);
+                    } catch (err) {
+                        showToast("Import Failed", "Corrupt or incompatible save file.", "danger", 3000);
+                    }
+                };
+                reader.readAsText(file);
+            };
+            input.click();
         }
 
         function isShielded(x, y) {
