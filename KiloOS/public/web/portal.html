@@ -3700,6 +3700,92 @@ Ready. Select target destination to begin automated indexing pass.
     </div>
   </section>
 
+  <!-- TAB: Y2K Readiness Lab -->
+  <section id="tab-y2k" class="tab-content">
+    <div style="background:#111827; color:#f3f4f6; border:2px solid #b91c1c; padding:12px; margin-bottom:12px; font-family:'Courier New', monospace;">
+      <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #7f1d1d; padding-bottom:6px; margin-bottom:8px; flex-wrap:wrap; gap:6px;">
+        <span style="color:#ef4444; font-weight:bold; font-size:16px;">⚠️ KILONET GLOBAL Y2K EMERGENCY DEFENSE LAB</span>
+        <span id="y2kSimStatus" style="color:#ffff00; font-size:11px; font-weight:bold;">STATUS: SYNCHRONIZED TO ATOMIC STANDARD</span>
+      </div>
+      <p style="margin:0 0 10px 0; font-size:12px; color:#d1d5db; line-height:1.4;">
+        Welcome to the central Year 2000 Millennium compliance outpost. Monitor global date rollover counters, audit real-time hardware clock registers, verify COBOL and BIOS leap day logic, and prepare your survival bunker before the zero-hour rollover!
+      </p>
+
+      <!-- Countdown LED Matrix -->
+      <div style="background:#030712; border:2px inset #374151; padding:10px; text-align:center; margin-bottom:10px;">
+        <div style="font-size:11px; color:#9ca3af; margin-bottom:4px; letter-spacing:1px;">COUNTDOWN TO JAN 1, 2000 00:00:00 UTC:</div>
+        <div style="display:flex; justify-content:center; gap:12px; font-size:28px; font-weight:bold; color:#ef4444; letter-spacing:2px;">
+          <div><span id="y2kDays">00</span><div style="font-size:9px; color:#9ca3af; letter-spacing:normal;">DAYS</div></div>
+          <div>:</div>
+          <div><span id="y2kHours">00</span><div style="font-size:9px; color:#9ca3af; letter-spacing:normal;">HOURS</div></div>
+          <div>:</div>
+          <div><span id="y2kMins">00</span><div style="font-size:9px; color:#9ca3af; letter-spacing:normal;">MINS</div></div>
+          <div>:</div>
+          <div><span id="y2kSecs">00</span><div style="font-size:9px; color:#9ca3af; letter-spacing:normal;">SECS</div></div>
+        </div>
+        <div style="margin-top:8px; display:flex; justify-content:center; gap:8px; flex-wrap:wrap;">
+          <button class="btn-retro" style="background:#b91c1c; color:#ffffff; font-weight:bold;" onclick="testY2KRollover()">⚡ Warp to 23:59:53 Rollover Test</button>
+          <button class="btn-retro" onclick="resetY2KClock()">🔄 Reset Atomic Clock</button>
+        </div>
+      </div>
+
+      <!-- 2-Column Test & Bunker Desk -->
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px;">
+        <!-- Left: Diagnostic Tests -->
+        <div style="background:#1f2937; border:1px solid #374151; padding:8px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #4b5563; padding-bottom:4px; margin-bottom:6px;">
+            <span style="font-weight:bold; color:#60a5fa; font-size:12px;">🔬 BIOS &amp; RTC Audit Suite</span>
+            <span id="y2kOverallScore" style="color:#10b981; font-weight:bold; font-size:11px;">Status: Unchecked</span>
+          </div>
+          <div id="y2kTestList" style="background:#000000; color:#34d399; font-size:11px; padding:6px; height:120px; overflow-y:auto; border:1px inset #4b5563; margin-bottom:6px; font-family:'Courier New', monospace;">
+            <div>[READY] Press Audit below to verify RTC, BIOS, and 2-digit windowing.</div>
+          </div>
+          <button class="btn-retro" style="width:100%; font-weight:bold; background:#2563eb; color:#ffffff;" onclick="runY2KAudit()">▶️ Run 5-Point Subsystem Audit</button>
+        </div>
+
+        <!-- Right: Bunker Survival Checklist -->
+        <div style="background:#1f2937; border:1px solid #374151; padding:8px;">
+          <div style="font-weight:bold; color:#fbbf24; font-size:12px; border-bottom:1px solid #4b5563; padding-bottom:4px; margin-bottom:6px;">
+            📦 Y2K Citizen Bunker Checklist (Saved to Local Storage)
+          </div>
+          <div style="font-size:11px; display:grid; grid-template-columns:1fr 1fr; gap:4px; color:#e5e7eb;">
+            <label><input type="checkbox" id="bunker_water" onchange="saveBunkerItem('water')"> 55-Gal Potable Water</label>
+            <label><input type="checkbox" id="bunker_dialup" onchange="saveBunkerItem('dialup')"> Backup 56k Modem</label>
+            <label><input type="checkbox" id="bunker_cash" onchange="saveBunkerItem('cash')"> Paper Currency Reserve</label>
+            <label><input type="checkbox" id="bunker_canned" onchange="saveBunkerItem('canned')"> Canned Beans &amp; SPAM</label>
+            <label><input type="checkbox" id="bunker_tape" onchange="saveBunkerItem('tape')"> QIC-80 Backup Tapes</label>
+            <label><input type="checkbox" id="bunker_battery" onchange="saveBunkerItem('battery')"> D-Cell Battery Stash</label>
+            <label><input type="checkbox" id="bunker_paper" onchange="saveBunkerItem('paper')"> Printed Phone Directory</label>
+            <label><input type="checkbox" id="bunker_ham" onchange="saveBunkerItem('ham')"> Shortwave / Ham Radio</label>
+            <label><input type="checkbox" id="bunker_floppy" onchange="saveBunkerItem('floppy')"> DOS 6.22 Boot Disk</label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Compliance Certificate Generator -->
+      <div style="background:#1f2937; border:1px solid #374151; padding:8px;">
+        <div style="font-weight:bold; color:#a78bfa; font-size:12px; border-bottom:1px solid #4b5563; padding-bottom:4px; margin-bottom:6px;">
+          📜 Generate Official 1999 Millennium Compliance Certificate
+        </div>
+        <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:6px; font-size:11px;">
+          <label style="flex:1;">
+            Workstation Name:
+            <input type="text" id="y2kCertStation" class="form-input" style="background:#ffffff; color:#000000; font-size:11px; padding:2px 4px;" value="KiloOS Workstation 1999" />
+          </label>
+          <label style="flex:1;">
+            Firmware / BIOS:
+            <input type="text" id="y2kCertBios" class="form-input" style="background:#ffffff; color:#000000; font-size:11px; padding:2px 4px;" value="Award Modular BIOS v4.51PG" />
+          </label>
+        </div>
+        <div style="display:flex; gap:6px;">
+          <button class="btn-retro" onclick="generateY2KCert()">📜 Preview Declaration</button>
+          <button class="btn-retro" style="background:#059669; color:#ffffff; font-weight:bold;" onclick="downloadY2KCert()">💾 Download Official .TXT Certificate</button>
+        </div>
+        <pre id="y2kCertPreview" style="display:none; background:#000000; color:#38bdf8; border:1px dashed #64748b; padding:8px; margin-top:8px; font-size:11px; white-space:pre-wrap;"></pre>
+      </div>
+    </div>
+  </section>
+
   <!-- Webring Member Widget -->
   <div class="webring-widget">
     <strong>[ Central KiloNet 1999 Webring Member #001 ]</strong><br>

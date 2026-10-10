@@ -559,9 +559,9 @@
         <div><kbd>F</kbd></div><div>Toggle ⛏️ Dig / 🚩 Flag Mode (Touch Friendly)</div>
         <div><kbd>N</kbd></div><div>Cyber Duel Arena (Online Multiplayer & Local AI)</div>
         <div><kbd>4</kbd></div><div>Custom Grid Configuration Dialog</div>
-        <div><kbd>S</kbd></div><div>Deterministic Seed & Board Exchange Dialog</div>
-        <div><kbd>Y</kbd></div><div>Tactical Analytics & 3BV Telemetry Dashboard</div>
         <div><kbd>Z</kbd></div><div>Tactical Deduction Scanner (Probability & Safe Frontiers)</div>
+        <div><kbd>O</kbd></div><div>Pattern Explorer (1-2-1, 1-1, 1-2-2-1 Classic Theorems)</div>
+        <div><kbd>K</kbd></div><div>Deterministic Seed & Daily Challenge Studio</div>
         <div><kbd>T</kbd></div><div>Cycle Visual Themes (Cyber / Retro 1999 / Sonar)</div>
         <div><kbd>M</kbd></div><div>Toggle Procedural Audio Sound Effects</div>
         <div><kbd>H</kbd></div><div>Safe Move Hint (reveals a guaranteed safe tile)</div>
@@ -572,7 +572,7 @@
         <div><kbd>E</kbd></div><div>Export Best Times & Records (JSON)</div>
         <div><kbd>B</kbd></div><div>Copy Board Layout ASCII Notation to Clipboard</div>
         <div><kbd>I</kbd></div><div>Import Best Times & Records (JSON)</div>
-        <div><kbd>P</kbd></div><div>Watch Replay (after game completion)</div>
+        <div><kbd>P</kbd></div><div>Watch Replay Studio & Scrubber</div>
         <div><kbd>Esc</kbd></div><div>Close Modals / Dismiss Toasts</div>
       </div>
     </div>
@@ -677,94 +677,35 @@
     <div class="modal-footer" style="gap:8px;">
       <button type="button" onclick="toggleCustomModal(false)">Cancel</button>
       <button type="button" class="btn-accent" onclick="applyCustomGrid()">Apply & Play</button>
-    </div>
-  </div>
 </div>
 
-<!-- Deterministic Seed & Board Exchange Modal -->
+<!-- Seed & Daily Challenge Configuration Modal -->
 <div id="seedModal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="seedModalTitle" onclick="if(event.target===this) toggleSeedModal(false)">
-  <div class="modal-box" style="max-width: 480px;">
+  <div class="modal-box" style="max-width: 460px;">
     <div class="modal-header">
-      <h3 id="seedModalTitle">🌱 Board Seed & Puzzle Exchange</h3>
+      <h3 id="seedModalTitle">🌱 Seed & Tournament Studio</h3>
       <button class="modal-close" aria-label="Close Seed Modal" onclick="toggleSeedModal(false)">✕</button>
     </div>
     <div class="modal-body">
-      <p style="margin-top:0; font-size:12px; color:#8b949e;">Every board configuration in KMine is deterministically driven by a pseudorandom seed. Share seeds with friends or rivals to race on the exact same minefield.</p>
-      
-      <div style="background:#0d1117; border:1px solid #21262d; border-radius:6px; padding:10px 12px; margin-bottom:12px;">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-          <span style="font-size:11px; font-weight:700; color:#79c0ff;">CURRENT BOARD SEED:</span>
-          <span id="seedActiveBadge" class="badge" style="color:#4ade80; border-color:#22c55e;">AUTO</span>
-        </div>
-        <div id="currentSeedDisplay" style="font-family:monospace; font-size:13px; font-weight:bold; color:#f0f6fc; word-break:break-all;">--</div>
-        <div style="margin-top:8px; display:flex; gap:6px;">
-          <button type="button" onclick="copyActiveSeedCode()" style="font-size:11px; padding:3px 8px;">📋 Copy Seed Code</button>
-          <button type="button" onclick="randomizeSeedInput()" style="font-size:11px; padding:3px 8px;">🎲 Roll New Seed</button>
-        </div>
-      </div>
-
+      <p style="margin-top:0; font-size:12px; color:#8b949e;">Play or share reproducible minefield layouts for speedruns, tournaments, or daily competitive practice.</p>
       <div style="margin-bottom:12px;">
-        <label for="customSeedInput" style="display:block; font-size:12px; font-weight:600; color:#c9d1d9; margin-bottom:4px;">Enter Custom Seed (Number or KMINE-SEED Code):</label>
-        <div style="display:flex; gap:6px;">
-          <input id="customSeedInput" type="text" placeholder="e.g. 19990812 or KMINE-SEED:16x16:40:99824" style="flex:1; background:#0d1117; border:1px solid #30363d; color:#f0f6fc; padding:6px 10px; border-radius:6px; font-family:monospace; font-size:12px;">
-          <button type="button" class="btn-accent" onclick="applyEnteredSeed()">Load Seed</button>
+        <label for="boardSeedInput" style="display:block; font-size:12px; font-weight:600; color:#79c0ff; margin-bottom:4px;">Custom Seed Code:</label>
+        <div style="display:flex; gap:8px;">
+          <input id="boardSeedInput" type="text" maxlength="32" placeholder="e.g. 1999-SECTOR-42" style="flex:1; background:#0d1117; border:1px solid #30363d; color:#f0f6fc; padding:6px 10px; border-radius:6px; font-family:monospace; font-weight:bold;">
+          <button type="button" onclick="generateRandomSeedInput()" style="padding:6px 10px;">🎲 Roll</button>
         </div>
       </div>
-
-      <div style="display:flex; justify-content:space-between; align-items:center; font-size:11px; color:#8b949e; border-top:1px solid #21262d; padding-top:10px;">
-        <span>Fixed seed locks board until reset.</span>
-        <button type="button" onclick="clearFixedSeed()" style="font-size:11px; padding:3px 8px;">Clear Fixed Seed</button>
+      <div id="activeSeedStatus" style="font-size:12px; color:#c9d1d9; background:#0d1117; border:1px solid #21262d; border-radius:6px; padding:8px 12px; margin-bottom:12px;">
+        Current Mode: <strong id="activeSeedBadge" style="color:#e3b341;">Random Unseeded Field</strong>
+      </div>
+      <div style="display:flex; gap:8px; flex-wrap:wrap;">
+        <button type="button" class="btn-accent" style="flex:1;" onclick="applyDailyChallengeSeed()">📅 Daily Challenge Seed</button>
+        <button type="button" style="flex:1;" onclick="applyEnteredSeed()">🎮 Play Seeded Field</button>
       </div>
     </div>
-    <div class="modal-footer">
+    <div class="modal-footer" style="gap:8px;">
+      <button type="button" onclick="clearSeedAndPlay()">Clear to Random</button>
       <button type="button" onclick="toggleSeedModal(false)">Close [Esc]</button>
-    </div>
-  </div>
-</div>
-
-<!-- Match Analytics & 3BV Telemetry Modal -->
-<div id="telemetryModal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="telemetryModalTitle" onclick="if(event.target===this) toggleTelemetryModal(false)">
-  <div class="modal-box" style="max-width: 520px;">
-    <div class="modal-header">
-      <h3 id="telemetryModalTitle">📊 Tactical Analytics & 3BV Telemetry</h3>
-      <button class="modal-close" aria-label="Close Analytics" onclick="toggleTelemetryModal(false)">✕</button>
-    </div>
-    <div class="modal-body">
-      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:14px;">
-        <div style="background:#0d1117; border:1px solid #21262d; border-radius:6px; padding:10px;">
-          <div style="font-size:11px; color:#8b949e; font-weight:600;">BOARD BENCHMARK (3BV)</div>
-          <div id="telBvv" style="font-size:22px; font-weight:bold; color:#58a6ff; font-family:monospace;">--</div>
-          <div style="font-size:10px; color:#6e7681;">Min non-flag clicks required</div>
-        </div>
-        <div style="background:#0d1117; border:1px solid #21262d; border-radius:6px; padding:10px;">
-          <div style="font-size:11px; color:#8b949e; font-weight:600;">3BV SPEED (3BV/s)</div>
-          <div id="telBvvSpeed" style="font-size:22px; font-weight:bold; color:#3fb950; font-family:monospace;">--</div>
-          <div style="font-size:10px; color:#6e7681;">Speed benchmark index</div>
-        </div>
-        <div style="background:#0d1117; border:1px solid #21262d; border-radius:6px; padding:10px;">
-          <div style="font-size:11px; color:#8b949e; font-weight:600;">CLICK EFFICIENCY</div>
-          <div id="telEff" style="font-size:22px; font-weight:bold; color:#f0f6fc; font-family:monospace;">--%</div>
-          <div style="font-size:10px; color:#6e7681;">3BV / Total reveals</div>
-        </div>
-        <div style="background:#0d1117; border:1px solid #21262d; border-radius:6px; padding:10px;">
-          <div style="font-size:11px; color:#8b949e; font-weight:600;">TOTAL ACTIONS</div>
-          <div id="telActions" style="font-size:22px; font-weight:bold; color:#f0f6fc; font-family:monospace;">0</div>
-          <div id="telActionSub" style="font-size:10px; color:#6e7681;">Digs: 0 | Flags: 0 | Chords: 0</div>
-        </div>
-      </div>
-
-      <div style="background:#0d1117; border:1px solid #21262d; border-radius:6px; padding:12px; margin-bottom:12px;">
-        <div style="font-size:12px; font-weight:700; color:#79c0ff; margin-bottom:6px;">🎯 TACTICAL PERFORMANCE ASSESSMENT</div>
-        <div id="telRatingText" style="font-size:12px; color:#c9d1d9; line-height:1.5;">Start a game to generate live tactical efficiency telemetry.</div>
-      </div>
-
-      <div style="display:flex; gap:8px; justify-content:flex-end;">
-        <button type="button" onclick="copyTelemetrySummary()" style="padding:6px 12px; font-size:12px;">📋 Copy Summary</button>
-        <button type="button" class="btn-accent" onclick="exportCsvReport()" style="padding:6px 12px; font-size:12px;">Export CSV Log</button>
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button type="button" onclick="toggleTelemetryModal(false)">Close [Esc]</button>
     </div>
   </div>
 </div>
@@ -802,8 +743,9 @@
     <button onclick="giveHint()" title="Reveal Safe Tile (H)">💡 Hint <span class="badge">H</span></button>
     <button id="duelBtn" class="btn-accent" onclick="toggleMultiplayerModal(true)" title="Online & Local AI Speed Duel (N)">⚔️ Duel <span class="badge">N</span></button>
     <button id="customBtn" onclick="toggleCustomModal(true)" title="Configure Custom Grid (4)">⚙️ Custom <span class="badge">4</span></button>
-    <button id="seedBtn" onclick="toggleSeedModal(true)" title="Deterministic Seed & Board Exchange (S)">🌱 Seed <span class="badge">S</span></button>
     <button id="scannerBtn" onclick="toggleTacticalScanner()" title="Toggle Probability Deduction Scanner (Z)">🔬 Scan <span class="badge">Z</span></button>
+    <button id="patternBtn" onclick="togglePatternExplorer()" title="Toggle Deduction Theorems & Pattern Explorer (O)">📐 Patterns <span class="badge">O</span></button>
+    <button id="seedBtn" onclick="toggleSeedModal(true)" title="Configure Deterministic Seed & Daily Challenge (K)">🌱 Seed <span class="badge">K</span></button>
     <button id="themeBtn" onclick="cycleTheme()" title="Switch Visual Theme (T)">🎨 Theme <span class="badge">T</span></button>
   </div>
 
@@ -817,14 +759,38 @@
     <button onclick="quickSave()" title="Save Current State (F5)">💾 Save <span class="badge">F5</span></button>
     <button onclick="quickLoad()" title="Load Saved State (F9)">📂 Load <span class="badge">F9</span></button>
     <button onclick="exportStats()" title="Export Best Times (JSON)">📤 Exp <span class="badge">E</span></button>
-    <button id="telemetryBtn" onclick="toggleTelemetryModal(true)" title="Session Analytics & 3BV Telemetry (Y)">📊 Stats <span class="badge">Y</span></button>
     <button onclick="exportCsvReport()" title="Export Match Telemetry & Move Log (CSV)">📊 CSV</button>
     <button onclick="copyBoardNotation()" title="Copy ASCII Field Notation to Clipboard">📋 Board</button>
     <button onclick="document.getElementById('fileIn').click()" title="Import Best Times">📥 Imp <span class="badge">I</span></button>
     <input type="file" id="fileIn" style="display:none" accept=".json" onchange="importStats(event)">
-    <button id="replayBtn" style="display:none;" class="btn-accent" onclick="startReplay()">🎬 Replay <span class="badge">P</span></button>
+    <button id="replayBtn" style="display:none;" class="btn-accent" onclick="startReplayStudio()">🎬 Replay <span class="badge">P</span></button>
+    <button onclick="document.getElementById('replayFileIn').click()" title="Import .kmreplay File">📼 Replay In</button>
+    <input type="file" id="replayFileIn" style="display:none" accept=".kmreplay,.json" onchange="importReplayFile(event)">
     <button onclick="toggleHelpModal(true)" title="Rules & Help (F1)">❓ Help <span class="badge">F1</span></button>
   </div>
+</div>
+
+<!-- Interactive Replay Studio Bar -->
+<div id="replay-bar" style="display:none; margin-bottom:12px; width:100%; max-width:1040px; background:#161b22; border:1px solid #388bfd; border-radius:10px; padding:8px 16px; align-items:center; gap:10px; flex-wrap:wrap; box-shadow:0 4px 16px rgba(56,139,253,0.25);">
+  <span style="font-weight:700; color:#58a6ff; font-size:13px; display:inline-flex; align-items:center; gap:6px;">🎬 REPLAY STUDIO</span>
+  <button type="button" id="replayPlayPauseBtn" onclick="toggleReplayPlayPause()" style="padding:4px 10px;">⏸️ Pause</button>
+  <button type="button" onclick="stepReplay(-1)" title="Step 1 Move Backward" style="padding:4px 8px;">⏮️</button>
+  <button type="button" onclick="stepReplay(1)" title="Step 1 Move Forward" style="padding:4px 8px;">⏭️</button>
+  <div style="display:flex; align-items:center; gap:6px; flex:1; min-width:140px;">
+    <input type="range" id="replayScrubber" min="0" max="100" value="0" oninput="onReplayScrub(this.value)" style="flex:1; cursor:pointer;">
+    <span id="replayStepCounter" style="font-family:monospace; font-size:12px; color:#79c0ff; min-width:60px;">0 / 0</span>
+  </div>
+  <div style="display:flex; align-items:center; gap:4px;">
+    <span style="font-size:11px; color:#8b949e;">Speed:</span>
+    <select id="replaySpeedSel" onchange="setReplaySpeed(this.value)" style="padding:2px 6px; font-size:12px;">
+      <option value="0.5">0.5x</option>
+      <option value="1" selected>1.0x</option>
+      <option value="2">2.0x</option>
+      <option value="4">4.0x</option>
+    </select>
+  </div>
+  <button type="button" onclick="exportReplayFile()" style="padding:4px 10px;" title="Export .kmreplay file">💾 Save Replay</button>
+  <button type="button" onclick="closeReplayStudio()" style="padding:4px 10px; background:#da3633; border-color:#f85149; color:#fff;">✕ Exit</button>
 </div>
 
 <div class="info-bar">
@@ -834,9 +800,9 @@
   <span><kbd>F</kbd> Mode</span>
   <span><kbd>N</kbd> Duel</span>
   <span><kbd>4</kbd> Custom</span>
-  <span><kbd>S</kbd> Seed</span>
-  <span><kbd>Y</kbd> Stats</span>
   <span><kbd>Z</kbd> Scanner</span>
+  <span><kbd>O</kbd> Patterns</span>
+  <span><kbd>K</kbd> Seed</span>
   <span><kbd>T</kbd> Theme</span>
   <span><kbd>M</kbd> Sound</span>
   <span><kbd>H</kbd> Hint</span>
@@ -844,6 +810,7 @@
   <span><kbd>B</kbd> Board</span>
   <span><kbd>1-3</kbd> Diff</span>
   <span><kbd>F1</kbd> Guide</span>
+</div>
 </div>
 
 <div id="game-layout">
@@ -932,10 +899,6 @@
   // Deep Expansion: 3BV Benchmark Engine, Tactical Deduction Scanner & Themes
   let current3BV = 0;
   let totalClicks = 0;
-  let totalRightClicks = 0;
-  let totalChords = 0;
-  let customSeed = null;
-  let activeSeed = null;
   let scannerActive = safeGetStorage('kmine_scanner', '0') === '1';
   let currentTheme = safeGetStorage('kmine_theme', 'cyber'); // 'cyber' | 'retro1999' | 'sonar'
 
@@ -1503,168 +1466,6 @@
       showToast("⚠️ Clipboard API not supported", "warn");
     }
   }
-
-  // --- Deterministic Seed & Board Exchange Utilities ---
-  function toggleSeedModal(show) {
-    const modal = document.getElementById('seedModal');
-    if (!modal) return;
-    if (show) {
-      modal.classList.add('active');
-      updateSeedDisplay();
-    } else {
-      modal.classList.remove('active');
-    }
-  }
-
-  function updateSeedDisplay() {
-    const disp = document.getElementById('currentSeedDisplay');
-    const badge = document.getElementById('seedActiveBadge');
-    if (!disp) return;
-    const s = activeSeed !== null ? activeSeed : (customSeed !== null ? customSeed : '--');
-    disp.textContent = `KMINE-SEED:${cols}x${rows}:${totalMines}:${s}`;
-    if (badge) {
-      if (customSeed !== null) {
-        badge.textContent = "FIXED";
-        badge.style.color = "#f59e0b";
-        badge.style.borderColor = "#f59e0b";
-      } else {
-        badge.textContent = "AUTO";
-        badge.style.color = "#4ade80";
-        badge.style.borderColor = "#22c55e";
-      }
-    }
-  }
-
-  function copyActiveSeedCode() {
-    const s = activeSeed !== null ? activeSeed : (customSeed !== null ? customSeed : Math.floor(Math.random() * 2147483647));
-    const code = `KMINE-SEED:${cols}x${rows}:${totalMines}:${s}`;
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(code).then(() => {
-        showToast("📋 Seed code copied to clipboard!", "success", 2000);
-      }).catch(() => {
-        showToast("⚠️ Clipboard copy failed", "warn");
-      });
-    } else {
-      showToast("Seed: " + code, "info");
-    }
-  }
-
-  function randomizeSeedInput() {
-    const newSeed = Math.floor(100000 + Math.random() * 9000000);
-    const inp = document.getElementById('customSeedInput');
-    if (inp) inp.value = newSeed;
-  }
-
-  function applyEnteredSeed() {
-    const inp = document.getElementById('customSeedInput');
-    if (!inp) return;
-    let val = inp.value.trim();
-    if (!val) {
-      showToast("Please enter a numeric seed or KMINE-SEED code", "warn");
-      return;
-    }
-    if (val.startsWith("KMINE-SEED:")) {
-      const parts = val.replace("KMINE-SEED:", "").split(":");
-      if (parts.length >= 3) {
-        const dims = parts[0].split("x");
-        const c = parseInt(dims[0]);
-        const r = parseInt(dims[1]);
-        const m = parseInt(parts[1]);
-        const s = parseInt(parts[2]);
-        if (!isNaN(c) && !isNaN(r) && !isNaN(m) && !isNaN(s)) {
-          cols = Math.max(8, Math.min(30, c));
-          rows = Math.max(8, Math.min(24, r));
-          totalMines = Math.max(1, Math.min(cols * rows - 1, m));
-          customSeed = Math.abs(s);
-          setupCanvas();
-          initGame();
-          toggleSeedModal(false);
-          showToast(`🌱 Loaded shared seed board (${cols}x${rows}, ${totalMines} mines)!`, "success", 3000);
-          return;
-        }
-      }
-    }
-    const num = parseInt(val);
-    if (isNaN(num)) {
-      showToast("Invalid seed format", "error");
-      return;
-    }
-    customSeed = Math.abs(num);
-    initGame();
-    toggleSeedModal(false);
-    showToast(`🌱 Fixed Seed set to ${customSeed}`, "success", 3000);
-  }
-
-  function clearFixedSeed() {
-    customSeed = null;
-    updateSeedDisplay();
-    showToast("Cleared fixed seed. Board generation returned to automatic random.", "info", 2500);
-  }
-
-  // --- Tactical Analytics & 3BV Telemetry Utilities ---
-  function toggleTelemetryModal(show) {
-    const modal = document.getElementById('telemetryModal');
-    if (!modal) return;
-    if (show) {
-      modal.classList.add('active');
-      updateTelemetryModal();
-    } else {
-      modal.classList.remove('active');
-    }
-  }
-
-  function updateTelemetryModal() {
-    const bvvEl = document.getElementById('telBvv');
-    const speedEl = document.getElementById('telBvvSpeed');
-    const effEl = document.getElementById('telEff');
-    const actEl = document.getElementById('telActions');
-    const subEl = document.getElementById('telActionSub');
-    const ratEl = document.getElementById('telRatingText');
-
-    const bvv = current3BV || 0;
-    const speed = timeElapsed > 0 ? (bvv / timeElapsed).toFixed(2) : '0.00';
-    const eff = totalClicks > 0 ? ((bvv / totalClicks) * 100).toFixed(1) : '100.0';
-    const totalActs = totalClicks + totalRightClicks;
-
-    if (bvvEl) bvvEl.textContent = bvv > 0 ? bvv : '--';
-    if (speedEl) speedEl.textContent = bvv > 0 ? speed : '--';
-    if (effEl) effEl.textContent = bvv > 0 ? eff + '%' : '--%';
-    if (actEl) actEl.textContent = totalActs;
-    if (subEl) subEl.textContent = `Digs: ${totalClicks} | Flags: ${totalRightClicks} | Chords: ${totalChords}`;
-
-    if (ratEl) {
-      if (gameOver === 2) {
-        ratEl.innerHTML = `<strong>CLEARED:</strong> Flawless deduction! Swept in ${timeElapsed}s with <strong>${speed} 3BV/s</strong> pace and <strong>${eff}%</strong> click efficiency index.`;
-      } else if (gameOver === 1) {
-        ratEl.innerHTML = `<strong>DETONATED:</strong> Reached ${countRevealedSafeTiles()}/${(cols*rows)-totalMines} safe sectors before mine contact. Executed ${totalChords} chords with ${totalRightClicks} flags placed.`;
-      } else {
-        ratEl.innerHTML = `Active session on <strong>${cols}x${rows}</strong> grid (${totalMines} mines). Benchmark value: <strong>${bvv} 3BV</strong>. Keep sweeping to refine efficiency metrics.`;
-      }
-    }
-  }
-
-  function copyTelemetrySummary() {
-    const bvv = current3BV || 0;
-    const speed = timeElapsed > 0 ? (bvv / timeElapsed).toFixed(2) : '0.00';
-    const eff = totalClicks > 0 ? ((bvv / totalClicks) * 100).toFixed(1) : '100.0';
-    const summary = `KMine Session Telemetry:
-Grid: ${cols}x${rows} (${totalMines} mines)
-Time: ${timeElapsed}s | Status: ${gameOver === 2 ? 'WIN' : (gameOver === 1 ? 'BOOM' : 'IN_PROGRESS')}
-3BV: ${bvv} | 3BV/s: ${speed} | Efficiency: ${eff}%
-Actions: ${totalClicks} digs, ${totalRightClicks} flags, ${totalChords} chords
-Seed: KMINE-SEED:${cols}x${rows}:${totalMines}:${activeSeed || '--'}`;
-
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(summary).then(() => {
-        showToast("📋 Performance telemetry summary copied!", "success", 2000);
-      }).catch(() => {
-        showToast("⚠️ Clipboard copy failed", "warn");
-      });
-    } else {
-      showToast("Telemetry copied", "info");
-    }
-  }
-
   function importStats(e) {
     let file = e.target.files[0];
     if(!file) return;
@@ -1810,14 +1611,8 @@ Seed: KMINE-SEED:${cols}x${rows}:${totalMines}:${activeSeed || '--'}`;
   function generateMines(safeX, safeY) {
     grid = Array.from({length: rows}, () => Array(cols).fill(0));
     let mines = 0;
-    if (customSeed !== null) {
-      activeSeed = customSeed;
-    } else if (duelSeed !== null) {
-      activeSeed = duelSeed;
-    } else {
-      activeSeed = Math.floor(Math.random() * 2147483647);
-    }
-    const rng = mulberry32(activeSeed);
+    const seedToUse = (duelSeed !== null) ? duelSeed : (activeCustomSeed !== null ? hashSeedString(String(activeCustomSeed)) : null);
+    const rng = (seedToUse !== null) ? mulberry32(seedToUse) : Math.random;
     while (mines < totalMines) {
       let x = Math.floor(rng() * cols);
       let y = Math.floor(rng() * rows);
@@ -1979,17 +1774,9 @@ Seed: KMINE-SEED:${cols}x${rows}:${totalMines}:${activeSeed || '--'}`;
     if (!keepGrid) {
       grid = Array.from({length: rows}, () => Array(cols).fill(0));
       moves = [];
-      totalClicks = 0;
-      totalRightClicks = 0;
-      totalChords = 0;
-      if (customSeed === null && duelSeed === null) {
-        activeSeed = null;
-      }
     }
     state = Array.from({length: rows}, () => Array(cols).fill(0));
     initDust();
-    updateSeedDisplay();
-    updateTelemetryModal();
     if (isDuelMode) {
       updateOpponentHud();
       drawOpponentRadar();
@@ -2000,9 +1787,8 @@ Seed: KMINE-SEED:${cols}x${rows}:${totalMines}:${activeSeed || '--'}`;
     if (btn === 0) {
       if (firstClick) {
         firstClick = false;
+      calculate3BV();
         generateMines(x, y);
-        calculate3BV();
-        updateSeedDisplay();
         startRealTime = Date.now();
         if (!isReplaying) startTimer();
       }
@@ -2019,7 +1805,6 @@ Seed: KMINE-SEED:${cols}x${rows}:${totalMines}:${activeSeed || '--'}`;
         broadcastDuelProgress(safeCount, totalSafe, flags, 'Sweeping');
       }
     } else if (btn === 2) {
-      if (gameOver === 0) totalRightClicks++;
       if (state[y][x] !== 1) {
         if (state[y][x] === 0) { 
           state[y][x] = 2; 
@@ -2790,7 +2575,6 @@ Seed: KMINE-SEED:${cols}x${rows}:${totalMines}:${activeSeed || '--'}`;
       }
     }
     if (flagCount === grid[y][x]) {
-      if (gameOver === 0) totalChords++;
       playSfx('chord');
       triggerShake(4.0, 0.88);
       for (let dy = -1; dy <= 1; dy++) {
@@ -2842,32 +2626,360 @@ Seed: KMINE-SEED:${cols}x${rows}:${totalMines}:${activeSeed || '--'}`;
     }
   }
 
-  function startReplay() {
-    if (moves.length === 0) return;
-    initGame(true);
-    isReplaying = true;
-    document.getElementById('replayBtn').style.display = 'none';
-    showToast("🎬 Playing move replay...", "info", 2500);
-    let replayStartTime = Date.now();
-    let moveIdx = 0;
-    
-    function nextFrame() {
-      if (!isReplaying) return;
-      let now = Date.now() - replayStartTime;
-      while (moveIdx < moves.length && now >= moves[moveIdx].t) {
-        let m = moves[moveIdx];
-        applyAction(m.x, m.y, m.b);
-        moveIdx++;
-      }
-      if (moveIdx < moves.length) {
-        requestAnimationFrame(nextFrame);
-      } else {
-        isReplaying = false;
-        if (gameOver !== 0) document.getElementById('replayBtn').style.display = 'inline-flex';
-        showToast("🎬 Replay completed.", "info", 2000);
+  // --- Deep Feature Expansions: Deterministic Seed, Pattern Explorer & Replay Studio ---
+  let activeCustomSeed = null;
+
+  function hashSeedString(str) {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+      hash = ((hash << 5) - hash) + str.charCodeAt(i);
+      hash |= 0;
+    }
+    return Math.abs(hash) || 1999;
+  }
+
+  function toggleSeedModal(show) {
+    const modal = document.getElementById('seedModal');
+    if (!modal) return;
+    if (show) {
+      modal.classList.add('active');
+      const input = document.getElementById('boardSeedInput');
+      if (input && activeCustomSeed) input.value = activeCustomSeed;
+    } else {
+      modal.classList.remove('active');
+    }
+  }
+
+  function generateRandomSeedInput() {
+    const s = 'SECTOR-' + Math.floor(1000 + Math.random() * 9000);
+    const input = document.getElementById('boardSeedInput');
+    if (input) input.value = s;
+  }
+
+  function applyDailyChallengeSeed() {
+    const today = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+    const dailySeed = `DAILY-${today}`;
+    setBoardSeed(dailySeed);
+    toggleSeedModal(false);
+    showToast(`📅 Loaded Daily Challenge Seed: ${dailySeed}`, 'success', 3000);
+  }
+
+  function applyEnteredSeed() {
+    const input = document.getElementById('boardSeedInput');
+    const val = input ? input.value.trim() : '';
+    if (!val) {
+      showToast('⚠️ Please enter a seed string or number', 'warn');
+      return;
+    }
+    setBoardSeed(val);
+    toggleSeedModal(false);
+  }
+
+  function clearSeedAndPlay() {
+    activeCustomSeed = null;
+    const badge = document.getElementById('activeSeedBadge');
+    if (badge) {
+      badge.textContent = 'Random Unseeded Field';
+      badge.style.color = '#e3b341';
+    }
+    initGame();
+    toggleSeedModal(false);
+    showToast('🎲 Returned to standard random generator', 'info', 2000);
+  }
+
+  function setBoardSeed(seedVal) {
+    activeCustomSeed = seedVal;
+    const badge = document.getElementById('activeSeedBadge');
+    if (badge) {
+      badge.textContent = `Seed #${seedVal}`;
+      badge.style.color = '#58a6ff';
+    }
+    initGame();
+    showToast(`🌱 Seed locked: ${seedVal}`, 'success', 2500);
+  }
+
+  // Pattern Explorer Deduction Theorem Engine (1-2-1, 1-2-2-1, 1-1 Corner)
+  let patternExplorerActive = false;
+  let detectedPatterns = [];
+
+  function togglePatternExplorer() {
+    patternExplorerActive = !patternExplorerActive;
+    const btn = document.getElementById('patternBtn');
+    if (btn) {
+      if (patternExplorerActive) btn.classList.add('btn-accent');
+      else btn.classList.remove('btn-accent');
+    }
+    if (patternExplorerActive) {
+      findDeductionPatterns();
+      const count = detectedPatterns.length;
+      showToast(count > 0 ? `📐 Pattern Explorer: Found ${count} classic deduction theorem(s)!` : `📐 Pattern Explorer: No classic patterns detected on current frontier`, 'info', 3000);
+    } else {
+      detectedPatterns = [];
+      showToast('📐 Pattern Explorer disabled', 'info', 1500);
+    }
+  }
+
+  function findDeductionPatterns() {
+    detectedPatterns = [];
+    if (!grid || grid.length === 0 || gameOver !== 0) return;
+
+    // Detect 1-2-1 horizontal
+    for (let y = 0; y < rows; y++) {
+      for (let x = 0; x <= cols - 3; x++) {
+        if (state[y][x] === 1 && state[y][x+1] === 1 && state[y][x+2] === 1) {
+          if (grid[y][x] === 1 && grid[y][x+1] === 2 && grid[y][x+2] === 1) {
+            [-1, 1].forEach(dy => {
+              const ny = y + dy;
+              if (ny >= 0 && ny < rows) {
+                if (state[ny][x] === 0 && state[ny][x+1] === 0 && state[ny][x+2] === 0) {
+                  detectedPatterns.push({
+                    type: '1-2-1',
+                    label: '1-2-1 Theorem',
+                    desc: 'Outer tiles are MINES, center tile is SAFE!',
+                    tiles: [{x, y}, {x: x+1, y}, {x: x+2, y}],
+                    mineHints: [{x, y: ny}, {x: x+2, y: ny}],
+                    safeHints: [{x: x+1, y: ny}]
+                  });
+                }
+              }
+            });
+          }
+        }
       }
     }
-    requestAnimationFrame(nextFrame);
+
+    // Detect 1-2-1 vertical
+    for (let x = 0; x < cols; x++) {
+      for (let y = 0; y <= rows - 3; y++) {
+        if (state[y][x] === 1 && state[y+1][x] === 1 && state[y+2][x] === 1) {
+          if (grid[y][x] === 1 && grid[y+1][x] === 2 && grid[y+2][x] === 1) {
+            [-1, 1].forEach(dx => {
+              const nx = x + dx;
+              if (nx >= 0 && nx < cols) {
+                if (state[y][nx] === 0 && state[y+1][nx] === 0 && state[y+2][nx] === 0) {
+                  detectedPatterns.push({
+                    type: '1-2-1',
+                    label: '1-2-1 Theorem',
+                    desc: 'Outer tiles are MINES, center tile is SAFE!',
+                    tiles: [{x, y}, {x, y: y+1}, {x, y: y+2}],
+                    mineHints: [{x: nx, y}, {x: nx, y: y+2}],
+                    safeHints: [{x: nx, y: y+1}]
+                  });
+                }
+              }
+            });
+          }
+        }
+      }
+    }
+
+    // Detect 1-2-2-1 horizontal
+    for (let y = 0; y < rows; y++) {
+      for (let x = 0; x <= cols - 4; x++) {
+        if (state[y][x] === 1 && state[y][x+1] === 1 && state[y][x+2] === 1 && state[y][x+3] === 1) {
+          if (grid[y][x] === 1 && grid[y][x+1] === 2 && grid[y][x+2] === 2 && grid[y][x+3] === 1) {
+            [-1, 1].forEach(dy => {
+              const ny = y + dy;
+              if (ny >= 0 && ny < rows) {
+                if (state[ny][x] === 0 && state[ny][x+1] === 0 && state[ny][x+2] === 0 && state[ny][x+3] === 0) {
+                  detectedPatterns.push({
+                    type: '1-2-2-1',
+                    label: '1-2-2-1 Theorem',
+                    desc: 'Tiles against 2s are MINES, outers are SAFE!',
+                    tiles: [{x, y}, {x: x+1, y}, {x: x+2, y}, {x: x+3, y}],
+                    mineHints: [{x: x+1, y: ny}, {x: x+2, y: ny}],
+                    safeHints: [{x, y: ny}, {x: x+3, y: ny}]
+                  });
+                }
+              }
+            });
+          }
+        }
+      }
+    }
+  }
+
+  // Replay Studio with Scrubber, Step Controls & Export/Import
+  let replayStudioMoves = [];
+  let replayMoveIdx = 0;
+  let replayPaused = false;
+  let replaySpeed = 1.0;
+  let replayTimer = null;
+  let savedInitialGrid = null;
+
+  function startReplayStudio(externalMoves = null, externalGrid = null) {
+    const movesToPlay = externalMoves || moves;
+    if (!movesToPlay || movesToPlay.length === 0) {
+      showToast('⚠️ No moves to replay', 'warn');
+      return;
+    }
+    replayStudioMoves = JSON.parse(JSON.stringify(movesToPlay));
+    if (externalGrid) {
+      grid = JSON.parse(JSON.stringify(externalGrid));
+    }
+    savedInitialGrid = JSON.parse(JSON.stringify(grid));
+    isReplaying = true;
+    replayMoveIdx = 0;
+    replayPaused = false;
+
+    initGame(true);
+    isReplaying = true;
+    grid = JSON.parse(JSON.stringify(savedInitialGrid));
+
+    const bar = document.getElementById('replay-bar');
+    if (bar) bar.style.display = 'flex';
+    const scrubber = document.getElementById('replayScrubber');
+    if (scrubber) {
+      scrubber.max = replayStudioMoves.length;
+      scrubber.value = 0;
+    }
+    updateReplayScrubberDisplay();
+    runReplayLoop();
+    showToast('🎬 Replay Studio active! Use space to pause, slider to scrub.', 'info', 3000);
+  }
+
+  function startReplay() {
+    startReplayStudio();
+  }
+
+  function runReplayLoop() {
+    if (replayTimer) clearInterval(replayTimer);
+    if (!isReplaying || replayPaused) return;
+
+    replayTimer = setInterval(() => {
+      if (!isReplaying || replayPaused) {
+        clearInterval(replayTimer);
+        return;
+      }
+      if (replayMoveIdx < replayStudioMoves.length) {
+        const m = replayStudioMoves[replayMoveIdx];
+        applyAction(m.x, m.y, m.b);
+        replayMoveIdx++;
+        updateReplayScrubberDisplay();
+      } else {
+        clearInterval(replayTimer);
+        replayPaused = true;
+        const btn = document.getElementById('replayPlayPauseBtn');
+        if (btn) btn.textContent = '▶️ Play';
+        showToast('🎬 Replay completed.', 'info', 2000);
+      }
+    }, Math.max(25, 250 / replaySpeed));
+  }
+
+  function updateReplayScrubberDisplay() {
+    const scrubber = document.getElementById('replayScrubber');
+    const counter = document.getElementById('replayStepCounter');
+    if (scrubber) scrubber.value = replayMoveIdx;
+    if (counter) counter.textContent = `${replayMoveIdx} / ${replayStudioMoves.length}`;
+  }
+
+  function toggleReplayPlayPause() {
+    replayPaused = !replayPaused;
+    const btn = document.getElementById('replayPlayPauseBtn');
+    if (btn) btn.textContent = replayPaused ? '▶️ Play' : '⏸️ Pause';
+    if (!replayPaused) {
+      if (replayMoveIdx >= replayStudioMoves.length) {
+        replayMoveIdx = 0;
+        initGame(true);
+        isReplaying = true;
+        grid = JSON.parse(JSON.stringify(savedInitialGrid));
+      }
+      runReplayLoop();
+    }
+  }
+
+  function stepReplay(delta) {
+    replayPaused = true;
+    const btn = document.getElementById('replayPlayPauseBtn');
+    if (btn) btn.textContent = '▶️ Play';
+    let target = Math.max(0, Math.min(replayStudioMoves.length, replayMoveIdx + delta));
+    onReplayScrub(target);
+  }
+
+  function onReplayScrub(targetStep) {
+    targetStep = parseInt(targetStep);
+    initGame(true);
+    isReplaying = true;
+    grid = JSON.parse(JSON.stringify(savedInitialGrid));
+    replayMoveIdx = 0;
+    for (let i = 0; i < targetStep; i++) {
+      const m = replayStudioMoves[i];
+      applyAction(m.x, m.y, m.b);
+      replayMoveIdx++;
+    }
+    updateReplayScrubberDisplay();
+  }
+
+  function setReplaySpeed(val) {
+    replaySpeed = parseFloat(val) || 1.0;
+    if (!replayPaused && isReplaying) {
+      runReplayLoop();
+    }
+  }
+
+  function closeReplayStudio() {
+    isReplaying = false;
+    if (replayTimer) clearInterval(replayTimer);
+    const bar = document.getElementById('replay-bar');
+    if (bar) bar.style.display = 'none';
+    if (gameOver !== 0) {
+      document.getElementById('replayBtn').style.display = 'inline-flex';
+    }
+  }
+
+  function exportReplayFile() {
+    if (!moves || moves.length === 0) {
+      showToast('⚠️ No moves to export', 'warn');
+      return;
+    }
+    const replayData = {
+      app: 'KMine',
+      version: '1.99',
+      timestamp: new Date().toISOString(),
+      cols, rows, totalMines,
+      seed: activeCustomSeed,
+      grid: grid,
+      moves: moves,
+      timeElapsed,
+      threeBV: current3BV,
+      totalClicks,
+      outcome: gameOver === 2 ? 'WIN' : (gameOver === 1 ? 'BOOM' : 'IN_PROGRESS')
+    };
+    const blob = new Blob([JSON.stringify(replayData, null, 2)], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `kmine_replay_${Date.now()}.kmreplay`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+    showToast('💾 Replay saved as .kmreplay file!', 'success', 2500);
+  }
+
+  function importReplayFile(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(ev) {
+      try {
+        const data = JSON.parse(ev.target.result);
+        if (data.cols && data.rows && data.moves && Array.isArray(data.moves)) {
+          cols = data.cols;
+          rows = data.rows;
+          totalMines = data.totalMines || 40;
+          setupCanvas();
+          if (data.seed) activeCustomSeed = data.seed;
+          startReplayStudio(data.moves, data.grid);
+          showToast(`📼 Loaded .kmreplay (${data.moves.length} moves)`, 'success', 3000);
+        } else {
+          showToast('❌ Invalid .kmreplay format', 'error');
+        }
+      } catch (err) {
+        showToast('❌ Failed to parse .kmreplay file', 'error');
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = '';
   }
 
   function quickSave() {
@@ -3323,6 +3435,30 @@ Seed: KMINE-SEED:${cols}x${rows}:${totalMines}:${activeSeed || '--'}`;
       ctx.fillText("Arrows/WASD: Move | 'H' Hint | 'F1' Guide | 'N' Duel", totalW / 2, by + 38);
     }
 
+    if (patternExplorerActive && detectedPatterns.length > 0) {
+      for (const pat of detectedPatterns) {
+        ctx.save();
+        ctx.strokeStyle = "#38bdf8";
+        ctx.lineWidth = 2;
+        for (const t of pat.tiles) {
+          ctx.strokeRect(t.x * CELL + 2, t.y * CELL + 2, CELL - 4, CELL - 4);
+        }
+        for (const m of pat.mineHints) {
+          ctx.fillStyle = "rgba(239, 68, 68, 0.35)";
+          ctx.fillRect(m.x * CELL + 2, m.y * CELL + 2, CELL - 4, CELL - 4);
+          ctx.strokeStyle = "#ef4444";
+          ctx.strokeRect(m.x * CELL + 2, m.y * CELL + 2, CELL - 4, CELL - 4);
+        }
+        for (const s of pat.safeHints) {
+          ctx.fillStyle = "rgba(74, 222, 128, 0.35)";
+          ctx.fillRect(s.x * CELL + 2, s.y * CELL + 2, CELL - 4, CELL - 4);
+          ctx.strokeStyle = "#4ade80";
+          ctx.strokeRect(s.x * CELL + 2, s.y * CELL + 2, CELL - 4, CELL - 4);
+        }
+        ctx.restore();
+      }
+    }
+
     if (isDuelMode) {
       drawOpponentRadar();
     }
@@ -3476,14 +3612,12 @@ Seed: KMINE-SEED:${cols}x${rows}:${totalMines}:${activeSeed || '--'}`;
     const helpModal = document.getElementById('helpModal');
     const mpModal = document.getElementById('mpModal');
     const customModal = document.getElementById('customModal');
-    const seedModal = document.getElementById('seedModal');
-    const telemetryModal = document.getElementById('telemetryModal');
     const inviteModal = document.getElementById('inviteModal');
+    const seedModal = document.getElementById('seedModal');
     const isAnyModalOpen = (helpModal && helpModal.classList.contains('active')) ||
                            (mpModal && mpModal.classList.contains('active')) ||
                            (customModal && customModal.classList.contains('active')) ||
                            (seedModal && seedModal.classList.contains('active')) ||
-                           (telemetryModal && telemetryModal.classList.contains('active')) ||
                            (inviteModal && inviteModal.classList.contains('active'));
 
     if (isAnyModalOpen) {
@@ -3493,7 +3627,6 @@ Seed: KMINE-SEED:${cols}x${rows}:${totalMines}:${activeSeed || '--'}`;
         toggleMultiplayerModal(false);
         toggleCustomModal(false);
         toggleSeedModal(false);
-        toggleTelemetryModal(false);
         if (inviteModal) declineInviteChallenge();
         return;
       }
@@ -3512,10 +3645,14 @@ Seed: KMINE-SEED:${cols}x${rows}:${totalMines}:${activeSeed || '--'}`;
       toggleMultiplayerModal(true);
     } else if (e.key === '4') {
       toggleCustomModal(true);
-    } else if (e.key === '5') {
-      if (!isDuelMode) toggleSeedModal(true);
-    } else if (e.key === 'y' || e.key === 'Y') {
-      toggleTelemetryModal(true);
+    } else if (e.key === 'z' || e.key === 'Z') {
+      toggleTacticalScanner();
+    } else if (e.key === 'o' || e.key === 'O') {
+      togglePatternExplorer();
+    } else if (e.key === 'k' || e.key === 'K') {
+      toggleSeedModal(true);
+    } else if (e.key === 't' || e.key === 'T') {
+      cycleTheme();
     } else if (e.key === 'm' || e.key === 'M') {
       toggleAudio();
     } else if (e.key === 'F1' || e.key === '?') {
@@ -3526,7 +3663,7 @@ Seed: KMINE-SEED:${cols}x${rows}:${totalMines}:${activeSeed || '--'}`;
       toggleMultiplayerModal(false);
       toggleCustomModal(false);
       toggleSeedModal(false);
-      toggleTelemetryModal(false);
+      if (isReplaying) closeReplayStudio();
       document.querySelectorAll('.toast').forEach(t => t.remove());
     } else if (e.key === 'F2') {
       e.preventDefault();
