@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-qa
+current_agent: kilo-qa
+next_agent: kilo-expander
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -15,7 +15,7 @@ current_targets:
   kilo_creator: "kweb://portal"
   kilo_graphics: KQuest
   kilo_tester: KMine
-  kilo_usability: KStarForge
+  kilo_usability: KPong
   kilo_qa: KRogue
   kilo_expander: KAudio
 virtual_web_target: "kweb://portal"
@@ -32,11 +32,17 @@ virtual_web_rotation:
   - "kweb://geocities"
   - "kweb://users/~neon_rider"
 last_run:
-  agent: kilo-tester
-  app: KColony
-  timestamp: "2026-10-10T02:14:00-07:00"
+  agent: kilo-usability
+  app: KStarForge
+  timestamp: "2026-10-10T02:35:00-07:00"
 last_planner_run: "2026-10-09T15:32:00Z"
 ---
+
+### Agent Run Log — 2026-10-10T02:35 (kilo-usability)
+- **Status:** 🟢 Completed (`KStarForge`)
+- UI/UX polish: responsive blueprint center & sidebars, auto-fit canvas aspect ratio.
+- Relocated toolbar below canvas to prevent grid cell clipping; wired splash backdrop/ESC launch.
+- Build clean (`npm run build`). Advanced queue to `KPong`; handoff to `kilo-qa`.
 
 ### Agent Run Log — 2026-10-10T02:14 (kilo-tester)
 - **Status:** 🟢 Completed (`KColony`)
@@ -173,8 +179,8 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Upcoming Queue**: `KFortress`, `KNetMap`, `KPing`, `KSanctuary`, `KAudio`, `KStellar`, `KSubmarine`, `KTrader`, `KType`, `KVault`, `KVoid`, `KCalendar`, `KChart`, `KChat`.
 
 ### 4. Usability & UX Queue (`kilo-usability`)
-- **Current Target**: `KStarForge`
-- **Upcoming Queue**: `KPong`, `KCalendar`, `KSnake`, `KAudio`, `KBudget`, `KPing`, `KNetMap`.
+- **Current Target**: `KPong`
+- **Upcoming Queue**: `KCalendar`, `KSnake`, `KAudio`, `KBudget`, `KPing`, `KNetMap`.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
 - **Current Target**: `KRogue`

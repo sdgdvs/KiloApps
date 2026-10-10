@@ -258,8 +258,9 @@
             background: radial-gradient(circle at center, #0e172e 0%, #060913 85%);
             position: relative;
             overflow: auto;
-            min-width: 580px;
+            min-width: 320px;
             padding: 10px;
+            gap: 8px;
         }
 
         .blueprint-sidebar-right {
@@ -274,15 +275,27 @@
             flex-shrink: 0;
         }
 
-        @media (max-width: 1140px) {
+        @media (max-width: 1180px) {
             .blueprint-sidebar-left {
-                width: 230px;
+                width: 220px;
             }
             .blueprint-sidebar-right {
-                width: 260px;
+                width: 250px;
             }
             .blueprint-center {
-                min-width: 520px;
+                min-width: 420px;
+            }
+        }
+
+        @media (max-width: 960px) {
+            .blueprint-sidebar-left {
+                width: 190px;
+            }
+            .blueprint-sidebar-right {
+                width: 220px;
+            }
+            .blueprint-center {
+                min-width: 340px;
             }
         }
 
@@ -397,23 +410,36 @@
             box-shadow: 0 0 30px rgba(6, 182, 212, 0.15);
             border: 1px solid var(--border-dim);
             background: #080e1e;
+            max-width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
         }
 
         #blueprint-canvas {
             display: block;
             cursor: crosshair;
+            max-width: 100%;
+            max-height: calc(100vh - 170px);
+            aspect-ratio: 1 / 1;
+            object-fit: contain;
         }
 
         .blueprint-toolbar {
-            position: absolute;
-            bottom: 12px;
+            position: relative;
+            margin-top: 8px;
             display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
             gap: 8px;
             background: rgba(13, 21, 39, 0.85);
             padding: 6px 12px;
             border-radius: 4px;
             border: 1px solid var(--border-dim);
             backdrop-filter: blur(4px);
+            z-index: 5;
+            max-width: 100%;
         }
 
         /* Telemetry Readouts */
@@ -3354,6 +3380,11 @@
                 ['quick-help-modal', 'splash-modal', 'tutorial-modal', 'template-modal', 'settings-modal'].forEach(id => {
                     const el = document.getElementById(id);
                     if (el && window.getComputedStyle(el).display !== 'none') {
+                        if (id === 'splash-modal') {
+                            document.getElementById('btn-splash-start')?.click();
+                            closedModal = true;
+                            return;
+                        }
                         el.style.display = 'none';
                         closedModal = true;
                         if (id === 'tutorial-modal') {
@@ -4517,6 +4548,10 @@
         document.querySelectorAll('.modal-overlay').forEach(overlay => {
             overlay.addEventListener('click', (e) => {
                 if (e.target === overlay) {
+                    if (overlay.id === 'splash-modal') {
+                        document.getElementById('btn-splash-start')?.click();
+                        return;
+                    }
                     overlay.style.display = 'none';
                     if (overlay.id === 'tutorial-modal') {
                         localStorage.setItem('kstarforge_tutorialSeen', '1');
