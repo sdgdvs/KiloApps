@@ -3795,11 +3795,42 @@ function render() {
     ctx.restore();
 }
 
+let animFrameId = null;
+let loopRunning = true;
+
 function loop() {
-    update();
-    render();
-    requestAnimationFrame(loop);
+    if (loopRunning) {
+        update();
+        render();
+        animFrameId = requestAnimationFrame(loop);
+    }
 }
+
+function startLoop() {
+    if (!loopRunning) {
+        loopRunning = true;
+        animFrameId = requestAnimationFrame(loop);
+    }
+}
+
+function stopLoop() {
+    loopRunning = false;
+    if (animFrameId) {
+        cancelAnimationFrame(animFrameId);
+        animFrameId = null;
+    }
+}
+
+document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+        if (state === 1 && !is_paused) {
+            togglePause();
+        }
+        stopLoop();
+    } else {
+        startLoop();
+    }
+});
 
 window.addEventListener('keydown', e => {
     keys[e.code] = true;
