@@ -2647,7 +2647,14 @@ must be synchronized into the convergence console:
 
 Once aligned, the Permian halite cavity achieves 100% phase lock,
 revealing the blueprint for the App #100 KMatrix singularity.
-==================================================================`
+==================================================================`,
+
+    'litho_resonance_telemetry.csv': `timestamp,freq_hz,q_factor,strata_depth_m,attenuation_db_km,transponder_status
+1999-12-31T23:59:00Z,1999.00,420.5,650.4,0.12,LOCKED
+1999-12-31T23:59:15Z,1999.01,421.1,650.4,0.12,LOCKED
+1999-12-31T23:59:30Z,1999.00,420.8,650.4,0.11,LOCKED
+1999-12-31T23:59:45Z,1998.99,419.9,650.4,0.12,LOCKED
+1999-12-31T23:59:59Z,1999.02,422.3,650.4,0.10,SUPER_RESONANT`
   };
 
   // --- AUDIO SYNTHESIZER (GENESIS YM2612 FM & SNES SPC700 ECHO) ---
@@ -5250,6 +5257,25 @@ Timestamp: ${new Date().toISOString()}
         }
         break;
 
+      case 'litho':
+      case 'resonate':
+        printLine('--- 650m LITHOSPHERIC BEDROCK HARMONIC RESONATOR ---', 'text-cyan');
+        if (arg === 'sweep' || arg === 'pulse' || arg === 'resonate') {
+          printLine('Emitting 1999.00 Hz acoustic subcarrier through Permian Salado halite formation...', 'text-highlight');
+          printLine('Strata: Depth 650.4m | Shear Velocity: 4,450 m/s | Q Factor: 420.5', 'text-warn');
+          printLine('Transponder Status: PHASE-LOCKED TO SUBTERRANEAN RING-0 BUS', 'text-bright');
+          SFX.subcarrier();
+          if (typeof fireSeismicSounding === 'function') { fireSeismicSounding(); }
+        } else if (arg === 'export' || arg === 'csv') {
+          downloadFile('litho_resonance_telemetry.csv', SPOOL_FILES['litho_resonance_telemetry.csv'], 'text/csv');
+          printLine('[EXPORT] Telemetry CSV downloaded to local disk.', 'text-bright');
+        } else {
+          printLine('Telemetry: 1999.00 Hz | Q-Factor: 420.5 | Attenuation: 0.12 dB/km');
+          printLine("Options: 'litho sweep' (acoustic pulse) | 'litho export' (download CSV)", 'text-dim');
+          SFX.beep();
+        }
+        break;
+
       case 'wiretap':
       case 'sniff':
       case 'sniffer':
@@ -5282,6 +5308,7 @@ Timestamp: ${new Date().toISOString()}
         printLine('-rw-r--r--   620  0x1995 carlsbad_geological_strata.dat');
         printLine('-rw-r--r--  1150  0x1996 precursor_lattice_protocol.asm');
         printLine('-rw-r--r--   840  0x1997 singularity_containment.nfo');
+        printLine('-rw-r--r--   460  0x1998 litho_resonance_telemetry.csv');
         printLine('');
         printLine("Type 'cat <file>' to display, or 'download <file>' to save to disk.", 'text-dim');
         SFX.beep();
@@ -5954,7 +5981,7 @@ Timestamp: ${new Date().toISOString()}
     'help', 'status', 'sectors', 'defuse', 'ls', 'dir', 'cat', 'download', 'probe',
     'dump', 'trace', 'traceroute', 'matrix', 'verify', 'hash', 'entropy', 'xor', 'ping',
     'inject', 'netstat', 'radar', 'mesh', 'morse', 'music', 'audio', 'theme', 'scanlines',
-    'disasm', 'step', 'regs', 'seismic', 'sonar', 'wiretap', 'sniff', 'pcap', 'uptime',
+    'disasm', 'step', 'regs', 'seismic', 'sonar', 'litho', 'resonate', 'wiretap', 'sniff', 'pcap', 'uptime',
     'save', 'load', 'export', 'clear'
   ];
   function handleAutocomplete() {
