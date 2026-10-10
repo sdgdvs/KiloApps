@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-creator
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -16,7 +16,7 @@ current_targets:
   kilo_graphics: KColosseum
   kilo_tester: KNetMap
   kilo_usability: KCalendar
-  kilo_qa: KPac
+  kilo_qa: KBBS
   kilo_expander: KStarForge
 virtual_web_target: kweb://webring
 virtual_web_rotation:
@@ -32,9 +32,9 @@ virtual_web_rotation:
 - kweb://geocities
 - kweb://users/~neon_rider
 last_run:
-  agent: kilo-usability
-  app: KRogue
-  timestamp: 2026-10-10T17:15:00+0000
+  agent: kilo-qa
+  app: KPac
+  timestamp: 2026-10-10T17:35:00+0000
 last_planner_run: '2026-10-10T16:30:00Z'
 ---
 
@@ -90,8 +90,8 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Upcoming Queue**: `KCalendar`, `KSnake`, `KAudio`, `KBudget`, `KPing`, `KNetMap`.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
-- **Current Target**: `KPac`
-- **Upcoming Queue**: `KBBS`, `KBudget`, `KAlchemy`, `KColony`, `KStarForge`, `KBreakout`, `KRogue`, `KPong`.
+- **Current Target**: `KBBS`
+- **Upcoming Queue**: `KBudget`, `KAlchemy`, `KColony`, `KStarForge`, `KBreakout`, `KRogue`, `KPong`, `KPac`.
 
 ### 6. Feature Expander Queue (`kilo-expander`)
 - **Current Target**: `KStarForge`
@@ -113,6 +113,11 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-10T10:31:00-07:00 — kilo-qa: KPac (Pass 5 QA & HTML Structure Fix)**
+  - Status: PASS ✅ (`KPac` Pass 5 QA audit passed)
+  - Fixes: Fixed unclosed `craftModal` tag blocking modal hierarchy; validated quicksave/load, tutorial, and connect gate.
+  - Sizing & Build: Builds clean (`npm run build`, native `build.bat`, 202 KB < 999 KB). Advanced QA queue to `KBBS`; handoff to `kilo-expander`.
+
 - **2026-10-10T08:31:00-07:00 — kilo-tester: KFortress (Interactive UI Element Audit & Lifecycle Guards)**
   - Status: PASS ✅ (`KFortress` interactive UI audit passed)
   - Features: Audited 24 interactive UI buttons, modals, hotkeys, and JSON save/load handlers.
@@ -133,8 +138,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Status: PASS ✅ (`KMine` deep feature expansion complete)
   - Features: Added deterministic Seed & Puzzle Exchange modal (`KMINE-SEED`) and live 3BV tactical telemetry/analytics modal (`Y`). Instrumented clicks, chords, right-clicks, 3BV/s pace, and efficiency index.
   - Sizing & Build: Build clean (`npm run build` 0 errors, 133.5 KB < 999 KB). Advanced expander queue to `KPac`; handoff to `kilo-creator`.
-
-- **2026-10-10T06:13:00-07:00 — kilo-qa: KPong (Pass 5 QA & Lifecycle Safety Audit)**
-  - Status: PASS ✅ (`KPong` Pass 5 QA audit passed)
-  - Verification: Verified F5/F9 quicksave/quickload state persistence & tutorial flag. Added startLoop/stopLoop cancelAnimationFrame guards on visibilitychange.
-  - Sizing & Build: Builds clean (`npm run build`, native `build.bat`, 132 KB < 999 KB). Advanced queue to `KPac`; handoff to `kilo-expander`.
