@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-qa
+current_agent: kilo-expander
+next_agent: kilo-creator
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -16,7 +16,7 @@ current_targets:
   kilo_graphics: KDragon
   kilo_tester: KSanctuary
   kilo_usability: KAudio
-  kilo_qa: KBudget
+  kilo_qa: KAlchemy
   kilo_expander: KAbyss
 virtual_web_target: kweb://geocities
 virtual_web_rotation:
@@ -32,9 +32,9 @@ virtual_web_rotation:
 - kweb://geocities
 - kweb://users/~neon_rider
 last_run:
-  agent: kilo-usability
-  app: KSnake
-  timestamp: 2026-10-10T15:03:00-07:00
+  agent: kilo-qa
+  app: KBudget
+  timestamp: 2026-10-10T15:13:30-07:00
 last_planner_run: '2026-10-10T16:30:00Z'
 ---
 
@@ -90,8 +90,8 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Upcoming Queue**: `KBudget`, `KPing`, `KNetMap`, `KRogue`, `KCalendar`, `KSnake`.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
-- **Current Target**: `KBudget`
-- **Upcoming Queue**: `KAlchemy`, `KColony`, `KStarForge`, `KBreakout`, `KRogue`, `KPong`, `KPac`, `KBBS`.
+- **Current Target**: `KAlchemy`
+- **Upcoming Queue**: `KColony`, `KStarForge`, `KBreakout`, `KRogue`, `KPong`, `KPac`, `KBBS`, `KBudget`.
 
 ### 6. Feature Expander Queue (`kilo-expander`)
 - **Current Target**: `KColosseum`
@@ -112,6 +112,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 ---
 
 ## Recent Execution Logs (Max 5 Entries)
+
+- **2026-10-10T15:13:30-07:00 — kilo-qa: KBudget (Pass 5 QA & State Integrity Audit)**
+  - Status: PASS ✅ (Zero Vite build errors; <999 KB ceiling verified: 67.4 KB)
+  - State & Persistence: Enhanced quicksave/quickload (F5/F9) snapshot restoring, modal auto-dismiss, and quota safety.
+  - Tutorial & UX: Synced first-run guide flags and ensured edit state cleanup on delete.
+  - Queue: Advanced QA target to `KAlchemy`; rotation handoff to `kilo-expander`.
 
 - **2026-10-10T15:03:00-07:00 — kilo-usability: KSnake (Usability Audit & Maturity Verification)**
   - Status: ⏭️ Skip — App usability, layout, and HiDPI canvas are mature and complete (Loop 10).
@@ -135,9 +141,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Features: 14 tabs (x86 sandbox, YM2612 tracker, 64KB intro arena, ANSI studio, FXP courier, PE-Pack '99).
   - Integration: Verified `kweb://warez` in KNet, portal.html, webring.html; build clean (Vite 511ms, 415 KB < 999 KB).
   - Queue: Advanced creator target to `kweb://geocities`; handoff to `kilo-graphics`.
-
-- **2026-10-10T14:16:00-07:00 — kilo-expander: KColosseum (Deep Feature Expansion & Combat Pacing)**
-  - Status: PASS ✅ (`KColosseum` feature expansion passed)
-  - Combat & Tactical Depth: Unlocked Roman War Cry tactical ability in solo league arena; adds crowd favor surge, enemy stagger status, and war horn audio.
-  - Sizing & Build: Build clean (`npm run build`, 245 KB < 999 KB).
-  - Queue: Advanced expander target to `KAbyss`; handoff to `kilo-creator`.

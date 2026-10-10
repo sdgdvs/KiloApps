@@ -743,11 +743,15 @@
         function closeTutorialModal() {
             if (tutorialModal) tutorialModal.classList.remove('active');
             const dontShow = document.getElementById('check-tutorial-dontshow');
-            if (!dontShow || dontShow.checked) {
-                try { localStorage.setItem('kbudget_tutorialSeen', '1'); } catch(e) {}
-            }
+            try {
+                if (dontShow && !dontShow.checked) {
+                    localStorage.removeItem('kbudget_tutorialSeen');
+                } else {
+                    localStorage.setItem('kbudget_tutorialSeen', '1');
+                }
+            } catch(e) {}
             const checkTutorialSeen = document.getElementById('check-tutorial-seen');
-            if (checkTutorialSeen) checkTutorialSeen.checked = true;
+            if (checkTutorialSeen) checkTutorialSeen.checked = (!dontShow || dontShow.checked);
         }
 
         function escapeHtml(str) {
@@ -825,8 +829,12 @@
             if (helpModal) helpModal.classList.remove('active');
             try {
                 const checkTutorialSeen = document.getElementById('check-tutorial-seen');
-                if (checkTutorialSeen && checkTutorialSeen.checked) {
-                    localStorage.setItem('kbudget_tutorialSeen', '1');
+                if (checkTutorialSeen) {
+                    if (checkTutorialSeen.checked) {
+                        localStorage.setItem('kbudget_tutorialSeen', '1');
+                    } else {
+                        localStorage.removeItem('kbudget_tutorialSeen');
+                    }
                 }
             } catch(e) {}
         }
@@ -893,7 +901,7 @@
                     transactions = snapshot.transactions;
                     if (snapshot.currency) {
                         currencySymbol = String(snapshot.currency).trim() || '$';
-                        localStorage.setItem('kbudget_currency', currencySymbol);
+                        try { localStorage.setItem('kbudget_currency', currencySymbol); } catch(e) {}
                         if (currencyInput) currencyInput.value = currencySymbol;
                         if (amountLabel) amountLabel.textContent = `Amount (${currencySymbol})`;
                     }
@@ -906,6 +914,9 @@
                         if (sortEl) sortEl.value = snapshot.sort;
                     }
                     currentPage = snapshot.page || 1;
+                    if (tutorialModal && tutorialModal.classList.contains('active')) {
+                        closeTutorialModal();
+                    }
                     saveTransactions();
                     render();
                     showToast(`Quickloaded ${transactions.length} transaction(s) snapshot [F9] ✅`, "success");
@@ -1042,6 +1053,9 @@
             id = decodeURIComponent(id);
             if (!confirm("Are you sure you want to delete this transaction?")) {
                 return;
+            }
+            if (editingTransactionId && String(editingTransactionId) === String(id)) {
+                closeModal();
             }
             const prevLen = transactions.length;
             transactions = transactions.filter(t => String(t.id) !== String(id));
