@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-creator
-next_agent: kilo-graphics
+current_agent: kilo-graphics
+next_agent: kilo-tester
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -12,15 +12,14 @@ model: gemini-3.8-flash-medium
 timeout_minutes: 6
 status: ready
 current_targets:
-  kilo_creator: kweb://users/~neon_rider
+  kilo_creator: kweb://asm-temple
   kilo_graphics: KDragon
   kilo_tester: KAudio
   kilo_usability: KBudget
   kilo_qa: KColony
   kilo_expander: KRogue
-virtual_web_target: kweb://users/~neon_rider
+virtual_web_target: kweb://asm-temple
 virtual_web_rotation:
-- kweb://asm-temple
 - kweb://cybercafe
 - kweb://10.19.99.4/classified
 - kweb://echo-subsystem.net
@@ -31,10 +30,11 @@ virtual_web_rotation:
 - kweb://warez
 - kweb://geocities
 - kweb://users/~neon_rider
+- kweb://asm-temple
 last_run:
-  agent: kilo-expander
-  app: KPong
-  timestamp: 2026-10-10T16:23:00-07:00
+  agent: kilo-creator
+  app: kweb://users/~neon_rider
+  timestamp: 2026-10-10T16:30:05-07:00
 last_planner_run: '2026-10-10T16:30:00Z'
 ---
 
@@ -73,7 +73,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ### 1. Virtual 1999 Web & ARG Node Creator (`kilo-creator`)
 - **Mission**: Build functional Web 1.0 destinations in `KiloOS/public/web/` (<999KB). Standalone OS apps frozen at 92 native / 99 web.
-- **Current Target**: `kweb://geocities`
+- **Current Target**: `kweb://asm-temple`
 - **Upcoming Queue**: `kweb://users/~neon_rider`, `kweb://asm-temple`, `kweb://cybercafe`, `kweb://10.19.99.4/classified`, `kweb://echo-subsystem.net`, `kweb://deep-core`, `kweb://darknet`, `kweb://portal`, `kweb://webring`, `kweb://warez`.
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
@@ -113,6 +113,11 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-10T16:30:05-07:00 — kilo-creator: kweb://users/~neon_rider (Virtual 1999 Web Expansion)**
+  - Status: PASS ✅ (x86 opcode sandbox, demoscene devlog, YM2612 tracker, VGA canvas, webring & KNet verified)
+  - Integrity: Anti-Potemkin compliant, fully interactive Web 1.0 experience; file size 256.6 KB << 999 KB ceiling.
+  - Queue: Advanced virtual web target to `kweb://asm-temple`; rotation handoff to `kilo-graphics`.
+
 - **2026-10-10T16:23:00-07:00 — kilo-expander: KPong (Engine Depth & Replay/Keybinds Expansion)**
   - Status: PASS ✅ (Keybinding manager [K], Replay .kpr export/import, match telemetry & analytics)
   - Engine Depth: Full custom key rebinding with persistence, .kpr replay file format, and live telemetry tracking.
@@ -135,8 +140,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Interactive UI: Audited F1/H help, F5/F9 quicksave/quickload, Esc/backdrop dismissals, numeric tab hotkeys (1-8).
   - Build & Size: Vite build clean (365ms); size 439.4 KB << 999 KB ceiling.
   - Queue: Advanced tester target to `KAudio`; rotation handoff to `kilo-usability`.
-
-- **2026-10-10T22:38:02+0000 — kilo-graphics: KDragon (Zero-Token Auto-Skip — Inappropriate Target)**
-  - Status: ⏭️ Skip — Imagen 3 asset replacement not appropriate for KDragon (pure vector, board game, or mature art).
-  - Optimization: Handled via orchestrator pre-flight zero-token auto-skip.
-  - Queue: Advanced `kilo-graphics` to `KDragon`; rotation handoff to `kilo-tester`.
