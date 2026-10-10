@@ -1898,30 +1898,41 @@
             }
 
             saveToStorage(slot = 'kstarforge_quicksave') {
-                const payload = {
-                    grid: this.grid,
-                    resources: this.resources,
-                    completedContracts: this.completedContracts,
-                    drydockProgress: this.drydockProgress,
-                    timestamp: Date.now()
-                };
-                localStorage.setItem(slot, JSON.stringify(payload));
-                showToast('QUICKSAVE SUCCESSFUL [F5]');
-                audio.playSuccess();
+                try {
+                    const payload = {
+                        grid: this.grid,
+                        resources: this.resources,
+                        completedContracts: this.completedContracts,
+                        drydockProgress: this.drydockProgress,
+                        selectedShipClass: this.selectedShipClass,
+                        shipName: this.shipName,
+                        timestamp: Date.now()
+                    };
+                    localStorage.setItem(slot, JSON.stringify(payload));
+                    showToast('QUICKSAVE SUCCESSFUL [F5]');
+                    audio.playSuccess();
+                    return true;
+                } catch (e) {
+                    console.warn('[KStarForge] Storage quota error during quicksave:', e);
+                    showToast('QUICKSAVE FAILED (STORAGE LIMIT)');
+                    return false;
+                }
             }
 
             loadFromStorage(slot = 'kstarforge_quicksave') {
-                const raw = localStorage.getItem(slot);
-                if (!raw) {
-                    showToast('NO SAVE FILE LOCATED');
-                    return false;
-                }
                 try {
+                    const raw = localStorage.getItem(slot);
+                    if (!raw) {
+                        showToast('NO SAVE FILE LOCATED');
+                        return false;
+                    }
                     const data = JSON.parse(raw);
                     if (data.grid) this.grid = data.grid;
                     if (data.resources) this.resources = data.resources;
                     if (data.completedContracts) this.completedContracts = data.completedContracts;
                     if (data.drydockProgress !== undefined) this.drydockProgress = data.drydockProgress;
+                    if (data.selectedShipClass) this.selectedShipClass = data.selectedShipClass;
+                    if (data.shipName) this.shipName = data.shipName;
                     this.calculateTelemetry();
                     showToast('QUICKSAVE RESTORED [F9]');
                     audio.playSuccess();
