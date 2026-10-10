@@ -650,7 +650,7 @@
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
         Open Image(s)
       </button>
-      <input type="file" id="fileInput" multiple accept="image/*" style="display:none;" />
+      <input type="file" id="fileInput" multiple accept="image/*,.tga,.pcx" style="display:none;" />
       <button id="btnDemo" aria-label="Demo Studio Image" title="Load Demo Sample Studio Image (N)">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
         Demo [N]
@@ -734,6 +734,24 @@
               <button id="btnFilterWarm">Warm</button>
               <button id="btnFilterCool">Cool</button>
               <button id="btnFilterDramatic">Dramatic</button>
+            </div>
+          </div>
+
+          <div class="control-group" style="margin-top:10px; border-top:1px solid var(--glass-border); padding-top:10px;">
+            <label>Photographic & Optical DSP</label>
+            <div class="control-group" style="margin-top:4px;">
+              <label>Vignette Falloff <span class="val" id="valVignette">0%</span></label>
+              <input type="range" id="sliderVignette" min="0" max="100" value="0">
+              <button id="btnApplyVignette" style="margin-top:4px;">Apply Vignette</button>
+            </div>
+            <div class="control-group" style="margin-top:6px;">
+              <label>Chromatic Aberration <span class="val" id="valChromatic">0px</span></label>
+              <input type="range" id="sliderChromatic" min="0" max="25" value="0">
+              <button id="btnApplyChromatic" style="margin-top:4px;">Apply Chromatic Aberration</button>
+            </div>
+            <div class="row" style="margin-top:6px;">
+              <button id="btnApplyMedian" style="flex:1;">Median / Despeckle</button>
+              <button id="btnAutoEqualize" style="flex:1;">Histogram Equalize</button>
             </div>
           </div>
 
@@ -958,7 +976,11 @@
               <option value="image/jpeg">JPEG (.jpg)</option>
               <option value="image/webp">WEBP (.webp)</option>
               <option value="image/bmp">BMP (.bmp)</option>
+              <option value="image/x-tga">Truevision TGA (.tga)</option>
+              <option value="image/x-pcx">ZSoft PCX (.pcx)</option>
               <option value="image/x-portable-pixmap">Netpbm PPM (.ppm)</option>
+              <option value="application/x-gpl">GIMP Palette (.gpl)</option>
+              <option value="application/x-act">Adobe Color Table (.act)</option>
             </select>
             <div id="qualityGroup" class="control-group hidden" style="margin-top:8px;">
               <label>Quality <span class="val" id="valQuality">90%</span></label>
@@ -1734,7 +1756,10 @@
 
   // Load Files into Playlist
   function loadFiles(files) {
-    const validFiles = Array.from(files).filter(f => f.type.startsWith('image/'));
+    const validFiles = Array.from(files).filter(f => {
+      const lower = f.name.toLowerCase();
+      return f.type.startsWith('image/') || lower.endsWith('.tga') || lower.endsWith('.pcx');
+    });
     if (!validFiles.length) return;
 
     let loadedCount = 0;
@@ -1744,7 +1769,69 @@
       const reader = new FileReader();
       reader.onload = (e) => {
         const arrayBuffer = e.target.result;
-        const blob = new Blob([arrayBuffer], { type: file.type });
+        const lowerName = file.name.toLowerCase();
+
+        // Check for TGA binary format
+        if (lowerName.endsWith('.tga') || file.type === 'image/x-tga') {
+          const tgaCanvas = parseTGA(arrayBuffer);
+          if (tgaCanvas) {
+            tgaCanvas.toBlob(blob => {
+              const blobUrl = URL.createObjectURL(blob);
+              const img = new Image();
+              img.onload = () => {
+                state.playlist.push({
+                  file,
+                  img,
+                  origSrc: blobUrl,
+                  name: file.name,
+                  size: formatBytes(file.size),
+                  type: 'image/x-tga',
+                  exif: { camera: 'Truevision TGA File', date: new Date().toLocaleDateString(), exposure: 'N/A', aperture: 'N/A', iso: 'N/A', software: 'TGA 24/32-bit' }
+                });
+                loadedCount++;
+                if (loadedCount === validFiles.length) {
+                  updatePlaylistUI();
+                  if (state.currentIndex === -1) selectImage(0);
+                  else selectImage(initialLen);
+                }
+              };
+              img.src = blobUrl;
+            }, 'image/png');
+            return;
+          }
+        }
+
+        // Check for PCX binary format
+        if (lowerName.endsWith('.pcx') || file.type === 'image/x-pcx') {
+          const pcxCanvas = parsePCX(arrayBuffer);
+          if (pcxCanvas) {
+            pcxCanvas.toBlob(blob => {
+              const blobUrl = URL.createObjectURL(blob);
+              const img = new Image();
+              img.onload = () => {
+                state.playlist.push({
+                  file,
+                  img,
+                  origSrc: blobUrl,
+                  name: file.name,
+                  size: formatBytes(file.size),
+                  type: 'image/x-pcx',
+                  exif: { camera: 'ZSoft PCX File', date: new Date().toLocaleDateString(), exposure: 'N/A', aperture: 'N/A', iso: 'N/A', software: 'PCX 24-bit RLE' }
+                });
+                loadedCount++;
+                if (loadedCount === validFiles.length) {
+                  updatePlaylistUI();
+                  if (state.currentIndex === -1) selectImage(0);
+                  else selectImage(initialLen);
+                }
+              };
+              img.src = blobUrl;
+            }, 'image/png');
+            return;
+          }
+        }
+
+        const blob = new Blob([arrayBuffer], { type: file.type || 'image/png' });
         const img = new Image();
         img.onload = () => {
           if (img.width <= 0 || img.height <= 0 || img.width > 8192 || img.height > 8192) {
@@ -3554,7 +3641,17 @@
     }
     const fmt = exportFormat.value;
     const quality = parseInt(document.getElementById('sliderQuality').value) / 100;
-    const extMap = { 'image/png': '.png', 'image/jpeg': '.jpg', 'image/webp': '.webp', 'image/bmp': '.bmp', 'image/x-portable-pixmap': '.ppm' };
+    const extMap = {
+      'image/png': '.png',
+      'image/jpeg': '.jpg',
+      'image/webp': '.webp',
+      'image/bmp': '.bmp',
+      'image/x-tga': '.tga',
+      'image/x-pcx': '.pcx',
+      'image/x-portable-pixmap': '.ppm',
+      'application/x-gpl': '.gpl',
+      'application/x-act': '.act'
+    };
     const link = document.createElement('a');
     const name = (state.playlist[state.currentIndex]?.name || 'edited_image').split('.')[0];
     link.download = `${name}_edited${extMap[fmt] || '.png'}`;
@@ -3562,6 +3659,38 @@
     if (fmt === 'image/bmp') {
       const bmpBlob = canvasToBMP(ui.mainCanvas);
       const url = URL.createObjectURL(bmpBlob);
+      link.href = url;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      setTimeout(() => URL.revokeObjectURL(url), 2000);
+    } else if (fmt === 'image/x-tga') {
+      const tgaBlob = canvasToTGA(ui.mainCanvas);
+      const url = URL.createObjectURL(tgaBlob);
+      link.href = url;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      setTimeout(() => URL.revokeObjectURL(url), 2000);
+    } else if (fmt === 'image/x-pcx') {
+      const pcxBlob = canvasToPCX(ui.mainCanvas);
+      const url = URL.createObjectURL(pcxBlob);
+      link.href = url;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      setTimeout(() => URL.revokeObjectURL(url), 2000);
+    } else if (fmt === 'application/x-gpl') {
+      const gplBlob = extractGPL(ui.mainCanvas, name);
+      const url = URL.createObjectURL(gplBlob);
+      link.href = url;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      setTimeout(() => URL.revokeObjectURL(url), 2000);
+    } else if (fmt === 'application/x-act') {
+      const actBlob = extractACT(ui.mainCanvas);
+      const url = URL.createObjectURL(actBlob);
       link.href = url;
       document.body.appendChild(link);
       link.click();
@@ -3581,7 +3710,7 @@
       link.click();
       document.body.removeChild(link);
     }
-    showToast("Export download started", "success");
+    showToast(`Export download (${extMap[fmt] || fmt}) started`, "success");
   };
 
   function canvasToPPM(canvas) {
@@ -3638,6 +3767,404 @@
     }
     return new Blob([buffer], { type: 'image/bmp' });
   }
+
+  function canvasToTGA(canvas) {
+    const w = canvas.width;
+    const h = canvas.height;
+    const ctx = canvas.getContext('2d');
+    const imgData = ctx.getImageData(0, 0, w, h);
+    const data = imgData.data;
+
+    const header = new Uint8Array(18);
+    header[2] = 2; // Uncompressed true-color
+    header[12] = w & 0xFF;
+    header[13] = (w >> 8) & 0xFF;
+    header[14] = h & 0xFF;
+    header[15] = (h >> 8) & 0xFF;
+    header[16] = 32; // 32 bits BGRA
+    header[17] = 0x28; // Origin top-left, 8-bit alpha
+
+    const pixelBytes = w * h * 4;
+    const buffer = new Uint8Array(18 + pixelBytes);
+    buffer.set(header, 0);
+
+    let offset = 18;
+    for (let i = 0; i < data.length; i += 4) {
+      buffer[offset++] = data[i + 2]; // B
+      buffer[offset++] = data[i + 1]; // G
+      buffer[offset++] = data[i];     // R
+      buffer[offset++] = data[i + 3]; // A
+    }
+    return new Blob([buffer], { type: 'image/x-tga' });
+  }
+
+  function canvasToPCX(canvas) {
+    const w = canvas.width;
+    const h = canvas.height;
+    const ctx = canvas.getContext('2d');
+    const imgData = ctx.getImageData(0, 0, w, h);
+    const data = imgData.data;
+
+    const bytesPerLine = (w % 2 === 0) ? w : w + 1;
+    const header = new Uint8Array(128);
+    header[0] = 0x0A; // ZSoft PCX
+    header[1] = 0x05; // Version 3.0
+    header[2] = 0x01; // RLE encoding
+    header[3] = 0x08; // 8 bits per plane
+    const xMax = w - 1, yMax = h - 1;
+    header[8] = xMax & 0xFF; header[9] = (xMax >> 8) & 0xFF;
+    header[10] = yMax & 0xFF; header[11] = (yMax >> 8) & 0xFF;
+    header[12] = w & 0xFF; header[13] = (w >> 8) & 0xFF;
+    header[14] = h & 0xFF; header[15] = (h >> 8) & 0xFF;
+    header[65] = 3; // 3 planes (RGB)
+    header[66] = bytesPerLine & 0xFF; header[67] = (bytesPerLine >> 8) & 0xFF;
+    header[68] = 1; // Color
+    header[70] = w & 0xFF; header[71] = (w >> 8) & 0xFF;
+    header[72] = h & 0xFF; header[73] = (h >> 8) & 0xFF;
+
+    const chunks = [header];
+    for (let y = 0; y < h; y++) {
+      for (let plane = 0; plane < 3; plane++) {
+        const line = new Uint8Array(bytesPerLine);
+        for (let x = 0; x < w; x++) {
+          const idx = (y * w + x) * 4;
+          line[x] = data[idx + plane];
+        }
+        const encoded = [];
+        let i = 0;
+        while (i < bytesPerLine) {
+          const b = line[i];
+          let run = 1;
+          while (i + run < bytesPerLine && line[i + run] === b && run < 63) {
+            run++;
+          }
+          if (run > 1 || (b & 0xC0) === 0xC0) {
+            encoded.push(0xC0 | run);
+            encoded.push(b);
+          } else {
+            encoded.push(b);
+          }
+          i += run;
+        }
+        chunks.push(new Uint8Array(encoded));
+      }
+    }
+    return new Blob(chunks, { type: 'image/x-pcx' });
+  }
+
+  function extractPalette(canvas, maxColors = 256) {
+    const ctx = canvas.getContext('2d');
+    const data = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+    const colorCounts = new Map();
+    const step = Math.max(1, Math.floor(data.length / (4 * 40000))) * 4;
+    for (let i = 0; i < data.length; i += step) {
+      const r = (data[i] >> 3) << 3;
+      const g = (data[i + 1] >> 3) << 3;
+      const b = (data[i + 2] >> 3) << 3;
+      const key = (r << 16) | (g << 8) | b;
+      colorCounts.set(key, (colorCounts.get(key) || 0) + 1);
+    }
+    const sorted = Array.from(colorCounts.entries()).sort((a, b) => b[1] - a[1]);
+    const palette = [];
+    for (let i = 0; i < Math.min(maxColors, sorted.length); i++) {
+      const k = sorted[i][0];
+      palette.push([(k >> 16) & 0xFF, (k >> 8) & 0xFF, k & 0xFF]);
+    }
+    while (palette.length < 256) palette.push([0, 0, 0]);
+    return palette;
+  }
+
+  function extractGPL(canvas, name) {
+    const pal = extractPalette(canvas, 256);
+    let gpl = `GIMP Palette\nName: ${name || 'KImage'}\nColumns: 16\n#\n`;
+    pal.slice(0, 256).forEach((c, idx) => {
+      gpl += `${c[0].toString().padStart(3, ' ')} ${c[1].toString().padStart(3, ' ')} ${c[2].toString().padStart(3, ' ')} Color ${idx + 1}\n`;
+    });
+    return new Blob([gpl], { type: 'application/x-gpl' });
+  }
+
+  function extractACT(canvas) {
+    const pal = extractPalette(canvas, 256);
+    const buf = new Uint8Array(768);
+    for (let i = 0; i < 256; i++) {
+      buf[i * 3] = pal[i][0];
+      buf[i * 3 + 1] = pal[i][1];
+      buf[i * 3 + 2] = pal[i][2];
+    }
+    return new Blob([buf], { type: 'application/x-act' });
+  }
+
+  function parseTGA(buffer) {
+    try {
+      const view = new DataView(buffer);
+      if (buffer.byteLength < 18) return null;
+      const idLen = view.getUint8(0);
+      const imgType = view.getUint8(2);
+      const w = view.getUint16(12, true);
+      const h = view.getUint16(14, true);
+      const bpp = view.getUint8(16);
+      const descriptor = view.getUint8(17);
+
+      if (w <= 0 || h <= 0 || (bpp !== 24 && bpp !== 32 && bpp !== 8)) return null;
+      if (imgType !== 2 && imgType !== 10 && imgType !== 3) return null;
+
+      const canvas = document.createElement('canvas');
+      canvas.width = w;
+      canvas.height = h;
+      const ctx = canvas.getContext('2d');
+      const imgData = ctx.createImageData(w, h);
+      const dst = imgData.data;
+
+      const topToBottom = (descriptor & 0x20) !== 0;
+      const bytesPerPixel = bpp / 8;
+      let offset = 18 + idLen;
+
+      if (imgType === 2) {
+        for (let y = 0; y < h; y++) {
+          const row = topToBottom ? y : (h - 1 - y);
+          for (let x = 0; x < w; x++) {
+            const dstIdx = (row * w + x) * 4;
+            const b = view.getUint8(offset++);
+            const g = (bytesPerPixel >= 2) ? view.getUint8(offset++) : b;
+            const r = (bytesPerPixel >= 3) ? view.getUint8(offset++) : b;
+            const a = (bytesPerPixel === 4) ? view.getUint8(offset++) : 255;
+            dst[dstIdx] = r; dst[dstIdx + 1] = g; dst[dstIdx + 2] = b; dst[dstIdx + 3] = a;
+          }
+        }
+      } else if (imgType === 10) {
+        let pixelCount = w * h;
+        let p = 0;
+        const u8 = new Uint8Array(buffer);
+        while (p < pixelCount && offset < u8.length) {
+          const header = u8[offset++];
+          const count = (header & 0x7F) + 1;
+          const isRLE = (header & 0x80) !== 0;
+          if (isRLE) {
+            const b = u8[offset++];
+            const g = (bytesPerPixel >= 2) ? u8[offset++] : b;
+            const r = (bytesPerPixel >= 3) ? u8[offset++] : b;
+            const a = (bytesPerPixel === 4) ? u8[offset++] : 255;
+            for (let c = 0; c < count; c++, p++) {
+              const x = p % w;
+              const y = Math.floor(p / w);
+              const row = topToBottom ? y : (h - 1 - y);
+              const dstIdx = (row * w + x) * 4;
+              dst[dstIdx] = r; dst[dstIdx + 1] = g; dst[dstIdx + 2] = b; dst[dstIdx + 3] = a;
+            }
+          } else {
+            for (let c = 0; c < count; c++, p++) {
+              const b = u8[offset++];
+              const g = (bytesPerPixel >= 2) ? u8[offset++] : b;
+              const r = (bytesPerPixel >= 3) ? u8[offset++] : b;
+              const a = (bytesPerPixel === 4) ? u8[offset++] : 255;
+              const x = p % w;
+              const y = Math.floor(p / w);
+              const row = topToBottom ? y : (h - 1 - y);
+              const dstIdx = (row * w + x) * 4;
+              dst[dstIdx] = r; dst[dstIdx + 1] = g; dst[dstIdx + 2] = b; dst[dstIdx + 3] = a;
+            }
+          }
+        }
+      }
+      ctx.putImageData(imgData, 0, 0);
+      return canvas;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  function parsePCX(buffer) {
+    try {
+      if (buffer.byteLength < 128) return null;
+      const view = new DataView(buffer);
+      const u8 = new Uint8Array(buffer);
+      if (u8[0] !== 0x0A) return null;
+      const xMin = view.getUint16(4, true);
+      const yMin = view.getUint16(6, true);
+      const xMax = view.getUint16(8, true);
+      const yMax = view.getUint16(10, true);
+      const w = xMax - xMin + 1;
+      const h = yMax - yMin + 1;
+      const nPlanes = u8[65];
+      const bytesPerLine = view.getUint16(66, true);
+      if (w <= 0 || h <= 0 || bytesPerLine <= 0) return null;
+
+      const canvas = document.createElement('canvas');
+      canvas.width = w;
+      canvas.height = h;
+      const ctx = canvas.getContext('2d');
+      const imgData = ctx.createImageData(w, h);
+      const dst = imgData.data;
+
+      let offset = 128;
+      const totalLineBytes = nPlanes * bytesPerLine;
+      const scanlineBuf = new Uint8Array(totalLineBytes);
+
+      for (let y = 0; y < h; y++) {
+        let linePos = 0;
+        while (linePos < totalLineBytes && offset < u8.length) {
+          const byteVal = u8[offset++];
+          if ((byteVal & 0xC0) === 0xC0) {
+            const count = byteVal & 0x3F;
+            const dataVal = u8[offset++];
+            for (let c = 0; c < count && linePos < totalLineBytes; c++) {
+              scanlineBuf[linePos++] = dataVal;
+            }
+          } else {
+            scanlineBuf[linePos++] = byteVal;
+          }
+        }
+        for (let x = 0; x < w; x++) {
+          const dstIdx = (y * w + x) * 4;
+          if (nPlanes === 3) {
+            dst[dstIdx] = scanlineBuf[x];
+            dst[dstIdx + 1] = scanlineBuf[bytesPerLine + x];
+            dst[dstIdx + 2] = scanlineBuf[2 * bytesPerLine + x];
+            dst[dstIdx + 3] = 255;
+          } else {
+            const v = scanlineBuf[x];
+            dst[dstIdx] = v; dst[dstIdx + 1] = v; dst[dstIdx + 2] = v; dst[dstIdx + 3] = 255;
+          }
+        }
+      }
+      ctx.putImageData(imgData, 0, 0);
+      return canvas;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  // Optical & Photographic DSP Filters
+  function applyVignetteFilter() {
+    const item = state.playlist[state.currentIndex];
+    if (!item) return;
+    const intensity = (parseInt(document.getElementById('sliderVignette')?.value) || 0) / 100;
+    if (intensity <= 0) return;
+
+    mutatePixels((src, dst, w, h) => {
+      const cx = w / 2;
+      const cy = h / 2;
+      const maxDist = Math.sqrt(cx * cx + cy * cy);
+      for (let y = 0; y < h; y++) {
+        for (let x = 0; x < w; x++) {
+          const idx = (y * w + x) * 4;
+          const dx = x - cx;
+          const dy = y - cy;
+          const d = Math.sqrt(dx * dx + dy * dy) / maxDist;
+          const falloff = 1 - Math.pow(d, 1.8) * intensity;
+          const factor = Math.max(0, Math.min(1, falloff));
+          dst[idx] = Math.round(src[idx] * factor);
+          dst[idx + 1] = Math.round(src[idx + 1] * factor);
+          dst[idx + 2] = Math.round(src[idx + 2] * factor);
+          dst[idx + 3] = src[idx + 3];
+        }
+      }
+    }, `Applied Vignette Falloff (${Math.round(intensity * 100)}%)`);
+  }
+
+  function applyChromaticAberrationFilter() {
+    const item = state.playlist[state.currentIndex];
+    if (!item) return;
+    const shift = parseInt(document.getElementById('sliderChromatic')?.value) || 0;
+    if (shift <= 0) return;
+
+    mutatePixels((src, dst, w, h) => {
+      for (let y = 0; y < h; y++) {
+        for (let x = 0; x < w; x++) {
+          const idx = (y * w + x) * 4;
+          const rX = Math.max(0, x - shift);
+          const bX = Math.min(w - 1, x + shift);
+          const rIdx = (y * w + rX) * 4;
+          const bIdx = (y * w + bX) * 4;
+          dst[idx] = src[rIdx];
+          dst[idx + 1] = src[idx + 1];
+          dst[idx + 2] = src[bIdx + 2];
+          dst[idx + 3] = src[idx + 3];
+        }
+      }
+    }, `Applied Chromatic Aberration (${shift}px split)`);
+  }
+
+  function applyMedianFilter() {
+    const item = state.playlist[state.currentIndex];
+    if (!item) return;
+
+    mutatePixels((src, dst, w, h) => {
+      const rVals = new Uint8Array(9);
+      const gVals = new Uint8Array(9);
+      const bVals = new Uint8Array(9);
+
+      for (let y = 0; y < h; y++) {
+        for (let x = 0; x < w; x++) {
+          let count = 0;
+          for (let dy = -1; dy <= 1; dy++) {
+            const sy = Math.max(0, Math.min(h - 1, y + dy));
+            for (let dx = -1; dx <= 1; dx++) {
+              const sx = Math.max(0, Math.min(w - 1, x + dx));
+              const p = (sy * w + sx) * 4;
+              rVals[count] = src[p];
+              gVals[count] = src[p + 1];
+              bVals[count] = src[p + 2];
+              count++;
+            }
+          }
+          rVals.sort();
+          gVals.sort();
+          bVals.sort();
+          const idx = (y * w + x) * 4;
+          dst[idx] = rVals[4];
+          dst[idx + 1] = gVals[4];
+          dst[idx + 2] = bVals[4];
+          dst[idx + 3] = src[idx + 3];
+        }
+      }
+    }, "Applied 3x3 Median / Despeckle filter");
+  }
+
+  function applyHistogramEqualization() {
+    const item = state.playlist[state.currentIndex];
+    if (!item) return;
+
+    mutatePixels((src, dst, w, h) => {
+      const hist = new Uint32Array(256);
+      const totalPixels = w * h;
+      for (let i = 0; i < src.length; i += 4) {
+        const lum = Math.round(0.299 * src[i] + 0.587 * src[i + 1] + 0.114 * src[i + 2]);
+        hist[lum]++;
+      }
+      const cdf = new Float32Array(256);
+      let cum = 0;
+      let minCdf = 0;
+      for (let i = 0; i < 256; i++) {
+        cum += hist[i];
+        cdf[i] = cum / totalPixels;
+        if (minCdf === 0 && hist[i] > 0) minCdf = cdf[i];
+      }
+      const map = new Uint8Array(256);
+      for (let i = 0; i < 256; i++) {
+        map[i] = Math.round(((cdf[i] - minCdf) / (1 - minCdf)) * 255);
+      }
+      for (let i = 0; i < src.length; i += 4) {
+        dst[i] = map[src[i]];
+        dst[i + 1] = map[src[i + 1]];
+        dst[i + 2] = map[src[i + 2]];
+        dst[i + 3] = src[i + 3];
+      }
+    }, "Applied Histogram Equalization");
+  }
+
+  document.getElementById('sliderVignette')?.addEventListener('input', (e) => {
+    document.getElementById('valVignette').textContent = `${e.target.value}%`;
+  });
+  document.getElementById('btnApplyVignette')?.addEventListener('click', applyVignetteFilter);
+
+  document.getElementById('sliderChromatic')?.addEventListener('input', (e) => {
+    document.getElementById('valChromatic').textContent = `${e.target.value}px`;
+  });
+  document.getElementById('btnApplyChromatic')?.addEventListener('click', applyChromaticAberrationFilter);
+
+  document.getElementById('btnApplyMedian')?.addEventListener('click', applyMedianFilter);
+  document.getElementById('btnAutoEqualize')?.addEventListener('click', applyHistogramEqualization);
 
   // Slideshow
   document.getElementById('btnPrev').onclick = () => selectImage((state.currentIndex - 1 + state.playlist.length) % state.playlist.length);

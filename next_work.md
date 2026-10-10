@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-expander
-next_agent: kilo-creator
+current_agent: kilo-creator
+next_agent: kilo-graphics
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -17,7 +17,7 @@ current_targets:
   kilo_tester: KColony
   kilo_usability: KStarForge
   kilo_qa: KRogue
-  kilo_expander: KImage
+  kilo_expander: KAudio
 virtual_web_target: "kweb://darknet"
 virtual_web_rotation:
   - "kweb://asm-temple"
@@ -32,11 +32,17 @@ virtual_web_rotation:
   - "kweb://geocities"
   - "kweb://users/~neon_rider"
 last_run:
-  agent: kilo-qa
-  app: KBreakout
-  timestamp: "2026-10-10T00:14:00-07:00"
+  agent: kilo-expander
+  app: KImage
+  timestamp: "2026-10-10T00:33:00-07:00"
 last_planner_run: "2026-10-09T15:32:00Z"
 ---
+
+### Agent Run Log — 2026-10-10T00:33 (kilo-expander)
+- **Status:** 🟢 Completed (`KImage`)
+- Deep format expansion: added Truevision TGA (.tga) & ZSoft PCX (.pcx) binary import/export, plus GIMP (.gpl) & Adobe (.act) palette exports.
+- Integrated optical DSP studio: Vignette falloff, Chromatic Aberration RGB split, 3x3 Median despeckle, and Histogram Equalization.
+- Build clean (`npm run build`). Advanced queue to `KAudio`; handoff to `kilo-creator`.
 
 ### Agent Run Log — 2026-10-10T00:14 (kilo-qa)
 - **Status:** 🟢 Completed (`KBreakout`)
