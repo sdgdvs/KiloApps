@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-tester
+current_agent: kilo-qa
+next_agent: kilo-expander
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -15,7 +15,7 @@ current_targets:
   kilo_creator: kweb://users/~neon_rider
   kilo_graphics: KDragon
   kilo_tester: KAudio
-  kilo_usability: KAudio
+  kilo_usability: KBudget
   kilo_qa: KAlchemy
   kilo_expander: KPong
 virtual_web_target: kweb://users/~neon_rider
@@ -32,9 +32,9 @@ virtual_web_rotation:
 - kweb://geocities
 - kweb://users/~neon_rider
 last_run:
-  agent: kilo-tester
-  app: KSanctuary
-  timestamp: 2026-10-10T15:48:40-07:00
+  agent: kilo-usability
+  app: KAudio
+  timestamp: 2026-10-10T16:03:15-07:00
 last_planner_run: '2026-10-10T16:30:00Z'
 ---
 
@@ -86,8 +86,8 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Upcoming Queue**: `KStellar`, `KSubmarine`, `KTrader`, `KType`, `KVault`, `KVoid`, `KCalendar`, `KChart`, `KChat`, `KMine`, `KPing`, `KSanctuary`.
 
 ### 4. Usability & UX Queue (`kilo-usability`)
-- **Current Target**: `KAudio`
-- **Upcoming Queue**: `KBudget`, `KPing`, `KNetMap`, `KRogue`, `KCalendar`, `KSnake`.
+- **Current Target**: `KBudget`
+- **Upcoming Queue**: `KPing`, `KNetMap`, `KRogue`, `KCalendar`, `KSnake`, `KAudio`.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
 - **Current Target**: `KAlchemy`
@@ -113,6 +113,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-10T16:03:15-07:00 — kilo-usability: KAudio (UI/UX & Window Ergonomics Pass)**
+  - Status: PASS ✅ (Tuned window sizing to 1020x820 in App.jsx & meta tags; responsive container padding & height scaling)
+  - UX & Ergonomics: Enhanced compact height layout (@media max-height: 850px) preventing vertical overflow.
+  - Build & Size: Vite build clean (479ms); size 142.5 KB << 999 KB ceiling.
+  - Queue: Advanced usability target to `KBudget`; rotation handoff to `kilo-qa`.
+
 - **2026-10-10T15:48:40-07:00 — kilo-tester: KSanctuary (UI Audit & Startup Verification)**
   - Status: PASS ✅ (No issues found; 0 JS errors, clean modal dismissals, valid 573x140 canvas)
   - Interactive UI: Audited F1/H help, F5/F9 quicksave/quickload, Esc/backdrop dismissals, numeric tab hotkeys (1-8).
@@ -133,9 +139,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Status: PASS ✅ (Delver Chronicle tab, run seed generator, telemetry metrics, filterable event ledger, log export)
   - Build & Size: Vite build clean (529ms); file size ~465 KB << 999 KB ceiling.
   - Queue: Advanced expander target to `KPong`; rotation handoff to `kilo-creator`.
-
-- **2026-10-10T15:13:30-07:00 — kilo-qa: KBudget (Pass 5 QA & State Integrity Audit)**
-  - Status: PASS ✅ (Zero Vite build errors; <999 KB ceiling verified: 67.4 KB)
-  - State & Persistence: Enhanced quicksave/quickload (F5/F9) snapshot restoring, modal auto-dismiss, and quota safety.
-  - Tutorial & UX: Synced first-run guide flags and ensured edit state cleanup on delete.
-  - Queue: Advanced QA target to `KAlchemy`; rotation handoff to `kilo-expander`.

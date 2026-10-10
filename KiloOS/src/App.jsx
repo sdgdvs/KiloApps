@@ -32,7 +32,7 @@ const APPS = [
   { id: 'kpong', title: 'KPong', url: '/apps/kpong.html', exeUrl: '/exe/KPong.exe', icon: '/assets/icons/kpong.ico', w: 960, h: 860, folder: 'Games' },
   { id: 'kterm', title: 'KTerm', url: '/apps/kterm.html', exeUrl: '/exe/KTerm.exe', icon: '/assets/icons/kterm.ico', w: 960, h: 600, folder: 'System' },
   { id: 'kmaze', title: 'KMaze', url: '/apps/kmaze.html', exeUrl: '/exe/KMaze.exe', icon: '/assets/icons/kmaze.ico', w: 800, h: 700, folder: 'Games' },
-  { id: 'kaudio', title: 'KAudio', url: '/apps/kaudio.html', exeUrl: '/exe/KAudio.exe', icon: '/assets/icons/kaudio.ico', w: 1040, h: 860, folder: 'Media' },
+  { id: 'kaudio', title: 'KAudio', url: '/apps/kaudio.html', exeUrl: '/exe/KAudio.exe', icon: '/assets/icons/kaudio.ico', w: 1020, h: 820, folder: 'Media' },
   { id: 'kradio', title: 'KRadio', url: '/apps/kradio.html', exeUrl: '/exe/KRadio.exe', icon: '/assets/icons/kradio.ico', w: 500, h: 480, folder: 'Media' },
   { id: 'kcalendar', title: 'KCalendar', url: '/apps/kcalendar.html', exeUrl: '/exe/KCalendar.exe', icon: '/assets/icons/kcalendar.ico', w: 1020, h: 720, folder: 'Office' },
   { id: 'ksolitaire', title: 'KSolitaire', url: '/apps/ksolitaire.html', exeUrl: '/exe/KSolitaire.exe', icon: '/assets/icons/ksolitaire.ico', w: 940, h: 800, folder: 'Games' },
