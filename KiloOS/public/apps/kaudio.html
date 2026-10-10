@@ -795,7 +795,7 @@
         <div style="border-top: 1px dashed rgba(255,255,255,0.06); margin-top: 2px; padding-top: 6px;">
           <div class="panel-header">
             <label style="display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; color: #2dd4bf; cursor: pointer;">
-              <input type="checkbox" id="chkChorus"> 🌊 Stereo BBD Chorus (H)
+              <input type="checkbox" id="chkChorus"> 🌊 Stereo BBD Chorus (N)
             </label>
             <span style="font-size: 10px; color: #5eead4;">Dual LFO Ensemble</span>
           </div>
@@ -875,7 +875,7 @@
       <strong style="text-align: right; color: #38bdf8;">Arrow Keys ← / →</strong> <span>Shift Octave (-4 to +4)</span>
       <strong style="text-align: right; color: #38bdf8;">Z / X</strong> <span>Live Record / Playback Performance</span>
       <strong style="text-align: right; color: #38bdf8;">Space / P / C</strong> <span>Start/Pause Sequencer / Clear Grid Pattern</span>
-      <strong style="text-align: right; color: #38bdf8;">L / O / V</strong> <span>Toggle Stereo Delay / Overdrive Saturation / Vis Mode</span>
+      <strong style="text-align: right; color: #38bdf8;">L / O / B / N / V</strong> <span>Toggle Delay / Overdrive / Bitcrusher / Chorus / Vis Mode</span>
       <strong style="text-align: right; color: #34d399;">Ctrl + J</strong> <span>Toggle Online Collaborative Jam Room Modal</span>
       <strong style="text-align: right; color: #38bdf8;">F5 / F9</strong> <span>Quicksave / Quickload State</span>
       <strong style="text-align: right; color: #38bdf8;">Ctrl + S / Ctrl + O</strong> <span>Save / Open JSON Synthesizer Projects</span>
@@ -1206,8 +1206,15 @@
         snesDamp: chkSnesDamp ? chkSnesDamp.checked : true,
         snesDampCutoff: snesDampCutoff ? snesDampCutoff.value : '3200',
         drive: chkDrive ? chkDrive.checked : false,
-        driveAmount: driveAmount ? driveAmount.value : '15'
+        driveAmount: driveAmount ? driveAmount.value : '15',
+        bitcrush: (typeof chkBitcrush !== 'undefined' && chkBitcrush) ? chkBitcrush.checked : false,
+        crushBits: (typeof crushBits !== 'undefined' && crushBits) ? crushBits.value : '12',
+        chorus: (typeof chkChorus !== 'undefined' && chkChorus) ? chkChorus.checked : false,
+        chorusRate: (typeof chorusRate !== 'undefined' && chorusRate) ? chorusRate.value : '1.2',
+        chorusDepth: (typeof chorusDepth !== 'undefined' && chorusDepth) ? chorusDepth.value : '6.0',
+        chorusMix: (typeof chorusMix !== 'undefined' && chorusMix) ? chorusMix.value : '0.40'
       },
+      tuning: (typeof scaleTuningSelect !== 'undefined' && scaleTuningSelect) ? scaleTuningSelect.value : '12tet',
       visMode: visMode,
       octaveShift: octaveShift,
       masterVol: masterVol ? masterVol.value : '0.3',
@@ -2655,6 +2662,24 @@
       return;
     }
 
+    if (e.key.toUpperCase() === 'B' && !e.repeat && !e.ctrlKey) {
+      if (typeof chkBitcrush !== 'undefined' && chkBitcrush) {
+        chkBitcrush.checked = !chkBitcrush.checked;
+        chkBitcrush.onchange();
+        showToast(chkBitcrush.checked ? '👾 Bitcrusher Enabled [B]' : 'Bitcrusher Disabled [B]', 'info', 1800);
+      }
+      return;
+    }
+
+    if (e.key.toUpperCase() === 'N' && !e.repeat && !e.ctrlKey) {
+      if (typeof chkChorus !== 'undefined' && chkChorus) {
+        chkChorus.checked = !chkChorus.checked;
+        chkChorus.onchange();
+        showToast(chkChorus.checked ? '🌊 Stereo Chorus Enabled [N]' : 'Stereo Chorus Disabled [N]', 'info', 1800);
+      }
+      return;
+    }
+
     if (e.key.toUpperCase() === 'V' && !e.repeat) {
       btnVisMode.click();
       showToast(`📊 Visualizer Mode: ${visMode === 'scope' ? 'Oscilloscope' : 'FFT Spectrum'} [V]`, 'info', 1800);
@@ -2867,8 +2892,15 @@
         delayFeedback: delayFeedback.value,
         delayMix: delayMix.value,
         drive: chkDrive.checked,
-        driveAmount: driveAmount.value
+        driveAmount: driveAmount.value,
+        bitcrush: (typeof chkBitcrush !== 'undefined' && chkBitcrush) ? chkBitcrush.checked : false,
+        crushBits: (typeof crushBits !== 'undefined' && crushBits) ? crushBits.value : '12',
+        chorus: (typeof chkChorus !== 'undefined' && chkChorus) ? chkChorus.checked : false,
+        chorusRate: (typeof chorusRate !== 'undefined' && chorusRate) ? chorusRate.value : '1.2',
+        chorusDepth: (typeof chorusDepth !== 'undefined' && chorusDepth) ? chorusDepth.value : '6.0',
+        chorusMix: (typeof chorusMix !== 'undefined' && chorusMix) ? chorusMix.value : '0.40'
       },
+      tuning: (typeof scaleTuningSelect !== 'undefined' && scaleTuningSelect) ? scaleTuningSelect.value : '12tet',
       bpm: seqBpmEl.value,
       tracks: seqTracks.map(t => ({ name: t.name, grid: t.grid }))
     };
@@ -2928,6 +2960,22 @@
             if (data.effects.driveAmount) { driveAmount.value = data.effects.driveAmount; driveAmount.oninput(); }
             chkDrive.onchange();
           }
+          if (typeof data.effects.bitcrush !== 'undefined' && typeof chkBitcrush !== 'undefined' && chkBitcrush) {
+            chkBitcrush.checked = !!data.effects.bitcrush;
+            if (data.effects.crushBits && crushBits) { crushBits.value = data.effects.crushBits; crushBits.oninput(); }
+            chkBitcrush.onchange();
+          }
+          if (typeof data.effects.chorus !== 'undefined' && typeof chkChorus !== 'undefined' && chkChorus) {
+            chkChorus.checked = !!data.effects.chorus;
+            if (data.effects.chorusRate && chorusRate) { chorusRate.value = data.effects.chorusRate; chorusRate.oninput(); }
+            if (data.effects.chorusDepth && chorusDepth) { chorusDepth.value = data.effects.chorusDepth; chorusDepth.oninput(); }
+            if (data.effects.chorusMix && chorusMix) { chorusMix.value = data.effects.chorusMix; chorusMix.oninput(); }
+            chkChorus.onchange();
+          }
+        }
+        if (data.tuning && scaleTuningSelect) {
+          scaleTuningSelect.value = data.tuning;
+          scaleTuningSelect.onchange();
         }
         if (data.bpm) { seqBpmEl.value = data.bpm; valBpmEl.textContent = data.bpm; }
         if (data.tracks) {
@@ -3182,6 +3230,44 @@
             driveNode.curve = chkDrive.checked ? makeDistortionCurve(parseFloat(driveAmount.value)) : null;
           }
         }
+        if (typeof data.effects.bitcrush !== 'undefined' && typeof chkBitcrush !== 'undefined' && chkBitcrush) {
+          chkBitcrush.checked = !!data.effects.bitcrush;
+          if (data.effects.crushBits && crushBits && valCrushBits) {
+            crushBits.value = data.effects.crushBits;
+            valCrushBits.textContent = data.effects.crushBits + '-bit';
+          }
+          if (crushNode) {
+            crushNode.curve = chkBitcrush.checked ? makeBitcrushCurve(parseInt(crushBits.value)) : null;
+          }
+        }
+        if (typeof data.effects.chorus !== 'undefined' && typeof chkChorus !== 'undefined' && chkChorus) {
+          chkChorus.checked = !!data.effects.chorus;
+          if (data.effects.chorusRate && chorusRate && valChorusRate) {
+            chorusRate.value = data.effects.chorusRate;
+            valChorusRate.textContent = data.effects.chorusRate + 'Hz';
+          }
+          if (data.effects.chorusDepth && chorusDepth && valChorusDepth) {
+            chorusDepth.value = data.effects.chorusDepth;
+            valChorusDepth.textContent = data.effects.chorusDepth + 'ms';
+          }
+          if (data.effects.chorusMix && chorusMix && valChorusMix) {
+            chorusMix.value = data.effects.chorusMix;
+            valChorusMix.textContent = Math.round(parseFloat(data.effects.chorusMix) * 100) + '%';
+          }
+          if (chorusWetGainNode && ctx) {
+            chorusWetGainNode.gain.setValueAtTime(chkChorus.checked ? parseFloat(chorusMix.value) : 0, ctx.currentTime);
+          }
+          if (chorusLfoNode && ctx && chorusRate) {
+            chorusLfoNode.frequency.setValueAtTime(parseFloat(chorusRate.value), ctx.currentTime);
+          }
+          if (chorusLfoGainNode && ctx && chorusDepth) {
+            chorusLfoGainNode.gain.setValueAtTime(parseFloat(chorusDepth.value) / 1000, ctx.currentTime);
+          }
+        }
+      }
+      if (data.tuning && typeof scaleTuningSelect !== 'undefined' && scaleTuningSelect) {
+        scaleTuningSelect.value = data.tuning;
+        scaleTuningSelect.onchange();
       }
       if (data.visMode) {
         visMode = data.visMode;
