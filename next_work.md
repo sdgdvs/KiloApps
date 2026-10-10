@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-qa
+current_agent: kilo-qa
+next_agent: kilo-expander
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -15,7 +15,7 @@ current_targets:
   kilo_creator: kweb://webring
   kilo_graphics: KColosseum
   kilo_tester: KNetMap
-  kilo_usability: KRogue
+  kilo_usability: KCalendar
   kilo_qa: KPac
   kilo_expander: KStarForge
 virtual_web_target: kweb://webring
@@ -32,9 +32,9 @@ virtual_web_rotation:
 - kweb://geocities
 - kweb://users/~neon_rider
 last_run:
-  agent: kilo-tester
-  app: KFortress
-  timestamp: 2026-10-10T15:31:00+0000
+  agent: kilo-usability
+  app: KRogue
+  timestamp: 2026-10-10T17:15:00+0000
 last_planner_run: '2026-10-10T16:30:00Z'
 ---
 
@@ -138,3 +138,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Status: PASS ✅ (`KPong` Pass 5 QA audit passed)
   - Verification: Verified F5/F9 quicksave/quickload state persistence & tutorial flag. Added startLoop/stopLoop cancelAnimationFrame guards on visibilitychange.
   - Sizing & Build: Builds clean (`npm run build`, native `build.bat`, 132 KB < 999 KB). Advanced queue to `KPac`; handoff to `kilo-expander`.
+
+### Agent Run Log — 2026-10-10T17:15 (kilo-usability)
+- **Status:** 🟢 Completed (`KRogue`)
+- Window sizing tuned to 1020x840 in `App.jsx` for zero clipping/scrollbars.
+- Verified mature UX: HiDPI rendering, modal backdrop dismiss, and F1/H help intact.
+- Build: clean (`npm run build`). Version bumped to 0.4.28.
