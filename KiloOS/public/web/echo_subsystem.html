@@ -999,6 +999,7 @@
     <button class="tab-btn" id="tabBtn8" onclick="switchTab('mesh')">⚡ [08] AIRGAP MESH &amp; ARTIFACTS</button>
     <button class="tab-btn" id="tabBtn9" onclick="switchTab('seismic')">🪨 [09] LITHOSPHERIC SEISMIC &amp; STRATA PROFILER</button>
     <button class="tab-btn" id="tabBtn10" onclick="switchTab('tape')">📼 [10] HELMHOLTZ CAVITY &amp; 4-TRACK ANALOG TAPE</button>
+    <button class="tab-btn" id="tabBtn11" onclick="switchTab('heterodyne')">🔬 [11] HETERODYNE DOWNSHIFTER &amp; CAVITATION SONAR</button>
   </nav>
 
   <!-- TAB 1: RESEARCH JOURNAL & OBSERVATION LOGBOOK -->
@@ -2535,6 +2536,149 @@ END TRANSMISSION // ESARL 1999</div>
     </div>
   </div>
 
+
+  <!-- TAB 11: HETERODYNE DOWNSHIFTER & CAVITATION SONAR MATRIX -->
+  <div id="pane-heterodyne" class="tab-pane">
+    <div class="card-box">
+      <div class="card-header">
+        <span>INTERACTIVE HETERODYNE DOWNSHIFTER &amp; CAVITATION SONAR MATRIX</span>
+        <div style="display:flex; gap:6px; align-items:center;">
+          <span class="slot-badge valid">DIEGETIC SIGINT REV 1999.12</span>
+          <span style="font-size:11px; color:var(--green-phosphor);">HALITE BED: -2,150 FT</span>
+        </div>
+      </div>
+      <p style="font-size:12px; color:#94a3b8; margin-bottom:12px;">
+        High-precision RF &amp; lithospheric down-conversion suite. Downshifts the persistent 1999.0 Hz lithospheric carrier wave via heterodyne product detection into the audible baseband (0–100 Hz), paired with a deep borehole piezo-cavitation sonar transducer probing the Permian Salado strata.
+      </p>
+
+      <!-- Section 1: Heterodyne Product Detector -->
+      <div style="background:#040915; border:1px solid var(--border-bright); padding:12px; border-radius:4px; margin-bottom:14px;">
+        <div style="font-weight:700; color:#38bdf8; font-size:12px; margin-bottom:8px; display:flex; justify-content:space-between;">
+          <span>📻 SECTION A: RF/ACOUSTIC HETERODYNE PRODUCT DETECTOR</span>
+          <span id="hetBeatBadge" style="color:var(--amber-led); font-family:monospace;">IF BEAT: 49.0 Hz</span>
+        </div>
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:12px; margin-bottom:12px;">
+          <div>
+            <label style="font-size:11px; color:#bae6fd; display:block; margin-bottom:4px;">Incoming RF Carrier (f_RF):</label>
+            <div style="font-size:14px; font-weight:700; color:var(--green-phosphor); background:#020612; border:1px solid var(--border-dim); padding:6px 10px; border-radius:3px;">1999.00 Hz (LOCKED)</div>
+          </div>
+          <div>
+            <label style="font-size:11px; color:#bae6fd; display:flex; justify-content:space-between; margin-bottom:4px;">
+              <span>Local Oscillator (f_LO):</span>
+              <span id="loFreqLabel" style="color:#38bdf8; font-weight:700;">1950.0 Hz</span>
+            </label>
+            <input type="range" id="rngLOFreq" min="1700" max="2300" step="0.5" value="1950" style="width:100%; accent-color:#38bdf8;" oninput="onLOFreqChange(this.value)">
+            <div style="display:flex; justify-content:space-between; font-size:10px; color:#64748b; margin-top:2px;">
+              <span>1700 Hz</span><span>1950 Hz</span><span>1999 Hz (Zero Beat)</span><span>2300 Hz</span>
+            </div>
+          </div>
+          <div>
+            <label style="font-size:11px; color:#bae6fd; display:block; margin-bottom:4px;">Heterodyne Demod Mode:</label>
+            <select id="selHetMode" class="term-input" style="width:100%; height:34px;" onchange="onHetModeChange()">
+              <option value="product">Balanced Ring Product (f_RF * f_LO)</option>
+              <option value="envelope">Envelope Detector + Low-Pass</option>
+              <option value="quadrature">I/Q Quadrature Demodulator</option>
+            </select>
+          </div>
+          <div>
+            <label style="font-size:11px; color:#bae6fd; display:block; margin-bottom:4px;">Audio Heterodyne Monitor:</label>
+            <div style="display:flex; gap:6px;">
+              <button class="btn-retro btn-green" id="btnHetAudio" style="flex:1;" onclick="toggleHetAudioMonitor()">🔊 Start Beat Audio</button>
+              <button class="btn-retro" onclick="snapZeroBeat()">Zero Beat (1999Hz)</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Oscilloscope Canvas for Heterodyne Beat -->
+        <div style="background:#01040a; border:1px solid #1e315b; border-radius:3px; padding:6px; position:relative;">
+          <div style="position:absolute; top:10px; left:12px; font-size:10px; color:#38bdf8; font-family:monospace; pointer-events:none;">
+            HETERODYNE TIME-DOMAIN BEAT OSCILLOSCOPE [TIME: 50ms/DIV]
+          </div>
+          <canvas id="hetOscCanvas" width="800" height="110" style="width:100%; height:110px; display:block;"></canvas>
+        </div>
+      </div>
+
+      <!-- Section 2: Borehole Cavitation Sonar Transducer -->
+      <div style="background:#040915; border:1px solid var(--border-bright); padding:12px; border-radius:4px; margin-bottom:14px;">
+        <div style="font-weight:700; color:var(--green-phosphor); font-size:12px; margin-bottom:8px; display:flex; justify-content:space-between;">
+          <span>🪨 SECTION B: BOREHOLE PIEZO-CAVITATION SONAR TRANSDUCER</span>
+          <span id="sonarTwtBadge" style="color:#38bdf8; font-family:monospace;">TWT ECHO DELAY: 296.8 ms</span>
+        </div>
+        <div style="display:grid; grid-template-columns: 2fr 1fr; gap:12px; margin-bottom:10px;">
+          <div>
+            <div style="display:flex; gap:12px; align-items:center; margin-bottom:8px; flex-wrap:wrap;">
+              <button class="btn-retro btn-red" id="btnFirePing" style="font-weight:700; padding:8px 14px;" onclick="fireCavitationPing()">⚡ FIRE PIEZO CAVITATION PING</button>
+              <div style="flex:1; min-width:180px;">
+                <label style="font-size:11px; color:#bae6fd; display:flex; justify-content:space-between;">
+                  <span>Transducer Depth in Salt Strata:</span>
+                  <span id="transducerDepthLabel" style="font-weight:700; color:var(--amber-led);">2,150 ft (655.3 m)</span>
+                </label>
+                <input type="range" id="rngDepth" min="500" max="3200" step="10" value="2150" style="width:100%; accent-color:var(--amber-led);" oninput="onDepthChange(this.value)">
+              </div>
+            </div>
+            <!-- Canvas: Strata Wavefront Echogram -->
+            <div style="background:#01040a; border:1px solid #1e315b; border-radius:3px; padding:6px; position:relative;">
+              <div style="position:absolute; top:10px; left:12px; font-size:10px; color:var(--green-phosphor); font-family:monospace; pointer-events:none;">
+                LITHOSPHERIC CAVITATION ECHOGRAM // PERMIAN STRATA PROFILE
+              </div>
+              <canvas id="sonarEchoCanvas" width="800" height="150" style="width:100%; height:150px; display:block;"></canvas>
+            </div>
+          </div>
+
+          <!-- Telemetry & Strata Readouts -->
+          <div style="background:#020612; border:1px solid var(--border-dim); padding:10px; border-radius:3px; font-size:11px; display:flex; flex-direction:column; justify-content:space-between;">
+            <div>
+              <div style="color:#38bdf8; font-weight:700; border-bottom:1px solid var(--border-dim); padding-bottom:4px; margin-bottom:6px;">ACOUSTIC STRATA TELEMETRY</div>
+              <div style="margin-bottom:4px;"><strong>Medium:</strong> Salado Rock Salt (Halite)</div>
+              <div style="margin-bottom:4px;"><strong>Velocity (V_p):</strong> <span style="color:var(--green-phosphor);">4,420 m/s</span></div>
+              <div style="margin-bottom:4px;"><strong>Cavitation Pressure:</strong> 14.8 MPa</div>
+              <div style="margin-bottom:4px;"><strong>Acoustic Impedance:</strong> 9.61 MRayl</div>
+              <div style="margin-bottom:4px;"><strong>Cavity Reflection Q:</strong> 158.2</div>
+              <div style="margin-bottom:4px;"><strong>Echo Return Amplitude:</strong> <span id="sonarReturnAmp" style="color:var(--amber-led);">-18.4 dB</span></div>
+              <div><strong>Gateway Correlation:</strong> <code style="color:#bae6fd;">echo-gw-07.kilonet.internal</code></div>
+            </div>
+            <div style="margin-top:8px;">
+              <button class="btn-retro btn-purple" style="width:100%; font-size:11px;" onclick="pipeEchoToStego()">🧩 Route Echo Waveform to Steganography</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section 3: Sector 0x1999 Demodulation & Memory Correlator -->
+      <div style="background:#040915; border:1px solid var(--border-bright); padding:12px; border-radius:4px;">
+        <div style="font-weight:700; color:var(--amber-led); font-size:12px; margin-bottom:8px; display:flex; justify-content:space-between;">
+          <span>💾 SECTION C: SECTOR 0x1999 DEMODULATOR &amp; HEX MEMORY CORRELATOR</span>
+          <span style="color:#94a3b8; font-size:11px;">OFFSET: <code>0x0040:0x1999</code> // XOR KEY: <code>0x7F</code></span>
+        </div>
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-bottom:10px;">
+          <div>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+              <span style="font-size:11px; color:#bae6fd;">Demodulated Sector Buffer (Raw Hex Stream):</span>
+              <button class="btn-retro" style="font-size:10px; padding:1px 6px;" onclick="cycleHexEntropy()">Inject Carrier Jitter</button>
+            </div>
+            <pre id="sectorHexDump" style="background:#02050c; border:1px solid var(--border-dim); padding:8px; font-size:11px; color:var(--border-bright); height:120px; overflow-y:auto; border-radius:3px; line-height:1.4;"></pre>
+          </div>
+          <div>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+              <span style="font-size:11px; color:#bae6fd;">Decrypted ASCII Stream (XOR 0x7F Demasked):</span>
+              <button class="btn-retro btn-amber" style="font-size:10px; padding:1px 6px;" onclick="toggleXorMask()">Toggle 0x7F Cipher</button>
+            </div>
+            <div id="sectorAsciiStream" style="background:#02050c; border:1px solid var(--border-dim); padding:8px; font-size:11px; color:var(--green-phosphor); height:120px; overflow-y:auto; border-radius:3px; line-height:1.4; font-family:monospace;"></div>
+          </div>
+        </div>
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+          <div style="font-size:11px; color:#94a3b8;">
+            Deep Virtual Web Correlator: Cross-referenced with <a href="/web/classified.html" style="color:var(--green-phosphor);">10.19.99.4 Classified</a> &amp; <a href="/web/deep_core.html" style="color:#38bdf8;">Deep Core #017</a>.
+          </div>
+          <div style="display:flex; gap:6px;">
+            <button class="btn-retro btn-green" onclick="exportSonarTelemetryDat()">💾 Export Raw Telemetry (.DAT)</button>
+            <button class="btn-retro btn-amber" onclick="feedBeatToTerminal()">💻 Send Intermediate Frequency to Terminal</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Footer & Central Webring -->
   <footer class="lab-footer">
     <div>
@@ -3930,7 +4074,7 @@ Host: kweb://echo-subsystem.net | Station: SIG-1999-ECHO
   }
 
   function switchTab(name) {
-    const tabs = ['journal', 'decoder', 'spectral', 'filter', 'sigint', 'stego', 'terminal', 'mesh', 'seismic', 'tape'];
+    const tabs = ['journal', 'decoder', 'spectral', 'filter', 'sigint', 'stego', 'terminal', 'mesh', 'seismic', 'tape', 'heterodyne'];
     tabs.forEach((t, i) => {
       const btn = document.getElementById('tabBtn' + (i + 1));
       const pane = document.getElementById('pane-' + t);
@@ -3952,6 +4096,7 @@ Host: kweb://echo-subsystem.net | Station: SIG-1999-ECHO
     if (name === 'mesh') checkArtifactSlots();
     if (name === 'seismic') initSeismicCanvases();
     if (name === 'tape') initTapeAndCavity();
+    if (name === 'heterodyne') initHeterodyneAndSonar();
   }
 
   function executeTermInput() {
@@ -7038,7 +7183,7 @@ kweb://echo-subsystem.net
     if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA')) return;
 
     if (e.key >= '1' && e.key <= '9') {
-      const tabs = ['journal', 'decoder', 'spectral', 'filter', 'sigint', 'stego', 'terminal', 'mesh', 'seismic', 'tape'];
+      const tabs = ['journal', 'decoder', 'spectral', 'filter', 'sigint', 'stego', 'terminal', 'mesh', 'seismic', 'tape', 'heterodyne'];
       switchTab(tabs[parseInt(e.key) - 1]);
       e.preventDefault();
       return;
@@ -7109,6 +7254,398 @@ kweb://echo-subsystem.net
     selectStrataLayer(2);
     initTapeAndCavity();
   });
+
+  /* ============================================================
+     11. HETERODYNE DOWNSHIFTER & CAVITATION SONAR ENGINE
+     ============================================================ */
+  let hetAudioOsc = null;
+  let hetAudioGain = null;
+  let hetAudioPlaying = false;
+  let hetLOFreq = 1950.0;
+  const hetRFFreq = 1999.0;
+  let hetAnimId = null;
+  let sonarEchoAnimId = null;
+  let sonarPingActive = false;
+  let sonarPingStartTime = 0;
+  let xorMaskActive = true;
+  let rawSectorBytes = [];
+
+  const DIEGETIC_HEX_MESSAGES = [
+    "ESARL_CARLSBAD_SALT_BED_TRANSPONDER_1999.0_HZ_LOCKED",
+    "GATEWAY_07_ROUTING_PACKETS_TO_10.19.99.4_AND_DEEP_CORE",
+    "ANOMALY_AT_0x0040:0x1999_AUTONOMOUS_FLEET_PRECURSOR_DETECTED",
+    "LITHOSPHERIC_IMPEDANCE_9.61_MRAYL_UNBROKEN_ACOUSTIC_LINK",
+    "ECHO_CIRCUIT_LOOP_CLOSED_THROUGH_DARKNET_NODE_0x7F"
+  ];
+
+  function initHeterodyneAndSonar() {
+    initSectorMemoryDump();
+    renderHetOscilloscope();
+    renderSonarEchogram();
+  }
+
+  function onLOFreqChange(val) {
+    hetLOFreq = parseFloat(val);
+    const lbl = document.getElementById('loFreqLabel');
+    if (lbl) lbl.textContent = hetLOFreq.toFixed(1) + " Hz";
+    updateHetBeatDisplay();
+    if (hetAudioPlaying && hetAudioOsc && audioCtx) {
+      const beat = Math.abs(hetRFFreq - hetLOFreq);
+      hetAudioOsc.frequency.setValueAtTime(Math.max(10, beat), audioCtx.currentTime);
+    }
+  }
+
+  function updateHetBeatDisplay() {
+    const beat = Math.abs(hetRFFreq - hetLOFreq);
+    const badge = document.getElementById('hetBeatBadge');
+    if (badge) {
+      if (beat < 0.5) {
+        badge.textContent = "IF BEAT: 0.0 Hz (ZERO BEAT PHASE-LOCK)";
+        badge.style.color = "var(--green-phosphor)";
+      } else {
+        badge.textContent = `IF BEAT: ${beat.toFixed(1)} Hz`;
+        badge.style.color = "var(--amber-led)";
+      }
+    }
+  }
+
+  function snapZeroBeat() {
+    const rng = document.getElementById('rngLOFreq');
+    if (rng) {
+      rng.value = 1999.0;
+      onLOFreqChange(1999.0);
+    }
+  }
+
+  function onHetModeChange() {
+    const mode = document.getElementById('selHetMode').value;
+    logToTerminal(`>> [HETERODYNE] Demodulator mode set to: ${mode.toUpperCase()}`);
+  }
+
+  function toggleHetAudioMonitor() {
+    initAudioContext();
+    if (!audioCtx) return;
+
+    const btn = document.getElementById('btnHetAudio');
+    if (hetAudioPlaying) {
+      if (hetAudioGain) {
+        hetAudioGain.gain.setValueAtTime(hetAudioGain.gain.value, audioCtx.currentTime);
+        hetAudioGain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.08);
+      }
+      setTimeout(() => {
+        if (hetAudioOsc) { hetAudioOsc.stop(); hetAudioOsc.disconnect(); hetAudioOsc = null; }
+        hetAudioPlaying = false;
+        if (btn) { btn.textContent = "🔊 Start Beat Audio"; btn.className = "btn-retro btn-green"; }
+      }, 90);
+    } else {
+      const beat = Math.max(10, Math.abs(hetRFFreq - hetLOFreq));
+      hetAudioOsc = audioCtx.createOscillator();
+      hetAudioGain = audioCtx.createGain();
+      hetAudioOsc.type = 'sine';
+      hetAudioOsc.frequency.setValueAtTime(beat, audioCtx.currentTime);
+      hetAudioGain.gain.setValueAtTime(0.001, audioCtx.currentTime);
+      hetAudioGain.gain.linearRampToValueAtTime(0.12, audioCtx.currentTime + 0.1);
+      hetAudioOsc.connect(hetAudioGain);
+      hetAudioGain.connect(masterGainNode || audioCtx.destination);
+      hetAudioOsc.start();
+      hetAudioPlaying = true;
+      if (btn) { btn.textContent = "⏹️ Stop Beat Audio"; btn.className = "btn-retro btn-red"; }
+      logToTerminal(`>> [HETERODYNE] Beat audio active @ ${beat.toFixed(1)} Hz (f_RF: 1999.0Hz, f_LO: ${hetLOFreq.toFixed(1)}Hz).`);
+    }
+  }
+
+  function renderHetOscilloscope() {
+    const cvs = document.getElementById('hetOscCanvas');
+    if (!cvs) return;
+    const ctx = cvs.getContext('2d');
+    const w = cvs.width;
+    const h = cvs.height;
+
+    let phase = 0;
+    function draw() {
+      const pane = document.getElementById('pane-heterodyne');
+      if (!pane || !pane.classList.contains('active')) {
+        hetAnimId = requestAnimationFrame(draw);
+        return;
+      }
+      ctx.fillStyle = '#01040a';
+      ctx.fillRect(0, 0, w, h);
+
+      // Grid
+      ctx.strokeStyle = '#0e1d3b';
+      ctx.lineWidth = 1;
+      for (let x = 0; x < w; x += 40) {
+        ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, h); ctx.stroke();
+      }
+      for (let y = 0; y < h; y += 22) {
+        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke();
+      }
+
+      const beat = Math.abs(hetRFFreq - hetLOFreq);
+      const isZeroBeat = beat < 0.5;
+
+      ctx.beginPath();
+      ctx.strokeStyle = isZeroBeat ? '#00ffaa' : '#38bdf8';
+      ctx.lineWidth = 2;
+      ctx.shadowColor = isZeroBeat ? '#00ffaa' : '#38bdf8';
+      ctx.shadowBlur = 6;
+
+      for (let x = 0; x < w; x++) {
+        const t = x / w * 0.05; // 50ms window
+        const rfWave = Math.sin(2 * Math.PI * hetRFFreq * t + phase);
+        const loWave = Math.sin(2 * Math.PI * hetLOFreq * t + phase * 0.98);
+        const product = rfWave * loWave;
+        const envelope = Math.cos(2 * Math.PI * beat * t + phase);
+        const y = h / 2 + (product * 0.4 + envelope * 0.4) * (h * 0.38);
+        if (x === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+
+      phase += 0.08;
+      hetAnimId = requestAnimationFrame(draw);
+    }
+    if (!hetAnimId) hetAnimId = requestAnimationFrame(draw);
+  }
+
+  function onDepthChange(val) {
+    const depthFt = parseFloat(val);
+    const depthM = depthFt * 0.3048;
+    const lbl = document.getElementById('transducerDepthLabel');
+    if (lbl) lbl.textContent = `${depthFt.toLocaleString()} ft (${depthM.toFixed(1)} m)`;
+
+    // Calculate TWT (Two-Way Travel time) in Salado Halite (V_p = 4420 m/s)
+    const twtMs = (2 * depthM / 4420) * 1000;
+    const badge = document.getElementById('sonarTwtBadge');
+    if (badge) badge.textContent = `TWT ECHO DELAY: ${twtMs.toFixed(1)} ms`;
+
+    const ampEl = document.getElementById('sonarReturnAmp');
+    const attenuation = -12.0 - (depthFt / 100);
+    if (ampEl) ampEl.textContent = `${attenuation.toFixed(1)} dB`;
+  }
+
+  function fireCavitationPing() {
+    initAudioContext();
+    sonarPingActive = true;
+    sonarPingStartTime = performance.now();
+
+    const depthFt = parseFloat(document.getElementById('rngDepth').value);
+    const depthM = depthFt * 0.3048;
+    const twtMs = (2 * depthM / 4420) * 1000;
+
+    logToTerminal(`>> [SONAR] Piezo Cavitation Pulse fired @ 1999Hz. Depth: ${depthFt}ft. Anticipated TWT: ${twtMs.toFixed(1)}ms.`);
+
+    if (audioCtx) {
+      try {
+        const pingOsc = audioCtx.createOscillator();
+        const pingGain = audioCtx.createGain();
+        pingOsc.type = 'triangle';
+        pingOsc.frequency.setValueAtTime(1999.0, audioCtx.currentTime);
+        pingOsc.frequency.exponentialRampToValueAtTime(1200.0, audioCtx.currentTime + 0.08);
+        pingGain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+        pingGain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.12);
+        pingOsc.connect(pingGain);
+        pingGain.connect(masterGainNode || audioCtx.destination);
+        pingOsc.start();
+        pingOsc.stop(audioCtx.currentTime + 0.15);
+
+        // Echo return sound after TWT
+        setTimeout(() => {
+          if (audioCtx) {
+            const echoOsc = audioCtx.createOscillator();
+            const echoGain = audioCtx.createGain();
+            echoOsc.type = 'sine';
+            echoOsc.frequency.setValueAtTime(1999.0, audioCtx.currentTime);
+            echoGain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+            echoGain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.25);
+            echoOsc.connect(echoGain);
+            echoGain.connect(masterGainNode || audioCtx.destination);
+            echoOsc.start();
+            echoOsc.stop(audioCtx.currentTime + 0.28);
+            logToTerminal(`>> [SONAR] Hydrophone Echo Return Detected! TWT: ${twtMs.toFixed(1)}ms. Permian Salado Halite cavity validated.`);
+          }
+        }, Math.min(600, Math.max(100, twtMs)));
+      } catch (err) {
+        console.warn("Audio error during sonar ping:", err);
+      }
+    }
+  }
+
+  function renderSonarEchogram() {
+    const cvs = document.getElementById('sonarEchoCanvas');
+    if (!cvs) return;
+    const ctx = cvs.getContext('2d');
+    const w = cvs.width;
+    const h = cvs.height;
+
+    function draw() {
+      const pane = document.getElementById('pane-heterodyne');
+      if (!pane || !pane.classList.contains('active')) {
+        sonarEchoAnimId = requestAnimationFrame(draw);
+        return;
+      }
+      ctx.fillStyle = '#02050c';
+      ctx.fillRect(0, 0, w, h);
+
+      // Strata layers horizontal bands
+      const layers = [
+        { name: "Alluvium / Silt (0-300ft)", y: 0.15, color: "rgba(100,116,139,0.15)" },
+        { name: "Rustler Anhydrite (300-800ft)", y: 0.35, color: "rgba(56,189,248,0.12)" },
+        { name: "Salado Halite Bed (800-2400ft)", y: 0.70, color: "rgba(0,255,170,0.18)" },
+        { name: "Castile Anhydrite / Bedrock (2400ft+)", y: 1.0, color: "rgba(245,158,11,0.12)" }
+      ];
+
+      let lastY = 0;
+      layers.forEach(l => {
+        const curY = l.y * h;
+        ctx.fillStyle = l.color;
+        ctx.fillRect(0, lastY, w, curY - lastY);
+        ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+        ctx.beginPath(); ctx.moveTo(0, curY); ctx.lineTo(w, curY); ctx.stroke();
+        ctx.fillStyle = '#64748b';
+        ctx.font = '9px monospace';
+        ctx.fillText(l.name, 10, curY - 4);
+        lastY = curY;
+      });
+
+      // Transducer position line
+      const depthVal = parseFloat(document.getElementById('rngDepth').value || 2150);
+      const transducerNormY = (depthVal / 3200) * h;
+      ctx.strokeStyle = '#ef4444';
+      ctx.lineWidth = 1.5;
+      ctx.setLineDash([4, 4]);
+      ctx.beginPath(); ctx.moveTo(0, transducerNormY); ctx.lineTo(w, transducerNormY); ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.fillStyle = '#ef4444';
+      ctx.font = '10px monospace';
+      ctx.fillText(`TRANSDUCER HEAD: ${depthVal} FT`, w - 160, transducerNormY - 4);
+
+      // Ping wavefront animation
+      if (sonarPingActive) {
+        const elapsed = (performance.now() - sonarPingStartTime) / 1000;
+        const progress = elapsed / 0.8;
+        if (progress < 1.0) {
+          const waveRadius = progress * w * 0.7;
+          ctx.beginPath();
+          ctx.arc(w / 2, transducerNormY, waveRadius, 0, Math.PI * 2);
+          ctx.strokeStyle = `rgba(0, 255, 170, ${1.0 - progress})`;
+          ctx.lineWidth = 3;
+          ctx.stroke();
+
+          // Reflected echo wave returning from cavity
+          if (progress > 0.4) {
+            const echoProg = (progress - 0.4) / 0.6;
+            ctx.beginPath();
+            ctx.arc(w / 2, transducerNormY, (1.0 - echoProg) * waveRadius, 0, Math.PI * 2);
+            ctx.strokeStyle = `rgba(56, 189, 248, ${echoProg})`;
+            ctx.lineWidth = 2;
+            ctx.stroke();
+          }
+        } else {
+          sonarPingActive = false;
+        }
+      }
+
+      sonarEchoAnimId = requestAnimationFrame(draw);
+    }
+    if (!sonarEchoAnimId) sonarEchoAnimId = requestAnimationFrame(draw);
+  }
+
+  function initSectorMemoryDump() {
+    const rawStr = DIEGETIC_HEX_MESSAGES.join(" // ");
+    rawSectorBytes = [];
+    for (let i = 0; i < rawStr.length; i++) {
+      rawSectorBytes.push(rawStr.charCodeAt(i));
+    }
+    renderSectorMemoryViews();
+  }
+
+  function cycleHexEntropy() {
+    for (let i = 0; i < rawSectorBytes.length; i += 7) {
+      rawSectorBytes[i] = (rawSectorBytes[i] + Math.floor(Math.random() * 3) - 1) & 0xFF;
+    }
+    renderSectorMemoryViews();
+    logToTerminal(">> [SECTOR 0x1999] Injected carrier microphonic jitter into memory partition.");
+  }
+
+  function toggleXorMask() {
+    xorMaskActive = !xorMaskActive;
+    renderSectorMemoryViews();
+    logToTerminal(`>> [SECTOR 0x1999] XOR 0x7F demasking ${xorMaskActive ? 'ENABLED' : 'BYPASSED'}.`);
+  }
+
+  function renderSectorMemoryViews() {
+    const hexPre = document.getElementById('sectorHexDump');
+    const asciiDiv = document.getElementById('sectorAsciiStream');
+    if (!hexPre || !asciiDiv) return;
+
+    let hexText = "";
+    let asciiText = "";
+
+    for (let i = 0; i < rawSectorBytes.length; i += 16) {
+      const chunk = rawSectorBytes.slice(i, i + 16);
+      const offset = (0x1999 + i).toString(16).toUpperCase().padStart(4, '0');
+      const hexLine = chunk.map(b => b.toString(16).padStart(2, '0').toUpperCase()).join(' ');
+      hexText += `0x0040:${offset}  ${hexLine.padEnd(48, ' ')}
+`;
+
+      chunk.forEach(b => {
+        const charCode = xorMaskActive ? (b ^ 0x7F) : b;
+        asciiText += (charCode >= 32 && charCode <= 126) ? String.fromCharCode(charCode) : '.';
+      });
+      asciiText += '
+';
+    }
+
+    hexPre.textContent = hexText;
+    asciiDiv.textContent = asciiText;
+  }
+
+  function exportSonarTelemetryDat() {
+    let report = "================================================================================\n";
+    report += "ECHO SUBSYSTEM ACOUSTIC RESEARCH LABORATORY (ESARL)\n";
+    report += "STATION SIG-1999-ECHO // BOREHOLE SONAR & HETERODYNE DUMP\n";
+    report += "DATE: 1999-12-31 23:59:59 // SUBCARRIER: 1999.0 HZ\n";
+    report += "================================================================================\n\n";
+    report += `[HETERODYNE TELEMETRY]\n`;
+    report += `Incoming RF Carrier: 1999.00 Hz\n`;
+    report += `Local Oscillator (LO): ${hetLOFreq.toFixed(1)} Hz\n`;
+    report += `Intermediate Frequency (IF Beat): ${Math.abs(hetRFFreq - hetLOFreq).toFixed(1)} Hz\n\n`;
+    report += `[BOREHOLE SONAR PROFILE]\n`;
+    report += `Formation: Permian Salado Halite Bed\n`;
+    report += `Transducer Depth: ${document.getElementById('rngDepth').value} ft\n`;
+    report += `Acoustic Velocity (V_p): 4,420 m/s\n`;
+    report += `Cavitation Pressure: 14.8 MPa\n`;
+    report += `Impedance: 9.61 MRayl\n\n`;
+    report += `[SECTOR 0x1999 RAW MEMORY SNAPSHOT]\n`;
+    report += document.getElementById('sectorHexDump').textContent;
+    report += "\n================================================================================\n";
+    report += "AUTH: Dr. Alistair Vance, Lead Acoustic SIGINT Investigator\n";
+    report += "kweb://echo-subsystem.net\n";
+
+    const blob = new Blob([report], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'ESARL_SONAR_TELEMETRY_0x1999.DAT';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    logToTerminal(">> [EXPORT] Telemetry package exported: 'ESARL_SONAR_TELEMETRY_0x1999.DAT'.");
+  }
+
+  function feedBeatToTerminal() {
+    const beat = Math.abs(hetRFFreq - hetLOFreq);
+    logToTerminal(`>> [HETERODYNE] IF beat note: ${beat.toFixed(1)} Hz. Cross-checking against 0x0040:0x1999.`);
+    switchTab('terminal');
+  }
+
+  function pipeEchoToStego() {
+    switchTab('stego');
+    logToTerminal(">> [ROUTING] Cavitation echo impedance routed into Steganography encoder.");
+  }
+
 </script>
 </body>
 </html>
