@@ -997,7 +997,13 @@
                 const raw = localStorage.getItem(STORAGE_KEY);
                 if (raw) {
                     const parsed = JSON.parse(raw);
-                    if (parsed.messages && Array.isArray(parsed.messages)) messages = parsed.messages;
+                    if (parsed.messages && Array.isArray(parsed.messages)) {
+                        messages = parsed.messages.map((m, idx) => {
+                            if (!m || typeof m !== 'object') return null;
+                            if (!m.id) m.id = 'msg_loaded_' + idx + '_' + Math.floor(Math.random()*10000);
+                            return m;
+                        }).filter(Boolean);
+                    }
                     if (parsed.rooms && Array.isArray(parsed.rooms)) rooms = parsed.rooms;
                     if (parsed.roomTopics && typeof parsed.roomTopics === 'object') roomTopics = parsed.roomTopics;
                     if (parsed.currentUsername) currentUsername = parsed.currentUsername;
@@ -1188,6 +1194,7 @@
         const topicModalEl = document.getElementById('topicModal');
 
         function closeAllModals() {
+            try { localStorage.setItem('kchat_tutorialSeen', '1'); } catch(e) {}
             if (helpModalEl) helpModalEl.classList.remove('active');
             if (pollModalEl) pollModalEl.classList.remove('active');
             if (roomModalEl) roomModalEl.classList.remove('active');
@@ -1396,11 +1403,12 @@
                 const d = new Date(m.timestamp || Date.now());
                 const timeStr = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
+                const author = m.user || 'Anonymous';
                 let authorTagClass = 'user-tag';
                 let avatarIcon = '👤';
-                if (m.user === 'System') { authorTagClass = 'sys-tag'; avatarIcon = '⚙️'; }
-                else if (m.user === 'Action') { authorTagClass = 'sys-tag'; avatarIcon = '⚡'; }
-                else if (m.isAI || m.user.includes('AI') || m.user.includes('Bot') || m.user.includes('Cerberus')) { 
+                if (author === 'System') { authorTagClass = 'sys-tag'; avatarIcon = '⚙️'; }
+                else if (author === 'Action') { authorTagClass = 'sys-tag'; avatarIcon = '⚡'; }
+                else if (m.isAI || author.includes('AI') || author.includes('Bot') || author.includes('Cerberus')) { 
                     authorTagClass = 'ai-tag'; avatarIcon = '🤖'; 
                 }
 
@@ -1410,7 +1418,7 @@
                 header.innerHTML = `
                     <div class="msg-author">
                         <span>${avatarIcon}</span>
-                        <span class="${authorTagClass}">${escapeHtml(m.user)}</span>
+                        <span class="${authorTagClass}">${escapeHtml(author)}</span>
                         <span class="msg-room-badge">${escapeHtml(m.room || '#general')}</span>
                     </div>
                     <div class="msg-time">${timeStr}</div>
@@ -1886,13 +1894,14 @@
         });
 
         function cleanupSocket() {
-            if (ws) {
-                if (typeof ws.close === 'function') ws.close();
-                ws = null;
-            }
+            const s = ws;
+            ws = null;
             isVirtual = false;
-            btnConnect.textContent = 'Connect';
-            btnConnectGlobal.disabled = false;
+            if (s && typeof s.close === 'function') {
+                try { s.close(); } catch(e) {}
+            }
+            if (btnConnect) btnConnect.textContent = 'Connect';
+            if (btnConnectGlobal) btnConnectGlobal.disabled = false;
         }
 
         window.addEventListener('beforeunload', () => {
@@ -1970,7 +1979,6 @@
                     },
                     close: () => {
                         addMessage("System", 'Disconnected from Virtual Node.', currentRoom);
-                        cleanupSocket();
                     }
                 };
                 setTimeout(() => {
@@ -2009,7 +2017,7 @@
             if (!msg) return;
 
             if (msg === '/help' || msg.startsWith('/help ')) {
-                addMessage("System", "KChat Commands: /poll <q>? <opt1>|<opt2>, /vote <num>, /topic <text>, /roll [d20], /stats, /me <action>, /shrug, /tableflip, /nick <name>, /join <#room>, /quicksave, /quickload, /clear, /unpin", currentRoom, false);
+                addMessage("System", "KChat Commands: /poll <q>? <opt1>|<opt2>, /vote <num>, /topic <text>, /roll [d20], /stats, /me <action>, /shrug, /tableflip, /nick <name>, /join <#room>, /quicksave, /quickload, /clear, /clear all, /unpin", currentRoom, false);
                 inputEl.value = '';
                 return;
             }
@@ -2026,8 +2034,8 @@
                 return;
             }
 
-            if (msg === '/clear') {
-                window.clearLog();
+            if (msg === '/clear' || msg === '/clear all') {
+                window.clearLog(msg === '/clear all');
                 inputEl.value = '';
                 return;
             }
@@ -2185,11 +2193,16 @@
             inputEl.value = '';
         };
 
-        window.clearLog = function() {
-            messages = [];
+        window.clearLog = function(all = false) {
+            if (all) {
+                messages = [];
+                showToast("Cleared chat log for all channels.");
+            } else {
+                messages = messages.filter(m => (m.room || '#general') !== currentRoom);
+                showToast(`Cleared chat log for ${currentRoom}.`);
+            }
             safeSaveState();
             window.renderMessages();
-            showToast("Cleared chat log.");
         };
 
         // Tab visibility and audio context suspension (ARCH-05)
