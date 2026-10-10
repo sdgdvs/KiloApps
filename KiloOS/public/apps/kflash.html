@@ -944,13 +944,31 @@
 
         const allModals = [addCardModal, loadSampleModal, exportModal, importConfirmModal, statsModal, helpModal];
 
+        // Storage safety helpers (MANDATORY Architecture & Quality Standards)
+        function safeGet(key, fallback) {
+            try {
+                const val = localStorage.getItem(key);
+                if (val === null) return fallback;
+                try { return JSON.parse(val); } catch (_) { return val; }
+            } catch (_) { return fallback; }
+        }
+        function safeSet(key, value) {
+            try {
+                localStorage.setItem(key, typeof value === 'string' ? value : JSON.stringify(value));
+                return true;
+            } catch (e) {
+                console.warn('[KiloApp] Storage write failed:', e ? e.message : e);
+                return false;
+            }
+        }
+
         let deck = [];
         let currentIndex = 0;
         let searchQuery = "";
         let filteredIndices = [];
         let editingIndex = -1;
         let pendingImportedDeck = null;
-        let soundEnabled = localStorage.getItem('kflash_sound_enabled') !== 'false';
+        let soundEnabled = safeGet('kflash_sound_enabled', 'true') !== 'false';
         let audioCtx = null;
 
         // --- Audio Synthesizer (Genesis YM2612 & SNES warmth standard) ---
@@ -1085,15 +1103,15 @@
 
         // --- Deck Initialization & Persistence ---
         try {
-            const saved = localStorage.getItem('kflash_deck');
+            const saved = safeGet('kflash_deck', null);
             if (saved) {
-                deck = JSON.parse(saved);
+                deck = typeof saved === 'string' ? JSON.parse(saved) : saved;
             }
         } catch (e) {
             console.error(e);
         }
 
-        const isDeckInitialized = localStorage.getItem('kflash_initialized');
+        const isDeckInitialized = safeGet('kflash_initialized', null);
         if (!isDeckInitialized && deck.length === 0) {
             deck = [
                 { front: "Welcome to KFlash!", back: "This is a quick tutorial. Press Space or click the card to flip it." },
@@ -1102,14 +1120,14 @@
                 { front: "Editing and Deleting", back: "Use 'Edit' [E] and 'Delete' [Del] to modify the currently displayed card." },
                 { front: "Import, Export & Samples", back: "Use 'Export' to save your deck to a file, 'Import' to load one, or 'Load Sample' to try pre-made decks!" }
             ];
-            localStorage.setItem('kflash_initialized', 'true');
+            safeSet('kflash_initialized', 'true');
             saveDeck();
         }
 
         function saveDeck() {
             try {
-                localStorage.setItem('kflash_deck', JSON.stringify(deck));
-                localStorage.setItem('kflash_initialized', 'true');
+                safeSet('kflash_deck', deck);
+                safeSet('kflash_initialized', 'true');
             } catch (e) {
                 showToast('⚠️ Storage quota exceeded, changes not saved', 'danger');
             }
@@ -1233,9 +1251,9 @@
                     soundEnabled: soundEnabled,
                     timestamp: Date.now()
                 };
-                localStorage.setItem('kflash_quicksave', JSON.stringify(payload));
-                localStorage.setItem('kflash_tutorialSeen', 'true');
-                localStorage.setItem('kflash_tutorial_seen', 'true');
+                safeSet('kflash_quicksave', payload);
+                safeSet('kflash_tutorialSeen', 'true');
+                safeSet('kflash_tutorial_seen', 'true');
                 playSound('save');
                 showToast('💾 Deck snapshot quicksaved [F5]', 'success');
             } catch (e) {
@@ -1245,17 +1263,17 @@
 
         function quickloadDeck() {
             try {
-                const raw = localStorage.getItem('kflash_quicksave');
+                const raw = safeGet('kflash_quicksave', null);
                 if (!raw) {
                     showToast('⚠️ No quicksave snapshot found [Press F5 to save]', 'warning');
                     return;
                 }
-                const payload = JSON.parse(raw);
+                const payload = typeof raw === 'string' ? JSON.parse(raw) : raw;
                 if (payload && Array.isArray(payload.deck)) {
                     deck = payload.deck;
                     saveDeck();
-                    localStorage.setItem('kflash_tutorialSeen', 'true');
-                    localStorage.setItem('kflash_tutorial_seen', 'true');
+                    safeSet('kflash_tutorialSeen', 'true');
+                    safeSet('kflash_tutorial_seen', 'true');
                     if (typeof payload.searchQuery === 'string') {
                         searchQuery = payload.searchQuery;
                         searchBar.value = searchQuery;
@@ -1265,7 +1283,7 @@
                     }
                     if (typeof payload.soundEnabled === 'boolean') {
                         soundEnabled = payload.soundEnabled;
-                        localStorage.setItem('kflash_sound_enabled', String(soundEnabled));
+                        safeSet('kflash_sound_enabled', String(soundEnabled));
                         if (btnAudioToggle) {
                             btnAudioToggle.textContent = soundEnabled ? '🔊' : '🔇';
                             btnAudioToggle.title = soundEnabled ? 'Mute Sound [M]' : 'Unmute Sound [M]';
@@ -1298,7 +1316,7 @@
             btnAudioToggle.title = soundEnabled ? 'Mute Sound [M]' : 'Unmute Sound [M]';
             btnAudioToggle.addEventListener('click', () => {
                 soundEnabled = !soundEnabled;
-                localStorage.setItem('kflash_sound_enabled', String(soundEnabled));
+                safeSet('kflash_sound_enabled', String(soundEnabled));
                 btnAudioToggle.textContent = soundEnabled ? '🔊' : '🔇';
                 btnAudioToggle.title = soundEnabled ? 'Mute Sound [M]' : 'Unmute Sound [M]';
                 showToast(soundEnabled ? '🔊 Sound enabled' : '🔇 Sound muted', 'info');
@@ -1921,17 +1939,24 @@
         // --- Boot & First-Run Welcome ---
         renderCard();
 
-        const hasSeenTutorial = localStorage.getItem('kflash_tutorialSeen') || localStorage.getItem('kflash_tutorial_seen');
-        const hasQuicksave = localStorage.getItem('kflash_quicksave');
+        const hasSeenTutorial = safeGet('kflash_tutorialSeen', null) || safeGet('kflash_tutorial_seen', null);
+        const hasQuicksave = safeGet('kflash_quicksave', null);
         if (!hasSeenTutorial && !hasQuicksave) {
             setTimeout(() => {
-                if (!localStorage.getItem('kflash_tutorialSeen') && !localStorage.getItem('kflash_tutorial_seen')) {
+                if (!safeGet('kflash_tutorialSeen', null) && !safeGet('kflash_tutorial_seen', null)) {
                     showToast('💡 Welcome to KFlash! [Space] Flip · [←/→] Navigate · [A] Add · [F1] Help · [F5] Save', 'info', 5000);
-                    localStorage.setItem('kflash_tutorialSeen', 'true');
-                    localStorage.setItem('kflash_tutorial_seen', 'true');
+                    safeSet('kflash_tutorialSeen', 'true');
+                    safeSet('kflash_tutorial_seen', 'true');
                 }
             }, 350);
         }
+
+        // Lifecycle guard (Architecture invariant)
+        document.addEventListener('visibilitychange', () => {
+            if (!document.hidden) {
+                renderCard();
+            }
+        });
     </script>
 </body>
 </html>
