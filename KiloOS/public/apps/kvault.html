@@ -3548,6 +3548,7 @@ Store this sheet in a fireproof safe or secure physical vault. It provides emerg
         function handleFileSelected(e) {
             const file = e.target.files[0];
             if (!file) return;
+            try { e.target.value = ''; } catch(err) {}
             processImportFile(file);
         }
 
@@ -3567,7 +3568,9 @@ Store this sheet in a fireproof safe or secure physical vault. It provides emerg
 
                     if (data && data.salt && data.vault) {
                         // Raw encrypted backup
-                        localStorage.setItem(STORAGE_KEY, text);
+                        if (!safeStorageSet(STORAGE_KEY, text)) {
+                            return;
+                        }
                         lockVault(true);
                         showNotification("Encrypted vault imported. Please unlock with master password.");
                         return;
@@ -3996,6 +3999,20 @@ Store this sheet in a fireproof safe or secure physical vault. It provides emerg
             if (container) container.style.borderColor = 'var(--glass-border)';
             if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length > 0) {
                 processImportFile(e.dataTransfer.files[0]);
+            }
+        });
+
+        // Visibilitychange lifecycle listener for TOTP timer
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) {
+                if (totpTimer) {
+                    clearInterval(totpTimer);
+                    totpTimer = null;
+                }
+            } else {
+                if (masterKey) {
+                    startTotpTicker();
+                }
             }
         });
 
