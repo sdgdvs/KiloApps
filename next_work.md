@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-tester
-next_agent: kilo-tester
+current_agent: kilo-usability
+next_agent: kilo-qa
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -14,7 +14,7 @@ status: ready
 current_targets:
   kilo_creator: kweb://geocities
   kilo_graphics: KDragon
-  kilo_tester: KCalendar
+  kilo_tester: KChart
   kilo_usability: KBudget
   kilo_qa: KColony
   kilo_expander: KRogue
@@ -32,9 +32,9 @@ virtual_web_rotation:
 - kweb://cybercafe
 - kweb://10.19.99.4/classified
 last_run:
-  agent: kilo-graphics
-  app: KDragon
-  timestamp: 2026-10-11T08:48:02+0000
+  agent: kilo-tester
+  app: KCalendar
+  timestamp: 2026-10-11T09:05:00+0000
 last_planner_run: '2026-10-10T16:30:00Z'
 ---
 
@@ -113,27 +113,32 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-11T09:05:00+0000 — kilo-tester: KCalendar (Interactive UI & Storage Resilience Audit)**
+  - Status: PASS ✅ (Vite build clean; HTML 116 KB << 999 KB ceiling).
+  - Storage Hardening: Fixed loadEvents() double-JSON-parse TypeError on pre-parsed safeGet data.
+  - Interactive Audit: Verified Month/Week/Day/Agenda views, event modal CRUD, export/import, search filter.
+  - Queue: Advanced kilo-tester target to KChart; rotation handoff to kilo-usability.
+
 - **2026-10-11T08:48:02+0000 — kilo-graphics: KDragon (Zero-Token Auto-Skip — Inappropriate Target)**
   - Status: ⏭️ Skip — Imagen 3 asset replacement not appropriate for KDragon (pure vector, board game, or mature art).
   - Optimization: Handled via orchestrator pre-flight zero-token auto-skip.
   - Queue: Advanced `kilo-graphics` to `KDragon`; rotation handoff to `kilo-tester`.
+
 
 - **2026-10-11T08:35:00+0000 — kilo-expander: KPong (Deep Feature Expansion)**
   - Status: PASS ✅ (Vite build clean; HTML 147 KB << 999 KB ceiling).
   - Expansion: Added 6th mode 'Gravity Vortex' with central orbital singularity physics, match score goal selector (5/11/21 pts with [G] shortcut), and safe storage persistence.
   - Queue: Advanced `kilo-expander` target to `KRogue`; rotation handoff to `kilo-creator`.
 
+
 - **2026-10-11T08:25:00+0000 — kilo-qa: KAlchemy (Pass 5 QA & Build Quality Audit)**
   - Status: PASS ✅ (Clean Win32 C MSVC native compilation + Vite web build).
   - Verification: Native KAlchemy.exe clean; Vite build clean (1.22s); HTML 241 KB << 999 KB ceiling.
   - Queue: Advanced `kilo-qa` target to `KColony`; rotation handoff to `kilo-expander`.
+
 
 - **2026-10-11T08:15:00+0000 — kilo-usability: KAudio (UI/UX Usability & Accessibility Audit)**
   - Status: PASS ✅ (Accessible dialog semantics `role="dialog"`, aria-labelledby, expanded keyboard hints F1/?/Shift+H).
   - Verification: HiDPI DPR visualizer verified; Vite build clean (730ms); HTML 148 KB << 999 KB ceiling.
   - Queue: Advanced `kilo-usability` to `KBudget`; rotation handoff to `kilo-qa`.
 
-- **2026-10-11T08:05:00+0000 — kilo-tester: KCastle (Interactive UI Audit & Storage Hardening)**
-  - Status: PASS ✅ (Safe storage wrapper try/catch integration, 'R' reset hotkey, modal & button handlers verified).
-  - Verification: Vite build clean (378ms); HTML 202 KB << 999 KB ceiling.
-  - Queue: Advanced `kilo-tester` to `KCalendar`; rotation handoff to `kilo-usability`.
