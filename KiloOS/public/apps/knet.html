@@ -223,6 +223,16 @@
     display: flex;
     flex-direction: column;
     gap: 10px;
+    transition: padding 0.15s ease;
+  }
+
+  .panel.inspector-minimized {
+    padding: 6px 10px;
+    gap: 0;
+  }
+
+  .panel.inspector-minimized #httpInspectorBody {
+    display: none !important;
   }
 
   .panel-title {
@@ -653,9 +663,12 @@
 
   <!-- TAB 1: Web Browser & HTTP Inspector -->
   <div class="tab-content active" id="tab-http">
-    <div class="panel" style="flex:0 0 auto;">
-      <div class="panel-title">
-        <span>Web Navigator & Request Inspector</span>
+    <div class="panel inspector-minimized" id="httpInspectorPanel" style="flex:0 0 auto;">
+      <div class="panel-title" id="httpInspectorTitle" style="cursor:pointer;" title="Click header or toggle button to minimize / expand [I]">
+        <div style="display:flex; align-items:center; gap:8px;">
+          <span>Web Navigator & Request Inspector</span>
+          <button class="btn-chip" id="btnToggleInspector" title="Minimize / Expand Inspector [I]" style="font-weight:700; cursor:pointer; padding:2px 8px; font-size:11px;">▼ Expand</button>
+        </div>
         <div style="display:flex; gap:6px; align-items:center;">
           <button class="btn-chip" id="btnOpenForge" style="color:#38bdf8; border-color:#38bdf8; font-weight:700;">🔨 Forge Request</button>
           <button class="btn-chip" id="btnViewRendered" style="background:rgba(56,189,248,0.25); border-color:#38bdf8; font-weight:700;">🌐 Rendered View</button>
@@ -664,47 +677,49 @@
           <span id="httpStatusBadge" class="badge badge-success">HTTP 200 OK</span>
         </div>
       </div>
-      <div id="httpSearchRow" style="display:none; gap:8px;">
+      <div id="httpSearchRow" style="display:none; gap:8px; margin-top:4px;">
         <input type="text" class="filter-input" id="httpSearchInput" placeholder="Filter/Search within response body (Press Enter to find, Esc to clear)..." />
         <button class="btn" id="btnSearchHttp">Find [Enter]</button>
         <button class="btn" id="btnClearHttp">Clear</button>
       </div>
-      <div style="display:flex; flex-wrap:wrap; gap:6px; align-items:center; margin-top:2px;">
-        <span style="font-size:11px; color:var(--text-muted); font-weight:700;">1999 WEB:</span>
-        <button class="btn-chip" data-url="kweb://portal" style="background:rgba(56,189,248,0.2); border-color:#38bdf8; font-weight:700; color:#fff;">🏠 1999 Portal</button>
-        <button class="btn-chip" data-url="kweb://webring">🌐 Webring</button>
-        <button class="btn-chip" data-url="kweb://geocities" style="color:#f0abfc;">✨ GeoCities</button>
-        <button class="btn-chip" data-url="kweb://cybercafe" style="color:#fbbf24; border-color:rgba(251, 191, 36, 0.4);">☕ CyberCafe</button>
-        <button class="btn-chip" data-url="kweb://users/~neon_rider" style="color:#00ffcc; border-color:rgba(0, 255, 204, 0.4);">⚡ ~neon_rider</button>
-        <button class="btn-chip" data-url="kweb://asm-temple" style="color:#fbbf24; border-color:rgba(245, 158, 11, 0.4);">⚡ ASM Temple</button>
-        <button class="btn-chip" data-url="kweb://warez" style="color:#e879f9; border-color:rgba(232, 121, 249, 0.4);">💾 Warez</button>
-        <button class="btn-chip" data-url="kweb://echo-subsystem.net" style="color:#a78bfa; border-color:rgba(167, 139, 250, 0.4);">🔬 Echo Subsystem</button>
-        <button class="btn-chip" data-url="kweb://10.19.99.4/classified" style="color:#f59e0b; border-color:rgba(245, 158, 11, 0.4);">🔒 10.19.99.4</button>
-        <button class="btn-chip" data-url="kweb://deep-core" style="color:#22ff66; border-color:rgba(34, 255, 102, 0.4);">⚡ Deep Core</button>
-        <span style="font-size:11px; color:var(--text-muted); font-weight:700; margin-left:6px;">FLEET:</span>
-        <button class="btn-chip" data-url="/apps/contribute.html" style="background:rgba(56,189,248,0.2); border-color:#38bdf8; font-weight:700; color:#fff;">🚀 Contributor</button>
-        <button class="btn-chip" data-url="ping:8.8.8.8">📡 Ping</button>
-        <button class="btn-chip" data-url="scan">🔍 Port Scan</button>
-        <button class="btn-chip" id="btnAdminAccess" title="Restricted Admin Access" style="margin-left:auto; opacity:0.6; font-size:11px; border-style:dashed;">🔒 Admin</button>
-      </div>
-      <!-- Hidden Admin Section (Requires KDirector Password) -->
-      <div id="adminPanel" style="display:none; flex-wrap:wrap; gap:6px; align-items:center; margin-top:4px; padding:4px 8px; background:rgba(30, 41, 59, 0.7); border:1px dashed #f59e0b; border-radius:4px;">
-        <span style="font-size:11px; color:#f59e0b; font-weight:700;">🔒 CLASSIFIED ADMIN:</span>
-        <button class="btn-chip" data-url="kweb://darknet" style="color:#34d399; border-color:rgba(52, 211, 153, 0.4);">👁️ Darknet</button>
-        <button class="btn-chip" data-url="kweb://10.19.99.4/classified" style="color:#f59e0b; border-color:rgba(245, 158, 11, 0.4);">🔒 10.19.99.4</button>
-        <button class="btn-chip" data-url="kweb://deep-core" style="color:#22ff66; border-color:rgba(34, 255, 102, 0.4);">⚡ Deep Core</button>
-        <button class="btn-chip" data-url="/apps/kdirector.html" style="color:#fbbf24; border-color:rgba(251, 191, 36, 0.4);">🏛️ KDirector</button>
-        <button class="btn-chip" data-url="echoes" style="color:#c084fc; border-color:rgba(192, 132, 252, 0.4);">🌌 Echoes</button>
-        <button class="btn-chip" id="btnAdminLock" style="color:#ef4444; margin-left:auto; font-size:11px;" title="Lock Admin Session">Lock [✕]</button>
-      </div>
-      <!-- HTTP Performance Metrics Waterfall -->
-      <div id="httpMetricsBar" style="display:flex; flex-wrap:wrap; gap:12px; font-size:11px; color:var(--text-muted); padding:5px 10px; background:#090d16; border:1px solid var(--border); border-radius:4px; margin-top:4px;">
-        <span>⏱️ DNS: <strong id="mDns" style="color:#38bdf8;">--</strong></span>
-        <span>🔌 Connect: <strong id="mConn" style="color:#38bdf8;">--</strong></span>
-        <span>⚡ TTFB: <strong id="mTtfb" style="color:#38bdf8;">--</strong></span>
-        <span>📦 Size: <strong id="mSize" style="color:#34d399;">--</strong></span>
-        <span>🚀 Rate: <strong id="mRate" style="color:#38bdf8;">--</strong></span>
-        <span>🔒 Protocol: <strong id="mProto" style="color:#fbbf24;">HTTP/1.1</strong></span>
+      <div id="httpInspectorBody" style="display:none; flex-direction:column; gap:8px; margin-top:4px;">
+        <div style="display:flex; flex-wrap:wrap; gap:6px; align-items:center; margin-top:2px;">
+          <span style="font-size:11px; color:var(--text-muted); font-weight:700;">1999 WEB:</span>
+          <button class="btn-chip" data-url="kweb://portal" style="background:rgba(56,189,248,0.2); border-color:#38bdf8; font-weight:700; color:#fff;">🏠 1999 Portal</button>
+          <button class="btn-chip" data-url="kweb://webring">🌐 Webring</button>
+          <button class="btn-chip" data-url="kweb://geocities" style="color:#f0abfc;">✨ GeoCities</button>
+          <button class="btn-chip" data-url="kweb://cybercafe" style="color:#fbbf24; border-color:rgba(251, 191, 36, 0.4);">☕ CyberCafe</button>
+          <button class="btn-chip" data-url="kweb://users/~neon_rider" style="color:#00ffcc; border-color:rgba(0, 255, 204, 0.4);">⚡ ~neon_rider</button>
+          <button class="btn-chip" data-url="kweb://asm-temple" style="color:#fbbf24; border-color:rgba(245, 158, 11, 0.4);">⚡ ASM Temple</button>
+          <button class="btn-chip" data-url="kweb://warez" style="color:#e879f9; border-color:rgba(232, 121, 249, 0.4);">💾 Warez</button>
+          <button class="btn-chip" data-url="kweb://echo-subsystem.net" style="color:#a78bfa; border-color:rgba(167, 139, 250, 0.4);">🔬 Echo Subsystem</button>
+          <button class="btn-chip" data-url="kweb://10.19.99.4/classified" style="color:#f59e0b; border-color:rgba(245, 158, 11, 0.4);">🔒 10.19.99.4</button>
+          <button class="btn-chip" data-url="kweb://deep-core" style="color:#22ff66; border-color:rgba(34, 255, 102, 0.4);">⚡ Deep Core</button>
+          <span style="font-size:11px; color:var(--text-muted); font-weight:700; margin-left:6px;">FLEET:</span>
+          <button class="btn-chip" data-url="/apps/contribute.html" style="background:rgba(56,189,248,0.2); border-color:#38bdf8; font-weight:700; color:#fff;">🚀 Contributor</button>
+          <button class="btn-chip" data-url="ping:8.8.8.8">📡 Ping</button>
+          <button class="btn-chip" data-url="scan">🔍 Port Scan</button>
+          <button class="btn-chip" id="btnAdminAccess" title="Restricted Admin Access" style="margin-left:auto; opacity:0.6; font-size:11px; border-style:dashed;">🔒 Admin</button>
+        </div>
+        <!-- Hidden Admin Section (Requires KDirector Password) -->
+        <div id="adminPanel" style="display:none; flex-wrap:wrap; gap:6px; align-items:center; margin-top:4px; padding:4px 8px; background:rgba(30, 41, 59, 0.7); border:1px dashed #f59e0b; border-radius:4px;">
+          <span style="font-size:11px; color:#f59e0b; font-weight:700;">🔒 CLASSIFIED ADMIN:</span>
+          <button class="btn-chip" data-url="kweb://darknet" style="color:#34d399; border-color:rgba(52, 211, 153, 0.4);">👁️ Darknet</button>
+          <button class="btn-chip" data-url="kweb://10.19.99.4/classified" style="color:#f59e0b; border-color:rgba(245, 158, 11, 0.4);">🔒 10.19.99.4</button>
+          <button class="btn-chip" data-url="kweb://deep-core" style="color:#22ff66; border-color:rgba(34, 255, 102, 0.4);">⚡ Deep Core</button>
+          <button class="btn-chip" data-url="/apps/kdirector.html" style="color:#fbbf24; border-color:rgba(251, 191, 36, 0.4);">🏛️ KDirector</button>
+          <button class="btn-chip" data-url="echoes" style="color:#c084fc; border-color:rgba(192, 132, 252, 0.4);">🌌 Echoes</button>
+          <button class="btn-chip" id="btnAdminLock" style="color:#ef4444; margin-left:auto; font-size:11px;" title="Lock Admin Session">Lock [✕]</button>
+        </div>
+        <!-- HTTP Performance Metrics Waterfall -->
+        <div id="httpMetricsBar" style="display:flex; flex-wrap:wrap; gap:12px; font-size:11px; color:var(--text-muted); padding:5px 10px; background:#090d16; border:1px solid var(--border); border-radius:4px; margin-top:4px;">
+          <span>⏱️ DNS: <strong id="mDns" style="color:#38bdf8;">--</strong></span>
+          <span>🔌 Connect: <strong id="mConn" style="color:#38bdf8;">--</strong></span>
+          <span>⚡ TTFB: <strong id="mTtfb" style="color:#38bdf8;">--</strong></span>
+          <span>📦 Size: <strong id="mSize" style="color:#34d399;">--</strong></span>
+          <span>🚀 Rate: <strong id="mRate" style="color:#38bdf8;">--</strong></span>
+          <span>🔒 Protocol: <strong id="mProto" style="color:#fbbf24;">HTTP/1.1</strong></span>
+        </div>
       </div>
     </div>
     <iframe id="httpWebFrame" src="/web/portal.html" title="KNet Web Viewport" style="flex:1; border:1px solid var(--border); border-radius:6px; background:#090d16; width:100%; height:100%; display:block;"></iframe>
@@ -1087,6 +1102,7 @@
           <tr><td><code>F5</code></td><td>Quick Save session snapshot to local storage</td></tr>
           <tr><td><code>F9</code></td><td>Quick Load session snapshot from local storage</td></tr>
           <tr><td><code>1 - 7</code></td><td>Switch tabs directly (Browser, Ping, Scan, Logs, Utils, Sniffer, Mesh)</td></tr>
+          <tr><td><code>I</code> or <code>▼/▲</code></td><td>Minimize / Expand Web Navigator &amp; Request Inspector</td></tr>
           <tr><td><code>Enter</code> in URL Bar</td><td>Execute HTTP request / diagnostic command</td></tr>
           <tr><td><code>Enter</code> in Search / Filter</td><td>Filter response text or traffic log live</td></tr>
           <tr><td><code>P</code></td><td>Start / Stop Continuous Ping</td></tr>
@@ -1515,6 +1531,9 @@
         if (typeof forgeHeadersText !== 'undefined' && forgeHeadersText && s.forge.headers) forgeHeadersText.value = s.forge.headers;
         if (typeof forgeBodyText !== 'undefined' && forgeBodyText && s.forge.body) forgeBodyText.value = s.forge.body;
       }
+      if (typeof s.inspectorMinimized === 'boolean' && typeof setInspectorMinimized === 'function') {
+        setInspectorMinimized(s.inspectorMinimized);
+      }
       localStorage.setItem('knet_tutorialSeen', 'true');
       const saveTime = s.savedAt ? new Date(s.savedAt).toLocaleTimeString() : 'earlier';
       showToast(`Snapshot restored [F9]! (Saved at ${saveTime})`, 'success');
@@ -1569,10 +1588,10 @@
   const btnAdminCancel = document.getElementById('btnAdminCancel');
   const btnAdminSubmit = document.getElementById('btnAdminSubmit');
 
+  let isAdminUnlocked = false;
+
   function isDirectorAuthenticated() {
-    return sessionStorage.getItem('kdirector_auth') === 'true' ||
-           localStorage.getItem('kdirector_auth') === 'true' ||
-           sessionStorage.getItem('knet_admin_auth') === 'true';
+    return isAdminUnlocked;
   }
 
   function ensureAdminBookmarks(show) {
@@ -1595,9 +1614,8 @@
   }
 
   function setAdminUnlocked(unlocked) {
+    isAdminUnlocked = !!unlocked;
     if (unlocked) {
-      sessionStorage.setItem('kdirector_auth', 'true');
-      sessionStorage.setItem('knet_admin_auth', 'true');
       if (adminPanel) adminPanel.style.display = 'flex';
       if (btnAdminAccess) {
         btnAdminAccess.style.color = '#fbbf24';
@@ -1607,8 +1625,6 @@
       }
       ensureAdminBookmarks(true);
     } else {
-      sessionStorage.removeItem('kdirector_auth');
-      sessionStorage.removeItem('knet_admin_auth');
       if (adminPanel) adminPanel.style.display = 'none';
       if (btnAdminAccess) {
         btnAdminAccess.style.color = 'var(--text-muted)';
@@ -1621,12 +1637,13 @@
   }
 
   function openAdminAuth() {
-    if (isDirectorAuthenticated()) {
-      if (adminPanel.style.display === 'none') {
+    if (isAdminUnlocked) {
+      if (typeof setInspectorMinimized === 'function' && isInspectorMinimized) {
+        setInspectorMinimized(false);
+      }
+      if (adminPanel) {
         adminPanel.style.display = 'flex';
         showToast('Admin Console active.', 'info');
-      } else {
-        showToast('Admin Console already unlocked.', 'info');
       }
       return;
     }
@@ -1649,6 +1666,9 @@
     if (VALID_DIRECTOR_KEY_HASHES.includes(hash)) {
       setAdminUnlocked(true);
       closeAdminAuth();
+      if (typeof setInspectorMinimized === 'function' && isInspectorMinimized) {
+        setInspectorMinimized(false);
+      }
       showToast('Director passkey verified. Classified nodes revealed.', 'success');
     } else {
       if (adminPassError) adminPassError.style.display = 'block';
@@ -1676,10 +1696,51 @@
     });
   }
 
-  // Restore authenticated state if session already holds credentials
-  if (isDirectorAuthenticated()) {
-    setAdminUnlocked(true);
+  // Admin is strictly locked by default on open; requires explicit passkey
+  setAdminUnlocked(false);
+
+  // --- Web Navigator & Request Inspector Minimization Logic ---
+  let isInspectorMinimized = true;
+  const httpInspectorPanel = document.getElementById('httpInspectorPanel');
+  const httpInspectorBody = document.getElementById('httpInspectorBody');
+  const btnToggleInspector = document.getElementById('btnToggleInspector');
+  const httpInspectorTitle = document.getElementById('httpInspectorTitle');
+
+  function setInspectorMinimized(minimized) {
+    isInspectorMinimized = !!minimized;
+    if (isInspectorMinimized) {
+      if (httpInspectorPanel) httpInspectorPanel.classList.add('inspector-minimized');
+      if (httpInspectorBody) httpInspectorBody.style.display = 'none';
+      if (btnToggleInspector) {
+        btnToggleInspector.textContent = '▼ Expand';
+        btnToggleInspector.title = 'Expand Web Navigator & Request Inspector [I]';
+      }
+    } else {
+      if (httpInspectorPanel) httpInspectorPanel.classList.remove('inspector-minimized');
+      if (httpInspectorBody) httpInspectorBody.style.display = 'flex';
+      if (btnToggleInspector) {
+        btnToggleInspector.textContent = '▲ Minimize';
+        btnToggleInspector.title = 'Minimize Web Navigator & Request Inspector [I]';
+      }
+    }
   }
+
+  if (btnToggleInspector) {
+    btnToggleInspector.onclick = (e) => {
+      e.stopPropagation();
+      setInspectorMinimized(!isInspectorMinimized);
+    };
+  }
+
+  if (httpInspectorTitle) {
+    httpInspectorTitle.addEventListener('click', (e) => {
+      if (e.target.closest('button') || e.target.closest('input')) return;
+      setInspectorMinimized(!isInspectorMinimized);
+    });
+  }
+
+  // Minimize Web Navigator & Request Inspector on opening to save screen real estate
+  setInspectorMinimized(true);
 
   // Tab Navigation
   const tabBtns = document.querySelectorAll('.tab-btn');
@@ -1792,6 +1853,12 @@
           tabBtns[idx].click();
           return;
         }
+      }
+      if (e.key === 'i' || e.key === 'I') {
+        e.preventDefault();
+        setInspectorMinimized(!isInspectorMinimized);
+        showToast(isInspectorMinimized ? 'Inspector minimized.' : 'Inspector expanded.', 'info');
+        return;
       }
       if (e.key === 'h' || e.key === 'H') {
         e.preventDefault();
