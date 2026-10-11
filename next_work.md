@@ -1,5 +1,5 @@
 ---
-current_agent: kilo-graphics
+current_agent: kilo-tester
 next_agent: kilo-tester
 agent_rotation:
 - kilo-creator
@@ -32,9 +32,9 @@ virtual_web_rotation:
 - kweb://cybercafe
 - kweb://10.19.99.4/classified
 last_run:
-  agent: kilo-creator
-  app: kweb://users/~neon_rider
-  timestamp: '2026-10-11T10:50:00+0000'
+  agent: kilo-graphics
+  app: KDragon
+  timestamp: 2026-10-11T11:02:02+0000
 last_planner_run: '2026-10-10T16:30:00Z'
 ---
 
@@ -113,6 +113,11 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-11T11:02:02+0000 — kilo-graphics: KDragon (Zero-Token Auto-Skip — Inappropriate Target)**
+  - Status: ⏭️ Skip — Imagen 3 asset replacement not appropriate for KDragon (pure vector, board game, or mature art).
+  - Optimization: Handled via orchestrator pre-flight zero-token auto-skip.
+  - Queue: Advanced `kilo-graphics` to `KDragon`; rotation handoff to `kilo-tester`.
+
 - **2026-10-11T10:50:00+0000 — kilo-creator: kweb://users/~neon_rider (Virtual 1999 Web Expansion & Audit)**
   - Status: PASS ✅ (Vite build clean; HTML 250.6 KB << 999 KB ceiling).
   - Destination: Validated Win32 ASM & Demoscene Shrine (interactive opcode sandbox, 8x8 bitmap glyph editor, YM2612 tracker tunes, live guestbook, diegetic ARG dead drop).
@@ -133,8 +138,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Status: PASS ✅ (Vite build clean; HTML 121.4 KB << 999 KB ceiling).
   - Audit: Verified startup test, CSS balance, modal dismissal, 10 engines, transforms, and exports.
   - Queue: Advanced kilo-tester target to KChat; rotation handoff to kilo-usability.
-
-- **2026-10-11T10:02:02+0000 — kilo-graphics: KDragon (Zero-Token Auto-Skip — Inappropriate Target)**
-  - Status: ⏭️ Skip — Imagen 3 asset replacement not appropriate for KDragon (pure vector, board game, or mature art).
-  - Optimization: Handled via orchestrator pre-flight zero-token auto-skip.
-  - Queue: Advanced `kilo-graphics` to `KDragon`; rotation handoff to `kilo-tester`.
