@@ -286,6 +286,7 @@
                 <button id="btn-class-ability" class="btn-action btn-ability" onclick="useClassAbility()">[A] Berserk Slash</button>
                 <button class="btn-action btn-spell" onclick="openSpellbook()">[M] Spellbook</button>
                 <button class="btn-action btn-inv" onclick="openInventory()">[I] Inventory</button>
+                <button class="btn-action" style="border-color: #38bdf8; background: #0c4a6e; color: #bae6fd;" onclick="openBestiary()">[X] Bestiary</button>
                 <button class="btn-action" style="border-color: #b794f4; background: #3b2158; color: #e9d8fd;" onclick="openAltarModal()">[E] Altar</button>
                 <button class="btn-action" style="border-color: #ed8936; background: #55270d; color: #feebc8;" onclick="openPetModal()">[P] Pet</button>
                 <button class="btn-action" style="border-color: #38a169; background: #22543d;" onclick="waitTurnAction()">[.] Wait Turn</button>
@@ -310,6 +311,7 @@
                 <div style="display: flex; flex-direction: column; gap: 4px;">
                     <button class="btn-action btn-ability" style="font-size: 11px; padding: 4px 10px;" onclick="if(state===0||state===2||state===3){openCharSelect();}else{useClassAbility();}">⚔️ Ability [A]</button>
                     <button class="btn-action btn-inv" style="font-size: 11px; padding: 4px 10px;" onclick="openInventory()">🎒 Backpack [I]</button>
+                    <button class="btn-action" style="font-size: 11px; padding: 4px 10px; border-color: #38bdf8; background: #0c4a6e;" onclick="openBestiary()">👾 Bestiary [X]</button>
                     <button class="btn-action btn-spell" style="font-size: 11px; padding: 4px 10px;" onclick="openSpellbook()">✨ Spells [M]</button>
                     <button class="btn-action" style="font-size: 11px; padding: 4px 10px; border-color: #b794f4; background: #3b2158;" onclick="openAltarModal()">⚡ Altar [E]</button>
                     <button class="btn-action" style="font-size: 11px; padding: 4px 10px; border-color: #ed8936; background: #55270d;" onclick="openPetModal()">🐾 Pet [P]</button>
@@ -317,7 +319,7 @@
             </div>
             <div id="msg-box"></div>
             <div class="controls-hint">
-                [Arrows/Numpad] Move | [.] Wait | [A] Ability | [M] Spells | [I] Inventory | [E] Altar | [P] Pet | [T] Leaderboard | [K] Keybinds | [H/F1] Help | [F5] Save | [F9] Load
+                [Arrows/Numpad] Move | [.] Wait | [A] Ability | [M] Spells | [I] Inventory | [X] Bestiary | [E] Altar | [P] Pet | [T] Leaderboard | [K] Keybinds | [H/F1] Help | [F5] Save | [F9] Load
             </div>
         </div>
 
@@ -550,6 +552,34 @@
                 </div>
                 <div class="modal-close" style="display: flex; justify-content: center; gap: 8px; margin-top: 12px;">
                     <button class="btn-modal-close" onclick="closeModal('modal-anvil')">Leave Anvil [ESC]</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bestiary / Monster Compendium Modal -->
+        <div id="modal-bestiary" class="modal-overlay" style="display: none;" onclick="if(event.target === this) closeModal('modal-bestiary')">
+            <div class="modal-card" style="border-color: #38bdf8; background: #081528; box-shadow: 0 10px 30px rgba(56, 189, 248, 0.25); width: 680px; max-width: 95%;">
+                <div class="modal-header" style="color: #38bdf8;">👾 DUNGEON BESTIARY & MONSTER COMPENDIUM 👾</div>
+                <div style="font-size: 12px; color: #a0aec0; margin-bottom: 10px; text-align: center;">
+                    Documenting the fell beasts, fiends, and horrors lurking throughout the Caverns of Chaos.
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 8px;">
+                    <div style="display: flex; gap: 6px;" id="bestiary-filter-btns">
+                        <button class="btn-action" style="font-size: 11px; padding: 3px 8px; border-color: #38bdf8; background: #0c4a6e;" onclick="filterBestiary('all')">All Beasts</button>
+                        <button class="btn-action" style="font-size: 11px; padding: 3px 8px;" onclick="filterBestiary('caverns')">Floors 1-10</button>
+                        <button class="btn-action" style="font-size: 11px; padding: 3px 8px;" onclick="filterBestiary('catacombs')">Floors 11-20</button>
+                        <button class="btn-action" style="font-size: 11px; padding: 3px 8px;" onclick="filterBestiary('abyss')">Floors 21-40</button>
+                        <button class="btn-action" style="font-size: 11px; padding: 3px 8px;" onclick="filterBestiary('chaos')">Chaos 40+</button>
+                    </div>
+                    <div style="font-size: 12px; color: #ecc94b; font-weight: bold;">
+                        Defeated: <span id="bestiary-total-kills">0</span> beasts
+                    </div>
+                </div>
+                <div id="bestiary-list" style="display: flex; flex-direction: column; gap: 8px; max-height: 320px; overflow-y: auto; padding-right: 4px;">
+                    <!-- Populated dynamically -->
+                </div>
+                <div class="modal-close" style="display: flex; justify-content: center; gap: 8px; margin-top: 12px;">
+                    <button class="btn-modal-close" onclick="closeModal('modal-bestiary')">Close Bestiary [ESC]</button>
                 </div>
             </div>
         </div>
@@ -2889,6 +2919,7 @@
                     let goldDrop = rngRange(1, 3 + dlevel);
                     player.gold += goldDrop;
                     total_kills++;
+                    recordBestiaryKill(m.name);
                     monsters.splice(i, 1);
                     continue;
                 }
@@ -2985,7 +3016,7 @@
         }
 
         function isAnyModalOpen() {
-            const modalIds = ['modal-char-select', 'modal-inventory', 'modal-spellbook', 'modal-leaderboard', 'modal-keybinds', 'modal-help', 'modal-altar', 'modal-pet', 'modal-anvil', 'modal-multiplayer', 'modal-replay'];
+            const modalIds = ['modal-char-select', 'modal-inventory', 'modal-spellbook', 'modal-leaderboard', 'modal-keybinds', 'modal-help', 'modal-altar', 'modal-pet', 'modal-anvil', 'modal-multiplayer', 'modal-replay', 'modal-bestiary'];
             return modalIds.some(id => {
                 let el = document.getElementById(id);
                 return el && el.style.display && el.style.display !== 'none';
@@ -2993,13 +3024,145 @@
         }
 
         function closeAllModalsExcept(excludeId = null) {
-            const modalIds = ['modal-char-select', 'modal-inventory', 'modal-spellbook', 'modal-leaderboard', 'modal-keybinds', 'modal-help', 'modal-altar', 'modal-pet', 'modal-anvil', 'modal-multiplayer', 'modal-replay'];
+            const modalIds = ['modal-char-select', 'modal-inventory', 'modal-spellbook', 'modal-leaderboard', 'modal-keybinds', 'modal-help', 'modal-altar', 'modal-pet', 'modal-anvil', 'modal-multiplayer', 'modal-replay', 'modal-bestiary'];
             modalIds.forEach(id => {
                 if (id !== excludeId) {
                     let el = document.getElementById(id);
                     if (el) el.style.display = 'none';
                 }
             });
+        }
+
+        // --- Dungeon Bestiary & Monster Compendium ---
+        const BESTIARY_DATA = [
+            { ch: 'r', name: 'Giant Rat', tier: 'caverns', depth: 'Floors 1-5', hp: 5, atk: '1-3', weak: 'Fire, Physical', color: '#a0aec0', desc: 'Foul subterranean rodents that swarm unwary adventurers in damp tunnels.' },
+            { ch: 'b', name: 'Giant Bat', tier: 'caverns', depth: 'Floors 1-5', hp: 4, atk: '1-2', weak: 'Shock, Ranged', color: '#cbd5e0', desc: 'Erratic cave flyers that strike swiftly from cavern stalactites.' },
+            { ch: 's', name: 'Slime', tier: 'caverns', depth: 'Floors 1-5', hp: 10, atk: '2-4', weak: 'Ice, Fire', color: '#48bb78', desc: 'Acidic amoebic puddles that slowly dissolve organic flesh and boots.' },
+            { ch: 'g', name: 'Goblin', tier: 'caverns', depth: 'Floors 1-5', hp: 6, atk: '2-5', weak: 'Physical, Cleave', color: '#68d391', desc: 'Cunning tribal scavengers wielding crudely sharpened stone daggers.' },
+            { ch: 'x', name: 'Skeleton', tier: 'caverns', depth: 'Floors 1-5', hp: 8, atk: '3-6', weak: 'Blunt, Holy, Fire', color: '#e2e8f0', desc: 'Restless bony remnants reanimated by ambient necromantic seepage.' },
+            { ch: 'o', name: 'Orc', tier: 'caverns', depth: 'Floors 6-10', hp: 14, atk: '4-8', weak: 'Ice, Lightning', color: '#38a169', desc: 'Brutish warlike humanoids armed with notched broadswords and fury.' },
+            { ch: 'S', name: 'Giant Spider', tier: 'caverns', depth: 'Floors 6-10', hp: 12, atk: '3-7', weak: 'Fire', color: '#ed8936', desc: 'Venomous multi-eyed predators that entrap wandering prey in silken webs.' },
+            { ch: 'z', name: 'Zombie', tier: 'caverns', depth: 'Floors 6-10', hp: 25, atk: '4-9', weak: 'Fire, Holy', color: '#718096', desc: 'Slow, rotting husks endowed with unnatural endurance and plague.' },
+            { ch: 'k', name: 'Kobold', tier: 'caverns', depth: 'Floors 6-10', hp: 10, atk: '3-6', weak: 'Shock', color: '#d69e2e', desc: 'Furtive reptilian trap-smiths guarding subterranean mineral veins.' },
+            { ch: 'G', name: 'Ghost', tier: 'caverns', depth: 'Floors 6-10', hp: 18, atk: '4-8', weak: 'Holy, Arcane', color: '#e9d8fd', desc: 'Incorporeal phantoms drifting effortlessly across dungeon walls.' },
+            { ch: 'T', name: 'Cave Troll', tier: 'catacombs', depth: 'Floors 11-15', hp: 35, atk: '7-14', weak: 'Fire, Acid', color: '#2f855a', desc: 'Hulking regenerative brutes capable of crushing armor in a single blow.' },
+            { ch: 'M', name: 'Minotaur', tier: 'catacombs', depth: 'Floors 11-15', hp: 30, atk: '6-12', weak: 'Ice, Dodge', color: '#c53030', desc: 'Fierce horned guardians galloping blindly down stone corridors.' },
+            { ch: 'W', name: 'Wraith', tier: 'catacombs', depth: 'Floors 11-15', hp: 25, atk: '5-11', weak: 'Holy, Fire', color: '#805ad5', desc: 'Chilling specters hungry to siphon the mortal warmth of living souls.' },
+            { ch: 'C', name: 'Gelatinous Cube', tier: 'catacombs', depth: 'Floors 11-15', hp: 50, atk: '8-15', weak: 'Shock, Magic', color: '#4fd1c5', desc: 'Enormous translucent scavengers that engulf and dissolve travelers whole.' },
+            { ch: 'D', name: 'Red Dragon', tier: 'catacombs', depth: 'Floors 16-20', hp: 70, atk: '12-22', weak: 'Ice, Dragonbane', color: '#e53e3e', desc: 'Ancient fire-breathing tyrants guarding vast hoards of glittering gold.' },
+            { ch: 'V', name: 'Vampire', tier: 'catacombs', depth: 'Floors 16-20', hp: 50, atk: '9-18', weak: 'Holy, Fire, Sunlight', color: '#9b2c2c', desc: 'Aristocratic predators of the night wielding dark sanguine sorcery.' },
+            { ch: 'L', name: 'Lich', tier: 'catacombs', depth: 'Floors 16-20', hp: 45, atk: '10-20', weak: 'Holy, Lightning', color: '#b794f4', desc: 'Undead arch-mages bound to mortal realms through unholy phylacteries.' },
+            { ch: 'd', name: 'Demon', tier: 'catacombs', depth: 'Floors 16-20', hp: 60, atk: '11-21', weak: 'Holy, Ice', color: '#dd6b20', desc: 'Horned fiends manifesting from the smoldering sulphur of Nether rifts.' },
+            { ch: 'B', name: 'Balrog', tier: 'abyss', depth: 'Floors 21-25', hp: 110, atk: '16-30', weak: 'Ice, Holy', color: '#c53030', desc: 'Colossal beings of shadow and flame brandishing whips of burning ash.' },
+            { ch: 't', name: 'Titan', tier: 'abyss', depth: 'Floors 21-25', hp: 130, atk: '18-32', weak: 'Void, Shock', color: '#d69e2e', desc: 'Primeval earth-shakers whose steps shatter dungeon bedrock.' },
+            { ch: 'E', name: 'Beholder', tier: 'abyss', depth: 'Floors 21-25', hp: 80, atk: '15-28', weak: 'Physical, Stealth', color: '#805ad5', desc: 'Levitating aberrational spheres projecting lethal eye rays of disintegration.' },
+            { ch: 'U', name: 'Shadow Behemoth', tier: 'abyss', depth: 'Floors 21-25', hp: 150, atk: '20-35', weak: 'Holy, Radiant', color: '#4a5568', desc: 'Formless nightmare behemoths drinking all ambient light into the void.' },
+            { ch: 'v', name: 'Void Walker', tier: 'abyss', depth: 'Floors 26-40', hp: 180, atk: '22-38', weak: 'Light, Shock', color: '#63b3ed', desc: 'Phase-shifting entities stepping effortlessly through extradimensional folds.' },
+            { ch: 'f', name: 'Abyss Fiend', tier: 'abyss', depth: 'Floors 26-40', hp: 250, atk: '25-45', weak: 'Holy, Celestial', color: '#e53e3e', desc: 'Barbed apex fiends spawned within the bottomless depths of chaos.' },
+            { ch: 'w', name: 'Deep Worm', tier: 'abyss', depth: 'Floors 26-40', hp: 300, atk: '28-50', weak: 'Fire, Ice', color: '#975a16', desc: 'Subterranean leviathans devouring magma and iron stone alike.' },
+            { ch: 'O', name: 'Abyssal Overlord', tier: 'abyss', depth: 'Floors 26-40', hp: 400, atk: '35-65', weak: 'Holy, Arcane Nova', color: '#fc8181', desc: 'Sovereign despots commanding legions of demonic entities.' },
+            { ch: 'S', name: 'Seraphim', tier: 'chaos', depth: 'Floors 41-50', hp: 300, atk: '30-55', weak: 'Void, Dark', color: '#f6e05e', desc: 'Blinding celestial arbiters enacting ruthless divine judgment.' },
+            { ch: 'N', name: 'Nephilim', tier: 'chaos', depth: 'Floors 41-50', hp: 400, atk: '38-70', weak: 'Void Siphon', color: '#ecc94b', desc: 'Monumental half-divine colossi towering over ruined dungeon halls.' },
+            { ch: 'J', name: 'Juggernaut', tier: 'chaos', depth: 'Floors 41-50', hp: 600, atk: '45-80', weak: 'Lightning, Piercing', color: '#718096', desc: 'Inexorable living dreadnoughts encased in impenetrable obsidian plate.' },
+            { ch: 'E', name: 'Eldritch God', tier: 'chaos', depth: 'Floors 41-50', hp: 500, atk: '42-75', weak: 'Concentrated Chaos', color: '#9f7aea', desc: 'Incomprehensible cosmic entities that twist Euclidean reality and sanity.' },
+            { ch: '&', name: 'True Astaroth', tier: 'chaos', depth: 'Floor 50+ Boss', hp: 1200, atk: '55-100', weak: 'All Elements Combined', color: '#f56565', desc: 'The Lord of Chaos and master of the underworld. Slashing him wins ultimate victory.' }
+        ];
+
+        let activeBestiaryFilter = 'all';
+
+        function recordBestiaryKill(monsterName) {
+            try {
+                let counts = JSON.parse(localStorage.getItem('krogue_bestiary_kills') || '{}');
+                counts[monsterName] = (counts[monsterName] || 0) + 1;
+                localStorage.setItem('krogue_bestiary_kills', JSON.stringify(counts));
+            } catch(e) {
+                console.warn('[KRogue] Failed to save bestiary kill:', e.message);
+            }
+        }
+
+        function getBestiaryKills(monsterName) {
+            try {
+                let counts = JSON.parse(localStorage.getItem('krogue_bestiary_kills') || '{}');
+                return counts[monsterName] || 0;
+            } catch(e) {
+                return 0;
+            }
+        }
+
+        function openBestiary() {
+            closeAllModalsExcept('modal-bestiary');
+            clearAllToasts();
+            renderBestiary();
+            let modal = document.getElementById('modal-bestiary');
+            if (modal) modal.style.display = 'flex';
+        }
+
+        function filterBestiary(tier) {
+            activeBestiaryFilter = tier;
+            renderBestiary();
+        }
+
+        function renderBestiary() {
+            let container = document.getElementById('bestiary-list');
+            let totalKillsEl = document.getElementById('bestiary-total-kills');
+            if (!container) return;
+
+            let filterBtns = document.querySelectorAll('#bestiary-filter-btns button');
+            filterBtns.forEach(btn => {
+                let onclickStr = btn.getAttribute('onclick') || '';
+                if (onclickStr.includes(`'${activeBestiaryFilter}'`)) {
+                    btn.style.borderColor = '#38bdf8';
+                    btn.style.background = '#0c4a6e';
+                    btn.style.color = '#fff';
+                } else {
+                    btn.style.borderColor = '#4a5568';
+                    btn.style.background = '#2d3748';
+                    btn.style.color = '#cbd5e0';
+                }
+            });
+
+            let totalKills = 0;
+            BESTIARY_DATA.forEach(b => {
+                totalKills += getBestiaryKills(b.name);
+            });
+            if (totalKillsEl) totalKillsEl.innerText = totalKills;
+
+            let filtered = BESTIARY_DATA.filter(b => {
+                if (activeBestiaryFilter === 'all') return true;
+                return b.tier === activeBestiaryFilter;
+            });
+
+            let html = '';
+            filtered.forEach(m => {
+                let kills = getBestiaryKills(m.name);
+                html += `
+                    <div style="background: #0f172a; border: 1px solid ${kills > 0 ? '#38bdf8' : '#334155'}; border-radius: 8px; padding: 10px 12px; display: flex; gap: 12px; align-items: center;">
+                        <div style="width: 44px; height: 44px; background: #020617; border: 1px solid #1e293b; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-family: monospace; font-size: 24px; font-weight: bold; color: ${m.color}; text-shadow: 0 0 8px ${m.color}; flex-shrink: 0;">
+                            ${m.ch}
+                        </div>
+                        <div style="flex: 1; min-width: 0;">
+                            <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 2px;">
+                                <div style="font-weight: bold; font-size: 13px; color: ${kills > 0 ? '#f8fafc' : '#94a3b8'};">
+                                    ${m.name} <span style="font-size: 11px; color: #38bdf8; font-weight: normal; margin-left: 4px;">[${m.depth}]</span>
+                                </div>
+                                <div style="font-size: 11px; font-weight: bold; color: ${kills > 0 ? '#34d399' : '#64748b'};">
+                                    ${kills > 0 ? `Defeated: ${kills}x` : 'Undefeated'}
+                                </div>
+                            </div>
+                            <div style="font-size: 11px; color: #94a3b8; line-height: 1.35; margin-bottom: 4px;">
+                                ${m.desc}
+                            </div>
+                            <div style="display: flex; gap: 12px; font-size: 10px; color: #cbd5e1; flex-wrap: wrap;">
+                                <span><b style="color: #f87171;">HP:</b> ${m.hp}</span>
+                                <span><b style="color: #fb923c;">Threat:</b> ${m.atk}</span>
+                                <span><b style="color: #a78bfa;">Weakness:</b> ${m.weak}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html;
         }
 
         function saveGame() {
@@ -4605,6 +4768,7 @@
             if (state === 0) {
                 if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openCharSelect(); }
                 if (isActionKey(e, 'openLeaderboard') || e.key === 't' || e.key === 'T') openLeaderboard();
+                if (e.key === 'x' || e.key === 'X') openBestiary();
                 if (isActionKey(e, 'openKeybinds') || e.key === 'k' || e.key === 'K') openKeybinds();
                 if (isActionKey(e, 'loadState') || e.key === 'l' || e.key === 'L' || e.key === 'F9') loadGame();
                 if (isActionKey(e, 'openHelp') || e.key === 'h' || e.key === 'H' || e.key === '?') openHelp();
@@ -4619,6 +4783,10 @@
                 }
                 if (isActionKey(e, 'openInventory') || e.key === 'i' || e.key === 'I') {
                     openInventory();
+                    return;
+                }
+                if (e.key === 'x' || e.key === 'X') {
+                    openBestiary();
                     return;
                 }
                 if (e.key === 'e' || e.key === 'E') {
