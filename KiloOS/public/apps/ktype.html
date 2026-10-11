@@ -838,6 +838,7 @@
       <div class="hotkey-status-bar">
         <span class="hk-chip"><kbd>F1 / H</kbd> Help</span>
         <span class="hk-chip"><kbd>Esc</kbd> Restart</span>
+        <span class="hk-chip"><kbd>Alt+1..6</kbd> Tabs</span>
         <span class="hk-chip"><kbd>F5</kbd> Quicksave</span>
         <span class="hk-chip"><kbd>F9</kbd> Quickload</span>
         <span class="hk-chip"><kbd>M</kbd> Sound</span>
@@ -2186,6 +2187,15 @@ document.addEventListener('keydown', (e) => {
     return;
   }
 
+  // Alt+1 to Alt+6 for quick tab switching
+  if (e.altKey && e.key >= '1' && e.key <= '6') {
+    e.preventDefault();
+    const tabs = ['test', 'arcade', 'custom', 'analytics', 'history', 'duel'];
+    const tabIdx = parseInt(e.key, 10) - 1;
+    if (tabs[tabIdx]) switchTab(tabs[tabIdx]);
+    return;
+  }
+
   if (currentTab === 'test') {
     if (e.key === 'Escape') resetTest();
     if (e.key === 'Backspace' && charIndex > 0) {
@@ -2571,6 +2581,20 @@ document.addEventListener('drop', e => {
       handleFontImport({ dataTransfer: e.dataTransfer });
     } else if (fname.endsWith('.json') || fname.endsWith('.txt')) {
       handleFileImport({ target: { files: [file] } });
+    }
+  }
+});
+
+// Guard animation loops when tab is hidden or restored per architecture standards
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) {
+    if (arcadeAnimationFrame) {
+      cancelAnimationFrame(arcadeAnimationFrame);
+      arcadeAnimationFrame = null;
+    }
+  } else {
+    if (arcadeRunning && currentTab === 'arcade' && !arcadeAnimationFrame) {
+      arcadeAnimationFrame = requestAnimationFrame(arcadeLoop);
     }
   }
 });
