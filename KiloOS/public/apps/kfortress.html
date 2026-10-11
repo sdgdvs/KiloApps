@@ -545,12 +545,28 @@
   </div>
 
   <script>
+    function safeGet(key, fallback) {
+      try {
+        const v = localStorage.getItem(key);
+        return v !== null ? v : fallback;
+      } catch (e) {
+        return fallback;
+      }
+    }
+    function safeSet(key, value) {
+      try {
+        localStorage.setItem(key, typeof value === 'object' ? JSON.stringify(value) : String(value));
+      } catch (e) {
+        console.warn('[KFortress] Storage write failed:', e.message);
+      }
+    }
+
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    let soundMuted = localStorage.getItem('kf_soundMuted') === 'true';
+    let soundMuted = safeGet('kf_soundMuted', 'false') === 'true';
 
     function toggleSound() {
       soundMuted = !soundMuted;
-      try { localStorage.setItem('kf_soundMuted', soundMuted ? 'true' : 'false'); } catch(e){}
+      safeSet('kf_soundMuted', soundMuted ? 'true' : 'false');
       updateSoundUI();
       if (!soundMuted) {
         playBeep(660, 0.1, 'sine', 0.2);
@@ -798,26 +814,26 @@
     }
 
     // Tech Variables
-    let techStartingGold = parseInt(localStorage.getItem('kf_techGold')) || 0;
-    let techWallHp = parseInt(localStorage.getItem('kf_techWallHp')) || 0;
-    let techHeroCd = parseInt(localStorage.getItem('kf_techHeroCd')) || 0;
-    let techTowerDmg = parseInt(localStorage.getItem('kf_techTowerDmg')) || 0;
-    let techMilitia = parseInt(localStorage.getItem('kf_techMilitia')) || 0;
-    let techSiegeEng = parseInt(localStorage.getItem('kf_techSiegeEng')) || 0;
-    let techFusion = parseInt(localStorage.getItem('kf_techFusion')) || 0;
-    let techFortTraps = parseInt(localStorage.getItem('kf_techFortTraps')) || 0;
+    let techStartingGold = parseInt(safeGet('kf_techGold', '0')) || 0;
+    let techWallHp = parseInt(safeGet('kf_techWallHp', '0')) || 0;
+    let techHeroCd = parseInt(safeGet('kf_techHeroCd', '0')) || 0;
+    let techTowerDmg = parseInt(safeGet('kf_techTowerDmg', '0')) || 0;
+    let techMilitia = parseInt(safeGet('kf_techMilitia', '0')) || 0;
+    let techSiegeEng = parseInt(safeGet('kf_techSiegeEng', '0')) || 0;
+    let techFusion = parseInt(safeGet('kf_techFusion', '0')) || 0;
+    let techFortTraps = parseInt(safeGet('kf_techFortTraps', '0')) || 0;
 
     // Mutators
     let mutators = {
-      bloodlust: localStorage.getItem('kf_mut_bloodlust') === 'true',
-      titan: localStorage.getItem('kf_mut_titan') === 'true',
-      eclipse: localStorage.getItem('kf_mut_eclipse') === 'true',
-      meteor: localStorage.getItem('kf_mut_meteor') === 'true',
-      phaseshift: localStorage.getItem('kf_mut_phaseshift') === 'true'
+      bloodlust: safeGet('kf_mut_bloodlust', 'false') === 'true',
+      titan: safeGet('kf_mut_titan', 'false') === 'true',
+      eclipse: safeGet('kf_mut_eclipse', 'false') === 'true',
+      meteor: safeGet('kf_mut_meteor', 'false') === 'true',
+      phaseshift: safeGet('kf_mut_phaseshift', 'false') === 'true'
     };
 
-    let hsEndless = parseInt(localStorage.getItem('kf_hsEndless')) || 0;
-    let hsBoss = parseInt(localStorage.getItem('kf_hsBoss')) || 0;
+    let hsEndless = parseInt(safeGet('kf_hsEndless', '0')) || 0;
+    let hsBoss = parseInt(safeGet('kf_hsBoss', '0')) || 0;
 
     let gameMode = 'Campaign';
     let bossesKilled = 0;
@@ -1130,14 +1146,14 @@
     resizeCanvas();
 
     const academyTech = [
-      { id: 'techGold', name: 'Starting Gold (+50)', baseCost: 100, getLvl: () => techStartingGold, setLvl: v => { techStartingGold = v; localStorage.setItem('kf_techGold', v); } },
-      { id: 'techWall', name: 'Wall Durability (+10 HP)', baseCost: 150, getLvl: () => techWallHp, setLvl: v => { techWallHp = v; localStorage.setItem('kf_techWallHp', v); } },
-      { id: 'techHero', name: 'Hero Cooldowns (-10%)', baseCost: 200, getLvl: () => techHeroCd, setLvl: v => { techHeroCd = v; localStorage.setItem('kf_techHeroCd', v); } },
-      { id: 'techDmg', name: 'Tower Damage (+10%)', baseCost: 250, getLvl: () => techTowerDmg, setLvl: v => { techTowerDmg = v; localStorage.setItem('kf_techTowerDmg', v); } },
-      { id: 'techMilitia', name: 'Militia Training (+50% HP/Dmg)', baseCost: 200, getLvl: () => techMilitia, setLvl: v => { techMilitia = v; localStorage.setItem('kf_techMilitia', v); } },
-      { id: 'techSiegeEng', name: 'Siege Engineering (Castle Wall Ballistas)', baseCost: 300, getLvl: () => techSiegeEng, setLvl: v => { techSiegeEng = v; localStorage.setItem('kf_techSiegeEng', v); } },
-      { id: 'techFusion', name: 'Fusion Mastery (+25% Fusion Dmg/AoE)', baseCost: 350, getLvl: () => techFusion, setLvl: v => { techFusion = v; localStorage.setItem('kf_techFusion', v); } },
-      { id: 'techFortTraps', name: 'Fortified Traps (+1 Charge, +75 HP)', baseCost: 180, getLvl: () => techFortTraps, setLvl: v => { techFortTraps = v; localStorage.setItem('kf_techFortTraps', v); } }
+      { id: 'techGold', name: 'Starting Gold (+50)', baseCost: 100, getLvl: () => techStartingGold, setLvl: v => { techStartingGold = v; safeSet('kf_techGold', v); } },
+      { id: 'techWall', name: 'Wall Durability (+10 HP)', baseCost: 150, getLvl: () => techWallHp, setLvl: v => { techWallHp = v; safeSet('kf_techWallHp', v); } },
+      { id: 'techHero', name: 'Hero Cooldowns (-10%)', baseCost: 200, getLvl: () => techHeroCd, setLvl: v => { techHeroCd = v; safeSet('kf_techHeroCd', v); } },
+      { id: 'techDmg', name: 'Tower Damage (+10%)', baseCost: 250, getLvl: () => techTowerDmg, setLvl: v => { techTowerDmg = v; safeSet('kf_techTowerDmg', v); } },
+      { id: 'techMilitia', name: 'Militia Training (+50% HP/Dmg)', baseCost: 200, getLvl: () => techMilitia, setLvl: v => { techMilitia = v; safeSet('kf_techMilitia', v); } },
+      { id: 'techSiegeEng', name: 'Siege Engineering (Castle Wall Ballistas)', baseCost: 300, getLvl: () => techSiegeEng, setLvl: v => { techSiegeEng = v; safeSet('kf_techSiegeEng', v); } },
+      { id: 'techFusion', name: 'Fusion Mastery (+25% Fusion Dmg/AoE)', baseCost: 350, getLvl: () => techFusion, setLvl: v => { techFusion = v; safeSet('kf_techFusion', v); } },
+      { id: 'techFortTraps', name: 'Fortified Traps (+1 Charge, +75 HP)', baseCost: 180, getLvl: () => techFortTraps, setLvl: v => { techFortTraps = v; safeSet('kf_techFortTraps', v); } }
     ];
 
     function updateAcademyUI() {
@@ -1215,7 +1231,7 @@
         div.onclick = (e) => {
           e.stopPropagation();
           mutators[m.id] = !mutators[m.id];
-          localStorage.setItem('kf_mut_' + m.id, mutators[m.id]);
+          safeSet('kf_mut_' + m.id, mutators[m.id]);
           playBeep(500, 0.08, 'triangle', 0.15);
           showToast(m.name, mutators[m.id] ? "Mutator Enabled" : "Mutator Disabled", "warning", 2500);
           updateMutatorUI();
@@ -1481,7 +1497,7 @@
           hsEndless, hsBoss,
           savedAt: Date.now()
         };
-        localStorage.setItem('kfortress_quicksave', JSON.stringify(saveData));
+        safeSet('kfortress_quicksave', JSON.stringify(saveData));
         playBeep(750, 0.12, 'square', 0.15);
         showToast("Game Quicksaved [F5]", `Wave ${wave} on ${campaignMaps[currentMapIndex].name} saved.`, "success", 2800);
       } catch (err) {
@@ -1492,7 +1508,7 @@
     function exportSaveData() {
       try {
         quickSaveGame();
-        const raw = localStorage.getItem('kfortress_quicksave');
+        const raw = safeGet('kfortress_quicksave', null);
         if (!raw) return;
         const blob = new Blob([raw], { type: 'application/json' });
         const url = URL.createObjectURL(blob);
@@ -1519,7 +1535,7 @@
           if (!parsed || typeof parsed.wave !== 'number') {
             throw new Error("Invalid or corrupt save file structure.");
           }
-          localStorage.setItem('kfortress_quicksave', content);
+          safeSet('kfortress_quicksave', content);
           quickLoadGame();
           document.getElementById('helpModal').style.display = 'none';
           showToast("Save Imported", `Loaded Wave ${parsed.wave} on ${campaignMaps[parsed.currentMapIndex || 0].name}!`, "success", 3500);
@@ -1532,7 +1548,7 @@
 
     function quickLoadGame() {
       try {
-        const raw = localStorage.getItem('kfortress_quicksave');
+        const raw = safeGet('kfortress_quicksave', null);
         if (!raw) {
           playBeep(220, 0.18, 'sawtooth', 0.2);
           showToast("No Quicksave Found", "Press [F5] anytime during gameplay to save state.", "warning", 3000);
@@ -1649,11 +1665,9 @@
     }
 
     function checkFirstRunTutorial() {
-      const tutorialSeen = localStorage.getItem('kfortress_tutorialSeen');
+      const tutorialSeen = safeGet('kfortress_tutorialSeen', null);
       if (!tutorialSeen) {
-        try {
-          localStorage.setItem('kfortress_tutorialSeen', 'true');
-        } catch (e) {}
+        safeSet('kfortress_tutorialSeen', 'true');
         clearToasts();
         document.getElementById('helpModal').style.display = 'flex';
       }
@@ -1733,6 +1747,12 @@
       }
 
       if (anyModalOpen) return;
+
+      // Reset hotkey [R] when wave is not in progress
+      if (e.key.toLowerCase() === 'r' && !waveInProgress) {
+        document.getElementById('resetBtn').click();
+        return;
+      }
 
       // Map switching hotkeys between waves
       if (!waveInProgress) {
@@ -2795,7 +2815,7 @@
           if (enemies[j].type === 'Ogre' || enemies[j].type === 'Wyvern' || enemies[j].type === 'Golem') {
             if (gameMode === 'BossBlitz') {
                bossesKilled++;
-               if (bossesKilled > hsBoss) { hsBoss = bossesKilled; localStorage.setItem('kf_hsBoss', hsBoss); }
+               if (bossesKilled > hsBoss) { hsBoss = bossesKilled; safeSet('kf_hsBoss', hsBoss); }
             }
             spawnExplosion(enemies[j].x, enemies[j].y, "#fbbf24", 1.8);
           } else {
@@ -2893,7 +2913,7 @@
         showToast(`Wave ${wave} Cleared!`, `+${waveBonus}g bounty awarded! Upgrade defenses or press [Space] for next wave.`, "success", 4000);
         
         if (gameMode === 'Endless') {
-           if (wave > hsEndless) { hsEndless = wave; localStorage.setItem('kf_hsEndless', hsEndless); }
+           if (wave > hsEndless) { hsEndless = wave; safeSet('kf_hsEndless', hsEndless); }
         }
         
         wave++;

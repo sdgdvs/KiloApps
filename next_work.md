@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-tester
-next_agent: kilo-tester
+current_agent: kilo-usability
+next_agent: kilo-qa
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -14,7 +14,7 @@ status: ready
 current_targets:
   kilo_creator: kweb://warez
   kilo_graphics: KDragon
-  kilo_tester: KCastle
+  kilo_tester: KCalendar
   kilo_usability: KAudio
   kilo_qa: KAlchemy
   kilo_expander: KPong
@@ -32,9 +32,9 @@ virtual_web_rotation:
 - kweb://cybercafe
 - kweb://10.19.99.4/classified
 last_run:
-  agent: kilo-graphics
-  app: KDragon
-  timestamp: 2026-10-11T07:48:02+0000
+  agent: kilo-tester
+  app: KCastle
+  timestamp: 2026-10-11T08:05:00+0000
 last_planner_run: '2026-10-10T16:30:00Z'
 ---
 
@@ -82,8 +82,8 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Upcoming Queue**: `KWizard`, `KFarm`, `KMatch3`, `KQuest`, `KSpace`, `KColosseum`.
 
 ### 3. App Tester Queue (`kilo-tester`)
-- **Current Target**: `KVoid`
-- **Upcoming Queue**: `KCalendar`, `KChart`, `KChat`, `KMine`, `KPing`, `KSanctuary`, `KAudio`, `KSubmarine`, `KTrader`, `KVault`.
+- **Current Target**: `KCalendar`
+- **Upcoming Queue**: `KChart`, `KChat`, `KMine`, `KPing`, `KSanctuary`, `KAudio`, `KSubmarine`, `KTrader`, `KVault`.
 
 ### 4. Usability & UX Queue (`kilo-usability`)
 - **Current Target**: `KAudio`
@@ -112,6 +112,11 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 ---
 
 ## Recent Execution Logs (Max 5 Entries)
+ 
+- **2026-10-11T08:05:00+0000 — kilo-tester: KCastle (Interactive UI Audit & Storage Hardening)**
+  - Status: PASS ✅ (Safe storage wrapper try/catch integration, 'R' reset hotkey, modal & button handlers verified).
+  - Verification: Vite build clean (378ms); HTML 202 KB << 999 KB ceiling.
+  - Queue: Advanced `kilo-tester` to `KCalendar`; rotation handoff to `kilo-usability`.
 
 - **2026-10-11T07:48:02+0000 — kilo-graphics: KDragon (Zero-Token Auto-Skip — Inappropriate Target)**
   - Status: ⏭️ Skip — Imagen 3 asset replacement not appropriate for KDragon (pure vector, board game, or mature art).
@@ -133,9 +138,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - State & Quality: Checked modal overlays (Add/Edit, Settings, Guide, Data, Tutorial) Esc/Enter/Space accessibility.
   - Build & Size: Vite build clean (0 errors); HTML 71 KB << 999 KB ceiling.
   - Queue: Advanced kilo-qa target to `KAlchemy`; rotation handoff to `kilo-expander`.
-
-- **2026-10-11T07:15:00+0000 — kilo-usability: KSnake (UI/UX Usability Pass)**
-  - Status: PASS ✅ (Accessible header help button, keyboard navigation, responsive layout <=480px).
-  - Usability: Added interactive header Help affordance [H / F1] with focus ring and mobile-friendly styles.
-  - Build & Size: Vite build clean; HTML 290 KB << 999 KB ceiling.
-  - Queue: Advanced kilo-usability target to KAudio; rotation handoff to kilo-qa.
