@@ -4,6 +4,12 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-11T12:15:00+0000 — kilo-tester: KMine (Interactive UI Audit & In-Line Repairs)**
+  - Status: PASS ✅ (Vite build clean; HTML 137 KB << 999 KB ceiling).
+  - Repairs: Resolved key collision where 'A' opened Analytics modal instead of WASD left-movement; remapped to 'G'.
+  - Modals: Wired Analytics modal into isAnyModalOpen and Escape/Enter dismissal handlers.
+  - Queue: Advanced kilo-tester target to KPing; rotation handoff to kilo-usability.
+
 - **2026-10-11T11:14:00+0000 — kilo-tester: KChat (UI & Interactive Audit)**
   - Status: PASS ✅ (Vite build clean; HTML 100 KB << 999 KB ceiling).
   - Audit: Audited shortcuts, modal transitions, and import handler; fixed typing collision on Ctrl+C and modal key-bleed.
