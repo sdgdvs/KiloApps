@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-creator
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -16,7 +16,7 @@ current_targets:
   kilo_graphics: KDragon
   kilo_tester: KChart
   kilo_usability: KNetMap
-  kilo_qa: KColony
+  kilo_qa: KBreakout
   kilo_expander: KRogue
 virtual_web_target: kweb://geocities
 virtual_web_rotation:
@@ -32,8 +32,8 @@ virtual_web_rotation:
 - kweb://cybercafe
 - kweb://10.19.99.4/classified
 last_run:
-  agent: kilo-usability
-  app: KBudget
+  agent: kilo-qa
+  app: KColony
   timestamp: 2026-10-11T09:15:00+0000
 last_planner_run: '2026-10-10T16:30:00Z'
 ---

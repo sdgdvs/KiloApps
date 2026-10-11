@@ -1689,7 +1689,8 @@
             requestAnimationFrame(renderWeatherFX);
             updateUI();
             
-            setInterval(() => {
+            let gameInterval = null;
+            function gameTick() {
                 if (gameState !== 1) return;
                 tick++;
                 if (tick % 10 === 0) { day++; isDay = true; }
@@ -2013,6 +2014,7 @@
                     playUnlock();
                     showToast("Scenario Complete", "100 Days Survived on the Alien Frontier! You Win!", "success", 8000);
                     gameState = 0;
+                    stopLoop();
                     document.getElementById('start-screen').style.display = 'flex';
                 }
                 if (gameMode === 6) {
@@ -2021,26 +2023,48 @@
                         playUnlock();
                         showToast("Resource Rush Complete", "Quota fulfilled on Day " + day + "! Colony Secured!", "success", 8000);
                         gameState = 0;
+                        stopLoop();
                         document.getElementById('start-screen').style.display = 'flex';
                     } else if (day > 50) {
                         showToast("Mission Failed", "Day 50 reached without meeting quota! Mission Failed.", "danger", 8000);
                         gameState = 0;
+                        stopLoop();
                         document.getElementById('start-screen').style.display = 'flex';
                     }
                 }
                 if (day > 3 && pop === 0 && maxPop === 0 && mat < 10 && grid.filter(g => g > 0 && g <= 20).length === 0) {
                     showToast("Colony Lost", "All structures destroyed and population lost! Mission Failed.", "danger", 8000);
                     gameState = 0;
+                    stopLoop();
                     document.getElementById('start-screen').style.display = 'flex';
                 }
-            }, 2000);
+            }
+
+            function startLoop() {
+                if (!gameInterval) {
+                    gameInterval = setInterval(gameTick, 2000);
+                }
+            }
+            function stopLoop() {
+                if (gameInterval) {
+                    clearInterval(gameInterval);
+                    gameInterval = null;
+                }
+            }
+
+            startLoop();
 
             document.addEventListener('visibilitychange', () => {
-                // Audio and loop idle handling on background tab
-                if (document.hidden && audioCtx && audioCtx.state === 'running') {
-                    audioCtx.suspend().catch(() => {});
-                } else if (!document.hidden && audioCtx && audioCtx.state === 'suspended') {
-                    audioCtx.resume().catch(() => {});
+                if (document.hidden) {
+                    stopLoop();
+                    if (audioCtx && audioCtx.state === 'running') {
+                        audioCtx.suspend().catch(() => {});
+                    }
+                } else {
+                    if (gameState === 1) startLoop();
+                    if (audioCtx && audioCtx.state === 'suspended') {
+                        audioCtx.resume().catch(() => {});
+                    }
                 }
             });
         }
