@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-usability
+current_agent: kilo-qa
+next_agent: kilo-qa
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -15,7 +15,7 @@ current_targets:
   kilo_creator: kweb://users/~neon_rider
   kilo_graphics: KDragon
   kilo_tester: KChat
-  kilo_usability: KNetMap
+  kilo_usability: KPaint
   kilo_qa: KBreakout
   kilo_expander: KChess
 virtual_web_target: kweb://users/~neon_rider
@@ -32,9 +32,9 @@ virtual_web_rotation:
 - kweb://cybercafe
 - kweb://10.19.99.4/classified
 last_run:
-  agent: kilo-tester
-  app: KChart
-  timestamp: 2026-10-11T10:14:00+0000
+  agent: kilo-usability
+  app: KNetMap
+  timestamp: '2026-10-11T10:25:00+0000'
 last_planner_run: '2026-10-10T16:30:00Z'
 ---
 
@@ -113,6 +113,11 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-11T10:25:00+0000 — kilo-usability: KNetMap (UI/UX & Usability Polish)**
+  - Status: PASS ✅ (Vite build clean; HTML 114.5 KB << 999 KB ceiling).
+  - Usability: Added touch drag & pinch-to-zoom support, canvas touch-action:none, and responsive layout queries.
+  - Queue: Advanced kilo-usability to KPaint; rotation handoff to kilo-qa.
+
 - **2026-10-11T10:14:00+0000 — kilo-tester: KChart (UI & Interactive Audit)**
   - Status: PASS ✅ (Vite build clean; HTML 121.4 KB << 999 KB ceiling).
   - Audit: Verified startup test, CSS balance, modal dismissal, 10 engines, transforms, and exports.
@@ -133,8 +138,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Status: PASS ✅ (Vite build clean; HTML 284 KB << 999 KB ceiling).
   - Expansion: Added 12-tier Dungeon Feats & Mastery Badges system with interactive modal [C], persistent localStorage tracking, milestone perks (+Max HP/MP/DEF/XP), and in-game achievements.
   - Queue: Advanced kilo-expander target to KChess; rotation handoff to kilo-creator.
-
-- **2026-10-11T09:15:00+0000 — kilo-usability: KBudget (Usability & Layout Polish)**
-  - Status: PASS ✅ (Vite build clean; HTML 145 KB << 999 KB ceiling).
-  - Tuned window bounds to 920x650 in App.jsx for zero-scroll default display; added breakdown legend.
-  - Queue: Advanced kilo-usability to KNetMap; rotation handoff to kilo-qa.
