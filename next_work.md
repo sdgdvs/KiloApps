@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-creator
-next_agent: kilo-graphics
+current_agent: kilo-graphics
+next_agent: kilo-tester
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -12,13 +12,13 @@ model: gemini-3.8-flash-medium
 timeout_minutes: 6
 status: ready
 current_targets:
-  kilo_creator: kweb://cybercafe
+  kilo_creator: kweb://10.19.99.4/classified
   kilo_graphics: KDragon
   kilo_tester: KPing
   kilo_usability: KAudio
   kilo_qa: KPac
   kilo_expander: KColosseum
-virtual_web_target: kweb://cybercafe
+virtual_web_target: kweb://10.19.99.4/classified
 virtual_web_rotation:
 - kweb://echo-subsystem.net
 - kweb://deep-core
@@ -32,9 +32,9 @@ virtual_web_rotation:
 - kweb://cybercafe
 - kweb://10.19.99.4/classified
 last_run:
-  agent: kilo-expander
-  app: KPac
-  timestamp: 2026-10-11T12:40:00+0000
+  agent: kilo-creator
+  app: kweb://cybercafe
+  timestamp: 2026-10-11T12:50:00+0000
 last_planner_run: '2026-10-10T16:30:00Z'
 ---
 
@@ -73,8 +73,8 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ### 1. Virtual 1999 Web & ARG Node Creator (`kilo-creator`)
 - **Mission**: Build functional Web 1.0 destinations in `KiloOS/public/web/` (<999KB). Standalone OS apps frozen at 92 native / 99 web.
-- **Current Target**: `kweb://users/~neon_rider`
-- **Upcoming Queue**: `kweb://users/~neon_rider`, `kweb://asm-temple`, `kweb://cybercafe`, `kweb://10.19.99.4/classified`, `kweb://echo-subsystem.net`, `kweb://deep-core`, `kweb://darknet`, `kweb://portal`, `kweb://webring`, `kweb://warez`, `kweb://geocities`.
+- **Current Target**: `kweb://10.19.99.4/classified`
+- **Upcoming Queue**: `kweb://10.19.99.4/classified`, `kweb://echo-subsystem.net`, `kweb://deep-core`, `kweb://darknet`, `kweb://portal`, `kweb://webring`, `kweb://warez`, `kweb://geocities`, `kweb://users/~neon_rider`, `kweb://asm-temple`, `kweb://cybercafe`.
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
 - **Mission**: Replace programmer art with Imagen 3 assets. Skip immediately if vector/board/mature.
@@ -113,6 +113,11 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-11T12:50:00+0000 — kilo-creator: kweb://cybercafe (Virtual 1999 Web Expansion)**
+  - Status: PASS ✅ (Vite build clean; HTML 355 KB << 999 KB ceiling).
+  - Web & ARG: Verified full BBS door game, threaded forums, ASCII studio, mIRC lounge, FM sound chip lab, and portal/webring/knet routing.
+  - Queue: Advanced kilo-creator target to kweb://10.19.99.4/classified; rotation handoff to kilo-graphics.
+
 - **2026-10-11T12:40:00+0000 — kilo-expander: KPac (Deep Feature Expansion)**
   - Status: PASS ✅ (Vite build clean; HTML 218 KB << 999 KB ceiling).
   - Expansion: Added RFC-4180 CSV telemetry export [Y], procedural seeded labyrinth generator, and Matrix FEN challenge.
@@ -134,8 +139,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Repairs: Resolved key collision where 'A' opened Analytics modal instead of WASD left-movement; remapped to 'G'.
   - Modals: Wired Analytics modal into isAnyModalOpen and Escape/Enter dismissal handlers.
   - Queue: Advanced kilo-tester target to KPing; rotation handoff to kilo-usability.
-
-- **2026-10-11T12:02:02+0000 — kilo-graphics: KDragon (Zero-Token Auto-Skip — Inappropriate Target)**
-  - Status: ⏭️ Skip — Imagen 3 asset replacement not appropriate for KDragon (pure vector, board game, or mature art).
-  - Optimization: Handled via orchestrator pre-flight zero-token auto-skip.
-  - Queue: Advanced `kilo-graphics` to `KDragon`; rotation handoff to `kilo-tester`.
