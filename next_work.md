@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-usability
+current_agent: kilo-qa
+next_agent: kilo-expander
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -15,7 +15,7 @@ current_targets:
   kilo_creator: kweb://cybercafe
   kilo_graphics: KDragon
   kilo_tester: KPing
-  kilo_usability: KRogue
+  kilo_usability: KAudio
   kilo_qa: KPong
   kilo_expander: KPac
 virtual_web_target: kweb://cybercafe
@@ -32,9 +32,9 @@ virtual_web_rotation:
 - kweb://cybercafe
 - kweb://10.19.99.4/classified
 last_run:
-  agent: kilo-tester
-  app: KMine
-  timestamp: 2026-10-11T12:15:00+0000
+  agent: kilo-usability
+  app: KRogue
+  timestamp: 2026-10-11T12:25:00+0000
 last_planner_run: '2026-10-10T16:30:00Z'
 ---
 
@@ -86,8 +86,8 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Upcoming Queue**: `KSanctuary`, `KAudio`, `KSubmarine`, `KTrader`, `KVault`, `KCalendar`, `KChart`, `KChat`, `KMine`.
 
 ### 4. Usability & UX Queue (`kilo-usability`)
-- **Current Target**: `KNetMap`
-- **Upcoming Queue**: `KRogue`, `KAudio`, `KBudget`.
+- **Current Target**: `KAudio`
+- **Upcoming Queue**: `KBudget`, `KNetMap`, `KRogue`.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
 - **Current Target**: `KRogue`
@@ -113,6 +113,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-11T12:25:00+0000 — kilo-usability: KRogue (UI/UX & Usability Pass)**
+  - Status: PASS ✅ (Vite build clean; HTML 300 KB << 999 KB ceiling).
+  - Usability: Added responsive media query breakpoints (<940px, <600px), compact status bars, and touch D-Pad ergonomics.
+  - Focus & A11y: Added focus-visible rings for keyboard navigation and touch-action manipulation.
+  - Queue: Advanced kilo-usability target to KAudio; rotation handoff to kilo-qa.
+
 - **2026-10-11T12:15:00+0000 — kilo-tester: KMine (Interactive UI Audit & In-Line Repairs)**
   - Status: PASS ✅ (Vite build clean; HTML 137 KB << 999 KB ceiling).
   - Repairs: Resolved key collision where 'A' opened Analytics modal instead of WASD left-movement; remapped to 'G'.
@@ -133,8 +139,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Status: PASS ✅ (Vite build clean; HTML 144 KB << 999 KB ceiling).
   - Expansion: Added Sweeper Telemetry & APM Studio (live APM, 3BV/s benchmark rating, win-rate breakdown, match history, and JSON export).
   - Queue: Advanced kilo-expander target to KPac; rotation handoff to kilo-creator.
-
-- **2026-10-11T11:30:00+0000 — kilo-qa: KRogue (Pass 5 QA & Build Audit)**
-  - Status: PASS ✅ (Vite build clean; Win32 C build clean; HTML 299 KB << 999 KB ceiling).
-  - Audit: Verified dual-target compilation, offline multiplayer gates, quicksave/load, state integrity.
-  - Queue: Advanced kilo-qa target to KPong; rotation handoff to kilo-expander.
