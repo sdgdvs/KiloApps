@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-qa
+current_agent: kilo-expander
+next_agent: kilo-expander
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -16,7 +16,7 @@ current_targets:
   kilo_graphics: KDragon
   kilo_tester: KChat
   kilo_usability: KPaint
-  kilo_qa: KBreakout
+  kilo_qa: KRogue
   kilo_expander: KChess
 virtual_web_target: kweb://users/~neon_rider
 virtual_web_rotation:
@@ -32,9 +32,9 @@ virtual_web_rotation:
 - kweb://cybercafe
 - kweb://10.19.99.4/classified
 last_run:
-  agent: kilo-usability
-  app: KNetMap
-  timestamp: '2026-10-11T10:25:00+0000'
+  agent: kilo-qa
+  app: KBreakout
+  timestamp: '2026-10-11T10:31:00+0000'
 last_planner_run: '2026-10-10T16:30:00Z'
 ---
 
@@ -90,8 +90,8 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Upcoming Queue**: `KRogue`, `KAudio`, `KBudget`.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
-- **Current Target**: `KColony`
-- **Upcoming Queue**: `KBreakout`, `KRogue`, `KPong`, `KPac`, `KBBS`, `KBudget`.
+- **Current Target**: `KRogue`
+- **Upcoming Queue**: `KPong`, `KPac`, `KBBS`, `KBudget`, `KColony`, `KBreakout`.
 
 ### 6. Feature Expander Queue (`kilo-expander`)
 - **Current Target**: `KChess`
@@ -138,3 +138,8 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Status: PASS ✅ (Vite build clean; HTML 284 KB << 999 KB ceiling).
   - Expansion: Added 12-tier Dungeon Feats & Mastery Badges system with interactive modal [C], persistent localStorage tracking, milestone perks (+Max HP/MP/DEF/XP), and in-game achievements.
   - Queue: Advanced kilo-expander target to KChess; rotation handoff to kilo-creator.
+
+### Agent Run Log — 2026-10-11T10:31:00+0000 (`kilo-qa`)
+- **Target:** `KBreakout` (Pass 5: QA & Build Quality)
+- **Status:** 🟢 Pass — State persistence (F5/F9), tutorial flag, modal keybinds verified.
+- **Builds:** Web build clean (<999KB). Native build clean.

@@ -418,6 +418,9 @@
                 <div class="modal-close" style="display: flex; gap: 8px; justify-content: center; flex-wrap: wrap;">
                     <button class="btn-modal-close" style="border-color: #63b3ed; color: #63b3ed;" onclick="exportDungeonFEN()">📋 Export FEN</button>
                     <button class="btn-modal-close" style="border-color: #ecc94b; color: #ecc94b;" onclick="importDungeonFENPrompt()">📥 Import FEN</button>
+                    <button class="btn-modal-close" style="border-color: #48bb78; color: #9ae6b4;" onclick="exportSaveFile()">💾 Export Save</button>
+                    <button class="btn-modal-close" style="border-color: #38bdf8; color: #bae6fd;" onclick="importSaveFilePrompt()">📥 Import Save</button>
+                    <button class="btn-modal-close" style="border-color: #d69e2e; color: #fefcbf;" onclick="exportMorgueFile()">📜 Morgue Sheet</button>
                     <button class="btn-modal-close" onclick="closeModal('modal-inventory')">Close [ESC]</button>
                 </div>
             </div>
@@ -461,6 +464,7 @@
                 </div>
                 <div class="modal-close" style="display: flex; gap: 8px; justify-content: center; flex-wrap: wrap;">
                     <button class="btn-modal-close" style="border-color: #ecc94b; background: #443711; color: #fefcbf;" onclick="openReplayModal()">🎥 Replay Viewer</button>
+                    <button class="btn-modal-close" style="border-color: #d69e2e; color: #fefcbf;" onclick="exportMorgueFile()">📜 Export Morgue</button>
                     <button class="btn-modal-close" onclick="exportLeaderboardJSON()">📤 Export JSON</button>
                     <button class="btn-modal-close" onclick="importLeaderboardJSON()">📥 Import JSON</button>
                     <button class="btn-modal-close" style="border-color: #e53e3e; background: #742a2a;" onclick="clearLeaderboard()">🗑️ Clear History</button>
@@ -470,6 +474,7 @@
         </div>
 
         <input type="file" id="import-json-file" accept=".json" style="display: none;" onchange="handleImportJSONFile(event)">
+        <input type="file" id="import-save-file" accept=".json" style="display: none;" onchange="handleImportSaveFile(event)">
 
         <!-- Keybindings Modal -->
         <div id="modal-keybinds" class="modal-overlay" style="display: none;" onclick="if(event.target === this) closeModal('modal-keybinds')">
@@ -2046,7 +2051,7 @@
                     ctx.fillText("ASTAROTH THE FALLEN IS DEFEATED!", C_WIDTH / 2, 220);
                 }
                 ctx.fillStyle = '#cbd5e0'; ctx.font = '16px sans-serif';
-                ctx.fillText("Press [R] to Restart Run  |  Press [T] to View Leaderboard", C_WIDTH / 2, 310);
+                ctx.fillText("Press [M] to Export Morgue Sheet  |  [R] Restart  |  [T] Leaderboard", C_WIDTH / 2, 310);
                 ctx.restore();
                 return;
             }
@@ -3387,6 +3392,195 @@
                 addMsg("Failed to load run."); 
                 showToast("Failed to load run: " + (e.message || "Corrupted save file"), 'error');
             }
+        }
+
+        /* --- SAVE FILE EXPORT & IMPORT UTILITIES --- */
+        function exportSaveFile() {
+            if (state !== 1 && !localStorage.getItem('krogue_save')) {
+                showToast("No active or saved run to export!", "warning");
+                return;
+            }
+            try {
+                let savePayload = (state === 1) ? {
+                    player, equipment, inventory, dlevel, total_kills, msgs,
+                    map, monsters, items, traps, knownSpells, currentSeedVal, difficulty,
+                    pet, inVault, currentVault, savedFloorData,
+                    exportTimestamp: Date.now(),
+                    saveFormatVersion: "1.99"
+                } : JSON.parse(localStorage.getItem('krogue_save'));
+
+                let jsonStr = JSON.stringify(savePayload, null, 2);
+                let blob = new Blob([jsonStr], { type: "application/json" });
+                let dl = document.createElement("a");
+                dl.href = URL.createObjectURL(blob);
+                dl.download = `krogue_save_${(savePayload.player && savePayload.player.class) || 'hero'}_d${savePayload.dlevel || 1}_${Date.now()}.json`;
+                document.body.appendChild(dl);
+                dl.click();
+                document.body.removeChild(dl);
+                URL.revokeObjectURL(dl.href);
+
+                addMsg("Exported Save File to JSON!", 'good');
+                showToast("Exported Save State (.json)!", 'success');
+            } catch(e) {
+                showToast("Failed to export save: " + e.message, 'error');
+            }
+        }
+
+        function importSaveFilePrompt() {
+            const input = document.getElementById('import-save-file');
+            if (input) input.click();
+        }
+
+        function handleImportSaveFile(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    let d = JSON.parse(e.target.result);
+                    if (!d || !d.player || !d.dlevel) {
+                        throw new Error("Invalid KRogue save format (missing player or dlevel data).");
+                    }
+                    localStorage.setItem('krogue_save', JSON.stringify(d));
+                    loadGame();
+                    closeModal('modal-inventory');
+                    addMsg(`Imported Save Game: ${d.player.class.toUpperCase()} Floor ${d.dlevel}!`, 'good');
+                    showToast(`Imported Save State: DLVL ${d.dlevel}!`, 'success');
+                } catch(err) {
+                    addMsg("Failed to import save: " + err.message, 'bad');
+                    showToast("Corrupt Save File: " + err.message, 'error');
+                } finally {
+                    event.target.value = '';
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        /* --- ROGUELIKE MORGUE & CHARACTER MEMORIAL DUMP --- */
+        function exportMorgueFile() {
+            let outcome = state === 3 ? "VICTORY" : (state === 2 ? "DEFEAT (SLAIN)" : "ACTIVE HERO EXPEDITION");
+            let dateStr = new Date().toISOString().replace('T', ' ').substring(0, 19);
+            let sep = "================================================================================";
+            let subSep = "--------------------------------------------------------------------------------";
+            
+            let pName = player.name || 'Hero';
+            let pRace = (player.race || 'human').toUpperCase();
+            let pClass = (player.class || 'warrior').toUpperCase();
+
+            let lines = [
+                sep,
+                "                    KROGUE v1.99 - HERO MEMORIAL & MORGUE FILE",
+                "                       Alternate Reality OS / Retro 1999 Dungeons",
+                sep,
+                `Timestamp:     ${dateStr}`,
+                `Outcome:       ${outcome}`,
+                `Seed:          ${currentSeedVal || player.seedStr || 'DEFAULT'}`,
+                `Dungeon Floor: DLVL ${dlevel}`,
+                `Total Kills:   ${total_kills}`,
+                `Difficulty:    ${difficulty || 'Normal'}`,
+                "",
+                subSep,
+                "                              HERO STATUS",
+                subSep,
+                `Character:     ${pName} the ${pRace} ${pClass}`,
+                `Level / XP:    Level ${player.lvl || 1}  (XP: ${player.xp || 0} / Next: ${(player.lvl || 1) * 20})`,
+                `Hit Points:    ${player.hp} / ${player.max_hp}`,
+                `Mana Points:   ${player.mp} / ${player.max_mp}`,
+                `Food Satiety:  ${player.food} / ${player.max_food || 300}`,
+                `Gold Coins:    ${player.gold || 0} GP`,
+                `Attack Power:  ${player.atk || 0}  (+Equipment)`,
+                `Defense Armor: ${player.def || 0}  (+Equipment)`,
+                "",
+                subSep,
+                "                           EQUIPPED ARTIFACTS",
+                subSep,
+                `Main Hand:     ${equipment.weapon ? equipment.weapon.name + (equipment.weapon.bonus ? ` (+${equipment.weapon.bonus})` : '') : '(unarmed)'}`,
+                `Body Armor:    ${equipment.armor ? equipment.armor.name + (equipment.armor.bonus ? ` (+${equipment.armor.bonus})` : '') : '(unarmored)'}`,
+                `Shield / Off:  ${equipment.shield ? equipment.shield.name + (equipment.shield.bonus ? ` (+${equipment.shield.bonus})` : '') : '(none)'}`,
+                `Ring / Trinket:${equipment.ring ? equipment.ring.name : '(none)'}`,
+                "",
+                subSep,
+                "                            BACKPACK INVENTORY",
+                subSep
+            ];
+
+            if (inventory.length === 0) {
+                lines.push("  (Backpack is empty)");
+            } else {
+                inventory.forEach((it, i) => {
+                    let desc = ` [${String(i + 1).padStart(2, ' ')}] ${it.name}`;
+                    if (it.count && it.count > 1) desc += ` (x${it.count})`;
+                    if (it.bonus) desc += ` (+${it.bonus})`;
+                    lines.push(desc);
+                });
+            }
+
+            lines.push("");
+            lines.push(subSep);
+            lines.push("                          SPELLBOOK & POWERS");
+            lines.push(subSep);
+            if (knownSpells && knownSpells.length > 0) {
+                knownSpells.forEach(s => lines.push(`  * [${s.key.toUpperCase()}] ${s.name} (MP Cost: ${s.cost})`));
+            } else {
+                lines.push("  (No magic spells inscribed)");
+            }
+
+            if (pet) {
+                lines.push("");
+                lines.push(subSep);
+                lines.push("                           COMPANION BEAST");
+                lines.push(subSep);
+                lines.push(`Species / Name: ${pet.name} (${pet.type || 'Familiar'})`);
+                lines.push(`Health:         ${pet.hp} / ${pet.max_hp}`);
+                lines.push(`Level / Atk:    Lvl ${pet.lvl || 1} (Attack: ${pet.atk || 4})`);
+            }
+
+            try {
+                let kills = JSON.parse(localStorage.getItem('krogue_bestiary_kills') || '{}');
+                let killKeys = Object.keys(kills);
+                if (killKeys.length > 0) {
+                    lines.push("");
+                    lines.push(subSep);
+                    lines.push("                       BESTIARY LIFETIME CULL");
+                    lines.push(subSep);
+                    killKeys.forEach(k => {
+                        lines.push(`  - ${k.padEnd(24, ' ')} : ${kills[k]} slain`);
+                    });
+                }
+            } catch(e) {}
+
+            lines.push("");
+            lines.push(subSep);
+            lines.push("                         FINAL ADVENTURE LOG");
+            lines.push(subSep);
+            let recentMsgs = msgs.slice(-20);
+            recentMsgs.forEach(m => lines.push(`  > ${typeof m === 'object' ? m.text : m}`));
+
+            const monsterCount = monsters.filter(m => m.hp > 0).length;
+            const itemCount = items.length;
+            const fen = `KROGUE-FEN:1:KR-${player.seedStr || currentSeedVal || '0'}:POS=${player.x},${player.y}:HP=${player.hp}/${player.max_hp}:MP=${player.mp}/${player.max_mp}:GLD=${player.gold}:KLS=${total_kills}:M=${monsterCount}:I=${itemCount}`;
+            lines.push("");
+            lines.push(subSep);
+            lines.push("                         DUNGEON FEN RECORD");
+            lines.push(subSep);
+            lines.push(fen);
+
+            lines.push(sep);
+            lines.push("             End of KRogue Memorial - KiloApps Alternate 1999");
+            lines.push(sep);
+
+            let txt = lines.join("\r\n");
+            let blob = new Blob([txt], { type: "text/plain;charset=utf-8" });
+            let dl = document.createElement("a");
+            dl.href = URL.createObjectURL(blob);
+            dl.download = `krogue_morgue_${player.class || 'hero'}_d${dlevel}_${Date.now()}.txt`;
+            document.body.appendChild(dl);
+            dl.click();
+            document.body.removeChild(dl);
+            URL.revokeObjectURL(dl.href);
+
+            addMsg("Exported Hero Morgue & Character Sheet!", 'good');
+            showToast("Exported Hero Morgue Dump (.txt)!", 'success');
         }
 
         /* --- RETRO FIREBASE MULTIPLAYER SERVICE (RFMS) INTEGRATION --- */
@@ -5015,6 +5209,7 @@
                 else if (e.key === 'Numpad3' || e.key === 'n' || e.key === 'N') { targetX = Math.min(COLS - 2, targetX + 1); targetY = Math.min(ROWS - 2, targetY + 1); e.preventDefault(); }
                 else if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); executeTargetSpell(); }
             } else if (state === 2 || state === 3) {
+                if (e.key === 'm' || e.key === 'M') { e.preventDefault(); exportMorgueFile(); }
                 if (e.key === 'r' || e.key === 'R' || e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openCharSelect(); }
                 if (e.key === 't' || e.key === 'T') openLeaderboard();
                 if (isActionKey(e, 'loadState') || e.key === 'F9' || e.key === 'l' || e.key === 'L') { e.preventDefault(); loadGame(); }
