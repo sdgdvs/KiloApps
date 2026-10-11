@@ -211,6 +211,7 @@
       <button class="btn-sm" onclick="openKeybindsModal()" id="btn-keybinds" title="Custom Key Rebinding [K]">⌨️ Keys [K]</button>
       <button class="btn-sm" onclick="togglePvPMode()" id="btn-pvp" title="Toggle 1P vs AI / 2P Local PvP (V)">👤 1P vs AI [V]</button>
       <button class="btn-sm" onclick="cycleGameMode()" id="btn-mode" title="Cycle Game Modes (M)">🎮 Mode: Classic [M]</button>
+      <button class="btn-sm" onclick="cycleTargetScore()" id="btn-pts" title="Cycle Winning Score Goal (5, 11, 21) [G]">🎯 Goal: 11 [G]</button>
       <button class="btn-sm" onclick="cycleDifficulty()" id="btn-diff" title="Cycle AI Difficulty (1-3)">⚡ Diff: Normal [1-3]</button>
       <button class="btn-sm" onclick="cycleTheme()" id="btn-theme" title="Cycle Visual Themes (T)">🎨 Theme [T]</button>
       <button class="btn-sm" onclick="toggleReplay()" id="btn-replay" title="Toggle Match Replay (P)">📽️ Replay [P]</button>
@@ -528,7 +529,17 @@
   // Game Modes
   // 0: Classic, 1: Obstacle Arena, 2: Power-Up Frenzy, 3: Multi-Ball, 4: Campaign
   let gameMode = safeGetStorage('kpong_mode', 0); 
-  const MODE_NAMES = ["Classic", "Obstacle Arena", "Power-Up Frenzy", "Multi-Ball", "Campaign"];
+  const MODE_NAMES = ["Classic", "Obstacle Arena", "Power-Up Frenzy", "Multi-Ball", "Campaign", "Gravity Vortex"];
+  let customTargetScore = safeGetStorage("kpong_target_score", 11);
+  function cycleTargetScore() {
+      const opts = [5, 11, 21];
+      let idx = opts.indexOf(customTargetScore);
+      customTargetScore = opts[(idx + 1) % opts.length];
+      safeSetStorage("kpong_target_score", customTargetScore);
+      const btn = document.getElementById("btn-pts");
+      if (btn) btn.innerText = "🎯 Goal: " + customTargetScore + " [G]";
+      showToast("Match Winning Goal: " + customTargetScore + " Points");
+  }
   if (gameMode < 0 || gameMode >= MODE_NAMES.length) gameMode = 0;
   
   // PvP vs AI
@@ -2516,6 +2527,14 @@
               let hitPos = ((b.y + BALL_SIZE/2) - (p2y + p2PadH/2)) / (p2PadH/2);
               b.dy += hitPos * 5.0;
               if (gameMode === 4 && campaignLevel === 20) b.dy += p2Vy * 0.8;
+          if (gameMode === 5) {
+              let gdx = W/2 - (b.x + BALL_SIZE/2);
+              let gdy = H/2 - (b.y + BALL_SIZE/2);
+              let gdist = Math.hypot(gdx, gdy) + 18;
+              let gpull = 28 / (gdist * 0.85);
+              b.dx += (gdx / gdist) * gpull * 0.14;
+              b.dy += (gdy / gdist) * gpull * 0.14;
+          }
               if (b.dy > 12) b.dy = 12; if (b.dy < -12) b.dy = -12;
               b.dx *= 1.08;
               rally++;
@@ -2582,7 +2601,7 @@
       }
 
       // Win Conditions
-      let targetScore = (gameMode === 4 && campaignLevel === 20) ? 7 : (gameMode === 4 ? 5 : 11);
+      let targetScore = (gameMode === 4 && campaignLevel === 20) ? 7 : (gameMode === 4 ? 5 : customTargetScore);
       if (s1 >= targetScore) {
           if (gameMode === 4) {
               campaignLevel++; s1 = 0; s2 = 0; rally = 0; bossShieldHp = 3; bossShieldTimer = 0;
@@ -2999,6 +3018,29 @@
       ctx.beginPath(); ctx.arc(W/2, H/2, 45, 0, Math.PI * 2); ctx.stroke();
 
       // Gravity Well
+      if (gameMode === 5) {
+          ctx.save();
+          ctx.translate(W/2, H/2);
+          let vRot = (performance.now() / 800) % (Math.PI * 2);
+          ctx.rotate(vRot);
+          let vGrad = ctx.createRadialGradient(0, 0, 3, 0, 0, 34);
+          vGrad.addColorStop(0, '#ffffff');
+          vGrad.addColorStop(0.25, getPrimaryColor());
+          vGrad.addColorStop(0.7, 'rgba(0, 229, 255, 0.2)');
+          vGrad.addColorStop(1, 'transparent');
+          ctx.fillStyle = vGrad;
+          ctx.beginPath();
+          ctx.arc(0, 0, 34, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.strokeStyle = getPrimaryColor();
+          ctx.lineWidth = 1.5;
+          ctx.setLineDash([4, 6]);
+          ctx.beginPath();
+          ctx.arc(0, 0, 24, 0, Math.PI * 2);
+          ctx.stroke();
+          ctx.setLineDash([]);
+          ctx.restore();
+      }
       if (gameMode === 1 || (gameMode === 4 && campaignLevel >= 9)) {
           ctx.save();
           ctx.strokeStyle = getSecondaryColor(); ctx.lineWidth = 1.5;

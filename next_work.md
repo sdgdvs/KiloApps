@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-expander
-next_agent: kilo-creator
+current_agent: kilo-creator
+next_agent: kilo-graphics
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -17,7 +17,7 @@ current_targets:
   kilo_tester: KCalendar
   kilo_usability: KBudget
   kilo_qa: KColony
-  kilo_expander: KPong
+  kilo_expander: KRogue
 virtual_web_target: kweb://warez
 virtual_web_rotation:
 - kweb://echo-subsystem.net
@@ -113,6 +113,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
  
+- **2026-10-11T08:35:00+0000 — kilo-expander: KPong (Deep Feature Expansion)**
+  - Status: PASS ✅ (Vite build clean; HTML 147 KB << 999 KB ceiling).
+  - Expansion: Added 6th mode 'Gravity Vortex' with central orbital singularity physics, match score goal selector (5/11/21 pts with [G] shortcut), and safe storage persistence.
+  - Queue: Advanced `kilo-expander` target to `KRogue`; rotation handoff to `kilo-creator`.
 - **2026-10-11T08:25:00+0000 — kilo-qa: KAlchemy (Pass 5 QA & Build Quality Audit)**
   - Status: PASS ✅ (Clean Win32 C MSVC native compilation + Vite web build).
   - Verification: Native KAlchemy.exe clean; Vite build clean (1.22s); HTML 241 KB << 999 KB ceiling.
