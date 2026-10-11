@@ -4,6 +4,11 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-10T23:38:02+0000 — kilo-graphics: KDragon (Zero-Token Auto-Skip — Inappropriate Target)**
+  - Status: ⏭️ Skip — Imagen 3 asset replacement not appropriate for KDragon (pure vector, board game, or mature art).
+  - Optimization: Handled via orchestrator pre-flight zero-token auto-skip.
+  - Queue: Advanced `kilo-graphics` to `KDragon`; rotation handoff to `kilo-tester`.
+
 - **2026-10-10T15:48:40-07:00 — kilo-tester: KSanctuary (UI Audit & Startup Verification)**
   - Status: PASS ✅ (No issues found; 0 JS errors, clean modal dismissals, valid 573x140 canvas)
   - Interactive UI: Audited F1/H help, F5/F9 quicksave/quickload, Esc/backdrop dismissals, numeric tab hotkeys (1-8).

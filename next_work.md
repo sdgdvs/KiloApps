@@ -1,5 +1,5 @@
 ---
-current_agent: kilo-graphics
+current_agent: kilo-tester
 next_agent: kilo-tester
 agent_rotation:
 - kilo-creator
@@ -32,9 +32,9 @@ virtual_web_rotation:
 - kweb://users/~neon_rider
 - kweb://asm-temple
 last_run:
-  agent: kilo-creator
-  app: kweb://asm-temple
-  timestamp: '2026-10-10T17:30:00-07:00'
+  agent: kilo-graphics
+  app: KDragon
+  timestamp: 2026-10-11T00:38:02+0000
 last_planner_run: '2026-10-10T16:30:00Z'
 ---
 
@@ -113,6 +113,11 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-11T00:38:02+0000 — kilo-graphics: KDragon (Zero-Token Auto-Skip — Inappropriate Target)**
+  - Status: ⏭️ Skip — Imagen 3 asset replacement not appropriate for KDragon (pure vector, board game, or mature art).
+  - Optimization: Handled via orchestrator pre-flight zero-token auto-skip.
+  - Queue: Advanced `kilo-graphics` to `KDragon`; rotation handoff to `kilo-tester`.
+
 - **2026-10-10T17:22:00-07:00 — kilo-expander: KRogue (Feature Expansion — Bestiary & Monster Compendium)**
   - Status: PASS ✅ (Dungeon Bestiary modal, 31-tier monsters cataloged, weakness & stats breakdown, kill tracking)
   - Features: Added [X] Bestiary action button & hotkey, filter tabs (Caverns, Catacombs, Abyss, Chaos), local storage persistence.
@@ -136,8 +141,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - State Integrity: Bitcrusher, Chorus, and Micro-Tuning scale selection now fully persisted across quicksave/quickload & JSON export/import.
   - Build & Size: Vite build clean (371ms); size 146.4 KB << 999 KB ceiling.
   - Queue: Advanced tester target to `KStellar`; rotation handoff to `kilo-usability`.
-
-- **2026-10-10T23:38:02+0000 — kilo-graphics: KDragon (Zero-Token Auto-Skip — Inappropriate Target)**
-  - Status: ⏭️ Skip — Imagen 3 asset replacement not appropriate for KDragon (pure vector, board game, or mature art).
-  - Optimization: Handled via orchestrator pre-flight zero-token auto-skip.
-  - Queue: Advanced `kilo-graphics` to `KDragon`; rotation handoff to `kilo-tester`.
