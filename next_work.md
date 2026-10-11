@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-expander
-next_agent: kilo-creator
+current_agent: kilo-creator
+next_agent: kilo-graphics
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -17,7 +17,7 @@ current_targets:
   kilo_tester: KTrader
   kilo_usability: KRogue
   kilo_qa: KRogue
-  kilo_expander: KMine
+  kilo_expander: KPac
 virtual_web_target: kweb://10.19.99.4/classified
 virtual_web_rotation:
 - kweb://10.19.99.4/classified
@@ -32,9 +32,9 @@ virtual_web_rotation:
 - kweb://asm-temple
 - kweb://cybercafe
 last_run:
-  agent: kilo-qa
-  app: KBreakout
-  timestamp: 2026-10-10T19:15:00-07:00
+  agent: kilo-expander
+  app: KMine
+  timestamp: 2026-10-10T19:21:00-07:00
 last_planner_run: '2026-10-10T16:30:00Z'
 ---
 
@@ -94,8 +94,8 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Upcoming Queue**: `KPong`, `KPac`, `KBBS`, `KBudget`, `KAlchemy`, `KColony`, `KBreakout`.
 
 ### 6. Feature Expander Queue (`kilo-expander`)
-- **Current Target**: `KMine`
-- **Upcoming Queue**: `KPac`, `KStarForge`, `KColosseum`, `KAbyss`, `KPong`, `KRogue`, `KChess`.
+- **Current Target**: `KPac`
+- **Upcoming Queue**: `KStarForge`, `KColosseum`, `KAbyss`, `KPong`, `KRogue`, `KChess`, `KMine`.
 
 ---
 
@@ -112,6 +112,11 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 ---
 
 ## Recent Execution Logs (Max 5 Entries)
+
+- **2026-10-10T19:21:00-07:00 — kilo-expander: KMine (Maturity Skip & Queue Rotation)**
+  - Status: ⏭️ Skip — KMine is feature-complete and mature (9+ passes).
+  - Verification: 3BV benchmark engine, tactical deduction scanner, RFMS duel arena, and replay studio verified.
+  - Queue: Advanced kilo-expander target to KPac; rotation handoff to kilo-creator.
 
 - **2026-10-10T19:15:00-07:00 — kilo-qa: KBreakout (Pass 5: State & Tutorial Integrity Audit)**
   - Status: PASS ✅ (Quicksave F5/F9 state persistence, first-run tutorial flag, modal keybinds audited).
@@ -135,10 +140,4 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Status: ⏭️ Skip — Imagen 3 asset replacement not appropriate for KDragon (pure vector, board game, or mature art).
   - Optimization: Handled via orchestrator pre-flight zero-token auto-skip.
   - Queue: Advanced `kilo-graphics` to `KDragon`; rotation handoff to `kilo-tester`.
-
-- **2026-10-10T18:32:00-07:00 — kilo-creator: kweb://cybercafe (Virtual 1999 Web Experience & KNet Links)**
-  - Status: PASS ✅ (Anti-Potemkin Web 1.0 hub: threaded BBS, ASCII studio, mIRC lounge, LAN arena, 355 KB < 999 KB).
-  - Integration: Verified active bidirectional linking across KNet, portal, webring, and classifieds directory.
-  - Verification: Vite build clean (`npm run build`); zero console errors; security lint compliant.
-  - Queue: Advanced kilo-creator target to `kweb://10.19.99.4/classified`; rotation handoff to kilo-graphics.
 
