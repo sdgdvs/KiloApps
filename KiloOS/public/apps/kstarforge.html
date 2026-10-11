@@ -1668,13 +1668,38 @@
             }
         ];
 
+        function safeGet(key, fallback = null) {
+            try {
+                const val = localStorage.getItem(key);
+                if (val === null) return fallback;
+                try { return JSON.parse(val); } catch (_) { return val; }
+            } catch (e) {
+                return fallback;
+            }
+        }
+        function safeSet(key, value) {
+            try {
+                const str = typeof value === 'string' ? value : JSON.stringify(value);
+                localStorage.setItem(key, str);
+                return true;
+            } catch (e) {
+                console.warn('[KStarForge] Storage write failed:', e);
+                return false;
+            }
+        }
+        function safeRemove(key) {
+            try {
+                localStorage.removeItem(key);
+            } catch (e) {}
+        }
+
         /* ==========================================================================
            2. AUDIO SYNTHESIZER ENGINE (Yamaha YM2612 2-Op FM + SNES SPC700 Delay)
            ========================================================================== */
         class AudioEngine {
             constructor() {
                 this.ctx = null;
-                this.muted = localStorage.getItem('kstarforge_soundMuted') === '1';
+                this.muted = safeGet('kstarforge_soundMuted', '0') === '1';
                 this.volume = 0.5;
             }
 
@@ -4062,14 +4087,19 @@
         }
 
         /* Animation Main Loop */
+        let animFrameId = null;
         function gameLoop() {
+            if (document.hidden) {
+                animFrameId = null;
+                return;
+            }
             if (flightSim.active) {
                 updateFlightSim();
                 renderFlightSim();
             }
-            requestAnimationFrame(gameLoop);
+            animFrameId = requestAnimationFrame(gameLoop);
         }
-        requestAnimationFrame(gameLoop);
+        animFrameId = requestAnimationFrame(gameLoop);
 
         /* ==========================================================================
            9. CONTRACTS & FACTION PROGRESSION
@@ -5243,7 +5273,7 @@ Certification: APPROVED BY PROVING GROUNDS RANGE CONTROL`;
                 drydockProgress: state.drydockProgress,
                 timestamp: Date.now()
             };
-            localStorage.setItem('kstarforge_quicksave', JSON.stringify(payload));
+            safeSet('kstarforge_quicksave', payload);
             const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(payload, null, 2));
             const downloadAnchor = document.createElement('a');
             downloadAnchor.setAttribute("href", dataStr);
@@ -5268,7 +5298,7 @@ Certification: APPROVED BY PROVING GROUNDS RANGE CONTROL`;
                     if (!data.grid || !Array.isArray(data.grid)) {
                         throw new Error('Invalid grid format in save JSON');
                     }
-                    localStorage.setItem('kstarforge_quicksave', event.target.result);
+                    safeSet('kstarforge_quicksave', event.target.result);
                     state.loadFromStorage();
                     updateUI();
                     renderBlueprintGrid();
@@ -5285,8 +5315,8 @@ Certification: APPROVED BY PROVING GROUNDS RANGE CONTROL`;
 
         document.getElementById('btn-reset-save').addEventListener('click', () => {
             if (confirm('Reset all shipyard progress?')) {
-                localStorage.removeItem('kstarforge_quicksave');
-                localStorage.removeItem('kstarforge_tutorialSeen');
+                safeRemove('kstarforge_quicksave');
+                safeRemove('kstarforge_tutorialSeen');
                 location.reload();
             }
         });
@@ -5301,12 +5331,12 @@ Certification: APPROVED BY PROVING GROUNDS RANGE CONTROL`;
                     drydockProgress: state.drydockProgress,
                     timestamp: Date.now()
                 };
-                localStorage.setItem('kstarforge_quicksave', JSON.stringify(payload));
+                safeSet('kstarforge_quicksave', payload);
             } catch (e) {}
         });
 
         // Splash screen buttons
-        const hasSave = !!localStorage.getItem('kstarforge_quicksave');
+        const hasSave = !!safeGet('kstarforge_quicksave');
         if (hasSave) {
             document.getElementById('btn-splash-continue').removeAttribute('disabled');
             document.getElementById('splash-save-info').textContent = 'Saved yard ready';
@@ -5321,7 +5351,7 @@ Certification: APPROVED BY PROVING GROUNDS RANGE CONTROL`;
         const closeTut = () => {
             audio.playClick();
             document.getElementById('tutorial-modal').style.display = 'none';
-            localStorage.setItem('kstarforge_tutorialSeen', '1');
+            safeSet('kstarforge_tutorialSeen', '1');
         };
         document.getElementById('btn-tut-close')?.addEventListener('click', closeTut);
 
@@ -5332,7 +5362,7 @@ Certification: APPROVED BY PROVING GROUNDS RANGE CONTROL`;
             state.loadDefaultVanguard();
             updateUI();
             renderBlueprintGrid();
-            if (!localStorage.getItem('kstarforge_tutorialSeen')) {
+            if (!safeGet('kstarforge_tutorialSeen')) {
                 showTutorialStep(0);
             }
         });
@@ -5376,18 +5406,18 @@ Certification: APPROVED BY PROVING GROUNDS RANGE CONTROL`;
             state.loadDefaultVanguard();
             updateUI();
             renderBlueprintGrid();
-            if (!localStorage.getItem('kstarforge_tutorialSeen')) {
+            if (!safeGet('kstarforge_tutorialSeen')) {
                 showTutorialStep(0);
             }
         });
 
         // Restore settings preferences from storage
-        const savedCrt = localStorage.getItem('kstarforge_crt');
+        const savedCrt = safeGet('kstarforge_crt');
         if (savedCrt === 'disabled') {
             document.body.classList.add('no-crt');
             document.getElementById('setting-crt-toggle').textContent = 'DISABLED';
         }
-        const savedVol = localStorage.getItem('kstarforge_volume');
+        const savedVol = safeGet('kstarforge_volume');
         if (savedVol !== null) {
             audio.volume = parseFloat(savedVol);
             document.getElementById('setting-vol').value = Math.round(audio.volume * 100);
@@ -5403,6 +5433,10 @@ Certification: APPROVED BY PROVING GROUNDS RANGE CONTROL`;
             if (document.hidden) {
                 hiddenTimestamp = Date.now();
                 flightSim.keys = {};
+                if (animFrameId) {
+                    cancelAnimationFrame(animFrameId);
+                    animFrameId = null;
+                }
                 if (fabInterval) {
                     clearInterval(fabInterval);
                     fabInterval = null;
@@ -5411,6 +5445,9 @@ Certification: APPROVED BY PROVING GROUNDS RANGE CONTROL`;
                     audio.ctx.suspend().catch(() => {});
                 }
             } else {
+                if (!animFrameId) {
+                    animFrameId = requestAnimationFrame(gameLoop);
+                }
                 if (audio.ctx && audio.ctx.state === 'suspended') {
                     audio.ctx.resume().catch(() => {});
                 }

@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-creator
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -16,7 +16,7 @@ current_targets:
   kilo_graphics: KDragon
   kilo_tester: KSubmarine
   kilo_usability: KNetMap
-  kilo_qa: KStarForge
+  kilo_qa: KBreakout
   kilo_expander: KChess
 virtual_web_target: kweb://cybercafe
 virtual_web_rotation:
@@ -32,9 +32,9 @@ virtual_web_rotation:
 - kweb://users/~neon_rider
 - kweb://asm-temple
 last_run:
-  agent: kilo-usability
-  app: KPing
-  timestamp: 2026-10-10T18:03:00-07:00
+  agent: kilo-qa
+  app: KStarForge
+  timestamp: 2026-10-10T18:14:00-07:00
 last_planner_run: '2026-10-10T16:30:00Z'
 ---
 
@@ -90,8 +90,8 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Upcoming Queue**: `KNetMap`, `KRogue`, `KCalendar`, `KSnake`, `KAudio`, `KBudget`.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
-- **Current Target**: `KStarForge`
-- **Upcoming Queue**: `KBreakout`, `KRogue`, `KPong`, `KPac`, `KBBS`, `KBudget`, `KAlchemy`, `KColony`.
+- **Current Target**: `KBreakout`
+- **Upcoming Queue**: `KRogue`, `KPong`, `KPac`, `KBBS`, `KBudget`, `KAlchemy`, `KColony`.
 
 ### 6. Feature Expander Queue (`kilo-expander`)
 - **Current Target**: `KChess`
@@ -112,6 +112,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 ---
 
 ## Recent Execution Logs (Max 5 Entries)
+
+- **2026-10-10T18:14:00-07:00 — kilo-qa: KStarForge (Pass 5 QA & Build Quality Audit)**
+  - Status: PASS ✅ (Storage resilience wrapped, rAF visibility pause guarded, MSVC & Vite builds clean).
+  - Storage & Lifecycle: Wrapped localStorage with safeGet/safeSet/safeRemove; guarded gameLoop rAF with document.hidden.
+  - Build & Size: Native MSVC clean build (KStarForge.exe); Vite build clean; HTML 258 KB << 999 KB ceiling.
+  - Queue: Advanced kilo-qa target to KBreakout; rotation handoff to kilo-expander.
 
 - **2026-10-10T18:03:00-07:00 — kilo-usability: KPing (Usability & Responsive Layout Audit)**
   - Status: PASS ✅ (HiDPI canvas scaling verified, button touch targets & smooth terminal scroll tuned, 162 KB << 999 KB ceiling).
@@ -136,9 +142,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Status: ⏭️ Skip — Imagen 3 asset replacement not appropriate for KDragon (pure vector, board game, or mature art).
   - Optimization: Handled via orchestrator pre-flight zero-token auto-skip.
   - Queue: Advanced `kilo-graphics` to `KDragon`; rotation handoff to `kilo-tester`.
-
-- **2026-10-10T17:22:00-07:00 — kilo-expander: KRogue (Feature Expansion — Bestiary & Monster Compendium)**
-  - Status: PASS ✅ (Dungeon Bestiary modal, 31-tier monsters cataloged, weakness & stats breakdown, kill tracking)
-  - Features: Added [X] Bestiary action button & hotkey, filter tabs (Caverns, Catacombs, Abyss, Chaos), local storage persistence.
-  - Build & Size: Vite build clean (370ms); HTML 277.5 KB << 999 KB ceiling. Zero errors.
-  - Queue: Advanced expander target to `KChess`; rotation handoff to `kilo-creator`.
