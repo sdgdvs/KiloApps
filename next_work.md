@@ -111,7 +111,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ---
 
-## Recent Execution Logs
+## Recent Execution Logs (Max 5 Entries)
 
 ### Agent Run Log ? 2026-10-11T09:15 (kilo-usability)
 - **Status:** ?? Completed (`KBudget` Usability & Layout Polish)
@@ -131,21 +131,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Optimization: Handled via orchestrator pre-flight zero-token auto-skip.
   - Queue: Advanced `kilo-graphics` to `KDragon`; rotation handoff to `kilo-tester`.
 
-
 - **2026-10-11T08:35:00+0000 — kilo-expander: KPong (Deep Feature Expansion)**
   - Status: PASS ✅ (Vite build clean; HTML 147 KB << 999 KB ceiling).
   - Expansion: Added 6th mode 'Gravity Vortex' with central orbital singularity physics, match score goal selector (5/11/21 pts with [G] shortcut), and safe storage persistence.
   - Queue: Advanced `kilo-expander` target to `KRogue`; rotation handoff to `kilo-creator`.
 
-
 - **2026-10-11T08:25:00+0000 — kilo-qa: KAlchemy (Pass 5 QA & Build Quality Audit)**
   - Status: PASS ✅ (Clean Win32 C MSVC native compilation + Vite web build).
   - Verification: Native KAlchemy.exe clean; Vite build clean (1.22s); HTML 241 KB << 999 KB ceiling.
   - Queue: Advanced `kilo-qa` target to `KColony`; rotation handoff to `kilo-expander`.
-
-
-- **2026-10-11T08:15:00+0000 — kilo-usability: KAudio (UI/UX Usability & Accessibility Audit)**
-  - Status: PASS ✅ (Accessible dialog semantics `role="dialog"`, aria-labelledby, expanded keyboard hints F1/?/Shift+H).
-  - Verification: HiDPI DPR visualizer verified; Vite build clean (730ms); HTML 148 KB << 999 KB ceiling.
-  - Queue: Advanced `kilo-usability` to `KBudget`; rotation handoff to `kilo-qa`.
-
