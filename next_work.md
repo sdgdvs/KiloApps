@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-usability
+current_agent: kilo-qa
+next_agent: kilo-expander
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -15,7 +15,7 @@ current_targets:
   kilo_creator: kweb://echo-subsystem.net
   kilo_graphics: KDragon
   kilo_tester: KType
-  kilo_usability: KRogue
+  kilo_usability: KNetMap
   kilo_qa: KRogue
   kilo_expander: KPac
 virtual_web_target: kweb://echo-subsystem.net
@@ -32,9 +32,9 @@ virtual_web_rotation:
 - kweb://cybercafe
 - kweb://10.19.99.4/classified
 last_run:
-  agent: kilo-tester
-  app: KTrader
-  timestamp: 2026-10-10T19:49:00-07:00
+  agent: kilo-usability
+  app: KRogue
+  timestamp: 2026-10-10T20:02:45-07:00
 last_planner_run: '2026-10-10T16:30:00Z'
 ---
 
@@ -86,8 +86,8 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Upcoming Queue**: `KVault`, `KVoid`, `KCalendar`, `KChart`, `KChat`, `KMine`, `KPing`, `KSanctuary`, `KAudio`, `KSubmarine`, `KTrader`.
 
 ### 4. Usability & UX Queue (`kilo-usability`)
-- **Current Target**: `KPing`
-- **Upcoming Queue**: `KNetMap`, `KRogue`, `KCalendar`, `KSnake`, `KAudio`, `KBudget`.
+- **Current Target**: `KNetMap`
+- **Upcoming Queue**: `KRogue`, `KCalendar`, `KSnake`, `KAudio`, `KBudget`.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
 - **Current Target**: `KRogue`
@@ -113,6 +113,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-10T20:02:45-07:00 — kilo-usability: KRogue (UI/UX & Usability Pass)**
+  - Status: PASS ✅ (Audited layout scaling, canvas touch-action, :focus-visible outlines, and modal Escape keybinds).
+  - Usability Fixes: Fixed body flexbox top-clipping on short viewports, added canvas `touch-action: none`, wired Bestiary modal to Escape.
+  - Build & Size: Vite build clean (`npm run build`); HTML 277 KB << 999 KB ceiling.
+  - Queue: Advanced kilo-usability target to `KNetMap`; rotation handoff to `kilo-qa`.
+
 - **2026-10-10T19:49:00-07:00 — kilo-tester: KTrader (Interactive UI & Lifecycle Audit)**
   - Status: PASS ✅ (Audited shortcuts, navigation routes, softlock safeguards, and lifecycle hooks).
   - UI Fixes: Added `visibilitychange`/`pagehide` loop pauses, fixed emergency recharge calculation to prevent softlocks.
@@ -134,9 +140,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Status: ⏭️ Skip — KMine is feature-complete and mature (9+ passes).
   - Verification: 3BV benchmark engine, tactical deduction scanner, RFMS duel arena, and replay studio verified.
   - Queue: Advanced kilo-expander target to KPac; rotation handoff to kilo-creator.
-
-- **2026-10-10T19:15:00-07:00 — kilo-qa: KBreakout (Pass 5: State & Tutorial Integrity Audit)**
-  - Status: PASS ✅ (Quicksave F5/F9 state persistence, first-run tutorial flag, modal keybinds audited).
-  - Verification: Full state persistence, storage safety guards, non-autostart duel lobby verified.
-  - Build & Size: Vite build clean (`npm run build`); HTML 160 KB << 999 KB ceiling.
-  - Queue: Advanced kilo-qa target to KRogue; rotation handoff to kilo-expander.

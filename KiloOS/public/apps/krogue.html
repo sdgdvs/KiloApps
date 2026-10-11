@@ -6,19 +6,21 @@
     <title>KRogue - Expanded Roguelike Edition</title>
     <style>
         * { box-sizing: border-box; user-select: none; margin: 0; padding: 0; }
+        *:focus-visible { outline: 2px solid #63b3ed; outline-offset: 2px; }
         body {
             background: #07090e; color: #e2e8f0;
             font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
             text-rendering: optimizeLegibility;
             -webkit-font-smoothing: antialiased;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            min-height: 100vh; overflow-y: auto; overflow-x: hidden; padding: 4px;
+            display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
+            min-height: 100vh; overflow-y: auto; overflow-x: hidden; padding: 8px 4px;
         }
         #game-container {
             display: flex; flex-direction: column; align-items: center;
             background: #111520; border: 2px solid #2d3748; border-radius: 12px;
             box-shadow: 0 12px 40px rgba(0,0,0,0.85), 0 0 25px rgba(66, 153, 225, 0.2);
             padding: 8px; width: 920px; max-width: 98vw; position: relative;
+            margin: auto 0;
         }
         #canvas-wrapper {
             position: relative;
@@ -29,7 +31,7 @@
             display: flex;
             justify-content: center;
         }
-        canvas { display: block; width: 100%; max-width: 880px; height: auto; image-rendering: pixelated; cursor: crosshair; }
+        canvas { display: block; width: 100%; max-width: 880px; height: auto; image-rendering: pixelated; cursor: crosshair; touch-action: none; }
         
         #ui-panel {
             width: 100%; margin-top: 10px;
@@ -4728,7 +4730,7 @@
             }
 
             if (e.key === 'Escape') {
-                closeModal('modal-inventory'); closeModal('modal-spellbook'); closeModal('modal-leaderboard'); closeModal('modal-char-select'); closeModal('modal-help'); closeModal('modal-keybinds'); closeModal('modal-altar'); closeModal('modal-pet'); closeModal('modal-anvil'); closeModal('modal-multiplayer'); closeModal('modal-replay');
+                closeModal('modal-inventory'); closeModal('modal-spellbook'); closeModal('modal-leaderboard'); closeModal('modal-char-select'); closeModal('modal-help'); closeModal('modal-keybinds'); closeModal('modal-altar'); closeModal('modal-pet'); closeModal('modal-anvil'); closeModal('modal-bestiary'); closeModal('modal-multiplayer'); closeModal('modal-replay');
                 if (state === 4) { state = 1; addMsg("Targeting cancelled."); }
                 else if (state === 2 || state === 3) { state = 0; }
                 return;
