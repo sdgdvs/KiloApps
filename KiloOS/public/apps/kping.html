@@ -322,6 +322,20 @@
   .export-option-card:hover {
     border-color: var(--accent); background: rgba(59, 130, 246, 0.1);
   }
+  .mesh-station-card {
+    background: rgba(0, 0, 0, 0.25);
+    border: 1px solid var(--border-subtle);
+    border-radius: 8px;
+    padding: 8px 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: all 0.2s ease;
+  }
+  .mesh-station-card:hover {
+    border-color: rgba(45, 212, 191, 0.4);
+    background: rgba(13, 148, 136, 0.1);
+  }
 
   /* Responsive Layout Ergonomics */
   @media (max-width: 768px) {
@@ -1482,7 +1496,7 @@ Press Enter or 'P' to Ping, 'B' for BGP, 'Q' for Bloat, 'G' for Global Mesh, F5/
       let shouldDisplay = true;
       if (currentFilter === 'reply' && type !== 'reply') shouldDisplay = false;
       if (currentFilter === 'loss' && type !== 'timeout' && type !== 'error' && type !== 'mtu_frag') shouldDisplay = false;
-      if (currentFilter === 'hops' && type !== 'trace_hop') shouldDisplay = false;
+      if (currentFilter === 'hops' && type !== 'trace_hop' && type !== 'bgp_hop') shouldDisplay = false;
       if (currentFilter === 'probes' && type !== 'mtu_pass' && type !== 'mtu_frag') shouldDisplay = false;
       if (filterQuery && !text.toLowerCase().includes(filterQuery)) shouldDisplay = false;
 
