@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-qa
+current_agent: kilo-qa
+next_agent: kilo-expander
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -15,7 +15,7 @@ current_targets:
   kilo_creator: kweb://10.19.99.4/classified
   kilo_graphics: KDragon
   kilo_tester: KSanctuary
-  kilo_usability: KAudio
+  kilo_usability: KBudget
   kilo_qa: KPac
   kilo_expander: KColosseum
 virtual_web_target: kweb://10.19.99.4/classified
@@ -32,9 +32,9 @@ virtual_web_rotation:
 - kweb://cybercafe
 - kweb://10.19.99.4/classified
 last_run:
-  agent: kilo-tester
-  app: KPing
-  timestamp: 2026-10-11T13:13:00+0000
+  agent: kilo-usability
+  app: KAudio
+  timestamp: 2026-10-11T13:25:00+0000
 last_planner_run: '2026-10-10T16:30:00Z'
 ---
 
@@ -113,6 +113,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-11T13:25:00+0000 — kilo-usability: KAudio (UI/UX Usability Pass)**
+  - Status: PASS ✅ (Vite build clean; HTML 148 KB << 999 KB ceiling).
+  - Usability & Accessibility: Added modal focus capture and restoration on close/backdrop dismiss.
+  - Controls: Verified DPR visualizer crispness, responsive layouts, and F1/Shift+H shortcuts.
+  - Queue: Advanced kilo-usability target to KBudget; rotation handoff to kilo-qa.
+
 - **2026-10-11T13:13:00+0000 — kilo-tester: KPing (Interactive UI Audit & Inline Repairs)**
   - Status: PASS ✅ (Vite build clean; HTML 162 KB << 999 KB ceiling).
   - UI & Interaction: Verified Ping, Trace, MTU, Subnet, DNS, BGP, Bloat, Mesh dialogs, audio toggle, and presets.
@@ -134,7 +140,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Expansion: Added RFC-4180 CSV telemetry export [Y], procedural seeded labyrinth generator, and Matrix FEN challenge.
   - Queue: Advanced kilo-expander target to KColosseum; rotation handoff to kilo-creator.
 
-- **2026-10-11T12:30:00+0000 — kilo-qa: KPong (Pass 5 QA & Build Quality Audit)**
-  - Status: PASS ✅ (Vite build clean; Native build.bat clean 46 KB; HTML 149 KB << 999 KB ceiling).
-  - State & Tutorial: Quicksave/Load (F5/F9) verified across all modes/balls; tutorialSeen gate verified.
-  - Queue: Advanced kilo-qa target to KPac; rotation handoff to kilo-expander.
