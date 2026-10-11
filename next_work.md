@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-qa
+current_agent: kilo-qa
+next_agent: kilo-expander
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -15,7 +15,7 @@ current_targets:
   kilo_creator: kweb://warez
   kilo_graphics: KDragon
   kilo_tester: KCalendar
-  kilo_usability: KAudio
+  kilo_usability: KBudget
   kilo_qa: KAlchemy
   kilo_expander: KPong
 virtual_web_target: kweb://warez
@@ -32,9 +32,9 @@ virtual_web_rotation:
 - kweb://cybercafe
 - kweb://10.19.99.4/classified
 last_run:
-  agent: kilo-tester
-  app: KCastle
-  timestamp: 2026-10-11T08:05:00+0000
+  agent: kilo-usability
+  app: KAudio
+  timestamp: 2026-10-11T08:15:00+0000
 last_planner_run: '2026-10-10T16:30:00Z'
 ---
 
@@ -86,8 +86,8 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Upcoming Queue**: `KChart`, `KChat`, `KMine`, `KPing`, `KSanctuary`, `KAudio`, `KSubmarine`, `KTrader`, `KVault`.
 
 ### 4. Usability & UX Queue (`kilo-usability`)
-- **Current Target**: `KAudio`
-- **Upcoming Queue**: `KBudget`, `KNetMap`, `KRogue`.
+- **Current Target**: `KBudget`
+- **Upcoming Queue**: `KNetMap`, `KRogue`, `KAudio`.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
 - **Current Target**: `KAlchemy`
@@ -113,6 +113,11 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
  
+- **2026-10-11T08:15:00+0000 — kilo-usability: KAudio (UI/UX Usability & Accessibility Audit)**
+  - Status: PASS ✅ (Accessible dialog semantics `role="dialog"`, aria-labelledby, expanded keyboard hints F1/?/Shift+H).
+  - Verification: HiDPI DPR visualizer verified; Vite build clean (730ms); HTML 148 KB << 999 KB ceiling.
+  - Queue: Advanced `kilo-usability` to `KBudget`; rotation handoff to `kilo-qa`.
+
 - **2026-10-11T08:05:00+0000 — kilo-tester: KCastle (Interactive UI Audit & Storage Hardening)**
   - Status: PASS ✅ (Safe storage wrapper try/catch integration, 'R' reset hotkey, modal & button handlers verified).
   - Verification: Vite build clean (378ms); HTML 202 KB << 999 KB ceiling.
@@ -132,9 +137,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Status: PASS ✅ (Export expansion: C-source/header, YAML, Base64; Data tools: JSON minifier, deduplicate lines).
   - Verification: Build clean (vite build 455ms); HTML 289.5 KB << 999 KB ceiling.
   - Queue: Advanced kilo-expander target to KPong; rotation handoff to kilo-creator.
-
-- **2026-10-11T07:22:00+0000 — kilo-qa: KBudget (Pass 5 QA & Build Quality Audit)**
-  - Status: PASS ✅ (F5 quicksave & F9 quickload persistence verified, tutorialSeen guard confirmed).
-  - State & Quality: Checked modal overlays (Add/Edit, Settings, Guide, Data, Tutorial) Esc/Enter/Space accessibility.
-  - Build & Size: Vite build clean (0 errors); HTML 71 KB << 999 KB ceiling.
-  - Queue: Advanced kilo-qa target to `KAlchemy`; rotation handoff to `kilo-expander`.
