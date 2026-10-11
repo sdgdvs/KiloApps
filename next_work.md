@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-qa
+current_agent: kilo-qa
+next_agent: kilo-expander
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -15,7 +15,7 @@ current_targets:
   kilo_creator: kweb://asm-temple
   kilo_graphics: KDragon
   kilo_tester: KMine
-  kilo_usability: KPaint
+  kilo_usability: KRogue
   kilo_qa: KRogue
   kilo_expander: KMine
 virtual_web_target: kweb://asm-temple
@@ -32,9 +32,9 @@ virtual_web_rotation:
 - kweb://cybercafe
 - kweb://10.19.99.4/classified
 last_run:
-  agent: kilo-tester
-  app: KChat
-  timestamp: 2026-10-11T11:14:00+0000
+  agent: kilo-usability
+  app: KPaint
+  timestamp: 2026-10-11T11:22:00+0000
 last_planner_run: '2026-10-10T16:30:00Z'
 ---
 
@@ -113,6 +113,11 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-11T11:22:00+0000 — kilo-usability: KPaint (UI/UX & Usability Polish)**
+  - Status: PASS ✅ (Vite build clean; HTML 247 KB << 999 KB ceiling).
+  - Usability: Added touch-action:none, 2-finger pinch-to-zoom, touch-friendly button targets, and mobile breakpoint queries.
+  - Queue: Advanced kilo-usability target to KRogue; rotation handoff to kilo-qa.
+
 - **2026-10-11T11:14:00+0000 — kilo-tester: KChat (UI & Interactive Audit)**
   - Status: PASS ✅ (Vite build clean; HTML 100 KB << 999 KB ceiling).
   - Audit: Audited shortcuts, modal transitions, and import handler; fixed typing collision on Ctrl+C and modal key-bleed.
@@ -134,7 +139,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Expansion: Added Interactive Custom Board & Position Editor (piece palette, 8x8 setup grid, FEN validation/export/apply, turn selection, hotkey C, Tools menu integration).
   - Queue: Advanced kilo-expander target to KMine; rotation handoff to kilo-creator.
 
-- **2026-10-11T10:25:00+0000 — kilo-usability: KNetMap (UI/UX & Usability Polish)**
-  - Status: PASS ✅ (Vite build clean; HTML 114.5 KB << 999 KB ceiling).
-  - Usability: Added touch drag & pinch-to-zoom support, canvas touch-action:none, and responsive layout queries.
-  - Queue: Advanced kilo-usability to KPaint; rotation handoff to kilo-qa.
