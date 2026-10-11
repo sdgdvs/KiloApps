@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-creator
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -16,7 +16,7 @@ current_targets:
   kilo_graphics: KDragon
   kilo_tester: KSanctuary
   kilo_usability: KBudget
-  kilo_qa: KPac
+  kilo_qa: KBBS
   kilo_expander: KColosseum
 virtual_web_target: kweb://10.19.99.4/classified
 virtual_web_rotation:
@@ -32,9 +32,9 @@ virtual_web_rotation:
 - kweb://cybercafe
 - kweb://10.19.99.4/classified
 last_run:
-  agent: kilo-usability
-  app: KAudio
-  timestamp: 2026-10-11T13:25:00+0000
+  agent: kilo-qa
+  app: KPac
+  timestamp: 2026-10-11T13:35:00+0000
 last_planner_run: '2026-10-10T16:30:00Z'
 ---
 
@@ -113,6 +113,11 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-11T13:35:00+0000 — kilo-qa: KPac (Pass 5 QA & Build Quality Audit)**
+  - Status: PASS ✅ (Vite build clean; HTML 218 KB << 999 KB; Win32 C 104 KB clean compile).
+  - Audit: Verified dual-target parity, multiplayer connect gate (no autostart), and state save/load.
+  - Queue: Advanced kilo-qa target to KBBS; rotation handoff to kilo-expander.
+
 - **2026-10-11T13:25:00+0000 — kilo-usability: KAudio (UI/UX Usability Pass)**
   - Status: PASS ✅ (Vite build clean; HTML 148 KB << 999 KB ceiling).
   - Usability & Accessibility: Added modal focus capture and restoration on close/backdrop dismiss.
@@ -134,9 +139,4 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Status: PASS ✅ (Vite build clean; HTML 355 KB << 999 KB ceiling).
   - Web & ARG: Verified full BBS door game, threaded forums, ASCII studio, mIRC lounge, FM sound chip lab, and portal/webring/knet routing.
   - Queue: Advanced kilo-creator target to kweb://10.19.99.4/classified; rotation handoff to kilo-graphics.
-
-- **2026-10-11T12:40:00+0000 — kilo-expander: KPac (Deep Feature Expansion)**
-  - Status: PASS ✅ (Vite build clean; HTML 218 KB << 999 KB ceiling).
-  - Expansion: Added RFC-4180 CSV telemetry export [Y], procedural seeded labyrinth generator, and Matrix FEN challenge.
-  - Queue: Advanced kilo-expander target to KColosseum; rotation handoff to kilo-creator.
 
