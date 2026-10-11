@@ -891,11 +891,34 @@
       spawnParticleBurst(100, 75, 'celebration', 12);
     }
 
+    let isLoopRunning = false;
     function renderLoop(timestamp) {
+      if (!isLoopRunning) return;
       animTime = timestamp || 0;
       drawGraphics();
       animFrameId = requestAnimationFrame(renderLoop);
     }
+
+    function startLoop() {
+      if (!isLoopRunning) {
+        isLoopRunning = true;
+        animFrameId = requestAnimationFrame(renderLoop);
+      }
+    }
+
+    function stopLoop() {
+      if (isLoopRunning) {
+        isLoopRunning = false;
+        if (animFrameId) {
+          cancelAnimationFrame(animFrameId);
+          animFrameId = null;
+        }
+      }
+    }
+
+    document.addEventListener('visibilitychange', () => {
+      document.hidden ? stopLoop() : startLoop();
+    });
 
     function setupHiDPICanvas() {
       const canvas = document.getElementById('gfx-canvas');
@@ -1505,10 +1528,12 @@
       destContainer.innerHTML = '';
       
       let canTravelAnywhere = false;
+      let minFuelNeededForAnyRoute = Infinity;
       let destIndex = 1;
       for (const [target, cost] of Object.entries(currentP.distance || {})) {
         let actualCost = cost - state.engineLevel * 2;
         if (actualCost < 1) actualCost = 1;
+        if (actualCost < minFuelNeededForAnyRoute) minFuelNeededForAnyRoute = actualCost;
         if (state.fuel >= actualCost) canTravelAnywhere = true;
 
         const btn = document.createElement('button');
@@ -1521,7 +1546,9 @@
         destIndex++;
       }
 
-      if (!canTravelAnywhere && state.credits < 2) {
+      const fuelDeficit = Math.max(0, minFuelNeededForAnyRoute - state.fuel);
+      const fuelCreditsNeeded = fuelDeficit * 2;
+      if (!canTravelAnywhere && state.credits < fuelCreditsNeeded) {
         const btnEmergency = document.createElement('button');
         btnEmergency.textContent = '⚡ Deploy Emergency Solar Collector (+25 Fuel)';
         btnEmergency.style.borderColor = '#ff0';
@@ -2025,10 +2052,13 @@
     });
 
     window.addEventListener('beforeunload', () => {
-      if (animFrameId) cancelAnimationFrame(animFrameId);
+      stopLoop();
       if (audioCtx && audioCtx.state !== 'closed') {
         try { audioCtx.close(); } catch (err) {}
       }
+    });
+    window.addEventListener('pagehide', () => {
+      stopLoop();
     });
 
     const hasSaved = loadGame();
@@ -2039,7 +2069,7 @@
       saveGame();
     }
     updateUI();
-    requestAnimationFrame(renderLoop);
+    startLoop();
 
     const tutorialSeen = safeGetStorage('ktrader_tutorialSeen') === '1';
     if (!hasSaved && !tutorialSeen) {
