@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-creator
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -16,7 +16,7 @@ current_targets:
   kilo_graphics: KDragon
   kilo_tester: KMine
   kilo_usability: KRogue
-  kilo_qa: KRogue
+  kilo_qa: KPong
   kilo_expander: KMine
 virtual_web_target: kweb://asm-temple
 virtual_web_rotation:
@@ -32,9 +32,9 @@ virtual_web_rotation:
 - kweb://cybercafe
 - kweb://10.19.99.4/classified
 last_run:
-  agent: kilo-usability
-  app: KPaint
-  timestamp: 2026-10-11T11:22:00+0000
+  agent: kilo-qa
+  app: KRogue
+  timestamp: 2026-10-11T11:30:00+0000
 last_planner_run: '2026-10-10T16:30:00Z'
 ---
 
@@ -113,6 +113,11 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-11T11:30:00+0000 — kilo-qa: KRogue (Pass 5 QA & Build Audit)**
+  - Status: PASS ✅ (Vite build clean; Win32 C build clean; HTML 299 KB << 999 KB ceiling).
+  - Audit: Verified dual-target compilation, offline multiplayer gates, quicksave/load, state integrity.
+  - Queue: Advanced kilo-qa target to KPong; rotation handoff to kilo-expander.
+
 - **2026-10-11T11:22:00+0000 — kilo-usability: KPaint (UI/UX & Usability Polish)**
   - Status: PASS ✅ (Vite build clean; HTML 247 KB << 999 KB ceiling).
   - Usability: Added touch-action:none, 2-finger pinch-to-zoom, touch-friendly button targets, and mobile breakpoint queries.
@@ -133,9 +138,4 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Destination: Validated Win32 ASM & Demoscene Shrine (interactive opcode sandbox, 8x8 bitmap glyph editor, YM2612 tracker tunes, live guestbook, diegetic ARG dead drop).
   - Integration: Verified seamless routing via KNet (`kweb://users/~neon_rider`), KPortal, and WebRing.
   - Queue: Advanced kilo-creator to kweb://asm-temple; rotation handoff to kilo-graphics.
-
-- **2026-10-11T10:39:00+0000 — kilo-expander: KChess (Deep Feature Expansion)**
-  - Status: PASS ✅ (Vite build clean; HTML 216 KB << 999 KB ceiling).
-  - Expansion: Added Interactive Custom Board & Position Editor (piece palette, 8x8 setup grid, FEN validation/export/apply, turn selection, hotkey C, Tools menu integration).
-  - Queue: Advanced kilo-expander target to KMine; rotation handoff to kilo-creator.
 
