@@ -574,6 +574,7 @@
         <div><kbd>I</kbd></div><div>Import Best Times & Records (JSON)</div>
         <div><kbd>P</kbd></div><div>Watch Replay Studio & Scrubber</div>
         <div><kbd>Esc</kbd></div><div>Close Modals / Dismiss Toasts</div>
+        <div><kbd>A</kbd></div><div>Telemetry & APM Performance Analytics Studio</div>
       </div>
     </div>
     <div class="modal-footer">
@@ -582,152 +583,221 @@
   </div>
 </div>
 
-<!-- Cyber Duel Arena Modal (Online RFMS & Local AI) -->
-<div id="mpModal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="mpModalTitle" onclick="if(event.target===this) toggleMultiplayerModal(false)">
-  <div class="modal-box" style="max-width: 520px;">
+<!-- Telemetry & APM Performance Analytics Studio Modal -->
+<div id="analyticsModal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="analyticsModalTitle" onclick="if(event.target===this) toggleAnalyticsModal(false)">
+  <div class="modal-box" style="max-width: 560px;">
     <div class="modal-header">
-      <h3 id="mpModalTitle">⚔️ KMine - Cyber Duel Arena</h3>
-      <button class="modal-close" aria-label="Close Arena" onclick="toggleMultiplayerModal(false)">✕</button>
+      <h3 id="analyticsModalTitle">📈 Sweeper Telemetry & APM Studio</h3>
+      <button class="modal-close" aria-label="Close Analytics" onclick="toggleAnalyticsModal(false)">✕</button>
     </div>
     <div class="modal-body">
-      <div style="margin-bottom: 14px;">
-        <label for="mpCallSign" style="display:block; font-size:12px; font-weight:600; color:#79c0ff; margin-bottom:4px;">Sweeper Call-Sign:</label>
-        <div style="display:flex; gap:8px;">
-          <input id="mpCallSign" type="text" maxlength="16" style="flex:1; background:#0d1117; border:1px solid #30363d; color:#f0f6fc; padding:6px 10px; border-radius:6px; font-size:13px; font-weight:600;" placeholder="Sweeper-99">
-          <button type="button" onclick="saveMpCallSign()" style="padding:6px 12px;">Save</button>
+      <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap:8px; margin-bottom:12px; text-align:center;">
+        <div style="background:#0d1117; padding:8px 4px; border-radius:6px; border:1px solid #21262d;">
+          <div style="font-size:10px; color:#8b949e; text-transform:uppercase;">Win Rate</div>
+          <div id="anWinRate" style="font-size:16px; font-weight:700; color:#3fb950; font-family:monospace;">--%</div>
+        </div>
+        <div style="background:#0d1117; padding:8px 4px; border-radius:6px; border:1px solid #21262d;">
+          <div style="font-size:10px; color:#8b949e; text-transform:uppercase;">Avg 3BV/s</div>
+          <div id="anBvvS" style="font-size:16px; font-weight:700; color:#58a6ff; font-family:monospace;">--</div>
+        </div>
+        <div style="background:#0d1117; padding:8px 4px; border-radius:6px; border:1px solid #21262d;">
+          <div style="font-size:10px; color:#8b949e; text-transform:uppercase;">Avg APM</div>
+          <div id="anApm" style="font-size:16px; font-weight:700; color:#e3b341; font-family:monospace;">--</div>
+        </div>
+        <div style="background:#0d1117; padding:8px 4px; border-radius:6px; border:1px solid #21262d;">
+          <div style="font-size:10px; color:#8b949e; text-transform:uppercase;">Efficiency</div>
+          <div id="anEff" style="font-size:16px; font-weight:700; color:#bc8cff; font-family:monospace;">--%</div>
         </div>
       </div>
 
-      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:14px;">
-        <button type="button" class="btn-accent" style="padding:10px; flex-direction:column; gap:2px;" onclick="startQuickMatch()">
-          <span style="font-size:14px;">⚡ Quick Match</span>
-          <span style="font-size:10px; font-weight:normal; opacity:0.85;">Join or host public room</span>
-        </button>
-        <button type="button" style="padding:10px; flex-direction:column; gap:2px;" onclick="startCreateRoom()">
-          <span style="font-size:14px;">🏠 Create Room</span>
-          <span style="font-size:10px; font-weight:normal; opacity:0.85;">Generate custom code</span>
-        </button>
-      </div>
-
-      <div style="background:#0d1117; border:1px solid #21262d; border-radius:8px; padding:12px; margin-bottom:14px;">
-        <label for="mpJoinCode" style="display:block; font-size:12px; font-weight:600; color:#8b949e; margin-bottom:6px;">Join with Code (e.g. MIN-XXXX):</label>
-        <div style="display:flex; gap:8px;">
-          <input id="mpJoinCode" type="text" maxlength="12" placeholder="MIN-XXXX" style="flex:1; background:#161b22; border:1px solid #30363d; color:#f0f6fc; padding:6px 10px; border-radius:6px; font-family:monospace; font-weight:bold; text-transform:uppercase;">
-          <button type="button" class="btn-accent" onclick="startJoinRoom()">Join Room</button>
+      <div style="background:#0d1117; border:1px solid #21262d; border-radius:6px; padding:10px; margin-bottom:12px;">
+        <div style="display:flex; justify-content:space-between; font-size:12px; margin-bottom:6px;">
+          <span style="color:#8b949e;">Mastery Rating:</span>
+          <strong id="anRankBadge" style="color:#58a6ff;">--</strong>
+        </div>
+        <div style="display:flex; justify-content:space-between; font-size:12px; margin-bottom:4px;">
+          <span style="color:#8b949e;">Games Won / Played:</span>
+          <span id="anRecordSpan" style="font-family:monospace; color:#f0f6fc;">0 / 0</span>
+        </div>
+        <div style="display:flex; justify-content:space-between; font-size:12px; margin-bottom:4px;">
+          <span style="color:#8b949e;">Total Clicks & Chords:</span>
+          <span id="anClicksSpan" style="font-family:monospace; color:#f0f6fc;">0 clicks</span>
         </div>
       </div>
 
-      <div style="border-top:1px solid #21262d; padding-top:12px; display:flex; justify-content:space-between; align-items:center;">
-        <div>
-          <div style="font-size:13px; font-weight:600; color:#f0f6fc;">🤖 Solo Offline Duel (Vs CyberBot AI)</div>
-          <div style="font-size:11px; color:#8b949e;">Practice locally against CyberBot-99 solver</div>
-        </div>
-        <button type="button" onclick="startCyberBotDuel()" style="padding:6px 12px; background:#238636; border-color:#2ea043; color:#fff;">Play CyberBot</button>
-      </div>
-
-      <!-- Live Matchmaking Status & Fallback Timer (Rule 12 compliant) -->
-      <div id="mpStatusSection" style="display:none; margin-top:14px; background:#161b22; border:1px solid #388bfd; border-radius:8px; padding:12px; text-align:center;">
-        <div id="mpRoomCodeDisplay" style="font-size:18px; font-family:monospace; font-weight:bold; color:#58a6ff; margin-bottom:4px;"></div>
-        <div id="mpStatusMessage" style="font-size:12px; color:#c9d1d9; margin-bottom:8px;">Waiting for challenger...</div>
-        <div id="mpFallbackTimerDisplay" style="font-size:11px; color:#e3b341; font-weight:600;">⏱️ Lone player? Auto-engaging CyberBot-99 in 25s</div>
-        <div style="margin-top:10px; display:flex; gap:8px; justify-content:center;">
-          <button type="button" id="mpCopyLinkBtn" onclick="copyDuelInviteLink()" style="font-size:11px; padding:4px 10px;">📋 Copy Link</button>
-          <button type="button" onclick="cancelMatchmaking()" style="font-size:11px; padding:4px 10px; background:#da3633; border-color:#f85149; color:#fff;">Cancel</button>
-        </div>
+      <div style="font-size:12px; font-weight:600; color:#79c0ff; margin-bottom:6px;">📜 Recent Match Telemetry (Last 8)</div>
+      <div id="anRecentTable" style="max-height:140px; overflow-y:auto; background:#0d1117; border:1px solid #21262d; border-radius:6px; font-family:monospace; font-size:11px;">
+        <div style="padding:6px; color:#8b949e; text-align:center;">No recent matches logged in session.</div>
       </div>
     </div>
-    <div class="modal-footer">
-      <button type="button" onclick="toggleMultiplayerModal(false)">Close [Esc]</button>
+    <div class="modal-footer" style="gap:8px; justify-content:space-between;">
+      <button type="button" onclick="clearAnalyticsLog()" style="font-size:11px; color:#f85149; background:#21262d; border-color:#30363d;">Reset Stats</button>
+      <div style="display:flex; gap:6px;">
+        <button type="button" onclick="exportAnalyticsJson()" style="font-size:12px;">📥 Export JSON</button>
+        <button type="button" class="btn-accent" onclick="toggleAnalyticsModal(false)">Close [Esc]</button>
+      </div>
     </div>
   </div>
 </div>
+<script>
+// Sweeper Telemetry & Performance Analytics Engine
+window.kmineAnalytics = (function() {
+  let store = {
+    played: 0,
+    won: 0,
+    clicks: 0,
+    totalBvv: 0,
+    totalTime: 0,
+    matches: []
+  };
 
-<!-- Custom Grid Configuration Modal -->
-<div id="customModal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="customModalTitle" onclick="if(event.target===this) toggleCustomModal(false)">
-  <div class="modal-box" style="max-width: 440px;">
-    <div class="modal-header">
-      <h3 id="customModalTitle">⚙️ Custom Grid Configuration</h3>
-      <button class="modal-close" aria-label="Close Custom" onclick="toggleCustomModal(false)">✕</button>
-    </div>
-    <div class="modal-body">
-      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-bottom:12px;">
-        <div>
-          <label for="custCols" style="display:block; font-size:12px; color:#8b949e; margin-bottom:4px;">Columns (8-30):</label>
-          <input id="custCols" type="number" min="8" max="30" value="16" oninput="updateCustomDensity()" style="width:100%; background:#0d1117; border:1px solid #30363d; color:#f0f6fc; padding:6px 8px; border-radius:6px; font-weight:bold;">
-        </div>
-        <div>
-          <label for="custRows" style="display:block; font-size:12px; color:#8b949e; margin-bottom:4px;">Rows (8-24):</label>
-          <input id="custRows" type="number" min="8" max="24" value="16" oninput="updateCustomDensity()" style="width:100%; background:#0d1117; border:1px solid #30363d; color:#f0f6fc; padding:6px 8px; border-radius:6px; font-weight:bold;">
-        </div>
-      </div>
-      <div style="margin-bottom:12px;">
-        <label for="custMines" style="display:block; font-size:12px; color:#8b949e; margin-bottom:4px;">Mines Count:</label>
-        <input id="custMines" type="number" min="1" max="180" value="40" oninput="updateCustomDensity()" style="width:100%; background:#0d1117; border:1px solid #30363d; color:#f0f6fc; padding:6px 8px; border-radius:6px; font-weight:bold;">
-      </div>
-      <div id="custDensityNote" style="font-size:12px; color:#79c0ff; background:#0d1117; padding:8px 12px; border-radius:6px; border:1px solid #21262d; margin-bottom:10px;">
-        Grid: 16x16 (256 tiles) | Mines: 40 (15.6% density)
-      </div>
-      <div style="display:flex; gap:6px; flex-wrap:wrap; font-size:11px;">
-        <span style="color:#8b949e; align-self:center;">Presets:</span>
-        <button type="button" style="padding:2px 8px; font-size:11px;" onclick="setCustomPreset(8, 8, 10)">Micro (8x8/10)</button>
-        <button type="button" style="padding:2px 8px; font-size:11px;" onclick="setCustomPreset(20, 12, 35)">Wide (20x12/35)</button>
-        <button type="button" style="padding:2px 8px; font-size:11px;" onclick="setCustomPreset(24, 18, 70)">Titan (24x18/70)</button>
-      </div>
-    </div>
-    <div class="modal-footer" style="gap:8px;">
-      <button type="button" onclick="toggleCustomModal(false)">Cancel</button>
-      <button type="button" class="btn-accent" onclick="applyCustomGrid()">Apply & Play</button>
-</div>
+  try {
+    const raw = localStorage.getItem('kmine_telemetry_v1');
+    if (raw) store = Object.assign(store, JSON.parse(raw));
+  } catch(e) {}
 
-<!-- Seed & Daily Challenge Configuration Modal -->
-<div id="seedModal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="seedModalTitle" onclick="if(event.target===this) toggleSeedModal(false)">
-  <div class="modal-box" style="max-width: 460px;">
-    <div class="modal-header">
-      <h3 id="seedModalTitle">🌱 Seed & Tournament Studio</h3>
-      <button class="modal-close" aria-label="Close Seed Modal" onclick="toggleSeedModal(false)">✕</button>
-    </div>
-    <div class="modal-body">
-      <p style="margin-top:0; font-size:12px; color:#8b949e;">Play or share reproducible minefield layouts for speedruns, tournaments, or daily competitive practice.</p>
-      <div style="margin-bottom:12px;">
-        <label for="boardSeedInput" style="display:block; font-size:12px; font-weight:600; color:#79c0ff; margin-bottom:4px;">Custom Seed Code:</label>
-        <div style="display:flex; gap:8px;">
-          <input id="boardSeedInput" type="text" maxlength="32" placeholder="e.g. 1999-SECTOR-42" style="flex:1; background:#0d1117; border:1px solid #30363d; color:#f0f6fc; padding:6px 10px; border-radius:6px; font-family:monospace; font-weight:bold;">
-          <button type="button" onclick="generateRandomSeedInput()" style="padding:6px 10px;">🎲 Roll</button>
-        </div>
-      </div>
-      <div id="activeSeedStatus" style="font-size:12px; color:#c9d1d9; background:#0d1117; border:1px solid #21262d; border-radius:6px; padding:8px 12px; margin-bottom:12px;">
-        Current Mode: <strong id="activeSeedBadge" style="color:#e3b341;">Random Unseeded Field</strong>
-      </div>
-      <div style="display:flex; gap:8px; flex-wrap:wrap;">
-        <button type="button" class="btn-accent" style="flex:1;" onclick="applyDailyChallengeSeed()">📅 Daily Challenge Seed</button>
-        <button type="button" style="flex:1;" onclick="applyEnteredSeed()">🎮 Play Seeded Field</button>
-      </div>
-    </div>
-    <div class="modal-footer" style="gap:8px;">
-      <button type="button" onclick="clearSeedAndPlay()">Clear to Random</button>
-      <button type="button" onclick="toggleSeedModal(false)">Close [Esc]</button>
-    </div>
-  </div>
-</div>
+  function save() {
+    try {
+      localStorage.setItem('kmine_telemetry_v1', JSON.stringify(store));
+    } catch(e) {}
+  }
 
-<!-- Incoming Duel Challenge Prompt (Rule 12 Connect Gate) -->
-<div id="inviteModal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="inviteModalTitle">
-  <div class="modal-box" style="max-width: 440px;">
-    <div class="modal-header">
-      <h3 id="inviteModalTitle">⚔️ Incoming Duel Challenge!</h3>
-    </div>
-    <div class="modal-body" style="text-align:center;">
-      <div style="font-size:40px; margin-bottom:8px;">💣</div>
-      <p style="font-size:14px; margin-top:0;">You have been invited to a live Minesweeper Speed Duel!</p>
-      <div id="inviteRoomDisplay" style="font-family:monospace; font-size:20px; font-weight:bold; color:#58a6ff; background:#0d1117; padding:8px 16px; border-radius:6px; border:1px solid #30363d; display:inline-block; margin-bottom:14px;">MIN-XXXX</div>
-      <p style="font-size:12px; color:#8b949e; margin:0;">Both players race on the identical minefield layout. First to sweep all safe tiles wins.</p>
-    </div>
-    <div class="modal-footer" style="justify-content:center; gap:12px;">
-      <button type="button" onclick="declineInviteChallenge()" style="background:#21262d; border-color:#30363d;">Decline</button>
-      <button type="button" class="btn-accent" onclick="acceptInviteChallenge()" style="padding:8px 20px; font-size:14px;">⚔️ Accept & Connect</button>
-    </div>
-  </div>
-</div>
+  function getRating(winRate, avgBvvs) {
+    if (store.played < 2) return 'Recruit (Unranked)';
+    if (avgBvvs > 2.0 && winRate > 60) return 'Grandmaster Sweeper 🌟';
+    if (avgBvvs > 1.2 && winRate > 45) return 'Master Demolitionist ⚔️';
+    if (avgBvvs > 0.8 && winRate > 30) return 'Veteran Pioneer 🎖️';
+    if (winRate > 20) return 'Field Specialist 🔍';
+    return 'Minefield Scout 🧭';
+  }
+
+  return {
+    recordMatch: function(won, timeSec, bvv, clicks, diffName) {
+      store.played++;
+      if (won) store.won++;
+      store.clicks += (clicks || 0);
+      const bvvVal = Number(bvv) || 0;
+      const t = Math.max(1, Number(timeSec) || 1);
+      const bvvS = bvvVal > 0 ? (bvvVal / t) : 0;
+      const apm = clicks > 0 ? Math.round((clicks / t) * 60) : 0;
+      if (won && bvvVal > 0) {
+        store.totalBvv += bvvVal;
+        store.totalTime += t;
+      }
+      store.matches.unshift({
+        date: new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit', second:'2-digit'}),
+        won: !!won,
+        diff: diffName || 'Standard',
+        time: t,
+        bvv: bvvVal,
+        bvvS: bvvS.toFixed(2),
+        apm: apm,
+        clicks: clicks || 0
+      });
+      if (store.matches.length > 25) store.matches.pop();
+      save();
+    },
+    getSummary: function() {
+      const winRate = store.played > 0 ? Math.round((store.won / store.played) * 100) : 0;
+      const avgBvvS = store.totalTime > 0 ? (store.totalBvv / store.totalTime).toFixed(2) : '--';
+      const avgApm = store.totalTime > 0 ? Math.round((store.clicks / store.totalTime) * 60) : '--';
+      const eff = (store.clicks > 0 && store.totalBvv > 0) ? Math.min(100, Math.round((store.totalBvv / store.clicks) * 100)) : '--';
+      return {
+        winRate,
+        avgBvvS,
+        avgApm,
+        eff,
+        played: store.played,
+        won: store.won,
+        clicks: store.clicks,
+        rating: getRating(winRate, Number(avgBvvS) || 0),
+        matches: store.matches
+      };
+    },
+    clear: function() {
+      store = { played:0, won:0, clicks:0, totalBvv:0, totalTime:0, matches:[] };
+      save();
+    }
+  };
+})();
+
+function toggleAnalyticsModal(show) {
+  const m = document.getElementById('analyticsModal');
+  if (!m) return;
+  if (show) {
+    refreshAnalyticsUI();
+    m.classList.add('active');
+  } else {
+    m.classList.remove('active');
+  }
+}
+
+function refreshAnalyticsUI() {
+  const data = window.kmineAnalytics.getSummary();
+  const el = (id) => document.getElementById(id);
+  if (el('anWinRate')) el('anWinRate').textContent = data.played > 0 ? data.winRate + '%' : '--%';
+  if (el('anBvvS')) el('anBvvS').textContent = data.avgBvvS;
+  if (el('anApm')) el('anApm').textContent = data.avgApm;
+  if (el('anEff')) el('anEff').textContent = data.eff !== '--' ? data.eff + '%' : '--%';
+  if (el('anRankBadge')) el('anRankBadge').textContent = data.rating;
+  if (el('anRecordSpan')) el('anRecordSpan').textContent = `${data.won}W / ${data.played - data.won}L (${data.played} total)`;
+  if (el('anClicksSpan')) el('anClicksSpan').textContent = `${data.clicks} total actions logged`;
+
+  const tbl = el('anRecentTable');
+  if (tbl) {
+    if (!data.matches || data.matches.length === 0) {
+      tbl.innerHTML = '<div style="padding:8px; color:#8b949e; text-align:center;">No recent matches logged in session.</div>';
+    } else {
+      let html = '<table style="width:100%; border-collapse:collapse; text-align:left;">';
+      html += '<tr style="border-bottom:1px solid #30363d; color:#8b949e; font-size:10px;"><th style="padding:4px 6px;">RESULT</th><th style="padding:4px 6px;">DIFF</th><th style="padding:4px 6px;">TIME</th><th style="padding:4px 6px;">3BV/s</th><th style="padding:4px 6px;">APM</th></tr>';
+      data.matches.slice(0, 8).forEach(m => {
+        const resCol = m.won ? '#3fb950' : '#f85149';
+        const resTxt = m.won ? 'VICTORY' : 'BLAST';
+        html += `<tr style="border-bottom:1px solid #161b22;">
+          <td style="padding:4px 6px; color:${resCol}; font-weight:700;">${resTxt}</td>
+          <td style="padding:4px 6px; color:#c9d1d9;">${m.diff}</td>
+          <td style="padding:4px 6px; color:#f0f6fc;">${m.time}s</td>
+          <td style="padding:4px 6px; color:#58a6ff;">${m.bvvS}</td>
+          <td style="padding:4px 6px; color:#e3b341;">${m.apm}</td>
+        </tr>`;
+      });
+      html += '</table>';
+      tbl.innerHTML = html;
+    }
+  }
+}
+
+function clearAnalyticsLog() {
+  if (confirm("Reset all session telemetry and match history?")) {
+    window.kmineAnalytics.clear();
+    refreshAnalyticsUI();
+    if (typeof showToast === 'function') showToast("Telemetry log reset to zero", "warn");
+  }
+}
+
+function exportAnalyticsJson() {
+  const data = window.kmineAnalytics.getSummary();
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `kmine_telemetry_${Date.now()}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  if (typeof showToast === 'function') showToast("Telemetry report exported", "success");
+}
+
+// Hook 'A' key to toggle Analytics modal
+window.addEventListener('keydown', function(e) {
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+  if (e.key === 'a' || e.key === 'A') {
+    e.preventDefault();
+    const m = document.getElementById('analyticsModal');
+    const isActive = m && m.classList.contains('active');
+    toggleAnalyticsModal(!isActive);
+  }
+});
+</script>
 
 <!-- Controls Toolbar -->
 <div id="controls">
@@ -755,6 +825,7 @@
   <div class="stats-box" id="bvvBox" title="Board Benchmark Value (3BV) & Click Efficiency">⚡ 3BV: <span id="bvvVal" style="color:#fff;">--</span> (<span id="effVal" style="color:#3fb950;">--%</span>)</div>
 
   <div class="ctrl-group">
+    <button id="analyticsBtn" onclick="toggleAnalyticsModal(true)" title="Session Analytics & APM Dashboard (A)">📈 Stats <span class="badge">A</span></button>
     <button id="audioToggleBtn" onclick="toggleAudio()" title="Toggle Sound FX (M)">🔊 Sound <span class="badge">M</span></button>
     <button onclick="quickSave()" title="Save Current State (F5)">💾 Save <span class="badge">F5</span></button>
     <button onclick="quickLoad()" title="Load Saved State (F9)">📂 Load <span class="badge">F9</span></button>
@@ -1558,6 +1629,11 @@
       playSfx('win');
       document.getElementById('replayBtn').style.display = 'inline-flex';
       showToast(`🏆 VICTORY! Cleared in ${timeElapsed}s!`, "success", 5000);
+      if (window.kmineAnalytics && !isReplaying) {
+        const diffSel = document.getElementById('diff');
+        const diffTxt = diffSel && diffSel.options[diffSel.selectedIndex] ? diffSel.options[diffSel.selectedIndex].text.split(' ')[0] : 'Standard';
+        window.kmineAnalytics.recordMatch(true, timeElapsed, current3BV, totalClicks, diffTxt);
+      }
       if (isDuelMode) {
         handleLocalDuelWin();
       }
@@ -1853,6 +1929,11 @@
       playSfx('boom');
       stopTimer();
       updateStatus();
+      if (window.kmineAnalytics && !isReplaying) {
+        const diffSel = document.getElementById('diff');
+        const diffTxt = diffSel && diffSel.options[diffSel.selectedIndex] ? diffSel.options[diffSel.selectedIndex].text.split(' ')[0] : 'Standard';
+        window.kmineAnalytics.recordMatch(false, timeElapsed, current3BV, totalClicks, diffTxt);
+      }
       document.getElementById('replayBtn').style.display = 'inline-flex';
       showToast("💥 Mine detonated! Game Over.", "error", 4000);
       for (let i = 0; i < rows; i++) {
