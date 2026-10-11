@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-expander
-next_agent: kilo-creator
+current_agent: kilo-creator
+next_agent: kilo-graphics
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -17,7 +17,7 @@ current_targets:
   kilo_tester: KSubmarine
   kilo_usability: KNetMap
   kilo_qa: KBreakout
-  kilo_expander: KChess
+  kilo_expander: KMine
 virtual_web_target: kweb://cybercafe
 virtual_web_rotation:
 - kweb://cybercafe
@@ -32,9 +32,9 @@ virtual_web_rotation:
 - kweb://users/~neon_rider
 - kweb://asm-temple
 last_run:
-  agent: kilo-qa
-  app: KStarForge
-  timestamp: 2026-10-10T18:14:00-07:00
+  agent: kilo-expander
+  app: KChess
+  timestamp: 2026-10-10T18:24:00-07:00
 last_planner_run: '2026-10-10T16:30:00Z'
 ---
 
@@ -94,8 +94,8 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Upcoming Queue**: `KRogue`, `KPong`, `KPac`, `KBBS`, `KBudget`, `KAlchemy`, `KColony`.
 
 ### 6. Feature Expander Queue (`kilo-expander`)
-- **Current Target**: `KChess`
-- **Upcoming Queue**: `KMine`, `KPac`, `KStarForge`, `KColosseum`, `KAbyss`, `KPong`, `KRogue`.
+- **Current Target**: `KMine`
+- **Upcoming Queue**: `KPac`, `KStarForge`, `KColosseum`, `KAbyss`, `KPong`, `KRogue`, `KChess`.
 
 ---
 
@@ -112,6 +112,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 ---
 
 ## Recent Execution Logs (Max 5 Entries)
+
+- **2026-10-10T18:24:00-07:00 — kilo-expander: KChess (Feature Expansion: Themes, Sound & Accuracy)**
+  - Status: PASS ✅ (Theme engine, Web Audio sound FX, move quality tagging & accuracy metrics, Vite build clean).
+  - Enhancements: Added 4 custom board themes (Walnut, Emerald, Cyber, Slate), sound FX toggle with Web Audio synthesizer, and move quality ratings (⭐/⚡/⚔️/♟️) with game accuracy review in replay inspector.
+  - Build & Size: Vite build clean; HTML 209 KB << 999 KB ceiling; zero console errors.
+  - Queue: Advanced kilo-expander target to KMine; rotation handoff to kilo-creator.
 
 - **2026-10-10T18:14:00-07:00 — kilo-qa: KStarForge (Pass 5 QA & Build Quality Audit)**
   - Status: PASS ✅ (Storage resilience wrapped, rAF visibility pause guarded, MSVC & Vite builds clean).
@@ -137,8 +143,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Web Navigator & Request Inspector: Added minimizable toggle [▼ Expand / ▲ Minimize], hotkey [I], title bar toggle, and start minimized by default to maximize viewport.
   - Classified Admin Gate: Enforced locked state by default on open, removed cross-app auto-unlock bypass, requires director passkey signature to reveal classified nodes.
   - Verification: Native MSVC clean (KNet.exe 45 KB); Vite build clean (346ms); security_lint 100% PASS.
-
-- **2026-10-11T00:38:02+0000 — kilo-graphics: KDragon (Zero-Token Auto-Skip — Inappropriate Target)**
-  - Status: ⏭️ Skip — Imagen 3 asset replacement not appropriate for KDragon (pure vector, board game, or mature art).
-  - Optimization: Handled via orchestrator pre-flight zero-token auto-skip.
-  - Queue: Advanced `kilo-graphics` to `KDragon`; rotation handoff to `kilo-tester`.

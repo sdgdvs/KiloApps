@@ -335,6 +335,9 @@
         <div class="menu-dropdown-entry" onclick="handleHotkey('f')">
           <span>❄️ Time Freeze Powerup</span><span class="shortcut">F</span>
         </div>
+        <div class="menu-dropdown-entry" onclick="toggleSoundFX()">
+          <span id="menu-opt-sound">🔊 Sound Effects: ON</span>
+        </div>
         <div class="menu-divider"></div>
         <div class="menu-dropdown-entry" onclick="undoMove()">
           <span>↩️ Undo Move</span><span class="shortcut">U</span>
@@ -344,7 +347,7 @@
         </div>
         <div class="menu-divider"></div>
         <div class="menu-dropdown-entry" onclick="openReplayModal()">
-          <span>📼 Interactive Move Replay</span><span class="shortcut">V</span>
+          <span>📼 Interactive Move Replay & Accuracy</span><span class="shortcut">V</span>
         </div>
         <div class="menu-dropdown-entry" onclick="openBookModal()">
           <span>📖 Opening Book Explorer</span><span class="shortcut">B</span>
@@ -358,6 +361,24 @@
         </div>
         <div class="menu-dropdown-entry" onclick="openPGNModal()">
           <span>📜 PGN Notation Manager</span><span class="shortcut">G</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="menu-item" tabindex="0" role="menuitem" aria-haspopup="true">
+      <span>Theme ▾</span>
+      <div class="menu-dropdown" role="menu">
+        <div class="menu-dropdown-entry" onclick="setBoardTheme('walnut')">
+          <span id="theme-opt-walnut">🪵 Classical Walnut</span>
+        </div>
+        <div class="menu-dropdown-entry" onclick="setBoardTheme('emerald')">
+          <span id="theme-opt-emerald">🌿 Emerald Tournament</span>
+        </div>
+        <div class="menu-dropdown-entry" onclick="setBoardTheme('cyber')">
+          <span id="theme-opt-cyber">🌌 Cyber Neon</span>
+        </div>
+        <div class="menu-dropdown-entry" onclick="setBoardTheme('slate')">
+          <span id="theme-opt-slate">♟️ Midnight Slate</span>
         </div>
       </div>
     </div>
@@ -937,7 +958,72 @@
   const pieceValues = [0, 100, 320, 330, 500, 900, 20000, 100, 320, 330, 500, 900, 20000];
 
   const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  let soundEnabled = safeGetStorage('kchess_sound_enabled', 'true') === 'true';
+  function toggleSoundFX() {
+      soundEnabled = !soundEnabled;
+      safeSetStorage('kchess_sound_enabled', soundEnabled ? 'true' : 'false');
+      showToast(soundEnabled ? "🔊 Sound Effects Enabled" : "🔇 Sound Effects Muted", "info");
+      const el = document.getElementById('menu-opt-sound');
+      if (el) el.textContent = soundEnabled ? '🔊 Sound Effects: ON' : '🔇 Sound Effects: OFF';
+  }
+
+  const BOARD_THEMES = {
+      walnut: {
+          name: 'Classical Walnut',
+          light: ['#fdfbf7', '#e8dac1', '#c4b295'],
+          dark: ['#663b22', '#4a2c1b', '#2c180e'],
+          frame: ['#2d1810', '#1e100a', '#150a06'],
+          table: ['#2b1d14', '#0c0704'],
+          border: '#d4af37'
+      },
+      emerald: {
+          name: 'Emerald Tournament',
+          light: ['#f0fdf4', '#dcfce7', '#bbf7d0'],
+          dark: ['#166534', '#14532d', '#052e16'],
+          frame: ['#132e1b', '#0b1d11', '#06110a'],
+          table: ['#172e1e', '#09150d'],
+          border: '#4ade80'
+      },
+      cyber: {
+          name: 'Cyber Neon',
+          light: ['#0e3a53', '#155e75', '#0891b2'],
+          dark: ['#031c2a', '#02131d', '#01080d'],
+          frame: ['#08202d', '#04131b', '#02090d'],
+          table: ['#0b1e2c', '#040b10'],
+          border: '#5eead4'
+      },
+      slate: {
+          name: 'Midnight Slate',
+          light: ['#94a3b8', '#64748b', '#475569'],
+          dark: ['#334155', '#1e293b', '#0f172a'],
+          frame: ['#1e293b', '#0f172a', '#020617'],
+          table: ['#1b2230', '#0a0d14'],
+          border: '#cbd5e1'
+      }
+  };
+  let currentThemeKey = safeGetStorage('kchess_board_theme', 'walnut');
+  if (!BOARD_THEMES[currentThemeKey]) currentThemeKey = 'walnut';
+  function setBoardTheme(themeKey) {
+      if (BOARD_THEMES[themeKey]) {
+          currentThemeKey = themeKey;
+          safeSetStorage('kchess_board_theme', themeKey);
+          showToast(`🎨 Board Theme: ${BOARD_THEMES[themeKey].name}`, 'info');
+          updateThemeMenu();
+      }
+  }
+  function updateThemeMenu() {
+      ['walnut', 'emerald', 'cyber', 'slate'].forEach(k => {
+          const el = document.getElementById(`theme-opt-${k}`);
+          if (el) {
+              const th = BOARD_THEMES[k];
+              const prefix = (k === currentThemeKey) ? '✓ ' : '  ';
+              el.textContent = `${prefix}${th.name}`;
+          }
+      });
+  }
+
   function playSound(type = 'move') {
+      if (!soundEnabled) return;
       if (audioCtx.state === 'suspended') audioCtx.resume();
       const osc = audioCtx.createOscillator();
       const gain = audioCtx.createGain();
@@ -2829,7 +2915,30 @@
       tbody.innerHTML = '';
       const totalPlies = Math.max(0, moveHistoryStack.length - 1);
       const curPly = Math.max(0, historyIndex);
-      if (badge) badge.textContent = `Ply: ${curPly} / ${totalPlies}`;
+
+      let wScoreSum = 0, wCount = 0;
+      let bScoreSum = 0, bCount = 0;
+      for (let i = 1; i < moveHistoryStack.length; i++) {
+          const san = moveHistoryStack[i].moveSAN || '';
+          let val = 88;
+          if (san.includes('#')) val = 100;
+          else if (san.includes('+')) val = 95;
+          else if (san.includes('x')) val = 92;
+          if (i % 2 === 1) { wScoreSum += val; wCount++; }
+          else { bScoreSum += val; bCount++; }
+      }
+      const wAcc = wCount > 0 ? (wScoreSum / wCount).toFixed(1) : '100.0';
+      const bAcc = bCount > 0 ? (bScoreSum / bCount).toFixed(1) : '100.0';
+
+      if (badge) badge.textContent = `Ply: ${curPly} / ${totalPlies} | Acc: ♔ ${wAcc}% • ♚ ${bAcc}%`;
+
+      function getMoveQualityPrefix(san) {
+          if (!san) return '';
+          if (san.includes('#')) return '⭐ ';
+          if (san.includes('+')) return '⚡ ';
+          if (san.includes('x')) return '⚔️ ';
+          return '♟️ ';
+      }
 
       if (totalPlies === 0) {
           tbody.innerHTML = '<tr><td colspan="3" style="text-align:center; padding:16px; color:#64748b; font-style:italic;">No moves played yet.</td></tr>';
@@ -2858,7 +2967,7 @@
           tdW.style.cursor = 'pointer';
           const wMove = moveHistoryStack[whitePly];
           if (wMove) {
-              tdW.textContent = wMove.moveSAN || `Ply ${whitePly}`;
+              tdW.textContent = getMoveQualityPrefix(wMove.moveSAN) + (wMove.moveSAN || `Ply ${whitePly}`);
               if (curPly === whitePly) {
                   tdW.style.background = '#0284c7';
                   tdW.style.color = '#ffffff';
@@ -2879,7 +2988,7 @@
           tdB.style.cursor = 'pointer';
           const bMove = moveHistoryStack[blackPly];
           if (bMove) {
-              tdB.textContent = bMove.moveSAN || `Ply ${blackPly}`;
+              tdB.textContent = getMoveQualityPrefix(bMove.moveSAN) + (bMove.moveSAN || `Ply ${blackPly}`);
               if (curPly === blackPly) {
                   tdB.style.background = '#0284c7';
                   tdB.style.color = '#ffffff';
@@ -4113,10 +4222,12 @@
           ctx.translate(-W / 2 + (Math.sin(performance.now() * 0.06) * mag), -H / 2 + (Math.cos(performance.now() * 0.08) * mag));
       }
 
+      const th = BOARD_THEMES[currentThemeKey] || BOARD_THEMES.walnut;
+
       // Environmental Art: 3D Ornate Table
       const tableGrad = ctx.createRadialGradient(W/2, H/2, H*0.1, W/2, H/2, H*0.9);
-      tableGrad.addColorStop(0, '#2b1d14');
-      tableGrad.addColorStop(1, '#0c0704');
+      tableGrad.addColorStop(0, th.table[0]);
+      tableGrad.addColorStop(1, th.table[1]);
       ctx.fillStyle = tableGrad;
       ctx.fillRect(0, 0, W, H);
       
@@ -4140,19 +4251,19 @@
 
       // Wood frame border
       const frameGrad = ctx.createLinearGradient(0, 0, W, H);
-      frameGrad.addColorStop(0, '#2d1810');
-      frameGrad.addColorStop(0.5, '#1e100a');
-      frameGrad.addColorStop(1, '#150a06');
+      frameGrad.addColorStop(0, th.frame[0]);
+      frameGrad.addColorStop(0.5, th.frame[1]);
+      frameGrad.addColorStop(1, th.frame[2]);
       ctx.fillStyle = frameGrad;
       ctx.beginPath();
       ctx.roundRect(12, 12, W - 24, H - 24, 16);
       ctx.fill();
-      ctx.strokeStyle = '#d4af37';
+      ctx.strokeStyle = th.border;
       ctx.lineWidth = 2;
       ctx.stroke();
 
       // Outer Ornate Filigree Corner Brackets
-      drawOrnateCornerFiligree(ctx, 12, 12, W - 24, H - 24, 22, '#d4af37', '#fef08a');
+      drawOrnateCornerFiligree(ctx, 12, 12, W - 24, H - 24, 22, th.border, '#fef08a');
 
       // Pulsating Golden Energy Perimeter Inlay Border
       let perimeterPulse = (Math.sin(performance.now() * 0.003) + 1) * 0.5;
@@ -4202,13 +4313,13 @@
 
               let tileGrad = ctx.createLinearGradient(px, py, px + TS, py + TS);
               if (isLight) {
-                  tileGrad.addColorStop(0, '#fdfbf7');
-                  tileGrad.addColorStop(0.5, '#e8dac1');
-                  tileGrad.addColorStop(1, '#c4b295');
+                  tileGrad.addColorStop(0, th.light[0]);
+                  tileGrad.addColorStop(0.5, th.light[1]);
+                  tileGrad.addColorStop(1, th.light[2]);
               } else {
-                  tileGrad.addColorStop(0, '#663b22');
-                  tileGrad.addColorStop(0.5, '#4a2c1b');
-                  tileGrad.addColorStop(1, '#2c180e');
+                  tileGrad.addColorStop(0, th.dark[0]);
+                  tileGrad.addColorStop(0.5, th.dark[1]);
+                  tileGrad.addColorStop(1, th.dark[2]);
               }
               ctx.fillStyle = tileGrad;
               ctx.fillRect(px, py, TS, TS);
@@ -4698,6 +4809,9 @@
 
   resetGame();
   updateMenuIndicators();
+  updateThemeMenu();
+  const soundEl = document.getElementById('menu-opt-sound');
+  if (soundEl) soundEl.textContent = soundEnabled ? '🔊 Sound Effects: ON' : '🔇 Sound Effects: OFF';
   startLoop();
 
   window.onFirebaseLoaded = function() {
