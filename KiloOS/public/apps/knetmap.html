@@ -1464,7 +1464,7 @@ Type 'P' to test ping, 'T' for traceroute, or select links to inject faults.
       const dpr = window.devicePixelRatio || 1;
       canvas.width = container.clientWidth * dpr;
       canvas.height = container.clientHeight * dpr;
-      ctx.scale(dpr, dpr);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       requestRender();
     }
 
