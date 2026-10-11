@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-qa
+current_agent: kilo-expander
+next_agent: kilo-creator
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -16,7 +16,7 @@ current_targets:
   kilo_graphics: KDragon
   kilo_tester: KVoid
   kilo_usability: KSnake
-  kilo_qa: KBBS
+  kilo_qa: KBudget
   kilo_expander: KAbyss
 virtual_web_target: kweb://portal
 virtual_web_rotation:
@@ -32,9 +32,9 @@ virtual_web_rotation:
 - kweb://cybercafe
 - kweb://10.19.99.4/classified
 last_run:
-  agent: kilo-usability
-  app: KCalendar
-  timestamp: 2026-10-11T06:13:00+0000
+  agent: kilo-qa
+  app: KBBS
+  timestamp: 2026-10-11T06:21:00+0000
 last_planner_run: '2026-10-10T16:30:00Z'
 ---
 
@@ -90,8 +90,8 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Upcoming Queue**: `KSnake`, `KAudio`, `KBudget`, `KNetMap`, `KRogue`.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
-- **Current Target**: `KBBS`
-- **Upcoming Queue**: `KBudget`, `KAlchemy`, `KColony`, `KBreakout`, `KRogue`, `KPong`, `KPac`.
+- **Current Target**: `KBudget`
+- **Upcoming Queue**: `KAlchemy`, `KColony`, `KBreakout`, `KRogue`, `KPong`, `KPac`, `KBBS`.
 
 ### 6. Feature Expander Queue (`kilo-expander`)
 - **Current Target**: `KAbyss`
@@ -112,6 +112,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 ---
 
 ## Recent Execution Logs (Max 5 Entries)
+
+- **2026-10-10T23:21:00-07:00 — kilo-qa: KBBS (Pass 5 QA & Build Quality Audit)**
+  - Status: PASS ✅ (Verified multi-node dialing, door games save state, F5/F9 quicksave/load, tutorialSeen flag).
+  - State & Quality: Safe storage try/catch helpers, visibility guards, zero perimeter glints, full CP437 ANSI render.
+  - Build & Size: Native MSVC build intact; Vite build clean (366ms); HTML 169 KB << 999 KB ceiling.
+  - Queue: Advanced kilo-qa target to `KBudget`; rotation handoff to `kilo-expander`.
 
 - **2026-10-10T23:13:00-07:00 — kilo-usability: KCalendar (UI/UX Usability Pass)**
   - Status: PASS ✅ (Responsive layout <=768px/<=560px, smooth scrollbars, compact key badges).
@@ -135,9 +141,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Expansion: Integrated combat damage/dodge/crit stance modifiers, live combat badges, gladiator dossier import/export [GLAD-...].
   - Build & Size: Vite build clean (9s); HTML 250 KB << 999 KB ceiling.
   - Queue: Advanced kilo-expander target to `KAbyss`; rotation handoff to `kilo-creator`.
-
-- **2026-10-10T22:20:04-07:00 — kilo-qa: KPac (Pass 5 QA & Build Quality Audit)**
-  - Status: PASS ✅ (Storage safety try/catch on playerName & quicksave check; visibilitychange game loop lifecycle guard).
-  - Persistence & Tutorials: Verified full state quicksave/load [F5/F9], first-run tutorial flag, and clean modal shortcut handlers.
-  - Build & Size: Native MSVC C build clean (`KPac.exe`); Vite build clean (343ms); HTML 213 KB << 999 KB ceiling.
-  - Queue: Advanced kilo-qa target to `KBBS`; rotation handoff to `kilo-expander`.
