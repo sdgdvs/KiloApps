@@ -277,10 +277,19 @@
 
     <script>
         // --- Sega Genesis Yamaha YM2612 2-Operator FM Synthesizer & SNES SPC700 Delay DSP ---
+        function safeGetItem(key, fallback = null) {
+            try {
+                const val = localStorage.getItem(key);
+                return val !== null ? val : fallback;
+            } catch (e) {
+                return fallback;
+            }
+        }
+
         let audioCtx = null;
-        let soundEnabled = localStorage.getItem('kstellar_soundEnabled') !== 'false';
-        let droneEnabled = localStorage.getItem('kstellar_droneEnabled') !== 'false';
-        let fmMusicEnabled = localStorage.getItem('kstellar_fmMusicEnabled') === 'true';
+        let soundEnabled = safeGetItem('kstellar_soundEnabled') !== 'false';
+        let droneEnabled = safeGetItem('kstellar_droneEnabled') !== 'false';
+        let fmMusicEnabled = safeGetItem('kstellar_fmMusicEnabled') === 'true';
         let droneGain = null;
         let droneOsc1 = null;
         let droneOsc2 = null;
