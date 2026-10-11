@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-usability
+current_agent: kilo-qa
+next_agent: kilo-qa
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -15,7 +15,7 @@ current_targets:
   kilo_creator: kweb://deep-core
   kilo_graphics: KDragon
   kilo_tester: KVault
-  kilo_usability: KNetMap
+  kilo_usability: KRogue
   kilo_qa: KPong
   kilo_expander: KStarForge
 virtual_web_target: kweb://deep-core
@@ -32,9 +32,9 @@ virtual_web_rotation:
 - kweb://cybercafe
 - kweb://10.19.99.4/classified
 last_run:
-  agent: kilo-tester
-  app: KType
-  timestamp: 2026-10-10T21:03:15-07:00
+  agent: kilo-usability
+  app: KNetMap
+  timestamp: 2026-10-10T21:13:30-07:00
 last_planner_run: '2026-10-10T16:30:00Z'
 ---
 
@@ -86,8 +86,8 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Upcoming Queue**: `KVoid`, `KCalendar`, `KChart`, `KChat`, `KMine`, `KPing`, `KSanctuary`, `KAudio`, `KSubmarine`, `KTrader`.
 
 ### 4. Usability & UX Queue (`kilo-usability`)
-- **Current Target**: `KNetMap`
-- **Upcoming Queue**: `KRogue`, `KCalendar`, `KSnake`, `KAudio`, `KBudget`.
+- **Current Target**: `KRogue`
+- **Upcoming Queue**: `KCalendar`, `KSnake`, `KAudio`, `KBudget`, `KNetMap`.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
 - **Current Target**: `KPong`
@@ -113,6 +113,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-10T21:13:30-07:00 — kilo-usability: KNetMap (UI/UX & Ergonomics Audit)**
+  - Status: PASS ✅ (HiDPI dpr canvas scaling, 1080x720 window bounds, F1/H help modal, Escape backdrop dismiss).
+  - Usability: Verified crisp rendering, intuitive CIDR strip, responsive pan/zoom controls, and zero clipped UI panes.
+  - Build & Size: Vite build clean (`npm run build`); HTML 110 KB << 999 KB ceiling.
+  - Queue: Advanced kilo-usability target to `KRogue`; rotation handoff to `kilo-qa`.
+
 - **2026-10-10T21:03:15-07:00 — kilo-tester: KType (Interactive UI & Lifecycle Audit)**
   - Status: PASS ✅ (Audited buttons, tabs, modal backdrops, F1/F5/F9 hotkeys, and duel multiplayer gate).
   - UI/UX Fixes: Added Alt+1..6 tab navigation & hotkey badge, wired visibilitychange animation guard per architecture standards.
@@ -135,9 +141,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Utility Depth: Added PAC-FEN string parser/serializer with 3 tactical presets, interactive replay scrubber, and live HUD overlay.
   - Build & Size: Vite build clean (`npm run build`); HTML 212 KB << 999 KB ceiling.
   - Queue: Advanced kilo-expander target to `KStarForge`; rotation handoff to `kilo-creator`.
-
-- **2026-10-10T20:14:35-07:00 — kilo-qa: KRogue (Pass 5 QA & Build Quality Audit)**
-  - Status: PASS ✅ (Quicksave F5/F9 state persistence, first-run tutorial flags, modal overlays verified).
-  - Parity & Builds: Clean native MSVC build (`KRogue.exe` 81 KB); Vite build clean (`krogue.html` 277 KB).
-  - Integrity: No un-diegetic ARG markers; zero runtime memory/timer leaks.
-  - Queue: Advanced kilo-qa target to `KPong`; rotation handoff to `kilo-expander`.
