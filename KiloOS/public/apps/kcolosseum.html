@@ -213,7 +213,10 @@
       <ul id="marketList"></ul>
     </div>
     <div class="panel">
-      <h2>Your Gladiators</h2>
+      <h2 style="display:flex; justify-content:space-between; align-items:center;">
+        Your Gladiators
+        <button onclick="importGladiatorDossier()" style="font-size:0.55em; padding:2px 6px; background:#004d40; border-color:#00e5ff; color:#fff;" title="Import Gladiator Code [Dossier]">📥 Import Code</button>
+      </h2>
       <ul id="ownedList"></ul>
     </div>
   </div>
@@ -890,9 +893,94 @@
           if (Math.random() < 0.35) shield = 1;
       }
       const cost = (str + agi + vit) * 20 + Math.floor(Math.random() * 50) + (weapon ? 50 : 0) + (armor ? 50 : 0) + (shield ? 30 : 0);
-      let g = { id: nextId++, name, cost, str, agi, vit, weapon, armor, shield, damageTaken: 0, skinTone: (Math.random() > 0.5 ? '#d29a68' : '#e4b68e') };
+      let g = { id: nextId++, name, cost, str, agi, vit, weapon, armor, shield, stance: 'balanced', damageTaken: 0, skinTone: (Math.random() > 0.5 ? '#d29a68' : '#e4b68e') };
       updateDesc(g);
       return g;
+    }
+
+    function getStanceInfo(stance) {
+      switch (stance) {
+        case 'ferox': return { name: 'Ferox (Aggressive)', short: '⚔️ Ferox', desc: '+25% DMG, -15% DEF', color: '#ff4444' };
+        case 'murus': return { name: 'Murus (Defensive)', short: '🛡️ Murus', desc: '+25% DEF, -20% DMG', color: '#44aa44' };
+        case 'celeritas': return { name: 'Celeritas (Swift)', short: '⚡ Celeritas', desc: '+15% Hit/Dodge, +Crit', color: '#ffd700' };
+        default: return { name: 'Equitas (Balanced)', short: '⚖️ Equitas', desc: 'Standard Balance', color: '#d4af37' };
+      }
+    }
+
+    function cycleStance(id) {
+      const g = owned.find(x => x.id === id);
+      if (!g) return;
+      const order = ['balanced', 'ferox', 'murus', 'celeritas'];
+      const curIdx = order.indexOf(g.stance || 'balanced');
+      g.stance = order[(curIdx + 1) % order.length];
+      updateDesc(g);
+      const info = getStanceInfo(g.stance);
+      showToast(`🥋 ${g.name} tactic set to ${info.name}!`, 'info');
+      if (!soundMuted) playTone(440, 'triangle', 0.1, 0.2);
+      saveGame();
+      updateUI();
+    }
+
+    function exportGladiatorDossier(id) {
+      const g = owned.find(x => x.id === id);
+      if (!g) return;
+      try {
+        const payload = {
+          magic: 'KGLAD_1999',
+          name: g.name,
+          str: g.str,
+          agi: g.agi,
+          vit: g.vit,
+          weapon: g.weapon,
+          armor: g.armor,
+          shield: g.shield,
+          stance: g.stance || 'balanced'
+        };
+        const code = 'GLAD-' + btoa(JSON.stringify(payload));
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(code);
+          showToast(`📋 Gladiator code copied for ${g.name}!`, 'success');
+        } else {
+          prompt(`Gladiator Dossier Code for ${g.name}:`, code);
+        }
+      } catch (e) {
+        showToast('Export failed: ' + e.message, 'warning');
+      }
+    }
+
+    function importGladiatorDossier() {
+      const code = prompt('Enter Gladiator Dossier Code (GLAD-...):');
+      if (!code) return;
+      try {
+        const raw = code.trim().replace(/^GLAD-/, '');
+        const payload = JSON.parse(atob(raw));
+        if (payload.magic !== 'KGLAD_1999' || !payload.name) {
+          showToast('Invalid gladiator code structure!', 'warning');
+          return;
+        }
+        const g = {
+          id: nextId++,
+          name: String(payload.name).slice(0, 24),
+          cost: 0,
+          str: Math.min(50, Math.max(1, parseInt(payload.str) || 5)),
+          agi: Math.min(50, Math.max(1, parseInt(payload.agi) || 5)),
+          vit: Math.min(50, Math.max(1, parseInt(payload.vit) || 5)),
+          weapon: Math.min(3, Math.max(0, parseInt(payload.weapon) || 0)),
+          armor: Math.min(1, Math.max(0, parseInt(payload.armor) || 0)),
+          shield: Math.min(1, Math.max(0, parseInt(payload.shield) || 0)),
+          stance: ['balanced','ferox','murus','celeritas'].includes(payload.stance) ? payload.stance : 'balanced',
+          damageTaken: 0,
+          skinTone: '#d29a68'
+        };
+        updateDesc(g);
+        owned.push(g);
+        showToast(`⚔️ Recruited guest veteran ${g.name} into ludus!`, 'success');
+        if (!soundMuted) playTone(587.33, 'triangle', 0.2, 0.3);
+        saveGame();
+        updateUI();
+      } catch (e) {
+        showToast('Import failed: invalid dossier data!', 'warning');
+      }
     }
 
     function getEffStr(g) { return g.str + (g.weapon === 1 ? 3 : (g.weapon === 3 ? 3 : 0)); }
@@ -906,6 +994,8 @@
       else if (g.weapon === 3) eqStr += " [Sica]";
       if (g.armor === 1) eqStr += " [Armr]";
       if (g.shield === 1) eqStr += " [Shld]";
+      const stInfo = getStanceInfo(g.stance || 'balanced');
+      eqStr += ` [${stInfo.short}]`;
       let maxHp = getEffVit(g) * 10;
       let hp = maxHp - g.damageTaken;
       g.desc = `HP:${hp}/${maxHp} STR:${g.str} AGI:${g.agi} VIT:${g.vit}${eqStr}`;
@@ -1097,6 +1187,10 @@
             <button style="font-size:0.7em" onclick="trainGladiator(${g.id}, 'str')" ${funds < 20 ? 'disabled' : ''}>+STR (20D)</button>
             <button style="font-size:0.7em" onclick="trainGladiator(${g.id}, 'agi')" ${funds < 20 ? 'disabled' : ''}>+AGI (20D)</button>
             <button style="font-size:0.7em" onclick="trainGladiator(${g.id}, 'vit')" ${funds < 20 ? 'disabled' : ''}>+VIT (20D)</button>
+          </div>
+          <div style="display:flex; gap:5px; width:100%; margin-top:4px; flex-wrap:wrap;">
+            <button style="font-size:0.7em; background:#3d1a04; border-color:#d4af37; color:#ffd700;" onclick="cycleStance(${g.id})" title="Click to cycle combat tactics (Ferox / Murus / Celeritas / Equitas)">🥋 Tactic: ${getStanceInfo(g.stance || 'balanced').short}</button>
+            <button style="font-size:0.7em; background:#221508; border-color:#888; color:#eee;" onclick="exportGladiatorDossier(${g.id})" title="Export champion dossier code to clipboard">📜 Share</button>
           </div>
           <div style="margin-top:6px; display:flex; gap:8px; width:100%;">
             <button style="font-size:0.75em; background:#228b22; color:#fff;" onclick="enterArena(${g.id})" ${g.damageTaken >= getEffVit(g) * 10 ? 'disabled' : ''}>⚔️ Fight in Arena</button>
@@ -3192,10 +3286,12 @@
     }
     
     function updateCombatUI() {
+      const pStInfo = getStanceInfo(currentFighter.stance || 'balanced');
       document.getElementById('playerCombat').innerHTML = `
         <h3 style="margin-top:0; color:#8b0000;">${currentFighter.name}</h3>
         <div style="font-weight:bold; color:#8b0000; font-size:1.1em;">HP: ${currentFighter.hp} / ${currentFighter.maxHp}</div>
         <div style="font-size:0.9em; margin-top:5px;">STR:${getEffStr(currentFighter)} AGI:${getEffAgi(currentFighter)} VIT:${getEffVit(currentFighter)}</div>
+        <div style="margin-top:6px; font-size:0.85em; font-weight:bold; color:${pStInfo.color}; background:#2b0808; padding:2px 6px; border-radius:3px; display:inline-block; border:1px solid #d4af37;">Tactic: ${pStInfo.name}</div>
       `;
       document.getElementById('enemyCombat').innerHTML = `
         <h3 style="margin-top:0; color:#8b0000;">${enemyFighter.name}</h3>
@@ -3309,9 +3405,22 @@
         setTimeout(() => { playerState.stance = playerDefending ? 'defend' : 'idle'; }, 300);
 
         let hitChance = 75 + (getEffAgi(currentFighter) - getEffAgi(enemyFighter)) * 5;
+        const pStance = currentFighter.stance || 'balanced';
+        if (pStance === 'celeritas') hitChance += 15;
         if (enemyDefending) hitChance -= (enemyFighter.shield === 1 ? 50 : 30);
         if (Math.random() * 100 < hitChance) {
           let dmg = Math.max(1, getEffStr(currentFighter) + Math.floor(Math.random() * 4));
+          if (pStance === 'ferox') {
+            dmg = Math.max(1, Math.round(dmg * 1.25));
+          } else if (pStance === 'murus') {
+            dmg = Math.max(1, Math.round(dmg * 0.80));
+          }
+          if (pStance === 'celeritas' && Math.random() < 0.25) {
+            let critAmt = Math.max(2, Math.round(dmg * 0.4));
+            dmg += critAmt;
+            addFloatingText(`CRIT! +${critAmt}`, eX, eY - 50, '#00e5ff');
+            logCombat(`<strong>${currentFighter.name}</strong> lands a swift <strong>Celeritas Critical Strike</strong>!`);
+          }
           if (enemyDefending) {
             if (currentFighter.weapon === 3) {
               dmg = Math.max(1, dmg - (enemyFighter.shield === 1 ? 3 : 1));
@@ -3475,6 +3584,8 @@
           }
 
           let hitChance = 75 + (getEffAgi(enemyFighter) - getEffAgi(currentFighter)) * 5;
+          const pStance = currentFighter.stance || 'balanced';
+          if (pStance === 'celeritas') hitChance -= 15;
           if (playerDefending) hitChance -= (currentFighter.shield === 1 ? 50 : 30);
           
           if (Math.random() * 100 < hitChance) {
@@ -3485,6 +3596,13 @@
               } else {
                 dmg = Math.max(1, dmg - (currentFighter.shield === 1 ? 5 : 3));
               }
+            }
+            if (pStance === 'murus') {
+              let murusBlock = Math.max(1, Math.round(dmg * 0.25));
+              dmg = Math.max(1, dmg - murusBlock);
+              addFloatingText(`MURUS -${murusBlock}`, pX, pY - 45, '#a3f7bf');
+            } else if (pStance === 'ferox') {
+              dmg = Math.max(1, Math.round(dmg * 1.15));
             }
             if (enemyStaggered) {
               dmg = Math.max(1, Math.floor(dmg * 0.5));
