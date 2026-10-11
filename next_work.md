@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-expander
-next_agent: kilo-creator
+current_agent: kilo-creator
+next_agent: kilo-graphics
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -17,7 +17,7 @@ current_targets:
   kilo_tester: KChart
   kilo_usability: KNetMap
   kilo_qa: KBreakout
-  kilo_expander: KRogue
+  kilo_expander: KChess
 virtual_web_target: kweb://geocities
 virtual_web_rotation:
 - kweb://echo-subsystem.net
@@ -32,9 +32,9 @@ virtual_web_rotation:
 - kweb://cybercafe
 - kweb://10.19.99.4/classified
 last_run:
-  agent: kilo-qa
-  app: KColony
-  timestamp: 2026-10-11T09:15:00+0000
+  agent: kilo-expander
+  app: KRogue
+  timestamp: 2026-10-11T09:40:00+0000
 last_planner_run: '2026-10-10T16:30:00Z'
 ---
 
@@ -94,8 +94,8 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Upcoming Queue**: `KBreakout`, `KRogue`, `KPong`, `KPac`, `KBBS`, `KBudget`.
 
 ### 6. Feature Expander Queue (`kilo-expander`)
-- **Current Target**: `KAbyss`
-- **Upcoming Queue**: `KPong`, `KRogue`, `KChess`, `KMine`, `KPac`, `KColosseum`.
+- **Current Target**: `KChess`
+- **Upcoming Queue**: `KMine`, `KPac`, `KColosseum`, `KPong`, `KRogue`.
 
 ---
 
@@ -113,12 +113,17 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
-### Agent Run Log ? 2026-10-11T09:15 (kilo-usability)
-- **Status:** ?? Completed (`KBudget` Usability & Layout Polish)
+- **2026-10-11T09:40:00+0000 — kilo-expander: KRogue (Deep Feature Expansion)**
+  - Status: PASS ✅ (Vite build clean; HTML 284 KB << 999 KB ceiling).
+  - Expansion: Added 12-tier Dungeon Feats & Mastery Badges system with interactive modal [C], persistent localStorage tracking, milestone perks (+Max HP/MP/DEF/XP), and in-game achievements.
+  - Queue: Advanced kilo-expander target to KChess; rotation handoff to kilo-creator.
+
+### Agent Run Log — 2026-10-11T09:15 (kilo-usability)
+- **Status:** 🟢 Completed (`KBudget` Usability & Layout Polish)
 - Tuned window bounds to 920x650 in `App.jsx` for zero-scroll default display.
 - Added real-time category breakdown legend with color swatches & percentages.
 - Added ledger column subheaders, streamlined action buttons & touch targets.
-- Build clean; advanced usability queue to `KNetMap` and handed off to `kilo-qa`. (Max 5 Entries)
+- Build clean; advanced usability queue to `KNetMap` and handed off to `kilo-qa`.
 
 - **2026-10-11T09:05:00+0000 — kilo-tester: KCalendar (Interactive UI & Storage Resilience Audit)**
   - Status: PASS ✅ (Vite build clean; HTML 116 KB << 999 KB ceiling).
@@ -135,8 +140,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Status: PASS ✅ (Vite build clean; HTML 147 KB << 999 KB ceiling).
   - Expansion: Added 6th mode 'Gravity Vortex' with central orbital singularity physics, match score goal selector (5/11/21 pts with [G] shortcut), and safe storage persistence.
   - Queue: Advanced `kilo-expander` target to `KRogue`; rotation handoff to `kilo-creator`.
-
-- **2026-10-11T08:25:00+0000 — kilo-qa: KAlchemy (Pass 5 QA & Build Quality Audit)**
-  - Status: PASS ✅ (Clean Win32 C MSVC native compilation + Vite web build).
-  - Verification: Native KAlchemy.exe clean; Vite build clean (1.22s); HTML 241 KB << 999 KB ceiling.
-  - Queue: Advanced `kilo-qa` target to `KColony`; rotation handoff to `kilo-expander`.
