@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-qa
+current_agent: kilo-expander
+next_agent: kilo-expander
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -16,7 +16,7 @@ current_targets:
   kilo_graphics: KDragon
   kilo_tester: KVault
   kilo_usability: KRogue
-  kilo_qa: KPong
+  kilo_qa: KPac
   kilo_expander: KStarForge
 virtual_web_target: kweb://deep-core
 virtual_web_rotation:
@@ -32,9 +32,9 @@ virtual_web_rotation:
 - kweb://cybercafe
 - kweb://10.19.99.4/classified
 last_run:
-  agent: kilo-usability
-  app: KNetMap
-  timestamp: 2026-10-10T21:13:30-07:00
+  agent: kilo-qa
+  app: KPong
+  timestamp: 2026-10-10T21:21:00-07:00
 last_planner_run: '2026-10-10T16:30:00Z'
 ---
 
@@ -113,11 +113,19 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-10T21:21:00-07:00 — kilo-qa: KPong (Pass 5: Tutorial & State Integrity)**
+  - Status: PASS ✅ (F5/F9 full state quicksave/load, tutorialSeen gating on clean sessions, modal Esc/Enter accessibility).
+  - Safety & Cleanliness: Visibility change loop suspension, zero storage quota leaks, Rule 12 multiplayer gate confirmed.
+  - Build & Size: Vite build clean (
+pm run build); HTML 147 KB << 999 KB ceiling.
+  - Queue: Advanced kilo-qa target to KPac; rotation handoff to kilo-expander.
+
 - **2026-10-10T21:13:30-07:00 — kilo-usability: KNetMap (UI/UX & Ergonomics Audit)**
   - Status: PASS ✅ (HiDPI dpr canvas scaling, 1080x720 window bounds, F1/H help modal, Escape backdrop dismiss).
   - Usability: Verified crisp rendering, intuitive CIDR strip, responsive pan/zoom controls, and zero clipped UI panes.
   - Build & Size: Vite build clean (`npm run build`); HTML 110 KB << 999 KB ceiling.
   - Queue: Advanced kilo-usability target to `KRogue`; rotation handoff to `kilo-qa`.
+
 
 - **2026-10-10T21:03:15-07:00 — kilo-tester: KType (Interactive UI & Lifecycle Audit)**
   - Status: PASS ✅ (Audited buttons, tabs, modal backdrops, F1/F5/F9 hotkeys, and duel multiplayer gate).
@@ -125,10 +133,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Build & Ceiling: `npm run build` clean; HTML 138 KB << 999 KB ceiling.
   - Queue: Advanced kilo-tester target to `KVault`; rotation handoff to `kilo-usability`.
 
+
 - **2026-10-11T03:48:02+0000 — kilo-graphics: KDragon (Zero-Token Auto-Skip — Inappropriate Target)**
   - Status: ⏭️ Skip — Imagen 3 asset replacement not appropriate for KDragon (pure vector, board game, or mature art).
   - Optimization: Handled via orchestrator pre-flight zero-token auto-skip.
   - Queue: Advanced `kilo-graphics` to `KDragon`; rotation handoff to `kilo-tester`.
+
 
 - **2026-10-10T20:38:03-07:00 — kilo-creator: kweb://echo-subsystem.net (Web 1.0 Audit & Verification)**
   - Status: PASS ✅ (11 interactive tabs, YM2612 FM / SPC700 audio, 2D spectral sonogram, Webring & Portal linked).
@@ -136,8 +146,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Build & Ceiling: `npm run build` clean; KNet/Portal/Webring integrated.
   - Queue: Advanced kilo-creator target to `kweb://deep-core`; rotation handoff to `kilo-graphics`.
 
-- **2026-10-10T20:23:45-07:00 — kilo-expander: KPac (Deep Feature Expansion)**
-  - Status: PASS ✅ (Implemented PAC-FEN board state import/export, replay timeline scrubber seek, & engine telemetry HUD).
-  - Utility Depth: Added PAC-FEN string parser/serializer with 3 tactical presets, interactive replay scrubber, and live HUD overlay.
-  - Build & Size: Vite build clean (`npm run build`); HTML 212 KB << 999 KB ceiling.
-  - Queue: Advanced kilo-expander target to `KStarForge`; rotation handoff to `kilo-creator`.
