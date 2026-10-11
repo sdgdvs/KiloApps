@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-qa
+current_agent: kilo-expander
+next_agent: kilo-expander
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -16,7 +16,7 @@ current_targets:
   kilo_graphics: KDragon
   kilo_tester: KVoid
   kilo_usability: KCalendar
-  kilo_qa: KPac
+  kilo_qa: KBBS
   kilo_expander: KColosseum
 virtual_web_target: kweb://darknet
 virtual_web_rotation:
@@ -32,9 +32,9 @@ virtual_web_rotation:
 - kweb://cybercafe
 - kweb://10.19.99.4/classified
 last_run:
-  agent: kilo-usability
-  app: KRogue
-  timestamp: '2026-10-10T22:13:30-07:00'
+  agent: kilo-qa
+  app: KPac
+  timestamp: '2026-10-10T22:20:04-07:00'
 last_planner_run: '2026-10-10T16:30:00Z'
 ---
 
@@ -90,8 +90,8 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Upcoming Queue**: `KSnake`, `KAudio`, `KBudget`, `KNetMap`, `KRogue`.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
-- **Current Target**: `KPong`
-- **Upcoming Queue**: `KPac`, `KBBS`, `KBudget`, `KAlchemy`, `KColony`, `KBreakout`, `KRogue`.
+- **Current Target**: `KBBS`
+- **Upcoming Queue**: `KBudget`, `KAlchemy`, `KColony`, `KBreakout`, `KRogue`, `KPong`, `KPac`.
 
 ### 6. Feature Expander Queue (`kilo-expander`)
 - **Current Target**: `KColosseum`
@@ -112,6 +112,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 ---
 
 ## Recent Execution Logs (Max 5 Entries)
+
+- **2026-10-10T22:20:04-07:00 — kilo-qa: KPac (Pass 5 QA & Build Quality Audit)**
+  - Status: PASS ✅ (Storage safety try/catch on playerName & quicksave check; visibilitychange game loop lifecycle guard).
+  - Persistence & Tutorials: Verified full state quicksave/load [F5/F9], first-run tutorial flag, and clean modal shortcut handlers.
+  - Build & Size: Native MSVC C build clean (`KPac.exe`); Vite build clean (343ms); HTML 213 KB << 999 KB ceiling.
+  - Queue: Advanced kilo-qa target to `KBBS`; rotation handoff to `kilo-expander`.
 
 - **2026-10-10T22:13:30-07:00 — kilo-usability: KRogue (UI/UX Usability Pass)**
   - Status: PASS ✅ (Eliminated flexbox vertical scroll top-clipping bug via margin: 0 auto; themed custom dark scrollbars).
@@ -135,9 +141,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Anti-Potemkin: Verified 6 workbenches (Terminal, Defusal, 3D Radar, Mesh, Spool Vault, Crypto Lab), VT100 CLI & FM audio.
   - Build & Size: Vite build clean (393ms); HTML 244 KB << 999 KB ceiling.
   - Queue: Advanced kilo-creator target to `kweb://darknet`; rotation handoff to `kilo-graphics`.
-
-- **2026-10-10T21:34:00-07:00 — kilo-expander: KStarForge (Deep Feature Expansion)**
-  - Status: PASS ✅ (BOM manifest CSV export, vector SVG CAD schematic export, diagnostic hull stress/thermal overlay with CoM/CoT reticles).
-  - Tactical Routing: Wired [1-4] subsystem shunting (weapons/engines/shields/balanced) into flight telemetry HUD and physics loop.
-  - Storage & Build: Fixed save import JSON wrapping via safeSet; Vite build clean (276 KB << 999 KB).
-  - Queue: Advanced kilo-expander target to `KColosseum`; rotation handoff to `kilo-creator`.

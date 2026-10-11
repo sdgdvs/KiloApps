@@ -1183,7 +1183,13 @@
 
   // Cyber Duel Arena & RFMS Multiplayer State
   let rMultiplayer = null;
-  let myPlayerName = localStorage.getItem('kilo_kpac_name') || ('Pilot_' + Math.floor(1000 + Math.random() * 9000));
+  let myPlayerName = (function() {
+      try {
+          return localStorage.getItem('kilo_kpac_name') || ('Pilot_' + Math.floor(1000 + Math.random() * 9000));
+      } catch(e) {
+          return 'Pilot_' + Math.floor(1000 + Math.random() * 9000);
+      }
+  })();
   let oppPlayerName = 'Challenger';
   let myPlayerSlot = 1; // 1: Yellow Pac (P1), 2: Cyan CyberPac (P2)
   let currentRoomId = null;
@@ -4794,17 +4800,45 @@
   init(false);
   updateUIBadges();
 
-  const hasQuicksave = !!localStorage.getItem('kpac_quicksave');
+  let hasQuicksave = false;
+  try {
+      hasQuicksave = !!localStorage.getItem('kpac_quicksave');
+  } catch(e) {
+      hasQuicksave = false;
+  }
+
   if (!isTutorialSeen() && !hasQuicksave) {
       showToast("⚡ Welcome to KPac! WASD/Arrows to Move, [Space] to Pause, [F1] for Codex & Skills", "info");
       setTutorialSeen();
   } else {
       showToast("⚡ KPac Cyber Edition: WASD/Arrows to Move, [Space] to Pause, [F1] for Help & Codex", "info");
   }
-  setInterval(() => {
-      update();
-      draw();
-  }, 100);
+
+  let gameLoopTimer = null;
+  function startGameLoop() {
+      if (!gameLoopTimer) {
+          gameLoopTimer = setInterval(() => {
+              update();
+              draw();
+          }, 100);
+      }
+  }
+  function stopGameLoop() {
+      if (gameLoopTimer) {
+          clearInterval(gameLoopTimer);
+          gameLoopTimer = null;
+      }
+  }
+
+  document.addEventListener('visibilitychange', () => {
+      if (document.hidden) {
+          stopGameLoop();
+      } else {
+          startGameLoop();
+      }
+  });
+
+  startGameLoop();
 </script>
 </body>
 </html>
