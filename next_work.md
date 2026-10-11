@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-expander
-next_agent: kilo-expander
+current_agent: kilo-creator
+next_agent: kilo-graphics
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -17,7 +17,7 @@ current_targets:
   kilo_tester: KChat
   kilo_usability: KPaint
   kilo_qa: KRogue
-  kilo_expander: KChess
+  kilo_expander: KMine
 virtual_web_target: kweb://users/~neon_rider
 virtual_web_rotation:
 - kweb://echo-subsystem.net
@@ -32,9 +32,9 @@ virtual_web_rotation:
 - kweb://cybercafe
 - kweb://10.19.99.4/classified
 last_run:
-  agent: kilo-qa
-  app: KBreakout
-  timestamp: '2026-10-11T10:31:00+0000'
+  agent: kilo-expander
+  app: KChess
+  timestamp: '2026-10-11T10:39:00+0000'
 last_planner_run: '2026-10-10T16:30:00Z'
 ---
 
@@ -94,8 +94,8 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Upcoming Queue**: `KPong`, `KPac`, `KBBS`, `KBudget`, `KColony`, `KBreakout`.
 
 ### 6. Feature Expander Queue (`kilo-expander`)
-- **Current Target**: `KChess`
-- **Upcoming Queue**: `KMine`, `KPac`, `KColosseum`, `KPong`, `KRogue`.
+- **Current Target**: `KMine`
+- **Upcoming Queue**: `KPac`, `KColosseum`, `KPong`, `KRogue`, `KChess`.
 
 ---
 
@@ -112,6 +112,11 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 ---
 
 ## Recent Execution Logs (Max 5 Entries)
+
+- **2026-10-11T10:39:00+0000 — kilo-expander: KChess (Deep Feature Expansion)**
+  - Status: PASS ✅ (Vite build clean; HTML 216 KB << 999 KB ceiling).
+  - Expansion: Added Interactive Custom Board & Position Editor (piece palette, 8x8 setup grid, FEN validation/export/apply, turn selection, hotkey C, Tools menu integration).
+  - Queue: Advanced kilo-expander target to KMine; rotation handoff to kilo-creator.
 
 - **2026-10-11T10:25:00+0000 — kilo-usability: KNetMap (UI/UX & Usability Polish)**
   - Status: PASS ✅ (Vite build clean; HTML 114.5 KB << 999 KB ceiling).
@@ -133,8 +138,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Web Destination: Validated CyberSpire Retro Shrine (MOD vault, SFX lab, Web-Safe 216 Color Lab, Halite Crypt Dungeon RPG, guestbook & webring links).
   - Integration: Verified seamless links in KNet, KPortal, WebRing, and KRSS.
   - Queue: Advanced kilo-creator to kweb://users/~neon_rider; rotation handoff to kilo-graphics.
-
-- **2026-10-11T09:40:00+0000 — kilo-expander: KRogue (Deep Feature Expansion)**
-  - Status: PASS ✅ (Vite build clean; HTML 284 KB << 999 KB ceiling).
-  - Expansion: Added 12-tier Dungeon Feats & Mastery Badges system with interactive modal [C], persistent localStorage tracking, milestone perks (+Max HP/MP/DEF/XP), and in-game achievements.
-  - Queue: Advanced kilo-expander target to KChess; rotation handoff to kilo-creator.

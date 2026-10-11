@@ -355,6 +355,9 @@
         <div class="menu-dropdown-entry" onclick="openAnalysisModal()">
           <span>📊 Deep Engine Analysis</span><span class="shortcut">A</span>
         </div>
+        <div class="menu-dropdown-entry" onclick="openEditorModal()">
+          <span>🧩 Custom Board &amp; Position Editor</span><span class="shortcut">C</span>
+        </div>
         <div class="menu-divider"></div>
         <div class="menu-dropdown-entry" onclick="openFENModal()">
           <span>📋 FEN Position Manager</span><span class="shortcut">E</span>
@@ -445,6 +448,7 @@
         <tr><td><kbd>V</kbd></td><td>Interactive Move Replay &amp; History Inspector</td></tr>
         <tr><td><kbd>B</kbd></td><td>Opening Book Explorer (learn &amp; practice openings)</td></tr>
         <tr><td><kbd>A</kbd></td><td>Deep Positional &amp; Tactical Engine Analysis</td></tr>
+        <tr><td><kbd>C</kbd></td><td>Custom Board &amp; Position Editor (Setup Scenarios)</td></tr>
         <tr><td><kbd>S</kbd> / <kbd>F5</kbd></td><td>Quick Save Game State to storage</td></tr>
         <tr><td><kbd>L</kbd> / <kbd>F9</kbd></td><td>Quick Load Saved Game State</td></tr>
         <tr><td><kbd>M</kbd></td><td>Switch Game Mode (Standard / Campaign / Puzzle / Blitz)</td></tr>
@@ -570,6 +574,63 @@
       <div class="btn-group" style="margin-top: 12px;">
         <button onclick="refreshAnalysisModal()" class="primary">🔄 Re-evaluate</button>
         <button onclick="handleHotkey('h'); closeModals();">💡 Show Best Move Hint [H]</button>
+        <button class="modal-close" onclick="closeModals()">Close [Esc]</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Custom Board & Position Editor Modal -->
+  <div id="editor-modal" class="modal-overlay" onclick="handleBackdropClick(event, 'editor-modal')">
+    <div class="modal-card" style="width: 530px; max-height: 90vh; overflow-y: auto;">
+      <h3>🧩 Custom Board &amp; Position Editor <span class="close-btn" onclick="closeModals()">&times;</span></h3>
+      <p style="font-size: 12px; color: #94a3b8; margin: -4px 0 10px 0;">Setup custom scenarios, practice endgames, or create tactical chess puzzles:</p>
+      
+      <!-- Palette -->
+      <div style="background: #1e293b; padding: 8px; border-radius: 8px; border: 1px solid #334155; margin-bottom: 10px; display: flex; flex-direction: column; gap: 6px;">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <span style="font-size:11px; font-weight:bold; color:#5eead4;">Select Piece to Place (or click Clear to erase):</span>
+          <span id="editor-selected-badge" style="font-size:11px; color:#fde68a; font-weight:bold;">Selected: ♙ White Pawn</span>
+        </div>
+        <div style="display:flex; gap:5px; flex-wrap:wrap; justify-content:center;">
+          <button type="button" class="editor-palette-btn" onclick="selectEditorPiece(6)" style="font-size:18px; padding:2px 7px; background:#0f172a; border:1px solid #475569; border-radius:4px; cursor:pointer;" title="White King">♔</button>
+          <button type="button" class="editor-palette-btn" onclick="selectEditorPiece(5)" style="font-size:18px; padding:2px 7px; background:#0f172a; border:1px solid #475569; border-radius:4px; cursor:pointer;" title="White Queen">♕</button>
+          <button type="button" class="editor-palette-btn" onclick="selectEditorPiece(4)" style="font-size:18px; padding:2px 7px; background:#0f172a; border:1px solid #475569; border-radius:4px; cursor:pointer;" title="White Rook">♖</button>
+          <button type="button" class="editor-palette-btn" onclick="selectEditorPiece(3)" style="font-size:18px; padding:2px 7px; background:#0f172a; border:1px solid #475569; border-radius:4px; cursor:pointer;" title="White Bishop">♗</button>
+          <button type="button" class="editor-palette-btn" onclick="selectEditorPiece(2)" style="font-size:18px; padding:2px 7px; background:#0f172a; border:1px solid #475569; border-radius:4px; cursor:pointer;" title="White Knight">♘</button>
+          <button type="button" class="editor-palette-btn active-editor-piece" onclick="selectEditorPiece(1)" style="font-size:18px; padding:2px 7px; background:#0f172a; border:2px solid #5eead4; border-radius:4px; cursor:pointer;" title="White Pawn">♙</button>
+          <span style="border-left:1px solid #475569; margin:0 2px;"></span>
+          <button type="button" class="editor-palette-btn" onclick="selectEditorPiece(-6)" style="font-size:18px; padding:2px 7px; background:#0f172a; border:1px solid #475569; border-radius:4px; cursor:pointer;" title="Black King">♚</button>
+          <button type="button" class="editor-palette-btn" onclick="selectEditorPiece(-5)" style="font-size:18px; padding:2px 7px; background:#0f172a; border:1px solid #475569; border-radius:4px; cursor:pointer;" title="Black Queen">♛</button>
+          <button type="button" class="editor-palette-btn" onclick="selectEditorPiece(-4)" style="font-size:18px; padding:2px 7px; background:#0f172a; border:1px solid #475569; border-radius:4px; cursor:pointer;" title="Black Rook">♜</button>
+          <button type="button" class="editor-palette-btn" onclick="selectEditorPiece(-3)" style="font-size:18px; padding:2px 7px; background:#0f172a; border:1px solid #475569; border-radius:4px; cursor:pointer;" title="Black Bishop">♝</button>
+          <button type="button" class="editor-palette-btn" onclick="selectEditorPiece(-2)" style="font-size:18px; padding:2px 7px; background:#0f172a; border:1px solid #475569; border-radius:4px; cursor:pointer;" title="Black Knight">♞</button>
+          <button type="button" class="editor-palette-btn" onclick="selectEditorPiece(-1)" style="font-size:18px; padding:2px 7px; background:#0f172a; border:1px solid #475569; border-radius:4px; cursor:pointer;" title="Black Pawn">♟</button>
+          <span style="border-left:1px solid #475569; margin:0 2px;"></span>
+          <button type="button" class="editor-palette-btn" onclick="selectEditorPiece(0)" style="font-size:13px; padding:2px 8px; background:#0f172a; border:1px solid #ef4444; border-radius:4px; cursor:pointer; color:#f87171;" title="Erase Square">🗑️</button>
+        </div>
+      </div>
+
+      <!-- Mini 8x8 Grid -->
+      <div style="display:flex; justify-content:center; margin-bottom:10px;">
+        <div id="editor-grid" style="display:grid; grid-template-columns:repeat(8, 38px); grid-template-rows:repeat(8, 38px); border:2px solid #475569; border-radius:6px; overflow:hidden;"></div>
+      </div>
+
+      <!-- Active Turn & Presets -->
+      <div style="display:flex; justify-content:space-between; align-items:center; background:#1e293b; padding:8px 12px; border-radius:6px; border:1px solid #334155; margin-bottom:10px; font-size:12px;">
+        <div style="display:flex; align-items:center; gap:8px;">
+          <span style="font-weight:bold; color:#cbd5e1;">Active Turn:</span>
+          <label style="cursor:pointer;"><input type="radio" name="editor-turn" id="editor-turn-w" value="1" checked onchange="setEditorTurn(1)"> White</label>
+          <label style="cursor:pointer;"><input type="radio" name="editor-turn" id="editor-turn-b" value="-1" onchange="setEditorTurn(-1)"> Black</label>
+        </div>
+        <div style="display:flex; gap:6px;">
+          <button type="button" onclick="editorResetStart()" style="font-size:11px; padding:3px 8px;">Reset Initial</button>
+          <button type="button" onclick="editorClearBoard()" style="font-size:11px; padding:3px 8px; color:#f87171;">Clear All</button>
+        </div>
+      </div>
+
+      <div class="btn-group">
+        <button class="primary" onclick="editorApplyToGame()">▶ Play Position</button>
+        <button onclick="editorExportFEN()">📋 Export FEN</button>
         <button class="modal-close" onclick="closeModals()">Close [Esc]</button>
       </div>
     </div>
@@ -2130,11 +2191,13 @@
           openBookModal();
       } else if (k === 'a') {
           openAnalysisModal();
+      } else if (k === 'c') {
+          openEditorModal();
       }
   }
 
   function getActiveModal() {
-      const ids = ['help-modal', 'fen-modal', 'pgn-modal', 'replay-modal', 'book-modal', 'analysis-modal', 'multiplayer-modal', 'invite-modal'];
+      const ids = ['help-modal', 'fen-modal', 'pgn-modal', 'replay-modal', 'book-modal', 'analysis-modal', 'editor-modal', 'multiplayer-modal', 'invite-modal'];
       for (const id of ids) {
           const el = document.getElementById(id);
           if (el && (el.style.display === 'flex' || el.style.display === 'block')) {
@@ -2776,6 +2839,8 @@
       if (rep) rep.style.display = 'none';
       const bk = document.getElementById('book-modal');
       if (bk) bk.style.display = 'none';
+      const ed = document.getElementById('editor-modal');
+      if (ed) ed.style.display = 'none';
       stopReplayPlay();
       const help = document.getElementById('help-modal');
       if (help) help.style.display = 'none';
@@ -3192,6 +3257,199 @@
       refreshAnalysisModal();
       const modal = document.getElementById('analysis-modal');
       if (modal) modal.style.display = 'flex';
+  }
+
+  // --------------------------------------------------------------------------
+  // Custom Board & Position Editor Subsystem
+  // --------------------------------------------------------------------------
+  let editorBoard = [
+      [-4,-2,-3,-5,-6,-3,-2,-4],
+      [-1,-1,-1,-1,-1,-1,-1,-1],
+      [0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0],
+      [1,1,1,1,1,1,1,1],
+      [4,2,3,5,6,3,2,4]
+  ];
+  let editorSelectedPiece = 1; // 1 = White Pawn
+  let editorTurn = 1; // 1 = White, -1 = Black
+
+  const pieceSymbols = {
+      6: '♔', 5: '♕', 4: '♖', 3: '♗', 2: '♘', 1: '♙',
+      0: '',
+      '-1': '♟', '-2': '♞', '-3': '♝', '-4': '♜', '-5': '♛', '-6': '♚'
+  };
+  const pieceNames = {
+      6: 'White King', 5: 'White Queen', 4: 'White Rook', 3: 'White Bishop', 2: 'White Knight', 1: 'White Pawn',
+      0: 'Clear / Erase',
+      '-1': 'Black Pawn', '-2': 'Black Knight', '-3': 'Black Bishop', '-4': 'Black Rook', '-5': 'Black Queen', '-6': 'Black King'
+  };
+
+  function selectEditorPiece(p) {
+      editorSelectedPiece = p;
+      const badge = document.getElementById('editor-selected-badge');
+      if (badge) {
+          const sym = pieceSymbols[p] || '';
+          badge.textContent = `Selected: ${sym} ${pieceNames[p]}`;
+      }
+      const btns = document.querySelectorAll('.editor-palette-btn');
+      btns.forEach(btn => {
+          btn.style.border = '1px solid #475569';
+      });
+      if (event && event.currentTarget) {
+          event.currentTarget.style.border = '2px solid #5eead4';
+      }
+  }
+
+  function setEditorTurn(t) {
+      editorTurn = t;
+  }
+
+  function editorResetStart() {
+      editorBoard = [
+          [-4,-2,-3,-5,-6,-3,-2,-4],
+          [-1,-1,-1,-1,-1,-1,-1,-1],
+          [0,0,0,0,0,0,0,0],
+          [0,0,0,0,0,0,0,0],
+          [0,0,0,0,0,0,0,0],
+          [0,0,0,0,0,0,0,0],
+          [1,1,1,1,1,1,1,1],
+          [4,2,3,5,6,3,2,4]
+      ];
+      editorTurn = 1;
+      const tw = document.getElementById('editor-turn-w');
+      if (tw) tw.checked = true;
+      renderEditorGrid();
+      showToast('Board reset to standard initial position.', 'info');
+  }
+
+  function editorClearBoard() {
+      editorBoard = Array(8).fill(null).map(() => Array(8).fill(0));
+      // Keep kings by default so position is valid
+      editorBoard[0][4] = -6; // Black King
+      editorBoard[7][4] = 6;  // White King
+      renderEditorGrid();
+      showToast('Board cleared (kings preserved).', 'info');
+  }
+
+  function renderEditorGrid() {
+      const container = document.getElementById('editor-grid');
+      if (!container) return;
+      container.innerHTML = '';
+
+      for (let r = 0; r < 8; r++) {
+          for (let c = 0; c < 8; c++) {
+              const sq = document.createElement('div');
+              const isDark = (r + c) % 2 === 1;
+              sq.style.width = '38px';
+              sq.style.height = '38px';
+              sq.style.display = 'flex';
+              sq.style.alignItems = 'center';
+              sq.style.justifyContent = 'center';
+              sq.style.fontSize = '22px';
+              sq.style.cursor = 'pointer';
+              sq.style.userSelect = 'none';
+              sq.style.background = isDark ? '#334155' : '#64748b';
+              sq.style.color = editorBoard[r][c] > 0 ? '#f8fafc' : '#0f172a';
+              sq.style.textShadow = editorBoard[r][c] > 0 ? '0 1px 2px rgba(0,0,0,0.8)' : '0 0 2px rgba(255,255,255,0.8)';
+              
+              const p = editorBoard[r][c];
+              sq.textContent = pieceSymbols[p] || '';
+
+              sq.onclick = () => {
+                  editorBoard[r][c] = editorSelectedPiece;
+                  renderEditorGrid();
+              };
+              container.appendChild(sq);
+          }
+      }
+  }
+
+  function openEditorModal() {
+      closeModals();
+      // Initialize editor board with current active game board
+      editorBoard = board.map(row => [...row]);
+      editorTurn = turn;
+      const tw = document.getElementById('editor-turn-w');
+      const tb = document.getElementById('editor-turn-b');
+      if (tw && tb) {
+          if (editorTurn === 1) tw.checked = true;
+          else tb.checked = true;
+      }
+      renderEditorGrid();
+      const modal = document.getElementById('editor-modal');
+      if (modal) modal.style.display = 'flex';
+  }
+
+  function editorValidate() {
+      let whiteKings = 0;
+      let blackKings = 0;
+      for (let r = 0; r < 8; r++) {
+          for (let c = 0; c < 8; c++) {
+              if (editorBoard[r][c] === 6) whiteKings++;
+              if (editorBoard[r][c] === -6) blackKings++;
+          }
+      }
+      if (whiteKings !== 1 || blackKings !== 1) {
+          showToast(`Invalid Position: Board must have exactly 1 White King and 1 Black King (Found ${whiteKings}W, ${blackKings}B)`, 'warn');
+          return false;
+      }
+      // Check for pawns on row 0 or 7
+      for (let c = 0; c < 8; c++) {
+          if (Math.abs(editorBoard[0][c]) === 1 || Math.abs(editorBoard[7][c]) === 1) {
+              showToast('Invalid Position: Pawns cannot be on back rank (row 1 or 8).', 'warn');
+              return false;
+          }
+      }
+      return true;
+  }
+
+  function generateEditorFEN() {
+      let fen = '';
+      for (let r = 0; r < 8; r++) {
+          let empty = 0;
+          for (let c = 0; c < 8; c++) {
+              const p = editorBoard[r][c];
+              if (p === 0) {
+                  empty++;
+              } else {
+                  if (empty > 0) {
+                      fen += empty;
+                      empty = 0;
+                  }
+                  const fenChars = { 1: 'P', 2: 'N', 3: 'B', 4: 'R', 5: 'Q', 6: 'K' };
+                  const ch = fenChars[Math.abs(p)] || '';
+                  fen += p > 0 ? ch : ch.toLowerCase();
+              }
+          }
+          if (empty > 0) fen += empty;
+          if (r < 7) fen += '/';
+      }
+      fen += ` ${editorTurn === 1 ? 'w' : 'b'} - - 0 1`;
+      return fen;
+  }
+
+  function editorExportFEN() {
+      if (!editorValidate()) return;
+      const fen = generateEditorFEN();
+      if (navigator.clipboard) {
+          navigator.clipboard.writeText(fen).then(() => {
+              showToast('FEN copied to clipboard!', 'success');
+          }).catch(() => {
+              prompt('Copy custom FEN:', fen);
+          });
+      } else {
+          prompt('Copy custom FEN:', fen);
+      }
+  }
+
+  function editorApplyToGame() {
+      if (!editorValidate()) return;
+      const fen = generateEditorFEN();
+      closeModals();
+      loadFEN(fen);
+      showToast('Custom position applied! Good luck.', 'success');
   }
 
   function refreshAnalysisModal() {
