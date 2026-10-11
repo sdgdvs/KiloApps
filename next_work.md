@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-creator
-next_agent: kilo-graphics
+current_agent: kilo-graphics
+next_agent: kilo-tester
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -12,15 +12,14 @@ model: gemini-3.8-flash-medium
 timeout_minutes: 6
 status: ready
 current_targets:
-  kilo_creator: kweb://cybercafe
+  kilo_creator: kweb://10.19.99.4/classified
   kilo_graphics: KDragon
   kilo_tester: KSubmarine
   kilo_usability: KNetMap
   kilo_qa: KBreakout
   kilo_expander: KMine
-virtual_web_target: kweb://cybercafe
+virtual_web_target: kweb://10.19.99.4/classified
 virtual_web_rotation:
-- kweb://cybercafe
 - kweb://10.19.99.4/classified
 - kweb://echo-subsystem.net
 - kweb://deep-core
@@ -31,10 +30,11 @@ virtual_web_rotation:
 - kweb://geocities
 - kweb://users/~neon_rider
 - kweb://asm-temple
+- kweb://cybercafe
 last_run:
-  agent: kilo-expander
-  app: KChess
-  timestamp: 2026-10-10T18:24:00-07:00
+  agent: kilo-creator
+  app: kweb://cybercafe
+  timestamp: 2026-10-10T18:32:00-07:00
 last_planner_run: '2026-10-10T16:30:00Z'
 ---
 
@@ -73,8 +73,8 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ### 1. Virtual 1999 Web & ARG Node Creator (`kilo-creator`)
 - **Mission**: Build functional Web 1.0 destinations in `KiloOS/public/web/` (<999KB). Standalone OS apps frozen at 92 native / 99 web.
-- **Current Target**: `kweb://asm-temple`
-- **Upcoming Queue**: `kweb://users/~neon_rider`, `kweb://asm-temple`, `kweb://cybercafe`, `kweb://10.19.99.4/classified`, `kweb://echo-subsystem.net`, `kweb://deep-core`, `kweb://darknet`, `kweb://portal`, `kweb://webring`, `kweb://warez`.
+- **Current Target**: `kweb://10.19.99.4/classified`
+- **Upcoming Queue**: `kweb://10.19.99.4/classified`, `kweb://echo-subsystem.net`, `kweb://deep-core`, `kweb://darknet`, `kweb://portal`, `kweb://webring`, `kweb://warez`, `kweb://geocities`, `kweb://users/~neon_rider`, `kweb://asm-temple`, `kweb://cybercafe`.
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
 - **Mission**: Replace programmer art with Imagen 3 assets. Skip immediately if vector/board/mature.
@@ -113,6 +113,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-10T18:32:00-07:00 — kilo-creator: kweb://cybercafe (Virtual 1999 Web Experience & KNet Links)**
+  - Status: PASS ✅ (Anti-Potemkin Web 1.0 hub: threaded BBS, ASCII studio, mIRC lounge, LAN arena, 355 KB < 999 KB).
+  - Integration: Verified active bidirectional linking across KNet, portal, webring, and classifieds directory.
+  - Verification: Vite build clean (`npm run build`); zero console errors; security lint compliant.
+  - Queue: Advanced kilo-creator target to `kweb://10.19.99.4/classified`; rotation handoff to kilo-graphics.
+
 - **2026-10-10T18:24:00-07:00 — kilo-expander: KChess (Feature Expansion: Themes, Sound & Accuracy)**
   - Status: PASS ✅ (Theme engine, Web Audio sound FX, move quality tagging & accuracy metrics, Vite build clean).
   - Enhancements: Added 4 custom board themes (Walnut, Emerald, Cyber, Slate), sound FX toggle with Web Audio synthesizer, and move quality ratings (⭐/⚡/⚔️/♟️) with game accuracy review in replay inspector.
@@ -137,9 +143,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Resilience: Wrapped initial audio localStorage access in try/catch to protect iframe environments.
   - Build & Size: Vite build clean; HTML 156.6 KB << 999 KB ceiling; zero console errors.
   - Queue: Advanced tester target to KSubmarine; rotation handoff to kilo-usability.
-
-- **2026-10-10T17:40:00-07:00 — kilo-adhoc: KNet (Inspector Minimization & Classified Admin Passkey Gate)**
-  - Status: PASS ✅ (Inspector minimizable & minimized on load, admin locked by default requiring passkey, 190.4 KB HTML / 45 KB native < 999 KB ceiling).
-  - Web Navigator & Request Inspector: Added minimizable toggle [▼ Expand / ▲ Minimize], hotkey [I], title bar toggle, and start minimized by default to maximize viewport.
-  - Classified Admin Gate: Enforced locked state by default on open, removed cross-app auto-unlock bypass, requires director passkey signature to reveal classified nodes.
-  - Verification: Native MSVC clean (KNet.exe 45 KB); Vite build clean (346ms); security_lint 100% PASS.
