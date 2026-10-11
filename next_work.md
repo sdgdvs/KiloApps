@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-creator
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -16,7 +16,7 @@ current_targets:
   kilo_graphics: KDragon
   kilo_tester: KType
   kilo_usability: KNetMap
-  kilo_qa: KRogue
+  kilo_qa: KPong
   kilo_expander: KPac
 virtual_web_target: kweb://echo-subsystem.net
 virtual_web_rotation:
@@ -32,9 +32,9 @@ virtual_web_rotation:
 - kweb://cybercafe
 - kweb://10.19.99.4/classified
 last_run:
-  agent: kilo-usability
+  agent: kilo-qa
   app: KRogue
-  timestamp: 2026-10-10T20:02:45-07:00
+  timestamp: 2026-10-10T20:14:35-07:00
 last_planner_run: '2026-10-10T16:30:00Z'
 ---
 
@@ -90,8 +90,8 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Upcoming Queue**: `KRogue`, `KCalendar`, `KSnake`, `KAudio`, `KBudget`.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
-- **Current Target**: `KRogue`
-- **Upcoming Queue**: `KPong`, `KPac`, `KBBS`, `KBudget`, `KAlchemy`, `KColony`, `KBreakout`.
+- **Current Target**: `KPong`
+- **Upcoming Queue**: `KPac`, `KBBS`, `KBudget`, `KAlchemy`, `KColony`, `KBreakout`, `KRogue`.
 
 ### 6. Feature Expander Queue (`kilo-expander`)
 - **Current Target**: `KPac`
@@ -112,6 +112,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 ---
 
 ## Recent Execution Logs (Max 5 Entries)
+
+- **2026-10-10T20:14:35-07:00 — kilo-qa: KRogue (Pass 5 QA & Build Quality Audit)**
+  - Status: PASS ✅ (Quicksave F5/F9 state persistence, first-run tutorial flags, modal overlays verified).
+  - Parity & Builds: Clean native MSVC build (`KRogue.exe` 81 KB); Vite build clean (`krogue.html` 277 KB).
+  - Integrity: No un-diegetic ARG markers; zero runtime memory/timer leaks.
+  - Queue: Advanced kilo-qa target to `KPong`; rotation handoff to `kilo-expander`.
 
 - **2026-10-10T20:02:45-07:00 — kilo-usability: KRogue (UI/UX & Usability Pass)**
   - Status: PASS ✅ (Audited layout scaling, canvas touch-action, :focus-visible outlines, and modal Escape keybinds).
@@ -135,8 +141,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Parity & Size: 255 KB << 999 KB ceiling; cross-linked across KNet, Portal & Webring.
   - Verification: Vite build clean (`npm run build`).
   - Queue: Advanced kilo-creator target to `kweb://echo-subsystem.net`; rotation handoff to `kilo-graphics`.
-
-- **2026-10-10T19:21:00-07:00 — kilo-expander: KMine (Maturity Skip & Queue Rotation)**
-  - Status: ⏭️ Skip — KMine is feature-complete and mature (9+ passes).
-  - Verification: 3BV benchmark engine, tactical deduction scanner, RFMS duel arena, and replay studio verified.
-  - Queue: Advanced kilo-expander target to KPac; rotation handoff to kilo-creator.
