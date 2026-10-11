@@ -6007,7 +6007,11 @@ Timestamp: ${new Date().toISOString()}
   }
   function closeBriefing() {
     briefingModal.style.display = 'none';
-    localStorage.setItem(BRIEFING_KEY, 'true');
+    try {
+      localStorage.setItem(BRIEFING_KEY, 'true');
+    } catch(e) {
+      console.warn('[DeepCore] Storage write failed:', e);
+    }
     termInput.focus();
   }
 
@@ -6035,7 +6039,13 @@ Timestamp: ${new Date().toISOString()}
   quickloadState(false);
 
   // Show first-run briefing if not previously seen
-  if (!localStorage.getItem(BRIEFING_KEY)) {
+  let hasSeenBriefing = false;
+  try {
+    hasSeenBriefing = !!localStorage.getItem(BRIEFING_KEY);
+  } catch(e) {
+    hasSeenBriefing = false;
+  }
+  if (!hasSeenBriefing) {
     openBriefing();
   } else {
     termInput.focus();
