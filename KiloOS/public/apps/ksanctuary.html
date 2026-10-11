@@ -8542,7 +8542,7 @@
                         e.preventDefault();
                         closeTutorialModal();
                         return;
-                    } else if (activeModal === 'raid-modal' || activeModal === 'summary-modal') {
+                    } else if (activeModal === 'raid-modal' || activeModal === 'summary-modal' || activeModal === 'help-modal') {
                         e.preventDefault();
                         closeModal(activeModal);
                         return;
@@ -8558,7 +8558,7 @@
                         e.preventDefault();
                         closeTutorialModal();
                         return;
-                    } else if (activeModal === 'raid-modal' || activeModal === 'summary-modal') {
+                    } else if (activeModal === 'raid-modal' || activeModal === 'summary-modal' || activeModal === 'help-modal') {
                         e.preventDefault();
                         closeModal(activeModal);
                         return;
@@ -8604,6 +8604,10 @@
                 toggleScanlines();
             } else if (e.code === 'KeyA') {
                 toggleAutoRun();
+            } else if (e.code === 'KeyM') {
+                if (typeof toggleSound === 'function') {
+                    toggleSound();
+                }
             }
         });
 
