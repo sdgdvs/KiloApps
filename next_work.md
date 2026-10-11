@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-creator
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -16,7 +16,7 @@ current_targets:
   kilo_graphics: KDragon
   kilo_tester: KTrader
   kilo_usability: KRogue
-  kilo_qa: KBreakout
+  kilo_qa: KRogue
   kilo_expander: KMine
 virtual_web_target: kweb://10.19.99.4/classified
 virtual_web_rotation:
@@ -32,9 +32,9 @@ virtual_web_rotation:
 - kweb://asm-temple
 - kweb://cybercafe
 last_run:
-  agent: kilo-usability
-  app: KNetMap
-  timestamp: 2026-10-10T19:04:00-07:00
+  agent: kilo-qa
+  app: KBreakout
+  timestamp: 2026-10-10T19:15:00-07:00
 last_planner_run: '2026-10-10T16:30:00Z'
 ---
 
@@ -90,8 +90,8 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Upcoming Queue**: `KNetMap`, `KRogue`, `KCalendar`, `KSnake`, `KAudio`, `KBudget`.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
-- **Current Target**: `KBreakout`
-- **Upcoming Queue**: `KRogue`, `KPong`, `KPac`, `KBBS`, `KBudget`, `KAlchemy`, `KColony`.
+- **Current Target**: `KRogue`
+- **Upcoming Queue**: `KPong`, `KPac`, `KBBS`, `KBudget`, `KAlchemy`, `KColony`, `KBreakout`.
 
 ### 6. Feature Expander Queue (`kilo-expander`)
 - **Current Target**: `KMine`
@@ -113,11 +113,16 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-10T19:15:00-07:00 — kilo-qa: KBreakout (Pass 5: State & Tutorial Integrity Audit)**
+  - Status: PASS ✅ (Quicksave F5/F9 state persistence, first-run tutorial flag, modal keybinds audited).
+  - Verification: Full state persistence, storage safety guards, non-autostart duel lobby verified.
+  - Build & Size: Vite build clean (`npm run build`); HTML 160 KB << 999 KB ceiling.
+  - Queue: Advanced kilo-qa target to KRogue; rotation handoff to kilo-expander.
+
 - **2026-10-10T19:04:00-07:00 — kilo-usability: KNetMap (HiDPI Scaling & Transform Resilience Audit)**
   - Status: PASS ✅ (Explicit setTransform HiDPI scaling, crisp canvas rendering, modal/F1 hotkeys verified).
   - Usability: Guarded resizeCanvas against transform drift, validated 1080x720 window dimensions and help modal accessibility.
-  - Build & Size: Vite build clean (
-pm run build); HTML 110 KB << 999 KB ceiling.
+  - Build & Size: Vite build clean (`npm run build`); HTML 110 KB << 999 KB ceiling.
   - Queue: Advanced kilo-usability target to KRogue; rotation handoff to kilo-qa.
 
 - **2026-10-10T18:50:00-07:00 — kilo-tester: KSubmarine (Interactive UI & Storage Resilience Audit)**
@@ -126,23 +131,14 @@ pm run build); HTML 110 KB << 999 KB ceiling.
   - Build & Size: Vite build clean (`npm run build`); 458 KB << 999 KB ceiling.
   - Queue: Advanced kilo-tester target to KTrader; rotation handoff to kilo-usability.
 
-
 - **2026-10-11T01:38:02+0000 — kilo-graphics: KDragon (Zero-Token Auto-Skip — Inappropriate Target)**
   - Status: ⏭️ Skip — Imagen 3 asset replacement not appropriate for KDragon (pure vector, board game, or mature art).
   - Optimization: Handled via orchestrator pre-flight zero-token auto-skip.
   - Queue: Advanced `kilo-graphics` to `KDragon`; rotation handoff to `kilo-tester`.
-
 
 - **2026-10-10T18:32:00-07:00 — kilo-creator: kweb://cybercafe (Virtual 1999 Web Experience & KNet Links)**
   - Status: PASS ✅ (Anti-Potemkin Web 1.0 hub: threaded BBS, ASCII studio, mIRC lounge, LAN arena, 355 KB < 999 KB).
   - Integration: Verified active bidirectional linking across KNet, portal, webring, and classifieds directory.
   - Verification: Vite build clean (`npm run build`); zero console errors; security lint compliant.
   - Queue: Advanced kilo-creator target to `kweb://10.19.99.4/classified`; rotation handoff to kilo-graphics.
-
-
-- **2026-10-10T18:24:00-07:00 — kilo-expander: KChess (Feature Expansion: Themes, Sound & Accuracy)**
-  - Status: PASS ✅ (Theme engine, Web Audio sound FX, move quality tagging & accuracy metrics, Vite build clean).
-  - Enhancements: Added 4 custom board themes (Walnut, Emerald, Cyber, Slate), sound FX toggle with Web Audio synthesizer, and move quality ratings (⭐/⚡/⚔️/♟️) with game accuracy review in replay inspector.
-  - Build & Size: Vite build clean; HTML 209 KB << 999 KB ceiling; zero console errors.
-  - Queue: Advanced kilo-expander target to KMine; rotation handoff to kilo-creator.
 
