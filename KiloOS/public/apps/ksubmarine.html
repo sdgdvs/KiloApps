@@ -6326,9 +6326,26 @@
                 });
             });
 
+            // --- STORAGE SAFETY HELPERS ---
+            function safeGetRaw(key, fallback) {
+                try {
+                    const val = localStorage.getItem(key);
+                    return val !== null ? val : fallback;
+                } catch {
+                    return fallback;
+                }
+            }
+            function safeSetRaw(key, value) {
+                try {
+                    localStorage.setItem(key, String(value));
+                } catch (e) {
+                    console.warn('[KSubmarine] Storage write failed:', e.message);
+                }
+            }
+
             // --- CRT THEME & SCANLINE SYSTEM ---
-            let currentTheme = localStorage.getItem('ksubmarine_theme') || 'theme-abyss';
-            let scanlinesEnabled = localStorage.getItem('ksubmarine_scanlines') !== 'false';
+            let currentTheme = safeGetRaw('ksubmarine_theme', 'theme-abyss');
+            let scanlinesEnabled = safeGetRaw('ksubmarine_scanlines', 'true') !== 'false';
 
             function applyThemeSettings() {
                 themeSelect.value = currentTheme;
@@ -6339,7 +6356,7 @@
 
             themeSelect.addEventListener('change', (e) => {
                 currentTheme = e.target.value;
-                localStorage.setItem('ksubmarine_theme', currentTheme);
+                safeSetRaw('ksubmarine_theme', currentTheme);
                 applyThemeSettings();
                 playBeep(420, 'sine', 0.08);
                 const themeName = themeSelect.options[themeSelect.selectedIndex].text;
@@ -6348,7 +6365,7 @@
 
             scanlineToggleBtn.addEventListener('click', () => {
                 scanlinesEnabled = !scanlinesEnabled;
-                localStorage.setItem('ksubmarine_scanlines', scanlinesEnabled);
+                safeSetRaw('ksubmarine_scanlines', scanlinesEnabled);
                 applyThemeSettings();
                 playBeep(scanlinesEnabled ? 520 : 320, 'triangle', 0.08);
                 logMessage(`Deep-water CRT scanline raster ${scanlinesEnabled ? 'ENGAGED' : 'BYPASSED'}.`, 'info');
@@ -6570,11 +6587,11 @@
                 // Restore themes if present
                 if (parsed.theme) {
                     currentTheme = parsed.theme;
-                    localStorage.setItem('ksubmarine_theme', currentTheme);
+                    safeSetRaw('ksubmarine_theme', currentTheme);
                 }
                 if (typeof parsed.scanlines === 'boolean') {
                     scanlinesEnabled = parsed.scanlines;
-                    localStorage.setItem('ksubmarine_scanlines', scanlinesEnabled);
+                    safeSetRaw('ksubmarine_scanlines', scanlinesEnabled);
                 }
                 applyThemeSettings();
 
@@ -6698,9 +6715,7 @@
                 if (!tutorialModal) return;
                 tutorialModal.style.display = 'none';
                 if (chkDoNotShowTutorial && chkDoNotShowTutorial.checked) {
-                    try {
-                        localStorage.setItem('ksubmarine_tutorialSeen', '1');
-                    } catch (e) {}
+                    safeSetRaw('ksubmarine_tutorialSeen', '1');
                 }
                 logMessage('⚓ Captain\'s dive briefing acknowledged. All systems online. Good hunting in the abyss.', 'info');
                 playBeep(650, 'sine', 0.1);
@@ -6762,7 +6777,7 @@
             });
 
             // First-run tutorial check: only show if not previously seen
-            if (localStorage.getItem('ksubmarine_tutorialSeen') !== '1') {
+            if (safeGetRaw('ksubmarine_tutorialSeen', '0') !== '1') {
                 openTutorialBriefing();
             }
 
