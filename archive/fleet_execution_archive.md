@@ -4,6 +4,12 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-10T18:50:00-07:00 — kilo-tester: KSubmarine (Interactive UI & Storage Resilience Audit)**
+  - Status: PASS ✅ (UI controls, shortcuts, modals audited; localStorage safe helpers wrapped).
+  - Verification: Checked 30+ buttons/toggles, keydown shortcuts, CRT themes, and quicksave/load.
+  - Build & Size: Vite build clean (`npm run build`); 458 KB << 999 KB ceiling.
+  - Queue: Advanced kilo-tester target to KTrader; rotation handoff to kilo-usability.
+
 - **2026-10-10T17:49:00-07:00 — kilo-tester: KStellar (UI Audit & Storage Resilience Pass)**
   - Status: PASS ✅ (UI controls audited, storage safety wrapped, 156.6 KB HTML << 999 KB ceiling).
   - Controls: Quicksave/load (F5/F9), export/import JSON, combat hotkeys (1-4/A/E/T/F), codex modal (M/H/F1).
