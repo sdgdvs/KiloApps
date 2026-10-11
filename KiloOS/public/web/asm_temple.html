@@ -757,6 +757,36 @@
           <button class="btn-retro btn-cyan" id="btnLoadToWorkbench" style="font-size:11px; padding:2px 8px;">Load Into Live Assembler ➔</button>
         </div>
       </div>
+
+      <!-- Silicon Catechism: x86 Opcode Speed Trial -->
+      <div id="quizBox" style="background:#0b1323; border:1px solid #d97706; padding:12px; margin-bottom:12px; border-radius:4px; box-shadow:0 0 15px rgba(245, 158, 11, 0.12);">
+        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid rgba(245,158,11,0.25); padding-bottom:6px; margin-bottom:10px; flex-wrap:wrap; gap:8px;">
+          <div style="display:flex; align-items:center; gap:8px;">
+            <span style="font-size:13px; font-weight:bold; color:var(--gold-bright);">⚡ Silicon Catechism: x86 Opcode Speed Drill</span>
+            <span class="status-pill online" style="font-size:10px;">Trial Active</span>
+          </div>
+          <div style="font-size:11px; color:var(--text-muted); display:flex; gap:12px;">
+            <span>Streak: <strong id="quizStreak" style="color:var(--emerald-bright);">0</strong></span>
+            <span>Total Solved: <strong id="quizScore" style="color:var(--gold);">0</strong></span>
+          </div>
+        </div>
+        <div style="display:flex; flex-wrap:wrap; gap:12px; align-items:center;">
+          <div style="background:#04070d; border:1px solid #1e293b; padding:8px 14px; border-radius:4px; text-align:center; min-width:140px;">
+            <div style="font-size:10px; color:var(--text-muted); text-transform:uppercase;">Target Opcode</div>
+            <div id="quizOpcodePrompt" style="font-size:18px; font-weight:bold; color:var(--cyan-bright); font-family:var(--font-mono); letter-spacing:1px;">0x90</div>
+            <div id="quizPromptHint" style="font-size:9px; color:var(--text-muted);">1-byte encoding</div>
+          </div>
+          <div style="flex:1; min-width:260px;">
+            <div id="quizQuestion" style="font-size:12px; color:var(--text-main); margin-bottom:8px;">
+              Which sacred x86 mnemonic decodes from this hardware byte sequence?
+            </div>
+            <div id="quizChoices" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(110px, 1fr)); gap:6px;">
+              <!-- Dynamic buttons rendered via JS -->
+            </div>
+          </div>
+        </div>
+        <div id="quizFeedback" style="margin-top:8px; font-size:11px; min-height:18px; color:var(--emerald-bright); font-weight:bold;"></div>
+      </div>
       
       <div style="display:flex; gap:10px; margin-bottom:12px; flex-wrap:wrap;">
         <input type="text" id="oracleSearch" placeholder="Search mnemonic (e.g. NOP, XOR, MOV), hex byte (e.g. 90, 31, C3), flags, description..." style="flex:1; min-width:240px;" />
@@ -5748,6 +5778,102 @@ ENDP`
           el.innerHTML = "MM0 (Alpha Mask): [0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00]<br>MM1 (Texture Alpha): [0x3A, 0x4B, 0x5C, 0x6D, 0x7E, 0x8F, 0x90, 0xA1]<br><strong style='color:#7dd3fc;'>PAND</strong>: [0x3A, 0x00, 0x5C, 0x00, 0x7E, 0x00, 0x90, 0x00] (High-speed 64-bit demoscene channel blit)";
         }
       }
+
+      // Silicon Catechism Quiz Logic
+      const QUIZ_BANK = [
+        { op: "0x90", mnem: "NOP", fake: ["RET", "HLT", "INT 3"], hint: "1-byte / No operation (XCHG EAX,EAX)" },
+        { op: "0xCC", mnem: "INT 3", fake: ["IRET", "INTO", "HLT"], hint: "1-byte / Breakpoint interrupt" },
+        { op: "0xC3", mnem: "RET", fake: ["CALL", "JMP", "IRET"], hint: "1-byte / Near return from procedure" },
+        { op: "0x31 0xC0", mnem: "XOR EAX, EAX", fake: ["MOV EAX, 0", "SUB EAX, EAX", "AND EAX, 0"], hint: "2-byte / Canonical register zeroing" },
+        { op: "0x0F 0x05", mnem: "SYSCALL", fake: ["SYSENTER", "INT 0x80", "CPUID"], hint: "2-byte / 64-bit kernel system entry" },
+        { op: "0x0F 0xA2", mnem: "CPUID", fake: ["RDTSC", "RSM", "UD2"], hint: "2-byte / Processor feature identification" },
+        { op: "0x0F 0x31", mnem: "RDTSC", fake: ["CPUID", "RDMSR", "INVD"], hint: "2-byte / Read cycle timestamp counter" },
+        { op: "0xCD 0x80", mnem: "INT 0x80", fake: ["INT 0x21", "INT 3", "SYSCALL"], hint: "2-byte / Classic Unix system call vector" },
+        { op: "0xCD 0x21", mnem: "INT 0x21", fake: ["INT 0x10", "INT 0x13", "INT 0x80"], hint: "2-byte / MS-DOS API interrupt handler" },
+        { op: "0x0F 0x3F", mnem: "ECHO_PULSE", fake: ["UD2", "INVD", "WBINVD"], hint: "2-byte / Undocumented KiloNet subnet subcarrier pulse" },
+        { op: "0x50", mnem: "PUSH EAX", fake: ["POP EAX", "INC EAX", "DEC EAX"], hint: "1-byte / Push 32-bit accumulator onto stack" },
+        { op: "0x58", mnem: "POP EAX", fake: ["PUSH EAX", "XCHG EAX", "LODSD"], hint: "1-byte / Pop top of stack into EAX" },
+        { op: "0xEB 0xFE", mnem: "JMP $", fake: ["HLT", "NOP", "CLI"], hint: "2-byte / Infinite relative spinloop" },
+        { op: "0xF4", mnem: "HLT", fake: ["CLI", "STI", "LOCK"], hint: "1-byte / Halt CPU until next interrupt" },
+        { op: "0xFA", mnem: "CLI", fake: ["STI", "CLD", "STD"], hint: "1-byte / Clear Interrupt Flag (disable IRQs)" },
+        { op: "0xFB", mnem: "STI", fake: ["CLI", "STD", "CLD"], hint: "1-byte / Set Interrupt Flag (enable IRQs)" }
+      ];
+      let quizScoreVal = parseInt(localStorage.getItem('kweb_asm_temple_quiz_score') || '0', 10);
+      let quizStreakVal = 0;
+      let currentQuizIdx = -1;
+
+      function renderQuizScore() {
+        const sEl = document.getElementById('quizScore');
+        const stEl = document.getElementById('quizStreak');
+        if (sEl) sEl.textContent = quizScoreVal;
+        if (stEl) stEl.textContent = quizStreakVal;
+      }
+
+      function nextQuizQuestion() {
+        let nextIdx = Math.floor(Math.random() * QUIZ_BANK.length);
+        if (nextIdx === currentQuizIdx) nextIdx = (nextIdx + 1) % QUIZ_BANK.length;
+        currentQuizIdx = nextIdx;
+        const item = QUIZ_BANK[currentQuizIdx];
+        const promptEl = document.getElementById('quizOpcodePrompt');
+        const hintEl = document.getElementById('quizPromptHint');
+        const choicesEl = document.getElementById('quizChoices');
+        const feedbackEl = document.getElementById('quizFeedback');
+        if (!promptEl || !choicesEl) return;
+        promptEl.textContent = item.op;
+        if (hintEl) hintEl.textContent = item.hint;
+        if (feedbackEl) feedbackEl.textContent = '';
+
+        const choices = [item.mnem, ...item.fake].sort(() => Math.random() - 0.5);
+        choicesEl.innerHTML = '';
+        choices.forEach(c => {
+          const btn = document.createElement('button');
+          btn.className = 'btn-retro';
+          btn.style.cssText = 'font-size:11px; padding:6px 10px; font-weight:bold; cursor:pointer; text-align:center;';
+          btn.textContent = c;
+          btn.onclick = () => handleQuizChoice(c, item.mnem, btn);
+          choicesEl.appendChild(btn);
+        });
+      }
+
+      function handleQuizChoice(selected, correct, btn) {
+        const feedbackEl = document.getElementById('quizFeedback');
+        const buttons = document.querySelectorAll('#quizChoices button');
+        buttons.forEach(b => b.disabled = true);
+        if (selected === correct) {
+          quizScoreVal++;
+          quizStreakVal++;
+          try { localStorage.setItem('kweb_asm_temple_quiz_score', quizScoreVal); } catch(e){}
+          renderQuizScore();
+          btn.style.backgroundColor = '#065f46';
+          btn.style.borderColor = '#34d399';
+          btn.style.color = '#fff';
+          if (feedbackEl) {
+            feedbackEl.style.color = '#34d399';
+            feedbackEl.textContent = '★ CORRECT! Catechism verified. Initiating next instruction cycle...';
+          }
+          if (typeof playUiClick === 'function') playUiClick(selected === 'ECHO_PULSE' ? 'echo' : 'click');
+          setTimeout(nextQuizQuestion, 900);
+        } else {
+          quizStreakVal = 0;
+          renderQuizScore();
+          btn.style.backgroundColor = '#7f1d1d';
+          btn.style.borderColor = '#f87171';
+          btn.style.color = '#fff';
+          buttons.forEach(b => {
+            if (b.textContent === correct) {
+              b.style.backgroundColor = '#065f46';
+              b.style.borderColor = '#34d399';
+            }
+          });
+          if (feedbackEl) {
+            feedbackEl.style.color = '#f87171';
+            feedbackEl.textContent = `❌ INCORRECT! Opcode ${QUIZ_BANK[currentQuizIdx].op} corresponds to ${correct}.`;
+          }
+          setTimeout(nextQuizQuestion, 1400);
+        }
+      }
+      renderQuizScore();
+      nextQuizQuestion();
     </script>
     
 </body>
