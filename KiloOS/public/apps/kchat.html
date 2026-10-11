@@ -1669,8 +1669,7 @@
         window.toggleFilterPinned = function() {
             showOnlyPinned = !showOnlyPinned;
             const btn = document.getElementById('btnFilterPinned');
-            if (showOnlyPinned) btn.classList.add('btn-active');
-            else btn.classList.remove('btn-active');
+            if (btn) btn.classList.toggle('btn-active', showOnlyPinned);
             window.renderMessages();
         };
 
@@ -1709,9 +1708,9 @@
 
         document.addEventListener('keydown', function(e) {
             const isTyping = document.activeElement && (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA' || document.activeElement.tagName === 'SELECT');
+            const anyModalOpen = [helpModalEl, pollModalEl, roomModalEl, topicModalEl, statsModalEl].some(m => m && m.classList.contains('active'));
 
             if (e.key === 'Escape') {
-                const anyModalOpen = [helpModalEl, pollModalEl, roomModalEl, topicModalEl, statsModalEl].some(m => m && m.classList.contains('active'));
                 if (anyModalOpen) {
                     closeAllModals();
                 } else if (toastEl && toastEl.style.display !== 'none' && toastEl.style.display !== '') {
@@ -1735,16 +1734,16 @@
             } else if (e.key === 'F9') {
                 e.preventDefault();
                 window.quickLoad();
-            } else if ((e.key === 'h' || e.key === 'H') && !isTyping) {
+            } else if (!isTyping && !anyModalOpen && (e.key === 'h' || e.key === 'H')) {
                 e.preventDefault();
                 window.showHelp();
-            } else if ((e.key === 'p' || e.key === 'P') && !isTyping && !e.ctrlKey && !e.altKey) {
+            } else if (!isTyping && !anyModalOpen && (e.key === 'p' || e.key === 'P') && !e.ctrlKey && !e.altKey) {
                 e.preventDefault();
                 window.openPollModal();
-            } else if ((e.key === 's' || e.key === 'S') && !isTyping && !e.ctrlKey && !e.altKey) {
+            } else if (!isTyping && !anyModalOpen && (e.key === 's' || e.key === 'S') && !e.ctrlKey && !e.altKey) {
                 e.preventDefault();
                 window.openStatsModal();
-            } else if (e.ctrlKey && (e.key === 'c' || e.key === 'C')) {
+            } else if (!isTyping && e.ctrlKey && (e.key === 'c' || e.key === 'C')) {
                 const sel = window.getSelection();
                 if (!sel || !sel.toString()) {
                     e.preventDefault();
@@ -1756,7 +1755,7 @@
                     searchInput.focus();
                     searchInput.select();
                 }
-            } else if (!isTyping && !e.ctrlKey && !e.altKey) {
+            } else if (!isTyping && !anyModalOpen && !e.ctrlKey && !e.altKey) {
                 const num = parseInt(e.key, 10);
                 if (!isNaN(num) && num >= 1 && num <= rooms.length) {
                     window.switchRoom(rooms[num - 1]);
@@ -1841,6 +1840,7 @@
         };
 
         window.importFile = function(event) {
+            if (!event || !event.target || !event.target.files || !event.target.files[0]) return;
             const file = event.target.files[0];
             if (!file) return;
 
