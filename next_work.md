@@ -142,8 +142,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - UI Testing: Verified import/export, generator modals, quicksave/quickload [F5/F9], custom compartments, audio [M].
   - Build & Ceiling: Vite build clean (350ms); HTML 196 KB << 999 KB ceiling.
   - Queue: Advanced kilo-tester target to `KVoid`; rotation handoff to `kilo-usability`.
-
-- **2026-10-11T04:48:02+0000 — kilo-graphics: KDragon (Zero-Token Auto-Skip — Inappropriate Target)**
-  - Status: ⏭️ Skip — Imagen 3 asset replacement not appropriate for KDragon (pure vector, board game, or mature art).
-  - Optimization: Handled via orchestrator pre-flight zero-token auto-skip.
-  - Queue: Advanced `kilo-graphics` to `KDragon`; rotation handoff to `kilo-tester`.
