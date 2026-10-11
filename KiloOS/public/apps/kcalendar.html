@@ -914,6 +914,38 @@
 
   /* Hidden file input for import */
   #importFileInput { display: none; }
+
+  /* Custom Smooth Scrollbars */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.2); }
+  ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.2); border-radius: 4px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+
+  /* Responsive & Usability Optimizations */
+  @media (max-width: 768px) {
+    .app-header { padding: 8px 12px; gap: 8px; }
+    .toolbar { padding: 6px 12px; gap: 8px; }
+    .header-title { font-size: 15px; min-width: auto; }
+    .search-input { width: 140px; }
+    .search-input:focus { width: 170px; }
+    .action-menu { gap: 4px; }
+    .btn { padding: 5px 10px; font-size: 12px; }
+    .weekdays { font-size: 11px; margin-bottom: 4px; }
+    .day-cell { padding: 4px; }
+    .day-num { width: 20px; height: 20px; font-size: 11px; }
+    .event-pill { font-size: 10px; padding: 1px 4px; }
+  }
+
+  @media (max-width: 560px) {
+    .key-badge { display: none; }
+    .view-tabs .tab-btn { padding: 4px 8px; font-size: 11px; }
+    .search-input { width: 110px; font-size: 12px; }
+    .search-input:focus { width: 140px; }
+    .category-select { padding: 4px 6px; font-size: 12px; }
+    .week-day-date { font-size: 13px; }
+    .hour-row { padding: 6px; gap: 8px; }
+    .hour-label { width: 48px; font-size: 11px; }
+  }
 </style>
 </head>
 <body role="application" aria-label="KCalendar Application">

@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-usability
+current_agent: kilo-qa
+next_agent: kilo-qa
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -15,7 +15,7 @@ current_targets:
   kilo_creator: kweb://portal
   kilo_graphics: KDragon
   kilo_tester: KVoid
-  kilo_usability: KCalendar
+  kilo_usability: KSnake
   kilo_qa: KBBS
   kilo_expander: KAbyss
 virtual_web_target: kweb://portal
@@ -32,9 +32,9 @@ virtual_web_rotation:
 - kweb://cybercafe
 - kweb://10.19.99.4/classified
 last_run:
-  agent: kilo-tester
-  app: KVoid
-  timestamp: 2026-10-11T06:03:00+0000
+  agent: kilo-usability
+  app: KCalendar
+  timestamp: 2026-10-11T06:13:00+0000
 last_planner_run: '2026-10-10T16:30:00Z'
 ---
 
@@ -113,6 +113,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-10T23:13:00-07:00 — kilo-usability: KCalendar (UI/UX Usability Pass)**
+  - Status: PASS ✅ (Responsive layout <=768px/<=560px, smooth scrollbars, compact key badges).
+  - Usability: Enhanced touch ergonomics, focus outline contrast, and window resize adaptability.
+  - Build & Size: Vite build clean; HTML 115 KB << 999 KB ceiling.
+  - Queue: Advanced kilo-usability target to KSnake; rotation handoff to kilo-qa.
+
 - **2026-10-11T05:48:02+0000 — kilo-graphics: KDragon (Zero-Token Auto-Skip — Inappropriate Target)**
   - Status: ⏭️ Skip — Imagen 3 asset replacement not appropriate for KDragon (pure vector, board game, or mature art).
   - Optimization: Handled via orchestrator pre-flight zero-token auto-skip.
@@ -135,9 +141,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Persistence & Tutorials: Verified full state quicksave/load [F5/F9], first-run tutorial flag, and clean modal shortcut handlers.
   - Build & Size: Native MSVC C build clean (`KPac.exe`); Vite build clean (343ms); HTML 213 KB << 999 KB ceiling.
   - Queue: Advanced kilo-qa target to `KBBS`; rotation handoff to `kilo-expander`.
-
-- **2026-10-10T22:13:30-07:00 — kilo-usability: KRogue (UI/UX Usability Pass)**
-  - Status: PASS ✅ (Eliminated flexbox vertical scroll top-clipping bug via margin: 0 auto; themed custom dark scrollbars).
-  - Usability: Verified canvas HiDPI/responsive scaling, hotkey hints [H/F1], and button touch target spacing.
-  - Build & Size: Vite build clean; HTML 277 KB << 999 KB ceiling.
-  - Queue: Advanced kilo-usability target to `KCalendar`; rotation handoff to `kilo-qa`.

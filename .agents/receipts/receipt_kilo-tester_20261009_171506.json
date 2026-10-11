@@ -1,0 +1,10 @@
+{
+  "timestamp": "2026-10-09T17:15:06.676924+00:00",
+  "agent": "kilo-tester",
+  "model": "gemini-3.8-flash-medium",
+  "target": "KBudget",
+  "duration_seconds": 183.95,
+  "returncode": 0,
+  "success": true,
+  "provenance": null
+}

@@ -1,0 +1,10 @@
+{
+  "timestamp": "2026-10-09T13:15:18.901527+00:00",
+  "agent": "kilo-qa",
+  "model": "gemini-3.8-flash-medium",
+  "target": "KAudio",
+  "duration_seconds": 192.35,
+  "returncode": 0,
+  "success": true,
+  "provenance": null
+}
