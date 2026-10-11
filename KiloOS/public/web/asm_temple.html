@@ -5673,5 +5673,82 @@ ENDP`
     }
   });
 </script>
+
+    <!-- ==================== x86 A20 GATE & MMX SIMD EXTENSION LAB (1999) ==================== -->
+    <div class="panel-box gold-accent" style="margin-top:20px;" id="a20-mmx-lab">
+      <div class="panel-title">
+        <span>⚡ ARCHITECT LAB: A20 GATE ADDRESSING & MMX PACK/UNPACK WORKBENCH (1999)</span>
+        <span style="font-size:10px; color:var(--cyan); font-weight:normal;">[Real-Mode 8086 / High Memory Area / MMX Multi-Pack]</span>
+      </div>
+      <p style="font-size:12px; color:var(--text-muted); margin-bottom:12px;">
+        In authentic 1999 demoscene and kernel programming, enabling the keyboard controller Fast A20 gate (Port 0x92 / 0x60) dictates whether memory above 1MB (0x100000) wraps to zero or accesses the 65,520-byte High Memory Area (HMA). Test real-mode physical calculation and MMX 64-bit packed byte arithmetic below:
+      </p>
+      <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(300px, 1fr)); gap:12px; margin-bottom:12px;">
+        <div style="background:#090e18; border:1px solid #1e293b; padding:12px; border-radius:3px;">
+          <div style="color:var(--gold-bright); font-weight:bold; font-size:12px; margin-bottom:8px;">Real-Mode Segment:Offset Physical Calculator</div>
+          <div style="display:flex; gap:8px; align-items:center; margin-bottom:8px;">
+            <label style="font-size:11px; color:var(--text-muted);">Segment (Hex):</label>
+            <input type="text" id="a20-seg" value="FFFF" maxlength="4" style="background:#111a2d; color:#fff; border:1px solid #334155; font-family:var(--font-mono); font-size:11px; padding:3px 6px; width:60px;">
+            <label style="font-size:11px; color:var(--text-muted);">Offset (Hex):</label>
+            <input type="text" id="a20-off" value="0010" maxlength="4" style="background:#111a2d; color:#fff; border:1px solid #334155; font-family:var(--font-mono); font-size:11px; padding:3px 6px; width:60px;">
+          </div>
+          <div style="margin-bottom:8px;">
+            <label style="font-size:11px; color:var(--text-muted);">A20 Gate Line State: </label>
+            <select id="a20-state" style="background:#111a2d; color:var(--gold-bright); border:1px solid #334155; font-family:var(--font-mono); font-size:11px; padding:3px 6px;">
+              <option value="1" selected>A20 ENABLED (High Memory Area 1MB+)</option>
+              <option value="0">A20 DISABLED (Wraps to 0x000000)</option>
+            </select>
+          </div>
+          <button class="btn-retro" style="font-size:11px; padding:4px 10px; cursor:pointer;" onclick="calcA20Address()">Compute Linear Address</button>
+          <div id="a20-result" style="background:#04070c; border:1px solid #334155; padding:8px; margin-top:8px; font-size:11px; color:var(--emerald-bright); min-height:40px;">
+            Segment &times; 16 + Offset: 0x100000 (1,048,576 bytes) &rarr; Linear Address: <strong>0x100000</strong> (HMA Base).
+          </div>
+        </div>
+
+        <div style="background:#090e18; border:1px solid #1e293b; padding:12px; border-radius:3px;">
+          <div style="color:var(--cyan-bright); font-weight:bold; font-size:12px; margin-bottom:8px;">Pentium MMX SIMD PADDSB / PACKUSWB Lab</div>
+          <div style="display:flex; gap:6px; margin-bottom:8px; flex-wrap:wrap;">
+            <button class="btn-retro" style="font-size:10px; padding:3px 8px; cursor:pointer;" onclick="runMmxPreset('add')">PADDSB (Saturating Add)</button>
+            <button class="btn-retro" style="font-size:10px; padding:3px 8px; cursor:pointer;" onclick="runMmxPreset('sub')">PSUBUSB (Unsigned Sub)</button>
+            <button class="btn-retro" style="font-size:10px; padding:3px 8px; cursor:pointer;" onclick="runMmxPreset('blend')">PAND / POR Pixel Blend</button>
+          </div>
+          <div id="mmx-display" style="background:#04070c; border:1px solid #334155; padding:8px; font-size:11px; color:var(--cyan-bright); min-height:65px; line-height:1.4;">
+            MM0: [0x7F, 0x10, 0x20, 0x80, 0x05, 0x40, 0x12, 0xFF]<br>
+            MM1: [0x20, 0x30, 0x10, 0x10, 0x7F, 0x20, 0x10, 0x01]<br>
+            PADDSB Result: [0x7F, 0x40, 0x30, 0x80, 0x7F, 0x60, 0x22, 0xFF] (Signed saturation clamp active).
+          </div>
+        </div>
+      </div>
+    </div>
+    <script>
+      function calcA20Address() {
+        const seg = parseInt(document.getElementById('a20-seg').value, 16) || 0;
+        const off = parseInt(document.getElementById('a20-off').value, 16) || 0;
+        const a20 = document.getElementById('a20-state').value === '1';
+        let linear = (seg << 4) + off;
+        let physical = linear;
+        let note = "";
+        if (!a20) {
+          physical = linear & 0xFFFFF;
+          note = (linear >= 0x100000) ? " (Bit 20 wrapped down to 0x000000-0x0FFFFF)" : "";
+        } else {
+          note = (linear >= 0x100000) ? " (Valid High Memory Area HMA access)" : " (Conventional 640K / Upper Memory)";
+        }
+        document.getElementById('a20-result').innerHTML = 
+          'Calculated 21-bit Address: 0x' + linear.toString(16).toUpperCase() + '<br>' +
+          'Physical Address: <strong>0x' + physical.toString(16).toUpperCase().padStart(6, '0') + '</strong>' + note;
+      }
+      function runMmxPreset(type) {
+        const el = document.getElementById('mmx-display');
+        if (type === 'add') {
+          el.innerHTML = "MM0: [100, 120, -50, 127, 40, -100, 10, 0]<br>MM1: [ 50,  30, -90,  10, 20,  -30, 20, 5]<br><strong style='color:#34d399;'>PADDSB</strong>: [127, 127,-128, 127, 60, -128, 30, 5] (Saturated into 8-bit signed range [-128..127])";
+        } else if (type === 'sub') {
+          el.innerHTML = "MM0: [255, 100,  50, 10, 200,  80, 40, 12]<br>MM1: [ 20, 150,  80,  5,  50, 100, 40, 15]<br><strong style='color:#fbbf24;'>PSUBUSB</strong>: [235,   0,   0,  5, 150,   0,  0,  0] (Unsigned saturation at zero floor)";
+        } else {
+          el.innerHTML = "MM0 (Alpha Mask): [0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00]<br>MM1 (Texture Alpha): [0x3A, 0x4B, 0x5C, 0x6D, 0x7E, 0x8F, 0x90, 0xA1]<br><strong style='color:#7dd3fc;'>PAND</strong>: [0x3A, 0x00, 0x5C, 0x00, 0x7E, 0x00, 0x90, 0x00] (High-speed 64-bit demoscene channel blit)";
+        }
+      }
+    </script>
+    
 </body>
 </html>

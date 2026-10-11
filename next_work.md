@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-creator
-next_agent: kilo-graphics
+current_agent: kilo-graphics
+next_agent: kilo-tester
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -12,13 +12,13 @@ model: gemini-3.8-flash-medium
 timeout_minutes: 6
 status: ready
 current_targets:
-  kilo_creator: kweb://asm-temple
+  kilo_creator: kweb://cybercafe
   kilo_graphics: KDragon
   kilo_tester: KStellar
   kilo_usability: KPing
   kilo_qa: KStarForge
   kilo_expander: KChess
-virtual_web_target: kweb://asm-temple
+virtual_web_target: kweb://cybercafe
 virtual_web_rotation:
 - kweb://cybercafe
 - kweb://10.19.99.4/classified
@@ -32,9 +32,9 @@ virtual_web_rotation:
 - kweb://users/~neon_rider
 - kweb://asm-temple
 last_run:
-  agent: kilo-expander
-  app: KRogue
-  timestamp: '2026-10-10T17:22:00-07:00'
+  agent: kilo-creator
+  app: kweb://asm-temple
+  timestamp: '2026-10-10T17:30:00-07:00'
 last_planner_run: '2026-10-10T16:30:00Z'
 ---
 
