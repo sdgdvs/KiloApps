@@ -574,7 +574,7 @@
         <div><kbd>I</kbd></div><div>Import Best Times & Records (JSON)</div>
         <div><kbd>P</kbd></div><div>Watch Replay Studio & Scrubber</div>
         <div><kbd>Esc</kbd></div><div>Close Modals / Dismiss Toasts</div>
-        <div><kbd>A</kbd></div><div>Telemetry & APM Performance Analytics Studio</div>
+        <div><kbd>G</kbd></div><div>Telemetry & APM Performance Analytics Studio</div>
       </div>
     </div>
     <div class="modal-footer">
@@ -787,10 +787,10 @@ function exportAnalyticsJson() {
   if (typeof showToast === 'function') showToast("Telemetry report exported", "success");
 }
 
-// Hook 'A' key to toggle Analytics modal
+// Hook 'G' key to toggle Analytics modal
 window.addEventListener('keydown', function(e) {
-  if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
-  if (e.key === 'a' || e.key === 'A') {
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') return;
+  if (e.key === 'g' || e.key === 'G') {
     e.preventDefault();
     const m = document.getElementById('analyticsModal');
     const isActive = m && m.classList.contains('active');
@@ -825,7 +825,7 @@ window.addEventListener('keydown', function(e) {
   <div class="stats-box" id="bvvBox" title="Board Benchmark Value (3BV) & Click Efficiency">⚡ 3BV: <span id="bvvVal" style="color:#fff;">--</span> (<span id="effVal" style="color:#3fb950;">--%</span>)</div>
 
   <div class="ctrl-group">
-    <button id="analyticsBtn" onclick="toggleAnalyticsModal(true)" title="Session Analytics & APM Dashboard (A)">📈 Stats <span class="badge">A</span></button>
+    <button id="analyticsBtn" onclick="toggleAnalyticsModal(true)" title="Session Analytics & APM Dashboard (G)">📈 Stats <span class="badge">G</span></button>
     <button id="audioToggleBtn" onclick="toggleAudio()" title="Toggle Sound FX (M)">🔊 Sound <span class="badge">M</span></button>
     <button onclick="quickSave()" title="Save Current State (F5)">💾 Save <span class="badge">F5</span></button>
     <button onclick="quickLoad()" title="Load Saved State (F9)">📂 Load <span class="badge">F9</span></button>
@@ -3695,11 +3695,13 @@ window.addEventListener('keydown', function(e) {
     const customModal = document.getElementById('customModal');
     const inviteModal = document.getElementById('inviteModal');
     const seedModal = document.getElementById('seedModal');
+    const analyticsModal = document.getElementById('analyticsModal');
     const isAnyModalOpen = (helpModal && helpModal.classList.contains('active')) ||
                            (mpModal && mpModal.classList.contains('active')) ||
                            (customModal && customModal.classList.contains('active')) ||
                            (seedModal && seedModal.classList.contains('active')) ||
-                           (inviteModal && inviteModal.classList.contains('active'));
+                           (inviteModal && inviteModal.classList.contains('active')) ||
+                           (analyticsModal && analyticsModal.classList.contains('active'));
 
     if (isAnyModalOpen) {
       if (e.key === 'Escape') {
@@ -3708,12 +3710,18 @@ window.addEventListener('keydown', function(e) {
         toggleMultiplayerModal(false);
         toggleCustomModal(false);
         toggleSeedModal(false);
+        if (typeof toggleAnalyticsModal === 'function') toggleAnalyticsModal(false);
         if (inviteModal) declineInviteChallenge();
         return;
       }
       if (helpModal && helpModal.classList.contains('active') && (e.key === 'Enter' || e.key === ' ')) {
         e.preventDefault();
         toggleHelpModal(false);
+        return;
+      }
+      if (analyticsModal && analyticsModal.classList.contains('active') && (e.key === 'Enter' || e.key === ' ')) {
+        e.preventDefault();
+        toggleAnalyticsModal(false);
         return;
       }
     }
@@ -3744,6 +3752,7 @@ window.addEventListener('keydown', function(e) {
       toggleMultiplayerModal(false);
       toggleCustomModal(false);
       toggleSeedModal(false);
+      if (typeof toggleAnalyticsModal === 'function') toggleAnalyticsModal(false);
       if (isReplaying) closeReplayStudio();
       document.querySelectorAll('.toast').forEach(t => t.remove());
     } else if (e.key === 'F2') {
