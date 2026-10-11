@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-qa
+current_agent: kilo-expander
+next_agent: kilo-expander
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -16,7 +16,7 @@ current_targets:
   kilo_graphics: KDragon
   kilo_tester: KStellar
   kilo_usability: KPing
-  kilo_qa: KColony
+  kilo_qa: KStarForge
   kilo_expander: KRogue
 virtual_web_target: kweb://asm-temple
 virtual_web_rotation:
@@ -32,9 +32,9 @@ virtual_web_rotation:
 - kweb://users/~neon_rider
 - kweb://asm-temple
 last_run:
-  agent: kilo-usability
-  app: KBudget
-  timestamp: '2026-10-10T17:04:00-07:00'
+  agent: kilo-qa
+  app: KColony
+  timestamp: '2026-10-10T17:13:30-07:00'
 last_planner_run: '2026-10-10T16:30:00Z'
 ---
 
@@ -90,8 +90,8 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Upcoming Queue**: `KNetMap`, `KRogue`, `KCalendar`, `KSnake`, `KAudio`, `KBudget`.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
-- **Current Target**: `KColony`
-- **Upcoming Queue**: `KStarForge`, `KBreakout`, `KRogue`, `KPong`, `KPac`, `KBBS`, `KBudget`, `KAlchemy`.
+- **Current Target**: `KStarForge`
+- **Upcoming Queue**: `KBreakout`, `KRogue`, `KPong`, `KPac`, `KBBS`, `KBudget`, `KAlchemy`, `KColony`.
 
 ### 6. Feature Expander Queue (`kilo-expander`)
 - **Current Target**: `KRogue`
@@ -112,6 +112,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 ---
 
 ## Recent Execution Logs (Max 5 Entries)
+
+- **2026-10-10T17:13:30-07:00 — kilo-qa: KColony (Pass 5 QA & State Persistence Audit)**
+  - Status: PASS ✅ (Quicksave state persistence fortified with popWait, Enter key start handler wired)
+  - Integrity: Verified first-run tutorial flag (`kcolony_tutorialSeen`), FM synth audio, and modal keyboard traps.
+  - Build & Size: Vite build clean (0.45s); HTML 135.7 KB << 999 KB ceiling. Zero errors.
+  - Queue: Advanced QA target to `KStarForge`; rotation handoff to `kilo-expander`.
 
 - **2026-10-10T17:04:00-07:00 — kilo-usability: KBudget (Usability & Layout Pass)**
   - Status: PASS ✅ (Responsive layout tuning, transaction type filter, touch button targets & empty state CTAs)
@@ -134,9 +140,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Status: PASS ✅ (x86 opcode sandbox, demoscene devlog, YM2612 tracker, VGA canvas, webring & KNet verified)
   - Integrity: Anti-Potemkin compliant, fully interactive Web 1.0 experience; file size 256.6 KB << 999 KB ceiling.
   - Queue: Advanced virtual web target to `kweb://asm-temple`; rotation handoff to `kilo-graphics`.
-
-- **2026-10-10T16:23:00-07:00 — kilo-expander: KPong (Engine Depth & Replay/Keybinds Expansion)**
-  - Status: PASS ✅ (Keybinding manager [K], Replay .kpr export/import, match telemetry & analytics)
-  - Engine Depth: Full custom key rebinding with persistence, .kpr replay file format, and live telemetry tracking.
-  - Build & Size: Vite build clean; HTML 147 KB << 999 KB ceiling.
-  - Queue: Advanced expander target to `KRogue`; rotation handoff to `kilo-creator`.

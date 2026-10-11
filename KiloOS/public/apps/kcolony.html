@@ -331,7 +331,9 @@
             }
             if (helpModal && helpModal.style.display !== 'none') return;
             if (gameState === 0) {
-                if (e.key >= '1' && e.key <= '7') {
+                if (e.key === 'Enter') {
+                    startGame(0);
+                } else if (e.key >= '1' && e.key <= '7') {
                     startGame(parseInt(e.key) - 1);
                 } else if (e.key === '8') {
                     toggleHelp();
@@ -482,7 +484,7 @@
             }
             const saveData = {
                 version: 2,
-                food, power, maxPower, mat, advm, pop, maxPop, happiness, sci,
+                food, power, maxPower, mat, advm, pop, maxPop, happiness, popWait, sci,
                 day, tick, isDay, planetType, gameMode,
                 unlockedHydro, unlockedNuke, unlockedLaser, unlockedFactory,
                 unlockedSolar4, unlockedXenoArmor, unlockedGeo, unlockedBio,
@@ -511,6 +513,7 @@
                 const s = JSON.parse(raw);
                 food = s.food; power = s.power; maxPower = s.maxPower; mat = s.mat; advm = s.advm;
                 pop = s.pop; maxPop = s.maxPop; happiness = s.happiness; sci = s.sci;
+                popWait = s.popWait !== undefined ? s.popWait : 0;
                 day = s.day; tick = s.tick; isDay = s.isDay;
                 planetType = s.planetType || 0;
                 gameMode = s.gameMode !== undefined ? s.gameMode : 0;
