@@ -418,6 +418,8 @@
       <button id="btnDuel" class="hdr-btn" onclick="openDuelModal()" title="Cyber Duel Arena & Multiplayer [X]" style="color: #00e5ff; border-color: #00e5ff;">Duel [X]</button>
       <button id="btnReplay" class="hdr-btn" onclick="openReplayModal()" title="Match Replay Viewer & Records [R]">Replay [R]</button>
       <button id="btnKeybinds" class="hdr-btn" onclick="openKeybindsModal()" title="Custom Controls & Keys [K]">Keys [K]</button>
+      <button id="btnFen" class="hdr-btn" onclick="openFenModal()" title="PAC-FEN Board State & Custom Mazes [N]">FEN [N]</button>
+      <button id="btnTelemetry" class="hdr-btn" onclick="toggleTelemetry()" title="Engine Diagnostics Telemetry [T]">HUD [T]</button>
       <button class="hdr-btn" onclick="saveGame()" title="Quick Save [F5/V]">Save [F5]</button>
       <button class="hdr-btn" onclick="loadGame()" title="Quick Load [F9/L]">Load [F9]</button>
       <button class="hdr-btn" onclick="exportJSON()" title="Export JSON Data [E]">Exp [E]</button>
@@ -507,6 +509,8 @@
         <div class="shortcut-row"><span>Open Duel & Matchmaking Menu</span><span class="key-badge">X</span></div>
         <div class="shortcut-row"><span>Match Replay Viewer (.kpdr)</span><span class="key-badge">R</span></div>
         <div class="shortcut-row"><span>Key Rebinding Controls</span><span class="key-badge">K</span></div>
+        <div class="shortcut-row"><span>PAC-FEN Board State & Presets</span><span class="key-badge">N</span></div>
+        <div class="shortcut-row"><span>Engine Diagnostics HUD</span><span class="key-badge">T</span></div>
         <div class="shortcut-row"><span>Quick-Chat (In Net Duel)</span><span class="key-badge">1 - 4</span></div>
         <div class="shortcut-row"><span>Local 2P Player 2 Movement</span><span class="key-badge">Arrow Keys</span></div>
 
@@ -701,7 +705,14 @@
         <button class="mp-btn accent" onclick="exportReplayData()">💾 Export Match Record (.kpdr)</button>
         <button class="mp-btn" onclick="document.getElementById('replayFileInput').click()">📂 Load .kpdr File from Disk</button>
 
-        <h4>⏯️ Replay Playback Controls</h4>
+        <h4>⏯️ Replay Playback & Timeline Scrubber</h4>
+        <div style="margin: 5px 0;">
+          <input type="range" id="replayScrubber" min="0" max="0" value="0" style="width: 100%; cursor: pointer;" oninput="seekReplayFrame(parseInt(this.value))">
+          <div style="display: flex; justify-content: space-between; font-size: 8px; color: #90caf9; margin-top: 2px;">
+            <span id="replayFrameDisp">Frame: 0 / 0</span>
+            <span id="replayProgressDisp">0%</span>
+          </div>
+        </div>
         <div style="display: flex; gap: 4px; margin-top: 4px;">
           <button class="hdr-btn" style="flex: 1; justify-content: center;" onclick="toggleReplayPlay()">▶ Play / ⏸ Pause</button>
           <button class="hdr-btn" style="flex: 1; justify-content: center;" onclick="stepReplayPlayback()">⏭ Step</button>
@@ -746,6 +757,35 @@
       </div>
       <div class="modal-footer">
         <button class="hdr-btn" onclick="closeKeybindModal()">Close [Esc]</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- PAC-FEN Board State & Custom Mazes Modal -->
+  <div id="fenModal" class="modal-backdrop" onclick="if(event.target===this) closeFenModal()">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <div class="modal-title">📋 PAC-FEN Board State & Custom Mazes</div>
+        <button class="modal-close" onclick="closeFenModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <h4>📤 Export Current Board State (PAC-FEN)</h4>
+        <textarea id="fenExportBox" class="mp-input" style="height: 48px; font-size: 8px; resize: none;" readonly onclick="this.select()"></textarea>
+        <button class="hdr-btn" style="width: 100%; justify-content: center; margin-bottom: 6px;" onclick="copyFenString()">📋 Copy PAC-FEN String</button>
+
+        <h4>📥 Import Board State or Puzzle FEN</h4>
+        <textarea id="fenImportBox" class="mp-input" style="height: 48px; font-size: 8px; resize: none;" placeholder="Paste PAC-FEN string here..."></textarea>
+        <button class="mp-btn accent" onclick="loadFenFromInput()">⚡ Load & Play Custom Board</button>
+
+        <h4>🧩 Tactical Challenge Presets</h4>
+        <div style="display: flex; flex-direction: column; gap: 4px; margin-top: 4px;">
+          <button class="hdr-btn" style="justify-content: flex-start;" onclick="loadPresetFen('corners')">🟡 Preset 1: Four Corners Panic (Surrounded)</button>
+          <button class="hdr-btn" style="justify-content: flex-start;" onclick="loadPresetFen('tunnel')">⚡ Preset 2: Speed Corridor Gauntlet</button>
+          <button class="hdr-btn" style="justify-content: flex-start;" onclick="loadPresetFen('rush')">🍒 Preset 3: Ultra Pellet Frenzy (1 HP)</button>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="hdr-btn" onclick="closeFenModal()">Close [Esc]</button>
       </div>
     </div>
   </div>
@@ -1380,11 +1420,129 @@
       if (btn) btn.textContent = 'Resume [Space]';
       const disp = document.getElementById('replayFrameCountDisp');
       if (disp) disp.textContent = replayFrames.length;
+      updateReplayProgressUI();
   }
 
   function closeReplayModal() {
       const modal = document.getElementById('replayModal');
       if (modal) modal.style.display = 'none';
+  }
+
+  function openFenModal() {
+      const modal = document.getElementById('fenModal');
+      if (modal) modal.style.display = 'flex';
+      paused = 1;
+      const btn = document.getElementById('btnPause');
+      if (btn) btn.textContent = 'Resume [Space]';
+      const box = document.getElementById('fenExportBox');
+      if (box) box.value = exportPACFEN();
+  }
+
+  function closeFenModal() {
+      const modal = document.getElementById('fenModal');
+      if (modal) modal.style.display = 'none';
+  }
+
+  function copyFenString() {
+      const box = document.getElementById('fenExportBox');
+      if (box && box.value) {
+          navigator.clipboard.writeText(box.value).then(() => {
+              showToast("📋 PAC-FEN Copied to Clipboard!", "success");
+          }).catch(() => {
+              box.select();
+              document.execCommand('copy');
+              showToast("📋 PAC-FEN Copied to Clipboard!", "success");
+          });
+      }
+  }
+
+  function exportPACFEN() {
+      try {
+          if (!map || map.length === 0) return "";
+          let gridStr = map.map(row => row.join("")).join("/");
+          let ghostStr = (ghosts || []).map(g => `${Math.round(g.x)},${Math.round(g.y)}`).join(";");
+          let fen = `PACFEN/1.0|GRID:${gridStr}|P:${Math.round(px)},${Math.round(py)}|G:${ghostStr}|S:${score}|L:${lives}|LV:${level}|D:${diffLevel}|M:${gameMode}`;
+          return fen;
+      } catch(e) {
+          return "";
+      }
+  }
+
+  function importPACFEN(fen) {
+      try {
+          if (!fen || !fen.startsWith("PACFEN/1.0|")) {
+              showToast("Invalid PAC-FEN header format", "danger");
+              return false;
+          }
+          const parts = fen.split("|");
+          const data = {};
+          for (let i = 1; i < parts.length; i++) {
+              const colonIdx = parts[i].indexOf(":");
+              if (colonIdx > -1) {
+                  data[parts[i].slice(0, colonIdx)] = parts[i].slice(colonIdx + 1);
+              }
+          }
+          if (data.GRID) {
+              const rows = data.GRID.split("/");
+              if (rows.length === ROWS) {
+                  for (let r = 0; r < ROWS; r++) {
+                      for (let c = 0; c < COLS; c++) {
+                          const val = parseInt(rows[r][c]);
+                          if (!isNaN(val)) map[r][c] = val;
+                      }
+                  }
+              }
+          }
+          if (data.P) {
+              const [x, y] = data.P.split(",").map(Number);
+              if (!isNaN(x) && !isNaN(y)) { px = x; py = y; pdx = 0; pdy = 0; ndx = 0; ndy = 0; }
+          }
+          if (data.G && ghosts) {
+              const gcoords = data.G.split(";");
+              gcoords.forEach((gc, idx) => {
+                  if (ghosts[idx]) {
+                      const [gx, gy] = gc.split(",").map(Number);
+                      if (!isNaN(gx) && !isNaN(gy)) { ghosts[idx].x = gx; ghosts[idx].y = gy; }
+                  }
+              });
+          }
+          if (data.S !== undefined) score = parseInt(data.S) || score;
+          if (data.L !== undefined) lives = parseInt(data.L) || lives;
+          if (data.LV !== undefined) level = parseInt(data.LV) || level;
+          if (data.D !== undefined) diffLevel = parseInt(data.D) || diffLevel;
+          if (data.M !== undefined) gameMode = parseInt(data.M) || gameMode;
+
+          closeFenModal();
+          updateUIBadges();
+          showToast("⚡ PAC-FEN Board State Loaded!", "success");
+          playSound(640, 0.25, 'triangle', 180);
+          return true;
+      } catch(err) {
+          showToast("Failed to parse PAC-FEN: " + err.message, "danger");
+          return false;
+      }
+  }
+
+  function loadFenFromInput() {
+      const box = document.getElementById('fenImportBox');
+      if (box && box.value.trim()) {
+          importPACFEN(box.value.trim());
+      } else {
+          showToast("Please enter a valid PAC-FEN string", "warning");
+      }
+  }
+
+  function loadPresetFen(preset) {
+      if (preset === 'corners') {
+          const fen = "PACFEN/1.0|GRID:111111111111111/130000010000031/101111010111101/101111010111101/100000000000001/101110111011101/100000010000001/111111010111111/000001000100000/111111000111111/100000010000001/101111010111101/100011000110001/130000010000031/111111111111111|P:7,8|G:1,2;13,2;1,12;13,12|S:500|L:3|LV:3|D:2|M:0";
+          importPACFEN(fen);
+      } else if (preset === 'tunnel') {
+          const fen = "PACFEN/1.0|GRID:111111111111111/122222222222221/111111121111111/122222222222221/111111121111111/122222222222221/111111121111111/122222222222221/111111121111111/122222222222221/111111121111111/122222222222221/111111121111111/132222222222231/111111111111111|P:1,1|G:13,1;1,13;13,13;7,7|S:1000|L:2|LV:5|D:2|M:1";
+          importPACFEN(fen);
+      } else if (preset === 'rush') {
+          const fen = "PACFEN/1.0|GRID:111111111111111/122222222222221/121212121212121/122222222222221/121212121212121/122222222222221/121212121212121/122222232222221/121212121212121/122222222222221/121212121212121/122222222222221/121212121212121/122222222222221/111111111111111|P:7,7|G:2,2;12,2;2,12;12,12|S:2500|L:1|LV:10|D:2|M:1";
+          importPACFEN(fen);
+      }
   }
 
   function openKeybindsModal() {
@@ -1413,6 +1571,7 @@
       closeReplayModal();
       closeKeybindModal();
       closeInviteModal();
+      closeFenModal();
   }
 
   function savePlayerName(val) {
@@ -1850,12 +2009,41 @@
       replayTimer = setInterval(stepReplayPlayback, Math.floor(100 / replaySpeed));
   }
 
+  function updateReplayProgressUI() {
+      const scrubber = document.getElementById('replayScrubber');
+      const disp = document.getElementById('replayFrameDisp');
+      const pctDisp = document.getElementById('replayProgressDisp');
+      const total = replayFrames.length;
+      if (scrubber) {
+          scrubber.max = Math.max(0, total - 1);
+          scrubber.value = replayPlayIndex;
+      }
+      if (disp) disp.textContent = `Frame: ${replayPlayIndex} / ${total}`;
+      if (pctDisp) {
+          const pct = total > 0 ? Math.round((replayPlayIndex / total) * 100) : 0;
+          pctDisp.textContent = `${pct}%`;
+      }
+  }
+
+  function seekReplayFrame(idx) {
+      if (replayFrames.length === 0) return;
+      replayPlayIndex = Math.max(0, Math.min(idx, replayFrames.length - 1));
+      const f = replayFrames[replayPlayIndex];
+      if (f) {
+          px = f.p1.x; py = f.p1.y; pdx = f.p1.dx; pdy = f.p1.dy; p1SuperTimer = f.p1.super; p1Score = f.p1.score; p1KOs = f.p1.kos;
+          p2x = f.p2.x; p2y = f.p2.y; p2dx = f.p2.dx; p2dy = f.p2.dy; p2SuperTimer = f.p2.super; p2Score = f.p2.score; p2KOs = f.p2.kos;
+          if (f.event) { saveMsgText = f.event; saveMsgTimer = 20; }
+      }
+      updateReplayProgressUI();
+  }
+
   function stepReplayPlayback() {
       if (!isReplayActive || !replayPlaying) return;
       if (replayPlayIndex >= replayFrames.length) {
           replayPlaying = false;
           if (replayTimer) clearInterval(replayTimer);
           showToast("📼 Replay Completed!", "info");
+          updateReplayProgressUI();
           return;
       }
       const f = replayFrames[replayPlayIndex];
@@ -1865,6 +2053,7 @@
           if (f.event) { saveMsgText = f.event; saveMsgTimer = 20; }
       }
       replayPlayIndex++;
+      updateReplayProgressUI();
   }
 
   function toggleReplayPlay() {
@@ -2715,7 +2904,8 @@
       const replayOpen = document.getElementById('replayModal')?.style.display === 'flex';
       const keybindOpen = document.getElementById('keybindModal')?.style.display === 'flex';
       const inviteOpen = document.getElementById('inviteModal')?.style.display === 'flex';
-      const anyModalOpen = helpOpen || craftOpen || duelOpen || replayOpen || keybindOpen || inviteOpen;
+      const fenOpen = document.getElementById('fenModal')?.style.display === 'flex';
+      const anyModalOpen = helpOpen || craftOpen || duelOpen || replayOpen || keybindOpen || inviteOpen || fenOpen;
 
       if (e.key === 'Escape') {
           if (anyModalOpen) { closeAllModals(); return; }
@@ -2770,6 +2960,16 @@
       if (key === 'K') {
           e.preventDefault();
           if (keybindOpen) closeKeybindModal(); else openKeybindsModal();
+          return;
+      }
+      if (key === 'N') {
+          e.preventDefault();
+          if (fenOpen) closeFenModal(); else openFenModal();
+          return;
+      }
+      if (key === 'T') {
+          e.preventDefault();
+          toggleTelemetry();
           return;
       }
 
@@ -4557,6 +4757,34 @@
           ctx.fillText('Press [Space] or Click to Resume', 150, 158);
           ctx.textAlign = 'left';
       }
+
+      if (showTelemetry) {
+          ctx.save();
+          ctx.fillStyle = 'rgba(3, 6, 17, 0.88)';
+          ctx.strokeStyle = '#00e5ff';
+          ctx.lineWidth = 1;
+          ctx.fillRect(8, 8, 175, 78);
+          ctx.strokeRect(8, 8, 175, 78);
+
+          ctx.fillStyle = '#00e5ff';
+          ctx.font = 'bold 8px monospace';
+          ctx.fillText('ENGINE TELEMETRY (HUD) [T]', 12, 18);
+
+          ctx.fillStyle = '#ffffff';
+          ctx.font = '7.5px monospace';
+          ctx.fillText(`FPS: 60 | Tick: ${frameCount || 0}`, 12, 29);
+          ctx.fillText(`Pac Pos: (${Math.round(px)}, ${Math.round(py)}) Dir:(${pdx},${pdy})`, 12, 40);
+          ctx.fillText(`Ghosts: ${ghosts.length} | Scat/Chase: ${ghostModeTimer || 0}`, 12, 51);
+          ctx.fillText(`Mode: ${gameMode===0?'CAMP':(gameMode===1?'ENDL':'DUEL')} | Diff: ${diffLevel}`, 12, 62);
+          ctx.fillText(`Buffs: S:${p1SuperTimer>0?'Y':'N'} Sh:${shieldActive?'Y':'N'} Frz:${freezeTimer>0?'Y':'N'}`, 12, 73);
+          ctx.restore();
+      }
+  }
+
+  let showTelemetry = false;
+  function toggleTelemetry() {
+      showTelemetry = !showTelemetry;
+      showToast(showTelemetry ? "Engine Telemetry HUD: Active [T]" : "Engine Telemetry HUD: Hidden [T]", "info");
   }
 
   loadHighScore();

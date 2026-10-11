@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-expander
-next_agent: kilo-creator
+current_agent: kilo-creator
+next_agent: kilo-graphics
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -17,7 +17,7 @@ current_targets:
   kilo_tester: KType
   kilo_usability: KNetMap
   kilo_qa: KPong
-  kilo_expander: KPac
+  kilo_expander: KStarForge
 virtual_web_target: kweb://echo-subsystem.net
 virtual_web_rotation:
 - kweb://echo-subsystem.net
@@ -32,9 +32,9 @@ virtual_web_rotation:
 - kweb://cybercafe
 - kweb://10.19.99.4/classified
 last_run:
-  agent: kilo-qa
-  app: KRogue
-  timestamp: 2026-10-10T20:14:35-07:00
+  agent: kilo-expander
+  app: KPac
+  timestamp: 2026-10-10T20:23:45-07:00
 last_planner_run: '2026-10-10T16:30:00Z'
 ---
 
@@ -94,8 +94,8 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Upcoming Queue**: `KPac`, `KBBS`, `KBudget`, `KAlchemy`, `KColony`, `KBreakout`, `KRogue`.
 
 ### 6. Feature Expander Queue (`kilo-expander`)
-- **Current Target**: `KPac`
-- **Upcoming Queue**: `KStarForge`, `KColosseum`, `KAbyss`, `KPong`, `KRogue`, `KChess`, `KMine`.
+- **Current Target**: `KStarForge`
+- **Upcoming Queue**: `KColosseum`, `KAbyss`, `KPong`, `KRogue`, `KChess`, `KMine`, `KPac`.
 
 ---
 
@@ -112,6 +112,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 ---
 
 ## Recent Execution Logs (Max 5 Entries)
+
+- **2026-10-10T20:23:45-07:00 — kilo-expander: KPac (Deep Feature Expansion)**
+  - Status: PASS ✅ (Implemented PAC-FEN board state import/export, replay timeline scrubber seek, & engine telemetry HUD).
+  - Utility Depth: Added PAC-FEN string parser/serializer with 3 tactical presets, interactive replay scrubber, and live HUD overlay.
+  - Build & Size: Vite build clean (`npm run build`); HTML 212 KB << 999 KB ceiling.
+  - Queue: Advanced kilo-expander target to `KStarForge`; rotation handoff to `kilo-creator`.
 
 - **2026-10-10T20:14:35-07:00 — kilo-qa: KRogue (Pass 5 QA & Build Quality Audit)**
   - Status: PASS ✅ (Quicksave F5/F9 state persistence, first-run tutorial flags, modal overlays verified).
@@ -135,9 +141,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Status: ⏭️ Skip — Imagen 3 asset replacement not appropriate for KDragon (pure vector, board game, or mature art).
   - Optimization: Handled via orchestrator pre-flight zero-token auto-skip.
   - Queue: Advanced `kilo-graphics` to `KDragon`; rotation handoff to `kilo-tester`.
-
-- **2026-10-10T19:31:00-07:00 — kilo-creator: kweb://10.19.99.4/classified (Virtual Web Expansion Audit)**
-  - Status: PASS ✅ (Anti-Potemkin Web 1.0 intranet verified: 10 interactive diagnostic tabs, Web Audio, packet sniffer, hex inspector).
-  - Parity & Size: 255 KB << 999 KB ceiling; cross-linked across KNet, Portal & Webring.
-  - Verification: Vite build clean (`npm run build`).
-  - Queue: Advanced kilo-creator target to `kweb://echo-subsystem.net`; rotation handoff to `kilo-graphics`.
