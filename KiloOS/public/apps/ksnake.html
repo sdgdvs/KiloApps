@@ -8,7 +8,9 @@
         body { margin: 0; padding: 0; background: #0f0f1a; display: flex; justify-content: center; align-items: center; min-height: 100vh; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #fff; user-select: none; text-rendering: optimizeLegibility; -webkit-font-smoothing: antialiased; }
         #gameContainer { position: relative; width: 440px; max-width: 95vw; max-height: 96vh; background: #161626; border: 3px solid #2e2e4a; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.6); padding: 12px; display: flex; flex-direction: column; align-items: center; overflow-y: auto; overflow-x: hidden; scrollbar-width: thin; scrollbar-color: #3d3d5c #161626; }
         #header { width: 100%; display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font-weight: bold; font-size: 13px; color: #4cd137; }
-        #header span { background: #22223b; padding: 5px 8px; border-radius: 6px; border: 1px solid #3d3d5c; }
+        #header span { background: #22223b; padding: 5px 8px; border-radius: 6px; border: 1px solid #3d3d5c; transition: all 0.15s ease; }
+        #header span[role="button"]:hover { border-color: #00d2d3; color: #00ffff; }
+        #header span[role="button"]:focus-visible { outline: 2px solid #00d2d3; outline-offset: 1px; }
         #bossBarContainer { width: 100%; background: #22223b; border: 1px solid #ff0055; border-radius: 6px; height: 22px; margin-bottom: 8px; display: none; position: relative; overflow: hidden; }
         #bossBarFill { width: 100%; height: 100%; background: linear-gradient(90deg, #ff0055, #ff4757); transition: width 0.2s; }
         #bossBarText { position: absolute; width: 100%; text-align: center; font-size: 12px; font-weight: bold; color: #fff; line-height: 22px; text-shadow: 0 0 4px #000; }
@@ -47,6 +49,14 @@
         .toast-container { position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%); z-index: 9999; display: flex; flex-direction: column; gap: 8px; pointer-events: none; max-width: 440px; width: auto; align-items: center; }
         .toast { background: #22223b; color: #48dbfb; border: 1px solid #48dbfb; padding: 8px 18px; border-radius: 6px; font-size: 13px; font-weight: bold; box-shadow: 0 4px 15px rgba(0,0,0,0.6); opacity: 0; transform: translateY(12px); transition: all 0.25s ease-out; pointer-events: auto; text-align: center; cursor: pointer; }
         .toast.show { opacity: 1; transform: translateY(0); }
+        @media (max-width: 480px) {
+            #gameContainer { width: 100%; padding: 8px; border-radius: 8px; }
+            #header { font-size: 11px; flex-wrap: wrap; gap: 4px; justify-content: center; }
+            #header span { padding: 3px 6px; }
+            .skills-bar { gap: 4px; }
+            .skill-btn { font-size: 11px; padding: 4px; }
+            .powerup-legend { font-size: 10px; gap: 3px; }
+        }
     </style>
     <script src="../assets/js/retro_multiplayer.js"></script>
     <script type="module">
@@ -200,8 +210,9 @@
         <div id="header">
             <span id="scoreDisplay">Score: 0</span>
             <span id="modeDisplay">Mode: Classic</span>
-            <span id="pauseToggle" onclick="togglePauseGame()" style="cursor:pointer;" title="Pause / Resume Game (P)">⏸ Pause</span>
-            <span id="soundToggle" onclick="toggleSound()" style="cursor:pointer;" title="Toggle Sound (U)">🔊 Sound</span>
+            <span id="pauseToggle" onclick="togglePauseGame()" style="cursor:pointer;" title="Pause / Resume Game (P)" tabindex="0" role="button">⏸ Pause</span>
+            <span id="soundToggle" onclick="toggleSound()" style="cursor:pointer;" title="Toggle Sound (U)" tabindex="0" role="button">🔊 Sound</span>
+            <span id="helpToggle" onclick="showLeaderboard()" style="cursor:pointer;" title="Help &amp; Scores (H / F1)" tabindex="0" role="button">❓ Help</span>
             <span id="highDisplay">High: 0</span>
         </div>
 
