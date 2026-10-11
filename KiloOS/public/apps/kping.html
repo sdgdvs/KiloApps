@@ -116,6 +116,7 @@
   input[type="checkbox"] { accent-color: var(--accent); width: 14px; height: 14px; cursor: pointer; }
   .btn {
     padding: 6px 12px; border: none; border-radius: 6px; font-weight: 600; font-size: 12px;
+    min-height: 32px; touch-action: manipulation;
     cursor: pointer; transition: all 0.2s ease;
     display: flex; align-items: center; justify-content: center; gap: 5px; min-width: 68px;
     font-family: inherit; user-select: none;
@@ -192,6 +193,7 @@
 
   #out {
     flex: 1; background: transparent; border: none; color: #a3be8c;
+    scroll-behavior: smooth;
     font-family: "Consolas", "Courier New", monospace; font-size: 12.5px;
     resize: none; outline: none; overflow-y: auto; line-height: 1.45;
   }

@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-qa
+current_agent: kilo-qa
+next_agent: kilo-expander
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -15,7 +15,7 @@ current_targets:
   kilo_creator: kweb://cybercafe
   kilo_graphics: KDragon
   kilo_tester: KSubmarine
-  kilo_usability: KPing
+  kilo_usability: KNetMap
   kilo_qa: KStarForge
   kilo_expander: KChess
 virtual_web_target: kweb://cybercafe
@@ -32,9 +32,9 @@ virtual_web_rotation:
 - kweb://users/~neon_rider
 - kweb://asm-temple
 last_run:
-  agent: kilo-tester
-  app: KStellar
-  timestamp: 2026-10-10T17:49:00-07:00
+  agent: kilo-usability
+  app: KPing
+  timestamp: 2026-10-10T18:03:00-07:00
 last_planner_run: '2026-10-10T16:30:00Z'
 ---
 
@@ -113,6 +113,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-10T18:03:00-07:00 — kilo-usability: KPing (Usability & Responsive Layout Audit)**
+  - Status: PASS ✅ (HiDPI canvas scaling verified, button touch targets & smooth terminal scroll tuned, 162 KB << 999 KB ceiling).
+  - Ergonomics: Enhanced button min-height (32px), touch-action manipulation, and focus styling.
+  - Build & Size: Vite build clean; HTML 162 KB << 999 KB ceiling; zero console errors.
+  - Queue: Advanced usability target to KNetMap; rotation handoff to kilo-qa.
+
 - **2026-10-10T17:49:00-07:00 — kilo-tester: KStellar (UI Audit & Storage Resilience Pass)**
   - Status: PASS ✅ (UI controls audited, storage safety wrapped, 156.6 KB HTML << 999 KB ceiling).
   - Controls: Quicksave/load (F5/F9), export/import JSON, combat hotkeys (1-4/A/E/T/F), codex modal (M/H/F1).
@@ -136,9 +142,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Features: Added [X] Bestiary action button & hotkey, filter tabs (Caverns, Catacombs, Abyss, Chaos), local storage persistence.
   - Build & Size: Vite build clean (370ms); HTML 277.5 KB << 999 KB ceiling. Zero errors.
   - Queue: Advanced expander target to `KChess`; rotation handoff to `kilo-creator`.
-
-- **2026-10-10T17:13:30-07:00 — kilo-qa: KColony (Pass 5 QA & State Persistence Audit)**
-  - Status: PASS ✅ (Quicksave state persistence fortified with popWait, Enter key start handler wired)
-  - Integrity: Verified first-run tutorial flag (`kcolony_tutorialSeen`), FM synth audio, and modal keyboard traps.
-  - Build & Size: Vite build clean (0.45s); HTML 135.7 KB << 999 KB ceiling. Zero errors.
-  - Queue: Advanced QA target to `KStarForge`; rotation handoff to `kilo-expander`.
