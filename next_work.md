@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-creator
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -16,7 +16,7 @@ current_targets:
   kilo_graphics: KDragon
   kilo_tester: KCastle
   kilo_usability: KAudio
-  kilo_qa: KBudget
+  kilo_qa: KAlchemy
   kilo_expander: KPad
 virtual_web_target: kweb://webring
 virtual_web_rotation:
@@ -32,9 +32,9 @@ virtual_web_rotation:
 - kweb://cybercafe
 - kweb://10.19.99.4/classified
 last_run:
-  agent: kilo-usability
-  app: KSnake
-  timestamp: 2026-10-11T07:15:00+0000
+  agent: kilo-qa
+  app: KBudget
+  timestamp: 2026-10-11T07:22:00+0000
 last_planner_run: '2026-10-10T16:30:00Z'
 ---
 
@@ -90,8 +90,8 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Upcoming Queue**: `KBudget`, `KNetMap`, `KRogue`.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
-- **Current Target**: `KBudget`
-- **Upcoming Queue**: `KAlchemy`, `KColony`, `KBreakout`, `KRogue`, `KPong`, `KPac`, `KBBS`.
+- **Current Target**: `KAlchemy`
+- **Upcoming Queue**: `KColony`, `KBreakout`, `KRogue`, `KPong`, `KPac`, `KBBS`, `KBudget`.
 
 ### 6. Feature Expander Queue (`kilo-expander`)
 - **Current Target**: `KAbyss`
@@ -112,6 +112,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 ---
 
 ## Recent Execution Logs (Max 5 Entries)
+
+- **2026-10-11T07:22:00+0000 — kilo-qa: KBudget (Pass 5 QA & Build Quality Audit)**
+  - Status: PASS ✅ (F5 quicksave & F9 quickload persistence verified, tutorialSeen guard confirmed).
+  - State & Quality: Checked modal overlays (Add/Edit, Settings, Guide, Data, Tutorial) Esc/Enter/Space accessibility.
+  - Build & Size: Vite build clean (0 errors); HTML 71 KB << 999 KB ceiling.
+  - Queue: Advanced kilo-qa target to `KAlchemy`; rotation handoff to `kilo-expander`.
 
 - **2026-10-11T07:15:00+0000 — kilo-usability: KSnake (UI/UX Usability Pass)**
   - Status: PASS ✅ (Accessible header help button, keyboard navigation, responsive layout <=480px).
@@ -134,9 +140,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Expansion: Added customizable keymapping engine, persistent run records (Triumph/Fallen), turn action replay buffer & JSON telemetry export.
   - Build & Size: Vite build clean; HTML 480 KB << 999 KB ceiling.
   - Queue: Advanced kilo-expander target to `KPad`; rotation handoff to `kilo-creator`.
-
-- **2026-10-10T23:21:00-07:00 — kilo-qa: KBBS (Pass 5 QA & Build Quality Audit)**
-  - Status: PASS ✅ (Verified multi-node dialing, door games save state, F5/F9 quicksave/load, tutorialSeen flag).
-  - State & Quality: Safe storage try/catch helpers, visibility guards, zero perimeter glints, full CP437 ANSI render.
-  - Build & Size: Native MSVC build intact; Vite build clean (366ms); HTML 169 KB << 999 KB ceiling.
-  - Queue: Advanced kilo-qa target to `KBudget`; rotation handoff to `kilo-expander`.
