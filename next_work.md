@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-expander
-next_agent: kilo-creator
+current_agent: kilo-creator
+next_agent: kilo-graphics
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -17,7 +17,7 @@ current_targets:
   kilo_tester: KPing
   kilo_usability: KAudio
   kilo_qa: KPac
-  kilo_expander: KPac
+  kilo_expander: KColosseum
 virtual_web_target: kweb://cybercafe
 virtual_web_rotation:
 - kweb://echo-subsystem.net
@@ -32,9 +32,9 @@ virtual_web_rotation:
 - kweb://cybercafe
 - kweb://10.19.99.4/classified
 last_run:
-  agent: kilo-qa
-  app: KPong
-  timestamp: 2026-10-11T12:30:00+0000
+  agent: kilo-expander
+  app: KPac
+  timestamp: 2026-10-11T12:40:00+0000
 last_planner_run: '2026-10-10T16:30:00Z'
 ---
 
@@ -94,8 +94,8 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Upcoming Queue**: `KBBS`, `KBudget`, `KColony`, `KBreakout`, `KRogue`, `KPong`.
 
 ### 6. Feature Expander Queue (`kilo-expander`)
-- **Current Target**: `KPac`
-- **Upcoming Queue**: `KColosseum`, `KPong`, `KRogue`, `KChess`.
+- **Current Target**: `KColosseum`
+- **Upcoming Queue**: `KPong`, `KRogue`, `KChess`.
 
 ---
 
@@ -112,6 +112,11 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 ---
 
 ## Recent Execution Logs (Max 5 Entries)
+
+- **2026-10-11T12:40:00+0000 — kilo-expander: KPac (Deep Feature Expansion)**
+  - Status: PASS ✅ (Vite build clean; HTML 218 KB << 999 KB ceiling).
+  - Expansion: Added RFC-4180 CSV telemetry export [Y], procedural seeded labyrinth generator, and Matrix FEN challenge.
+  - Queue: Advanced kilo-expander target to KColosseum; rotation handoff to kilo-creator.
 
 - **2026-10-11T12:30:00+0000 — kilo-qa: KPong (Pass 5 QA & Build Quality Audit)**
   - Status: PASS ✅ (Vite build clean; Native build.bat clean 46 KB; HTML 149 KB << 999 KB ceiling).
@@ -134,8 +139,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Status: ⏭️ Skip — Imagen 3 asset replacement not appropriate for KDragon (pure vector, board game, or mature art).
   - Optimization: Handled via orchestrator pre-flight zero-token auto-skip.
   - Queue: Advanced `kilo-graphics` to `KDragon`; rotation handoff to `kilo-tester`.
-
-- **2026-10-11T11:50:00+0000 — kilo-creator: kweb://asm-temple (Virtual Web Expansion)**
-  - Status: PASS ✅ (Vite build clean; HTML 293 KB << 999 KB ceiling).
-  - Expansion: Implemented Silicon Catechism (interactive x86 Opcode Speed Drill quiz with scoring, streaks & audio).
-  - Queue: Advanced kilo-creator target to kweb://cybercafe; rotation handoff to kilo-graphics.
