@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-expander
-next_agent: kilo-creator
+current_agent: kilo-creator
+next_agent: kilo-graphics
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -17,7 +17,7 @@ current_targets:
   kilo_tester: KVoid
   kilo_usability: KSnake
   kilo_qa: KBudget
-  kilo_expander: KAbyss
+  kilo_expander: KPad
 virtual_web_target: kweb://portal
 virtual_web_rotation:
 - kweb://echo-subsystem.net
@@ -32,9 +32,9 @@ virtual_web_rotation:
 - kweb://cybercafe
 - kweb://10.19.99.4/classified
 last_run:
-  agent: kilo-qa
-  app: KBBS
-  timestamp: 2026-10-11T06:21:00+0000
+  agent: kilo-expander
+  app: KAbyss
+  timestamp: 2026-10-10T23:32:00-07:00
 last_planner_run: '2026-10-10T16:30:00Z'
 ---
 
@@ -113,6 +113,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-10T23:32:00-07:00 — kilo-expander: KAbyss (Deep Feature Expansion)**
+  - Status: PASS ✅ (Delver keybindings modal, Hall of Delvers run tracking, turn replay scrubber).
+  - Expansion: Added customizable keymapping engine, persistent run records (Triumph/Fallen), turn action replay buffer & JSON telemetry export.
+  - Build & Size: Vite build clean; HTML 480 KB << 999 KB ceiling.
+  - Queue: Advanced kilo-expander target to `KPad`; rotation handoff to `kilo-creator`.
+
 - **2026-10-10T23:21:00-07:00 — kilo-qa: KBBS (Pass 5 QA & Build Quality Audit)**
   - Status: PASS ✅ (Verified multi-node dialing, door games save state, F5/F9 quicksave/load, tutorialSeen flag).
   - State & Quality: Safe storage try/catch helpers, visibility guards, zero perimeter glints, full CP437 ANSI render.
@@ -135,9 +141,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Web & ARG: Full KNet/portal/webring integration; verified Web 1.0 interactivity and secret breadcrumbs.
   - Build & Size: Vite build clean (333ms); HTML 367 KB < 999 KB ceiling.
   - Queue: Advanced kilo-creator target to kweb://portal; rotation handoff to kilo-graphics.
-
-- **2026-10-10T22:34:00-07:00 — kilo-expander: KColosseum (Deep Feature Expansion)**
-  - Status: PASS ✅ (Implemented Lanista Tactical Doctrines: Ferox, Murus, Celeritas, Equitas).
-  - Expansion: Integrated combat damage/dodge/crit stance modifiers, live combat badges, gladiator dossier import/export [GLAD-...].
-  - Build & Size: Vite build clean (9s); HTML 250 KB << 999 KB ceiling.
-  - Queue: Advanced kilo-expander target to `KAbyss`; rotation handoff to `kilo-creator`.

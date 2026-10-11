@@ -1153,6 +1153,7 @@
                     <button id="btnToggleCRT" class="btn-action" title="Toggle CRT scanlines & phosphors">📺 CRT: On</button>
                     <button id="btnToggleFOV" class="btn-action" title="Toggle full map vision (Debug)">👁️ FOV: On</button>
                     <button id="btnHelp">📖 Delver's Tome</button>
+                    <button id="btnKeybinds" class="btn-action" title="Configure custom keybindings">⌨️ Keys</button>
                 </div>
                 <div class="btn-group">
                     <button id="btnQuicksave" class="btn-action" title="Quicksave delve state to browser storage [F5]">💾 Save [F5]</button>
@@ -9488,6 +9489,222 @@
             };
         }
 
+        // --- KAbyss Feature Expansions: Keybindings, Hall of Delvers, and Turn Replay ---
+
+        // 1. Keybindings Engine
+        const DEFAULT_KEYBINDS = {
+            up: 'w',
+            down: 's',
+            left: 'a',
+            right: 'd',
+            wait: ' ',
+            interact: 'e',
+            cauldron: 'b',
+            altar: 'i',
+            market: 'm',
+            spell1: 'z',
+            spell2: 'x',
+            spell3: 'v'
+        };
+
+        let currentKeybinds = Object.assign({}, DEFAULT_KEYBINDS);
+        try {
+            const savedBinds = localStorage.getItem('kabyss_keybindings');
+            if (savedBinds) {
+                currentKeybinds = Object.assign({}, DEFAULT_KEYBINDS, JSON.parse(savedBinds));
+            }
+        } catch (e) {}
+
+        function saveCustomKeybinds() {
+            try {
+                localStorage.setItem('kabyss_keybindings', JSON.stringify(currentKeybinds));
+                showToast('Keybindings preserved in memory crystals.', 'info');
+            } catch (e) {}
+        }
+
+        function initKeybindsModal() {
+            if (document.getElementById('modalKeybinds')) return;
+            const modalEl = document.createElement('div');
+            modalEl.id = 'modalKeybinds';
+            modalEl.style.cssText = 'position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(3,5,8,0.85); backdrop-filter:blur(6px); z-index:9999; display:none; align-items:center; justify-content:center;';
+            modalEl.innerHTML = `
+                <div style="background:#090d16; border:1px solid #38bdf8; border-radius:6px; width:440px; max-width:92vw; padding:16px; color:#cbd5e1; box-shadow:0 0 24px rgba(56,189,248,0.3); font-family:var(--font-mono);">
+                    <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #1e293b; padding-bottom:8px; margin-bottom:12px;">
+                        <strong style="color:#f8fafc; font-size:14px; text-shadow:0 0 8px #38bdf8;">⌨️ Delver Key Control Rebinding</strong>
+                        <button id="btnKeybindsClose" style="background:transparent; border:none; color:#94a3b8; font-size:16px; cursor:pointer;">✕</button>
+                    </div>
+                    <div style="font-size:11px; color:#94a3b8; margin-bottom:12px;">
+                        Click a key slot to listen for a keypress, or reset to classical 1999 roguelike defaults.
+                    </div>
+                    <div id="keybindsList" style="display:grid; grid-template-columns:1fr 1fr; gap:8px; font-size:11px; margin-bottom:16px;">
+                    </div>
+                    <div style="display:flex; justify-content:space-between; gap:8px;">
+                        <button id="btnResetKeybinds" class="btn-action" style="font-size:11px;">Default Keys</button>
+                        <button id="btnSaveKeybinds" class="btn-primary" style="font-size:11px;">Save & Close</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modalEl);
+
+            const renderKeySlots = () => {
+                const list = document.getElementById('keybindsList');
+                if (!list) return;
+                const labels = {
+                    up: 'Move North', down: 'Move South', left: 'Move West', right: 'Move East',
+                    wait: 'Rest / Wait', interact: 'Interact / Stairs',
+                    cauldron: 'Cauldron Alchemy', altar: 'Enchant Altar', market: 'Black Market',
+                    spell1: 'Spell 1', spell2: 'Spell 2', spell3: 'Spell 3'
+                };
+                list.innerHTML = Object.keys(DEFAULT_KEYBINDS).map(k => `
+                    <div style="display:flex; justify-content:space-between; align-items:center; background:#0c121e; border:1px solid #1e293b; padding:4px 8px; border-radius:4px;">
+                        <span style="color:#94a3b8;">${labels[k] || k}</span>
+                        <button class="key-slot-btn" data-action="${k}" style="min-width:44px; padding:2px 6px; font-size:10px; background:#1e293b; color:#fbbf24; border-radius:3px; border:1px solid #334155;">
+                            ${currentKeybinds[k] === ' ' ? 'Space' : currentKeybinds[k].toUpperCase()}
+                        </button>
+                    </div>
+                `).join('');
+
+                list.querySelectorAll('.key-slot-btn').forEach(b => {
+                    b.addEventListener('click', () => {
+                        const act = b.getAttribute('data-action');
+                        b.textContent = '...';
+                        b.style.borderColor = '#38bdf8';
+                        const onKey = (ev) => {
+                            ev.preventDefault();
+                            ev.stopPropagation();
+                            currentKeybinds[act] = ev.key.length === 1 ? ev.key.toLowerCase() : ev.key;
+                            window.removeEventListener('keydown', onKey, true);
+                            renderKeySlots();
+                        };
+                        window.addEventListener('keydown', onKey, true);
+                    });
+                });
+            };
+
+            document.getElementById('btnKeybinds')?.addEventListener('click', () => {
+                renderKeySlots();
+                modalEl.style.display = 'flex';
+            });
+            document.getElementById('btnKeybindsClose')?.addEventListener('click', () => {
+                modalEl.style.display = 'none';
+            });
+            document.getElementById('btnSaveKeybinds')?.addEventListener('click', () => {
+                saveCustomKeybinds();
+                modalEl.style.display = 'none';
+            });
+            document.getElementById('btnResetKeybinds')?.addEventListener('click', () => {
+                currentKeybinds = Object.assign({}, DEFAULT_KEYBINDS);
+                saveCustomKeybinds();
+                renderKeySlots();
+                showToast('Keybindings restored to default.', 'info');
+            });
+        }
+
+        // 2. Hall of Delvers (Hall of Fame / Expeditions Archive)
+        function getHallOfDelvers() {
+            try {
+                return JSON.parse(localStorage.getItem('kabyss_hall_of_fame')) || [];
+            } catch (e) {
+                return [];
+            }
+        }
+
+        function recordExpeditionToHall(outcome, reason) {
+            try {
+                const hall = getHallOfDelvers();
+                const record = {
+                    id: Date.now(),
+                    date: new Date().toISOString().replace('T', ' ').substring(0, 19),
+                    outcome: outcome, // 'Triumph' or 'Fallen'
+                    reason: reason || 'Unknown fate in the dark',
+                    depth: typeof depthLevel !== 'undefined' ? depthLevel : 1,
+                    zone: typeof ZONE_INFO !== 'undefined' && ZONE_INFO[getZone(depthLevel)] ? ZONE_INFO[getZone(depthLevel)].shortName : 'Abyss',
+                    turns: typeof turn !== 'undefined' ? turn : 1,
+                    monstersSlain: delveStats.monstersSlain || 0,
+                    spellsCast: delveStats.spellsCast || 0,
+                    runesFound: delveStats.runesFound || 0,
+                    potionsBrewed: delveStats.potionsBrewed || 0,
+                    seed: currentRunSeed,
+                    level: player ? player.level : 1,
+                    gold: player ? player.gold : 0
+                };
+                hall.unshift(record);
+                if (hall.length > 30) hall.pop(); // Keep top 30 runs
+                localStorage.setItem('kabyss_hall_of_fame', JSON.stringify(hall));
+                renderHallOfDelvers();
+            } catch (e) {}
+        }
+
+        function renderHallOfDelvers() {
+            const list = document.getElementById('hallOfDelversList');
+            if (!list) return;
+            const records = getHallOfDelvers();
+            if (records.length === 0) {
+                list.innerHTML = `<div style="color:var(--text-dim); font-style:italic; padding:6px;">No recorded delve descents in memory.</div>`;
+                return;
+            }
+            list.innerHTML = records.map(r => {
+                const isWin = r.outcome === 'Triumph';
+                const tagCol = isWin ? '#34d399' : '#f87171';
+                return `
+                    <div style="background:#090d16; border:1px solid #1e293b; border-left:3px solid ${tagCol}; padding:5px 8px; border-radius:3px; display:flex; flex-direction:column; gap:2px;">
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <strong style="color:${tagCol}; font-size:10px;">${isWin ? '👑 TRIUMPH' : '💀 FALLEN'} (B${r.depth} ${r.zone})</strong>
+                            <span style="color:#64748b; font-size:9px;">${r.date}</span>
+                        </div>
+                        <div style="color:#cbd5e1; font-size:10px;">${r.reason}</div>
+                        <div style="display:flex; gap:8px; color:#94a3b8; font-size:9px;">
+                            <span>Turns: ${r.turns}</span>
+                            <span>Kills: ${r.monstersSlain}</span>
+                            <span>Lvl: ${r.level}</span>
+                            <span style="color:#fbbf24;">Gold: ${r.gold}</span>
+                            <span style="color:#38bdf8;">Seed: ${r.seed}</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // 3. Turn Action Replay Buffer & Telemetry Rewind
+        let delveTurnHistory = [];
+        const MAX_REPLAY_TURNS = 120;
+
+        function recordTurnReplaySnapshot(actionDesc) {
+            try {
+                if (!player) return;
+                const snapshot = {
+                    turn: typeof turn !== 'undefined' ? turn : 1,
+                    depth: typeof depthLevel !== 'undefined' ? depthLevel : 1,
+                    x: player.x,
+                    y: player.y,
+                    hp: player.hp,
+                    maxHp: player.maxHp,
+                    sanity: player.sanity,
+                    hunger: player.hunger,
+                    aether: player.aether,
+                    action: actionDesc || 'Pass'
+                };
+                delveTurnHistory.push(snapshot);
+                if (delveTurnHistory.length > MAX_REPLAY_TURNS) {
+                    delveTurnHistory.shift();
+                }
+                const slider = document.getElementById('replayTurnSlider');
+                if (slider) {
+                    slider.max = Math.max(0, delveTurnHistory.length - 1);
+                    slider.value = slider.max;
+                    updateReplayDisplay(slider.value);
+                }
+            } catch (e) {}
+        }
+
+        function updateReplayDisplay(index) {
+            const idx = parseInt(index);
+            const snap = delveTurnHistory[idx];
+            const infoEl = document.getElementById('replayTurnInfo');
+            if (!infoEl || !snap) return;
+            infoEl.innerHTML = `Step ${idx + 1}/${delveTurnHistory.length}: <strong>Turn ${snap.turn}</strong> [B${snap.depth}] Pos:(${snap.x},${snap.y}) HP:${snap.hp}/${snap.maxHp} Sanity:${snap.sanity}% - <em style="color:#38bdf8;">${snap.action}</em>`;
+        }
+
         // Initialize Chronicle Tab in Sidebar DOM
         function initChronicleSystem() {
             const tabsHeader = document.querySelector('.tabs-header');
@@ -9540,6 +9757,32 @@
 
                     <div class="panel-section">
                         <div class="section-header">
+                            <span>🎬 Turn Action Replay Scrubber</span>
+                        </div>
+                        <div style="display:flex; flex-direction:column; gap:6px;">
+                            <input type="range" id="replayTurnSlider" min="0" max="0" value="0" style="width:100%; accent-color:#38bdf8; cursor:pointer;" />
+                            <div id="replayTurnInfo" style="font-size:10px; color:#94a3b8; background:#06080e; padding:4px 6px; border-radius:3px; border:1px solid #131a29;">
+                                No turns recorded yet.
+                            </div>
+                            <div style="display:flex; gap:4px;">
+                                <button id="btnReplayPrev" class="btn-action" style="flex:1; font-size:10px;">◀ Step Back</button>
+                                <button id="btnReplayNext" class="btn-action" style="flex:1; font-size:10px;">Step Fwd ▶</button>
+                                <button id="btnExportReplay" class="btn-action" style="flex:1; font-size:10px;" title="Export replay telemetry as JSON">📤 JSON</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="panel-section">
+                        <div class="section-header">
+                            <span>🏆 Hall of Delvers (Archive)</span>
+                            <button id="btnClearHall" style="background:transparent; border:none; color:#ef4444; font-size:9px; cursor:pointer;" title="Clear saved hall records">Clear</button>
+                        </div>
+                        <div id="hallOfDelversList" style="display:flex; flex-direction:column; gap:4px; max-height:160px; overflow-y:auto; font-size:10px; padding:4px 0;">
+                        </div>
+                    </div>
+
+                    <div class="panel-section">
+                        <div class="section-header">
                             <span>Expedition Ledger</span>
                             <span id="chronLogCount" style="color:var(--text-dim); font-size:10px;">0 Events</span>
                         </div>
@@ -9550,7 +9793,7 @@
                             <button class="chron-filter-btn" data-filter="important" style="font-size:9px; padding:2px 6px;">Alerts</button>
                         </div>
                         <input type="text" id="chronSearch" placeholder="Search delve ledger..." style="width:100%; background:#090d16; border:1px solid #1e293b; color:#cbd5e1; font-size:10px; padding:4px 6px; border-radius:3px; margin-bottom:6px;" />
-                        <div id="chronicleEventsList" style="display:flex; flex-direction:column; gap:4px; max-height:220px; overflow-y:auto; font-size:10px; font-family:var(--font-mono); background:#06080e; border:1px solid #131a29; border-radius:3px; padding:6px;">
+                        <div id="chronicleEventsList" style="display:flex; flex-direction:column; gap:4px; max-height:180px; overflow-y:auto; font-size:10px; font-family:var(--font-mono); background:#06080e; border:1px solid #131a29; border-radius:3px; padding:6px;">
                             <div style="color:var(--text-dim); font-style:italic;">No logged events yet.</div>
                         </div>
                     </div>
@@ -9621,6 +9864,46 @@
                 document.getElementById('chronSearch')?.addEventListener('input', () => {
                     renderChronicleEvents();
                 });
+
+                // Wire up Replay UI
+                const slider = document.getElementById('replayTurnSlider');
+                slider?.addEventListener('input', (e) => {
+                    updateReplayDisplay(e.target.value);
+                });
+                document.getElementById('btnReplayPrev')?.addEventListener('click', () => {
+                    if (slider && slider.value > 0) {
+                        slider.value = parseInt(slider.value) - 1;
+                        updateReplayDisplay(slider.value);
+                    }
+                });
+                document.getElementById('btnReplayNext')?.addEventListener('click', () => {
+                    if (slider && slider.value < slider.max) {
+                        slider.value = parseInt(slider.value) + 1;
+                        updateReplayDisplay(slider.value);
+                    }
+                });
+                document.getElementById('btnExportReplay')?.addEventListener('click', () => {
+                    try {
+                        const blob = new Blob([JSON.stringify({ seed: currentRunSeed, turns: delveTurnHistory }, null, 2)], { type: 'application/json' });
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = `kabyss-replay-${currentRunSeed}.json`;
+                        a.click();
+                        URL.revokeObjectURL(url);
+                        showToast('Replay telemetry exported.', 'info');
+                    } catch (e) {
+                        showToast('Replay export error.', 'warn');
+                    }
+                });
+
+                document.getElementById('btnClearHall')?.addEventListener('click', () => {
+                    if (confirm('Clear all stored Hall of Delvers run records?')) {
+                        localStorage.removeItem('kabyss_hall_of_fame');
+                        renderHallOfDelvers();
+                        showToast('Hall of Delvers cleared.', 'info');
+                    }
+                });
             }
         }
 
@@ -9642,6 +9925,7 @@
             if (seedEl) seedEl.textContent = currentRunSeed;
 
             renderChronicleEvents();
+            renderHallOfDelvers();
         }
 
         function renderChronicleEvents() {
@@ -9709,6 +9993,23 @@
             }
         };
 
+        // Hook into movePlayer / action to record turn replay
+        const _baseMovePlayer = typeof movePlayer === 'function' ? movePlayer : null;
+        if (_baseMovePlayer) {
+            movePlayer = function(dx, dy) {
+                _baseMovePlayer(dx, dy);
+                const dir = dx === 0 && dy === -1 ? 'North' : dx === 0 && dy === 1 ? 'South' : dx === -1 ? 'West' : 'East';
+                recordTurnReplaySnapshot(`Step ${dir}`);
+            };
+        }
+
+        // Hook into player death / game over to save to Hall of Delvers
+        const _baseRestartDescent = typeof restartDescent === 'function' ? restartDescent : null;
+        restartDescent = function() {
+            recordExpeditionToHall('Fallen', 'Succumbed to abyssal terrors');
+            if (_baseRestartDescent) _baseRestartDescent();
+        };
+
         // Help Modal - Delver's Tome & Survival Codex
         const modal = document.getElementById('modalHelp');
         function switchTomeTab(tabId) {
@@ -9743,8 +10044,10 @@
         // Initialization
         window.addEventListener('load', () => {
             initChronicleSystem();
+            initKeybindsModal();
             bindAllTabs();
             generateDungeon(1);
+            recordTurnReplaySnapshot('Entered the Abyss');
             render();
             try {
                 const tutorialSeen = localStorage.getItem('kabyss_tutorialSeen') === '1';
