@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-tester
-next_agent: kilo-tester
+current_agent: kilo-usability
+next_agent: kilo-usability
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -14,7 +14,7 @@ status: ready
 current_targets:
   kilo_creator: kweb://users/~neon_rider
   kilo_graphics: KDragon
-  kilo_tester: KChart
+  kilo_tester: KChat
   kilo_usability: KNetMap
   kilo_qa: KBreakout
   kilo_expander: KChess
@@ -32,9 +32,9 @@ virtual_web_rotation:
 - kweb://cybercafe
 - kweb://10.19.99.4/classified
 last_run:
-  agent: kilo-graphics
-  app: KDragon
-  timestamp: 2026-10-11T10:02:02+0000
+  agent: kilo-tester
+  app: KChart
+  timestamp: 2026-10-11T10:14:00+0000
 last_planner_run: '2026-10-10T16:30:00Z'
 ---
 
@@ -82,8 +82,8 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Upcoming Queue**: `KWizard`, `KFarm`, `KMatch3`, `KQuest`, `KSpace`, `KColosseum`.
 
 ### 3. App Tester Queue (`kilo-tester`)
-- **Current Target**: `KCalendar`
-- **Upcoming Queue**: `KChart`, `KChat`, `KMine`, `KPing`, `KSanctuary`, `KAudio`, `KSubmarine`, `KTrader`, `KVault`.
+- **Current Target**: `KChat`
+- **Upcoming Queue**: `KMine`, `KPing`, `KSanctuary`, `KAudio`, `KSubmarine`, `KTrader`, `KVault`, `KCalendar`, `KChart`.
 
 ### 4. Usability & UX Queue (`kilo-usability`)
 - **Current Target**: `KNetMap`
@@ -113,6 +113,11 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-11T10:14:00+0000 — kilo-tester: KChart (UI & Interactive Audit)**
+  - Status: PASS ✅ (Vite build clean; HTML 121.4 KB << 999 KB ceiling).
+  - Audit: Verified startup test, CSS balance, modal dismissal, 10 engines, transforms, and exports.
+  - Queue: Advanced kilo-tester target to KChat; rotation handoff to kilo-usability.
+
 - **2026-10-11T10:02:02+0000 — kilo-graphics: KDragon (Zero-Token Auto-Skip — Inappropriate Target)**
   - Status: ⏭️ Skip — Imagen 3 asset replacement not appropriate for KDragon (pure vector, board game, or mature art).
   - Optimization: Handled via orchestrator pre-flight zero-token auto-skip.
@@ -129,15 +134,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Expansion: Added 12-tier Dungeon Feats & Mastery Badges system with interactive modal [C], persistent localStorage tracking, milestone perks (+Max HP/MP/DEF/XP), and in-game achievements.
   - Queue: Advanced kilo-expander target to KChess; rotation handoff to kilo-creator.
 
-### Agent Run Log — 2026-10-11T09:15 (kilo-usability)
-- **Status:** 🟢 Completed (`KBudget` Usability & Layout Polish)
-- Tuned window bounds to 920x650 in `App.jsx` for zero-scroll default display.
-- Added real-time category breakdown legend with color swatches & percentages.
-- Added ledger column subheaders, streamlined action buttons & touch targets.
-- Build clean; advanced usability queue to `KNetMap` and handed off to `kilo-qa`.
-
-- **2026-10-11T09:05:00+0000 — kilo-tester: KCalendar (Interactive UI & Storage Resilience Audit)**
-  - Status: PASS ✅ (Vite build clean; HTML 116 KB << 999 KB ceiling).
-  - Storage Hardening: Fixed loadEvents() double-JSON-parse TypeError on pre-parsed safeGet data.
-  - Interactive Audit: Verified Month/Week/Day/Agenda views, event modal CRUD, export/import, search filter.
-  - Queue: Advanced kilo-tester target to KChart; rotation handoff to kilo-usability.
+- **2026-10-11T09:15:00+0000 — kilo-usability: KBudget (Usability & Layout Polish)**
+  - Status: PASS ✅ (Vite build clean; HTML 145 KB << 999 KB ceiling).
+  - Tuned window bounds to 920x650 in App.jsx for zero-scroll default display; added breakdown legend.
+  - Queue: Advanced kilo-usability to KNetMap; rotation handoff to kilo-qa.
