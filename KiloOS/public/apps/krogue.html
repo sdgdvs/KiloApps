@@ -13,14 +13,18 @@
             text-rendering: optimizeLegibility;
             -webkit-font-smoothing: antialiased;
             display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
-            min-height: 100vh; overflow-y: auto; overflow-x: hidden; padding: 8px 4px;
+            min-height: 100vh; overflow-y: auto; overflow-x: hidden; padding: 10px 4px;
         }
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #07090e; }
+        ::-webkit-scrollbar-thumb { background: #2d3748; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #4a5568; }
         #game-container {
             display: flex; flex-direction: column; align-items: center;
             background: #111520; border: 2px solid #2d3748; border-radius: 12px;
             box-shadow: 0 12px 40px rgba(0,0,0,0.85), 0 0 25px rgba(66, 153, 225, 0.2);
             padding: 8px; width: 920px; max-width: 98vw; position: relative;
-            margin: auto 0;
+            margin: 0 auto;
         }
         #canvas-wrapper {
             position: relative;

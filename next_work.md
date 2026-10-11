@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-usability
+current_agent: kilo-qa
+next_agent: kilo-qa
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -15,7 +15,7 @@ current_targets:
   kilo_creator: kweb://darknet
   kilo_graphics: KDragon
   kilo_tester: KVoid
-  kilo_usability: KRogue
+  kilo_usability: KCalendar
   kilo_qa: KPac
   kilo_expander: KColosseum
 virtual_web_target: kweb://darknet
@@ -32,9 +32,9 @@ virtual_web_rotation:
 - kweb://cybercafe
 - kweb://10.19.99.4/classified
 last_run:
-  agent: kilo-tester
-  app: KVault
-  timestamp: 2026-10-10T22:03:30-07:00
+  agent: kilo-usability
+  app: KRogue
+  timestamp: '2026-10-10T22:13:30-07:00'
 last_planner_run: '2026-10-10T16:30:00Z'
 ---
 
@@ -86,8 +86,8 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Upcoming Queue**: `KCalendar`, `KChart`, `KChat`, `KMine`, `KPing`, `KSanctuary`, `KAudio`, `KSubmarine`, `KTrader`, `KVault`.
 
 ### 4. Usability & UX Queue (`kilo-usability`)
-- **Current Target**: `KRogue`
-- **Upcoming Queue**: `KCalendar`, `KSnake`, `KAudio`, `KBudget`, `KNetMap`.
+- **Current Target**: `KCalendar`
+- **Upcoming Queue**: `KSnake`, `KAudio`, `KBudget`, `KNetMap`, `KRogue`.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
 - **Current Target**: `KPong`
@@ -113,6 +113,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-10T22:13:30-07:00 — kilo-usability: KRogue (UI/UX Usability Pass)**
+  - Status: PASS ✅ (Eliminated flexbox vertical scroll top-clipping bug via margin: 0 auto; themed custom dark scrollbars).
+  - Usability: Verified canvas HiDPI/responsive scaling, hotkey hints [H/F1], and button touch target spacing.
+  - Build & Size: Vite build clean; HTML 277 KB << 999 KB ceiling.
+  - Queue: Advanced kilo-usability target to `KCalendar`; rotation handoff to `kilo-qa`.
+
 - **2026-10-10T22:03:30-07:00 — kilo-tester: KVault (UI Elements & Lifecycle Audit)**
   - Status: PASS ✅ (File input reset on re-import, safe storage error wrapping, visibilitychange TOTP pause).
   - UI Testing: Verified import/export, generator modals, quicksave/quickload [F5/F9], custom compartments, audio [M].
@@ -135,9 +141,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Tactical Routing: Wired [1-4] subsystem shunting (weapons/engines/shields/balanced) into flight telemetry HUD and physics loop.
   - Storage & Build: Fixed save import JSON wrapping via safeSet; Vite build clean (276 KB << 999 KB).
   - Queue: Advanced kilo-expander target to `KColosseum`; rotation handoff to `kilo-creator`.
-
-- **2026-10-10T21:21:00-07:00 — kilo-qa: KPong (Pass 5: Tutorial & State Integrity)**
-  - Status: PASS ✅ (F5/F9 full state quicksave/load, tutorialSeen gating on clean sessions, modal Esc/Enter accessibility).
-  - Safety & Cleanliness: Visibility change loop suspension, zero storage quota leaks, Rule 12 multiplayer gate confirmed.
-  - Build & Size: Vite build clean (`npm run build`); HTML 147 KB << 999 KB ceiling.
-  - Queue: Advanced kilo-qa target to KPac; rotation handoff to kilo-expander.
