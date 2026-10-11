@@ -4,6 +4,11 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-11T07:48:02+0000 — kilo-graphics: KDragon (Zero-Token Auto-Skip — Inappropriate Target)**
+  - Status: ⏭️ Skip — Imagen 3 asset replacement not appropriate for KDragon (pure vector, board game, or mature art).
+  - Optimization: Handled via orchestrator pre-flight zero-token auto-skip.
+  - Queue: Advanced `kilo-graphics` to `KDragon`; rotation handoff to `kilo-tester`.
+
 - **Agent Run Log — 2026-10-11T08:38:00+0000 (`kilo-creator`)**
   - **Status:** 🟢 Completed (`kweb://warez` / 0xRELEASE Scene Vault)
   - Verified Anti-Potemkin Web 1.0 cracktro/FXP/YM2612 engine in `KiloOS/public/web/warez.html`.
