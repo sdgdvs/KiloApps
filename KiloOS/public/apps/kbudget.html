@@ -75,21 +75,22 @@
 
         .main-content {
             flex: 1;
-            padding: 2rem;
+            padding: 1.25rem 1.5rem;
             overflow-y: auto;
             display: grid;
-            grid-template-columns: 300px 1fr;
-            gap: 2rem;
+            grid-template-columns: 290px 1fr;
+            gap: 1.5rem;
         }
 
         .glass-panel {
             background: var(--glass-bg);
             border: 1px solid var(--glass-border);
             border-radius: 12px;
-            padding: 1.5rem;
+            padding: 1.25rem;
             backdrop-filter: blur(10px);
             display: flex;
             flex-direction: column;
+            min-width: 0;
         }
 
         .glass-panel h2 {
@@ -136,7 +137,7 @@
             justify-content: space-between;
             align-items: center;
             background: rgba(255, 255, 255, 0.03);
-            padding: 1rem;
+            padding: 0.85rem 1rem;
             border-radius: 8px;
             border: 1px solid var(--glass-border);
             transition: transform 0.2s, background 0.2s;
@@ -152,10 +153,14 @@
             display: flex;
             flex-direction: column;
             gap: 0.25rem;
+            min-width: 0;
         }
 
         .transaction-desc {
             font-weight: 500;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .transaction-meta {
@@ -163,6 +168,7 @@
             color: #94a3b8;
             display: flex;
             gap: 0.5rem;
+            flex-wrap: wrap;
         }
         
         .transaction-category {
@@ -174,12 +180,13 @@
         .transaction-amount {
             font-weight: 700;
             font-size: 1.1rem;
+            white-space: nowrap;
         }
 
         .empty-state {
             text-align: center;
             color: #94a3b8;
-            padding: 3rem 1rem;
+            padding: 2.5rem 1rem;
             font-style: italic;
         }
 
@@ -296,26 +303,38 @@
         }
 
         .delete-btn, .edit-btn {
-            background: transparent;
-            color: #64748b;
-            border: none;
+            background: rgba(255, 255, 255, 0.05);
+            color: #94a3b8;
+            border: 1px solid var(--glass-border);
             cursor: pointer;
-            margin-left: 0.5rem;
-            transition: color 0.2s;
-            font-size: 1.1rem;
+            margin-left: 0.4rem;
+            transition: color 0.2s, background 0.2s, border-color 0.2s;
+            font-size: 0.95rem;
+            width: 28px;
+            height: 28px;
+            border-radius: 5px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .delete-btn:hover {
             color: var(--danger-color);
+            border-color: rgba(239, 68, 68, 0.4);
+            background: rgba(239, 68, 68, 0.1);
         }
         
         .edit-btn:hover {
             color: var(--primary-color);
+            border-color: rgba(59, 130, 246, 0.4);
+            background: rgba(59, 130, 246, 0.1);
         }
 
         .transaction-right {
             display: flex;
             align-items: center;
+            flex-shrink: 0;
+            margin-left: 0.75rem;
         }
 
         #chart-container {
@@ -370,7 +389,7 @@
             outline-offset: 2px;
         }
 
-        @media (max-width: 768px) {
+        @media (max-width: 820px) {
             body {
                 overflow-y: auto;
             }
@@ -447,9 +466,14 @@
         
         <section class="glass-panel">
             <h2>Transactions</h2>
-            <div style="display: flex; gap: 1rem; align-items: center; margin-bottom: 1rem;">
-                <input type="text" id="search-input" class="form-control" placeholder="Search by description or category..." style="flex: 1; margin-bottom: 0;" oninput="currentPage = 1; render()">
-                <select id="sort-select" class="form-control" style="width: auto; margin-bottom: 0;" onchange="currentPage = 1; render()">
+            <div style="display: flex; gap: 0.5rem; align-items: center; margin-bottom: 1rem; flex-wrap: wrap;">
+                <input type="text" id="search-input" class="form-control" placeholder="Search by description or category..." style="flex: 1; min-width: 180px; margin-bottom: 0;" oninput="currentPage = 1; render()">
+                <select id="filter-type-select" class="form-control" style="width: auto; min-width: 120px; margin-bottom: 0;" onchange="currentPage = 1; render()" title="Filter by transaction type">
+                    <option value="all">All Types</option>
+                    <option value="expense">Expenses</option>
+                    <option value="income">Income</option>
+                </select>
+                <select id="sort-select" class="form-control" style="width: auto; min-width: 160px; margin-bottom: 0;" onchange="currentPage = 1; render()">
                     <option value="date-desc">Date (Newest First)</option>
                     <option value="date-asc">Date (Oldest First)</option>
                     <option value="amount-desc">Amount (Highest First)</option>
@@ -770,7 +794,7 @@
                 if (t) {
                     typeSelect.value = t.type;
                     updateCategories();
-                    document.getElementById('amount').value = t.amount;
+                    document.getElementById('amount').value = Number(t.amount).toFixed(2);
                     if (t.category && !Array.from(categorySelect.options).some(o => o.value === t.category)) {
                         const opt = document.createElement('option');
                         opt.value = t.category;
@@ -789,6 +813,10 @@
                 dateInput.value = new Date().toLocaleDateString('en-CA');
                 document.querySelector('#modal h2').textContent = 'Add Transaction';
             }
+            setTimeout(() => {
+                const amt = document.getElementById('amount');
+                if (amt) amt.focus();
+            }, 60);
         }
 
         function changePage(delta) {
@@ -875,6 +903,7 @@
                     currency: currencySymbol,
                     transactions: transactions,
                     search: document.getElementById('search-input')?.value || '',
+                    filterType: document.getElementById('filter-type-select')?.value || 'all',
                     sort: document.getElementById('sort-select')?.value || 'date-desc',
                     page: currentPage,
                     savedAt: new Date().toISOString()
@@ -908,6 +937,10 @@
                     if (snapshot.search !== undefined) {
                         const searchEl = document.getElementById('search-input');
                         if (searchEl) searchEl.value = snapshot.search;
+                    }
+                    if (snapshot.filterType !== undefined) {
+                        const filterEl = document.getElementById('filter-type-select');
+                        if (filterEl) filterEl.value = snapshot.filterType;
                     }
                     if (snapshot.sort !== undefined) {
                         const sortEl = document.getElementById('sort-select');
@@ -1179,6 +1212,15 @@
             showToast("Cleared all transactions.", "info");
         }
 
+        function clearFilters() {
+            const s = document.getElementById('search-input');
+            if (s) s.value = '';
+            const f = document.getElementById('filter-type-select');
+            if (f) f.value = 'all';
+            currentPage = 1;
+            render();
+        }
+
         function formatCurrency(amount) {
             const isNeg = amount < 0;
             return (isNeg ? '-' : '') + currencySymbol + Math.abs(amount).toFixed(2);
@@ -1204,7 +1246,9 @@
 
         function render() {
             const searchTerm = (document.getElementById('search-input')?.value || '').toLowerCase().trim();
+            const filterType = document.getElementById('filter-type-select')?.value || 'all';
             let filteredTransactions = transactions.filter(t => {
+                if (filterType !== 'all' && t.type !== filterType) return false;
                 if (!searchTerm) return true;
                 const desc = (t.description || '').toLowerCase();
                 const cat = (t.category || '').toLowerCase();
@@ -1277,9 +1321,22 @@
             
             if (filteredTransactions.length === 0) {
                 if (transactions.length === 0) {
-                    transactionList.innerHTML = '<div class="empty-state">No transactions yet. Click + New Transaction to add one.</div>';
+                    transactionList.innerHTML = `
+                        <div class="empty-state">
+                            <p style="margin-bottom: 0.75rem;">No transactions yet in your ledger.</p>
+                            <div style="display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap;">
+                                <button type="button" class="btn" onclick="openModal()">+ Add First Transaction</button>
+                                <button type="button" class="btn btn-outline" style="color: white;" onclick="loadSampleData()">Load Sample Demo</button>
+                            </div>
+                        </div>
+                    `;
                 } else {
-                    transactionList.innerHTML = '<div class="empty-state">No transactions found matching your search.</div>';
+                    transactionList.innerHTML = `
+                        <div class="empty-state">
+                            <p style="margin-bottom: 0.5rem;">No transactions found matching criteria.</p>
+                            <button type="button" class="btn btn-outline" style="color: white; font-size: 0.85rem;" onclick="clearFilters()">Reset Filters</button>
+                        </div>
+                    `;
                 }
             } else {
                 paginatedTransactions.forEach(t => {
@@ -1291,7 +1348,7 @@
                     el.className = 'transaction-item';
                     el.innerHTML = `
                         <div class="transaction-info">
-                            <span class="transaction-desc">${escapeHtml(t.description)}</span>
+                            <span class="transaction-desc" title="${escapeHtml(t.description)}">${escapeHtml(t.description)}</span>
                             <div class="transaction-meta">
                                 <span class="transaction-category">${escapeHtml(t.category)}</span>
                                 <span>${formatDate(t.date)}</span>
@@ -1299,8 +1356,8 @@
                         </div>
                         <div class="transaction-right">
                             <span class="transaction-amount ${amountClass}">${sign}${formatCurrency(t.amount)}</span>
-                            <button class="edit-btn" onclick="openModal('${encodeURIComponent(t.id)}')" title="Edit">✎</button>
-                            <button class="delete-btn" onclick="deleteTransaction('${encodeURIComponent(t.id)}')" title="Delete">✕</button>
+                            <button class="edit-btn" onclick="openModal('${encodeURIComponent(t.id)}')" title="Edit transaction" aria-label="Edit transaction">✎</button>
+                            <button class="delete-btn" onclick="deleteTransaction('${encodeURIComponent(t.id)}')" title="Delete transaction" aria-label="Delete transaction">✕</button>
                         </div>
                     `;
                     transactionList.appendChild(el);

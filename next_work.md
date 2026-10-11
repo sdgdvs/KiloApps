@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-usability
+current_agent: kilo-qa
+next_agent: kilo-qa
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -15,7 +15,7 @@ current_targets:
   kilo_creator: kweb://asm-temple
   kilo_graphics: KDragon
   kilo_tester: KStellar
-  kilo_usability: KBudget
+  kilo_usability: KPing
   kilo_qa: KColony
   kilo_expander: KRogue
 virtual_web_target: kweb://asm-temple
@@ -32,9 +32,9 @@ virtual_web_rotation:
 - kweb://users/~neon_rider
 - kweb://asm-temple
 last_run:
-  agent: kilo-tester
-  app: KAudio
-  timestamp: '2026-10-10T16:50:00-07:00'
+  agent: kilo-usability
+  app: KBudget
+  timestamp: '2026-10-10T17:04:00-07:00'
 last_planner_run: '2026-10-10T16:30:00Z'
 ---
 
@@ -86,8 +86,8 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Upcoming Queue**: `KSubmarine`, `KTrader`, `KType`, `KVault`, `KVoid`, `KCalendar`, `KChart`, `KChat`, `KMine`, `KPing`, `KSanctuary`, `KAudio`.
 
 ### 4. Usability & UX Queue (`kilo-usability`)
-- **Current Target**: `KBudget`
-- **Upcoming Queue**: `KPing`, `KNetMap`, `KRogue`, `KCalendar`, `KSnake`, `KAudio`.
+- **Current Target**: `KPing`
+- **Upcoming Queue**: `KNetMap`, `KRogue`, `KCalendar`, `KSnake`, `KAudio`, `KBudget`.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
 - **Current Target**: `KColony`
@@ -113,6 +113,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-10T17:04:00-07:00 — kilo-usability: KBudget (Usability & Layout Pass)**
+  - Status: PASS ✅ (Responsive layout tuning, transaction type filter, touch button targets & empty state CTAs)
+  - Layout & UX: Restructured grid padding to 1.25rem, added 28px touch action buttons, amount field autofocus, and filter reset.
+  - Build & Size: Vite build clean; HTML 64.9 KB << 999 KB ceiling.
+  - Queue: Advanced usability target to `KPing`; rotation handoff to `kilo-qa`.
+
 - **2026-10-10T16:50:00-07:00 — kilo-tester: KAudio (UI Elements & State Integrity Audit)**
   - Status: PASS ✅ (Wired missing hotkeys [B] Bitcrush and [N] Chorus, fixed [H] key conflict with A4 note, updated help guide)
   - State Integrity: Bitcrusher, Chorus, and Micro-Tuning scale selection now fully persisted across quicksave/quickload & JSON export/import.
@@ -134,8 +140,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Engine Depth: Full custom key rebinding with persistence, .kpr replay file format, and live telemetry tracking.
   - Build & Size: Vite build clean; HTML 147 KB << 999 KB ceiling.
   - Queue: Advanced expander target to `KRogue`; rotation handoff to `kilo-creator`.
-
-- **2026-10-10T16:13:10-07:00 — kilo-qa: KAlchemy (Pass 5 QA & State Integrity)**
-  - Status: PASS ✅ (F5 quicksave & F9 quickload persistence handlers wired with toasts; manual guide updated)
-  - Build & Size: Vite build clean (493ms), MSVC native clean; HTML 241 KB << 999 KB ceiling.
-  - Queue: Advanced QA target to `KColony`; rotation handoff to `kilo-expander`.
