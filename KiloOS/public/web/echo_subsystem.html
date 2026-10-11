@@ -1000,6 +1000,7 @@
     <button class="tab-btn" id="tabBtn9" onclick="switchTab('seismic')">🪨 [09] LITHOSPHERIC SEISMIC &amp; STRATA PROFILER</button>
     <button class="tab-btn" id="tabBtn10" onclick="switchTab('tape')">📼 [10] HELMHOLTZ CAVITY &amp; 4-TRACK ANALOG TAPE</button>
     <button class="tab-btn" id="tabBtn11" onclick="switchTab('heterodyne')">🔬 [11] HETERODYNE DOWNSHIFTER &amp; CAVITATION SONAR</button>
+    <button class="tab-btn" id="tabBtn12" onclick="switchTab('interferometer')">🎚️ [12] SPATIO-ACOUSTIC INTERFEROMETER &amp; CORRELATOR</button>
   </nav>
 
   <!-- TAB 1: RESEARCH JOURNAL & OBSERVATION LOGBOOK -->
@@ -2679,6 +2680,135 @@ END TRANSMISSION // ESARL 1999</div>
     </div>
   </div>
 
+  <!-- TAB 12: SPATIO-ACOUSTIC INTERFEROMETER & CORRELATOR -->
+  <div id="pane-interferometer" class="tab-pane">
+    <div class="card-box">
+      <div class="card-header">
+        <span>SPATIO-ACOUSTIC CORRELATOR &amp; DUAL-LOBE INTERFEROMETER</span>
+        <div style="display:flex; gap:6px; align-items:center;">
+          <span class="slot-badge valid">INTERFEROMETRY CORE 1999.X</span>
+          <span style="font-size:11px; color:var(--cyan-glow);">CH-A: BOREHOLE | CH-B: MEMORY BUS</span>
+        </div>
+      </div>
+      <p style="font-size:12px; color:#94a3b8; margin-bottom:12px;">
+        Dual-channel spatial interferometer calculating real-time cross-correlation R_xy(τ) between the Delaware Basin seismic transducer (10.19.99.4) and local microphonic RAM bus resonance at 0x0040:0x1999. Features phase-nulling vector synthesis, binaural stereo separation, and steganographic burst demodulation.
+      </p>
+
+      <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:14px; margin-bottom:14px;">
+        <!-- Controls Column -->
+        <div style="background:#040915; border:1px solid var(--border-bright); padding:12px; border-radius:4px;">
+          <div style="font-weight:700; color:#38bdf8; font-size:12px; margin-bottom:10px; display:flex; justify-content:space-between;">
+            <span>🎛️ INTERFEROMETER PHASE &amp; DELAY CONTROL</span>
+            <span id="interfPhaseLock" style="color:#ef4444; font-family:monospace;">PHASE: UNLOCKED</span>
+          </div>
+
+          <div style="margin-bottom:10px;">
+            <label style="font-size:11px; color:#bae6fd; display:flex; justify-content:space-between; margin-bottom:4px;">
+              <span>Time Delay Offset (τ):</span>
+              <span id="interfTauVal" style="color:var(--green-phosphor); font-weight:700;">0.00 ms</span>
+            </label>
+            <input type="range" id="rngInterfTau" min="-50" max="50" step="0.25" value="0" style="width:100%; accent-color:var(--green-phosphor);" oninput="onInterfTauChange(this.value)">
+            <div style="display:flex; justify-content:space-between; font-size:10px; color:#64748b; margin-top:2px;">
+              <span>-50 ms</span><span>0 ms (Coincident)</span><span>+50 ms</span>
+            </div>
+          </div>
+
+          <div style="margin-bottom:10px;">
+            <label style="font-size:11px; color:#bae6fd; display:flex; justify-content:space-between; margin-bottom:4px;">
+              <span>Interferometric Phase Shift (θ):</span>
+              <span id="interfPhaseVal" style="color:var(--cyan-glow); font-weight:700;">180.0°</span>
+            </label>
+            <input type="range" id="rngInterfPhase" min="0" max="360" step="1" value="180" style="width:100%; accent-color:var(--cyan-glow);" oninput="onInterfPhaseChange(this.value)">
+            <div style="display:flex; justify-content:space-between; font-size:10px; color:#64748b; margin-top:2px;">
+              <span>0° (Constructive)</span><span>180° (Destructive Null)</span><span>360°</span>
+            </div>
+          </div>
+
+          <div style="margin-bottom:12px;">
+            <label style="font-size:11px; color:#bae6fd; display:flex; justify-content:space-between; margin-bottom:4px;">
+              <span>Channel B Resonance Offset:</span>
+              <span id="interfFreqBVal" style="color:var(--purple-spectral); font-weight:700;">1999.0 Hz</span>
+            </label>
+            <input type="range" id="rngInterfFreqB" min="1980" max="2020" step="0.1" value="1999" style="width:100%; accent-color:var(--purple-spectral);" oninput="onInterfFreqBChange(this.value)">
+            <div style="display:flex; justify-content:space-between; font-size:10px; color:#64748b; margin-top:2px;">
+              <span>1980 Hz</span><span>1999.0 Hz</span><span>2020 Hz</span>
+            </div>
+          </div>
+
+          <div style="display:flex; gap:6px; flex-wrap:wrap;">
+            <button class="btn-retro btn-green" id="btnInterfAudio" onclick="toggleInterfAudio()">🔊 Monitor Binaural Phase</button>
+            <button class="btn-retro" onclick="snapInterfNull()">Lock Phase Null (180°)</button>
+            <button class="btn-retro btn-amber" onclick="captureInterfBurst()">Capture Burst</button>
+            <button class="btn-retro" onclick="exportInterfLog()">Export .INT Log</button>
+          </div>
+        </div>
+
+        <!-- Telemetry Meters Column -->
+        <div style="background:#040915; border:1px solid var(--border-bright); padding:12px; border-radius:4px; display:flex; flex-direction:column; justify-content:space-between;">
+          <div>
+            <div style="font-weight:700; color:#38bdf8; font-size:12px; margin-bottom:8px;">
+              📊 REAL-TIME INTERFEROMETRY METRICS
+            </div>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:10px; font-size:11px;">
+              <div style="background:#020612; padding:8px; border:1px solid var(--border-dim); border-radius:3px;">
+                <div style="color:#64748b;">Cross-Correlation R_xy:</div>
+                <div id="statInterfCorr" style="font-size:16px; font-weight:700; color:var(--green-phosphor);">+0.9982</div>
+              </div>
+              <div style="background:#020612; padding:8px; border:1px solid var(--border-dim); border-radius:3px;">
+                <div style="color:#64748b;">Carrier Residual (Null):</div>
+                <div id="statInterfResidual" style="font-size:16px; font-weight:700; color:var(--cyan-glow);">-48.2 dB</div>
+              </div>
+              <div style="background:#020612; padding:8px; border:1px solid var(--border-dim); border-radius:3px;">
+                <div style="color:#64748b;">Subcarrier Sideband:</div>
+                <div id="statInterfSideband" style="font-size:14px; font-weight:700; color:var(--amber-led);">19.99 Hz</div>
+              </div>
+              <div style="background:#020612; padding:8px; border:1px solid var(--border-dim); border-radius:3px;">
+                <div style="color:#64748b;">Lobe Interference:</div>
+                <div id="statInterfLobe" style="font-size:14px; font-weight:700; color:var(--purple-spectral);">DESTRUCTIVE</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Decoded Burst Feed -->
+          <div style="background:#01040a; border:1px solid #1e315b; padding:8px; border-radius:3px;">
+            <div style="font-size:10px; color:#38bdf8; margin-bottom:4px; font-weight:700;">
+              DEEP CARRIER SUBCARRIER BURST TELEMETRY:
+            </div>
+            <div id="interfBurstOutput" style="font-family:monospace; font-size:11px; color:#bae6fd; min-height:42px; line-height:1.4;">
+              [READY] Awaiting phase-null lock or burst trigger...
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Interferometer Visualizer Oscilloscope Canvases -->
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-bottom:12px;">
+        <div style="background:#01040a; border:1px solid #1e315b; border-radius:3px; padding:6px; position:relative;">
+          <div style="position:absolute; top:8px; left:10px; font-size:10px; color:#38bdf8; font-family:monospace; pointer-events:none;">
+            DUAL-LOBE LISSAJOUS PHASE VECTOR (CH-A vs CH-B)
+          </div>
+          <canvas id="interfLissajousCanvas" width="400" height="180" style="width:100%; height:180px; display:block;"></canvas>
+        </div>
+        <div style="background:#01040a; border:1px solid #1e315b; border-radius:3px; padding:6px; position:relative;">
+          <div style="position:absolute; top:8px; left:10px; font-size:10px; color:#00ffaa; font-family:monospace; pointer-events:none;">
+            INTERFERENCE FRINGE PATTERN &amp; CROSS-CORRELATION R_xy(τ)
+          </div>
+          <canvas id="interfFringeCanvas" width="400" height="180" style="width:100%; height:180px; display:block;"></canvas>
+        </div>
+      </div>
+
+      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+        <div style="font-size:11px; color:#64748b;">
+          Signal Paths: CH-A Carlsbad Geophone Borehole (Permian Salado) • CH-B Local Memory Bus 0x0040:0x1999
+        </div>
+        <div style="display:flex; gap:6px;">
+          <button class="btn-retro" onclick="pipeInterfToTerminal()">Route Metrics to Field Terminal</button>
+          <button class="btn-retro" onclick="switchTab('heterodyne')">« Return to Heterodyne</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Footer & Central Webring -->
   <footer class="lab-footer">
     <div>
@@ -4074,7 +4204,7 @@ Host: kweb://echo-subsystem.net | Station: SIG-1999-ECHO
   }
 
   function switchTab(name) {
-    const tabs = ['journal', 'decoder', 'spectral', 'filter', 'sigint', 'stego', 'terminal', 'mesh', 'seismic', 'tape', 'heterodyne'];
+    const tabs = ['journal', 'decoder', 'spectral', 'filter', 'sigint', 'stego', 'terminal', 'mesh', 'seismic', 'tape', 'heterodyne', 'interferometer'];
     tabs.forEach((t, i) => {
       const btn = document.getElementById('tabBtn' + (i + 1));
       const pane = document.getElementById('pane-' + t);
@@ -4097,6 +4227,7 @@ Host: kweb://echo-subsystem.net | Station: SIG-1999-ECHO
     if (name === 'seismic') initSeismicCanvases();
     if (name === 'tape') initTapeAndCavity();
     if (name === 'heterodyne') initHeterodyneAndSonar();
+    if (name === 'interferometer') initInterferometerSuite();
   }
 
   function executeTermInput() {
@@ -7644,6 +7775,329 @@ kweb://echo-subsystem.net
   function pipeEchoToStego() {
     switchTab('stego');
     logToTerminal(">> [ROUTING] Cavitation echo impedance routed into Steganography encoder.");
+  }
+
+  /* ============================================================
+     TAB 12: SPATIO-ACOUSTIC CORRELATOR & INTERFEROMETER LOGIC
+     ============================================================ */
+  let interfTau = 0; // ms delay
+  let interfPhase = 180; // degrees
+  let interfFreqB = 1999.0; // Hz
+  let interfAudioActive = false;
+  let interfOscA = null;
+  let interfOscB = null;
+  let interfPanA = null;
+  let interfPanB = null;
+  let interfGain = null;
+  let interfAnimId = null;
+
+  function initInterferometerSuite() {
+    updateInterfMeters();
+    renderInterfVisualizers();
+  }
+
+  function onInterfTauChange(val) {
+    interfTau = parseFloat(val);
+    const lbl = document.getElementById('interfTauVal');
+    if (lbl) lbl.textContent = `${interfTau.toFixed(2)} ms`;
+    updateInterfMeters();
+  }
+
+  function onInterfPhaseChange(val) {
+    interfPhase = parseFloat(val);
+    const lbl = document.getElementById('interfPhaseVal');
+    if (lbl) lbl.textContent = `${interfPhase.toFixed(1)}°`;
+    updateInterfMeters();
+  }
+
+  function onInterfFreqBChange(val) {
+    interfFreqB = parseFloat(val);
+    const lbl = document.getElementById('interfFreqBVal');
+    if (lbl) lbl.textContent = `${interfFreqB.toFixed(1)} Hz`;
+    if (interfOscB && audioCtx) {
+      interfOscB.frequency.setValueAtTime(interfFreqB, audioCtx.currentTime);
+    }
+    updateInterfMeters();
+  }
+
+  function snapInterfNull() {
+    const rngT = document.getElementById('rngInterfTau');
+    const rngP = document.getElementById('rngInterfPhase');
+    const rngF = document.getElementById('rngInterfFreqB');
+    if (rngT) rngT.value = 0;
+    if (rngP) rngP.value = 180;
+    if (rngF) rngF.value = 1999;
+    onInterfTauChange(0);
+    onInterfPhaseChange(180);
+    onInterfFreqBChange(1999);
+    captureInterfBurst();
+    logToTerminal(">> [INTERFEROMETER] Carrier phase null locked at 180.0° / 0.00ms delay. Microphonic resonance extinguished.");
+  }
+
+  function updateInterfMeters() {
+    const isLocked = Math.abs(interfPhase - 180) < 2.0 && Math.abs(interfTau) < 0.5 && Math.abs(interfFreqB - 1999) < 0.2;
+    const lockBadge = document.getElementById('interfPhaseLock');
+    if (lockBadge) {
+      if (isLocked) {
+        lockBadge.textContent = 'PHASE: LOCKED (NULL)';
+        lockBadge.style.color = 'var(--green-phosphor)';
+      } else {
+        lockBadge.textContent = 'PHASE: UNLOCKED';
+        lockBadge.style.color = '#ef4444';
+      }
+    }
+
+    const rad = (interfPhase * Math.PI) / 180;
+    const corr = Math.cos(rad) * Math.exp(-Math.abs(interfTau) / 25.0);
+    const corrEl = document.getElementById('statInterfCorr');
+    if (corrEl) {
+      corrEl.textContent = (corr >= 0 ? '+' : '') + corr.toFixed(4);
+    }
+
+    const residualDb = isLocked ? -52.4 : (-20.0 + (1.0 + Math.cos(rad)) * 15.0);
+    const resEl = document.getElementById('statInterfResidual');
+    if (resEl) {
+      resEl.textContent = `${residualDb.toFixed(1)} dB`;
+    }
+
+    const sideband = Math.abs(interfFreqB - 1999.0);
+    const sideEl = document.getElementById('statInterfSideband');
+    if (sideEl) {
+      sideEl.textContent = `${(19.99 + sideband).toFixed(2)} Hz`;
+    }
+
+    const lobeEl = document.getElementById('statInterfLobe');
+    if (lobeEl) {
+      if (isLocked) {
+        lobeEl.textContent = 'COMPLETE NULL';
+        lobeEl.style.color = 'var(--green-phosphor)';
+      } else if (corr > 0.5) {
+        lobeEl.textContent = 'CONSTRUCTIVE';
+        lobeEl.style.color = 'var(--cyan-glow)';
+      } else {
+        lobeEl.textContent = 'DESTRUCTIVE';
+        lobeEl.style.color = 'var(--purple-spectral)';
+      }
+    }
+  }
+
+  function toggleInterfAudio() {
+    if (!audioCtx) initAudio();
+    if (!audioCtx) return;
+
+    const btn = document.getElementById('btnInterfAudio');
+    if (interfAudioActive) {
+      if (interfOscA) { try { interfOscA.stop(); } catch(e){} interfOscA = null; }
+      if (interfOscB) { try { interfOscB.stop(); } catch(e){} interfOscB = null; }
+      interfAudioActive = false;
+      if (btn) {
+        btn.textContent = '🔊 Monitor Binaural Phase';
+        btn.className = 'btn-retro btn-green';
+      }
+      return;
+    }
+
+    try {
+      const now = audioCtx.currentTime;
+      interfGain = audioCtx.createGain();
+      interfGain.gain.setValueAtTime(0.08, now);
+      interfGain.connect(masterGain || audioCtx.destination);
+
+      interfPanA = audioCtx.createStereoPanner ? audioCtx.createStereoPanner() : null;
+      interfPanB = audioCtx.createStereoPanner ? audioCtx.createStereoPanner() : null;
+      if (interfPanA) interfPanA.pan.setValueAtTime(-0.9, now);
+      if (interfPanB) interfPanB.pan.setValueAtTime(0.9, now);
+
+      interfOscA = audioCtx.createOscillator();
+      interfOscA.type = 'sine';
+      interfOscA.frequency.setValueAtTime(1999.0, now);
+
+      interfOscB = audioCtx.createOscillator();
+      interfOscB.type = 'sine';
+      interfOscB.frequency.setValueAtTime(interfFreqB, now);
+
+      if (interfPanA) {
+        interfOscA.connect(interfPanA);
+        interfPanA.connect(interfGain);
+      } else {
+        interfOscA.connect(interfGain);
+      }
+
+      if (interfPanB) {
+        interfOscB.connect(interfPanB);
+        interfPanB.connect(interfGain);
+      } else {
+        interfOscB.connect(interfGain);
+      }
+
+      interfOscA.start(now);
+      interfOscB.start(now);
+      interfAudioActive = true;
+      if (btn) {
+        btn.textContent = '⏹ Stop Binaural Audio';
+        btn.className = 'btn-retro btn-amber';
+      }
+    } catch(err) {
+      console.warn('Interferometer audio error:', err);
+    }
+  }
+
+  function captureInterfBurst() {
+    const isLocked = Math.abs(interfPhase - 180) < 2.0 && Math.abs(interfTau) < 0.5;
+    const output = document.getElementById('interfBurstOutput');
+    if (!output) return;
+
+    if (isLocked) {
+      output.innerHTML = `<span style="color:var(--green-phosphor); font-weight:700;">[SUBCARRIER DEMODULATED // PHASE NULL ESTABLISHED]</span><br>` +
+        `TIMESTAMP: 1999-12-31 23:59:58.412 UTC<br>` +
+        `PAYLOAD: <code>HEX: 53 49 47 2D 31 39 39 39 2D 45 43 48 4F (SIG-1999-ECHO)</code><br>` +
+        `<span style="color:#bae6fd;">DEEP CORRELATION: Delaware Basin Halite Geophone matches memory page 0x0040:0x1999 with 0.9982 coherence.</span>`;
+    } else {
+      const randHex = Math.floor(Math.random() * 0xFFFF).toString(16).toUpperCase().padStart(4, '0');
+      output.innerHTML = `<span style="color:var(--amber-led);">[PARTIAL BURST CAPTURED - UNRESOLVED PHASE NOISE]</span><br>` +
+        `Offset Tau: ${interfTau.toFixed(2)}ms | Phase Error: ${Math.abs(interfPhase - 180).toFixed(1)}°<br>` +
+        `RAW TELEMETRY: <code>FRAME_HDR: 0x${randHex} // SUBCARRIER JITTER: ±${(Math.random() * 4 + 1).toFixed(1)}Hz</code>`;
+    }
+  }
+
+  function exportInterfLog() {
+    let report = "================================================================================\n";
+    report += "ECHO SUBSYSTEM ACOUSTIC RESEARCH LABORATORY (ESARL)\n";
+    report += "SPATIO-ACOUSTIC CORRELATOR & DUAL-LOBE INTERFEROMETER LOG\n";
+    report += "DATE: 1999-12-31 // INSTRUMENT: INTERF-1999-REV-D\n";
+    report += "================================================================================\n\n";
+    report += `[CH-A: BOREHOLE GEOPHONE 10.19.99.4]\n`;
+    report += `Frequency: 1999.00 Hz (Phase Locked Reference)\n`;
+    report += `Transducer: Carlsbad Deep Halite Piezo Array\n\n`;
+    report += `[CH-B: LOCAL MEMORY BUS RESONATOR]\n`;
+    report += `Frequency: ${interfFreqB.toFixed(2)} Hz\n`;
+    report += `Time Delay Offset (Tau): ${interfTau.toFixed(2)} ms\n`;
+    report += `Interferometric Phase (Theta): ${interfPhase.toFixed(1)} deg\n\n`;
+    report += `[CORRELATION COEFFICIENTS]\n`;
+    report += `Cross-Correlation R_xy: ${document.getElementById('statInterfCorr') ? document.getElementById('statInterfCorr').textContent : 'N/A'}\n`;
+    report += `Null Residual: ${document.getElementById('statInterfResidual') ? document.getElementById('statInterfResidual').textContent : 'N/A'}\n`;
+    report += `Lobe Mode: ${document.getElementById('statInterfLobe') ? document.getElementById('statInterfLobe').textContent : 'N/A'}\n\n`;
+    report += `[TELEMETRY BURST CAPTURE]\n`;
+    report += (document.getElementById('interfBurstOutput') ? document.getElementById('interfBurstOutput').innerText : 'No burst captured') + "\n\n";
+    report += "================================================================================\n";
+    report += "VERIFIED: Dr. Alistair Vance, Station Lead\n";
+    report += "kweb://echo-subsystem.net\n";
+
+    const blob = new Blob([report], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'ESARL_INTERFEROMETRY_LOG_1999.INT';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    logToTerminal(">> [EXPORT] Saved interferometry log: 'ESARL_INTERFEROMETRY_LOG_1999.INT'.");
+  }
+
+  function pipeInterfToTerminal() {
+    const corr = document.getElementById('statInterfCorr') ? document.getElementById('statInterfCorr').textContent : '0.0000';
+    logToTerminal(`>> [INTERFEROMETER] Tau=${interfTau.toFixed(2)}ms, Theta=${interfPhase.toFixed(1)}°, R_xy=${corr}. Telemetry linked to KNet.`);
+    switchTab('terminal');
+  }
+
+  function renderInterfVisualizers() {
+    if (interfAnimId) cancelAnimationFrame(interfAnimId);
+    let t = 0;
+
+    function step() {
+      const pane = document.getElementById('pane-interferometer');
+      if (!pane || pane.style.display === 'none' || !pane.classList.contains('active')) {
+        interfAnimId = null;
+        return;
+      }
+
+      t += 0.05;
+      const cvLiss = document.getElementById('interfLissajousCanvas');
+      const cvFrg = document.getElementById('interfFringeCanvas');
+
+      if (cvLiss) {
+        const ctx = cvLiss.getContext('2d');
+        const w = cvLiss.width;
+        const h = cvLiss.height;
+        ctx.fillStyle = 'rgba(1, 4, 10, 0.25)';
+        ctx.fillRect(0, 0, w, h);
+
+        // Grid
+        ctx.strokeStyle = '#0d1a33';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        for (let x = 0; x < w; x += 40) { ctx.moveTo(x, 0); ctx.lineTo(x, h); }
+        for (let y = 0; y < h; y += 30) { ctx.moveTo(0, y); ctx.lineTo(w, y); }
+        ctx.stroke();
+
+        // Crosshairs
+        ctx.strokeStyle = '#1e315b';
+        ctx.beginPath();
+        ctx.moveTo(w / 2, 0); ctx.lineTo(w / 2, h);
+        ctx.moveTo(0, h / 2); ctx.lineTo(w, h / 2);
+        ctx.stroke();
+
+        // Lissajous curve
+        const phaseRad = (interfPhase * Math.PI) / 180;
+        const tauShift = interfTau * 0.1;
+        ctx.strokeStyle = Math.abs(interfPhase - 180) < 5 ? '#00ffaa' : '#38bdf8';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        const rx = w * 0.38;
+        const ry = h * 0.38;
+        const cx = w / 2;
+        const cy = h / 2;
+        for (let i = 0; i <= 100; i++) {
+          const theta = (i / 100) * Math.PI * 2;
+          const x = cx + Math.sin(theta + t) * rx;
+          const y = cy + Math.sin(theta + phaseRad + tauShift + t * (interfFreqB / 1999.0)) * ry;
+          if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+        }
+        ctx.stroke();
+      }
+
+      if (cvFrg) {
+        const ctx = cvFrg.getContext('2d');
+        const w = cvFrg.width;
+        const h = cvFrg.height;
+        ctx.fillStyle = '#01040a';
+        ctx.fillRect(0, 0, w, h);
+
+        // Draw interference fringes
+        const phaseRad = (interfPhase * Math.PI) / 180;
+        const colW = w / 50;
+        for (let i = 0; i < 50; i++) {
+          const x = i * colW;
+          const dist = (i - 25) * 0.4 + (interfTau * 0.1);
+          const intensity = 0.5 + 0.5 * Math.cos(dist + phaseRad + Math.sin(t * 0.5));
+          const g = Math.floor(intensity * 255);
+          ctx.fillStyle = `rgb(0, ${g}, ${Math.floor(g * 0.7)})`;
+          ctx.fillRect(x, 0, colW, h - 45);
+        }
+
+        // Draw R_xy correlation curve along bottom
+        ctx.fillStyle = '#060d1d';
+        ctx.fillRect(0, h - 45, w, 45);
+        ctx.strokeStyle = '#38bdf8';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        for (let x = 0; x < w; x += 4) {
+          const tauNorm = (x - w / 2) / (w / 2) * 50.0;
+          const r = Math.cos((phaseRad) + (tauNorm - interfTau) * 0.3) * Math.exp(-Math.abs(tauNorm - interfTau) / 18.0);
+          const y = (h - 22) - r * 18;
+          if (x === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+        }
+        ctx.stroke();
+
+        ctx.fillStyle = '#bae6fd';
+        ctx.font = '9px monospace';
+        ctx.fillText('CROSS-CORRELATION ENVELOPE R_xy(τ)', 10, h - 8);
+      }
+
+      interfAnimId = requestAnimationFrame(step);
+    }
+    interfAnimId = requestAnimationFrame(step);
   }
 
 </script>

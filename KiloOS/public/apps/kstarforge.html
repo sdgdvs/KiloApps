@@ -1064,6 +1064,9 @@
                 <div class="blueprint-toolbar">
                     <button class="btn btn-active" id="btn-tool-mode" title="Toggle Placement or Erase Tool [X]">✏️ Tool: Place [X]</button>
                     <button class="btn" id="btn-symmetry" title="Toggle Bilateral Symmetry Placement [S]">⇋ Symmetry: ON</button>
+                    <button class="btn" id="btn-stress-overlay" title="Toggle Hull Stress & Thermal Analysis [H]">⚡ Stress: OFF</button>
+                    <button class="btn" id="btn-export-bom" title="Export Bill of Materials Manifest CSV">📜 BOM (.csv)</button>
+                    <button class="btn" id="btn-export-svg" title="Export Architectural CAD Schematic">📐 SVG CAD</button>
                     <button class="btn" id="btn-clear-grid" title="Clear Grid">🗑 Clear</button>
                     <button class="btn" id="btn-template-select">📋 Templates ▼</button>
                     <button class="btn btn-primary" id="btn-send-to-drydock">🚀 Transfer to Drydock</button>
@@ -1222,6 +1225,18 @@
                 <div>REACTOR HEAT: <span id="flight-hud-heat" style="font-weight: bold; color: #38bdf8;">0%</span></div>
                 <div>SPEED: <span id="flight-hud-speed" style="font-weight: bold; color: #fff;">0 m/s</span></div>
                 <div>ORE IN CARGO: <span id="flight-hud-cargo" style="font-weight: bold; color: #f59e0b;">0 TONS</span></div>
+                <div style="margin-top: 4px; padding-top: 4px; border-top: 1px solid var(--border-dim); font-size: 11px; display: flex; flex-direction: column; gap: 4px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span style="color: var(--text-dim);">TACTICAL ROUTE:</span>
+                        <span id="flight-hud-route" style="color: var(--accent-cyan); font-weight: bold;">[4] BALANCED</span>
+                    </div>
+                    <div style="display: flex; gap: 4px; pointer-events: auto;">
+                        <button class="btn" id="btn-shunt-wep" style="font-size: 10px; padding: 2px 5px;" title="Shunt Power to Weapons (+25% DPS, -15% Spd)">[1] WEP</button>
+                        <button class="btn" id="btn-shunt-eng" style="font-size: 10px; padding: 2px 5px;" title="Shunt Power to Engines (+35% Thrust, -20% Shield Regen)">[2] ENG</button>
+                        <button class="btn" id="btn-shunt-shd" style="font-size: 10px; padding: 2px 5px;" title="Shunt Power to Shields (+50% Regen, -15% DPS)">[3] SHD</button>
+                        <button class="btn btn-active" id="btn-shunt-bal" style="font-size: 10px; padding: 2px 5px;" title="Balanced Standard Grid">[4] BAL</button>
+                    </div>
+                </div>
                 <div style="display: flex; gap: 6px; margin-top: 4px;">
                     <button class="btn btn-primary" id="btn-flight-dock" style="pointer-events: auto; padding: 3px 8px; font-size: 11px;">⮐ Dock [ESC]</button>
                     <button class="btn" id="btn-toggle-flight-touch" style="pointer-events: auto; padding: 3px 8px; font-size: 11px;" title="Toggle On-Screen Touch Controls">🎮 Touch HUD</button>
@@ -1233,6 +1248,7 @@
                 <span>[A/D] Steering Yaw</span>
                 <span>[SPACE] Primaries</span>
                 <span>[E] Mining Beam</span>
+                <span>[1-4] Power Route</span>
                 <span>[SHIFT] Boost</span>
                 <span>[C] Coolant</span>
                 <span>[H/F1] Help</span>
@@ -1857,6 +1873,8 @@
                 this.activeTool = 'place';
                 this.previousView = 'blueprint-view';
                 this.stats = {};
+                this.stressOverlay = false;
+                this.tacticalRoute = 'balanced';
             }
 
             loadDefaultVanguard() {
@@ -1957,9 +1975,11 @@
                         drydockProgress: this.drydockProgress,
                         selectedShipClass: this.selectedShipClass,
                         shipName: this.shipName,
+                        stressOverlay: this.stressOverlay,
+                        tacticalRoute: this.tacticalRoute,
                         timestamp: Date.now()
                     };
-                    localStorage.setItem(slot, JSON.stringify(payload));
+                    safeSet(slot, payload);
                     showToast('QUICKSAVE SUCCESSFUL [F5]');
                     audio.playSuccess();
                     return true;
@@ -1972,18 +1992,19 @@
 
             loadFromStorage(slot = 'kstarforge_quicksave') {
                 try {
-                    const raw = localStorage.getItem(slot);
-                    if (!raw) {
+                    const data = safeGet(slot, null);
+                    if (!data) {
                         showToast('NO SAVE FILE LOCATED');
                         return false;
                     }
-                    const data = JSON.parse(raw);
                     if (data.grid) this.grid = data.grid;
                     if (data.resources) this.resources = data.resources;
                     if (data.completedContracts) this.completedContracts = data.completedContracts;
                     if (data.drydockProgress !== undefined) this.drydockProgress = data.drydockProgress;
                     if (data.selectedShipClass) this.selectedShipClass = data.selectedShipClass;
                     if (data.shipName) this.shipName = data.shipName;
+                    if (data.stressOverlay !== undefined) this.stressOverlay = data.stressOverlay;
+                    if (data.tacticalRoute) this.tacticalRoute = data.tacticalRoute;
                     this.calculateTelemetry();
                     showToast('QUICKSAVE RESTORED [F9]');
                     audio.playSuccess();
@@ -2294,6 +2315,116 @@
                         drawModuleBlueprintGlyph(bpCtx, def, px, py, sz);
                     }
                 }
+            }
+
+            // Diagnostic Hull Stress & Thermal Analysis Overlay
+            if (state.stressOverlay) {
+                let totalMass = 0, sumMassX = 0, sumMassY = 0;
+                let totalThrust = 0, sumThrustX = 0, sumThrustY = 0;
+
+                for (let y = 0; y < GRID_SIZE; y++) {
+                    for (let x = 0; x < GRID_SIZE; x++) {
+                        const mId = state.grid[y][x];
+                        if (mId && MODULE_DEFS[mId]) {
+                            const def = MODULE_DEFS[mId];
+                            const px = x * CELL_SIZE + 2;
+                            const py = y * CELL_SIZE + 2;
+                            const sz = CELL_SIZE - 4;
+
+                            // CoM / CoT integration
+                            const mMass = def.mass || 1;
+                            totalMass += mMass;
+                            sumMassX += (x + 0.5) * mMass;
+                            sumMassY += (y + 0.5) * mMass;
+
+                            if (def.thrust > 0) {
+                                totalThrust += def.thrust;
+                                sumThrustX += (x + 0.5) * def.thrust;
+                                sumThrustY += (y + 0.5) * def.thrust;
+                            }
+
+                            // Neighbor stress connectivity check
+                            let neighbors = 0;
+                            if (x > 0 && state.grid[y][x - 1]) neighbors++;
+                            if (x < GRID_SIZE - 1 && state.grid[y][x + 1]) neighbors++;
+                            if (y > 0 && state.grid[y - 1][x]) neighbors++;
+                            if (y < GRID_SIZE - 1 && state.grid[y + 1][x]) neighbors++;
+
+                            // Color-coded stress & thermal tint
+                            if (def.hGen > 10) {
+                                // High Thermal Hotspot
+                                bpCtx.fillStyle = 'rgba(239, 68, 68, 0.38)';
+                                bpCtx.fillRect(px, py, sz, sz);
+                                bpCtx.strokeStyle = '#ef4444';
+                                bpCtx.strokeRect(px, py, sz, sz);
+                            } else if (def.pGen > 0) {
+                                // High Power Generator
+                                bpCtx.fillStyle = 'rgba(6, 182, 212, 0.30)';
+                                bpCtx.fillRect(px, py, sz, sz);
+                            } else if (neighbors <= 1 && def.mass > 5) {
+                                // High Cantilever Shear Stress (unsupported heavy module)
+                                bpCtx.fillStyle = 'rgba(245, 158, 11, 0.35)';
+                                bpCtx.fillRect(px, py, sz, sz);
+                                bpCtx.strokeStyle = '#f59e0b';
+                                bpCtx.strokeRect(px, py, sz, sz);
+                            } else {
+                                // Nominal structural load
+                                bpCtx.fillStyle = 'rgba(16, 185, 129, 0.20)';
+                                bpCtx.fillRect(px, py, sz, sz);
+                            }
+                        }
+                    }
+                }
+
+                // Render Center of Mass (CoM) Reticle
+                if (totalMass > 0) {
+                    const comX = (sumMassX / totalMass) * CELL_SIZE;
+                    const comY = (sumMassY / totalMass) * CELL_SIZE;
+                    bpCtx.save();
+                    bpCtx.strokeStyle = '#facc15';
+                    bpCtx.fillStyle = '#facc15';
+                    bpCtx.lineWidth = 1.5;
+                    bpCtx.beginPath();
+                    bpCtx.arc(comX, comY, 7, 0, Math.PI * 2);
+                    bpCtx.stroke();
+                    bpCtx.beginPath();
+                    bpCtx.moveTo(comX - 10, comY); bpCtx.lineTo(comX + 10, comY);
+                    bpCtx.moveTo(comX, comY - 10); bpCtx.lineTo(comX, comY + 10);
+                    bpCtx.stroke();
+                    bpCtx.font = 'bold 9px Consolas, monospace';
+                    bpCtx.fillText('CoM', comX + 9, comY - 5);
+                    bpCtx.restore();
+                }
+
+                // Render Center of Thrust (CoT) Reticle
+                if (totalThrust > 0) {
+                    const cotX = (sumThrustX / totalThrust) * CELL_SIZE;
+                    const cotY = (sumThrustY / totalThrust) * CELL_SIZE;
+                    bpCtx.save();
+                    bpCtx.strokeStyle = '#38bdf8';
+                    bpCtx.fillStyle = '#38bdf8';
+                    bpCtx.lineWidth = 1.5;
+                    bpCtx.beginPath();
+                    bpCtx.moveTo(cotX, cotY - 8);
+                    bpCtx.lineTo(cotX + 7, cotY + 6);
+                    bpCtx.lineTo(cotX - 7, cotY + 6);
+                    bpCtx.closePath();
+                    bpCtx.stroke();
+                    bpCtx.font = 'bold 9px Consolas, monospace';
+                    bpCtx.fillText('CoT', cotX + 9, cotY + 7);
+                    bpCtx.restore();
+                }
+
+                // Telemetry diagnostic badge
+                bpCtx.save();
+                bpCtx.fillStyle = 'rgba(8, 14, 28, 0.85)';
+                bpCtx.fillRect(8, 8, 220, 24);
+                bpCtx.strokeStyle = 'rgba(56, 189, 248, 0.4)';
+                bpCtx.strokeRect(8, 8, 220, 24);
+                bpCtx.fillStyle = '#38bdf8';
+                bpCtx.font = 'bold 10px Consolas, monospace';
+                bpCtx.fillText('STRESS SCAN: ACTIVE // NOMINAL', 14, 24);
+                bpCtx.restore();
             }
 
             // Hover Cell Highlight & Selected Module Ghost Preview
@@ -3443,9 +3574,14 @@
                     document.getElementById('btn-settings-done')?.click();
                 }
             } else if (e.key >= '1' && e.key <= '5' && (!document.activeElement || document.activeElement.tagName !== 'INPUT')) {
-                const navBtns = document.querySelectorAll('.nav-btn');
-                const idx = parseInt(e.key) - 1;
-                if (navBtns[idx]) navBtns[idx].click();
+                if (flightSim.active && e.key >= '1' && e.key <= '4' && typeof window.setTacticalRoute === 'function') {
+                    const routes = ['weapons', 'engines', 'shields', 'balanced'];
+                    window.setTacticalRoute(routes[parseInt(e.key) - 1]);
+                } else {
+                    const navBtns = document.querySelectorAll('.nav-btn');
+                    const idx = parseInt(e.key) - 1;
+                    if (navBtns[idx]) navBtns[idx].click();
+                }
             }
         });
 
@@ -3463,13 +3599,18 @@
             const p = flightSim.player;
             const s = state.stats;
 
+            // Tactical Routing Modifiers
+            const route = state.tacticalRoute || 'balanced';
+            const thrustMult = route === 'engines' ? 1.35 : (route === 'weapons' ? 0.85 : 1.0);
+            const shieldRegenMult = route === 'shields' ? 1.6 : (route === 'engines' ? 0.75 : 1.0);
+
             // Turning
             const turnSpeed = 0.055;
             if (flightSim.keys['a'] || flightSim.keys['arrowleft']) p.angle -= turnSpeed;
             if (flightSim.keys['d'] || flightSim.keys['arrowright']) p.angle += turnSpeed;
 
             // Thrust
-            const thrustPower = (s.twr ? parseFloat(s.twr) : 1.5) * 0.12;
+            const thrustPower = (s.twr ? parseFloat(s.twr) : 1.5) * 0.12 * thrustMult;
             if (flightSim.keys['w'] || flightSim.keys['arrowup']) {
                 p.vx += Math.cos(p.angle) * thrustPower;
                 p.vy += Math.sin(p.angle) * thrustPower;
@@ -3511,7 +3652,7 @@
 
             // Shields
             if (s.netPower >= 0 && p.currentShield < s.shields) {
-                p.currentShield = Math.min(s.shields, p.currentShield + 0.3);
+                p.currentShield = Math.min(s.shields, p.currentShield + 0.3 * shieldRegenMult);
             }
 
             // Position & Drag
@@ -5298,7 +5439,7 @@ Certification: APPROVED BY PROVING GROUNDS RANGE CONTROL`;
                     if (!data.grid || !Array.isArray(data.grid)) {
                         throw new Error('Invalid grid format in save JSON');
                     }
-                    safeSet('kstarforge_quicksave', event.target.result);
+                    safeSet('kstarforge_quicksave', data);
                     state.loadFromStorage();
                     updateUI();
                     renderBlueprintGrid();
@@ -5312,6 +5453,186 @@ Certification: APPROVED BY PROVING GROUNDS RANGE CONTROL`;
             };
             reader.readAsText(file);
         });
+
+        // Bill of Materials (BOM) CSV Export
+        function exportBomCsv() {
+            try {
+                const counts = {};
+                let totalMass = 0, totalPowerDraw = 0, totalPowerGen = 0, totalThrust = 0, totalShield = 0, totalDps = 0;
+                let totalCr = 0, totalTi = 0, totalFe = 0, totalDe = 0;
+
+                for (let y = 0; y < GRID_SIZE; y++) {
+                    for (let x = 0; x < GRID_SIZE; x++) {
+                        const mId = state.grid[y][x];
+                        if (mId && MODULE_DEFS[mId]) {
+                            counts[mId] = (counts[mId] || 0) + 1;
+                        }
+                    }
+                }
+
+                let csv = 'STARFORGE SHIPYARD IX - BILL OF MATERIALS (BOM)\n';
+                csv += `Ship Class,${state.selectedShipClass || 'CORVETTE'},Ship Registry,${state.shipName || 'VANGUARD-01'}\n`;
+                csv += `Export Timestamp,${new Date().toISOString()}\n\n`;
+                csv += 'Module ID,Module Name,Category,Quantity,Mass (t),Power Draw (MW),Power Gen (MW),Thrust (kN),Shield (SP),DPS,Credits,Titanium,Ferrite,Deuterium\n';
+
+                Object.keys(counts).forEach(idStr => {
+                    const id = parseInt(idStr);
+                    const def = MODULE_DEFS[id];
+                    const qty = counts[id];
+                    const mass = def.mass * qty;
+                    const pDraw = def.pDraw * qty;
+                    const pGen = def.pGen * qty;
+                    const thr = def.thrust * qty;
+                    const shd = def.shield * qty;
+                    const dps = def.dps * qty;
+                    const cr = def.costCr * qty;
+                    const ti = def.costTi * qty;
+                    const fe = def.costFe * qty;
+                    const de = def.costDe * qty;
+
+                    totalMass += mass;
+                    totalPowerDraw += pDraw;
+                    totalPowerGen += pGen;
+                    totalThrust += thr;
+                    totalShield += shd;
+                    totalDps += dps;
+                    totalCr += cr;
+                    totalTi += ti;
+                    totalFe += fe;
+                    totalDe += de;
+
+                    csv += `${id},"${def.name}",${def.cat},${qty},${mass},${pDraw},${pGen},${thr},${shd},${dps},${cr},${ti},${fe},${de}\n`;
+                });
+
+                csv += `\nTOTALS,---,---,---,${totalMass},${totalPowerDraw},${totalPowerGen},${totalThrust},${totalShield},${totalDps},${totalCr},${totalTi},${totalFe},${totalDe}\n`;
+
+                const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `kstarforge_${(state.shipName || 'vessel').toLowerCase()}_bom.csv`;
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                URL.revokeObjectURL(url);
+                showToast('BOM MANIFEST EXPORTED (.CSV)');
+                audio.playSuccess();
+            } catch (err) {
+                console.error('[KStarForge] BOM export error:', err);
+                showToast('BOM EXPORT FAILED');
+            }
+        }
+        document.getElementById('btn-export-bom')?.addEventListener('click', exportBomCsv);
+
+        // Architectural Vector SVG CAD Schematic Export
+        function exportSvgSchematic() {
+            try {
+                const cellSize = 28;
+                const width = GRID_SIZE * cellSize;
+                const height = GRID_SIZE * cellSize;
+                let svg = `<?xml version="1.0" encoding="UTF-8"?>\n<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${height + 60}" width="${width}" height="${height + 60}">\n`;
+                svg += `<rect width="100%" height="100%" fill="#080e1e"/>\n`;
+                
+                // Grid CAD lines
+                for (let i = 0; i <= GRID_SIZE; i++) {
+                    const pos = i * cellSize;
+                    svg += `<line x1="${pos}" y1="0" x2="${pos}" y2="${height}" stroke="#1e3054" stroke-width="0.75"/>\n`;
+                    svg += `<line x1="0" y1="${pos}" x2="${width}" y2="${pos}" stroke="#1e3054" stroke-width="0.75"/>\n`;
+                }
+
+                // Modules
+                for (let y = 0; y < GRID_SIZE; y++) {
+                    for (let x = 0; x < GRID_SIZE; x++) {
+                        const mId = state.grid[y][x];
+                        if (mId && MODULE_DEFS[mId]) {
+                            const def = MODULE_DEFS[mId];
+                            const px = x * cellSize + 2;
+                            const py = y * cellSize + 2;
+                            const sz = cellSize - 4;
+                            svg += `<rect x="${px}" y="${py}" width="${sz}" height="${sz}" fill="${def.color}" fill-opacity="0.25" stroke="${def.color}" stroke-width="1.5" rx="2"/>\n`;
+                            svg += `<text x="${px + sz / 2}" y="${py + sz / 2 + 4}" fill="#f8fafc" font-family="Consolas, monospace" font-size="9" font-weight="bold" text-anchor="middle">${def.badge}</text>\n`;
+                        }
+                    }
+                }
+
+                // Header block
+                svg += `<rect x="0" y="${height}" width="${width}" height="60" fill="#0d1527" stroke="#1e3054" stroke-width="1"/>\n`;
+                svg += `<text x="12" y="${height + 22}" fill="#38bdf8" font-family="Consolas, monospace" font-size="12" font-weight="bold">STARFORGE ARCHITECTURAL SCHEMATIC: ${state.shipName || 'VANGUARD-01'}</text>\n`;
+                svg += `<text x="12" y="${height + 42}" fill="#94a3b8" font-family="Consolas, monospace" font-size="10">MASS: ${state.stats.mass || 0}T | POWER: ${state.stats.netPower || 0}MW | THRUST: ${state.stats.thrust || 0}kN | TWR: ${state.stats.twr || 0}</text>\n`;
+                svg += `</svg>`;
+
+                const blob = new Blob([svg], { type: 'image/svg+xml;charset=utf-8;' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `kstarforge_${(state.shipName || 'vessel').toLowerCase()}_schematic.svg`;
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                URL.revokeObjectURL(url);
+                showToast('CAD SCHEMATIC EXPORTED (.SVG)');
+                audio.playSuccess();
+            } catch (err) {
+                console.error('[KStarForge] SVG export error:', err);
+                showToast('SVG EXPORT FAILED');
+            }
+        }
+        document.getElementById('btn-export-svg')?.addEventListener('click', exportSvgSchematic);
+
+        // Stress & Thermal Analysis Toggle
+        document.getElementById('btn-stress-overlay')?.addEventListener('click', (e) => {
+            audio.playClick();
+            state.stressOverlay = !state.stressOverlay;
+            const btn = e.currentTarget;
+            if (state.stressOverlay) {
+                btn.classList.add('btn-active');
+                btn.textContent = '⚡ Stress: ON';
+                showToast('DIAGNOSTIC STRESS & THERMAL OVERLAY ACTIVE');
+            } else {
+                btn.classList.remove('btn-active');
+                btn.textContent = '⚡ Stress: OFF';
+                showToast('STRESS OVERLAY DEACTIVATED');
+            }
+            renderBlueprintGrid();
+        });
+
+        // Tactical Power Routing (Flight Sim)
+        function setTacticalRoute(route) {
+            state.tacticalRoute = route;
+            const routeLabel = document.getElementById('flight-hud-route');
+            const btns = {
+                wep: document.getElementById('btn-shunt-wep'),
+                eng: document.getElementById('btn-shunt-eng'),
+                shd: document.getElementById('btn-shunt-shd'),
+                bal: document.getElementById('btn-shunt-bal')
+            };
+            Object.values(btns).forEach(b => b?.classList.remove('btn-active'));
+
+            if (route === 'weapons') {
+                if (routeLabel) { routeLabel.textContent = '[1] WEAPONS (+25% DPS)'; routeLabel.style.color = '#ef4444'; }
+                btns.wep?.classList.add('btn-active');
+                showToast('POWER ROUTED TO WEAPONS (+25% DPS, -15% SPD)');
+            } else if (route === 'engines') {
+                if (routeLabel) { routeLabel.textContent = '[2] ENGINES (+35% TWR)'; routeLabel.style.color = '#38bdf8'; }
+                btns.eng?.classList.add('btn-active');
+                showToast('POWER ROUTED TO ENGINES (+35% THRUST, -20% SHIELD)');
+            } else if (route === 'shields') {
+                if (routeLabel) { routeLabel.textContent = '[3] SHIELDS (+50% REG)'; routeLabel.style.color = '#818cf8'; }
+                btns.shd?.classList.add('btn-active');
+                showToast('POWER ROUTED TO SHIELDS (+50% REGEN, -15% DPS)');
+            } else {
+                if (routeLabel) { routeLabel.textContent = '[4] BALANCED'; routeLabel.style.color = '#06b6d4'; }
+                btns.bal?.classList.add('btn-active');
+                showToast('POWER GRID BALANCED');
+            }
+            audio.playClick();
+        }
+        window.setTacticalRoute = setTacticalRoute;
+
+        document.getElementById('btn-shunt-wep')?.addEventListener('click', () => setTacticalRoute('weapons'));
+        document.getElementById('btn-shunt-eng')?.addEventListener('click', () => setTacticalRoute('engines'));
+        document.getElementById('btn-shunt-shd')?.addEventListener('click', () => setTacticalRoute('shields'));
+        document.getElementById('btn-shunt-bal')?.addEventListener('click', () => setTacticalRoute('balanced'));
 
         document.getElementById('btn-reset-save').addEventListener('click', () => {
             if (confirm('Reset all shipyard progress?')) {
