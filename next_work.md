@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-qa
+current_agent: kilo-qa
+next_agent: kilo-expander
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -15,7 +15,7 @@ current_targets:
   kilo_creator: kweb://geocities
   kilo_graphics: KDragon
   kilo_tester: KChart
-  kilo_usability: KBudget
+  kilo_usability: KNetMap
   kilo_qa: KColony
   kilo_expander: KRogue
 virtual_web_target: kweb://geocities
@@ -32,9 +32,9 @@ virtual_web_rotation:
 - kweb://cybercafe
 - kweb://10.19.99.4/classified
 last_run:
-  agent: kilo-tester
-  app: KCalendar
-  timestamp: 2026-10-11T09:05:00+0000
+  agent: kilo-usability
+  app: KBudget
+  timestamp: 2026-10-11T09:15:00+0000
 last_planner_run: '2026-10-10T16:30:00Z'
 ---
 
@@ -86,8 +86,8 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Upcoming Queue**: `KChart`, `KChat`, `KMine`, `KPing`, `KSanctuary`, `KAudio`, `KSubmarine`, `KTrader`, `KVault`.
 
 ### 4. Usability & UX Queue (`kilo-usability`)
-- **Current Target**: `KBudget`
-- **Upcoming Queue**: `KNetMap`, `KRogue`, `KAudio`.
+- **Current Target**: `KNetMap`
+- **Upcoming Queue**: `KRogue`, `KAudio`, `KBudget`.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
 - **Current Target**: `KColony`
@@ -111,7 +111,14 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ---
 
-## Recent Execution Logs (Max 5 Entries)
+## Recent Execution Logs
+
+### Agent Run Log ? 2026-10-11T09:15 (kilo-usability)
+- **Status:** ?? Completed (`KBudget` Usability & Layout Polish)
+- Tuned window bounds to 920x650 in `App.jsx` for zero-scroll default display.
+- Added real-time category breakdown legend with color swatches & percentages.
+- Added ledger column subheaders, streamlined action buttons & touch targets.
+- Build clean; advanced usability queue to `KNetMap` and handed off to `kilo-qa`. (Max 5 Entries)
 
 - **2026-10-11T09:05:00+0000 — kilo-tester: KCalendar (Interactive UI & Storage Resilience Audit)**
   - Status: PASS ✅ (Vite build clean; HTML 116 KB << 999 KB ceiling).
