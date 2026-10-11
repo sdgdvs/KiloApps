@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-creator
-next_agent: kilo-graphics
+current_agent: kilo-graphics
+next_agent: kilo-tester
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -12,13 +12,13 @@ model: gemini-3.8-flash-medium
 timeout_minutes: 6
 status: ready
 current_targets:
-  kilo_creator: kweb://users/~neon_rider
+  kilo_creator: kweb://asm-temple
   kilo_graphics: KDragon
   kilo_tester: KChat
   kilo_usability: KPaint
   kilo_qa: KRogue
   kilo_expander: KMine
-virtual_web_target: kweb://users/~neon_rider
+virtual_web_target: kweb://asm-temple
 virtual_web_rotation:
 - kweb://echo-subsystem.net
 - kweb://deep-core
@@ -32,9 +32,9 @@ virtual_web_rotation:
 - kweb://cybercafe
 - kweb://10.19.99.4/classified
 last_run:
-  agent: kilo-expander
-  app: KChess
-  timestamp: '2026-10-11T10:39:00+0000'
+  agent: kilo-creator
+  app: kweb://users/~neon_rider
+  timestamp: '2026-10-11T10:50:00+0000'
 last_planner_run: '2026-10-10T16:30:00Z'
 ---
 
@@ -113,6 +113,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-11T10:50:00+0000 — kilo-creator: kweb://users/~neon_rider (Virtual 1999 Web Expansion & Audit)**
+  - Status: PASS ✅ (Vite build clean; HTML 250.6 KB << 999 KB ceiling).
+  - Destination: Validated Win32 ASM & Demoscene Shrine (interactive opcode sandbox, 8x8 bitmap glyph editor, YM2612 tracker tunes, live guestbook, diegetic ARG dead drop).
+  - Integration: Verified seamless routing via KNet (`kweb://users/~neon_rider`), KPortal, and WebRing.
+  - Queue: Advanced kilo-creator to kweb://asm-temple; rotation handoff to kilo-graphics.
+
 - **2026-10-11T10:39:00+0000 — kilo-expander: KChess (Deep Feature Expansion)**
   - Status: PASS ✅ (Vite build clean; HTML 216 KB << 999 KB ceiling).
   - Expansion: Added Interactive Custom Board & Position Editor (piece palette, 8x8 setup grid, FEN validation/export/apply, turn selection, hotkey C, Tools menu integration).
@@ -132,9 +138,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Status: ⏭️ Skip — Imagen 3 asset replacement not appropriate for KDragon (pure vector, board game, or mature art).
   - Optimization: Handled via orchestrator pre-flight zero-token auto-skip.
   - Queue: Advanced `kilo-graphics` to `KDragon`; rotation handoff to `kilo-tester`.
-
-- **2026-10-11T09:50:00+0000 — kilo-creator: kweb://geocities (Virtual 1999 Web Polish & Audit)**
-  - Status: PASS ✅ (Vite build clean; HTML 574 KB << 999 KB ceiling).
-  - Web Destination: Validated CyberSpire Retro Shrine (MOD vault, SFX lab, Web-Safe 216 Color Lab, Halite Crypt Dungeon RPG, guestbook & webring links).
-  - Integration: Verified seamless links in KNet, KPortal, WebRing, and KRSS.
-  - Queue: Advanced kilo-creator to kweb://users/~neon_rider; rotation handoff to kilo-graphics.
