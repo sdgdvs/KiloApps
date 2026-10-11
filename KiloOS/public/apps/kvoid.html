@@ -253,7 +253,7 @@
             <div class="scanlines"></div>
             <div class="crt-overlay"></div>
         </div>
-        <div id="message">Use WASD to move &bull; Space for EMP &bull; [F] Flare &bull; [F1] Guide &bull; [M] Audio &bull; [F5] Save &bull; [F9] Load</div>
+        <div id="message">Use WASD or Click to move &bull; Space for EMP &bull; [F] Flare &bull; [F1] Guide &bull; [M] Audio &bull; [F5] Save &bull; [F9] Load</div>
         <div class="btn-panel">
             <button class="retro-btn" id="btn-help" onclick="toggleHelp()" title="Survival Guide & Hotkeys (F1 / H)">[F1/H] Guide</button>
             <button class="retro-btn" id="btn-emp" onclick="deployEMP()" title="EMP Blast - Stun Entities (Space)">[Space] EMP</button>
@@ -950,7 +950,12 @@
             updateStatsDisplay();
         }
         
-        setInterval(gameTick, 1000);
+        let gameTickInterval = null;
+        function startGameTickInterval() {
+            if (gameTickInterval) clearInterval(gameTickInterval);
+            gameTickInterval = setInterval(gameTick, 1000);
+        }
+        startGameTickInterval();
 
         function die(msg) {
             if (!isDead) {
@@ -2173,13 +2178,28 @@
             reader.readAsText(file);
         }
 
-        canvas.addEventListener('click', () => {
+        canvas.addEventListener('click', (e) => {
             if (showHelp) {
                 closeHelp();
                 return;
             }
             if (isDead || wonGame) {
                 resetGame();
+                return;
+            }
+            const rect = canvas.getBoundingClientRect();
+            const clickX = (e.clientX - rect.left) / rect.width * VIRTUAL_WIDTH;
+            const clickY = (e.clientY - rect.top) / rect.height * VIRTUAL_HEIGHT;
+            const pCentX = player.x * TILE_SIZE + TILE_SIZE / 2;
+            const pCentY = player.y * TILE_SIZE + TILE_SIZE / 2;
+            const diffX = clickX - pCentX;
+            const diffY = clickY - pCentY;
+            if (Math.abs(diffX) > Math.abs(diffY)) {
+                if (diffX > 8) { movePlayer(1, 0); playerDir = 3; }
+                else if (diffX < -8) { movePlayer(-1, 0); playerDir = 2; }
+            } else {
+                if (diffY > 8) { movePlayer(0, 1); playerDir = 1; }
+                else if (diffY < -8) { movePlayer(0, -1); playerDir = 0; }
             }
         });
 
@@ -2207,7 +2227,8 @@
             updateInventoryDisplay();
             updateStatsDisplay();
             startAlienInterval();
-            showMessage("Use WASD to move • Space for EMP • [F] Flare • [F1] Guide • [M] Audio");
+            startGameTickInterval();
+            showMessage("Use WASD or Click to move • Space for EMP • [F] Flare • [F1] Guide • [M] Audio");
             draw();
         }
 
@@ -2309,14 +2330,41 @@
             }
         } catch (err) {}
 
-        let renderLoopId;
+        let renderLoopId = null;
         function renderLoop(time) {
             updateParticles();
             updateShockwaves();
             draw(time);
             renderLoopId = requestAnimationFrame(renderLoop);
         }
-        renderLoop(performance.now());
+        renderLoopId = requestAnimationFrame(renderLoop);
+
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) {
+                if (renderLoopId) {
+                    cancelAnimationFrame(renderLoopId);
+                    renderLoopId = null;
+                }
+                if (alienInterval) {
+                    clearInterval(alienInterval);
+                    alienInterval = null;
+                }
+                if (gameTickInterval) {
+                    clearInterval(gameTickInterval);
+                    gameTickInterval = null;
+                }
+            } else {
+                if (!renderLoopId) {
+                    renderLoopId = requestAnimationFrame(renderLoop);
+                }
+                if (!alienInterval && !isDead && !wonGame) {
+                    startAlienInterval();
+                }
+                if (!gameTickInterval && !isDead && !wonGame) {
+                    startGameTickInterval();
+                }
+            }
+        });
     </script>
 </body>
 </html>
