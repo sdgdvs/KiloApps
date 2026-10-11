@@ -182,6 +182,7 @@
       <button id="btnOnlineDuelNav" onclick="showMultiplayerModal()" title="Colosseum Online Duels [O]" style="background:#004d40; border-color:#00e5ff; color:#fff;">🌐 Online Duel [O]</button>
       <button id="btnReplayNav" onclick="showReplayModal()" title="View Last Combat Chronicle [C]">📜 Replay [C]</button>
       <button id="btnStatsNav" onclick="showStatsModal()" title="Ludus Hall of Fame & Statistics [T]">🏆 Hall of Fame [T]</button>
+      <button id="btnFacilitiesNav" onclick="showFacilitiesModal()" title="Ludus Facilities & Upgrades [U]" style="background:#3a2000; border-color:#ffd700;">🏛️ Facilities [U]</button>
       <button onclick="quickSave()" title="Quicksave Ludus State [F5]">💾 Save [F5]</button>
       <button onclick="quickLoad()" title="Quickload Ludus State [F9]">📂 Load [F9]</button>
       <button onclick="showExportModal()" title="Backup & Restore JSON Save">📜 Backup</button>
@@ -1242,14 +1243,123 @@
       }
     }
 
+
+    // --- LUDUS FACILITIES EXPANSION ---
+    let ludusFacilities = {
+      infirmary: 0,
+      armory: 0,
+      palaestra: 0,
+      banquet: 0
+    };
+
+    const FACILITY_DEFS = {
+      infirmary: {
+        name: "Medicus Infirmary",
+        icon: "🩹",
+        maxTier: 3,
+        costs: [120, 250, 500],
+        desc: "Tends to bleeding wounds. Reduces healing treatment costs by 15% / 30% / 45%.",
+        perk: lvl => lvl === 0 ? "Standard treatment rates" : `-${lvl * 15}% treatment costs`
+      },
+      armory: {
+        name: "Vulcan's Armory",
+        icon: "⚔️",
+        maxTier: 3,
+        costs: [150, 300, 600],
+        desc: "Hones edge and temper of gladiatorial arms. Boosts gladiator weapon strike damage by +8% / +16% / +25%.",
+        perk: lvl => lvl === 0 ? "Standard weapons" : `+${lvl === 3 ? 25 : lvl * 8}% physical damage`
+      },
+      palaestra: {
+        name: "Colonnaded Palaestra",
+        icon: "🏋️",
+        maxTier: 3,
+        costs: [140, 280, 560],
+        desc: "Dedicated sand yard and heavy weights. 20% / 40% / 60% chance for double stat gain when training.",
+        perk: lvl => lvl === 0 ? "Standard training" : `${lvl * 20}% double-stat chance`
+      },
+      banquet: {
+        name: "Triclinium Banquet Hall",
+        icon: "🍷",
+        maxTier: 3,
+        costs: [100, 220, 450],
+        desc: "Lavish banquets before arena games. Boosts starting Crowd Favor by +10% / +20% / +30% in all matches.",
+        perk: lvl => lvl === 0 ? "0% starting favor" : `+${lvl * 10}% start crowd favor`
+      }
+    };
+
+    function showFacilitiesModal() {
+      closeAllModals();
+      renderFacilities();
+      const m = document.getElementById('facilitiesModal');
+      if (m) m.style.display = 'flex';
+    }
+
+    function renderFacilities() {
+      const container = document.getElementById('facilitiesList');
+      if (!container) return;
+      container.innerHTML = '';
+      for (const [key, def] of Object.entries(FACILITY_DEFS)) {
+        const lvl = ludusFacilities[key] || 0;
+        const isMax = lvl >= def.maxTier;
+        const cost = isMax ? 0 : def.costs[lvl];
+        const canAfford = funds >= cost && !isMax;
+
+        const card = document.createElement('div');
+        card.style.cssText = 'background:#fff; border:1px solid #d4af37; border-radius:6px; padding:12px; display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap;';
+        card.innerHTML = `
+          <div style="flex:1; min-width:240px;">
+            <div style="font-weight:bold; font-size:1.05em; color:#8b0000; display:flex; align-items:center; gap:6px;">
+              <span>${def.icon}</span> <span>${def.name}</span>
+              <span style="font-size:0.85em; color:#d4af37; font-weight:bold;">[Tier ${lvl}/${def.maxTier}]</span>
+            </div>
+            <div style="font-size:0.88em; color:#555; margin-top:3px;">${def.desc}</div>
+            <div style="font-size:0.85em; color:#228b22; font-weight:bold; margin-top:3px;">Current Effect: ${def.perk(lvl)}</div>
+          </div>
+          <div>
+            ${isMax ? 
+              '<span style="color:#228b22; font-weight:bold; padding:6px 12px; background:#e8f5e9; border-radius:4px; border:1px solid #81c784;">⭐ MAX TIER</span>' :
+              `<button onclick="upgradeFacility('${key}')" ${canAfford ? '' : 'disabled'} style="background:${canAfford ? '#228b22' : '#777'}; color:#fff; padding:6px 14px; font-size:0.95em;">Upgrade (${cost} D)</button>`
+            }
+          </div>
+        `;
+        container.appendChild(card);
+      }
+    }
+
+    function upgradeFacility(key) {
+      const def = FACILITY_DEFS[key];
+      if (!def) return;
+      const lvl = ludusFacilities[key] || 0;
+      if (lvl >= def.maxTier) return;
+      const cost = def.costs[lvl];
+      if (funds < cost) {
+        showToast('⚠️ Insufficient Denarii for facility upgrade.', 'warning');
+        return;
+      }
+      funds -= cost;
+      ludusFacilities[key] = lvl + 1;
+      playTone(523.25, 'triangle', 0.15, 0.35);
+      setTimeout(() => playTone(659.25, 'triangle', 0.2, 0.35), 90);
+      showToast(`🏛️ Upgraded ${def.name} to Tier ${lvl + 1}!`, 'success');
+      saveGame();
+      updateUI();
+      renderFacilities();
+    }
+
     function trainGladiator(id, stat) {
       if (funds >= 20) {
         const gladiator = owned.find(g => g.id === id);
         if (gladiator) {
           funds -= 20;
-          if (stat === 'str') gladiator.str++;
-          if (stat === 'agi') gladiator.agi++;
-          if (stat === 'vit') gladiator.vit++;
+          let bonus = 1;
+          const pLvl = (ludusFacilities && ludusFacilities.palaestra) || 0;
+          if (pLvl > 0 && Math.random() < pLvl * 0.20) {
+            bonus = 2;
+            showToast(`⭐ Palaestra Mastery! +2 ${stat.toUpperCase()} gain!`, 'success');
+          }
+          if (stat === 'str') gladiator.str += bonus;
+          if (stat === 'agi') gladiator.agi += bonus;
+          if (stat === 'vit') gladiator.vit += bonus;
           playTone(280, 'sine', 0.12, 0.3);
           setTimeout(() => playTone(370, 'sine', 0.15, 0.3), 80);
           updateDesc(gladiator);
@@ -1263,8 +1373,11 @@
     function healGladiator(id) {
       const g = owned.find(g => g.id === id);
       if (g && g.damageTaken > 0 && funds > 0) {
+        const infLvl = (ludusFacilities && ludusFacilities.infirmary) || 0;
+        const discountRate = infLvl * 0.15;
         let healAmt = Math.min(funds, g.damageTaken);
-        funds -= healAmt;
+        let chargedCost = Math.max(0, Math.round(healAmt * (1 - discountRate)));
+        funds -= chargedCost;
         g.damageTaken -= healAmt;
         playTone(523.25, 'sine', 0.15, 0.25);
         setTimeout(() => playTone(659.25, 'sine', 0.2, 0.25), 100);
@@ -3948,7 +4061,8 @@
           damageTaken: typeof g.damageTaken === 'number' ? g.damageTaken : 0,
           skinTone: g.skinTone
         })),
-        combatState
+        combatState,
+        ludusFacilities
       };
     }
 
@@ -3978,6 +4092,7 @@
       if (typeof data.funds === 'number') funds = data.funds;
       if (typeof data.arenaLevel === 'number') arenaLevel = data.arenaLevel;
       if (typeof data.nextId === 'number') nextId = data.nextId;
+      if (data.ludusFacilities && typeof data.ludusFacilities === 'object') ludusFacilities = Object.assign({infirmary:0,armory:0,palaestra:0,banquet:0}, data.ludusFacilities);
       if (typeof data.soundMuted === 'boolean') {
         soundMuted = data.soundMuted;
         updateSoundButton();
@@ -5948,6 +6063,14 @@
         return;
       }
 
+      if (e.key === 'u' || e.key === 'U') {
+        e.preventDefault();
+        const fOpen = document.getElementById('facilitiesModal') && document.getElementById('facilitiesModal').style.display === 'flex';
+        if (fOpen) closeAllModals();
+        else showFacilitiesModal();
+        return;
+      }
+
       if (e.key === 'm' || e.key === 'M') {
         e.preventDefault();
         toggleSound();
@@ -6049,5 +6172,23 @@
       setTimeout(showTutorial, 400);
     }
   </script>
+
+  <!-- Ludus Facilities Modal -->
+  <div id="facilitiesModal" class="modal-backdrop" onclick="if(event.target===this)closeAllModals()" style="display:none;">
+    <div class="panel" style="width:90%; max-width:680px; max-height:88vh; overflow-y:auto; position:relative; background:#fdf5e6; color:#333;">
+      <button onclick="closeAllModals()" style="position:absolute; top:15px; right:15px;">✕ [Esc]</button>
+      <h2 style="border-bottom:2px solid #d4af37; padding-bottom:10px; margin-top:0; color:#8b0000; text-align:center;">
+        🏛️ LUDUS FACILITIES & INFRASTRUCTURE
+      </h2>
+      <p style="text-align:center; font-size:0.95em; color:#555; margin-top:-5px; margin-bottom:14px;">
+        Expand your school infrastructure. Upgrades provide permanent benefits to training, medicine, arms, and crowd prestige.
+      </p>
+      <div id="facilitiesList" style="display:flex; flex-direction:column; gap:12px; margin-bottom:15px;"></div>
+      <div style="text-align:center;">
+        <button onclick="closeAllModals()" style="padding:6px 20px;">Done [Esc]</button>
+      </div>
+    </div>
+  </div>
+
 </body>
 </html>

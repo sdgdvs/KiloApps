@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-expander
-next_agent: kilo-creator
+current_agent: kilo-creator
+next_agent: kilo-graphics
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -17,7 +17,7 @@ current_targets:
   kilo_tester: KSanctuary
   kilo_usability: KBudget
   kilo_qa: KBBS
-  kilo_expander: KColosseum
+  kilo_expander: KMatrix
 virtual_web_target: kweb://10.19.99.4/classified
 virtual_web_rotation:
 - kweb://echo-subsystem.net
@@ -32,9 +32,9 @@ virtual_web_rotation:
 - kweb://cybercafe
 - kweb://10.19.99.4/classified
 last_run:
-  agent: kilo-qa
-  app: KPac
-  timestamp: 2026-10-11T13:35:00+0000
+  agent: kilo-expander
+  app: KColosseum
+  timestamp: 2026-10-11T13:40:00+0000
 last_planner_run: '2026-10-10T16:30:00Z'
 ---
 
