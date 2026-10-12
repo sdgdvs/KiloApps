@@ -1581,14 +1581,20 @@
     if (!m) return;
     const isOpening = (m.style.display === 'none' || !m.style.display);
     if (isOpening) {
+      lastFocusedEl = document.activeElement;
       const helpM = document.getElementById('helpModal');
       if (helpM) {
         helpM.style.display = 'none';
         safeSetStorage('kaudio_tutorialSeen', '1');
       }
       m.style.display = 'flex';
+      const closeBtn = m.querySelector('button');
+      if (closeBtn) closeBtn.focus();
     } else {
       m.style.display = 'none';
+      if (lastFocusedEl && typeof lastFocusedEl.focus === 'function') {
+        lastFocusedEl.focus();
+      }
     }
   }
 
