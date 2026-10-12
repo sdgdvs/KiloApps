@@ -1,5 +1,5 @@
 ---
-current_agent: kilo-creator
+current_agent: kilo-graphics
 next_agent: kilo-graphics
 agent_rotation:
 - kilo-creator
@@ -20,7 +20,7 @@ current_targets:
   kilo_qa: KColony
   kilo_soundscape: KRogue
   kilo_expander: KPong
-virtual_web_target: kweb://darknet
+virtual_web_target: kweb://portal
 virtual_web_rotation:
 - kweb://deep-core
 - kweb://darknet
