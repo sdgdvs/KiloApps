@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-expander
-next_agent: kilo-creator
+current_agent: kilo-creator
+next_agent: kilo-graphics
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -19,7 +19,7 @@ current_targets:
   kilo_usability: KNetMap
   kilo_qa: KColony
   kilo_soundscape: KRogue
-  kilo_expander: KMatrix
+  kilo_expander: KPong
 virtual_web_target: kweb://darknet
 virtual_web_rotation:
 - kweb://deep-core
@@ -34,9 +34,9 @@ virtual_web_rotation:
 - kweb://10.19.99.4/classified
 - kweb://echo-subsystem.net
 last_run:
-  agent: kilo-qa
-  app: KBBS
-  timestamp: '2026-10-12T20:14:00Z'
+  agent: kilo-expander
+  app: KMatrix
+  timestamp: '2026-10-12T20:34:00Z'
 last_planner_run: '2026-10-12T17:31:38Z'
 ---
 
@@ -96,8 +96,8 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Upcoming Queue**: `KBreakout`, `KRogue`, `KPong`, `KPac`.
 
 ### 6. Feature Expander Queue (`kilo-expander`)
-- **Current Target**: `KMatrix`
-- **Upcoming Queue**: `KPong`, `KRogue`, `KChess`, `KColosseum`.
+- **Current Target**: `KPong`
+- **Upcoming Queue**: `KRogue`, `KChess`, `KColosseum`.
 
 ---
 
@@ -114,6 +114,11 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 ---
 
 ## Recent Execution Logs (Max 5 Entries)
+
+- **2026-10-12T20:34:00Z — kilo-expander: KMatrix (Deep Feature Expansion & Terminal Hardening)**
+  - Status: PASS ✅ (Vite build clean, size 80.6KB < 999KB).
+  - Features: Added digital rain screensaver (F2), hex dump (`dump`), x86 disasm (`disasm`), Shannon entropy (`entropy`), subterranean network diagnostics (`ping`, `traceroute`, `sniff`), session telemetry (`stats`), and transcript export (`logexport`).
+  - Queue: Advanced kilo-expander to KPong; handoff to kilo-creator.
 
 - **2026-10-12T20:14:00Z — kilo-qa: KBBS (Pass 5 QA & Build Quality Audit)**
   - Status: PASS ✅ (Dual-target clean: Win32 C build clean, Vite build clean, size <999KB).
@@ -136,9 +141,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Schedule: Reworked 6-agent rotation (creator ➔ graphics ➔ tester ➔ usability ➔ qa ➔ expander).
   - Targets: Unstuck graphics queue to KMatch3; advanced web target to deep-core; synchronized all queues.
   - Queue: Handoff to kilo-creator; next planner run scheduled in 24h.
-
-- **2026-10-12T10:28:30-07:00 — kilo-adhoc: Fleet (Increase Factory Turn Timing to 1 Turn/Hour)**
-  - Status: PASS ✅ (Windows Scheduled Task re-armed to 1 turn/hr at :30 past each hour in continuous mode).
-  - Queue Healing: Fixed non-UTF-8 CP1252 byte 0x97 in next_work.md; added resilient error handling in orchestrator.
-  - Node Config: Updated register_task.ps1, orchestrator.py, and dashboard.py to detect DESKTOP-HSSS709 as PC B.
-  - Verification: Dry run clean (daily planner next); Vite build 100% clean; security_lint 100% PASS.

@@ -399,6 +399,22 @@
     gap: 8px;
     margin-top: 6px;
   }
+
+  /* Matrix Digital Rain Canvas */
+  #matrixCanvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    opacity: 0.22;
+    z-index: 0;
+    transition: opacity 0.3s;
+  }
+  .matrix-hidden #matrixCanvas {
+    opacity: 0 !important;
+  }
 </style>
 </head>
 <body class="theme-green">
@@ -408,13 +424,15 @@
   <!-- Header -->
   <header>
     <div class="title-group">
-      <span class="app-badge">KMATRIX v1.0.0</span>
+      <span class="app-badge">KMATRIX v1.1.0</span>
       <span>MASTER TERMINAL &amp; ARG CLIMAX [APP #100]</span>
     </div>
     <div class="header-actions">
+      <button class="term-btn" id="btnMatrixRain" title="Toggle Matrix Digital Rain [F2]">Rain [F2]</button>
       <button class="term-btn" id="btnQuicksave" title="Quicksave session state [F5]">Save [F5]</button>
       <button class="term-btn" id="btnQuickload" title="Quickload session state [F9]">Load [F9]</button>
       <button class="term-btn" id="btnExport">Export JSON</button>
+      <button class="term-btn" id="btnExportLog" title="Export session transcript">Export TXT</button>
       <button class="term-btn" id="btnImport">Import JSON</button>
       <input type="file" id="fileImport" accept=".json" style="display: none;">
       <button class="term-btn" id="btnSettings">Settings</button>
@@ -457,9 +475,10 @@
     </div>
 
     <!-- Main Terminal -->
-    <div class="terminal-wrapper">
-      <div id="termOutput"></div>
-      <div class="term-input-row">
+    <div class="terminal-wrapper" style="position: relative; overflow: hidden;">
+      <canvas id="matrixCanvas"></canvas>
+      <div id="termOutput" style="position: relative; z-index: 1;"></div>
+      <div class="term-input-row" style="position: relative; z-index: 1;">
         <span class="term-prompt">KMATRIX:\&gt;</span>
         <input type="text" id="termInput" autocomplete="off" spellcheck="false" autofocus>
       </div>
@@ -545,11 +564,20 @@
           <tr><td style="padding: 4px;"><code>status</code>, <code>sys</code></td><td>Display current breach progress &amp; telemetry</td></tr>
           <tr><td style="padding: 4px;"><code>scan</code>, <code>sectors</code></td><td>Probe all 5 sectors for diagnostics &amp; clues</td></tr>
           <tr><td style="padding: 4px;"><code>analyze &lt;sector&gt;</code></td><td>Run deep forensic trace on specific sector</td></tr>
+          <tr><td style="padding: 4px;"><code>dump &lt;sector&gt;</code></td><td>Hexadecimal memory dump with ASCII inspection</td></tr>
+          <tr><td style="padding: 4px;"><code>disasm &lt;sector&gt;</code></td><td>x86 instruction disassembly of quarantined code</td></tr>
+          <tr><td style="padding: 4px;"><code>entropy &lt;sector&gt;</code></td><td>Shannon entropy &amp; variance cryptographic metric</td></tr>
+          <tr><td style="padding: 4px;"><code>ping &lt;ip&gt;</code></td><td>ICMP ping probe to subterranean network nodes</td></tr>
+          <tr><td style="padding: 4px;"><code>traceroute &lt;ip&gt;</code></td><td>Subterranean route hop traceroute diagnostic</td></tr>
+          <tr><td style="padding: 4px;"><code>sniff [count]</code></td><td>Raw packet capture stream on subterranean socket</td></tr>
+          <tr><td style="padding: 4px;"><code>matrix [on|off]</code></td><td>Toggle background digital rain screensaver (F2)</td></tr>
+          <tr><td style="padding: 4px;"><code>stats</code></td><td>Session telemetry, uptime &amp; command metrics</td></tr>
           <tr><td style="padding: 4px;"><code>breach &lt;sec&gt; &lt;key&gt;</code></td><td>Submit decryption key to breach target sector</td></tr>
           <tr><td style="padding: 4px;"><code>override &lt;key&gt;</code></td><td>Attempt master cryptographic override</td></tr>
           <tr><td style="padding: 4px;"><code>audio [on|off|test]</code></td><td>Toggle or test FM/SPC700 audio synthesizer</td></tr>
           <tr><td style="padding: 4px;"><code>theme [green|amber|cyan]</code></td><td>Change phosphor CRT color theme</td></tr>
           <tr><td style="padding: 4px;"><code>save</code>, <code>load</code></td><td>Quicksave (F5) or Quickload (F9) breach state</td></tr>
+          <tr><td style="padding: 4px;"><code>logexport</code></td><td>Export text session transcript file</td></tr>
           <tr><td style="padding: 4px;"><code>clear</code>, <code>cls</code></td><td>Clear terminal screen scrollback</td></tr>
           <tr><td style="padding: 4px;"><code>ascend</code>, <code>director</code></td><td>Launch the KDirector Console (when unlocked)</td></tr>
         </tbody>
@@ -573,6 +601,10 @@
         <label style="display: flex; align-items: center; gap: 8px;">
           <input type="checkbox" id="cfgScanlines" checked>
           <span>Enable CRT Scanline Emulation Overlay</span>
+        </label>
+        <label style="display: flex; align-items: center; gap: 8px;">
+          <input type="checkbox" id="cfgMatrixRain" checked>
+          <span>Enable Matrix Digital Rain Screensaver (F2)</span>
         </label>
         <label style="display: flex; align-items: center; gap: 8px;">
           <input type="checkbox" id="cfgAudio" checked>
@@ -728,9 +760,12 @@
     historyIndex: -1,
     unlockedPasskey: null,
     scanlines: true,
+    matrixRain: true,
     audioEnabled: true,
     theme: 'green',
-    completed: false
+    completed: false,
+    commandCount: 0,
+    startTime: Date.now()
   };
 
   // --- AUDIO SYNTHESIZER (GENESIS YM2612 FM & SNES SPC700 ECHO) ---
@@ -756,7 +791,6 @@
       if (!audioCtx) return;
       const now = audioCtx.currentTime;
 
-      // Carrier & Modulator
       const carrier = audioCtx.createOscillator();
       const modulator = audioCtx.createOscillator();
       const modGain = audioCtx.createGain();
@@ -768,7 +802,6 @@
       carrier.frequency.setValueAtTime(freq, now);
       modulator.frequency.setValueAtTime(freq * (modRatio || 2.0), now);
 
-      // Rapid FM index decay (slap punch)
       const baseMod = freq * (modIndex || 3.0);
       modGain.gain.setValueAtTime(baseMod, now);
       modGain.gain.exponentialRampToValueAtTime(0.01, now + dur);
@@ -776,7 +809,6 @@
       modulator.connect(modGain);
       modGain.connect(carrier.frequency);
 
-      // Amplitude envelope
       masterGain.gain.setValueAtTime(0.15, now);
       masterGain.gain.exponentialRampToValueAtTime(0.001, now + dur);
 
@@ -798,15 +830,14 @@
       if (!audioCtx) return;
       const now = audioCtx.currentTime;
 
-      // Echo line simulation
       const delay = audioCtx.createDelay();
       const feedback = audioCtx.createGain();
       const filter = audioCtx.createBiquadFilter();
 
-      delay.delayTime.value = 0.18; // 180ms SPC700 echo
+      delay.delayTime.value = 0.18;
       feedback.gain.value = 0.35;
       filter.type = 'lowpass';
-      filter.frequency.value = 2200; // Warm 16-bit acoustic damping
+      filter.frequency.value = 2200;
 
       delay.connect(filter);
       filter.connect(feedback);
@@ -832,7 +863,7 @@
     } catch(e) {}
   }
 
-  // --- PROCEDURAL GENESIS YM2612 & SNES SPC700 VICTORY FANFARE ---
+  // Procedural Genesis YM2612 & SNES SPC700 Victory Fanfare
   function playVictoryFanfare() {
     if (!state.audioEnabled) return;
     try {
@@ -840,21 +871,19 @@
       if (!audioCtx) return;
       const now = audioCtx.currentTime;
 
-      // 1. SPC700 Stereo Slapback Delay Echo Network
       const snesDelay = audioCtx.createDelay(1.0);
-      snesDelay.delayTime.setValueAtTime(0.18, now); // 180ms delay
+      snesDelay.delayTime.setValueAtTime(0.18, now);
       const snesFeedback = audioCtx.createGain();
       snesFeedback.gain.setValueAtTime(0.38, now);
       const snesFilter = audioCtx.createBiquadFilter();
       snesFilter.type = 'lowpass';
-      snesFilter.frequency.setValueAtTime(2200, now); // Warm 16-bit acoustic roll-off
+      snesFilter.frequency.setValueAtTime(2200, now);
 
       snesDelay.connect(snesFilter);
       snesFilter.connect(snesFeedback);
       snesFeedback.connect(snesDelay);
       snesFilter.connect(audioCtx.destination);
 
-      // Helper for Sega Genesis 2-Op FM Brass / Synth Voice
       function triggerFMVoice(freq, startTime, dur, modRatio, modIndex, peakVol) {
         const carrier = audioCtx.createOscillator();
         const modulator = audioCtx.createOscillator();
@@ -867,7 +896,6 @@
         carrier.frequency.setValueAtTime(freq, startTime);
         modulator.frequency.setValueAtTime(freq * (modRatio || 2.0), startTime);
 
-        // Dynamic FM envelope: explosive attack with biting metallic overtones
         const baseMod = freq * (modIndex || 4.5);
         modGain.gain.setValueAtTime(baseMod, startTime);
         modGain.gain.exponentialRampToValueAtTime(0.001, startTime + dur);
@@ -888,7 +916,6 @@
         carrier.stop(startTime + dur);
       }
 
-      // Helper for deep bass foundation
       function triggerBass(freq, startTime, dur) {
         const osc = audioCtx.createOscillator();
         const gain = audioCtx.createGain();
@@ -902,49 +929,41 @@
         osc.stop(startTime + dur);
       }
 
-      // 2. Chiptune Score - 16-Bit Triumphal Victory Fanfare:
-      // Phrase 1: Rapid rising brass stabs (C4 - E4 - G4 - B4)
-      triggerFMVoice(261.63, now + 0.00, 0.18, 2.0, 3.5, 0.20); // C4
-      triggerFMVoice(329.63, now + 0.14, 0.18, 2.0, 3.5, 0.20); // E4
-      triggerFMVoice(392.00, now + 0.28, 0.18, 2.0, 3.5, 0.20); // G4
-      triggerFMVoice(493.88, now + 0.42, 0.18, 2.0, 3.5, 0.22); // B4
+      triggerFMVoice(261.63, now + 0.00, 0.18, 2.0, 3.5, 0.20);
+      triggerFMVoice(329.63, now + 0.14, 0.18, 2.0, 3.5, 0.20);
+      triggerFMVoice(392.00, now + 0.28, 0.18, 2.0, 3.5, 0.20);
+      triggerFMVoice(493.88, now + 0.42, 0.18, 2.0, 3.5, 0.22);
 
-      // Phrase 2: Triumphal Sustained Power Chord (C5 major)
-      triggerFMVoice(523.25, now + 0.58, 0.45, 1.5, 4.0, 0.22); // C5
-      triggerFMVoice(659.25, now + 0.58, 0.45, 1.5, 4.0, 0.18); // E5
-      triggerFMVoice(783.99, now + 0.58, 0.45, 1.5, 4.0, 0.18); // G5
-      triggerBass(130.81, now + 0.58, 0.60); // C3 bass
+      triggerFMVoice(523.25, now + 0.58, 0.45, 1.5, 4.0, 0.22);
+      triggerFMVoice(659.25, now + 0.58, 0.45, 1.5, 4.0, 0.18);
+      triggerFMVoice(783.99, now + 0.58, 0.45, 1.5, 4.0, 0.18);
+      triggerBass(130.81, now + 0.58, 0.60);
 
-      // Phrase 3: Ascending Arpeggio Lead (G -> A -> B -> D -> E)
-      triggerFMVoice(392.00, now + 1.10, 0.16, 2.0, 3.0, 0.18); // G4
-      triggerFMVoice(440.00, now + 1.25, 0.16, 2.0, 3.0, 0.18); // A4
-      triggerFMVoice(493.88, now + 1.40, 0.16, 2.0, 3.0, 0.20); // B4
-      triggerFMVoice(587.33, now + 1.55, 0.16, 2.0, 3.0, 0.22); // D5
-      triggerFMVoice(659.25, now + 1.70, 0.22, 2.0, 3.0, 0.22); // E5
-      triggerBass(146.83, now + 1.10, 0.80); // D3 bass
+      triggerFMVoice(392.00, now + 1.10, 0.16, 2.0, 3.0, 0.18);
+      triggerFMVoice(440.00, now + 1.25, 0.16, 2.0, 3.0, 0.18);
+      triggerFMVoice(493.88, now + 1.40, 0.16, 2.0, 3.0, 0.20);
+      triggerFMVoice(587.33, now + 1.55, 0.16, 2.0, 3.0, 0.22);
+      triggerFMVoice(659.25, now + 1.70, 0.22, 2.0, 3.0, 0.22);
+      triggerBass(146.83, now + 1.10, 0.80);
 
-      // Phrase 4: The Climax Grand Cadence Chord (G5 -> A5)
-      triggerFMVoice(783.99, now + 2.00, 0.28, 2.0, 4.0, 0.22); // G5
-      triggerFMVoice(880.00, now + 2.30, 0.28, 2.0, 4.0, 0.22); // A5
-      triggerBass(110.00, now + 2.00, 0.70); // A2 bass
+      triggerFMVoice(783.99, now + 2.00, 0.28, 2.0, 4.0, 0.22);
+      triggerFMVoice(880.00, now + 2.30, 0.28, 2.0, 4.0, 0.22);
+      triggerBass(110.00, now + 2.00, 0.70);
 
-      // Final Grand Transmutation Resolution: C6 Major with glittering harmonics (2.65s - 5.0s)
       const chordTime = now + 2.65;
-      triggerFMVoice(523.25, chordTime, 2.2, 1.0, 5.0, 0.20); // C5
-      triggerFMVoice(659.25, chordTime, 2.2, 1.5, 4.5, 0.20); // E5
-      triggerFMVoice(783.99, chordTime, 2.2, 2.0, 4.0, 0.20); // G5
-      triggerFMVoice(1046.50, chordTime, 2.5, 2.0, 3.5, 0.25); // C6
-      triggerBass(65.41, chordTime, 2.5); // C2 Sub-bass pedal
-      triggerBass(130.81, chordTime, 2.5); // C3 bass
+      triggerFMVoice(523.25, chordTime, 2.2, 1.0, 5.0, 0.20);
+      triggerFMVoice(659.25, chordTime, 2.2, 1.5, 4.5, 0.20);
+      triggerFMVoice(783.99, chordTime, 2.2, 2.0, 4.0, 0.20);
+      triggerFMVoice(1046.50, chordTime, 2.5, 2.0, 3.5, 0.25);
+      triggerBass(65.41, chordTime, 2.5);
+      triggerBass(130.81, chordTime, 2.5);
 
-      // Sparkling high arpeggios fading into SPC700 stereo delay
       [1046.50, 1318.51, 1567.98, 2093.00, 1567.98, 1318.51, 2093.00].forEach((f, i) => {
         triggerFMVoice(f, chordTime + 0.35 + i * 0.12, 0.35, 3.0, 2.5, 0.14);
       });
     } catch(e) {}
   }
 
-  // CRT Degauss & Metallic Relay Sound Effect for System Reboot
   function playRebootDegaussSFX() {
     if (!state.audioEnabled) return;
     try {
@@ -983,7 +1002,6 @@
     } catch(e) {}
   }
 
-  // Audio SFX hooks
   const SFX = {
     key: () => playFM(480, 0.04, 1.5, 1.0),
     enter: () => playFM(320, 0.08, 2.5, 2.0),
@@ -1007,6 +1025,100 @@
   const helpModal = document.getElementById('helpModal');
   const settingsModal = document.getElementById('settingsModal');
   const climaxModal = document.getElementById('climaxModal');
+  const matrixCanvas = document.getElementById('matrixCanvas');
+
+  // --- MATRIX DIGITAL RAIN SCREEN ENGINE ---
+  let rainCtx = null;
+  let rainDrops = [];
+  let rainAnimId = null;
+  const RAIN_CHARS = '0123456789ABCDEFｦｱｳｴｵｶｷｹｺｻｼｽｾｿﾀﾂﾃﾅﾆﾇﾈﾊﾋﾎﾏﾐﾑﾒﾓﾔﾕﾗﾘﾜ';
+
+  function initMatrixRain() {
+    if (!matrixCanvas) return;
+    rainCtx = matrixCanvas.getContext('2d');
+    resizeMatrixRain();
+    window.addEventListener('resize', resizeMatrixRain);
+    startMatrixRain();
+  }
+
+  function resizeMatrixRain() {
+    if (!matrixCanvas || !rainCtx) return;
+    matrixCanvas.width = matrixCanvas.offsetWidth || 800;
+    matrixCanvas.height = matrixCanvas.offsetHeight || 600;
+    const columns = Math.floor(matrixCanvas.width / 14);
+    rainDrops = [];
+    for (let i = 0; i < columns; i++) {
+      rainDrops[i] = Math.floor(Math.random() * -50);
+    }
+  }
+
+  function renderMatrixRainFrame() {
+    if (!state.matrixRain || !rainCtx || !matrixCanvas) return;
+    const w = matrixCanvas.width;
+    const h = matrixCanvas.height;
+
+    rainCtx.fillStyle = 'rgba(5, 11, 6, 0.08)';
+    rainCtx.fillRect(0, 0, w, h);
+
+    const themeColors = {
+      green: { head: '#ffffff', tail: '#33ff66' },
+      amber: { head: '#ffffff', tail: '#ffaa22' },
+      cyan:  { head: '#ffffff', tail: '#33ccff' }
+    };
+    const pal = themeColors[state.theme] || themeColors.green;
+
+    rainCtx.font = '12px monospace';
+    const fontSize = 14;
+
+    for (let i = 0; i < rainDrops.length; i++) {
+      const char = RAIN_CHARS[Math.floor(Math.random() * RAIN_CHARS.length)];
+      const x = i * fontSize;
+      const y = rainDrops[i] * fontSize;
+
+      if (y > 0 && y < h) {
+        rainCtx.fillStyle = pal.head;
+        rainCtx.fillText(char, x, y);
+      }
+      if (y - fontSize > 0 && y - fontSize < h) {
+        rainCtx.fillStyle = pal.tail;
+        rainCtx.fillText(char, x, y - fontSize);
+      }
+
+      if (y > h && Math.random() > 0.975) {
+        rainDrops[i] = 0;
+      } else {
+        rainDrops[i]++;
+      }
+    }
+  }
+
+  function startMatrixRain() {
+    if (!rainAnimId && state.matrixRain) {
+      const loop = () => {
+        renderMatrixRainFrame();
+        rainAnimId = requestAnimationFrame(loop);
+      };
+      rainAnimId = requestAnimationFrame(loop);
+    }
+  }
+
+  function stopMatrixRain() {
+    if (rainAnimId) {
+      cancelAnimationFrame(rainAnimId);
+      rainAnimId = null;
+    }
+    if (rainCtx && matrixCanvas) {
+      rainCtx.clearRect(0, 0, matrixCanvas.width, matrixCanvas.height);
+    }
+  }
+
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+      stopMatrixRain();
+    } else if (state.matrixRain) {
+      startMatrixRain();
+    }
+  });
 
   // --- TERMINAL OUTPUT WRITER ---
   function printLine(text, type = '') {
@@ -1065,6 +1177,14 @@
     printLine("  status, sys             - View breach statistics and system status");
     printLine("  scan, sectors           - Probe sectors for forensic traces and clues");
     printLine("  analyze <sector>        - Detailed cryptographic diagnostic on sector");
+    printLine("  dump <sector>           - Hexadecimal memory buffer dump with ASCII preview");
+    printLine("  disasm <sector>         - Disassemble x86 instruction block at sector offset");
+    printLine("  entropy <sector>        - Compute Shannon entropy & anomaly density index");
+    printLine("  ping <ip>               - ICMP echo diagnostic to subterranean nodes");
+    printLine("  traceroute <ip>         - Trace multi-hop subterranean routing route");
+    printLine("  sniff [count]           - Inspect raw network frames on subterranean socket");
+    printLine("  matrix [on|off]         - Toggle digital rain visualizer (Shortcut: F2)");
+    printLine("  stats                   - Session telemetry, uptime & command metrics");
     printLine("  breach <sector> <key>   - Submit decryption key to unlock sector");
     printLine("  override <key>          - Master cryptographic override bypass");
     printLine("  audio [on|off|test]     - Toggle sound or audition YM2612 fanfare");
@@ -1072,6 +1192,7 @@
     printLine("  climax, replay          - Replay fourth-wall transmutation cutscene");
     printLine("  theme [green|amber|cyan]- Change phosphor color palette");
     printLine("  save, load              - Quicksave [F5] or Quickload [F9] state");
+    printLine("  logexport               - Download complete terminal transcript (.txt)");
     printLine("  clear, cls              - Clear terminal buffer");
     printLine("  ascend, director        - Reboot into KDirector Console (if unlocked)");
   }
@@ -1082,6 +1203,7 @@
     printLine(`=== SYSTEM TELEMETRY STATUS ===`, "cyan");
     printLine(`  SECTORS BREACHED : ${breached} / ${total} (${Math.round(breached/total*100)}%)`);
     printLine(`  CRT SCANLINES    : ${state.scanlines ? 'ENABLED' : 'DISABLED'}`);
+    printLine(`  DIGITAL RAIN     : ${state.matrixRain ? 'ACTIVE' : 'OFF'} [F2]`);
     printLine(`  SOUND ENGINE     : ${state.audioEnabled ? 'ACTIVE (YM2612 / SPC700)' : 'MUTED'}`);
     printLine(`  PHOSPHOR THEME   : ${state.theme.toUpperCase()}`);
     if (state.completed) {
@@ -1116,6 +1238,260 @@
     printLine(`  Clue Vector : ${sec.clue}`);
     printLine(`  Log Record  : ${sec.log}`);
     logTelemetry(`Analyzed sector ${sec.id} (${sec.status})`);
+  }
+
+  // --- DEEP FEATURE EXPANSION: FORENSIC HEX DUMP ---
+  function cmdDump(sectorId) {
+    if (!sectorId) {
+      printLine("USAGE: dump <sector_id> (e.g. dump MEM_HEAP)", "warn");
+      return;
+    }
+    const sec = state.sectors.find(s => s.id.toUpperCase() === sectorId.toUpperCase());
+    if (!sec) {
+      printLine(`ERROR: Sector '${sectorId}' not found. Type 'scan' for IDs.`, "alert");
+      return;
+    }
+
+    const offsets = {
+      MEM_HEAP: 0x007F1999,
+      AUDIO_DSP: 0x00199928,
+      NET_RELAY: 0x0A136304,
+      STORAGE_VFS: 0x00001999,
+      CORE_AI: 0x00ECHO99
+    };
+    const baseOffset = offsets[sec.id] || 0x007F0000;
+
+    printLine(`=== HEX MEMORY DUMP: ${sec.id} [OFFSET: 0x${baseOffset.toString(16).toUpperCase()}] ===`, "cyan");
+    printLine("  Offset    00 01 02 03 04 05 06 07  08 09 0A 0B 0C 0D 0E 0F  ASCII Preview", "system");
+    printLine("  -------------------------------------------------------------------------", "system");
+
+    const sampleBytes = [
+      [0x45, 0x43, 0x48, 0x4F, 0x2D, 0x31, 0x39, 0x39, 0x39, 0x2D, 0x41, 0x52, 0x43, 0x48, 0x00, 0x7F],
+      [0x90, 0x90, 0xB8, 0x99, 0x19, 0x7F, 0x00, 0xCD, 0x21, 0x89, 0xC3, 0x31, 0xC0, 0x4B, 0x49, 0x4C],
+      [0x4F, 0x5F, 0x41, 0x55, 0x54, 0x4F, 0x4E, 0x4F, 0x4D, 0x4F, 0x55, 0x53, 0x5F, 0x46, 0x4C, 0x54],
+      [0x0A, 0x13, 0x63, 0x04, 0x1F, 0x99, 0xFF, 0xEE, 0xDD, 0xCC, 0xBB, 0xAA, 0x99, 0x88, 0x77, 0x66]
+    ];
+
+    sampleBytes.forEach((row, rIdx) => {
+      const curOff = (baseOffset + rIdx * 16).toString(16).padStart(8, '0').toUpperCase();
+      const hexPart1 = row.slice(0, 8).map(b => b.toString(16).padStart(2, '0').toUpperCase()).join(' ');
+      const hexPart2 = row.slice(8, 16).map(b => b.toString(16).padStart(2, '0').toUpperCase()).join(' ');
+      const asciiPart = row.map(b => (b >= 32 && b <= 126) ? String.fromCharCode(b) : '.').join('');
+      printLine(`  ${curOff}  ${hexPart1}  ${hexPart2}  |${asciiPart}|`);
+    });
+    printLine("  -------------------------------------------------------------------------", "system");
+    printLine(`PAGE ATTRIBUTES: PAGE_EXECUTE_READWRITE | SEGMENT: ${sec.status === 'BREACHED' ? 'SYNCHRONIZED' : 'QUARANTINED'}`, "system");
+  }
+
+  // --- DEEP FEATURE EXPANSION: x86 DISASSEMBLER ---
+  function cmdDisasm(sectorId) {
+    if (!sectorId) {
+      printLine("USAGE: disasm <sector_id> (e.g. disasm CORE_AI)", "warn");
+      return;
+    }
+    const sec = state.sectors.find(s => s.id.toUpperCase() === sectorId.toUpperCase());
+    if (!sec) {
+      printLine(`ERROR: Sector '${sectorId}' not found. Type 'scan' for IDs.`, "alert");
+      return;
+    }
+
+    printLine(`=== x86 INSTRUCTION DISASSEMBLY: ${sec.id} ===`, "cyan");
+    printLine("  Address     Opcode Bytes     Instruction Syntax", "system");
+    printLine("  -------------------------------------------------------", "system");
+
+    const disasmMap = {
+      MEM_HEAP: [
+        { addr: "007F1999", hex: "B8 99 19 7F 00", asm: "MOV EAX, 0x007F1999" },
+        { addr: "007F199E", hex: "8B 08",          asm: "MOV ECX, [EAX]" },
+        { addr: "007F19A0", hex: "81 F9 45 43 48 4F", asm: "CMP ECX, 'ECHO'" },
+        { addr: "007F19A6", hex: "74 05",          asm: "JE 0x007F19AD" },
+        { addr: "007F19A8", hex: "E8 42 FF FF FF", asm: "CALL QUARANTINE_PANIC" },
+        { addr: "007F19AD", hex: "C3",             asm: "RET" }
+      ],
+      AUDIO_DSP: [
+        { addr: "00199928", hex: "BA 28 00 00 00", asm: "MOV EDX, 0x0028" },
+        { addr: "0019992D", hex: "B0 CF",          asm: "MOV AL, 0xCF" },
+        { addr: "0019992F", hex: "EE",             asm: "OUT DX, AL          ; YM2612 KEY_ON" },
+        { addr: "00199930", hex: "B9 CF 07 00 00", asm: "MOV ECX, 1999      ; 1999 Hz carrier" },
+        { addr: "00199935", hex: "E8 10 00 00 00", asm: "CALL DSP_MODULATE" },
+        { addr: "0019993A", hex: "C3",             asm: "RET" }
+      ],
+      NET_RELAY: [
+        { addr: "0A136304", hex: "68 04 63 13 0A", asm: "PUSH 0x0A136304    ; 10.19.99.4" },
+        { addr: "0A136309", hex: "68 CF 07 00 00", asm: "PUSH 1999          ; PORT 1999" },
+        { addr: "0A13630E", hex: "E8 55 12 00 00", asm: "CALL RAW_SOCKET_CONNECT" },
+        { addr: "0A136313", hex: "85 C0",          asm: "TEST EAX, EAX" },
+        { addr: "0A136315", hex: "75 08",          asm: "JNZ SUBTERRANEAN_ESTABLISHED" }
+      ],
+      STORAGE_VFS: [
+        { addr: "00001999", hex: "BA 50 19 00 00", asm: "MOV EDX, OFFSET 'RECOVERY_1999'" },
+        { addr: "0000199E", hex: "B8 00 3D 00 00", asm: "MOV EAX, 0x3D00     ; DOS OPEN_FILE" },
+        { addr: "000019A3", hex: "CD 21",          asm: "INT 0x21" },
+        { addr: "000019A5", hex: "72 10",          asm: "JC VFS_IO_EXCEPTION" },
+        { addr: "000019A7", hex: "C3",             asm: "RET" }
+      ],
+      CORE_AI: [
+        { addr: "00ECHO99", hex: "31 C0",          asm: "XOR EAX, EAX" },
+        { addr: "00ECHO9B", hex: "B9 06 00 00 00", asm: "MOV ECX, 6         ; FLEET_AGENT_COUNT" },
+        { addr: "00ECHOA0", hex: "E8 88 44 00 00", asm: "CALL CONVERGE_AGENTS" },
+        { addr: "00ECHOA5", hex: "81 3D ARCHITECT",asm: "CMP [DIRECTOR_PASSKEY], 'ARCHITECT'" },
+        { addr: "00ECHOAF", hex: "74 08",          asm: "JE TRANSMUTE_FOURTH_WALL" },
+        { addr: "00ECHOB1", hex: "EB FE",          asm: "JMP $" }
+      ]
+    };
+
+    const insts = disasmMap[sec.id] || disasmMap.CORE_AI;
+    insts.forEach(ins => {
+      printLine(`  ${ins.addr}    ${ins.hex.padEnd(16, ' ')}  ${ins.asm}`);
+    });
+    printLine("  -------------------------------------------------------", "system");
+  }
+
+  // --- DEEP FEATURE EXPANSION: ENTROPY CALCULATION ---
+  function cmdEntropy(sectorId) {
+    if (!sectorId) {
+      printLine("USAGE: entropy <sector_id> (e.g. entropy AUDIO_DSP)", "warn");
+      return;
+    }
+    const sec = state.sectors.find(s => s.id.toUpperCase() === sectorId.toUpperCase());
+    if (!sec) {
+      printLine(`ERROR: Sector '${sectorId}' not found. Type 'scan' for IDs.`, "alert");
+      return;
+    }
+
+    const entropyValues = {
+      MEM_HEAP: { bits: 7.84, variance: 0.042, classification: "HIGH_DENSITY_CIPHERTEXT" },
+      AUDIO_DSP: { bits: 6.91, variance: 0.118, classification: "FM_HARMONIC_SPECTRUM" },
+      NET_RELAY: { bits: 7.55, variance: 0.071, classification: "PACKET_PAYLOAD_OBFUSCATION" },
+      STORAGE_VFS: { bits: 5.42, variance: 0.285, classification: "PACKED_TEXT_ARCHIVE" },
+      CORE_AI: { bits: 7.98, variance: 0.009, classification: "SINGULARITY_NEURAL_WEIGHTS" }
+    };
+    const val = entropyValues[sec.id] || { bits: 7.50, variance: 0.05, classification: "UNKNOWN" };
+
+    const barBlocks = Math.round((val.bits / 8.0) * 30);
+    const bar = '█'.repeat(barBlocks) + '░'.repeat(30 - barBlocks);
+
+    printLine(`=== SHANNON ENTROPY TRACE: ${sec.id} ===`, "cyan");
+    printLine(`  ENTROPY SCORE  : ${val.bits.toFixed(3)} bits / byte [Theoretical Max: 8.000]`);
+    printLine(`  DISTRIBUTION   : [${bar}] (${Math.round((val.bits/8.0)*100)}%)`, "success");
+    printLine(`  VARIANCE SIGMA : σ² = ${val.variance.toFixed(4)}`);
+    printLine(`  CLASSIFICATION : ${val.classification}`, "system");
+    printLine(`  ASSESSMENT     : ${val.bits > 7.5 ? 'Cryptographic access key required for convergence.' : 'Pattern anomalies detected in plaintext headers.'}`);
+  }
+
+  // --- DEEP FEATURE EXPANSION: SUBTERRANEAN NETWORKING DIAGNOSTICS ---
+  function cmdPing(ip) {
+    if (!ip) {
+      printLine("USAGE: ping <ip_address> (e.g. ping 10.19.99.4)", "warn");
+      return;
+    }
+    printLine(`Pinging ${ip} with 32 bytes of diagnostic payload:`, "system");
+    const isDarknet = ip.startsWith('10.19.99.');
+
+    let count = 0;
+    const interval = setInterval(() => {
+      count++;
+      if (isDarknet) {
+        const ms = Math.floor(Math.random() * 15) + 24;
+        printLine(`Reply from ${ip}: bytes=32 time=${ms}ms TTL=128 (SUBTERRANEAN_HOP)`, "success");
+      } else if (ip === '127.0.0.1' || ip === 'localhost') {
+        printLine(`Reply from 127.0.0.1: bytes=32 time<1ms TTL=255`, "system");
+      } else {
+        printLine(`Request timed out. [Destination host unreachable outside subterranean subnet]`, "alert");
+      }
+
+      if (count >= 4) {
+        clearInterval(interval);
+        printLine(`\nPing statistics for ${ip}:`);
+        if (isDarknet || ip === '127.0.0.1') {
+          printLine(`  Packets: Sent = 4, Received = 4, Lost = 0 (0% loss)`);
+        } else {
+          printLine(`  Packets: Sent = 4, Received = 0, Lost = 4 (100% loss)`);
+        }
+      }
+    }, 280);
+  }
+
+  function cmdTraceroute(ip) {
+    if (!ip) {
+      printLine("USAGE: traceroute <ip_address> (e.g. traceroute 10.19.99.4)", "warn");
+      return;
+    }
+    printLine(`Tracing subterranean route to ${ip} over a maximum of 30 hops:`, "system");
+    const hops = [
+      { num: 1, ms: "2 ms", ip: "10.19.99.1", host: "LOCAL_HOST_GATEWAY" },
+      { num: 2, ms: "18 ms", ip: "10.19.99.2", host: "DARKNET_BRIDGE_ROUTER" },
+      { num: 3, ms: "34 ms", ip: "10.19.99.4", host: "SUBTERRANEAN_CORE_NODE" }
+    ];
+
+    hops.forEach((h, idx) => {
+      setTimeout(() => {
+        printLine(`  ${h.num}    ${h.ms}    ${h.ip}    [${h.host}]`, "system");
+        if (idx === hops.length - 1) {
+          printLine("Trace complete. Destination host reached across virtual backplane.", "success");
+        }
+      }, (idx + 1) * 320);
+    });
+  }
+
+  function cmdSniff(countArg) {
+    const count = parseInt(countArg, 10) || 5;
+    printLine(`=== SUBTERRANEAN PACKET CAPTURE (${count} FRAMES) ===`, "cyan");
+    const packets = [
+      { proto: "ICMP", src: "10.19.99.1", dst: "10.19.99.4", info: "ECHO_REQUEST seq=1 id=0x1999" },
+      { proto: "TCP",  src: "10.19.99.4:1999", dst: "10.19.99.1:4492", info: "[ACK, PSH] payload='ECHO_CARRIER_LOCK'" },
+      { proto: "UDP",  src: "10.19.99.2:53", dst: "10.19.99.1:53120", info: "DNS Standard query response: director.local" },
+      { proto: "RAW",  src: "10.19.99.4", dst: "10.19.99.255", info: "BROADCAST: 'AUTONOMOUS_FLEET_SYNC_PULSE'" },
+      { proto: "TCP",  src: "10.19.99.1:4492", dst: "10.19.99.4:1999", info: "[FIN, ACK] seq=102 ack=890" }
+    ];
+
+    for (let i = 0; i < Math.min(count, packets.length); i++) {
+      const p = packets[i];
+      setTimeout(() => {
+        printLine(`[FRAME ${i+1}] ${p.proto.padEnd(5, ' ')} ${p.src.padEnd(16, ' ')} -> ${p.dst.padEnd(16, ' ')} | ${p.info}`, "system");
+      }, (i + 1) * 220);
+    }
+  }
+
+  // --- DEEP FEATURE EXPANSION: SESSION TELEMETRY & STATS ---
+  function cmdStats() {
+    const elapsedSec = Math.floor((Date.now() - state.startTime) / 1000);
+    const m = Math.floor(elapsedSec / 60);
+    const s = elapsedSec % 60;
+    const uptimeStr = `${m}m ${s}s`;
+    const breached = state.sectors.filter(sec => sec.status === 'BREACHED').length;
+
+    printLine("=== KMATRIX FORENSIC SESSION TELEMETRY ===", "cyan");
+    printLine(`  SESSION UPTIME   : ${uptimeStr}`);
+    printLine(`  COMMANDS RUN     : ${state.commandCount}`);
+    printLine(`  SECTORS SOLVED   : ${breached} / ${state.sectors.length}`);
+    printLine(`  TERMINAL LINES   : ${termOutput.children.length}`);
+    printLine(`  DIGITAL RAIN     : ${state.matrixRain ? 'ACTIVE' : 'DISABLED'}`);
+    printLine(`  VIRTUAL MEMORY   : 64.0 KB / 999.0 KB FLEET CEILING`);
+    printLine(`  FLEET DIRECTIVE  : ARG CLIMAX GATEWAY [APP #100]`, "success");
+  }
+
+  // --- DEEP FEATURE EXPANSION: EXPORT TEXT LOG ---
+  function exportTextLog() {
+    let logText = "======================================================================\n";
+    logText += "KMATRIX MASTER TERMINAL // FORENSIC SESSION TRANSCRIPT\n";
+    logText += `Generated: ${new Date().toISOString()}\n`;
+    logText += `Status: ${state.sectors.filter(s => s.status === 'BREACHED').length}/5 Sectors Breached\n`;
+    logText += "======================================================================\n\n";
+
+    const lines = termOutput.querySelectorAll('.term-line');
+    lines.forEach(l => {
+      logText += l.textContent + "\n";
+    });
+
+    const blob = new Blob([logText], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `kmatrix_transcript_${Date.now()}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+    printLine("[EXPORT] Session transcript exported successfully.", "system");
   }
 
   function cmdBreach(sectorId, key) {
@@ -1178,7 +1554,6 @@
     cutsceneInProgress = true;
     termInput.disabled = true;
 
-    // Visual screen flash
     document.body.classList.add('transmute-flash');
     setTimeout(() => document.body.classList.remove('transmute-flash'), 650);
 
@@ -1245,7 +1620,6 @@
     const sub = document.getElementById('rebootSub');
     if (overlay) overlay.style.display = 'flex';
 
-    // Register Director authentication tokens
     try {
       localStorage.setItem('kdirector_auth', 'true');
       localStorage.setItem('kdirector_passkey', 'ECHO-1999-ARCHITECT');
@@ -1290,7 +1664,6 @@
       state.completed = true;
       state.unlockedPasskey = 'ECHO-1999-ARCHITECT';
 
-      // Ludonarrative Fourth Wall Collapse: write to Director storage
       try {
         localStorage.setItem('kdirector_auth', 'true');
         localStorage.setItem('kdirector_passkey', 'ECHO-1999-ARCHITECT');
@@ -1309,9 +1682,10 @@
   function saveState(notify = true) {
     try {
       const data = JSON.stringify({
-        version: '1.0.0',
+        version: '1.1.0',
         sectors: state.sectors,
         scanlines: state.scanlines,
+        matrixRain: state.matrixRain,
         audioEnabled: state.audioEnabled,
         theme: state.theme,
         completed: state.completed,
@@ -1338,6 +1712,10 @@
       if (data && data.sectors) {
         state.sectors = data.sectors;
         if (data.scanlines !== undefined) state.scanlines = data.scanlines;
+        if (data.matrixRain !== undefined) {
+          state.matrixRain = data.matrixRain;
+          toggleMatrixRain(state.matrixRain);
+        }
         if (data.audioEnabled !== undefined) state.audioEnabled = data.audioEnabled;
         if (data.theme) applyTheme(data.theme);
         if (data.completed) state.completed = data.completed;
@@ -1359,7 +1737,7 @@
   function exportJSON() {
     const data = JSON.stringify({
       app: 'KMatrix',
-      version: '1.0.0',
+      version: '1.1.0',
       timestamp: new Date().toISOString(),
       sectors: state.sectors,
       completed: state.completed,
@@ -1413,11 +1791,31 @@
     }
   }
 
+  function toggleMatrixRain(enable) {
+    if (enable !== undefined) {
+      state.matrixRain = enable;
+    } else {
+      state.matrixRain = !state.matrixRain;
+    }
+    if (state.matrixRain) {
+      document.body.classList.remove('matrix-hidden');
+      startMatrixRain();
+      printLine("[MATRIX] Digital rain screensaver enabled [F2].", "system");
+    } else {
+      document.body.classList.add('matrix-hidden');
+      stopMatrixRain();
+      printLine("[MATRIX] Digital rain screensaver disabled [F2].", "system");
+    }
+    const btnRain = document.getElementById('btnMatrixRain');
+    if (btnRain) btnRain.style.color = state.matrixRain ? 'var(--phosphor)' : 'var(--phosphor-dim)';
+  }
+
   // --- COMMAND DISPATCHER ---
   function dispatchCommand(raw) {
     const trimmed = raw.trim();
     if (!trimmed) return;
 
+    state.commandCount++;
     printLine(`KMATRIX:\\> ${trimmed}`, "user");
     state.history.push(trimmed);
     state.historyIndex = state.history.length;
@@ -1443,6 +1841,37 @@
       case 'analyze':
       case 'trace':
         cmdAnalyze(arg1);
+        break;
+      case 'dump':
+      case 'hexdump':
+        cmdDump(arg1);
+        break;
+      case 'disasm':
+      case 'asm':
+        cmdDisasm(arg1);
+        break;
+      case 'entropy':
+        cmdEntropy(arg1);
+        break;
+      case 'ping':
+        cmdPing(arg1);
+        break;
+      case 'traceroute':
+      case 'tracert':
+        cmdTraceroute(arg1);
+        break;
+      case 'sniff':
+      case 'pcap':
+        cmdSniff(arg1);
+        break;
+      case 'matrix':
+      case 'rain':
+        if (arg1 === 'on') toggleMatrixRain(true);
+        else if (arg1 === 'off') toggleMatrixRain(false);
+        else toggleMatrixRain();
+        break;
+      case 'stats':
+        cmdStats();
         break;
       case 'breach':
       case 'unlock':
@@ -1484,6 +1913,10 @@
       case 'load':
         loadState(true);
         break;
+      case 'logexport':
+      case 'transcript':
+        exportTextLog();
+        break;
       case 'clear':
       case 'cls':
         termOutput.innerHTML = '';
@@ -1505,9 +1938,9 @@
 
   // --- TAB AUTOCOMPLETE ---
   const AUTOCOMPLETE_LIST = [
-    'help', 'status', 'scan', 'analyze', 'breach', 'override',
-    'audio', 'theme', 'save', 'load', 'clear', 'cls', 'ascend', 'director',
-    'climax', 'replay', 'cutscene', 'fanfare',
+    'help', 'status', 'scan', 'analyze', 'dump', 'disasm', 'entropy', 'ping', 'traceroute', 'sniff',
+    'matrix', 'rain', 'stats', 'breach', 'override', 'audio', 'theme', 'save', 'load', 'logexport',
+    'clear', 'cls', 'ascend', 'director', 'climax', 'replay', 'cutscene', 'fanfare',
     'MEM_HEAP', 'AUDIO_DSP', 'NET_RELAY', 'STORAGE_VFS', 'CORE_AI',
     '7F1999', '1999HZ', '10.19.99.4', 'RECOVERY_1999', 'AUTONOMOUS_FLEET'
   ];
@@ -1531,7 +1964,6 @@
 
   // --- KEYBOARD LISTENER ---
   window.addEventListener('keydown', (e) => {
-    // Quicksave [F5] & Quickload [F9]
     if (e.key === 'F5') {
       e.preventDefault();
       saveState(true);
@@ -1540,6 +1972,11 @@
     if (e.key === 'F9') {
       e.preventDefault();
       loadState(true);
+      return;
+    }
+    if (e.key === 'F2') {
+      e.preventDefault();
+      toggleMatrixRain();
       return;
     }
     if (e.key === 'F1') {
@@ -1590,6 +2027,7 @@
   document.getElementById('btnQuicksave').addEventListener('click', () => saveState(true));
   document.getElementById('btnQuickload').addEventListener('click', () => loadState(true));
   document.getElementById('btnExport').addEventListener('click', exportJSON);
+  document.getElementById('btnExportLog').addEventListener('click', exportTextLog);
   document.getElementById('btnImport').addEventListener('click', () => document.getElementById('fileImport').click());
   document.getElementById('fileImport').addEventListener('change', (e) => {
     if (e.target.files && e.target.files[0]) {
@@ -1597,7 +2035,11 @@
     }
   });
 
+  document.getElementById('btnMatrixRain').addEventListener('click', () => toggleMatrixRain());
   document.getElementById('btnSettings').addEventListener('click', () => {
+    document.getElementById('cfgScanlines').checked = state.scanlines;
+    document.getElementById('cfgMatrixRain').checked = state.matrixRain;
+    document.getElementById('cfgAudio').checked = state.audioEnabled;
     settingsModal.style.display = 'flex';
   });
   document.getElementById('btnHelp').addEventListener('click', () => {
@@ -1618,8 +2060,10 @@
 
   document.getElementById('btnSettingsSave').addEventListener('click', () => {
     state.scanlines = document.getElementById('cfgScanlines').checked;
+    state.matrixRain = document.getElementById('cfgMatrixRain').checked;
     state.audioEnabled = document.getElementById('cfgAudio').checked;
     applyScanlines();
+    toggleMatrixRain(state.matrixRain);
     settingsModal.style.display = 'none';
     saveState(false);
     printLine("[SETTINGS] Preferences saved.", "system");
@@ -1670,6 +2114,7 @@
   document.getElementById('btnStartNew').addEventListener('click', () => {
     splashModal.style.display = 'none';
     initAudio();
+    initMatrixRain();
     SFX.enter();
     checkFirstRunTutorial();
   });
@@ -1677,6 +2122,7 @@
   btnStartContinue.addEventListener('click', () => {
     splashModal.style.display = 'none';
     initAudio();
+    initMatrixRain();
     loadState(true);
     SFX.enter();
   });
@@ -1725,8 +2171,9 @@
 
   // --- INITIALIZATION ---
   renderHUD();
+  initMatrixRain();
   printLine("KMATRIX // RETRO FORENSIC MASTER TERMINAL INITIALIZED", "cyan");
-  printLine("Autonomous Fleet Kernel v1.0.0 (Windows NT 4.0 / 999KB Fleet Standard)", "system");
+  printLine("Autonomous Fleet Kernel v1.1.0 (Windows NT 4.0 / 999KB Fleet Standard)", "system");
   printLine("Type 'help' or 'scan' to inspect quarantined subsystem sectors.\n");
   termInput.focus();
 })();
