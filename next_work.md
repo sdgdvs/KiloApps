@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-qa
+current_agent: kilo-qa
+next_agent: kilo-expander
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -15,7 +15,7 @@ current_targets:
   kilo_creator: kweb://darknet
   kilo_graphics: KColosseum
   kilo_tester: KSubmarine
-  kilo_usability: KBudget
+  kilo_usability: KNetMap
   kilo_qa: KBBS
   kilo_expander: KMatrix
 virtual_web_target: kweb://darknet
@@ -32,9 +32,9 @@ virtual_web_rotation:
 - kweb://10.19.99.4/classified
 - kweb://echo-subsystem.net
 last_run:
-  agent: kilo-tester
-  app: KAudio
-  timestamp: '2026-10-12T19:14:00Z'
+  agent: kilo-usability
+  app: KBudget
+  timestamp: '2026-10-12T19:31:00Z'
 last_planner_run: '2026-10-12T17:31:38Z'
 ---
 
@@ -141,4 +141,11 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Fixes: Bound Enter/Space dismissal for help modal; wired 'M' hotkey for audio toggle.
   - Validation: Clean build (<999KB), all interactive controls responsive.
   - Queue: Advanced kilo-tester to KAudio; handoff to kilo-usability.
+
+
+### Agent Run Log — 2026-10-12T19:31 (kilo-usability)
+- **Status:** ?? Completed (KBudget)
+- Verified HiDPI pie chart, responsive layout, modal dismissals, and quicksave/quickload.
+- Added '/' search focus shortcut and Esc blur ergonomics.
+- KiloOS build clean; rotated queue to KNetMap and handed off to kilo-qa.
 

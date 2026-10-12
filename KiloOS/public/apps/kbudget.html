@@ -1506,10 +1506,12 @@
             // Global Hotkeys (even when in inputs)
             if (e.key === 'Escape') {
                 const searchEl = document.getElementById('search-input');
-                if (document.activeElement === searchEl && searchEl.value) {
-                    searchEl.value = '';
-                    currentPage = 1;
-                    render();
+                if (document.activeElement === searchEl) {
+                    if (searchEl.value) {
+                        searchEl.value = '';
+                        currentPage = 1;
+                        render();
+                    }
                     searchEl.blur();
                     return;
                 }
@@ -1564,7 +1566,8 @@
                         break;
                     case 'f':
                         e.preventDefault();
-                        document.getElementById('search-input').focus();
+                        const sf = document.getElementById('search-input');
+                        if (sf) { sf.focus(); sf.select(); }
                         break;
                     case 's':
                         e.preventDefault();
@@ -1576,7 +1579,11 @@
                         break;
                 }
             } else if (!isInput) {
-                if (e.key === 'h' || e.key === 'H' || e.key === '?') {
+                if (e.key === '/') {
+                    e.preventDefault();
+                    const si = document.getElementById('search-input');
+                    if (si) { si.focus(); si.select(); }
+                } else if (e.key === 'h' || e.key === 'H' || e.key === '?') {
                     e.preventDefault();
                     openHelpModal();
                 } else if (e.key === 'ArrowLeft') {
