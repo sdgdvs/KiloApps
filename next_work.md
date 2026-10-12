@@ -1,9 +1,10 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-creator
 agent_rotation:
 - kilo-creator
 - kilo-graphics
+- kilo-soundscape
 - kilo-tester
 - kilo-usability
 - kilo-qa
@@ -16,7 +17,8 @@ current_targets:
   kilo_graphics: KColosseum
   kilo_tester: KSubmarine
   kilo_usability: KNetMap
-  kilo_qa: KBBS
+  kilo_qa: KColony
+  kilo_soundscape: KRogue
   kilo_expander: KMatrix
 virtual_web_target: kweb://darknet
 virtual_web_rotation:
@@ -32,9 +34,9 @@ virtual_web_rotation:
 - kweb://10.19.99.4/classified
 - kweb://echo-subsystem.net
 last_run:
-  agent: kilo-usability
-  app: KBudget
-  timestamp: '2026-10-12T19:31:00Z'
+  agent: kilo-qa
+  app: KBBS
+  timestamp: '2026-10-12T20:14:00Z'
 last_planner_run: '2026-10-12T17:31:38Z'
 ---
 
@@ -90,8 +92,8 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Upcoming Queue**: `KNetMap`, `KRogue`, `KAudio`, `KSubmarine`, `KTrader`.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
-- **Current Target**: `KBBS`
-- **Upcoming Queue**: `KColony`, `KBreakout`, `KRogue`, `KPong`, `KPac`.
+- **Current Target**: `KColony`
+- **Upcoming Queue**: `KBreakout`, `KRogue`, `KPong`, `KPac`.
 
 ### 6. Feature Expander Queue (`kilo-expander`)
 - **Current Target**: `KMatrix`
@@ -112,6 +114,11 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 ---
 
 ## Recent Execution Logs (Max 5 Entries)
+
+- **2026-10-12T20:14:00Z — kilo-qa: KBBS (Pass 5 QA & Build Quality Audit)**
+  - Status: PASS ✅ (Dual-target clean: Win32 C build clean, Vite build clean, size <999KB).
+  - Fixes: Added visibilitychange lifecycle guards to baud rate loop in kbbs.html.
+  - Queue: Advanced kilo-qa to KColony; handoff to kilo-expander.
 
 - **2026-10-12T19:14:00Z — kilo-tester: KAudio (Interactive UI Audit & Focus Polish)**
   - Status: PASS ✅ (0 errors, startup audit clean, canvas 444x98 active).
@@ -135,9 +142,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Queue Healing: Fixed non-UTF-8 CP1252 byte 0x97 in next_work.md; added resilient error handling in orchestrator.
   - Node Config: Updated register_task.ps1, orchestrator.py, and dashboard.py to detect DESKTOP-HSSS709 as PC B.
   - Verification: Dry run clean (daily planner next); Vite build 100% clean; security_lint 100% PASS.
-
-- **2026-10-11T14:14:00+0000 — kilo-tester: KSanctuary (Interactive UI Audit & Hotkey Polish)**
-  - Status: PASS ✅ (Audited modals, inputs, and hotkeys in ksanctuary.html).
-  - Fixes: Bound Enter/Space dismissal for help modal; wired 'M' hotkey for audio toggle.
-  - Validation: Clean build (<999KB), all interactive controls responsive.
-  - Queue: Advanced kilo-tester to KAudio; handoff to kilo-usability.

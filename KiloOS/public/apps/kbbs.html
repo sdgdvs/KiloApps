@@ -1071,10 +1071,12 @@ SEND:"secret\r"'></textarea>
         checkScriptAutoLoginTrigger(data);
     }
 
-    // ─── Baud Rate Emulation Queue ───
+    // ─── Baud Rate Emulation Queue & Lifecycle Guards ───
     let baudFraction = 0;
     let lastBaudTime = Date.now();
-    setInterval(() => {
+    let baudIntervalId = null;
+
+    function baudTick() {
         let now = Date.now();
         let dt = now - lastBaudTime;
         lastBaudTime = now;
@@ -1097,7 +1099,29 @@ SEND:"secret\r"'></textarea>
                 processData(chunk);
             }
         }
-    }, 16);
+    }
+
+    function startBaudLoop() {
+        if (baudIntervalId !== null) return;
+        lastBaudTime = Date.now();
+        baudIntervalId = setInterval(baudTick, 16);
+    }
+
+    function stopBaudLoop() {
+        if (baudIntervalId !== null) {
+            clearInterval(baudIntervalId);
+            baudIntervalId = null;
+        }
+    }
+
+    startBaudLoop();
+    document.addEventListener('visibilitychange', () => {
+        if (document.hidden) {
+            stopBaudLoop();
+        } else {
+            startBaudLoop();
+        }
+    });
 
     // ─── Connection Management ───
     const PROXY_URL = 'wss://kbbs-proxy-751490709804.us-central1.run.app';
