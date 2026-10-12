@@ -255,7 +255,8 @@
             outline-offset: 1px;
         }
     </style>
-    <script src="../assets/js/retro_multiplayer.js"></script>
+    <script src="../assets/js/retro_multiplayer.js">        updateAudioUI();
+    </script>
 </head>
 <body>
     <div id="game-container">
@@ -313,6 +314,7 @@
             </div>
             <div class="action-buttons">
                 <button id="btn-start-run" class="btn-action" style="border-color: #48bb78; background: #1c4532; color: #9ae6b4;" onclick="openCharSelect()">⚔️ New Run [Enter]</button>
+                <button id="btn-audio-toggle" class="btn-action" style="border-color: #10b981; background: #064e3b; color: #a7f3d0;" onclick="toggleAudio()" title="Toggle Genesis YM2612 FM / SPC700 Audio [F2]">🔊 Audio: On [F2]</button>
                 <button class="btn-action" style="border-color: #63b3ed; background: #1a365d; color: #bee3f8;" onclick="openMultiplayerModal()">🌐 Duel</button>
                 <button class="btn-action" style="border-color: #ecc94b; background: #554415; color: #fefcbf;" onclick="openReplayModal()">🎥 Replay</button>
                 <button id="btn-class-ability" class="btn-action btn-ability" onclick="useClassAbility()">[A] Berserk Slash</button>
@@ -328,7 +330,6 @@
                 <button class="btn-action" style="border-color: #4299e1; background: #1a365d;" onclick="openHelp()">[H / F1] Help</button>
                 <button class="btn-action" onclick="saveGame()">[F5 / S] Save</button>
                 <button class="btn-action" onclick="loadGame()">[F9 / L] Load</button>
-                <button id="btn-audio-toggle" class="btn-action" style="border-color: #805ad5; background: #2b1f48; color: #d6bcfa;" onclick="toggleAudio()" title="Toggle Soundscape SFX [O]">🔊 Sound [O]</button>
             </div>
             <div id="virtual-dpad" style="display: flex; gap: 14px; justify-content: center; align-items: center; margin-top: 2px; flex-wrap: wrap;">
                 <div style="display: grid; grid-template-columns: repeat(3, 34px); gap: 4px;">
@@ -535,6 +536,7 @@
                     <p><b style="color:#63b3ed;">Key Rebinding:</b> Press <b>[K]</b> to customize controls to your personal setup.</p>
                     <p><b style="color:#63b3ed;">Quicksave / Quickload:</b> Press <b>[F5]</b> or <b>[S]</b> to save run, <b>[F9]</b> or <b>[L]</b> to resume.</p>
                     <p><b style="color:#63b3ed;">Run History / Export:</b> Press <b>[T]</b> for the Leaderboard and JSON Export/Import.</p>
+                    <p><b style="color:#63b3ed;">Audio Soundscape:</b> Press <b>[F2]</b> or click Audio button to toggle Genesis YM2612 FM Synthesis & SPC700 Echo.</p>
                     <p><b style="color:#63b3ed;">Shortcut:</b> Press <b>[H]</b> or <b>[F1]</b> anytime to open this guide.</p>
                 </div>
                 <div class="modal-close">
@@ -759,6 +761,347 @@
         ctx.scale(dpr, dpr);
         ctx.imageSmoothingEnabled = false;
 
+        // =========================================================================
+        // SEGA GENESIS YM2612 2-OPERATOR FM SYNTHESIS & SNES SPC700 STEREO DELAY ENGINE
+        // Procedural Dungeon Soundscape, Modal Voice Leading, & Adaptive Chiptune Sequencer
+        // =========================================================================
+        let audioCtx = null;
+        let spcDelay = null;
+        let spcFeedback = null;
+        let spcDamp = null;
+        let musicGain = null;
+        let sfxGain = null;
+        let audioMuted = false;
+        let seqTimer = null;
+        let seqStep = 0;
+        let lastStepSoundTime = 0;
+
+        try {
+            audioMuted = localStorage.getItem('krogue_audioMuted') === '1';
+        } catch (e) {
+            audioMuted = false;
+        }
+
+        function initAudio() {
+            if (audioCtx) {
+                if (audioCtx.state === 'suspended') audioCtx.resume();
+                return audioCtx;
+            }
+            try {
+                const AudioCtxClass = window.AudioContext || window.webkitAudioContext;
+                if (!AudioCtxClass) return null;
+                audioCtx = new AudioCtxClass();
+
+                // Master buses
+                musicGain = audioCtx.createGain();
+                musicGain.gain.setValueAtTime(0.22, audioCtx.currentTime);
+                musicGain.connect(audioCtx.destination);
+
+                sfxGain = audioCtx.createGain();
+                sfxGain.gain.setValueAtTime(0.32, audioCtx.currentTime);
+                sfxGain.connect(audioCtx.destination);
+
+                // SNES SPC700-style Stereo Warm Tape Delay & Dampening Filter
+                spcDelay = audioCtx.createDelay(1.0);
+                spcDelay.delayTime.value = 0.28; // ~107 BPM eighth-note echo
+
+                spcFeedback = audioCtx.createGain();
+                spcFeedback.gain.value = 0.26; // Smooth decaying echo
+
+                spcDamp = audioCtx.createBiquadFilter();
+                spcDamp.type = 'lowpass';
+                spcDamp.frequency.value = 3200; // Warm 16-bit analog rolloff
+
+                spcDelay.connect(spcDamp);
+                spcDamp.connect(spcFeedback);
+                spcFeedback.connect(spcDelay);
+                spcDamp.connect(musicGain);
+                spcDamp.connect(sfxGain);
+
+                if (!audioMuted) {
+                    startMusicSequencer();
+                }
+            } catch (err) {
+                audioCtx = null;
+            }
+            return audioCtx;
+        }
+
+        // Genesis YM2612 2-Operator FM Synthesizer Voice
+        function playFM(carrierFreq, modRatio, modIndex, duration, vol = 0.25, type = 'sine', enableEcho = true, bus = 'sfx') {
+            if (audioMuted) return;
+            const ctx = initAudio();
+            if (!ctx) return;
+            const t = ctx.currentTime;
+
+            try {
+                // Operator 2 (Modulator)
+                const op2 = ctx.createOscillator();
+                const op2Gain = ctx.createGain();
+                op2.type = type;
+                op2.frequency.setValueAtTime(Math.max(20, carrierFreq * modRatio), t);
+                const modDev = Math.max(1, carrierFreq * modIndex);
+                op2Gain.gain.setValueAtTime(modDev, t);
+                op2Gain.gain.exponentialRampToValueAtTime(Math.max(0.1, modDev * 0.02), t + duration * 0.85);
+                op2.connect(op2Gain);
+
+                // Operator 1 (Carrier)
+                const op1 = ctx.createOscillator();
+                const masterGain = ctx.createGain();
+                op1.type = type;
+                op1.frequency.setValueAtTime(Math.max(20, carrierFreq), t);
+                op2Gain.connect(op1.frequency);
+
+                const targetBus = (bus === 'music' && musicGain) ? musicGain : ((bus === 'sfx' && sfxGain) ? sfxGain : ctx.destination);
+                masterGain.gain.setValueAtTime(Math.max(0.0001, vol), t);
+                masterGain.gain.exponentialRampToValueAtTime(0.0001, t + duration);
+
+                op1.connect(masterGain);
+                masterGain.connect(targetBus);
+
+                if (enableEcho && spcDelay) {
+                    masterGain.connect(spcDelay);
+                }
+
+                op2.start(t);
+                op1.start(t);
+                op2.stop(t + duration);
+                op1.stop(t + duration);
+            } catch (e) {}
+        }
+
+        // Noise Burst Generator for Percussion & Impact
+        function playNoiseBurst(duration = 0.10, vol = 0.20, filterFreq = 800) {
+            if (audioMuted) return;
+            const ctx = initAudio();
+            if (!ctx) return;
+            try {
+                const bufferSize = Math.floor(ctx.sampleRate * duration);
+                const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+                const data = buffer.getChannelData(0);
+                for (let i = 0; i < bufferSize; i++) {
+                    data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (bufferSize * 0.35));
+                }
+                const noise = ctx.createBufferSource();
+                noise.buffer = buffer;
+                const filter = ctx.createBiquadFilter();
+                filter.type = 'bandpass';
+                filter.frequency.value = filterFreq;
+                const gain = ctx.createGain();
+                gain.gain.setValueAtTime(vol, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + duration);
+
+                noise.connect(filter);
+                filter.connect(gain);
+                gain.connect(sfxGain || ctx.destination);
+                noise.start();
+            } catch (e) {}
+        }
+
+        // Procedural Genre-Appropriate Sound Effects & Action Stingers
+        function playSFX(type) {
+            if (audioMuted) return;
+            const ctx = initAudio();
+            if (!ctx) return;
+
+            try {
+                if (type === 'step') {
+                    const now = Date.now();
+                    if (now - lastStepSoundTime < 110) return;
+                    lastStepSoundTime = now;
+                    // Muted stone/leather subterranean footstep
+                    playFM(65 + Math.random() * 8, 0.5, 0.8, 0.05, 0.08, 'triangle', false, 'sfx');
+                    playNoiseBurst(0.04, 0.05, 450);
+                } else if (type === 'hit') {
+                    // Punchy blade strike (sharp 2-op FM transient + noise impact)
+                    playFM(175, 2.0, 3.2, 0.16, 0.30, 'sawtooth', false, 'sfx');
+                    playNoiseBurst(0.10, 0.22, 950);
+                } else if (type === 'crit') {
+                    // Heavy explosive critical strike stinger
+                    playFM(120, 3.5, 4.5, 0.32, 0.40, 'sawtooth', true, 'sfx');
+                    playFM(240, 1.5, 2.8, 0.24, 0.28, 'triangle', true, 'sfx');
+                    playNoiseBurst(0.20, 0.35, 1400);
+                } else if (type === 'kill') {
+                    // Descending FM dissolution stinger
+                    playFM(220, 1.414, 2.5, 0.28, 0.26, 'sawtooth', true, 'sfx');
+                    setTimeout(() => playFM(146.83, 1.0, 2.0, 0.35, 0.22, 'triangle', true, 'sfx'), 70);
+                    playNoiseBurst(0.18, 0.16, 600);
+                } else if (type === 'hurt') {
+                    // Low dissonant damage thud
+                    playFM(85, 2.67, 3.0, 0.22, 0.35, 'sawtooth', false, 'sfx');
+                    playNoiseBurst(0.14, 0.24, 400);
+                } else if (type === 'gold') {
+                    // Resonant high coin chime (G5 -> C6)
+                    playFM(783.99, 3.5, 2.4, 0.18, 0.22, 'sine', true, 'sfx');
+                    setTimeout(() => playFM(1046.50, 3.5, 2.0, 0.28, 0.26, 'sine', true, 'sfx'), 60);
+                } else if (type === 'item') {
+                    // Crystalline dual-tone pickup chime (E5 -> B5)
+                    playFM(659.25, 2.0, 2.2, 0.25, 0.24, 'sine', true, 'sfx');
+                    setTimeout(() => playFM(987.77, 3.5, 2.5, 0.35, 0.24, 'sine', true, 'sfx'), 75);
+                } else if (type === 'spell') {
+                    // Mystical arcane FM glissando sweep with SPC700 stereo delay
+                    playFM(440, 1.5, 3.2, 0.35, 0.28, 'sine', true, 'sfx');
+                    setTimeout(() => playFM(659.25, 2.0, 3.0, 0.30, 0.24, 'triangle', true, 'sfx'), 60);
+                    setTimeout(() => playFM(880.00, 3.5, 2.5, 0.45, 0.22, 'sine', true, 'sfx'), 120);
+                } else if (type === 'stairs') {
+                    // Deep resonant dungeon portal descent
+                    playFM(196.00, 1.5, 2.2, 0.40, 0.30, 'triangle', true, 'sfx');
+                    setTimeout(() => playFM(146.83, 1.5, 2.0, 0.50, 0.32, 'triangle', true, 'sfx'), 140);
+                    setTimeout(() => playFM(98.00, 0.5, 2.5, 0.70, 0.35, 'sine', true, 'sfx'), 280);
+                } else if (type === 'levelup') {
+                    // Triumphant ascending 4-note FM brass fanfare (C4 -> E4 -> G4 -> C5)
+                    const notes = [261.63, 329.63, 392.00, 523.25];
+                    notes.forEach((freq, idx) => {
+                        setTimeout(() => {
+                            playFM(freq, 2.0, 2.5, 0.35, 0.30, 'sawtooth', true, 'sfx');
+                            playFM(freq * 1.5, 1.0, 1.2, 0.28, 0.18, 'sine', true, 'sfx');
+                        }, idx * 110);
+                    });
+                } else if (type === 'gameover') {
+                    // Tragic descending minor triad dirge
+                    const notes = [220.00, 174.61, 146.83, 110.00];
+                    notes.forEach((freq, idx) => {
+                        setTimeout(() => {
+                            playFM(freq, 1.5, 2.8, 0.50, 0.32, 'sawtooth', true, 'sfx');
+                        }, idx * 170);
+                    });
+                } else if (type === 'victory') {
+                    // Heroic major fanfare
+                    const notes = [293.66, 369.99, 440.00, 587.33];
+                    notes.forEach((freq, idx) => {
+                        setTimeout(() => {
+                            playFM(freq, 2.0, 2.2, 0.40, 0.30, 'sine', true, 'sfx');
+                        }, idx * 120);
+                    });
+                } else if (type === 'click') {
+                    // Snappy 2-op UI earcon
+                    playFM(880, 2.0, 1.2, 0.04, 0.12, 'triangle', false, 'sfx');
+                }
+            } catch (e) {}
+        }
+
+        // Procedural Modal Chiptune Music Sequencer (YM2612 2-Op + SPC700 Delay)
+        function startMusicSequencer() {
+            if (seqTimer) clearInterval(seqTimer);
+            seqStep = 0;
+            seqTimer = setInterval(() => {
+                if (audioMuted || !audioCtx) return;
+                tickSequencerStep();
+            }, 280); // ~107 BPM eighth-note tracker step
+        }
+
+        function stopMusicSequencer() {
+            if (seqTimer) {
+                clearInterval(seqTimer);
+                seqTimer = null;
+            }
+        }
+
+        function tickSequencerStep() {
+            if (document.hidden || !audioCtx) return;
+            const step = seqStep % 16;
+            seqStep++;
+
+            // Zone Patterns based on Dungeon Depth or Game State
+            // State 0: Intro/Menu; State 2: Defeat; State 3: Victory; State 1: Active Dungeon
+            let zone = 0;
+            if (state === 0) {
+                zone = 4; // Intro Hymn
+            } else if (state === 2 || state === 3) {
+                return; // Dirge/Fanfare handled by stingers
+            } else {
+                if (dlevel <= 3) zone = 0;      // Catacombs of Omen (D Minor)
+                else if (dlevel <= 6) zone = 1; // Sunken Crypts (E Dorian)
+                else if (dlevel <= 9) zone = 2; // Infernal Caverns (C Minor / Phrygian)
+                else zone = 3;                  // The Void Sanctuary (Ab Minor Cosmic)
+            }
+
+            const patterns = {
+                // Zone 0: Catacombs of Omen (D Minor Harmonic)
+                0: {
+                    bass: [73.42, 0, 73.42, 0, 87.31, 0, 73.42, 0, 58.27, 0, 58.27, 0, 55.00, 0, 65.41, 0],
+                    lead: [293.66, 0, 349.23, 0, 440.00, 0, 392.00, 0, 349.23, 0, 554.37, 0, 587.33, 440.00, 349.23, 0],
+                    bell: [0, 587.33, 0, 440.00, 0, 0, 523.25, 0, 0, 698.46, 0, 587.33, 0, 440.00, 0, 880.00]
+                },
+                // Zone 1: Sunken Crypts (E Dorian Ancient Mode)
+                1: {
+                    bass: [82.41, 0, 82.41, 0, 98.00, 0, 82.41, 0, 110.00, 0, 98.00, 0, 61.74, 0, 73.42, 0],
+                    lead: [329.63, 0, 392.00, 0, 493.88, 0, 554.37, 0, 587.33, 0, 493.88, 0, 392.00, 0, 329.63, 0],
+                    bell: [0, 659.25, 0, 0, 783.99, 0, 659.25, 0, 0, 987.77, 0, 783.99, 0, 659.25, 0, 587.33]
+                },
+                // Zone 2: Infernal Caverns (C Minor / Gothic March)
+                2: {
+                    bass: [65.41, 0, 65.41, 0, 69.30, 0, 65.41, 0, 49.00, 0, 51.91, 0, 65.41, 0, 77.78, 0],
+                    lead: [261.63, 0, 311.13, 0, 392.00, 0, 415.30, 0, 523.25, 0, 392.00, 0, 311.13, 415.30, 261.63, 0],
+                    bell: [0, 523.25, 0, 392.00, 0, 622.25, 0, 0, 0, 783.99, 0, 523.25, 0, 392.00, 0, 622.25]
+                },
+                // Zone 3: The Void Sanctuary (Ab Minor Astral Singularity)
+                3: {
+                    bass: [51.91, 0, 0, 51.91, 77.78, 0, 61.74, 0, 46.25, 0, 0, 46.25, 51.91, 0, 69.30, 0],
+                    lead: [415.30, 0, 493.88, 0, 622.25, 0, 659.25, 830.61, 0, 622.25, 0, 493.88, 415.30, 0, 622.25, 0],
+                    bell: [0, 830.61, 0, 622.25, 0, 0, 987.77, 0, 0, 1244.51, 0, 830.61, 0, 622.25, 0, 987.77]
+                },
+                // Zone 4: Intro / Menu Theme (A Minor Contemplative Chime)
+                4: {
+                    bass: [55.00, 0, 0, 0, 65.41, 0, 0, 0, 43.65, 0, 0, 0, 49.00, 0, 0, 0],
+                    lead: [220.00, 0, 261.63, 0, 329.63, 0, 261.63, 0, 174.61, 0, 220.00, 0, 246.94, 0, 196.00, 0],
+                    bell: [0, 440.00, 0, 0, 0, 523.25, 0, 0, 0, 349.23, 0, 0, 0, 493.88, 0, 0]
+                }
+            };
+
+            const pat = patterns[zone] || patterns[0];
+
+            // 1. Voice 1: Deep FM Sub-Bass (0.5 Modulator Ratio pluck)
+            if (pat.bass && pat.bass[step]) {
+                playFM(pat.bass[step], 0.5, 2.2, 0.35, 0.30, 'triangle', false, 'music');
+            }
+
+            // 2. Voice 2: Singing FM Lead (1.5 Modulator Ratio)
+            if (pat.lead && pat.lead[step]) {
+                playFM(pat.lead[step], 1.5, 1.8, 0.30, 0.22, 'sine', true, 'music');
+            }
+
+            // 3. Voice 3: Crystalline Chime (3.5 Modulator Ratio + SPC700 delay)
+            if (pat.bell && pat.bell[step]) {
+                playFM(pat.bell[step], 3.5, 2.2, 0.40, 0.16, 'sine', true, 'music');
+            }
+        }
+
+        function toggleAudio() {
+            initAudio();
+            audioMuted = !audioMuted;
+            try {
+                localStorage.setItem('krogue_audioMuted', audioMuted ? '1' : '0');
+            } catch (e) {}
+
+            updateAudioUI();
+            if (!audioMuted) {
+                startMusicSequencer();
+                playSFX('click');
+                showToast('🔊 Genesis YM2612 FM / SPC700 Audio ENABLED [F2]', 'success');
+            } else {
+                stopMusicSequencer();
+                showToast('🔇 Audio MUTED [F2]', 'info');
+            }
+        }
+
+        function updateAudioUI() {
+            const btn = document.getElementById('btn-audio-toggle');
+            if (!btn) return;
+            if (audioMuted) {
+                btn.innerText = '🔇 Audio: Off [F2]';
+                btn.style.borderColor = '#e53e3e';
+                btn.style.background = '#742a2a';
+                btn.style.color = '#fed7d7';
+            } else {
+                btn.innerText = '🔊 Audio: On [F2]';
+                btn.style.borderColor = '#10b981';
+                btn.style.background = '#064e3b';
+                btn.style.color = '#a7f3d0';
+            }
+        }
+
+
         // Seeded PRNG
         let currentSeedVal = 12345;
         function seedFromString(str) {
@@ -823,223 +1166,6 @@
         let inVault = false;
         let currentVault = null;
         let savedFloorData = null;
-
-        // ==========================================
-        // PROCEDURAL SOUNDSCAPE ENGINE (Web Audio API)
-        // ==========================================
-        let soundEnabled = true;
-        try {
-            const savedAudio = localStorage.getItem('krogue_sfx');
-            if (savedAudio !== null) soundEnabled = savedAudio === '1';
-        } catch (e) {}
-
-        let audioCtx = null;
-        let ambientGain = null;
-        let ambientOsc = null;
-        let ambientFilter = null;
-
-        function getAudioContext() {
-            if (!audioCtx) {
-                const AudioClass = window.AudioContext || window.webkitAudioContext;
-                if (AudioClass) {
-                    audioCtx = new AudioClass();
-                }
-            }
-            if (audioCtx && audioCtx.state === 'suspended') {
-                audioCtx.resume();
-            }
-            return audioCtx;
-        }
-
-        function toggleAudio() {
-            soundEnabled = !soundEnabled;
-            try {
-                localStorage.setItem('krogue_sfx', soundEnabled ? '1' : '0');
-            } catch (e) {}
-            const btn = document.getElementById('btn-audio-toggle');
-            if (btn) {
-                btn.textContent = soundEnabled ? '🔊 Sound [O]' : '🔇 Sound [O]';
-                btn.style.color = soundEnabled ? '#d6bcfa' : '#a0aec0';
-            }
-            if (!soundEnabled) {
-                stopAmbientDrone();
-            } else {
-                startAmbientDrone();
-                sfxItem();
-            }
-            showToast(soundEnabled ? '🔊 Soundscape Enabled' : '🔇 Soundscape Muted', 'info');
-        }
-
-        function playRetroTone(freq, dur, type = 'sine', startVol = 0.12, endVol = 0.001, freqSlide = null) {
-            if (!soundEnabled) return;
-            try {
-                const ctx = getAudioContext();
-                if (!ctx) return;
-                const osc = ctx.createOscillator();
-                const gain = ctx.createGain();
-                osc.type = type;
-                const now = ctx.currentTime;
-                osc.frequency.setValueAtTime(freq, now);
-                if (freqSlide) {
-                    osc.frequency.exponentialRampToValueAtTime(Math.max(20, freqSlide), now + dur);
-                }
-                gain.gain.setValueAtTime(startVol, now);
-                gain.gain.exponentialRampToValueAtTime(Math.max(0.0001, endVol), now + dur);
-                osc.connect(gain);
-                gain.connect(ctx.destination);
-                osc.start(now);
-                osc.stop(now + dur);
-            } catch (e) {}
-        }
-
-        function playNoise(dur, startVol = 0.1) {
-            if (!soundEnabled) return;
-            try {
-                const ctx = getAudioContext();
-                if (!ctx) return;
-                const bufferSize = Math.floor(ctx.sampleRate * dur);
-                const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
-                const data = buffer.getChannelData(0);
-                for (let i = 0; i < bufferSize; i++) {
-                    data[i] = (Math.random() * 2 - 1) * Math.exp(-3 * i / bufferSize);
-                }
-                const noise = ctx.createBufferSource();
-                noise.buffer = buffer;
-                const gain = ctx.createGain();
-                gain.gain.setValueAtTime(startVol, ctx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + dur);
-                noise.connect(gain);
-                gain.connect(ctx.destination);
-                noise.start(ctx.currentTime);
-            } catch (e) {}
-        }
-
-        function sfxMove() {
-            playRetroTone(80 + Math.random() * 20, 0.04, 'triangle', 0.04, 0.001);
-        }
-
-        function sfxAttack(isCrit = false) {
-            playNoise(0.08, isCrit ? 0.2 : 0.12);
-            playRetroTone(isCrit ? 360 : 220, 0.1, 'sawtooth', 0.15, 0.01, 70);
-        }
-
-        function sfxHit() {
-            playRetroTone(130, 0.12, 'square', 0.15, 0.01, 55);
-        }
-
-        function sfxKill() {
-            playRetroTone(300, 0.08, 'triangle', 0.15, 0.01, 150);
-            setTimeout(() => playRetroTone(450, 0.12, 'triangle', 0.18, 0.01, 600), 50);
-        }
-
-        function sfxItem() {
-            playRetroTone(523.25, 0.08, 'sine', 0.12, 0.01);
-            setTimeout(() => playRetroTone(659.25, 0.1, 'sine', 0.12, 0.01), 70);
-        }
-
-        function sfxGold() {
-            playRetroTone(987.77, 0.06, 'sine', 0.14, 0.01);
-            setTimeout(() => playRetroTone(1318.51, 0.1, 'sine', 0.16, 0.01), 50);
-        }
-
-        function sfxPotion() {
-            playRetroTone(320, 0.08, 'sine', 0.12, 0.01, 520);
-            setTimeout(() => playRetroTone(520, 0.12, 'sine', 0.12, 0.01, 780), 80);
-        }
-
-        function sfxSpell(type = 'default') {
-            if (type === 'fireball' || type === 'meteor') {
-                playNoise(0.25, 0.25);
-                playRetroTone(180, 0.25, 'sawtooth', 0.2, 0.01, 40);
-            } else if (type === 'icestorm') {
-                playNoise(0.18, 0.15);
-                playRetroTone(600, 0.2, 'sine', 0.15, 0.01, 1200);
-            } else {
-                playRetroTone(440, 0.1, 'triangle', 0.15, 0.01, 660);
-                setTimeout(() => playRetroTone(660, 0.15, 'sine', 0.15, 0.01, 880), 90);
-            }
-        }
-
-        function sfxStairs() {
-            playRetroTone(440, 0.15, 'triangle', 0.14, 0.01, 330);
-            setTimeout(() => playRetroTone(330, 0.2, 'triangle', 0.14, 0.01, 220), 120);
-            setTimeout(() => playRetroTone(220, 0.25, 'sine', 0.16, 0.01, 110), 240);
-        }
-
-        function sfxLevelUp() {
-            const notes = [261.63, 329.63, 392.00, 523.25];
-            notes.forEach((freq, idx) => {
-                setTimeout(() => playRetroTone(freq, 0.12, 'triangle', 0.18, 0.01), idx * 80);
-            });
-        }
-
-        function sfxTrap() {
-            playRetroTone(160, 0.15, 'sawtooth', 0.18, 0.01, 90);
-        }
-
-        function sfxGameOver() {
-            stopAmbientDrone();
-            const notes = [293.66, 277.18, 261.63, 220.00];
-            notes.forEach((freq, idx) => {
-                setTimeout(() => playRetroTone(freq, 0.35, 'sawtooth', 0.2, 0.01), idx * 160);
-            });
-        }
-
-        function sfxVictory() {
-            const notes = [261.63, 329.63, 392.00, 523.25, 659.25, 783.99];
-            notes.forEach((freq, idx) => {
-                setTimeout(() => playRetroTone(freq, 0.22, 'triangle', 0.2, 0.01), idx * 100);
-            });
-        }
-
-        function startAmbientDrone() {
-            if (!soundEnabled) return;
-            try {
-                const ctx = getAudioContext();
-                if (!ctx || ambientOsc) return;
-                ambientOsc = ctx.createOscillator();
-                ambientGain = ctx.createGain();
-                ambientFilter = ctx.createBiquadFilter();
-
-                ambientOsc.type = 'sawtooth';
-                ambientOsc.frequency.setValueAtTime(55, ctx.currentTime);
-
-                ambientFilter.type = 'lowpass';
-                ambientFilter.frequency.setValueAtTime(140, ctx.currentTime);
-
-                ambientGain.gain.setValueAtTime(0.015, ctx.currentTime);
-
-                ambientOsc.connect(ambientFilter);
-                ambientFilter.connect(ambientGain);
-                ambientGain.connect(ctx.destination);
-
-                ambientOsc.start();
-            } catch (e) {}
-        }
-
-        function stopAmbientDrone() {
-            if (ambientOsc) {
-                try {
-                    ambientOsc.stop();
-                    ambientOsc.disconnect();
-                } catch (e) {}
-                ambientOsc = null;
-                ambientGain = null;
-                ambientFilter = null;
-            }
-        }
-
-        document.addEventListener('visibilitychange', () => {
-            if (document.hidden) {
-                if (audioCtx && audioCtx.state === 'running') {
-                    audioCtx.suspend();
-                }
-            } else {
-                if (audioCtx && audioCtx.state === 'suspended' && soundEnabled) {
-                    audioCtx.resume();
-                }
-            }
-        });
 
         // Multiplayer Duel & Phantom Race State
         let rMultiplayer = null;
@@ -1411,7 +1537,6 @@
             let seedVal = document.getElementById('seed-input').value.trim() || "KR-1000";
             closeModal('modal-char-select');
             startNewGame(selectedClass, selectedRace, seedVal, selectedLoadout);
-            startAmbientDrone();
         }
 
         function gainXP(amount) {
@@ -1427,11 +1552,11 @@
                 player.dex += 1;
                 player.atk += 1;
                 player.def += 1;
-                sfxLevelUp();
                 addMsg(`LEVEL UP! Welcome to level ${player.level}! (+5 Max HP/MP, +1 ATK/DEF)`, 'msg-good');
                 showToast(`LEVEL UP! Welcome to Level ${player.level}!`, 'success');
                 addFloatText(player.x, player.y, `LEVEL ${player.level}!`, '#ecc94b');
                 addStarParticles(player.x, player.y, '#ecc94b', 20);
+                playSFX('levelup');
             }
         }
 
@@ -2656,8 +2781,13 @@
             }
         }
         document.addEventListener('visibilitychange', () => {
-            if (document.hidden) stopLoop();
-            else startLoop();
+            if (document.hidden) {
+                stopLoop();
+                stopMusicSequencer();
+            } else {
+                startLoop();
+                if (!audioMuted) startMusicSequencer();
+            }
         });
 
         // Class Abilities
@@ -2671,6 +2801,7 @@
                 player.mp -= 8; player.berserk_turns = 5;
                 addMsg("WAR CRY & BERSERK CLEAVE! 360-degree sweep strikes surrounding foes!", 'msg-magic');
                 addParticles(player.x, player.y, '#e53e3e', 30, true);
+                playSFX('spell');
                 addDebrisParticles(player.x, player.y, '#ecc94b', 12);
                 screenShake = 14;
                 shockwaves.push({x: player.x, y: player.y, innerRadius: 0, outerRadius: 0, life: 1.3, maxLife: 1.3, color: '#e53e3e'});
@@ -3244,8 +3375,8 @@
                     let dmg = Math.max(1, 3 + Math.floor(dlevel * 0.5) - calcDef);
                     if (player.class === 'warrior' && player.loadout === 0) dmg = Math.max(1, Math.floor(dmg * 0.75));
                     player.hp -= dmg;
-                    sfxHit();
                     addMsg(`${m.name} strikes you for ${dmg} dmg.`, 'msg-combat');
+                    playSFX('hurt');
                     addFloatText(player.x, player.y, `-${dmg}`, '#e53e3e');
                     if (player.hp <= 0) { triggerGameOver(); return; }
                 } else if (map[m.y + mdy][m.x + mdx] !== '#') {
@@ -3284,8 +3415,8 @@
                 updatePetHUD();
                 return;
             }
+            playSFX('gameover');
             state = 2;
-            sfxGameOver();
             if (typeof isDuelMode !== 'undefined' && isDuelMode && isDuelOnline && rMultiplayer) {
                 rMultiplayer.sendMove({ action: 'finish', outcome: 'defeat', floor: dlevel, kills: total_kills, gold: player.gold });
             }
@@ -5121,6 +5252,7 @@
                     addMsg(`You strike ${monsters[mIdx].name} for ${calcAtk} dmg!`);
                 }
                 addFloatText(nx, ny, `-${calcAtk}`, '#e53e3e');
+                playSFX((isCrit || isStealth) ? 'crit' : 'hit');
                 monsters[mIdx].hp -= calcAtk;
                 if (player.class === 'mage' && player.loadout === 0 && Math.random() < 0.4) {
                     addMsg("Elemental burns ignite the target!", 'msg-magic');
@@ -5186,8 +5318,8 @@
                     } else {
                         addParticles(monsters[mIdx].x, monsters[mIdx].y, '#fc8181', 15);
                     }
-                    sfxKill();
                     addMsg(`${monsters[mIdx].name} dies!`, 'good');
+                    playSFX('kill');
                     decals.push({x: monsters[mIdx].x, y: monsters[mIdx].y, color: (monsters[mIdx].ch === 's' ? '#3182ce' : '#8a0303'), life: 100});
                     gainXP(8 + Math.floor(dlevel * 1.5));
                     let goldDrop = rngRange(1, 3 + dlevel);
@@ -5197,7 +5329,7 @@
                 }
             } else {
                 player.x = nx; player.y = ny;
-                sfxMove();
+                playSFX('step');
                 let itIdx = items.findIndex(i => i.x === nx && i.y === ny);
                 if (itIdx >= 0) {
                     let it = items[itIdx];
@@ -5208,8 +5340,8 @@
                             checkFeatProgress('catacomb_explorer', dlevel);
                             checkFeatProgress('abyssal_champion', dlevel);
                         } catch(e) {}
-                        sfxStairs();
                         addMsg(`You descend deeper into floor ${dlevel}...`, 'msg-good');
+                        playSFX('stairs');
                         showToast(`Descended to Floor ${dlevel}`, 'info');
                         if (typeof isDuelMode !== 'undefined' && isDuelMode) {
                             duelHexCharges = Math.min(3, duelHexCharges + 1);
@@ -5276,14 +5408,14 @@
                         let gVal = it.val || rngRange(5, 15);
                         player.gold += gVal;
                         items.splice(itIdx, 1);
-                        sfxGold();
+                        playSFX('gold');
                         addMsg(`Picked up ${gVal} gold pieces!`, 'good');
                         addFloatText(nx, ny, `+${gVal}G`, '#f6e05e');
                     } else {
                         inventory.push(it);
                         items.splice(itIdx, 1);
-                        sfxItem();
                         addMsg(`Picked up ${it.name || 'item'}`, 'good');
+                        playSFX('item');
                     }
                 }
                 let trapIdx = traps.findIndex(t => t.x === nx && t.y === ny);
@@ -5298,7 +5430,6 @@
                         }
                     }
                     traps[trapIdx].revealed = true;
-                    sfxTrap();
                     let ty = traps[trapIdx].type;
                     if(ty === 'poison') { player.poisoned_turns = 10; addMsg("Triggered a poison trap!", 'msg-combat'); }
                     else if(ty === 'root') { player.rooted_turns = 5; addMsg("Triggered a root trap!", 'msg-combat'); }
@@ -5315,6 +5446,11 @@
 
         // Key Listeners
         window.addEventListener('keydown', e => {
+            if (e.key === 'F2') {
+                e.preventDefault();
+                toggleAudio();
+                return;
+            }
             if (e.key === 'F1') {
                 e.preventDefault();
                 openHelp();
@@ -5373,11 +5509,6 @@
 
             // Suppress gameplay actions while any modal overlay is active
             if (isAnyModalOpen()) return;
-
-            if (e.key === 'o' || e.key === 'O') {
-                toggleAudio();
-                return;
-            }
 
             if (state === 0) {
                 if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openCharSelect(); }

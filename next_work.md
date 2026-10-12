@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-tester
-next_agent: kilo-usability
+current_agent: kilo-usability
+next_agent: kilo-qa
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -15,7 +15,7 @@ status: ready
 current_targets:
   kilo_creator: kweb://darknet
   kilo_graphics: KMech
-  kilo_tester: KSubmarine
+  kilo_tester: KTrader
   kilo_usability: KNetMap
   kilo_qa: KColony
   kilo_soundscape: KSanctuary
@@ -34,9 +34,9 @@ virtual_web_rotation:
 - kweb://10.19.99.4/classified
 - kweb://echo-subsystem.net
 last_run:
-  agent: kilo-soundscape
-  app: KRogue
-  timestamp: '2026-10-12T22:35:00Z'
+  agent: kilo-tester
+  app: KSubmarine
+  timestamp: '2026-10-12T23:14:00Z'
 last_planner_run: '2026-10-12T17:31:38Z'
 ---
 
@@ -84,8 +84,8 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Upcoming Queue**: `KCyber`, `KSpace`, `KStellar`, `KColosseum`.
 
 ### 3. App Tester Queue (`kilo-tester`)
-- **Current Target**: `KSubmarine`
-- **Upcoming Queue**: `KTrader`, `KVault`, `KCalendar`, `KChart`, `KChat`, `KMine`, `KSanctuary`, `KAudio`.
+- **Current Target**: `KTrader`
+- **Upcoming Queue**: `KVault`, `KCalendar`, `KChart`, `KChat`, `KMine`, `KSanctuary`, `KAudio`, `KSubmarine`.
 
 ### 4. Usability & UX Queue (`kilo-usability`)
 - **Current Target**: `KBudget`
@@ -115,6 +115,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-12T23:14:00Z — kilo-tester: KSubmarine (Interactive UI Audit & Focus Polish)**
+  - Status: PASS ✅ (0 errors, startup audit clean, canvas 346x238 active).
+  - Audit: Verified all controls (depth/heading/engine), hotkeys (F1, F5, F9, 1-4, X, C, Tab, Esc), modals & storage handlers.
+  - Verification: Human-perspective startup test 100% clean, Vite build clean, size 447.9KB < 999KB.
+  - Queue: Advanced kilo-tester to KTrader; handoff to kilo-usability.
+
 - **2026-10-12T22:35:00Z — kilo-soundscape: KRogue (Procedural Soundscape Engine Implementation)**
   - Status: PASS ✅ (Vite build clean, size 310KB < 999KB).
   - Audio: Added Web Audio procedural synthesis engine (footsteps, attack/crit, damage crunch, kill chime, gold/items, stairs, level-up arpeggio, traps, defeat).
@@ -135,9 +141,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Status: PASS ✅ (Dual-target clean: Win32 C build clean, Vite build clean, size <999KB).
   - Fixes: Added visibilitychange lifecycle guards to baud rate loop in kbbs.html.
   - Queue: Advanced kilo-qa to KColony; handoff to kilo-expander.
-
-- **2026-10-12T19:14:00Z — kilo-tester: KAudio (Interactive UI Audit & Focus Polish)**
-  - Status: PASS ✅ (0 errors, startup audit clean, canvas 444x98 active).
-  - Fixes: Polished modal accessibility and focus restoration in collaborative Jam Room overlay.
-  - Verification: Human-perspective startup test 100% clean, build passed, file size <999KB.
-  - Queue: Advanced kilo-tester to KSubmarine; handoff to kilo-usability.

@@ -664,6 +664,16 @@ INAPPROPRIATE_IMAGEN_TARGETS = {
     "kwords", "khangman", "ksudoku", "kcalc", "kmine", "kmines", "knetmap"
 }
 
+# Pure-utility / text-only apps where procedural soundscape composition is not appropriate.
+INAPPROPRIATE_SOUNDSCAPE_TARGETS = {
+    "kcalc", "kcalendar", "kclock", "kcontacts", "kconverter", "kdb",
+    "kfont", "khash", "kimage", "kjournal", "kmail", "knote", "kpad",
+    "kpass", "krss", "kscript", "ksettings", "ksteno", "ksys", "ktask",
+    "ktaskmgr", "kterm", "ktimer", "ktodo", "kzip", "kbookmark", "kclip",
+    "kcolor", "kexplorer", "kfleet", "kgraph", "khex", "kread",
+    "kchatserver", "kcontribute", "kpomodoro"
+}
+
 
 def build_agent_prompt(agent: str, targets: dict) -> str:
     if agent == "kilo-tester":
@@ -704,6 +714,17 @@ def build_agent_prompt(agent: str, targets: dict) -> str:
             f"Replace programmer art with Imagen 3 generated sprites and backgrounds for '{target}' per next_work.md. "
             f"If Imagen 3 asset replacement is not appropriate for '{target}', skip turn cleanly with format: '⏭️ Skip — Imagen 3 asset replacement not appropriate for {target}'. "
             f"Search for and remove any rotating specular glints or traveling perimeter border dots. "
+            f"Verify builds, advance queue, update next_work.md, and git commit/push. Process 1 app only then STOP."
+            + TOKEN_EFFICIENCY_SUFFIX
+        )
+    elif agent == "kilo-soundscape":
+        target = targets.get("kilo_soundscape", "the next app in queue")
+        return (
+            f"Activate skill 'kilo-soundscape'. "
+            f"Compose unique procedural FM synthesis audio (YM2612 2-Op / SPC700) for '{target}' per next_work.md. "
+            f"Replace existing generic FM presets with genre-appropriate music: melodic themes, bass lines, ambient drones, UI earcons, and action stingers. "
+            f"Apply real chiptune composition techniques: proper voice leading, chord progressions, rhythmic variation, and expressive FM patch design. "
+            f"If procedural audio is not appropriate for '{target}' (pure utility/text tool), skip turn cleanly with format: '⏭️ Skip — Procedural soundscape not appropriate for {target}'. "
             f"Verify builds, advance queue, update next_work.md, and git commit/push. Process 1 app only then STOP."
             + TOKEN_EFFICIENCY_SUFFIX
         )
@@ -749,6 +770,11 @@ def handle_preflight_skip(agent: str, targets: dict, frontmatter: dict, node_id:
             is_skip = True
             skip_reason = f"Imagen 3 asset replacement not appropriate for {target} (pure vector, board game, or mature art)"
 
+    if agent == "kilo-soundscape":
+        if target.lower() in INAPPROPRIATE_SOUNDSCAPE_TARGETS or "(skip)" in target.lower():
+            is_skip = True
+            skip_reason = f"Procedural soundscape not appropriate for {target} (pure utility/text tool)"
+
     if not is_skip:
         return False
 
@@ -759,7 +785,7 @@ def handle_preflight_skip(agent: str, targets: dict, frontmatter: dict, node_id:
     try:
         # 1. Advance rotation
         rotation = frontmatter.get("agent_rotation", [
-            "kilo-creator", "kilo-graphics", "kilo-tester", "kilo-usability", "kilo-qa", "kilo-expander"
+            "kilo-creator", "kilo-graphics", "kilo-soundscape", "kilo-tester", "kilo-usability", "kilo-qa", "kilo-expander"
         ])
         curr_idx = rotation.index(agent) if agent in rotation else 0
         next_agent = rotation[(curr_idx + 1) % len(rotation)]
@@ -767,15 +793,24 @@ def handle_preflight_skip(agent: str, targets: dict, frontmatter: dict, node_id:
         # 2. Advance target queue in next_work.md
         content = NEXT_WORK_FILE.read_text(encoding="utf-8", errors="replace")
         import re
-        queue_match = re.search(r"### 2\. Game Content & Graphics Queue.*?\n- \*\*Current Target\*\*:.*?\n- \*\*Upcoming Queue\*\*: ([^\n]+)", content)
+
+        # Map agents to their queue section header prefix and frontmatter target key
+        _QUEUE_PATTERNS = {
+            "kilo-graphics": (r"### 2\. Game Content \& Graphics Queue", "kilo_graphics"),
+            "kilo-soundscape": (r"### 3\. Procedural Audio \& Soundscape Queue", "kilo_soundscape"),
+        }
+        queue_pattern, fm_target_key = _QUEUE_PATTERNS.get(agent, (None, agent.replace("-", "_")))
+
         next_target = ""
-        if queue_match:
-            upcoming_items = [x.strip() for x in queue_match.group(1).split(",")]
-            if upcoming_items:
-                next_target = upcoming_items[0].split()[0]
-                new_upcoming = ", ".join(upcoming_items[1:] + [target])
-                content = content.replace(f"- **Current Target**: {target}", f"- **Current Target**: {next_target}")
-                content = content.replace(queue_match.group(1), new_upcoming)
+        if queue_pattern:
+            queue_match = re.search(queue_pattern + r".*?\n- \*\*Current Target\*\*:.*?\n- \*\*Upcoming Queue\*\*: ([^\n]+)", content)
+            if queue_match:
+                upcoming_items = [x.strip() for x in queue_match.group(1).split(",")]
+                if upcoming_items:
+                    next_target = upcoming_items[0].split()[0]
+                    new_upcoming = ", ".join(upcoming_items[1:] + [target])
+                    content = content.replace(f"- **Current Target**: {target}", f"- **Current Target**: {next_target}")
+                    content = content.replace(queue_match.group(1), new_upcoming)
 
         if not next_target:
             next_target = target
@@ -787,7 +822,7 @@ def handle_preflight_skip(agent: str, targets: dict, frontmatter: dict, node_id:
             fm_data = yaml.safe_load(parts[1])
             fm_data["current_agent"] = next_agent
             if "current_targets" in fm_data and isinstance(fm_data["current_targets"], dict):
-                fm_data["current_targets"]["kilo_graphics"] = next_target
+                fm_data["current_targets"][fm_target_key] = next_target
             fm_data["last_run"] = {
                 "agent": agent,
                 "app": target,
