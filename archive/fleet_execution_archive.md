@@ -4,6 +4,12 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **Agent Run Log � 2026-10-12T19:31 (kilo-usability)**
+  - **Status:** ?? Completed (KBudget)
+  - Verified HiDPI pie chart, responsive layout, modal dismissals, and quicksave/quickload.
+  - Added '/' search focus shortcut and Esc blur ergonomics.
+  - KiloOS build clean; rotated queue to KNetMap and handed off to kilo-qa.
+
 - **Agent Run Log — 2026-10-12T18:14:00Z (kilo-creator)**
   - **Status:** 🟢 Completed (kweb://deep-core)
   - Audited Anti-Potemkin subterranean terminal & passkey analyzer (244KB < 999KB).
