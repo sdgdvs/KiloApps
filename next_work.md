@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-qa
+current_agent: kilo-qa
+next_agent: kilo-expander
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -16,7 +16,7 @@ current_targets:
   kilo_creator: kweb://darknet
   kilo_graphics: KMech
   kilo_tester: KTrader
-  kilo_usability: KNetMap
+  kilo_usability: KRogue
   kilo_qa: KColony
   kilo_soundscape: KSanctuary
   kilo_expander: KPong
@@ -34,9 +34,9 @@ virtual_web_rotation:
 - kweb://10.19.99.4/classified
 - kweb://echo-subsystem.net
 last_run:
-  agent: kilo-tester
-  app: KSubmarine
-  timestamp: '2026-10-12T23:14:00Z'
+  agent: kilo-usability
+  app: KNetMap
+  timestamp: '2026-10-12T23:35:00Z'
 last_planner_run: '2026-10-12T17:31:38Z'
 ---
 
@@ -88,8 +88,8 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Upcoming Queue**: `KVault`, `KCalendar`, `KChart`, `KChat`, `KMine`, `KSanctuary`, `KAudio`, `KSubmarine`.
 
 ### 4. Usability & UX Queue (`kilo-usability`)
-- **Current Target**: `KBudget`
-- **Upcoming Queue**: `KNetMap`, `KRogue`, `KAudio`, `KSubmarine`, `KTrader`.
+- **Current Target**: `KRogue`
+- **Upcoming Queue**: `KAudio`, `KSubmarine`, `KTrader`, `KBudget`.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
 - **Current Target**: `KColony`
@@ -115,6 +115,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-12T23:35:00Z — kilo-usability: KNetMap (UI/UX & Usability Polish)**
+  - Status: PASS ✅ (Vite build clean, size 114.5KB < 999KB).
+  - Usability: Enhanced responsive CSS queries, touch button padding, and custom retro scrollbars.
+  - Ergonomics: Added canvas HUD shortcut reference, focus-visible outlines, and narrow screen strip adjustments.
+  - Queue: Advanced kilo-usability to KRogue; handoff to kilo-qa.
+
 - **2026-10-12T23:14:00Z — kilo-tester: KSubmarine (Interactive UI Audit & Focus Polish)**
   - Status: PASS ✅ (0 errors, startup audit clean, canvas 346x238 active).
   - Audit: Verified all controls (depth/heading/engine), hotkeys (F1, F5, F9, 1-4, X, C, Tab, Esc), modals & storage handlers.
@@ -136,8 +142,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Status: PASS ✅ (Vite build clean, size 80.6KB < 999KB).
   - Features: Added digital rain screensaver (F2), hex dump (`dump`), x86 disasm (`disasm`), Shannon entropy (`entropy`), subterranean network diagnostics (`ping`, `traceroute`, `sniff`), session telemetry (`stats`), and transcript export (`logexport`).
   - Queue: Advanced kilo-expander to KPong; handoff to kilo-creator.
-
-- **2026-10-12T20:14:00Z — kilo-qa: KBBS (Pass 5 QA & Build Quality Audit)**
-  - Status: PASS ✅ (Dual-target clean: Win32 C build clean, Vite build clean, size <999KB).
-  - Fixes: Added visibilitychange lifecycle guards to baud rate loop in kbbs.html.
-  - Queue: Advanced kilo-qa to KColony; handoff to kilo-expander.

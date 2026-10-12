@@ -252,16 +252,34 @@
     touch-action: none;
   }
 
-  /* RESPONSIVE & USABILITY MEDIA QUERIES */
+  /* RESPONSIVE & USABILITY MEDIA QUERIES & SCROLLBAR POLISH */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: rgba(10, 16, 30, 0.6); }
+  ::-webkit-scrollbar-thumb { background: rgba(56, 189, 248, 0.3); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: rgba(56, 189, 248, 0.6); }
+  * { scrollbar-width: thin; scrollbar-color: rgba(56, 189, 248, 0.3) rgba(10, 16, 30, 0.6); }
+  :focus-visible { outline: 2px solid var(--cyan); outline-offset: 1px; }
+
   @media (max-width: 900px) {
-    .app-header { overflow-x: auto; padding: 0 8px; }
+    .app-header { overflow-x: auto; padding: 0 8px; scrollbar-width: none; }
+    .app-header::-webkit-scrollbar { display: none; }
     .status-cluster { display: none; }
     .header-actions { margin-left: auto; flex-shrink: 0; }
     .palette { width: 135px; }
   }
+  @media (max-width: 768px) {
+    .cidr-strip { font-size: 9.5px; padding: 4px 8px; gap: 6px; }
+    #cidrStatsLabel { display: none; }
+  }
   @media (max-width: 600px) {
     .palette { width: 105px; font-size: 10px; }
     .tool-btn { padding: 4px 6px; font-size: 10px; }
+    .app-title span { display: none; }
+  }
+  @media (pointer: coarse) {
+    .canvas-btn { width: 36px; height: 36px; font-size: 16px; }
+    .tool-btn { padding: 9px 10px; font-size: 12px; }
+    .btn { padding: 6px 12px; font-size: 12px; }
   }
   
   /* FLOATING CANVAS OVERLAYS */
@@ -708,6 +726,7 @@
         <div class="hud-row"><span>VIEWPORT:</span> <span class="hud-val" id="hudZoom">100%</span></div>
         <div class="hud-row"><span>CURSOR:</span> <span class="hud-val" id="hudCoords">0, 0</span></div>
         <div class="hud-row"><span>ACTIVE TOOL:</span> <span class="hud-val" id="hudTool">SELECT</span></div>
+        <div style="margin-top:4px; font-size:9.5px; color:var(--text-dim); border-top:1px solid rgba(255,255,255,0.06); padding-top:2px;">[Space] Pause • [C] Cable • [Del] Sever • [F1] Help</div>
       </div>
 
       <!-- ZOOM & RESET CONTROLS -->
