@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-qa
+current_agent: kilo-creator
+next_agent: kilo-graphics
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -12,15 +12,14 @@ model: gemini-3.8-flash-medium
 timeout_minutes: 6
 status: ready
 current_targets:
-  kilo_creator: kweb://echo-subsystem.net
-  kilo_graphics: KDragon
+  kilo_creator: kweb://deep-core
+  kilo_graphics: KMatch3
   kilo_tester: KAudio
   kilo_usability: KBudget
   kilo_qa: KBBS
   kilo_expander: KMatrix
-virtual_web_target: kweb://echo-subsystem.net
+virtual_web_target: kweb://deep-core
 virtual_web_rotation:
-- kweb://echo-subsystem.net
 - kweb://deep-core
 - kweb://darknet
 - kweb://portal
@@ -31,11 +30,12 @@ virtual_web_rotation:
 - kweb://asm-temple
 - kweb://cybercafe
 - kweb://10.19.99.4/classified
+- kweb://echo-subsystem.net
 last_run:
-  agent: kilo-tester
-  app: KSanctuary
-  timestamp: 2026-10-11T14:14:00+0000
-last_planner_run: '2026-10-10T16:30:00Z'
+  agent: kilo-planner
+  app: Fleet
+  timestamp: 2026-10-12T17:31:38Z
+last_planner_run: '2026-10-12T17:31:38Z'
 ---
 
 # KiloApps Master Fleet Work & Queue State
@@ -73,29 +73,29 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ### 1. Virtual 1999 Web & ARG Node Creator (`kilo-creator`)
 - **Mission**: Build functional Web 1.0 destinations in `KiloOS/public/web/` (<999KB). Standalone OS apps frozen at 92 native / 99 web.
-- **Current Target**: `kweb://echo-subsystem.net`
-- **Upcoming Queue**: `kweb://echo-subsystem.net`, `kweb://deep-core`, `kweb://darknet`, `kweb://portal`, `kweb://webring`, `kweb://warez`, `kweb://geocities`, `kweb://users/~neon_rider`, `kweb://asm-temple`, `kweb://cybercafe`, `kweb://10.19.99.4/classified`.
+- **Current Target**: `kweb://deep-core`
+- **Upcoming Queue**: `kweb://darknet`, `kweb://portal`, `kweb://webring`, `kweb://warez`, `kweb://geocities`, `kweb://users/~neon_rider`, `kweb://asm-temple`, `kweb://cybercafe`, `kweb://10.19.99.4/classified`, `kweb://echo-subsystem.net`.
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
 - **Mission**: Replace programmer art with Imagen 3 assets. Skip immediately if vector/board/mature.
-- **Current Target**: `KDragon`
-- **Upcoming Queue**: `KWizard`, `KFarm`, `KMatch3`, `KQuest`, `KSpace`, `KColosseum`.
+- **Current Target**: `KMatch3`
+- **Upcoming Queue**: `KColosseum`, `KMech`, `KCyber`, `KSpace`, `KStellar`.
 
 ### 3. App Tester Queue (`kilo-tester`)
-- **Current Target**: `KSanctuary`
-- **Upcoming Queue**: `KAudio`, `KSubmarine`, `KTrader`, `KVault`, `KCalendar`, `KChart`, `KChat`, `KMine`.
+- **Current Target**: `KAudio`
+- **Upcoming Queue**: `KSubmarine`, `KTrader`, `KVault`, `KCalendar`, `KChart`, `KChat`, `KMine`, `KSanctuary`.
 
 ### 4. Usability & UX Queue (`kilo-usability`)
-- **Current Target**: `KAudio`
-- **Upcoming Queue**: `KBudget`, `KNetMap`, `KRogue`.
+- **Current Target**: `KBudget`
+- **Upcoming Queue**: `KNetMap`, `KRogue`, `KAudio`, `KSubmarine`, `KTrader`.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
-- **Current Target**: `KPac`
-- **Upcoming Queue**: `KBBS`, `KBudget`, `KColony`, `KBreakout`, `KRogue`, `KPong`.
+- **Current Target**: `KBBS`
+- **Upcoming Queue**: `KColony`, `KBreakout`, `KRogue`, `KPong`, `KPac`.
 
 ### 6. Feature Expander Queue (`kilo-expander`)
-- **Current Target**: `KColosseum`
-- **Upcoming Queue**: `KPong`, `KRogue`, `KChess`.
+- **Current Target**: `KMatrix`
+- **Upcoming Queue**: `KPong`, `KRogue`, `KChess`, `KColosseum`.
 
 ---
 
@@ -112,6 +112,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 ---
 
 ## Recent Execution Logs (Max 5 Entries)
+
+- **2026-10-12T17:31:38Z — kilo-planner: Fleet (24h Planning, Queue Rework & Compaction)**
+  - Status: PASS ✅ (24h fleet planning complete; icon uniqueness 105/105 passed).
+  - Schedule: Reworked 6-agent rotation (creator ➔ graphics ➔ tester ➔ usability ➔ qa ➔ expander).
+  - Targets: Unstuck graphics queue to KMatch3; advanced web target to deep-core; synchronized all queues.
+  - Queue: Handoff to kilo-creator; next planner run scheduled in 24h.
 
 - **2026-10-12T10:28:30-07:00 — kilo-adhoc: Fleet (Increase Factory Turn Timing to 1 Turn/Hour)**
   - Status: PASS ✅ (Windows Scheduled Task re-armed to 1 turn/hr at :30 past each hour in continuous mode).
@@ -135,8 +141,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Web & ARG: Audited 10 skunkworks tabs (memos, hex, RF lab, topology, sniffer, term, airgap, interferometer, CAD).
   - Integration: Verified bidirectional routing across KNet, Portal, Webring, Geocities, and Neon Rider.
   - Queue: Advanced kilo-creator target to kweb://echo-subsystem.net; rotation handoff to kilo-graphics.
-
-- **2026-10-11T13:35:00+0000 — kilo-qa: KPac (Pass 5 QA & Build Quality Audit)**
-  - Status: PASS ✅ (Vite build clean; HTML 218 KB << 999 KB; Win32 C 104 KB clean compile).
-  - Audit: Verified dual-target parity, multiplayer connect gate (no autostart), and state save/load.
-  - Queue: Advanced kilo-qa target to KBBS; rotation handoff to kilo-expander.
