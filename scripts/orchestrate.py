@@ -279,7 +279,17 @@ def get_current_node_id() -> str:
         except Exception:
             pass
 
-    # 3. Git user configuration
+    # 3. Hostname hint
+    import socket
+    h = socket.gethostname().upper()
+    if "DESKTOP-HSSS709" in h:
+        return "pc_b"
+    if "12900K" in h:
+        return "pc_c"
+    if "P10700" in h:
+        return "pc_a"
+
+    # 4. Git user configuration
     try:
         res = subprocess.run(["git", "config", "user.name"], cwd=str(REPO_ROOT), capture_output=True, text=True, timeout=2)
         if res.returncode == 0:
@@ -293,13 +303,7 @@ def get_current_node_id() -> str:
     except Exception:
         pass
 
-    # 4. Hostname hint
-    import socket
-    h = socket.gethostname().upper()
-    if "12900K" in h:
-        return "pc_c"
-
-    return "pc_c"
+    return "pc_b"
 
 
 def check_and_handle_remote_commands(node_id: str) -> bool:
@@ -617,7 +621,7 @@ def validate_next_work_file(path: Path) -> tuple[bool, str]:
     if not path.exists():
         return False, f"File {path} does not exist."
     try:
-        content = path.read_text(encoding="utf-8")
+        content = path.read_text(encoding="utf-8", errors="replace")
     except Exception as e:
         return False, f"Failed to read {path}: {e}"
 
@@ -635,7 +639,7 @@ def validate_next_work_file(path: Path) -> tuple[bool, str]:
         if restore_res.returncode == 0:
             log(f"Successfully self-healed {path.name} from HEAD.")
             try:
-                content = path.read_text(encoding="utf-8")
+                content = path.read_text(encoding="utf-8", errors="replace")
             except Exception as e:
                 return False, f"Failed to re-read {path}: {e}"
         else:
@@ -761,7 +765,7 @@ def handle_preflight_skip(agent: str, targets: dict, frontmatter: dict, node_id:
         next_agent = rotation[(curr_idx + 1) % len(rotation)]
 
         # 2. Advance target queue in next_work.md
-        content = NEXT_WORK_FILE.read_text(encoding="utf-8")
+        content = NEXT_WORK_FILE.read_text(encoding="utf-8", errors="replace")
         import re
         queue_match = re.search(r"### 2\. Game Content & Graphics Queue.*?\n- \*\*Current Target\*\*:.*?\n- \*\*Upcoming Queue\*\*: ([^\n]+)", content)
         next_target = ""

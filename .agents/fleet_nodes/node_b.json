@@ -1,21 +1,21 @@
-{
-  "node_id": "pc_b",
-  "name": "PC B (anonymous2)",
-  "account": "anonymous2",
-  "hostname": "DESKTOP-HSSS709",
-  "model_tier": "Gemini Pro",
-  "cadence": "1 turn/hour",
-  "status": "active",
-  "schedule_minutes": [
-    30
-  ],
-  "session_start": "2026-10-08T03:57:16.8295358Z",
-  "session_end": null,
-  "session_limit_enabled": false,
-  "timer_enabled": false,
-  "turns_executed": 151,
-  "last_turn_timestamp": "2026-09-28T17:56:12Z",
-  "last_heartbeat": "2026-10-11T09:36:05.967283+00:00",
-  "current_target": "KRogue",
-  "remote_command": "none"
+﻿{
+    "node_id":  "pc_b",
+    "name":  "PC B (anonymous2)",
+    "account":  "anonymous2",
+    "hostname":  "DESKTOP-HSSS709",
+    "model_tier":  "Gemini Pro",
+    "cadence":  "1 turn/hour",
+    "status":  "active",
+    "schedule_minutes":  [
+                             30
+                         ],
+    "session_start":  "2026-10-12T17:27:27.9172817Z",
+    "session_end":  null,
+    "session_limit_enabled":  false,
+    "timer_enabled":  false,
+    "turns_executed":  155,
+    "last_turn_timestamp":  "2026-09-28T17:56:12Z",
+    "last_heartbeat":  "2026-10-12T17:27:27.9172817Z",
+    "current_target":  "KPac",
+    "remote_command":  "none"
 }

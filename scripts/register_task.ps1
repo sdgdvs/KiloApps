@@ -50,14 +50,14 @@ try { $GitUser = (git -C $RepoRoot config user.name) } catch {}
 $HostName = $env:COMPUTERNAME
 
 if ($NodeId -eq "auto") {
-    if ($GitUser -match "anonymous1" -or $HostName -match "12900K") {
-        $NodeId = "pc_c"
-    } elseif ($GitUser -match "sdgdvs") {
-        $NodeId = "pc_a"
-    } elseif ($GitUser -match "anonymous2") {
+    if ($HostName -match "DESKTOP-HSSS709" -or $GitUser -match "anonymous2") {
         $NodeId = "pc_b"
-    } else {
+    } elseif ($GitUser -match "anonymous1" -or $HostName -match "12900K") {
         $NodeId = "pc_c"
+    } elseif ($GitUser -match "sdgdvs" -or $HostName -match "P10700") {
+        $NodeId = "pc_a"
+    } else {
+        $NodeId = "pc_b"
     }
 }
 

@@ -161,7 +161,7 @@ def rotate_next_work_logs(
         log(f"Warning: {next_work_path} does not exist.")
         return {"retained": 0, "archived": 0, "status": "missing_file"}
 
-    content = next_work_path.read_text(encoding="utf-8")
+    content = next_work_path.read_text(encoding="utf-8", errors="replace")
 
     # Determine max_entries if not explicitly given
     if max_entries is None:

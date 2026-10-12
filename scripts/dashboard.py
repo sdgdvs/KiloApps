@@ -94,6 +94,15 @@ def get_current_node_id() -> str:
         except Exception:
             pass
 
+    import socket
+    h = socket.gethostname().upper()
+    if "DESKTOP-HSSS709" in h:
+        return "pc_b"
+    if "12900K" in h:
+        return "pc_c"
+    if "P10700" in h:
+        return "pc_a"
+
     try:
         res = subprocess.run(["git", "config", "user.name"], cwd=str(REPO_ROOT), capture_output=True, text=True, timeout=2)
         if res.returncode == 0:
@@ -107,12 +116,7 @@ def get_current_node_id() -> str:
     except Exception:
         pass
 
-    import socket
-    h = socket.gethostname().upper()
-    if "12900K" in h:
-        return "pc_c"
-
-    return "pc_c"
+    return "pc_b"
 
 
 def load_fleet_nodes() -> dict:

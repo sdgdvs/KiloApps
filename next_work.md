@@ -113,8 +113,14 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
-- **2026-10-11T14:14:00+0000 � kilo-tester: KSanctuary (Interactive UI Audit & Hotkey Polish)**
-  - Status: ?? Complete. Audited modals, inputs, and hotkeys in ksanctuary.html.
+- **2026-10-12T10:28:30-07:00 — kilo-adhoc: Fleet (Increase Factory Turn Timing to 1 Turn/Hour)**
+  - Status: PASS ✅ (Windows Scheduled Task re-armed to 1 turn/hr at :30 past each hour in continuous mode).
+  - Queue Healing: Fixed non-UTF-8 CP1252 byte 0x97 in next_work.md; added resilient error handling in orchestrator.
+  - Node Config: Updated register_task.ps1, orchestrator.py, and dashboard.py to detect DESKTOP-HSSS709 as PC B.
+  - Verification: Dry run clean (daily planner next); Vite build 100% clean; security_lint 100% PASS.
+
+- **2026-10-11T14:14:00+0000 — kilo-tester: KSanctuary (Interactive UI Audit & Hotkey Polish)**
+  - Status: PASS ✅ (Audited modals, inputs, and hotkeys in ksanctuary.html).
   - Fixes: Bound Enter/Space dismissal for help modal; wired 'M' hotkey for audio toggle.
   - Validation: Clean build (<999KB), all interactive controls responsive.
   - Queue: Advanced kilo-tester to KAudio; handoff to kilo-usability.
@@ -134,15 +140,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Status: PASS ✅ (Vite build clean; HTML 218 KB << 999 KB; Win32 C 104 KB clean compile).
   - Audit: Verified dual-target parity, multiplayer connect gate (no autostart), and state save/load.
   - Queue: Advanced kilo-qa target to KBBS; rotation handoff to kilo-expander.
-
-- **2026-10-11T13:25:00+0000 — kilo-usability: KAudio (UI/UX Usability Pass)**
-  - Status: PASS ✅ (Vite build clean; HTML 148 KB << 999 KB ceiling).
-  - Usability & Accessibility: Added modal focus capture and restoration on close/backdrop dismiss.
-  - Controls: Verified DPR visualizer crispness, responsive layouts, and F1/Shift+H shortcuts.
-  - Queue: Advanced kilo-usability target to KBudget; rotation handoff to kilo-qa.
-
-- **2026-10-11T13:13:00+0000 — kilo-tester: KPing (Interactive UI Audit & Inline Repairs)**
-  - Status: PASS ✅ (Vite build clean; HTML 162 KB << 999 KB ceiling).
-  - UI & Interaction: Verified Ping, Trace, MTU, Subnet, DNS, BGP, Bloat, Mesh dialogs, audio toggle, and presets.
-  - Repairs: Added `.mesh-station-card` styling for peer lists; aligned live hops log filter to include BGP AS hops.
-  - Queue: Advanced `kilo-tester` target to `KSanctuary`; rotation handoff to `kilo-usability`.

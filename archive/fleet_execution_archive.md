@@ -4,6 +4,18 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-11T13:25:00+0000 — kilo-usability: KAudio (UI/UX Usability Pass)**
+  - Status: PASS ✅ (Vite build clean; HTML 148 KB << 999 KB ceiling).
+  - Usability & Accessibility: Added modal focus capture and restoration on close/backdrop dismiss.
+  - Controls: Verified DPR visualizer crispness, responsive layouts, and F1/Shift+H shortcuts.
+  - Queue: Advanced kilo-usability target to KBudget; rotation handoff to kilo-qa.
+
+- **2026-10-11T13:13:00+0000 — kilo-tester: KPing (Interactive UI Audit & Inline Repairs)**
+  - Status: PASS ✅ (Vite build clean; HTML 162 KB << 999 KB ceiling).
+  - UI & Interaction: Verified Ping, Trace, MTU, Subnet, DNS, BGP, Bloat, Mesh dialogs, audio toggle, and presets.
+  - Repairs: Added `.mesh-station-card` styling for peer lists; aligned live hops log filter to include BGP AS hops.
+  - Queue: Advanced `kilo-tester` target to `KSanctuary`; rotation handoff to `kilo-usability`.
+
 - **2026-10-11T13:02:02+0000 — kilo-graphics: KDragon (Zero-Token Auto-Skip — Inappropriate Target)**
   - Status: ⏭️ Skip — Imagen 3 asset replacement not appropriate for KDragon (pure vector, board game, or mature art).
   - Optimization: Handled via orchestrator pre-flight zero-token auto-skip.

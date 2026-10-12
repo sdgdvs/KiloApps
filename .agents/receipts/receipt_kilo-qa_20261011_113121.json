@@ -1,0 +1,10 @@
+{
+  "timestamp": "2026-10-11T11:31:21.076017+00:00",
+  "agent": "kilo-qa",
+  "model": "gemini-3.8-flash-medium",
+  "target": "KRogue",
+  "duration_seconds": 78.44,
+  "returncode": 0,
+  "success": true,
+  "provenance": null
+}
