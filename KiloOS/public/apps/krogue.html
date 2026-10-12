@@ -328,6 +328,7 @@
                 <button class="btn-action" style="border-color: #4299e1; background: #1a365d;" onclick="openHelp()">[H / F1] Help</button>
                 <button class="btn-action" onclick="saveGame()">[F5 / S] Save</button>
                 <button class="btn-action" onclick="loadGame()">[F9 / L] Load</button>
+                <button id="btn-audio-toggle" class="btn-action" style="border-color: #805ad5; background: #2b1f48; color: #d6bcfa;" onclick="toggleAudio()" title="Toggle Soundscape SFX [O]">🔊 Sound [O]</button>
             </div>
             <div id="virtual-dpad" style="display: flex; gap: 14px; justify-content: center; align-items: center; margin-top: 2px; flex-wrap: wrap;">
                 <div style="display: grid; grid-template-columns: repeat(3, 34px); gap: 4px;">
@@ -823,6 +824,223 @@
         let currentVault = null;
         let savedFloorData = null;
 
+        // ==========================================
+        // PROCEDURAL SOUNDSCAPE ENGINE (Web Audio API)
+        // ==========================================
+        let soundEnabled = true;
+        try {
+            const savedAudio = localStorage.getItem('krogue_sfx');
+            if (savedAudio !== null) soundEnabled = savedAudio === '1';
+        } catch (e) {}
+
+        let audioCtx = null;
+        let ambientGain = null;
+        let ambientOsc = null;
+        let ambientFilter = null;
+
+        function getAudioContext() {
+            if (!audioCtx) {
+                const AudioClass = window.AudioContext || window.webkitAudioContext;
+                if (AudioClass) {
+                    audioCtx = new AudioClass();
+                }
+            }
+            if (audioCtx && audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+            return audioCtx;
+        }
+
+        function toggleAudio() {
+            soundEnabled = !soundEnabled;
+            try {
+                localStorage.setItem('krogue_sfx', soundEnabled ? '1' : '0');
+            } catch (e) {}
+            const btn = document.getElementById('btn-audio-toggle');
+            if (btn) {
+                btn.textContent = soundEnabled ? '🔊 Sound [O]' : '🔇 Sound [O]';
+                btn.style.color = soundEnabled ? '#d6bcfa' : '#a0aec0';
+            }
+            if (!soundEnabled) {
+                stopAmbientDrone();
+            } else {
+                startAmbientDrone();
+                sfxItem();
+            }
+            showToast(soundEnabled ? '🔊 Soundscape Enabled' : '🔇 Soundscape Muted', 'info');
+        }
+
+        function playRetroTone(freq, dur, type = 'sine', startVol = 0.12, endVol = 0.001, freqSlide = null) {
+            if (!soundEnabled) return;
+            try {
+                const ctx = getAudioContext();
+                if (!ctx) return;
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.type = type;
+                const now = ctx.currentTime;
+                osc.frequency.setValueAtTime(freq, now);
+                if (freqSlide) {
+                    osc.frequency.exponentialRampToValueAtTime(Math.max(20, freqSlide), now + dur);
+                }
+                gain.gain.setValueAtTime(startVol, now);
+                gain.gain.exponentialRampToValueAtTime(Math.max(0.0001, endVol), now + dur);
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.start(now);
+                osc.stop(now + dur);
+            } catch (e) {}
+        }
+
+        function playNoise(dur, startVol = 0.1) {
+            if (!soundEnabled) return;
+            try {
+                const ctx = getAudioContext();
+                if (!ctx) return;
+                const bufferSize = Math.floor(ctx.sampleRate * dur);
+                const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+                const data = buffer.getChannelData(0);
+                for (let i = 0; i < bufferSize; i++) {
+                    data[i] = (Math.random() * 2 - 1) * Math.exp(-3 * i / bufferSize);
+                }
+                const noise = ctx.createBufferSource();
+                noise.buffer = buffer;
+                const gain = ctx.createGain();
+                gain.gain.setValueAtTime(startVol, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + dur);
+                noise.connect(gain);
+                gain.connect(ctx.destination);
+                noise.start(ctx.currentTime);
+            } catch (e) {}
+        }
+
+        function sfxMove() {
+            playRetroTone(80 + Math.random() * 20, 0.04, 'triangle', 0.04, 0.001);
+        }
+
+        function sfxAttack(isCrit = false) {
+            playNoise(0.08, isCrit ? 0.2 : 0.12);
+            playRetroTone(isCrit ? 360 : 220, 0.1, 'sawtooth', 0.15, 0.01, 70);
+        }
+
+        function sfxHit() {
+            playRetroTone(130, 0.12, 'square', 0.15, 0.01, 55);
+        }
+
+        function sfxKill() {
+            playRetroTone(300, 0.08, 'triangle', 0.15, 0.01, 150);
+            setTimeout(() => playRetroTone(450, 0.12, 'triangle', 0.18, 0.01, 600), 50);
+        }
+
+        function sfxItem() {
+            playRetroTone(523.25, 0.08, 'sine', 0.12, 0.01);
+            setTimeout(() => playRetroTone(659.25, 0.1, 'sine', 0.12, 0.01), 70);
+        }
+
+        function sfxGold() {
+            playRetroTone(987.77, 0.06, 'sine', 0.14, 0.01);
+            setTimeout(() => playRetroTone(1318.51, 0.1, 'sine', 0.16, 0.01), 50);
+        }
+
+        function sfxPotion() {
+            playRetroTone(320, 0.08, 'sine', 0.12, 0.01, 520);
+            setTimeout(() => playRetroTone(520, 0.12, 'sine', 0.12, 0.01, 780), 80);
+        }
+
+        function sfxSpell(type = 'default') {
+            if (type === 'fireball' || type === 'meteor') {
+                playNoise(0.25, 0.25);
+                playRetroTone(180, 0.25, 'sawtooth', 0.2, 0.01, 40);
+            } else if (type === 'icestorm') {
+                playNoise(0.18, 0.15);
+                playRetroTone(600, 0.2, 'sine', 0.15, 0.01, 1200);
+            } else {
+                playRetroTone(440, 0.1, 'triangle', 0.15, 0.01, 660);
+                setTimeout(() => playRetroTone(660, 0.15, 'sine', 0.15, 0.01, 880), 90);
+            }
+        }
+
+        function sfxStairs() {
+            playRetroTone(440, 0.15, 'triangle', 0.14, 0.01, 330);
+            setTimeout(() => playRetroTone(330, 0.2, 'triangle', 0.14, 0.01, 220), 120);
+            setTimeout(() => playRetroTone(220, 0.25, 'sine', 0.16, 0.01, 110), 240);
+        }
+
+        function sfxLevelUp() {
+            const notes = [261.63, 329.63, 392.00, 523.25];
+            notes.forEach((freq, idx) => {
+                setTimeout(() => playRetroTone(freq, 0.12, 'triangle', 0.18, 0.01), idx * 80);
+            });
+        }
+
+        function sfxTrap() {
+            playRetroTone(160, 0.15, 'sawtooth', 0.18, 0.01, 90);
+        }
+
+        function sfxGameOver() {
+            stopAmbientDrone();
+            const notes = [293.66, 277.18, 261.63, 220.00];
+            notes.forEach((freq, idx) => {
+                setTimeout(() => playRetroTone(freq, 0.35, 'sawtooth', 0.2, 0.01), idx * 160);
+            });
+        }
+
+        function sfxVictory() {
+            const notes = [261.63, 329.63, 392.00, 523.25, 659.25, 783.99];
+            notes.forEach((freq, idx) => {
+                setTimeout(() => playRetroTone(freq, 0.22, 'triangle', 0.2, 0.01), idx * 100);
+            });
+        }
+
+        function startAmbientDrone() {
+            if (!soundEnabled) return;
+            try {
+                const ctx = getAudioContext();
+                if (!ctx || ambientOsc) return;
+                ambientOsc = ctx.createOscillator();
+                ambientGain = ctx.createGain();
+                ambientFilter = ctx.createBiquadFilter();
+
+                ambientOsc.type = 'sawtooth';
+                ambientOsc.frequency.setValueAtTime(55, ctx.currentTime);
+
+                ambientFilter.type = 'lowpass';
+                ambientFilter.frequency.setValueAtTime(140, ctx.currentTime);
+
+                ambientGain.gain.setValueAtTime(0.015, ctx.currentTime);
+
+                ambientOsc.connect(ambientFilter);
+                ambientFilter.connect(ambientGain);
+                ambientGain.connect(ctx.destination);
+
+                ambientOsc.start();
+            } catch (e) {}
+        }
+
+        function stopAmbientDrone() {
+            if (ambientOsc) {
+                try {
+                    ambientOsc.stop();
+                    ambientOsc.disconnect();
+                } catch (e) {}
+                ambientOsc = null;
+                ambientGain = null;
+                ambientFilter = null;
+            }
+        }
+
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) {
+                if (audioCtx && audioCtx.state === 'running') {
+                    audioCtx.suspend();
+                }
+            } else {
+                if (audioCtx && audioCtx.state === 'suspended' && soundEnabled) {
+                    audioCtx.resume();
+                }
+            }
+        });
+
         // Multiplayer Duel & Phantom Race State
         let rMultiplayer = null;
         let myPlayerName = localStorage.getItem('krogue_player_name') || ("Hero_" + Math.floor(1000 + Math.random() * 9000));
@@ -1193,6 +1411,7 @@
             let seedVal = document.getElementById('seed-input').value.trim() || "KR-1000";
             closeModal('modal-char-select');
             startNewGame(selectedClass, selectedRace, seedVal, selectedLoadout);
+            startAmbientDrone();
         }
 
         function gainXP(amount) {
@@ -1208,6 +1427,7 @@
                 player.dex += 1;
                 player.atk += 1;
                 player.def += 1;
+                sfxLevelUp();
                 addMsg(`LEVEL UP! Welcome to level ${player.level}! (+5 Max HP/MP, +1 ATK/DEF)`, 'msg-good');
                 showToast(`LEVEL UP! Welcome to Level ${player.level}!`, 'success');
                 addFloatText(player.x, player.y, `LEVEL ${player.level}!`, '#ecc94b');
@@ -3024,6 +3244,7 @@
                     let dmg = Math.max(1, 3 + Math.floor(dlevel * 0.5) - calcDef);
                     if (player.class === 'warrior' && player.loadout === 0) dmg = Math.max(1, Math.floor(dmg * 0.75));
                     player.hp -= dmg;
+                    sfxHit();
                     addMsg(`${m.name} strikes you for ${dmg} dmg.`, 'msg-combat');
                     addFloatText(player.x, player.y, `-${dmg}`, '#e53e3e');
                     if (player.hp <= 0) { triggerGameOver(); return; }
@@ -3064,6 +3285,7 @@
                 return;
             }
             state = 2;
+            sfxGameOver();
             if (typeof isDuelMode !== 'undefined' && isDuelMode && isDuelOnline && rMultiplayer) {
                 rMultiplayer.sendMove({ action: 'finish', outcome: 'defeat', floor: dlevel, kills: total_kills, gold: player.gold });
             }
@@ -4964,6 +5186,7 @@
                     } else {
                         addParticles(monsters[mIdx].x, monsters[mIdx].y, '#fc8181', 15);
                     }
+                    sfxKill();
                     addMsg(`${monsters[mIdx].name} dies!`, 'good');
                     decals.push({x: monsters[mIdx].x, y: monsters[mIdx].y, color: (monsters[mIdx].ch === 's' ? '#3182ce' : '#8a0303'), life: 100});
                     gainXP(8 + Math.floor(dlevel * 1.5));
@@ -4974,6 +5197,7 @@
                 }
             } else {
                 player.x = nx; player.y = ny;
+                sfxMove();
                 let itIdx = items.findIndex(i => i.x === nx && i.y === ny);
                 if (itIdx >= 0) {
                     let it = items[itIdx];
@@ -4984,6 +5208,7 @@
                             checkFeatProgress('catacomb_explorer', dlevel);
                             checkFeatProgress('abyssal_champion', dlevel);
                         } catch(e) {}
+                        sfxStairs();
                         addMsg(`You descend deeper into floor ${dlevel}...`, 'msg-good');
                         showToast(`Descended to Floor ${dlevel}`, 'info');
                         if (typeof isDuelMode !== 'undefined' && isDuelMode) {
@@ -5051,11 +5276,13 @@
                         let gVal = it.val || rngRange(5, 15);
                         player.gold += gVal;
                         items.splice(itIdx, 1);
+                        sfxGold();
                         addMsg(`Picked up ${gVal} gold pieces!`, 'good');
                         addFloatText(nx, ny, `+${gVal}G`, '#f6e05e');
                     } else {
                         inventory.push(it);
                         items.splice(itIdx, 1);
+                        sfxItem();
                         addMsg(`Picked up ${it.name || 'item'}`, 'good');
                     }
                 }
@@ -5071,6 +5298,7 @@
                         }
                     }
                     traps[trapIdx].revealed = true;
+                    sfxTrap();
                     let ty = traps[trapIdx].type;
                     if(ty === 'poison') { player.poisoned_turns = 10; addMsg("Triggered a poison trap!", 'msg-combat'); }
                     else if(ty === 'root') { player.rooted_turns = 5; addMsg("Triggered a root trap!", 'msg-combat'); }
@@ -5145,6 +5373,11 @@
 
             // Suppress gameplay actions while any modal overlay is active
             if (isAnyModalOpen()) return;
+
+            if (e.key === 'o' || e.key === 'O') {
+                toggleAudio();
+                return;
+            }
 
             if (state === 0) {
                 if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openCharSelect(); }
