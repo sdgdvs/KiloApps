@@ -232,6 +232,7 @@
       <button class="deck-btn" onclick="toggleHelp()" title="Runner's Reference Manual [F1]">Help [F1]</button>
       <button class="deck-btn" onclick="showTutorial()" title="Deck Orientation Briefing">Briefing</button>
       <button class="deck-btn" onclick="processCommand('reboot')" title="Reboot Deck">Reboot</button>
+      <button class="deck-btn" id="audio-toggle-btn" onclick="toggleAudio()" title="Toggle FM Soundscape">BGM: ON</button>
       <input type="file" id="import-file-input" accept=".json" style="display:none;" onchange="handleImportFile(event)">
     </div>
   </div>
@@ -320,51 +321,318 @@
     const terminalDiv = document.getElementById('terminal');
     const promptSpan = document.querySelector('.prompt');
 
-    // Web Audio Setup
+    // =========================================================================
+    // PROCEDURAL FM SYNTHESIS SOUNDSCAPE (YM2612 2-Op / SPC700 Architecture)
+    // =========================================================================
     const AudioContext = window.AudioContext || window.webkitAudioContext;
-    const audioCtx = new AudioContext();
+    let audioCtx = null;
+    let masterGain = null;
+    let masterFilter = null;
+    let bgmTimer = null;
+    let bgmEnabled = true;
+    let bgmStep = 0;
+    let bgmBar = 0;
 
-    function playTone(freq, type, duration, vol=0.1) {
-      if (audioCtx.state === 'suspended') audioCtx.resume();
-      const osc = audioCtx.createOscillator();
-      const gain = audioCtx.createGain();
-      osc.type = type;
-      osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-      gain.gain.setValueAtTime(vol, audioCtx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
-      osc.connect(gain);
-      gain.connect(audioCtx.destination);
-      osc.start();
-      osc.stop(audioCtx.currentTime + duration);
+    try {
+      audioCtx = new AudioContext();
+    } catch (e) {
+      console.warn('[KCyber] Web Audio not supported:', e);
     }
 
-    function playKeyClack() { /* Beep on keypress disabled */ }
-    function playAccessGranted() {
-      playTone(400, 'sine', 0.1, 0.1);
-      setTimeout(() => playTone(600, 'sine', 0.1, 0.1), 100);
-      setTimeout(() => playTone(800, 'sine', 0.2, 0.1), 200);
+    function initAudioNodes() {
+      if (!audioCtx) {
+        try { audioCtx = new AudioContext(); } catch (e) { return; }
+      }
+      if (masterFilter && masterGain) return;
+      try {
+        masterFilter = audioCtx.createBiquadFilter();
+        masterFilter.type = 'lowpass';
+        masterFilter.frequency.setValueAtTime(3600, audioCtx.currentTime);
+        masterFilter.Q.setValueAtTime(1.4, audioCtx.currentTime);
+
+        masterGain = audioCtx.createGain();
+        masterGain.gain.setValueAtTime(bgmEnabled ? 0.85 : 0.0, audioCtx.currentTime);
+
+        masterFilter.connect(masterGain);
+        masterGain.connect(audioCtx.destination);
+      } catch (e) {}
     }
-    function playAccessDenied() {
-      playTone(150, 'sawtooth', 0.3, 0.2);
-      setTimeout(() => playTone(150, 'sawtooth', 0.3, 0.2), 400);
-    }
-    function playAlarm() {
-      playTone(600, 'square', 0.2, 0.1);
-      setTimeout(() => playTone(400, 'square', 0.2, 0.1), 200);
-    }
-    function playDialup() {
-      for(let i=0; i<10; i++) {
-        setTimeout(() => playTone(Math.random()*1000 + 500, 'square', 0.1, 0.05), i*100);
+
+    function ensureAudio() {
+      initAudioNodes();
+      if (audioCtx && audioCtx.state === 'suspended') {
+        audioCtx.resume().catch(() => {});
       }
     }
+
+    // 2-Operator FM Synthesizer Voice (YM2612 Style)
+    function playFM(carrierFreq, modRatio, modDepth, duration, vol = 0.12, opt = {}) {
+      ensureAudio();
+      if (!audioCtx || !masterFilter) return;
+      const t0 = audioCtx.currentTime + (opt.timeOffset || 0);
+      const carrierType = opt.carrierType || 'sine';
+      const modType = opt.modType || 'sine';
+      const attack = opt.attack || 0.005;
+      const decay = opt.decay || duration;
+
+      try {
+        const carrier = audioCtx.createOscillator();
+        const modulator = audioCtx.createOscillator();
+        const modGain = audioCtx.createGain();
+        const carrierGain = audioCtx.createGain();
+
+        carrier.type = carrierType;
+        modulator.type = modType;
+
+        const cFreq = Math.max(20, carrierFreq);
+        const mFreq = cFreq * modRatio;
+        carrier.frequency.setValueAtTime(cFreq, t0);
+        modulator.frequency.setValueAtTime(mFreq, t0);
+
+        if (opt.freqSlide) {
+          carrier.frequency.exponentialRampToValueAtTime(Math.max(20, opt.freqSlide), t0 + duration);
+        }
+
+        const depthHz = cFreq * modDepth;
+        modGain.gain.setValueAtTime(depthHz, t0);
+        modGain.gain.exponentialRampToValueAtTime(Math.max(1, depthHz * 0.05), t0 + decay);
+
+        modulator.connect(carrier.frequency);
+
+        carrierGain.gain.setValueAtTime(0.0001, t0);
+        carrierGain.gain.linearRampToValueAtTime(vol, t0 + attack);
+        carrierGain.gain.exponentialRampToValueAtTime(0.0001, t0 + duration);
+
+        carrier.connect(carrierGain);
+        carrierGain.connect(masterFilter);
+
+        modulator.start(t0);
+        carrier.start(t0);
+        modulator.stop(t0 + duration);
+        carrier.stop(t0 + duration);
+      } catch (e) {}
+    }
+
+    // SPC700 Band-Filtered Noise Burst
+    function playNoiseBurst(duration, vol = 0.08, filterFreq = 1800, opt = {}) {
+      ensureAudio();
+      if (!audioCtx || !masterFilter) return;
+      try {
+        const t0 = audioCtx.currentTime + (opt.timeOffset || 0);
+        const bufLen = Math.floor(audioCtx.sampleRate * duration);
+        const buf = audioCtx.createBuffer(1, bufLen, audioCtx.sampleRate);
+        const data = buf.getChannelData(0);
+        for (let i = 0; i < bufLen; i++) {
+          data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (bufLen * 0.35));
+        }
+
+        const src = audioCtx.createBufferSource();
+        src.buffer = buf;
+
+        const bq = audioCtx.createBiquadFilter();
+        bq.type = opt.filterType || 'bandpass';
+        bq.frequency.setValueAtTime(filterFreq, t0);
+
+        const g = audioCtx.createGain();
+        g.gain.setValueAtTime(vol, t0);
+        g.gain.exponentialRampToValueAtTime(0.0001, t0 + duration);
+
+        src.connect(bq);
+        bq.connect(g);
+        g.connect(masterFilter);
+
+        src.start(t0);
+        src.stop(t0 + duration);
+      } catch (e) {}
+    }
+
+    // Backward-compatible playTone
+    function playTone(freq, type = 'sine', duration = 0.1, vol = 0.1) {
+      playFM(freq, 1.0, 0.4, duration, vol, { carrierType: type });
+    }
+
+    // --- REFINED YM2612 / SPC700 UI EARCONS & ACTION STINGERS ---
+    function playKeyClack() {
+      playFM(1200, 2.0, 0.8, 0.02, 0.015, { carrierType: 'triangle' });
+    }
+
+    function playAccessGranted() {
+      // Heroic FM Crystal Stinger (D-Dorian Pentatonic Chime D5 -> F5 -> A5 -> D6)
+      const notes = [587.33, 698.46, 880.00, 1174.66];
+      notes.forEach((f, idx) => {
+        playFM(f, 2.76, 1.8, 0.28, 0.11, {
+          timeOffset: idx * 0.065,
+          carrierType: 'sine',
+          modType: 'sine'
+        });
+      });
+      playNoiseBurst(0.09, 0.03, 3200, { filterType: 'highpass' });
+    }
+
+    function playAccessDenied() {
+      // Threatening 2-Op FM Growl with descending sub-detune
+      playFM(92.5, 1.5, 3.2, 0.32, 0.18, {
+        carrierType: 'sawtooth',
+        modType: 'square',
+        freqSlide: 65.4
+      });
+      playFM(130.8, 2.0, 2.4, 0.28, 0.14, {
+        timeOffset: 0.04,
+        carrierType: 'square',
+        freqSlide: 82.4
+      });
+    }
+
+    function playAlarm() {
+      // Intrusive Dual-Tone Cyber Klaxon
+      for (let i = 0; i < 2; i++) {
+        playFM(783.99, 1.414, 2.0, 0.13, 0.14, {
+          timeOffset: i * 0.15,
+          carrierType: 'square',
+          freqSlide: 587.33
+        });
+      }
+    }
+
+    function playDialup() {
+      // 1999 Cyberdeck Handshake & Matrix Carrier Lock
+      playFM(941, 1.0, 0.5, 0.08, 0.08);
+      playFM(1336, 1.0, 0.5, 0.08, 0.08, { timeOffset: 0.05 });
+      for (let i = 0; i < 6; i++) {
+        playFM(1200 + Math.sin(i * 1.5) * 600, 2.1, 1.5, 0.06, 0.06, {
+          timeOffset: 0.12 + i * 0.05,
+          carrierType: 'triangle'
+        });
+      }
+      playNoiseBurst(0.35, 0.07, 1400, { timeOffset: 0.42, filterType: 'bandpass' });
+      playFM(1850, 1.0, 0.2, 0.3, 0.09, { timeOffset: 0.75, carrierType: 'sine' });
+    }
+
     function playPatchSound() {
-      playTone(520, 'sine', 0.12, 0.12);
-      setTimeout(() => playTone(780, 'sine', 0.18, 0.12), 100);
+      // Nanite Regeneration Chord (Ethereal FM Shimmer: F4 -> A4 -> C5 -> E5)
+      [349.23, 440.0, 523.25, 659.25].forEach((f, idx) => {
+        playFM(f, 3.5, 1.2, 0.35, 0.09, {
+          timeOffset: idx * 0.04,
+          carrierType: 'sine',
+          modType: 'sine'
+        });
+      });
     }
+
     function playProbeSound() {
-      playTone(900, 'sawtooth', 0.08, 0.08);
-      setTimeout(() => playTone(1200, 'sine', 0.15, 0.1), 80);
+      // Sonar Network Probe: High-Q FM Radar Ping with decay
+      playFM(1480, 4.0, 2.5, 0.18, 0.12, {
+        carrierType: 'sine',
+        modType: 'triangle',
+        freqSlide: 740
+      });
+      playNoiseBurst(0.06, 0.03, 4200, { timeOffset: 0.02, filterType: 'highpass' });
     }
+
+    // --- PROCEDURAL FM BGM ENGINE (Cyberpunk Matrix Soundscape) ---
+    // Mode: D-Dorian / D-Minor (Progression: Dm9 -> Bbmaj7 -> Gm7 -> Asus4)
+    const BGM_CHORDS = [
+      { bass: 73.42, roots: [146.83, 220.0, 261.63, 329.63], name: 'Dm9' },
+      { bass: 58.27, roots: [116.54, 233.08, 293.66, 349.23], name: 'Bbmaj7' },
+      { bass: 48.99, roots: [97.99, 196.0, 293.66, 349.23], name: 'Gm7' },
+      { bass: 55.00, roots: [110.0, 220.0, 293.66, 329.63], name: 'Asus4' }
+    ];
+
+    function tickBGM() {
+      if (!bgmEnabled || !audioCtx || audioCtx.state !== 'running') return;
+
+      const currentChord = BGM_CHORDS[bgmBar % BGM_CHORDS.length];
+      const stepInBar = bgmStep % 16;
+      const isCombat = Boolean(ice_interval);
+      const heatFactor = Math.min(1.0, player_heat / 100);
+
+      // 1. FM Bass Voice (Snappy YM2612 2-Op Slap / Sub-Bass)
+      if (stepInBar === 0 || stepInBar === 6 || stepInBar === 10 || (isCombat && stepInBar === 14)) {
+        const bassFreq = currentChord.bass * (stepInBar === 10 ? 1.5 : 1.0);
+        playFM(bassFreq, 1.0, 1.8 + heatFactor * 1.2, 0.22, 0.14, {
+          carrierType: 'sawtooth',
+          modType: 'sine'
+        });
+      }
+
+      // 2. Ambient FM Cyber Drone / Pad (Slow chord root swells every 8 steps)
+      if (stepInBar === 0 || stepInBar === 8) {
+        const padFreq = currentChord.roots[stepInBar === 0 ? 0 : 1];
+        playFM(padFreq, 2.01, 0.45, 1.1, 0.045, {
+          carrierType: 'sine',
+          modType: 'sine',
+          attack: 0.15,
+          decay: 0.95
+        });
+      }
+
+      // 3. Generative FM Lead / Arpeggiator (Dorian Chiptune Arps)
+      if (stepInBar % 2 === 0 || (heatFactor > 0.4 && stepInBar % 2 === 1)) {
+        const noteIdx = (stepInBar + bgmBar) % currentChord.roots.length;
+        const arpFreq = currentChord.roots[noteIdx] * (isCombat ? 2.0 : 1.5);
+        playFM(arpFreq, 3.5, 0.8 + (heatFactor * 0.9), 0.12, 0.04, {
+          carrierType: 'triangle',
+          modType: 'sine'
+        });
+      }
+
+      // 4. Subtle SPC700 Bandpass Hi-Hat
+      if (stepInBar % 4 === 2) {
+        playNoiseBurst(0.025, 0.02 + heatFactor * 0.02, 6500, { filterType: 'highpass' });
+      }
+
+      bgmStep++;
+      if (bgmStep % 16 === 0) {
+        bgmBar++;
+      }
+    }
+
+    function startBGM() {
+      if (bgmTimer) clearInterval(bgmTimer);
+      const tempoMs = ice_interval ? 105 : 125;
+      bgmTimer = setInterval(tickBGM, tempoMs);
+    }
+
+    function stopBGM() {
+      if (bgmTimer) {
+        clearInterval(bgmTimer);
+        bgmTimer = null;
+      }
+    }
+
+    function toggleAudio() {
+      ensureAudio();
+      bgmEnabled = !bgmEnabled;
+      const btn = document.getElementById('audio-toggle-btn');
+      if (btn) btn.textContent = bgmEnabled ? 'BGM: ON' : 'BGM: OFF';
+      if (masterGain && audioCtx) {
+        masterGain.gain.setValueAtTime(bgmEnabled ? 0.85 : 0.0, audioCtx.currentTime);
+      }
+      try { localStorage.setItem('kcyber_audio_bgm', bgmEnabled ? '1' : '0'); } catch (e) {}
+      if (typeof showToast === 'function') {
+        showToast(bgmEnabled ? 'FM Soundscape Enabled' : 'FM Soundscape Muted');
+      }
+    }
+
+    // Auto-start on first user interaction gesture
+    function initUserAudioGesture() {
+      ensureAudio();
+      if (!bgmTimer && bgmEnabled) {
+        startBGM();
+      }
+    }
+    window.addEventListener('click', initUserAudioGesture, { once: false });
+    window.addEventListener('keydown', initUserAudioGesture, { once: false });
+
+    // Architecture Lifecycle Guard
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) {
+        stopBGM();
+      } else if (bgmEnabled) {
+        ensureAudio();
+        startBGM();
+      }
+    });
 
     let hacking_node = null;
     let hacking_target = "";
