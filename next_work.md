@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-graphics
-next_agent: kilo-soundscape
+current_agent: kilo-soundscape
+next_agent: kilo-tester
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -14,7 +14,7 @@ timeout_minutes: 6
 status: ready
 current_targets:
   kilo_creator: kweb://geocities
-  kilo_graphics: KStellar
+  kilo_graphics: KColosseum
   kilo_tester: KChart
   kilo_usability: KTrader
   kilo_qa: KPong
@@ -34,9 +34,9 @@ virtual_web_rotation:
 - kweb://10.19.99.4/classified
 - kweb://echo-subsystem.net
 last_run:
-  agent: kilo-creator
-  app: kweb://warez
-  timestamp: '2026-10-13T04:33:00Z'
+  agent: kilo-graphics
+  app: KStellar
+  timestamp: '2026-10-13T05:13:00Z'
 last_planner_run: '2026-10-12T17:31:38Z'
 ---
 
@@ -80,8 +80,8 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
 - **Mission**: Replace programmer art with Imagen 3 assets. Skip immediately if vector/board/mature.
-- **Current Target**: `KStellar`
-- **Upcoming Queue**: `KColosseum`, `KMech`.
+- **Current Target**: `KColosseum`
+- **Upcoming Queue**: `KMech`, `KStellar`.
 
 ### 3. App Tester Queue (`kilo-tester`)
 - **Current Target**: `KChart`
@@ -115,6 +115,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-13T05:13:00Z — kilo-graphics: KStellar (Imagen 3 Asset Audit & Skip)**
+  - ⏭️ Skip — Imagen 3 asset replacement not appropriate for KStellar
+  - Verified zero rotating specular glints or traveling perimeter border dots.
+  - Status: PASS ✅ (Vite build clean, size 156KB < 999KB).
+  - Queue: Advanced kilo-graphics to KColosseum; handoff to kilo-soundscape.
+
 - **2026-10-13T04:33:00Z — kilo-creator: kweb://warez (Scene Pulse Diskmag Expansion)**
   - Implemented 1999 floppy diskmag 'Scene Pulse '99' (Issues #12, #13, #14) with real Web Audio FDD seek sound and tracker chiptune.
   - Added CRT phosphor themes, article search/filter, and interactive mailbag letter dispatcher.
@@ -139,9 +145,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - F5/F9 persistence, CSV/JSON import/export, and backdrop dismissals verified.
   - Status: PASS ✅ (Vite build clean, size 113KB < 999KB).
   - Queue: Advanced kilo-tester to KChart; handoff to kilo-usability.
-
-- **2026-10-13T02:16:00Z — kilo-soundscape: KSpace (YM2612 FM Soundscape & SPC700 Delay)**
-  - Replaced generic FM presets with 64-step chiptune tracker (4 modal patterns in Dm/Fmaj, walking slap bass, crystal lead, SPC700 ambient drone, FM drums).
-  - Upgraded sound FX palette (types 0-12) with pitch sweeps, harmonic chords, and master soft-clipping limiter.
-  - Status: PASS ✅ (Vite build clean, size 185KB < 999KB).
-  - Queue: Advanced kilo-soundscape to KStellar; handoff to kilo-tester.
