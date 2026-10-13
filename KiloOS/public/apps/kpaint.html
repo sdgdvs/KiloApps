@@ -6110,6 +6110,7 @@
       } else if (!e.altKey) {
         const k = e.key.toLowerCase();
         if (e.shiftKey && k === 'g') setTool('replace');
+        else if (k === 'h' || k === '?') toggleHelp();
         else if (k === 'b') setTool('freehand');
         else if (k === 'e') setTool('eraser');
         else if (k === 'l') setTool('line');
