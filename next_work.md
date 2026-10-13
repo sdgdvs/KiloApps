@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-graphics
-next_agent: kilo-soundscape
+current_agent: kilo-soundscape
+next_agent: kilo-tester
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -14,7 +14,7 @@ timeout_minutes: 6
 status: ready
 current_targets:
   kilo_creator: kweb://warez
-  kilo_graphics: KSpace
+  kilo_graphics: KStellar
   kilo_tester: KCalendar
   kilo_usability: KSubmarine
   kilo_qa: KRogue
@@ -34,9 +34,9 @@ virtual_web_rotation:
 - kweb://10.19.99.4/classified
 - kweb://echo-subsystem.net
 last_run:
-  agent: kilo-creator
-  app: kweb://webring
-  timestamp: '2026-10-13T01:13:00Z'
+  agent: kilo-graphics
+  app: KSpace
+  timestamp: '2026-10-13T01:31:00Z'
 last_planner_run: '2026-10-12T17:31:38Z'
 ---
 
@@ -80,8 +80,8 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
 - **Mission**: Replace programmer art with Imagen 3 assets. Skip immediately if vector/board/mature.
-- **Current Target**: `KSpace`
-- **Upcoming Queue**: `KStellar`, `KColosseum`, `KMech`.
+- **Current Target**: `KStellar`
+- **Upcoming Queue**: `KColosseum`, `KMech`.
 
 ### 3. App Tester Queue (`kilo-tester`)
 - **Current Target**: `KCalendar`
@@ -115,6 +115,11 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-13T01:31:00Z — kilo-graphics: KSpace (Asset Audit & Queue Advance)**
+  - ⏭️ Skip — Imagen 3 asset replacement not appropriate for KSpace (production Imagen 3 assets already active; perimeter glints/dots absent).
+  - Status: PASS ✅ (Vite build clean, size 184KB < 999KB).
+  - Queue: Advanced kilo-graphics to KStellar; handoff to kilo-soundscape.
+
 - **2026-10-13T00:33:00Z — kilo-expander: KChess (Deep Utility Expansion)**
   - Status: PASS ✅ (Vite build clean, size 227KB < 999KB).
   - Deep utility: Live on-canvas Centipawn Evaluation Bar (`X` / menu toggle), multi-format clock manager (`K` - Blitz/Bullet/Rapid/Classical/Casual).
@@ -140,9 +145,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Added immediate `display: none` dismissal for overlays on ESC, backdrop click, and button click.
   - Startup audit passed (`test_app_startup.py`), Vite build clean (`dist/`), size 192KB < 999KB.
   - Queue: Advanced kilo-tester to KCalendar; handoff to kilo-usability.
-
-- **2026-10-12T22:33:00Z — kilo-soundscape: KCyber (Procedural FM Soundscape Composition)**
-  - Status: PASS ✅ (Vite build clean, 101KB < 999KB).
-  - Composed YM2612 2-Op / SPC700 procedural audio: D-Dorian cyberpunk BGM (4-voice FM bass, pad, arps), toolbar BGM toggle.
-  - Synthesized expressive FM earcons: access granted/denied, klaxon alarm, 1999 dialup handshake, nanite patch, and radar probe.
-  - Queue: Advanced kilo-soundscape to KSpace; handoff to kilo-tester.
