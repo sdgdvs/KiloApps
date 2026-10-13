@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-soundscape
-next_agent: kilo-tester
+current_agent: kilo-tester
+next_agent: kilo-usability
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -15,7 +15,7 @@ status: ready
 current_targets:
   kilo_creator: kweb://cybercafe
   kilo_graphics: KAbyss
-  kilo_soundscape: kweb://geocities
+  kilo_soundscape: kweb://portal
   kilo_tester: KMine
   kilo_usability: KCalc
   kilo_qa: KRogue
@@ -34,9 +34,9 @@ virtual_web_rotation:
 - kweb://10.19.99.4/classified
 - kweb://echo-subsystem.net
 last_run:
-  agent: kilo-graphics
-  app: KSubmarine
-  timestamp: '2026-10-13T22:30:00Z'
+  agent: kilo-soundscape
+  app: kweb://geocities
+  timestamp: '2026-10-13T23:15:00Z'
 last_planner_run: '2026-10-13T18:15:00Z'
 ---
 
@@ -87,8 +87,8 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ### 3. Procedural Audio & Soundscape Queue (`kilo-soundscape`)
 - **Mission**: Give each game/app a unique YM2612 2-Op FM / SPC700 procedural audio identity. Compose genre-appropriate melodic themes with real chiptune techniques: shell voicings, contrary-motion counterpoint, Royal Road / Andalusian progressions, swing-tick groove, and per-genre FM patch design. Replace all generic oscillator presets. Skip cleanly for pure-utility/text targets (`⏭️ Skip — Procedural soundscape not appropriate for [app]`).
-- **Current Target**: `kweb://geocities`
-- **Upcoming Queue** *(virtual KNet web first, then game apps)*: `kweb://portal`, `kweb://warez`, `kweb://cybercafe`, `kweb://darknet`, `kweb://asm-temple`, `kweb://echo-subsystem.net`, `kweb://deep-core`, `kweb://10.19.99.4/classified`, `kweb://webring`, `KColosseum`, `KRogue`, `KSpace`, `KMine`, `KSubmarine`, `KFortress`, `KMaze`, `KAbyss`, `KStarForge`, `KPac`, `KAsteroids`, `KBreakout`, `KSnake`, `KPong`, `KWizard`, `KFarm`, `KDragon`, `KQuest`.
+- **Current Target**: `kweb://portal`
+- **Upcoming Queue** *(virtual KNet web first, then game apps)*: `kweb://warez`, `kweb://cybercafe`, `kweb://darknet`, `kweb://asm-temple`, `kweb://echo-subsystem.net`, `kweb://deep-core`, `kweb://10.19.99.4/classified`, `kweb://webring`, `KColosseum`, `KRogue`, `KSpace`, `KMine`, `KSubmarine`, `KFortress`, `KMaze`, `KAbyss`, `KStarForge`, `KPac`, `KAsteroids`, `KBreakout`, `KSnake`, `KPong`, `KWizard`, `KFarm`, `KDragon`, `KQuest`.
 
 ### 4. App Tester Queue (`kilo-tester`)
 - **Current Target**: `KPaint`
@@ -122,6 +122,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 ---
 
 ## Recent Execution Logs (Max 5 Entries)
+- **2026-10-13T23:15:00Z — kilo-soundscape: kweb://geocities (Procedural FM Audio Overhaul)**
+  - Replaced generic oscillators with authentic YM2612 2-Op FM synthesis engine.
+  - Implemented 2-Op FM lead with portamento & LFO vibrato, slap bass, crystal arps, FM drums, and earcons.
+  - Verified clean build (`npm run build` 0 errors, 588 KB < 999 KB).
+  - Queue: Advanced kilo-soundscape to kweb://portal; handed off to kilo-tester.
+
 - **2026-10-13T22:30:00Z — kilo-graphics: KSubmarine (Target Suitability Audit)**
   - ⏭️ Skip — Imagen 3 asset replacement not appropriate for KSubmarine.
   - Audited CRT telemetry dashboard aesthetic; verified zero rotating specular glints or traveling border dots.
@@ -144,10 +150,4 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Audited state persistence (F5 quicksave/F9 quickload), tutorial flag integrity, and modal dialogs.
   - Verified clean builds: Native Win32 (`build.bat` 0 errors, <999 KB) and Web Vite (`npm run build` 0 errors, <999 KB).
   - Queue: Advanced kilo-qa to KRogue; handed off to kilo-expander.
-
-- **2026-10-13T20:30:00Z — kilo-usability: KNote (UI/UX & Ergonomics Audit)**
-  - Audited responsive layout, window bounds (980x680), and keyboard accessibility (F1/H Help modal, shortcuts).
-  - Verified ARIA roles, input ergonomics, toast notifications, offline safe storage, and dist-free mode.
-  - Verified build clean (`npm run build` 0 errors, <999 KB).
-  - Queue: Advanced kilo-usability to KCalc; handed off to kilo-qa.
 

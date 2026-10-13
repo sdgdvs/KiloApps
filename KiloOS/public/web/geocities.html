@@ -4449,40 +4449,63 @@ function midiNoteToFreq(note) {
   return 440 * Math.pow(2, (note - 69) / 12);
 }
 
-// UI Audio SFX
+// ============================================================================
+// YM2612 2-OPERATOR FM SYNTHESIS & SPC700 SOUND ENGINE
+// ============================================================================
+function playFmTone(carrierFreq, modRatio, modIndex, time, dur, gainVal, useEcho = true) {
+  if (!carrierFreq || carrierFreq <= 0) return;
+  try {
+    initAudioCtx();
+    const t = time || audioCtx.currentTime;
+    const carrier = audioCtx.createOscillator();
+    const modulator = audioCtx.createOscillator();
+    const modGain = audioCtx.createGain();
+    const ampGain = audioCtx.createGain();
+
+    carrier.type = 'sine';
+    modulator.type = 'sine';
+
+    carrier.frequency.setValueAtTime(carrierFreq, t);
+    modulator.frequency.setValueAtTime(carrierFreq * modRatio, t);
+
+    const peakModDev = carrierFreq * modRatio * modIndex;
+    modGain.gain.setValueAtTime(peakModDev, t);
+    modGain.gain.exponentialRampToValueAtTime(Math.max(1, peakModDev * 0.12), t + Math.min(dur * 0.45, 0.08));
+    modGain.gain.exponentialRampToValueAtTime(0.01, t + dur);
+
+    modulator.connect(modGain);
+    modGain.connect(carrier.frequency);
+
+    ampGain.gain.setValueAtTime(0.001, t);
+    ampGain.gain.linearRampToValueAtTime(gainVal, t + 0.006);
+    ampGain.gain.exponentialRampToValueAtTime(0.001, t + dur);
+
+    carrier.connect(ampGain);
+    ampGain.connect(masterGain);
+    if (useEcho && delayNode) ampGain.connect(delayNode);
+
+    modulator.start(t);
+    carrier.start(t);
+    modulator.stop(t + dur + 0.02);
+    carrier.stop(t + dur + 0.02);
+  } catch(e) {}
+}
+
+// UI Audio SFX - YM2612 FM Earcons & Stingers
 function playUiBeep(freq = 880, dur = 0.05, type = 'square') {
   try {
     initAudioCtx();
-    const osc = audioCtx.createOscillator();
-    const g = audioCtx.createGain();
-    osc.type = type;
-    osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-    g.gain.setValueAtTime(0.08, audioCtx.currentTime);
-    g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + dur);
-    osc.connect(g);
-    g.connect(masterGain);
-    osc.start();
-    osc.stop(audioCtx.currentTime + dur);
+    playFmTone(freq, 2.0, 1.6, audioCtx.currentTime, dur, 0.09, false);
   } catch (e) {}
 }
 
 function playOracleChime() {
   try {
     initAudioCtx();
-    const notes = [60, 67, 72, 79]; // C, G, C, G mystic chime
+    const notes = [60, 67, 72, 79, 84]; // C, G, C, G, C mystic crystal chime
     notes.forEach((n, idx) => {
-      const t = audioCtx.currentTime + idx * 0.09;
-      const osc = audioCtx.createOscillator();
-      const g = audioCtx.createGain();
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(midiNoteToFreq(n), t);
-      g.gain.setValueAtTime(0.12, t);
-      g.gain.exponentialRampToValueAtTime(0.001, t + 0.6);
-      osc.connect(g);
-      g.connect(masterGain);
-      if (delayNode) g.connect(delayNode);
-      osc.start(t);
-      osc.stop(t + 0.65);
+      const t = audioCtx.currentTime + idx * 0.085;
+      playFmTone(midiNoteToFreq(n), 3.5, 3.2, t, 0.7, 0.12, true);
     });
   } catch(e) {}
 }
@@ -4944,187 +4967,276 @@ const midiTracks = allTracks;
 // Lead, Bass, Percussion Synths
 function playLead(note, time, dur) {
   if (!note) return;
-  const osc1 = audioCtx.createOscillator();
-  const osc2 = audioCtx.createOscillator();
-  const g = audioCtx.createGain();
-  const f = audioCtx.createBiquadFilter();
+  try {
+    const targetFreq = midiNoteToFreq(note);
+    const carrier = audioCtx.createOscillator();
+    const modulator = audioCtx.createOscillator();
+    const modGain = audioCtx.createGain();
+    const ampGain = audioCtx.createGain();
+    const filter = audioCtx.createBiquadFilter();
 
-  osc1.type = 'square';
-  osc2.type = 'sawtooth';
-  const targetFreq = midiNoteToFreq(note);
+    carrier.type = 'sine';
+    modulator.type = 'sine';
 
-  if (lastLeadFreq && Math.abs(targetFreq - lastLeadFreq) < 500) {
-    osc1.frequency.setValueAtTime(lastLeadFreq, time);
-    osc1.frequency.exponentialRampToValueAtTime(targetFreq, time + 0.04);
-    osc2.frequency.setValueAtTime(lastLeadFreq * 1.006, time);
-    osc2.frequency.exponentialRampToValueAtTime(targetFreq * 1.006, time + 0.04);
-  } else {
-    osc1.frequency.setValueAtTime(targetFreq, time);
-    osc2.frequency.setValueAtTime(targetFreq * 1.006, time);
-  }
-  lastLeadFreq = targetFreq;
+    // Portamento glide between adjacent melodic steps
+    if (lastLeadFreq && Math.abs(targetFreq - lastLeadFreq) < 500) {
+      carrier.frequency.setValueAtTime(lastLeadFreq, time);
+      carrier.frequency.exponentialRampToValueAtTime(targetFreq, time + 0.045);
+      modulator.frequency.setValueAtTime(lastLeadFreq * 2.0, time);
+      modulator.frequency.exponentialRampToValueAtTime(targetFreq * 2.0, time + 0.045);
+    } else {
+      carrier.frequency.setValueAtTime(targetFreq, time);
+      modulator.frequency.setValueAtTime(targetFreq * 2.0, time);
+    }
+    lastLeadFreq = targetFreq;
 
-  const vib = audioCtx.createOscillator();
-  const vibGain = audioCtx.createGain();
-  vib.frequency.setValueAtTime(5.5, time);
-  vibGain.gain.setValueAtTime(0, time);
-  vibGain.gain.setValueAtTime(0, time + 0.07);
-  vibGain.gain.linearRampToValueAtTime(targetFreq * 0.015, time + 0.16);
-  vib.connect(vibGain);
-  vibGain.connect(osc1.frequency);
-  vibGain.connect(osc2.frequency);
-  vib.start(time);
-  vib.stop(time + dur);
+    // Delayed vibrato LFO (YM2612 hardware LFO emulation: ~5.6 Hz, 80ms delay)
+    const vib = audioCtx.createOscillator();
+    const vibGain = audioCtx.createGain();
+    vib.frequency.setValueAtTime(5.6, time);
+    vibGain.gain.setValueAtTime(0, time);
+    vibGain.gain.setValueAtTime(0, time + 0.08);
+    vibGain.gain.linearRampToValueAtTime(targetFreq * 0.016, time + 0.22);
+    vib.connect(vibGain);
+    vibGain.connect(carrier.frequency);
+    vib.start(time);
+    vib.stop(time + dur);
 
-  f.type = 'lowpass';
-  f.frequency.setValueAtTime(2800, time);
-  f.Q.setValueAtTime(2.4, time);
+    // FM Modulation envelope: sharp initial attack (index ~3.2), warm sustained body
+    const peakDev = targetFreq * 2.0 * 3.2;
+    modGain.gain.setValueAtTime(peakDev, time);
+    modGain.gain.exponentialRampToValueAtTime(targetFreq * 0.35, time + 0.09);
+    modGain.gain.exponentialRampToValueAtTime(0.01, time + dur);
 
-  g.gain.setValueAtTime(0.001, time);
-  g.gain.linearRampToValueAtTime(0.18, time + 0.012);
-  g.gain.exponentialRampToValueAtTime(0.11, time + 0.10);
-  g.gain.linearRampToValueAtTime(0.001, time + dur);
+    modulator.connect(modGain);
+    modGain.connect(carrier.frequency);
 
-  osc1.connect(f);
-  osc2.connect(f);
-  f.connect(g);
-  g.connect(masterGain);
-  if (delayNode) g.connect(delayNode);
+    // Warm SPC700 lowpass filter
+    filter.type = 'lowpass';
+    filter.frequency.setValueAtTime(3400, time);
+    filter.Q.setValueAtTime(2.2, time);
 
-  osc1.start(time);
-  osc2.start(time);
-  osc1.stop(time + dur);
-  osc2.stop(time + dur);
+    // Amp envelope
+    ampGain.gain.setValueAtTime(0.001, time);
+    ampGain.gain.linearRampToValueAtTime(0.19, time + 0.012);
+    ampGain.gain.exponentialRampToValueAtTime(0.12, time + 0.12);
+    ampGain.gain.linearRampToValueAtTime(0.001, time + dur);
+
+    carrier.connect(filter);
+    filter.connect(ampGain);
+    ampGain.connect(masterGain);
+    if (delayNode) ampGain.connect(delayNode);
+
+    modulator.start(time);
+    carrier.start(time);
+    modulator.stop(time + dur + 0.03);
+    carrier.stop(time + dur + 0.03);
+  } catch(e) {}
 }
 
 function playFastArp(chordNotes, time, dur) {
   if (!chordNotes || chordNotes.length === 0) return;
-  const osc = audioCtx.createOscillator();
-  const g = audioCtx.createGain();
-  const f = audioCtx.createBiquadFilter();
-
-  osc.type = 'sawtooth';
-  const numCycles = Math.floor(dur / 0.022);
-  for (let c = 0; c < numCycles; c++) {
-    const note = chordNotes[c % chordNotes.length];
-    osc.frequency.setValueAtTime(midiNoteToFreq(note), time + c * 0.022);
-  }
-
-  f.type = 'lowpass';
-  f.frequency.setValueAtTime(3200, time);
-  f.Q.setValueAtTime(2.0, time);
-
-  g.gain.setValueAtTime(0.11, time);
-  g.gain.exponentialRampToValueAtTime(0.001, time + dur * 0.95);
-
-  osc.connect(f);
-  f.connect(g);
-  g.connect(masterGain);
-  if (delayNode) g.connect(delayNode);
-
-  osc.start(time);
-  osc.stop(time + dur);
+  try {
+    const cycleDur = 0.024;
+    const numCycles = Math.min(16, Math.floor(dur / cycleDur));
+    for (let c = 0; c < numCycles; c++) {
+      const note = chordNotes[c % chordNotes.length];
+      const noteFreq = midiNoteToFreq(note);
+      const stepTime = time + c * cycleDur;
+      const noteDur = cycleDur * 1.6;
+      playFmTone(noteFreq, 2.0, 1.8, stepTime, noteDur, 0.075, true);
+    }
+  } catch(e) {}
 }
 
 function playBass(note, time, dur) {
   if (!note) return;
-  const osc = audioCtx.createOscillator();
-  const g = audioCtx.createGain();
-  const f = audioCtx.createBiquadFilter();
+  try {
+    const freq = midiNoteToFreq(note);
+    const carrier = audioCtx.createOscillator();
+    const modulator = audioCtx.createOscillator();
+    const modGain = audioCtx.createGain();
+    const ampGain = audioCtx.createGain();
+    const filter = audioCtx.createBiquadFilter();
 
-  osc.type = 'sawtooth';
-  osc.frequency.setValueAtTime(midiNoteToFreq(note), time);
+    carrier.type = 'sine';
+    carrier.frequency.setValueAtTime(freq, time);
 
-  f.type = 'lowpass';
-  f.Q.setValueAtTime(3.8, time);
-  f.frequency.setValueAtTime(1800, time);
-  f.frequency.exponentialRampToValueAtTime(240, time + Math.min(dur * 0.8, 0.15));
+    modulator.type = 'sine';
+    modulator.frequency.setValueAtTime(freq, time); // 1:1 ratio for rich warm harmonics
 
-  g.gain.setValueAtTime(0.24, time);
-  g.gain.exponentialRampToValueAtTime(0.001, time + dur * 0.95);
+    // FM bite envelope: punchy slap transient
+    const biteDev = freq * 3.8;
+    modGain.gain.setValueAtTime(biteDev, time);
+    modGain.gain.exponentialRampToValueAtTime(freq * 0.4, time + Math.min(dur * 0.4, 0.04));
+    modGain.gain.exponentialRampToValueAtTime(0.01, time + dur);
 
-  osc.connect(f);
-  f.connect(g);
-  g.connect(masterGain);
+    modulator.connect(modGain);
+    modGain.connect(carrier.frequency);
 
-  osc.start(time);
-  osc.stop(time + dur);
+    // SPC700 resonant lowpass to emphasize punchy sub frequencies
+    filter.type = 'lowpass';
+    filter.Q.setValueAtTime(3.4, time);
+    filter.frequency.setValueAtTime(1400, time);
+    filter.frequency.exponentialRampToValueAtTime(220, time + Math.min(dur * 0.8, 0.16));
+
+    ampGain.gain.setValueAtTime(0.001, time);
+    ampGain.gain.linearRampToValueAtTime(0.26, time + 0.005);
+    ampGain.gain.exponentialRampToValueAtTime(0.001, time + dur * 0.95);
+
+    carrier.connect(filter);
+    filter.connect(ampGain);
+    ampGain.connect(masterGain);
+
+    modulator.start(time);
+    carrier.start(time);
+    modulator.stop(time + dur);
+    carrier.stop(time + dur);
+  } catch(e) {}
 }
 
 function playKick(time) {
-  const osc = audioCtx.createOscillator();
-  const g = audioCtx.createGain();
-  osc.type = 'sine';
-  osc.frequency.setValueAtTime(160, time);
-  osc.frequency.exponentialRampToValueAtTime(36, time + 0.075);
+  try {
+    const carrier = audioCtx.createOscillator();
+    const modulator = audioCtx.createOscillator();
+    const modGain = audioCtx.createGain();
+    const ampGain = audioCtx.createGain();
 
-  g.gain.setValueAtTime(0.38, time);
-  g.gain.exponentialRampToValueAtTime(0.001, time + 0.13);
+    carrier.type = 'sine';
+    carrier.frequency.setValueAtTime(155, time);
+    carrier.frequency.exponentialRampToValueAtTime(34, time + 0.075);
 
-  osc.connect(g);
-  g.connect(masterGain);
+    modulator.type = 'sine';
+    modulator.frequency.setValueAtTime(77, time);
+    modGain.gain.setValueAtTime(220, time);
+    modGain.gain.exponentialRampToValueAtTime(1, time + 0.035);
 
-  osc.start(time);
-  osc.stop(time + 0.14);
+    modulator.connect(modGain);
+    modGain.connect(carrier.frequency);
+
+    ampGain.gain.setValueAtTime(0.38, time);
+    ampGain.gain.exponentialRampToValueAtTime(0.001, time + 0.13);
+
+    carrier.connect(ampGain);
+    ampGain.connect(masterGain);
+
+    modulator.start(time);
+    carrier.start(time);
+    modulator.stop(time + 0.08);
+    carrier.stop(time + 0.14);
+  } catch(e) {}
 }
 
 function playSnare(time, isGhost) {
-  if (!noiseBuf) return;
-  const noise = audioCtx.createBufferSource();
-  noise.buffer = noiseBuf;
+  try {
+    const dur = isGhost ? 0.06 : 0.13;
+    const gainVal = isGhost ? 0.09 : 0.22;
 
-  const f = audioCtx.createBiquadFilter();
-  f.type = 'bandpass';
-  f.frequency.setValueAtTime(1350, time);
-  f.Q.setValueAtTime(1.6, time);
+    // FM Snare body
+    const carrier = audioCtx.createOscillator();
+    const modulator = audioCtx.createOscillator();
+    const modGain = audioCtx.createGain();
+    const ampGain = audioCtx.createGain();
 
-  const g = audioCtx.createGain();
-  const gainVal = isGhost ? 0.08 : 0.20;
-  g.gain.setValueAtTime(gainVal, time);
-  g.gain.exponentialRampToValueAtTime(0.001, time + (isGhost ? 0.06 : 0.11));
+    carrier.type = 'triangle';
+    carrier.frequency.setValueAtTime(195, time);
+    carrier.frequency.exponentialRampToValueAtTime(65, time + 0.045);
 
-  noise.connect(f);
-  f.connect(g);
-  g.connect(masterGain);
+    modulator.type = 'sine';
+    modulator.frequency.setValueAtTime(1950, time); // 10:1 ratio for metallic crunch
+    modGain.gain.setValueAtTime(600, time);
+    modGain.gain.exponentialRampToValueAtTime(5, time + 0.04);
 
-  noise.start(time);
-  noise.stop(time + 0.12);
+    modulator.connect(modGain);
+    modGain.connect(carrier.frequency);
 
-  if (!isGhost) {
-    const osc = audioCtx.createOscillator();
-    const oscG = audioCtx.createGain();
-    osc.type = 'triangle';
-    osc.frequency.setValueAtTime(180, time);
-    osc.frequency.exponentialRampToValueAtTime(60, time + 0.04);
-    oscG.gain.setValueAtTime(0.14, time);
-    oscG.gain.exponentialRampToValueAtTime(0.001, time + 0.05);
-    osc.connect(oscG);
-    oscG.connect(masterGain);
-    osc.start(time);
-    osc.stop(time + 0.05);
-  }
+    ampGain.gain.setValueAtTime(gainVal * 0.75, time);
+    ampGain.gain.exponentialRampToValueAtTime(0.001, time + dur * 0.8);
+
+    carrier.connect(ampGain);
+    ampGain.connect(masterGain);
+
+    modulator.start(time);
+    carrier.start(time);
+    modulator.stop(time + dur);
+    carrier.stop(time + dur);
+
+    // Noise burst
+    if (noiseBuf) {
+      const noise = audioCtx.createBufferSource();
+      noise.buffer = noiseBuf;
+      const f = audioCtx.createBiquadFilter();
+      f.type = 'bandpass';
+      f.frequency.setValueAtTime(1450, time);
+      f.Q.setValueAtTime(1.8, time);
+
+      const ng = audioCtx.createGain();
+      ng.gain.setValueAtTime(gainVal, time);
+      ng.gain.exponentialRampToValueAtTime(0.001, time + dur);
+
+      noise.connect(f);
+      f.connect(ng);
+      ng.connect(masterGain);
+
+      noise.start(time);
+      noise.stop(time + dur + 0.01);
+    }
+  } catch(e) {}
 }
 
 function playHihat(time, isOpen) {
-  if (!noiseBuf) return;
-  const noise = audioCtx.createBufferSource();
-  noise.buffer = noiseBuf;
+  try {
+    const dur = isOpen ? 0.20 : 0.04;
+    const gainVal = isOpen ? 0.10 : 0.07;
 
-  const f = audioCtx.createBiquadFilter();
-  f.type = 'highpass';
-  f.frequency.setValueAtTime(isOpen ? 6800 : 8000, time);
+    // Metallic FM metallic ping
+    const carrier = audioCtx.createOscillator();
+    const modulator = audioCtx.createOscillator();
+    const modGain = audioCtx.createGain();
+    const ampGain = audioCtx.createGain();
 
-  const g = audioCtx.createGain();
-  const dur = isOpen ? 0.18 : 0.035;
-  g.gain.setValueAtTime(isOpen ? 0.09 : 0.07, time);
-  g.gain.exponentialRampToValueAtTime(0.001, time + dur);
+    carrier.type = 'sine';
+    carrier.frequency.setValueAtTime(6200, time);
+    modulator.type = 'sine';
+    modulator.frequency.setValueAtTime(6200 * 1.414, time); // Inharmonic metallic ratio
 
-  noise.connect(f);
-  f.connect(g);
-  g.connect(masterGain);
+    modGain.gain.setValueAtTime(4500, time);
+    modGain.gain.exponentialRampToValueAtTime(10, time + (isOpen ? 0.08 : 0.02));
 
-  noise.start(time);
-  noise.stop(time + dur + 0.01);
+    modulator.connect(modGain);
+    modGain.connect(carrier.frequency);
+
+    ampGain.gain.setValueAtTime(gainVal * 0.5, time);
+    ampGain.gain.exponentialRampToValueAtTime(0.001, time + dur);
+
+    carrier.connect(ampGain);
+    ampGain.connect(masterGain);
+
+    modulator.start(time);
+    carrier.start(time);
+    modulator.stop(time + dur);
+    carrier.stop(time + dur);
+
+    // Highpass noise sizzle
+    if (noiseBuf) {
+      const noise = audioCtx.createBufferSource();
+      noise.buffer = noiseBuf;
+      const f = audioCtx.createBiquadFilter();
+      f.type = 'highpass';
+      f.frequency.setValueAtTime(isOpen ? 7000 : 8500, time);
+
+      const ng = audioCtx.createGain();
+      ng.gain.setValueAtTime(gainVal, time);
+      ng.gain.exponentialRampToValueAtTime(0.001, time + dur);
+
+      noise.connect(f);
+      f.connect(ng);
+      ng.connect(masterGain);
+
+      noise.start(time);
+      noise.stop(time + dur + 0.01);
+    }
+  } catch(e) {}
 }
 
 function playCrash(time) {
