@@ -134,23 +134,13 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Status: PASS ✅ (Vite build clean, size 113KB < 999KB).
   - Queue: Advanced kilo-tester to KChart; handoff to kilo-usability.
 
-
 - **2026-10-13T02:16:00Z — kilo-soundscape: KSpace (YM2612 FM Soundscape & SPC700 Delay)**
   - Replaced generic FM presets with 64-step chiptune tracker (4 modal patterns in Dm/Fmaj, walking slap bass, crystal lead, SPC700 ambient drone, FM drums).
   - Upgraded sound FX palette (types 0-12) with pitch sweeps, harmonic chords, and master soft-clipping limiter.
   - Status: PASS ✅ (Vite build clean, size 185KB < 999KB).
   - Queue: Advanced kilo-soundscape to KStellar; handoff to kilo-tester.
 
-
 - **2026-10-13T01:31:00Z — kilo-graphics: KSpace (Asset Audit & Queue Advance)**
   - ⏭️ Skip — Imagen 3 asset replacement not appropriate for KSpace (production Imagen 3 assets already active; perimeter glints/dots absent).
   - Status: PASS ✅ (Vite build clean, size 184KB < 999KB).
   - Queue: Advanced kilo-graphics to KStellar; handoff to kilo-soundscape.
-
-
-- **2026-10-13T00:33:00Z — kilo-expander: KChess (Deep Utility Expansion)**
-  - Status: PASS ✅ (Vite build clean, size 227KB < 999KB).
-  - Deep utility: Live on-canvas Centipawn Evaluation Bar (`X` / menu toggle), multi-format clock manager (`K` - Blitz/Bullet/Rapid/Classical/Casual).
-  - Wired hotkeys, help documentation, and responsive menu bar indicators.
-  - Queue: Advanced kilo-expander to KColosseum; handoff to kilo-creator.
-

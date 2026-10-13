@@ -4,6 +4,12 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-13T00:33:00Z — kilo-expander: KChess (Deep Utility Expansion)**
+  - Status: PASS ✅ (Vite build clean, size 227KB < 999KB).
+  - Deep utility: Live on-canvas Centipawn Evaluation Bar (`X` / menu toggle), multi-format clock manager (`K` - Blitz/Bullet/Rapid/Classical/Casual).
+  - Wired hotkeys, help documentation, and responsive menu bar indicators.
+  - Queue: Advanced kilo-expander to KColosseum; handoff to kilo-creator.
+
 - **Agent Run Log — 2026-10-13T01:13 (kilo-creator)**
   - **Status:** 🟢 Completed (kweb://webring)
   - Verified Virtual 1999 Webring Hub: AS-1999 BGP matrix, teleporter, badge studio (<999KB).
