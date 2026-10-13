@@ -812,13 +812,23 @@ window.addEventListener('beforeunload', () => {
     safeRemoveStorage('kspace_save');
   }
 
-  // --- GENESIS YM2612 FM SYNTHESIZER & SNES SPC700 STEREO DELAY ARCHITECTURE ---
+  // --- GENESIS YM2612 FM SYNTHESIZER & SNES SPC700 STEREO DELAY SOUNDSCAPE ---
   let audioCtx = null;
   let spcBus = null;
+  let masterLimiter = null;
 
   function initSPCDelay() {
     if (spcBus || !audioCtx) return;
     try {
+      // Master limiter / compressor to preserve dynamic headroom during heavy combat
+      masterLimiter = audioCtx.createDynamicsCompressor();
+      masterLimiter.threshold.setValueAtTime(-4, audioCtx.currentTime);
+      masterLimiter.knee.setValueAtTime(6, audioCtx.currentTime);
+      masterLimiter.ratio.setValueAtTime(8, audioCtx.currentTime);
+      masterLimiter.attack.setValueAtTime(0.003, audioCtx.currentTime);
+      masterLimiter.release.setValueAtTime(0.15, audioCtx.currentTime);
+      masterLimiter.connect(audioCtx.destination);
+
       const dryGain = audioCtx.createGain();
       const wetGain = audioCtx.createGain();
       const delayL = audioCtx.createDelay();
@@ -827,17 +837,17 @@ window.addEventListener('beforeunload', () => {
       const lowpass = audioCtx.createBiquadFilter();
       const merger = audioCtx.createChannelMerger(2);
 
-      // Authentic SPC700 stereo slapback delay (140ms L / 210ms R with 1350Hz warmth damping)
-      delayL.delayTime.value = 0.14;
-      delayR.delayTime.value = 0.21;
-      feedback.gain.value = 0.28;
+      // Authentic SPC700 stereo ping-pong slapback delay (145ms L / 225ms R with 1300Hz warmth filter)
+      delayL.delayTime.value = 0.145;
+      delayR.delayTime.value = 0.225;
+      feedback.gain.value = 0.32;
       lowpass.type = 'lowpass';
-      lowpass.frequency.value = 1350;
+      lowpass.frequency.value = 1300;
 
-      wetGain.gain.value = 0.30;
+      wetGain.gain.value = 0.32;
       dryGain.gain.value = 0.85;
 
-      dryGain.connect(audioCtx.destination);
+      dryGain.connect(masterLimiter);
       delayL.connect(merger, 0, 0);
       delayR.connect(merger, 0, 1);
       merger.connect(lowpass);
@@ -845,28 +855,35 @@ window.addEventListener('beforeunload', () => {
       feedback.connect(delayL);
       feedback.connect(delayR);
       lowpass.connect(wetGain);
-      wetGain.connect(audioCtx.destination);
+      wetGain.connect(masterLimiter);
 
       spcBus = { dryGain, delayL, delayR };
     } catch (e) {}
   }
 
-  function playFM(cType, mType, cFreq, mRatio, modIndex, duration, envDecay, gainAmt = 0.25, useDelay = true) {
+  function getAudioContext() {
+    if (!audioCtx) {
+      const AudioCtxClass = window.AudioContext || window.webkitAudioContext;
+      if (!AudioCtxClass) return null;
+      audioCtx = new AudioCtxClass();
+    }
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    initSPCDelay();
+    return audioCtx;
+  }
+
+  // Core 2-Operator FM Synthesizer with pitch envelopes and stereo routing
+  function playFM(cType, mType, cFreq, mRatio, modIndex, duration, envDecay, gainAmt = 0.25, useDelay = true, pitchGlide = null) {
     if (!soundEnabled) return;
     try {
-      if (!audioCtx) {
-        const AudioContext = window.AudioContext || window.webkitAudioContext;
-        if (!AudioContext) return;
-        audioCtx = new AudioContext();
-      }
-      if (audioCtx.state === 'suspended') audioCtx.resume();
-      initSPCDelay();
+      const ctx = getAudioContext();
+      if (!ctx) return;
 
-      const now = audioCtx.currentTime;
-      const carrier = audioCtx.createOscillator();
-      const modulator = audioCtx.createOscillator();
-      const modGain = audioCtx.createGain();
-      const mainGain = audioCtx.createGain();
+      const now = ctx.currentTime;
+      const carrier = ctx.createOscillator();
+      const modulator = ctx.createOscillator();
+      const modGain = ctx.createGain();
+      const mainGain = ctx.createGain();
 
       carrier.type = cType;
       modulator.type = mType;
@@ -874,11 +891,17 @@ window.addEventListener('beforeunload', () => {
       carrier.frequency.setValueAtTime(cFreq, now);
       modulator.frequency.setValueAtTime(cFreq * mRatio, now);
 
+      if (pitchGlide && typeof pitchGlide.target === 'number') {
+        const pTime = pitchGlide.time || duration;
+        carrier.frequency.exponentialRampToValueAtTime(Math.max(20, pitchGlide.target), now + pTime);
+        modulator.frequency.exponentialRampToValueAtTime(Math.max(20, pitchGlide.target * mRatio), now + pTime);
+      }
+
       modGain.gain.setValueAtTime(cFreq * modIndex, now);
-      modGain.gain.exponentialRampToValueAtTime(0.01, now + envDecay);
+      modGain.gain.exponentialRampToValueAtTime(0.001, now + Math.max(0.01, envDecay));
 
       mainGain.gain.setValueAtTime(gainAmt, now);
-      mainGain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+      mainGain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
 
       modulator.connect(modGain);
       modGain.connect(carrier.frequency);
@@ -888,78 +911,198 @@ window.addEventListener('beforeunload', () => {
         mainGain.connect(spcBus.dryGain);
         mainGain.connect(spcBus.delayL);
         mainGain.connect(spcBus.delayR);
+      } else if (masterLimiter) {
+        mainGain.connect(masterLimiter);
       } else {
-        mainGain.connect(audioCtx.destination);
+        mainGain.connect(ctx.destination);
       }
 
       modulator.start(now);
       carrier.start(now);
-      modulator.stop(now + duration);
-      carrier.stop(now + duration);
+      modulator.stop(now + duration + 0.02);
+      carrier.stop(now + duration + 0.02);
     } catch (e) {}
   }
 
-  function playSound(type) {
+  // Authentic Genesis FM Drum generator (punchy kick, noise snare, metallic hats)
+  function playFMDrum(drum) {
     if (!soundEnabled) return;
     try {
-      if (type === 0) { // Shoot (YM2612 punchy laser)
-        playFM('square', 'sawtooth', 840, 2.0, 3.2, 0.08, 0.05, 0.18, false);
-      } else if (type === 1) { // Explosion (Crunchy sub-FM detonation)
-        playFM('sawtooth', 'triangle', 180, 0.5, 6.0, 0.28, 0.2, 0.28, true);
-      } else if (type === 2) { // Powerup / Skill (Crystal FM chime)
-        playFM('sine', 'sine', 520, 2.0, 3.5, 0.22, 0.15, 0.22, true);
-      } else if (type === 3) { // Wave Clear / Stasis (Genesis harmonic chord)
-        playFM('triangle', 'sine', 440, 1.5, 2.8, 0.38, 0.28, 0.24, true);
-      } else if (type === 4) { // Smart Bomb (Heavy sub-bass shockwave)
-        playFM('sawtooth', 'square', 120, 0.25, 8.5, 0.55, 0.45, 0.35, true);
-      } else if (type === 5) { // Continuous Laser (Resonant filtered beam)
-        playFM('sawtooth', 'sine', 1100, 3.0, 2.5, 0.06, 0.04, 0.12, false);
-      } else if (type === 6) { // Victory Fanfare
-        playFM('triangle', 'sine', 587, 2.0, 3.0, 0.6, 0.4, 0.28, true);
-      } else if (type === 7) { // Hyper-Jump Warp Sweep
-        playFM('sawtooth', 'triangle', 260, 4.0, 5.0, 0.45, 0.35, 0.3, true);
-      } else if (type === 8) { // Point Defense Zap
-        playFM('square', 'sine', 1200, 1.5, 2.0, 0.05, 0.03, 0.14, false);
-      } else if (type === 9) { // Dreadnought Mega-Ion Beam Roar
-        playFM('sawtooth', 'sawtooth', 75, 1.0, 9.0, 0.75, 0.6, 0.38, true);
-      } else if (type === 10) { // Heavy Plasma Cannon (Deep thunderous blast)
-        playFM('sine', 'sawtooth', 240, 0.5, 7.5, 0.18, 0.12, 0.32, true);
+      const ctx = getAudioContext();
+      if (!ctx) return;
+      const now = ctx.currentTime;
+
+      if (drum === 'kick') {
+        // YM2612 punchy kick: pitch sweep 155 -> 38 Hz with heavy carrier impact
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(155, now);
+        osc.frequency.exponentialRampToValueAtTime(38, now + 0.09);
+        gain.gain.setValueAtTime(0.32, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
+        osc.connect(gain);
+        gain.connect(masterLimiter || ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.13);
+      } else if (drum === 'snare') {
+        // Snappy metallic FM snare: tonal punch + noise snap
+        playFM('square', 'sawtooth', 210, 2.5, 4.5, 0.11, 0.07, 0.15, true, { target: 90, time: 0.08 });
+      } else if (drum === 'hat') {
+        // Crisp closed FM metallic hat (high metallic frequency ratio)
+        playFM('square', 'sawtooth', 4600, 1.48, 2.8, 0.035, 0.025, 0.08, false);
+      } else if (drum === 'openhat') {
+        // Sizzling open FM cymbal with SPC stereo reverb tail
+        playFM('sawtooth', 'square', 3800, 1.62, 3.2, 0.16, 0.12, 0.09, true);
       }
     } catch (e) {}
   }
 
-  // --- PROCEDURAL 16-STEP CHIPTUNE TRACKER (GENESIS YM2612 & SNES SPC700) ---
+  // Genre-appropriate FM Sound Effects, UI Earcons & Action Stingers
+  function playSound(type) {
+    if (!soundEnabled) return;
+    try {
+      if (type === 0) { // Shoot (YM2612 crisp resonant laser)
+        playFM('sawtooth', 'square', 880, 2.0, 3.8, 0.075, 0.045, 0.16, false, { target: 240, time: 0.07 });
+      } else if (type === 1) { // Explosion (Crunchy sub-FM detonation with SPC echo)
+        playFM('sawtooth', 'triangle', 160, 0.5, 7.2, 0.32, 0.22, 0.28, true, { target: 35, time: 0.28 });
+      } else if (type === 2) { // Powerup / Item Collect (Ascending crystal FM chime triad)
+        playFM('sine', 'sine', 523.25, 2.0, 3.2, 0.24, 0.16, 0.18, true);
+        setTimeout(() => playFM('sine', 'sine', 659.25, 2.0, 3.2, 0.24, 0.16, 0.18, true), 50);
+        setTimeout(() => playFM('sine', 'sine', 783.99, 2.0, 3.2, 0.28, 0.18, 0.20, true), 100);
+      } else if (type === 3) { // Wave Clear / Stasis (Genesis harmonic chord swell)
+        playFM('triangle', 'sine', 440, 1.5, 2.5, 0.42, 0.32, 0.22, true);
+        playFM('sine', 'triangle', 554.37, 2.0, 2.0, 0.42, 0.32, 0.18, true);
+        playFM('sine', 'sine', 659.25, 1.5, 1.8, 0.48, 0.36, 0.18, true);
+      } else if (type === 4) { // Smart Bomb (Sub-bass seismic shockwave)
+        playFM('sawtooth', 'square', 130, 0.25, 9.0, 0.60, 0.48, 0.36, true, { target: 28, time: 0.55 });
+      } else if (type === 5) { // Continuous Laser (Resonant filtered beam)
+        playFM('sawtooth', 'sine', 1150, 3.0, 2.8, 0.055, 0.035, 0.12, false, { target: 980, time: 0.05 });
+      } else if (type === 6) { // Victory Fanfare (Heroic multi-voice chiptune stinger)
+        const notes = [440, 554.37, 659.25, 880];
+        notes.forEach((f, i) => {
+          setTimeout(() => playFM('triangle', 'sine', f, 2.0, 2.6, 0.45, 0.30, 0.22, true), i * 90);
+        });
+      } else if (type === 7) { // Hyper-Jump Warp Sweep (Exponential pitch soar with flange)
+        playFM('sawtooth', 'triangle', 180, 3.0, 5.5, 0.48, 0.38, 0.28, true, { target: 1950, time: 0.45 });
+      } else if (type === 8) { // Point Defense Zap (High-voltage crisp discharge)
+        playFM('square', 'sine', 1400, 1.5, 2.4, 0.045, 0.025, 0.14, false, { target: 450, time: 0.04 });
+      } else if (type === 9) { // Dreadnought Mega-Ion Beam Roar (Sub-rumble sawtooth beam)
+        playFM('sawtooth', 'sawtooth', 72, 1.0, 9.5, 0.85, 0.70, 0.38, true, { target: 48, time: 0.80 });
+      } else if (type === 10) { // Heavy Plasma Cannon (Thunderous plasma burst)
+        playFM('sine', 'sawtooth', 250, 0.5, 8.0, 0.20, 0.14, 0.32, true, { target: 70, time: 0.18 });
+      } else if (type === 11) { // Shield Deflect Earcon (Crisp metallic pulse)
+        playFM('square', 'sine', 1100, 2.0, 3.0, 0.06, 0.04, 0.16, true, { target: 750, time: 0.05 });
+      } else if (type === 12) { // Warning Klaxon (Dual-tone alarm stinger)
+        playFM('square', 'sawtooth', 880, 1.0, 2.5, 0.12, 0.08, 0.18, false);
+        setTimeout(() => playFM('square', 'sawtooth', 660, 1.0, 2.5, 0.14, 0.09, 0.18, false), 110);
+      }
+    } catch (e) {}
+  }
+
+  // --- PROCEDURAL 64-STEP SPACE CHIPTUNE TRACKER (GENESIS YM2612 & SNES SPC700) ---
+  // Style: Thunder Force IV / Musha Aleste high-energy space shooter chiptune
   let bgmEnabled = safeGetStorage('kspace_bgm') !== '0';
   let bgmStep = 0;
   let bgmTimer = null;
-  const BASS_NOTES = [146.8, 0, 146.8, 146.8, 174.6, 0, 174.6, 174.6, 130.8, 0, 130.8, 130.8, 116.5, 0, 116.5, 130.8];
-  const LEAD_NOTES = [587.3, 698.5, 880.0, 1046.5, 698.5, 880.0, 1046.5, 1318.5, 523.3, 659.3, 784.0, 1046.5, 466.2, 587.3, 698.5, 880.0];
+
+  // Frequencies in Hz: D-minor / F-major modal space palette
+  const D2 = 73.42, F2 = 87.31, G2 = 98.00, A2 = 110.00, Bb2 = 116.54, C3 = 130.81, D3 = 146.83, E3 = 164.81;
+  const F3 = 174.61, G3 = 196.00, A3 = 220.00, Bb3 = 233.08, C4 = 261.63, Csharp4 = 277.18, D4 = 293.66, E4 = 329.63;
+  const F4 = 349.23, G4 = 392.00, A4 = 440.00, Bb4 = 466.16, C5 = 523.25, D5 = 587.33, E5 = 659.25, F5 = 698.46;
+
+  // 4 Patterns (64 steps total: 16 steps per pattern)
+  // Bassline: 16th-note rolling Genesis bass with octave pops and syncopated grooving
+  const TRACKER_BASS = [
+    // Pattern 0: Sector Entry (D Minor drive)
+    D3, 0, D3, D3, F3, 0, D3, 0, C3, 0, C3, C3, Bb2, 0, C3, 0,
+    // Pattern 1: Asteroid Storm (Bb -> C pump)
+    Bb2, 0, Bb2, Bb2, C3, 0, C3, C3, D3, 0, D3, D3, F3, 0, G3, A2,
+    // Pattern 2: Armada Confrontation (Chromatic suspense)
+    D3, 0, D3, F3, G3, 0, G3, 0, Bb3, 0, A3, 0, G3, 0, F3, E3,
+    // Pattern 3: Hyper-Drive Resolution (Triumphant soaring resolve)
+    D3, 0, F3, 0, G3, 0, A3, 0, Bb3, 0, A3, 0, G3, 0, F3, E3
+  ];
+
+  // Lead Melody: Heroic arcade theme with voice leading and crystal bell FM tones
+  const TRACKER_LEAD = [
+    // Pattern 0: Main Theme Hook
+    D4, 0, F4, 0, A4, 0, D5, 0, C5, 0, A4, 0, F4, G4, A4, 0,
+    // Pattern 1: Counter-Melody Lift
+    Bb4, 0, D5, 0, C5, 0, A4, 0, F4, 0, G4, A4, G4, 0, F4, E4,
+    // Pattern 2: Tension & Chromatic Surge
+    D5, 0, Csharp4, 0, D5, 0, E5, 0, F5, 0, E5, 0, D5, 0, Csharp4, 0,
+    // Pattern 3: Victorious Arc
+    D5, 0, A4, 0, F4, 0, G4, 0, A4, 0, Bb4, C5, D5, 0, 0, 0
+  ];
+
+  // Ambient SPC700 Space Pad (Chords trigger every 16 steps for lush cosmic depth)
+  const PAD_CHORDS = [
+    [D3, A3, F4],     // Dm (Sector Alpha)
+    [Bb2, F3, D4],    // Bbmaj (Asteroid Field)
+    [G2, D3, Bb3],    // Gm (Armada Incursion)
+    [A2, E3, Csharp4] // A7 (Warp Horizon)
+  ];
 
   function startBGM() {
     if (bgmTimer) return;
+    // 136 BPM (110ms per 16th-note step)
     bgmTimer = setInterval(() => {
       if (!bgmEnabled || !soundEnabled || gameState !== STATE_PLAYING) return;
       try {
-        const bassFreq = BASS_NOTES[bgmStep % 16];
+        const step = bgmStep % 64;
+        const pat = Math.floor(step / 16);
+        const subStep = step % 16;
+
+        // 1. Driving FM Bass voice (Genesis YM2612 punchy 2-op slap bass)
+        const bassFreq = TRACKER_BASS[step];
         if (bassFreq > 0) {
-          playFM('square', 'sawtooth', bassFreq, 2.0, 3.6, 0.10, 0.07, 0.10, false);
+          playFM('square', 'sawtooth', bassFreq, 2.0, 3.8, 0.09, 0.06, 0.11, false);
         }
-        if (bgmStep % 2 === 0) {
-          const leadFreq = LEAD_NOTES[bgmStep % 16];
-          playFM('sine', 'triangle', leadFreq, 1.0, 1.4, 0.16, 0.10, 0.05, true);
+
+        // 2. Lead Voice (Crystalline FM melody with warm decay through SPC echo)
+        const leadFreq = TRACKER_LEAD[step];
+        if (leadFreq > 0) {
+          playFM('sine', 'triangle', leadFreq, 1.0, 1.8, 0.22, 0.14, 0.08, true);
         }
-        if (bgmStep % 4 === 2) {
-          playFM('triangle', 'sawtooth', 80, 5.0, 4.0, 0.05, 0.03, 0.06, false);
+
+        // 3. Ambient SPC700 Space Drone / Pad (Triggers on beat 1 of each 16-step bar)
+        if (subStep === 0) {
+          const chord = PAD_CHORDS[pat];
+          if (chord) {
+            chord.forEach(f => {
+              playFM('triangle', 'sine', f, 1.0, 0.6, 1.6, 1.4, 0.035, true);
+            });
+          }
         }
-        bgmStep = (bgmStep + 1) % 16;
+
+        // 4. FM Rhythm Drum Machine:
+        // Four-on-the-floor kick
+        if (subStep % 4 === 0) {
+          playFMDrum('kick');
+        }
+        // Snappy backbeat snare on beats 2 and 4 (steps 4 and 12)
+        if (subStep === 4 || subStep === 12) {
+          playFMDrum('snare');
+        }
+        // Off-beat closed hi-hats
+        if (subStep % 2 === 1) {
+          playFMDrum('hat');
+        }
+        // Open hi-hat accent on step 14
+        if (subStep === 14) {
+          playFMDrum('openhat');
+        }
+
+        bgmStep = (bgmStep + 1) % 64;
       } catch (e) {}
-    }, 125);
+    }, 110);
   }
 
   function toggleBGM() {
     bgmEnabled = !bgmEnabled;
     safeSetStorage('kspace_bgm', bgmEnabled ? '1' : '0');
-    showToast(bgmEnabled ? '🎵 Genesis FM Synth: ON' : '🎵 Genesis FM Synth: OFF', 'info', 1800);
+    showToast(bgmEnabled ? '🎵 Genesis FM Soundscape: ON' : '🎵 Genesis FM Soundscape: OFF', 'info', 1800);
   }
 
   // --- PARTICLES, SHOCKWAVES & DEBRIS (Loop 8 Enhanced Engine) ---
