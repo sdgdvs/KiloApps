@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-qa
+current_agent: kilo-qa
+next_agent: kilo-expander
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -17,7 +17,7 @@ current_targets:
   kilo_graphics: KSubmarine
   kilo_soundscape: kweb://geocities
   kilo_tester: KMine
-  kilo_usability: KNote
+  kilo_usability: KCalc
   kilo_qa: KBreakout
   kilo_expander: KVault
 virtual_web_target: kweb://asm-temple
@@ -34,9 +34,9 @@ virtual_web_rotation:
 - kweb://10.19.99.4/classified
 - kweb://echo-subsystem.net
 last_run:
-  agent: kilo-tester
-  app: KPaint
-  timestamp: '2026-10-13T20:13:00Z'
+  agent: kilo-usability
+  app: KNote
+  timestamp: '2026-10-13T20:30:00Z'
 last_planner_run: '2026-10-13T18:15:00Z'
 ---
 
@@ -123,6 +123,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-13T20:30:00Z — kilo-usability: KNote (UI/UX & Ergonomics Audit)**
+  - Audited responsive layout, window bounds (980x680), and keyboard accessibility (F1/H Help modal, shortcuts).
+  - Verified ARIA roles, input ergonomics, toast notifications, offline safe storage, and dist-free mode.
+  - Verified build clean (`npm run build` 0 errors, <999 KB).
+  - Queue: Advanced kilo-usability to KCalc; handed off to kilo-qa.
+
 - **2026-10-13T19:35:00Z — kilo-soundscape: kweb://webring (YM2612 2-Op FM / SPC700 Procedural Audio Overhaul)**
   - Composed 6-channel YM2612 FM chiptunes: Track 1 ("Hyperlink Voyager '99", Dorian cyber groove) & Track 2 ("Ringmaster's Cadence", Streets of Rage club groove).
   - Implemented 3-voice counterpoint (Lead, Counter, Slap Bass), shell voicings, 16th crystal arps, 5:3 swing groove, and SPC700 slapback delay.
@@ -149,8 +155,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Compaction & Archival: Executed zero-discard log rotation of older worker turns to archive/fleet_execution_archive.md.
   - Timestamp & Rotation: Updated last_planner_run to 2026-10-13T18:15:00Z; rotated current_agent to kilo-creator.
 
-- **2026-10-13T10:32:00Z — kilo-qa: KPac (Pass 5 QA Audit)**
-  - Audited dual-target builds: Win32 native C clean, Web HTML clean (<999 KB).
-  - Hardened storage handlers (`safeGet`/`safeSet`) across all highscores and quicksaves.
-  - Verified build (`npm run build` 0 errors).
-  - Queue: Advanced kilo-qa to KBreakout; handoff to kilo-expander.
