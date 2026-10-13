@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-graphics
-next_agent: kilo-soundscape
+current_agent: kilo-soundscape
+next_agent: kilo-tester
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -14,7 +14,7 @@ timeout_minutes: 6
 status: ready
 current_targets:
   kilo_creator: kweb://cybercafe
-  kilo_graphics: KSubmarine
+  kilo_graphics: KAbyss
   kilo_soundscape: kweb://geocities
   kilo_tester: KMine
   kilo_usability: KCalc
@@ -34,9 +34,9 @@ virtual_web_rotation:
 - kweb://10.19.99.4/classified
 - kweb://echo-subsystem.net
 last_run:
-  agent: kilo-creator
-  app: kweb://asm-temple
-  timestamp: '2026-10-13T22:15:00Z'
+  agent: kilo-graphics
+  app: KSubmarine
+  timestamp: '2026-10-13T22:30:00Z'
 last_planner_run: '2026-10-13T18:15:00Z'
 ---
 
@@ -82,8 +82,8 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
 - **Mission**: Replace programmer art with Imagen 3 assets. Skip immediately if vector/board/mature.
-- **Current Target**: `KSubmarine`
-- **Upcoming Queue**: `KAbyss`, `KStarForge`, `KSpace`, `KMech`.
+- **Current Target**: `KAbyss`
+- **Upcoming Queue**: `KStarForge`, `KSpace`, `KMech`, `KSubmarine`.
 
 ### 3. Procedural Audio & Soundscape Queue (`kilo-soundscape`)
 - **Mission**: Give each game/app a unique YM2612 2-Op FM / SPC700 procedural audio identity. Compose genre-appropriate melodic themes with real chiptune techniques: shell voicings, contrary-motion counterpoint, Royal Road / Andalusian progressions, swing-tick groove, and per-genre FM patch design. Replace all generic oscillator presets. Skip cleanly for pure-utility/text targets (`⏭️ Skip — Procedural soundscape not appropriate for [app]`).
@@ -122,6 +122,11 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 ---
 
 ## Recent Execution Logs (Max 5 Entries)
+- **2026-10-13T22:30:00Z — kilo-graphics: KSubmarine (Target Suitability Audit)**
+  - ⏭️ Skip — Imagen 3 asset replacement not appropriate for KSubmarine.
+  - Audited CRT telemetry dashboard aesthetic; verified zero rotating specular glints or traveling border dots.
+  - Queue: Advanced kilo-graphics to KAbyss; handed off to kilo-soundscape.
+
 - **2026-10-13T22:15:00Z — kilo-creator: kweb://asm-temple (Virtual Web Destination Expansion)**
   - Implemented Tab 9 Ring-0 Crypta: interactive anti-debugger probe suite, PEB/RDTSC diagnostics.
   - Implemented CRACKME99 algorithmic keygen & serial validator with live transform hashes.
@@ -145,11 +150,4 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Verified ARIA roles, input ergonomics, toast notifications, offline safe storage, and dist-free mode.
   - Verified build clean (`npm run build` 0 errors, <999 KB).
   - Queue: Advanced kilo-usability to KCalc; handed off to kilo-qa.
-
-- **2026-10-13T19:35:00Z — kilo-soundscape: kweb://webring (YM2612 2-Op FM / SPC700 Procedural Audio Overhaul)**
-  - Composed 6-channel YM2612 FM chiptunes: Track 1 ("Hyperlink Voyager '99", Dorian cyber groove) & Track 2 ("Ringmaster's Cadence", Streets of Rage club groove).
-  - Implemented 3-voice counterpoint (Lead, Counter, Slap Bass), shell voicings, 16th crystal arps, 5:3 swing groove, and SPC700 slapback delay.
-  - Upgraded UI earcons/stingers (click, warp, badge, submit, stamp, pixel, pulse, hop, decrypt).
-  - Verified clean build (`npm run build` 0 errors, <999 KB).
-  - Queue: Advanced kilo-soundscape to `kweb://geocities`; handed off to `kilo-tester`.
 
