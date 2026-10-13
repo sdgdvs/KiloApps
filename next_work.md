@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-tester
-next_agent: kilo-usability
+current_agent: kilo-usability
+next_agent: kilo-qa
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -15,7 +15,7 @@ status: ready
 current_targets:
   kilo_creator: kweb://warez
   kilo_graphics: KStellar
-  kilo_tester: KCalendar
+  kilo_tester: KChart
   kilo_usability: KSubmarine
   kilo_qa: KRogue
   kilo_soundscape: KStellar
@@ -34,9 +34,9 @@ virtual_web_rotation:
 - kweb://10.19.99.4/classified
 - kweb://echo-subsystem.net
 last_run:
-  agent: kilo-soundscape
-  app: KSpace
-  timestamp: '2026-10-13T02:16:00Z'
+  agent: kilo-tester
+  app: KCalendar
+  timestamp: '2026-10-13T02:31:00Z'
 last_planner_run: '2026-10-12T17:31:38Z'
 ---
 
@@ -84,8 +84,8 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Upcoming Queue**: `KColosseum`, `KMech`.
 
 ### 3. App Tester Queue (`kilo-tester`)
-- **Current Target**: `KCalendar`
-- **Upcoming Queue**: `KChart`, `KChat`, `KMine`, `KSanctuary`, `KAudio`, `KSubmarine`, `KTrader`, `KVault`.
+- **Current Target**: `KChart`
+- **Upcoming Queue**: `KChat`, `KMine`, `KSanctuary`, `KAudio`, `KSubmarine`, `KTrader`, `KVault`, `KCalendar`.
 
 ### 4. Usability & UX Queue (`kilo-usability`)
 - **Current Target**: `KSubmarine`
@@ -115,6 +115,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-13T02:31:00Z — kilo-tester: KCalendar (Interactive UI & Startup Audit)**
+  - Startup & UI element audit: CSS valid, 0 JS errors, modals/tabs/shortcuts intact.
+  - F5/F9 persistence, CSV/JSON import/export, and backdrop dismissals verified.
+  - Status: PASS ✅ (Vite build clean, size 113KB < 999KB).
+  - Queue: Advanced kilo-tester to KChart; handoff to kilo-usability.
+
 - **2026-10-13T02:16:00Z — kilo-soundscape: KSpace (YM2612 FM Soundscape & SPC700 Delay)**
   - Replaced generic FM presets with 64-step chiptune tracker (4 modal patterns in Dm/Fmaj, walking slap bass, crystal lead, SPC700 ambient drone, FM drums).
   - Upgraded sound FX palette (types 0-12) with pitch sweeps, harmonic chords, and master soft-clipping limiter.
@@ -138,9 +144,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - First-run tutorial flag (`kbreakout_tutorialSeen`) and duel non-autostart intact.
   - Security lint 100% clean; verified zero native C binary dependencies.
   - Queue: Advanced kilo-qa to KRogue; handoff to kilo-expander.
-
-- **2026-10-12T23:32:00Z — kilo-usability: KAudio (UI/UX & Toolbar Ergonomics Audit)**
-  - Status: PASS ✅ (Vite build clean, size 149KB < 999KB).
-  - Ergonomics: Grouped header toolbar into semantic clusters (.toolbar-group) preventing multi-row wrapping overflow.
-  - Window Sizing: Adjusted default geometry to 1040x840 in App.jsx & meta tags to accommodate full visualizer and keys without vertical clipping.
-  - Queue: Advanced kilo-usability to KSubmarine; handoff to kilo-qa.
