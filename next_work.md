@@ -1,4 +1,4 @@
----
+﻿---
 current_agent: kilo-expander
 next_agent: kilo-creator
 agent_rotation:
@@ -18,7 +18,7 @@ current_targets:
   kilo_tester: KPaint
   kilo_usability: KNotes
   kilo_qa: KDoom
-  kilo_soundscape: KColosseum
+  kilo_soundscape: kweb://webring
   kilo_expander: KChess
 virtual_web_target: kweb://users/~neon_rider
 virtual_web_rotation:
@@ -86,6 +86,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 13. **🎨 Daily App Icon Uniqueness Audit**: Every app in `App.jsx` must have a unique 32x32 `.ico` file in `public/assets/icons/`. Checked daily by `kilo-planner`.
 14. **ARG Mystery Preservation**: Clues must be diegetic. Never use `(ARG)` or walkthrough tags; keep passkeys protected.
 15. **🖼️ Imagen 3 Asset Replacement for `kilo-graphics`**: Replace programmer art with Imagen 3 assets. Skip turn cleanly for vector/board/mature targets (`⏭️ Skip — Imagen 3 asset replacement not appropriate for [app]`).
+16. **🎵 Chiptune Audio Quality Standard (`kilo-soundscape`)**: `kilo-soundscape` must compose real chiptune music per hardware composer techniques (Koshiro/Kondo/Follin/Uematsu). Required: 3-voice counterpoint (Lead/Counter/Bass), shell voicings (Root+3rd+7th only, no 5ths), swing-tick groove, delayed vibrato, genre-specific FM patches, and SPC700-style echo. Virtual KNet web destinations (webring, geocities, portal, warez, etc.) are **highest priority** — their existing generic 8-step bass+bell loops must be replaced with full chiptune compositions this cycle.
 
 ---
 
@@ -101,21 +102,26 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Current Target**: `KMech`
 - **Upcoming Queue**: `KStellar`, `KColosseum`.
 
-### 3. App Tester Queue (`kilo-tester`)
-- **Current Target**: `KChat`
+### 3. Procedural Audio & Soundscape Queue (`kilo-soundscape`)
+- **Mission**: Give each game/app a unique YM2612 2-Op FM / SPC700 procedural audio identity. Compose genre-appropriate melodic themes with real chiptune techniques: shell voicings, contrary-motion counterpoint, Royal Road / Andalusian progressions, swing-tick groove, and per-genre FM patch design. Replace all generic oscillator presets. Skip cleanly for pure-utility/text targets (`⏭️ Skip — Procedural soundscape not appropriate for [app]`).
+- **Current Target**: `kweb://webring`
+- **Upcoming Queue** *(virtual KNet web first, then game apps)*: `kweb://geocities`, `kweb://portal`, `kweb://warez`, `kweb://cybercafe`, `kweb://darknet`, `kweb://asm-temple`, `kweb://echo-subsystem.net`, `kweb://deep-core`, `kweb://10.19.99.4/classified`, `KColosseum`, `KRogue`, `KSpace`, `KMine`, `KSubmarine`, `KFortress`, `KMaze`, `KAbyss`, `KStarForge`, `KPac`, `KAsteroids`, `KBreakout`, `KSnake`, `KPong`, `KWizard`, `KFarm`, `KDragon`, `KQuest`.
+
+### 4. App Tester Queue (`kilo-tester`)
+- **Current Target**: `KPaint`
 - **Upcoming Queue**: `KMine`, `KSanctuary`, `KAudio`, `KSubmarine`, `KTrader`, `KVault`, `KCalendar`, `KChart`.
 
-### 4. Usability & UX Queue (`kilo-usability`)
-- **Current Target**: `KBudget`
+### 5. Usability & UX Queue (`kilo-usability`)
+- **Current Target**: `KNotes`
 - **Upcoming Queue**: `KRogue`, `KSubmarine`, `KTrader`.
 
-### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
+### 6. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
 - **Current Target**: `KPac`
 - **Upcoming Queue**: `KColony`, `KBreakout`, `KRogue`, `KPong`.
 
-### 6. Feature Expander Queue (`kilo-expander`)
-- **Current Target**: `KPong`
-- **Upcoming Queue**: `KRogue`, `KChess`, `KColosseum`.
+### 7. Feature Expander Queue (`kilo-expander`)
+- **Current Target**: `KChess`
+- **Upcoming Queue**: `KRogue`, `KColosseum`, `KPong`.
 
 ---
 
@@ -128,6 +134,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Imagen 3 Focus & Turn Skipping**: `kilo-graphics` replaces programmer art with Imagen 3 sprites/textures; skips cleanly for inappropriate targets.
 - **Virtual Net Expansion & Middle-Game Puzzle Gating**: Build out interactive Tier 3 web destinations (`darknet`, `classified`, `echo_subsystem`, `deep_core`) and seed ambient ARG breadcrumbs into surface sites.
 - **Daily Icon Audit**: Ensure 100% unique `.ico` files across all apps during planner runs.
+- **🎵 Procedural Audio Identity Initiative (DIRECTOR MANDATE)**: `kilo-soundscape` gives every game a unique FM synthesis audio identity. Replace all generic oscillator presets with real chiptune composition: melodic themes (Lead + Counter-melody + Bass counterpoint), proper chord progressions (Royal Road IV-V-iii-vi, Andalusian i-bVII-bVI-V, Mario cadence bVI-bVII-I), swing-tick groove, per-genre FM patch design, and SPC700-style echo. Web ring and all virtual web destinations must receive upgraded music as first priority — existing generic looping presets are explicitly **not good enough**. Every audio pass must audit and replace music that sounds robotic or uses default single-oscillator patterns.
 
 ---
 

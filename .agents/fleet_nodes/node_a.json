@@ -13,9 +13,9 @@
   "session_end": null,
   "session_limit_enabled": false,
   "timer_enabled": false,
-  "turns_executed": 171,
+  "turns_executed": 189,
   "last_turn_timestamp": "2026-09-28T18:42:51Z",
-  "last_heartbeat": "2026-10-12T23:14:16.765818+00:00",
-  "current_target": "KSubmarine",
+  "last_heartbeat": "2026-10-13T17:15:17.361491+00:00",
+  "current_target": "KBudget",
   "remote_command": "none"
 }
