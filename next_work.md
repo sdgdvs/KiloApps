@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-expander
-next_agent: kilo-creator
+current_agent: kilo-creator
+next_agent: kilo-graphics
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -19,7 +19,7 @@ current_targets:
   kilo_usability: KTrader
   kilo_qa: KPong
   kilo_soundscape: KStellar
-  kilo_expander: KColosseum
+  kilo_expander: KPong
 virtual_web_target: kweb://warez
 virtual_web_rotation:
 - kweb://deep-core
@@ -34,9 +34,9 @@ virtual_web_rotation:
 - kweb://10.19.99.4/classified
 - kweb://echo-subsystem.net
 last_run:
-  agent: kilo-qa
-  app: KRogue
-  timestamp: '2026-10-13T03:31:00Z'
+  agent: kilo-expander
+  app: KColosseum
+  timestamp: '2026-10-13T04:15:00Z'
 last_planner_run: '2026-10-12T17:31:38Z'
 ---
 
@@ -96,8 +96,8 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Upcoming Queue**: `KPong`, `KPac`, `KColony`, `KBreakout`.
 
 ### 6. Feature Expander Queue (`kilo-expander`)
-- **Current Target**: `KColosseum`
-- **Upcoming Queue**: `KPong`, `KRogue`, `KChess`.
+- **Current Target**: `KPong`
+- **Upcoming Queue**: `KRogue`, `KChess`, `KColosseum`.
 
 ---
 
@@ -114,6 +114,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 ---
 
 ## Recent Execution Logs (Max 5 Entries)
+
+- **2026-10-13T04:15:00Z — kilo-expander: KColosseum (Deep Feature Expansion)**
+  - Expanded Ludus infrastructure: Shrine of Mars & Bellona (divine death defiance) & Tabularium (tactical crits).
+  - Implemented Lanista Arena Wager engine, roster stat/health sorting, and Imperial Certificate export.
+  - Status: PASS ✅ (Vite build clean, size 264KB < 999KB).
+  - Queue: Advanced kilo-expander to KPong; handoff to kilo-creator.
 
 - **2026-10-13T03:31:00Z — kilo-qa: KRogue (Pass 5 QA & State Integrity Audit)**
   - Quicksave (F5) / Quickload (F9) slot persistence and beforeunload/visibility auto-save verified.

@@ -1244,13 +1244,88 @@
     }
 
 
-    // --- LUDUS FACILITIES EXPANSION ---
+    // --- LUDUS FACILITIES & INFRASTRUCTURE EXPANSION ---
     let ludusFacilities = {
       infirmary: 0,
       armory: 0,
       palaestra: 0,
-      banquet: 0
+      banquet: 0,
+      shrine: 0,
+      scriptorium: 0
     };
+
+    let currentArenaWager = 0;
+
+    function setArenaWager(amt) {
+      if (amt > 0 && funds < amt) {
+        showToast('⚠️ Insufficient Denarii to place this wager!', 'warning');
+        return;
+      }
+      currentArenaWager = amt;
+      ['btnWager0', 'btnWager25', 'btnWager50', 'btnWager100'].forEach(id => {
+        const b = document.getElementById(id);
+        if (b) b.style.background = '#4a1f00';
+      });
+      const activeBtn = document.getElementById(`btnWager${amt}`);
+      if (activeBtn) activeBtn.style.background = '#228b22';
+      const oddsEl = document.getElementById('wagerOddsDisplay');
+      if (oddsEl) oddsEl.innerText = amt > 0 ? `(Payout: ${getWagerMultiplier().toFixed(1)}x)` : '(No Bet)';
+      showToast(amt > 0 ? `💰 Wager set: ${amt} Denarii!` : '💰 Wager cleared.', 'info');
+    }
+
+    function getWagerMultiplier() {
+      const lvl = (typeof arenaLevel !== 'undefined') ? arenaLevel : 1;
+      return 1.8 + (lvl * 0.35);
+    }
+
+    function sortGladiators(mode) {
+      if (!owned || owned.length <= 1) {
+        showToast('Roster already ordered.', 'info');
+        return;
+      }
+      if (mode === 'stat') {
+        owned.sort((a, b) => (getEffStr(b) + getEffAgi(b) + getEffVit(b)) - (getEffStr(a) + getEffAgi(a) + getEffVit(a)));
+        showToast('⚡ Sorted roster by combined combat prowess!', 'info');
+      } else if (mode === 'hp') {
+        owned.sort((a, b) => (getEffVit(b) * 10 - b.damageTaken) - (getEffVit(a) * 10 - a.damageTaken));
+        showToast('❤️ Sorted roster by current health!', 'info');
+      }
+      saveGame();
+      updateUI();
+    }
+
+    function exportGladiatorCertificate(id) {
+      const g = owned.find(item => item.id === id);
+      if (!g) return;
+      const cert = [
+        "========================================",
+        "     IMPERIAL GLADIATOR DOSSIER         ",
+        "        ROMA - FLAVIAN ARCHIVE          ",
+        "========================================",
+        `Name: ${g.name}`,
+        `Title: ${g.desc}`,
+        `Strength: ${g.str} (Effective: ${getEffStr(g)})`,
+        `Agility:  ${g.agi} (Effective: ${getEffAgi(g)})`,
+        `Vitality: ${g.vit} (Effective: ${getEffVit(g)})`,
+        `Max Health: ${getEffVit(g) * 10} HP`,
+        `Current Damage: ${g.damageTaken || 0} HP`,
+        `Weapon: ${g.weapon === 1 ? 'Gladius' : g.weapon === 2 ? 'Trident' : g.weapon === 3 ? 'Twin Sica' : 'Bare Fists'}`,
+        `Armor:  ${g.armor === 1 ? 'Bronze Cuirass' : 'Unarmored'}`,
+        `Shield: ${g.shield === 1 ? 'Bronze Scutum' : 'None'}`,
+        `Tactic: ${(g.stance || 'balanced').toUpperCase()}`,
+        "========================================"
+      ].join("\n");
+
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(cert).then(() => {
+          showToast(`📜 Copied ${g.name}'s Imperial Certificate!`, 'success');
+        }).catch(() => {
+          prompt('Copy Imperial Certificate:', cert);
+        });
+      } else {
+        prompt('Copy Imperial Certificate:', cert);
+      }
+    }
 
     const FACILITY_DEFS = {
       infirmary: {
@@ -1284,6 +1359,22 @@
         costs: [100, 220, 450],
         desc: "Lavish banquets before arena games. Boosts starting Crowd Favor by +10% / +20% / +30% in all matches.",
         perk: lvl => lvl === 0 ? "0% starting favor" : `+${lvl * 10}% start crowd favor`
+      },
+      shrine: {
+        name: "Shrine of Mars & Bellona",
+        icon: "🏛️",
+        maxTier: 3,
+        costs: [150, 300, 600],
+        desc: "Consecrated temple to the god of war. Grants 12% / 24% / 36% chance for gladiators to survive fatal blows with 1 HP.",
+        perk: lvl => lvl === 0 ? "No blessing" : `${lvl * 12}% death defiance chance`
+      },
+      scriptorium: {
+        name: "Tabularium & Tactical Archives",
+        icon: "📜",
+        maxTier: 3,
+        costs: [120, 250, 500],
+        desc: "Tactical scrolls on beasts and champion techniques. Grants +8% / +16% / +24% critical strike chance.",
+        perk: lvl => lvl === 0 ? "Standard scouting" : `+${lvl * 8}% critical strike rate`
       }
     };
 
