@@ -255,8 +255,7 @@
             outline-offset: 1px;
         }
     </style>
-    <script src="../assets/js/retro_multiplayer.js">        updateAudioUI();
-    </script>
+    <script src="../assets/js/retro_multiplayer.js"></script>
 </head>
 <body>
     <div id="game-container">
@@ -328,6 +327,7 @@
                 <button class="btn-action btn-lead" onclick="openLeaderboard()">[T] Leaderboard</button>
                 <button class="btn-action" onclick="openKeybinds()">[K] Controls</button>
                 <button class="btn-action" style="border-color: #4299e1; background: #1a365d;" onclick="openHelp()">[H / F1] Help</button>
+                <button id="btn-save-slot" class="btn-action" style="border-color: #9f7aea; background: #322659; color: #d6bcfa;" onclick="cycleSaveSlot()" title="Click to cycle save slot (1, 2, 3)">[Slot 1]</button>
                 <button class="btn-action" onclick="saveGame()">[F5 / S] Save</button>
                 <button class="btn-action" onclick="loadGame()">[F9 / L] Load</button>
             </div>
@@ -3705,28 +3705,43 @@
             container.innerHTML = html;
         }
 
-        function saveGame() {
+        let currentSaveSlot = 1;
+        function cycleSaveSlot() {
+            currentSaveSlot = (currentSaveSlot % 3) + 1;
+            const btn = document.getElementById('btn-save-slot');
+            if (btn) btn.textContent = `[Slot ${currentSaveSlot}]`;
+            showToast(`Switched to Save Slot ${currentSaveSlot}`, 'info');
+        }
+
+        function saveGame(slot) {
             if (state !== 1) {
                 showToast("You can only save during an active run!", "warning");
                 return;
             }
+            const sIdx = slot || currentSaveSlot;
+            const saveKey = sIdx === 1 ? 'krogue_save' : `krogue_save_slot_${sIdx}`;
             try {
-                localStorage.setItem('krogue_save', JSON.stringify({ 
+                const data = { 
                     player, equipment, inventory, dlevel, total_kills, msgs,
                     map, monsters, items, traps, knownSpells, currentSeedVal, difficulty,
-                    pet, inVault, currentVault, savedFloorData
-                }));
-                addMsg("Run Saved to Storage!", 'good');
-                showToast("Run Saved to Storage!", 'success');
+                    pet, inVault, currentVault, savedFloorData,
+                    savedSlot: sIdx, savedAt: Date.now()
+                };
+                localStorage.setItem(saveKey, JSON.stringify(data));
+                if (sIdx === 1) localStorage.setItem('krogue_save_slot_1', JSON.stringify(data));
+                addMsg(`Run Saved to Slot ${sIdx}!`, 'good');
+                showToast(`Run Saved to Slot ${sIdx}!`, 'success');
             } catch(e) { 
                 addMsg("Failed to save run."); 
                 showToast("Failed to save: " + (e.name === 'QuotaExceededError' ? "Storage quota exceeded" : (e.message || "Unknown error")), 'error');
             }
         }
 
-        function loadGame() {
+        function loadGame(slot) {
+            const sIdx = slot || currentSaveSlot;
+            const saveKey = sIdx === 1 ? 'krogue_save' : `krogue_save_slot_${sIdx}`;
             try {
-                let s = localStorage.getItem('krogue_save');
+                let s = localStorage.getItem(saveKey) || (sIdx === 1 ? localStorage.getItem('krogue_save_slot_1') : null);
                 if (s) {
                     let d = JSON.parse(s);
                     if (tutorialTimeout) {
@@ -3761,11 +3776,11 @@
                     updateMsgBox();
                     updatePetHUD();
                     state = 1;
-                    addMsg("Run Resumed!", 'good');
-                    showToast("Run Resumed!", 'success');
+                    addMsg(`Run Resumed from Slot ${sIdx}!`, 'good');
+                    showToast(`Run Resumed from Slot ${sIdx}!`, 'success');
                 } else {
-                    addMsg("No saved run found.");
-                    showToast("No saved run found.", 'warning');
+                    addMsg(`No saved run found in Slot ${sIdx}.`);
+                    showToast(`No saved run found in Slot ${sIdx}.`, 'warning');
                 }
             } catch(e) { 
                 addMsg("Failed to load run."); 
