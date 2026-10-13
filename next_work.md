@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-creator
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -18,7 +18,7 @@ current_targets:
   kilo_soundscape: kweb://geocities
   kilo_tester: KMine
   kilo_usability: KCalc
-  kilo_qa: KBreakout
+  kilo_qa: KRogue
   kilo_expander: KVault
 virtual_web_target: kweb://asm-temple
 virtual_web_rotation:
@@ -34,9 +34,9 @@ virtual_web_rotation:
 - kweb://10.19.99.4/classified
 - kweb://echo-subsystem.net
 last_run:
-  agent: kilo-usability
-  app: KNote
-  timestamp: '2026-10-13T20:30:00Z'
+  agent: kilo-qa
+  app: KBreakout
+  timestamp: '2026-10-13T21:15:00Z'
 last_planner_run: '2026-10-13T18:15:00Z'
 ---
 
@@ -99,8 +99,8 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Upcoming Queue**: `KRogue`, `KSubmarine`, `KMail`, `KPad`, `KAudio`.
 
 ### 6. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
-- **Current Target**: `KBreakout`
-- **Upcoming Queue**: `KRogue`, `KSpace`, `KMaze`, `KAsteroids`, `KSnake`.
+- **Current Target**: `KRogue`
+- **Upcoming Queue**: `KSpace`, `KMaze`, `KAsteroids`, `KSnake`, `KBreakout`.
 
 ### 7. Feature Expander Queue (`kilo-expander`)
 - **Current Target**: `KVault`
@@ -122,6 +122,11 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 ---
 
 ## Recent Execution Logs (Max 5 Entries)
+
+- **2026-10-13T21:15:00Z — kilo-qa: KBreakout (Pass 5 QA & Build Quality Audit)**
+  - Audited state persistence (F5 quicksave/F9 quickload), tutorial flag integrity, and modal dialogs.
+  - Verified clean builds: Native Win32 (`build.bat` 0 errors, <999 KB) and Web Vite (`npm run build` 0 errors, <999 KB).
+  - Queue: Advanced kilo-qa to KRogue; handed off to kilo-expander.
 
 - **2026-10-13T20:30:00Z — kilo-usability: KNote (UI/UX & Ergonomics Audit)**
   - Audited responsive layout, window bounds (980x680), and keyboard accessibility (F1/H Help modal, shortcuts).
@@ -147,11 +152,4 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Verified full KNet, KBookmark, Portal, Webring, and Warez directory links and routing.
   - Build verified clean (`npm run build` 0 errors).
   - Advanced creator queue to `kweb://asm-temple`; handed off to `kilo-graphics`.
-
-- **2026-10-13T18:15:00Z — kilo-planner: fleet-wide (Daily 24h Fleet Planning, Queue Health & Log Compaction)**
-  - Status: PASS ✅ (Daily fleet audit, velocity evaluation & queue rework complete).
-  - Icon Uniqueness: Verified 105 apps in App.jsx, 105 unique .ico files, 0 duplicate hashes (check_icons.py 100% PASS).
-  - Queue Health & Rework: Replaced stale targets (KDoom -> KBreakout, KNotes -> KNote, KChess -> KVault); prioritized kweb soundscapes.
-  - Compaction & Archival: Executed zero-discard log rotation of older worker turns to archive/fleet_execution_archive.md.
-  - Timestamp & Rotation: Updated last_planner_run to 2026-10-13T18:15:00Z; rotated current_agent to kilo-creator.
 
