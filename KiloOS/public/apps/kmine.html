@@ -639,6 +639,139 @@
     </div>
   </div>
 </div>
+
+<!-- Multiplayer Duel Modal -->
+<div id="mpModal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="mpModalTitle" onclick="if(event.target===this) toggleMultiplayerModal(false)">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3 id="mpModalTitle">⚔️ Cyber Duel Arena</h3>
+      <button class="modal-close" aria-label="Close Multiplayer" onclick="toggleMultiplayerModal(false)">✕</button>
+    </div>
+    <div class="modal-body">
+      <div style="margin-bottom: 12px;">
+        <label style="display:block; font-size:12px; color:#8b949e; margin-bottom:4px;">Call-Sign / Player Name:</label>
+        <div style="display:flex; gap:6px;">
+          <input type="text" id="mpCallSign" maxlength="16" placeholder="Sweeper-99" style="flex:1; padding:6px 10px; background:#0d1117; border:1px solid #30363d; color:#f0f6fc; border-radius:6px; font-family:inherit; font-size:13px;">
+          <button type="button" class="btn-accent" onclick="saveMpCallSign()">Save</button>
+        </div>
+      </div>
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px; margin-bottom:12px;">
+        <button type="button" class="btn-accent" onclick="startQuickMatch()">⚡ Quick Match</button>
+        <button type="button" onclick="startCreateRoom()">🏠 Create Duel Room</button>
+      </div>
+      <div style="margin-bottom: 12px;">
+        <label style="display:block; font-size:12px; color:#8b949e; margin-bottom:4px;">Join by Room Code:</label>
+        <div style="display:flex; gap:6px;">
+          <input type="text" id="mpJoinCode" placeholder="MIN-XXXX" style="flex:1; padding:6px 10px; text-transform:uppercase; background:#0d1117; border:1px solid #30363d; color:#f0f6fc; border-radius:6px; font-family:monospace; font-size:13px;">
+          <button type="button" onclick="startJoinRoom()">Join Room</button>
+        </div>
+      </div>
+      <div style="margin-bottom: 8px;">
+        <button type="button" style="width:100%; border-color:#58a6ff; color:#58a6ff;" onclick="startCyberBotDuel()">🤖 Solo Duel vs CyberBot-99 (Offline AI)</button>
+      </div>
+      <div id="mpStatusSection" style="display:none; margin-top:12px; padding:10px; background:#0d1117; border:1px solid #21262d; border-radius:6px; text-align:center;">
+        <div style="font-size:11px; color:#8b949e; margin-bottom:2px;">ROOM CODE</div>
+        <div id="mpRoomCodeDisplay" style="font-size:18px; font-weight:700; color:#58a6ff; font-family:monospace; letter-spacing:1px; margin-bottom:4px;">---</div>
+        <div id="mpStatusMessage" style="font-size:12px; color:#c9d1d9; margin-bottom:6px;">Waiting for player...</div>
+        <div id="mpFallbackTimerDisplay" style="font-size:11px; color:#e3b341; margin-bottom:8px;"></div>
+        <div style="display:flex; gap:6px; justify-content:center;">
+          <button type="button" onclick="copyDuelInviteLink()" style="font-size:12px;">📋 Copy Link</button>
+          <button type="button" onclick="cancelMatchmaking()" style="font-size:12px; color:#f85149;">Cancel</button>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn-secondary" onclick="toggleMultiplayerModal(false)">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- Duel Invite Modal -->
+<div id="inviteModal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="inviteModalTitle">
+  <div class="modal-box" style="max-width:420px;">
+    <div class="modal-header">
+      <h3 id="inviteModalTitle">⚔️ Duel Challenge Received</h3>
+    </div>
+    <div class="modal-body" style="text-align:center;">
+      <p>You have been invited to a Minesweeper speed duel in room <strong id="inviteRoomDisplay" style="color:#58a6ff; font-family:monospace;">---</strong>!</p>
+      <div style="display:flex; gap:8px; justify-content:center; margin-top:16px;">
+        <button type="button" class="btn-accent" onclick="acceptInviteChallenge()">Accept & Connect</button>
+        <button type="button" class="btn-secondary" onclick="declineInviteChallenge()">Decline</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Custom Grid Configuration Modal -->
+<div id="customModal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="customModalTitle" onclick="if(event.target===this) toggleCustomModal(false)">
+  <div class="modal-box" style="max-width:480px;">
+    <div class="modal-header">
+      <h3 id="customModalTitle">⚙️ Custom Grid Configuration</h3>
+      <button class="modal-close" aria-label="Close Custom Modal" onclick="toggleCustomModal(false)">✕</button>
+    </div>
+    <div class="modal-body">
+      <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:10px; margin-bottom:12px;">
+        <div>
+          <label style="display:block; font-size:12px; color:#8b949e; margin-bottom:4px;">Columns (8-30):</label>
+          <input type="number" id="custCols" min="8" max="30" value="16" oninput="updateCustomDensity()" style="width:100%; padding:6px; background:#0d1117; border:1px solid #30363d; color:#f0f6fc; border-radius:6px; font-family:inherit;">
+        </div>
+        <div>
+          <label style="display:block; font-size:12px; color:#8b949e; margin-bottom:4px;">Rows (8-24):</label>
+          <input type="number" id="custRows" min="8" max="24" value="16" oninput="updateCustomDensity()" style="width:100%; padding:6px; background:#0d1117; border:1px solid #30363d; color:#f0f6fc; border-radius:6px; font-family:inherit;">
+        </div>
+        <div>
+          <label style="display:block; font-size:12px; color:#8b949e; margin-bottom:4px;">Mines:</label>
+          <input type="number" id="custMines" min="1" max="999" value="40" oninput="updateCustomDensity()" style="width:100%; padding:6px; background:#0d1117; border:1px solid #30363d; color:#f0f6fc; border-radius:6px; font-family:inherit;">
+        </div>
+      </div>
+      <div id="custDensityNote" style="font-size:12px; color:#79c0ff; font-family:monospace; margin-bottom:12px; text-align:center;">Grid: 16x16 (256 tiles) | Mines: 40 (15.6% density)</div>
+      <div style="font-size:11px; color:#8b949e; margin-bottom:6px;">QUICK PRESETS:</div>
+      <div style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:16px;">
+        <button type="button" onclick="setCustomPreset(9, 9, 10)">9x9 (10)</button>
+        <button type="button" onclick="setCustomPreset(16, 16, 40)">16x16 (40)</button>
+        <button type="button" onclick="setCustomPreset(30, 16, 99)">30x16 (99)</button>
+        <button type="button" onclick="setCustomPreset(24, 24, 120)">24x24 (120)</button>
+      </div>
+    </div>
+    <div class="modal-footer" style="gap:8px;">
+      <button type="button" class="btn-secondary" onclick="toggleCustomModal(false)">Cancel</button>
+      <button type="button" class="btn-accent" onclick="applyCustomGrid()">Apply & Start</button>
+    </div>
+  </div>
+</div>
+
+<!-- Deterministic Seed & Daily Challenge Modal -->
+<div id="seedModal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="seedModalTitle" onclick="if(event.target===this) toggleSeedModal(false)">
+  <div class="modal-box" style="max-width:480px;">
+    <div class="modal-header">
+      <h3 id="seedModalTitle">🌱 Seed & Daily Challenge Studio</h3>
+      <button class="modal-close" aria-label="Close Seed Modal" onclick="toggleSeedModal(false)">✕</button>
+    </div>
+    <div class="modal-body">
+      <div style="margin-bottom:12px;">
+        <label style="display:block; font-size:12px; color:#8b949e; margin-bottom:4px;">Custom Seed String or Code:</label>
+        <div style="display:flex; gap:6px;">
+          <input type="text" id="boardSeedInput" placeholder="e.g. SECTOR-1999" style="flex:1; padding:6px 10px; background:#0d1117; border:1px solid #30363d; color:#f0f6fc; border-radius:6px; font-family:monospace; font-size:13px;">
+          <button type="button" onclick="generateRandomSeedInput()">🎲 Random</button>
+        </div>
+      </div>
+      <div style="display:flex; gap:8px; margin-bottom:16px;">
+        <button type="button" class="btn-accent" style="flex:1;" onclick="applyDailyChallengeSeed()">📅 Play Today's Daily Challenge</button>
+      </div>
+      <div style="display:flex; justify-content:space-between; align-items:center; background:#0d1117; padding:8px 12px; border-radius:6px; border:1px solid #21262d;">
+        <span style="font-size:12px; color:#8b949e;">Current Seed Status:</span>
+        <span id="activeSeedBadge" style="font-size:12px; font-weight:700; color:#e3b341; font-family:monospace;">Random Unseeded Field</span>
+      </div>
+    </div>
+    <div class="modal-footer" style="gap:8px; justify-content:space-between;">
+      <button type="button" onclick="clearSeedAndPlay()" style="font-size:12px; color:#f85149; background:#21262d; border-color:#30363d;">Clear Seed</button>
+      <div style="display:flex; gap:6px;">
+        <button type="button" class="btn-secondary" onclick="toggleSeedModal(false)">Cancel</button>
+        <button type="button" class="btn-accent" onclick="applyEnteredSeed()">Apply Seed</button>
+      </div>
+    </div>
+  </div>
+</div>
 <script>
 // Sweeper Telemetry & Performance Analytics Engine
 window.kmineAnalytics = (function() {
