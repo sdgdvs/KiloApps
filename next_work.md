@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-soundscape
-next_agent: kilo-tester
+current_agent: kilo-tester
+next_agent: kilo-usability
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -15,7 +15,7 @@ status: ready
 current_targets:
   kilo_creator: kweb://asm-temple
   kilo_graphics: KSubmarine
-  kilo_soundscape: kweb://webring
+  kilo_soundscape: kweb://geocities
   kilo_tester: KPaint
   kilo_usability: KNote
   kilo_qa: KBreakout
@@ -34,9 +34,9 @@ virtual_web_rotation:
 - kweb://10.19.99.4/classified
 - kweb://echo-subsystem.net
 last_run:
-  agent: kilo-graphics
-  app: KMech
-  timestamp: '2026-10-13T19:15:00Z'
+  agent: kilo-soundscape
+  app: kweb://webring
+  timestamp: '2026-10-13T19:35:00Z'
 last_planner_run: '2026-10-13T18:15:00Z'
 ---
 
@@ -87,8 +87,8 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ### 3. Procedural Audio & Soundscape Queue (`kilo-soundscape`)
 - **Mission**: Give each game/app a unique YM2612 2-Op FM / SPC700 procedural audio identity. Compose genre-appropriate melodic themes with real chiptune techniques: shell voicings, contrary-motion counterpoint, Royal Road / Andalusian progressions, swing-tick groove, and per-genre FM patch design. Replace all generic oscillator presets. Skip cleanly for pure-utility/text targets (`⏭️ Skip — Procedural soundscape not appropriate for [app]`).
-- **Current Target**: `kweb://webring`
-- **Upcoming Queue** *(virtual KNet web first, then game apps)*: `kweb://geocities`, `kweb://portal`, `kweb://warez`, `kweb://cybercafe`, `kweb://darknet`, `kweb://asm-temple`, `kweb://echo-subsystem.net`, `kweb://deep-core`, `kweb://10.19.99.4/classified`, `KColosseum`, `KRogue`, `KSpace`, `KMine`, `KSubmarine`, `KFortress`, `KMaze`, `KAbyss`, `KStarForge`, `KPac`, `KAsteroids`, `KBreakout`, `KSnake`, `KPong`, `KWizard`, `KFarm`, `KDragon`, `KQuest`.
+- **Current Target**: `kweb://geocities`
+- **Upcoming Queue** *(virtual KNet web first, then game apps)*: `kweb://portal`, `kweb://warez`, `kweb://cybercafe`, `kweb://darknet`, `kweb://asm-temple`, `kweb://echo-subsystem.net`, `kweb://deep-core`, `kweb://10.19.99.4/classified`, `kweb://webring`, `KColosseum`, `KRogue`, `KSpace`, `KMine`, `KSubmarine`, `KFortress`, `KMaze`, `KAbyss`, `KStarForge`, `KPac`, `KAsteroids`, `KBreakout`, `KSnake`, `KPong`, `KWizard`, `KFarm`, `KDragon`, `KQuest`.
 
 ### 4. App Tester Queue (`kilo-tester`)
 - **Current Target**: `KPaint`
@@ -123,6 +123,13 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-13T19:35:00Z — kilo-soundscape: kweb://webring (YM2612 2-Op FM / SPC700 Procedural Audio Overhaul)**
+  - Composed 6-channel YM2612 FM chiptunes: Track 1 ("Hyperlink Voyager '99", Dorian cyber groove) & Track 2 ("Ringmaster's Cadence", Streets of Rage club groove).
+  - Implemented 3-voice counterpoint (Lead, Counter, Slap Bass), shell voicings, 16th crystal arps, 5:3 swing groove, and SPC700 slapback delay.
+  - Upgraded UI earcons/stingers (click, warp, badge, submit, stamp, pixel, pulse, hop, decrypt).
+  - Verified clean build (`npm run build` 0 errors, <999 KB).
+  - Queue: Advanced kilo-soundscape to `kweb://geocities`; handed off to `kilo-tester`.
+
 - **2026-10-13T19:15:00Z — kilo-graphics: KMech (Graphics Pass & Target Evaluation)**
   - ⏭️ Skip — Imagen 3 asset replacement not appropriate for KMech
   - Verified zero rotating specular glints or traveling perimeter border dots.
@@ -147,9 +154,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Hardened storage handlers (`safeGet`/`safeSet`) across all highscores and quicksaves.
   - Verified build (`npm run build` 0 errors).
   - Queue: Advanced kilo-qa to KBreakout; handoff to kilo-expander.
-
-- **2026-10-13T10:14:00Z — kilo-usability: KBudget (Usability & Layout Polish)**
-  - Added category click-filtering to transaction badges and pie chart legend items.
-  - Added clear search button affordance and accessible dialog roles across modals.
-  - Hardened storage handlers (`safeSet`), verified clean build (<999 KB).
-  - Queue: Advanced kilo-usability to KNote; handoff to kilo-qa.

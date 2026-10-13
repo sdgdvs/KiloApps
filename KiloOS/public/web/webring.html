@@ -3335,56 +3335,246 @@ function playFmTone(carrierFreq, modRatio, modIndex, duration, gainVal, useEcho 
   carrier.stop(now + duration);
 }
 
-// Procedural Sound Effects Suite
+// Procedural FM Voice Synthesizers & Patch Engine
+function playFmKick() {
+  if (!isAudioEnabled || !audioCtx) return;
+  const now = audioCtx.currentTime;
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.frequency.setValueAtTime(130, now);
+  osc.frequency.exponentialRampToValueAtTime(38, now + 0.06);
+  gain.gain.setValueAtTime(0.20, now);
+  gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+  osc.connect(gain);
+  gain.connect(audioCtx.destination);
+  osc.start(now);
+  osc.stop(now + 0.15);
+}
+
+function playFmSnare() {
+  if (!isAudioEnabled || !audioCtx) return;
+  const now = audioCtx.currentTime;
+  // Tone body
+  const bodyOsc = audioCtx.createOscillator();
+  const bodyGain = audioCtx.createGain();
+  bodyOsc.frequency.setValueAtTime(220, now);
+  bodyOsc.frequency.exponentialRampToValueAtTime(80, now + 0.08);
+  bodyGain.gain.setValueAtTime(0.12, now);
+  bodyGain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
+  bodyOsc.connect(bodyGain);
+  bodyGain.connect(audioCtx.destination);
+  bodyOsc.start(now);
+  bodyOsc.stop(now + 0.12);
+
+  // Inharmonic FM noise snap (modRatio 10.5, modIndex 7.0)
+  const carrier = audioCtx.createOscillator();
+  const mod = audioCtx.createOscillator();
+  const modGain = audioCtx.createGain();
+  const snapGain = audioCtx.createGain();
+  carrier.type = 'triangle';
+  carrier.frequency.setValueAtTime(320, now);
+  mod.frequency.setValueAtTime(320 * 10.5, now);
+  modGain.gain.setValueAtTime(320 * 10.5 * 7.0, now);
+  modGain.gain.exponentialRampToValueAtTime(0.1, now + 0.09);
+  mod.connect(modGain);
+  modGain.connect(carrier.frequency);
+  snapGain.gain.setValueAtTime(0.10, now);
+  snapGain.gain.exponentialRampToValueAtTime(0.001, now + 0.14);
+  carrier.connect(snapGain);
+  snapGain.connect(audioCtx.destination);
+  if (snesDelayNode) snapGain.connect(snesDelayNode);
+  mod.start(now); carrier.start(now);
+  mod.stop(now + 0.14); carrier.stop(now + 0.14);
+}
+
+function playFmHiHat(isOpen = false) {
+  if (!isAudioEnabled || !audioCtx) return;
+  const now = audioCtx.currentTime;
+  const dur = isOpen ? 0.18 : 0.038;
+  const carrier = audioCtx.createOscillator();
+  const mod = audioCtx.createOscillator();
+  const modGain = audioCtx.createGain();
+  const amp = audioCtx.createGain();
+  carrier.type = 'sine';
+  carrier.frequency.setValueAtTime(4400, now);
+  mod.frequency.setValueAtTime(4400 * 11.23, now);
+  modGain.gain.setValueAtTime(4400 * 6.0, now);
+  modGain.gain.exponentialRampToValueAtTime(1.0, now + dur);
+  mod.connect(modGain);
+  modGain.connect(carrier.frequency);
+  amp.gain.setValueAtTime(isOpen ? 0.07 : 0.045, now);
+  amp.gain.exponentialRampToValueAtTime(0.001, now + dur);
+  carrier.connect(amp);
+  amp.connect(audioCtx.destination);
+  mod.start(now); carrier.start(now);
+  mod.stop(now + dur); carrier.stop(now + dur);
+}
+
+function playFmSlapBass(freq, dur = 0.18) {
+  if (!isAudioEnabled || !audioCtx || freq <= 0) return;
+  const now = audioCtx.currentTime;
+  const carrier = audioCtx.createOscillator();
+  const mod = audioCtx.createOscillator();
+  const modGain = audioCtx.createGain();
+  const amp = audioCtx.createGain();
+  carrier.type = 'sine';
+  carrier.frequency.setValueAtTime(freq, now);
+  mod.frequency.setValueAtTime(freq * 2.0, now);
+  // Sharp transient mod index 3.6 drops rapidly to 0.12 in 35ms (dry slap bass)
+  modGain.gain.setValueAtTime(freq * 2.0 * 3.6, now);
+  modGain.gain.exponentialRampToValueAtTime(freq * 0.15, now + 0.035);
+  modGain.gain.exponentialRampToValueAtTime(0.01, now + dur);
+  mod.connect(modGain);
+  modGain.connect(carrier.frequency);
+  amp.gain.setValueAtTime(0.085, now);
+  amp.gain.exponentialRampToValueAtTime(0.001, now + dur);
+  carrier.connect(amp);
+  amp.connect(audioCtx.destination);
+  mod.start(now); carrier.start(now);
+  mod.stop(now + dur); carrier.stop(now + dur);
+}
+
+function playFmLead(freq, dur = 0.28, vol = 0.075, withVibrato = true) {
+  if (!isAudioEnabled || !audioCtx || freq <= 0) return;
+  const now = audioCtx.currentTime;
+  const carrier = audioCtx.createOscillator();
+  const mod = audioCtx.createOscillator();
+  const modGain = audioCtx.createGain();
+  const amp = audioCtx.createGain();
+  carrier.type = 'sine';
+  carrier.frequency.setValueAtTime(freq, now);
+  mod.frequency.setValueAtTime(freq * 1.0, now);
+  modGain.gain.setValueAtTime(freq * 2.4, now);
+  modGain.gain.exponentialRampToValueAtTime(freq * 0.35, now + 0.08);
+  modGain.gain.exponentialRampToValueAtTime(0.01, now + dur);
+  mod.connect(modGain);
+  modGain.connect(carrier.frequency);
+
+  // Delayed vibrato (ramps in after 100ms)
+  if (withVibrato && dur > 0.15) {
+    const lfo = audioCtx.createOscillator();
+    const lfoGain = audioCtx.createGain();
+    lfo.frequency.setValueAtTime(5.5, now);
+    lfoGain.gain.setValueAtTime(0.0, now);
+    lfoGain.gain.setValueAtTime(0.0, now + 0.10);
+    lfoGain.gain.linearRampToValueAtTime(5.5, now + 0.22);
+    lfo.connect(lfoGain);
+    lfoGain.connect(carrier.frequency);
+    lfo.start(now);
+    lfo.stop(now + dur);
+  }
+
+  amp.gain.setValueAtTime(vol, now);
+  amp.gain.exponentialRampToValueAtTime(0.0005, now + dur);
+  carrier.connect(amp);
+  amp.connect(audioCtx.destination);
+  if (snesDelayNode) amp.connect(snesDelayNode);
+  mod.start(now); carrier.start(now);
+  mod.stop(now + dur); carrier.stop(now + dur);
+}
+
+function playFmCounter(freq, dur = 0.22, vol = 0.055) {
+  if (!isAudioEnabled || !audioCtx || freq <= 0) return;
+  const now = audioCtx.currentTime;
+  const carrier = audioCtx.createOscillator();
+  const mod = audioCtx.createOscillator();
+  const modGain = audioCtx.createGain();
+  const amp = audioCtx.createGain();
+  carrier.type = 'sine';
+  carrier.frequency.setValueAtTime(freq, now);
+  mod.frequency.setValueAtTime(freq * 1.0, now);
+  modGain.gain.setValueAtTime(freq * 0.85, now);
+  modGain.gain.exponentialRampToValueAtTime(freq * 0.10, now + 0.06);
+  modGain.gain.exponentialRampToValueAtTime(0.01, now + dur);
+  mod.connect(modGain);
+  modGain.connect(carrier.frequency);
+  amp.gain.setValueAtTime(vol, now);
+  amp.gain.exponentialRampToValueAtTime(0.0005, now + dur);
+  carrier.connect(amp);
+  amp.connect(audioCtx.destination);
+  if (snesDelayNode) amp.connect(snesDelayNode);
+  mod.start(now); carrier.start(now);
+  mod.stop(now + dur); carrier.stop(now + dur);
+}
+
+function playFmChime(freq, dur = 0.16, vol = 0.045) {
+  if (!isAudioEnabled || !audioCtx || freq <= 0) return;
+  const now = audioCtx.currentTime;
+  const carrier = audioCtx.createOscillator();
+  const mod = audioCtx.createOscillator();
+  const modGain = audioCtx.createGain();
+  const amp = audioCtx.createGain();
+  carrier.type = 'sine';
+  carrier.frequency.setValueAtTime(freq, now);
+  mod.frequency.setValueAtTime(freq * 3.5, now);
+  modGain.gain.setValueAtTime(freq * 3.5 * 3.8, now);
+  modGain.gain.exponentialRampToValueAtTime(0.01, now + dur);
+  mod.connect(modGain);
+  modGain.connect(carrier.frequency);
+  amp.gain.setValueAtTime(vol, now);
+  amp.gain.exponentialRampToValueAtTime(0.0001, now + dur);
+  carrier.connect(amp);
+  amp.connect(audioCtx.destination);
+  if (snesDelayNode) amp.connect(snesDelayNode);
+  mod.start(now); carrier.start(now);
+  mod.stop(now + dur); carrier.stop(now + dur);
+}
+
+// Procedural Sound Effects & UI Earcons Suite
 function playSfx(type) {
   if (!isAudioEnabled || !audioCtx) return;
 
   if (type === 'click') {
-    playFmTone(600, 2.0, 1.2, 0.04, 0.08, false);
+    playFmTone(1200, 2.0, 1.0, 0.025, 0.06, false);
   } else if (type === 'warp') {
-    // FM frequency sweep upward
     const now = audioCtx.currentTime;
     const osc = audioCtx.createOscillator();
     const gain = audioCtx.createGain();
     osc.type = "sawtooth";
-    osc.frequency.setValueAtTime(160, now);
-    osc.frequency.exponentialRampToValueAtTime(1440, now + 0.35);
+    osc.frequency.setValueAtTime(140, now);
+    osc.frequency.exponentialRampToValueAtTime(1520, now + 0.32);
     gain.gain.setValueAtTime(0.12, now);
-    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.38);
     osc.connect(gain);
     gain.connect(audioCtx.destination);
     if (snesDelayNode) gain.connect(snesDelayNode);
     osc.start(now);
-    osc.stop(now + 0.4);
+    osc.stop(now + 0.38);
+    setTimeout(() => playFmChime(1760, 0.32, 0.10), 120);
   } else if (type === 'ping') {
-    playFmTone(880, 1.5, 2.0, 0.18, 0.12, true);
-    setTimeout(() => playFmTone(1760, 1.0, 1.5, 0.22, 0.10, true), 70);
+    playFmChime(1046.50, 0.22, 0.10);
+    setTimeout(() => playFmChime(1567.98, 0.28, 0.08), 70);
   } else if (type === 'badge') {
-    // 3-note ascending chime
-    playFmTone(523.25, 1.0, 1.5, 0.12, 0.10, true);
-    setTimeout(() => playFmTone(659.25, 1.0, 1.5, 0.12, 0.10, true), 80);
-    setTimeout(() => playFmTone(783.99, 1.0, 1.5, 0.25, 0.12, true), 160);
+    // Shell voicing chime: Root (523.25) -> 3rd (659.25) -> 7th (987.77)
+    playFmChime(523.25, 0.14, 0.09);
+    setTimeout(() => playFmChime(659.25, 0.14, 0.09), 65);
+    setTimeout(() => playFmChime(987.77, 0.32, 0.11), 130);
   } else if (type === 'submit') {
-    playFmTone(440, 2.0, 2.5, 0.15, 0.12, true);
-    setTimeout(() => playFmTone(554.37, 2.0, 2.5, 0.15, 0.12, true), 90);
-    setTimeout(() => playFmTone(659.25, 2.0, 2.5, 0.35, 0.14, true), 180);
+    // Mario / heroic cadence chord stab: Ab4 -> Bb4 -> C5
+    playFmTone(415.30, 1.0, 2.0, 0.12, 0.09, false);
+    setTimeout(() => playFmTone(466.16, 1.0, 2.0, 0.12, 0.10, false), 70);
+    setTimeout(() => {
+      playFmLead(523.25, 0.35, 0.12, true);
+      playFmSlapBass(130.81, 0.35);
+    }, 140);
   } else if (type === 'stamp') {
-    playFmTone(180, 0.5, 3.0, 0.15, 0.16, false);
+    playFmKick();
   } else if (type === 'pixel') {
-    playFmTone(1200, 3.0, 0.8, 0.03, 0.06, false);
+    playFmChime(2637.02, 0.08, 0.08);
   } else if (type === 'pulse') {
-    playFmTone(587.33, 1.5, 2.2, 0.25, 0.14, true);
+    playFmLead(587.33, 0.24, 0.10, true);
   } else if (type === 'traceroute') {
-    playFmTone(640 + Math.random() * 260, 2.0, 1.0, 0.06, 0.08, false);
+    playFmChime(659.25 + (Math.random() * 400), 0.05, 0.07);
   } else if (type === 'hop') {
-    playFmTone(783.99, 1.0, 1.8, 0.12, 0.12, true);
-    setTimeout(() => playFmTone(1046.50, 1.0, 1.4, 0.22, 0.10, true), 80);
+    playFmChime(587.33, 0.10, 0.09);
+    setTimeout(() => playFmChime(880.00, 0.12, 0.09), 60);
+    setTimeout(() => playFmChime(1174.66, 0.25, 0.10), 120);
   } else if (type === 'dialup') {
     playDialupSound();
   } else if (type === 'decrypt') {
-    playFmTone(1999, 2.0, 2.5, 0.10, 0.15, true);
-    setTimeout(() => playFmTone(1499, 1.5, 2.0, 0.08, 0.12, false), 50);
-    setTimeout(() => playFmTone(2398, 2.5, 3.0, 0.14, 0.12, true), 100);
+    playFmChime(1999, 0.08, 0.12);
+    setTimeout(() => playFmTone(1499, 3.5, 3.0, 0.09, 0.10, false), 50);
+    setTimeout(() => playFmChime(2398, 0.22, 0.12), 100);
   }
 }
 
@@ -3447,15 +3637,72 @@ function playDialupSound() {
   } catch (e) {}
 }
 
-// Procedural Background Chiptunes
+// Procedural 6-Channel FM Chiptune Score Architecture
 let currentBgmTrack = 1;
-// Track 1: "Hyperlink Voyager '99"
-const BGM1_BASS_LINE = [110, 110, 130.81, 110, 146.83, 110, 164.81, 146.83];
-const BGM1_BELL_LINE = [440, 0, 523.25, 659.25, 0, 587.33, 523.25, 0];
 
-// Track 2: "Ringmaster's Cadence"
-const BGM2_BASS_LINE = [98.0, 98.0, 123.47, 98.0, 130.81, 123.47, 146.83, 98.0];
-const BGM2_BELL_LINE = [392.0, 493.88, 587.33, 739.99, 587.33, 493.88, 392.0, 587.33];
+// ---------------------------------------------------------------------------
+// TRACK 1: "Hyperlink Voyager '99" (Dorian cyber groove, 134 BPM, 5:3 swing)
+// Dm9 -> G13 -> Cmaj9 -> Am9 / Bbmaj7
+// ---------------------------------------------------------------------------
+const T1_LEAD = [
+  440.00,  0, 523.25,  0, 587.33,  0, 659.25,  0, // Bar 1 (A4 -> C5 -> D5 -> E5)
+  783.99,  0, 659.25,  0, 587.33,  0, 523.25,  0, // Bar 2 (G5 -> E5 -> D5 -> C5)
+       0,  0,      0,  0,      0,  0, 493.88,  0, // Bar 3 (Rest -> B4 call-response)
+  523.25,  0, 587.33,  0, 440.00,  0,      0,  0  // Bar 4 (C5 -> D5 -> A4 -> Rest)
+];
+
+const T1_COUNTER = [
+  349.23,  0,      0,  0, 329.63,  0,      0,  0, // Contrary downward (F4, E4)
+  293.66,  0,      0,  0, 261.63,  0,      0,  0, // Downward (D4, C4)
+  659.25,  0, 783.99,  0, 880.00,  0,      0,  0, // High solo during Lead rest
+  349.23,  0,      0,  0, 329.63,  0,      0,  0  // Resolve downward (F4, E4)
+];
+
+const T1_ARP = [
+       0, 440.00,      0, 523.25,      0, 659.25,      0, 783.99,
+       0, 493.88,      0, 587.33,      0, 659.25,      0, 880.00,
+       0, 523.25,      0, 659.25,      0, 783.99,      0, 987.77,
+       0, 587.33,      0, 698.46,      0, 880.00,      0, 1046.50
+];
+
+const T1_BASS = [
+   73.42,  0,  73.42,  0, 146.83,  0, 130.81,  0, // D2, D2, D3, C3
+   98.00,  0,  98.00,  0,  87.31,  0,  98.00,  0, // G2, G2, F2, G2
+   65.41,  0, 130.81,  0, 146.83,  0, 164.81,  0, // C2, C3, D3, E3
+  110.00,  0, 116.54,  0, 130.81,  0, 110.00,  0  // A2, Bb2, C3, A2
+];
+
+// ---------------------------------------------------------------------------
+// TRACK 2: "Ringmaster's Cadence" (Streets of Rage / Yuzo Koshiro 1999 Club)
+// Gm -> Ebmaj7 -> F -> D7/F#
+// ---------------------------------------------------------------------------
+const T2_LEAD = [
+  392.00,      0,      0, 466.16, 587.33,      0, 523.25,      0, // G4, Bb4, D5, C5
+  466.16,      0,      0, 587.33, 783.99,      0, 698.46,      0, // Bb4, D5, G5, F5
+  523.25,      0, 587.33,      0, 622.25,      0, 587.33,      0, // C5, D5, Eb5, D5
+  523.25,      0, 440.00,      0, 369.99,      0,      0,      0  // C5, A4, F#4, rest
+];
+
+const T2_COUNTER = [
+  587.33,  0,      0,  0, 523.25,  0,      0,  0, // D5 -> C5
+  392.00,  0,      0,  0, 349.23,  0,      0,  0, // G4 -> F4
+  440.00,  0,      0,  0, 466.16,  0,      0,  0, // A4 -> Bb4
+  293.66,  0,      0,  0, 587.33,  0,      0,  0  // D4 -> D5
+];
+
+const T2_ARP = [
+       0, 783.99,      0, 932.33,      0, 1174.66,     0, 783.99,
+       0, 622.25,      0, 783.99,      0, 932.33,      0, 1174.66,
+       0, 698.46,      0, 880.00,      0, 1046.50,     0, 698.46,
+       0, 739.99,      0, 880.00,      0, 1108.73,     0, 1479.98
+];
+
+const T2_BASS = [
+   98.00,  98.00, 196.00,      0, 174.61,      0,  98.00,      0, // G2, G2, G3, F3, G2
+   77.78,  77.78, 155.56,      0, 146.83,      0,  77.78,      0, // Eb2, Eb2, Eb3, D3, Eb2
+   87.31,  87.31, 174.61,      0, 155.56,      0,  87.31,      0, // F2, F2, F3, Eb3, F2
+   73.42,  92.50, 110.00,      0, 130.81,      0, 146.83,      0  // D2, F#2, A2, C3, D3
+];
 
 function toggleBgmTrack() {
   currentBgmTrack = currentBgmTrack === 1 ? 2 : 1;
@@ -3469,35 +3716,85 @@ function toggleBgmTrack() {
   showNoticeToast(`Soundtrack switched to Track ${currentBgmTrack}: ${currentBgmTrack === 1 ? "Hyperlink Voyager '99" : "Ringmaster's Cadence"}`);
 }
 
+function playBgmStep(stepIdx) {
+  if (!isAudioEnabled || !audioCtx) return;
+  const idx = stepIdx % 32;
+
+  const leadArr = currentBgmTrack === 1 ? T1_LEAD : T2_LEAD;
+  const counterArr = currentBgmTrack === 1 ? T1_COUNTER : T2_COUNTER;
+  const arpArr = currentBgmTrack === 1 ? T1_ARP : T2_ARP;
+  const bassArr = currentBgmTrack === 1 ? T1_BASS : T2_BASS;
+
+  // Ch1: Lead Melody (vocal phrasing + delayed vibrato)
+  const leadFreq = leadArr[idx];
+  if (leadFreq > 0) {
+    playFmLead(leadFreq, 0.26, 0.075, true);
+  }
+
+  // Ch2: Counter-melody (contrary motion / response)
+  const counterFreq = counterArr[idx];
+  if (counterFreq > 0) {
+    playFmCounter(counterFreq, 0.22, 0.055);
+  }
+
+  // Ch3: Harmony Arpeggio (rapid 16th crystal runs)
+  const arpFreq = arpArr[idx];
+  if (arpFreq > 0) {
+    playFmChime(arpFreq, 0.12, 0.040);
+  }
+
+  // Ch4: Bass (active slap bass counterpoint)
+  const bassFreq = bassArr[idx];
+  if (bassFreq > 0) {
+    playFmSlapBass(bassFreq, 0.18);
+  }
+
+  // Ch5: FM Percussion (Kick + Snare)
+  // Kick: beats 0, 6, 8, 14, 16, 22, 24
+  if (idx === 0 || idx === 6 || idx === 8 || idx === 14 || idx === 16 || idx === 22 || idx === 24) {
+    playFmKick();
+  }
+  // Snare: beats 4, 12, 20, 28 (plus ghost snare on beat 26 of track 1)
+  if (idx === 4 || idx === 12 || idx === 20 || idx === 28) {
+    playFmSnare();
+  } else if (currentBgmTrack === 1 && idx === 26) {
+    playFmSnare();
+  }
+
+  // Ch6: Inharmonic FM Hi-Hats with swing groove
+  if (idx % 2 === 0) {
+    const isOpen = (idx === 14 || idx === 30);
+    playFmHiHat(isOpen);
+  } else if (Math.random() > 0.40) {
+    playFmHiHat(false);
+  }
+}
+
+function scheduleBgmStep() {
+  if (!isAudioEnabled || !isBgmPlaying) return;
+  playBgmStep(bgmStep);
+  bgmStep++;
+
+  // Subtle 5:3 swing groove (even 175ms, odd 105ms at ~134 BPM)
+  const isEven = (bgmStep % 2 === 0);
+  const nextDelay = currentBgmTrack === 1 
+    ? (isEven ? 175 : 105)
+    : (isEven ? 170 : 100);
+
+  bgmTimer = setTimeout(scheduleBgmStep, nextDelay);
+}
+
 function startProceduralBgm() {
   if (isBgmPlaying || !isAudioEnabled) return;
   isBgmPlaying = true;
   bgmStep = 0;
-
-  bgmTimer = setInterval(() => {
-    if (!isAudioEnabled) return;
-    const bassArr = currentBgmTrack === 1 ? BGM1_BASS_LINE : BGM2_BASS_LINE;
-    const bellArr = currentBgmTrack === 1 ? BGM1_BELL_LINE : BGM2_BELL_LINE;
-
-    const bassFreq = bassArr[bgmStep % bassArr.length];
-    const bellFreq = bellArr[bgmStep % bellArr.length];
-
-    if (bassFreq > 0) {
-      // FM Slap Bass (2:1 ratio, punchy decay)
-      playFmTone(bassFreq, 2.0, 3.2, 0.18, 0.07, false);
-    }
-    if (bellFreq > 0 && Math.random() > 0.25) {
-      // FM Bright Chime (1:1 ratio, SPC700 echo)
-      playFmTone(bellFreq, 1.0, 1.5, 0.22, 0.05, true);
-    }
-
-    bgmStep++;
-  }, 220); // ~136 BPM sixteenth pulse
+  scheduleBgmStep();
 }
 
 function stopProceduralBgm() {
   isBgmPlaying = false;
   if (bgmTimer) {
+    clearTimeout(bgmTimer);
     clearInterval(bgmTimer);
     bgmTimer = null;
   }
