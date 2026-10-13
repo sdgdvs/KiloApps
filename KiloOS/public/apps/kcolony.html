@@ -504,7 +504,13 @@
 
         function quickLoad() {
             initAudio();
-            const raw = localStorage.getItem('kcolony_quicksave');
+            let raw = null;
+            try {
+                raw = localStorage.getItem('kcolony_quicksave');
+            } catch (e) {
+                showToast("Load Error", "Unable to access local storage: " + e.message, "danger", 3000);
+                return;
+            }
             if (!raw) {
                 showToast("No Save Found", "No quicksave data found in storage. Press [Save F5] first.", "warning", 3000);
                 return;
@@ -559,7 +565,13 @@
         }
 
         function exportSave() {
-            const raw = localStorage.getItem('kcolony_quicksave');
+            let raw = null;
+            try {
+                raw = localStorage.getItem('kcolony_quicksave');
+            } catch (e) {
+                showToast("Export Failed", "Unable to access local storage: " + e.message, "danger", 3000);
+                return;
+            }
             if (!raw) {
                 showToast("No Save Data", "Create a colony quicksave [F5] before exporting.", "warning", 3000);
                 return;
