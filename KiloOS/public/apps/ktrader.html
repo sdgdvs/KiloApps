@@ -1584,6 +1584,7 @@
         const tdAction = document.createElement('td');
         const buyBtn = document.createElement('button');
         buyBtn.textContent = 'Buy';
+        buyBtn.title = `Buy 1 ${good} (${price} cr)`;
         buyBtn.style.padding = '2px 5px';
         buyBtn.style.margin = '2px';
         buyBtn.disabled = state.credits < price || state.cargo >= state.maxCargo;
@@ -1591,13 +1592,23 @@
         
         const sellBtn = document.createElement('button');
         sellBtn.textContent = 'Sell';
+        sellBtn.title = `Sell 1 ${good} (${price} cr)`;
         sellBtn.style.padding = '2px 5px';
         sellBtn.style.margin = '2px';
         sellBtn.disabled = owned <= 0;
         sellBtn.onclick = () => sellGood(good, price);
 
+        const sellAllBtn = document.createElement('button');
+        sellAllBtn.textContent = 'Sell All';
+        sellAllBtn.title = `Sell all ${owned} ${good} (${price * owned} cr)`;
+        sellAllBtn.style.padding = '2px 5px';
+        sellAllBtn.style.margin = '2px';
+        sellAllBtn.disabled = owned <= 0;
+        sellAllBtn.onclick = () => sellAllGood(good, price);
+
         tdAction.appendChild(buyBtn);
         tdAction.appendChild(sellBtn);
+        tdAction.appendChild(sellAllBtn);
         tr.appendChild(tdAction);
 
         marketBody.appendChild(tr);
@@ -1723,6 +1734,7 @@
     
     function abandonMission() {
         if (state.activeMission) {
+            if (!confirm(`Abandon mission: ${state.activeMission.desc}?`)) return;
             state.activeMission = null;
             log(`Mission abandoned.`);
             playSound('fail');
@@ -1751,6 +1763,20 @@
         state.cargo = Object.values(state.inventory).reduce((a, b) => a + b, 0);
         state.repTraders++;
         log(`Sold 1 ${good} for ${price} cr.`);
+        playSound('chime');
+        saveGame();
+        updateUI();
+      }
+    }
+
+    function sellAllGood(good, price) {
+      const count = state.inventory[good] || 0;
+      if (count > 0) {
+        state.credits += price * count;
+        state.inventory[good] = 0;
+        state.cargo = Object.values(state.inventory).reduce((a, b) => a + b, 0);
+        state.repTraders += count;
+        log(`Sold all ${count} ${good} for ${price * count} cr.`);
         playSound('chime');
         saveGame();
         updateUI();
