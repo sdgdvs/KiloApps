@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-qa
+current_agent: kilo-qa
+next_agent: kilo-expander
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -16,7 +16,7 @@ current_targets:
   kilo_creator: kweb://warez
   kilo_graphics: KStellar
   kilo_tester: KChart
-  kilo_usability: KSubmarine
+  kilo_usability: KTrader
   kilo_qa: KRogue
   kilo_soundscape: KStellar
   kilo_expander: KColosseum
@@ -34,9 +34,9 @@ virtual_web_rotation:
 - kweb://10.19.99.4/classified
 - kweb://echo-subsystem.net
 last_run:
-  agent: kilo-tester
-  app: KCalendar
-  timestamp: '2026-10-13T02:31:00Z'
+  agent: kilo-usability
+  app: KSubmarine
+  timestamp: '2026-10-13T03:13:00Z'
 last_planner_run: '2026-10-12T17:31:38Z'
 ---
 
@@ -88,8 +88,8 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Upcoming Queue**: `KChat`, `KMine`, `KSanctuary`, `KAudio`, `KSubmarine`, `KTrader`, `KVault`, `KCalendar`.
 
 ### 4. Usability & UX Queue (`kilo-usability`)
-- **Current Target**: `KSubmarine`
-- **Upcoming Queue**: `KTrader`, `KBudget`, `KRogue`.
+- **Current Target**: `KTrader`
+- **Upcoming Queue**: `KBudget`, `KRogue`, `KSubmarine`.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
 - **Current Target**: `KRogue`
