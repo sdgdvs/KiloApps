@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-graphics
-next_agent: kilo-soundscape
+current_agent: kilo-soundscape
+next_agent: kilo-tester
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -14,7 +14,7 @@ timeout_minutes: 6
 status: ready
 current_targets:
   kilo_creator: kweb://asm-temple
-  kilo_graphics: KMech
+  kilo_graphics: KSubmarine
   kilo_soundscape: kweb://webring
   kilo_tester: KPaint
   kilo_usability: KNote
@@ -34,9 +34,9 @@ virtual_web_rotation:
 - kweb://10.19.99.4/classified
 - kweb://echo-subsystem.net
 last_run:
-  agent: kilo-creator
-  app: kweb://users/~neon_rider
-  timestamp: '2026-10-13T18:31:00Z'
+  agent: kilo-graphics
+  app: KMech
+  timestamp: '2026-10-13T19:15:00Z'
 last_planner_run: '2026-10-13T18:15:00Z'
 ---
 
@@ -82,8 +82,8 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
 - **Mission**: Replace programmer art with Imagen 3 assets. Skip immediately if vector/board/mature.
-- **Current Target**: `KMech`
-- **Upcoming Queue**: `KSubmarine`, `KAbyss`, `KStarForge`, `KSpace`.
+- **Current Target**: `KSubmarine`
+- **Upcoming Queue**: `KAbyss`, `KStarForge`, `KSpace`, `KMech`.
 
 ### 3. Procedural Audio & Soundscape Queue (`kilo-soundscape`)
 - **Mission**: Give each game/app a unique YM2612 2-Op FM / SPC700 procedural audio identity. Compose genre-appropriate melodic themes with real chiptune techniques: shell voicings, contrary-motion counterpoint, Royal Road / Andalusian progressions, swing-tick groove, and per-genre FM patch design. Replace all generic oscillator presets. Skip cleanly for pure-utility/text targets (`⏭️ Skip — Procedural soundscape not appropriate for [app]`).
@@ -123,6 +123,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-13T19:15:00Z — kilo-graphics: KMech (Graphics Pass & Target Evaluation)**
+  - ⏭️ Skip — Imagen 3 asset replacement not appropriate for KMech
+  - Verified zero rotating specular glints or traveling perimeter border dots.
+  - Build verified clean (npm run build 0 errors, <999 KB).
+  - Advanced graphics queue to KSubmarine; handed off to kilo-soundscape.
+
 - **2026-10-13T18:31:00Z — kilo-creator: kweb://users/~neon_rider (Virtual 1999 Web Destination Audit & Expansion)**
   - Audited and verified `kweb://users/~neon_rider` (<999KB, 250KB, interactive x86 playground, opcode matrix, YM2612 tracker, Mode 13h demoscene canvas).
   - Verified full KNet, KBookmark, Portal, Webring, and Warez directory links and routing.
@@ -147,9 +153,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Added clear search button affordance and accessible dialog roles across modals.
   - Hardened storage handlers (`safeSet`), verified clean build (<999 KB).
   - Queue: Advanced kilo-usability to KNote; handoff to kilo-qa.
-
-- **2026-10-13T09:33:00Z — kilo-tester: KChat (Pass 5 UI Audit)**
-  - Fixed safe storage handlers (safeGet/safeSet) and pinned filter UI sync.
-  - Added keyboard delegation for channel pills and interactive poll options.
-  - Verified build and quicksave/quickload integrity.
-  - Queue: Advanced kilo-tester to KPaint; handoff to kilo-usability.
