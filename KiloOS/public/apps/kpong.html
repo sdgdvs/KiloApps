@@ -218,6 +218,7 @@
       <button class="btn-sm" onclick="openStatsModal()" id="btn-stats" title="View Statistics & Leaderboard (L)">🏆 Stats [L]</button>
       <button class="btn-sm" onclick="saveGameState()" id="btn-save" title="Save Game State (F5)">💾 Save [F5]</button>
       <button class="btn-sm" onclick="loadGameState()" id="btn-load" title="Load Game State (F9)">📂 Load [F9]</button>
+      <button class="btn-sm" onclick="openModifiersModal()" id="btn-modifiers" title="Match Physics & Modifiers Lab [J]">⚙️ Modifiers [J]</button>
       <button class="btn-sm" onclick="openHelpModal()" id="btn-help" title="Help & Instructions (F1 or H)">❓ Help [F1/H]</button>
     </div>
   </div>
@@ -270,6 +271,7 @@
       <tr><th>P2 Controls</th><td>Customizable [K] (Default: Up/Down in 2P PvP)</td></tr>
       <tr><th>Online Match</th><td>[O] Online Net-Arena | Quick Match, Host & Codes</td></tr>
       <tr><th>Skills</th><td>[F] Slow-Mo | [E] Mega Paddle | [B] Fireball</td></tr>
+      <tr><th>Modifiers Lab</th><td>[J] Physics Lab | Speed Scale, Magnus Spin Curve, Guides, Presets</td></tr>
       <tr><th>Controls Setup</th><td>[K] Custom Key Rebinding for all moves & skills</td></tr>
       <tr><th>System</th><td>[Space] Pause | [M] Mode | [1-3] Diff | [V] PvP | [T] Theme | [U] Sound</td></tr>
       <tr><th>Help & Guide</th><td>[F1], [H], or [?] to open Help at any time</td></tr>
@@ -348,6 +350,83 @@
     <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 14px;">
       <button class="btn-sm" onclick="resetKeybindsToDefaults()" style="color: #ffaa55;">Reset Defaults</button>
       <button class="btn-sm modal-close btn-close" id="btn-close-keys" onclick="closeKeybindsModal()">Done [Esc]</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modifiers & Physics Lab Modal -->
+<div class="modal-overlay" id="modifiersModal" role="dialog" aria-modal="true" aria-labelledby="modifiersTitle">
+  <div class="modal" style="max-width: 480px;">
+    <h2 id="modifiersTitle">⚙️ Match Modifiers & Physics Lab</h2>
+    <p style="font-size: 12px; color: #a0c0d8; margin: 4px 0 12px 0;">Tune ball dynamics, aerodynamics spin, visual guides, and paddle handicaps.</p>
+
+    <div style="display: flex; flex-direction: column; gap: 10px; font-size: 12px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.04); padding: 6px 10px; border-radius: 6px;">
+        <span>⚡ Ball Speed Multiplier:</span>
+        <select id="mod-speed" style="background:#111; color:#fff; border:1px solid var(--primary); border-radius:4px; padding:3px 8px; font-size:12px;" onchange="updateModifierSetting('speedMult', parseFloat(this.value))">
+          <option value="0.75">0.75x (Chill)</option>
+          <option value="1.0" selected>1.0x (Standard)</option>
+          <option value="1.25">1.25x (Turbo)</option>
+          <option value="1.5">1.5x (Hyper)</option>
+        </select>
+      </div>
+
+      <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.04); padding: 6px 10px; border-radius: 6px;">
+        <span>🌪️ Magnus Spin / Curveball:</span>
+        <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
+          <input type="checkbox" id="mod-spin" checked onchange="updateModifierSetting('spinEnabled', this.checked)">
+          <span style="font-size: 11px; color: var(--accent);">Active</span>
+        </label>
+      </div>
+
+      <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.04); padding: 6px 10px; border-radius: 6px;">
+        <span>🎯 Trajectory Prediction Line:</span>
+        <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
+          <input type="checkbox" id="mod-trajectory" onchange="updateModifierSetting('trajectoryGuide', this.checked)">
+          <span style="font-size: 11px; color: var(--accent);">Active</span>
+        </label>
+      </div>
+
+      <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.04); padding: 6px 10px; border-radius: 6px;">
+        <span>🎚️ P1 Paddle Handicap:</span>
+        <select id="mod-p1-size" style="background:#111; color:#fff; border:1px solid var(--primary); border-radius:4px; padding:3px 8px; font-size:12px;" onchange="updateModifierSetting('p1Size', this.value)">
+          <option value="compact">Compact (36px)</option>
+          <option value="normal" selected>Normal (50px)</option>
+          <option value="wide">Wide (72px)</option>
+        </select>
+      </div>
+
+      <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.04); padding: 6px 10px; border-radius: 6px;">
+        <span>🎚️ P2 / CPU Handicap:</span>
+        <select id="mod-p2-size" style="background:#111; color:#fff; border:1px solid var(--primary); border-radius:4px; padding:3px 8px; font-size:12px;" onchange="updateModifierSetting('p2Size', this.value)">
+          <option value="compact">Compact (36px)</option>
+          <option value="normal" selected>Normal (50px)</option>
+          <option value="wide">Wide (72px)</option>
+        </select>
+      </div>
+
+      <!-- Presets bar -->
+      <div style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 8px;">
+        <span style="font-size: 11px; color: #888;">Quick Presets:</span>
+        <div style="display: flex; gap: 6px; margin-top: 4px; flex-wrap: wrap;">
+          <button class="btn-sm" onclick="applyModifierPreset('standard')">Standard</button>
+          <button class="btn-sm" onclick="applyModifierPreset('turbo')">Turbo Rally</button>
+          <button class="btn-sm" onclick="applyModifierPreset('spin')">Spin Master</button>
+          <button class="btn-sm" onclick="applyModifierPreset('training')">Target Practice</button>
+        </div>
+      </div>
+
+      <!-- Import / Export -->
+      <div style="display: flex; gap: 6px; margin-top: 6px; padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.1);">
+        <button class="btn-sm" onclick="exportModifiersJSON()">💾 Export JSON</button>
+        <button class="btn-sm" onclick="document.getElementById('modFileInput').click()">📂 Import JSON</button>
+        <input type="file" id="modFileInput" accept=".json" style="display:none" onchange="importModifiersJSON(event)">
+      </div>
+    </div>
+
+    <div class="modal-actions" style="margin-top: 14px; justify-content: space-between;">
+      <button class="btn-sm" onclick="resetModifiersToDefault()" style="color: #ffaa55;">Reset Defaults</button>
+      <button class="btn-sm modal-close btn-close" id="btn-close-mod" onclick="closeModifiersModal()">Done [Esc]</button>
     </div>
   </div>
 </div>
@@ -3336,6 +3415,198 @@
           animFrameId = null;
       }
   }
+
+  // ==========================================
+  // Match Modifiers & Physics Lab System
+  // ==========================================
+  const DEFAULT_MODIFIERS = {
+      speedMult: 1.0,
+      spinEnabled: true,
+      trajectoryGuide: false,
+      p1Size: 'normal',
+      p2Size: 'normal'
+  };
+
+  let matchModifiers = Object.assign({}, DEFAULT_MODIFIERS, safeGetStorage('kpong_modifiers_v1', {}));
+
+  function syncModifierUI() {
+      const spdEl = document.getElementById('mod-speed');
+      if (spdEl) spdEl.value = String(matchModifiers.speedMult);
+      const spinEl = document.getElementById('mod-spin');
+      if (spinEl) spinEl.checked = !!matchModifiers.spinEnabled;
+      const trajEl = document.getElementById('mod-trajectory');
+      if (trajEl) trajEl.checked = !!matchModifiers.trajectoryGuide;
+      const p1El = document.getElementById('mod-p1-size');
+      if (p1El) p1El.value = matchModifiers.p1Size || 'normal';
+      const p2El = document.getElementById('mod-p2-size');
+      if (p2El) p2El.value = matchModifiers.p2Size || 'normal';
+      applyPaddleHandicaps();
+  }
+
+  function applyPaddleHandicaps() {
+      const sizeMap = { compact: 36, normal: 50, wide: 72 };
+      p1PadH = sizeMap[matchModifiers.p1Size] || 50;
+      p2PadH = sizeMap[matchModifiers.p2Size] || 50;
+  }
+
+  function updateModifierSetting(key, val) {
+      matchModifiers[key] = val;
+      safeSetStorage('kpong_modifiers_v1', matchModifiers);
+      applyPaddleHandicaps();
+      showToast(`Modifier: ${key} = ${val}`);
+  }
+
+  function applyModifierPreset(name) {
+      if (name === 'turbo') {
+          matchModifiers = { speedMult: 1.25, spinEnabled: true, trajectoryGuide: false, p1Size: 'normal', p2Size: 'normal' };
+      } else if (name === 'spin') {
+          matchModifiers = { speedMult: 1.0, spinEnabled: true, trajectoryGuide: true, p1Size: 'wide', p2Size: 'normal' };
+      } else if (name === 'training') {
+          matchModifiers = { speedMult: 0.75, spinEnabled: false, trajectoryGuide: true, p1Size: 'wide', p2Size: 'wide' };
+      } else {
+          matchModifiers = Object.assign({}, DEFAULT_MODIFIERS);
+      }
+      safeSetStorage('kpong_modifiers_v1', matchModifiers);
+      syncModifierUI();
+      showToast(`Preset: ${name.toUpperCase()}`);
+  }
+
+  function resetModifiersToDefault() {
+      matchModifiers = Object.assign({}, DEFAULT_MODIFIERS);
+      safeSetStorage('kpong_modifiers_v1', matchModifiers);
+      syncModifierUI();
+      showToast("Modifiers reset to defaults.");
+  }
+
+  function exportModifiersJSON() {
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(matchModifiers, null, 2));
+      const dlAnchor = document.createElement('a');
+      dlAnchor.setAttribute("href", dataStr);
+      dlAnchor.setAttribute("download", `kpong_modifiers_${Date.now()}.json`);
+      document.body.appendChild(dlAnchor);
+      dlAnchor.click();
+      dlAnchor.remove();
+      showToast("Modifiers exported to JSON.");
+  }
+
+  function importModifiersJSON(event) {
+      const file = event.target.files && event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(e) {
+          try {
+              const parsed = JSON.parse(e.target.result);
+              if (parsed && typeof parsed === 'object') {
+                  matchModifiers = Object.assign({}, DEFAULT_MODIFIERS, parsed);
+                  safeSetStorage('kpong_modifiers_v1', matchModifiers);
+                  syncModifierUI();
+                  showToast("Modifiers configuration loaded!");
+              }
+          } catch(err) {
+              showToast("Invalid JSON modifier file.");
+          }
+      };
+      reader.readAsText(file);
+      event.target.value = "";
+  }
+
+  function openModifiersModal() {
+      if (typeof closeAllModals === 'function') closeAllModals();
+      syncModifierUI();
+      const modal = document.getElementById('modifiersModal');
+      if (modal) modal.classList.add('active');
+      const closeBtn = document.getElementById('btn-close-mod');
+      if (closeBtn) closeBtn.focus();
+  }
+
+  function closeModifiersModal() {
+      const modal = document.getElementById('modifiersModal');
+      if (modal) modal.classList.remove('active');
+      if (canvas) canvas.focus();
+  }
+
+  if (typeof closeAllModals === 'function') {
+      const origCloseAllModals = closeAllModals;
+      closeAllModals = function() {
+          origCloseAllModals();
+          const m = document.getElementById('modifiersModal');
+          if (m) m.classList.remove('active');
+      };
+  }
+
+  window.addEventListener('keydown', (e) => {
+      const target = e.target;
+      const isInput = target && (target.tagName === 'INPUT' || target.tagName === 'SELECT' || target.tagName === 'TEXTAREA');
+      if (isInput) return;
+      if (e.key === 'j' || e.key === 'J') {
+          e.preventDefault();
+          const modal = document.getElementById('modifiersModal');
+          if (modal && modal.classList.contains('active')) {
+              closeModifiersModal();
+          } else {
+              openModifiersModal();
+          }
+      }
+  });
+
+  // Extend update and draw loops for Magnus spin physics & trajectory guide
+  const origUpdate = update;
+  update = function() {
+      applyPaddleHandicaps();
+      origUpdate();
+      if (!isPaused && !gameOver && !isReplaying && balls && balls.length > 0) {
+          for (let i = 0; i < balls.length; i++) {
+              let b = balls[i];
+              if (!b) continue;
+              if (matchModifiers.spinEnabled) {
+                  if (typeof b.spin !== 'number') b.spin = 0;
+                  if (b.x <= 35 + PAD_W + 5 && b.vx > 0 && Math.abs(p1Vy) > 0.5) {
+                      b.spin = p1Vy * 0.35;
+                  } else if (b.x >= W - 35 - PAD_W - 5 && b.vx < 0 && Math.abs(p2Vy) > 0.5) {
+                      b.spin = p2Vy * 0.35;
+                  }
+                  b.y += b.spin;
+                  b.spin *= 0.982;
+              }
+          }
+      }
+  };
+
+  const origDraw = draw;
+  draw = function() {
+      origDraw();
+      if (matchModifiers.trajectoryGuide && !isPaused && !gameOver && balls && balls.length > 0) {
+          ctx.save();
+          for (let i = 0; i < balls.length; i++) {
+              let b = balls[i];
+              if (!b) continue;
+              ctx.strokeStyle = 'rgba(0, 229, 255, 0.45)';
+              ctx.lineWidth = 1.5;
+              ctx.setLineDash([4, 4]);
+              ctx.beginPath();
+              ctx.moveTo(b.x + BALL_SIZE/2, b.y + BALL_SIZE/2);
+              let projX = b.x + BALL_SIZE/2;
+              let projY = b.y + BALL_SIZE/2;
+              let simVy = b.vy;
+              for (let step = 0; step < 8; step++) {
+                  projX += b.vx * 4;
+                  projY += simVy * 4;
+                  if (projY <= 5 || projY >= H - 5) {
+                      simVy = -simVy;
+                  }
+              }
+              ctx.lineTo(projX, projY);
+              ctx.stroke();
+              ctx.fillStyle = '#ffd700';
+              ctx.beginPath();
+              ctx.arc(projX, projY, 2.5, 0, Math.PI * 2);
+              ctx.fill();
+          }
+          ctx.restore();
+      }
+  };
+
+  syncModifierUI();
 
   startLoop();
 

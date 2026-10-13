@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-expander
-next_agent: kilo-creator
+current_agent: kilo-creator
+next_agent: kilo-graphics
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -19,7 +19,7 @@ current_targets:
   kilo_usability: KRogue
   kilo_qa: KSpace
   kilo_soundscape: KSanctuary
-  kilo_expander: KPong
+  kilo_expander: KRogue
 virtual_web_target: kweb://portal
 virtual_web_rotation:
 - kweb://deep-core
@@ -34,9 +34,9 @@ virtual_web_rotation:
 - kweb://10.19.99.4/classified
 - kweb://echo-subsystem.net
 last_run:
-  agent: kilo-qa
-  app: KColony
-  timestamp: '2026-10-12T17:13:00Z'
+  agent: kilo-expander
+  app: KPong
+  timestamp: '2026-10-12T17:33:00Z'
 last_planner_run: '2026-10-12T17:31:38Z'
 ---
 
@@ -96,8 +96,8 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Upcoming Queue**: `KBreakout`, `KRogue`, `KPong`, `KPac`.
 
 ### 6. Feature Expander Queue (`kilo-expander`)
-- **Current Target**: `KPong`
-- **Upcoming Queue**: `KRogue`, `KChess`, `KColosseum`.
+- **Current Target**: `KRogue`
+- **Upcoming Queue**: `KChess`, `KColosseum`, `KPong`.
 
 ---
 
@@ -114,6 +114,11 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 ---
 
 ## Recent Execution Logs (Max 5 Entries)
+
+- **2026-10-12T17:33:00Z — kilo-expander: KPong (Deep Feature & Physics Lab Expansion)**
+  - Status: PASS ✅ (Vite build clean, size 156KB < 999KB).
+  - Features: Match Modifiers & Physics Lab ([J]), Magnus aerodynamic spin curve, trajectory guide, paddle size handicaps, and JSON setup export/import.
+  - Queue: Advanced kilo-expander to KRogue; handoff to kilo-creator.
 
 - **2026-10-12T23:35:00Z — kilo-usability: KNetMap (UI/UX & Usability Polish)**
   - Status: PASS ✅ (Vite build clean, size 114.5KB < 999KB).
@@ -137,8 +142,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Status: ⏭️ Skip — Imagen 3 asset replacement not appropriate for KColosseum.
   - Audit: Mature procedural gladiator RPG with dynamic equipment layering; 0 traveling glints or perimeter dots.
   - Queue: Advanced kilo-graphics to KMech; handoff to kilo-soundscape.
-
-- **2026-10-12T20:34:00Z — kilo-expander: KMatrix (Deep Feature Expansion & Terminal Hardening)**
-  - Status: PASS ✅ (Vite build clean, size 80.6KB < 999KB).
-  - Features: Added digital rain screensaver (F2), hex dump (`dump`), x86 disasm (`disasm`), Shannon entropy (`entropy`), subterranean network diagnostics (`ping`, `traceroute`, `sniff`), session telemetry (`stats`), and transcript export (`logexport`).
-  - Queue: Advanced kilo-expander to KPong; handoff to kilo-creator.
