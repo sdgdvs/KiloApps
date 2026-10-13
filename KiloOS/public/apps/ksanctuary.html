@@ -2918,136 +2918,449 @@
     </div>
 
     <script>
-        // Audio Synthesizer (Web Audio API) - Geiger, Construction, Siren, Ambient Wind & UI SFX
+        // =========================================================================
+        // YM2612 2-Op / SPC700 Procedural FM Soundscape & Chiptune Music Engine
+        // Desolate Wasteland Shelter Theme: Modal D-Minor Harmony & Dynamic FM SFX
+        // =========================================================================
         let audioCtx = null;
         let soundEnabled = true;
+        let musicEnabled = true;
         let ambientWindNode = null;
         let isAmbientWindPlaying = false;
+        let bgmTimer = null;
+        let bgmStep = 0;
+        let nextBgmTime = 0;
+        let isBgmRunning = false;
+
+        // Master Audio Graph Nodes
+        let masterGain = null;
+        let sfxGain = null;
+        let bgmGain = null;
+        let spcFilter = null;
 
         function initAudio() {
             if (!audioCtx) {
-                const AudioContext = window.AudioContext || window.webkitAudioContext;
-                if (AudioContext) audioCtx = new AudioContext();
+                const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+                if (!AudioContextClass) return;
+                audioCtx = new AudioContextClass();
+
+                // Master Bus
+                masterGain = audioCtx.createGain();
+                masterGain.gain.setValueAtTime(0.85, audioCtx.currentTime);
+
+                // SPC700 warm 16-bit lowpass filter characteristics
+                spcFilter = audioCtx.createBiquadFilter();
+                spcFilter.type = 'lowpass';
+                spcFilter.frequency.setValueAtTime(6200, audioCtx.currentTime);
+                spcFilter.Q.setValueAtTime(0.8, audioCtx.currentTime);
+
+                masterGain.connect(spcFilter);
+                spcFilter.connect(audioCtx.destination);
+
+                // Sub-busses
+                sfxGain = audioCtx.createGain();
+                sfxGain.gain.setValueAtTime(0.9, audioCtx.currentTime);
+                sfxGain.connect(masterGain);
+
+                bgmGain = audioCtx.createGain();
+                bgmGain.gain.setValueAtTime(0.18, audioCtx.currentTime); // Balanced background level
+                bgmGain.connect(masterGain);
+            }
+            if (audioCtx && audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+            if (soundEnabled && musicEnabled && !isBgmRunning) {
+                startBgm();
             }
         }
 
-        function playGeigerBurst(count = 6) {
-            if (!soundEnabled) return;
+        // --- YM2612 2-Op FM Synthesizer Core ---
+        // Generates carrier + modulator pair with frequency modulation index envelope
+        function playFmVoice(freq, duration, patch = 'lead', time = null, targetBus = null) {
+            if (!soundEnabled || !audioCtx) return null;
             try {
-                initAudio();
-                if (!audioCtx) return;
-                if (audioCtx.state === 'suspended') audioCtx.resume();
+                const startTime = time || audioCtx.currentTime;
+                const dest = targetBus || sfxGain || audioCtx.destination;
+
+                const carrier = audioCtx.createOscillator();
+                const carrierGain = audioCtx.createGain();
+                const modulator = audioCtx.createOscillator();
+                const modGain = audioCtx.createGain();
+
+                // Patch Definitions (YM2612 Operator Parameters)
+                let modRatio = 1.0;
+                let modIndex = 250;
+                let cWave = 'sine';
+                let mWave = 'sine';
+                let attack = 0.01;
+                let decay = 0.15;
+                let sustain = 0.3;
+                let release = 0.1;
+                let vol = 0.2;
+
+                switch (patch) {
+                    case 'bass': // Gritty YM2612 Slap/Grit Bass
+                        modRatio = 0.5;
+                        modIndex = 380;
+                        cWave = 'sine';
+                        mWave = 'sawtooth';
+                        attack = 0.008;
+                        decay = 0.18;
+                        sustain = 0.25;
+                        release = 0.12;
+                        vol = 0.32;
+                        break;
+                    case 'pad': // Warm SPC700 String/Chamber Pad
+                        modRatio = 1.002;
+                        modIndex = 90;
+                        cWave = 'triangle';
+                        mWave = 'sine';
+                        attack = 0.18;
+                        decay = 0.45;
+                        sustain = 0.65;
+                        release = 0.35;
+                        vol = 0.18;
+                        break;
+                    case 'bell': // Crystalline Metallic Chime
+                        modRatio = 3.5;
+                        modIndex = 620;
+                        cWave = 'sine';
+                        mWave = 'sine';
+                        attack = 0.004;
+                        decay = 0.35;
+                        sustain = 0.08;
+                        release = 0.4;
+                        vol = 0.25;
+                        break;
+                    case 'brass': // Resonant Post-Apocalyptic FM Horn
+                        modRatio = 1.0;
+                        modIndex = 320;
+                        cWave = 'sawtooth';
+                        mWave = 'sine';
+                        attack = 0.05;
+                        decay = 0.25;
+                        sustain = 0.5;
+                        release = 0.22;
+                        vol = 0.22;
+                        break;
+                    case 'lead': // Piercing Chiptune Solitude Lead
+                    default:
+                        modRatio = 2.0;
+                        modIndex = 420;
+                        cWave = 'sine';
+                        mWave = 'sine';
+                        attack = 0.015;
+                        decay = 0.2;
+                        sustain = 0.45;
+                        release = 0.18;
+                        vol = 0.22;
+                        break;
+                }
+
+                // Operator Frequencies
+                carrier.type = cWave;
+                carrier.frequency.setValueAtTime(freq, startTime);
+
+                modulator.type = mWave;
+                modulator.frequency.setValueAtTime(freq * modRatio, startTime);
+
+                // Modulator Envelope (Modulation Index shaping timbre over time)
+                modGain.gain.setValueAtTime(0.001, startTime);
+                modGain.gain.linearRampToValueAtTime(modIndex, startTime + attack);
+                modGain.gain.exponentialRampToValueAtTime(Math.max(1, modIndex * sustain), startTime + attack + decay);
+                modGain.gain.linearRampToValueAtTime(0.001, startTime + duration + release);
+
+                // Carrier Envelope (Amplitude ADSR)
+                carrierGain.gain.setValueAtTime(0.0001, startTime);
+                carrierGain.gain.linearRampToValueAtTime(vol, startTime + attack);
+                carrierGain.gain.exponentialRampToValueAtTime(Math.max(0.001, vol * sustain), startTime + attack + decay);
+                carrierGain.gain.setValueAtTime(Math.max(0.001, vol * sustain), startTime + duration);
+                carrierGain.gain.linearRampToValueAtTime(0.0001, startTime + duration + release);
+
+                // 2-Op Route: Modulator -> Carrier Frequency -> Output
+                modulator.connect(modGain);
+                modGain.connect(carrier.frequency);
+
+                carrier.connect(carrierGain);
+                carrierGain.connect(dest);
+
+                const stopTime = startTime + duration + release + 0.05;
+                modulator.start(startTime);
+                carrier.start(startTime);
+                modulator.stop(stopTime);
+                carrier.stop(stopTime);
+
+                return { carrier, carrierGain, stopTime };
+            } catch (e) {
+                return null;
+            }
+        }
+
+        // --- FM Chiptune Noise / Percussion ---
+        function playFmPercussion(type, time = null) {
+            if (!soundEnabled || !audioCtx) return;
+            try {
+                const startTime = time || audioCtx.currentTime;
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                const filter = audioCtx.createBiquadFilter();
+
+                if (type === 'tick' || type === 'hat') {
+                    // Crisp 16-bit Chiptune Closed Hat
+                    osc.type = 'square';
+                    osc.frequency.setValueAtTime(3200, startTime);
+                    filter.type = 'highpass';
+                    filter.frequency.setValueAtTime(4500, startTime);
+                    gain.gain.setValueAtTime(0.04, startTime);
+                    gain.gain.exponentialRampToValueAtTime(0.0001, startTime + 0.035);
+                    osc.connect(filter);
+                    filter.connect(gain);
+                    gain.connect(bgmGain);
+                    osc.start(startTime);
+                    osc.stop(startTime + 0.04);
+                } else if (type === 'snare') {
+                    // Vintage YM2612 FM / Noise Burst Snare
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(260, startTime);
+                    osc.frequency.exponentialRampToValueAtTime(60, startTime + 0.12);
+                    filter.type = 'bandpass';
+                    filter.frequency.setValueAtTime(1400, startTime);
+                    gain.gain.setValueAtTime(0.09, startTime);
+                    gain.gain.exponentialRampToValueAtTime(0.0001, startTime + 0.12);
+                    osc.connect(filter);
+                    filter.connect(gain);
+                    gain.connect(bgmGain);
+                    osc.start(startTime);
+                    osc.stop(startTime + 0.13);
+                }
+            } catch (e) {}
+        }
+
+        // --- Desolate Wasteland Chiptune Sequencer ---
+        // 32-Step modal sequence in D-Minor (Dm -> Bbmaj7 -> Gm -> A7 -> Dm)
+        // Authentic voice leading, melancholic melody, driving FM bassline, and subtle rhythm
+        const NOTE_PITCHES = {
+            'D2': 73.42, 'F2': 87.31, 'G2': 98.00, 'A2': 110.00, 'Bb2': 116.54, 'C3': 130.81,
+            'D3': 146.83, 'E3': 164.81, 'F3': 174.61, 'G3': 196.00, 'A3': 220.00, 'Bb3': 233.08, 'C4': 261.63, 'C#4': 277.18,
+            'D4': 293.66, 'E4': 329.63, 'F4': 349.23, 'G4': 392.00, 'A4': 440.00, 'Bb4': 466.16, 'C5': 523.25, 'D5': 587.33,
+            'E5': 659.25, 'F5': 698.46, 'A5': 880.00
+        };
+
+        // 32-Step Arrangement Table: [Lead, Pad, Bass, Perc]
+        const BGM_PATTERNS = [
+            // Bar 1: Dm (Desolate Shelter Awaken)
+            ['D4', 'A3', 'D2', 'tick'],
+            [null, null, null, null],
+            ['F4', null, 'D2', null],
+            ['A4', 'D4', null, 'tick'],
+            ['D5', null, 'D2', null],
+            [null, null, null, null],
+            ['C5', 'F4', 'D2', 'snare'],
+            ['A4', null, 'F2', null],
+
+            // Bar 2: Bbmaj7 (Wasteland Horizon)
+            ['Bb4', 'D4', 'Bb2', 'tick'],
+            [null, null, null, null],
+            ['D5', null, 'Bb2', null],
+            ['F5', 'F4', null, 'tick'],
+            ['E5', null, 'Bb2', null],
+            ['D5', null, null, null],
+            ['C5', 'A4', 'Bb2', 'snare'],
+            ['Bb4', null, 'A2', null],
+
+            // Bar 3: Gm9 (Survivor Remnants)
+            ['G4', 'Bb3', 'G2', 'tick'],
+            [null, null, null, null],
+            ['Bb4', null, 'G2', null],
+            ['D5', 'D4', null, 'tick'],
+            ['F5', null, 'G2', null],
+            ['E5', null, null, null],
+            ['D5', 'G4', 'G2', 'snare'],
+            ['C5', null, 'G2', null],
+
+            // Bar 4: A7sus4 -> A7 -> Dm Cadence
+            ['E4', 'A3', 'A2', 'tick'],
+            ['G4', null, null, null],
+            ['F4', 'C#4', 'A2', null],
+            ['E4', null, null, 'tick'],
+            ['D4', 'A3', 'D2', null],
+            [null, null, null, null],
+            ['D4', 'F4', 'D2', 'snare'],
+            [null, null, null, null]
+        ];
+
+        const STEP_DURATION = 0.22; // ~68 BPM Wasteland Desolation Tempo
+
+        function scheduleBgmStep() {
+            if (!isBgmRunning || !audioCtx || !musicEnabled) return;
+            try {
+                const now = audioCtx.currentTime;
+                while (nextBgmTime < now + 0.15) {
+                    const stepData = BGM_PATTERNS[bgmStep];
+                    if (stepData) {
+                        const [leadNote, padNote, bassNote, perc] = stepData;
+
+                        // Voice 1: FM Lead Melody
+                        if (leadNote && NOTE_PITCHES[leadNote]) {
+                            playFmVoice(NOTE_PITCHES[leadNote], STEP_DURATION * 1.4, 'lead', nextBgmTime, bgmGain);
+                        }
+
+                        // Voice 2: SPC700 Warm Pad
+                        if (padNote && NOTE_PITCHES[padNote]) {
+                            playFmVoice(NOTE_PITCHES[padNote], STEP_DURATION * 3.2, 'pad', nextBgmTime, bgmGain);
+                        }
+
+                        // Voice 3: Gritty 2-Op FM Bass
+                        if (bassNote && NOTE_PITCHES[bassNote]) {
+                            playFmVoice(NOTE_PITCHES[bassNote], STEP_DURATION * 0.9, 'bass', nextBgmTime, bgmGain);
+                        }
+
+                        // Voice 4: Chiptune Percussion
+                        if (perc) {
+                            playFmPercussion(perc, nextBgmTime);
+                        }
+                    }
+
+                    nextBgmTime += STEP_DURATION;
+                    bgmStep = (bgmStep + 1) % BGM_PATTERNS.length;
+                }
+            } catch (err) {}
+        }
+
+        function startBgm() {
+            if (isBgmRunning || !soundEnabled || !musicEnabled) return;
+            initAudio();
+            if (!audioCtx) return;
+            isBgmRunning = true;
+            nextBgmTime = audioCtx.currentTime + 0.05;
+            if (bgmTimer) clearInterval(bgmTimer);
+            bgmTimer = setInterval(scheduleBgmStep, 50);
+        }
+
+        function stopBgm() {
+            isBgmRunning = false;
+            if (bgmTimer) {
+                clearInterval(bgmTimer);
+                bgmTimer = null;
+            }
+        }
+
+        // --- Wasteland Action Stingers & UI Earcons ---
+        function playRelicChime() {
+            if (!soundEnabled) return;
+            initAudio();
+            if (!audioCtx) return;
+            try {
+                const now = audioCtx.currentTime;
+                // Shimmering 4-Note 2-Op Glass Bell Arpeggio
+                const chord = [587.33, 880.00, 1174.66, 1760.00]; // D-Major Glass Harmonics
+                chord.forEach((freq, idx) => {
+                    playFmVoice(freq, 0.45, 'bell', now + idx * 0.07, sfxGain);
+                });
+            } catch (e) {}
+        }
+
+        function playGeigerBurst(count = 7) {
+            if (!soundEnabled) return;
+            initAudio();
+            if (!audioCtx) return;
+            try {
                 const now = audioCtx.currentTime;
                 for (let i = 0; i < count; i++) {
-                    const clickTime = now + (i * 0.032) + (Math.random() * 0.04);
+                    const clickTime = now + (i * 0.03) + (Math.random() * 0.04);
                     const osc = audioCtx.createOscillator();
                     const gain = audioCtx.createGain();
                     const filter = audioCtx.createBiquadFilter();
+
                     filter.type = 'highpass';
-                    filter.frequency.setValueAtTime(1400 + Math.random() * 1200, clickTime);
+                    filter.frequency.setValueAtTime(1800 + Math.random() * 1400, clickTime);
 
                     osc.type = 'square';
-                    osc.frequency.setValueAtTime(1800 + Math.random() * 1600, clickTime);
-                    gain.gain.setValueAtTime(0.06, clickTime);
-                    gain.gain.exponentialRampToValueAtTime(0.0001, clickTime + 0.008);
+                    osc.frequency.setValueAtTime(2200 + Math.random() * 1800, clickTime);
+
+                    gain.gain.setValueAtTime(0.08, clickTime);
+                    gain.gain.exponentialRampToValueAtTime(0.0001, clickTime + 0.007);
 
                     osc.connect(filter);
                     filter.connect(gain);
-                    gain.connect(audioCtx.destination);
+                    gain.connect(sfxGain || audioCtx.destination);
 
                     osc.start(clickTime);
-                    osc.stop(clickTime + 0.009);
+                    osc.stop(clickTime + 0.008);
                 }
             } catch (e) {}
         }
 
         function playConstructionSound() {
             if (!soundEnabled) return;
+            initAudio();
+            if (!audioCtx) return;
             try {
-                initAudio();
-                if (!audioCtx) return;
-                if (audioCtx.state === 'suspended') audioCtx.resume();
                 const now = audioCtx.currentTime;
-
-                // Heavy motor / turbine hum
-                const osc1 = audioCtx.createOscillator();
-                const gain1 = audioCtx.createGain();
-                osc1.type = 'sawtooth';
-                osc1.frequency.setValueAtTime(65, now);
-                osc1.frequency.linearRampToValueAtTime(115, now + 0.22);
-                osc1.frequency.linearRampToValueAtTime(55, now + 0.45);
-                gain1.gain.setValueAtTime(0.08, now);
-                gain1.gain.linearRampToValueAtTime(0.001, now + 0.5);
-                osc1.connect(gain1);
-                gain1.connect(audioCtx.destination);
-                osc1.start(now);
-                osc1.stop(now + 0.5);
-
-                // Metallic clangs & impact pulses
-                [0.06, 0.20, 0.35].forEach((tOffset, idx) => {
-                    const osc2 = audioCtx.createOscillator();
-                    const gain2 = audioCtx.createGain();
-                    osc2.type = 'triangle';
-                    osc2.frequency.setValueAtTime(260 + idx * 70, now + tOffset);
-                    osc2.frequency.exponentialRampToValueAtTime(80, now + tOffset + 0.1);
-                    gain2.gain.setValueAtTime(0.09, now + tOffset);
-                    gain2.gain.exponentialRampToValueAtTime(0.001, now + tOffset + 0.1);
-                    osc2.connect(gain2);
-                    gain2.connect(audioCtx.destination);
-                    osc2.start(now + tOffset);
-                    osc2.stop(now + tOffset + 0.1);
-                });
+                // Heavy FM Hydraulic Impact + Metallic Resonant Clang
+                playFmVoice(73.42, 0.45, 'bass', now, sfxGain);
+                playFmVoice(220.00, 0.25, 'bell', now + 0.05, sfxGain);
+                playFmVoice(146.83, 0.35, 'brass', now + 0.12, sfxGain);
             } catch (e) {}
         }
 
         function playAlarmSiren() {
             if (!soundEnabled) return;
+            initAudio();
+            if (!audioCtx) return;
             try {
-                initAudio();
-                if (!audioCtx) return;
-                if (audioCtx.state === 'suspended') audioCtx.resume();
                 const now = audioCtx.currentTime;
+                // Dual Sweeping FM Warning Klaxon
                 const osc = audioCtx.createOscillator();
+                const mod = audioCtx.createOscillator();
+                const mGain = audioCtx.createGain();
                 const gain = audioCtx.createGain();
+
                 osc.type = 'sawtooth';
+                mod.type = 'sine';
+                mod.frequency.setValueAtTime(14, now); // Rapid FM warble
+                mGain.gain.setValueAtTime(180, now);
 
-                // Two rising/falling siren sweeps
                 osc.frequency.setValueAtTime(440, now);
-                osc.frequency.linearRampToValueAtTime(880, now + 0.2);
-                osc.frequency.linearRampToValueAtTime(440, now + 0.4);
-                osc.frequency.linearRampToValueAtTime(880, now + 0.6);
-                osc.frequency.linearRampToValueAtTime(380, now + 0.85);
+                osc.frequency.linearRampToValueAtTime(880, now + 0.22);
+                osc.frequency.linearRampToValueAtTime(440, now + 0.44);
+                osc.frequency.linearRampToValueAtTime(880, now + 0.66);
+                osc.frequency.linearRampToValueAtTime(320, now + 0.9);
 
-                gain.gain.setValueAtTime(0.12, now);
-                gain.gain.setValueAtTime(0.12, now + 0.7);
-                gain.gain.linearRampToValueAtTime(0.001, now + 0.88);
+                gain.gain.setValueAtTime(0.18, now);
+                gain.gain.linearRampToValueAtTime(0.18, now + 0.75);
+                gain.gain.linearRampToValueAtTime(0.001, now + 0.92);
+
+                mod.connect(mGain);
+                mGain.connect(osc.frequency);
                 osc.connect(gain);
-                gain.connect(audioCtx.destination);
+                gain.connect(sfxGain || audioCtx.destination);
+
+                mod.start(now);
                 osc.start(now);
-                osc.stop(now + 0.88);
+                mod.stop(now + 0.93);
+                osc.stop(now + 0.93);
             } catch (e) {}
         }
 
         function playWindGust() {
             if (!soundEnabled) return;
+            initAudio();
+            if (!audioCtx) return;
             try {
-                initAudio();
-                if (!audioCtx) return;
-                if (audioCtx.state === 'suspended') audioCtx.resume();
                 const now = audioCtx.currentTime;
-
                 const osc = audioCtx.createOscillator();
                 const gain = audioCtx.createGain();
                 osc.type = 'sine';
-                osc.frequency.setValueAtTime(140, now);
-                osc.frequency.linearRampToValueAtTime(220, now + 0.3);
-                osc.frequency.linearRampToValueAtTime(120, now + 0.6);
-                gain.gain.setValueAtTime(0.06, now);
-                gain.gain.linearRampToValueAtTime(0.001, now + 0.65);
+                osc.frequency.setValueAtTime(120, now);
+                osc.frequency.linearRampToValueAtTime(260, now + 0.35);
+                osc.frequency.linearRampToValueAtTime(90, now + 0.7);
+                gain.gain.setValueAtTime(0.08, now);
+                gain.gain.linearRampToValueAtTime(0.001, now + 0.75);
                 osc.connect(gain);
-                gain.connect(audioCtx.destination);
+                gain.connect(sfxGain || audioCtx.destination);
                 osc.start(now);
-                osc.stop(now + 0.65);
+                osc.stop(now + 0.75);
             } catch (e) {}
         }
 
@@ -3100,7 +3413,7 @@
 
                 whiteNoise.connect(filter);
                 filter.connect(gain);
-                gain.connect(audioCtx.destination);
+                gain.connect(sfxGain || audioCtx.destination);
 
                 whiteNoise.start();
                 ambientWindNode = { whiteNoise, lfo, gain };
@@ -3135,167 +3448,117 @@
             }
         }
 
-        function playRelicChime() {
-            if (!soundEnabled) return;
-            try {
-                initAudio();
-                if (!audioCtx) return;
-                if (audioCtx.state === 'suspended') audioCtx.resume();
-                const now = audioCtx.currentTime;
-                // Harmonic 1999Hz resonant chime arpeggio
-                const freqs = [659.25, 987.77, 1318.51, 1999.0];
-                freqs.forEach((freq, idx) => {
-                    const osc = audioCtx.createOscillator();
-                    const gain = audioCtx.createGain();
-                    osc.type = idx === 3 ? 'sine' : 'triangle';
-                    osc.frequency.setValueAtTime(freq, now + idx * 0.08);
-                    gain.gain.setValueAtTime(0.08, now + idx * 0.08);
-                    gain.gain.exponentialRampToValueAtTime(0.0001, now + idx * 0.08 + (idx === 3 ? 0.65 : 0.35));
-                    osc.connect(gain);
-                    gain.connect(audioCtx.destination);
-                    osc.start(now + idx * 0.08);
-                    osc.stop(now + idx * 0.08 + (idx === 3 ? 0.65 : 0.35));
-                });
-            } catch (e) {}
-        }
-
+        // --- General Sound Dispatcher with Procedural FM Earcons ---
         function playSound(type) {
             if (!soundEnabled) return;
-            try {
-                initAudio();
-                if (!audioCtx) return;
-                if (audioCtx.state === 'suspended') audioCtx.resume();
+            initAudio();
+            if (!audioCtx) return;
 
-                const now = audioCtx.currentTime;
+            const now = audioCtx.currentTime;
 
-                if (type === 'relic') {
+            switch (type) {
+                case 'click': // Crisp FM Micro-switch Tick
+                    playFmVoice(1480, 0.025, 'bell', now, sfxGain);
+                    break;
+                case 'cycle': // Day Transition Chord Stinger
+                    playFmVoice(146.83, 0.45, 'bass', now, sfxGain);
+                    playFmVoice(293.66, 0.35, 'brass', now + 0.06, sfxGain);
+                    playFmVoice(440.00, 0.40, 'bell', now + 0.12, sfxGain);
+                    playFmVoice(587.33, 0.55, 'lead', now + 0.18, sfxGain);
+                    break;
+                case 'alert':
+                case 'warn': // Dissonant 2-Op FM Hazard Earcon
+                    playFmVoice(220.0, 0.18, 'brass', now, sfxGain);
+                    playFmVoice(207.65, 0.22, 'brass', now + 0.08, sfxGain); // Tritone / Diminished rub
+                    break;
+                case 'scout': // Expedition FM Horn
+                    playFmVoice(261.63, 0.18, 'lead', now, sfxGain);
+                    playFmVoice(392.00, 0.25, 'lead', now + 0.1, sfxGain);
+                    break;
+                case 'hazard': // Subterranean Seismic FM Drop
+                    playFmVoice(98.00, 0.55, 'bass', now, sfxGain);
+                    playFmVoice(65.41, 0.65, 'bass', now + 0.15, sfxGain);
+                    break;
+                case 'pump': // Hydraulic Hydro-Pump Chug
+                    playFmVoice(110.00, 0.15, 'bass', now, sfxGain);
+                    playFmVoice(164.81, 0.18, 'brass', now + 0.08, sfxGain);
+                    break;
+                case 'trade': // Ascending Currency Shimmer
+                    playFmVoice(523.25, 0.12, 'bell', now, sfxGain);
+                    playFmVoice(659.25, 0.14, 'bell', now + 0.07, sfxGain);
+                    playFmVoice(783.99, 0.22, 'bell', now + 0.14, sfxGain);
+                    break;
+                case 'meds':
+                case 'heal': // Warm Restorative FM Chord
+                    playFmVoice(349.23, 0.35, 'pad', now, sfxGain);
+                    playFmVoice(440.00, 0.35, 'bell', now + 0.06, sfxGain);
+                    playFmVoice(523.25, 0.45, 'lead', now + 0.12, sfxGain);
+                    break;
+                case 'research': // Technological Breakthrough 4-Note FM Arpeggio
+                    playFmVoice(440.00, 0.10, 'bell', now, sfxGain);
+                    playFmVoice(587.33, 0.10, 'bell', now + 0.06, sfxGain);
+                    playFmVoice(880.00, 0.12, 'lead', now + 0.12, sfxGain);
+                    playFmVoice(1174.66, 0.35, 'bell', now + 0.18, sfxGain);
+                    break;
+                case 'turret': // Ballistic Kinetic FM Crack
+                    playFmVoice(180.00, 0.08, 'bass', now, sfxGain);
+                    playFmPercussion('snare', now);
+                    break;
+                case 'repair': // Welder / Wrench Resonance
+                    playFmVoice(330.00, 0.14, 'brass', now, sfxGain);
+                    playFmVoice(440.00, 0.20, 'bell', now + 0.08, sfxGain);
+                    break;
+                case 'relic':
                     playRelicChime();
-                    return;
-                } else if (type === 'geiger') {
+                    break;
+                case 'geiger':
                     playGeigerBurst(6);
-                    return;
-                } else if (type === 'construction') {
+                    break;
+                case 'construction':
                     playConstructionSound();
-                    return;
-                } else if (type === 'siren' || type === 'alarm') {
+                    break;
+                case 'siren':
+                case 'alarm':
                     playAlarmSiren();
-                    return;
-                } else if (type === 'wind') {
+                    break;
+                case 'wind':
                     playWindGust();
-                    return;
-                }
-
-                const osc = audioCtx.createOscillator();
-                const gain = audioCtx.createGain();
-                osc.connect(gain);
-                gain.connect(audioCtx.destination);
-
-                if (type === 'click') {
-                    osc.type = 'square';
-                    osc.frequency.setValueAtTime(650, now);
-                    osc.frequency.exponentialRampToValueAtTime(300, now + 0.035);
-                    gain.gain.setValueAtTime(0.04, now);
-                    gain.gain.linearRampToValueAtTime(0.001, now + 0.035);
-                    osc.start(now);
-                    osc.stop(now + 0.035);
-                } else if (type === 'cycle') {
-                    osc.type = 'sine';
-                    osc.frequency.setValueAtTime(440, now);
-                    osc.frequency.setValueAtTime(554.37, now + 0.07);
-                    osc.frequency.setValueAtTime(659.25, now + 0.14);
-                    gain.gain.setValueAtTime(0.08, now);
-                    gain.gain.linearRampToValueAtTime(0.001, now + 0.25);
-                    osc.start(now);
-                    osc.stop(now + 0.25);
-                } else if (type === 'alert' || type === 'warn') {
-                    osc.type = 'sawtooth';
-                    osc.frequency.setValueAtTime(220, now);
-                    osc.frequency.setValueAtTime(180, now + 0.1);
-                    gain.gain.setValueAtTime(0.09, now);
-                    gain.gain.linearRampToValueAtTime(0.001, now + 0.22);
-                    osc.start(now);
-                    osc.stop(now + 0.22);
-                } else if (type === 'scout') {
-                    osc.type = 'triangle';
-                    osc.frequency.setValueAtTime(523.25, now);
-                    osc.frequency.setValueAtTime(783.99, now + 0.09);
-                    gain.gain.setValueAtTime(0.08, now);
-                    gain.gain.linearRampToValueAtTime(0.001, now + 0.2);
-                    osc.start(now);
-                    osc.stop(now + 0.2);
-                } else if (type === 'hazard') {
-                    osc.type = 'sawtooth';
-                    osc.frequency.setValueAtTime(160, now);
-                    osc.frequency.exponentialRampToValueAtTime(60, now + 0.35);
-                    gain.gain.setValueAtTime(0.12, now);
-                    gain.gain.linearRampToValueAtTime(0.001, now + 0.35);
-                    osc.start(now);
-                    osc.stop(now + 0.35);
-                } else if (type === 'pump') {
-                    osc.type = 'square';
-                    osc.frequency.setValueAtTime(320, now);
-                    osc.frequency.setValueAtTime(480, now + 0.08);
-                    gain.gain.setValueAtTime(0.07, now);
-                    gain.gain.linearRampToValueAtTime(0.001, now + 0.2);
-                    osc.start(now);
-                    osc.stop(now + 0.2);
-                } else if (type === 'trade') {
-                    osc.type = 'triangle';
-                    osc.frequency.setValueAtTime(659.25, now);
-                    osc.frequency.setValueAtTime(880, now + 0.07);
-                    osc.frequency.setValueAtTime(1174.66, now + 0.14);
-                    gain.gain.setValueAtTime(0.08, now);
-                    gain.gain.linearRampToValueAtTime(0.001, now + 0.24);
-                    osc.start(now);
-                    osc.stop(now + 0.24);
-                } else if (type === 'meds' || type === 'heal') {
-                    osc.type = 'sine';
-                    osc.frequency.setValueAtTime(523.25, now);
-                    osc.frequency.setValueAtTime(659.25, now + 0.07);
-                    osc.frequency.setValueAtTime(880.00, now + 0.14);
-                    gain.gain.setValueAtTime(0.07, now);
-                    gain.gain.linearRampToValueAtTime(0.001, now + 0.26);
-                    osc.start(now);
-                    osc.stop(now + 0.26);
-                } else if (type === 'research') {
-                    osc.type = 'triangle';
-                    osc.frequency.setValueAtTime(987.77, now);
-                    osc.frequency.setValueAtTime(1318.51, now + 0.06);
-                    osc.frequency.setValueAtTime(1760.00, now + 0.12);
-                    osc.frequency.setValueAtTime(2093.00, now + 0.18);
-                    gain.gain.setValueAtTime(0.07, now);
-                    gain.gain.linearRampToValueAtTime(0.001, now + 0.28);
-                    osc.start(now);
-                    osc.stop(now + 0.28);
-                } else if (type === 'turret') {
-                    osc.type = 'square';
-                    osc.frequency.setValueAtTime(320, now);
-                    osc.frequency.setValueAtTime(260, now + 0.04);
-                    gain.gain.setValueAtTime(0.08, now);
-                    gain.gain.linearRampToValueAtTime(0.001, now + 0.14);
-                    osc.start(now);
-                    osc.stop(now + 0.14);
-                } else if (type === 'repair') {
-                    osc.type = 'sawtooth';
-                    osc.frequency.setValueAtTime(450, now);
-                    osc.frequency.setValueAtTime(280, now + 0.06);
-                    gain.gain.setValueAtTime(0.08, now);
-                    gain.gain.linearRampToValueAtTime(0.001, now + 0.18);
-                    osc.start(now);
-                    osc.stop(now + 0.18);
-                }
-            } catch (e) {
-                // Ignore audio restriction errors
+                    break;
+                default:
+                    playFmVoice(440, 0.08, 'lead', now, sfxGain);
+                    break;
             }
         }
 
+        // Window / Lifecycle Visibility Listener
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) {
+                if (isBgmRunning) stopBgm();
+                if (isAmbientWindPlaying && ambientWindNode) {
+                    try { ambientWindNode.gain.gain.setValueAtTime(0.0001, audioCtx.currentTime); } catch (e) {}
+                }
+            } else {
+                if (soundEnabled && musicEnabled && audioCtx && !isBgmRunning) {
+                    startBgm();
+                }
+                if (isAmbientWindPlaying && ambientWindNode && audioCtx) {
+                    try { ambientWindNode.gain.gain.setValueAtTime(0.035, audioCtx.currentTime); } catch (e) {}
+                }
+            }
+        });
+
+        // Audio Toggle
         function toggleAudio() {
             soundEnabled = !soundEnabled;
             document.getElementById('btn-audio').textContent = `AUDIO: ${soundEnabled ? 'ON' : 'OFF'}`;
-            if (!soundEnabled && isAmbientWindPlaying) {
-                stopAmbientWind();
+            if (!soundEnabled) {
+                if (isAmbientWindPlaying) stopAmbientWind();
+                stopBgm();
+            } else {
+                initAudio();
+                startBgm();
             }
-            playSound('click');
+            if (soundEnabled) playSound('click');
         }
 
         function toggleScanlines() {
