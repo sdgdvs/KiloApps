@@ -1294,6 +1294,7 @@
     <button class="tab-btn" id="tabBtnSignals" onclick="switchMainTab('signals', this)">[ 📡 SUBTERRANEAN SIGNALS ]</button>
     <button class="tab-btn" onclick="switchMainTab('courier', this)">[ 🏁 FXP COURIER RACE &amp; GLFTPD ]</button>
     <button class="tab-btn" onclick="switchMainTab('packer', this)">[ 🛡️ PE-PACK '99 &amp; ENTROPY LAB ]</button>
+    <button class="tab-btn" onclick="switchMainTab('diskmag', this)">[ 💾 SCENE PULSE DISKMAG '99 ]</button>
   </div>
 
   <!-- ================================================================= -->
@@ -2642,6 +2643,857 @@ Tested clean on Windows 98 SE and DOS 7.1.</textarea>
       </div>
     </div>
   </div>
+
+  <!-- ================================================================= -->
+  <!-- TAB 15: SCENE PULSE DISKMAG '99 // FLOPPY DISKETTE MAGAZINE -->
+  <!-- ================================================================= -->
+  <div id="tab-diskmag" class="tab-content">
+    <div class="section-box" style="border: 1px solid var(--accent-cyan); background: #030811;">
+      <!-- Diskmag Top Header -->
+      <div class="section-title" style="border-bottom: 2px solid #00f0ff; padding-bottom: 8px;">
+        <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+          <span style="color:var(--accent-cyan); font-size:14px; letter-spacing:1px; font-weight:bold;">
+            💾 SCENE PULSE '99 // THE DEMOSCENE &amp; WAREZ DISKMAGAZINE
+          </span>
+          <span style="font-size:10px; background:#0e2a47; color:#38bdf8; padding:2px 8px; border-radius:3px; border:1px solid #0284c7;">
+            VIRTUAL 1.44MB FLOPPY DISKETTE FORMAT
+          </span>
+        </div>
+        <div style="display:flex; align-items:center; gap:8px; font-size:11px;">
+          <span id="diskmagDriveStatus" style="color:#4ade80;">[ FDD A: READY ]</span>
+          <button class="btn-filter" id="btnDiskmagAudio" onclick="toggleDiskmagAudio()" style="font-size:10px; padding:3px 8px;">
+            🔊 DISKMAG CHIPTUNE: OFF
+          </button>
+        </div>
+      </div>
+
+      <!-- Controls & Theme Toolbar -->
+      <div class="control-bar" style="background:#071220; border-color:#1e3a5f; margin-bottom:12px;">
+        <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+          <span style="font-size:11px; color:#94a3b8; font-weight:bold;">SELECT DISKETTE:</span>
+          <select id="diskmagIssueSelect" onchange="loadDiskmagIssue(this.value)" style="background:#030811; color:var(--accent-green); border:1px solid #10b981; padding:4px 8px; font-family:inherit; font-size:11px; border-radius:3px; cursor:pointer;">
+            <option value="14">ISSUE #14 (NOV 1999) - THE MILLENNIUM DAWN &amp; 64KB INTRO GOLD</option>
+            <option value="13">ISSUE #13 (JUL 1999) - 3DFX GLIDE VS DIRECT3D HARDWARE BATTLE</option>
+            <option value="12">ISSUE #12 (APR 1999) - WIN32 ASSEMBLY &amp; SAFEDISC DEFEAT</option>
+          </select>
+          <button class="btn-filter" onclick="ejectAndReloadDiskmag()" style="font-size:10px; padding:3px 8px;">
+            ⏏️ EJECT &amp; RE-READ DISK
+          </button>
+        </div>
+
+        <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+          <span style="font-size:10px; color:#94a3b8;">CRT PHOSPHOR:</span>
+          <button class="btn-filter active" id="btnThemeCyan" onclick="setDiskmagTheme('cyan')">CYAN</button>
+          <button class="btn-filter" id="btnThemeGreen" onclick="setDiskmagTheme('green')">AMBER/GREEN</button>
+          <button class="btn-filter" id="btnThemeVga" onclick="setDiskmagTheme('vga')">VGA GRAY</button>
+          <button class="btn-filter" id="btnThemeMatrix" onclick="setDiskmagTheme('matrix')">DARKNET</button>
+        </div>
+      </div>
+
+      <!-- Diskmag 2-Column Interface -->
+      <div style="display:grid; grid-template-columns: 280px 1fr; gap:14px; min-height:540px;" id="diskmagMainGrid">
+        <!-- Left: Table of Contents & Diskmag Stats -->
+        <div style="display:flex; flex-direction:column; gap:10px;">
+          <!-- Category Filter -->
+          <div style="background:#050d18; border:1px solid #14243b; border-radius:4px; padding:10px;">
+            <div style="font-size:11px; color:#38bdf8; font-weight:bold; margin-bottom:6px; border-bottom:1px dashed #14243b; padding-bottom:4px;">
+              ARTICLE CATEGORIES
+            </div>
+            <div style="display:flex; flex-direction:column; gap:4px;" id="diskmagCategoryList">
+              <button class="btn-filter active" style="text-align:left; width:100%;" onclick="filterDiskmagCategory('ALL')">📑 ALL ARTICLES (<span id="catCountAll">0</span>)</button>
+              <button class="btn-filter" style="text-align:left; width:100%;" onclick="filterDiskmagCategory('EDITORIAL')">📰 EDITORIAL &amp; NEWS (<span id="catCountEd">0</span>)</button>
+              <button class="btn-filter" style="text-align:left; width:100%;" onclick="filterDiskmagCategory('INTERVIEWS')">🎙️ SCENE INTERVIEWS (<span id="catCountInt">0</span>)</button>
+              <button class="btn-filter" style="text-align:left; width:100%;" onclick="filterDiskmagCategory('CODER')">💻 CODER'S CORNER (<span id="catCountCod">0</span>)</button>
+              <button class="btn-filter" style="text-align:left; width:100%;" onclick="filterDiskmagCategory('PARTY')">🏆 PARTY REPORTS (<span id="catCountPty">0</span>)</button>
+              <button class="btn-filter" style="text-align:left; width:100%;" onclick="filterDiskmagCategory('HARDWARE')">⚡ HARDWARE SHOOTOUT (<span id="catCountHw">0</span>)</button>
+              <button class="btn-filter" style="text-align:left; width:100%;" onclick="filterDiskmagCategory('ANOMALY')">🕵️ UNDERGROUND RUMORS (<span id="catCountAnom">0</span>)</button>
+            </div>
+          </div>
+
+          <!-- Article Index List -->
+          <div style="background:#050d18; border:1px solid #14243b; border-radius:4px; padding:10px; flex:1; display:flex; flex-direction:column;">
+            <div style="font-size:11px; color:var(--accent-yellow); font-weight:bold; margin-bottom:6px; display:flex; justify-content:space-between; align-items:center;">
+              <span>TABLE OF CONTENTS</span>
+              <span id="diskmagIndexBadge" style="font-size:10px; color:#64748b;">ISSUE #14</span>
+            </div>
+            <div id="diskmagArticleNav" style="flex:1; overflow-y:auto; max-height:340px; display:flex; flex-direction:column; gap:4px; padding-right:2px;">
+              <!-- Dynamically populated article items -->
+            </div>
+          </div>
+
+          <!-- Diskette Physical Stats Box -->
+          <div style="background:#030710; border:1px solid #112235; border-radius:4px; padding:8px 10px; font-size:10px; color:#94a3b8; line-height:1.4;">
+            <div><b>SECTORS:</b> 2,880 / 2,880 (1.44 MB FAT12)</div>
+            <div><b>MUSIC MOD:</b> 4-Channel XM (ProTracker Synthesizer)</div>
+            <div><b>RELEASE:</b> SCENE PULSE PRODUCTIONS (EUROPE 1999)</div>
+          </div>
+        </div>
+
+        <!-- Right: Article Reader Pane -->
+        <div style="background:#02060e; border:1px solid #142844; border-radius:4px; display:flex; flex-direction:column; overflow:hidden;" id="diskmagReaderContainer">
+          <!-- Reader Header Toolbar -->
+          <div style="background:#071529; border-bottom:1px solid #1b375b; padding:8px 12px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+            <div style="display:flex; align-items:center; gap:8px;">
+              <span id="readerArticleCategoryBadge" style="background:#064e3b; color:#6ee7b7; border:1px solid #10b981; font-size:10px; padding:2px 6px; border-radius:2px; font-weight:bold;">
+                EDITORIAL
+              </span>
+              <span id="readerArticleHeaderTitle" style="color:var(--accent-cyan); font-weight:bold; font-size:12px;">
+                The Millennium Dawn: Demoscene at the 2000 Frontier
+              </span>
+            </div>
+            
+            <div style="display:flex; align-items:center; gap:6px;">
+              <input type="text" id="diskmagSearchInput" placeholder="Search diskmag..." oninput="onDiskmagSearch(this.value)" style="background:#02050c; border:1px solid #1e3a5f; color:#38bdf8; font-size:11px; padding:3px 8px; border-radius:2px; width:130px; font-family:inherit;" />
+              <button class="btn-filter" onclick="adjustDiskmagFontSize(-1)" title="Smaller font">A-</button>
+              <button class="btn-filter" onclick="adjustDiskmagFontSize(1)" title="Larger font">A+</button>
+              <button class="btn-filter" onclick="copyDiskmagArticleText()" title="Copy article text">📋 COPY</button>
+            </div>
+          </div>
+
+          <!-- Reader Content Window -->
+          <div id="diskmagArticleBody" style="flex:1; padding:18px 22px; overflow-y:auto; max-height:460px; font-family:'Consolas', 'Courier New', monospace; font-size:12px; line-height:1.6; color:#93c5fd; white-space:pre-wrap; user-select:text;">
+            <!-- Article text loaded here -->
+          </div>
+
+          <!-- Reader Footer & Mailbag Shouter -->
+          <div style="background:#050e1c; border-top:1px solid #142844; padding:8px 12px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; font-size:11px;">
+            <div style="color:#64748b; font-size:10px;">
+              <span id="readerAuthorLine">BY: VORTEX / FLARELIGHT</span> &bull; 
+              <span id="readerWordCount">1,420 WORDS</span> &bull; 
+              <span>VGA DOS TEXTMODE BUFFER 80x25</span>
+            </div>
+
+            <div style="display:flex; align-items:center; gap:6px;">
+              <input type="text" id="diskmagMailbagNick" placeholder="Your Handle" style="background:#02050c; border:1px solid #142844; color:#34d399; font-size:10px; padding:3px 6px; width:90px; font-family:inherit;" value="Scener99" />
+              <input type="text" id="diskmagMailbagMsg" placeholder="Send Letter to Editor..." style="background:#02050c; border:1px solid #142844; color:#e2e8f0; font-size:10px; padding:3px 8px; width:180px; font-family:inherit;" onkeydown="if(event.key==='Enter')submitDiskmagLetter()" />
+              <button class="btn-gen" onclick="submitDiskmagLetter()" style="font-size:10px; padding:3px 8px;">✉️ SUBMIT</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+  // =========================================================================
+  // SCENE PULSE '99 FLOPPY DISKMAG ENGINE
+  // =========================================================================
+  const DISKMAG_ISSUES = {
+    "14": {
+      title: "ISSUE #14 (NOV 1999) - THE MILLENNIUM DAWN",
+      articles: [
+        {
+          id: "14-01",
+          cat: "EDITORIAL",
+          title: "The Millennium Dawn: Demoscene at the 2000 Frontier",
+          author: "Vortex / FLARELIGHT",
+          text: `[SCENE PULSE // ISSUE 14 // EDITORIAL LEAD]
+=========================================================================
+THE MILLENNIUM DAWN: DEMOSCENE AT THE 2000 FRONTIER
+Author: Vortex / FLARELIGHT
+Published: November 24, 1999 // Amsterdam Scene Syndicate
+=========================================================================
+
+As the calendar clicks inexorably toward January 1, 2000, mainstream media
+is in full-blown apocalyptic panic. Banks are buying backup generators,
+newspapers are warning that home microwaves will shut down, and airline
+passengers are cancelling flights out of fear that air traffic control
+will plummet from the sky.
+
+Meanwhile, on the underground scene FTP rings and 33.6k dialup BBS boards,
+nobody is panicking. Why? Because we have been writing 32-bit real-time
+raster code and hand-crafting IA-32 assembly since the 386SX days. Our
+clocks don't overflow on two-digit years; our democodes use 64-bit cycle
+counters directly from the RDTSC opcode.
+
+The real revolution of late 1999 isn't the bogus Y2K bug—it is the brutal,
+exhilarating transition from MS-DOS real mode/DOS32A extenders to native
+Win32 and DirectX 7. For years, democoders treated Windows like an
+unwelcome parasite that stole CPU cycles and ruined page-flipping.
+VESA 2.0 linear framebuffers (INT 10h AH=4F01h) were our sacred ground.
+Mode 13h (320x200x256) was our canvas.
+
+Yet look at what happened this autumn. The release of Surreal Tournament '99
+and Tremor III Arena proved that 3D hardware acceleration—Glide, OpenGL,
+and the newly polished Direct3D HAL—can pump out 100,000 gouraud-shaded,
+multitextured polygons per second with trilinear filtering. The demo scene
+has answered with breathtaking 64KB intros like 'Mindflux '99' that generate
+their entire sound bank via procedural sine synthesis and run smooth 60 FPS
+bump-mapping inside a tiny executable that fits on half an old 5.25" floppy.
+
+We are entering a new millennium, sceners. The hardware is faster, the
+monitors are sharper (0.25mm dot pitch Sony Trinitrons!), and our music
+trackers are humming. Keep your assembly tight, your registers unspilled,
+and your modems dialed in.
+
+Long live the Scene.`
+        },
+        {
+          id: "14-02",
+          cat: "INTERVIEWS",
+          title: "Behind 'Mindflux '99': Exclusive Interview with Vectrex / FLARELIGHT",
+          author: "Cynic / PARALAX",
+          text: `[SCENE PULSE // ISSUE 14 // SCENE INTERVIEW]
+=========================================================================
+BEHIND 'MINDFLUX '99': EXCLUSIVE INTERVIEW WITH VECTREX
+Conducted by: Cynic / PARALAX
+Target: Vectrex (Lead Coder, FLARELIGHT)
+=========================================================================
+
+SCENE PULSE: Congratulations on taking 1st Prize in the PC 64KB Intro
+competition at the European Autumn Invitational! How did you fit all
+those volumetric fog passes and the 4-channel techno tracker into 65,536 bytes?
+
+VECTREX: Thanks, Cynic! The secret was throwing away libc and the Microsoft
+CRT completely. If you compile with standard MSVC6 settings, the compiler
+inserts 28 KB of garbage runtime stubs before your first line of code runs.
+We wrote our own PE entry point directly:
+   extern "C" void WinMainCRTStartup()
+and imported solely KERNEL32, USER32, and GDI32.
+For compression, we used PE-Pack '99 with custom arithmetic entropy coding.
+Our procedural textures—the plasma clouds and metallic rust—are computed
+at startup using fractional Brownian motion. A 512x512 texture takes only
+40 bytes of x86 math code instead of 786 KB of uncompressed bitmap data!
+
+SCENE PULSE: What about the music? Everyone was shocked that a 64k intro had
+real Yamaha-style FM synthesis and crisp 909 bassdrums.
+
+VECTREX: Our musician 'Resonance' wrote a tiny 3 KB software synth that uses
+two-operator phase modulation (just like the Genesis YM2612 sound chip).
+Instead of storing PCM wavetable samples, we store 16 envelope parameters
+and a 32-pattern sequence table. The entire music score takes just 4,200 bytes.
+
+SCENE PULSE: There are rumors on darknet IRC channels about anomalous data
+in the footer of your release NFO. People noticed CRC32 checksum 0x7F199942.
+Is there an easter egg or something more sinister?
+
+VECTREX: [laughs quietly] All good scene groups leave signatures for those
+who know how to parse hex dumps. Let's just say that if you monitor packet
+frequencies on the non-routable Carlsbad transponder node, you might find
+more than just our greeting list. Watch the Subterranean Signals board.
+
+SCENE PULSE: Words of wisdom for aspiring 1999 scene coders?
+
+VECTREX: Never use floating point division when fixed-point 16.16 shift-right
+will do. And always align your loops to 16-byte boundaries (ALIGN 16) so
+the Pentium II instruction prefetch cache doesn't stall!`
+        },
+        {
+          id: "14-03",
+          cat: "CODER",
+          title: "Coder's Corner: Fixed-Point 16.16 & Fast Square Root in x86 ASM",
+          author: "DarkByte / RAZOR 1999",
+          text: `[SCENE PULSE // ISSUE 14 // CODER'S CORNER]
+=========================================================================
+FIXED-POINT 16.16 ARITHMETIC & SUB-PIXEL RASTERIZATION
+Author: DarkByte / RAZOR 1999
+Target Architecture: Intel Pentium II / AMD K6-2 (IA-32)
+=========================================================================
+
+Every beginning democoder makes the tragic mistake of using the x87 FPU
+for inner-loop texture mapping. Floating point FDIV takes up to 39 clock
+cycles on a Pentium II! That is an eternity when you are trying to rasterize
+300,000 pixels every frame at 1024x768.
+
+The solution is Fixed-Point 16.16 math using standard 32-bit registers:
+- Upper 16 bits: Integer portion
+- Lower 16 bits: Fractional portion
+
+Example: 1.0 in 16.16 is represented as 0x00010000 (65536 decimal).
+To add or subtract: simple ADD and SUB opcodes (1 single clock cycle!).
+
+Here is our optimized inner loop for linear affine texture stepping:
+
+; -----------------------------------------------------------------------
+; EAX = current U (16.16), EBX = current V (16.16)
+; EDX = dU/dx (16.16),     ESI = dV/dx (16.16)
+; EDI = Framebuffer pointer, ECX = pixel span counter
+; -----------------------------------------------------------------------
+align 16
+@@span_loop:
+    mov     ebp, ebx            ; EBP = V (16.16)
+    shr     ebp, 16             ; EBP = integer V
+    shl     ebp, 8              ; Multiply by texture pitch (256)
+    mov     temp, eax           ; Save U
+    shr     eax, 16             ; EAX = integer U
+    add     ebp, eax            ; EBP = texture offset (V*256 + U)
+    mov     al, [tex_data+ebp]  ; Fetch 8-bit paletted texel
+    mov     [edi], al           ; Write to video memory
+    inc     edi                 ; Advance screen pointer
+    mov     eax, temp           ; Restore U
+    add     eax, edx            ; U += dU/dx
+    add     ebx, esi            ; V += dV/dx
+    dec     ecx
+    jnz     @@span_loop
+
+Notice how we avoid all division inside the horizontal scanline.
+The division only happens ONCE per triangle edge when computing the
+gradients. Keep your code aligned, avoid register bank stalls, and your
+software renderers will fly!`
+        },
+        {
+          id: "14-04",
+          cat: "PARTY",
+          title: "Assembly '99 Helsinki: Giant Screens, Sauna & Demo Glory",
+          author: "PhreakZero / SKID VECTOR",
+          text: `[SCENE PULSE // ISSUE 14 // PARTY REPORT]
+=========================================================================
+ASSEMBLY '99 REPORT: HARTWALL ARENA, HELSINKI, FINLAND
+Author: PhreakZero / SKID VECTOR
+Attendance: 4,800 Sceners // 100Mbit Fast Ethernet Arena Ring
+=========================================================================
+
+Five thousand geeks, sleeping under tables wrapped in sleeping bags,
+surrounded by the deafening hum of thousands of overclocked CRT monitors
+and 100-watt subwoofers playing tracked gabber and drum'n'bass. This is
+Assembly '99 at the Hartwall Arena.
+
+The atmosphere was electric. The local telecom (Sonera) piped a massive
+155 Mbit/s ATM connection straight into the arena. Sceners were leeching
+releases, exchanging source code, and showing off hardware rigs with
+liquid nitrogen coolers and dual 3dfx Voodoo2 cards linked via SLI cables.
+
+The big winners this year:
+- PC Demo Compo: 'Turning Point' blew minds with its cinematic camera
+  interpolation and realtime depth-of-field blur.
+- 64KB Intro Compo: Jaw-dropping procedural raymarching and voxel terrains
+  running at full 60 Hz on a single Matrox Millennium G400.
+- Fast Music Compo: 4-channel XM wizards producing orchestral symphonies
+  using only 8-bit 22kHz sampled acoustic instruments.
+
+At 3:00 AM on Saturday, the traditional outdoor Finnish sauna was packed
+with coders from Germany, Sweden, France, and Russia debating the merits
+of 3DNow! instructions versus Intel's new SSE streaming SIMD extensions.
+The scene spirit has never been stronger.`
+        },
+        {
+          id: "14-05",
+          cat: "HARDWARE",
+          title: "Hardware Shootout: Voodoo3 3000 vs Riva TNT2 Ultra vs G400",
+          author: "OverclockGod '99",
+          text: `[SCENE PULSE // ISSUE 14 // HARDWARE LAB]
+=========================================================================
+THE GREAT 1999 3D GRAPHICS SHOOTOUT
+Abit BH6 Motherboard + Intel Celeron 300A @ 450 MHz (100MHz FSB / 2.0V)
+128 MB PC100 SDRAM // Quantum Fireball CR 8.4 GB 5400RPM
+=========================================================================
+
+We assembled the three titans of 1999 3D acceleration to see who truly
+reigns supreme for demoscene intros and high-framerate deathmatches:
+
+1. 3dfx Voodoo3 3000 AGP (166 MHz Core / 166 MHz RAM, 16 MB SDRAM)
+   - Tremor III Arena (Timedemo 1024x768 16-bit): 54.8 FPS
+   - Glide API Support: Absolutely flawless. Zero texture thrashing.
+   - 22-bit post-processing ramp: Colors look rich despite 16-bit frame buffer.
+   - Downside: No 32-bit color rendering, no textures larger than 256x256.
+
+2. Diamond Viper V770 Ultra (NVIDIA Riva TNT2 Ultra, 150/183 MHz, 32 MB)
+   - Tremor III Arena (Timedemo 1024x768 32-bit): 42.1 FPS
+   - True 32-bit RGBA color with 24-bit Z-buffer and 8-bit Stencil.
+   - Stunning visual clarity on skyboxes and specular highlights.
+   - Downside: Runs scalding hot; needs a 40mm fan attached to heatsink.
+
+3. Matrox Millennium G400 DualHead (125/166 MHz, 32 MB SGRAM)
+   - Tremor III Arena (Timedemo 1024x768 32-bit): 38.6 FPS
+   - Environmental Mapped Bump Mapping (EMBM): Incredible water waves!
+   - 360 MHz RAMDAC: The sharpest 2D desktop text output in human history.
+   - Downside: OpenGL ICD driver still needs optimization.
+
+VERDICT: If you play Glide titles and care about pure 60fps fluidity,
+the Voodoo3 3000 is your weapon of choice. If you want true 32-bit color
+and future-proof OpenGL extensions, grab the TNT2 Ultra!`
+        },
+        {
+          id: "14-06",
+          cat: "ANOMALY",
+          title: "Subterranean Whispers: Anomalous Port 1999 & Carlsbad Leaks",
+          author: "GhostOperator / DARKNET",
+          text: `[SCENE PULSE // ISSUE 14 // INVESTIGATIVE REPORT]
+=========================================================================
+SUBTERRANEAN WHISPERS: ANOMALOUS PORT 1999 & THE CARLSBAD LEAKS
+Classification: Scene Rumor // Level 4 Darknet Wire
+=========================================================================
+
+Several topsite couriers and warez archivists have reported bizarre
+behavior on high-speed FTP trunks. During automated FXP transfers
+between European scene mirrors, socket connections to non-routable
+IP addresses in the 10.19.99.x subnet have appeared in glFTPd site logs.
+
+Even stranger are the encrypted footers embedded in recent FLARELIGHT and
+RAZOR 1999 release NFOs. Decoded using an 8-bit XOR key against ASCII
+character '1999', the text reveals repeated references to a subterranean
+signal transponder located in Carlsbad, California.
+
+The anomalous transmission broadcasts on an audio subcarrier of 1999 Hz,
+carrying hex offsets that correlate with memory addresses in KiloOS:
+   OFFSET: 0x00401140 -> Entry Point
+   CRC32:  0x7F199942 -> Transponder Verification Token
+   SECTOR: Carlsbad Cavern Sub-relay 0x7F
+
+Is this the work of an elaborate ARG created by scene veterans, or has
+an autonomous network subsystem begun communicating with external topsites?
+
+Couriers running our Subterranean Signals sniffer should keep their eyes
+peeled on packet frequencies. Whatever is echoing through the wires,
+it knows our protocols.`
+        }
+      ]
+    },
+    "13": {
+      title: "ISSUE #13 (JUL 1999) - 3DFX GLIDE VS DIRECT3D HARDWARE BATTLE",
+      articles: [
+        {
+          id: "13-01",
+          cat: "EDITORIAL",
+          title: "Summer '99: The Glide API Hegemony and the Rise of MiniGL",
+          author: "Vortex / FLARELIGHT",
+          text: `[SCENE PULSE // ISSUE 13 // EDITORIAL]
+Glide was designed by 3dfx Interactive to be a lean, mean, low-overhead C
+wrapper around the Voodoo hardware rasterizer. Unlike Microsoft's early
+Direct3D execute buffers—which gave every programmer migraines—Glide was
+intuitive, lighting fast, and gave demo coders direct control over texture
+combining units and alpha blending stages. But with Microsoft pushing
+DirectX 6.1 and 7, and NVIDIA shipping the Riva TNT2, the days of proprietary
+3D APIs are numbered. Enjoy Glide while it lasts!`
+        },
+        {
+          id: "13-02",
+          cat: "CODER",
+          title: "Writing a 4KB Intro: Voxel Landscapes with Raymarching in DOS",
+          author: "Vectrex / FLARELIGHT",
+          text: `[SCENE PULSE // ISSUE 13 // CODER'S CORNER]
+How do you generate an entire infinite mountain range in under 4,096 bytes?
+You don't store 3D polygons. You store a 2D heightmap in memory using a simple
+procedural plasma generator:
+   height = sin(x * 0.05) * cos(y * 0.05) + sin((x+y) * 0.03) * 64;
+To render, cast rays from the viewer's camera plane forward into the distance.
+As you step along each ray, calculate the height on screen using perspective
+projection: screen_y = (height - cam_z) / distance + horizon.
+Draw vertical columns from bottom to top, keeping track of the highest drawn
+pixel to eliminate overdraw. Total assembly footprint: 412 bytes!`
+        },
+        {
+          id: "13-03",
+          cat: "INTERVIEWS",
+          title: "Interview with SafeDisc Cracker 'DarkByte'",
+          author: "Cynic / PARALAX",
+          text: `[SCENE PULSE // ISSUE 13 // SCENE INTERVIEW]
+DarkByte explains how Macrovision's SafeDisc copy protection works:
+'SafeDisc uses intentional bad sectors on the physical CD-ROM media and an
+encrypted wrapper executable (00000001.TMP) with an anti-debugging driver
+(SECDRV.SYS). They hook INT 1 and INT 3 to detect SoftICE.
+To crack it, you set a hardware breakpoint on the Original Entry Point (OEP),
+dump the decrypted memory space using IceDump, and rebuild the Import Address
+Table (IAT) with a custom tool. Once the IAT is repaired, the game runs
+without checking the CD drive at all.'`
+        }
+      ]
+    },
+    "12": {
+      title: "ISSUE #12 (APR 1999) - WIN32 ASSEMBLY & COPY PROTECTION WARS",
+      articles: [
+        {
+          id: "12-01",
+          cat: "EDITORIAL",
+          title: "Saying Goodbye to Real Mode: MASM 6.14 and NASM on Win32",
+          author: "Vortex / FLARELIGHT",
+          text: `[SCENE PULSE // ISSUE 12 // EDITORIAL]
+The death of MS-DOS 6.22 has been predicted for four years, but with Windows 98
+Second Edition dominating retail PCs, writing Win32 assembly is no longer an
+academic curiosity. With NASM and flat assembler, we can write small, blisteringly
+fast 32-bit code with flat 4GB addressing space. No more 64KB segment registers
+(CS, DS, ES, SS)! No more near/far pointers! Flat memory is a dream come true.`
+        },
+        {
+          id: "12-02",
+          cat: "CODER",
+          title: "PE File Structure Deep Dive: Headers, Sections & Virtual Addresses",
+          author: "DarkByte / RAZOR 1999",
+          text: `[SCENE PULSE // ISSUE 12 // CODER'S CORNER]
+Every Win32 EXE begins with the legacy MS-DOS stub ('MZ' at offset 0). At offset
+0x3C is the pointer (e_lfanew) to the 'PE\0\0' signature. Following this is the
+COFF file header, the Optional Header with ImageBase (typically 0x00400000) and
+AddressOfEntryPoint (RVA). Next comes the Section Table (.text, .rdata, .data).
+Understanding how VirtualAddress maps to PointerToRawData is the key to all
+packing, unpacking, and binary instrumentation.`
+        }
+      ]
+    }
+  };
+
+  let diskmagCurrentIssue = "14";
+  let diskmagCurrentArticle = null;
+  let diskmagCurrentCat = "ALL";
+  let diskmagFontSize = 12;
+  let diskmagAudioCtx = null;
+  let diskmagSynthInterval = null;
+  let diskmagIsAudioPlaying = false;
+
+  function initDiskmag() {
+    loadDiskmagIssue("14");
+    updateDiskmagCategoryCounts();
+  }
+
+  function loadDiskmagIssue(issueNum) {
+    diskmagCurrentIssue = issueNum;
+    const issueData = DISKMAG_ISSUES[issueNum];
+    if (!issueData) return;
+
+    playFddSeekSound();
+
+    const badge = document.getElementById('diskmagIndexBadge');
+    if (badge) badge.textContent = `ISSUE #${issueNum}`;
+
+    const driveStatus = document.getElementById('diskmagDriveStatus');
+    if (driveStatus) {
+      driveStatus.textContent = "[ FDD A: READING... ]";
+      driveStatus.style.color = "#facc15";
+      setTimeout(() => {
+        driveStatus.textContent = `[ FDD A: TRACK 00-79 OK ]`;
+        driveStatus.style.color = "#4ade80";
+      }, 350);
+    }
+
+    updateDiskmagCategoryCounts();
+    renderDiskmagArticleList();
+
+    // Load first article by default
+    if (issueData.articles && issueData.articles.length > 0) {
+      openDiskmagArticle(issueData.articles[0]);
+    }
+  }
+
+  function ejectAndReloadDiskmag() {
+    playFddSeekSound();
+    const driveStatus = document.getElementById('diskmagDriveStatus');
+    if (driveStatus) {
+      driveStatus.textContent = "[ FDD A: DISK EJECTED ]";
+      driveStatus.style.color = "#f43f5e";
+    }
+    setTimeout(() => {
+      loadDiskmagIssue(diskmagCurrentIssue);
+    }, 400);
+  }
+
+  function updateDiskmagCategoryCounts() {
+    const issue = DISKMAG_ISSUES[diskmagCurrentIssue];
+    if (!issue) return;
+    const counts = { ALL: issue.articles.length, EDITORIAL: 0, INTERVIEWS: 0, CODER: 0, PARTY: 0, HARDWARE: 0, ANOMALY: 0 };
+    issue.articles.forEach(a => {
+      if (counts[a.cat] !== undefined) counts[a.cat]++;
+    });
+
+    const setEl = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+    setEl('catCountAll', counts.ALL);
+    setEl('catCountEd', counts.EDITORIAL);
+    setEl('catCountInt', counts.INTERVIEWS);
+    setEl('catCountCod', counts.CODER);
+    setEl('catCountPty', counts.PARTY);
+    setEl('catCountHw', counts.HARDWARE);
+    setEl('catCountAnom', counts.ANOMALY);
+  }
+
+  function filterDiskmagCategory(cat) {
+    diskmagCurrentCat = cat;
+    const catList = document.getElementById('diskmagCategoryList');
+    if (catList) {
+      catList.querySelectorAll('.btn-filter').forEach(btn => btn.classList.remove('active'));
+    }
+    if (event && event.target) event.target.classList.add('active');
+    renderDiskmagArticleList();
+  }
+
+  function renderDiskmagArticleList(filterQuery = '') {
+    const nav = document.getElementById('diskmagArticleNav');
+    if (!nav) return;
+    nav.innerHTML = '';
+
+    const issue = DISKMAG_ISSUES[diskmagCurrentIssue];
+    if (!issue) return;
+
+    const filtered = issue.articles.filter(a => {
+      const matchCat = (diskmagCurrentCat === 'ALL' || a.cat === diskmagCurrentCat);
+      if (!matchCat) return false;
+      if (!filterQuery) return true;
+      const q = filterQuery.toLowerCase();
+      return a.title.toLowerCase().includes(q) || a.author.toLowerCase().includes(q) || a.text.toLowerCase().includes(q);
+    });
+
+    if (filtered.length === 0) {
+      nav.innerHTML = '<div style="color:#64748b; font-size:10px; padding:8px;">No matching articles found on diskette.</div>';
+      return;
+    }
+
+    filtered.forEach(article => {
+      const btn = document.createElement('div');
+      btn.className = 'track-item' + (diskmagCurrentArticle && diskmagCurrentArticle.id === article.id ? ' active' : '');
+      btn.style.padding = '6px 8px';
+      btn.style.fontSize = '10px';
+      btn.style.display = 'flex';
+      btn.style.flexDirection = 'column';
+      btn.style.alignItems = 'flex-start';
+      btn.style.gap = '2px';
+
+      const tagColors = {
+        EDITORIAL: '#38bdf8',
+        INTERVIEWS: '#f43f5e',
+        CODER: '#10b981',
+        PARTY: '#facc15',
+        HARDWARE: '#fb923c',
+        ANOMALY: '#c084fc'
+      };
+
+      btn.innerHTML = `
+        <div style="display:flex; justify-content:space-between; width:100%; align-items:center;">
+          <span style="font-size:9px; color:${tagColors[article.cat] || '#38bdf8'}; font-weight:bold;">[${article.cat}]</span>
+          <span style="font-size:9px; color:#64748b;">${article.author.split('/')[0]}</span>
+        </div>
+        <div style="color:#e2e8f0; font-weight:bold; font-size:11px; line-height:1.2;">${article.title}</div>
+      `;
+
+      btn.onclick = () => {
+        playFddSeekSound();
+        openDiskmagArticle(article);
+        renderDiskmagArticleList(filterQuery);
+      };
+
+      nav.appendChild(btn);
+    });
+  }
+
+  function openDiskmagArticle(article) {
+    diskmagCurrentArticle = article;
+    const bodyEl = document.getElementById('diskmagArticleBody');
+    const titleEl = document.getElementById('readerArticleHeaderTitle');
+    const catBadge = document.getElementById('readerArticleCategoryBadge');
+    const authorLine = document.getElementById('readerAuthorLine');
+    const wordCount = document.getElementById('readerWordCount');
+
+    if (bodyEl) {
+      bodyEl.textContent = article.text;
+      bodyEl.scrollTop = 0;
+    }
+    if (titleEl) titleEl.textContent = article.title;
+    if (catBadge) {
+      catBadge.textContent = article.cat;
+      const colors = {
+        EDITORIAL: '#0284c7',
+        INTERVIEWS: '#e11d48',
+        CODER: '#16a34a',
+        PARTY: '#ca8a04',
+        HARDWARE: '#ea580c',
+        ANOMALY: '#9333ea'
+      };
+      catBadge.style.backgroundColor = colors[article.cat] || '#0284c7';
+    }
+    if (authorLine) authorLine.textContent = `BY: ${article.author.toUpperCase()}`;
+    if (wordCount) {
+      const words = article.text.split(/\s+/).filter(Boolean).length;
+      wordCount.textContent = `${words} WORDS`;
+    }
+  }
+
+  function onDiskmagSearch(val) {
+    renderDiskmagArticleList(val);
+  }
+
+  function adjustDiskmagFontSize(delta) {
+    diskmagFontSize = Math.max(10, Math.min(18, diskmagFontSize + delta));
+    const bodyEl = document.getElementById('diskmagArticleBody');
+    if (bodyEl) bodyEl.style.fontSize = `${diskmagFontSize}px`;
+  }
+
+  function copyDiskmagArticleText() {
+    if (!diskmagCurrentArticle) return;
+    navigator.clipboard.writeText(diskmagCurrentArticle.text).then(() => {
+      showNoticeToast("📋 Article text copied to clipboard!");
+    }).catch(() => {
+      showNoticeToast("Article copied!");
+    });
+  }
+
+  function setDiskmagTheme(theme) {
+    const container = document.getElementById('diskmagReaderContainer');
+    const bodyEl = document.getElementById('diskmagArticleBody');
+    if (!container || !bodyEl) return;
+
+    ['btnThemeCyan', 'btnThemeGreen', 'btnThemeVga', 'btnThemeMatrix'].forEach(id => {
+      const b = document.getElementById(id);
+      if (b) b.classList.remove('active');
+    });
+
+    if (theme === 'cyan') {
+      container.style.borderColor = '#142844';
+      bodyEl.style.color = '#93c5fd';
+      bodyEl.style.backgroundColor = '#02060e';
+      const b = document.getElementById('btnThemeCyan');
+      if (b) b.classList.add('active');
+    } else if (theme === 'green') {
+      container.style.borderColor = '#1e3a29';
+      bodyEl.style.color = '#4ade80';
+      bodyEl.style.backgroundColor = '#020b05';
+      const b = document.getElementById('btnThemeGreen');
+      if (b) b.classList.add('active');
+    } else if (theme === 'vga') {
+      container.style.borderColor = '#334155';
+      bodyEl.style.color = '#e2e8f0';
+      bodyEl.style.backgroundColor = '#0f172a';
+      const b = document.getElementById('btnThemeVga');
+      if (b) b.classList.add('active');
+    } else if (theme === 'matrix') {
+      container.style.borderColor = '#4a044e';
+      bodyEl.style.color = '#f472b6';
+      bodyEl.style.backgroundColor = '#0a020d';
+      const b = document.getElementById('btnThemeMatrix');
+      if (b) b.classList.add('active');
+    }
+  }
+
+  // Synthesized 3.5" Floppy Disk Stepper Motor Sound
+  function playFddSeekSound() {
+    try {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (!AudioCtx) return;
+      const ctx = new AudioCtx();
+      
+      const bufferSize = ctx.sampleRate * 0.12;
+      const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+      const data = buffer.getChannelData(0);
+      for (let i = 0; i < bufferSize; i++) {
+        // Step motor click / burst
+        const env = Math.exp(-i / (ctx.sampleRate * 0.02));
+        data[i] = (Math.random() * 2 - 1) * env * 0.25;
+      }
+
+      const noise = ctx.createBufferSource();
+      noise.buffer = buffer;
+
+      const filter = ctx.createBiquadFilter();
+      filter.type = 'bandpass';
+      filter.frequency.setValueAtTime(1400, ctx.currentTime);
+      filter.Q.setValueAtTime(4.0, ctx.currentTime);
+
+      const gain = ctx.createGain();
+      gain.gain.setValueAtTime(0.3, ctx.currentTime);
+
+      noise.connect(filter);
+      filter.connect(gain);
+      gain.connect(ctx.destination);
+
+      noise.start();
+      noise.stop(ctx.currentTime + 0.15);
+    } catch (e) {}
+  }
+
+  // Synthesized 1999 Diskmag Chiptune Background Arpeggiator
+  function toggleDiskmagAudio() {
+    const btn = document.getElementById('btnDiskmagAudio');
+    if (diskmagIsAudioPlaying) {
+      stopDiskmagAudio();
+      if (btn) {
+        btn.textContent = "🔊 DISKMAG CHIPTUNE: OFF";
+        btn.classList.remove('active');
+      }
+    } else {
+      startDiskmagAudio();
+      if (btn) {
+        btn.textContent = "🔊 DISKMAG CHIPTUNE: ON (PLAYING)";
+        btn.classList.add('active');
+      }
+    }
+  }
+
+  function startDiskmagAudio() {
+    try {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (!AudioCtx) return;
+      if (!diskmagAudioCtx) diskmagAudioCtx = new AudioCtx();
+      if (diskmagAudioCtx.state === 'suspended') diskmagAudioCtx.resume();
+
+      diskmagIsAudioPlaying = true;
+      const notes = [220, 261.63, 329.63, 392, 440, 523.25, 659.25, 783.99]; // Am7 arpeggios
+      let step = 0;
+
+      diskmagSynthInterval = setInterval(() => {
+        if (!diskmagIsAudioPlaying || !diskmagAudioCtx) return;
+        const now = diskmagAudioCtx.currentTime;
+
+        // Arp voice
+        const osc = diskmagAudioCtx.createOscillator();
+        const gain = diskmagAudioCtx.createGain();
+        osc.type = 'triangle';
+        const noteIdx = (step % 4 === 3) ? (step % 8) : (step % 5);
+        osc.frequency.setValueAtTime(notes[noteIdx], now);
+
+        gain.gain.setValueAtTime(0.08, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
+
+        osc.connect(gain);
+        gain.connect(diskmagAudioCtx.destination);
+        osc.start(now);
+        osc.stop(now + 0.13);
+
+        // Bass voice every 4 beats
+        if (step % 4 === 0) {
+          const bass = diskmagAudioCtx.createOscillator();
+          const bgain = diskmagAudioCtx.createGain();
+          bass.type = 'sawtooth';
+          bass.frequency.setValueAtTime(110, now);
+          bgain.gain.setValueAtTime(0.12, now);
+          bgain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+          bass.connect(bgain);
+          bgain.connect(diskmagAudioCtx.destination);
+          bass.start(now);
+          bass.stop(now + 0.26);
+        }
+
+        step = (step + 1) % 16;
+      }, 130);
+    } catch (e) {}
+  }
+
+  function stopDiskmagAudio() {
+    diskmagIsAudioPlaying = false;
+    if (diskmagSynthInterval) {
+      clearInterval(diskmagSynthInterval);
+      diskmagSynthInterval = null;
+    }
+  }
+
+  function submitDiskmagLetter() {
+    const nickEl = document.getElementById('diskmagMailbagNick');
+    const msgEl = document.getElementById('diskmagMailbagMsg');
+    const nick = (nickEl && nickEl.value.trim()) || "Anonymous";
+    const msg = (msgEl && msgEl.value.trim()) || "";
+
+    if (!msg) {
+      showNoticeToast("Please write a message before submitting.");
+      return;
+    }
+
+    playFddSeekSound();
+    showNoticeToast(`✉️ Letter from ${nick} dispatched to Diskmag Editor mailbag & Shoutbox!`);
+
+    if (msgEl) msgEl.value = "";
+
+    // Forward to live shoutbox if available
+    if (typeof window.WarezFirebasePush === 'function') {
+      window.WarezFirebasePush({
+        handle: nick,
+        text: `[DISKMAG MAILBAG]: ${msg}`,
+        ts: Date.now()
+      });
+    }
+  }
+
+  // Auto-init diskmag when tab is opened
+  window.addEventListener('DOMContentLoaded', () => {
+    initDiskmag();
+  });
+  if (document.readyState === 'complete' || document.readyState === 'interactive') {
+    initDiskmag();
+  }
+  </script>
 
   <!-- Quick Nav to Clearnet & Webring -->
   <div class="section-box" style="text-align:center;">
