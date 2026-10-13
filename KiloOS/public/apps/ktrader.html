@@ -100,6 +100,7 @@
     <button onclick="exportSaveFile()" title="Export voyage JSON file" style="font-size: 0.95em; padding: 4px 8px; margin: 2px;">Export</button>
     <button onclick="document.getElementById('import-file-input').click()" title="Import voyage JSON file" style="font-size: 0.95em; padding: 4px 8px; margin: 2px;">Import</button>
     <input type="file" id="import-file-input" accept=".json" style="display:none;" onchange="importSaveFile(this.files[0]); this.value='';">
+    <button id="audio-toggle-btn" onclick="toggleAudio()" title="Toggle Soundscape Audio [M]" style="font-size: 0.95em; padding: 4px 8px; margin: 2px;">Audio: ON</button>
     <button onclick="showHelp()" title="Captain's Log Help Guide [F1]" style="font-size: 0.95em; padding: 4px 8px; margin: 2px;">Help [F1]</button>
   </div>
 
@@ -362,74 +363,369 @@
       if (m) m.style.display = 'none';
     }
 
+    // --- PROCEDURAL FM SYNTHESIS AUDIO ENGINE (YM2612 2-Op / SPC700) ---
     let audioCtx = null;
+    let audioMasterGain = null;
+    let audioEnabled = true;
+    let musicIntervalId = null;
+    let musicStep = 0;
+
     function getAudioContext() {
-        if (!audioCtx) {
-            const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-            if (AudioContextClass) {
-                audioCtx = new AudioContextClass();
-            }
+      if (!audioCtx) {
+        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        if (AudioContextClass) {
+          audioCtx = new AudioContextClass();
+          audioMasterGain = audioCtx.createGain();
+          audioMasterGain.gain.setValueAtTime(audioEnabled ? 0.35 : 0.0, audioCtx.currentTime);
+          audioMasterGain.connect(audioCtx.destination);
         }
-        if (audioCtx && audioCtx.state === 'suspended') {
-            audioCtx.resume().catch(() => {});
-        }
-        return audioCtx;
+      }
+      if (audioCtx && audioCtx.state === 'suspended') {
+        audioCtx.resume().catch(() => {});
+      }
+      return audioCtx;
     }
-    
+
+    function toggleAudio() {
+      audioEnabled = !audioEnabled;
+      const btn = document.getElementById('audio-toggle-btn');
+      if (btn) {
+        btn.textContent = audioEnabled ? 'Audio: ON' : 'Audio: OFF';
+        btn.style.color = audioEnabled ? '#0ff' : '#888';
+        btn.style.borderColor = audioEnabled ? '#0ff' : '#555';
+      }
+      if (audioMasterGain && audioCtx) {
+        audioMasterGain.gain.setValueAtTime(audioEnabled ? 0.35 : 0.0, audioCtx.currentTime);
+      }
+      if (audioEnabled) {
+        getAudioContext();
+        startSoundscape();
+        showToast('🔊 Audio enabled [M]', 'info', 1800);
+      } else {
+        stopSoundscape();
+        showToast('🔇 Audio muted [M]', 'info', 1800);
+      }
+    }
+
+    // 2-Operator FM Synthesizer Voice (YM2612 Architecture: Modulator -> Carrier)
+    function triggerFMVoice(freq, duration, opts = {}) {
+      if (!audioEnabled) return;
+      const ctx = getAudioContext();
+      if (!ctx || !audioMasterGain) return;
+
+      const now = opts.time || ctx.currentTime;
+      const modRatio = opts.modRatio !== undefined ? opts.modRatio : 1.0;
+      const modIndex = opts.modIndex !== undefined ? opts.modIndex : 120;
+      const carType = opts.carType || 'sine';
+      const modType = opts.modType || 'sine';
+      const attack = opts.attack !== undefined ? opts.attack : 0.01;
+      const decay = opts.decay !== undefined ? opts.decay : duration * 0.7;
+      const sustain = opts.sustain !== undefined ? opts.sustain : 0.2;
+      const release = opts.release !== undefined ? opts.release : 0.08;
+      const volume = opts.volume !== undefined ? opts.volume : 0.4;
+
+      // Carrier
+      const carOsc = ctx.createOscillator();
+      carOsc.type = carType;
+      carOsc.frequency.setValueAtTime(freq, now);
+
+      // Carrier Gain (ADSR)
+      const carGain = ctx.createGain();
+      carGain.gain.setValueAtTime(0.0001, now);
+      carGain.gain.linearRampToValueAtTime(volume, now + attack);
+      carGain.gain.exponentialRampToValueAtTime(Math.max(0.0001, volume * sustain), now + attack + decay);
+      carGain.gain.exponentialRampToValueAtTime(0.0001, now + duration + release);
+
+      // Modulator
+      const modOsc = ctx.createOscillator();
+      modOsc.type = modType;
+      modOsc.frequency.setValueAtTime(freq * modRatio, now);
+
+      // Modulator Gain (FM Index Envelope)
+      const modGain = ctx.createGain();
+      modGain.gain.setValueAtTime(modIndex, now);
+      modGain.gain.exponentialRampToValueAtTime(Math.max(0.1, modIndex * 0.15), now + duration * 0.8);
+      modGain.gain.linearRampToValueAtTime(0.0001, now + duration + release);
+
+      // Wire: Modulator -> Carrier Frequency
+      modOsc.connect(modGain);
+      modGain.connect(carOsc.frequency);
+
+      // Wire: Carrier -> Master
+      carOsc.connect(carGain);
+      carGain.connect(audioMasterGain);
+
+      modOsc.start(now);
+      carOsc.start(now);
+      modOsc.stop(now + duration + release + 0.05);
+      carOsc.stop(now + duration + release + 0.05);
+    }
+
+    // Procedural YM2612 / SPC700 Chiptune Soundscape Sequencer
+    // Scale: D Dorian / Minor (D, E, F, G, A, B, C)
+    const FREQS = {
+      D1: 36.71, A1: 55.00, D2: 73.42, F2: 87.31, G2: 98.00, A2: 110.00, Bb2: 116.54, C3: 130.81,
+      D3: 146.83, E3: 164.81, F3: 174.61, G3: 196.00, A3: 220.00, Bb3: 233.08, C4: 261.63,
+      D4: 293.66, E4: 329.63, F4: 349.23, G4: 392.00, A4: 440.00, Bb4: 466.16, C5: 523.25,
+      D5: 587.33, E5: 659.25, F5: 698.46, G5: 783.99, A5: 880.00
+    };
+
+    // Deep Space Orbit progression (16 steps per bar, 2 bars = 32 steps)
+    const AMBIENT_BASS = [
+      FREQS.D2, 0, FREQS.D2, 0, FREQS.A1, 0, FREQS.D2, 0,
+      FREQS.Bb2, 0, FREQS.Bb2, 0, FREQS.F2, 0, FREQS.Bb2, 0,
+      FREQS.G2, 0, FREQS.G2, 0, FREQS.D2, 0, FREQS.G2, 0,
+      FREQS.A2, 0, FREQS.A2, 0, FREQS.E3, 0, FREQS.A2, 0
+    ];
+
+    const AMBIENT_MELODY = [
+      FREQS.D4, 0, FREQS.F4, FREQS.A4, 0, FREQS.D5, 0, FREQS.C5,
+      FREQS.Bb4, 0, FREQS.D4, FREQS.F4, 0, FREQS.A4, 0, FREQS.F4,
+      FREQS.G4, 0, FREQS.Bb4, FREQS.D5, 0, FREQS.F5, 0, FREQS.D5,
+      FREQS.E5, 0, FREQS.C5, FREQS.A4, 0, FREQS.E4, FREQS.F4, FREQS.E4
+    ];
+
+    // Combat Ostinato (High-tempo action)
+    const COMBAT_BASS = [
+      FREQS.D2, FREQS.D2, FREQS.F2, FREQS.D2, FREQS.G2, FREQS.D2, FREQS.A2, FREQS.D2,
+      FREQS.Bb2, FREQS.Bb2, FREQS.A2, FREQS.G2, FREQS.F2, FREQS.G2, FREQS.A2, FREQS.C3
+    ];
+
+    const COMBAT_MELODY = [
+      FREQS.D4, FREQS.D4, FREQS.A4, 0, FREQS.F4, 0, FREQS.D4, FREQS.E4,
+      FREQS.F4, FREQS.F4, FREQS.G4, FREQS.A4, FREQS.D5, 0, FREQS.C5, FREQS.A4
+    ];
+
+    function scheduleSoundscapeStep() {
+      if (!audioEnabled) return;
+      const ctx = getAudioContext();
+      if (!ctx || !audioMasterGain) return;
+
+      const stepTime = ctx.currentTime + 0.05;
+      const isCombat = !!state.inCombat;
+      const stepLen = isCombat ? 0.13 : 0.22;
+
+      if (isCombat) {
+        // Fast Combat Tracker
+        const bIdx = musicStep % COMBAT_BASS.length;
+        const mIdx = musicStep % COMBAT_MELODY.length;
+        const bNote = COMBAT_BASS[bIdx];
+        const mNote = COMBAT_MELODY[mIdx];
+
+        if (bNote) {
+          triggerFMVoice(bNote, stepLen * 0.8, {
+            time: stepTime,
+            modRatio: 2.0,
+            modIndex: 260,
+            attack: 0.005,
+            decay: stepLen * 0.6,
+            sustain: 0.2,
+            release: 0.04,
+            volume: 0.28,
+            carType: 'sawtooth',
+            modType: 'sine'
+          });
+        }
+        if (mNote) {
+          triggerFMVoice(mNote, stepLen * 0.6, {
+            time: stepTime,
+            modRatio: 3.5,
+            modIndex: 420,
+            attack: 0.003,
+            decay: stepLen * 0.5,
+            sustain: 0.1,
+            release: 0.03,
+            volume: 0.22,
+            carType: 'square',
+            modType: 'sine'
+          });
+        }
+      } else {
+        // Ambient Exploration Tracker
+        const bIdx = musicStep % AMBIENT_BASS.length;
+        const mIdx = musicStep % AMBIENT_MELODY.length;
+        const bNote = AMBIENT_BASS[bIdx];
+        const mNote = AMBIENT_MELODY[mIdx];
+
+        if (bNote) {
+          triggerFMVoice(bNote, stepLen * 1.4, {
+            time: stepTime,
+            modRatio: 1.0,
+            modIndex: 110,
+            attack: 0.02,
+            decay: stepLen * 0.9,
+            sustain: 0.35,
+            release: 0.12,
+            volume: 0.24,
+            carType: 'triangle',
+            modType: 'sine'
+          });
+        }
+        if (mNote && Math.random() < 0.85) {
+          triggerFMVoice(mNote, stepLen * 1.1, {
+            time: stepTime,
+            modRatio: 2.5,
+            modIndex: 320,
+            attack: 0.008,
+            decay: stepLen * 0.7,
+            sustain: 0.15,
+            release: 0.15,
+            volume: 0.18,
+            carType: 'sine',
+            modType: 'sine'
+          });
+        }
+      }
+
+      musicStep++;
+    }
+
+    function startSoundscape() {
+      if (musicIntervalId) return;
+      musicIntervalId = setInterval(scheduleSoundscapeStep, 210);
+    }
+
+    function stopSoundscape() {
+      if (musicIntervalId) {
+        clearInterval(musicIntervalId);
+        musicIntervalId = null;
+      }
+    }
+
+    // High-Fidelity YM2612 UI Earcons & Action Stingers
     function playSound(type) {
-        try {
-            const ctx = getAudioContext();
-            if (!ctx) return;
-            const osc = ctx.createOscillator();
-            const gain = ctx.createGain();
-            osc.connect(gain);
-            gain.connect(ctx.destination);
-            const now = ctx.currentTime;
-            
-            if (type === 'jump') {
-                osc.type = 'sine';
-                osc.frequency.setValueAtTime(100, now);
-                osc.frequency.exponentialRampToValueAtTime(800, now + 1.0);
-                gain.gain.setValueAtTime(0, now);
-                gain.gain.linearRampToValueAtTime(0.5, now + 0.1);
-                gain.gain.exponentialRampToValueAtTime(0.01, now + 1.0);
-                osc.start(now);
-                osc.stop(now + 1.0);
-            } else if (type === 'laser') {
-                osc.type = 'square';
-                osc.frequency.setValueAtTime(800, now);
-                osc.frequency.exponentialRampToValueAtTime(100, now + 0.2);
-                gain.gain.setValueAtTime(0.1, now);
-                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
-                osc.start(now);
-                osc.stop(now + 0.2);
-            } else if (type === 'chime') {
-                osc.type = 'triangle';
-                osc.frequency.setValueAtTime(600, now);
-                gain.gain.setValueAtTime(0.1, now);
-                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
-                osc.start(now);
-                osc.stop(now + 0.3);
-            } else if (type === 'alert') {
-                osc.type = 'sawtooth';
-                osc.frequency.setValueAtTime(400, now);
-                osc.frequency.linearRampToValueAtTime(600, now + 0.2);
-                osc.frequency.linearRampToValueAtTime(400, now + 0.4);
-                gain.gain.setValueAtTime(0.1, now);
-                gain.gain.linearRampToValueAtTime(0.1, now + 0.3);
-                gain.gain.linearRampToValueAtTime(0.01, now + 0.4);
-                osc.start(now);
-                osc.stop(now + 0.4);
-            } else if (type === 'fail') {
-                osc.type = 'sawtooth';
-                osc.frequency.setValueAtTime(200, now);
-                osc.frequency.linearRampToValueAtTime(100, now + 0.5);
-                gain.gain.setValueAtTime(0.1, now);
-                gain.gain.linearRampToValueAtTime(0.01, now + 0.5);
-                osc.start(now);
-                osc.stop(now + 0.5);
-            }
-        } catch (e) {}
+      if (!audioEnabled) return;
+      try {
+        const ctx = getAudioContext();
+        if (!ctx || !audioMasterGain) return;
+        const now = ctx.currentTime;
+
+        if (type === 'chime') {
+          // Dual 2-Op FM crystal bell earcon (Buy / Sell / Save / Progress)
+          triggerFMVoice(659.25, 0.25, {
+            time: now,
+            modRatio: 2.76,
+            modIndex: 400,
+            attack: 0.002,
+            decay: 0.2,
+            sustain: 0.05,
+            release: 0.1,
+            volume: 0.28,
+            carType: 'sine'
+          });
+          triggerFMVoice(987.77, 0.35, {
+            time: now + 0.05,
+            modRatio: 3.5,
+            modIndex: 500,
+            attack: 0.002,
+            decay: 0.25,
+            sustain: 0.05,
+            release: 0.12,
+            volume: 0.24,
+            carType: 'sine'
+          });
+        } else if (type === 'jump') {
+          // Hyperspace Warp: Resonant FM sub-bass glide + cosmic shimmer
+          const osc = ctx.createOscillator();
+          const mod = ctx.createOscillator();
+          const modG = ctx.createGain();
+          const gain = ctx.createGain();
+
+          osc.type = 'sine';
+          mod.type = 'sawtooth';
+
+          osc.frequency.setValueAtTime(65, now);
+          osc.frequency.exponentialRampToValueAtTime(740, now + 0.9);
+          osc.frequency.exponentialRampToValueAtTime(130, now + 1.2);
+
+          mod.frequency.setValueAtTime(130, now);
+          mod.frequency.exponentialRampToValueAtTime(1480, now + 0.9);
+
+          modG.gain.setValueAtTime(300, now);
+          modG.gain.exponentialRampToValueAtTime(30, now + 1.2);
+
+          gain.gain.setValueAtTime(0.001, now);
+          gain.gain.linearRampToValueAtTime(0.35, now + 0.12);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 1.25);
+
+          mod.connect(modG);
+          modG.connect(osc.frequency);
+          osc.connect(gain);
+          gain.connect(audioMasterGain);
+
+          mod.start(now);
+          osc.start(now);
+          mod.stop(now + 1.3);
+          osc.stop(now + 1.3);
+        } else if (type === 'laser') {
+          // Punchy 2-Op FM laser bolt
+          triggerFMVoice(880, 0.16, {
+            time: now,
+            modRatio: 3.0,
+            modIndex: 750,
+            attack: 0.001,
+            decay: 0.12,
+            sustain: 0.01,
+            release: 0.04,
+            volume: 0.32,
+            carType: 'sawtooth',
+            modType: 'square'
+          });
+        } else if (type === 'alert') {
+          // FM Klaxon Alarm (Alternating minor-second klaxon)
+          triggerFMVoice(440, 0.14, {
+            time: now,
+            modRatio: 1.5,
+            modIndex: 350,
+            attack: 0.005,
+            decay: 0.12,
+            sustain: 0.2,
+            release: 0.02,
+            volume: 0.3,
+            carType: 'sawtooth'
+          });
+          triggerFMVoice(622.25, 0.18, {
+            time: now + 0.15,
+            modRatio: 1.5,
+            modIndex: 350,
+            attack: 0.005,
+            decay: 0.15,
+            sustain: 0.2,
+            release: 0.02,
+            volume: 0.32,
+            carType: 'sawtooth'
+          });
+        } else if (type === 'fail') {
+          // Heavy resonant FM downward buzzer with metallic dissonance
+          triggerFMVoice(146.83, 0.45, {
+            time: now,
+            modRatio: 1.414,
+            modIndex: 450,
+            attack: 0.005,
+            decay: 0.35,
+            sustain: 0.1,
+            release: 0.1,
+            volume: 0.35,
+            carType: 'sawtooth',
+            modType: 'triangle'
+          });
+        } else if (type === 'victory') {
+          // Dreadnought Fanfare chord
+          [293.66, 369.99, 440.00, 587.33].forEach((f, i) => {
+            triggerFMVoice(f, 0.8, {
+              time: now + i * 0.08,
+              modRatio: 2.0,
+              modIndex: 280,
+              attack: 0.01,
+              decay: 0.5,
+              sustain: 0.2,
+              release: 0.2,
+              volume: 0.22,
+              carType: 'sine'
+            });
+          });
+        }
+      } catch (e) {}
     }
 
     const goods = ["Food", "Water", "Ore", "Tech", "Meds", "Luxury", "Contraband", "Military"];
@@ -2056,6 +2352,11 @@
         showHelp();
         return;
       }
+      if (e.key === 'm' || e.key === 'M') {
+        e.preventDefault();
+        toggleAudio();
+        return;
+      }
 
       if (state.inCombat) {
         if (e.key === ' ' || e.key === 'f' || e.key === 'F') {
@@ -2086,13 +2387,32 @@
 
     window.addEventListener('beforeunload', () => {
       stopLoop();
+      stopSoundscape();
       if (audioCtx && audioCtx.state !== 'closed') {
         try { audioCtx.close(); } catch (err) {}
       }
     });
     window.addEventListener('pagehide', () => {
       stopLoop();
+      stopSoundscape();
     });
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) {
+        stopLoop();
+        stopSoundscape();
+      } else {
+        startLoop();
+        if (audioEnabled) startSoundscape();
+      }
+    });
+
+    // Start soundscape on first user gesture
+    document.addEventListener('pointerdown', () => {
+      if (audioEnabled) {
+        getAudioContext();
+        startSoundscape();
+      }
+    }, { once: true });
 
     const hasSaved = loadGame();
     if (!hasSaved) {
