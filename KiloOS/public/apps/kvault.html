@@ -1268,6 +1268,22 @@
                     </div>
                     <button class="btn secondary" onclick="exportEmergencyKit()">Generate Sheet</button>
                 </div>
+
+                <div style="background:rgba(255,255,255,0.03); border:1px solid var(--glass-border); border-radius:8px; padding:12px; display:flex; justify-content:space-between; align-items:center;">
+                    <div>
+                        <strong style="font-size:14px;">📜 Retro PGP-Style Armored Block (.asc)</strong>
+                        <div style="font-size:12px; color:var(--text-muted);">ASCII armored base64 block with SHA-256 parity checksum.</div>
+                    </div>
+                    <button class="btn secondary" onclick="exportArmoredASCII()">Export ASC</button>
+                </div>
+
+                <div style="background:rgba(255,255,255,0.03); border:1px solid var(--glass-border); border-radius:8px; padding:12px; display:flex; justify-content:space-between; align-items:center;">
+                    <div>
+                        <strong style="font-size:14px;">🗂️ KeePass 1.x XML Exchange (.xml)</strong>
+                        <div style="font-size:12px; color:var(--text-muted);">Standard XML schema compatible with KeePass 1.x / KDBX migration.</div>
+                    </div>
+                    <button class="btn secondary" onclick="exportKeePassXML()">Export XML</button>
+                </div>
             </div>
 
             <button class="btn secondary close-modal" onclick="closeExportModal()">Cancel (Esc)</button>
@@ -1278,13 +1294,13 @@
     <div class="modal-overlay" id="import-modal" role="dialog" aria-modal="true" aria-labelledby="import-title">
         <div class="modal-content" style="max-width: 500px;">
             <h3 id="import-title">📥 Import Vault Data</h3>
-            <p>Upload an Encrypted KVault JSON backup or standard CSV file.</p>
+            <p>Upload an Encrypted KVault JSON backup, KeePass XML, PGP Armored, or standard CSV file.</p>
 
             <div id="drop-zone" style="border: 2px dashed var(--glass-border); border-radius:10px; padding:30px 20px; text-align:center; background:rgba(0,0,0,0.2); cursor:pointer; margin: 16px 0;" onclick="document.getElementById('import-file-input').click()">
                 <div style="font-size:32px; margin-bottom:8px;">📁</div>
                 <div style="font-size:14px; font-weight:600; margin-bottom:4px;">Click to select file or Drag & Drop here</div>
-                <div style="font-size:12px; color:var(--text-muted);">Accepts .json (encrypted backup) or .csv (spreadsheet / KeePass)</div>
-                <input type="file" id="import-file-input" accept=".json,.csv,text/csv,application/json" style="display:none;" onchange="handleFileSelected(event)">
+                <div style="font-size:12px; color:var(--text-muted);">Accepts .json (encrypted backup), .csv, .xml (KeePass), or .asc (PGP armor)</div>
+                <input type="file" id="import-file-input" accept=".json,.csv,.xml,.asc,.txt,text/csv,text/xml,application/json" style="display:none;" onchange="handleFileSelected(event)">
             </div>
 
             <button class="btn secondary close-modal" onclick="closeImportModal()">Cancel (Esc)</button>
@@ -3513,6 +3529,65 @@ Store this sheet in a fireproof safe or secure physical vault. It provides emerg
             showNotification("Emergency Access Kit generated");
         }
 
+        async function exportArmoredASCII() {
+            closeExportModal();
+            let stored = null;
+            try { stored = localStorage.getItem(STORAGE_KEY); } catch(e){}
+            if (!stored) {
+                showNotification("Vault is empty or not initialized", "error");
+                return;
+            }
+            let checksum = "00000000";
+            try {
+                const msgUint8 = new TextEncoder().encode(stored);
+                const hashBuffer = await crypto.subtle.digest('SHA-256', msgUint8);
+                const hashArray = Array.from(new Uint8Array(hashBuffer));
+                checksum = hashArray.slice(0, 4).map(b => b.toString(16).padStart(2, '0')).join('').toUpperCase();
+            } catch(e) {}
+            const b64 = btoa(unescape(encodeURIComponent(stored)));
+            const lines = [];
+            for (let i = 0; i < b64.length; i += 64) {
+                lines.push(b64.slice(i, i + 64));
+            }
+            const armor = [
+                "-----BEGIN KVAULT ARMORED BACKUP-----",
+                "Version: KVault 1.99 / KiloOS CryptoEngine",
+                `Comment: Alternate 1999 Secure Mesh Vault (Parity: =${checksum})`,
+                "",
+                ...lines,
+                `=${checksum}`,
+                "-----END KVAULT ARMORED BACKUP-----"
+            ].join('\r\n');
+
+            downloadFile("kvault_armored.asc", "text/plain", armor);
+            showNotification("ASCII Armored backup exported (.asc)");
+        }
+
+        function exportKeePassXML() {
+            closeExportModal();
+            const active = vaultData.filter(s => !s.trash);
+            if (active.length === 0) {
+                showNotification("No active secrets to export", "error");
+                return;
+            }
+            let xml = `<?xml version="1.0" encoding="utf-8"?>\r\n<pwlist version="1.0">\r\n`;
+            active.forEach(s => {
+                xml += `  <pwentry>\r\n`;
+                xml += `    <group>${escapeHtml(s.category || 'General')}</group>\r\n`;
+                xml += `    <title>${escapeHtml(s.title || '')}</title>\r\n`;
+                xml += `    <username>${escapeHtml(s.username || '')}</username>\r\n`;
+                xml += `    <password>${escapeHtml(s.value || '')}</password>\r\n`;
+                xml += `    <url>${escapeHtml(s.url || '')}</url>\r\n`;
+                xml += `    <notes>${escapeHtml((s.notes || '') + (s.totpKey ? ' [TOTP:' + s.totpKey + ']' : ''))}</notes>\r\n`;
+                xml += `    <creationtime>${s.created || ''}</creationtime>\r\n`;
+                xml += `    <lastmodtime>${s.modified || ''}</lastmodtime>\r\n`;
+                xml += `  </pwentry>\r\n`;
+            });
+            xml += `</pwlist>\r\n`;
+            downloadFile("kvault_keepass.xml", "application/xml", xml);
+            showNotification(`Exported ${active.length} entries to KeePass XML`);
+        }
+
         function downloadFile(filename, mimeType, content) {
             const blob = new Blob([content], { type: mimeType });
             const url = URL.createObjectURL(blob);
@@ -3562,6 +3637,74 @@ Store this sheet in a fireproof safe or secure physical vault. It provides emerg
                 const text = ev.target.result;
                 closeImportModal();
                 try {
+                    // Check if file is ASCII Armored KVault backup
+                    if (text.includes("-----BEGIN KVAULT ARMORED BACKUP-----")) {
+                        const armorBody = text.split(/\r?\n/)
+                            .filter(l => !l.startsWith("-----") && !l.startsWith("Version:") && !l.startsWith("Comment:") && !l.startsWith("=") && l.trim().length > 0)
+                            .join("");
+                        const decodedJson = decodeURIComponent(escape(atob(armorBody)));
+                        if (!safeStorageSet(STORAGE_KEY, decodedJson)) {
+                            return;
+                        }
+                        lockVault(true);
+                        showNotification("Armored vault imported! Please unlock with master password.");
+                        return;
+                    }
+
+                    // Check if file is KeePass XML (<pwlist> / <pwentry>)
+                    if (text.includes("<pwentry>") || text.includes("<pwlist>")) {
+                        if (!masterKey) {
+                            showNotification("Unlock your vault first before importing unencrypted KeePass XML", "error");
+                            return;
+                        }
+                        const parser = new DOMParser();
+                        const xmlDoc = parser.parseFromString(text, "text/xml");
+                        const entries = xmlDoc.getElementsByTagName("pwentry");
+                        let count = 0;
+                        for (let i = 0; i < entries.length; i++) {
+                            const entry = entries[i];
+                            const getTag = (tag) => {
+                                const el = entry.getElementsByTagName(tag)[0];
+                                return el ? el.textContent : '';
+                            };
+                            const title = getTag('title') || 'Imported Entry';
+                            const pass = getTag('password');
+                            const user = getTag('username');
+                            const url = getTag('url');
+                            const group = getTag('group') || 'General';
+                            const notes = getTag('notes');
+                            let totp = '';
+                            const totpMatch = notes.match(/\[TOTP:\s*([^\]]+)\]/i);
+                            if (totpMatch) totp = totpMatch[1].trim();
+
+                            vaultData.push({
+                                id: 'sec_' + Date.now() + '_' + i + '_' + Math.random().toString(36).substring(2, 6),
+                                title: title,
+                                value: pass,
+                                category: group,
+                                compartment: 'personal',
+                                username: user,
+                                url: url,
+                                totpKey: totp,
+                                cardNumber: '',
+                                cardExpiry: '',
+                                cardCvv: '',
+                                expires: '',
+                                customFields: [],
+                                tags: ['keepass'],
+                                notes: notes.replace(/\[TOTP:\s*[^\]]+\]/gi, '').trim(),
+                                created: getTag('creationtime') || new Date().toISOString()
+                            });
+                            count++;
+                        }
+                        if (count > 0) {
+                            await saveVaultToStorage();
+                            renderSecrets();
+                            showNotification(`Successfully imported ${count} entries from KeePass XML!`);
+                            return;
+                        }
+                    }
+
                     // Try parsing as JSON first
                     let data = null;
                     try { data = JSON.parse(text); } catch(err) {}

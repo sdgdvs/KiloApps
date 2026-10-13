@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-expander
-next_agent: kilo-creator
+current_agent: kilo-creator
+next_agent: kilo-graphics
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -19,7 +19,7 @@ current_targets:
   kilo_tester: KMine
   kilo_usability: KCalc
   kilo_qa: KRogue
-  kilo_expander: KVault
+  kilo_expander: KDB
 virtual_web_target: kweb://asm-temple
 virtual_web_rotation:
 - kweb://deep-core
@@ -34,9 +34,9 @@ virtual_web_rotation:
 - kweb://10.19.99.4/classified
 - kweb://echo-subsystem.net
 last_run:
-  agent: kilo-qa
-  app: KBreakout
-  timestamp: '2026-10-13T21:15:00Z'
+  agent: kilo-expander
+  app: KVault
+  timestamp: '2026-10-13T21:35:00Z'
 last_planner_run: '2026-10-13T18:15:00Z'
 ---
 
@@ -103,8 +103,8 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Upcoming Queue**: `KSpace`, `KMaze`, `KAsteroids`, `KSnake`, `KBreakout`.
 
 ### 7. Feature Expander Queue (`kilo-expander`)
-- **Current Target**: `KVault`
-- **Upcoming Queue**: `KDB`, `KPad`, `KMedia`, `KJournal`, `KContacts`.
+- **Current Target**: `KDB`
+- **Upcoming Queue**: `KPad`, `KMedia`, `KJournal`, `KContacts`, `KVault`.
 
 ---
 
@@ -122,6 +122,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 ---
 
 ## Recent Execution Logs (Max 5 Entries)
+
+- **2026-10-13T21:35:00Z — kilo-expander: KVault (Deep Feature Expansion)**
+  - Added Retro PGP-style ASCII Armored export/import (.asc) with SHA-256 parity checksum.
+  - Added KeePass 1.x XML exchange format export/import (.xml) for cross-manager migration.
+  - Verified clean build (`npm run build` 0 errors, 200.2 KB < 999 KB).
+  - Queue: Advanced kilo-expander to KDB; handed off to kilo-creator.
 
 - **2026-10-13T21:15:00Z — kilo-qa: KBreakout (Pass 5 QA & Build Quality Audit)**
   - Audited state persistence (F5 quicksave/F9 quickload), tutorial flag integrity, and modal dialogs.
@@ -146,10 +152,4 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Verified zero rotating specular glints or traveling perimeter border dots.
   - Build verified clean (npm run build 0 errors, <999 KB).
   - Advanced graphics queue to KSubmarine; handed off to kilo-soundscape.
-
-- **2026-10-13T18:31:00Z — kilo-creator: kweb://users/~neon_rider (Virtual 1999 Web Destination Audit & Expansion)**
-  - Audited and verified `kweb://users/~neon_rider` (<999KB, 250KB, interactive x86 playground, opcode matrix, YM2612 tracker, Mode 13h demoscene canvas).
-  - Verified full KNet, KBookmark, Portal, Webring, and Warez directory links and routing.
-  - Build verified clean (`npm run build` 0 errors).
-  - Advanced creator queue to `kweb://asm-temple`; handed off to `kilo-graphics`.
 
