@@ -339,6 +339,13 @@
           <span id="menu-opt-sound">🔊 Sound Effects: ON</span>
         </div>
         <div class="menu-divider"></div>
+        <div class="menu-dropdown-entry" onclick="toggleEvalBar()">
+          <span id="menu-opt-evalbar">📊 Live Engine Eval Bar: ON</span><span class="shortcut">X</span>
+        </div>
+        <div class="menu-dropdown-entry" onclick="cycleClockFormat()">
+          <span id="menu-opt-clock">⏱️ Time Control: Blitz (3m)</span><span class="shortcut">K</span>
+        </div>
+        <div class="menu-divider"></div>
         <div class="menu-dropdown-entry" onclick="undoMove()">
           <span>↩️ Undo Move</span><span class="shortcut">U</span>
         </div>
@@ -451,6 +458,8 @@
         <tr><td><kbd>C</kbd></td><td>Custom Board &amp; Position Editor (Setup Scenarios)</td></tr>
         <tr><td><kbd>S</kbd> / <kbd>F5</kbd></td><td>Quick Save Game State to storage</td></tr>
         <tr><td><kbd>L</kbd> / <kbd>F9</kbd></td><td>Quick Load Saved Game State</td></tr>
+        <tr><td><kbd>X</kbd></td><td>Toggle Live Engine Evaluation Bar (Centipawn gauge)</td></tr>
+        <tr><td><kbd>K</kbd></td><td>Cycle Clock Time Control (Blitz / Bullet / Rapid / Classical)</td></tr>
         <tr><td><kbd>M</kbd></td><td>Switch Game Mode (Standard / Campaign / Puzzle / Blitz)</td></tr>
         <tr><td><kbd>T</kbd></td><td>Toggle vs AI / 2-Player Pass-and-Play Mode</td></tr>
         <tr><td><kbd>E</kbd></td><td>FEN Position Manager (Export / Load FEN string)</td></tr>
@@ -903,6 +912,110 @@
 
   let blitzTimeWhite = 180.0;
   let blitzTimeBlack = 180.0;
+  let blitzIncrement = 0;
+  const CLOCK_FORMATS = [
+      { name: 'Blitz (3m)', time: 180, inc: 0 },
+      { name: 'Bullet (1m)', time: 60, inc: 0 },
+      { name: 'Rapid (5m+3s)', time: 300, inc: 3 },
+      { name: 'Classical (10m)', time: 600, inc: 5 },
+      { name: 'Casual (No Clock)', time: 0, inc: 0 }
+  ];
+  let currentClockFormatIndex = 0;
+
+  let showEvalBar = true;
+  let evalBarScore = 0;
+
+  function toggleEvalBar() {
+      showEvalBar = !showEvalBar;
+      const optEl = document.getElementById('menu-opt-evalbar');
+      if (optEl) optEl.textContent = `📊 Live Engine Eval Bar: ${showEvalBar ? 'ON' : 'OFF'}`;
+      showToast(`Live Eval Bar ${showEvalBar ? 'Enabled' : 'Disabled'} (X)`, 'info');
+  }
+
+  function cycleClockFormat() {
+      currentClockFormatIndex = (currentClockFormatIndex + 1) % CLOCK_FORMATS.length;
+      const fmt = CLOCK_FORMATS[currentClockFormatIndex];
+      if (fmt.time > 0) {
+          blitzTimeWhite = fmt.time;
+          blitzTimeBlack = fmt.time;
+          blitzIncrement = fmt.inc || 0;
+          if (gameMode !== 3) {
+              setMode(3);
+          }
+      } else {
+          if (gameMode === 3) {
+              setMode(1);
+          }
+      }
+      const optEl = document.getElementById('menu-opt-clock');
+      if (optEl) optEl.textContent = `⏱️ Time Control: ${fmt.name}`;
+      showToast(`Time Control: ${fmt.name} (K)`, 'info');
+  }
+
+  function drawEvalBar(ctx) {
+      if (!showEvalBar) return;
+      const barX = 72;
+      const barY = OY; // 120
+      const barW = 16;
+      const barH = 8 * TS; // 560
+
+      let targetScore = 0;
+      if (gameOver) {
+          if (winner === 1) targetScore = 2000;
+          else if (winner === 2) targetScore = -2000;
+          else targetScore = 0;
+      } else {
+          targetScore = typeof evaluateBoardStatic === 'function' ? evaluateBoardStatic() : 0;
+      }
+
+      evalBarScore += (targetScore - evalBarScore) * 0.12;
+
+      const pawns = evalBarScore / 100;
+      const clamped = Math.max(-10, Math.min(10, pawns));
+      const whiteRatio = 0.5 + (clamped / 20); // 0.0 to 1.0
+      const whiteH = Math.round(barH * whiteRatio);
+      const blackH = barH - whiteH;
+
+      ctx.save();
+      // Outer border frame
+      ctx.fillStyle = '#0f172a';
+      ctx.beginPath();
+      ctx.roundRect(barX, barY, barW, barH, 4);
+      ctx.fill();
+      ctx.strokeStyle = '#334155';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+
+      // Black portion (top)
+      ctx.fillStyle = '#1e293b';
+      ctx.beginPath();
+      ctx.roundRect(barX, barY, barW, blackH, [4, 4, 0, 0]);
+      ctx.fill();
+
+      // White portion (bottom)
+      ctx.fillStyle = '#f8fafc';
+      ctx.beginPath();
+      ctx.roundRect(barX, barY + blackH, barW, whiteH, [0, 0, 4, 4]);
+      ctx.fill();
+
+      // Center baseline indicator
+      ctx.fillStyle = '#38bdf8';
+      ctx.fillRect(barX - 2, barY + barH / 2 - 1, barW + 4, 2);
+
+      // Centipawn text readout
+      ctx.font = 'bold 9px monospace';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      const scoreStr = Math.abs(pawns).toFixed(1);
+      if (pawns >= 0) {
+          ctx.fillStyle = '#0f172a';
+          ctx.fillText('+' + scoreStr, barX + barW / 2, barY + barH - 10);
+      } else {
+          ctx.fillStyle = '#f8fafc';
+          ctx.fillText('-' + scoreStr, barX + barW / 2, barY + 10);
+      }
+      ctx.restore();
+  }
 
   let wKingMoved = false, wRookLMoved = false, wRookRMoved = false;
   let bKingMoved = false, bRookLMoved = false, bRookRMoved = false;
@@ -2193,6 +2306,10 @@
           openAnalysisModal();
       } else if (k === 'c') {
           openEditorModal();
+      } else if (k === 'x') {
+          toggleEvalBar();
+      } else if (k === 'k') {
+          cycleClockFormat();
       }
   }
 
@@ -4533,6 +4650,9 @@
 
       // Board Frame Ornate Filigree Corner Brackets
       drawOrnateCornerFiligree(ctx, OX - 6, OY - 6, TS * 8 + 12, TS * 8 + 12, 16, '#d4af37', '#fef08a');
+
+      // Dynamic Engine Evaluation Bar
+      drawEvalBar(ctx);
 
       ctx.font = "bold 15px 'Inter', sans-serif";
       ctx.fillStyle = "#d4af37";
