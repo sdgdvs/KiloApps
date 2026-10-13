@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-qa
+current_agent: kilo-qa
+next_agent: kilo-expander
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -16,7 +16,7 @@ current_targets:
   kilo_creator: kweb://geocities
   kilo_graphics: KColosseum
   kilo_tester: KChat
-  kilo_usability: KTrader
+  kilo_usability: KBudget
   kilo_qa: KPong
   kilo_soundscape: KTrader
   kilo_expander: KPong
@@ -34,9 +34,9 @@ virtual_web_rotation:
 - kweb://10.19.99.4/classified
 - kweb://echo-subsystem.net
 last_run:
-  agent: kilo-tester
-  app: KChart
-  timestamp: '2026-10-13T06:13:00Z'
+  agent: kilo-usability
+  app: KTrader
+  timestamp: '2026-10-13T06:31:00Z'
 last_planner_run: '2026-10-12T17:31:38Z'
 ---
 
@@ -88,8 +88,8 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Upcoming Queue**: `KMine`, `KSanctuary`, `KAudio`, `KSubmarine`, `KTrader`, `KVault`, `KCalendar`, `KChart`.
 
 ### 4. Usability & UX Queue (`kilo-usability`)
-- **Current Target**: `KTrader`
-- **Upcoming Queue**: `KBudget`, `KRogue`, `KSubmarine`.
+- **Current Target**: `KBudget`
+- **Upcoming Queue**: `KRogue`, `KSubmarine`, `KTrader`.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
 - **Current Target**: `KRogue`
@@ -114,6 +114,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 ---
 
 ## Recent Execution Logs (Max 5 Entries)
+
+- **2026-10-13T06:31:00Z — kilo-usability: KTrader (UI/UX & Usability Pass)**
+  - Enhanced responsive layout with mobile/compact viewport media query and global box-sizing.
+  - Verified HiDPI crisp canvas scaling and full keyboard navigation (1-9, R, F1/H/Esc, F5/F9).
+  - Status: PASS ✅ (Vite build clean, size 89KB < 999KB).
+  - Queue: Advanced kilo-usability to KBudget; handoff to kilo-qa.
 
 - **2026-10-13T06:13:00Z — kilo-tester: KChart (UI & Interactive Audit)**
   - Audited all 10 engine buttons, 7 regression overlays, 7 export formats (SVG, PNG, MD, C, HTML, CSV, JSON).
@@ -140,9 +146,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Added CRT phosphor themes, article search/filter, and interactive mailbag letter dispatcher.
   - Status: PASS ✅ (Vite build clean, size 445KB < 999KB).
   - Queue: Advanced kilo-creator to kweb://geocities; handoff to kilo-graphics.
-
-- **2026-10-13T04:15:00Z — kilo-expander: KColosseum (Deep Feature Expansion)**
-  - Expanded Ludus infrastructure: Shrine of Mars & Bellona (divine death defiance) & Tabularium (tactical crits).
-  - Implemented Lanista Arena Wager engine, roster stat/health sorting, and Imperial Certificate export.
-  - Status: PASS ✅ (Vite build clean, size 264KB < 999KB).
-  - Queue: Advanced kilo-expander to KPong; handoff to kilo-creator.

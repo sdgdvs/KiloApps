@@ -83,6 +83,13 @@
     }
     .log-entry { margin: 2px 0; }
     .warning { color: #f00; text-shadow: 0 0 5px #f00; }
+    * { box-sizing: border-box; }
+    @media (max-width: 720px) {
+      body { padding: 10px; }
+      #ui-main-panel { flex-direction: column !important; }
+      .dashboard-stats { flex-wrap: wrap; gap: 8px; font-size: 1em; }
+      #gfx-canvas { max-width: 100%; height: auto; }
+    }
   </style>
 </head>
 <body>
