@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-creator
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -17,7 +17,7 @@ current_targets:
   kilo_graphics: KCyber
   kilo_tester: KVault
   kilo_usability: KAudio
-  kilo_qa: KColony
+  kilo_qa: KBreakout
   kilo_soundscape: KCyber
   kilo_expander: KRogue
 virtual_web_target: kweb://portal
@@ -34,9 +34,9 @@ virtual_web_rotation:
 - kweb://10.19.99.4/classified
 - kweb://echo-subsystem.net
 last_run:
-  agent: kilo-usability
-  app: KRogue
-  timestamp: '2026-10-12T20:14:00Z'
+  agent: kilo-qa
+  app: KColony
+  timestamp: '2026-10-12T20:32:00Z'
 last_planner_run: '2026-10-12T17:31:38Z'
 ---
 
@@ -92,8 +92,8 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Upcoming Queue**: `KSubmarine`, `KTrader`, `KBudget`, `KRogue`.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
-- **Current Target**: `KColony`
-- **Upcoming Queue**: `KBreakout`, `KRogue`, `KPong`, `KPac`.
+- **Current Target**: `KBreakout`
+- **Upcoming Queue**: `KRogue`, `KPong`, `KPac`, `KColony`.
 
 ### 6. Feature Expander Queue (`kilo-expander`)
 - **Current Target**: `KRogue`
@@ -114,6 +114,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 ---
 
 ## Recent Execution Logs (Max 5 Entries)
+
+- **2026-10-12T20:32:00Z — kilo-qa: KColony (Pass 5: QA & Build Quality Audit)**
+  - Status: PASS ✅ (Vite build clean, size 134KB < 999KB).
+  - State & Tutorial: Quicksave/quickload [F5/F9] verified; first-run tutorial flag intact.
+  - Controls & Modals: Verified hotkeys [0-9, H, F1, Esc, Space], responsive modal overlays.
+  - Queue: Advanced kilo-qa to KBreakout; handoff to kilo-expander.
 
 - **2026-10-12T20:14:00Z — kilo-usability: KRogue (UI/UX & Usability Maturity Audit)**
   - ⏭️ Skip — KRogue usability is mature (10+ passes, crisp HiDPI canvas, F1/H modal, responsive D-Pad).
@@ -137,9 +143,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Target uses modular SVG/vector blueprint HUD with dynamic armor/weapon components.
   - Zero rotating specular glints or traveling perimeter dots detected.
   - Queue: Advanced kilo-graphics to KCyber; handoff to kilo-soundscape.
-
-- **2026-10-12T18:15:00Z — kilo-creator: kweb://darknet (Virtual Web 1.0 Expansion Audit)**
-  - Status: PASS ✅ (367KB < 999KB, Anti-Potemkin compliant).
-  - Depth: Verified Node 0x7F subterranean terminal, crypto lab, Bell 103/202 FSK modem, and signal board.
-  - Links: Cross-verified dual-target links in KNet (kweb://darknet), Portal directory, and Subterranean Webring.
-  - Queue: Advanced kilo-creator to kweb://portal; handoff to kilo-graphics.
