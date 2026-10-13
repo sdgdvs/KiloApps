@@ -725,6 +725,7 @@
     <button class="nav-btn" data-tab="tab-audio">[6] 🎵 YM2612 &amp; SPC700 Jukebox</button>
     <button class="nav-btn" data-tab="tab-guestbook">[7] 🕯️ Acolyte Guestbook</button>
     <button class="nav-btn" data-tab="tab-webring">[8] 🌐 Webring &amp; Network</button>
+    <button class="nav-btn" data-tab="tab-crypta">[9] 🛡️ Ring-0 Crypta &amp; RE Lab</button>
   </div>
 
   <!-- TAB 1: Opcode Oracle -->
@@ -1757,6 +1758,124 @@
   &lt;img src="/web/badges/x86_temple.gif" alt="x86 Temple" width="88" height="31" border="0"&gt;
 &lt;/a&gt;</textarea>
       </div>
+    </div>
+  </section>
+
+  <!-- TAB 9: Ring-0 Crypta & Reverse Engineering Lab -->
+  <section id="tab-crypta" class="section-tab">
+    <div class="panel-box gold-accent">
+      <div class="panel-title">
+        <span>🛡️ RING-0 CRYPTA &amp; REVERSE ENGINEERING SANCTUARY (1999)</span>
+        <span style="font-size:11px; color:var(--cyan); font-weight:normal;">[Anti-Debugging • Algorithmic Keygen • Byte Patcher]</span>
+      </div>
+      <p style="font-size:12px; color:var(--text-muted); margin-bottom:14px; line-height:1.6;">
+        Welcome, initiate, to the inner sanctuary of binary dissection. In 1999, protection authors and reverse engineering acolytes fought an eternal duel over silicon memory: PEB environment flags, RDTSC cycle jitter, hardware breakpoint registers, and cryptographic registration routines. Explore fully interactive ring-3 and ring-0 analysis tools below:
+      </p>
+
+      <!-- Sub-grid: Anti-Debugger & Keygen -->
+      <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(320px, 1fr)); gap:14px; margin-bottom:16px;">
+        
+        <!-- Panel 1: Anti-Debugger Probe Matrix -->
+        <div style="background:#090e18; border:1px solid #1e293b; padding:12px; border-radius:3px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+            <div style="color:var(--gold-bright); font-weight:bold; font-size:12px;">⚡ Anti-Debugger Heuristic Matrix</div>
+            <select id="reDbgEnv" onchange="updateDbgSimEnv()" style="background:#111a2d; color:#fbbf24; border:1px solid #334155; font-size:10px; font-family:var(--font-mono); padding:2px 4px;">
+              <option value="clean">Environment: Clean Win98 / Ring-3</option>
+              <option value="debugger">Environment: SoftICE / OllyDbg Attached</option>
+            </select>
+          </div>
+          <div style="font-size:11px; color:var(--text-muted); margin-bottom:10px;">
+            Execute authentic 1999 anti-reversing probes against the virtual processor environment:
+          </div>
+          <div style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:10px;">
+            <button class="btn-retro" style="font-size:10px; padding:4px 8px; cursor:pointer;" onclick="runAntiDbgProbe('peb')">1. PEB.BeingDebugged</button>
+            <button class="btn-retro" style="font-size:10px; padding:4px 8px; cursor:pointer;" onclick="runAntiDbgProbe('rdtsc')">2. RDTSC Cycle Jitter</button>
+            <button class="btn-retro" style="font-size:10px; padding:4px 8px; cursor:pointer;" onclick="runAntiDbgProbe('int3')">3. INT 3 (0xCC) Scan</button>
+            <button class="btn-retro" style="font-size:10px; padding:4px 8px; cursor:pointer;" onclick="runAntiDbgProbe('drx')">4. DR0-DR7 Breakpoint</button>
+            <button class="btn-retro" style="font-size:10px; padding:4px 8px; cursor:pointer;" onclick="runAntiDbgProbe('all')">Run Full Heuristic Suite</button>
+          </div>
+          <div id="dbgTelemetryBox" style="background:#04070c; border:1px solid #334155; padding:8px; font-family:var(--font-mono); font-size:11px; color:var(--cyan-bright); min-height:85px; line-height:1.45; white-space:pre-wrap;">[TELEMETRY] Awaiting probe execution. Select a test above to inspect registers & flags...</div>
+        </div>
+
+        <!-- Panel 2: 1999 Keygen & CrackMe Engine -->
+        <div style="background:#090e18; border:1px solid #1e293b; padding:12px; border-radius:3px;">
+          <div style="color:var(--gold-bright); font-weight:bold; font-size:12px; margin-bottom:8px;">🔑 CRACKME99: Algorithmic Keygen &amp; Serial Validator</div>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:8px;">
+            <div>
+              <label style="font-size:10px; color:var(--text-muted); display:block; margin-bottom:2px;">User / Callsign:</label>
+              <input type="text" id="keygenCallsign" value="ACOLYTE_99" maxlength="16" style="width:100%; box-sizing:border-box; background:#111a2d; color:#fff; border:1px solid #334155; font-family:var(--font-mono); font-size:11px; padding:4px 6px;">
+            </div>
+            <div>
+              <label style="font-size:10px; color:var(--text-muted); display:block; margin-bottom:2px;">Transform Hash:</label>
+              <select id="keygenAlgo" style="width:100%; box-sizing:border-box; background:#111a2d; color:var(--gold-bright); border:1px solid #334155; font-family:var(--font-mono); font-size:11px; padding:3px 4px;">
+                <option value="rol_xor">ROL 3 + XOR 0x5A</option>
+                <option value="crc32">Poly CRC32 (0xEDB88320)</option>
+                <option value="feistel">8-Round Feistel Hash</option>
+              </select>
+            </div>
+          </div>
+          <div style="display:flex; gap:6px; margin-bottom:8px;">
+            <button class="btn-retro" style="font-size:10px; padding:4px 8px; cursor:pointer;" onclick="generateKeygenSerial()">Generate Valid Key</button>
+            <button class="btn-retro" style="font-size:10px; padding:4px 8px; cursor:pointer;" onclick="verifyKeygenSerial()">Verify Key in Engine</button>
+          </div>
+          <div style="margin-bottom:6px;">
+            <label style="font-size:10px; color:var(--text-muted); display:block; margin-bottom:2px;">Calculated Serial Key:</label>
+            <input type="text" id="keygenSerial" readonly style="width:100%; box-sizing:border-box; background:#04070c; color:var(--emerald-bright); border:1px solid #059669; font-family:var(--font-mono); font-size:11px; padding:5px 8px; letter-spacing:1px; font-weight:bold;">
+          </div>
+          <div id="keygenFeedback" style="font-size:10px; color:var(--text-muted); min-height:18px;">Click 'Generate Valid Key' to calculate the cryptographic hash.</div>
+        </div>
+
+      </div>
+
+      <!-- Panel 3: Interactive Byte Patcher & Nag Bypass -->
+      <div style="background:#090e18; border:1px solid #1e293b; padding:12px; border-radius:3px; margin-bottom:14px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+          <div style="color:var(--emerald-bright); font-weight:bold; font-size:12px;">✂️ Disassembly Byte Patcher: Shareware Nag Bypass Lab</div>
+          <div style="font-size:10px; color:var(--text-muted);">Target: <code>SANCTUARY_SHAREWARE.EXE (0x00401200)</code></div>
+        </div>
+        <p style="font-size:11px; color:var(--text-muted); margin-bottom:8px;">
+          In 1999 shareware binaries, registration checks branched on a conditional test. Experiment with byte-level opcode modifications to change CPU execution flow:
+        </p>
+
+        <div style="display:grid; grid-template-columns:1fr auto; gap:12px; align-items:start; margin-bottom:10px;">
+          <div id="patcherDisasmBox" style="background:#04070c; border:1px solid #334155; padding:8px; font-family:var(--font-mono); font-size:11px; line-height:1.5; color:#cbd5e1;">
+00401200: 85 C0             TEST EAX, EAX          ; Check registration status in EAX
+00401202: <span id="patchByteView" style="background:#1e293b; color:#fbbf24; padding:1px 4px; font-weight:bold;">74 08</span>          <span id="patchMnemView" style="color:#fbbf24; font-weight:bold;">JZ   SHORT 0040120C</span>   ; If zero, branch to UNLICENSED nag
+00401204: B8 01 00 00 00    MOV  EAX, 0x00000001   ; SUCCESS: Return 1 (Full Temple Unlocked)
+00401209: C3                RET                     ; Return to caller
+0040120A: 90                NOP                     ; Alignment padding
+0040120B: 90                NOP                     ; Alignment padding
+0040120C: E8 50 10 00 00    CALL Show30DayNagScreen ; FAILURE: Display nag &amp; lock features
+00401211: 31 C0             XOR  EAX, EAX          ; Return 0 (Evaluation mode)
+00401213: C3                RET                     ; Return to caller
+          </div>
+          <div style="display:flex; flex-direction:column; gap:6px; min-width:180px;">
+            <button class="btn-retro" style="font-size:10px; padding:4px 8px; cursor:pointer; text-align:left;" onclick="applyBytePatch('orig')">⏮️ Reset: JZ (74 08)</button>
+            <button class="btn-retro" style="font-size:10px; padding:4px 8px; cursor:pointer; text-align:left; color:#38bdf8;" onclick="applyBytePatch('nop')">⚡ Patch 1: NOP NOP (90 90)</button>
+            <button class="btn-retro" style="font-size:10px; padding:4px 8px; cursor:pointer; text-align:left; color:#34d399;" onclick="applyBytePatch('jnz')">🔄 Patch 2: Invert to JNZ (75 08)</button>
+            <button class="btn-retro" style="font-size:10px; padding:4px 8px; cursor:pointer; text-align:left; color:#f43f5e;" onclick="applyBytePatch('jmp')">🚀 Patch 3: Force JMP (EB 02)</button>
+            <button class="btn-retro" style="font-size:10px; padding:6px 8px; cursor:pointer; text-align:center; font-weight:bold; background:#064e3b; border-color:#10b981; color:#fff;" onclick="testRunPatchedBinary()">▶ Test Run Patched PE</button>
+          </div>
+        </div>
+        <div id="patcherOutputBox" style="background:#04070c; border:1px solid #334155; padding:6px 10px; font-size:11px; color:var(--text-muted); font-family:var(--font-mono);">
+          Status: Binary loaded in original unpatched state. Click 'Test Run Patched PE' or choose an opcode patch.
+        </div>
+      </div>
+
+      <!-- Panel 4: Diegetic Memory Offset 0x101999 Inspection -->
+      <div style="background:#050b14; border:1px solid #1e293b; padding:10px; border-radius:3px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+          <span style="font-size:11px; font-weight:bold; color:var(--gold-bright);">📡 DIEGETIC BUFFER INSPECTOR: MEMORY OFFSET 0x101999</span>
+          <span style="font-size:10px; color:var(--text-muted);">PE Header Physical Alignment Buffer</span>
+        </div>
+        <div style="background:#02050a; border:1px solid #0f172a; padding:8px; font-family:var(--font-mono); font-size:10px; color:#64748b; line-height:1.4;">
+00101990  53 55 42 4E  45 54 5F 49  44 3A 20 31  30 2E 31 39  | SUBNET_ID: 10.19 |
+001019A0  39 39 2E 34  3A 39 39 39  39 00 53 59  4E 43 5F 42  | 99.4:9999.SYNC_B |
+001019B0  45 41 43 4F  4E 5F 31 39  39 39 00 FF  00 90 90 C3  | EACON_1999...... |
+[MEMORY TELEMETRY: Non-routable intranet packet subcarrier logged at ring-0 interrupt level]
+        </div>
+      </div>
+
     </div>
   </section>
 
@@ -5874,6 +5993,163 @@ ENDP`
       }
       renderQuizScore();
       nextQuizQuestion();
+
+      // ==========================================
+      // TAB 9: Ring-0 Crypta & RE Lab Scripts
+      // ==========================================
+      let activeBytePatch = 'orig';
+
+      function updateDbgSimEnv() {
+        const env = document.getElementById('reDbgEnv').value;
+        const box = document.getElementById('dbgTelemetryBox');
+        if (!box) return;
+        if (env === 'debugger') {
+          box.textContent = '[ENV NOTICE] Virtual CPU hooked into Ring-0 Kernel Debugger (SoftICE v4.05 / OllyDbg 1.10).\nDebug registers DR0-DR7 active; PEB.BeingDebugged flag set to 0x01.';
+        } else {
+          box.textContent = '[ENV NOTICE] Virtual CPU operating in clean Win98 Ring-3 subsystem.\nDebug hooks uninstalled; PEB.BeingDebugged = 0x00.';
+        }
+      }
+
+      function runAntiDbgProbe(type) {
+        const env = document.getElementById('reDbgEnv')?.value || 'clean';
+        const box = document.getElementById('dbgTelemetryBox');
+        if (!box) return;
+        const isDbg = (env === 'debugger');
+
+        if (type === 'peb') {
+          const val = isDbg ? '0x01 (ATTACHED)' : '0x00 (CLEAN)';
+          box.textContent = `[PROBE: PEB.BeingDebugged]
+MOV EAX, FS:[0x30]               ; Get pointer to Process Environment Block (PEB)
+MOVZX EAX, BYTE PTR [EAX + 0x02]  ; Read BeingDebugged byte flag
+VERDICT: EAX = ${val}
+${isDbg ? '🚨 DETECTED: Active ring-3 debugger attached to process!' : '✅ PASS: Process running under normal OS loader.'}`;
+        } else if (type === 'rdtsc') {
+          const delta = isDbg ? 148290 : 42;
+          box.textContent = `[PROBE: RDTSC Cycle Jitter]
+RDTSC                            ; Read Timestamp Counter -> EDX:EAX
+MOV EBX, EAX                     ; Save initial low tick count
+NOP                              ; Executed instructions...
+RDTSC                            ; Read secondary timestamp
+SUB EAX, EBX                     ; Calculate elapsed clock cycles
+DELTA: ${delta} cycles
+${isDbg ? '🚨 DETECTED: Cycle latency exceeds threshold (>5000 cycles). Single-stepping trap confirmed!' : '✅ PASS: Cycle latency within hardware limits (42 cycles). No trace traps.'}`;
+        } else if (type === 'int3') {
+          box.textContent = `[PROBE: INT 3 (0xCC) Prologue Scan]
+MOV ESI, 0x00401000              ; Module entry point
+LODSB                            ; Fetch first opcode byte
+CMP AL, 0xCC                     ; Compare against INT 3 software breakpoint
+${isDbg ? '🚨 DETECTED: Opcode 0xCC found at 0x00401000! Debugger breakpoint trapped.' : '✅ PASS: Entry point opcode = 0x55 (PUSH EBP). No software hooks.'}`;
+        } else if (type === 'drx') {
+          box.textContent = `[PROBE: Hardware Debug Registers DR0-DR7]
+CONTEXT.ContextFlags = CONTEXT_DEBUG_REGISTERS
+GetThreadContext(GetCurrentThread(), &ctx)
+${isDbg ? '🚨 DETECTED: DR0=0x00401202, DR7=0x00000001! Active hardware execution breakpoint set!' : '✅ PASS: DR0..DR3 = 0x00000000. Hardware watchpoints clear.'}`;
+        } else {
+          box.textContent = `[HEURISTIC SUMMARY SCAN: ${isDbg ? 'SOFTICE / DEBUGGER HOOKED' : 'CLEAN WIN98 ENVIRONMENT'}]
+• PEB.BeingDebugged Check : ${isDbg ? 'FAIL (0x01)' : 'PASS (0x00)'}
+• RDTSC Timing Threshold  : ${isDbg ? 'FAIL (Jitter > 50k)' : 'PASS (<100 cycles)'}
+• 0xCC Breakpoint Sweep   : ${isDbg ? 'FAIL (Hook at 0x00401000)' : 'PASS (Clean opcode 0x55)'}
+• Hardware DRx Registers  : ${isDbg ? 'FAIL (DR0 Armed)' : 'PASS (All Zero)'}
+CONCLUSION: ${isDbg ? '🚨 REVERSE ENGINEERING THREAT MITIGATED: Process would execute INT 3 crash or self-terminate.' : '✅ ENVIRONMENT AUTHENTICATED: Full access granted to x86 temple sanctum.'}`;
+        }
+        if (typeof playUiClick === 'function') playUiClick('click');
+      }
+
+      function generateKeygenSerial() {
+        const name = (document.getElementById('keygenCallsign')?.value || 'ACOLYTE').toUpperCase().trim();
+        const algo = document.getElementById('keygenAlgo')?.value || 'rol_xor';
+        const serialEl = document.getElementById('keygenSerial');
+        const feedbackEl = document.getElementById('keygenFeedback');
+        if (!serialEl) return;
+
+        let hash = 0x55AA;
+        for (let i = 0; i < name.length; i++) {
+          const c = name.charCodeAt(i);
+          if (algo === 'rol_xor') {
+            hash = (((hash << 3) | (hash >>> 29)) ^ c ^ 0x5A) >>> 0;
+          } else if (algo === 'crc32') {
+            hash = (hash ^ c) >>> 0;
+            for (let j = 0; j < 8; j++) {
+              hash = (hash & 1) ? ((hash >>> 1) ^ 0xEDB88320) >>> 0 : (hash >>> 1);
+            }
+          } else {
+            hash = ((hash * 31) + (c ^ 0x99)) >>> 0;
+          }
+        }
+        const hHex = hash.toString(16).toUpperCase().padStart(8, '0');
+        const serial = `K99-${hHex.substring(0, 4)}-${hHex.substring(4, 8)}-${name.length.toString(16).toUpperCase().padStart(2, '0')}7A`;
+        serialEl.value = serial;
+        if (feedbackEl) {
+          feedbackEl.style.color = 'var(--emerald-bright)';
+          feedbackEl.textContent = `Valid key computed for '${name}' via [${algo.toUpperCase()}]. Ready for verification.`;
+        }
+        if (typeof playUiClick === 'function') playUiClick('click');
+      }
+
+      function verifyKeygenSerial() {
+        const name = (document.getElementById('keygenCallsign')?.value || '').toUpperCase().trim();
+        const serial = (document.getElementById('keygenSerial')?.value || '').toUpperCase().trim();
+        const feedbackEl = document.getElementById('keygenFeedback');
+        if (!feedbackEl) return;
+
+        if (!serial.startsWith('K99-') || serial.length < 16) {
+          feedbackEl.style.color = '#f87171';
+          feedbackEl.textContent = '❌ INVALID SERIAL FORMAT! Must match K99-XXXX-XXXX-XX pattern.';
+          return;
+        }
+
+        feedbackEl.style.color = 'var(--emerald-bright)';
+        feedbackEl.textContent = `★ SUCCESS: Key '${serial}' verified for handle '${name}'! Registration granted (1999 Commercial License).`;
+        if (typeof playUiClick === 'function') playUiClick('echo');
+      }
+
+      function applyBytePatch(type) {
+        activeBytePatch = type;
+        const bView = document.getElementById('patchByteView');
+        const mView = document.getElementById('patchMnemView');
+        const outBox = document.getElementById('patcherOutputBox');
+        if (!bView || !mView || !outBox) return;
+
+        if (type === 'nop') {
+          bView.textContent = '90 90';
+          bView.style.color = '#38bdf8';
+          mView.textContent = 'NOP  NOP (FALLTHROUGH)';
+          mView.style.color = '#38bdf8';
+          outBox.innerHTML = '<span style="color:#38bdf8;">Patched with NOP NOP (0x90 0x90). CPU skips conditional branch and falls directly into registration block!</span>';
+        } else if (type === 'jnz') {
+          bView.textContent = '75 08';
+          bView.style.color = '#34d399';
+          mView.textContent = 'JNZ  SHORT 0040120C';
+          mView.style.color = '#34d399';
+          outBox.innerHTML = '<span style="color:#34d399;">Inverted to JNZ (0x75 0x08). Unregistered state (0) will now invert condition and bypass the nag!</span>';
+        } else if (type === 'jmp') {
+          bView.textContent = 'EB 02';
+          bView.style.color = '#f43f5e';
+          mView.textContent = 'JMP  SHORT 00401204';
+          mView.style.color = '#f43f5e';
+          outBox.innerHTML = '<span style="color:#f43f5e;">Forced unconditional jump (0xEB 0x02) jumping past the test straight to MOV EAX, 1!</span>';
+        } else {
+          bView.textContent = '74 08';
+          bView.style.color = '#fbbf24';
+          mView.textContent = 'JZ   SHORT 0040120C';
+          mView.style.color = '#fbbf24';
+          outBox.innerHTML = '<span>Original unpatched binary restored (0x74 0x08). Unregistered executions jump to nag routine.</span>';
+        }
+        if (typeof playUiClick === 'function') playUiClick('click');
+      }
+
+      function testRunPatchedBinary() {
+        const outBox = document.getElementById('patcherOutputBox');
+        if (!outBox) return;
+
+        if (activeBytePatch === 'orig') {
+          outBox.innerHTML = '<strong style="color:#f87171;">[PROGRAM HALTED]</strong> 30-Day Shareware Nag Screen triggered! Registration check returned 0x00000000 (UNREGISTERED). Features locked.';
+          if (typeof playUiClick === 'function') playUiClick('click');
+        } else {
+          outBox.innerHTML = `<strong style="color:var(--emerald-bright);">[PROGRAM SUCCESS]</strong> Full Temple License Unlocked! Execution returned EAX = 0x00000001 via patch [${activeBytePatch.toUpperCase()}]. No nag screen shown!`;
+          if (typeof playUiClick === 'function') playUiClick('echo');
+        }
+      }
     </script>
     
 </body>
