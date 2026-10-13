@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-creator
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -17,7 +17,7 @@ current_targets:
   kilo_graphics: KSpace
   kilo_tester: KCalendar
   kilo_usability: KSubmarine
-  kilo_qa: KBreakout
+  kilo_qa: KRogue
   kilo_soundscape: KSpace
   kilo_expander: KChess
 virtual_web_target: kweb://webring
@@ -34,9 +34,9 @@ virtual_web_rotation:
 - kweb://10.19.99.4/classified
 - kweb://echo-subsystem.net
 last_run:
-  agent: kilo-usability
-  app: KAudio
-  timestamp: '2026-10-12T23:32:00Z'
+  agent: kilo-qa
+  app: KBreakout
+  timestamp: '2026-10-13T00:15:00Z'
 last_planner_run: '2026-10-12T17:31:38Z'
 ---
 
@@ -92,8 +92,8 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Upcoming Queue**: `KTrader`, `KBudget`, `KRogue`.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
-- **Current Target**: `KBreakout`
-- **Upcoming Queue**: `KRogue`, `KPong`, `KPac`, `KColony`.
+- **Current Target**: `KRogue`
+- **Upcoming Queue**: `KPong`, `KPac`, `KColony`, `KBreakout`.
 
 ### 6. Feature Expander Queue (`kilo-expander`)
 - **Current Target**: `KChess`
@@ -114,6 +114,13 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 ---
 
 ## Recent Execution Logs (Max 5 Entries)
+
+- **2026-10-13T00:15:00Z — kilo-qa: KBreakout (Pass 5 QA & State Integrity Audit)**
+  - Status: PASS ✅ (Vite build clean, size 160KB < 999KB).
+  - Quicksave (F5) / Quickload (F9) and beforeunload state persistence validated.
+  - First-run tutorial flag (`kbreakout_tutorialSeen`) and duel non-autostart intact.
+  - Security lint 100% clean; verified zero native C binary dependencies.
+  - Queue: Advanced kilo-qa to KRogue; handoff to kilo-expander.
 
 - **2026-10-12T23:32:00Z — kilo-usability: KAudio (UI/UX & Toolbar Ergonomics Audit)**
   - Status: PASS ✅ (Vite build clean, size 149KB < 999KB).
@@ -139,9 +146,4 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Verified 0 rotating specular glints or traveling perimeter border dots.
   - Queue: Advanced kilo-graphics to KSpace; handoff to kilo-soundscape.
 
-- **2026-10-12T21:15:00Z — kilo-expander: KRogue (Multi-Slot Save & Replay Expansion)**
-  - Status: PASS ✅ (Vite build clean, size 319KB < 999KB).
-  - Feature Expansion: Implemented multi-slot save architecture (Slots 1-3) with HUD slot switcher [Slot 1-3].
-  - Cleaned up malformed script tag in header; verified F5 quicksave and F9 quickload parity.
-  - Queue: Advanced kilo-expander to KChess; handed off to kilo-creator.
 
