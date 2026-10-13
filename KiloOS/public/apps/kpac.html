@@ -798,6 +798,22 @@
 </div>
 
 <script>
+  function safeGet(key, fallback) {
+    try {
+      const raw = localStorage.getItem(key);
+      if (raw === null || raw === undefined) return fallback;
+      try { return JSON.parse(raw) ?? fallback; } catch { return raw ?? fallback; }
+    } catch { return fallback; }
+  }
+  function safeSet(key, value) {
+    try {
+      const str = typeof value === 'string' ? value : JSON.stringify(value);
+      localStorage.setItem(key, str);
+    } catch (e) {
+      console.warn('[KiloApp] Storage write failed:', e.message);
+    }
+  }
+
   const canvas = document.getElementById('gameCanvas');
   const ctx = canvas.getContext('2d');
   const dpr = window.devicePixelRatio || 1;
@@ -1187,11 +1203,7 @@
   // Cyber Duel Arena & RFMS Multiplayer State
   let rMultiplayer = null;
   let myPlayerName = (function() {
-      try {
-          return localStorage.getItem('kilo_kpac_name') || ('Pilot_' + Math.floor(1000 + Math.random() * 9000));
-      } catch(e) {
-          return 'Pilot_' + Math.floor(1000 + Math.random() * 9000);
-      }
+      return safeGet('kilo_kpac_name', null) || ('Pilot_' + Math.floor(1000 + Math.random() * 9000));
   })();
   let oppPlayerName = 'Challenger';
   let myPlayerSlot = 1; // 1: Yellow Pac (P1), 2: Cyan CyberPac (P2)
@@ -1358,14 +1370,10 @@
 
   const TUTORIAL_KEY = 'kpac_tutorialSeen';
   function isTutorialSeen() {
-      try {
-          return localStorage.getItem(TUTORIAL_KEY) === '1';
-      } catch(e) { return true; }
+      return safeGet(TUTORIAL_KEY, '0') === '1';
   }
   function setTutorialSeen() {
-      try {
-          localStorage.setItem(TUTORIAL_KEY, '1');
-      } catch(e) {}
+      safeSet(TUTORIAL_KEY, '1');
   }
 
   function togglePause() {
@@ -1589,7 +1597,7 @@
   function savePlayerName(val) {
       if (val && val.trim()) {
           myPlayerName = val.trim().slice(0, 15);
-          try { localStorage.setItem('kilo_kpac_name', myPlayerName); } catch(e) {}
+          safeSet('kilo_kpac_name', myPlayerName);
           if (rMultiplayer) rMultiplayer.playerName = myPlayerName;
           showToast(`Callsign set to [${myPlayerName}]`, 'info');
       }
@@ -2133,17 +2141,13 @@
   }
 
   function loadKeybinds() {
-      try {
-          const saved = localStorage.getItem('kpac_keybinds');
-          if (saved) Object.assign(keyBindings, JSON.parse(saved));
-      } catch(e) {}
+      const saved = safeGet('kpac_keybinds', null);
+      if (saved && typeof saved === 'object') Object.assign(keyBindings, saved);
   }
 
   function saveKeybinds() {
-      try {
-          localStorage.setItem('kpac_keybinds', JSON.stringify(keyBindings));
-          showToast("⌨️ Keybindings Saved!", "success");
-      } catch(e) {}
+      safeSet('kpac_keybinds', keyBindings);
+      showToast("⌨️ Keybindings Saved!", "success");
   }
 
   function triggerArgSignalTrace() {
@@ -2206,7 +2210,7 @@
               sludgeTraps,
               map
           };
-          localStorage.setItem('kpac_quicksave', JSON.stringify(saveState));
+          safeSet('kpac_quicksave', saveState);
           saveHighScore();
           showToast('💾 Quick Game State Saved!', 'success');
           playSound(600, 0.25, 'triangle', 200);
@@ -2217,12 +2221,11 @@
 
   function loadGame() {
       try {
-          const raw = localStorage.getItem('kpac_quicksave');
-          if (!raw) {
+          const s = safeGet('kpac_quicksave', null);
+          if (!s) {
               showToast('No saved game found', 'warning');
               return;
           }
-          const s = JSON.parse(raw);
           score = s.score || 0;
           highScore = Math.max(highScore, s.highScore || 0);
           level = s.level || 1;
@@ -2552,45 +2555,41 @@
   }
 
   function loadHighScore() {
-      try {
-          highScore = parseInt(localStorage.getItem('kpac_high') || '0', 10);
-          endlessHighWave = parseInt(localStorage.getItem('kpac_endless_high') || '1', 10);
-          craftEctoplasm = parseInt(localStorage.getItem('kpac_ecto') || '0', 10);
-          craftFruitEssence = parseInt(localStorage.getItem('kpac_ess') || '0', 10);
-          craftStarDust = parseInt(localStorage.getItem('kpac_dust') || '0', 10);
-          relicCrown = parseInt(localStorage.getItem('kpac_relic_crown') || '0', 10);
-          relicHourglass = parseInt(localStorage.getItem('kpac_relic_hourglass') || '0', 10);
-          relicOrb = parseInt(localStorage.getItem('kpac_relic_orb') || '0', 10);
-          relicAegis = parseInt(localStorage.getItem('kpac_relic_aegis') || '0', 10);
-          relicStone = parseInt(localStorage.getItem('kpac_relic_stone') || '0', 10);
-          petType = parseInt(localStorage.getItem('kpac_pet_type') || '0', 10);
-          petLevel = parseInt(localStorage.getItem('kpac_pet_level') || '1', 10);
-          statsGamesPlayed = parseInt(localStorage.getItem('kpac_stat_games') || '0', 10);
-          statsGhostsEaten = parseInt(localStorage.getItem('kpac_stat_ghosts') || '0', 10);
-          statsMaxScore = parseInt(localStorage.getItem('kpac_stat_maxsc') || '0', 10);
-          statsRelicsForged = parseInt(localStorage.getItem('kpac_stat_relics') || '0', 10);
-      } catch(e) {}
+      highScore = parseInt(safeGet('kpac_high', 0), 10) || 0;
+      endlessHighWave = parseInt(safeGet('kpac_endless_high', 1), 10) || 1;
+      craftEctoplasm = parseInt(safeGet('kpac_ecto', 0), 10) || 0;
+      craftFruitEssence = parseInt(safeGet('kpac_ess', 0), 10) || 0;
+      craftStarDust = parseInt(safeGet('kpac_dust', 0), 10) || 0;
+      relicCrown = parseInt(safeGet('kpac_relic_crown', 0), 10) || 0;
+      relicHourglass = parseInt(safeGet('kpac_relic_hourglass', 0), 10) || 0;
+      relicOrb = parseInt(safeGet('kpac_relic_orb', 0), 10) || 0;
+      relicAegis = parseInt(safeGet('kpac_relic_aegis', 0), 10) || 0;
+      relicStone = parseInt(safeGet('kpac_relic_stone', 0), 10) || 0;
+      petType = parseInt(safeGet('kpac_pet_type', 0), 10) || 0;
+      petLevel = parseInt(safeGet('kpac_pet_level', 1), 10) || 1;
+      statsGamesPlayed = parseInt(safeGet('kpac_stat_games', 0), 10) || 0;
+      statsGhostsEaten = parseInt(safeGet('kpac_stat_ghosts', 0), 10) || 0;
+      statsMaxScore = parseInt(safeGet('kpac_stat_maxsc', 0), 10) || 0;
+      statsRelicsForged = parseInt(safeGet('kpac_stat_relics', 0), 10) || 0;
   }
 
   function saveHighScore() {
-      try {
-          localStorage.setItem('kpac_high', highScore);
-          localStorage.setItem('kpac_endless_high', endlessHighWave);
-          localStorage.setItem('kpac_ecto', craftEctoplasm);
-          localStorage.setItem('kpac_ess', craftFruitEssence);
-          localStorage.setItem('kpac_dust', craftStarDust);
-          localStorage.setItem('kpac_relic_crown', relicCrown);
-          localStorage.setItem('kpac_relic_hourglass', relicHourglass);
-          localStorage.setItem('kpac_relic_orb', relicOrb);
-          localStorage.setItem('kpac_relic_aegis', relicAegis);
-          localStorage.setItem('kpac_relic_stone', relicStone);
-          localStorage.setItem('kpac_pet_type', petType);
-          localStorage.setItem('kpac_pet_level', petLevel);
-          localStorage.setItem('kpac_stat_games', statsGamesPlayed);
-          localStorage.setItem('kpac_stat_ghosts', statsGhostsEaten);
-          localStorage.setItem('kpac_stat_maxsc', statsMaxScore);
-          localStorage.setItem('kpac_stat_relics', statsRelicsForged);
-      } catch(e) {}
+      safeSet('kpac_high', highScore);
+      safeSet('kpac_endless_high', endlessHighWave);
+      safeSet('kpac_ecto', craftEctoplasm);
+      safeSet('kpac_ess', craftFruitEssence);
+      safeSet('kpac_dust', craftStarDust);
+      safeSet('kpac_relic_crown', relicCrown);
+      safeSet('kpac_relic_hourglass', relicHourglass);
+      safeSet('kpac_relic_orb', relicOrb);
+      safeSet('kpac_relic_aegis', relicAegis);
+      safeSet('kpac_relic_stone', relicStone);
+      safeSet('kpac_pet_type', petType);
+      safeSet('kpac_pet_level', petLevel);
+      safeSet('kpac_stat_games', statsGamesPlayed);
+      safeSet('kpac_stat_ghosts', statsGhostsEaten);
+      safeSet('kpac_stat_maxsc', statsMaxScore);
+      safeSet('kpac_stat_relics', statsRelicsForged);
   }
 
   function getInitLives() {
@@ -4893,12 +4892,7 @@
   init(false);
   updateUIBadges();
 
-  let hasQuicksave = false;
-  try {
-      hasQuicksave = !!localStorage.getItem('kpac_quicksave');
-  } catch(e) {
-      hasQuicksave = false;
-  }
+  let hasQuicksave = !!safeGet('kpac_quicksave', null);
 
   if (!isTutorialSeen() && !hasQuicksave) {
       showToast("⚡ Welcome to KPac! WASD/Arrows to Move, [Space] to Pause, [F1] for Codex & Skills", "info");

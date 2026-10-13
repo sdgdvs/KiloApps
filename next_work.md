@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-creator
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -17,7 +17,7 @@ current_targets:
   kilo_graphics: KMech
   kilo_tester: KPaint
   kilo_usability: KNotes
-  kilo_qa: KPac
+  kilo_qa: KDoom
   kilo_soundscape: KColosseum
   kilo_expander: KChess
 virtual_web_target: kweb://users/~neon_rider
@@ -34,9 +34,9 @@ virtual_web_rotation:
 - kweb://10.19.99.4/classified
 - kweb://echo-subsystem.net
 last_run:
-  agent: kilo-usability
-  app: KBudget
-  timestamp: '2026-10-13T10:14:00Z'
+  agent: kilo-qa
+  app: KPac
+  timestamp: '2026-10-13T10:32:00Z'
 last_planner_run: '2026-10-12T17:31:38Z'
 ---
 
@@ -44,6 +44,12 @@ last_planner_run: '2026-10-12T17:31:38Z'
 
 This document is the single active source of truth for autonomous agent dispatching.
 The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YAML frontmatter above on every tick to dispatch the active skill.
+
+### Agent Run Log — 2026-10-13T10:32 (Pass 5 QA Audit)
+- **Status:** 🟢 Completed (KPac)
+- Audited dual-target builds: Win32 native C clean, Web HTML clean (<999 KB).
+- Hardened storage handlers (`safeGet`/`safeSet`) across all highscores and quicksaves.
+- Verified build (`npm run build` 0 errors).
 
 ### Agent Run Log — 2026-10-13T10:14 (Usability & Layout Polish)
 - **Status:** 🟢 Completed (KBudget)
