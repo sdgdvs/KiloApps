@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-tester
-next_agent: kilo-usability
+current_agent: kilo-usability
+next_agent: kilo-qa
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -15,7 +15,7 @@ status: ready
 current_targets:
   kilo_creator: kweb://webring
   kilo_graphics: KSpace
-  kilo_tester: KVault
+  kilo_tester: KCalendar
   kilo_usability: KAudio
   kilo_qa: KBreakout
   kilo_soundscape: KSpace
@@ -34,9 +34,9 @@ virtual_web_rotation:
 - kweb://10.19.99.4/classified
 - kweb://echo-subsystem.net
 last_run:
-  agent: kilo-soundscape
-  app: KCyber
-  timestamp: '2026-10-12T22:33:00Z'
+  agent: kilo-tester
+  app: KVault
+  timestamp: '2026-10-12T23:14:00Z'
 last_planner_run: '2026-10-12T17:31:38Z'
 ---
 
@@ -84,8 +84,8 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Upcoming Queue**: `KStellar`, `KColosseum`, `KMech`.
 
 ### 3. App Tester Queue (`kilo-tester`)
-- **Current Target**: `KVault`
-- **Upcoming Queue**: `KCalendar`, `KChart`, `KChat`, `KMine`, `KSanctuary`, `KAudio`, `KSubmarine`, `KTrader`.
+- **Current Target**: `KCalendar`
+- **Upcoming Queue**: `KChart`, `KChat`, `KMine`, `KSanctuary`, `KAudio`, `KSubmarine`, `KTrader`, `KVault`.
 
 ### 4. Usability & UX Queue (`kilo-usability`)
 - **Current Target**: `KAudio`
@@ -115,6 +115,13 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-12T23:14:00Z — kilo-tester: KVault (Interactive UI & Startup Audit)**
+  - Status: PASS ✅ (1 issue fixed: startup tutorial modal unclosable race condition).
+  - Wired `#tutorial-modal` action buttons with proper test selectors (`btnDismissTutorial`, `tutorial-btn-dismiss`).
+  - Added immediate `display: none` dismissal for overlays on ESC, backdrop click, and button click.
+  - Startup audit passed (`test_app_startup.py`), Vite build clean (`dist/`), size 192KB < 999KB.
+  - Queue: Advanced kilo-tester to KCalendar; handoff to kilo-usability.
+
 - **2026-10-12T22:33:00Z — kilo-soundscape: KCyber (Procedural FM Soundscape Composition)**
   - Status: PASS ✅ (Vite build clean, 101KB < 999KB).
   - Composed YM2612 2-Op / SPC700 procedural audio: D-Dorian cyberpunk BGM (4-voice FM bass, pad, arps), toolbar BGM toggle.
@@ -137,8 +144,4 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - State & Tutorial: Quicksave/quickload [F5/F9] verified; first-run tutorial flag intact.
   - Controls & Modals: Verified hotkeys [0-9, H, F1, Esc, Space], responsive modal overlays.
   - Queue: Advanced kilo-qa to KBreakout; handoff to kilo-expander.
-
-- **2026-10-12T20:14:00Z — kilo-usability: KRogue (UI/UX & Usability Maturity Audit)**
-  - ⏭️ Skip — KRogue usability is mature (10+ passes, crisp HiDPI canvas, F1/H modal, responsive D-Pad).
-  - Queue: Advanced kilo-usability to KAudio; handoff to kilo-qa.
 

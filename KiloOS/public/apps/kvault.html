@@ -1322,8 +1322,8 @@
                 <div style="margin-top: 6px;">⌨️ <strong>Hotkeys:</strong> [F1/H] Help &middot; [F5] Quicksave &middot; [F9] Quickload &middot; [Ctrl+L] Lock &middot; [Ctrl+G] Generator &middot; [M] Audio.</div>
             </div>
             <div style="display:flex; gap:10px; margin-top:20px;">
-                <button class="btn secondary close-modal" style="flex:1; margin-top:0;" onclick="dismissTutorial()">Skip (Esc)</button>
-                <button class="btn close-modal" style="flex:1; margin-top:0;" onclick="dismissTutorial()">Get Started (Enter)</button>
+                <button class="btn secondary close-modal tutorial-btn-skip tutorial-btn-dismiss" id="btnDismissTutorial" style="flex:1; margin-top:0;" onclick="dismissTutorial()">Skip (Esc)</button>
+                <button class="btn close-modal tutorial-btn-primary" id="btnStartVault" style="flex:1; margin-top:0;" onclick="dismissTutorial()">Get Started (Enter)</button>
             </div>
         </div>
     </div>
@@ -3851,7 +3851,7 @@ Store this sheet in a fireproof safe or secure physical vault. It provides emerg
             const modal = document.getElementById('help-modal');
             if (modal) {
                 modal.classList.remove('active');
-                setTimeout(() => modal.style.display = 'none', 250);
+                modal.style.display = 'none';
             }
         }
 
@@ -3869,7 +3869,7 @@ Store this sheet in a fireproof safe or secure physical vault. It provides emerg
             const modal = document.getElementById('tutorial-modal');
             if (modal) {
                 modal.classList.remove('active');
-                setTimeout(() => modal.style.display = 'none', 250);
+                modal.style.display = 'none';
             }
             safeStorageSet('kvault_tutorialSeen', '1');
             const passInput = document.getElementById('master-password');
@@ -3882,20 +3882,23 @@ Store this sheet in a fireproof safe or secure physical vault. It provides emerg
                 if (e.target === modal) {
                     clearToasts();
                     modal.classList.remove('active');
-                    setTimeout(() => modal.style.display = 'none', 250);
+                    modal.style.display = 'none';
                 }
             });
         });
 
         // --- Keyboard Shortcuts & Global Hotkeys ---
         document.addEventListener('keydown', (e) => {
-            const activeModal = document.querySelector('.modal-overlay.active');
+            const activeModal = document.querySelector('.modal-overlay.active') || document.querySelector('.modal-overlay[style*="display: flex"]');
             if (activeModal) {
                 if (e.key === 'Escape') {
                     e.preventDefault();
                     clearToasts();
                     activeModal.classList.remove('active');
-                    setTimeout(() => activeModal.style.display = 'none', 250);
+                    activeModal.style.display = 'none';
+                    if (activeModal.id === 'tutorial-modal') {
+                        safeStorageSet('kvault_tutorialSeen', '1');
+                    }
                     return;
                 }
                 if (e.key === 'Enter') {
