@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-qa
+current_agent: kilo-qa
+next_agent: kilo-expander
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -16,7 +16,7 @@ current_targets:
   kilo_creator: kweb://webring
   kilo_graphics: KSpace
   kilo_tester: KCalendar
-  kilo_usability: KAudio
+  kilo_usability: KSubmarine
   kilo_qa: KBreakout
   kilo_soundscape: KSpace
   kilo_expander: KChess
@@ -34,9 +34,9 @@ virtual_web_rotation:
 - kweb://10.19.99.4/classified
 - kweb://echo-subsystem.net
 last_run:
-  agent: kilo-tester
-  app: KVault
-  timestamp: '2026-10-12T23:14:00Z'
+  agent: kilo-usability
+  app: KAudio
+  timestamp: '2026-10-12T23:32:00Z'
 last_planner_run: '2026-10-12T17:31:38Z'
 ---
 
@@ -88,8 +88,8 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Upcoming Queue**: `KChart`, `KChat`, `KMine`, `KSanctuary`, `KAudio`, `KSubmarine`, `KTrader`, `KVault`.
 
 ### 4. Usability & UX Queue (`kilo-usability`)
-- **Current Target**: `KAudio`
-- **Upcoming Queue**: `KSubmarine`, `KTrader`, `KBudget`, `KRogue`.
+- **Current Target**: `KSubmarine`
+- **Upcoming Queue**: `KTrader`, `KBudget`, `KRogue`.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
 - **Current Target**: `KBreakout`
@@ -115,6 +115,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-12T23:32:00Z — kilo-usability: KAudio (UI/UX & Toolbar Ergonomics Audit)**
+  - Status: PASS ✅ (Vite build clean, size 149KB < 999KB).
+  - Ergonomics: Grouped header toolbar into semantic clusters (.toolbar-group) preventing multi-row wrapping overflow.
+  - Window Sizing: Adjusted default geometry to 1040x840 in App.jsx & meta tags to accommodate full visualizer and keys without vertical clipping.
+  - Queue: Advanced kilo-usability to KSubmarine; handoff to kilo-qa.
+
 - **2026-10-12T23:14:00Z — kilo-tester: KVault (Interactive UI & Startup Audit)**
   - Status: PASS ✅ (1 issue fixed: startup tutorial modal unclosable race condition).
   - Wired `#tutorial-modal` action buttons with proper test selectors (`btnDismissTutorial`, `tutorial-btn-dismiss`).
@@ -138,10 +144,4 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Feature Expansion: Implemented multi-slot save architecture (Slots 1-3) with HUD slot switcher [Slot 1-3].
   - Cleaned up malformed script tag in header; verified F5 quicksave and F9 quickload parity.
   - Queue: Advanced kilo-expander to KChess; handed off to kilo-creator.
-
-- **2026-10-12T20:32:00Z — kilo-qa: KColony (Pass 5: QA & Build Quality Audit)**
-  - Status: PASS ✅ (Vite build clean, size 134KB < 999KB).
-  - State & Tutorial: Quicksave/quickload [F5/F9] verified; first-run tutorial flag intact.
-  - Controls & Modals: Verified hotkeys [0-9, H, F1, Esc, Space], responsive modal overlays.
-  - Queue: Advanced kilo-qa to KBreakout; handoff to kilo-expander.
 
