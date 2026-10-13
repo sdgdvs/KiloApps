@@ -469,7 +469,10 @@
         <section class="glass-panel">
             <h2>Transactions</h2>
             <div style="display: flex; gap: 0.5rem; align-items: center; margin-bottom: 1rem; flex-wrap: wrap;">
-                <input type="text" id="search-input" class="form-control" placeholder="Search by description or category..." style="flex: 1; min-width: 180px; margin-bottom: 0;" oninput="currentPage = 1; render()">
+                <div style="position: relative; flex: 1; min-width: 180px; display: flex; align-items: center;">
+                    <input type="text" id="search-input" class="form-control" placeholder="Search description, category, or amount... (/ to focus)" style="width: 100%; margin-bottom: 0; padding-right: 1.8rem;" oninput="updateSearchClearBtn(); currentPage = 1; render()">
+                    <button id="clear-search-btn" type="button" onclick="clearFilters()" style="position: absolute; right: 8px; background: transparent; border: none; color: #94a3b8; cursor: pointer; font-size: 1.1rem; line-height: 1; display: none; padding: 2px 4px;" title="Clear search">&times;</button>
+                </div>
                 <select id="filter-type-select" class="form-control" style="width: auto; min-width: 120px; margin-bottom: 0;" onchange="currentPage = 1; render()" title="Filter by transaction type">
                     <option value="all">All Types</option>
                     <option value="expense">Expenses</option>
@@ -498,10 +501,10 @@
     </main>
 
     <!-- Modal -->
-    <div class="modal-overlay" id="modal">
+    <div class="modal-overlay" id="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
         <div class="modal">
             <div class="modal-header">
-                <h2>Add Transaction</h2>
+                <h2 id="modal-title">Add Transaction</h2>
                 <button type="button" class="modal-close-btn" onclick="closeModal()" aria-label="Close modal">&times;</button>
             </div>
             <form id="transaction-form">
@@ -544,10 +547,10 @@
     </div>
 
     <!-- Settings Modal -->
-    <div class="modal-overlay" id="settings-modal">
+    <div class="modal-overlay" id="settings-modal" role="dialog" aria-modal="true" aria-labelledby="settings-title">
         <div class="modal">
             <div class="modal-header">
-                <h2>Settings</h2>
+                <h2 id="settings-title">Settings</h2>
                 <button type="button" class="modal-close-btn" onclick="closeSettingsModal()" aria-label="Close modal">&times;</button>
             </div>
             <form id="settings-form">
@@ -564,10 +567,10 @@
     </div>
 
     <!-- Help Modal -->
-    <div class="modal-overlay" id="help-modal">
+    <div class="modal-overlay" id="help-modal" role="dialog" aria-modal="true" aria-labelledby="help-title">
         <div class="modal" style="max-width: 480px;">
             <div class="modal-header">
-                <h2>KBudget Guide &amp; Shortcuts</h2>
+                <h2 id="help-title">KBudget Guide &amp; Shortcuts</h2>
                 <button type="button" class="modal-close-btn" onclick="closeHelpModal()" aria-label="Close modal">&times;</button>
             </div>
             <div style="font-size: 0.9rem; color: #cbd5e1; display: flex; flex-direction: column; gap: 1rem; max-height: 60vh; overflow-y: auto; padding-right: 4px;">
@@ -575,7 +578,7 @@
                     <h3 style="color: #fff; margin-bottom: 0.5rem; font-size: 0.95rem;">Keyboard Shortcuts</h3>
                     <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem;">
                         <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);"><td style="padding: 4px 0;"><kbd style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px;">Ctrl + N</kbd></td><td>New Transaction</td></tr>
-                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);"><td style="padding: 4px 0;"><kbd style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px;">Ctrl + F</kbd></td><td>Focus Search Box</td></tr>
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);"><td style="padding: 4px 0;"><kbd style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px;">Ctrl + F</kbd> / <kbd style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px;">/</kbd></td><td>Focus Search Box</td></tr>
                         <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);"><td style="padding: 4px 0;"><kbd style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px;">F5</kbd></td><td>Quicksave Snapshot</td></tr>
                         <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);"><td style="padding: 4px 0;"><kbd style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px;">F9</kbd></td><td>Quickload Snapshot</td></tr>
                         <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);"><td style="padding: 4px 0;"><kbd style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px;">F1</kbd> / <kbd style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px;">H</kbd></td><td>Help &amp; Shortcuts Guide</td></tr>
@@ -586,10 +589,11 @@
                     </table>
                 </div>
                 <div>
-                    <h3 style="color: #fff; margin-bottom: 0.5rem; font-size: 0.95rem;">Features &amp; Persistence</h3>
-                    <p style="margin-bottom: 0.4rem;">• <strong>Quicksave &amp; Quickload:</strong> Store and restore complete workstation snapshots (F5/F9).</p>
-                    <p style="margin-bottom: 0.4rem;">• <strong>CSV &amp; JSON:</strong> Export ledgers to CSV for Excel/spreadsheets or JSON for complete backups.</p>
-                    <p>• <strong>Expenses Pie Chart:</strong> Real-time category allocation visualization with responsive HiDPI rendering.</p>
+                    <h3 style="color: #fff; margin-bottom: 0.5rem; font-size: 0.95rem;">Features &amp; Usability Tips</h3>
+                    <p style="margin-bottom: 0.4rem;">• <strong>Interactive Categories:</strong> Click any category badge in the transaction list or legend to instantly filter entries.</p>
+                    <p style="margin-bottom: 0.4rem;">• <strong>Quicksave &amp; Quickload:</strong> Store and restore complete workstation snapshots (<kbd style="background: rgba(255,255,255,0.1); padding: 1px 4px; border-radius: 3px;">F5</kbd> / <kbd style="background: rgba(255,255,255,0.1); padding: 1px 4px; border-radius: 3px;">F9</kbd>).</p>
+                    <p style="margin-bottom: 0.4rem;">• <strong>CSV &amp; JSON:</strong> Export ledgers to CSV for spreadsheets or JSON for complete backups.</p>
+                    <p>• <strong>Expenses Pie Chart:</strong> Real-time category allocation with sharp HiDPI rendering.</p>
                 </div>
                 <div style="margin-top: 0.5rem; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 0.75rem;">
                     <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; color: #94a3b8; cursor: pointer;">
@@ -605,10 +609,10 @@
     </div>
 
     <!-- Data Modal -->
-    <div class="modal-overlay" id="data-modal">
+    <div class="modal-overlay" id="data-modal" role="dialog" aria-modal="true" aria-labelledby="data-title">
         <div class="modal" style="max-width: 440px;">
             <div class="modal-header">
-                <h2>Data Management</h2>
+                <h2 id="data-title">Data Management</h2>
                 <button type="button" class="modal-close-btn" onclick="closeDataModal()" aria-label="Close modal">&times;</button>
             </div>
             <div style="display: flex; flex-direction: column; gap: 1.25rem;">
@@ -641,10 +645,10 @@
     </div>
 
     <!-- First-Run Tutorial Modal -->
-    <div class="modal-overlay" id="tutorial-modal">
+    <div class="modal-overlay" id="tutorial-modal" role="dialog" aria-modal="true" aria-labelledby="tutorial-title">
         <div class="modal" style="max-width: 480px;">
             <div class="modal-header">
-                <h2>Welcome to KBudget</h2>
+                <h2 id="tutorial-title">Welcome to KBudget</h2>
                 <button type="button" class="modal-close-btn" onclick="closeTutorialModal()" aria-label="Close modal">&times;</button>
             </div>
             <div style="font-size: 0.9rem; color: #cbd5e1; display: flex; flex-direction: column; gap: 0.85rem; max-height: 60vh; overflow-y: auto;">
@@ -895,11 +899,7 @@
         }
 
         function saveTransactions() {
-            try {
-                localStorage.setItem('kbudget_transactions', JSON.stringify(transactions));
-            } catch (e) {
-                showToast("Storage quota exceeded", "danger");
-            }
+            safeSet('kbudget_transactions', transactions);
         }
 
         function quicksaveState() {
@@ -915,9 +915,9 @@
                     savedAt: new Date().toISOString()
                 };
                 const json = JSON.stringify(snapshot);
-                localStorage.setItem('kbudget_quicksave', json);
-                localStorage.setItem('kbudget_state', json);
-                localStorage.setItem('kbudget_tutorialSeen', '1');
+                safeSet('kbudget_quicksave', json);
+                safeSet('kbudget_state', json);
+                safeSet('kbudget_tutorialSeen', '1');
                 showToast(`Quicksaved ${transactions.length} transaction(s) snapshot [F5] ✅`, "success");
             } catch (err) {
                 showToast("Quicksave failed: storage quota exceeded", "danger");
@@ -1218,13 +1218,31 @@
             showToast("Cleared all transactions.", "info");
         }
 
+        function updateSearchClearBtn() {
+            const s = document.getElementById('search-input');
+            const btn = document.getElementById('clear-search-btn');
+            if (btn) btn.style.display = (s && s.value) ? 'block' : 'none';
+        }
+
         function clearFilters() {
             const s = document.getElementById('search-input');
             if (s) s.value = '';
             const f = document.getElementById('filter-type-select');
             if (f) f.value = 'all';
+            updateSearchClearBtn();
             currentPage = 1;
             render();
+        }
+
+        function filterByCategory(cat) {
+            const s = document.getElementById('search-input');
+            if (s) {
+                s.value = cat;
+                updateSearchClearBtn();
+                currentPage = 1;
+                render();
+                showToast(`Filtered by "${cat}"`, "info");
+            }
         }
 
         function formatCurrency(amount) {
@@ -1251,6 +1269,7 @@
         }
 
         function render() {
+            updateSearchClearBtn();
             const searchTerm = (document.getElementById('search-input')?.value || '').toLowerCase().trim();
             const filterType = document.getElementById('filter-type-select')?.value || 'all';
             let filteredTransactions = transactions.filter(t => {
@@ -1356,7 +1375,7 @@
                         <div class="transaction-info">
                             <span class="transaction-desc" title="${escapeHtml(t.description)}">${escapeHtml(t.description)}</span>
                             <div class="transaction-meta">
-                                <span class="transaction-category">${escapeHtml(t.category)}</span>
+                                <span class="transaction-category" onclick="filterByCategory('${escapeHtml(t.category)}')" style="cursor: pointer;" title="Click to filter by ${escapeHtml(t.category)}">${escapeHtml(t.category)}</span>
                                 <span>${formatDate(t.date)}</span>
                             </div>
                         </div>
@@ -1444,7 +1463,11 @@
                     if (val > 0) {
                         const pct = Math.round((val / totalExpense) * 100);
                         const row = document.createElement('div');
-                        row.style.cssText = 'display: flex; align-items: center; justify-content: space-between; background: rgba(255,255,255,0.03); padding: 3px 6px; border-radius: 4px;';
+                        row.style.cssText = 'display: flex; align-items: center; justify-content: space-between; background: rgba(255,255,255,0.03); padding: 3px 6px; border-radius: 4px; cursor: pointer; transition: background 0.2s;';
+                        row.title = `Click to filter by ${escapeHtml(cat)}`;
+                        row.onmouseenter = () => { row.style.background = 'rgba(255,255,255,0.08)'; };
+                        row.onmouseleave = () => { row.style.background = 'rgba(255,255,255,0.03)'; };
+                        row.onclick = () => filterByCategory(cat);
                         row.innerHTML = `
                             <div style="display: flex; align-items: center; gap: 6px;">
                                 <span style="width: 8px; height: 8px; border-radius: 50%; background: ${colors[lColorIdx % colors.length]}; display: inline-block;"></span>

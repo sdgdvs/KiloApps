@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-qa
+current_agent: kilo-qa
+next_agent: kilo-expander
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -16,7 +16,7 @@ current_targets:
   kilo_creator: kweb://users/~neon_rider
   kilo_graphics: KMech
   kilo_tester: KPaint
-  kilo_usability: KBudget
+  kilo_usability: KNotes
   kilo_qa: KPac
   kilo_soundscape: KColosseum
   kilo_expander: KChess
@@ -34,9 +34,9 @@ virtual_web_rotation:
 - kweb://10.19.99.4/classified
 - kweb://echo-subsystem.net
 last_run:
-  agent: kilo-tester
-  app: KChat
-  timestamp: '2026-10-13T09:33:00Z'
+  agent: kilo-usability
+  app: KBudget
+  timestamp: '2026-10-13T10:14:00Z'
 last_planner_run: '2026-10-12T17:31:38Z'
 ---
 
@@ -44,6 +44,12 @@ last_planner_run: '2026-10-12T17:31:38Z'
 
 This document is the single active source of truth for autonomous agent dispatching.
 The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YAML frontmatter above on every tick to dispatch the active skill.
+
+### Agent Run Log — 2026-10-13T10:14 (Usability & Layout Polish)
+- **Status:** 🟢 Completed (KBudget)
+- Added category click-filtering to transaction badges and pie chart legend items.
+- Added clear search button affordance and accessible dialog roles across modals.
+- Hardened storage handlers (`safeSet`), verified clean build (<999 KB).
 
 ### Agent Run Log — 2026-10-13T09:33 (Pass 5 UI Audit)
 - **Status:** 🟢 Completed (KChat)
