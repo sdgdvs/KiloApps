@@ -8712,6 +8712,171 @@ const SAMPLE_HTML_CODE = `<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitio
     </tr>
   </table>
   <p>Welcome to my hypermedia corner of cyberspace!</p>
+
+<!-- KiloNet 1999 Dial-up Ping & Traceroute Radar (Anti-Potemkin Interactive Tool) -->
+<div id="knet-radar-tool" style="margin: 20px auto; max-width: 960px; background: #c0c0c0; border: 2px outset #ffffff; box-shadow: 2px 2px 0 #000; font-family: 'Tahoma', 'MS Sans Serif', sans-serif; color: #000;">
+  <div style="background: linear-gradient(90deg, #000080, #1084d0); color: #fff; padding: 3px 6px; font-weight: bold; font-size: 12px; display: flex; justify-content: space-between; align-items: center;">
+    <span>🌐 KiloNet v2.4 Dial-Up Packet Diagnostic &amp; Traceroute Radar</span>
+    <span style="font-size: 10px;">[WinSock 1.1 / PPP Active]</span>
+  </div>
+  <div style="padding: 8px; font-size: 11px;">
+    <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 8px;">
+      <div style="flex: 1; min-width: 220px;">
+        <label><strong>Target Web Node:</strong></label><br/>
+        <select id="radarTargetSelect" style="width: 100%; font-family: monospace; font-size: 11px; margin-top: 2px; padding: 2px;">
+          <option value="portal" data-url="/web/portal.html" data-ip="209.85.128.1">kweb://portal [209.85.128.1] (Local Hub)</option>
+          <option value="webring" data-url="/web/webring.html" data-ip="198.41.0.4">kweb://webring [198.41.0.4] (Ring Registry)</option>
+          <option value="geocities" data-url="/web/geocities.html" data-ip="206.190.36.45">kweb://geocities [206.190.36.45] (CyberSpire)</option>
+          <option value="cybercafe" data-url="/web/cybercafe.html" data-ip="194.109.6.92">kweb://cybercafe [194.109.6.92] (Neon Oasis)</option>
+          <option value="warez" data-url="/web/warez.html" data-ip="193.190.198.22">kweb://warez [193.190.198.22] (Scene Mirror)</option>
+          <option value="asm-temple" data-url="/web/asm_temple.html" data-ip="130.237.234.80">kweb://asm-temple [130.237.234.80] (Opcode Shrines)</option>
+          <option value="neon_rider" data-url="/web/users/neon_rider.html" data-ip="165.227.41.11">kweb://users/~neon_rider [165.227.41.11] (Personal)</option>
+        </select>
+      </div>
+      <div style="flex: 0 0 160px;">
+        <label><strong>Modem Emulation:</strong></label><br/>
+        <select id="radarModemSelect" style="width: 100%; font-size: 11px; margin-top: 2px; padding: 2px;">
+          <option value="56k">V.90 56,000 bps (120-210ms)</option>
+          <option value="33k">V.34 33,600 bps (180-280ms)</option>
+          <option value="14k">V.32bis 14,400 bps (350-520ms)</option>
+          <option value="isdn">ISDN 128 kbps BRI (45-80ms)</option>
+        </select>
+      </div>
+      <div style="display: flex; align-items: flex-end; gap: 4px;">
+        <button id="btnRadarPing" class="btn-retro" onclick="executeRadarPing()" style="padding: 3px 8px; font-weight: bold;">📡 Ping (x4)</button>
+        <button id="btnRadarTrace" class="btn-retro" onclick="executeRadarTrace()" style="padding: 3px 8px; font-weight: bold;">🛣️ Trace Route</button>
+        <button id="btnRadarHandshake" class="btn-retro" onclick="playModemSound()" style="padding: 3px 8px;">🔊 Modem Handshake</button>
+        <button id="btnRadarOpen" class="btn-retro" onclick="openSelectedTarget()" style="padding: 3px 8px;">🚀 Navigate</button>
+      </div>
+    </div>
+    <div id="radarTerminalOutput" style="background: #000000; color: #00ff66; font-family: 'Courier New', monospace; font-size: 11px; padding: 8px; height: 160px; overflow-y: auto; border: 2px inset #808080; white-space: pre-wrap; line-height: 1.35;">KiloNet WinSock PPP Console Initialized.&#10;Type or select host above, then press 'Ping' or 'Trace Route' to probe 1999 node latency.</div>
+  </div>
+</div>
+
+<script>
+(function() {
+  let audioCtx = null;
+  function getAudioCtx() {
+    if (!audioCtx) {
+      const AudioContext = window.AudioContext || window.webkitAudioContext;
+      if (AudioContext) audioCtx = new AudioContext();
+    }
+    if (audioCtx && audioCtx.state === 'suspended') {
+      audioCtx.resume().catch(function() {});
+    }
+    return audioCtx;
+  }
+
+  function playTone(freq, durationMs, type) {
+    try {
+      const ctx = getAudioCtx();
+      if (!ctx) return;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = type || 'sine';
+      osc.frequency.setValueAtTime(freq, ctx.currentTime);
+      gain.gain.setValueAtTime(0.08, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + (durationMs / 1000));
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start();
+      osc.stop(ctx.currentTime + (durationMs / 1000));
+    } catch(e) {}
+  }
+
+  window.playModemSound = function() {
+    try {
+      const ctx = getAudioCtx();
+      if (!ctx) return;
+      const term = document.getElementById('radarTerminalOutput');
+      if (term) term.textContent += '\n[ATDT 555-0199] Dialing KiloNet POP... Handshake V.90 Negotiating...';
+      playTone(941, 120, 'square');
+      setTimeout(function() { playTone(1336, 120, 'square'); }, 140);
+      setTimeout(function() { playTone(2100, 350, 'sawtooth'); }, 300);
+      setTimeout(function() { playTone(1800, 200, 'sine'); }, 700);
+      setTimeout(function() {
+        if (term) {
+          term.textContent += '\nCONNECT 53333/V.90/LAPM/V42BIS -- Carrier established.';
+          term.scrollTop = term.scrollHeight;
+        }
+      }, 1000);
+    } catch(e) {}
+  };
+
+  window.openSelectedTarget = function() {
+    const sel = document.getElementById('radarTargetSelect');
+    if (!sel) return;
+    const opt = sel.options[sel.selectedIndex];
+    const url = opt.getAttribute('data-url');
+    if (url) window.location.href = url;
+  };
+
+  window.executeRadarPing = function() {
+    const sel = document.getElementById('radarTargetSelect');
+    const modem = document.getElementById('radarModemSelect').value;
+    const term = document.getElementById('radarTerminalOutput');
+    if (!sel || !term) return;
+    const opt = sel.options[sel.selectedIndex];
+    const host = opt.text.split(' ')[0];
+    const ip = opt.getAttribute('data-ip');
+    const baseLatency = modem === '56k' ? 140 : (modem === '33k' ? 210 : (modem === '14k' ? 420 : 60));
+    term.textContent = 'Pinging ' + host + ' [' + ip + '] with 32 bytes of data:\n';
+    let packet = 1;
+    function sendPacket() {
+      if (packet > 4) {
+        term.textContent += '\nPing statistics for ' + ip + ':\n    Packets: Sent = 4, Received = 4, Lost = 0 (0% loss)\nApproximate round trip times:\n    Minimum = ' + (baseLatency - 15) + 'ms, Maximum = ' + (baseLatency + 25) + 'ms, Average = ' + baseLatency + 'ms\n';
+        term.scrollTop = term.scrollHeight;
+        try {
+          const hist = JSON.parse(localStorage.getItem('kportal_radar_pings') || '[]');
+          hist.unshift({ host: host, ip: ip, time: new Date().toISOString(), ms: baseLatency });
+          localStorage.setItem('kportal_radar_pings', JSON.stringify(hist.slice(0, 10)));
+        } catch(e) {}
+        return;
+      }
+      const jitter = Math.floor(Math.random() * 30) - 15;
+      const ms = Math.max(20, baseLatency + jitter);
+      term.textContent += 'Reply from ' + ip + ': bytes=32 time=' + ms + 'ms TTL=54\n';
+      term.scrollTop = term.scrollHeight;
+      playTone(1200 + (packet * 100), 50, 'sine');
+      packet++;
+      setTimeout(sendPacket, 350);
+    }
+    sendPacket();
+  };
+
+  window.executeRadarTrace = function() {
+    const sel = document.getElementById('radarTargetSelect');
+    const term = document.getElementById('radarTerminalOutput');
+    if (!sel || !term) return;
+    const opt = sel.options[sel.selectedIndex];
+    const host = opt.text.split(' ')[0];
+    const ip = opt.getAttribute('data-ip');
+    term.textContent = 'Tracing route to ' + host + ' [' + ip + ']\nover a maximum of 30 hops:\n\n';
+    const hops = [
+      '  1    <10 ms    <10 ms    <10 ms  192.168.1.1 (Local Gateway)',
+      '  2    125 ms    132 ms    128 ms  207.69.200.1 (KiloNet Dialup POP, US-West)',
+      '  3    142 ms    139 ms    145 ms  core1-sfo.knet-backbone.net [198.32.160.12]',
+      '  4    155 ms    151 ms    158 ms  edge02.knet-ring.org [204.152.184.64]',
+      '  5    160 ms    164 ms    159 ms  ' + ip + ' (' + host + ')'
+    ];
+    let hopIdx = 0;
+    function printHop() {
+      if (hopIdx >= hops.length) {
+        term.textContent += '\nTrace complete.\n';
+        term.scrollTop = term.scrollHeight;
+        return;
+      }
+      term.textContent += hops[hopIdx] + '\n';
+      term.scrollTop = term.scrollHeight;
+      playTone(800 + (hopIdx * 150), 40, 'triangle');
+      hopIdx++;
+      setTimeout(printHop, 300);
+    }
+    printHop();
+  };
+})();
+</script>
+
 </body>
 </html>`;
 
