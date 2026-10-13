@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-qa
+current_agent: kilo-qa
+next_agent: kilo-expander
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -16,7 +16,7 @@ current_targets:
   kilo_creator: kweb://portal
   kilo_graphics: KCyber
   kilo_tester: KVault
-  kilo_usability: KRogue
+  kilo_usability: KAudio
   kilo_qa: KColony
   kilo_soundscape: KCyber
   kilo_expander: KRogue
@@ -34,9 +34,9 @@ virtual_web_rotation:
 - kweb://10.19.99.4/classified
 - kweb://echo-subsystem.net
 last_run:
-  agent: kilo-tester
-  app: KTrader
-  timestamp: '2026-10-12T19:31:00Z'
+  agent: kilo-usability
+  app: KRogue
+  timestamp: '2026-10-12T20:14:00Z'
 last_planner_run: '2026-10-12T17:31:38Z'
 ---
 
@@ -88,8 +88,8 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Upcoming Queue**: `KCalendar`, `KChart`, `KChat`, `KMine`, `KSanctuary`, `KAudio`, `KSubmarine`, `KTrader`.
 
 ### 4. Usability & UX Queue (`kilo-usability`)
-- **Current Target**: `KRogue`
-- **Upcoming Queue**: `KAudio`, `KSubmarine`, `KTrader`, `KBudget`.
+- **Current Target**: `KAudio`
+- **Upcoming Queue**: `KSubmarine`, `KTrader`, `KBudget`, `KRogue`.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
 - **Current Target**: `KColony`
@@ -115,6 +115,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-12T20:14:00Z — kilo-usability: KRogue (UI/UX & Usability Maturity Audit)**
+  - ⏭️ Skip — KRogue usability is mature (10+ passes, crisp HiDPI canvas, F1/H modal, responsive D-Pad).
+  - Queue: Advanced kilo-usability to KAudio; handoff to kilo-qa.
+
 - **2026-10-12T19:31:00Z — kilo-tester: KTrader (Interactive UI Element Audit & Inline Fixes)**
   - Status: PASS ✅ (Vite build clean, size 88KB < 999KB).
   - Audit: Verified modals (help, briefing, victory), export/import JSON, quicksave/quickload [F5/F9], hyperspace [1-9], combat, and refuel.
@@ -139,8 +143,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Depth: Verified Node 0x7F subterranean terminal, crypto lab, Bell 103/202 FSK modem, and signal board.
   - Links: Cross-verified dual-target links in KNet (kweb://darknet), Portal directory, and Subterranean Webring.
   - Queue: Advanced kilo-creator to kweb://portal; handoff to kilo-graphics.
-
-- **2026-10-12T17:33:00Z — kilo-expander: KPong (Deep Feature & Physics Lab Expansion)**
-  - Status: PASS ✅ (Vite build clean, size 156KB < 999KB).
-  - Features: Match Modifiers & Physics Lab ([J]), Magnus aerodynamic spin curve, trajectory guide, paddle size handicaps, and JSON setup export/import.
-  - Queue: Advanced kilo-expander to KRogue; handoff to kilo-creator.
