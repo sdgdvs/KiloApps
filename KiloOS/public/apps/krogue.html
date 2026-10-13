@@ -5667,6 +5667,16 @@
 
         // Start Loop
         gameLoop();
+        window.addEventListener('beforeunload', () => {
+            if (state === 1) {
+                try { saveGame(currentSaveSlot); } catch(e) {}
+            }
+        });
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden && state === 1) {
+                try { saveGame(currentSaveSlot); } catch(e) {}
+            }
+        });
         setTimeout(() => {
             initRetroMultiplayer();
             let hasSave = !!localStorage.getItem('krogue_save');
