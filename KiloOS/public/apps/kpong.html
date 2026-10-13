@@ -212,6 +212,7 @@
       <button class="btn-sm" onclick="togglePvPMode()" id="btn-pvp" title="Toggle 1P vs AI / 2P Local PvP (V)">👤 1P vs AI [V]</button>
       <button class="btn-sm" onclick="cycleGameMode()" id="btn-mode" title="Cycle Game Modes (M)">🎮 Mode: Classic [M]</button>
       <button class="btn-sm" onclick="cycleTargetScore()" id="btn-pts" title="Cycle Winning Score Goal (5, 11, 21) [G]">🎯 Goal: 11 [G]</button>
+      <button class="btn-sm" onclick="cycleMatchSeries()" id="btn-series" title="Tournament Match Series (Best of 1, 3, 5)">🏆 Series: 1 Set</button>
       <button class="btn-sm" onclick="cycleDifficulty()" id="btn-diff" title="Cycle AI Difficulty (1-3)">⚡ Diff: Normal [1-3]</button>
       <button class="btn-sm" onclick="cycleTheme()" id="btn-theme" title="Cycle Visual Themes (T)">🎨 Theme [T]</button>
       <button class="btn-sm" onclick="toggleReplay()" id="btn-replay" title="Toggle Match Replay (P)">📽️ Replay [P]</button>
@@ -243,6 +244,10 @@
       <span id="replay-frame-text" style="font-family: monospace; font-size: 11px; color: var(--primary);">0/0</span>
     </div>
     <div style="display: flex; gap: 4px; align-items: center; flex-wrap: wrap;">
+      <button class="btn-sm" onclick="jumpReplayGoal(-1)" title="Jump to previous scored goal">⏮️ Prev Goal</button>
+      <button class="btn-sm" onclick="jumpReplayGoal(1)" title="Jump to next scored goal">Next Goal ⏭️</button>
+      <button class="btn-sm" onclick="jumpReplayPeakRally()" title="Jump to frame with highest rally">🔥 Peak</button>
+      <button class="btn-sm" onclick="toggleReplayTrail()" id="btn-replay-trail" title="Toggle Ball Motion Heat Trail">✨ Trail: OFF</button>
       <button class="btn-sm" onclick="setReplaySpeed(0.5)" id="btn-spd-05">0.5x</button>
       <button class="btn-sm" onclick="setReplaySpeed(1)" id="btn-spd-1" style="border-color: var(--accent); color: var(--accent);">1.0x</button>
       <button class="btn-sm" onclick="setReplaySpeed(2)" id="btn-spd-2">2.0x</button>
@@ -322,6 +327,8 @@
     <div style="display: flex; gap: 8px; margin-top: 12px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.1); flex-wrap: wrap;">
       <button class="btn-sm" onclick="exportStatsJSON()">📥 Export JSON</button>
       <button class="btn-sm" onclick="exportStatsCSV()">📊 Export CSV</button>
+      <button class="btn-sm" onclick="exportMatchLogTxt()" title="Download Play-by-Play Event Log">📋 Match Log (.klog)</button>
+      <button class="btn-sm" onclick="exportMatchLogJSON()" title="Export Match Log as JSON">📋 Match Log (JSON)</button>
       <button class="btn-sm" onclick="document.getElementById('statsFileInput').click()">📤 Import JSON</button>
       <button class="btn-sm" onclick="document.getElementById('replayFileInput').click()">📽️ Watch .kpr</button>
       <input type="file" id="statsFileInput" accept=".json" style="display:none" onchange="importStatsJSON(event)">
@@ -402,6 +409,15 @@
           <option value="compact">Compact (36px)</option>
           <option value="normal" selected>Normal (50px)</option>
           <option value="wide">Wide (72px)</option>
+        </select>
+      </div>
+
+      <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.04); padding: 6px 10px; border-radius: 6px;">
+        <span>🛡️ Cushion Elasticity:</span>
+        <select id="mod-cushion" style="background:#111; color:#fff; border:1px solid var(--primary); border-radius:4px; padding:3px 8px; font-size:12px;" onchange="updateModifierSetting('cushionMult', parseFloat(this.value))">
+          <option value="1.0" selected>Standard (1.0x)</option>
+          <option value="1.25">High Bounce (1.25x)</option>
+          <option value="1.5">Superball (1.5x)</option>
         </select>
       </div>
 
@@ -1545,6 +1561,154 @@
       if (pBtn) pBtn.innerText = replayPaused ? "▶️ Play" : "⏸️ Pause";
   }
 
+  // ==========================================
+  // Expanded Engine Systems: Keyframes, Series & Play-by-Play
+  // ==========================================
+  let replayTrailEnabled = false;
+  let seriesType = safeGetStorage('kpong_series_type', 1); // 1, 3, 5
+  let p1Sets = 0, p2Sets = 0;
+  let matchEventLog = [];
+
+  function logMatchEvent(type, details) {
+      const evt = {
+          time: new Date().toLocaleTimeString(),
+          frame: replayFrames.length,
+          type: type,
+          score: `${s1}-${s2}`,
+          sets: `${p1Sets}-${p2Sets}`,
+          details: details || ''
+      };
+      matchEventLog.push(evt);
+      if (matchEventLog.length > 250) matchEventLog.shift();
+  }
+
+  function cycleMatchSeries() {
+      const opts = [1, 3, 5];
+      let idx = opts.indexOf(seriesType);
+      seriesType = opts[(idx + 1) % opts.length];
+      safeSetStorage('kpong_series_type', seriesType);
+      p1Sets = 0; p2Sets = 0;
+      updateSeriesUI();
+      showToast(`Tournament Series: ${seriesType === 1 ? '1 Set (Standard)' : 'Best of ' + seriesType}`);
+      logMatchEvent('SERIES_CONFIG', `Series set to Best of ${seriesType}`);
+  }
+
+  function updateSeriesUI() {
+      const btn = document.getElementById('btn-series');
+      if (btn) btn.innerText = seriesType === 1 ? '🏆 Series: 1 Set' : `🏆 Best of ${seriesType} (${p1Sets}-${p2Sets})`;
+      updateBadge();
+  }
+
+  function toggleReplayTrail() {
+      replayTrailEnabled = !replayTrailEnabled;
+      const btn = document.getElementById('btn-replay-trail');
+      if (btn) {
+          btn.innerText = replayTrailEnabled ? '✨ Trail: ON' : '✨ Trail: OFF';
+          btn.style.color = replayTrailEnabled ? 'var(--accent)' : '#fff';
+      }
+      showToast(replayTrailEnabled ? 'Replay Motion Trail: Enabled' : 'Replay Motion Trail: Disabled');
+  }
+
+  function jumpReplayGoal(direction) {
+      if (replayFrames.length === 0) return;
+      let targetFrame = -1;
+      if (direction > 0) {
+          for (let i = replayCurFrame + 1; i < replayFrames.length; i++) {
+              let prev = replayFrames[i - 1];
+              let cur = replayFrames[i];
+              if (cur.s1 !== prev.s1 || cur.s2 !== prev.s2) {
+                  targetFrame = i;
+                  break;
+              }
+          }
+      } else {
+          for (let i = replayCurFrame - 1; i > 0; i--) {
+              let prev = replayFrames[i - 1];
+              let cur = replayFrames[i];
+              if (cur.s1 !== prev.s1 || cur.s2 !== prev.s2) {
+                  targetFrame = i;
+                  break;
+              }
+          }
+      }
+      if (targetFrame !== -1) {
+          replayCurFrame = targetFrame;
+          updateReplayUI();
+          showToast(`Jumped to Goal at frame ${targetFrame + 1}`);
+      } else {
+          showToast(direction > 0 ? 'No subsequent goals recorded.' : 'No prior goals recorded.');
+      }
+  }
+
+  function jumpReplayPeakRally() {
+      if (replayFrames.length === 0) return;
+      let maxRally = -1, peakFrame = 0;
+      for (let i = 0; i < replayFrames.length; i++) {
+          if (replayFrames[i].rally > maxRally) {
+              maxRally = replayFrames[i].rally;
+              peakFrame = i;
+          }
+      }
+      replayCurFrame = peakFrame;
+      updateReplayUI();
+      showToast(`Jumped to Peak Rally (${maxRally}) at frame ${peakFrame + 1}`);
+  }
+
+  function exportMatchLogTxt() {
+      let txt = '=== KPONG MATCH PLAY-BY-PLAY EVENT LOG ===\n';
+      txt += `Generated: ${new Date().toISOString()}\n`;
+      txt += `Mode: ${MODE_NAMES[gameMode]} | Series: Best of ${seriesType}\n`;
+      txt += `Final Score: P1: ${s1} (Sets: ${p1Sets}) - P2: ${s2} (Sets: ${p2Sets})\n`;
+      txt += `Peak Rally: ${stats.highRally} | Max Velocity: ${telemetry.maxSpeed} px/f\n\n`;
+      txt += 'CHRONOLOGICAL LOG:\n';
+      txt += '-----------------------------------------------------------\n';
+      if (matchEventLog.length === 0) {
+          txt += 'No match events logged during this session.\n';
+      } else {
+          matchEventLog.forEach((evt, idx) => {
+              txt += `[${evt.time}] Frame ${evt.frame} | ${evt.type.padEnd(16)} | Score ${evt.score} (Sets ${evt.sets}) | ${evt.details}\n`;
+          });
+      }
+      txt += '-----------------------------------------------------------\n';
+      txt += '=== END OF KPONG MATCH LOG ===\n';
+
+      const blob = new Blob([txt], { type: 'text/plain;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `kpong_match_${Date.now()}.klog`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 1500);
+      showToast('Match Log exported to .klog file!');
+  }
+
+  function exportMatchLogJSON() {
+      const data = {
+          generatedAt: new Date().toISOString(),
+          mode: MODE_NAMES[gameMode],
+          series: seriesType,
+          p1Sets: p1Sets,
+          p2Sets: p2Sets,
+          s1: s1,
+          s2: s2,
+          highRally: stats.highRally,
+          telemetry: telemetry,
+          events: matchEventLog
+      };
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `kpong_match_${Date.now()}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 1500);
+      showToast('Match Log exported to JSON!');
+  }
+
   function exportStatsJSON() {
       const data = {
           total_games: stats.games,
@@ -2519,13 +2683,13 @@
 
           // Top/Bottom Wall Collisions
           if (b.y < 0) {
-              b.y = 0; b.dy = -b.dy; arenaPulse = 1.0; screenShake = 4;
+              b.y = 0; b.dy = -b.dy * (matchModifiers.cushionMult || 1.0); arenaPulse = 1.0; screenShake = 4;
               createParticles(b.x + BALL_SIZE/2, 0, '#ffffff', 10, 5);
               createShockwave(b.x + BALL_SIZE/2, 0, getPrimaryColor());
               playSound(800, 'hit');
           }
           if (b.y > H - BALL_SIZE) {
-              b.y = H - BALL_SIZE; b.dy = -b.dy; arenaPulse = 1.0; screenShake = 4;
+              b.y = H - BALL_SIZE; b.dy = -b.dy * (matchModifiers.cushionMult || 1.0); arenaPulse = 1.0; screenShake = 4;
               createParticles(b.x + BALL_SIZE/2, H, '#ffffff', 10, 5);
               createShockwave(b.x + BALL_SIZE/2, H, getSecondaryColor());
               playSound(800, 'hit');
@@ -2688,6 +2852,23 @@
               if (campaignLevel > 20) {
                   winScreen = true; gameOver = true; stats.wins++; stats.games++;
               } else { resetBalls(); }
+          } else if (seriesType > 1 && !isOnline) {
+              p1Sets++;
+              logMatchEvent('SET_WON', `P1 won Set! Current Sets: P1 ${p1Sets} - ${p2Sets} P2`);
+              const neededSets = Math.ceil(seriesType / 2);
+              if (p1Sets >= neededSets) {
+                  gameOver = true;
+                  stats.wins++; stats.games++;
+                  showToast(`🏆 TOURNAMENT CHAMPION! P1 wins series ${p1Sets}-${p2Sets}!`);
+                  logMatchEvent('SERIES_CHAMPION', `P1 clinched series ${p1Sets}-${p2Sets}`);
+              } else {
+                  showToast(`Set won by P1! Series: ${p1Sets} - ${p2Sets}. Next set begins!`);
+                  s1 = 0; s2 = 0; rally = 0;
+                  document.getElementById('s1').innerText = 0;
+                  document.getElementById('s2').innerText = 0;
+                  resetBalls();
+              }
+              updateSeriesUI();
           } else {
               gameOver = true;
               if (isOnline) {
@@ -2704,13 +2885,31 @@
           safeSetStorage('kpong_stats_v2', stats);
       }
       if (s2 >= targetScore) {
-          gameOver = true;
-          if (isOnline) {
-              if (myPlayerSlot === 2) stats.wins++; else stats.losses++;
+          if (seriesType > 1 && !isOnline && gameMode !== 4) {
+              p2Sets++;
+              logMatchEvent('SET_WON', `P2 won Set! Current Sets: P1 ${p1Sets} - ${p2Sets} P2`);
+              const neededSets = Math.ceil(seriesType / 2);
+              if (p2Sets >= neededSets) {
+                  gameOver = true;
+                  stats.losses++; stats.games++;
+                  showToast(`🏆 SERIES CONCLUDED! P2 wins series ${p1Sets}-${p2Sets}!`);
+                  logMatchEvent('SERIES_CHAMPION', `P2 clinched series ${p1Sets}-${p2Sets}`);
+              } else {
+                  showToast(`Set won by P2! Series: ${p1Sets} - ${p2Sets}. Next set begins!`);
+                  s1 = 0; s2 = 0; rally = 0;
+                  document.getElementById('s1').innerText = 0;
+                  document.getElementById('s2').innerText = 0;
+                  resetBalls();
+              }
+              updateSeriesUI();
           } else {
-              stats.losses++;
-          }
-          stats.games++;
+              gameOver = true;
+              if (isOnline) {
+                  if (myPlayerSlot === 2) stats.wins++; else stats.losses++;
+              } else {
+                  stats.losses++;
+              }
+              stats.games++;
           if (isOnline && isHost && rMultiplayer) {
               rMultiplayer.sendMove({ type: 'game_over', s1, s2, winner: 2 });
               emitArgSignal('kpong_duel_finished', { winner: 2, s1, s2, rally: stats.highRally });
@@ -2940,6 +3139,24 @@
                   ctx.save(); ctx.fillStyle = 'rgba(0, 200, 255, 0.85)'; ctx.shadowBlur = 15; ctx.shadowColor = '#00c8ff';
                   ctx.fillRect(rf.obs2X, H/2 - 6, 40, 12); ctx.restore();
               }
+          }
+
+          // Render Ball Motion Heat Trail if enabled
+          if (replayTrailEnabled && replayCurFrame > 0) {
+              const trailStart = Math.max(0, replayCurFrame - 25);
+              ctx.save();
+              for (let fIdx = trailStart; fIdx < replayCurFrame; fIdx++) {
+                  const pastRf = replayFrames[fIdx];
+                  const alpha = ((fIdx - trailStart + 1) / (replayCurFrame - trailStart + 1)) * 0.35;
+                  if (pastRf && pastRf.balls) {
+                      for (let pb of pastRf.balls) {
+                          if (!pb.active) continue;
+                          ctx.fillStyle = pb.isFireball ? `rgba(255, 100, 0, ${alpha})` : `rgba(0, 229, 255, ${alpha})`;
+                          ctx.fillRect(pb.x + 2, pb.y + 2, BALL_SIZE - 4, BALL_SIZE - 4);
+                      }
+                  }
+              }
+              ctx.restore();
           }
 
           // Render Balls from frame
@@ -3424,7 +3641,8 @@
       spinEnabled: true,
       trajectoryGuide: false,
       p1Size: 'normal',
-      p2Size: 'normal'
+      p2Size: 'normal',
+      cushionMult: 1.0
   };
 
   let matchModifiers = Object.assign({}, DEFAULT_MODIFIERS, safeGetStorage('kpong_modifiers_v1', {}));
@@ -3440,6 +3658,8 @@
       if (p1El) p1El.value = matchModifiers.p1Size || 'normal';
       const p2El = document.getElementById('mod-p2-size');
       if (p2El) p2El.value = matchModifiers.p2Size || 'normal';
+      const cushEl = document.getElementById('mod-cushion');
+      if (cushEl) cushEl.value = String(matchModifiers.cushionMult || 1.0);
       applyPaddleHandicaps();
   }
 

@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-expander
-next_agent: kilo-creator
+current_agent: kilo-creator
+next_agent: kilo-graphics
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -19,7 +19,7 @@ current_targets:
   kilo_usability: KBudget
   kilo_qa: KPac
   kilo_soundscape: KTrader
-  kilo_expander: KPong
+  kilo_expander: KChess
 virtual_web_target: kweb://geocities
 virtual_web_rotation:
 - kweb://deep-core
@@ -34,9 +34,9 @@ virtual_web_rotation:
 - kweb://10.19.99.4/classified
 - kweb://echo-subsystem.net
 last_run:
-  agent: kilo-qa
+  agent: kilo-expander
   app: KPong
-  timestamp: '2026-10-13T07:13:00Z'
+  timestamp: '2026-10-13T07:32:00Z'
 last_planner_run: '2026-10-12T17:31:38Z'
 ---
 
