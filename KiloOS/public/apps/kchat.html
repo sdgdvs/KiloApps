@@ -991,40 +991,52 @@
             }
         ];
 
+        function safeGet(key, fallback) {
+            try {
+                const item = localStorage.getItem(key);
+                return item !== null ? (JSON.parse(item) ?? fallback) : fallback;
+            } catch(e) {
+                return fallback;
+            }
+        }
+
+        function safeSet(key, value) {
+            try {
+                localStorage.setItem(key, JSON.stringify(value));
+            } catch(e) {
+                console.warn('[KChat] Storage write failed:', e.message);
+            }
+        }
+
         const STORAGE_KEY = 'kchat_pro_state_v2';
         function safeLoadState() {
-            try {
-                const raw = localStorage.getItem(STORAGE_KEY);
-                if (raw) {
-                    const parsed = JSON.parse(raw);
-                    if (parsed.messages && Array.isArray(parsed.messages)) {
-                        messages = parsed.messages.map((m, idx) => {
-                            if (!m || typeof m !== 'object') return null;
-                            if (!m.id) m.id = 'msg_loaded_' + idx + '_' + Math.floor(Math.random()*10000);
-                            return m;
-                        }).filter(Boolean);
-                    }
-                    if (parsed.rooms && Array.isArray(parsed.rooms)) rooms = parsed.rooms;
-                    if (parsed.roomTopics && typeof parsed.roomTopics === 'object') roomTopics = parsed.roomTopics;
-                    if (parsed.currentUsername) currentUsername = parsed.currentUsername;
-                    if (parsed.currentRoom) currentRoom = parsed.currentRoom;
-                    if (parsed.showOnlyPinned !== undefined) showOnlyPinned = !!parsed.showOnlyPinned;
+            const parsed = safeGet(STORAGE_KEY, null);
+            if (parsed && typeof parsed === 'object') {
+                if (parsed.messages && Array.isArray(parsed.messages)) {
+                    messages = parsed.messages.map((m, idx) => {
+                        if (!m || typeof m !== 'object') return null;
+                        if (!m.id) m.id = 'msg_loaded_' + idx + '_' + Math.floor(Math.random()*10000);
+                        return m;
+                    }).filter(Boolean);
                 }
-            } catch(e) {
-                console.warn("Could not load KChat state from localStorage:", e);
+                if (parsed.rooms && Array.isArray(parsed.rooms)) rooms = parsed.rooms;
+                if (parsed.roomTopics && typeof parsed.roomTopics === 'object') roomTopics = parsed.roomTopics;
+                if (parsed.currentUsername) currentUsername = parsed.currentUsername;
+                if (parsed.currentRoom) currentRoom = parsed.currentRoom;
+                if (parsed.showOnlyPinned !== undefined) showOnlyPinned = !!parsed.showOnlyPinned;
             }
         }
 
         function safeSaveState() {
+            const state = {
+                messages: messages.slice(-150),
+                rooms: rooms,
+                roomTopics: roomTopics,
+                currentUsername: currentUsername,
+                currentRoom: currentRoom,
+                showOnlyPinned: showOnlyPinned
+            };
             try {
-                const state = {
-                    messages: messages.slice(-150),
-                    rooms: rooms,
-                    roomTopics: roomTopics,
-                    currentUsername: currentUsername,
-                    currentRoom: currentRoom,
-                    showOnlyPinned: showOnlyPinned
-                };
                 localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
             } catch(e) {
                 try {
@@ -1039,7 +1051,7 @@
                     };
                     localStorage.setItem(STORAGE_KEY, JSON.stringify(fallbackState));
                 } catch(err2) {
-                    console.warn("Could not save KChat state to localStorage:", err2);
+                    console.warn("[KChat] Could not save state:", err2);
                 }
             }
         }
@@ -1057,8 +1069,8 @@
                     messages: messages.slice(-200),
                     showOnlyPinned: showOnlyPinned
                 };
-                localStorage.setItem(QUICKSAVE_KEY, JSON.stringify(snapshot));
-                try { localStorage.setItem('kchat_tutorialSeen', '1'); } catch(err) {}
+                safeSet(QUICKSAVE_KEY, snapshot);
+                safeSet('kchat_tutorialSeen', '1');
                 safeSaveState();
                 playChime(784.00, 0.15);
                 showToast("💾 Quicksave created! [F5]");
@@ -1069,12 +1081,11 @@
 
         window.quickLoad = function() {
             try {
-                const raw = localStorage.getItem(QUICKSAVE_KEY) || localStorage.getItem(STORAGE_KEY);
-                if (!raw) {
+                const parsed = safeGet(QUICKSAVE_KEY, null) || safeGet(STORAGE_KEY, null);
+                if (!parsed) {
                     showToast("⚠️ No quicksave snapshot found.");
                     return;
                 }
-                const parsed = JSON.parse(raw);
                 if (parsed.messages && Array.isArray(parsed.messages)) {
                     messages = parsed.messages.filter(m => m && typeof m === 'object' && m.id && m.text !== undefined);
                 }
@@ -1098,7 +1109,7 @@
                         else btn.classList.remove('btn-active');
                     }
                 }
-                try { localStorage.setItem('kchat_tutorialSeen', '1'); } catch(err) {}
+                safeSet('kchat_tutorialSeen', '1');
                 safeSaveState();
                 if (window.renderChannelBar) window.renderChannelBar();
                 if (window.renderMessages) window.renderMessages();
@@ -2222,11 +2233,46 @@
         window.renderChannelBar();
         window.renderMessages();
 
+        // Sync filter button visual state
+        const btnFilterPinned = document.getElementById('btnFilterPinned');
+        if (btnFilterPinned && showOnlyPinned) btnFilterPinned.classList.add('btn-active');
+
+        // Modal input progression & search button accessibility
+        const pollOpt2 = document.getElementById('pollOpt2Input');
+        if (pollOpt2) {
+            pollOpt2.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    const opt3 = document.getElementById('pollOpt3Input');
+                    if (opt3 && !opt3.value) opt3.focus();
+                    else window.submitNewPoll();
+                }
+            });
+        }
+        const searchClear = document.getElementById('searchClearBtn');
+        if (searchClear) {
+            searchClear.setAttribute('role', 'button');
+            searchClear.setAttribute('tabindex', '0');
+            searchClear.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    searchClear.click();
+                }
+            });
+        }
+
+        // Global keyboard delegation for interactive pills and poll options
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                const target = e.target;
+                if (target && target.classList && (target.classList.contains('channel-pill') || target.classList.contains('poll-opt-row'))) {
+                    e.preventDefault();
+                    target.click();
+                }
+            }
+        });
+
         // First-run Tutorial Integrity (Pass 5)
-        let tutorialSeen = false;
-        try {
-            tutorialSeen = localStorage.getItem('kchat_tutorialSeen') === '1';
-        } catch(e) {}
+        const tutorialSeen = safeGet('kchat_tutorialSeen', '0') === '1';
 
         if (!tutorialSeen) {
             setTimeout(() => {
