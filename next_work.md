@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-creator
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -17,7 +17,7 @@ current_targets:
   kilo_graphics: KColosseum
   kilo_tester: KChat
   kilo_usability: KBudget
-  kilo_qa: KPong
+  kilo_qa: KPac
   kilo_soundscape: KTrader
   kilo_expander: KPong
 virtual_web_target: kweb://geocities
@@ -34,9 +34,9 @@ virtual_web_rotation:
 - kweb://10.19.99.4/classified
 - kweb://echo-subsystem.net
 last_run:
-  agent: kilo-usability
-  app: KTrader
-  timestamp: '2026-10-13T06:31:00Z'
+  agent: kilo-qa
+  app: KPong
+  timestamp: '2026-10-13T07:13:00Z'
 last_planner_run: '2026-10-12T17:31:38Z'
 ---
 
@@ -92,8 +92,8 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Upcoming Queue**: `KRogue`, `KSubmarine`, `KTrader`.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
-- **Current Target**: `KRogue`
-- **Upcoming Queue**: `KPong`, `KPac`, `KColony`, `KBreakout`.
+- **Current Target**: `KPac`
+- **Upcoming Queue**: `KColony`, `KBreakout`, `KRogue`, `KPong`.
 
 ### 6. Feature Expander Queue (`kilo-expander`)
 - **Current Target**: `KPong`
@@ -114,6 +114,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 ---
 
 ## Recent Execution Logs (Max 5 Entries)
+
+- **2026-10-13T07:13:00Z — kilo-qa: KPong (Pass 5 QA & Build Audit)**
+  - Audited F5/F9 state persistence (balls, powerups, boss shields, timers, score integrity).
+  - Verified tutorial flag suppression on restored saves and offline default (Rule 12 compliant).
+  - Status: PASS ✅ (Vite build clean, size 161.7KB < 999KB).
+  - Queue: Advanced kilo-qa to KPac; handoff to kilo-expander.
 
 - **2026-10-13T06:31:00Z — kilo-usability: KTrader (UI/UX & Usability Pass)**
   - Enhanced responsive layout with mobile/compact viewport media query and global box-sizing.
@@ -140,9 +146,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Verified zero rotating specular glints or traveling perimeter border dots.
   - Status: PASS ✅ (Vite build clean, size 156KB < 999KB).
   - Queue: Advanced kilo-graphics to KColosseum; handoff to kilo-soundscape.
-
-- **2026-10-13T04:33:00Z — kilo-creator: kweb://warez (Scene Pulse Diskmag Expansion)**
-  - Implemented 1999 floppy diskmag 'Scene Pulse '99' (Issues #12, #13, #14) with real Web Audio FDD seek sound and tracker chiptune.
-  - Added CRT phosphor themes, article search/filter, and interactive mailbag letter dispatcher.
-  - Status: PASS ✅ (Vite build clean, size 445KB < 999KB).
-  - Queue: Advanced kilo-creator to kweb://geocities; handoff to kilo-graphics.
