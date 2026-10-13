@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-graphics
-next_agent: kilo-soundscape
+current_agent: kilo-soundscape
+next_agent: kilo-tester
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -14,7 +14,7 @@ timeout_minutes: 6
 status: ready
 current_targets:
   kilo_creator: kweb://portal
-  kilo_graphics: KMech
+  kilo_graphics: KCyber
   kilo_tester: KTrader
   kilo_usability: KRogue
   kilo_qa: KSpace
@@ -34,9 +34,9 @@ virtual_web_rotation:
 - kweb://10.19.99.4/classified
 - kweb://echo-subsystem.net
 last_run:
-  agent: kilo-creator
-  app: kweb://darknet
-  timestamp: '2026-10-12T18:15:00Z'
+  agent: kilo-graphics
+  app: KMech
+  timestamp: '2026-10-12T18:31:00Z'
 last_planner_run: '2026-10-12T17:31:38Z'
 ---
 
@@ -53,7 +53,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
    - Never run multi-app quality gates or full-repo screenshot suites during worker turns.
    - Keep only the 5 most recent log entries in this file. Older entries are 0-token automatically rotated to [archive/fleet_execution_archive.md](archive/fleet_execution_archive.md) by orchestrator (via scripts/rotate_logs.py) with zero discard.
 3. **Queue Handoff & Rotation Protocol**:
-   - Master fleet rotates: `kilo-creator` ➔ `kilo-graphics` ➔ `kilo-tester` ➔ `kilo-usability` ➔ `kilo-qa` ➔ `kilo-expander`.
+   - Master fleet rotates: `kilo-creator` ➔ `kilo-graphics` ➔ `kilo-soundscape` ➔ `kilo-tester` ➔ `kilo-usability` ➔ `kilo-qa` ➔ `kilo-expander`.
    - On completion, advance `current_targets.<agent>` and advance `current_agent`.
 4. **24-Hour Master Planner Tick**:
    - `scripts/orchestrate.py` checks `last_planner_run`. At ≥24h, dispatches `kilo-planner` for queue rebalancing, icon audits, and compaction.
@@ -80,8 +80,8 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
 - **Mission**: Replace programmer art with Imagen 3 assets. Skip immediately if vector/board/mature.
-- **Current Target**: `KMech`
-- **Upcoming Queue**: `KCyber`, `KSpace`, `KStellar`, `KColosseum`.
+- **Current Target**: `KCyber`
+- **Upcoming Queue**: `KSpace`, `KStellar`, `KColosseum`, `KMech`.
 
 ### 3. App Tester Queue (`kilo-tester`)
 - **Current Target**: `KTrader`
@@ -115,6 +115,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-12T18:31:00Z — kilo-graphics: KMech (Target Suitability & Glint Audit)**
+  - ⏭️ Skip — Imagen 3 asset replacement not appropriate for KMech.
+  - Target uses modular SVG/vector blueprint HUD with dynamic armor/weapon components.
+  - Zero rotating specular glints or traveling perimeter dots detected.
+  - Queue: Advanced kilo-graphics to KCyber; handoff to kilo-soundscape.
+
 - **2026-10-12T18:15:00Z — kilo-creator: kweb://darknet (Virtual Web 1.0 Expansion Audit)**
   - Status: PASS ✅ (367KB < 999KB, Anti-Potemkin compliant).
   - Depth: Verified Node 0x7F subterranean terminal, crypto lab, Bell 103/202 FSK modem, and signal board.
@@ -137,9 +143,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Audit: Verified all controls (depth/heading/engine), hotkeys (F1, F5, F9, 1-4, X, C, Tab, Esc), modals & storage handlers.
   - Verification: Human-perspective startup test 100% clean, Vite build clean, size 447.9KB < 999KB.
   - Queue: Advanced kilo-tester to KTrader; handoff to kilo-usability.
-
-- **2026-10-12T22:35:00Z — kilo-soundscape: KRogue (Procedural Soundscape Engine Implementation)**
-  - Status: PASS ✅ (Vite build clean, size 310KB < 999KB).
-  - Audio: Added Web Audio procedural synthesis engine (footsteps, attack/crit, damage crunch, kill chime, gold/items, stairs, level-up arpeggio, traps, defeat).
-  - Ambient: Subterranean low-pass drone with visibilitychange suspension & [O] shortcut toggle.
-  - Queue: Advanced kilo_soundscape to KSanctuary; handoff to kilo-tester.
