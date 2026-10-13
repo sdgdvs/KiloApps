@@ -1,6 +1,6 @@
-﻿---
-current_agent: kilo-expander
-next_agent: kilo-creator
+---
+current_agent: kilo-creator
+next_agent: kilo-graphics
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -15,11 +15,11 @@ status: ready
 current_targets:
   kilo_creator: kweb://users/~neon_rider
   kilo_graphics: KMech
-  kilo_tester: KPaint
-  kilo_usability: KNotes
-  kilo_qa: KDoom
   kilo_soundscape: kweb://webring
-  kilo_expander: KChess
+  kilo_tester: KPaint
+  kilo_usability: KNote
+  kilo_qa: KBreakout
+  kilo_expander: KVault
 virtual_web_target: kweb://users/~neon_rider
 virtual_web_rotation:
 - kweb://deep-core
@@ -34,10 +34,10 @@ virtual_web_rotation:
 - kweb://10.19.99.4/classified
 - kweb://echo-subsystem.net
 last_run:
-  agent: kilo-qa
-  app: KPac
-  timestamp: '2026-10-13T10:32:00Z'
-last_planner_run: '2026-10-12T17:31:38Z'
+  agent: kilo-planner
+  app: fleet-wide
+  timestamp: '2026-10-13T18:15:00Z'
+last_planner_run: '2026-10-13T18:15:00Z'
 ---
 
 # KiloApps Master Fleet Work & Queue State
@@ -45,23 +45,6 @@ last_planner_run: '2026-10-12T17:31:38Z'
 This document is the single active source of truth for autonomous agent dispatching.
 The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YAML frontmatter above on every tick to dispatch the active skill.
 
-### Agent Run Log — 2026-10-13T10:32 (Pass 5 QA Audit)
-- **Status:** 🟢 Completed (KPac)
-- Audited dual-target builds: Win32 native C clean, Web HTML clean (<999 KB).
-- Hardened storage handlers (`safeGet`/`safeSet`) across all highscores and quicksaves.
-- Verified build (`npm run build` 0 errors).
-
-### Agent Run Log — 2026-10-13T10:14 (Usability & Layout Polish)
-- **Status:** 🟢 Completed (KBudget)
-- Added category click-filtering to transaction badges and pie chart legend items.
-- Added clear search button affordance and accessible dialog roles across modals.
-- Hardened storage handlers (`safeSet`), verified clean build (<999 KB).
-
-### Agent Run Log — 2026-10-13T09:33 (Pass 5 UI Audit)
-- **Status:** 🟢 Completed (KChat)
-- Fixed safe storage handlers (safeGet/safeSet) and pinned filter UI sync.
-- Added keyboard delegation for channel pills and interactive poll options.
-- Verified build and quicksave/quickload integrity.
 
 ## Fleet Directives & Rules
 1. **Single-App-Per-Turn**: Every agent run audits/fixes/creates exactly ONE application, updates this file, commits, and pushes.
@@ -100,7 +83,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
 - **Mission**: Replace programmer art with Imagen 3 assets. Skip immediately if vector/board/mature.
 - **Current Target**: `KMech`
-- **Upcoming Queue**: `KStellar`, `KColosseum`.
+- **Upcoming Queue**: `KSubmarine`, `KAbyss`, `KStarForge`, `KSpace`.
 
 ### 3. Procedural Audio & Soundscape Queue (`kilo-soundscape`)
 - **Mission**: Give each game/app a unique YM2612 2-Op FM / SPC700 procedural audio identity. Compose genre-appropriate melodic themes with real chiptune techniques: shell voicings, contrary-motion counterpoint, Royal Road / Andalusian progressions, swing-tick groove, and per-genre FM patch design. Replace all generic oscillator presets. Skip cleanly for pure-utility/text targets (`⏭️ Skip — Procedural soundscape not appropriate for [app]`).
@@ -109,19 +92,19 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ### 4. App Tester Queue (`kilo-tester`)
 - **Current Target**: `KPaint`
-- **Upcoming Queue**: `KMine`, `KSanctuary`, `KAudio`, `KSubmarine`, `KTrader`, `KVault`, `KCalendar`, `KChart`.
+- **Upcoming Queue**: `KMine`, `KSanctuary`, `KAudio`, `KSubmarine`, `KVault`, `KCalendar`.
 
 ### 5. Usability & UX Queue (`kilo-usability`)
-- **Current Target**: `KNotes`
-- **Upcoming Queue**: `KRogue`, `KSubmarine`, `KTrader`.
+- **Current Target**: `KNote`
+- **Upcoming Queue**: `KRogue`, `KSubmarine`, `KMail`, `KPad`, `KAudio`.
 
 ### 6. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
-- **Current Target**: `KPac`
-- **Upcoming Queue**: `KColony`, `KBreakout`, `KRogue`, `KPong`.
+- **Current Target**: `KBreakout`
+- **Upcoming Queue**: `KRogue`, `KSpace`, `KMaze`, `KAsteroids`, `KSnake`.
 
 ### 7. Feature Expander Queue (`kilo-expander`)
-- **Current Target**: `KChess`
-- **Upcoming Queue**: `KRogue`, `KColosseum`, `KPong`.
+- **Current Target**: `KVault`
+- **Upcoming Queue**: `KDB`, `KPad`, `KMedia`, `KJournal`, `KContacts`.
 
 ---
 
@@ -140,32 +123,33 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-13T18:15:00Z — kilo-planner: fleet-wide (Daily 24h Fleet Planning, Queue Health & Log Compaction)**
+  - Status: PASS ✅ (Daily fleet audit, velocity evaluation & queue rework complete).
+  - Icon Uniqueness: Verified 105 apps in App.jsx, 105 unique .ico files, 0 duplicate hashes (check_icons.py 100% PASS).
+  - Queue Health & Rework: Replaced stale targets (KDoom -> KBreakout, KNotes -> KNote, KChess -> KVault); prioritized kweb soundscapes.
+  - Compaction & Archival: Executed zero-discard log rotation of older worker turns to archive/fleet_execution_archive.md.
+  - Timestamp & Rotation: Updated last_planner_run to 2026-10-13T18:15:00Z; rotated current_agent to kilo-creator.
+
+- **2026-10-13T10:32:00Z — kilo-qa: KPac (Pass 5 QA Audit)**
+  - Audited dual-target builds: Win32 native C clean, Web HTML clean (<999 KB).
+  - Hardened storage handlers (`safeGet`/`safeSet`) across all highscores and quicksaves.
+  - Verified build (`npm run build` 0 errors).
+  - Queue: Advanced kilo-qa to KBreakout; handoff to kilo-expander.
+
+- **2026-10-13T10:14:00Z — kilo-usability: KBudget (Usability & Layout Polish)**
+  - Added category click-filtering to transaction badges and pie chart legend items.
+  - Added clear search button affordance and accessible dialog roles across modals.
+  - Hardened storage handlers (`safeSet`), verified clean build (<999 KB).
+  - Queue: Advanced kilo-usability to KNote; handoff to kilo-qa.
+
+- **2026-10-13T09:33:00Z — kilo-tester: KChat (Pass 5 UI Audit)**
+  - Fixed safe storage handlers (safeGet/safeSet) and pinned filter UI sync.
+  - Added keyboard delegation for channel pills and interactive poll options.
+  - Verified build and quicksave/quickload integrity.
+  - Queue: Advanced kilo-tester to KPaint; handoff to kilo-usability.
+
 - **2026-10-13T09:15:00Z — kilo-soundscape: KTrader (YM2612 2-Op Procedural Soundscape)**
   - Replaced generic oscillator beeps with 2-Op FM synthesis engine, space ambient drone, and combat ostinato tracker.
   - Implemented high-fidelity FM earcons (warp jump, lasers, alarms, crystal buy/sell chime, victory fanfare) & Mute [M].
   - Status: PASS ✅ (Vite build clean, size 98KB < 999KB, visibility lifecycle guarded).
   - Queue: Advanced kilo-soundscape to KColosseum; handoff to kilo-tester.
-
-- **2026-10-13T08:31:00Z — kilo-graphics: KColosseum (Skip Turn)**
-  - ⏭️ Skip — Imagen 3 asset replacement not appropriate for KColosseum
-  - Audited kcolosseum.html: zero traveling glints or orbital border dots found (clean static roman arena).
-  - Status: PASS ✅ (Vite build clean, size 255KB < 999KB).
-  - Queue: Advanced kilo-graphics to KMech; handoff to kilo-soundscape.
-
-- **2026-10-13T08:14:00Z — kilo-creator: kweb://geocities (Web 1.0 Expansion)**
-  - Implemented 1999 Ringmaster Station & 88x31 Vintage Button Forge with live canvas drawing, PNG export, and HTML copy.
-  - Added 300-baud acoustic carrier tone generator with Web Audio API modulation for packet carrier auditing.
-  - Status: PASS ✅ (HTML size 584KB < 999KB; Vite build clean).
-  - Queue: Advanced kilo-creator to kweb://users/~neon_rider; handoff to kilo-graphics.
-
-- **2026-10-13T07:13:00Z — kilo-qa: KPong (Pass 5 QA & Build Audit)**
-  - Audited F5/F9 state persistence (balls, powerups, boss shields, timers, score integrity).
-  - Verified tutorial flag suppression on restored saves and offline default (Rule 12 compliant).
-  - Status: PASS ✅ (Vite build clean, size 161.7KB < 999KB).
-  - Queue: Advanced kilo-qa to KPac; handoff to kilo-expander.
-
-- **2026-10-13T06:31:00Z — kilo-usability: KTrader (UI/UX & Usability Pass)**
-  - Enhanced responsive layout with mobile/compact viewport media query and global box-sizing.
-  - Verified HiDPI crisp canvas scaling and full keyboard navigation (1-9, R, F1/H/Esc, F5/F9).
-  - Status: PASS ✅ (Vite build clean, size 89KB < 999KB).
-  - Queue: Advanced kilo-usability to KBudget; handoff to kilo-qa.
