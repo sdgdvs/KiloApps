@@ -1,0 +1,46 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "KiloApps Cartridge Manifest",
+  "type": "object",
+  "required": ["id", "title", "version", "entrypoints", "byteBudget"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9-_]+$",
+      "description": "Unique identifier slug for the cartridge (e.g. kalchemy, kstarforge)"
+    },
+    "title": { "type": "string", "description": "Display name of the cartridge" },
+    "version": { "type": "string", "description": "Semver version string" },
+    "author": { "type": "string", "description": "Human or AI Agent author" },
+    "genre": { "type": "string", "description": "Game or app category" },
+    "description": { "type": "string", "description": "Short 1-2 sentence pitch" },
+    "byteBudget": {
+      "type": "object",
+      "required": ["limitBytes"],
+      "properties": {
+        "limitBytes": { "type": "integer", "maximum": 999000 },
+        "enforced": { "type": "boolean", "default": true }
+      }
+    },
+    "entrypoints": {
+      "type": "object",
+      "required": ["web"],
+      "properties": {
+        "web": { "type": "string", "default": "index.html" },
+        "nativeWin32": { "type": "string" }
+      }
+    },
+    "window": {
+      "type": "object",
+      "properties": {
+        "width": { "type": "integer", "default": 800 },
+        "height": { "type": "integer", "default": 600 },
+        "resizable": { "type": "boolean", "default": true }
+      }
+    },
+    "capabilities": {
+      "type": "array",
+      "items": { "type": "string", "enum": ["audio-synthesis", "local-storage", "virtual-dpad", "vfs", "gamepad"] }
+    }
+  }
+}

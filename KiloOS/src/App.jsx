@@ -406,6 +406,17 @@ function Window({ app, onClose, onFocus, onMinimize, vfs, setVfs, requestVfsModa
 function App() {
   const [screen, setScreen] = useState('login'); // 'login' | 'os' | 'boot'
   const [bootLogs, setBootLogs] = useState([]);
+  const [standaloneApp, setStandaloneApp] = useState(() => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const playId = params.get('play') || params.get('cartridge') || params.get('app');
+      if (playId) {
+        const found = APPS.find(a => a.id.toLowerCase() === playId.toLowerCase());
+        return found || { id: playId, title: playId, url: `/apps/${playId}.html` };
+      }
+    } catch (e) {}
+    return null;
+  });
 
   const playAnomalyAudio = useCallback(() => {
     if (Math.random() < 0.01) {
@@ -912,6 +923,32 @@ function App() {
     setModal({ type: `vfs_${type}`, callback });
     setModalInput('');
   }, []);
+
+  if (standaloneApp) {
+    return (
+      <div style={{ width: '100vw', height: '100vh', display: 'flex', flexDirection: 'column', background: '#090a10', overflow: 'hidden' }}>
+        <header style={{ height: '38px', background: '#111827', borderBottom: '1px solid #1f2937', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 12px', color: '#f3f4f6', fontSize: '13px', zIndex: 100 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ fontSize: '16px' }}>🕹️</span>
+            <strong>{standaloneApp.title}</strong>
+            <span style={{ color: '#10b981', fontSize: '11px', border: '1px solid #065f46', background: '#064e3b', padding: '1px 6px', borderRadius: '4px' }}>&lt; 999KB Cartridge</span>
+          </div>
+          <button 
+            onClick={() => { setStandaloneApp(null); window.history.pushState({}, '', '/'); setScreen('os'); }}
+            style={{ background: '#2563eb', color: '#fff', border: 'none', padding: '4px 12px', borderRadius: '4px', fontSize: '12px', cursor: 'pointer', fontWeight: 600 }}
+          >
+            Launch KiloOS Desktop
+          </button>
+        </header>
+        <iframe 
+          src={standaloneApp.url ? (standaloneApp.url.includes('?') ? `${standaloneApp.url}&v=${MICROS_VERSION}` : `${standaloneApp.url}?v=${MICROS_VERSION}`) : ''} 
+          title={standaloneApp.title}
+          sandbox="allow-scripts allow-same-origin allow-downloads allow-popups"
+          style={{ flex: 1, width: '100%', border: 'none' }}
+        />
+      </div>
+    );
+  }
 
   if (screen === 'login') {
     return (
