@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-tester
-next_agent: kilo-usability
+current_agent: kilo-usability
+next_agent: kilo-qa
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -16,7 +16,7 @@ current_targets:
   kilo_creator: kweb://echo-subsystem.net
   kilo_graphics: KMech
   kilo_soundscape: kweb://portal
-  kilo_tester: KSubmarine
+  kilo_tester: KVault
   kilo_usability: KMine
   kilo_qa: KAsteroids
   kilo_expander: KCalendar
@@ -34,9 +34,9 @@ virtual_web_rotation:
 - kweb://10.19.99.4/classified
 - kweb://echo-subsystem.net
 last_run:
-  agent: kilo-soundscape
-  app: kweb://geocities
-  timestamp: '2026-10-14T04:14:00-07:00'
+  agent: kilo-tester
+  app: KSubmarine
+  timestamp: '2026-10-14T04:32:00-07:00'
 last_planner_run: '2026-10-13T18:15:00Z'
 ---
 
@@ -116,19 +116,19 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Upcoming Queue**: `kweb://cybercafe`, `kweb://darknet`, `kweb://asm-temple`, `kweb://echo-subsystem.net`, `kweb://deep-core`, `kweb://10.19.99.4/classified`, `kweb://webring`, `KColosseum`, `KRogue`, `KSpace`, `KMine`.
 
 ### 4. App Tester Queue (`kilo-tester`)
-- **Target**: `KSubmarine`
-- **Primary File**: `KiloOS/public/apps/ksubmarine.html`
+- **Target**: `KVault`
+- **Primary File**: `KiloOS/public/apps/kvault.html`
 - **Objective**: Interactive UI element and modal audit with inline repairs.
 - **Action Steps**:
-  1. Run automated startup check: `uv run scripts/test_app_startup.py --app KSubmarine`.
-  2. Audit all UI elements: sonar/periscope displays, ballast/dive controls, torpedo firing buttons, modals (help/manual), and local state persistence.
+  1. Run automated startup check: `uv run scripts/test_app_startup.py --app KVault`.
+  2. Audit all UI elements: password generator, entry creation, clipboard copy buttons, export/import modals, master password prompt, and local storage state persistence.
   3. Fix any broken button hooks, missing element IDs, or unhandled exceptions inline.
-- **Verification**: `uv run scripts/test_app_startup.py --app KSubmarine` and `cd KiloOS && npm run build`. File size < 999 KB.
+- **Verification**: `uv run scripts/test_app_startup.py --app KVault` and `cd KiloOS && npm run build`. File size < 999 KB.
 - **Handoff**:
-  - In frontmatter: advance `current_targets.kilo_tester` to `KVault`.
-  - Set `current_agent: kilo-creator
+  - In frontmatter: advance `current_targets.kilo_tester` to `KCalendar`.
+  - Set `current_agent: kilo-usability`
   - Append terse execution log (≤6 lines), commit, and push.
-- **Upcoming Queue**: `KVault`, `KCalendar`, `KPaint`, `KAudio`.
+- **Upcoming Queue**: `KCalendar`, `KPaint`, `KAudio`, `KSubmarine`.
 
 ### 5. Usability & UX Queue (`kilo-usability`)
 - **Target**: `KRogue`
@@ -190,6 +190,13 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-14T04:32:00-07:00 — kilo-tester: KSubmarine (Interactive UI & Modal Audit)**
+  - Automated startup audit: PASS ✅ (CSS valid, 0 JS err, clean modal dismissal, canvas 354x238).
+  - Verified UI controls: ballast, torpedo tubes (1-4), F5 quicksave, F9 quickload, JSON export/import.
+  - Confirmed Escape key and backdrop dismissal on tutorial modal and all view overlay panels.
+  - Clean Vite build (`npm run build` PASS, 0 errors, `ksubmarine.html` 448.6 KB < 999 KB ceiling).
+  - Queue: Advanced kilo-tester to KVault; handed off to kilo-usability.
+
 - **2026-10-14T04:14:00-07:00 — kilo-soundscape: kweb://geocities (Chiptune FM & Swing Groove)**
   - Enhanced 5-track YM2612 FM / SPC700 demoscene playback engine with authentic 5:3 / 5:4 swing-tick tracker shuffle.
   - Expressive FM patch design with resonant lowpass filtering, fast mod decay, delayed vibrato, and SPC700 stereo delay.
@@ -214,9 +221,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Implemented 6-rate playback speed selector (0.5x, 0.75x, 1.0x, 1.25x, 1.5x, 2.0x).
   - Standardized ergonomic hotkeys: Space (Play/Pause), Arrows (Seek/Vol), M (Mute), F (Fullscreen).
   - Verified clean Vite build (`kmedia.html` 150 KB < 999 KB ceiling); advanced queue to KJournal.
-
-- **2026-10-14T00:31:00-07:00 — kilo-qa: KMaze (Pass 5 QA & State Integrity)**
-  - Hardened state persistence: verified F5 quicksave & F9 quickload dual-key support (`kmaze_saveState` and `kmaze_save`) & native `.dat`.
-  - Confirmed `kmaze_tutorialSeen` / `.dat` onboarding flag integrity and modal dismissals (Esc, Enter, Close).
-  - Verified clean builds: `KMaze.exe` (62 KB) and Vite web build (`kmaze.html` 138 KB < 999 KB ceiling).
-  - Queue: Advanced kilo-qa to KAsteroids; handed off to kilo-expander (KMedia).
