@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-graphics
-next_agent: kilo-soundscape
+current_agent: kilo-soundscape
+next_agent: kilo-tester
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -14,7 +14,7 @@ timeout_minutes: 6
 status: ready
 current_targets:
   kilo_creator: kweb://darknet
-  kilo_graphics: KSubmarine
+  kilo_graphics: KAbyss
   kilo_soundscape: kweb://warez
   kilo_tester: KCalendar
   kilo_usability: KMail
@@ -34,9 +34,9 @@ virtual_web_rotation:
 - kweb://10.19.99.4/classified
 - kweb://echo-subsystem.net
 last_run:
-  agent: kilo-creator
-  app: kweb://deep-core
-  timestamp: '2026-10-14T10:14:00-07:00'
+  agent: kilo-graphics
+  app: KSubmarine
+  timestamp: '2026-10-14T10:30:00-07:00'
 last_planner_run: '2026-10-13T18:15:00Z'
 ---
 
@@ -80,20 +80,20 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Upcoming Queue**: `kweb://portal`, `kweb://webring`, `kweb://warez`, `kweb://geocities`, `kweb://users/~neon_rider`, `kweb://asm-temple`, `kweb://cybercafe`.
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
-- **Target**: `KSubmarine`
-- **Primary Files**: `KiloOS/public/apps/ksubmarine.html`, `KSubmarine/main.c`
+- **Target**: `KAbyss`
+- **Primary Files**: `KiloOS/public/apps/kabyss.html`, `KAbyss/main.c`
 - **Objective**: Visual art audit for programmer art vs. Imagen 3 suitability; remove traveling glints.
 - **Action Steps**:
-  1. Evaluate suitability: `KSubmarine` periscope, tactical sonar, and submarine sprites.
+  1. Evaluate suitability: `KAbyss` deep ocean abyss exploration and creatures.
   2. If visual aesthetic is wireframe/radar or already has production art, execute clean turn skip.
   3. If replacing sprites: use 2-stage asset pipeline (`generate_image` with solid `#FF00FF` background -> `scripts/asset_pipeline.py`).
   4. Search for and remove any rotating specular glints or traveling perimeter border dots.
 - **Verification**: `cd KiloOS && npm run build`. Verify files < 999 KB.
 - **Handoff**:
-  - In frontmatter: advance `current_targets.kilo_graphics` to `KAbyss`.
+  - In frontmatter: advance `current_targets.kilo_graphics` to `KMech`.
   - Set `current_agent: kilo-soundscape`
   - Append terse execution log (≤6 lines), commit, and push.
-- **Upcoming Queue**: `KAbyss`, `KMech`.
+- **Upcoming Queue**: `KMech`.
 
 ### 3. Procedural Audio & Soundscape Queue (`kilo-soundscape`)
 - **Target**: `kweb://warez`
@@ -188,6 +188,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-14T10:30:00-07:00 — kilo-graphics: KSubmarine (Programmer Art & Glint Audit)**
+  - ⏭️ Skip — Imagen 3 asset replacement not appropriate for KSubmarine
+  - Confirmed tactical CRT sonar/radar telemetry aesthetic; no traveling glints or perimeter dots present.
+  - Build verified (`npm run build` PASS, 0 Vite errors).
+  - Queue: Advanced kilo_graphics to KAbyss; handed off to kilo-soundscape.
+
 - **2026-10-14T10:14:00-07:00 — kilo-creator: kweb://deep-core (Subterranean Ghost Terminal Audit & Verification)**
   - PASS ✅ — Verified deep interactive subterranean terminal, 5-sector defusal, x86 disasm stepper, and packet sniffer.
   - Confirmed reciprocal links in KNet (`knet.html`), Portal (`portal.html`), and WebRing (`webring.html`).
@@ -212,10 +218,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Interactive UI audit confirmed: generator, password entry forms, TOTP 2FA, export/import modals & keyboard handlers fully wired.
   - Build verified (`npm run build` PASS, 0 errors, `kvault.html` 200.2 KB < 999 KB ceiling).
   - Queue: Advanced kilo-tester to KCalendar; handed off to kilo-usability (KSubmarine).
-
-- **2026-10-14T07:34:00-07:00 — kilo-soundscape: kweb://portal (YM2612 FM / SPC700 Audio Overhaul)**
-  - Composed 6-ch procedural FM soundtrack: Track 1 ("Portal Odyssey '99") & Track 2 ("Dial-Tone Serenade").
-  - Added delayed vibrato lead, contrary-motion counterpoint, shell voicings, slap bass, swing groove & SPC700 delay.
-  - Upgraded UI earcons & stingers: FM stock chime, major 9th fanfare, 1999Hz ping, and detuned buzz.
-  - Build clean (`npm run build` PASS, `portal.html` 557 KB < 999 KB ceiling, security lint clean).
-  - Queue: Advanced kilo-soundscape to kweb://warez; handed off to kilo-tester.
