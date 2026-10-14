@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-graphics
-next_agent: kilo-soundscape
+current_agent: kilo-soundscape
+next_agent: kilo-tester
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -14,7 +14,7 @@ timeout_minutes: 6
 status: ready
 current_targets:
   kilo_creator: kweb://echo-subsystem.net
-  kilo_graphics: KSpace
+  kilo_graphics: KMech
   kilo_soundscape: kweb://geocities
   kilo_tester: KSubmarine
   kilo_usability: KMine
@@ -34,9 +34,9 @@ virtual_web_rotation:
 - kweb://10.19.99.4/classified
 - kweb://echo-subsystem.net
 last_run:
-  agent: kilo-creator
-  app: kweb://echo-subsystem.net
-  timestamp: '2026-10-14T03:15:00-07:00'
+  agent: kilo-graphics
+  app: KSpace
+  timestamp: '2026-10-14T03:30:00-07:00'
 last_planner_run: '2026-10-13T18:15:00Z'
 ---
 
@@ -80,21 +80,21 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Upcoming Queue**: `kweb://echo-subsystem.net`, `kweb://deep-core`, `kweb://darknet`, `kweb://portal`, `kweb://webring`, `kweb://warez`, `kweb://geocities`, `kweb://users/~neon_rider`, `kweb://asm-temple`, `kweb://cybercafe`.
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
-- **Target**: `KStarForge`
-- **Primary Files**: `KiloOS/public/apps/kstarforge.html`, `KStarForge/main.c`
+- **Target**: `KMech`
+- **Primary Files**: `KiloOS/public/apps/kmech.html`, `KMech/main.c`
 - **Objective**: Visual art audit for programmer art vs. Imagen 3 suitability; remove traveling glints.
 - **Action Steps**:
-  1. Evaluate suitability: `KStarForge` is an engineering CAD blueprint shipyard simulator using procedural vector line rendering.
-  2. **Skip Fast-Path**: If visual aesthetic is pure vector CAD / blueprint line art with no 2D sprites, execute clean turn skip immediately:
-     `⏭️ Skip — Imagen 3 asset replacement not appropriate for KStarForge`
+  1. Evaluate suitability: `KMech` cockpit/radar HUD vs sprite needs.
+  2. If visual aesthetic is wireframe/radar or already has production art, execute clean turn skip immediately:
+     `⏭️ Skip — Imagen 3 asset replacement not appropriate for KMech`
   3. If replacing sprites: use 2-stage asset pipeline (`generate_image` with solid `#FF00FF` background -> `scripts/asset_pipeline.py`).
   4. Search for and remove any rotating specular glints or traveling perimeter border dots.
-- **Verification**: `uv run scripts/test_app_startup.py --app KStarForge` and `cd KiloOS && npm run build`. Verify files < 999 KB.
+- **Verification**: `cd KiloOS && npm run build`. Verify files < 999 KB.
 - **Handoff**:
-  - In frontmatter: advance `current_targets.kilo_graphics` to `KSpace`.
-  - Set `current_agent: kilo-creator
+  - In frontmatter: advance `current_targets.kilo_graphics` to `KSubmarine`.
+  - Set `current_agent: kilo-soundscape`
   - Append terse execution log (≤6 lines), commit, and push.
-- **Upcoming Queue**: `KSpace`, `KMech`, `KSubmarine`, `KAbyss`.
+- **Upcoming Queue**: `KSubmarine`, `KAbyss`.
 
 ### 3. Procedural Audio & Soundscape Queue (`kilo-soundscape`)
 - **Target**: `kweb://warez`
@@ -190,6 +190,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-14T03:30:00-07:00 — kilo-graphics: KSpace**
+  - ⏭️ Skip — Imagen 3 asset replacement not appropriate for KSpace (complete production sprite suite & background loaded).
+  - Verified 0 rotating specular glints or traveling perimeter border dots.
+  - Build clean (`npm run build` PASS, 0 errors, `kspace.html` 190 KB < 999 KB ceiling).
+  - Queue: Advanced kilo-graphics to KMech; handed off to kilo-soundscape.
+
 - **2026-10-14T02:15:00-07:00 — kilo-expander: KJournal (Deep Feature Expansion)**
   - Added OPML 2.0 outline export & XML/CSV multi-format import parser for outliner and spreadsheet interoperability.
   - Built standalone portable offline HTML vault exporter with embedded client search for zero-dependency archival.
@@ -214,9 +220,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Added collapsible virtual D-Pad toggle (`[🎮 D-Pad]`) with localStorage persistence for desktop/compact screens.
   - Verified clean Vite build (`npm.cmd run build` 0 errors, `krogue.html` 323 KB < 999 KB ceiling).
   - Queue: Advanced kilo-usability to KMine; handed off to kilo-qa (KMaze).
-
-- **2026-10-13T23:34:00-07:00 — kilo-tester: KAudio (UI Audit & Inline Fixes)**
-  - PASS ✅ (3 issues fixed). Added tactile `[+]`/`[-]` octave transpose buttons and `[G]` Portamento/Glide pitch slide.
-  - Fixed modal backdrop click and Escape handling to properly restore focus and dismiss when typing in inputs.
-  - Startup test PASS (0 errors, 448x98 canvas unblocked), Vite build clean (`kaudio.html` 149.7 KB < 999 KB).
-  - Queue: Advanced kilo-tester to KSubmarine; handed off to kilo-usability (KRogue).
