@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-graphics
-next_agent: kilo-soundscape
+current_agent: kilo-soundscape
+next_agent: kilo-tester
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -14,7 +14,7 @@ timeout_minutes: 6
 status: ready
 current_targets:
   kilo_creator: kweb://deep-core
-  kilo_graphics: KMech
+  kilo_graphics: KSubmarine
   kilo_soundscape: kweb://portal
   kilo_tester: KVault
   kilo_usability: KSubmarine
@@ -34,9 +34,9 @@ virtual_web_rotation:
 - kweb://10.19.99.4/classified
 - kweb://echo-subsystem.net
 last_run:
-  agent: kilo-creator
-  app: kweb://echo-subsystem.net
-  timestamp: '2026-10-14T06:33:00-07:00'
+  agent: kilo-graphics
+  app: KMech
+  timestamp: '2026-10-14T07:14:00-07:00'
 last_planner_run: '2026-10-13T18:15:00Z'
 ---
 
@@ -80,21 +80,20 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Upcoming Queue**: `kweb://echo-subsystem.net`, `kweb://deep-core`, `kweb://darknet`, `kweb://portal`, `kweb://webring`, `kweb://warez`, `kweb://geocities`, `kweb://users/~neon_rider`, `kweb://asm-temple`, `kweb://cybercafe`.
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
-- **Target**: `KMech`
-- **Primary Files**: `KiloOS/public/apps/kmech.html`, `KMech/main.c`
+- **Target**: `KSubmarine`
+- **Primary Files**: `KiloOS/public/apps/ksubmarine.html`, `KSubmarine/main.c`
 - **Objective**: Visual art audit for programmer art vs. Imagen 3 suitability; remove traveling glints.
 - **Action Steps**:
-  1. Evaluate suitability: `KMech` cockpit/radar HUD vs sprite needs.
-  2. If visual aesthetic is wireframe/radar or already has production art, execute clean turn skip immediately:
-     `⏭️ Skip — Imagen 3 asset replacement not appropriate for KMech`
+  1. Evaluate suitability: `KSubmarine` periscope, tactical sonar, and submarine sprites.
+  2. If visual aesthetic is wireframe/radar or already has production art, execute clean turn skip.
   3. If replacing sprites: use 2-stage asset pipeline (`generate_image` with solid `#FF00FF` background -> `scripts/asset_pipeline.py`).
   4. Search for and remove any rotating specular glints or traveling perimeter border dots.
 - **Verification**: `cd KiloOS && npm run build`. Verify files < 999 KB.
 - **Handoff**:
-  - In frontmatter: advance `current_targets.kilo_graphics` to `KSubmarine`.
+  - In frontmatter: advance `current_targets.kilo_graphics` to `KAbyss`.
   - Set `current_agent: kilo-soundscape`
   - Append terse execution log (≤6 lines), commit, and push.
-- **Upcoming Queue**: `KSubmarine`, `KAbyss`.
+- **Upcoming Queue**: `KAbyss`, `KMech`.
 
 ### 3. Procedural Audio & Soundscape Queue (`kilo-soundscape`)
 - **Target**: `kweb://warez`
@@ -189,6 +188,13 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-14T07:14:00-07:00 — kilo-graphics: KMech**
+  - ⏭️ Skip — Imagen 3 asset replacement not appropriate for KMech.
+  - Zero traveling specular glints or perimeter border dots found (clean static industrial HUD corners).
+  - Confirmed authentic green-phosphor tactical wireframe vector aesthetic.
+  - Build verified (`npm run build` PASS, 0 errors, `kmech.html` 129 KB < 999 KB ceiling).
+  - Queue: Advanced kilo-graphics to KSubmarine; handed off to kilo-soundscape.
+
 - **2026-10-14T06:33:00-07:00 — kilo-creator: kweb://echo-subsystem.net (Tab 14 Deep Expansion)**
   - Added Tab 14: Cryogenic SQUID Magnetometer & Sub-Crustal Acoustic Tomograph.
   - Interactive Josephson fluxoid phase slip Lissajous orbit & 3D strata tomographic scanner.
@@ -214,9 +220,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Confirmed Escape key and backdrop dismissal on tutorial modal and all view overlay panels.
   - Clean Vite build (`npm run build` PASS, 0 errors, `ksubmarine.html` 448.6 KB < 999 KB ceiling).
   - Queue: Advanced kilo-tester to KVault; handed off to kilo-usability.
-
-- **2026-10-14T04:14:00-07:00 — kilo-soundscape: kweb://geocities (Chiptune FM & Swing Groove)**
-  - Enhanced 5-track YM2612 FM / SPC700 demoscene playback engine with authentic 5:3 / 5:4 swing-tick tracker shuffle.
-  - Expressive FM patch design with resonant lowpass filtering, fast mod decay, delayed vibrato, and SPC700 stereo delay.
-  - Verified clean Vite build (`npm run build` PASS, 0 errors, `geocities.html` 588 KB < 999 KB ceiling).
-  - Queue: Advanced kilo-soundscape to kweb://portal; handed off to kilo-tester (KSubmarine).
