@@ -1369,9 +1369,13 @@
           <div class="export-card-title">📊 [4] CSV</div>
           <div class="export-card-desc">Spreadsheet table with address &amp; web (.csv)</div>
         </div>
-        <div class="export-card" data-fmt="ldif" tabindex="0" role="button" aria-label="Export as LDIF" style="grid-column: span 2;">
+        <div class="export-card" data-fmt="ldif" tabindex="0" role="button" aria-label="Export as LDIF">
           <div class="export-card-title">🌐 [5] Netscape LDIF</div>
-          <div class="export-card-desc">LDAP Data Interchange Format for Netscape / Mozilla Communicator (.ldif)</div>
+          <div class="export-card-desc">LDAP Data Interchange Format for Netscape (.ldif)</div>
+        </div>
+        <div class="export-card" data-fmt="xml" tabindex="0" role="button" aria-label="Export as XML Archive">
+          <div class="export-card-title">📜 [6] XML Archive</div>
+          <div class="export-card-desc">Structured 1999 XML Address Book interchange (.xml)</div>
         </div>
       </div>
       <button class="btn btn-secondary" id="btnCloseExport" style="width: 100%;">Cancel</button>
@@ -1424,6 +1428,14 @@
         <div class="stat-card">
           <div class="stat-num" id="statBdaysCount">0</div>
           <div class="stat-label">With Birthday Tracked</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num" id="statDuplicatesCount">0</div>
+          <div class="stat-label">Potential Duplicates</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num" id="statIncompleteCount">0</div>
+          <div class="stat-label">Incomplete Records</div>
         </div>
       </div>
       <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 6px;">Category Distribution:</div>
@@ -2788,6 +2800,18 @@
       document.getElementById('statFavContacts').textContent = contacts.filter(c => c.fav).length;
       document.getElementById('statAddressesCount').textContent = contacts.filter(c => c.address && (c.address.street || c.address.city)).length;
       document.getElementById('statBdaysCount').textContent = contacts.filter(c => !!c.birthday).length;
+      // Duplicates & incomplete calculation
+      const nameSet = new Set();
+      let dupCount = 0;
+      contacts.forEach(c => {
+        const k = (c.name || '').toLowerCase().trim();
+        if (k && nameSet.has(k)) dupCount++;
+        else if (k) nameSet.add(k);
+      });
+      const dupEl = document.getElementById('statDuplicatesCount');
+      if (dupEl) dupEl.textContent = dupCount;
+      const incEl = document.getElementById('statIncompleteCount');
+      if (incEl) incEl.textContent = contacts.filter(c => !c.phone && !c.email).length;
 
       // Category breakdown bars
       const cats = ['Work', 'Personal', 'Family', 'Friends', 'Other'];
@@ -2923,6 +2947,49 @@
         content = [headers.join(','), ...rows].join('\n');
         filename = 'kcontacts_export.csv';
         mimeType = 'text/csv';
+      } else if (format === 'xml') {
+        mime = 'application/xml;charset=utf-8;';
+        ext = 'xml';
+        const escapeXml = (str) => (str || '').replace(/[<>&'"]/g, (c) => {
+          switch (c) {
+            case '<': return '&lt;';
+            case '>': return '&gt;';
+            case '&': return '&amp;';
+            case "'": return '&apos;';
+            case '"': return '&quot;';
+            default: return c;
+          }
+        });
+        let xmlLines = ['<?xml version="1.0" encoding="UTF-8"?>', '<AddressBook version="1.0" generator="KContacts 1999" exportDate="' + new Date().toISOString() + '">'];
+        targetContacts.forEach(c => {
+          xmlLines.push('  <Contact id="' + escapeXml(c.id) + '" favorite="' + (c.favorite ? 'true' : 'false') + '">');
+          xmlLines.push('    <Name>' + escapeXml(c.name) + '</Name>');
+          xmlLines.push('    <Category>' + escapeXml(c.category || 'Other') + '</Category>');
+          xmlLines.push('    <Phone>' + escapeXml(c.phone) + '</Phone>');
+          xmlLines.push('    <Email>' + escapeXml(c.email) + '</Email>');
+          xmlLines.push('    <Company>' + escapeXml(c.company) + '</Company>');
+          xmlLines.push('    <Title>' + escapeXml(c.title) + '</Title>');
+          xmlLines.push('    <Website>' + escapeXml(c.website) + '</Website>');
+          xmlLines.push('    <Birthday>' + escapeXml(c.birthday) + '</Birthday>');
+          xmlLines.push('    <Notes>' + escapeXml(c.notes) + '</Notes>');
+          if (c.address) {
+            xmlLines.push('    <Address>');
+            xmlLines.push('      <Street>' + escapeXml(c.address.street) + '</Street>');
+            xmlLines.push('      <City>' + escapeXml(c.address.city) + '</City>');
+            xmlLines.push('      <State>' + escapeXml(c.address.state) + '</State>');
+            xmlLines.push('      <Zip>' + escapeXml(c.address.zip) + '</Zip>');
+            xmlLines.push('      <Country>' + escapeXml(c.address.country) + '</Country>');
+            xmlLines.push('    </Address>');
+          }
+          if (Array.isArray(c.tags) && c.tags.length > 0) {
+            xmlLines.push('    <Tags>');
+            c.tags.forEach(t => xmlLines.push('      <Tag>' + escapeXml(t) + '</Tag>'));
+            xmlLines.push('    </Tags>');
+          }
+          xmlLines.push('  </Contact>');
+        });
+        xmlLines.push('</AddressBook>');
+        out = xmlLines.join('\n');
       } else if (format === 'ldif') {
         let ldif = `# LDIF Address Book Export - KContacts Standard\nversion: 1\n\n`;
         targetContacts.forEach(c => {
@@ -3175,6 +3242,81 @@
         const text = event.target.result || '';
         let count = 0;
         const fname = (file.name || '').toLowerCase();
+        if (fname.endsWith('.xml') || text.trim().startsWith('<?xml') || text.includes('<AddressBook')) {
+          try {
+            const parser = new DOMParser();
+            const xmlDoc = parser.parseFromString(text, 'text/xml');
+            const contactNodes = xmlDoc.querySelectorAll('Contact');
+            if (contactNodes.length === 0) {
+              showToast('⚠️ No contacts found in XML file');
+              return;
+            }
+            let imported = 0;
+            contactNodes.forEach(node => {
+              const getVal = (tag) => {
+                const el = node.querySelector(tag);
+                return el ? el.textContent.trim() : '';
+              };
+              const contactName = getVal('Name') || 'Unnamed Contact';
+              const category = getVal('Category') || 'Other';
+              const phone = getVal('Phone');
+              const email = getVal('Email');
+              const company = getVal('Company');
+              const title = getVal('Title');
+              const website = getVal('Website');
+              const birthday = getVal('Birthday');
+              const notes = getVal('Notes');
+              const favorite = node.getAttribute('favorite') === 'true';
+
+              let address = null;
+              const addrNode = node.querySelector('Address');
+              if (addrNode) {
+                const getAddrVal = (tag) => {
+                  const el = addrNode.querySelector(tag);
+                  return el ? el.textContent.trim() : '';
+                };
+                address = {
+                  street: getAddrVal('Street'),
+                  city: getAddrVal('City'),
+                  state: getAddrVal('State'),
+                  zip: getAddrVal('Zip'),
+                  country: getAddrVal('Country')
+                };
+              }
+
+              const tags = [];
+              node.querySelectorAll('Tags > Tag').forEach(t => {
+                if (t.textContent.trim()) tags.push(t.textContent.trim());
+              });
+
+              contacts.push({
+                id: 'c_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6),
+                name: contactName,
+                category: category,
+                phone: phone,
+                email: email,
+                company: company,
+                title: title,
+                website: website,
+                birthday: birthday,
+                notes: notes,
+                favorite: favorite,
+                address: address,
+                tags: tags
+              });
+              imported++;
+            });
+            saveContacts();
+            updateTagPills();
+            renderList();
+            showToast(`✅ Imported ${imported} contacts from XML archive!`);
+            return;
+          } catch (err) {
+            showToast('⚠️ Failed to parse XML address book');
+            return;
+          }
+        }
+
 
         if (fname.endsWith('.json') || (text.trim().startsWith('[') && text.trim().endsWith(']'))) {
           try {
@@ -3625,13 +3767,14 @@
         return;
       }
 
-      // Export modal 1-5 shortcuts
+      // Export modal 1-6 shortcuts
       if (exportModal.style.display === 'flex') {
         if (e.key === '1') { e.preventDefault(); closeExport(); doExport('md'); return; }
         if (e.key === '2') { e.preventDefault(); closeExport(); doExport('json'); return; }
         if (e.key === '3') { e.preventDefault(); closeExport(); doExport('vcf'); return; }
         if (e.key === '4') { e.preventDefault(); closeExport(); doExport('csv'); return; }
         if (e.key === '5') { e.preventDefault(); closeExport(); doExport('ldif'); return; }
+        if (e.key === '6') { e.preventDefault(); closeExport(); doExport('xml'); return; }
       }
 
       // Print modal 1-3 shortcuts and Enter
