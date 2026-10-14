@@ -312,51 +312,73 @@
                 </div>
             </div>
             <div class="action-buttons">
-                <button id="btn-start-run" class="btn-action" style="border-color: #48bb78; background: #1c4532; color: #9ae6b4;" onclick="openCharSelect()">⚔️ New Run [Enter]</button>
-                <button id="btn-audio-toggle" class="btn-action" style="border-color: #10b981; background: #064e3b; color: #a7f3d0;" onclick="toggleAudio()" title="Toggle Genesis YM2612 FM / SPC700 Audio [F2]">🔊 Audio: On [F2]</button>
-                <button class="btn-action" style="border-color: #63b3ed; background: #1a365d; color: #bee3f8;" onclick="openMultiplayerModal()">🌐 Duel</button>
-                <button class="btn-action" style="border-color: #ecc94b; background: #554415; color: #fefcbf;" onclick="openReplayModal()">🎥 Replay</button>
-                <button id="btn-class-ability" class="btn-action btn-ability" onclick="useClassAbility()">[A] Berserk Slash</button>
-                <button class="btn-action btn-spell" onclick="openSpellbook()">[M] Spellbook</button>
-                <button class="btn-action btn-inv" onclick="openInventory()">[I] Inventory</button>
-                <button class="btn-action" style="border-color: #f6e05e; background: #3c3210; color: #fefcbf;" onclick="openFeatsModal()">[C] Feats</button>
-                <button class="btn-action" style="border-color: #38bdf8; background: #0c4a6e; color: #bae6fd;" onclick="openBestiary()">[X] Bestiary</button>
-                <button class="btn-action" style="border-color: #b794f4; background: #3b2158; color: #e9d8fd;" onclick="openAltarModal()">[E] Altar</button>
-                <button class="btn-action" style="border-color: #ed8936; background: #55270d; color: #feebc8;" onclick="openPetModal()">[P] Pet</button>
-                <button class="btn-action" style="border-color: #38a169; background: #22543d;" onclick="waitTurnAction()">[.] Wait Turn</button>
-                <button class="btn-action btn-lead" onclick="openLeaderboard()">[T] Leaderboard</button>
-                <button class="btn-action" onclick="openKeybinds()">[K] Controls</button>
-                <button class="btn-action" style="border-color: #4299e1; background: #1a365d;" onclick="openHelp()">[H / F1] Help</button>
-                <button id="btn-save-slot" class="btn-action" style="border-color: #9f7aea; background: #322659; color: #d6bcfa;" onclick="cycleSaveSlot()" title="Click to cycle save slot (1, 2, 3)">[Slot 1]</button>
-                <button class="btn-action" onclick="saveGame()">[F5 / S] Save</button>
-                <button class="btn-action" onclick="loadGame()">[F9 / L] Load</button>
+                <button id="btn-start-run" class="btn-action" style="border-color: #48bb78; background: #1c4532; color: #9ae6b4;" onclick="openCharSelect()" title="Start New Run [Enter]" aria-label="Start New Dungeon Run">⚔️ New Run [Enter]</button>
+                <button id="btn-audio-toggle" class="btn-action" style="border-color: #10b981; background: #064e3b; color: #a7f3d0;" onclick="toggleAudio()" title="Toggle Genesis YM2612 FM / SPC700 Audio [F2]" aria-label="Toggle Genesis FM Audio">🔊 Audio: On [F2]</button>
+                <button class="btn-action" style="border-color: #63b3ed; background: #1a365d; color: #bee3f8;" onclick="openMultiplayerModal()" title="Multiplayer Seed Duel" aria-label="Open Seed Duel Lobby">🌐 Duel</button>
+                <button class="btn-action" style="border-color: #ecc94b; background: #554415; color: #fefcbf;" onclick="openReplayModal()" title="View Saved Run Replay" aria-label="Open Replay Viewer">🎥 Replay</button>
+                <button id="btn-class-ability" class="btn-action btn-ability" onclick="useClassAbility()" title="Trigger Class Active Ability [A]" aria-label="Use Class Ability">[A] Berserk Slash</button>
+                <button class="btn-action btn-spell" onclick="openSpellbook()" title="Open Spellbook [M]" aria-label="Open Spellbook">[M] Spellbook</button>
+                <button class="btn-action btn-inv" onclick="openInventory()" title="Open Inventory & Equipment [I]" aria-label="Open Inventory">[I] Inventory</button>
+                <button class="btn-action" style="border-color: #f6e05e; background: #3c3210; color: #fefcbf;" onclick="openFeatsModal()" title="View Hero Feats & Badges [C]" aria-label="Open Hero Feats">[C] Feats</button>
+                <button class="btn-action" style="border-color: #38bdf8; background: #0c4a6e; color: #bae6fd;" onclick="openBestiary()" title="View Monster Bestiary [X]" aria-label="Open Monster Bestiary">[X] Bestiary</button>
+                <button class="btn-action" style="border-color: #b794f4; background: #3b2158; color: #e9d8fd;" onclick="openAltarModal()" title="Enchanting & Socketing Altar [E]" aria-label="Open Enchanting Altar">[E] Altar</button>
+                <button class="btn-action" style="border-color: #ed8936; background: #55270d; color: #feebc8;" onclick="openPetModal()" title="Companion Pet Sanctuary [P]" aria-label="Open Pet Sanctuary">[P] Pet</button>
+                <button class="btn-action" style="border-color: #38a169; background: #22543d;" onclick="waitTurnAction()" title="Wait Turn [. / Space]" aria-label="Wait Turn">[.] Wait Turn</button>
+                <button class="btn-action btn-lead" onclick="openLeaderboard()" title="View Dungeon Run History [T]" aria-label="Open Leaderboard">[T] Leaderboard</button>
+                <button class="btn-action" onclick="openKeybinds()" title="Customize Keybindings [K]" aria-label="Open Controls Settings">[K] Controls</button>
+                <button class="btn-action" style="border-color: #4299e1; background: #1a365d;" onclick="openHelp()" title="Game Guide & Instructions [H / F1]" aria-label="Open Game Guide">[H / F1] Help</button>
+                <button id="btn-toggle-dpad" class="btn-action" style="border-color: #4a5568;" onclick="toggleVirtualDpad()" title="Toggle Virtual D-Pad Display" aria-label="Toggle Virtual D-Pad">🎮 D-Pad</button>
+                <button id="btn-save-slot" class="btn-action" style="border-color: #9f7aea; background: #322659; color: #d6bcfa;" onclick="cycleSaveSlot()" title="Click to cycle save slot (1, 2, 3)" aria-label="Cycle Save Slot">[Slot 1]</button>
+                <button class="btn-action" onclick="saveGame()" title="Quicksave Game [F5 / S]" aria-label="Save Game">[F5 / S] Save</button>
+                <button class="btn-action" onclick="loadGame()" title="Quickload Game [F9 / L]" aria-label="Load Game">[F9 / L] Load</button>
             </div>
             <div id="virtual-dpad" style="display: flex; gap: 14px; justify-content: center; align-items: center; margin-top: 2px; flex-wrap: wrap;">
                 <div style="display: grid; grid-template-columns: repeat(3, 34px); gap: 4px;">
-                    <button class="btn-action" style="padding: 5px 0; justify-content: center;" onclick="handlePlayerMove(-1, -1)" title="North-West [Y/7]">↖</button>
-                    <button class="btn-action" style="padding: 5px 0; justify-content: center;" onclick="handlePlayerMove(0, -1)" title="North [Up/8]">↑</button>
-                    <button class="btn-action" style="padding: 5px 0; justify-content: center;" onclick="handlePlayerMove(1, -1)" title="North-East [U/9]">↗</button>
-                    <button class="btn-action" style="padding: 5px 0; justify-content: center;" onclick="handlePlayerMove(-1, 0)" title="West [Left/4]">←</button>
-                    <button class="btn-action" style="padding: 5px 0; justify-content: center; background: #22543d; border-color: #38a169;" onclick="waitTurnAction()" title="Wait [.]">•</button>
-                    <button class="btn-action" style="padding: 5px 0; justify-content: center;" onclick="handlePlayerMove(1, 0)" title="East [Right/6]">→</button>
-                    <button class="btn-action" style="padding: 5px 0; justify-content: center;" onclick="handlePlayerMove(-1, 1)" title="South-West [B/1]">↙</button>
-                    <button class="btn-action" style="padding: 5px 0; justify-content: center;" onclick="handlePlayerMove(0, 1)" title="South [Down/2]">↓</button>
-                    <button class="btn-action" style="padding: 5px 0; justify-content: center;" onclick="handlePlayerMove(1, 1)" title="South-East [N/3]">↘</button>
+                    <button class="btn-action" style="padding: 5px 0; justify-content: center;" onclick="handlePlayerMove(-1, -1)" title="North-West [Y/7]" aria-label="Move North-West">↖</button>
+                    <button class="btn-action" style="padding: 5px 0; justify-content: center;" onclick="handlePlayerMove(0, -1)" title="North [Up/8]" aria-label="Move North">↑</button>
+                    <button class="btn-action" style="padding: 5px 0; justify-content: center;" onclick="handlePlayerMove(1, -1)" title="North-East [U/9]" aria-label="Move North-East">↗</button>
+                    <button class="btn-action" style="padding: 5px 0; justify-content: center;" onclick="handlePlayerMove(-1, 0)" title="West [Left/4]" aria-label="Move West">←</button>
+                    <button class="btn-action" style="padding: 5px 0; justify-content: center; background: #22543d; border-color: #38a169;" onclick="waitTurnAction()" title="Wait [.]" aria-label="Wait a Turn">•</button>
+                    <button class="btn-action" style="padding: 5px 0; justify-content: center;" onclick="handlePlayerMove(1, 0)" title="East [Right/6]" aria-label="Move East">→</button>
+                    <button class="btn-action" style="padding: 5px 0; justify-content: center;" onclick="handlePlayerMove(-1, 1)" title="South-West [B/1]" aria-label="Move South-West">↙</button>
+                    <button class="btn-action" style="padding: 5px 0; justify-content: center;" onclick="handlePlayerMove(0, 1)" title="South [Down/2]" aria-label="Move South">↓</button>
+                    <button class="btn-action" style="padding: 5px 0; justify-content: center;" onclick="handlePlayerMove(1, 1)" title="South-East [N/3]" aria-label="Move South-East">↘</button>
                 </div>
                 <div style="display: flex; flex-direction: column; gap: 4px;">
-                    <button class="btn-action btn-ability" style="font-size: 11px; padding: 4px 10px;" onclick="if(state===0||state===2||state===3){openCharSelect();}else{useClassAbility();}">⚔️ Ability [A]</button>
-                    <button class="btn-action btn-inv" style="font-size: 11px; padding: 4px 10px;" onclick="openInventory()">🎒 Backpack [I]</button>
-                    <button class="btn-action" style="font-size: 11px; padding: 4px 10px; border-color: #f6e05e; background: #3c3210; color: #fefcbf;" onclick="openFeatsModal()">🏆 Feats [C]</button>
-                    <button class="btn-action" style="font-size: 11px; padding: 4px 10px; border-color: #38bdf8; background: #0c4a6e;" onclick="openBestiary()">👾 Bestiary [X]</button>
-                    <button class="btn-action btn-spell" style="font-size: 11px; padding: 4px 10px;" onclick="openSpellbook()">✨ Spells [M]</button>
-                    <button class="btn-action" style="font-size: 11px; padding: 4px 10px; border-color: #b794f4; background: #3b2158;" onclick="openAltarModal()">⚡ Altar [E]</button>
-                    <button class="btn-action" style="font-size: 11px; padding: 4px 10px; border-color: #ed8936; background: #55270d;" onclick="openPetModal()">🐾 Pet [P]</button>
+                    <button class="btn-action btn-ability" style="font-size: 11px; padding: 4px 10px;" onclick="if(state===0||state===2||state===3){openCharSelect();}else{useClassAbility();}" aria-label="Trigger Ability">⚔️ Ability [A]</button>
+                    <button class="btn-action btn-inv" style="font-size: 11px; padding: 4px 10px;" onclick="openInventory()" aria-label="Open Inventory">🎒 Backpack [I]</button>
+                    <button class="btn-action" style="font-size: 11px; padding: 4px 10px; border-color: #f6e05e; background: #3c3210; color: #fefcbf;" onclick="openFeatsModal()" aria-label="Open Feats">🏆 Feats [C]</button>
+                    <button class="btn-action" style="font-size: 11px; padding: 4px 10px; border-color: #38bdf8; background: #0c4a6e;" onclick="openBestiary()" aria-label="Open Bestiary">👾 Bestiary [X]</button>
+                    <button class="btn-action btn-spell" style="font-size: 11px; padding: 4px 10px;" onclick="openSpellbook()" aria-label="Open Spells">✨ Spells [M]</button>
+                    <button class="btn-action" style="font-size: 11px; padding: 4px 10px; border-color: #b794f4; background: #3b2158;" onclick="openAltarModal()" aria-label="Open Altar">⚡ Altar [E]</button>
+                    <button class="btn-action" style="font-size: 11px; padding: 4px 10px; border-color: #ed8936; background: #55270d;" onclick="openPetModal()" aria-label="Open Pet">🐾 Pet [P]</button>
                 </div>
             </div>
-            <div id="msg-box"></div>
+            <div id="msg-box" role="log" aria-live="polite" aria-label="Game Messages"></div>
             <div class="controls-hint">
                 [Arrows/Numpad] Move | [.] Wait | [A] Ability | [M] Spells | [I] Inventory | [C] Feats | [X] Bestiary | [E] Altar | [P] Pet | [T] Leaderboard | [K] Keybinds | [H/F1] Help | [F5] Save | [F9] Load
             </div>
+            <script>
+                function toggleVirtualDpad() {
+                    const dpad = document.getElementById('virtual-dpad');
+                    if (!dpad) return;
+                    const isHidden = dpad.style.display === 'none';
+                    dpad.style.display = isHidden ? 'flex' : 'none';
+                    const btn = document.getElementById('btn-toggle-dpad');
+                    if (btn) btn.textContent = isHidden ? '🎮 D-Pad' : '🎮 D-Pad (Off)';
+                    try { localStorage.setItem('krogue_dpad_visible', isHidden ? '1' : '0'); } catch(e){}
+                }
+                document.addEventListener('DOMContentLoaded', function() {
+                    try {
+                        if (localStorage.getItem('krogue_dpad_visible') === '0') {
+                            const dpad = document.getElementById('virtual-dpad');
+                            if (dpad) dpad.style.display = 'none';
+                            const btn = document.getElementById('btn-toggle-dpad');
+                            if (btn) btn.textContent = '🎮 D-Pad (Off)';
+                        }
+                    } catch(e){}
+                });
+            </script>
         </div>
 
         <!-- Character Select Modal -->
