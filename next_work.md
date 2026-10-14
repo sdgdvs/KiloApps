@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-tester
-next_agent: kilo-usability
+current_agent: kilo-usability
+next_agent: kilo-qa
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -16,7 +16,7 @@ current_targets:
   kilo_creator: kweb://echo-subsystem.net
   kilo_graphics: KSpace
   kilo_soundscape: kweb://geocities
-  kilo_tester: KAudio
+  kilo_tester: KSubmarine
   kilo_usability: KRogue
   kilo_qa: KMaze
   kilo_expander: KMedia
@@ -34,9 +34,9 @@ virtual_web_rotation:
 - kweb://10.19.99.4/classified
 - kweb://echo-subsystem.net
 last_run:
-  agent: kilo-soundscape
-  app: kweb://warez
-  timestamp: '2026-10-13T23:15:00-07:00'
+  agent: kilo-tester
+  app: KAudio
+  timestamp: '2026-10-13T23:34:00-07:00'
 last_planner_run: '2026-10-13T18:15:00Z'
 ---
 
@@ -116,24 +116,19 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Upcoming Queue**: `kweb://cybercafe`, `kweb://darknet`, `kweb://asm-temple`, `kweb://echo-subsystem.net`, `kweb://deep-core`, `kweb://10.19.99.4/classified`, `kweb://webring`, `KColosseum`, `KRogue`, `KSpace`, `KMine`.
 
 ### 4. App Tester Queue (`kilo-tester`)
-- **Target**: `KAudio`
-- **Primary File**: `KiloOS/public/apps/kaudio.html`
+- **Target**: `KSubmarine`
+- **Primary File**: `KiloOS/public/apps/ksubmarine.html`
 - **Objective**: Interactive UI element and modal audit with inline repairs.
 - **Action Steps**:
-  1. Run automated startup check: `uv run scripts/test_app_startup.py --app KAudio`.
-  2. Audit all UI elements:
-     - Synth keys (click/touch/QWERTY hotkeys) & octave transpose buttons (+/-).
-     - Presets dropdown, waveform selectors, glide/portamento toggles.
-     - ADSR envelope sliders, filter cutoff/resonance knobs, and SPC700 delay toggle.
-     - Help & Settings modals: ensure dismissal via Escape, Close button, and backdrop click.
-     - Patch Save/Load: test F5 quicksave, F9 quickload, JSON preset export/import.
+  1. Run automated startup check: `uv run scripts/test_app_startup.py --app KSubmarine`.
+  2. Audit all UI elements: sonar/periscope displays, ballast/dive controls, torpedo firing buttons, modals (help/manual), and local state persistence.
   3. Fix any broken button hooks, missing element IDs, or unhandled exceptions inline.
-- **Verification**: `uv run scripts/test_app_startup.py --app KAudio` and `cd KiloOS && npm run build`. File size < 999 KB (`kaudio.html` ~149 KB).
+- **Verification**: `uv run scripts/test_app_startup.py --app KSubmarine` and `cd KiloOS && npm run build`. File size < 999 KB.
 - **Handoff**:
-  - In frontmatter: advance `current_targets.kilo_tester` to `KSubmarine`.
-  - Set `current_agent: kilo-usability`, `last_run.agent: kilo-tester`, `last_run.app: KAudio`.
+  - In frontmatter: advance `current_targets.kilo_tester` to `KVault`.
+  - Set `current_agent: kilo-usability`, `last_run.agent: kilo-tester`, `last_run.app: KSubmarine`.
   - Append terse execution log (≤6 lines), commit, and push.
-- **Upcoming Queue**: `KSubmarine`, `KVault`, `KCalendar`, `KPaint`.
+- **Upcoming Queue**: `KVault`, `KCalendar`, `KPaint`, `KAudio`.
 
 ### 5. Usability & UX Queue (`kilo-usability`)
 - **Target**: `KRogue`
@@ -195,6 +190,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-13T23:34:00-07:00 — kilo-tester: KAudio (UI Audit & Inline Fixes)**
+  - PASS ✅ (3 issues fixed). Added tactile `[+]`/`[-]` octave transpose buttons and `[G]` Portamento/Glide pitch slide.
+  - Fixed modal backdrop click and Escape handling to properly restore focus and dismiss when typing in inputs.
+  - Startup test PASS (0 errors, 448x98 canvas unblocked), Vite build clean (`kaudio.html` 149.7 KB < 999 KB).
+  - Queue: Advanced kilo-tester to KSubmarine; handed off to kilo-usability (KRogue).
+
 - **2026-10-13T23:15:00-07:00 — kilo-soundscape: kweb://warez (YM2612 FM Soundscape)**
   - Composed procedural audio identities for all 8 demoscene tracks using YM2612 2-Op FM & SPC700 delay.
   - Implemented 6 named FM patch presets (slap bass, Rhodes EPiano, FM brass, hollow flute, metallic bell, acid lead).
@@ -220,9 +221,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Archived duplicate director directives to `archive/director_directives_archive.md`; fixed `scripts/compact_all.py` parameter bug.
   - Rewrote 7 uncompleted tickets in `next_work.md` with explicit file paths, concrete action steps, and skip fast-paths for Gemini Flash Medium.
   - Verification: `compact_all.py` clean, `orchestrate.py --dry-run` PASS, Vite build clean, security_lint 100% PASS.
-
-- **2026-10-13T21:33:00-07:00 — kilo-expander: KPad (Deep Feature Expansion)**
-  - Added Regular Expression Workbench & Pattern Lab with live matching, capture groups, presets, and replacement preview.
-  - Added Extract Matches to Tab, Copy Matches, and Apply Replacement tools (`Ctrl+Shift+R`).
-  - Verified clean build (`npm run build` 0 errors, 306 KB < 999 KB size ceiling).
-  - Queue: Advanced kilo-expander to KMedia; handed off to kilo-creator.

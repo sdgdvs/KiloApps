@@ -593,6 +593,15 @@
           </select>
         </div>
       </div>
+      <div class="control-row" style="margin-top: 4px; border-top: 1px dashed rgba(255,255,255,0.06); padding-top: 4px;">
+        <label style="display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: #cbd5e1; cursor: pointer;" title="Smooth frequency pitch slide between notes (G)">
+          <input type="checkbox" id="chkGlide"> 🏄 Portamento / Glide (G)
+        </label>
+        <div class="slider-container" style="max-width: 140px;">
+          <input type="range" id="glideTime" min="0.01" max="0.5" step="0.01" value="0.08" title="Glide Time">
+          <span class="val-display" id="valGlide">0.08s</span>
+        </div>
+      </div>
 
       <!-- Yamaha YM2612 2-Operator FM Synthesizer Controls -->
       <div id="fmControls" style="display: none; background: rgba(14, 165, 233, 0.08); border: 1px solid rgba(56, 189, 248, 0.25); border-radius: 8px; padding: 8px; flex-direction: column; gap: 8px;">
@@ -709,7 +718,9 @@
         <div class="section-title">📊 Visualizer & DSP FX Rack</div>
         <div style="display: flex; gap: 6px; align-items: center;">
           <button class="btn" id="btnVisMode" style="padding: 2px 8px; font-size: 11px;">Mode: Scope (V)</button>
-          <span class="badge" id="octaveBadge">Octave: 0</span>
+          <button class="btn" id="btnOctaveDown" title="Octave Down (-)" style="padding: 2px 6px; font-size: 11px; font-weight: 700; min-width: 22px;">-</button>
+          <span class="badge" id="octaveBadge" style="cursor: pointer;" title="Click to shift octave (or use - / + keys)">Octave: 0</span>
+          <button class="btn" id="btnOctaveUp" title="Octave Up (+)" style="padding: 2px 6px; font-size: 11px; font-weight: 700; min-width: 22px;">+</button>
         </div>
       </div>
       <div class="visualizer-container">
@@ -1079,6 +1090,9 @@
   document.getElementById('jamModal')?.addEventListener('click', (e) => {
     if (e.target === document.getElementById('jamModal')) {
       document.getElementById('jamModal').style.display = 'none';
+      if (lastFocusedEl && typeof lastFocusedEl.focus === 'function') {
+        lastFocusedEl.focus();
+      }
     }
   });
   // Audio Context & Nodes Initialization
@@ -1167,6 +1181,12 @@
   const valCutoff = document.getElementById('valCutoff');
   const valQ = document.getElementById('valQ');
   const octaveBadge = document.getElementById('octaveBadge');
+  const btnOctaveDown = document.getElementById('btnOctaveDown');
+  const btnOctaveUp = document.getElementById('btnOctaveUp');
+  const chkGlide = document.getElementById('chkGlide');
+  const glideTime = document.getElementById('glideTime');
+  const valGlide = document.getElementById('valGlide');
+  let lastPlayedFreq = 0;
   const recStatus = document.getElementById('recStatus');
 
   // DSP FX UI Elements
@@ -1224,6 +1244,8 @@
         chorusDepth: (typeof chorusDepth !== 'undefined' && chorusDepth) ? chorusDepth.value : '6.0',
         chorusMix: (typeof chorusMix !== 'undefined' && chorusMix) ? chorusMix.value : '0.40'
       },
+      glide: (typeof chkGlide !== 'undefined' && chkGlide) ? chkGlide.checked : false,
+      glideTime: (typeof glideTime !== 'undefined' && glideTime) ? glideTime.value : '0.08',
       tuning: (typeof scaleTuningSelect !== 'undefined' && scaleTuningSelect) ? scaleTuningSelect.value : '12tet',
       visMode: visMode,
       octaveShift: octaveShift,
@@ -1545,13 +1567,44 @@
   };
 
   octaveBadge.style.cursor = 'pointer';
-  octaveBadge.title = 'Click to shift octave (or use ← / → keys)';
+  octaveBadge.title = 'Click to shift octave (or use - / + keys)';
   octaveBadge.onclick = () => {
     octaveShift = (octaveShift >= 4) ? -4 : octaveShift + 1;
     octaveBadge.textContent = 'Octave: ' + (octaveShift > 0 ? '+' : '') + octaveShift;
     showToast(`Octave shifted: ${octaveShift > 0 ? '+' : ''}${octaveShift}`, 'info', 1400);
     saveAudioState();
   };
+  if (btnOctaveDown) {
+    btnOctaveDown.onclick = () => {
+      if (octaveShift > -4) {
+        octaveShift--;
+        octaveBadge.textContent = 'Octave: ' + (octaveShift > 0 ? '+' : '') + octaveShift;
+        showToast(`Octave shifted: ${octaveShift > 0 ? '+' : ''}${octaveShift}`, 'info', 1400);
+        saveAudioState();
+      }
+    };
+  }
+  if (btnOctaveUp) {
+    btnOctaveUp.onclick = () => {
+      if (octaveShift < 4) {
+        octaveShift++;
+        octaveBadge.textContent = 'Octave: ' + (octaveShift > 0 ? '+' : '') + octaveShift;
+        showToast(`Octave shifted: ${octaveShift > 0 ? '+' : ''}${octaveShift}`, 'info', 1400);
+        saveAudioState();
+      }
+    };
+  }
+  if (glideTime && valGlide) {
+    glideTime.oninput = () => {
+      valGlide.textContent = parseFloat(glideTime.value).toFixed(2) + 's';
+      saveAudioState();
+    };
+  }
+  if (chkGlide) {
+    chkGlide.onchange = () => {
+      saveAudioState();
+    };
+  }
 
   recStatus.style.cursor = 'pointer';
   recStatus.title = 'Click to toggle Record / Playback (Z / X)';
@@ -2156,11 +2209,19 @@
 
       osc = ctx.createOscillator(); // Carrier
       osc.type = 'sine';
-      osc.frequency.setValueAtTime(targetFreq, now);
-
       modOsc = ctx.createOscillator(); // Modulator
       modOsc.type = 'sine';
-      modOsc.frequency.setValueAtTime(targetFreq * ratio, now);
+
+      if (chkGlide && chkGlide.checked && lastPlayedFreq > 0) {
+        let gTime = parseFloat(glideTime ? glideTime.value : '0.08');
+        osc.frequency.setValueAtTime(lastPlayedFreq, now);
+        osc.frequency.exponentialRampToValueAtTime(targetFreq, now + gTime);
+        modOsc.frequency.setValueAtTime(lastPlayedFreq * ratio, now);
+        modOsc.frequency.exponentialRampToValueAtTime(targetFreq * ratio, now + gTime);
+      } else {
+        osc.frequency.setValueAtTime(targetFreq, now);
+        modOsc.frequency.setValueAtTime(targetFreq * ratio, now);
+      }
 
       modGain = ctx.createGain();
       modGain.gain.setValueAtTime(depth, now);
@@ -2175,10 +2236,17 @@
     } else {
       osc = ctx.createOscillator();
       osc.type = waveSelect.value;
-      osc.frequency.setValueAtTime(targetFreq, now);
+      if (chkGlide && chkGlide.checked && lastPlayedFreq > 0) {
+        let gTime = parseFloat(glideTime ? glideTime.value : '0.08');
+        osc.frequency.setValueAtTime(lastPlayedFreq, now);
+        osc.frequency.exponentialRampToValueAtTime(targetFreq, now + gTime);
+      } else {
+        osc.frequency.setValueAtTime(targetFreq, now);
+      }
       osc.connect(voiceGain);
       osc.start();
     }
+    lastPlayedFreq = targetFreq;
 
     voiceGain.connect(filterNode);
 
@@ -2530,6 +2598,29 @@
   // Global Keyboard Event Handlers
   document.addEventListener('keydown', e => {
     if (!e.key) return;
+
+    // Check Escape first before ignoring inputs, so Escape dismisses modals even when typing in room input
+    const helpModalEl = document.getElementById('helpModal');
+    const isHelpOpen = helpModalEl && (helpModalEl.style.display === 'flex' || helpModalEl.offsetParent !== null);
+    const jamModalEl = document.getElementById('jamModal');
+    const isJamOpen = jamModalEl && (jamModalEl.style.display === 'flex' || jamModalEl.offsetParent !== null);
+
+    if (e.key === 'Escape') {
+      if (isHelpOpen) {
+        e.preventDefault();
+        helpModalEl.style.display = 'none';
+        safeSetStorage('kaudio_tutorialSeen', '1');
+        if (lastFocusedEl && typeof lastFocusedEl.focus === 'function') lastFocusedEl.focus();
+        return;
+      }
+      if (isJamOpen) {
+        e.preventDefault();
+        jamModalEl.style.display = 'none';
+        if (lastFocusedEl && typeof lastFocusedEl.focus === 'function') lastFocusedEl.focus();
+        return;
+      }
+    }
+
     if (['INPUT', 'SELECT', 'TEXTAREA'].includes(document.activeElement?.tagName)) return;
     initAudio();
 
@@ -2566,6 +2657,16 @@
       return;
     }
 
+    // Toggle Portamento / Glide [G]
+    if (e.key === 'g' || e.key === 'G') {
+      if (chkGlide) {
+        chkGlide.checked = !chkGlide.checked;
+        saveAudioState();
+        showToast(`🏄 Portamento / Glide: ${chkGlide.checked ? 'ON' : 'OFF'} [G]`, 'info', 1400);
+      }
+      return;
+    }
+
     // Quicksave (F5) and Quickload (F9)
     if (e.key === 'F5') {
       e.preventDefault();
@@ -2579,10 +2680,6 @@
     }
 
     // Function keys and Modal Controls
-    const helpModalEl = document.getElementById('helpModal');
-    const isHelpOpen = helpModalEl && (helpModalEl.style.display === 'flex' || helpModalEl.offsetParent !== null);
-    const jamModalEl = document.getElementById('jamModal');
-    const isJamOpen = jamModalEl && (jamModalEl.style.display === 'flex' || jamModalEl.offsetParent !== null);
 
     if (e.key === 'F1' || e.key === '?' || (e.key === '/' && e.shiftKey) || (e.key === 'H' && e.shiftKey)) {
       e.preventDefault();
@@ -2590,19 +2687,7 @@
       return;
     }
 
-    if (e.key === 'Escape') {
-      if (isHelpOpen) {
-        e.preventDefault();
-        helpModalEl.style.display = 'none';
-        safeSetStorage('kaudio_tutorialSeen', '1');
-        return;
-      }
-      if (isJamOpen) {
-        e.preventDefault();
-        jamModalEl.style.display = 'none';
-        return;
-      }
-    }
+
 
     if (isHelpOpen && (e.key === 'Enter' || e.key === ' ' || e.key === 'h' || e.key === 'H')) {
       e.preventDefault();
@@ -3284,6 +3369,13 @@
       if (data.tuning && typeof scaleTuningSelect !== 'undefined' && scaleTuningSelect) {
         scaleTuningSelect.value = data.tuning;
         scaleTuningSelect.onchange();
+      }
+      if (typeof data.glide === 'boolean' && chkGlide) {
+        chkGlide.checked = data.glide;
+      }
+      if (data.glideTime && glideTime && valGlide) {
+        glideTime.value = data.glideTime;
+        valGlide.textContent = parseFloat(data.glideTime).toFixed(2) + 's';
       }
       if (data.visMode) {
         visMode = data.visMode;
