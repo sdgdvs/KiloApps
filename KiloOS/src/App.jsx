@@ -1,4 +1,4 @@
-﻿import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
+import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { DEFAULT_VFS } from './defaultVfs';
 import './App.css';
 const MICROS_VERSION = '0.4.28'
@@ -103,7 +103,7 @@ const APPS = [
   { id: 'kcolosseum', title: 'KColosseum', url: '/apps/kcolosseum.html', exeUrl: '/exe/KColosseum.exe', icon: '/assets/icons/kcolosseum.ico', w: 800, h: 600, folder: 'Games' },
   { id: 'kstellar', title: 'KStellar', url: '/apps/kstellar.html', exeUrl: '/exe/KStellar.exe', icon: '/assets/icons/kstellar.ico', w: 800, h: 600, folder: 'Games' },
   { id: 'ksanctuary', title: 'KSanctuary', url: '/apps/ksanctuary.html', exeUrl: '/exe/KSanctuary.exe', icon: '/assets/icons/ksanctuary.ico', w: 850, h: 650, folder: 'Games' },
-  { id: 'ksubmarine', title: 'KSubmarine', url: '/apps/ksubmarine.html', exeUrl: '/exe/KSubmarine.exe', icon: '/assets/icons/ksubmarine.ico', w: 920, h: 680, folder: 'Games' },
+  { id: 'ksubmarine', title: 'KSubmarine', url: '/apps/ksubmarine.html', exeUrl: '/exe/KSubmarine.exe', icon: '/assets/icons/ksubmarine.ico', w: 1040, h: 720, folder: 'Games' },
   { id: 'kstardredge', title: 'KStarDredge', url: '/apps/kstardredge.html', exeUrl: '/exe/KStarDredge.exe', icon: '/assets/icons/kstardredge.ico', w: 900, h: 680, folder: 'Games' },
   { id: 'kabyss', title: 'KAbyss', url: '/apps/kabyss.html', exeUrl: '/exe/KAbyss.exe', icon: '/assets/icons/kabyss.ico', w: 920, h: 680, folder: 'Games' },
   { id: 'kcosmic', title: 'KCosmic', url: '/apps/kcosmic.html', exeUrl: '/exe/KCosmic.exe', icon: '/assets/icons/kcosmic.ico', w: 940, h: 680, folder: 'Games' },

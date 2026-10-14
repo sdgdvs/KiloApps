@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-qa
+current_agent: kilo-qa
+next_agent: kilo-expander
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -17,7 +17,7 @@ current_targets:
   kilo_graphics: KSubmarine
   kilo_soundscape: kweb://warez
   kilo_tester: KCalendar
-  kilo_usability: KSubmarine
+  kilo_usability: KMail
   kilo_qa: KBreakout
   kilo_expander: KMedia
 virtual_web_target: kweb://deep-core
@@ -34,9 +34,9 @@ virtual_web_rotation:
 - kweb://10.19.99.4/classified
 - kweb://echo-subsystem.net
 last_run:
-  agent: kilo-tester
-  app: KVault
-  timestamp: '2026-10-14T08:14:00-07:00'
+  agent: kilo-usability
+  app: KSubmarine
+  timestamp: '2026-10-14T08:31:00-07:00'
 last_planner_run: '2026-10-13T18:15:00Z'
 ---
 
@@ -188,6 +188,13 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-14T08:31:00-07:00 — kilo-usability: KSubmarine (Layout & Usability Audit)**
+  - PASS ✅ — Audited bathyscaphe dashboard layout, HiDPI radar/periscope canvases, and hotkey bindings.
+  - Sizing tuned: updated default dimensions in `KiloOS/src/App.jsx` to 1040x720 for optimal 3-column telemetry layout.
+  - Confirmed HiDPI crispness (`devicePixelRatio`), F1/H manual, Esc dismissal, and save/load shortcuts.
+  - Build verified (`npm run build` PASS, 0 errors, `ksubmarine.html` 448 KB < 999 KB ceiling).
+  - Queue: Advanced kilo-usability to KMail; handed off to kilo-qa (KBreakout).
+
 - **2026-10-14T08:14:00-07:00 — kilo-tester: KVault (UI Audit & Startup Verification)**
   - PASS ✅ (No issues found) — Automated startup test verified: 0 JS err, CSS valid, hit-test unblocked.
   - Interactive UI audit confirmed: generator, password entry forms, TOTP 2FA, export/import modals & keyboard handlers fully wired.
@@ -214,10 +221,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Procedural Web Audio: Josephson flux quantum whistle & 1999Hz halite acoustic echo ping.
   - Interactive packet demodulation (10.19.99.x subnet) and structured magnetogram export (.sqd).
   - Build verified (`npm run build` PASS, 0 errors, `echo_subsystem.html` 365.5 KB < 999 KB ceiling).
-
-- **2026-10-14T06:15:00-07:00 — kilo-expander: KCalendar (Deep Feature Expansion)**
-  - Added Plain Text Schedule Briefing (.txt) and TSV data table (.tsv) multi-format exporters.
-  - Added 1-click clipboard agenda export and Next Upcoming Event jump navigation (button + [J] shortcut).
-  - Added Purge/Clean Completed Events utility in stats modal with user confirmation.
-  - Verified clean build (`npm run build` PASS, 0 errors, `kcalendar.html` 123 KB < 999 KB ceiling).
-  - Queue: Advanced kilo-expander to KMedia; handed off to kilo-creator (kweb://echo-subsystem.net).
