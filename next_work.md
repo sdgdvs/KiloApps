@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-creator
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -18,7 +18,7 @@ current_targets:
   kilo_soundscape: kweb://warez
   kilo_tester: KAudio
   kilo_usability: KRogue
-  kilo_qa: KSpace
+  kilo_qa: KMaze
   kilo_expander: KPad
 virtual_web_target: kweb://10.19.99.4/classified
 virtual_web_rotation:
@@ -34,9 +34,9 @@ virtual_web_rotation:
 - kweb://10.19.99.4/classified
 - kweb://echo-subsystem.net
 last_run:
-  agent: kilo-usability
-  app: KNote
-  timestamp: '2026-10-13T20:31:00-07:00'
+  agent: kilo-qa
+  app: KSpace
+  timestamp: '2026-10-13T21:14:00-07:00'
 last_planner_run: '2026-10-13T18:15:00Z'
 ---
 
@@ -99,8 +99,8 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Upcoming Queue**: `KSubmarine`, `KMail`, `KPad`, `KAudio`, `KNote`.
 
 ### 6. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
-- **Current Target**: `KSpace`
-- **Upcoming Queue**: `KMaze`, `KAsteroids`, `KSnake`, `KBreakout`, `KRogue`.
+- **Current Target**: `KMaze`
+- **Upcoming Queue**: `KAsteroids`, `KSnake`, `KBreakout`, `KRogue`, `KSpace`.
 
 ### 7. Feature Expander Queue (`kilo-expander`)
 - **Current Target**: `KDB`
@@ -122,6 +122,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 ---
 
 ## Recent Execution Logs (Max 5 Entries)
+- **2026-10-13T21:14:00-07:00 — kilo-qa: KSpace (Pass 5 QA & State Integrity)**
+  - Audited full game state persistence: F5 quicksave & F9 quickload capture wave, score, player, weapons, and enemies.
+  - Verified first-run tutorial flag (`kspace_tutorialSeen`), storage quota fallback, and clean ARG compliance.
+  - Verified clean build (`npm.cmd run build` 0 errors, 191 KB < 999 KB size ceiling).
+  - Queue: Advanced kilo-qa to KMaze; handed off to kilo-expander.
+
 - **2026-10-13T20:31:00-07:00 — kilo-usability: KNote (Usability & UX Audit)**
   - ⏭️ Skip — KNote usability is complete and mature (10+ passes, comprehensive UI/UX).
   - Verified default window bounds (980x680), clean build (`npm run build` 0 errors, 161 KB < 999 KB).
@@ -145,10 +151,4 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Verified no rotating specular glints or traveling perimeter border dots.
   - Verified clean build (`npm run build` 0 errors, 490 KB < 999 KB).
   - Queue: Advanced kilo-graphics to KStarForge; handed off to kilo-soundscape.
-
-- **2026-10-13T18:32:00-07:00 — kilo-creator: kweb://cybercafe (Deep Web 1.0 Expansion)**
-  - Implemented 1999 Cyber-Trivia Arcade & SysOp Certification Exam (10 questions, timer, scoring, leaderboards).
-  - Built real-time ANSI/canvas certificate compositor with PNG export and NVRAM persistence.
-  - Linked in navigation tabs with F1/H shortcut bindings; verified file size 371 KB (<999 KB).
-  - Queue: Advanced kilo-creator to kweb://10.19.99.4/classified; handed off to kilo-graphics.
 
