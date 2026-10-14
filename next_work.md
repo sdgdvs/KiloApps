@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-creator
-next_agent: kilo-graphics
+current_agent: kilo-graphics
+next_agent: kilo-soundscape
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -13,14 +13,14 @@ model: gemini-3.8-flash-medium
 timeout_minutes: 6
 status: ready
 current_targets:
-  kilo_creator: kweb://deep-core
+  kilo_creator: kweb://darknet
   kilo_graphics: KSubmarine
   kilo_soundscape: kweb://warez
   kilo_tester: KCalendar
   kilo_usability: KMail
   kilo_qa: KRogue
   kilo_expander: KJournal
-virtual_web_target: kweb://deep-core
+virtual_web_target: kweb://darknet
 virtual_web_rotation:
 - kweb://deep-core
 - kweb://darknet
@@ -34,9 +34,9 @@ virtual_web_rotation:
 - kweb://10.19.99.4/classified
 - kweb://echo-subsystem.net
 last_run:
-  agent: kilo-expander
-  app: KMedia
-  timestamp: '2026-10-14T09:32:00-07:00'
+  agent: kilo-creator
+  app: kweb://deep-core
+  timestamp: '2026-10-14T10:14:00-07:00'
 last_planner_run: '2026-10-13T18:15:00Z'
 ---
 
@@ -64,20 +64,20 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 ## Active Target Queues (Gemini Flash Optimized Tickets)
 
 ### 1. Virtual 1999 Web & ARG Node Creator (`kilo-creator`)
-- **Target**: `kweb://10.19.99.4/classified`
-- **Primary File**: `KiloOS/public/web/classified.html`
-- **Objective**: Audit & expand Aethel Dynamics Special Projects Intranet & RF Signal Diagnostic (<999 KB).
+- **Target**: `kweb://darknet`
+- **Primary File**: `KiloOS/public/web/darknet.html`
+- **Objective**: Audit & expand Node 0x7F Encrypted Underground Relay & Cryptography Lab (<999 KB).
 - **Action Steps**:
-  1. Inspect `KiloOS/public/web/classified.html` in a single pass.
-  2. Verify all 4 tabs (Intranet Memos, RF Waveguide Oscilloscope, Sector Digests, Skunkworks Terminal) render and function with 0 console errors.
-  3. Ensure Web Audio DSP and oscilloscope operate crisply with clean promise handling.
+  1. Inspect `KiloOS/public/web/darknet.html` in a single pass.
+  2. Verify Feistel cipher lab, subterranean terminal, and packet traceroute render with 0 console errors.
+  3. Ensure Web Audio DSP and quicksave/quickload handlers operate cleanly.
   4. Ensure diegetic ARG consistency: no un-diegetic `(ARG)` tags or leaked passkeys.
-- **Verification**: `cd KiloOS && npm run build` (0 Vite errors). Confirm file size < 999 KB (`classified.html` ~256 KB).
+- **Verification**: `cd KiloOS && npm run build` (0 Vite errors). Confirm file size < 999 KB (`darknet.html` ~320 KB).
 - **Handoff**:
-  - In frontmatter: advance `current_targets.kilo_creator` to `kweb://echo-subsystem.net`.
-  - Set `current_agent: kilo-creator
+  - In frontmatter: advance `current_targets.kilo_creator` to `kweb://portal`.
+  - Set `current_agent: kilo-graphics`
   - Append terse execution log (≤6 lines), commit, and push.
-- **Upcoming Queue**: `kweb://echo-subsystem.net`, `kweb://deep-core`, `kweb://darknet`, `kweb://portal`, `kweb://webring`, `kweb://warez`, `kweb://geocities`, `kweb://users/~neon_rider`, `kweb://asm-temple`, `kweb://cybercafe`.
+- **Upcoming Queue**: `kweb://portal`, `kweb://webring`, `kweb://warez`, `kweb://geocities`, `kweb://users/~neon_rider`, `kweb://asm-temple`, `kweb://cybercafe`.
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
 - **Target**: `KSubmarine`
@@ -188,6 +188,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-14T10:14:00-07:00 — kilo-creator: kweb://deep-core (Subterranean Ghost Terminal Audit & Verification)**
+  - PASS ✅ — Verified deep interactive subterranean terminal, 5-sector defusal, x86 disasm stepper, and packet sniffer.
+  - Confirmed reciprocal links in KNet (`knet.html`), Portal (`portal.html`), and WebRing (`webring.html`).
+  - Build verified (`npm run build` PASS, 0 errors, `deep_core.html` 244.6 KB < 999 KB ceiling, security lint clean).
+  - Queue: Advanced kilo-creator to kweb://darknet; handed off to kilo-graphics (KSubmarine).
+
 - **2026-10-14T09:32:00-07:00 — kilo-expander: KMedia (Playback Speed & Media Expansion)**
   - PASS ✅ — Wired 0.5x, 0.75x, 1.0x, 1.25x, 1.5x, 2.0x playback rate selector into DSP panel & transport.
   - Verified M3U export, JSON state backup/restore, EQ presets, dancing spectrum toggle, and hotkeys.
@@ -213,10 +219,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Upgraded UI earcons & stingers: FM stock chime, major 9th fanfare, 1999Hz ping, and detuned buzz.
   - Build clean (`npm run build` PASS, `portal.html` 557 KB < 999 KB ceiling, security lint clean).
   - Queue: Advanced kilo-soundscape to kweb://warez; handed off to kilo-tester.
-
-- **2026-10-14T07:14:00-07:00 — kilo-graphics: KMech**
-  - ⏭️ Skip — Imagen 3 asset replacement not appropriate for KMech.
-  - Zero traveling specular glints or perimeter border dots found (clean static industrial HUD corners).
-  - Confirmed authentic green-phosphor tactical wireframe vector aesthetic.
-  - Build verified (`npm run build` PASS, 0 errors, `kmech.html` 129 KB < 999 KB ceiling).
-  - Queue: Advanced kilo-graphics to KSubmarine; handed off to kilo-soundscape.
