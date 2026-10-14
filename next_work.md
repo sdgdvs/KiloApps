@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-expander
-next_agent: kilo-creator
+current_agent: kilo-creator
+next_agent: kilo-graphics
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -19,7 +19,7 @@ current_targets:
   kilo_tester: KCalendar
   kilo_usability: KMail
   kilo_qa: KRogue
-  kilo_expander: KMedia
+  kilo_expander: KJournal
 virtual_web_target: kweb://deep-core
 virtual_web_rotation:
 - kweb://deep-core
@@ -34,9 +34,9 @@ virtual_web_rotation:
 - kweb://10.19.99.4/classified
 - kweb://echo-subsystem.net
 last_run:
-  agent: kilo-qa
-  app: KBreakout
-  timestamp: '2026-10-14T09:13:00-07:00'
+  agent: kilo-expander
+  app: KMedia
+  timestamp: '2026-10-14T09:32:00-07:00'
 last_planner_run: '2026-10-13T18:15:00Z'
 ---
 
@@ -188,6 +188,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-14T09:32:00-07:00 — kilo-expander: KMedia (Playback Speed & Media Expansion)**
+  - PASS ✅ — Wired 0.5x, 0.75x, 1.0x, 1.25x, 1.5x, 2.0x playback rate selector into DSP panel & transport.
+  - Verified M3U export, JSON state backup/restore, EQ presets, dancing spectrum toggle, and hotkeys.
+  - Build verified (`npm run build` PASS, 0 errors, `kmedia.html` 150.1 KB < 999 KB ceiling).
+  - Queue: Advanced kilo-expander to KJournal; handed off to kilo-creator.
+
 - **2026-10-14T08:31:00-07:00 — kilo-usability: KSubmarine (Layout & Usability Audit)**
   - PASS ✅ — Audited bathyscaphe dashboard layout, HiDPI radar/periscope canvases, and hotkey bindings.
   - Sizing tuned: updated default dimensions in `KiloOS/src/App.jsx` to 1040x720 for optimal 3-column telemetry layout.
@@ -214,10 +220,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Confirmed authentic green-phosphor tactical wireframe vector aesthetic.
   - Build verified (`npm run build` PASS, 0 errors, `kmech.html` 129 KB < 999 KB ceiling).
   - Queue: Advanced kilo-graphics to KSubmarine; handed off to kilo-soundscape.
-
-- **2026-10-14T06:33:00-07:00 — kilo-creator: kweb://echo-subsystem.net (Tab 14 Deep Expansion)**
-  - Added Tab 14: Cryogenic SQUID Magnetometer & Sub-Crustal Acoustic Tomograph.
-  - Interactive Josephson fluxoid phase slip Lissajous orbit & 3D strata tomographic scanner.
-  - Procedural Web Audio: Josephson flux quantum whistle & 1999Hz halite acoustic echo ping.
-  - Interactive packet demodulation (10.19.99.x subnet) and structured magnetogram export (.sqd).
-  - Build verified (`npm run build` PASS, 0 errors, `echo_subsystem.html` 365.5 KB < 999 KB ceiling).

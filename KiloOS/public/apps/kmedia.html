@@ -961,6 +961,20 @@
         </div>
 
         <div class="panel">
+          <div class="panel-title">Playback Rate &amp; Speed</div>
+          <div class="preset-row">
+            <select id="speedSelect" class="preset-select" aria-label="Playback Rate Selector">
+              <option value="0.5">0.5x (Half Speed)</option>
+              <option value="0.75">0.75x (Slow)</option>
+              <option value="1">1.0x (Normal)</option>
+              <option value="1.25">1.25x (Fast)</option>
+              <option value="1.5">1.5x (Speedy)</option>
+              <option value="2">2.0x (Double Speed)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="panel">
           <div class="panel-title">Visualizer Style &amp; Sonogram</div>
           <div class="preset-row">
             <select id="visSelect" class="preset-select" aria-label="Visualizer Mode">
@@ -1202,6 +1216,7 @@
     btnLoopTrack: document.getElementById('btnLoopTrack'),
     btnMode: document.getElementById('btnMode'),
     btnSpeed: document.getElementById('btnSpeed'),
+    speedSelect: document.getElementById('speedSelect'),
     btnVisMode: document.getElementById('btnVisMode'),
     btnExport: document.getElementById('btnExport'),
     btnExportVideo: document.getElementById('btnExportVideo'),
@@ -2266,13 +2281,31 @@
     showToast('Mode: ' + modes[currentModeIndex]);
   };
 
-  UI.btnSpeed.onclick = () => {
-    currentSpeedIndex = (currentSpeedIndex + 1) % speeds.length;
+  function setPlaybackSpeed(index) {
+    if (index < 0 || index >= speeds.length) index = 2;
+    currentSpeedIndex = index;
     safeSetStorage('kmedia_speed', currentSpeedIndex);
-    UI.btnSpeed.textContent = speeds[currentSpeedIndex].toFixed(1) + 'x';
-    UI.mediaPlayer.playbackRate = speeds[currentSpeedIndex];
+    const spd = speeds[currentSpeedIndex];
+    UI.btnSpeed.textContent = spd.toFixed(1) + 'x';
+    UI.mediaPlayer.playbackRate = spd;
+    if (UI.speedSelect) UI.speedSelect.value = (spd === 1 ? '1' : spd === 2 ? '2' : spd.toString());
+  }
+
+  UI.btnSpeed.onclick = () => {
+    setPlaybackSpeed((currentSpeedIndex + 1) % speeds.length);
     showToast('Speed: ' + speeds[currentSpeedIndex].toFixed(1) + 'x');
   };
+
+  if (UI.speedSelect) {
+    UI.speedSelect.onchange = (e) => {
+      const val = parseFloat(e.target.value);
+      const idx = speeds.indexOf(val);
+      if (idx !== -1) {
+        setPlaybackSpeed(idx);
+        showToast('Speed: ' + speeds[currentSpeedIndex].toFixed(1) + 'x');
+      }
+    };
+  }
 
   // Video interaction (Click play/pause, Double-click fullscreen)
   UI.videoContainer.addEventListener('click', (e) => {
@@ -3573,10 +3606,7 @@
         safeSetStorage('kmedia_mode', currentModeIndex);
       }
       if (typeof state.playbackSpeed === 'number') {
-        currentSpeedIndex = state.playbackSpeed % speeds.length;
-        UI.mediaPlayer.playbackRate = speeds[currentSpeedIndex];
-        UI.btnSpeed.textContent = speeds[currentSpeedIndex].toFixed(1) + 'x';
-        safeSetStorage('kmedia_speed', currentSpeedIndex);
+        setPlaybackSpeed(state.playbackSpeed % speeds.length);
       }
 
       // Restore Visualizer Mode & Palette
@@ -3886,8 +3916,7 @@
 
   // --- Initial State Hydration ---
   UI.btnMode.textContent = 'Mode: ' + modes[currentModeIndex] + ' [M]';
-  UI.btnSpeed.textContent = speeds[currentSpeedIndex].toFixed(1) + 'x';
-  UI.mediaPlayer.playbackRate = speeds[currentSpeedIndex];
+  setPlaybackSpeed(currentSpeedIndex);
 
   UI.fBright.value = safeGetStorage('kmedia_f_bright', '1');
   UI.fCont.value = safeGetStorage('kmedia_f_cont', '1');
