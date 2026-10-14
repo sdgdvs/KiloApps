@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-qa
+current_agent: kilo-qa
+next_agent: kilo-expander
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -17,7 +17,7 @@ current_targets:
   kilo_graphics: KSpace
   kilo_soundscape: kweb://geocities
   kilo_tester: KSubmarine
-  kilo_usability: KRogue
+  kilo_usability: KMine
   kilo_qa: KMaze
   kilo_expander: KMedia
 virtual_web_target: kweb://echo-subsystem.net
@@ -34,9 +34,9 @@ virtual_web_rotation:
 - kweb://10.19.99.4/classified
 - kweb://echo-subsystem.net
 last_run:
-  agent: kilo-tester
-  app: KAudio
-  timestamp: '2026-10-13T23:34:00-07:00'
+  agent: kilo-usability
+  app: KRogue
+  timestamp: '2026-10-14T00:13:00-07:00'
 last_planner_run: '2026-10-13T18:15:00Z'
 ---
 
@@ -190,6 +190,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-14T00:13:00-07:00 — kilo-usability: KRogue (UI/UX & Usability Pass)**
+  - Enhanced layout accessibility with ARIA roles/labels across action buttons and `#msg-box` combat log.
+  - Added collapsible virtual D-Pad toggle (`[🎮 D-Pad]`) with localStorage persistence for desktop/compact screens.
+  - Verified clean Vite build (`npm.cmd run build` 0 errors, `krogue.html` 323 KB < 999 KB ceiling).
+  - Queue: Advanced kilo-usability to KMine; handed off to kilo-qa (KMaze).
+
 - **2026-10-13T23:34:00-07:00 — kilo-tester: KAudio (UI Audit & Inline Fixes)**
   - PASS ✅ (3 issues fixed). Added tactile `[+]`/`[-]` octave transpose buttons and `[G]` Portamento/Glide pitch slide.
   - Fixed modal backdrop click and Escape handling to properly restore focus and dismiss when typing in inputs.
@@ -215,9 +221,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Verified 4 interactive tabs (Memos, RF Waveguide, Sector Digests, Skunkworks Terminal) and diegetic ARG lore.
   - Verified Vite clean build (`npm run build` 0 errors) and KNet portal/webring integration.
   - Queue: Advanced kilo-creator to kweb://echo-subsystem.net; handed off to kilo-graphics.
-
-- **2026-10-13T21:55:00-07:00 — kilo-adhoc: Fleet Queue & Planning Audit**
-  - Audited last 6h fleet work (12 commits across kpad, kspace, portal, cybercafe, kdb, krogue, kmine, geocities).
-  - Archived duplicate director directives to `archive/director_directives_archive.md`; fixed `scripts/compact_all.py` parameter bug.
-  - Rewrote 7 uncompleted tickets in `next_work.md` with explicit file paths, concrete action steps, and skip fast-paths for Gemini Flash Medium.
-  - Verification: `compact_all.py` clean, `orchestrate.py --dry-run` PASS, Vite build clean, security_lint 100% PASS.
