@@ -4072,7 +4072,7 @@ function mtof(note) {
   return 440 * Math.pow(2, (note - 69) / 12);
 }
 
-// YM2612 2-Operator FM Synthesis
+// YM2612 2-Operator FM Synthesis Core
 function playYm2612Fm(freq, modRatio, modIndex, duration, time, vol = 0.22, useSnesEcho = false) {
   if (!audioCtx || freq <= 0) return;
 
@@ -4111,6 +4111,31 @@ function playYm2612Fm(freq, modRatio, modIndex, duration, time, vol = 0.22, useS
   modulator.stop(time + duration + 0.05);
 }
 
+// Named FM Patch Presets (YM2612 & SPC700 Architecture)
+function playSlapBass(freq, dur, time, vol = 0.26) {
+  playYm2612Fm(freq, 2.0, 3.8, dur, time, vol, false);
+}
+
+function playEPiano(freq, dur, time, vol = 0.22, useEcho = true) {
+  playYm2612Fm(freq, 2.0, 2.6, dur, time, vol, useEcho);
+}
+
+function playFmBrass(freq, dur, time, vol = 0.22, useEcho = true) {
+  playYm2612Fm(freq, 1.0, 4.0, dur, time, vol, useEcho);
+}
+
+function playHollowLead(freq, dur, time, vol = 0.2, useEcho = true) {
+  playYm2612Fm(freq, 1.0, 0.85, dur, time, vol, useEcho);
+}
+
+function playMetallicBell(freq, dur, time, vol = 0.18, useEcho = true) {
+  playYm2612Fm(freq, 3.5, 4.5, dur, time, vol, useEcho);
+}
+
+function playAcidLead(freq, dur, time, vol = 0.22, useEcho = true) {
+  playYm2612Fm(freq, 1.0, 5.2, dur, time, vol, useEcho);
+}
+
 // SNES SPC700 Warm Resonant Pad Note
 function playSnesPad(freq, duration, time, vol = 0.18) {
   if (!audioCtx || freq <= 0) return;
@@ -4139,16 +4164,16 @@ function playSnesPad(freq, duration, time, vol = 0.18) {
   osc.stop(time + duration + 0.05);
 }
 
-// 16-Bit Retro Drum Kit
+// 16-Bit Retro Drum Kit with FM transient enhancements
 function play16BitDrum(type, time) {
   if (!audioCtx) return;
 
   if (type === 'kick') {
     const osc = audioCtx.createOscillator();
     const g = audioCtx.createGain();
-    osc.frequency.setValueAtTime(130, time);
-    osc.frequency.exponentialRampToValueAtTime(32, time + 0.09);
-    g.gain.setValueAtTime(0.35, time);
+    osc.frequency.setValueAtTime(140, time);
+    osc.frequency.exponentialRampToValueAtTime(32, time + 0.08);
+    g.gain.setValueAtTime(0.38, time);
     g.gain.exponentialRampToValueAtTime(0.001, time + 0.14);
     osc.connect(g);
     g.connect(masterGain);
@@ -4157,9 +4182,9 @@ function play16BitDrum(type, time) {
   } else if (type === 'snare') {
     const osc = audioCtx.createOscillator();
     const g1 = audioCtx.createGain();
-    osc.frequency.setValueAtTime(210, time);
-    osc.frequency.exponentialRampToValueAtTime(80, time + 0.07);
-    g1.gain.setValueAtTime(0.2, time);
+    osc.frequency.setValueAtTime(220, time);
+    osc.frequency.exponentialRampToValueAtTime(75, time + 0.07);
+    g1.gain.setValueAtTime(0.22, time);
     g1.gain.exponentialRampToValueAtTime(0.001, time + 0.1);
     osc.connect(g1);
     g1.connect(masterGain);
@@ -4175,17 +4200,18 @@ function play16BitDrum(type, time) {
     noise.buffer = buffer;
     const filter = audioCtx.createBiquadFilter();
     filter.type = 'bandpass';
-    filter.frequency.setValueAtTime(2200, time);
+    filter.frequency.setValueAtTime(2400, time);
     const g2 = audioCtx.createGain();
-    g2.gain.setValueAtTime(0.22, time);
+    g2.gain.setValueAtTime(0.24, time);
     g2.gain.exponentialRampToValueAtTime(0.001, time + 0.12);
 
     noise.connect(filter);
     filter.connect(g2);
     g2.connect(masterGain);
     noise.start(time);
-  } else if (type === 'hat') {
-    const bufferSize = Math.floor(audioCtx.sampleRate * 0.04);
+  } else if (type === 'hat' || type === 'openhat') {
+    const isOpen = (type === 'openhat');
+    const bufferSize = Math.floor(audioCtx.sampleRate * (isOpen ? 0.16 : 0.04));
     const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
     const data = buffer.getChannelData(0);
     for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
@@ -4194,10 +4220,10 @@ function play16BitDrum(type, time) {
     noise.buffer = buffer;
     const filter = audioCtx.createBiquadFilter();
     filter.type = 'highpass';
-    filter.frequency.setValueAtTime(6500, time);
+    filter.frequency.setValueAtTime(7000, time);
     const g = audioCtx.createGain();
-    g.gain.setValueAtTime(0.12, time);
-    g.gain.exponentialRampToValueAtTime(0.001, time + 0.04);
+    g.gain.setValueAtTime(isOpen ? 0.16 : 0.11, time);
+    g.gain.exponentialRampToValueAtTime(0.001, time + (isOpen ? 0.15 : 0.04));
 
     noise.connect(filter);
     filter.connect(g);
@@ -4206,11 +4232,11 @@ function play16BitDrum(type, time) {
   }
 }
 
-// Procedural Song Sequencer
+// Procedural Song Sequencer with Swing Groove & Voice Leading
 function scheduleSongNotes() {
   if (!audioCtx) return;
 
-  while (nextNoteTime < audioCtx.currentTime + 0.12) {
+  while (nextNoteTime < audioCtx.currentTime + 0.14) {
     const step = songStep % 64;
     const song = SONGS[currentSongIndex];
 
@@ -4220,6 +4246,7 @@ function scheduleSongNotes() {
     let ch4Note = "---";
 
     if (song.style === 'genesis_rush') {
+      // Mega Drive FM Rush: Heroic Brass Lead, Funk Slap Bass, Shell Pad Voicings
       const bassProg = [
         33,33,45,33, 33,45,33,36, 33,33,45,33, 38,36,35,33,
         29,29,41,29, 29,41,29,33, 29,29,41,29, 36,35,33,29,
@@ -4232,56 +4259,206 @@ function scheduleSongNotes() {
         72, 0, 76, 0, 79, 77, 76, 72, 77, 0, 79, 0, 81, 79, 77, 76,
         67, 0, 71, 0, 74, 72, 71, 67, 72, 0, 74, 0, 76, 74, 72, 71
       ];
+      const counterProg = [
+        0,  0, 60, 0,  0, 62, 0, 64,  0, 65, 0, 64,  0, 62, 0, 60,
+        0,  0, 57, 0,  0, 60, 0, 62,  0, 64, 0, 62,  0, 60, 0, 57,
+        0,  0, 64, 0,  0, 67, 0, 69,  0, 71, 0, 69,  0, 67, 0, 64,
+        0,  0, 59, 0,  0, 62, 0, 64,  0, 66, 0, 64,  0, 62, 0, 59
+      ];
       const padProg = [57, 0, 0, 0, 0, 0, 0, 0, 53, 0, 0, 0, 0, 0, 0, 0, 60, 0, 0, 0, 0, 0, 0, 0, 55, 0, 0, 0, 0, 0, 0, 0];
 
       if (!channelMuted[1] && bassProg[step]) {
-        playYm2612Fm(mtof(bassProg[step]), 2.0, 4.0, 0.12, nextNoteTime, 0.26);
+        playSlapBass(mtof(bassProg[step]), 0.12, nextNoteTime, 0.28);
         ch2Note = noteNumToString(bassProg[step]);
       }
       if (!channelMuted[0] && leadProg[step]) {
-        playYm2612Fm(mtof(leadProg[step]), 1.0, 2.5, 0.18, nextNoteTime, 0.22, true);
+        playFmBrass(mtof(leadProg[step]), 0.18, nextNoteTime, 0.24, true);
         ch1Note = noteNumToString(leadProg[step]);
+      } else if (!channelMuted[0] && counterProg[step]) {
+        playHollowLead(mtof(counterProg[step]), 0.14, nextNoteTime, 0.16, true);
+        ch1Note = noteNumToString(counterProg[step]);
       }
       if (!channelMuted[2] && padProg[step % 32]) {
         playSnesPad(mtof(padProg[step % 32]), 1.8, nextNoteTime, 0.16);
         ch3Note = noteNumToString(padProg[step % 32]);
       }
     } else if (song.style === 'snes_dream') {
-      const padNotes = [60, 63, 67, 70, 58, 62, 65, 68, 56, 60, 63, 67, 55, 58, 62, 65];
-      const melody = [72, 0, 75, 74, 70, 0, 72, 0, 67, 0, 70, 68, 65, 0, 67, 0];
-      const bass = [36, 0, 36, 0, 34, 0, 34, 0, 32, 0, 32, 0, 31, 0, 31, 0];
+      // SNES 16-Bit Cyber Dreamscape: Suspended Cascade, Bittersweet Hollow Flute
+      const padNotes = [62, 65, 69, 72,  58, 62, 65, 70,  55, 58, 62, 67,  57, 61, 64, 69];
+      const melody = [
+        74, 0, 77, 76, 72, 0, 74, 0,  69, 0, 72, 70, 67, 0, 69, 0,
+        70, 0, 74, 72, 69, 0, 70, 0,  67, 0, 69, 70, 72, 0, 74, 0
+      ];
+      const counterMelody = [
+        0, 62, 0, 65,  0, 64, 0, 60,  0, 57, 0, 60,  0, 58, 0, 55,
+        0, 58, 0, 62,  0, 60, 0, 57,  0, 55, 0, 57,  0, 60, 0, 62
+      ];
+      const bass = [
+        38, 0, 50, 0,  38, 0, 48, 0,  34, 0, 46, 0,  34, 0, 45, 0,
+        31, 0, 43, 0,  31, 0, 41, 0,  33, 0, 45, 0,  33, 0, 43, 0
+      ];
 
       if (!channelMuted[2] && step % 4 === 0) {
-        const p = padNotes[(step / 4) % padNotes.length];
-        playSnesPad(mtof(p), 1.2, nextNoteTime, 0.2);
+        const p = padNotes[(Math.floor(step / 4)) % padNotes.length];
+        playSnesPad(mtof(p), 1.4, nextNoteTime, 0.2);
         ch3Note = noteNumToString(p);
       }
-      if (!channelMuted[0] && melody[step % 16]) {
-        playYm2612Fm(mtof(melody[step % 16]), 2.5, 1.8, 0.25, nextNoteTime, 0.2, true);
-        ch1Note = noteNumToString(melody[step % 16]);
+      if (!channelMuted[0] && melody[step % 32]) {
+        playHollowLead(mtof(melody[step % 32]), 0.24, nextNoteTime, 0.22, true);
+        ch1Note = noteNumToString(melody[step % 32]);
+      } else if (!channelMuted[0] && counterMelody[step % 32]) {
+        playMetallicBell(mtof(counterMelody[step % 32]), 0.18, nextNoteTime, 0.15, true);
+        ch1Note = noteNumToString(counterMelody[step % 32]);
       }
-      if (!channelMuted[1] && bass[step % 16]) {
-        playYm2612Fm(mtof(bass[step % 16]), 2.0, 3.2, 0.18, nextNoteTime, 0.25);
-        ch2Note = noteNumToString(bass[step % 16]);
+      if (!channelMuted[1] && bass[step % 32]) {
+        playSlapBass(mtof(bass[step % 32]), 0.2, nextNoteTime, 0.24);
+        ch2Note = noteNumToString(bass[step % 32]);
+      }
+    } else if (song.style === 'pdx_euphoria') {
+      // Keygen FM Euphoria: Rapid 16th Keygen Arps, Acid Lead & Driving Octave Bass
+      const keygenArp = [
+        60, 63, 67, 72, 63, 67, 72, 75,  58, 62, 65, 70, 62, 65, 70, 74,
+        56, 60, 63, 68, 60, 63, 68, 72,  55, 58, 62, 67, 58, 62, 67, 70,
+        60, 63, 67, 72, 67, 72, 75, 79,  58, 62, 65, 70, 65, 70, 74, 77,
+        56, 60, 63, 68, 63, 68, 72, 75,  59, 62, 65, 71, 65, 71, 74, 77
+      ];
+      const keygenLead = [
+        72, 0,  0, 75,  0, 74, 72,  0,  70, 0,  0, 72,  0, 70, 67,  0,
+        68, 0,  0, 70,  0, 68, 65,  0,  67, 0, 70,  0, 72,  0, 74,  0,
+        75, 0,  0, 77,  0, 75, 74,  0,  72, 0,  0, 74,  0, 72, 70,  0,
+        68, 0, 72,  0, 75,  0, 74,  0,  71, 0, 74,  0, 77, 74, 71,  0
+      ];
+      const keygenBass = [
+        36, 48, 36, 48,  36, 48, 39, 41,  34, 46, 34, 46,  34, 46, 38, 41,
+        32, 44, 32, 44,  32, 44, 36, 39,  31, 43, 31, 43,  31, 43, 38, 41
+      ];
+
+      if (!channelMuted[0] && keygenLead[step]) {
+        playFmBrass(mtof(keygenLead[step]), 0.22, nextNoteTime, 0.24, true);
+        ch1Note = noteNumToString(keygenLead[step]);
+      } else if (!channelMuted[0] && keygenArp[step]) {
+        playAcidLead(mtof(keygenArp[step]), 0.08, nextNoteTime, 0.16, true);
+        ch1Note = noteNumToString(keygenArp[step]);
+      }
+      if (!channelMuted[1]) {
+        const b = keygenBass[step % 32];
+        playSlapBass(mtof(b), 0.1, nextNoteTime, 0.26);
+        ch2Note = noteNumToString(b);
+      }
+      if (!channelMuted[2] && step % 8 === 0) {
+        const padRoot = [48, 46, 44, 43][Math.floor((step % 32) / 8)];
+        playSnesPad(mtof(padRoot + 12), 1.8, nextNoteTime, 0.16);
+        ch3Note = noteNumToString(padRoot + 12);
+      }
+    } else if (song.style === 'yuzo_groove') {
+      // Streets of 1999 Yuzo Groove: 5:3 Swing, FM Piano Shell Voicings, Slap Funk
+      const pianoChords = [
+        // F#m7 (F# bass + A + E) -> Bm7 (B bass + D + A) -> C#m7 (C# bass + E + B)
+        { step: 2,  notes: [69, 76] }, // A4, E5 (3rd + 7th of F#m)
+        { step: 6,  notes: [69, 76] },
+        { step: 10, notes: [74, 81] }, // D5, A5 (3rd + 7th of Bm)
+        { step: 14, notes: [76, 83] }, // E5, B5 (3rd + 7th of C#m)
+        { step: 18, notes: [69, 76] },
+        { step: 22, notes: [69, 76] },
+        { step: 26, notes: [74, 81] },
+        { step: 30, notes: [73, 79] }  // C#5, G5 (tension resolution)
+      ];
+      const yuzoBass = [
+        30, 0, 30, 42,  0, 30, 40, 42,  35, 0, 35, 47,  0, 37, 49, 47,
+        30, 0, 30, 42,  0, 30, 40, 42,  35, 0, 35, 47,  40, 39, 37, 35
+      ];
+      const yuzoBrass = [
+        0,  0,  0,  0,  0,  0,  0,  0,  73, 0, 76, 0,  78, 76, 73, 0,
+        0,  0,  0,  0,  0,  0,  0,  0,  81, 0, 78, 0,  76, 73, 71, 0
+      ];
+
+      // Play FM Rhodes chords on syncopated offbeats
+      const chordHit = pianoChords.find(c => c.step === (step % 32));
+      if (!channelMuted[2] && chordHit) {
+        chordHit.notes.forEach(n => playEPiano(mtof(n), 0.25, nextNoteTime, 0.18, true));
+        ch3Note = noteNumToString(chordHit.notes[0]);
+      }
+      if (!channelMuted[0] && yuzoBrass[step % 32]) {
+        playFmBrass(mtof(yuzoBrass[step % 32]), 0.22, nextNoteTime, 0.22, true);
+        ch1Note = noteNumToString(yuzoBrass[step % 32]);
+      }
+      if (!channelMuted[1] && yuzoBass[step % 32]) {
+        playSlapBass(mtof(yuzoBass[step % 32]), 0.12, nextNoteTime, 0.28);
+        ch2Note = noteNumToString(yuzoBass[step % 32]);
+      }
+    } else if (song.style === 'amiga_twilight') {
+      // Amiga Tracker Twilight: Royal Road (Fmaj7 - G - Em7 - Am), Nostalgic Melody
+      const twilightLead = [
+        69, 0, 72, 76,  79, 0, 76, 74,  76, 0, 72, 69,  71, 0, 67, 0,
+        65, 0, 69, 72,  74, 0, 72, 71,  72, 0, 76, 79,  81, 79, 76, 72
+      ];
+      const twilightCounter = [
+        0, 60, 0, 64,   0, 67, 0, 64,   0, 62, 0, 60,   0, 59, 0, 55,
+        0, 57, 0, 60,   0, 62, 0, 59,   0, 60, 0, 64,   0, 67, 0, 64
+      ];
+      const twilightBass = [
+        29, 0, 41, 0,   31, 0, 43, 0,   28, 0, 40, 0,   33, 0, 45, 0,
+        29, 0, 41, 0,   31, 0, 43, 0,   33, 0, 45, 0,   35, 0, 47, 0
+      ];
+
+      if (!channelMuted[0] && twilightLead[step % 32]) {
+        playEPiano(mtof(twilightLead[step % 32]), 0.26, nextNoteTime, 0.24, true);
+        ch1Note = noteNumToString(twilightLead[step % 32]);
+      } else if (!channelMuted[0] && twilightCounter[step % 32]) {
+        playMetallicBell(mtof(twilightCounter[step % 32]), 0.16, nextNoteTime, 0.14, true);
+        ch1Note = noteNumToString(twilightCounter[step % 32]);
+      }
+      if (!channelMuted[1] && twilightBass[step % 32]) {
+        playSlapBass(mtof(twilightBass[step % 32]), 0.18, nextNoteTime, 0.25);
+        ch2Note = noteNumToString(twilightBass[step % 32]);
+      }
+      if (!channelMuted[2] && step % 8 === 0) {
+        const root = [53, 55, 52, 57][Math.floor((step % 32) / 8)];
+        playSnesPad(mtof(root), 1.9, nextNoteTime, 0.18);
+        ch3Note = noteNumToString(root);
+      }
+    } else if (song.style === 'void_fantasy') {
+      // Void Traveler FM Fantasy: Lydian Bells, Floating Arpeggios & Crystalline Chimes
+      const voidBells = [
+        72, 79, 83, 86,  79, 83, 86, 91,  74, 81, 84, 86,  81, 84, 86, 93,
+        71, 78, 81, 84,  78, 81, 84, 88,  74, 81, 86, 88,  81, 86, 88, 93
+      ];
+      const voidFlute = [
+        60, 0,  0,  0,   67, 0,  0,  0,   66, 0,  0,  0,   62, 0,  0,  0,
+        59, 0,  0,  0,   64, 0,  0,  0,   62, 0,  0,  0,   67, 0,  0,  0
+      ];
+      const voidDrone = [36, 0, 48, 0, 38, 0, 50, 0, 35, 0, 47, 0, 38, 0, 50, 0];
+
+      if (!channelMuted[0]) {
+        const b = voidBells[step % voidBells.length];
+        playMetallicBell(mtof(b), 0.14, nextNoteTime, 0.16, true);
+        ch1Note = noteNumToString(b);
+      }
+      if (!channelMuted[1] && voidDrone[step % voidDrone.length]) {
+        playSlapBass(mtof(voidDrone[step % voidDrone.length]), 0.22, nextNoteTime, 0.22);
+        ch2Note = noteNumToString(voidDrone[step % voidDrone.length]);
+      }
+      if (!channelMuted[2] && voidFlute[step % 32]) {
+        playHollowLead(mtof(voidFlute[step % 32]), 0.45, nextNoteTime, 0.18, true);
+        ch3Note = noteNumToString(voidFlute[step % 32]);
       }
     } else if (song.style === 'carlsbad_1999') {
-      // Subterranean drone with 1999Hz acoustic subcarrier
+      // Subterranean Carlsbad 1999Hz: Deep Cavern Sub-Bass & 1999Hz Acoustic Subcarrier
       const subNotes = [24, 24, 36, 24, 22, 22, 34, 22, 20, 20, 32, 20, 27, 25, 24, 22];
       const carrierPings = [0, 0, 1999, 0, 0, 0, 0, 1999, 0, 1999, 0, 0, 0, 0, 1999, 0];
 
       if (!channelMuted[0] && carrierPings[step % 16]) {
-        // Direct 1999Hz subcarrier synthesis
-        playYm2612Fm(1999.0, 1.0, 1.5, 0.12, nextNoteTime, 0.18, true);
+        playYm2612Fm(1999.0, 1.0, 1.6, 0.12, nextNoteTime, 0.18, true);
         ch1Note = "1999Hz";
       } else if (!channelMuted[0] && step % 4 === 0) {
         const lead = 60 + ((step * 3) % 15);
-        playYm2612Fm(mtof(lead), 2.0, 1.8, 0.2, nextNoteTime, 0.15, true);
+        playHollowLead(mtof(lead), 0.22, nextNoteTime, 0.16, true);
         ch1Note = noteNumToString(lead);
       }
 
       if (!channelMuted[1]) {
         const b = subNotes[step % 16];
-        playYm2612Fm(mtof(b), 1.5, 5.0, 0.22, nextNoteTime, 0.28);
+        playSlapBass(mtof(b), 0.22, nextNoteTime, 0.28);
         ch2Note = noteNumToString(b);
       }
 
@@ -4289,66 +4466,73 @@ function scheduleSongNotes() {
         playSnesPad(mtof(48 + ((step % 16) === 0 ? 0 : 3)), 2.0, nextNoteTime, 0.18);
         ch3Note = noteNumToString(48 + ((step % 16) === 0 ? 0 : 3));
       }
-    } else if (song.style === 'amiga_copper') {
-      // ProTracker style high-speed arpeggio & slap bass
+    } else {
+      // Amiga Copper Skyline '99: ProTracker High-Speed Arpeggio & Slap Bass
       const arp = [60, 63, 67, 72, 63, 67, 72, 75, 58, 62, 65, 70, 62, 65, 70, 74];
       const slap = [36, 48, 36, 48, 34, 46, 34, 46, 32, 44, 32, 44, 31, 43, 31, 43];
 
       if (!channelMuted[0]) {
         const a = arp[step % arp.length];
-        playYm2612Fm(mtof(a), 3.0, 2.2, 0.06, nextNoteTime, 0.16, true);
+        playAcidLead(mtof(a), 0.08, nextNoteTime, 0.18, true);
         ch1Note = noteNumToString(a);
       }
       if (!channelMuted[1]) {
         const s = slap[step % slap.length];
-        playYm2612Fm(mtof(s), 2.0, 4.0, 0.1, nextNoteTime, 0.2);
+        playSlapBass(mtof(s), 0.12, nextNoteTime, 0.24);
         ch2Note = noteNumToString(s);
       }
       if (!channelMuted[2] && step % 4 === 0) {
-        playSnesPad(mtof(48 + (step % 12)), 1.4, nextNoteTime, 0.15);
+        playSnesPad(mtof(48 + (step % 12)), 1.4, nextNoteTime, 0.16);
         ch3Note = noteNumToString(48 + (step % 12));
-      }
-    } else {
-      // Fast arpeggiated demoscene tracks
-      const arpNotes = [60, 64, 67, 72, 64, 67, 72, 76, 58, 62, 65, 70, 62, 65, 70, 74];
-      const bassNotes = [36, 36, 48, 36, 34, 34, 46, 34];
-
-      if (!channelMuted[0]) {
-        const a = arpNotes[step % arpNotes.length];
-        playYm2612Fm(mtof(a), 3.0, 2.0, 0.08, nextNoteTime, 0.18, true);
-        ch1Note = noteNumToString(a);
-      }
-      if (!channelMuted[1] && bassNotes[step % bassNotes.length]) {
-        const b = bassNotes[step % bassNotes.length];
-        playYm2612Fm(mtof(b), 2.0, 4.5, 0.14, nextNoteTime, 0.24);
-        ch2Note = noteNumToString(b);
-      }
-      if (!channelMuted[2] && step % 8 === 0) {
-        playSnesPad(mtof(48 + (step % 24)), 1.5, nextNoteTime, 0.16);
-        ch3Note = noteNumToString(48 + (step % 24));
       }
     }
 
-    // Drum rhythm
+    // Drum rhythm with authentic swing groove and open hat accents
     if (!channelMuted[3]) {
-      if (step % 4 === 0) {
-        play16BitDrum('kick', nextNoteTime);
-        ch4Note = "KIK";
-      } else if (step % 4 === 2) {
-        play16BitDrum('snare', nextNoteTime);
-        ch4Note = "SNR";
-      }
-      if (step % 2 === 1) {
-        play16BitDrum('hat', nextNoteTime);
-        if (ch4Note === "---") ch4Note = "HAT";
+      const isYuzo = (song.style === 'yuzo_groove');
+      if (isYuzo) {
+        // 4-on-the-floor house / club beat with offbeat open hats
+        if (step % 4 === 0) {
+          play16BitDrum('kick', nextNoteTime);
+          ch4Note = "KIK";
+        }
+        if (step % 8 === 4) {
+          play16BitDrum('snare', nextNoteTime);
+          ch4Note = "SNR";
+        }
+        if (step % 4 === 2) {
+          play16BitDrum('openhat', nextNoteTime);
+          ch4Note = "OHAT";
+        } else if (step % 2 === 1) {
+          play16BitDrum('hat', nextNoteTime);
+          if (ch4Note === "---") ch4Note = "HAT";
+        }
+      } else {
+        if (step % 8 === 0 || (step % 8 === 6 && step % 16 === 6)) {
+          play16BitDrum('kick', nextNoteTime);
+          ch4Note = "KIK";
+        } else if (step % 8 === 4) {
+          play16BitDrum('snare', nextNoteTime);
+          ch4Note = "SNR";
+        }
+        if (step % 4 === 2) {
+          play16BitDrum('openhat', nextNoteTime);
+          if (ch4Note === "---") ch4Note = "OHAT";
+        } else if (step % 2 === 1) {
+          play16BitDrum('hat', nextNoteTime);
+          if (ch4Note === "---") ch4Note = "HAT";
+        }
       }
     }
 
     // Update live tracker row display
     updateTrackerRowDisplay(step, ch1Note, ch2Note, ch3Note, ch4Note);
 
+    // Subtle swing groove: alternating even/odd step duration for organic human tracker feel
+    const isEven = (songStep % 2 === 0);
+    const swingFactor = (song.style === 'yuzo_groove') ? (isEven ? 1.25 : 0.75) : (isEven ? 1.06 : 0.94);
     const baseStepDuration = 60 / (song.bpm * 4);
-    const stepDuration = baseStepDuration / tempoMultiplier;
+    const stepDuration = (baseStepDuration / tempoMultiplier) * swingFactor;
     nextNoteTime += stepDuration;
     songStep++;
   }
