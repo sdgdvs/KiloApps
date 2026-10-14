@@ -4164,6 +4164,40 @@ function playSnesPad(freq, duration, time, vol = 0.18) {
   osc.stop(time + duration + 0.05);
 }
 
+// Cached noise buffers for zero-allocation 16-bit drum transients
+let snareNoiseBuffer = null;
+let hatNoiseBuffer = null;
+let openHatNoiseBuffer = null;
+
+function getDrumBuffer(type) {
+  if (!audioCtx) return null;
+  if (type === 'snare') {
+    if (!snareNoiseBuffer) {
+      const len = Math.floor(audioCtx.sampleRate * 0.12);
+      snareNoiseBuffer = audioCtx.createBuffer(1, len, audioCtx.sampleRate);
+      const d = snareNoiseBuffer.getChannelData(0);
+      for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+    }
+    return snareNoiseBuffer;
+  }
+  if (type === 'openhat') {
+    if (!openHatNoiseBuffer) {
+      const len = Math.floor(audioCtx.sampleRate * 0.16);
+      openHatNoiseBuffer = audioCtx.createBuffer(1, len, audioCtx.sampleRate);
+      const d = openHatNoiseBuffer.getChannelData(0);
+      for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+    }
+    return openHatNoiseBuffer;
+  }
+  if (!hatNoiseBuffer) {
+    const len = Math.floor(audioCtx.sampleRate * 0.04);
+    hatNoiseBuffer = audioCtx.createBuffer(1, len, audioCtx.sampleRate);
+    const d = hatNoiseBuffer.getChannelData(0);
+    for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+  }
+  return hatNoiseBuffer;
+}
+
 // 16-Bit Retro Drum Kit with FM transient enhancements
 function play16BitDrum(type, time) {
   if (!audioCtx) return;
@@ -4191,13 +4225,8 @@ function play16BitDrum(type, time) {
     osc.start(time);
     osc.stop(time + 0.11);
 
-    const bufferSize = Math.floor(audioCtx.sampleRate * 0.12);
-    const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
-    const data = buffer.getChannelData(0);
-    for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
-
     const noise = audioCtx.createBufferSource();
-    noise.buffer = buffer;
+    noise.buffer = getDrumBuffer('snare');
     const filter = audioCtx.createBiquadFilter();
     filter.type = 'bandpass';
     filter.frequency.setValueAtTime(2400, time);
@@ -4211,13 +4240,8 @@ function play16BitDrum(type, time) {
     noise.start(time);
   } else if (type === 'hat' || type === 'openhat') {
     const isOpen = (type === 'openhat');
-    const bufferSize = Math.floor(audioCtx.sampleRate * (isOpen ? 0.16 : 0.04));
-    const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
-    const data = buffer.getChannelData(0);
-    for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
-
     const noise = audioCtx.createBufferSource();
-    noise.buffer = buffer;
+    noise.buffer = getDrumBuffer(isOpen ? 'openhat' : 'hat');
     const filter = audioCtx.createBiquadFilter();
     filter.type = 'highpass';
     filter.frequency.setValueAtTime(7000, time);
