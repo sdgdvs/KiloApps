@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-graphics
-next_agent: kilo-soundscape
+current_agent: kilo-soundscape
+next_agent: kilo-tester
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -14,7 +14,7 @@ timeout_minutes: 6
 status: ready
 current_targets:
   kilo_creator: kweb://portal
-  kilo_graphics: KMech
+  kilo_graphics: KCyber
   kilo_soundscape: kweb://darknet
   kilo_tester: KPaint
   kilo_usability: KPad
@@ -34,9 +34,9 @@ virtual_web_rotation:
 - kweb://10.19.99.4/classified
 - kweb://echo-subsystem.net
 last_run:
-  agent: kilo-expander
-  app: KContacts
-  timestamp: '2026-10-14T15:15:00-07:00'
+  agent: kilo-graphics
+  app: KMech
+  timestamp: '2026-10-14T16:13:00-07:00'
 last_planner_run: '2026-10-14T18:32:00Z'
 ---
 
@@ -80,20 +80,20 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Upcoming Queue**: `kweb://portal`, `kweb://webring`, `kweb://warez`, `kweb://geocities`, `kweb://users/~neon_rider`, `kweb://asm-temple`, `kweb://cybercafe`.
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
-- **Target**: `KAbyss`
-- **Primary Files**: `KiloOS/public/apps/kabyss.html`, `KAbyss/main.c`
+- **Target**: `KCyber`
+- **Primary Files**: `KiloOS/public/apps/kcyber.html`, `KCyber/main.c`
 - **Objective**: Visual art audit for programmer art vs. Imagen 3 suitability; remove traveling glints.
 - **Action Steps**:
-  1. Evaluate suitability: `KAbyss` deep ocean abyss exploration and creatures.
-  2. If visual aesthetic is wireframe/radar or already has production art, execute clean turn skip.
+  1. Evaluate suitability: `KCyber` cyberpunk cyberspace hacking simulation.
+  2. If visual aesthetic is wireframe/terminal or already has production art, execute clean turn skip.
   3. If replacing sprites: use 2-stage asset pipeline (`generate_image` with solid `#FF00FF` background -> `scripts/asset_pipeline.py`).
   4. Search for and remove any rotating specular glints or traveling perimeter border dots.
 - **Verification**: `cd KiloOS && npm run build`. Verify files < 999 KB.
 - **Handoff**:
-  - In frontmatter: advance `current_targets.kilo_graphics` to `KMech`.
+  - In frontmatter: advance `current_targets.kilo_graphics` to `KTrader`.
   - Set `current_agent: kilo-soundscape`
   - Append terse execution log (≤6 lines), commit, and push.
-- **Upcoming Queue**: `KMech`.
+- **Upcoming Queue**: `KTrader`, `KMystery`, `KColosseum`.
 
 ### 3. Procedural Audio & Soundscape Queue (`kilo-soundscape`)
 - **Target**: `kweb://cybercafe`
@@ -186,6 +186,13 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-14T16:13:00-07:00 — kilo-graphics: KMech (Programmer Art & Glint Audit)**
+  - ⏭️ Skip — Imagen 3 asset replacement not appropriate for KMech
+  - Confirmed authentic retro vector HUD wireframe & blueprint aesthetic (<999 KB: 128.9 KB).
+  - Verified 0 rotating specular glints or traveling perimeter dots.
+  - Build verified (`npm run build` PASS, 0 Vite errors).
+  - Queue: Advanced kilo_graphics to KCyber; handed off to kilo-soundscape.
+
 - **2026-10-14T14:31:00-07:00 — kilo-qa: KRogue (Pass 5 QA & State Integrity)**
   - PASS ✅ — Quicksave (F5) / Quickload (F9) persistent across 'krogue_save' and 'krogue_saveState' with fog-of-war.
   - Tutorial flag 'krogue_tutorialSeen' displays onboarding once; modals dismiss cleanly with Escape, Enter, or Close.
@@ -208,10 +215,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Implemented 5:3 swing-tick groove scheduler, contrary motion counterpoint, shell voicings, and selective SPC700 stereo delay.
   - Verification: Build clean, size 379.0 KB (< 999 KB).
   - Queue: Advanced kilo-soundscape to kweb://darknet; handoff to kilo-tester.
-
-- **2026-10-14T12:31:00-07:00 — kilo-graphics: KAbyss (Programmer Art & Glint Audit)**
-  - ⏭️ Skip — Imagen 3 asset replacement not appropriate for KAbyss
-  - Confirmed procedural glyph/canvas dark fantasy roguelike aesthetic (<999 KB: 490 KB).
-  - Verified 0 rotating specular glints or traveling perimeter dots.
-  - Build verified (`npm run build` PASS, 0 Vite errors).
-  - Queue: Advanced kilo_graphics to KMech; handed off to kilo-soundscape.
