@@ -897,6 +897,8 @@
             <button id="btnExportM3u" class="secondary" title="Export playlist as .m3u file">💾 M3U</button>
             <button id="btnExportCue" class="secondary" title="Export cue points sheet">📍 CUE</button>
             <button id="btnExportJson" class="secondary" title="Export full playlist and DSP state as .json file">📋 JSON</button>
+            <button id="btnImportJson" class="secondary" title="Restore playlist &amp; DSP from JSON backup">📥 Restore JSON</button>
+            <input type="file" id="jsonRestoreInput" accept=".json,application/json" style="display:none;" />
           </div>
           <button id="btnLoopTrack" class="secondary" title="Cycle A-B Repeat (Point A -> Point B -> Clear) [L]">🔁 A-B [L]</button>
         </div>
@@ -930,6 +932,7 @@
               <option value="rock">Rock / Punchy</option>
               <option value="pop">Pop / Bright</option>
               <option value="vocal">Vocal / Dialogue</option>
+              <option value="electronic">Electronic / Dance</option>
               <option value="techno">Techno / Club Dance</option>
               <option value="acoustic">Acoustic / Warm</option>
               <option value="radio">1999 Transistor Radio</option>
@@ -940,6 +943,7 @@
           <div class="slider-row"><span class="label">Mid (1kHz)</span><input type="range" id="eqMid" min="-20" max="20" step="1" value="0" aria-label="Mid"><span class="val" id="vMid">0dB</span></div>
           <div class="slider-row"><span class="label">Treble (3.2k)</span><input type="range" id="eqHigh" min="-20" max="20" step="1" value="0" aria-label="Treble"><span class="val" id="vHigh">0dB</span></div>
           <button id="btnResetAudio" class="secondary" style="width:100%; margin-top:4px; font-size:11px;">Reset Equalizer</button>
+          <button id="btnToggleSpectrum" class="secondary" style="width:100%; margin-top:4px; font-size:11px;" title="Toggle Dancing Spectrum Visualizer">⚡ Toggle Dancing Spectrum</button>
         </div>
 
         <div class="panel">
@@ -1106,14 +1110,14 @@
       <tr><td>Left / Right Arrow</td><td>Seek Backward / Forward 5s</td></tr>
       <tr><td>[ / ]</td><td>Seek Backward / Forward 5s</td></tr>
       <tr><td>Up / Down Arrow</td><td>Volume Up / Down (5%)</td></tr>
-      <tr><td>U</td><td>Toggle Mute / Unmute</td></tr>
+      <tr><td>M / U</td><td>Toggle Mute / Unmute</td></tr>
       <tr><td>P / N</td><td>Previous / Next Track</td></tr>
       <tr><td>Alt + Up / Down</td><td>Move Track Up / Down in Playlist</td></tr>
       <tr><td>1 - 4</td><td>Switch Sidebar Tabs (Playlist, DSP, Video, Party)</td></tr>
       <tr><td>Tab</td><td>Toggle Sidebar (Expand / Collapse)</td></tr>
       <tr><td>Del</td><td>Remove Selected Track from Playlist</td></tr>
       <tr><td>S</td><td>Stop Playback &amp; Rewind</td></tr>
-      <tr><td>M</td><td>Cycle Playback Mode (Normal/Repeat/Shuffle)</td></tr>
+      <tr><td>Shift+M</td><td>Cycle Playback Mode (Normal/Repeat/Shuffle)</td></tr>
       <tr><td>V</td><td>Cycle Visualizer Mode (Bars/Osc/VU/Sonogram/Radial)</td></tr>
       <tr><td>B</td><td>Add Bookmark / Cue Point at Current Timestamp</td></tr>
       <tr><td>L</td><td>Cycle A-B Repeat Loop (A -> B -> Off)</td></tr>
@@ -1321,7 +1325,7 @@
   let currentModeIndex = parseInt(safeGetStorage('kmedia_mode', '0'), 10) || 0;
   if (currentModeIndex < 0 || currentModeIndex >= modes.length) currentModeIndex = 0;
 
-  const speeds = [1.0, 1.25, 1.5, 2.0, 0.5];
+  const speeds = [0.5, 0.75, 1.0, 1.25, 1.5, 2.0];
   let currentSpeedIndex = parseInt(safeGetStorage('kmedia_speed', '0'), 10) || 0;
   if (currentSpeedIndex < 0 || currentSpeedIndex >= speeds.length) currentSpeedIndex = 0;
 
@@ -1348,6 +1352,7 @@
     rock: { low: 5, mid: -2, high: 4 },
     pop: { low: -1, mid: 4, high: 3 },
     vocal: { low: -4, mid: 6, high: -1 },
+    electronic: { low: 7, mid: 2, high: 6 },
     techno: { low: 7, mid: 2, high: 5 },
     acoustic: { low: 3, mid: 2, high: 4 },
     radio: { low: -12, mid: 8, high: -6 },
@@ -2654,6 +2659,38 @@
   }
   if (UI.btnExportJson) UI.btnExportJson.onclick = exportStateJson;
 
+  // Restore JSON file picker wiring
+  const btnImportJson = document.getElementById('btnImportJson');
+  const jsonRestoreInput = document.getElementById('jsonRestoreInput');
+  if (btnImportJson && jsonRestoreInput) {
+    btnImportJson.onclick = () => jsonRestoreInput.click();
+    jsonRestoreInput.onchange = async (e) => {
+      if (e.target.files && e.target.files[0]) {
+        try {
+          const text = await e.target.files[0].text();
+          loadStateFromJson(text);
+          showToast('Restored playlist & DSP from JSON backup');
+        } catch (err) {
+          showToast('JSON restore failed: ' + err.message, true);
+        }
+        jsonRestoreInput.value = '';
+      }
+    };
+  }
+
+  // Toggle Dancing Spectrum
+  const btnToggleSpectrum = document.getElementById('btnToggleSpectrum');
+  if (btnToggleSpectrum) {
+    btnToggleSpectrum.onclick = () => {
+      currentVisMode = (currentVisMode === 1) ? 0 : 1;
+      safeSetStorage('kmedia_vismode', currentVisMode.toString());
+      if (UI.visSelect) UI.visSelect.value = currentVisMode.toString();
+      updateVisModeDisplay();
+      showToast('Visualizer: ' + visModeNames[currentVisMode]);
+    };
+  }
+
+
   // --- A-B Looping Controls ---
   function updateABDisplay() {
     UI.lblPointA.textContent = pointA !== null ? formatTime(pointA) : 'None';
@@ -3806,7 +3843,11 @@
       UI.btnStop.click();
       e.preventDefault();
     } else if (e.key.toLowerCase() === 'm') {
-      UI.btnMode.click();
+      if (e.shiftKey) {
+        UI.btnMode.click();
+      } else {
+        UI.btnMute.click();
+      }
       e.preventDefault();
     } else if (e.key.toLowerCase() === 'v') {
       cycleVisualizerMode();

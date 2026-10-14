@@ -1,6 +1,6 @@
 ---
 current_agent: kilo-expander
-next_agent: kilo-creator
+next_agent: kilo-graphics
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -19,7 +19,7 @@ current_targets:
   kilo_tester: KSubmarine
   kilo_usability: KMine
   kilo_qa: KAsteroids
-  kilo_expander: KMedia
+  kilo_expander: KJournal
 virtual_web_target: kweb://echo-subsystem.net
 virtual_web_rotation:
 - kweb://deep-core
@@ -35,8 +35,8 @@ virtual_web_rotation:
 - kweb://echo-subsystem.net
 last_run:
   agent: kilo-qa
-  app: KMaze
-  timestamp: '2026-10-14T00:31:00-07:00'
+  app: KMedia
+  timestamp: '2026-10-14T01:14:00-07:00'
 last_planner_run: '2026-10-13T18:15:00Z'
 ---
 
@@ -75,7 +75,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Verification**: `cd KiloOS && npm run build` (0 Vite errors). Confirm file size < 999 KB (`classified.html` ~256 KB).
 - **Handoff**:
   - In frontmatter: advance `current_targets.kilo_creator` to `kweb://echo-subsystem.net`.
-  - Set `current_agent: kilo-graphics`, `last_run.agent: kilo-creator`, `last_run.app: classified`.
+  - Set `current_agent: kilo-creator
   - Append terse execution log (≤6 lines), commit, and push.
 - **Upcoming Queue**: `kweb://echo-subsystem.net`, `kweb://deep-core`, `kweb://darknet`, `kweb://portal`, `kweb://webring`, `kweb://warez`, `kweb://geocities`, `kweb://users/~neon_rider`, `kweb://asm-temple`, `kweb://cybercafe`.
 
@@ -92,7 +92,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Verification**: `uv run scripts/test_app_startup.py --app KStarForge` and `cd KiloOS && npm run build`. Verify files < 999 KB.
 - **Handoff**:
   - In frontmatter: advance `current_targets.kilo_graphics` to `KSpace`.
-  - Set `current_agent: kilo-soundscape`, `last_run.agent: kilo-graphics`, `last_run.app: KStarForge`.
+  - Set `current_agent: kilo-creator
   - Append terse execution log (≤6 lines), commit, and push.
 - **Upcoming Queue**: `KSpace`, `KMech`, `KSubmarine`, `KAbyss`.
 
@@ -111,7 +111,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Verification**: `cd KiloOS && npm run build` (0 errors). Confirm file size < 999 KB (`warez.html` ~457 KB).
 - **Handoff**:
   - In frontmatter: advance `current_targets.kilo_soundscape` to `kweb://cybercafe`.
-  - Set `current_agent: kilo-tester`, `last_run.agent: kilo-soundscape`, `last_run.app: warez`.
+  - Set `current_agent: kilo-creator
   - Append terse execution log (≤6 lines), commit, and push.
 - **Upcoming Queue**: `kweb://cybercafe`, `kweb://darknet`, `kweb://asm-temple`, `kweb://echo-subsystem.net`, `kweb://deep-core`, `kweb://10.19.99.4/classified`, `kweb://webring`, `KColosseum`, `KRogue`, `KSpace`, `KMine`.
 
@@ -126,7 +126,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Verification**: `uv run scripts/test_app_startup.py --app KSubmarine` and `cd KiloOS && npm run build`. File size < 999 KB.
 - **Handoff**:
   - In frontmatter: advance `current_targets.kilo_tester` to `KVault`.
-  - Set `current_agent: kilo-usability`, `last_run.agent: kilo-tester`, `last_run.app: KSubmarine`.
+  - Set `current_agent: kilo-creator
   - Append terse execution log (≤6 lines), commit, and push.
 - **Upcoming Queue**: `KVault`, `KCalendar`, `KPaint`, `KAudio`.
 
@@ -144,7 +144,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Verification**: `uv run scripts/test_app_startup.py --app KRogue` and `cd KiloOS && npm run build`. File size < 999 KB (`krogue.html` ~320 KB).
 - **Handoff**:
   - In frontmatter: advance `current_targets.kilo_usability` to `KSubmarine`.
-  - Set `current_agent: kilo-qa`, `last_run.agent: kilo-usability`, `last_run.app: KRogue`.
+  - Set `current_agent: kilo-creator
   - Append terse execution log (≤6 lines), commit, and push.
 - **Upcoming Queue**: `KSubmarine`, `KMail`, `KPad`, `KAudio`, `KNote`.
 
@@ -163,7 +163,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 -   - `cd KiloOS && npm run build` (0 Vite errors, `kasteroids.html` < 999 KB)
 - - **Handoff**:
 -   - In frontmatter: advance `current_targets.kilo_qa` to `KSnake`.
--   - Set `current_agent: kilo-expander`, `last_run.agent: kilo-qa`, `last_run.app: KAsteroids`.
+-   - Set `current_agent: kilo-creator
 -   - Append terse execution log (≤6 lines), commit, and push.
 - - **Upcoming Queue**: `KSnake`, `KBreakout`, `KRogue`, `KSpace`, `KMaze`.
 
@@ -182,7 +182,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Verification**: `uv run scripts/test_app_startup.py --app KMedia` and `cd KiloOS && npm run build`. File size < 999 KB (`kmedia.html` ~148 KB).
 - **Handoff**:
   - In frontmatter: advance `current_targets.kilo_expander` to `KJournal`.
-  - Set `current_agent: kilo-graphics`, `last_run.agent: kilo-expander`, `last_run.app: KMedia`.
+  - Set `current_agent: kilo-creator
   - Append terse execution log (≤6 lines), commit, and push.
 - **Upcoming Queue**: `KJournal`, `KContacts`, `KVault`, `KDB`, `KPad`.
 
@@ -190,11 +190,19 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-14T01:14:00-07:00 — kilo-expander: KMedia (Deep Feature Expansion)**
+  - Expanded playlist manager with JSON backup/restore button and validated M3U playlist export.
+  - Enhanced DSP equalizer with Electronic preset and added dancing spectrum visualizer mode toggle.
+  - Implemented 6-rate playback speed selector (0.5x, 0.75x, 1.0x, 1.25x, 1.5x, 2.0x).
+  - Standardized ergonomic hotkeys: Space (Play/Pause), Arrows (Seek/Vol), M (Mute), F (Fullscreen).
+  - Verified clean Vite build (`kmedia.html` 150 KB < 999 KB ceiling); advanced queue to KJournal.
+
 - **2026-10-14T00:31:00-07:00 — kilo-qa: KMaze (Pass 5 QA & State Integrity)**
   - Hardened state persistence: verified F5 quicksave & F9 quickload dual-key support (`kmaze_saveState` and `kmaze_save`) & native `.dat`.
   - Confirmed `kmaze_tutorialSeen` / `.dat` onboarding flag integrity and modal dismissals (Esc, Enter, Close).
   - Verified clean builds: `KMaze.exe` (62 KB) and Vite web build (`kmaze.html` 138 KB < 999 KB ceiling).
   - Queue: Advanced kilo-qa to KAsteroids; handed off to kilo-expander (KMedia).
+
 
 - **2026-10-14T00:13:00-07:00 — kilo-usability: KRogue (UI/UX & Usability Pass)**
   - Enhanced layout accessibility with ARIA roles/labels across action buttons and `#msg-box` combat log.
@@ -202,11 +210,13 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Verified clean Vite build (`npm.cmd run build` 0 errors, `krogue.html` 323 KB < 999 KB ceiling).
   - Queue: Advanced kilo-usability to KMine; handed off to kilo-qa (KMaze).
 
+
 - **2026-10-13T23:34:00-07:00 — kilo-tester: KAudio (UI Audit & Inline Fixes)**
   - PASS ✅ (3 issues fixed). Added tactile `[+]`/`[-]` octave transpose buttons and `[G]` Portamento/Glide pitch slide.
   - Fixed modal backdrop click and Escape handling to properly restore focus and dismiss when typing in inputs.
   - Startup test PASS (0 errors, 448x98 canvas unblocked), Vite build clean (`kaudio.html` 149.7 KB < 999 KB).
   - Queue: Advanced kilo-tester to KSubmarine; handed off to kilo-usability (KRogue).
+
 
 - **2026-10-13T23:15:00-07:00 — kilo-soundscape: kweb://warez (YM2612 FM Soundscape)**
   - Composed procedural audio identities for all 8 demoscene tracks using YM2612 2-Op FM & SPC700 delay.
@@ -215,8 +225,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Verification: `npm.cmd run build` clean (0 errors), `warez.html` 464 KB < 999 KB ceiling.
   - Queue: Advanced kilo-soundscape to kweb://geocities; handed off to kilo-tester (KAudio).
 
-- **2026-10-13T22:31:00-07:00 — kilo-graphics: KStarForge (Graphics & Visual Polish)**
-  - ⏭️ Skip — Imagen 3 asset replacement not appropriate for KStarForge.
-  - Pure vector CAD blueprint shipyard simulator; 0 glints/perimeter dots found.
-  - Build clean (`npm run build` 0 errors, kstarforge.html 277 KB < 999 KB).
-  - Queue: Advanced kilo-graphics to KSpace; handed off to kilo-soundscape.
