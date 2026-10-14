@@ -1001,6 +1001,7 @@
     <button class="tab-btn" id="tabBtn10" onclick="switchTab('tape')">📼 [10] HELMHOLTZ CAVITY &amp; 4-TRACK ANALOG TAPE</button>
     <button class="tab-btn" id="tabBtn11" onclick="switchTab('heterodyne')">🔬 [11] HETERODYNE DOWNSHIFTER &amp; CAVITATION SONAR</button>
     <button class="tab-btn" id="tabBtn12" onclick="switchTab('interferometer')">🎚️ [12] SPATIO-ACOUSTIC INTERFEROMETER &amp; CORRELATOR</button>
+    <button class="tab-btn" id="tabBtn13" onclick="switchTab('troposphere')">📡 [13] TROPOSPHERIC DUCT &amp; VLF SANGUINE TRANSCEIVER</button>
   </nav>
 
   <!-- TAB 1: RESEARCH JOURNAL & OBSERVATION LOGBOOK -->
@@ -2680,7 +2681,139 @@ END TRANSMISSION // ESARL 1999</div>
     </div>
   </div>
 
-  <!-- TAB 12: SPATIO-ACOUSTIC INTERFEROMETER & CORRELATOR -->
+    <!-- TAB 13: TROPOSPHERIC DUCTING & VLF SANGUINE TRANSCEIVER -->
+  <div id="pane-troposphere" class="tab-pane">
+    <div class="card-box">
+      <div class="card-header">
+        <span>TROPOSPHERIC DUCTING RADAR &amp; VLF SANGUINE TRANSCEIVER (1999)</span>
+        <div style="display:flex; gap:6px; align-items:center;">
+          <span class="slot-badge valid">SANGUINE GRID: ACTIVE</span>
+          <span style="font-size:11px; color:var(--cyan-glow);">CARRIER: 19.99 kHz / HARMONIC: 1999 Hz</span>
+        </div>
+      </div>
+      <p style="font-size:12px; color:#94a3b8; margin-bottom:12px;">
+        Long-range atmospheric waveguide telemetry receiver analyzing anomalous electromagnetic ducting along the Carlsbad subterranean corridor (10.19.99.4) to Sector 0x1999. Intercepts ionospheric Whistler dispersions and 80-baud MSK military submarine beacons.
+      </p>
+
+      <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); gap:14px; margin-bottom:14px;">
+        <!-- Controls Column -->
+        <div style="background:#040915; border:1px solid var(--border-bright); padding:12px; border-radius:4px;">
+          <div style="font-weight:700; color:#38bdf8; font-size:12px; margin-bottom:10px; display:flex; justify-content:space-between;">
+            <span>🎛️ DUCT &amp; IONOSPHERE PARAMETERS</span>
+            <span id="vlfLockStatus" style="color:var(--green-phosphor); font-family:monospace;">SIGNAL: LOCKED</span>
+          </div>
+
+          <div style="margin-bottom:10px;">
+            <label style="font-size:11px; color:#bae6fd; display:flex; justify-content:space-between; margin-bottom:4px;">
+              <span>Modified Refractivity Gradient (dM/dz):</span>
+              <span id="vlfGradientVal" style="color:var(--green-phosphor); font-weight:700;">-157 M/km (Trapping)</span>
+            </label>
+            <input type="range" id="rngVlfGradient" min="-250" max="0" step="1" value="-157" style="width:100%; accent-color:var(--green-phosphor);" oninput="onVlfGradientChange(this.value)">
+            <div style="display:flex; justify-content:space-between; font-size:10px; color:#64748b; margin-top:2px;">
+              <span>-250 (Extreme Duct)</span><span>-157 (Critical)</span><span>0 (Standard)</span>
+            </div>
+          </div>
+
+          <div style="margin-bottom:10px;">
+            <label style="font-size:11px; color:#bae6fd; display:flex; justify-content:space-between; margin-bottom:4px;">
+              <span>Ionospheric D-Layer Reflection Height:</span>
+              <span id="vlfDLayerVal" style="color:var(--cyan-glow); font-weight:700;">72 km (Nighttime)</span>
+            </label>
+            <input type="range" id="rngVlfDLayer" min="55" max="95" step="1" value="72" style="width:100%; accent-color:var(--cyan-glow);" oninput="onVlfDLayerChange(this.value)">
+            <div style="display:flex; justify-content:space-between; font-size:10px; color:#64748b; margin-top:2px;">
+              <span>55 km (Daytime D)</span><span>72 km (D/E Transition)</span><span>95 km (E-Layer)</span>
+            </div>
+          </div>
+
+          <div style="margin-bottom:10px;">
+            <label style="font-size:11px; color:#bae6fd; display:flex; justify-content:space-between; margin-bottom:4px;">
+              <span>Geomagnetic Kp Activity Index:</span>
+              <span id="vlfKpVal" style="color:var(--amber-led); font-weight:700;">Kp 4 (Moderate Storm)</span>
+            </label>
+            <input type="range" id="rngVlfKp" min="0" max="9" step="1" value="4" style="width:100%; accent-color:var(--amber-led);" oninput="onVlfKpChange(this.value)">
+            <div style="display:flex; justify-content:space-between; font-size:10px; color:#64748b; margin-top:2px;">
+              <span>Kp 0 (Quiet)</span><span>Kp 4 (Active)</span><span>Kp 9 (Severe Storm)</span>
+            </div>
+          </div>
+
+          <div style="display:flex; gap:6px; flex-wrap:wrap; margin-top:12px;">
+            <button class="btn-retro btn-green" id="btnVlfAudio" onclick="toggleVlfAudio()">🔊 Monitor VLF Audio</button>
+            <button class="btn-retro btn-amber" onclick="triggerVlfWhistler()">⚡ Trigger Whistler Chirp</button>
+            <button class="btn-retro" onclick="demodulateSanguinePacket()">📡 Demodulate MSK Burst</button>
+            <button class="btn-retro" onclick="exportVlfTelemetry()">💾 Export .TRP Trace</button>
+          </div>
+        </div>
+
+        <!-- Telemetry & Waveguide Metrics -->
+        <div style="background:#040915; border:1px solid var(--border-bright); padding:12px; border-radius:4px; display:flex; flex-direction:column; justify-content:space-between;">
+          <div>
+            <div style="font-weight:700; color:#38bdf8; font-size:12px; margin-bottom:8px;">
+              📊 WAVEGUIDE PROPAGATION &amp; CARRIER TELEMETRY
+            </div>
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px; font-size:11px; margin-bottom:10px;">
+              <div style="background:#081329; padding:6px 8px; border-radius:3px; border:1px solid #1e293b;">
+                <span style="color:#94a3b8; display:block; font-size:10px;">CUTOFF FREQUENCY (fc):</span>
+                <span id="vlfCutoffFreq" style="font-weight:700; color:var(--cyan-glow); font-size:12px;">2.08 kHz</span>
+              </div>
+              <div style="background:#081329; padding:6px 8px; border-radius:3px; border:1px solid #1e293b;">
+                <span style="color:#94a3b8; display:block; font-size:10px;">DISPERSION CONSTANT (D):</span>
+                <span id="vlfDispersion" style="font-weight:700; color:var(--green-phosphor); font-size:12px;">48.2 s^0.5</span>
+              </div>
+              <div style="background:#081329; padding:6px 8px; border-radius:3px; border:1px solid #1e293b;">
+                <span style="color:#94a3b8; display:block; font-size:10px;">ATTENUATION RATE:</span>
+                <span id="vlfAttenuation" style="font-weight:700; color:var(--amber-led); font-size:12px;">1.84 dB/Mm</span>
+              </div>
+              <div style="background:#081329; padding:6px 8px; border-radius:3px; border:1px solid #1e293b;">
+                <span style="color:#94a3b8; display:block; font-size:10px;">CARLSBAD HOP COUNT:</span>
+                <span id="vlfHops" style="font-weight:700; color:#bae6fd; font-size:12px;">3 Hops (Ground-Ionosphere)</span>
+              </div>
+            </div>
+            <div style="font-size:11px; color:#cbd5e1; line-height:1.4;">
+              The atmospheric surface duct concentrates 1999Hz subcarrier energy inside an inversion boundary layer at 320m AGL. Whistler dispersals indicate lightning discharge coupling via magnetospheric duct to conjugate hemisphere.
+            </div>
+          </div>
+          <div style="margin-top:8px; padding-top:8px; border-top:1px dashed #1e293b; font-size:10.5px; color:#64748b; display:flex; justify-content:space-between;">
+            <span>RECEIVER: AN/FRR-99 (MOD)</span>
+            <span>ANTENNA: 2.4 KM LONG-WIRE DIPOLE</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Real-Time Waveguide & Whistler Canvases -->
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:14px; margin-bottom:14px;">
+        <div class="canvas-box" style="height:210px;">
+          <div style="position:absolute; top:6px; left:8px; font-size:10px; color:#38bdf8; z-index:2; font-weight:700; background:rgba(2,5,11,0.85); padding:2px 6px; border-radius:2px;">
+            RADAR: TROPOSPHERIC DUCT RAY-TRACING (EARTH-IONOSPHERE WAVEGUIDE)
+          </div>
+          <canvas id="vlfWaveguideCanvas" class="display-canvas" width="520" height="210"></canvas>
+        </div>
+        <div class="canvas-box" style="height:210px;">
+          <div style="position:absolute; top:6px; left:8px; font-size:10px; color:#00ffaa; z-index:2; font-weight:700; background:rgba(2,5,11,0.85); padding:2px 6px; border-radius:2px;">
+            WATERFALL: VLF SPECTROGRAM &amp; WHISTLER DISPERSION CURVES
+          </div>
+          <canvas id="vlfWaterfallCanvas" class="display-canvas" width="520" height="210"></canvas>
+        </div>
+      </div>
+
+      <!-- SANGUINE MSK Packet Teleprinter Feed -->
+      <div class="card-box" style="background:#030712; border:1px solid var(--border-dim); margin-bottom:0;">
+        <div class="card-header" style="font-size:11.5px;">
+          <span>📡 SANGUINE SUB-CARRIER MSK TELETYPE STREAM [CARLSBAD GATEWAY 10.19.99.4]</span>
+          <span style="font-size:10px; color:var(--green-phosphor);">BAUD: 80 | CIPHER: SECTOR-1999</span>
+        </div>
+        <div id="vlfTeletypeFeed" class="terminal-feed" style="height:150px; font-size:11.5px;">[03:12:00] INITIALIZING AN/FRR-99 VLF RECEIVER ON 19.99 kHz...
+[03:12:01] TUNED TO D-LAYER BOUNDARY WAVEGUIDE. STANDING WAVE RATIO: 1.04.
+[03:12:02] CARLSBAD HOP 3 DETECTED. SUBCARRIER 1999 Hz PHASE-LOCKED TO MEMORY PARTITION 0x0040:0x1999.
+[03:12:03] SANGUINE FRAME: [SYNC] 0xAA 0x55 // PEER: <a href="/web/portal.html" style="color:#38bdf8;">kweb://portal</a> // NODE: <a href="/web/deep_core.html" style="color:#00ffaa;">kweb://deep-core</a> // GATEWAY: 10.19.99.4</div>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px;">
+          <span style="font-size:10.5px; color:#64748b;">Linkage: Direct RF grounding through Carlsbad borehole strata down to 10.19.99.4 deep relay.</span>
+          <button class="btn-retro" onclick="clearVlfFeed()">Clear Teletype</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<!-- TAB 12: SPATIO-ACOUSTIC INTERFEROMETER & CORRELATOR -->
   <div id="pane-interferometer" class="tab-pane">
     <div class="card-box">
       <div class="card-header">
@@ -4204,7 +4337,7 @@ Host: kweb://echo-subsystem.net | Station: SIG-1999-ECHO
   }
 
   function switchTab(name) {
-    const tabs = ['journal', 'decoder', 'spectral', 'filter', 'sigint', 'stego', 'terminal', 'mesh', 'seismic', 'tape', 'heterodyne', 'interferometer'];
+    const tabs = ['journal', 'decoder', 'spectral', 'filter', 'sigint', 'stego', 'terminal', 'mesh', 'seismic', 'tape', 'heterodyne', 'interferometer', 'troposphere'];
     tabs.forEach((t, i) => {
       const btn = document.getElementById('tabBtn' + (i + 1));
       const pane = document.getElementById('pane-' + t);
@@ -4228,6 +4361,7 @@ Host: kweb://echo-subsystem.net | Station: SIG-1999-ECHO
     if (name === 'tape') initTapeAndCavity();
     if (name === 'heterodyne') initHeterodyneAndSonar();
     if (name === 'interferometer') initInterferometerSuite();
+    if (name === 'troposphere') initTroposphereSuite();
   }
 
   function executeTermInput() {
@@ -8098,6 +8232,368 @@ kweb://echo-subsystem.net
       interfAnimId = requestAnimationFrame(step);
     }
     interfAnimId = requestAnimationFrame(step);
+  }
+
+
+  // ==========================================
+  // TAB 13: TROPOSPHERIC DUCT & VLF SANGUINE TRANSCEIVER
+  // ==========================================
+  let vlfAudioActive = false;
+  let vlfAudioNodes = null;
+  let vlfGradient = -157;
+  let vlfDLayerHeight = 72;
+  let vlfKpIndex = 4;
+  let vlfAnimFrame = null;
+  let vlfWaterfallData = [];
+
+  function initTroposphereSuite() {
+    const wgCanvas = document.getElementById('vlfWaveguideCanvas');
+    const wfCanvas = document.getElementById('vlfWaterfallCanvas');
+    if (!wgCanvas || !wfCanvas) return;
+
+    if (!vlfWaterfallData || vlfWaterfallData.length === 0) {
+      vlfWaterfallData = new Array(210).fill(0).map(() => new Uint8Array(520));
+    }
+
+    if (!vlfAnimFrame) {
+      drawTroposphereFrame();
+    }
+  }
+
+  function onVlfGradientChange(val) {
+    vlfGradient = parseFloat(val);
+    const badge = document.getElementById('vlfGradientVal');
+    let mode = 'Trapping Duct';
+    if (vlfGradient > -79) mode = 'Standard';
+    else if (vlfGradient > -157) mode = 'Super-refractive';
+    else mode = 'Trapping Duct';
+    if (badge) badge.textContent = val + ' M/km (' + mode + ')';
+    updateVlfMetrics();
+  }
+
+  function onVlfDLayerChange(val) {
+    vlfDLayerHeight = parseFloat(val);
+    const badge = document.getElementById('vlfDLayerVal');
+    let time = vlfDLayerHeight > 75 ? 'Nighttime' : (vlfDLayerHeight < 65 ? 'Daytime' : 'D/E Transition');
+    if (badge) badge.textContent = val + ' km (' + time + ')';
+    updateVlfMetrics();
+  }
+
+  function onVlfKpChange(val) {
+    vlfKpIndex = parseInt(val, 10);
+    const badge = document.getElementById('vlfKpVal');
+    const labels = ['Quiet', 'Quiet', 'Unsettled', 'Active', 'Moderate Storm', 'Minor Storm', 'Major Storm', 'Severe Storm', 'Severe Storm', 'Extreme Storm'];
+    if (badge) badge.textContent = 'Kp ' + val + ' (' + labels[vlfKpIndex] + ')';
+    updateVlfMetrics();
+  }
+
+  function updateVlfMetrics() {
+    const cutoff = (300 / (2 * vlfDLayerHeight)).toFixed(2);
+    const dispersion = (35 + (vlfKpIndex * 3.2)).toFixed(1);
+    const att = (1.2 + (vlfDLayerHeight < 70 ? 0.8 : 0.2) + (vlfKpIndex * 0.15)).toFixed(2);
+    const hops = vlfGradient < -157 ? 'Trapped Waveguide (Infinite ducting)' : (Math.floor(2500 / (vlfDLayerHeight * 12)) + ' Hops (Ground-Ionosphere)');
+
+    const elCutoff = document.getElementById('vlfCutoffFreq');
+    if (elCutoff) elCutoff.textContent = cutoff + ' kHz';
+    const elDisp = document.getElementById('vlfDispersion');
+    if (elDisp) elDisp.textContent = dispersion + ' s^0.5';
+    const elAtt = document.getElementById('vlfAttenuation');
+    if (elAtt) elAtt.textContent = att + ' dB/Mm';
+    const elHops = document.getElementById('vlfHops');
+    if (elHops) elHops.textContent = hops;
+  }
+
+  function drawTroposphereFrame() {
+    const wgCanvas = document.getElementById('vlfWaveguideCanvas');
+    const wfCanvas = document.getElementById('vlfWaterfallCanvas');
+    if (!wgCanvas || !wfCanvas) return;
+
+    // 1. Draw Waveguide Ray-Tracing
+    const ctxW = wgCanvas.getContext('2d');
+    const w = wgCanvas.width;
+    const h = wgCanvas.height;
+
+    ctxW.fillStyle = '#02050c';
+    ctxW.fillRect(0, 0, w, h);
+
+    // Ionosphere boundary top
+    const ionoY = 25 + (95 - vlfDLayerHeight) * 1.5;
+    const gradIono = ctxW.createLinearGradient(0, 0, 0, ionoY);
+    gradIono.addColorStop(0, 'rgba(56, 189, 248, 0.3)');
+    gradIono.addColorStop(1, 'rgba(56, 189, 248, 0.05)');
+    ctxW.fillStyle = gradIono;
+    ctxW.fillRect(0, 0, w, ionoY);
+
+    ctxW.strokeStyle = '#38bdf8';
+    ctxW.lineWidth = 1.5;
+    ctxW.beginPath();
+    ctxW.moveTo(0, ionoY);
+    for (let x = 0; x <= w; x += 20) {
+      ctxW.lineTo(x, ionoY + Math.sin(Date.now() * 0.003 + x * 0.05) * (vlfKpIndex * 0.7));
+    }
+    ctxW.stroke();
+
+    // Ground line
+    const groundY = h - 25;
+    ctxW.fillStyle = '#071329';
+    ctxW.fillRect(0, groundY, w, 25);
+    ctxW.strokeStyle = '#1e3a5f';
+    ctxW.beginPath();
+    ctxW.moveTo(0, groundY);
+    ctxW.lineTo(w, groundY);
+    ctxW.stroke();
+
+    // Tropospheric duct inversion layer
+    const ductY = groundY - 45;
+    ctxW.strokeStyle = 'rgba(0, 255, 170, 0.4)';
+    ctxW.setLineDash([4, 4]);
+    ctxW.beginPath();
+    ctxW.moveTo(0, ductY);
+    ctxW.lineTo(w, ductY);
+    ctxW.stroke();
+    ctxW.setLineDash([]);
+
+    // Draw propagating rays
+    const time = Date.now() * 0.002;
+    const rays = 5;
+    for (let r = 0; r < rays; r++) {
+      const startAngle = 0.25 + r * 0.12;
+      const ducting = vlfGradient < -140;
+
+      ctxW.strokeStyle = ducting ? '#00ffaa' : '#f59e0b';
+      ctxW.lineWidth = 1.2;
+      ctxW.beginPath();
+      let curX = 15;
+      let curY = groundY;
+      ctxW.moveTo(curX, curY);
+
+      let dy = -Math.sin(startAngle) * 4;
+      let dx = Math.cos(startAngle) * 4;
+
+      while (curX < w && curY > 0 && curY < h) {
+        curX += dx;
+        curY += dy;
+
+        // Inversion duct trapping
+        if (ducting && curY < ductY && dy < 0) {
+          dy = -dy; // refracted downwards
+        } else if (curY <= ionoY) {
+          dy = Math.abs(dy); // bounce off ionosphere
+        } else if (curY >= groundY) {
+          dy = -Math.abs(dy); // bounce off ground
+        }
+        ctxW.lineTo(curX, curY);
+      }
+      ctxW.stroke();
+    }
+
+    // 2. Draw Waterfall Spectrogram
+    const ctxF = wfCanvas.getContext('2d');
+    const fW = wfCanvas.width;
+    const fH = wfCanvas.height;
+
+    // Shift waterfall down by 1 row
+    const imgData = ctxF.getImageData(0, 0, fW, fH - 1);
+    ctxF.putImageData(imgData, 0, 1);
+
+    // Generate new top line
+    const row = ctxF.createImageData(fW, 1);
+    const data = row.data;
+    const tNow = Date.now();
+
+    for (let x = 0; x < fW; x++) {
+      let amp = Math.random() * 20;
+
+      // 1999Hz harmonic subcarrier line
+      const carrierX = Math.floor(fW * 0.38);
+      if (Math.abs(x - carrierX) < 2) {
+        amp += 180 + Math.sin(tNow * 0.01) * 30;
+      }
+
+      // MSK modulation sidebands
+      if (Math.abs(x - carrierX) === 6 || Math.abs(x - carrierX) === 12) {
+        amp += 90 + Math.random() * 40;
+      }
+
+      // Auroral hiss at higher frequencies
+      if (x > fW * 0.7) {
+        amp += (vlfKpIndex * 8) * Math.random();
+      }
+
+      amp = Math.min(255, Math.max(0, amp));
+      const idx = x * 4;
+      // Phosphor cyan/green color grading
+      data[idx] = Math.floor(amp * 0.15); // R
+      data[idx + 1] = Math.floor(amp * 0.95); // G
+      data[idx + 2] = Math.floor(amp * 0.85); // B
+      data[idx + 3] = 255; // Alpha
+    }
+    ctxF.putImageData(row, 0, 0);
+
+    vlfAnimFrame = requestAnimationFrame(drawTroposphereFrame);
+  }
+
+  function toggleVlfAudio() {
+    ensureAudioContext();
+    if (!audioCtx) return;
+
+    const btn = document.getElementById('btnVlfAudio');
+
+    if (vlfAudioActive) {
+      if (vlfAudioNodes) {
+        try {
+          vlfAudioNodes.osc.stop();
+          vlfAudioNodes.noiseSource.stop();
+          vlfAudioNodes.gain.disconnect();
+        } catch(e) {}
+        vlfAudioNodes = null;
+      }
+      vlfAudioActive = false;
+      if (btn) {
+        btn.textContent = '🔊 Monitor VLF Audio';
+        btn.className = 'btn-retro btn-green';
+      }
+      appendVlfLog('[AUDIO] VLF Carrier Audio Monitor: DEACTIVATED.');
+    } else {
+      try {
+        const osc = audioCtx.createOscillator();
+        const oscGain = audioCtx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(1999, audioCtx.currentTime); // 1999Hz subcarrier
+        oscGain.gain.setValueAtTime(0.04, audioCtx.currentTime);
+
+        // Noise buffer for atmospheric background
+        const bufferSize = audioCtx.sampleRate * 2;
+        const noiseBuffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+        const output = noiseBuffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) {
+          output[i] = (Math.random() * 2 - 1) * 0.015;
+        }
+        const whiteNoise = audioCtx.createBufferSource();
+        whiteNoise.buffer = noiseBuffer;
+        whiteNoise.loop = true;
+
+        const noiseFilter = audioCtx.createBiquadFilter();
+        noiseFilter.type = 'bandpass';
+        noiseFilter.frequency.setValueAtTime(1999, audioCtx.currentTime);
+        noiseFilter.Q.setValueAtTime(4.5, audioCtx.currentTime);
+
+        const masterGain = audioCtx.createGain();
+        masterGain.gain.setValueAtTime(0.12, audioCtx.currentTime);
+
+        osc.connect(oscGain);
+        oscGain.connect(masterGain);
+        whiteNoise.connect(noiseFilter);
+        noiseFilter.connect(masterGain);
+        masterGain.connect(audioCtx.destination);
+
+        osc.start();
+        whiteNoise.start();
+
+        vlfAudioNodes = { osc, oscGain, noiseSource: whiteNoise, gain: masterGain };
+        vlfAudioActive = true;
+
+        if (btn) {
+          btn.textContent = '⏹️ Silence VLF Audio';
+          btn.className = 'btn-retro btn-amber';
+        }
+        appendVlfLog('[AUDIO] VLF Carrier Audio Monitor: ACTIVE [1999Hz Harmonic Subcarrier + Atmospheric Filter]');
+      } catch(e) {
+        console.error(e);
+      }
+    }
+  }
+
+  function triggerVlfWhistler() {
+    ensureAudioContext();
+    if (!audioCtx) return;
+
+    appendVlfLog('[WHISTLER] Lightning discharge coupled to magnetospheric duct! D=' + (35 + vlfKpIndex * 3.2).toFixed(1) + ' s^0.5');
+
+    // Synthesize dispersive whistler sweep (6 kHz down to 450 Hz with 1/sqrt(t) curve)
+    try {
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'sine';
+
+      const now = audioCtx.currentTime;
+      const dur = 1.4;
+      osc.frequency.setValueAtTime(5500, now);
+      osc.frequency.exponentialRampToValueAtTime(480, now + dur);
+
+      gain.gain.setValueAtTime(0.001, now);
+      gain.gain.exponentialRampToValueAtTime(0.08, now + 0.1);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + dur);
+
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start(now);
+      osc.stop(now + dur);
+    } catch(e) {}
+  }
+
+  function demodulateSanguinePacket() {
+    ensureAudioContext();
+    // Chirp 3 quick MSK data bursts
+    if (audioCtx) {
+      try {
+        const now = audioCtx.currentTime;
+        [1950, 2050, 1950, 2050, 2050].forEach((freq, idx) => {
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.frequency.setValueAtTime(freq, now + idx * 0.06);
+          gain.gain.setValueAtTime(0.04, now + idx * 0.06);
+          gain.gain.setValueAtTime(0.001, now + (idx + 1) * 0.06);
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.start(now + idx * 0.06);
+          osc.stop(now + (idx + 1) * 0.06);
+        });
+      } catch(e) {}
+    }
+
+    const packets = [
+      '[MSK-80] PREAMBLE: 10101010 // CARRIER 19.99 kHz // MSG: SANGUINE GRID COUPLING AT 0x1999 // PASSKEY: HARMONIC_1999',
+      '[MSK-80] ROUTING: CARLSBAD RELAY 10.19.99.4 -> <a href="/web/deep_core.html" style="color:#38bdf8;">kweb://deep-core</a> // SEISMIC FREQ LOCK: 7.83 Hz',
+      '[MSK-80] DEEP-LAYER TELEMETRY: BOREHOLE TEMP 48.2C // STRATA RESISTIVITY 142 OHM-M // WAVEGUIDE DUCT: CLOSED',
+      '[MSK-80] ANOMALY: NON-ROUTABLE VLF PACKETS MATCHING TIMESTAMP 1999-12-31T23:59:59Z DETECTED IN TRANSIT.'
+    ];
+    const picked = packets[Math.floor(Math.random() * packets.length)];
+    const timeStr = new Date().toTimeString().split(' ')[0];
+    appendVlfLog('[' + timeStr + '] ' + picked);
+  }
+
+  function appendVlfLog(msg) {
+    const feed = document.getElementById('vlfTeletypeFeed');
+    if (!feed) return;
+    feed.innerHTML += '\n' + msg;
+    feed.scrollTop = feed.scrollHeight;
+  }
+
+  function clearVlfFeed() {
+    const feed = document.getElementById('vlfTeletypeFeed');
+    if (feed) feed.innerHTML = '[TELETYPE BUFFER CLEARED]';
+  }
+
+  function exportVlfTelemetry() {
+    const logData = '=== ECHO SUBSYSTEM // AN/FRR-99 VLF TROPOSPHERIC TELEMETRY TRACE ===\n' +
+      'TIMESTAMP: ' + new Date().toISOString() + '\n' +
+      'CARRIER: 19.99 kHz (Downmixed 1999 Hz)\n' +
+      'REFRACTIVE GRADIENT: ' + vlfGradient + ' M/km\n' +
+      'D-LAYER HEIGHT: ' + vlfDLayerHeight + ' km\n' +
+      'GEOMAGNETIC KP: ' + vlfKpIndex + '\n' +
+      'CUTOFF FREQ: ' + (300 / (2 * vlfDLayerHeight)).toFixed(2) + ' kHz\n' +
+      'GATEWAY PEER: 10.19.99.4 [CARLSBAD]\n' +
+      'STATUS: HARMONIC RESONANCE 0x1999 CONFIRMED\n';
+
+    const blob = new Blob([logData], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'tropospheric_trace_' + Date.now() + '.trp';
+    a.click();
+    URL.revokeObjectURL(url);
+    appendVlfLog('[SYSTEM] Telemetry trace file exported: tropospheric_trace_' + Date.now() + '.trp');
   }
 
 </script>
