@@ -4,6 +4,13 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-14T08:31:00-07:00 — kilo-usability: KSubmarine (Layout & Usability Audit)**
+  - PASS ✅ — Audited bathyscaphe dashboard layout, HiDPI radar/periscope canvases, and hotkey bindings.
+  - Sizing tuned: updated default dimensions in `KiloOS/src/App.jsx` to 1040x720 for optimal 3-column telemetry layout.
+  - Confirmed HiDPI crispness (`devicePixelRatio`), F1/H manual, Esc dismissal, and save/load shortcuts.
+  - Build verified (`npm run build` PASS, 0 errors, `ksubmarine.html` 448 KB < 999 KB ceiling).
+  - Queue: Advanced kilo-usability to KMail; handed off to kilo-qa (KBreakout).
+
 - **2026-10-14T08:14:00-07:00 — kilo-tester: KVault (UI Audit & Startup Verification)**
   - PASS ✅ (No issues found) — Automated startup test verified: 0 JS err, CSS valid, hit-test unblocked.
   - Interactive UI audit confirmed: generator, password entry forms, TOTP 2FA, export/import modals & keyboard handlers fully wired.
