@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-creator
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -18,7 +18,7 @@ current_targets:
   kilo_soundscape: kweb://darknet
   kilo_tester: KPaint
   kilo_usability: KPad
-  kilo_qa: KRogue
+  kilo_qa: KSnake
   kilo_expander: KContacts
 virtual_web_target: kweb://portal
 virtual_web_rotation:
@@ -34,9 +34,9 @@ virtual_web_rotation:
 - kweb://10.19.99.4/classified
 - kweb://echo-subsystem.net
 last_run:
-  agent: kilo-usability
-  app: KMail
-  timestamp: '2026-10-14T14:13:00-07:00'
+  agent: kilo-qa
+  app: KRogue
+  timestamp: '2026-10-14T14:31:00-07:00'
 last_planner_run: '2026-10-14T18:32:00Z'
 ---
 
@@ -146,22 +146,22 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Upcoming Queue**: `KPad`, `KAudio`, `KNote`, `KMine`.
 
 ### 6. QA & Build Queue (kilo-qa — Pass 5: Tutorial & State Integrity)
-- **Target**: `KRogue`
-- **Primary Files**: `KiloOS/public/apps/krogue.html`, `KRogue/main.c`, `KRogue/build.bat`
+- **Target**: `KSnake`
+- **Primary Files**: `KiloOS/public/apps/ksnake.html`, `KSnake/main.c`, `KSnake/build.bat`
 - **Objective**: Pass 5 QA audit, state persistence integrity, and dual web/native parity.
 - **Action Steps**:
-  1. State Persistence: F5 quicksave & F9 quickload capturing player HP/gold/inventory, dungeon floor seed, monster states, and explored fog of war in `localStorage` (`krogue_saveState`) and native `.dat`.
-  2. First-run Tutorial: `krogue_tutorialSeen` flag ensures onboarding displays once on fresh sessions, never on restored saves.
-  3. Modal Dismissals: Inventory, Help, Character Stats, and Game Over modals dismiss cleanly with Escape, Enter, or Close button.
-  4. Dual Parity & Build: Compile Win32 native client via `cmd.exe /c build.bat` in `KRogue/` (if present) and verify web build.
+  1. State Persistence: F5 quicksave & F9 quickload capturing snake length, score, direction, obstacles, speed, and high scores in `localStorage` and native `.dat`.
+  2. First-run Tutorial: Onboarding displays once on fresh sessions, never on restored saves.
+  3. Modal Dismissals: Modals dismiss cleanly with Escape, Enter, or Close button.
+  4. Dual Parity & Build: Compile Win32 native client via `cmd.exe /c build.bat` in `KSnake/` (if present) and verify web build.
 - **Verification**:
-  - `uv run scripts/test_app_startup.py --app KRogue`
-  - `cd KiloOS && npm run build` (0 Vite errors, `krogue.html` < 999 KB)
+  - `uv run scripts/test_app_startup.py --app KSnake`
+  - `cd KiloOS && npm run build` (0 Vite errors, `ksnake.html` < 999 KB)
 - **Handoff**:
-  - In frontmatter: advance `current_targets.kilo_qa` to `KSnake`.
+  - In frontmatter: advance `current_targets.kilo_qa` to `KSpace`.
   - Set `current_agent: kilo-expander`
   - Append terse execution log (≤6 lines), commit, and push.
-- **Upcoming Queue**: `KSnake`, `KSpace`, `KMaze`.
+- **Upcoming Queue**: `KSpace`, `KMaze`.
 
 ### 7. Feature Expander Queue (`kilo-expander`)
 - **Target**: `KContacts`
@@ -186,6 +186,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-14T14:31:00-07:00 — kilo-qa: KRogue (Pass 5 QA & State Integrity)**
+  - PASS ✅ — Quicksave (F5) / Quickload (F9) persistent across 'krogue_save' and 'krogue_saveState' with fog-of-war.
+  - Tutorial flag 'krogue_tutorialSeen' displays onboarding once; modals dismiss cleanly with Escape, Enter, or Close.
+  - Builds clean: Native Win32 KRogue.exe compiled; Vite build 100% clean (323.5 KB < 999 KB).
+  - Advanced queue: kilo-qa target to KSnake; handed off to kilo-expander.
+
 - **2026-10-14T14:13:00-07:00 — kilo-usability: KMail (Usability & Layout Audit)**
   - ⏭️ Skip — app usability is complete and mature (23 passes, clean layout & hotkeys).
   - Verified build (`npm run build` PASS, 0 Vite errors; size 124.4 KB < 999 KB).
@@ -209,9 +215,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Verified 0 rotating specular glints or traveling perimeter dots.
   - Build verified (`npm run build` PASS, 0 Vite errors).
   - Queue: Advanced kilo_graphics to KMech; handed off to kilo-soundscape.
-
-- **2026-10-14T12:13:00-07:00 — kilo-creator: kweb://darknet (Node 0x7F Subterranean Relay & Cryptography Lab)**
-  - PASS ✅ — Audited comprehensive 17-tab subterranean darknet hub (<999 KB: 367 KB).
-  - Validated Bell 103/202 FSK modem, Tone-Loc wardialer, Feistel/RC4 crypto engines, and Blue Box.
-  - Confirmed bidirectional discovery links in KNet, KiloOS portal, webring, and warez gate triggers.
-  - Verification: `npm run build` PASS (0 errors, 18 modules transformed). Advanced queue to `kilo-graphics` (target: `KAbyss`).

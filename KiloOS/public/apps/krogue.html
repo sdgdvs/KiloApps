@@ -3752,7 +3752,10 @@
                     savedSlot: sIdx, savedAt: Date.now()
                 };
                 localStorage.setItem(saveKey, JSON.stringify(data));
-                if (sIdx === 1) localStorage.setItem('krogue_save_slot_1', JSON.stringify(data));
+                if (sIdx === 1) {
+                    localStorage.setItem('krogue_save_slot_1', JSON.stringify(data));
+                    localStorage.setItem('krogue_saveState', JSON.stringify(data));
+                }
                 addMsg(`Run Saved to Slot ${sIdx}!`, 'good');
                 showToast(`Run Saved to Slot ${sIdx}!`, 'success');
             } catch(e) { 
@@ -3765,7 +3768,7 @@
             const sIdx = slot || currentSaveSlot;
             const saveKey = sIdx === 1 ? 'krogue_save' : `krogue_save_slot_${sIdx}`;
             try {
-                let s = localStorage.getItem(saveKey) || (sIdx === 1 ? localStorage.getItem('krogue_save_slot_1') : null);
+                let s = localStorage.getItem(saveKey) || (sIdx === 1 ? (localStorage.getItem('krogue_save_slot_1') || localStorage.getItem('krogue_saveState')) : null);
                 if (s) {
                     let d = JSON.parse(s);
                     if (tutorialTimeout) {
@@ -5518,12 +5521,18 @@
                 return;
             }
 
-            // Quick close help with Enter or Space
+            // Quick close informational modals with Enter or Space
             let helpModal = document.getElementById('modal-help');
-            if (helpModal && helpModal.style.display !== 'none' && (e.key === 'Enter' || e.key === ' ')) {
-                e.preventDefault();
-                closeModal('modal-help');
-                return;
+            let invModal = document.getElementById('modal-inventory');
+            let featsModal = document.getElementById('modal-feats');
+            let bestiaryModal = document.getElementById('modal-bestiary');
+            let leadModal = document.getElementById('modal-leaderboard');
+            if ((e.key === 'Enter' || e.key === ' ') && !document.activeElement?.tagName?.match(/INPUT|TEXTAREA|SELECT/)) {
+                if (helpModal && helpModal.style.display !== 'none') { e.preventDefault(); closeModal('modal-help'); return; }
+                if (invModal && invModal.style.display !== 'none') { e.preventDefault(); closeModal('modal-inventory'); return; }
+                if (featsModal && featsModal.style.display !== 'none') { e.preventDefault(); closeModal('modal-feats'); return; }
+                if (bestiaryModal && bestiaryModal.style.display !== 'none') { e.preventDefault(); closeModal('modal-bestiary'); return; }
+                if (leadModal && leadModal.style.display !== 'none') { e.preventDefault(); closeModal('modal-leaderboard'); return; }
             }
 
             // Quick actions for Anvil modal with 1-4
