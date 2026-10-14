@@ -163,6 +163,7 @@
                 <p id="statWins">Campaign Wins: 0</p>
                 <p class="menu-btn" onclick="showMenu(); this.blur();" style="margin-top: 15px; color: #facc15;">[B] Back to Menu</p>
             </div>
+            <div id="toastMessage" style="display:none; position:absolute; bottom:20px; left:50%; transform:translateX(-50%); background:rgba(15,23,42,0.95); border:1px solid #38bdf8; color:#38bdf8; padding:6px 14px; border-radius:6px; font-size:13px; font-weight:bold; z-index:100; pointer-events:none;"></div>
         </div>
         <canvas id="gameCanvas" width="800" height="600"></canvas>
     </div>
@@ -573,6 +574,97 @@
         let keys = {};
         let prevKeys = {};
         
+        
+        // --- Pass 5 QA: State Persistence (F5 Quicksave / F9 Quickload) & Tutorial Integrity ---
+        function showToast(msg) {
+            const t = document.getElementById('toastMessage');
+            if (t) {
+                t.textContent = msg;
+                t.style.display = 'block';
+                clearTimeout(t._timer);
+                t._timer = setTimeout(() => { t.style.display = 'none'; }, 2200);
+            }
+        }
+
+        function checkFirstRunTutorial() {
+            try {
+                if (!localStorage.getItem('kasteroids_tutorialSeen')) {
+                    localStorage.setItem('kasteroids_tutorialSeen', 'true');
+                    showHelp();
+                    showToast('Welcome! [H] How to Play | [Esc] Menu');
+                }
+            } catch(e) {}
+        }
+
+        function quicksaveGame() {
+            try {
+                const saveState = {
+                    score: typeof score !== 'undefined' ? score : 0,
+                    wave: typeof wave !== 'undefined' ? wave : 1,
+                    mode: typeof gameMode !== 'undefined' ? gameMode : (typeof mode !== 'undefined' ? mode : 0),
+                    lives: typeof lives !== 'undefined' ? lives : 3,
+                    ship: typeof ship !== 'undefined' ? { x: ship.x, y: ship.y, vx: ship.vx, vy: ship.vy, angle: ship.angle, radius: ship.radius || 15 } : null,
+                    asteroidsCount: typeof asteroids !== 'undefined' ? asteroids.length : 0,
+                    warpCores: typeof warpCores !== 'undefined' ? warpCores : 0,
+                    timestamp: Date.now()
+                };
+                safeSet('kasteroids_quicksave', saveState);
+                showToast('STATE SAVED [F5]');
+            } catch(e) {
+                console.warn('[KAsteroids] Quicksave failed:', e);
+            }
+        }
+
+        function quickloadGame() {
+            try {
+                const saveState = safeGet('kasteroids_quicksave', null);
+                if (!saveState) {
+                    showToast('NO SAVE DATA FOUND [F9]');
+                    return;
+                }
+                if (typeof score !== 'undefined' && saveState.score !== undefined) {
+                    score = saveState.score;
+                    if (scoreSpan) scoreSpan.textContent = score;
+                }
+                if (typeof wave !== 'undefined' && saveState.wave !== undefined) {
+                    wave = saveState.wave;
+                    if (waveSpan) waveSpan.textContent = wave;
+                }
+                if (typeof ship !== 'undefined' && saveState.ship) {
+                    ship.x = saveState.ship.x;
+                    ship.y = saveState.ship.y;
+                    ship.vx = saveState.ship.vx;
+                    ship.vy = saveState.ship.vy;
+                    ship.angle = saveState.ship.angle;
+                }
+                if (typeof warpCores !== 'undefined' && saveState.warpCores !== undefined) {
+                    warpCores = saveState.warpCores;
+                    if (warpSpan) warpSpan.textContent = 'Warp Cores: ' + warpCores + '/3';
+                }
+                if (gameOverDiv) gameOverDiv.style.display = 'none';
+                showToast('STATE RESTORED [F9]');
+            } catch(e) {
+                console.warn('[KAsteroids] Quickload failed:', e);
+            }
+        }
+
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'F5') {
+                e.preventDefault();
+                quicksaveGame();
+            } else if (e.key === 'F9') {
+                e.preventDefault();
+                quickloadGame();
+            } else if (e.key === 'Escape') {
+                if (gameOverDiv && gameOverDiv.style.display === 'block') {
+                    showMenu();
+                }
+            }
+        });
+        window.addEventListener('DOMContentLoaded', () => {
+            checkFirstRunTutorial();
+        });
+
         document.addEventListener('keydown', e => keys[e.code] = true);
         document.addEventListener('keyup', e => keys[e.code] = false);
 
