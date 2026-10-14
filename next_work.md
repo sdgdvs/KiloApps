@@ -217,9 +217,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Optimization: Added zero-allocation cached drum buffers for 16-bit FM snare/hat transients.
   - Status: PASS (Vite build clean, 465 KB < 999 KB, 0 external audio assets).
   - Queue: Advanced kilo-soundscape to kweb://cybercafe; handoff to kilo-tester.
-
-- **2026-10-14T10:30:00-07:00 — kilo-graphics: KSubmarine (Programmer Art & Glint Audit)**
-  - ⏭️ Skip — Imagen 3 asset replacement not appropriate for KSubmarine
-  - Confirmed tactical CRT sonar/radar telemetry aesthetic; no traveling glints or perimeter dots present.
-  - Build verified (`npm run build` PASS, 0 Vite errors).
-  - Queue: Advanced kilo_graphics to KAbyss; handed off to kilo-soundscape.

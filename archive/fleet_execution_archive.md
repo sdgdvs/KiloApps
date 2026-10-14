@@ -4,6 +4,12 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-14T10:30:00-07:00 — kilo-graphics: KSubmarine (Programmer Art & Glint Audit)**
+  - ⏭️ Skip — Imagen 3 asset replacement not appropriate for KSubmarine
+  - Confirmed tactical CRT sonar/radar telemetry aesthetic; no traveling glints or perimeter dots present.
+  - Build verified (`npm run build` PASS, 0 Vite errors).
+  - Queue: Advanced kilo_graphics to KAbyss; handed off to kilo-soundscape.
+
 - **2026-10-14T08:31:00-07:00 — kilo-usability: KSubmarine (Layout & Usability Audit)**
   - PASS ✅ — Audited bathyscaphe dashboard layout, HiDPI radar/periscope canvases, and hotkey bindings.
   - Sizing tuned: updated default dimensions in `KiloOS/src/App.jsx` to 1040x720 for optimal 3-column telemetry layout.
