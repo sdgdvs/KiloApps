@@ -4681,71 +4681,249 @@ function playNoiseBurst(duration, filterFreq = 1800) {
 /* =========================================================================
    REALAUDIO .RAM PROCEDURAL RADIO & 16-BAND SPECTRUM EQUALIZER
    ========================================================================= */
+/* =========================================================================
+   REALAUDIO .RAM PROCEDURAL RADIO & 16-BAND SPECTRUM EQUALIZER (YM2612/SPC700)
+   ========================================================================= */
 let radioPlaying = false;
 let radioChannel = 0;
 let radioTimer = null;
 let radioStep = 0;
 let radioVolume = 0.7;
 
+// Procedural 2-operator FM Synthesizer Voice Engine
+function triggerFmVoice(carrierFreq, modMultiplier, modIndex, duration, vol, delayOffset, vibratoAmount) {
+  if (!audioCtx || !carrierFreq || carrierFreq <= 0) return;
+  const now = audioCtx.currentTime + (delayOffset || 0);
+
+  const carrier = audioCtx.createOscillator();
+  const modulator = audioCtx.createOscillator();
+  const modGain = audioCtx.createGain();
+  const carrierGain = audioCtx.createGain();
+
+  carrier.type = 'sine';
+  carrier.frequency.setValueAtTime(carrierFreq, now);
+
+  modulator.type = 'sine';
+  modulator.frequency.setValueAtTime(carrierFreq * modMultiplier, now);
+
+  // Modulator envelope
+  const depth = carrierFreq * Math.max(0.05, modIndex);
+  modGain.gain.setValueAtTime(depth, now);
+  modGain.gain.exponentialRampToValueAtTime(0.01, now + duration);
+
+  // Delayed vibrato for melodic lead channels (Yuzo Koshiro style)
+  if (vibratoAmount && vibratoAmount > 0) {
+    const lfo = audioCtx.createOscillator();
+    const lfoGain = audioCtx.createGain();
+    lfo.frequency.setValueAtTime(5.8, now); // ~5.8 Hz vibrato
+    lfoGain.gain.setValueAtTime(0, now);
+    lfoGain.gain.setValueAtTime(0, now + Math.min(0.18, duration * 0.4));
+    lfoGain.gain.linearRampToValueAtTime(vibratoAmount * carrierFreq * 0.03, now + duration);
+    lfo.connect(lfoGain);
+    lfoGain.connect(carrier.frequency);
+    lfo.start(now);
+    lfo.stop(now + duration);
+  }
+
+  // Carrier envelope
+  carrierGain.gain.setValueAtTime(vol * radioVolume, now);
+  carrierGain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+
+  modulator.connect(modGain);
+  modGain.connect(carrier.frequency);
+  carrier.connect(carrierGain);
+  carrierGain.connect(masterGain || audioCtx.destination);
+  if (delayNode) carrierGain.connect(delayNode);
+
+  modulator.start(now);
+  carrier.start(now);
+  modulator.stop(now + duration);
+  carrier.stop(now + duration);
+}
+
+// Dedicated FM Drum Synth: Punchy kick, snappy snare, crisp metallic hat
+function triggerFmDrum(type, vol, delayOffset) {
+  if (!audioCtx) return;
+  const now = audioCtx.currentTime + (delayOffset || 0);
+  const drumVol = (vol || 0.3) * radioVolume;
+
+  if (type === 'kick') {
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.frequency.setValueAtTime(145, now);
+    osc.frequency.exponentialRampToValueAtTime(38, now + 0.14);
+    gain.gain.setValueAtTime(drumVol * 1.2, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
+    osc.connect(gain);
+    gain.connect(masterGain || audioCtx.destination);
+    osc.start(now);
+    osc.stop(now + 0.19);
+  } else if (type === 'snare') {
+    // FM Body tone
+    const osc = audioCtx.createOscillator();
+    const oscGain = audioCtx.createGain();
+    osc.frequency.setValueAtTime(210, now);
+    osc.frequency.exponentialRampToValueAtTime(80, now + 0.1);
+    oscGain.gain.setValueAtTime(drumVol * 0.6, now);
+    oscGain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
+    osc.connect(oscGain);
+    oscGain.connect(masterGain || audioCtx.destination);
+    osc.start(now);
+    osc.stop(now + 0.13);
+
+    // Noise snap
+    playNoiseBurst(0.12, 3200);
+  } else if (type === 'hat') {
+    // Inharmonic metallic FM pulse
+    const carrier = audioCtx.createOscillator();
+    const mod = audioCtx.createOscillator();
+    const modG = audioCtx.createGain();
+    const outG = audioCtx.createGain();
+    carrier.frequency.setValueAtTime(6200, now);
+    mod.frequency.setValueAtTime(9450, now);
+    modG.gain.setValueAtTime(4500, now);
+    modG.gain.exponentialRampToValueAtTime(10, now + 0.05);
+    outG.gain.setValueAtTime(drumVol * 0.45, now);
+    outG.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
+    mod.connect(modG);
+    modG.connect(carrier.frequency);
+    carrier.connect(outG);
+    outG.connect(masterGain || audioCtx.destination);
+    mod.start(now);
+    carrier.start(now);
+    mod.stop(now + 0.06);
+    carrier.stop(now + 0.06);
+  }
+}
+
+// 4 Complete Authentic Procedural Soundscapes (6 logical tracks: Lead, Counter, Harmony/Arp, Bass, Kick/Snare, Hat)
 const RADIO_CHANNELS = [
   {
     name: "CH 1: DIAL-UP DREAMS '99",
     genre: "Corporate Lobby Jazz & FM Electric Piano",
-    bpm: 110,
-    carrierRatio: 1.0,
-    modRatio: 2.0,
-    modDepth: 2.4,
-    bassMod: 1.0,
-    notes: [
-      { chord: [523.25, 659.25, 783.99, 987.77], bass: 130.81, dur: 0.35 },
-      { chord: [440.00, 523.25, 659.25, 783.99], bass: 110.00, dur: 0.35 },
-      { chord: [587.33, 698.46, 880.00, 1046.50], bass: 146.83, dur: 0.35 },
-      { chord: [392.00, 493.88, 587.33, 783.99], bass: 98.00, dur: 0.35 }
+    bpm: 112,
+    leadMod: 2.0, leadDepth: 2.1,
+    counterMod: 1.414, counterDepth: 1.2,
+    chordMod: 1.0, chordDepth: 1.5,
+    bassMod: 0.5, bassDepth: 2.8,
+    // 16-step composition: Cmaj7 -> Am7 -> Dm7 -> G7(b9)
+    steps: [
+      // Bar 1: Cmaj7
+      { lead: 523.25, counter: 659.25, chord: [329.63, 493.88], bass: 65.41, drum: 'kick', hat: true },
+      { lead: 0,      counter: 0,      chord: [],               bass: 0,     drum: null,   hat: true },
+      { lead: 587.33, counter: 523.25, chord: [329.63, 392.00], bass: 130.81, drum: 'snare',hat: true },
+      { lead: 659.25, counter: 0,      chord: [],               bass: 65.41,  drum: null,   hat: true },
+      // Bar 2: Am7
+      { lead: 783.99, counter: 659.25, chord: [329.63, 440.00], bass: 55.00, drum: 'kick', hat: true },
+      { lead: 659.25, counter: 523.25, chord: [],               bass: 0,     drum: null,   hat: true },
+      { lead: 587.33, counter: 440.00, chord: [261.63, 329.63], bass: 110.00, drum: 'snare',hat: true },
+      { lead: 523.25, counter: 0,      chord: [],               bass: 55.00,  drum: null,   hat: true },
+      // Bar 3: Dm7
+      { lead: 440.00, counter: 587.33, chord: [349.23, 523.25], bass: 73.42, drum: 'kick', hat: true },
+      { lead: 493.88, counter: 0,      chord: [],               bass: 0,     drum: null,   hat: true },
+      { lead: 523.25, counter: 440.00, chord: [293.66, 349.23], bass: 146.83, drum: 'snare',hat: true },
+      { lead: 587.33, counter: 0,      chord: [],               bass: 73.42,  drum: null,   hat: true },
+      // Bar 4: G7(b9) resolving back
+      { lead: 659.25, counter: 493.88, chord: [311.13, 466.16], bass: 49.00, drum: 'kick', hat: true },
+      { lead: 587.33, counter: 440.00, chord: [],               bass: 0,     drum: null,   hat: true },
+      { lead: 493.88, counter: 392.00, chord: [293.66, 349.23], bass: 98.00, drum: 'snare',hat: true },
+      { lead: 466.16, counter: 0,      chord: [],               bass: 49.00,  drum: null,   hat: true }
     ]
   },
   {
     name: "CH 2: SILICON VALLEY RUSH",
     genre: "Late-90s Synthpop & Eurodance FM",
-    bpm: 132,
-    carrierRatio: 1.0,
-    modRatio: 3.5,
-    modDepth: 3.2,
-    bassMod: 1.5,
-    notes: [
-      { chord: [440.00, 554.37, 659.25], bass: 110.00, dur: 0.2 },
-      { chord: [493.88, 622.25, 739.99], bass: 123.47, dur: 0.2 },
-      { chord: [587.33, 739.99, 880.00], bass: 146.83, dur: 0.2 },
-      { chord: [659.25, 830.61, 987.77], bass: 164.81, dur: 0.2 }
+    bpm: 134,
+    leadMod: 3.5, leadDepth: 3.2,
+    counterMod: 2.0, counterDepth: 2.0,
+    chordMod: 2.0, chordDepth: 2.2,
+    bassMod: 1.0, bassDepth: 3.5,
+    // 16-step composition: F#m -> D -> A -> E (driving Eurodance counterpoint)
+    steps: [
+      // Bar 1: F#m
+      { lead: 739.99, counter: 440.00, chord: [554.37, 880.00], bass: 46.25, drum: 'kick', hat: true },
+      { lead: 0,      counter: 554.37, chord: [],               bass: 92.50, drum: null,   hat: true },
+      { lead: 659.25, counter: 440.00, chord: [440.00, 554.37], bass: 46.25, drum: 'snare',hat: true },
+      { lead: 739.99, counter: 659.25, chord: [],               bass: 92.50, drum: 'kick', hat: true },
+      // Bar 2: D
+      { lead: 880.00, counter: 587.33, chord: [587.33, 739.99], bass: 73.42, drum: 'kick', hat: true },
+      { lead: 0,      counter: 739.99, chord: [],               bass: 146.83,drum: null,   hat: true },
+      { lead: 987.77, counter: 587.33, chord: [440.00, 587.33], bass: 73.42, drum: 'snare',hat: true },
+      { lead: 880.00, counter: 739.99, chord: [],               bass: 146.83,drum: 'kick', hat: true },
+      // Bar 3: A
+      { lead: 880.00, counter: 554.37, chord: [554.37, 659.25], bass: 55.00, drum: 'kick', hat: true },
+      { lead: 0,      counter: 659.25, chord: [],               bass: 110.00,drum: null,   hat: true },
+      { lead: 739.99, counter: 554.37, chord: [440.00, 554.37], bass: 55.00, drum: 'snare',hat: true },
+      { lead: 659.25, counter: 440.00, chord: [],               bass: 110.00,drum: 'kick', hat: true },
+      // Bar 4: E
+      { lead: 659.25, counter: 493.88, chord: [493.88, 659.25], bass: 41.20, drum: 'kick', hat: true },
+      { lead: 739.99, counter: 392.00, chord: [],               bass: 82.41, drum: null,   hat: true },
+      { lead: 830.61, counter: 493.88, chord: [415.30, 493.88], bass: 41.20, drum: 'snare',hat: true },
+      { lead: 987.77, counter: 659.25, chord: [],               bass: 82.41, drum: 'kick', hat: true }
     ]
   },
   {
     name: "CH 3: SUBCARRIER NIGHTLINE",
     genre: "Atmospheric Ambient FM & 1999Hz Harmonics",
-    bpm: 72,
-    carrierRatio: 1.0,
-    modRatio: 1.999,
-    modDepth: 1.8,
-    bassMod: 0.5,
-    notes: [
-      { chord: [499.75, 749.62, 999.50], bass: 62.47, dur: 0.8 },
-      { chord: [559.72, 839.58, 1119.44], bass: 69.96, dur: 0.8 },
-      { chord: [439.78, 659.67, 879.56], bass: 55.00, dur: 0.8 },
-      { chord: [499.75, 999.50, 1499.25], bass: 62.47, dur: 0.8 }
+    bpm: 74,
+    leadMod: 1.999, leadDepth: 1.8,
+    counterMod: 2.999, counterDepth: 1.4,
+    chordMod: 1.5, chordDepth: 1.9,
+    bassMod: 0.5, bassDepth: 2.2,
+    // 16-step composition: Dm9 -> Bbmaj7#11 -> Gm9 -> A7alt (Carlsbad lithospheric tones)
+    steps: [
+      // Bar 1: Dm9
+      { lead: 587.33, counter: 880.00, chord: [349.23, 440.00, 659.25], bass: 36.71, drum: 'kick', hat: true },
+      { lead: 0,      counter: 0,      chord: [],                        bass: 0,     drum: null,   hat: false },
+      { lead: 659.25, counter: 783.99, chord: [392.00, 499.75],         bass: 73.42, drum: null,   hat: true },
+      { lead: 0,      counter: 0,      chord: [],                        bass: 0,     drum: null,   hat: false },
+      // Bar 2: Bbmaj7#11
+      { lead: 739.99, counter: 698.46, chord: [349.23, 466.16, 739.99], bass: 29.14, drum: 'kick', hat: true },
+      { lead: 0,      counter: 0,      chord: [],                        bass: 0,     drum: null,   hat: false },
+      { lead: 698.46, counter: 587.33, chord: [392.00, 466.16],         bass: 58.27, drum: 'snare',hat: true },
+      { lead: 0,      counter: 0,      chord: [],                        bass: 0,     drum: null,   hat: false },
+      // Bar 3: Gm9
+      { lead: 783.99, counter: 587.33, chord: [349.23, 440.00, 587.33], bass: 49.00, drum: 'kick', hat: true },
+      { lead: 0,      counter: 0,      chord: [],                        bass: 0,     drum: null,   hat: false },
+      { lead: 880.00, counter: 698.46, chord: [392.00, 587.33],         bass: 98.00, drum: null,   hat: true },
+      { lead: 0,      counter: 0,      chord: [],                        bass: 0,     drum: null,   hat: false },
+      // Bar 4: A7alt (with 1999Hz acoustic subcarrier pulse)
+      { lead: 999.50, counter: 739.99, chord: [415.30, 523.25, 659.25], bass: 55.00, drum: 'kick', hat: true },
+      { lead: 0,      counter: 0,      chord: [],                        bass: 0,     drum: null,   hat: false },
+      { lead: 880.00, counter: 659.25, chord: [370.00, 493.88],         bass: 110.0, drum: 'snare',hat: true },
+      { lead: 0,      counter: 0,      chord: [],                        bass: 0,     drum: null,   hat: false }
     ]
   },
   {
     name: "CH 4: DEMOSCENE FM",
     genre: "Chiptune Arpeggios & FastTracker Anthems",
-    bpm: 140,
-    carrierRatio: 1.0,
-    modRatio: 2.0,
-    modDepth: 2.8,
-    bassMod: 2.0,
-    notes: [
-      { chord: [523.25, 622.25, 783.99, 1046.50], bass: 130.81, dur: 0.16 },
-      { chord: [587.33, 698.46, 880.00, 1174.66], bass: 146.83, dur: 0.16 },
-      { chord: [659.25, 783.99, 987.77, 1318.51], bass: 164.81, dur: 0.16 },
-      { chord: [783.99, 987.77, 1174.66, 1567.98], bass: 196.00, dur: 0.16 }
+    bpm: 142,
+    leadMod: 2.0, leadDepth: 2.8,
+    counterMod: 1.0, counterDepth: 2.2,
+    chordMod: 3.0, chordDepth: 2.5,
+    bassMod: 1.0, bassDepth: 3.2,
+    // 16-step composition: Fast Am -> F -> C -> G tracker run
+    steps: [
+      // Bar 1: Am
+      { lead: 880.00, counter: 440.00, chord: [523.25, 659.25], bass: 55.00, drum: 'kick', hat: true },
+      { lead: 1046.5, counter: 523.25, chord: [659.25, 880.00], bass: 110.0, drum: null,   hat: true },
+      { lead: 1318.5, counter: 659.25, chord: [523.25, 659.25], bass: 55.00, drum: 'snare',hat: true },
+      { lead: 1046.5, counter: 523.25, chord: [659.25, 880.00], bass: 110.0, drum: 'kick', hat: true },
+      // Bar 2: F
+      { lead: 698.46, counter: 349.23, chord: [440.00, 523.25], bass: 43.65, drum: 'kick', hat: true },
+      { lead: 880.00, counter: 440.00, chord: [523.25, 698.46], bass: 87.31, drum: null,   hat: true },
+      { lead: 1046.5, counter: 523.25, chord: [440.00, 523.25], bass: 43.65, drum: 'snare',hat: true },
+      { lead: 880.00, counter: 440.00, chord: [523.25, 698.46], bass: 87.31, drum: 'kick', hat: true },
+      // Bar 3: C
+      { lead: 1046.5, counter: 523.25, chord: [659.25, 783.99], bass: 65.41, drum: 'kick', hat: true },
+      { lead: 1318.5, counter: 659.25, chord: [783.99, 1046.5], bass: 130.8, drum: null,   hat: true },
+      { lead: 1567.9, counter: 783.99, chord: [659.25, 783.99], bass: 65.41, drum: 'snare',hat: true },
+      { lead: 1318.5, counter: 659.25, chord: [783.99, 1046.5], bass: 130.8, drum: 'kick', hat: true },
+      // Bar 4: G
+      { lead: 783.99, counter: 392.00, chord: [493.88, 587.33], bass: 49.00, drum: 'kick', hat: true },
+      { lead: 987.77, counter: 493.88, chord: [587.33, 783.99], bass: 98.00, drum: null,   hat: true },
+      { lead: 1174.6, counter: 587.33, chord: [493.88, 587.33], bass: 49.00, drum: 'snare',hat: true },
+      { lead: 987.77, counter: 493.88, chord: [587.33, 783.99], bass: 98.00, drum: 'kick', hat: true }
     ]
   }
 ];
@@ -4813,17 +4991,43 @@ function startRadioPlay() {
   if (quickLink) quickLink.textContent = '📻 RealAudio: [ON]';
 
   const ch = RADIO_CHANNELS[radioChannel];
-  const stepMs = Math.round((60000 / ch.bpm) * 0.5);
+  const stepMs = Math.round((60000 / ch.bpm) * 0.25); // 16th-note ticks
   radioTimer = setInterval(() => {
     if (!radioPlaying || !audioEnabled) return;
-    const stepData = ch.notes[radioStep % ch.notes.length];
-    
-    // Play FM Chord
-    stepData.chord.forEach((freq, idx) => {
-      triggerFmVoice(freq, ch.modRatio, ch.modDepth, stepData.dur, radioVolume * 0.18, idx * 0.02);
-    });
-    // Play FM Bass
-    triggerFmVoice(stepData.bass, ch.bassMod, 2.5, stepData.dur * 1.2, radioVolume * 0.28, 0);
+    const stepData = ch.steps[radioStep % ch.steps.length];
+    const dur16th = (60 / ch.bpm) * 0.25;
+
+    // Ch1: Lead Melody (with vibrato)
+    if (stepData.lead > 0) {
+      triggerFmVoice(stepData.lead, ch.leadMod, ch.leadDepth, dur16th * 1.8, 0.22, 0, 0.4);
+    }
+
+    // Ch2: Counter-melody
+    if (stepData.counter > 0) {
+      triggerFmVoice(stepData.counter, ch.counterMod, ch.counterDepth, dur16th * 1.2, 0.16, 0.015, 0);
+    }
+
+    // Ch3: Harmony Shell Voicings
+    if (stepData.chord && stepData.chord.length > 0) {
+      stepData.chord.forEach((freq, idx) => {
+        triggerFmVoice(freq, ch.chordMod, ch.chordDepth, dur16th * 2.0, 0.12, idx * 0.01, 0);
+      });
+    }
+
+    // Ch4: Bass (active counterpoint)
+    if (stepData.bass > 0) {
+      triggerFmVoice(stepData.bass, ch.bassMod, ch.bassDepth, dur16th * 1.6, 0.32, 0, 0);
+    }
+
+    // Ch5: FM Kick / Snare
+    if (stepData.drum) {
+      triggerFmDrum(stepData.drum, 0.35, 0);
+    }
+
+    // Ch6: Inharmonic Metallic Hat
+    if (stepData.hat) {
+      triggerFmDrum('hat', 0.18, 0);
+    }
 
     updateSpectrumVisual();
     radioStep++;
@@ -4865,42 +5069,6 @@ function switchRadioChannel(idx) {
 
 function handleRadioVolume(val) {
   radioVolume = parseInt(val, 10) / 100;
-}
-
-// Procedural 2-operator FM Voice
-function triggerFmVoice(carrierFreq, modMultiplier, modIndex, duration, vol, delayOffset) {
-  if (!audioCtx) return;
-  const now = audioCtx.currentTime + (delayOffset || 0);
-
-  const carrier = audioCtx.createOscillator();
-  const modulator = audioCtx.createOscillator();
-  const modGain = audioCtx.createGain();
-  const carrierGain = audioCtx.createGain();
-
-  carrier.type = 'sine';
-  carrier.frequency.setValueAtTime(carrierFreq, now);
-
-  modulator.type = 'sine';
-  modulator.frequency.setValueAtTime(carrierFreq * modMultiplier, now);
-
-  const depth = carrierFreq * modIndex;
-  modGain.gain.setValueAtTime(depth, now);
-  modGain.gain.exponentialRampToValueAtTime(0.1, now + duration);
-
-  carrierGain.gain.setValueAtTime(vol, now);
-  carrierGain.gain.exponentialRampToValueAtTime(0.001, now + duration);
-
-  modulator.connect(modGain);
-  modGain.connect(carrier.frequency);
-
-  carrier.connect(carrierGain);
-  carrierGain.connect(masterGain);
-  if (delayNode) carrierGain.connect(delayNode);
-
-  modulator.start(now);
-  carrier.start(now);
-  modulator.stop(now + duration);
-  carrier.stop(now + duration);
 }
 
 /* =========================================================================

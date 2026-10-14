@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-soundscape
-next_agent: kilo-tester
+current_agent: kilo-tester
+next_agent: kilo-usability
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -15,7 +15,7 @@ status: ready
 current_targets:
   kilo_creator: kweb://10.19.99.4/classified
   kilo_graphics: KStarForge
-  kilo_soundscape: kweb://portal
+  kilo_soundscape: kweb://warez
   kilo_tester: KSanctuary
   kilo_usability: KNote
   kilo_qa: KSpace
@@ -34,9 +34,9 @@ virtual_web_rotation:
 - kweb://10.19.99.4/classified
 - kweb://echo-subsystem.net
 last_run:
-  agent: kilo-graphics
-  app: KAbyss
-  timestamp: '2026-10-13T19:14:00-07:00'
+  agent: kilo-soundscape
+  app: kweb://portal
+  timestamp: '2026-10-13T19:32:00-07:00'
 last_planner_run: '2026-10-13T18:15:00Z'
 ---
 
@@ -87,7 +87,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ### 3. Procedural Audio & Soundscape Queue (`kilo-soundscape`)
 - **Mission**: Give each game/app a unique YM2612 2-Op FM / SPC700 procedural audio identity. Compose genre-appropriate melodic themes with real chiptune techniques: shell voicings, contrary-motion counterpoint, Royal Road / Andalusian progressions, swing-tick groove, and per-genre FM patch design. Replace all generic oscillator presets. Skip cleanly for pure-utility/text targets (`⏭️ Skip — Procedural soundscape not appropriate for [app]`).
-- **Current Target**: `kweb://portal`
+- **Current Target**: `kweb://warez`
 - **Upcoming Queue** *(virtual KNet web first, then game apps)*: `kweb://warez`, `kweb://cybercafe`, `kweb://darknet`, `kweb://asm-temple`, `kweb://echo-subsystem.net`, `kweb://deep-core`, `kweb://10.19.99.4/classified`, `kweb://webring`, `KColosseum`, `KRogue`, `KSpace`, `KMine`, `KSubmarine`, `KFortress`, `KMaze`, `KAbyss`, `KStarForge`, `KPac`, `KAsteroids`, `KBreakout`, `KSnake`, `KPong`, `KWizard`, `KFarm`, `KDragon`, `KQuest`.
 
 ### 4. App Tester Queue (`kilo-tester`)
@@ -122,6 +122,13 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 ---
 
 ## Recent Execution Logs (Max 5 Entries)
+- **2026-10-13T19:32:00-07:00 — kilo-soundscape: kweb://portal (Procedural Audio Overhaul)**
+  - Replaced generic 4-chord presets with authentic 6-channel YM2612 2-Op FM / SPC700 music engine.
+  - Composed 4 distinct 16-step tracks (Jazz, Eurodance Synthpop, Carlsbad Ambient Harmonics, Demoscene Tracker).
+  - Added dedicated FM kick, snappy snare, metallic hats, and delayed vibrato lead voice-leading.
+  - Verified clean build (`npm run build` 0 errors, 542 KB < 999 KB).
+  - Queue: Advanced kilo-soundscape to kweb://warez; handed off to kilo-tester.
+
 - **2026-10-13T19:14:00-07:00 — kilo-graphics: KAbyss (Graphics & Asset Audit)**
   - ⏭️ Skip — Imagen 3 asset replacement not appropriate for KAbyss
   - Verified no rotating specular glints or traveling perimeter border dots.
@@ -145,8 +152,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Ensured first-run tutorial integrity with storage safety guards and timeout cancellation on load.
   - Verified clean build (`npm run build` 0 errors, file size 320 KB < 999 KB).
   - Queue: Advanced kilo-qa to KSpace; handed off to kilo-expander.
-
-- **2026-10-13T17:13:00-07:00 — kilo-usability: KCalc (Usability & Layout Audit)**
-  - ⏭️ Skip — app usability is complete and mature (6+ passes, zero layout clipping, HiDPI graphing, F1/H modal guides).
-  - Verified clean build (npm run build 0 errors, 200 KB < 999 KB).
-  - Queue: Advanced kilo-usability to KNote; handed off to kilo-qa.
