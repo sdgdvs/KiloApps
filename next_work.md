@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-creator
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -18,7 +18,7 @@ current_targets:
   kilo_soundscape: kweb://portal
   kilo_tester: KSanctuary
   kilo_usability: KNote
-  kilo_qa: KRogue
+  kilo_qa: KSpace
   kilo_expander: KDB
 virtual_web_target: kweb://cybercafe
 virtual_web_rotation:
@@ -34,9 +34,9 @@ virtual_web_rotation:
 - kweb://10.19.99.4/classified
 - kweb://echo-subsystem.net
 last_run:
-  agent: kilo-usability
-  app: KCalc
-  timestamp: '2026-10-13T17:13:00-07:00'
+  agent: kilo-qa
+  app: KRogue
+  timestamp: '2026-10-13T17:31:00-07:00'
 last_planner_run: '2026-10-13T18:15:00Z'
 ---
 
@@ -99,8 +99,8 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Upcoming Queue**: `KRogue`, `KSubmarine`, `KMail`, `KPad`, `KAudio`.
 
 ### 6. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
-- **Current Target**: `KRogue`
-- **Upcoming Queue**: `KSpace`, `KMaze`, `KAsteroids`, `KSnake`, `KBreakout`.
+- **Current Target**: `KSpace`
+- **Upcoming Queue**: `KMaze`, `KAsteroids`, `KSnake`, `KBreakout`, `KRogue`.
 
 ### 7. Feature Expander Queue (`kilo-expander`)
 - **Current Target**: `KDB`
@@ -122,6 +122,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 ---
 
 ## Recent Execution Logs (Max 5 Entries)
+- **2026-10-13T17:31:00-07:00 — kilo-qa: KRogue (Pass 5: Tutorial & State Integrity)**
+  - Audited full game state persistence (F5/S quicksave, F9/L quickload, slots 1-3, import/export).
+  - Ensured first-run tutorial integrity with storage safety guards and timeout cancellation on load.
+  - Verified clean build (`npm run build` 0 errors, file size 320 KB < 999 KB).
+  - Queue: Advanced kilo-qa to KSpace; handed off to kilo-expander.
+
 - **2026-10-13T17:13:00-07:00 — kilo-usability: KCalc (Usability & Layout Audit)**
   - ⏭️ Skip — app usability is complete and mature (6+ passes, zero layout clipping, HiDPI graphing, F1/H modal guides).
   - Verified clean build (npm run build 0 errors, 200 KB < 999 KB).
@@ -143,10 +149,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - ⏭️ Skip — Imagen 3 asset replacement not appropriate for KSubmarine.
   - Audited CRT telemetry dashboard aesthetic; verified zero rotating specular glints or traveling border dots.
   - Queue: Advanced kilo-graphics to KAbyss; handed off to kilo-soundscape.
-
-- **2026-10-13T22:15:00Z — kilo-creator: kweb://asm-temple (Virtual Web Destination Expansion)**
-  - Implemented Tab 9 Ring-0 Crypta: interactive anti-debugger probe suite, PEB/RDTSC diagnostics.
-  - Implemented CRACKME99 algorithmic keygen & serial validator with live transform hashes.
-  - Implemented interactive shareware disassembly byte patcher and diegetic subnet buffer telemetry.
-  - Verified clean build (`npm run build` 0 errors, 313 KB < 999 KB).
-  - Queue: Advanced kilo-creator to kweb://cybercafe; handed off to kilo-graphics.

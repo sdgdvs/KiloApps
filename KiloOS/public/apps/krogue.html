@@ -1577,11 +1577,13 @@
                 turn_parity: 0
             };
 
-            let seenTutorial = localStorage.getItem('krogue_tutorialSeen');
-            if (!seenTutorial) {
-                localStorage.setItem('krogue_tutorialSeen', 'true');
-                tutorialTimeout = setTimeout(() => { openHelp(); }, 350);
-            }
+            try {
+                let seenTutorial = localStorage.getItem('krogue_tutorialSeen');
+                if (!seenTutorial) {
+                    localStorage.setItem('krogue_tutorialSeen', 'true');
+                    tutorialTimeout = setTimeout(() => { openHelp(); }, 350);
+                }
+            } catch(e) {}
 
             equipment = { weapon: null, armor: null, shield: null, ring: null };
 
