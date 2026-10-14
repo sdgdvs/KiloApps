@@ -1847,7 +1847,7 @@ function initAudio() {
     }
   }
   if (audioCtx && audioCtx.state === 'suspended') {
-    audioCtx.resume();
+    audioCtx.resume().catch(() => {});
   }
 }
 
@@ -2232,7 +2232,7 @@ async function transmitModemMessage() {
 
   initAudio();
   if (audioCtx && audioCtx.state === 'suspended') {
-    await audioCtx.resume();
+    await audioCtx.resume().catch(() => {});
   }
 
   isModemBusy = true;
@@ -5923,7 +5923,7 @@ document.addEventListener('visibilitychange', () => {
     cadScopeAnimId = null;
   } else {
     if (audioCtx && audioEnabled && audioCtx.state === 'suspended') {
-      audioCtx.resume();
+      audioCtx.resume().catch(() => {});
     }
     if (audioEnabled) {
       startVisualizers();
