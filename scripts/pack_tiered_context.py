@@ -71,7 +71,8 @@ def extract_apps_metadata(repo_root):
     return apps
 
 def build_architecture_index(repo_root, apps, target_dir):
-    out_path = os.path.join(target_dir, "KiloApps-architecture-index.xml")
+    out_txt_path = os.path.join(target_dir, "KiloApps-architecture-index.txt")
+    out_xml_path = os.path.join(target_dir, "KiloApps-architecture-index.xml")
     apps_dir = os.path.join(repo_root, "KiloOS", "public", "apps")
     
     xml_parts = []
@@ -142,9 +143,12 @@ def build_architecture_index(repo_root, apps, target_dir):
     xml_parts.append('  </cartridges_catalog>')
     xml_parts.append('</project_context>')
     
-    with open(out_path, "w", encoding="utf-8") as f:
-        f.write("\n".join(xml_parts))
-    return out_path
+    body = "\n".join(xml_parts)
+    with open(out_txt_path, "w", encoding="utf-8") as f:
+        f.write(body)
+    with open(out_xml_path, "w", encoding="utf-8") as f:
+        f.write(body)
+    return out_txt_path
 
 def build_per_game_bundles(repo_root, apps, target_dir):
     games_out_dir = os.path.join(target_dir, "kiloapps-games")
@@ -153,7 +157,8 @@ def build_per_game_bundles(repo_root, apps, target_dir):
     
     for app in apps:
         slug = app["id"]
-        out_path = os.path.join(games_out_dir, f"{slug}-context.xml")
+        out_txt_path = os.path.join(games_out_dir, f"{slug}-context.txt")
+        out_xml_path = os.path.join(games_out_dir, f"{slug}-context.xml")
         
         # Web app html
         html_rel = app["url"].lstrip("/")
@@ -191,9 +196,12 @@ def build_per_game_bundles(repo_root, apps, target_dir):
         xml.append('  </files>')
         xml.append('</cartridge_context>')
         
-        with open(out_path, "w", encoding="utf-8") as f:
-            f.write("\n".join(xml))
-        generated.append(out_path)
+        body = "\n".join(xml)
+        with open(out_txt_path, "w", encoding="utf-8") as f:
+            f.write(body)
+        with open(out_xml_path, "w", encoding="utf-8") as f:
+            f.write(body)
+        generated.append(out_txt_path)
         
     return generated
 
