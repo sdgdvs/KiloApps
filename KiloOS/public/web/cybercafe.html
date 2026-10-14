@@ -3639,48 +3639,408 @@ function playSteamBubbling(dur = 1.4) {
 }
 
 /* =========================================================================
-   2. PROCEDURAL BGM CHIPTUNE JUKEBOX (5 Tracks)
+   2. PROCEDURAL BGM CHIPTUNE JUKEBOX (YM2612 2-Op FM / SPC700 Engine)
    ========================================================================= */
+
+// Named FM Patches & Percussion Synthesizers
+function playRhodesEPiano(freq, dur, vol = 0.1, toDelay = true) {
+  if (!audioEnabled || !freq) return;
+  initAudio();
+  if (!audioCtx) return;
+  const now = audioCtx.currentTime;
+  const carrier = audioCtx.createOscillator();
+  const modulator = audioCtx.createOscillator();
+  const modGain = audioCtx.createGain();
+  const ampEnv = audioCtx.createGain();
+
+  carrier.type = 'sine'; modulator.type = 'sine';
+  carrier.frequency.setValueAtTime(freq, now);
+  modulator.frequency.setValueAtTime(freq * 2.0, now); // 2:1 ratio for warm bell harmonic
+
+  const modPeak = freq * 2.0 * 2.6;
+  modGain.gain.setValueAtTime(modPeak, now);
+  modGain.gain.exponentialRampToValueAtTime(freq * 0.15, now + 0.08); // fast decay to mellow sine
+  modGain.gain.exponentialRampToValueAtTime(0.01, now + dur);
+
+  ampEnv.gain.setValueAtTime(vol, now);
+  ampEnv.gain.exponentialRampToValueAtTime(0.0001, now + dur);
+
+  modulator.connect(modGain);
+  modGain.connect(carrier.frequency);
+  carrier.connect(ampEnv);
+  ampEnv.connect(analyserNode);
+  if (toDelay && delayL && delayR) {
+    ampEnv.connect(delayL);
+    ampEnv.connect(delayR);
+  }
+  carrier.start(now); modulator.start(now);
+  carrier.stop(now + dur); modulator.stop(now + dur);
+}
+
+function playSlapBass(freq, dur, vol = 0.12) {
+  if (!audioEnabled || !freq) return;
+  initAudio();
+  if (!audioCtx) return;
+  const now = audioCtx.currentTime;
+  const carrier = audioCtx.createOscillator();
+  const modulator = audioCtx.createOscillator();
+  const modGain = audioCtx.createGain();
+  const ampEnv = audioCtx.createGain();
+
+  carrier.type = 'sine'; modulator.type = 'sine';
+  carrier.frequency.setValueAtTime(freq, now);
+  modulator.frequency.setValueAtTime(freq * 2.0, now);
+
+  const modPeak = freq * 2.0 * 3.4; // punchy FM transient
+  modGain.gain.setValueAtTime(modPeak, now);
+  modGain.gain.exponentialRampToValueAtTime(0.01, now + 0.05);
+
+  ampEnv.gain.setValueAtTime(vol, now);
+  ampEnv.gain.exponentialRampToValueAtTime(0.0001, now + dur);
+
+  modulator.connect(modGain);
+  modGain.connect(carrier.frequency);
+  carrier.connect(ampEnv);
+  ampEnv.connect(analyserNode); // Low end kept dry (no delay) for punch
+  carrier.start(now); modulator.start(now);
+  carrier.stop(now + dur); modulator.stop(now + dur);
+}
+
+function playHollowLead(freq, dur, vol = 0.08, toDelay = true) {
+  if (!audioEnabled || !freq) return;
+  initAudio();
+  if (!audioCtx) return;
+  const now = audioCtx.currentTime;
+  const carrier = audioCtx.createOscillator();
+  const modulator = audioCtx.createOscillator();
+  const modGain = audioCtx.createGain();
+  const ampEnv = audioCtx.createGain();
+
+  carrier.type = 'sine'; modulator.type = 'sine';
+  carrier.frequency.setValueAtTime(freq, now);
+  // Delayed vibrato (after 140ms)
+  carrier.frequency.setValueAtTime(freq, now + 0.14);
+  carrier.frequency.linearRampToValueAtTime(freq * 1.018, now + 0.22);
+  carrier.frequency.linearRampToValueAtTime(freq * 0.985, now + 0.32);
+
+  modulator.frequency.setValueAtTime(freq * 1.0, now);
+  modGain.gain.setValueAtTime(freq * 0.85, now);
+  modGain.gain.exponentialRampToValueAtTime(freq * 0.12, now + dur);
+
+  ampEnv.gain.setValueAtTime(0.001, now);
+  ampEnv.gain.linearRampToValueAtTime(vol, now + 0.03); // soft vocal attack
+  ampEnv.gain.exponentialRampToValueAtTime(0.0001, now + dur);
+
+  modulator.connect(modGain);
+  modGain.connect(carrier.frequency);
+  carrier.connect(ampEnv);
+  ampEnv.connect(analyserNode);
+  if (toDelay && delayL && delayR) {
+    ampEnv.connect(delayL);
+    ampEnv.connect(delayR);
+  }
+  carrier.start(now); modulator.start(now);
+  carrier.stop(now + dur); modulator.stop(now + dur);
+}
+
+function playWarmPad(freq, dur, vol = 0.05, toDelay = true) {
+  if (!audioEnabled || !freq) return;
+  initAudio();
+  if (!audioCtx) return;
+  const now = audioCtx.currentTime;
+  const carrier = audioCtx.createOscillator();
+  const modulator = audioCtx.createOscillator();
+  const modGain = audioCtx.createGain();
+  const ampEnv = audioCtx.createGain();
+
+  carrier.type = 'sine'; modulator.type = 'sine';
+  carrier.frequency.setValueAtTime(freq, now);
+  modulator.frequency.setValueAtTime(freq * 0.5, now);
+  modGain.gain.setValueAtTime(freq * 0.5 * 1.2, now);
+  modGain.gain.exponentialRampToValueAtTime(freq * 0.5 * 0.6, now + dur);
+
+  ampEnv.gain.setValueAtTime(0.001, now);
+  ampEnv.gain.linearRampToValueAtTime(vol, now + 0.08); // slow pillowy attack
+  ampEnv.gain.exponentialRampToValueAtTime(0.0001, now + dur);
+
+  modulator.connect(modGain);
+  modGain.connect(carrier.frequency);
+  carrier.connect(ampEnv);
+  ampEnv.connect(analyserNode);
+  if (toDelay && delayL && delayR) {
+    ampEnv.connect(delayL);
+    ampEnv.connect(delayR);
+  }
+  carrier.start(now); modulator.start(now);
+  carrier.stop(now + dur); modulator.stop(now + dur);
+}
+
+function playFMKick(dur = 0.12, vol = 0.18) {
+  if (!audioEnabled) return;
+  initAudio();
+  if (!audioCtx) return;
+  const now = audioCtx.currentTime;
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.type = 'sine';
+  osc.frequency.setValueAtTime(130, now);
+  osc.frequency.exponentialRampToValueAtTime(42, now + dur * 0.7);
+
+  gain.gain.setValueAtTime(vol, now);
+  gain.gain.exponentialRampToValueAtTime(0.0001, now + dur);
+
+  osc.connect(gain);
+  gain.connect(analyserNode); // dry
+  osc.start(now);
+  osc.stop(now + dur);
+}
+
+function playFMSnare(dur = 0.14, vol = 0.11) {
+  if (!audioEnabled) return;
+  initAudio();
+  if (!audioCtx) return;
+  const now = audioCtx.currentTime;
+  const carrier = audioCtx.createOscillator();
+  const modulator = audioCtx.createOscillator();
+  const modGain = audioCtx.createGain();
+  const amp = audioCtx.createGain();
+
+  carrier.type = 'triangle';
+  carrier.frequency.setValueAtTime(185, now);
+  carrier.frequency.exponentialRampToValueAtTime(75, now + 0.06);
+
+  modulator.type = 'sine';
+  modulator.frequency.setValueAtTime(1850, now); // high inharmonic ratio for noise snap
+  modGain.gain.setValueAtTime(1850 * 7.5, now);
+  modGain.gain.exponentialRampToValueAtTime(1.0, now + dur);
+
+  amp.gain.setValueAtTime(vol, now);
+  amp.gain.exponentialRampToValueAtTime(0.0001, now + dur);
+
+  modulator.connect(modGain);
+  modGain.connect(carrier.frequency);
+  carrier.connect(amp);
+  amp.connect(analyserNode);
+  if (delayL && delayR) {
+    amp.connect(delayL);
+  }
+  carrier.start(now); modulator.start(now);
+  carrier.stop(now + dur); modulator.stop(now + dur);
+}
+
+function playFMHiHat(open = false, vol = 0.05) {
+  if (!audioEnabled) return;
+  initAudio();
+  if (!audioCtx) return;
+  const dur = open ? 0.18 : 0.04;
+  const now = audioCtx.currentTime;
+  const carrier = audioCtx.createOscillator();
+  const modulator = audioCtx.createOscillator();
+  const modGain = audioCtx.createGain();
+  const amp = audioCtx.createGain();
+
+  carrier.type = 'square';
+  carrier.frequency.setValueAtTime(3200, now);
+  modulator.type = 'sine';
+  modulator.frequency.setValueAtTime(35200, now); // 11x inharmonic
+  modGain.gain.setValueAtTime(12000, now);
+  modGain.gain.exponentialRampToValueAtTime(1.0, now + dur);
+
+  amp.gain.setValueAtTime(vol, now);
+  amp.gain.exponentialRampToValueAtTime(0.0001, now + dur);
+
+  modulator.connect(modGain);
+  modGain.connect(carrier.frequency);
+  carrier.connect(amp);
+  amp.connect(analyserNode);
+  if (open && delayL && delayR) {
+    amp.connect(delayR);
+  }
+  carrier.start(now); modulator.start(now);
+  carrier.stop(now + dur); modulator.stop(now + dur);
+}
+
+// 32-step multi-voice compositions with swing grooves
 const BGM_TRACKS = [
   {
     name: "Midnight Baud '99",
-    tempo: 120, // ~125 BPM
-    bass: [146.83, 0, 146.83, 0, 116.54, 0, 116.54, 0, 98.00, 0, 98.00, 0, 110.00, 0, 130.81, 0],
-    lead: [293.66, 349.23, 440.00, 523.25, 440.00, 349.23, 293.66, 0, 233.08, 293.66, 349.23, 440.00, 349.23, 293.66, 220.00, 261.63],
-    fmRatio: 2.0,
-    fmMod: 1.5
+    genre: "Downtempo Cybercafe Groove",
+    stepMs: 140, // ~107 BPM swing
+    // 32 steps: Dm -> Bb -> Gm7 -> A7
+    bass: [
+      146.83, 0, 146.83, 0,  293.66, 0, 146.83, 0,
+      116.54, 0, 116.54, 0,  233.08, 0, 116.54, 0,
+      98.00,  0, 98.00,  0,  196.00, 0, 98.00,  0,
+      110.00, 0, 110.00, 123.47, 130.81, 0, 138.59, 0
+    ],
+    lead: [
+      587.33, 0, 523.25, 440.00,  0, 349.23, 392.00, 0,
+      466.16, 0, 440.00, 349.23,  0, 293.66, 349.23, 0,
+      392.00, 0, 440.00, 523.25,  587.33, 0, 698.46, 0,
+      659.25, 0, 587.33, 523.25,  440.00, 0, 0, 0
+    ],
+    counter: [
+      0, 0, 0, 293.66,  0, 0, 0, 261.63,
+      0, 0, 0, 233.08,  0, 0, 0, 220.00,
+      0, 0, 0, 196.00,  0, 0, 0, 233.08,
+      0, 0, 0, 220.00,  0, 246.94, 277.18, 0
+    ],
+    shell: [
+      349.23, 0, 440.00, 0,  349.23, 0, 440.00, 0,
+      349.23, 0, 466.16, 0,  349.23, 0, 466.16, 0,
+      349.23, 0, 392.00, 0,  349.23, 0, 392.00, 0,
+      329.63, 0, 440.00, 0,  370.00, 0, 440.00, 0
+    ],
+    drums: [
+      1, 3, 2, 3,  1, 3, 2, 4,
+      1, 3, 2, 3,  1, 3, 2, 3,
+      1, 3, 2, 3,  1, 3, 2, 4,
+      1, 3, 2, 3,  1, 3, 2, 2
+    ]
   },
   {
     name: "Packet Storm",
-    tempo: 105, // ~140 BPM
-    bass: [110.00, 110.00, 220.00, 110.00, 130.81, 130.81, 261.63, 130.81, 146.83, 146.83, 293.66, 146.83, 164.81, 146.83, 130.81, 110.00],
-    lead: [440.00, 0, 523.25, 0, 587.33, 0, 659.25, 587.33, 523.25, 0, 440.00, 0, 392.00, 440.00, 523.25, 0],
-    fmRatio: 3.5,
-    fmMod: 2.2
+    genre: "Demoscene Tracker Funk",
+    stepMs: 110, // ~136 BPM
+    // Am -> F -> C -> E7
+    bass: [
+      110.00, 110.00, 220.00, 110.00,  130.81, 110.00, 164.81, 0,
+      87.31,  87.31,  174.61, 87.31,   130.81, 87.31,  174.61, 0,
+      130.81, 130.81, 261.63, 130.81,  164.81, 130.81, 196.00, 0,
+      82.41,  82.41,  164.81, 82.41,   123.47, 130.81, 146.83, 155.56
+    ],
+    lead: [
+      440.00, 0, 523.25, 0,  587.33, 659.25, 0, 523.25,
+      698.46, 0, 659.25, 0,  587.33, 523.25, 440.00, 0,
+      523.25, 0, 659.25, 0,  783.99, 0, 659.25, 0,
+      830.61, 0, 783.99, 659.25, 587.33, 523.25, 493.88, 0
+    ],
+    counter: [
+      0, 220.00, 0, 261.63,  0, 293.66, 0, 261.63,
+      0, 174.61, 0, 220.00,  0, 261.63, 0, 220.00,
+      0, 261.63, 0, 329.63,  0, 392.00, 0, 329.63,
+      0, 207.65, 0, 246.94,  0, 293.66, 0, 246.94
+    ],
+    shell: [
+      261.63, 0, 329.63, 0,  261.63, 0, 329.63, 0,
+      261.63, 0, 349.23, 0,  261.63, 0, 349.23, 0,
+      261.63, 0, 329.63, 0,  261.63, 0, 392.00, 0,
+      246.94, 0, 329.63, 0,  246.94, 0, 392.00, 0
+    ],
+    drums: [
+      1, 3, 2, 3,  1, 3, 2, 4,
+      1, 3, 2, 3,  1, 1, 2, 4,
+      1, 3, 2, 3,  1, 3, 2, 4,
+      1, 3, 2, 3,  1, 2, 1, 2
+    ]
   },
   {
     name: "Silicon Sunset",
-    tempo: 160, // ~94 BPM ambient
-    bass: [130.81, 0, 0, 0, 164.81, 0, 0, 0, 174.61, 0, 0, 0, 196.00, 0, 0, 0],
-    lead: [523.25, 659.25, 783.99, 987.77, 783.99, 659.25, 523.25, 0, 440.00, 523.25, 659.25, 0, 392.00, 0, 440.00, 0],
-    fmRatio: 1.5,
-    fmMod: 0.8
+    genre: "Neo-Tokyo Ambient Lounge",
+    stepMs: 165, // ~90 BPM
+    // Fmaj7 -> Gsus4 -> Em7 -> Am9 (Royal Road variant)
+    bass: [
+      87.31,  0, 0, 0,  174.61, 0, 0, 0,
+      98.00,  0, 0, 0,  196.00, 0, 0, 0,
+      82.41,  0, 0, 0,  164.81, 0, 0, 0,
+      110.00, 0, 0, 0,  220.00, 0, 0, 0
+    ],
+    lead: [
+      698.46, 0, 659.25, 0,  523.25, 0, 440.00, 0,
+      587.33, 0, 659.25, 0,  783.99, 0, 0, 0,
+      659.25, 0, 587.33, 0,  493.88, 0, 392.00, 0,
+      523.25, 0, 440.00, 0,  392.00, 0, 440.00, 0
+    ],
+    counter: [
+      0, 0, 349.23, 0,  0, 0, 440.00, 0,
+      0, 0, 392.00, 0,  0, 0, 523.25, 0,
+      0, 0, 329.63, 0,  0, 0, 392.00, 0,
+      0, 0, 349.23, 0,  0, 0, 293.66, 0
+    ],
+    shell: [
+      329.63, 0, 349.23, 0,  440.00, 0, 523.25, 0,
+      293.66, 0, 392.00, 0,  440.00, 0, 523.25, 0,
+      293.66, 0, 329.63, 0,  392.00, 0, 493.88, 0,
+      261.63, 0, 329.63, 0,  440.00, 0, 523.25, 0
+    ],
+    drums: [
+      1, 0, 3, 0,  2, 0, 3, 4,
+      1, 0, 3, 0,  2, 0, 3, 0,
+      1, 0, 3, 0,  2, 0, 3, 4,
+      1, 0, 3, 0,  2, 0, 4, 0
+    ]
   },
   {
     name: "Subnet Odyssey",
-    tempo: 115, // ~130 BPM Genesis funk
-    bass: [146.83, 146.83, 0, 146.83, 174.61, 0, 146.83, 0, 130.81, 130.81, 0, 130.81, 110.00, 0, 123.47, 130.81],
-    lead: [587.33, 523.25, 440.00, 392.00, 440.00, 523.25, 587.33, 0, 659.25, 587.33, 523.25, 440.00, 392.00, 440.00, 523.25, 587.33],
-    fmRatio: 1.0,
-    fmMod: 2.6
+    genre: "Genesis YM2612 Slap Funk",
+    stepMs: 120, // ~125 BPM
+    // Dm7 -> G9 -> Cmaj7 -> A7#9
+    bass: [
+      146.83, 146.83, 0, 146.83,  293.66, 0, 146.83, 0,
+      98.00,  98.00,  0, 98.00,   196.00, 0, 98.00,  0,
+      130.81, 130.81, 0, 130.81,  261.63, 0, 130.81, 0,
+      110.00, 110.00, 0, 110.00,  220.00, 0, 123.47, 138.59
+    ],
+    lead: [
+      587.33, 0, 523.25, 0,  440.00, 0, 392.00, 440.00,
+      493.88, 0, 587.33, 0,  698.46, 0, 587.33, 0,
+      523.25, 0, 659.25, 0,  783.99, 0, 659.25, 0,
+      622.25, 0, 587.33, 0,  523.25, 493.88, 440.00, 0
+    ],
+    counter: [
+      0, 261.63, 0, 293.66,  0, 349.23, 0, 293.66,
+      0, 246.94, 0, 293.66,  0, 349.23, 0, 293.66,
+      0, 246.94, 0, 261.63,  0, 329.63, 0, 261.63,
+      0, 233.08, 0, 277.18,  0, 329.63, 0, 277.18
+    ],
+    shell: [
+      349.23, 0, 440.00, 0,  349.23, 0, 440.00, 0,
+      349.23, 0, 493.88, 0,  349.23, 0, 493.88, 0,
+      329.63, 0, 493.88, 0,  329.63, 0, 493.88, 0,
+      329.63, 0, 440.00, 0,  370.00, 0, 440.00, 0
+    ],
+    drums: [
+      1, 3, 2, 3,  1, 3, 2, 4,
+      1, 3, 2, 3,  1, 3, 2, 3,
+      1, 3, 2, 3,  1, 3, 2, 4,
+      1, 3, 2, 1,  2, 3, 4, 3
+    ]
   },
   {
     name: "Neon Barista",
-    tempo: 175, // ~85 BPM chill lounge
-    bass: [110.00, 0, 0, 110.00, 130.81, 0, 0, 130.81, 146.83, 0, 0, 146.83, 164.81, 0, 130.81, 0],
-    lead: [440.00, 493.88, 523.25, 659.25, 587.33, 523.25, 440.00, 392.00, 440.00, 523.25, 659.25, 783.99, 659.25, 523.25, 440.00, 392.00],
-    fmRatio: 2.5,
-    fmMod: 1.1
+    genre: "Coffee Lounge Chillhop",
+    stepMs: 155, // ~96 BPM swing
+    // Cmaj7 -> Am9 -> Dm7 -> G13
+    bass: [
+      130.81, 0, 0, 130.81,  261.63, 0, 130.81, 0,
+      110.00, 0, 0, 110.00,  220.00, 0, 110.00, 0,
+      146.83, 0, 0, 146.83,  293.66, 0, 146.83, 0,
+      98.00,  0, 0, 98.00,   196.00, 0, 110.00, 123.47
+    ],
+    lead: [
+      523.25, 0, 493.88, 0,  392.00, 440.00, 523.25, 0,
+      659.25, 0, 587.33, 0,  523.25, 0, 440.00, 0,
+      587.33, 0, 523.25, 0,  440.00, 392.00, 349.23, 0,
+      440.00, 0, 493.88, 0,  587.33, 0, 0, 0
+    ],
+    counter: [
+      0, 329.63, 0, 392.00,  0, 493.88, 0, 392.00,
+      0, 261.63, 0, 329.63,  0, 440.00, 0, 329.63,
+      0, 293.66, 0, 349.23,  0, 440.00, 0, 349.23,
+      0, 246.94, 0, 329.63,  0, 392.00, 0, 329.63
+    ],
+    shell: [
+      493.88, 0, 523.25, 0,  493.88, 0, 523.25, 0,
+      440.00, 0, 523.25, 0,  440.00, 0, 523.25, 0,
+      440.00, 0, 523.25, 0,  440.00, 0, 523.25, 0,
+      392.00, 0, 493.88, 0,  440.00, 0, 523.25, 0
+    ],
+    drums: [
+      1, 3, 2, 3,  1, 3, 2, 4,
+      1, 3, 2, 3,  1, 3, 2, 0,
+      1, 3, 2, 3,  1, 3, 2, 4,
+      1, 3, 2, 3,  1, 3, 4, 0
+    ]
   }
 ];
 
@@ -3721,25 +4081,58 @@ function changeBgmTrack(val) {
   }
 }
 
+// 6-Channel procedural audio scheduler with 5:3 swing-tick groove
 function playBgmStep() {
   if (!bgmPlaying) return;
   const track = BGM_TRACKS[currentBgmTrack];
-  const stepIdx = bgmStep % 16;
+  const stepIdx = bgmStep % 32;
 
-  // Bass note
+  // 1. Ch4: Bass (melodic counterpoint & slap bass transient, dry)
   const bassFreq = track.bass[stepIdx];
   if (bassFreq > 0) {
-    playFmTone(bassFreq, 1.0, 1.2, (track.tempo * 1.5) / 1000, 0.08, false);
+    playSlapBass(bassFreq, (track.stepMs * 1.4) / 1000, 0.12);
   }
 
-  // Lead arpeggio
+  // 2. Ch1: Lead Melody (vocal-style E-Piano or Hollow Flute, stereo delay)
   const leadFreq = track.lead[stepIdx];
   if (leadFreq > 0) {
-    playFmTone(leadFreq, track.fmRatio, track.fmMod, (track.tempo * 1.8) / 1000, 0.06, true);
+    if (currentBgmTrack === 2) {
+      playHollowLead(leadFreq, (track.stepMs * 2.2) / 1000, 0.09, true);
+    } else {
+      playRhodesEPiano(leadFreq, (track.stepMs * 1.8) / 1000, 0.10, true);
+    }
   }
 
+  // 3. Ch2: Counter-Melody (contrary motion voice)
+  const counterFreq = track.counter[stepIdx];
+  if (counterFreq > 0) {
+    playHollowLead(counterFreq, (track.stepMs * 1.6) / 1000, 0.06, true);
+  }
+
+  // 4. Ch3: Shell Harmony / Ambient Pad (fills harmonic movement)
+  const shellFreq = track.shell[stepIdx];
+  if (shellFreq > 0) {
+    playWarmPad(shellFreq, (track.stepMs * 2.5) / 1000, 0.05, true);
+  }
+
+  // 5. Ch5 & Ch6: Percussion & Hi-Hats (1=kick, 2=snare, 3=closed hat, 4=open hat)
+  const drumHit = track.drums[stepIdx];
+  if (drumHit === 1) {
+    playFMKick((track.stepMs * 1.1) / 1000, 0.16);
+  } else if (drumHit === 2) {
+    playFMSnare((track.stepMs * 1.2) / 1000, 0.11);
+  } else if (drumHit === 3) {
+    playFMHiHat(false, 0.04);
+  } else if (drumHit === 4) {
+    playFMHiHat(true, 0.06);
+  }
+
+  // Swing-tick groove: 5:3 ratio for even vs odd 16th steps
+  const isEven = (bgmStep % 2 === 0);
+  const nextDelay = isEven ? Math.round(track.stepMs * 1.18) : Math.round(track.stepMs * 0.82);
+
   bgmStep++;
-  bgmTimer = setTimeout(playBgmStep, track.tempo);
+  bgmTimer = setTimeout(playBgmStep, nextDelay);
 }
 
 // 14-band visualizer loop
