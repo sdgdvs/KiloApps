@@ -1002,6 +1002,7 @@
     <button class="tab-btn" id="tabBtn11" onclick="switchTab('heterodyne')">🔬 [11] HETERODYNE DOWNSHIFTER &amp; CAVITATION SONAR</button>
     <button class="tab-btn" id="tabBtn12" onclick="switchTab('interferometer')">🎚️ [12] SPATIO-ACOUSTIC INTERFEROMETER &amp; CORRELATOR</button>
     <button class="tab-btn" id="tabBtn13" onclick="switchTab('troposphere')">📡 [13] TROPOSPHERIC DUCT &amp; VLF SANGUINE TRANSCEIVER</button>
+    <button class="tab-btn" id="tabBtn14" onclick="switchTab('squid')">🧲 [14] CRYOGENIC SQUID MAGNETOMETER &amp; SUB-CRUSTAL TOMOGRAPH</button>
   </nav>
 
   <!-- TAB 1: RESEARCH JOURNAL & OBSERVATION LOGBOOK -->
@@ -2942,6 +2943,129 @@ END TRANSMISSION // ESARL 1999</div>
     </div>
   </div>
 
+  <!-- TAB 14: CRYOGENIC SQUID MAGNETOMETER & SUB-CRUSTAL TOMOGRAPH -->
+  <div id="pane-squid" class="tab-pane">
+    <div class="card-box">
+      <div class="card-header">
+        <span>RF-SQUID MAGNETOMETER // SUB-CRUSTAL ACOUSTIC-MAGNETIC TOMOGRAPH</span>
+        <div style="display:flex; gap:6px; align-items:center;">
+          <span class="mesh-badge" id="squidCryoBadge">CRYO: 4.2 K (LHe)</span>
+          <span class="mesh-badge" style="color:var(--green-phosphor); border-color:var(--green-phosphor);" id="squidLockBadge">JOSEPHSON: PHASE LOCKED</span>
+          <span class="journal-tag">ESARL // BOREHOLE S-09</span>
+        </div>
+      </div>
+
+      <p style="font-size:12px; color:var(--text-muted); margin-bottom:12px;">
+        Superconducting Quantum Interference Device (RF-SQUID) coupled to a 2,150-ft halite bedrock pickup loop.
+        Monitors ultra-low frequency magnetic flux quantum transitions (Phi_0) and acoustic-induced piezo-magnetic modulation at 1999.0 Hz.
+      </p>
+
+      <!-- Two-column Displays -->
+      <div class="grid-2col" style="margin-bottom:14px;">
+        <!-- Left: SQUID Phase Slip & Fluxoid Orbit -->
+        <div class="card-box" style="margin-bottom:0; background:#040814;">
+          <div class="card-header" style="font-size:11.5px;">
+            <span>JOSEPHSON FLUXOID ORBIT (Φ / Φ₀ vs B-FIELD)</span>
+            <span style="font-size:10px; color:var(--cyan-glow);" id="squidFluxVal">Φ = 1.000 Φ₀</span>
+          </div>
+          <div class="canvas-box" style="height:190px;">
+            <canvas id="squidPhaseCanvas" width="460" height="190" class="display-canvas"></canvas>
+          </div>
+          <div style="display:flex; justify-content:space-between; font-size:10.5px; margin-top:6px; color:var(--text-muted);">
+            <span>Sensitivity: 2.5 fT/√Hz</span>
+            <span>Sampling: 48 kHz (Downmixed)</span>
+            <span style="color:var(--green-phosphor);">Carrier Lock: 1999.0 Hz</span>
+          </div>
+        </div>
+
+        <!-- Right: Sub-Crustal Tomographic Heatmap -->
+        <div class="card-box" style="margin-bottom:0; background:#040814;">
+          <div class="card-header" style="font-size:11.5px;">
+            <span>CARLSBAD STRATA TOMOGRAM (DEPTH: 500 - 4500 FT)</span>
+            <span style="font-size:10px; color:var(--amber-led);" id="squidDepthVal">SLICE: 2,150 FT (HALITE)</span>
+          </div>
+          <div class="canvas-box" style="height:190px;">
+            <canvas id="squidTomoCanvas" width="460" height="190" class="display-canvas"></canvas>
+          </div>
+          <div style="display:flex; justify-content:space-between; font-size:10.5px; margin-top:6px; color:var(--text-muted);">
+            <span>Matrix: <span id="squidResLabel">32x32</span></span>
+            <span>Reflectivity: 94.6%</span>
+            <span style="color:var(--cyan-glow);">Waveguide: Sector 03</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Controls & Synth Trigger Grid -->
+      <div class="grid-3col" style="margin-bottom:14px;">
+        <!-- Column 1: Cryostat & Bias Controls -->
+        <div class="card-box" style="margin-bottom:0;">
+          <div class="card-header" style="font-size:11px;">CRYOSTAT &amp; BIAS CONTROLS</div>
+          <div class="control-row">
+            <span class="control-label">Josephson Bias (μA):</span>
+            <input type="range" class="slider-control" id="squidBiasRange" min="10" max="120" value="48" oninput="updateSquidParams()">
+            <span class="value-badge" id="squidBiasVal">48 μA</span>
+          </div>
+          <div class="control-row">
+            <span class="control-label">Flux Quantum Offset:</span>
+            <input type="range" class="slider-control" id="squidFluxRange" min="-20" max="20" value="0" oninput="updateSquidParams()">
+            <span class="value-badge" id="squidFluxOffsetVal">0.00 Φ₀</span>
+          </div>
+          <div class="control-row">
+            <span class="control-label">Cryo Boil-off Vent:</span>
+            <button class="btn-retro" onclick="ventCryostat()" style="padding:3px 8px; font-size:10.5px; border-color:var(--cyan-glow); color:var(--cyan-glow);">VENT LHe (4.2K)</button>
+          </div>
+        </div>
+
+        <!-- Column 2: Acoustic Tomograph Parameters -->
+        <div class="card-box" style="margin-bottom:0;">
+          <div class="card-header" style="font-size:11px;">TOMOGRAPHIC SCANNER</div>
+          <div class="control-row">
+            <span class="control-label">Strata Depth Slice:</span>
+            <input type="range" class="slider-control" id="squidDepthRange" min="500" max="4500" step="50" value="2150" oninput="updateSquidParams()">
+            <span class="value-badge" id="squidDepthBadge">2150 ft</span>
+          </div>
+          <div class="control-row">
+            <span class="control-label">Resolution Matrix:</span>
+            <select id="squidResSelect" onchange="changeSquidResolution()" style="background:#070d1a; color:var(--cyan-glow); border:1px solid var(--border-bright); padding:2px 6px; font-family:inherit; font-size:11px; border-radius:3px;">
+              <option value="16">16 x 16 (Fast)</option>
+              <option value="32" selected>32 x 32 (Standard)</option>
+              <option value="64">64 x 64 (Deep Scan)</option>
+            </select>
+          </div>
+          <div style="margin-top:8px; display:flex; gap:6px;">
+            <button class="btn-retro btn-green" onclick="triggerTomographicScan()" style="flex:1; font-size:11px;">🛰️ RUN TOMO SCAN</button>
+          </div>
+        </div>
+
+        <!-- Column 3: Procedural Audio & Synthesis -->
+        <div class="card-box" style="margin-bottom:0;">
+          <div class="card-header" style="font-size:11px;">ACOUSTIC-MAGNETIC SYNTH</div>
+          <p style="font-size:10.5px; color:var(--text-muted); margin-bottom:8px;">
+            Transducer downmixes SQUID quantum phase slips and piezo-acoustic 1999Hz rock resonance into audible YM2612 FM pulses.
+          </p>
+          <div style="display:flex; flex-direction:column; gap:6px;">
+            <button class="btn-retro" onclick="playJosephsonWhistle()" style="border-color:var(--cyan-glow); color:var(--cyan-glow);">🔊 JOSEPHSON FLUX WHISTLE</button>
+            <button class="btn-retro btn-amber" onclick="playHaliteAcousticPing()">📡 HALITE ACOUSTIC ECHO PING</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bottom Panel: Live Telemetry Decoder & Data Export -->
+      <div class="card-box" style="margin-bottom:0; background:#030712;">
+        <div class="card-header" style="font-size:11.5px;">
+          <span>SQUID TELEMETRY LOG &amp; SUBNET INTERCEPT FEED</span>
+          <div style="display:flex; gap:6px;">
+            <button class="btn-retro btn-green" onclick="demodulateSquidPacket()">[DEMODULATE PACKET]</button>
+            <button class="btn-retro" onclick="exportSquidTelemetry()" style="border-color:var(--cyan-glow); color:var(--cyan-glow);">[EXPORT MAGNETOGRAM (.SQD)]</button>
+            <button class="btn-retro" onclick="clearSquidFeed()">[CLEAR]</button>
+          </div>
+        </div>
+        <div id="squidTeletypeFeed" class="signal-stream-terminal" style="height:120px; color:#00ffaa;">[SQUID-SYS] RF-SQUID MAGNETOMETER ONLINE // CRYOSTAT AT 4.2 KELVIN // CARRIER LOCK AT 1999.0 Hz
+[SQUID-SYS] SENSING PROBE IMMERSED AT 2,150 FT HALITE STRATA // SUBNET 10.19.99.x INTRANET FRAME MONITOR ACTIVE</div>
+      </div>
+    </div>
+  </div>
+
   <!-- Footer & Central Webring -->
   <footer class="lab-footer">
     <div>
@@ -4337,7 +4461,7 @@ Host: kweb://echo-subsystem.net | Station: SIG-1999-ECHO
   }
 
   function switchTab(name) {
-    const tabs = ['journal', 'decoder', 'spectral', 'filter', 'sigint', 'stego', 'terminal', 'mesh', 'seismic', 'tape', 'heterodyne', 'interferometer', 'troposphere'];
+    const tabs = ['journal', 'decoder', 'spectral', 'filter', 'sigint', 'stego', 'terminal', 'mesh', 'seismic', 'tape', 'heterodyne', 'interferometer', 'troposphere', 'squid'];
     tabs.forEach((t, i) => {
       const btn = document.getElementById('tabBtn' + (i + 1));
       const pane = document.getElementById('pane-' + t);
@@ -4362,6 +4486,7 @@ Host: kweb://echo-subsystem.net | Station: SIG-1999-ECHO
     if (name === 'heterodyne') initHeterodyneAndSonar();
     if (name === 'interferometer') initInterferometerSuite();
     if (name === 'troposphere') initTroposphereSuite();
+    if (name === 'squid') initSquidSuite();
   }
 
   function executeTermInput() {
