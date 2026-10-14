@@ -22,7 +22,7 @@ def main():
     print("Running scripts/compact_all.py: checking plan files for token conservation...")
     
     # Enforce zero-discard rotation on next_work.md
-    res = rotate_next_work_logs(repo_root=WORKSPACE_ROOT)
+    res = rotate_next_work_logs(next_work_path=WORKSPACE_ROOT / "next_work.md")
     if res.get("archived", 0) > 0:
         print(f"[next_work.md] Archived {res['archived']} entries to archive/fleet_execution_archive.md (kept {res['retained']} active entries).")
     else:

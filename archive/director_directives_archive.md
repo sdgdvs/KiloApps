@@ -1,4 +1,4 @@
-﻿# Director Directives Archive
+# Director Directives Archive
 
 > Archived from next_work.md to reduce per-turn token overhead.
 > These directives are now codified in AGENTS.md rules and skill instructions.
@@ -64,4 +64,8 @@
     2. **Dual-presence puzzle**: One Tier 3 node requires two simultaneous "connections" â€” but this should work with two browser tabs on the same computer, or a phone and desktop both visiting `kiloapps.web.app`. Example: `classified` shows a locked signal diagnostic that requires a second user (or the same user in another tab) to be actively running `echo_subsystem`'s Morse transmitter at the correct frequency. The RTDB presence check should use session IDs, not unique users, so one person with two tabs qualifies.
     3. **Dead-drop guestbooks**: Certain Firebase guestbooks (`cybercafe` IRC, `geocities` shoutbox, `neon_rider` guestbook) should have a hidden mechanic where posting a specific passphrase (discoverable from puzzle chain artifacts) triggers a server-side Firebase rule or client-side listener that reveals a hidden response message containing the next clue. Since these are persistent RTDB writes, the player's own post triggers their own reveal â€” no second person needed.
     4. **Explicit design rule**: If a puzzle involves Firebase presence, matchmaking, or multi-session state, it MUST include a "solo path" â€” either via multi-tab, or via a time-delayed fallback (e.g., if no second connection appears within 30 seconds, the puzzle auto-advances with a "signal lock acquired from cached relay" diegetic message).
+
+- **[FLEET: kilo-soundscape] — Procedural Audio Identity Initiative** | Director Directive
+  - ⚠️ AGENT NOTE: Human director priority directive.
+  - Instructions: `kilo-soundscape` gives every game and virtual web destination a unique FM synthesis audio identity. Replace all generic oscillator presets with real chiptune composition: melodic themes (Lead + Counter-melody + Bass counterpoint), proper chord progressions (Royal Road IV-V-iii-vi, Andalusian i-bVII-bVI-V, Mario cadence bVI-bVII-I), shell voicings (Root+3rd+7th, no 5ths), swing-tick groove, per-genre FM patch design, and SPC700-style echo. Web ring and all virtual web destinations must receive upgraded music as first priority — existing generic looping presets are explicitly not good enough. Every audio pass must audit and replace music that sounds robotic or uses default single-oscillator patterns.
 
