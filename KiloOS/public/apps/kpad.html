@@ -754,6 +754,56 @@
     transition: width 0.3s ease;
   }
 
+  /* Regular Expression Workbench & Pattern Lab */
+  .regex-wb-container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    font-size: 12px;
+  }
+  .regex-flags-wrap {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: rgba(0,0,0,0.3);
+    padding: 6px 12px;
+    border-radius: 6px;
+    border: 1px solid var(--border-glass);
+    flex-wrap: wrap;
+  }
+  .regex-flag-label {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    cursor: pointer;
+    user-select: none;
+    color: var(--text-secondary);
+  }
+  .regex-flag-label:hover { color: var(--text-primary); }
+  .regex-match-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: 'Consolas', monospace;
+    font-size: 11px;
+  }
+  .regex-match-table th {
+    background: rgba(255,255,255,0.06);
+    color: var(--accent-hover);
+    padding: 6px 8px;
+    text-align: left;
+    border-bottom: 1px solid var(--border-glass);
+  }
+  .regex-match-table td {
+    padding: 5px 8px;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    color: var(--text-primary);
+    word-break: break-all;
+  }
+  .regex-match-table tr:hover td {
+    background: rgba(59, 130, 246, 0.12);
+  }
+
   /* Find & Replace Floating Panel */
   .find-replace-panel {
     display: none;
@@ -1461,6 +1511,7 @@
     <div class="menu-btn">Tools
       <div class="dropdown">
         <div onclick="openDiffModal()"><span>📊 Compare / Diff Documents...</span><span class="shortcut">Ctrl+Shift+D</span></div>
+        <div onclick="openRegexWorkbenchModal()"><span>🔬 Regular Expression Workbench...</span><span class="shortcut">Ctrl+Shift+R</span></div>
         <div onclick="openSyntaxLinterModal()"><span>🧪 Syntax Validator & Linter...</span><span class="shortcut">Ctrl+Shift+L</span></div>
         <div onclick="openHexDumpModal()"><span>🔢 Hex Dump Inspector & Entropy...</span><span class="shortcut">Ctrl+Shift+H</span></div>
         <div onclick="openSymbolPaletteModal()"><span>🔣 ASCII & CP437 Symbol Palette...</span><span class="shortcut">Alt+A</span></div>
@@ -1565,6 +1616,9 @@
       </button>
       <button class="quick-btn" id="btn-diff" onclick="openDiffModal()" title="Compare & Diff Documents (Tabs vs Quicksave vs Clipboard) [Ctrl+Shift+D]">
         📊 Diff
+      </button>
+      <button class="quick-btn" onclick="openRegexWorkbenchModal()" title="Regular Expression Workbench & Pattern Lab (Ctrl+Shift+R)">
+        🔬 Regex <span class="kbd-hint">Ctrl+Shift+R</span>
       </button>
       <button class="quick-btn" onclick="openSyntaxLinterModal()" title="Syntax Validator & Linter Center (Ctrl+Shift+L)">
         🧪 Lint <span class="kbd-hint">Ctrl+Shift+L</span>
@@ -5100,6 +5154,299 @@ Strings, block comments, and line comments were safely bypassed during scanning.
       }
     }
 
+    // --- Regular Expression Workbench & Pattern Lab ---
+    const REGEX_PRESETS = {
+      email: { pattern: '[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}', flags: 'g', desc: 'Email Addresses' },
+      url: { pattern: 'https?:\\/\\/[^\\s/$.?#].[^\\s]*', flags: 'g', desc: 'Web URLs (HTTP/HTTPS)' },
+      ipv4: { pattern: '\\b(?:\\d{1,3}\\.){3}\\d{1,3}\\b', flags: 'g', desc: 'IPv4 Addresses' },
+      hexcolor: { pattern: '#(?:[0-9a-fA-F]{3}){1,2}\\b', flags: 'g', desc: 'Hex Color Codes' },
+      isodate: { pattern: '\\d{4}-\\d{2}-\\d{2}(?:[T ]\\d{2}:\\d{2}:\\d{2})?', flags: 'g', desc: 'ISO Dates & Timestamps' },
+      c_ident: { pattern: '\\b[a-zA-Z_][a-zA-Z0-9_]*\\b', flags: 'g', desc: 'C / JS Identifiers' },
+      html_tag: { pattern: '<\\/?[a-zA-Z][a-zA-Z0-9]*(?:\\s+[^>]*?)?\\/?>', flags: 'g', desc: 'HTML / XML Tags' },
+      quoted_str: { pattern: '(["\'])(?:(?=(\\\\?))\\2.)*?\\1', flags: 'g', desc: 'Quoted Strings' },
+      numbers: { pattern: '\\b[-+]?\\d*\\.?\\d+(?:[eE][-+]?\\d+)?\\b', flags: 'g', desc: 'Numbers (Integers & Floats)' },
+      md_link: { pattern: '\\[([^\]]+)\\]\\(([^)]+)\\)', flags: 'g', desc: 'Markdown Links [title](url)' }
+    };
+
+    let lastRegexMatches = [];
+
+    function openRegexWorkbenchModal() {
+      const bodyHtml = `
+        <div class="regex-wb-container">
+          <div style="display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap;">
+            <div style="display:flex; align-items:center; gap:6px; flex:1; min-width:240px;">
+              <label class="form-label" style="margin-bottom:0; font-size:11px;">Preset:</label>
+              <select id="regex-preset-sel" class="tag-filter-select" style="flex:1;" onchange="loadRegexPreset(this.value)">
+                <option value="">-- Select Pattern Template --</option>
+                <option value="email">📧 Email Addresses</option>
+                <option value="url">🌐 Web URLs (HTTP/HTTPS)</option>
+                <option value="ipv4">🔢 IPv4 Addresses</option>
+                <option value="hexcolor">🎨 Hex Color Codes</option>
+                <option value="isodate">📅 ISO 8601 Timestamps</option>
+                <option value="c_ident">⚙️ C / JS Identifiers</option>
+                <option value="html_tag">🏷️ HTML / XML Tags</option>
+                <option value="quoted_str">💬 Quoted Strings</option>
+                <option value="numbers">🔢 Numeric Constants</option>
+                <option value="md_link">🔗 Markdown Links</option>
+              </select>
+            </div>
+            <div style="display:flex; gap:6px;">
+              <button class="quick-btn" onclick="extractRegexMatchesToTab()" title="Extract all matches into a new tab">📑 Extract to New Tab</button>
+              <button class="quick-btn" onclick="copyRegexMatches()" title="Copy all matches to clipboard">📋 Copy Matches</button>
+            </div>
+          </div>
+
+          <div style="display:flex; flex-direction:column; gap:6px;">
+            <label class="form-label" style="margin-bottom:0;">Regular Expression Pattern:</label>
+            <div style="display:flex; gap:6px;">
+              <input type="text" class="form-input" id="regex-pattern-input" placeholder="e.g. \\b[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}\\b" style="font-family:Consolas,monospace; font-size:12px;" oninput="updateRegexWorkbench()">
+            </div>
+          </div>
+
+          <div class="regex-flags-wrap">
+            <span style="font-weight:600; font-size:11px; color:var(--text-muted);">Flags:</span>
+            <label class="regex-flag-label"><input type="checkbox" id="rf-g" checked onchange="updateRegexWorkbench()"> Global (g)</label>
+            <label class="regex-flag-label"><input type="checkbox" id="rf-i" onchange="updateRegexWorkbench()"> Case Insensitive (i)</label>
+            <label class="regex-flag-label"><input type="checkbox" id="rf-m" checked onchange="updateRegexWorkbench()"> Multiline (m)</label>
+            <label class="regex-flag-label"><input type="checkbox" id="rf-s" onchange="updateRegexWorkbench()"> DotAll / Single-line (s)</label>
+            <label class="regex-flag-label" style="margin-left:auto;"><input type="checkbox" id="rf-sel-only" onchange="updateRegexWorkbench()"> Selection Only</label>
+          </div>
+
+          <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(0,0,0,0.3); padding:6px 12px; border-radius:6px; border:1px solid var(--border-glass);">
+            <div id="regex-status-badge" style="font-weight:600;">Enter a pattern above to test</div>
+            <div id="regex-summary-stat" style="font-size:11px; color:var(--text-muted);"></div>
+          </div>
+
+          <div style="display:flex; flex-direction:column; gap:6px;">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <label class="form-label" style="margin-bottom:0;">Substitution & Replacement ($1, $2, $&):</label>
+              <button class="quick-btn" onclick="applyRegexSubstitution()" style="background:rgba(16,185,129,0.25); border-color:#10b981; color:#34d399; font-weight:600;">⚡ Apply Replacement to Tab</button>
+            </div>
+            <input type="text" class="form-input" id="regex-replace-input" placeholder="Replacement string (leave blank to delete matches, or use $1, $2)" style="font-family:Consolas,monospace; font-size:12px;" oninput="updateRegexWorkbench()">
+          </div>
+
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+            <div style="display:flex; flex-direction:column; gap:4px;">
+              <div style="font-size:11px; font-weight:600; color:var(--text-muted);">Matches & Capture Groups:</div>
+              <div id="regex-matches-container" style="max-height:180px; overflow-y:auto; background:#090d16; border:1px solid var(--border-glass); border-radius:6px; padding:4px;"></div>
+            </div>
+            <div style="display:flex; flex-direction:column; gap:4px;">
+              <div style="font-size:11px; font-weight:600; color:var(--text-muted);">Substitution Preview:</div>
+              <div id="regex-replace-preview" style="max-height:180px; overflow-y:auto; background:#090d16; border:1px solid var(--border-glass); border-radius:6px; padding:8px; font-family:Consolas,monospace; font-size:11px; white-space:pre-wrap; word-break:break-all; color:var(--text-secondary);"></div>
+            </div>
+          </div>
+        </div>
+      `;
+
+      openModal('🔬 Regular Expression Workbench & Pattern Lab', bodyHtml, true, true);
+      setTimeout(() => {
+        const pInp = document.getElementById('regex-pattern-input');
+        if (pInp) pInp.focus();
+        updateRegexWorkbench();
+      }, 50);
+    }
+
+    function loadRegexPreset(key) {
+      if (!key || !REGEX_PRESETS[key]) return;
+      const preset = REGEX_PRESETS[key];
+      const pInp = document.getElementById('regex-pattern-input');
+      if (pInp) pInp.value = preset.pattern;
+      const g = document.getElementById('rf-g');
+      const i = document.getElementById('rf-i');
+      if (g) g.checked = preset.flags.includes('g');
+      if (i) i.checked = preset.flags.includes('i');
+      updateRegexWorkbench();
+    }
+
+    function getRegexFlags() {
+      let flags = '';
+      if (document.getElementById('rf-g')?.checked) flags += 'g';
+      if (document.getElementById('rf-i')?.checked) flags += 'i';
+      if (document.getElementById('rf-m')?.checked) flags += 'm';
+      if (document.getElementById('rf-s')?.checked) flags += 's';
+      return flags;
+    }
+
+    function updateRegexWorkbench() {
+      const pInp = document.getElementById('regex-pattern-input');
+      const rInp = document.getElementById('regex-replace-input');
+      const statusBadge = document.getElementById('regex-status-badge');
+      const summaryStat = document.getElementById('regex-summary-stat');
+      const matchesCont = document.getElementById('regex-matches-container');
+      const prevCont = document.getElementById('regex-replace-preview');
+      const selOnly = document.getElementById('rf-sel-only')?.checked;
+
+      if (!pInp || !statusBadge || !matchesCont || !prevCont) return;
+
+      const pattern = pInp.value;
+      const flags = getRegexFlags();
+      const replaceVal = rInp ? rInp.value : '';
+
+      let text = editor.value;
+      const start = editor.selectionStart;
+      const end = editor.selectionEnd;
+      if (selOnly && start !== end) {
+        text = text.substring(start, end);
+      }
+
+      if (!pattern) {
+        statusBadge.innerHTML = `<span style="color:var(--text-muted);">Enter a pattern above to test against active document</span>`;
+        if (summaryStat) summaryStat.innerText = `Document: ${text.length} chars, ${text.split('\n').length} lines`;
+        matchesCont.innerHTML = `<div style="text-align:center; padding:20px; color:var(--text-muted); font-size:11px;">No regex pattern specified.</div>`;
+        prevCont.innerText = text.substring(0, 1500) + (text.length > 1500 ? '\n...[truncated]' : '');
+        lastRegexMatches = [];
+        return;
+      }
+
+      let regex;
+      try {
+        regex = new RegExp(pattern, flags);
+      } catch (err) {
+        statusBadge.innerHTML = `<span style="color:#ef4444;">⚠️ Invalid Regex: ${escapeHtml(err.message)}</span>`;
+        if (summaryStat) summaryStat.innerText = '';
+        matchesCont.innerHTML = `<div style="padding:12px; color:#ef4444; font-size:11px;">${escapeHtml(err.message)}</div>`;
+        prevCont.innerText = 'Error compiling regular expression.';
+        lastRegexMatches = [];
+        return;
+      }
+
+      let matches = [];
+      try {
+        if (flags.includes('g')) {
+          matches = [...text.matchAll(regex)];
+        } else {
+          const m = text.match(regex);
+          if (m) matches = [m];
+        }
+      } catch (e) {
+        statusBadge.innerHTML = `<span style="color:#ef4444;">Execution Error: ${escapeHtml(e.message)}</span>`;
+        return;
+      }
+
+      lastRegexMatches = matches.map(m => m[0]);
+      const matchCount = matches.length;
+
+      statusBadge.innerHTML = matchCount > 0 
+        ? `<span style="color:#34d399;">✅ ${matchCount} match${matchCount === 1 ? '' : 'es'} found</span>`
+        : `<span style="color:#f59e0b;">ℹ️ No matches found</span>`;
+
+      if (summaryStat) {
+        const totalChars = matches.reduce((acc, m) => acc + (m[0] ? m[0].length : 0), 0);
+        summaryStat.innerText = `${totalChars} matched chars | Source: ${text.length} chars`;
+      }
+
+      if (matchCount === 0) {
+        matchesCont.innerHTML = `<div style="text-align:center; padding:20px; color:var(--text-muted); font-size:11px;">No matches found in active ${selOnly ? 'selection' : 'document'}.</div>`;
+      } else {
+        let tableHtml = `
+          <table class="regex-match-table">
+            <thead>
+              <tr>
+                <th style="width:30px;">#</th>
+                <th style="width:60px;">Index</th>
+                <th>Match</th>
+                <th>Groups</th>
+              </tr>
+            </thead>
+            <tbody>
+        `;
+        const displayLimit = Math.min(matches.length, 150);
+        for (let i = 0; i < displayLimit; i++) {
+          const m = matches[i];
+          const idx = m.index !== undefined ? m.index : '-';
+          const val = escapeHtml(m[0]);
+          const groups = m.length > 1 ? m.slice(1).map((g, gi) => `$${gi+1}: ${g !== undefined ? escapeHtml(g) : 'undefined'}`).join('<br>') : '<span style="color:var(--text-muted);">-</span>';
+          tableHtml += `
+            <tr>
+              <td style="color:var(--text-muted);">${i + 1}</td>
+              <td style="color:var(--accent);">${idx}</td>
+              <td style="color:#34d399;">${val}</td>
+              <td style="font-size:10px;">${groups}</td>
+            </tr>
+          `;
+        }
+        if (matches.length > displayLimit) {
+          tableHtml += `<tr><td colspan="4" style="text-align:center; color:var(--text-muted);">+ ${matches.length - displayLimit} additional matches not shown</td></tr>`;
+        }
+        tableHtml += '</tbody></table>';
+        matchesCont.innerHTML = tableHtml;
+      }
+
+      // Preview substitution
+      try {
+        const replaced = text.replace(regex, replaceVal);
+        prevCont.innerText = replaced.substring(0, 2000) + (replaced.length > 2000 ? '\n...[truncated]' : '');
+      } catch (e) {
+        prevCont.innerText = 'Replacement Error: ' + e.message;
+      }
+    }
+
+    function applyRegexSubstitution() {
+      const pInp = document.getElementById('regex-pattern-input');
+      const rInp = document.getElementById('regex-replace-input');
+      const selOnly = document.getElementById('rf-sel-only')?.checked;
+      if (!pInp) return;
+
+      const pattern = pInp.value;
+      if (!pattern) {
+        showToast('Please enter a regular expression pattern', 'warning');
+        return;
+      }
+
+      const flags = getRegexFlags();
+      let regex;
+      try {
+        regex = new RegExp(pattern, flags);
+      } catch (err) {
+        showToast('Invalid Regex: ' + err.message, 'error');
+        return;
+      }
+
+      const replaceVal = rInp ? rInp.value : '';
+      let text = editor.value;
+      const start = editor.selectionStart;
+      const end = editor.selectionEnd;
+
+      if (selOnly && start !== end) {
+        const selected = text.substring(start, end);
+        const replaced = selected.replace(regex, replaceVal);
+        editor.value = text.substring(0, start) + replaced + text.substring(end);
+        editor.setSelectionRange(start, start + replaced.length);
+      } else {
+        editor.value = text.replace(regex, replaceVal);
+      }
+
+      updateEditor();
+      showToast('Regular expression replacement applied successfully!', 'success');
+      updateRegexWorkbench();
+    }
+
+    function extractRegexMatchesToTab() {
+      if (!lastRegexMatches || lastRegexMatches.length === 0) {
+        showToast('No matches available to extract', 'warning');
+        return;
+      }
+      const content = lastRegexMatches.join('\n');
+      createTab('Regex_Matches.txt', content, null, 'plaintext', ['extracted', 'regex']);
+      closeModal();
+      showToast(`Extracted ${lastRegexMatches.length} matches to new tab!`, 'success');
+    }
+
+    function copyRegexMatches() {
+      if (!lastRegexMatches || lastRegexMatches.length === 0) {
+        showToast('No matches available to copy', 'warning');
+        return;
+      }
+      const text = lastRegexMatches.join('\n');
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(text).then(() => {
+          showToast(`Copied ${lastRegexMatches.length} matches to clipboard!`, 'success');
+        });
+      } else {
+        showToast(`Copied ${lastRegexMatches.length} matches!`, 'success');
+      }
+    }
+
     // --- Hex Dump Inspector & Shannon Entropy ---
     let lastHexDumpData = '';
 
@@ -6399,6 +6746,7 @@ Strings, block comments, and line comments were safely bypassed during scanning.
       { cat: 'edit', label: 'Zoom In / Out / Reset', key: 'Ctrl++ / Ctrl+- / Ctrl+0' },
       { cat: 'edit', label: 'Insert Current Date & Time', key: 'F7' },
       { cat: 'edit', label: 'Format & Pretty-Print JSON', key: 'Tools > Format JSON' },
+      { cat: 'edit', label: 'Regular Expression Workbench & Pattern Lab', key: 'Ctrl + Shift + R' },
       { cat: 'edit', label: 'Syntax Validator & Linter Center', key: 'Ctrl + Shift + L' },
       { cat: 'edit', label: 'Hex Dump Inspector & Shannon Entropy', key: 'Ctrl + Shift + H' },
       { cat: 'edit', label: 'ASCII & CP437 Symbol Palette', key: 'Alt + A' },
@@ -6762,6 +7110,7 @@ Strings, block comments, and line comments were safely bypassed during scanning.
       if (e.ctrlKey && e.shiftKey && (e.key === 'f' || e.key === 'F')) { e.preventDefault(); openGlobalTabSearch(); }
       if (e.ctrlKey && e.shiftKey && (e.key === 's' || e.key === 'S')) { e.preventDefault(); exportDocument('workspace'); }
       if (e.ctrlKey && e.shiftKey && (e.key === 'd' || e.key === 'D')) { e.preventDefault(); openDiffModal(); }
+      if (e.ctrlKey && e.shiftKey && (e.key === 'r' || e.key === 'R')) { e.preventDefault(); openRegexWorkbenchModal(); }
       if (e.ctrlKey && e.shiftKey && (e.key === 'l' || e.key === 'L')) { e.preventDefault(); openSyntaxLinterModal(); }
       if (e.ctrlKey && e.shiftKey && (e.key === 'h' || e.key === 'H')) { e.preventDefault(); openHexDumpModal(); }
       if (e.ctrlKey && e.shiftKey && (e.key === 't' || e.key === 'T')) { e.preventDefault(); formatMarkdownTableInPlace(); }
