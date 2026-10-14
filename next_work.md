@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-creator
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -18,7 +18,7 @@ current_targets:
   kilo_soundscape: kweb://warez
   kilo_tester: KCalendar
   kilo_usability: KMail
-  kilo_qa: KBreakout
+  kilo_qa: KRogue
   kilo_expander: KMedia
 virtual_web_target: kweb://deep-core
 virtual_web_rotation:
@@ -34,9 +34,9 @@ virtual_web_rotation:
 - kweb://10.19.99.4/classified
 - kweb://echo-subsystem.net
 last_run:
-  agent: kilo-usability
-  app: KSubmarine
-  timestamp: '2026-10-14T08:31:00-07:00'
+  agent: kilo-qa
+  app: KBreakout
+  timestamp: '2026-10-14T09:13:00-07:00'
 last_planner_run: '2026-10-13T18:15:00Z'
 ---
 
@@ -146,8 +146,8 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Append terse execution log (≤6 lines), commit, and push.
 - **Upcoming Queue**: `KMail`, `KPad`, `KAudio`, `KNote`, `KMine`.
 
-### 6. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
-- **Target**: `KAsteroids`
+### 6. QA & Build Queue (kilo-qa — Pass 5: Tutorial & State Integrity)
+- **Target**: `KRogue`
 - **Primary Files**: `KiloOS/public/apps/kasteroids.html`, `KAsteroids/main.c`, `KAsteroids/build.bat`
 - **Objective**: Pass 5 QA audit, state persistence integrity, and dual web/native parity.
 - **Action Steps**:
@@ -221,3 +221,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Procedural Web Audio: Josephson flux quantum whistle & 1999Hz halite acoustic echo ping.
   - Interactive packet demodulation (10.19.99.x subnet) and structured magnetogram export (.sqd).
   - Build verified (`npm run build` PASS, 0 errors, `echo_subsystem.html` 365.5 KB < 999 KB ceiling).
+
+### 2026-10-14 — kilo-qa — KBreakout
+- Pass 5 audit: verified quicksave (F5) / quickload (F9) state persistence with safe JSON storage helpers.
+- Verified tutorial onboarding flags (kbreakout_tutorialSeen / !hasSaved) preventing intrusive dialogs on load.
+- Verified all overlays (Pause, Forge, Duel Arena, Replay Theater, Telemetry) and keybind shortcuts.
+- Zero ARG leaks, proper 1999 diegetic theme, clean Web Audio synthesis, and size < 999 KB (~160 KB).
+- Build verification: `npm run build` succeeded with zero errors.
