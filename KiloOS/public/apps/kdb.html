@@ -862,12 +862,15 @@
 
       <!-- Action Buttons -->
       <button class="btn-accent" onclick="openStatsModal()" title="View Database Analytics & Metrics (A)">Stats <span class="kbd-badge">A</span></button>
+      <button class="btn-secondary" onclick="openSchemaModal()" title="Alter Table Schema / Manage Columns (S)">Columns <span class="kbd-badge">S</span></button>
       <button class="btn-secondary" onclick="exportCSV()" title="Export active table as CSV (E)">Exp CSV <span class="kbd-badge">E</span></button>
       <button class="btn-secondary" onclick="triggerImportCSV()" title="Import CSV file (I)">Imp CSV <span class="kbd-badge">I</span></button>
       <input type="file" id="csvFileInput" accept=".csv" style="display:none;" onchange="importCSV(event)">
+      <button class="btn-secondary" onclick="exportTSV()" title="Export active table as Tab-Separated TSV">Exp TSV</button>
       <button class="btn-secondary" onclick="exportJSON()" title="Export full database as JSON (J)">Exp JSON <span class="kbd-badge">J</span></button>
       <button class="btn-secondary" onclick="triggerImportJSON()" title="Import JSON file (O)">Imp JSON <span class="kbd-badge">O</span></button>
       <input type="file" id="jsonFileInput" accept=".json" style="display:none;" onchange="importJSON(event)">
+      <button class="btn-secondary" onclick="exportXML()" title="Export active table as XML document">Exp XML</button>
       <button class="btn-secondary" onclick="exportSQLDump()" title="Export ANSI SQL DDL + INSERT statements (.sql)">Exp SQL</button>
       <button class="btn-secondary" onclick="exportMarkdown()" title="Export Markdown Directory Report (M)">Exp MD <span class="kbd-badge">M</span></button>
       <button class="btn-secondary" onclick="printReport()" title="Generate printable HTML report">Print</button>
@@ -1056,6 +1059,36 @@
   </div>
 </div>
 
+<!-- Table Schema & Column Manager Modal -->
+<div class="modal-overlay" id="schemaModal" role="dialog" aria-modal="true" aria-labelledby="schemaModalTitle" onclick="if(event.target===this) closeSchemaModal()">
+  <div class="modal modal-wide">
+    <h3 id="schemaModalTitle">📐 Table Schema & Column Manager</h3>
+    <p style="font-size:12px;color:var(--text-muted);line-height:1.4;margin-top:0;">
+      Inspect, append, or drop columns for table <strong id="schemaModalTableTitle" style="color:var(--primary);"></strong>. All changes safely preserve existing record values.
+    </p>
+    
+    <div style="margin-bottom: 14px;">
+      <h4 style="margin: 0 0 6px 0; font-size: 12px; color: #7dd3fc; text-transform: uppercase;">Active Columns (<span id="schemaColCount">0</span>)</h4>
+      <div id="schemaColumnsList" style="max-height: 180px; overflow-y: auto; background: rgba(0,0,0,0.3); border: 1px solid var(--border-color); border-radius: 6px; padding: 6px;">
+        <!-- Populated dynamically -->
+      </div>
+    </div>
+
+    <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); border-radius: 6px; padding: 10px; margin-bottom: 12px;">
+      <h4 style="margin: 0 0 8px 0; font-size: 12px; color: var(--primary); text-transform: uppercase;">➕ Add New Column</h4>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <input type="text" id="newColumnNameInput" placeholder="Column name (e.g. phone, salary, notes)" style="flex:1;min-width:180px;padding:6px 8px;border-radius:4px;border:1px solid var(--border-color);background:rgba(0,0,0,0.4);color:var(--text-main);font-size:12px;" maxlength="32" onkeydown="if(event.key==='Enter') addNewColumnToTable()">
+        <input type="text" id="newColumnDefaultInput" placeholder="Default value (optional)" style="flex:1;min-width:140px;padding:6px 8px;border-radius:4px;border:1px solid var(--border-color);background:rgba(0,0,0,0.4);color:var(--text-main);font-size:12px;" maxlength="50" onkeydown="if(event.key==='Enter') addNewColumnToTable()">
+        <button class="btn-primary" onclick="addNewColumnToTable()">Add Column</button>
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeSchemaModal()">Done</button>
+    </div>
+  </div>
+</div>
+
 <!-- Live Sync / Firebase RTDB Modal -->
 <div class="modal-overlay" id="syncModal" role="dialog" aria-modal="true" aria-labelledby="syncModalTitle" onclick="if(event.target===this) closeSyncModal()">
   <div class="modal">
@@ -1126,6 +1159,7 @@
       <table style="width:100%;font-size:11px;">
         <tr><td style="width:130px;color:var(--primary);font-family:monospace;font-weight:600;">[1] / [2] / [3] / [4]</td><td>Switch Views: Grid, Cards, SQL Studio, Dashboard</td></tr>
         <tr><td style="color:var(--primary);font-family:monospace;font-weight:600;">[F1] or [H]</td><td>Open this Help & Shortcuts guide</td></tr>
+        <tr><td style="color:var(--primary);font-family:monospace;font-weight:600;">[S]</td><td>Table Schema & Column Manager (Add / Drop columns)</td></tr>
         <tr><td style="color:var(--primary);font-family:monospace;font-weight:600;">[/] or [Ctrl+F]</td><td>Focus Search & Query field</td></tr>
         <tr><td style="color:var(--primary);font-family:monospace;font-weight:600;">[Ctrl+Enter]</td><td>Execute SQL in Studio or Submit Dialogs</td></tr>
         <tr><td style="color:var(--primary);font-family:monospace;font-weight:600;">[A]</td><td>Open Analytics & Distribution Metrics</td></tr>
@@ -2642,6 +2676,144 @@ function exportMarkdown() {
   showToast('Exported Markdown Directory report', 'success');
 }
 
+// --- Table Schema & Column Manager ---
+function openSchemaModal() {
+  const tbl = getActiveTable();
+  if (!tbl) return;
+  const titleEl = document.getElementById('schemaModalTableTitle');
+  if (titleEl) titleEl.textContent = tbl.title;
+  renderSchemaColumnsList();
+  const nInput = document.getElementById('newColumnNameInput');
+  const dInput = document.getElementById('newColumnDefaultInput');
+  if (nInput) { nInput.value = ''; nInput.focus(); }
+  if (dInput) dInput.value = '';
+  const modal = document.getElementById('schemaModal');
+  if (modal) modal.classList.add('active');
+}
+
+function closeSchemaModal() {
+  const modal = document.getElementById('schemaModal');
+  if (modal) modal.classList.remove('active');
+}
+
+function renderSchemaColumnsList() {
+  const tbl = getActiveTable();
+  if (!tbl) return;
+  const list = document.getElementById('schemaColumnsList');
+  const countEl = document.getElementById('schemaColCount');
+  if (countEl) countEl.textContent = tbl.columns.length;
+  if (!list) return;
+  list.innerHTML = '';
+
+  tbl.columns.forEach(col => {
+    const isPk = col === tbl.primaryKey;
+    const item = document.createElement('div');
+    item.style.cssText = 'display:flex;justify-content:space-between;align-items:center;padding:5px 8px;border-bottom:1px solid rgba(255,255,255,0.06);font-size:12px;';
+    item.innerHTML = `
+      <div style="display:flex;align-items:center;gap:6px;">
+        <span style="font-family:'JetBrains Mono',monospace;font-weight:600;color:${isPk ? '#f59e0b' : '#38bdf8'};">${col}</span>
+        ${isPk ? '<span class="tag" style="background:rgba(245,158,11,0.2);color:#fcd34d;font-size:9px;">PRIMARY KEY</span>' : ''}
+      </div>
+      <div>
+        ${!isPk ? `<button type="button" class="btn-action del-btn" onclick="dropColumnFromTable('${col}')" title="Drop column from table">Drop</button>` : '<span style="font-size:10px;color:var(--text-muted);">Required</span>'}
+      </div>
+    `;
+    list.appendChild(item);
+  });
+}
+
+function addNewColumnToTable() {
+  const nameInput = document.getElementById('newColumnNameInput');
+  const defInput = document.getElementById('newColumnDefaultInput');
+  if (!nameInput) return;
+  const rawCol = nameInput.value.trim().toLowerCase().replace(/[^a-z0-9_]/g, '_');
+  if (!rawCol) {
+    showToast('Please enter a valid column identifier', 'warning');
+    return;
+  }
+  const tbl = getActiveTable();
+  if (!tbl) return;
+  if (tbl.columns.includes(rawCol)) {
+    showToast(`Column "${rawCol}" already exists in ${tbl.title}`, 'warning');
+    return;
+  }
+  const defaultVal = defInput ? defInput.value.trim() : '';
+  tbl.columns.push(rawCol);
+  if (defaultVal) {
+    tbl.records.forEach(r => {
+      if (r[rawCol] === undefined || r[rawCol] === null) {
+        r[rawCol] = defaultVal;
+      }
+    });
+  }
+  saveDatabase();
+  renderTable();
+  renderSchemaColumnsList();
+  nameInput.value = '';
+  if (defInput) defInput.value = '';
+  showToast(`Added column "${rawCol}" to ${tbl.title}`, 'success');
+}
+
+function dropColumnFromTable(col) {
+  const tbl = getActiveTable();
+  if (!tbl) return;
+  if (col === tbl.primaryKey) {
+    showToast('Cannot drop primary key column', 'danger');
+    return;
+  }
+  if (!confirm(`Are you sure you want to drop column "${col}" from ${tbl.title}? Data in this column will be removed from existing records.`)) {
+    return;
+  }
+  tbl.columns = tbl.columns.filter(c => c !== col);
+  tbl.records.forEach(r => {
+    delete r[col];
+  });
+  saveDatabase();
+  renderTable();
+  renderSchemaColumnsList();
+  showToast(`Dropped column "${col}" from ${tbl.title}`, 'info');
+}
+
+function exportTSV() {
+  const tbl = getActiveTable();
+  if (!tbl || !tbl.records.length) {
+    showToast('No records to export', 'warning');
+    return;
+  }
+  let tsv = tbl.columns.join('\t') + '\n';
+  tbl.records.forEach(r => {
+    const row = tbl.columns.map(c => String(r[c] !== undefined && r[c] !== null ? r[c] : '').replace(/\t|\n|\r/g, ' '));
+    tsv += row.join('\t') + '\n';
+  });
+  const blob = new Blob([tsv], { type: 'text/tab-separated-values' });
+  downloadBlob(blob, `kdb_${dbState.activeTable}_${new Date().toISOString().slice(0, 10)}.tsv`);
+  showToast(`Exported ${tbl.records.length} records as TSV`, 'success');
+}
+
+function exportXML() {
+  const tbl = getActiveTable();
+  if (!tbl) return;
+  const dateStr = new Date().toISOString();
+  let xml = `<?xml version="1.0" encoding="UTF-8"?>\n<database name="KDB" exported="${dateStr}">\n  <table name="${tbl.title}">\n`;
+  tbl.records.forEach(r => {
+    xml += `    <record>\n`;
+    tbl.columns.forEach(c => {
+      const val = String(r[c] !== undefined && r[c] !== null ? r[c] : '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&apos;');
+      xml += `      <${c}>${val}</${c}>\n`;
+    });
+    xml += `    </record>\n`;
+  });
+  xml += `  </table>\n</database>\n`;
+  const blob = new Blob([xml], { type: 'application/xml' });
+  downloadBlob(blob, `kdb_${dbState.activeTable}_${new Date().toISOString().slice(0, 10)}.xml`);
+  showToast(`Exported ${tbl.records.length} records as XML document`, 'success');
+}
+
 function printReport() {
   window.print();
 }
@@ -2802,6 +2974,9 @@ window.addEventListener('keydown', function(e) {
       } else if (document.getElementById('newTableModal').classList.contains('active')) {
         e.preventDefault();
         createCustomTable();
+      } else if (document.getElementById('schemaModal') && document.getElementById('schemaModal').classList.contains('active')) {
+        e.preventDefault();
+        addNewColumnToTable();
       } else if (document.getElementById('syncModal').classList.contains('active')) {
         e.preventDefault();
         connectLiveSync();
@@ -2832,6 +3007,7 @@ window.addEventListener('keydown', function(e) {
     else if (k === '3') switchView('sql');
     else if (k === '4') switchView('dash');
     else if (k === 'h') openHelpModal();
+    else if (k === 's') openSchemaModal();
     else if (k === '/') {
       e.preventDefault();
       const s = document.getElementById('searchInput');
