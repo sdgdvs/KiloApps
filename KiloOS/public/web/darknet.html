@@ -1562,10 +1562,10 @@
       <div class="audio-bar-controls">
         <strong style="color:var(--phosphor-bright);">CHIPTUNE JUKEBOX:</strong>
         <select id="selTrack" class="custom-select" style="font-size:11px;" onchange="changeTrack(parseInt(this.value))">
-          <option value="0">Track 1: Lithospheric Resonance 0x7F (SPC700 Delay)</option>
-          <option value="1">Track 2: Underground Warez NFO Courier (YM2612 Bells)</option>
-          <option value="2">Track 3: Deep Salt Vault Subcarrier (1999Hz Ambient)</option>
-          <option value="3">Track 4: Lithospheric Cipher Suite (FM Slap Bass &amp; Delay)</option>
+          <option value="0">Track 1: Lithospheric Echoes (Andalusian Descent / SPC700 Delay)</option>
+          <option value="1">Track 2: Encrypted Courier 1999 (Demoscene Tracker &amp; Arps)</option>
+          <option value="2">Track 3: Salt Vault Resonance (Subterranean Ambient &amp; 1999Hz)</option>
+          <option value="3">Track 4: Node 0x7F Cipher Suite (Neo-Noir Koshiro FM Funk)</option>
         </select>
         <button class="action-btn" id="btnPlayMusic" onclick="toggleMusicPlayback()">▶️ PLAY</button>
         <label for="rngVol" style="color:var(--phosphor-dim); font-size:11px;">VOL:</label>
@@ -3316,6 +3316,9 @@ class DarknetSoundEngine {
     this.ctx = null;
     this.muted = false;
     this.masterGain = null;
+    this.snesDelay = null;
+    this.snesDelayFeedback = null;
+    this.snesDelayFilter = null;
     this.carrierOsc = null;
     this.carrierGain = null;
     this.carrierActive = false;
@@ -3323,6 +3326,19 @@ class DarknetSoundEngine {
     this.musicTimer = null;
     this.musicStep = 0;
     this.currentTrack = 0;
+
+    // Visibility-aware lifecycle guard
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) {
+        if (this.ctx && this.ctx.state === 'running') {
+          this.ctx.suspend().catch(() => {});
+        }
+      } else {
+        if (this.ctx && this.ctx.state === 'suspended' && this.musicPlaying) {
+          this.ctx.resume().catch(() => {});
+        }
+      }
+    });
   }
 
   init() {
@@ -3333,20 +3349,505 @@ class DarknetSoundEngine {
         this.masterGain = this.ctx.createGain();
         this.masterGain.gain.value = 0.7;
         this.masterGain.connect(this.ctx.destination);
+
+        // SNES SPC700-style warm stereo delay bus with 2400Hz analog roll-off
+        try {
+          this.snesDelay = this.ctx.createDelay();
+          this.snesDelay.delayTime.value = 0.175; // 175ms delay
+          this.snesDelayFeedback = this.ctx.createGain();
+          this.snesDelayFeedback.gain.value = 0.28;
+          this.snesDelayFilter = this.ctx.createBiquadFilter();
+          this.snesDelayFilter.type = 'lowpass';
+          this.snesDelayFilter.frequency.value = 2400;
+
+          this.snesDelay.connect(this.snesDelayFilter);
+          this.snesDelayFilter.connect(this.snesDelayFeedback);
+          this.snesDelayFeedback.connect(this.snesDelay);
+          this.snesDelayFilter.connect(this.masterGain);
+        } catch (e) {
+          console.warn('[DarknetAudio] Delay bus init fallback:', e);
+        }
       }
     }
     if (this.ctx && this.ctx.state === 'suspended') {
-      this.ctx.resume();
+      this.ctx.resume().catch(() => {});
     }
   }
 
   setVolume(vol) {
     this.init();
     if (this.masterGain) {
-      this.masterGain.gain.value = Math.max(0, Math.min(1, vol / 100));
+      this.masterGain.gain.setValueAtTime(Math.max(0, Math.min(1, vol / 100)), this.ctx.currentTime);
     }
   }
 
+  /* -------------------------------------------------------------------------
+     YM2612 2-OP FM SYNTHESIS VOICES & SPC700 DELAY BUS
+     ------------------------------------------------------------------------- */
+  playFmLead(freq, dur = 0.25, vol = 0.05, patch = 'epiano', delayedVibrato = false) {
+    if (this.muted || !freq || freq <= 0) return;
+    this.init();
+    if (!this.ctx) return;
+    const now = this.ctx.currentTime;
+
+    const carrier = this.ctx.createOscillator();
+    const modulator = this.ctx.createOscillator();
+    const modGain = this.ctx.createGain();
+    const ampEnv = this.ctx.createGain();
+
+    carrier.type = 'sine';
+    modulator.type = 'sine';
+
+    // FM patch configuration (Carrier + Modulator 2-Op Algorithm)
+    let modRatio = 2.0;
+    let initialIndex = 2.8;
+    let sustainedIndex = 0.15;
+    let attackTime = 0.06;
+
+    if (patch === 'flute') {
+      modRatio = 1.0;
+      initialIndex = 0.8;
+      sustainedIndex = 0.1;
+      attackTime = 0.08;
+    } else if (patch === 'brass') {
+      modRatio = 1.0;
+      initialIndex = 4.0;
+      sustainedIndex = 0.5;
+      attackTime = 0.04;
+    } else if (patch === 'bell') {
+      modRatio = 3.5;
+      initialIndex = 5.0;
+      sustainedIndex = 0.01;
+      attackTime = 0.03;
+    } else if (patch === 'demosynth') {
+      carrier.type = 'sawtooth';
+      modRatio = 2.0;
+      initialIndex = 3.5;
+      sustainedIndex = 0.7;
+      attackTime = 0.05;
+    }
+
+    carrier.frequency.setValueAtTime(freq, now);
+    modulator.frequency.setValueAtTime(freq * modRatio, now);
+
+    // Delayed vibrato (vocal-style expression after 180ms)
+    if (delayedVibrato && dur > 0.28) {
+      try {
+        const vibOsc = this.ctx.createOscillator();
+        const vibGain = this.ctx.createGain();
+        vibOsc.frequency.setValueAtTime(5.5, now); // 5.5 Hz vibrato rate
+        vibGain.gain.setValueAtTime(0, now);
+        vibGain.gain.setValueAtTime(0, now + 0.18);
+        vibGain.gain.linearRampToValueAtTime(freq * 0.025, now + 0.28);
+        vibOsc.connect(vibGain);
+        vibGain.connect(carrier.frequency);
+        vibOsc.start(now);
+        vibOsc.stop(now + dur + 0.05);
+      } catch (err) {}
+    }
+
+    // Modulator envelope
+    modGain.gain.setValueAtTime(freq * modRatio * initialIndex, now);
+    modGain.gain.exponentialRampToValueAtTime(Math.max(1, freq * sustainedIndex), now + attackTime);
+    modGain.gain.exponentialRampToValueAtTime(0.01, now + dur);
+
+    // Amplitude envelope
+    ampEnv.gain.setValueAtTime(vol, now);
+    ampEnv.gain.exponentialRampToValueAtTime(0.0001, now + dur);
+
+    modulator.connect(modGain);
+    modGain.connect(carrier.frequency);
+    carrier.connect(ampEnv);
+
+    ampEnv.connect(this.masterGain || this.ctx.destination);
+    if (this.snesDelay) {
+      ampEnv.connect(this.snesDelay);
+    }
+
+    modulator.start(now);
+    carrier.start(now);
+    modulator.stop(now + dur + 0.05);
+    carrier.stop(now + dur + 0.05);
+  }
+
+  playFmBass(freq, dur = 0.2, vol = 0.08, style = 'slap') {
+    if (this.muted || !freq || freq <= 0) return;
+    this.init();
+    if (!this.ctx) return;
+    const now = this.ctx.currentTime;
+
+    const carrier = this.ctx.createOscillator();
+    const modulator = this.ctx.createOscillator();
+    const modGain = this.ctx.createGain();
+    const ampEnv = this.ctx.createGain();
+
+    if (style === 'slap') {
+      carrier.type = 'sawtooth';
+      modulator.type = 'sine';
+      carrier.frequency.setValueAtTime(freq, now);
+      modulator.frequency.setValueAtTime(freq * 2.0, now);
+
+      modGain.gain.setValueAtTime(freq * 3.2, now);
+      modGain.gain.exponentialRampToValueAtTime(1, now + 0.05);
+
+      ampEnv.gain.setValueAtTime(vol, now);
+      ampEnv.gain.exponentialRampToValueAtTime(0.0001, now + dur);
+    } else {
+      // Subterranean smooth sine FM bass
+      carrier.type = 'sine';
+      modulator.type = 'sine';
+      carrier.frequency.setValueAtTime(freq, now);
+      modulator.frequency.setValueAtTime(freq * 1.0, now);
+
+      modGain.gain.setValueAtTime(freq * 1.2, now);
+      modGain.gain.exponentialRampToValueAtTime(1, now + 0.08);
+
+      ampEnv.gain.setValueAtTime(vol * 1.1, now);
+      ampEnv.gain.exponentialRampToValueAtTime(0.0001, now + dur);
+    }
+
+    modulator.connect(modGain);
+    modGain.connect(carrier.frequency);
+    carrier.connect(ampEnv);
+    ampEnv.connect(this.masterGain || this.ctx.destination);
+
+    modulator.start(now);
+    carrier.start(now);
+    modulator.stop(now + dur + 0.05);
+    carrier.stop(now + dur + 0.05);
+  }
+
+  playFmDrum(type, vol = 0.06) {
+    if (this.muted) return;
+    this.init();
+    if (!this.ctx) return;
+    const now = this.ctx.currentTime;
+
+    if (type === 'kick') {
+      // FM Kick with rapid pitch-down envelope
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(145, now);
+      osc.frequency.exponentialRampToValueAtTime(36, now + 0.045);
+      gain.gain.setValueAtTime(vol * 1.3, now);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.12);
+      osc.connect(gain);
+      gain.connect(this.masterGain || this.ctx.destination);
+      osc.start(now);
+      osc.stop(now + 0.13);
+    } else if (type === 'snare') {
+      // Inharmonic FM noise snare simulation
+      const carrier = this.ctx.createOscillator();
+      const modulator = this.ctx.createOscillator();
+      const modGain = this.ctx.createGain();
+      const ampEnv = this.ctx.createGain();
+
+      carrier.type = 'sine';
+      carrier.frequency.setValueAtTime(180, now);
+      carrier.frequency.exponentialRampToValueAtTime(80, now + 0.08);
+
+      modulator.type = 'sine';
+      modulator.frequency.setValueAtTime(1800, now); // Inharmonic high MUL
+
+      modGain.gain.setValueAtTime(1800 * 4.0, now);
+      modGain.gain.exponentialRampToValueAtTime(1, now + 0.07);
+
+      ampEnv.gain.setValueAtTime(vol * 0.9, now);
+      ampEnv.gain.exponentialRampToValueAtTime(0.0001, now + 0.14);
+
+      modulator.connect(modGain);
+      modGain.connect(carrier.frequency);
+      carrier.connect(ampEnv);
+      ampEnv.connect(this.masterGain || this.ctx.destination);
+
+      modulator.start(now);
+      carrier.start(now);
+      modulator.stop(now + 0.15);
+      carrier.stop(now + 0.15);
+    } else if (type === 'hat' || type === 'openhat') {
+      // Inharmonic metallic hat
+      const carrier = this.ctx.createOscillator();
+      const modulator = this.ctx.createOscillator();
+      const modGain = this.ctx.createGain();
+      const ampEnv = this.ctx.createGain();
+      const dur = type === 'openhat' ? 0.16 : 0.04;
+
+      carrier.type = 'sine';
+      carrier.frequency.setValueAtTime(8200, now);
+      modulator.type = 'sine';
+      modulator.frequency.setValueAtTime(9430, now);
+
+      modGain.gain.setValueAtTime(4500, now);
+      modGain.gain.exponentialRampToValueAtTime(10, now + dur);
+
+      ampEnv.gain.setValueAtTime(vol * 0.5, now);
+      ampEnv.gain.exponentialRampToValueAtTime(0.0001, now + dur);
+
+      modulator.connect(modGain);
+      modGain.connect(carrier.frequency);
+      carrier.connect(ampEnv);
+      ampEnv.connect(this.masterGain || this.ctx.destination);
+
+      modulator.start(now);
+      carrier.start(now);
+      modulator.stop(now + dur + 0.02);
+      carrier.stop(now + dur + 0.02);
+    }
+  }
+
+  /* -------------------------------------------------------------------------
+     CHIPTUNE JUKEBOX: 4 ADVANCED GENRE TRACKS WITH VOICE LEADING & SWING
+     ------------------------------------------------------------------------- */
+  startMusic(trackIdx = 0) {
+    this.init();
+    this.stopMusic();
+    this.currentTrack = trackIdx;
+    this.musicPlaying = true;
+    this.musicStep = 0;
+
+    // Standard frequency reference map (Hz)
+    // C2..C5
+    const N = {
+      R: 0,
+      D1: 36.71, E1: 41.20, F1: 43.65, G1: 49.00, A1: 55.00, Bb1: 58.27, C2: 65.41,
+      D2: 73.42, E2: 82.41, F2: 87.31, G2: 98.00, A2: 110.00, Bb2: 116.54, B2: 123.47,
+      C3: 130.81, D3: 146.83, Eb3: 155.56, E3: 164.81, F3: 174.61, G3: 196.00, Ab3: 207.65, A3: 220.00, Bb3: 233.08, B3: 246.94,
+      C4: 261.63, Cs4: 277.18, D4: 293.66, Eb4: 311.13, E4: 329.63, F4: 349.23, G4: 392.00, Ab4: 415.30, A4: 440.00, Bb4: 466.16, B4: 493.88,
+      C5: 523.25, Cs5: 554.37, D5: 587.33, Eb5: 622.25, E5: 659.25, F5: 698.46, G5: 783.99, A5: 880.00, Bb5: 932.33,
+      HARMONIC_1999: 1999.00
+    };
+
+    /* TRACK DEFINITIONS: 6-Channel Voice-Leading Sequences
+       Voice 1: Lead Melody (vocal phrasing + delayed vibrato)
+       Voice 2: Counter-Melody (contrary motion to lead)
+       Voice 3: Shell Voicing / Harmony (3rd + 7th; no doubled 5th)
+       Voice 4: Bass (Root/octave motion strictly below C3)
+       Voice 5: Drum (kick/snare)
+       Voice 6: Hat (closed/open)
+    */
+    const TRACK_0_STEPS = [
+      // Section A: D minor (Dm -> C -> Bb -> A7 Andalusian descent)
+      // Bar 1: Dm
+      { l: N.D4, c: N.A4, h: N.F4, b: N.D2, d: 'kick', hat: 'hat', p: 'flute', vib: false },
+      { l: N.R,  c: N.G4, h: N.R,  b: N.R,  d: '',     hat: 'hat', p: 'flute', vib: false },
+      { l: N.F4, c: N.F4, h: N.C5, b: N.D3, d: 'hat',  hat: '',    p: 'flute', vib: false },
+      { l: N.G4, c: N.E4, h: N.R,  b: N.R,  d: '',     hat: 'hat', p: 'flute', vib: false },
+      { l: N.A4, c: N.D4, h: N.F4, b: N.D2, d: 'snare',hat: 'hat', p: 'flute', vib: true },
+      { l: N.R,  c: N.E4, h: N.R,  b: N.R,  d: '',     hat: 'hat', p: 'flute', vib: false },
+      { l: N.A4, c: N.F4, h: N.C5, b: N.A2, d: 'kick', hat: '',    p: 'flute', vib: false },
+      { l: N.D5, c: N.G4, h: N.R,  b: N.R,  d: '',     hat: 'openhat', p: 'flute', vib: false },
+      // Bar 2: C Major (lead rests -> counter takes melodic spotlight)
+      { l: N.C5, c: N.E4, h: N.E4, b: N.C2, d: 'kick', hat: 'hat', p: 'flute', vib: true },
+      { l: N.R,  c: N.G4, h: N.R,  b: N.R,  d: '',     hat: 'hat', p: 'flute', vib: false },
+      { l: N.R,  c: N.C5, h: N.Bb4,b: N.C3, d: 'hat',  hat: '',    p: 'flute', vib: false },
+      { l: N.R,  c: N.D5, h: N.R,  b: N.R,  d: '',     hat: 'hat', p: 'flute', vib: false },
+      { l: N.Bb4,c: N.C5, h: N.E4, b: N.G2, d: 'snare',hat: 'hat', p: 'flute', vib: false },
+      { l: N.A4, c: N.Bb4,h: N.R,  b: N.R,  d: '',     hat: 'hat', p: 'flute', vib: false },
+      { l: N.G4, c: N.A4, h: N.Bb4,b: N.C2, d: 'kick', hat: '',    p: 'flute', vib: false },
+      { l: N.F4, c: N.G4, h: N.R,  b: N.R,  d: '',     hat: 'openhat', p: 'flute', vib: false },
+      // Bar 3: Bb Major (contrary motion descent in lead vs ascent in counter)
+      { l: N.D4, c: N.D5, h: N.D4, b: N.Bb1,d: 'kick', hat: 'hat', p: 'flute', vib: false },
+      { l: N.F4, c: N.F5, h: N.R,  b: N.R,  d: '',     hat: 'hat', p: 'flute', vib: false },
+      { l: N.Bb4,c: N.D5, h: N.Ab4,b: N.Bb2,d: 'hat',  hat: '',    p: 'flute', vib: false },
+      { l: N.C5, c: N.C5, h: N.R,  b: N.R,  d: '',     hat: 'hat', p: 'flute', vib: false },
+      { l: N.D5, c: N.Bb4,h: N.D4, b: N.F2, d: 'snare',hat: 'hat', p: 'flute', vib: true },
+      { l: N.R,  c: N.A4, h: N.R,  b: N.R,  d: '',     hat: 'hat', p: 'flute', vib: false },
+      { l: N.C5, c: N.G4, h: N.Ab4,b: N.Bb1,d: 'kick', hat: '',    p: 'flute', vib: false },
+      { l: N.Bb4,c: N.F4, h: N.R,  b: N.R,  d: '',     hat: 'openhat', p: 'flute', vib: false },
+      // Bar 4: A7 Phrygian Cadence (resolving into Dm)
+      { l: N.A4, c: N.E4, h: N.Cs4,b: N.A1, d: 'kick', hat: 'hat', p: 'flute', vib: false },
+      { l: N.G4, c: N.G4, h: N.R,  b: N.R,  d: '',     hat: 'hat', p: 'flute', vib: false },
+      { l: N.E4, c: N.A4, h: N.G4, b: N.A2, d: 'hat',  hat: '',    p: 'flute', vib: false },
+      { l: N.F4, c: N.Bb4,h: N.R,  b: N.R,  d: '',     hat: 'hat', p: 'flute', vib: false },
+      { l: N.Cs4,c: N.A4, h: N.Cs4,b: N.E2, d: 'snare',hat: 'hat', p: 'flute', vib: true },
+      { l: N.D4, c: N.G4, h: N.R,  b: N.R,  d: '',     hat: 'hat', p: 'flute', vib: false },
+      { l: N.E4, c: N.E4, h: N.G4, b: N.A1, d: 'kick', hat: '',    p: 'flute', vib: false },
+      { l: N.Cs4,c: N.Cs4,h: N.R,  b: N.R,  d: 'snare',hat: 'openhat', p: 'flute', vib: false }
+    ];
+
+    const TRACK_1_STEPS = [
+      // Demoscene Tracker: Fast 16th Arpeggios & Slap Bass (D Dorian)
+      { l: N.D4, c: N.A4, h: N.F4, b: N.D2, d: 'kick', hat: 'hat', p: 'demosynth', vib: false },
+      { l: N.R,  c: N.D5, h: N.R,  b: N.R,  d: '',     hat: 'hat', p: 'demosynth', vib: false },
+      { l: N.F4, c: N.F5, h: N.C5, b: N.D3, d: 'hat',  hat: '',    p: 'demosynth', vib: false },
+      { l: N.R,  c: N.A5, h: N.R,  b: N.D2, d: '',     hat: 'hat', p: 'demosynth', vib: false },
+      { l: N.A4, c: N.F5, h: N.F4, b: N.A2, d: 'snare',hat: 'hat', p: 'demosynth', vib: false },
+      { l: N.R,  c: N.D5, h: N.R,  b: N.R,  d: '',     hat: 'hat', p: 'demosynth', vib: false },
+      { l: N.C5, c: N.A4, h: N.C5, b: N.D2, d: 'kick', hat: '',    p: 'demosynth', vib: false },
+      { l: N.D5, c: N.F4, h: N.R,  b: N.C3, d: '',     hat: 'openhat', p: 'demosynth', vib: true },
+
+      { l: N.F5, c: N.C5, h: N.A4, b: N.F2, d: 'kick', hat: 'hat', p: 'demosynth', vib: false },
+      { l: N.R,  c: N.A4, h: N.R,  b: N.R,  d: '',     hat: 'hat', p: 'demosynth', vib: false },
+      { l: N.E5, c: N.F5, h: N.E4, b: N.F3, d: 'hat',  hat: '',    p: 'demosynth', vib: false },
+      { l: N.R,  c: N.C5, h: N.R,  b: N.F2, d: '',     hat: 'hat', p: 'demosynth', vib: false },
+      { l: N.D5, c: N.A4, h: N.A4, b: N.C3, d: 'snare',hat: 'hat', p: 'demosynth', vib: false },
+      { l: N.C5, c: N.F4, h: N.R,  b: N.R,  d: '',     hat: 'hat', p: 'demosynth', vib: false },
+      { l: N.A4, c: N.C5, h: N.E4, b: N.F2, d: 'kick', hat: '',    p: 'demosynth', vib: false },
+      { l: N.G4, c: N.D5, h: N.R,  b: N.E2, d: '',     hat: 'openhat', p: 'demosynth', vib: false },
+
+      { l: N.G4, c: N.B4, h: N.G4, b: N.G2, d: 'kick', hat: 'hat', p: 'demosynth', vib: false },
+      { l: N.R,  c: N.D5, h: N.R,  b: N.R,  d: '',     hat: 'hat', p: 'demosynth', vib: false },
+      { l: N.B4, c: N.G5, h: N.F4, b: N.G3, d: 'hat',  hat: '',    p: 'demosynth', vib: false },
+      { l: N.R,  c: N.B5, h: N.R,  b: N.G2, d: '',     hat: 'hat', p: 'demosynth', vib: false },
+      { l: N.D5, c: N.G5, h: N.G4, b: N.D3, d: 'snare',hat: 'hat', p: 'demosynth', vib: false },
+      { l: N.R,  c: N.D5, h: N.R,  b: N.R,  d: '',     hat: 'hat', p: 'demosynth', vib: false },
+      { l: N.F5, c: N.B4, h: N.F4, b: N.G2, d: 'kick', hat: '',    p: 'demosynth', vib: false },
+      { l: N.E5, c: N.G4, h: N.R,  b: N.F2, d: '',     hat: 'openhat', p: 'demosynth', vib: false },
+
+      { l: N.D5, c: N.A4, h: N.E4, b: N.A2, d: 'kick', hat: 'hat', p: 'demosynth', vib: true },
+      { l: N.C5, c: N.C5, h: N.R,  b: N.R,  d: '',     hat: 'hat', p: 'demosynth', vib: false },
+      { l: N.B4, c: N.E5, h: N.G4, b: N.A3, d: 'hat',  hat: '',    p: 'demosynth', vib: false },
+      { l: N.A4, c: N.A5, h: N.R,  b: N.A2, d: '',     hat: 'hat', p: 'demosynth', vib: false },
+      { l: N.G4, c: N.E5, h: N.E4, b: N.E3, d: 'snare',hat: 'hat', p: 'demosynth', vib: false },
+      { l: N.F4, c: N.C5, h: N.R,  b: N.R,  d: '',     hat: 'hat', p: 'demosynth', vib: false },
+      { l: N.E4, c: N.A4, h: N.G4, b: N.A2, d: 'kick', hat: '',    p: 'demosynth', vib: false },
+      { l: N.Cs4,c: N.G4, h: N.R,  b: N.A1, d: 'snare',hat: 'openhat', p: 'demosynth', vib: false }
+    ];
+
+    const TRACK_2_STEPS = [
+      // Track 3: Salt Vault Subterranean Ambient & 1999Hz Subcarrier
+      // Slow, cavernous floating pads, bell earcons, and sub-octave rumble
+      { l: N.HARMONIC_1999, c: N.A4,  h: N.E4, b: N.A1,  d: '', hat: '', p: 'bell', vib: false },
+      { l: N.R,             c: N.R,   h: N.R,  b: N.R,   d: '', hat: '', p: 'bell', vib: false },
+      { l: N.E5,            c: N.C5,  h: N.G4, b: N.R,   d: '', hat: '', p: 'bell', vib: true },
+      { l: N.R,             c: N.R,   h: N.R,  b: N.E2,  d: '', hat: '', p: 'bell', vib: false },
+      { l: N.B4,            c: N.G4,  h: N.D4, b: N.A1,  d: '', hat: '', p: 'bell', vib: false },
+      { l: N.R,             c: N.R,   h: N.R,  b: N.R,   d: '', hat: '', p: 'bell', vib: false },
+      { l: N.HARMONIC_1999, c: N.E4,  h: N.B4, b: N.R,   d: '', hat: '', p: 'bell', vib: false },
+      { l: N.R,             c: N.R,   h: N.R,  b: N.C2,  d: '', hat: '', p: 'bell', vib: false },
+      { l: N.D5,            c: N.F4,  h: N.C5, b: N.D2,  d: '', hat: '', p: 'bell', vib: true },
+      { l: N.R,             c: N.R,   h: N.R,  b: N.R,   d: '', hat: '', p: 'bell', vib: false },
+      { l: N.A4,            c: N.C5,  h: N.E4, b: N.R,   d: '', hat: '', p: 'bell', vib: false },
+      { l: N.R,             c: N.R,   h: N.R,  b: N.A1,  d: '', hat: '', p: 'bell', vib: false },
+      { l: N.HARMONIC_1999, c: N.D4,  h: N.G4, b: N.Bb1, d: '', hat: '', p: 'bell', vib: false },
+      { l: N.R,             c: N.R,   h: N.R,  b: N.R,   d: '', hat: '', p: 'bell', vib: false },
+      { l: N.Cs5,           c: N.A4,  h: N.E4, b: N.A1,  d: '', hat: '', p: 'bell', vib: true },
+      { l: N.R,             c: N.R,   h: N.R,  b: N.R,   d: '', hat: '', p: 'bell', vib: false }
+    ];
+
+    const TRACK_3_STEPS = [
+      // Track 4: Node 0x7F Cipher Suite (Neo-Noir Yuzo Koshiro FM Funk)
+      // Shell voicings: Fm7 -> Bbm7 -> Eb7 -> AbMaj7
+      { l: N.Ab4, c: N.Eb4, h: N.C4, b: N.F2,  d: 'kick', hat: 'hat', p: 'epiano', vib: false },
+      { l: N.R,   c: N.R,   h: N.R,  b: N.R,   d: '',     hat: 'hat', p: 'epiano', vib: false },
+      { l: N.C5,  c: N.Ab4, h: N.Eb4,b: N.F3,  d: 'hat',  hat: '',    p: 'epiano', vib: false },
+      { l: N.Eb5, c: N.C5,  h: N.R,  b: N.F2,  d: '',     hat: 'hat', p: 'epiano', vib: true },
+      { l: N.F5,  c: N.Eb4, h: N.Ab4,b: N.C3,  d: 'snare',hat: 'hat', p: 'epiano', vib: false },
+      { l: N.R,   c: N.R,   h: N.R,  b: N.R,   d: '',     hat: 'hat', p: 'epiano', vib: false },
+      { l: N.Eb5, c: N.C5,  h: N.Eb4,b: N.F2,  d: 'kick', hat: '',    p: 'epiano', vib: false },
+      { l: N.C5,  c: N.Ab4, h: N.R,  b: N.Ab2, d: '',     hat: 'openhat', p: 'epiano', vib: false },
+
+      { l: N.Db5, c: N.F4,  h: N.Ab4,b: N.Bb1, d: 'kick', hat: 'hat', p: 'epiano', vib: false },
+      { l: N.R,   c: N.R,   h: N.R,  b: N.R,   d: '',     hat: 'hat', p: 'epiano', vib: false },
+      { l: N.F5,  c: N.Db5, h: N.F4, b: N.Bb2, d: 'hat',  hat: '',    p: 'epiano', vib: false },
+      { l: N.Ab5, c: N.F5,  h: N.R,  b: N.Bb1, d: '',     hat: 'hat', p: 'epiano', vib: true },
+      { l: N.Bb5, c: N.Db5, h: N.Ab4,b: N.F2,  d: 'snare',hat: 'hat', p: 'epiano', vib: false },
+      { l: N.R,   c: N.R,   h: N.R,  b: N.R,   d: '',     hat: 'hat', p: 'epiano', vib: false },
+      { l: N.Ab5, c: N.F4,  h: N.Db5,b: N.Bb1, d: 'kick', hat: '',    p: 'epiano', vib: false },
+      { l: N.F5,  c: N.Db5, h: N.R,  b: N.Db2, d: '',     hat: 'openhat', p: 'epiano', vib: false },
+
+      { l: N.Eb5, c: N.G4,  h: N.Db5,b: N.Eb2, d: 'kick', hat: 'hat', p: 'epiano', vib: false },
+      { l: N.R,   c: N.R,   h: N.R,  b: N.R,   d: '',     hat: 'hat', p: 'epiano', vib: false },
+      { l: N.G5,  c: N.Eb5, h: N.G4, b: N.Eb3, d: 'hat',  hat: '',    p: 'epiano', vib: false },
+      { l: N.Bb5, c: N.Db5, h: N.R,  b: N.Eb2, d: '',     hat: 'hat', p: 'epiano', vib: true },
+      { l: N.Ab5, c: N.G4,  h: N.Db5,b: N.Bb2, d: 'snare',hat: 'hat', p: 'epiano', vib: false },
+      { l: N.R,   c: N.R,   h: N.R,  b: N.R,   d: '',     hat: 'hat', p: 'epiano', vib: false },
+      { l: N.G5,  c: N.Eb5, h: N.G4, b: N.Eb2, d: 'kick', hat: '',    p: 'epiano', vib: false },
+      { l: N.Eb5, c: N.Db5, h: N.R,  b: N.G2,  d: '',     hat: 'openhat', p: 'epiano', vib: false },
+
+      { l: N.C5,  c: N.Eb4, h: N.G4, b: N.Ab1, d: 'kick', hat: 'hat', p: 'epiano', vib: false },
+      { l: N.R,   c: N.R,   h: N.R,  b: N.R,   d: '',     hat: 'hat', p: 'epiano', vib: false },
+      { l: N.Eb5, c: N.C5,  h: N.Eb4,b: N.Ab2, d: 'hat',  hat: '',    p: 'epiano', vib: false },
+      { l: N.Ab5, c: N.G4,  h: N.R,  b: N.Ab1, d: '',     hat: 'hat', p: 'epiano', vib: true },
+      { l: N.G5,  c: N.Eb4, h: N.C5, b: N.Eb2, d: 'snare',hat: 'hat', p: 'epiano', vib: false },
+      { l: N.F5,  c: N.C5,  h: N.R,  b: N.R,   d: '',     hat: 'hat', p: 'epiano', vib: false },
+      { l: N.Eb5, c: N.Ab4, h: N.G4, b: N.Ab1, d: 'kick', hat: '',    p: 'epiano', vib: false },
+      { l: N.Db5, c: N.G4,  h: N.R,  b: N.C2,  d: 'snare',hat: 'openhat', p: 'epiano', vib: false }
+    ];
+
+    const trackBank = [TRACK_0_STEPS, TRACK_1_STEPS, TRACK_2_STEPS, TRACK_3_STEPS];
+    const steps = trackBank[this.currentTrack % trackBank.length];
+
+    // Rhythmic Swing Groove Configuration
+    const stepNext = () => {
+      if (!this.musicPlaying || this.muted || !this.ctx) return;
+
+      const idx = this.musicStep % steps.length;
+      const s = steps[idx];
+      const isEven = (this.musicStep % 2 === 0);
+
+      // Swing ratios:
+      // Track 0 (Andalusian): 175ms (even) / 115ms (odd) -> 5:3 subtle swing
+      // Track 1 (Tracker): 112ms even / 112ms odd -> straight driving 16ths
+      // Track 2 (Ambient): 270ms even / 270ms odd -> spacious breathing tempo
+      // Track 3 (Funk): 180ms even / 100ms odd -> 9:5 punchy jazz swing
+      let nextDelay = 140;
+      if (this.currentTrack === 0) {
+        nextDelay = isEven ? 175 : 115;
+      } else if (this.currentTrack === 1) {
+        nextDelay = 112;
+      } else if (this.currentTrack === 2) {
+        nextDelay = 270;
+      } else if (this.currentTrack === 3) {
+        nextDelay = isEven ? 180 : 100;
+      }
+
+      // Voice 1: Lead Melody (with delayed vibrato on sustains)
+      if (s.l > 0) {
+        const dur = (nextDelay / 1000) * 1.5;
+        this.playFmLead(s.l, dur, 0.05, s.p || 'epiano', s.vib);
+      }
+
+      // Voice 2: Counter-Melody (contrary motion to lead)
+      if (s.c > 0) {
+        const dur = (nextDelay / 1000) * 1.2;
+        this.playFmLead(s.c, dur, 0.03, 'flute', false);
+      }
+
+      // Voice 3: Shell Voicing (3rd / 7th harmony)
+      if (s.h > 0) {
+        const dur = (nextDelay / 1000) * 0.9;
+        this.playFmLead(s.h, dur, 0.025, 'bell', false);
+      }
+
+      // Voice 4: Bass (Strictly below C3, active slap/sub)
+      if (s.b > 0) {
+        const dur = (nextDelay / 1000) * 1.1;
+        const bStyle = (this.currentTrack === 2) ? 'sub' : 'slap';
+        this.playFmBass(s.b, dur, 0.075, bStyle);
+      }
+
+      // Voice 5: Drum (FM Kick / Snare)
+      if (s.d) {
+        this.playFmDrum(s.d, 0.06);
+      }
+
+      // Voice 6: Hat (Inharmonic Closed/Open Hat)
+      if (s.hat) {
+        this.playFmDrum(s.hat, 0.035);
+      }
+
+      this.musicStep++;
+      if (this.musicPlaying) {
+        this.musicTimer = setTimeout(stepNext, nextDelay);
+      }
+    };
+
+    stepNext();
+  }
+
+  stopMusic() {
+    if (this.musicTimer) {
+      clearTimeout(this.musicTimer);
+      this.musicTimer = null;
+    }
+    this.musicPlaying = false;
+  }
+
+  /* -------------------------------------------------------------------------
+     UI EARCONS & ACTION STINGERS (AUTHENTIC RETRO FM SYNTHESIS)
+     ------------------------------------------------------------------------- */
   playKeyClick() {
     if (this.muted) return;
     this.init();
@@ -3355,10 +3856,10 @@ class DarknetSoundEngine {
     const osc = this.ctx.createOscillator();
     const gain = this.ctx.createGain();
     osc.type = 'triangle';
-    osc.frequency.setValueAtTime(800 + Math.random() * 500, now);
-    osc.frequency.exponentialRampToValueAtTime(100, now + 0.02);
-    gain.gain.setValueAtTime(0.03, now);
-    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.02);
+    osc.frequency.setValueAtTime(850 + Math.random() * 400, now);
+    osc.frequency.exponentialRampToValueAtTime(110, now + 0.018);
+    gain.gain.setValueAtTime(0.025, now);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.018);
     osc.connect(gain);
     gain.connect(this.masterGain || this.ctx.destination);
     osc.start(now);
@@ -3367,64 +3868,24 @@ class DarknetSoundEngine {
 
   playFMChirp(freq = 440) {
     if (this.muted) return;
-    this.init();
-    if (!this.ctx) return;
-    const now = this.ctx.currentTime;
-    const carrier = this.ctx.createOscillator();
-    const modulator = this.ctx.createOscillator();
-    const modGain = this.ctx.createGain();
-    const carrierGain = this.ctx.createGain();
-
-    // SPC700 stereo delay line
-    const delay = this.ctx.createDelay();
-    delay.delayTime.value = 0.17; // 170ms delay
-    const delayGain = this.ctx.createGain();
-    delayGain.gain.value = 0.28;
-    const delayFilter = this.ctx.createBiquadFilter();
-    delayFilter.frequency.value = 2200;
-
-    carrier.type = 'sine';
-    carrier.frequency.setValueAtTime(freq, now);
-    modulator.type = 'sine';
-    modulator.frequency.setValueAtTime(freq * 2, now); // 2:1 harmonic ratio
-
-    modGain.gain.setValueAtTime(freq * 1.5, now);
-    modGain.gain.exponentialRampToValueAtTime(1, now + 0.18);
-
-    carrierGain.gain.setValueAtTime(0.07, now);
-    carrierGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.35);
-
-    modulator.connect(modGain);
-    modGain.connect(carrier.frequency);
-    carrier.connect(carrierGain);
-    carrierGain.connect(this.masterGain || this.ctx.destination);
-
-    // SPC700 feedback
-    carrierGain.connect(delay);
-    delay.connect(delayFilter);
-    delayFilter.connect(delayGain);
-    delayGain.connect(delay);
-    delayFilter.connect(this.masterGain || this.ctx.destination);
-
-    carrier.start(now);
-    modulator.start(now);
-    carrier.stop(now + 0.38);
-    modulator.stop(now + 0.38);
+    this.playFmLead(freq, 0.18, 0.045, 'bell', false);
   }
 
   playDecodeSuccess() {
     if (this.muted) return;
-    const notes = [392, 493.88, 587.33, 783.99]; // G4, B4, D5, G5
+    // G major triumphant whole-step lift (G4, B4, D5, G5)
+    const notes = [392.00, 493.88, 587.33, 783.99];
     notes.forEach((f, i) => {
-      setTimeout(() => this.playFMChirp(f), i * 60);
+      setTimeout(() => this.playFmLead(f, 0.22, 0.05, 'brass', false), i * 55);
     });
   }
 
   playRelayUnlockAffirmation() {
     if (this.muted) return;
-    const notes = [261.63, 329.63, 392.00, 523.25, 659.25]; // C4, E4, G4, C5, E5
+    // Ascending crystal arpeggio (C4, E4, G4, C5, E5)
+    const notes = [261.63, 329.63, 392.00, 523.25, 659.25];
     notes.forEach((f, i) => {
-      setTimeout(() => this.playFMChirp(f), i * 75);
+      setTimeout(() => this.playFmLead(f, 0.25, 0.045, 'bell', false), i * 65);
     });
   }
 
@@ -3436,14 +3897,14 @@ class DarknetSoundEngine {
     const osc = this.ctx.createOscillator();
     const gain = this.ctx.createGain();
     osc.type = 'square';
-    // Bell 202 AFSK tones: 1200 mark, 2200 space
+    // Bell 202 AFSK tones: 1200 Mark, 2200 Space
     osc.frequency.setValueAtTime(1200, now);
     osc.frequency.setValueAtTime(2200, now + 0.012);
-    osc.frequency.setValueAtTime(1200, now + 0.025);
-    osc.frequency.setValueAtTime(2200, now + 0.038);
-    osc.frequency.setValueAtTime(1200, now + 0.05);
+    osc.frequency.setValueAtTime(1200, now + 0.024);
+    osc.frequency.setValueAtTime(2200, now + 0.036);
+    osc.frequency.setValueAtTime(1200, now + 0.048);
     gain.gain.setValueAtTime(0.025, now);
-    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.07);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.065);
     osc.connect(gain);
     gain.connect(this.masterGain || this.ctx.destination);
     osc.start(now);
@@ -3458,7 +3919,7 @@ class DarknetSoundEngine {
     const osc = this.ctx.createOscillator();
     const gain = this.ctx.createGain();
     osc.type = 'sine';
-    osc.frequency.setValueAtTime(2100, now);
+    osc.frequency.setValueAtTime(2100, now); // 2100Hz answer tone
     gain.gain.setValueAtTime(0.04, now);
     gain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
     osc.connect(gain);
@@ -3476,10 +3937,10 @@ class DarknetSoundEngine {
     const osc = this.ctx.createOscillator();
     const gain = this.ctx.createGain();
     osc.type = 'square';
-    osc.frequency.setValueAtTime(1400 + Math.random() * 400, now);
-    osc.frequency.exponentialRampToValueAtTime(300, now + 0.03);
-    gain.gain.setValueAtTime(0.03, now);
-    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.03);
+    osc.frequency.setValueAtTime(1300 + Math.random() * 450, now);
+    osc.frequency.exponentialRampToValueAtTime(280, now + 0.028);
+    gain.gain.setValueAtTime(0.025, now);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.028);
     osc.connect(gain);
     gain.connect(this.masterGain || this.ctx.destination);
     osc.start(now);
@@ -3495,7 +3956,7 @@ class DarknetSoundEngine {
     const gain = this.ctx.createGain();
     osc.type = 'sine';
     osc.frequency.setValueAtTime(freq, now);
-    gain.gain.setValueAtTime(0.04, now);
+    gain.gain.setValueAtTime(0.035, now);
     gain.gain.exponentialRampToValueAtTime(0.0001, now + (durationMs / 1000));
     osc.connect(gain);
     gain.connect(this.masterGain || this.ctx.destination);
@@ -3512,7 +3973,7 @@ class DarknetSoundEngine {
     const gain = this.ctx.createGain();
     osc.type = 'sine';
     osc.frequency.setValueAtTime(2600, now);
-    gain.gain.setValueAtTime(0.08, now);
+    gain.gain.setValueAtTime(0.075, now);
     gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.38);
     osc.connect(gain);
     gain.connect(this.masterGain || this.ctx.destination);
@@ -3539,9 +4000,9 @@ class DarknetSoundEngine {
     osc1.frequency.setValueAtTime(f1, now);
     osc2.frequency.setValueAtTime(f2, now);
 
-    g1.gain.setValueAtTime(0.06, now);
+    g1.gain.setValueAtTime(0.055, now);
     g1.gain.exponentialRampToValueAtTime(0.0001, now + dur);
-    g2.gain.setValueAtTime(0.06, now);
+    g2.gain.setValueAtTime(0.055, now);
     g2.gain.exponentialRampToValueAtTime(0.0001, now + dur);
 
     osc1.connect(g1);
@@ -3601,13 +4062,13 @@ class DarknetSoundEngine {
     const gain = this.ctx.createGain();
     osc.type = 'sawtooth';
     osc.frequency.setValueAtTime(800, now);
-    osc.frequency.exponentialRampToValueAtTime(40, now + 0.4);
-    gain.gain.setValueAtTime(0.09, now);
-    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.4);
+    osc.frequency.exponentialRampToValueAtTime(40, now + 0.38);
+    gain.gain.setValueAtTime(0.08, now);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.38);
     osc.connect(gain);
     gain.connect(this.masterGain || this.ctx.destination);
     osc.start(now);
-    osc.stop(now + 0.42);
+    osc.stop(now + 0.4);
   }
 
   toggleCarrier() {
@@ -3633,7 +4094,7 @@ class DarknetSoundEngine {
       this.carrierGain = this.ctx.createGain();
 
       this.carrierOsc.type = 'sine';
-      this.carrierOsc.frequency.setValueAtTime(1999, now); // The 1999Hz harmonic!
+      this.carrierOsc.frequency.setValueAtTime(1999, now); // The 1999Hz harmonic
 
       lfo.frequency.setValueAtTime(1.2, now); // 1.2Hz atmospheric drift
       lfoGain.gain.setValueAtTime(6, now);
@@ -3653,125 +4114,6 @@ class DarknetSoundEngine {
     }
   }
 
-  /* Procedural Chiptune Music Engine */
-  startMusic(trackIdx = 0) {
-    this.init();
-    this.stopMusic();
-    this.currentTrack = trackIdx;
-    this.musicPlaying = true;
-    this.musicStep = 0;
-
-    // Track patterns (Notes in Hz)
-    const tracks = [
-      // Track 1: Lithospheric Resonance (SPC700 ambient delay + FM bass)
-      [
-        { bass: 110, lead: 440 }, { bass: 0, lead: 554.37 },
-        { bass: 110, lead: 659.25 }, { bass: 0, lead: 554.37 },
-        { bass: 98, lead: 392 }, { bass: 0, lead: 493.88 },
-        { bass: 98, lead: 587.33 }, { bass: 0, lead: 493.88 },
-        { bass: 87.31, lead: 349.23 }, { bass: 0, lead: 440 },
-        { bass: 87.31, lead: 523.25 }, { bass: 0, lead: 440 },
-        { bass: 82.41, lead: 329.63 }, { bass: 0, lead: 415.30 },
-        { bass: 82.41, lead: 493.88 }, { bass: 0, lead: 659.25 }
-      ],
-      // Track 2: Underground Warez Courier (Demoscene arps)
-      [
-        { bass: 130.81, lead: 523.25 }, { bass: 0, lead: 659.25 },
-        { bass: 130.81, lead: 783.99 }, { bass: 0, lead: 1046.50 },
-        { bass: 146.83, lead: 587.33 }, { bass: 0, lead: 698.46 },
-        { bass: 146.83, lead: 880.00 }, { bass: 0, lead: 1174.66 },
-        { bass: 164.81, lead: 659.25 }, { bass: 0, lead: 783.99 },
-        { bass: 164.81, lead: 987.77 }, { bass: 0, lead: 1318.51 },
-        { bass: 174.61, lead: 698.46 }, { bass: 0, lead: 880.00 },
-        { bass: 174.61, lead: 1046.50 }, { bass: 0, lead: 1396.91 }
-      ],
-      // Track 3: Salt Vault Acoustic Carrier (1999Hz ambient drone)
-      [
-        { bass: 55, lead: 1999 }, { bass: 0, lead: 0 },
-        { bass: 73.42, lead: 1999 }, { bass: 0, lead: 880 },
-        { bass: 65.41, lead: 1999 }, { bass: 0, lead: 0 },
-        { bass: 82.41, lead: 1999 }, { bass: 0, lead: 1318.51 }
-      ],
-      // Track 4: Lithospheric Cipher Suite (FM Slap Bass & Stereo Delay)
-      [
-        { bass: 73.42, lead: 293.66 }, { bass: 0, lead: 440.00 },
-        { bass: 146.83, lead: 587.33 }, { bass: 73.42, lead: 880.00 },
-        { bass: 82.41, lead: 329.63 }, { bass: 0, lead: 493.88 },
-        { bass: 164.81, lead: 659.25 }, { bass: 82.41, lead: 987.77 },
-        { bass: 98.00, lead: 392.00 }, { bass: 0, lead: 587.33 },
-        { bass: 196.00, lead: 783.99 }, { bass: 98.00, lead: 1174.66 },
-        { bass: 87.31, lead: 349.23 }, { bass: 0, lead: 523.25 },
-        { bass: 174.61, lead: 698.46 }, { bass: 110.00, lead: 1999.00 }
-      ]
-    ];
-
-    const currentNotes = tracks[this.currentTrack % tracks.length];
-    const tempoMs = this.currentTrack === 1 ? 140 : 200;
-
-    this.musicTimer = setInterval(() => {
-      if (!this.musicPlaying || this.muted || !this.ctx) return;
-      const note = currentNotes[this.musicStep % currentNotes.length];
-      const now = this.ctx.currentTime;
-
-      // FM Bass
-      if (note.bass > 0) {
-        const c = this.ctx.createOscillator();
-        const m = this.ctx.createOscillator();
-        const mg = this.ctx.createGain();
-        const cg = this.ctx.createGain();
-
-        c.type = 'sawtooth';
-        c.frequency.setValueAtTime(note.bass, now);
-        m.type = 'sine';
-        m.frequency.setValueAtTime(note.bass * 2, now);
-
-        mg.gain.setValueAtTime(note.bass * 1.5, now);
-        mg.gain.exponentialRampToValueAtTime(1, now + 0.12);
-
-        cg.gain.setValueAtTime(0.04, now);
-        cg.gain.exponentialRampToValueAtTime(0.0001, now + 0.18);
-
-        m.connect(mg);
-        mg.connect(c.frequency);
-        c.connect(cg);
-        cg.connect(this.masterGain || this.ctx.destination);
-
-        c.start(now);
-        m.start(now);
-        c.stop(now + 0.2);
-        m.stop(now + 0.2);
-      }
-
-      // Lead Note with SPC700 Delay
-      if (note.lead > 0) {
-        const osc = this.ctx.createOscillator();
-        const g = this.ctx.createGain();
-        const d = this.ctx.createDelay();
-        d.delayTime.value = 0.18;
-        const dg = this.ctx.createGain();
-        dg.gain.value = 0.25;
-
-        osc.type = 'triangle';
-        osc.frequency.setValueAtTime(note.lead, now);
-        g.gain.setValueAtTime(0.03, now);
-        g.gain.exponentialRampToValueAtTime(0.0001, now + 0.16);
-
-        osc.connect(g);
-        g.connect(this.masterGain || this.ctx.destination);
-
-        g.connect(d);
-        d.connect(dg);
-        dg.connect(d);
-        dg.connect(this.masterGain || this.ctx.destination);
-
-        osc.start(now);
-        osc.stop(now + 0.25);
-      }
-
-      this.musicStep++;
-    }, tempoMs);
-  }
-
   playFSKTone(freq, durationMs = 80) {
     if (this.muted) return;
     this.init();
@@ -3781,7 +4123,7 @@ class DarknetSoundEngine {
     const gain = this.ctx.createGain();
     osc.type = 'sine';
     osc.frequency.setValueAtTime(freq, now);
-    gain.gain.setValueAtTime(0.04, now);
+    gain.gain.setValueAtTime(0.035, now);
     gain.gain.exponentialRampToValueAtTime(0.0001, now + (durationMs / 1000));
     osc.connect(gain);
     gain.connect(this.masterGain || this.ctx.destination);
@@ -3799,7 +4141,7 @@ class DarknetSoundEngine {
     osc.type = 'triangle';
     osc.frequency.setValueAtTime(600 + Math.random() * 300, now);
     osc.frequency.exponentialRampToValueAtTime(80, now + 0.025);
-    gain.gain.setValueAtTime(0.035, now);
+    gain.gain.setValueAtTime(0.03, now);
     gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.025);
     osc.connect(gain);
     gain.connect(this.masterGain || this.ctx.destination);
@@ -3830,16 +4172,8 @@ class DarknetSoundEngine {
     if (this.muted) return;
     const notes = [440, 554.37, 659.25, 880, 1108.73, 1318.51];
     notes.forEach((f, i) => {
-      setTimeout(() => this.playFMChirp(f), i * 90);
+      setTimeout(() => this.playFmLead(f, 0.2, 0.04, 'bell', false), i * 85);
     });
-  }
-
-  stopMusic() {
-    if (this.musicTimer) {
-      clearInterval(this.musicTimer);
-      this.musicTimer = null;
-    }
-    this.musicPlaying = false;
   }
 }
 
