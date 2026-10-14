@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-qa
+current_agent: kilo-qa
+next_agent: kilo-expander
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -17,7 +17,7 @@ current_targets:
   kilo_graphics: KStarForge
   kilo_soundscape: kweb://warez
   kilo_tester: KAudio
-  kilo_usability: KNote
+  kilo_usability: KRogue
   kilo_qa: KSpace
   kilo_expander: KPad
 virtual_web_target: kweb://10.19.99.4/classified
@@ -34,9 +34,9 @@ virtual_web_rotation:
 - kweb://10.19.99.4/classified
 - kweb://echo-subsystem.net
 last_run:
-  agent: kilo-tester
-  app: KSanctuary
-  timestamp: '2026-10-13T20:13:00-07:00'
+  agent: kilo-usability
+  app: KNote
+  timestamp: '2026-10-13T20:31:00-07:00'
 last_planner_run: '2026-10-13T18:15:00Z'
 ---
 
@@ -95,8 +95,8 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Upcoming Queue**: `KAudio`, `KSubmarine`, `KVault`, `KCalendar`, `KPaint`.
 
 ### 5. Usability & UX Queue (`kilo-usability`)
-- **Current Target**: `KNote`
-- **Upcoming Queue**: `KRogue`, `KSubmarine`, `KMail`, `KPad`, `KAudio`.
+- **Current Target**: `KRogue`
+- **Upcoming Queue**: `KSubmarine`, `KMail`, `KPad`, `KAudio`, `KNote`.
 
 ### 6. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
 - **Current Target**: `KSpace`
@@ -122,6 +122,11 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 ---
 
 ## Recent Execution Logs (Max 5 Entries)
+- **2026-10-13T20:31:00-07:00 — kilo-usability: KNote (Usability & UX Audit)**
+  - ⏭️ Skip — KNote usability is complete and mature (10+ passes, comprehensive UI/UX).
+  - Verified default window bounds (980x680), clean build (`npm run build` 0 errors, 161 KB < 999 KB).
+  - Queue: Advanced kilo-usability to KRogue; handed off to kilo-qa.
+
 - **2026-10-13T20:13:00-07:00 — kilo-tester: KSanctuary (Interactive UI Audit & Parity Fixes)**
   - Audited full interactive UI: tabs 1-8, modal popups (tutorial, help, summary, scout, raid), worker ± controls, trade counters.
   - Verified storage safety guards (safe try/catch on quicksave/load/export) and hotkeys (F1, F5, F9, Space, 1-8, Esc, Enter).
@@ -147,8 +152,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Linked in navigation tabs with F1/H shortcut bindings; verified file size 371 KB (<999 KB).
   - Queue: Advanced kilo-creator to kweb://10.19.99.4/classified; handed off to kilo-graphics.
 
-- **2026-10-13T18:15:00-07:00 — kilo-expander: KDB (Deep Feature Expansion)**
-  - Implemented Table Schema & Column Manager modal (`openSchemaModal`, append/drop columns with value preservation).
-  - Added multi-format data interoperability (`exportTSV()`, `exportXML()`).
-  - Wired keyboard accelerators (`[S]` for schema manager) and updated Help shortcuts guide.
-  - Queue: Advanced kilo-expander to KPad; handed off to kilo-creator.
