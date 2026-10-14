@@ -5330,7 +5330,10 @@ function schedule() {
     if (pat.snare[sIdx]) playSnare(t, pat.snare[sIdx] === 2);
     if (pat.hihat[sIdx]) playHihat(t, pat.hihat[sIdx] === 2);
 
-    nextNoteTime += sixteenthTime;
+    // Swing-tick groove: alternating long-short 16th intervals (5:3 / 5:4 ratio) for tracker shuffle
+    const isEven = (sIdx % 2 === 0);
+    const swingFactor = (currentTrackIdx === 1 || currentTrackIdx === 0) ? (isEven ? 1.08 : 0.92) : (isEven ? 1.03 : 0.97);
+    nextNoteTime += sixteenthTime * swingFactor;
     currentStep = (currentStep + 1) % totalSteps;
     updatePlaybackHud(track, pIdx, sIdx, currentStep, totalSteps, sixteenthTime);
     renderTrackerRoll(track, pIdx, sIdx);
