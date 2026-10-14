@@ -1860,6 +1860,7 @@
     <button class="tab-btn" onclick="switchTab('tab-overclock')">⚡ OVERCLOCK &amp; 3D BENCH</button>
     <button class="tab-btn" onclick="switchTab('tab-tariff')">💰 TARIFF &amp; BANDWIDTH</button>
     <button class="tab-btn" onclick="switchTab('tab-booth')">📸 QUICKCAM '99 &amp; PHOTO BOOTH</button>
+    <button class="tab-btn" onclick="switchTab('tab-trivia')">🎮 1999 CYBER-TRIVIA EXAM</button>
   </nav>
 
   <!-- PANE 1: TERMINAL LOUNGE -->
@@ -3210,6 +3211,76 @@ Ready for Quarterfinals. Click 'SIMULATE MATCH'.</div>
     </div>
   </section>
 
+  <!-- PANE 12: 1999 CYBER-TRIVIA EXAM & SYSOP CERTIFICATION -->
+  <section id="tab-trivia" class="pane-content">
+    <div class="section-title">
+      <span>🎮 1999 CYBER-TRIVIA ARCADE &amp; SYSOP CERTIFICATION EXAM</span>
+      <span style="font-size:11px; color:var(--amber-bright);">TEST YOUR 1999 PHREAK, HARDWARE &amp; NET PROTOCOL MASTERY</span>
+    </div>
+
+    <div style="display:grid; grid-template-columns: 1fr 340px; gap:16px;">
+      <!-- Quiz Main Console -->
+      <div style="background:var(--bg-panel); border:1px solid var(--border); padding:16px; border-radius:4px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; border-bottom:1px solid var(--border); padding-bottom:8px;">
+          <div>
+            <span style="color:var(--text-muted); font-size:11px;">QUESTION: </span>
+            <span id="triviaProgress" style="color:var(--cyan-bright); font-weight:bold; font-size:13px;">1 / 10</span>
+          </div>
+          <div>
+            <span style="color:var(--text-muted); font-size:11px;">SCORE: </span>
+            <span id="triviaScore" style="color:var(--green-bright); font-weight:bold; font-size:13px;">0 PTS</span>
+          </div>
+          <div>
+            <span style="color:var(--text-muted); font-size:11px;">TIME: </span>
+            <span id="triviaTimer" style="color:var(--amber-bright); font-weight:bold; font-size:13px;">25s</span>
+          </div>
+        </div>
+
+        <div id="triviaQuestionBox" style="min-height:75px; margin-bottom:16px;">
+          <div id="triviaCategory" style="font-size:10px; color:var(--amber); text-transform:uppercase; letter-spacing:1px; margin-bottom:4px;">[ CATEGORY: TELECOMMUNICATIONS ]</div>
+          <div id="triviaQuestionText" style="font-size:14px; font-weight:bold; color:var(--text); line-height:1.4;">Loading question...</div>
+        </div>
+
+        <div id="triviaOptionsContainer" style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:16px;">
+          <!-- 4 option buttons -->
+        </div>
+
+        <div id="triviaFeedback" style="min-height:38px; font-size:12px; margin-bottom:12px; padding:6px 10px; border-radius:3px; background:#080d16; border:1px solid var(--border); color:var(--text-muted); display:flex; align-items:center;">
+          Select an answer above to log your telemetry.
+        </div>
+
+        <div style="display:flex; gap:10px; justify-content:space-between; align-items:center; border-top:1px dashed var(--border); padding-top:10px;">
+          <button class="btn-retro" id="btnRestartTrivia" onclick="startTriviaExam()">🔄 RESTART EXAM</button>
+          <button class="btn-retro green" id="btnGenerateCert" style="display:none;" onclick="generateTriviaCertificate()">📜 ISSUE CERTIFICATE</button>
+        </div>
+      </div>
+
+      <!-- Right Column: High Scores & Live Terminal Cert -->
+      <div style="display:flex; flex-direction:column; gap:12px;">
+        <!-- High Scores Leaderboard -->
+        <div style="background:var(--bg-panel); border:1px solid var(--border); padding:12px; border-radius:4px;">
+          <div style="font-size:11px; font-weight:bold; color:var(--cyan-bright); margin-bottom:8px; border-bottom:1px solid var(--border); padding-bottom:4px;">
+            🏆 CYBERCAFE HIGH ROLLER LEADERBOARD
+          </div>
+          <div id="triviaLeaderboard" style="font-size:11px; line-height:1.6; color:var(--text-muted);">
+            <!-- Leaderboard items -->
+          </div>
+        </div>
+
+        <!-- Certificate Canvas Preview -->
+        <div style="background:var(--bg-panel); border:1px solid var(--border); padding:12px; border-radius:4px; text-align:center;">
+          <div style="font-size:11px; font-weight:bold; color:var(--amber-bright); margin-bottom:6px;">
+            🖨️ 1999 ANSI CERTIFICATE PREVIEW
+          </div>
+          <canvas id="certCanvas" width="310" height="190" style="background:#000; border:1px solid var(--border); border-radius:2px; width:100%; height:auto;"></canvas>
+          <div style="margin-top:6px;">
+            <button class="btn-retro" style="font-size:10px; padding:3px 8px;" onclick="downloadTriviaCert()">💾 SAVE CERTIFICATE IMAGE</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <!-- BOOTH DETAIL & TELEMETRY MODAL -->
   <div id="boothModal" class="modal-overlay">
     <div class="modal-box">
@@ -3832,7 +3903,8 @@ function switchTab(tabId) {
     'tab-guestbook': 8,
     'tab-overclock': 9,
     'tab-tariff': 10,
-    'tab-booth': 11
+    'tab-booth': 11,
+    'tab-trivia': 12
   };
   const buttons = document.querySelectorAll('.tab-btn');
   if (buttons[btnMap[tabId]]) {
@@ -3856,7 +3928,374 @@ function switchTab(tabId) {
     calculateTariff();
   } else if (tabId === 'tab-booth') {
     initQuickCamBooth();
+  } else if (tabId === 'tab-trivia') {
+    initTriviaKiosk();
   }
+}
+
+// ==========================================
+// 1999 CYBER-TRIVIA ARCADE & CERTIFICATE ENGINE
+// ==========================================
+const TRIVIA_BANK = [
+  {
+    cat: 'Telecommunications',
+    q: 'What is the maximum theoretical analog downstream speed defined by the V.90 modem standard?',
+    options: ['56.0 Kbps', '33.6 Kbps', '128.0 Kbps', '1.544 Mbps'],
+    ans: 0,
+    exp: 'V.90 standardized 56 Kbps downstream via PCM, while upstream was capped at 33.6 Kbps.'
+  },
+  {
+    cat: '3D Graphics',
+    q: 'Which proprietary low-level API was developed by 3dfx Interactive for the Voodoo graphics accelerators?',
+    options: ['Glide', 'Direct3D 5.0', 'OpenGL ES', 'RenderWare'],
+    ans: 0,
+    exp: 'Glide was optimized specifically for 3dfx hardware, delivering unmatched framerates in 1999.'
+  },
+  {
+    cat: 'Internet Culture',
+    q: 'Which 1999 peer-to-peer MP3 file-sharing software caused widespread bandwidth rationing at universities?',
+    options: ['Napster', 'Trapster', 'ICQ 99a', 'RealPlayer G2'],
+    ans: 0,
+    exp: 'Napster was launched in June 1999 by Shawn Fanning and revolutionized digital media distribution.'
+  },
+  {
+    cat: 'Hardware & Processors',
+    q: 'What controversial hardware feature in the 1999 Pentium III sparked worldwide consumer boycott calls?',
+    options: ['Processor Serial Number (PSN)', 'MMX 2 Instructions', 'Slot 1 Cartridge', '133MHz FSB'],
+    ans: 0,
+    exp: 'The PSN allowed remote software to uniquely identify individual PCs, sparking privacy alarms.'
+  },
+  {
+    cat: 'Modem Telephony',
+    q: 'Which standard Hayes AT command initiates touch-tone dialing on a PSTN line?',
+    options: ['ATDT', 'ATDP', 'ATH0', 'ATZ'],
+    ans: 0,
+    exp: 'ATDT instructs the modem: Attention Dial Tone.'
+  },
+  {
+    cat: 'IRC & Networking',
+    q: 'When two IRC routing servers disconnect from each other, what classic phenomenon divides user channels?',
+    options: ['Netsplit', 'SYN Storm', 'O-Line Drop', 'Nick Collision'],
+    ans: 0,
+    exp: 'Netsplits caused users on disjoint network segments to appear as if quitting simultaneously.'
+  },
+  {
+    cat: 'Phreaking Lore',
+    q: 'What audio tone frequency was famously used with a Cap\'n Crunch whistle to seize trunk lines?',
+    options: ['2600 Hz', '1999 Hz', '1000 Hz', '432 Hz'],
+    ans: 0,
+    exp: 'A 2600 Hz tone signaled trunk supervisory idle status on pre-SS7 telephone networks.'
+  },
+  {
+    cat: 'Operating Systems',
+    q: 'Which Linux kernel release arrived in early 1999 adding major SMP multiprocessor support?',
+    options: ['Linux 2.2.0', 'Linux 2.0.36', 'Linux 2.4.0', 'Linux 1.2.13'],
+    ans: 0,
+    exp: 'Alan Cox and Linus Torvalds released the 2.2 kernel series in January 1999.'
+  },
+  {
+    cat: 'Security & Trojans',
+    q: 'Which default listening port was widely associated with the notorious Sub7 remote administration tool in 1999?',
+    options: ['27374', '6667', '31337', '8080'],
+    ans: 0,
+    exp: 'Sub7 defaulted to port 27374 and featured remote webcam capture, microphone spying, and matrix chat.'
+  },
+  {
+    cat: 'Diegetic Telemetry',
+    q: 'What mysterious private subnet and memory offset were uncovered in Station #4 memory dumps?',
+    options: ['10.19.99.4 at offset 0x0040', '192.168.1.1 at offset 0xFFFF', '127.0.0.1 at offset 0x0000', '172.16.0.1 at offset 0x1000'],
+    ans: 0,
+    exp: 'Packet sniffers confirmed non-routable carrier tone 1999Hz at 10.19.99.4.'
+  }
+];
+
+let triviaCurrentIdx = 0;
+let triviaScoreTotal = 0;
+let triviaTimeRemaining = 25;
+let triviaTimerInterval = null;
+let triviaExamActive = false;
+
+function initTriviaKiosk() {
+  loadTriviaLeaderboard();
+  if (!triviaExamActive && triviaCurrentIdx === 0) {
+    startTriviaExam();
+  }
+  drawCertPlaceholder();
+}
+
+function startTriviaExam() {
+  if (triviaTimerInterval) clearInterval(triviaTimerInterval);
+  triviaCurrentIdx = 0;
+  triviaScoreTotal = 0;
+  triviaExamActive = true;
+  document.getElementById('btnGenerateCert').style.display = 'none';
+  renderTriviaQuestion();
+}
+
+function renderTriviaQuestion() {
+  if (triviaCurrentIdx >= TRIVIA_BANK.length) {
+    finishTriviaExam();
+    return;
+  }
+
+  const qData = TRIVIA_BANK[triviaCurrentIdx];
+  document.getElementById('triviaProgress').textContent = (triviaCurrentIdx + 1) + ' / ' + TRIVIA_BANK.length;
+  document.getElementById('triviaScore').textContent = triviaScoreTotal + ' PTS';
+  document.getElementById('triviaCategory').textContent = '[ CATEGORY: ' + qData.cat.toUpperCase() + ' ]';
+  document.getElementById('triviaQuestionText').textContent = qData.q;
+  document.getElementById('triviaFeedback').innerHTML = '<span style="color:var(--text-muted);">Clock ticking... select your telemetry answer.</span>';
+
+  const container = document.getElementById('triviaOptionsContainer');
+  container.innerHTML = '';
+
+  qData.options.forEach((optText, optIdx) => {
+    const btn = document.createElement('button');
+    btn.className = 'btn-retro';
+    btn.style.textAlign = 'left';
+    btn.style.padding = '8px 12px';
+    btn.style.fontSize = '12px';
+    btn.textContent = String.fromCharCode(65 + optIdx) + ') ' + optText;
+    btn.onclick = () => submitTriviaAnswer(optIdx);
+    container.appendChild(btn);
+  });
+
+  triviaTimeRemaining = 25;
+  document.getElementById('triviaTimer').textContent = triviaTimeRemaining + 's';
+  if (triviaTimerInterval) clearInterval(triviaTimerInterval);
+
+  triviaTimerInterval = setInterval(() => {
+    triviaTimeRemaining--;
+    document.getElementById('triviaTimer').textContent = triviaTimeRemaining + 's';
+    if (triviaTimeRemaining <= 5) {
+      playKeyClick();
+    }
+    if (triviaTimeRemaining <= 0) {
+      clearInterval(triviaTimerInterval);
+      submitTriviaAnswer(-1); // timeout
+    }
+  }, 1000);
+}
+
+function submitTriviaAnswer(selectedIdx) {
+  if (triviaTimerInterval) clearInterval(triviaTimerInterval);
+  const qData = TRIVIA_BANK[triviaCurrentIdx];
+  const container = document.getElementById('triviaOptionsContainer');
+  const buttons = container.querySelectorAll('button');
+
+  buttons.forEach(btn => btn.disabled = true);
+
+  const feedback = document.getElementById('triviaFeedback');
+  if (selectedIdx === qData.ans) {
+    const bonus = Math.max(10, triviaTimeRemaining * 4);
+    const earned = 100 + bonus;
+    triviaScoreTotal += earned;
+    playChime(880, 0.12);
+    if (buttons[selectedIdx]) {
+      buttons[selectedIdx].style.background = 'rgba(16, 185, 129, 0.3)';
+      buttons[selectedIdx].style.borderColor = 'var(--green-bright)';
+    }
+    feedback.innerHTML = '<span style="color:var(--green-bright); font-weight:bold;">✔ CORRECT! (+' + earned + ' pts)</span> — ' + qData.exp;
+  } else {
+    playChime(220, 0.18);
+    if (selectedIdx >= 0 && buttons[selectedIdx]) {
+      buttons[selectedIdx].style.background = 'rgba(239, 68, 68, 0.3)';
+      buttons[selectedIdx].style.borderColor = '#ef4444';
+    }
+    if (buttons[qData.ans]) {
+      buttons[qData.ans].style.background = 'rgba(16, 185, 129, 0.3)';
+      buttons[qData.ans].style.borderColor = 'var(--green-bright)';
+    }
+    feedback.innerHTML = '<span style="color:#ef4444; font-weight:bold;">✖ ' + (selectedIdx === -1 ? 'TIME EXPIRED!' : 'INCORRECT!') + '</span> — ' + qData.exp;
+  }
+
+  document.getElementById('triviaScore').textContent = triviaScoreTotal + ' PTS';
+
+  setTimeout(() => {
+    triviaCurrentIdx++;
+    renderTriviaQuestion();
+  }, 2200);
+}
+
+function finishTriviaExam() {
+  triviaExamActive = false;
+  if (triviaTimerInterval) clearInterval(triviaTimerInterval);
+
+  playChime(1046, 0.25);
+  const maxPossible = TRIVIA_BANK.length * 200;
+  const pct = Math.round((triviaScoreTotal / maxPossible) * 100);
+
+  let rank = 'NOVICE TERMINAL USER';
+  if (pct >= 85) rank = 'LEVEL 4 SYSOP ELITE';
+  else if (pct >= 65) rank = 'CERTIFIED 1999 PHREAKER';
+  else if (pct >= 40) rank = 'CYBERCAFE CASUAL HACKER';
+
+  document.getElementById('triviaQuestionBox').innerHTML = `
+    <div style="font-size:16px; font-weight:bold; color:var(--amber-bright); margin-bottom:6px;">🎉 EXAM COMPLETE: ${rank}</div>
+    <div style="font-size:12px; color:var(--text); line-height:1.5;">
+      You scored <strong>${triviaScoreTotal} PTS</strong> (${pct}% proficiency index). Telemetry logged into local NVRAM.
+    </div>
+  `;
+
+  document.getElementById('triviaOptionsContainer').innerHTML = '';
+  document.getElementById('triviaFeedback').innerHTML = `
+    <span style="color:var(--cyan-bright); font-weight:bold;">[TELEMETRY ARCHIVED]</span> Click 'ISSUE CERTIFICATE' to render your authentic 1999 credential.
+  `;
+  document.getElementById('btnGenerateCert').style.display = 'inline-block';
+
+  saveTriviaScore(rank, triviaScoreTotal);
+  renderCertificateCanvas(rank, triviaScoreTotal, pct);
+}
+
+function saveTriviaScore(rank, score) {
+  try {
+    const raw = localStorage.getItem('cybercafe_trivia_scores');
+    let scores = raw ? JSON.parse(raw) : [
+      { name: 'TheMentor', rank: 'SYSOP ELITE', score: 1840, date: '1999-10-04' },
+      { name: 'AcidBurn', rank: 'SYSOP ELITE', score: 1720, date: '1999-10-09' },
+      { name: 'PhiberOptik', rank: 'CERTIFIED PHREAKER', score: 1510, date: '1999-10-11' },
+      { name: 'ZeroCool', rank: 'CERTIFIED PHREAKER', score: 1420, date: '1999-10-12' }
+    ];
+    scores.push({
+      name: 'Operator_' + Math.floor(Math.random() * 899 + 100),
+      rank: rank,
+      score: score,
+      date: new Date().toISOString().slice(0, 10)
+    });
+    scores.sort((a, b) => b.score - a.score);
+    scores = scores.slice(0, 7);
+    localStorage.setItem('cybercafe_trivia_scores', JSON.stringify(scores));
+    loadTriviaLeaderboard();
+  } catch(e) {}
+}
+
+function loadTriviaLeaderboard() {
+  const container = document.getElementById('triviaLeaderboard');
+  if (!container) return;
+  try {
+    const raw = localStorage.getItem('cybercafe_trivia_scores');
+    const scores = raw ? JSON.parse(raw) : [
+      { name: 'TheMentor', rank: 'SYSOP ELITE', score: 1840, date: '1999-10-04' },
+      { name: 'AcidBurn', rank: 'SYSOP ELITE', score: 1720, date: '1999-10-09' },
+      { name: 'PhiberOptik', rank: 'CERTIFIED PHREAKER', score: 1510, date: '1999-10-11' },
+      { name: 'ZeroCool', rank: 'CERTIFIED PHREAKER', score: 1420, date: '1999-10-12' }
+    ];
+    let html = '<table style="width:100%; border-collapse:collapse; font-size:10px;">';
+    html += '<tr style="border-bottom:1px solid var(--border); color:var(--text-muted);"><th style="text-align:left; padding:2px;">RANK</th><th style="text-align:left; padding:2px;">HANDLE</th><th style="text-align:right; padding:2px;">SCORE</th></tr>';
+    scores.forEach((s, idx) => {
+      const color = idx === 0 ? 'var(--amber-bright)' : (idx === 1 ? 'var(--cyan-bright)' : 'var(--text)');
+      html += `<tr style="border-bottom:1px dotted #1a253c; color:${color};">
+        <td style="padding:3px 2px;">#${idx + 1}</td>
+        <td style="padding:3px 2px; font-weight:bold;">${s.name}</td>
+        <td style="padding:3px 2px; text-align:right; font-family:var(--font-mono);">${s.score}</td>
+      </tr>`;
+    });
+    html += '</table>';
+    container.innerHTML = html;
+  } catch(e) {}
+}
+
+function drawCertPlaceholder() {
+  const canvas = document.getElementById('certCanvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = '#06090e';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.strokeStyle = '#22314d';
+  ctx.strokeRect(6, 6, canvas.width - 12, canvas.height - 12);
+  ctx.fillStyle = '#475569';
+  ctx.font = '10px monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText('[ EXAM IN PROGRESS ]', canvas.width / 2, canvas.height / 2 - 8);
+  ctx.fillText('Complete questions to render certificate', canvas.width / 2, canvas.height / 2 + 10);
+}
+
+function renderCertificateCanvas(rank, score, pct) {
+  const canvas = document.getElementById('certCanvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+
+  // Background
+  ctx.fillStyle = '#0a0e17';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  // Borders
+  ctx.strokeStyle = '#f59e0b';
+  ctx.lineWidth = 2;
+  ctx.strokeRect(4, 4, canvas.width - 8, canvas.height - 8);
+
+  ctx.strokeStyle = '#38bdf8';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(8, 8, canvas.width - 16, canvas.height - 16);
+
+  // Header
+  ctx.fillStyle = '#fbbf24';
+  ctx.font = 'bold 11px monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText('CYBERCAFE \'99 // BOARD OF EXAMINERS', canvas.width / 2, 24);
+
+  ctx.fillStyle = '#94a3b8';
+  ctx.font = '8px monospace';
+  ctx.fillText('UNDERGROUND TELECOMMUNICATIONS & SYSOP CREDENTIAL', canvas.width / 2, 36);
+
+  // Seal / divider
+  ctx.strokeStyle = '#334155';
+  ctx.beginPath();
+  ctx.moveTo(20, 42);
+  ctx.lineTo(canvas.width - 20, 42);
+  ctx.stroke();
+
+  // Recipient Title
+  ctx.fillStyle = '#22d3ee';
+  ctx.font = 'bold 13px monospace';
+  ctx.fillText(rank, canvas.width / 2, 62);
+
+  ctx.fillStyle = '#e2e8f0';
+  ctx.font = '9px monospace';
+  ctx.fillText('Has demonstrated exceptional proficiency in 1999 Net Protocols,', canvas.width / 2, 78);
+  ctx.fillText('V.90 Telephony, Phreaking Frequencies & Diegetic Telemetry.', canvas.width / 2, 90);
+
+  // Metrics Box
+  ctx.fillStyle = '#111827';
+  ctx.fillRect(24, 102, canvas.width - 48, 40);
+  ctx.strokeStyle = '#1e293b';
+  ctx.strokeRect(24, 102, canvas.width - 48, 40);
+
+  ctx.fillStyle = '#10b981';
+  ctx.font = 'bold 11px monospace';
+  ctx.fillText(`SCORE: ${score} PTS  |  ACCURACY: ${pct}%`, canvas.width / 2, 118);
+
+  ctx.fillStyle = '#f59e0b';
+  ctx.font = '8px monospace';
+  ctx.fillText('CARRIER TONE: 1999Hz  |  AUTH: 0x0040-OK', canvas.width / 2, 132);
+
+  // Footer & Date
+  const dateStr = new Date().toISOString().slice(0, 10);
+  ctx.fillStyle = '#64748b';
+  ctx.font = '8px monospace';
+  ctx.textAlign = 'left';
+  ctx.fillText(`ISSUED: ${dateStr}`, 16, 172);
+
+  ctx.textAlign = 'right';
+  ctx.fillText('SEAL: [VERIFIED 1999]', canvas.width - 16, 172);
+}
+
+function generateTriviaCertificate() {
+  playChime(1200, 0.2);
+  const maxPossible = TRIVIA_BANK.length * 200;
+  const pct = Math.round((triviaScoreTotal / maxPossible) * 100);
+  let rank = 'SYSOP ELITE';
+  if (pct < 85 && pct >= 65) rank = 'CERTIFIED PHREAKER';
+  else if (pct < 65) rank = 'CYBERCAFE OPERATOR';
+  renderCertificateCanvas(rank, triviaScoreTotal, pct);
+}
+
+function downloadTriviaCert() {
+  const canvas = document.getElementById('certCanvas');
+  if (!canvas) return;
+  const a = document.createElement('a');
+  a.download = 'CyberCafe99_Certified_SysOp.png';
+  a.href = canvas.toDataURL('image/png');
+  a.click();
 }
 
 function openHelpModal() {
