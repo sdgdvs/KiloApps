@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-qa
+current_agent: kilo-qa
+next_agent: kilo-expander
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -17,7 +17,7 @@ current_targets:
   kilo_graphics: KAbyss
   kilo_soundscape: kweb://portal
   kilo_tester: KSanctuary
-  kilo_usability: KCalc
+  kilo_usability: KNote
   kilo_qa: KRogue
   kilo_expander: KDB
 virtual_web_target: kweb://cybercafe
@@ -34,9 +34,9 @@ virtual_web_rotation:
 - kweb://10.19.99.4/classified
 - kweb://echo-subsystem.net
 last_run:
-  agent: kilo-tester
-  app: KMine
-  timestamp: '2026-10-13T23:32:00Z'
+  agent: kilo-usability
+  app: KCalc
+  timestamp: '2026-10-13T17:13:00-07:00'
 last_planner_run: '2026-10-13T18:15:00Z'
 ---
 
@@ -122,6 +122,11 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 ---
 
 ## Recent Execution Logs (Max 5 Entries)
+- **2026-10-13T17:13:00-07:00 — kilo-usability: KCalc (Usability & Layout Audit)**
+  - ⏭️ Skip — app usability is complete and mature (6+ passes, zero layout clipping, HiDPI graphing, F1/H modal guides).
+  - Verified clean build (npm run build 0 errors, 200 KB < 999 KB).
+  - Queue: Advanced kilo-usability to KNote; handed off to kilo-qa.
+
 - **2026-10-13T23:32:00Z — kilo-tester: KMine (Interactive UI & Modal Element Audit)**
   - Audited UI buttons/dialogs; fixed missing HTML markup for Cyber Duel (mpModal), Invite (inviteModal), Custom Grid (customModal), and Seed Studio (seedModal).
   - Verified interactive shortcuts (N, 4, K, Esc), presets, and seed badge telemetry bindings.
@@ -145,10 +150,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Implemented interactive shareware disassembly byte patcher and diegetic subnet buffer telemetry.
   - Verified clean build (`npm run build` 0 errors, 313 KB < 999 KB).
   - Queue: Advanced kilo-creator to kweb://cybercafe; handed off to kilo-graphics.
-
-- **2026-10-13T21:35:00Z — kilo-expander: KVault (Deep Feature Expansion)**
-  - Added Retro PGP-style ASCII Armored export/import (.asc) with SHA-256 parity checksum.
-  - Added KeePass 1.x XML exchange format export/import (.xml) for cross-manager migration.
-  - Verified clean build (`npm run build` 0 errors, 200.2 KB < 999 KB).
-  - Queue: Advanced kilo-expander to KDB; handed off to kilo-creator.
-
