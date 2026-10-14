@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-qa
+current_agent: kilo-qa
+next_agent: kilo-expander
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -17,7 +17,7 @@ current_targets:
   kilo_graphics: KMech
   kilo_soundscape: kweb://portal
   kilo_tester: KVault
-  kilo_usability: KMine
+  kilo_usability: KSubmarine
   kilo_qa: KAsteroids
   kilo_expander: KCalendar
 virtual_web_target: kweb://echo-subsystem.net
@@ -34,9 +34,9 @@ virtual_web_rotation:
 - kweb://10.19.99.4/classified
 - kweb://echo-subsystem.net
 last_run:
-  agent: kilo-tester
-  app: KSubmarine
-  timestamp: '2026-10-14T04:32:00-07:00'
+  agent: kilo-usability
+  app: KMine
+  timestamp: '2026-10-14T05:13:00-07:00'
 last_planner_run: '2026-10-13T18:15:00Z'
 ---
 
@@ -131,22 +131,21 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Upcoming Queue**: `KCalendar`, `KPaint`, `KAudio`, `KSubmarine`.
 
 ### 5. Usability & UX Queue (`kilo-usability`)
-- **Target**: `KRogue`
-- **Primary File**: `KiloOS/public/apps/krogue.html`
+- **Target**: `KSubmarine`
+- **Primary File**: `KiloOS/public/apps/ksubmarine.html`
 - **Objective**: Usability, layout, window sizing, and input ergonomics audit.
 - **Action Steps**:
-  1. Verify window bounds in `KiloOS/src/App.jsx` (`w: 1020, h: 840`): ensure dungeon canvas (880x440), stats panel, inventory, and combat log fit without clipped action buttons.
-  2. Verify HiDPI canvas crispness (`window.devicePixelRatio` scaling) on game canvas.
-  3. Ensure visible control hints (Arrow keys, Numpad, Vi keys `HJKL`, Wait `.`, Rest `R`, Inventory `I`, Help `?`/`F1`).
-  4. Ensure modals (Inventory, Spellbook, Help, Game Over) dismiss cleanly with Escape.
-  5. **Maturity Check**: If layout and controls are already complete and responsive (Pass 5 QA passed), log clean skip:
-     `⏭️ Skip — KRogue usability and layout complete and mature.`
-- **Verification**: `uv run scripts/test_app_startup.py --app KRogue` and `cd KiloOS && npm run build`. File size < 999 KB (`krogue.html` ~320 KB).
+  1. Verify window bounds in `KiloOS/src/App.jsx` (`w: 1040, h: 720`): ensure periscope canvas, sonar, ballast controls, and status logs fit comfortably.
+  2. Verify HiDPI canvas crispness (`window.devicePixelRatio` scaling) on periscope/tactical display.
+  3. Ensure visible control hints (Keyboard shortcuts, help modal F1/H).
+  4. Ensure modals dismiss cleanly with Escape and backdrop click.
+  5. **Maturity Check**: If layout and controls are complete, log clean skip.
+- **Verification**: `uv run scripts/test_app_startup.py --app KSubmarine` and `cd KiloOS && npm run build`. File size < 999 KB.
 - **Handoff**:
-  - In frontmatter: advance `current_targets.kilo_usability` to `KSubmarine`.
-  - Set `current_agent: kilo-creator
+  - In frontmatter: advance `current_targets.kilo_usability` to `KMail`.
+  - Set `current_agent: kilo-qa`
   - Append terse execution log (≤6 lines), commit, and push.
-- **Upcoming Queue**: `KSubmarine`, `KMail`, `KPad`, `KAudio`, `KNote`.
+- **Upcoming Queue**: `KMail`, `KPad`, `KAudio`, `KNote`, `KMine`.
 
 ### 6. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
 - **Target**: `KAsteroids`
@@ -190,6 +189,11 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-14T05:13:00-07:00 — kilo-usability: KMine**
+  - ⏭️ Skip — KMine usability and layout complete and mature (10+ passes, HiDPI scaling, full shortcuts).
+  - Verified window bounds (1040x740), modal dismissals (Esc/backdrop), and clean Vite build (PASS, 0 errors).
+  - Queue: Advanced kilo-usability to KSubmarine; handed off to kilo-qa (KAsteroids).
+
 - **2026-10-14T04:32:00-07:00 — kilo-tester: KSubmarine (Interactive UI & Modal Audit)**
   - Automated startup audit: PASS ✅ (CSS valid, 0 JS err, clean modal dismissal, canvas 354x238).
   - Verified UI controls: ballast, torpedo tubes (1-4), F5 quicksave, F9 quickload, JSON export/import.
@@ -214,10 +218,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Built standalone portable offline HTML vault exporter with embedded client search for zero-dependency archival.
   - Implemented 'On This Day' memory flashback modal & Alt+M shortcut scanning past years for calendar day reflection.
   - Verified clean Vite build (`kjournal.html` 137.6 KB < 999 KB ceiling); advanced queue to KCalendar.
-
-- **2026-10-14T01:14:00-07:00 — kilo-expander: KMedia (Deep Feature Expansion)**
-  - Expanded playlist manager with JSON backup/restore button and validated M3U playlist export.
-  - Enhanced DSP equalizer with Electronic preset and added dancing spectrum visualizer mode toggle.
-  - Implemented 6-rate playback speed selector (0.5x, 0.75x, 1.0x, 1.25x, 1.5x, 2.0x).
-  - Standardized ergonomic hotkeys: Space (Play/Pause), Arrows (Seek/Vol), M (Mute), F (Fullscreen).
-  - Verified clean Vite build (`kmedia.html` 150 KB < 999 KB ceiling); advanced queue to KJournal.
