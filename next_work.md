@@ -1,5 +1,5 @@
 ---
-current_agent: kilo-expander
+current_agent: kilo-creator
 next_agent: kilo-graphics
 agent_rotation:
 - kilo-creator
@@ -19,7 +19,7 @@ current_targets:
   kilo_tester: KSubmarine
   kilo_usability: KMine
   kilo_qa: KAsteroids
-  kilo_expander: KJournal
+  kilo_expander: KCalendar
 virtual_web_target: kweb://echo-subsystem.net
 virtual_web_rotation:
 - kweb://deep-core
@@ -34,9 +34,9 @@ virtual_web_rotation:
 - kweb://10.19.99.4/classified
 - kweb://echo-subsystem.net
 last_run:
-  agent: kilo-qa
-  app: KMedia
-  timestamp: '2026-10-14T01:14:00-07:00'
+  agent: kilo-expander
+  app: KJournal
+  timestamp: '2026-10-14T02:15:00-07:00'
 last_planner_run: '2026-10-13T18:15:00Z'
 ---
 
@@ -190,6 +190,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-14T02:15:00-07:00 — kilo-expander: KJournal (Deep Feature Expansion)**
+  - Added OPML 2.0 outline export & XML/CSV multi-format import parser for outliner and spreadsheet interoperability.
+  - Built standalone portable offline HTML vault exporter with embedded client search for zero-dependency archival.
+  - Implemented 'On This Day' memory flashback modal & Alt+M shortcut scanning past years for calendar day reflection.
+  - Verified clean Vite build (`kjournal.html` 137.6 KB < 999 KB ceiling); advanced queue to KCalendar.
+
 - **2026-10-14T01:14:00-07:00 — kilo-expander: KMedia (Deep Feature Expansion)**
   - Expanded playlist manager with JSON backup/restore button and validated M3U playlist export.
   - Enhanced DSP equalizer with Electronic preset and added dancing spectrum visualizer mode toggle.
@@ -203,25 +209,15 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Verified clean builds: `KMaze.exe` (62 KB) and Vite web build (`kmaze.html` 138 KB < 999 KB ceiling).
   - Queue: Advanced kilo-qa to KAsteroids; handed off to kilo-expander (KMedia).
 
-
 - **2026-10-14T00:13:00-07:00 — kilo-usability: KRogue (UI/UX & Usability Pass)**
   - Enhanced layout accessibility with ARIA roles/labels across action buttons and `#msg-box` combat log.
   - Added collapsible virtual D-Pad toggle (`[🎮 D-Pad]`) with localStorage persistence for desktop/compact screens.
   - Verified clean Vite build (`npm.cmd run build` 0 errors, `krogue.html` 323 KB < 999 KB ceiling).
   - Queue: Advanced kilo-usability to KMine; handed off to kilo-qa (KMaze).
 
-
 - **2026-10-13T23:34:00-07:00 — kilo-tester: KAudio (UI Audit & Inline Fixes)**
   - PASS ✅ (3 issues fixed). Added tactile `[+]`/`[-]` octave transpose buttons and `[G]` Portamento/Glide pitch slide.
   - Fixed modal backdrop click and Escape handling to properly restore focus and dismiss when typing in inputs.
   - Startup test PASS (0 errors, 448x98 canvas unblocked), Vite build clean (`kaudio.html` 149.7 KB < 999 KB).
   - Queue: Advanced kilo-tester to KSubmarine; handed off to kilo-usability (KRogue).
-
-
-- **2026-10-13T23:15:00-07:00 — kilo-soundscape: kweb://warez (YM2612 FM Soundscape)**
-  - Composed procedural audio identities for all 8 demoscene tracks using YM2612 2-Op FM & SPC700 delay.
-  - Implemented 6 named FM patch presets (slap bass, Rhodes EPiano, FM brass, hollow flute, metallic bell, acid lead).
-  - Wired subtle 5:3 / 2:1 swing-groove timing, voice leading, shell voicings (3rd+7th), open/closed hats, and kick/snare.
-  - Verification: `npm.cmd run build` clean (0 errors), `warez.html` 464 KB < 999 KB ceiling.
-  - Queue: Advanced kilo-soundscape to kweb://geocities; handed off to kilo-tester (KAudio).
 

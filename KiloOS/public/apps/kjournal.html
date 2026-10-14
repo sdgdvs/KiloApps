@@ -965,6 +965,7 @@
 
         <div class="toolbar-actions">
           <button class="btn" onclick="openModal('helpModal')" title="Help & Keyboard Shortcuts (F1 or H)">❓ <span class="btn-lbl-long">Help</span> <span class="shortcut-tag">[F1]</span></button>
+          <button class="btn" onclick="openMemoryFlashback()" title="On This Day - Memory Flashback (Alt+M)">⏳ <span class="btn-lbl-long">Flashback</span> <span class="shortcut-tag">[Alt+M]</span></button>
           <button class="btn" onclick="insertRandomPrompt()" style="color:var(--accent-gold);" title="Get Inspired with a Daily Reflection Prompt (Alt+P)">💡 <span class="btn-lbl-long">Prompt</span> <span class="shortcut-tag">[Alt+P]</span></button>
           <button class="btn" onclick="copyCurrentEntry()" title="Copy Entry to Clipboard (Alt+C)">📋 <span class="btn-lbl-long">Copy</span> <span class="shortcut-tag">[Alt+C]</span></button>
           <button class="btn" onclick="openTemplatesModal()" title="Prompt Templates (Ctrl+T)">📑 <span class="btn-lbl-long">Templates</span> <span class="shortcut-tag">[^T]</span></button>
@@ -1232,6 +1233,8 @@
           <button class="btn" onclick="exportData('csv')" title="Spreadsheet format for Excel, KBase, KCalc">📊 CSV Spreadsheet</button>
           <button class="btn" onclick="exportData('md')" title="Standard Markdown documents">Markdown (.md)</button>
           <button class="btn" onclick="exportData('txt')" title="Plain text format">Plain Text (.txt)</button>
+          <button class="btn" onclick="exportData('opml')" title="Outline Processor Markup Language (OPML) format for outliners">📑 OPML Outline</button>
+          <button class="btn" onclick="exportData('standalone')" title="Self-contained portable offline HTML reader bundle">🌐 Portable Web App</button>
           <button class="btn btn-primary" onclick="exportData('book')" title="Standalone printable journal chronicle with TOC">📖 Printable Book / PDF</button>
         </div>
       </div>
@@ -1241,14 +1244,30 @@
       <div class="form-group">
         <label><strong>Import Entries</strong></label>
         <p style="font-size:12px; color:var(--text-muted); margin-bottom:10px;">
-          Restore entries from a previously exported JSON backup file.
+          Restore entries from a previously exported JSON backup, OPML outline, or CSV file.
         </p>
-        <input type="file" id="importFileInput" accept=".json" class="form-control">
-        <button class="btn btn-primary" onclick="importData()" style="margin-top:10px;">Import JSON File</button>
+        <input type="file" id="importFileInput" accept=".json,.opml,.csv,.xml" class="form-control">
+        <button class="btn btn-primary" onclick="importData()" style="margin-top:10px;">Import File</button>
       </div>
     </div>
     <div class="modal-footer">
       <button class="btn" onclick="closeModal('importExportModal')">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- Flashback / On This Day Modal -->
+<div class="modal-backdrop" id="flashbackModal">
+  <div class="modal-card" style="width: 540px; max-width: 92vw;">
+    <div class="modal-header">
+      <h3>⏳ On This Day — Memory Flashback</h3>
+      <button class="icon-btn" onclick="closeModal('flashbackModal')">✕</button>
+    </div>
+    <div class="modal-body" id="flashbackBody" style="max-height: 460px; overflow-y: auto;">
+      <!-- Populated dynamically -->
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-primary" onclick="closeModal('flashbackModal')">Close</button>
     </div>
   </div>
 </div>
@@ -2924,6 +2943,23 @@
   <main>${entriesHtml}</main>
 </body>
 </html>`;
+    } else if (format === 'opml') {
+      filename = `kjournal_outline_${new Date().toISOString().slice(0,10)}.opml`;
+      mimeType = 'text/xml';
+      let outlines = '';
+      dates.forEach(d => {
+        const e = entries[d];
+        const safeDate = d;
+        const safeTitle = (formatReadableDate(d) + ' [' + (e.category || 'personal') + ' - ' + (e.mood || '') + ']').replace(/"/g, '&quot;');
+        const safeText = (e.text || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/\n/g, '&#10;');
+        outlines += `    <outline text="${safeTitle}" date="${safeDate}" category="${e.category || 'personal'}" mood="${e.mood || '😊'}" _note="${safeText}" />\n`;
+      });
+      content = `<?xml version="1.0" encoding="UTF-8"?>\n<opml version="2.0">\n  <head>\n    <title>KJournal Outline Export</title>\n    <dateCreated>${new Date().toUTCString()}</dateCreated>\n  </head>\n  <body>\n${outlines}  </body>\n</opml>`;
+    } else if (format === 'standalone') {
+      filename = `kjournal_offline_vault_${new Date().toISOString().slice(0,10)}.html`;
+      mimeType = 'text/html';
+      const exportDataJson = JSON.stringify(entries).replace(/</g, '\\u003c');
+      content = `<!DOCTYPE html>\n<html><head><meta charset="utf-8"><title>KJournal Offline Vault</title><style>body{background:#181b22;color:#abb2bf;font-family:sans-serif;margin:0;padding:24px}h1{color:#e5c07b}.card{background:#212631;border:1px solid #313745;border-radius:8px;padding:16px;margin-bottom:12px}input{background:#2a303f;color:#fff;border:1px solid #313745;padding:8px;border-radius:6px;width:100%;box-sizing:border-box;margin-bottom:16px}</style></head><body><h1>📖 KJournal Offline Vault</h1><input type="text" id="q" placeholder="Filter memories..." oninput="render()"><div id="list"></div><script>const D=${exportDataJson};function render(){const q=document.getElementById('q').value.toLowerCase();const out=[];for(const k of Object.keys(D).sort().reverse()){const e=D[k];if(!q||k.includes(q)||(e.text&&e.text.toLowerCase().includes(q))){out.push('<div class="card"><h3 style="color:#e5c07b">'+k+' '+(e.mood||'')+' ['+(e.category||'')+']</h3><pre style="white-space:pre-wrap;font-family:inherit">'+(e.text||'').replace(/</g,'&lt;')+'</pre></div>');}}document.getElementById('list').innerHTML=out.join('');}render();<\/script></body></html>`;
     }
 
     const blob = new Blob([content], { type: mimeType });
@@ -2941,7 +2977,7 @@
   function importData() {
     const fileInput = document.getElementById('importFileInput');
     if (!fileInput.files || fileInput.files.length === 0) {
-      showToast('Please select a JSON file to import');
+      showToast('Please select a file to import');
       return;
     }
 
@@ -2949,28 +2985,72 @@
     const reader = new FileReader();
     reader.onload = function(e) {
       try {
-        const imported = JSON.parse(e.target.result);
-        if (!imported || typeof imported !== 'object' || Array.isArray(imported)) {
-          showToast('Invalid JSON file: Expected an entries object');
-          return;
-        }
+        const textContent = e.target.result;
         let count = 0;
-        for (let d in imported) {
-          if (!imported.hasOwnProperty(d)) continue;
-          const val = imported[d];
-          if (typeof val === 'string') {
-            entries[d] = { text: val, mood: '😊', category: 'personal', updatedAt: Date.now() };
-            count++;
-          } else if (val && typeof val === 'object') {
-            entries[d] = {
-              text: typeof val.text === 'string' ? val.text : '',
-              mood: typeof val.mood === 'string' ? val.mood : '😊',
-              category: typeof val.category === 'string' ? val.category : 'personal',
-              updatedAt: Number(val.updatedAt) || Date.now()
-            };
-            count++;
+
+        if (file.name.toLowerCase().endsWith('.opml') || textContent.trim().startsWith('<opml') || textContent.trim().startsWith('<?xml')) {
+          // OPML Parser
+          const parser = new DOMParser();
+          const xmlDoc = parser.parseFromString(textContent, 'text/xml');
+          const outlines = xmlDoc.querySelectorAll('outline');
+          outlines.forEach(out => {
+            const date = out.getAttribute('date');
+            const note = out.getAttribute('_note') || out.getAttribute('text') || '';
+            const category = out.getAttribute('category') || 'personal';
+            const mood = out.getAttribute('mood') || '😊';
+            if (date && /^\d{4}-\d{2}-\d{2}$/.test(date)) {
+              entries[date] = {
+                text: note.replace(/&#10;/g, '\n'),
+                mood: mood,
+                category: category,
+                updatedAt: Date.now()
+              };
+              count++;
+            }
+          });
+        } else if (file.name.toLowerCase().endsWith('.csv') || textContent.startsWith('Date,Notebook,Mood')) {
+          // CSV Parser
+          const lines = textContent.split(/\r?\n/);
+          for (let i = 1; i < lines.length; i++) {
+            const line = lines[i].trim();
+            if (!line) continue;
+            const match = line.match(/^"([^"]+)","([^"]+)","([^"]+)",\d+,\d+,\d+,"[^"]*","(.*)"$/);
+            if (match) {
+              const d = match[1];
+              const cat = match[2];
+              const mood = match[3];
+              const txt = match[4].replace(/""/g, '"');
+              if (/^\d{4}-\d{2}-\d{2}$/.test(d)) {
+                entries[d] = { text: txt, mood: mood, category: cat, updatedAt: Date.now() };
+                count++;
+              }
+            }
+          }
+        } else {
+          // JSON Parser
+          const imported = JSON.parse(textContent);
+          if (!imported || typeof imported !== 'object' || Array.isArray(imported)) {
+            showToast('Invalid file format: Expected an entries object');
+            return;
+          }
+          for (let d in imported) {
+            if (!imported.hasOwnProperty(d)) continue;
+            const val = imported[d];
+            if (typeof val === 'string') {
+              entries[d] = { text: val, mood: '😊', category: 'personal', updatedAt: Date.now() };
+              count++;
+            } else if (val && typeof val === 'object') {
+              entries[d] = {
+                text: typeof val.text === 'string' ? val.text : '',
+                mood: typeof val.mood === 'string' ? val.mood : '😊',
+                category: typeof val.category === 'string' ? val.category : 'personal',
+                updatedAt: Number(val.updatedAt) || Date.now()
+              };
+              count++;
+            }
           }
         }
+
         saveEntriesToStorage();
         renderCalendar();
         renderTagCloud();
@@ -2980,10 +3060,60 @@
         fileInput.value = '';
         showToast(`Successfully imported ${count} entries!`);
       } catch (err) {
-        showToast('Invalid JSON file format');
+        showToast('Invalid or corrupt import file');
       }
     };
     reader.readAsText(file);
+  }
+
+  // Memory Flashback ("On This Day")
+  function openMemoryFlashback() {
+    const today = new Date();
+    const mm = String(today.getMonth() + 1).padStart(2, '0');
+    const dd = String(today.getDate()).padStart(2, '0');
+    const targetPattern = `-${mm}-${dd}`;
+    const todayStr = today.toISOString().slice(0, 10);
+    
+    const matches = [];
+    Object.keys(entries).forEach(d => {
+      if (d.endsWith(targetPattern) && d !== todayStr && entries[d] && entries[d].text) {
+        matches.push(d);
+      }
+    });
+    
+    matches.sort().reverse();
+    const body = document.getElementById('flashbackBody');
+    if (!body) return;
+    
+    if (matches.length === 0) {
+      body.innerHTML = `
+        <div style="text-align:center; padding:30px 10px; color:var(--text-muted);">
+          <div style="font-size:36px; margin-bottom:10px;">⏳</div>
+          <h4 style="color:var(--text-bright); margin-bottom:6px;">No Past Flashbacks for ${today.toLocaleDateString(undefined, { month: 'long', day: 'numeric' })}</h4>
+          <p style="font-size:13px;">As you write more journal entries, memories from previous years will appear here automatically!</p>
+        </div>
+      `;
+    } else {
+      let html = `<p style="font-size:13px; color:var(--text-muted); margin-bottom:14px;">You have <strong>${matches.length}</strong> previous memories on this calendar day:</p>`;
+      matches.forEach(d => {
+        const e = entries[d];
+        const year = parseInt(d.split('-')[0], 10);
+        const yearsAgo = today.getFullYear() - year;
+        const yearsText = yearsAgo > 0 ? `(${yearsAgo} ${yearsAgo === 1 ? 'year' : 'years'} ago)` : '';
+        html += `
+          <div style="background:var(--bg-tertiary); border:1px solid var(--border-color); border-radius:8px; padding:12px 14px; margin-bottom:10px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+              <span style="font-weight:bold; color:var(--accent-gold); font-size:14px;">${formatReadableDate(d)} ${yearsText}</span>
+              <span style="font-size:16px;">${e.mood || '😊'}</span>
+            </div>
+            <div style="font-size:13px; color:var(--text-main); white-space:pre-wrap; max-height:100px; overflow-y:auto; line-height:1.5; margin-bottom:8px;">${escapeHtml(e.text || '')}</div>
+            <button class="btn" onclick="jumpToDate('${d}'); closeModal('flashbackModal');" style="font-size:11px; padding:3px 8px;">Jump to Entry ➔</button>
+          </div>
+        `;
+      });
+      body.innerHTML = html;
+    }
+    openModal('flashbackModal');
   }
 
   // Navigation, Copy & Sample Data Helpers
