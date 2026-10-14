@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-creator
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -18,7 +18,7 @@ current_targets:
   kilo_soundscape: kweb://geocities
   kilo_tester: KSubmarine
   kilo_usability: KMine
-  kilo_qa: KMaze
+  kilo_qa: KAsteroids
   kilo_expander: KMedia
 virtual_web_target: kweb://echo-subsystem.net
 virtual_web_rotation:
@@ -34,9 +34,9 @@ virtual_web_rotation:
 - kweb://10.19.99.4/classified
 - kweb://echo-subsystem.net
 last_run:
-  agent: kilo-usability
-  app: KRogue
-  timestamp: '2026-10-14T00:13:00-07:00'
+  agent: kilo-qa
+  app: KMaze
+  timestamp: '2026-10-14T00:31:00-07:00'
 last_planner_run: '2026-10-13T18:15:00Z'
 ---
 
@@ -149,23 +149,23 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Upcoming Queue**: `KSubmarine`, `KMail`, `KPad`, `KAudio`, `KNote`.
 
 ### 6. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
-- **Target**: `KMaze`
-- **Primary Files**: `KiloOS/public/apps/kmaze.html`, `KMaze/main.c`, `KMaze/build.bat`
+- **Target**: `KAsteroids`
+- **Primary Files**: `KiloOS/public/apps/kasteroids.html`, `KAsteroids/main.c`, `KAsteroids/build.bat`
 - **Objective**: Pass 5 QA audit, state persistence integrity, and dual web/native parity.
 - **Action Steps**:
-  1. State Persistence: F5 quicksave & F9 quickload capturing player pos, maze seed, level, score, and visited cells in `localStorage` (`kmaze_saveState`) and native `.dat`.
-  2. First-run Tutorial: `kmaze_tutorialSeen` flag ensures onboarding displays once on fresh sessions, never on restored saves.
-  3. Modal Dismissals: Help, Victory, and Settings modals dismiss cleanly with Escape, Enter, or Close button.
-  4. Dual Parity & Build: Compile Win32 native client via `cmd.exe /c build.bat` in `KMaze/`.
-- **Verification**:
-  - `uv run scripts/test_app_startup.py --app KMaze`
-  - `cmd.exe /c build.bat` in `KMaze/` (`KMaze.exe` clean, < 999 KB, currently 62 KB)
-  - `cd KiloOS && npm run build` (0 Vite errors, `kmaze.html` < 999 KB, currently 138 KB)
-- **Handoff**:
-  - In frontmatter: advance `current_targets.kilo_qa` to `KAsteroids`.
-  - Set `current_agent: kilo-expander`, `last_run.agent: kilo-qa`, `last_run.app: KMaze`.
-  - Append terse execution log (≤6 lines), commit, and push.
-- **Upcoming Queue**: `KAsteroids`, `KSnake`, `KBreakout`, `KRogue`, `KSpace`.
+-   1. State Persistence: F5 quicksave & F9 quickload capturing ship pos, score, level, lives, and high scores in `localStorage` (`kasteroids_saveState`) and native `.dat`.
+-   2. First-run Tutorial: `kasteroids_tutorialSeen` flag ensures onboarding displays once on fresh sessions, never on restored saves.
+-   3. Modal Dismissals: Help, Game Over, and Settings modals dismiss cleanly with Escape, Enter, or Close button.
+-   4. Dual Parity & Build: Compile Win32 native client via `cmd.exe /c build.bat` in `KAsteroids/`.
+- - **Verification**:
+-   - `uv run scripts/test_app_startup.py --app KAsteroids`
+-   - `cmd.exe /c build.bat` in `KAsteroids/` (`KAsteroids.exe` clean, < 999 KB)
+-   - `cd KiloOS && npm run build` (0 Vite errors, `kasteroids.html` < 999 KB)
+- - **Handoff**:
+-   - In frontmatter: advance `current_targets.kilo_qa` to `KSnake`.
+-   - Set `current_agent: kilo-expander`, `last_run.agent: kilo-qa`, `last_run.app: KAsteroids`.
+-   - Append terse execution log (≤6 lines), commit, and push.
+- - **Upcoming Queue**: `KSnake`, `KBreakout`, `KRogue`, `KSpace`, `KMaze`.
 
 ### 7. Feature Expander Queue (`kilo-expander`)
 - **Target**: `KMedia`
@@ -189,6 +189,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 ---
 
 ## Recent Execution Logs (Max 5 Entries)
+
+- **2026-10-14T00:31:00-07:00 — kilo-qa: KMaze (Pass 5 QA & State Integrity)**
+  - Hardened state persistence: verified F5 quicksave & F9 quickload dual-key support (`kmaze_saveState` and `kmaze_save`) & native `.dat`.
+  - Confirmed `kmaze_tutorialSeen` / `.dat` onboarding flag integrity and modal dismissals (Esc, Enter, Close).
+  - Verified clean builds: `KMaze.exe` (62 KB) and Vite web build (`kmaze.html` 138 KB < 999 KB ceiling).
+  - Queue: Advanced kilo-qa to KAsteroids; handed off to kilo-expander (KMedia).
 
 - **2026-10-14T00:13:00-07:00 — kilo-usability: KRogue (UI/UX & Usability Pass)**
   - Enhanced layout accessibility with ARIA roles/labels across action buttons and `#msg-box` combat log.
@@ -214,10 +220,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Pure vector CAD blueprint shipyard simulator; 0 glints/perimeter dots found.
   - Build clean (`npm run build` 0 errors, kstarforge.html 277 KB < 999 KB).
   - Queue: Advanced kilo-graphics to KSpace; handed off to kilo-soundscape.
-
-- **2026-10-13T22:14:00-07:00 — kilo-creator: kweb://10.19.99.4/classified (Virtual Web Expansion)**
-  - Audited Aethel Dynamics Special Projects Intranet & RF Signal Diagnostic (`classified.html`, 249 KB < 999 KB).
-  - Hardened Web Audio DSP and oscilloscope with safe audioCtx resume error handling.
-  - Verified 4 interactive tabs (Memos, RF Waveguide, Sector Digests, Skunkworks Terminal) and diegetic ARG lore.
-  - Verified Vite clean build (`npm run build` 0 errors) and KNet portal/webring integration.
-  - Queue: Advanced kilo-creator to kweb://echo-subsystem.net; handed off to kilo-graphics.

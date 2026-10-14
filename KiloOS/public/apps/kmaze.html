@@ -760,7 +760,7 @@
           }
           const saveStatus = document.getElementById('splashSaveStatus');
           const continueBtn = document.getElementById('btnSplashContinue');
-          let sd = safeGetStorage('kmaze_save', null);
+          let sd = safeGetStorage('kmaze_saveState', null) || safeGetStorage('kmaze_save', null);
           if (sd) {
               try {
                   let parsed = JSON.parse(sd);
@@ -1754,6 +1754,7 @@
           elapsed: Date.now() - startTime
       };
       safeSetStorage('kmaze_save', JSON.stringify(saveData));
+      safeSetStorage('kmaze_saveState', JSON.stringify(saveData));
       msgText = "Game Saved to Checkpoint!";
       msgTimer = 60;
       playTone(900, 'sine', 0.2);
@@ -1762,7 +1763,7 @@
   }
 
   function loadCheckpointGame() {
-      let sd = safeGetStorage('kmaze_save', null);
+      let sd = safeGetStorage('kmaze_saveState', null) || safeGetStorage('kmaze_save', null);
       if (sd) {
           try {
               let saveData = JSON.parse(sd);
