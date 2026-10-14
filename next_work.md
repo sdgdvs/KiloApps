@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-expander
-next_agent: kilo-creator
+current_agent: kilo-creator
+next_agent: kilo-graphics
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -19,7 +19,7 @@ current_targets:
   kilo_tester: KVault
   kilo_usability: KSubmarine
   kilo_qa: KBreakout
-  kilo_expander: KCalendar
+  kilo_expander: KMedia
 virtual_web_target: kweb://echo-subsystem.net
 virtual_web_rotation:
 - kweb://deep-core
@@ -34,9 +34,9 @@ virtual_web_rotation:
 - kweb://10.19.99.4/classified
 - kweb://echo-subsystem.net
 last_run:
-  agent: kilo-qa
-  app: KAsteroids
-  timestamp: '2026-10-14T05:31:00-07:00'
+  agent: kilo-expander
+  app: KCalendar
+  timestamp: '2026-10-14T06:15:00-07:00'
 last_planner_run: '2026-10-13T18:15:00Z'
 ---
 
@@ -189,6 +189,13 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-14T06:15:00-07:00 — kilo-expander: KCalendar (Deep Feature Expansion)**
+  - Added Plain Text Schedule Briefing (.txt) and TSV data table (.tsv) multi-format exporters.
+  - Added 1-click clipboard agenda export and Next Upcoming Event jump navigation (button + [J] shortcut).
+  - Added Purge/Clean Completed Events utility in stats modal with user confirmation.
+  - Verified clean build (`npm run build` PASS, 0 errors, `kcalendar.html` 123 KB < 999 KB ceiling).
+  - Queue: Advanced kilo-expander to KMedia; handed off to kilo-creator (kweb://echo-subsystem.net).
+
 - **2026-10-14T05:13:00-07:00 — kilo-usability: KMine**
   - ⏭️ Skip — KMine usability and layout complete and mature (10+ passes, HiDPI scaling, full shortcuts).
   - Verified window bounds (1040x740), modal dismissals (Esc/backdrop), and clean Vite build (PASS, 0 errors).
@@ -212,9 +219,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Verified 0 rotating specular glints or traveling perimeter border dots.
   - Build clean (`npm run build` PASS, 0 errors, `kspace.html` 190 KB < 999 KB ceiling).
   - Queue: Advanced kilo-graphics to KMech; handed off to kilo-soundscape.
-
-- **2026-10-14T02:15:00-07:00 — kilo-expander: KJournal (Deep Feature Expansion)**
-  - Added OPML 2.0 outline export & XML/CSV multi-format import parser for outliner and spreadsheet interoperability.
-  - Built standalone portable offline HTML vault exporter with embedded client search for zero-dependency archival.
-  - Implemented 'On This Day' memory flashback modal & Alt+M shortcut scanning past years for calendar day reflection.
-  - Verified clean Vite build (`kjournal.html` 137.6 KB < 999 KB ceiling); advanced queue to KCalendar.

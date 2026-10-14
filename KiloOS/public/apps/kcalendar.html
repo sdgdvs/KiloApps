@@ -963,14 +963,18 @@
   </div>
   <div class="action-menu">
     <button class="btn btn-accent" id="newEventBtn" title="Create New Event [N]">+ New <span class="key-badge" style="background:rgba(0,0,0,0.2); border-color:rgba(0,0,0,0.3); color:#0f172a;">N</span></button>
+    <button class="btn" id="jumpNextBtn" title="Jump to Next Upcoming Event [J]">⏭ Next <span class="key-badge">J</span></button>
     <button class="btn" id="quicksaveBtn" title="Quicksave Snapshot [F5]">💾 Save <span class="key-badge">F5</span></button>
     <button class="btn" id="quickloadBtn" title="Quickload Snapshot [F9]">📂 Load <span class="key-badge">F9</span></button>
     <div class="dropdown" id="exportDropdown">
-      <button class="btn" id="exportMenuBtn" title="Export Calendar (ICS, CSV, MD, JSON)">Export ▾</button>
+      <button class="btn" id="exportMenuBtn" title="Export Calendar (ICS, CSV, MD, JSON, TXT, TSV)">Export ▾</button>
       <div class="dropdown-menu" id="exportMenuContent">
         <button class="dropdown-item" id="exportIcsBtn">📅 iCalendar (.ics)</button>
         <button class="dropdown-item" id="exportCsvBtn">📊 Spreadsheet (.csv)</button>
+        <button class="dropdown-item" id="exportTsvBtn">📑 Data Table (.tsv)</button>
         <button class="dropdown-item" id="exportMdBtn">📝 Markdown Agenda (.md)</button>
+        <button class="dropdown-item" id="exportTxtBtn">📄 Plain Text Briefing (.txt)</button>
+        <button class="dropdown-item" id="copySummaryBtn">📋 Copy Agenda to Clipboard</button>
         <button class="dropdown-item" id="exportJsonDropdownBtn">💾 JSON Backup</button>
       </div>
     </div>
@@ -1137,6 +1141,7 @@
     <div class="modal-actions" style="margin-top:10px;">
       <button class="btn btn-accent" id="exportMdFromStatsBtn">Export .md Agenda</button>
       <button class="btn" id="exportJsonBackupBtn">Export JSON</button>
+      <button class="btn btn-danger" id="purgeCompletedBtn" title="Remove all completed events">Clean Completed</button>
       <button class="btn" id="closeStatsBtn" style="margin-left:auto;">Close</button>
     </div>
   </div>
@@ -2636,6 +2641,126 @@
     showToast('Exported JSON backup to kcalendar_backup.json', 'success');
   }
 
+  function exportTxt() {
+    const todayStr = formatDateStr(new Date());
+    let txt = `====================================================\n`;
+    txt += `  KCALENDAR EXECUTIVE SCHEDULE BRIEFING\n`;
+    txt += `  Generated: ${todayStr} | Events: ${events.length}\n`;
+    txt += `====================================================\n\n`;
+
+    const sortedEvents = [...events].sort((a, b) => a.date.localeCompare(b.date) || (a.time || '00:00').localeCompare(b.time || '00:00'));
+
+    if (sortedEvents.length === 0) {
+      txt += `No scheduled events recorded.\n`;
+    } else {
+      let curDate = '';
+      sortedEvents.forEach(ev => {
+        if (ev.date !== curDate) {
+          curDate = ev.date;
+          txt += `\n--- [ ${curDate} ] ---------------------------------\n`;
+        }
+        const timeStr = ev.time ? `[${ev.time}] ` : `[ALL DAY] `;
+        const statusStr = ev.completed ? `[DONE]` : `[PENDING]`;
+        const prioStr = (ev.priority || 'normal').toUpperCase();
+        txt += `• ${statusStr} ${timeStr}${ev.title || 'Untitled'} (${ev.category || 'General'} | Prio: ${prioStr})\n`;
+        if (ev.location) txt += `  Location: ${ev.location}\n`;
+        if (ev.tags) txt += `  Tags: ${ev.tags}\n`;
+        if (ev.description) txt += `  Notes: ${ev.description.replace(/\n/g, ' ')}\n`;
+      });
+    }
+
+    txt += `\n====================================================\n`;
+    txt += `  KiloApps Retro-1999 Certified | Y2K Compliant\n`;
+    txt += `====================================================\n`;
+
+    downloadFile(txt, 'kcalendar_briefing.txt', 'text/plain;charset=utf-8;');
+    showToast('Exported plain text briefing to kcalendar_briefing.txt', 'success');
+  }
+
+  function exportTsv() {
+    let tsv = "ID\tTitle\tDate\tTime\tCategory\tPriority\tRecurrence\tCompleted\tTags\tLocation\tDescription\n";
+    events.forEach(ev => {
+      const cleanField = s => String(s || '').replace(/[\t\r\n]/g, ' ');
+      const row = [
+        ev.id,
+        cleanField(ev.title),
+        ev.date,
+        ev.time || '',
+        ev.category,
+        ev.priority || 'normal',
+        ev.recurring || 'none',
+        ev.completed ? 'TRUE' : 'FALSE',
+        cleanField(ev.tags),
+        cleanField(ev.location),
+        cleanField(ev.description)
+      ].join('\t');
+      tsv += row + "\n";
+    });
+
+    downloadFile(tsv, 'kcalendar_events.tsv', 'text/tab-separated-values;charset=utf-8;');
+    showToast('Exported events to kcalendar_events.tsv', 'success');
+  }
+
+  function copyAgendaSummary() {
+    const todayStr = formatDateStr(new Date());
+    const sorted = [...events]
+      .filter(e => !e.completed && e.date >= todayStr)
+      .sort((a, b) => a.date.localeCompare(b.date) || (a.time || '00:00').localeCompare(b.time || '00:00'))
+      .slice(0, 10);
+
+    let summary = `📅 KCalendar Upcoming Agenda (${todayStr}):\n`;
+    if (sorted.length === 0) {
+      summary += `No upcoming pending events scheduled.\n`;
+    } else {
+      sorted.forEach(e => {
+        const t = e.time ? `@ ${e.time} ` : '';
+        summary += `• ${e.date} ${t}- ${e.title} [${e.category}]\n`;
+      });
+    }
+
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(summary)
+        .then(() => showToast('Agenda summary copied to clipboard!', 'success'))
+        .catch(() => showToast('Clipboard write failed', 'error'));
+    } else {
+      showToast('Clipboard access unavailable', 'error');
+    }
+  }
+
+  function jumpToNextUpcomingEvent() {
+    const todayStr = formatDateStr(new Date());
+    const upcoming = [...events]
+      .filter(e => !e.completed && e.date >= todayStr)
+      .sort((a, b) => a.date.localeCompare(b.date) || (a.time || '00:00').localeCompare(b.time || '00:00'));
+
+    if (upcoming.length === 0) {
+      showToast('No upcoming pending events found', 'info');
+      return;
+    }
+
+    const nextEv = upcoming[0];
+    const [y, m, d] = nextEv.date.split('-').map(Number);
+    selectedDate = new Date(y, m - 1, d);
+    renderApp();
+    showToast(`Jumped to Next: "${nextEv.title}" (${nextEv.date})`, 'success', 3000);
+  }
+
+  function purgeCompletedEvents() {
+    const completedCount = events.filter(e => e.completed).length;
+    if (completedCount === 0) {
+      showToast('No completed events to clean', 'info');
+      return;
+    }
+
+    if (confirm(`Remove ${completedCount} completed events from calendar?`)) {
+      events = events.filter(e => !e.completed);
+      saveEvents();
+      renderApp();
+      closeStatsModal();
+      showToast(`Cleaned ${completedCount} completed events`, 'success');
+    }
+  }
+
   function escapeCsv(str) {
     str = String(str || '');
     if (str.includes(',') || str.includes('"') || str.includes('\n') || str.includes('\r')) {
@@ -3022,14 +3147,28 @@
     exportMenuContent.classList.remove('show');
     exportCsv();
   };
+  document.getElementById('exportTsvBtn').onclick = () => {
+    exportMenuContent.classList.remove('show');
+    exportTsv();
+  };
   document.getElementById('exportMdBtn').onclick = () => {
     exportMenuContent.classList.remove('show');
     exportMarkdownAgenda();
+  };
+  document.getElementById('exportTxtBtn').onclick = () => {
+    exportMenuContent.classList.remove('show');
+    exportTxt();
+  };
+  document.getElementById('copySummaryBtn').onclick = () => {
+    exportMenuContent.classList.remove('show');
+    copyAgendaSummary();
   };
   document.getElementById('exportJsonDropdownBtn').onclick = () => {
     exportMenuContent.classList.remove('show');
     exportJsonBackup();
   };
+
+  document.getElementById('jumpNextBtn').onclick = jumpToNextUpcomingEvent;
 
   document.getElementById('statsBtn').onclick = openStatsModal;
   document.getElementById('closeStatsModalBtn').onclick = closeStatsModal;
@@ -3042,6 +3181,10 @@
     exportJsonBackup();
     closeStatsModal();
   };
+  const purgeCompletedBtn = document.getElementById('purgeCompletedBtn');
+  if (purgeCompletedBtn) {
+    purgeCompletedBtn.onclick = purgeCompletedEvents;
+  }
 
   document.getElementById('quicksaveBtn').onclick = quicksaveState;
   document.getElementById('quickloadBtn').onclick = quickloadState;
@@ -3137,6 +3280,7 @@
       }
       else if (e.key === 's' || e.key === 'S') { openStatsModal(); }
       else if (e.key === 'h' || e.key === 'H') { openHelpModal(); }
+      else if (e.key === 'j' || e.key === 'J') { e.preventDefault(); jumpToNextUpcomingEvent(); }
       else if (e.key === '/') {
         e.preventDefault();
         searchInputElem.focus();
