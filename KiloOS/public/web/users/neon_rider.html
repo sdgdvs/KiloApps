@@ -1102,6 +1102,7 @@
     <button class="nav-btn" data-target="tab-benchmark">⚡ Rig Benchmark</button>
     <button class="nav-btn" data-target="tab-guestbook">✍️ Guestbook ('99)</button>
     <button class="nav-btn" data-target="tab-webring">🌐 Webring &amp; Badges</button>
+    <button class="nav-btn" data-target="tab-sniffer">🛰️ Subnet Sniffer &amp; Packet Interceptor</button>
   </nav>
 
   <!-- TAB 1: About ~neon_rider -->
@@ -2105,7 +2106,101 @@ NOP</textarea>
   </section>
 
   <!-- TAB 7: Badges & Webring -->
-  <section class="content-section" id="tab-webring">
+    <!-- TAB 11: Subnet Sniffer & Packet Interceptor -->
+  <section class="content-section" id="tab-sniffer">
+    <div class="panel-card purple-edge">
+      <div class="panel-title">
+        <span>🛰️ 10.19.99.x INTRANET PACKET SNIFFER &amp; SUBNET INTERCEPTOR (V1.99)</span>
+        <span style="font-size:10px; color:var(--accent-purple);">PROMISCUOUS SOCKET MODE // NDIS 3.0</span>
+      </div>
+      <p style="font-size:12px; margin-bottom:12px;">
+        Direct raw frame capture tap hooked into Carlsbad acoustic repeater relay (<code>10.19.99.254</code>) and Permian salt cavern telemetry bus.
+        Captures live autonomous beacon frames, classified gateway handshakes (<code>10.19.99.4</code>), and demogroup FLARELIGHT dead-drops.
+      </p>
+
+      <!-- Sniffer Controls -->
+      <div style="display:flex; flex-wrap:wrap; gap:8px; align-items:center; background:#040914; border:1px solid var(--border-dim); padding:8px 12px; margin-bottom:12px;">
+        <button id="sniffToggleBtn" class="btn-retro-cyan" style="font-size:11px; padding:4px 10px; cursor:pointer;">⏸️ PAUSE CAPTURE</button>
+        <button id="sniffClearBtn" class="btn-retro-magenta" style="font-size:11px; padding:4px 10px; cursor:pointer;">🗑️ CLEAR BUFFER</button>
+        <span style="color:var(--text-muted); font-size:11px;">Filter:</span>
+        <select id="sniffFilterSel" style="background:#060d19; color:#00ffcc; border:1px solid #1e3a4a; font-family:var(--font-mono); font-size:11px; padding:3px 6px;">
+          <option value="ALL">ALL TRAFFIC (*.*)</option>
+          <option value="CLASSIFIED">CLASSIFIED (0x7F / 10.19.99.4)</option>
+          <option value="ECHO">ECHO-SUBSYSTEM (Acoustic 1999Hz)</option>
+          <option value="ICMP">ICMP / PING</option>
+          <option value="RAW">RAW DEMO FRAMES</option>
+        </select>
+        <button id="sniffExportBtn" class="btn-retro-green" style="font-size:11px; padding:4px 10px; cursor:pointer;">💾 EXPORT PCAP / ASM</button>
+        <label style="font-size:11px; color:#cbd5e1; display:flex; align-items:center; gap:4px; margin-left:auto; cursor:pointer;">
+          <input type="checkbox" id="sniffAudioChk" checked style="accent-color:#00ffcc;">
+          <span>🔊 Acoustic Chirp</span>
+        </label>
+      </div>
+
+      <!-- Packet Injection / Ping Bar -->
+      <div style="display:flex; flex-wrap:wrap; gap:8px; align-items:center; background:#08101e; border:1px solid #14283d; padding:8px 12px; margin-bottom:12px;">
+        <span style="font-size:11px; color:var(--accent-amber); font-weight:bold;">⚡ TRANSMIT / PING PROBE:</span>
+        <select id="sniffProbeTarget" style="background:#060d19; color:#ffcc00; border:1px solid #3d2f0a; font-family:var(--font-mono); font-size:11px; padding:3px 6px;">
+          <option value="10.19.99.4">10.19.99.4 (Classified Intranet Gateway)</option>
+          <option value="10.19.99.254">10.19.99.254 (Carlsbad Salt Cavern Relay)</option>
+          <option value="10.19.99.7">10.19.99.7 (ESARL Geophone Acoustic Sensor)</option>
+          <option value="10.19.99.1">10.19.99.1 (Border Gateway Router)</option>
+          <option value="kweb://echo-subsystem.net">kweb://echo-subsystem.net (Research Lab)</option>
+        </select>
+        <button id="sniffSendProbeBtn" class="btn-retro-amber" style="font-size:11px; padding:4px 10px; cursor:pointer;">🚀 TRANSMIT SYN-PROBE</button>
+        <span id="sniffProbeStatus" style="font-size:11px; color:#a7f3d0; margin-left:8px;">Status: Standby</span>
+      </div>
+
+      <!-- Packet Grid Layout -->
+      <div style="display:grid; grid-template-columns: 1fr 380px; gap:12px;">
+        <!-- Live Packet Stream Table -->
+        <div style="background:#020509; border:1px solid var(--border-dim); padding:6px; max-height:360px; overflow-y:auto; font-family:var(--font-mono); font-size:10.5px;">
+          <table style="width:100%; border-collapse:collapse; color:#cbd5e1;" id="sniffPacketTable">
+            <thead>
+              <tr style="background:#091424; color:var(--accent-cyan); text-align:left; border-bottom:1px solid #14283d;">
+                <th style="padding:4px;">#</th>
+                <th style="padding:4px;">TIME</th>
+                <th style="padding:4px;">SOURCE</th>
+                <th style="padding:4px;">DESTINATION</th>
+                <th style="padding:4px;">PROTO</th>
+                <th style="padding:4px;">INFO</th>
+              </tr>
+            </thead>
+            <tbody id="sniffPacketTbody">
+              <!-- Injected by script -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Packet Inspector & Decryption Pane -->
+        <div style="background:#030710; border:1px solid var(--border-dim); padding:10px; display:flex; flex-direction:column; gap:8px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #14283d; padding-bottom:4px;">
+            <span style="color:var(--accent-cyan); font-weight:bold; font-size:11px;">PACKET DETAILS &amp; DISSECTOR</span>
+            <span id="sniffSelectedId" style="font-size:10px; color:var(--text-muted);">No packet selected</span>
+          </div>
+          <div id="sniffHeaderSummary" style="background:#060e1c; border:1px solid #102238; padding:6px; font-family:var(--font-mono); font-size:10px; color:#93c5fd; min-height:55px;">
+            Select a packet from the capture stream to inspect headers and decrypt raw demoscene payload bytes.
+          </div>
+          
+          <div style="font-size:11px; color:var(--accent-magenta); font-weight:bold;">PAYLOAD HEX DISSECTOR &amp; DECRYPTOR</div>
+          <div id="sniffHexDump" style="background:#020408; border:1px solid #14283d; padding:6px; font-family:var(--font-mono); font-size:9.5px; color:#38bdf8; height:110px; overflow-y:auto; white-space:pre;">-- HEX DUMP EMPTY --</div>
+
+          <div style="display:flex; gap:6px; align-items:center; margin-top:2px;">
+            <span style="font-size:10px; color:#cbd5e1;">Cipher:</span>
+            <button id="sniffDecRot13" class="btn-retro-cyan" style="font-size:9px; padding:2px 6px;">ROT13</button>
+            <button id="sniffDecXor" class="btn-retro-magenta" style="font-size:9px; padding:2px 6px;">XOR 0x7F</button>
+            <button id="sniffDecB64" class="btn-retro-green" style="font-size:9px; padding:2px 6px;">Base64</button>
+            <button id="sniffDecAscii" class="btn-retro-amber" style="font-size:9px; padding:2px 6px;">Raw ASCII</button>
+          </div>
+          <div id="sniffDecodedText" style="background:#040914; border:1px solid #00ffcc; padding:6px; font-family:var(--font-mono); font-size:10px; color:#00ffcc; min-height:45px; word-break:break-all;">
+            Decoded payload text will display here...
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+<section class="content-section" id="tab-webring">
     <div class="panel-card cyan-edge">
       <div class="panel-title">
         <span>RETRO 88x31 BUTTON EXCHANGE &amp; AFFILIATES</span>
@@ -2191,6 +2286,324 @@ NOP</textarea>
     });
     if (targetId === 'tab-font' && typeof initFontStudio === 'function') initFontStudio();
     if (targetId === 'tab-copper' && typeof initCopperStudio === 'function') initCopperStudio();
+    initSnifferStudio();
+
+  /* =========================================================================
+     11. SUBNET SNIFFER & PACKET INTERCEPTOR (V1.99)
+     ========================================================================= */
+  let snifferActive = true;
+  let snifferPackets = [];
+  let snifferInterval = null;
+  let snifferSelectedPacket = null;
+  let snifferPacketCounter = 100;
+
+  const mockPayloadTemplates = [
+    { proto: 'CLASSIFIED_0x7F', src: '10.19.99.4:8080', dst: '10.19.99.254:1999', info: 'CARLSBAD_SALT_IMPEDANCE_FRAME: 1999Hz harmonic sync verified. Subsurface array depth 650m.', cipher: 'xor7f' },
+    { proto: 'ECHO_STREAM', src: '10.19.99.7:1999', dst: '10.19.99.4:443', info: 'GEOPHONE_TELEMETRY: Stratum P-wave velocity 4200m/s. Halite cavern acoustic reflection detected.', cipher: 'rot13' },
+    { proto: 'FLARELIGHT_RAW', src: '165.227.41.11:6667', dst: '10.19.99.254:6667', info: 'DEMOSCENE_RELAY: Greets to neon_rider. 64KB intro rendered with pure Win32 opcodes.', cipher: 'b64' },
+    { proto: 'ICMP', src: '10.19.99.254', dst: '10.19.99.1', info: 'Echo (ping) request ttl=64 id=0x4a12 seq=1 (Permian relay beacon)', cipher: 'ascii' },
+    { proto: 'CLASSIFIED_0x7F', src: '10.19.99.4:21', dst: '10.19.99.100:1024', info: 'ARCHIVE_SYNC: /classified/manifest.txt checksum [0x99A4F] verified. Access at kweb://10.19.99.4/classified', cipher: 'xor7f' },
+    { proto: 'TCP_80', src: '198.51.100.12:4102', dst: '10.19.99.4:80', info: 'GET /status HTTP/1.0 Host: echo-subsystem.net User-Agent: KNet-Browser/1.0', cipher: 'ascii' }
+  ];
+
+  function xorCipher(str, key) {
+    let out = '';
+    for (let i = 0; i < str.length; i++) {
+      out += String.fromCharCode(str.charCodeAt(i) ^ key);
+    }
+    return out;
+  }
+
+  function rot13Cipher(str) {
+    return str.replace(/[a-zA-Z]/g, function(c) {
+      return String.fromCharCode((c <= 'Z' ? 90 : 122) >= (c = c.charCodeAt(0) + 13) ? c : c - 26);
+    });
+  }
+
+  function generatePacket(customTemplate = null) {
+    snifferPacketCounter++;
+    const tmpl = customTemplate || mockPayloadTemplates[Math.floor(Math.random() * mockPayloadTemplates.length)];
+    const now = new Date();
+    const timeStr = now.toTimeString().split(' ')[0] + '.' + String(Math.floor(now.getMilliseconds() / 10)).padStart(2, '0');
+    
+    // Build raw hex bytes
+    let rawPayload = tmpl.info;
+    let encodedBytes = [];
+    for (let i = 0; i < rawPayload.length; i++) {
+      encodedBytes.push(rawPayload.charCodeAt(i));
+    }
+
+    const pkt = {
+      id: snifferPacketCounter,
+      time: timeStr,
+      src: tmpl.src,
+      dst: tmpl.dst,
+      proto: tmpl.proto,
+      info: tmpl.info,
+      cipher: tmpl.cipher,
+      bytes: encodedBytes
+    };
+
+    snifferPackets.unshift(pkt);
+    if (snifferPackets.length > 50) snifferPackets.pop();
+
+    renderPacketRow(pkt);
+
+    // Audio chirp
+    const chk = document.getElementById('sniffAudioChk');
+    if (chk && chk.checked && typeof triggerFmVoice === 'function') {
+      try {
+        const freq = tmpl.proto.includes('CLASSIFIED') ? 1999 : (tmpl.proto.includes('ECHO') ? 1200 : 880);
+        triggerFmVoice(freq, 0.4, false, 0.6, 60);
+      } catch(e) {}
+    }
+  }
+
+  function renderPacketRow(pkt) {
+    const tbody = document.getElementById('sniffPacketTbody');
+    if (!tbody) return;
+
+    const filter = document.getElementById('sniffFilterSel') ? document.getElementById('sniffFilterSel').value : 'ALL';
+    if (!matchesFilter(pkt, filter)) return;
+
+    const tr = document.createElement('tr');
+    tr.id = 'pkt-row-' + pkt.id;
+    tr.style.cursor = 'pointer';
+    tr.style.borderBottom = '1px solid #0f1e30';
+    tr.style.transition = 'background 0.15s ease';
+
+    let color = '#cbd5e1';
+    if (pkt.proto.includes('CLASSIFIED')) color = '#ff00aa';
+    else if (pkt.proto.includes('ECHO')) color = '#00ffcc';
+    else if (pkt.proto === 'ICMP') color = '#ffcc00';
+    else if (pkt.proto.includes('FLARELIGHT')) color = '#a78bfa';
+
+    tr.innerHTML = `
+      <td style="padding:3px 4px; color:var(--text-muted);">${pkt.id}</td>
+      <td style="padding:3px 4px; color:#7dd3fc;">${pkt.time}</td>
+      <td style="padding:3px 4px; color:#cbd5e1;">${pkt.src}</td>
+      <td style="padding:3px 4px; color:#cbd5e1;">${pkt.dst}</td>
+      <td style="padding:3px 4px; font-weight:bold; color:${color};">${pkt.proto}</td>
+      <td style="padding:3px 4px; max-width:240px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${pkt.info}</td>
+    `;
+
+    tr.addEventListener('mouseenter', () => { tr.style.background = '#0d2238'; });
+    tr.addEventListener('mouseleave', () => {
+      if (snifferSelectedPacket && snifferSelectedPacket.id === pkt.id) tr.style.background = '#143152';
+      else tr.style.background = 'transparent';
+    });
+    tr.addEventListener('click', () => { selectPacket(pkt); });
+
+    tbody.insertBefore(tr, tbody.firstChild);
+
+    // Limit visible rows
+    while (tbody.children.length > 50) {
+      tbody.removeChild(tbody.lastChild);
+    }
+  }
+
+  function matchesFilter(pkt, filter) {
+    if (filter === 'ALL') return true;
+    if (filter === 'CLASSIFIED' && (pkt.proto.includes('CLASSIFIED') || pkt.src.includes('10.19.99.4') || pkt.dst.includes('10.19.99.4'))) return true;
+    if (filter === 'ECHO' && (pkt.proto.includes('ECHO') || pkt.info.includes('Acoustic') || pkt.info.includes('1999Hz'))) return true;
+    if (filter === 'ICMP' && pkt.proto === 'ICMP') return true;
+    if (filter === 'RAW' && pkt.proto.includes('RAW')) return true;
+    return false;
+  }
+
+  function selectPacket(pkt) {
+    snifferSelectedPacket = pkt;
+    document.querySelectorAll('#sniffPacketTbody tr').forEach(r => r.style.background = 'transparent');
+    const selectedRow = document.getElementById('pkt-row-' + pkt.id);
+    if (selectedRow) selectedRow.style.background = '#143152';
+
+    const lbl = document.getElementById('sniffSelectedId');
+    if (lbl) lbl.textContent = `Frame #${pkt.id} [${pkt.proto}]`;
+
+    const summary = document.getElementById('sniffHeaderSummary');
+    if (summary) {
+      summary.innerHTML = `
+        <strong>FRAME:</strong> #${pkt.id} | <strong>TIME:</strong> ${pkt.time} | <strong>PROTO:</strong> ${pkt.proto}<br>
+        <strong>SRC:</strong> ${pkt.src} &rarr; <strong>DST:</strong> ${pkt.dst}<br>
+        <strong>PAYLOAD LEN:</strong> ${pkt.bytes.length} bytes | <strong>CIPHER TAG:</strong> ${pkt.cipher.toUpperCase()}
+      `;
+    }
+
+    // Format Hex Dump
+    const hexBox = document.getElementById('sniffHexDump');
+    if (hexBox) {
+      let lines = [];
+      for (let offset = 0; offset < pkt.bytes.length; offset += 16) {
+        const slice = pkt.bytes.slice(offset, offset + 16);
+        const hexParts = slice.map(b => b.toString(16).padStart(2, '0').toUpperCase()).join(' ');
+        const paddedHex = hexParts.padEnd(48, ' ');
+        const asciiParts = slice.map(b => (b >= 32 && b <= 126) ? String.fromCharCode(b) : '.').join('');
+        const offStr = offset.toString(16).padStart(4, '0').toUpperCase();
+        lines.push(`${offStr}  ${paddedHex}  |${asciiParts}|`);
+      }
+      hexBox.textContent = lines.join('\n');
+    }
+
+    // Default raw decode
+    updateDecodedText(pkt.info);
+  }
+
+  function updateDecodedText(txt) {
+    const box = document.getElementById('sniffDecodedText');
+    if (box) box.textContent = txt;
+  }
+
+  function initSnifferStudio() {
+    if (snifferInterval) return; // already initialized
+
+    // Wire controls
+    const toggleBtn = document.getElementById('sniffToggleBtn');
+    if (toggleBtn) {
+      toggleBtn.onclick = () => {
+        snifferActive = !snifferActive;
+        toggleBtn.textContent = snifferActive ? '⏸️ PAUSE CAPTURE' : '▶️ RESUME CAPTURE';
+        toggleBtn.className = snifferActive ? 'btn-retro-cyan' : 'btn-retro-amber';
+      };
+    }
+
+    const clearBtn = document.getElementById('sniffClearBtn');
+    if (clearBtn) {
+      clearBtn.onclick = () => {
+        snifferPackets = [];
+        const tbody = document.getElementById('sniffPacketTbody');
+        if (tbody) tbody.innerHTML = '';
+        const hex = document.getElementById('sniffHexDump');
+        if (hex) hex.textContent = '-- HEX DUMP EMPTY --';
+        const sum = document.getElementById('sniffHeaderSummary');
+        if (sum) sum.textContent = 'Capture stream cleared.';
+        updateDecodedText('');
+      };
+    }
+
+    const filterSel = document.getElementById('sniffFilterSel');
+    if (filterSel) {
+      filterSel.onchange = () => {
+        const tbody = document.getElementById('sniffPacketTbody');
+        if (!tbody) return;
+        tbody.innerHTML = '';
+        snifferPackets.forEach(p => {
+          if (matchesFilter(p, filterSel.value)) renderPacketRow(p);
+        });
+      };
+    }
+
+    const probeBtn = document.getElementById('sniffSendProbeBtn');
+    if (probeBtn) {
+      probeBtn.onclick = () => {
+        const target = document.getElementById('sniffProbeTarget') ? document.getElementById('sniffProbeTarget').value : '10.19.99.4';
+        const stat = document.getElementById('sniffProbeStatus');
+        if (stat) stat.textContent = `Transmitting SYN probe to ${target}...`;
+        
+        setTimeout(() => {
+          generatePacket({
+            proto: 'ICMP',
+            src: '165.227.41.11',
+            dst: target,
+            info: `SYN_PROBE ping transmit to ${target}: RTT=18ms acoustic carrier lock [1999Hz]`,
+            cipher: 'ascii'
+          });
+
+          setTimeout(() => {
+            let replyInfo = `REPLY from ${target}: Bytes=64 ACK=0x7F seq=1999. Inbound link established.`;
+            let cipherType = 'ascii';
+            if (target === '10.19.99.4') {
+              replyInfo = `*** [CLASSIFIED_GATEWAY_ACK]: Node 10.19.99.4 responds. Salt cavern memory sector unlocked. Access secret log at kweb://10.19.99.4/classified. Key: HALITE-1999`;
+              cipherType = 'xor7f';
+            } else if (target === '10.19.99.7') {
+              replyInfo = `*** [ESARL_SENSOR_ACK]: Acoustic hydrophone locked to 1999Hz. Visit kweb://echo-subsystem.net for research log.`;
+              cipherType = 'rot13';
+            }
+            generatePacket({
+              proto: target === '10.19.99.4' ? 'CLASSIFIED_0x7F' : (target === '10.19.99.7' ? 'ECHO_STREAM' : 'ICMP'),
+              src: target,
+              dst: '165.227.41.11',
+              info: replyInfo,
+              cipher: cipherType
+            });
+            if (stat) stat.textContent = `Status: Echo reply received from ${target} (18ms)`;
+          }, 600);
+        }, 300);
+      };
+    }
+
+    // Dissector cipher buttons
+    const btnRot13 = document.getElementById('sniffDecRot13');
+    if (btnRot13) btnRot13.onclick = () => {
+      if (snifferSelectedPacket) updateDecodedText(rot13Cipher(snifferSelectedPacket.info));
+    };
+
+    const btnXor = document.getElementById('sniffDecXor');
+    if (btnXor) btnXor.onclick = () => {
+      if (snifferSelectedPacket) updateDecodedText(xorCipher(snifferSelectedPacket.info, 0x7F));
+    };
+
+    const btnB64 = document.getElementById('sniffDecB64');
+    if (btnB64) btnB64.onclick = () => {
+      if (snifferSelectedPacket) {
+        try {
+          updateDecodedText(btoa(snifferSelectedPacket.info));
+        } catch(e) {
+          updateDecodedText(snifferSelectedPacket.info);
+        }
+      }
+    };
+
+    const btnAscii = document.getElementById('sniffDecAscii');
+    if (btnAscii) btnAscii.onclick = () => {
+      if (snifferSelectedPacket) updateDecodedText(snifferSelectedPacket.info);
+    };
+
+    // Export PCAP / ASM
+    const exportBtn = document.getElementById('sniffExportBtn');
+    if (exportBtn) {
+      exportBtn.onclick = () => {
+        let asm = `; =========================================================================\n`;
+        asm += `; NEON_RIDER 10.19.99.x RAW SOCKET PACKET STREAM LOG (MASM 6.14 / NASM)\n`;
+        asm += `; Generated live via kweb://users/~neon_rider // NDIS 3.0 Tap\n`;
+        asm += `; Captured Packets: ${snifferPackets.length}\n`;
+        asm += `; =========================================================================\n\n`;
+        asm += `.data\n`;
+        snifferPackets.slice(0, 10).forEach((p, idx) => {
+          asm += `packet_${idx}_info DB "${p.proto}: ${p.info.replace(/"/g, "'")}", 0\n`;
+        });
+        asm += `\n.code\n`;
+        asm += `ProcessSubnetFrame PROC\n`;
+        asm += `    mov eax, [esp + 4]    ; packet buffer ptr\n`;
+        asm += `    cmp dword ptr [eax], 07Fh ; check classified magic\n`;
+        asm += `    jne @skip\n`;
+        asm += `    call DecryptCavernTelemetry\n`;
+        asm += `@skip:\n`;
+        asm += `    ret\n`;
+        asm += `ProcessSubnetFrame ENDP\n`;
+
+        const blob = new Blob([asm], { type: 'text/plain' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'neon_rider_subnet_packets.asm';
+        a.click();
+        if (typeof showToast === 'function') showToast('💾 Exported MASM network frame driver (.asm)');
+      };
+    }
+
+    // Seed initial packet batch
+    for (let i = 0; i < 5; i++) {
+      generatePacket();
+    }
+
+    // Packet generation timer
+    snifferInterval = setInterval(() => {
+      if (snifferActive) {
+        generatePacket();
+      }
+    }, 4500);
+  }
+
+    if (targetId === 'tab-sniffer' && typeof initSnifferStudio === 'function') initSnifferStudio();
   }
 
   navButtons.forEach(btn => {
