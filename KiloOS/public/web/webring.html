@@ -3566,6 +3566,53 @@ function playFmChime(freq, dur = 0.16, vol = 0.045) {
   mod.stop(now + dur); carrier.stop(now + dur);
 }
 
+// DX7 E-Piano / Rhodes patch (modRatio 2.0, modIndex 2.8 -> 0.15 fast)
+function playEPiano(freq, dur = 0.28, vol = 0.075) {
+  if (!isAudioEnabled || !audioCtx || freq <= 0) return;
+  const now = audioCtx.currentTime;
+  const carrier = audioCtx.createOscillator();
+  const mod = audioCtx.createOscillator();
+  const modGain = audioCtx.createGain();
+  const amp = audioCtx.createGain();
+  carrier.type = 'sine'; mod.type = 'sine';
+  carrier.frequency.setValueAtTime(freq, now);
+  mod.frequency.setValueAtTime(freq * 2.0, now);
+  modGain.gain.setValueAtTime(freq * 2.0 * 2.8, now);
+  modGain.gain.exponentialRampToValueAtTime(freq * 0.15, now + 0.08);
+  modGain.gain.exponentialRampToValueAtTime(0.01, now + dur);
+  amp.gain.setValueAtTime(vol, now);
+  amp.gain.exponentialRampToValueAtTime(0.001, now + dur);
+  mod.connect(modGain); modGain.connect(carrier.frequency);
+  carrier.connect(amp); amp.connect(audioCtx.destination);
+  if (snesDelayNode) amp.connect(snesDelayNode);
+  mod.start(now); carrier.start(now);
+  mod.stop(now + dur); carrier.stop(now + dur);
+}
+
+// Warm Pad patch (modRatio 0.5, modIndex 1.2 -> 0.8 slow)
+function playWarmPad(freq, dur = 0.55, vol = 0.045) {
+  if (!isAudioEnabled || !audioCtx || freq <= 0) return;
+  const now = audioCtx.currentTime;
+  const carrier = audioCtx.createOscillator();
+  const mod = audioCtx.createOscillator();
+  const modGain = audioCtx.createGain();
+  const amp = audioCtx.createGain();
+  carrier.type = 'sine'; mod.type = 'sine';
+  carrier.frequency.setValueAtTime(freq, now);
+  mod.frequency.setValueAtTime(freq * 0.5, now);
+  modGain.gain.setValueAtTime(freq * 0.5 * 1.2, now);
+  modGain.gain.linearRampToValueAtTime(freq * 0.5 * 0.8, now + dur * 0.6);
+  modGain.gain.exponentialRampToValueAtTime(0.01, now + dur);
+  amp.gain.setValueAtTime(0.001, now);
+  amp.gain.linearRampToValueAtTime(vol, now + 0.07);
+  amp.gain.exponentialRampToValueAtTime(0.0005, now + dur);
+  mod.connect(modGain); modGain.connect(carrier.frequency);
+  carrier.connect(amp); amp.connect(audioCtx.destination);
+  if (snesDelayNode) amp.connect(snesDelayNode);
+  mod.start(now); carrier.start(now);
+  mod.stop(now + dur); carrier.stop(now + dur);
+}
+
 // Procedural Sound Effects & UI Earcons Suite
 function playSfx(type) {
   if (!isAudioEnabled || !audioCtx) return;
@@ -3750,8 +3797,46 @@ const T2_BASS = [
    73.42,  92.50, 110.00,      0, 130.81,      0, 146.83,      0  // D2, F#2, A2, C3, D3
 ];
 
+// ---------------------------------------------------------------------------
+// TRACK 3: "Subnet Phantom '99" (Dungeon / Dark Cyberspace Andalusian Descent in Am)
+// Am9 -> G6 -> Fmaj7 -> E7#9
+// ---------------------------------------------------------------------------
+const T3_LEAD = [
+  440.00,      0,      0, 493.88, 523.25,      0, 493.88,      0, // A4, B4, C5, B4
+  392.00,      0,      0, 440.00, 493.88,      0, 392.00,      0, // G4, A4, B4, G4
+  349.23,      0,      0, 392.00, 440.00,      0, 349.23,      0, // F4, G4, A4, F4
+  329.63,      0, 415.30,      0, 493.88,      0,      0,      0  // E4, G#4, B4, rest
+];
+
+const T3_COUNTER = [
+  523.25,  0,      0,  0, 659.25,  0,      0,  0, // C5 -> E5
+  493.88,  0,      0,  0, 587.33,  0,      0,  0, // B4 -> D5
+  440.00,  0,      0,  0, 523.25,  0,      0,  0, // A4 -> C5
+  415.30,  0,      0,  0, 622.25,  0,      0,  0  // G#4 -> D#5
+];
+
+const T3_ARP = [
+       0, 440.00,      0, 523.25,      0, 659.25,      0, 880.00,
+       0, 392.00,      0, 493.88,      0, 587.33,      0, 783.99,
+       0, 349.23,      0, 440.00,      0, 523.25,      0, 698.46,
+       0, 329.63,      0, 415.30,      0, 493.88,      0, 659.25
+];
+
+const T3_BASS = [
+   55.00,  0, 110.00,      0, 164.81,      0, 110.00,      0, // A1, A2, E3, A2
+   49.00,  0,  98.00,      0, 146.83,      0,  98.00,      0, // G1, G2, D3, G2
+   43.65,  0,  87.31,      0, 130.81,      0,  87.31,      0, // F1, F2, C3, F2
+   41.20,  0,  82.41,      0, 123.47,      0, 164.81,      0  // E1, E2, B2, E3
+];
+
+const TRACK_NAMES = {
+  1: "Hyperlink Voyager '99",
+  2: "Ringmaster's Cadence",
+  3: "Subnet Phantom '99"
+};
+
 function toggleBgmTrack() {
-  currentBgmTrack = currentBgmTrack === 1 ? 2 : 1;
+  currentBgmTrack = (currentBgmTrack % 3) + 1;
   const trackText = document.getElementById('trackText');
   if (trackText) trackText.textContent = `TRACK ${currentBgmTrack}`;
   playSfx('click');
@@ -3759,22 +3844,26 @@ function toggleBgmTrack() {
     stopProceduralBgm();
     startProceduralBgm();
   }
-  showNoticeToast(`Soundtrack switched to Track ${currentBgmTrack}: ${currentBgmTrack === 1 ? "Hyperlink Voyager '99" : "Ringmaster's Cadence"}`);
+  showNoticeToast(`Soundtrack switched to Track ${currentBgmTrack}: ${TRACK_NAMES[currentBgmTrack]}`);
 }
 
 function playBgmStep(stepIdx) {
   if (!isAudioEnabled || !audioCtx) return;
   const idx = stepIdx % 32;
 
-  const leadArr = currentBgmTrack === 1 ? T1_LEAD : T2_LEAD;
-  const counterArr = currentBgmTrack === 1 ? T1_COUNTER : T2_COUNTER;
-  const arpArr = currentBgmTrack === 1 ? T1_ARP : T2_ARP;
-  const bassArr = currentBgmTrack === 1 ? T1_BASS : T2_BASS;
+  const leadArr = currentBgmTrack === 1 ? T1_LEAD : (currentBgmTrack === 2 ? T2_LEAD : T3_LEAD);
+  const counterArr = currentBgmTrack === 1 ? T1_COUNTER : (currentBgmTrack === 2 ? T2_COUNTER : T3_COUNTER);
+  const arpArr = currentBgmTrack === 1 ? T1_ARP : (currentBgmTrack === 2 ? T2_ARP : T3_ARP);
+  const bassArr = currentBgmTrack === 1 ? T1_BASS : (currentBgmTrack === 2 ? T2_BASS : T3_BASS);
 
   // Ch1: Lead Melody (vocal phrasing + delayed vibrato)
   const leadFreq = leadArr[idx];
   if (leadFreq > 0) {
-    playFmLead(leadFreq, 0.26, 0.075, true);
+    if (currentBgmTrack === 3) {
+      playEPiano(leadFreq, 0.28, 0.08);
+    } else {
+      playFmLead(leadFreq, 0.26, 0.075, true);
+    }
   }
 
   // Ch2: Counter-melody (contrary motion / response)
@@ -3787,6 +3876,12 @@ function playBgmStep(stepIdx) {
   const arpFreq = arpArr[idx];
   if (arpFreq > 0) {
     playFmChime(arpFreq, 0.12, 0.040);
+  }
+
+  // Ambient Pad Drone on bar downbeats (Track 3)
+  if (currentBgmTrack === 3 && (idx === 0 || idx === 8 || idx === 16 || idx === 24)) {
+    const padFreqs = [220.00, 196.00, 174.61, 164.81];
+    playWarmPad(padFreqs[Math.floor(idx / 8)], 0.60, 0.045);
   }
 
   // Ch4: Bass (active slap bass counterpoint)
@@ -3821,11 +3916,13 @@ function scheduleBgmStep() {
   playBgmStep(bgmStep);
   bgmStep++;
 
-  // Subtle 5:3 swing groove (even 175ms, odd 105ms at ~134 BPM)
+  // Subtle swing groove (even vs odd step duration)
   const isEven = (bgmStep % 2 === 0);
   const nextDelay = currentBgmTrack === 1 
     ? (isEven ? 175 : 105)
-    : (isEven ? 170 : 100);
+    : currentBgmTrack === 2
+      ? (isEven ? 170 : 100)
+      : (isEven ? 185 : 115);
 
   bgmTimer = setTimeout(scheduleBgmStep, nextDelay);
 }
