@@ -1509,6 +1509,15 @@
       <button class="sound-btn" id="btnTrackToggle" onclick="toggleBgmTrack()" title="Switch Procedural FM Soundtrack">
         <span>🎵</span> <span id="trackText">TRACK 1</span>
       </button>
+      <button class="sound-btn" id="btnHelpToggle" onclick="openHelpModal()" title="[F1 / H] Open Webring Field Manual & Hotkey HUD">
+        <span>📖</span> <span>HELP [F1]</span>
+      </button>
+      <button class="sound-btn" id="btnQuickSave" onclick="executeQuickSave()" title="[F5] QuickSave State Snapshot">
+        <span>💾</span> <span>SAVE [F5]</span>
+      </button>
+      <button class="sound-btn" id="btnQuickLoad" onclick="executeQuickLoad()" title="[F9] QuickLoad Saved State">
+        <span>📂</span> <span>LOAD [F9]</span>
+      </button>
       <canvas id="visCanvas" width="140" height="24" title="Audio Spectrum &amp; Oscilloscope"></canvas>
     </div>
   </header>
@@ -2917,6 +2926,43 @@ Monitoring transit sessions...
   </div>
 </div>
 
+<!-- Modal: Webring Field Manual & Hotkey HUD -->
+<div class="modal-backdrop" id="helpModal" onclick="closeModalOnBackdrop(event)">
+  <div class="modal-window" style="max-width:640px;">
+    <div class="modal-head">
+      <div class="modal-title"><span>📖</span> KiloNet 1999 Webring Field Manual &amp; Hotkeys</div>
+      <button class="btn-close" onclick="closeHelpModal()">×</button>
+    </div>
+    <div class="modal-body" style="line-height:1.5;">
+      <div style="background:#090d18; border:1px solid var(--border-med); padding:10px; margin-bottom:12px; font-family:var(--font-mono); font-size:11px;">
+        <div style="color:var(--cyan); font-weight:bold; margin-bottom:4px;">🌐 THE PLANETARY RETRO HYPERMEDIA BACKBONE</div>
+        <div>The Central KiloNet Webring links all 18+ member destinations, demoscene shrines, and underground intranets across the 999KB fleet. Fully autonomous Web 1.0 experience with zero external dependencies.</div>
+      </div>
+
+      <div style="font-family:var(--font-mono); font-weight:bold; color:var(--amber-bright); font-size:12px; margin-bottom:6px;">
+        ⌨️ KEYBOARD SHORTCUTS &amp; CONTROLS:
+      </div>
+      <table style="width:100%; border-collapse:collapse; font-family:var(--font-mono); font-size:11px; margin-bottom:12px;">
+        <tr style="border-bottom:1px solid var(--border-dim);"><td style="padding:4px; color:var(--cyan); font-weight:bold; width:120px;">[1] to [9], [0]</td><td style="padding:4px;">Switch Subsystem Tabs (Directory, Teleporter, Badges, Health, Join, Guestbook, Topology, Surf, Validator, BGP)</td></tr>
+        <tr style="border-bottom:1px solid var(--border-dim);"><td style="padding:4px; color:var(--cyan); font-weight:bold;">[F1] or [H]</td><td style="padding:4px;">Toggle this Field Manual / Help HUD</td></tr>
+        <tr style="border-bottom:1px solid var(--border-dim);"><td style="padding:4px; color:var(--cyan); font-weight:bold;">[F5]</td><td style="padding:4px;">QuickSave Ring State &amp; Bookmarks to local storage</td></tr>
+        <tr style="border-bottom:1px solid var(--border-dim);"><td style="padding:4px; color:var(--cyan); font-weight:bold;">[F9]</td><td style="padding:4px;">QuickLoad restored snapshot state</td></tr>
+        <tr style="border-bottom:1px solid var(--border-dim);"><td style="padding:4px; color:var(--cyan); font-weight:bold;">[M]</td><td style="padding:4px;">Mute / Unmute Yamaha YM2612 FM audio synthesizer</td></tr>
+        <tr style="border-bottom:1px solid var(--border-dim);"><td style="padding:4px; color:var(--cyan); font-weight:bold;">[Space]</td><td style="padding:4px;">Trigger instant random teleporter jump</td></tr>
+        <tr><td style="padding:4px; color:var(--cyan); font-weight:bold;">[Esc]</td><td style="padding:4px;">Dismiss any open modal window</td></tr>
+      </table>
+
+      <div style="background:rgba(239, 68, 68, 0.1); border-left:3px solid #ef4444; padding:8px 10px; font-family:var(--font-mono); font-size:10px; color:#fca5a5;">
+        <strong>📡 SIGINT ADVISORY (AS-1999):</strong> Packets transiting Node #019 / #020 trigger 1999Hz subcarrier echoes across <code>echo-gw-07.kilonet.internal</code>. Check the BGP matrix for routing anomalies.
+      </div>
+    </div>
+    <div class="modal-foot" style="display:flex; justify-content:space-between; align-items:center;">
+      <button class="btn-teleport" onclick="exportQuickSaveJson()" style="font-size:11px; padding:4px 10px;">💾 Backup State (JSON)</button>
+      <button class="btn-teleport alt" onclick="closeHelpModal()">Close [Esc]</button>
+    </div>
+  </div>
+</div>
+
 <!-- Firebase Realtime Database Integration -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
@@ -3889,10 +3935,26 @@ function switchTab(targetId) {
   }
 }
 
-// Global hotkeys: 1-9, 0 for tabs
+// Global hotkeys: 1-9, 0 for tabs, F1/H for help, F5/F9 for quicksave/load, Space for teleport
 window.addEventListener('keydown', (e) => {
   if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
-  if ((e.key >= '1' && e.key <= '9') || e.key === '0') {
+
+  if (e.key === 'F1' || e.key === 'h' || e.key === 'H') {
+    e.preventDefault();
+    openHelpModal();
+  } else if (e.key === 'F5') {
+    e.preventDefault();
+    executeQuickSave();
+  } else if (e.key === 'F9') {
+    e.preventDefault();
+    executeQuickLoad();
+  } else if (e.key === 'm' || e.key === 'M') {
+    e.preventDefault();
+    toggleAudioSystem();
+  } else if (e.code === 'Space') {
+    e.preventDefault();
+    triggerInstantWarp();
+  } else if ((e.key >= '1' && e.key <= '9') || e.key === '0') {
     const tabMap = {
       '1': 'tab-directory',
       '2': 'tab-teleport',
@@ -3908,11 +3970,104 @@ window.addEventListener('keydown', (e) => {
     switchTab(tabMap[e.key]);
   } else if (e.key === 'Escape') {
     closeNodeModal();
+    closeHelpModal();
     if (typeof closePublishBadgeModal === 'function') closePublishBadgeModal();
     if (typeof closeVoyagerModal === 'function') closeVoyagerModal();
     if (typeof closeCommunityBadgeModal === 'function') closeCommunityBadgeModal();
   }
 });
+
+function openHelpModal() {
+  playSfx('click');
+  const modal = document.getElementById('helpModal');
+  if (modal) modal.classList.add('open');
+}
+
+function closeHelpModal() {
+  playSfx('click');
+  const modal = document.getElementById('helpModal');
+  if (modal) modal.classList.remove('open');
+}
+
+function executeQuickSave() {
+  playSfx('warp');
+  try {
+    const quicksaveData = {
+      timestamp: new Date().toISOString(),
+      customNodes: localStorage.getItem('knet_webring_custom_nodes') || '[]',
+      tourHistory: localStorage.getItem('knet_webring_tour_history') || '[]',
+      guestbook: localStorage.getItem('knet_webring_guestbook') || '[]',
+      signals: localStorage.getItem('knet_subterranean_signals') || '[]',
+      callsign: localStorage.getItem('knet_webring_callsign') || userCallsign,
+      communityBadges: localStorage.getItem('knet_webring_community_badges') || '[]',
+      surfBookmarks: localStorage.getItem('knet_surf_bookmarks') || '[]'
+    };
+    localStorage.setItem('knet_webring_quicksave', JSON.stringify(quicksaveData));
+    showNoticeToast("💾 [F5] QuickSave completed! Webring state & bookmarks preserved.");
+  } catch (err) {
+    console.error("QuickSave error:", err);
+    showNoticeToast("⚠️ QuickSave error: Local storage quota exceeded or disabled.");
+  }
+}
+
+function executeQuickLoad() {
+  playSfx('teleport');
+  try {
+    const raw = localStorage.getItem('knet_webring_quicksave');
+    if (!raw) {
+      showNoticeToast("ℹ️ No QuickSave snapshot found. Press [F5] to create one.");
+      return;
+    }
+    const data = JSON.parse(raw);
+    if (data.customNodes) localStorage.setItem('knet_webring_custom_nodes', data.customNodes);
+    if (data.tourHistory) localStorage.setItem('knet_webring_tour_history', data.tourHistory);
+    if (data.guestbook) localStorage.setItem('knet_webring_guestbook', data.guestbook);
+    if (data.signals) localStorage.setItem('knet_subterranean_signals', data.signals);
+    if (data.callsign) {
+      localStorage.setItem('knet_webring_callsign', data.callsign);
+      userCallsign = data.callsign;
+    }
+    if (data.communityBadges) localStorage.setItem('knet_webring_community_badges', data.communityBadges);
+    if (data.surfBookmarks) localStorage.setItem('knet_surf_bookmarks', data.surfBookmarks);
+
+    loadCustomSubmittedNodes();
+    renderDirectoryTable();
+    if (typeof loadSurfBookmarks === 'function') loadSurfBookmarks();
+    if (typeof loadCommunityBadges === 'function') loadCommunityBadges();
+
+    showNoticeToast(`📂 [F9] QuickLoad complete! Restored snapshot from ${new Date(data.timestamp).toLocaleTimeString()}.`);
+  } catch (err) {
+    console.error("QuickLoad error:", err);
+    showNoticeToast("⚠️ QuickLoad error: Corrupted quicksave payload.");
+  }
+}
+
+function exportQuickSaveJson() {
+  playSfx('click');
+  const quicksave = localStorage.getItem('knet_webring_quicksave') || JSON.stringify({
+    timestamp: new Date().toISOString(),
+    callsign: userCallsign,
+    nodes: ringNodes
+  });
+  const blob = new Blob([quicksave], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `kilonet_webring_backup_${Date.now()}.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showNoticeToast("💾 State backup downloaded!");
+}
+
+// First run onboarding hint
+if (!localStorage.getItem('knet_webring_visited_once')) {
+  localStorage.setItem('knet_webring_visited_once', 'true');
+  setTimeout(() => {
+    showNoticeToast("🌐 Welcome to Central KiloNet Webring! Press [F1] for Field Manual & shortcuts.");
+  }, 1200);
+}
 
 /* =========================================================================
    5. DIRECTORY RENDERING, SEARCH & FILTERING
