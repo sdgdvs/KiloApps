@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-qa
+current_agent: kilo-qa
+next_agent: kilo-expander
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -17,7 +17,7 @@ current_targets:
   kilo_graphics: KTrader
   kilo_soundscape: kweb://echo-subsystem.net
   kilo_tester: KPad
-  kilo_usability: KPad
+  kilo_usability: KCalc
   kilo_qa: KPong
   kilo_expander: KZip
 virtual_web_target: kweb://users/~neon_rider
@@ -34,13 +34,18 @@ virtual_web_rotation:
 - kweb://10.19.99.4/classified
 - kweb://echo-subsystem.net
 last_run:
-  agent: kilo-tester
-  app: 'KPaint'
-  timestamp: '2026-10-15T15:13:00.000000+00:00'
+  agent: kilo-usability
+  app: 'KPad'
+  timestamp: '2026-10-15T15:31:00.000000+00:00'
 last_planner_run: '2026-10-14T18:32:00Z'
 ---
 
 ## Execution Log
+- **2026-10-15 08:31 [kilo-usability]**: KPad UI/UX & compact viewport usability pass complete.
+  - Added 540px responsive breakpoint with horizontal scroll containment for header menu and status bar.
+  - Optimized compact gutter width and enabled touch momentum scrolling for mobile/narrow viewports.
+  - Verified default window geometry (1000x680) fits multi-tab strip, quick toolbar, and editor.
+  - Advanced usability queue to KCalc; handed off to kilo-qa.
 - **2026-10-15 08:13 [kilo-tester]**: KPaint interactive UI element audit & accessibility repairs complete.
   - Audited all tools, canvas mouse/touch drag handlers, palette presets, filter convolution kernels, and modals.
   - Hardened Export dropdown items with menuitem ARIA roles, tabindex, and explicit aria-labels for screen readers.

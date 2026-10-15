@@ -1341,6 +1341,17 @@
     #stat-crlf, #stat-indent { display: none; }
     .preview-ratio-btn { display: none; }
   }
+  @media (max-width: 540px) {
+    .header-menu { overflow-x: auto; scrollbar-width: none; }
+    .header-menu::-webkit-scrollbar { display: none; }
+    .menu-btn { padding: 4px 8px; font-size: 11px; flex-shrink: 0; }
+    .status-bar { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
+    .status-bar::-webkit-scrollbar { display: none; }
+    .status-left, .status-right { flex-wrap: nowrap; gap: 8px; flex-shrink: 0; }
+    .gutter { width: 38px; }
+    .gutter-line { padding-right: 6px; font-size: 11px; }
+    #editor { font-size: 13px !important; -webkit-overflow-scrolling: touch; }
+  }
   .shortcut-row {
     display: flex;
     justify-content: space-between;
