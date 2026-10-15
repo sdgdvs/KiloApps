@@ -1300,19 +1300,12 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 SelectObject(memDC, hCoreBrush);
                 Ellipse(memDC, 100 - coreRadius, py - coreRadius, 100 + coreRadius, py + coreRadius);
 
-                // Specular sheen sweep
-                int sheenX = 65 + ((animTick * 3) % 80);
-                HPEN hSheenPen = CreatePen(PS_SOLID, 1, RGB(255, 255, 255));
-                SelectObject(memDC, hSheenPen);
-                MoveToEx(memDC, sheenX - 8, py - 14, NULL);
-                LineTo(memDC, sheenX + 8, py + 14);
-
                 SelectObject(memDC, origBrush);
                 SelectObject(memDC, origPen);
                 DeleteObject(hVBrush); DeleteObject(hVPen);
                 DeleteObject(hTitanBrush); DeleteObject(hTitanPen);
                 DeleteObject(hGunBrush); DeleteObject(hGunPen);
-                DeleteObject(hCoreBrush); DeleteObject(hSheenPen);
+                DeleteObject(hCoreBrush);
             } else {
                 // Standard Player Scout / Cruiser Sprite
                 // Animated Engine Flame
@@ -1351,19 +1344,11 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     Rectangle(memDC, 125, py - 2, 138, py + 2);
                 }
 
-                // Specular Sheen line
-                int sheenX = 76 + ((animTick * 3) % 60);
-                HPEN hSheenPen = CreatePen(PS_SOLID, 1, RGB(255, 255, 255));
-                SelectObject(memDC, hSheenPen);
-                MoveToEx(memDC, sheenX - 6, py - 10, NULL);
-                LineTo(memDC, sheenX + 6, py + 10);
-
                 SelectObject(memDC, origBrush);
                 SelectObject(memDC, origPen);
                 DeleteObject(hEngBrush); DeleteObject(hEngPen);
                 DeleteObject(hShipBrush); DeleteObject(hShipPen);
                 DeleteObject(hCanopyBrush); DeleteObject(hCyanPen);
-                DeleteObject(hSheenPen);
             }
 
             // Player Shield Bubble
