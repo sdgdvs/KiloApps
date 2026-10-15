@@ -1850,11 +1850,12 @@
     }
 
     function updateCategoryCounts() {
-      const counts = { All: contacts.length, Favorites: 0, Work: 0, Personal: 0, Family: 0, Friends: 0, Other: 0 };
+      const counts = { All: contacts.length, Favorites: 0, Work: 0, Personal: 0, Family: 0, Friends: 0, Other: 0, 'Warez/Scene': 0 };
       contacts.forEach(c => {
         if (c.fav) counts.Favorites++;
         const cat = c.category || 'Other';
         if (counts[cat] !== undefined) counts[cat]++;
+        else if (cat === 'Warez') counts['Warez/Scene']++;
         else counts.Other++;
       });
 
@@ -1865,6 +1866,8 @@
       document.getElementById('countFamily').textContent = counts.Family;
       document.getElementById('countFriends').textContent = counts.Friends;
       document.getElementById('countOther').textContent = counts.Other;
+      const warezEl = document.getElementById('count-warez');
+      if (warezEl) warezEl.textContent = counts['Warez/Scene'];
     }
 
     function seedData() {
@@ -2061,7 +2064,10 @@
 
         let matchesCat = true;
         if (currentFilter === 'Favorites') matchesCat = !!c.fav;
-        else if (currentFilter !== 'All') matchesCat = c.category === currentFilter;
+        else if (currentFilter !== 'All') {
+          if (currentFilter === 'Warez/Scene') matchesCat = (c.category === 'Warez/Scene' || c.category === 'Warez');
+          else matchesCat = c.category === currentFilter;
+        }
 
         let matchesTag = true;
         if (selectedTag) {
@@ -3517,6 +3523,7 @@
       currentFilter = cat;
       renderList();
     }
+    window.selectCategoryFilter = selectCategoryFilter;
 
     // Sort & Quick Filter Events
     sortSelect.onchange = () => {
@@ -3752,7 +3759,7 @@
     }
 
     // Keyboard Navigation & Shortcuts
-    const CATEGORIES_LIST = ['All', 'Favorites', 'Work', 'Personal', 'Family', 'Friends', 'Other'];
+    const CATEGORIES_LIST = ['All', 'Favorites', 'Work', 'Personal', 'Family', 'Friends', 'Other', 'Warez/Scene'];
 
     document.addEventListener('keydown', (e) => {
       const isInput = e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT';
@@ -3912,7 +3919,7 @@
 
       // Non-input hotkeys
       if (!isInput) {
-        if (!e.ctrlKey && !e.altKey && !e.metaKey && e.key >= '1' && e.key <= '7') {
+        if (!e.ctrlKey && !e.altKey && !e.metaKey && e.key >= '1' && e.key <= '8') {
           const idx = parseInt(e.key, 10) - 1;
           if (idx >= 0 && idx < CATEGORIES_LIST.length) {
             e.preventDefault();
@@ -4008,18 +4015,15 @@
         bar.appendChild(btn);
         btn.addEventListener('click', function(e) {
           e.preventDefault();
-          bar.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
-          btn.classList.add('active');
-          if (typeof window.filterByCategory === 'function') {
+          if (typeof window.selectCategoryFilter === 'function') {
+            window.selectCategoryFilter('Warez/Scene');
+          } else if (typeof window.filterByCategory === 'function') {
             window.filterByCategory('Warez/Scene');
           } else if (typeof window.setCategoryFilter === 'function') {
             window.setCategoryFilter('Warez/Scene');
           } else {
-            const searchInput = document.querySelector('.search-box input, #search-input');
-            if (searchInput) {
-              searchInput.value = 'cat:Warez/Scene';
-              searchInput.dispatchEvent(new Event('input', { bubbles: true }));
-            }
+            bar.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
+            btn.classList.add('active');
           }
         });
       }

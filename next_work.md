@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-tester
-next_agent: kilo-usability
+current_agent: kilo-usability
+next_agent: kilo-qa
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -16,7 +16,7 @@ current_targets:
   kilo_creator: kweb://geocities
   kilo_graphics: KColosseum
   kilo_soundscape: kweb://10.19.99.4/classified
-  kilo_tester: KContacts
+  kilo_tester: KPaint
   kilo_usability: KMine
   kilo_qa: KTetris
   kilo_expander: KScript
@@ -34,13 +34,18 @@ virtual_web_rotation:
 - kweb://10.19.99.4/classified
 - kweb://echo-subsystem.net
 last_run:
-  agent: kilo-soundscape
-  app: kweb://deep-core
-  timestamp: '2026-10-15T04:17:00-07:00'
+  agent: kilo-tester
+  app: KContacts
+  timestamp: '2026-10-15T04:32:00-07:00'
 last_planner_run: '2026-10-14T18:32:00Z'
 ---
 
 ## Execution Log
+- **2026-10-15 04:32 [kilo-tester]**: KContacts UI audit & inline repairs.
+  - Linked Warez/Scene filter pill directly to selectCategoryFilter and added live count badge updates.
+  - Enabled Warez/Scene category filter support with hotkey [8] and dual-tag matching.
+  - Verified clean KiloOS build (npm run build PASS, 154 KB < 999 KB ceiling).
+  - Advanced tester queue to KPaint; handed off to kilo-usability (KMine).
 - **2026-10-15 04:17 [kilo-soundscape]**: kweb://deep-core Procedural YM2612 FM Soundscape Overhaul.
   - Composed 5 6-channel chiptune tracks (Carlsbad Cavern, Airgap, Lattice, Meltdown, Millennium).
   - 3-voice counterpoint with contrary motion, shell voicings, swing-tick scheduler, and selective SPC700 echo.
