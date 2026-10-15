@@ -1963,41 +1963,59 @@
       const ctx = window.__uiAudioCtx;
       if (ctx.state === 'suspended') ctx.resume();
       const now = ctx.currentTime;
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.connect(gain);
-      gain.connect(ctx.destination);
+
+      // Yamaha YM2612 2-Operator FM Earcons
+      const carrier = ctx.createOscillator();
+      const modulator = ctx.createOscillator();
+      const modGain = ctx.createGain();
+      const ampEnv = ctx.createGain();
+      carrier.type = 'sine';
+      modulator.type = 'sine';
 
       if (type === 'bit') {
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(1100, now);
-        gain.gain.setValueAtTime(0.04, now);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.025);
-        osc.start(now);
-        osc.stop(now + 0.03);
+        // Metallic Crystal Chime (MUL 3.5)
+        carrier.frequency.setValueAtTime(1760, now);
+        modulator.frequency.setValueAtTime(1760 * 3.5, now);
+        modGain.gain.setValueAtTime(1760 * 3.5 * 3.0, now);
+        modGain.gain.exponentialRampToValueAtTime(0.01, now + 0.04);
+        ampEnv.gain.setValueAtTime(0.05, now);
+        ampEnv.gain.exponentialRampToValueAtTime(0.001, now + 0.07);
       } else if (type === 'step') {
-        osc.type = 'triangle';
-        osc.frequency.setValueAtTime(440, now);
-        osc.frequency.exponentialRampToValueAtTime(880, now + 0.04);
-        gain.gain.setValueAtTime(0.05, now);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
-        osc.start(now);
-        osc.stop(now + 0.06);
+        // Hollow Opcode Stepper (MUL 2.0)
+        carrier.frequency.setValueAtTime(520, now);
+        modulator.frequency.setValueAtTime(1040, now);
+        modGain.gain.setValueAtTime(1040 * 2.2, now);
+        modGain.gain.exponentialRampToValueAtTime(0.01, now + 0.035);
+        ampEnv.gain.setValueAtTime(0.06, now);
+        ampEnv.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
       } else if (type === 'echo') {
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(1999, now);
-        gain.gain.setValueAtTime(0.08, now);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
-        osc.start(now);
-        osc.stop(now + 0.13);
+        // 1999Hz Subcarrier Resonance Ping (MUL 1.0)
+        carrier.frequency.setValueAtTime(1999, now);
+        modulator.frequency.setValueAtTime(1999, now);
+        modGain.gain.setValueAtTime(1999 * 1.8, now);
+        modGain.gain.exponentialRampToValueAtTime(0.01, now + 0.12);
+        ampEnv.gain.setValueAtTime(0.07, now);
+        ampEnv.gain.exponentialRampToValueAtTime(0.001, now + 0.14);
       } else {
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(750, now);
-        gain.gain.setValueAtTime(0.03, now);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.02);
-        osc.start(now);
-        osc.stop(now + 0.025);
+        // Mechanical Switch Click (Inharmonic FM)
+        carrier.frequency.setValueAtTime(900, now);
+        carrier.frequency.exponentialRampToValueAtTime(220, now + 0.02);
+        modulator.frequency.setValueAtTime(2700, now);
+        modGain.gain.setValueAtTime(1800, now);
+        modGain.gain.exponentialRampToValueAtTime(0.01, now + 0.02);
+        ampEnv.gain.setValueAtTime(0.04, now);
+        ampEnv.gain.exponentialRampToValueAtTime(0.001, now + 0.025);
       }
+
+      modulator.connect(modGain);
+      modGain.connect(carrier.frequency);
+      carrier.connect(ampEnv);
+      ampEnv.connect(ctx.destination);
+
+      modulator.start(now);
+      carrier.start(now);
+      modulator.stop(now + 0.15);
+      carrier.stop(now + 0.15);
     } catch {}
   }
 
@@ -4740,38 +4758,188 @@
   let fmIndexSetting = 180;
   let echoFeedbackSetting = 0.28;
 
+  // Frequencies Reference Table (Octaves 2 - 6)
+  const F = {
+    C2: 65.41, D2: 73.42, Eb2: 77.78, E2: 82.41, F2: 87.31, G2: 98.00, Ab2: 103.83, A2: 110.00, Bb2: 116.54, B2: 123.47,
+    C3: 130.81, Cs3: 138.59, D3: 146.83, Eb3: 155.56, E3: 164.81, F3: 174.61, Fs3: 185.00, G3: 196.00, Ab3: 207.65, A3: 220.00, Bb3: 233.08, B3: 246.94,
+    C4: 261.63, Cs4: 277.18, D4: 293.66, Eb4: 311.13, E4: 329.63, F4: 349.23, Fs4: 369.99, G4: 392.00, Ab4: 415.30, A4: 440.00, Bb4: 466.16, B4: 493.88,
+    C5: 523.25, Cs5: 554.37, D5: 587.33, Eb5: 622.25, E5: 659.26, F5: 698.46, Fs5: 739.99, G5: 783.99, Ab5: 830.61, A5: 880.00, Bb5: 932.33, B5: 987.77,
+    C6: 1046.50, D6: 1174.66, E6: 1318.51
+  };
+
   const TRACKS = [
     {
-      title: "Track 01: 'Shrine of Silicon'",
-      style: "136 BPM // Yamaha 2-Operator Bass & SPC700 Delay",
+      title: "Track 01: 'Shrine of Silicon (Cathedral Core)'",
+      style: "136 BPM // D Minor Andalusian Descent, 6-Voice Counterpoint & SPC700 Delay",
       bpm: 136,
-      scale: [130.81, 146.83, 155.56, 174.61, 196.00, 220.00, 246.94, 261.63, 293.66, 311.13, 349.23, 392.00]
+      swing: true,
+      // 32-step composition arrays
+      lead: [
+        F.D5, 0, F.F5, 0, F.E5, F.D5, 0, F.A4,
+        F.G4, 0, F.Bb4, 0, F.A4, F.G4, F.F4, F.E4,
+        F.D4, 0, F.F4, F.G4, F.A4, 0, F.C5, 0,
+        F.D5, 0, F.Cs5, 0, F.D5, 0, 0, 0
+      ],
+      counter: [
+        0, F.A3, 0, F.D4, 0, 0, F.E4, 0,
+        0, F.C4, 0, F.E4, 0, 0, F.D4, F.Cs4,
+        0, F.Bb3, 0, 0, 0, F.D4, 0, F.F4,
+        0, F.E4, 0, F.G4, 0, F.F4, F.E4, F.Cs4
+      ],
+      arp: [
+        F.F4, F.A4, F.C5, F.D5, F.F4, F.A4, F.C5, F.D5,
+        F.E4, F.G4, F.B4, F.C5, F.E4, F.G4, F.B4, F.C5,
+        F.D4, F.F4, F.A4, F.Bb4, F.D4, F.F4, F.A4, F.Bb4,
+        F.Cs4, F.E4, F.G4, F.A4, F.Cs4, F.E4, F.G4, F.A4
+      ],
+      bass: [
+        F.D2, F.D3, F.D2, F.F2, F.D2, F.D3, F.A2, F.C3,
+        F.C2, F.C3, F.C2, F.E2, F.C2, F.C3, F.G2, F.B2,
+        F.Bb2, F.Bb3, F.Bb2, F.D3, F.Bb2, F.Bb3, F.F2, F.A2,
+        F.A2, F.A3, F.A2, F.Cs3, F.A2, F.A3, F.G2, F.E2
+      ],
+      kick:  [1,0,0,0, 0,0,1,0, 1,0,0,0, 0,0,1,0, 1,0,0,0, 0,0,1,0, 1,0,0,0, 1,0,1,0],
+      snare: [0,0,0,0, 1,0,0,0, 0,0,0,0, 1,0,0,0, 0,0,0,0, 1,0,0,0, 0,0,0,0, 1,0,0,1],
+      hat:   [1,1,2,1, 1,1,2,1, 1,1,2,1, 1,1,2,1, 1,1,2,1, 1,1,2,1, 1,1,2,1, 1,1,2,2]
     },
     {
-      title: "Track 02: 'Cathedral of ModRM'",
-      style: "96 BPM // Lush SPC700 Resonant Pads & Delay Chimes",
+      title: "Track 02: 'Cathedral of ModRM (Sacred Opcodes)'",
+      style: "96 BPM // E Dorian Ambient Hymn, Resonant Pads & Delay Chimes",
       bpm: 96,
-      scale: [146.83, 164.81, 174.61, 196.00, 220.00, 261.63, 293.66, 329.63, 349.23, 392.00, 440.00, 523.25]
+      swing: false,
+      lead: [
+        F.E5, 0, 0, F.Fs5, F.G5, 0, F.Fs5, 0,
+        F.D5, 0, 0, F.E5, F.B4, 0, 0, 0,
+        F.C5, 0, F.D5, 0, F.E5, 0, F.G5, 0,
+        F.Fs5, 0, F.D5, 0, F.E5, 0, 0, 0
+      ],
+      counter: [
+        0, F.B3, 0, 0, F.E4, 0, 0, F.D4,
+        0, F.G3, 0, 0, F.D4, 0, F.C4, 0,
+        0, F.A3, 0, F.C4, 0, F.E4, 0, 0,
+        0, F.B3, 0, 0, F.G3, F.A3, F.B3, 0
+      ],
+      arp: [
+        F.G4, F.B4, F.D5, F.E5, F.G4, F.B4, F.D5, F.E5,
+        F.Fs4, F.A4, F.D5, F.Fs5, F.Fs4, F.A4, F.D5, F.Fs5,
+        F.E4, F.G4, F.C5, F.E5, F.E4, F.G4, F.C5, F.E5,
+        F.Ds4, F.Fs4, F.B4, F.Ds5, F.Ds4, F.Fs4, F.B4, F.Ds5
+      ],
+      bass: [
+        F.E2, 0, F.B2, 0, F.E2, 0, F.G2, 0,
+        F.D2, 0, F.A2, 0, F.D2, 0, F.Fs2, 0,
+        F.C2, 0, F.G2, 0, F.C2, 0, F.E2, 0,
+        F.B2, 0, F.Fs2, 0, F.B2, 0, F.A2, 0
+      ],
+      kick:  [1,0,0,0, 0,0,0,0, 1,0,0,0, 0,0,0,0, 1,0,0,0, 0,0,0,0, 1,0,0,0, 0,0,0,0],
+      snare: [0,0,0,0, 1,0,0,0, 0,0,0,0, 1,0,0,0, 0,0,0,0, 1,0,0,0, 0,0,0,0, 1,0,0,0],
+      hat:   [0,1,0,1, 0,1,0,2, 0,1,0,1, 0,1,0,2, 0,1,0,1, 0,1,0,2, 0,1,0,1, 0,1,2,2]
     },
     {
-      title: "Track 03: 'Subterranean Ring 0'",
-      style: "128 BPM // Dark Demoscene Cyber Groove & FM Clangs",
+      title: "Track 03: 'Subterranean Ring 0 (Privileged Mode)'",
+      style: "128 BPM // C Minor Phrygian Cyber-Groove, Slap FM Bass & Action Stabs",
       bpm: 128,
-      scale: [110.00, 123.47, 130.81, 146.83, 164.81, 174.61, 196.00, 220.00, 246.94, 261.63, 293.66, 329.63]
+      swing: true,
+      lead: [
+        F.C5, F.Eb5, 0, F.G5, F.Ab5, 0, F.G5, F.F5,
+        F.Eb5, 0, F.D5, 0, F.C5, 0, 0, 0,
+        F.F5, F.Ab5, 0, F.C6, F.Bb5, 0, F.Ab5, F.G5,
+        F.F5, 0, F.G5, 0, F.Eb5, F.D5, F.C5, 0
+      ],
+      counter: [
+        0, 0, F.G4, 0, 0, F.F4, 0, 0,
+        0, F.Eb4, 0, F.D4, 0, 0, F.C4, F.B3,
+        0, 0, F.C5, 0, 0, F.Bb4, 0, 0,
+        0, F.Ab4, 0, F.G4, 0, F.F4, 0, F.B3
+      ],
+      arp: [
+        F.Eb4, F.G4, F.Bb4, F.C5, F.Eb4, F.G4, F.Bb4, F.C5,
+        F.C4, F.Eb4, F.G4, F.Ab4, F.C4, F.Eb4, F.G4, F.Ab4,
+        F.Ab4, F.C5, F.Eb5, F.F5, F.Ab4, F.C5, F.Eb5, F.F5,
+        F.B3, F.D4, F.F4, F.G4, F.B3, F.D4, F.F4, F.G4
+      ],
+      bass: [
+        F.C2, F.C3, F.C2, F.Eb2, F.C2, F.C3, F.G2, F.Bb2,
+        F.Ab2, F.Ab3, F.Ab2, F.C3, F.Ab2, F.Ab3, F.Eb2, F.G2,
+        F.F2, F.F3, F.F2, F.Ab2, F.F2, F.F3, F.C3, F.Eb3,
+        F.G2, F.G3, F.G2, F.B2, F.G2, F.G3, F.F2, F.D2
+      ],
+      kick:  [1,0,0,1, 0,0,1,0, 1,0,0,1, 0,0,1,0, 1,0,0,1, 0,0,1,0, 1,0,0,1, 1,0,1,0],
+      snare: [0,0,0,0, 1,0,0,0, 0,0,0,0, 1,0,0,0, 0,0,0,0, 1,0,0,0, 0,0,0,0, 1,0,0,1],
+      hat:   [1,1,2,1, 1,1,2,1, 1,1,2,1, 1,1,2,1, 1,1,2,1, 1,1,2,1, 1,1,2,1, 1,1,2,2]
     },
     {
       title: "Track 04: 'Assembly Revelation (1999 Megademo)'",
-      style: "144 BPM // Hyper-Speed FM Arpeggios & Resonant Bass",
+      style: "144 BPM // F Major Royal Road (IV-V-iii-vi), Tracker Arps & Galloping Bass",
       bpm: 144,
-      scale: [164.81, 185.00, 196.00, 220.00, 246.94, 261.63, 293.66, 329.63, 370.00, 392.00, 440.00, 493.88]
+      swing: true,
+      lead: [
+        F.D5, 0, F.C5, F.D5, F.F5, 0, F.E5, 0,
+        F.G5, 0, F.F5, F.E5, F.D5, 0, F.C5, 0,
+        F.A4, 0, F.C5, 0, F.E5, 0, F.D5, 0,
+        F.F5, 0, F.E5, F.C5, F.D5, 0, 0, 0
+      ],
+      counter: [
+        0, F.F4, 0, 0, F.A4, 0, 0, F.G4,
+        0, F.C5, 0, 0, F.Bb4, 0, F.A4, 0,
+        0, F.E4, 0, 0, F.G4, 0, F.F4, 0,
+        0, F.A4, 0, F.G4, 0, F.F4, F.E4, 0
+      ],
+      arp: [
+        F.D4, F.F4, F.A4, F.Bb4, F.D4, F.F4, F.A4, F.Bb4,
+        F.E4, F.G4, F.Bb4, F.C5, F.E4, F.G4, F.Bb4, F.C5,
+        F.C4, F.E4, F.G4, F.A4, F.C4, F.E4, F.G4, F.A4,
+        F.D4, F.F4, F.A4, F.D5, F.D4, F.F4, F.A4, F.D5
+      ],
+      bass: [
+        F.Bb2, F.Bb3, F.Bb2, F.D3, F.Bb2, F.Bb3, F.F2, F.A2,
+        F.C3, F.C4, F.C3, F.E3, F.C3, F.C4, F.G2, F.Bb2,
+        F.A2, F.A3, F.A2, F.C3, F.A2, F.A3, F.E2, F.G2,
+        F.D2, F.D3, F.D2, F.F2, F.D2, F.D3, F.C3, F.A2
+      ],
+      kick:  [1,0,0,0, 0,0,1,0, 1,0,0,0, 0,0,1,0, 1,0,0,0, 0,0,1,0, 1,0,0,0, 1,0,1,0],
+      snare: [0,0,0,0, 1,0,0,0, 0,0,0,0, 1,0,0,0, 0,0,0,0, 1,0,0,0, 0,0,0,0, 1,0,0,0],
+      hat:   [1,1,2,1, 1,1,2,1, 1,1,2,1, 1,1,2,1, 1,1,2,1, 1,1,2,1, 1,1,2,1, 1,1,2,2]
     },
     {
-      title: "Track 05: 'Subcarrier 1999 (Echo Protocol)'",
-      style: "110 BPM // 1999Hz Carrier Resonance & Genesis FM Arpeggios",
+      title: "Track 05: 'Subcarrier 1999 (TINAG Subsystem)'",
+      style: "110 BPM // 1999Hz Carrier Resonance & Floating Maj9 Suspensions",
       bpm: 110,
-      scale: [123.47, 146.83, 164.81, 196.00, 220.00, 246.94, 293.66, 329.63, 392.00, 440.00, 493.88, 587.33]
+      swing: false,
+      lead: [
+        F.B4, 0, F.C5, 0, F.E5, 0, F.G5, 0,
+        F.Fs5, 0, F.D5, 0, F.B4, 0, 0, 0,
+        F.A4, 0, F.C5, 0, F.E5, 0, F.G5, 0,
+        F.Fs5, 0, F.Gs4, 0, F.A4, 0, 0, 0
+      ],
+      counter: [
+        0, F.E4, 0, 0, 0, F.A4, 0, 0,
+        0, F.B4, 0, F.A4, 0, 0, F.G4, 0,
+        0, F.D4, 0, 0, 0, F.F4, 0, 0,
+        0, F.E4, 0, F.D4, 0, F.C4, F.B3, 0
+      ],
+      arp: [
+        F.C4, F.E4, F.G4, F.B4, F.C4, F.E4, F.G4, F.B4,
+        F.A3, F.C4, F.E4, F.Fs4, F.A3, F.C4, F.E4, F.Fs4,
+        F.F3, F.A3, F.C4, F.E4, F.F3, F.A3, F.C4, F.E4,
+        F.E3, F.Gs3, F.B3, F.D4, F.E3, F.Gs3, F.B3, F.D4
+      ],
+      bass: [
+        F.A2, 0, 0, 0, F.E2, 0, 0, 0,
+        F.F2, 0, 0, 0, F.C2, 0, 0, 0,
+        F.D2, 0, 0, 0, F.A2, 0, 0, 0,
+        F.E2, 0, 0, 0, F.B2, 0, 0, 0
+      ],
+      kick:  [1,0,0,0, 0,0,0,0, 1,0,0,0, 0,0,0,0, 1,0,0,0, 0,0,0,0, 1,0,0,0, 0,0,0,0],
+      snare: [0,0,0,0, 1,0,0,0, 0,0,0,0, 1,0,0,0, 0,0,0,0, 1,0,0,0, 0,0,0,0, 1,0,0,0],
+      hat:   [0,1,0,1, 0,1,0,2, 0,1,0,1, 0,1,0,2, 0,1,0,1, 0,1,0,2, 0,1,0,1, 0,1,2,2]
     }
   ];
+
+  // Global Delay Bus Node references
+  let snesDelayNode = null;
+  let snesFeedbackGain = null;
+  let snesFilter = null;
 
   function initAudio() {
     if (audioCtx) return;
@@ -4787,109 +4955,318 @@
     masterGain.connect(analyser);
     analyser.connect(audioCtx.destination);
 
+    // Shared SPC700 Stereo Slapback Delay DSP Bus (180ms delay, 2100Hz lowpass filter)
+    snesDelayNode = audioCtx.createDelay();
+    snesDelayNode.delayTime.value = 0.18;
+
+    snesFeedbackGain = audioCtx.createGain();
+    snesFeedbackGain.gain.value = echoFeedbackSetting;
+
+    snesFilter = audioCtx.createBiquadFilter();
+    snesFilter.type = 'lowpass';
+    snesFilter.frequency.value = 2100;
+
+    snesDelayNode.connect(snesFilter);
+    snesFilter.connect(snesFeedbackGain);
+    snesFeedbackGain.connect(snesDelayNode);
+    snesFilter.connect(masterGain);
+
     startVisualizer();
   }
 
-  function playFMSound(freq, duration, customRatio = fmRatioSetting, customIndex = fmIndexSetting) {
-    if (!audioCtx) return;
+  // --- Voice 1: Lead Melody (YM2612 2-Op Lead with Delayed Vibrato & Echo) ---
+  function playFmLead(freq, dur, vol = 0.35, useVibrato = true) {
+    if (!audioCtx || !freq) return;
     const now = audioCtx.currentTime;
 
     const carrier = audioCtx.createOscillator();
     const modulator = audioCtx.createOscillator();
     const modGain = audioCtx.createGain();
-    const envGain = audioCtx.createGain();
+    const ampEnv = audioCtx.createGain();
+
+    carrier.type = 'sine';
+    carrier.frequency.setValueAtTime(freq, now);
+
+    // Delayed Vibrato LFO
+    let lfo = null;
+    let lfoGain = null;
+    if (useVibrato && dur > 0.18) {
+      lfo = audioCtx.createOscillator();
+      lfoGain = audioCtx.createGain();
+      lfo.frequency.setValueAtTime(5.5, now); // 5.5 Hz expressive vibrato
+      lfoGain.gain.setValueAtTime(0, now);
+      lfoGain.gain.setValueAtTime(0, now + 0.12);
+      lfoGain.gain.linearRampToValueAtTime(freq * 0.025, now + 0.22); // subtle pitch swell
+      lfo.connect(lfoGain);
+      lfoGain.connect(carrier.frequency);
+      lfo.start(now + 0.12);
+      lfo.stop(now + dur + 0.1);
+    }
+
+    modulator.type = 'sine';
+    modulator.frequency.setValueAtTime(freq * fmRatioSetting, now);
+
+    modGain.gain.setValueAtTime(fmIndexSetting * 1.5, now);
+    modGain.gain.exponentialRampToValueAtTime(0.01, now + dur * 0.85);
+
+    modulator.connect(modGain);
+    modGain.connect(carrier.frequency);
+
+    ampEnv.gain.setValueAtTime(0.001, now);
+    ampEnv.gain.linearRampToValueAtTime(vol, now + 0.015);
+    ampEnv.gain.exponentialRampToValueAtTime(0.001, now + dur);
+
+    carrier.connect(ampEnv);
+    ampEnv.connect(masterGain);
+    if (snesDelayNode) ampEnv.connect(snesDelayNode); // Echo enabled on Lead
+
+    carrier.start(now);
+    modulator.start(now);
+    carrier.stop(now + dur + 0.05);
+    modulator.stop(now + dur + 0.05);
+  }
+
+  // --- Voice 2: Counter-melody (Hollow Reed / Flute, Contrary Motion & Echo) ---
+  function playFmCounter(freq, dur, vol = 0.22) {
+    if (!audioCtx || !freq) return;
+    const now = audioCtx.currentTime;
+
+    const carrier = audioCtx.createOscillator();
+    const modulator = audioCtx.createOscillator();
+    const modGain = audioCtx.createGain();
+    const ampEnv = audioCtx.createGain();
 
     carrier.type = 'sine';
     carrier.frequency.setValueAtTime(freq, now);
 
     modulator.type = 'sine';
-    modulator.frequency.setValueAtTime(freq * customRatio, now);
+    modulator.frequency.setValueAtTime(freq * 1.0, now); // 1:1 hollow timber
 
-    modGain.gain.setValueAtTime(customIndex, now);
-    modGain.gain.exponentialRampToValueAtTime(0.01, now + duration * 0.7);
+    modGain.gain.setValueAtTime(freq * 0.9, now);
+    modGain.gain.exponentialRampToValueAtTime(freq * 0.12, now + dur * 0.6);
 
     modulator.connect(modGain);
     modGain.connect(carrier.frequency);
 
-    envGain.gain.setValueAtTime(0.001, now);
-    envGain.gain.linearRampToValueAtTime(0.4, now + 0.015);
-    envGain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+    ampEnv.gain.setValueAtTime(0.001, now);
+    ampEnv.gain.linearRampToValueAtTime(vol, now + 0.02);
+    ampEnv.gain.exponentialRampToValueAtTime(0.001, now + dur);
 
-    carrier.connect(envGain);
-
-    // SPC700 Delay
-    const delayNode = audioCtx.createDelay();
-    delayNode.delayTime.value = 0.18;
-
-    const delayFeedback = audioCtx.createGain();
-    delayFeedback.gain.value = echoFeedbackSetting;
-
-    const delayFilter = audioCtx.createBiquadFilter();
-    delayFilter.type = 'lowpass';
-    delayFilter.frequency.value = 2100;
-
-    envGain.connect(masterGain);
-    envGain.connect(delayNode);
-    delayNode.connect(delayFilter);
-    delayFilter.connect(delayFeedback);
-    delayFeedback.connect(delayNode);
-    delayFilter.connect(masterGain);
+    carrier.connect(ampEnv);
+    ampEnv.connect(masterGain);
+    if (snesDelayNode) ampEnv.connect(snesDelayNode);
 
     carrier.start(now);
     modulator.start(now);
-    carrier.stop(now + duration + 0.5);
-    modulator.stop(now + duration + 0.5);
+    carrier.stop(now + dur + 0.05);
+    modulator.stop(now + dur + 0.05);
   }
 
-  function playProceduralPercussion(type) {
+  // --- Voice 3: Arpeggio / Shell Harmony (Metallic Glass Chime & Echo) ---
+  function playFmArp(freq, dur, vol = 0.16) {
+    if (!audioCtx || !freq) return;
+    const now = audioCtx.currentTime;
+
+    const carrier = audioCtx.createOscillator();
+    const modulator = audioCtx.createOscillator();
+    const modGain = audioCtx.createGain();
+    const ampEnv = audioCtx.createGain();
+
+    carrier.type = 'sine';
+    carrier.frequency.setValueAtTime(freq, now);
+
+    modulator.type = 'sine';
+    modulator.frequency.setValueAtTime(freq * 3.5, now); // 3.5:1 metallic bell ratio
+
+    modGain.gain.setValueAtTime(freq * 3.2, now);
+    modGain.gain.exponentialRampToValueAtTime(0.01, now + dur * 0.5);
+
+    modulator.connect(modGain);
+    modGain.connect(carrier.frequency);
+
+    ampEnv.gain.setValueAtTime(0.001, now);
+    ampEnv.gain.linearRampToValueAtTime(vol, now + 0.008);
+    ampEnv.gain.exponentialRampToValueAtTime(0.001, now + dur);
+
+    carrier.connect(ampEnv);
+    ampEnv.connect(masterGain);
+    if (snesDelayNode) ampEnv.connect(snesDelayNode);
+
+    carrier.start(now);
+    modulator.start(now);
+    carrier.stop(now + dur + 0.05);
+    modulator.stop(now + dur + 0.05);
+  }
+
+  // --- Voice 4: Melodic Bass (YM2612 Slap Bass, DRY / No Echo for Punch) ---
+  function playFmBass(freq, dur, vol = 0.38) {
+    if (!audioCtx || !freq) return;
+    const now = audioCtx.currentTime;
+
+    const carrier = audioCtx.createOscillator();
+    const modulator = audioCtx.createOscillator();
+    const modGain = audioCtx.createGain();
+    const ampEnv = audioCtx.createGain();
+
+    carrier.type = 'sine';
+    carrier.frequency.setValueAtTime(freq, now);
+
+    modulator.type = 'sine';
+    modulator.frequency.setValueAtTime(freq * 2.0, now); // 2:1 punchy slap bass ratio
+
+    modGain.gain.setValueAtTime(freq * 2.0 * 3.5, now);
+    modGain.gain.exponentialRampToValueAtTime(freq * 0.15, now + 0.07); // fast mod decay
+    modGain.gain.exponentialRampToValueAtTime(0.01, now + dur);
+
+    modulator.connect(modGain);
+    modGain.connect(carrier.frequency);
+
+    ampEnv.gain.setValueAtTime(0.001, now);
+    ampEnv.gain.linearRampToValueAtTime(vol, now + 0.006);
+    ampEnv.gain.exponentialRampToValueAtTime(0.001, now + dur);
+
+    carrier.connect(ampEnv);
+    ampEnv.connect(masterGain); // Strictly DRY: no delay to keep bass tight
+
+    carrier.start(now);
+    modulator.start(now);
+    carrier.stop(now + dur + 0.05);
+    modulator.stop(now + dur + 0.05);
+  }
+
+  // --- Voice 5: FM Kick & Snare Percussion ---
+  function playFmKick() {
     if (!audioCtx) return;
     const now = audioCtx.currentTime;
 
-    if (type === 'kick') {
-      const osc = audioCtx.createOscillator();
-      const gain = audioCtx.createGain();
-      osc.frequency.setValueAtTime(140, now);
-      osc.frequency.exponentialRampToValueAtTime(32, now + 0.12);
-      gain.gain.setValueAtTime(0.7, now);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
-      osc.connect(gain);
-      gain.connect(masterGain);
-      osc.start(now);
-      osc.stop(now + 0.16);
-    } else if (type === 'hat') {
-      const osc = audioCtx.createOscillator();
-      const gain = audioCtx.createGain();
-      osc.type = 'square';
-      osc.frequency.setValueAtTime(4800, now);
-      gain.gain.setValueAtTime(0.12, now);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.04);
-      osc.connect(gain);
-      gain.connect(masterGain);
-      osc.start(now);
-      osc.stop(now + 0.05);
-    }
+    const osc = audioCtx.createOscillator();
+    const mod = audioCtx.createOscillator();
+    const modGain = audioCtx.createGain();
+    const gain = audioCtx.createGain();
+
+    osc.frequency.setValueAtTime(145, now);
+    osc.frequency.exponentialRampToValueAtTime(34, now + 0.12);
+
+    mod.frequency.setValueAtTime(72, now);
+    modGain.gain.setValueAtTime(220, now);
+    modGain.gain.exponentialRampToValueAtTime(0.01, now + 0.06);
+
+    mod.connect(modGain);
+    modGain.connect(osc.frequency);
+
+    gain.gain.setValueAtTime(0.75, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+
+    osc.connect(gain);
+    gain.connect(masterGain);
+
+    osc.start(now); mod.start(now);
+    osc.stop(now + 0.16); mod.stop(now + 0.16);
   }
 
+  function playFmSnare() {
+    if (!audioCtx) return;
+    const now = audioCtx.currentTime;
+
+    // Inharmonic FM Noise Approximation (MUL 10.0)
+    const carrier = audioCtx.createOscillator();
+    const mod = audioCtx.createOscillator();
+    const modGain = audioCtx.createGain();
+    const gain = audioCtx.createGain();
+
+    carrier.type = 'triangle';
+    carrier.frequency.setValueAtTime(220, now);
+    carrier.frequency.exponentialRampToValueAtTime(80, now + 0.1);
+
+    mod.type = 'sine';
+    mod.frequency.setValueAtTime(2200, now);
+    modGain.gain.setValueAtTime(1800, now);
+    modGain.gain.exponentialRampToValueAtTime(0.01, now + 0.08);
+
+    mod.connect(modGain);
+    modGain.connect(carrier.frequency);
+
+    gain.gain.setValueAtTime(0.55, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.14);
+
+    carrier.connect(gain);
+    gain.connect(masterGain);
+
+    carrier.start(now); mod.start(now);
+    carrier.stop(now + 0.15); mod.stop(now + 0.15);
+  }
+
+  // --- Voice 6: Inharmonic Metallic FM Hi-Hat ---
+  function playFmHiHat(isOpen = false) {
+    if (!audioCtx) return;
+    const now = audioCtx.currentTime;
+
+    const carrier = audioCtx.createOscillator();
+    const mod = audioCtx.createOscillator();
+    const modGain = audioCtx.createGain();
+    const gain = audioCtx.createGain();
+
+    const dur = isOpen ? 0.18 : 0.038;
+    carrier.type = 'square';
+    carrier.frequency.setValueAtTime(1200, now);
+
+    mod.type = 'sine';
+    mod.frequency.setValueAtTime(13200, now); // 11:1 inharmonic ratio
+    modGain.gain.setValueAtTime(7200, now);
+    modGain.gain.exponentialRampToValueAtTime(0.01, now + dur * 0.7);
+
+    mod.connect(modGain);
+    modGain.connect(carrier.frequency);
+
+    gain.gain.setValueAtTime(isOpen ? 0.16 : 0.12, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + dur);
+
+    carrier.connect(gain);
+    gain.connect(masterGain);
+
+    carrier.start(now); mod.start(now);
+    carrier.stop(now + dur + 0.02); mod.stop(now + dur + 0.02);
+  }
+
+  // --- Sequencer Step Tick with Swing-Groove Engine ---
   function tickStep() {
     if (!isPlaying) return;
     const curTrack = TRACKS[trackIdx];
-    const scale = curTrack.scale;
+    const totalSteps = curTrack.lead.length;
 
-    if (stepIdx % 2 === 0) {
-      const bassNote = scale[stepIdx % 4];
-      playFMSound(bassNote / 2, 0.22, fmRatioSetting, fmIndexSetting * 1.3);
+    // Channel 1: Lead Melody (with delayed vibrato)
+    const leadNote = curTrack.lead[stepIdx];
+    if (leadNote) playFmLead(leadNote, 0.22, 0.35, true);
+
+    // Channel 2: Counter-melody (Contrary motion to lead)
+    const counterNote = curTrack.counter[stepIdx];
+    if (counterNote) playFmCounter(counterNote, 0.20, 0.22);
+
+    // Channel 3: Arpeggio / Shell Chords
+    const arpNote = curTrack.arp[stepIdx];
+    if (arpNote) playFmArp(arpNote, 0.12, 0.15);
+
+    // Channel 4: Melodic Slap Bass (Dry)
+    const bassNote = curTrack.bass[stepIdx];
+    if (bassNote) playFmBass(bassNote, 0.20, 0.38);
+
+    // Channel 5: Kick & Snare Percussion
+    if (curTrack.kick && curTrack.kick[stepIdx]) playFmKick();
+    if (curTrack.snare && curTrack.snare[stepIdx]) playFmSnare();
+
+    // Channel 6: Hi-Hat
+    if (curTrack.hat && curTrack.hat[stepIdx]) {
+      playFmHiHat(curTrack.hat[stepIdx] === 2);
     }
 
-    if (stepIdx % 4 === 0 || stepIdx % 4 === 2) {
-      const leadNote = scale[(stepIdx * 3) % scale.length];
-      playFMSound(leadNote, 0.18, fmRatioSetting, fmIndexSetting);
-    }
+    stepIdx = (stepIdx + 1) % totalSteps;
 
-    if (stepIdx % 4 === 0) playProceduralPercussion('kick');
-    if (stepIdx % 2 === 1) playProceduralPercussion('hat');
+    // Swing Timing: 5:3 ratio for organic groove on 16th steps
+    const baseStepMs = (60 / curTrack.bpm / 4) * 1000;
+    const isEven = (stepIdx % 2 === 0);
+    const swingFactor = curTrack.swing ? 1.25 : 1.0;
+    const stepDurationMs = isEven ? (baseStepMs * swingFactor) : (baseStepMs * (2 - swingFactor));
 
-    stepIdx = (stepIdx + 1) % 16;
-    const stepDurationMs = (60 / curTrack.bpm / 4) * 1000;
     audioTimer = setTimeout(tickStep, stepDurationMs);
   }
 
