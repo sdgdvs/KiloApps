@@ -18,7 +18,7 @@ current_targets:
   kilo_soundscape: kweb://asm-temple
   kilo_tester: KPad
   kilo_usability: KAudio
-  kilo_qa: KSnake
+  kilo_qa: KSpace
   kilo_expander: KContacts
 virtual_web_target: kweb://webring
 virtual_web_rotation:
@@ -36,12 +36,12 @@ virtual_web_rotation:
 last_run:
   agent: kilo-qa
   app: KSnake
-  timestamp: '2026-10-14T18:13:00-07:00'
+  timestamp: '2026-10-14T18:31:00-07:00'
 last_planner_run: '2026-10-14T18:32:00Z'
 ---
 
 ## Execution Log
-- **2026-10-14 18:13 [kilo-qa]**: KSnake Pass 5 QA audit verified. Native Win32 C build verified clean via build.bat (<999 KB). Web app (284 KB) UI, canvas rendering, and modal dialogs verified. KiloOS shell build verified clean.
+- **2026-10-14 18:31 [kilo-qa]**: KSnake Pass 5 QA audit verified. Native Win32 C build verified clean via build.bat (<999 KB). Web app (284 KB) state persistence, tutorial flags, and modal dismissals verified. KiloOS shell build clean. Advanced queue to KSpace.
 - **2026-10-14 17:31 [kilo-usability]**: KPad UX audit verified. Window bounds (1000x680) comfortably fit editor, tab-strip, and toolbars. F1/Alt+H help, Esc modal dismissal, and typography crispness confirmed. Web build clean.
 - **2026-10-14 17:13 [kilo-tester]**: KPaint interactive UI audit verified. Fixed duplicate keyboard shortcut handler. All modals, tools, quicksave/quickload F5/F9, and canvas handlers operational. Build verified clean.
 
