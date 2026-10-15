@@ -1253,16 +1253,16 @@
           Procedural 2-operator FM synthesis: Modulator Osc &rarr; Mod Gain &rarr; Carrier Frequency + SPC700 stereo delay warmth.
         </p>
 
-        <!-- Quick Presets -->
+        <!-- Procedural FM Soundscape & Harmonic Presets -->
         <div style="margin-bottom:12px;">
-          <div style="font-size:11px; color:#bae6fd; font-weight:700; margin-bottom:6px;">QUICK HARMONIC PRESETS:</div>
+          <div style="font-size:11px; color:#bae6fd; font-weight:700; margin-bottom:6px;">YM2612 / SPC700 PROCEDURAL FM PRESETS &amp; MOTIFS:</div>
           <div style="display:flex; gap:5px; flex-wrap:wrap;">
-            <button class="btn-retro btn-amber" onclick="loadPresetToDecoder(1999, 2.0, 450)">1999 Hz Subcarrier</button>
-            <button class="btn-retro" onclick="loadPresetToDecoder(432, 1.0, 180)">432 Hz Precursor</button>
-            <button class="btn-retro" onclick="loadPresetToDecoder(888, 1.5, 240)">888 Hz Crystal</button>
-            <button class="btn-retro" onclick="loadPresetToDecoder(528, 2.5, 300)">528 Hz Matrix</button>
-            <button class="btn-retro" onclick="loadPresetToDecoder(1200, 1.0, 100)">1200 Baud Modem</button>
-            <button class="btn-retro" onclick="loadPresetToDecoder(110, 2.0, 600)">Slap Bass FM</button>
+            <button class="btn-retro btn-cyan" onclick="auditionFmPreset('theme')">🎵 Melodic Theme</button>
+            <button class="btn-retro btn-purple" onclick="auditionFmPreset('bass')">🎸 Slap Bass Line</button>
+            <button class="btn-retro" onclick="auditionFmPreset('drone')">🌌 Ambient Drone</button>
+            <button class="btn-retro btn-green" onclick="auditionFmPreset('earcon')">🔔 UI Earcon Chime</button>
+            <button class="btn-retro btn-amber" onclick="auditionFmPreset('stinger')">⚡ Action Stinger</button>
+            <button class="btn-retro btn-amber" onclick="auditionFmPreset('subcarrier')">📡 1999 Hz Subcarrier</button>
           </div>
         </div>
 
@@ -3351,6 +3351,48 @@ END TRANSMISSION // ESARL 1999</div>
         1, 0, 1, 0, 1, 0, 1, 2, 1, 0, 1, 0, 1, 0, 2, 0,
         1, 0, 1, 0, 1, 0, 1, 2, 1, 0, 1, 0, 2, 0, 2, 2
       ]
+    },
+    {
+      title: "Track 05: Permian Strata Resonance",
+      style: "112 BPM // F Minor Andalusian Descent & E-Piano Lead",
+      bpm: 112,
+      swing: true,
+      lead: [
+        NF.F5, 0, NF.Ab5, 0, NF.G5, NF.F5, 0, NF.C5,
+        NF.Bb4, 0, NF.Db5, 0, NF.C5, NF.Bb4, NF.Ab4, NF.G4,
+        NF.F4, 0, NF.Ab4, NF.Bb4, NF.C5, 0, NF.Eb5, 0,
+        NF.F5, 0, NF.E5, 0, NF.F5, 0, 0, 0
+      ],
+      counter: [
+        0, NF.C4, 0, NF.F4, 0, 0, NF.G4, 0,
+        0, NF.Eb4, 0, NF.G4, 0, 0, NF.F4, NF.E4,
+        0, NF.Db4, 0, 0, 0, NF.F4, 0, NF.Ab4,
+        0, NF.G4, 0, NF.Bb4, 0, NF.Ab4, NF.G4, NF.E4
+      ],
+      arp: [
+        NF.Ab4, NF.C5, NF.Eb5, NF.F5, NF.Ab4, NF.C5, NF.Eb5, NF.F5,
+        NF.G4, NF.Bb4, NF.D5, NF.Eb5, NF.G4, NF.Bb4, NF.D5, NF.Eb5,
+        NF.F4, NF.Ab4, NF.C5, NF.Db5, NF.F4, NF.Ab4, NF.C5, NF.Db5,
+        NF.E4, NF.G4, NF.Bb4, NF.C5, NF.E4, NF.G4, NF.Bb4, NF.C5
+      ],
+      bass: [
+        NF.F2, NF.F3, NF.F2, NF.Ab2, NF.F2, NF.F3, NF.C3, NF.Eb3,
+        NF.Eb2, NF.Eb3, NF.Eb2, NF.G2, NF.Eb2, NF.Eb3, NF.Bb2, NF.D3,
+        NF.Db2, NF.Db3, NF.Db2, NF.F2, NF.Db2, NF.Db3, NF.Ab2, NF.C3,
+        NF.C2, NF.C3, NF.C2, NF.E2, NF.C2, NF.C3, NF.Bb2, NF.G2
+      ],
+      kick: [
+        1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0,
+        1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1
+      ],
+      snare: [
+        0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0,
+        0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1, 0, 1
+      ],
+      hat: [
+        1, 1, 1, 1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 1, 2, 0,
+        1, 1, 1, 1, 1, 1, 1, 2, 1, 1, 1, 1, 2, 1, 2, 2
+      ]
     }
   ];
 
@@ -3379,17 +3421,17 @@ END TRANSMISSION // ESARL 1999</div>
     carrier.type = 'sine';
     carrier.frequency.setValueAtTime(freq, now);
 
-    // Delayed Vibrato LFO (starts after 140ms)
+    // Delayed Vibrato LFO (starts after 160ms)
     if (useVibrato && dur > 0.18) {
       const lfo = audioCtx.createOscillator();
       const lfoGain = audioCtx.createGain();
       lfo.frequency.setValueAtTime(5.5, now);
       lfoGain.gain.setValueAtTime(0, now);
-      lfoGain.gain.setValueAtTime(0, now + 0.14);
-      lfoGain.gain.linearRampToValueAtTime(freq * 0.024, now + 0.24);
+      lfoGain.gain.setValueAtTime(0, now + 0.16);
+      lfoGain.gain.linearRampToValueAtTime(freq * 0.024, now + 0.26);
       lfo.connect(lfoGain);
       lfoGain.connect(carrier.frequency);
-      lfo.start(now + 0.14);
+      lfo.start(now + 0.16);
       lfo.stop(now + dur + 0.08);
     }
 
@@ -3626,6 +3668,144 @@ END TRANSMISSION // ESARL 1999</div>
     carrier.stop(now + dur + 0.02); mod.stop(now + dur + 0.02);
   }
 
+  // --- Ambient Drone Engine (Helmholtz Resonant Sub-Carrier Drone) ---
+  let isAmbientDroneActive = false;
+  let ambientDroneNodes = null;
+
+  function startAmbientDrone() {
+    if (!isAudioPowered) toggleAudioEngine();
+    if (!audioCtx) return;
+    if (isAmbientDroneActive) return;
+
+    const now = audioCtx.currentTime;
+    const oscRoot = audioCtx.createOscillator();
+    const oscSub = audioCtx.createOscillator();
+    const oscFifth = audioCtx.createOscillator();
+    const filter = audioCtx.createBiquadFilter();
+    const lfo = audioCtx.createOscillator();
+    const lfoGain = audioCtx.createGain();
+    const droneGain = audioCtx.createGain();
+
+    // 1999Hz subharmonic tuning: 1999 / 32 = 62.46 Hz (approx C2/B1 fundamental)
+    oscRoot.type = 'sawtooth';
+    oscRoot.frequency.setValueAtTime(62.47, now);
+
+    oscSub.type = 'sine';
+    oscSub.frequency.setValueAtTime(31.23, now);
+
+    oscFifth.type = 'triangle';
+    oscFifth.frequency.setValueAtTime(93.70, now);
+
+    filter.type = 'lowpass';
+    filter.frequency.setValueAtTime(380, now);
+    filter.Q.setValueAtTime(5.5, now);
+
+    // LFO sweeps resonant filter cutoff slowly (0.12 Hz)
+    lfo.frequency.setValueAtTime(0.12, now);
+    lfoGain.gain.setValueAtTime(220, now);
+    lfo.connect(lfoGain);
+    lfoGain.connect(filter.frequency);
+
+    droneGain.gain.setValueAtTime(0.001, now);
+    droneGain.gain.linearRampToValueAtTime(0.24, now + 1.2);
+
+    oscRoot.connect(filter);
+    oscSub.connect(filter);
+    oscFifth.connect(filter);
+    filter.connect(droneGain);
+    droneGain.connect(masterGain);
+    if (delayNode) droneGain.connect(delayNode);
+
+    oscRoot.start(now);
+    oscSub.start(now);
+    oscFifth.start(now);
+    lfo.start(now);
+
+    ambientDroneNodes = { oscRoot, oscSub, oscFifth, lfo, droneGain, filter };
+    isAmbientDroneActive = true;
+    logToTerminal(">> [AMBIENT DRONE] Engaged Helmholtz 1999Hz Subharmonic Cavern Drone (62.47Hz)");
+  }
+
+  function stopAmbientDrone() {
+    if (!isAmbientDroneActive || !ambientDroneNodes || !audioCtx) return;
+    const now = audioCtx.currentTime;
+    ambientDroneNodes.droneGain.gain.linearRampToValueAtTime(0.001, now + 0.8);
+    setTimeout(() => {
+      try {
+        ambientDroneNodes.oscRoot.stop();
+        ambientDroneNodes.oscSub.stop();
+        ambientDroneNodes.oscFifth.stop();
+        ambientDroneNodes.lfo.stop();
+      } catch (e) {}
+      ambientDroneNodes = null;
+      isAmbientDroneActive = false;
+      logToTerminal(">> [AMBIENT DRONE] Disengaged Subharmonic Drone.");
+    }, 850);
+  }
+
+  function toggleAmbientDrone() {
+    if (isAmbientDroneActive) stopAmbientDrone();
+    else startAmbientDrone();
+  }
+
+  // --- Audition Procedural FM Soundscape Presets ---
+  function auditionFmPreset(type) {
+    if (!isAudioPowered) toggleAudioEngine();
+    if (!audioCtx) return;
+    playEarconClick();
+
+    if (type === 'theme') {
+      logToTerminal(">> [FM AUDITION] Playing '1999 Acoustic Motif' Melodic Theme (YM2612 2-Op Lead + Vibrato)...");
+      const motif = [
+        { f: NF.F5, d: 0.28 }, { f: NF.Eb5, d: 0.24 }, { f: NF.Db5, d: 0.24 }, { f: NF.C5, d: 0.36 },
+        { f: NF.Ab4, d: 0.20 }, { f: NF.Bb4, d: 0.20 }, { f: NF.C5, d: 0.60 }
+      ];
+      let tOffset = 0;
+      motif.forEach((item, idx) => {
+        setTimeout(() => {
+          playSoundscapeLead(item.f, item.d, 0.35, true);
+          // Counter harmonic response on downbeats
+          if (idx === 0) playSoundscapeCounter(NF.C4, 0.5, 0.2);
+          if (idx === 3) playSoundscapeCounter(NF.Ab3, 0.5, 0.2);
+          if (idx === 6) playSoundscapeCounter(NF.F3, 0.7, 0.25);
+        }, tOffset * 1000);
+        tOffset += item.d + 0.05;
+      });
+    } else if (type === 'bass') {
+      logToTerminal(">> [FM AUDITION] Playing 'Carlsbad Slap Bass Riff' (2:1 MUL, punchy attack)...");
+      const bassRiff = [
+        { f: NF.F2, d: 0.18 }, { f: NF.F3, d: 0.16 }, { f: NF.Ab2, d: 0.18 }, { f: NF.F2, d: 0.16 },
+        { f: NF.C3, d: 0.18 }, { f: NF.Eb3, d: 0.18 }, { f: NF.C2, d: 0.22 }, { f: NF.F2, d: 0.35 }
+      ];
+      let tOffset = 0;
+      bassRiff.forEach((item, idx) => {
+        setTimeout(() => {
+          playSoundscapeBass(item.f, item.d, 0.42);
+          if (idx % 2 === 0) playSoundscapeKick();
+          else playSoundscapeHiHat(false);
+        }, tOffset * 1000);
+        tOffset += (idx % 2 === 0 ? 0.17 : 0.11); // 5:3 subtle swing
+      });
+    } else if (type === 'drone') {
+      toggleAmbientDrone();
+    } else if (type === 'earcon') {
+      logToTerminal(">> [FM AUDITION] Auditioning Crystal Glass UI Earcon...");
+      const now = audioCtx.currentTime;
+      const chimeNotes = [NF.C5, NF.G5, NF.C6];
+      chimeNotes.forEach((f, idx) => {
+        setTimeout(() => {
+          playSoundscapeArp(f, 0.22, 0.25);
+        }, idx * 60);
+      });
+    } else if (type === 'stinger') {
+      logToTerminal(">> [FM AUDITION] Triggering 1999Hz Subcarrier Lock Action Stinger!");
+      playStingerLock();
+    } else if (type === 'subcarrier') {
+      loadPresetToDecoder(1999, 2.0, 450);
+      playStingerLock();
+    }
+  }
+
   // --- UI Earcons & Action Stingers ---
   function playEarconClick() {
     if (!audioCtx || !isAudioPowered) return;
@@ -3664,7 +3844,7 @@ END TRANSMISSION // ESARL 1999</div>
   function playStingerLock() {
     if (!audioCtx || !isAudioPowered) return;
     const now = audioCtx.currentTime;
-    const chord = [NF.C5, NF.E5, NF.G5, 1999.0];
+    const chord = [NF.C5, NF.Eb5, NF.G5, 1999.0];
     chord.forEach((f, idx) => {
       const osc = audioCtx.createOscillator();
       const g = audioCtx.createGain();
