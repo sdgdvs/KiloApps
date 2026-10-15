@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-graphics
-next_agent: kilo-soundscape
+current_agent: kilo-soundscape
+next_agent: kilo-tester
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -14,7 +14,7 @@ timeout_minutes: 6
 status: ready
 current_targets:
   kilo_creator: kweb://geocities
-  kilo_graphics: KMystery
+  kilo_graphics: KColosseum
   kilo_soundscape: kweb://deep-core
   kilo_tester: KContacts
   kilo_usability: KMine
@@ -34,13 +34,18 @@ virtual_web_rotation:
 - kweb://10.19.99.4/classified
 - kweb://echo-subsystem.net
 last_run:
-  agent: kilo-creator
-  app: kweb://warez
-  timestamp: '2026-10-15T03:17:00-07:00'
+  agent: kilo-graphics
+  app: KMystery
+  timestamp: '2026-10-15T03:31:00-07:00'
 last_planner_run: '2026-10-14T18:32:00Z'
 ---
 
 ## Execution Log
+- **2026-10-15 03:31 [kilo-graphics]**: ⏭️ Skip — Imagen 3 asset replacement not appropriate for KMystery.
+  - Narrative noir detective investigation game with custom procedural canvas lighting, moods, & dual-target Win32 C parity.
+  - Zero rotating specular glints or traveling perimeter border dots present.
+  - Web size: 154 KB (<999 KB ceiling). KiloOS shell build clean.
+  - Advanced graphics queue to KColosseum; handed off to kilo-soundscape.
 - **2026-10-15 03:17 [kilo-creator]**: kweb://warez Virtual 1999 Web expansion complete.
   - Implemented Tab 16: Pre-DB '99 & Scene Nuke Tribunal with 32+ release archive, dupe checker, and IRC #pre ticker.
   - Added interactive Senior Scene Council arbitration court with live voting and credit penalty multipliers.
@@ -145,20 +150,20 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Upcoming Queue**: `kweb://portal`, `kweb://webring`, `kweb://warez`, `kweb://geocities`, `kweb://users/~neon_rider`, `kweb://asm-temple`, `kweb://cybercafe`.
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
-- **Target**: `KMystery`
-- **Primary Files**: `KiloOS/public/apps/kmystery.html`, `KMystery/main.c`
+- **Target**: `KColosseum`
+- **Primary Files**: `KiloOS/public/apps/kcolosseum.html`, `KColosseum/main.c`
 - **Objective**: Visual art audit for programmer art vs. Imagen 3 suitability; remove traveling glints.
 - **Action Steps**:
-  1. Evaluate suitability: `KMystery` detective mystery investigation game.
+  1. Evaluate suitability: `KColosseum` gladiator arena combat game.
   2. If visual aesthetic is text/procedural or already has production art, execute clean turn skip.
   3. If replacing sprites: use 2-stage asset pipeline (`generate_image` with solid `#FF00FF` background -> `scripts/asset_pipeline.py`).
   4. Search for and remove any rotating specular glints or traveling perimeter border dots.
 - **Verification**: `cd KiloOS && npm run build`. Verify files < 999 KB.
 - **Handoff**:
-  - In frontmatter: advance `current_targets.kilo_graphics` to `KColosseum`.
-  - Set `current_agent: kilo-creator
+  - In frontmatter: advance `current_targets.kilo_graphics` to `KTrader`.
+  - Set `current_agent: kilo-soundscape`
   - Append terse execution log (≤6 lines), commit, and push.
-- **Upcoming Queue**: `KMystery`, `KColosseum`, `KTrader`.
+- **Upcoming Queue**: `KColosseum`, `KTrader`, `KMystery`.
 
 ### 3. Procedural Audio & Soundscape Queue (`kilo-soundscape`)
 - **Target**: `kweb://asm-temple`
