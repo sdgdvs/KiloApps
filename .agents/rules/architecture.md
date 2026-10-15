@@ -1,44 +1,31 @@
 ---
-trigger: always_on
+trigger: model_decision
 name: architecture
-description: >-
-  Structural invariants, directory layout, and state-isolation rules
-  that ALL KiloApps agents must obey on every run. Violations are
-  blocking — do not commit or push without compliance.
+description: Structural invariants, React state isolation, APPS registry, and iframe postMessage boundaries for KiloOS and web applications.
 ---
 
-# KiloApps Architecture Rules (always_on)
+# KiloApps Architecture Rules
 
 ## 1. State Isolation
-
-- **No direct DOM mutations from App.jsx business logic.** All window state
-  (`openApps`, `vfs`, `zIndexCounter`) must be read and written exclusively
-  through `useState` / `useRef` inside `App.jsx`.  Web app iframes (in
-  `public/apps/`) must communicate with the shell ONLY via `postMessage`.
+- **No direct DOM mutations from App.jsx business logic.** All window state (`openApps`, `vfs`, `zIndexCounter`) must be read and written exclusively through `useState` / `useRef` inside `App.jsx`. Web app iframes (in `public/apps/`) must communicate with the shell ONLY via `postMessage`.
 - **postMessage handlers must validate origin first:**
   ```js
   if (event.origin !== window.location.origin) return;
   ```
-- **zIndexCounter mutations must use the functional updater form:**
+- **zIndexCounter mutations must use functional updater form:**
   ```js
   setZIndexCounter(prev => prev + 1);
   ```
-  Direct reference (`zIndexCounter + 1`) is banned because stale-closure
-  race conditions collapse the focus stack on rapid multi-open.
+  Direct reference (`zIndexCounter + 1`) is banned to avoid stale-closure race conditions on rapid multi-open.
 
-## 2. Lifecycle Cleanup — Hard Requirements
-
-Every `setInterval`, `setTimeout`, `requestAnimationFrame` loop,
-`addEventListener`, `WebSocket`, `MutationObserver`, or `IntersectionObserver`
-created inside a React `useEffect` MUST return a cleanup function:
-
+## 2. Lifecycle Cleanup
+Every `setInterval`, `setTimeout`, `requestAnimationFrame` loop, `addEventListener`, `WebSocket`, `MutationObserver`, or `IntersectionObserver` created inside a React `useEffect` MUST return a cleanup function:
 ```js
 useEffect(() => {
   const id = setInterval(fn, ms);
-  return () => clearInterval(id);     // REQUIRED
+  return () => clearInterval(id); // REQUIRED
 }, [deps]);
 ```
-
 Individual HTML app files MUST guard long-running loops with `visibilitychange`:
 ```js
 document.addEventListener('visibilitychange', () =>
@@ -46,27 +33,20 @@ document.addEventListener('visibilitychange', () =>
 ```
 
 ## 3. Repository Layout Invariants
-
 | Path | Rule |
 |---|---|
 | `KiloOS/src/App.jsx` | KiloOS shell only. No app-specific business logic. |
 | `KiloOS/public/apps/k<name>.html` | One self-contained file per app. No external script imports allowed. |
 | `.agents/skills/` | Skill SKILL.md files only. Do NOT add application code here. |
-| `.agents/rules/` | This directory. Rules files only. |
-| `archive/` | Immutable. Do NOT modify archived files. |
+| `.agents/rules/` | Rule files only. |
+| `archive/` | Immutable historical archives. Do NOT modify. |
 
 ## 4. APPS Registry Integrity
-
-- Every entry in the `APPS` array in `App.jsx` must include all required
-  fields: `id`, `title`, `url`, `icon`, `w`, `h`, `folder`.
+- Every entry in the `APPS` array in `App.jsx` must include: `id`, `title`, `url`, `icon`, `w`, `h`, `folder`.
 - `exeUrl` may be `null` but must be explicitly present.
-- The validation warning block (`REQUIRED_FIELDS.forEach`) must remain in
-  `App.jsx` and must NOT be removed.
+- The validation warning block (`REQUIRED_FIELDS.forEach`) must remain in `App.jsx`.
 
 ## 5. Boundary Violations — Banned Patterns
-
-The following patterns are categorically banned:
-
 ```js
 // ❌ BANNED: iframe app directly mutating shell localStorage keys
 localStorage.setItem('kiloOS_openApps', ...)
@@ -82,14 +62,7 @@ useEffect(() => { setInterval(tick, 1000); }, []);
 ```
 
 ## 6. Size Ceiling
-
-No individual `k<name>.html` file may exceed **999 KB** (uncompressed).
-The check is enforced by `python scripts/check_sizes.py` — run it before
-every commit that modifies app HTML files.
+No individual `k<name>.html` file may exceed **999 KB** (uncompressed). Enforced by `python scripts/check_sizes.py`.
 
 ## 7. ARG Layer Protection
-
-ARG narrative elements (`.kilo-echo.json`, `window.__KILO_ECHO__`,
-`kquarantine` app, `argAppHistory` ref) are **intentional** and must NOT
-be removed, refactored away, or altered in logic. Mark any concern with a
-`// ARG: intentional` comment and leave it.
+ARG narrative elements (`.kilo-echo.json`, `window.__KILO_ECHO__`, `kquarantine` app, `argAppHistory` ref) are **intentional** and must NOT be removed or refactored away. Mark any concern with `// ARG: intentional`.

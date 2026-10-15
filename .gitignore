@@ -52,3 +52,6 @@ docs/gallery/screenshots/
 docs/gallery/baselines/
 docs/gallery/diff_report.json
 docs/gallery/vision_scores.json
+
+# Local rules backup
+.backup-rules/
