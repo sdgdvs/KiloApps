@@ -471,6 +471,7 @@
   .badge-Family { background: rgba(139, 92, 246, 0.2); color: #c084fc; }
   .badge-Friends { background: rgba(236, 72, 153, 0.2); color: #f472b6; }
   .badge-Other { background: rgba(107, 114, 128, 0.2); color: #9ca3af; }
+  .badge-Warez, .badge-Scene, .badge-WarezScene, [class*="badge-Warez"] { background: rgba(245, 158, 11, 0.25); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.4); }
 
   .item-tags {
     display: flex;
@@ -1071,7 +1072,8 @@
       </div>
 
       <div class="category-pills" id="categoryPills" role="tablist" aria-label="Filter by category">
-        <div class="pill active" data-cat="All" role="tab" tabindex="0" aria-selected="true" title="Press 1"><span class="btn-badge" style="margin:0 2px 0 0;">1</span> All <span class="pill-count" id="countAll">0</span></div>
+        <div class="pill active" data-cat="All" role="tab" tabindex="0" aria-selected="true" title="Press 1"><span class="btn-badge" style="margin:0 2px 0 0;">1</span> All <span class="pill-count" id="countAll">0</span>
+      <button class="pill" data-cat="Warez/Scene" data-category="Warez/Scene">💾 Warez/Scene</button></div>
         <div class="pill" data-cat="Favorites" role="tab" tabindex="0" aria-selected="false" title="Press 2"><span class="btn-badge" style="margin:0 2px 0 0;">2</span> ★ Favs <span class="pill-count" id="countFav">0</span></div>
         <div class="pill" data-cat="Work" role="tab" tabindex="0" aria-selected="false" title="Press 3"><span class="btn-badge" style="margin:0 2px 0 0;">3</span> Work <span class="pill-count" id="countWork">0</span></div>
         <div class="pill" data-cat="Personal" role="tab" tabindex="0" aria-selected="false" title="Press 4"><span class="btn-badge" style="margin:0 2px 0 0;">4</span> Personal <span class="pill-count" id="countPersonal">0</span></div>
@@ -3981,5 +3983,57 @@
       setTimeout(() => showToast("📇 Welcome to KContacts! Press F1 for Help, [F5] Quicksave, [N] Add, or [1-7] Filter."), 300);
     }
   </script>
+
+<script>
+// --- KContacts 1999 Deep Feature Expansion Module ---
+(function() {
+  window.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('select#contact-category, select#category, select.category-select').forEach(sel => {
+      if (!Array.from(sel.options).some(o => o.value === 'Warez/Scene')) {
+        const opt = document.createElement('option');
+        opt.value = 'Warez/Scene';
+        opt.textContent = '💾 Warez/Scene';
+        sel.appendChild(opt);
+      }
+    });
+
+    const pillBars = document.querySelectorAll('.category-pills');
+    pillBars.forEach(bar => {
+      if (!bar.querySelector('[data-category="Warez/Scene"], [data-cat="Warez/Scene"]')) {
+        const btn = document.createElement('button');
+        btn.className = 'pill';
+        btn.setAttribute('data-category', 'Warez/Scene');
+        btn.setAttribute('data-cat', 'Warez/Scene');
+        btn.innerHTML = '💾 Warez/Scene <span class="pill-count" id="count-warez">0</span>';
+        bar.appendChild(btn);
+        btn.addEventListener('click', function(e) {
+          e.preventDefault();
+          bar.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
+          btn.classList.add('active');
+          if (typeof window.filterByCategory === 'function') {
+            window.filterByCategory('Warez/Scene');
+          } else if (typeof window.setCategoryFilter === 'function') {
+            window.setCategoryFilter('Warez/Scene');
+          } else {
+            const searchInput = document.querySelector('.search-box input, #search-input');
+            if (searchInput) {
+              searchInput.value = 'cat:Warez/Scene';
+              searchInput.dispatchEvent(new Event('input', { bubbles: true }));
+            }
+          }
+        });
+      }
+    });
+
+    const annivInput = document.getElementById('contact-anniversary');
+    if (annivInput && window.currentContact) {
+      if (window.currentContact.anniversary) annivInput.value = window.currentContact.anniversary;
+    }
+
+    console.log('[KContacts] Deep feature expansion active: vCard 3.0, Warez/Scene grouping, and Anniversary milestone tracking.');
+  });
+})();
+</script>
+
 </body>
 </html>
