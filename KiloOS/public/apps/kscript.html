@@ -748,7 +748,7 @@
     <div class="header">
         <div class="title-group">
             <h1>⚡ KScript</h1>
-            <span class="version-tag">v2.0 EXPANDED</span>
+            <span class="version-tag">v2.1 EXPANDED</span>
             <span id="statusBadge" class="status-badge">READY</span>
         </div>
         <div class="toolbar">
@@ -764,6 +764,7 @@
             <button id="btnContinue" type="button" style="background:#d97706" title="Continue to Breakpoint (F8)">
                 <span>⏯ Continue</span> <span class="btn-key">F8</span>
             </button>
+            <button id="btnAst" type="button" style="background:#8b5cf6" title="AST & Code Linter (Alt+T)"><span>🌳 AST & Lint</span> <span class="btn-key">Alt+T</span></button>
             <button id="btnRun" type="button" title="Execute Script (Ctrl+Enter)">
                 <span>⚡ Run</span> <span class="btn-key">Ctrl+Enter</span>
             </button>
@@ -830,6 +831,9 @@
         <button type="button" class="preset-chip" onclick="loadPreset('mathfuncs')">🧪 Math Functions</button>
         <button type="button" class="preset-chip" onclick="loadPreset('collatz')">⏱️ Collatz Sequence</button>
         <button type="button" class="preset-chip" onclick="loadPreset('stress')">⚡ Stress Test</button>
+        <button type="button" class="preset-chip" onclick="loadPreset('arrays')">📦 Arrays & Aggregation</button>
+        <button type="button" class="preset-chip" onclick="loadPreset('crypto_hash')">🔑 FNV-1a Hash (32-bit)</button>
+        <button type="button" class="preset-chip" onclick="loadPreset('lint_audit')">🛡️ Linter Audit</button>
     </div>
 
     <!-- Onboarding / Quick Tip Banner -->
@@ -932,6 +936,7 @@
                     <tr><td>Step Statement</td><td><span class="kbd">F10</span> / <span class="kbd">Alt+S</span></td><td>Step statement-by-statement with active line highlight</td></tr>
                     <tr><td>Continue Run</td><td><span class="kbd">F8</span></td><td>Run until next breakpoint is reached</td></tr>
                     <tr><td>Benchmark</td><td><span class="kbd">F6</span></td><td>Execute iterations benchmark with latency analysis</td></tr>
+                    <tr><td>AST & Linter</td><td><span class="kbd">Alt+T</span></td><td>Inspect syntax tree & static linter diagnostics</td></tr>
                     <tr><td>Toggle Breakpoint</td><td><span class="kbd">Click Gutter</span></td><td>Set / clear breakpoint on line</td></tr>
                     <tr><td>Save Script File</td><td><span class="kbd">Ctrl+S</span></td><td>Save .ksc script file or state dump</td></tr>
                     <tr><td>Import Script File</td><td><span class="kbd">Ctrl+O</span></td><td>Load .ksc or .txt script file</td></tr>
@@ -1014,6 +1019,39 @@
         </div>
         <div class="modal-footer">
             <button type="button" id="btnExportModalCloseBottom" style="background:#475569;">Close [Esc]</button>
+        </div>
+    </div>
+</div>
+
+<!-- AST & Lint Diagnostics Modal -->
+<div id="astModal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="astModalTitle">
+    <div class="modal" style="max-width: 700px;">
+        <div class="modal-header">
+            <h2 id="astModalTitle">🌳 AST & Code Linter Suite</h2>
+            <button id="astModalClose" type="button" class="modal-close" title="Close [Esc]">&times;</button>
+        </div>
+        <div style="font-size:12.5px; color:var(--text-muted); margin-bottom:12px;">
+            Real-time syntax tree breakdown, token complexity analysis, and static code linting.
+        </div>
+        <div style="display:flex; gap:10px; margin-bottom:12px;">
+            <div id="lintBadge" style="padding:4px 10px; border-radius:6px; font-weight:700; font-size:11px; background:rgba(16,185,129,0.2); border:1px solid rgba(16,185,129,0.5); color:#6ee7b7;">0 Issues Detected</div>
+            <div id="astCountBadge" style="padding:4px 10px; border-radius:6px; font-weight:700; font-size:11px; background:rgba(139,92,246,0.2); border:1px solid rgba(139,92,246,0.5); color:#c4b5fd;">0 AST Statements</div>
+        </div>
+        <div style="display:flex; gap:10px; flex-direction:column; max-height:55vh; overflow-y:auto;">
+            <div style="background:#090d16; border:1px solid var(--glass-border); border-radius:8px; padding:10px;">
+                <h4 style="margin:0 0 6px 0; color:#cbd5e1; font-size:12px;">🛡️ Static Linter Diagnostics</h4>
+                <div id="lintDiagnosticsList" style="font-family:monospace; font-size:11.5px; line-height:1.6; color:#94a3b8;">
+                    No issues found. Code is clean.
+                </div>
+            </div>
+            <div style="background:#090d16; border:1px solid var(--glass-border); border-radius:8px; padding:10px;">
+                <h4 style="margin:0 0 6px 0; color:#cbd5e1; font-size:12px;">🌲 Syntax AST Hierarchy</h4>
+                <div id="astTreeViewer" style="font-family:monospace; font-size:11.5px; line-height:1.6; color:#a78bfa; max-height:200px; overflow-y:auto; white-space:pre-wrap;">
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" id="btnAstModalCloseBottom" style="background:#475569;">Close [Esc]</button>
         </div>
     </div>
 </div>
@@ -1332,7 +1370,50 @@ while i < iterations
   acc = acc + (i ^ 0x55) % 17
   i = i + 1
 endwhile
-print "Stress test result:", acc`
+print "Stress test result:", acc`,
+
+        arrays: `// Arrays, Dynamic Buffers & Aggregations
+scores = [85, 92, 78, 96, 88]
+print "Initial list:", scores
+print "Count:", len(scores)
+print "Total Sum:", sum(scores)
+print "Average Score:", avg(scores)
+
+// Append bonus score
+push(scores, 100)
+print "After push 100:", scores
+print "New Count:", len(scores)
+print "New Sum:", sum(scores)
+print "First Item:", at(scores, 0)
+print "Last Item:", at(scores, -1)`,
+
+        crypto_hash: `// 32-Bit FNV-1a Hash Implementation
+FNV_PRIME = 0x01000193
+FNV_OFFSET = 0x811C9DC5
+
+hash = FNV_OFFSET
+bytes = [0x4B, 0x53, 0x63, 0x72, 0x69, 0x70, 0x74] // "KScript"
+i = 0
+while i < len(bytes)
+  byte = at(bytes, i)
+  hash = hash ^ byte
+  hash = (hash * FNV_PRIME) & 0xFFFFFFFF
+  i = i + 1
+endwhile
+
+print "FNV-1a 32-Bit Digest:", hex(hash), bin(hash)`,
+
+        lint_audit: `// Linter Diagnostic Demo
+// Click 'AST & Lint' [Alt+T] to inspect diagnostics!
+total = 100
+unused_metric = 42
+
+if total > 50
+  result = total * 2
+  print "Calculated result:", result
+endif
+
+// Note: unused_metric was never read`
     };
 
     function loadPreset(name) {
@@ -1505,6 +1586,11 @@ print "Stress test result:", acc`
             btnPlay.click();
             return;
         }
+        if (e.altKey && !e.ctrlKey && (e.key === 't' || e.key === 'T')) {
+            e.preventDefault();
+            openAstModal();
+            return;
+        }
     });
 
     // ==========================================
@@ -1533,7 +1619,13 @@ print "Stress test result:", acc`
             return r;
         },
         hex: (x) => '0x' + (Number(x) >>> 0).toString(16).toUpperCase(),
-        bin: (x) => '0b' + (Number(x) >>> 0).toString(2)
+        bin: (x) => '0b' + (Number(x) >>> 0).toString(2),
+        len: (arr) => Array.isArray(arr) ? arr.length : (typeof arr === 'string' ? arr.length : 0),
+        push: (arr, v) => { if (Array.isArray(arr)) { arr.push(v); return arr.length; } return 0; },
+        pop: (arr) => Array.isArray(arr) ? (arr.pop() ?? 0) : 0,
+        at: (arr, idx) => Array.isArray(arr) ? (arr[idx >= 0 ? idx : arr.length + idx] ?? 0) : 0,
+        sum: (arr) => Array.isArray(arr) ? arr.reduce((acc, x) => acc + (Number(x) || 0), 0) : 0,
+        avg: (arr) => Array.isArray(arr) && arr.length > 0 ? Math.round(arr.reduce((acc, x) => acc + (Number(x) || 0), 0) / arr.length) : 0
     };
 
     function parseExpression(str, vars, nodeCounter) {
@@ -1548,6 +1640,24 @@ print "Stress test result:", acc`
             if (nodeCounter) nodeCounter.count++;
             skipWhitespace();
             if (idx >= str.length) return 0;
+
+            // Array Literals: [1, 2, 3]
+            if (peek() === '[') {
+                advance();
+                const arr = [];
+                skipWhitespace();
+                if (peek() !== ']') {
+                    arr.push(parseExpr());
+                    skipWhitespace();
+                    while (peek() === ',') {
+                        advance();
+                        arr.push(parseExpr());
+                        skipWhitespace();
+                    }
+                }
+                if (peek() === ']') advance();
+                return arr;
+            }
 
             // Parentheses
             if (peek() === '(') {
@@ -2182,11 +2292,14 @@ print "Stress test result:", acc`
         let html = '';
         for (const k of matchedKeys) {
             const val = vars[k];
+            const isArr = Array.isArray(val);
             const isNum = typeof val === 'number';
-            const decVal = isNum ? val : `"${val}"`;
-            const hexVal = isNum ? '0x' + (val >>> 0).toString(16).toUpperCase().padStart(4, '0') : '-';
+            let decVal = isArr ? `[${val.join(', ')}]` : (isNum ? val : `"${val}"`);
+            let hexVal = isArr ? `len:${val.length}` : (isNum ? '0x' + (val >>> 0).toString(16).toUpperCase().padStart(4, '0') : '-');
             let binVal = '-';
-            if (isNum) {
+            if (isArr) {
+                binVal = `[Array (${val.length})]`;
+            } else if (isNum) {
                 const b = (val >>> 0).toString(2).padStart(16, '0').slice(-16);
                 binVal = `${b.slice(0,4)} ${b.slice(4,8)} ${b.slice(8,12)} ${b.slice(12,16)}`;
             }
@@ -2677,6 +2790,139 @@ print "Stress test result:", acc`
         downloadBlob(blob, 'script.ksc');
         showToast("Saved script.ksc", "success");
     };
+
+
+    // ==========================================
+    // AST & Static Code Linter Suite
+    // ==========================================
+    const astModal = document.getElementById('astModal');
+    const astModalClose = document.getElementById('astModalClose');
+    const btnAst = document.getElementById('btnAst');
+    const btnAstModalCloseBottom = document.getElementById('btnAstModalCloseBottom');
+    const lintBadge = document.getElementById('lintBadge');
+    const astCountBadge = document.getElementById('astCountBadge');
+    const lintDiagnosticsList = document.getElementById('lintDiagnosticsList');
+    const astTreeViewer = document.getElementById('astTreeViewer');
+
+    function analyzeScript(code) {
+        const rawLines = code.split('\n');
+        const ast = [];
+        const diagnostics = [];
+        const assignedVars = new Map();
+        const referencedVars = new Set();
+
+        rawLines.forEach((raw, idx) => {
+            const lineNum = idx + 1;
+            let line = raw.trim();
+            const cIdx = line.indexOf('//');
+            if (cIdx !== -1) line = line.substring(0, cIdx).trim();
+            if (!line) return;
+
+            // Check suspicious single '=' in condition
+            if (/^if\s+[a-zA-Z_]\w*\s*=\s*[^=]/.test(line)) {
+                diagnostics.push({ line: lineNum, type: 'warning', msg: `Suspicious assignment '=' in 'if' condition (did you mean '=='?)` });
+            }
+
+            // Check division by literal zero
+            if (/\/\s*0(?![0-9])/.test(line)) {
+                diagnostics.push({ line: lineNum, type: 'error', msg: `Division by literal zero detected` });
+            }
+
+            // Classify AST statement node
+            let category = 'EXPRESSION';
+            let detail = line;
+            if (/^print\b/i.test(line)) {
+                category = 'STMT_PRINT';
+                detail = line.substring(5).trim();
+            } else if (/^if\b/i.test(line)) {
+                category = 'STMT_BRANCH_IF';
+                detail = line.substring(2).trim();
+            } else if (/^elif\b/i.test(line)) {
+                category = 'STMT_BRANCH_ELIF';
+                detail = line.substring(4).trim();
+            } else if (/^else\b/i.test(line)) {
+                category = 'STMT_BRANCH_ELSE';
+                detail = '';
+            } else if (/^endif\b/i.test(line)) {
+                category = 'STMT_ENDIF';
+                detail = '';
+            } else if (/^while\b/i.test(line)) {
+                category = 'STMT_LOOP_WHILE';
+                detail = line.substring(5).trim();
+            } else if (/^endwhile\b/i.test(line)) {
+                category = 'STMT_ENDWHILE';
+                detail = '';
+            } else {
+                const assignM = line.match(/^([a-zA-Z_]\w*)\s*(=|\+=|-=|\*=|\/=|%=|&=|\|=|\^=|<<=|>>=)\s*(.+)$/);
+                if (assignM) {
+                    category = 'STMT_ASSIGN';
+                    detail = `${assignM[1]} ${assignM[2]} ${assignM[3]}`;
+                    if (!assignedVars.has(assignM[1])) assignedVars.set(assignM[1], lineNum);
+                }
+            }
+
+            // Variable references check
+            const words = line.match(/\b[a-zA-Z_]\w*\b/g) || [];
+            const keywords = new Set(['if', 'elif', 'else', 'endif', 'while', 'endwhile', 'print', 'true', 'false', 'abs', 'min', 'max', 'clamp', 'sqrt', 'pow', 'sign', 'rand', 'gcd', 'fact', 'hex', 'bin', 'len', 'push', 'pop', 'at', 'sum', 'avg']);
+            words.forEach(w => {
+                const lw = w.toLowerCase();
+                if (!keywords.has(lw)) {
+                    const assignLeft = line.match(/^([a-zA-Z_]\w*)\s*=/);
+                    if (!assignLeft || assignLeft[1] !== w) {
+                        referencedVars.add(w);
+                        if (!assignedVars.has(w)) {
+                            diagnostics.push({ line: lineNum, type: 'warning', msg: `Variable '${w}' referenced before explicit assignment (defaults to 0)` });
+                        }
+                    }
+                }
+            });
+
+            ast.push({ line: lineNum, category, detail });
+        });
+
+        // Unused variables check
+        for (const [varName, lineNum] of assignedVars.entries()) {
+            if (!referencedVars.has(varName)) {
+                diagnostics.push({ line: lineNum, type: 'info', msg: `Variable '${varName}' assigned at line ${lineNum} is never read` });
+            }
+        }
+
+        return { ast, diagnostics };
+    }
+
+    function openAstModal() {
+        toastContainer.innerHTML = '';
+        const { ast, diagnostics } = analyzeScript(exprInput.value);
+
+        astCountBadge.textContent = `${ast.length} AST Statements`;
+        if (diagnostics.length === 0) {
+            lintBadge.textContent = '0 Issues Detected (Clean)';
+            lintBadge.style.color = '#6ee7b7';
+            lintBadge.style.borderColor = 'rgba(16,185,129,0.5)';
+            lintDiagnosticsList.innerHTML = '<span style="color:#10b981;">✅ Code is clean. Zero syntax or variable anomalies detected.</span>';
+        } else {
+            lintBadge.textContent = `${diagnostics.length} Diagnostic Warning${diagnostics.length > 1 ? 's' : ''}`;
+            lintBadge.style.color = '#fcd34d';
+            lintBadge.style.borderColor = 'rgba(245,158,11,0.5)';
+            lintDiagnosticsList.innerHTML = diagnostics.map(d => {
+                const color = d.type === 'error' ? '#fda4af' : (d.type === 'warning' ? '#fde047' : '#93c5fd');
+                const badge = d.type.toUpperCase();
+                return `<div style="padding:2px 0;"><span style="color:${color}; font-weight:bold;">[L${d.line} ${badge}]</span> ${d.msg}</div>`;
+            }).join('');
+        }
+
+        astTreeViewer.textContent = ast.map(node => {
+            const padLine = String(node.line).padStart(3, ' ');
+            return `L${padLine} | [${node.category}] ${node.detail}`;
+        }).join('\n');
+
+        astModal.classList.add('active');
+    }
+
+    if (btnAst) btnAst.onclick = openAstModal;
+    if (astModalClose) astModalClose.onclick = () => astModal.classList.remove('active');
+    if (btnAstModalCloseBottom) btnAstModalCloseBottom.onclick = () => astModal.classList.remove('active');
+    if (astModal) astModal.onclick = (e) => { if (e.target === astModal) astModal.classList.remove('active'); };
 
     // Modal Events
     btnHelp.onclick = () => { toastContainer.innerHTML = ''; helpModal.classList.add('active'); };
