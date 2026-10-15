@@ -1,5 +1,5 @@
 ---
-current_agent: kilo-expander
+current_agent: kilo-creator
 next_agent: kilo-creator
 agent_rotation:
 - kilo-creator
@@ -19,7 +19,7 @@ current_targets:
   kilo_tester: KContacts
   kilo_usability: KMine
   kilo_qa: KTetris
-  kilo_expander: KCalc
+  kilo_expander: KScript
 virtual_web_target: kweb://warez
 virtual_web_rotation:
 - kweb://deep-core
@@ -34,13 +34,19 @@ virtual_web_rotation:
 - kweb://10.19.99.4/classified
 - kweb://echo-subsystem.net
 last_run:
-  agent: kilo-qa
-  app: KMaze
-  timestamp: '2026-10-15T02:14:00-07:00'
+  agent: kilo-expander
+  app: KCalc
+  timestamp: '2026-10-15T02:32:00-07:00'
 last_planner_run: '2026-10-14T18:32:00Z'
 ---
 
 ## Execution Log
+- **2026-10-15 02:32 [kilo-expander]**: KCalc deep feature expansion complete.
+  - Implemented 8-slot Multi-Register Memory Bank (M0-M7) with custom labeling, storage/recall, and localStorage persistence.
+  - Added Physical/Mathematical Constants Palette (20 constants) with instant search and one-click injection.
+  - Added Calculation Tape Exporter/Importer (Plain Text, JSON, CSV formats) with clipboard copy and file download.
+  - Added Bitwise Word Diagnostic Inspector (8/16/32-bit, bit toggle, hex/oct/bin/signed/ASCII representations).
+  - Web size 220.6 KB (<999 KB ceiling). KiloOS shell build clean. Advanced expander queue to KScript; handed off to kilo-creator.
 - **2026-10-15 02:14 [kilo-qa]**: KMaze Pass 5 QA audit verified.
   - Native Win32 C build clean via build.bat (62 KB < 999 KB ceiling).
   - Web app (138 KB < 999 KB) tutorial onboarding, F5/F9 quicksave state persistence, and Esc/modal dismissal verified.
@@ -129,7 +135,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Verification**: `cd KiloOS && npm run build` (0 Vite errors). Confirm file size < 999 KB (`darknet.html` ~320 KB).
 - **Handoff**:
   - In frontmatter: advance `current_targets.kilo_creator` to `kweb://portal`.
-  - Set `current_agent: kilo-graphics`
+  - Set `current_agent: kilo-creator
   - Append terse execution log (≤6 lines), commit, and push.
 - **Upcoming Queue**: `kweb://portal`, `kweb://webring`, `kweb://warez`, `kweb://geocities`, `kweb://users/~neon_rider`, `kweb://asm-temple`, `kweb://cybercafe`.
 
@@ -145,7 +151,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Verification**: `cd KiloOS && npm run build`. Verify files < 999 KB.
 - **Handoff**:
   - In frontmatter: advance `current_targets.kilo_graphics` to `KColosseum`.
-  - Set `current_agent: kilo-soundscape`
+  - Set `current_agent: kilo-creator
   - Append terse execution log (≤6 lines), commit, and push.
 - **Upcoming Queue**: `KMystery`, `KColosseum`, `KTrader`.
 
@@ -164,7 +170,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Verification**: `cd KiloOS && npm run build` (0 Vite errors). Confirm file size < 999 KB.
 - **Handoff**:
   - In frontmatter: advance `current_targets.kilo_soundscape` to `kweb://asm-temple`.
-  - Set `current_agent: kilo-tester`
+  - Set `current_agent: kilo-creator
   - Append terse execution log (≤6 lines), commit, and push.
 - **Upcoming Queue**: `kweb://asm-temple`, `kweb://echo-subsystem.net`, `kweb://10.19.99.4/classified`, `kweb://webring`, `KColosseum`.
 
@@ -179,7 +185,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Verification**: `uv run scripts/test_app_startup.py --app KAudio` and `cd KiloOS && npm run build`. File size < 999 KB.
 - **Handoff**:
   - In frontmatter: advance `current_targets.kilo_tester` to `KContacts`.
-  - Set `current_agent: kilo-usability`
+  - Set `current_agent: kilo-creator
   - Append terse execution log (≤6 lines), commit, and push.
 - **Upcoming Queue**: `KContacts`, `KSubmarine`, `KCalendar`, `KPad`.
 
@@ -195,7 +201,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Verification**: `uv run scripts/test_app_startup.py --app KMail` and `cd KiloOS && npm run build`. File size < 999 KB.
 - **Handoff**:
   - In frontmatter: advance `current_targets.kilo_usability` to `KPad`.
-  - Set `current_agent: kilo-qa`
+  - Set `current_agent: kilo-creator
   - Append terse execution log (≤6 lines), commit, and push.
 - **Upcoming Queue**: `KPad`, `KAudio`, `KNote`, `KMine`.
 
@@ -213,7 +219,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - `cd KiloOS && npm run build` (0 Vite errors, `ksnake.html` < 999 KB)
 - **Handoff**:
   - In frontmatter: advance `current_targets.kilo_qa` to `KSpace`.
-  - Set `current_agent: kilo-creator`
+  - Set `current_agent: kilo-creator
   - Append terse execution log (≤6 lines), commit, and push.
 - **Upcoming Queue**: `KSpace`, `KMaze`.
 
@@ -232,7 +238,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Verification**: `uv run scripts/test_app_startup.py --app KContacts` and `cd KiloOS && npm run build`. File size < 999 KB.
 - **Handoff**:
   - In frontmatter: advance `current_targets.kilo_expander` to `KDB`.
-  - Set `current_agent: kilo-graphics`
+  - Set `current_agent: kilo-creator
   - Append terse execution log (≤6 lines), commit, and push.
 - **Upcoming Queue**: `KDB`, `KPad`, `KCalc`.
 
