@@ -464,6 +464,7 @@
     <select id="archiveFormat" aria-label="Archive container format">
       <option value="kza">KZA (KZip Archive)</option>
       <option value="zip">ZIP (PKZIP 2.0)</option>
+      <option value="sfx">SFX HTML (Self-Extracting)</option>
       <option value="tar">TAR (POSIX ustar)</option>
     </select>
   </div>
@@ -509,6 +510,7 @@
     <button id="btnVerify" aria-label="Verify CRC32 integrity" title="Verify CRC32 (V)">🛡️ Verify <span class="shortcut-tag">[V]</span></button>
     <button id="btnAnalysis" aria-label="Archive Entropy Analysis" title="Diagnostics & Entropy Analysis (Alt+A)">📊 Analysis <span class="shortcut-tag">[Alt+A]</span></button>
     <button id="btnManifest" aria-label="Archive Manifest Report" title="Generate inventory manifest (Ctrl+M)">📋 Manifest <span class="shortcut-tag">[Ctrl+M]</span></button>
+    <button id="btnGrep" aria-label="Search content across archive files" title="Grep text across archive files (Ctrl+F)">🔎 Grep <span class="shortcut-tag">[Ctrl+F]</span></button>
     <button id="btnBatchExtract" aria-label="Batch Extract" title="Batch extract (B)">📑 Batch <span class="shortcut-tag">[B]</span></button>
   </div>
   <div class="btn-sep" aria-hidden="true"></div>
@@ -688,6 +690,28 @@
         <button id="btnDownloadManifest">⬇️ Download File</button>
         <button class="btn-primary" id="btnOkManifest">Close</button>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- Grep Content Search Modal -->
+<div class="modal-overlay" id="grepModal" role="dialog" aria-modal="true" aria-labelledby="grepTitle">
+  <div class="modal-box" style="width: 680px; max-width: 95%;">
+    <div class="modal-header">
+      <span id="grepTitle">Search Inside Archive Files (Grep)</span>
+      <button style="padding: 2px 8px;" id="btnCloseGrep" aria-label="Close">✕</button>
+    </div>
+    <div style="display: flex; gap: 8px; margin-bottom: 10px; align-items: center;">
+      <input type="text" id="grepQueryInput" placeholder="Enter search string or regex..." style="flex: 1;">
+      <label style="font-size: 11px; display: flex; align-items: center; gap: 4px; white-space: nowrap;"><input type="checkbox" id="grepCaseSens">Case-sensitive</label>
+      <label style="font-size: 11px; display: flex; align-items: center; gap: 4px; white-space: nowrap;"><input type="checkbox" id="grepRegex">Regex</label>
+      <button class="btn-primary" id="btnRunGrep" style="padding: 5px 12px;">Search</button>
+    </div>
+    <div class="modal-body" id="grepResultsBody" style="max-height: 300px; overflow-y: auto; font-family: monospace; font-size: 12px;">
+      <div style="color: var(--text-muted);">Enter a term above to search through all text files in this archive.</div>
+    </div>
+    <div style="display: flex; justify-content: flex-end; margin-top: 10px;">
+      <button class="btn-primary" id="btnOkGrep">Close</button>
     </div>
   </div>
 </div>
@@ -2098,7 +2122,85 @@ Refer to acoustic diagnostics at echo-subsystem.net.
     }
   };
 
-  // Pack archive according to chosen container format (KZA, ZIP, TAR)
+  
+  // SFX HTML Self-Extracting Archive Generator
+  function createSfxHtml(fileList, comment) {
+    const archivePayload = fileList.map(f => ({
+      name: sanitizeFilename(f.name),
+      size: f.uncompSize,
+      crc32: f.crc32,
+      data: uint8ToBase64(f.uncompressedBytes)
+    }));
+    const jsonStr = JSON.stringify({ comment: comment || '', files: archivePayload });
+    return `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KZip Self-Extracting Archive</title>
+<style>
+  body { font-family: system-ui, sans-serif; background: #0f172a; color: #f8fafc; margin: 0; padding: 24px; display: flex; justify-content: center; align-items: center; min-height: 100vh; box-sizing: border-box; }
+  .box { background: #1e293b; border: 1px solid #334155; border-radius: 12px; padding: 24px; max-width: 640px; width: 100%; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+  h1 { font-size: 18px; margin-bottom: 12px; color: #38bdf8; display: flex; align-items: center; gap: 8px; }
+  .comment { background: #0f172a; border-left: 3px solid #38bdf8; padding: 8px 12px; margin-bottom: 16px; font-size: 13px; color: #94a3b8; font-style: italic; white-space: pre-wrap; }
+  .list { background: #0f172a; border: 1px solid #334155; border-radius: 6px; max-height: 280px; overflow-y: auto; margin-bottom: 16px; }
+  .item { display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; border-bottom: 1px solid #1e293b; font-size: 13px; }
+  .item:last-child { border-bottom: none; }
+  button { background: #38bdf8; color: #0f172a; font-weight: bold; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; transition: all 0.2s; }
+  button:hover { filter: brightness(1.15); }
+  .btn-sm { padding: 4px 10px; font-size: 11px; background: #334155; color: #f8fafc; }
+  .btn-sm:hover { background: #38bdf8; color: #0f172a; }
+</style>
+</head>
+<body>
+<div class="box">
+  <h1>📦 KZip Self-Extracting Archive (SFX)</h1>
+  <div id="commentBox" class="comment" style="display:none;"></div>
+  <div class="list" id="fileList"></div>
+  <div style="display:flex; justify-content:space-between; align-items:center;">
+    <span id="stats" style="font-size:12px; color:#94a3b8;"></span>
+    <button id="btnExtractAll">⚡ Extract All Files</button>
+  </div>
+</div>
+<script>
+  const payload = ${jsonStr};
+  const cBox = document.getElementById('commentBox');
+  if (payload.comment) { cBox.innerText = payload.comment; cBox.style.display = 'block'; }
+  const list = document.getElementById('fileList');
+  let totalBytes = 0;
+  payload.files.forEach((f, idx) => {
+    totalBytes += f.size;
+    const row = document.createElement('div');
+    row.className = 'item';
+    row.innerHTML = '<span>' + f.name + ' (' + f.size + ' B)</span><button class="btn-sm" onclick="extractFile(' + idx + ')">Save</button>';
+    list.appendChild(row);
+  });
+  document.getElementById('stats').innerText = payload.files.length + ' files | ' + totalBytes + ' B';
+  function b64ToUint8(b64) {
+    const bin = atob(b64);
+    const u = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i);
+    return u;
+  }
+  function extractFile(idx) {
+    const f = payload.files[idx];
+    const u = b64ToUint8(f.data);
+    const blob = new Blob([u], { type: 'application/octet-stream' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = f.name;
+    a.click();
+    URL.revokeObjectURL(a.href);
+  }
+  document.getElementById('btnExtractAll').onclick = () => {
+    payload.files.forEach((_, idx) => setTimeout(() => extractFile(idx), idx * 250));
+  };
+<\/script>
+</body>
+</html>`;
+  }
+
+  // Pack archive according to chosen container format (KZA, ZIP, TAR, SFX)
   btnPack.onclick = async () => {
     if (files.length === 0) return showToast("Archive is empty - nothing to pack!", true);
     clearToasts();
@@ -2116,6 +2218,14 @@ Refer to acoustic diagnostics at echo-subsystem.net.
         outBlob = new Blob([zipBytes], { type: 'application/zip' });
       } catch (e) {
         return showToast("Failed to create ZIP: " + e.message, true);
+      }
+    } else if (format === 'sfx') {
+      try {
+        const sfxHtml = createSfxHtml(files, archiveComment);
+        outBlob = new Blob([sfxHtml], { type: 'text/html' });
+        outFilename = 'archive.sfx.html';
+      } catch (e) {
+        return showToast("Failed to create SFX: " + e.message, true);
       }
     } else if (format === 'tar') {
       try {
@@ -3253,6 +3363,89 @@ Refer to acoustic diagnostics at echo-subsystem.net.
   } else {
     showToast("Welcome to KZip Archiver Studio! Press 'H' or F1 for Help.");
   }
+
+  // Grep in Archive Files Wireup
+  const btnGrep = document.getElementById('btnGrep');
+  const grepModal = document.getElementById('grepModal');
+  const btnCloseGrep = document.getElementById('btnCloseGrep');
+  const btnOkGrep = document.getElementById('btnOkGrep');
+  const btnRunGrep = document.getElementById('btnRunGrep');
+  const grepQueryInput = document.getElementById('grepQueryInput');
+  const grepCaseSens = document.getElementById('grepCaseSens');
+  const grepRegex = document.getElementById('grepRegex');
+  const grepResultsBody = document.getElementById('grepResultsBody');
+
+  if (btnGrep) {
+    btnGrep.onclick = () => {
+      grepModal.classList.add('active');
+      grepQueryInput.focus();
+    };
+  }
+  const closeGrep = () => grepModal.classList.remove('active');
+  if (btnCloseGrep) btnCloseGrep.onclick = closeGrep;
+  if (btnOkGrep) btnOkGrep.onclick = closeGrep;
+
+  if (btnRunGrep) {
+    btnRunGrep.onclick = () => {
+      const query = grepQueryInput.value.trim();
+      if (!query) {
+        grepResultsBody.innerHTML = '<div style="color:var(--accent-red);">Please enter a search pattern.</div>';
+        return;
+      }
+      let matcher;
+      try {
+        if (grepRegex.checked) {
+          matcher = new RegExp(query, grepCaseSens.checked ? 'g' : 'gi');
+        } else {
+          matcher = new RegExp(query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), grepCaseSens.checked ? 'g' : 'gi');
+        }
+      } catch (e) {
+        grepResultsBody.innerHTML = '<div style="color:var(--accent-red);">Invalid regular expression: ' + escapeHtml(e.message) + '</div>';
+        return;
+      }
+
+      let totalMatches = 0;
+      let outHtml = '';
+      const decoder = new TextDecoder('utf-8', { fatal: false });
+
+      files.forEach(f => {
+        let text = '';
+        try {
+          text = decoder.decode(f.uncompressedBytes);
+        } catch (_) { return; }
+        // Skip non-printable or huge binary blobs
+        if (/[\x00-\x08\x0E-\x1F]/.test(text.slice(0, 500))) return;
+
+        const lines = text.split(/\r?\n/);
+        const fileHits = [];
+        lines.forEach((line, lineIdx) => {
+          if (matcher.test(line)) {
+            totalMatches++;
+            const highlighted = line.replace(matcher, m => '<mark style="background:#38bdf8;color:#0f172a;font-weight:bold;border-radius:2px;padding:0 2px;">' + escapeHtml(m) + '</mark>');
+            fileHits.push('<div style="padding:2px 0 2px 14px; color:#cbd5e1;"><span style="color:var(--text-muted);font-size:11px;">Line ' + (lineIdx + 1) + ':</span> ' + highlighted + '</div>');
+          }
+        });
+
+        if (fileHits.length > 0) {
+          outHtml += '<div style="margin-bottom:10px; border-bottom:1px solid rgba(255,255,255,0.08); padding-bottom:6px;">' +
+            '<div style="font-weight:bold; color:var(--accent-blue);">📄 ' + escapeHtml(f.name) + ' (' + fileHits.length + ' hits)</div>' +
+            fileHits.slice(0, 50).join('') +
+            (fileHits.length > 50 ? '<div style="font-size:11px; color:var(--text-muted); padding-left:14px;">... and ' + (fileHits.length - 50) + ' more matches in this file.</div>' : '') +
+            '</div>';
+        }
+      });
+
+      if (totalMatches === 0) {
+        grepResultsBody.innerHTML = '<div style="color:var(--text-muted);">No matches found across ' + files.length + ' archive files.</div>';
+      } else {
+        grepResultsBody.innerHTML = '<div style="font-weight:bold; margin-bottom:8px; color:var(--accent-green);">Found ' + totalMatches + ' matches:</div>' + outHtml;
+      }
+    };
+    grepQueryInput.onkeydown = (e) => {
+      if (e.key === 'Enter') btnRunGrep.click();
+    };
+  }
+
 </script>
 </body>
 </html>
