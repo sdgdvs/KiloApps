@@ -2661,6 +2661,7 @@ revealing the blueprint for the App #100 KMatrix singularity.
   let audioCtx = null;
   let snesDelay = null;
   let jukeboxTimer = null;
+  let jukeboxTimeout = null;
   let jukeboxStep = 0;
 
   function initAudio() {
@@ -2670,7 +2671,7 @@ revealing the blueprint for the App #100 KMatrix singularity.
       audioCtx = new AudioContext();
 
       // Super Nintendo SPC700 Stereo Slapback Delay line
-      // 180ms delay with 2200Hz low-pass damping
+      // 180ms delay with 2200Hz low-pass damping and 0.28 feedback
       const delayNode = audioCtx.createDelay();
       delayNode.delayTime.value = 0.18;
 
@@ -2694,29 +2695,25 @@ revealing the blueprint for the App #100 KMatrix singularity.
   }
 
   // Genesis YM2612 2-Operator FM sound synthesis
-  function playFM(freq, modRatio, modDepth, duration, gainVal = 0.14) {
+  function playFM(freq, modRatio, modDepth, duration, gainVal = 0.14, useEcho = true) {
     if (!state.audioEnabled) return;
     initAudio();
     if (!audioCtx) return;
 
     try {
       const t = audioCtx.currentTime;
-      // Carrier
       const carrier = audioCtx.createOscillator();
       carrier.type = 'sine';
       carrier.frequency.setValueAtTime(freq, t);
 
-      // Modulator
       const modulator = audioCtx.createOscillator();
       modulator.type = 'sine';
       modulator.frequency.setValueAtTime(freq * modRatio, t);
 
-      // Modulator envelope (rapid exponential decay characteristic of YM2612)
       const modGain = audioCtx.createGain();
       modGain.gain.setValueAtTime(modDepth, t);
       modGain.gain.exponentialRampToValueAtTime(0.001, t + duration * 0.85);
 
-      // Master output envelope
       const masterGain = audioCtx.createGain();
       masterGain.gain.setValueAtTime(gainVal, t);
       masterGain.gain.exponentialRampToValueAtTime(0.0001, t + duration);
@@ -2725,7 +2722,7 @@ revealing the blueprint for the App #100 KMatrix singularity.
       modGain.connect(carrier.frequency);
       carrier.connect(masterGain);
       masterGain.connect(audioCtx.destination);
-      if (snesDelay) masterGain.connect(snesDelay);
+      if (snesDelay && useEcho) masterGain.connect(snesDelay);
 
       modulator.start(t);
       carrier.start(t);
@@ -2734,88 +2731,790 @@ revealing the blueprint for the App #100 KMatrix singularity.
     } catch(e) {}
   }
 
+  // --- GENRE-SPECIFIC FM PATCH DESIGN (YM2612 2-OP RECIPES) ---
+  function playSlapBass(freq, dur = 0.22, vol = 0.14) {
+    if (!state.audioEnabled) return;
+    initAudio();
+    if (!audioCtx) return;
+    try {
+      const t = audioCtx.currentTime;
+      const carrier = audioCtx.createOscillator();
+      carrier.type = 'sine';
+      carrier.frequency.setValueAtTime(freq, t);
+
+      const modulator = audioCtx.createOscillator();
+      modulator.type = 'sine';
+      modulator.frequency.setValueAtTime(freq * 2.0, t);
+
+      const modGain = audioCtx.createGain();
+      modGain.gain.setValueAtTime(freq * 3.4, t);
+      modGain.gain.exponentialRampToValueAtTime(0.01, t + 0.05);
+
+      const amp = audioCtx.createGain();
+      amp.gain.setValueAtTime(vol, t);
+      amp.gain.exponentialRampToValueAtTime(0.001, t + dur);
+
+      modulator.connect(modGain);
+      modGain.connect(carrier.frequency);
+      carrier.connect(amp);
+      amp.connect(audioCtx.destination); // Tight bass, no echo
+
+      modulator.start(t); carrier.start(t);
+      modulator.stop(t + dur); carrier.stop(t + dur);
+    } catch(e) {}
+  }
+
+  function playEPiano(freq, dur = 0.35, vol = 0.10, echo = true) {
+    if (!state.audioEnabled) return;
+    initAudio();
+    if (!audioCtx) return;
+    try {
+      const t = audioCtx.currentTime;
+      const carrier = audioCtx.createOscillator();
+      carrier.type = 'sine';
+      carrier.frequency.setValueAtTime(freq, t);
+
+      const modulator = audioCtx.createOscillator();
+      modulator.type = 'sine';
+      modulator.frequency.setValueAtTime(freq * 2.0, t);
+
+      const modGain = audioCtx.createGain();
+      modGain.gain.setValueAtTime(freq * 2.0 * 2.8, t);
+      modGain.gain.exponentialRampToValueAtTime(freq * 0.15, t + 0.08);
+      modGain.gain.exponentialRampToValueAtTime(0.01, t + dur);
+
+      const amp = audioCtx.createGain();
+      amp.gain.setValueAtTime(vol, t);
+      amp.gain.exponentialRampToValueAtTime(0.001, t + dur);
+
+      modulator.connect(modGain);
+      modGain.connect(carrier.frequency);
+      carrier.connect(amp);
+      amp.connect(audioCtx.destination);
+      if (snesDelay && echo) amp.connect(snesDelay);
+
+      modulator.start(t); carrier.start(t);
+      modulator.stop(t + dur); carrier.stop(t + dur);
+    } catch(e) {}
+  }
+
+  function playBrightBrass(freq, dur = 0.30, vol = 0.11, echo = true) {
+    if (!state.audioEnabled) return;
+    initAudio();
+    if (!audioCtx) return;
+    try {
+      const t = audioCtx.currentTime;
+      const carrier = audioCtx.createOscillator();
+      carrier.type = 'sawtooth';
+      carrier.frequency.setValueAtTime(freq, t);
+
+      const modulator = audioCtx.createOscillator();
+      modulator.type = 'sine';
+      modulator.frequency.setValueAtTime(freq * 1.0, t);
+
+      const modGain = audioCtx.createGain();
+      modGain.gain.setValueAtTime(freq * 4.0, t);
+      modGain.gain.exponentialRampToValueAtTime(freq * 0.5, t + dur * 0.7);
+
+      const amp = audioCtx.createGain();
+      amp.gain.setValueAtTime(vol * 0.4, t);
+      amp.gain.linearRampToValueAtTime(vol, t + 0.025);
+      amp.gain.exponentialRampToValueAtTime(0.001, t + dur);
+
+      modulator.connect(modGain);
+      modGain.connect(carrier.frequency);
+      carrier.connect(amp);
+      amp.connect(audioCtx.destination);
+      if (snesDelay && echo) amp.connect(snesDelay);
+
+      modulator.start(t); carrier.start(t);
+      modulator.stop(t + dur); carrier.stop(t + dur);
+    } catch(e) {}
+  }
+
+  function playHollowLead(freq, dur = 0.45, vol = 0.09, echo = true, vibrato = true) {
+    if (!state.audioEnabled) return;
+    initAudio();
+    if (!audioCtx) return;
+    try {
+      const t = audioCtx.currentTime;
+      const carrier = audioCtx.createOscillator();
+      carrier.type = 'sine';
+      carrier.frequency.setValueAtTime(freq, t);
+
+      const modulator = audioCtx.createOscillator();
+      modulator.type = 'sine';
+      modulator.frequency.setValueAtTime(freq * 1.0, t);
+
+      const modGain = audioCtx.createGain();
+      modGain.gain.setValueAtTime(freq * 0.85, t);
+      modGain.gain.exponentialRampToValueAtTime(freq * 0.12, t + dur * 0.9);
+
+      if (vibrato && dur > 0.25) {
+        // Delayed vocal-style vibrato (starts after 180ms)
+        const lfo = audioCtx.createOscillator();
+        const lfoGain = audioCtx.createGain();
+        lfo.frequency.setValueAtTime(5.5, t);
+        lfoGain.gain.setValueAtTime(0, t);
+        lfoGain.gain.setValueAtTime(0, t + 0.18);
+        lfoGain.gain.linearRampToValueAtTime(freq * 0.025, t + dur * 0.7);
+        lfo.connect(lfoGain);
+        lfoGain.connect(carrier.frequency);
+        lfo.start(t);
+        lfo.stop(t + dur);
+      }
+
+      const amp = audioCtx.createGain();
+      amp.gain.setValueAtTime(0.001, t);
+      amp.gain.linearRampToValueAtTime(vol, t + 0.03);
+      amp.gain.exponentialRampToValueAtTime(0.001, t + dur);
+
+      modulator.connect(modGain);
+      modGain.connect(carrier.frequency);
+      carrier.connect(amp);
+      amp.connect(audioCtx.destination);
+      if (snesDelay && echo) amp.connect(snesDelay);
+
+      modulator.start(t); carrier.start(t);
+      modulator.stop(t + dur); carrier.stop(t + dur);
+    } catch(e) {}
+  }
+
+  function playMetallicBell(freq, dur = 0.45, vol = 0.08, echo = true) {
+    if (!state.audioEnabled) return;
+    initAudio();
+    if (!audioCtx) return;
+    try {
+      const t = audioCtx.currentTime;
+      const carrier = audioCtx.createOscillator();
+      carrier.type = 'sine';
+      carrier.frequency.setValueAtTime(freq, t);
+
+      const modulator = audioCtx.createOscillator();
+      modulator.type = 'sine';
+      modulator.frequency.setValueAtTime(freq * 3.5, t); // Inharmonic 3.5:1 ratio
+
+      const modGain = audioCtx.createGain();
+      modGain.gain.setValueAtTime(freq * 5.0, t);
+      modGain.gain.exponentialRampToValueAtTime(0.01, t + dur * 0.65);
+
+      const amp = audioCtx.createGain();
+      amp.gain.setValueAtTime(vol, t);
+      amp.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+
+      modulator.connect(modGain);
+      modGain.connect(carrier.frequency);
+      carrier.connect(amp);
+      amp.connect(audioCtx.destination);
+      if (snesDelay && echo) amp.connect(snesDelay);
+
+      modulator.start(t); carrier.start(t);
+      modulator.stop(t + dur); carrier.stop(t + dur);
+    } catch(e) {}
+  }
+
+  function playWarmPad(freq, dur = 0.70, vol = 0.07, echo = true) {
+    if (!state.audioEnabled) return;
+    initAudio();
+    if (!audioCtx) return;
+    try {
+      const t = audioCtx.currentTime;
+      const carrier = audioCtx.createOscillator();
+      carrier.type = 'sine';
+      carrier.frequency.setValueAtTime(freq, t);
+
+      const modulator = audioCtx.createOscillator();
+      modulator.type = 'sine';
+      modulator.frequency.setValueAtTime(freq * 0.5, t);
+
+      const modGain = audioCtx.createGain();
+      modGain.gain.setValueAtTime(freq * 1.2, t);
+      modGain.gain.linearRampToValueAtTime(freq * 0.8, t + dur);
+
+      const amp = audioCtx.createGain();
+      amp.gain.setValueAtTime(0.001, t);
+      amp.gain.linearRampToValueAtTime(vol, t + 0.12);
+      amp.gain.exponentialRampToValueAtTime(0.001, t + dur);
+
+      modulator.connect(modGain);
+      modGain.connect(carrier.frequency);
+      carrier.connect(amp);
+      amp.connect(audioCtx.destination);
+      if (snesDelay && echo) amp.connect(snesDelay);
+
+      modulator.start(t); carrier.start(t);
+      modulator.stop(t + dur); carrier.stop(t + dur);
+    } catch(e) {}
+  }
+
+  function playDistGuitar(freq, dur = 0.25, vol = 0.12, echo = false) {
+    if (!state.audioEnabled) return;
+    initAudio();
+    if (!audioCtx) return;
+    try {
+      const t = audioCtx.currentTime;
+      const carrier = audioCtx.createOscillator();
+      carrier.type = 'sawtooth';
+      carrier.frequency.setValueAtTime(freq, t);
+
+      const modulator = audioCtx.createOscillator();
+      modulator.type = 'sine';
+      modulator.frequency.setValueAtTime(freq * 1.0, t);
+
+      const modGain = audioCtx.createGain();
+      modGain.gain.setValueAtTime(freq * 6.0, t);
+      modGain.gain.exponentialRampToValueAtTime(freq * 2.0, t + dur);
+
+      const amp = audioCtx.createGain();
+      amp.gain.setValueAtTime(vol, t);
+      amp.gain.exponentialRampToValueAtTime(0.001, t + dur);
+
+      modulator.connect(modGain);
+      modGain.connect(carrier.frequency);
+      carrier.connect(amp);
+      amp.connect(audioCtx.destination);
+      if (snesDelay && echo) amp.connect(snesDelay);
+
+      modulator.start(t); carrier.start(t);
+      modulator.stop(t + dur); carrier.stop(t + dur);
+    } catch(e) {}
+  }
+
+  function playFMKick(vol = 0.16) {
+    if (!state.audioEnabled) return;
+    initAudio();
+    if (!audioCtx) return;
+    try {
+      const t = audioCtx.currentTime;
+      const carrier = audioCtx.createOscillator();
+      carrier.type = 'sine';
+      carrier.frequency.setValueAtTime(140, t);
+      carrier.frequency.exponentialRampToValueAtTime(42, t + 0.045);
+
+      const modulator = audioCtx.createOscillator();
+      modulator.type = 'sine';
+      modulator.frequency.setValueAtTime(70, t);
+
+      const modGain = audioCtx.createGain();
+      modGain.gain.setValueAtTime(120, t);
+      modGain.gain.exponentialRampToValueAtTime(0.01, t + 0.035);
+
+      const amp = audioCtx.createGain();
+      amp.gain.setValueAtTime(vol, t);
+      amp.gain.exponentialRampToValueAtTime(0.001, t + 0.18);
+
+      modulator.connect(modGain);
+      modGain.connect(carrier.frequency);
+      carrier.connect(amp);
+      amp.connect(audioCtx.destination); // Tight kick, no echo
+
+      modulator.start(t); carrier.start(t);
+      modulator.stop(t + 0.18); carrier.stop(t + 0.18);
+    } catch(e) {}
+  }
+
+  function playFMSnare(vol = 0.10) {
+    if (!state.audioEnabled) return;
+    initAudio();
+    if (!audioCtx) return;
+    try {
+      const t = audioCtx.currentTime;
+      const carrier = audioCtx.createOscillator();
+      carrier.type = 'sine';
+      carrier.frequency.setValueAtTime(220, t);
+
+      const modulator = audioCtx.createOscillator();
+      modulator.type = 'sine';
+      modulator.frequency.setValueAtTime(220 * 10.0, t); // High MUL ratio = noise burst
+
+      const modGain = audioCtx.createGain();
+      modGain.gain.setValueAtTime(700, t);
+      modGain.gain.exponentialRampToValueAtTime(0.01, t + 0.11);
+
+      const amp = audioCtx.createGain();
+      amp.gain.setValueAtTime(vol, t);
+      amp.gain.exponentialRampToValueAtTime(0.001, t + 0.14);
+
+      modulator.connect(modGain);
+      modGain.connect(carrier.frequency);
+      carrier.connect(amp);
+      amp.connect(audioCtx.destination);
+
+      modulator.start(t); carrier.start(t);
+      modulator.stop(t + 0.14); carrier.stop(t + 0.14);
+    } catch(e) {}
+  }
+
+  function playFMHiHat(vol = 0.045, open = false) {
+    if (!state.audioEnabled) return;
+    initAudio();
+    if (!audioCtx) return;
+    try {
+      const t = audioCtx.currentTime;
+      const dur = open ? 0.13 : 0.035;
+      const carrier = audioCtx.createOscillator();
+      carrier.type = 'sine';
+      carrier.frequency.setValueAtTime(3200, t);
+
+      const modulator = audioCtx.createOscillator();
+      modulator.type = 'sine';
+      modulator.frequency.setValueAtTime(3200 * 11.0, t);
+
+      const modGain = audioCtx.createGain();
+      modGain.gain.setValueAtTime(2800, t);
+      modGain.gain.exponentialRampToValueAtTime(0.01, t + dur * 0.8);
+
+      const amp = audioCtx.createGain();
+      amp.gain.setValueAtTime(vol, t);
+      amp.gain.exponentialRampToValueAtTime(0.001, t + dur);
+
+      modulator.connect(modGain);
+      modGain.connect(carrier.frequency);
+      carrier.connect(amp);
+      amp.connect(audioCtx.destination);
+
+      modulator.start(t); carrier.start(t);
+      modulator.stop(t + dur); carrier.stop(t + dur);
+    } catch(e) {}
+  }
+
   const SFX = {
-    key: () => playFM(1200, 1.5, 300, 0.03, 0.03),
-    beep: () => playFM(state.carrierFreq, 2.0, 500, 0.08, 0.07),
-    warn: () => playFM(320, 0.5, 800, 0.22, 0.11),
+    key: () => {
+      // Crisp mechanical terminal click: high pitch fast transient
+      playFM(1850, 2.0, 350, 0.025, 0.035, false);
+    },
+    beep: () => {
+      // Resonant 1999Hz carrier ping
+      playEPiano(state.carrierFreq || 1999, 0.12, 0.07, true);
+    },
+    warn: () => {
+      // Subterranean FM warning stab
+      playSlapBass(146.83, 0.28, 0.12);
+      playFM(293.66, 3.5, 400, 0.22, 0.09, true);
+    },
     alarm: () => {
-      playFM(880, 2.0, 600, 0.12, 0.1);
-      setTimeout(() => playFM(720, 2.0, 600, 0.12, 0.1), 100);
+      // Urgent dual-tone siren
+      playBrightBrass(880, 0.12, 0.10, true);
+      setTimeout(() => playBrightBrass(739.99, 0.14, 0.10, true), 90);
     },
     success: () => {
-      playFM(523.25, 2.0, 400, 0.16, 0.09);
-      setTimeout(() => playFM(659.25, 2.0, 400, 0.16, 0.09), 80);
-      setTimeout(() => playFM(783.99, 2.0, 400, 0.24, 0.11), 160);
+      // Major triad crystal earcon (C5 - E5 - G5)
+      playMetallicBell(523.25, 0.16, 0.08, true);
+      setTimeout(() => playMetallicBell(659.25, 0.18, 0.09, true), 70);
+      setTimeout(() => playMetallicBell(783.99, 0.30, 0.11, true), 140);
     },
     unsealFanfare: () => {
-      const notes = [440, 554.37, 659.25, 880, 1108.73, 1318.51, 1760];
-      notes.forEach((n, idx) => {
-        setTimeout(() => playFM(n, 2.5, 450, 0.35, 0.12), idx * 110);
+      // Majestic 1999 singularity fanfare: ♭VI - ♭VII - I cadence with brass & bells
+      const notes = [
+        { f: 415.30, d: 0.20, t: 0 },    // Ab4
+        { f: 466.16, d: 0.20, t: 110 },  // Bb4
+        { f: 523.25, d: 0.45, t: 220 },  // C5
+        { f: 659.25, d: 0.30, t: 400 },  // E5
+        { f: 783.99, d: 0.30, t: 510 },  // G5
+        { f: 1046.50, d: 0.65, t: 620 }  // C6
+      ];
+      notes.forEach(n => {
+        setTimeout(() => {
+          playBrightBrass(n.f, n.d, 0.12, true);
+          playMetallicBell(n.f * 2, n.d * 0.7, 0.06, true);
+        }, n.t);
       });
     },
-    morseDit: () => playFM(state.carrierFreq, 1.0, 50, 0.06, 0.08),
-    morseDah: () => playFM(state.carrierFreq, 1.0, 50, 0.18, 0.08),
-    cpuStep: () => playFM(1800, 1.0, 150, 0.02, 0.03),
-    seismicBoom: () => playFM(65.4, 3.5, 300, 0.65, 0.16),
-    packet: () => playFM(2400, 0.5, 100, 0.015, 0.02)
+    morseDit: () => playFM(state.carrierFreq || 1999, 1.0, 40, 0.05, 0.07, false),
+    morseDah: () => playFM(state.carrierFreq || 1999, 1.0, 40, 0.16, 0.07, false),
+    cpuStep: () => playFM(2400, 1.5, 120, 0.018, 0.025, false),
+    seismicBoom: () => {
+      // Subterranean seismic rumble: pitch drops 85Hz -> 28Hz with heavy FM
+      playSlapBass(55.0, 0.75, 0.18);
+      if (audioCtx && state.audioEnabled) {
+        try {
+          const t = audioCtx.currentTime;
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(85, t);
+          osc.frequency.exponentialRampToValueAtTime(26, t + 0.8);
+          gain.gain.setValueAtTime(0.18, t);
+          gain.gain.exponentialRampToValueAtTime(0.001, t + 0.85);
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          if (snesDelay) gain.connect(snesDelay);
+          osc.start(t);
+          osc.stop(t + 0.85);
+        } catch(e) {}
+      }
+    },
+    packet: () => playMetallicBell(2637, 0.04, 0.04, false)
   };
 
-  // Procedural FM Chiptune Jukebox Sequencer (5 Tracks)
+  // --- PROCEDURAL 6-CHANNEL CHIPTUNE JUKEBOX SEQUENCER (32-STEP THEMES) ---
   function stepJukebox() {
     if (!state.audioEnabled || state.jukeboxTrack === 0) return;
+    const step = jukeboxStep % 32;
 
     if (state.jukeboxTrack === 1) {
-      // Track 1: Carlsbad Salt Cavern (1999Hz Drone & Low Pulses)
-      const bassNotes = [55, 55, 73.4, 55, 65.4, 55, 82.4, 73.4];
-      const note = bassNotes[jukeboxStep % bassNotes.length];
-      playFM(note, 2.0, 120, 0.35, 0.08);
+      // =========================================================================
+      // TRACK 1: CARLSBAD SALT CAVERN (Subterranean Dark Ambient / Deep Drone)
+      // Andalusian descent: Am -> G -> F -> E7 (8 steps per chord)
+      // Ch1 Hollow Flute (delayed vibrato), Ch2 Counter pad, Ch3 Water drips,
+      // Ch4 Sub-bass (55->49->43.6->41.2), Ch5 Subterranean pulse
+      // =========================================================================
+      const bassRoots = [55.0, 49.0, 43.65, 41.2]; // A1, G1, F1, E1
+      const chordIdx = Math.floor(step / 8);
+      const chordSubStep = step % 8;
 
-      if (jukeboxStep % 4 === 0) {
-        playFM(state.carrierFreq, 1.0, 180, 0.45, 0.04);
+      // Ch4: Sub-bass counterpoint (no echo, tight low end)
+      if (chordSubStep === 0) {
+        playSlapBass(bassRoots[chordIdx], 0.70, 0.15);
+      } else if (chordSubStep === 4) {
+        playSlapBass(bassRoots[chordIdx] * 2, 0.35, 0.09); // Octave pop
       }
+
+      // Ch1: Lead Melody (Hollow Flute with delayed vibrato) - Phrygian/Aeolian
+      // Phrasing: active steps 0-14, rests steps 16-22 (Call & Response!)
+      const leadMap = {
+        0: 329.63, // E4
+        3: 392.00, // G4
+        6: 440.00, // A4
+        9: 493.88, // B4
+        12: 523.25, // C5
+        14: 493.88, // B4
+        // 16-22 REST - Call and response
+        24: 415.30, // G#4 (leading tone of E7!)
+        27: 369.99, // F#4
+        30: 440.00  // A4 resolve
+      };
+      if (leadMap[step]) {
+        playHollowLead(leadMap[step], 0.65, 0.095, true, true);
+      }
+
+      // Ch2: Counter-melody (contrary motion to lead!)
+      // When lead ascends in steps 0-12, counter descends: C4 -> B3 -> A3 -> G3
+      // When lead rests in steps 16-22, counter takes melodic spotlight!
+      const counterMap = {
+        1: 261.63, // C4
+        5: 246.94, // B3
+        8: 220.00, // A3
+        13: 196.00, // G3
+        16: 329.63, // E4 (Spotlight solo)
+        18: 349.23, // F4
+        20: 293.66, // D4
+        22: 329.63  // E4
+      };
+      if (counterMap[step]) {
+        playWarmPad(counterMap[step], 0.55, 0.065, true);
+      }
+
+      // Ch3: Crystal water droplet echo (high SPC700 echo)
+      if (step % 4 === 2) {
+        const dropNotes = [1046.5, 1318.5, 1567.98, 1760.0];
+        playMetallicBell(dropNotes[(step / 2) % dropNotes.length], 0.20, 0.04, true);
+      }
+
+      // Ch5: Subterranean resonant pulse on bar downbeats
+      if (chordSubStep === 0) {
+        playFM(65.41, 0.5, 80, 0.40, 0.06, false);
+      }
+
     } else if (state.jukeboxTrack === 2) {
-      // Track 2: Airgap Infiltration (A Minor 120BPM Groove)
-      const riff = [110, 110, 130.8, 110, 146.8, 130.8, 164.8, 146.8];
-      const note = riff[jukeboxStep % riff.length];
-      playFM(note, 1.5, 220, 0.22, 0.09);
+      // =========================================================================
+      // TRACK 2: AIRGAP INFILTRATION (Cyberpunk Stealth Groove / Koshiro Style)
+      // Progression: Am7 -> Dm7 -> Fmaj7 -> Em7 (8 steps each, 125BPM swing)
+      // Ch1 E-Piano, Ch2 Brass counter-stabs, Ch3 Shell voicings,
+      // Ch4 Slap-bass 16th funk, Ch5 Kick+Snare, Ch6 Hi-hat
+      // =========================================================================
+      const chordIdx = Math.floor(step / 8);
+      const sub = step % 8;
 
-      if (jukeboxStep % 2 === 1) {
-        playFM(440, 2.5, 300, 0.12, 0.04);
-      }
-    } else if (state.jukeboxTrack === 3) {
-      // Track 3: Precursor Echoes (Am9 Arpeggio)
-      const arp = [220, 261.6, 329.6, 392.0, 493.8, 392.0, 329.6, 261.6];
-      const note = arp[jukeboxStep % arp.length];
-      playFM(note, 3.0, 350, 0.28, 0.06);
-
-      if (jukeboxStep % 8 === 0) {
-        playFM(110, 1.0, 150, 0.60, 0.10);
-      }
-    } else if (state.jukeboxTrack === 4) {
-      // Track 4: Quarantine Meltdown (140BPM Urgent Pulse)
-      const meltdownNotes = [146.8, 174.6, 196.0, 220.0, 196.0, 174.6, 146.8, 130.8];
-      const note = meltdownNotes[jukeboxStep % meltdownNotes.length];
-      playFM(note, 3.5, 450, 0.18, 0.10);
-      if (jukeboxStep % 4 === 2) {
-        playFM(880, 1.5, 600, 0.15, 0.05);
-      }
-    } else if (state.jukeboxTrack === 5) {
-      // Track 5: Echoes of the Millennium (Am - F - C - G ambient bell choir in 1999Hz tuning)
-      const chords = [
-        [220.0, 261.6, 329.6],
-        [174.6, 220.0, 261.6],
-        [130.8, 164.8, 196.0],
-        [196.0, 246.9, 293.7]
+      // Ch4: Active Koshiro Slap Bass counterpoint (roots, octaves, 5ths)
+      const bassPatterns = [
+        [110.0, 55.0, 130.81, 110.0, 164.81, 110.0, 146.83, 130.81], // Am7
+        [146.83, 73.42, 174.61, 146.83, 220.0, 146.83, 196.0, 174.61], // Dm7
+        [174.61, 87.31, 220.0, 174.61, 261.63, 174.61, 246.94, 220.0], // Fmaj7
+        [164.81, 82.41, 196.0, 164.81, 246.94, 164.81, 220.0, 196.0]   // Em7
       ];
-      const chord = chords[Math.floor(jukeboxStep / 4) % chords.length];
-      const note = chord[jukeboxStep % chord.length];
-      playFM(note, 2.0, 280, 0.40, 0.06);
-      if (jukeboxStep % 8 === 0) {
-        playFM(state.carrierFreq, 0.5, 120, 0.55, 0.03);
-      }
-    }
+      playSlapBass(bassPatterns[chordIdx][sub], 0.18, 0.13);
 
+      // Ch1: Lead Melody (Syncopated DX7 E-Piano with off-beat suspensions)
+      const leadMap = {
+        0: 440.00,  // A4
+        2: 523.25,  // C5
+        5: 493.88,  // B4
+        7: 440.00,  // A4
+        8: 587.33,  // D5
+        10: 659.26, // E5
+        13: 587.33, // D5
+        15: 523.25, // C5
+        16: 659.26, // E5
+        18: 698.46, // F5
+        21: 659.26, // E5
+        23: 587.33, // D5
+        24: 493.88, // B4
+        27: 440.00, // A4
+        30: 415.30  // G#4
+      };
+      if (leadMap[step]) {
+        playEPiano(leadMap[step], 0.28, 0.09, true);
+      }
+
+      // Ch2: Counter-Melody Brass Stabs (contrary response on off-beats)
+      if (sub === 3 || sub === 6) {
+        const counterNotes = [
+          [261.63, 329.63], // Am7 (C4, E4)
+          [349.23, 440.00], // Dm7 (F4, A4)
+          [349.23, 523.25], // Fmaj7 (F4, C5)
+          [293.66, 392.00]  // Em7 (D4, G4)
+        ];
+        playBrightBrass(counterNotes[chordIdx][sub === 3 ? 0 : 1], 0.20, 0.08, true);
+      }
+
+      // Ch3: Shell Voicings (3rd + 7th arpeggios, no doubled 5th)
+      if (sub === 1 || sub === 5) {
+        const shellNotes = [
+          261.63, // C4 (3rd of Am)
+          349.23, // F4 (3rd of Dm)
+          329.63, // E4 (7th of Fmaj7)
+          392.00  // G4 (3rd of Em)
+        ];
+        playMetallicBell(shellNotes[chordIdx] * 1.5, 0.15, 0.04, true);
+      }
+
+      // Ch5/6: Swing Percussion (Kick on 0 & 4/6, Snare backbeat on 2 & 6, Hi-hat every step)
+      if (sub === 0 || sub === 5) playFMKick(0.15);
+      if (sub === 2 || sub === 6) playFMSnare(0.09);
+      playFMHiHat(0.035, sub === 7); // Open hat at bar end
+
+    } else if (state.jukeboxTrack === 3) {
+      // =========================================================================
+      // TRACK 3: PRECURSOR NEURAL LATTICE (Sci-Fi Minor / Lydian-Aeolian Float)
+      // Progression: Em9 -> Cmaj7#11 -> Am9 -> B7sus4 (8 steps each)
+      // Ch1 Crystalline Bells, Ch2 Flute counterpoint, Ch3 5-step lattice arp,
+      // Ch4 Sub drone, Ch5 Subtle click rhythm
+      // =========================================================================
+      const chordIdx = Math.floor(step / 8);
+      const sub = step % 8;
+
+      // Ch4: Warm sub-bass drone
+      if (sub === 0) {
+        const roots = [82.41, 65.41, 55.0, 61.74]; // E2, C2, A1, B1
+        playSlapBass(roots[chordIdx], 0.85, 0.13);
+      }
+
+      // Ch1: Crystalline Bell Lead Theme
+      const leadMap = {
+        0: 659.26,  // E5
+        2: 739.99,  // F#5 (9th)
+        5: 587.33,  // D5
+        8: 739.99,  // F#5 (#11 of Cmaj7!)
+        11: 783.99, // G5
+        14: 659.26, // E5
+        16: 880.00, // A5
+        19: 783.99, // G5
+        22: 659.26, // E5
+        24: 739.99, // F#5
+        27: 587.33, // D5
+        30: 493.88  // B4
+      };
+      if (leadMap[step]) {
+        playMetallicBell(leadMap[step], 0.45, 0.08, true);
+      }
+
+      // Ch2: Counter-melody (Hollow Flute moving in contrary motion)
+      const counterMap = {
+        1: 329.63, // E4
+        4: 293.66, // D4
+        9: 261.63, // C4
+        12: 246.94, // B3
+        17: 220.00, // A3
+        20: 261.63, // C4
+        25: 293.66, // D4
+        29: 246.94  // B3
+      };
+      if (counterMap[step]) {
+        playHollowLead(counterMap[step], 0.45, 0.075, true, false);
+      }
+
+      // Ch3: 5-step Neural Lattice Arpeggio
+      const latticeNotes = [329.63, 392.00, 493.88, 587.33, 659.26];
+      const arpNote = latticeNotes[(step * 2) % latticeNotes.length];
+      playEPiano(arpNote, 0.18, 0.04, true);
+
+      // Ch5: Inharmonic clock ticks
+      if (step % 2 === 0) playFMHiHat(0.025, false);
+
+    } else if (state.jukeboxTrack === 4) {
+      // =========================================================================
+      // TRACK 4: QUARANTINE MELTDOWN (Driving Industrial Battle / Phrygian Dominant)
+      // Progression: Dm -> Eb -> Dm -> A7 (8 steps each, 150BPM galloping swing)
+      // Ch1 Distorted Guitar Lead, Ch2 High Siren Stabs, Ch3 Syncopated shells,
+      // Ch4 Galloping 16th Bass, Ch5 Heavy Kick+Snare
+      // =========================================================================
+      const chordIdx = Math.floor(step / 8);
+      const sub = step % 8;
+
+      // Ch4: Galloping 16th Distorted Bass Riff (Root-Root-Octave)
+      const bassRoots = [73.42, 77.78, 73.42, 55.0]; // D2, Eb2, D2, A1
+      const root = bassRoots[chordIdx];
+      const bassPitch = (sub === 2 || sub === 6) ? root * 2 : root;
+      playSlapBass(bassPitch, 0.14, 0.14);
+
+      // Ch1: Distorted FM Guitar Lead
+      const leadMap = {
+        0: 293.66,  // D4
+        2: 311.13,  // Eb4 (Phrygian ♭2 bite!)
+        4: 369.99,  // F#4
+        7: 440.00,  // A4
+        8: 466.16,  // Bb4
+        10: 440.00, // A4
+        13: 369.99, // F#4
+        15: 311.13, // Eb4
+        16: 587.33, // D5
+        18: 622.25, // Eb5
+        21: 587.33, // D5
+        23: 466.16, // Bb4
+        24: 440.00, // A4
+        26: 369.99, // F#4
+        28: 311.13, // Eb4
+        30: 293.66  // D4
+      };
+      if (leadMap[step]) {
+        playDistGuitar(leadMap[step], 0.22, 0.11, false);
+      }
+
+      // Ch2: Counter Alarm Siren Stabs (High contrary interval stabs)
+      if (sub === 1 || sub === 5) {
+        const sirens = [
+          880.00, // A5
+          932.33, // Bb5
+          880.00, // A5
+          739.99  // F#5
+        ];
+        playBrightBrass(sirens[chordIdx], 0.16, 0.08, true);
+      }
+
+      // Ch5/6: Heavy Driving Industrial Drums (Kick 0, 3, 6; Snare 2, 4, 6)
+      if (sub === 0 || sub === 3 || sub === 5) playFMKick(0.18);
+      if (sub === 2 || sub === 6) playFMSnare(0.12);
+      playFMHiHat(0.04, sub === 4);
+
+    } else if (state.jukeboxTrack === 5) {
+      // =========================================================================
+      // TRACK 5: MILLENNIUM SINGULARITY (Royal Road / Majestic 1999 Chime Chorale)
+      // Progression: Fmaj7 -> G -> Em7 -> Am (0-23) -> Ab -> Bb -> C (24-31 Mario Cadence!)
+      // Ch1 Bright Brass & E-Piano, Ch2 Contrary vocal counterpoint,
+      // Ch3 Shimmering bells, Ch4 Walking bass, Ch5 Swing groove
+      // =========================================================================
+      const chordIdx = Math.floor(step / 4);
+      const sub = step % 4;
+
+      // Ch4: Walking Bass Counterpoint (C3-C4 stepwise connect)
+      const bassWalking = [
+        174.61, 196.00, // F3 -> G3
+        196.00, 220.00, // G3 -> A3
+        164.81, 196.00, // E3 -> G3
+        220.00, 196.00, // A3 -> G3
+        174.61, 220.00, // F3 -> A3
+        196.00, 246.94, // G3 -> B3
+        207.65, 233.08, // Ab3 -> Bb3 (Mario Cadence!)
+        261.63, 130.81  // C4 -> C3
+      ];
+      if (sub === 0 || sub === 2) {
+        playSlapBass(bassWalking[chordIdx] || 130.81, 0.24, 0.12);
+      }
+
+      // Ch1: Lead Melody (Singing E-Piano with delayed vibrato)
+      const leadMap = {
+        0: 523.25,  // C5 (Fmaj7 5th)
+        2: 587.33,  // D5
+        4: 659.26,  // E5
+        6: 783.99,  // G5
+        8: 659.26,  // E5
+        10: 587.33, // D5
+        12: 523.25, // C5
+        14: 440.00, // A4
+        16: 698.46, // F5
+        18: 783.99, // G5
+        20: 880.00, // A5
+        22: 987.77, // B5
+        24: 830.61, // Ab5 (Triumphant whole-step lift!)
+        26: 932.33, // Bb5
+        28: 1046.50 // C6 peak resolution!
+      };
+      if (leadMap[step]) {
+        playEPiano(leadMap[step], 0.38, 0.10, true);
+      }
+
+      // Ch2: Counter-Melody (Contrary motion weaving 3rds and 7ths)
+      const counterMap = {
+        1: 349.23, // F4
+        3: 392.00, // G4
+        5: 440.00, // A4
+        7: 493.88, // B4
+        9: 392.00, // G4
+        11: 349.23, // F4
+        13: 329.63, // E4
+        15: 261.63, // C4
+        17: 440.00, // A4
+        19: 493.88, // B4
+        21: 523.25, // C5
+        23: 587.33, // D5
+        25: 415.30, // Ab4
+        27: 466.16, // Bb4
+        29: 523.25  // C5
+      };
+      if (counterMap[step]) {
+        playHollowLead(counterMap[step], 0.32, 0.08, true, false);
+      }
+
+      // Ch3: Shimmering 1999Hz Singularity Bells
+      if (step % 2 === 1) {
+        const bellNotes = [1046.5, 1318.5, 1567.98, 2093.0];
+        playMetallicBell(bellNotes[step % bellNotes.length], 0.25, 0.04, true);
+      }
+
+      // Ch5/6: Majestic Swing Groove
+      if (sub === 0) playFMKick(0.14);
+      if (sub === 2) playFMSnare(0.08);
+      playFMHiHat(0.03, sub === 3);
+    }
+  }
+
+  // Swing groove scheduler replacing generic constant setInterval
+  function stopJukeboxTimer() {
+    if (jukeboxTimer) {
+      clearInterval(jukeboxTimer);
+      jukeboxTimer = null;
+    }
+    if (jukeboxTimeout) {
+      clearTimeout(jukeboxTimeout);
+      jukeboxTimeout = null;
+    }
+  }
+
+  function scheduleJukeboxStep() {
+    if (!state.audioEnabled || state.jukeboxTrack === 0) return;
+    stepJukebox();
     jukeboxStep++;
+
+    // Alternating swing groove delays per genre:
+    // Tracks 2 & 4: subtle 5:3 swing (165ms / 105ms ~125BPM / 150BPM)
+    // Track 1: slow ambient breathing pulse (310ms)
+    // Track 3: 5:4 crystalline lattice clock (200ms / 160ms)
+    // Track 5: 3:2 swing chiptune cadence (180ms / 120ms)
+    let nextDelay = 180;
+    const isEven = (jukeboxStep % 2 === 0);
+    if (state.jukeboxTrack === 1) {
+      nextDelay = 310;
+    } else if (state.jukeboxTrack === 2) {
+      nextDelay = isEven ? 165 : 105;
+    } else if (state.jukeboxTrack === 3) {
+      nextDelay = isEven ? 200 : 160;
+    } else if (state.jukeboxTrack === 4) {
+      nextDelay = isEven ? 140 : 100;
+    } else if (state.jukeboxTrack === 5) {
+      nextDelay = isEven ? 180 : 120;
+    }
+    jukeboxTimeout = setTimeout(scheduleJukeboxStep, nextDelay);
   }
 
   function cycleJukebox() {
@@ -2831,16 +3530,12 @@ revealing the blueprint for the App #100 KMatrix singularity.
     if (state.jukeboxTrack > 0) {
       pill.className = 'pill active';
       if (!state.audioEnabled) toggleAudio();
-      if (!jukeboxTimer) {
-        jukeboxStep = 0;
-        jukeboxTimer = setInterval(stepJukebox, 240);
-      }
+      stopJukeboxTimer();
+      jukeboxStep = 0;
+      scheduleJukeboxStep();
     } else {
       pill.className = 'pill warn';
-      if (jukeboxTimer) {
-        clearInterval(jukeboxTimer);
-        jukeboxTimer = null;
-      }
+      stopJukeboxTimer();
     }
   }
 
@@ -2856,10 +3551,7 @@ revealing the blueprint for the App #100 KMatrix singularity.
     } else {
       pill.textContent = 'AUDIO: FM+SPC (OFF)';
       pill.className = 'pill';
-      if (jukeboxTimer) {
-        clearInterval(jukeboxTimer);
-        jukeboxTimer = null;
-      }
+      stopJukeboxTimer();
       printLine('[AUDIO] Procedural acoustic synthesizer disabled.', 'text-dim');
     }
   }
@@ -5483,9 +6175,11 @@ Timestamp: ${new Date().toISOString()}
         else if (arg === '2') { state.jukeboxTrack = 2; updateJukeboxUI(); }
         else if (arg === '3') { state.jukeboxTrack = 3; updateJukeboxUI(); }
         else if (arg === '4') { state.jukeboxTrack = 4; updateJukeboxUI(); }
+        else if (arg === '5') { state.jukeboxTrack = 5; updateJukeboxUI(); }
         else if (arg === 'off' || arg === '0') { state.jukeboxTrack = 0; updateJukeboxUI(); }
         else { cycleJukebox(); }
-        printLine(`[JUKEBOX] Ambient track set to ${['MUTE', 'Salt Vault', 'Airgap Pulse', 'Precursor Echoes', 'Meltdown'][state.jukeboxTrack]}.`, 'text-cyan');
+        const jTitles = ['MUTE', 'Carlsbad Salt Cavern', 'Airgap Infiltration', 'Precursor Neural Lattice', 'Quarantine Meltdown', 'Millennium Singularity'];
+        printLine(`[JUKEBOX] Ambient track set to ${jTitles[state.jukeboxTrack] || 'MUTE'}.`, 'text-cyan');
         break;
 
       case 'audio':
