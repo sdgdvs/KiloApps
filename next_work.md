@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-graphics
-next_agent: kilo-soundscape
+current_agent: kilo-soundscape
+next_agent: kilo-tester
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -14,7 +14,7 @@ timeout_minutes: 6
 status: ready
 current_targets:
   kilo_creator: kweb://warez
-  kilo_graphics: KTrader
+  kilo_graphics: KMystery
   kilo_soundscape: kweb://echo-subsystem.net
   kilo_tester: KAudio
   kilo_usability: KNote
@@ -34,13 +34,18 @@ virtual_web_rotation:
 - kweb://10.19.99.4/classified
 - kweb://echo-subsystem.net
 last_run:
-  agent: kilo-creator
-  app: kweb://webring
-  timestamp: '2026-10-14T23:33:00-07:00'
+  agent: kilo-graphics
+  app: KTrader
+  timestamp: '2026-10-15T00:13:00-07:00'
 last_planner_run: '2026-10-14T18:32:00Z'
 ---
 
 ## Execution Log
+- **2026-10-15 00:13 [kilo-graphics]**: ⏭️ Skip — Imagen 3 asset replacement not appropriate for KTrader.
+  - Retro sci-fi space trading terminal with procedural canvas HUD; no programmer cutouts.
+  - Zero rotating specular glints or traveling perimeter border dots found.
+  - Web size: 96 KB (<999 KB ceiling). KiloOS shell build clean.
+  - Advanced graphics queue to KMystery; handed off to kilo-soundscape.
 - **2026-10-14 23:33 [kilo-creator]**: kweb://webring deep expansion complete.
   - Added F1/H Field Manual & Hotkey HUD modal, F5/F9 Quicksave/Quickload state snapshots, and first-run welcome banner.
   - Integrated header controls, hotkeys (1-9/0/M/Space/Esc/F1/F5/F9), and JSON state export for 18-node webring backbone.
@@ -111,20 +116,20 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Upcoming Queue**: `kweb://portal`, `kweb://webring`, `kweb://warez`, `kweb://geocities`, `kweb://users/~neon_rider`, `kweb://asm-temple`, `kweb://cybercafe`.
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
-- **Target**: `KCyber`
-- **Primary Files**: `KiloOS/public/apps/kcyber.html`, `KCyber/main.c`
+- **Target**: `KMystery`
+- **Primary Files**: `KiloOS/public/apps/kmystery.html`, `KMystery/main.c`
 - **Objective**: Visual art audit for programmer art vs. Imagen 3 suitability; remove traveling glints.
 - **Action Steps**:
-  1. Evaluate suitability: `KCyber` cyberpunk cyberspace hacking simulation.
-  2. If visual aesthetic is wireframe/terminal or already has production art, execute clean turn skip.
+  1. Evaluate suitability: `KMystery` detective mystery investigation game.
+  2. If visual aesthetic is text/procedural or already has production art, execute clean turn skip.
   3. If replacing sprites: use 2-stage asset pipeline (`generate_image` with solid `#FF00FF` background -> `scripts/asset_pipeline.py`).
   4. Search for and remove any rotating specular glints or traveling perimeter border dots.
 - **Verification**: `cd KiloOS && npm run build`. Verify files < 999 KB.
 - **Handoff**:
-  - In frontmatter: advance `current_targets.kilo_graphics` to `KTrader`.
+  - In frontmatter: advance `current_targets.kilo_graphics` to `KColosseum`.
   - Set `current_agent: kilo-soundscape`
   - Append terse execution log (≤6 lines), commit, and push.
-- **Upcoming Queue**: `KTrader`, `KMystery`, `KColosseum`.
+- **Upcoming Queue**: `KMystery`, `KColosseum`, `KTrader`.
 
 ### 3. Procedural Audio & Soundscape Queue (`kilo-soundscape`)
 - **Target**: `kweb://asm-temple`
