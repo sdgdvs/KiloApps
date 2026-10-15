@@ -750,10 +750,11 @@
         🔊 AUDIO: <span id="audioStatusText">OFF</span>
       </button>
       <select class="input-retro" id="audioPresetSelect" onchange="changeAudioPreset()" style="font-size:11px; padding:3px 6px;">
-        <option value="1999hz">1999Hz Subcarrier Beacon</option>
-        <option value="432hz">432Hz Carlsbad Waveguide</option>
-        <option value="slapbass">YM2612 Slap Bass Pulse</option>
-        <option value="spc_echo">SPC700 Stereo Delay Echo</option>
+        <option value="bgm">BGM: Echo Skunkworks Theme (YM2612 6-Ch)</option>
+        <option value="1999hz">1999Hz Subcarrier Beacon & Mystery Motif</option>
+        <option value="432hz">432Hz Carlsbad Phrygian Drone</option>
+        <option value="slapbass">YM2612 Slap Bass Groove</option>
+        <option value="spc_echo">SPC700 Suspended Echo Cascade</option>
       </select>
       <canvas class="scope-canvas-mini" id="scopeCanvasMini" width="90" height="26"></canvas>
     </div>
@@ -1820,7 +1821,7 @@ The third precursor hash is hereby committed to the Carlsbad bedrock memory regi
    ========================================================================= */
 let audioCtx = null;
 let audioEnabled = false;
-let currentPreset = '1999hz';
+let currentPreset = 'bgm';
 let loopOscCarrier = null;
 let loopOscMod = null;
 let loopModGain = null;
@@ -1830,6 +1831,10 @@ let delayFeedback = null;
 let analyserNode = null;
 let animFrameMini = null;
 let animFrameLarge = null;
+
+// Procedural BGM Sequencer state
+let bgmTimer = null;
+let bgmStep = 0;
 
 // User configurable tuning values
 let tunedCarrierFreq = 1999;
@@ -1849,6 +1854,384 @@ function initAudio() {
   if (audioCtx && audioCtx.state === 'suspended') {
     audioCtx.resume().catch(() => {});
   }
+  ensureAudioNodes();
+}
+
+function ensureAudioNodes() {
+  if (!audioCtx) return;
+  const now = audioCtx.currentTime;
+
+  // Analyser node for oscilloscope and FFT spectrum
+  if (!analyserNode) {
+    analyserNode = audioCtx.createAnalyser();
+    analyserNode.fftSize = 256;
+    analyserNode.smoothingTimeConstant = 0.8;
+    analyserNode.connect(audioCtx.destination);
+  }
+
+  // SPC700 Stereo Delay Line with LP filtering (SNES DSP echo profile)
+  if (!delayNode) {
+    delayNode = audioCtx.createDelay(1.0);
+    delayFeedback = audioCtx.createGain();
+    const delayFilter = audioCtx.createBiquadFilter();
+
+    delayNode.delayTime.setValueAtTime(tunedDelayTime, now);
+    delayFilter.type = 'lowpass';
+    delayFilter.frequency.setValueAtTime(2200, now);
+    delayFeedback.gain.setValueAtTime(tunedDelayFeedback, now);
+
+    delayNode.connect(delayFilter);
+    delayFilter.connect(delayFeedback);
+    delayFeedback.connect(delayNode);
+    delayNode.connect(analyserNode);
+  }
+}
+
+// 2-Operator YM2612 FM Synthesis Tone Generator
+function playFmTone(carrierFreq, modRatio, modIndex, duration, gainVal = 0.08, useEcho = true) {
+  if (!audioEnabled) return;
+  initAudio();
+  if (!audioCtx) return;
+
+  const now = audioCtx.currentTime;
+  const carrier = audioCtx.createOscillator();
+  const modulator = audioCtx.createOscillator();
+  const modGain = audioCtx.createGain();
+  const carrierGain = audioCtx.createGain();
+
+  carrier.type = 'sine';
+  carrier.frequency.setValueAtTime(carrierFreq, now);
+
+  modulator.type = 'sine';
+  const modFreq = carrierFreq * modRatio;
+  modulator.frequency.setValueAtTime(modFreq, now);
+
+  const deviation = modFreq * modIndex;
+  modGain.gain.setValueAtTime(deviation, now);
+  modGain.gain.exponentialRampToValueAtTime(0.01, now + duration);
+
+  modulator.connect(modGain);
+  modGain.connect(carrier.frequency);
+
+  carrierGain.gain.setValueAtTime(gainVal, now);
+  carrierGain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+
+  carrier.connect(carrierGain);
+  if (analyserNode) carrierGain.connect(analyserNode);
+  if (useEcho && delayNode) carrierGain.connect(delayNode);
+
+  carrier.start(now);
+  modulator.start(now);
+  carrier.stop(now + duration + 0.05);
+  modulator.stop(now + duration + 0.05);
+}
+
+// Named FM Patches & Channel Voices
+function playFMLead(freq, dur, vol = 0.085, useVibrato = true) {
+  if (!audioEnabled || !freq) return;
+  initAudio();
+  if (!audioCtx) return;
+
+  const now = audioCtx.currentTime;
+  const carrier = audioCtx.createOscillator();
+  const modulator = audioCtx.createOscillator();
+  const modGain = audioCtx.createGain();
+  const ampEnv = audioCtx.createGain();
+
+  carrier.type = 'sine';
+  carrier.frequency.setValueAtTime(freq, now);
+
+  if (useVibrato && dur > 0.25) {
+    const lfo = audioCtx.createOscillator();
+    const lfoGain = audioCtx.createGain();
+    lfo.frequency.setValueAtTime(5.8, now);
+    lfoGain.gain.setValueAtTime(0, now);
+    lfoGain.gain.setValueAtTime(0, now + 0.18);
+    lfoGain.gain.linearRampToValueAtTime(freq * 0.022, now + dur);
+    lfo.connect(lfoGain);
+    lfoGain.connect(carrier.frequency);
+    lfo.start(now);
+    lfo.stop(now + dur + 0.05);
+  }
+
+  modulator.type = 'sine';
+  const modFreq = freq * 1.0;
+  modulator.frequency.setValueAtTime(modFreq, now);
+  modGain.gain.setValueAtTime(freq * 1.6, now);
+  modGain.gain.exponentialRampToValueAtTime(freq * 0.2, now + 0.09);
+  modGain.gain.exponentialRampToValueAtTime(0.01, now + dur);
+
+  ampEnv.gain.setValueAtTime(vol, now);
+  ampEnv.gain.exponentialRampToValueAtTime(0.0001, now + dur);
+
+  modulator.connect(modGain);
+  modGain.connect(carrier.frequency);
+  carrier.connect(ampEnv);
+
+  if (analyserNode) ampEnv.connect(analyserNode);
+  if (delayNode) ampEnv.connect(delayNode);
+
+  carrier.start(now);
+  modulator.start(now);
+  carrier.stop(now + dur + 0.05);
+  modulator.stop(now + dur + 0.05);
+}
+
+function playFMCounter(freq, dur, vol = 0.065) {
+  if (!audioEnabled || !freq) return;
+  initAudio();
+  if (!audioCtx) return;
+
+  const now = audioCtx.currentTime;
+  const carrier = audioCtx.createOscillator();
+  const modulator = audioCtx.createOscillator();
+  const modGain = audioCtx.createGain();
+  const ampEnv = audioCtx.createGain();
+
+  carrier.type = 'sine';
+  carrier.frequency.setValueAtTime(freq, now);
+
+  modulator.type = 'sine';
+  const modFreq = freq * 2.0;
+  modulator.frequency.setValueAtTime(modFreq, now);
+  modGain.gain.setValueAtTime(freq * 2.8, now);
+  modGain.gain.exponentialRampToValueAtTime(freq * 0.15, now + 0.08);
+  modGain.gain.exponentialRampToValueAtTime(0.01, now + dur);
+
+  ampEnv.gain.setValueAtTime(vol, now);
+  ampEnv.gain.exponentialRampToValueAtTime(0.0001, now + dur);
+
+  modulator.connect(modGain);
+  modGain.connect(carrier.frequency);
+  carrier.connect(ampEnv);
+
+  if (analyserNode) ampEnv.connect(analyserNode);
+  if (delayNode) ampEnv.connect(delayNode);
+
+  carrier.start(now);
+  modulator.start(now);
+  carrier.stop(now + dur + 0.05);
+  modulator.stop(now + dur + 0.05);
+}
+
+function playFMHarmony(freq, dur, vol = 0.05) {
+  if (!audioEnabled || !freq) return;
+  playFmTone(freq, 3.5, 4.2, dur, vol, true);
+}
+
+function playFMBass(freq, dur, vol = 0.12) {
+  if (!audioEnabled || !freq) return;
+  initAudio();
+  if (!audioCtx) return;
+
+  const now = audioCtx.currentTime;
+  const carrier = audioCtx.createOscillator();
+  const modulator = audioCtx.createOscillator();
+  const modGain = audioCtx.createGain();
+  const ampEnv = audioCtx.createGain();
+
+  carrier.type = 'sine';
+  carrier.frequency.setValueAtTime(freq, now);
+
+  modulator.type = 'sine';
+  const modFreq = freq * 2.0;
+  modulator.frequency.setValueAtTime(modFreq, now);
+  modGain.gain.setValueAtTime(freq * 3.4, now);
+  modGain.gain.exponentialRampToValueAtTime(0.05, now + 0.07);
+
+  ampEnv.gain.setValueAtTime(vol, now);
+  ampEnv.gain.exponentialRampToValueAtTime(0.0001, now + dur);
+
+  modulator.connect(modGain);
+  modGain.connect(carrier.frequency);
+  carrier.connect(ampEnv);
+
+  // Bass connects to analyser for oscilloscope visualizer, but bypasses echo for clean tight punch
+  if (analyserNode) ampEnv.connect(analyserNode);
+
+  carrier.start(now);
+  modulator.start(now);
+  carrier.stop(now + dur + 0.02);
+  modulator.stop(now + dur + 0.02);
+}
+
+function playFMKick(vol = 0.14) {
+  if (!audioEnabled) return;
+  initAudio();
+  if (!audioCtx) return;
+
+  const now = audioCtx.currentTime;
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+
+  osc.type = 'sine';
+  osc.frequency.setValueAtTime(125, now);
+  osc.frequency.exponentialRampToValueAtTime(42, now + 0.065);
+
+  gain.gain.setValueAtTime(vol, now);
+  gain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
+
+  osc.connect(gain);
+  if (analyserNode) gain.connect(analyserNode);
+
+  osc.start(now);
+  osc.stop(now + 0.13);
+}
+
+function playFMSnare(vol = 0.09) {
+  if (!audioEnabled) return;
+  initAudio();
+  if (!audioCtx) return;
+
+  const now = audioCtx.currentTime;
+  const carrier = audioCtx.createOscillator();
+  const modulator = audioCtx.createOscillator();
+  const modGain = audioCtx.createGain();
+  const ampEnv = audioCtx.createGain();
+
+  carrier.type = 'sine';
+  carrier.frequency.setValueAtTime(180, now);
+  modulator.type = 'sine';
+  modulator.frequency.setValueAtTime(1800, now); // Inharmonic 10:1 ratio for FM noise emulation
+  modGain.gain.setValueAtTime(1400, now);
+  modGain.gain.exponentialRampToValueAtTime(0.01, now + 0.09);
+
+  ampEnv.gain.setValueAtTime(vol, now);
+  ampEnv.gain.exponentialRampToValueAtTime(0.0001, now + 0.11);
+
+  modulator.connect(modGain);
+  modGain.connect(carrier.frequency);
+  carrier.connect(ampEnv);
+
+  if (analyserNode) ampEnv.connect(analyserNode);
+
+  carrier.start(now);
+  modulator.start(now);
+  carrier.stop(now + 0.12);
+  modulator.stop(now + 0.12);
+}
+
+function playFMHiHat(vol = 0.035) {
+  if (!audioEnabled) return;
+  initAudio();
+  if (!audioCtx) return;
+
+  const now = audioCtx.currentTime;
+  const carrier = audioCtx.createOscillator();
+  const modulator = audioCtx.createOscillator();
+  const modGain = audioCtx.createGain();
+  const ampEnv = audioCtx.createGain();
+
+  carrier.type = 'sine';
+  carrier.frequency.setValueAtTime(420, now);
+  modulator.type = 'sine';
+  modulator.frequency.setValueAtTime(4620, now); // 11:1 inharmonic ratio for metallic clink
+  modGain.gain.setValueAtTime(2500, now);
+  modGain.gain.exponentialRampToValueAtTime(0.01, now + 0.035);
+
+  ampEnv.gain.setValueAtTime(vol, now);
+  ampEnv.gain.exponentialRampToValueAtTime(0.0001, now + 0.04);
+
+  modulator.connect(modGain);
+  modGain.connect(carrier.frequency);
+  carrier.connect(ampEnv);
+
+  if (analyserNode) ampEnv.connect(analyserNode);
+
+  carrier.start(now);
+  modulator.start(now);
+  carrier.stop(now + 0.05);
+  modulator.stop(now + 0.05);
+}
+
+function playSubcarrierBeacon(vol = 0.055) {
+  if (!audioEnabled) return;
+  playFmTone(1999, 0.01, 35, 0.22, vol, true);
+}
+
+// 32-Step Procedural Espionage Track ("Echo Skunkworks Theme" in D Minor / D Phrygian)
+const BGM_THEME = {
+  // Ch1: Lead Melody (vocal phrasing, memorable espionage theme, rests every 4-8 bars)
+  lead: [
+    293.66, 0, 349.23, 0, 392.00, 0, 440.00, 0,
+    466.16, 440.00, 0, 349.23, 392.00, 0, 293.66, 0,
+    349.23, 0, 392.00, 0, 440.00, 0, 587.33, 0,
+    523.25, 0, 466.16, 0, 440.00, 0, 0, 0
+  ],
+  // Ch2: Counter-Melody (contrary motion to lead, stepping into spotlight during lead rests)
+  counter: [
+    0, 0, 0, 293.66, 0, 261.63, 0, 349.23,
+    0, 0, 392.00, 0, 0, 329.63, 0, 349.23,
+    0, 220.00, 0, 233.08, 0, 261.63, 0, 349.23,
+    0, 392.00, 0, 349.23, 0, 311.13, 293.66, 0
+  ],
+  // Ch3: Harmony Shell Voicings (3rd + 7th / suspensions; no doubled 5ths)
+  harmony: [
+    349.23, 0, 523.25, 0, 349.23, 0, 0, 0,
+    293.66, 0, 440.00, 0, 293.66, 0, 0, 0,
+    466.16, 0, 349.23, 0, 466.16, 0, 0, 0,
+    277.18, 0, 392.00, 0, 466.16, 0, 277.18, 0
+  ],
+  // Ch4: Bass (Roots & octaves below C3; melodic stepwise walking in C3-C4 register)
+  bass: [
+    73.42, 0, 146.83, 0, 73.42, 0, 174.61, 0,
+    116.54, 0, 116.54, 0, 130.81, 0, 146.83, 0,
+    98.00, 0, 98.00, 0, 110.00, 0, 116.54, 0,
+    110.00, 0, 110.00, 0, 98.00, 0, 87.31, 82.41
+  ],
+  // Ch5: Kick + Snare swing groove
+  kick:  [1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 1, 0, 0, 0],
+  snare: [0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0],
+  // Ch6: Hi-Hat & 1999Hz Subcarrier telemetry beacon pulse
+  hat:   [0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1],
+  beacon:[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0]
+};
+
+function scheduleBgmStep() {
+  if (!audioEnabled || currentPreset !== 'bgm') return;
+
+  const step = bgmStep % 32;
+  const isEven = (step % 2 === 0);
+  const nextDelay = isEven ? 175 : 105; // 5:3 subtle swing groove
+
+  // Ch1: Lead
+  if (BGM_THEME.lead[step]) {
+    playFMLead(BGM_THEME.lead[step], 0.22, 0.085, true);
+  }
+
+  // Ch2: Counter-melody
+  if (BGM_THEME.counter[step]) {
+    playFMCounter(BGM_THEME.counter[step], 0.18, 0.065);
+  }
+
+  // Ch3: Harmony Shell Voicing
+  if (BGM_THEME.harmony[step]) {
+    playFMHarmony(BGM_THEME.harmony[step], 0.16, 0.045);
+  }
+
+  // Ch4: Melodic Counterpoint Bass
+  if (BGM_THEME.bass[step]) {
+    playFMBass(BGM_THEME.bass[step], 0.20, 0.12);
+  }
+
+  // Ch5: Percussion
+  if (BGM_THEME.kick[step]) {
+    playFMKick(0.14);
+  }
+  if (BGM_THEME.snare[step]) {
+    playFMSnare(0.09);
+  }
+
+  // Ch6: Hi-Hat & 1999Hz Telemetry
+  if (BGM_THEME.hat[step]) {
+    playFMHiHat(0.035);
+  }
+  if (BGM_THEME.beacon[step]) {
+    playSubcarrierBeacon(0.06);
+  }
+
+  bgmStep++;
+  bgmTimer = setTimeout(scheduleBgmStep, nextDelay);
 }
 
 function toggleAudio() {
@@ -1876,6 +2259,10 @@ function changeAudioPreset() {
 }
 
 function stopCurrentAudio() {
+  if (bgmTimer) {
+    clearTimeout(bgmTimer);
+    bgmTimer = null;
+  }
   if (loopOscCarrier) {
     try { loopOscCarrier.stop(); loopOscCarrier.disconnect(); } catch (e) {}
     loopOscCarrier = null;
@@ -1897,33 +2284,16 @@ function stopCurrentAudio() {
 function startAudioSynthesis() {
   if (!audioCtx) return;
   stopCurrentAudio();
+  ensureAudioNodes();
+
+  if (currentPreset === 'bgm') {
+    bgmStep = 0;
+    scheduleBgmStep();
+    return;
+  }
+
+  // Sustained Drone / Carrier Modes for lab analysis
   const now = audioCtx.currentTime;
-
-  // Analyser node for oscilloscope and FFT
-  if (!analyserNode) {
-    analyserNode = audioCtx.createAnalyser();
-    analyserNode.fftSize = 256;
-    analyserNode.smoothingTimeConstant = 0.8;
-  }
-
-  // Setup SPC700 Stereo Delay Line
-  if (!delayNode) {
-    delayNode = audioCtx.createDelay(1.0);
-    delayFeedback = audioCtx.createGain();
-    const delayFilter = audioCtx.createBiquadFilter();
-
-    delayNode.delayTime.setValueAtTime(tunedDelayTime, now);
-    delayFilter.type = 'lowpass';
-    delayFilter.frequency.setValueAtTime(2200, now);
-    delayFeedback.gain.setValueAtTime(tunedDelayFeedback, now);
-
-    delayNode.connect(delayFilter);
-    delayFilter.connect(delayFeedback);
-    delayFeedback.connect(delayNode);
-    delayNode.connect(analyserNode);
-  }
-
-  // 2-Operator YM2612 FM Architecture: Modulator -> modGain -> Carrier.frequency
   loopOscCarrier = audioCtx.createOscillator();
   loopOscMod = audioCtx.createOscillator();
   loopModGain = audioCtx.createGain();
@@ -1944,7 +2314,6 @@ function startAudioSynthesis() {
   loopOscCarrier.connect(loopMasterGain);
   loopMasterGain.connect(analyserNode);
   loopMasterGain.connect(delayNode);
-  analyserNode.connect(audioCtx.destination);
 
   loopOscMod.start(now);
   loopOscCarrier.start(now);
@@ -1986,7 +2355,13 @@ function applySignalPreset(preset) {
   currentPreset = preset;
   document.getElementById('audioPresetSelect').value = preset;
 
-  if (preset === '1999hz') {
+  if (preset === 'bgm') {
+    document.getElementById('rngCarrierFreq').value = 1999;
+    document.getElementById('rngModFreq').value = 19.99;
+    document.getElementById('rngModDepth').value = 45;
+    document.getElementById('rngDelayTime').value = 190;
+    document.getElementById('rngDelayFeedback').value = 28;
+  } else if (preset === '1999hz') {
     document.getElementById('rngCarrierFreq').value = 1999;
     document.getElementById('rngModFreq').value = 19.99;
     document.getElementById('rngModDepth').value = 35;
@@ -2014,43 +2389,26 @@ function applySignalPreset(preset) {
 
   updateSignalTuning();
 
-  if (!audioEnabled) {
+  if (audioEnabled) {
+    startAudioSynthesis();
+  } else {
     toggleAudio();
   }
 }
 
+// Tactical UI Earcon Feedback
 function playKeystrokeTone() {
   if (!audioEnabled || !audioCtx) return;
-  const now = audioCtx.currentTime;
-  const osc = audioCtx.createOscillator();
-  const g = audioCtx.createGain();
-  osc.type = 'square';
-  osc.frequency.setValueAtTime(880 + Math.random() * 200, now);
-  g.gain.setValueAtTime(0.015, now);
-  g.gain.exponentialRampToValueAtTime(0.001, now + 0.035);
-  osc.connect(g);
-  g.connect(audioCtx.destination);
-  osc.start(now);
-  osc.stop(now + 0.04);
+  playFmTone(1400 + Math.random() * 300, 3.5, 1.2, 0.02, 0.025, false);
 }
 
 function transmitProbeBurst() {
   initAudio();
   if (audioCtx) {
     const now = audioCtx.currentTime;
-    const osc = audioCtx.createOscillator();
-    const g = audioCtx.createGain();
-    osc.type = 'sine';
-    osc.frequency.setValueAtTime(1999, now);
-    osc.frequency.setValueAtTime(1999, now + 0.05);
-    osc.frequency.setValueAtTime(2400, now + 0.1);
-    osc.frequency.setValueAtTime(1999, now + 0.15);
-    g.gain.setValueAtTime(0.08, now);
-    g.gain.exponentialRampToValueAtTime(0.001, now + 0.28);
-    osc.connect(g);
-    g.connect(audioCtx.destination);
-    osc.start(now);
-    osc.stop(now + 0.3);
+    playFmTone(1999, 1.0, 2.5, 0.07, 0.08, true);
+    setTimeout(() => { if (audioEnabled) playFmTone(2400, 2.0, 3.0, 0.07, 0.08, true); }, 75);
+    setTimeout(() => { if (audioEnabled) playFmTone(1999, 0.01, 35, 0.16, 0.09, true); }, 150);
   }
 
   const demod = document.getElementById('demodConsole');
@@ -3784,11 +4142,11 @@ ROTATION PROTOCOL: Sequential single-app execution cycle.`;
   } else if (cmd === 'audio') {
     if (arg === 'on') { if (!audioEnabled) toggleAudio(); res += `Audio subcarrier activated.`; }
     else if (arg === 'off') { if (audioEnabled) toggleAudio(); res += `Audio subcarrier silenced.`; }
-    else if (['1999hz', '432hz', 'slapbass', 'spc_echo'].includes(arg)) {
+    else if (['bgm', '1999hz', '432hz', 'slapbass', 'spc_echo'].includes(arg)) {
       applySignalPreset(arg);
       res += `Preset switched to '${arg}'.`;
     } else {
-      res += `Usage: audio <on|off|1999hz|432hz|slapbass|spc_echo>`;
+      res += `Usage: audio <on|off|bgm|1999hz|432hz|slapbass|spc_echo>`;
     }
   } else if (cmd === 'dual') {
     switchTab('airgap');
