@@ -12826,6 +12826,49 @@ window.addEventListener('DOMContentLoaded', () => {
     window.removeEventListener('click', initAudioOnUserClick);
   };
   window.addEventListener('click', initAudioOnUserClick);
+
+  // Deep URL query parameter routing, instant search execution, and hash tabs
+  try {
+    const urlParams = new URLSearchParams(window.location.search);
+    const qParam = urlParams.get('q') || urlParams.get('search');
+    const tabParam = urlParams.get('tab') || window.location.hash.replace(/^#/, '');
+
+    if (tabParam) {
+      switchPortalTab(tabParam);
+    }
+    if (qParam) {
+      const searchInput = document.getElementById('portalSearchInput');
+      if (searchInput) {
+        searchInput.value = qParam;
+      }
+      switchPortalTab('directory');
+      executeSearch(qParam.toLowerCase());
+    }
+  } catch (err) {
+    console.warn('URL params parsing notice:', err);
+  }
+
+  // Live hash routing
+  window.addEventListener('hashchange', () => {
+    const hashTab = window.location.hash.replace(/^#/, '');
+    if (hashTab) switchPortalTab(hashTab);
+  });
+
+  // Cross-frame iframe postMessage boundary protocol (KiloOS & KNet integration)
+  window.addEventListener('message', (ev) => {
+    if (!ev || !ev.data) return;
+    const msg = ev.data;
+    if (typeof msg === 'object') {
+      if (msg.action === 'search' && msg.query) {
+        const searchInput = document.getElementById('portalSearchInput');
+        if (searchInput) searchInput.value = msg.query;
+        switchPortalTab('directory');
+        executeSearch(msg.query.toLowerCase());
+      } else if (msg.action === 'navigate' && msg.tab) {
+        switchPortalTab(msg.tab);
+      }
+    }
+  });
 });
 </script>
 </body>
