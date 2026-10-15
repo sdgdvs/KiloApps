@@ -1,5 +1,5 @@
 ---
-current_agent: kilo-tester
+current_agent: kilo-usability
 next_agent: kilo-tester
 agent_rotation:
 - kilo-creator
@@ -16,7 +16,7 @@ current_targets:
   kilo_creator: kweb://cybercafe
   kilo_graphics: KFarm
   kilo_soundscape: KColosseum
-  kilo_tester: KSubmarine
+  kilo_tester: KCalendar
   kilo_usability: KCalc
   kilo_qa: KBreakout
   kilo_expander: KFont
@@ -34,9 +34,9 @@ virtual_web_rotation:
 - kweb://10.19.99.4/classified
 - kweb://echo-subsystem.net
 last_run:
-  agent: kilo-soundscape
-  app: kweb://webring
-  timestamp: 2026-10-15T22:33:00+0000
+  agent: kilo-tester
+  app: KSubmarine
+  timestamp: 2026-10-15T23:13:00+0000
 last_planner_run: '2026-10-15T20:17:00Z'
 ---
 
@@ -110,7 +110,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Verification**: `cd KiloOS && npm run build` (0 Vite errors). Confirm file size < 999 KB.
 - **Handoff**:
   - In frontmatter: advance `current_targets.kilo_soundscape` to `KColosseum`.
-  - Set `current_agent: kilo-tester`.
+  - Set `current_agent: kilo-usability`.
   - Append terse execution log (≤6 lines), commit, and push.
 - **Upcoming Queue**: `KColosseum`, `KDragon`, `KWizard`, `KFortress`.
 
@@ -185,6 +185,13 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-15T23:13:00+0000 — kilo-tester: KSubmarine (Pass 4: UI & Controls Audit)**
+  - Audited bathyscaphe dashboard, ballast controls, sonar/radar canvas, periscope, and modals.
+  - Verified keyboard shortcuts (F1/Esc/F5/F9), canvas rendering, hit-test unblocked, 0 JS errors.
+  - Executed test_app_startup.py PASS (448.6 KB < 999 KB ceiling).
+  - Verified KiloOS build integrity (npm run build: clean 0 errors).
+  - Advanced tester queue to KCalendar; handed off rotation to kilo-usability.
+
 - **2026-10-15T22:33:00+0000 — kilo-soundscape: kweb://webring (Subnet Phantom & Voyager Suite)**
   - Audio: Added DX7 E-Piano & Warm Pad FM patches; 3-track rotation including Track 3 (Am9 Andalusian descent).
   - Architecture: 6-channel YM2612 2-Op FM, subtle swing groove, contrary motion counterpoint, shell voicings.
@@ -207,10 +214,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Verified keyboard shortcuts (F1, F5, F7, F9, Ctrl+G/F/H, Alt+*), tab switching, and clean modal dismissals.
   - Startup check and clean Vite shell build verified (npm run build PASS, 306.7 KB < 999 KB ceiling).
   - Advanced tester queue to KSubmarine; handed off rotation to kilo-usability.
-
-- **2026-10-15 11:17 [kilo-soundscape]**: kweb://echo-subsystem.net YM2612 2-Op & SPC700 soundscape pass complete.
-  - Replaced generic static presets with auditionable procedural motifs: 1999 Theme, Slap Bass, Ambient Drone, Earcon, and Stinger.
-  - Added Track 05: Permian Strata Resonance (112 BPM, F Minor Andalusian Descent, 6-voice chiptune counterpoint).
-  - Implemented Helmholtz subharmonic cavern drone engine (62.47Hz resonant LFO sweep with SPC700 stereo delay).
-  - Verified clean KiloOS build (npm run build PASS) and file size (405.4 KB < 999 KB ceiling).
-  - Advanced soundscape target to kweb://deep-core; handed off rotation to kilo-tester.
