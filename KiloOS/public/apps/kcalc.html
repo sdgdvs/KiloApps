@@ -962,10 +962,30 @@
     .mem-reg-grid { grid-template-columns: 1fr; }
     .toast-container { top: 56px; right: 12px; max-width: calc(100vw - 24px); }
   }
+  @media (max-width: 540px) {
+    .app-container { padding: 6px; gap: 6px; }
+    .header { padding: 6px 8px; }
+    .logo-icon { width: 20px; height: 20px; font-size: 11px; }
+    .logo { font-size: 14px; }
+    .tab-btn { padding: 4px 6px; font-size: 11px; }
+    .display-card { min-height: 72px; padding: 8px 10px; }
+    .main-display { font-size: 22px; letter-spacing: -0.5px; }
+    .sub-display { font-size: 11px; min-height: 16px; }
+    .formula-bar { padding: 4px 8px; gap: 4px; }
+    .keypad-grid { grid-template-columns: repeat(7, 1fr); gap: 3px; }
+    .calc-btn { font-size: 11px; min-height: 32px; border-radius: 6px; }
+    .calc-btn.op, .calc-btn.num { font-size: 13px; }
+    .kcalc-expansion-bar { padding: 6px 8px; font-size: 11px; }
+    .kcalc-tool-btn { padding: 3px 6px; font-size: 10px; }
+    .mem-reg-grid { grid-template-columns: 1fr; gap: 8px; }
+    .history-toolbar { flex-direction: column; align-items: stretch; }
+    .search-input { min-width: 100%; }
+    .modal-content, .kcalc-exp-modal { padding: 14px; max-height: 90vh; }
+  }
   @media (max-width: 480px) {
-    .calc-btn { font-size: 10px; min-height: 32px; padding: 2px; }
+    .calc-btn { font-size: 10px; min-height: 30px; padding: 2px; }
     .calc-btn.op, .calc-btn.num { font-size: 12px; }
-    .main-display { font-size: 20px; }
+    .main-display { font-size: 19px; }
   }
 
 /* --- KCalc Deep Expansion Features --- */
@@ -4689,6 +4709,14 @@
         closeTutorialModal();
         return;
       }
+    }
+
+    // Dismiss active expansion modals
+    const activeExpModal = document.querySelector('.kcalc-exp-modal-overlay.open');
+    if (activeExpModal && (e.key === 'Escape' || e.key === 'Enter')) {
+      e.preventDefault();
+      activeExpModal.classList.remove('open');
+      return;
     }
 
     // If modal is open, handle toggling and dismissal shortcuts

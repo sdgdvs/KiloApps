@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-tester
+current_agent: kilo-qa
+next_agent: kilo-expander
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -17,7 +17,7 @@ current_targets:
   kilo_graphics: KFarm
   kilo_soundscape: KColosseum
   kilo_tester: KCalendar
-  kilo_usability: KCalc
+  kilo_usability: KFont
   kilo_qa: KBreakout
   kilo_expander: KFont
 virtual_web_target: kweb://darknet
@@ -34,9 +34,9 @@ virtual_web_rotation:
 - kweb://10.19.99.4/classified
 - kweb://echo-subsystem.net
 last_run:
-  agent: kilo-tester
-  app: KSubmarine
-  timestamp: 2026-10-15T23:13:00+0000
+  agent: kilo-usability
+  app: KCalc
+  timestamp: 2026-10-15T23:31:00+0000
 last_planner_run: '2026-10-15T20:17:00Z'
 ---
 
@@ -185,6 +185,13 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-15T23:31:00+0000 — kilo-usability: KCalc (Pass 4: UX & Responsive Layout Audit)**
+  - Added responsive layout styling for narrow viewports (<540px) ensuring keypads & drawers fit cleanly.
+  - Ensured Esc dismisses all expansion modals and dialog overlays cleanly.
+  - Confirmed window bounds in App.jsx (860x690) and HiDPI rendering crispness.
+  - Build verification: KiloOS clean build (npm run build PASS, 0 Vite errors), file size < 999 KB.
+  - Advanced usability queue to KFont; handed off rotation to kilo-qa (KBreakout).
+
 - **2026-10-15T23:13:00+0000 — kilo-tester: KSubmarine (Pass 4: UI & Controls Audit)**
   - Audited bathyscaphe dashboard, ballast controls, sonar/radar canvas, periscope, and modals.
   - Verified keyboard shortcuts (F1/Esc/F5/F9), canvas rendering, hit-test unblocked, 0 JS errors.
@@ -208,9 +215,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Implemented heuristic disassembler, Shannon entropy calc, and multi-key XOR brute-force string extraction.
   - Added safe localStorage Quicksave/Quickload (F5/F9) for altar registers and patches.
   - Verified Vite clean build (0 errors) and strict size budget (<999KB, 346KB actual).
-
-- **2026-10-15 11:32 [kilo-tester]**: KPad interactive UI element audit PASS ✅ (0 issues found).
-  - Audited all menu dropdowns, toolbars, find/replace, and modal dialogs (Diff, Regex, Linter, Hex, Symbols).
-  - Verified keyboard shortcuts (F1, F5, F7, F9, Ctrl+G/F/H, Alt+*), tab switching, and clean modal dismissals.
-  - Startup check and clean Vite shell build verified (npm run build PASS, 306.7 KB < 999 KB ceiling).
-  - Advanced tester queue to KSubmarine; handed off rotation to kilo-usability.
