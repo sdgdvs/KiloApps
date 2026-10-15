@@ -976,13 +976,26 @@
       </div>
     </div>
 
-    <!-- Live Audio State Controls -->
-    <div class="quick-audio-bar">
-      <div>
+    <!-- Live Audio State Controls & YM2612 Soundscape Jukebox -->
+    <div class="quick-audio-bar" style="max-width: 720px; flex-wrap: wrap;">
+      <div style="display:flex; align-items:center; gap:8px;">
         <span class="status-dot" id="synthStatusDot"></span>
-        <span id="synthStatusText" style="margin-left:4px; font-weight:700;">AUDIO: IDLE</span>
+        <span id="synthStatusText" style="font-weight:700;">AUDIO: IDLE</span>
+        <button class="btn-retro btn-green" id="btnToggleAudio" onclick="toggleAudioEngine()">Power On Synth</button>
       </div>
-      <button class="btn-retro btn-green" id="btnToggleAudio" onclick="toggleAudioEngine()">Power On Synth</button>
+      <div style="display:flex; align-items:center; gap:6px; border-left:1px solid var(--border-dim); padding-left:8px;">
+        <button class="btn-retro btn-cyan" id="btnAudioPlay" onclick="toggleSoundscapePlay()">▶ Play Soundscape</button>
+        <button class="btn-retro" id="btnAudioNext" onclick="nextSoundscapeTrack()">⏭ Next</button>
+        <button class="btn-retro" id="btnAudioStop" onclick="stopSoundscape()">■</button>
+      </div>
+      <div style="font-size:11px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:240px;">
+        <div id="lblTrackName" style="color:var(--border-bright); font-weight:700;">Track 01: Lithospheric Pulse</div>
+        <div id="lblTrackStyle" style="color:var(--text-muted); font-size:10px;">124 BPM // C Phrygian &amp; SPC700 Delay</div>
+      </div>
+      <div style="display:flex; align-items:center; gap:5px;">
+        <span style="font-size:10px; color:var(--text-muted);">VOL</span>
+        <input type="range" id="soundscapeVolume" min="0" max="100" value="65" style="width:55px;" oninput="updateSoundscapeVolume(this.value)">
+      </div>
       <button class="btn-retro" onclick="toggleScanlines()">CRT Scanlines</button>
     </div>
   </header>
@@ -3151,6 +3164,627 @@ END TRANSMISSION // ESARL 1999</div>
     analyser.connect(audioCtx.destination);
   }
 
+  /* ============================================================
+     1b. YM2612 2-Op FM & SPC700 Procedural Soundscape Jukebox
+     ============================================================ */
+  let isSoundscapePlaying = false;
+  let soundscapeTrackIdx = 0;
+  let soundscapeStepIdx = 0;
+  let soundscapeTimer = null;
+  let soundscapeGainNode = null;
+  let soundscapeVolSetting = 0.65;
+
+  const NOTE_FREQS = {
+    C2: 65.41, D2: 73.42, Eb2: 77.78, E2: 82.41, F2: 87.31, G2: 98.00, Ab2: 103.83, A2: 110.00, Bb2: 116.54, B2: 123.47,
+    C3: 130.81, Cs3: 138.59, D3: 146.83, Eb3: 155.56, E3: 164.81, F3: 174.61, Fs3: 185.00, G3: 196.00, Ab3: 207.65, A3: 220.00, Bb3: 233.08, B3: 246.94,
+    C4: 261.63, Cs4: 277.18, D4: 293.66, Eb4: 311.13, E4: 329.63, F4: 349.23, Fs4: 369.99, G4: 392.00, Ab4: 415.30, A4: 440.00, Bb4: 466.16, B4: 493.88,
+    C5: 523.25, Cs5: 554.37, D5: 587.33, Eb5: 622.25, E5: 659.26, F5: 698.46, Fs5: 739.99, G5: 783.99, Ab5: 830.61, A5: 880.00, Bb5: 932.33, B5: 987.77,
+    C6: 1046.50, D6: 1174.66, E6: 1318.51, F6: 1396.91, G6: 1567.98
+  };
+  const NF = NOTE_FREQS;
+
+  const SOUNDSCAPE_TRACKS = [
+    {
+      title: "Track 01: Lithospheric Pulse",
+      style: "124 BPM // C Phrygian Cybernetic Mystery & SPC700 Delay",
+      bpm: 124,
+      swing: true,
+      lead: [
+        NF.C5, 0, NF.Eb5, 0, NF.D5, NF.C5, 0, NF.G4,
+        NF.Ab4, 0, NF.C5, 0, NF.Bb4, NF.Ab4, NF.G4, NF.F4,
+        0, 0, NF.Eb4, NF.F4, NF.G4, 0, NF.C5, 0,
+        NF.D5, 0, NF.Db5, 0, NF.C5, 0, 0, 0
+      ],
+      counter: [
+        0, NF.G3, 0, NF.C4, 0, 0, NF.D4, 0,
+        0, NF.Eb4, 0, NF.G4, 0, 0, NF.F4, NF.Eb4,
+        NF.C4, NF.D4, 0, 0, 0, NF.Eb4, 0, NF.G4,
+        0, NF.F4, 0, NF.Eb4, 0, NF.D4, NF.Db4, NF.C4
+      ],
+      arp: [
+        NF.Eb4, NF.G4, NF.Bb4, NF.C5, NF.Eb4, NF.G4, NF.Bb4, NF.C5,
+        NF.Ab3, NF.C4, NF.Eb4, NF.Ab4, NF.Ab3, NF.C4, NF.Eb4, NF.Ab4,
+        NF.F3, NF.Ab3, NF.C4, NF.F4, NF.F3, NF.Ab3, NF.C4, NF.F4,
+        NF.G3, NF.B3, NF.D4, NF.G4, NF.G3, NF.B3, NF.Db4, NF.G4
+      ],
+      bass: [
+        NF.C2, NF.C3, NF.C2, NF.Eb2, NF.C2, NF.C3, NF.G2, NF.Bb2,
+        NF.Ab2, NF.Ab3, NF.Ab2, NF.C3, NF.Ab2, NF.Ab3, NF.Eb2, NF.G2,
+        NF.F2, NF.F3, NF.F2, NF.Ab2, NF.F2, NF.F3, NF.C3, NF.Eb3,
+        NF.G2, NF.G3, NF.G2, NF.B2, NF.G2, NF.G3, NF.Db2, NF.B2
+      ],
+      kick: [
+        1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0,
+        1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0
+      ],
+      snare: [
+        0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0,
+        0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1, 0, 1
+      ],
+      hat: [
+        1, 1, 1, 1, 1, 1, 2, 0, 1, 1, 1, 1, 1, 1, 2, 0,
+        1, 1, 1, 1, 1, 1, 2, 0, 1, 1, 1, 1, 2, 1, 2, 2
+      ]
+    },
+    {
+      title: "Track 02: Subcarrier 1999",
+      style: "132 BPM // D Minor Andalusian Descent & FM Demoscene Lead",
+      bpm: 132,
+      swing: true,
+      lead: [
+        NF.D5, 0, NF.F5, 0, NF.E5, NF.D5, 0, NF.A4,
+        NF.G4, 0, NF.Bb4, 0, NF.A4, NF.G4, NF.F4, NF.E4,
+        NF.D4, 0, NF.F4, NF.G4, NF.A4, 0, NF.C5, 0,
+        NF.D5, 0, NF.Cs5, 0, NF.D5, 0, 0, 0
+      ],
+      counter: [
+        0, NF.A3, 0, NF.D4, 0, 0, NF.E4, 0,
+        0, NF.C4, 0, NF.E4, 0, 0, NF.D4, NF.Cs4,
+        0, NF.Bb3, 0, 0, 0, NF.D4, 0, NF.F4,
+        0, NF.E4, 0, NF.G4, 0, NF.F4, NF.E4, NF.Cs4
+      ],
+      arp: [
+        NF.F4, NF.A4, NF.C5, NF.D5, NF.F4, NF.A4, NF.C5, NF.D5,
+        NF.E4, NF.G4, NF.B4, NF.C5, NF.E4, NF.G4, NF.B4, NF.C5,
+        NF.D4, NF.F4, NF.A4, NF.Bb4, NF.D4, NF.F4, NF.A4, NF.Bb4,
+        NF.Cs4, NF.E4, NF.G4, NF.A4, NF.Cs4, NF.E4, NF.G4, NF.A4
+      ],
+      bass: [
+        NF.D2, NF.D3, NF.D2, NF.F2, NF.D2, NF.D3, NF.A2, NF.C3,
+        NF.C2, NF.C3, NF.C2, NF.E2, NF.C2, NF.C3, NF.G2, NF.B2,
+        NF.Bb2, NF.Bb3, NF.Bb2, NF.D3, NF.Bb2, NF.Bb3, NF.F2, NF.A2,
+        NF.A2, NF.A3, NF.A2, NF.Cs3, NF.A2, NF.A3, NF.G2, NF.E2
+      ],
+      kick: [
+        1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0,
+        1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1
+      ],
+      snare: [
+        0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0,
+        0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1, 0, 1
+      ],
+      hat: [
+        1, 1, 1, 1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 1, 2, 0,
+        1, 1, 1, 1, 1, 1, 1, 2, 1, 1, 1, 1, 2, 1, 2, 2
+      ]
+    },
+    {
+      title: "Track 03: Carlsbad Subnet 0x7F",
+      style: "116 BPM // E Dorian Darkwave Groove & E-Piano Lead",
+      bpm: 116,
+      swing: true,
+      lead: [
+        NF.E5, 0, NF.G5, 0, NF.Fs5, 0, NF.E5, 0,
+        NF.B4, 0, NF.D5, 0, NF.Cs5, NF.B4, NF.A4, NF.G4,
+        0, 0, NF.Fs4, NF.G4, NF.A4, 0, NF.B4, 0,
+        NF.D5, 0, NF.Cs5, 0, NF.E5, 0, 0, 0
+      ],
+      counter: [
+        0, NF.B3, 0, NF.E4, 0, 0, NF.Fs4, 0,
+        0, NF.A3, 0, NF.Cs4, 0, 0, NF.B3, NF.A3,
+        NF.G3, NF.A3, 0, 0, 0, NF.B3, 0, NF.D4,
+        0, NF.Cs4, 0, NF.B3, 0, NF.A3, NF.G3, NF.Fs3
+      ],
+      arp: [
+        NF.G4, NF.B4, NF.D5, NF.E5, NF.G4, NF.B4, NF.D5, NF.E5,
+        NF.G4, NF.A4, NF.Cs5, NF.E5, NF.G4, NF.A4, NF.Cs5, NF.E5,
+        NF.Fs4, NF.A4, NF.B4, NF.D5, NF.Fs4, NF.A4, NF.B4, NF.D5,
+        NF.E4, NF.G4, NF.B4, NF.E5, NF.E4, NF.G4, NF.B4, NF.E5
+      ],
+      bass: [
+        NF.E2, NF.E3, NF.E2, NF.G2, NF.E2, NF.E3, NF.B2, NF.D3,
+        NF.A2, NF.A3, NF.A2, NF.Cs3, NF.A2, NF.A3, NF.E2, NF.G2,
+        NF.B2, NF.B3, NF.B2, NF.D3, NF.B2, NF.B3, NF.Fs2, NF.A2,
+        NF.E2, NF.E3, NF.E2, NF.G2, NF.E2, NF.E3, NF.D2, NF.B2
+      ],
+      kick: [
+        1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0,
+        1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0
+      ],
+      snare: [
+        0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0,
+        0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1, 0, 1
+      ],
+      hat: [
+        1, 0, 1, 1, 1, 0, 2, 0, 1, 0, 1, 1, 1, 0, 2, 0,
+        1, 0, 1, 1, 1, 0, 2, 0, 1, 1, 1, 1, 2, 1, 2, 2
+      ]
+    },
+    {
+      title: "Track 04: Helmholtz Cavity Drone",
+      style: "96 BPM // A Minor Ambient Downtempo & Resonant Bells",
+      bpm: 96,
+      swing: false,
+      lead: [
+        NF.E5, 0, NF.C5, 0, NF.B4, 0, NF.A4, 0,
+        NF.G4, 0, NF.E4, 0, NF.G4, NF.A4, 0, 0,
+        0, 0, NF.C5, 0, NF.D5, 0, NF.E5, 0,
+        NF.G5, 0, NF.Fs5, 0, NF.E5, 0, 0, 0
+      ],
+      counter: [
+        0, NF.A3, 0, NF.C4, 0, 0, NF.D4, 0,
+        0, NF.F3, 0, NF.A3, 0, 0, NF.C4, 0,
+        0, NF.D3, 0, NF.F3, 0, 0, NF.A3, 0,
+        0, NF.E3, 0, NF.G3, 0, 0, NF.B3, 0
+      ],
+      arp: [
+        NF.C4, NF.E4, NF.G4, NF.B4, NF.C4, NF.E4, NF.G4, NF.B4,
+        NF.A3, NF.C4, NF.E4, NF.G4, NF.A3, NF.C4, NF.E4, NF.G4,
+        NF.F3, NF.A3, NF.C4, NF.E4, NF.F3, NF.A3, NF.C4, NF.E4,
+        NF.G3, NF.B3, NF.D4, NF.Fs4, NF.G3, NF.B3, NF.D4, NF.Fs4
+      ],
+      bass: [
+        NF.A2, 0, NF.A3, 0, NF.E2, 0, NF.A2, 0,
+        NF.F2, 0, NF.F3, 0, NF.C2, 0, NF.F2, 0,
+        NF.D2, 0, NF.D3, 0, NF.A2, 0, NF.D2, 0,
+        NF.E2, 0, NF.E3, 0, NF.B2, 0, NF.E2, 0
+      ],
+      kick: [
+        1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0,
+        1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 0
+      ],
+      snare: [
+        0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0,
+        0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1
+      ],
+      hat: [
+        1, 0, 1, 0, 1, 0, 1, 2, 1, 0, 1, 0, 1, 0, 2, 0,
+        1, 0, 1, 0, 1, 0, 1, 2, 1, 0, 1, 0, 2, 0, 2, 2
+      ]
+    }
+  ];
+
+  function getSoundscapeMasterGain() {
+    if (!audioCtx) return null;
+    if (!soundscapeGainNode) {
+      soundscapeGainNode = audioCtx.createGain();
+      soundscapeGainNode.gain.setValueAtTime(soundscapeVolSetting, audioCtx.currentTime);
+      soundscapeGainNode.connect(masterGain);
+    }
+    return soundscapeGainNode;
+  }
+
+  // --- Voice 1: Lead Melody (YM2612 2-Op Lead with Delayed Vibrato & SPC700 Delay) ---
+  function playSoundscapeLead(freq, dur, vol = 0.32, useVibrato = true) {
+    if (!audioCtx || !freq) return;
+    const now = audioCtx.currentTime;
+    const dest = getSoundscapeMasterGain();
+    if (!dest) return;
+
+    const carrier = audioCtx.createOscillator();
+    const modulator = audioCtx.createOscillator();
+    const modGain = audioCtx.createGain();
+    const ampEnv = audioCtx.createGain();
+
+    carrier.type = 'sine';
+    carrier.frequency.setValueAtTime(freq, now);
+
+    // Delayed Vibrato LFO (starts after 140ms)
+    if (useVibrato && dur > 0.18) {
+      const lfo = audioCtx.createOscillator();
+      const lfoGain = audioCtx.createGain();
+      lfo.frequency.setValueAtTime(5.5, now);
+      lfoGain.gain.setValueAtTime(0, now);
+      lfoGain.gain.setValueAtTime(0, now + 0.14);
+      lfoGain.gain.linearRampToValueAtTime(freq * 0.024, now + 0.24);
+      lfo.connect(lfoGain);
+      lfoGain.connect(carrier.frequency);
+      lfo.start(now + 0.14);
+      lfo.stop(now + dur + 0.08);
+    }
+
+    modulator.type = 'sine';
+    modulator.frequency.setValueAtTime(freq * 2.0, now); // 2:1 FM Lead ratio
+    modGain.gain.setValueAtTime(freq * 2.0 * 2.8, now);  // bright transient
+    modGain.gain.exponentialRampToValueAtTime(freq * 0.16, now + 0.08);
+    modGain.gain.exponentialRampToValueAtTime(0.01, now + dur);
+
+    modulator.connect(modGain);
+    modGain.connect(carrier.frequency);
+
+    ampEnv.gain.setValueAtTime(0.001, now);
+    ampEnv.gain.linearRampToValueAtTime(vol, now + 0.012);
+    ampEnv.gain.exponentialRampToValueAtTime(0.001, now + dur);
+
+    carrier.connect(ampEnv);
+    ampEnv.connect(dest);
+    if (delayNode) ampEnv.connect(delayNode); // Echo enabled on Lead
+
+    carrier.start(now);
+    modulator.start(now);
+    carrier.stop(now + dur + 0.05);
+    modulator.stop(now + dur + 0.05);
+  }
+
+  // --- Voice 2: Counter-melody (Contrary Motion Flute/Hollow Reed & Echo) ---
+  function playSoundscapeCounter(freq, dur, vol = 0.22) {
+    if (!audioCtx || !freq) return;
+    const now = audioCtx.currentTime;
+    const dest = getSoundscapeMasterGain();
+    if (!dest) return;
+
+    const carrier = audioCtx.createOscillator();
+    const modulator = audioCtx.createOscillator();
+    const modGain = audioCtx.createGain();
+    const ampEnv = audioCtx.createGain();
+
+    carrier.type = 'sine';
+    carrier.frequency.setValueAtTime(freq, now);
+
+    modulator.type = 'sine';
+    modulator.frequency.setValueAtTime(freq * 1.0, now); // 1:1 hollow timber
+    modGain.gain.setValueAtTime(freq * 0.85, now);
+    modGain.gain.exponentialRampToValueAtTime(freq * 0.12, now + dur * 0.65);
+
+    modulator.connect(modGain);
+    modGain.connect(carrier.frequency);
+
+    ampEnv.gain.setValueAtTime(0.001, now);
+    ampEnv.gain.linearRampToValueAtTime(vol, now + 0.02);
+    ampEnv.gain.exponentialRampToValueAtTime(0.001, now + dur);
+
+    carrier.connect(ampEnv);
+    ampEnv.connect(dest);
+    if (delayNode) ampEnv.connect(delayNode);
+
+    carrier.start(now);
+    modulator.start(now);
+    carrier.stop(now + dur + 0.05);
+    modulator.stop(now + dur + 0.05);
+  }
+
+  // --- Voice 3: Arpeggio / Shell Harmony (Metallic Glass Chime & Echo) ---
+  function playSoundscapeArp(freq, dur, vol = 0.16) {
+    if (!audioCtx || !freq) return;
+    const now = audioCtx.currentTime;
+    const dest = getSoundscapeMasterGain();
+    if (!dest) return;
+
+    const carrier = audioCtx.createOscillator();
+    const modulator = audioCtx.createOscillator();
+    const modGain = audioCtx.createGain();
+    const ampEnv = audioCtx.createGain();
+
+    carrier.type = 'sine';
+    carrier.frequency.setValueAtTime(freq, now);
+
+    modulator.type = 'sine';
+    modulator.frequency.setValueAtTime(freq * 3.5, now); // 3.5:1 metallic bell ratio
+    modGain.gain.setValueAtTime(freq * 3.0, now);
+    modGain.gain.exponentialRampToValueAtTime(0.01, now + dur * 0.5);
+
+    modulator.connect(modGain);
+    modGain.connect(carrier.frequency);
+
+    ampEnv.gain.setValueAtTime(0.001, now);
+    ampEnv.gain.linearRampToValueAtTime(vol, now + 0.008);
+    ampEnv.gain.exponentialRampToValueAtTime(0.001, now + dur);
+
+    carrier.connect(ampEnv);
+    ampEnv.connect(dest);
+    if (delayNode) ampEnv.connect(delayNode);
+
+    carrier.start(now);
+    modulator.start(now);
+    carrier.stop(now + dur + 0.05);
+    modulator.stop(now + dur + 0.05);
+  }
+
+  // --- Voice 4: Melodic Slap Bass (YM2612 2-Op Slap Bass, DRY For Tight Punch) ---
+  function playSoundscapeBass(freq, dur, vol = 0.36) {
+    if (!audioCtx || !freq) return;
+    const now = audioCtx.currentTime;
+    const dest = getSoundscapeMasterGain();
+    if (!dest) return;
+
+    const carrier = audioCtx.createOscillator();
+    const modulator = audioCtx.createOscillator();
+    const modGain = audioCtx.createGain();
+    const ampEnv = audioCtx.createGain();
+
+    carrier.type = 'sine';
+    carrier.frequency.setValueAtTime(freq, now);
+
+    modulator.type = 'sine';
+    modulator.frequency.setValueAtTime(freq * 2.0, now); // 2:1 punchy slap ratio
+    modGain.gain.setValueAtTime(freq * 2.0 * 3.4, now);
+    modGain.gain.exponentialRampToValueAtTime(freq * 0.15, now + 0.07);
+    modGain.gain.exponentialRampToValueAtTime(0.01, now + dur);
+
+    modulator.connect(modGain);
+    modGain.connect(carrier.frequency);
+
+    ampEnv.gain.setValueAtTime(0.001, now);
+    ampEnv.gain.linearRampToValueAtTime(vol, now + 0.006);
+    ampEnv.gain.exponentialRampToValueAtTime(0.001, now + dur);
+
+    carrier.connect(ampEnv);
+    ampEnv.connect(dest); // Strictly DRY: no delay to keep bass punchy
+
+    carrier.start(now);
+    modulator.start(now);
+    carrier.stop(now + dur + 0.05);
+    modulator.stop(now + dur + 0.05);
+  }
+
+  // --- Voice 5: FM Kick & Snare Percussion ---
+  function playSoundscapeKick() {
+    if (!audioCtx) return;
+    const now = audioCtx.currentTime;
+    const dest = getSoundscapeMasterGain();
+    if (!dest) return;
+
+    const osc = audioCtx.createOscillator();
+    const mod = audioCtx.createOscillator();
+    const modGain = audioCtx.createGain();
+    const gain = audioCtx.createGain();
+
+    osc.frequency.setValueAtTime(140, now);
+    osc.frequency.exponentialRampToValueAtTime(32, now + 0.12);
+
+    mod.frequency.setValueAtTime(70, now);
+    modGain.gain.setValueAtTime(200, now);
+    modGain.gain.exponentialRampToValueAtTime(0.01, now + 0.06);
+
+    mod.connect(modGain);
+    modGain.connect(osc.frequency);
+
+    gain.gain.setValueAtTime(0.72, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+
+    osc.connect(gain);
+    gain.connect(dest);
+
+    osc.start(now); mod.start(now);
+    osc.stop(now + 0.16); mod.stop(now + 0.16);
+  }
+
+  function playSoundscapeSnare() {
+    if (!audioCtx) return;
+    const now = audioCtx.currentTime;
+    const dest = getSoundscapeMasterGain();
+    if (!dest) return;
+
+    const carrier = audioCtx.createOscillator();
+    const mod = audioCtx.createOscillator();
+    const modGain = audioCtx.createGain();
+    const gain = audioCtx.createGain();
+
+    carrier.type = 'triangle';
+    carrier.frequency.setValueAtTime(210, now);
+    carrier.frequency.exponentialRampToValueAtTime(75, now + 0.1);
+
+    mod.type = 'sine';
+    mod.frequency.setValueAtTime(2100, now);
+    modGain.gain.setValueAtTime(1700, now);
+    modGain.gain.exponentialRampToValueAtTime(0.01, now + 0.08);
+
+    mod.connect(modGain);
+    modGain.connect(carrier.frequency);
+
+    gain.gain.setValueAtTime(0.52, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.14);
+
+    carrier.connect(gain);
+    gain.connect(dest);
+
+    carrier.start(now); mod.start(now);
+    carrier.stop(now + 0.15); mod.stop(now + 0.15);
+  }
+
+  // --- Voice 6: Inharmonic Metallic FM Hi-Hat ---
+  function playSoundscapeHiHat(isOpen = false) {
+    if (!audioCtx) return;
+    const now = audioCtx.currentTime;
+    const dest = getSoundscapeMasterGain();
+    if (!dest) return;
+
+    const carrier = audioCtx.createOscillator();
+    const mod = audioCtx.createOscillator();
+    const modGain = audioCtx.createGain();
+    const gain = audioCtx.createGain();
+
+    const dur = isOpen ? 0.18 : 0.038;
+    carrier.type = 'square';
+    carrier.frequency.setValueAtTime(1200, now);
+
+    mod.type = 'sine';
+    mod.frequency.setValueAtTime(13200, now); // 11:1 inharmonic ratio
+    modGain.gain.setValueAtTime(6800, now);
+    modGain.gain.exponentialRampToValueAtTime(0.01, now + dur * 0.7);
+
+    mod.connect(modGain);
+    modGain.connect(carrier.frequency);
+
+    gain.gain.setValueAtTime(isOpen ? 0.15 : 0.11, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + dur);
+
+    carrier.connect(gain);
+    gain.connect(dest);
+
+    carrier.start(now); mod.start(now);
+    carrier.stop(now + dur + 0.02); mod.stop(now + dur + 0.02);
+  }
+
+  // --- UI Earcons & Action Stingers ---
+  function playEarconClick() {
+    if (!audioCtx || !isAudioPowered) return;
+    const now = audioCtx.currentTime;
+    const c = audioCtx.createOscillator();
+    const m = audioCtx.createOscillator();
+    const mg = audioCtx.createGain();
+    const g = audioCtx.createGain();
+
+    c.frequency.setValueAtTime(1800, now);
+    m.frequency.setValueAtTime(6300, now);
+    mg.gain.setValueAtTime(3200, now);
+    mg.gain.exponentialRampToValueAtTime(0.01, now + 0.02);
+    m.connect(mg); mg.connect(c.frequency);
+
+    g.gain.setValueAtTime(0.08, now);
+    g.gain.exponentialRampToValueAtTime(0.001, now + 0.025);
+    c.connect(g); g.connect(masterGain);
+    c.start(now); m.start(now);
+    c.stop(now + 0.03); m.stop(now + 0.03);
+  }
+
+  function playEarconTab() {
+    if (!audioCtx || !isAudioPowered) return;
+    const now = audioCtx.currentTime;
+    const c = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    c.frequency.setValueAtTime(880, now);
+    c.frequency.exponentialRampToValueAtTime(1320, now + 0.05);
+    g.gain.setValueAtTime(0.09, now);
+    g.gain.exponentialRampToValueAtTime(0.001, now + 0.06);
+    c.connect(g); g.connect(masterGain);
+    c.start(now); c.stop(now + 0.07);
+  }
+
+  function playStingerLock() {
+    if (!audioCtx || !isAudioPowered) return;
+    const now = audioCtx.currentTime;
+    const chord = [NF.C5, NF.E5, NF.G5, 1999.0];
+    chord.forEach((f, idx) => {
+      const osc = audioCtx.createOscillator();
+      const g = audioCtx.createGain();
+      osc.frequency.setValueAtTime(f, now + idx * 0.04);
+      g.gain.setValueAtTime(0.12, now + idx * 0.04);
+      g.gain.exponentialRampToValueAtTime(0.001, now + 0.6);
+      osc.connect(g);
+      g.connect(masterGain);
+      if (delayNode) g.connect(delayNode);
+      osc.start(now + idx * 0.04);
+      osc.stop(now + 0.65);
+    });
+  }
+
+  function playStingerAlert() {
+    if (!audioCtx || !isAudioPowered) return;
+    const now = audioCtx.currentTime;
+    const osc = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(1400, now);
+    osc.frequency.linearRampToValueAtTime(700, now + 0.22);
+    g.gain.setValueAtTime(0.14, now);
+    g.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+    osc.connect(g); g.connect(masterGain);
+    osc.start(now); osc.stop(now + 0.26);
+  }
+
+  // --- Sequencer Step Tick with 5:3 Swing Groove Engine ---
+  function tickSoundscapeStep() {
+    if (!isSoundscapePlaying) return;
+    const curTrack = SOUNDSCAPE_TRACKS[soundscapeTrackIdx];
+    const totalSteps = curTrack.lead.length;
+
+    // Channel 1: Lead Melody
+    const leadNote = curTrack.lead[soundscapeStepIdx];
+    if (leadNote) playSoundscapeLead(leadNote, 0.22, 0.32, true);
+
+    // Channel 2: Counter-melody (Contrary motion)
+    const counterNote = curTrack.counter[soundscapeStepIdx];
+    if (counterNote) playSoundscapeCounter(counterNote, 0.20, 0.22);
+
+    // Channel 3: Arpeggio / Shell Chords
+    const arpNote = curTrack.arp[soundscapeStepIdx];
+    if (arpNote) playSoundscapeArp(arpNote, 0.12, 0.15);
+
+    // Channel 4: Melodic Slap Bass (Dry punch)
+    const bassNote = curTrack.bass[soundscapeStepIdx];
+    if (bassNote) playSoundscapeBass(bassNote, 0.20, 0.36);
+
+    // Channel 5: Kick & Snare Percussion
+    if (curTrack.kick && curTrack.kick[soundscapeStepIdx]) playSoundscapeKick();
+    if (curTrack.snare && curTrack.snare[soundscapeStepIdx]) playSoundscapeSnare();
+
+    // Channel 6: Hi-Hat
+    if (curTrack.hat && curTrack.hat[soundscapeStepIdx]) {
+      playSoundscapeHiHat(curTrack.hat[soundscapeStepIdx] === 2);
+    }
+
+    soundscapeStepIdx = (soundscapeStepIdx + 1) % totalSteps;
+
+    // Swing Timing: 5:3 ratio for organic groove on 16th steps
+    const baseStepMs = (60 / curTrack.bpm / 4) * 1000;
+    const isEven = (soundscapeStepIdx % 2 === 0);
+    const swingFactor = curTrack.swing ? 1.25 : 1.0;
+    const stepDurationMs = isEven ? (baseStepMs * swingFactor) : (baseStepMs * (2 - swingFactor));
+
+    soundscapeTimer = setTimeout(tickSoundscapeStep, stepDurationMs);
+  }
+
+  function startSoundscape() {
+    if (!isAudioPowered) toggleAudioEngine();
+    if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+    isSoundscapePlaying = true;
+    soundscapeStepIdx = 0;
+    updateSoundscapeLabels();
+    tickSoundscapeStep();
+    const btn = document.getElementById('btnAudioPlay');
+    if (btn) btn.textContent = '⏸ Pause';
+    logToTerminal(`>> [SOUNDSCAPE] Playing: "${SOUNDSCAPE_TRACKS[soundscapeTrackIdx].title}"`);
+  }
+
+  function stopSoundscape() {
+    isSoundscapePlaying = false;
+    clearTimeout(soundscapeTimer);
+    const btn = document.getElementById('btnAudioPlay');
+    if (btn) btn.textContent = '▶ Play Soundscape';
+  }
+
+  function toggleSoundscapePlay() {
+    if (isSoundscapePlaying) stopSoundscape();
+    else startSoundscape();
+  }
+
+  function nextSoundscapeTrack() {
+    soundscapeTrackIdx = (soundscapeTrackIdx + 1) % SOUNDSCAPE_TRACKS.length;
+    updateSoundscapeLabels();
+    if (isSoundscapePlaying) {
+      clearTimeout(soundscapeTimer);
+      soundscapeStepIdx = 0;
+      tickSoundscapeStep();
+      logToTerminal(`>> [SOUNDSCAPE] Switched to: "${SOUNDSCAPE_TRACKS[soundscapeTrackIdx].title}"`);
+    }
+  }
+
+  function updateSoundscapeLabels() {
+    const cur = SOUNDSCAPE_TRACKS[soundscapeTrackIdx];
+    const lblName = document.getElementById('lblTrackName');
+    const lblStyle = document.getElementById('lblTrackStyle');
+    if (lblName) lblName.textContent = cur.title;
+    if (lblStyle) lblStyle.textContent = cur.style;
+  }
+
+  function updateSoundscapeVolume(val) {
+    soundscapeVolSetting = parseInt(val, 10) / 100;
+    if (soundscapeGainNode && audioCtx) {
+      soundscapeGainNode.gain.setValueAtTime(soundscapeVolSetting, audioCtx.currentTime);
+    }
+  }
+
   function toggleAudioEngine() {
     setupSynthChain();
     if (!audioCtx) {
@@ -3174,6 +3808,7 @@ END TRANSMISSION // ESARL 1999</div>
     } else {
       stopTone();
       stopBeamAudio();
+      stopSoundscape();
       dot.className = "status-dot";
       text.textContent = "AUDIO: IDLE";
       text.style.color = "#94a3b8";
@@ -4473,6 +5108,8 @@ Host: kweb://echo-subsystem.net | Station: SIG-1999-ECHO
         if (pane) pane.className = "tab-pane";
       }
     });
+
+    playEarconTab();
 
     if (name === 'spectral' || name === 'decoder' || name === 'filter' || name === 'sigint') {
       initCanvases();
