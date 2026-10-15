@@ -792,22 +792,22 @@
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
           Export ▼
         </button>
-        <div class="export-dropdown-content" id="export-menu">
-          <a onclick="exportImage('png')" onkeydown="handleExportKey(event, 'png')" role="button" tabindex="0">PNG</a>
-          <a onclick="exportImage('webp')" onkeydown="handleExportKey(event, 'webp')" role="button" tabindex="0">WEBP</a>
-          <a onclick="exportImage('bmp')" onkeydown="handleExportKey(event, 'bmp')" role="button" tabindex="0">BMP (24-bit)</a>
-          <a onclick="exportPCX()" onkeydown="if(event.key==='Enter'||event.key===' ')exportPCX()" role="button" tabindex="0">PCX (ZSoft 24-bit)</a>
-          <a onclick="exportTGA()" onkeydown="if(event.key==='Enter'||event.key===' ')exportTGA()" role="button" tabindex="0">TGA (Truevision 32-bit)</a>
-          <a onclick="exportICO()" onkeydown="if(event.key==='Enter'||event.key===' ')exportICO()" role="button" tabindex="0">Windows Icon (.ICO)</a>
-          <a onclick="exportPPM()" onkeydown="if(event.key==='Enter'||event.key===' ')exportPPM()" role="button" tabindex="0">PPM (Netpbm)</a>
-          <a onclick="exportANSI()" onkeydown="if(event.key==='Enter'||event.key===' ')exportANSI()" role="button" tabindex="0">ANSI Art (.ANS)</a>
-          <a onclick="exportXBM()" onkeydown="if(event.key==='Enter'||event.key===' ')exportXBM()" role="button" tabindex="0">XBM C Bitmap (.xbm)</a>
-          <a onclick="exportCHeader()" onkeydown="if(event.key==='Enter'||event.key===' ')exportCHeader()" role="button" tabindex="0">C Header (.H)</a>
-          <a onclick="exportSVG()" onkeydown="if(event.key==='Enter'||event.key===' ')exportSVG()" role="button" tabindex="0">SVG Vector</a>
-          <a onclick="exportJSON()" onkeydown="if(event.key==='Enter'||event.key===' ')exportJSON()" role="button" tabindex="0">JSON Sprite</a>
-          <a onclick="exportCanvasSnippet()" onkeydown="if(event.key==='Enter'||event.key===' ')exportCanvasSnippet()" role="button" tabindex="0">HTML5 Canvas Page</a>
-          <a onclick="exportPaletteGPL()" onkeydown="if(event.key==='Enter'||event.key===' ')exportPaletteGPL()" role="button" tabindex="0">GIMP Palette (.GPL)</a>
-          <a onclick="exportPaletteACT()" onkeydown="if(event.key==='Enter'||event.key===' ')exportPaletteACT()" role="button" tabindex="0">Adobe Color Table (.ACT)</a>
+        <div class="export-dropdown-content" id="export-menu" role="menu" aria-label="Export Formats">
+          <a onclick="exportImage('png')" onkeydown="handleExportKey(event, 'png')" role="menuitem" tabindex="0" aria-label="Export PNG">PNG</a>
+          <a onclick="exportImage('webp')" onkeydown="handleExportKey(event, 'webp')" role="menuitem" tabindex="0" aria-label="Export WEBP">WEBP</a>
+          <a onclick="exportImage('bmp')" onkeydown="handleExportKey(event, 'bmp')" role="menuitem" tabindex="0" aria-label="Export BMP 24-bit">BMP (24-bit)</a>
+          <a onclick="exportPCX()" onkeydown="if(event.key==='Enter'||event.key===' ')exportPCX()" role="menuitem" tabindex="0" aria-label="Export PCX">PCX (ZSoft 24-bit)</a>
+          <a onclick="exportTGA()" onkeydown="if(event.key==='Enter'||event.key===' ')exportTGA()" role="menuitem" tabindex="0" aria-label="Export TGA">TGA (Truevision 32-bit)</a>
+          <a onclick="exportICO()" onkeydown="if(event.key==='Enter'||event.key===' ')exportICO()" role="menuitem" tabindex="0" aria-label="Export Windows Icon">Windows Icon (.ICO)</a>
+          <a onclick="exportPPM()" onkeydown="if(event.key==='Enter'||event.key===' ')exportPPM()" role="menuitem" tabindex="0" aria-label="Export PPM">PPM (Netpbm)</a>
+          <a onclick="exportANSI()" onkeydown="if(event.key==='Enter'||event.key===' ')exportANSI()" role="menuitem" tabindex="0" aria-label="Export ANSI Art">ANSI Art (.ANS)</a>
+          <a onclick="exportXBM()" onkeydown="if(event.key==='Enter'||event.key===' ')exportXBM()" role="menuitem" tabindex="0" aria-label="Export XBM C Bitmap">XBM C Bitmap (.xbm)</a>
+          <a onclick="exportCHeader()" onkeydown="if(event.key==='Enter'||event.key===' ')exportCHeader()" role="menuitem" tabindex="0" aria-label="Export C Header">C Header (.H)</a>
+          <a onclick="exportSVG()" onkeydown="if(event.key==='Enter'||event.key===' ')exportSVG()" role="menuitem" tabindex="0" aria-label="Export SVG Vector">SVG Vector</a>
+          <a onclick="exportJSON()" onkeydown="if(event.key==='Enter'||event.key===' ')exportJSON()" role="menuitem" tabindex="0" aria-label="Export JSON Sprite">JSON Sprite</a>
+          <a onclick="exportCanvasSnippet()" onkeydown="if(event.key==='Enter'||event.key===' ')exportCanvasSnippet()" role="menuitem" tabindex="0" aria-label="Export HTML5 Canvas Page">HTML5 Canvas Page</a>
+          <a onclick="exportPaletteGPL()" onkeydown="if(event.key==='Enter'||event.key===' ')exportPaletteGPL()" role="menuitem" tabindex="0" aria-label="Export GIMP Palette">GIMP Palette (.GPL)</a>
+          <a onclick="exportPaletteACT()" onkeydown="if(event.key==='Enter'||event.key===' ')exportPaletteACT()" role="menuitem" tabindex="0" aria-label="Export Adobe Color Table">Adobe Color Table (.ACT)</a>
         </div>
       </div>
 
