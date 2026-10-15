@@ -3013,6 +3013,7 @@ window.addEventListener('keydown', function(e) {
       const s = document.getElementById('searchInput');
       if (s) { s.focus(); s.select(); }
     } else if (k === 'a') openStatsModal();
+    else if (k === 'p') openDataProfilerModal();
     else if (k === 'e') exportCSV();
     else if (k === 'i') triggerImportCSV();
     else if (k === 'j') exportJSON();
@@ -3021,6 +3022,282 @@ window.addEventListener('keydown', function(e) {
     else if (k === 'r') openResetModal();
   }
 });
+
+// --- Enterprise Data Quality & Column Integrity Profiler ---
+function injectProfilerButton() {
+  const statsBtn = document.querySelector('button[onclick="openStatsModal()"]');
+  if (statsBtn && !document.getElementById('btnProfiler')) {
+    const profilerBtn = document.createElement('button');
+    profilerBtn.id = 'btnProfiler';
+    profilerBtn.className = 'btn-secondary';
+    profilerBtn.title = 'Data Quality & Column Profiler (P)';
+    profilerBtn.innerHTML = 'Profile <span class="kbd-badge">P</span>';
+    profilerBtn.onclick = openDataProfilerModal;
+    statsBtn.parentNode.insertBefore(profilerBtn, statsBtn.nextSibling);
+  }
+}
+setTimeout(injectProfilerButton, 100);
+
+function openDataProfilerModal() {
+  let modal = document.getElementById('profilerModal');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'profilerModal';
+    modal.className = 'modal-overlay';
+    modal.setAttribute('role', 'dialog');
+    modal.setAttribute('aria-modal', 'true');
+    modal.onclick = (e) => { if (e.target === modal) closeDataProfilerModal(); };
+    modal.innerHTML = `
+      <div class="modal modal-wide" style="max-height:88vh;display:flex;flex-direction:column;">
+        <h3 style="margin-bottom:8px;">🔍 Data Quality & Column Integrity Profiler</h3>
+        <p style="font-size:11px;color:var(--text-muted);margin:0 0 10px 0;">
+          Deep diagnostics, type variance analysis, missing value profiling, and one-click data sanitization.
+        </p>
+        <div id="profilerContent" style="overflow-y:auto;flex-grow:1;margin-bottom:12px;padding-right:4px;"></div>
+        <div class="modal-actions" style="margin-top:auto;flex-wrap:wrap;gap:6px;">
+          <button class="btn-accent" onclick="cleanTrimWhitespace()">✂️ Trim Whitespace</button>
+          <button class="btn-secondary" onclick="cleanDeduplicateRecords()">📑 Deduplicate</button>
+          <button class="btn-secondary" onclick="exportProfilerReport()">📄 Export Audit Report</button>
+          <button class="btn-secondary" onclick="closeDataProfilerModal()">Close</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(modal);
+  }
+  renderProfilerReport();
+  modal.classList.add('active');
+}
+
+function closeDataProfilerModal() {
+  const modal = document.getElementById('profilerModal');
+  if (modal) modal.classList.remove('active');
+}
+
+function analyzeColumnProfile(tbl) {
+  const records = tbl.records || [];
+  const cols = tbl.columns || [];
+  const total = records.length;
+  const profiles = [];
+
+  cols.forEach(col => {
+    let nullCount = 0;
+    let emptyCount = 0;
+    const valueMap = new Map();
+    let numericCount = 0;
+    let minNum = Infinity;
+    let maxNum = -Infinity;
+    let sumNum = 0;
+    let minLen = Infinity;
+    let maxLen = 0;
+    let whitespaceIssueCount = 0;
+
+    records.forEach(r => {
+      const val = r[col.id];
+      if (val === null || val === undefined) {
+        nullCount++;
+      } else {
+        const strVal = String(val);
+        if (strVal.trim() === '') {
+          emptyCount++;
+        }
+        if (strVal !== strVal.trim()) {
+          whitespaceIssueCount++;
+        }
+        valueMap.set(strVal, (valueMap.get(strVal) || 0) + 1);
+        minLen = Math.min(minLen, strVal.length);
+        maxLen = Math.max(maxLen, strVal.length);
+
+        const num = Number(val);
+        if (!isNaN(num) && strVal.trim() !== '') {
+          numericCount++;
+          minNum = Math.min(minNum, num);
+          maxNum = Math.max(maxNum, num);
+          sumNum += num;
+        }
+      }
+    });
+
+    const isPK = (col.id === tbl.primaryKey);
+    const distinctCount = valueMap.size;
+    const missingTotal = nullCount + emptyCount;
+    const missingPct = total > 0 ? ((missingTotal / total) * 100).toFixed(1) : 0;
+    const uniquenessPct = total > 0 ? ((distinctCount / total) * 100).toFixed(1) : 0;
+    const isMostlyNumeric = total > 0 && (numericCount / (total - missingTotal || 1)) > 0.8;
+    const avgNum = numericCount > 0 ? (sumNum / numericCount).toFixed(2) : 'N/A';
+
+    profiles.push({
+      id: col.id,
+      label: col.label || col.id,
+      isPK,
+      total,
+      missingTotal,
+      missingPct,
+      distinctCount,
+      uniquenessPct,
+      isMostlyNumeric,
+      minNum: minNum === Infinity ? 'N/A' : minNum,
+      maxNum: maxNum === -Infinity ? 'N/A' : maxNum,
+      avgNum,
+      minLen: minLen === Infinity ? 0 : minLen,
+      maxLen,
+      whitespaceIssueCount
+    });
+  });
+
+  return profiles;
+}
+
+function renderProfilerReport() {
+  const container = document.getElementById('profilerContent');
+  if (!container) return;
+  const tbl = getActiveTable();
+  if (!tbl) {
+    container.innerHTML = '<p style="color:var(--text-muted);">No active table found.</p>';
+    return;
+  }
+
+  const profiles = analyzeColumnProfile(tbl);
+  let html = `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;background:rgba(255,255,255,0.03);padding:6px 10px;border-radius:6px;border:1px solid var(--border-color);">
+      <div>
+        <span style="font-weight:600;color:var(--primary);font-size:12px;">${escapeHtml(tbl.title)}</span>
+        <span style="color:var(--text-muted);font-size:11px;margin-left:8px;">(${tbl.records.length} records, ${tbl.columns.length} columns)</span>
+      </div>
+      <div>
+        <span class="badge" style="background:rgba(56,189,248,0.15);color:var(--primary);">PK: ${escapeHtml(tbl.primaryKey)}</span>
+      </div>
+    </div>
+    <table style="width:100%;border-collapse:collapse;font-size:11px;background:rgba(0,0,0,0.25);border-radius:6px;overflow:hidden;">
+      <thead>
+        <tr style="background:rgba(255,255,255,0.06);color:var(--text-muted);text-align:left;">
+          <th style="padding:6px 8px;">Column</th>
+          <th style="padding:6px 8px;">Missing (Null/Blank)</th>
+          <th style="padding:6px 8px;">Distinct / Unique</th>
+          <th style="padding:6px 8px;">Type & Range</th>
+          <th style="padding:6px 8px;">Issues / Flags</th>
+        </tr>
+      </thead>
+      <tbody>
+  `;
+
+  profiles.forEach(p => {
+    let flags = [];
+    if (p.isPK && p.distinctCount < p.total) flags.push('<span class="tag" style="background:rgba(239,68,68,0.2);color:#fca5a5;border-color:rgba(239,68,68,0.4);">PK Collision!</span>');
+    if (parseFloat(p.missingPct) > 25) flags.push(`<span class="tag" style="background:rgba(245,158,11,0.2);color:#fcd34d;">${p.missingPct}% Missing</span>`);
+    if (p.whitespaceIssueCount > 0) flags.push(`<span class="tag" style="background:rgba(168,85,247,0.2);color:#d8b4fe;">${p.whitespaceIssueCount} Untrimmed</span>`);
+    if (flags.length === 0) flags.push('<span class="tag" style="background:rgba(16,185,129,0.15);color:#6ee7b7;">Clean</span>');
+
+    const rangeInfo = p.isMostlyNumeric 
+      ? `Num (Min: ${p.minNum}, Max: ${p.maxNum}, Avg: ${p.avgNum})` 
+      : `Text (Len: ${p.minLen} - ${p.maxLen} chars)`;
+
+    html += `
+      <tr style="border-bottom:1px solid var(--border-color);">
+        <td style="padding:6px 8px;font-weight:600;color:var(--text-main);">
+          ${escapeHtml(p.label)}
+          ${p.isPK ? '<span style="font-size:9px;color:var(--primary);margin-left:3px;">[PK]</span>' : ''}
+        </td>
+        <td style="padding:6px 8px;color:${parseFloat(p.missingPct) > 0 ? 'var(--warning)' : 'var(--text-muted)'};">
+          ${p.missingTotal} (${p.missingPct}%)
+        </td>
+        <td style="padding:6px 8px;color:var(--text-main);">
+          ${p.distinctCount} <span style="color:var(--text-muted);font-size:10px;">(${p.uniquenessPct}%)</span>
+        </td>
+        <td style="padding:6px 8px;color:var(--text-muted);font-family:monospace;font-size:10px;">
+          ${escapeHtml(rangeInfo)}
+        </td>
+        <td style="padding:6px 8px;">
+          ${flags.join(' ')}
+        </td>
+      </tr>
+    `;
+  });
+
+  html += `</tbody></table>`;
+  container.innerHTML = html;
+}
+
+function cleanTrimWhitespace() {
+  const tbl = getActiveTable();
+  if (!tbl || !tbl.records) return;
+  let trimmedCells = 0;
+  tbl.records.forEach(r => {
+    tbl.columns.forEach(col => {
+      const val = r[col.id];
+      if (typeof val === 'string' && val !== val.trim()) {
+        r[col.id] = val.trim();
+        trimmedCells++;
+      }
+    });
+  });
+  saveDatabase();
+  renderAll();
+  renderProfilerReport();
+  showToast(`✂️ Trimmed whitespace in ${trimmedCells} cell(s).`, 'success');
+  updateStatus(`Sanitized table: ${trimmedCells} untrimmed values cleaned`);
+}
+
+function cleanDeduplicateRecords() {
+  const tbl = getActiveTable();
+  if (!tbl || !tbl.records) return;
+  const initialCount = tbl.records.length;
+  const seen = new Set();
+  const uniqueRecords = [];
+
+  tbl.records.forEach(r => {
+    // Fingerprint based on non-PK fields or full row serialization
+    const copy = { ...r };
+    delete copy._id;
+    const key = JSON.stringify(copy);
+    if (!seen.has(key)) {
+      seen.add(key);
+      uniqueRecords.push(r);
+    }
+  });
+
+  const removed = initialCount - uniqueRecords.length;
+  if (removed > 0) {
+    tbl.records = uniqueRecords;
+    saveDatabase();
+    renderAll();
+    renderProfilerReport();
+    showToast(`📑 Removed ${removed} duplicate record(s).`, 'success');
+    updateStatus(`Deduplicated table: removed ${removed} duplicates`);
+  } else {
+    showToast('No exact duplicate records detected.', 'info');
+  }
+}
+
+function exportProfilerReport() {
+  const tbl = getActiveTable();
+  if (!tbl) return;
+  const profiles = analyzeColumnProfile(tbl);
+  const now = new Date().toISOString();
+  let txt = `=======================================================\n`;
+  txt += `  KDB ENTERPRISE DATA INTEGRITY & AUDIT REPORT\n`;
+  txt += `  Generated: ${now}\n`;
+  txt += `  Table: ${tbl.title} (${tbl.id})\n`;
+  txt += `  Total Records: ${tbl.records.length} | Columns: ${tbl.columns.length}\n`;
+  txt += `  Primary Key: ${tbl.primaryKey}\n`;
+  txt += `=======================================================\n\n`;
+
+  profiles.forEach(p => {
+    txt += `[Column: ${p.label} (${p.id})]${p.isPK ? ' [PRIMARY KEY]' : ''}\n`;
+    txt += `  - Missing / Null: ${p.missingTotal} (${p.missingPct}%)\n`;
+    txt += `  - Unique Values:  ${p.distinctCount} (${p.uniquenessPct}% distinct)\n`;
+    txt += `  - Untrimmed Rows: ${p.whitespaceIssueCount}\n`;
+    if (p.isMostlyNumeric) {
+      txt += `  - Inferred Type:  Numeric (Min: ${p.minNum}, Max: ${p.maxNum}, Avg: ${p.avgNum})\n`;
+    } else {
+      txt += `  - Inferred Type:  Text (Length range: ${p.minLen} to ${p.maxLen} characters)\n`;
+    }
+    txt += `\n`;
+  });
+
+  const blob = new Blob([txt], { type: 'text/plain;charset=utf-8' });
+  downloadBlob(blob, `kdb_integrity_profile_${tbl.id}_${now.slice(0,10)}.txt`);
+  showToast('📄 Exported Integrity Audit Report', 'success');
+}
 
 // Window Resizing Messaging for KiloOS
 if (window.parent !== window) {
