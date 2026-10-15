@@ -183,7 +183,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ---
 
-## Recent Execution Logs
+## Recent Execution Logs (Max 5 Entries)
 
 - **kweb://asm-temple** (kilo-creator):
   - Deep expansion of Tab 10: x86 Shellcode Deobfuscator & Acolyte State Vault.
@@ -217,9 +217,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Added MASM network frame driver (.asm) export and acoustic synthesizer chirp effects.
   - Verified KiloOS build clean (npm run build PASS) and file size (270.9 KB < 999 KB ceiling).
   - Advanced virtual web target to kweb://asm-temple; handed off to kilo-graphics.
-
-- **2026-10-15 09:35 [kilo-expander]**: KZip Pass 2 deep feature expansion complete.
-  - Implemented Self-Extracting Archive (.sfx.html) packaging with embedded web unpacker runtime.
-  - Added in-archive Grep content search supporting regex, case toggles, line highlights, and match indices.
-  - Verified KiloOS shell build clean (npm run build PASS).
-  - Advanced expander target to KFont; rotated next agent to kilo-creator.
