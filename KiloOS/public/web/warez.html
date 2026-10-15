@@ -1295,6 +1295,7 @@
     <button class="tab-btn" onclick="switchMainTab('courier', this)">[ 🏁 FXP COURIER RACE &amp; GLFTPD ]</button>
     <button class="tab-btn" onclick="switchMainTab('packer', this)">[ 🛡️ PE-PACK '99 &amp; ENTROPY LAB ]</button>
     <button class="tab-btn" onclick="switchMainTab('diskmag', this)">[ 💾 SCENE PULSE DISKMAG '99 ]</button>
+    <button class="tab-btn" onclick="switchMainTab('predb', this)">[ 🗄️ PRE-DB &amp; NUKE TRIBUNAL ]</button>
   </div>
 
   <!-- ================================================================= -->
@@ -2773,6 +2774,935 @@ Tested clean on Windows 98 SE and DOS 7.1.</textarea>
       </div>
     </div>
   </div>
+
+  <!-- ================================================================= -->
+  <!-- TAB 16: PRE-DB '99 & SCENE DUPE / NUKE TRIBUNAL -->
+  <!-- ================================================================= -->
+  <div id="tab-predb" class="tab-content">
+    <div class="section-box" style="border: 1px solid var(--accent-cyan); background: #030811;">
+      <!-- Pre-DB Header -->
+      <div class="section-title" style="border-bottom: 2px solid var(--accent-cyan); padding-bottom: 8px;">
+        <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+          <span style="color:var(--accent-cyan); font-size:14px; letter-spacing:1px; font-weight:bold;">🗄️ 1999 SCENE PRE-DB &amp; NUKE TRIBUNAL</span>
+          <span style="background:rgba(0,240,255,0.15); border:1px solid var(--accent-cyan); color:var(--accent-cyan); font-size:9px; padding:2px 6px; border-radius:3px;">THE SCENE RECORD ARCHIVE</span>
+          <span style="color:#64748b; font-size:11px;">EFnet #pre &bull; Topsite Dupe Check &bull; Senior Scene Council Arbitration</span>
+        </div>
+        <div style="display:flex; gap:8px; align-items:center;">
+          <span id="predbLiveClock" style="color:var(--accent-green); font-size:11px; font-family:monospace;">1999-10-15 03:14:00 EST</span>
+          <button class="btn-gen" onclick="predbPlayChime(660)" style="font-size:10px; padding:2px 6px;">🔔 AUDIO FX</button>
+        </div>
+      </div>
+
+      <!-- Quick Metrics Ribbon -->
+      <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(130px, 1fr)); gap:8px; margin:12px 0;">
+        <div style="background:#09121d; border:1px solid #1e3a29; padding:6px 10px; border-radius:3px;">
+          <div style="color:#64748b; font-size:9px;">ARCHIVED RELEASES</div>
+          <div id="predbStatTotal" style="color:var(--accent-green); font-size:15px; font-weight:bold;">32</div>
+        </div>
+        <div style="background:#09121d; border:1px solid #1e3a29; padding:6px 10px; border-radius:3px;">
+          <div style="color:#64748b; font-size:9px;">CLEAN / VERIFIED</div>
+          <div id="predbStatClean" style="color:var(--accent-cyan); font-size:15px; font-weight:bold;">22</div>
+        </div>
+        <div style="background:#09121d; border:1px solid #1e3a29; padding:6px 10px; border-radius:3px;">
+          <div style="color:#64748b; font-size:9px;">NUKED (VIOLATIONS)</div>
+          <div id="predbStatNuked" style="color:var(--accent-pink); font-size:15px; font-weight:bold;">7</div>
+        </div>
+        <div style="background:#09121d; border:1px solid #1e3a29; padding:6px 10px; border-radius:3px;">
+          <div style="color:#64748b; font-size:9px;">OVERRULED BY TRIBUNAL</div>
+          <div id="predbStatOverruled" style="color:var(--accent-yellow); font-size:15px; font-weight:bold;">2</div>
+        </div>
+        <div style="background:#09121d; border:1px solid #1e3a29; padding:6px 10px; border-radius:3px;">
+          <div style="color:#64748b; font-size:9px;">0x7F ANOMALIES</div>
+          <div id="predbStatAnomaly" style="color:var(--accent-purple); font-size:15px; font-weight:bold;">1</div>
+        </div>
+      </div>
+
+      <!-- Live IRC #pre Ticker -->
+      <div style="background:#050a14; border:1px solid #142844; border-radius:4px; padding:8px 12px; margin-bottom:12px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; border-bottom:1px solid #142844; padding-bottom:4px;">
+          <div style="display:flex; align-items:center; gap:8px;">
+            <span style="color:var(--accent-green); font-size:11px; font-weight:bold;">📡 LIVE TOPSITE #PRE FEED</span>
+            <span style="color:#64748b; font-size:10px;">[EFnet / IRCnet bot: <code style="color:#38bdf8;">PreBot@topsite.echo</code>]</span>
+          </div>
+          <div style="display:flex; gap:6px; align-items:center;">
+            <button id="predbTickerPauseBtn" class="btn-filter" onclick="predbToggleTicker()" style="font-size:9px; padding:2px 8px;">⏸️ PAUSE</button>
+            <button class="btn-filter" onclick="predbClearTicker()" style="font-size:9px; padding:2px 8px;">CLEAR</button>
+            <span id="predbTickerSpeedLabel" style="color:#64748b; font-size:9px;">SPEED: 3s</span>
+          </div>
+        </div>
+        <div id="predbTickerBox" style="height:76px; overflow-y:auto; font-family:'Consolas',monospace; font-size:11px; line-height:1.35; color:#cbd5e1; background:#02050c; border:1px solid #0f172a; padding:6px; border-radius:2px;">
+          <!-- Live ticker items injected here -->
+        </div>
+      </div>
+
+      <!-- Filter / Control Bar -->
+      <div class="control-bar" style="background:#08101d; border-color:#1e293b; margin-bottom:12px;">
+        <div style="display:flex; flex-wrap:wrap; gap:8px; align-items:center; flex:1;">
+          <input type="text" id="predbSearchInput" placeholder="🔍 Search Pre-DB (e.g. Flarelight, Razor, 0x7F, crash, dupe)..." oninput="predbFilterReleases()" style="background:#02050c; border:1px solid #1e3a29; color:var(--text-main); font-family:inherit; font-size:11px; padding:5px 8px; border-radius:3px; min-width:260px; flex:1;" />
+          
+          <select id="predbCategoryFilter" onchange="predbFilterReleases()" style="background:#02050c; border:1px solid #1e3a29; color:var(--accent-cyan); font-family:inherit; font-size:11px; padding:5px; border-radius:3px;">
+            <option value="ALL">All Sections (ALL)</option>
+            <option value="0DAY">0DAY (PC Apps)</option>
+            <option value="ISO">ISO (Game CDs)</option>
+            <option value="MP3">MP3 (Scene Rips)</option>
+            <option value="VCD">VCD (MPEG Movies)</option>
+            <option value="UTILS">UTILS (Dev / Sys)</option>
+            <option value="DOX">DOX (Docs / Passwords)</option>
+            <option value="TRAINER">TRAINER (Cheats)</option>
+            <option value="ANOMALY">0x7F ARG Anomaly</option>
+          </select>
+
+          <select id="predbGroupFilter" onchange="predbFilterReleases()" style="background:#02050c; border:1px solid #1e3a29; color:var(--accent-green); font-family:inherit; font-size:11px; padding:5px; border-radius:3px;">
+            <option value="ALL">All Groups (ALL)</option>
+            <option value="FLARELIGHT">FLARELIGHT [FLT]</option>
+            <option value="RAZOR 1999">RAZOR 1999 [RZR]</option>
+            <option value="PARALAX">PARALAX [PDX]</option>
+            <option value="CLASS">CLASS [CLS]</option>
+            <option value="HYBRID">HYBRID [HBD]</option>
+            <option value="DEVIANCE">DEVIANCE [DEV]</option>
+            <option value="MYSTERY">MYSTERY [MYS]</option>
+            <option value="ECHOSYS">ECHOSYS [0x7F]</option>
+          </select>
+
+          <select id="predbStatusFilter" onchange="predbFilterReleases()" style="background:#02050c; border:1px solid #1e3a29; color:var(--accent-yellow); font-family:inherit; font-size:11px; padding:5px; border-radius:3px;">
+            <option value="ALL">All Statuses</option>
+            <option value="CLEAN">CLEAN</option>
+            <option value="NUKED">NUKED</option>
+            <option value="OVERRULED">OVERRULED</option>
+            <option value="ANOMALY">0x7F ANOMALY</option>
+          </select>
+        </div>
+        <button class="btn-gen" onclick="predbResetFilters()" style="font-size:10px; padding:4px 8px;">RESET</button>
+      </div>
+
+      <!-- Pre-DB Main Workspace Grid -->
+      <div style="display:grid; grid-template-columns: 1.15fr 0.85fr; gap:12px; margin-bottom:14px;">
+        <!-- Left: Release Table -->
+        <div style="background:#060d19; border:1px solid #142844; border-radius:4px; padding:10px; display:flex; flex-direction:column;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; border-bottom:1px solid #142844; padding-bottom:4px;">
+            <span style="color:var(--accent-green); font-size:11px; font-weight:bold;">📁 PRE-DB RECORD DATABASE</span>
+            <span id="predbTableCount" style="color:#64748b; font-size:10px;">Showing 32 records</span>
+          </div>
+
+          <div style="max-height:380px; overflow-y:auto; border:1px solid #0f172a; border-radius:2px;">
+            <table style="width:100%; border-collapse:collapse; font-size:10px; font-family:'Consolas',monospace;">
+              <thead>
+                <tr style="background:#0b192c; color:#94a3b8; text-align:left; position:sticky; top:0; z-index:2; border-bottom:1px solid #1e293b;">
+                  <th style="padding:5px 6px;">PRE TIME (EST)</th>
+                  <th style="padding:5px 6px;">RELEASE DIRECTORY NAME</th>
+                  <th style="padding:5px 6px;">SEC</th>
+                  <th style="padding:5px 6px;">GRP</th>
+                  <th style="padding:5px 6px;">DISKS</th>
+                  <th style="padding:5px 6px;">STATUS</th>
+                </tr>
+              </thead>
+              <tbody id="predbTableBody">
+                <!-- Rows populated by JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Right: Inspector & Nuke Dispute Tribunal -->
+        <div style="background:#060d19; border:1px solid #142844; border-radius:4px; padding:10px; display:flex; flex-direction:column;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; border-bottom:1px solid #142844; padding-bottom:4px;">
+            <span style="color:var(--accent-cyan); font-size:11px; font-weight:bold;">⚖️ RELEASE INSPECTOR &amp; NUKE TRIBUNAL</span>
+            <span id="predbSelectedId" style="color:#38bdf8; font-size:10px; font-weight:bold;">SELECT A RELEASE</span>
+          </div>
+
+          <!-- Inspector Content Area -->
+          <div id="predbInspectorBox" style="font-size:11px; line-height:1.4; color:#e2e8f0; flex:1; display:flex; flex-direction:column; gap:8px;">
+            <div style="color:#64748b; text-align:center; padding:40px 10px;">
+              👈 Click any release row on the left or an incoming IRC #pre line to inspect full release forensics, CRC32 verifications, or arbitrate topsite nuke disputes.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bottom Panel: Pre Submitter & Dupe Checker -->
+      <div style="background:#050a14; border:1px solid #1e293b; border-radius:4px; padding:10px; margin-top:6px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; border-bottom:1px dashed #1e3a29; padding-bottom:4px;">
+          <div style="display:flex; align-items:center; gap:8px;">
+            <span style="color:var(--accent-yellow); font-size:12px; font-weight:bold;">⚡ SCENE RELEASE PRE SUBMISSION &amp; DUPE-CHECKER</span>
+            <span style="color:#64748b; font-size:10px;">Verify scene naming standards, detect duplicate releases, and broadcast to topsite bots.</span>
+          </div>
+          <span style="color:var(--accent-green); font-size:10px;">STANDARD: THE SCENE RULES '99</span>
+        </div>
+
+        <div style="display:grid; grid-template-columns: 2fr 1fr 1fr 1fr auto; gap:8px; align-items:end;">
+          <div>
+            <label style="color:#94a3b8; font-size:9px; display:block; margin-bottom:2px;">RELEASE DIRECTORY NAME</label>
+            <input type="text" id="predbSubmitDir" placeholder="e.g. Quake.III.Arena.v1.0.Cracked-FLT" style="width:100%; background:#02050c; border:1px solid #1e3a29; color:var(--text-main); font-family:inherit; font-size:11px; padding:4px 6px; border-radius:3px;" />
+          </div>
+          <div>
+            <label style="color:#94a3b8; font-size:9px; display:block; margin-bottom:2px;">SECTION</label>
+            <select id="predbSubmitSec" style="width:100%; background:#02050c; border:1px solid #1e3a29; color:var(--accent-cyan); font-family:inherit; font-size:11px; padding:4px; border-radius:3px;">
+              <option value="0DAY">0DAY (PC Apps)</option>
+              <option value="ISO">ISO (Game CDs)</option>
+              <option value="MP3">MP3 (Scene Rips)</option>
+              <option value="VCD">VCD (MPEG Movies)</option>
+              <option value="UTILS">UTILS (Dev / Sys)</option>
+              <option value="DOX">DOX (Docs / Passwords)</option>
+              <option value="TRAINER">TRAINER (Cheats)</option>
+            </select>
+          </div>
+          <div>
+            <label style="color:#94a3b8; font-size:9px; display:block; margin-bottom:2px;">GROUP HANDLE</label>
+            <input type="text" id="predbSubmitGroup" placeholder="FLARELIGHT" value="FLARELIGHT" style="width:100%; background:#02050c; border:1px solid #1e3a29; color:var(--accent-green); font-family:inherit; font-size:11px; padding:4px 6px; border-radius:3px;" />
+          </div>
+          <div>
+            <label style="color:#94a3b8; font-size:9px; display:block; margin-bottom:2px;">DISKS / ARCHIVES</label>
+            <input type="text" id="predbSubmitDisks" placeholder="12x15MB" value="15x15MB" style="width:100%; background:#02050c; border:1px solid #1e3a29; color:var(--text-main); font-family:inherit; font-size:11px; padding:4px 6px; border-radius:3px;" />
+          </div>
+          <div>
+            <button class="btn-gen" onclick="predbSubmitRelease()" style="font-size:11px; padding:5px 12px; background:#047857; color:#fff; border:1px solid #10b981;">🚀 PRE NOW</button>
+          </div>
+        </div>
+
+        <div id="predbSubmitFeedback" style="margin-top:8px; font-size:11px; padding:6px 10px; border-radius:3px; display:none;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pre-DB & Nuke Tribunal Engine -->
+  <script>
+  // =========================================================================
+  // PRE-DB & SCENE NUKE TRIBUNAL ENGINE (1999)
+  // =========================================================================
+  let predbAudioCtx = null;
+  function predbPlayChime(freq = 660, type = 'sine', duration = 0.12) {
+    try {
+      if (!predbAudioCtx) predbAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      if (predbAudioCtx.state === 'suspended') predbAudioCtx.resume();
+      const osc = predbAudioCtx.createOscillator();
+      const gain = predbAudioCtx.createGain();
+      osc.type = type;
+      osc.frequency.setValueAtTime(freq, predbAudioCtx.currentTime);
+      gain.gain.setValueAtTime(0.08, predbAudioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, predbAudioCtx.currentTime + duration);
+      osc.connect(gain);
+      gain.connect(predbAudioCtx.destination);
+      osc.start();
+      osc.stop(predbAudioCtx.currentTime + duration);
+    } catch(e) {}
+  }
+
+  const PREDB_INITIAL_RELEASES = [
+    {
+      id: "PRE-001",
+      dir: "VoidCraft.Brood.Strife.v1.05.Cracked-FLT",
+      section: "ISO",
+      group: "FLARELIGHT",
+      disks: "42x15MB",
+      preTime: "1999-10-14 23:14:02",
+      crc32: "0x89AC221F",
+      status: "CLEAN",
+      topsites: ["ECHO", "HEAVEN", "DARKSTAR"],
+      nfo: "VOIDCRAFT: BROOD STRIFE (c) Blizzard Entertainment / Parody\nCracked by Flarelight Assembly Guild.\nTested clean on Win95/98/NT4. Protection: SafeDisc v1.0 bypassed.",
+      nukeReason: null,
+      nukeBy: null,
+      multiplier: 1,
+      tribunalVotes: { overruled: 0, upheld: 0, penalty: 0 },
+      evidence: "Clean SafeDisc bypass with original audio CD emulation loader."
+    },
+    {
+      id: "PRE-002",
+      dir: "Machina.Ex.Stealth.Action.Beta.RIP-RZR",
+      section: "0DAY",
+      group: "RAZOR 1999",
+      disks: "18x15MB",
+      preTime: "1999-10-14 21:05:44",
+      crc32: "0x334DF801",
+      status: "CLEAN",
+      topsites: ["ECHO", "SHADOWNET", "PHANTOM"],
+      nfo: "MACHINA EX (c) Ion Storm / Eidos\nRipped audio & cutscenes for compact 18-disk scene distribution.\nKeygen by Razor 1999 Cryptography Unit.",
+      nukeReason: null,
+      nukeBy: null,
+      multiplier: 1,
+      tribunalVotes: { overruled: 0, upheld: 0, penalty: 0 },
+      evidence: "Proper rip verified by 0DAY Council. All game dialogues intact."
+    },
+    {
+      id: "PRE-003",
+      dir: "System.Glitch.2.Multiplayer.Patch.v1.1-PDX",
+      section: "0DAY",
+      group: "PARALAX",
+      disks: "4x15MB",
+      preTime: "1999-10-14 18:42:19",
+      crc32: "0x00FF8842",
+      status: "NUKED",
+      topsites: ["HEAVEN", "VOIDCORE"],
+      nfo: "SYSTEM GLITCH 2 MULTIPLAYER ENHANCEMENT\nFixes DirectPlay networking latency across dialup slips.",
+      nukeReason: "bad.crack.crashes.on.win98.second.edition",
+      nukeBy: "ECHO-Council",
+      multiplier: 3,
+      tribunalVotes: { overruled: 2, upheld: 5, penalty: 1 },
+      evidence: "Release crashes with Exception 0xC0000005 in DPLAYX.DLL on clean Windows 98 SE installation. Group acknowledges missing null-pointer guard in loader hook."
+    },
+    {
+      id: "PRE-004",
+      dir: "Half-Life.Opposing.Front.v1.0.Keymaker-CLS",
+      section: "DOX",
+      group: "CLASS",
+      disks: "1x1.44MB",
+      preTime: "1999-10-14 16:11:50",
+      crc32: "0xAA491999",
+      status: "OVERRULED",
+      topsites: ["DARKSTAR", "ECHO"],
+      nfo: "Algorithmic CD-Key generator for WON networking protocol.\nHand-crafted in MASM 6.11.",
+      nukeReason: "dupe.of.flt.keymaker.pred.2mins.prior",
+      nukeBy: "DARKSTAR-Sysop",
+      multiplier: 1,
+      tribunalVotes: { overruled: 6, upheld: 1, penalty: 0 },
+      evidence: "Topsite logs proved FLT release was pre'd with broken parity bit check while CLS implementation produces 100% valid CD keys. Senior Council overruled nuke."
+    },
+    {
+      id: "PRE-005",
+      dir: "Photoshop.v5.5.Full.Working.Crack-HBD",
+      section: "0DAY",
+      group: "HYBRID",
+      disks: "24x15MB",
+      preTime: "1999-10-14 14:02:11",
+      crc32: "0xFE552099",
+      status: "CLEAN",
+      topsites: ["ECHO", "HEAVEN", "SHADOWNET"],
+      nfo: "ADOBE PHOTOSHOP 5.5 + IMAGE READY 2.0\nComplete working registration with color management profiles.",
+      nukeReason: null,
+      nukeBy: null,
+      multiplier: 1,
+      tribunalVotes: { overruled: 0, upheld: 0, penalty: 0 },
+      evidence: "Verified clean. Includes authentic ICC scanner profiles and plug-ins."
+    },
+    {
+      id: "PRE-006",
+      dir: "Unreal.Tournament.v400.NoCD.Patch-DEV",
+      section: "TRAINER",
+      group: "DEVIANCE",
+      disks: "2x5MB",
+      preTime: "1999-10-14 11:30:28",
+      crc32: "0x1299FF00",
+      status: "NUKED",
+      topsites: ["VOIDCORE", "DARKSTAR"],
+      nfo: "No-CD executable patch for Unreal Tournament retail release.",
+      nukeReason: "stolen.code.from.razor1999.loader",
+      nukeBy: "RZR-Arbitration",
+      multiplier: 5,
+      tribunalVotes: { overruled: 1, upheld: 8, penalty: 4 },
+      evidence: "Hex diff demonstrates identical PE entrypoint stub down to Razor 1999 internal canary bytes (0x52 0x5A 0x52). Upheld with x5 penalty."
+    },
+    {
+      id: "PRE-007",
+      dir: "The.Matrix.1999.Screener.VCD-MYS",
+      section: "VCD",
+      group: "MYSTERY",
+      disks: "2x650MB",
+      preTime: "1999-10-14 09:15:33",
+      crc32: "0x99427F01",
+      status: "CLEAN",
+      topsites: ["ECHO", "PHANTOM"],
+      nfo: "THE MATRIX (1999) - White Rabbit Video CD Rip.\nMPEG-1 1150kbps video, 224kbps stereo audio. Dual-bin ISO image.",
+      nukeReason: null,
+      nukeBy: null,
+      multiplier: 1,
+      tribunalVotes: { overruled: 0, upheld: 0, penalty: 0 },
+      evidence: "Pristine audio sync and crisp telecine transfer."
+    },
+    {
+      id: "PRE-008",
+      dir: "ECHOSYS.Carlsbad.Subcarrier.Transponder.v1.0.NODE0x7F-FLT",
+      section: "ANOMALY",
+      group: "ECHOSYS",
+      disks: "1x777KB",
+      preTime: "1999-10-15 03:33:07",
+      crc32: "0x7F199942",
+      status: "ANOMALY",
+      topsites: ["CARLSBAD", "SUBTERRANEAN", "ECHO-0x7F"],
+      nfo: "CARLSBAD UNDERGROUND TELECOM TRANSPONDER NODE 0x7F\nSubcarrier Frequency: 1999 Hz // Bell 202 FSK Carrier\nEncrypted quantum parity packet linking Carlsbad Caverns Relay to subterranean deep core.\nSteganographic seed decoded from FLARELIGHT ANSI release NFO.",
+      nukeReason: null,
+      nukeBy: null,
+      multiplier: 1,
+      tribunalVotes: { overruled: 9, upheld: 0, penalty: 0 },
+      evidence: "Anomalous subterranean signal recognized by all council elders. Un-nukable quantum payload. Gateway to kweb://deep-core and kweb://darknet."
+    },
+    {
+      id: "PRE-009",
+      dir: "All.Star.Chumbawamba.Millennium.Hits.MP3-FLT",
+      section: "MP3",
+      group: "FLARELIGHT",
+      disks: "14x10MB",
+      preTime: "1999-10-13 22:19:00",
+      crc32: "0x981244BC",
+      status: "CLEAN",
+      topsites: ["ECHO", "HEAVEN"],
+      nfo: "Scene MP3 Release. LAME encoder v3.70 @ 192kbps Joint Stereo.\nAccurate EAC Secure Mode rip with verified CUE sheet.",
+      nukeReason: null,
+      nukeBy: null,
+      multiplier: 1,
+      tribunalVotes: { overruled: 0, upheld: 0, penalty: 0 },
+      evidence: "Verified 192kbps MP3 compliant with Radium / Fraunhofer audio standards."
+    },
+    {
+      id: "PRE-010",
+      dir: "Windows.98.Service.Pack.1.PreRelease.HOTFIX-RZR",
+      section: "UTILS",
+      group: "RAZOR 1999",
+      disks: "5x15MB",
+      preTime: "1999-10-13 20:01:14",
+      crc32: "0x44229988",
+      status: "CLEAN",
+      topsites: ["ECHO", "SHADOWNET"],
+      nfo: "Cumulative hotfixes for Windows 98 SE ACPI power management and USB 1.1 controller stability.",
+      nukeReason: null,
+      nukeBy: null,
+      multiplier: 1,
+      tribunalVotes: { overruled: 0, upheld: 0, penalty: 0 },
+      evidence: "Signed binary inspection verified against Microsoft internal debug symbols."
+    },
+    {
+      id: "PRE-011",
+      dir: "Age.Of.Empires.II.Age.Of.Kings.NoCD.Loader-PDX",
+      section: "ISO",
+      group: "PARALAX",
+      disks: "35x15MB",
+      preTime: "1999-10-13 17:49:50",
+      crc32: "0x110033FF",
+      status: "CLEAN",
+      topsites: ["HEAVEN", "DARKSTAR"],
+      nfo: "AGE OF EMPIRES II (c) Microsoft / Ensemble Studios\nFull ISO image with bypass for SecuROM red-book audio track check.",
+      nukeReason: null,
+      nukeBy: null,
+      multiplier: 1,
+      tribunalVotes: { overruled: 0, upheld: 0, penalty: 0 },
+      evidence: "SecuROM sub-channel data emulated cleanly."
+    },
+    {
+      id: "PRE-012",
+      dir: "WinAmp.v2.50.Pro.Unlocker.Plus.Visuals-CLS",
+      section: "0DAY",
+      group: "CLASS",
+      disks: "2x3MB",
+      preTime: "1999-10-13 15:12:00",
+      crc32: "0x55AA11EE",
+      status: "NUKED",
+      topsites: ["DARKSTAR"],
+      nfo: "WinAmp 2.50 Skin and DSP pack with Nullsoft AVS presets.",
+      nukeReason: "corrupt.rar.archive.part02.crc.mismatch",
+      nukeBy: "DARKSTAR-Sysop",
+      multiplier: 3,
+      tribunalVotes: { overruled: 0, upheld: 6, penalty: 0 },
+      evidence: "RAR volume part02 fails unrar extraction with CRC checksum error. Group did not re-upload parity recovery record."
+    }
+  ];
+
+  let predbReleases = [];
+  let predbSelectedRelease = null;
+  let predbTickerInterval = null;
+  let predbTickerPaused = false;
+  let predbJudgeRole = "FLARELIGHT Elder";
+
+  function predbInit() {
+    try {
+      const saved = localStorage.getItem('kweb_predb_releases_v1');
+      if (saved) {
+        predbReleases = JSON.parse(saved);
+      } else {
+        predbReleases = JSON.parse(JSON.stringify(PREDB_INITIAL_RELEASES));
+      }
+    } catch(e) {
+      predbReleases = JSON.parse(JSON.stringify(PREDB_INITIAL_RELEASES));
+    }
+
+    predbFilterReleases();
+    predbStartTicker();
+    predbUpdateMetrics();
+    
+    // Select first release if none selected
+    if (predbReleases.length > 0) {
+      predbSelectRelease(predbReleases[0].id);
+    }
+  }
+
+  function predbSave() {
+    try {
+      localStorage.setItem('kweb_predb_releases_v1', JSON.stringify(predbReleases));
+    } catch(e) {}
+    predbUpdateMetrics();
+  }
+
+  function predbUpdateMetrics() {
+    const total = predbReleases.length;
+    const clean = predbReleases.filter(r => r.status === 'CLEAN').length;
+    const nuked = predbReleases.filter(r => r.status === 'NUKED').length;
+    const overruled = predbReleases.filter(r => r.status === 'OVERRULED').length;
+    const anomaly = predbReleases.filter(r => r.status === 'ANOMALY').length;
+
+    const elTotal = document.getElementById('predbStatTotal');
+    const elClean = document.getElementById('predbStatClean');
+    const elNuked = document.getElementById('predbStatNuked');
+    const elOverruled = document.getElementById('predbStatOverruled');
+    const elAnomaly = document.getElementById('predbStatAnomaly');
+
+    if (elTotal) elTotal.textContent = total;
+    if (elClean) elClean.textContent = clean;
+    if (elNuked) elNuked.textContent = nuked;
+    if (elOverruled) elOverruled.textContent = overruled;
+    if (elAnomaly) elAnomaly.textContent = anomaly;
+  }
+
+  function predbFilterReleases() {
+    const q = (document.getElementById('predbSearchInput')?.value || '').toLowerCase().trim();
+    const sec = document.getElementById('predbCategoryFilter')?.value || 'ALL';
+    const grp = document.getElementById('predbGroupFilter')?.value || 'ALL';
+    const status = document.getElementById('predbStatusFilter')?.value || 'ALL';
+
+    const filtered = predbReleases.filter(r => {
+      if (sec !== 'ALL' && r.section !== sec) return false;
+      if (grp !== 'ALL' && !r.group.toUpperCase().includes(grp)) return false;
+      if (status !== 'ALL' && r.status !== status) return false;
+      if (q) {
+        const hay = (r.dir + ' ' + r.group + ' ' + r.section + ' ' + r.crc32 + ' ' + (r.nukeReason || '') + ' ' + r.nfo).toLowerCase();
+        if (!hay.includes(q)) return false;
+      }
+      return true;
+    });
+
+    const tbody = document.getElementById('predbTableBody');
+    const countEl = document.getElementById('predbTableCount');
+    if (countEl) countEl.textContent = `Showing ${filtered.length} of ${predbReleases.length} records`;
+
+    if (!tbody) return;
+    tbody.innerHTML = '';
+
+    if (filtered.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="6" style="padding:20px; text-align:center; color:#64748b;">No matching scene records found in Pre-DB database.</td></tr>`;
+      return;
+    }
+
+    filtered.forEach(r => {
+      const tr = document.createElement('tr');
+      tr.style.cursor = 'pointer';
+      tr.style.borderBottom = '1px solid #0f172a';
+      tr.onmouseenter = () => tr.style.background = '#0d1b2a';
+      tr.onmouseleave = () => tr.style.background = predbSelectedRelease?.id === r.id ? '#112235' : 'transparent';
+      if (predbSelectedRelease?.id === r.id) tr.style.background = '#112235';
+
+      let statusColor = '#34d399';
+      let statusBg = 'rgba(52, 211, 153, 0.15)';
+      if (r.status === 'NUKED') {
+        statusColor = '#f43f5e';
+        statusBg = 'rgba(244, 63, 94, 0.15)';
+      } else if (r.status === 'OVERRULED') {
+        statusColor = '#facc15';
+        statusBg = 'rgba(250, 204, 21, 0.15)';
+      } else if (r.status === 'ANOMALY') {
+        statusColor = '#c084fc';
+        statusBg = 'rgba(192, 132, 252, 0.2)';
+      }
+
+      tr.onclick = () => predbSelectRelease(r.id);
+
+      tr.innerHTML = `
+        <td style="padding:6px; color:#64748b; white-space:nowrap;">${r.preTime.split(' ')[1]}</td>
+        <td style="padding:6px; color:#e2e8f0; font-weight:bold; max-width:240px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${r.dir}">${r.dir}</td>
+        <td style="padding:6px; color:var(--accent-cyan);">${r.section}</td>
+        <td style="padding:6px; color:var(--accent-green);">${r.group}</td>
+        <td style="padding:6px; color:#94a3b8;">${r.disks}</td>
+        <td style="padding:6px;">
+          <span style="color:${statusColor}; background:${statusBg}; padding:2px 5px; border-radius:2px; font-weight:bold; font-size:9px;">[${r.status}]</span>
+        </td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }
+
+  function predbResetFilters() {
+    if (document.getElementById('predbSearchInput')) document.getElementById('predbSearchInput').value = '';
+    if (document.getElementById('predbCategoryFilter')) document.getElementById('predbCategoryFilter').value = 'ALL';
+    if (document.getElementById('predbGroupFilter')) document.getElementById('predbGroupFilter').value = 'ALL';
+    if (document.getElementById('predbStatusFilter')) document.getElementById('predbStatusFilter').value = 'ALL';
+    predbFilterReleases();
+  }
+
+  function predbSelectRelease(relId) {
+    const rel = predbReleases.find(r => r.id === relId);
+    if (!rel) return;
+    predbSelectedRelease = rel;
+
+    predbPlayChime(880, 'sine', 0.05);
+
+    const titleEl = document.getElementById('predbSelectedId');
+    if (titleEl) titleEl.textContent = `${rel.id} // ${rel.group}`;
+
+    const box = document.getElementById('predbInspectorBox');
+    if (!box) return;
+
+    let statusBadge = `<span style="color:#34d399; background:rgba(52,211,153,0.15); border:1px solid #34d399; padding:2px 6px; border-radius:3px; font-weight:bold;">[CLEAN SCENE RELEASE]</span>`;
+    if (rel.status === 'NUKED') {
+      statusBadge = `<span style="color:#f43f5e; background:rgba(244,63,94,0.15); border:1px solid #f43f5e; padding:2px 6px; border-radius:3px; font-weight:bold;">[NUKED // ${rel.nukeReason}]</span>`;
+    } else if (rel.status === 'OVERRULED') {
+      statusBadge = `<span style="color:#facc15; background:rgba(250,204,21,0.15); border:1px solid #facc15; padding:2px 6px; border-radius:3px; font-weight:bold;">[OVERRULED BY SCENE COUNCIL]</span>`;
+    } else if (rel.status === 'ANOMALY') {
+      statusBadge = `<span style="color:#c084fc; background:rgba(192,132,252,0.25); border:1px solid #c084fc; padding:2px 6px; border-radius:3px; font-weight:bold;">[0x7F QUANTUM ANOMALY]</span>`;
+    }
+
+    let nukeSection = '';
+    if (rel.status === 'NUKED' || rel.status === 'OVERRULED') {
+      const isNuked = rel.status === 'NUKED';
+      nukeSection = `
+        <div style="background:#150912; border:1px solid #f43f5e; border-radius:4px; padding:8px 10px; margin-top:4px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+            <span style="color:#f43f5e; font-weight:bold; font-size:11px;">⚠️ TOPSITE NUKE FORENSICS</span>
+            <span style="color:#fda4af; font-size:10px;">PENALTY MULTIPLIER: <strong>x${rel.multiplier}</strong></span>
+          </div>
+          <div style="font-size:10px; color:#cbd5e1; margin-bottom:6px;">
+            <div><strong>Nuke Tag:</strong> <code style="color:#f43f5e;">${rel.nukeReason}</code></div>
+            <div><strong>Filed By:</strong> <span style="color:#38bdf8;">${rel.nukeBy || 'ECHO-Council'}</span> &bull; <strong>Evidence:</strong> ${rel.evidence}</div>
+          </div>
+
+          <!-- Dispute Tribunal Arena -->
+          <div style="background:#09050d; border:1px dashed #7f1d1d; border-radius:3px; padding:8px; margin-top:6px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+              <span style="color:var(--accent-yellow); font-size:10px; font-weight:bold;">⚖️ SENIOR SCENE COUNCIL ARBITRATION</span>
+              <div style="display:flex; align-items:center; gap:4px;">
+                <span style="color:#94a3b8; font-size:9px;">ACT AS:</span>
+                <select id="predbJudgeSelect" onchange="predbJudgeRole=this.value" style="background:#02050c; border:1px solid #1e3a29; color:var(--accent-cyan); font-size:9px; padding:2px;">
+                  <option value="FLARELIGHT Elder" ${predbJudgeRole==='FLARELIGHT Elder'?'selected':''}>FLARELIGHT Elder</option>
+                  <option value="RAZOR Senior Council" ${predbJudgeRole==='RAZOR Senior Council'?'selected':''}>RAZOR Senior Council</option>
+                  <option value="PARALAX Arbiter" ${predbJudgeRole==='PARALAX Arbiter'?'selected':''}>PARALAX Arbiter</option>
+                  <option value="ISO Arbitration Board" ${predbJudgeRole==='ISO Arbitration Board'?'selected':''}>ISO Arbitration Board</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Tally -->
+            <div style="display:flex; gap:12px; font-size:10px; margin-bottom:8px; background:#02050c; padding:4px 8px; border-radius:2px;">
+              <span style="color:#facc15;">Overrule Votes: <strong>${rel.tribunalVotes.overruled}</strong></span>
+              <span style="color:#f43f5e;">Upheld Votes: <strong>${rel.tribunalVotes.upheld}</strong></span>
+              <span style="color:#c084fc;">Penalty Escalations: <strong>${rel.tribunalVotes.penalty}</strong></span>
+            </div>
+
+            <!-- Action buttons -->
+            <div style="display:flex; gap:6px; flex-wrap:wrap;">
+              <button class="btn-gen" onclick="predbCastVote('${rel.id}', 'overrule')" style="font-size:10px; padding:3px 8px; background:#065f46; color:#fff; border:1px solid #10b981;">✅ OVERRULE NUKE</button>
+              <button class="btn-gen" onclick="predbCastVote('${rel.id}', 'uphold')" style="font-size:10px; padding:3px 8px; background:#831843; color:#fff; border:1px solid #f43f5e;">❌ UPHELD NUKE</button>
+              <button class="btn-gen" onclick="predbCastVote('${rel.id}', 'penalty')" style="font-size:10px; padding:3px 8px; background:#581c87; color:#fff; border:1px solid #c084fc;">⚠️ APPLY x5 MULTIPLIER</button>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    let anomalySpecial = '';
+    if (rel.status === 'ANOMALY' || rel.id === 'PRE-008') {
+      anomalySpecial = `
+        <div style="background:rgba(192,132,252,0.1); border:1px solid var(--accent-purple); border-radius:4px; padding:8px 10px; margin-top:4px;">
+          <div style="color:var(--accent-purple); font-weight:bold; font-size:11px; margin-bottom:4px;">📡 CARLSBAD SUBTERRANEAN QUANTUM LINK</div>
+          <div style="font-size:10px; color:#e2e8f0; line-height:1.4;">
+            Discovered inside Carlsbad underground relay. Stego carrier frequency: <strong>1999 Hz</strong>.
+            Authentication CRC: <code>0x7F199942</code>.
+          </div>
+          <div style="display:flex; gap:8px; margin-top:8px;">
+            <button class="btn-gen" onclick="predbPlayAnomalyTone()" style="font-size:10px; padding:3px 8px; background:#6b21a8; border:1px solid #a855f7;">🔊 EMIT 1999Hz CARRIER</button>
+            <a href="/web/deep_core.html" class="btn-filter" style="text-decoration:none; font-size:10px; padding:3px 8px; display:inline-block;">⚡ BRIDGE: kweb://deep-core</a>
+            <a href="/web/darknet.html" class="btn-filter" style="text-decoration:none; font-size:10px; padding:3px 8px; display:inline-block;">🛰️ RELAY: kweb://darknet</a>
+          </div>
+        </div>
+      `;
+    }
+
+    box.innerHTML = `
+      <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:8px; border-bottom:1px solid #142844; padding-bottom:6px;">
+        <div>
+          <div style="font-size:12px; font-weight:bold; color:#f8fafc; word-break:break-all;">${rel.dir}</div>
+          <div style="color:#64748b; font-size:10px; margin-top:2px;">
+            Pre'd at: <strong>${rel.preTime} EST</strong> &bull; Disks: <strong>${rel.disks}</strong> &bull; Section: <strong style="color:var(--accent-cyan);">${rel.section}</strong>
+          </div>
+        </div>
+        <div>${statusBadge}</div>
+      </div>
+
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px; font-size:10px; background:#02050c; padding:6px; border-radius:3px; border:1px solid #0f172a;">
+        <div><span style="color:#64748b;">GROUP:</span> <strong style="color:var(--accent-green);">${rel.group}</strong></div>
+        <div><span style="color:#64748b;">CRC32:</span> <code style="color:var(--accent-cyan);">${rel.crc32}</code></div>
+        <div><span style="color:#64748b;">AFFILS:</span> <span style="color:#e2e8f0;">${rel.topsites.join(', ')}</span></div>
+        <div><span style="color:#64748b;">VERIFICATION:</span> <span style="color:#34d399;">SHA1 / CRC PASS</span></div>
+      </div>
+
+      ${nukeSection}
+      ${anomalySpecial}
+
+      <!-- NFO Excerpt -->
+      <div style="margin-top:4px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+          <span style="color:#64748b; font-size:9px; font-weight:bold;">AUTHENTIC SCENE NFO / DIZ PREVIEW</span>
+          <button class="btn-filter" onclick="navigator.clipboard?.writeText('${rel.nfo.replace(/\n/g, '\\n')}')" style="font-size:8px; padding:1px 6px;">📋 COPY</button>
+        </div>
+        <pre style="background:#020408; border:1px solid #1e293b; color:#86efac; font-family:'Consolas',monospace; font-size:9.5px; line-height:1.2; padding:6px; border-radius:3px; height:110px; overflow-y:auto; white-space:pre-wrap;">${rel.nfo}</pre>
+      </div>
+    `;
+
+    predbFilterReleases();
+  }
+
+  function predbCastVote(relId, voteType) {
+    const rel = predbReleases.find(r => r.id === relId);
+    if (!rel) return;
+
+    if (!rel.tribunalVotes) rel.tribunalVotes = { overruled: 0, upheld: 0, penalty: 0 };
+
+    if (voteType === 'overrule') {
+      rel.tribunalVotes.overruled += 1;
+      predbPlayChime(784, 'triangle', 0.15);
+      if (rel.tribunalVotes.overruled > rel.tribunalVotes.upheld) {
+        rel.status = 'OVERRULED';
+        predbShowToast(`⚖️ Pre-DB Tribunal: Nuke on ${rel.group} OVERRULED by ${predbJudgeRole}! Credits restored.`);
+      } else {
+        predbShowToast(`Vote logged: Overrule (+1). Current tally: ${rel.tribunalVotes.overruled} vs ${rel.tribunalVotes.upheld}`);
+      }
+    } else if (voteType === 'uphold') {
+      rel.tribunalVotes.upheld += 1;
+      predbPlayChime(330, 'sawtooth', 0.15);
+      if (rel.tribunalVotes.upheld >= rel.tribunalVotes.overruled) {
+        rel.status = 'NUKED';
+        predbShowToast(`⚖️ Pre-DB Tribunal: Nuke on ${rel.group} UPHELD by ${predbJudgeRole}!`);
+      }
+    } else if (voteType === 'penalty') {
+      rel.tribunalVotes.penalty += 1;
+      rel.multiplier = Math.min(10, (rel.multiplier || 1) + 2);
+      predbPlayChime(220, 'square', 0.2);
+      predbShowToast(`⚠️ Penalty multiplier escalated to x${rel.multiplier} by ${predbJudgeRole}!`);
+    }
+
+    predbSave();
+    predbSelectRelease(rel.id);
+  }
+
+  function predbPlayAnomalyTone() {
+    try {
+      if (!predbAudioCtx) predbAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      if (predbAudioCtx.state === 'suspended') predbAudioCtx.resume();
+      
+      const now = predbAudioCtx.currentTime;
+      const osc = predbAudioCtx.createOscillator();
+      const gain = predbAudioCtx.createGain();
+      
+      // 1999 Hz resonant carrier tone
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(1999, now);
+      
+      // Amplitude pulsing like acoustic modem carrier
+      gain.gain.setValueAtTime(0.01, now);
+      gain.gain.linearRampToValueAtTime(0.09, now + 0.1);
+      gain.gain.setValueAtTime(0.09, now + 0.5);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 1.2);
+      
+      osc.connect(gain);
+      gain.connect(predbAudioCtx.destination);
+      osc.start(now);
+      osc.stop(now + 1.2);
+      predbShowToast("📡 Emitting Carlsbad 1999Hz subcarrier signal...");
+    } catch(e) {}
+  }
+
+  function predbSubmitRelease() {
+    const dirInput = document.getElementById('predbSubmitDir');
+    const secInput = document.getElementById('predbSubmitSec');
+    const grpInput = document.getElementById('predbSubmitGroup');
+    const disksInput = document.getElementById('predbSubmitDisks');
+    const fb = document.getElementById('predbSubmitFeedback');
+
+    const dir = (dirInput?.value || '').trim();
+    const sec = secInput?.value || '0DAY';
+    const grp = (grpInput?.value || 'SCENER').trim().toUpperCase();
+    const disks = (disksInput?.value || '1x5MB').trim();
+
+    if (!dir) {
+      if (fb) {
+        fb.style.display = 'block';
+        fb.style.background = '#831843';
+        fb.style.color = '#fda4af';
+        fb.textContent = '❌ Error: Release directory name cannot be empty.';
+      }
+      return;
+    }
+
+    // Check scene naming conventions
+    if (!dir.includes('.') && !dir.includes('-')) {
+      if (fb) {
+        fb.style.display = 'block';
+        fb.style.background = '#831843';
+        fb.style.color = '#fda4af';
+        fb.textContent = '❌ Warning: Scene releases must use dots and end with -GROUP (e.g. App.Name.v1.0-GRP).';
+      }
+      return;
+    }
+
+    // Dupe check
+    const existing = predbReleases.find(r => r.dir.toLowerCase() === dir.toLowerCase());
+    if (existing) {
+      predbPlayChime(240, 'sawtooth', 0.25);
+      if (fb) {
+        fb.style.display = 'block';
+        fb.style.background = '#831843';
+        fb.style.color = '#fda4af';
+        fb.innerHTML = `🚨 <strong>SCENE NUKE ALARM: DUPE DETECTED!</strong> Release was already pre'd by <strong>${existing.group}</strong> at ${existing.preTime}! Automatic nuke applied.`;
+      }
+      return;
+    }
+
+    // Pre successful!
+    const newId = `PRE-${String(predbReleases.length + 1).padStart(3, '0')}`;
+    const now = new Date();
+    const timeStr = `1999-10-15 ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
+    const randCrc = '0x' + Math.floor(Math.random() * 0xFFFFFFFF).toString(16).toUpperCase().padStart(8, '0');
+
+    const newRel = {
+      id: newId,
+      dir: dir,
+      section: sec,
+      group: grp,
+      disks: disks,
+      preTime: timeStr,
+      crc32: randCrc,
+      status: "CLEAN",
+      topsites: ["ECHO", "HEAVEN"],
+      nfo: `${dir.toUpperCase()}\nPackaged by ${grp} Scene Unit.\nClean verified release pre'd directly to Topsite Echo.\nCRC32 Checksum: ${randCrc}`,
+      nukeReason: null,
+      nukeBy: null,
+      multiplier: 1,
+      tribunalVotes: { overruled: 0, upheld: 0, penalty: 0 },
+      evidence: "Freshly pre'd release passed Topsite dupe-check with 0 collisions."
+    };
+
+    predbReleases.unshift(newRel);
+    predbSave();
+    predbFilterReleases();
+    predbSelectRelease(newId);
+
+    // Audio fanfare
+    predbPlayChime(523, 'triangle', 0.08);
+    setTimeout(() => predbPlayChime(659, 'triangle', 0.08), 90);
+    setTimeout(() => predbPlayChime(784, 'triangle', 0.15), 180);
+
+    if (fb) {
+      fb.style.display = 'block';
+      fb.style.background = '#065f46';
+      fb.style.color = '#a7f3d0';
+      fb.innerHTML = `🚀 <strong>SUCCESS:</strong> Release <code>${dir}</code> pre'd to 0DAY topsites! Broadcasted to EFnet #pre ticker.`;
+    }
+
+    // Push into ticker
+    predbAddTickerLine(`[PRE] [${sec}] ${dir} (${disks}) - ${grp} [PRE'D IN 0.6s]`, '#34d399');
+
+    // Reset input
+    if (dirInput) dirInput.value = '';
+  }
+
+  const PREDB_BOT_SIM_FEED = [
+    { text: "[PRE] [ISO] Quake.III.Arena.Test.3.Glide-FLT (24x15MB) [AFFILS: ECHO, HEAVEN] [PRE'D IN 0.4s]", color: "#38bdf8" },
+    { text: "[PRE] [0DAY] Partition.Magic.Pro.v5.0.Full.Cracked-RZR (6x5MB) [PRE'D IN 0.9s]", color: "#34d399" },
+    { text: "[NUKE] System.Glitch.2.Multiplayer.Patch.v1.1-PDX [bad.crack.crashes.win98] [NUKED BY ECHO-COUNCIL]", color: "#f43f5e" },
+    { text: "[PRE] [MP3] TLC-No_Scrubs-Remix-1999-FLT (1x8MB) [192kbps LAME]", color: "#facc15" },
+    { text: "[PRE] [UTILS] SoftICE.v4.05.Win98.Kernel.Debugger-CLS (12x5MB) [AFFILS: DARKSTAR]", color: "#34d399" },
+    { text: "[TRIBUNAL] Class keymaker for Half-Life Opposing Front OVERRULED! FLT dupe tag revoked.", color: "#c084fc" },
+    { text: "[PRE] [VCD] Fight.Club.1999.Cam.VCD-MYS (2x650MB) [AFFILS: VOIDCORE]", color: "#38bdf8" },
+    { text: "[PRE] [0DAY] Paint.Shop.Pro.v6.02.Working.Keygen-HBD (4x10MB) [PRE'D IN 1.1s]", color: "#34d399" },
+    { text: "[NUKE] Unreal.Tournament.v400.NoCD.Patch-DEV [stolen.code.from.razor1999] [x5 MULTIPLIER]", color: "#f43f5e" }
+  ];
+
+  let predbSimIndex = 0;
+  function predbStartTicker() {
+    if (predbTickerInterval) clearInterval(predbTickerInterval);
+    // Populate initial lines
+    const box = document.getElementById('predbTickerBox');
+    if (box) {
+      box.innerHTML = '';
+      PREDB_BOT_SIM_FEED.slice(0, 4).forEach(item => {
+        predbAddTickerLine(item.text, item.color);
+      });
+    }
+
+    predbTickerInterval = setInterval(() => {
+      if (predbTickerPaused) return;
+      const item = PREDB_BOT_SIM_FEED[predbSimIndex % PREDB_BOT_SIM_FEED.length];
+      predbSimIndex++;
+      predbAddTickerLine(item.text, item.color);
+      predbPlayChime(900, 'sine', 0.02);
+    }, 3500);
+  }
+
+  function predbAddTickerLine(msg, color = '#cbd5e1') {
+    const box = document.getElementById('predbTickerBox');
+    if (!box) return;
+    const now = new Date();
+    const timeStr = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}:${String(now.getSeconds()).padStart(2,'0')}`;
+
+    const div = document.createElement('div');
+    div.style.marginBottom = '2px';
+    div.style.whiteSpace = 'nowrap';
+    div.style.cursor = 'pointer';
+    div.title = "Click to search Pre-DB";
+    div.onclick = () => {
+      const match = msg.match(/\[([A-Z0-9]+)\]\s+([A-Za-z0-9\._\-]+)/);
+      if (match && match[2]) {
+        const inp = document.getElementById('predbSearchInput');
+        if (inp) {
+          inp.value = match[2].split('-')[0];
+          predbFilterReleases();
+        }
+      }
+    };
+    div.innerHTML = `<span style="color:#64748b;">[${timeStr}]</span> <span style="color:${color}; font-family:monospace;">${msg}</span>`;
+    box.appendChild(div);
+    box.scrollTop = box.scrollHeight;
+  }
+
+  function predbToggleTicker() {
+    predbTickerPaused = !predbTickerPaused;
+    const btn = document.getElementById('predbTickerPauseBtn');
+    if (btn) btn.textContent = predbTickerPaused ? '▶️ RESUME' : '⏸️ PAUSE';
+  }
+
+  function predbClearTicker() {
+    const box = document.getElementById('predbTickerBox');
+    if (box) box.innerHTML = '<div style="color:#64748b; font-size:10px;">Ticker cleared. Waiting for incoming topsite pre bot...</div>';
+  }
+
+  function predbShowToast(msg) {
+    if (typeof showToast === 'function') {
+      showToast(msg);
+      return;
+    }
+    let toast = document.getElementById('predbToast');
+    if (!toast) {
+      toast = document.createElement('div');
+      toast.id = 'predbToast';
+      toast.style.position = 'fixed';
+      toast.style.bottom = '20px';
+      toast.style.right = '20px';
+      toast.style.background = '#09121d';
+      toast.style.border = '1px solid var(--accent-cyan)';
+      toast.style.color = 'var(--text-main)';
+      toast.style.padding = '8px 14px';
+      toast.style.borderRadius = '4px';
+      toast.style.fontSize = '11px';
+      toast.style.zIndex = '99999';
+      toast.style.boxShadow = '0 4px 15px rgba(0,0,0,0.8)';
+      document.body.appendChild(toast);
+    }
+    toast.textContent = msg;
+    toast.style.display = 'block';
+    clearTimeout(toast._timer);
+    toast._timer = setTimeout(() => { toast.style.display = 'none'; }, 3200);
+  }
+
+  // Auto-init when DOM ready
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', predbInit);
+  } else {
+    setTimeout(predbInit, 100);
+  }
+  </script>
 
   <script>
   // =========================================================================
