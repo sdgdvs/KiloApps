@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-qa
+current_agent: kilo-qa
+next_agent: kilo-expander
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -17,7 +17,7 @@ current_targets:
   kilo_graphics: KMystery
   kilo_soundscape: kweb://deep-core
   kilo_tester: KContacts
-  kilo_usability: KNote
+  kilo_usability: KMine
   kilo_qa: KMaze
   kilo_expander: KCalc
 virtual_web_target: kweb://warez
@@ -34,13 +34,18 @@ virtual_web_rotation:
 - kweb://10.19.99.4/classified
 - kweb://echo-subsystem.net
 last_run:
-  agent: kilo-tester
-  app: KAudio
-  timestamp: '2026-10-15T01:13:00-07:00'
+  agent: kilo-usability
+  app: KNote
+  timestamp: '2026-10-15T01:31:00-07:00'
 last_planner_run: '2026-10-14T18:32:00Z'
 ---
 
 ## Execution Log
+- **2026-10-15 01:31 [kilo-usability]**: KNote UI/UX & usability pass complete.
+  - Added font size zoom controls (A- / A+ / reset) and word wrap toggle (Alt+W) in speed bar.
+  - Added small-window responsive drawer styling (<540px) to prevent editor squishing and clean status bar wrap.
+  - Updated Help modal shortcut reference table and verified clean keyboard shortcuts (Ctrl+=/-/0, Alt+W).
+  - Shell build verified clean (`npm run build`). Advanced usability queue to KMine; handed off to kilo-qa.
 - **2026-10-15 01:13 [kilo-tester]**: KAudio UI audit PASS (0 issues found).
   - Audited sequencer/synth UI controls: ADSR, FM Lab, filter, bitcrusher, transport, and modals.
   - Verified 100% element IDs, event handlers, and modal keybindings intact.

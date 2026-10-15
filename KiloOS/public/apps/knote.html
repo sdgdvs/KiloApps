@@ -4317,6 +4317,151 @@
     toggleSidebar(false);
   }
 
+  // --- Usability & Ergonomics Enhancements ---
+  // 1. Inject responsive styles & editor view rules
+  const usabilityStyle = document.createElement('style');
+  usabilityStyle.id = 'knote-usability-enhancements';
+  usabilityStyle.textContent = `
+    textarea.no-wrap {
+      white-space: pre !important;
+      overflow-x: auto !important;
+      word-wrap: normal !important;
+    }
+    @media (max-width: 540px) {
+      .sidebar {
+        position: absolute;
+        z-index: 200;
+        height: 100%;
+        box-shadow: 4px 0 16px rgba(0,0,0,0.25);
+      }
+      .status-bar {
+        flex-wrap: wrap;
+        gap: 6px;
+        font-size: 11px;
+        padding: 4px 8px;
+      }
+    }
+    .zoom-btn-active {
+      background: var(--bg-active) !important;
+      font-weight: 600;
+    }
+  `;
+  document.head.appendChild(usabilityStyle);
+
+  // 2. Editor View State (Font Size Zoom & Word Wrap)
+  let currentFontSize = parseInt(safeGetStorage('knote_font_size'), 10) || 15;
+  let isWordWrap = safeGetStorage('knote_word_wrap') !== '0';
+
+  function applyEditorView() {
+    if (noteArea) {
+      noteArea.style.fontSize = currentFontSize + 'px';
+      if (isWordWrap) {
+        noteArea.classList.remove('no-wrap');
+      } else {
+        noteArea.classList.add('no-wrap');
+      }
+    }
+    const zoomVal = document.getElementById('zoomValDisplay');
+    if (zoomVal) zoomVal.textContent = currentFontSize + 'px';
+    const wrapBtn = document.getElementById('wrapToggleBtn');
+    if (wrapBtn) {
+      if (isWordWrap) {
+        wrapBtn.classList.add('zoom-btn-active');
+        wrapBtn.setAttribute('aria-pressed', 'true');
+        wrapBtn.title = 'Word Wrap: ON (Alt+W)';
+      } else {
+        wrapBtn.classList.remove('zoom-btn-active');
+        wrapBtn.setAttribute('aria-pressed', 'false');
+        wrapBtn.title = 'Word Wrap: OFF (Alt+W)';
+      }
+    }
+  }
+
+  function changeFontSize(delta, reset = false) {
+    if (reset) {
+      currentFontSize = 15;
+    } else {
+      currentFontSize = Math.min(28, Math.max(11, currentFontSize + delta));
+    }
+    safeSetStorage('knote_font_size', String(currentFontSize));
+    applyEditorView();
+    showToast(`Font size: ${currentFontSize}px`);
+  }
+
+  function toggleWordWrap() {
+    isWordWrap = !isWordWrap;
+    safeSetStorage('knote_word_wrap', isWordWrap ? '1' : '0');
+    applyEditorView();
+    showToast(`Word wrap: ${isWordWrap ? 'ON' : 'OFF'}`);
+  }
+
+  // 3. Mount Speed Bar Usability Controls
+  const speedBar = document.getElementById('speedBar');
+  if (speedBar) {
+    const viewGroup = document.createElement('div');
+    viewGroup.style.display = 'inline-flex';
+    viewGroup.style.alignItems = 'center';
+    viewGroup.style.gap = '3px';
+    viewGroup.innerHTML = `
+      <div class="divider-v"></div>
+      <span style="font-weight: 600; color: #665;">View:</span>
+      <button type="button" class="speed-btn" id="zoomOutBtn" title="Decrease font size (Ctrl+-)" aria-label="Decrease font size">A-</button>
+      <span id="zoomValDisplay" style="font-size: 11px; min-width: 28px; text-align: center; color: #555;">${currentFontSize}px</span>
+      <button type="button" class="speed-btn" id="zoomInBtn" title="Increase font size (Ctrl+=)" aria-label="Increase font size">A+</button>
+      <button type="button" class="speed-btn" id="wrapToggleBtn" title="Toggle Word Wrap (Alt+W)" aria-label="Toggle word wrap">Wrap</button>
+    `;
+    speedBar.appendChild(viewGroup);
+
+    const zoomInBtn = document.getElementById('zoomInBtn');
+    const zoomOutBtn = document.getElementById('zoomOutBtn');
+    const wrapToggleBtn = document.getElementById('wrapToggleBtn');
+
+    if (zoomInBtn) zoomInBtn.addEventListener('click', () => changeFontSize(1));
+    if (zoomOutBtn) zoomOutBtn.addEventListener('click', () => changeFontSize(-1));
+    if (wrapToggleBtn) wrapToggleBtn.addEventListener('click', toggleWordWrap);
+  }
+
+  // 4. Keyboard Shortcuts for Usability (Zoom & Wrap)
+  window.addEventListener('keydown', (e) => {
+    // Alt+W: Word wrap
+    if (e.altKey && (e.key === 'w' || e.key === 'W')) {
+      e.preventDefault();
+      toggleWordWrap();
+      return;
+    }
+    // Ctrl+= or Ctrl++: Zoom in
+    if (e.ctrlKey && (e.key === '=' || e.key === '+')) {
+      e.preventDefault();
+      changeFontSize(1);
+      return;
+    }
+    // Ctrl+-: Zoom out
+    if (e.ctrlKey && (e.key === '-' || e.key === '_')) {
+      e.preventDefault();
+      changeFontSize(-1);
+      return;
+    }
+    // Ctrl+0: Reset zoom
+    if (e.ctrlKey && e.key === '0') {
+      e.preventDefault();
+      changeFontSize(0, true);
+      return;
+    }
+  });
+
+  // 5. Update Help Modal Shortcuts Table
+  const shortcutTable = document.querySelector('.shortcut-table');
+  if (shortcutTable) {
+    const trZoom = document.createElement('tr');
+    trZoom.innerHTML = '<td><span class="kbd">Ctrl</span> + <span class="kbd">+</span> / <span class="kbd">-</span> / <span class="kbd">0</span></td><td>Zoom font in / out / reset</td>';
+    const trWrap = document.createElement('tr');
+    trWrap.innerHTML = '<td><span class="kbd">Alt</span> + <span class="kbd">W</span></td><td>Toggle word wrap (wrap vs preformatted code)</td>';
+    shortcutTable.appendChild(trZoom);
+    shortcutTable.appendChild(trWrap);
+  }
+
+  applyEditorView();
+
   const tutorialSeen = safeGetStorage('knote_tutorialSeen');
   const hasExistingData = !!(safeGetStorage('knote_data_multi') || safeGetStorage('knote_data') || safeGetStorage('knote_snapshot'));
   if (!tutorialSeen) {
