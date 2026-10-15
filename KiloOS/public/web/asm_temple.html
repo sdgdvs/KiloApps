@@ -725,7 +725,8 @@
     <button class="nav-btn" data-tab="tab-audio">[6] 🎵 YM2612 &amp; SPC700 Jukebox</button>
     <button class="nav-btn" data-tab="tab-guestbook">[7] 🕯️ Acolyte Guestbook</button>
     <button class="nav-btn" data-tab="tab-webring">[8] 🌐 Webring &amp; Network</button>
-    <button class="nav-btn" data-tab="tab-crypta">[9] 🛡️ Ring-0 Crypta &amp; RE Lab</button>
+    <button class="nav-btn" data-tab="tab-crypta">[9] 🛡️ Ring-0 Crypta & RE Lab</button>
+    <button class="nav-btn" data-tab="tab-shellcode">[10] 🔮 Shellcode Matrix & State Vault</button>
   </div>
 
   <!-- TAB 1: Opcode Oracle -->
@@ -1878,6 +1879,99 @@
 
     </div>
   </section>
+
+  <!-- TAB 10: Shellcode Matrix & State Vault -->
+  <section id="tab-shellcode" class="section-tab">
+    <div class="panel-box gold-accent">
+      <div class="panel-title">
+        <span>🔮 x86 SHELLCODE DEOBFUSCATOR &amp; ACOLYTE STATE VAULT</span>
+        <span style="font-size:11px; color:var(--cyan); font-weight:normal;">[Heuristic Disassembly • Multi-Key XOR Analysis • Quicksave Engine]</span>
+      </div>
+      <p style="font-size:12px; color:var(--text-muted); margin-bottom:14px; line-height:1.6;">
+        Deep in the silicon vaults of 1999, encrypted payloads and polymorphic dispatchers hid behind single-byte XOR transforms and self-modifying decoders. Analyze raw binary shellcode, brute-force cryptographic keys, trace emulation registers, and persist your holy altar state:
+      </p>
+
+      <!-- Grid layout for tools -->
+      <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(320px, 1fr)); gap:14px; margin-bottom:16px;">
+        
+        <!-- Tool 1: Shellcode Presets & Raw Hex Input -->
+        <div style="background:#090e18; border:1px solid #1e293b; padding:12px; border-radius:3px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+            <div style="color:var(--gold-bright); font-weight:bold; font-size:12px;">💾 Payload Hex Input &amp; Presets</div>
+            <select id="scPresetSelect" onchange="loadShellcodePreset()" style="background:#111a2d; color:#fbbf24; border:1px solid #334155; font-size:10px; font-family:var(--font-mono); padding:2px 4px;">
+              <option value="echo">Preset: Echo Acoustic Hook (XOR 0x42)</option>
+              <option value="int2e">Preset: Win32 INT 2Eh Dispatcher</option>
+              <option value="nop_sled">Preset: Polymorphic NOP Sled</option>
+              <option value="sub_zero">Preset: Sub-Zero Math Transform</option>
+            </select>
+          </div>
+          <div style="font-size:11px; color:var(--text-muted); margin-bottom:6px;">
+            Enter hex-encoded byte sequence (e.g. <code>31 C0 50 68 7F 00 00 01</code>):
+          </div>
+          <textarea id="scHexInput" rows="4" style="width:100%; box-sizing:border-box; background:#04070c; color:var(--cyan-bright); border:1px solid #334155; font-family:var(--font-mono); font-size:11px; padding:6px; margin-bottom:8px;">31 C0 B8 42 42 42 42 35 42 42 42 42 50 68 39 39 39 31 E8 00 00 00 00 58 83 C0 0B 50 C3</textarea>
+          <div style="display:flex; gap:6px; flex-wrap:wrap;">
+            <button class="btn-retro" style="font-size:10px; padding:4px 8px; cursor:pointer;" onclick="analyzeShellcode()">⚡ Deobfuscate &amp; Trace</button>
+            <button class="btn-retro" style="font-size:10px; padding:4px 8px; cursor:pointer;" onclick="bruteForceXor()">🔑 Brute-Force XOR Keys</button>
+            <button class="btn-retro" style="font-size:10px; padding:4px 8px; cursor:pointer;" onclick="resetShellcodeInput()">↺ Clear</button>
+          </div>
+        </div>
+
+        <!-- Tool 2: XOR Cryptanalysis & Entropy -->
+        <div style="background:#090e18; border:1px solid #1e293b; padding:12px; border-radius:3px;">
+          <div style="color:var(--gold-bright); font-weight:bold; font-size:12px; margin-bottom:8px;">📊 Cryptanalysis &amp; String Extraction</div>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:8px;">
+            <div>
+              <label style="font-size:10px; color:var(--text-muted); display:block; margin-bottom:2px;">Active XOR Key (0x00-0xFF):</label>
+              <input type="number" id="scXorKeyInput" min="0" max="255" value="66" onchange="applyManualXor()" style="width:100%; box-sizing:border-box; background:#111a2d; color:#fff; border:1px solid #334155; font-family:var(--font-mono); font-size:11px; padding:4px 6px;">
+            </div>
+            <div>
+              <label style="font-size:10px; color:var(--text-muted); display:block; margin-bottom:2px;">Estimated Shannon Entropy:</label>
+              <div id="scEntropyVal" style="background:#04070c; color:var(--emerald-bright); border:1px solid #334155; font-family:var(--font-mono); font-size:11px; padding:4px 6px; font-weight:bold;">3.41 bits/byte</div>
+            </div>
+          </div>
+          <div style="font-size:10px; color:var(--text-muted); margin-bottom:4px;">Decoded ASCII Strings / Leak Detection:</div>
+          <div id="scExtractedStrings" style="background:#04070c; border:1px solid #334155; padding:6px 8px; font-family:var(--font-mono); font-size:10px; color:var(--cyan); min-height:50px; max-height:80px; overflow-y:auto; line-height:1.4;">
+            [0x0D] "1999" (Diegetic timestamp tag)
+            [0x18] "ACOUSTIC_CARRIER_FREQ=1999Hz"
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Execution Trace Output -->
+      <div style="background:#090e18; border:1px solid #1e293b; padding:12px; border-radius:3px; margin-bottom:14px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+          <div style="color:var(--emerald-bright); font-weight:bold; font-size:12px;">⚙️ Micro-Execution Trace &amp; Register Diff</div>
+          <div style="font-size:10px; color:var(--text-muted);">Step Count: <span id="scStepCount" style="color:var(--gold-bright);">0 steps</span></div>
+        </div>
+        <div id="scTraceLog" style="background:#04070c; border:1px solid #334155; padding:8px; font-family:var(--font-mono); font-size:11px; color:#cbd5e1; min-height:90px; max-height:150px; overflow-y:auto; line-height:1.45;">
+[TRACER] Ready to emulate. Click 'Deobfuscate & Trace' to disassemble bytes and observe virtual register flow.
+        </div>
+      </div>
+
+      <!-- Quicksave & Quickload Altar State -->
+      <div style="background:#090e18; border:1px solid #1e293b; padding:12px; border-radius:3px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+          <div style="color:var(--gold-bright); font-weight:bold; font-size:12px;">💾 Acolyte Quicksave &amp; State Persistence</div>
+          <div style="font-size:10px; color:var(--text-muted);">Key: <code>kweb_asm_temple_state</code></div>
+        </div>
+        <p style="font-size:11px; color:var(--text-muted); margin-bottom:8px;">
+          Persist all active CPU register values, disassembly patches, custom notes, and shrine settings directly to browser local storage safely:
+        </p>
+        <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:8px;">
+          <button class="btn-retro" style="font-size:11px; padding:5px 12px; cursor:pointer; background:#064e3b; border-color:#10b981; color:#fff; font-weight:bold;" onclick="quicksaveTempleState()">💾 Quicksave State [F5]</button>
+          <button class="btn-retro" style="font-size:11px; padding:5px 12px; cursor:pointer; background:#1e293b; border-color:#38bdf8; color:#38bdf8; font-weight:bold;" onclick="quickloadTempleState()">📂 Quickload State [F9]</button>
+          <button class="btn-retro" style="font-size:11px; padding:5px 12px; cursor:pointer;" onclick="clearTempleState()">🗑️ Reset Saved State</button>
+        </div>
+        <div id="quicksaveStatus" style="font-size:10px; color:var(--text-muted); font-family:var(--font-mono);">
+          Status: Ready. Local state automatically verified against storage boundaries.
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+
 
   <!-- Footer & Retro Badges -->
   <footer>
@@ -6529,5 +6623,273 @@ CONCLUSION: ${isDbg ? '🚨 REVERSE ENGINEERING THREAT MITIGATED: Process would 
       }
     </script>
     
+
+    <script>
+      // TAB 10: Shellcode Deobfuscator & Quicksave Logic
+      const scPresets = {
+        echo: "31 C0 B8 42 42 42 42 35 42 42 42 42 50 68 39 39 39 31 E8 00 00 00 00 58 83 C0 0B 50 C3",
+        int2e: "B8 2E 00 00 00 8D 54 24 04 CD 2E C3",
+        nop_sled: "90 90 90 90 90 90 31 C0 40 C3",
+        sub_zero: "29 C0 0F AF C8 83 C1 13 89 C8 C3"
+      };
+
+      function loadShellcodePreset() {
+        const sel = document.getElementById('scPresetSelect');
+        const input = document.getElementById('scHexInput');
+        if (sel && input && scPresets[sel.value]) {
+          input.value = scPresets[sel.value];
+          analyzeShellcode();
+        }
+      }
+
+      function resetShellcodeInput() {
+        const input = document.getElementById('scHexInput');
+        if (input) input.value = '';
+        const log = document.getElementById('scTraceLog');
+        if (log) log.textContent = '[TRACER] Input cleared.';
+      }
+
+      function parseHexBytes(hexStr) {
+        const cleaned = hexStr.replace(/[^0-9A-Fa-f]/g, '');
+        const bytes = [];
+        for (let i = 0; i < cleaned.length; i += 2) {
+          bytes.push(parseInt(cleaned.substr(i, 2), 16));
+        }
+        return bytes;
+      }
+
+      function calculateShannonEntropy(bytes) {
+        if (!bytes || bytes.length === 0) return 0;
+        const freqs = {};
+        bytes.forEach(b => { freqs[b] = (freqs[b] || 0) + 1; });
+        let ent = 0;
+        const len = bytes.length;
+        Object.values(freqs).forEach(count => {
+          const p = count / len;
+          ent -= p * Math.log2(p);
+        });
+        return ent.toFixed(2);
+      }
+
+      function extractAsciiStrings(bytes) {
+        let current = '';
+        let offset = 0;
+        const results = [];
+        for (let i = 0; i < bytes.length; i++) {
+          const b = bytes[i];
+          if (b >= 32 && b <= 126) {
+            if (current.length === 0) offset = i;
+            current += String.fromCharCode(b);
+          } else {
+            if (current.length >= 3) {
+              results.push(`[0x${offset.toString(16).padStart(2, '0').toUpperCase()}] "${current}"`);
+            }
+            current = '';
+          }
+        }
+        if (current.length >= 3) {
+          results.push(`[0x${offset.toString(16).padStart(2, '0').toUpperCase()}] "${current}"`);
+        }
+        return results;
+      }
+
+      function analyzeShellcode() {
+        const input = document.getElementById('scHexInput');
+        const log = document.getElementById('scTraceLog');
+        const entropyEl = document.getElementById('scEntropyVal');
+        const strEl = document.getElementById('scExtractedStrings');
+        const stepEl = document.getElementById('scStepCount');
+        if (!input || !log) return;
+
+        const bytes = parseHexBytes(input.value);
+        if (bytes.length === 0) {
+          log.textContent = '[ERROR] No valid hex bytes found.';
+          return;
+        }
+
+        if (entropyEl) entropyEl.textContent = calculateShannonEntropy(bytes) + ' bits/byte';
+
+        const extracted = extractAsciiStrings(bytes);
+        if (strEl) {
+          strEl.innerHTML = extracted.length > 0 ? extracted.join('<br>') : '<span style="color:#64748b;">(No 3+ char ASCII strings detected)</span>';
+        }
+
+        // Trace virtual execution
+        let eax = 0, esp = 0x0012FF40;
+        const trace = [];
+        let pc = 0;
+        let steps = 0;
+
+        while (pc < bytes.length && steps < 30) {
+          steps++;
+          const b = bytes[pc];
+          const hexPc = '0x' + pc.toString(16).padStart(4, '0').toUpperCase();
+          if (b === 0x90) {
+            trace.push(`${hexPc}: 90              NOP               ; [Registers unchanged]`);
+            pc++;
+          } else if (b === 0x31 && pc + 1 < bytes.length && bytes[pc+1] === 0xC0) {
+            eax = 0;
+            trace.push(`${hexPc}: 31 C0           XOR EAX, EAX       ; EAX = 0x00000000, ZF = 1`);
+            pc += 2;
+          } else if (b === 0x29 && pc + 1 < bytes.length && bytes[pc+1] === 0xC0) {
+            eax = 0;
+            trace.push(`${hexPc}: 29 C0           SUB EAX, EAX       ; EAX = 0x00000000, ZF = 1`);
+            pc += 2;
+          } else if (b === 0xB8 && pc + 4 < bytes.length) {
+            const val = bytes[pc+1] | (bytes[pc+2] << 8) | (bytes[pc+3] << 16) | (bytes[pc+4] << 24);
+            eax = val >>> 0;
+            trace.push(`${hexPc}: B8 ${bytes[pc+1].toString(16).padStart(2,'0').toUpperCase()} ${bytes[pc+2].toString(16).padStart(2,'0').toUpperCase()} ${bytes[pc+3].toString(16).padStart(2,'0').toUpperCase()} ${bytes[pc+4].toString(16).padStart(2,'0').toUpperCase()}    MOV EAX, 0x${eax.toString(16).padStart(8, '0').toUpperCase()} ; Loaded immediate`);
+            pc += 5;
+          } else if (b === 0x35 && pc + 4 < bytes.length) {
+            const val = bytes[pc+1] | (bytes[pc+2] << 8) | (bytes[pc+3] << 16) | (bytes[pc+4] << 24);
+            eax = (eax ^ val) >>> 0;
+            trace.push(`${hexPc}: 35 ...           XOR EAX, 0x${val.toString(16).padStart(8, '0').toUpperCase()} ; Result EAX = 0x${eax.toString(16).padStart(8, '0').toUpperCase()}`);
+            pc += 5;
+          } else if (b === 0x40) {
+            eax = (eax + 1) >>> 0;
+            trace.push(`${hexPc}: 40              INC EAX            ; EAX = 0x${eax.toString(16).padStart(8, '0').toUpperCase()}`);
+            pc++;
+          } else if (b === 0x50) {
+            esp -= 4;
+            trace.push(`${hexPc}: 50              PUSH EAX           ; ESP = 0x${esp.toString(16).padStart(8, '0').toUpperCase()}`);
+            pc++;
+          } else if (b === 0x58) {
+            esp += 4;
+            trace.push(`${hexPc}: 58              POP EAX            ; ESP = 0x${esp.toString(16).padStart(8, '0').toUpperCase()}`);
+            pc++;
+          } else if (b === 0xC3) {
+            trace.push(`${hexPc}: C3              RET                ; [Subroutine exit. Execution complete]`);
+            pc++;
+            break;
+          } else {
+            trace.push(`${hexPc}: ${b.toString(16).padStart(2, '0').toUpperCase()}              DB 0x${b.toString(16).padStart(2, '0').toUpperCase()}          ; Data / unmodeled opcode`);
+            pc++;
+          }
+        }
+
+        if (stepEl) stepEl.textContent = `${steps} steps executed`;
+        log.innerHTML = trace.join('<br>') + `<br><strong style="color:var(--emerald-bright);">[TERMINATION]</strong> Final EAX: 0x${eax.toString(16).padStart(8, '0').toUpperCase()} | ESP: 0x${esp.toString(16).padStart(8, '0').toUpperCase()}`;
+        if (typeof playUiClick === 'function') playUiClick('echo');
+      }
+
+      function bruteForceXor() {
+        const input = document.getElementById('scHexInput');
+        const strEl = document.getElementById('scExtractedStrings');
+        if (!input || !strEl) return;
+
+        const bytes = parseHexBytes(input.value);
+        if (bytes.length === 0) return;
+
+        let bestKey = 0;
+        let maxPrintable = 0;
+        let bestStrings = [];
+
+        for (let k = 0; k < 256; k++) {
+          const transformed = bytes.map(b => b ^ k);
+          const strings = extractAsciiStrings(transformed);
+          let printableCount = 0;
+          transformed.forEach(b => { if (b >= 32 && b <= 126) printableCount++; });
+          if (printableCount > maxPrintable) {
+            maxPrintable = printableCount;
+            bestKey = k;
+            bestStrings = strings;
+          }
+        }
+
+        const xorIn = document.getElementById('scXorKeyInput');
+        if (xorIn) xorIn.value = bestKey;
+
+        strEl.innerHTML = `<span style="color:var(--gold-bright); font-weight:bold;">[Optimal XOR Key Detected: 0x${bestKey.toString(16).padStart(2,'0').toUpperCase()} (${bestKey})]</span><br>` +
+          (bestStrings.length > 0 ? bestStrings.join('<br>') : '(No strings found with optimal key)');
+        if (typeof playUiClick === 'function') playUiClick('click');
+      }
+
+      function applyManualXor() {
+        const xorIn = document.getElementById('scXorKeyInput');
+        const input = document.getElementById('scHexInput');
+        const strEl = document.getElementById('scExtractedStrings');
+        if (!xorIn || !input || !strEl) return;
+
+        const k = parseInt(xorIn.value, 10) || 0;
+        const bytes = parseHexBytes(input.value);
+        const transformed = bytes.map(b => b ^ k);
+        const strings = extractAsciiStrings(transformed);
+        strEl.innerHTML = `<span style="color:var(--cyan); font-weight:bold;">[Decoded with XOR 0x${k.toString(16).padStart(2,'0').toUpperCase()}]:</span><br>` +
+          (strings.length > 0 ? strings.join('<br>') : '(No strings found)');
+      }
+
+      // Quicksave / Quickload Temple State
+      function quicksaveTempleState() {
+        const status = document.getElementById('quicksaveStatus');
+        const input = document.getElementById('scHexInput');
+        const xorIn = document.getElementById('scXorKeyInput');
+        const patch = typeof activeBytePatch !== 'undefined' ? activeBytePatch : 'orig';
+        
+        const state = {
+          hex: input ? input.value : '',
+          xorKey: xorIn ? xorIn.value : 0,
+          patch: patch,
+          timestamp: new Date().toISOString()
+        };
+
+        try {
+          localStorage.setItem('kweb_asm_temple_state', JSON.stringify(state));
+          if (status) {
+            status.innerHTML = `<strong style="color:var(--emerald-bright);">[QUICKSAVE SUCCESS]</strong> State recorded at ${new Date().toLocaleTimeString()} (Key: kweb_asm_temple_state)`;
+          }
+          if (typeof playUiClick === 'function') playUiClick('echo');
+        } catch (e) {
+          if (status) status.innerHTML = `<strong style="color:#f87171;">[QUICKSAVE ERROR]</strong> Storage write failed: ${e.message}`;
+        }
+      }
+
+      function quickloadTempleState() {
+        const status = document.getElementById('quicksaveStatus');
+        const input = document.getElementById('scHexInput');
+        const xorIn = document.getElementById('scXorKeyInput');
+
+        try {
+          const raw = localStorage.getItem('kweb_asm_temple_state');
+          if (!raw) {
+            if (status) status.innerHTML = '<span style="color:#f59e0b;">[QUICKLOAD] No previous quicksave state found in storage.</span>';
+            return;
+          }
+          const state = JSON.parse(raw);
+          if (input && state.hex) input.value = state.hex;
+          if (xorIn && state.xorKey !== undefined) xorIn.value = state.xorKey;
+          if (typeof applyBytePatch === 'function' && state.patch) applyBytePatch(state.patch);
+          analyzeShellcode();
+          if (status) {
+            status.innerHTML = `<strong style="color:var(--emerald-bright);">[QUICKLOAD RESTORED]</strong> Saved state loaded successfully from ${state.timestamp || 'storage'}.`;
+          }
+          if (typeof playUiClick === 'function') playUiClick('echo');
+        } catch (e) {
+          if (status) status.innerHTML = `<strong style="color:#f87171;">[QUICKLOAD ERROR]</strong> Could not parse saved state: ${e.message}`;
+        }
+      }
+
+      function clearTempleState() {
+        const status = document.getElementById('quicksaveStatus');
+        try {
+          localStorage.removeItem('kweb_asm_temple_state');
+          if (status) status.innerHTML = '[RESET] Saved temple state removed from local storage.';
+          if (typeof playUiClick === 'function') playUiClick('click');
+        } catch (e) {
+          if (status) status.innerHTML = `Error clearing state: ${e.message}`;
+        }
+      }
+
+      // Keyboard shortcuts for F5/F9
+      window.addEventListener('keydown', (e) => {
+        if (e.key === 'F5' && !e.ctrlKey) {
+          e.preventDefault();
+          quicksaveTempleState();
+        } else if (e.key === 'F9') {
+          e.preventDefault();
+          quickloadTempleState();
+        }
+      });
+    </script>
+
 </body>
 </html>
