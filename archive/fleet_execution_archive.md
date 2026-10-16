@@ -4,6 +4,13 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-16T02:31:00+0000 — kilo-tester: KCalendar (Interactive UI & Modal Audit)**
+  - PASS ✅ (0 runtime errors, clean startup & hit-test unblocked).
+  - Verified modal dismissing (Esc, backdrop, Enter/Space), quicksave (F5/Ctrl+S), and quickload (F9).
+  - Confirmed search shortcuts (/), view tabs (1-4), date navigation, and multi-format exporters (ICS/CSV/TSV/MD/JSON).
+  - Verification: npm run build 0 errors, kcalendar.html 119 KB (<999 KB ceiling).
+  - Advanced tester queue to KChess; handed off rotation to kilo-usability (KFont).
+
 - **2026-10-16T01:13:00+0000 — kilo-creator: kweb://cybercafe (Virtual 1999 Web Destination)**
   - Underground BBS & Lounge: Verified 12 interactive modules (BBS Forums, ASCII Studio, mIRC, Door Game, QuickCam ID Kiosk, Overclock Bench).
   - Web & ARG Integration: Fully linked in KNet portal, search engine index, dialer nodes, traceroute, and Webring.

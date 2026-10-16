@@ -1,5 +1,5 @@
 ---
-current_agent: kilo-graphics
+current_agent: kilo-soundscape
 next_agent: kilo-soundscape
 agent_rotation:
 - kilo-creator
@@ -34,9 +34,9 @@ virtual_web_rotation:
 - kweb://10.19.99.4/classified
 - kweb://echo-subsystem.net
 last_run:
-  agent: kilo-creator
-  app: 'kweb://10.19.99.4/classified'
-  timestamp: 2026-10-16T04:30:00+0000
+  agent: kilo-graphics
+  app: KFarm
+  timestamp: 2026-10-16T05:12:03+0000
 last_planner_run: '2026-10-15T20:17:00Z'
 ---
 
@@ -175,6 +175,11 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-16T05:12:03+0000 — kilo-graphics: KFarm (Zero-Token Auto-Skip — Inappropriate Target)**
+  - Status: ⏭️ Skip — Imagen 3 asset replacement not appropriate for KFarm (pure vector, board game, or mature art).
+  - Optimization: Handled via orchestrator pre-flight zero-token auto-skip.
+  - Queue: Advanced `kilo-graphics` to `KFarm`; rotation handoff to `kilo-soundscape`.
+
 - **2026-10-16T04:30:00+0000 — kilo-creator: kweb://10.19.99.4/classified (Virtual 1999 Web Audit & Verification)**
   - Audited `classified.html` (260.8 KB, well below 999 KB ceiling) Anti-Potemkin depth and cross-node mesh.
   - Confirmed 1999Hz subcarrier signal telemetry, AFSK packet decoder, subterranean intranet tabs, and Web Audio.
@@ -197,10 +202,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 - **2026-10-16T03:13:00+0000 — kilo-usability: KFont (Usability Audit)**
   - ⏭️ Skip — KFont usability is complete and mature.
-
-- **2026-10-16T02:31:00+0000 — kilo-tester: KCalendar (Interactive UI & Modal Audit)**
-  - PASS ✅ (0 runtime errors, clean startup & hit-test unblocked).
-  - Verified modal dismissing (Esc, backdrop, Enter/Space), quicksave (F5/Ctrl+S), and quickload (F9).
-  - Confirmed search shortcuts (/), view tabs (1-4), date navigation, and multi-format exporters (ICS/CSV/TSV/MD/JSON).
-  - Verification: npm run build 0 errors, kcalendar.html 119 KB (<999 KB ceiling).
-  - Advanced tester queue to KChess; handed off rotation to kilo-usability (KFont).
