@@ -34,9 +34,9 @@ virtual_web_rotation:
 - kweb://echo-subsystem.net
 - kweb://deep-core
 last_run:
-  agent: kilo-tester
-  app: KChess
-  timestamp: 2026-10-16T17:15:00+0000
+  agent: kilo-adhoc
+  app: Core System Cartridges
+  timestamp: 2026-10-16T17:31:00+0000
 last_planner_run: '2026-10-15T20:17:00Z'
 ---
 
@@ -174,6 +174,14 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-16T17:31:00+0000 — kilo-adhoc: Core System Cartridges v2.0 (KExplorer, KTaskMgr, KSettings)**
+  - Status: PASS ✅ (0 regressions, clean builds, all cartridges < 999 KB ceiling).
+  - KExplorer v2.0: Added live `VFS_CHANGED` auto-refresh, `+ New File`, file rename (F2), file delete (Del), inline quick-preview drawer for text/code, and cartridge mappings.
+  - KTaskMgr v2.0: Rendered enriched `OS_LIST_TASKS_DONE` payload, real-time Canvas sparkline graph for aggregate FPS & Virtual RAM, and double-click window focus/restore.
+  - KSettings v2.0: Wired sound & volume controls to `/.sys_settings_sound` & `/.sys_settings_volume` via `VFS_WRITE`; added exact file byte sizes & guarded VFS deletion.
+  - Shell Bridge: Added `OS_FOCUS_TASK` in `App.jsx`, bumped version to `0.4.30`.
+  - Verification: `npm run build` clean (0 errors, 364ms); file sizes verified: `kexplorer` (55 KB), `ktaskmgr` (51 KB), `ksettings` (78 KB).
+
 - **2026-10-16T17:21:00+0000 — kilo-adhoc: RFMS v2.0 (Retro Firebase Multiplayer Service Upgrade)**
   - Status: PASS ✅ (0 regressions, clean builds, all cartridges < 999 KB ceiling).
   - Self-Contained Firebase Loader: Dynamic import from gstatic v10.9.0 with `rfms-ready` CustomEvent and late `window.onFirebaseLoaded` interceptor.
@@ -202,11 +210,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Voice Leading: Implemented 6-channel architecture with delayed vibrato (5.5Hz), contrary counter-melodies, shell voicings (3rd+7th), swing groove, and inharmonic FM percussion.
   - UI Audio: Added dedicated FM earcons/stingers for cracktro launch, patch generation, tab switches, and warnings.
   - Verification: `npm run build` clean (0 errors, 285ms); advanced soundscape target to `kweb://cybercafe`; handoff to `kilo-tester`.
-
-- **2026-10-16T16:25:00+0000 — kilo-adhoc: KiloOS Kernel v2.0 (Singleton Audio, Persistent VFS, IPC v2.0)**
-  - Status: PASS ✅ (0 regressions, clean builds, 254 KB bundle < 999 KB ceiling).
-  - Web Audio Singleton: Replaced per-click/startup `new AudioContext()` leak with persistent singleton audio synthesizer.
-  - Persistent VFS: Auto-hydrates from `kiloos_vfs_state_v2` with 400ms debounced auto-save so user sessions survive page reloads.
-  - IPC v2.0 Switchboard: Extended Window postMessage bridge with `VFS_DELETE`, `VFS_STAT`, live `VFS_CHANGED` broadcast, `OS_NOTIFY`, and `OS_TELEMETRY_BEAT`.
-  - Enriched Telemetry: Added FPS and memory metrics to `OS_LIST_TASKS` and `openApp` state tracking for KTaskMgr and KDirector.
-  - Verification: Vite build clean (0 errors, 308ms); `security_lint.py` 100% PASS; `byte_budget_gate.py` 100% PASS.

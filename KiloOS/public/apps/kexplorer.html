@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>File Explorer</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<title>File Explorer v2.0</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
   :root {
     --bg-color: hsl(210, 15%, 12%);
@@ -12,6 +12,7 @@
     --card-hover: hsl(210, 15%, 24%);
     --primary: hsl(200, 85%, 60%);
     --primary-hover: hsl(200, 85%, 50%);
+    --danger: hsl(0, 80%, 60%);
     --border-color: rgba(255, 255, 255, 0.12);
     --text-main: #ffffff;
     --text-muted: #a0aec0;
@@ -42,6 +43,7 @@
     gap: 8px;
     align-items: center;
     flex-wrap: wrap;
+    flex-shrink: 0;
   }
 
   .btn-group {
@@ -88,6 +90,18 @@
     border-color: var(--border-color) !important;
   }
 
+  .btn-danger:hover {
+    background: var(--danger) !important;
+    color: #fff !important;
+    border-color: var(--danger) !important;
+  }
+
+  .btn-active {
+    background: var(--primary);
+    color: #111;
+    border-color: var(--primary);
+  }
+
   .address-bar {
     flex: 1;
     min-width: 180px;
@@ -119,6 +133,7 @@
     align-items: center;
     min-height: 28px;
     overflow-x: auto;
+    flex-shrink: 0;
   }
 
   .breadcrumbs {
@@ -155,10 +170,18 @@
     padding: 0 2px;
   }
 
+  .content-wrapper {
+    flex: 1;
+    display: flex;
+    overflow: hidden;
+    position: relative;
+  }
+
   .main-content {
     flex: 1;
     overflow-y: auto;
     padding: 16px;
+    min-width: 0;
   }
 
   /* Grid View (Default) */
@@ -249,6 +272,88 @@
     font-size: 13px;
   }
 
+  /* Inline Quick-Preview Drawer */
+  .preview-drawer {
+    width: 340px;
+    background: hsl(210, 16%, 15%);
+    border-left: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    flex-shrink: 0;
+    animation: drawerSlide 0.18s ease-out;
+  }
+
+  @keyframes drawerSlide {
+    from { transform: translateX(30px); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+  }
+
+  .preview-drawer.hidden {
+    display: none;
+  }
+
+  .preview-header {
+    background: var(--card-bg);
+    border-bottom: 1px solid var(--border-color);
+    padding: 10px 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+
+  .preview-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-main);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .preview-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .btn-sm {
+    padding: 3px 8px;
+    font-size: 11px;
+    border-radius: 4px;
+  }
+
+  .preview-meta {
+    padding: 6px 14px;
+    background: rgba(0, 0, 0, 0.2);
+    border-bottom: 1px solid var(--border-color);
+    font-size: 11px;
+    color: var(--text-muted);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-shrink: 0;
+  }
+
+  .preview-body {
+    flex: 1;
+    overflow: auto;
+    padding: 12px;
+    background: rgba(0, 0, 0, 0.15);
+  }
+
+  .preview-body pre {
+    margin: 0;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    line-height: 1.5;
+    color: #e2e8f0;
+    white-space: pre-wrap;
+    word-break: break-all;
+  }
+
   /* Status Bar */
   .status-bar {
     background: var(--card-bg);
@@ -260,6 +365,7 @@
     justify-content: space-between;
     align-items: center;
     gap: 12px;
+    flex-shrink: 0;
   }
 
   .empty-msg {
@@ -268,6 +374,46 @@
     font-size: 13px;
     text-align: center;
     padding: 40px 20px;
+  }
+
+  /* Custom Context Menu */
+  .context-menu {
+    position: fixed;
+    background: hsl(210, 15%, 16%);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 4px 0;
+    min-width: 170px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    user-select: none;
+  }
+
+  .context-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 14px;
+    font-size: 12px;
+    color: var(--text-main);
+    cursor: pointer;
+    transition: background 0.12s ease;
+  }
+
+  .context-item:hover {
+    background: var(--primary);
+    color: #111;
+  }
+
+  .context-item.danger:hover {
+    background: var(--danger);
+    color: #fff;
+  }
+
+  .context-sep {
+    height: 1px;
+    background: var(--border-color);
+    margin: 4px 0;
   }
 
   .toast {
@@ -285,7 +431,7 @@
     pointer-events: none;
     opacity: 0;
     transition: opacity 0.2s ease;
-    z-index: 100;
+    z-index: 1100;
   }
   .toast.show {
     opacity: 1;
@@ -296,20 +442,32 @@
   <header class="toolbar" role="toolbar" aria-label="Explorer Toolbar">
     <div class="btn-group">
       <button onclick="goUp()" id="btn-up" aria-label="Go Up Directory" title="Go Up (Alt+Up or Backspace)">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
         Up
       </button>
       <button onclick="refresh()" aria-label="Refresh Directory" title="Refresh (F5)">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
         Refresh
       </button>
-      <button onclick="createNewFile()" aria-label="New File" title="New File">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="11" x2="12" y2="17"/><line x1="9" y1="14" x2="15" y2="14"/></svg>
-        New File
+      <button onclick="createNewFile()" aria-label="New File" title="Create New File (+ New File)">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="11" x2="12" y2="17"/><line x1="9" y1="14" x2="15" y2="14"/></svg>
+        + New File
       </button>
-      <button onclick="createNewFolder()" aria-label="New Folder" title="New Folder">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/><line x1="12" y1="11" x2="12" y2="17"/><line x1="9" y1="14" x2="15" y2="14"/></svg>
+      <button onclick="createNewFolder()" aria-label="New Folder" title="Create New Folder">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/><line x1="12" y1="11" x2="12" y2="17"/><line x1="9" y1="14" x2="15" y2="14"/></svg>
         New Folder
+      </button>
+      <button onclick="renameSelectedItem()" id="btn-rename" disabled aria-label="Rename Selected Item" title="Rename (F2)">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
+        Rename
+      </button>
+      <button onclick="deleteSelectedItem()" id="btn-delete" class="btn-danger" disabled aria-label="Delete Selected Item" title="Delete (Del)">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+        Delete
+      </button>
+      <button onclick="togglePreviewDrawer()" id="btn-preview-toggle" aria-label="Toggle Quick Preview" title="Quick Preview Drawer (Space)">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+        Preview
       </button>
     </div>
 
@@ -332,9 +490,29 @@
     <div class="breadcrumbs" id="breadcrumbs" role="navigation" aria-label="Folder Path"></div>
   </nav>
 
-  <main class="main-content">
-    <div class="file-list" id="list" tabindex="0" role="grid" aria-label="File List"></div>
-  </main>
+  <div class="content-wrapper" id="content-wrapper">
+    <main class="main-content" id="main-content">
+      <div class="file-list" id="list" tabindex="0" role="grid" aria-label="File List"></div>
+    </main>
+
+    <!-- Inline Quick-Preview Drawer -->
+    <aside class="preview-drawer hidden" id="preview-drawer" aria-label="Inline Quick Preview Drawer">
+      <div class="preview-header">
+        <span class="preview-title" id="preview-filename">File Preview</span>
+        <div class="preview-actions">
+          <button class="btn-sm" id="btn-drawer-open" onclick="launchPreviewedItem()" title="Open file in mapped editor">Open Editor</button>
+          <button class="btn-sm" onclick="togglePreviewDrawer(false)" title="Close Preview (Esc)">✕</button>
+        </div>
+      </div>
+      <div class="preview-meta">
+        <span id="preview-meta-type">Type: Text Document</span>
+        <span id="preview-meta-size">0 bytes</span>
+      </div>
+      <div class="preview-body">
+        <pre id="preview-content">Select a file to inspect its content.</pre>
+      </div>
+    </aside>
+  </div>
 
   <footer class="status-bar" id="status-bar" aria-live="polite" role="status">
     <span id="status-left">Loading VFS...</span>
@@ -342,6 +520,41 @@
   </footer>
 
   <div id="toast" class="toast" role="alert" aria-live="assertive"></div>
+
+  <!-- Custom Retro Context Menu -->
+  <div id="context-menu" class="context-menu" style="display: none;" role="menu">
+    <div class="context-item" id="ctx-open" onclick="handleCtxOpen()" role="menuitem">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+      Open
+    </div>
+    <div class="context-item" id="ctx-preview" onclick="handleCtxPreview()" role="menuitem">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+      Quick Preview
+    </div>
+    <div class="context-sep" id="ctx-sep-1"></div>
+    <div class="context-item" id="ctx-rename" onclick="handleCtxRename()" role="menuitem">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
+      Rename (F2)
+    </div>
+    <div class="context-item danger" id="ctx-delete" onclick="handleCtxDelete()" role="menuitem" style="color: var(--danger);">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+      Delete (Del)
+    </div>
+    <div class="context-sep" id="ctx-sep-2"></div>
+    <div class="context-item" id="ctx-copy-path" onclick="handleCtxCopyPath()" role="menuitem">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      Copy Path
+    </div>
+    <div class="context-sep" id="ctx-sep-3" style="display: none;"></div>
+    <div class="context-item" id="ctx-new-file" onclick="createNewFile()" role="menuitem" style="display: none;">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><line x1="12" y1="11" x2="12" y2="17"/><line x1="9" y1="14" x2="15" y2="14"/></svg>
+      + New File
+    </div>
+    <div class="context-item" id="ctx-new-folder" onclick="createNewFolder()" role="menuitem" style="display: none;">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/><line x1="12" y1="11" x2="12" y2="17"/><line x1="9" y1="14" x2="15" y2="14"/></svg>
+      + New Folder
+    </div>
+  </div>
 
   <script>
     let currentReqId = 0;
@@ -352,17 +565,36 @@
     let selectedIndex = -1;
     let currentRenderedItems = [];
     let toastTimer = null;
+    let previewItem = null;
+    let previewDrawerOpen = false;
+    let contextTargetItem = null;
 
-    const RENDER_LIMIT = 500; // File bound limit to prevent DOM freeze
+    const RENDER_LIMIT = 500;
 
+    // Listen for parent messages, including VFS_CHANGED for live real-time auto-refresh!
     window.addEventListener('message', (e) => {
       const msg = e.data;
-      if (msg && msg.type === 'VFS_LIST_DONE' && callbacks[msg.requestId]) {
+      if (!msg) return;
+
+      if (msg.type === 'VFS_LIST_DONE' && callbacks[msg.requestId]) {
         callbacks[msg.requestId](msg.files || []);
         delete callbacks[msg.requestId];
-      } else if (msg && msg.type === 'VFS_WRITE_DONE' && callbacks[msg.requestId]) {
+      } else if (msg.type === 'VFS_WRITE_DONE' && callbacks[msg.requestId]) {
         callbacks[msg.requestId](true);
         delete callbacks[msg.requestId];
+      } else if (msg.type === 'VFS_DELETE_DONE' && callbacks[msg.requestId]) {
+        callbacks[msg.requestId](true);
+        delete callbacks[msg.requestId];
+      } else if (msg.type === 'VFS_READ_DONE' && callbacks[msg.requestId]) {
+        callbacks[msg.requestId](msg.data);
+        delete callbacks[msg.requestId];
+      } else if (msg.type === 'VFS_CHANGED') {
+        // Kernel v2.0 IPC Bus real-time update:
+        // Automatically refresh directory view whenever another app creates, edits, or deletes a file!
+        refresh();
+        if (previewItem && previewDrawerOpen && msg.path === previewItem.fullPath) {
+          loadPreviewContent(previewItem);
+        }
       }
     });
 
@@ -377,6 +609,16 @@
       }, 2500);
     }
 
+    // Standalone mock memory store for development & offline fallback
+    const mockStorage = {
+      '/welcome.txt': 'Welcome to KiloOS Retro 1999!\n\nThis is the upgraded File Browser v2.0 running on Kernel v2.0 IPC Bus.\nFeatures:\n- Real-time VFS_CHANGED event listening\n- Quick-preview drawer for text, markdown, JSON, and log files\n- Direct cartridge mapping (kpad, kscript, khex, kaudio)\n- Inline file creation, rename, and deletion.',
+      '/docs/readme.md': '# KiloOS Documentation\n\n- All cartridges are strictly under 999 KB\n- Kernel v2.0 IPC Bus bridges apps seamlessly\n- Native Win32 C parity ensured',
+      '/system/config.json': '{\n  "version": "2.0.0",\n  "arch": "x86",\n  "ipc": "Kernel v2.0",\n  "audio": "YM2612 2-Op FM"\n}',
+      '/system/boot.log': '[1999-12-31 23:59:58] Kernel v2.0 initialized.\n[1999-12-31 23:59:59] VFS mounted at root.\n[2000-01-01 00:00:00] KiloOS shell online.\n[2000-01-01 00:00:01] Welcome user.',
+      '/music/theme.wav': '(Binary audio stream)',
+      '/data/memory.bin': '(Raw memory dump)'
+    };
+
     function sendToOS(msg) {
       return new Promise((resolve) => {
         const id = ++currentReqId;
@@ -387,19 +629,19 @@
           // Local fallback simulation if running standalone
           setTimeout(() => {
             if (msg.type === 'VFS_LIST') {
-              if (!allVfsFiles.length) {
-                allVfsFiles = ['/welcome.txt', '/docs/readme.md', '/pictures/wallpaper.png', '/music/theme.wav', '/data/records.csv'];
-              }
-              resolve([...allVfsFiles]);
+              resolve(Object.keys(mockStorage));
             } else if (msg.type === 'VFS_WRITE') {
-              if (msg.path && !allVfsFiles.includes(msg.path)) {
-                allVfsFiles.push(msg.path);
-              }
+              if (msg.path) mockStorage[msg.path] = msg.data ?? '';
               resolve(true);
+            } else if (msg.type === 'VFS_DELETE') {
+              if (msg.path) delete mockStorage[msg.path];
+              resolve(true);
+            } else if (msg.type === 'VFS_READ') {
+              resolve(mockStorage[msg.path] ?? null);
             } else {
               resolve(true);
             }
-          }, 50);
+          }, 30);
         }
       });
     }
@@ -450,8 +692,10 @@
       renderCurrentView();
     }
 
+    // File Creation (+ New File)
     async function createNewFile() {
-      const name = prompt('Enter new file name:', 'new_document.txt');
+      hideContextMenu();
+      const name = prompt('Enter new file name (e.g. notes.txt, data.json, app.js):', 'new_document.txt');
       if (!name || !name.trim()) return;
       const cleanName = name.trim().replace(/[\\/]/g, '');
       if (!cleanName || cleanName === '.' || cleanName === '..') {
@@ -462,9 +706,17 @@
       await sendToOS({ type: 'VFS_WRITE', path: fullPath, data: '' });
       await refresh();
       showToast(`Created file: ${cleanName}`);
+      
+      // Select the newly created file
+      const foundIdx = currentRenderedItems.findIndex(i => !i.isFolder && !i.isUp && i.name === cleanName);
+      if (foundIdx !== -1) {
+        selectItem(foundIdx);
+      }
     }
 
+    // Folder Creation
     async function createNewFolder() {
+      hideContextMenu();
       const name = prompt('Enter new folder name:', 'New Folder');
       if (!name || !name.trim()) return;
       const cleanName = name.trim().replace(/[\\/]/g, '');
@@ -476,6 +728,183 @@
       await sendToOS({ type: 'VFS_WRITE', path: fullPath, data: '' });
       await refresh();
       showToast(`Created folder: ${cleanName}`);
+    }
+
+    // File Deletion (Delete key / Context menu / Toolbar button)
+    async function deleteSelectedItem() {
+      if (selectedIndex === -1 || !currentRenderedItems[selectedIndex]) return;
+      const item = currentRenderedItems[selectedIndex];
+      deleteItem(item);
+    }
+
+    async function deleteItem(item) {
+      hideContextMenu();
+      if (!item || item.isUp) return;
+
+      if (item.fullPath && item.fullPath.startsWith('/.sys_')) {
+        alert('Protected system file cannot be deleted.');
+        return;
+      }
+
+      const confirmMsg = item.isFolder 
+        ? `Are you sure you want to delete folder "${item.name}" and all contents?`
+        : `Are you sure you want to delete file "${item.name}"?`;
+
+      if (!confirm(confirmMsg)) return;
+
+      if (item.isFolder) {
+        // Delete all files residing under this folder directory prefix
+        const folderPrefix = item.fullPath;
+        const matching = allVfsFiles.filter(f => f.startsWith(folderPrefix));
+        for (const filePath of matching) {
+          await sendToOS({ type: 'VFS_DELETE', path: filePath });
+        }
+        await sendToOS({ type: 'VFS_DELETE', path: folderPrefix + '.keep' });
+      } else {
+        await sendToOS({ type: 'VFS_DELETE', path: item.fullPath });
+      }
+
+      if (previewItem && previewItem.fullPath === item.fullPath) {
+        togglePreviewDrawer(false);
+      }
+
+      await refresh();
+      showToast(`Deleted: ${item.name}`);
+    }
+
+    // File Rename (F2 key / Context menu / Toolbar button)
+    async function renameSelectedItem() {
+      if (selectedIndex === -1 || !currentRenderedItems[selectedIndex]) return;
+      const item = currentRenderedItems[selectedIndex];
+      renameItem(item);
+    }
+
+    async function renameItem(item) {
+      hideContextMenu();
+      if (!item || item.isUp) return;
+
+      if (item.fullPath && item.fullPath.startsWith('/.sys_')) {
+        alert('Protected system file cannot be renamed.');
+        return;
+      }
+
+      const newName = prompt(`Enter new name for "${item.name}":`, item.name);
+      if (!newName || !newName.trim() || newName.trim() === item.name) return;
+
+      const cleanName = newName.trim().replace(/[\\/]/g, '');
+      if (!cleanName || cleanName === '.' || cleanName === '..') {
+        alert('Please enter a valid name without slashes.');
+        return;
+      }
+
+      if (item.isFolder) {
+        const oldPrefix = item.fullPath;
+        const newPrefix = normalizePath(currentPath + cleanName + '/');
+        const matching = allVfsFiles.filter(f => f.startsWith(oldPrefix));
+        
+        for (const oldFile of matching) {
+          const content = await sendToOS({ type: 'VFS_READ', path: oldFile });
+          const rel = oldFile.slice(oldPrefix.length);
+          const newFile = newPrefix + rel;
+          await sendToOS({ type: 'VFS_WRITE', path: newFile, data: content ?? '' });
+          await sendToOS({ type: 'VFS_DELETE', path: oldFile });
+        }
+      } else {
+        const newFullPath = normalizePath(currentPath) + cleanName;
+        // Read existing content
+        const content = await sendToOS({ type: 'VFS_READ', path: item.fullPath });
+        // Write new file
+        await sendToOS({ type: 'VFS_WRITE', path: newFullPath, data: content ?? '' });
+        // Delete old file
+        await sendToOS({ type: 'VFS_DELETE', path: item.fullPath });
+      }
+
+      await refresh();
+      showToast(`Renamed to "${cleanName}"`);
+
+      // Reselect renamed item
+      const foundIdx = currentRenderedItems.findIndex(i => i.name === cleanName);
+      if (foundIdx !== -1) {
+        selectItem(foundIdx);
+      }
+    }
+
+    // Check if file is suitable for quick text preview
+    function isPreviewableFile(fileName) {
+      if (!fileName || typeof fileName !== 'string') return false;
+      const lower = fileName.toLowerCase();
+      return lower.endsWith('.txt') || lower.endsWith('.md') || lower.endsWith('.json') || 
+             lower.endsWith('.log') || lower.endsWith('.js') || lower.endsWith('.html') || 
+             lower.endsWith('.css') || lower.endsWith('.ini') || lower.endsWith('.c') || 
+             lower.endsWith('.h') || lower.endsWith('.csv');
+    }
+
+    // Inline Quick-Preview Drawer Controls
+    function togglePreviewDrawer(forceState) {
+      const drawer = document.getElementById('preview-drawer');
+      const toggleBtn = document.getElementById('btn-preview-toggle');
+      if (typeof forceState === 'boolean') {
+        previewDrawerOpen = forceState;
+      } else {
+        previewDrawerOpen = !previewDrawerOpen;
+      }
+
+      if (previewDrawerOpen) {
+        drawer.classList.remove('hidden');
+        toggleBtn.classList.add('btn-active');
+        if (selectedIndex !== -1 && currentRenderedItems[selectedIndex]) {
+          loadPreviewContent(currentRenderedItems[selectedIndex]);
+        }
+      } else {
+        drawer.classList.add('hidden');
+        toggleBtn.classList.remove('btn-active');
+      }
+    }
+
+    async function loadPreviewContent(item) {
+      if (!item || item.isUp || item.isFolder) {
+        document.getElementById('preview-filename').textContent = 'Directory';
+        document.getElementById('preview-meta-type').textContent = 'Folder';
+        document.getElementById('preview-meta-size').textContent = '';
+        document.getElementById('preview-content').textContent = 'Select a text, markdown, JSON, or log file to view preview.';
+        previewItem = null;
+        return;
+      }
+
+      previewItem = item;
+      document.getElementById('preview-filename').textContent = item.name;
+      document.getElementById('preview-filename').title = item.fullPath;
+      
+      const ext = item.name.includes('.') ? item.name.split('.').pop().toUpperCase() : 'FILE';
+      document.getElementById('preview-meta-type').textContent = `Format: .${ext.toLowerCase()}`;
+      
+      const contentEl = document.getElementById('preview-content');
+      contentEl.textContent = 'Loading file from VFS...';
+
+      if (!isPreviewableFile(item.name)) {
+        document.getElementById('preview-meta-size').textContent = 'Binary format';
+        contentEl.textContent = `[Binary / Non-text File: ${item.name}]\n\nDouble-click or click "Open Editor" to launch in the corresponding KiloOS cartridge (${getAppForFile(item.name).toUpperCase()}).`;
+        return;
+      }
+
+      const content = await sendToOS({ type: 'VFS_READ', path: item.fullPath });
+      if (content === null || content === undefined) {
+        contentEl.textContent = '(Empty file or file does not exist)';
+        document.getElementById('preview-meta-size').textContent = '0 bytes';
+        return;
+      }
+
+      const strContent = typeof content === 'string' ? content : JSON.stringify(content, null, 2);
+      const byteCount = new Blob([strContent]).size;
+      const lineCount = strContent.split('\n').length;
+      document.getElementById('preview-meta-size').textContent = `${byteCount} B (${lineCount} lines)`;
+      contentEl.textContent = strContent || '(Empty file)';
+    }
+
+    function launchPreviewedItem() {
+      if (previewItem) {
+        launchItem(previewItem);
+      }
     }
 
     function renderBreadcrumbs() {
@@ -564,38 +993,51 @@
       renderCurrentView();
     }
 
+    // Precise extension mapping to launch appropriate KiloOS cartridge
+    // Requirement: (.txt/.md -> kpad, .html/.js -> kscript, .dat/.bin -> khex, .wav -> kaudio)
     function getAppForFile(fileName) {
       const lower = fileName.toLowerCase();
-      if (lower.endsWith('.png') || lower.endsWith('.jpg') || lower.endsWith('.jpeg') || lower.endsWith('.gif') || lower.endsWith('.bmp') || lower.endsWith('.ico') || lower.endsWith('.svg') || lower.endsWith('.webp')) {
-        return 'kpaint';
+      // Text & Documents -> KPad
+      if (lower.endsWith('.txt') || lower.endsWith('.md') || lower.endsWith('.log')) {
+        return 'kpad';
       }
+      // Scripts & Web -> KScript
+      if (lower.endsWith('.html') || lower.endsWith('.htm') || lower.endsWith('.js') || lower.endsWith('.ks') || lower.endsWith('.css') || lower.endsWith('.json')) {
+        return 'kscript';
+      }
+      // Hex & Raw Binaries -> KHex
+      if (lower.endsWith('.dat') || lower.endsWith('.bin') || lower.endsWith('.hex')) {
+        return 'khex';
+      }
+      // Audio -> KAudio
       if (lower.endsWith('.wav') || lower.endsWith('.mp3') || lower.endsWith('.ogg') || lower.endsWith('.mid') || lower.endsWith('.m4a') || lower.endsWith('.flac')) {
         return 'kaudio';
       }
+      // Graphics -> KPaint
+      if (lower.endsWith('.png') || lower.endsWith('.jpg') || lower.endsWith('.jpeg') || lower.endsWith('.gif') || lower.endsWith('.bmp') || lower.endsWith('.ico') || lower.endsWith('.svg') || lower.endsWith('.webp')) {
+        return 'kpaint';
+      }
+      // Video Media -> KMedia
       if (lower.endsWith('.mp4') || lower.endsWith('.webm') || lower.endsWith('.avi') || lower.endsWith('.mov') || lower.endsWith('.mkv')) {
         return 'kmedia';
       }
+      // Archives -> KZip
       if (lower.endsWith('.zip') || lower.endsWith('.kza') || lower.endsWith('.gz') || lower.endsWith('.tar') || lower.endsWith('.7z')) {
         return 'kzip';
       }
-      if (lower.endsWith('.hex') || lower.endsWith('.bin') || lower.endsWith('.dat')) {
-        return 'khex';
-      }
+      // Databases & Tables -> KDB
       if (lower.endsWith('.csv') || lower.endsWith('.db') || lower.endsWith('.tsv')) {
         return 'kdb';
       }
-      if (lower.endsWith('.ks')) {
-        return 'kscript';
-      }
+      // Document Reader -> KRead
       if (lower.endsWith('.pdf')) {
         return 'kread';
       }
+      // Executable Cartridges
       if (lower.endsWith('.exe')) {
         if (lower === 'quarantine.exe') return 'kquarantine';
         const base = lower.replace(/\.exe$/, '');
-        const knownApps = ['kpad', 'kcalc', 'kpaint', 'kmine', 'kclock', 'ktask', 'kbbs', 'krogue', 'ksnake', 'ktetris', 'kpong', 'kterm', 'kmaze', 'kaudio', 'kradio', 'kcalendar', 'ksolitaire', 'kspace', 'kpac', 'kmail', 'kmedia', 'kimage', 'knet', 'kdb', 'kscript', 'kchess', 'ktype', 'kchart', 'kzip', 'knote', 'kcolor', 'kpass', 'kping', 'khex', 'ksys', 'kmandel', 'ktimer', 'ksynth', 'kfont', 'kconverter', 'ktodo', 'kgraph', 'kcontacts', 'kread', 'kbase', 'kvault', 'kjournal', 'kbreakout', 'kbudget', 'khabit', 'kflash', 'k2048', 'ksudoku', 'kconnect4', 'khangman', 'ksimon', 'kasteroids', 'kfreecell', 'kmatch3', 'kwords', 'kgo', 'kdarts', 'ktowers', 'kreversi', 'kquest', 'kstarship', 'kalchemy', 'kfortress', 'kcolony', 'kfarm', 'kwizard', 'kvoid', 'kdragon', 'kmech', 'kcyber', 'ktrader'];
-        if (knownApps.includes(base)) return base;
-        return 'kpad';
+        return base;
       }
       return 'kpad';
     }
@@ -625,6 +1067,9 @@
       list.innerHTML = '';
       selectedIndex = -1;
       currentRenderedItems = [];
+
+      // Update action button states
+      updateActionButtons();
 
       const itemsInDir = new Set();
       const filesToShow = [];
@@ -691,12 +1136,11 @@
         currentRenderedItems.push(fileObj);
       });
 
-      // VFS File Bounds Limit check
       const totalItems = currentRenderedItems.length;
       const itemsToRender = currentRenderedItems.slice(0, RENDER_LIMIT);
 
       if (itemsToRender.length === 0) {
-        list.innerHTML = `<div class="empty-msg">${searchVal ? 'No matching files or folders found.' : 'Directory is empty.'}</div>`;
+        list.innerHTML = `<div class="empty-msg">${searchVal ? 'No matching files or folders found.' : 'Directory is empty. Click "+ New File" to create one.'}</div>`;
         updateStatus(0, totalItems);
         return;
       }
@@ -721,9 +1165,11 @@
         } else {
           domItem.setAttribute('aria-label', `File: ${item.name}`);
           const lowerName = item.name.toLowerCase();
-          if (lowerName.endsWith('.txt') || lowerName.endsWith('.md') || lowerName.endsWith('.log') || lowerName.endsWith('.json') || lowerName.endsWith('.js') || lowerName.endsWith('.c') || lowerName.endsWith('.h') || lowerName.endsWith('.html') || lowerName.endsWith('.css') || lowerName.endsWith('.ini')) {
+          if (lowerName.endsWith('.txt') || lowerName.endsWith('.md') || lowerName.endsWith('.log')) {
             iconSvg = `<div class="file-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg></div>`;
-          } else if (lowerName.endsWith('.png') || lowerName.endsWith('.jpg') || lowerName.endsWith('.jpeg') || lowerName.endsWith('.gif') || lowerName.endsWith('.ico') || lowerName.endsWith('.bmp') || lowerName.endsWith('.svg') || lowerName.endsWith('.webp')) {
+          } else if (lowerName.endsWith('.json') || lowerName.endsWith('.js') || lowerName.endsWith('.html') || lowerName.endsWith('.css') || lowerName.endsWith('.c') || lowerName.endsWith('.h')) {
+            iconSvg = `<div class="file-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg></div>`;
+          } else if (lowerName.endsWith('.png') || lowerName.endsWith('.jpg') || lowerName.endsWith('.jpeg') || lowerName.endsWith('.gif') || lowerName.endsWith('.bmp') || lowerName.endsWith('.ico') || lowerName.endsWith('.svg') || lowerName.endsWith('.webp')) {
             iconSvg = `<div class="file-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#4caf50" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></div>`;
           } else if (lowerName.endsWith('.wav') || lowerName.endsWith('.mp3') || lowerName.endsWith('.ogg') || lowerName.endsWith('.mid') || lowerName.endsWith('.m4a') || lowerName.endsWith('.flac')) {
             iconSvg = `<div class="file-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#e91e63" stroke-width="2"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg></div>`;
@@ -749,7 +1195,14 @@
         domItem.onfocus = () => selectItem(index);
         domItem.onkeydown = (e) => handleKeyNavigation(e, index, item);
 
-        // Safe DOM creation preventing XSS
+        // Right-click context menu
+        domItem.oncontextmenu = (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          selectItem(index);
+          showContextMenu(e.clientX, e.clientY, item);
+        };
+
         domItem.innerHTML = iconSvg;
         const nameEl = document.createElement('div');
         nameEl.className = 'file-name';
@@ -779,8 +1232,112 @@
       if (item) {
         const detail = item.isUp ? 'Parent Directory' : item.isFolder ? 'Folder' : (item.name.includes('.') ? item.name.split('.').pop().toUpperCase() + ' File' : 'File');
         document.getElementById('status-left').textContent = `Selected: ${item.name} (${detail})`;
+        
+        // Auto-refresh quick preview drawer if open
+        if (previewDrawerOpen) {
+          loadPreviewContent(item);
+        }
       }
+      updateActionButtons();
     }
+
+    function updateActionButtons() {
+      const btnRename = document.getElementById('btn-rename');
+      const btnDelete = document.getElementById('btn-delete');
+      const hasValidSelection = selectedIndex !== -1 && currentRenderedItems[selectedIndex] && !currentRenderedItems[selectedIndex].isUp;
+      
+      if (btnRename) btnRename.disabled = !hasValidSelection;
+      if (btnDelete) btnDelete.disabled = !hasValidSelection;
+    }
+
+    // Context Menu Operations
+    function showContextMenu(x, y, item) {
+      contextTargetItem = item;
+      const menu = document.getElementById('context-menu');
+      if (!menu) return;
+
+      const isItem = Boolean(item);
+      const isFile = isItem && !item.isFolder && !item.isUp;
+      const isUp = isItem && item.isUp;
+
+      document.getElementById('ctx-open').style.display = isItem ? 'flex' : 'none';
+      document.getElementById('ctx-preview').style.display = isFile ? 'flex' : 'none';
+      document.getElementById('ctx-rename').style.display = (isItem && !isUp) ? 'flex' : 'none';
+      document.getElementById('ctx-delete').style.display = (isItem && !isUp) ? 'flex' : 'none';
+      document.getElementById('ctx-copy-path').style.display = (isItem && !isUp) ? 'flex' : 'none';
+      document.getElementById('ctx-new-file').style.display = 'flex';
+      document.getElementById('ctx-new-folder').style.display = 'flex';
+      document.getElementById('ctx-sep-1').style.display = isItem ? 'block' : 'none';
+      document.getElementById('ctx-sep-2').style.display = (isItem && !isUp) ? 'block' : 'none';
+      document.getElementById('ctx-sep-3').style.display = isItem ? 'block' : 'none';
+
+      menu.style.display = 'block';
+
+      // Clamp context menu inside window boundaries
+      const menuW = menu.offsetWidth || 180;
+      const menuH = menu.offsetHeight || 200;
+      const posX = (x + menuW > window.innerWidth) ? Math.max(10, window.innerWidth - menuW - 10) : x;
+      const posY = (y + menuH > window.innerHeight) ? Math.max(10, window.innerHeight - menuH - 10) : y;
+
+      menu.style.left = `${posX}px`;
+      menu.style.top = `${posY}px`;
+    }
+
+    function hideContextMenu() {
+      const menu = document.getElementById('context-menu');
+      if (menu) menu.style.display = 'none';
+      contextTargetItem = null;
+    }
+
+    function handleCtxOpen() {
+      if (contextTargetItem) launchItem(contextTargetItem);
+      hideContextMenu();
+    }
+
+    function handleCtxPreview() {
+      if (contextTargetItem) {
+        togglePreviewDrawer(true);
+        loadPreviewContent(contextTargetItem);
+      }
+      hideContextMenu();
+    }
+
+    function handleCtxRename() {
+      if (contextTargetItem) renameItem(contextTargetItem);
+      hideContextMenu();
+    }
+
+    function handleCtxDelete() {
+      if (contextTargetItem) deleteItem(contextTargetItem);
+      hideContextMenu();
+    }
+
+    function handleCtxCopyPath() {
+      if (contextTargetItem && contextTargetItem.fullPath) {
+        navigator.clipboard.writeText(contextTargetItem.fullPath).then(() => {
+          showToast(`Path copied: ${contextTargetItem.fullPath}`);
+        }).catch(() => {
+          showToast(`Path: ${contextTargetItem.fullPath}`);
+        });
+      }
+      hideContextMenu();
+    }
+
+    // Dismiss context menu on global click or Escape
+    window.addEventListener('click', (e) => {
+      const menu = document.getElementById('context-menu');
+      if (menu && menu.style.display !== 'none' && !menu.contains(e.target)) {
+        hideContextMenu();
+      }
+    });
+
+    // Background context menu on empty space
+    document.getElementById('main-content').addEventListener('contextmenu', (e) => {
+      if (e.target === document.getElementById('main-content') || e.target === document.getElementById('list')) {
+        e.preventDefault();
+        showContextMenu(e.clientX, e.clientY, null);
+      }
+    });
 
     function handleKeyNavigation(e, index, item) {
       const items = document.querySelectorAll('.file-item');
@@ -811,9 +1368,23 @@
       } else if (e.key === 'End') {
         nextIndex = items.length - 1;
         e.preventDefault();
-      } else if (e.key === 'Enter' || e.key === ' ') {
+      } else if (e.key === 'Enter') {
         e.preventDefault();
         launchItem(item);
+        return;
+      } else if (e.key === ' ') {
+        // Spacebar toggles quick preview drawer
+        e.preventDefault();
+        togglePreviewDrawer();
+        if (previewDrawerOpen) loadPreviewContent(item);
+        return;
+      } else if (e.key === 'F2') {
+        e.preventDefault();
+        renameItem(item);
+        return;
+      } else if (e.key === 'Delete' || e.key === 'Del') {
+        e.preventDefault();
+        deleteItem(item);
         return;
       } else if (e.key === 'Backspace') {
         if (document.activeElement.tagName !== 'INPUT') {
@@ -834,21 +1405,37 @@
       const activeTag = document.activeElement ? document.activeElement.tagName : '';
       const isInput = activeTag === 'INPUT' || activeTag === 'SELECT' || activeTag === 'TEXTAREA';
 
-      if (e.key === 'F5' || (e.ctrlKey && e.key.toLowerCase() === 'r')) {
-        e.preventDefault();
-        refresh();
-      } else if ((e.ctrlKey && e.key.toLowerCase() === 'f') || (!isInput && e.key === '/')) {
-        e.preventDefault();
-        const searchInput = document.getElementById('search-input');
-        searchInput.focus();
-        searchInput.select();
-      } else if (e.key === 'Escape') {
+      if (e.key === 'Escape') {
+        hideContextMenu();
+        if (previewDrawerOpen) {
+          togglePreviewDrawer(false);
+          return;
+        }
         const searchInput = document.getElementById('search-input');
         if (document.activeElement === searchInput) {
           searchInput.value = '';
           renderCurrentView();
           document.getElementById('list').focus();
         }
+      } else if (e.key === 'F5' || (e.ctrlKey && e.key.toLowerCase() === 'r')) {
+        e.preventDefault();
+        refresh();
+      } else if (!isInput && (e.key === 'Delete' || e.key === 'Del')) {
+        e.preventDefault();
+        deleteSelectedItem();
+      } else if (!isInput && e.key === 'F2') {
+        e.preventDefault();
+        renameSelectedItem();
+      } else if (!isInput && e.key === ' ') {
+        if (selectedIndex !== -1 && currentRenderedItems[selectedIndex]) {
+          e.preventDefault();
+          togglePreviewDrawer();
+        }
+      } else if ((e.ctrlKey && e.key.toLowerCase() === 'f') || (!isInput && e.key === '/')) {
+        e.preventDefault();
+        const searchInput = document.getElementById('search-input');
+        searchInput.focus();
+        searchInput.select();
       } else if ((e.ctrlKey && e.key.toLowerCase() === 'l') || (e.altKey && e.key.toLowerCase() === 'd')) {
         e.preventDefault();
         const pathInput = document.getElementById('path-input');

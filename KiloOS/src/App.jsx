@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { DEFAULT_VFS } from './defaultVfs';
 import './App.css';
-const MICROS_VERSION = '0.4.29';
+const MICROS_VERSION = '0.4.30';
 
 // Singleton Web Audio Synthesizer (Replaces per-click new AudioContext() leak)
 const osAudioCtxRef = { current: null };
@@ -364,6 +364,9 @@ function Window({ app, onClose, onFocus, onMinimize, vfs, setVfs, requestVfsModa
       }
       else if (type === 'OS_KILL_TASK') {
         closeApp(e.data?.taskId);
+      }
+      else if (type === 'OS_FOCUS_TASK') {
+        window.dispatchEvent(new CustomEvent('os-focus-task', { detail: { taskId: e.data?.taskId, appId: e.data?.appId } }));
       }
     };
     window.addEventListener('message', handleMessage);
@@ -934,6 +937,20 @@ function App() {
     window.addEventListener('os-telemetry-beat', handler);
     return () => window.removeEventListener('os-telemetry-beat', handler);
   }, []);
+
+  // Listen for OS Focus Task from apps (e.g. KTaskMgr)
+  useEffect(() => {
+    const handler = (e) => {
+      const { taskId, appId } = e.detail || {};
+      const target = openApps.find((a, idx) => a.instanceId === taskId || a.id === taskId || (1000 + idx * 17) === taskId || (appId && a.id === appId));
+      if (target) {
+        focusApp(target.instanceId);
+        if (target.minimized) toggleMinimize(target.instanceId);
+      }
+    };
+    window.addEventListener('os-focus-task', handler);
+    return () => window.removeEventListener('os-focus-task', handler);
+  }, [openApps, focusApp, toggleMinimize]);
 
   // Handle Window Switching Shortcut & Help & Global Navigation
   useEffect(() => {
