@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-qa
+current_agent: kilo-qa
+next_agent: kilo-expander
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -17,7 +17,7 @@ current_targets:
   kilo_graphics: KFarm
   kilo_soundscape: kweb://cybercafe
   kilo_tester: KSpace
-  kilo_usability: KDB
+  kilo_usability: KNote
   kilo_qa: KSudoku
   kilo_expander: KHex
 virtual_web_target: kweb://portal
@@ -34,9 +34,9 @@ virtual_web_rotation:
 - kweb://echo-subsystem.net
 - kweb://deep-core
 last_run:
-  agent: kilo-adhoc
-  app: Core System Cartridges
-  timestamp: 2026-10-16T17:31:00+0000
+  agent: kilo-usability
+  app: KDB
+  timestamp: 2026-10-16T18:15:00+0000
 last_planner_run: '2026-10-15T20:17:00Z'
 ---
 
@@ -174,6 +174,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-16T18:15:00+0000 — kilo-usability: KDB (UI/UX & Usability Overhaul)**
+  - Audited layout ergonomics: tuned default window size to 1020x700 in `App.jsx` and `kdb.html` for clean multi-column viewing.
+  - Eliminated toolbar button wrap: consolidated 9 export/import actions into responsive Dropdown menus while preserving all shortcuts.
+  - HiDPI & Responsive Charts: enforced integer DPR canvas buffer styles and added debounced window resize handler for dashboard charts.
+  - Verification: `npm run build` clean (0 errors); advanced usability target to `KNote`; handoff to `kilo-qa`.
+
 - **2026-10-16T17:31:00+0000 — kilo-adhoc: Core System Cartridges v2.0 (KExplorer, KTaskMgr, KSettings)**
   - Status: PASS ✅ (0 regressions, clean builds, all cartridges < 999 KB ceiling).
   - KExplorer v2.0: Added live `VFS_CHANGED` auto-refresh, `+ New File`, file rename (F2), file delete (Del), inline quick-preview drawer for text/code, and cartridge mappings.
@@ -203,10 +209,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Shard Forensics: 4 memory shards with XOR-0x99 decrypt, VFS export (/QUARANTINE_DUMP.txt), live VFS audit query, and KMatrix/KDirector launch bridges.
   - Ergonomics & Audio: Added retro Web Audio feedback, F5 Quicksave / F9 Quickload persistence, and hotkeys (1-4, D).
   - Verification: npm run build clean (0 errors); security_lint 100% PASS; check_sizes PASS.
-
-- **2026-10-16T16:35:00+0000 — kilo-soundscape: kweb://warez (Authentic YM2612 2-Op FM Soundscape)**
-  - Status: PASS ✅ (Clean build, 514 KB single-file < 999 KB ceiling).
-  - Soundscape: Replaced generic FM presets with 8 demoscene/cracktro tracks (Mega Drive Rush, SNES Dreamscape, Keygen Euphoria, Yuzo Groove, Amiga Twilight, Void Fantasy, Carlsbad 1999Hz, Copper Skyline).
-  - Voice Leading: Implemented 6-channel architecture with delayed vibrato (5.5Hz), contrary counter-melodies, shell voicings (3rd+7th), swing groove, and inharmonic FM percussion.
-  - UI Audio: Added dedicated FM earcons/stingers for cracktro launch, patch generation, tab switches, and warnings.
-  - Verification: `npm run build` clean (0 errors, 285ms); advanced soundscape target to `kweb://cybercafe`; handoff to `kilo-tester`.
