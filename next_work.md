@@ -1,5 +1,5 @@
 ---
-current_agent: kilo-graphics
+current_agent: kilo-soundscape
 next_agent: kilo-soundscape
 agent_rotation:
 - kilo-creator
@@ -34,9 +34,9 @@ virtual_web_rotation:
 - kweb://10.19.99.4/classified
 - kweb://echo-subsystem.net
 last_run:
-  agent: kilo-creator
-  app: kweb://cybercafe
-  timestamp: 2026-10-16T01:13:00+0000
+  agent: kilo-graphics
+  app: KFarm
+  timestamp: 2026-10-16T01:30:02+0000
 last_planner_run: '2026-10-15T20:17:00Z'
 ---
 
