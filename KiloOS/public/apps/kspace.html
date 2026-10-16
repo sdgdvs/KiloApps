@@ -1678,12 +1678,16 @@ window.addEventListener('beforeunload', () => {
       }
     } else if (gameState === STATE_MODE_SELECT) {
       for (let i = 0; i < MODES.length; i++) {
-        let btnY = 200 + i * 55;
-        if (mx >= 40 && mx <= 280 && my >= btnY - 20 && my <= btnY + 25) {
+        let btnY = 180 + i * 65;
+        if (mx >= 30 && mx <= W - 30 && my >= btnY - 20 && my <= btnY + 35) {
           modeIndex = i;
           startNewGame(modeIndex);
           return;
         }
+      }
+      if (my >= H - 45) {
+        gameState = STATE_MENU;
+        return;
       }
     } else if (gameState === STATE_PAUSED) {
       let clickedOption = false;
@@ -4648,7 +4652,15 @@ window.addEventListener('beforeunload', () => {
 
     ctx.fillStyle = '#ff1744';
     ctx.font = '12px monospace';
-    ctx.fillText('Press ENTER to Launch Mission', W / 2, H - 40);
+    ctx.fillText('Press ENTER to Launch Mission', W / 2, H - 52);
+
+    ctx.fillStyle = 'rgba(0, 229, 255, 0.1)';
+    ctx.fillRect(40, H - 42, W - 80, 26);
+    ctx.strokeStyle = '#00e5ff';
+    ctx.strokeRect(40, H - 42, W - 80, 26);
+    ctx.fillStyle = '#80d8ff';
+    ctx.font = '11px monospace';
+    ctx.fillText('CLICK / [ESC] : BACK TO MENU', W / 2, H - 25);
     ctx.textAlign = 'left';
   }
 

@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-tester
-next_agent: kilo-usability
+current_agent: kilo-usability
+next_agent: kilo-qa
 agent_rotation:
 - kilo-graphics
 - kilo-soundscape
@@ -16,7 +16,7 @@ current_targets:
   kilo_creator: kweb://webring
   kilo_graphics: KWizard
   kilo_soundscape: KDragon
-  kilo_tester: KSpace
+  kilo_tester: KPac
   kilo_usability: KNote
   kilo_qa: KConnect4
   kilo_expander: KClip
@@ -34,9 +34,9 @@ virtual_web_rotation:
 - kweb://echo-subsystem.net
 - kweb://deep-core
 last_run:
-  agent: kilo-soundscape
-  app: kweb://cybercafe
-  timestamp: 2026-10-16T21:32:00+0000
+  agent: kilo-tester
+  app: KSpace
+  timestamp: 2026-10-16T22:32:00+0000
 last_planner_run: '2026-10-16T20:35:00Z'
 ---
 
@@ -174,6 +174,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-16T22:32:00+0000 — kilo-tester: KSpace (Interactive UI Audit & Mode Select Fixes)**
+  - Audit: Verified canvas startup, HUD skill-bar buttons ([J], [W], [O], [T], [D], [B], [S]), quicksave [F5], and quickload [F9].
+  - Inline Fix: Realigned mode selection hitboxes and added interactive back-to-menu pointer/click dismissal to mode select screen.
+  - Status: PASS ✅ (test_app_startup.py clean, npm run build clean, size 186.2 KB < 999 KB ceiling).
+  - Queue: Advanced kilo-tester target to KPac; rotation handoff to kilo-usability.
+
 - **2026-10-16T21:32:00+0000 — kilo-soundscape: kweb://cybercafe (CyberCafe '99 FM Suite)**
   - Soundscape: Audited 5-track 6-channel YM2612 jukebox with 5:3 swing-tick groove and SPC700 stereo delay.
   - Synthesis: Upgraded UI modem chirps, DTMF tones, metallic bell earcon, and fanfare brass stinger to 2-Op FM.
@@ -197,11 +203,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Verified directory indexing across all 1999 virtual web destinations and bidirectional webring navigation.
   - Verification: npm run build clean (0 errors, 500ms); file size 560 KB (< 999 KB ceiling).
   - Queue handoff: advanced virtual_web_target to kweb://webring; dispatched next_agent to kilo-graphics.
-
-- **2026-10-16T12:55:00-07:00 — kilo-adhoc: Byte-Budget Enforcement Gate v2.0 & Drive Sync Automation**
-  - Status: PASS ✅ (107 web cartridges + 104 native EXEs strictly <= 999,000 bytes; 100% manifest & icon parity).
-  - scripts/byte_budget_gate.py: Upgraded to v2.0 auditing web HTML, native EXEs, App.jsx schema/icons, and reverse coverage.
-  - Auto-generated catalog.json: Emits { id, title, folder, webBytes, exeBytes, budgetPercent } for live fleet telemetry.
-  - KDirector & KSys: Wired to fetch live catalog.json for real-time byte telemetry, accurate app counts, and budget tracking.
-  - Google Drive & CI/CD Automation: pack_tiered_context.py automated in orchestrator post-turn and .github byte-budget-gate workflow.
-  - Verification: byte_budget_gate.py 100% PASS; pack_tiered_context.py 100% PASS; npm run build 0 errors; security_lint.py PASS.
