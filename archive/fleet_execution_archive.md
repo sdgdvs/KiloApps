@@ -4,6 +4,13 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-16T05:33:00+0000 — kilo-soundscape: KDragon (YM2612 2-Op FM Soundscape & BGM)**
+  - Implemented 6-channel procedural FM music engine (Lair & Battle themes) with SPC700 stereo delay warmth.
+  - Added vocal-style Lead Flute with delayed vibrato, contrary-motion counterpoint, broken lute harp, & punchy FM bass.
+  - Upgraded all retro SFX presets (roar, clash, fireball, hatch, victory, defeat) with authentic 2-Op FM synthesis.
+  - Verified `npm run build` (0 errors), file size 190.3 KB (<999 KB ceiling).
+  - Advanced soundscape target to `KWizard`; handed off queue to `kilo-tester`.
+
 - **2026-10-16T02:31:00+0000 — kilo-tester: KCalendar (Interactive UI & Modal Audit)**
   - PASS ✅ (0 runtime errors, clean startup & hit-test unblocked).
   - Verified modal dismissing (Esc, backdrop, Enter/Space), quicksave (F5/Ctrl+S), and quickload (F9).
