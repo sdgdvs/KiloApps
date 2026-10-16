@@ -52,11 +52,11 @@
             border-radius: 12px;
             box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 0 15px rgba(56, 189, 248, 0.1);
             width: 100%;
-            max-width: 470px;
+            max-width: 500px;
             padding: 14px 18px;
             display: flex;
             flex-direction: column;
-            gap: 10px;
+            gap: 9px;
             position: relative;
         }
 
@@ -67,6 +67,8 @@
             justify-content: space-between;
             padding-bottom: 8px;
             border-bottom: 1px solid var(--border-color);
+            flex-wrap: wrap;
+            gap: 6px;
         }
 
         .title-group {
@@ -90,7 +92,8 @@
         .header-actions {
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 6px;
+            flex-wrap: wrap;
         }
 
         .badge-status {
@@ -139,13 +142,13 @@
             100% { transform: scale(0.9); opacity: 0.8; }
         }
 
-        .btn-help {
+        .btn-help, .btn-tool {
             background: transparent;
             border: 1px solid var(--border-color);
             color: var(--text-muted);
-            padding: 4px 10px;
+            padding: 4px 8px;
             border-radius: 6px;
-            font-size: 12px;
+            font-size: 11px;
             font-weight: 600;
             cursor: pointer;
             display: flex;
@@ -154,7 +157,7 @@
             transition: all 0.2s;
         }
 
-        .btn-help:hover {
+        .btn-help:hover, .btn-tool:hover, .btn-tool.active {
             color: var(--accent);
             border-color: var(--accent);
             background: rgba(56, 189, 248, 0.1);
@@ -171,12 +174,35 @@
             border: 1px solid rgba(255, 255, 255, 0.15);
         }
 
+        /* Feature Tool Bar */
+        .feature-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 6px;
+            padding: 4px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            flex-wrap: wrap;
+        }
+
+        .feature-bar-left {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .feature-bar-right {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
         /* Visualizer Display */
         .visualizer-card {
             background: var(--bg-input);
             border: 1px solid var(--border-color);
             border-radius: 8px;
-            padding: 10px 12px;
+            padding: 9px 12px;
             display: flex;
             flex-direction: column;
             gap: 6px;
@@ -203,7 +229,7 @@
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
-            max-width: 210px;
+            max-width: 220px;
         }
 
         .station-tag {
@@ -249,7 +275,7 @@
         .canvas-container {
             position: relative;
             width: 100%;
-            height: 34px;
+            height: 38px;
             background: #080d19;
             border-radius: 4px;
             border: 1px solid #162035;
@@ -261,6 +287,133 @@
             height: 100%;
             display: block;
             cursor: pointer;
+        }
+
+        /* Equalizer Drawer Panel */
+        .eq-panel {
+            background: #0b1322;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 8px 12px;
+            display: none;
+            flex-direction: column;
+            gap: 8px;
+            animation: fadeIn 0.2s ease-in-out;
+        }
+
+        .eq-panel.open {
+            display: flex;
+        }
+
+        .eq-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--accent);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .eq-presets-row {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            flex-wrap: wrap;
+        }
+
+        .btn-eq-preset {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            color: var(--text-muted);
+            font-size: 10px;
+            border-radius: 4px;
+            padding: 3px 6px;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .btn-eq-preset:hover, .btn-eq-preset.active {
+            background: rgba(56, 189, 248, 0.15);
+            border-color: var(--accent);
+            color: var(--accent);
+            font-weight: 600;
+        }
+
+        .eq-sliders-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            text-align: center;
+        }
+
+        .eq-slider-col {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 3px;
+        }
+
+        .eq-slider-col span {
+            font-size: 10px;
+            color: var(--text-muted);
+        }
+
+        .eq-slider-col .eq-val {
+            font-family: monospace;
+            font-size: 10px;
+            color: var(--accent);
+        }
+
+        .eq-range {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100%;
+            height: 4px;
+            background: #1e293b;
+            border-radius: 2px;
+            outline: none;
+            cursor: pointer;
+        }
+
+        .eq-range::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--accent);
+            cursor: pointer;
+        }
+
+        /* Diagnostic HUD */
+        .diag-panel {
+            background: #060911;
+            border: 1px dashed #1e293b;
+            border-radius: 6px;
+            padding: 6px 10px;
+            font-family: monospace;
+            font-size: 10px;
+            color: #94a3b8;
+            display: none;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 4px 12px;
+            animation: fadeIn 0.2s ease-in-out;
+        }
+
+        .diag-panel.open {
+            display: grid;
+        }
+
+        .diag-item {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .diag-item b {
+            color: #cbd5e1;
+            font-weight: 600;
         }
 
         /* Station Presets */
@@ -528,11 +681,12 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 10px;
+            gap: 8px;
             padding-top: 2px;
+            flex-wrap: wrap;
         }
 
-        /* Non-Occluding Toast System (Top-Center Floating) */
+        /* Toast Notifications */
         .toast-container {
             position: fixed;
             top: 16px;
@@ -597,7 +751,7 @@
         .toast-warning { border-color: rgba(245, 158, 11, 0.4); }
         .toast-error { border-color: rgba(239, 68, 68, 0.4); }
 
-        /* Modal Dialog */
+        /* Modal Dialogs */
         .modal-overlay {
             position: fixed;
             top: 0;
@@ -627,7 +781,7 @@
             border-radius: 12px;
             box-shadow: 0 20px 30px rgba(0, 0, 0, 0.6);
             width: 100%;
-            max-width: 440px;
+            max-width: 480px;
             max-height: min(580px, calc(100vh - 32px));
             padding: 16px 18px;
             display: flex;
@@ -702,7 +856,7 @@
         }
 
         .shortcuts-table td:first-child {
-            width: 125px;
+            width: 135px;
             font-family: monospace;
             color: var(--accent);
             font-weight: 600;
@@ -731,6 +885,92 @@
         .btn-primary:hover {
             background: #7dd3fc;
         }
+
+        /* Directory Station List */
+        .directory-search {
+            width: 100%;
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            padding: 6px 10px;
+            border-radius: 6px;
+            font-size: 11px;
+            outline: none;
+            margin-bottom: 6px;
+        }
+
+        .directory-list {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            max-height: 320px;
+            overflow-y: auto;
+        }
+
+        .dir-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 6px 8px;
+            gap: 8px;
+        }
+
+        .dir-item:hover {
+            border-color: rgba(56, 189, 248, 0.3);
+            background: var(--bg-card-hover);
+        }
+
+        .dir-info {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            min-width: 0;
+            flex: 1;
+        }
+
+        .dir-name {
+            font-weight: 600;
+            color: #f1f5f9;
+            font-size: 12px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .dir-genre {
+            font-size: 10px;
+            color: var(--accent);
+            text-transform: uppercase;
+        }
+
+        .dir-actions {
+            display: flex;
+            gap: 4px;
+        }
+
+        .dir-btn {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            color: var(--text-muted);
+            border-radius: 4px;
+            padding: 3px 6px;
+            font-size: 10px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .dir-btn:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-4px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
     </style>
 </head>
 <body>
@@ -746,18 +986,85 @@
                     <span class="status-dot" id="statusDot"></span>
                     <span id="statusText">Ready</span>
                 </div>
-                <button class="btn-help" id="btnExport" title="Export Station Playlist & Config [.json]">
+                <button class="btn-help" id="btnExport" title="Export Station Playlist & Config [.json / .m3u / .pls]">
                     📤 Export
                 </button>
-                <button class="btn-help" id="btnImport" title="Import Station Playlist & Config [.json]">
+                <button class="btn-help" id="btnImport" title="Import Station Playlist [.json / .m3u / .pls]">
                     📥 Import
                 </button>
                 <button class="btn-help" id="btnHelp" title="Help & Shortcuts [F1]">
                     Help <span class="key-badge">F1</span>
                 </button>
-                <input type="file" id="fileImportJson" accept=".json" style="display:none;" />
+                <input type="file" id="fileImportPlaylist" accept=".json,.m3u,.m3u8,.pls,.txt" style="display:none;" />
             </div>
         </header>
+
+        <!-- Feature Tool Bar -->
+        <div class="feature-bar">
+            <div class="feature-bar-left">
+                <button class="btn-tool" id="btnToggleEq" title="Toggle 3-Band DSP Equalizer [E]">
+                    🎛️ Equalizer <span class="key-badge">E</span>
+                </button>
+                <button class="btn-tool" id="btnOpenDirectory" title="Open Curated 1999 Station Directory [B]">
+                    📚 Directory <span class="key-badge">B</span>
+                </button>
+            </div>
+            <div class="feature-bar-right">
+                <button class="btn-tool" id="btnSleepTimer" title="Cycle Sleep Timer [T]">
+                    ⏱️ Sleep: <span id="sleepTimerLabel">Off</span>
+                </button>
+                <button class="btn-tool" id="btnToggleDiag" title="Toggle Stream Diagnostics HUD [D]">
+                    📊 HUD <span class="key-badge">D</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Equalizer Drawer Panel -->
+        <div class="eq-panel" id="eqPanel">
+            <div class="eq-header">
+                <span>🎛️ 3-Band DSP Equalizer</span>
+                <div class="eq-presets-row">
+                    <button class="btn-eq-preset active" data-preset="flat">Flat</button>
+                    <button class="btn-eq-preset" data-preset="bass">Bass+</button>
+                    <button class="btn-eq-preset" data-preset="club">Club</button>
+                    <button class="btn-eq-preset" data-preset="radio99">1999 AM</button>
+                    <button class="btn-eq-preset" data-preset="lofi">Lo-Fi Tape</button>
+                    <button class="btn-eq-preset" data-preset="vocal">Vocal</button>
+                </div>
+            </div>
+            <div class="eq-sliders-grid">
+                <div class="eq-slider-col">
+                    <span>Bass 80Hz</span>
+                    <input type="range" class="eq-range" id="eqBass" min="-12" max="12" value="0" step="1">
+                    <span class="eq-val" id="eqBassVal">0 dB</span>
+                </div>
+                <div class="eq-slider-col">
+                    <span>Mid 1kHz</span>
+                    <input type="range" class="eq-range" id="eqMid" min="-12" max="12" value="0" step="1">
+                    <span class="eq-val" id="eqMidVal">0 dB</span>
+                </div>
+                <div class="eq-slider-col">
+                    <span>Treb 6kHz</span>
+                    <input type="range" class="eq-range" id="eqTreble" min="-12" max="12" value="0" step="1">
+                    <span class="eq-val" id="eqTrebleVal">0 dB</span>
+                </div>
+                <div class="eq-slider-col">
+                    <span>Preamp</span>
+                    <input type="range" class="eq-range" id="eqPreamp" min="-6" max="6" value="0" step="1">
+                    <span class="eq-val" id="eqPreampVal">0 dB</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Diagnostic Stream HUD -->
+        <div class="diag-panel" id="diagPanel">
+            <div class="diag-item"><span>State:</span> <b id="diagAudioState">STOPPED</b></div>
+            <div class="diag-item"><span>Codec / Mode:</span> <b id="diagCodec">AUTO / HTTPS</b></div>
+            <div class="diag-item"><span>Buffer Health:</span> <b id="diagBuffer">100% OK</b></div>
+            <div class="diag-item"><span>Stream Uptime:</span> <b id="diagUptime">00:00:00</b></div>
+            <div class="diag-item"><span>Est. Data Recv:</span> <b id="diagData">0.0 MB</b></div>
+            <div class="diag-item"><span>EQ Status:</span> <b id="diagEqStatus">ACTIVE (WebAudio)</b></div>
+        </div>
 
         <!-- Visualizer & Now Playing -->
         <div class="visualizer-card">
@@ -835,16 +1142,18 @@
         <footer class="footer-hint">
             <span>[Space] Play</span>
             <span>[1-6] Presets</span>
-            <span>[F5] Save</span>
-            <span>[F9] Load</span>
-            <span>[M] Mute</span>
+            <span>[E] EQ</span>
+            <span>[B] Directory</span>
+            <span>[T] Sleep</span>
+            <span>[D] HUD</span>
+            <span>[F5/F9] Save/Load</span>
             <span>[V] Viz</span>
             <span>[F1] Help</span>
         </footer>
     </div>
 
     <!-- Hidden Audio Element -->
-    <audio id="audioElement" preload="none"></audio>
+    <audio id="audioElement" preload="none" crossorigin="anonymous"></audio>
 
     <!-- Non-Occluding Toast Notifications Container -->
     <div class="toast-container" id="toastContainer"></div>
@@ -859,7 +1168,7 @@
                 <button class="btn-modal-close" id="btnCloseModal" title="Close [Esc]">×</button>
             </div>
             <div class="modal-content">
-                <p>KRadio streams live synthwave, ambient, lo-fi, and internet radio stations in real time inside KiloOS with HiDPI retro spectrum visualization.</p>
+                <p>KRadio streams live synthwave, ambient, lo-fi, and internet radio stations in real time inside KiloOS with HiDPI retro spectrum visualization and 3-band DSP equalizer.</p>
                 
                 <table class="shortcuts-table">
                     <tr>
@@ -891,6 +1200,22 @@
                         <td>Cycle previous / next preset</td>
                     </tr>
                     <tr>
+                        <td>E</td>
+                        <td>Toggle 3-Band DSP Equalizer panel</td>
+                    </tr>
+                    <tr>
+                        <td>B</td>
+                        <td>Open Curated 1999 Station Directory</td>
+                    </tr>
+                    <tr>
+                        <td>T</td>
+                        <td>Cycle Sleep Timer (15m, 30m, 45m, 60m, Off)</td>
+                    </tr>
+                    <tr>
+                        <td>D</td>
+                        <td>Toggle Stream Diagnostics HUD</td>
+                    </tr>
+                    <tr>
                         <td>M</td>
                         <td>Mute / Unmute audio output</td>
                     </tr>
@@ -903,8 +1228,20 @@
                         <td>Cycle visualizer style (LED / CRT / VU)</td>
                     </tr>
                     <tr>
-                        <td>Alt + E / Alt + I</td>
-                        <td>Export / Import station playlist [.json]</td>
+                        <td>Alt + E</td>
+                        <td>Export playlist [.json]</td>
+                    </tr>
+                    <tr>
+                        <td>Alt + M</td>
+                        <td>Export Winamp Playlist [.m3u]</td>
+                    </tr>
+                    <tr>
+                        <td>Alt + P</td>
+                        <td>Export Shoutcast Playlist [.pls]</td>
+                    </tr>
+                    <tr>
+                        <td>Alt + I</td>
+                        <td>Import playlist config [.json, .m3u, .pls]</td>
                     </tr>
                     <tr>
                         <td>Enter</td>
@@ -920,8 +1257,10 @@
                     </tr>
                 </table>
                 <div style="display:flex; gap:6px; flex-wrap:wrap; margin-top:4px;">
-                    <button class="btn-help" id="btnModalExport" style="flex:1; justify-content:center;">📤 Export JSON</button>
-                    <button class="btn-help" id="btnModalImport" style="flex:1; justify-content:center;">📥 Import JSON</button>
+                    <button class="btn-help" id="btnModalExportJson" style="flex:1; justify-content:center;">📤 Export JSON</button>
+                    <button class="btn-help" id="btnModalExportM3u" style="flex:1; justify-content:center;">📑 Export M3U</button>
+                    <button class="btn-help" id="btnModalExportPls" style="flex:1; justify-content:center;">📻 Export PLS</button>
+                    <button class="btn-help" id="btnModalImport" style="flex:1; justify-content:center;">📥 Import</button>
                     <button class="btn-help" id="btnModalReset" style="flex:1; justify-content:center;">↺ Reset Defaults</button>
                 </div>
                 <p style="font-size: 11px; color: var(--text-muted); margin-top:2px;">
@@ -930,6 +1269,27 @@
             </div>
             <div class="modal-footer">
                 <button class="btn-primary" id="btnGotIt">Got It</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Station Directory Modal -->
+    <div class="modal-overlay" id="directoryModal">
+        <div class="modal-card">
+            <div class="modal-header">
+                <div class="modal-title">
+                    <span>📚</span> Curated 1999 Station Directory
+                </div>
+                <button class="btn-modal-close" id="btnCloseDirectory" title="Close [Esc]">×</button>
+            </div>
+            <div class="modal-content">
+                <input type="text" class="directory-search" id="directorySearch" placeholder="Filter by station name or genre (e.g. ambient, synth, lo-fi)..." spellcheck="false">
+                <div class="directory-list" id="directoryList">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-primary" id="btnDirectoryClose">Close</button>
             </div>
         </div>
     </div>
@@ -945,6 +1305,28 @@
             { id: 6, name: 'Space Station', genre: 'Spacemusic', url: 'https://ice1.somafm.com/spacestation-128-mp3' }
         ];
 
+        // Expanded Curated 1999 Station Library
+        const STATION_DIRECTORY = [
+            { name: 'Subspace Synthwave', genre: 'Synthwave', url: 'https://radio.erb.pw/public/subspace' },
+            { name: 'Groove Salad Chillout', genre: 'Ambient', url: 'https://ice2.somafm.com/groovesalad-128-mp3' },
+            { name: 'Nightwave Plaza Vapor', genre: 'Vaporwave', url: 'https://radio.plaza.one/mp3' },
+            { name: 'DEF CON Hacker Radio', genre: 'Cyber Ambient', url: 'https://ice2.somafm.com/defcon-128-mp3' },
+            { name: 'Secret Agent 007 Spy', genre: 'Vintage Lounge', url: 'https://ice1.somafm.com/secretagent-128-mp3' },
+            { name: 'Space Station Deep Space', genre: 'Space Ambient', url: 'https://ice1.somafm.com/spacestation-128-mp3' },
+            { name: 'Drone Zone Atmospheric', genre: 'Dark Ambient', url: 'https://ice1.somafm.com/dronezone-128-mp3' },
+            { name: 'Suburban Lo-Fi Beats', genre: 'Lo-Fi HipHop', url: 'https://ice2.somafm.com/suburbsofgoa-128-mp3' },
+            { name: 'Digitalis Indie Lounge', genre: 'Electronica', url: 'https://ice1.somafm.com/digitalis-128-mp3' },
+            { name: 'Lush Vocal Chill', genre: 'Downtempo', url: 'https://ice1.somafm.com/lush-128-mp3' },
+            { name: 'Boot Liquor Americana', genre: 'Roots / Folk', url: 'https://ice1.somafm.com/bootliquor-128-mp3' },
+            { name: 'Beat Blender House', genre: 'Deep House', url: 'https://ice1.somafm.com/beatblender-128-mp3' },
+            { name: 'Fluid Electronic Beats', genre: 'Future Bass', url: 'https://ice1.somafm.com/fluid-128-mp3' },
+            { name: 'Sonic Universe Avant-Garde', genre: 'Nu Jazz', url: 'https://ice1.somafm.com/sonicuniverse-128-mp3' },
+            { name: 'Illinois Street Lounge', genre: 'Exotica Lounge', url: 'https://ice1.somafm.com/illstreet-128-mp3' },
+            { name: 'Underground 80s Wave', genre: 'Post-Punk / New Wave', url: 'https://ice1.somafm.com/u80s-128-mp3' },
+            { name: 'Seven Inch Soul', genre: 'Vintage Vinyl 45s', url: 'https://ice1.somafm.com/sevensoul-128-mp3' },
+            { name: '10.19.99.4 Subcarrier Anomaly', genre: 'ARG Carrier', url: 'https://10.19.99.4/subcarrier' }
+        ];
+
         let PRESETS = JSON.parse(JSON.stringify(DEFAULT_PRESETS));
 
         // Elements
@@ -958,8 +1340,10 @@
         const btnLoad = document.getElementById('btnLoad');
         const btnExport = document.getElementById('btnExport');
         const btnImport = document.getElementById('btnImport');
-        const fileImportJson = document.getElementById('fileImportJson');
-        const btnModalExport = document.getElementById('btnModalExport');
+        const fileImportPlaylist = document.getElementById('fileImportPlaylist');
+        const btnModalExportJson = document.getElementById('btnModalExportJson');
+        const btnModalExportM3u = document.getElementById('btnModalExportM3u');
+        const btnModalExportPls = document.getElementById('btnModalExportPls');
         const btnModalImport = document.getElementById('btnModalImport');
         const btnModalReset = document.getElementById('btnModalReset');
         const btnTune = document.getElementById('btnTune');
@@ -978,9 +1362,40 @@
         const helpModal = document.getElementById('helpModal');
         const btnCloseModal = document.getElementById('btnCloseModal');
         const btnGotIt = document.getElementById('btnGotIt');
+        const directoryModal = document.getElementById('directoryModal');
+        const btnCloseDirectory = document.getElementById('btnCloseDirectory');
+        const btnDirectoryClose = document.getElementById('btnDirectoryClose');
+        const btnOpenDirectory = document.getElementById('btnOpenDirectory');
+        const directorySearch = document.getElementById('directorySearch');
+        const directoryList = document.getElementById('directoryList');
+        const btnToggleEq = document.getElementById('btnToggleEq');
+        const eqPanel = document.getElementById('eqPanel');
+        const btnToggleDiag = document.getElementById('btnToggleDiag');
+        const diagPanel = document.getElementById('diagPanel');
+        const btnSleepTimer = document.getElementById('btnSleepTimer');
+        const sleepTimerLabel = document.getElementById('sleepTimerLabel');
         const btnVizMode = document.getElementById('btnVizMode');
         const canvas = document.getElementById('visualizerCanvas');
         const ctx = canvas.getContext('2d');
+
+        // Equalizer Elements
+        const eqBass = document.getElementById('eqBass');
+        const eqMid = document.getElementById('eqMid');
+        const eqTreble = document.getElementById('eqTreble');
+        const eqPreamp = document.getElementById('eqPreamp');
+        const eqBassVal = document.getElementById('eqBassVal');
+        const eqMidVal = document.getElementById('eqMidVal');
+        const eqTrebleVal = document.getElementById('eqTrebleVal');
+        const eqPreampVal = document.getElementById('eqPreampVal');
+        const eqPresetBtns = document.querySelectorAll('.btn-eq-preset');
+
+        // Diagnostic HUD Elements
+        const diagAudioState = document.getElementById('diagAudioState');
+        const diagCodec = document.getElementById('diagCodec');
+        const diagBuffer = document.getElementById('diagBuffer');
+        const diagUptime = document.getElementById('diagUptime');
+        const diagData = document.getElementById('diagData');
+        const diagEqStatus = document.getElementById('diagEqStatus');
 
         let activePresetIndex = 0;
         let isPlaying = false;
@@ -997,12 +1412,218 @@
         let vizMode = 0;
         let dpr = window.devicePixelRatio || 1;
 
+        // Web Audio Context & DSP Biquad Filters
+        let audioCtx = null;
+        let sourceNode = null;
+        let bassFilter = null;
+        let midFilter = null;
+        let trebleFilter = null;
+        let preampGain = null;
+        let isAudioGraphSetup = false;
+
         // Subcarrier Anomaly Generator (Diegetic ARG Audio Detail)
         let subcarrierCtx = null;
         let subcarrierOsc = null;
         let subcarrierGain = null;
         let isSubcarrierActive = false;
 
+        // Diagnostic Metrics
+        let streamStartTime = null;
+        let estimatedBytesReceived = 0;
+        let uptimeTimer = null;
+
+        // Sleep Timer
+        const SLEEP_INTERVALS = [0, 15, 30, 45, 60];
+        let sleepTimerIdx = 0;
+        let sleepTimeoutId = null;
+        let sleepTargetTimestamp = null;
+        let sleepTickTimer = null;
+
+        // EQ Presets definition
+        const EQ_PRESETS = {
+            flat: { bass: 0, mid: 0, treble: 0, preamp: 0 },
+            bass: { bass: 7, mid: -1, treble: 2, preamp: 0 },
+            club: { bass: 5, mid: 2, treble: 4, preamp: 1 },
+            radio99: { bass: -8, mid: 6, treble: -4, preamp: 2 },
+            lofi: { bass: 4, mid: -2, treble: -6, preamp: -1 },
+            vocal: { bass: -3, mid: 5, treble: 3, preamp: 0 }
+        };
+
+        function setupAudioGraph() {
+            if (isAudioGraphSetup) return;
+            try {
+                const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+                if (!AudioContextClass) return;
+                audioCtx = new AudioContextClass();
+
+                // Create Biquad EQ Filters
+                bassFilter = audioCtx.createBiquadFilter();
+                bassFilter.type = 'lowshelf';
+                bassFilter.frequency.value = 80;
+
+                midFilter = audioCtx.createBiquadFilter();
+                midFilter.type = 'peaking';
+                midFilter.frequency.value = 1000;
+                midFilter.Q.value = 1.0;
+
+                trebleFilter = audioCtx.createBiquadFilter();
+                trebleFilter.type = 'highshelf';
+                trebleFilter.frequency.value = 6000;
+
+                preampGain = audioCtx.createGain();
+
+                // Connect Media Element Source
+                sourceNode = audioCtx.createMediaElementSource(audio);
+                sourceNode.connect(bassFilter);
+                bassFilter.connect(midFilter);
+                midFilter.connect(trebleFilter);
+                trebleFilter.connect(preampGain);
+                preampGain.connect(audioCtx.destination);
+
+                isAudioGraphSetup = true;
+                applyEqValues();
+                diagEqStatus.textContent = 'ONLINE (WebAudio)';
+            } catch (e) {
+                console.warn('Audio graph setup skipped or CORS restricted:', e);
+                diagEqStatus.textContent = 'PASSTHROUGH (CORS)';
+            }
+        }
+
+        function applyEqValues() {
+            const b = parseFloat(eqBass.value);
+            const m = parseFloat(eqMid.value);
+            const t = parseFloat(eqTreble.value);
+            const p = parseFloat(eqPreamp.value);
+
+            eqBassVal.textContent = (b > 0 ? '+' : '') + b + ' dB';
+            eqMidVal.textContent = (m > 0 ? '+' : '') + m + ' dB';
+            eqTrebleVal.textContent = (t > 0 ? '+' : '') + t + ' dB';
+            eqPreampVal.textContent = (p > 0 ? '+' : '') + p + ' dB';
+
+            if (bassFilter && midFilter && trebleFilter && preampGain && audioCtx) {
+                bassFilter.gain.setValueAtTime(b, audioCtx.currentTime);
+                midFilter.gain.setValueAtTime(m, audioCtx.currentTime);
+                trebleFilter.gain.setValueAtTime(t, audioCtx.currentTime);
+                // Preamp dB to linear gain
+                const linearPreamp = Math.pow(10, p / 20);
+                preampGain.gain.setValueAtTime(linearPreamp, audioCtx.currentTime);
+            }
+
+            // Persist EQ settings
+            safeSetStorage('kradio_eq_settings', JSON.stringify({ bass: b, mid: m, treble: t, preamp: p }));
+        }
+
+        function setEqPreset(presetKey) {
+            const p = EQ_PRESETS[presetKey];
+            if (!p) return;
+            eqBass.value = p.bass;
+            eqMid.value = p.mid;
+            eqTreble.value = p.treble;
+            eqPreamp.value = p.preamp;
+
+            eqPresetBtns.forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.preset === presetKey);
+            });
+
+            applyEqValues();
+            showToast(`EQ Preset: ${presetKey.toUpperCase()}`, 'info', 1400);
+        }
+
+        eqBass.addEventListener('input', () => {
+            eqPresetBtns.forEach(btn => btn.classList.remove('active'));
+            applyEqValues();
+        });
+        eqMid.addEventListener('input', () => {
+            eqPresetBtns.forEach(btn => btn.classList.remove('active'));
+            applyEqValues();
+        });
+        eqTreble.addEventListener('input', () => {
+            eqPresetBtns.forEach(btn => btn.classList.remove('active'));
+            applyEqValues();
+        });
+        eqPreamp.addEventListener('input', () => {
+            eqPresetBtns.forEach(btn => btn.classList.remove('active'));
+            applyEqValues();
+        });
+
+        eqPresetBtns.forEach(btn => {
+            btn.addEventListener('click', () => setEqPreset(btn.dataset.preset));
+        });
+
+        btnToggleEq.addEventListener('click', () => {
+            const isOpen = eqPanel.classList.toggle('open');
+            btnToggleEq.classList.toggle('active', isOpen);
+            if (isOpen && audioCtx && audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        });
+
+        btnToggleDiag.addEventListener('click', () => {
+            const isOpen = diagPanel.classList.toggle('open');
+            btnToggleDiag.classList.toggle('active', isOpen);
+        });
+
+        // Sleep Timer Logic
+        function cycleSleepTimer() {
+            sleepTimerIdx = (sleepTimerIdx + 1) % SLEEP_INTERVALS.length;
+            const minutes = SLEEP_INTERVALS[sleepTimerIdx];
+
+            if (sleepTimeoutId) {
+                clearTimeout(sleepTimeoutId);
+                sleepTimeoutId = null;
+            }
+            if (sleepTickTimer) {
+                clearInterval(sleepTickTimer);
+                sleepTickTimer = null;
+            }
+
+            if (minutes === 0) {
+                sleepTimerLabel.textContent = 'Off';
+                btnSleepTimer.classList.remove('active');
+                showToast('⏱️ Sleep Timer disabled', 'info', 1400);
+            } else {
+                btnSleepTimer.classList.add('active');
+                sleepTargetTimestamp = Date.now() + minutes * 60 * 1000;
+                updateSleepCountdown();
+                sleepTickTimer = setInterval(updateSleepCountdown, 1000);
+
+                sleepTimeoutId = setTimeout(() => {
+                    fadeAndStop();
+                    sleepTimerIdx = 0;
+                    sleepTimerLabel.textContent = 'Off';
+                    btnSleepTimer.classList.remove('active');
+                    clearInterval(sleepTickTimer);
+                    showToast('💤 Sleep Timer triggered: Goodnight', 'info', 3000);
+                }, minutes * 60 * 1000);
+
+                showToast(`⏱️ Sleep Timer set for ${minutes} minutes`, 'success', 1800);
+            }
+        }
+
+        function updateSleepCountdown() {
+            if (!sleepTargetTimestamp) return;
+            const remaining = Math.max(0, Math.ceil((sleepTargetTimestamp - Date.now()) / 1000));
+            const mins = Math.floor(remaining / 60);
+            const secs = remaining % 60;
+            sleepTimerLabel.textContent = `${mins}m ${secs < 10 ? '0' : ''}${secs}s`;
+        }
+
+        function fadeAndStop() {
+            let cur = parseInt(volumeSlider.value, 10);
+            const interval = setInterval(() => {
+                cur -= 5;
+                if (cur <= 0) {
+                    clearInterval(interval);
+                    stopStream(false);
+                } else {
+                    updateVolume(cur);
+                }
+            }, 100);
+        }
+
+        btnSleepTimer.addEventListener('click', cycleSleepTimer);
+
+        // Subcarrier Anomaly Generator
         function startSubcarrier() {
             stopSubcarrier();
             try {
@@ -1052,9 +1673,7 @@
             vizMode = (vizMode + 1) % VIZ_MODES.length;
             btnVizMode.textContent = VIZ_MODES[vizMode];
             showToast(`Visualizer: ${VIZ_MODES[vizMode]}`, 'info', 1400);
-            try {
-                localStorage.setItem('kradio_viz_mode', String(vizMode));
-            } catch (e) {}
+            safeSetStorage('kradio_viz_mode', String(vizMode));
         }
         btnVizMode.addEventListener('click', cycleVizMode);
         canvas.addEventListener('click', cycleVizMode);
@@ -1083,7 +1702,6 @@
                 let target = 0.08;
                 if (active) {
                     if (isSubcarrierActive) {
-                        // Narrow anomaly spike around carrier
                         const dist = Math.abs(i - 16);
                         target = dist <= 2 ? (0.9 - dist * 0.3) : 0.08 + Math.random() * 0.08;
                     } else {
@@ -1095,7 +1713,6 @@
                 }
                 bandLevels[i] += (target - bandLevels[i]) * 0.28;
 
-                // Peak hold decay
                 if (bandLevels[i] >= peakLevels[i]) {
                     peakLevels[i] = bandLevels[i];
                     peakDecay[i] = 0;
@@ -1123,9 +1740,9 @@
                         const isLit = s < activeSegments;
 
                         if (isLit) {
-                            if (s >= 6) ctx.fillStyle = '#ef4444'; // Red peak
-                            else if (s >= 4) ctx.fillStyle = '#f59e0b'; // Amber mid
-                            else ctx.fillStyle = '#38bdf8'; // Cyan lower
+                            if (s >= 6) ctx.fillStyle = '#ef4444';
+                            else if (s >= 4) ctx.fillStyle = '#f59e0b';
+                            else ctx.fillStyle = '#38bdf8';
                             ctx.shadowColor = ctx.fillStyle;
                             ctx.shadowBlur = 3;
                         } else {
@@ -1241,11 +1858,82 @@
             showToast('↺ Station presets reset to factory defaults', 'info', 2200);
         }
 
-        // JSON Station Export
+        // Station Directory UI
+        function renderDirectory(filter = '') {
+            directoryList.innerHTML = '';
+            const f = filter.toLowerCase().trim();
+            const filtered = STATION_DIRECTORY.filter(s => 
+                !f || s.name.toLowerCase().includes(f) || s.genre.toLowerCase().includes(f)
+            );
+
+            if (filtered.length === 0) {
+                directoryList.innerHTML = '<div style="text-align:center; padding:12px; color:var(--text-muted);">No matching stations found.</div>';
+                return;
+            }
+
+            filtered.forEach(s => {
+                const item = document.createElement('div');
+                item.className = 'dir-item';
+                item.innerHTML = `
+                    <div class="dir-info">
+                        <div class="dir-name">${s.name}</div>
+                        <div class="dir-genre">${s.genre}</div>
+                    </div>
+                    <div class="dir-actions">
+                        <button class="dir-btn" title="Tune immediately">▶ Tune</button>
+                        <button class="dir-btn" title="Set as Preset">Set Preset</button>
+                    </div>
+                `;
+                const [btnT, btnP] = item.querySelectorAll('.dir-btn');
+                btnT.onclick = () => {
+                    stationUrl.value = s.url;
+                    displayStation.textContent = s.name;
+                    stationTag.textContent = s.genre;
+                    displayBitrate.textContent = 'Directory Stream';
+                    closeDirectory();
+                    playStream();
+                };
+                btnP.onclick = () => {
+                    const slot = prompt(`Assign "${s.name}" to Preset slot (1-6):`, "1");
+                    if (slot && slot >= '1' && slot <= '6') {
+                        const idx = parseInt(slot, 10) - 1;
+                        PRESETS[idx] = { id: idx + 1, name: s.name, genre: s.genre, url: s.url };
+                        safeSetStorage('kradio_custom_presets', JSON.stringify(PRESETS));
+                        renderPresets();
+                        showToast(`⭐ Assigned to Preset [${slot}]!`, 'success', 2000);
+                    }
+                };
+                directoryList.appendChild(item);
+            });
+        }
+
+        directorySearch.addEventListener('input', (e) => {
+            renderDirectory(e.target.value);
+        });
+
+        function openDirectory() {
+            directoryModal.classList.add('active');
+            directorySearch.value = '';
+            renderDirectory();
+            directorySearch.focus();
+        }
+
+        function closeDirectory() {
+            directoryModal.classList.remove('active');
+        }
+
+        btnOpenDirectory.addEventListener('click', openDirectory);
+        btnCloseDirectory.addEventListener('click', closeDirectory);
+        btnDirectoryClose.addEventListener('click', closeDirectory);
+        directoryModal.addEventListener('click', (e) => {
+            if (e.target === directoryModal) closeDirectory();
+        });
+
+        // Multi-Format Export Functions (JSON, M3U, PLS)
         function exportJsonConfig() {
             const data = {
                 app: "KRadio",
-                version: "1.0",
+                version: "2.0",
                 exportedAt: new Date().toISOString(),
                 presets: PRESETS,
                 activePresetIndex: activePresetIndex,
@@ -1257,67 +1945,212 @@
                 },
                 volume: parseInt(volumeSlider.value, 10),
                 isMuted: isMuted,
-                vizMode: vizMode
+                vizMode: vizMode,
+                eq: {
+                    bass: parseFloat(eqBass.value),
+                    mid: parseFloat(eqMid.value),
+                    treble: parseFloat(eqTreble.value),
+                    preamp: parseFloat(eqPreamp.value)
+                }
             };
-            const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+            downloadFile(`kradio_stations_${Date.now()}.json`, JSON.stringify(data, null, 2), "application/json");
+            showToast("📤 Exported JSON configuration", "success", 2500);
+        }
+
+        function exportM3uPlaylist() {
+            let m3u = '#EXTM3U\n';
+            PRESETS.forEach(p => {
+                m3u += `#EXTINF:-1,${p.name} (${p.genre})\n${p.url}\n`;
+            });
+            downloadFile(`kradio_playlist_${Date.now()}.m3u`, m3u, "audio/x-mpegurl");
+            showToast("📑 Exported Winamp M3U playlist", "success", 2500);
+        }
+
+        function exportPlsPlaylist() {
+            let pls = '[playlist]\n';
+            PRESETS.forEach((p, idx) => {
+                const i = idx + 1;
+                pls += `File${i}=${p.url}\nTitle${i}=${p.name}\nLength${i}=-1\n`;
+            });
+            pls += `NumberOfEntries=${PRESETS.length}\nVersion=2\n`;
+            downloadFile(`kradio_playlist_${Date.now()}.pls`, pls, "audio/x-scpls");
+            showToast("📻 Exported Shoutcast PLS playlist", "success", 2500);
+        }
+
+        function downloadFile(filename, content, type) {
+            const blob = new Blob([content], { type: type });
             const url = URL.createObjectURL(blob);
             const a = document.createElement("a");
             a.href = url;
-            a.download = `kradio_stations_${Date.now()}.json`;
+            a.download = filename;
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
-            showToast("📤 Station playlist & settings exported [.json]", "success", 2500);
         }
 
-        // JSON Station Import
-        function importJsonConfig(file) {
+        // Multi-Format Import (JSON, M3U, PLS)
+        function importPlaylistFile(file) {
             if (!file) return;
             const reader = new FileReader();
-            reader.onload = (e) => {
-                try {
-                    const data = JSON.parse(e.target.result);
-                    const incomingPresets = Array.isArray(data) ? data : data.presets;
-                    if (Array.isArray(incomingPresets) && incomingPresets.length > 0) {
-                        PRESETS.length = 0;
-                        incomingPresets.slice(0, 6).forEach((p, idx) => {
-                            PRESETS.push({
-                                id: idx + 1,
-                                name: String(p.name || `Station ${idx + 1}`).substring(0, 32),
-                                genre: String(p.genre || 'STREAM').substring(0, 20),
-                                url: String(p.url || '').trim()
-                            });
-                        });
-                        safeSetStorage('kradio_custom_presets', JSON.stringify(PRESETS));
-                        renderPresets();
-                    }
+            const lowerName = file.name.toLowerCase();
 
-                    if (typeof data.volume === 'number' && !isNaN(data.volume)) {
-                        updateVolume(data.volume);
+            reader.onload = (e) => {
+                const text = e.target.result;
+                try {
+                    if (lowerName.endsWith('.json') || text.trim().startsWith('{') || text.trim().startsWith('[')) {
+                        parseJsonPlaylist(text);
+                    } else if (lowerName.endsWith('.m3u') || lowerName.endsWith('.m3u8') || text.includes('#EXTM3U')) {
+                        parseM3uPlaylist(text);
+                    } else if (lowerName.endsWith('.pls') || text.toLowerCase().includes('[playlist]')) {
+                        parsePlsPlaylist(text);
+                    } else {
+                        // Fallback line-separated URLs
+                        parseLineUrls(text);
                     }
-                    if (typeof data.vizMode === 'number' && data.vizMode >= 0 && data.vizMode < VIZ_MODES.length) {
-                        vizMode = data.vizMode;
-                        btnVizMode.textContent = VIZ_MODES[vizMode];
-                        safeSetStorage('kradio_viz_mode', String(vizMode));
-                    }
-                    if (data.currentStation && data.currentStation.url) {
-                        stationUrl.value = data.currentStation.url;
-                        displayStation.textContent = data.currentStation.name || 'Imported Stream';
-                        stationTag.textContent = data.currentStation.tag || 'CUSTOM';
-                        displayBitrate.textContent = data.currentStation.bitrate || 'Imported';
-                        safeSetStorage('kradio_station_url', data.currentStation.url);
-                    }
-                    showToast("📥 Successfully imported station playlist!", "success", 2500);
                 } catch (err) {
-                    console.error("Failed to parse JSON config", err);
-                    showToast("❌ Invalid or corrupted station JSON file", "error", 2800);
+                    console.error("Failed to parse playlist file", err);
+                    showToast("❌ Invalid or unsupported playlist file", "error", 2800);
                 }
             };
             reader.readAsText(file);
         }
 
-        // Storage Helpers (Catching quota errors gracefully)
+        function parseJsonPlaylist(text) {
+            const data = JSON.parse(text);
+            const incomingPresets = Array.isArray(data) ? data : data.presets;
+            if (Array.isArray(incomingPresets) && incomingPresets.length > 0) {
+                PRESETS.length = 0;
+                incomingPresets.slice(0, 6).forEach((p, idx) => {
+                    PRESETS.push({
+                        id: idx + 1,
+                        name: String(p.name || `Station ${idx + 1}`).substring(0, 32),
+                        genre: String(p.genre || 'STREAM').substring(0, 20),
+                        url: String(p.url || '').trim()
+                    });
+                });
+                safeSetStorage('kradio_custom_presets', JSON.stringify(PRESETS));
+                renderPresets();
+            }
+
+            if (data.eq) {
+                if (typeof data.eq.bass === 'number') eqBass.value = data.eq.bass;
+                if (typeof data.eq.mid === 'number') eqMid.value = data.eq.mid;
+                if (typeof data.eq.treble === 'number') eqTreble.value = data.eq.treble;
+                if (typeof data.eq.preamp === 'number') eqPreamp.value = data.eq.preamp;
+                applyEqValues();
+            }
+
+            if (typeof data.volume === 'number' && !isNaN(data.volume)) {
+                updateVolume(data.volume);
+            }
+            if (typeof data.vizMode === 'number' && data.vizMode >= 0 && data.vizMode < VIZ_MODES.length) {
+                vizMode = data.vizMode;
+                btnVizMode.textContent = VIZ_MODES[vizMode];
+                safeSetStorage('kradio_viz_mode', String(vizMode));
+            }
+            if (data.currentStation && data.currentStation.url) {
+                stationUrl.value = data.currentStation.url;
+                displayStation.textContent = data.currentStation.name || 'Imported Stream';
+                stationTag.textContent = data.currentStation.tag || 'CUSTOM';
+                displayBitrate.textContent = data.currentStation.bitrate || 'Imported';
+                safeSetStorage('kradio_station_url', data.currentStation.url);
+            }
+            showToast("📥 Successfully imported JSON configuration!", "success", 2500);
+        }
+
+        function parseM3uPlaylist(text) {
+            const lines = text.split('\n');
+            const items = [];
+            let currentTitle = '';
+
+            for (let line of lines) {
+                line = line.trim();
+                if (!line) continue;
+                if (line.startsWith('#EXTINF:')) {
+                    const commaIdx = line.indexOf(',');
+                    currentTitle = commaIdx !== -1 ? line.substring(commaIdx + 1).trim() : 'Stream';
+                } else if (!line.startsWith('#')) {
+                    items.push({
+                        name: currentTitle || 'Stream ' + (items.length + 1),
+                        genre: 'M3U',
+                        url: line
+                    });
+                    currentTitle = '';
+                }
+            }
+
+            if (items.length > 0) {
+                populatePresetsFromImport(items);
+                showToast(`📥 Imported ${items.length} stations from M3U!`, "success", 2500);
+            } else {
+                showToast("⚠️ No valid audio streams in M3U", "warning", 2500);
+            }
+        }
+
+        function parsePlsPlaylist(text) {
+            const lines = text.split('\n');
+            const map = {};
+            for (let line of lines) {
+                line = line.trim();
+                if (line.includes('=')) {
+                    const [k, v] = line.split('=');
+                    map[k.trim().toLowerCase()] = v.trim();
+                }
+            }
+
+            const items = [];
+            const count = parseInt(map['numberofentries'] || '6', 10);
+            for (let i = 1; i <= Math.min(count, 12); i++) {
+                const file = map[`file${i}`];
+                if (file) {
+                    items.push({
+                        name: map[`title${i}`] || `Station ${i}`,
+                        genre: 'PLS',
+                        url: file
+                    });
+                }
+            }
+
+            if (items.length > 0) {
+                populatePresetsFromImport(items);
+                showToast(`📥 Imported ${items.length} stations from PLS!`, "success", 2500);
+            } else {
+                showToast("⚠️ No valid audio streams in PLS", "warning", 2500);
+            }
+        }
+
+        function parseLineUrls(text) {
+            const lines = text.split('\n').map(l => l.trim()).filter(l => l.startsWith('http'));
+            if (lines.length > 0) {
+                const items = lines.map((url, idx) => ({
+                    name: `Stream ${idx + 1}`,
+                    genre: 'URL',
+                    url: url
+                }));
+                populatePresetsFromImport(items);
+                showToast(`📥 Imported ${items.length} stream URLs!`, "success", 2500);
+            } else {
+                showToast("⚠️ No valid URLs found in file", "warning", 2500);
+            }
+        }
+
+        function populatePresetsFromImport(items) {
+            PRESETS.length = 0;
+            items.slice(0, 6).forEach((item, idx) => {
+                PRESETS.push({
+                    id: idx + 1,
+                    name: item.name.substring(0, 32),
+                    genre: item.genre.substring(0, 20),
+                    url: item.url
+                });
+            });
+            safeSetStorage('kradio_custom_presets', JSON.stringify(PRESETS));
+            selectPreset(0, false);
+            renderPresets();
+        }
+
+        // Storage Helpers
         function safeGetStorage(key) {
             try { return localStorage.getItem(key); } catch (e) { return null; }
         }
@@ -1331,7 +2164,7 @@
             }
         }
 
-        // Full App State Persistence (Pass 5: Quicksave F5 & Quickload F9)
+        // Full App State Persistence (Quicksave F5 & Quickload F9)
         function quicksaveState() {
             const state = {
                 activePresetIndex: activePresetIndex,
@@ -1343,6 +2176,12 @@
                 isMuted: isMuted,
                 vizMode: vizMode,
                 isPlaying: isPlaying || isSubcarrierActive,
+                eq: {
+                    bass: parseFloat(eqBass.value),
+                    mid: parseFloat(eqMid.value),
+                    treble: parseFloat(eqTreble.value),
+                    preamp: parseFloat(eqPreamp.value)
+                },
                 timestamp: Date.now()
             };
             const ok = safeSetStorage('kradio_quicksave', JSON.stringify(state));
@@ -1364,14 +2203,20 @@
                 const state = JSON.parse(raw);
                 safeSetStorage('kradio_tutorialSeen', '1');
 
-                // Restore visualizer mode
                 if (typeof state.vizMode === 'number' && state.vizMode >= 0 && state.vizMode < VIZ_MODES.length) {
                     vizMode = state.vizMode;
                     btnVizMode.textContent = VIZ_MODES[vizMode];
                     safeSetStorage('kradio_viz_mode', String(vizMode));
                 }
 
-                // Restore volume
+                if (state.eq) {
+                    if (typeof state.eq.bass === 'number') eqBass.value = state.eq.bass;
+                    if (typeof state.eq.mid === 'number') eqMid.value = state.eq.mid;
+                    if (typeof state.eq.treble === 'number') eqTreble.value = state.eq.treble;
+                    if (typeof state.eq.preamp === 'number') eqPreamp.value = state.eq.preamp;
+                    applyEqValues();
+                }
+
                 if (typeof state.volume === 'number') {
                     updateVolume(state.volume);
                 }
@@ -1382,7 +2227,6 @@
                     volumePercent.textContent = '0%';
                 }
 
-                // Restore preset or custom URL
                 if (typeof state.activePresetIndex === 'number' && state.activePresetIndex >= 0 && state.activePresetIndex < PRESETS.length) {
                     selectPreset(state.activePresetIndex, false);
                 } else {
@@ -1396,7 +2240,6 @@
                     if (state.stationUrl) safeSetStorage('kradio_station_url', state.stationUrl);
                 }
 
-                // Restore playback
                 if (state.isPlaying) {
                     playStream();
                 } else {
@@ -1412,7 +2255,6 @@
 
         // Non-Occluding Toast Notification System
         function showToast(message, type = 'info', duration = 2800) {
-            // Dismiss prior toasts immediately so toasts never stack or occlude buttons
             while (toastContainer.firstChild) {
                 toastContainer.removeChild(toastContainer.firstChild);
             }
@@ -1441,7 +2283,6 @@
             };
 
             toast.onclick = dismiss;
-
             toastContainer.appendChild(toast);
 
             requestAnimationFrame(() => {
@@ -1455,10 +2296,26 @@
             }, duration);
         }
 
-        // Status update
+        // Status and Diagnostic update
         function setStatus(text, state = 'ready') {
             statusText.textContent = text;
             statusDot.className = 'status-dot ' + state;
+            diagAudioState.textContent = text.toUpperCase();
+        }
+
+        function updateDiagnosticsHUD() {
+            if (isPlaying && streamStartTime) {
+                const diff = Math.floor((Date.now() - streamStartTime) / 1000);
+                const hrs = Math.floor(diff / 3600);
+                const mins = Math.floor((diff % 3600) / 60);
+                const secs = diff % 60;
+                diagUptime.textContent = `${hrs < 10 ? '0' : ''}${hrs}:${mins < 10 ? '0' : ''}${mins}:${secs < 10 ? '0' : ''}${secs}`;
+
+                // Estimate data usage at 128 kbps (16 KB/sec)
+                estimatedBytesReceived += 16 * 1024;
+                const mb = (estimatedBytesReceived / (1024 * 1024)).toFixed(1);
+                diagData.textContent = `${mb} MB`;
+            }
         }
 
         // Select Preset
@@ -1490,13 +2347,19 @@
                 return;
             }
 
-            // Check for subtle in-universe ARG subcarrier anomaly
+            setupAudioGraph();
+            if (audioCtx && audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+
+            // In-universe ARG subcarrier anomaly
             if (url.includes('10.19.99.4') || url.toLowerCase().includes('subcarrier') || url.includes('1999')) {
                 stopStream(false);
                 displayStation.textContent = 'Subcarrier Anomaly';
                 stationTag.textContent = '10.19.99.4';
                 displayBitrate.textContent = '1999.4 kHz Carrier Lock';
                 setStatus('Carrier Lock', 'playing');
+                diagCodec.textContent = 'ARG CARRIER / SINE 1999.4Hz';
                 startSubcarrier();
                 isPlaying = true;
                 playIcon.textContent = '⏸';
@@ -1509,6 +2372,7 @@
 
             isStopping = false;
             setStatus('Connecting...', 'buffering');
+            diagCodec.textContent = url.toLowerCase().includes('.aac') ? 'AAC / HTTPS' : 'MP3 / HTTPS';
             
             if (audio.src !== url || audio.paused) {
                 audio.src = url;
@@ -1524,6 +2388,8 @@
                     playIcon.textContent = '⏸';
                     playLabel.textContent = 'Pause';
                     setStatus('Live', 'playing');
+                    streamStartTime = Date.now();
+                    if (!uptimeTimer) uptimeTimer = setInterval(updateDiagnosticsHUD, 1000);
                     document.title = `▶ ${displayStation.textContent} - KRadio`;
                     showToast(`Tuned in: ${displayStation.textContent}`, 'success', 2200);
                 }).catch(err => {
@@ -1533,7 +2399,6 @@
                     document.title = 'KRadio - Retro Stream Player';
 
                     if (err && err.name === 'NotAllowedError') {
-                        // Unprompted autoplay blocked by browser policy
                         setStatus('Ready', 'ready');
                     } else {
                         setStatus('Error', 'error');
@@ -1577,6 +2442,11 @@
             audio.removeAttribute('src');
             audio.load();
             isPlaying = false;
+            streamStartTime = null;
+            if (uptimeTimer) {
+                clearInterval(uptimeTimer);
+                uptimeTimer = null;
+            }
             playIcon.textContent = '▶';
             playLabel.textContent = 'Play';
             setStatus('Stopped', 'ready');
@@ -1592,9 +2462,7 @@
             volumeSlider.value = val;
             volumePercent.textContent = `${val}%`;
             
-            try {
-                localStorage.setItem('kradio_volume', String(val));
-            } catch (e) {}
+            safeSetStorage('kradio_volume', String(val));
 
             if (subcarrierGain && subcarrierCtx) {
                 subcarrierGain.gain.setValueAtTime(0.04 * (val / 100), subcarrierCtx.currentTime);
@@ -1629,7 +2497,7 @@
             }
         }
 
-        // Modal Controls & First-Run Onboarding
+        // Help Modal Controls
         function openHelp() {
             helpModal.classList.add('active');
         }
@@ -1683,14 +2551,16 @@
         btnGotIt.addEventListener('click', closeHelp);
         
         btnExport.addEventListener('click', exportJsonConfig);
-        btnImport.addEventListener('click', () => fileImportJson.click());
-        btnModalExport.addEventListener('click', exportJsonConfig);
-        btnModalImport.addEventListener('click', () => fileImportJson.click());
+        btnImport.addEventListener('click', () => fileImportPlaylist.click());
+        btnModalExportJson.addEventListener('click', exportJsonConfig);
+        btnModalExportM3u.addEventListener('click', exportM3uPlaylist);
+        btnModalExportPls.addEventListener('click', exportPlsPlaylist);
+        btnModalImport.addEventListener('click', () => fileImportPlaylist.click());
         btnModalReset.addEventListener('click', resetDefaultPresets);
 
-        fileImportJson.addEventListener('change', (e) => {
+        fileImportPlaylist.addEventListener('change', (e) => {
             if (e.target.files && e.target.files.length > 0) {
-                importJsonConfig(e.target.files[0]);
+                importPlaylistFile(e.target.files[0]);
                 e.target.value = '';
             }
         });
@@ -1699,7 +2569,7 @@
             if (e.target === helpModal) closeHelp();
         });
 
-        // Audio element native events
+        // Audio native events
         audio.addEventListener('playing', () => {
             isPlaying = true;
             playIcon.textContent = '⏸';
@@ -1722,12 +2592,18 @@
 
         audio.addEventListener('waiting', () => {
             setStatus('Buffering...', 'buffering');
+            diagBuffer.textContent = 'BUFFERING';
         });
 
         audio.addEventListener('stalled', () => {
             if (isPlaying && !isStopping) {
                 setStatus('Buffering...', 'buffering');
+                diagBuffer.textContent = 'STALLED / RETRYING';
             }
+        });
+
+        audio.addEventListener('canplay', () => {
+            diagBuffer.textContent = '100% HEALTHY';
         });
 
         audio.addEventListener('error', () => {
@@ -1737,6 +2613,7 @@
                 playIcon.textContent = '▶';
                 playLabel.textContent = 'Play';
                 setStatus('Stream Offline', 'error');
+                diagBuffer.textContent = 'OFFLINE / FAILED';
                 document.title = 'KRadio - Retro Stream Player';
                 showToast('Unable to connect to stream server', 'error', 3000);
             }
@@ -1744,9 +2621,14 @@
 
         // Keyboard Shortcuts
         window.addEventListener('keydown', (e) => {
-            const isInputFocused = document.activeElement && (document.activeElement === stationUrl || document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA');
+            const isInputFocused = document.activeElement && (
+                document.activeElement === stationUrl || 
+                document.activeElement === directorySearch ||
+                document.activeElement.tagName === 'INPUT' || 
+                document.activeElement.tagName === 'TEXTAREA'
+            );
 
-            // Global modal handling: Esc, Enter, Space dismisses Help modal
+            // Modal handling
             if (helpModal.classList.contains('active')) {
                 if (e.key === 'Escape' || e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar') {
                     e.preventDefault();
@@ -1761,6 +2643,14 @@
                 return;
             }
 
+            if (directoryModal.classList.contains('active')) {
+                if (e.key === 'Escape') {
+                    e.preventDefault();
+                    closeDirectory();
+                    return;
+                }
+            }
+
             // Quicksave (F5) & Quickload (F9)
             if (e.key === 'F5') {
                 e.preventDefault();
@@ -1773,15 +2663,25 @@
                 return;
             }
 
-            // Export / Import shortcuts: Alt+E, Alt+I
+            // Export shortcuts: Alt+E (JSON), Alt+M (M3U), Alt+P (PLS), Alt+I (Import)
             if (e.altKey && (e.key === 'e' || e.key === 'E')) {
                 e.preventDefault();
                 exportJsonConfig();
                 return;
             }
+            if (e.altKey && (e.key === 'm' || e.key === 'M')) {
+                e.preventDefault();
+                exportM3uPlaylist();
+                return;
+            }
+            if (e.altKey && (e.key === 'p' || e.key === 'P')) {
+                e.preventDefault();
+                exportPlsPlaylist();
+                return;
+            }
             if (e.altKey && (e.key === 'i' || e.key === 'I')) {
                 e.preventDefault();
-                fileImportJson.click();
+                fileImportPlaylist.click();
                 return;
             }
 
@@ -1802,17 +2702,39 @@
 
             if (e.key === 'Escape') {
                 if (isInputFocused) {
-                    stationUrl.blur();
+                    document.activeElement.blur();
                 }
                 return;
             }
 
             if (isInputFocused) {
-                if (e.key === 'Enter') {
+                if (e.key === 'Enter' && document.activeElement === stationUrl) {
                     e.preventDefault();
                     btnTune.click();
                     stationUrl.blur();
                 }
+                return;
+            }
+
+            // Feature panel hotkeys
+            if (e.key === 'e' || e.key === 'E') {
+                e.preventDefault();
+                btnToggleEq.click();
+                return;
+            }
+            if (e.key === 'b' || e.key === 'B') {
+                e.preventDefault();
+                openDirectory();
+                return;
+            }
+            if (e.key === 't' || e.key === 'T') {
+                e.preventDefault();
+                cycleSleepTimer();
+                return;
+            }
+            if (e.key === 'd' || e.key === 'D') {
+                e.preventDefault();
+                btnToggleDiag.click();
                 return;
             }
 
@@ -1823,7 +2745,7 @@
                 return;
             }
 
-            // Playback and station navigation hotkeys
+            // Playback hotkeys
             if (e.key === ' ' || e.key === 'p' || e.key === 'P') {
                 e.preventDefault();
                 togglePlay();
@@ -1855,9 +2777,12 @@
             }
         });
 
-        // Clean resource teardown on unload
+        // Clean teardown on unload
         window.addEventListener('beforeunload', () => {
             stopSubcarrier();
+            if (uptimeTimer) clearInterval(uptimeTimer);
+            if (sleepTickTimer) clearInterval(sleepTickTimer);
+            if (sleepTimeoutId) clearTimeout(sleepTimeoutId);
             if (audio) {
                 audio.pause();
                 audio.removeAttribute('src');
@@ -1878,9 +2803,24 @@
             PRESETS = JSON.parse(JSON.stringify(DEFAULT_PRESETS));
         }
 
+        function loadSavedEq() {
+            const raw = safeGetStorage('kradio_eq_settings');
+            if (raw) {
+                try {
+                    const eq = JSON.parse(raw);
+                    if (typeof eq.bass === 'number') eqBass.value = eq.bass;
+                    if (typeof eq.mid === 'number') eqMid.value = eq.mid;
+                    if (typeof eq.treble === 'number') eqTreble.value = eq.treble;
+                    if (typeof eq.preamp === 'number') eqPreamp.value = eq.preamp;
+                } catch (e) {}
+            }
+            applyEqValues();
+        }
+
         // App Initialization
         window.addEventListener('DOMContentLoaded', () => {
             loadSavedPresets();
+            loadSavedEq();
             resizeCanvas();
             drawVisualizer();
 
@@ -1928,20 +2868,19 @@
                 renderPresets();
             }
 
-            // First-run tutorial onboarding (only on fresh sessions, never interrupts restored states)
+            // First-run tutorial onboarding
             try {
                 const tutorialSeen = safeGetStorage('kradio_tutorialSeen');
                 const hasQuicksave = !!safeGetStorage('kradio_quicksave');
                 if (!tutorialSeen && !hasQuicksave) {
                     openHelp();
                 } else {
-                    showToast('📻 Tuned to preset. Press [Space] to play, [1-6] for stations, or [F1] for help.', 'info', 3200);
+                    showToast('📻 Tuned to preset. Press [Space] to play, [E] for EQ, or [F1] for help.', 'info', 3200);
                 }
             } catch (e) {
                 showToast('📻 Ready to stream! Press [Space] to play or [F1] for help.', 'info', 3000);
             }
 
-            // Set initial ready state without unprompted autoplay (complies with browser media policy)
             setStatus('Ready', 'ready');
         });
     </script>

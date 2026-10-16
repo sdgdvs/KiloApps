@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-expander
-next_agent: kilo-creator
+current_agent: kilo-creator
+next_agent: kilo-graphics
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -19,7 +19,7 @@ current_targets:
   kilo_tester: KCalendar
   kilo_usability: KChart
   kilo_qa: KHangman
-  kilo_expander: KRadio
+  kilo_expander: KHex
 virtual_web_target: kweb://deep-core
 virtual_web_rotation:
 - kweb://deep-core
@@ -34,9 +34,9 @@ virtual_web_rotation:
 - kweb://10.19.99.4/classified
 - kweb://echo-subsystem.net
 last_run:
-  agent: kilo-qa
-  app: KConnect4
-  timestamp: 2026-10-16T10:33:00+0000
+  agent: kilo-expander
+  app: KRadio
+  timestamp: 2026-10-16T11:15:00+0000
 last_planner_run: '2026-10-15T20:17:00Z'
 ---
 
@@ -174,6 +174,13 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-16T11:15:00+0000 — kilo-expander: KRadio (Deep Feature Expansion)**
+  - Added 3-band Web Audio DSP Equalizer (80Hz Bass, 1kHz Mid, 6kHz Treble, Preamp) with 6 quick presets.
+  - Added curated 18-station 1999 Directory modal with live search, 1-click tune, and slot assignments.
+  - Implemented multi-format playlist exporter/importer supporting JSON, Winamp M3U, and Shoutcast PLS.
+  - Added sleep timer auto-off (15-60m) with smooth volume fade and real-time Stream Diagnostics HUD.
+  - Verified build clean; kradio.html is 51 KB (<999 KB ceiling); handed off to kilo-creator.
+
 - **2026-10-16T10:33:00+0000 — kilo-qa: KConnect4 (Pass 5 QA & Build Quality Audit)**
   - Audited full game state persistence (F5 quicksave/F9 quickload) capturing board, timers, powerups, and replays.
   - Verified first-run tutorial prompt gating via `kconnect4_tutorialSeen` and tested Esc/Enter modal dismissals.
@@ -200,9 +207,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Upgraded all spell action stingers and UI earcons with dedicated FM patches and crystalline bell resonances.
   - Verified `npm run build` clean (0 errors); `kwizard.html` is 141 KB (<999 KB ceiling).
   - Advanced soundscape target to `kweb://webring`; rotation handed off to `kilo-tester`.
-
-- **2026-10-16T08:30:02+0000 — kilo-graphics: KFarm (Zero-Token Auto-Skip — Inappropriate Target)**
-  - Status: ⏭️ Skip — Imagen 3 asset replacement not appropriate for KFarm (pure vector, board game, or mature art).
-  - Optimization: Handled via orchestrator pre-flight zero-token auto-skip.
-  - Queue: Advanced `kilo-graphics` to `KFarm`; rotation handoff to `kilo-soundscape`.
-
