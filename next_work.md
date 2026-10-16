@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-soundscape
-next_agent: kilo-soundscape
+current_agent: kilo-tester
+next_agent: kilo-usability
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -15,7 +15,7 @@ status: ready
 current_targets:
   kilo_creator: kweb://portal
   kilo_graphics: KFarm
-  kilo_soundscape: kweb://warez
+  kilo_soundscape: kweb://cybercafe
   kilo_tester: KChess
   kilo_usability: KDB
   kilo_qa: KSudoku
@@ -34,9 +34,9 @@ virtual_web_rotation:
 - kweb://echo-subsystem.net
 - kweb://deep-core
 last_run:
-  agent: kilo-graphics
-  app: KFarm
-  timestamp: 2026-10-16T16:12:03+0000
+  agent: kilo-soundscape
+  app: kweb://warez
+  timestamp: 2026-10-16T16:35:00+0000
 last_planner_run: '2026-10-15T20:17:00Z'
 ---
 
@@ -174,6 +174,13 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-16T16:35:00+0000 — kilo-soundscape: kweb://warez (Authentic YM2612 2-Op FM Soundscape)**
+  - Status: PASS ✅ (Clean build, 514 KB single-file < 999 KB ceiling).
+  - Soundscape: Replaced generic FM presets with 8 demoscene/cracktro tracks (Mega Drive Rush, SNES Dreamscape, Keygen Euphoria, Yuzo Groove, Amiga Twilight, Void Fantasy, Carlsbad 1999Hz, Copper Skyline).
+  - Voice Leading: Implemented 6-channel architecture with delayed vibrato (5.5Hz), contrary counter-melodies, shell voicings (3rd+7th), swing groove, and inharmonic FM percussion.
+  - UI Audio: Added dedicated FM earcons/stingers for cracktro launch, patch generation, tab switches, and warnings.
+  - Verification: `npm run build` clean (0 errors, 285ms); advanced soundscape target to `kweb://cybercafe`; handoff to `kilo-tester`.
+
 - **2026-10-16T16:25:00+0000 — kilo-adhoc: KiloOS Kernel v2.0 (Singleton Audio, Persistent VFS, IPC v2.0)**
   - Status: PASS ✅ (0 regressions, clean builds, 254 KB bundle < 999 KB ceiling).
   - Web Audio Singleton: Replaced per-click/startup `new AudioContext()` leak with persistent singleton audio synthesizer.
@@ -200,10 +207,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Fixed modal dismissals: Esc/Enter/Space cleanly dismiss active overlays without triggering unwanted game inputs.
   - Verified clean native build (`KHangman.exe`, 36 KB) and web build (`npm run build`, 0 errors, 147 KB < 999 KB).
   - Advanced QA target to `KSudoku`; handoff to `kilo-expander`.
-
-- **2026-10-16T14:15:00+0000 — kilo-usability: KChart (UI/UX & Usability Pass)**
-  - Enhanced responsive layout: added narrow viewport (<640px/<440px) media queries for header, workspace, toolbar, and stats grid.
-  - Improved legend usability: made pie, donut, and polar chart legends dynamically sized and repositioned to prevent canvas clipping.
-  - Added direct legend interactive hover hit-testing and pointerup touch events for instant slice highlighting.
-  - Verified HiDPI canvas scaling, accessible focus indicators (:focus-visible), and Esc modal/input dismissal.
-  - Verified `npm run build` (0 Vite errors, `kchart.html` 126 KB < 999 KB); advanced usability target to `KDB`; handoff to `kilo-qa`.

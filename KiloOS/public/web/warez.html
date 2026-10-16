@@ -5002,8 +5002,8 @@ function mtof(note) {
   return 440 * Math.pow(2, (note - 69) / 12);
 }
 
-// YM2612 2-Operator FM Synthesis Core
-function playYm2612Fm(freq, modRatio, modIndex, duration, time, vol = 0.22, useSnesEcho = false) {
+// YM2612 2-Operator FM Synthesis Core with Delayed Vibrato & Pitch Shaping
+function playYm2612Fm(freq, modRatio, modIndex, duration, time, vol = 0.22, useSnesEcho = false, vibrato = false) {
   if (!audioCtx || freq <= 0) return;
 
   const carrier = audioCtx.createOscillator();
@@ -5017,7 +5017,7 @@ function playYm2612Fm(freq, modRatio, modIndex, duration, time, vol = 0.22, useS
 
   const peakMod = freq * modIndex;
   modGain.gain.setValueAtTime(peakMod, time);
-  modGain.gain.exponentialRampToValueAtTime(Math.max(1, peakMod * 0.15), time + duration * 0.35);
+  modGain.gain.exponentialRampToValueAtTime(Math.max(1, peakMod * 0.18), time + duration * 0.35);
   modGain.gain.exponentialRampToValueAtTime(0.01, time + duration);
 
   modulator.connect(modGain);
@@ -5025,6 +5025,20 @@ function playYm2612Fm(freq, modRatio, modIndex, duration, time, vol = 0.22, useS
 
   carrier.frequency.setValueAtTime(freq, time);
   carrier.type = 'sine';
+
+  // Delayed expressive vibrato (starts after 180ms, 5.5Hz LFO pitch modulation)
+  if (vibrato && duration > 0.28) {
+    const lfo = audioCtx.createOscillator();
+    const lfoGain = audioCtx.createGain();
+    lfo.frequency.setValueAtTime(5.5, time);
+    lfoGain.gain.setValueAtTime(0, time);
+    lfoGain.gain.setValueAtTime(0, time + 0.18);
+    lfoGain.gain.linearRampToValueAtTime(freq * 0.022, time + 0.35);
+    lfo.connect(lfoGain);
+    lfoGain.connect(carrier.frequency);
+    lfo.start(time);
+    lfo.stop(time + duration + 0.05);
+  }
 
   carrierGain.gain.setValueAtTime(vol, time);
   carrierGain.gain.exponentialRampToValueAtTime(0.001, time + duration);
@@ -5043,27 +5057,69 @@ function playYm2612Fm(freq, modRatio, modIndex, duration, time, vol = 0.22, useS
 
 // Named FM Patch Presets (YM2612 & SPC700 Architecture)
 function playSlapBass(freq, dur, time, vol = 0.26) {
-  playYm2612Fm(freq, 2.0, 3.8, dur, time, vol, false);
+  playYm2612Fm(freq, 2.0, 4.2, dur, time, vol, false);
+}
+
+function playSubBass(freq, dur, time, vol = 0.28) {
+  playYm2612Fm(freq, 0.5, 2.0, dur, time, vol, false);
 }
 
 function playEPiano(freq, dur, time, vol = 0.22, useEcho = true) {
-  playYm2612Fm(freq, 2.0, 2.6, dur, time, vol, useEcho);
+  playYm2612Fm(freq, 2.0, 2.4, dur, time, vol, useEcho);
 }
 
-function playFmBrass(freq, dur, time, vol = 0.22, useEcho = true) {
-  playYm2612Fm(freq, 1.0, 4.0, dur, time, vol, useEcho);
+function playFmBrass(freq, dur, time, vol = 0.22, useEcho = true, vib = true) {
+  playYm2612Fm(freq, 1.0, 4.2, dur, time, vol, useEcho, vib);
 }
 
-function playHollowLead(freq, dur, time, vol = 0.2, useEcho = true) {
-  playYm2612Fm(freq, 1.0, 0.85, dur, time, vol, useEcho);
+function playHollowLead(freq, dur, time, vol = 0.2, useEcho = true, vib = true) {
+  playYm2612Fm(freq, 2.0, 1.1, dur, time, vol, useEcho, vib);
 }
 
 function playMetallicBell(freq, dur, time, vol = 0.18, useEcho = true) {
-  playYm2612Fm(freq, 3.5, 4.5, dur, time, vol, useEcho);
+  playYm2612Fm(freq, 3.52, 4.8, dur, time, vol, useEcho);
 }
 
 function playAcidLead(freq, dur, time, vol = 0.22, useEcho = true) {
   playYm2612Fm(freq, 1.0, 5.2, dur, time, vol, useEcho);
+}
+
+// UI Earcons & Action Stingers (FM Synthesis)
+function playEarconClick() {
+  if (!audioCtx) return;
+  playYm2612Fm(1046, 2.0, 1.2, 0.03, audioCtx.currentTime, 0.12, false);
+}
+
+function playEarconTab() {
+  if (!audioCtx) return;
+  const now = audioCtx.currentTime;
+  playYm2612Fm(880, 2.0, 1.5, 0.04, now, 0.14, false);
+  setTimeout(() => playYm2612Fm(1320, 2.0, 1.8, 0.06, audioCtx.currentTime, 0.16, true), 35);
+}
+
+function playStingerSuccess() {
+  if (!audioCtx) return;
+  const now = audioCtx.currentTime;
+  playYm2612Fm(523.25, 2.0, 2.5, 0.15, now, 0.22, true);
+  setTimeout(() => playYm2612Fm(659.25, 2.0, 2.5, 0.15, audioCtx.currentTime, 0.22, true), 80);
+  setTimeout(() => playYm2612Fm(783.99, 2.0, 2.5, 0.18, audioCtx.currentTime, 0.24, true), 160);
+  setTimeout(() => playYm2612Fm(1046.50, 1.0, 3.8, 0.45, audioCtx.currentTime, 0.28, true, true), 240);
+}
+
+function playStingerPatch() {
+  if (!audioCtx) return;
+  const now = audioCtx.currentTime;
+  playYm2612Fm(440, 1.0, 3.0, 0.08, now, 0.2, true);
+  setTimeout(() => playYm2612Fm(554.37, 1.0, 3.0, 0.08, audioCtx.currentTime, 0.2, true), 60);
+  setTimeout(() => playYm2612Fm(659.25, 1.0, 3.0, 0.08, audioCtx.currentTime, 0.22, true), 120);
+  setTimeout(() => playYm2612Fm(880, 1.0, 4.5, 0.35, audioCtx.currentTime, 0.26, true, true), 180);
+}
+
+function playEarconWarning() {
+  if (!audioCtx) return;
+  const now = audioCtx.currentTime;
+  playYm2612Fm(233.08, 3.73, 5.0, 0.18, now, 0.22, false);
+  setTimeout(() => playYm2612Fm(220.00, 3.73, 5.0, 0.25, audioCtx.currentTime, 0.25, false), 90);
 }
 
 // SNES SPC700 Warm Resonant Pad Note
@@ -5128,27 +5184,30 @@ function getDrumBuffer(type) {
   return hatNoiseBuffer;
 }
 
-// 16-Bit Retro Drum Kit with FM transient enhancements
+// 16-Bit Retro Drum Kit with Inharmonic FM & Noise transients
 function play16BitDrum(type, time) {
   if (!audioCtx) return;
 
   if (type === 'kick') {
     const osc = audioCtx.createOscillator();
     const g = audioCtx.createGain();
-    osc.frequency.setValueAtTime(140, time);
-    osc.frequency.exponentialRampToValueAtTime(32, time + 0.08);
-    g.gain.setValueAtTime(0.38, time);
-    g.gain.exponentialRampToValueAtTime(0.001, time + 0.14);
+    osc.frequency.setValueAtTime(145, time);
+    osc.frequency.exponentialRampToValueAtTime(30, time + 0.09);
+    g.gain.setValueAtTime(0.42, time);
+    g.gain.exponentialRampToValueAtTime(0.001, time + 0.15);
     osc.connect(g);
     g.connect(masterGain);
     osc.start(time);
-    osc.stop(time + 0.15);
+    osc.stop(time + 0.16);
+
+    // FM click punch for attack transient
+    playYm2612Fm(80, 0.5, 4.0, 0.03, time, 0.28, false);
   } else if (type === 'snare') {
     const osc = audioCtx.createOscillator();
     const g1 = audioCtx.createGain();
-    osc.frequency.setValueAtTime(220, time);
-    osc.frequency.exponentialRampToValueAtTime(75, time + 0.07);
-    g1.gain.setValueAtTime(0.22, time);
+    osc.frequency.setValueAtTime(230, time);
+    osc.frequency.exponentialRampToValueAtTime(70, time + 0.07);
+    g1.gain.setValueAtTime(0.24, time);
     g1.gain.exponentialRampToValueAtTime(0.001, time + 0.1);
     osc.connect(g1);
     g1.connect(masterGain);
@@ -5161,8 +5220,8 @@ function play16BitDrum(type, time) {
     filter.type = 'bandpass';
     filter.frequency.setValueAtTime(2400, time);
     const g2 = audioCtx.createGain();
-    g2.gain.setValueAtTime(0.24, time);
-    g2.gain.exponentialRampToValueAtTime(0.001, time + 0.12);
+    g2.gain.setValueAtTime(0.26, time);
+    g2.gain.exponentialRampToValueAtTime(0.001, time + 0.13);
 
     noise.connect(filter);
     filter.connect(g2);
@@ -5170,14 +5229,17 @@ function play16BitDrum(type, time) {
     noise.start(time);
   } else if (type === 'hat' || type === 'openhat') {
     const isOpen = (type === 'openhat');
+    // Inharmonic FM cymbal metallic sheen
+    playYm2612Fm(4800, 1.52, 4.5, isOpen ? 0.14 : 0.04, time, isOpen ? 0.16 : 0.12, false);
+
     const noise = audioCtx.createBufferSource();
     noise.buffer = getDrumBuffer(isOpen ? 'openhat' : 'hat');
     const filter = audioCtx.createBiquadFilter();
     filter.type = 'highpass';
-    filter.frequency.setValueAtTime(7000, time);
+    filter.frequency.setValueAtTime(7500, time);
     const g = audioCtx.createGain();
-    g.gain.setValueAtTime(isOpen ? 0.16 : 0.11, time);
-    g.gain.exponentialRampToValueAtTime(0.001, time + (isOpen ? 0.15 : 0.04));
+    g.gain.setValueAtTime(isOpen ? 0.14 : 0.10, time);
+    g.gain.exponentialRampToValueAtTime(0.001, time + (isOpen ? 0.16 : 0.04));
 
     noise.connect(filter);
     filter.connect(g);
@@ -5201,24 +5263,28 @@ function scheduleSongNotes() {
 
     if (song.style === 'genesis_rush') {
       // Mega Drive FM Rush: Heroic Brass Lead, Funk Slap Bass, Shell Pad Voicings
+      // Voice leading: Contrary motion between Bass (ascending/descending) and Lead
       const bassProg = [
         33,33,45,33, 33,45,33,36, 33,33,45,33, 38,36,35,33,
         29,29,41,29, 29,41,29,33, 29,29,41,29, 36,35,33,29,
         36,36,48,36, 36,48,36,40, 36,36,48,36, 43,41,40,36,
         31,31,43,31, 31,43,31,35, 31,31,43,31, 38,36,35,31
       ];
+      // Lead phrases: Vocal-style phrasing, rests every 4 bars, contrary motion
       const leadProg = [
         69, 0, 72, 0, 76, 74, 72, 69, 74, 0, 76, 0, 79, 76, 74, 72,
         65, 0, 69, 0, 72, 70, 69, 65, 70, 0, 72, 0, 74, 72, 70, 69,
         72, 0, 76, 0, 79, 77, 76, 72, 77, 0, 79, 0, 81, 79, 77, 76,
         67, 0, 71, 0, 74, 72, 71, 67, 72, 0, 74, 0, 76, 74, 72, 71
       ];
+      // Counter-melody: active in contrary motion when lead sustains/rests
       const counterProg = [
         0,  0, 60, 0,  0, 62, 0, 64,  0, 65, 0, 64,  0, 62, 0, 60,
         0,  0, 57, 0,  0, 60, 0, 62,  0, 64, 0, 62,  0, 60, 0, 57,
         0,  0, 64, 0,  0, 67, 0, 69,  0, 71, 0, 69,  0, 67, 0, 64,
         0,  0, 59, 0,  0, 62, 0, 64,  0, 66, 0, 64,  0, 62, 0, 59
       ];
+      // Shell voicings: 3rd + 7th without doubling bass root
       const padProg = [57, 0, 0, 0, 0, 0, 0, 0, 53, 0, 0, 0, 0, 0, 0, 0, 60, 0, 0, 0, 0, 0, 0, 0, 55, 0, 0, 0, 0, 0, 0, 0];
 
       if (!channelMuted[1] && bassProg[step]) {
@@ -5226,10 +5292,10 @@ function scheduleSongNotes() {
         ch2Note = noteNumToString(bassProg[step]);
       }
       if (!channelMuted[0] && leadProg[step]) {
-        playFmBrass(mtof(leadProg[step]), 0.18, nextNoteTime, 0.24, true);
+        playFmBrass(mtof(leadProg[step]), 0.22, nextNoteTime, 0.24, true, true);
         ch1Note = noteNumToString(leadProg[step]);
       } else if (!channelMuted[0] && counterProg[step]) {
-        playHollowLead(mtof(counterProg[step]), 0.14, nextNoteTime, 0.16, true);
+        playHollowLead(mtof(counterProg[step]), 0.14, nextNoteTime, 0.16, true, false);
         ch1Note = noteNumToString(counterProg[step]);
       }
       if (!channelMuted[2] && padProg[step % 32]) {
@@ -5258,7 +5324,7 @@ function scheduleSongNotes() {
         ch3Note = noteNumToString(p);
       }
       if (!channelMuted[0] && melody[step % 32]) {
-        playHollowLead(mtof(melody[step % 32]), 0.24, nextNoteTime, 0.22, true);
+        playHollowLead(mtof(melody[step % 32]), 0.28, nextNoteTime, 0.22, true, true);
         ch1Note = noteNumToString(melody[step % 32]);
       } else if (!channelMuted[0] && counterMelody[step % 32]) {
         playMetallicBell(mtof(counterMelody[step % 32]), 0.18, nextNoteTime, 0.15, true);
@@ -5288,7 +5354,7 @@ function scheduleSongNotes() {
       ];
 
       if (!channelMuted[0] && keygenLead[step]) {
-        playFmBrass(mtof(keygenLead[step]), 0.22, nextNoteTime, 0.24, true);
+        playFmBrass(mtof(keygenLead[step]), 0.22, nextNoteTime, 0.24, true, true);
         ch1Note = noteNumToString(keygenLead[step]);
       } else if (!channelMuted[0] && keygenArp[step]) {
         playAcidLead(mtof(keygenArp[step]), 0.08, nextNoteTime, 0.16, true);
@@ -5333,7 +5399,7 @@ function scheduleSongNotes() {
         ch3Note = noteNumToString(chordHit.notes[0]);
       }
       if (!channelMuted[0] && yuzoBrass[step % 32]) {
-        playFmBrass(mtof(yuzoBrass[step % 32]), 0.22, nextNoteTime, 0.22, true);
+        playFmBrass(mtof(yuzoBrass[step % 32]), 0.22, nextNoteTime, 0.22, true, true);
         ch1Note = noteNumToString(yuzoBrass[step % 32]);
       }
       if (!channelMuted[1] && yuzoBass[step % 32]) {
@@ -5389,11 +5455,11 @@ function scheduleSongNotes() {
         ch1Note = noteNumToString(b);
       }
       if (!channelMuted[1] && voidDrone[step % voidDrone.length]) {
-        playSlapBass(mtof(voidDrone[step % voidDrone.length]), 0.22, nextNoteTime, 0.22);
+        playSubBass(mtof(voidDrone[step % voidDrone.length]), 0.22, nextNoteTime, 0.24);
         ch2Note = noteNumToString(voidDrone[step % voidDrone.length]);
       }
       if (!channelMuted[2] && voidFlute[step % 32]) {
-        playHollowLead(mtof(voidFlute[step % 32]), 0.45, nextNoteTime, 0.18, true);
+        playHollowLead(mtof(voidFlute[step % 32]), 0.45, nextNoteTime, 0.18, true, true);
         ch3Note = noteNumToString(voidFlute[step % 32]);
       }
     } else if (song.style === 'carlsbad_1999') {
@@ -5402,17 +5468,17 @@ function scheduleSongNotes() {
       const carrierPings = [0, 0, 1999, 0, 0, 0, 0, 1999, 0, 1999, 0, 0, 0, 0, 1999, 0];
 
       if (!channelMuted[0] && carrierPings[step % 16]) {
-        playYm2612Fm(1999.0, 1.0, 1.6, 0.12, nextNoteTime, 0.18, true);
+        playYm2612Fm(1999.0, 1.0, 1.6, 0.12, nextNoteTime, 0.18, true, false);
         ch1Note = "1999Hz";
       } else if (!channelMuted[0] && step % 4 === 0) {
         const lead = 60 + ((step * 3) % 15);
-        playHollowLead(mtof(lead), 0.22, nextNoteTime, 0.16, true);
+        playHollowLead(mtof(lead), 0.22, nextNoteTime, 0.16, true, true);
         ch1Note = noteNumToString(lead);
       }
 
       if (!channelMuted[1]) {
         const b = subNotes[step % 16];
-        playSlapBass(mtof(b), 0.22, nextNoteTime, 0.28);
+        playSubBass(mtof(b), 0.22, nextNoteTime, 0.30);
         ch2Note = noteNumToString(b);
       }
 
@@ -5421,14 +5487,21 @@ function scheduleSongNotes() {
         ch3Note = noteNumToString(48 + ((step % 16) === 0 ? 0 : 3));
       }
     } else {
-      // Amiga Copper Skyline '99: ProTracker High-Speed Arpeggio & Slap Bass
+      // Amiga Copper Skyline '99: ProTracker High-Speed Arpeggio & Contrary Slap Bass
       const arp = [60, 63, 67, 72, 63, 67, 72, 75, 58, 62, 65, 70, 62, 65, 70, 74];
       const slap = [36, 48, 36, 48, 34, 46, 34, 46, 32, 44, 32, 44, 31, 43, 31, 43];
+      const skylineLead = [72, 0, 75, 0, 74, 72, 70, 0, 68, 0, 70, 0, 72, 70, 67, 0];
 
       if (!channelMuted[0]) {
-        const a = arp[step % arp.length];
-        playAcidLead(mtof(a), 0.08, nextNoteTime, 0.18, true);
-        ch1Note = noteNumToString(a);
+        if (step % 2 === 0 && skylineLead[Math.floor(step / 2) % 16]) {
+          const l = skylineLead[Math.floor(step / 2) % 16];
+          playFmBrass(mtof(l), 0.18, nextNoteTime, 0.22, true, true);
+          ch1Note = noteNumToString(l);
+        } else {
+          const a = arp[step % arp.length];
+          playAcidLead(mtof(a), 0.08, nextNoteTime, 0.16, true);
+          ch1Note = noteNumToString(a);
+        }
       }
       if (!channelMuted[1]) {
         const s = slap[step % slap.length];
@@ -5441,7 +5514,7 @@ function scheduleSongNotes() {
       }
     }
 
-    // Drum rhythm with authentic swing groove and open hat accents
+    // Drum rhythm with authentic swing groove, inharmonic hats, and open hat accents
     if (!channelMuted[3]) {
       const isYuzo = (song.style === 'yuzo_groove');
       if (isYuzo) {
