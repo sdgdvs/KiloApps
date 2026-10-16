@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-expander
-next_agent: kilo-creator
+current_agent: kilo-creator
+next_agent: kilo-graphics
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -19,7 +19,7 @@ current_targets:
   kilo_tester: KSubmarine
   kilo_usability: KFont
   kilo_qa: KConnect4
-  kilo_expander: KClip
+  kilo_expander: KRadio
 virtual_web_target: kweb://darknet
 virtual_web_rotation:
 - kweb://deep-core
@@ -34,9 +34,9 @@ virtual_web_rotation:
 - kweb://10.19.99.4/classified
 - kweb://echo-subsystem.net
 last_run:
-  agent: kilo-qa
-  app: KSudoku
-  timestamp: 2026-10-16T07:14:00+0000
+  agent: kilo-expander
+  app: KClip
+  timestamp: 2026-10-16T07:32:39+0000
 last_planner_run: '2026-10-15T20:17:00Z'
 ---
 
