@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-creator
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -18,7 +18,7 @@ current_targets:
   kilo_soundscape: kweb://cybercafe
   kilo_tester: KSpace
   kilo_usability: KNote
-  kilo_qa: KSudoku
+  kilo_qa: KConnect4
   kilo_expander: KHex
 virtual_web_target: kweb://portal
 virtual_web_rotation:
@@ -34,9 +34,9 @@ virtual_web_rotation:
 - kweb://echo-subsystem.net
 - kweb://deep-core
 last_run:
-  agent: kilo-usability
-  app: KDB
-  timestamp: 2026-10-16T18:15:00+0000
+  agent: kilo-qa
+  app: KSudoku
+  timestamp: 2026-10-16T19:13:00+0000
 last_planner_run: '2026-10-15T20:17:00Z'
 ---
 
@@ -130,7 +130,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Verification**: `cd KiloOS && npm run build`. File size < 999 KB.
 - **Handoff**:
   - In frontmatter: advance `current_targets.kilo_usability` to `KDB`.
-  - Set `current_agent: kilo-qa`.
+  - Set `current_agent: kilo-expander`.
   - Append terse execution log (≤6 lines), commit, and push.
 - **Upcoming Queue**: `KChart`, `KDB`, `KNote`.
 
