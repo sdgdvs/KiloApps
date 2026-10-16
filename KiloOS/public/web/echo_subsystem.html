@@ -9538,6 +9538,436 @@ kweb://echo-subsystem.net
     appendVlfLog('[SYSTEM] Telemetry trace file exported: tropospheric_trace_' + Date.now() + '.trp');
   }
 
+  // ==========================================
+  // TAB 14: CRYOGENIC SQUID MAGNETOMETER & SUB-CRUSTAL TOMOGRAPH
+  // ==========================================
+  let squidInitialized = false;
+  let squidAnimFrame = null;
+  let squidBias = 48; // μA
+  let squidFluxOffset = 0; // Φ₀
+  let squidDepth = 2150; // ft
+  let squidResolution = 32; // 32x32
+  let squidTomoData = null;
+  let squidPhaseAngle = 0;
+
+  function initSquidSuite() {
+    if (squidInitialized) return;
+    squidInitialized = true;
+    generateSquidTomoData();
+    renderSquidPhaseCurve();
+    renderSquidTomoMap();
+    startSquidAnimation();
+    appendSquidLog('[SQUID-SYS] RF-SQUID Magnetometer phase-locked to 1999.0 Hz acoustic-magnetic resonance.');
+    appendSquidLog('[SQUID-SYS] Liquid Helium Cryostat stabilized at 4.20 K. Permian Salado Halite slice loaded.');
+  }
+
+  function updateSquidParams() {
+    const biasEl = document.getElementById('squidBiasRange');
+    const fluxEl = document.getElementById('squidFluxRange');
+    const depthEl = document.getElementById('squidDepthRange');
+
+    if (biasEl) squidBias = parseFloat(biasEl.value);
+    if (fluxEl) squidFluxOffset = parseFloat(fluxEl.value) / 10.0;
+    if (depthEl) squidDepth = parseInt(depthEl.value, 10);
+
+    const biasBadge = document.getElementById('squidBiasVal');
+    const fluxBadge = document.getElementById('squidFluxOffsetVal');
+    const depthBadge = document.getElementById('squidDepthBadge');
+    const fluxValLabel = document.getElementById('squidFluxVal');
+    const depthValLabel = document.getElementById('squidDepthVal');
+
+    if (biasBadge) biasBadge.textContent = squidBias + ' μA';
+    if (fluxBadge) fluxBadge.textContent = squidFluxOffset.toFixed(2) + ' Φ₀';
+    if (depthBadge) depthBadge.textContent = squidDepth + ' ft';
+    if (fluxValLabel) fluxValLabel.textContent = 'Φ = ' + (1.000 + squidFluxOffset).toFixed(3) + ' Φ₀';
+    if (depthValLabel) {
+      let stratum = 'HALITE STRATA';
+      if (squidDepth < 1000) stratum = 'RUSTLER ANHYDRITE';
+      else if (squidDepth <= 2800) stratum = 'SALADO HALITE (1999Hz DUCT)';
+      else stratum = 'CASTILE ANHYDRITE BED';
+      depthValLabel.textContent = 'SLICE: ' + squidDepth.toLocaleString() + ' FT (' + stratum + ')';
+    }
+
+    generateSquidTomoData();
+    renderSquidPhaseCurve();
+    renderSquidTomoMap();
+  }
+
+  function ventCryostat() {
+    ensureAudioContext();
+    if (audioCtx) {
+      try {
+        const now = audioCtx.currentTime;
+        const dur = 0.8;
+        const buf = audioCtx.createBuffer(1, audioCtx.sampleRate * dur, audioCtx.sampleRate);
+        const data = buf.getChannelData(0);
+        for (let i = 0; i < buf.length; i++) data[i] = (Math.random() * 2 - 1) * 0.15;
+        const src = audioCtx.createBufferSource();
+        src.buffer = buf;
+        const filter = audioCtx.createBiquadFilter();
+        filter.type = 'bandpass';
+        filter.frequency.setValueAtTime(3200, now);
+        filter.frequency.exponentialRampToValueAtTime(400, now + dur);
+        filter.Q.setValueAtTime(2.5, now);
+        const gain = audioCtx.createGain();
+        gain.gain.setValueAtTime(0.08, now);
+        gain.gain.linearRampToValueAtTime(0.001, now + dur);
+        src.connect(filter);
+        filter.connect(gain);
+        gain.connect(audioCtx.destination);
+        src.start(now);
+      } catch(e) {}
+    }
+
+    const cryoBadge = document.getElementById('squidCryoBadge');
+    if (cryoBadge) {
+      cryoBadge.textContent = 'CRYO: 4.18 K (VENTING)';
+      cryoBadge.style.color = '#38bdf8';
+      setTimeout(() => {
+        if (cryoBadge) {
+          cryoBadge.textContent = 'CRYO: 4.20 K (LHe)';
+          cryoBadge.style.color = '';
+        }
+      }, 1500);
+    }
+    appendSquidLog('[CRYO-VENT] LHe dewar pressure equalized. Cryostat core temperature stabilized at 4.20 Kelvin.');
+  }
+
+  function changeSquidResolution() {
+    const sel = document.getElementById('squidResSelect');
+    if (sel) {
+      squidResolution = parseInt(sel.value, 10);
+      const label = document.getElementById('squidResLabel');
+      if (label) label.textContent = squidResolution + 'x' + squidResolution;
+      generateSquidTomoData();
+      renderSquidTomoMap();
+      appendSquidLog('[TOMO-GRID] Sub-crustal inversion mesh resolution reconfigured to ' + squidResolution + 'x' + squidResolution + ' cells.');
+    }
+  }
+
+  function generateSquidTomoData() {
+    const res = squidResolution;
+    squidTomoData = [];
+    const isCavityDepth = Math.abs(squidDepth - 2150) < 300;
+    for (let y = 0; y < res; y++) {
+      const row = [];
+      const ny = (y / res) * 2 - 1;
+      for (let x = 0; x < res; x++) {
+        const nx = (x / res) * 2 - 1;
+        const dist = Math.sqrt(nx * nx + ny * ny);
+        let val = Math.sin(nx * 4.5 + ny * 2.0) * 0.25 + Math.cos(ny * 5.0) * 0.2 + 0.5;
+        if (isCavityDepth && dist < 0.38) {
+          const cavityFactor = 1.0 - (dist / 0.38);
+          val = Math.min(1.0, val + cavityFactor * 0.65);
+        }
+        val += Math.sin((nx + ny) * 8.0 + squidFluxOffset * Math.PI) * 0.08;
+        row.push(Math.max(0, Math.min(1, val)));
+      }
+      squidTomoData.push(row);
+    }
+  }
+
+  function renderSquidPhaseCurve() {
+    const canvas = document.getElementById('squidPhaseCanvas');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const w = canvas.width;
+    const h = canvas.height;
+
+    ctx.fillStyle = '#030712';
+    ctx.fillRect(0, 0, w, h);
+
+    ctx.strokeStyle = 'rgba(30, 49, 91, 0.4)';
+    ctx.lineWidth = 1;
+    for (let x = 0; x < w; x += 40) {
+      ctx.beginPath();
+      ctx.moveTo(x, 0);
+      ctx.lineTo(x, h);
+      ctx.stroke();
+    }
+    for (let y = 0; y < h; y += 30) {
+      ctx.beginPath();
+      ctx.moveTo(0, y);
+      ctx.lineTo(w, y);
+      ctx.stroke();
+    }
+
+    ctx.strokeStyle = 'rgba(56, 189, 248, 0.3)';
+    ctx.beginPath();
+    ctx.moveTo(0, h / 2);
+    ctx.lineTo(w, h / 2);
+    ctx.stroke();
+
+    const Ic = 35;
+    const Ib = Math.max(Ic + 1, squidBias);
+    const R = 3.5;
+
+    ctx.beginPath();
+    ctx.strokeStyle = '#00ffaa';
+    ctx.lineWidth = 2;
+
+    for (let px = 0; px < w; px++) {
+      const phi = ((px / w) * 4 - 2) + squidFluxOffset;
+      const cosTerm = Math.cos(Math.PI * phi);
+      const inner = Ib * Ib - (Ic * Ic * cosTerm * cosTerm);
+      const V = inner > 0 ? R * Math.sqrt(inner) : 0;
+      const py = (h - 25) - (V / (R * Ib * 1.2)) * (h - 45);
+      if (px === 0) ctx.moveTo(px, py);
+      else ctx.lineTo(px, py);
+    }
+    ctx.stroke();
+
+    const opPhi = squidFluxOffset;
+    const opX = ((opPhi + 2) / 4) * w;
+    const opCos = Math.cos(Math.PI * opPhi);
+    const opInner = Ib * Ib - (Ic * Ic * opCos * opCos);
+    const opV = opInner > 0 ? R * Math.sqrt(opInner) : 0;
+    const opY = (h - 25) - (opV / (R * Ib * 1.2)) * (h - 45);
+
+    ctx.fillStyle = '#f59e0b';
+    ctx.beginPath();
+    ctx.arc(opX, opY, 5, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = '#bae6fd';
+    ctx.font = '10px monospace';
+    ctx.fillText('V-Φ CHARACTERISTIC // Ic = ' + Ic + 'μA // Ib = ' + Ib + 'μA', 10, 16);
+    ctx.fillStyle = '#f59e0b';
+    ctx.fillText('BIAS POINT: V = ' + opV.toFixed(1) + ' μV (Φ = ' + opPhi.toFixed(2) + ' Φ₀)', 10, 30);
+  }
+
+  function renderSquidTomoMap() {
+    const canvas = document.getElementById('squidTomoCanvas');
+    if (!canvas || !squidTomoData) return;
+    const ctx = canvas.getContext('2d');
+    const w = canvas.width;
+    const h = canvas.height;
+    const res = squidResolution;
+    const cellW = w / res;
+    const cellH = h / res;
+
+    for (let y = 0; y < res; y++) {
+      for (let x = 0; x < res; x++) {
+        const val = squidTomoData[y][x];
+        let r = 0, g = 0, b = 0;
+        if (val < 0.3) {
+          const t = val / 0.3;
+          r = Math.floor(5 + t * 25);
+          g = Math.floor(15 + t * 65);
+          b = Math.floor(40 + t * 140);
+        } else if (val < 0.7) {
+          const t = (val - 0.3) / 0.4;
+          r = Math.floor(30 + t * 20);
+          g = Math.floor(80 + t * 155);
+          b = Math.floor(180 - t * 60);
+        } else {
+          const t = (val - 0.7) / 0.3;
+          r = Math.floor(50 + t * 195);
+          g = Math.floor(235 - t * 80);
+          b = Math.floor(120 - t * 100);
+        }
+        ctx.fillStyle = 'rgb(' + r + ',' + g + ',' + b + ')';
+        ctx.fillRect(x * cellW, y * cellH, cellW + 0.5, cellH + 0.5);
+      }
+    }
+
+    const cx = w / 2;
+    const cy = h / 2;
+    ctx.strokeStyle = 'rgba(245, 158, 11, 0.7)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(cx - 15, cy);
+    ctx.lineTo(cx + 15, cy);
+    ctx.moveTo(cx, cy - 15);
+    ctx.lineTo(cx, cy + 15);
+    ctx.stroke();
+
+    ctx.fillStyle = '#f59e0b';
+    ctx.font = '10px monospace';
+    ctx.fillText('TARGET: BOREHOLE CARLSBAD-03', cx + 8, cy - 8);
+  }
+
+  function startSquidAnimation() {
+    if (squidAnimFrame) cancelAnimationFrame(squidAnimFrame);
+    function loop() {
+      const pane = document.getElementById('pane-squid');
+      if (pane && pane.classList.contains('active')) {
+        squidPhaseAngle += 0.04;
+        const jitter = Math.sin(squidPhaseAngle) * 0.015;
+        const fluxBadge = document.getElementById('squidFluxVal');
+        if (fluxBadge) {
+          fluxBadge.textContent = 'Φ = ' + (1.000 + squidFluxOffset + jitter).toFixed(3) + ' Φ₀';
+        }
+      }
+      squidAnimFrame = requestAnimationFrame(loop);
+    }
+    loop();
+  }
+
+  function triggerTomographicScan() {
+    appendSquidLog('[TOMO-SWEEP] Initiating 3D lithospheric impedance scan at depth ' + squidDepth + ' ft...');
+    ensureAudioContext();
+    if (audioCtx) {
+      try {
+        const now = audioCtx.currentTime;
+        [880, 1320, 1760, 1999].forEach((f, idx) => {
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(f, now + idx * 0.08);
+          gain.gain.setValueAtTime(0.04, now + idx * 0.08);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + (idx + 1) * 0.08);
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.start(now + idx * 0.08);
+          osc.stop(now + (idx + 1) * 0.08);
+        });
+      } catch(e) {}
+    }
+
+    setTimeout(() => {
+      generateSquidTomoData();
+      renderSquidTomoMap();
+      const velocity = (4410 + (squidDepth % 50)).toString();
+      appendSquidLog('[TOMO-RES] Acoustic velocity: ' + velocity + ' m/s. Permian Salado Halite acoustic waveguide coherent.');
+      if (Math.abs(squidDepth - 2150) < 300) {
+        appendSquidLog('★ [ANOMALY DETECTED]: High-Q resonance cavity locked at 1999.0 Hz. Cross-referenced to gateway 10.19.99.4/classified & kweb://deep-core.');
+      }
+    }, 450);
+  }
+
+  function playJosephsonWhistle() {
+    ensureAudioContext();
+    if (!audioCtx) return;
+    try {
+      const now = audioCtx.currentTime;
+      const oscCarrier = audioCtx.createOscillator();
+      const oscMod = audioCtx.createOscillator();
+      const modGain = audioCtx.createGain();
+      const masterGain = audioCtx.createGain();
+
+      oscCarrier.type = 'sine';
+      oscCarrier.frequency.setValueAtTime(1999, now);
+
+      oscMod.type = 'sine';
+      oscMod.frequency.setValueAtTime(48 + Math.abs(squidFluxOffset) * 20, now);
+      oscMod.frequency.linearRampToValueAtTime(72, now + 0.6);
+
+      modGain.gain.setValueAtTime(120, now);
+      modGain.gain.linearRampToValueAtTime(10, now + 0.6);
+
+      oscMod.connect(modGain);
+      modGain.connect(oscCarrier.frequency);
+
+      masterGain.gain.setValueAtTime(0.08, now);
+      masterGain.gain.exponentialRampToValueAtTime(0.001, now + 0.6);
+
+      oscCarrier.connect(masterGain);
+      masterGain.connect(audioCtx.destination);
+
+      oscCarrier.start(now);
+      oscMod.start(now);
+      oscCarrier.stop(now + 0.6);
+      oscMod.stop(now + 0.6);
+
+      appendSquidLog('[AUDIO] Josephson flux whistle synthesized (1999Hz carrier, V = ' + (squidBias * 3.5).toFixed(1) + ' μV).');
+    } catch(e) {
+      console.error(e);
+    }
+  }
+
+  function playHaliteAcousticPing() {
+    ensureAudioContext();
+    if (!audioCtx) return;
+    try {
+      const now = audioCtx.currentTime;
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(1999, now);
+      osc.frequency.exponentialRampToValueAtTime(999.5, now + 0.9);
+
+      gain.gain.setValueAtTime(0.12, now);
+      gain.gain.exponentialRampToValueAtTime(0.0005, now + 0.9);
+
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+
+      osc.start(now);
+      osc.stop(now + 0.9);
+
+      appendSquidLog('[AUDIO] Halite acoustic echo ping broadcast: Delaware Basin cavern reverberation 900ms.');
+    } catch(e) {
+      console.error(e);
+    }
+  }
+
+  function demodulateSquidPacket() {
+    ensureAudioContext();
+    if (audioCtx) {
+      try {
+        const now = audioCtx.currentTime;
+        [1999, 2040, 1999, 1950, 2040, 1999].forEach((freq, idx) => {
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(freq, now + idx * 0.05);
+          gain.gain.setValueAtTime(0.035, now + idx * 0.05);
+          gain.gain.setValueAtTime(0.001, now + (idx + 1) * 0.05);
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.start(now + idx * 0.05);
+          osc.stop(now + (idx + 1) * 0.05);
+        });
+      } catch(e) {}
+    }
+
+    const packets = [
+      '[SQUID-PKT] FRAME 0x1999 // JOSEPHSON LOCK: Φ = 1.000 Φ₀ // CARRIER: 1999.0 Hz // REFLECTIVITY: 94.2%',
+      '[SQUID-PKT] LITHOSPHERIC INTERCEPT: 10.19.99.4 [CARLSBAD RELAY] -> <a href="/web/deep_core.html" style="color:#38bdf8;">kweb://deep-core</a> // SECTOR 0x7F PASSKEY: 7F-HALITE-1999',
+      '[SQUID-PKT] DELAWARE BASIN ACOUSTIC PROFILE: COMPRESSION WAVE VELOCITY 4,420 m/s // HALITE CORE ANOMALY VERIFIED',
+      '[SQUID-PKT] TELEMETRY DISPATCH: PEER GATEWAY <a href="/web/classified.html" style="color:#ff66cc;">kweb://10.19.99.4/classified</a> REPORTED UNBROKEN CARRIER LOOP AT OFFSET 0x00402030.'
+    ];
+    const picked = packets[Math.floor(Math.random() * packets.length)];
+    const timeStr = new Date().toTimeString().split(' ')[0];
+    appendSquidLog('[' + timeStr + '] ' + picked);
+  }
+
+  function appendSquidLog(msg) {
+    const feed = document.getElementById('squidTeletypeFeed');
+    if (!feed) return;
+    feed.innerHTML += '\n' + msg;
+    feed.scrollTop = feed.scrollHeight;
+  }
+
+  function clearSquidFeed() {
+    const feed = document.getElementById('squidTeletypeFeed');
+    if (feed) feed.innerHTML = '[SQUID TELETYPE BUFFER CLEARED]';
+  }
+
+  function exportSquidTelemetry() {
+    const logData = '=== ECHO SUBSYSTEM // RF-SQUID MAGNETOGRAM & TOMOGRAPHIC TRACE ===\n' +
+      'TIMESTAMP: ' + new Date().toISOString() + '\n' +
+      'CRYOSTAT: 4.20 K (Liquid Helium Dewar)\n' +
+      'JOSEPHSON BIAS: ' + squidBias + ' uA\n' +
+      'FLUX OFFSET: ' + squidFluxOffset.toFixed(2) + ' Phi_0\n' +
+      'STRATA SLICE: ' + squidDepth + ' ft\n' +
+      'RESOLUTION: ' + squidResolution + 'x' + squidResolution + '\n' +
+      'ACOUSTIC CARRIER: 1999.0 Hz\n' +
+      'SECTOR LOCK: 0x1999\n' +
+      'STATUS: PHASE LOCKED // ANTI-POTEMKIN VERIFIED\n';
+
+    const blob = new Blob([logData], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'squid_magnetogram_' + Date.now() + '.sqd';
+    a.click();
+    URL.revokeObjectURL(url);
+    appendSquidLog('[SYSTEM] Magnetogram telemetry trace exported: squid_magnetogram_' + Date.now() + '.sqd');
+  }
+
 </script>
 </body>
 </html>
