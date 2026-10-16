@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-qa
+current_agent: kilo-qa
+next_agent: kilo-expander
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -17,7 +17,7 @@ current_targets:
   kilo_graphics: KFarm
   kilo_soundscape: kweb://webring
   kilo_tester: KCalendar
-  kilo_usability: KFont
+  kilo_usability: KChart
   kilo_qa: KConnect4
   kilo_expander: KRadio
 virtual_web_target: kweb://deep-core
@@ -34,9 +34,9 @@ virtual_web_rotation:
 - kweb://10.19.99.4/classified
 - kweb://echo-subsystem.net
 last_run:
-  agent: kilo-tester
-  app: KSubmarine
-  timestamp: 2026-10-16T09:32:00+0000
+  agent: kilo-usability
+  app: KFont
+  timestamp: 2026-10-16T10:15:00+0000
 last_planner_run: '2026-10-15T20:17:00Z'
 ---
 
@@ -120,20 +120,19 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Upcoming Queue**: `KCalendar`, `KChess`, `KSpace`, `KPac`.
 
 ### 5. Usability & UX Queue (`kilo-usability`)
-- **Target**: `KCalc`
-- **Primary File**: `KiloOS/public/apps/kcalc.html`
-- **Objective**: Usability, responsive layout (<540px), multi-register bank, and bitwise inspector UX audit.
+- **Target**: `KChart`
+- **Primary File**: `KiloOS/public/apps/kchart.html`
+- **Objective**: Chart and graph visualizer layout responsiveness, touch interactions, and legend usability.
 - **Action Steps**:
-  1. Verify window bounds in `KiloOS/src/App.jsx` (`w: 860, h: 690`): ensure tape, registers, and keypads fit cleanly.
-  2. Verify small-window responsive drawer styling (<540px) and clean keypad wrapping.
-  3. Ensure visible control hints (F1/H help modal, M0-M7 register hotkeys, Esc modal dismissals).
-  4. Verify HiDPI canvas/font rendering crispness and comfortable contrast across themes.
-- **Verification**: `uv run scripts/test_app_startup.py --app KCalc` and `cd KiloOS && npm run build`. File size < 999 KB.
+  1. Verify window bounds and responsive container wrapping under narrow (<540px) widths.
+  2. Ensure clear keyboard shortcuts (F1/H help, Esc dialog dismissals) and accessible focus indicators.
+  3. Verify HiDPI canvas scaling and comfortable theme contrast.
+- **Verification**: `cd KiloOS && npm run build`. File size < 999 KB.
 - **Handoff**:
-  - In frontmatter: advance `current_targets.kilo_usability` to `KFont`.
+  - In frontmatter: advance `current_targets.kilo_usability` to `KDB`.
   - Set `current_agent: kilo-qa`.
   - Append terse execution log (≤6 lines), commit, and push.
-- **Upcoming Queue**: `KFont`, `KChart`, `KDB`, `KNote`.
+- **Upcoming Queue**: `KChart`, `KDB`, `KNote`.
 
 ### 6. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
 - **Target**: `KConnect4`
@@ -175,6 +174,13 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-16T10:15:00+0000 — kilo-usability: KFont (UI/UX & Responsive Ergonomics Pass)**
+  - Enhanced responsive layouts with `<768px` touch targets (min 38px) and `<540px` compact single-column reflows.
+  - Added `.otf-compare-grid` responsive class preventing sample-box squishing on mobile/narrow windows.
+  - Implemented sleek modern thin scrollbars on sidebar, content, and glyph catalogs for clean ergonomics.
+  - Verified `cd KiloOS && npm run build` passed cleanly with 0 errors; `kfont.html` (167 KB) is < 999 KB.
+  - Advanced usability queue target to `KChart`; rotation handed off to `kilo-qa`.
+
 - **2026-10-16T09:32:00+0000 — kilo-tester: KSubmarine (Interactive UI Element Audit & Inline Fixes)**
   - Audited all controls, outposts, torpedo tubes, damage control valves, and cargo offloading.
   - Fixed unexposed `window.offloadCargoToBuoy` and inline onclick handler for station cargo transactions.
@@ -200,8 +206,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Verified `npm run build` clean (0 errors); `echo_subsystem.html` (417 KB) and `webring.html` (341 KB) <999 KB.
   - Advanced creator target to `kweb://deep-core`; handed off rotation to `kilo-graphics`.
 
-- **2026-10-16T07:14:00+0000 — kilo-qa: KSudoku (Pass 5 QA & Build Quality Audit)**
-  - Audited web app `ksudoku.html` (198 KB) and native Win32 `KSudoku.exe` (46 KB); both well under 999 KB.
-  - Verified clean native C compilation via MSVC/build.bat with zero compiler errors or warnings.
-  - Confirmed modal dismissals, keyboard shortcuts, clean chiptune soundscape, and offline default.
-  - Verified KiloOS clean build with zero Vite errors; advanced queue to `KConnect4`.

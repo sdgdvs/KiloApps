@@ -132,13 +132,40 @@
   .flaw-ok { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
   .flaw-info { background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; }
 
+  /* Scrollbar ergonomics & responsive design */
+  .sidebar, .content, #glyphGrid, .waterfall-list, .contrast-grid {
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e1 #f8fafc;
+  }
+  .sidebar::-webkit-scrollbar, .content::-webkit-scrollbar {
+    width: 6px; height: 6px;
+  }
+  .sidebar::-webkit-scrollbar-thumb, .content::-webkit-scrollbar-thumb {
+    background: #cbd5e1; border-radius: 3px;
+  }
+
   @media (max-width: 768px) {
-    .header { padding: 8px 12px; gap: 8px; }
+    .header { padding: 6px 10px; gap: 6px; }
+    .header-brand { font-size: 14px; }
+    .header-hint { display: none; }
     .main { flex-direction: column; }
     .sidebar { width: 100%; flex-direction: row; overflow-x: auto; border-right: none; border-bottom: 1px solid #e1e4e8; white-space: nowrap; -webkit-overflow-scrolling: touch; }
-    .tab-btn { padding: 8px 12px; border-bottom: none; border-right: 1px solid #f0f2f5; flex-shrink: 0; gap: 6px; }
+    .tab-btn { padding: 8px 12px; border-bottom: none; border-right: 1px solid #f0f2f5; flex-shrink: 0; gap: 6px; font-size: 12px; min-height: 38px; }
     .tab-btn.active { border-left: none; border-bottom: 3px solid #0066cc; }
-    .content { padding: 14px 16px; }
+    .content { padding: 12px 14px; }
+    .anatomy-controls { flex-direction: column; align-items: stretch; }
+    .anatomy-controls .action-btn { margin-left: 0 !important; width: 100%; justify-content: center; }
+  }
+
+  @media (max-width: 540px) {
+    .header { flex-wrap: wrap; gap: 4px; padding: 6px 8px; }
+    .header select, .header input[type="text"] { font-size: 11px; padding: 3px 6px; }
+    .action-btn { padding: 4px 7px; font-size: 11px; }
+    .metric-grid { grid-template-columns: 1fr; }
+    .contrast-grid { grid-template-columns: 1fr; }
+    .glyph-grid { grid-template-columns: repeat(auto-fill, minmax(52px, 1fr)); }
+    .otf-compare-grid { grid-template-columns: 1fr !important; }
+    .sample-presets { flex-direction: column; align-items: stretch; }
   }
 </style>
 </head>
@@ -571,7 +598,7 @@
         </div>
 
         <!-- Side-by-Side Comparison (Feature OFF vs Feature ON) -->
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:16px;">
+        <div class="otf-compare-grid" style="display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:16px;">
           <div>
             <div style="font-size:12px; font-weight:600; color:#64748b; margin-bottom:4px;">Feature Settings: OFF (Standard Fallback)</div>
             <div id="otfPreviewOff" contenteditable="true" style="padding:14px; border:1px solid #cbd5e1; border-radius:6px; min-height:90px; font-size:20px; background:#fff; font-feature-settings: normal; line-height:1.4;">The difficult flight of fifteen flamingoes. Total: $1,234.50 vs $9,876.00 with 1/2 and 3/4 fractions. ZERO: 0O0O.</div>
