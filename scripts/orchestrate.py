@@ -45,6 +45,14 @@ try:
 except ImportError:
     from rotate_logs import rotate_next_work_logs, rotate_orchestrator_log
 
+try:
+    from scripts.pack_tiered_context import main as pack_context
+except ImportError:
+    try:
+        from pack_tiered_context import main as pack_context
+    except ImportError:
+        pack_context = None
+
 # Multi-PC Node Profiles: Dedicated, non-colliding dispatch windows based on account model tier:
 # - PC A: sdgdvs (Gemini Pro) - 1 turn/hr at :12 past each hour (Window :10 - :18)
 # - PC B: anonymous2 (Gemini Pro) - 1 turn/hr at :30 past each hour (Window :28 - :36)
@@ -1098,6 +1106,13 @@ def main():
                     subprocess.run(["git", "add", "next_work.md", "archive/fleet_execution_archive.md"], cwd=str(REPO_ROOT), capture_output=True)
                     subprocess.run(["git", "commit", "-m", "chore(logs): zero-token rotate old work to archive"], cwd=str(REPO_ROOT), capture_output=True)
                 rotate_orchestrator_log()
+
+                # Auto-sync Tiered Context exports to Google Drive
+                if pack_context:
+                    try:
+                        pack_context()
+                    except Exception as gdrive_err:
+                        log(f"[POST-TURN] Google Drive context sync note: {gdrive_err}")
 
                 # Stage fleet node telemetry
                 subprocess.run(

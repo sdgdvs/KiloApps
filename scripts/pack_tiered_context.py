@@ -92,6 +92,7 @@ def build_architecture_index(repo_root, apps, target_dir):
         "packages/sdk/kilo-sdk.js",
         "KiloOS/package.json",
         "KiloOS/src/App.jsx",
+        "KiloOS/public/apps/catalog.json",
         "scripts/byte_budget_gate.py"
     ]
     
@@ -111,7 +112,10 @@ def build_architecture_index(repo_root, apps, target_dir):
         folder = app["folder"]
         
         # Check web html size
-        html_rel = app["url"].lstrip("/")
+        if app["url"] == "#":
+            html_rel = f"apps/{slug}.html"
+        else:
+            html_rel = app["url"].lstrip("/")
         html_path = os.path.join(repo_root, "KiloOS", "public", html_rel)
         web_bytes = os.path.getsize(html_path) if os.path.exists(html_path) else 0
         pct = round((web_bytes / BUDGET_CEILING) * 100, 1)
@@ -161,7 +165,10 @@ def build_per_game_bundles(repo_root, apps, target_dir):
         out_xml_path = os.path.join(games_out_dir, f"{slug}-context.xml")
         
         # Web app html
-        html_rel = app["url"].lstrip("/")
+        if app["url"] == "#":
+            html_rel = f"apps/{slug}.html"
+        else:
+            html_rel = app["url"].lstrip("/")
         html_path = os.path.join(repo_root, "KiloOS", "public", html_rel)
         html_content = read_file_safe(html_path)
         

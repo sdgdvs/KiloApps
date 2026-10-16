@@ -19,3 +19,6 @@ jobs:
 
       - name: Run Byte-Budget Enforcement Gate
         run: python scripts/byte_budget_gate.py
+
+      - name: Verify Tiered Context Packing & Export Integrity
+        run: python scripts/pack_tiered_context.py

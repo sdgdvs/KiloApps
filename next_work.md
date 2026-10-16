@@ -174,12 +174,13 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
-- **2026-10-16T12:55:00-07:00 — kilo-adhoc: Byte-Budget Enforcement Gate v2.0 (Dual-Target & Manifest Gate)**
+- **2026-10-16T12:55:00-07:00 — kilo-adhoc: Byte-Budget Enforcement Gate v2.0 & Drive Sync Automation**
   - Status: PASS ✅ (107 web cartridges + 104 native EXEs strictly <= 999,000 bytes; 100% manifest & icon parity).
   - scripts/byte_budget_gate.py: Upgraded to v2.0 auditing web HTML, native EXEs, App.jsx schema/icons, and reverse coverage.
   - Auto-generated catalog.json: Emits { id, title, folder, webBytes, exeBytes, budgetPercent } for live fleet telemetry.
   - KDirector & KSys: Wired to fetch live catalog.json for real-time byte telemetry, accurate app counts, and budget tracking.
-  - Verification: byte_budget_gate.py 100% PASS; npm run build 0 errors; security_lint.py 100% PASS; check_icons.py clean.
+  - Google Drive & CI/CD Automation: pack_tiered_context.py automated in orchestrator post-turn and .github byte-budget-gate workflow.
+  - Verification: byte_budget_gate.py 100% PASS; pack_tiered_context.py 100% PASS; npm run build 0 errors; security_lint.py PASS.
 
 - **2026-10-16T19:33:00+0000 — kilo-expander: KHex (Struct & Signatures Dissector)**
   - Implemented Tab 9: Binary Struct Unpacker with schema parser (uint, int, float, char, hex) & C/JSON export.
