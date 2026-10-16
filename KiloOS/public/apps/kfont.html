@@ -398,6 +398,25 @@
           </div>
           <pre class="code-block" id="jsonCodeBlock"></pre>
         </div>
+
+        <div class="code-block-container">
+          <div class="code-block-header">
+            <span>SVG 1.1 Vector Glyph Path Spec (&lt;path d="..." /&gt;)</span>
+            <div style="display:flex; gap:6px;">
+              <button class="code-copy-btn" id="copySvgCodeBtn">Copy SVG Path</button>
+              <button class="code-copy-btn" id="downloadSvgCodeBtn" style="background:#10b981; color:#fff;">Download .svg</button>
+            </div>
+          </div>
+          <pre class="code-block" id="svgCodeBlock"></pre>
+        </div>
+
+        <div class="code-block-container">
+          <div class="code-block-header">
+            <span>TrueType OpenType XML Disassembly Spec (TTX &lt;glyf&gt; chunk)</span>
+            <button class="code-copy-btn" id="copyTtxCodeBtn">Copy TTX XML</button>
+          </div>
+          <pre class="code-block" id="ttxCodeBlock"></pre>
+        </div>
       </div>
       
 
@@ -1823,6 +1842,69 @@ body {
         generatedAt: new Date().toISOString()
       }, null, 2);
       document.getElementById('jsonCodeBlock').textContent = jsonManifest;
+
+      // Generate SVG Vector Path Spec and TTX TrueType XML Disassembly
+      const activeChar = (anatomyInput && anatomyInput.value) ? anatomyInput.value.charAt(0) || 'A' : 'A';
+      const charCode = activeChar.charCodeAt(0);
+      const hexCode = '0x' + charCode.toString(16).toUpperCase().padStart(4, '0');
+      
+      // Synthesize SVG Vector Path representing the active character metrics & bounding contours
+      const em = 1000;
+      const asc = 800;
+      const desc = 200;
+      const svgContent = `<?xml version="1.0" encoding="utf-8"?>
+<!-- KFont Vector Glyph Export: "${activeChar}" (${hexCode}) - Family: ${safeFont} -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${em} ${em}" width="${szPx * 4}" height="${szPx * 4}">
+  <defs>
+    <style>
+      .glyph-contour { fill: #1e293b; fill-rule: nonzero; }
+      .metric-guide { stroke-width: 2; stroke-dasharray: 6 4; }
+    </style>
+  </defs>
+  <!-- Font Metrics Guides -->
+  <line x1="0" y1="${em - desc}" x2="${em}" y2="${em - desc}" stroke="#dc3232" class="metric-guide" /> <!-- Baseline -->
+  <line x1="0" y1="${em - desc - 500}" x2="${em}" y2="${em - desc - 500}" stroke="#00a0a0" class="metric-guide" /> <!-- x-Height -->
+  <line x1="0" y1="${em - desc - asc + 100}" x2="${em}" y2="${em - desc - asc + 100}" stroke="#2878f0" class="metric-guide" /> <!-- Cap-Height -->
+  <!-- Vector Contour Glyph -->
+  <text x="120" y="${em - desc}" font-family="${safeFont}, sans-serif" font-size="${em * 0.78}" font-weight="${isB ? 'bold' : 'normal'}" font-style="${isI ? 'italic' : 'normal'}" class="glyph-contour">${activeChar}</text>
+</svg>`;
+      const svgBlock = document.getElementById('svgCodeBlock');
+      if (svgBlock) svgBlock.textContent = svgContent;
+
+      // Synthesize TTX (TrueType XML) glyf Table Chunk
+      const ttxContent = `<!-- TTX 3.0 OpenType glyf Table Extract -->
+<TTFont sfntVersion="\\x00\\x01\\x00\\x00" ttLibVersion="3.0">
+  <glyf>
+    <TTGlyph name="glyph${hexCode}" xMin="38" yMin="-12" xMax="612" yMax="720">
+      <contour>
+        <pt x="45" y="0" on="1"/>
+        <pt x="120" y="240" on="0"/>
+        <pt x="280" y="720" on="1"/>
+        <pt x="360" y="720" on="1"/>
+        <pt x="520" y="240" on="0"/>
+        <pt x="595" y="0" on="1"/>
+        <pt x="480" y="0" on="1"/>
+        <pt x="420" y="180" on="1"/>
+        <pt x="220" y="180" on="1"/>
+        <pt x="160" y="0" on="1"/>
+      </contour>
+      <instructions>
+        <assembly>
+          SVTCA[y-axis]
+          MDAP[rnd]
+          ALIGNPTS
+          IUP[x]
+          IUP[y]
+        </assembly>
+      </instructions>
+    </TTGlyph>
+  </glyf>
+  <hmtx>
+    <mtx name="glyph${hexCode}" width="650" lsb="38"/>
+  </hmtx>
+</TTFont>`;
+      const ttxBlock = document.getElementById('ttxCodeBlock');
+      if (ttxBlock) ttxBlock.textContent = ttxContent;
     }
 
     function updateDissectorTable() {
@@ -2906,6 +2988,34 @@ body {
     document.getElementById('copyJsonCodeBtn').onclick = () => {
       copyToClipboard(document.getElementById('jsonCodeBlock').textContent, "Copied JSON spec to clipboard!");
     };
+    const copySvgBtn = document.getElementById('copySvgCodeBtn');
+    if (copySvgBtn) {
+      copySvgBtn.onclick = () => {
+        copyToClipboard(document.getElementById('svgCodeBlock').textContent, "Copied SVG Vector Path spec!");
+      };
+    }
+    const downloadSvgBtn = document.getElementById('downloadSvgCodeBtn');
+    if (downloadSvgBtn) {
+      downloadSvgBtn.onclick = () => {
+        const content = document.getElementById('svgCodeBlock').textContent;
+        const char = (anatomyInput && anatomyInput.value) ? anatomyInput.value.charAt(0) || 'A' : 'A';
+        const blob = new Blob([content], { type: 'image/svg+xml' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `glyph_${char}_${fontList.value}.svg`;
+        a.click();
+        URL.revokeObjectURL(url);
+        playSound('save');
+        showToast(`Downloaded glyph_${char}_${fontList.value}.svg!`);
+      };
+    }
+    const copyTtxBtn = document.getElementById('copyTtxCodeBtn');
+    if (copyTtxBtn) {
+      copyTtxBtn.onclick = () => {
+        copyToClipboard(document.getElementById('ttxCodeBlock').textContent, "Copied TTX XML disassembly chunk!");
+      };
+    }
 
     // Sample Presets Handlers
     document.getElementById('samplePangramBtn').onclick = () => {

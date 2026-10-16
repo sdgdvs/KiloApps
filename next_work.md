@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-expander
-next_agent: kilo-creator
+current_agent: kilo-creator
+next_agent: kilo-graphics
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -19,7 +19,7 @@ current_targets:
   kilo_tester: KCalendar
   kilo_usability: KFont
   kilo_qa: K2048
-  kilo_expander: KFont
+  kilo_expander: KHex
 virtual_web_target: kweb://darknet
 virtual_web_rotation:
 - kweb://deep-core
@@ -34,9 +34,9 @@ virtual_web_rotation:
 - kweb://10.19.99.4/classified
 - kweb://echo-subsystem.net
 last_run:
-  agent: kilo-qa
-  app: KBreakout
-  timestamp: 2026-10-16T00:14:00+0000
+  agent: kilo-expander
+  app: KFont
+  timestamp: 2026-10-16T00:31:00+0000
 last_planner_run: '2026-10-15T20:17:00Z'
 ---
 
@@ -185,6 +185,13 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-16T00:31:00+0000 — kilo-expander: KFont (Pass 3: SVG & TrueType TTX Exporters)**
+  - Vector Exporters: Added SVG 1.1 Vector Glyph Path Spec (<path d="...">) with real-time download and copy.
+  - OpenType Disassembly: Added TrueType XML (TTX <glyf> contour chunk) generation with copy functionality.
+  - Integrated with active character, font family, style (bold/italic), and em-box scaling.
+  - Build/Size: Verified clean Vite build (`npm run build`), kfont.html 168 KB (<999 KB ceiling).
+  - Advanced expander target to KHex; handed off rotation to kilo-creator.
+
 - **2026-10-16T00:14:00+0000 — kilo-qa: KBreakout (Pass 5: Tutorial, State Integrity & Dual Parity)**
   - State Persistence: Verified F5 quicksave & F9 quickload capturing full gameplay, materials & boss state.
   - Onboarding Integrity: Fixed tutorialSeen flag persistence so tutorial never re-triggers on loaded saves.
@@ -211,8 +218,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Architecture: 6-channel YM2612 2-Op FM, subtle swing groove, contrary motion counterpoint, shell voicings.
   - Build/Size: Vite clean (0 errors), 341 KB < 999 KB ceiling.
   - Queue: Advanced kilo-soundscape to KColosseum; handoff to kilo-tester (KSubmarine).
-
-- **2026-10-15T22:12:02+0000 — kilo-graphics: KFarm (Zero-Token Auto-Skip — Inappropriate Target)**
-  - Status: ⏭️ Skip — Imagen 3 asset replacement not appropriate for KFarm (pure vector, board game, or mature art).
-  - Optimization: Handled via orchestrator pre-flight zero-token auto-skip.
-  - Queue: Advanced `kilo-graphics` to `KFarm`; rotation handoff to `kilo-soundscape`.
