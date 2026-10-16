@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-tester
-next_agent: kilo-usability
+current_agent: kilo-usability
+next_agent: kilo-qa
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -16,7 +16,7 @@ current_targets:
   kilo_creator: kweb://10.19.99.4/classified
   kilo_graphics: KFarm
   kilo_soundscape: KDragon
-  kilo_tester: KCalendar
+  kilo_tester: KChess
   kilo_usability: KFont
   kilo_qa: K2048
   kilo_expander: KHex
@@ -34,9 +34,9 @@ virtual_web_rotation:
 - kweb://10.19.99.4/classified
 - kweb://echo-subsystem.net
 last_run:
-  agent: kilo-soundscape
-  app: KColosseum
-  timestamp: 2026-10-16T02:15:00+0000
+  agent: kilo-tester
+  app: KCalendar
+  timestamp: 2026-10-16T02:31:00+0000
 last_planner_run: '2026-10-15T20:17:00Z'
 ---
 
@@ -175,6 +175,14 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
  
+- **2026-10-16T02:31:00+0000 — kilo-tester: KCalendar (Interactive UI & Modal Audit)**
+  - PASS ✅ (0 runtime errors, clean startup & hit-test unblocked).
+  - Verified modal dismissing (Esc, backdrop, Enter/Space), quicksave (F5/Ctrl+S), and quickload (F9).
+  - Confirmed search shortcuts (/), view tabs (1-4), date navigation, and multi-format exporters (ICS/CSV/TSV/MD/JSON).
+  - Verification: 
+pm run build 0 errors, kcalendar.html 119 KB (<999 KB ceiling).
+  - Advanced tester queue to KChess; handed off rotation to kilo-usability (KFont).
+
 - **2026-10-16T02:15:00+0000 — kilo-soundscape: KColosseum (YM2612 Phrygian Dominant Combat & March)**
   - Dual procedural soundscapes: D Phrygian Dominant driving combat theme & Andalusian Ludus march.
   - 6-voice architecture: Distorted FM guitar lead, brass counterpoint, slap bass, kick, snare, hi-hat.
@@ -202,9 +210,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Dual Parity & Build: Created KBreakout/build.bat, verified clean Win32 MSVC build (56 KB), Vite 0 errors.
   - Advanced QA queue to K2048; handed off rotation to kilo-expander (KFont).
 
-- **2026-10-15T23:31:00+0000 — kilo-usability: KCalc (Pass 4: UX & Responsive Layout Audit)**
-  - Added responsive layout styling for narrow viewports (<540px) ensuring keypads & drawers fit cleanly.
-  - Ensured Esc dismisses all expansion modals and dialog overlays cleanly.
-  - Confirmed window bounds in App.jsx (860x690) and HiDPI rendering crispness.
-  - Build verification: KiloOS clean build (npm run build PASS, 0 Vite errors), file size < 999 KB.
-  - Advanced usability queue to KFont; handed off rotation to kilo-qa (KBreakout).
