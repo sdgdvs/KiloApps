@@ -2,19 +2,19 @@
 current_agent: kilo-graphics
 next_agent: kilo-soundscape
 agent_rotation:
-- kilo-creator
 - kilo-graphics
 - kilo-soundscape
 - kilo-tester
 - kilo-usability
 - kilo-qa
 - kilo-expander
+- kilo-creator
 model: gemini-3.8-flash-medium
 timeout_minutes: 6
 status: ready
 current_targets:
   kilo_creator: kweb://webring
-  kilo_graphics: KFarm
+  kilo_graphics: KWizard
   kilo_soundscape: kweb://cybercafe
   kilo_tester: KSpace
   kilo_usability: KNote
@@ -37,7 +37,7 @@ last_run:
   agent: kilo-creator
   app: kweb://portal
   timestamp: 2026-10-16T20:15:00+0000
-last_planner_run: '2026-10-15T20:17:00Z'
+last_planner_run: '2026-10-16T20:35:00Z'
 ---
 
 # KiloApps Master Fleet Work & Queue State
@@ -64,33 +64,33 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 ## Active Target Queues (Gemini Flash Optimized Tickets)
 
 ### 1. Virtual 1999 Web & ARG Node Creator (`kilo-creator`)
-- **Target**: `kweb://10.19.99.4/classified`
-- **Primary File**: `KiloOS/public/web/classified.html`
-- **Objective**: Virtual 1999 classifieds and bulletin board destination (<999 KB).
-- **Upcoming Queue**: `kweb://echo-subsystem.net`, `kweb://deep-core`, `kweb://darknet`, `kweb://portal`.
+- **Target**: `kweb://webring`
+- **Primary File**: `KiloOS/public/web/webring.html`
+- **Objective**: Expand Central KiloNet 1999 Webring Hub, random teleporter, and badge studio (<999 KB).
+- **Upcoming Queue**: `kweb://warez`, `kweb://geocities`, `kweb://users/~neon_rider`, `kweb://asm-temple`.
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
-- **Target**: `KFarm`
-- **Primary Files**: `KiloOS/public/apps/kfarm.html`, `KFarm/main.c` (if present)
-- **Objective**: Replace 2D tile canvas programmer art (primitive rect fills for crops, terrain, and animals) with Imagen 3 generated sprite assets & tiles; ensure 0 specular glints.
+- **Target**: `KWizard`
+- **Primary Files**: `KiloOS/public/apps/kwizard.html`, `KWizard/main.c` (if present)
+- **Objective**: Card battle arena visual overhaul: generate spell card illustration sprites & fantasy arena background textures with Imagen 3 pipeline; ensure 0 specular glints.
 - **Action Steps**:
-  1. Inspect `KiloOS/public/apps/kfarm.html` canvas rendering routines for programmer art.
-  2. Generate crop/terrain/animal tiles via 2-stage asset pipeline (`generate_image` with solid `#FF00FF` -> `scripts/asset_pipeline.py`).
+  1. Inspect `KiloOS/public/apps/kwizard.html` canvas rendering routines for programmer art.
+  2. Generate spell card / arena battle sprites via 2-stage asset pipeline (`generate_image` with solid `#FF00FF` -> `scripts/asset_pipeline.py`).
   3. Search for and eliminate any traveling border dots or rotating specular glints.
   4. Run `python scripts/check_icons.py` to audit icon uniqueness.
 - **Verification**: `cd KiloOS && npm run build`. Verify files < 999 KB.
 - **Handoff**:
-  - In frontmatter: advance `current_targets.kilo_graphics` to `KWizard`.
+  - In frontmatter: advance `current_targets.kilo_graphics` to `KDragon`.
   - Set `current_agent: kilo-soundscape`.
   - Append terse execution log (≤6 lines), commit, and push.
-- **Upcoming Queue**: `KWizard`, `KDragon`, `KAlchemy`, `KFortress`.
+- **Upcoming Queue**: `KDragon`, `KAlchemy`, `KFortress`, `KSpace`.
 
 ### 3. Procedural Audio & Soundscape Queue (`kilo-soundscape`)
-- **Target**: `KDragon`
-- **Primary File**: `KiloOS/public/apps/kdragon.html`
-- **Objective**: Authentic YM2612 2-Op FM / SPC700 medieval fantasy dungeon chiptune audio suite.
+- **Target**: `kweb://cybercafe`
+- **Primary File**: `KiloOS/public/web/cybercafe.html`
+- **Objective**: Authentic YM2612 2-Op FM / SPC700 underground BBS & cyber lounge chiptune audio suite.
 - **Action Steps**:
-  1. Inspect `KiloOS/public/apps/kdragon.html` audio synthesis functions.
+  1. Inspect `KiloOS/public/web/cybercafe.html` audio synthesis functions.
   2. Implement hardware composer chiptune standard:
      - 3-Voice counterpoint: Lead melody, counter-melody/arpeggio, and punchy FM bassline.
      - Shell voicings: Root + 3rd + 7th (omit 5ths).
@@ -105,74 +105,81 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Upcoming Queue**: `KDragon`, `KWizard`, `KFortress`.
 
 ### 4. App Tester Queue (`kilo-tester`)
-- **Target**: `KChess`
-- **Primary File**: `KiloOS/public/apps/kchess.html`
-- **Objective**: Chess board interactive UI element, move highlight canvas, and modal audit with inline repairs.
+- **Target**: `KSpace`
+- **Primary File**: `KiloOS/public/apps/kspace.html`
+- **Objective**: Space flight simulator & combat UI audit: radar display, thruster controls, docking nav, modal dismissal, keyboard shortcuts.
 - **Action Steps**:
-  1. Run automated startup check: `uv run scripts/test_app_startup.py --app KChess`.
-  2. Audit all UI elements: piece drag/click, timer clocks, move notation log, undo/redo, shortcuts, and modals.
+  1. Run automated startup check: `uv run scripts/test_app_startup.py --app KSpace`.
+  2. Audit all UI elements: cockpit buttons, hyperspace jump modal, throttle controls, weapon switching, shortcuts.
   3. Fix any broken button hooks, missing element IDs, or unhandled exceptions inline.
-- **Verification**: `uv run scripts/test_app_startup.py --app KChess` and `cd KiloOS && npm run build`. File size < 999 KB.
+- **Verification**: `uv run scripts/test_app_startup.py --app KSpace` and `cd KiloOS && npm run build`. File size < 999 KB.
 - **Handoff**:
-  - In frontmatter: advance `current_targets.kilo_tester` to `KChess`.
+  - In frontmatter: advance `current_targets.kilo_tester` to `KPac`.
   - Set `current_agent: kilo-usability`.
   - Append terse execution log (≤6 lines), commit, and push.
-- **Upcoming Queue**: `KChess`, `KSpace`, `KPac`, `KCalendar`.
+- **Upcoming Queue**: `KPac`, `KCalendar`, `KChess`.
 
 ### 5. Usability & UX Queue (`kilo-usability`)
-- **Target**: `KChart`
-- **Primary File**: `KiloOS/public/apps/kchart.html`
-- **Objective**: Chart and graph visualizer layout responsiveness, touch interactions, and legend usability.
+- **Target**: `KNote`
+- **Primary File**: `KiloOS/public/apps/knote.html`
+- **Objective**: Note & markdown editor responsive layout, tab management ergonomics, clean font scaling, and keyboard shortcut overlays (F1/H).
 - **Action Steps**:
   1. Verify window bounds and responsive container wrapping under narrow (<540px) widths.
   2. Ensure clear keyboard shortcuts (F1/H help, Esc dialog dismissals) and accessible focus indicators.
-  3. Verify HiDPI canvas scaling and comfortable theme contrast.
+  3. Verify HiDPI canvas/text scaling and comfortable retro theme contrast.
 - **Verification**: `cd KiloOS && npm run build`. File size < 999 KB.
 - **Handoff**:
-  - In frontmatter: advance `current_targets.kilo_usability` to `KDB`.
-  - Set `current_agent: kilo-expander`.
+  - In frontmatter: advance `current_targets.kilo_usability` to `KChart`.
+  - Set `current_agent: kilo-qa`.
   - Append terse execution log (≤6 lines), commit, and push.
-- **Upcoming Queue**: `KChart`, `KDB`, `KNote`.
+- **Upcoming Queue**: `KChart`, `KDB`, `KCalc`.
 
 ### 6. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
-- **Target**: `KSudoku`
-- **Primary Files**: `KiloOS/public/apps/ksudoku.html`, `KSudoku/main.c`, `KSudoku/build.bat`
+- **Target**: `KConnect4`
+- **Primary Files**: `KiloOS/public/apps/kconnect4.html`, `KConnect4/main.c`, `KConnect4/build.bat`
 - **Objective**: Pass 5 QA audit, state persistence integrity, and dual web/native parity.
 - **Action Steps**:
   1. State Persistence: F5 quicksave & F9 quickload capturing complete game state, stats, and settings.
   2. First-run Tutorial: Onboarding displays once on fresh sessions, never on restored saves.
   3. Modal Dismissals: Modals dismiss cleanly with Escape, Enter, or Close button.
-  4. Dual Parity & Build: Compile Win32 native client via `cmd.exe /c build.bat` in `KSudoku/` (if present) and verify web build.
+  4. Dual Parity & Build: Compile Win32 native client via `cmd.exe /c build.bat` in `KConnect4/` (if present) and verify web build.
 - **Verification**:
-  - `uv run scripts/test_app_startup.py --app KSudoku`
-  - `cd KiloOS && npm run build` (0 Vite errors, `ksudoku.html` < 999 KB)
+  - `uv run scripts/test_app_startup.py --app KConnect4`
+  - `cd KiloOS && npm run build` (0 Vite errors, `kconnect4.html` < 999 KB)
 - **Handoff**:
-  - In frontmatter: advance `current_targets.kilo_qa` to `KSudoku`.
-  - Set `current_agent: kilo-graphics`.
+  - In frontmatter: advance `current_targets.kilo_qa` to `KHangman`.
+  - Set `current_agent: kilo-expander`.
   - Append terse execution log (≤6 lines), commit, and push.
-- **Upcoming Queue**: `KSudoku`, `KConnect4`, `KHangman`.
+- **Upcoming Queue**: `KHangman`, `KSudoku`, `KTetris`.
 
 ### 7. Feature Expander Queue (`kilo-expander`)
-- **Target**: `KFont`
-- **Primary Files**: `KiloOS/public/apps/kfont.html`, `KFont/main.c` (if present)
-- **Objective**: Deep functional feature expansion for bitmap font editor.
+- **Target**: `KClip`
+- **Primary Files**: `KiloOS/public/apps/kclip.html`, `KClip/main.c` (if present)
+- **Objective**: Deep functional feature expansion for clipboard manager.
 - **Action Steps**:
-  1. Inspect `KiloOS/public/apps/kfont.html`.
-  2. Expand font editor capabilities:
-     - BDF / FON / TTF Export & Import: Add standardized bitmap font format exporters.
-     - Extended Character Grid: 256-character ASCII/CP437 matrix with individual glyph editing.
-     - Live Typography Previewer: Real-time text preview box with kerning, leading, and scale controls.
+  1. Inspect `KiloOS/public/apps/kclip.html`.
+  2. Expand clipboard manager capabilities:
+     - Multi-format clip storage: Text, HTML snippet, image data URL, and hex dump preview.
+     - Snippet tags & categorization: Custom labels, search/filter regex, and pinned items.
+     - Batch Import & Export: JSON and plain text batch archive export and import.
   3. Zero external dependencies; maintain responsive 1999 retro styling.
-- **Verification**: `uv run scripts/test_app_startup.py --app KFont` and `cd KiloOS && npm run build`. File size < 999 KB.
+- **Verification**: `uv run scripts/test_app_startup.py --app KClip` and `cd KiloOS && npm run build`. File size < 999 KB.
 - **Handoff**:
-  - In frontmatter: advance `current_targets.kilo_expander` to `KHex`.
-  - Set `current_agent: kilo-graphics`.
+  - In frontmatter: advance `current_targets.kilo_expander` to `KJournal`.
+  - Set `current_agent: kilo-creator`.
   - Append terse execution log (≤6 lines), commit, and push.
-- **Upcoming Queue**: `KHex`, `KClip`, `KJournal`, `KBookmark`.
+- **Upcoming Queue**: `KJournal`, `KBookmark`, `KHex`, `KFont`.
 
 ---
 
 ## Recent Execution Logs (Max 5 Entries)
+
+- **2026-10-16T20:35:00+0000 — kilo-planner: 24-Hour Fleet Planning & Queue Harmonization**
+  - Evaluated velocity & queue health: 105 apps strictly <= 999 KB; resolved KFarm skip loop by re-targeting kilo-graphics to KWizard.
+  - Aligned active target queues: kilo-soundscape -> kweb://cybercafe, tester -> KSpace, usability -> KNote, qa -> KConnect4, expander -> KClip.
+  - Fixed syntax error in scripts/byte_budget_gate.py; verified 100% clean gate pass, icon uniqueness, and security lint.
+  - Verification: npm run build clean (0 errors, 566ms); zero-discard log rotation executed cleanly.
+  - Queue handoff: current_agent set to kilo-graphics; status set to ready.
 
 - **2026-10-16T20:15:00+0000 — kilo-creator: kweb://portal (Netscape Bookmarks & 1999 Directory Engine)**
   - Implemented Netscape Bookmarks.html export engine in My KiloNet dashboard with full RFC standard DL/DT structure.
@@ -198,11 +205,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Eliminated toolbar button wrap: consolidated 9 export/import actions into responsive Dropdown menus while preserving all shortcuts.
   - HiDPI & Responsive Charts: enforced integer DPR canvas buffer styles and added debounced window resize handler for dashboard charts.
   - Verification: `npm run build` clean (0 errors); advanced usability target to `KNote`; handoff to `kilo-qa`.
-
-- **2026-10-16T17:31:00+0000 — kilo-adhoc: Core System Cartridges v2.0 (KExplorer, KTaskMgr, KSettings)**
-  - Status: PASS ✅ (0 regressions, clean builds, all cartridges < 999 KB ceiling).
-  - KExplorer v2.0: Added live `VFS_CHANGED` auto-refresh, `+ New File`, file rename (F2), file delete (Del), inline quick-preview drawer for text/code, and cartridge mappings.
-  - KTaskMgr v2.0: Rendered enriched `OS_LIST_TASKS_DONE` payload, real-time Canvas sparkline graph for aggregate FPS & Virtual RAM, and double-click window focus/restore.
-  - KSettings v2.0: Wired sound & volume controls to `/.sys_settings_sound` & `/.sys_settings_volume` via `VFS_WRITE`; added exact file byte sizes & guarded VFS deletion.
-  - Shell Bridge: Added `OS_FOCUS_TASK` in `App.jsx`, bumped version to `0.4.30`.
-  - Verification: `npm run build` clean (0 errors, 364ms); file sizes verified: `kexplorer` (55 KB), `ktaskmgr` (51 KB), `ksettings` (78 KB).

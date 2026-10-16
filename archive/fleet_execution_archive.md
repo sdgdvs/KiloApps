@@ -4,6 +4,14 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-16T17:31:00+0000 — kilo-adhoc: Core System Cartridges v2.0 (KExplorer, KTaskMgr, KSettings)**
+  - Status: PASS ✅ (0 regressions, clean builds, all cartridges < 999 KB ceiling).
+  - KExplorer v2.0: Added live `VFS_CHANGED` auto-refresh, `+ New File`, file rename (F2), file delete (Del), inline quick-preview drawer for text/code, and cartridge mappings.
+  - KTaskMgr v2.0: Rendered enriched `OS_LIST_TASKS_DONE` payload, real-time Canvas sparkline graph for aggregate FPS & Virtual RAM, and double-click window focus/restore.
+  - KSettings v2.0: Wired sound & volume controls to `/.sys_settings_sound` & `/.sys_settings_volume` via `VFS_WRITE`; added exact file byte sizes & guarded VFS deletion.
+  - Shell Bridge: Added `OS_FOCUS_TASK` in `App.jsx`, bumped version to `0.4.30`.
+  - Verification: `npm run build` clean (0 errors, 364ms); file sizes verified: `kexplorer` (55 KB), `ktaskmgr` (51 KB), `ksettings` (78 KB).
+
 - **2026-10-16T17:15:00+0000 — kilo-tester: KChess (Interactive UI Audit & Inline Fixes)**
   - Audited all UI components: piece drag/clicks, timers, PGN/FEN managers, replay inspector, opening book, and modals.
   - Fixed critical ReferenceError in `openEditorModal` (`editorTurn = turn` -> `whiteTurn ? 1 : -1`) and inverted piece mapping.

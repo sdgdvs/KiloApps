@@ -162,7 +162,7 @@ def run_gate(dry_run: bool = False):
         if not app["folder"]:
             failed_manifest.append(f"App '{app_id}' has missing or empty 'folder'")
         elif app["folder"] not in VALID_FOLDERS:
-            failed_manifest.append(f"App '{app_id}' has unknown folder '{app["folder"]}' (valid: {sorted(VALID_FOLDERS)})")
+            failed_manifest.append(f"App '{app_id}' has unknown folder '{app['folder']}' (valid: {sorted(VALID_FOLDERS)})")
 
         # Validate icon path and existence
         icon_path = app["icon"]
