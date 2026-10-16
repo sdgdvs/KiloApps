@@ -659,7 +659,13 @@
       } catch (e) {}
       updateSoundButton();
       showToast(soundMuted ? '🔇 Audio muted [M]' : '🔊 Audio unmuted [M]', 'info');
-      if (!soundMuted) playTone(523.25, 'triangle', 0.1, 0.25);
+      if (soundMuted) {
+        stopBgm();
+      } else {
+        initAudio();
+        playBrassFanfareNote(523.25, 0.18, 0.25);
+        startBgm();
+      }
     }
 
     function updateSoundButton() {
@@ -686,14 +692,14 @@
         if (!AudioClass) return null;
         audioCtx = new AudioClass();
         
-        // SNES SPC700 Stereo Delay & Spatial Warmth Network
-        spcDelay = audioCtx.createDelay(0.5);
-        spcDelay.delayTime.value = 0.045; // 45ms warm slapback
+        // SNES SPC700 Stereo Delay & Spatial Warmth Network (180ms, 2200Hz LP filter, 0.28 feedback)
+        spcDelay = audioCtx.createDelay(1.0);
+        spcDelay.delayTime.value = 0.18; // 180ms SPC700 echo
         spcFeedback = audioCtx.createGain();
-        spcFeedback.gain.value = 0.22;
+        spcFeedback.gain.value = 0.28;
         spcDamp = audioCtx.createBiquadFilter();
         spcDamp.type = 'lowpass';
-        spcDamp.frequency.value = 3400; // Warm analog tape / SPC700 rolloff
+        spcDamp.frequency.value = 2200; // Warm analog tape / SPC700 DSP filter rolloff
 
         spcDelay.connect(spcDamp);
         spcDamp.connect(spcFeedback);
@@ -705,65 +711,281 @@
       return audioCtx;
     }
 
-    // Sega Genesis YM2612 2-Operator FM Synthesizer Voice
-    function playFM(carrierFreq, modRatio, modIndex, duration, vol = 0.3, type = 'sine') {
+    // --- Sega Genesis YM2612 2-Operator FM Synthesizer Voice ---
+    function playFmTone(carrierFreq, modRatio, modIndex, duration, gainVal = 0.25, useEcho = true) {
       const ctx = initAudio();
-      if (!ctx) return;
-      const t = ctx.currentTime;
+      if (!ctx || soundMuted) return;
+      const now = ctx.currentTime;
 
-      // Operator 2 (Modulator)
-      const op2 = ctx.createOscillator();
-      const op2Gain = ctx.createGain();
-      op2.type = type;
-      op2.frequency.setValueAtTime(carrierFreq * modRatio, t);
-      op2Gain.gain.setValueAtTime(modIndex, t);
-      op2Gain.gain.exponentialRampToValueAtTime(0.01, t + duration * 0.9);
-      op2.connect(op2Gain);
+      // Operator 2: Modulator
+      const mod = ctx.createOscillator();
+      const modGain = ctx.createGain();
+      mod.type = 'sine';
+      mod.frequency.setValueAtTime(carrierFreq * modRatio, now);
+      modGain.gain.setValueAtTime(carrierFreq * modRatio * modIndex, now);
+      modGain.gain.exponentialRampToValueAtTime(0.01, now + duration * 0.9);
+      mod.connect(modGain);
 
-      // Operator 1 (Carrier)
-      const op1 = ctx.createOscillator();
-      const masterGain = ctx.createGain();
-      op1.type = type;
-      op1.frequency.setValueAtTime(carrierFreq, t);
-      op2Gain.connect(op1.frequency);
+      // Operator 1: Carrier
+      const carrier = ctx.createOscillator();
+      const ampEnv = ctx.createGain();
+      carrier.type = 'sine';
+      carrier.frequency.setValueAtTime(carrierFreq, now);
+      modGain.connect(carrier.frequency);
 
-      masterGain.gain.setValueAtTime(vol, t);
-      masterGain.gain.exponentialRampToValueAtTime(0.001, t + duration);
+      ampEnv.gain.setValueAtTime(gainVal, now);
+      ampEnv.gain.exponentialRampToValueAtTime(0.001, now + duration);
 
-      op1.connect(masterGain);
-      masterGain.connect(ctx.destination);
-      if (spcDelay) masterGain.connect(spcDelay);
+      carrier.connect(ampEnv);
+      ampEnv.connect(ctx.destination);
+      if (useEcho && spcDelay) ampEnv.connect(spcDelay);
 
-      op2.start(t);
-      op1.start(t);
-      op2.stop(t + duration);
-      op1.stop(t + duration);
+      mod.start(now);
+      carrier.start(now);
+      mod.stop(now + duration);
+      carrier.stop(now + duration);
     }
 
-    function playTone(freq, type = 'sine', duration = 0.15, vol = 0.25) {
+    // --- NAMED FM PATCHES ---
+    // 1. Punchy Slap Bass (tight transient, no echo)
+    function playSlapBass(freq, dur = 0.14, vol = 0.3) {
+      playFmTone(freq, 2.0, 3.4, dur, vol, false);
+    }
+
+    // 2. Distorted FM Guitar / Roman Gladius Lead (high modIndex, delayed vibrato)
+    function playDistortedLead(freq, dur = 0.22, vol = 0.24) {
       const ctx = initAudio();
-      if (!ctx) return;
+      if (!ctx || soundMuted) return;
+      const now = ctx.currentTime;
+      const carrier = ctx.createOscillator();
+      const mod = ctx.createOscillator();
+      const modGain = ctx.createGain();
+      const ampEnv = ctx.createGain();
+
+      carrier.type = 'sawtooth';
+      mod.type = 'sine';
+      carrier.frequency.setValueAtTime(freq, now);
+      mod.frequency.setValueAtTime(freq * 1.0, now);
+
+      modGain.gain.setValueAtTime(freq * 4.5, now);
+      modGain.gain.exponentialRampToValueAtTime(freq * 0.8, now + dur);
+
+      // Delayed vibrato (after 90ms)
+      if (dur > 0.2) {
+        carrier.frequency.setValueAtTime(freq, now + 0.09);
+        carrier.frequency.linearRampToValueAtTime(freq * 1.025, now + 0.14);
+        carrier.frequency.linearRampToValueAtTime(freq * 0.975, now + 0.19);
+        carrier.frequency.linearRampToValueAtTime(freq, now + dur);
+      }
+
+      ampEnv.gain.setValueAtTime(vol, now);
+      ampEnv.gain.exponentialRampToValueAtTime(0.001, now + dur);
+
+      mod.connect(modGain);
+      modGain.connect(carrier.frequency);
+      carrier.connect(ampEnv);
+      ampEnv.connect(ctx.destination);
+      if (spcDelay) ampEnv.connect(spcDelay);
+
+      mod.start(now);
+      carrier.start(now);
+      mod.stop(now + dur);
+      carrier.stop(now + dur);
+    }
+
+    // 3. Bright Imperial Brass Stab
+    function playBrassFanfareNote(freq, dur = 0.25, vol = 0.28) {
+      playFmTone(freq, 1.0, 3.8, dur, vol, true);
+    }
+
+    // 4. Inharmonic FM Hi-Hat / Percussion Cymbal
+    function playFmHiHat(isOpen = false) {
+      const dur = isOpen ? 0.16 : 0.05;
+      playFmTone(640, 11.0, 5.2, dur, 0.12, false);
+    }
+
+    // 5. FM Kick Drum (rapid pitch drop 130Hz -> 38Hz)
+    function playFmKick() {
+      const ctx = initAudio();
+      if (!ctx || soundMuted) return;
+      const now = ctx.currentTime;
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
-      osc.type = type;
-      osc.frequency.setValueAtTime(freq, ctx.currentTime);
-      gain.gain.setValueAtTime(vol, ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(140, now);
+      osc.frequency.exponentialRampToValueAtTime(36, now + 0.09);
+      gain.gain.setValueAtTime(0.42, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.14);
       osc.connect(gain);
       gain.connect(ctx.destination);
-      if (spcDelay) gain.connect(spcDelay);
-      osc.start();
-      osc.stop(ctx.currentTime + duration);
+      osc.start(now);
+      osc.stop(now + 0.14);
     }
 
+    // 6. FM Snare (noise burst + snappy body)
+    function playFmSnare() {
+      const ctx = initAudio();
+      if (!ctx || soundMuted) return;
+      const now = ctx.currentTime;
+      playFmTone(190, 8.5, 6.0, 0.11, 0.22, false);
+      try {
+        const bufferSize = Math.floor(ctx.sampleRate * 0.07);
+        const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (bufferSize * 0.4));
+        const noise = ctx.createBufferSource();
+        noise.buffer = buffer;
+        const filter = ctx.createBiquadFilter();
+        filter.type = 'highpass';
+        filter.frequency.value = 1800;
+        const gain = ctx.createGain();
+        gain.gain.setValueAtTime(0.3, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.07);
+        noise.connect(filter);
+        filter.connect(gain);
+        gain.connect(ctx.destination);
+        noise.start(now);
+      } catch (e) {}
+    }
+
+    // Fallback playTone wrapper for compatibility
+    function playTone(freq, type = 'sine', duration = 0.15, vol = 0.25) {
+      if (type === 'triangle' || type === 'sine') {
+        playFmTone(freq, 1.0, 0.5, duration, vol, true);
+      } else {
+        playBrassFanfareNote(freq, duration, vol);
+      }
+    }
+
+    // --- PROCEDURAL SOUNDSCAPE ENGINE (YM2612 2-Op FM + SPC700) ---
+    // Mode: D Phrygian Dominant (D - Eb - F# - G - A - Bb - C) & Andalusian Dm -> C -> Bb -> A
+    // Channels: Lead, Counter, Harmony Arp, Slap Bass, Kick, Snare, HiHat
+    let bgmTimer = null;
+    let bgmStep = 0;
+    let bgmMode = 'ludus'; // 'ludus' (ambient march) or 'combat' (driving battle)
+
+    // Frequencies (Hz)
+    const F_D2 = 73.42, F_Eb2 = 77.78, F_F2 = 87.31, F_G2 = 98.00, F_A2 = 110.00, F_Bb2 = 116.54, F_C3 = 130.81, F_D3 = 146.83;
+    const F_Eb3 = 155.56, F_Fs3 = 185.00, F_G3 = 196.00, F_A3 = 220.00, F_Bb3 = 233.08, F_C4 = 261.63, F_D4 = 293.66;
+    const F_Eb4 = 311.13, F_Fs4 = 369.99, F_G4 = 392.00, F_A4 = 440.00, F_Bb4 = 466.16, F_C5 = 523.25, F_D5 = 587.33;
+
+    // 32-step Combat Phrygian Dominant Riff (Galloping 16ths, 3-Voice counterpoint)
+    const combatLead = [
+      F_D4, 0, F_Eb4, F_Fs4, F_G4, 0, F_Fs4, F_Eb4,
+      F_D4, 0, F_A4, 0, F_G4, F_Fs4, F_Eb4, F_Fs4,
+      F_D4, 0, F_D5, 0, F_C5, F_Bb4, F_A4, F_G4,
+      F_Fs4, F_G4, F_A4, F_Bb4, F_A4, F_G4, F_Fs4, F_Eb4
+    ];
+    const combatCounter = [
+      0, F_Fs3, 0, F_G3, 0, F_A3, 0, F_G3,
+      F_Fs3, 0, 0, F_Fs3, 0, F_Eb3, 0, F_Fs3,
+      0, F_A3, 0, F_Bb3, 0, F_A3, 0, F_G3,
+      F_A3, 0, F_Fs3, 0, F_Eb3, 0, F_D3, 0
+    ];
+    const combatBass = [
+      F_D2, F_D2, F_D3, F_D2, F_Eb2, F_Eb2, F_Eb3, F_Eb2,
+      F_D2, F_D2, F_D3, F_D2, F_C3, F_C3, F_Bb2, F_A2,
+      F_D2, F_D2, F_D3, F_D2, F_G2, F_G2, F_G3, F_G2,
+      F_Fs2 || F_D2, F_D2, F_Eb2, F_Eb2, F_A2, F_A2, F_A2, 0
+    ];
+
+    // 32-step Ludus Management Theme (Stately Roman March & Training)
+    const ludusLead = [
+      F_D4, 0, 0, F_A4, F_G4, 0, F_Fs4, 0,
+      F_G4, 0, F_Eb4, 0, F_D4, 0, 0, 0,
+      F_Fs4, 0, 0, F_A4, F_Bb4, 0, F_A4, 0,
+      F_G4, 0, F_Fs4, 0, F_Eb4, 0, F_D4, 0
+    ];
+    const ludusCounter = [
+      0, 0, F_Fs3, 0, 0, 0, F_Eb3, 0,
+      0, 0, F_D3, 0, 0, F_Fs3, 0, 0,
+      0, 0, F_D3, 0, 0, 0, F_Fs3, 0,
+      0, 0, F_Eb3, 0, 0, 0, F_D3, 0
+    ];
+    const ludusBass = [
+      F_D2, 0, F_D3, 0, F_C3, 0, F_C3, 0,
+      F_Bb2, 0, F_Bb2, 0, F_A2, 0, F_A2, 0,
+      F_D2, 0, F_D3, 0, F_G2, 0, F_G3, 0,
+      F_Eb2, 0, F_Eb3, 0, F_D2, 0, F_D2, 0
+    ];
+
+    function playBgmStep(stepIdx) {
+      if (soundMuted) return;
+      const s = stepIdx % 32;
+
+      if (bgmMode === 'combat') {
+        // --- COMBAT ARENA SOUNDSCAPE ---
+        // Ch1: Lead Melody (Distorted Gladius Lead with delayed vibrato & echo)
+        const leadNote = combatLead[s];
+        if (leadNote > 0) playDistortedLead(leadNote, 0.17, 0.22);
+
+        // Ch2: Counterpoint (Brass harmony answering lead)
+        const counterNote = combatCounter[s];
+        if (counterNote > 0) playBrassFanfareNote(counterNote, 0.15, 0.18);
+
+        // Ch3: Galloping FM Slap Bass (tight root/octave motion)
+        const bassNote = combatBass[s];
+        if (bassNote > 0) playSlapBass(bassNote, 0.12, 0.28);
+
+        // Ch5 & Ch6: Percussion (FM Kick + Snare + Hi-Hat)
+        if (s % 8 === 0 || s % 8 === 6) playFmKick();
+        if (s % 8 === 4) playFmSnare();
+        if (s % 2 === 0) playFmHiHat(s % 4 === 2);
+      } else {
+        // --- LUDUS AMBIENT MARCH ---
+        // Ch1: Imperial Brass Phrasing
+        const leadNote = ludusLead[s];
+        if (leadNote > 0) playBrassFanfareNote(leadNote, 0.24, 0.2);
+
+        // Ch2: Counterpoint Voice
+        const counterNote = ludusCounter[s];
+        if (counterNote > 0) playFmTone(counterNote, 1.0, 1.2, 0.22, 0.16, true);
+
+        // Ch3: Stately Bass
+        const bassNote = ludusBass[s];
+        if (bassNote > 0) playSlapBass(bassNote, 0.2, 0.22);
+
+        // Soft March Percussion
+        if (s % 8 === 0) playFmKick();
+        if (s % 8 === 4) playFmHiHat(true);
+      }
+    }
+
+    function scheduleBgmStep() {
+      if (soundMuted) return;
+      playBgmStep(bgmStep);
+      bgmStep++;
+
+      // 5:3 Swing Groove timing: Even 175ms, Odd 105ms (Average 140ms per step = ~107 BPM)
+      const isEven = (bgmStep % 2 === 0);
+      const nextDelay = bgmMode === 'combat' ? (isEven ? 150 : 95) : (isEven ? 180 : 120);
+      bgmTimer = setTimeout(scheduleBgmStep, nextDelay);
+    }
+
+    function startBgm(mode = null) {
+      if (mode) bgmMode = mode;
+      if (soundMuted) return;
+      if (bgmTimer) clearTimeout(bgmTimer);
+      bgmStep = 0;
+      scheduleBgmStep();
+    }
+
+    function stopBgm() {
+      if (bgmTimer) {
+        clearTimeout(bgmTimer);
+        bgmTimer = null;
+      }
+    }
+
+    // --- REFINED COMBAT ACTION STINGERS & EARCONS ---
     function playClash() {
       const ctx = initAudio();
-      if (!ctx) return;
-      // FM metallic sword blade clash (2-op bell ring)
-      playFM(580, 2.76, 1200, 0.22, 0.35);
-      // Impact noise burst
+      if (!ctx || soundMuted) return;
+      // High-register inharmonic FM blade resonance
+      playFmTone(620, 2.76, 4.8, 0.22, 0.32, true);
+      // Sharp impact noise transient
       try {
-        const bufferSize = Math.floor(ctx.sampleRate * 0.08);
+        const bufferSize = Math.floor(ctx.sampleRate * 0.07);
         const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
         const data = buffer.getChannelData(0);
         for (let i = 0; i < bufferSize; i++) data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (bufferSize * 0.3));
@@ -771,10 +993,10 @@
         noise.buffer = buffer;
         const filter = ctx.createBiquadFilter();
         filter.type = 'highpass';
-        filter.frequency.value = 1400;
+        filter.frequency.value = 1600;
         const gain = ctx.createGain();
-        gain.gain.setValueAtTime(0.4, ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.08);
+        gain.gain.setValueAtTime(0.35, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.07);
         noise.connect(filter);
         filter.connect(gain);
         gain.connect(ctx.destination);
@@ -784,22 +1006,22 @@
 
     function playShieldBash() {
       const ctx = initAudio();
-      if (!ctx) return;
-      // Heavy bronze gong / shield clang
-      playFM(185, 1.41, 850, 0.35, 0.4);
-      playTone(95, 'triangle', 0.25, 0.45);
+      if (!ctx || soundMuted) return;
+      // Heavy bronze gong / shield slam
+      playFmTone(174.61, 1.41, 5.0, 0.35, 0.38, true);
+      playSlapBass(92.5, 0.22, 0.4);
     }
 
     function playMiss() {
       const ctx = initAudio();
-      if (!ctx) return;
-      // Whoosh air slice
-      playTone(190, 'sine', 0.18, 0.25);
+      if (!ctx || soundMuted) return;
+      // Whoosh air slice via descending FM tone
+      playFmTone(240, 0.5, 1.2, 0.16, 0.2, false);
     }
 
     function playCheer() {
       const ctx = initAudio();
-      if (!ctx) return;
+      if (!ctx || soundMuted) return;
       try {
         const bufferSize = Math.floor(ctx.sampleRate * 1.8);
         const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
@@ -813,8 +1035,8 @@
         filter.Q.value = 1.2;
         const gain = ctx.createGain();
         gain.gain.setValueAtTime(0, ctx.currentTime);
-        gain.gain.linearRampToValueAtTime(0.45, ctx.currentTime + 0.4);
-        gain.gain.linearRampToValueAtTime(0.35, ctx.currentTime + 1.2);
+        gain.gain.linearRampToValueAtTime(0.4, ctx.currentTime + 0.35);
+        gain.gain.linearRampToValueAtTime(0.3, ctx.currentTime + 1.2);
         gain.gain.linearRampToValueAtTime(0, ctx.currentTime + 1.8);
         noise.connect(filter);
         filter.connect(gain);
@@ -825,41 +1047,49 @@
     }
 
     function playTrumpetFanfare() {
-      // Imperial Roman Brass Fanfare using FM Horns
-      const notes = [261.63, 329.63, 392.00, 523.25]; // C4, E4, G4, C5
+      // Imperial Roman Brass Fanfare using Mario Cadence (bVI - bVII - I) in D: Bb -> C -> D
+      const notes = [233.08, 261.63, 293.66, 587.33]; // Bb3, C4, D4, D5
       notes.forEach((f, i) => {
         setTimeout(() => {
-          playFM(f, 1.0, 550, i === 3 ? 0.6 : 0.2, 0.32, 'sawtooth');
-        }, i * 110);
+          playBrassFanfareNote(f, i === 3 ? 0.6 : 0.22, 0.35);
+        }, i * 115);
       });
     }
 
     function playWarHorn() {
       // Imperial Cornu / War Horn using YM2612 2-op FM with brass swell
-      playFM(146.83, 1.0, 340, 0.45, 0.38, 'sawtooth');
+      playBrassFanfareNote(146.83, 0.4, 0.36);
       setTimeout(() => {
-        playFM(220.00, 1.0, 480, 0.65, 0.42, 'sawtooth');
-      }, 150);
+        playBrassFanfareNote(220.00, 0.6, 0.4);
+      }, 140);
     }
 
     function playDualSlash() {
       playClash();
-      setTimeout(() => playClash(), 110);
+      setTimeout(() => playClash(), 100);
     }
 
     function playVictory() {
+      stopBgm();
       playTrumpetFanfare();
       setTimeout(() => playCheer(), 250);
+      setTimeout(() => {
+        if (!soundMuted) startBgm('ludus');
+      }, 2500);
     }
 
     function playDefeat() {
-      // Somber minor descent with FM war horn
+      stopBgm();
+      // Somber Andalusian minor descent with somber FM brass
       const notes = [220, 196, 174.61, 146.83];
       notes.forEach((f, i) => {
         setTimeout(() => {
-          playFM(f, 0.5, 300, 0.45, 0.3, 'sawtooth');
-        }, i * 220);
+          playFmTone(f, 0.5, 2.2, 0.45, 0.28, true);
+        }, i * 210);
       });
+      setTimeout(() => {
+        if (!soundMuted) startBgm('ludus');
+      }, 2500);
     }
 
     let funds = 1000;
@@ -3442,6 +3672,7 @@
       
       document.getElementById('dashboard').style.display = 'none';
       document.getElementById('arenaPanel').style.display = 'block';
+      if (!soundMuted) startBgm('combat');
 
       // Ensure online duel overlays are reset for solo play
       isOnlineGame = false;
@@ -3955,6 +4186,7 @@
       if (animId) cancelAnimationFrame(animId);
       document.getElementById('arenaPanel').style.display = 'none';
       document.getElementById('dashboard').style.display = 'flex';
+      if (!soundMuted) startBgm('ludus');
 
       // Reset online duel overlays
       isOnlineGame = false;
