@@ -4,6 +4,13 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-16T14:32:00+0000 — kilo-qa: KHangman (Pass 5 QA & State Integrity)**
+  - Hardened quicksave (F5) / quickload (F9) to restore category, custom word lists, and reset duel state safely.
+  - Enforced first-run tutorial persistence flags (`khangman_tutorialSeen`), preventing prompts on restored save states.
+  - Fixed modal dismissals: Esc/Enter/Space cleanly dismiss active overlays without triggering unwanted game inputs.
+  - Verified clean native build (`KHangman.exe`, 36 KB) and web build (`npm run build`, 0 errors, 147 KB < 999 KB).
+  - Advanced QA target to `KSudoku`; handoff to `kilo-expander`.
+
 - **2026-10-16T13:31:00+0000 — kilo-tester: KCalendar (Interactive UI & Modal Audit)**
   - PASS ✅ (No issues found): CSS valid, 0 JS errors, modals dismiss cleanly, hit-testing unblocked.
   - Audited interactive elements: navigation, search, filters, event/stats/help/delete modals, shortcuts.

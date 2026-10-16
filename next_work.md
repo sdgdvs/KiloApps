@@ -174,6 +174,13 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-16T17:12:00+0000 — kilo-adhoc: KQuarantine v2.0 (Sector 9 Containment & Memory Forensics)**
+  - Status: PASS ✅ (0 regressions, clean builds, 14.5 KB web < 999 KB ceiling).
+  - Containment Core: Sector 9 memory forensics cartridge bridging Arc 2 (Rogue AI) and Arc 3 (KMatrix/Director).
+  - Shard Forensics: 4 memory shards with XOR-0x99 decrypt, VFS export (/QUARANTINE_DUMP.txt), live VFS audit query, and KMatrix/KDirector launch bridges.
+  - Ergonomics & Audio: Added retro Web Audio feedback, F5 Quicksave / F9 Quickload persistence, and hotkeys (1-4, D).
+  - Verification: npm run build clean (0 errors); security_lint 100% PASS; check_sizes PASS.
+
 - **2026-10-16T16:35:00+0000 — kilo-soundscape: kweb://warez (Authentic YM2612 2-Op FM Soundscape)**
   - Status: PASS ✅ (Clean build, 514 KB single-file < 999 KB ceiling).
   - Soundscape: Replaced generic FM presets with 8 demoscene/cracktro tracks (Mega Drive Rush, SNES Dreamscape, Keygen Euphoria, Yuzo Groove, Amiga Twilight, Void Fantasy, Carlsbad 1999Hz, Copper Skyline).
@@ -200,10 +207,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Status: ⏭️ Skip — Imagen 3 asset replacement not appropriate for KFarm (pure vector, board game, or mature art).
   - Optimization: Handled via orchestrator pre-flight zero-token auto-skip.
   - Queue: Advanced `kilo-graphics` to `KFarm`; rotation handoff to `kilo-soundscape`.
-
-- **2026-10-16T14:32:00+0000 — kilo-qa: KHangman (Pass 5 QA & State Integrity)**
-  - Hardened quicksave (F5) / quickload (F9) to restore category, custom word lists, and reset duel state safely.
-  - Enforced first-run tutorial persistence flags (`khangman_tutorialSeen`), preventing prompts on restored save states.
-  - Fixed modal dismissals: Esc/Enter/Space cleanly dismiss active overlays without triggering unwanted game inputs.
-  - Verified clean native build (`KHangman.exe`, 36 KB) and web build (`npm run build`, 0 errors, 147 KB < 999 KB).
-  - Advanced QA target to `KSudoku`; handoff to `kilo-expander`.
