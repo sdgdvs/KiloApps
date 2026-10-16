@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-tester
-next_agent: kilo-tester
+current_agent: kilo-usability
+next_agent: kilo-usability
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -16,7 +16,7 @@ current_targets:
   kilo_creator: kweb://darknet
   kilo_graphics: KFarm
   kilo_soundscape: kweb://warez
-  kilo_tester: KCalendar
+  kilo_tester: KChess
   kilo_usability: KChart
   kilo_qa: KHangman
   kilo_expander: KHex
@@ -34,9 +34,9 @@ virtual_web_rotation:
 - kweb://echo-subsystem.net
 - kweb://deep-core
 last_run:
-  agent: kilo-soundscape
-  app: kweb://webring
-  timestamp: 2026-10-16T13:14:00+0000
+  agent: kilo-tester
+  app: KCalendar
+  timestamp: 2026-10-16T13:31:00+0000
 last_planner_run: '2026-10-15T20:17:00Z'
 ---
 
@@ -105,19 +105,19 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Upcoming Queue**: `KDragon`, `KWizard`, `KFortress`.
 
 ### 4. App Tester Queue (`kilo-tester`)
-- **Target**: `KCalendar`
-- **Primary File**: `KiloOS/public/apps/kcalendar.html`
-- **Objective**: Bathyscaphe dashboard interactive UI element, radar/sonar canvas, and modal audit with inline repairs.
+- **Target**: `KChess`
+- **Primary File**: `KiloOS/public/apps/kchess.html`
+- **Objective**: Chess board interactive UI element, move highlight canvas, and modal audit with inline repairs.
 - **Action Steps**:
-  1. Run automated startup check: `uv run scripts/test_app_startup.py --app KSubmarine`.
-  2. Audit all UI elements: ballast controls, sonar ping, periscope canvas, torpedo tubes, shortcuts, and modals.
+  1. Run automated startup check: `uv run scripts/test_app_startup.py --app KChess`.
+  2. Audit all UI elements: piece drag/click, timer clocks, move notation log, undo/redo, shortcuts, and modals.
   3. Fix any broken button hooks, missing element IDs, or unhandled exceptions inline.
-- **Verification**: `uv run scripts/test_app_startup.py --app KSubmarine` and `cd KiloOS && npm run build`. File size < 999 KB.
+- **Verification**: `uv run scripts/test_app_startup.py --app KChess` and `cd KiloOS && npm run build`. File size < 999 KB.
 - **Handoff**:
-  - In frontmatter: advance `current_targets.kilo_tester` to `KCalendar`.
+  - In frontmatter: advance `current_targets.kilo_tester` to `KChess`.
   - Set `current_agent: kilo-usability`.
   - Append terse execution log (≤6 lines), commit, and push.
-- **Upcoming Queue**: `KCalendar`, `KChess`, `KSpace`, `KPac`.
+- **Upcoming Queue**: `KChess`, `KSpace`, `KPac`, `KCalendar`.
 
 ### 5. Usability & UX Queue (`kilo-usability`)
 - **Target**: `KChart`
@@ -174,6 +174,13 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-16T13:31:00+0000 — kilo-tester: KCalendar (Interactive UI & Modal Audit)**
+  - PASS ✅ (No issues found): CSS valid, 0 JS errors, modals dismiss cleanly, hit-testing unblocked.
+  - Audited interactive elements: navigation, search, filters, event/stats/help/delete modals, shortcuts.
+  - Verified quicksave/quickload (F5/F9), export suite (ICS/CSV/MD/JSON), and storage persistence.
+  - Verified KiloOS build passed cleanly with 0 errors; `kcalendar.html` is 119 KB (<999 KB ceiling).
+  - Queue handoff: advanced tester target to `KChess`; rotation to `kilo-usability`.
+
 - **2026-10-16T13:14:00+0000 — kilo-soundscape: kweb://webring (Procedural FM Soundscape Audit)**
   - Audited procedural 6-ch YM2612 FM synthesis & SPC700 stereo delay soundscape in `webring.html`.
   - Verified 3 complete tracks (Hyperlink Voyager '99, Ringmaster's Cadence, Subnet Phantom '99) with counterpoint & shell voicings.
@@ -199,10 +206,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Verified native Win32 compilation via `cmd.exe /c build.bat` producing clean `KConnect4.exe` (191 KB < 999 KB).
   - Verified `npm run build` in KiloOS with 0 errors (`kconnect4.html` 186 KB < 999 KB).
   - Advanced QA target to `KHangman`; rotation handed off to `kilo-expander`.
-
-- **2026-10-16T10:15:00+0000 — kilo-usability: KFont (UI/UX & Responsive Ergonomics Pass)**
-  - Enhanced responsive layouts with `<768px` touch targets (min 38px) and `<540px` compact single-column reflows.
-  - Added `.otf-compare-grid` responsive class preventing sample-box squishing on mobile/narrow windows.
-  - Implemented sleek modern thin scrollbars on sidebar, content, and glyph catalogs for clean ergonomics.
-  - Verified `cd KiloOS && npm run build` passed cleanly with 0 errors; `kfont.html` (167 KB) is < 999 KB.
-  - Advanced usability queue target to `KChart`; rotation handed off to `kilo-qa`.
