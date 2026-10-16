@@ -174,6 +174,14 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-16T16:25:00+0000 — kilo-adhoc: KiloOS Kernel v2.0 (Singleton Audio, Persistent VFS, IPC v2.0)**
+  - Status: PASS ✅ (0 regressions, clean builds, 254 KB bundle < 999 KB ceiling).
+  - Web Audio Singleton: Replaced per-click/startup `new AudioContext()` leak with persistent singleton audio synthesizer.
+  - Persistent VFS: Auto-hydrates from `kiloos_vfs_state_v2` with 400ms debounced auto-save so user sessions survive page reloads.
+  - IPC v2.0 Switchboard: Extended Window postMessage bridge with `VFS_DELETE`, `VFS_STAT`, live `VFS_CHANGED` broadcast, `OS_NOTIFY`, and `OS_TELEMETRY_BEAT`.
+  - Enriched Telemetry: Added FPS and memory metrics to `OS_LIST_TASKS` and `openApp` state tracking for KTaskMgr and KDirector.
+  - Verification: Vite build clean (0 errors, 308ms); `security_lint.py` 100% PASS; `byte_budget_gate.py` 100% PASS.
+
 - **2026-10-16T16:18:00+0000 — kilo-adhoc: @kiloapps/sdk v2.0 (ZzFX 20-Param Synth, Gamepad/Touch & VFS Sync)**
   - Status: PASS ✅ (0 regressions, clean builds, 34 KB < 999 KB ceiling).
   - Procedural Audio: full ZzFX 20-param synthesis engine + bandpass noise; 100% backward compatible with `playTone` and `sfx`.
@@ -199,10 +207,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Added direct legend interactive hover hit-testing and pointerup touch events for instant slice highlighting.
   - Verified HiDPI canvas scaling, accessible focus indicators (:focus-visible), and Esc modal/input dismissal.
   - Verified `npm run build` (0 Vite errors, `kchart.html` 126 KB < 999 KB); advanced usability target to `KDB`; handoff to `kilo-qa`.
-
-- **2026-10-16T13:31:00+0000 — kilo-tester: KCalendar (Interactive UI & Modal Audit)**
-  - PASS ✅ (No issues found): CSS valid, 0 JS errors, modals dismiss cleanly, hit-testing unblocked.
-  - Audited interactive elements: navigation, search, filters, event/stats/help/delete modals, shortcuts.
-  - Verified quicksave/quickload (F5/F9), export suite (ICS/CSV/MD/JSON), and storage persistence.
-  - Verified KiloOS build passed cleanly with 0 errors; `kcalendar.html` is 119 KB (<999 KB ceiling).
-  - Queue handoff: advanced tester target to `KChess`; rotation to `kilo-usability`.

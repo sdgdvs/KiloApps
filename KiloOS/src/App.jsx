@@ -1,7 +1,20 @@
 import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { DEFAULT_VFS } from './defaultVfs';
 import './App.css';
-const MICROS_VERSION = '0.4.28'
+const MICROS_VERSION = '0.4.29';
+
+// Singleton Web Audio Synthesizer (Replaces per-click new AudioContext() leak)
+const osAudioCtxRef = { current: null };
+function getOsAudioContext() {
+  if (!osAudioCtxRef.current) {
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    if (AudioCtx) osAudioCtxRef.current = new AudioCtx();
+  }
+  if (osAudioCtxRef.current && osAudioCtxRef.current.state === 'suspended') {
+    osAudioCtxRef.current.resume().catch(() => {});
+  }
+  return osAudioCtxRef.current;
+}
 
 const FOLDER_ICON = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><defs><linearGradient id='f1' x1='0%' y1='0%' x2='0%' y2='100%'><stop offset='0%' stop-color='%2364B5F6'/><stop offset='100%' stop-color='%231E88E5'/></linearGradient><linearGradient id='f2' x1='0%' y1='0%' x2='0%' y2='100%'><stop offset='0%' stop-color='%2390CAF9'/><stop offset='100%' stop-color='%232196F3'/></linearGradient></defs><path fill='url(%23f1)' d='M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z'/><path fill='url(%23f2)' d='M2 8h20v10c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V8z'/></svg>";
 const HELP_ICON = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%232196F3' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><circle cx='12' cy='12' r='10'></circle><path d='M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3'></path><line x1='12' y1='17' x2='12.01' y2='17'></line></svg>";
@@ -263,18 +276,53 @@ function Window({ app, onClose, onFocus, onMinimize, vfs, setVfs, requestVfsModa
   useEffect(() => {
     const handleMessage = (e) => {
       if (e.source !== iframeRef.current?.contentWindow) return;
-      const { type, path, data, requestId } = e.data;
+      const { type, path, data, requestId } = e.data || {};
 
       if (type === 'VFS_READ') {
-        const fileData = vfs[path] || '';
+        const fileData = vfs[path] ?? null;
         e.source.postMessage({ type: 'VFS_READ_DONE', requestId, data: fileData, path }, '*');
       } 
       else if (type === 'VFS_WRITE') {
         setVfs(prev => ({ ...prev, [path]: data }));
         e.source.postMessage({ type: 'VFS_WRITE_DONE', requestId, path }, '*');
+        // Broadcast VFS_CHANGED to all open windows so KExplorer/KSettings update live
+        document.querySelectorAll('.xp-iframe').forEach(frame => {
+          frame.contentWindow?.postMessage({ type: 'VFS_CHANGED', path, data }, '*');
+        });
       } 
+      else if (type === 'VFS_DELETE') {
+        setVfs(prev => {
+          const next = { ...prev };
+          delete next[path];
+          return next;
+        });
+        e.source.postMessage({ type: 'VFS_DELETE_DONE', requestId, path }, '*');
+        document.querySelectorAll('.xp-iframe').forEach(frame => {
+          frame.contentWindow?.postMessage({ type: 'VFS_CHANGED', path, deleted: true }, '*');
+        });
+      }
+      else if (type === 'VFS_STAT') {
+        const exists = Object.prototype.hasOwnProperty.call(vfs, path);
+        const val = vfs[path];
+        const stat = exists ? {
+          exists: true,
+          path,
+          size: typeof val === 'string' ? val.length : 0,
+          isFile: true,
+        } : { exists: false, path };
+        e.source.postMessage({ type: 'VFS_STAT_DONE', requestId, stat, exists, path }, '*');
+      }
       else if (type === 'VFS_LIST') {
-        e.source.postMessage({ type: 'VFS_LIST_DONE', requestId, files: Object.keys(vfs) }, '*');
+        const entries = Object.entries(vfs).map(([k, v]) => ({
+          path: k,
+          size: typeof v === 'string' ? v.length : 0
+        }));
+        e.source.postMessage({
+          type: 'VFS_LIST_DONE',
+          requestId,
+          files: Object.keys(vfs),
+          entries
+        }, '*');
       }
       else if (type === 'VFS_SHOW_OPEN') {
         requestVfsModal('open', (selectedPath) => {
@@ -286,21 +334,41 @@ function Window({ app, onClose, onFocus, onMinimize, vfs, setVfs, requestVfsModa
           e.source.postMessage({ type: 'VFS_SHOW_SAVE_DONE', requestId, path: selectedPath }, '*');
         });
       }
-      else if (type === 'OS_LAUNCH_APP' || type === 'KILO_LAUNCH_APP') {
-        const payload = e.data.targetApp ? { appId: e.data.targetApp, ...e.data } : e.data;
-        window.dispatchEvent(new CustomEvent('os-launch-app', { detail: payload }));
-      }
       else if (type === 'OS_LIST_TASKS') {
-        const tasks = openApps.map(a => ({ id: a.instanceId, title: a.title }));
+        const tasks = openApps.map((a, idx) => ({
+          id: a.instanceId,
+          appId: a.id,
+          pid: 1000 + idx * 17,
+          title: a.title,
+          folder: a.folder || 'System',
+          minimized: !!a.minimized,
+          fps: a.fps || 60,
+          memoryKB: a.memoryKB || Math.round((a.w * a.h) / 400)
+        }));
         e.source.postMessage({ type: 'OS_LIST_TASKS_DONE', requestId, tasks }, '*');
       }
+      else if (type === 'OS_TELEMETRY_BEAT') {
+        // Update live FPS and memory for KTaskMgr & KDirector
+        window.dispatchEvent(new CustomEvent('os-telemetry-beat', {
+          detail: { instanceId: app.instanceId, fps: e.data?.fps, memoryKB: e.data?.memoryKB }
+        }));
+      }
+      else if (type === 'OS_NOTIFY') {
+        window.dispatchEvent(new CustomEvent('os-notify', {
+          detail: { title: e.data?.title || app.title, message: e.data?.message || '' }
+        }));
+      }
+      else if (type === 'OS_LAUNCH_APP' || type === 'KILO_LAUNCH_APP') {
+        const payload = e.data?.targetApp ? { appId: e.data.targetApp, ...e.data } : (e.data?.appId ? e.data : { appId: e.data?.targetApp || e.data?.id, ...e.data });
+        window.dispatchEvent(new CustomEvent('os-launch-app', { detail: payload }));
+      }
       else if (type === 'OS_KILL_TASK') {
-        closeApp(e.data.taskId);
+        closeApp(e.data?.taskId);
       }
     };
     window.addEventListener('message', handleMessage);
     return () => window.removeEventListener('message', handleMessage);
-  }, [vfs, setVfs, requestVfsModal, openApps, closeApp]);
+  }, [vfs, setVfs, requestVfsModal, openApps, closeApp, app.instanceId, app.title]);
 
   const getStyle = () => {
     let left = pos.x;
@@ -427,9 +495,11 @@ function App() {
   }, []);
 
   const playClickAudio = useCallback(() => {
+    if (vfs['/.sys_settings_sound'] === 'false') return;
     try {
-      const AudioContext = window.AudioContext || window.webkitAudioContext;
-      const ctx = new AudioContext();
+      const ctx = getOsAudioContext();
+      if (!ctx) return;
+      const vol = parseFloat(vfs['/.sys_settings_volume'] || '0.8');
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
       osc.connect(gain);
@@ -437,18 +507,19 @@ function App() {
       osc.type = 'sine';
       osc.frequency.setValueAtTime(800, ctx.currentTime);
       osc.frequency.exponentialRampToValueAtTime(300, ctx.currentTime + 0.05);
-      gain.gain.setValueAtTime(0.05, ctx.currentTime);
+      gain.gain.setValueAtTime(0.05 * vol, ctx.currentTime);
       gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.05);
       osc.start(ctx.currentTime);
       osc.stop(ctx.currentTime + 0.05);
     } catch (e) {}
-  }, []);
+  }, [vfs]);
 
   const playStartupAudio = useCallback(() => {
+    if (vfs['/.sys_settings_sound'] === 'false') return;
     try {
-      const AudioContext = window.AudioContext || window.webkitAudioContext;
-      const ctx = new AudioContext();
-      
+      const ctx = getOsAudioContext();
+      if (!ctx) return;
+      const vol = parseFloat(vfs['/.sys_settings_volume'] || '0.8');
       const t = ctx.currentTime;
       const freqs = [261.63, 329.63, 392.00, 493.88, 587.33]; // Cmaj9
       
@@ -462,14 +533,14 @@ function App() {
         osc.frequency.setValueAtTime(freq, t);
         
         gain.gain.setValueAtTime(0, t);
-        gain.gain.linearRampToValueAtTime(0.05, t + 0.1 + i * 0.1);
+        gain.gain.linearRampToValueAtTime(0.05 * vol, t + 0.1 + i * 0.1);
         gain.gain.exponentialRampToValueAtTime(0.001, t + 2.0);
         
         osc.start(t);
         osc.stop(t + 2.1);
       });
     } catch (e) {}
-  }, []);
+  }, [vfs]);
   const argClicks = useRef(0);
   const handlePixelClick = (e) => {
     e.stopPropagation();
@@ -481,7 +552,22 @@ function App() {
   const argAppHistory = useRef([]);
   const [isGlitching, setIsGlitching] = useState(false);
   const [safeMode, setSafeMode] = useState(false);
-  const [vfs, setVfs] = useState(DEFAULT_VFS);
+  const [vfs, setVfs] = useState(() => {
+    try {
+      const saved = localStorage.getItem('kiloos_vfs_state_v2');
+      if (saved) return { ...DEFAULT_VFS, ...JSON.parse(saved) };
+    } catch (e) {}
+    return DEFAULT_VFS;
+  });
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      try {
+        localStorage.setItem('kiloos_vfs_state_v2', JSON.stringify(vfs));
+      } catch (e) { /* Quota safeguard */ }
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [vfs]);
   const [openApps, setOpenApps] = useState([]);
   const [zIndexCounter, setZIndexCounter] = useState(10);
   const zIndexRef = useRef(10);
@@ -745,8 +831,11 @@ function App() {
     focusApp(instanceId);
   }, [focusApp]);
 
-  const closeApp = useCallback((instanceId) => {
-    setOpenApps(prev => prev.filter(a => a.instanceId !== instanceId));
+  const closeApp = useCallback((taskId) => {
+    setOpenApps(prev => prev.filter((a, idx) => {
+      const pid = 1000 + idx * 17;
+      return a.instanceId !== taskId && a.id !== taskId && pid !== taskId && String(pid) !== String(taskId);
+    }));
   }, []);
 
   const openApp = useCallback((appParams) => {
@@ -793,26 +882,58 @@ function App() {
         x: 50 + ((prev.length % 10) * 20), 
         y: 50 + ((prev.length % 10) * 20),
         zIndex: newZ,
-        minimized: false
+        minimized: false,
+        fps: 60,
+        memoryKB: Math.round(((appDef.w || 600) * (appDef.h || 400)) / 400)
       };
       setActiveAppId(instanceId);
       return [...prev, newApp];
     });
   }, [cerberusBlinded, focusApp, toggleMinimize]);
 
-  // Listen for File Explorer launching apps
+  // Listen for File Explorer / OS launching apps
   useEffect(() => {
     const handler = (e) => {
-      const { appId, path } = e.detail;
+      const { appId, path } = e.detail || {};
       const appDef = APPS.find(a => a.id === appId);
       if (appDef) {
         // Simple way to pass path to a newly launched app is via URL hash
-        openApp({ ...appDef, url: `${appDef.url}#${path}` });
+        openApp({ ...appDef, url: `${appDef.url}#${path || ''}` });
       }
     };
     window.addEventListener('os-launch-app', handler);
     return () => window.removeEventListener('os-launch-app', handler);
   }, [openApp]);
+
+  // Listen for OS Notifications from apps
+  useEffect(() => {
+    const handler = (e) => {
+      const { title, message } = e.detail || {};
+      notify(title || 'System', message || '');
+    };
+    window.addEventListener('os-notify', handler);
+    return () => window.removeEventListener('os-notify', handler);
+  }, [notify]);
+
+  // Listen for Live Telemetry beats from apps (KTaskMgr / KDirector)
+  useEffect(() => {
+    const handler = (e) => {
+      const { instanceId, fps, memoryKB } = e.detail || {};
+      if (!instanceId) return;
+      setOpenApps(prev => prev.map(a => {
+        if (a.instanceId === instanceId) {
+          return {
+            ...a,
+            fps: fps !== undefined ? fps : a.fps,
+            memoryKB: memoryKB !== undefined ? memoryKB : a.memoryKB
+          };
+        }
+        return a;
+      }));
+    };
+    window.addEventListener('os-telemetry-beat', handler);
+    return () => window.removeEventListener('os-telemetry-beat', handler);
+  }, []);
 
   // Handle Window Switching Shortcut & Help & Global Navigation
   useEffect(() => {
