@@ -2549,6 +2549,7 @@
           <span class="myk-time-pill" id="mykClockPill">🕒 14:00:00 PST</span>
           <button class="btn-retro" onclick="toggleMyKSettings()">⚙️ Customize Profile &amp; Theme</button>
           <button class="btn-retro" onclick="exportMyKProfile()">💾 Export Profile</button>
+          <button class="btn-retro" onclick="exportNetscapeBookmarks()">📑 Export Bookmarks.html</button>
           <label class="btn-retro" style="cursor:pointer; margin:0;">
             📂 Import <input type="file" id="mykImportInput" accept=".json" style="display:none;" onchange="importMyKProfile(event)">
           </label>
@@ -12870,6 +12871,32 @@ window.addEventListener('DOMContentLoaded', () => {
     }
   });
 });
+
+function exportNetscapeBookmarks() {
+  const bookmarks = (typeof mykProfile !== 'undefined' && mykProfile && Array.isArray(mykProfile.bookmarks) && mykProfile.bookmarks.length > 0)
+    ? mykProfile.bookmarks
+    : [
+        { title: "KiloNet Central Portal", url: "/web/portal.html" },
+        { title: "Central Webring Hub", url: "/web/webring.html" },
+        { title: "Warez Scene '99", url: "/web/warez.html" },
+        { title: "GeoCities CyberSpire", url: "/web/geocities.html" },
+        { title: "~neon_rider's Shrine", url: "/web/users/neon_rider.html" },
+        { title: "x86 Opcode Temple", url: "/web/asm_temple.html" },
+        { title: "CyberCafe '99", url: "/web/cybercafe.html" }
+      ];
+  let html = `<!DOCTYPE NETSCAPE-Bookmark-file-1>\n<!-- This is an automatically generated file. It will be read and overwritten. Do Not Edit! -->\n<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=UTF-8">\n<TITLE>Bookmarks</TITLE>\n<H1>Bookmarks</H1>\n<DL><p>\n    <DT><H3 FOLDED>KiloNet 1999 Favorites</H3>\n    <DL><p>\n`;
+  bookmarks.forEach(b => {
+    html += `        <DT><A HREF="${b.url}" ADD_DATE="${Math.floor(Date.now()/1000)}">${b.title || b.url}</A>\n`;
+  });
+  html += `    </DL><p>\n</DL><p>\n`;
+  const blob = new Blob([html], { type: 'text/html' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'bookmarks.html';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+}
 </script>
 </body>
 </html>
