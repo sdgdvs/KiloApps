@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-tester
-next_agent: kilo-usability
+current_agent: kilo-usability
+next_agent: kilo-qa
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -16,7 +16,7 @@ current_targets:
   kilo_creator: kweb://portal
   kilo_graphics: KFarm
   kilo_soundscape: kweb://cybercafe
-  kilo_tester: KChess
+  kilo_tester: KSpace
   kilo_usability: KDB
   kilo_qa: KSudoku
   kilo_expander: KHex
@@ -34,9 +34,9 @@ virtual_web_rotation:
 - kweb://echo-subsystem.net
 - kweb://deep-core
 last_run:
-  agent: kilo-soundscape
-  app: kweb://warez
-  timestamp: 2026-10-16T16:35:00+0000
+  agent: kilo-tester
+  app: KChess
+  timestamp: 2026-10-16T17:15:00+0000
 last_planner_run: '2026-10-15T20:17:00Z'
 ---
 
@@ -173,6 +173,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 ---
 
 ## Recent Execution Logs (Max 5 Entries)
+
+- **2026-10-16T17:15:00+0000 — kilo-tester: KChess (Interactive UI Audit & Inline Fixes)**
+  - Audited all UI components: piece drag/clicks, timers, PGN/FEN managers, replay inspector, opening book, and modals.
+  - Fixed critical ReferenceError in `openEditorModal` (`editorTurn = turn` -> `whiteTurn ? 1 : -1`) and inverted piece mapping.
+  - Enhanced editor palette selection highlight and added `modal-close` class to multiplayer modal.
+  - Verification: `npm run build` clean (0 errors, 491ms, 227 KB < 999 KB); advanced tester target to `KSpace`; handoff to `kilo-usability`.
 
 - **2026-10-16T17:12:00+0000 — kilo-adhoc: KQuarantine v2.0 (Sector 9 Containment & Memory Forensics)**
   - Status: PASS ✅ (0 regressions, clean builds, 14.5 KB web < 999 KB ceiling).

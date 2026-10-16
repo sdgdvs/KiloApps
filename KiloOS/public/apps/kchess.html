@@ -712,7 +712,7 @@
       </div>
 
       <div class="btn-group">
-        <button onclick="closeModals()">Close [Esc]</button>
+        <button class="modal-close" onclick="closeModals()">Close [Esc]</button>
       </div>
     </div>
   </div>
@@ -3412,12 +3412,13 @@
       }
       const btns = document.querySelectorAll('.editor-palette-btn');
       btns.forEach(btn => {
-          btn.style.border = '1px solid #475569';
+          const onclickAttr = btn.getAttribute('onclick') || '';
+          if (onclickAttr.includes(`selectEditorPiece(${p}`)) {
+              btn.style.border = '2px solid #5eead4';
+          } else {
+              btn.style.border = '1px solid #475569';
+          }
       });
-      const activeEvt = evt || (typeof window !== 'undefined' ? window.event : null);
-      if (activeEvt && activeEvt.currentTarget) {
-          activeEvt.currentTarget.style.border = '2px solid #5eead4';
-      }
   }
 
   function setEditorTurn(t) {
@@ -3486,9 +3487,12 @@
 
   function openEditorModal() {
       closeModals();
-      // Initialize editor board with current active game board
-      editorBoard = board.map(row => [...row]);
-      editorTurn = turn;
+      // Initialize editor board with current active game board (convert 7..12 to -1..-6)
+      editorBoard = board.map(row => row.map(p => {
+          if (p === 0) return 0;
+          return p > 6 ? -(p - 6) : p;
+      }));
+      editorTurn = whiteTurn ? 1 : -1;
       const tw = document.getElementById('editor-turn-w');
       const tb = document.getElementById('editor-turn-b');
       if (tw && tb) {
