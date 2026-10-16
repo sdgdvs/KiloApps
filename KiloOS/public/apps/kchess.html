@@ -3403,7 +3403,7 @@
       '-1': 'Black Pawn', '-2': 'Black Knight', '-3': 'Black Bishop', '-4': 'Black Rook', '-5': 'Black Queen', '-6': 'Black King'
   };
 
-  function selectEditorPiece(p) {
+  function selectEditorPiece(p, evt) {
       editorSelectedPiece = p;
       const badge = document.getElementById('editor-selected-badge');
       if (badge) {
@@ -3414,8 +3414,9 @@
       btns.forEach(btn => {
           btn.style.border = '1px solid #475569';
       });
-      if (event && event.currentTarget) {
-          event.currentTarget.style.border = '2px solid #5eead4';
+      const activeEvt = evt || (typeof window !== 'undefined' ? window.event : null);
+      if (activeEvt && activeEvt.currentTarget) {
+          activeEvt.currentTarget.style.border = '2px solid #5eead4';
       }
   }
 
