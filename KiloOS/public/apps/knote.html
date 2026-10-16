@@ -4,7 +4,161 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>KNote - Cybernetic Personal Notepad</title>
+<script>
+  /* KNote Usability & Keyboard Ergonomics Suite */
+  (function() {
+    window.addEventListener('keydown', function(e) {
+      // 1. Esc: Clean dialog / dropdown / find dismissal
+      if (e.key === 'Escape') {
+        var openModals = document.querySelectorAll('.modal-backdrop');
+        openModals.forEach(function(m) {
+          if (m.style.display !== 'none' && getComputedStyle(m).display !== 'none') {
+            m.style.display = 'none';
+          }
+        });
+        var openDropdowns = document.querySelectorAll('.dropdown.open, .dropdown-content');
+        openDropdowns.forEach(function(d) {
+          if (d.classList.contains('open')) d.classList.remove('open');
+          else if (d.style.display === 'block') d.style.display = 'none';
+        });
+        var fr = document.getElementById('findReplaceBar') || document.querySelector('.find-replace-bar');
+        if (fr && fr.style.display !== 'none') {
+          fr.style.display = 'none';
+        }
+      }
+
+      // 2. F1 / H / ?: Help & Shortcut modal overlay
+      var isTyping = ['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement && document.activeElement.tagName) || (document.activeElement && document.activeElement.isContentEditable);
+      if (e.key === 'F1' || (!isTyping && !e.ctrlKey && !e.altKey && !e.metaKey && (e.key === 'h' || e.key === 'H' || e.key === '?'))) {
+        e.preventDefault();
+        var helpBtn = document.getElementById('btnHelp') || document.getElementById('shortcutsBtn') ||
+                      document.querySelector('button[title*="Help" i]') || document.querySelector('button[title*="Shortcut" i]') ||
+                      document.querySelector('button[onclick*="shortcut" i]') || document.querySelector('button[onclick*="help" i]');
+        if (helpBtn) {
+          helpBtn.click();
+        } else {
+          var modal = document.getElementById('shortcutsModal') || document.getElementById('helpModal') ||
+                      document.querySelector('.modal-backdrop[id*="shortcut" i]') || document.querySelector('.modal-backdrop[id*="help" i]');
+          if (modal) modal.style.display = 'flex';
+        }
+      }
+
+      // 3. Tab Cycling Ergonomics: Ctrl+PageUp/PageDown & Alt+Left/Right
+      if ((e.ctrlKey && (e.key === 'PageDown' || e.key === 'PageUp')) || (e.altKey && (e.key === 'ArrowRight' || e.key === 'ArrowLeft'))) {
+        var tabs = Array.from(document.querySelectorAll('.tab-item:not(.tab-add)'));
+        if (tabs.length > 1) {
+          var activeIdx = tabs.findIndex(function(t) { return t.classList.contains('active'); });
+          if (activeIdx !== -1) {
+            e.preventDefault();
+            var nextIdx = (e.key === 'PageDown' || e.key === 'ArrowRight')
+              ? (activeIdx + 1) % tabs.length
+              : (activeIdx - 1 + tabs.length) % tabs.length;
+            tabs[nextIdx].click();
+            tabs[nextIdx].scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
+          }
+        }
+      }
+    });
+
+    document.addEventListener('DOMContentLoaded', function() {
+      // Middle-click to close tabs
+      document.addEventListener('auxclick', function(e) {
+        if (e.button === 1) {
+          var tab = e.target.closest('.tab-item');
+          if (tab) {
+            var closeBtn = tab.querySelector('.tab-close');
+            if (closeBtn) {
+              e.preventDefault();
+              closeBtn.click();
+            }
+          }
+        }
+      });
+
+      // Auto-collapse sidebar on narrow screens when selecting a note
+      var noteList = document.querySelector('.note-list');
+      if (noteList) {
+        noteList.addEventListener('click', function() {
+          if (window.innerWidth <= 540) {
+            var sidebar = document.querySelector('.sidebar');
+            if (sidebar && !sidebar.classList.contains('collapsed')) {
+              sidebar.classList.add('collapsed');
+            }
+          }
+        });
+      }
+    });
+  })();
+</script>
 <style>
+  /* KNote Responsive & Ergonomic Layout Enhancements */
+  @media (max-width: 540px) {
+    .sidebar {
+      position: absolute !important;
+      top: 0;
+      bottom: 0;
+      left: 0;
+      z-index: 100;
+      width: 82% !important;
+      max-width: 280px;
+      box-shadow: 4px 0 16px rgba(0,0,0,0.25);
+    }
+    .sidebar.collapsed {
+      display: none !important;
+    }
+    .toolbar {
+      padding: 4px 6px;
+      gap: 4px;
+    }
+    .toolbar-group {
+      gap: 4px;
+      flex-wrap: wrap;
+    }
+    .toolbar button, .toolbar .btn {
+      padding: 4px 6px;
+      font-size: 11px;
+    }
+    .speed-bar {
+      padding: 3px 6px;
+      overflow-x: auto;
+      flex-wrap: nowrap;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: thin;
+    }
+    .tab-bar {
+      padding-left: 2px;
+      scrollbar-width: thin;
+    }
+    .tab-item {
+      max-width: 120px;
+      padding: 4px 7px;
+      font-size: 11px;
+    }
+    textarea {
+      padding: 10px 12px;
+      font-size: 14px;
+    }
+    .preview-pane {
+      padding: 12px 14px;
+      font-size: 13px;
+    }
+    .status-bar {
+      padding: 4px 8px;
+      font-size: 11px;
+      flex-wrap: wrap;
+      gap: 4px;
+    }
+    .modal {
+      width: 95%;
+      margin: 8px;
+    }
+  }
+
+  /* Accessible focus indicators & HiDPI contrast */
+  button:focus-visible, .btn:focus-visible, .tab-item:focus-visible, .speed-btn:focus-visible, .tag-filter-chip:focus-visible {
+    outline: 2px solid var(--accent-dark) !important;
+    outline-offset: 1px;
+  }
   :root {
     --bg-main: #fffef0;
     --bg-sidebar: #fff9c4;

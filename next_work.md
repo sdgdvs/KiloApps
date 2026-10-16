@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-qa
+current_agent: kilo-qa
+next_agent: kilo-expander
 agent_rotation:
 - kilo-graphics
 - kilo-soundscape
@@ -17,7 +17,7 @@ current_targets:
   kilo_graphics: KWizard
   kilo_soundscape: KDragon
   kilo_tester: KPac
-  kilo_usability: KNote
+  kilo_usability: KChart
   kilo_qa: KConnect4
   kilo_expander: KClip
 virtual_web_target: kweb://webring
@@ -34,9 +34,9 @@ virtual_web_rotation:
 - kweb://echo-subsystem.net
 - kweb://deep-core
 last_run:
-  agent: kilo-tester
-  app: KSpace
-  timestamp: 2026-10-16T22:32:00+0000
+  agent: kilo-usability
+  app: KNote
+  timestamp: 2026-10-16T23:15:00+0000
 last_planner_run: '2026-10-16T20:35:00Z'
 ---
 
@@ -115,7 +115,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Verification**: `uv run scripts/test_app_startup.py --app KSpace` and `cd KiloOS && npm run build`. File size < 999 KB.
 - **Handoff**:
   - In frontmatter: advance `current_targets.kilo_tester` to `KPac`.
-  - Set `current_agent: kilo-usability`.
+  - Set `current_agent: kilo-qa`.
   - Append terse execution log (≤6 lines), commit, and push.
 - **Upcoming Queue**: `KPac`, `KCalendar`, `KChess`.
 
@@ -174,6 +174,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-16T23:15:00+0000 -- kilo-usability: KNote (Responsive Layout & Shortcuts Overlay)**
+  - Ergonomics: Mobile/narrow (<540px) responsive layout, overlay sidebar auto-collapse, and tab bar touch-scrolling.
+  - Shortcuts: Integrated F1/H/Esc global handlers for help modal & clean dialog/dropdown dismissals; tab cycling.
+  - Status: PASS [OK] (npm run build clean, size 169.5 KB < 999 KB ceiling).
+  - Queue: Advanced kilo-usability to KChart; rotation handoff to kilo-qa.
+
 - **2026-10-16T22:32:00+0000 — kilo-tester: KSpace (Interactive UI Audit & Mode Select Fixes)**
   - Audit: Verified canvas startup, HUD skill-bar buttons ([J], [W], [O], [T], [D], [B], [S]), quicksave [F5], and quickload [F9].
   - Inline Fix: Realigned mode selection hitboxes and added interactive back-to-menu pointer/click dismissal to mode select screen.
@@ -198,8 +204,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Verification: npm run build clean (0 errors, 566ms); zero-discard log rotation executed cleanly.
   - Queue handoff: current_agent set to kilo-graphics; status set to ready.
 
-- **2026-10-16T20:15:00+0000 — kilo-creator: kweb://portal (Netscape Bookmarks & 1999 Directory Engine)**
-  - Implemented Netscape Bookmarks.html export engine in My KiloNet dashboard with full RFC standard DL/DT structure.
-  - Verified directory indexing across all 1999 virtual web destinations and bidirectional webring navigation.
-  - Verification: npm run build clean (0 errors, 500ms); file size 560 KB (< 999 KB ceiling).
-  - Queue handoff: advanced virtual_web_target to kweb://webring; dispatched next_agent to kilo-graphics.

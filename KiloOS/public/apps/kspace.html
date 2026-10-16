@@ -7,6 +7,8 @@
 window.addEventListener('load', () => {
     if (window.resizeTo) window.resizeTo(340, 520);
     if (window.parent) window.parent.postMessage({ type: 'OS_SET_WINDOW_SIZE', width: 340, height: 520 }, '*');
+    const c = document.getElementById('gameCanvas');
+    if (c) c.focus();
     setTimeout(() => {
       let tutorialSeen = safeGetStorage('kspace_tutorialSeen') === '1';
       let hasSaved = typeof hasSavedGame === 'function' ? hasSavedGame() : false;
@@ -147,14 +149,14 @@ window.addEventListener('beforeunload', () => {
 <div id="gameContainer">
   <div id="toastContainer"></div>
   <canvas id="gameCanvas" width="320" height="480" tabindex="0" role="img" aria-label="KSpace space shooter game canvas"></canvas>
-  <div class="skill-bar" id="skillBar" style="display:none;">
-    <button class="skill-btn" id="btnHyperJump" onclick="useHyperJump(); this.blur();">[J] WARP</button>
-    <button class="skill-btn" id="btnDrone" onclick="deployDroneWing(); this.blur();">[W] DRONE</button>
-    <button class="skill-btn" id="btnOvercharge" onclick="useOvercharge(); this.blur();">[O] OVER</button>
-    <button class="skill-btn" id="btnTimeStop" onclick="useTimeStop(); this.blur();">[T] TIME</button>
-    <button class="skill-btn" id="btnDash" onclick="useTacticalDash(); this.blur();">[D] DASH</button>
-    <button class="skill-btn" id="btnBomb" onclick="useSmartBomb(); this.blur();">[B] BOMB</button>
-    <button class="skill-btn" id="btnShield" onclick="useHyperShield(); this.blur();">[S] SHIELD</button>
+  <div class="skill-bar" id="skillBar" style="display:none;" onpointerdown="event.stopPropagation();">
+    <button class="skill-btn" id="btnHyperJump" onclick="useHyperJump(); this.blur();" onpointerdown="event.stopPropagation();">[J] WARP</button>
+    <button class="skill-btn" id="btnDrone" onclick="deployDroneWing(); this.blur();" onpointerdown="event.stopPropagation();">[W] DRONE</button>
+    <button class="skill-btn" id="btnOvercharge" onclick="useOvercharge(); this.blur();" onpointerdown="event.stopPropagation();">[O] OVER</button>
+    <button class="skill-btn" id="btnTimeStop" onclick="useTimeStop(); this.blur();" onpointerdown="event.stopPropagation();">[T] TIME</button>
+    <button class="skill-btn" id="btnDash" onclick="useTacticalDash(); this.blur();" onpointerdown="event.stopPropagation();">[D] DASH</button>
+    <button class="skill-btn" id="btnBomb" onclick="useSmartBomb(); this.blur();" onpointerdown="event.stopPropagation();">[B] BOMB</button>
+    <button class="skill-btn" id="btnShield" onclick="useHyperShield(); this.blur();" onpointerdown="event.stopPropagation();">[S] SHIELD</button>
   </div>
 </div>
 
@@ -229,6 +231,9 @@ window.addEventListener('beforeunload', () => {
   function toggleSound() {
     soundEnabled = !soundEnabled;
     safeSetStorage('kspace_sound', soundEnabled ? '1' : '0');
+    if (soundEnabled && audioCtx && audioCtx.state === 'suspended') {
+      audioCtx.resume();
+    }
     showToast(soundEnabled ? 'Audio Sound FX: Enabled' : 'Audio Sound FX: Muted', 'info');
   }
 
@@ -667,6 +672,18 @@ window.addEventListener('beforeunload', () => {
     leaderboard.sort((a, b) => b.score - a.score);
     if (leaderboard.length > 5) leaderboard = leaderboard.slice(0, 5);
     saveLeaderboard();
+  }
+
+  function resetLeaderboard() {
+    leaderboard = [
+      { score: 12000, wave: 20, mode: 'Classic 20-Wave Campaign' },
+      { score: 8500, wave: 15, mode: 'Classic 20-Wave Campaign' },
+      { score: 5000, wave: 10, mode: 'Endurance Wave Storm' },
+      { score: 3500, wave: 7, mode: 'Boss Rush Challenge' },
+      { score: 1500, wave: 4, mode: 'Classic 20-Wave Campaign' }
+    ];
+    saveLeaderboard();
+    showToast('Leaderboard reset to defaults', 'info');
   }
 
   function hasSavedGame() {
@@ -1629,6 +1646,7 @@ window.addEventListener('beforeunload', () => {
     } else if (gameState === STATE_LEADERBOARD) {
       if (keyLower === 'e') exportHighScores();
       else if (keyLower === 'i') importHighScores();
+      else if (keyLower === 'c') resetLeaderboard();
       else if (e.key === 'Enter' || e.key === ' ' || e.key === 'Escape') gameState = STATE_MENU;
     }
   });
@@ -1641,6 +1659,7 @@ window.addEventListener('beforeunload', () => {
   const PAUSE_OPTIONS = [
     'RESUME MISSION',
     'MISSION CONTROLS [H]',
+    'TOGGLE AUDIO [M]',
     'QUICK SAVE [F5]',
     'QUICK LOAD [F9]',
     'EXPORT SAVE FILE',
@@ -1658,6 +1677,10 @@ window.addEventListener('beforeunload', () => {
     if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
 
     if (gameState === STATE_MENU) {
+      if (mx >= W - 36 && mx <= W - 8 && my >= 6 && my <= 30) {
+        toggleSound();
+        return;
+      }
       if (my >= 75 && my <= 138) {
         cyclePlayerChassis();
         return;
@@ -1692,13 +1715,17 @@ window.addEventListener('beforeunload', () => {
     } else if (gameState === STATE_PAUSED) {
       let clickedOption = false;
       for (let i = 0; i < PAUSE_OPTIONS.length; i++) {
-        let btnY = 160 + i * 32;
-        if (mx >= 40 && mx <= 280 && my >= btnY - 13 && my <= btnY + 13) {
+        let btnY = 138 + i * 29;
+        if (mx >= 35 && mx <= 285 && my >= btnY - 13 && my <= btnY + 13) {
           menuIndex = i;
           handlePauseSelect();
           clickedOption = true;
           return;
         }
+      }
+      if (my >= H - 42 && my <= H - 14) {
+        toggleSound();
+        return;
       }
       if (!clickedOption) {
         // Clicking backdrop resumes game
@@ -1723,9 +1750,13 @@ window.addEventListener('beforeunload', () => {
         return;
       }
     } else if (gameState === STATE_LEADERBOARD) {
+      if (my >= 300 && my <= 330 && mx >= W / 2 - 55 && mx <= W / 2 + 55) {
+        resetLeaderboard();
+        return;
+      }
       if (my >= 338 && my <= 366) {
-        if (mx >= 30 && mx <= 145) { exportHighScores(); return; }
-        if (mx >= 165 && mx <= 280) { importHighScores(); return; }
+        if (mx >= 30 && mx <= 150) { exportHighScores(); return; }
+        if (mx >= 165 && mx <= 295) { importHighScores(); return; }
       }
       if (my >= 380 && my <= 430) {
         gameState = STATE_MENU;
@@ -1763,6 +1794,9 @@ window.addEventListener('beforeunload', () => {
       } else if (mx >= W - 54 && mx <= W - 32 && my >= 4 && my <= 26) {
         previousState = STATE_PLAYING;
         gameState = STATE_HELP;
+        return;
+      } else if (mx >= W - 78 && mx <= W - 56 && my >= 4 && my <= 26) {
+        toggleSound();
         return;
       }
       isPointerDown = true;
@@ -1802,17 +1836,18 @@ window.addEventListener('beforeunload', () => {
   function handlePauseSelect() {
     if (menuIndex === 0) gameState = STATE_PLAYING;
     else if (menuIndex === 1) { previousState = STATE_PAUSED; gameState = STATE_HELP; }
-    else if (menuIndex === 2) { saveGameState(); showToast('Mission saved! [F5]', 'success'); }
-    else if (menuIndex === 3) {
+    else if (menuIndex === 2) toggleSound();
+    else if (menuIndex === 3) { saveGameState(); showToast('Mission saved! [F5]', 'success'); }
+    else if (menuIndex === 4) {
       if (!loadGameState()) {
         showToast("No saved game found!", "warning");
       } else {
         showToast('Mission loaded! [F9]', 'success');
       }
     }
-    else if (menuIndex === 4) exportSaveFile();
-    else if (menuIndex === 5) importSaveFile();
-    else if (menuIndex === 6) {
+    else if (menuIndex === 5) exportSaveFile();
+    else if (menuIndex === 6) importSaveFile();
+    else if (menuIndex === 7) {
       isReplaying = false;
       gameState = STATE_MENU;
     }
@@ -4397,17 +4432,21 @@ window.addEventListener('beforeunload', () => {
     let sec = getSector(wave);
     ctx.fillText(`W:${wave}/20 [S${sec}]`, 175, 18);
 
-    // Visible Pause [||] and Help [?] buttons in HUD
+    // Visible Pause [||], Help [?] and Sound [♫/✕] buttons in HUD
     ctx.fillStyle = 'rgba(10, 25, 50, 0.85)';
+    ctx.fillRect(W - 76, 4, 20, 18);
     ctx.fillRect(W - 52, 4, 20, 18);
     ctx.fillRect(W - 28, 4, 20, 18);
     ctx.strokeStyle = '#00e5ff';
     ctx.lineWidth = 1;
+    ctx.strokeRect(W - 76, 4, 20, 18);
     ctx.strokeRect(W - 52, 4, 20, 18);
     ctx.strokeRect(W - 28, 4, 20, 18);
-    ctx.fillStyle = '#00e5ff';
+    ctx.fillStyle = soundEnabled ? '#00e5ff' : '#ff5252';
     ctx.font = 'bold 10px monospace';
     ctx.textAlign = 'center';
+    ctx.fillText(soundEnabled ? '♫' : '✕', W - 66, 17);
+    ctx.fillStyle = '#00e5ff';
     ctx.fillText('?', W - 42, 17);
     ctx.fillText('||', W - 18, 17);
     ctx.textAlign = 'left';
@@ -4513,6 +4552,16 @@ window.addEventListener('beforeunload', () => {
     ctx.font = 'bold 30px monospace';
     ctx.textAlign = 'center';
     ctx.fillText('KSPACE', W / 2, 54);
+
+    // Visible audio toggle in top right corner
+    ctx.fillStyle = 'rgba(10, 25, 50, 0.85)';
+    ctx.fillRect(W - 32, 8, 24, 20);
+    ctx.strokeStyle = soundEnabled ? '#00e5ff' : '#ff5252';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(W - 32, 8, 24, 20);
+    ctx.fillStyle = soundEnabled ? '#00e5ff' : '#ff5252';
+    ctx.font = 'bold 12px monospace';
+    ctx.fillText(soundEnabled ? '♫' : '✕', W - 20, 23);
 
     ctx.fillStyle = '#80d8ff';
     ctx.font = '11px monospace';
@@ -4683,6 +4732,16 @@ window.addEventListener('beforeunload', () => {
       ctx.fillText(`${item.mode || 'Campaign'}`, W / 2, y + 15);
     }
 
+    // Reset Defaults Button
+    ctx.fillStyle = 'rgba(255, 23, 68, 0.12)';
+    ctx.fillRect(W / 2 - 55, 304, 110, 22);
+    ctx.strokeStyle = '#ff5252';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(W / 2 - 55, 304, 110, 22);
+    ctx.fillStyle = '#ff5252';
+    ctx.font = 'bold 10px monospace';
+    ctx.fillText('[C] RESET DEFAULTS', W / 2, 318);
+
     // Export & Import interactive buttons
     ctx.fillStyle = 'rgba(0, 229, 255, 0.15)';
     ctx.fillRect(30, 338, 120, 26);
@@ -4714,19 +4773,20 @@ window.addEventListener('beforeunload', () => {
     ctx.fillText('SYSTEM PAUSED', W / 2, 95);
 
     for (let i = 0; i < PAUSE_OPTIONS.length; i++) {
-      let y = 150 + i * 33;
+      let y = 138 + i * 29;
+      let optText = (i === 2) ? (soundEnabled ? 'TOGGLE AUDIO: ON [M]' : 'TOGGLE AUDIO: MUTED [M]') : PAUSE_OPTIONS[i];
       if (i === menuIndex) {
         ctx.fillStyle = 'rgba(0, 229, 255, 0.18)';
-        ctx.fillRect(35, y - 14, W - 70, 24);
+        ctx.fillRect(35, y - 13, W - 70, 23);
         ctx.strokeStyle = '#00e5ff';
-        ctx.strokeRect(35, y - 14, W - 70, 24);
+        ctx.strokeRect(35, y - 13, W - 70, 23);
         ctx.fillStyle = '#00e5ff';
-        ctx.font = 'bold 13px monospace';
-        ctx.fillText(`> ${PAUSE_OPTIONS[i]} <`, W / 2, y + 2);
+        ctx.font = 'bold 12px monospace';
+        ctx.fillText(`> ${optText} <`, W / 2, y + 3);
       } else {
         ctx.fillStyle = '#ffffff';
         ctx.font = '12px monospace';
-        ctx.fillText(PAUSE_OPTIONS[i], W / 2, y + 2);
+        ctx.fillText(optText, W / 2, y + 3);
       }
     }
     ctx.fillStyle = '#80d8ff';
