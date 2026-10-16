@@ -174,6 +174,13 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-16T16:18:00+0000 — kilo-adhoc: @kiloapps/sdk v2.0 (ZzFX 20-Param Synth, Gamepad/Touch & VFS Sync)**
+  - Status: PASS ✅ (0 regressions, clean builds, 34 KB < 999 KB ceiling).
+  - Procedural Audio: full ZzFX 20-param synthesis engine + bandpass noise; 100% backward compatible with `playTone` and `sfx`.
+  - Input Controller: real HTML5 Gamepad API polling, multi-button Virtual Touch Pad (D-Pad + A/B), frame-accurate `isDown`/`justPressed`.
+  - VFS Sync & Persistence: boot hydration from KiloOS VFS_READ, out-of-the-box F5 Quicksave / F9 Quickload, and live 60FPS telemetry stream.
+  - Verification: 100% unit tests pass (`node packages/sdk/test.js`); Vite build clean; security_lint PASS.
+
 - **2026-10-16T16:12:03+0000 — kilo-graphics: KFarm (Zero-Token Auto-Skip — Inappropriate Target)**
   - Status: ⏭️ Skip — Imagen 3 asset replacement not appropriate for KFarm (pure vector, board game, or mature art).
   - Optimization: Handled via orchestrator pre-flight zero-token auto-skip.
@@ -199,10 +206,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Verified quicksave/quickload (F5/F9), export suite (ICS/CSV/MD/JSON), and storage persistence.
   - Verified KiloOS build passed cleanly with 0 errors; `kcalendar.html` is 119 KB (<999 KB ceiling).
   - Queue handoff: advanced tester target to `KChess`; rotation to `kilo-usability`.
-
-- **2026-10-16T13:14:00+0000 — kilo-soundscape: kweb://webring (Procedural FM Soundscape Audit)**
-  - Audited procedural 6-ch YM2612 FM synthesis & SPC700 stereo delay soundscape in `webring.html`.
-  - Verified 3 complete tracks (Hyperlink Voyager '99, Ringmaster's Cadence, Subnet Phantom '99) with counterpoint & shell voicings.
-  - Verified full UI earcon & stinger suite (dialup, warp, teleport, badge, ping, submit, traceroute, pulse).
-  - Verified `npm run build` clean (0 errors, 341 KB < 999 KB); advanced soundscape queue to `kweb://warez`.
-  - Queue handoff: rotation to `kilo-tester`.

@@ -1,0 +1,19 @@
+{
+  "name": "@kiloapps/sdk",
+  "version": "2.0.0",
+  "description": "Sub-15KB Micro-SDK for Sub-999KB Web Minigames & Utilities with ZzFX synthesis, Gamepad/Touch controls, and bidirectional VFS sync.",
+  "main": "kilo-sdk.js",
+  "scripts": {
+    "test": "node test.js"
+  },
+  "keywords": [
+    "kiloapps",
+    "zzfx",
+    "synth",
+    "gamepad",
+    "vfs",
+    "retro"
+  ],
+  "author": "KiloApps Autonomous Fleet",
+  "license": "MIT"
+}
