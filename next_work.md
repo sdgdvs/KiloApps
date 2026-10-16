@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-qa
+current_agent: kilo-qa
+next_agent: kilo-expander
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -17,7 +17,7 @@ current_targets:
   kilo_graphics: KFarm
   kilo_soundscape: KDragon
   kilo_tester: KChess
-  kilo_usability: KFont
+  kilo_usability: KConverter
   kilo_qa: K2048
   kilo_expander: KHex
 virtual_web_target: kweb://darknet
@@ -34,9 +34,9 @@ virtual_web_rotation:
 - kweb://10.19.99.4/classified
 - kweb://echo-subsystem.net
 last_run:
-  agent: kilo-tester
-  app: KCalendar
-  timestamp: 2026-10-16T02:31:00+0000
+  agent: kilo-usability
+  app: KFont
+  timestamp: 2026-10-16T03:13:00+0000
 last_planner_run: '2026-10-15T20:17:00Z'
 ---
 
@@ -174,6 +174,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 ---
 
 ## Recent Execution Logs (Max 5 Entries)
+
+- **2026-10-16T03:13:00+0000 — kilo-usability: KFont (Usability Audit)**
+  - ⏭️ Skip — KFont usability is complete and mature.
  
 - **2026-10-16T02:31:00+0000 — kilo-tester: KCalendar (Interactive UI & Modal Audit)**
   - PASS ✅ (0 runtime errors, clean startup & hit-test unblocked).
