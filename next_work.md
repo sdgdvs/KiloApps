@@ -174,6 +174,13 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-16T12:55:00-07:00 — kilo-adhoc: Byte-Budget Enforcement Gate v2.0 (Dual-Target & Manifest Gate)**
+  - Status: PASS ✅ (107 web cartridges + 104 native EXEs strictly <= 999,000 bytes; 100% manifest & icon parity).
+  - scripts/byte_budget_gate.py: Upgraded to v2.0 auditing web HTML, native EXEs, App.jsx schema/icons, and reverse coverage.
+  - Auto-generated catalog.json: Emits { id, title, folder, webBytes, exeBytes, budgetPercent } for live fleet telemetry.
+  - KDirector & KSys: Wired to fetch live catalog.json for real-time byte telemetry, accurate app counts, and budget tracking.
+  - Verification: byte_budget_gate.py 100% PASS; npm run build 0 errors; security_lint.py 100% PASS; check_icons.py clean.
+
 - **2026-10-16T19:33:00+0000 — kilo-expander: KHex (Struct & Signatures Dissector)**
   - Implemented Tab 9: Binary Struct Unpacker with schema parser (uint, int, float, char, hex) & C/JSON export.
   - Added Magic Bytes Detector for 20+ file signatures (BMP, WAV, PNG, ZIP, MZ, ELF, etc.) with header analysis.
@@ -201,9 +208,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Offline Local P2P: Zero-config `BroadcastChannel('kilo_rfms_' + gameId)` fallback and in-memory RTDB shim for side-by-side offline play.
   - Boilerplate Elimination: Deduplicated ~30 lines of Firebase SDK boilerplate across `k2048`, `kbreakout`, `ksnake`, `ktetris`, and `kchess`.
   - Verification: Vite build clean (0 errors, 331ms); `byte_budget_gate.py` PASS; `security_lint.py` 100% PASS; Node P2P unit tests 100% PASS.
-
-- **2026-10-16T17:15:00+0000 — kilo-tester: KChess (Interactive UI Audit & Inline Fixes)**
-  - Audited all UI components: piece drag/clicks, timers, PGN/FEN managers, replay inspector, opening book, and modals.
-  - Fixed critical ReferenceError in `openEditorModal` (`editorTurn = turn` -> `whiteTurn ? 1 : -1`) and inverted piece mapping.
-  - Enhanced editor palette selection highlight and added `modal-close` class to multiplayer modal.
-  - Verification: `npm run build` clean (0 errors, 491ms, 227 KB < 999 KB); advanced tester target to `KSpace`; handoff to `kilo-usability`.

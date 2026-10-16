@@ -978,7 +978,7 @@ btnCrt.addEventListener('click', () => {
 });
 
 // --- APPS INVENTORY DATABASE ---
-const APPS = [
+let APPS = [
   { id: 'kexplorer', title: 'File Browser', folder: 'System', fps: 60, size: '31.7 KB', status: 'Active' },
   { id: 'kchat', title: 'KChat', folder: 'Network', fps: 60, size: '83.6 KB', status: 'Active' },
   { id: 'kpad', title: 'KPad', folder: 'Office', fps: 60, size: '80.0 KB', status: 'Active' },
@@ -1101,7 +1101,7 @@ function renderTable(filterText = '', filterCat = 'all') {
         <span style="font-family: var(--font-mono); color: var(--text-muted); font-size: 11px;"> (${app.id})</span>
       </td>
       <td><span class="tag tag-cat">${app.folder}</span></td>
-      <td style="font-family: var(--font-mono);">${app.size}</td>
+      <td style="font-family: var(--font-mono);" title="${app.budgetPercent ? app.budgetPercent + '% of 999KB budget' : ''}${app.exeBytes ? ' | Native Exe: ' + (app.exeBytes / 1024).toFixed(1) + ' KB' : ''}">${app.size}${app.budgetPercent !== undefined ? ` <small style="color: var(--text-muted); font-size: 10px;">(${app.budgetPercent}%)</small>` : ''}</td>
       <td>
         <span class="tag ${app.fps >= 55 ? 'tag-fps-60' : 'tag-fps-lag'}">${app.fps} FPS</span>
       </td>
@@ -1152,19 +1152,62 @@ const specialScopes = [
   { id: 'ARG / FLEET-WIDE', title: '👁️ [ARG / FLEET-WIDE] — ARG & Secret Nodes' },
   { id: 'MULTIPLAYER', title: '🎮 [MULTIPLAYER] — Retro Firebase Multiplayer' }
 ];
-specialScopes.forEach(s => {
-  const opt = document.createElement('option');
-  opt.value = s.id;
-  opt.textContent = s.title;
-  targetAppSelect.appendChild(opt);
-});
 
-APPS.forEach(app => {
-  const opt = document.createElement('option');
-  opt.value = app.id;
-  opt.textContent = `${app.title} (${app.id})`;
-  targetAppSelect.appendChild(opt);
-});
+function populateAppSelect() {
+  if (!targetAppSelect) return;
+  targetAppSelect.innerHTML = '';
+  specialScopes.forEach(s => {
+    const opt = document.createElement('option');
+    opt.value = s.id;
+    opt.textContent = s.title;
+    targetAppSelect.appendChild(opt);
+  });
+  APPS.forEach(app => {
+    const opt = document.createElement('option');
+    opt.value = app.id;
+    opt.textContent = `${app.title} (${app.id})`;
+    targetAppSelect.appendChild(opt);
+  });
+}
+populateAppSelect();
+
+// Live Byte-Budget Telemetry from catalog.json
+async function fetchCatalogTelemetry() {
+  try {
+    const res = await fetch('/apps/catalog.json');
+    if (!res.ok) return;
+    const catalog = await res.json();
+    if (!Array.isArray(catalog) || catalog.length === 0) return;
+
+    const existingMap = new Map();
+    APPS.forEach(a => existingMap.set(a.id, a));
+
+    APPS = catalog.map(item => {
+      const existing = existingMap.get(item.id) || {};
+      const kbSize = (item.webBytes / 1024).toFixed(1) + ' KB';
+      return {
+        id: item.id,
+        title: item.title,
+        folder: item.folder,
+        fps: existing.fps || 60,
+        size: kbSize,
+        webBytes: item.webBytes,
+        exeBytes: item.exeBytes,
+        budgetPercent: item.budgetPercent,
+        status: existing.status || (item.budgetPercent > 50 ? 'Heavy' : 'Active')
+      };
+    });
+
+    const countLabel = document.getElementById('appCountLabel');
+    if (countLabel) countLabel.textContent = APPS.length;
+
+    populateAppSelect();
+    renderTable(searchInput ? searchInput.value : '', activeFilter || 'all');
+  } catch (e) {
+    console.warn('Could not load live catalog.json in KDirector, relying on fallback table', e);
+  }
+}
+fetchCatalogTelemetry();
 
 // Search & Filters
 const searchInput = document.getElementById('searchInput');

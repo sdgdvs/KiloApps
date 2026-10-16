@@ -923,6 +923,18 @@
             <div class="info-item"><span class="info-label">Storage Available:</span><span class="info-val" id="disk-free">--</span></div>
             <div class="info-item"><span class="info-label">Persisted Storage:</span><span class="info-val" id="disk-persisted">--</span></div>
           </div>
+          <div style="margin-top: 14px; padding-top: 10px; border-top: 1px solid var(--border-color);">
+            <div style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 6px; display: flex; justify-content: space-between;">
+              <span>Cartridge Fleet Byte-Budget</span>
+              <span id="cartridge-budget-compliance" style="color: var(--accent-green);">100% Sub-999KB</span>
+            </div>
+            <div class="info-list">
+              <div class="info-item"><span class="info-label">Audited Cartridges:</span><span class="info-val" id="cartridge-count">--</span></div>
+              <div class="info-item"><span class="info-label">Fleet Web Payload:</span><span class="info-val" id="cartridge-total-size">--</span></div>
+              <div class="info-item"><span class="info-label">Avg Cartridge Footprint:</span><span class="info-val" id="cartridge-avg-size">--</span></div>
+              <div class="info-item"><span class="info-label">Platform Ceiling:</span><span class="info-val" style="color: var(--accent-blue);">999,000 B / Cartridge</span></div>
+            </div>
+          </div>
         </div>
 
         <!-- Network Card -->
@@ -2459,6 +2471,9 @@
       document.getElementById('disk-persisted').textContent = "Unknown";
     }
 
+    // Live Cartridge Fleet Byte-Budget Telemetry from catalog.json
+    loadCartridgeCatalogTelemetry();
+
     // Network
     document.getElementById('net-status').textContent = navigator.onLine ? "Connected" : "Offline";
     if (navigator.connection) {
@@ -2476,6 +2491,39 @@
     document.getElementById('os-tz').textContent = Intl.DateTimeFormat().resolvedOptions().timeZone || "Unknown";
     document.getElementById('os-cookies').textContent = navigator.cookieEnabled ? "Yes" : "No";
     document.getElementById('os-online').textContent = navigator.onLine ? "Online" : "Offline";
+  }
+
+  // Live Cartridge Catalog Telemetry Loader
+  let cartridgeCatalog = [];
+  async function loadCartridgeCatalogTelemetry() {
+    try {
+      const res = await fetch('/apps/catalog.json');
+      if (!res.ok) return;
+      const data = await res.json();
+      if (!Array.isArray(data) || data.length === 0) return;
+      cartridgeCatalog = data;
+
+      const count = data.length;
+      const totalWeb = data.reduce((acc, c) => acc + (c.webBytes || 0), 0);
+      const avgWeb = Math.round(totalWeb / count);
+      const maxPct = Math.max(...data.map(c => c.budgetPercent || 0));
+      const allCompliant = data.every(c => (c.webBytes || 0) <= 999000 && (!c.exeBytes || c.exeBytes <= 999000));
+
+      const countEl = document.getElementById('cartridge-count');
+      const totalEl = document.getElementById('cartridge-total-size');
+      const avgEl = document.getElementById('cartridge-avg-size');
+      const compEl = document.getElementById('cartridge-budget-compliance');
+
+      if (countEl) countEl.textContent = `${count} Cartridges (Dual-Target)`;
+      if (totalEl) totalEl.textContent = `${(totalWeb / (1024 * 1024)).toFixed(2)} MB (${totalWeb.toLocaleString()} B)`;
+      if (avgEl) avgEl.textContent = `${(avgWeb / 1024).toFixed(1)} KB (Peak: ${maxPct}%)`;
+      if (compEl) {
+        compEl.textContent = allCompliant ? '100% Sub-999KB' : 'Ceiling Violation';
+        compEl.style.color = allCompliant ? 'var(--accent-green)' : 'var(--accent-red)';
+      }
+    } catch (e) {
+      console.warn('Could not fetch /apps/catalog.json in KSys:', e);
+    }
   }
 
   // Uptime Counter

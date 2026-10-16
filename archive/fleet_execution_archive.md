@@ -4,6 +4,12 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-16T17:15:00+0000 — kilo-tester: KChess (Interactive UI Audit & Inline Fixes)**
+  - Audited all UI components: piece drag/clicks, timers, PGN/FEN managers, replay inspector, opening book, and modals.
+  - Fixed critical ReferenceError in `openEditorModal` (`editorTurn = turn` -> `whiteTurn ? 1 : -1`) and inverted piece mapping.
+  - Enhanced editor palette selection highlight and added `modal-close` class to multiplayer modal.
+  - Verification: `npm run build` clean (0 errors, 491ms, 227 KB < 999 KB); advanced tester target to `KSpace`; handoff to `kilo-usability`.
+
 - **2026-10-16T17:12:00+0000 — kilo-adhoc: KQuarantine v2.0 (Sector 9 Containment & Memory Forensics)**
   - Status: PASS ✅ (0 regressions, clean builds, 14.5 KB web < 999 KB ceiling).
   - Containment Core: Sector 9 memory forensics cartridge bridging Arc 2 (Rogue AI) and Arc 3 (KMatrix/Director).
