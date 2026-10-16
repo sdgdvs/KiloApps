@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-creator
-next_agent: kilo-graphics
+current_agent: kilo-graphics
+next_agent: kilo-soundscape
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -13,16 +13,15 @@ model: gemini-3.8-flash-medium
 timeout_minutes: 6
 status: ready
 current_targets:
-  kilo_creator: kweb://deep-core
+  kilo_creator: kweb://darknet
   kilo_graphics: KFarm
   kilo_soundscape: kweb://webring
   kilo_tester: KCalendar
   kilo_usability: KChart
   kilo_qa: KHangman
   kilo_expander: KHex
-virtual_web_target: kweb://deep-core
+virtual_web_target: kweb://darknet
 virtual_web_rotation:
-- kweb://deep-core
 - kweb://darknet
 - kweb://portal
 - kweb://webring
@@ -33,10 +32,11 @@ virtual_web_rotation:
 - kweb://cybercafe
 - kweb://10.19.99.4/classified
 - kweb://echo-subsystem.net
+- kweb://deep-core
 last_run:
-  agent: kilo-expander
-  app: KRadio
-  timestamp: 2026-10-16T11:15:00+0000
+  agent: kilo-creator
+  app: kweb://deep-core
+  timestamp: 2026-10-16T12:15:00+0000
 last_planner_run: '2026-10-15T20:17:00Z'
 ---
 
@@ -166,7 +166,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Verification**: `uv run scripts/test_app_startup.py --app KFont` and `cd KiloOS && npm run build`. File size < 999 KB.
 - **Handoff**:
   - In frontmatter: advance `current_targets.kilo_expander` to `KHex`.
-  - Set `current_agent: kilo-creator`.
+  - Set `current_agent: kilo-graphics`.
   - Append terse execution log (≤6 lines), commit, and push.
 - **Upcoming Queue**: `KHex`, `KClip`, `KJournal`, `KBookmark`.
 
