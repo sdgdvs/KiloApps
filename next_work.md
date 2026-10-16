@@ -174,6 +174,15 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-16T17:21:00+0000 — kilo-adhoc: RFMS v2.0 (Retro Firebase Multiplayer Service Upgrade)**
+  - Status: PASS ✅ (0 regressions, clean builds, all cartridges < 999 KB ceiling).
+  - Self-Contained Firebase Loader: Dynamic import from gstatic v10.9.0 with `rfms-ready` CustomEvent and late `window.onFirebaseLoaded` interceptor.
+  - Mandate 12 Matchmaking Timer: Added 25s countdown helper (`RetroMultiplayer.startMatchmaking`) with automatic `CyberBot-99` (ELO 1200) fallback.
+  - Presence & Stale Room Purge: Added `onDisconnect().remove()` on room player nodes and 10-minute stale room cleanup during lobby scans.
+  - Offline Local P2P: Zero-config `BroadcastChannel('kilo_rfms_' + gameId)` fallback and in-memory RTDB shim for side-by-side offline play.
+  - Boilerplate Elimination: Deduplicated ~30 lines of Firebase SDK boilerplate across `k2048`, `kbreakout`, `ksnake`, `ktetris`, and `kchess`.
+  - Verification: Vite build clean (0 errors, 331ms); `byte_budget_gate.py` PASS; `security_lint.py` 100% PASS; Node P2P unit tests 100% PASS.
+
 - **2026-10-16T17:15:00+0000 — kilo-tester: KChess (Interactive UI Audit & Inline Fixes)**
   - Audited all UI components: piece drag/clicks, timers, PGN/FEN managers, replay inspector, opening book, and modals.
   - Fixed critical ReferenceError in `openEditorModal` (`editorTurn = turn` -> `whiteTurn ? 1 : -1`) and inverted piece mapping.
@@ -201,10 +210,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - IPC v2.0 Switchboard: Extended Window postMessage bridge with `VFS_DELETE`, `VFS_STAT`, live `VFS_CHANGED` broadcast, `OS_NOTIFY`, and `OS_TELEMETRY_BEAT`.
   - Enriched Telemetry: Added FPS and memory metrics to `OS_LIST_TASKS` and `openApp` state tracking for KTaskMgr and KDirector.
   - Verification: Vite build clean (0 errors, 308ms); `security_lint.py` 100% PASS; `byte_budget_gate.py` 100% PASS.
-
-- **2026-10-16T16:18:00+0000 — kilo-adhoc: @kiloapps/sdk v2.0 (ZzFX 20-Param Synth, Gamepad/Touch & VFS Sync)**
-  - Status: PASS ✅ (0 regressions, clean builds, 34 KB < 999 KB ceiling).
-  - Procedural Audio: full ZzFX 20-param synthesis engine + bandpass noise; 100% backward compatible with `playTone` and `sfx`.
-  - Input Controller: real HTML5 Gamepad API polling, multi-button Virtual Touch Pad (D-Pad + A/B), frame-accurate `isDown`/`justPressed`.
-  - VFS Sync & Persistence: boot hydration from KiloOS VFS_READ, out-of-the-box F5 Quicksave / F9 Quickload, and live 60FPS telemetry stream.
-  - Verification: 100% unit tests pass (`node packages/sdk/test.js`); Vite build clean; security_lint PASS.

@@ -123,32 +123,6 @@
 
 <canvas id="gameCanvas" tabindex="0" role="application" aria-label="KTetris Arcade Game"></canvas>
 
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
-  import { getDatabase, ref, set, get, push, onValue, onChildAdded, off, serverTimestamp, onDisconnect } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-database.js";
-
-  const firebaseConfig = {
-    apiKey: "AIzaSyDns9KBDxyd4v-TbAvi5xLrVkbXaUt_9GE",
-    authDomain: "kiloappschat.firebaseapp.com",
-    databaseURL: "https://kiloappschat-default-rtdb.firebaseio.com",
-    projectId: "kiloappschat",
-    storageBucket: "kiloappschat.firebasestorage.app",
-    messagingSenderId: "290208566057",
-    appId: "1:290208566057:web:deacd8c7457d0cc7ec0538"
-  };
-
-  try {
-    const app = initializeApp(firebaseConfig);
-    const db = getDatabase(app);
-    window.fb = {
-      app, db, ref, set, get, push, onValue, onChildAdded, off, serverTimestamp, onDisconnect
-    };
-    if (window.onFirebaseLoaded) window.onFirebaseLoaded();
-  } catch (err) {
-    console.warn("Firebase RTDB init error:", err);
-  }
-</script>
-
 <script>
   function showToast(msg, dur = 3500) {
       const t = document.getElementById('toast');

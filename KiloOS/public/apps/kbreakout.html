@@ -4,31 +4,6 @@
 <meta charset="utf-8">
 <title>KBreakout - Satellites, Reflectors & Quantum Resonance</title>
 <script src="../assets/js/retro_multiplayer.js"></script>
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
-  import { getDatabase, ref, set, get, push, onValue, onChildAdded, off, serverTimestamp, onDisconnect } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-database.js";
-
-  const firebaseConfig = {
-    apiKey: "AIzaSyDns9KBDxyd4v-TbAvi5xLrVkbXaUt_9GE",
-    authDomain: "kiloappschat.firebaseapp.com",
-    databaseURL: "https://kiloappschat-default-rtdb.firebaseio.com",
-    projectId: "kiloappschat",
-    storageBucket: "kiloappschat.firebasestorage.app",
-    messagingSenderId: "290208566057",
-    appId: "1:290208566057:web:deacd8c7457d0cc7ec0538"
-  };
-
-  try {
-    const app = initializeApp(firebaseConfig);
-    const db = getDatabase(app);
-    window.fb = {
-      app, db, ref, set, get, push, onValue, onChildAdded, off, serverTimestamp, onDisconnect
-    };
-    if (window.onFirebaseLoaded) window.onFirebaseLoaded();
-  } catch (err) {
-    console.warn("Firebase RTDB init error:", err);
-  }
-</script>
 <style>
 * { box-sizing: border-box; }
 body { background: #0e0e17; color: #fff; margin: 0; display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 100vh; overflow: hidden; font-family: 'Segoe UI', Tahoma, monospace; user-select: none; }
