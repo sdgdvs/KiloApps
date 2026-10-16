@@ -13,9 +13,9 @@
   "session_end": null,
   "session_limit_enabled": false,
   "timer_enabled": false,
-  "turns_executed": 241,
+  "turns_executed": 243,
   "last_turn_timestamp": "2026-09-28T18:42:51Z",
-  "last_heartbeat": "2026-10-15T21:15:25.066169+00:00",
-  "current_target": "kweb://asm-temple",
+  "last_heartbeat": "2026-10-15T23:13:46.992032+00:00",
+  "current_target": "KSubmarine",
   "remote_command": "none"
 }

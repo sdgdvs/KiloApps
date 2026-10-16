@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-creator
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -18,7 +18,7 @@ current_targets:
   kilo_soundscape: KColosseum
   kilo_tester: KCalendar
   kilo_usability: KFont
-  kilo_qa: KBreakout
+  kilo_qa: K2048
   kilo_expander: KFont
 virtual_web_target: kweb://darknet
 virtual_web_rotation:
@@ -34,9 +34,9 @@ virtual_web_rotation:
 - kweb://10.19.99.4/classified
 - kweb://echo-subsystem.net
 last_run:
-  agent: kilo-usability
-  app: KCalc
-  timestamp: 2026-10-15T23:31:00+0000
+  agent: kilo-qa
+  app: KBreakout
+  timestamp: 2026-10-16T00:14:00+0000
 last_planner_run: '2026-10-15T20:17:00Z'
 ---
 
@@ -185,6 +185,13 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-16T00:14:00+0000 — kilo-qa: KBreakout (Pass 5: Tutorial, State Integrity & Dual Parity)**
+  - State Persistence: Verified F5 quicksave & F9 quickload capturing full gameplay, materials & boss state.
+  - Onboarding Integrity: Fixed tutorialSeen flag persistence so tutorial never re-triggers on loaded saves.
+  - Modal Dismissals: Added Enter key dismissals across all overlays with clean Escape/Close hierarchy.
+  - Dual Parity & Build: Created KBreakout/build.bat, verified clean Win32 MSVC build (56 KB), Vite 0 errors.
+  - Advanced QA queue to K2048; handed off rotation to kilo-expander (KFont).
+
 - **2026-10-15T23:31:00+0000 — kilo-usability: KCalc (Pass 4: UX & Responsive Layout Audit)**
   - Added responsive layout styling for narrow viewports (<540px) ensuring keypads & drawers fit cleanly.
   - Ensured Esc dismisses all expansion modals and dialog overlays cleanly.
@@ -209,9 +216,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Status: ⏭️ Skip — Imagen 3 asset replacement not appropriate for KFarm (pure vector, board game, or mature art).
   - Optimization: Handled via orchestrator pre-flight zero-token auto-skip.
   - Queue: Advanced `kilo-graphics` to `KFarm`; rotation handoff to `kilo-soundscape`.
-
-- **kweb://asm-temple** (kilo-creator):
-  - Deep expansion of Tab 10: x86 Shellcode Deobfuscator & Acolyte State Vault.
-  - Implemented heuristic disassembler, Shannon entropy calc, and multi-key XOR brute-force string extraction.
-  - Added safe localStorage Quicksave/Quickload (F5/F9) for altar registers and patches.
-  - Verified Vite clean build (0 errors) and strict size budget (<999KB, 346KB actual).

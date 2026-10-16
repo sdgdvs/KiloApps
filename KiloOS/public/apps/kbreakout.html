@@ -568,6 +568,7 @@ function quicksaveGame(silent = false) {
     };
     const ok = safeSetJSON('kbreakout_quicksave', saveData);
     if (ok) {
+        safeSetStorage('kbreakout_tutorialSeen', '1');
         if (!silent) {
             showToast('Tactical Quicksave Stored! [F5]', 'success');
             playTone(700, 'sine', 0.15);
@@ -658,6 +659,7 @@ function quickloadGame() {
     if (forge_open) toggleForge();
     if (tutorial_open) closeTutorial();
     if (is_paused) togglePause();
+    safeSetStorage('kbreakout_tutorialSeen', '1');
 
     state = 1;
     if (boss_active) {
@@ -3935,6 +3937,36 @@ window.addEventListener('keydown', e => {
     if (tutorial_open && (e.code === 'Enter' || e.code === 'Space')) {
         e.preventDefault();
         closeTutorial();
+        return;
+    }
+    if (keybind_open && !rebindingAction && e.code === 'Enter') {
+        e.preventDefault();
+        closeKeybindModal();
+        return;
+    }
+    if (telemetry_open && e.code === 'Enter') {
+        e.preventDefault();
+        closeTelemetryModal();
+        return;
+    }
+    if (replay_open && (!document.activeElement || document.activeElement.tagName !== 'TEXTAREA') && e.code === 'Enter') {
+        e.preventDefault();
+        closeReplayModal();
+        return;
+    }
+    if (invite_prompt_open && e.code === 'Enter') {
+        e.preventDefault();
+        acceptInvite();
+        return;
+    }
+    if (forge_open && e.code === 'Escape') {
+        e.preventDefault();
+        toggleForge();
+        return;
+    }
+    if (is_paused && e.code === 'Enter') {
+        e.preventDefault();
+        togglePause();
         return;
     }
 
