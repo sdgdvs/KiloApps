@@ -789,6 +789,7 @@
     <button class="tab-btn" id="tabbtn-hashes" role="tab" aria-selected="false" aria-controls="tab-hashes" onclick="switchTab('hashes')"><span class="badge" style="padding:2px 6px; font-size:0.7rem;">5</span> 🔐 Checksum & Hashes</button>
     <button class="tab-btn" id="tabbtn-operations" role="tab" aria-selected="false" aria-controls="tab-operations" onclick="switchTab('operations')"><span class="badge" style="padding:2px 6px; font-size:0.7rem;">6</span> 🛠️ Byte Operations</button>
     <button class="tab-btn" id="tabbtn-export" role="tab" aria-selected="false" aria-controls="tab-export" onclick="switchTab('export')"><span class="badge" style="padding:2px 6px; font-size:0.7rem;">7</span> 💾 Data Export</button>
+    <button class="tab-btn" id="tabbtn-strings" role="tab" aria-selected="false" aria-controls="tab-strings" onclick="switchTab('strings')"><span class="badge" style="padding:2px 6px; font-size:0.7rem;">8</span> 🧵 Strings & Diff</button>
   </div>
 
   <!-- TAB 1: Base Converter & Data Inspector -->
@@ -1128,6 +1129,65 @@
         </select>
       </div>
       <div class="output-box" id="exportOutputBox" style="min-height: 200px;"></div>
+    </div>
+  </div>
+
+  <!-- TAB 8: String Carver & Binary Diff -->
+  <div id="tab-strings" class="tab-content">
+    <div class="grid-2">
+      <!-- String Carver -->
+      <div class="panel">
+        <div class="panel-title">
+          <div class="title-left">🧵 String Carver & Extractor</div>
+          <div class="form-row" style="gap:6px;">
+            <button class="btn btn-cyan btn-sm" onclick="runStringCarver()">Extract Strings</button>
+            <button class="btn btn-sm" onclick="copyCarvedStrings()">Copy All</button>
+          </div>
+        </div>
+        <div class="form-row" style="gap:10px; margin-bottom:6px;">
+          <div class="form-group" style="flex:1;">
+            <label>Min Length</label>
+            <select id="carveMinLen" onchange="runStringCarver()">
+              <option value="3">3 Chars</option>
+              <option value="4" selected>4 Chars (Standard)</option>
+              <option value="6">6 Chars</option>
+              <option value="8">8 Chars</option>
+              <option value="12">12 Chars</option>
+            </select>
+          </div>
+          <div class="form-group" style="flex:1;">
+            <label>Encoding</label>
+            <select id="carveEncoding" onchange="runStringCarver()">
+              <option value="both" selected>ASCII & UTF-16LE</option>
+              <option value="ascii">ASCII Only (7/8-bit)</option>
+              <option value="utf16">UTF-16LE Only (Wide)</option>
+            </select>
+          </div>
+          <div class="form-group" style="flex:1.5;">
+            <label>Filter Match</label>
+            <input type="text" id="carveFilter" placeholder="Filter strings..." oninput="filterCarvedStrings()" style="padding:7px 10px;">
+          </div>
+        </div>
+        <div style="font-size:0.75rem; color:var(--text-secondary); margin-bottom:4px;" id="carveStatsLabel">0 Strings Extracted</div>
+        <div class="output-box" id="carveOutputBox" style="min-height:220px; max-height:300px; font-family:'JetBrains Mono', monospace; font-size:0.8rem; overflow-y:auto;">Click 'Extract Strings' to scan buffer.</div>
+      </div>
+
+      <!-- Binary Difference & Delta Analyzer -->
+      <div class="panel">
+        <div class="panel-title">
+          <div class="title-left">⚖️ Binary Diff & Delta Analyzer</div>
+          <div class="form-row" style="gap:6px;">
+            <button class="btn btn-purple btn-sm" onclick="runBinaryDiff()">Compare Buffers</button>
+            <button class="btn btn-sm" onclick="loadSampleDiffBuffer()">Load Sample B</button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Comparison Buffer B (Paste Hex Bytes or Raw Text)</label>
+          <textarea id="diffBufferInput" style="min-height:80px;" placeholder="Paste secondary buffer (Hex: '48 65 6C...' or text) to compare against primary buffer...">Hello KHex World! Press 'h' for Help.</textarea>
+        </div>
+        <div style="font-size:0.75rem; color:var(--text-secondary); margin-bottom:4px;" id="diffStatsLabel">Comparison not run yet.</div>
+        <div class="output-box" id="diffOutputBox" style="min-height:180px; max-height:260px; font-family:'JetBrains Mono', monospace; font-size:0.8rem; overflow-y:auto;">Provide Buffer B and click 'Compare Buffers'.</div>
+      </div>
     </div>
   </div>
 
@@ -1585,6 +1645,7 @@
       else if (e.key === '5') { switchTab('hashes'); e.preventDefault(); }
       else if (e.key === '6') { switchTab('operations'); e.preventDefault(); }
       else if (e.key === '7') { switchTab('export'); e.preventDefault(); }
+      else if (e.key === '8') { switchTab('strings'); e.preventDefault(); }
       else if (e.key === 'e' || e.key === 'E') {
         isLittleEndian = !isLittleEndian;
         try { localStorage.setItem('khex_endian', isLittleEndian.toString()); } catch (err) {}
@@ -1642,6 +1703,7 @@
     if (tabId === 'hashes') computeHashes();
     if (tabId === 'operations') updateOpArgVisibility();
     if (tabId === 'export') generateExport();
+    if (tabId === 'strings') runStringCarver();
   }
 
   // --- TAB 1: BASE CONVERTER & INSPECTOR LOGIC ---
@@ -3225,6 +3287,208 @@
       URL.revokeObjectURL(a.href);
     }, 1000);
     showToast('Download Started', 'Binary buffer downloaded as khex_export.bin', 'success');
+  }
+
+  // TAB 8: String Carver & Binary Diff Implementation
+  let lastCarvedStrings = [];
+
+  function runStringCarver() {
+    if (!binaryBuffer || binaryBuffer.length === 0) {
+      document.getElementById('carveOutputBox').innerText = 'Primary buffer is empty.';
+      document.getElementById('carveStatsLabel').innerText = '0 Strings Extracted';
+      return;
+    }
+    const minLen = parseInt(document.getElementById('carveMinLen').value, 10) || 4;
+    const enc = document.getElementById('carveEncoding').value;
+    const results = [];
+    const buf = binaryBuffer;
+    const len = buf.length;
+
+    // 1. ASCII extraction
+    if (enc === 'ascii' || enc === 'both') {
+      let cur = '';
+      let startOff = 0;
+      for (let i = 0; i < len; i++) {
+        const b = buf[i];
+        if (b >= 32 && b <= 126) {
+          if (cur.length === 0) startOff = i;
+          cur += String.fromCharCode(b);
+        } else {
+          if (cur.length >= minLen) {
+            results.push({ offset: startOff, len: cur.length, type: 'ASCII', text: cur });
+          }
+          cur = '';
+        }
+      }
+      if (cur.length >= minLen) {
+        results.push({ offset: startOff, len: cur.length, type: 'ASCII', text: cur });
+      }
+    }
+
+    // 2. UTF-16LE extraction
+    if (enc === 'utf16' || enc === 'both') {
+      for (let start = 0; start < 2; start++) {
+        let cur = '';
+        let startOff = start;
+        for (let i = start; i < len - 1; i += 2) {
+          const b1 = buf[i];
+          const b2 = buf[i + 1];
+          if (b2 === 0 && b1 >= 32 && b1 <= 126) {
+            if (cur.length === 0) startOff = i;
+            cur += String.fromCharCode(b1);
+          } else {
+            if (cur.length >= minLen) {
+              results.push({ offset: startOff, len: cur.length * 2, type: 'UTF-16', text: cur });
+            }
+            cur = '';
+          }
+        }
+        if (cur.length >= minLen) {
+          results.push({ offset: startOff, len: cur.length * 2, type: 'UTF-16', text: cur });
+        }
+      }
+    }
+
+    results.sort((a, b) => a.offset - b.offset);
+    lastCarvedStrings = results;
+    renderCarvedStrings(results);
+  }
+
+  function renderCarvedStrings(list) {
+    const box = document.getElementById('carveOutputBox');
+    const label = document.getElementById('carveStatsLabel');
+    if (!box || !label) return;
+    label.innerText = `${list.length} Strings Found (${binaryBuffer.length} Byte Buffer)`;
+    if (list.length === 0) {
+      box.innerText = 'No strings matching criteria found.';
+      return;
+    }
+    let html = '';
+    list.forEach(item => {
+      const hexOff = '0x' + item.offset.toString(16).padStart(6, '0').toUpperCase();
+      const escText = item.text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      html += `<div style="display:flex; gap:12px; padding:3px 0; border-bottom:1px solid rgba(255,255,255,0.05); align-items:center;">` +
+        `<span style="color:var(--accent-purple); width:80px; flex-shrink:0; cursor:pointer; font-weight:600;" onclick="gotoOffset(${item.offset}); switchTab('editor');" title="Click to jump to offset">${hexOff}</span>` +
+        `<span style="color:var(--accent-cyan); width:65px; flex-shrink:0; font-size:0.75rem;">[${item.type}]</span>` +
+        `<span style="color:var(--text-secondary); width:45px; flex-shrink:0; font-size:0.75rem;">${item.len}B</span>` +
+        `<span style="color:var(--text-primary); word-break:break-all;">${escText}</span>` +
+      `</div>`;
+    });
+    box.innerHTML = html;
+  }
+
+  function filterCarvedStrings() {
+    const q = (document.getElementById('carveFilter').value || '').toLowerCase();
+    if (!q) {
+      renderCarvedStrings(lastCarvedStrings);
+      return;
+    }
+    const filtered = lastCarvedStrings.filter(s => s.text.toLowerCase().includes(q) || ('0x' + s.offset.toString(16)).includes(q));
+    renderCarvedStrings(filtered);
+  }
+
+  function copyCarvedStrings() {
+    if (!lastCarvedStrings || lastCarvedStrings.length === 0) {
+      showToast('Notice', 'No carved strings to copy.', 'warning');
+      return;
+    }
+    const txt = lastCarvedStrings.map(s => `0x${s.offset.toString(16).padStart(6, '0').toUpperCase()} [${s.type}, ${s.len}B]: ${s.text}`).join('\n');
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(txt).then(() => showToast('Strings Copied', `Copied ${lastCarvedStrings.length} strings.`, 'success'));
+    } else {
+      showToast('Strings', `Found ${lastCarvedStrings.length} strings.`, 'info');
+    }
+  }
+
+  function parseInputBufferB() {
+    const raw = (document.getElementById('diffBufferInput').value || '').trim();
+    if (!raw) return new Uint8Array(0);
+    const cleanHex = raw.replace(/\s+|0x|,/g, '');
+    if (/^[0-9a-fA-F]+$/.test(cleanHex) && cleanHex.length % 2 === 0 && cleanHex.length >= 2) {
+      const arr = new Uint8Array(cleanHex.length / 2);
+      for (let i = 0; i < cleanHex.length; i += 2) {
+        arr[i / 2] = parseInt(cleanHex.substr(i, 2), 16);
+      }
+      return arr;
+    }
+    return new TextEncoder().encode(raw);
+  }
+
+  function runBinaryDiff() {
+    const bufA = binaryBuffer;
+    const bufB = parseInputBufferB();
+    const stats = document.getElementById('diffStatsLabel');
+    const box = document.getElementById('diffOutputBox');
+    if (!stats || !box) return;
+    const maxLen = Math.max(bufA.length, bufB.length);
+    if (maxLen === 0) {
+      stats.innerText = 'Both buffers are empty.';
+      box.innerText = '';
+      return;
+    }
+
+    let diffCount = 0;
+    let matchCount = 0;
+    const diffs = [];
+
+    for (let i = 0; i < maxLen; i++) {
+      const byteA = i < bufA.length ? bufA[i] : null;
+      const byteB = i < bufB.length ? bufB[i] : null;
+      if (byteA !== byteB) {
+        diffCount++;
+        if (diffs.length < 500) {
+          diffs.push({
+            offset: i,
+            valA: byteA !== null ? '0x' + byteA.toString(16).padStart(2, '0').toUpperCase() : '--',
+            charA: byteA !== null && byteA >= 32 && byteA <= 126 ? String.fromCharCode(byteA) : '.',
+            valB: byteB !== null ? '0x' + byteB.toString(16).padStart(2, '0').toUpperCase() : '--',
+            charB: byteB !== null && byteB >= 32 && byteB <= 126 ? String.fromCharCode(byteB) : '.',
+            xor: byteA !== null && byteB !== null ? '0x' + (byteA ^ byteB).toString(16).padStart(2, '0').toUpperCase() : '--'
+          });
+        }
+      } else {
+        matchCount++;
+      }
+    }
+
+    const similarity = ((matchCount / maxLen) * 100).toFixed(1);
+    stats.innerHTML = `Buffer A: <b>${bufA.length}B</b> &bull; Buffer B: <b>${bufB.length}B</b> &bull; Mismatches: <b style="color:${diffCount ? '#ef4444' : '#10b981'}">${diffCount}</b> &bull; Similarity: <b>${similarity}%</b>`;
+
+    if (diffCount === 0) {
+      box.innerHTML = '<div style="color:var(--accent-emerald); font-weight:bold;">✅ Buffers are 100% IDENTICAL across all bytes.</div>';
+      return;
+    }
+
+    let html = `<div style="display:flex; gap:10px; font-weight:bold; color:var(--text-secondary); border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:4px; margin-bottom:4px;">` +
+      `<span style="width:75px;">Offset</span>` +
+      `<span style="width:95px;">Buf A (Hex/Asc)</span>` +
+      `<span style="width:95px;">Buf B (Hex/Asc)</span>` +
+      `<span>XOR Delta</span>` +
+    `</div>`;
+
+    diffs.forEach(d => {
+      const hexOff = '0x' + d.offset.toString(16).padStart(6, '0').toUpperCase();
+      html += `<div style="display:flex; gap:10px; padding:2px 0; border-bottom:1px solid rgba(255,255,255,0.03);">` +
+        `<span style="color:var(--accent-purple); width:75px; cursor:pointer; font-weight:600;" onclick="gotoOffset(${d.offset}); switchTab('editor');" title="Click to jump to offset">${hexOff}</span>` +
+        `<span style="color:#ef4444; width:95px;">${d.valA} ('${d.charA}')</span>` +
+        `<span style="color:var(--accent-cyan); width:95px;">${d.valB} ('${d.charB}')</span>` +
+        `<span style="color:var(--accent-amber);">${d.xor}</span>` +
+      `</div>`;
+    });
+
+    if (diffCount > 500) {
+      html += `<div style="color:var(--text-dim); margin-top:6px; font-style:italic;">...and ${diffCount - 500} more differences truncated for display.</div>`;
+    }
+    box.innerHTML = html;
+  }
+
+  function loadSampleDiffBuffer() {
+    const tb = document.getElementById('diffBufferInput');
+    if (tb) {
+      tb.value = "Hello KHex World! Press 'H' for Help.";
+      runBinaryDiff();
+      showToast('Sample Loaded', 'Loaded modified sample string into Buffer B for diff.', 'info');
+    }
   }
 
   // Attach HUD Corner Filigree Brackets to panels

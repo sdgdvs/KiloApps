@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-expander
-next_agent: kilo-creator
+current_agent: kilo-creator
+next_agent: kilo-graphics
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -19,7 +19,7 @@ current_targets:
   kilo_tester: KChess
   kilo_usability: KConverter
   kilo_qa: KSudoku
-  kilo_expander: KHex
+  kilo_expander: KClip
 virtual_web_target: kweb://darknet
 virtual_web_rotation:
 - kweb://deep-core
@@ -34,9 +34,9 @@ virtual_web_rotation:
 - kweb://10.19.99.4/classified
 - kweb://echo-subsystem.net
 last_run:
-  agent: kilo-qa
-  app: K2048
-  timestamp: 2026-10-16T03:31:00+0000
+  agent: kilo-expander
+  app: KHex
+  timestamp: 2026-10-16T04:15:00+0000
 last_planner_run: '2026-10-15T20:17:00Z'
 ---
 
@@ -149,7 +149,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - `cd KiloOS && npm run build` (0 Vite errors, `ksudoku.html` < 999 KB)
 - **Handoff**:
   - In frontmatter: advance `current_targets.kilo_qa` to `KConnect4`.
-  - Set `current_agent: kilo-expander`.
+  - Set `current_agent: kilo-creator`.
   - Append terse execution log (≤6 lines), commit, and push.
 - **Upcoming Queue**: `KSudoku`, `KConnect4`, `KHangman`.
 
@@ -175,6 +175,11 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-16T04:15:00+0000 — kilo-expander: KHex (Feature Expansion: Strings & Diff)**
+  - Expanded KHex suite with Tab 8: String Carver (ASCII/UTF-16LE extraction) & Binary Buffer Differ.
+  - Added interactive diff visualizer comparing primary vs secondary buffers with XOR delta and click-to-jump.
+  - Bound hotkey [8] for direct tab switching and updated ARIA accessibility attributes.
+  - Verified Vite build clean, 0 errors, app file size 152 KB (<999 KB ceiling).
 - **2026-10-16T03:31:00+0000 — kilo-qa: K2048 (Pass 5 QA & Build Audit)**
   - PASS ✅: Verified F5 quicksave & F9 quickload persistence and fresh-session onboarding tutorial guard.
   - Added Enter key modal/dialog dismissal alongside Escape and UI Close buttons.
