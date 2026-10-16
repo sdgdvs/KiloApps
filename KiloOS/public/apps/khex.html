@@ -1119,6 +1119,11 @@
           <option value="hexdump">Formatted Hex Dump</option>
           <option value="carray">C / C++ Byte Array (const unsigned char data[])</option>
           <option value="intelhex">Intel HEX (.hex) Format</option>
+          <option value="srec">Motorola S-Record (.s19) Format</option>
+          <option value="python">Python Bytes Literal (b'\x..')</option>
+          <option value="base64">Base64 Encoded (RFC 4648)</option>
+          <option value="rust">Rust Byte Slice (&[u8])</option>
+          <option value="go">Go Byte Slice ([]byte)</option>
           <option value="asmdb">Assembly DB Directives (db 0x..)</option>
           <option value="json">JSON Byte Array [0x..]</option>
           <option value="rust">Rust Byte Slice (&[u8])</option>
@@ -3172,6 +3177,70 @@
       }
       out += ':00000001FF\n';
       out += '; Intel HEX Format (' + binaryBuffer.length + ' bytes total)';
+    } else if (preset === 'srec') {
+      out = 'S0030000FC\n';
+      let offset = 0;
+      while (offset < binaryBuffer.length) {
+        let chunkLen = Math.min(16, binaryBuffer.length - offset);
+        let addr = offset;
+        let count = chunkLen + 3;
+        let sum = count + ((addr >> 8) & 0xFF) + (addr & 0xFF);
+        let line = 'S1' + count.toString(16).padStart(2, '0').toUpperCase();
+        line += addr.toString(16).padStart(4, '0').toUpperCase();
+        for (let i = 0; i < chunkLen; i++) {
+          let b = binaryBuffer[offset + i];
+          sum += b;
+          line += b.toString(16).padStart(2, '0').toUpperCase();
+        }
+        let chk = (0xFF - (sum & 0xFF)) & 0xFF;
+        line += chk.toString(16).padStart(2, '0').toUpperCase();
+        out += line + '\n';
+        offset += chunkLen;
+      }
+      out += 'S9030000FC';
+    } else if (preset === 'python') {
+      out = '# Python bytes definition (' + binaryBuffer.length + ' bytes)\n';
+      out += 'DATA = (\n';
+      let offset = 0;
+      while (offset < binaryBuffer.length) {
+        let chunkLen = Math.min(16, binaryBuffer.length - offset);
+        out += '    b"';
+        for (let i = 0; i < chunkLen; i++) {
+          out += '\\x' + binaryBuffer[offset + i].toString(16).padStart(2, '0').toLowerCase();
+        }
+        out += '"\n';
+        offset += chunkLen;
+      }
+      out += ')';
+    } else if (preset === 'base64') {
+      let b64 = '';
+      const CHUNK = 8192;
+      for (let i = 0; i < binaryBuffer.length; i += CHUNK) {
+        let slice = binaryBuffer.subarray(i, Math.min(i + CHUNK, binaryBuffer.length));
+        b64 += String.fromCharCode.apply(null, slice);
+      }
+      out = btoa(b64);
+      let formatted = '';
+      for (let i = 0; i < out.length; i += 64) {
+        formatted += out.slice(i, i + 64) + '\n';
+      }
+      out = formatted.trim();
+    } else if (preset === 'rust') {
+      out = 'pub static DATA: &[u8] = &[\n  ';
+      for (let i = 0; i < binaryBuffer.length; i++) {
+        out += '0x' + binaryBuffer[i].toString(16).padStart(2, '0').toUpperCase();
+        if (i < binaryBuffer.length - 1) out += ', ';
+        if ((i + 1) % 12 === 0 && i < binaryBuffer.length - 1) out += '\n  ';
+      }
+      out += '\n];';
+    } else if (preset === 'go') {
+      out = 'var Data = []byte{\n  ';
+      for (let i = 0; i < binaryBuffer.length; i++) {
+        out += '0x' + binaryBuffer[i].toString(16).padStart(2, '0').toUpperCase();
+        if (i < binaryBuffer.length - 1) out += ', ';
+        if ((i + 1) % 12 === 0 && i < binaryBuffer.length - 1) out += '\n  ';
+      }
+      out += '\n}';
     } else if (preset === 'asmdb') {
       out = '; x86 / NASM Assembly Byte Directives (' + binaryBuffer.length + ' bytes)\n';
       out += 'data_bytes:\n';
