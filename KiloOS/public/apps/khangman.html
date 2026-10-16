@@ -1076,6 +1076,7 @@
 
     function hideHelp() {
         document.getElementById('help-modal').style.display = 'none';
+        safeSetStorage('khangman_tutorialSeen', '1');
         safeSetStorage('khangman_tutorial_seen', '1');
     }
 
@@ -1401,18 +1402,33 @@
         if (state) {
             try {
                 if (blitzTimerId) clearInterval(blitzTimerId);
+                duelActive = false;
+                isSoloBotDuel = false;
+                stopSoloBot();
+                const duelHud = document.getElementById('duel-hud');
+                if (duelHud) duelHud.style.display = 'none';
+                const duelTag = document.getElementById('duel-status-tag');
+                if (duelTag) duelTag.style.display = 'none';
+
                 word = state.word;
-                document.getElementById('category').value = state.category;
+                const catEl = document.getElementById('category');
+                if (catEl) {
+                    catEl.value = state.category;
+                    const customContainer = document.getElementById('custom-container');
+                    if (customContainer) {
+                        customContainer.style.display = (state.category === "Custom") ? 'block' : 'none';
+                    }
+                }
                 guessed = new Set(state.guessed);
                 errors = state.errors;
                 gameMode = state.gameMode;
                 campaignLevel = state.campaignLevel || 1;
                 maxErrors = state.maxErrors || 6;
-                vowelReveals = state.vowelReveals || 0;
-                consonantRadars = state.consonantRadars || 0;
-                shields = state.shields || 0;
-                freezes = state.freezes || 0;
-                bombs = state.bombs || 0;
+                vowelReveals = state.vowelReveals !== undefined ? state.vowelReveals : 2;
+                consonantRadars = state.consonantRadars !== undefined ? state.consonantRadars : 2;
+                shields = state.shields !== undefined ? state.shields : 2;
+                freezes = state.freezes !== undefined ? state.freezes : 2;
+                bombs = state.bombs !== undefined ? state.bombs : 2;
                 freezeTimerSeconds = state.freezeTimerSeconds || 0;
                 blitzTime = state.blitzTime || 60;
                 blitzWords = state.blitzWords || 0;
@@ -3154,6 +3170,17 @@
             return;
         }
 
+        // If any modal is active, Esc, Enter, or Space will dismiss it cleanly
+        const activeModal = document.querySelector('.modal[style*="display: flex"]');
+        if (activeModal) {
+            if (e.key === 'Escape' || e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                closeAllModals();
+                return;
+            }
+            return;
+        }
+
         if (e.key === 'Escape') {
             closeAllModals();
             return;
@@ -3235,8 +3262,13 @@
     });
 
     function checkFirstRunTutorial() {
-        if (!safeGetStorage('khangman_tutorial_seen', null)) {
+        if (safeGetStorage('khangman_save', null)) {
+            // Never interrupt existing saved game session
+            return;
+        }
+        if (!safeGetStorage('khangman_tutorialSeen', null) && !safeGetStorage('khangman_tutorial_seen', null)) {
             showHelp();
+            safeSetStorage('khangman_tutorialSeen', '1');
             safeSetStorage('khangman_tutorial_seen', '1');
         }
     }

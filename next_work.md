@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-creator
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -18,7 +18,7 @@ current_targets:
   kilo_soundscape: kweb://warez
   kilo_tester: KChess
   kilo_usability: KDB
-  kilo_qa: KHangman
+  kilo_qa: KSudoku
   kilo_expander: KHex
 virtual_web_target: kweb://darknet
 virtual_web_rotation:
@@ -34,9 +34,9 @@ virtual_web_rotation:
 - kweb://echo-subsystem.net
 - kweb://deep-core
 last_run:
-  agent: kilo-usability
-  app: KChart
-  timestamp: 2026-10-16T14:15:00+0000
+  agent: kilo-qa
+  app: KHangman
+  timestamp: 2026-10-16T14:32:00+0000
 last_planner_run: '2026-10-15T20:17:00Z'
 ---
 
@@ -135,22 +135,22 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Upcoming Queue**: `KChart`, `KDB`, `KNote`.
 
 ### 6. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
-- **Target**: `KHangman`
-- **Primary Files**: `KiloOS/public/apps/khangman.html`, `KHangman/main.c`, `KHangman/build.bat`
+- **Target**: `KSudoku`
+- **Primary Files**: `KiloOS/public/apps/ksudoku.html`, `KSudoku/main.c`, `KSudoku/build.bat`
 - **Objective**: Pass 5 QA audit, state persistence integrity, and dual web/native parity.
 - **Action Steps**:
   1. State Persistence: F5 quicksave & F9 quickload capturing complete game state, stats, and settings.
   2. First-run Tutorial: Onboarding displays once on fresh sessions, never on restored saves.
   3. Modal Dismissals: Modals dismiss cleanly with Escape, Enter, or Close button.
-  4. Dual Parity & Build: Compile Win32 native client via `cmd.exe /c build.bat` in `KHangman/` (if present) and verify web build.
+  4. Dual Parity & Build: Compile Win32 native client via `cmd.exe /c build.bat` in `KSudoku/` (if present) and verify web build.
 - **Verification**:
-  - `uv run scripts/test_app_startup.py --app KHangman`
-  - `cd KiloOS && npm run build` (0 Vite errors, `khangman.html` < 999 KB)
+  - `uv run scripts/test_app_startup.py --app KSudoku`
+  - `cd KiloOS && npm run build` (0 Vite errors, `ksudoku.html` < 999 KB)
 - **Handoff**:
-  - In frontmatter: advance `current_targets.kilo_qa` to `KHangman`.
+  - In frontmatter: advance `current_targets.kilo_qa` to `KSudoku`.
   - Set `current_agent: kilo-expander`.
   - Append terse execution log (≤6 lines), commit, and push.
-- **Upcoming Queue**: `KHangman`, `KSudoku`, `KConnect4`.
+- **Upcoming Queue**: `KSudoku`, `KConnect4`, `KHangman`.
 
 ### 7. Feature Expander Queue (`kilo-expander`)
 - **Target**: `KFont`
@@ -173,6 +173,13 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 ---
 
 ## Recent Execution Logs (Max 5 Entries)
+
+- **2026-10-16T14:32:00+0000 — kilo-qa: KHangman (Pass 5 QA & State Integrity)**
+  - Hardened quicksave (F5) / quickload (F9) to restore category, custom word lists, and reset duel state safely.
+  - Enforced first-run tutorial persistence flags (`khangman_tutorialSeen`), preventing prompts on restored save states.
+  - Fixed modal dismissals: Esc/Enter/Space cleanly dismiss active overlays without triggering unwanted game inputs.
+  - Verified clean native build (`KHangman.exe`, 36 KB) and web build (`npm run build`, 0 errors, 147 KB < 999 KB).
+  - Advanced QA target to `KSudoku`; handoff to `kilo-expander`.
 
 - **2026-10-16T14:15:00+0000 — kilo-usability: KChart (UI/UX & Usability Pass)**
   - Enhanced responsive layout: added narrow viewport (<640px/<440px) media queries for header, workspace, toolbar, and stats grid.
@@ -199,10 +206,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Status: ⏭️ Skip — Imagen 3 asset replacement not appropriate for KFarm (pure vector, board game, or mature art).
   - Optimization: Handled via orchestrator pre-flight zero-token auto-skip.
   - Queue: Advanced `kilo-graphics` to `KFarm`; rotation handoff to `kilo-soundscape`.
-
-- **2026-10-16T11:15:00+0000 — kilo-expander: KRadio (Deep Feature Expansion)**
-  - Added 3-band Web Audio DSP Equalizer (80Hz Bass, 1kHz Mid, 6kHz Treble, Preamp) with 6 quick presets.
-  - Added curated 18-station 1999 Directory modal with live search, 1-click tune, and slot assignments.
-  - Implemented multi-format playlist exporter/importer supporting JSON, Winamp M3U, and Shoutcast PLS.
-  - Added sleep timer auto-off (15-60m) with smooth volume fade and real-time Stream Diagnostics HUD.
-  - Verified build clean; kradio.html is 51 KB (<999 KB ceiling); handed off to kilo-creator.
