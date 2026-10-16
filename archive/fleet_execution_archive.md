@@ -4,6 +4,13 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-16T00:14:00+0000 — kilo-qa: KBreakout (Pass 5: Tutorial, State Integrity & Dual Parity)**
+  - State Persistence: Verified F5 quicksave & F9 quickload capturing full gameplay, materials & boss state.
+  - Onboarding Integrity: Fixed tutorialSeen flag persistence so tutorial never re-triggers on loaded saves.
+  - Modal Dismissals: Added Enter key dismissals across all overlays with clean Escape/Close hierarchy.
+  - Dual Parity & Build: Created KBreakout/build.bat, verified clean Win32 MSVC build (56 KB), Vite 0 errors.
+  - Advanced QA queue to K2048; handed off rotation to kilo-expander (KFont).
+
 - **2026-10-15 09:35 [kilo-expander]**: KZip Pass 2 deep feature expansion complete.
   - Implemented Self-Extracting Archive (.sfx.html) packaging with embedded web unpacker runtime.
   - Added in-archive Grep content search supporting regex, case toggles, line highlights, and match indices.

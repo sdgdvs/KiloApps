@@ -177,7 +177,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 - **2026-10-16T03:13:00+0000 — kilo-usability: KFont (Usability Audit)**
   - ⏭️ Skip — KFont usability is complete and mature.
- 
+
 - **2026-10-16T02:31:00+0000 — kilo-tester: KCalendar (Interactive UI & Modal Audit)**
   - PASS ✅ (0 runtime errors, clean startup & hit-test unblocked).
   - Verified modal dismissing (Esc, backdrop, Enter/Space), quicksave (F5/Ctrl+S), and quickload (F9).
@@ -205,11 +205,3 @@ pm run build 0 errors, kcalendar.html 119 KB (<999 KB ceiling).
   - Integrated with active character, font family, style (bold/italic), and em-box scaling.
   - Build/Size: Verified clean Vite build (`npm run build`), kfont.html 168 KB (<999 KB ceiling).
   - Advanced expander target to KHex; handed off rotation to kilo-creator.
-
-- **2026-10-16T00:14:00+0000 — kilo-qa: KBreakout (Pass 5: Tutorial, State Integrity & Dual Parity)**
-  - State Persistence: Verified F5 quicksave & F9 quickload capturing full gameplay, materials & boss state.
-  - Onboarding Integrity: Fixed tutorialSeen flag persistence so tutorial never re-triggers on loaded saves.
-  - Modal Dismissals: Added Enter key dismissals across all overlays with clean Escape/Close hierarchy.
-  - Dual Parity & Build: Created KBreakout/build.bat, verified clean Win32 MSVC build (56 KB), Vite 0 errors.
-  - Advanced QA queue to K2048; handed off rotation to kilo-expander (KFont).
-
