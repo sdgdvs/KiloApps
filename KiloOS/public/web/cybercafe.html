@@ -3541,17 +3541,26 @@ function playModemChirp() {
   initAudio();
   if (!audioCtx) return;
   const now = audioCtx.currentTime;
-  const osc = audioCtx.createOscillator();
-  const gain = audioCtx.createGain();
-  osc.type = 'sawtooth';
-  osc.frequency.setValueAtTime(980, now);
-  osc.frequency.linearRampToValueAtTime(1850, now + 0.08);
-  gain.gain.setValueAtTime(0.06, now);
-  gain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
-  osc.connect(gain);
-  gain.connect(audioCtx.destination);
-  osc.start(now);
-  osc.stop(now + 0.1);
+  const carrier = audioCtx.createOscillator();
+  const modulator = audioCtx.createOscillator();
+  const modGain = audioCtx.createGain();
+  const ampEnv = audioCtx.createGain();
+  carrier.type = 'sine';
+  modulator.type = 'sine';
+  carrier.frequency.setValueAtTime(980, now);
+  carrier.frequency.exponentialRampToValueAtTime(1850, now + 0.08);
+  modulator.frequency.setValueAtTime(980 * 2.0, now);
+  modulator.frequency.exponentialRampToValueAtTime(1850 * 2.0, now + 0.08);
+  modGain.gain.setValueAtTime(980 * 2.0 * 2.5, now);
+  modGain.gain.exponentialRampToValueAtTime(0.01, now + 0.09);
+  ampEnv.gain.setValueAtTime(0.07, now);
+  ampEnv.gain.exponentialRampToValueAtTime(0.0001, now + 0.1);
+  modulator.connect(modGain);
+  modGain.connect(carrier.frequency);
+  carrier.connect(ampEnv);
+  ampEnv.connect(analyserNode);
+  carrier.start(now); modulator.start(now);
+  carrier.stop(now + 0.1); modulator.stop(now + 0.1);
 }
 
 function playDtmfTone(rowFreq, colFreq, dur = 0.16) {
@@ -3581,14 +3590,78 @@ function playDtmfTone(rowFreq, colFreq, dur = 0.16) {
   if (analyserNode) {
     gain1.connect(analyserNode);
     gain2.connect(analyserNode);
+  } else {
+    gain1.connect(audioCtx.destination);
+    gain2.connect(audioCtx.destination);
   }
-  gain1.connect(audioCtx.destination);
-  gain2.connect(audioCtx.destination);
 
   osc1.start(now);
   osc2.start(now);
   osc1.stop(now + dur);
   osc2.stop(now + dur);
+}
+
+// Metallic Bell patch (modRatio 3.5, modIndex 5.0 -> 0)
+function playFmBell(freq = 880, dur = 0.45, vol = 0.10) {
+  if (!audioEnabled) return;
+  initAudio();
+  if (!audioCtx) return;
+  const now = audioCtx.currentTime;
+  const carrier = audioCtx.createOscillator();
+  const modulator = audioCtx.createOscillator();
+  const modGain = audioCtx.createGain();
+  const ampEnv = audioCtx.createGain();
+  carrier.type = 'sine'; modulator.type = 'sine';
+  carrier.frequency.setValueAtTime(freq, now);
+  modulator.frequency.setValueAtTime(freq * 3.5, now);
+  modGain.gain.setValueAtTime(freq * 3.5 * 5.0, now);
+  modGain.gain.exponentialRampToValueAtTime(0.01, now + dur);
+  ampEnv.gain.setValueAtTime(vol, now);
+  ampEnv.gain.exponentialRampToValueAtTime(0.0001, now + dur);
+  modulator.connect(modGain);
+  modGain.connect(carrier.frequency);
+  carrier.connect(ampEnv);
+  ampEnv.connect(analyserNode);
+  if (delayL && delayR) {
+    ampEnv.connect(delayL);
+    ampEnv.connect(delayR);
+  }
+  carrier.start(now); modulator.start(now);
+  carrier.stop(now + dur); modulator.stop(now + dur);
+}
+
+// Action Stinger / Fanfare Brass (modRatio 1.0, modIndex 4.0 -> 0.5)
+function playFmBrassStinger(baseFreq = 392.00, vol = 0.12) {
+  if (!audioEnabled) return;
+  const notes = [baseFreq, baseFreq * 1.25, baseFreq * 1.5, baseFreq * 2.0];
+  notes.forEach((freq, i) => {
+    setTimeout(() => {
+      if (!audioEnabled || !audioCtx) return;
+      const now = audioCtx.currentTime;
+      const carrier = audioCtx.createOscillator();
+      const modulator = audioCtx.createOscillator();
+      const modGain = audioCtx.createGain();
+      const ampEnv = audioCtx.createGain();
+      const dur = (i === notes.length - 1) ? 0.4 : 0.12;
+      carrier.type = 'sine'; modulator.type = 'sine';
+      carrier.frequency.setValueAtTime(freq, now);
+      modulator.frequency.setValueAtTime(freq * 1.0, now);
+      modGain.gain.setValueAtTime(freq * 4.0, now);
+      modGain.gain.exponentialRampToValueAtTime(freq * 0.5, now + dur);
+      ampEnv.gain.setValueAtTime(vol, now);
+      ampEnv.gain.exponentialRampToValueAtTime(0.0001, now + dur);
+      modulator.connect(modGain);
+      modGain.connect(carrier.frequency);
+      carrier.connect(ampEnv);
+      ampEnv.connect(analyserNode);
+      if (delayL && delayR) {
+        ampEnv.connect(delayL);
+        ampEnv.connect(delayR);
+      }
+      carrier.start(now); modulator.start(now);
+      carrier.stop(now + dur); modulator.stop(now + dur);
+    }, i * 95);
+  });
 }
 
 function playNoiseBurst(dur = 0.25, centerFreq = 1400) {
