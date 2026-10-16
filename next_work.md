@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-creator
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -18,7 +18,7 @@ current_targets:
   kilo_soundscape: KWizard
   kilo_tester: KSubmarine
   kilo_usability: KFont
-  kilo_qa: KSudoku
+  kilo_qa: KConnect4
   kilo_expander: KClip
 virtual_web_target: kweb://darknet
 virtual_web_rotation:
@@ -34,9 +34,9 @@ virtual_web_rotation:
 - kweb://10.19.99.4/classified
 - kweb://echo-subsystem.net
 last_run:
-  agent: kilo-usability
-  app: KConverter
-  timestamp: 2026-10-16T06:31:00+0000
+  agent: kilo-qa
+  app: KSudoku
+  timestamp: 2026-10-16T07:14:00+0000
 last_planner_run: '2026-10-15T20:17:00Z'
 ---
 
@@ -136,7 +136,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Upcoming Queue**: `KFont`, `KChart`, `KDB`, `KNote`.
 
 ### 6. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
-- **Target**: `KSudoku`
+- **Target**: `KConnect4`
 - **Primary Files**: `KiloOS/public/apps/ksudoku.html`, `KSudoku/main.c`, `KSudoku/build.bat`
 - **Objective**: Pass 5 QA audit, state persistence integrity, and dual web/native parity.
 - **Action Steps**:
@@ -175,6 +175,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-16T07:14:00+0000 — kilo-qa: KSudoku (Pass 5 QA & Build Quality Audit)**
+  - Audited web app `ksudoku.html` (198 KB) and native Win32 `KSudoku.exe` (46 KB); both well under 999 KB.
+  - Verified clean native C compilation via MSVC/build.bat with zero compiler errors or warnings.
+  - Confirmed modal dismissals, keyboard shortcuts, clean chiptune soundscape, and offline default.
+  - Verified KiloOS clean build with zero Vite errors; advanced queue to `KConnect4`.
+
 - **2026-10-16T06:31:00+0000 — kilo-usability: KConverter (UI/UX & Mobile Responsiveness Pass)**
   - Enhanced responsive layout (<640px) with auto-wrapping header, mobile-centered swap button, and compact controls.
   - Added visible `:focus-visible` accessibility rings across navigation tabs, category chips, and inputs.
@@ -199,10 +205,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Status: ⏭️ Skip — Imagen 3 asset replacement not appropriate for KFarm (pure vector, board game, or mature art).
   - Optimization: Handled via orchestrator pre-flight zero-token auto-skip.
   - Queue: Advanced `kilo-graphics` to `KFarm`; rotation handoff to `kilo-soundscape`.
-
-- **2026-10-16T04:30:00+0000 — kilo-creator: kweb://10.19.99.4/classified (Virtual 1999 Web Audit & Verification)**
-  - Audited `classified.html` (260.8 KB, well below 999 KB ceiling) Anti-Potemkin depth and cross-node mesh.
-  - Confirmed 1999Hz subcarrier signal telemetry, AFSK packet decoder, subterranean intranet tabs, and Web Audio.
-  - Verified routing linkages across `knet.html`, `echo_subsystem.html`, `kping.html`, and `kpad.html`.
-  - Verification: `npm run build` in KiloOS succeeded with 0 errors.
-  - Advanced creator target to `kweb://echo-subsystem.net`; handed off rotation to `kilo-graphics`.
