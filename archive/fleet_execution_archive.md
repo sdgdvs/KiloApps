@@ -4,6 +4,12 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-16T18:15:00+0000 — kilo-usability: KDB (UI/UX & Usability Overhaul)**
+  - Audited layout ergonomics: tuned default window size to 1020x700 in `App.jsx` and `kdb.html` for clean multi-column viewing.
+  - Eliminated toolbar button wrap: consolidated 9 export/import actions into responsive Dropdown menus while preserving all shortcuts.
+  - HiDPI & Responsive Charts: enforced integer DPR canvas buffer styles and added debounced window resize handler for dashboard charts.
+  - Verification: `npm run build` clean (0 errors); advanced usability target to `KNote`; handoff to `kilo-qa`.
+
 - **2026-10-16T17:31:00+0000 — kilo-adhoc: Core System Cartridges v2.0 (KExplorer, KTaskMgr, KSettings)**
   - Status: PASS ✅ (0 regressions, clean builds, all cartridges < 999 KB ceiling).
   - KExplorer v2.0: Added live `VFS_CHANGED` auto-refresh, `+ New File`, file rename (F2), file delete (Del), inline quick-preview drawer for text/code, and cartridge mappings.
