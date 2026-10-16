@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-creator
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -18,7 +18,7 @@ current_targets:
   kilo_soundscape: kweb://webring
   kilo_tester: KCalendar
   kilo_usability: KChart
-  kilo_qa: KConnect4
+  kilo_qa: KHangman
   kilo_expander: KRadio
 virtual_web_target: kweb://deep-core
 virtual_web_rotation:
@@ -34,9 +34,9 @@ virtual_web_rotation:
 - kweb://10.19.99.4/classified
 - kweb://echo-subsystem.net
 last_run:
-  agent: kilo-usability
-  app: KFont
-  timestamp: 2026-10-16T10:15:00+0000
+  agent: kilo-qa
+  app: KConnect4
+  timestamp: 2026-10-16T10:33:00+0000
 last_planner_run: '2026-10-15T20:17:00Z'
 ---
 
@@ -135,22 +135,22 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Upcoming Queue**: `KChart`, `KDB`, `KNote`.
 
 ### 6. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
-- **Target**: `KConnect4`
-- **Primary Files**: `KiloOS/public/apps/ksudoku.html`, `KSudoku/main.c`, `KSudoku/build.bat`
+- **Target**: `KHangman`
+- **Primary Files**: `KiloOS/public/apps/khangman.html`, `KHangman/main.c`, `KHangman/build.bat`
 - **Objective**: Pass 5 QA audit, state persistence integrity, and dual web/native parity.
 - **Action Steps**:
-  1. State Persistence: F5 quicksave & F9 quickload capturing grid values, notes, timer, difficulty.
+  1. State Persistence: F5 quicksave & F9 quickload capturing complete game state, stats, and settings.
   2. First-run Tutorial: Onboarding displays once on fresh sessions, never on restored saves.
   3. Modal Dismissals: Modals dismiss cleanly with Escape, Enter, or Close button.
-  4. Dual Parity & Build: Compile Win32 native client via `cmd.exe /c build.bat` in `KSudoku/` (if present) and verify web build.
+  4. Dual Parity & Build: Compile Win32 native client via `cmd.exe /c build.bat` in `KHangman/` (if present) and verify web build.
 - **Verification**:
-  - `uv run scripts/test_app_startup.py --app KSudoku`
-  - `cd KiloOS && npm run build` (0 Vite errors, `ksudoku.html` < 999 KB)
+  - `uv run scripts/test_app_startup.py --app KHangman`
+  - `cd KiloOS && npm run build` (0 Vite errors, `khangman.html` < 999 KB)
 - **Handoff**:
-  - In frontmatter: advance `current_targets.kilo_qa` to `KConnect4`.
-  - Set `current_agent: kilo-creator`.
+  - In frontmatter: advance `current_targets.kilo_qa` to `KHangman`.
+  - Set `current_agent: kilo-expander`.
   - Append terse execution log (≤6 lines), commit, and push.
-- **Upcoming Queue**: `KSudoku`, `KConnect4`, `KHangman`.
+- **Upcoming Queue**: `KHangman`, `KSudoku`, `KConnect4`.
 
 ### 7. Feature Expander Queue (`kilo-expander`)
 - **Target**: `KFont`
@@ -173,6 +173,13 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 ---
 
 ## Recent Execution Logs (Max 5 Entries)
+
+- **2026-10-16T10:33:00+0000 — kilo-qa: KConnect4 (Pass 5 QA & Build Quality Audit)**
+  - Audited full game state persistence (F5 quicksave/F9 quickload) capturing board, timers, powerups, and replays.
+  - Verified first-run tutorial prompt gating via `kconnect4_tutorialSeen` and tested Esc/Enter modal dismissals.
+  - Verified native Win32 compilation via `cmd.exe /c build.bat` producing clean `KConnect4.exe` (191 KB < 999 KB).
+  - Verified `npm run build` in KiloOS with 0 errors (`kconnect4.html` 186 KB < 999 KB).
+  - Advanced QA target to `KHangman`; rotation handed off to `kilo-expander`.
 
 - **2026-10-16T10:15:00+0000 — kilo-usability: KFont (UI/UX & Responsive Ergonomics Pass)**
   - Enhanced responsive layouts with `<768px` touch targets (min 38px) and `<540px` compact single-column reflows.
@@ -198,11 +205,4 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Status: ⏭️ Skip — Imagen 3 asset replacement not appropriate for KFarm (pure vector, board game, or mature art).
   - Optimization: Handled via orchestrator pre-flight zero-token auto-skip.
   - Queue: Advanced `kilo-graphics` to `KFarm`; rotation handoff to `kilo-soundscape`.
-
-- **2026-10-16T08:16:00+0000 — kilo-creator: kweb://echo-subsystem.net (Anti-Potemkin SQUID & Webring Pass)**
-  - Implemented interactive Tab 14 RF-SQUID Magnetometer & Sub-Crustal Tomograph suite in `echo_subsystem.html`.
-  - Added live Josephson V-Phi curve, 2D Salado Halite strata impedance map, procedural FM whistle & acoustic ping.
-  - Linked `echo-subsystem.net` into `webring.html` active directory (Node #019) with full ARG metadata tags.
-  - Verified `npm run build` clean (0 errors); `echo_subsystem.html` (417 KB) and `webring.html` (341 KB) <999 KB.
-  - Advanced creator target to `kweb://deep-core`; handed off rotation to `kilo-graphics`.
 
