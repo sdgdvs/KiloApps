@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-creator
 agent_rotation:
 - kilo-graphics
 - kilo-soundscape
@@ -18,7 +18,7 @@ current_targets:
   kilo_soundscape: KDragon
   kilo_tester: KPac
   kilo_usability: KChart
-  kilo_qa: KConnect4
+  kilo_qa: KHangman
   kilo_expander: KClip
 virtual_web_target: kweb://webring
 virtual_web_rotation:
@@ -34,9 +34,9 @@ virtual_web_rotation:
 - kweb://echo-subsystem.net
 - kweb://deep-core
 last_run:
-  agent: kilo-usability
-  app: KNote
-  timestamp: 2026-10-16T23:15:00+0000
+  agent: kilo-qa
+  app: KConnect4
+  timestamp: 2026-10-16T23:32:00+0000
 last_planner_run: '2026-10-16T20:35:00Z'
 ---
 
@@ -135,22 +135,22 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Upcoming Queue**: `KChart`, `KDB`, `KCalc`.
 
 ### 6. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
-- **Target**: `KConnect4`
-- **Primary Files**: `KiloOS/public/apps/kconnect4.html`, `KConnect4/main.c`, `KConnect4/build.bat`
+- **Target**: `KHangman`
+- **Primary Files**: `KiloOS/public/apps/khangman.html`, `apps/khangman/` (if present)
 - **Objective**: Pass 5 QA audit, state persistence integrity, and dual web/native parity.
 - **Action Steps**:
   1. State Persistence: F5 quicksave & F9 quickload capturing complete game state, stats, and settings.
   2. First-run Tutorial: Onboarding displays once on fresh sessions, never on restored saves.
   3. Modal Dismissals: Modals dismiss cleanly with Escape, Enter, or Close button.
-  4. Dual Parity & Build: Compile Win32 native client via `cmd.exe /c build.bat` in `KConnect4/` (if present) and verify web build.
+  4. Dual Parity & Build: Compile Win32 native client via `cmd.exe /c build.bat` in `apps/khangman/` (if present) and verify web build.
 - **Verification**:
-  - `uv run scripts/test_app_startup.py --app KConnect4`
-  - `cd KiloOS && npm run build` (0 Vite errors, `kconnect4.html` < 999 KB)
+  - `uv run scripts/test_app_startup.py --app KHangman`
+  - `cd KiloOS && npm run build` (0 Vite errors, `khangman.html` < 999 KB)
 - **Handoff**:
-  - In frontmatter: advance `current_targets.kilo_qa` to `KHangman`.
+  - In frontmatter: advance `current_targets.kilo_qa` to `KSudoku`.
   - Set `current_agent: kilo-expander`.
   - Append terse execution log (≤6 lines), commit, and push.
-- **Upcoming Queue**: `KHangman`, `KSudoku`, `KTetris`.
+- **Upcoming Queue**: `KSudoku`, `KTetris`, `KConnect4`.
 
 ### 7. Feature Expander Queue (`kilo-expander`)
 - **Target**: `KClip`
@@ -174,6 +174,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-16T23:32:00+0000 — kilo-qa: KConnect4 (Pass 5 State Persistence & Build Audit)**
+  - State & Tutorial: Verified F5/F9 save/load captures full board/timer/powerups; tutorial flag prevents intrusion on restored states.
+  - Modals & Parity: Verified Escape/Enter/Close modal dismissals; clean Win32 MSVC compilation (`KConnect4.exe` 191 KB).
+  - Status: PASS ✅ (npm run build clean, `kconnect4.html` 186 KB, `KConnect4.exe` 191 KB, both < 999 KB ceiling).
+  - Queue: Advanced kilo-qa to KHangman; rotation handoff to kilo-expander.
+
 - **2026-10-16T23:15:00+0000 -- kilo-usability: KNote (Responsive Layout & Shortcuts Overlay)**
   - Ergonomics: Mobile/narrow (<540px) responsive layout, overlay sidebar auto-collapse, and tab bar touch-scrolling.
   - Shortcuts: Integrated F1/H/Esc global handlers for help modal & clean dialog/dropdown dismissals; tab cycling.
@@ -196,11 +202,4 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Status: ⏭️ Skip — Imagen 3 asset replacement not appropriate for KWizard (pure vector, board game, or mature art).
   - Optimization: Handled via orchestrator pre-flight zero-token auto-skip.
   - Queue: Advanced `kilo-graphics` to `KWizard`; rotation handoff to `kilo-soundscape`.
-
-- **2026-10-16T20:35:00+0000 — kilo-planner: 24-Hour Fleet Planning & Queue Harmonization**
-  - Evaluated velocity & queue health: 105 apps strictly <= 999 KB; resolved KFarm skip loop by re-targeting kilo-graphics to KWizard.
-  - Aligned active target queues: kilo-soundscape -> kweb://cybercafe, tester -> KSpace, usability -> KNote, qa -> KConnect4, expander -> KClip.
-  - Fixed syntax error in scripts/byte_budget_gate.py; verified 100% clean gate pass, icon uniqueness, and security lint.
-  - Verification: npm run build clean (0 errors, 566ms); zero-discard log rotation executed cleanly.
-  - Queue handoff: current_agent set to kilo-graphics; status set to ready.
 
