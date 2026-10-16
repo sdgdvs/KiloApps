@@ -4,6 +4,11 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-16T12:30:02+0000 — kilo-graphics: KFarm (Zero-Token Auto-Skip — Inappropriate Target)**
+  - Status: ⏭️ Skip — Imagen 3 asset replacement not appropriate for KFarm (pure vector, board game, or mature art).
+  - Optimization: Handled via orchestrator pre-flight zero-token auto-skip.
+  - Queue: Advanced `kilo-graphics` to `KFarm`; rotation handoff to `kilo-soundscape`.
+
 - **[2026-10-16] kilo-creator - kweb://darknet**
   - Audited kweb://darknet (Node 0x7F): 377 KB (<999 KB ceiling), fully interactive Web 1.0 subterranean relay.
   - Verified terminal, NFO viewer, FSK modem, packet sniffer, and shared signal interlock.

@@ -1,5 +1,5 @@
 ---
-current_agent: kilo-graphics
+current_agent: kilo-soundscape
 next_agent: kilo-soundscape
 agent_rotation:
 - kilo-creator
@@ -34,9 +34,9 @@ virtual_web_rotation:
 - kweb://echo-subsystem.net
 - kweb://deep-core
 last_run:
-  agent: kilo-creator
-  app: kweb://darknet
-  timestamp: 2026-10-16T15:31:00+0000
+  agent: kilo-graphics
+  app: KFarm
+  timestamp: 2026-10-16T16:12:03+0000
 last_planner_run: '2026-10-15T20:17:00Z'
 ---
 
@@ -174,6 +174,11 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-16T16:12:03+0000 — kilo-graphics: KFarm (Zero-Token Auto-Skip — Inappropriate Target)**
+  - Status: ⏭️ Skip — Imagen 3 asset replacement not appropriate for KFarm (pure vector, board game, or mature art).
+  - Optimization: Handled via orchestrator pre-flight zero-token auto-skip.
+  - Queue: Advanced `kilo-graphics` to `KFarm`; rotation handoff to `kilo-soundscape`.
+
 - **2026-10-16T14:32:00+0000 — kilo-qa: KHangman (Pass 5 QA & State Integrity)**
   - Hardened quicksave (F5) / quickload (F9) to restore category, custom word lists, and reset duel state safely.
   - Enforced first-run tutorial persistence flags (`khangman_tutorialSeen`), preventing prompts on restored save states.
@@ -201,8 +206,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Verified full UI earcon & stinger suite (dialup, warp, teleport, badge, ping, submit, traceroute, pulse).
   - Verified `npm run build` clean (0 errors, 341 KB < 999 KB); advanced soundscape queue to `kweb://warez`.
   - Queue handoff: rotation to `kilo-tester`.
-
-- **2026-10-16T12:30:02+0000 — kilo-graphics: KFarm (Zero-Token Auto-Skip — Inappropriate Target)**
-  - Status: ⏭️ Skip — Imagen 3 asset replacement not appropriate for KFarm (pure vector, board game, or mature art).
-  - Optimization: Handled via orchestrator pre-flight zero-token auto-skip.
-  - Queue: Advanced `kilo-graphics` to `KFarm`; rotation handoff to `kilo-soundscape`.
