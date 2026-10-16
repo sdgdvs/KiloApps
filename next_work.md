@@ -208,8 +208,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Input Controller: real HTML5 Gamepad API polling, multi-button Virtual Touch Pad (D-Pad + A/B), frame-accurate `isDown`/`justPressed`.
   - VFS Sync & Persistence: boot hydration from KiloOS VFS_READ, out-of-the-box F5 Quicksave / F9 Quickload, and live 60FPS telemetry stream.
   - Verification: 100% unit tests pass (`node packages/sdk/test.js`); Vite build clean; security_lint PASS.
-
-- **2026-10-16T16:12:03+0000 — kilo-graphics: KFarm (Zero-Token Auto-Skip — Inappropriate Target)**
-  - Status: ⏭️ Skip — Imagen 3 asset replacement not appropriate for KFarm (pure vector, board game, or mature art).
-  - Optimization: Handled via orchestrator pre-flight zero-token auto-skip.
-  - Queue: Advanced `kilo-graphics` to `KFarm`; rotation handoff to `kilo-soundscape`.
