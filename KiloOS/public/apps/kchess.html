@@ -2913,21 +2913,12 @@
   }
 
   function closeModals() {
-      document.getElementById('fen-modal').style.display = 'none';
-      document.getElementById('pgn-modal').style.display = 'none';
-      const rep = document.getElementById('replay-modal');
-      if (rep) rep.style.display = 'none';
-      const bk = document.getElementById('book-modal');
-      if (bk) bk.style.display = 'none';
-      const ed = document.getElementById('editor-modal');
-      if (ed) ed.style.display = 'none';
+      const modalIds = ['help-modal', 'fen-modal', 'pgn-modal', 'replay-modal', 'book-modal', 'analysis-modal', 'editor-modal', 'multiplayer-modal', 'invite-modal'];
+      for (const id of modalIds) {
+          const m = document.getElementById(id);
+          if (m) m.style.display = 'none';
+      }
       stopReplayPlay();
-      const help = document.getElementById('help-modal');
-      if (help) help.style.display = 'none';
-      const mp = document.getElementById('multiplayer-modal');
-      if (mp) mp.style.display = 'none';
-      const inv = document.getElementById('invite-modal');
-      if (inv) inv.style.display = 'none';
       pendingInviteRoom = null;
       safeSetStorage(TUTORIAL_KEY, '1');
       if (activeLobbyRef && activeLobbyListener && window.fb) {

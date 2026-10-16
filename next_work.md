@@ -36,7 +36,7 @@ virtual_web_rotation:
 last_run:
   agent: kilo-tester
   app: KChess
-  timestamp: 2026-10-16T17:15:00+0000
+  timestamp: 2026-10-16T17:35:00+0000
 last_planner_run: '2026-10-15T20:17:00Z'
 ---
 
@@ -105,19 +105,19 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Upcoming Queue**: `KDragon`, `KWizard`, `KFortress`.
 
 ### 4. App Tester Queue (`kilo-tester`)
-- **Target**: `KChess`
-- **Primary File**: `KiloOS/public/apps/kchess.html`
-- **Objective**: Chess board interactive UI element, move highlight canvas, and modal audit with inline repairs.
+- **Target**: `KSpace`
+- **Primary File**: `KiloOS/public/apps/kspace.html`
+- **Objective**: Space game interactive UI elements, canvas rendering, modal dialogs, and controls.
 - **Action Steps**:
-  1. Run automated startup check: `uv run scripts/test_app_startup.py --app KChess`.
-  2. Audit all UI elements: piece drag/click, timer clocks, move notation log, undo/redo, shortcuts, and modals.
+  1. Run automated startup check: `uv run scripts/test_app_startup.py --app KSpace`.
+  2. Audit all UI elements: controls, canvas interactions, scoring, modals, and hotkeys.
   3. Fix any broken button hooks, missing element IDs, or unhandled exceptions inline.
-- **Verification**: `uv run scripts/test_app_startup.py --app KChess` and `cd KiloOS && npm run build`. File size < 999 KB.
+- **Verification**: `uv run scripts/test_app_startup.py --app KSpace` and `cd KiloOS && npm run build`. File size < 999 KB.
 - **Handoff**:
-  - In frontmatter: advance `current_targets.kilo_tester` to `KChess`.
+  - In frontmatter: advance `current_targets.kilo_tester` to `KPac`.
   - Set `current_agent: kilo-usability`.
   - Append terse execution log (≤6 lines), commit, and push.
-- **Upcoming Queue**: `KChess`, `KSpace`, `KPac`, `KCalendar`.
+- **Upcoming Queue**: `KSpace`, `KPac`, `KCalendar`, `KChess`.
 
 ### 5. Usability & UX Queue (`kilo-usability`)
 - **Target**: `KChart`
@@ -183,6 +183,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Boilerplate Elimination: Deduplicated ~30 lines of Firebase SDK boilerplate across `k2048`, `kbreakout`, `ksnake`, `ktetris`, and `kchess`.
   - Verification: Vite build clean (0 errors, 331ms); `byte_budget_gate.py` PASS; `security_lint.py` 100% PASS; Node P2P unit tests 100% PASS.
 
+- **2026-10-16T17:35:00+0000 — kilo-tester: KChess (Interactive UI Audit & Modal Repairs)**
+  - PASS ✅ (Human-perspective startup test clean, 0 JS errors, unblocked canvas).
+  - Fixed `closeModals()` omitting `analysis-modal` so Esc, backdrop, and close buttons cleanly dismiss all 9 modals.
+  - Verified Vite build (0 errors, 510ms, file size 220.8 KB < 999 KB ceiling).
+  - Advanced tester queue to `KSpace`; handoff to `kilo-usability`.
+
 - **2026-10-16T17:15:00+0000 — kilo-tester: KChess (Interactive UI Audit & Inline Fixes)**
   - Audited all UI components: piece drag/clicks, timers, PGN/FEN managers, replay inspector, opening book, and modals.
   - Fixed critical ReferenceError in `openEditorModal` (`editorTurn = turn` -> `whiteTurn ? 1 : -1`) and inverted piece mapping.
@@ -202,11 +208,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Voice Leading: Implemented 6-channel architecture with delayed vibrato (5.5Hz), contrary counter-melodies, shell voicings (3rd+7th), swing groove, and inharmonic FM percussion.
   - UI Audio: Added dedicated FM earcons/stingers for cracktro launch, patch generation, tab switches, and warnings.
   - Verification: `npm run build` clean (0 errors, 285ms); advanced soundscape target to `kweb://cybercafe`; handoff to `kilo-tester`.
-
-- **2026-10-16T16:25:00+0000 — kilo-adhoc: KiloOS Kernel v2.0 (Singleton Audio, Persistent VFS, IPC v2.0)**
-  - Status: PASS ✅ (0 regressions, clean builds, 254 KB bundle < 999 KB ceiling).
-  - Web Audio Singleton: Replaced per-click/startup `new AudioContext()` leak with persistent singleton audio synthesizer.
-  - Persistent VFS: Auto-hydrates from `kiloos_vfs_state_v2` with 400ms debounced auto-save so user sessions survive page reloads.
-  - IPC v2.0 Switchboard: Extended Window postMessage bridge with `VFS_DELETE`, `VFS_STAT`, live `VFS_CHANGED` broadcast, `OS_NOTIFY`, and `OS_TELEMETRY_BEAT`.
-  - Enriched Telemetry: Added FPS and memory metrics to `OS_LIST_TASKS` and `openApp` state tracking for KTaskMgr and KDirector.
-  - Verification: Vite build clean (0 errors, 308ms); `security_lint.py` 100% PASS; `byte_budget_gate.py` 100% PASS.
