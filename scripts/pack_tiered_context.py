@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 r"""
-KiloApps Tiered XML Context Packer for Google Drive (E:\My Drive\Gemini-Code-Context\)
+KiloApps Tiered XML & Markdown Context Packer for Google Drive (E:\My Drive\Gemini-Code-Context\)
 Generates:
-  Tier 1: KiloApps-architecture-index.xml (~150 KB)
-          Core shell, directory structure, Cartridge Contract, and 10-line metadata catalog for all games.
-  Tier 2: kiloapps-games/<game-slug>-context.xml (100-300 KB each)
-          Isolated per-game context bundles for focused iteration.
+  Tier 1: KiloApps-architecture-index (.txt, .xml, .md) (~250 KB)
+          Core shell, directory structure, Cartridge Contract, and metadata catalog for all games.
+  Tier 2: kiloapps-games/<game-slug>-context (.txt, .xml, .md) (100-999 KB each)
+          Isolated per-game context bundles formatted with 4-tilde Markdown fences for NotebookLM.
 """
 import os
 import re
@@ -20,6 +20,45 @@ BUDGET_CEILING = 999000
 
 def escape_xml(s):
     return saxutils.escape(str(s))
+
+def detect_file_lang(rel_path: str) -> str:
+    ext = os.path.splitext(rel_path)[1].lower()
+    mapping = {
+        ".html": "html",
+        ".htm": "html",
+        ".js": "javascript",
+        ".jsx": "jsx",
+        ".json": "json",
+        ".c": "c",
+        ".h": "c",
+        ".md": "markdown",
+        ".py": "python",
+        ".css": "css",
+        ".txt": "text",
+        ".xml": "xml"
+    }
+    return mapping.get(ext, "text")
+
+def format_file_for_notebooklm(rel_path: str, raw_content: str, lang: str = "text") -> str:
+    """
+    Formats a source file so NotebookLM's Markdown + HTML sanitizer
+    never strips <script>, <style>, <![CDATA[, #include <...>, or JS backticks.
+    """
+    # Normalize CRLF -> LF so byte counts match across index and context files
+    content = raw_content.replace("\r\n", "\n")
+
+    # Prevent NotebookLM's HTML sanitizer from deleting <script>...</script>
+    # and <style>...</style> blocks or treating <!DOCTYPE / <![CDATA[ as raw HTML blocks
+    content = re.sub(r"(?i)<(/?)(script|style|!doctype|!\[cdata\[)", r"< \1\2", content)
+
+    # Use 4 tildes (~~~~) so triple-backticks (```) and JS template literals (`)
+    # inside the source file never close or corrupt the code block
+    return (
+        f"\n## FILE: {rel_path} ({len(content.encode('utf-8'))} bytes)\n\n"
+        f"~~~~{lang}\n"
+        f"{content}\n"
+        f"~~~~\n"
+    )
 
 def get_gdrive_dir():
     candidates = [
@@ -39,7 +78,7 @@ def get_gdrive_dir():
     os.makedirs(fallback, exist_ok=True)
     return fallback
 
-def read_file_safe(path, max_bytes=300000):
+def read_file_safe(path, max_bytes=BUDGET_CEILING):
     try:
         if not os.path.exists(path):
             return None
@@ -73,6 +112,7 @@ def extract_apps_metadata(repo_root):
 def build_architecture_index(repo_root, apps, target_dir):
     out_txt_path = os.path.join(target_dir, "KiloApps-architecture-index.txt")
     out_xml_path = os.path.join(target_dir, "KiloApps-architecture-index.xml")
+    out_md_path = os.path.join(target_dir, "KiloApps-architecture-index.md")
     apps_dir = os.path.join(repo_root, "KiloOS", "public", "apps")
     
     xml_parts = []
@@ -99,9 +139,9 @@ def build_architecture_index(repo_root, apps, target_dir):
     xml_parts.append('  <core_architecture_files>')
     for rel_path in core_files:
         full_path = os.path.join(repo_root, rel_path)
-        content = read_file_safe(full_path, max_bytes=80000)
+        content = read_file_safe(full_path, max_bytes=BUDGET_CEILING)
         if content:
-            xml_parts.append(f'    <file path="{rel_path}">\n<![CDATA[\n{content}\n]]>\n    </file>')
+            xml_parts.append(format_file_for_notebooklm(rel_path, content, detect_file_lang(rel_path)))
     xml_parts.append('  </core_architecture_files>\n')
     
     # 40+ Cartridge Catalog (10-line metadata header each)
@@ -152,6 +192,8 @@ def build_architecture_index(repo_root, apps, target_dir):
         f.write(body)
     with open(out_xml_path, "w", encoding="utf-8") as f:
         f.write(body)
+    with open(out_md_path, "w", encoding="utf-8") as f:
+        f.write(body)
     return out_txt_path
 
 def build_per_game_bundles(repo_root, apps, target_dir):
@@ -163,6 +205,7 @@ def build_per_game_bundles(repo_root, apps, target_dir):
         slug = app["id"]
         out_txt_path = os.path.join(games_out_dir, f"{slug}-context.txt")
         out_xml_path = os.path.join(games_out_dir, f"{slug}-context.xml")
+        out_md_path = os.path.join(games_out_dir, f"{slug}-context.md")
         
         # Web app html
         if app["url"] == "#":
@@ -170,7 +213,7 @@ def build_per_game_bundles(repo_root, apps, target_dir):
         else:
             html_rel = app["url"].lstrip("/")
         html_path = os.path.join(repo_root, "KiloOS", "public", html_rel)
-        html_content = read_file_safe(html_path)
+        html_content = read_file_safe(html_path, max_bytes=BUDGET_CEILING)
         
         # Native C source
         native_folder_candidates = [slug.capitalize(), "K" + slug[1:].capitalize() if slug.startswith("k") else slug]
@@ -180,7 +223,7 @@ def build_per_game_bundles(repo_root, apps, target_dir):
             c_path = os.path.join(repo_root, cand, "main.c")
             if os.path.exists(c_path):
                 c_source_name = f"{cand}/main.c"
-                c_content = read_file_safe(c_path)
+                c_content = read_file_safe(c_path, max_bytes=BUDGET_CEILING)
                 break
                 
         xml = []
@@ -197,9 +240,9 @@ def build_per_game_bundles(repo_root, apps, target_dir):
         
         xml.append('  <files>')
         if html_content:
-            xml.append(f'    <file path="{html_rel}">\n<![CDATA[\n{html_content}\n]]>\n    </file>')
+            xml.append(format_file_for_notebooklm(html_rel, html_content, detect_file_lang(html_rel)))
         if c_content:
-            xml.append(f'    <file path="{c_source_name}">\n<![CDATA[\n{c_content}\n]]>\n    </file>')
+            xml.append(format_file_for_notebooklm(c_source_name, c_content, detect_file_lang(c_source_name)))
         xml.append('  </files>')
         xml.append('</cartridge_context>')
         
@@ -207,6 +250,8 @@ def build_per_game_bundles(repo_root, apps, target_dir):
         with open(out_txt_path, "w", encoding="utf-8") as f:
             f.write(body)
         with open(out_xml_path, "w", encoding="utf-8") as f:
+            f.write(body)
+        with open(out_md_path, "w", encoding="utf-8") as f:
             f.write(body)
         generated.append(out_txt_path)
         
@@ -229,7 +274,7 @@ def main():
     
     # 2. Tier 2 Per-Game Bundles
     game_bundles = build_per_game_bundles(repo_root, apps, target_dir)
-    print(f"✅ Tier 2 Generated: {len(game_bundles)} per-game XML bundles in kiloapps-games/")
+    print(f"✅ Tier 2 Generated: {len(game_bundles)} per-game bundles in kiloapps-games/")
     
     # Clean up old monolithic files if present
     for old_file in ["KiloApps-main-context.xml", "peaceful-carson-main-context.xml"]:
