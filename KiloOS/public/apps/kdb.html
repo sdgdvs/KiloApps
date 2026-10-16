@@ -237,6 +237,51 @@
     background: rgba(168, 85, 247, 0.35);
     border-color: rgba(168, 85, 247, 0.6);
   }
+  .dropdown {
+    position: relative;
+    display: inline-flex;
+  }
+  .dropdown-content {
+    display: none;
+    position: absolute;
+    right: 0;
+    top: 100%;
+    margin-top: 3px;
+    background: #121824;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.85);
+    z-index: 1000;
+    min-width: 160px;
+    padding: 4px;
+    backdrop-filter: blur(12px);
+  }
+  .dropdown:hover .dropdown-content,
+  .dropdown:focus-within .dropdown-content {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .dropdown-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    padding: 5px 8px;
+    background: transparent;
+    border: none;
+    border-radius: 4px;
+    color: var(--text-main);
+    font-size: 11px;
+    font-family: inherit;
+    text-align: left;
+    cursor: pointer;
+    transition: background 0.1s ease;
+  }
+  .dropdown-item:hover {
+    background: rgba(56, 189, 248, 0.2);
+    color: var(--primary);
+  }
   .btn-primary {
     padding: 6px 12px;
     border-radius: 5px;
@@ -863,17 +908,32 @@
       <!-- Action Buttons -->
       <button class="btn-accent" onclick="openStatsModal()" title="View Database Analytics & Metrics (A)">Stats <span class="kbd-badge">A</span></button>
       <button class="btn-secondary" onclick="openSchemaModal()" title="Alter Table Schema / Manage Columns (S)">Columns <span class="kbd-badge">S</span></button>
-      <button class="btn-secondary" onclick="exportCSV()" title="Export active table as CSV (E)">Exp CSV <span class="kbd-badge">E</span></button>
-      <button class="btn-secondary" onclick="triggerImportCSV()" title="Import CSV file (I)">Imp CSV <span class="kbd-badge">I</span></button>
+      
+      <!-- Export Dropdown -->
+      <div class="dropdown">
+        <button class="btn-secondary" title="Export database or active table in multiple formats">Export ▾</button>
+        <div class="dropdown-content">
+          <button class="dropdown-item" onclick="exportCSV()" title="Export active table as CSV (E)"><span>CSV</span> <span class="kbd-badge">E</span></button>
+          <button class="dropdown-item" onclick="exportTSV()" title="Export active table as Tab-Separated TSV"><span>TSV</span></button>
+          <button class="dropdown-item" onclick="exportJSON()" title="Export full database as JSON (J)"><span>JSON</span> <span class="kbd-badge">J</span></button>
+          <button class="dropdown-item" onclick="exportXML()" title="Export active table as XML document"><span>XML</span></button>
+          <button class="dropdown-item" onclick="exportSQLDump()" title="Export ANSI SQL DDL + INSERT statements (.sql)"><span>SQL Dump</span></button>
+          <button class="dropdown-item" onclick="exportMarkdown()" title="Export Markdown Directory Report (M)"><span>Markdown</span> <span class="kbd-badge">M</span></button>
+          <button class="dropdown-item" onclick="printReport()" title="Generate printable HTML report"><span>Print View</span></button>
+        </div>
+      </div>
+
+      <!-- Import Dropdown -->
+      <div class="dropdown">
+        <button class="btn-secondary" title="Import data from files">Import ▾</button>
+        <div class="dropdown-content">
+          <button class="dropdown-item" onclick="triggerImportCSV()" title="Import CSV file (I)"><span>Import CSV</span> <span class="kbd-badge">I</span></button>
+          <button class="dropdown-item" onclick="triggerImportJSON()" title="Import JSON file (O)"><span>Import JSON</span> <span class="kbd-badge">O</span></button>
+        </div>
+      </div>
       <input type="file" id="csvFileInput" accept=".csv" style="display:none;" onchange="importCSV(event)">
-      <button class="btn-secondary" onclick="exportTSV()" title="Export active table as Tab-Separated TSV">Exp TSV</button>
-      <button class="btn-secondary" onclick="exportJSON()" title="Export full database as JSON (J)">Exp JSON <span class="kbd-badge">J</span></button>
-      <button class="btn-secondary" onclick="triggerImportJSON()" title="Import JSON file (O)">Imp JSON <span class="kbd-badge">O</span></button>
       <input type="file" id="jsonFileInput" accept=".json" style="display:none;" onchange="importJSON(event)">
-      <button class="btn-secondary" onclick="exportXML()" title="Export active table as XML document">Exp XML</button>
-      <button class="btn-secondary" onclick="exportSQLDump()" title="Export ANSI SQL DDL + INSERT statements (.sql)">Exp SQL</button>
-      <button class="btn-secondary" onclick="exportMarkdown()" title="Export Markdown Directory Report (M)">Exp MD <span class="kbd-badge">M</span></button>
-      <button class="btn-secondary" onclick="printReport()" title="Generate printable HTML report">Print</button>
+
       <button class="btn-secondary" onclick="quicksaveDatabase()" title="Quicksave database snapshot (F5)">Save <span class="kbd-badge">F5</span></button>
       <button class="btn-secondary" onclick="quickloadDatabase()" title="Quickload snapshot (F9)">Load <span class="kbd-badge">F9</span></button>
       <button class="btn-secondary" onclick="openResetModal()" title="Reset database to default tables (R)">Reset <span class="kbd-badge">R</span></button>
@@ -2303,9 +2363,12 @@ function drawBarChart(canvasId, dataMap) {
   if (!canvas) return;
   const ctx = canvas.getContext('2d');
   const rect = canvas.parentElement.getBoundingClientRect();
-  canvas.width = rect.width * (window.devicePixelRatio || 1);
-  canvas.height = rect.height * (window.devicePixelRatio || 1);
-  ctx.scale(window.devicePixelRatio || 1, window.devicePixelRatio || 1);
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = Math.floor(rect.width * dpr);
+  canvas.height = Math.floor(rect.height * dpr);
+  canvas.style.width = rect.width + 'px';
+  canvas.style.height = rect.height + 'px';
+  ctx.scale(dpr, dpr);
 
   const w = rect.width;
   const h = rect.height;
@@ -2355,9 +2418,12 @@ function drawDonutChart(canvasId, dataMap) {
   if (!canvas) return;
   const ctx = canvas.getContext('2d');
   const rect = canvas.parentElement.getBoundingClientRect();
-  canvas.width = rect.width * (window.devicePixelRatio || 1);
-  canvas.height = rect.height * (window.devicePixelRatio || 1);
-  ctx.scale(window.devicePixelRatio || 1, window.devicePixelRatio || 1);
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = Math.floor(rect.width * dpr);
+  canvas.height = Math.floor(rect.height * dpr);
+  canvas.style.width = rect.width + 'px';
+  canvas.style.height = rect.height + 'px';
+  ctx.scale(dpr, dpr);
 
   const w = rect.width;
   const h = rect.height;
@@ -3301,11 +3367,18 @@ function exportProfilerReport() {
 
 // Window Resizing Messaging for KiloOS
 if (window.parent !== window) {
-  window.parent.postMessage({ type: 'OS_RESIZE_WINDOW', width: 940, height: 660 }, '*');
+  window.parent.postMessage({ type: 'OS_RESIZE_WINDOW', width: 1020, height: 700 }, '*');
 }
 if (window.resizeTo) {
-  window.resizeTo(940, 660);
+  window.resizeTo(1020, 700);
 }
+
+// Responsive dashboard charts redraw on resize
+window.addEventListener('resize', () => {
+  if (currentView === 'dash') {
+    renderDashboard();
+  }
+});
 
 // ARCH-05: Background Tab Visibility & Storage Flush
 document.addEventListener('visibilitychange', () => {

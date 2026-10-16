@@ -480,7 +480,7 @@
 
   /* Table styling */
   .vfs-table-wrap {
-    max-height: 160px;
+    max-height: 240px;
     overflow-y: auto;
     border: 1px solid var(--card-border);
     border-radius: 6px;
@@ -939,11 +939,12 @@
               <thead>
                 <tr>
                   <th>VFS Path</th>
-                  <th>Action</th>
+                  <th style="width: 85px;">Size</th>
+                  <th style="width: 125px; text-align: right;">Action</th>
                 </tr>
               </thead>
               <tbody id="vfsTableBody">
-                <tr><td colspan="2" style="color:var(--text-muted); text-align:center;">Scanning virtual storage...</td></tr>
+                <tr><td colspan="3" style="color:var(--text-muted); text-align:center;">Scanning virtual storage...</td></tr>
               </tbody>
             </table>
           </div>
@@ -1237,6 +1238,25 @@
       }
     }
 
+    function escapeHtml(str) {
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    const standaloneVfs = {
+      '/.sys_settings_accent': '#2196F3',
+      '/.sys_settings_animations': 'true',
+      '/.sys_settings_sound': 'true',
+      '/.sys_settings_volume': '0.80',
+      '/.sys_pinned_apps': '["kpad","kcalc","kpaint","kclock"]',
+      '/welcome.txt': 'Welcome to KiloOS!',
+      '/docs/readme.md': 'System documentation'
+    };
+
     // OS Bridge
     window.addEventListener('message', (e) => {
       if (window.location.origin && window.location.origin !== 'null' && e.origin !== window.location.origin) return;
@@ -1246,6 +1266,12 @@
         callbacks[msg.requestId](msg);
         delete callbacks[msg.requestId];
       }
+      if (msg.type === 'VFS_CHANGED') {
+        // Auto-refresh VFS list if Storage tab is active
+        if (state.activeTab === 'storage') {
+          refreshVfsList();
+        }
+      }
     });
 
     function sendToOS(msg) {
@@ -1254,14 +1280,41 @@
         callbacks[id] = resolve;
         if (window.parent && window.parent !== window) {
           window.parent.postMessage({ ...msg, requestId: id }, '*');
+        } else {
+          // Fallback simulation for standalone browser preview
+          setTimeout(() => {
+            if (callbacks[id]) {
+              const cb = callbacks[id];
+              delete callbacks[id];
+              if (msg.type === 'VFS_LIST') {
+                cb({
+                  type: 'VFS_LIST_DONE',
+                  files: Object.keys(standaloneVfs),
+                  entries: Object.entries(standaloneVfs).map(([k, v]) => ({ path: k, size: typeof v === 'string' ? v.length : 0 }))
+                });
+              } else if (msg.type === 'VFS_READ') {
+                cb({ type: 'VFS_READ_DONE', data: standaloneVfs[msg.path] ?? null, path: msg.path });
+              } else if (msg.type === 'VFS_WRITE') {
+                standaloneVfs[msg.path] = msg.data;
+                cb({ type: 'VFS_WRITE_DONE', path: msg.path });
+              } else if (msg.type === 'VFS_DELETE') {
+                delete standaloneVfs[msg.path];
+                cb({ type: 'VFS_DELETE_DONE', path: msg.path });
+              } else {
+                cb({ data: null });
+              }
+            }
+          }, 30);
+          return;
         }
-        // Fallback timeout for standalone browser preview
+
+        // Fallback timeout if OS does not reply
         setTimeout(() => {
           if (callbacks[id]) {
             delete callbacks[id];
             resolve({ data: null, error: 'timeout' });
           }
-        }, 350);
+        }, 500);
       });
     }
 
@@ -1521,18 +1574,21 @@
     }
 
     // Audio State
-    function updateSoundEnabled(enabled) {
+    async function updateSoundEnabled(enabled) {
       state.soundEnabled = Boolean(enabled);
       safeSetStorage('ksettings_soundEnabled', enabled);
+      await sendToOS({ type: 'VFS_WRITE', path: '/.sys_settings_sound', data: enabled ? 'true' : 'false' });
       showToast(`System sounds: ${enabled ? 'Enabled' : 'Muted'}`, enabled ? '🔊' : '🔇');
     }
 
-    function updateVolume(val) {
+    async function updateVolume(val) {
       const v = parseInt(val, 10);
       state.soundVolume = isNaN(v) ? 80 : Math.max(0, Math.min(100, v));
       const lbl = document.getElementById('volumeLabel');
       if (lbl) lbl.textContent = `${state.soundVolume}%`;
       safeSetStorage('ksettings_soundVolume', state.soundVolume);
+      const normalizedVol = (state.soundVolume / 100).toFixed(2);
+      await sendToOS({ type: 'VFS_WRITE', path: '/.sys_settings_volume', data: String(normalizedVol) });
     }
 
     function previewVolume() {
@@ -1606,33 +1662,84 @@
       const tbody = document.getElementById('vfsTableBody');
       const countEl = document.getElementById('vfsFileCount');
       const sizeEl = document.getElementById('vfsSizeEst');
-      if (tbody) tbody.innerHTML = '<tr><td colspan="2" style="color:var(--text-muted); text-align:center;">Scanning virtual filesystem...</td></tr>';
+      if (tbody) tbody.innerHTML = '<tr><td colspan="3" style="color:var(--text-muted); text-align:center;">Scanning virtual filesystem...</td></tr>';
 
       const res = await sendToOS({ type: 'VFS_LIST' });
-      let files = (res && Array.isArray(res.files)) ? res.files : [];
+      let entries = (res && Array.isArray(res.entries)) ? res.entries : [];
       
-      // If standalone fallback or empty list, populate standard known system files
-      if (files.length === 0) {
-        files = ['/.sys_settings_accent', '/.sys_settings_animations', '/.sys_pinned_apps'];
+      // Fallback if entries missing
+      if (entries.length === 0 && res && Array.isArray(res.files)) {
+        entries = res.files.map(f => ({ path: f, size: 64 }));
       }
-      knownVfsFiles = files;
+      if (entries.length === 0) {
+        entries = [
+          { path: '/.sys_settings_accent', size: 7 },
+          { path: '/.sys_settings_animations', size: 4 },
+          { path: '/.sys_settings_sound', size: 4 },
+          { path: '/.sys_settings_volume', size: 4 },
+          { path: '/.sys_pinned_apps', size: 42 }
+        ];
+      }
+      knownVfsFiles = entries.map(e => e.path);
 
-      if (countEl) countEl.textContent = `Indexed Files: ${files.length} items`;
-      if (sizeEl) sizeEl.textContent = `Estimated VFS Size: ~${(files.length * 0.4 + 1.2).toFixed(1)} KB`;
+      let totalBytes = entries.reduce((sum, e) => sum + (e.size || 0), 0);
+      const totalFormatted = totalBytes >= 1024 
+        ? `${(totalBytes / 1024).toFixed(1)} KB` 
+        : `${totalBytes} B`;
+
+      if (countEl) countEl.textContent = `Indexed Files: ${entries.length} items`;
+      if (sizeEl) sizeEl.textContent = `Total VFS Size: ${totalFormatted}`;
 
       if (tbody) {
         tbody.innerHTML = '';
-        files.forEach(f => {
+        entries.sort((a, b) => a.path.localeCompare(b.path)).forEach(entry => {
           const row = document.createElement('tr');
+          const isSystem = entry.path.startsWith('/.sys_');
+          const sizeStr = entry.size >= 1024 ? `${(entry.size / 1024).toFixed(1)} KB` : `${entry.size} B`;
+
           row.innerHTML = `
-            <td>${f}</td>
-            <td style="text-align:right;">
-              <button class="btn btn-sm" onclick="inspectVfsFile('${f}')" style="padding:2px 6px;">Inspect</button>
+            <td>
+              <span style="font-family:monospace; font-size:11px;">${escapeHtml(entry.path)}</span>
+              ${isSystem ? '<span style="font-size:9px; background:rgba(239,68,68,0.15); color:#fca5a5; border:1px solid rgba(239,68,68,0.3); border-radius:3px; padding:1px 4px; margin-left:6px;">System</span>' : ''}
+            </td>
+            <td style="font-family:monospace; font-size:11px; color:#38bdf8; white-space:nowrap;" title="${entry.size} bytes">
+              ${sizeStr}
+            </td>
+            <td style="text-align:right; white-space:nowrap;">
+              <button class="btn btn-sm btn-inspect" style="padding:2px 6px;">Inspect</button>
+              ${isSystem ? `
+                <button class="btn btn-sm" disabled style="padding:2px 6px; opacity:0.35; cursor:not-allowed;" title="Protected System Key - Cannot be deleted">🗑️</button>
+              ` : `
+                <button class="btn btn-sm btn-danger btn-delete" style="padding:2px 6px;" title="Delete File">🗑️</button>
+              `}
             </td>
           `;
+
+          row.querySelector('.btn-inspect').onclick = () => inspectVfsFile(entry.path);
+          const delBtn = row.querySelector('.btn-delete');
+          if (delBtn) {
+            delBtn.onclick = () => deleteVfsFile(entry.path);
+          }
+
           tbody.appendChild(row);
         });
       }
+    }
+
+    async function deleteVfsFile(path) {
+      if (!path) return;
+      // Safeguard check: prevent deletion of critical system keys (/.sys_*)
+      if (path.startsWith('/.sys_')) {
+        showToast('⚠️ Cannot delete protected system file', '🛡️');
+        alert(`SAFEGUARD ERROR: Cannot delete critical system key "${path}". System configuration files are protected.`);
+        return;
+      }
+
+      if (!confirm(`Are you sure you want to delete "${path}" from VFS?`)) return;
+
+      await sendToOS({ type: 'VFS_DELETE', path });
+      showToast(`Deleted ${path}`, '🗑️');
+      await refreshVfsList();
     }
 
     async function inspectVfsFile(path) {
@@ -1672,6 +1779,8 @@
       // Sync key system values to VFS
       await sendToOS({ type: 'VFS_WRITE', path: '/.sys_settings_accent', data: state.accentColor });
       await sendToOS({ type: 'VFS_WRITE', path: '/.sys_settings_animations', data: state.animationsEnabled ? 'true' : 'false' });
+      await sendToOS({ type: 'VFS_WRITE', path: '/.sys_settings_sound', data: state.soundEnabled ? 'true' : 'false' });
+      await sendToOS({ type: 'VFS_WRITE', path: '/.sys_settings_volume', data: (state.soundVolume / 100).toFixed(2) });
       await sendToOS({ type: 'VFS_WRITE', path: '/.sys_pinned_apps', data: JSON.stringify(state.pinnedApps) });
 
       const saveInfo = document.getElementById('footerSaveInfo');
@@ -2072,9 +2181,24 @@
         if (Array.isArray(localPins)) state.pinnedApps = localPins;
       }
 
-      // Check stored audio preferences
-      state.soundEnabled = safeGetStorage('ksettings_soundEnabled', true);
-      state.soundVolume = safeGetStorage('ksettings_soundVolume', 80);
+      // Check stored audio preferences from VFS (with fallback to localStorage)
+      const soundRes = await sendToOS({ type: 'VFS_READ', path: '/.sys_settings_sound' });
+      if (soundRes && soundRes.data !== undefined && soundRes.data !== null) {
+        state.soundEnabled = soundRes.data !== 'false';
+      } else {
+        state.soundEnabled = safeGetStorage('ksettings_soundEnabled', true);
+      }
+
+      const volRes = await sendToOS({ type: 'VFS_READ', path: '/.sys_settings_volume' });
+      if (volRes && volRes.data !== undefined && volRes.data !== null) {
+        const parsed = parseFloat(volRes.data);
+        if (!isNaN(parsed)) {
+          state.soundVolume = Math.round(Math.max(0, Math.min(1, parsed)) * 100);
+        }
+      } else {
+        state.soundVolume = safeGetStorage('ksettings_soundVolume', 80);
+      }
+
       state.highContrast = safeGetStorage('ksettings_highContrast', false);
 
       // Apply state to DOM controls

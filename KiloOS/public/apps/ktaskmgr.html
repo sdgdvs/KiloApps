@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Task Manager</title>
+<title>Task Manager v2.0</title>
 <style>
   :root {
     --bg-color: hsl(210, 15%, 12%);
@@ -16,6 +16,8 @@
     --text-main: #ffffff;
     --text-muted: #94a3b8;
     --success: #34d399;
+    --warning: #fbbf24;
+    --accent-cyan: #38bdf8;
   }
   
   * { box-sizing: border-box; }
@@ -55,6 +57,7 @@
     gap: 10px;
     align-items: center;
     flex-wrap: wrap;
+    flex-shrink: 0;
   }
 
   .toolbar-title {
@@ -143,17 +146,60 @@
     cursor: pointer;
   }
 
-  .metrics-bar {
-    font-size: 11px;
-    color: var(--text-muted);
-    padding: 5px 16px;
-    background: rgba(0, 0, 0, 0.25);
+  /* Real-Time Telemetry & Canvas Sparkline Graph */
+  .telemetry-container {
+    background: hsl(210, 16%, 14%);
     border-bottom: 1px solid var(--border-color);
+    padding: 8px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    flex-shrink: 0;
+  }
+
+  .telemetry-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    font-size: 11px;
+    color: var(--text-muted);
   }
 
+  .telemetry-badges {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 11px;
+  }
+
+  .badge-fps {
+    color: var(--success);
+    font-weight: 600;
+  }
+
+  .badge-ram {
+    color: var(--accent-cyan);
+    font-weight: 600;
+  }
+
+  .sparkline-canvas-wrap {
+    width: 100%;
+    height: 60px;
+    background: rgba(0, 0, 0, 0.35);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 4px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  #sparklineCanvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+
+  /* Table styles */
   .table-container {
     flex: 1;
     overflow-y: auto;
@@ -179,9 +225,9 @@
 
   th, td {
     text-align: left;
-    padding: 8px 16px;
+    padding: 7px 12px;
     border-bottom: 1px solid var(--border-color);
-    font-size: 13px;
+    font-size: 12px;
   }
 
   th {
@@ -192,6 +238,9 @@
     top: 0;
     z-index: 10;
     user-select: none;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
   }
 
   th:hover {
@@ -213,7 +262,69 @@
   }
 
   tr.selected {
-    background: rgba(56, 189, 248, 0.14);
+    background: rgba(56, 189, 248, 0.16);
+  }
+
+  .pid-tag {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    color: #94a3b8;
+    font-size: 11px;
+  }
+
+  .app-id-pill {
+    font-size: 10px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 3px;
+    padding: 1px 5px;
+    color: #cbd5e1;
+    margin-left: 6px;
+    font-family: monospace;
+  }
+
+  .folder-pill {
+    font-size: 10px;
+    background: rgba(56, 189, 248, 0.1);
+    color: #7dd3fc;
+    border: 1px solid rgba(56, 189, 248, 0.2);
+    border-radius: 3px;
+    padding: 1px 6px;
+    display: inline-block;
+  }
+
+  .status-pill {
+    font-size: 10px;
+    border-radius: 3px;
+    padding: 1px 6px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-weight: 500;
+  }
+
+  .status-active {
+    background: rgba(52, 211, 153, 0.15);
+    color: #34d399;
+    border: 1px solid rgba(52, 211, 153, 0.3);
+  }
+
+  .status-minimized {
+    background: rgba(251, 191, 36, 0.15);
+    color: #fbbf24;
+    border: 1px solid rgba(251, 191, 36, 0.3);
+  }
+
+  .fps-pill {
+    font-family: monospace;
+    font-weight: 600;
+  }
+  .fps-good { color: #34d399; }
+  .fps-medium { color: #fbbf24; }
+  .fps-low { color: #f87171; }
+
+  .ram-val {
+    font-family: monospace;
+    color: #38bdf8;
   }
 
   .kill-btn {
@@ -222,8 +333,8 @@
     border: 1px solid rgba(239, 68, 68, 0.3);
     border-radius: 4px;
     cursor: pointer;
-    padding: 4px 10px;
-    font-size: 12px;
+    padding: 3px 8px;
+    font-size: 11px;
     font-weight: 500;
     transition: all 0.15s;
   }
@@ -302,54 +413,48 @@
     padding: 12px 16px;
     border-bottom: 1px solid var(--border-color);
     display: flex;
-    align-items: center;
     justify-content: space-between;
+    align-items: center;
+  }
+
+  .modal-body {
+    padding: 14px 16px;
+    font-size: 13px;
+  }
+
+  .modal-footer {
+    padding: 10px 16px;
+    border-top: 1px solid var(--border-color);
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    background: rgba(0, 0, 0, 0.15);
   }
 
   .modal-close-btn {
     background: transparent;
     border: none;
-    color: var(--text-muted);
     font-size: 18px;
-    line-height: 1;
+    color: var(--text-muted);
     cursor: pointer;
-    padding: 2px 6px;
-    border-radius: 4px;
+    line-height: 1;
+    padding: 0;
   }
-
   .modal-close-btn:hover {
-    color: var(--text-main);
-    background: rgba(255, 255, 255, 0.1);
-  }
-
-  .modal-body {
-    padding: 16px;
-  }
-
-  .modal-footer {
-    padding: 10px 16px;
-    background: rgba(0, 0, 0, 0.18);
-    border-top: 1px solid var(--border-color);
-    display: flex;
-    justify-content: flex-end;
-    gap: 8px;
+    color: #fff;
   }
 </style>
 </head>
 <body>
   <div class="toolbar" role="toolbar" aria-label="Task Manager Toolbar">
     <div class="toolbar-title">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-        <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
-        <line x1="8" y1="21" x2="16" y2="21"></line>
-        <line x1="12" y1="17" x2="12" y2="21"></line>
-      </svg>
-      Task Manager
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+      <span>Task Manager v2.0</span>
     </div>
 
     <div class="controls-group">
       <button class="btn" onclick="openRunModal()" aria-label="Launch New Task (Hotkey: Ctrl+N)">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
         New Task
       </button>
 
@@ -362,35 +467,58 @@
         <option value="name-desc">Sort: Title (Z-A)</option>
         <option value="pid-asc">Sort: PID (Low-High)</option>
         <option value="pid-desc">Sort: PID (High-Low)</option>
+        <option value="ram-desc">Sort: Memory (High-Low)</option>
+        <option value="fps-desc">Sort: FPS (High-Low)</option>
       </select>
 
-      <label class="toggle-label" title="Toggle automatic 2.5s telemetry updates">
+      <label class="toggle-label" title="Toggle automatic 2.0s telemetry updates">
         <input type="checkbox" id="autoRefreshToggle" checked onchange="toggleAutoRefresh()"> Auto
       </label>
 
-      <button class="btn" onclick="handleRefreshBtn()" aria-label="Refresh and Quicksave Snapshot (Hotkey: F5 or R)" title="Refresh &amp; Quicksave [F5]">Refresh [F5]</button>
-      <button class="btn" onclick="quickLoadState()" aria-label="Quickload Snapshot (Hotkey: F9)" title="Quickload Snapshot [F9]">Load [F9]</button>
+      <button class="btn" onclick="handleRefreshBtn()" aria-label="Refresh and Quicksave Snapshot [F5]" title="Refresh &amp; Quicksave [F5]">Refresh [F5]</button>
+      <button class="btn" onclick="quickLoadState()" aria-label="Quickload Snapshot [F9]" title="Quickload Snapshot [F9]">Load [F9]</button>
       <button class="btn" onclick="exportTasks()" aria-label="Export or Copy Task List" title="Copy tasks list to clipboard">Copy List</button>
-      <button class="btn" onclick="openHelpModal()" aria-label="Help and Shortcuts (Hotkey: F1 or H)" title="Help &amp; Shortcuts [F1/H]">Help</button>
+      <button class="btn" onclick="openHelpModal()" aria-label="Help and Shortcuts [F1/H]" title="Help &amp; Shortcuts [F1/H]">Help</button>
     </div>
   </div>
 
-  <div class="metrics-bar" role="region" aria-label="System Metrics">
-    <span id="status-info">Loading active tasks...</span>
-    <span id="system-metrics">CPU: ~3.0% | RAM: ~28MB</span>
+  <!-- Real-Time Canvas Sparkline Graph & Aggregate Telemetry -->
+  <div class="telemetry-container" role="region" aria-label="System Performance Graph">
+    <div class="telemetry-header">
+      <div class="telemetry-badges">
+        <span class="badge-fps" id="badge-fps-val">⚡ Avg FPS: 60.0 fps</span>
+        <span class="badge-ram" id="badge-ram-val">💾 Total V-RAM: 0 KB</span>
+      </div>
+      <div style="font-size: 11px; color: var(--text-muted);" id="badge-process-summary">
+        Active Windows: 0
+      </div>
+    </div>
+    <div class="sparkline-canvas-wrap" id="sparklineWrap">
+      <canvas id="sparklineCanvas"></canvas>
+    </div>
   </div>
 
   <div class="table-container" tabindex="0" aria-label="Tasks list container" onkeydown="handleTableKeyDown(event)">
     <table id="task-table" role="grid" aria-label="Running Tasks List">
       <thead>
         <tr role="row">
-          <th id="th-name" scope="col" role="columnheader" tabindex="0" onclick="toggleSort('name')" onkeydown="handleHeaderKey(event, 'name')" aria-sort="ascending" style="cursor: pointer;">
-            Application Title <span id="sort-icon-name" aria-hidden="true" style="font-size: 10px; margin-left: 4px; color: var(--primary);">▲</span>
+          <th id="th-pid" scope="col" role="columnheader" tabindex="0" onclick="toggleSort('pid')" onkeydown="handleHeaderKey(event, 'pid')" style="width: 75px; cursor: pointer;">
+            PID <span id="sort-icon-pid" aria-hidden="true" style="font-size: 10px; margin-left: 2px;"></span>
           </th>
-          <th id="th-pid" scope="col" role="columnheader" tabindex="0" onclick="toggleSort('pid')" onkeydown="handleHeaderKey(event, 'pid')" aria-sort="none" style="width: 170px; cursor: pointer;">
-            Process ID <span id="sort-icon-pid" aria-hidden="true" style="font-size: 10px; margin-left: 4px; color: var(--text-muted);"></span>
+          <th id="th-name" scope="col" role="columnheader" tabindex="0" onclick="toggleSort('name')" onkeydown="handleHeaderKey(event, 'name')" style="cursor: pointer;">
+            Application Title <span id="sort-icon-name" aria-hidden="true" style="font-size: 10px; margin-left: 2px;">▲</span>
           </th>
-          <th scope="col" role="columnheader" style="width: 110px; text-align: right;">Action</th>
+          <th id="th-folder" scope="col" role="columnheader" tabindex="0" onclick="toggleSort('folder')" onkeydown="handleHeaderKey(event, 'folder')" style="width: 100px; cursor: pointer;">
+            Folder
+          </th>
+          <th id="th-fps" scope="col" role="columnheader" tabindex="0" onclick="toggleSort('fps')" onkeydown="handleHeaderKey(event, 'fps')" style="width: 75px; cursor: pointer;">
+            FPS <span id="sort-icon-fps" aria-hidden="true" style="font-size: 10px; margin-left: 2px;"></span>
+          </th>
+          <th id="th-ram" scope="col" role="columnheader" tabindex="0" onclick="toggleSort('ram')" onkeydown="handleHeaderKey(event, 'ram')" style="width: 95px; cursor: pointer;">
+            Virtual RAM <span id="sort-icon-ram" aria-hidden="true" style="font-size: 10px; margin-left: 2px;"></span>
+          </th>
+          <th scope="col" role="columnheader" style="width: 85px;">Status</th>
+          <th scope="col" role="columnheader" style="width: 100px; text-align: right;">Action</th>
         </tr>
       </thead>
       <tbody id="task-list" aria-live="polite">
@@ -411,23 +539,20 @@
         <p style="margin-top: 0; font-size: 12px; color: var(--text-muted); margin-bottom: 10px;">
           Type the application ID or command to open in KiloOS:
         </p>
-        <input type="text" id="runAppInput" class="input-ctrl" list="commonAppsList" placeholder="e.g. kpad, kcalc, kexplorer..." style="width: 100%; font-size: 13px; padding: 7px 10px;" onkeydown="if(event.key==='Enter') submitRunTask();">
+        <input type="text" id="runAppInput" class="input-ctrl" list="commonAppsList" placeholder="e.g. kexplorer, kpad, kcalc, kaudio..." style="width: 100%; font-size: 13px; padding: 7px 10px;" onkeydown="if(event.key==='Enter') submitRunTask();">
         <datalist id="commonAppsList">
           <option value="kexplorer">File Browser</option>
           <option value="kpad">KPad Editor</option>
           <option value="kcalc">KCalc Calculator</option>
           <option value="kpaint">KPaint</option>
           <option value="kclock">KClock</option>
-          <option value="ktask">KTask Process Viewer</option>
+          <option value="ktaskmgr">Task Manager</option>
           <option value="ksys">KSys System Monitor</option>
           <option value="kterm">KTerm Terminal</option>
-          <option value="kmine">KMine Minesweeper</option>
-          <option value="ksolitaire">KSolitaire</option>
           <option value="kaudio">KAudio Player</option>
-          <option value="kchat">KChat</option>
-          <option value="kdb">KDB Database</option>
-          <option value="knote">KNote Sticky Notes</option>
-          <option value="kcalendar">KCalendar</option>
+          <option value="khex">KHex Editor</option>
+          <option value="kscript">KScript Editor</option>
+          <option value="ksettings">Settings Control Panel</option>
         </datalist>
       </div>
       <div class="modal-footer">
@@ -442,7 +567,7 @@
     <div class="modal-box">
       <div class="modal-header">
         <h3 id="helpModalTitle" style="margin: 0; font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 6px;">
-          <span>❓</span> Task Manager Help &amp; Shortcuts
+          <span>❓</span> Task Manager v2.0 Help &amp; Shortcuts
         </h3>
         <button id="btn-close-help" class="modal-close-btn close-btn-help" onclick="closeHelpModal()" aria-label="Close help">&times;</button>
       </div>
@@ -455,18 +580,17 @@
             </tr>
           </thead>
           <tbody>
+            <tr><td style="padding: 5px 8px;"><kbd>Double Click</kbd></td><td style="padding: 5px 8px;">Focus &amp; restore window in KiloOS</td></tr>
+            <tr><td style="padding: 5px 8px;"><kbd>Del</kbd></td><td style="padding: 5px 8px;">Terminate selected process (OS_KILL_TASK)</td></tr>
             <tr><td style="padding: 5px 8px;"><kbd>F5</kbd> / <kbd>R</kbd></td><td style="padding: 5px 8px;">Refresh processes &amp; quicksave snapshot</td></tr>
             <tr><td style="padding: 5px 8px;"><kbd>F9</kbd></td><td style="padding: 5px 8px;">Quickload snapshot state</td></tr>
             <tr><td style="padding: 5px 8px;"><kbd>Ctrl+N</kbd></td><td style="padding: 5px 8px;">Open "Create New Task" dialog</td></tr>
-            <tr><td style="padding: 5px 8px;"><kbd>Del</kbd> / <kbd>Enter</kbd></td><td style="padding: 5px 8px;">Terminate selected process</td></tr>
             <tr><td style="padding: 5px 8px;"><kbd>↑</kbd> / <kbd>↓</kbd></td><td style="padding: 5px 8px;">Navigate process table rows</td></tr>
-            <tr><td style="padding: 5px 8px;"><kbd>Home</kbd> / <kbd>End</kbd></td><td style="padding: 5px 8px;">Select first / last process</td></tr>
             <tr><td style="padding: 5px 8px;"><kbd>Esc</kbd></td><td style="padding: 5px 8px;">Close dialog / Clear search filter</td></tr>
-            <tr><td style="padding: 5px 8px;"><kbd>F1</kbd> / <kbd>H</kbd></td><td style="padding: 5px 8px;">Open this help guide</td></tr>
           </tbody>
         </table>
         <p style="margin: 0; color: var(--text-muted); font-size: 11px;">
-          In standalone mode, local mock kernel tasks can be added, inspected, and terminated.
+          Kernel v2.0 IPC Bus delivers live real-time telemetry (FPS, Memory, Status).
         </p>
       </div>
       <div class="modal-footer">
@@ -480,30 +604,26 @@
     <div class="modal-box">
       <div class="modal-header">
         <h3 id="tutorialModalTitle" style="margin: 0; font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 6px;">
-          <span>📋</span> Welcome to Task Manager
+          <span>📋</span> Welcome to Task Manager v2.0
         </h3>
         <button id="btn-close-tutorial" class="modal-close-btn btn-close close-btn-tutorial" onclick="closeTutorialModal()" aria-label="Close tutorial">&times;</button>
       </div>
       <div class="modal-body">
         <p style="margin-top: 0; font-size: 12px; color: var(--text-muted); line-height: 1.5;">
-          Inspect live active applications, monitor CPU/RAM metrics, and manage runtime tasks across KiloOS.
+          Monitor real-time system performance sparklines and manage active processes across KiloOS.
         </p>
         <div style="background: rgba(0,0,0,0.25); border: 1px solid var(--border-color); border-radius: 6px; padding: 10px 12px; margin-bottom: 12px; font-size: 12px;">
           <div style="display: flex; gap: 8px; margin-bottom: 8px;">
             <span style="color: var(--primary); font-weight: 600;">⚡</span>
-            <div><strong>Process List:</strong> Filter by title or PID, and click headers to sort ascending/descending.</div>
+            <div><strong>Double Click:</strong> Double-click any row to focus and restore that window in KiloOS.</div>
           </div>
           <div style="display: flex; gap: 8px; margin-bottom: 8px;">
             <span style="color: var(--danger); font-weight: 600;">🛑</span>
-            <div><strong>End Task:</strong> Select any row and click "End Task" or press <kbd>Del</kbd> to terminate.</div>
+            <div><strong>End Task:</strong> Click "End Task" or press <kbd>Del</kbd> to terminate tasks.</div>
           </div>
           <div style="display: flex; gap: 8px; margin-bottom: 8px;">
-            <span style="color: var(--success); font-weight: 600;">🚀</span>
-            <div><strong>New Task:</strong> Launch programs with <kbd>Ctrl+N</kbd> or the toolbar button.</div>
-          </div>
-          <div style="display: flex; gap: 8px;">
-            <span style="color: #fbbf24; font-weight: 600;">💾</span>
-            <div><strong>State Snapshot:</strong> Press <kbd>F5</kbd> to quicksave snapshot, <kbd>F9</kbd> to quickload state.</div>
+            <span style="color: var(--success); font-weight: 600;">📈</span>
+            <div><strong>Canvas Sparkline:</strong> Live telemetry chart plots aggregate system FPS and Virtual RAM.</div>
           </div>
         </div>
         <label style="display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--text-muted); cursor: pointer;">
@@ -529,19 +649,18 @@
     let currentSortField = 'name';
     let currentSortDir = 'asc';
 
+    // Sparkline history data points (up to 45 data points)
+    const MAX_HISTORY = 45;
+    const telemetryHistory = [];
+
+    // Standalone mock kernel tasks with enriched v2.0 schema
     let standaloneTasks = [
-      { id: '1004', title: 'KiloOS Kernel' },
-      { id: '1842', title: 'Task Manager (ktaskmgr)' },
-      { id: '2410', title: 'KPad Editor' },
-      { id: '3108', title: 'File Browser (kexplorer)' }
+      { id: '1004', pid: 1004, appId: 'ksys', title: 'KiloOS Kernel', folder: 'System', fps: 60, memoryKB: 2048, minimized: false },
+      { id: '1021', pid: 1021, appId: 'ktaskmgr', title: 'Task Manager (ktaskmgr)', folder: 'System', fps: 60, memoryKB: 1420, minimized: false },
+      { id: '1038', pid: 1038, appId: 'kpad', title: 'KPad Editor', folder: 'Accessories', fps: 59, memoryKB: 860, minimized: false },
+      { id: '1055', pid: 1055, appId: 'kexplorer', title: 'File Browser (kexplorer)', folder: 'System', fps: 60, memoryKB: 1250, minimized: true }
     ];
 
-    /**
-     * Safely reads an item from localStorage.
-     * @param {string} key
-     * @param {string|null} [fallback=null]
-     * @returns {string|null}
-     */
     function safeGetStorage(key, fallback = null) {
       try {
         const val = localStorage.getItem(key);
@@ -551,24 +670,17 @@
       }
     }
 
-    /**
-     * Safely stores an item into localStorage with error handling.
-     * @param {string} key
-     * @param {any} value
-     * @returns {boolean}
-     */
     function safeSetStorage(key, value) {
       try {
         localStorage.setItem(key, typeof value === 'string' ? value : JSON.stringify(value));
         return true;
       } catch (e) {
-        console.warn('[KTaskMgr] Storage write failed:', e);
         return false;
       }
     }
 
+    // IPC message listener
     window.addEventListener('message', (e) => {
-      if (window.location.origin && window.location.origin !== 'null' && e.origin !== window.location.origin) return;
       const msg = e.data;
       if (typeof msg === 'object' && msg !== null && msg.type === 'OS_LIST_TASKS_DONE' && callbacks[msg.requestId]) {
         callbacks[msg.requestId](msg.tasks);
@@ -589,14 +701,9 @@
         const timer = setTimeout(() => {
           if (callbacks[id]) {
             delete callbacks[id];
-            // Fallback mock tasks for preview if OS parent doesn't respond
-            resolve([
-              { id: '1004', title: 'KiloOS Kernel' },
-              { id: '1842', title: 'Task Manager (ktaskmgr)' },
-              { id: '2410', title: 'KPad Editor' }
-            ]);
+            resolve([...standaloneTasks]);
           }
-        }, 2000);
+        }, 1500);
 
         callbacks[id] = (tasks) => {
           clearTimeout(timer);
@@ -648,6 +755,7 @@
       try {
         const res = await sendToOS({ type: 'OS_LIST_TASKS' });
         tasksData = Array.isArray(res) ? res : [];
+        updateTelemetry();
         render();
       } catch (err) {
         console.error('Failed to list tasks:', err);
@@ -656,35 +764,162 @@
       }
     }
 
-    function updateMetrics(taskCount) {
-      const metricsDetail = document.getElementById('system-metrics');
-      const estimatedRam = Math.max(14, 24 + taskCount * 12);
-      const cpuJitter = (Math.random() * 2.2).toFixed(1);
-      const estimatedCpu = Math.min(99, (parseFloat(cpuJitter) + Math.max(1, taskCount) * 0.9)).toFixed(1);
+    // Telemetry updates and Canvas Sparkline Graph
+    function updateTelemetry() {
+      const count = tasksData.length;
+      let totalRamKB = 0;
+      let sumFps = 0;
 
-      if (metricsDetail) {
-        metricsDetail.textContent = `CPU: ~${estimatedCpu}% | RAM: ~${estimatedRam}MB`;
+      tasksData.forEach(t => {
+        totalRamKB += (t.memoryKB || 0);
+        sumFps += (t.fps || 60);
+      });
+
+      const avgFps = count > 0 ? (sumFps / count) : 60;
+      const ramFormatted = totalRamKB >= 1024 
+        ? `${(totalRamKB / 1024).toFixed(1)} MB` 
+        : `${totalRamKB} KB`;
+
+      // Update badge readouts
+      const fpsEl = document.getElementById('badge-fps-val');
+      const ramEl = document.getElementById('badge-ram-val');
+      const summaryEl = document.getElementById('badge-process-summary');
+
+      if (fpsEl) fpsEl.textContent = `⚡ Avg FPS: ${avgFps.toFixed(1)} fps`;
+      if (ramEl) ramEl.textContent = `💾 Total V-RAM: ${ramFormatted}`;
+      if (summaryEl) summaryEl.textContent = `Active Windows: ${count}`;
+
+      // Push to sparkline history
+      telemetryHistory.push({
+        fps: avgFps,
+        ramKB: totalRamKB
+      });
+      if (telemetryHistory.length > MAX_HISTORY) {
+        telemetryHistory.shift();
       }
+
+      drawSparkline();
     }
+
+    function drawSparkline() {
+      const canvas = document.getElementById('sparklineCanvas');
+      if (!canvas) return;
+      const wrap = document.getElementById('sparklineWrap');
+      const w = wrap ? wrap.clientWidth : 600;
+      const h = wrap ? wrap.clientHeight : 60;
+
+      const dpr = window.devicePixelRatio || 1;
+      if (canvas.width !== Math.floor(w * dpr) || canvas.height !== Math.floor(h * dpr)) {
+        canvas.width = Math.floor(w * dpr);
+        canvas.height = Math.floor(h * dpr);
+      }
+
+      const ctx = canvas.getContext('2d');
+      ctx.save();
+      ctx.scale(dpr, dpr);
+      ctx.clearRect(0, 0, w, h);
+
+      // Draw subtle grid lines
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.06)';
+      ctx.lineWidth = 1;
+      for (let y = 15; y < h; y += 15) {
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(w, y);
+        ctx.stroke();
+      }
+
+      if (telemetryHistory.length < 2) {
+        ctx.restore();
+        return;
+      }
+
+      const len = telemetryHistory.length;
+      const stepX = w / (MAX_HISTORY - 1);
+      const startX = (MAX_HISTORY - len) * stepX;
+
+      // Find max RAM for scaling
+      let maxRam = 2048;
+      telemetryHistory.forEach(pt => {
+        if (pt.ramKB > maxRam) maxRam = pt.ramKB;
+      });
+      maxRam *= 1.2;
+
+      // 1. Draw Total Virtual RAM Line & Fill (Cyan)
+      ctx.beginPath();
+      telemetryHistory.forEach((pt, idx) => {
+        const x = startX + idx * stepX;
+        const normalizedRam = Math.min(1, Math.max(0, pt.ramKB / maxRam));
+        const y = h - 4 - normalizedRam * (h - 8);
+        if (idx === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      });
+      ctx.strokeStyle = '#38bdf8';
+      ctx.lineWidth = 1.8;
+      ctx.stroke();
+
+      // RAM Area Fill
+      const lastX = startX + (len - 1) * stepX;
+      ctx.lineTo(lastX, h);
+      ctx.lineTo(startX, h);
+      ctx.closePath();
+      const ramGrad = ctx.createLinearGradient(0, 0, 0, h);
+      ramGrad.addColorStop(0, 'rgba(56, 189, 248, 0.18)');
+      ramGrad.addColorStop(1, 'rgba(56, 189, 248, 0.01)');
+      ctx.fillStyle = ramGrad;
+      ctx.fill();
+
+      // 2. Draw System FPS Line (Emerald Green)
+      ctx.beginPath();
+      telemetryHistory.forEach((pt, idx) => {
+        const x = startX + idx * stepX;
+        // FPS scale: 0 to 70 fps
+        const normalizedFps = Math.min(1, Math.max(0, pt.fps / 70));
+        const y = h - 4 - normalizedFps * (h - 8);
+        if (idx === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      });
+      ctx.strokeStyle = '#34d399';
+      ctx.lineWidth = 2.0;
+      ctx.stroke();
+
+      // Graph Legend Overlay
+      ctx.font = '9px monospace';
+      ctx.fillStyle = '#34d399';
+      ctx.fillText('● FPS', 8, 12);
+      ctx.fillStyle = '#38bdf8';
+      ctx.fillText('● V-RAM', 54, 12);
+
+      ctx.restore();
+    }
+
+    window.addEventListener('resize', drawSparkline);
 
     function getFilteredAndSortedTasks() {
       const filter = (document.getElementById('searchInput')?.value || '').trim().toLowerCase();
       let filtered = tasksData.filter(t => {
         const title = String(t.title || '').toLowerCase();
         const id = String(t.id || '').toLowerCase();
-        return title.includes(filter) || id.includes(filter);
+        const pid = String(t.pid || '').toLowerCase();
+        const appId = String(t.appId || '').toLowerCase();
+        const folder = String(t.folder || '').toLowerCase();
+        return title.includes(filter) || id.includes(filter) || pid.includes(filter) || appId.includes(filter) || folder.includes(filter);
       });
 
       filtered.sort((a, b) => {
-        const tA = String(a.title || '');
-        const tB = String(b.title || '');
-        const idA = String(a.id || '');
-        const idB = String(b.id || '');
         let cmp = 0;
         if (currentSortField === 'name') {
-          cmp = tA.localeCompare(tB);
-        } else {
-          cmp = idA.localeCompare(idB, undefined, { numeric: true });
+          cmp = String(a.title || '').localeCompare(String(b.title || ''));
+        } else if (currentSortField === 'pid') {
+          const pA = a.pid || parseInt(a.id, 10) || 0;
+          const pB = b.pid || parseInt(b.id, 10) || 0;
+          cmp = pA - pB;
+        } else if (currentSortField === 'ram') {
+          cmp = (a.memoryKB || 0) - (b.memoryKB || 0);
+        } else if (currentSortField === 'fps') {
+          cmp = (a.fps || 60) - (b.fps || 60);
+        } else if (currentSortField === 'folder') {
+          cmp = String(a.folder || '').localeCompare(String(b.folder || ''));
         }
         return currentSortDir === 'desc' ? -cmp : cmp;
       });
@@ -697,24 +932,19 @@
       const thPid = document.getElementById('th-pid');
       const iconName = document.getElementById('sort-icon-name');
       const iconPid = document.getElementById('sort-icon-pid');
+      const iconFps = document.getElementById('sort-icon-fps');
+      const iconRam = document.getElementById('sort-icon-ram');
 
-      if (currentSortField === 'name') {
-        thName?.setAttribute('aria-sort', currentSortDir === 'asc' ? 'ascending' : 'descending');
-        thPid?.setAttribute('aria-sort', 'none');
-        if (iconName) {
-          iconName.textContent = currentSortDir === 'asc' ? '▲' : '▼';
-          iconName.style.color = 'var(--primary)';
-        }
-        if (iconPid) iconPid.textContent = '';
-      } else {
-        thPid?.setAttribute('aria-sort', currentSortDir === 'asc' ? 'ascending' : 'descending');
-        thName?.setAttribute('aria-sort', 'none');
-        if (iconPid) {
-          iconPid.textContent = currentSortDir === 'asc' ? '▲' : '▼';
-          iconPid.style.color = 'var(--primary)';
-        }
-        if (iconName) iconName.textContent = '';
-      }
+      if (iconName) iconName.textContent = '';
+      if (iconPid) iconPid.textContent = '';
+      if (iconFps) iconFps.textContent = '';
+      if (iconRam) iconRam.textContent = '';
+
+      const dirSym = currentSortDir === 'asc' ? '▲' : '▼';
+      if (currentSortField === 'name' && iconName) iconName.textContent = dirSym;
+      if (currentSortField === 'pid' && iconPid) iconPid.textContent = dirSym;
+      if (currentSortField === 'fps' && iconFps) iconFps.textContent = dirSym;
+      if (currentSortField === 'ram' && iconRam) iconRam.textContent = dirSym;
     }
 
     function toggleSort(field) {
@@ -722,7 +952,7 @@
         currentSortDir = currentSortDir === 'asc' ? 'desc' : 'asc';
       } else {
         currentSortField = field;
-        currentSortDir = 'asc';
+        currentSortDir = (field === 'ram' || field === 'fps') ? 'desc' : 'asc';
       }
       syncSortSelect();
       saveUserSettings();
@@ -770,17 +1000,27 @@
       }
     }
 
+    // Double-click row to focus/restore window in KiloOS
+    function focusTask(task) {
+      if (!task) return;
+      if (isStandalone) {
+        task.minimized = false;
+        showToast(`[Standalone] Focused: ${task.title}`);
+        render();
+        return;
+      }
+
+      // Send OS_FOCUS_TASK and OS_LAUNCH_APP so KiloOS focuses and un-minimizes the window
+      window.parent.postMessage({ type: 'OS_FOCUS_TASK', taskId: task.id, appId: task.appId }, '*');
+      window.parent.postMessage({ type: 'OS_LAUNCH_APP', appId: task.appId }, '*');
+      showToast(`Restored & Focused: ${task.title}`);
+    }
+
     function render() {
       const tbody = document.getElementById('task-list');
-      const statusInfo = document.getElementById('status-info');
       if (!tbody) return;
 
       const filtered = getFilteredAndSortedTasks();
-
-      if (statusInfo) {
-        statusInfo.textContent = `Tasks: ${filtered.length} shown (${tasksData.length} total)`;
-      }
-      updateMetrics(tasksData.length);
       updateSortIndicators();
 
       tbody.innerHTML = '';
@@ -788,7 +1028,7 @@
       if (filtered.length === 0) {
         const emptyRow = document.createElement('tr');
         const emptyCell = document.createElement('td');
-        emptyCell.colSpan = 3;
+        emptyCell.colSpan = 7;
         emptyCell.style.textAlign = 'center';
         emptyCell.style.color = 'var(--text-muted)';
         emptyCell.style.padding = '24px 16px';
@@ -805,7 +1045,13 @@
 
       filtered.forEach(task => {
         const taskId = String(task.id || 'N/A');
+        const taskPid = task.pid || taskId;
         const taskTitle = String(task.title || 'Untitled Process');
+        const taskAppId = String(task.appId || 'app');
+        const taskFolder = String(task.folder || 'System');
+        const taskFps = typeof task.fps === 'number' ? task.fps : 60;
+        const taskRamKB = typeof task.memoryKB === 'number' ? task.memoryKB : 512;
+        const isMinimized = !!task.minimized;
 
         const tr = document.createElement('tr');
         tr.setAttribute('role', 'row');
@@ -816,42 +1062,69 @@
         if (isSelected) tr.classList.add('selected');
         tr.setAttribute('aria-selected', isSelected ? 'true' : 'false');
 
+        // Single click selects
         tr.onclick = () => {
           selectTask(taskId);
           document.querySelector('.table-container')?.focus();
         };
 
+        // Double click focuses and restores the window in KiloOS
         tr.ondblclick = () => {
-          showToast(`Process: ${taskTitle} (PID: ${taskId})`);
+          focusTask(task);
         };
 
+        // Column 1: PID
+        const tdPid = document.createElement('td');
+        tdPid.className = 'pid-tag';
+        tdPid.textContent = taskPid;
+
+        // Column 2: Application Title + appId
         const tdTitle = document.createElement('td');
-        tdTitle.setAttribute('role', 'gridcell');
-        tdTitle.textContent = taskTitle;
+        tdTitle.innerHTML = `<strong>${escapeHtml(taskTitle)}</strong><span class="app-id-pill">${escapeHtml(taskAppId)}</span>`;
 
-        const tdId = document.createElement('td');
-        tdId.setAttribute('role', 'gridcell');
-        tdId.style.fontFamily = 'monospace';
-        tdId.style.color = '#94a3b8';
-        tdId.title = taskId;
-        tdId.textContent = taskId.length > 14 ? taskId.slice(0, 14) + '...' : taskId;
+        // Column 3: Folder
+        const tdFolder = document.createElement('td');
+        tdFolder.innerHTML = `<span class="folder-pill">${escapeHtml(taskFolder)}</span>`;
 
+        // Column 4: FPS
+        const tdFps = document.createElement('td');
+        const fpsClass = taskFps >= 50 ? 'fps-good' : (taskFps >= 30 ? 'fps-medium' : 'fps-low');
+        tdFps.className = `fps-pill ${fpsClass}`;
+        tdFps.textContent = `${taskFps} fps`;
+
+        // Column 5: Memory
+        const tdRam = document.createElement('td');
+        tdRam.className = 'ram-val';
+        tdRam.textContent = taskRamKB >= 1024 
+          ? `${(taskRamKB / 1024).toFixed(1)} MB` 
+          : `${taskRamKB} KB`;
+
+        // Column 6: Status (Active vs Minimized)
+        const tdStatus = document.createElement('td');
+        tdStatus.innerHTML = isMinimized
+          ? `<span class="status-pill status-minimized">Minimized</span>`
+          : `<span class="status-pill status-active">Active</span>`;
+
+        // Column 7: Action (End Task)
         const tdAction = document.createElement('td');
-        tdAction.setAttribute('role', 'gridcell');
         tdAction.style.textAlign = 'right';
 
         const btnKill = document.createElement('button');
         btnKill.className = 'kill-btn';
         btnKill.textContent = 'End Task';
-        btnKill.setAttribute('aria-label', `End task ${taskTitle} with PID ${taskId}`);
+        btnKill.setAttribute('aria-label', `End task ${taskTitle} with PID ${taskPid}`);
         btnKill.onclick = (e) => {
           e.stopPropagation();
           killTask(taskId, taskTitle);
         };
 
         tdAction.appendChild(btnKill);
+        tr.appendChild(tdPid);
         tr.appendChild(tdTitle);
-        tr.appendChild(tdId);
+        tr.appendChild(tdFolder);
+        tr.appendChild(tdFps);
+        tr.appendChild(tdRam);
+        tr.appendChild(tdStatus);
         tr.appendChild(tdAction);
         tbody.appendChild(tr);
       });
@@ -870,6 +1143,7 @@
           selectedTaskId = null;
         }
         showToast(`Terminated ${taskTitle || taskId}`);
+        updateTelemetry();
         render();
         return;
       }
@@ -904,7 +1178,13 @@
       } else if (e.key === 'End') {
         e.preventDefault();
         selectTask(String(visibleTasks[visibleTasks.length - 1].id));
-      } else if (e.key === 'Delete' || e.key === 'Enter') {
+      } else if (e.key === 'Enter') {
+        e.preventDefault();
+        if (selectedTaskId) {
+          const task = visibleTasks.find(t => String(t.id) === selectedTaskId);
+          if (task) focusTask(task);
+        }
+      } else if (e.key === 'Delete' || e.key === 'Del') {
         e.preventDefault();
         if (selectedTaskId) {
           const task = visibleTasks.find(t => String(t.id) === selectedTaskId);
@@ -926,7 +1206,7 @@
       stopAutoRefresh();
       autoInterval = setInterval(() => {
         if (!document.hidden) refresh();
-      }, 2500);
+      }, 2000);
     }
 
     function stopAutoRefresh() {
@@ -952,11 +1232,6 @@
       const modal = document.getElementById('runModal');
       if (modal) modal.style.display = 'none';
       document.querySelector('.table-container')?.focus();
-    }
-
-    function isRunModalOpen() {
-      const modal = document.getElementById('runModal');
-      return modal && modal.style.display === 'flex';
     }
 
     function openHelpModal() {
@@ -1026,13 +1301,14 @@
       if (!appId) return;
 
       if (isStandalone) {
-        const newPid = String(Math.floor(1000 + Math.random() * 9000));
-        standaloneTasks.push({ id: newPid, title: appId });
+        const newPid = Math.floor(1000 + Math.random() * 9000);
+        standaloneTasks.push({ id: String(newPid), pid: newPid, appId: appId, title: appId, folder: 'User', fps: 60, memoryKB: 1024, minimized: false });
         tasksData = [...standaloneTasks];
         showToast(`Started "${appId}" (PID ${newPid})`);
         closeRunModal();
+        updateTelemetry();
         render();
-        selectTask(newPid);
+        selectTask(String(newPid));
         return;
       }
 
@@ -1047,17 +1323,15 @@
         showToast('No active tasks to export');
         return;
       }
-      const lines = ['Task Manager Process List - KiloOS', '----------------------------------'];
+      const lines = ['Task Manager Process List - KiloOS v2.0', '======================================'];
       tasksData.forEach(t => {
-        lines.push(`PID: ${t.id} | Title: ${t.title}`);
+        lines.push(`PID: ${t.pid || t.id} | ${t.title} [${t.appId}] | ${t.folder} | ${t.fps} FPS | ${t.memoryKB} KB | ${t.minimized ? 'Minimized' : 'Active'}`);
       });
       const text = lines.join('\n');
       if (navigator.clipboard && navigator.clipboard.writeText) {
         navigator.clipboard.writeText(text).then(() => {
           showToast(`Copied ${tasksData.length} tasks to clipboard`);
-        }).catch(() => {
-          fallbackCopy(text);
-        });
+        }).catch(() => fallbackCopy(text));
       } else {
         fallbackCopy(text);
       }
@@ -1079,9 +1353,6 @@
       document.body.removeChild(ta);
     }
 
-    /**
-     * Captures complete state snapshot into localStorage.
-     */
     function quickSaveState() {
       try {
         const payload = {
@@ -1094,11 +1365,7 @@
           sortDir: currentSortDir,
           autoRefresh: document.getElementById('autoRefreshToggle')?.checked ?? true
         };
-        const ok = safeSetStorage('ktaskmgr_quicksave', JSON.stringify(payload));
-        if (!ok) {
-          showToast('⚠️ Storage quota exceeded or save failed.');
-          return;
-        }
+        safeSetStorage('ktaskmgr_quicksave', JSON.stringify(payload));
         safeSetStorage('ktaskmgr_tutorialSeen', '1');
         const timeStr = new Date().toLocaleTimeString();
         showToast(`★ Quicksave snapshot created at ${timeStr} [F5]`);
@@ -1107,9 +1374,6 @@
       }
     }
 
-    /**
-     * Restores state snapshot from localStorage.
-     */
     function quickLoadState() {
       try {
         const raw = safeGetStorage('ktaskmgr_quicksave');
@@ -1140,12 +1404,12 @@
           syncSortSelect();
         }
         selectedTaskId = data.selectedTaskId || (tasksData[0] ? String(tasksData[0].id) : null);
+        updateTelemetry();
         render();
         if (selectedTaskId) selectTask(selectedTaskId);
 
-        safeSetStorage('ktaskmgr_tutorialSeen', '1');
         const timeStr = new Date(data.timestamp || Date.now()).toLocaleTimeString();
-        showToast(`📂 Loaded snapshot from ${timeStr} [F9] (Auto paused)`);
+        showToast(`📂 Loaded snapshot from ${timeStr} [F9]`);
       } catch (err) {
         showToast('Failed to load quicksave snapshot.');
       }
@@ -1185,7 +1449,6 @@
     }
 
     document.addEventListener('keydown', (e) => {
-      // If focus is inside an input or select
       if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') {
         if (e.key === 'Escape') {
           if (anyModalOpen()) {
@@ -1198,7 +1461,6 @@
         return;
       }
 
-      // Guard against browser accelerator hijack (Ctrl, Alt, Meta)
       if (e.ctrlKey || e.altKey || e.metaKey) {
         if (e.ctrlKey && (e.key === 'n' || e.key === 'N')) {
           e.preventDefault();
@@ -1216,9 +1478,7 @@
         return;
       }
 
-      if (anyModalOpen()) {
-        return;
-      }
+      if (anyModalOpen()) return;
 
       if (e.key === 'r' || e.key === 'R' || e.key === 'F5') {
         e.preventDefault();
@@ -1229,6 +1489,12 @@
       } else if (e.key === 'h' || e.key === 'H' || e.key === 'F1') {
         e.preventDefault();
         openHelpModal();
+      } else if (e.key === 'Delete' || e.key === 'Del') {
+        e.preventDefault();
+        if (selectedTaskId) {
+          const task = tasksData.find(t => String(t.id) === selectedTaskId);
+          if (task) killTask(selectedTaskId, task.title);
+        }
       }
     });
 
@@ -1246,7 +1512,6 @@
       startAutoRefresh();
     }
 
-    // Check first-run tutorial flag
     const tutorialSeen = safeGetStorage('ktaskmgr_tutorialSeen');
     if (!tutorialSeen) {
       setTimeout(openTutorialModal, 150);
