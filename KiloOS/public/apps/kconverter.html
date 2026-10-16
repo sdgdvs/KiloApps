@@ -279,7 +279,7 @@
     border-color: #ef4444;
   }
 
-  /* Single Convert Card Layout */
+  /* Single Convert Card Layout & Responsive Ergonomics */
   .convert-grid {
     display: grid;
     grid-template-columns: 1fr auto 1fr;
@@ -287,9 +287,41 @@
     align-items: center;
   }
 
-  @media (max-width: 600px) {
+  /* Accessibility focus ring */
+  button:focus-visible, input:focus-visible, select:focus-visible, .nav-tab:focus-visible, .cat-tab:focus-visible {
+    outline: 2px solid var(--accent-blue);
+    outline-offset: 2px;
+  }
+
+  @media (max-width: 640px) {
+    .app-container {
+      padding: 10px;
+      gap: 8px;
+    }
+    .header {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 10px;
+    }
+    .controls-bar {
+      justify-content: space-between;
+      width: 100%;
+    }
     .convert-grid {
       grid-template-columns: 1fr;
+    }
+    .swap-btn {
+      margin: 4px auto !important;
+    }
+    .nav-tabs {
+      padding: 3px;
+    }
+    .nav-tab {
+      padding: 5px 8px;
+      font-size: 12px;
+    }
+    .quick-presets-bar {
+      padding: 6px 8px;
     }
   }
 

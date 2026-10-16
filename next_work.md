@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-qa
+current_agent: kilo-qa
+next_agent: kilo-expander
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -17,7 +17,7 @@ current_targets:
   kilo_graphics: KFarm
   kilo_soundscape: KWizard
   kilo_tester: KSubmarine
-  kilo_usability: KConverter
+  kilo_usability: KFont
   kilo_qa: KSudoku
   kilo_expander: KClip
 virtual_web_target: kweb://darknet
@@ -34,9 +34,9 @@ virtual_web_rotation:
 - kweb://10.19.99.4/classified
 - kweb://echo-subsystem.net
 last_run:
-  agent: kilo-tester
-  app: KChess
-  timestamp: 2026-10-16T06:14:00+0000
+  agent: kilo-usability
+  app: KConverter
+  timestamp: 2026-10-16T06:31:00+0000
 last_planner_run: '2026-10-15T20:17:00Z'
 ---
 
@@ -175,6 +175,13 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-16T06:31:00+0000 — kilo-usability: KConverter (UI/UX & Mobile Responsiveness Pass)**
+  - Enhanced responsive layout (<640px) with auto-wrapping header, mobile-centered swap button, and compact controls.
+  - Added visible `:focus-visible` accessibility rings across navigation tabs, category chips, and inputs.
+  - Verified clean rendering and touch target sizing across Single, Batch, Express, and Favorites views.
+  - Verified `npm run build` in KiloOS passed with 0 errors; `kconverter.html` is 106 KB (<999 KB ceiling).
+  - Advanced usability queue to `KFont`; handed off rotation to `kilo-qa`.
+
 - **2026-10-16T06:14:00+0000 — kilo-tester: KChess (Interactive UI Element & Editor Audit)**
   - Audited menu bar entries, shortcuts, help, replay, analysis, FEN/PGN modals, and custom board editor.
   - Fixed event safety in `selectEditorPiece` with active styling boundary check.
@@ -199,9 +206,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Verified routing linkages across `knet.html`, `echo_subsystem.html`, `kping.html`, and `kpad.html`.
   - Verification: `npm run build` in KiloOS succeeded with 0 errors.
   - Advanced creator target to `kweb://echo-subsystem.net`; handed off rotation to `kilo-graphics`.
-
-- **2026-10-16T04:15:00+0000 — kilo-expander: KHex (Feature Expansion: Strings & Diff)**
-  - Expanded KHex suite with Tab 8: String Carver (ASCII/UTF-16LE extraction) & Binary Buffer Differ.
-  - Added interactive diff visualizer comparing primary vs secondary buffers with XOR delta and click-to-jump.
-  - Bound hotkey [8] for direct tab switching and updated ARIA accessibility attributes.
-  - Verified Vite build clean, 0 errors, app file size 152 KB (<999 KB ceiling).
