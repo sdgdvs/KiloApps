@@ -2845,7 +2845,12 @@
                 }
             }
 
-            if (e.key === 'Escape') {
+            const hasActiveModal = document.querySelector('.retro-modal.active') || 
+                                   document.querySelector('#modalBackdrop.active') || 
+                                   document.querySelector('#help-modal.active') || 
+                                   document.querySelector('#stats-modal.active');
+
+            if (e.key === 'Escape' || (e.key === 'Enter' && hasActiveModal)) {
                 closeAllModals();
                 closeStats();
                 closeHelp();

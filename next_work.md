@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-creator
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -18,7 +18,7 @@ current_targets:
   kilo_soundscape: KDragon
   kilo_tester: KChess
   kilo_usability: KConverter
-  kilo_qa: K2048
+  kilo_qa: KSudoku
   kilo_expander: KHex
 virtual_web_target: kweb://darknet
 virtual_web_rotation:
@@ -34,9 +34,9 @@ virtual_web_rotation:
 - kweb://10.19.99.4/classified
 - kweb://echo-subsystem.net
 last_run:
-  agent: kilo-usability
-  app: KFont
-  timestamp: 2026-10-16T03:13:00+0000
+  agent: kilo-qa
+  app: K2048
+  timestamp: 2026-10-16T03:31:00+0000
 last_planner_run: '2026-10-15T20:17:00Z'
 ---
 
@@ -136,22 +136,22 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Upcoming Queue**: `KFont`, `KChart`, `KDB`, `KNote`.
 
 ### 6. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
-- **Target**: `KBreakout`
-- **Primary Files**: `KiloOS/public/apps/kbreakout.html`, `KBreakout/main.c`, `KBreakout/build.bat`
+- **Target**: `KSudoku`
+- **Primary Files**: `KiloOS/public/apps/ksudoku.html`, `KSudoku/main.c`, `KSudoku/build.bat`
 - **Objective**: Pass 5 QA audit, state persistence integrity, and dual web/native parity.
 - **Action Steps**:
-  1. State Persistence: F5 quicksave & F9 quickload capturing paddle position, ball velocity, brick grid, score, and lives.
+  1. State Persistence: F5 quicksave & F9 quickload capturing grid values, notes, timer, difficulty.
   2. First-run Tutorial: Onboarding displays once on fresh sessions, never on restored saves.
   3. Modal Dismissals: Modals dismiss cleanly with Escape, Enter, or Close button.
-  4. Dual Parity & Build: Compile Win32 native client via `cmd.exe /c build.bat` in `KBreakout/` (if present) and verify web build.
+  4. Dual Parity & Build: Compile Win32 native client via `cmd.exe /c build.bat` in `KSudoku/` (if present) and verify web build.
 - **Verification**:
-  - `uv run scripts/test_app_startup.py --app KBreakout`
-  - `cd KiloOS && npm run build` (0 Vite errors, `kbreakout.html` < 999 KB)
+  - `uv run scripts/test_app_startup.py --app KSudoku`
+  - `cd KiloOS && npm run build` (0 Vite errors, `ksudoku.html` < 999 KB)
 - **Handoff**:
-  - In frontmatter: advance `current_targets.kilo_qa` to `K2048`.
+  - In frontmatter: advance `current_targets.kilo_qa` to `KConnect4`.
   - Set `current_agent: kilo-expander`.
   - Append terse execution log (≤6 lines), commit, and push.
-- **Upcoming Queue**: `K2048`, `KSudoku`, `KConnect4`, `KHangman`.
+- **Upcoming Queue**: `KSudoku`, `KConnect4`, `KHangman`.
 
 ### 7. Feature Expander Queue (`kilo-expander`)
 - **Target**: `KFont`
@@ -175,6 +175,13 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-16T03:31:00+0000 — kilo-qa: K2048 (Pass 5 QA & Build Audit)**
+  - PASS ✅: Verified F5 quicksave & F9 quickload persistence and fresh-session onboarding tutorial guard.
+  - Added Enter key modal/dialog dismissal alongside Escape and UI Close buttons.
+  - Verified clean Win32 native compilation (`K2048/build.bat`) and KiloOS web build (`npm run build`).
+  - Size check: `k2048.html` (210 KB) and `K2048.exe` (38.9 KB) remain well below 999 KB limit.
+  - Advanced QA target to KSudoku; handed off queue rotation to kilo-expander.
+
 - **2026-10-16T03:13:00+0000 — kilo-usability: KFont (Usability Audit)**
   - ⏭️ Skip — KFont usability is complete and mature.
 
@@ -182,8 +189,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - PASS ✅ (0 runtime errors, clean startup & hit-test unblocked).
   - Verified modal dismissing (Esc, backdrop, Enter/Space), quicksave (F5/Ctrl+S), and quickload (F9).
   - Confirmed search shortcuts (/), view tabs (1-4), date navigation, and multi-format exporters (ICS/CSV/TSV/MD/JSON).
-  - Verification: 
-pm run build 0 errors, kcalendar.html 119 KB (<999 KB ceiling).
+  - Verification: npm run build 0 errors, kcalendar.html 119 KB (<999 KB ceiling).
   - Advanced tester queue to KChess; handed off rotation to kilo-usability (KFont).
 
 - **2026-10-16T02:15:00+0000 — kilo-soundscape: KColosseum (YM2612 Phrygian Dominant Combat & March)**
@@ -198,10 +204,3 @@ pm run build 0 errors, kcalendar.html 119 KB (<999 KB ceiling).
   - Web & ARG Integration: Fully linked in KNet portal, search engine index, dialer nodes, traceroute, and Webring.
   - Build/Size: Verified clean Vite build (`npm run build`), cybercafe.html 388 KB (<999 KB ceiling).
   - Advanced creator target to kweb://10.19.99.4/classified; handed off rotation to kilo-graphics.
-
-- **2026-10-16T00:31:00+0000 — kilo-expander: KFont (Pass 3: SVG & TrueType TTX Exporters)**
-  - Vector Exporters: Added SVG 1.1 Vector Glyph Path Spec (<path d="...">) with real-time download and copy.
-  - OpenType Disassembly: Added TrueType XML (TTX <glyf> contour chunk) generation with copy functionality.
-  - Integrated with active character, font family, style (bold/italic), and em-box scaling.
-  - Build/Size: Verified clean Vite build (`npm run build`), kfont.html 168 KB (<999 KB ceiling).
-  - Advanced expander target to KHex; handed off rotation to kilo-creator.
