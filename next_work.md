@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-tester
-next_agent: kilo-usability
+current_agent: kilo-usability
+next_agent: kilo-qa
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -16,7 +16,7 @@ current_targets:
   kilo_creator: kweb://deep-core
   kilo_graphics: KFarm
   kilo_soundscape: kweb://webring
-  kilo_tester: KSubmarine
+  kilo_tester: KCalendar
   kilo_usability: KFont
   kilo_qa: KConnect4
   kilo_expander: KRadio
@@ -34,9 +34,9 @@ virtual_web_rotation:
 - kweb://10.19.99.4/classified
 - kweb://echo-subsystem.net
 last_run:
-  agent: kilo-soundscape
-  app: KWizard
-  timestamp: 2026-10-16T09:15:00+0000
+  agent: kilo-tester
+  app: KSubmarine
+  timestamp: 2026-10-16T09:32:00+0000
 last_planner_run: '2026-10-15T20:17:00Z'
 ---
 
@@ -105,8 +105,8 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Upcoming Queue**: `KDragon`, `KWizard`, `KFortress`.
 
 ### 4. App Tester Queue (`kilo-tester`)
-- **Target**: `KSubmarine`
-- **Primary File**: `KiloOS/public/apps/ksubmarine.html`
+- **Target**: `KCalendar`
+- **Primary File**: `KiloOS/public/apps/kcalendar.html`
 - **Objective**: Bathyscaphe dashboard interactive UI element, radar/sonar canvas, and modal audit with inline repairs.
 - **Action Steps**:
   1. Run automated startup check: `uv run scripts/test_app_startup.py --app KSubmarine`.
@@ -175,6 +175,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-16T09:32:00+0000 — kilo-tester: KSubmarine (Interactive UI Element Audit & Inline Fixes)**
+  - Audited all controls, outposts, torpedo tubes, damage control valves, and cargo offloading.
+  - Fixed unexposed `window.offloadCargoToBuoy` and inline onclick handler for station cargo transactions.
+  - Verified `npm run build` in KiloOS clean (0 errors); `ksubmarine.html` is 459 KB (<999 KB ceiling).
+  - Advanced tester queue to `KCalendar`; handed off rotation to `kilo-usability`.
+
 - **2026-10-16T09:15:00+0000 — kilo-soundscape: KWizard (Procedural FM Soundscape & 32-Step Theme)**
   - Implemented YM2612 2-Op FM synthesis engine with SPC700 stereo delay (85ms slapback, 2600Hz rolloff).
   - Composed 32-step "Archmage's Duel" theme in D Dorian/Minor with 6 voices, 5:3 subtle swing, and contrary voice leading.
@@ -199,10 +205,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Verified clean native C compilation via MSVC/build.bat with zero compiler errors or warnings.
   - Confirmed modal dismissals, keyboard shortcuts, clean chiptune soundscape, and offline default.
   - Verified KiloOS clean build with zero Vite errors; advanced queue to `KConnect4`.
-
-- **2026-10-16T06:31:00+0000 — kilo-usability: KConverter (UI/UX & Mobile Responsiveness Pass)**
-  - Enhanced responsive layout (<640px) with auto-wrapping header, mobile-centered swap button, and compact controls.
-  - Added visible `:focus-visible` accessibility rings across navigation tabs, category chips, and inputs.
-  - Verified clean rendering and touch target sizing across Single, Batch, Express, and Favorites views.
-  - Verified `npm run build` in KiloOS passed with 0 errors; `kconverter.html` is 106 KB (<999 KB ceiling).
-  - Advanced usability queue to `KFont`; handed off rotation to `kilo-qa`.

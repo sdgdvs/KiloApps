@@ -4870,7 +4870,7 @@
 
                     <div style="margin-top: 6px; border-top: 1px solid var(--border-panel); padding-top: 4px; display: flex; justify-content: space-between; align-items: center;">
                         <span style="font-size: 9px; color: var(--text-dim);">Sell cargo minerals to station:</span>
-                        <button onclick="offloadCargoToBuoy()" style="padding: 3px 8px; font-size: 9px; border-color: var(--accent-emerald); color: var(--accent-emerald); font-weight: bold;">
+                        <button onclick="window.offloadCargoToBuoy()" style="padding: 3px 8px; font-size: 9px; border-color: var(--accent-emerald); color: var(--accent-emerald); font-weight: bold;">
                             💎 SELL CARGO (+${state.cargo.totalValue} PTS)
                         </button>
                     </div>
@@ -5352,6 +5352,7 @@
                 renderEngineeringUI();
             }
 
+            window.offloadCargoToBuoy = offloadCargoToBuoy;
             btnToggleClaw.addEventListener('click', toggleDredgingClaw);
             btnDredgeSeabed.addEventListener('click', initiateDredgeAction);
             btnOffloadCargo.addEventListener('click', offloadCargoToBuoy);
