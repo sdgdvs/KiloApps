@@ -111,6 +111,60 @@
     }
   }
 
+  @media (max-width: 640px) {
+    header {
+      padding: 6px 10px;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .header-actions {
+      justify-content: flex-start;
+      width: 100%;
+    }
+    .workspace {
+      padding: 8px;
+      gap: 10px;
+    }
+    .panel-card {
+      padding: 10px 12px;
+    }
+    .canvas-container {
+      height: clamp(260px, 38vh, 340px);
+    }
+    .stats-grid {
+      grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+      gap: 6px;
+    }
+    .stat-box {
+      padding: 6px 8px;
+    }
+    .stat-value {
+      font-size: 13px;
+    }
+    .btn-group button {
+      padding: 4px 6px;
+      font-size: 11px;
+    }
+  }
+
+  @media (max-width: 440px) {
+    .logo-title span {
+      font-size: 14px;
+    }
+    .header-actions button, .header-actions select {
+      font-size: 10px;
+      padding: 4px 6px;
+    }
+    .stats-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  button:focus-visible, .btn:focus-visible, select:focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 1px;
+  }
+
   /* Card Component */
   .panel-card {
     background: var(--card-bg);
@@ -1771,9 +1825,12 @@
 
   // 3. Polar Area / Coxcomb Rose Chart (Florence Nightingale)
   function renderPolarCoxcomb() {
-    const cx = canvasW / 2 - 60;
+    const legW = canvasW < 440 ? Math.max(85, Math.floor(canvasW * 0.28)) : 140;
+    const legX = canvasW - legW;
+    const maxLegW = canvasW - legX - 8;
+    const cx = Math.max(70, (canvasW - legW) / 2);
     const cy = canvasH / 2;
-    const maxR = Math.min(canvasW, canvasH) * 0.36;
+    const maxR = Math.min((canvasW - legW) * 0.42, canvasH * 0.38);
     const n = data.length;
 
     const vals = data.map(d => Math.max(0, Number(d.value) || 0));
@@ -2063,9 +2120,12 @@
   // 5. Pie / Donut
   function renderPieOrDonut(isDonut) {
     const total = data.reduce((a, b) => a + Math.max(0, Number(b.value) || 0), 0) || 1;
-    const cx = canvasW / 2 - 60;
+    const legW = canvasW < 440 ? Math.max(85, Math.floor(canvasW * 0.28)) : 140;
+    const legX = canvasW - legW;
+    const maxLegW = canvasW - legX - 8;
+    const cx = Math.max(70, (canvasW - legW) / 2);
     const cy = canvasH / 2;
-    const outerR = Math.min(canvasW, canvasH) * 0.35;
+    const outerR = Math.min((canvasW - legW) * 0.42, canvasH * 0.38);
     const innerR = isDonut ? outerR * 0.55 : 0;
 
     let startAngle = -Math.PI / 2;
@@ -2398,6 +2458,21 @@
       hoveredIndex = newHover;
       renderChart();
     }
+
+    // Check legend hover for pie, donut, polar if slice wasn't directly hit
+    if (newHover === -1 && (chartType === 'pie' || chartType === 'donut' || chartType === 'polar') && n > 0) {
+      const legW = canvasW < 440 ? Math.max(85, Math.floor(canvasW * 0.28)) : 140;
+      const legX = canvasW - legW;
+      const rowH = Math.min(22, Math.max(14, (canvasH - 60) / Math.max(1, data.length)));
+      const legY = (canvasH / 2) - (n * rowH) / 2;
+      if (hoverX >= legX - 10 && hoverX <= canvasW && hoverY >= legY && hoverY <= legY + n * rowH) {
+        const idx = Math.floor((hoverY - legY) / rowH);
+        if (idx >= 0 && idx < n && idx !== hoveredIndex) {
+          hoveredIndex = idx;
+          renderChart();
+        }
+      }
+    }
   }
 
   canvas.onpointermove = (e) => handlePointerMove(e.clientX, e.clientY);
@@ -2406,6 +2481,7 @@
     canvas.focus();
     handlePointerMove(e.clientX, e.clientY);
   };
+  canvas.onpointerup = (e) => handlePointerMove(e.clientX, e.clientY);
   canvas.onpointerleave = () => {
     if (hoveredIndex !== -1) {
       hoveredIndex = -1;

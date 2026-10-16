@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-usability
+current_agent: kilo-qa
+next_agent: kilo-expander
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -17,7 +17,7 @@ current_targets:
   kilo_graphics: KFarm
   kilo_soundscape: kweb://warez
   kilo_tester: KChess
-  kilo_usability: KChart
+  kilo_usability: KDB
   kilo_qa: KHangman
   kilo_expander: KHex
 virtual_web_target: kweb://darknet
@@ -34,9 +34,9 @@ virtual_web_rotation:
 - kweb://echo-subsystem.net
 - kweb://deep-core
 last_run:
-  agent: kilo-tester
-  app: KCalendar
-  timestamp: 2026-10-16T13:31:00+0000
+  agent: kilo-usability
+  app: KChart
+  timestamp: 2026-10-16T14:15:00+0000
 last_planner_run: '2026-10-15T20:17:00Z'
 ---
 
@@ -174,6 +174,13 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-16T14:15:00+0000 — kilo-usability: KChart (UI/UX & Usability Pass)**
+  - Enhanced responsive layout: added narrow viewport (<640px/<440px) media queries for header, workspace, toolbar, and stats grid.
+  - Improved legend usability: made pie, donut, and polar chart legends dynamically sized and repositioned to prevent canvas clipping.
+  - Added direct legend interactive hover hit-testing and pointerup touch events for instant slice highlighting.
+  - Verified HiDPI canvas scaling, accessible focus indicators (:focus-visible), and Esc modal/input dismissal.
+  - Verified `npm run build` (0 Vite errors, `kchart.html` 126 KB < 999 KB); advanced usability target to `KDB`; handoff to `kilo-qa`.
+
 - **2026-10-16T13:31:00+0000 — kilo-tester: KCalendar (Interactive UI & Modal Audit)**
   - PASS ✅ (No issues found): CSS valid, 0 JS errors, modals dismiss cleanly, hit-testing unblocked.
   - Audited interactive elements: navigation, search, filters, event/stats/help/delete modals, shortcuts.
@@ -199,10 +206,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Implemented multi-format playlist exporter/importer supporting JSON, Winamp M3U, and Shoutcast PLS.
   - Added sleep timer auto-off (15-60m) with smooth volume fade and real-time Stream Diagnostics HUD.
   - Verified build clean; kradio.html is 51 KB (<999 KB ceiling); handed off to kilo-creator.
-
-- **2026-10-16T10:33:00+0000 — kilo-qa: KConnect4 (Pass 5 QA & Build Quality Audit)**
-  - Audited full game state persistence (F5 quicksave/F9 quickload) capturing board, timers, powerups, and replays.
-  - Verified first-run tutorial prompt gating via `kconnect4_tutorialSeen` and tested Esc/Enter modal dismissals.
-  - Verified native Win32 compilation via `cmd.exe /c build.bat` producing clean `KConnect4.exe` (191 KB < 999 KB).
-  - Verified `npm run build` in KiloOS with 0 errors (`kconnect4.html` 186 KB < 999 KB).
-  - Advanced QA target to `KHangman`; rotation handed off to `kilo-expander`.
