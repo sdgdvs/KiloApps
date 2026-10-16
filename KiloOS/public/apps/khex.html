@@ -3560,6 +3560,683 @@
     }
   }
 
+  // ==========================================
+  // TAB 9: STRUCT & MAGIC SIGNATURE DISSECTOR
+  // ==========================================
+  (function initStructAndMagicModule() {
+    const tabNav = document.querySelector('.tab-nav');
+    if (tabNav && !document.getElementById('tabbtn-struct')) {
+      const btn = document.createElement('button');
+      btn.className = 'tab-btn';
+      btn.id = 'tabbtn-struct';
+      btn.setAttribute('role', 'tab');
+      btn.setAttribute('aria-selected', 'false');
+      btn.setAttribute('aria-controls', 'tab-struct');
+      btn.onclick = () => switchTab('struct');
+      btn.innerHTML = '<span class="badge" style="padding:2px 6px; font-size:0.7rem;">9</span> 🔬 Struct & Signatures';
+      tabNav.appendChild(btn);
+    }
+
+    const tabContainer = document.createElement('div');
+    tabContainer.id = 'tab-struct';
+    tabContainer.className = 'tab-content';
+    tabContainer.innerHTML = `
+      <div class="grid-2">
+        <!-- Magic Signatures & File Header Analyzer -->
+        <div class="panel">
+          <div class="panel-title">
+            <div class="title-left">
+              <span style="font-size:1.1rem;">🔮</span>
+              <span>Magic Bytes & Format Detector</span>
+            </div>
+            <button class="btn btn-sm btn-cyan" onclick="runMagicSignatureScan()">Scan Buffer</button>
+          </div>
+          <div style="font-size:0.78rem; color:var(--text-secondary); line-height:1.4;">
+            Scans binary buffer for standardized magic signatures, file formats, container headers, and sub-stream chunks.
+          </div>
+          <div id="magicResultsSummary" style="font-size:0.82rem; font-weight:600; color:var(--accent-cyan); padding:4px 0;"></div>
+          <div id="magicResultsTable" class="output-box" style="min-height:180px; max-height:280px; padding:6px 10px; font-size:0.8rem;"></div>
+          <div style="display:flex; gap:8px; flex-wrap:wrap;">
+            <button class="btn btn-sm" onclick="loadSampleBinaryHeader('bmp')">Sample: BMP Header</button>
+            <button class="btn btn-sm" onclick="loadSampleBinaryHeader('wav')">Sample: WAV Audio</button>
+            <button class="btn btn-sm" onclick="loadSampleBinaryHeader('png')">Sample: PNG Image</button>
+            <button class="btn btn-sm" onclick="loadSampleBinaryHeader('zip')">Sample: ZIP Archive</button>
+          </div>
+        </div>
+
+        <!-- C Struct & Binary Data Unpacker -->
+        <div class="panel">
+          <div class="panel-title">
+            <div class="title-left">
+              <span style="font-size:1.1rem;">📐</span>
+              <span>Binary Struct & Protocol Unpacker</span>
+            </div>
+            <div style="display:flex; gap:6px;">
+              <button class="btn btn-sm btn-primary" onclick="executeStructUnpack()">Unpack Struct</button>
+            </div>
+          </div>
+          <div class="form-row" style="flex-wrap:wrap; gap:8px;">
+            <div class="form-group" style="flex:1; min-width:140px;">
+              <label for="structTemplateSelect">Preset Struct Schema</label>
+              <select id="structTemplateSelect" onchange="applyStructTemplate(this.value)">
+                <option value="bmp">BMP Header (BITMAPINFOHEADER)</option>
+                <option value="wav">WAV Header (RIFF WAVE)</option>
+                <option value="mz">DOS Executable (IMAGE_DOS_HEADER)</option>
+                <option value="zip">ZIP Local File Header</option>
+                <option value="ipv4">IPv4 Packet Header</option>
+                <option value="custom">Custom / User-Defined</option>
+              </select>
+            </div>
+            <div class="form-group" style="width:110px;">
+              <label for="structStartOffset">Offset (Hex/Dec)</label>
+              <input type="text" id="structStartOffset" value="0x0000" style="padding:6px 8px;" onchange="executeStructUnpack()">
+            </div>
+            <div class="form-group" style="width:100px;">
+              <label for="structEndianMode">Endian</label>
+              <select id="structEndianMode" onchange="executeStructUnpack()" style="padding:6px 8px;">
+                <option value="auto">Auto (Global)</option>
+                <option value="le">Little (LE)</option>
+                <option value="be">Big (BE)</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="structSchemaEditor">Struct Definition (fieldName: type [desc])</label>
+            <textarea id="structSchemaEditor" rows="5" style="font-size:0.8rem; font-family:monospace; min-height:85px;"></textarea>
+          </div>
+        </div>
+      </div>
+
+      <!-- Unpacked Struct Table & Export Toolbar -->
+      <div class="panel">
+        <div class="panel-title">
+          <div class="title-left">
+            <span style="font-size:1.1rem;">📋</span>
+            <span>Parsed Struct Fields & Memory Layout</span>
+          </div>
+          <div style="display:flex; gap:6px;">
+            <button class="btn btn-sm" onclick="exportStructToJson()">Export JSON</button>
+            <button class="btn btn-sm btn-purple" onclick="exportStructToCHeader()">Export C Header</button>
+          </div>
+        </div>
+        <div id="unpackedFieldsContainer" class="output-box" style="min-height:160px; max-height:360px; padding:4px 8px;">
+          <div style="color:var(--text-dim); text-align:center; padding:30px;">Click 'Unpack Struct' to parse data fields at current offset.</div>
+        </div>
+      </div>
+    `;
+
+    const statusRef = document.querySelector('.status-bar');
+    if (statusRef && statusRef.parentNode) {
+      statusRef.parentNode.insertBefore(tabContainer, statusRef);
+    } else {
+      document.body.appendChild(tabContainer);
+    }
+  })();
+
+  // -------------------------------------------------------------
+  // MAGIC SIGNATURE REPOSITORY & SCANNER
+  // -------------------------------------------------------------
+  const KNOWN_FILE_SIGNATURES = [
+    { name: 'PNG Image', ext: 'png', mime: 'image/png', bytes: [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A], desc: 'Portable Network Graphics lossless image' },
+    { name: 'JPEG Image', ext: 'jpg', mime: 'image/jpeg', bytes: [0xFF, 0xD8, 0xFF], desc: 'Joint Photographic Experts Group JFIF/EXIF image' },
+    { name: 'GIF89a Image', ext: 'gif', mime: 'image/gif', bytes: [0x47, 0x49, 0x46, 0x38, 0x39, 0x61], desc: 'Graphics Interchange Format 89a animation' },
+    { name: 'GIF87a Image', ext: 'gif', mime: 'image/gif', bytes: [0x47, 0x49, 0x46, 0x38, 0x37, 0x61], desc: 'Graphics Interchange Format 87a static' },
+    { name: 'Windows Bitmap', ext: 'bmp', mime: 'image/bmp', bytes: [0x42, 0x4D], desc: 'Device Independent Bitmap format' },
+    { name: 'DOS/PE Executable', ext: 'exe', mime: 'application/x-msdownload', bytes: [0x4D, 0x5A], desc: 'DOS MZ executable / PE header stub' },
+    { name: 'ZIP Archive', ext: 'zip', mime: 'application/zip', bytes: [0x50, 0x4B, 0x03, 0x04], desc: 'PKZIP compressed file archive' },
+    { name: 'GZIP Compressed', ext: 'gz', mime: 'application/gzip', bytes: [0x1F, 0x8B, 0x08], desc: 'GNU Zip compression container' },
+    { name: '7-Zip Archive', ext: '7z', mime: 'application/x-7z-compressed', bytes: [0x37, 0x7A, 0xBC, 0xAF, 0x27, 0x1C], desc: '7-Zip high-ratio archive' },
+    { name: 'ELF Executable', ext: 'elf', mime: 'application/x-executable', bytes: [0x7F, 0x45, 0x4C, 0x46], desc: 'Executable and Linkable Format (Linux/BSD)' },
+    { name: 'Java Class Bytecode', ext: 'class', mime: 'application/java-vm', bytes: [0xCA, 0xFE, 0xBA, 0xBE], desc: 'Java Virtual Machine compiled bytecode' },
+    { name: 'PDF Document', ext: 'pdf', mime: 'application/pdf', bytes: [0x25, 0x50, 0x44, 0x46], desc: 'Adobe Portable Document Format' },
+    { name: 'RIFF Container (WAV/AVI/WEBP)', ext: 'riff', mime: 'audio/vnd.wave', bytes: [0x52, 0x49, 0x46, 0x46], desc: 'Resource Interchange File Format chunk' },
+    { name: 'MIDI Sequence', ext: 'mid', mime: 'audio/midi', bytes: [0x4D, 0x54, 0x68, 0x64], desc: 'Musical Instrument Digital Interface track' },
+    { name: 'FLAC Audio', ext: 'flac', mime: 'audio/flac', bytes: [0x66, 0x4C, 0x61, 0x43], desc: 'Free Lossless Audio Codec container' },
+    { name: 'Ogg Vorbis Audio', ext: 'ogg', mime: 'audio/ogg', bytes: [0x4F, 0x67, 0x67, 0x53], desc: 'Xiph.Org Ogg bitstream container' },
+    { name: 'ID3v2 Audio Tag', ext: 'mp3', mime: 'audio/mpeg', bytes: [0x49, 0x44, 0x33], desc: 'MP3 ID3v2 metadata container tag' },
+    { name: 'SQLite 3 Database', ext: 'db', mime: 'application/x-sqlite3', bytes: [0x53, 0x51, 0x4C, 0x69, 0x74, 0x65, 0x20, 0x66, 0x6F, 0x72, 0x6D, 0x61, 0x74, 0x20, 0x33, 0x00], desc: 'SQLite v3 relational database file' },
+    { name: 'NES ROM Image', ext: 'nes', mime: 'application/x-nes-rom', bytes: [0x4E, 0x45, 0x53, 0x1A], desc: 'Nintendo Entertainment System iNES ROM' },
+    { name: 'WebP Image', ext: 'webp', mime: 'image/webp', bytes: [0x57, 0x45, 0x42, 0x50], desc: 'Google WebP modern raster format (inside RIFF)' },
+    { name: 'TAR Archive Header', ext: 'tar', mime: 'application/x-tar', bytes: [0x75, 0x73, 0x74, 0x61, 0x72], desc: 'POSIX ustar archive format' }
+  ];
+
+  function runMagicSignatureScan() {
+    const buf = binaryBuffer;
+    const summary = document.getElementById('magicResultsSummary');
+    const box = document.getElementById('magicResultsTable');
+    if (!summary || !box) return;
+
+    if (!buf || buf.length === 0) {
+      summary.innerText = 'Binary buffer is empty.';
+      box.innerHTML = '<div style="color:var(--text-dim); padding:10px;">Load or enter binary data first.</div>';
+      return;
+    }
+
+    const matches = [];
+
+    // 1. Scan offset 0 specifically
+    KNOWN_FILE_SIGNATURES.forEach(sig => {
+      if (buf.length >= sig.bytes.length) {
+        let match = true;
+        for (let i = 0; i < sig.bytes.length; i++) {
+          if (buf[i] !== sig.bytes[i]) { match = false; break; }
+        }
+        if (match) {
+          matches.push({ ...sig, offset: 0, priority: 1 });
+        }
+      }
+    });
+
+    // 2. Scan internal offsets for embedded chunks (up to 32 KB or buffer length)
+    const scanLimit = Math.min(buf.length, 32768);
+    for (let offset = 1; offset < scanLimit; offset++) {
+      for (let s = 0; s < KNOWN_FILE_SIGNATURES.length; s++) {
+        const sig = KNOWN_FILE_SIGNATURES[s];
+        if (offset + sig.bytes.length <= buf.length) {
+          let match = true;
+          for (let i = 0; i < sig.bytes.length; i++) {
+            if (buf[offset + i] !== sig.bytes[i]) { match = false; break; }
+          }
+          if (match) {
+            matches.push({ ...sig, offset: offset, priority: 2 });
+          }
+        }
+      }
+      if (matches.length >= 50) break; // prevent flood
+    }
+
+    // Inspect header attributes if recognized
+    let extraHeaderInfo = '';
+    if (matches.length > 0 && matches[0].offset === 0) {
+      const top = matches[0];
+      if (top.ext === 'bmp' && buf.length >= 26) {
+        const view = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
+        const fileSize = view.getUint32(2, true);
+        const dataOffset = view.getUint32(10, true);
+        const headerSize = view.getUint32(14, true);
+        const width = view.getInt32(18, true);
+        const height = view.getInt32(22, true);
+        const bpp = buf.length >= 28 ? view.getUint16(28, true) : 'N/A';
+        extraHeaderInfo = `<div style="margin-top:6px; padding:6px 8px; background:rgba(6,182,212,0.1); border-left:3px solid var(--accent-cyan); border-radius:4px;">` +
+          `<b>DIB Metadata:</b> Dim: ${width}x${height}px &bull; Depth: ${bpp}-bit &bull; FileSize: ${fileSize}B &bull; PixelOffset: 0x${dataOffset.toString(16).toUpperCase()}</div>`;
+      } else if (top.ext === 'png' && buf.length >= 24) {
+        const view = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
+        const width = view.getUint32(16, false); // PNG is Big-Endian
+        const height = view.getUint32(20, false);
+        const bitDepth = buf.length >= 25 ? buf[24] : 'N/A';
+        extraHeaderInfo = `<div style="margin-top:6px; padding:6px 8px; background:rgba(16,185,129,0.1); border-left:3px solid var(--accent-emerald); border-radius:4px;">` +
+          `<b>PNG IHDR Chunk:</b> Dimensions: ${width}x${height}px &bull; Bit Depth: ${bitDepth} &bull; Endianness: Big-Endian</div>`;
+      } else if (top.ext === 'riff' && buf.length >= 12) {
+        const typeStr = String.fromCharCode(buf[8], buf[9], buf[10], buf[11]);
+        extraHeaderInfo = `<div style="margin-top:6px; padding:6px 8px; background:rgba(139,92,246,0.1); border-left:3px solid var(--accent-purple); border-radius:4px;">` +
+          `<b>RIFF Sub-format:</b> FourCC '${typeStr}'</div>`;
+      }
+    }
+
+    summary.innerHTML = matches.length > 0
+      ? `Found <b>${matches.length}</b> signature signature(s) &bull; Primary: <span style="color:var(--accent-emerald);">${matches[0].name} (0x0000)</span>`
+      : `<span style="color:var(--accent-amber);">No standardized file signatures recognized in scanned range.</span>`;
+
+    if (matches.length === 0) {
+      box.innerHTML = '<div style="color:var(--text-dim); padding:10px;">Raw unstructured binary data or unlisted format.</div>';
+      return;
+    }
+
+    let html = extraHeaderInfo;
+    html += `<div style="display:flex; gap:8px; font-weight:bold; color:var(--text-secondary); border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:4px; margin-top:8px; margin-bottom:4px;">` +
+      `<span style="width:75px;">Offset</span>` +
+      `<span style="width:140px;">Format / Name</span>` +
+      `<span style="width:70px;">Extension</span>` +
+      `<span style="width:130px;">Magic Bytes</span>` +
+      `<span>Description</span>` +
+    `</div>`;
+
+    matches.forEach(m => {
+      const hexOff = '0x' + m.offset.toString(16).padStart(6, '0').toUpperCase();
+      const hexMagic = m.bytes.map(b => b.toString(16).padStart(2, '0').toUpperCase()).join(' ');
+      html += `<div style="display:flex; gap:8px; padding:3px 0; border-bottom:1px solid rgba(255,255,255,0.03); align-items:center;">` +
+        `<span style="color:var(--accent-purple); width:75px; cursor:pointer; font-weight:600;" onclick="gotoOffset(${m.offset}); switchTab('editor');" title="Click to view in Hex Editor">${hexOff}</span>` +
+        `<span style="color:var(--accent-cyan); width:140px; font-weight:bold;">${m.name}</span>` +
+        `<span style="color:var(--accent-amber); width:70px; font-family:monospace;">.${m.ext}</span>` +
+        `<span style="color:var(--text-primary); width:130px; font-family:monospace; font-size:0.75rem;">${hexMagic}</span>` +
+        `<span style="color:var(--text-secondary); font-size:0.76rem;">${m.desc}</span>` +
+      `</div>`;
+    });
+
+    box.innerHTML = html;
+  }
+
+  // -------------------------------------------------------------
+  // PRESET STRUCT TEMPLATES & SCHEMA REPOSITORY
+  // -------------------------------------------------------------
+  const STRUCT_SCHEMAS = {
+    bmp: `# Standard Windows BMP File & DIB Header
+bfType: char[2] // Magic 'BM'
+bfSize: uint32 // Total file size in bytes
+bfReserved1: uint16 // Application reserved
+bfReserved2: uint16 // Application reserved
+bfOffBits: uint32 // Byte offset to raster pixel bits
+biSize: uint32 // DIB Header size (usually 40)
+biWidth: int32 // Image pixel width
+biHeight: int32 // Image pixel height
+biPlanes: uint16 // Color planes (must be 1)
+biBitCount: uint16 // Color depth bits per pixel (1, 4, 8, 24, 32)
+biCompression: uint32 // Compression method (0 = uncompressed BI_RGB)
+biSizeImage: uint32 // Raw bitmap data size
+biXPelsPerMeter: int32 // Horizontal resolution
+biYPelsPerMeter: int32 // Vertical resolution
+biClrUsed: uint32 // Color table palette count
+biClrImportant: uint32 // Minimum required colors`,
+
+    wav: `# RIFF Wave Audio Format Header
+riffHeader: char[4] // 'RIFF' FourCC chunk ID
+fileSize: uint32 // File size minus 8 bytes
+waveFormat: char[4] // 'WAVE' FourCC type
+fmtChunkId: char[4] // 'fmt ' subchunk ID
+fmtChunkSize: uint32 // fmt chunk size (typically 16 for PCM)
+audioFormat: uint16 // Audio format (1 = PCM uncompressed)
+numChannels: uint16 // Channels (1 = Mono, 2 = Stereo)
+sampleRate: uint32 // Sampling frequency (e.g. 44100 Hz)
+byteRate: uint32 // Byte rate (SampleRate * NumChannels * BitsPerSample/8)
+blockAlign: uint16 // Block alignment (NumChannels * BitsPerSample/8)
+bitsPerSample: uint16 // Bits per sample (e.g. 16-bit, 24-bit)
+dataChunkId: char[4] // 'data' subchunk ID
+dataChunkSize: uint32 // Audio sample payload byte length`,
+
+    mz: `# MS-DOS MZ Executable Header (IMAGE_DOS_HEADER)
+e_magic: char[2] // Magic signature 'MZ'
+e_cblp: uint16 // Bytes on last page of file
+e_cp: uint16 // Pages in file
+e_crlc: uint16 // Relocations
+e_cparhdr: uint16 // Size of header in paragraphs
+e_minalloc: uint16 // Minimum extra paragraphs needed
+e_maxalloc: uint16 // Maximum extra paragraphs needed
+e_ss: uint16 // Initial SS relative value
+e_sp: uint16 // Initial SP value
+e_csum: uint16 // Checksum
+e_ip: uint16 // Initial IP value
+e_cs: uint16 // Initial CS relative value
+e_lfarlc: uint16 // File address of relocation table
+e_ovno: uint16 // Overlay number
+e_lfanew: uint32 // File address of PE NT header`,
+
+    zip: `# PKZIP Local File Header
+signature: hex[4] // 0x50 0x4B 0x03 0x04
+versionNeeded: uint16 // Version needed to extract
+bitFlag: uint16 // General purpose bit flag
+compression: uint16 // Compression method (0=Stored, 8=Deflate)
+lastModTime: uint16 // Last mod file time
+lastModDate: uint16 // Last mod file date
+crc32: uint32 // CRC-32 checksum of uncompressed data
+compressedSize: uint32 // Compressed size in bytes
+uncompressedSize: uint32 // Uncompressed size in bytes
+fileNameLength: uint16 // Filename length (n)
+extraFieldLength: uint16 // Extra field length (m)`,
+
+    ipv4: `# Internet Protocol Version 4 Header
+versionAndIHL: uint8 // 4 bits version + 4 bits IHL
+dscpAndECN: uint8 // DiffServ + Explicit Congestion
+totalLength: uint16 // Total packet length in bytes
+identification: uint16 // Packet identification
+flagsAndOffset: uint16 // 3 bits flags + 13 bits fragment offset
+ttl: uint8 // Time to Live (hops)
+protocol: uint8 // Protocol (6=TCP, 17=UDP, 1=ICMP)
+headerChecksum: uint16 // 16-bit one's complement checksum
+sourceIp: hex[4] // Source IP Address (4 octets)
+destIp: hex[4] // Destination IP Address (4 octets)`,
+
+    custom: `# Custom Packet Protocol Definition
+packetMagic: char[4] // Header magic identifier
+packetVersion: uint8 // Protocol version byte
+sequenceNum: uint32 // Packet transmission sequence
+payloadLength: uint16 // Byte length of payload
+checksum: uint16 // CRC16 / Checksum value`
+  };
+
+  function applyStructTemplate(tpl) {
+    const editor = document.getElementById('structSchemaEditor');
+    if (editor && STRUCT_SCHEMAS[tpl]) {
+      editor.value = STRUCT_SCHEMAS[tpl];
+      executeStructUnpack();
+    }
+  }
+
+  let lastUnpackedStructFields = [];
+
+  function executeStructUnpack() {
+    const editor = document.getElementById('structSchemaEditor');
+    const offsetInput = document.getElementById('structStartOffset');
+    const endianSelect = document.getElementById('structEndianMode');
+    const container = document.getElementById('unpackedFieldsContainer');
+    if (!editor || !offsetInput || !container) return;
+
+    let startOffset = 0;
+    const rawOff = offsetInput.value.trim().toLowerCase();
+    if (rawOff.startsWith('0x')) {
+      startOffset = parseInt(rawOff.slice(2), 16) || 0;
+    } else {
+      startOffset = parseInt(rawOff, 10) || 0;
+    }
+
+    let isLittleEndian = isLittle;
+    if (endianSelect && endianSelect.value === 'le') isLittleEndian = true;
+    if (endianSelect && endianSelect.value === 'be') isLittleEndian = false;
+
+    const buf = binaryBuffer;
+    if (!buf || buf.length === 0) {
+      container.innerHTML = '<div style="color:var(--text-dim); text-align:center; padding:30px;">Buffer is empty. Load or enter hex bytes first.</div>';
+      return;
+    }
+
+    const lines = editor.value.split('\n');
+    let currOffset = startOffset;
+    const fields = [];
+
+    const view = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
+
+    for (let line of lines) {
+      line = line.trim();
+      if (!line || line.startsWith('#')) continue;
+
+      let comment = '';
+      if (line.includes('//')) {
+        const parts = line.split('//');
+        line = parts[0].trim();
+        comment = parts[1].trim();
+      }
+
+      const match = line.match(/^([a-zA-Z0-9_\-]+)\s*:\s*([a-zA-Z0-9_\[\]]+)/);
+      if (!match) continue;
+
+      const fieldName = match[1];
+      const fieldType = match[2].toLowerCase();
+
+      let byteLen = 0;
+      let parsedValue = null;
+      let rawHex = '';
+
+      if (currOffset >= buf.length) {
+        fields.push({
+          name: fieldName,
+          type: fieldType,
+          offset: currOffset,
+          byteLen: 0,
+          rawHex: '--',
+          val: '<Out of Buffer Bounds>',
+          comment: comment,
+          error: true
+        });
+        continue;
+      }
+
+      try {
+        if (fieldType === 'uint8' || fieldType === 'byte') {
+          byteLen = 1;
+          const v = view.getUint8(currOffset);
+          parsedValue = `${v} (0x${v.toString(16).padStart(2, '0').toUpperCase()})`;
+        } else if (fieldType === 'int8') {
+          byteLen = 1;
+          const v = view.getInt8(currOffset);
+          parsedValue = `${v}`;
+        } else if (fieldType === 'uint16' || fieldType === 'word') {
+          byteLen = 2;
+          if (currOffset + 2 <= buf.length) {
+            const v = view.getUint16(currOffset, isLittleEndian);
+            parsedValue = `${v} (0x${v.toString(16).padStart(4, '0').toUpperCase()})`;
+          }
+        } else if (fieldType === 'int16') {
+          byteLen = 2;
+          if (currOffset + 2 <= buf.length) {
+            const v = view.getInt16(currOffset, isLittleEndian);
+            parsedValue = `${v}`;
+          }
+        } else if (fieldType === 'uint32' || fieldType === 'dword') {
+          byteLen = 4;
+          if (currOffset + 4 <= buf.length) {
+            const v = view.getUint32(currOffset, isLittleEndian);
+            parsedValue = `${v} (0x${v.toString(16).padStart(8, '0').toUpperCase()})`;
+          }
+        } else if (fieldType === 'int32') {
+          byteLen = 4;
+          if (currOffset + 4 <= buf.length) {
+            const v = view.getInt32(currOffset, isLittleEndian);
+            parsedValue = `${v}`;
+          }
+        } else if (fieldType === 'uint64' || fieldType === 'qword') {
+          byteLen = 8;
+          if (currOffset + 8 <= buf.length) {
+            const v = view.getBigUint64(currOffset, isLittleEndian);
+            parsedValue = `${v.toString(10)} (0x${v.toString(16).toUpperCase()})`;
+          }
+        } else if (fieldType === 'int64') {
+          byteLen = 8;
+          if (currOffset + 8 <= buf.length) {
+            const v = view.getBigInt64(currOffset, isLittleEndian);
+            parsedValue = `${v.toString(10)}`;
+          }
+        } else if (fieldType === 'float32' || fieldType === 'float') {
+          byteLen = 4;
+          if (currOffset + 4 <= buf.length) {
+            const v = view.getFloat32(currOffset, isLittleEndian);
+            parsedValue = `${v.toPrecision(7)}`;
+          }
+        } else if (fieldType === 'float64' || fieldType === 'double') {
+          byteLen = 8;
+          if (currOffset + 8 <= buf.length) {
+            const v = view.getFloat64(currOffset, isLittleEndian);
+            parsedValue = `${v.toPrecision(12)}`;
+          }
+        } else if (fieldType.startsWith('char[')) {
+          const m = fieldType.match(/char\[(\d+)\]/);
+          const len = m ? parseInt(m[1], 10) : 4;
+          byteLen = len;
+          let s = '';
+          for (let i = 0; i < len && currOffset + i < buf.length; i++) {
+            const b = buf[currOffset + i];
+            s += (b >= 32 && b <= 126) ? String.fromCharCode(b) : '.';
+          }
+          parsedValue = `"${s}"`;
+        } else if (fieldType.startsWith('hex[')) {
+          const m = fieldType.match(/hex\[(\d+)\]/);
+          const len = m ? parseInt(m[1], 10) : 4;
+          byteLen = len;
+          const hexArr = [];
+          for (let i = 0; i < len && currOffset + i < buf.length; i++) {
+            hexArr.push(buf[currOffset + i].toString(16).padStart(2, '0').toUpperCase());
+          }
+          parsedValue = hexArr.join(' ');
+        } else {
+          byteLen = 1;
+          const v = view.getUint8(currOffset);
+          parsedValue = `Unknown type '${fieldType}': 0x${v.toString(16)}`;
+        }
+      } catch (err) {
+        parsedValue = `<Read Error: ${err.message}>`;
+      }
+
+      if (byteLen > 0) {
+        const sliceLen = Math.min(byteLen, Math.max(0, buf.length - currOffset));
+        const rawBytes = [];
+        for (let b = 0; b < sliceLen; b++) {
+          rawBytes.push(buf[currOffset + b].toString(16).padStart(2, '0').toUpperCase());
+        }
+        rawHex = rawBytes.join(' ');
+        if (rawBytes.length < byteLen) {
+          parsedValue += ' [TRUNCATED]';
+        }
+      }
+
+      fields.push({
+        name: fieldName,
+        type: fieldType,
+        offset: currOffset,
+        byteLen: byteLen,
+        rawHex: rawHex,
+        val: parsedValue,
+        comment: comment,
+        error: false
+      });
+
+      currOffset += byteLen;
+    }
+
+    lastUnpackedStructFields = fields;
+
+    // Render table
+    let html = `<div style="display:flex; gap:8px; font-weight:bold; color:var(--text-secondary); border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:4px; margin-bottom:4px;">` +
+      `<span style="width:75px;">Offset</span>` +
+      `<span style="width:130px;">Field Name</span>` +
+      `<span style="width:85px;">Type</span>` +
+      `<span style="width:130px;">Raw Bytes</span>` +
+      `<span style="flex:1;">Unpacked Value</span>` +
+      `<span style="width:140px; color:var(--text-dim);">Description</span>` +
+    `</div>`;
+
+    fields.forEach(f => {
+      const hexOff = '0x' + f.offset.toString(16).padStart(6, '0').toUpperCase();
+      html += `<div style="display:flex; gap:8px; padding:3px 0; border-bottom:1px solid rgba(255,255,255,0.03); align-items:center;">` +
+        `<span style="color:var(--accent-purple); width:75px; cursor:pointer; font-weight:600;" onclick="gotoOffset(${f.offset}); switchTab('editor');" title="Jump to field offset">${hexOff}</span>` +
+        `<span style="color:var(--text-primary); width:130px; font-weight:600;">${f.name}</span>` +
+        `<span style="color:var(--accent-cyan); width:85px; font-family:monospace; font-size:0.75rem;">${f.type}</span>` +
+        `<span style="color:var(--accent-amber); width:130px; font-family:monospace; font-size:0.75rem; overflow:hidden; text-overflow:ellipsis;">${f.rawHex}</span>` +
+        `<span style="color:var(--accent-emerald); flex:1; font-family:monospace; font-weight:bold; font-size:0.82rem; word-break:break-all;">${f.val}</span>` +
+        `<span style="color:var(--text-dim); width:140px; font-size:0.74rem; overflow:hidden; text-overflow:ellipsis;" title="${f.comment}">${f.comment || ''}</span>` +
+      `</div>`;
+    });
+
+    container.innerHTML = html;
+  }
+
+  function exportStructToJson() {
+    if (!lastUnpackedStructFields || lastUnpackedStructFields.length === 0) {
+      showToast('Notice', 'No unpacked struct fields to export.', 'warning');
+      return;
+    }
+    const exportObj = {};
+    lastUnpackedStructFields.forEach(f => {
+      exportObj[f.name] = {
+        type: f.type,
+        offset: '0x' + f.offset.toString(16).toUpperCase(),
+        rawHex: f.rawHex,
+        value: f.val,
+        comment: f.comment || undefined
+      };
+    });
+    const str = JSON.stringify(exportObj, null, 2);
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(str).then(() => showToast('JSON Exported', 'Copied unpacked struct JSON to clipboard.', 'success'));
+    } else {
+      showToast('Exported', `Prepared ${lastUnpackedStructFields.length} struct fields.`, 'info');
+    }
+  }
+
+  function exportStructToCHeader() {
+    if (!lastUnpackedStructFields || lastUnpackedStructFields.length === 0) {
+      showToast('Notice', 'No unpacked struct fields to export.', 'warning');
+      return;
+    }
+    let c = `// Auto-generated by KHex Suite 1999 Struct Dissector\n#pragma pack(push, 1)\ntypedef struct {\n`;
+    lastUnpackedStructFields.forEach(f => {
+      let cType = 'uint8_t';
+      let arraySuffix = '';
+      if (f.type === 'uint8' || f.type === 'byte') cType = 'uint8_t';
+      else if (f.type === 'int8') cType = 'int8_t';
+      else if (f.type === 'uint16' || f.type === 'word') cType = 'uint16_t';
+      else if (f.type === 'int16') cType = 'int16_t';
+      else if (f.type === 'uint32' || f.type === 'dword') cType = 'uint32_t';
+      else if (f.type === 'int32') cType = 'int32_t';
+      else if (f.type === 'uint64' || f.type === 'qword') cType = 'uint64_t';
+      else if (f.type === 'int64') cType = 'int64_t';
+      else if (f.type === 'float32' || f.type === 'float') cType = 'float';
+      else if (f.type === 'float64' || f.type === 'double') cType = 'double';
+      else if (f.type.startsWith('char[')) {
+        cType = 'char';
+        const m = f.type.match(/\[(\d+)\]/);
+        arraySuffix = m ? `[${m[1]}]` : '[4]';
+      } else if (f.type.startsWith('hex[')) {
+        cType = 'uint8_t';
+        const m = f.type.match(/\[(\d+)\]/);
+        arraySuffix = m ? `[${m[1]}]` : '[4]';
+      }
+      c += `  ${cType} ${f.name}${arraySuffix}; ${f.comment ? '// ' + f.comment : ''}\n`;
+    });
+    c += `} KHex_ParsedStruct_t;\n#pragma pack(pop)\n`;
+
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(c).then(() => showToast('C Header Exported', 'Copied C struct definition to clipboard.', 'success'));
+    } else {
+      showToast('Exported', 'C struct header generated.', 'info');
+    }
+  }
+
+  function loadSampleBinaryHeader(type) {
+    if (type === 'bmp') {
+      // 1x1 24bpp BMP header (54 bytes)
+      const bytes = [
+        0x42, 0x4D, 0x36, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x36, 0x00, 0x00, 0x00, 0x28, 0x00,
+        0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01, 0x00, 0x18, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x12, 0x0B, 0x00, 0x00, 0x12, 0x0B, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFF
+      ];
+      loadBufferData(new Uint8Array(bytes));
+      applyStructTemplate('bmp');
+      runMagicSignatureScan();
+      showToast('Sample BMP Loaded', 'Loaded 54-byte BMP header into buffer.', 'success');
+    } else if (type === 'wav') {
+      // Minimal 44-byte WAV header
+      const bytes = [
+        0x52, 0x49, 0x46, 0x46, 0x24, 0x00, 0x00, 0x00, 0x57, 0x41, 0x56, 0x45, 0x66, 0x6D, 0x74, 0x20,
+        0x10, 0x00, 0x00, 0x00, 0x01, 0x00, 0x02, 0x00, 0x44, 0xAC, 0x00, 0x00, 0x10, 0xB1, 0x02, 0x00,
+        0x04, 0x00, 0x10, 0x00, 0x64, 0x61, 0x74, 0x61, 0x00, 0x00, 0x00, 0x00
+      ];
+      loadBufferData(new Uint8Array(bytes));
+      applyStructTemplate('wav');
+      runMagicSignatureScan();
+      showToast('Sample WAV Loaded', 'Loaded 44-byte WAV header into buffer.', 'success');
+    } else if (type === 'png') {
+      const bytes = [
+        0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 0x00, 0x00, 0x00, 0x0D, 0x49, 0x48, 0x44, 0x52,
+        0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01, 0x00, 0x08, 0x02, 0x00, 0x00, 0x00, 0x90, 0x77, 0x53
+      ];
+      loadBufferData(new Uint8Array(bytes));
+      runMagicSignatureScan();
+      showToast('Sample PNG Loaded', 'Loaded 32-byte PNG signature & IHDR chunk.', 'success');
+    } else if (type === 'zip') {
+      const bytes = [
+        0x50, 0x4B, 0x03, 0x04, 0x14, 0x00, 0x00, 0x00, 0x08, 0x00, 0x5A, 0x7E, 0x9A, 0x54, 0x12, 0x34,
+        0x56, 0x78, 0x20, 0x00, 0x00, 0x00, 0x40, 0x00, 0x00, 0x00, 0x08, 0x00, 0x00, 0x00, 0x74, 0x65,
+        0x73, 0x74, 0x2E, 0x74, 0x78, 0x74
+      ];
+      loadBufferData(new Uint8Array(bytes));
+      applyStructTemplate('zip');
+      runMagicSignatureScan();
+      showToast('Sample ZIP Loaded', 'Loaded 38-byte ZIP local file header.', 'success');
+    }
+  }
+
+  // Hook tab switch to refresh struct inspector
+  const _origSwitchTab = window.switchTab;
+  window.switchTab = function(tabId) {
+    if (typeof _origSwitchTab === 'function') {
+      _origSwitchTab(tabId);
+    } else {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+      const b = document.getElementById('tabbtn-' + tabId);
+      const c = document.getElementById('tab-' + tabId);
+      if (b) b.classList.add('active');
+      if (c) c.classList.add('active');
+    }
+    if (tabId === 'struct') {
+      const editor = document.getElementById('structSchemaEditor');
+      if (editor && !editor.value) {
+        applyStructTemplate('bmp');
+      }
+      runMagicSignatureScan();
+      executeStructUnpack();
+    }
+  };
+
   // Attach HUD Corner Filigree Brackets to panels
   function attachHudBrackets() {
     document.querySelectorAll('.panel, .header').forEach(el => {

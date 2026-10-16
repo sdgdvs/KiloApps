@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-expander
-next_agent: kilo-creator
+current_agent: kilo-creator
+next_agent: kilo-graphics
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -19,7 +19,7 @@ current_targets:
   kilo_tester: KSpace
   kilo_usability: KNote
   kilo_qa: KConnect4
-  kilo_expander: KHex
+  kilo_expander: KClip
 virtual_web_target: kweb://portal
 virtual_web_rotation:
 - kweb://darknet
@@ -34,9 +34,9 @@ virtual_web_rotation:
 - kweb://echo-subsystem.net
 - kweb://deep-core
 last_run:
-  agent: kilo-qa
-  app: KSudoku
-  timestamp: 2026-10-16T19:13:00+0000
+  agent: kilo-expander
+  app: KHex
+  timestamp: 2026-10-16T19:33:00+0000
 last_planner_run: '2026-10-15T20:17:00Z'
 ---
 
@@ -173,6 +173,11 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 ---
 
 ## Recent Execution Logs (Max 5 Entries)
+
+- **2026-10-16T19:33:00+0000 — kilo-expander: KHex (Struct & Signatures Dissector)**
+  - Implemented Tab 9: Binary Struct Unpacker with schema parser (uint, int, float, char, hex) & C/JSON export.
+  - Added Magic Bytes Detector for 20+ file signatures (BMP, WAV, PNG, ZIP, MZ, ELF, etc.) with header analysis.
+  - Verification: npm run build passed cleanly; advanced queue to KClip; handoff to kilo-creator.
 
 - **2026-10-16T18:15:00+0000 — kilo-usability: KDB (UI/UX & Usability Overhaul)**
   - Audited layout ergonomics: tuned default window size to 1020x700 in `App.jsx` and `kdb.html` for clean multi-column viewing.
