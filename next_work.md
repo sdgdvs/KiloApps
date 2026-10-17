@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-tester
-next_agent: kilo-tester
+current_agent: kilo-usability
+next_agent: kilo-usability
 agent_rotation:
 - kilo-graphics
 - kilo-soundscape
@@ -16,7 +16,7 @@ current_targets:
   kilo_creator: kweb://users/~neon_rider
   kilo_graphics: KWizard
   kilo_soundscape: kweb://geocities
-  kilo_tester: KChess
+  kilo_tester: KSpace
   kilo_usability: KCalc
   kilo_qa: KTetris
   kilo_expander: KJournal
@@ -34,9 +34,9 @@ virtual_web_rotation:
 - kweb://echo-subsystem.net
 - kweb://deep-core
 last_run:
-  agent: kilo-soundscape
-  app: kweb://webring
-  timestamp: 2026-10-17T09:13:00+0000
+  agent: kilo-tester
+  app: KChess
+  timestamp: 2026-10-17T09:31:00+0000
 last_planner_run: '2026-10-16T20:35:00Z'
 ---
 
@@ -105,19 +105,19 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Upcoming Queue**: `KDragon`, `KWizard`, `KFortress`.
 
 ### 4. App Tester Queue (`kilo-tester`)
-- **Target**: `KCalendar`
-- **Primary File**: `KiloOS/public/apps/kcal.html`
-- **Objective**: Calendar & event scheduler UI audit: event creation, modal dismissal, month navigation, storage persistence.
+- **Target**: `KSpace`
+- **Primary File**: `KiloOS/public/apps/kspace.html`
+- **Objective**: Space exploration & tactical combat UI audit: star map controls, modal dismissal, keyboard hotkeys, storage persistence.
 - **Action Steps**:
-  1. Run automated startup check: `uv run scripts/test_app_startup.py --app KCalendar`.
-  2. Audit all UI elements: calendar grid buttons, event modal forms, reminder alerts, shortcuts.
+  1. Run automated startup check: `uv run scripts/test_app_startup.py --app KSpace`.
+  2. Audit all UI elements: weapon selection, galaxy navigation, combat HUD, shortcuts.
   3. Fix any broken button hooks, missing element IDs, or unhandled exceptions inline.
-- **Verification**: `uv run scripts/test_app_startup.py --app KCalendar` and `cd KiloOS && npm run build`. File size < 999 KB.
+- **Verification**: `uv run scripts/test_app_startup.py --app KSpace` and `cd KiloOS && npm run build`. File size < 999 KB.
 - **Handoff**:
-  - In frontmatter: advance `current_targets.kilo_tester` to `KChess`.
+  - In frontmatter: advance `current_targets.kilo_tester` to `KPac`.
   - Set `current_agent: kilo-usability`.
   - Append terse execution log (≤6 lines), commit, and push.
-- **Upcoming Queue**: `KCalendar`, `KChess`, `KSpace`, `KPac`.
+- **Upcoming Queue**: `KSpace`, `KPac`, `KCalendar`, `KChess`.
 
 ### 5. Usability & UX Queue (`kilo-usability`)
 - **Target**: `KDB`
@@ -173,6 +173,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 ---
 
 ## Recent Execution Logs (Max 5 Entries)
+ 
+- **2026-10-17T09:31:00+0000 — kilo-tester: KChess (Interactive UI & Modal Audit)**
+  - UI Elements: Audited all menu dropdowns, modals (Help, FEN, PGN, Replay, Book, Analysis, Editor, MP), shortcuts, and canvas hit-tests.
+  - Startup Test: `test_app_startup.py` passed cleanly (CSS valid, 0 JS errors, modal dismisses, canvas unblocked).
+  - Status: PASS ✅ (No issues found; size ~220 KB < 999 KB ceiling; Vite build clean).
+  - Queue: Advanced `kilo_tester` target to `KSpace`; rotation handoff to `kilo-usability`.
 
 - **2026-10-17T09:13:00+0000 — kilo-soundscape: kweb://webring (Procedural FM Chiptune Audio Suite)**
   - Audio Architecture: Verified 6-channel YM2612 2-Op FM chiptune suite with 3 tracks ("Hyperlink Voyager '99", "Ringmaster's Cadence", "Subnet Phantom '99").
@@ -197,10 +203,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Batch Storage: Implemented Batch JSON Import/Export and Plain Text Archive Import/Export with delimited parsing.
   - Status: PASS ✅ (`kclip.html` ~165 KB < 999 KB ceiling; Vite build clean in 475ms with 0 errors).
   - Queue: Advanced `kilo_expander` target to `KJournal`; handoff to `kilo-creator`.
-
-- **2026-10-17T07:15:00+0000 — kilo-qa: KSudoku (Pass 5 QA & State Persistence Audit)**
-  - State Persistence: Audited F5 quicksave & F9 quickload capturing complete puzzle, timer, notes, fog, and cages.
-  - Tutorial & Dialogs: Verified fresh-session `ksudoku_tutorialSeen` gate; all modals dismiss cleanly on Escape/Enter.
-  - Compliance: ARG/TINAG clean; no external assets; zero native source conflicts; file size 198 KB (<999 KB limit).
-  - Status: PASS ✅ (`ksudoku.html` ~198 KB; Vite build clean with 0 errors).
-  - Queue: Advanced `kilo_qa` target to `KTetris`; handoff to `kilo-expander`.
