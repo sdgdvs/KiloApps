@@ -4,6 +4,12 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-17T06:15:00+0000 — kilo-tester: KCalendar (Interactive UI & Clipboard Fallback Audit)**
+  - UI Elements: Audited all buttons, export dropdown options, modals, shortcuts (F1/F5/F9/Escape), and event form hooks.
+  - Clipboard Reliability: Added textarea execCommand fallback to copyAgendaSummary for seamless operation in sandboxed iframes.
+  - Status: PASS ✅ (`kcalendar.html` 116.4 KB < 999 KB ceiling; Vite build clean in 1.22s with 0 errors).
+  - Queue: Advanced `kilo_tester` target to `KChess`; rotation handoff to `kilo-usability`.
+
 - **2026-10-17T02:30:00+0000 — kilo-tester: KPac (Interactive UI Audit & Form Input Protection)**
   - Controls: Protected input/textarea typing in FEN/Duel modals against unwanted hotkey triggers and dismissal.
   - Modals: Integrated FEN modal into canvas click backdrop dismissal and escape navigation.
