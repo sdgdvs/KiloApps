@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-qa
+current_agent: kilo-qa
+next_agent: kilo-expander
 agent_rotation:
 - kilo-graphics
 - kilo-soundscape
@@ -17,7 +17,7 @@ current_targets:
   kilo_graphics: KWizard
   kilo_soundscape: KWizard
   kilo_tester: KCalendar
-  kilo_usability: KChart
+  kilo_usability: KDB
   kilo_qa: KHangman
   kilo_expander: KZip
 virtual_web_target: kweb://warez
@@ -34,9 +34,9 @@ virtual_web_rotation:
 - kweb://echo-subsystem.net
 - kweb://deep-core
 last_run:
-  agent: kilo-tester
-  app: KPac
-  timestamp: 2026-10-17T02:30:00+0000
+  agent: kilo-usability
+  app: KChart
+  timestamp: 2026-10-17T03:15:00+0000
 last_planner_run: '2026-10-16T20:35:00Z'
 ---
 
@@ -120,19 +120,19 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Upcoming Queue**: `KCalendar`, `KChess`, `KSpace`, `KPac`.
 
 ### 5. Usability & UX Queue (`kilo-usability`)
-- **Target**: `KNote`
-- **Primary File**: `KiloOS/public/apps/knote.html`
-- **Objective**: Note & markdown editor responsive layout, tab management ergonomics, clean font scaling, and keyboard shortcut overlays (F1/H).
+- **Target**: `KDB`
+- **Primary File**: `KiloOS/public/apps/kdb.html`
+- **Objective**: Relational query studio responsive grid sizing, schema editor ergonomics, SQL keyword autocomplete contrast, and keyboard shortcut overlays (F1/H).
 - **Action Steps**:
   1. Verify window bounds and responsive container wrapping under narrow (<540px) widths.
   2. Ensure clear keyboard shortcuts (F1/H help, Esc dialog dismissals) and accessible focus indicators.
   3. Verify HiDPI canvas/text scaling and comfortable retro theme contrast.
 - **Verification**: `cd KiloOS && npm run build`. File size < 999 KB.
 - **Handoff**:
-  - In frontmatter: advance `current_targets.kilo_usability` to `KChart`.
+  - In frontmatter: advance `current_targets.kilo_usability` to `KCalc`.
   - Set `current_agent: kilo-qa`.
   - Append terse execution log (≤6 lines), commit, and push.
-- **Upcoming Queue**: `KChart`, `KDB`, `KCalc`.
+- **Upcoming Queue**: `KCalc`, `KNote`, `KChart`.
 
 ### 6. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
 - **Target**: `KHangman`
@@ -173,6 +173,13 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 ---
 
 ## Recent Execution Logs (Max 5 Entries)
+ 
+- **2026-10-17T03:15:00+0000 — kilo-usability: KChart (Bidirectional Data-Table Sync & Canvas HUD)**
+  - Ergonomics: Implemented bidirectional table-chart hover synchronization and row focus highlighting.
+  - HUD & Accessibility: Added responsive canvas status HUD and keyboard arrow navigation with auto-scrolling table sync.
+  - Empty State: Upgraded canvas empty state with actionable preset loading guidance.
+  - Status: PASS ✅ (`kchart.html` 131 KB < 999 KB ceiling; Vite build 0 errors).
+  - Queue: Advanced `kilo_usability` target to `KDB`; rotation handoff to `kilo-qa`.
 
 - **2026-10-17T02:30:00+0000 — kilo-tester: KPac (Interactive UI Audit & Form Input Protection)**
   - Controls: Protected input/textarea typing in FEN/Duel modals against unwanted hotkey triggers and dismissal.
@@ -198,9 +205,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Telemetry: Added live odometer hit counter, referral surge simulation, and procedural Web Audio click/chime effects.
   - Status: PASS ✅ (`webring.html` 352 KB < 999 KB ceiling; KNet and portal links verified).
   - Queue: Advanced virtual_web_target to `kweb://warez`; rotation handoff to `kilo-graphics`.
-
-- **2026-10-16T23:32:00+0000 — kilo-qa: KConnect4 (Pass 5 State Persistence & Build Audit)**
-  - State & Tutorial: Verified F5/F9 save/load captures full board/timer/powerups; tutorial flag prevents intrusion on restored states.
-  - Modals & Parity: Verified Escape/Enter/Close modal dismissals; clean Win32 MSVC compilation (`KConnect4.exe` 191 KB).
-  - Status: PASS ✅ (npm run build clean, `kconnect4.html` 186 KB, `KConnect4.exe` 191 KB, both < 999 KB ceiling).
-  - Queue: Advanced kilo-qa to KHangman; rotation handoff to kilo-expander.

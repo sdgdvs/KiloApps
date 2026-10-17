@@ -456,6 +456,40 @@
     color: #ffffff;
   }
 
+  tr.active-row {
+    background: rgba(59, 130, 246, 0.22) !important;
+    border-left: 3px solid var(--accent);
+  }
+
+  tr {
+    transition: background 0.15s ease;
+  }
+
+  .canvas-hud {
+    position: absolute;
+    bottom: 8px;
+    right: 10px;
+    background: rgba(10, 10, 15, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    padding: 3px 8px;
+    border-radius: 6px;
+    font-size: 11px;
+    color: var(--text-muted);
+    pointer-events: none;
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    z-index: 5;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+  }
+
+  .canvas-hud #hudInspect {
+    color: #93c5fd;
+    font-weight: 500;
+  }
+
   /* Toast Notification System (Centered Bottom to Prevent Occlusion of Inputs & Drop Zone) */
   #toastContainer {
     position: fixed;
@@ -708,6 +742,9 @@
 
     <div class="canvas-container" id="canvasContainer">
       <canvas id="chartCanvas" tabindex="0" aria-label="Interactive Chart Canvas"></canvas>
+      <div class="canvas-hud" id="canvasHud">
+        <span id="hudMode">Bar Chart</span> &bull; <span id="hudPoints">0 Points</span> &bull; <span id="hudInspect">Hover or use &larr; &rarr; to inspect</span>
+      </div>
     </div>
 
     <!-- Statistical Analysis Suite -->
@@ -1314,12 +1351,24 @@
     }
     data.forEach((item, index) => {
       const tr = document.createElement('tr');
+      if (index === hoveredIndex) tr.classList.add('active-row');
       tr.innerHTML = `
         <td><span class="color-dot" style="background: ${getColor(index)}"></span></td>
         <td><input type="text" value="${escapeHtml(item.label)}" data-index="${index}" class="lbl-input"></td>
         <td><input type="number" value="${item.value}" data-index="${index}" class="val-input" step="any"></td>
         <td><button class="btn-sm btn-danger del-btn" data-index="${index}" title="Delete Point">✕</button></td>
       `;
+      tr.onpointerenter = () => {
+        hoveredIndex = index;
+        updateHoverCoordsForIndex(index);
+        renderChart();
+      };
+      tr.onpointerleave = () => {
+        if (hoveredIndex === index) {
+          hoveredIndex = -1;
+          renderChart();
+        }
+      };
       tableBody.appendChild(tr);
     });
 
@@ -1378,6 +1427,66 @@
     });
   }
 
+  function updateHoverCoordsForIndex(idx) {
+    if (idx < 0 || idx >= data.length) return;
+    const n = data.length;
+    if (chartType === 'hbar') {
+      const padL = currentHBarPadL, padT = 30, padB = 40;
+      const chartH = canvasH - padT - padB;
+      const stepY = chartH / n;
+      hoverX = canvasW / 2;
+      hoverY = padT + idx * stepY + stepY / 2;
+    } else if (chartType === 'pie' || chartType === 'donut' || chartType === 'polar') {
+      hoverX = canvasW / 2 - 60;
+      hoverY = canvasH / 2;
+    } else if (chartType === 'radar') {
+      hoverX = canvasW / 2;
+      hoverY = canvasH / 2;
+    } else {
+      const padL = 50, padR = 25;
+      const chartW = canvasW - padL - padR;
+      const step = chartW / n;
+      hoverX = padL + (idx + 0.5) * step;
+      hoverY = canvasH / 2;
+    }
+  }
+
+  function updateTableRowHighlight() {
+    if (!tableBody) return;
+    const rows = tableBody.querySelectorAll('tr');
+    rows.forEach((r, idx) => {
+      if (idx === hoveredIndex) {
+        r.classList.add('active-row');
+      } else {
+        r.classList.remove('active-row');
+      }
+    });
+  }
+
+  function updateCanvasHud() {
+    const hudMode = document.getElementById('hudMode');
+    const hudPoints = document.getElementById('hudPoints');
+    const hudInspect = document.getElementById('hudInspect');
+    if (!hudMode || !hudPoints || !hudInspect) return;
+
+    const modeNames = {
+      bar: "Bar Chart", line: "Line Graph", area: "Area Chart",
+      pie: "Pie Chart", donut: "Donut Chart", radar: "Radar Chart",
+      hbar: "Horizontal Bar", step: "Step Wave", scatter: "Scatter Plot", polar: "Polar Area"
+    };
+    hudMode.textContent = modeNames[chartType] || chartType;
+    hudPoints.textContent = `${data.length} Pt${data.length === 1 ? '' : 's'}`;
+
+    if (hoveredIndex >= 0 && hoveredIndex < data.length) {
+      const it = data[hoveredIndex];
+      const total = data.reduce((a, b) => a + Math.max(0, Number(b.value) || 0), 0) || 1;
+      const pct = Math.round(((Number(it.value) || 0) / total) * 100);
+      hudInspect.textContent = `[#${hoveredIndex + 1}] ${it.label}: ${it.value} (${pct}%)`;
+    } else {
+      hudInspect.textContent = "Hover or use ← → to inspect | +/- nudge";
+    }
+  }
+
   function escapeHtml(str) {
     return String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
   }
@@ -1406,7 +1515,12 @@
       ctx.font = "14px 'Inter', sans-serif";
       ctx.fillStyle = "#71717a";
       ctx.textAlign = "center";
-      ctx.fillText("No data available. Add items in the table editor.", canvasW / 2, canvasH / 2);
+      ctx.fillText("📊 No data points available.", canvasW / 2, canvasH / 2 - 10);
+      ctx.font = "12px 'Inter', sans-serif";
+      ctx.fillStyle = "#3b82f6";
+      ctx.fillText("Click '+ Add Point' or press [P] for sample presets", canvasW / 2, canvasH / 2 + 14);
+      updateCanvasHud();
+      updateTableRowHighlight();
       return;
     }
 
@@ -1426,6 +1540,9 @@
     if (isSonifying && sonifyPlayheadIndex >= 0 && sonifyPlayheadIndex < data.length) {
       renderSonifyPlayhead();
     }
+
+    updateCanvasHud();
+    updateTableRowHighlight();
   }
 
   function renderSonifyPlayhead() {
@@ -3479,12 +3596,18 @@
     } else if (e.key === 'ArrowLeft') {
       if (data.length > 0) {
         hoveredIndex = (hoveredIndex - 1 + data.length) % data.length;
+        updateHoverCoordsForIndex(hoveredIndex);
         renderChart();
+        const activeTr = tableBody && tableBody.children[hoveredIndex];
+        if (activeTr && activeTr.scrollIntoView) activeTr.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
       }
     } else if (e.key === 'ArrowRight') {
       if (data.length > 0) {
         hoveredIndex = (hoveredIndex + 1) % data.length;
+        updateHoverCoordsForIndex(hoveredIndex);
         renderChart();
+        const activeTr = tableBody && tableBody.children[hoveredIndex];
+        if (activeTr && activeTr.scrollIntoView) activeTr.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
       }
     } else if (e.key === 'ArrowUp' || e.key === '+' || e.key === '=') {
       if (data.length > 0) {
