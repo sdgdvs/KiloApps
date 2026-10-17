@@ -870,7 +870,52 @@
   /* Usability & Ergonomics: Accessible Focus & High Contrast Autocomplete */
   :focus-visible {
     outline: 2px solid var(--primary) !important;
-    outline-offset: 1px !important;
+    outline-offset: 2px !important;
+    box-shadow: 0 0 8px rgba(56, 189, 248, 0.45) !important;
+  }
+  .btn-tab:active, .btn-secondary:active, .btn-primary:active, .btn-accent:active, .btn-danger:active {
+    transform: scale(0.97);
+  }
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.2);
+  }
+  ::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.18);
+    border-radius: 3px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(56, 189, 248, 0.5);
+  }
+  .modal-header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+  }
+  .modal-header-row h3 {
+    margin: 0;
+  }
+  .modal-close-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    font-size: 20px;
+    line-height: 1;
+    cursor: pointer;
+    padding: 2px 6px;
+    border-radius: 4px;
+    transition: all 0.15s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .modal-close-btn:hover {
+    color: var(--text-main);
+    background: rgba(255, 255, 255, 0.12);
   }
   .sql-chip-bar {
     display: flex;
@@ -902,15 +947,29 @@
   @media (max-width: 768px) {
     .charts-row { grid-template-columns: 1fr; }
     .stats-grid { grid-template-columns: repeat(2, 1fr); }
+    .header { gap: 6px; }
+    .sub-header-bar { font-size: 10px; gap: 4px; }
   }
   @media (max-width: 540px) {
     body { padding: 4px; }
-    .header { padding: 6px 8px; }
-    .controls { justify-content: flex-start; }
+    .header { padding: 6px 8px; gap: 6px; }
+    .header-title h1 { font-size: 13px; }
+    .controls { justify-content: flex-start; gap: 4px; }
+    .btn-tab { padding: 4px 6px; font-size: 10px; }
+    .btn-secondary, .btn-accent, .btn-primary { padding: 4px 7px; font-size: 10px; min-height: 26px; }
     .search-box { min-width: 100%; max-width: 100%; order: 10; margin-top: 4px; }
     .pwd-box { width: 75px; }
+    .sub-header-bar { font-size: 10px; flex-direction: column; align-items: flex-start; gap: 4px; padding: 4px 8px; }
+    .cards-grid { grid-template-columns: 1fr; padding: 8px; gap: 8px; }
     .stats-grid { grid-template-columns: 1fr; }
-    .table-container, .sql-results-container { font-size: 11px; }
+    .table-container, .sql-results-container { font-size: 11px; -webkit-overflow-scrolling: touch; }
+    .add-form { padding: 6px 8px; gap: 4px; -webkit-overflow-scrolling: touch; }
+    .add-form input { min-width: 75px; font-size: 10px; padding: 4px 6px; }
+    .add-form button { font-size: 10px; padding: 4px 8px; white-space: nowrap; }
+    .sql-toolbar { flex-direction: column; align-items: stretch; gap: 6px; }
+    .sql-presets { width: 100%; }
+    .sql-presets select { flex: 1; width: 100%; max-width: 100%; }
+    .modal, .modal-wide { width: 95%; max-width: 95%; max-height: 90vh; padding: 12px; }
   }
 </style>
 </head>
@@ -1140,7 +1199,10 @@
 <!-- Edit Record Modal -->
 <div class="modal-overlay" id="editModal" role="dialog" aria-modal="true" aria-labelledby="editModalTitle" onclick="if(event.target===this) closeEditModal()">
   <div class="modal">
-    <h3 id="editModalTitle">✏️ Edit Record</h3>
+    <div class="modal-header-row">
+      <h3 id="editModalTitle">✏️ Edit Record</h3>
+      <button class="modal-close-btn" onclick="closeEditModal()" title="Close dialog (Esc)" aria-label="Close dialog">&times;</button>
+    </div>
     <input type="hidden" id="editOriginalId">
     <div id="editFieldsContainer">
       <!-- Populated dynamically based on active table columns -->
@@ -1155,7 +1217,10 @@
 <!-- New Table Modal -->
 <div class="modal-overlay" id="newTableModal" role="dialog" aria-modal="true" aria-labelledby="newTableModalTitle" onclick="if(event.target===this) closeNewTableModal()">
   <div class="modal">
-    <h3 id="newTableModalTitle">➕ Create New Database Table</h3>
+    <div class="modal-header-row">
+      <h3 id="newTableModalTitle">➕ Create New Database Table</h3>
+      <button class="modal-close-btn" onclick="closeNewTableModal()" title="Close dialog (Esc)" aria-label="Close dialog">&times;</button>
+    </div>
     <div class="modal-field">
       <label for="newTableName">Table Name (single lowercase word)</label>
       <input type="text" id="newTableName" placeholder="e.g. inventory, clients, invoices" maxlength="30" onkeydown="if(event.key==='Enter') createCustomTable()">
@@ -1174,7 +1239,10 @@
 <!-- Table Schema & Column Manager Modal -->
 <div class="modal-overlay" id="schemaModal" role="dialog" aria-modal="true" aria-labelledby="schemaModalTitle" onclick="if(event.target===this) closeSchemaModal()">
   <div class="modal modal-wide">
-    <h3 id="schemaModalTitle">📐 Table Schema & Column Manager</h3>
+    <div class="modal-header-row">
+      <h3 id="schemaModalTitle">📐 Table Schema & Column Manager</h3>
+      <button class="modal-close-btn" onclick="closeSchemaModal()" title="Close dialog (Esc)" aria-label="Close dialog">&times;</button>
+    </div>
     <p style="font-size:12px;color:var(--text-muted);line-height:1.4;margin-top:0;">
       Inspect, append, or drop columns for table <strong id="schemaModalTableTitle" style="color:var(--primary);"></strong>. All changes safely preserve existing record values.
     </p>
@@ -1204,7 +1272,10 @@
 <!-- Live Sync / Firebase RTDB Modal -->
 <div class="modal-overlay" id="syncModal" role="dialog" aria-modal="true" aria-labelledby="syncModalTitle" onclick="if(event.target===this) closeSyncModal()">
   <div class="modal">
-    <h3 id="syncModalTitle">🌐 Firebase RTDB Live Synchronization</h3>
+    <div class="modal-header-row">
+      <h3 id="syncModalTitle">🌐 Firebase RTDB Live Synchronization</h3>
+      <button class="modal-close-btn" onclick="closeSyncModal()" title="Close dialog (Esc)" aria-label="Close dialog">&times;</button>
+    </div>
     <p style="font-size:12px;color:var(--text-muted);line-height:1.4;margin-top:0;">
       Connect to a shared real-time database room on <code>kiloapps.web.app</code>. Changes to records, tables, and schemas synchronize automatically across all connected peers.
     </p>
@@ -1229,7 +1300,10 @@
 <!-- Analytics & Statistics Modal -->
 <div class="modal-overlay" id="statsModal" role="dialog" aria-modal="true" aria-labelledby="statsModalTitle" onclick="if(event.target===this) closeStatsModal()">
   <div class="modal modal-wide">
-    <h3 id="statsModalTitle">📊 Database Analytics & Metrics</h3>
+    <div class="modal-header-row">
+      <h3 id="statsModalTitle">📊 Database Analytics & Metrics</h3>
+      <button class="modal-close-btn" onclick="closeStatsModal()" title="Close dialog (Esc)" aria-label="Close dialog">&times;</button>
+    </div>
     <div class="stats-grid">
       <div class="stat-card">
         <div class="stat-value" id="statTotalEmployees">0</div>
@@ -1264,14 +1338,18 @@
 <!-- Help & Keyboard Shortcuts Modal -->
 <div class="modal-overlay" id="helpModal" role="dialog" aria-modal="true" aria-labelledby="helpModalTitle" onclick="if(event.target===this) closeHelpModal()">
   <div class="modal modal-wide">
-    <h3 id="helpModalTitle">💡 KDB Studio Guide & Shortcuts</h3>
+    <div class="modal-header-row">
+      <h3 id="helpModalTitle">💡 KDB Studio Guide & Shortcuts</h3>
+      <button class="modal-close-btn" onclick="closeHelpModal()" title="Close dialog (Esc)" aria-label="Close dialog">&times;</button>
+    </div>
     
     <div style="margin-bottom: 12px;">
       <h4 style="margin: 0 0 6px 0; font-size: 12px; color: #7dd3fc; text-transform: uppercase;">Keyboard Accelerators</h4>
       <table style="width:100%;font-size:11px;">
         <tr><td style="width:130px;color:var(--primary);font-family:monospace;font-weight:600;">[1] / [2] / [3] / [4]</td><td>Switch Views: Grid, Cards, SQL Studio, Dashboard</td></tr>
-        <tr><td style="color:var(--primary);font-family:monospace;font-weight:600;">[F1] or [H]</td><td>Open this Help & Shortcuts guide</td></tr>
+        <tr><td style="color:var(--primary);font-family:monospace;font-weight:600;">[F1] / [H] / [?]</td><td>Open this Help & Shortcuts guide</td></tr>
         <tr><td style="color:var(--primary);font-family:monospace;font-weight:600;">[S]</td><td>Table Schema & Column Manager (Add / Drop columns)</td></tr>
+        <tr><td style="color:var(--primary);font-family:monospace;font-weight:600;">[P]</td><td>Data Quality & Column Integrity Profiler</td></tr>
         <tr><td style="color:var(--primary);font-family:monospace;font-weight:600;">[/] or [Ctrl+F]</td><td>Focus Search & Query field</td></tr>
         <tr><td style="color:var(--primary);font-family:monospace;font-weight:600;">[Ctrl+Enter]</td><td>Execute SQL in Studio or Submit Dialogs</td></tr>
         <tr><td style="color:var(--primary);font-family:monospace;font-weight:600;">[A]</td><td>Open Analytics & Distribution Metrics</td></tr>
@@ -1305,7 +1383,10 @@
 <!-- Reset Confirm Modal -->
 <div class="modal-overlay" id="resetModal" role="dialog" aria-modal="true" aria-labelledby="resetModalTitle" onclick="if(event.target===this) closeResetModal()">
   <div class="modal">
-    <h3 id="resetModalTitle" style="color: var(--warning);">⚠️ Reset Database</h3>
+    <div class="modal-header-row">
+      <h3 id="resetModalTitle" style="color: var(--warning);">⚠️ Reset Database</h3>
+      <button class="modal-close-btn" onclick="closeResetModal()" title="Close dialog (Esc)" aria-label="Close dialog">&times;</button>
+    </div>
     <p style="font-size: 12px; color: #e5e7eb; line-height: 1.5;">Are you sure you want to reset all database tables to the default records? All custom additions and modifications will be replaced.</p>
     <div class="modal-actions">
       <button class="btn-secondary" onclick="closeResetModal()">Cancel</button>
@@ -1317,7 +1398,10 @@
 <!-- Delete Confirm Modal -->
 <div class="modal-overlay" id="deleteModal" role="dialog" aria-modal="true" aria-labelledby="deleteModalTitle" onclick="if(event.target===this) closeDeleteModal()">
   <div class="modal">
-    <h3 id="deleteModalTitle" style="color: var(--danger);">🗑️ Delete Record</h3>
+    <div class="modal-header-row">
+      <h3 id="deleteModalTitle" style="color: var(--danger);">🗑️ Delete Record</h3>
+      <button class="modal-close-btn" onclick="closeDeleteModal()" title="Close dialog (Esc)" aria-label="Close dialog">&times;</button>
+    </div>
     <p id="deleteModalMessage" style="font-size: 12px; color: #e5e7eb; line-height: 1.5;">Are you sure you want to delete this record?</p>
     <input type="hidden" id="deleteTargetId">
     <div class="modal-actions">
@@ -2449,21 +2533,24 @@ function drawBarChart(canvasId, dataMap) {
   const ctx = canvas.getContext('2d');
   const rect = canvas.parentElement.getBoundingClientRect();
   const dpr = window.devicePixelRatio || 1;
-  canvas.width = Math.floor(rect.width * dpr);
-  canvas.height = Math.floor(rect.height * dpr);
-  canvas.style.width = rect.width + 'px';
-  canvas.style.height = rect.height + 'px';
+  const rw = Math.max(rect.width || 0, canvas.parentElement.clientWidth || 320);
+  const rh = Math.max(rect.height || 0, canvas.parentElement.clientHeight || 220);
+  canvas.width = Math.floor(rw * dpr);
+  canvas.height = Math.floor(rh * dpr);
+  canvas.style.width = rw + 'px';
+  canvas.style.height = rh + 'px';
   ctx.scale(dpr, dpr);
 
-  const w = rect.width;
-  const h = rect.height;
+  const w = rw;
+  const h = rh;
   ctx.clearRect(0, 0, w, h);
 
   const keys = Object.keys(dataMap);
   if (keys.length === 0) {
     ctx.fillStyle = '#94a3b8';
-    ctx.font = '12px Inter';
-    ctx.fillText('No data available', w / 2 - 40, h / 2);
+    ctx.font = '12px Inter, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('No data available', w / 2, h / 2);
     return;
   }
 
@@ -2487,13 +2574,13 @@ function drawBarChart(canvasId, dataMap) {
 
     // Value text
     ctx.fillStyle = '#f3f4f6';
-    ctx.font = '10px "JetBrains Mono"';
+    ctx.font = '10px "JetBrains Mono", monospace';
     ctx.textAlign = 'center';
     ctx.fillText(val, x + barWidth / 2, y - 5);
 
     // Label
     ctx.fillStyle = '#94a3b8';
-    ctx.font = '9px Inter';
+    ctx.font = '9px Inter, sans-serif';
     ctx.fillText(k.slice(0, 8), x + barWidth / 2, chartHeight + 14);
   });
 }
@@ -2504,14 +2591,16 @@ function drawDonutChart(canvasId, dataMap) {
   const ctx = canvas.getContext('2d');
   const rect = canvas.parentElement.getBoundingClientRect();
   const dpr = window.devicePixelRatio || 1;
-  canvas.width = Math.floor(rect.width * dpr);
-  canvas.height = Math.floor(rect.height * dpr);
-  canvas.style.width = rect.width + 'px';
-  canvas.style.height = rect.height + 'px';
+  const rw = Math.max(rect.width || 0, canvas.parentElement.clientWidth || 320);
+  const rh = Math.max(rect.height || 0, canvas.parentElement.clientHeight || 220);
+  canvas.width = Math.floor(rw * dpr);
+  canvas.height = Math.floor(rh * dpr);
+  canvas.style.width = rw + 'px';
+  canvas.style.height = rh + 'px';
   ctx.scale(dpr, dpr);
 
-  const w = rect.width;
-  const h = rect.height;
+  const w = rw;
+  const h = rh;
   ctx.clearRect(0, 0, w, h);
 
   const keys = Object.keys(dataMap);
@@ -2535,15 +2624,23 @@ function drawDonutChart(canvasId, dataMap) {
     startAngle += sliceAngle;
 
     // Legend item
-    const legendX = w * 0.62;
+    const legendX = w * 0.60;
     const legendY = 24 + idx * 22;
     ctx.fillStyle = colors[idx % colors.length];
     ctx.fillRect(legendX, legendY, 10, 10);
     ctx.fillStyle = '#e5e7eb';
-    ctx.font = '11px Inter';
+    ctx.font = '11px Inter, sans-serif';
     ctx.textAlign = 'left';
-    ctx.fillText(`${k}: ${dataMap[k]}`, legendX + 16, legendY + 9);
+    ctx.textBaseline = 'middle';
+    ctx.fillText(`${k}: ${dataMap[k]}`, legendX + 16, legendY + 5);
   });
+
+  // Total in center of donut
+  ctx.fillStyle = '#f3f4f6';
+  ctx.font = '600 13px "JetBrains Mono", monospace';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(total, centerX, centerY);
 }
 
 // --- Live Sync Modal & Operations ---
@@ -3074,14 +3171,16 @@ window.addEventListener('keydown', function(e) {
   const isInput = e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT';
 
   if (e.key === 'Escape') {
-    ['helpModal', 'resetModal', 'deleteModal', 'editModal', 'statsModal', 'newTableModal', 'syncModal'].forEach(mId => {
-      const el = document.getElementById(mId);
-      if (el && el.classList.contains('active')) el.classList.remove('active');
-    });
+    const activeModals = document.querySelectorAll('.modal-overlay.active');
+    if (activeModals.length > 0) {
+      activeModals.forEach(m => m.classList.remove('active'));
+      return;
+    }
     const sInput = document.getElementById('searchInput');
     if (sInput && (sInput.value || document.activeElement === sInput)) {
       clearSearch();
       sInput.blur();
+      return;
     }
     return;
   }
@@ -3131,6 +3230,9 @@ window.addEventListener('keydown', function(e) {
       } else if (document.getElementById('syncModal').classList.contains('active')) {
         e.preventDefault();
         connectLiveSync();
+      } else if (document.getElementById('profilerModal') && document.getElementById('profilerModal').classList.contains('active')) {
+        e.preventDefault();
+        closeDataProfilerModal();
       }
     }
     return;
@@ -3157,7 +3259,7 @@ window.addEventListener('keydown', function(e) {
     else if (k === '2') switchView('cards');
     else if (k === '3') switchView('sql');
     else if (k === '4') switchView('dash');
-    else if (k === 'h') openHelpModal();
+    else if (k === 'h' || e.key === '?') openHelpModal();
     else if (k === 's') openSchemaModal();
     else if (k === '/') {
       e.preventDefault();
@@ -3200,7 +3302,10 @@ function openDataProfilerModal() {
     modal.onclick = (e) => { if (e.target === modal) closeDataProfilerModal(); };
     modal.innerHTML = `
       <div class="modal modal-wide" style="max-height:88vh;display:flex;flex-direction:column;">
-        <h3 style="margin-bottom:8px;">🔍 Data Quality & Column Integrity Profiler</h3>
+        <div class="modal-header-row">
+          <h3 style="margin:0;">🔍 Data Quality & Column Integrity Profiler</h3>
+          <button class="modal-close-btn" onclick="closeDataProfilerModal()" title="Close dialog (Esc)" aria-label="Close dialog">&times;</button>
+        </div>
         <p style="font-size:11px;color:var(--text-muted);margin:0 0 10px 0;">
           Deep diagnostics, type variance analysis, missing value profiling, and one-click data sanitization.
         </p>
@@ -3459,9 +3564,11 @@ if (window.resizeTo) {
 }
 
 // Responsive dashboard charts redraw on resize
+let resizeRaf = null;
 window.addEventListener('resize', () => {
   if (currentView === 'dash') {
-    renderDashboard();
+    if (resizeRaf) cancelAnimationFrame(resizeRaf);
+    resizeRaf = requestAnimationFrame(() => renderDashboard());
   }
 });
 

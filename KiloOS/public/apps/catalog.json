@@ -251,9 +251,9 @@
     "id": "kdb",
     "title": "KDB",
     "folder": "Dev",
-    "webBytes": 126843,
+    "webBytes": 131722,
     "exeBytes": 67584,
-    "budgetPercent": 12.7
+    "budgetPercent": 13.2
   },
   {
     "id": "kdirector",
@@ -315,9 +315,9 @@
     "id": "kfortress",
     "title": "KFortress",
     "folder": "Games",
-    "webBytes": 202661,
+    "webBytes": 214498,
     "exeBytes": 182784,
-    "budgetPercent": 20.3
+    "budgetPercent": 21.5
   },
   {
     "id": "kfreecell",
@@ -507,9 +507,9 @@
     "id": "kpaint",
     "title": "KPaint",
     "folder": "Media",
-    "webBytes": 248023,
+    "webBytes": 248375,
     "exeBytes": 39936,
-    "budgetPercent": 24.8
+    "budgetPercent": 24.9
   },
   {
     "id": "kpass",

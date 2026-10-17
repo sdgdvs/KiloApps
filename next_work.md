@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-usability
+current_agent: kilo-qa
+next_agent: kilo-qa
 agent_rotation:
 - kilo-graphics
 - kilo-soundscape
@@ -18,7 +18,7 @@ current_targets:
   kilo_graphics: KDragon
   kilo_soundscape: KAlchemy
   kilo_tester: KNet
-  kilo_usability: KDB
+  kilo_usability: KCalc
   kilo_qa: KGo
   kilo_expander: KJournal
 virtual_web_target: kweb://echo-subsystem.net
@@ -35,9 +35,9 @@ virtual_web_rotation:
 - kweb://echo-subsystem.net
 - kweb://deep-core
 last_run:
-  agent: kilo-tester
-  app: KPaint
-  timestamp: 2026-10-17T21:55:00+0000
+  agent: kilo-usability
+  app: KDB
+  timestamp: 2026-10-17T22:20:00+0000
 last_planner_run: '2026-10-17T20:53:00Z'
 ---
 
@@ -122,19 +122,19 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Upcoming Queue**: `KColony`, `KTrader`, `KMystery`.
 
 ### 5. Usability & UX Queue (`kilo-usability`)
-- **Target**: `KDB`
-- **Primary File**: `KiloOS/public/apps/kdb.html`
-- **Objective**: Database explorer responsive layout, narrow-viewport (<540px) adaptation, keyboard shortcuts (F1/H help, Esc modal dismissal), accessible focus glow, and high-DPI canvas scaling.
+- **Target**: `KCalc`
+- **Primary File**: `KiloOS/public/apps/kcalc.html`
+- **Objective**: Scientific/programmer calculator responsive keypad layout, narrow-viewport (<540px) button scaling, keyboard shortcuts (F1/H help, Esc clear), accessible focus glow, and high-contrast LCD readout.
 - **Action Steps**:
   1. Verify window bounds and responsive container wrapping under narrow (<540px) widths.
-  2. Ensure clear keyboard shortcuts (F1/H help, Esc dialog dismissals) and accessible focus indicators.
-  3. Verify HiDPI canvas/text scaling and comfortable retro theme contrast.
+  2. Ensure clear keyboard shortcuts (F1/H help, Esc clear) and accessible focus indicators.
+  3. Verify keypad ergonomics, HiDPI font scaling, and comfortable retro theme contrast.
 - **Verification**: `cd KiloOS && npm run build`. File size < 999 KB.
 - **Handoff**:
-  - In frontmatter: advance `current_targets.kilo_usability` to `KCalc`.
+  - In frontmatter: advance `current_targets.kilo_usability` to `KCipher`.
   - Set `current_agent: kilo-qa`.
   - Append terse execution log (≤6 lines), commit, and push.
-- **Upcoming Queue**: `KCalc`, `KCipher`, `KPass`, `KVault`.
+- **Upcoming Queue**: `KCipher`, `KPass`, `KVault`.
 
 ### 6. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
 - **Target**: `KGo`
@@ -195,6 +195,15 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-17T22:20:00+0000 — kilo-usability: KDB (UI/UX & Usability Pass)**
+  - Responsive & Viewport Ergonomics: Added <540px mobile wrapping for header controls, cards-grid single-column fallback, sleek custom scrollbars, and touch scroll.
+  - Modal UX & Keyboard Navigation: Added header rows with close buttons (&times;) across all 9 modals; unified Escape key to dismiss any active modal and blur search.
+  - HiDPI Canvas & Visual Polish: Secured dimension fallbacks and middle baseline for charts, center KPI total readout on donut chart, and rAF debounced redraw on resize.
+  - Accessible Focus: Added high-contrast focus rings (`outline-offset: 2px`, glow shadow), button active press micro-interactions, and '?' accelerator shortcut.
+  - Verification: Clean Vite build (`npm.cmd run build` 0 err), Win32 native compile (`build.bat` 0 err), test_app_startup PASS (128.6 KB < 999 KB ceiling).
+  - Status: PASS ✅ (Layout, keyboard navigation, HiDPI charts, and accessible focus verified).
+  - Queue: Advanced `kilo_usability` to `KCalc`; rotation handoff to `kilo-qa`.
+
 - **2026-10-17T21:55:00+0000 — kilo-tester: KPaint (Interactive UI Audit & Inline Fixes — Mature Quarantine)**
   - UI Element Audit: Verified 115 buttons, 12 inputs, 5 selects, 4 dialog modals, 22 filters/tools, and multi-layer reel animation controls.
   - Storage Safety: Wrapped audio preference, tutorial flags, quicksave snapshot, and collab handle in safe storage try/catch handlers per quality standards.
@@ -224,11 +233,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Queue Rework: Advanced kilo_creator/virtual_web to echo-subsystem; routed graphics to KDragon, soundscape to KFortress, tester to KPaint, usability to KDB, qa to KGo.
   - Byte-Budget Gate: 107 web cartridges and 104 native executables verified <999 KB budget ceiling.
   - Compaction & Archival: Executed rotate_logs.py with zero data loss; updated last_planner_run timestamp.
-
-- **2026-10-17T20:18:00+0000 — kilo-creator: kweb://cybercafe (Deep Web Destination Expansion)**
-  - CCTV Surveillance Console: Added 5-feed 10Base-T video matrix with PTZ controls, motion detection, IR night vision, auto-cycle, and snapshot export.
-  - ShoutCast '99 NetRadio: Implemented real-time procedural FM chiptune stream with 5 stations, 10-band parametric equalizer, and 64-bin FFT spectrum visualizer.
-  - Lore & Anti-Trademark Parody: Fictionalized radio stations, Tremor III Arena PA intercom, and Trapster trivia per ARG standards.
-  - KNet & Directory Federation: Verified integration across KNet address bar/chips, portal.html directory/traceroute, and central webring hub.
-  - Verification: Clean Vite build (`npm.cmd run build` 0 err), test_app_startup PASS (459.1 KB), 100% security lint PASS; strictly <999 KB ceiling.
-  - Queue: Advanced `kilo_creator` to `kweb://10.19.99.4/classified`; rotation handoff to `kilo-graphics`.
