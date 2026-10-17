@@ -1210,18 +1210,49 @@
                 this.playFM(180, 10.0, 7.5, 0.12, 'triangle', false, 0.14, now);
             },
 
-            playTambourineTick(t = null) {
+            playTambourineTick(t = null, vol = 0.07) {
                 if (!this.ctx) return;
                 const now = t !== null ? Math.max(t, this.ctx.currentTime) : this.ctx.currentTime;
-                this.playFM(1200, 11.0, 5.0, 0.04, 'sine', false, 0.07, now);
+                this.playFM(1200, 11.0, 5.0, 0.04, 'sine', false, vol, now);
+            },
+
+            // Ambient Resonant FM Drone Generator (Cavernous Sub-harmonic Pad)
+            playAmbientDrone(freq, dur, vol = 0.08, t = null) {
+                if (!this.ctx || !freq) return;
+                const now = t !== null ? Math.max(t, this.ctx.currentTime) : this.ctx.currentTime;
+                const carrier = this.ctx.createOscillator();
+                const modulator = this.ctx.createOscillator();
+                const modGain = this.ctx.createGain();
+                const ampEnv = this.ctx.createGain();
+
+                carrier.type = 'sine';
+                modulator.type = 'triangle';
+                carrier.frequency.setValueAtTime(freq, now);
+                modulator.frequency.setValueAtTime(freq * 1.003, now); // subtle beating chorus
+                modGain.gain.setValueAtTime(freq * 1.4, now);
+                modGain.gain.linearRampToValueAtTime(freq * 0.4, now + dur * 0.5);
+                modGain.gain.linearRampToValueAtTime(freq * 0.8, now + dur);
+
+                ampEnv.gain.setValueAtTime(0.001, now);
+                ampEnv.gain.linearRampToValueAtTime(vol, now + dur * 0.25);
+                ampEnv.gain.exponentialRampToValueAtTime(0.0001, now + dur);
+
+                modulator.connect(modGain);
+                modGain.connect(carrier.frequency);
+                carrier.connect(ampEnv);
+                ampEnv.connect(this.masterGain);
+                if (this.delayNode) ampEnv.connect(this.delayNode);
+
+                modulator.start(now); carrier.start(now);
+                modulator.stop(now + dur); carrier.stop(now + dur);
             },
 
             // Note Frequencies in Hz
             NOTE: {
-                D1: 36.71, E1: 41.20, F1: 43.65, G1: 49.00, A1: 55.00, Bb1: 58.27, C2: 65.41,
-                D2: 73.42, E2: 82.41, F2: 87.31, G2: 98.00, A2: 110.00, Bb2: 116.54, C3: 130.81,
-                D3: 146.83, E3: 164.81, F3: 174.61, G3: 196.00, A3: 220.00, Bb3: 233.08, C4: 261.63, Csharp4: 277.18,
-                D4: 293.66, E4: 329.63, F4: 349.23, G4: 392.00, A4: 440.00, Bb4: 466.16, C5: 523.25,
+                D1: 36.71, E1: 41.20, F1: 43.65, G1: 49.00, A1: 55.00, Bb1: 58.27, B1: 61.74, C2: 65.41,
+                D2: 73.42, E2: 82.41, F2: 87.31, Fsharp2: 92.50, G2: 98.00, A2: 110.00, Bb2: 116.54, B2: 123.47, C3: 130.81,
+                D3: 146.83, E3: 164.81, F3: 174.61, Fsharp3: 185.00, G3: 196.00, A3: 220.00, Bb3: 233.08, B3: 246.94, C4: 261.63, Csharp4: 277.18,
+                D4: 293.66, Eb4: 311.13, E4: 329.63, F4: 349.23, Fsharp4: 369.99, G4: 392.00, Gsharp4: 415.30, A4: 440.00, Bb4: 466.16, B4: 493.88, C5: 523.25,
                 D5: 587.33, E5: 659.25, F5: 698.46, G5: 783.99, A5: 880.00
             },
 
@@ -1233,6 +1264,7 @@
                     lair: {
                         tempo: 116,
                         stepDur: (60 / 116) / 2, // 8th note steps
+                        swing: 0.016,
                         steps: 32,
                         lead: [
                             // Bar 1 (Dm9): Noble ascending phrasing
@@ -1278,6 +1310,7 @@
                     battle: {
                         tempo: 142,
                         stepDur: (60 / 142) / 2,
+                        swing: 0.012,
                         steps: 32,
                         lead: [
                             // Punchy brass heroic motives
@@ -1310,6 +1343,52 @@
                         kicks: [0, 3, 6, 8, 11, 14, 16, 19, 22, 24, 27, 30],
                         snares: [4, 12, 20, 28],
                         hats: [1, 2, 5, 7, 9, 10, 13, 15, 17, 18, 21, 23, 25, 26, 29, 31]
+                    },
+
+                    // "Ancient Sanctuary" - Mystic Dragon Roost & Shrine Theme in E Dorian (32-Step Loop)
+                    sanctuary: {
+                        tempo: 96,
+                        stepDur: (60 / 96) / 2,
+                        swing: 0.022,
+                        steps: 32,
+                        lead: [
+                            // Ethereal singing flute melody
+                            { s: 0, f: N.E4, d: 0.55 }, { s: 3, f: N.G4, d: 0.35 }, { s: 5, f: N.A4, d: 0.4 }, { s: 7, f: N.B4, d: 0.6 },
+                            { s: 10, f: N.D5, d: 0.45 }, { s: 12, f: N.C5, d: 0.35 }, { s: 14, f: N.B4, d: 0.55 },
+                            { s: 16, f: N.A4, d: 0.5 }, { s: 19, f: N.G4, d: 0.35 }, { s: 21, f: N.Fsharp4, d: 0.4 }, { s: 23, f: N.E4, d: 0.6 },
+                            { s: 26, f: N.Fsharp4, d: 0.35 }, { s: 28, f: N.G4, d: 0.35 }, { s: 30, f: N.E4, d: 0.7 }
+                        ],
+                        counter: [
+                            // Contrary motion lute counterpoint
+                            { s: 0, f: N.B3, d: 0.5 }, { s: 4, f: N.E4, d: 0.4 }, { s: 6, f: N.D4, d: 0.4 },
+                            { s: 8, f: N.G4, d: 0.45 }, { s: 12, f: N.Fsharp4, d: 0.4 }, { s: 14, f: N.E4, d: 0.45 },
+                            { s: 16, f: N.C4, d: 0.5 }, { s: 20, f: N.D4, d: 0.4 }, { s: 22, f: N.B3, d: 0.45 },
+                            { s: 24, f: N.A3, d: 0.5 }, { s: 28, f: N.B3, d: 0.4 }, { s: 30, f: N.B3, d: 0.6 }
+                        ],
+                        harp: [
+                            // Mystic arpeggios filling harmonic breath
+                            { s: 0, f: N.E3 }, { s: 2, f: N.B3 }, { s: 4, f: N.G4 }, { s: 6, f: N.B4 },
+                            { s: 8, f: N.D3 }, { s: 10, f: N.A3 }, { s: 12, f: N.Fsharp4 }, { s: 14, f: N.A4 },
+                            { s: 16, f: N.C3 }, { s: 18, f: N.G3 }, { s: 20, f: N.E4 }, { s: 22, f: N.G4 },
+                            { s: 24, f: N.B2 }, { s: 26, f: N.Fsharp3 }, { s: 28, f: N.D4 }, { s: 30, f: N.Fsharp4 }
+                        ],
+                        drone: [
+                            // Resonant sub-harmonic ambient pad swells
+                            { s: 0, f: N.E2, d: 2.2 },
+                            { s: 8, f: N.D2, d: 2.2 },
+                            { s: 16, f: N.C2, d: 2.2 },
+                            { s: 24, f: N.B1, d: 2.2 }
+                        ],
+                        bass: [
+                            // Low roots and fifths below C3
+                            { s: 0, f: N.E2, d: 0.45 }, { s: 4, f: N.B2, d: 0.35 }, { s: 6, f: N.E2, d: 0.35 },
+                            { s: 8, f: N.D2, d: 0.45 }, { s: 12, f: N.A2, d: 0.35 }, { s: 14, f: N.D2, d: 0.35 },
+                            { s: 16, f: N.C2, d: 0.45 }, { s: 20, f: N.G2, d: 0.35 }, { s: 22, f: N.C2, d: 0.35 },
+                            { s: 24, f: N.B1, d: 0.45 }, { s: 28, f: N.Fsharp2, d: 0.35 }, { s: 30, f: N.B1, d: 0.4 }
+                        ],
+                        kicks: [0, 16],
+                        snares: [8, 24],
+                        hats: [2, 4, 6, 10, 12, 14, 18, 20, 22, 26, 28, 30]
                     }
                 };
             },
@@ -1344,7 +1423,16 @@
 
                     while (this.nextStepTime < this.ctx.currentTime + 0.12) {
                         const s = this.seqStep;
-                        const t = this.nextStepTime;
+                        const swingOffset = (s % 2 === 1) ? (activeTrack.swing || 0) : 0;
+                        const t = this.nextStepTime + swingOffset;
+
+                        // Ch0: Ambient Sub-Harmonic Drone (if present)
+                        if (activeTrack.drone) {
+                            const droneNote = activeTrack.drone.find(n => n.s === s);
+                            if (droneNote) {
+                                this.playAmbientDrone(droneNote.f, droneNote.d, 0.08, t);
+                            }
+                        }
 
                         // Ch1: Lead Melody
                         const leadNote = activeTrack.lead.find(n => n.s === s);
@@ -1384,9 +1472,10 @@
                             this.playSnare(t);
                         }
 
-                        // Ch6: Tambourine / Hat
+                        // Ch6: Tambourine / Hat with swing-tick dynamics
                         if (activeTrack.hats.includes(s)) {
-                            this.playTambourineTick(t);
+                            const isAccent = (s % 4 === 2);
+                            this.playTambourineTick(t, isAccent ? 0.08 : 0.035);
                         }
 
                         this.seqStep = (this.seqStep + 1) % activeTrack.steps;
@@ -1412,6 +1501,9 @@
                 if (name === 'click') {
                     // Tactile parchment / wooden peg tap
                     this.playFM(820, 2.0, 0.8, 0.03, 'triangle', false, 0.09, t);
+                } else if (name === 'ambient') {
+                    // Resonant cave cavern drone pad
+                    this.playAmbientDrone(65.41, 3.5, 0.12, t);
                 } else if (name === 'munch') {
                     // Dragon feeding crunch (2-stage FM transient)
                     this.playFM(240, 1.75, 3.0, 0.08, 'sawtooth', false, 0.14, t);
@@ -3186,7 +3278,7 @@
             },
             
             endBattle(won) {
-                AudioEngine.setTrack('lair');
+                AudioEngine.setTrack(this.state === 'elder' ? 'sanctuary' : 'lair');
                 if (won) {
                     const bonus = this.battleState?.enemy?.bonusGold || 0;
                     let goldGain = 20 + Math.floor(Math.random() * 20) + bonus;
@@ -3394,6 +3486,7 @@
                     this.log(`👑 ASCENSION! Your ${this.element} Dragon has ascended into an ELDER SOVEREIGN WYRM!`);
                     this.showToast(`👑 <b>ELDER ASCENSION!</b> Dragon evolved into an <b>ELDER SOVEREIGN WYRM</b>!`, "gold", 8000);
                     AudioEngine.playPreset('evolution');
+                    AudioEngine.setTrack('sanctuary');
                     this.spawnParticles('#ffd700', 50, 'player', true);
                 }
                 this.updateUI();

@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-soundscape
-next_agent: kilo-soundscape
+current_agent: kilo-tester
+next_agent: kilo-usability
 agent_rotation:
 - kilo-graphics
 - kilo-soundscape
@@ -15,7 +15,7 @@ status: ready
 current_targets:
   kilo_creator: kweb://warez
   kilo_graphics: KWizard
-  kilo_soundscape: KDragon
+  kilo_soundscape: KWizard
   kilo_tester: KPac
   kilo_usability: KChart
   kilo_qa: KHangman
@@ -34,9 +34,9 @@ virtual_web_rotation:
 - kweb://echo-subsystem.net
 - kweb://deep-core
 last_run:
-  agent: kilo-graphics
-  app: KWizard
-  timestamp: 2026-10-17T01:12:03+0000
+  agent: kilo-soundscape
+  app: KDragon
+  timestamp: 2026-10-17T01:35:00+0000
 last_planner_run: '2026-10-16T20:35:00Z'
 ---
 
@@ -174,6 +174,13 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-17T01:35:00+0000 — kilo-soundscape: KDragon (YM2612 2-Op FM / SPC700 Audio Suite)**
+  - Audio Engine: Implemented 16-step swing micro-grooves, ambient sub-harmonic drone pad synthesis, and hat tick velocity dynamics.
+  - Music: Added "Ancient Sanctuary" theme (32-step E Dorian ambient/mystic roost) alongside "The Wyrm's Roost" and "Dragon's Clash".
+  - SFX & Earcons: Integrated resting ambient drone and dynamic track transitioning for Elder Wyrm ascension.
+  - Status: PASS ✅ (`kdragon.html` 200.8 KB < 999 KB ceiling; Vite build 0 errors).
+  - Queue: Advanced `kilo_soundscape` target to `KWizard`; rotation handoff to `kilo-tester`.
+
 - **2026-10-17T01:12:03+0000 — kilo-graphics: KWizard (Zero-Token Auto-Skip — Inappropriate Target)**
   - Status: ⏭️ Skip — Imagen 3 asset replacement not appropriate for KWizard (pure vector, board game, or mature art).
   - Optimization: Handled via orchestrator pre-flight zero-token auto-skip.
@@ -197,9 +204,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Shortcuts: Integrated F1/H/Esc global handlers for help modal & clean dialog/dropdown dismissals; tab cycling.
   - Status: PASS [OK] (npm run build clean, size 169.5 KB < 999 KB ceiling).
   - Queue: Advanced kilo-usability to KChart; rotation handoff to kilo-qa.
-
-- **2026-10-16T22:32:00+0000 — kilo-tester: KSpace (Interactive UI Audit & Mode Select Fixes)**
-  - Audit: Verified canvas startup, HUD skill-bar buttons ([J], [W], [O], [T], [D], [B], [S]), quicksave [F5], and quickload [F9].
-  - Inline Fix: Realigned mode selection hitboxes and added interactive back-to-menu pointer/click dismissal to mode select screen.
-  - Status: PASS ✅ (test_app_startup.py clean, npm run build clean, size 186.2 KB < 999 KB ceiling).
-  - Queue: Advanced kilo-tester target to KPac; rotation handoff to kilo-usability.
