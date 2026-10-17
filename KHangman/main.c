@@ -282,14 +282,12 @@ typedef struct {
     int freeze_timer_seconds;
     int blitz_time;
     int blitz_words;
+    Stats stats;
 } GameState;
 
 void SaveGame(HWND hwnd) {
-    if (game_over) {
-        MessageBoxA(hwnd, "Cannot save a finished game.", "Save", MB_OK);
-        return;
-    }
     GameState st;
+    memset(&st, 0, sizeof(st));
     strcpy(st.target_word, target_word);
     st.current_category = current_category;
     for (int i = 0; i < 26; i++) st.guessed[i] = guessed[i];
@@ -307,6 +305,7 @@ void SaveGame(HWND hwnd) {
     st.freeze_timer_seconds = freeze_timer_seconds;
     st.blitz_time = blitz_time;
     st.blitz_words = blitz_words;
+    st.stats = stats;
     
     FILE* f = fopen("khangman_save.dat", "wb");
     if (f) {
@@ -344,7 +343,8 @@ void LoadGame(HWND hwnd) {
     FILE* f = fopen("khangman_save.dat", "rb");
     if (f) {
         GameState st;
-        if (fread(&st, sizeof(GameState), 1, f) == 1) {
+        size_t n = fread(&st, 1, sizeof(GameState), f);
+        if (n >= sizeof(GameState) - sizeof(Stats)) {
             strcpy(target_word, st.target_word);
             current_category = st.current_category;
             for (int i = 0; i < 26; i++) guessed[i] = st.guessed[i];
@@ -362,6 +362,10 @@ void LoadGame(HWND hwnd) {
             freeze_timer_seconds = st.freeze_timer_seconds;
             blitz_time = st.blitz_time;
             blitz_words = st.blitz_words;
+            if (n == sizeof(GameState)) {
+                stats = st.stats;
+                SaveStats();
+            }
             if (hCustomEdit) {
                 if (current_category == TOTAL_CAT_COUNT - 1) ShowWindow(hCustomEdit, SW_SHOW);
                 else ShowWindow(hCustomEdit, SW_HIDE);
@@ -1921,6 +1925,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         }
 
         case WM_DESTROY:
+            KillTimer(hwnd, 1);
             PostQuitMessage(0);
             break;
         default:
@@ -1945,14 +1950,21 @@ void MainEntry() {
     ShowWindow(hwnd, SW_SHOW);
     UpdateWindow(hwnd);
 
-    // First-run tutorial integrity: show on fresh session only
-    FILE *ftut = fopen("khangman_tutorialSeen.dat", "rb");
-    if (!ftut) {
+    // First-run tutorial integrity: show on fresh session only, never interrupt saved state
+    FILE *fsave = fopen("khangman_save.dat", "rb");
+    if (fsave) {
+        fclose(fsave);
         FILE *fout = fopen("khangman_tutorialSeen.dat", "wb");
         if (fout) { fputc(1, fout); fclose(fout); }
-        ShowHelpDialog(hwnd);
     } else {
-        fclose(ftut);
+        FILE *ftut = fopen("khangman_tutorialSeen.dat", "rb");
+        if (!ftut) {
+            FILE *fout = fopen("khangman_tutorialSeen.dat", "wb");
+            if (fout) { fputc(1, fout); fclose(fout); }
+            ShowHelpDialog(hwnd);
+        } else {
+            fclose(ftut);
+        }
     }
 
     MSG msg;

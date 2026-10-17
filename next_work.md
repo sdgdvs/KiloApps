@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-creator
 agent_rotation:
 - kilo-graphics
 - kilo-soundscape
@@ -19,8 +19,8 @@ current_targets:
   kilo_soundscape: kweb://asm-temple
   kilo_tester: KPaint
   kilo_usability: KDB
-  kilo_qa: KHangman
-  kilo_expander: KFont
+  kilo_qa: KMinesweeper
+  kilo_expander: KClip
 virtual_web_target: kweb://cybercafe
 virtual_web_rotation:
 - kweb://darknet
@@ -35,9 +35,9 @@ virtual_web_rotation:
 - kweb://echo-subsystem.net
 - kweb://deep-core
 last_run:
-  agent: kilo-usability
-  app: KChart
-  timestamp: 2026-10-17T16:54:11+0000
+  agent: kilo-qa
+  app: KHangman
+  timestamp: 2026-10-17T17:18:25+0000
 last_planner_run: '2026-10-16T20:35:00Z'
 ---
 
@@ -138,22 +138,22 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 
 ### 6. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
-- **Target**: `KHangman`
-- **Primary Files**: `KiloOS/public/apps/khangman.html`, `apps/khangman/` (if present)
+- **Target**: `KMinesweeper`
+- **Primary Files**: `KiloOS/public/apps/kminesweeper.html`, `apps/kminesweeper/` (if present)
 - **Objective**: Pass 5 QA audit, state persistence integrity, and dual web/native parity.
 - **Action Steps**:
   1. State Persistence: F5 quicksave & F9 quickload capturing complete game state, stats, and settings.
   2. First-run Tutorial: Onboarding displays once on fresh sessions, never on restored saves.
   3. Modal Dismissals: Modals dismiss cleanly with Escape, Enter, or Close button.
-  4. Dual Parity & Build: Compile Win32 native client via `cmd.exe /c build.bat` in `apps/khangman/` (if present) and verify web build.
+  4. Dual Parity & Build: Compile Win32 native client via `cmd.exe /c build.bat` in `apps/kminesweeper/` (if present) and verify web build.
 - **Verification**:
-  - `uv run scripts/test_app_startup.py --app KHangman`
-  - `cd KiloOS && npm run build` (0 Vite errors, `khangman.html` < 999 KB)
+  - `uv run scripts/test_app_startup.py --app KMinesweeper`
+  - `cd KiloOS && npm run build` (0 Vite errors, `kminesweeper.html` < 999 KB)
 - **Handoff**:
-  - In frontmatter: advance `current_targets.kilo_qa` to `KMinesweeper`.
-  - Set `current_agent: kilo-usability`.
+  - In frontmatter: advance `current_targets.kilo_qa` to `KTetris`.
+  - Set `current_agent: kilo-expander`.
   - Append terse execution log (≤6 lines), commit, and push.
-- **Upcoming Queue**: `KMinesweeper`, `KTetris`, `KAudio`.
+- **Upcoming Queue**: `KTetris`, `KAudio`.
 
 ### 7. Feature Expander Queue (`kilo-expander`)
 - **Target**: `KClip`
@@ -191,10 +191,19 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | **KAsteroids** | `KiloOS/public/apps/kasteroids.html` | Pass 8+ (2026-10-16) | Arcade | Pure vector wireframe physics, particle explosions, high score persistence. |
 | **KChess** | `KiloOS/public/apps/kchess.html` | Pass 9+ (2026-10-15) | Strategy / Board | Complete chess engine, move validation, FEN/PGN import/export, RFMS multiplayer. |
 | **KConnect4** | `KiloOS/public/apps/kconnect4.html` | Pass 6+ (2026-10-07) | Strategy / Board | Complete connect 4 engine, minimax AI, win animations, RFMS multiplayer. |
+| **KHangman** | `KiloOS/public/apps/khangman.html` | Pass 5 (2026-10-17) | Word / Puzzle | 20-stage campaign, blitz mode, custom word bank studio, dual Win32 native client, full F5/F9 state persistence. |
 
 ---
 
 ## Recent Execution Logs (Max 5 Entries)
+
+- **2026-10-17T17:18:25+0000 — kilo-qa: KHangman (Pass 5 State Persistence & Mature Quarantine)**
+  - Dual Parity & State: Added full stats sync to Win32 `GameState`, enabled saving finished sessions, and ensured clean `KillTimer` on `WM_DESTROY`.
+  - Onboarding Integrity: Guarded tutorial against interrupting restored save files in both native C and web JS.
+  - Modal Ergonomics & Robustness: Improved `safeGetStorage` fallback and enabled immediate Escape modal dismissal from text inputs.
+  - Mature Promotion: Promoted feature-complete KHangman (20 stages, blitz, duel, dictionary studio, Win32 client) to Mature Applications table.
+  - Verification: Clean builds (`npm.cmd run build` 0 errors, `build.bat` 0 warnings); `test_app_startup.py` PASS; size: 148.9 KB HTML, 36.3 KB EXE (<999 KB).
+  - Queue: Advanced `kilo_qa` to `KMinesweeper`; rotation handoff to `kilo-expander`.
 
 - **2026-10-17T16:54:11+0000 — kilo-usability: KChart (Responsive Viewport Polish & Keyboard Accessibility)**
   - Responsive Viewport: Added narrow-viewport (<540px) adaptation, full-width toolbar flex-wrapping, button grouping, and table scrolling.
@@ -222,8 +231,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Delay Line: Calibrated SNES SPC700 slapback delay line (190ms with 2200Hz lowpass damping) and dynamic 4-channel VU meter bounce.
   - Verification: Clean Vite build (`npm.cmd run build` 0 errors); `neon_rider.html` 287 KB (<999 KB ceiling).
   - Queue: Advanced `kilo_soundscape` to `kweb://asm-temple`; rotation handoff to `kilo-tester`.
-
-- **2026-10-17T15:30:02+0000 — kilo-graphics: KWizard (Zero-Token Auto-Skip — Inappropriate Target)**
-  - Status: ⏭️ Skip — Imagen 3 asset replacement not appropriate for KWizard (pure vector, board game, or mature art).
-  - Optimization: Handled via orchestrator pre-flight zero-token auto-skip.
-  - Queue: Advanced `kilo-graphics` to `KWizard`; rotation handoff to `kilo-soundscape`.

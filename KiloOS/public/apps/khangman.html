@@ -731,7 +731,12 @@
     function safeGetStorage(key, fallback) {
         try {
             const raw = localStorage.getItem(key);
-            return raw !== null ? JSON.parse(raw) : fallback;
+            if (raw === null) return fallback;
+            try {
+                return JSON.parse(raw);
+            } catch (jsonErr) {
+                return raw;
+            }
         } catch (e) {
             return fallback;
         }
@@ -1465,6 +1470,8 @@
                     startBlitzTimer();
                 }
                 updateDisplay();
+                safeSetStorage('khangman_tutorialSeen', '1');
+                safeSetStorage('khangman_tutorial_seen', '1');
                 showToast("📂 Game loaded [F9]!", "success");
             } catch (e) {
                 showToast("⚠️ Failed to load saved game.", "error");
@@ -3174,7 +3181,10 @@
     // ==========================================
     document.addEventListener('keydown', (e) => {
         if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT')) {
-            if (e.key === 'Escape') e.target.blur();
+            if (e.key === 'Escape') {
+                e.target.blur();
+                closeAllModals();
+            }
             return;
         }
 
