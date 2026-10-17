@@ -205,8 +205,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - First-run tutorial verified: onboarding triggers on fresh session only (`kconnect4_tutorialSeen`).
   - Native & web build parity verified: `KConnect4.exe` (190 KB) & `kconnect4.html` (186 KB) < 999 KB.
   - Status: PASS ✅ (clean native C build & 0 Vite errors).
-
-- **2026-10-17 — kilo-tester — KPac**: PASS ✅ (No issues found)
-  - Interactive UI audit: all 93 onclick handlers and modals verified with valid IDs and handlers.
-  - Controls & modals: F1/H codex, Forge, Duel Arena, Replay, FEN, HUD, and virtual D-pad operational.
-  - Build & size: KPac (212.9 KB < 999 KB); Vite production build verified clean (0 errors).
