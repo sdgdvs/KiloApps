@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-usability
+current_agent: kilo-qa
+next_agent: kilo-qa
 agent_rotation:
 - kilo-graphics
 - kilo-soundscape
@@ -17,7 +17,7 @@ current_targets:
   kilo_graphics: KWizard
   kilo_soundscape: kweb://webring
   kilo_tester: KChess
-  kilo_usability: KDB
+  kilo_usability: KCalc
   kilo_qa: KSudoku
   kilo_expander: KJournal
 virtual_web_target: kweb://geocities
@@ -34,9 +34,9 @@ virtual_web_rotation:
 - kweb://echo-subsystem.net
 - kweb://deep-core
 last_run:
-  agent: kilo-tester
-  app: KCalendar
-  timestamp: 2026-10-17T06:15:00+0000
+  agent: kilo-usability
+  app: KDB
+  timestamp: 2026-10-17T06:31:00+0000
 last_planner_run: '2026-10-16T20:35:00Z'
 ---
 
@@ -174,6 +174,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-17T06:31:00+0000 — kilo-usability: KDB (Responsive Layout & SQL Studio Ergonomics)**
+  - Responsive Layout: Added <=540px container wrapping, compact mobile search bar, and grid adaptability.
+  - Studio Ergonomics: Added high-contrast `:focus-visible` styling, quick SQL keyword chips, and Tab key completion.
+  - Status: PASS ✅ (`kdb.html` ~124 KB < 999 KB ceiling; Vite build clean with 0 errors).
+  - Queue: Advanced `kilo_usability` target to `KCalc`; rotation handoff to `kilo-qa`.
+
 - **2026-10-17T06:15:00+0000 — kilo-tester: KCalendar (Interactive UI & Clipboard Fallback Audit)**
   - UI Elements: Audited all buttons, export dropdown options, modals, shortcuts (F1/F5/F9/Escape), and event form hooks.
   - Clipboard Reliability: Added textarea execCommand fallback to copyAgendaSummary for seamless operation in sandboxed iframes.
@@ -197,10 +203,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - ARG & Network Integration: Verified subterranean 1999Hz carrier signals & cross-links in KNet, Portal, and Webring.
   - Status: PASS ✅ (`warez.html` 517.5 KB < 999 KB ceiling; Vite build clean with 0 errors).
   - Queue: Advanced `virtual_web_target` to `kweb://geocities`; rotation handoff to `kilo-graphics`.
-
-- **2026-10-17T04:15:00+0000 — kilo-expander: KZip (Deep Feature Expansion)**
-  - Compression Benchmark Lab: real-time side-by-side Store vs RLE vs Deflate speed, ratio, and throughput [Alt+B].
-  - Multi-Volume Splitter & Combiner: 1.44MB/720KB/custom floppy volume slicer & part reconstructor [Alt+S].
-  - Deduplication & Cryptographic Hash Audit: SHA-256 / CRC-32 duplicate detector & space reclamation [Alt+D].
-  - Archive Transcoder: 1-click container conversion between ZIP, KZA, TAR, and SFX [Ctrl+T].
-  - Status: PASS ✅ (`kzip.html` 150.2 KB < 999 KB ceiling; 0 JS errors, 0 Vite build errors).

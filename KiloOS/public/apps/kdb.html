@@ -867,9 +867,50 @@
     to { opacity: 0; transform: translateY(10px); }
   }
 
+  /* Usability & Ergonomics: Accessible Focus & High Contrast Autocomplete */
+  :focus-visible {
+    outline: 2px solid var(--primary) !important;
+    outline-offset: 1px !important;
+  }
+  .sql-chip-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    align-items: center;
+    padding: 4px 8px;
+    background: rgba(0, 0, 0, 0.4);
+    border-radius: 4px;
+    border: 1px solid var(--border-color);
+  }
+  .sql-chip {
+    background: rgba(56, 189, 248, 0.15);
+    color: #7dd3fc;
+    border: 1px solid rgba(56, 189, 248, 0.35);
+    border-radius: 3px;
+    padding: 2px 6px;
+    font-size: 10px;
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  .sql-chip:hover {
+    background: var(--primary);
+    color: #0b0f17;
+    border-color: var(--primary);
+  }
   @media (max-width: 768px) {
     .charts-row { grid-template-columns: 1fr; }
     .stats-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+  @media (max-width: 540px) {
+    body { padding: 4px; }
+    .header { padding: 6px 8px; }
+    .controls { justify-content: flex-start; }
+    .search-box { min-width: 100%; max-width: 100%; order: 10; margin-top: 4px; }
+    .pwd-box { width: 75px; }
+    .stats-grid { grid-template-columns: 1fr; }
+    .table-container, .sql-results-container { font-size: 11px; }
   }
 </style>
 </head>
@@ -1012,6 +1053,17 @@
       </div>
 
       <div class="sql-editor-container">
+        <div class="sql-chip-bar" id="sqlChipBar">
+          <span style="font-size:10px;color:var(--text-muted);font-weight:600;text-transform:uppercase;">Keywords [Tab/Click]:</span>
+          <button type="button" class="sql-chip" onclick="insertSqlKeyword('SELECT * FROM ')">SELECT</button>
+          <button type="button" class="sql-chip" onclick="insertSqlKeyword(' WHERE ')">WHERE</button>
+          <button type="button" class="sql-chip" onclick="insertSqlKeyword(' ORDER BY ')">ORDER BY</button>
+          <button type="button" class="sql-chip" onclick="insertSqlKeyword(' GROUP BY ')">GROUP BY</button>
+          <button type="button" class="sql-chip" onclick="insertSqlKeyword(' INSERT INTO ')">INSERT</button>
+          <button type="button" class="sql-chip" onclick="insertSqlKeyword(' UPDATE ')">UPDATE</button>
+          <button type="button" class="sql-chip" onclick="insertSqlKeyword(' DELETE FROM ')">DELETE</button>
+          <button type="button" class="sql-chip" onclick="insertSqlKeyword(' JOIN ')">JOIN</button>
+        </div>
         <textarea id="sqlEditor" class="sql-editor" spellcheck="false" placeholder="Enter SQL query (e.g. SELECT * FROM employees WHERE dept = 'Engineering' ORDER BY name ASC;)" onkeydown="handleSqlKeyDown(event)"></textarea>
       </div>
 
@@ -2064,10 +2116,43 @@ function copySqlToClipboard() {
   });
 }
 
+function insertSqlKeyword(kw) {
+  const ed = document.getElementById('sqlEditor');
+  if (!ed) return;
+  const start = ed.selectionStart;
+  const end = ed.selectionEnd;
+  const val = ed.value;
+  ed.value = val.substring(0, start) + kw + val.substring(end);
+  ed.selectionStart = ed.selectionEnd = start + kw.length;
+  ed.focus();
+}
+
+const SQL_KEYWORDS = ['SELECT', 'FROM', 'WHERE', 'ORDER BY', 'GROUP BY', 'INSERT INTO', 'UPDATE', 'DELETE FROM', 'JOIN', 'LIMIT', 'COUNT', 'DISTINCT', 'AND', 'OR', 'ASC', 'DESC'];
+
 function handleSqlKeyDown(e) {
   if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
     e.preventDefault();
     executeSqlFromEditor();
+    return;
+  }
+  if (e.key === 'Tab') {
+    e.preventDefault();
+    const ed = e.target;
+    const pos = ed.selectionStart;
+    const textBefore = ed.value.substring(0, pos);
+    const lastWordMatch = textBefore.match(/([a-zA-Z_]+)$/);
+    if (lastWordMatch) {
+      const prefix = lastWordMatch[1].toUpperCase();
+      const match = SQL_KEYWORDS.find(k => k.startsWith(prefix) && k !== prefix);
+      if (match) {
+        const replaceStart = pos - prefix.length;
+        ed.value = ed.value.substring(0, replaceStart) + match + ' ' + ed.value.substring(pos);
+        ed.selectionStart = ed.selectionEnd = replaceStart + match.length + 1;
+        return;
+      }
+    }
+    ed.value = ed.value.substring(0, pos) + '  ' + ed.value.substring(pos);
+    ed.selectionStart = ed.selectionEnd = pos + 2;
   }
 }
 
