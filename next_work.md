@@ -1,5 +1,5 @@
 ---
-current_agent: kilo-graphics
+current_agent: kilo-soundscape
 next_agent: kilo-soundscape
 agent_rotation:
 - kilo-graphics
@@ -34,9 +34,9 @@ virtual_web_rotation:
 - kweb://echo-subsystem.net
 - kweb://deep-core
 last_run:
-  agent: kilo-expander
-  app: KClip
-  timestamp: 2026-10-17T11:15:00+0000
+  agent: kilo-graphics
+  app: KWizard
+  timestamp: 2026-10-17T12:12:04+0000
 last_planner_run: '2026-10-16T20:35:00Z'
 ---
 
@@ -174,6 +174,11 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 ---
 
 ## Recent Execution Logs (Max 5 Entries)
+
+- **2026-10-17T12:12:04+0000 — kilo-graphics: KWizard (Zero-Token Auto-Skip — Inappropriate Target)**
+  - Status: ⏭️ Skip — Imagen 3 asset replacement not appropriate for KWizard (pure vector, board game, or mature art).
+  - Optimization: Handled via orchestrator pre-flight zero-token auto-skip.
+  - Queue: Advanced `kilo-graphics` to `KWizard`; rotation handoff to `kilo-soundscape`.
 
 - **Pass [kilo-creator] (kweb://users/~neon_rider)**:
   - Verified & enhanced Win32 ASM & demoscene shrine (<999 KB Anti-Potemkin standard).
