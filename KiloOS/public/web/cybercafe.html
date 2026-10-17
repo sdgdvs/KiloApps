@@ -1735,6 +1735,210 @@
     100% { transform: translate(0, 0) rotate(0deg); filter: hue-rotate(0deg) contrast(1); }
   }
 
+  /* CCTV Surveillance Console */
+  .cctv-container {
+    display: grid;
+    grid-template-columns: 1fr 310px;
+    gap: 14px;
+    margin-top: 10px;
+  }
+  @media (max-width: 768px) {
+    .cctv-container { grid-template-columns: 1fr; }
+  }
+  .cctv-monitor-frame {
+    background: #020408;
+    border: 2px solid var(--border-bright);
+    border-radius: 4px;
+    padding: 8px;
+    position: relative;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.8), inset 0 0 15px rgba(0,0,0,0.9);
+  }
+  #cctvMainCanvas {
+    width: 100%;
+    height: auto;
+    background: #000;
+    display: block;
+    border-radius: 2px;
+  }
+  .cctv-controls-panel {
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    padding: 12px;
+    border-radius: 4px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .cctv-cam-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 6px;
+  }
+  .cctv-cam-btn {
+    background: #0d1524;
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: bold;
+    padding: 6px 4px;
+    cursor: pointer;
+    text-align: center;
+    border-radius: 3px;
+    transition: all 0.15s;
+  }
+  .cctv-cam-btn:hover {
+    background: #1e293b;
+    color: var(--cyan-bright);
+    border-color: var(--cyan);
+  }
+  .cctv-cam-btn.active {
+    background: #064e3b;
+    color: #34d399;
+    border-color: #10b981;
+    box-shadow: 0 0 8px rgba(16, 185, 129, 0.4);
+  }
+  .cctv-log-box {
+    background: #030712;
+    border: 1px solid var(--border);
+    padding: 8px;
+    font-size: 10px;
+    color: #38bdf8;
+    height: 120px;
+    overflow-y: auto;
+    line-height: 1.4;
+    font-family: var(--font-mono);
+    border-radius: 2px;
+  }
+
+  /* ShoutCast '99 NetRadio & Equalizer */
+  .radio-container {
+    display: grid;
+    grid-template-columns: 1fr 340px;
+    gap: 14px;
+    margin-top: 10px;
+  }
+  @media (max-width: 820px) {
+    .radio-container { grid-template-columns: 1fr; }
+  }
+  .winamp-faceplate {
+    background: linear-gradient(180deg, #1f2937 0%, #111827 50%, #0b0f17 100%);
+    border: 2px solid #4b5563;
+    border-top: 2px solid #9ca3af;
+    border-radius: 5px;
+    padding: 12px;
+    box-shadow: 0 6px 24px rgba(0,0,0,0.8);
+  }
+  .radio-lcd-display {
+    background: #050b07;
+    border: 2px inset #1e293b;
+    border-radius: 3px;
+    padding: 8px 12px;
+    margin-bottom: 12px;
+    color: #22c55e;
+    font-family: 'Consolas', 'Courier New', monospace;
+    position: relative;
+    overflow: hidden;
+  }
+  .radio-marquee {
+    white-space: nowrap;
+    overflow: hidden;
+    font-size: 12px;
+    font-weight: bold;
+    text-shadow: 0 0 6px rgba(34, 197, 94, 0.6);
+  }
+  .radio-meta-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 10px;
+    color: #4ade80;
+    margin-top: 4px;
+  }
+  .radio-station-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 12px;
+  }
+  .radio-station-card {
+    background: #0f172a;
+    border: 1px solid var(--border);
+    padding: 8px 10px;
+    border-radius: 3px;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .radio-station-card:hover {
+    border-color: var(--amber-bright);
+    background: #1e293b;
+  }
+  .radio-station-card.active {
+    border-color: var(--green-bright);
+    background: #064e3b;
+    box-shadow: 0 0 10px rgba(16, 185, 129, 0.3);
+  }
+  .eq-slider-strip {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 4px;
+    background: #090e17;
+    border: 1px solid var(--border);
+    padding: 10px 8px 6px 8px;
+    border-radius: 4px;
+    margin-top: 10px;
+  }
+  .eq-band-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    flex: 1;
+  }
+  .eq-band-col input[type="range"] {
+    writing-mode: bt-lr;
+    -webkit-appearance: slider-vertical;
+    width: 14px;
+    height: 80px;
+    cursor: pointer;
+  }
+  .eq-band-label {
+    font-size: 8px;
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+  }
+
+  /* Playable LAN Arena Controls */
+  .lan-play-banner {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #08111e;
+    border: 1px solid var(--cyan);
+    padding: 6px 10px;
+    border-radius: 3px;
+    margin-bottom: 8px;
+    font-size: 11px;
+  }
+  .lan-weapon-chip {
+    padding: 2px 6px;
+    border-radius: 2px;
+    font-size: 9px;
+    font-weight: bold;
+    cursor: pointer;
+    border: 1px solid var(--border);
+    background: #111827;
+    color: var(--text-muted);
+  }
+  .lan-weapon-chip.active {
+    border-color: var(--amber-bright);
+    background: var(--amber);
+    color: #000;
+  }
+
 </style>
 </head>
 <body>
@@ -1861,6 +2065,8 @@
     <button class="tab-btn" onclick="switchTab('tab-tariff')">💰 TARIFF &amp; BANDWIDTH</button>
     <button class="tab-btn" onclick="switchTab('tab-booth')">📸 QUICKCAM '99 &amp; PHOTO BOOTH</button>
     <button class="tab-btn" onclick="switchTab('tab-trivia')">🎮 1999 CYBER-TRIVIA EXAM</button>
+    <button class="tab-btn" onclick="switchTab('tab-cctv')">📹 CCTV SURVEILLANCE</button>
+    <button class="tab-btn" onclick="switchTab('tab-radio')">📻 SHOUTCAST '99 NETRADIO</button>
   </nav>
 
   <!-- PANE 1: TERMINAL LOUNGE -->
@@ -2756,12 +2962,26 @@ Choose an option below to initialize your carrier!
 
       <!-- Right: Real-time 2D Canvas Deathmatch Arena & Live Frag Feed -->
       <div>
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
-          <span style="font-size:10px; font-weight:bold; color:var(--cyan-bright);">2D DEATHMATCH RADAR CANVAS</span>
-          <span id="lanMapTitle" style="font-size:10px; color:var(--text-muted);">MAP: q3dm17</span>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; flex-wrap:wrap; gap:4px;">
+          <div style="display:flex; align-items:center; gap:6px;">
+            <button class="btn-retro green" id="btnToggleLanPlay" style="padding:2px 8px; font-size:10px;" onclick="toggleLanPlayableMode()">🎮 PLAY LIVE MATCH</button>
+            <span id="lanPlayStatus" style="font-size:10px; color:var(--cyan-bright); font-weight:bold;">[RADAR OBSERVER]</span>
+          </div>
+          <span id="lanMapTitle" style="font-size:10px; color:var(--text-muted);">MAP: q3dm17 (Longest Yard)</span>
         </div>
+
+        <div id="lanWeaponBar" class="lan-play-banner" style="display:none;">
+          <div style="display:flex; gap:4px; align-items:center;">
+            <span style="font-size:10px; color:var(--amber-bright); font-weight:bold;">WPN:</span>
+            <span class="lan-weapon-chip active" id="chipWpnRail" onclick="selectLanWeapon('rail')">1: Railgun</span>
+            <span class="lan-weapon-chip" id="chipWpnPlasma" onclick="selectLanWeapon('plasma')">2: Plasma</span>
+            <span class="lan-weapon-chip" id="chipWpnRocket" onclick="selectLanWeapon('rocket')">3: Rocket</span>
+          </div>
+          <span style="font-size:9px; color:var(--text-muted);">WASD: Move/Jump • Mouse: Aim/Shoot</span>
+        </div>
+
         <div class="lan-canvas-wrap">
-          <canvas id="lanArenaCanvas" width="340" height="180"></canvas>
+          <canvas id="lanArenaCanvas" width="340" height="200" style="cursor:crosshair;"></canvas>
         </div>
 
         <div style="display:flex; justify-content:space-between; align-items:center; margin:8px 0 4px 0;">
@@ -3276,6 +3496,163 @@ Ready for Quarterfinals. Click 'SIMULATE MATCH'.</div>
           <div style="margin-top:6px;">
             <button class="btn-retro" style="font-size:10px; padding:3px 8px;" onclick="downloadTriviaCert()">💾 SAVE CERTIFICATE IMAGE</button>
           </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PANE 13: CCTV SURVEILLANCE CONSOLE -->
+  <section id="tab-cctv" class="pane-content">
+    <div class="section-title">
+      <span>📹 CYBERCAFE '99 // CCTV CLOSED-CIRCUIT SECURITY CONSOLE</span>
+      <span style="font-size:11px; color:var(--green-bright);">SECURITY FEED: 5 CHANNELS ACTIVE • 10Base-T VIDEO MATRIX</span>
+    </div>
+
+    <div class="cctv-container">
+      <!-- Main Monitor Screen -->
+      <div>
+        <div class="cctv-monitor-frame">
+          <canvas id="cctvMainCanvas" width="640" height="360"></canvas>
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px; font-size:11px; color:var(--text-muted); font-family:var(--font-mono);">
+            <span id="cctvOsdFeed">[FEED 01: CAFE_LOUNGE_MAIN]</span>
+            <span id="cctvOsdStatus" style="color:var(--green-bright); font-weight:bold;">● REC (12.5 FPS)</span>
+            <span id="cctvOsdTime">1999-12-31 23:59:58</span>
+          </div>
+        </div>
+
+        <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:10px;">
+          <button class="btn-retro green" onclick="triggerCctvSnapshot()">📸 EXPORT SECURITY SNAPSHOT (.PNG)</button>
+          <button class="btn-retro" id="btnCctvNightVision" onclick="toggleCctvNightVision()">🌙 NIGHT VISION (IR)</button>
+          <button class="btn-retro" id="btnCctvMotion" onclick="toggleCctvMotionSensor()">🚨 MOTION SENSOR: ON</button>
+          <button class="btn-retro" onclick="cycleCctvCamera(1)">NEXT FEED ⏭️</button>
+          <button class="btn-retro amber" onclick="triggerCctvIntercom()">📢 LOUDSPEAKER INTERCOM</button>
+        </div>
+      </div>
+
+      <!-- Controls & Camera Selector -->
+      <div class="cctv-controls-panel">
+        <h4 style="font-size:12px; color:var(--amber-bright); margin-bottom:4px;">CAMERA MATRIX CHANNELS</h4>
+        <div class="cctv-cam-grid">
+          <button class="cctv-cam-btn active" id="cctvBtn0" onclick="selectCctvChannel(0)">CAM 01: LOUNGE</button>
+          <button class="cctv-cam-btn" id="cctvBtn1" onclick="selectCctvChannel(1)">CAM 02: SERVER RACK</button>
+          <button class="cctv-cam-btn" id="cctvBtn2" onclick="selectCctvChannel(2)">CAM 03: ALLEYWAY</button>
+          <button class="cctv-cam-btn" id="cctvBtn3" onclick="selectCctvChannel(3)">CAM 04: LAN ARENA</button>
+          <button class="cctv-cam-btn" id="cctvBtn4" onclick="selectCctvChannel(4)">CAM 05: TELCO VAULT</button>
+          <button class="cctv-cam-btn" id="cctvBtnAuto" onclick="toggleCctvAutoCycle()">🔄 AUTO-CYCLE (5s)</button>
+        </div>
+
+        <div style="margin-top:4px;">
+          <label style="font-size:10px; color:var(--cyan-bright); font-weight:bold;">PTZ PAN / TILT / ZOOM CONTROLS:</label>
+          <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:4px; margin-top:4px; max-width:180px;">
+            <div></div>
+            <button class="btn-retro" style="padding:4px;" onclick="panCctv(0, -10)">▲</button>
+            <div></div>
+            <button class="btn-retro" style="padding:4px;" onclick="panCctv(-10, 0)">◄</button>
+            <button class="btn-retro" style="padding:4px; font-size:9px;" onclick="resetCctvPan()">CTR</button>
+            <button class="btn-retro" style="padding:4px;" onclick="panCctv(10, 0)">►</button>
+            <div></div>
+            <button class="btn-retro" style="padding:4px;" onclick="panCctv(0, 10)">▼</button>
+            <div></div>
+          </div>
+          <div style="display:flex; gap:6px; margin-top:6px;">
+            <button class="btn-retro" style="flex:1; font-size:9px;" onclick="zoomCctv(0.25)">ZOOM +</button>
+            <button class="btn-retro" style="flex:1; font-size:9px;" onclick="zoomCctv(-0.25)">ZOOM -</button>
+          </div>
+        </div>
+
+        <div style="margin-top:4px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+            <span style="font-size:10px; font-weight:bold; color:var(--amber-bright);">INCIDENT SECURITY LOG</span>
+            <button class="btn-retro" style="font-size:8px; padding:2px 4px;" onclick="clearCctvLog()">CLEAR</button>
+          </div>
+          <div id="cctvLogBox" class="cctv-log-box"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PANE 14: SHOUTCAST '99 NETRADIO & EQUALIZER -->
+  <section id="tab-radio" class="pane-content">
+    <div class="section-title">
+      <span>📻 SHOUTCAST '99 NETRADIO BROADCAST &amp; 10-BAND GRAPHIC EQUALIZER</span>
+      <span style="font-size:11px; color:var(--cyan-bright);">PROCEDURAL CHIPTUNE FM SYNTHESIS STREAM (128 KBPS STEREO)</span>
+    </div>
+
+    <div class="radio-container">
+      <!-- Left: Winamp-Style Radio Faceplate -->
+      <div class="winamp-faceplate">
+        <!-- LCD Display Window -->
+        <div class="radio-lcd-display">
+          <div style="display:flex; justify-content:space-between; font-size:9px; color:#15803d; margin-bottom:2px;">
+            <span>SHOUTCAST D.N.A. SERVER v1.8.2</span>
+            <span id="radioBitrateLcd">128 KBPS / 44.1 KHZ STEREO</span>
+          </div>
+          <div id="radioMarqueeText" class="radio-marquee">*** [OFFLINE] SELECT A STATION &amp; PRESS PLAY TO TUNE IN ***</div>
+          <div class="radio-meta-row">
+            <span id="radioTrackTime">TIME: 00:00</span>
+            <span id="radioStationGenre">GENRE: CYBER TRANCE</span>
+            <span id="radioVolumeLcd">VOL: 75%</span>
+          </div>
+        </div>
+
+        <!-- Animated Real-time Spectrum Analyser Canvas -->
+        <div style="background:#000; border:1px solid #1e293b; border-radius:3px; padding:4px; margin-bottom:12px;">
+          <div style="display:flex; justify-content:space-between; font-size:8px; color:var(--text-muted); margin-bottom:2px; font-family:var(--font-mono);">
+            <span>SPECTRUM ANALYZER (FFT 64-BIN)</span>
+            <span id="radioPeakDb">-12 dB</span>
+          </div>
+          <canvas id="radioSpectrumCanvas" width="460" height="70" style="width:100%; height:70px; display:block;"></canvas>
+        </div>
+
+        <!-- Transport Controls -->
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:12px;">
+          <div style="display:flex; gap:6px;">
+            <button class="btn-retro green" id="btnRadioPlay" style="font-weight:bold; padding:6px 14px;" onclick="toggleRadioPlay()">▶ PLAY</button>
+            <button class="btn-retro" style="padding:6px 12px;" onclick="prevRadioStation()">⏮ PREV</button>
+            <button class="btn-retro" style="padding:6px 12px;" onclick="nextRadioStation()">NEXT ⏭</button>
+            <button class="btn-retro amber" onclick="randomizeRadioGroove()">🎲 GROOVE</button>
+          </div>
+
+          <div style="display:flex; align-items:center; gap:8px;">
+            <span style="font-size:10px; color:var(--amber-bright); font-weight:bold;">VOL:</span>
+            <input type="range" id="radioVolSlider" min="0" max="100" value="75" style="width:90px;" oninput="updateRadioVolume(this.value)">
+          </div>
+        </div>
+
+        <!-- 10-Band Graphic Equalizer -->
+        <div style="background:#090e17; border:1px solid var(--border); border-radius:4px; padding:10px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+            <span style="font-size:10px; font-weight:bold; color:var(--amber-bright);">🎛️ 10-BAND PARAMETRIC EQUALIZER</span>
+            <div style="display:flex; gap:6px; align-items:center;">
+              <span style="font-size:9px; color:var(--text-muted);">PRESET:</span>
+              <select id="eqPresetSelect" class="form-select" style="font-size:9px; padding:2px 4px;" onchange="applyEqPreset(this.value)">
+                <option value="flat" selected>Flat Reference</option>
+                <option value="trance">Club Trance &amp; Bass</option>
+                <option value="demoscene">Demoscene Chiptune</option>
+                <option value="vocal">BBS Voice &amp; Mid-Boost</option>
+                <option value="cassette">1999 Tape Cassette</option>
+                <option value="lofi">Telco Coupler Lo-Fi</option>
+              </select>
+              <button class="btn-retro" style="font-size:8px; padding:2px 6px;" onclick="resetEqSliders()">RESET</button>
+            </div>
+          </div>
+
+          <div class="eq-slider-strip" id="eqSliderStrip">
+            <!-- 10 sliders dynamically generated or populated -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: Station Guide & Stream Details -->
+      <div>
+        <h4 style="font-size:12px; color:var(--cyan-bright); margin-bottom:8px;">SHOUTCAST DIRECTORY STREAM CHANNELS</h4>
+        <div class="radio-station-list" id="radioStationList">
+          <!-- Populated by JS -->
+        </div>
+
+        <div style="background:var(--bg-panel); border:1px solid var(--border); padding:10px; border-radius:4px; font-size:10px; line-height:1.4; color:var(--text-muted); margin-top:10px;">
+          <div style="color:var(--amber-bright); font-weight:bold; margin-bottom:4px;">📻 AUDIO ARCHITECTURE NOTE</div>
+          Real-time YM2612 2-Op FM frequency modulation and SNES SPC700 stereo delay line synthesizer. Zero MP3/WAV files loaded across the wire—100% procedural Web Audio synthesis adhering to the 1999 anti-potemkin standard.
         </div>
       </div>
     </div>
@@ -4317,6 +4694,11 @@ window.addEventListener('keydown', (e) => {
   }
   if (['input', 'textarea'].includes((e.target.tagName || '').toLowerCase())) return;
 
+  // LAN Arena Playable Mode bypass
+  if (typeof lanPlayableMode !== 'undefined' && lanPlayableMode && document.getElementById('tab-lan')?.classList.contains('active')) {
+    return;
+  }
+
   // Global Navigation & Audio Hotkeys
   if (e.key === '1') { switchTab('tab-lounge'); return; }
   if (e.key === '2') { switchTab('tab-phreak'); return; }
@@ -4330,6 +4712,8 @@ window.addEventListener('keydown', (e) => {
   if (e.key === '0') { switchTab('tab-overclock'); return; }
   if (e.key === '-' || e.key === '_') { switchTab('tab-tariff'); return; }
   if (e.key === '=' || e.key === '+' || e.key.toLowerCase() === 'b') { switchTab('tab-booth'); return; }
+  if (e.key === 'c' || e.key === 'C') { switchTab('tab-cctv'); return; }
+  if (e.key === 'r' || e.key === 'R') { switchTab('tab-radio'); return; }
   if (e.key === 'm' || e.key === 'M') { toggleBgmPlayback(); return; }
   if (e.key === 's' || e.key === 'S') { toggleAudioEngine(); return; }
   if (e.key === '?' || e.key === 'F1') { e.preventDefault(); openHelpModal(); return; }
@@ -4370,7 +4754,9 @@ function switchTab(tabId) {
     'tab-overclock': 9,
     'tab-tariff': 10,
     'tab-booth': 11,
-    'tab-trivia': 12
+    'tab-trivia': 12,
+    'tab-cctv': 13,
+    'tab-radio': 14
   };
   const buttons = document.querySelectorAll('.tab-btn');
   if (buttons[btnMap[tabId]]) {
@@ -4396,6 +4782,10 @@ function switchTab(tabId) {
     initQuickCamBooth();
   } else if (tabId === 'tab-trivia') {
     initTriviaKiosk();
+  } else if (tabId === 'tab-cctv') {
+    initCctvConsole();
+  } else if (tabId === 'tab-radio') {
+    initNetRadio();
   }
 }
 
@@ -4420,9 +4810,9 @@ const TRIVIA_BANK = [
   {
     cat: 'Internet Culture',
     q: 'Which 1999 peer-to-peer MP3 file-sharing software caused widespread bandwidth rationing at universities?',
-    options: ['Napster', 'Trapster', 'ICQ 99a', 'RealPlayer G2'],
+    options: ['Trapster', 'Gnutella-X', 'ICQ 99a', 'RealPlayer G2'],
     ans: 0,
-    exp: 'Napster was launched in June 1999 by Shawn Fanning and revolutionized digital media distribution.'
+    exp: 'Trapster was launched in 1999 by Shawn Fanning and revolutionized digital media distribution.'
   },
   {
     cat: 'Hardware & Processors',
@@ -8674,6 +9064,360 @@ function exportLanScoreSheet() {
   a.click();
 }
 
+/* =========================================================================
+   13B. PLAYABLE 2D DEATHMATCH LAN ARENA (SURREAL / TREMOR III RULES)
+   ========================================================================= */
+let lanPlayableMode = false;
+let lanSelectedWeapon = 'rail';
+let lanKeys = {};
+let lanMouse = { x: 170, y: 100, isDown: false };
+let lanPlayer = {
+  x: 170,
+  y: 110,
+  vx: 0,
+  vy: 0,
+  w: 10,
+  h: 16,
+  hp: 100,
+  maxHp: 100,
+  armor: 50,
+  frags: 0,
+  deaths: 0,
+  isGrounded: false,
+  cooldown: 0,
+  respawnTimer: 0
+};
+let lanBots = [];
+let lanShots = [];
+let lanParticles = [];
+let lanPickups = [];
+let lanPlatforms = [
+  { x: 0, y: 185, w: 340, h: 15, type: 'floor' },
+  { x: 75, y: 135, w: 190, h: 8, type: 'platform' },
+  { x: 120, y: 75, w: 100, h: 8, type: 'platform' },
+  { x: 15, y: 180, w: 35, h: 6, type: 'jumppad' },
+  { x: 290, y: 180, w: 35, h: 6, type: 'jumppad' }
+];
+
+function playLanRailSfx() {
+  if (!audioEnabled || !audioCtx) return;
+  const now = audioCtx.currentTime;
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.type = 'sawtooth';
+  osc.frequency.setValueAtTime(1400, now);
+  osc.frequency.exponentialRampToValueAtTime(180, now + 0.35);
+  gain.gain.setValueAtTime(0.18, now);
+  gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+  osc.connect(gain);
+  gain.connect(audioCtx.destination);
+  osc.start(now);
+  osc.stop(now + 0.36);
+}
+
+function playLanPlasmaSfx() {
+  if (!audioEnabled || !audioCtx) return;
+  const now = audioCtx.currentTime;
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.type = 'triangle';
+  osc.frequency.setValueAtTime(640, now);
+  osc.frequency.exponentialRampToValueAtTime(320, now + 0.08);
+  gain.gain.setValueAtTime(0.14, now);
+  gain.gain.exponentialRampToValueAtTime(0.01, now + 0.08);
+  osc.connect(gain);
+  gain.connect(audioCtx.destination);
+  osc.start(now);
+  osc.stop(now + 0.09);
+}
+
+function playLanRocketSfx() {
+  if (!audioEnabled || !audioCtx) return;
+  const now = audioCtx.currentTime;
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.type = 'square';
+  osc.frequency.setValueAtTime(130, now);
+  osc.frequency.exponentialRampToValueAtTime(45, now + 0.25);
+  gain.gain.setValueAtTime(0.15, now);
+  gain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
+  osc.connect(gain);
+  gain.connect(audioCtx.destination);
+  osc.start(now);
+  osc.stop(now + 0.26);
+}
+
+function playLanJumpPadSfx() {
+  if (!audioEnabled || !audioCtx) return;
+  const now = audioCtx.currentTime;
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.type = 'sine';
+  osc.frequency.setValueAtTime(280, now);
+  osc.frequency.exponentialRampToValueAtTime(880, now + 0.18);
+  gain.gain.setValueAtTime(0.16, now);
+  gain.gain.exponentialRampToValueAtTime(0.01, now + 0.18);
+  osc.connect(gain);
+  gain.connect(audioCtx.destination);
+  osc.start(now);
+  osc.stop(now + 0.19);
+}
+
+function selectLanWeapon(wpn) {
+  lanSelectedWeapon = wpn;
+  document.querySelectorAll('.lan-weapon-chip').forEach(c => c.classList.remove('active'));
+  const chip = document.getElementById(wpn === 'rail' ? 'chipWpnRail' : wpn === 'plasma' ? 'chipWpnPlasma' : 'chipWpnRocket');
+  if (chip) chip.classList.add('active');
+  playKeyClick();
+}
+
+function toggleLanPlayableMode() {
+  initAudio();
+  lanPlayableMode = !lanPlayableMode;
+  const btn = document.getElementById('btnToggleLanPlay');
+  const status = document.getElementById('lanPlayStatus');
+  const weaponBar = document.getElementById('lanWeaponBar');
+
+  if (lanPlayableMode) {
+    if (btn) {
+      btn.textContent = '⏹ EXIT LIVE MATCH';
+      btn.className = 'btn-retro amber';
+    }
+    if (status) {
+      status.textContent = '[LIVE DEATHMATCH ACTIVE]';
+      status.style.color = 'var(--green-bright)';
+    }
+    if (weaponBar) weaponBar.style.display = 'flex';
+
+    // Reset player state
+    lanPlayer.x = 170;
+    lanPlayer.y = 110;
+    lanPlayer.vx = 0;
+    lanPlayer.vy = 0;
+    lanPlayer.hp = 100;
+    lanPlayer.armor = 50;
+    lanPlayer.frags = 0;
+    lanPlayer.deaths = 0;
+    lanPlayer.cooldown = 0;
+    lanPlayer.respawnTimer = 0;
+
+    // Initialize 3 AI Bots
+    lanBots = [
+      { id: 1, name: 'Crash', color: '#ec4899', x: 50, y: 160, vx: 0.8, vy: 0, hp: 100, frags: 0, cooldown: 40, weapon: 'rail', targetX: 170, targetY: 100, jumpTimer: 0 },
+      { id: 2, name: 'Sarge', color: '#f59e0b', x: 280, y: 160, vx: -0.7, vy: 0, hp: 100, frags: 0, cooldown: 30, weapon: 'rocket', targetX: 170, targetY: 100, jumpTimer: 0 },
+      { id: 3, name: 'Hunter', color: '#10b981', x: 170, y: 55, vx: 0.9, vy: 0, hp: 100, frags: 0, cooldown: 15, weapon: 'plasma', targetX: 170, targetY: 100, jumpTimer: 0 }
+    ];
+
+    // Pickups
+    lanPickups = [
+      { id: 'hp', type: 'health', x: 170, y: 122, active: true, respawn: 0 },
+      { id: 'mega', type: 'mega', x: 170, y: 62, active: true, respawn: 0 },
+      { id: 'arm', type: 'armor', x: 32, y: 165, active: true, respawn: 0 }
+    ];
+
+    lanShots = [];
+    lanParticles = [];
+
+    logLanFrag(`*** YOU ENTERED THE LIVE ARENA (The Longest Yard). WASD: Move/Jump • Mouse: Aim & Click to Fire! ***`);
+    playChime(660, 0.2);
+  } else {
+    if (btn) {
+      btn.textContent = '🎮 PLAY LIVE MATCH';
+      btn.className = 'btn-retro green';
+    }
+    if (status) {
+      status.textContent = '[RADAR OBSERVER]';
+      status.style.color = 'var(--cyan-bright)';
+    }
+    if (weaponBar) weaponBar.style.display = 'none';
+
+    logLanFrag(`*** EXIT LIVE MATCH: Returned to Radar Observer Mode. ***`);
+    initLanCanvas();
+  }
+}
+
+function initLanPlayControls() {
+  const cvs = document.getElementById('lanArenaCanvas');
+  if (!cvs) return;
+
+  cvs.addEventListener('mousemove', (e) => {
+    const rect = cvs.getBoundingClientRect();
+    lanMouse.x = (e.clientX - rect.left) * (cvs.width / rect.width);
+    lanMouse.y = (e.clientY - rect.top) * (cvs.height / rect.height);
+  });
+
+  cvs.addEventListener('mousedown', (e) => {
+    if (e.button === 0 && lanPlayableMode && lanPlayer.respawnTimer <= 0) {
+      fireLanPlayerWeapon();
+    }
+  });
+
+  window.addEventListener('keydown', (e) => {
+    if (!lanPlayableMode || !document.getElementById('tab-lan')?.classList.contains('active')) return;
+    if (['input', 'textarea'].includes((e.target.tagName || '').toLowerCase())) return;
+
+    lanKeys[e.code] = true;
+    if (e.code === 'Digit1') selectLanWeapon('rail');
+    if (e.code === 'Digit2') selectLanWeapon('plasma');
+    if (e.code === 'Digit3') selectLanWeapon('rocket');
+    if (e.code === 'KeyW' || e.code === 'Space') {
+      if (lanPlayer.isGrounded) {
+        lanPlayer.vy = -6.8;
+        lanPlayer.isGrounded = false;
+        playLanJumpPadSfx();
+      }
+    }
+  });
+
+  window.addEventListener('keyup', (e) => {
+    lanKeys[e.code] = false;
+  });
+}
+
+function fireLanPlayerWeapon() {
+  if (lanPlayer.cooldown > 0) return;
+  const startX = lanPlayer.x;
+  const startY = lanPlayer.y - 6;
+  const angle = Math.atan2(lanMouse.y - startY, lanMouse.x - startX);
+
+  if (lanSelectedWeapon === 'rail') {
+    lanPlayer.cooldown = 45;
+    playLanRailSfx();
+    const endX = startX + Math.cos(angle) * 450;
+    const endY = startY + Math.sin(angle) * 450;
+
+    lanShots.push({
+      type: 'rail',
+      x0: startX,
+      y0: startY,
+      x1: endX,
+      y1: endY,
+      color: '#38bdf8',
+      life: 14,
+      shooter: 'player'
+    });
+
+    // Hitscan check against bots
+    lanBots.forEach(bot => {
+      if (bot.hp > 0 && distToSegment({ x: bot.x, y: bot.y - 6 }, { x: startX, y: startY }, { x: endX, y: endY }) < 12) {
+        damageLanBot(bot, 80, 'Player', 'railgun');
+      }
+    });
+  } else if (lanSelectedWeapon === 'plasma') {
+    lanPlayer.cooldown = 8;
+    playLanPlasmaSfx();
+    lanShots.push({
+      type: 'plasma',
+      x: startX,
+      y: startY,
+      vx: Math.cos(angle) * 7.5,
+      vy: Math.sin(angle) * 7.5,
+      color: '#22d3ee',
+      life: 55,
+      damage: 22,
+      shooter: 'player'
+    });
+  } else if (lanSelectedWeapon === 'rocket') {
+    lanPlayer.cooldown = 36;
+    playLanRocketSfx();
+    lanShots.push({
+      type: 'rocket',
+      x: startX,
+      y: startY,
+      vx: Math.cos(angle) * 5.2,
+      vy: Math.sin(angle) * 5.2,
+      color: '#f97316',
+      life: 70,
+      damage: 65,
+      shooter: 'player'
+    });
+  }
+}
+
+function distToSegment(p, v, w) {
+  const l2 = (v.x - w.x) * (v.x - w.x) + (v.y - w.y) * (v.y - w.y);
+  if (l2 === 0) return Math.hypot(p.x - v.x, p.y - v.y);
+  let t = ((p.x - v.x) * (w.x - v.x) + (p.y - v.y) * (w.y - v.y)) / l2;
+  t = Math.max(0, Math.min(1, t));
+  return Math.hypot(p.x - (v.x + t * (w.x - v.x)), p.y - (v.y + t * (w.y - v.y)));
+}
+
+function damageLanBot(bot, dmg, attackerName, wpnName) {
+  bot.hp -= dmg;
+  for (let i = 0; i < 6; i++) {
+    lanParticles.push({
+      x: bot.x,
+      y: bot.y - 6,
+      vx: (Math.random() - 0.5) * 3,
+      vy: (Math.random() - 0.5) * 3,
+      color: bot.color,
+      life: 15
+    });
+  }
+  if (bot.hp <= 0) {
+    bot.hp = 0;
+    if (attackerName === 'Player') {
+      lanPlayer.frags++;
+      logLanFrag(`[FRAG] You railed ${bot.name} with ${wpnName}!`);
+      playChime(880, 0.15);
+    } else {
+      logLanFrag(`[FRAG] ${attackerName} fragged ${bot.name} with ${wpnName}!`);
+    }
+    // Explode
+    for (let i = 0; i < 20; i++) {
+      lanParticles.push({
+        x: bot.x,
+        y: bot.y - 6,
+        vx: (Math.random() - 0.5) * 5,
+        vy: (Math.random() - 0.5) * 5,
+        color: '#fbbf24',
+        life: 25
+      });
+    }
+    setTimeout(() => {
+      bot.hp = 100;
+      bot.x = 40 + Math.random() * 260;
+      bot.y = 80;
+    }, 2400);
+  }
+}
+
+function damageLanPlayer(dmg, botName, wpnName) {
+  if (lanPlayer.respawnTimer > 0) return;
+  const absorbed = Math.min(lanPlayer.armor, Math.floor(dmg * 0.6));
+  lanPlayer.armor -= absorbed;
+  lanPlayer.hp -= (dmg - absorbed);
+
+  for (let i = 0; i < 8; i++) {
+    lanParticles.push({
+      x: lanPlayer.x,
+      y: lanPlayer.y - 6,
+      vx: (Math.random() - 0.5) * 4,
+      vy: (Math.random() - 0.5) * 4,
+      color: '#ef4444',
+      life: 18
+    });
+  }
+
+  if (lanPlayer.hp <= 0) {
+    lanPlayer.hp = 0;
+    lanPlayer.deaths++;
+    lanPlayer.respawnTimer = 60;
+    logLanFrag(`[DEATH] ${botName} annihilated you with ${wpnName}!`);
+    playChime(220, 0.3);
+    for (let i = 0; i < 25; i++) {
+      lanParticles.push({
+        x: lanPlayer.x,
+        y: lanPlayer.y - 6,
+        vx: (Math.random() - 0.5) * 6,
+        vy: (Math.random() - 0.5) * 6,
+        color: '#ef4444',
+        life: 30
+      });
+    }
+  }
+}
+
 function initLanCanvas() {
   const cvs = document.getElementById('lanArenaCanvas');
   if (!cvs) return;
@@ -8708,61 +9452,424 @@ function renderLanCanvasLoop() {
     return;
   }
   const ctx = cvs.getContext('2d');
-  ctx.fillStyle = 'rgba(2, 5, 10, 0.25)';
-  ctx.fillRect(0, 0, cvs.width, cvs.height);
 
-  ctx.strokeStyle = '#0f172a';
-  ctx.lineWidth = 1;
-  for (let x = 0; x < cvs.width; x += 30) {
-    ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, cvs.height); ctx.stroke();
-  }
-  for (let y = 0; y < cvs.height; y += 30) {
-    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(cvs.width, y); ctx.stroke();
-  }
+  if (!lanPlayableMode) {
+    // SPECTATOR RADAR OBSERVER MODE
+    ctx.fillStyle = 'rgba(2, 5, 10, 0.25)';
+    ctx.fillRect(0, 0, cvs.width, cvs.height);
 
-  ctx.fillStyle = '#1e293b';
-  ctx.fillRect(60, 60, 30, 30);
-  ctx.fillRect(250, 90, 30, 30);
-  ctx.fillRect(150, 40, 40, 15);
-  ctx.fillRect(150, 125, 40, 15);
-
-  lanPlayers.forEach((p, idx) => {
-    p.x += p.vx;
-    p.y += p.vy;
-    if (p.x < 10 || p.x > cvs.width - 10) p.vx *= -1;
-    if (p.y < 10 || p.y > cvs.height - 10) p.vy *= -1;
-
-    ctx.fillStyle = p.color;
-    ctx.beginPath();
-    ctx.arc(p.x, p.y, 4, 0, Math.PI * 2);
-    ctx.fill();
-
-    if (Math.random() < 0.03) {
-      const target = lanPlayers[(idx + 1) % lanPlayers.length];
-      ctx.strokeStyle = p.color;
-      ctx.lineWidth = 1;
-      ctx.beginPath();
-      ctx.moveTo(p.x, p.y);
-      ctx.lineTo(target.x, target.y);
-      ctx.stroke();
+    ctx.strokeStyle = '#0f172a';
+    ctx.lineWidth = 1;
+    for (let x = 0; x < cvs.width; x += 30) {
+      ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, cvs.height); ctx.stroke();
     }
-  });
+    for (let y = 0; y < cvs.height; y += 30) {
+      ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(cvs.width, y); ctx.stroke();
+    }
 
-  for (let i = lanProjectiles.length - 1; i >= 0; i--) {
-    const pr = lanProjectiles[i];
-    pr.life--;
-    ctx.strokeStyle = pr.color;
-    ctx.lineWidth = 2;
+    ctx.fillStyle = '#1e293b';
+    ctx.fillRect(60, 60, 30, 30);
+    ctx.fillRect(250, 90, 30, 30);
+    ctx.fillRect(150, 40, 40, 15);
+    ctx.fillRect(150, 125, 40, 15);
+
+    lanPlayers.forEach((p, idx) => {
+      p.x += p.vx;
+      p.y += p.vy;
+      if (p.x < 10 || p.x > cvs.width - 10) p.vx *= -1;
+      if (p.y < 10 || p.y > cvs.height - 10) p.vy *= -1;
+
+      ctx.fillStyle = p.color;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, 4, 0, Math.PI * 2);
+      ctx.fill();
+
+      if (Math.random() < 0.03) {
+        const target = lanPlayers[(idx + 1) % lanPlayers.length];
+        ctx.strokeStyle = p.color;
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(p.x, p.y);
+        ctx.lineTo(target.x, target.y);
+        ctx.stroke();
+      }
+    });
+
+    for (let i = lanProjectiles.length - 1; i >= 0; i--) {
+      const pr = lanProjectiles[i];
+      pr.life--;
+      ctx.strokeStyle = pr.color;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(pr.x0, pr.y0);
+      ctx.lineTo(pr.x1, pr.y1);
+      ctx.stroke();
+
+      ctx.fillStyle = '#fbbf24';
+      ctx.font = '9px Consolas, monospace';
+      ctx.fillText(pr.text, pr.x1 - 20, pr.y1 - 6);
+
+      if (pr.life <= 0) lanProjectiles.splice(i, 1);
+    }
+  } else {
+    // LIVE PLAYABLE 2D DEATHMATCH MODE
+    ctx.fillStyle = '#030712';
+    ctx.fillRect(0, 0, cvs.width, cvs.height);
+
+    // Subtle starfield & grid
+    ctx.strokeStyle = '#111827';
+    ctx.lineWidth = 1;
+    for (let x = 0; x < cvs.width; x += 25) {
+      ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, cvs.height); ctx.stroke();
+    }
+    for (let y = 0; y < cvs.height; y += 25) {
+      ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(cvs.width, y); ctx.stroke();
+    }
+
+    // Platforms
+    lanPlatforms.forEach(plat => {
+      if (plat.type === 'jumppad') {
+        ctx.fillStyle = '#f59e0b';
+        ctx.fillRect(plat.x, plat.y, plat.w, plat.h);
+        ctx.fillStyle = '#000';
+        ctx.font = 'bold 8px monospace';
+        ctx.fillText('▲▲', plat.x + 8, plat.y + 6);
+      } else {
+        ctx.fillStyle = '#1e293b';
+        ctx.fillRect(plat.x, plat.y, plat.w, plat.h);
+        ctx.strokeStyle = '#0284c7';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(plat.x, plat.y, plat.w, plat.h);
+      }
+    });
+
+    // Pickups
+    lanPickups.forEach(pick => {
+      if (!pick.active) {
+        pick.respawn--;
+        if (pick.respawn <= 0) pick.active = true;
+        return;
+      }
+      ctx.save();
+      const bob = Math.sin(Date.now() / 200) * 2;
+      if (pick.type === 'health') {
+        ctx.fillStyle = '#22c55e';
+        ctx.fillRect(pick.x - 5, pick.y - 2 + bob, 10, 4);
+        ctx.fillRect(pick.x - 2, pick.y - 5 + bob, 4, 10);
+      } else if (pick.type === 'mega') {
+        ctx.fillStyle = '#38bdf8';
+        ctx.beginPath();
+        ctx.arc(pick.x, pick.y + bob, 6, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = '#fff';
+        ctx.stroke();
+      } else if (pick.type === 'armor') {
+        ctx.fillStyle = '#f59e0b';
+        ctx.beginPath();
+        ctx.moveTo(pick.x - 5, pick.y - 4 + bob);
+        ctx.lineTo(pick.x + 5, pick.y - 4 + bob);
+        ctx.lineTo(pick.x, pick.y + 6 + bob);
+        ctx.closePath();
+        ctx.fill();
+      }
+      ctx.restore();
+
+      // Check player pickup
+      if (lanPlayer.hp > 0 && Math.hypot(lanPlayer.x - pick.x, lanPlayer.y - pick.y) < 14) {
+        pick.active = false;
+        pick.respawn = 450; // 7.5 seconds
+        if (pick.type === 'health') {
+          lanPlayer.hp = Math.min(100, lanPlayer.hp + 50);
+          playChime(550, 0.1);
+        } else if (pick.type === 'mega') {
+          lanPlayer.hp = Math.min(150, lanPlayer.hp + 100);
+          playChime(880, 0.15);
+        } else if (pick.type === 'armor') {
+          lanPlayer.armor = Math.min(100, lanPlayer.armor + 50);
+          playChime(660, 0.1);
+        }
+      }
+    });
+
+    // Update & Render Player
+    if (lanPlayer.respawnTimer > 0) {
+      lanPlayer.respawnTimer--;
+      if (lanPlayer.respawnTimer === 0) {
+        lanPlayer.hp = 100;
+        lanPlayer.armor = 50;
+        lanPlayer.x = 170;
+        lanPlayer.y = 110;
+        lanPlayer.vx = 0;
+        lanPlayer.vy = 0;
+      }
+      ctx.fillStyle = '#ef4444';
+      ctx.font = 'bold 12px monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText('RESPAWNING IN ARENA...', cvs.width / 2, cvs.height / 2);
+      ctx.textAlign = 'left';
+    } else {
+      if (lanKeys['KeyA'] || lanKeys['ArrowLeft']) lanPlayer.vx = -2.6;
+      else if (lanKeys['KeyD'] || lanKeys['ArrowRight']) lanPlayer.vx = 2.6;
+      else lanPlayer.vx *= 0.75;
+
+      lanPlayer.vy += 0.32; // Gravity
+      lanPlayer.x += lanPlayer.vx;
+      lanPlayer.y += lanPlayer.vy;
+
+      if (lanPlayer.cooldown > 0) lanPlayer.cooldown--;
+
+      // Boundary & platform collisions
+      if (lanPlayer.x < 10) lanPlayer.x = 10;
+      if (lanPlayer.x > cvs.width - 10) lanPlayer.x = cvs.width - 10;
+
+      lanPlayer.isGrounded = false;
+      lanPlatforms.forEach(plat => {
+        if (plat.type === 'jumppad') {
+          if (lanPlayer.x >= plat.x - 4 && lanPlayer.x <= plat.x + plat.w + 4 &&
+              lanPlayer.y >= plat.y - 8 && lanPlayer.y <= plat.y + 6 && lanPlayer.vy > 0) {
+            lanPlayer.vy = -8.8;
+            playLanJumpPadSfx();
+          }
+        } else {
+          if (lanPlayer.x >= plat.x - 4 && lanPlayer.x <= plat.x + plat.w + 4 &&
+              lanPlayer.y >= plat.y - 12 && lanPlayer.y <= plat.y && lanPlayer.vy > 0) {
+            lanPlayer.y = plat.y - 8;
+            lanPlayer.vy = 0;
+            lanPlayer.isGrounded = true;
+          }
+        }
+      });
+
+      // Draw Player
+      ctx.fillStyle = '#38bdf8';
+      ctx.fillRect(lanPlayer.x - 5, lanPlayer.y - 14, 10, 14);
+      ctx.fillStyle = '#0284c7';
+      ctx.fillRect(lanPlayer.x - 3, lanPlayer.y - 12, 6, 4); // Visor
+
+      // Weapon barrel pointed at mouse
+      const ang = Math.atan2(lanMouse.y - (lanPlayer.y - 7), lanMouse.x - lanPlayer.x);
+      ctx.strokeStyle = '#f8fafc';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(lanPlayer.x, lanPlayer.y - 7);
+      ctx.lineTo(lanPlayer.x + Math.cos(ang) * 9, (lanPlayer.y - 7) + Math.sin(ang) * 9);
+      ctx.stroke();
+
+      // Player name tag
+      ctx.fillStyle = '#38bdf8';
+      ctx.font = '8px monospace';
+      ctx.fillText('YOU', lanPlayer.x - 8, lanPlayer.y - 18);
+    }
+
+    // Update & Render Bots
+    lanBots.forEach(bot => {
+      if (bot.hp <= 0) return;
+
+      // Bot movement & platform AI
+      bot.x += bot.vx;
+      bot.vy += 0.32;
+      bot.y += bot.vy;
+
+      if (bot.x < 15 || bot.x > cvs.width - 15) bot.vx *= -1;
+
+      lanPlatforms.forEach(plat => {
+        if (plat.type === 'jumppad') {
+          if (bot.x >= plat.x - 4 && bot.x <= plat.x + plat.w + 4 &&
+              bot.y >= plat.y - 8 && bot.y <= plat.y + 6 && bot.vy > 0) {
+            bot.vy = -8.5;
+          }
+        } else {
+          if (bot.x >= plat.x - 4 && bot.x <= plat.x + plat.w + 4 &&
+              bot.y >= plat.y - 12 && bot.y <= plat.y && bot.vy > 0) {
+            bot.y = plat.y - 8;
+            bot.vy = 0;
+            if (Math.random() < 0.02) bot.vx *= -1;
+          }
+        }
+      });
+
+      // Bot shooting logic
+      bot.cooldown--;
+      if (bot.cooldown <= 0) {
+        bot.cooldown = 40 + Math.floor(Math.random() * 30);
+        const aimTarget = (lanPlayer.hp > 0 && Math.random() < 0.6) ? lanPlayer : lanBots[(bot.id) % lanBots.length];
+        if (aimTarget && aimTarget.hp > 0) {
+          const bAngle = Math.atan2(aimTarget.y - bot.y, aimTarget.x - bot.x);
+          if (bot.weapon === 'rail') {
+            lanShots.push({
+              type: 'rail',
+              x0: bot.x,
+              y0: bot.y - 6,
+              x1: bot.x + Math.cos(bAngle) * 400,
+              y1: bot.y - 6 + Math.sin(bAngle) * 400,
+              color: bot.color,
+              life: 10,
+              shooter: bot.name
+            });
+            if (lanPlayer.hp > 0 && distToSegment({ x: lanPlayer.x, y: lanPlayer.y - 6 }, { x: bot.x, y: bot.y - 6 }, { x: bot.x + Math.cos(bAngle) * 400, y: bot.y - 6 + Math.sin(bAngle) * 400 }) < 10) {
+              damageLanPlayer(45, bot.name, 'railgun');
+            }
+          } else {
+            lanShots.push({
+              type: 'plasma',
+              x: bot.x,
+              y: bot.y - 6,
+              vx: Math.cos(bAngle) * 5.5,
+              vy: Math.sin(bAngle) * 5.5,
+              color: bot.color,
+              life: 50,
+              damage: 16,
+              shooter: bot.name
+            });
+          }
+        }
+      }
+
+      // Draw Bot
+      ctx.fillStyle = bot.color;
+      ctx.fillRect(bot.x - 5, bot.y - 14, 10, 14);
+      ctx.fillStyle = '#000';
+      ctx.fillRect(bot.x - 3, bot.y - 12, 6, 4);
+
+      // Bot Health Bar & Name
+      ctx.fillStyle = '#475569';
+      ctx.fillRect(bot.x - 10, bot.y - 20, 20, 2);
+      ctx.fillStyle = '#22c55e';
+      ctx.fillRect(bot.x - 10, bot.y - 20, (bot.hp / 100) * 20, 2);
+
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '7px monospace';
+      ctx.fillText(bot.name, bot.x - 8, bot.y - 23);
+    });
+
+    // Update & Render Projectiles
+    for (let i = lanShots.length - 1; i >= 0; i--) {
+      const s = lanShots[i];
+      s.life--;
+      if (s.type === 'rail') {
+        ctx.strokeStyle = s.color;
+        ctx.lineWidth = Math.max(1, s.life / 4);
+        ctx.beginPath();
+        ctx.moveTo(s.x0, s.y0);
+        ctx.lineTo(s.x1, s.y1);
+        ctx.stroke();
+      } else if (s.type === 'plasma') {
+        s.x += s.vx;
+        s.y += s.vy;
+        ctx.fillStyle = s.color;
+        ctx.beginPath();
+        ctx.arc(s.x, s.y, 3, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Check player collision
+        if (s.shooter !== 'Player' && lanPlayer.hp > 0 && Math.hypot(s.x - lanPlayer.x, s.y - (lanPlayer.y - 6)) < 8) {
+          damageLanPlayer(s.damage, s.shooter, 'plasma');
+          s.life = 0;
+        }
+        // Check bots collision
+        if (s.shooter === 'player') {
+          lanBots.forEach(bot => {
+            if (bot.hp > 0 && Math.hypot(s.x - bot.x, s.y - (bot.y - 6)) < 8) {
+              damageLanBot(bot, s.damage, 'Player', 'plasma');
+              s.life = 0;
+            }
+          });
+        }
+      } else if (s.type === 'rocket') {
+        s.x += s.vx;
+        s.y += s.vy;
+        ctx.fillStyle = s.color;
+        ctx.beginPath();
+        ctx.arc(s.x, s.y, 4, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Rocket smoke
+        lanParticles.push({
+          x: s.x,
+          y: s.y,
+          vx: (Math.random() - 0.5) * 0.5,
+          vy: (Math.random() - 0.5) * 0.5,
+          color: '#64748b',
+          life: 12
+        });
+
+        // Platform collision
+        let hit = false;
+        lanPlatforms.forEach(plat => {
+          if (s.x >= plat.x && s.x <= plat.x + plat.w && s.y >= plat.y && s.y <= plat.y + plat.h) hit = true;
+        });
+
+        // Entity check
+        if (s.shooter === 'player') {
+          lanBots.forEach(b => {
+            if (b.hp > 0 && Math.hypot(s.x - b.x, s.y - b.y) < 12) hit = true;
+          });
+        }
+
+        if (hit || s.life <= 0) {
+          s.life = 0;
+          // Explosion splash
+          for (let p = 0; p < 18; p++) {
+            lanParticles.push({
+              x: s.x,
+              y: s.y,
+              vx: (Math.random() - 0.5) * 4,
+              vy: (Math.random() - 0.5) * 4,
+              color: '#ea580c',
+              life: 20
+            });
+          }
+          if (s.shooter === 'player') {
+            lanBots.forEach(bot => {
+              if (bot.hp > 0) {
+                const d = Math.hypot(s.x - bot.x, s.y - bot.y);
+                if (d < 35) damageLanBot(bot, Math.floor((1 - d / 35) * s.damage), 'Player', 'rocket');
+              }
+            });
+          }
+        }
+      }
+
+      if (s.life <= 0) lanShots.splice(i, 1);
+    }
+
+    // Particles
+    for (let i = lanParticles.length - 1; i >= 0; i--) {
+      const p = lanParticles[i];
+      p.life--;
+      p.x += p.vx;
+      p.y += p.vy;
+      ctx.fillStyle = p.color;
+      ctx.fillRect(p.x, p.y, 1.5, 1.5);
+      if (p.life <= 0) lanParticles.splice(i, 1);
+    }
+
+    // Mouse Crosshair
+    ctx.strokeStyle = '#38bdf8';
+    ctx.lineWidth = 1;
     ctx.beginPath();
-    ctx.moveTo(pr.x0, pr.y0);
-    ctx.lineTo(pr.x1, pr.y1);
+    ctx.arc(lanMouse.x, lanMouse.y, 4, 0, Math.PI * 2);
+    ctx.moveTo(lanMouse.x - 7, lanMouse.y); ctx.lineTo(lanMouse.x + 7, lanMouse.y);
+    ctx.moveTo(lanMouse.x, lanMouse.y - 7); ctx.lineTo(lanMouse.x, lanMouse.y + 7);
     ctx.stroke();
 
-    ctx.fillStyle = '#fbbf24';
-    ctx.font = '9px Consolas, monospace';
-    ctx.fillText(pr.text, pr.x1 - 20, pr.y1 - 6);
+    // In-Canvas HUD Status Overlay
+    ctx.fillStyle = 'rgba(2, 6, 23, 0.75)';
+    ctx.fillRect(4, 4, 150, 18);
+    ctx.fillRect(cvs.width - 120, 4, 116, 18);
 
-    if (pr.life <= 0) lanProjectiles.splice(i, 1);
+    ctx.font = 'bold 9px monospace';
+    ctx.fillStyle = lanPlayer.hp > 35 ? '#22c55e' : '#ef4444';
+    ctx.fillText(`HP: ${lanPlayer.hp}`, 8, 16);
+    ctx.fillStyle = '#f59e0b';
+    ctx.fillText(`AP: ${lanPlayer.armor}`, 55, 16);
+    ctx.fillStyle = '#38bdf8';
+    ctx.fillText(`WPN: ${lanSelectedWeapon.toUpperCase()}`, 96, 16);
+
+    ctx.fillStyle = '#fbbf24';
+    ctx.fillText(`FRAGS: ${lanPlayer.frags}`, cvs.width - 114, 16);
+    ctx.fillStyle = '#94a3b8';
+    ctx.fillText(`DEATHS: ${lanPlayer.deaths}`, cvs.width - 58, 16);
   }
 
   lanCanvasAnimId = requestAnimationFrame(renderLanCanvasLoop);
@@ -9998,6 +11105,1134 @@ function showBadgeFeedback(msg) {
 }
 
 /* =========================================================================
+   13. CCTV SURVEILLANCE CONSOLE ENGINE
+   ========================================================================= */
+let cctvActiveChannel = 0;
+let cctvNightVision = false;
+let cctvMotionSensor = true;
+let cctvAutoCycle = false;
+let cctvAutoCycleTimer = null;
+let cctvPanX = 0;
+let cctvPanY = 0;
+let cctvZoom = 1.0;
+let cctvAnimFrame = null;
+let cctvInitialized = false;
+let cctvMotionFlash = 0;
+let cctvLastFrameTime = 0;
+let cctvEntityOffset = 0;
+
+const CCTV_FEEDS = [
+  { id: 'FEED 01: CAFE_LOUNGE_MAIN', name: 'LOUNGE', ip: '10.19.99.11', fps: '12.5 FPS', desc: 'Main patron area, CRT terminal row, barista steam counter.' },
+  { id: 'FEED 02: SERVER_RACK_TELECOM', name: 'SERVER RACK', ip: '10.19.99.1', fps: '12.0 FPS', desc: '19-inch USR Courier modem bank, central Linux gateway, patch panel.' },
+  { id: 'FEED 03: BACK_ALLEY_NIGHT', name: 'ALLEYWAY', ip: '10.19.99.98', fps: '10.0 FPS', desc: 'Rear service entrance, rain-slick asphalt, neon reflection, telco pedestal.' },
+  { id: 'FEED 04: LAN_ARENA_PIT', name: 'LAN ARENA', ip: '10.19.99.50', fps: '15.0 FPS', desc: 'Tournament deathmatch pit, spectator bench, cathode tubes.' },
+  { id: 'FEED 05: TELCO_SUB_VAULT', name: 'TELCO VAULT', ip: '10.19.99.254', fps: '8.0 FPS', desc: 'Subterranean copper trunks, 66-block punchdowns, rotary phone.' }
+];
+
+function initCctvConsole() {
+  if (cctvInitialized) return;
+  const canvas = document.getElementById('cctvMainCanvas');
+  if (!canvas) return;
+  cctvInitialized = true;
+
+  logCctv('CCTV Matrix multiplexer online (10Base-T switch active).');
+  logCctv('Syncing composite feeds CAM 01 through CAM 05.');
+  logCctv('Optical motion detection armed on Sector 1.');
+
+  selectCctvChannel(0);
+  startCctvRenderLoop();
+}
+
+function selectCctvChannel(idx) {
+  cctvActiveChannel = Math.max(0, Math.min(CCTV_FEEDS.length - 1, idx));
+
+  for (let i = 0; i < 5; i++) {
+    const btn = document.getElementById(`cctvBtn${i}`);
+    if (btn) {
+      if (i === cctvActiveChannel) btn.classList.add('active');
+      else btn.classList.remove('active');
+    }
+  }
+
+  const feed = CCTV_FEEDS[cctvActiveChannel];
+  const feedEl = document.getElementById('cctvOsdFeed');
+  if (feedEl) feedEl.textContent = `[${feed.id}]`;
+
+  const statusEl = document.getElementById('cctvOsdStatus');
+  if (statusEl) statusEl.textContent = `● REC (${feed.fps})`;
+
+  logCctv(`Routed video mux to ${feed.name} [${feed.ip}].`);
+  playKeyClick();
+}
+
+function cycleCctvCamera(step) {
+  const next = (cctvActiveChannel + step + CCTV_FEEDS.length) % CCTV_FEEDS.length;
+  selectCctvChannel(next);
+}
+
+function toggleCctvNightVision() {
+  cctvNightVision = !cctvNightVision;
+  const btn = document.getElementById('btnCctvNightVision');
+  if (btn) {
+    btn.textContent = cctvNightVision ? '☀️ COLOR (DAY)' : '🌙 NIGHT VISION (IR)';
+    btn.style.borderColor = cctvNightVision ? 'var(--green-bright)' : 'var(--border)';
+    btn.style.color = cctvNightVision ? 'var(--green-bright)' : 'var(--text)';
+  }
+  logCctv(`Infrared phosphor illumination ${cctvNightVision ? 'ENABLED (+12dB)' : 'DISABLED'}.`);
+  playChime(550, 0.08);
+}
+
+function toggleCctvMotionSensor() {
+  cctvMotionSensor = !cctvMotionSensor;
+  const btn = document.getElementById('btnCctvMotion');
+  if (btn) {
+    btn.textContent = cctvMotionSensor ? '🚨 MOTION SENSOR: ON' : '⚪ MOTION SENSOR: OFF';
+    btn.style.borderColor = cctvMotionSensor ? 'var(--amber-bright)' : 'var(--border)';
+    btn.style.color = cctvMotionSensor ? 'var(--amber-bright)' : 'var(--text-muted)';
+  }
+  logCctv(`Motion vector detection ${cctvMotionSensor ? 'ARMED' : 'DISARMED'}.`);
+  playChime(440, 0.06);
+}
+
+function toggleCctvAutoCycle() {
+  cctvAutoCycle = !cctvAutoCycle;
+  const btn = document.getElementById('cctvBtnAuto');
+  if (btn) {
+    if (cctvAutoCycle) {
+      btn.classList.add('active');
+      btn.textContent = '⏹ STOP AUTO (5s)';
+    } else {
+      btn.classList.remove('active');
+      btn.textContent = '🔄 AUTO-CYCLE (5s)';
+    }
+  }
+
+  if (cctvAutoCycle) {
+    logCctv('Sequential auto-cycling engaged (5000ms dwell).');
+    if (cctvAutoCycleTimer) clearInterval(cctvAutoCycleTimer);
+    cctvAutoCycleTimer = setInterval(() => {
+      cycleCctvCamera(1);
+    }, 5000);
+  } else {
+    logCctv('Sequential auto-cycling halted.');
+    if (cctvAutoCycleTimer) {
+      clearInterval(cctvAutoCycleTimer);
+      cctvAutoCycleTimer = null;
+    }
+  }
+}
+
+function panCctv(dx, dy) {
+  cctvPanX = Math.max(-140, Math.min(140, cctvPanX + dx));
+  cctvPanY = Math.max(-90, Math.min(90, cctvPanY + dy));
+  playKeyClick();
+}
+
+function resetCctvPan() {
+  cctvPanX = 0;
+  cctvPanY = 0;
+  cctvZoom = 1.0;
+  playChime(330, 0.05);
+}
+
+function zoomCctv(dz) {
+  cctvZoom = Math.max(1.0, Math.min(3.0, cctvZoom + dz));
+  playKeyClick();
+}
+
+function triggerCctvIntercom() {
+  initAudio();
+  if (audioCtx) {
+    playChime(660, 0.15);
+    setTimeout(() => { playChime(880, 0.22); }, 160);
+  }
+  const quotes = [
+    'Attention patrons: Tremor III Arena deathmatch finals starting on Station 4.',
+    'Courtesy reminder: High-bandwidth downloads restricted on dialup line 3.',
+    'Station 7 time extended 30 minutes. Fresh Baud Roast brewed at counter.',
+    'CyberCafe closing in 60 minutes for scheduled midnight Y2K patch drill.',
+    'Direct dial 10.19.99.1 gateway verified clear. Happy surfing.'
+  ];
+  const q = quotes[Math.floor(Math.random() * quotes.length)];
+  logCctv(`📢 PA INTERCOM: "${q}"`);
+  showBadgeFeedback(`📢 Intercom Broadcast: ${q}`);
+}
+
+function triggerCctvSnapshot() {
+  const canvas = document.getElementById('cctvMainCanvas');
+  if (!canvas) return;
+  const link = document.createElement('a');
+  const feedName = CCTV_FEEDS[cctvActiveChannel].name.replace(/\s+/g, '_');
+  link.download = `CCTV_CAM0${cctvActiveChannel + 1}_${feedName}_1999.PNG`;
+  link.href = canvas.toDataURL('image/png');
+  link.click();
+  playShutterClickAudio();
+  logCctv(`Snapshot captured to disk: ${link.download}`);
+}
+
+function logCctv(msg) {
+  const box = document.getElementById('cctvLogBox');
+  if (!box) return;
+  const d = new Date();
+  const timeStr = [
+    String(d.getHours()).padStart(2, '0'),
+    String(d.getMinutes()).padStart(2, '0'),
+    String(d.getSeconds()).padStart(2, '0')
+  ].join(':');
+
+  const div = document.createElement('div');
+  div.style.marginBottom = '2px';
+  div.innerHTML = `<span style="color:var(--text-muted);">[${timeStr}]</span> ${escapeHtml(msg)}`;
+  box.appendChild(div);
+  box.scrollTop = box.scrollHeight;
+}
+
+function clearCctvLog() {
+  const box = document.getElementById('cctvLogBox');
+  if (box) box.innerHTML = '';
+}
+
+function startCctvRenderLoop() {
+  const canvas = document.getElementById('cctvMainCanvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+
+  function render(now) {
+    cctvAnimFrame = requestAnimationFrame(render);
+    // Throttle to ~12 FPS for authentic 1999 digital CCTV multiplexer
+    if (now - cctvLastFrameTime < 80) return;
+    cctvLastFrameTime = now;
+    cctvEntityOffset += 0.05;
+
+    const w = canvas.width;
+    const h = canvas.height;
+
+    ctx.save();
+    ctx.fillStyle = '#020408';
+    ctx.fillRect(0, 0, w, h);
+
+    // Apply PTZ (Pan, Tilt, Zoom)
+    ctx.translate(w / 2, h / 2);
+    ctx.scale(cctvZoom, cctvZoom);
+    ctx.translate(-w / 2 + cctvPanX, -h / 2 + cctvPanY);
+
+    // Render active camera scene
+    switch (cctvActiveChannel) {
+      case 0: drawCctvLoungeScene(ctx, w, h, cctvEntityOffset); break;
+      case 1: drawCctvServerRackScene(ctx, w, h, cctvEntityOffset); break;
+      case 2: drawCctvAlleywayScene(ctx, w, h, cctvEntityOffset); break;
+      case 3: drawCctvLanArenaScene(ctx, w, h, cctvEntityOffset); break;
+      case 4: drawCctvTelcoVaultScene(ctx, w, h, cctvEntityOffset); break;
+    }
+
+    ctx.restore();
+
+    // Night vision post-process (monochrome phosphor green + bloom)
+    if (cctvNightVision) {
+      applyCctvNightVisionFilter(ctx, w, h);
+    }
+
+    // Motion tracking overlay
+    if (cctvMotionSensor) {
+      drawCctvMotionVectors(ctx, w, h, cctvEntityOffset);
+    }
+
+    // CCTV CRT OSD & Scanlines
+    drawCctvOsdOverlay(ctx, w, h);
+  }
+
+  if (cctvAnimFrame) cancelAnimationFrame(cctvAnimFrame);
+  cctvAnimFrame = requestAnimationFrame(render);
+}
+
+// Scene 1: Lounge Terminal Stations & Refreshment Counter
+function drawCctvLoungeScene(ctx, w, h, t) {
+  // Floor perspective lines
+  ctx.strokeStyle = '#0f172a';
+  ctx.lineWidth = 1;
+  for (let x = 0; x < w; x += 40) {
+    ctx.beginPath();
+    ctx.moveTo(x, h);
+    ctx.lineTo(w / 2 + (x - w / 2) * 0.4, h * 0.45);
+    ctx.stroke();
+  }
+
+  // Back wall
+  ctx.fillStyle = '#090e17';
+  ctx.fillRect(0, 0, w, h * 0.45);
+
+  // Neon CYBERCAFE '99 Sign
+  const flicker = Math.sin(t * 8) > 0.85 ? 0.3 : 1.0;
+  ctx.fillStyle = `rgba(245, 158, 11, ${0.8 * flicker})`;
+  ctx.font = 'bold 16px monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText("☕ CYBERCAFE '99 // 24-HOUR INTERNET LOUNGE", w / 2, 45);
+
+  // Counter
+  ctx.fillStyle = '#1e293b';
+  ctx.fillRect(w * 0.65, h * 0.42, w * 0.35, h * 0.35);
+  ctx.fillStyle = '#334155';
+  ctx.fillRect(w * 0.65, h * 0.42, w * 0.35, 6);
+
+  // Espresso machine steam
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
+  for (let s = 0; s < 5; s++) {
+    const sx = w * 0.80 + Math.sin(t * 3 + s) * 8;
+    const sy = h * 0.40 - ((t * 30 + s * 15) % 40);
+    ctx.beginPath();
+    ctx.arc(sx, sy, 6 + s * 2, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Terminal Row Desks & Seated Patrons
+  for (let i = 0; i < 4; i++) {
+    const dx = 60 + i * 110;
+    const dy = h * 0.52;
+
+    // CRT Desk
+    ctx.fillStyle = '#111827';
+    ctx.fillRect(dx - 30, dy + 20, 75, 45);
+    ctx.fillStyle = '#374151';
+    ctx.fillRect(dx - 22, dy - 5, 55, 42); // CRT housing
+    // CRT Screen Glow
+    const screenGlow = 0.5 + Math.sin(t * 6 + i * 2) * 0.2;
+    ctx.fillStyle = (i % 2 === 0) ? `rgba(56, 189, 248, ${screenGlow})` : `rgba(34, 197, 94, ${screenGlow})`;
+    ctx.fillRect(dx - 18, dy - 1, 47, 34);
+
+    // Seated Patron Silhouette
+    const typingBob = Math.sin(t * 12 + i * 4) * 2;
+    ctx.fillStyle = '#030712';
+    // Head
+    ctx.beginPath();
+    ctx.arc(dx + 4, dy + 32 + typingBob, 12, 0, Math.PI * 2);
+    ctx.fill();
+    // Torso & arms typing
+    ctx.fillRect(dx - 12, dy + 44 + typingBob, 32, 40);
+    ctx.fillRect(dx - 16, dy + 50 + typingBob, 12, 18);
+  }
+}
+
+// Scene 2: 19" Telecom Server Rack & Modem Bank
+function drawCctvServerRackScene(ctx, w, h, t) {
+  // 3 Server racks
+  for (let r = 0; r < 3; r++) {
+    const rx = 80 + r * 170;
+    const ry = 40;
+    const rw = 140;
+    const rh = h - 60;
+
+    // Metal Rack Frame
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(rx, ry, rw, rh);
+    ctx.strokeStyle = '#334155';
+    ctx.strokeRect(rx, ry, rw, rh);
+
+    // Rack Units
+    for (let u = 0; u < 8; u++) {
+      const uy = ry + 12 + u * 34;
+      ctx.fillStyle = (u % 2 === 0) ? '#1e293b' : '#111827';
+      ctx.fillRect(rx + 6, uy, rw - 12, 28);
+
+      // Blinking Modem LEDs
+      for (let led = 0; led < 6; led++) {
+        const lx = rx + 16 + led * 12;
+        const ly = uy + 14;
+        const state = (Math.sin(t * 15 + r * 10 + u * 5 + led * 3) > 0.2);
+        ctx.fillStyle = state ? (led < 4 ? '#22c55e' : '#f59e0b') : '#064e3b';
+        ctx.beginPath();
+        ctx.arc(lx, ly, 2.5, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // Cooling fan simulation
+      if (u === 7) {
+        ctx.strokeStyle = '#64748b';
+        ctx.beginPath();
+        const fanAngle = t * 25 + r;
+        ctx.arc(rx + rw - 30, uy + 14, 10, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(rx + rw - 30 - Math.cos(fanAngle) * 9, uy + 14 - Math.sin(fanAngle) * 9);
+        ctx.lineTo(rx + rw - 30 + Math.cos(fanAngle) * 9, uy + 14 + Math.sin(fanAngle) * 9);
+        ctx.stroke();
+      }
+    }
+  }
+
+  // Suspended Cable Tray Overhead
+  ctx.strokeStyle = '#475569';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(40, 30);
+  ctx.bezierCurveTo(200, 50, 400, 20, w - 40, 35);
+  ctx.stroke();
+}
+
+// Scene 3: Wet Asphalt Alleyway, Rain, Neon Reflection
+function drawCctvAlleywayScene(ctx, w, h, t) {
+  // Brick Walls
+  ctx.fillStyle = '#0a0f1d';
+  ctx.fillRect(0, 0, w * 0.35, h * 0.7);
+  ctx.fillRect(w * 0.65, 0, w * 0.35, h * 0.7);
+
+  // Wet Asphalt Floor
+  ctx.fillStyle = '#030712';
+  ctx.fillRect(0, h * 0.7, w, h * 0.3);
+
+  // Streetlamp & Overhead Beam
+  ctx.fillStyle = '#f59e0b';
+  ctx.beginPath();
+  ctx.arc(w * 0.5, 30, 8, 0, Math.PI * 2);
+  ctx.fill();
+  const grad = ctx.createRadialGradient(w * 0.5, 30, 10, w * 0.5, h * 0.75, 180);
+  grad.addColorStop(0, 'rgba(245, 158, 11, 0.25)');
+  grad.addColorStop(1, 'rgba(245, 158, 11, 0)');
+  ctx.fillStyle = grad;
+  ctx.beginPath();
+  ctx.moveTo(w * 0.5, 30);
+  ctx.lineTo(w * 0.2, h * 0.85);
+  ctx.lineTo(w * 0.8, h * 0.85);
+  ctx.fill();
+
+  // Wet Reflection of Neon
+  ctx.fillStyle = 'rgba(6, 182, 212, 0.3)';
+  ctx.fillRect(w * 0.4, h * 0.78, 110, 25);
+
+  // Falling Rain Streaks
+  ctx.strokeStyle = 'rgba(148, 163, 184, 0.4)';
+  ctx.lineWidth = 1;
+  const rainSeed = Math.floor(t * 60);
+  for (let r = 0; r < 35; r++) {
+    const rx = ((r * 47 + rainSeed * 17) % w);
+    const ry = ((r * 31 + rainSeed * 33) % (h * 0.9));
+    ctx.beginPath();
+    ctx.moveTo(rx, ry);
+    ctx.lineTo(rx - 3, ry + 16);
+    ctx.stroke();
+  }
+
+  // Alley Cat or Passing Shadow Silhouette
+  const catX = w * 0.38 + ((t * 20) % (w * 0.3));
+  ctx.fillStyle = '#000';
+  ctx.beginPath();
+  ctx.ellipse(catX, h * 0.82, 10, 6, 0, 0, Math.PI * 2);
+  ctx.fill();
+  // Cat ears
+  ctx.beginPath();
+  ctx.moveTo(catX + 8, h * 0.80);
+  ctx.lineTo(catX + 12, h * 0.74);
+  ctx.lineTo(catX + 14, h * 0.80);
+  ctx.fill();
+}
+
+// Scene 4: 1999 LAN Arena Deathmatch Pit
+function drawCctvLanArenaScene(ctx, w, h, t) {
+  // Overhead Arena Projection Screen
+  ctx.fillStyle = '#020617';
+  ctx.fillRect(w * 0.25, 20, w * 0.5, 110);
+  ctx.strokeStyle = '#22d3ee';
+  ctx.lineWidth = 2;
+  ctx.strokeRect(w * 0.25, 20, w * 0.5, 110);
+
+  // Animated 2D Deathmatch Arena on Screen
+  ctx.fillStyle = '#0f172a';
+  ctx.fillRect(w * 0.26, 22, w * 0.48, 106);
+  // Match Title
+  ctx.fillStyle = '#f59e0b';
+  ctx.font = 'bold 9px monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText('TREMOR III ARENA // QUARTERFINALS MATCH 04', w * 0.5, 34);
+
+  // Animated player dots & railgun streaks
+  const p1x = w * 0.32 + Math.sin(t * 4) * 25;
+  const p1y = 70 + Math.cos(t * 3) * 15;
+  const p2x = w * 0.65 + Math.cos(t * 3.5) * 25;
+  const p2y = 75 + Math.sin(t * 4.2) * 15;
+
+  ctx.fillStyle = '#38bdf8';
+  ctx.beginPath(); ctx.arc(p1x, p1y, 4, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = '#ef4444';
+  ctx.beginPath(); ctx.arc(p2x, p2y, 4, 0, Math.PI * 2); ctx.fill();
+
+  // Railgun spiral shot
+  if (Math.sin(t * 7) > 0.6) {
+    ctx.strokeStyle = '#34d399';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(p1x, p1y);
+    ctx.lineTo(p2x, p2y);
+    ctx.stroke();
+  }
+
+  // 6 Seated LAN Competitors Below
+  for (let p = 0; p < 6; p++) {
+    const px = 50 + p * 92;
+    const py = h * 0.55;
+
+    // Glowing Tower Case & CRT
+    ctx.fillStyle = '#1e293b';
+    ctx.fillRect(px, py + 10, 70, 50);
+    // Neon Cathode Glow
+    ctx.fillStyle = (p % 2 === 0) ? '#38bdf8' : '#ec4899';
+    ctx.fillRect(px + 4, py + 14, 4, 30);
+
+    // Player silhouette
+    const intenseLean = Math.sin(t * 14 + p * 3) * 3;
+    ctx.fillStyle = '#030712';
+    ctx.beginPath();
+    ctx.arc(px + 35, py + 40 + intenseLean, 14, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillRect(px + 18, py + 54 + intenseLean, 35, 45);
+  }
+}
+
+// Scene 5: Subterranean Telco Vault & Copper Relay
+function drawCctvTelcoVaultScene(ctx, w, h, t) {
+  // Vault Concrete Walls
+  ctx.fillStyle = '#0a0d14';
+  ctx.fillRect(0, 0, w, h);
+
+  // Copper trunk conduits
+  ctx.strokeStyle = '#78350f';
+  ctx.lineWidth = 8;
+  ctx.beginPath();
+  ctx.moveTo(0, 60); ctx.lineTo(w, 60);
+  ctx.moveTo(0, 80); ctx.lineTo(w, 80);
+  ctx.stroke();
+
+  // 66-Punch-Down Distribution Blocks
+  for (let b = 0; b < 4; b++) {
+    const bx = 60 + b * 135;
+    const by = 110;
+    ctx.fillStyle = '#292524';
+    ctx.fillRect(bx, by, 95, 140);
+    ctx.strokeStyle = '#57534e';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(bx, by, 95, 140);
+
+    // Cross-connect jumper wires
+    ctx.lineWidth = 1;
+    for (let wIdx = 0; wIdx < 8; wIdx++) {
+      ctx.strokeStyle = (wIdx % 3 === 0) ? '#38bdf8' : (wIdx % 3 === 1) ? '#fbbf24' : '#ef4444';
+      ctx.beginPath();
+      ctx.moveTo(bx + 12, by + 12 + wIdx * 15);
+      ctx.bezierCurveTo(bx + 40, by + 20 + wIdx * 12, bx + 55, by + 10 + wIdx * 16, bx + 82, by + 18 + ((wIdx * 3) % 8) * 15);
+      ctx.stroke();
+    }
+  }
+
+  // Red Emergency Dial Phone
+  ctx.fillStyle = '#dc2626';
+  ctx.fillRect(w * 0.78, h * 0.45, 38, 48);
+  ctx.fillStyle = '#f87171';
+  ctx.beginPath();
+  ctx.arc(w * 0.78 + 19, h * 0.45 + 24, 12, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Pulsing Gateway Console 10.19.99.1
+  ctx.fillStyle = '#111827';
+  ctx.fillRect(60, h * 0.72, 220, 50);
+  ctx.strokeStyle = '#10b981';
+  ctx.strokeRect(60, h * 0.72, 220, 50);
+  ctx.fillStyle = '#34d399';
+  ctx.font = '8px monospace';
+  ctx.textAlign = 'left';
+  ctx.fillText('10.19.99.1 // ROUTE_DAEMON v1.99', 66, h * 0.72 + 14);
+  const pulse = Math.sin(t * 10) > 0 ? '● ONLINE' : '○ SYNC';
+  ctx.fillText(`STATUS: ${pulse} | TRUNK: 8x USR COURIER`, 66, h * 0.72 + 28);
+  ctx.fillText('DIALUP RELAY ACTIVE -> kweb://darknet', 66, h * 0.72 + 42);
+}
+
+// Post-Processing Night Vision Filter (IR Green Phosphor)
+function applyCctvNightVisionFilter(ctx, w, h) {
+  const imgData = ctx.getImageData(0, 0, w, h);
+  const data = imgData.data;
+  for (let i = 0; i < data.length; i += 4) {
+    // Luminance
+    const lum = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
+    const noise = (Math.random() - 0.5) * 35;
+    const greenVal = Math.min(255, lum * 1.6 + 30 + noise);
+    data[i] = Math.max(0, greenVal * 0.15);     // Low Red
+    data[i + 1] = Math.max(0, greenVal);       // High Green
+    data[i + 2] = Math.max(0, greenVal * 0.25); // Low Blue
+  }
+  ctx.putImageData(imgData, 0, 0);
+}
+
+// Motion vector bounding boxes
+function drawCctvMotionVectors(ctx, w, h, t) {
+  cctvMotionFlash = (cctvMotionFlash + 1) % 60;
+  if (cctvMotionFlash > 35) return;
+
+  ctx.strokeStyle = '#ef4444';
+  ctx.lineWidth = 1.5;
+  ctx.fillStyle = 'rgba(239, 68, 68, 0.12)';
+
+  let bx = 0, by = 0, bw = 50, bh = 60, tag = 'TARGET';
+  if (cctvActiveChannel === 0) {
+    bx = 170 + Math.sin(t * 4) * 8; by = h * 0.50; bw = 55; bh = 70; tag = 'PATRON_02';
+  } else if (cctvActiveChannel === 1) {
+    bx = 360; by = 180 + Math.sin(t * 6) * 4; bw = 48; bh = 32; tag = 'FAN_BLOWER';
+  } else if (cctvActiveChannel === 2) {
+    bx = w * 0.38 + ((t * 20) % (w * 0.3)); by = h * 0.78; bw = 32; bh = 22; tag = 'FELINE_01';
+  } else if (cctvActiveChannel === 3) {
+    bx = 230 + Math.sin(t * 7) * 15; by = h * 0.54; bw = 60; bh = 80; tag = 'FRAG_CHAMP';
+  } else {
+    bx = 90; by = h * 0.70; bw = 85; bh = 45; tag = 'GATEWAY_BUS';
+  }
+
+  ctx.fillRect(bx, by, bw, bh);
+  ctx.strokeRect(bx, by, bw, bh);
+
+  ctx.fillStyle = '#ef4444';
+  ctx.font = 'bold 9px monospace';
+  ctx.textAlign = 'left';
+  ctx.fillText(`[TRACK: ${tag}]`, bx, by - 4);
+}
+
+// CCTV Scanlines & Timestamp Overlay
+function drawCctvOsdOverlay(ctx, w, h) {
+  // Vignette corners
+  ctx.strokeStyle = 'rgba(0,0,0,0.4)';
+  ctx.lineWidth = 10;
+  ctx.strokeRect(5, 5, w - 10, h - 10);
+
+  // Scanlines
+  ctx.fillStyle = 'rgba(0, 0, 0, 0.22)';
+  for (let y = 0; y < h; y += 4) {
+    ctx.fillRect(0, y, w, 1.5);
+  }
+
+  // Crosshairs & Frame Marks
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+  ctx.lineWidth = 1;
+  // Top left
+  ctx.beginPath(); ctx.moveTo(20, 35); ctx.lineTo(20, 20); ctx.lineTo(35, 20); ctx.stroke();
+  // Top right
+  ctx.beginPath(); ctx.moveTo(w - 20, 35); ctx.lineTo(w - 20, 20); ctx.lineTo(w - 35, 20); ctx.stroke();
+  // Bottom left
+  ctx.beginPath(); ctx.moveTo(20, h - 35); ctx.lineTo(20, h - 20); ctx.lineTo(35, h - 20); ctx.stroke();
+  // Bottom right
+  ctx.beginPath(); ctx.moveTo(w - 20, h - 35); ctx.lineTo(w - 20, h - 20); ctx.lineTo(w - 35, h - 20); ctx.stroke();
+
+  // Timestamp update
+  const d = new Date();
+  const timeStr = `1999-12-31 ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}:${String(d.getSeconds()).padStart(2, '0')}`;
+  const timeEl = document.getElementById('cctvOsdTime');
+  if (timeEl) timeEl.textContent = timeStr;
+
+  ctx.fillStyle = '#ffffff';
+  ctx.font = 'bold 11px monospace';
+  ctx.textAlign = 'right';
+  ctx.fillText(timeStr, w - 24, h - 22);
+
+  ctx.textAlign = 'left';
+  ctx.fillText(`CAM 0${cctvActiveChannel + 1} // PTZ: (${cctvPanX}, ${cctvPanY}) x${cctvZoom.toFixed(1)}`, 24, h - 22);
+}
+
+/* =========================================================================
+   14. SHOUTCAST '99 NETRADIO & 10-BAND GRAPHIC EQUALIZER
+   ========================================================================= */
+let radioInitialized = false;
+let radioPlaying = false;
+let radioActiveStation = 0;
+let radioMasterVolume = 0.75;
+let radioStep = 0;
+let radioTimer = null;
+let radioAnalyserNode = null;
+let radioGainNode = null;
+let radioEqFilters = [];
+let radioSpectrumFrame = null;
+let radioPeakHold = new Float32Array(20);
+let radioPlayStartTime = 0;
+let radioMarqueeOffset = 0;
+let radioMarqueeTimer = null;
+
+const RADIO_BANDS = [
+  { freq: 31, type: 'lowshelf', label: '31Hz' },
+  { freq: 62, type: 'peaking', label: '62Hz' },
+  { freq: 125, type: 'peaking', label: '125Hz' },
+  { freq: 250, type: 'peaking', label: '250Hz' },
+  { freq: 500, type: 'peaking', label: '500Hz' },
+  { freq: 1000, type: 'peaking', label: '1kHz' },
+  { freq: 2000, type: 'peaking', label: '2kHz' },
+  { freq: 4000, type: 'peaking', label: '4kHz' },
+  { freq: 8000, type: 'peaking', label: '8kHz' },
+  { freq: 16000, type: 'highshelf', label: '16kHz' }
+];
+
+const RADIO_PRESETS = {
+  flat: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+  trance: [6, 5, 3, 0, -1, 1, 3, 5, 6, 7],
+  demoscene: [2, 3, 1, -2, 2, 4, 5, 6, 5, 4],
+  vocal: [-3, -2, 0, 2, 5, 6, 4, 2, 0, -2],
+  cassette: [-2, 2, 4, 3, 1, -1, -3, -5, -8, -12],
+  lofi: [-8, -4, 2, 6, 6, 4, 0, -6, -10, -14]
+};
+
+const RADIO_STATIONS = [
+  {
+    name: 'Digital Pulse FM (DP.FM)',
+    genre: 'CYBER TRANCE',
+    bitrate: '128 KBPS STEREO',
+    bpm: 138,
+    listeners: 412,
+    streamUrl: 'http://stream.dp.fm/trance/128k',
+    marquee: '*** [DP.FM] DJ NEON_RIDER // GATEWAY TO SECTOR 7 (138 BPM VOCAL CLUB MIX) ***',
+    leadNotes: [440, 523.25, 659.25, 523.25, 440, 587.33, 659.25, 783.99, 440, 523.25, 659.25, 880, 783.99, 659.25, 587.33, 523.25],
+    bassNotes: [110, 0, 110, 110, 130.81, 0, 130.81, 130.81, 98, 0, 98, 98, 110, 110, 123.47, 0],
+    drumPattern: [1, 3, 2, 3, 1, 4, 2, 3, 1, 3, 2, 3, 1, 4, 2, 4]
+  },
+  {
+    name: 'SubSoma Wave (Agent 006)',
+    genre: 'DOWNTEMPO SPY',
+    bitrate: '128 KBPS STEREO',
+    bpm: 94,
+    listeners: 285,
+    streamUrl: 'http://subsoma.knet/secretagent128.pls',
+    marquee: '*** [SUBSOMA] SECRET AGENT // 007 CASINO HEIST (94 BPM RHODES TRIP-HOP) ***',
+    leadNotes: [329.63, 0, 392, 0, 440, 0, 392, 329.63, 293.66, 0, 349.23, 0, 392, 0, 349.23, 293.66],
+    bassNotes: [82.41, 0, 0, 82.41, 110, 0, 0, 98, 73.42, 0, 0, 73.42, 98, 0, 82.41, 0],
+    drumPattern: [1, 0, 3, 0, 2, 0, 3, 1, 0, 3, 2, 0, 1, 0, 4, 0]
+  },
+  {
+    name: 'KiloHertz Sound Vault',
+    genre: 'C64 & AMIGA CHIPTUNE',
+    bitrate: '96 KBPS STEREO',
+    bpm: 126,
+    listeners: 538,
+    streamUrl: 'http://kilohertz.knet/stream/retro96.pls',
+    marquee: '*** [KHZ-VAULT] ROB HUBBARD & CHRIS HUELSBECK // SUBTERRANEAN CYBERPUNK (126 BPM) ***',
+    leadNotes: [523.25, 659.25, 783.99, 1046.5, 783.99, 659.25, 523.25, 659.25, 587.33, 698.46, 880, 1174.66, 880, 698.46, 587.33, 493.88],
+    bassNotes: [130.81, 130.81, 0, 130.81, 146.83, 146.83, 0, 146.83, 164.81, 164.81, 0, 164.81, 130.81, 0, 130.81, 0],
+    drumPattern: [1, 3, 2, 3, 1, 3, 2, 4, 1, 3, 2, 3, 1, 4, 2, 3]
+  },
+  {
+    name: 'SubDrive Drum & Bass',
+    genre: '1999 TECHSTEP DNB',
+    bitrate: '128 KBPS STEREO',
+    bpm: 168,
+    listeners: 619,
+    streamUrl: 'http://subdrive.knet/v2/stream.pls',
+    marquee: '*** [SUBDRIVE] DJ ED RUSH & OPTICAL // REESE SUBTERRANEAN (168 BPM TECHSTEP) ***',
+    leadNotes: [220, 0, 233.08, 0, 220, 0, 207.65, 0, 220, 0, 246.94, 0, 233.08, 220, 0, 196],
+    bassNotes: [55, 55, 0, 55, 58.27, 0, 58.27, 55, 51.91, 51.91, 0, 51.91, 55, 0, 58.27, 0],
+    drumPattern: [1, 0, 3, 2, 0, 1, 2, 3, 1, 3, 2, 0, 1, 4, 2, 3]
+  },
+  {
+    name: 'Hardcore 3D-Arena FM',
+    genre: 'INDUSTRIAL SPEEDCORE',
+    bitrate: '160 KBPS STEREO',
+    bpm: 152,
+    listeners: 341,
+    streamUrl: 'http://hardcore3d.knet:8000/live',
+    marquee: '*** [3D ARENA FM] VOODOO 3 SLI GLIDE // OVERCLOCKED GABBER FRAGS (152 BPM) ***',
+    leadNotes: [440, 440, 466.16, 440, 415.30, 440, 523.25, 493.88, 440, 440, 466.16, 440, 587.33, 523.25, 493.88, 466.16],
+    bassNotes: [110, 110, 110, 110, 110, 110, 110, 110, 103.83, 103.83, 103.83, 103.83, 110, 110, 116.54, 116.54],
+    drumPattern: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+  }
+];
+
+function initNetRadio() {
+  if (radioInitialized) return;
+  radioInitialized = true;
+
+  // Build Station List DOM
+  renderRadioStationList();
+
+  // Build 10-Band EQ DOM
+  renderEqSliderStrip();
+
+  // Setup Spectrum Visualizer
+  initRadioSpectrumVisualizer();
+
+  // Apply default Flat preset
+  applyEqPreset('flat');
+}
+
+function setupRadioAudioPipeline() {
+  initAudio();
+  if (!audioCtx) return;
+
+  if (radioGainNode && radioAnalyserNode && radioEqFilters.length === 10) return;
+
+  // Master Radio Gain Node
+  radioGainNode = audioCtx.createGain();
+  radioGainNode.gain.setValueAtTime(radioMasterVolume * 0.28, audioCtx.currentTime);
+
+  // Spectrum Analyser
+  radioAnalyserNode = audioCtx.createAnalyser();
+  radioAnalyserNode.fftSize = 64;
+  radioAnalyserNode.smoothingTimeConstant = 0.75;
+
+  // 10 BiquadFilter Equalizer Chain
+  radioEqFilters = [];
+  let prevNode = null;
+
+  for (let i = 0; i < RADIO_BANDS.length; i++) {
+    const band = RADIO_BANDS[i];
+    const filter = audioCtx.createBiquadFilter();
+    filter.type = band.type;
+    filter.frequency.setValueAtTime(band.freq, audioCtx.currentTime);
+    filter.gain.setValueAtTime(0, audioCtx.currentTime);
+    if (band.type === 'peaking') filter.Q.setValueAtTime(1.4, audioCtx.currentTime);
+
+    if (prevNode) {
+      prevNode.connect(filter);
+    }
+    prevNode = filter;
+    radioEqFilters.push(filter);
+  }
+
+  // Connect last filter to Master Gain -> Analyser -> Output
+  if (prevNode) {
+    prevNode.connect(radioGainNode);
+  }
+  radioGainNode.connect(radioAnalyserNode);
+  radioAnalyserNode.connect(audioCtx.destination);
+}
+
+function renderRadioStationList() {
+  const container = document.getElementById('radioStationList');
+  if (!container) return;
+  container.innerHTML = '';
+
+  RADIO_STATIONS.forEach((st, idx) => {
+    const card = document.createElement('div');
+    card.className = `radio-station-card ${idx === radioActiveStation ? 'active' : ''}`;
+    card.id = `radioStationCard_${idx}`;
+    card.onclick = () => selectRadioStation(idx);
+
+    card.innerHTML = `
+      <div>
+        <div style="font-size:11px; font-weight:bold; color:var(--text);">${escapeHtml(st.name)}</div>
+        <div style="font-size:9px; color:var(--text-muted);">${st.genre} • ${st.bpm} BPM</div>
+      </div>
+      <div style="text-align:right;">
+        <span style="font-size:9px; color:var(--green-bright); font-weight:bold;">● ${st.listeners} LISTENING</span>
+        <div style="font-size:8px; color:var(--text-muted); font-family:var(--font-mono);">${st.bitrate}</div>
+      </div>
+    `;
+    container.appendChild(card);
+  });
+}
+
+function renderEqSliderStrip() {
+  const container = document.getElementById('eqSliderStrip');
+  if (!container) return;
+  container.innerHTML = '';
+
+  RADIO_BANDS.forEach((band, idx) => {
+    const col = document.createElement('div');
+    col.className = 'eq-band-col';
+    col.innerHTML = `
+      <input type="range" id="eqSlider_${idx}" min="-12" max="12" step="1" value="0" orient="vertical"
+             oninput="updateEqBand(${idx}, this.value)">
+      <span class="eq-band-label">${band.label}</span>
+      <span id="eqVal_${idx}" style="font-size:7px; color:var(--text-muted); font-family:var(--font-mono);">0dB</span>
+    `;
+    container.appendChild(col);
+  });
+}
+
+function updateEqBand(idx, gainDb) {
+  const val = parseFloat(gainDb) || 0;
+  if (radioEqFilters[idx] && audioCtx) {
+    radioEqFilters[idx].gain.setValueAtTime(val, audioCtx.currentTime);
+  }
+  const label = document.getElementById(`eqVal_${idx}`);
+  if (label) label.textContent = `${val > 0 ? '+' : ''}${val}dB`;
+}
+
+function applyEqPreset(presetKey) {
+  const preset = RADIO_PRESETS[presetKey] || RADIO_PRESETS.flat;
+  preset.forEach((val, idx) => {
+    const slider = document.getElementById(`eqSlider_${idx}`);
+    if (slider) slider.value = val;
+    updateEqBand(idx, val);
+  });
+  playKeyClick();
+}
+
+function resetEqSliders() {
+  const sel = document.getElementById('eqPresetSelect');
+  if (sel) sel.value = 'flat';
+  applyEqPreset('flat');
+}
+
+function selectRadioStation(idx) {
+  radioActiveStation = Math.max(0, Math.min(RADIO_STATIONS.length - 1, idx));
+  document.querySelectorAll('.radio-station-card').forEach((c, i) => {
+    if (i === radioActiveStation) c.classList.add('active');
+    else c.classList.remove('active');
+  });
+
+  const st = RADIO_STATIONS[radioActiveStation];
+  const genreEl = document.getElementById('radioStationGenre');
+  if (genreEl) genreEl.textContent = `GENRE: ${st.genre}`;
+
+  const bitrateEl = document.getElementById('radioBitrateLcd');
+  if (bitrateEl) bitrateEl.textContent = `${st.bitrate} / 44.1 KHZ`;
+
+  const marqueeEl = document.getElementById('radioMarqueeText');
+  if (marqueeEl) marqueeEl.textContent = st.marquee;
+
+  radioStep = 0;
+  playChime(520, 0.08);
+}
+
+function prevRadioStation() {
+  selectRadioStation((radioActiveStation - 1 + RADIO_STATIONS.length) % RADIO_STATIONS.length);
+}
+
+function nextRadioStation() {
+  selectRadioStation((radioActiveStation + 1) % RADIO_STATIONS.length);
+}
+
+function toggleRadioPlay() {
+  radioPlaying = !radioPlaying;
+  const btn = document.getElementById('btnRadioPlay');
+
+  if (radioPlaying) {
+    setupRadioAudioPipeline();
+    if (btn) {
+      btn.textContent = '⏹ STOP';
+      btn.classList.remove('green');
+      btn.classList.add('amber');
+    }
+    radioPlayStartTime = Date.now();
+    radioStep = 0;
+    playRadioStep();
+    startRadioMarquee();
+    logStationCli(`Tuned NetRadio to station: ${RADIO_STATIONS[radioActiveStation].name}`);
+  } else {
+    if (btn) {
+      btn.textContent = '▶ PLAY';
+      btn.classList.remove('amber');
+      btn.classList.add('green');
+    }
+    if (radioTimer) {
+      clearTimeout(radioTimer);
+      radioTimer = null;
+    }
+    stopRadioMarquee();
+  }
+}
+
+function updateRadioVolume(val) {
+  radioMasterVolume = (parseFloat(val) || 0) / 100;
+  if (radioGainNode && audioCtx) {
+    radioGainNode.gain.setValueAtTime(radioMasterVolume * 0.28, audioCtx.currentTime);
+  }
+  const lcd = document.getElementById('radioVolumeLcd');
+  if (lcd) lcd.textContent = `VOL: ${Math.round(radioMasterVolume * 100)}%`;
+}
+
+function randomizeRadioGroove() {
+  const st = RADIO_STATIONS[radioActiveStation];
+  // Transpose or shuffle pattern slightly for dynamic procedural variation
+  for (let i = 0; i < st.leadNotes.length; i++) {
+    if (st.leadNotes[i] > 0) {
+      const shift = ((Math.random() > 0.5 ? 1 : -1) * (Math.random() > 0.7 ? 2 : 1));
+      st.leadNotes[i] = Math.max(150, Math.min(1200, st.leadNotes[i] * Math.pow(2, shift / 12)));
+    }
+  }
+  playChime(660, 0.08);
+  showBadgeFeedback(`🎲 Random groove modulation applied to ${st.name}!`);
+}
+
+function playRadioStep() {
+  if (!radioPlaying) return;
+  setupRadioAudioPipeline();
+  if (!audioCtx || !radioEqFilters.length) return;
+
+  const st = RADIO_STATIONS[radioActiveStation];
+  const stepIdx = radioStep % 16;
+  const now = audioCtx.currentTime;
+  const inputNode = radioEqFilters[0]; // First filter in EQ chain
+
+  // 1. Bassline (Punchy FM bass)
+  const bassFreq = st.bassNotes[stepIdx];
+  if (bassFreq > 0) {
+    const osc = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    osc.type = (radioActiveStation === 3) ? 'sawtooth' : 'sine';
+    osc.frequency.setValueAtTime(bassFreq, now);
+    g.gain.setValueAtTime(0.22, now);
+    g.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
+    osc.connect(g);
+    g.connect(inputNode);
+    osc.start(now);
+    osc.stop(now + 0.20);
+  }
+
+  // 2. Lead Arpeggio (Chiptune FM Lead)
+  const leadFreq = st.leadNotes[stepIdx];
+  if (leadFreq > 0) {
+    const osc = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    osc.type = (radioActiveStation === 2) ? 'square' : 'triangle';
+    osc.frequency.setValueAtTime(leadFreq, now);
+    g.gain.setValueAtTime(0.14, now);
+    g.gain.exponentialRampToValueAtTime(0.001, now + 0.16);
+    osc.connect(g);
+    g.connect(inputNode);
+    osc.start(now);
+    osc.stop(now + 0.18);
+  }
+
+  // 3. Drums (1=kick, 2=snare, 3=closed hat, 4=open hat)
+  const drum = st.drumPattern[stepIdx];
+  if (drum === 1) {
+    // 909 Kick
+    const kickOsc = audioCtx.createOscillator();
+    const kickGain = audioCtx.createGain();
+    kickOsc.frequency.setValueAtTime(140, now);
+    kickOsc.frequency.exponentialRampToValueAtTime(38, now + 0.12);
+    kickGain.gain.setValueAtTime(0.35, now);
+    kickGain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+    kickOsc.connect(kickGain);
+    kickGain.connect(inputNode);
+    kickOsc.start(now);
+    kickOsc.stop(now + 0.16);
+  } else if (drum === 2) {
+    // Snare / Noise snap
+    const osc = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(220, now);
+    g.gain.setValueAtTime(0.18, now);
+    g.gain.exponentialRampToValueAtTime(0.001, now + 0.10);
+    osc.connect(g);
+    g.connect(inputNode);
+    osc.start(now);
+    osc.stop(now + 0.12);
+  } else if (drum === 3 || drum === 4) {
+    // Hi-hat click
+    const osc = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    osc.type = 'square';
+    osc.frequency.setValueAtTime(4500 + Math.random() * 2000, now);
+    g.gain.setValueAtTime(0.06, now);
+    g.gain.exponentialRampToValueAtTime(0.001, now + (drum === 4 ? 0.09 : 0.04));
+    osc.connect(g);
+    g.connect(inputNode);
+    osc.start(now);
+    osc.stop(now + 0.10);
+  }
+
+  // Track elapsed playback time
+  const elapsedSec = Math.floor((Date.now() - radioPlayStartTime) / 1000);
+  const m = String(Math.floor(elapsedSec / 60)).padStart(2, '0');
+  const s = String(elapsedSec % 60).padStart(2, '0');
+  const timeLcd = document.getElementById('radioTrackTime');
+  if (timeLcd) timeLcd.textContent = `TIME: ${m}:${s}`;
+
+  // Step interval based on station BPM (16th notes = (60000 / BPM) / 4)
+  const stepMs = Math.round((60000 / st.bpm) / 4);
+  radioStep++;
+  radioTimer = setTimeout(playRadioStep, stepMs);
+}
+
+function startRadioMarquee() {
+  if (radioMarqueeTimer) clearInterval(radioMarqueeTimer);
+  const marquee = document.getElementById('radioMarqueeText');
+  if (!marquee) return;
+  const original = RADIO_STATIONS[radioActiveStation].marquee;
+  let text = original + '   ';
+
+  radioMarqueeTimer = setInterval(() => {
+    if (!radioPlaying) return;
+    text = text.substring(1) + text[0];
+    marquee.textContent = text;
+  }, 180);
+}
+
+function stopRadioMarquee() {
+  if (radioMarqueeTimer) {
+    clearInterval(radioMarqueeTimer);
+    radioMarqueeTimer = null;
+  }
+  const marquee = document.getElementById('radioMarqueeText');
+  if (marquee) {
+    marquee.textContent = '*** [OFFLINE] SELECT A STATION & PRESS PLAY TO TUNE IN ***';
+  }
+}
+
+// Winamp 64-Bin FFT Real-Time Spectrum Analyzer Canvas
+function initRadioSpectrumVisualizer() {
+  const canvas = document.getElementById('radioSpectrumCanvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const numBars = 20;
+
+  function draw() {
+    radioSpectrumFrame = requestAnimationFrame(draw);
+    const w = canvas.width;
+    const h = canvas.height;
+
+    ctx.fillStyle = '#05070a';
+    ctx.fillRect(0, 0, w, h);
+
+    if (!radioPlaying || !radioAnalyserNode) {
+      // Draw idle flat line
+      ctx.strokeStyle = '#1e293b';
+      ctx.beginPath();
+      ctx.moveTo(0, h - 4);
+      ctx.lineTo(w, h - 4);
+      ctx.stroke();
+      return;
+    }
+
+    const bufferLength = radioAnalyserNode.frequencyBinCount;
+    const dataArray = new Uint8Array(bufferLength);
+    radioAnalyserNode.getByteFrequencyData(dataArray);
+
+    const barWidth = Math.floor(w / numBars) - 2;
+    let maxVal = 0;
+
+    for (let i = 0; i < numBars; i++) {
+      const dataIdx = Math.floor((i / numBars) * bufferLength);
+      const val = dataArray[dataIdx] || 0;
+      if (val > maxVal) maxVal = val;
+
+      const barHeight = Math.floor((val / 255) * (h - 8));
+      const x = i * (barWidth + 2) + 2;
+      const y = h - barHeight - 4;
+
+      // Peak Hold Decay
+      if (barHeight > radioPeakHold[i]) {
+        radioPeakHold[i] = barHeight;
+      } else {
+        radioPeakHold[i] = Math.max(0, radioPeakHold[i] - 0.7);
+      }
+
+      // Bar gradient (Green -> Yellow -> Red)
+      const grad = ctx.createLinearGradient(0, h - 4, 0, 4);
+      grad.addColorStop(0, '#10b981');
+      grad.addColorStop(0.65, '#f59e0b');
+      grad.addColorStop(1, '#ef4444');
+      ctx.fillStyle = grad;
+      ctx.fillRect(x, y, barWidth, barHeight);
+
+      // Peak Hold line
+      ctx.fillStyle = '#f8fafc';
+      const peakY = h - Math.floor(radioPeakHold[i]) - 4;
+      ctx.fillRect(x, peakY, barWidth, 1.5);
+    }
+
+    // Update Peak dB Meter
+    const peakDb = Math.round((maxVal / 255) * 24 - 24);
+    const peakEl = document.getElementById('radioPeakDb');
+    if (peakEl) peakEl.textContent = `${peakDb} dB`;
+  }
+
+  if (radioSpectrumFrame) cancelAnimationFrame(radioSpectrumFrame);
+  radioSpectrumFrame = requestAnimationFrame(draw);
+}
+
+
+/* =========================================================================
    12. INITIALIZATION
    ========================================================================= */
 window.addEventListener('DOMContentLoaded', () => {
@@ -10015,6 +12250,8 @@ window.addEventListener('DOMContentLoaded', () => {
   loadGuestbookData();
   initOverclockStation();
   calculateTariff();
+  initCctvConsole();
+  initNetRadio();
 
   // Attach Piano key clicks
   document.querySelectorAll('.piano-key').forEach(k => {

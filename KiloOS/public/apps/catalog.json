@@ -123,9 +123,9 @@
     "id": "kchatserver",
     "title": "KChat Server",
     "folder": "Network",
-    "webBytes": 24241,
+    "webBytes": 24901,
     "exeBytes": 13824,
-    "budgetPercent": 2.4
+    "budgetPercent": 2.5
   },
   {
     "id": "kchess",
@@ -467,7 +467,7 @@
     "id": "knet",
     "title": "KNet",
     "folder": "Network",
-    "webBytes": 190365,
+    "webBytes": 190387,
     "exeBytes": 45056,
     "budgetPercent": 19.1
   },
@@ -563,9 +563,9 @@
     "id": "kradio",
     "title": "KRadio",
     "folder": "Media",
-    "webBytes": 111203,
+    "webBytes": 108315,
     "exeBytes": 8704,
-    "budgetPercent": 11.1
+    "budgetPercent": 10.8
   },
   {
     "id": "kread",

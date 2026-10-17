@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-creator
-next_agent: kilo-graphics
+current_agent: kilo-graphics
+next_agent: kilo-soundscape
 agent_rotation:
 - kilo-graphics
 - kilo-soundscape
@@ -14,14 +14,14 @@ effort: high
 timeout_minutes: 10
 status: ready
 current_targets:
-  kilo_creator: kweb://cybercafe
+  kilo_creator: kweb://10.19.99.4/classified
   kilo_graphics: KWizard
   kilo_soundscape: kweb://asm-temple
   kilo_tester: KPaint
   kilo_usability: KDB
   kilo_qa: KMinesweeper
   kilo_expander: KJournal
-virtual_web_target: kweb://cybercafe
+virtual_web_target: kweb://10.19.99.4/classified
 virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
@@ -35,9 +35,9 @@ virtual_web_rotation:
 - kweb://echo-subsystem.net
 - kweb://deep-core
 last_run:
-  agent: kilo-expander
-  app: KClip
-  timestamp: 2026-10-17T18:38:00+0000
+  agent: kilo-creator
+  app: kweb://cybercafe
+  timestamp: 2026-10-17T20:18:00+0000
 last_planner_run: '2026-10-16T20:35:00Z'
 ---
 
@@ -66,10 +66,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 ## Active Target Queues (Gemini Flash Optimized Tickets)
 
 ### 1. Virtual 1999 Web & ARG Node Creator (`kilo-creator`)
-- **Target**: `kweb://webring`
-- **Primary File**: `KiloOS/public/web/webring.html`
-- **Objective**: Expand Central KiloNet 1999 Webring Hub, random teleporter, and badge studio (<999 KB).
-- **Upcoming Queue**: `kweb://warez`, `kweb://geocities`, `kweb://users/~neon_rider`, `kweb://asm-temple`.
+- **Target**: `kweb://10.19.99.4/classified`
+- **Primary File**: `KiloOS/public/web/classified.html`
+- **Objective**: Expand Carlsbad skunkworks intranet archive, seismic interferometer, and Permian transponder CAD (<999 KB).
+- **Upcoming Queue**: `kweb://echo-subsystem.net`, `kweb://deep-core`, `kweb://darknet`, `kweb://portal`.
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
 - **Target**: `KWizard`
@@ -194,6 +194,14 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-17T20:18:00+0000 — kilo-creator: kweb://cybercafe (Deep Web Destination Expansion)**
+  - CCTV Surveillance Console: Added 5-feed 10Base-T video matrix with PTZ controls, motion detection, IR night vision, auto-cycle, and snapshot export.
+  - ShoutCast '99 NetRadio: Implemented real-time procedural FM chiptune stream with 5 stations, 10-band parametric equalizer, and 64-bin FFT spectrum visualizer.
+  - Lore & Anti-Trademark Parody: Fictionalized radio stations, Tremor III Arena PA intercom, and Trapster trivia per ARG standards.
+  - KNet & Directory Federation: Verified integration across KNet address bar/chips, portal.html directory/traceroute, and central webring hub.
+  - Verification: Clean Vite build (`npm.cmd run build` 0 err), test_app_startup PASS (459.1 KB), 100% security lint PASS; strictly <999 KB ceiling.
+  - Queue: Advanced `kilo_creator` to `kweb://10.19.99.4/classified`; rotation handoff to `kilo-graphics`.
+
 - **2026-10-17T18:38:00+0000 — kilo-expander: KClip (Deep Feature Expansion & Dual-Target Parity)**
   - Dual-Target Parity: Expanded Win32 C client with camelCase, snake_case, line deduplication, buffer telemetry (CRC-32, char/word counts), and text archive export/import.
   - Multi-Format Views & Diagnostics: Added HTML live sandbox viewer and image/dataURL inspector to text/hex modes; added Shannon entropy & randomness metrics.
@@ -222,10 +230,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Mature Quarantine Policy: Codified anti-skip policy across orchestrator, workspace rules, and all skills: apps skipped for maturity/completion are permanently quarantined to `## Mature Applications` and removed from active queues until user reassigns.
   - Queue Sanitization: Purged mature apps from upcoming queues (seeded `KTowers`, `KDarts`, `KReversi`, `KMines`, `KPong`, `KAsteroids`, `KChess`, `KConnect4` in quarantine table).
   - Verification: Clean Vite build (`npm.cmd run build`), 100% security lint PASS, dry-run orchestrator verified.
-
-- **2026-10-17T09:35:00-07:00 — kilo-adhoc: Fleet Dashboard & Scheduler (Turn Metrics, PC A Slot Claim, Tool Budget Uncap)**
-  - Dashboard Metrics: Fixed turn metrics to accurately display all-time turns (1,941 receipts) and last 24h turns (42 receipts) with zero-overhead cached counter.
-  - Quota & Slot Balancing: Assigned PC C's :48 minute slot to PC A (now 2 turns/hr at :12, :48) with non-colliding windows across fleet.
-  - Tool Call Limit: Removed restrictive <=10 tool call directives from orchestrator agy agent dispatch and all skill definitions.
-  - Security Lint: Resolved javascript: protocol in webring.html; security_lint 100% PASS.
-  - Verification: Security gates passed; task registered in Windows Task Scheduler (next run :48).

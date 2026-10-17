@@ -93,11 +93,19 @@ async def run_cdp_audit(app_name: str, browser_path: str, port: int) -> Dict[str
     import websockets
 
     # Normalise app file name
-    clean_name = app_name.lower().replace(".html", "")
-    if not clean_name.startswith("k") and (APPS_DIR / f"k{clean_name}.html").exists():
-        clean_name = f"k{clean_name}"
-
+    clean_name = app_name.lower().replace(".html", "").replace("kweb://", "").replace("web/", "")
+    WEB_DIR = WORKSPACE_ROOT / "KiloOS" / "public" / "web"
     app_file = APPS_DIR / f"{clean_name}.html"
+    if not app_file.exists() and not clean_name.startswith("k"):
+        if (APPS_DIR / f"k{clean_name}.html").exists():
+            clean_name = f"k{clean_name}"
+            app_file = APPS_DIR / f"{clean_name}.html"
+    if not app_file.exists():
+        if (WEB_DIR / f"{clean_name}.html").exists():
+            app_file = WEB_DIR / f"{clean_name}.html"
+        elif clean_name.startswith("k") and (WEB_DIR / f"{clean_name[1:]}.html").exists():
+            app_file = WEB_DIR / f"{clean_name[1:]}.html"
+            clean_name = clean_name[1:]
     if not app_file.exists():
         return {
             "app": clean_name,
