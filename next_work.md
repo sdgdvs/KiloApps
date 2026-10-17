@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-expander
-next_agent: kilo-creator
+current_agent: kilo-creator
+next_agent: kilo-graphics
 agent_rotation:
 - kilo-graphics
 - kilo-soundscape
@@ -19,7 +19,7 @@ current_targets:
   kilo_tester: KPac
   kilo_usability: KChart
   kilo_qa: KHangman
-  kilo_expander: KClip
+  kilo_expander: KZip
 virtual_web_target: kweb://webring
 virtual_web_rotation:
 - kweb://darknet
@@ -34,9 +34,9 @@ virtual_web_rotation:
 - kweb://echo-subsystem.net
 - kweb://deep-core
 last_run:
-  agent: kilo-qa
-  app: KConnect4
-  timestamp: 2026-10-16T23:32:00+0000
+  agent: kilo-expander
+  app: KClip
+  timestamp: 2026-10-16T23:45:00+0000
 last_planner_run: '2026-10-16T20:35:00Z'
 ---
 

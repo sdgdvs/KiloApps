@@ -3268,6 +3268,728 @@
         });
       }
 
+      // --- 14b. DEEP FEATURE EXPANSION SUITE (kilo-expander) ---
+      function initKClipDeepExpansion() {
+        // Inject styles for Advanced Tools Modal and Quick Buttons
+        const styleEl = document.createElement('style');
+        styleEl.id = 'kclip-expansion-styles';
+        styleEl.textContent = `
+          .kclip-ext-btn {
+            background: linear-gradient(135deg, rgba(6,182,212,0.15), rgba(2,132,199,0.25));
+            border: 1px solid var(--primary);
+            color: var(--primary);
+            font-weight: 700;
+          }
+          .kclip-ext-btn:hover {
+            background: var(--primary);
+            color: #0b0f19;
+          }
+          .kclip-tab-btn {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            padding: 5px 12px;
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+            border-radius: 4px;
+            font-family: var(--font-mono);
+          }
+          .kclip-tab-btn.active {
+            background: var(--primary);
+            color: #0b0f19;
+            border-color: var(--primary-hover);
+          }
+          .kclip-tool-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+          }
+          .kclip-tool-card:hover {
+            border-color: var(--primary);
+          }
+          .kclip-tool-title {
+            font-weight: bold;
+            font-size: 12px;
+            color: var(--primary);
+            font-family: var(--font-mono);
+          }
+          .kclip-tool-desc {
+            font-size: 11px;
+            color: var(--text-muted);
+          }
+        `;
+        document.head.appendChild(styleEl);
+
+        // Helper to notify
+        function notify(msg) {
+          if (typeof showToast === 'function') {
+            showToast(msg);
+          } else {
+            console.log('[KClip]', msg);
+          }
+          if (typeof playSoundEffect === 'function') {
+            playSoundEffect('action');
+          }
+        }
+
+        // Helper to get active text from editor
+        function getCurrentText() {
+          const editor = document.querySelector('.clip-editor');
+          return editor ? editor.value : '';
+        }
+
+        // Helper to set editor text and sync state
+        function setCurrentText(newText, label) {
+          const editor = document.querySelector('.clip-editor');
+          if (editor) {
+            editor.value = newText;
+            editor.dispatchEvent(new Event('input', { bubbles: true }));
+          }
+          if (typeof updateInspector === 'function') updateInspector();
+          if (typeof saveWorkstationState === 'function') saveWorkstationState(false);
+          notify(label || 'Applied transformation');
+        }
+
+        // Helper to add new clip
+        function addNewClip(title, content, category) {
+          const newId = 'clip_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4);
+          const clipObj = {
+            id: newId,
+            title: title || 'Extracted Clip',
+            content: content,
+            category: category || 'snippets',
+            created: Date.now(),
+            pinned: false,
+            tags: ['extracted']
+          };
+          if (typeof state !== 'undefined' && Array.isArray(state.clips)) {
+            state.clips.unshift(clipObj);
+            state.selectedClipId = newId;
+            if (typeof renderClipList === 'function') renderClipList();
+            if (typeof updateInspector === 'function') updateInspector();
+            if (typeof saveWorkstationState === 'function') saveWorkstationState(false);
+            notify('Created new clip: ' + title);
+          }
+        }
+
+        // CRC32 Calculation
+        function crc32(str) {
+          let crc = 0 ^ (-1);
+          for (let i = 0; i < str.length; i++) {
+            let byte = str.charCodeAt(i);
+            for (let j = 0; j < 8; j++) {
+              let bit = (crc ^ byte) & 1;
+              crc = (crc >>> 1) ^ (bit ? 0xEDB88320 : 0);
+              byte >>>= 1;
+            }
+          }
+          return ((crc ^ (-1)) >>> 0).toString(16).toUpperCase().padStart(8, '0');
+        }
+
+        // Adler-32 Checksum
+        function adler32(str) {
+          let a = 1, b = 0;
+          const MOD_ADLER = 65521;
+          for (let i = 0; i < str.length; i++) {
+            a = (a + str.charCodeAt(i)) % MOD_ADLER;
+            b = (b + a) % MOD_ADLER;
+          }
+          return ((b << 16) | a) >>> 0;
+        }
+
+        // DJB2 Hash
+        function djb2(str) {
+          let hash = 5381;
+          for (let i = 0; i < str.length; i++) {
+            hash = ((hash << 5) + hash) + str.charCodeAt(i);
+            hash = hash & hash;
+          }
+          return (hash >>> 0).toString(16).toUpperCase().padStart(8, '0');
+        }
+
+        // FNV-1a 32-bit Hash
+        function fnv1a(str) {
+          let hash = 0x811c9dc5;
+          for (let i = 0; i < str.length; i++) {
+            hash ^= str.charCodeAt(i);
+            hash = (hash * 0x01000193) >>> 0;
+          }
+          return hash.toString(16).toUpperCase().padStart(8, '0');
+        }
+
+        // SQL Beautifier / Formatter
+        function formatSQL(sql) {
+          const keywords = [
+            'SELECT', 'FROM', 'WHERE', 'AND', 'OR', 'INSERT', 'INTO', 'VALUES',
+            'UPDATE', 'SET', 'DELETE', 'JOIN', 'LEFT JOIN', 'RIGHT JOIN', 'INNER JOIN',
+            'OUTER JOIN', 'GROUP BY', 'ORDER BY', 'HAVING', 'LIMIT', 'OFFSET',
+            'UNION', 'ALL', 'CREATE', 'TABLE', 'DROP', 'ALTER', 'INDEX', 'PRIMARY KEY'
+          ];
+          let formatted = sql;
+          keywords.forEach(kw => {
+            const regex = new RegExp('\\b' + kw + '\\b', 'gi');
+            formatted = formatted.replace(regex, kw);
+          });
+          const clauses = ['SELECT', 'FROM', 'WHERE', 'GROUP BY', 'ORDER BY', 'HAVING', 'LIMIT', 'SET', 'VALUES'];
+          clauses.forEach(cl => {
+            const re = new RegExp('(\\s*)(' + cl + ')(\\s+)', 'g');
+            formatted = formatted.replace(re, '\n$2\n  ');
+          });
+          return formatted.trim();
+        }
+
+        // CSV to Markdown Table
+        function csvToMarkdown(csvText) {
+          const lines = csvText.trim().split(/\r?\n/).filter(Boolean);
+          if (lines.length === 0) return '';
+          const rows = lines.map(line => {
+            return line.split(',').map(cell => cell.trim().replace(/^"|"$/g, ''));
+          });
+          const colCount = Math.max(...rows.map(r => r.length));
+          const header = rows[0];
+          while (header.length < colCount) header.push('');
+          
+          let md = '| ' + header.join(' | ') + ' |\n';
+          md += '| ' + header.map(() => '---').join(' | ') + ' |\n';
+          for (let i = 1; i < rows.length; i++) {
+            const row = rows[i];
+            while (row.length < colCount) row.push('');
+            md += '| ' + row.join(' | ') + ' |\n';
+          }
+          return md;
+        }
+
+        // Markdown Table to CSV
+        function markdownToCsv(mdText) {
+          const lines = mdText.trim().split(/\r?\n/).filter(line => line.includes('|'));
+          if (lines.length === 0) return '';
+          const rows = [];
+          for (let line of lines) {
+            if (/^\|\s*[-:]+/.test(line.trim())) continue;
+            const cells = line.split('|').slice(1, -1).map(c => c.trim());
+            if (cells.length > 0) {
+              rows.push(cells.map(c => c.includes(',') ? `"${c}"` : c).join(','));
+            }
+          }
+          return rows.join('\n');
+        }
+
+        // JSON to CSV
+        function jsonToCsv(jsonStr) {
+          try {
+            const data = JSON.parse(jsonStr);
+            const arr = Array.isArray(data) ? data : [data];
+            if (arr.length === 0) return '';
+            const keys = Object.keys(arr[0]);
+            const header = keys.join(',');
+            const rows = arr.map(obj => {
+              return keys.map(k => {
+                let v = obj[k] !== undefined ? String(obj[k]) : '';
+                return v.includes(',') || v.includes('"') || v.includes('\n') ? `"${v.replace(/"/g, '""')}"` : v;
+              }).join(',');
+            });
+            return [header, ...rows].join('\n');
+          } catch (e) {
+            alert('Invalid JSON for CSV conversion: ' + e.message);
+            return jsonStr;
+          }
+        }
+
+        // CSV to JSON
+        function csvToJson(csvStr) {
+          const lines = csvStr.trim().split(/\r?\n/).filter(Boolean);
+          if (lines.length < 2) return '[]';
+          const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, ''));
+          const result = [];
+          for (let i = 1; i < lines.length; i++) {
+            const row = lines[i].split(',').map(c => c.trim().replace(/^"|"$/g, ''));
+            const obj = {};
+            headers.forEach((h, idx) => {
+              obj[h] = row[idx] !== undefined ? row[idx] : '';
+            });
+            result.push(obj);
+          }
+          return JSON.stringify(result, null, 2);
+        }
+
+        // Build Modal UI
+        const modal = document.createElement('div');
+        modal.id = 'kclip-adv-modal';
+        modal.className = 'modal-backdrop';
+        modal.innerHTML = `
+          <div class="modal-window" style="width: 620px; max-width: 95vw;">
+            <div class="modal-header">
+              <div class="modal-title">
+                <span style="color:var(--primary); font-size:16px;">⚡</span>
+                <span>KClip Advanced Expansion Suite</span>
+              </div>
+              <button class="modal-close" id="kclip-adv-close">✕</button>
+            </div>
+            <div style="background:var(--card-bg); border-bottom:1px solid var(--border); padding:6px 14px; display:flex; gap:6px;">
+              <button class="kclip-tab-btn active" data-tab="tab-lines">Lines & Text</button>
+              <button class="kclip-tab-btn" data-tab="tab-data">Data & Formats</button>
+              <button class="kclip-tab-btn" data-tab="tab-extract">Extract & Hashes</button>
+              <button class="kclip-tab-btn" data-tab="tab-export">Batch Export</button>
+            </div>
+            <div class="modal-body" style="gap:10px;">
+              <!-- Tab 1: Lines -->
+              <div id="tab-lines" class="kclip-tab-pane">
+                <div style="display:grid; grid-template-columns:repeat(2,1fr); gap:8px;">
+                  <div class="kclip-tool-card">
+                    <div class="kclip-tool-title">Natural Sort (A-Z)</div>
+                    <div class="kclip-tool-desc">Sort all lines alphabetically with natural number ordering.</div>
+                    <button class="btn btn-sm btn-primary" id="btn-sort-asc">Sort Lines A-Z</button>
+                  </div>
+                  <div class="kclip-tool-card">
+                    <div class="kclip-tool-title">Reverse Sort (Z-A)</div>
+                    <div class="kclip-tool-desc">Sort all lines in descending order.</div>
+                    <button class="btn btn-sm" id="btn-sort-desc">Sort Lines Z-A</button>
+                  </div>
+                  <div class="kclip-tool-card">
+                    <div class="kclip-tool-title">Deduplicate Lines</div>
+                    <div class="kclip-tool-desc">Remove all duplicate lines while preserving original order.</div>
+                    <button class="btn btn-sm btn-primary" id="btn-dedup">Deduplicate</button>
+                  </div>
+                  <div class="kclip-tool-card">
+                    <div class="kclip-tool-title">Strip Empty & Trim</div>
+                    <div class="kclip-tool-desc">Trim whitespace from both ends and remove blank lines.</div>
+                    <button class="btn btn-sm" id="btn-clean-lines">Strip & Trim</button>
+                  </div>
+                  <div class="kclip-tool-card">
+                    <div class="kclip-tool-title">Number Lines</div>
+                    <div class="kclip-tool-desc">Prefix each line with 1-based sequential line index.</div>
+                    <button class="btn btn-sm" id="btn-number-lines">Number Lines</button>
+                  </div>
+                  <div class="kclip-tool-card">
+                    <div class="kclip-tool-title">Wrap in Quotes</div>
+                    <div class="kclip-tool-desc">Enclose every line in quotation marks for SQL or arrays.</div>
+                    <button class="btn btn-sm" id="btn-wrap-quotes">Quote Wrap</button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Tab 2: Data & Formats -->
+              <div id="tab-data" class="kclip-tab-pane" style="display:none;">
+                <div style="display:grid; grid-template-columns:repeat(2,1fr); gap:8px;">
+                  <div class="kclip-tool-card">
+                    <div class="kclip-tool-title">SQL Formatter</div>
+                    <div class="kclip-tool-desc">Beautify and capitalize SQL keywords (SELECT, WHERE, JOIN...).</div>
+                    <button class="btn btn-sm btn-primary" id="btn-format-sql">Format SQL</button>
+                  </div>
+                  <div class="kclip-tool-card">
+                    <div class="kclip-tool-title">CSV → Markdown Table</div>
+                    <div class="kclip-tool-desc">Convert comma-delimited data to GitHub-flavored Markdown table.</div>
+                    <button class="btn btn-sm btn-accent" id="btn-csv-to-md">Convert to MD Table</button>
+                  </div>
+                  <div class="kclip-tool-card">
+                    <div class="kclip-tool-title">Markdown Table → CSV</div>
+                    <div class="kclip-tool-desc">Extract Markdown pipe-table columns back into standard CSV.</div>
+                    <button class="btn btn-sm" id="btn-md-to-csv">Convert to CSV</button>
+                  </div>
+                  <div class="kclip-tool-card">
+                    <div class="kclip-tool-title">JSON ↔ CSV Converter</div>
+                    <div class="kclip-tool-desc">Convert array of JSON objects to CSV or CSV to structured JSON.</div>
+                    <div style="display:flex; gap:4px;">
+                      <button class="btn btn-sm" id="btn-json-to-csv" style="flex:1;">JSON→CSV</button>
+                      <button class="btn btn-sm" id="btn-csv-to-json" style="flex:1;">CSV→JSON</button>
+                    </div>
+                  </div>
+                  <div class="kclip-tool-card">
+                    <div class="kclip-tool-title">ROT-13 Cipher</div>
+                    <div class="kclip-tool-desc">Rotate ASCII letters by 13 positions (symmetric decoder/encoder).</div>
+                    <button class="btn btn-sm" id="btn-rot13">Apply ROT-13</button>
+                  </div>
+                  <div class="kclip-tool-card">
+                    <div class="kclip-tool-title">1337 Leetspeak Converter</div>
+                    <div class="kclip-tool-desc">Transform alphanumeric text into 1999 hacker leetspeak.</div>
+                    <button class="btn btn-sm" id="btn-leetspeak">Apply 1337</button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Tab 3: Extract & Hashes -->
+              <div id="tab-extract" class="kclip-tab-pane" style="display:none;">
+                <div style="display:grid; grid-template-columns:repeat(2,1fr); gap:8px;">
+                  <div class="kclip-tool-card">
+                    <div class="kclip-tool-title">Extract URLs</div>
+                    <div class="kclip-tool-desc">Scan current text for http/https URLs and create new clip.</div>
+                    <button class="btn btn-sm btn-primary" id="btn-extract-urls">Extract URLs</button>
+                  </div>
+                  <div class="kclip-tool-card">
+                    <div class="kclip-tool-title">Extract Emails</div>
+                    <div class="kclip-tool-desc">Harvest all email addresses from active buffer into new clip.</div>
+                    <button class="btn btn-sm btn-primary" id="btn-extract-emails">Extract Emails</button>
+                  </div>
+                  <div class="kclip-tool-card">
+                    <div class="kclip-tool-title">Extract IPv4 Addresses</div>
+                    <div class="kclip-tool-desc">Find all dotted-quad IP addresses in logs or text.</div>
+                    <button class="btn btn-sm" id="btn-extract-ips">Extract IPs</button>
+                  </div>
+                  <div class="kclip-tool-card">
+                    <div class="kclip-tool-title">CRC-32 & Adler-32</div>
+                    <div class="kclip-tool-desc">Compute classic 32-bit cyclical redundancy checksums.</div>
+                    <button class="btn btn-sm btn-accent" id="btn-hash-crc32">Compute CRC/Adler</button>
+                  </div>
+                  <div class="kclip-tool-card" style="grid-column: span 2;">
+                    <div class="kclip-tool-title">Full Hash Signatures</div>
+                    <div class="kclip-tool-desc">Generate DJB2, FNV-1a, Adler32, and CRC32 signatures and insert at top.</div>
+                    <button class="btn btn-sm btn-primary" id="btn-all-hashes">Generate Checksum Header</button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Tab 4: Batch Export -->
+              <div id="tab-export" class="kclip-tab-pane" style="display:none;">
+                <div class="kclip-tool-card">
+                  <div class="kclip-tool-title">Batch Markdown Digest (.md)</div>
+                  <div class="kclip-tool-desc">Compile all clips in your library into a formatted Markdown notebook with headers, metadata tags, and code blocks.</div>
+                  <button class="btn btn-sm btn-primary" id="btn-export-md-digest" style="align-self:flex-start;">Download Markdown Digest</button>
+                </div>
+                <div class="kclip-tool-card">
+                  <div class="kclip-tool-title">Full JSON Backup (.json)</div>
+                  <div class="kclip-tool-desc">Complete export of all clip items, timestamps, pinned states, and category tags.</div>
+                  <button class="btn btn-sm" id="btn-export-json-backup" style="align-self:flex-start;">Download JSON Backup</button>
+                </div>
+                <div class="kclip-tool-card">
+                  <div class="kclip-tool-title">Self-Contained HTML Archive (.html)</div>
+                  <div class="kclip-tool-desc">Generates a stand-alone, offline HTML document showcasing your clips with retro Cyberpunk styling.</div>
+                  <button class="btn btn-sm btn-accent" id="btn-export-html-archive" style="align-self:flex-start;">Download HTML Archive</button>
+                </div>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button class="btn" id="kclip-adv-done">Close</button>
+            </div>
+          </div>
+        `;
+        document.body.appendChild(modal);
+
+        // Add Quick Action Buttons into .transform-toolbox
+        const toolbox = document.querySelector('.transform-toolbox');
+        if (toolbox) {
+          const advBtn = document.createElement('button');
+          advBtn.className = 'btn btn-sm kclip-ext-btn';
+          advBtn.innerHTML = '⚡ Advanced Tools';
+          advBtn.title = 'Open Advanced Transformation & Export Suite';
+          advBtn.onclick = function() {
+            modal.style.display = 'flex';
+            if (typeof playSoundEffect === 'function') playSoundEffect('click');
+          };
+          toolbox.appendChild(advBtn);
+
+          const dedupBtn = document.createElement('button');
+          dedupBtn.className = 'btn btn-sm';
+          dedupBtn.innerHTML = 'Dedup';
+          dedupBtn.title = 'Deduplicate lines in editor';
+          dedupBtn.onclick = function() {
+            const txt = getCurrentText();
+            const lines = txt.split(/\r?\n/);
+            const deduped = Array.from(new Set(lines));
+            setCurrentText(deduped.join('\n'), 'Deduplicated ' + (lines.length - deduped.length) + ' duplicate lines');
+          };
+          toolbox.appendChild(dedupBtn);
+
+          const sortBtn = document.createElement('button');
+          sortBtn.className = 'btn btn-sm';
+          sortBtn.innerHTML = 'Sort A-Z';
+          sortBtn.title = 'Sort lines alphabetically';
+          sortBtn.onclick = function() {
+            const txt = getCurrentText();
+            const sorted = txt.split(/\r?\n/).sort((a,b) => a.localeCompare(b, undefined, { numeric: true }));
+            setCurrentText(sorted.join('\n'), 'Sorted lines naturally A-Z');
+          };
+          toolbox.appendChild(sortBtn);
+
+          const mdTableBtn = document.createElement('button');
+          mdTableBtn.className = 'btn btn-sm';
+          mdTableBtn.innerHTML = 'CSV→MD';
+          mdTableBtn.title = 'Convert CSV to Markdown table';
+          mdTableBtn.onclick = function() {
+            const txt = getCurrentText();
+            const md = csvToMarkdown(txt);
+            if (md) setCurrentText(md, 'Converted CSV to Markdown Table');
+            else notify('No CSV content found');
+          };
+          toolbox.appendChild(mdTableBtn);
+        }
+
+        // Modal tab switching
+        modal.querySelectorAll('.kclip-tab-btn').forEach(btn => {
+          btn.onclick = function() {
+            modal.querySelectorAll('.kclip-tab-btn').forEach(b => b.classList.remove('active'));
+            modal.querySelectorAll('.kclip-tab-pane').forEach(p => p.style.display = 'none');
+            btn.classList.add('active');
+            const target = modal.querySelector('#' + btn.getAttribute('data-tab'));
+            if (target) target.style.display = 'block';
+            if (typeof playSoundEffect === 'function') playSoundEffect('click');
+          };
+        });
+
+        // Close modal handlers
+        const closeModal = function() {
+          modal.style.display = 'none';
+          if (typeof playSoundEffect === 'function') playSoundEffect('click');
+        };
+        modal.querySelector('#kclip-adv-close').onclick = closeModal;
+        modal.querySelector('#kclip-adv-done').onclick = closeModal;
+        modal.onclick = function(e) { if (e.target === modal) closeModal(); };
+
+        // Tab 1 Listeners
+        modal.querySelector('#btn-sort-asc').onclick = function() {
+          const txt = getCurrentText();
+          const lines = txt.split(/\r?\n/).sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
+          setCurrentText(lines.join('\n'), 'Sorted ' + lines.length + ' lines (A-Z)');
+          closeModal();
+        };
+
+        modal.querySelector('#btn-sort-desc').onclick = function() {
+          const txt = getCurrentText();
+          const lines = txt.split(/\r?\n/).sort((a, b) => b.localeCompare(a, undefined, { numeric: true }));
+          setCurrentText(lines.join('\n'), 'Sorted ' + lines.length + ' lines (Z-A)');
+          closeModal();
+        };
+
+        modal.querySelector('#btn-dedup').onclick = function() {
+          const txt = getCurrentText();
+          const original = txt.split(/\r?\n/);
+          const unique = Array.from(new Set(original));
+          setCurrentText(unique.join('\n'), 'Removed ' + (original.length - unique.length) + ' duplicate lines');
+          closeModal();
+        };
+
+        modal.querySelector('#btn-clean-lines').onclick = function() {
+          const txt = getCurrentText();
+          const cleaned = txt.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+          setCurrentText(cleaned.join('\n'), 'Trimmed and removed blank lines');
+          closeModal();
+        };
+
+        modal.querySelector('#btn-number-lines').onclick = function() {
+          const txt = getCurrentText();
+          const numbered = txt.split(/\r?\n/).map((l, idx) => (idx + 1) + '. ' + l);
+          setCurrentText(numbered.join('\n'), 'Numbered ' + numbered.length + ' lines');
+          closeModal();
+        };
+
+        modal.querySelector('#btn-wrap-quotes').onclick = function() {
+          const txt = getCurrentText();
+          const quoted = txt.split(/\r?\n/).map(l => '"' + l.replace(/"/g, '\\"') + '"');
+          setCurrentText(quoted.join('\n'), 'Wrapped lines in quotation marks');
+          closeModal();
+        };
+
+        // Tab 2 Listeners
+        modal.querySelector('#btn-format-sql').onclick = function() {
+          const txt = getCurrentText();
+          const formatted = formatSQL(txt);
+          setCurrentText(formatted, 'Formatted SQL statement');
+          closeModal();
+        };
+
+        modal.querySelector('#btn-csv-to-md').onclick = function() {
+          const txt = getCurrentText();
+          const md = csvToMarkdown(txt);
+          if (md) setCurrentText(md, 'Converted CSV to Markdown Table');
+          closeModal();
+        };
+
+        modal.querySelector('#btn-md-to-csv').onclick = function() {
+          const txt = getCurrentText();
+          const csv = markdownToCsv(txt);
+          if (csv) setCurrentText(csv, 'Converted Markdown Table to CSV');
+          closeModal();
+        };
+
+        modal.querySelector('#btn-json-to-csv').onclick = function() {
+          const txt = getCurrentText();
+          const csv = jsonToCsv(txt);
+          if (csv) setCurrentText(csv, 'Converted JSON array to CSV');
+          closeModal();
+        };
+
+        modal.querySelector('#btn-csv-to-json').onclick = function() {
+          const txt = getCurrentText();
+          const json = csvToJson(txt);
+          if (json) setCurrentText(json, 'Converted CSV to JSON');
+          closeModal();
+        };
+
+        modal.querySelector('#btn-rot13').onclick = function() {
+          const txt = getCurrentText();
+          const rot = txt.replace(/[a-zA-Z]/g, function(c) {
+            const base = c <= 'Z' ? 65 : 97;
+            return String.fromCharCode(base + (c.charCodeAt(0) - base + 13) % 26);
+          });
+          setCurrentText(rot, 'Applied ROT-13 cipher');
+          closeModal();
+        };
+
+        modal.querySelector('#btn-leetspeak').onclick = function() {
+          const map = { 'a': '4', 'A': '4', 'e': '3', 'E': '3', 'i': '1', 'I': '1', 'o': '0', 'O': '0', 's': '5', 'S': '5', 't': '7', 'T': '7' };
+          const txt = getCurrentText();
+          const leet = txt.split('').map(ch => map[ch] || ch).join('');
+          setCurrentText(leet, 'Converted to 1337 Leetspeak');
+          closeModal();
+        };
+
+        // Tab 3 Listeners
+        modal.querySelector('#btn-extract-urls').onclick = function() {
+          const txt = getCurrentText();
+          const matches = txt.match(/https?:\/\/[^\s"'<>\)]+/gi) || [];
+          const unique = Array.from(new Set(matches));
+          if (unique.length > 0) {
+            addNewClip('Extracted URLs (' + unique.length + ')', unique.join('\n'), 'snippets');
+          } else {
+            notify('No URLs found in active clip');
+          }
+          closeModal();
+        };
+
+        modal.querySelector('#btn-extract-emails').onclick = function() {
+          const txt = getCurrentText();
+          const matches = txt.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/gi) || [];
+          const unique = Array.from(new Set(matches));
+          if (unique.length > 0) {
+            addNewClip('Extracted Emails (' + unique.length + ')', unique.join('\n'), 'snippets');
+          } else {
+            notify('No email addresses found in active clip');
+          }
+          closeModal();
+        };
+
+        modal.querySelector('#btn-extract-ips').onclick = function() {
+          const txt = getCurrentText();
+          const matches = txt.match(/\b(?:\d{1,3}\.){3}\d{1,3}\b/g) || [];
+          const unique = Array.from(new Set(matches));
+          if (unique.length > 0) {
+            addNewClip('Extracted IPs (' + unique.length + ')', unique.join('\n'), 'code');
+          } else {
+            notify('No IPv4 addresses found in active clip');
+          }
+          closeModal();
+        };
+
+        modal.querySelector('#btn-hash-crc32').onclick = function() {
+          const txt = getCurrentText();
+          const c = crc32(txt);
+          const a = adler32(txt).toString(16).toUpperCase().padStart(8, '0');
+          const header = `/* CRC32: 0x${c} | Adler32: 0x${a} */\n` + txt;
+          setCurrentText(header, `CRC32: 0x${c} | Adler32: 0x${a}`);
+          closeModal();
+        };
+
+        modal.querySelector('#btn-all-hashes').onclick = function() {
+          const txt = getCurrentText();
+          const c = crc32(txt);
+          const a = adler32(txt).toString(16).toUpperCase().padStart(8, '0');
+          const d = djb2(txt);
+          const f = fnv1a(txt);
+          const header = [
+            '/* =========================================',
+            ` * CHECKSUM MANIFEST (Size: ${txt.length} bytes)`,
+            ` * CRC32   : 0x${c}`,
+            ` * Adler32 : 0x${a}`,
+            ` * DJB2    : 0x${d}`,
+            ` * FNV-1a  : 0x${f}`,
+            ' * ========================================= */',
+            ''
+          ].join('\n');
+          setCurrentText(header + txt, 'Inserted complete checksum manifest');
+          closeModal();
+        };
+
+        // Tab 4 Export Helpers
+        function triggerDownload(filename, content, mimeType) {
+          const blob = new Blob([content], { type: mimeType });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = filename;
+          document.body.appendChild(a);
+          a.click();
+          setTimeout(() => {
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+          }, 100);
+          notify('Downloaded ' + filename);
+        }
+
+        modal.querySelector('#btn-export-md-digest').onclick = function() {
+          const clips = (typeof state !== 'undefined' && state.clips) ? state.clips : [];
+          let md = '# KClip Library Digest\n\nGenerated: ' + new Date().toISOString() + '\nTotal Clips: ' + clips.length + '\n\n---\n\n';
+          clips.forEach((c, idx) => {
+            md += `## ${idx + 1}. ${c.title || 'Untitled Clip'}\n\n`;
+            md += `- **ID**: \`${c.id}\`\n`;
+            md += `- **Category**: \`${c.category || 'general'}\`\n`;
+            md += `- **Created**: ${new Date(c.created).toLocaleString()}\n`;
+            md += `- **Pinned**: ${c.pinned ? 'Yes' : 'No'}\n\n`;
+            md += '```text\n' + (c.content || '') + '\n```\n\n---\n\n';
+          });
+          triggerDownload('kclip_digest_' + Date.now() + '.md', md, 'text/markdown');
+          closeModal();
+        };
+
+        modal.querySelector('#btn-export-json-backup').onclick = function() {
+          const backup = {
+            app: 'KClip',
+            version: '2.0.0',
+            exportedAt: new Date().toISOString(),
+            clips: (typeof state !== 'undefined' && state.clips) ? state.clips : []
+          };
+          triggerDownload('kclip_backup_' + Date.now() + '.json', JSON.stringify(backup, null, 2), 'application/json');
+          closeModal();
+        };
+
+        modal.querySelector('#btn-export-html-archive').onclick = function() {
+          const clips = (typeof state !== 'undefined' && state.clips) ? state.clips : [];
+          let cardsHtml = '';
+          clips.forEach((c, idx) => {
+            cardsHtml += `
+              <div style="background:#111827; border:1px solid #23324d; border-radius:6px; padding:16px; margin-bottom:12px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                  <h3 style="color:#06b6d4; margin:0; font-family:monospace;">${idx + 1}. ${escapeHtml(c.title || 'Untitled')}</h3>
+                  <span style="background:#1e293b; color:#94a3b8; padding:2px 8px; border-radius:4px; font-size:11px; font-family:monospace;">${escapeHtml(c.category || 'general')}</span>
+                </div>
+                <div style="font-size:11px; color:#64748b; margin-bottom:8px; font-family:monospace;">Created: ${new Date(c.created).toLocaleString()}</div>
+                <pre style="background:#0b0f19; color:#f1f5f9; padding:10px; border-radius:4px; overflow-x:auto; font-size:12px; font-family:monospace; margin:0;">${escapeHtml(c.content || '')}</pre>
+              </div>
+            `;
+          });
+
+          function escapeHtml(str) {
+            return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+          }
+
+          const htmlDoc = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>KClip Archive - ${new Date().toLocaleDateString()}</title>
+  <style>
+    body { background:#0b0f19; color:#f1f5f9; font-family:'Segoe UI',system-ui,sans-serif; margin:0; padding:24px; }
+    h1 { color:#06b6d4; font-family:monospace; margin-bottom:4px; }
+    .subtitle { color:#94a3b8; font-size:13px; margin-bottom:24px; font-family:monospace; }
+    .container { max-width:900px; margin:0 auto; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>KClip Workstation Archive</h1>
+    <div class="subtitle">Generated on ${new Date().toLocaleString()} | Total Items: ${clips.length}</div>
+    ${cardsHtml}
+  </div>
+</body>
+</html>`;
+          triggerDownload('kclip_archive_' + Date.now() + '.html', htmlDoc, 'text/html');
+          closeModal();
+        };
+      }
+
       // --- 15. BOOTSTRAP WORKSTATION ---
       function initWorkstation() {
         loadSettingsPreferences();
@@ -3282,6 +4004,7 @@
         updateStatus();
         initListeners();
         checkFirstRun();
+        initKClipDeepExpansion();
       }
 
       // Run on DOM ready
