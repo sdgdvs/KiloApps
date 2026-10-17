@@ -11,8 +11,7 @@ description: >-
 
 This skill designs and implements new applications or deep game worlds on exactly ONE application per turn.
 
-## Token Efficiency Directive (STRICT BUDGET: <= 12 Tool Calls)
-- **Tool Budget**: Complete this turn in **<= 12 tool calls**.
+## Token Efficiency Directive
 - **Batch Implementations**: Write the web page or destination file in a single write/edit pass.
 - **Single-App Build Only**: Run only `cd KiloOS && npm run build`. NEVER run full-repo test suites (no `quality_gate.js`, no screenshot regeneration).
 - **No Archives/Receipts**: Never read `archive/` or `.agents/receipts/`.

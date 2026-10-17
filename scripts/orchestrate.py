@@ -54,19 +54,19 @@ except ImportError:
         pack_context = None
 
 # Multi-PC Node Profiles: Dedicated, non-colliding dispatch windows based on account model tier:
-# - PC A: sdgdvs (Gemini Pro) - 1 turn/hr at :12 past each hour (Window :10 - :18)
+# - PC A: sdgdvs (Gemini Pro) - 2 turns/hr at :12, :48 past each hour (Windows :10 - :18, :46 - :54)
 # - PC B: anonymous2 (Gemini Pro) - 1 turn/hr at :30 past each hour (Window :28 - :36)
-# - PC C: This PC / anonymous1 (Gemini Ultra) - 3-4 turns/hr at :02, :20, :38, :48 past each hour
+# - PC C: This PC / anonymous1 (Gemini Ultra) - 3 turns/hr at :02, :20, :38 past each hour
 NODE_PROFILES = {
     "pc_a": {
         "node_id": "pc_a",
         "name": "PC A (sdgdvs)",
         "account": "sdgdvs",
         "model_tier": "Gemini Pro",
-        "minutes": [12],
-        "allowed_window": lambda m: 10 <= m <= 18,
-        "safe_window": ":10 - :18",
-        "collision_desc": "Reserved for PC B (Pro: :28-:36) & PC C (Ultra: :00-:10, :18-:28, :36-:56)",
+        "minutes": [12, 48],
+        "allowed_window": lambda m: (10 <= m <= 18) or (46 <= m <= 54),
+        "safe_window": ":10 - :18 & :46 - :54",
+        "collision_desc": "Reserved for PC B (Pro: :28-:36) & PC C (Ultra: :00-:10, :18-:28, :36-:46)",
     },
     "pc_b": {
         "node_id": "pc_b",
@@ -76,7 +76,7 @@ NODE_PROFILES = {
         "minutes": [30],
         "allowed_window": lambda m: 28 <= m <= 36,
         "safe_window": ":28 - :36",
-        "collision_desc": "Reserved for PC A (Pro: :10-:18) & PC C (Ultra: :00-:10, :18-:28, :36-:56)",
+        "collision_desc": "Reserved for PC A (Pro: :10-:18, :46-:54) & PC C (Ultra: :00-:10, :18-:28, :36-:46)",
     },
     "pc_c": {
         "node_id": "pc_c",
@@ -84,10 +84,10 @@ NODE_PROFILES = {
         "account": "anonymous1",
         "hostname_hint": "12900K",
         "model_tier": "Gemini Ultra",
-        "minutes": [2, 20, 38, 48],
-        "allowed_window": lambda m: not ((10 <= m <= 18) or (28 <= m <= 36)),
-        "safe_window": "Outside Pro Windows (:00-:10, :18-:28, :36-:56)",
-        "collision_desc": "Reserved for PC A (Pro: :10-:18) & PC B (Pro: :28-:36)",
+        "minutes": [2, 20, 38],
+        "allowed_window": lambda m: not ((10 <= m <= 18) or (28 <= m <= 36) or (46 <= m <= 54)),
+        "safe_window": "Outside Pro Windows (:00-:10, :18-:28, :36-:46)",
+        "collision_desc": "Reserved for PC A (Pro: :10-:18, :46-:54) & PC B (Pro: :28-:36)",
     },
 }
 
@@ -657,8 +657,7 @@ def validate_next_work_file(path: Path) -> tuple[bool, str]:
 
 
 TOKEN_EFFICIENCY_SUFFIX = (
-    " TOKEN EFFICIENCY DIRECTIVE (STRICT BUDGET): "
-    "Complete this turn in <= 10 tool calls. "
+    " TOKEN EFFICIENCY DIRECTIVE: "
     "Inspect the target app file ONCE. Batch all edits in a single pass. "
     "Do NOT re-read files after editing. "
     "Do NOT read archive files (archive/), receipt files, or unrelated apps. "

@@ -3,10 +3,9 @@
     Registers and activates the Windows Scheduled Task for the KiloApps Fleet Orchestrator.
 .DESCRIPTION
     Multi-PC Fleet Topology:
-      - PC A (sdgdvs, Gemini Pro): 1 turn/hr at :12 past each hour (Window :10 - :18)
+      - PC A (sdgdvs, Gemini Pro): 2 turns/hr at :12, :48 past each hour (Windows :10 - :18, :46 - :54)
       - PC B (anonymous2, Gemini Pro): 1 turn/hr at :30 past each hour (Window :28 - :36)
-      - PC C (This PC / anonymous1, Gemini Ultra): 4 turns/hr at :02, :20, :38, :48 past each hour
-        (or 3 turns/hr at :02, :22, :42 past each hour).
+      - PC C (This PC / anonymous1, Gemini Ultra): 3 turns/hr at :02, :20, :38 past each hour.
     Supports continuous mode (default: indefinite repetition, no auto-stop timer)
     or optional timed sessions (e.g. -Hours 24).
 .PARAMETER Hours
@@ -16,7 +15,7 @@
 .PARAMETER NodeId
     Node identifier: "pc_c" (this PC), "pc_a", "pc_b", or "auto".
 .PARAMETER Cadence
-    For PC C: 4 (default, 4 turns/hr) or 3 (3 turns/hr).
+    For PC C: 3 (default, 3 turns/hr) or 2 (2 turns/hr).
 .PARAMETER Minutes
     Custom explicit array of minute integers past each hour.
 .PARAMETER TaskName
@@ -63,18 +62,18 @@ if ($NodeId -eq "auto") {
 
 if ($Minutes.Count -eq 0) {
     if ($NodeId -eq "pc_a") {
-        $Minutes = @(12)
-        $NodeDesc = "PC A (sdgdvs • Gemini Pro - 1 turn/hr at :12)"
+        $Minutes = @(12, 48)
+        $NodeDesc = "PC A (sdgdvs • Gemini Pro - 2 turns/hr at :12, :48)"
     } elseif ($NodeId -eq "pc_b") {
         $Minutes = @(30)
         $NodeDesc = "PC B (anonymous2 • Gemini Pro - 1 turn/hr at :30)"
     } else {
-        if ($Cadence -eq 3) {
-            $Minutes = @(2, 22, 42)
-            $NodeDesc = "PC C (This PC / anonymous1 • Gemini Ultra - 3 turns/hr at :02, :22, :42)"
+        if ($Cadence -eq 2) {
+            $Minutes = @(2, 20)
+            $NodeDesc = "PC C (This PC / anonymous1 • Gemini Ultra - 2 turns/hr at :02, :20)"
         } else {
-            $Minutes = @(2, 20, 38, 48)
-            $NodeDesc = "PC C (This PC / anonymous1 • Gemini Ultra - 4 turns/hr at :02, :20, :38, :48)"
+            $Minutes = @(2, 20, 38)
+            $NodeDesc = "PC C (This PC / anonymous1 • Gemini Ultra - 3 turns/hr at :02, :20, :38)"
         }
     }
 } else {

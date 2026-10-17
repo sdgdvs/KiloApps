@@ -1,21 +1,22 @@
-{
-  "node_id": "pc_a",
-  "name": "PC A (sdgdvs)",
-  "account": "sdgdvs",
-  "hostname": "P10700",
-  "model_tier": "Gemini Pro",
-  "cadence": "1 turn/hour",
-  "status": "active",
-  "schedule_minutes": [
-    12
-  ],
-  "session_start": "2026-10-17T16:15:39.1587691Z",
-  "session_end": null,
-  "session_limit_enabled": false,
-  "timer_enabled": false,
-  "turns_executed": 283,
-  "last_turn_timestamp": "2026-09-28T18:42:51Z",
-  "last_heartbeat": "2026-10-17T16:15:41.028312+00:00",
-  "current_target": "kweb://asm-temple",
-  "remote_command": "none"
+﻿{
+    "node_id":  "pc_a",
+    "name":  "PC A (sdgdvs)",
+    "account":  "sdgdvs",
+    "hostname":  "P10700",
+    "model_tier":  "Gemini Pro",
+    "cadence":  "2 turns/hour",
+    "status":  "active",
+    "schedule_minutes":  [
+                             12,
+                             48
+                         ],
+    "session_start":  "2026-10-17T16:34:11.6162912Z",
+    "session_end":  null,
+    "session_limit_enabled":  false,
+    "timer_enabled":  false,
+    "turns_executed":  284,
+    "last_turn_timestamp":  "2026-09-28T18:42:51Z",
+    "last_heartbeat":  "2026-10-17T16:34:11.6162912Z",
+    "current_target":  "kweb://users/~neon_rider",
+    "remote_command":  "none"
 }

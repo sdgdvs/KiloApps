@@ -8826,11 +8826,11 @@ function updateWidgetPreview() {
       '🌐 Official KiloNet 1999 Webring Member</div>' +
       '<div style="font-size:11px; margin-bottom:6px;">Site: <u>' + siteTitle + '</u> (ID: #' + siteId + ')</div>' +
       '<div style="font-family:monospace; font-size:11px;">' +
-      '[ <a href="javascript:void(0)" onclick="testWidgetNavigation(\'prev\')" style="color:#00ffff; font-weight:bold;">&laquo; Prev</a> ] ' +
-      (showSkip ? '[ <a href="javascript:void(0)" onclick="testWidgetNavigation(\'skip\')" style="color:#ffffff;">Skip</a> ] ' : '') +
-      '[ <a href="javascript:void(0)" onclick="testWidgetNavigation(\'random\')" style="color:#ffff00; font-weight:bold;">Random</a> ] ' +
-      '[ <a href="javascript:void(0)" onclick="testWidgetNavigation(\'next\')" style="color:#00ffff; font-weight:bold;">Next &raquo;</a> ] ' +
-      '[ <a href="javascript:void(0)" onclick="testWidgetNavigation(\'list\')" style="color:#ffffff;">Ring Hub</a> ]</div>' +
+      '[ <a href="#" onclick="testWidgetNavigation(\'prev\'); return false;" style="color:#00ffff; font-weight:bold;">&laquo; Prev</a> ] ' +
+      (showSkip ? '[ <a href="#" onclick="testWidgetNavigation(\'skip\'); return false;" style="color:#ffffff;">Skip</a> ] ' : '') +
+      '[ <a href="#" onclick="testWidgetNavigation(\'random\'); return false;" style="color:#ffff00; font-weight:bold;">Random</a> ] ' +
+      '[ <a href="#" onclick="testWidgetNavigation(\'next\'); return false;" style="color:#00ffff; font-weight:bold;">Next &raquo;</a> ] ' +
+      '[ <a href="#" onclick="testWidgetNavigation(\'list\'); return false;" style="color:#ffffff;">Ring Hub</a> ]</div>' +
       (showCounter ? '<div style="margin-top:6px; font-size:9px; color:#a0a0ff;">KiloCount \'99: <span style="background:#000; color:#0f0; padding:1px 4px; border:1px inset #888;">048,219</span></div>' : '') +
       '</div>';
   } else if (theme === 'cyber') {
@@ -8840,18 +8840,18 @@ function updateWidgetPreview() {
       '&lt;&lt; KILONET RING CONDUIT // ID:[' + siteId + '] &gt;&gt;</div>' +
       '<div style="color:#94a3b8; margin-bottom:6px;">' + siteTitle + '</div>' +
       '<div style="font-size:11px;">' +
-      '<a href="javascript:void(0)" onclick="testWidgetNavigation(\'prev\')" style="color:#38bdf8; margin:0 4px;">[WARP-PREV]</a>' +
-      '<a href="javascript:void(0)" onclick="testWidgetNavigation(\'random\')" style="color:#fbbf24; margin:0 4px;">[QUANTUM-JUMP]</a>' +
-      '<a href="javascript:void(0)" onclick="testWidgetNavigation(\'next\')" style="color:#38bdf8; margin:0 4px;">[WARP-NEXT]</a>' +
+      '<a href="#" onclick="testWidgetNavigation(\'prev\'); return false;" style="color:#38bdf8; margin:0 4px;">[WARP-PREV]</a>' +
+      '<a href="#" onclick="testWidgetNavigation(\'random\'); return false;" style="color:#fbbf24; margin:0 4px;">[QUANTUM-JUMP]</a>' +
+      '<a href="#" onclick="testWidgetNavigation(\'next\'); return false;" style="color:#38bdf8; margin:0 4px;">[WARP-NEXT]</a>' +
       '</div></div>';
   } else if (theme === 'gold') {
     previewStyle = 'background:linear-gradient(180deg,#78350f,#451a03); border:2px solid #fbbf24; color:#fef3c7; font-family:Tahoma,sans-serif; font-size:11px; padding:8px 12px; text-align:center;';
     widgetHtml = '<div style="' + previewStyle + '">' +
       '<div style="font-weight:bold; color:#fef08a;">⭐ KiloNet Golden Web Consortium ⭐</div>' +
       '<div style="font-size:10px; margin:4px 0;">' + siteTitle + '</div>' +
-      '<div>[ <a href="javascript:void(0)" onclick="testWidgetNavigation(\'prev\')" style="color:#fbbf24;">&larr; Back</a> ] ' +
-      '[ <a href="javascript:void(0)" onclick="testWidgetNavigation(\'random\')" style="color:#ffffff;">Shuffle</a> ] ' +
-      '[ <a href="javascript:void(0)" onclick="testWidgetNavigation(\'next\')" style="color:#fbbf24;">Forward &rarr;</a> ]</div>' +
+      '<div>[ <a href="#" onclick="testWidgetNavigation(\'prev\'); return false;" style="color:#fbbf24;">&larr; Back</a> ] ' +
+      '[ <a href="#" onclick="testWidgetNavigation(\'random\'); return false;" style="color:#ffffff;">Shuffle</a> ] ' +
+      '[ <a href="#" onclick="testWidgetNavigation(\'next\'); return false;" style="color:#fbbf24;">Forward &rarr;</a> ]</div>' +
       '</div>';
   } else if (theme === 'terminal') {
     previewStyle = 'background:#000000; border:1px solid #10b981; color:#10b981; font-family:Consolas,monospace; font-size:11px; padding:8px 12px; text-align:left;';
@@ -8859,17 +8859,17 @@ function updateWidgetPreview() {
       '<div>SYS: KiloNet Ring Node // ' + siteId + '</div>' +
       '<div>PATH: /ring/nodes/' + siteId + '.htm</div>' +
       '<div style="margin-top:4px;">' +
-      '&gt; <a href="javascript:void(0)" onclick="testWidgetNavigation(\'prev\')" style="color:#34d399;">[PREV_CIRCUIT]</a> ' +
-      '&gt; <a href="javascript:void(0)" onclick="testWidgetNavigation(\'random\')" style="color:#fbbf24;">[PSEUDORANDOM]</a> ' +
-      '&gt; <a href="javascript:void(0)" onclick="testWidgetNavigation(\'next\')" style="color:#34d399;">[NEXT_CIRCUIT]</a>' +
+      '&gt; <a href="#" onclick="testWidgetNavigation(\'prev\'); return false;" style="color:#34d399;">[PREV_CIRCUIT]</a> ' +
+      '&gt; <a href="#" onclick="testWidgetNavigation(\'random\'); return false;" style="color:#fbbf24;">[PSEUDORANDOM]</a> ' +
+      '&gt; <a href="#" onclick="testWidgetNavigation(\'next\'); return false;" style="color:#34d399;">[NEXT_CIRCUIT]</a>' +
       '</div></div>';
   } else {
     previewStyle = 'background:#111726; border:1px solid #2d3e5e; color:#94a3b8; font-family:sans-serif; font-size:11px; padding:6px 10px; text-align:center; border-radius:3px;';
     widgetHtml = '<div style="' + previewStyle + '">' +
       '<span>KiloNet Webring:</span> ' +
-      '<a href="javascript:void(0)" onclick="testWidgetNavigation(\'prev\')" style="color:#38bdf8; margin:0 4px;">&laquo; Prev</a> &bull; ' +
-      '<a href="javascript:void(0)" onclick="testWidgetNavigation(\'random\')" style="color:#fbbf24; margin:0 4px;">Random</a> &bull; ' +
-      '<a href="javascript:void(0)" onclick="testWidgetNavigation(\'next\')" style="color:#38bdf8; margin:0 4px;">Next &raquo;</a>' +
+      '<a href="#" onclick="testWidgetNavigation(\'prev\'); return false;" style="color:#38bdf8; margin:0 4px;">&laquo; Prev</a> &bull; ' +
+      '<a href="#" onclick="testWidgetNavigation(\'random\'); return false;" style="color:#fbbf24; margin:0 4px;">Random</a> &bull; ' +
+      '<a href="#" onclick="testWidgetNavigation(\'next\'); return false;" style="color:#38bdf8; margin:0 4px;">Next &raquo;</a>' +
       '</div>';
   }
 

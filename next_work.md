@@ -175,6 +175,13 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-17T09:35:00-07:00 — kilo-adhoc: Fleet Dashboard & Scheduler (Turn Metrics, PC A Slot Claim, Tool Budget Uncap)**
+  - Dashboard Metrics: Fixed turn metrics to accurately display all-time turns (1,941 receipts) and last 24h turns (42 receipts) with zero-overhead cached counter.
+  - Quota & Slot Balancing: Assigned PC C's :48 minute slot to PC A (now 2 turns/hr at :12, :48) with non-colliding windows across fleet.
+  - Tool Call Limit: Removed restrictive <=10 tool call directives from orchestrator agy agent dispatch and all skill definitions.
+  - Security Lint: Resolved javascript: protocol in webring.html; security_lint 100% PASS.
+  - Verification: Security gates passed; task registered in Windows Task Scheduler (next run :48).
+
 - **2026-10-17T16:24:00+0000 — kilo-soundscape: kweb://users/~neon_rider (YM2612 2-Op FM / SPC700 Procedural Audio Overhaul)**
   - Audio Engine: Composed 6 authentic 32-step procedural chiptunes with 3-voice counterpoint (FM slap bass, lead, shell arps) and dynamic drum synthesis (FM kick, filtered noise snare, 2-op hi-hats).
   - Presets & Earcons: Added FM Operator Lab presets (Slap Bass, Cyber Lead, Crystal Chime, Sub Drone, FM Brass, Action Stinger) and tactile UI earcons/stingers (success fanfare, error buzz, 1999Hz harmonic chime, micro-clicks).
@@ -199,9 +206,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Export & Tools: Added .ASM download and clipboard export; integrated sample retro routines (x86 cracktro, 6502 screen clear, Z80 vblank).
   - Verification: `npm run build` clean (0 errors); `khex.html` ~208 KB (<999 KB ceiling).
   - Queue: Advanced `kilo_expander` to `KFont`; rotation handoff to `kilo-creator`.
-
-- **2026-10-17T14:14:00+0000 — kilo-qa: KConnect4 (Pass 5 QA & Build Audit)**
-  - State persistence verified: F5 quicksave & F9 quickload functional with quota protection.
-  - First-run tutorial verified: onboarding triggers on fresh session only (`kconnect4_tutorialSeen`).
-  - Native & web build parity verified: `KConnect4.exe` (190 KB) & `kconnect4.html` (186 KB) < 999 KB.
-  - Status: PASS ✅ (clean native C build & 0 Vite errors).

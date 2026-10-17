@@ -9,6 +9,12 @@ This file stores historical execution logs archived from `next_work.md` to keep 
   - Controls & modals: F1/H codex, Forge, Duel Arena, Replay, FEN, HUD, and virtual D-pad operational.
   - Build & size: KPac (212.9 KB < 999 KB); Vite production build verified clean (0 errors).
 
+- **2026-10-17T14:14:00+0000 — kilo-qa: KConnect4 (Pass 5 QA & Build Audit)**
+  - State persistence verified: F5 quicksave & F9 quickload functional with quota protection.
+  - First-run tutorial verified: onboarding triggers on fresh session only (`kconnect4_tutorialSeen`).
+  - Native & web build parity verified: `KConnect4.exe` (190 KB) & `kconnect4.html` (186 KB) < 999 KB.
+  - Status: PASS ✅ (clean native C build & 0 Vite errors).
+
 - **2026-10-17T13:15:00+0000 — kilo-tester: KSpace (Interactive UI Audit & Inline Repairs)**
   - Skill UI: Added explicit button types, titles, and ARIA labels across skill bar controls.
   - Controls: Added keybind fallbacks for skill hotkeys; added touch-action: none to canvas to prevent mobile gesture conflicts.

@@ -11,8 +11,7 @@ description: >-
 
 This skill executes a self-contained interactive UI audit and repair on exactly ONE web application.
 
-## Token Efficiency Directive (STRICT BUDGET: <= 10 Tool Calls)
-- **Tool Budget**: Complete this turn in **<= 10 tool calls**.
+## Token Efficiency Directive
 - **Batch Edits**: Inspect target HTML once, apply all event/modal fixes in a single edit block.
 - **No Re-reads**: Do NOT re-read files after editing them.
 - **Single-App Validation Only**: Run `uv run scripts/test_app_startup.py --app <TargetApp>` and `cd KiloOS && npm run build`. NEVER run full-repo test suites (no `quality_gate.js`, no screenshot regeneration).

@@ -14,6 +14,7 @@ Features:
 import datetime
 import json
 import os
+import re
 import subprocess
 import sys
 import threading
@@ -35,20 +36,20 @@ TASK_NAME = "KiloApps-Fleet-Orchestrator"
 CREATE_NO_WINDOW = 0x08000000 if sys.platform == "win32" else 0
 
 # Multi-PC Node Profiles: Dedicated, non-colliding dispatch windows based on account model tier:
-# - PC A: sdgdvs (Gemini Pro) - 1 turn/hr at :12 past each hour (Window :10 - :18)
+# - PC A: sdgdvs (Gemini Pro) - 2 turns/hr at :12, :48 past each hour (Windows :10 - :18, :46 - :54)
 # - PC B: anonymous2 (Gemini Pro) - 1 turn/hr at :30 past each hour (Window :28 - :36)
-# - PC C: This PC / anonymous1 (Gemini Ultra) - 3-4 turns/hr at :02, :20, :38, :48 past each hour
+# - PC C: This PC / anonymous1 (Gemini Ultra) - 3 turns/hr at :02, :20, :38 past each hour
 NODE_PROFILES = {
     "pc_a": {
         "node_id": "pc_a",
         "name": "PC A (sdgdvs)",
         "account": "sdgdvs",
         "model_tier": "Gemini Pro",
-        "cadence_desc": "1 turn/hr",
-        "minutes": [12],
-        "safe_window": ":10 - :18",
-        "is_safe": lambda m: 10 <= m <= 18,
-        "collision_desc": "Reserved for PC B (Pro: :28-:36) & PC C (Ultra: :00-:10, :18-:28, :36-:56)",
+        "cadence_desc": "2 turns/hr",
+        "minutes": [12, 48],
+        "safe_window": ":10 - :18 & :46 - :54",
+        "is_safe": lambda m: (10 <= m <= 18) or (46 <= m <= 54),
+        "collision_desc": "Reserved for PC B (Pro: :28-:36) & PC C (Ultra: :00-:10, :18-:28, :36-:46)",
     },
     "pc_b": {
         "node_id": "pc_b",
@@ -59,7 +60,7 @@ NODE_PROFILES = {
         "minutes": [30],
         "safe_window": ":28 - :36",
         "is_safe": lambda m: 28 <= m <= 36,
-        "collision_desc": "Reserved for PC A (Pro: :10-:18) & PC C (Ultra: :00-:10, :18-:28, :36-:56)",
+        "collision_desc": "Reserved for PC A (Pro: :10-:18, :46-:54) & PC C (Ultra: :00-:10, :18-:28, :36-:46)",
     },
     "pc_c": {
         "node_id": "pc_c",
@@ -67,13 +68,65 @@ NODE_PROFILES = {
         "account": "anonymous1",
         "hostname_hint": "12900K",
         "model_tier": "Gemini Ultra",
-        "cadence_desc": "4 turns/hr",
-        "minutes": [2, 20, 38, 48],
-        "safe_window": "Outside Pro Windows (:00-:10, :18-:28, :36-:56)",
-        "is_safe": lambda m: not ((10 <= m <= 18) or (28 <= m <= 36)),
-        "collision_desc": "Reserved for PC A (Pro: :10-:18) & PC B (Pro: :28-:36)",
+        "cadence_desc": "3 turns/hr",
+        "minutes": [2, 20, 38],
+        "safe_window": "Outside Pro Windows (:00-:10, :18-:28, :36-:46)",
+        "is_safe": lambda m: not ((10 <= m <= 18) or (28 <= m <= 36) or (46 <= m <= 54)),
+        "collision_desc": "Reserved for PC A (Pro: :10-:18, :46-:54) & PC B (Pro: :28-:36)",
     },
 }
+
+_turn_counts_cache = {
+    "last_check": 0.0,
+    "all_time": 0,
+    "last_24h": 0,
+}
+
+
+def get_fleet_turn_counts() -> tuple[int, int]:
+    """Calculates all-time turns and turns in last 24h from receipts in .agents/receipts."""
+    global _turn_counts_cache
+    now_ts = time.time()
+    if now_ts - _turn_counts_cache["last_check"] < 10.0 and _turn_counts_cache["last_check"] > 0:
+        return _turn_counts_cache["all_time"], _turn_counts_cache["last_24h"]
+
+    _turn_counts_cache["last_check"] = now_ts
+    receipts_dir = REPO_ROOT / ".agents" / "receipts"
+    archive_dir = receipts_dir / "archive"
+
+    if not receipts_dir.exists():
+        return 0, 0
+
+    now_utc = datetime.datetime.now(datetime.timezone.utc)
+    cutoff = now_utc - datetime.timedelta(hours=24)
+
+    files = list(receipts_dir.glob("*.json"))
+    if archive_dir.exists():
+        files.extend(archive_dir.glob("*.json"))
+
+    all_time = len(files)
+    last_24h = 0
+
+    for f in files:
+        m = re.search(r"(\d{8})_(\d{6})\.json$", f.name)
+        if m:
+            try:
+                dt = datetime.datetime.strptime(m.group(1) + m.group(2), "%Y%m%d%H%M%S").replace(tzinfo=datetime.timezone.utc)
+                if dt >= cutoff:
+                    last_24h += 1
+            except Exception:
+                pass
+        else:
+            try:
+                dt = datetime.datetime.fromtimestamp(f.stat().st_mtime, tz=datetime.timezone.utc)
+                if dt >= cutoff:
+                    last_24h += 1
+            except Exception:
+                pass
+
+    _turn_counts_cache["all_time"] = all_time
+    _turn_counts_cache["last_24h"] = last_24h
+    return all_time, last_24h
 
 
 def get_current_node_id() -> str:
@@ -237,35 +290,44 @@ def set_windows_autostart(enable: bool):
 
 def query_task_state_from_system() -> str:
     """Queries schtasks.exe safely with stdin redirected and creation flags to prevent error 0x800700E8 pipe closed."""
-    try:
-        res = subprocess.run(
-            ["schtasks.exe", "/query", "/tn", TASK_NAME, "/fo", "csv", "/nh"],
-            capture_output=True,
-            text=True,
-            stdin=subprocess.DEVNULL,
-            creationflags=CREATE_NO_WINDOW,
-            timeout=5,
-        )
-        if res.returncode == 0:
-            lines = res.stdout.strip().splitlines()
-            states = []
-            for line in lines:
-                parts = [p.strip().strip('"') for p in line.split(",")]
-                if len(parts) >= 3 and parts[2]:
-                    states.append(parts[2])
-            if any(s.lower() == "running" for s in states):
-                return "Running"
-            if any(s.lower() == "ready" for s in states):
-                return "Ready"
-            if any(s.lower() == "disabled" for s in states):
-                return "Disabled"
-            if states:
-                return states[0]
-        elif res.returncode == 1:
-            if "cannot find the file" in res.stderr.lower():
-                return "NOT REGISTERED"
-    except Exception:
-        pass
+    task_name = TASK_NAME
+    if SESSION_FILE.exists():
+        try:
+            s_data = json.loads(SESSION_FILE.read_text(encoding="utf-8-sig"))
+            task_name = s_data.get("task_name", TASK_NAME)
+        except Exception:
+            pass
+
+    for tn in (task_name, f"{TASK_NAME}-User", TASK_NAME):
+        try:
+            res = subprocess.run(
+                ["schtasks.exe", "/query", "/tn", tn, "/fo", "csv", "/nh"],
+                capture_output=True,
+                text=True,
+                stdin=subprocess.DEVNULL,
+                creationflags=CREATE_NO_WINDOW,
+                timeout=5,
+            )
+            if res.returncode == 0:
+                lines = res.stdout.strip().splitlines()
+                states = []
+                for line in lines:
+                    parts = [p.strip().strip('"') for p in line.split(",")]
+                    if len(parts) >= 3 and parts[2]:
+                        states.append(parts[2])
+                if any(s.lower() == "running" for s in states):
+                    return "Running"
+                if any(s.lower() == "ready" for s in states):
+                    return "Ready"
+                if any(s.lower() == "disabled" for s in states):
+                    return "Disabled"
+                if states:
+                    return states[0]
+            elif res.returncode == 1:
+                if "cannot find the file" in res.stderr.lower():
+                    continue
+        except Exception:
+            pass
 
     # Seamless fallback to session file state (prevents errors if RPC pipe is closed)
     if SESSION_FILE.exists():
@@ -300,13 +362,13 @@ class FleetDashboard(tk.Tk):
         self.current_node_id = get_current_node_id()
         self.current_node_profile = dict(NODE_PROFILES.get(self.current_node_id, NODE_PROFILES["pc_c"]))
         if self.current_node_id == "pc_c":
-            cad = self.config_data.get("cadence", 4)
-            if cad == 3:
-                self.current_node_profile["minutes"] = [2, 22, 42]
-                self.current_node_profile["cadence_desc"] = "3 turns/hr"
+            cad = self.config_data.get("cadence", 3)
+            if cad == 2:
+                self.current_node_profile["minutes"] = [2, 20]
+                self.current_node_profile["cadence_desc"] = "2 turns/hr"
             else:
-                self.current_node_profile["minutes"] = [2, 20, 38, 48]
-                self.current_node_profile["cadence_desc"] = "4 turns/hr"
+                self.current_node_profile["minutes"] = [2, 20, 38]
+                self.current_node_profile["cadence_desc"] = "3 turns/hr"
         self.current_node_name = self.current_node_profile["name"]
 
         # Telemetry query caching
@@ -382,24 +444,10 @@ class FleetDashboard(tk.Tk):
             cad_frame = tk.Frame(main_frame, bg="#212234", padx=8, pady=4, highlightbackground=self.c_card_border, highlightthickness=1)
             cad_frame.pack(fill=tk.X, pady=(2, 6))
             tk.Label(cad_frame, text="⚡ ULTRA CADENCE:", font=("Segoe UI", 8, "bold"), fg=self.c_accent, bg="#212234").pack(side=tk.LEFT)
-            self.var_cadence = tk.IntVar(value=self.config_data.get("cadence", 4))
-            r4 = tk.Radiobutton(
-                cad_frame,
-                text="4 turns/hr (:02, :20, :38, :48)",
-                variable=self.var_cadence,
-                value=4,
-                command=self._on_change_cadence,
-                font=("Segoe UI", 8),
-                fg=self.c_fg,
-                bg="#212234",
-                selectcolor="#313244",
-                activebackground="#212234",
-                activeforeground=self.c_fg,
-            )
-            r4.pack(side=tk.LEFT, padx=(10, 6))
+            self.var_cadence = tk.IntVar(value=self.config_data.get("cadence", 3))
             r3 = tk.Radiobutton(
                 cad_frame,
-                text="3 turns/hr (:02, :22, :42)",
+                text="3 turns/hr (:02, :20, :38)",
                 variable=self.var_cadence,
                 value=3,
                 command=self._on_change_cadence,
@@ -410,7 +458,21 @@ class FleetDashboard(tk.Tk):
                 activebackground="#212234",
                 activeforeground=self.c_fg,
             )
-            r3.pack(side=tk.LEFT)
+            r3.pack(side=tk.LEFT, padx=(10, 6))
+            r2 = tk.Radiobutton(
+                cad_frame,
+                text="2 turns/hr (:02, :20)",
+                variable=self.var_cadence,
+                value=2,
+                command=self._on_change_cadence,
+                font=("Segoe UI", 8),
+                fg=self.c_fg,
+                bg="#212234",
+                selectcolor="#313244",
+                activebackground="#212234",
+                activeforeground=self.c_fg,
+            )
+            r2.pack(side=tk.LEFT)
 
         # 2. Main Local Control Buttons Frame
         btn_frame = tk.Frame(main_frame, bg=self.c_bg)
@@ -532,8 +594,9 @@ class FleetDashboard(tk.Tk):
         self.lbl_next_run = add_metric_row(grid_frame, 0, "Next Scheduled Run:")
         self.lbl_window = add_metric_row(grid_frame, 1, "Fleet Window Alignment:")
         self.lbl_session = add_metric_row(grid_frame, 2, "Fleet Session Mode:")
-        self.lbl_turns = add_metric_row(grid_frame, 3, "Turns Executed (Today):")
-        self.lbl_target = add_metric_row(grid_frame, 4, "Active Fleet Target:")
+        self.lbl_turns_all_time = add_metric_row(grid_frame, 3, "Turns Executed (All Time):")
+        self.lbl_turns_24h = add_metric_row(grid_frame, 4, "Turns Executed (Last 24 Hours):")
+        self.lbl_target = add_metric_row(grid_frame, 5, "Active Fleet Target:")
 
         # 4. Activity Log Box
         log_header = tk.Frame(main_frame, bg=self.c_bg)
@@ -699,12 +762,12 @@ class FleetDashboard(tk.Tk):
         val = self.var_cadence.get()
         self.config_data["cadence"] = val
         save_config(self.config_data)
-        if val == 3:
-            self.current_node_profile["minutes"] = [2, 22, 42]
-            self.current_node_profile["cadence_desc"] = "3 turns/hr"
+        if val == 2:
+            self.current_node_profile["minutes"] = [2, 20]
+            self.current_node_profile["cadence_desc"] = "2 turns/hr"
         else:
-            self.current_node_profile["minutes"] = [2, 20, 38, 48]
-            self.current_node_profile["cadence_desc"] = "4 turns/hr"
+            self.current_node_profile["minutes"] = [2, 20, 38]
+            self.current_node_profile["cadence_desc"] = "3 turns/hr"
         min_desc = ", ".join([f":{m:02d}" for m in self.current_node_profile["minutes"]])
         tier_desc = self.current_node_profile.get("model_tier", "Gemini Ultra")
         self.subtitle_lbl.configure(text=f"Multi-PC Dispatcher • Local: {self.current_node_name} • {tier_desc} (Slots {min_desc})")
@@ -1058,7 +1121,7 @@ class FleetDashboard(tk.Tk):
 
         # 3. Calculate Next Run Time
         now = datetime.datetime.now()
-        mins = self.current_node_profile.get("minutes", [2, 20, 38, 48])
+        mins = self.current_node_profile.get("minutes", [12, 48])
         candidates = []
         for m in mins:
             t = now.replace(minute=m, second=0, microsecond=0)
@@ -1105,7 +1168,9 @@ class FleetDashboard(tk.Tk):
             text=remaining_str,
             fg=self.c_green if is_continuous else (self.c_fg if session_active else self.c_sub),
         )
-        self.lbl_turns.configure(text=f"{turns_count} turns executed", fg=self.c_fg)
+        all_time_turns, turns_24h = get_fleet_turn_counts()
+        self.lbl_turns_all_time.configure(text=f"{all_time_turns:,} turns executed", fg=self.c_fg)
+        self.lbl_turns_24h.configure(text=f"{turns_24h} turns executed", fg=self.c_green if turns_24h > 0 else self.c_fg)
 
         # 6. Active Queue Target
         if NEXT_WORK_FILE.exists():

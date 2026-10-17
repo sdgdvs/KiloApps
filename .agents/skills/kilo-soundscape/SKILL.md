@@ -15,8 +15,7 @@ Nobuo Uematsu, Jake Kaufman). Zero external audio files — everything generated
 
 ---
 
-## Token Efficiency Directive (STRICT BUDGET: ≤ 12 Tool Calls)
-- **Tool Budget**: Complete this turn in **≤ 12 tool calls**.
+## Token Efficiency Directive
 - **Skip Turn Fast-Path**: If target is a pure utility/text tool (see Skip List below), log skip,
   advance queue in `next_work.md`, commit, and STOP immediately.
 - **Single-File Only**: Edit only the target `.html` file (web) or `main.c` (native).

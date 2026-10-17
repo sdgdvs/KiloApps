@@ -11,8 +11,7 @@ description: >-
 
 This skill deepens functional utility and capabilities on exactly ONE application per turn.
 
-## Token Efficiency Directive (STRICT BUDGET: <= 10 Tool Calls)
-- **Tool Budget**: Complete this turn in **<= 10 tool calls**.
+## Token Efficiency Directive
 - **Batch Expansions**: Inspect target file once, plan features, apply edits in a single pass.
 - **No Re-reads**: Do NOT re-read files after editing them.
 - **Single-App Build Only**: Run only `cd KiloOS && npm run build`. NEVER run full-repo test suites (no `quality_gate.js`, no screenshot regeneration).

@@ -11,8 +11,7 @@ description: >-
 
 This skill executes a self-contained Pass 5 QA and build audit on exactly ONE application.
 
-## Token Efficiency Directive (STRICT BUDGET: <= 10 Tool Calls)
-- **Tool Budget**: Complete this turn in **<= 10 tool calls**.
+## Token Efficiency Directive
 - **Batch Edits**: Inspect target source once, apply state persistence / tutorial fixes in a single edit block.
 - **No Re-reads**: Do NOT re-read files after editing them.
 - **Single-App Build Only**: Run `cd KiloOS && npm run build` and native `build.bat` if present. NEVER run full-repo test suites (no `quality_gate.js`, no screenshot regeneration).
