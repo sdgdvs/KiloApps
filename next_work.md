@@ -179,7 +179,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Verified & enhanced Win32 ASM & demoscene shrine (<999 KB Anti-Potemkin standard).
   - Confirmed active bidirectional links across KNet portal, webring, and subnet sniffer.
   - Built KiloOS cleanly without errors; advanced queue handoff to kilo-graphics.
- 
+
 - **2026-10-17T10:31:00+0000 — kilo-qa: KTetris (Pass 5 QA & State Integrity Audit)**
   - Quicksave & State: Verified F5 quicksave & F9 quickload; guaranteed queue refill and tutorial suppression on load.
   - Bug Fix: Fixed ReferenceError in `useRowNuke` (`nx` -> `x`) during row clearance explosion rendering.
@@ -204,9 +204,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Delay & Filters: SNES SPC700 slapback delay line (180ms LPF 2200Hz) and procedural 56k dialup handshake generator.
   - Status: PASS ✅ (`webring.html` ~366 KB < 999 KB ceiling; Vite build clean in 1.20s with 0 errors).
   - Queue: Advanced `kilo_soundscape` target to `kweb://geocities`; rotation handoff to `kilo-tester`.
-
-- **2026-10-17T08:30:02+0000 — kilo-graphics: KWizard (Zero-Token Auto-Skip — Inappropriate Target)**
-  - Status: ⏭️ Skip — Imagen 3 asset replacement not appropriate for KWizard (pure vector, board game, or mature art).
-  - Optimization: Handled via orchestrator pre-flight zero-token auto-skip.
-  - Queue: Advanced `kilo-graphics` to `KWizard`; rotation handoff to `kilo-soundscape`.
-

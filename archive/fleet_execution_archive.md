@@ -4,6 +4,11 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-17T08:30:02+0000 — kilo-graphics: KWizard (Zero-Token Auto-Skip — Inappropriate Target)**
+  - Status: ⏭️ Skip — Imagen 3 asset replacement not appropriate for KWizard (pure vector, board game, or mature art).
+  - Optimization: Handled via orchestrator pre-flight zero-token auto-skip.
+  - Queue: Advanced `kilo-graphics` to `KWizard`; rotation handoff to `kilo-soundscape`.
+
 - **2026-10-17T06:15:00+0000 — kilo-tester: KCalendar (Interactive UI & Clipboard Fallback Audit)**
   - UI Elements: Audited all buttons, export dropdown options, modals, shortcuts (F1/F5/F9/Escape), and event form hooks.
   - Clipboard Reliability: Added textarea execCommand fallback to copyAgendaSummary for seamless operation in sandboxed iframes.
