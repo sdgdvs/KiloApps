@@ -4,6 +4,12 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-17T16:54:11+0000 — kilo-usability: KChart (Responsive Viewport Polish & Keyboard Accessibility)**
+  - Responsive Viewport: Added narrow-viewport (<540px) adaptation, full-width toolbar flex-wrapping, button grouping, and table scrolling.
+  - Accessibility & Polish: Added distinct help hint pill and high-visibility focus ring glow (`box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.35)`) on all inputs and buttons.
+  - Verification: Clean Vite build (`npm.cmd run build`), size 21.8 KB (<999 KB ceiling).
+  - Queue: Advanced `kilo_usability` to `KDB`; rotation handoff to `kilo-qa`.
+
 - **2026-10-17T10:00:00-07:00 — kilo-adhoc: Fleet Upgrade (Flash High Effort, 10m Timeout, Mature Application Quarantine)**
   - Model & Reasoning: Upgraded fleet orchestrator and work state to Gemini 3.8 Flash High effort (`--effort high`, `--model gemini-3.8-flash-high`) and expanded timeout to 10 minutes.
   - Quality Directives: Eliminated blindfold directives (removed single-pass batch restrictions and no-re-read bans); mandated iterative diff checks, build verification, and automated startup testing (`test_app_startup.py`).
