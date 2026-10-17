@@ -14,14 +14,14 @@ effort: high
 timeout_minutes: 10
 status: ready
 current_targets:
-  kilo_creator: kweb://10.19.99.4/classified
-  kilo_graphics: KWizard
-  kilo_soundscape: kweb://asm-temple
+  kilo_creator: kweb://echo-subsystem.net
+  kilo_graphics: KDragon
+  kilo_soundscape: KFortress
   kilo_tester: KPaint
   kilo_usability: KDB
-  kilo_qa: KMinesweeper
+  kilo_qa: KGo
   kilo_expander: KJournal
-virtual_web_target: kweb://10.19.99.4/classified
+virtual_web_target: kweb://echo-subsystem.net
 virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
@@ -35,10 +35,10 @@ virtual_web_rotation:
 - kweb://echo-subsystem.net
 - kweb://deep-core
 last_run:
-  agent: kilo-creator
-  app: kweb://cybercafe
-  timestamp: 2026-10-17T20:18:00+0000
-last_planner_run: '2026-10-16T20:35:00Z'
+  agent: kilo-planner
+  app: fleet-wide
+  timestamp: 2026-10-17T20:53:00Z
+last_planner_run: '2026-10-17T20:53:00Z'
 ---
 
 # KiloApps Master Fleet Work & Queue State
@@ -66,33 +66,33 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 ## Active Target Queues (Gemini Flash Optimized Tickets)
 
 ### 1. Virtual 1999 Web & ARG Node Creator (`kilo-creator`)
-- **Target**: `kweb://10.19.99.4/classified`
-- **Primary File**: `KiloOS/public/web/classified.html`
-- **Objective**: Expand Carlsbad skunkworks intranet archive, seismic interferometer, and Permian transponder CAD (<999 KB).
-- **Upcoming Queue**: `kweb://echo-subsystem.net`, `kweb://deep-core`, `kweb://darknet`, `kweb://portal`.
+- **Target**: `kweb://echo-subsystem.net`
+- **Primary File**: `KiloOS/public/web/echo_subsystem.html`
+- **Objective**: Deep harmonic decoders & SIGINT grid expansion: acoustic spectrogram visualizer, carrier wave frequency analyzer, numbers station decoders, secret transponder routing, and Anti-Potemkin depth (<999 KB).
+- **Upcoming Queue**: `kweb://deep-core`, `kweb://darknet`, `kweb://portal`, `kweb://webring`.
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
-- **Target**: `KWizard`
-- **Primary Files**: `KiloOS/public/apps/kwizard.html`, `KWizard/main.c` (if present)
-- **Objective**: Card battle arena visual overhaul: generate spell card illustration sprites & fantasy arena background textures with Imagen 3 pipeline; ensure 0 specular glints.
+- **Target**: `KDragon`
+- **Primary Files**: `KiloOS/public/apps/kdragon.html`, `KDragon/main.c` (if present)
+- **Objective**: Dragon pet & battle visual overhaul: generate pet dragon stages (egg, hatchling, juvenile, wyrm) and fantasy arena background with Imagen 3 pipeline; ensure 0 specular glints or traveling border dots.
 - **Action Steps**:
-  1. Inspect `KiloOS/public/apps/kwizard.html` canvas rendering routines for programmer art.
-  2. Generate spell card / arena battle sprites via 2-stage asset pipeline (`generate_image` with solid `#FF00FF` -> `scripts/asset_pipeline.py`).
+  1. Inspect `KiloOS/public/apps/kdragon.html` canvas rendering routines for programmer art.
+  2. Generate pet dragon / arena battle sprites via 2-stage asset pipeline (`generate_image` with solid `#FF00FF` -> `scripts/asset_pipeline.py`).
   3. Search for and eliminate any traveling border dots or rotating specular glints.
   4. Run `python scripts/check_icons.py` to audit icon uniqueness.
 - **Verification**: `cd KiloOS && npm run build`. Verify files < 999 KB.
 - **Handoff**:
-  - In frontmatter: advance `current_targets.kilo_graphics` to `KDragon`.
-  - Set `current_agent: kilo-usability`.
+  - In frontmatter: advance `current_targets.kilo_graphics` to `KAlchemy`.
+  - Set `current_agent: kilo-soundscape`.
   - Append terse execution log (≤6 lines), commit, and push.
-- **Upcoming Queue**: `KDragon`, `KAlchemy`, `KFortress`, `KSpace`.
+- **Upcoming Queue**: `KAlchemy`, `KFortress`, `KMech`, `KColosseum`.
 
 ### 3. Procedural Audio & Soundscape Queue (`kilo-soundscape`)
-- **Target**: `kweb://cybercafe`
-- **Primary File**: `KiloOS/public/web/cybercafe.html`
-- **Objective**: Authentic YM2612 2-Op FM / SPC700 underground BBS & cyber lounge chiptune audio suite.
+- **Target**: `KFortress`
+- **Primary Files**: `KiloOS/public/apps/kfortress.html`, `KFortress/main.c` (if present)
+- **Objective**: Authentic Genesis YM2612 2-Op FM / SPC700 stereo delay chiptune suite: 3-voice counterpoint medieval defense theme, punchy FM bassline, battle drum percussion, and spell casting SFX replacing generic sine beeps.
 - **Action Steps**:
-  1. Inspect `KiloOS/public/web/cybercafe.html` audio synthesis functions.
+  1. Inspect `KiloOS/public/apps/kfortress.html` audio synthesis functions.
   2. Implement hardware composer chiptune standard:
      - 3-Voice counterpoint: Lead melody, counter-melody/arpeggio, and punchy FM bassline.
      - Shell voicings: Root + 3rd + 7th (omit 5ths).
@@ -101,64 +101,63 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   3. Pure Web Audio synthesis with zero external audio assets.
 - **Verification**: `cd KiloOS && npm run build` (0 Vite errors). Confirm file size < 999 KB.
 - **Handoff**:
-  - In frontmatter: advance `current_targets.kilo_soundscape` to `KDragon`.
-  - Set `current_agent: kilo-usability`.
+  - In frontmatter: advance `current_targets.kilo_soundscape` to `KAlchemy`.
+  - Set `current_agent: kilo-tester`.
   - Append terse execution log (≤6 lines), commit, and push.
-- **Upcoming Queue**: `KDragon`, `KWizard`, `KFortress`.
+- **Upcoming Queue**: `KAlchemy`, `KDragon`, `KVoid`, `KColony`.
 
 ### 4. App Tester Queue (`kilo-tester`)
-- **Target**: `KSpace`
-- **Primary File**: `KiloOS/public/apps/kspace.html`
-- **Objective**: Space exploration & tactical combat UI audit: star map controls, modal dismissal, keyboard hotkeys, storage persistence.
+- **Target**: `KPaint`
+- **Primary File**: `KiloOS/public/apps/kpaint.html`
+- **Objective**: Interactive UI element & canvas tool audit: tool selection, color picker, layer controls, brush size sliders, palette swaps, export/import persistence, and keyboard shortcuts.
 - **Action Steps**:
-  1. Run automated startup check: `uv run scripts/test_app_startup.py --app KSpace`.
-  2. Audit all UI elements: weapon selection, galaxy navigation, combat HUD, shortcuts.
+  1. Run automated startup check: `uv run scripts/test_app_startup.py --app KPaint`.
+  2. Audit all UI elements: tool selection, color swatches, layer controls, modal dialogs, and shortcuts.
   3. Fix any broken button hooks, missing element IDs, or unhandled exceptions inline.
-- **Verification**: `uv run scripts/test_app_startup.py --app KSpace` and `cd KiloOS && npm run build`. File size < 999 KB.
+- **Verification**: `uv run scripts/test_app_startup.py --app KPaint` and `cd KiloOS && npm run build`. File size < 999 KB.
 - **Handoff**:
-  - In frontmatter: advance `current_targets.kilo_tester` to `KPac`.
+  - In frontmatter: advance `current_targets.kilo_tester` to `KNet`.
   - Set `current_agent: kilo-usability`.
   - Append terse execution log (≤6 lines), commit, and push.
-- **Upcoming Queue**: `KPaint`, `KPac`, `KCalendar`, `KNet`.
+- **Upcoming Queue**: `KNet`, `KColony`, `KTrader`, `KMystery`.
 
 ### 5. Usability & UX Queue (`kilo-usability`)
-- **Target**: `KChart`
-- **Primary File**: `KiloOS/public/apps/kchart.html`
-- **Objective**: Chart and graph visualizer responsive layout, canvas high-DPI scaling, and shortcut overlays.
+- **Target**: `KDB`
+- **Primary File**: `KiloOS/public/apps/kdb.html`
+- **Objective**: Database explorer responsive layout, narrow-viewport (<540px) adaptation, keyboard shortcuts (F1/H help, Esc modal dismissal), accessible focus glow, and high-DPI canvas scaling.
 - **Action Steps**:
   1. Verify window bounds and responsive container wrapping under narrow (<540px) widths.
   2. Ensure clear keyboard shortcuts (F1/H help, Esc dialog dismissals) and accessible focus indicators.
   3. Verify HiDPI canvas/text scaling and comfortable retro theme contrast.
 - **Verification**: `cd KiloOS && npm run build`. File size < 999 KB.
 - **Handoff**:
-  - In frontmatter: advance `current_targets.kilo_usability` to `KDB`.
-  - Set `current_agent: kilo-usability`.
+  - In frontmatter: advance `current_targets.kilo_usability` to `KCalc`.
+  - Set `current_agent: kilo-qa`.
   - Append terse execution log (≤6 lines), commit, and push.
-- **Upcoming Queue**: `KDB`, `KCalc`, `KNote`.
-
+- **Upcoming Queue**: `KCalc`, `KCipher`, `KPass`, `KVault`.
 
 ### 6. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
-- **Target**: `KMinesweeper`
-- **Primary Files**: `KiloOS/public/apps/kminesweeper.html`, `apps/kminesweeper/` (if present)
-- **Objective**: Pass 5 QA audit, state persistence integrity, and dual web/native parity.
+- **Target**: `KGo`
+- **Primary Files**: `KiloOS/public/apps/kgo.html`, `KGo/main.c`
+- **Objective**: Pass 5 QA audit: add first-run tutorial onboarding overlay (`kgo_tutorialSeen`), verify F5 quicksave & F9 quickload capture complete board state/captures/turn, test Escape modal dismissal, and ensure clean dual Win32 native compilation (`KGo.exe`) and web cartridge (<999 KB).
 - **Action Steps**:
   1. State Persistence: F5 quicksave & F9 quickload capturing complete game state, stats, and settings.
   2. First-run Tutorial: Onboarding displays once on fresh sessions, never on restored saves.
   3. Modal Dismissals: Modals dismiss cleanly with Escape, Enter, or Close button.
-  4. Dual Parity & Build: Compile Win32 native client via `cmd.exe /c build.bat` in `apps/kminesweeper/` (if present) and verify web build.
+  4. Dual Parity & Build: Compile Win32 native client via `cmd.exe /c build.bat` in `KGo/` (if present) and verify web build.
 - **Verification**:
-  - `uv run scripts/test_app_startup.py --app KMinesweeper`
-  - `cd KiloOS && npm run build` (0 Vite errors, `kminesweeper.html` < 999 KB)
+  - `uv run scripts/test_app_startup.py --app KGo`
+  - `cd KiloOS && npm run build` (0 Vite errors, `kgo.html` < 999 KB)
 - **Handoff**:
-  - In frontmatter: advance `current_targets.kilo_qa` to `KTetris`.
+  - In frontmatter: advance `current_targets.kilo_qa` to `KMaze`.
   - Set `current_agent: kilo-expander`.
   - Append terse execution log (≤6 lines), commit, and push.
-- **Upcoming Queue**: `KTetris`, `KAudio`.
+- **Upcoming Queue**: `KMaze`, `KSnake`, `K2048`, `KSudoku`.
 
 ### 7. Feature Expander Queue (`kilo-expander`)
 - **Target**: `KJournal`
 - **Primary Files**: `KiloOS/public/apps/kjournal.html`, `KJournal/main.c` (if present)
-- **Objective**: Deep functional feature expansion for personal journaling and encrypted log keeper.
+- **Objective**: Deep functional feature expansion: rich markdown rendering, calendar day indexing, tag searching, encrypted entry export, and template library.
 - **Action Steps**:
   1. Inspect `KiloOS/public/apps/kjournal.html`.
   2. Expand journal utility: rich markdown rendering, calendar day indexing, tag searching, and export.
@@ -168,7 +167,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - In frontmatter: advance `current_targets.kilo_expander` to `KBookmark`.
   - Set `current_agent: kilo-creator`.
   - Append terse execution log (≤6 lines), commit, and push.
-- **Upcoming Queue**: `KBookmark`, `KHex`, `KFont`.
+- **Upcoming Queue**: `KBookmark`, `KFont`, `KRSS`, `KVault`.
 
 ---
 
@@ -189,10 +188,19 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | **KChess** | `KiloOS/public/apps/kchess.html` | Pass 9+ (2026-10-15) | Strategy / Board | Complete chess engine, move validation, FEN/PGN import/export, RFMS multiplayer. |
 | **KConnect4** | `KiloOS/public/apps/kconnect4.html` | Pass 6+ (2026-10-07) | Strategy / Board | Complete connect 4 engine, minimax AI, win animations, RFMS multiplayer. |
 | **KHangman** | `KiloOS/public/apps/khangman.html` | Pass 5 (2026-10-17) | Word / Puzzle | 20-stage campaign, blitz mode, custom word bank studio, dual Win32 native client, full F5/F9 state persistence. |
+| **KNote** | `KiloOS/public/apps/knote.html` | Pass 6+ (2026-10-17) | Office / Notes | Feature-complete cybernetic notepad; multi-tab editing, find/replace, markdown preview, keyboard navigation, full state persistence. |
 
 ---
 
 ## Recent Execution Logs (Max 5 Entries)
+
+- **2026-10-17T20:53:00Z — kilo-planner: fleet-wide (Daily 24h Fleet Planning, Queue Health & Log Compaction)**
+  - Status: PASS ✅ (24h fleet health assessment, schedule rework, and log compaction complete).
+  - Icon Uniqueness: Verified 105 apps in App.jsx, 105 unique .ico files, 0 duplicate hashes (check_icons.py 100% PASS).
+  - Quarantine Enforcement: Quarantined mature KNote (Pass 6+); purged mature KMines and KNote from active queues.
+  - Queue Rework: Advanced kilo_creator/virtual_web to echo-subsystem; routed graphics to KDragon, soundscape to KFortress, tester to KPaint, usability to KDB, qa to KGo.
+  - Byte-Budget Gate: 107 web cartridges and 104 native executables verified <999 KB budget ceiling.
+  - Compaction & Archival: Executed rotate_logs.py with zero data loss; updated last_planner_run timestamp.
 
 - **2026-10-17T20:18:00+0000 — kilo-creator: kweb://cybercafe (Deep Web Destination Expansion)**
   - CCTV Surveillance Console: Added 5-feed 10Base-T video matrix with PTZ controls, motion detection, IR night vision, auto-cycle, and snapshot export.
@@ -223,10 +231,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Accessibility & Polish: Added distinct help hint pill and high-visibility focus ring glow (`box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.35)`) on all inputs and buttons.
   - Verification: Clean Vite build (`npm.cmd run build`), size 21.8 KB (<999 KB ceiling).
   - Queue: Advanced `kilo_usability` to `KDB`; rotation handoff to `kilo-qa`.
-
-- **2026-10-17T10:00:00-07:00 — kilo-adhoc: Fleet Upgrade (Flash High Effort, 10m Timeout, Mature Application Quarantine)**
-  - Model & Reasoning: Upgraded fleet orchestrator and work state to Gemini 3.8 Flash High effort (`--effort high`, `--model gemini-3.8-flash-high`) and expanded timeout to 10 minutes.
-  - Quality Directives: Eliminated blindfold directives (removed single-pass batch restrictions and no-re-read bans); mandated iterative diff checks, build verification, and automated startup testing (`test_app_startup.py`).
-  - Mature Quarantine Policy: Codified anti-skip policy across orchestrator, workspace rules, and all skills: apps skipped for maturity/completion are permanently quarantined to `## Mature Applications` and removed from active queues until user reassigns.
-  - Queue Sanitization: Purged mature apps from upcoming queues (seeded `KTowers`, `KDarts`, `KReversi`, `KMines`, `KPong`, `KAsteroids`, `KChess`, `KConnect4` in quarantine table).
-  - Verification: Clean Vite build (`npm.cmd run build`), 100% security lint PASS, dry-run orchestrator verified.

@@ -4,6 +4,13 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-17T10:00:00-07:00 — kilo-adhoc: Fleet Upgrade (Flash High Effort, 10m Timeout, Mature Application Quarantine)**
+  - Model & Reasoning: Upgraded fleet orchestrator and work state to Gemini 3.8 Flash High effort (`--effort high`, `--model gemini-3.8-flash-high`) and expanded timeout to 10 minutes.
+  - Quality Directives: Eliminated blindfold directives (removed single-pass batch restrictions and no-re-read bans); mandated iterative diff checks, build verification, and automated startup testing (`test_app_startup.py`).
+  - Mature Quarantine Policy: Codified anti-skip policy across orchestrator, workspace rules, and all skills: apps skipped for maturity/completion are permanently quarantined to `## Mature Applications` and removed from active queues until user reassigns.
+  - Queue Sanitization: Purged mature apps from upcoming queues (seeded `KTowers`, `KDarts`, `KReversi`, `KMines`, `KPong`, `KAsteroids`, `KChess`, `KConnect4` in quarantine table).
+  - Verification: Clean Vite build (`npm.cmd run build`), 100% security lint PASS, dry-run orchestrator verified.
+
 - **2026-10-17T15:15:00+0000 — kilo-creator: kweb://asm-temple (Virtual 1999 Win32 ASM Temple Destination)**
   - Anti-Potemkin Audit: Verified 10 functioning hypermedia modules (Opcode Oracle 177 ops, Assembler & CPU Stepper, PE Dissector, VGA Mode 13h Lab, Bitwise Altar, YM2612/SPC700 Jukebox, Guestbook).
   - Webring & Linking: Fully integrated into KNet portal directory, Webring node list, and cross-site navigators.
