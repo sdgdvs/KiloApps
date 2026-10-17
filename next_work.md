@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-tester
-next_agent: kilo-usability
+current_agent: kilo-usability
+next_agent: kilo-qa
 agent_rotation:
 - kilo-graphics
 - kilo-soundscape
@@ -16,7 +16,7 @@ current_targets:
   kilo_creator: kweb://warez
   kilo_graphics: KWizard
   kilo_soundscape: KWizard
-  kilo_tester: KPac
+  kilo_tester: KCalendar
   kilo_usability: KChart
   kilo_qa: KHangman
   kilo_expander: KZip
@@ -34,9 +34,9 @@ virtual_web_rotation:
 - kweb://echo-subsystem.net
 - kweb://deep-core
 last_run:
-  agent: kilo-soundscape
-  app: KDragon
-  timestamp: 2026-10-17T01:35:00+0000
+  agent: kilo-tester
+  app: KPac
+  timestamp: 2026-10-17T02:15:00+0000
 last_planner_run: '2026-10-16T20:35:00Z'
 ---
 
@@ -105,19 +105,19 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Upcoming Queue**: `KDragon`, `KWizard`, `KFortress`.
 
 ### 4. App Tester Queue (`kilo-tester`)
-- **Target**: `KSpace`
-- **Primary File**: `KiloOS/public/apps/kspace.html`
-- **Objective**: Space flight simulator & combat UI audit: radar display, thruster controls, docking nav, modal dismissal, keyboard shortcuts.
+- **Target**: `KCalendar`
+- **Primary File**: `KiloOS/public/apps/kcal.html`
+- **Objective**: Calendar & event scheduler UI audit: event creation, modal dismissal, month navigation, storage persistence.
 - **Action Steps**:
-  1. Run automated startup check: `uv run scripts/test_app_startup.py --app KSpace`.
-  2. Audit all UI elements: cockpit buttons, hyperspace jump modal, throttle controls, weapon switching, shortcuts.
+  1. Run automated startup check: `uv run scripts/test_app_startup.py --app KCalendar`.
+  2. Audit all UI elements: calendar grid buttons, event modal forms, reminder alerts, shortcuts.
   3. Fix any broken button hooks, missing element IDs, or unhandled exceptions inline.
-- **Verification**: `uv run scripts/test_app_startup.py --app KSpace` and `cd KiloOS && npm run build`. File size < 999 KB.
+- **Verification**: `uv run scripts/test_app_startup.py --app KCalendar` and `cd KiloOS && npm run build`. File size < 999 KB.
 - **Handoff**:
-  - In frontmatter: advance `current_targets.kilo_tester` to `KPac`.
-  - Set `current_agent: kilo-qa`.
+  - In frontmatter: advance `current_targets.kilo_tester` to `KChess`.
+  - Set `current_agent: kilo-usability`.
   - Append terse execution log (≤6 lines), commit, and push.
-- **Upcoming Queue**: `KPac`, `KCalendar`, `KChess`.
+- **Upcoming Queue**: `KCalendar`, `KChess`, `KSpace`, `KPac`.
 
 ### 5. Usability & UX Queue (`kilo-usability`)
 - **Target**: `KNote`
@@ -174,6 +174,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-17T02:15:00+0000 — kilo-tester: KPac (Interactive UI Audit & Modal Keybind Fixes)**
+  - UI & Startup: Validated startup audit, CSS balance, 0 JS errors, canvas rendering, no ARG leaks.
+  - Controls & Modals: Added global Enter/Space hotkey dismissal for Duel, Replay, Keybind, and FEN modal overlays.
+  - Status: PASS ✅ (`kpac.html` 212.5 KB < 999 KB ceiling; Vite build 0 errors).
+  - Queue: Advanced `kilo_tester` target to `KCalendar`; rotation handoff to `kilo-usability`.
+
 - **2026-10-17T01:35:00+0000 — kilo-soundscape: KDragon (YM2612 2-Op FM / SPC700 Audio Suite)**
   - Audio Engine: Implemented 16-step swing micro-grooves, ambient sub-harmonic drone pad synthesis, and hat tick velocity dynamics.
   - Music: Added "Ancient Sanctuary" theme (32-step E Dorian ambient/mystic roost) alongside "The Wyrm's Roost" and "Dragon's Clash".
@@ -198,9 +204,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Modals & Parity: Verified Escape/Enter/Close modal dismissals; clean Win32 MSVC compilation (`KConnect4.exe` 191 KB).
   - Status: PASS ✅ (npm run build clean, `kconnect4.html` 186 KB, `KConnect4.exe` 191 KB, both < 999 KB ceiling).
   - Queue: Advanced kilo-qa to KHangman; rotation handoff to kilo-expander.
-
-- **2026-10-16T23:15:00+0000 -- kilo-usability: KNote (Responsive Layout & Shortcuts Overlay)**
-  - Ergonomics: Mobile/narrow (<540px) responsive layout, overlay sidebar auto-collapse, and tab bar touch-scrolling.
-  - Shortcuts: Integrated F1/H/Esc global handlers for help modal & clean dialog/dropdown dismissals; tab cycling.
-  - Status: PASS [OK] (npm run build clean, size 169.5 KB < 999 KB ceiling).
-  - Queue: Advanced kilo-usability to KChart; rotation handoff to kilo-qa.

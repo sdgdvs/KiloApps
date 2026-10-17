@@ -3091,6 +3091,10 @@
               e.preventDefault();
               if (helpOpen) toggleHelpModal(false);
               if (craftOpen) toggleCraftModal(false);
+              if (duelOpen) closeDuelModal();
+              if (replayOpen) closeReplayModal();
+              if (keybindOpen) closeKeybindModal();
+              if (fenOpen) closeFenModal();
               return;
           }
           if (craftOpen) {
