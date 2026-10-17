@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-qa
+current_agent: kilo-expander
+next_agent: kilo-expander
 agent_rotation:
 - kilo-graphics
 - kilo-soundscape
@@ -18,8 +18,8 @@ current_targets:
   kilo_soundscape: kweb://webring
   kilo_tester: KChess
   kilo_usability: KCalc
-  kilo_qa: KSudoku
-  kilo_expander: KJournal
+  kilo_qa: KTetris
+  kilo_expander: KClip
 virtual_web_target: kweb://geocities
 virtual_web_rotation:
 - kweb://darknet
@@ -34,9 +34,9 @@ virtual_web_rotation:
 - kweb://echo-subsystem.net
 - kweb://deep-core
 last_run:
-  agent: kilo-usability
-  app: KDB
-  timestamp: 2026-10-17T06:31:00+0000
+  agent: kilo-qa
+  app: KSudoku
+  timestamp: 2026-10-17T07:15:00+0000
 last_planner_run: '2026-10-16T20:35:00Z'
 ---
 
@@ -135,22 +135,22 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Upcoming Queue**: `KCalc`, `KNote`, `KChart`.
 
 ### 6. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
-- **Target**: `KSudoku`
-- **Primary Files**: `KiloOS/public/apps/ksudoku.html`, `apps/ksudoku/` (if present)
+- **Target**: `KTetris`
+- **Primary Files**: `KiloOS/public/apps/ktetris.html`, `apps/ktetris/` (if present)
 - **Objective**: Pass 5 QA audit, state persistence integrity, and dual web/native parity.
 - **Action Steps**:
   1. State Persistence: F5 quicksave & F9 quickload capturing complete game state, stats, and settings.
   2. First-run Tutorial: Onboarding displays once on fresh sessions, never on restored saves.
   3. Modal Dismissals: Modals dismiss cleanly with Escape, Enter, or Close button.
-  4. Dual Parity & Build: Compile Win32 native client via `cmd.exe /c build.bat` in `apps/ksudoku/` (if present) and verify web build.
+  4. Dual Parity & Build: Compile Win32 native client via `cmd.exe /c build.bat` in `apps/ktetris/` (if present) and verify web build.
 - **Verification**:
-  - `uv run scripts/test_app_startup.py --app KSudoku`
-  - `cd KiloOS && npm run build` (0 Vite errors, `ksudoku.html` < 999 KB)
+  - `uv run scripts/test_app_startup.py --app KTetris`
+  - `cd KiloOS && npm run build` (0 Vite errors, `ktetris.html` < 999 KB)
 - **Handoff**:
-  - In frontmatter: advance `current_targets.kilo_qa` to `KTetris`.
-  - Set `current_agent: kilo-creator`.
+  - In frontmatter: advance `current_targets.kilo_qa` to `KConnect4`.
+  - Set `current_agent: kilo-expander`.
   - Append terse execution log (≤6 lines), commit, and push.
-- **Upcoming Queue**: `KTetris`, `KConnect4`, `KHangman`.
+- **Upcoming Queue**: `KConnect4`, `KHangman`, `KMinesweeper`.
 
 ### 7. Feature Expander Queue (`kilo-expander`)
 - **Target**: `KClip`
@@ -173,6 +173,13 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 ---
 
 ## Recent Execution Logs (Max 5 Entries)
+
+- **2026-10-17T07:15:00+0000 — kilo-qa: KSudoku (Pass 5 QA & State Persistence Audit)**
+  - State Persistence: Audited F5 quicksave & F9 quickload capturing complete puzzle, timer, notes, fog, and cages.
+  - Tutorial & Dialogs: Verified fresh-session `ksudoku_tutorialSeen` gate; all modals dismiss cleanly on Escape/Enter.
+  - Compliance: ARG/TINAG clean; no external assets; zero native source conflicts; file size 198 KB (<999 KB limit).
+  - Status: PASS ✅ (`ksudoku.html` ~198 KB; Vite build clean with 0 errors).
+  - Queue: Advanced `kilo_qa` target to `KTetris`; handoff to `kilo-expander`.
 
 - **2026-10-17T06:31:00+0000 — kilo-usability: KDB (Responsive Layout & SQL Studio Ergonomics)**
   - Responsive Layout: Added <=540px container wrapping, compact mobile search bar, and grid adaptability.
@@ -197,9 +204,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Status: ⏭️ Skip — Imagen 3 asset replacement not appropriate for KWizard (pure vector, board game, or mature art).
   - Optimization: Handled via orchestrator pre-flight zero-token auto-skip.
   - Queue: Advanced `kilo-graphics` to `KWizard`; rotation handoff to `kilo-soundscape`.
-
-- **2026-10-17T04:30:00+0000 — kilo-creator: kweb://warez (Underground 1999 Scene Vault & ARG Gateway)**
-  - Anti-Potemkin Audit: Verified 16 functional tabs, x86 crack sandbox, chiptune tracker/jukebox, and Firebase shoutbox.
-  - ARG & Network Integration: Verified subterranean 1999Hz carrier signals & cross-links in KNet, Portal, and Webring.
-  - Status: PASS ✅ (`warez.html` 517.5 KB < 999 KB ceiling; Vite build clean with 0 errors).
-  - Queue: Advanced `virtual_web_target` to `kweb://geocities`; rotation handoff to `kilo-graphics`.
