@@ -2992,6 +2992,9 @@
 
   // Global Input bindings
   window.addEventListener('keydown', e => {
+      const isInput = e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT');
+      if (isInput && e.key !== 'Escape') return;
+
       let key = e.key.toUpperCase();
       const code = e.code;
       const hasModifier = e.ctrlKey || e.altKey || e.metaKey;
@@ -3198,7 +3201,8 @@
           document.getElementById('duelModal')?.style.display === 'flex' ||
           document.getElementById('replayModal')?.style.display === 'flex' ||
           document.getElementById('keybindModal')?.style.display === 'flex' ||
-          document.getElementById('inviteModal')?.style.display === 'flex';
+          document.getElementById('inviteModal')?.style.display === 'flex' ||
+          document.getElementById('fenModal')?.style.display === 'flex';
       if (anyModalOpen) { closeAllModals(); return; }
       if (isDuelMode && duelMatchOver) {
           if (isOnlineDuel && rMultiplayer) rMultiplayer.requestRematch();

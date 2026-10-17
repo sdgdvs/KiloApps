@@ -36,7 +36,7 @@ virtual_web_rotation:
 last_run:
   agent: kilo-tester
   app: KPac
-  timestamp: 2026-10-17T02:15:00+0000
+  timestamp: 2026-10-17T02:30:00+0000
 last_planner_run: '2026-10-16T20:35:00Z'
 ---
 
@@ -174,10 +174,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
-- **2026-10-17T02:15:00+0000 — kilo-tester: KPac (Interactive UI Audit & Modal Keybind Fixes)**
-  - UI & Startup: Validated startup audit, CSS balance, 0 JS errors, canvas rendering, no ARG leaks.
-  - Controls & Modals: Added global Enter/Space hotkey dismissal for Duel, Replay, Keybind, and FEN modal overlays.
-  - Status: PASS ✅ (`kpac.html` 212.5 KB < 999 KB ceiling; Vite build 0 errors).
+- **2026-10-17T02:30:00+0000 — kilo-tester: KPac (Interactive UI Audit & Form Input Protection)**
+  - Controls: Protected input/textarea typing in FEN/Duel modals against unwanted hotkey triggers and dismissal.
+  - Modals: Integrated FEN modal into canvas click backdrop dismissal and escape navigation.
+  - Status: PASS ✅ (`kpac.html` 212.8 KB < 999 KB ceiling; Vite build 0 errors).
   - Queue: Advanced `kilo_tester` target to `KCalendar`; rotation handoff to `kilo-usability`.
 
 - **2026-10-17T01:35:00+0000 — kilo-soundscape: KDragon (YM2612 2-Op FM / SPC700 Audio Suite)**
