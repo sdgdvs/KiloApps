@@ -4,6 +4,11 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-17T01:12:03+0000 — kilo-graphics: KWizard (Zero-Token Auto-Skip — Inappropriate Target)**
+  - Status: ⏭️ Skip — Imagen 3 asset replacement not appropriate for KWizard (pure vector, board game, or mature art).
+  - Optimization: Handled via orchestrator pre-flight zero-token auto-skip.
+  - Queue: Advanced `kilo-graphics` to `KWizard`; rotation handoff to `kilo-soundscape`.
+
 - **2026-10-16T21:32:00+0000 — kilo-soundscape: kweb://cybercafe (CyberCafe '99 FM Suite)**
   - Soundscape: Audited 5-track 6-channel YM2612 jukebox with 5:3 swing-tick groove and SPC700 stereo delay.
   - Synthesis: Upgraded UI modem chirps, DTMF tones, metallic bell earcon, and fanfare brass stinger to 2-Op FM.
