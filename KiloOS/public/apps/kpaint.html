@@ -796,18 +796,18 @@
           <a onclick="exportImage('png')" onkeydown="handleExportKey(event, 'png')" role="menuitem" tabindex="0" aria-label="Export PNG">PNG</a>
           <a onclick="exportImage('webp')" onkeydown="handleExportKey(event, 'webp')" role="menuitem" tabindex="0" aria-label="Export WEBP">WEBP</a>
           <a onclick="exportImage('bmp')" onkeydown="handleExportKey(event, 'bmp')" role="menuitem" tabindex="0" aria-label="Export BMP 24-bit">BMP (24-bit)</a>
-          <a onclick="exportPCX()" onkeydown="if(event.key==='Enter'||event.key===' ')exportPCX()" role="menuitem" tabindex="0" aria-label="Export PCX">PCX (ZSoft 24-bit)</a>
-          <a onclick="exportTGA()" onkeydown="if(event.key==='Enter'||event.key===' ')exportTGA()" role="menuitem" tabindex="0" aria-label="Export TGA">TGA (Truevision 32-bit)</a>
-          <a onclick="exportICO()" onkeydown="if(event.key==='Enter'||event.key===' ')exportICO()" role="menuitem" tabindex="0" aria-label="Export Windows Icon">Windows Icon (.ICO)</a>
-          <a onclick="exportPPM()" onkeydown="if(event.key==='Enter'||event.key===' ')exportPPM()" role="menuitem" tabindex="0" aria-label="Export PPM">PPM (Netpbm)</a>
-          <a onclick="exportANSI()" onkeydown="if(event.key==='Enter'||event.key===' ')exportANSI()" role="menuitem" tabindex="0" aria-label="Export ANSI Art">ANSI Art (.ANS)</a>
-          <a onclick="exportXBM()" onkeydown="if(event.key==='Enter'||event.key===' ')exportXBM()" role="menuitem" tabindex="0" aria-label="Export XBM C Bitmap">XBM C Bitmap (.xbm)</a>
-          <a onclick="exportCHeader()" onkeydown="if(event.key==='Enter'||event.key===' ')exportCHeader()" role="menuitem" tabindex="0" aria-label="Export C Header">C Header (.H)</a>
-          <a onclick="exportSVG()" onkeydown="if(event.key==='Enter'||event.key===' ')exportSVG()" role="menuitem" tabindex="0" aria-label="Export SVG Vector">SVG Vector</a>
-          <a onclick="exportJSON()" onkeydown="if(event.key==='Enter'||event.key===' ')exportJSON()" role="menuitem" tabindex="0" aria-label="Export JSON Sprite">JSON Sprite</a>
-          <a onclick="exportCanvasSnippet()" onkeydown="if(event.key==='Enter'||event.key===' ')exportCanvasSnippet()" role="menuitem" tabindex="0" aria-label="Export HTML5 Canvas Page">HTML5 Canvas Page</a>
-          <a onclick="exportPaletteGPL()" onkeydown="if(event.key==='Enter'||event.key===' ')exportPaletteGPL()" role="menuitem" tabindex="0" aria-label="Export GIMP Palette">GIMP Palette (.GPL)</a>
-          <a onclick="exportPaletteACT()" onkeydown="if(event.key==='Enter'||event.key===' ')exportPaletteACT()" role="menuitem" tabindex="0" aria-label="Export Adobe Color Table">Adobe Color Table (.ACT)</a>
+          <a onclick="exportPCX()" onkeydown="handleExportFnKey(event, exportPCX)" role="menuitem" tabindex="0" aria-label="Export PCX">PCX (ZSoft 24-bit)</a>
+          <a onclick="exportTGA()" onkeydown="handleExportFnKey(event, exportTGA)" role="menuitem" tabindex="0" aria-label="Export TGA">TGA (Truevision 32-bit)</a>
+          <a onclick="exportICO()" onkeydown="handleExportFnKey(event, exportICO)" role="menuitem" tabindex="0" aria-label="Export Windows Icon">Windows Icon (.ICO)</a>
+          <a onclick="exportPPM()" onkeydown="handleExportFnKey(event, exportPPM)" role="menuitem" tabindex="0" aria-label="Export PPM">PPM (Netpbm)</a>
+          <a onclick="exportANSI()" onkeydown="handleExportFnKey(event, exportANSI)" role="menuitem" tabindex="0" aria-label="Export ANSI Art">ANSI Art (.ANS)</a>
+          <a onclick="exportXBM()" onkeydown="handleExportFnKey(event, exportXBM)" role="menuitem" tabindex="0" aria-label="Export XBM C Bitmap">XBM C Bitmap (.xbm)</a>
+          <a onclick="exportCHeader()" onkeydown="handleExportFnKey(event, exportCHeader)" role="menuitem" tabindex="0" aria-label="Export C Header">C Header (.H)</a>
+          <a onclick="exportSVG()" onkeydown="handleExportFnKey(event, exportSVG)" role="menuitem" tabindex="0" aria-label="Export SVG Vector">SVG Vector</a>
+          <a onclick="exportJSON()" onkeydown="handleExportFnKey(event, exportJSON)" role="menuitem" tabindex="0" aria-label="Export JSON Sprite">JSON Sprite</a>
+          <a onclick="exportCanvasSnippet()" onkeydown="handleExportFnKey(event, exportCanvasSnippet)" role="menuitem" tabindex="0" aria-label="Export HTML5 Canvas Page">HTML5 Canvas Page</a>
+          <a onclick="exportPaletteGPL()" onkeydown="handleExportFnKey(event, exportPaletteGPL)" role="menuitem" tabindex="0" aria-label="Export GIMP Palette">GIMP Palette (.GPL)</a>
+          <a onclick="exportPaletteACT()" onkeydown="handleExportFnKey(event, exportPaletteACT)" role="menuitem" tabindex="0" aria-label="Export Adobe Color Table">Adobe Color Table (.ACT)</a>
         </div>
       </div>
 
@@ -1335,11 +1335,29 @@
   <script src="../assets/js/retro_multiplayer.js"></script>
 
   <script>
+    // Safe Storage Wrappers (quality-standards compliant)
+    function safeGet(key, fallback = null) {
+      try {
+        const v = localStorage.getItem(key);
+        return v !== null ? v : fallback;
+      } catch (_) {
+        return fallback;
+      }
+    }
+
+    function safeSet(key, value) {
+      try {
+        localStorage.setItem(key, value);
+      } catch (e) {
+        console.warn('[KPaint] Storage write failed:', e);
+      }
+    }
+
     // Universal Retro Audio Synthesizer (Yamaha YM2612 2-Operator FM & SNES SPC700 Delay DSP)
     class RetroAudioEngine {
       constructor() {
         this.ctx = null;
-        this.enabled = localStorage.getItem('kpaint_sound') !== '0';
+        this.enabled = safeGet('kpaint_sound', '1') !== '0';
       }
       init() {
         if (!this.ctx) {
@@ -1467,7 +1485,7 @@
     let isLiveCollab = false;
     let currentCollabRoom = null;
     let collabClientId = 'artist_' + Math.random().toString(36).substr(2, 9);
-    let collabClientNick = localStorage.getItem('kpaint_collab_nick') || ('Artist_' + Math.floor(1000 + Math.random() * 9000));
+    let collabClientNick = safeGet('kpaint_collab_nick') || ('Artist_' + Math.floor(1000 + Math.random() * 9000));
     let presenceUnsub = null;
     let strokesUnsub = null;
     let cursorsRef = null;
@@ -1917,6 +1935,13 @@
       if (e.key === 'Enter' || e.key === ' ') {
         e.preventDefault();
         exportImage(fmt);
+      }
+    }
+
+    function handleExportFnKey(e, fn) {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        if (typeof fn === 'function') fn();
       }
     }
 
@@ -5859,7 +5884,7 @@
       if (m) m.classList.add('show');
       const chk = document.getElementById('chk-tutorial');
       if (chk) {
-        chk.checked = localStorage.getItem('kpaint_tutorial_seen') === '1' || localStorage.getItem('kpaint_tutorialSeen') === '1';
+        chk.checked = safeGet('kpaint_tutorial_seen') === '1' || safeGet('kpaint_tutorialSeen') === '1';
       }
     }
 
@@ -6032,6 +6057,20 @@
 
     // Keyboard Shortcuts
     window.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        const m = document.getElementById('help-modal');
+        if (m && m.classList.contains('show')) closeHelp();
+        closeCollabModal();
+        closeTextModal();
+        closeAnsiModal();
+        closeExportDropdown();
+        clearSelection();
+        const t = document.getElementById('toast');
+        if (t) t.classList.remove('show');
+        if (e.target && e.target.blur) e.target.blur();
+        return;
+      }
+
       if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') return;
 
       if (e.key === 'F1') {
@@ -6049,19 +6088,6 @@
       if (e.key === 'F9') {
         e.preventDefault();
         quickLoad();
-        return;
-      }
-
-      if (e.key === 'Escape') {
-        const m = document.getElementById('help-modal');
-        if (m && m.classList.contains('show')) closeHelp();
-        closeCollabModal();
-        closeTextModal();
-        closeAnsiModal();
-        closeExportDropdown();
-        clearSelection();
-        const t = document.getElementById('toast');
-        if (t) t.classList.remove('show');
         return;
       }
 
@@ -6176,15 +6202,13 @@
           loadVFSFile(hash);
         }
       }
-      const tutorialSeen = localStorage.getItem('kpaint_tutorial_seen') === '1' || localStorage.getItem('kpaint_tutorialSeen') === '1';
-      const hasQuicksave = !!localStorage.getItem(QUICKSAVE_KEY);
+      const tutorialSeen = safeGet('kpaint_tutorial_seen') === '1' || safeGet('kpaint_tutorialSeen') === '1';
+      const hasQuicksave = !!safeGet(QUICKSAVE_KEY);
       if (!tutorialSeen && !window.location.hash && !hasQuicksave) {
         setTimeout(() => {
           showHelp();
-          try {
-            localStorage.setItem('kpaint_tutorial_seen', '1');
-            localStorage.setItem('kpaint_tutorialSeen', '1');
-          } catch (_) {}
+          safeSet('kpaint_tutorial_seen', '1');
+          safeSet('kpaint_tutorialSeen', '1');
         }, 350);
       } else {
         setTimeout(() => {

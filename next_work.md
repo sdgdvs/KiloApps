@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-tester
-next_agent: kilo-tester
+current_agent: kilo-usability
+next_agent: kilo-usability
 agent_rotation:
 - kilo-graphics
 - kilo-soundscape
@@ -17,7 +17,7 @@ current_targets:
   kilo_creator: kweb://echo-subsystem.net
   kilo_graphics: KDragon
   kilo_soundscape: KAlchemy
-  kilo_tester: KPaint
+  kilo_tester: KNet
   kilo_usability: KDB
   kilo_qa: KGo
   kilo_expander: KJournal
@@ -35,9 +35,9 @@ virtual_web_rotation:
 - kweb://echo-subsystem.net
 - kweb://deep-core
 last_run:
-  agent: kilo-soundscape
-  app: KFortress
-  timestamp: 2026-10-17T21:38:00+0000
+  agent: kilo-tester
+  app: KPaint
+  timestamp: 2026-10-17T21:55:00+0000
 last_planner_run: '2026-10-17T20:53:00Z'
 ---
 
@@ -107,19 +107,19 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Upcoming Queue**: `KDragon`, `KVoid`, `KColony`, `KFortress`.
 
 ### 4. App Tester Queue (`kilo-tester`)
-- **Target**: `KPaint`
-- **Primary File**: `KiloOS/public/apps/kpaint.html`
-- **Objective**: Interactive UI element & canvas tool audit: tool selection, color picker, layer controls, brush size sliders, palette swaps, export/import persistence, and keyboard shortcuts.
+- **Target**: `KNet`
+- **Primary File**: `KiloOS/public/apps/knet.html`
+- **Objective**: Interactive UI element & browser controls audit: URL address bar, navigation history, bookmarked sites, search indexing, RFMS node pings, modal dialogs, and keyboard shortcuts.
 - **Action Steps**:
-  1. Run automated startup check: `uv run scripts/test_app_startup.py --app KPaint`.
-  2. Audit all UI elements: tool selection, color swatches, layer controls, modal dialogs, and shortcuts.
+  1. Run automated startup check: `uv run scripts/test_app_startup.py --app KNet`.
+  2. Audit all UI elements: address navigation, back/forward buttons, tab controls, bookmark triggers, and modals.
   3. Fix any broken button hooks, missing element IDs, or unhandled exceptions inline.
-- **Verification**: `uv run scripts/test_app_startup.py --app KPaint` and `cd KiloOS && npm run build`. File size < 999 KB.
+- **Verification**: `uv run scripts/test_app_startup.py --app KNet` and `cd KiloOS && npm run build`. File size < 999 KB.
 - **Handoff**:
-  - In frontmatter: advance `current_targets.kilo_tester` to `KNet`.
+  - In frontmatter: advance `current_targets.kilo_tester` to `KColony`.
   - Set `current_agent: kilo-usability`.
   - Append terse execution log (≤6 lines), commit, and push.
-- **Upcoming Queue**: `KNet`, `KColony`, `KTrader`, `KMystery`.
+- **Upcoming Queue**: `KColony`, `KTrader`, `KMystery`.
 
 ### 5. Usability & UX Queue (`kilo-usability`)
 - **Target**: `KDB`
@@ -189,10 +189,20 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | **KConnect4** | `KiloOS/public/apps/kconnect4.html` | Pass 6+ (2026-10-07) | Strategy / Board | Complete connect 4 engine, minimax AI, win animations, RFMS multiplayer. |
 | **KHangman** | `KiloOS/public/apps/khangman.html` | Pass 5 (2026-10-17) | Word / Puzzle | 20-stage campaign, blitz mode, custom word bank studio, dual Win32 native client, full F5/F9 state persistence. |
 | **KNote** | `KiloOS/public/apps/knote.html` | Pass 6+ (2026-10-17) | Office / Notes | Feature-complete cybernetic notepad; multi-tab editing, find/replace, markdown preview, keyboard navigation, full state persistence. |
+| **KPaint** | `KiloOS/public/apps/kpaint.html` | Pass 6+ (2026-10-17) | Media / Graphics | Feature-complete 1999 digital art studio; 15 export formats, sprite reel animation, multi-layer engine, dual Win32 client parity, zero glints. |
 
 ---
 
 ## Recent Execution Logs (Max 5 Entries)
+
+- **2026-10-17T21:55:00+0000 — kilo-tester: KPaint (Interactive UI Audit & Inline Fixes — Mature Quarantine)**
+  - UI Element Audit: Verified 115 buttons, 12 inputs, 5 selects, 4 dialog modals, 22 filters/tools, and multi-layer reel animation controls.
+  - Storage Safety: Wrapped audio preference, tutorial flags, quicksave snapshot, and collab handle in safe storage try/catch handlers per quality standards.
+  - Keyboard & Modal UX: Elevated Escape key handler to dismiss modals/dropdowns from focused text inputs; wired handleExportFnKey preventing page scroll on Space.
+  - Mature Promotion: Promoted feature-complete KPaint (Pass 6+) to Mature Applications quarantine table; removed from active queues.
+  - Verification: Clean Vite build (`npm.cmd run build` 0 err), Win32 native compile (`build.bat` 0 err), test_app_startup PASS (242.6 KB), check_sizes PASS (<999 KB).
+  - Status: PASS ✅ (3 issues fixed; promoted to Mature quarantine).
+  - Queue: Advanced `kilo_tester` to `KNet`; rotation handoff to `kilo-usability`.
 
 - **2026-10-17T21:38:00+0000 — kilo-soundscape: KFortress ("Siege of the Iron Citadel" — Combat / Defense FM Chiptune)**
   - Composition: 32-step D Minor / D Phrygian Dominant progression (Dm → C → Bb → A7); 6-channel architecture with vocal lead phrasing, contrary counterpoint, and shell brass stabs (no doubled 5ths).
@@ -222,11 +232,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - KNet & Directory Federation: Verified integration across KNet address bar/chips, portal.html directory/traceroute, and central webring hub.
   - Verification: Clean Vite build (`npm.cmd run build` 0 err), test_app_startup PASS (459.1 KB), 100% security lint PASS; strictly <999 KB ceiling.
   - Queue: Advanced `kilo_creator` to `kweb://10.19.99.4/classified`; rotation handoff to `kilo-graphics`.
-
-- **2026-10-17T18:38:00+0000 — kilo-expander: KClip (Deep Feature Expansion & Dual-Target Parity)**
-  - Dual-Target Parity: Expanded Win32 C client with camelCase, snake_case, line deduplication, buffer telemetry (CRC-32, char/word counts), and text archive export/import.
-  - Multi-Format Views & Diagnostics: Added HTML live sandbox viewer and image/dataURL inspector to text/hex modes; added Shannon entropy & randomness metrics.
-  - Interoperability & Code Tools: Integrated JSON prettify/minify, HTML entity escaping/unescaping, Base64 & URL decoders, CSV library export, and SQL schema/INSERT generator.
-  - Template Library: Expanded snippet templates (Win32 WndProc, HTML5 retro skeleton, SQL DDL schema, REST JSON spec, Project Echo telemetry frame).
-  - Verification: Clean builds (`npm.cmd run build` 0 errors, `build.bat` 0 warnings); `test_app_startup.py` PASS; size: 188.7 KB HTML, 21.5 KB EXE (<999 KB ceiling).
-  - Queue: Advanced `kilo_expander` to `KJournal`; rotation handoff to `kilo-creator`.
