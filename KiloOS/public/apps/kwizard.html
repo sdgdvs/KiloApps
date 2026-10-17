@@ -543,6 +543,11 @@
             configurable: true
         });
 
+        let ambientOsc = null;
+        let ambientMod = null;
+        let ambientGain = null;
+        let ambientLfo = null;
+
         function initAudio() {
             if (audioCtx) {
                 if (audioCtx.state === 'suspended') audioCtx.resume();
@@ -616,6 +621,72 @@
             op1.stop(t + duration);
         }
 
+        // Ambient Mystic Drone (Harmonic sub-octave with slow breathing LFO)
+        function startAmbientDrone() {
+            if (audioMuted || ambientGain) return;
+            const ctx = initAudio();
+            if (!ctx) return;
+            try {
+                const t = ctx.currentTime;
+                const carrier = ctx.createOscillator();
+                const mod = ctx.createOscillator();
+                const modGain = ctx.createGain();
+                const master = ctx.createGain();
+                const lfo = ctx.createOscillator();
+                const lfoGain = ctx.createGain();
+
+                carrier.type = 'sine';
+                carrier.frequency.setValueAtTime(73.42, t); // D2 fundamental
+
+                mod.type = 'triangle';
+                mod.frequency.setValueAtTime(36.71, t); // D1 sub-harmonic
+                modGain.gain.setValueAtTime(28, t);
+
+                lfo.type = 'sine';
+                lfo.frequency.setValueAtTime(0.08, t); // 0.08Hz mystical respiration
+                lfoGain.gain.setValueAtTime(0.02, t);
+
+                master.gain.setValueAtTime(0.032, t);
+
+                mod.connect(modGain);
+                modGain.connect(carrier.frequency);
+
+                lfo.connect(lfoGain);
+                lfoGain.connect(master.gain);
+
+                carrier.connect(master);
+                master.connect(ctx.destination);
+                if (spcDelay) master.connect(spcDelay);
+
+                carrier.start(t);
+                mod.start(t);
+                lfo.start(t);
+
+                ambientOsc = carrier;
+                ambientMod = mod;
+                ambientGain = master;
+                ambientLfo = lfo;
+            } catch (e) {}
+        }
+
+        function stopAmbientDrone() {
+            if (ambientGain && audioCtx) {
+                try {
+                    const t = audioCtx.currentTime;
+                    ambientGain.gain.setValueAtTime(ambientGain.gain.value, t);
+                    ambientGain.gain.linearRampToValueAtTime(0.0001, t + 0.25);
+                    setTimeout(() => {
+                        if (ambientOsc) { ambientOsc.stop(); ambientOsc.disconnect(); }
+                        if (ambientMod) { ambientMod.stop(); ambientMod.disconnect(); }
+                        if (ambientLfo) { ambientLfo.stop(); ambientLfo.disconnect(); }
+                        ambientOsc = null; ambientMod = null; ambientLfo = null; ambientGain = null;
+                    }, 300);
+                } catch(e) {
+                    ambientOsc = null; ambientMod = null; ambientLfo = null; ambientGain = null;
+                }
+            }
+        }
+
         // Named FM Voice Patches for Chiptune Composition
         function playWizardLead(freq, dur = 0.28, vol = 0.18) {
             if (audioMuted) return;
@@ -639,13 +710,13 @@
             modGain.gain.setValueAtTime(dev, t);
             modGain.gain.exponentialRampToValueAtTime(Math.max(1, dev * 0.12), t + dur * 0.7);
 
-            // Delayed vibrato LFO after 100ms
+            // Delayed vibrato LFO after 120ms
             const vib = ctx.createOscillator();
             const vibGain = ctx.createGain();
             vib.frequency.setValueAtTime(5.8, t);
             vibGain.gain.setValueAtTime(0, t);
-            vibGain.gain.setValueAtTime(0, t + 0.1);
-            vibGain.gain.linearRampToValueAtTime(freq * 0.02, t + Math.min(dur, 0.25));
+            vibGain.gain.setValueAtTime(0, t + 0.12);
+            vibGain.gain.linearRampToValueAtTime(freq * 0.025, t + Math.min(dur, 0.26));
             vib.connect(vibGain);
             vibGain.connect(op1.frequency);
 
@@ -754,8 +825,8 @@
             const osc = ctx.createOscillator();
             const gain = ctx.createGain();
             osc.type = 'sine';
-            osc.frequency.setValueAtTime(130, t);
-            osc.frequency.exponentialRampToValueAtTime(42, t + 0.045);
+            osc.frequency.setValueAtTime(140, t);
+            osc.frequency.exponentialRampToValueAtTime(40, t + 0.045);
 
             gain.gain.setValueAtTime(vol, t);
             gain.gain.exponentialRampToValueAtTime(0.001, t + 0.16);
@@ -804,41 +875,75 @@
             } catch (e) {}
         }
 
-        // 32-Step Chiptune Sequencer ("The Archmage's Duel" in D Dorian/Minor)
-        // 5:3 subtle swing rhythm (even 175ms, odd 105ms)
+        // 64-Step Chiptune Sequencer ("The Archmage's Duel" in D Dorian & Escalation)
+        // 5:3 subtle swing rhythm (even 170ms, odd 105ms)
         const BGM_NOTES = {
             // Channel 1: Lead Melody (Hollow Flute / E-Piano)
+            // Sec A (0-31): Dm -> Bb -> Gm -> A7 | Sec B (32-63): Fmaj7 -> C7 -> Dm9 -> A7alt
             lead: [
+                // Section A
                 293.66, 0, 349.23, 0, 440.00, 0, 523.25, 0,   // Bar 1 (Dm): D4, F4, A4, C5
                 587.33, 0, 466.16, 0, 440.00, 0, 349.23, 0,   // Bar 2 (Bb): D5, Bb4, A4, F4
                 0,      0, 392.00, 0, 466.16, 0, 587.33, 0,   // Bar 3 (Gm): Rest (call/response), G4, Bb4, D5
-                659.25, 0, 554.37, 0, 440.00, 0, 329.63, 0    // Bar 4 (A7): E5, C#5, A4, E4
+                659.25, 0, 554.37, 0, 440.00, 0, 329.63, 0,   // Bar 4 (A7): E5, C#5, A4, E4
+                // Section B (Escalation)
+                698.46, 0, 587.33, 0, 523.25, 0, 440.00, 0,   // Bar 5 (Fmaj7): F5, D5, C5, A4
+                523.25, 0, 466.16, 0, 392.00, 0, 523.25, 0,   // Bar 6 (C7): C5, Bb4, G4, C5
+                0,      0, 587.33, 0, 659.25, 0, 698.46, 0,   // Bar 7 (Dm9): Rest, D5, E5, F5
+                783.99, 0, 698.46, 0, 554.37, 0, 440.00, 0    // Bar 8 (A7alt): G5, F5, C#5, A4
             ],
-            // Channel 2: Counter-melody (Contrary Motion)
+            // Channel 2: Counter-melody (Contrary Motion & Melodic Spotlight)
             counter: [
+                // Section A
                 220.00, 0, 0, 0, 174.61, 0, 0, 0,             // Bar 1: A3, F3 (descending contrary)
                 146.83, 0, 0, 0, 174.61, 0, 0, 0,             // Bar 2: D3, F3
                 233.08, 0, 293.66, 0, 196.00, 0, 0, 0,        // Bar 3: Bb3, D4, G3 (takes spotlight during lead rest!)
-                196.00, 0, 0, 0, 220.00, 0, 0, 0             // Bar 4: G3, A3
+                196.00, 0, 0, 0, 220.00, 0, 0, 0,             // Bar 4: G3, A3
+                // Section B
+                174.61, 0, 220.00, 0, 261.63, 0, 0, 0,        // Bar 5: F3, A3, C4
+                196.00, 0, 233.08, 0, 261.63, 0, 0, 0,        // Bar 6: G3, Bb3, C4
+                293.66, 0, 220.00, 0, 174.61, 0, 146.83, 0,   // Bar 7: D4, A3, F3, D3 (spotlight counter)
+                220.00, 0, 277.18, 0, 220.00, 0, 0, 0         // Bar 8: A3, C#4, A3
             ],
             // Channel 3: Crystal Chimes / Arpeggio Accents
             chimes: [
+                // Section A
                 0, 0, 880.00, 0, 0, 0, 1174.66, 0,           // Bar 1: A5, D6
                 0, 0, 698.46, 0, 0, 0, 587.33, 0,            // Bar 2: F5, D5
                 0, 0, 932.33, 0, 0, 0, 783.99, 0,            // Bar 3: Bb5, G5
-                0, 0, 880.00, 0, 0, 0, 1108.73, 0            // Bar 4: A5, C#6
+                0, 0, 880.00, 0, 0, 0, 1108.73, 0,           // Bar 4: A5, C#6
+                // Section B
+                0, 0, 1046.50, 0, 0, 0, 1396.91, 0,          // Bar 5: C6, F6
+                0, 0, 932.33, 0, 0, 0, 1046.50, 0,           // Bar 6: Bb5, C6
+                0, 0, 1174.66, 0, 0, 0, 1479.98, 0,          // Bar 7: D6, F#6
+                0, 0, 1108.73, 0, 0, 0, 880.00, 0            // Bar 8: C#6, A5
             ],
             // Channel 4: Bass (Tight Root / Octave / Walking counterpoint)
             bass: [
+                // Section A
                 73.42, 0, 146.83, 0, 110.00, 0, 73.42, 0,     // Bar 1 (Dm): D2, D3, A2, D2
                 58.27, 0, 116.54, 0, 87.31, 0, 58.27, 0,      // Bar 2 (Bb): Bb1, Bb2, F2, Bb1
                 49.00, 0, 98.00, 0, 73.42, 0, 98.00, 0,       // Bar 3 (Gm): G1, G2, D2, G2
-                55.00, 0, 110.00, 0, 82.41, 0, 98.00, 0       // Bar 4 (A7): A1, A2, E2, G2
+                55.00, 0, 110.00, 0, 82.41, 0, 98.00, 0,      // Bar 4 (A7): A1, A2, E2, G2
+                // Section B
+                87.31, 0, 174.61, 0, 130.81, 0, 87.31, 0,     // Bar 5 (F): F2, F3, C3, F2
+                65.41, 0, 130.81, 0, 98.00, 0, 65.41, 0,      // Bar 6 (C): C2, C3, G2, C2
+                73.42, 0, 146.83, 0, 110.00, 0, 87.31, 0,     // Bar 7 (Dm): D2, D3, A2, F2
+                55.00, 0, 110.00, 0, 82.41, 0, 110.00, 0      // Bar 8 (A7): A1, A2, E2, A2
             ],
-            // Channel 5 & 6: Drums
-            kick:  [1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0, 1, 0, 0, 0, 1, 0, 1, 0, 1, 0, 0, 0, 1, 0, 0, 0],
-            snare: [0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0],
-            hat:   [1, 0, 1, 0, 1, 0, 2, 0, 1, 0, 1, 0, 1, 0, 2, 0, 1, 0, 1, 0, 1, 0, 2, 0, 1, 0, 1, 0, 1, 0, 2, 0] // 1=closed, 2=open
+            // Channel 5 & 6: Drums (Groove across 64 steps)
+            kick:  [
+                1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0, 1, 0, 0, 0, 1, 0, 1, 0, 1, 0, 0, 0, 1, 0, 0, 0,
+                1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0
+            ],
+            snare: [
+                0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0,
+                0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 1, 0
+            ],
+            hat:   [
+                1, 0, 1, 0, 1, 0, 2, 0, 1, 0, 1, 0, 1, 0, 2, 0, 1, 0, 1, 0, 1, 0, 2, 0, 1, 0, 1, 0, 1, 0, 2, 0,
+                1, 0, 1, 0, 1, 0, 2, 0, 1, 0, 1, 0, 1, 0, 2, 0, 1, 0, 1, 0, 1, 0, 2, 0, 1, 0, 2, 0, 2, 0, 2, 0
+            ] // 1=closed, 2=open
         };
 
         function playBgmStep(step) {
@@ -873,9 +978,9 @@
         function scheduleBgmStep() {
             if (audioMuted || !isBgmRunning) return;
             const isEven = (bgmStep % 2 === 0);
-            const nextDelay = isEven ? 175 : 105; // 5:3 subtle swing
+            const nextDelay = isEven ? 170 : 105; // 5:3 subtle swing
             playBgmStep(bgmStep);
-            bgmStep = (bgmStep + 1) % 32;
+            bgmStep = (bgmStep + 1) % 64;
             bgmTimer = setTimeout(scheduleBgmStep, nextDelay);
         }
 
@@ -884,6 +989,7 @@
             isBgmRunning = true;
             if (bgmTimer) clearTimeout(bgmTimer);
             scheduleBgmStep();
+            startAmbientDrone();
         }
 
         function stopBgm() {
@@ -892,6 +998,7 @@
                 clearTimeout(bgmTimer);
                 bgmTimer = null;
             }
+            stopAmbientDrone();
         }
 
         // Global user interaction hooks to kick off Web Audio on modern browsers
@@ -915,6 +1022,15 @@
             }
         });
 
+        // UI Earcons & Action Sound FX System
+        let lastHoverTime = 0;
+        function playCardHover() {
+            const now = Date.now();
+            if (now - lastHoverTime < 50) return; // Smooth throttling
+            lastHoverTime = now;
+            playSound('card_hover');
+        }
+
         function playSound(type) {
             if (audioMuted) return;
             try {
@@ -923,55 +1039,84 @@
 
                 if (type === 'fire') {
                     // Harsh biting FM sweep + crackle
-                    playFM(360, 2.5, 3.4, 0.26, 0.28, 'sawtooth', true);
-                    playNoiseBurst(0.16, 0.22);
+                    playFM(380, 2.75, 4.2, 0.28, 0.28, 'sawtooth', true);
+                    playNoiseBurst(0.18, 0.24);
                 } else if (type === 'ice') {
                     // Crystalline high-ratio FM bell ring with warm SPC700 delay
-                    playChimeBell(1046.50, 0.40, 0.26);
-                    playFM(1567.98, 1.414, 2.2, 0.28, 0.18, 'triangle', true);
+                    playChimeBell(1174.66, 0.45, 0.28);
+                    playFM(1760.00, 1.414, 2.5, 0.32, 0.20, 'triangle', true);
                 } else if (type === 'arcane') {
                     // Shimmering cosmic FM harmonic tone
-                    playFM(587.33, 2.0, 2.8, 0.42, 0.26, 'sine', true);
-                    playFM(880.00, 1.5, 2.0, 0.38, 0.20, 'sine', true);
+                    playFM(587.33, 2.0, 3.2, 0.45, 0.26, 'sine', true);
+                    playFM(880.00, 1.5, 2.2, 0.40, 0.22, 'sine', true);
                 } else if (type === 'nature' || type === 'heal') {
                     // Resonant organic wooden flute / chord
-                    playWizardLead(440.00, 0.38, 0.24);
-                    playCounterVoice(554.37, 0.38, 0.18);
+                    playWizardLead(523.25, 0.42, 0.25);
+                    playCounterVoice(659.25, 0.42, 0.20);
                 } else if (type === 'poison') {
                     // Acidic squelching low-ratio FM wobble
-                    playFM(196, 4.25, 5.2, 0.36, 0.28, 'sawtooth', true);
+                    playFM(185, 4.33, 6.5, 0.38, 0.30, 'sawtooth', true);
                 } else if (type === 'lightning') {
                     // Crackling high-velocity FM zap + thunder discharge
-                    playFM(720, 5.2, 4.8, 0.20, 0.30, 'sawtooth', true);
-                    playNoiseBurst(0.08, 0.26);
+                    playFM(784, 5.8, 6.0, 0.22, 0.32, 'sawtooth', true);
+                    playNoiseBurst(0.12, 0.30);
                 } else if (type === 'damage') {
                     // Deep resonant impact punch
-                    playWizardBass(82.41, 0.24, 0.35);
-                    playNoiseBurst(0.10, 0.22);
+                    playWizardBass(73.42, 0.28, 0.38);
+                    playNoiseBurst(0.12, 0.25);
                 } else if (type === 'shield') {
                     // Glassy protective chime
-                    playChimeBell(784, 0.32, 0.24);
+                    playChimeBell(880, 0.35, 0.26);
+                } else if (type === 'card_hover') {
+                    // Delicate crystalline micro-chime
+                    playFM(1760, 3.5, 2.0, 0.035, 0.06, 'sine', false);
+                } else if (type === 'card_draw') {
+                    // Arcane parchment draw sound
+                    playFM(330, 1.5, 2.5, 0.16, 0.15, 'triangle', true);
+                } else if (type === 'no_mana') {
+                    // Dissonant FM error buzz
+                    playFM(110, 1.414, 4.5, 0.14, 0.22, 'sawtooth', false);
+                    playFM(117, 1.414, 4.5, 0.14, 0.22, 'sawtooth', false);
+                } else if (type === 'turn_start') {
+                    // Mystical low gong chime
+                    playFM(220, 2.76, 3.8, 0.55, 0.25, 'sine', true);
+                } else if (type === 'turn_end') {
+                    // Subdued closing chime
+                    playFM(164.81, 2.76, 3.0, 0.45, 0.20, 'sine', true);
                 } else if (type === 'win') {
                     // Sega Genesis 16-bit victorious fanfare triad chord arpeggio
-                    const notes = [587.33, 739.99, 880.00, 1174.66];
+                    const notes = [587.33, 739.99, 880.00, 1174.66, 1479.98];
                     notes.forEach((f, idx) => {
                         setTimeout(() => {
                             playChimeBell(f, 0.45, 0.25);
-                        }, idx * 130);
+                        }, idx * 120);
                     });
                 } else if (type === 'lose') {
                     // Crushing descending FM dissonance
-                    const notes = [329.63, 311.13, 293.66, 220.00];
+                    const notes = [329.63, 311.13, 293.66, 220.00, 146.83];
                     notes.forEach((f, idx) => {
                         setTimeout(() => {
-                            playFM(f, 3.1, 4.0, 0.42, 0.28, 'sawtooth', false);
-                        }, idx * 160);
+                            playFM(f, 3.1, 4.0, 0.45, 0.28, 'sawtooth', false);
+                        }, idx * 150);
                     });
                 } else if (type === 'click') {
-                    playChimeBell(1174.66, 0.05, 0.15);
+                    playChimeBell(1318.51, 0.045, 0.12);
                 }
             } catch (e) {}
         }
+
+        // Global UI audio triggers for card hover, card draw, and button clicks
+        document.addEventListener('mouseover', (e) => {
+            const card = e.target.closest('.card:not(.opponent)');
+            if (card) playCardHover();
+        });
+
+        document.addEventListener('click', (e) => {
+            const btn = e.target.closest('button, .card-action, #end-turn-btn, .modal-close');
+            if (btn && btn.id !== 'audio-toggle-btn') {
+                playSound('click');
+            }
+        });
 
         const sampleCards = [
             { name: "Fireball", cost: 3, effect: "Deals 4 Fire damage", type: "fire", damage: 4, heal: 0, burn: 0, freeze: 0, shield: 0, regen: 0, poison: 0 },
