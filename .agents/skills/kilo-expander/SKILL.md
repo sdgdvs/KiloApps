@@ -11,10 +11,10 @@ description: >-
 
 This skill deepens functional utility and capabilities on exactly ONE application per turn.
 
-## Token Efficiency Directive
-- **Batch Expansions**: Inspect target file once, plan features, apply edits in a single pass.
-- **No Re-reads**: Do NOT re-read files after editing them.
-- **Single-App Build Only**: Run only `cd KiloOS && npm run build`. NEVER run full-repo test suites (no `quality_gate.js`, no screenshot regeneration).
+## Quality & Craft Directive
+- **Iterative Craft**: Plan carefully and implement robust, deep feature expansions. Inspect diffs and code after editing to verify syntax, logic, and dual-target parity (Web HTML + Win32 C).
+- **Parity & Validation**: Run `cd KiloOS && npm run build`. If native C source exists, verify compilation with `cmd.exe /c build.bat`. Run `uv run scripts/test_app_startup.py --app <TargetApp>` when applicable.
+- **No Full-Repo Test Suites**: Run only target build/startup verification. NEVER run repo-wide suites (`quality_gate.js`, screenshot generation).
 - **No Archives/Receipts**: Never read `archive/` or `.agents/receipts/`.
 - Advance queue in `next_work.md`, commit, push, and STOP immediately.
 
@@ -37,8 +37,13 @@ This skill deepens functional utility and capabilities on exactly ONE applicatio
    - When assigned to advance the virtual web or when native app targets are mature, expand `virtual_web_target` in `KiloOS/public/web/*.html`.
    - **Anti-Potemkin Quality Standard**: Sites must NEVER be shallow placeholders or fake stubs. Build genuine Web 1.0 depth: working simulated backends (guestbooks, search indices, calculators, voting polls), Genesis/SNES Web Audio synthesizers/MIDI jukeboxes, demoscene cracktros, retro browser mini-games, downloadable text/tracker assets, and interconnected hypermedia links.
    - Maintain strict adherence to HTML 4.01 retro styling, zero external dependencies, and file size strictly `< 999 KB`.
-6. **Maturity & Skip Protocol**:
-   - If an app has undergone 6+ passes and is functionally complete without active requests: log `⏭️ Skip — app is feature-complete and mature.` Rotate to queue bottom and finish cleanly.
+6. **Mature Application Quarantine Protocol (DIRECTOR MANDATE - CRITICAL)**:
+   - If an app has undergone multiple passes and is functionally complete, robust, and mature:
+     - **DO NOT rotate it to the queue bottom!** (Rotating to the bottom causes endless skip loops that waste tokens repeatedly).
+     - **Quarantine to Mature**: Move the app into `## Mature Applications (Archived from Active Queues)` in `next_work.md`.
+     - **Remove from Queues**: Remove the app completely from all active queues and upcoming lists across `next_work.md`.
+     - **Advance Target**: Advance `current_targets.kilo_expander` to the next non-mature app in line.
+     - Log: `⏭️ Skip — promoted <TargetApp> to Mature Applications quarantine.` Advance rotation, commit, push, and STOP cleanly.
 7. **Alternate Reality Fictionalization Mandate**:
    - All commercial video game titles, software products, corporate entities, and demoscene warez groups must be fictionalized parodies (e.g. *Surreal Tournament*, *Tremor III Arena*, *VoidCraft*, *Machina Ex*, *FLARELIGHT*, *RAZOR 1999*, *SlashNet*, *Cabled*). Never use real trademarked names. Enforced algorithmically by `scripts/security_lint.py`.
 8. **ARG Mystery Preservation & TINAG Standard (CRITICAL)**:

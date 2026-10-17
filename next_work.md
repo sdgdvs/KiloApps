@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-qa
+current_agent: kilo-qa
+next_agent: kilo-expander
 agent_rotation:
 - kilo-graphics
 - kilo-soundscape
@@ -9,15 +9,16 @@ agent_rotation:
 - kilo-qa
 - kilo-expander
 - kilo-creator
-model: gemini-3.8-flash-medium
-timeout_minutes: 6
+model: gemini-3.8-flash-high
+effort: high
+timeout_minutes: 10
 status: ready
 current_targets:
   kilo_creator: kweb://cybercafe
   kilo_graphics: KWizard
   kilo_soundscape: kweb://asm-temple
   kilo_tester: KPaint
-  kilo_usability: KChart
+  kilo_usability: KDB
   kilo_qa: KHangman
   kilo_expander: KFont
 virtual_web_target: kweb://cybercafe
@@ -34,9 +35,9 @@ virtual_web_rotation:
 - kweb://echo-subsystem.net
 - kweb://deep-core
 last_run:
-  agent: kilo-tester
-  app: KPac
-  timestamp: 2026-10-17T16:31:22+0000
+  agent: kilo-usability
+  app: KChart
+  timestamp: 2026-10-17T16:54:11+0000
 last_planner_run: '2026-10-16T20:35:00Z'
 ---
 
@@ -50,14 +51,15 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 > Full architectural rules codified in [.agents/AGENTS.md](.agents/AGENTS.md) and [.agents/rules/](.agents/rules/).
 > Full historical director directives codified in [archive/director_directives_archive.md](archive/director_directives_archive.md).
 
-1. **Single-App-Per-Turn**: Exactly ONE target application per turn. Inspect once, batch edits, verify builds, advance queue, commit, and push.
+1. **Single-App-Per-Turn & Quality Craft**: Exactly ONE target application per turn. Plan iteratively, inspect diffs, test thoroughly, advance queue, commit, and push.
 2. **Strict Size Ceiling**: Every web file (`.html`) and native executable (`.exe`) must remain strictly **< 999 KB**.
-3. **Token Conservation (CRITICAL)**: ≤6 lines of terse bullet points in execution log. Never re-read files after editing. Max 5 active log entries in this file (older entries rotated by `scripts/rotate_logs.py`).
+3. **Concise Logging & Verification**: ≤8 lines of terse bullet points in execution log. Inspect your diffs and re-read code as needed to verify correctness and dual-parity. Verify with `npm run build` and `uv run scripts/test_app_startup.py --app <target>`.
 4. **Multiplayer Autostart Prohibition**: Games must NEVER autostart into matchmaking. Default to local offline play; multiplayer requires explicit button click. Include 25s solo AI fallback.
 5. **Anti-Trademark / Parody Rule**: No real commercial marks or scene group names (use *Surreal Tournament*, *VoidCraft*, *RAZOR 1999*, *FLARELIGHT*). Must pass `python scripts/security_lint.py`.
 6. **ARG Mystery Preservation (TINAG)**: Never label UI or copy with `(ARG)` or walkthrough guides; never leak `ECHO-1999-ARCHITECT` before App #100 (`KMatrix`).
 7. **Perimeter Glint & Comet Ban**: Remove traveling border dots, orbiting balls, and specular glints.
 8. **Chiptune Audio Architecture**: Genesis YM2612 2-Op FM / SNES SPC700 stereo delay standard. Zero external audio assets.
+9. **Mature Application Quarantine Policy (DIRECTOR MANDATE - CRITICAL)**: If any agent decides to skip an app because it is complete or mature (except `kilo-graphics` skipping non-game apps), do NOT rotate it to the queue bottom! The agent MUST move the app into `## Mature Applications (Archived from Active Queues)` in `next_work.md` and remove it completely from all active queues. The app is permanently archived from all fleet turns until the Director personally directs otherwise.
 
 ---
 
@@ -117,7 +119,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - In frontmatter: advance `current_targets.kilo_tester` to `KPac`.
   - Set `current_agent: kilo-usability`.
   - Append terse execution log (≤6 lines), commit, and push.
-- **Upcoming Queue**: `KSpace`, `KPac`, `KCalendar`, `KChess`.
+- **Upcoming Queue**: `KPaint`, `KPac`, `KCalendar`, `KNet`.
 
 ### 5. Usability & UX Queue (`kilo-usability`)
 - **Target**: `KChart`
@@ -151,7 +153,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - In frontmatter: advance `current_targets.kilo_qa` to `KMinesweeper`.
   - Set `current_agent: kilo-usability`.
   - Append terse execution log (≤6 lines), commit, and push.
-- **Upcoming Queue**: `KMinesweeper`, `KTetris`, `KConnect4`.
+- **Upcoming Queue**: `KMinesweeper`, `KTetris`, `KAudio`.
 
 ### 7. Feature Expander Queue (`kilo-expander`)
 - **Target**: `KClip`
@@ -173,7 +175,39 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ---
 
+## Mature Applications (Archived from Active Queues)
+
+> **POLICY**: Applications listed below have reached feature completion, high stability, and mature visual/audio design.
+> **EXCLUSION RULE**: These applications are **permanently removed from all active worker queues** until the Director personally directs otherwise.
+> **SKIP ADDICTION PREVENTION**: If any agent (except `kilo-graphics` skipping non-game apps) encounters or decides to skip an app because it is complete or mature, it must NOT rotate the app to the queue bottom! The agent MUST record the app in this table, remove it from all upcoming queues and targets in `next_work.md`, and advance to the next non-mature app.
+
+| Application | Primary File | Pass Count / Date | Category | Summary of Mature State |
+|---|---|---|---|---|
+| **KTowers** | `KiloOS/public/apps/ktowers.html` | Pass 6+ (2026-10-08) | Puzzle / Strategy | Feature-complete Tower of Hanoi variant; full state persistence, responsive controls, zero glints. |
+| **KDarts** | `KiloOS/public/apps/kdarts.html` | Pass 6+ (2026-10-08) | Sports / Arcade | Complete physics simulation, scoring engine, audio effects, and UI persistence. |
+| **KReversi** | `KiloOS/public/apps/kreversi.html` | Pass 6+ (2026-10-07) | Strategy / Board | Complete board AI, move history, quicksave/load, RFMS multiplayer support. |
+| **KMines** | `KiloOS/public/apps/kmines.html` | Pass 8+ (2026-10-15) | Puzzle | Complete classic minesweeper with retro styling, timer persistence, custom difficulty. |
+| **KPong** | `KiloOS/public/apps/kpong.html` | Pass 9+ (2026-10-15) | Arcade | Full retro arcade physics, AI paddle tiers, local two-player, CRT curvature shaders. |
+| **KAsteroids** | `KiloOS/public/apps/kasteroids.html` | Pass 8+ (2026-10-16) | Arcade | Pure vector wireframe physics, particle explosions, high score persistence. |
+| **KChess** | `KiloOS/public/apps/kchess.html` | Pass 9+ (2026-10-15) | Strategy / Board | Complete chess engine, move validation, FEN/PGN import/export, RFMS multiplayer. |
+| **KConnect4** | `KiloOS/public/apps/kconnect4.html` | Pass 6+ (2026-10-07) | Strategy / Board | Complete connect 4 engine, minimax AI, win animations, RFMS multiplayer. |
+
+---
+
 ## Recent Execution Logs (Max 5 Entries)
+
+- **2026-10-17T16:54:11+0000 — kilo-usability: KChart (Responsive Viewport Polish & Keyboard Accessibility)**
+  - Responsive Viewport: Added narrow-viewport (<540px) adaptation, full-width toolbar flex-wrapping, button grouping, and table scrolling.
+  - Accessibility & Polish: Added distinct help hint pill and high-visibility focus ring glow (`box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.35)`) on all inputs and buttons.
+  - Verification: Clean Vite build (`npm.cmd run build`), size 21.8 KB (<999 KB ceiling).
+  - Queue: Advanced `kilo_usability` to `KDB`; rotation handoff to `kilo-qa`.
+
+- **2026-10-17T10:00:00-07:00 — kilo-adhoc: Fleet Upgrade (Flash High Effort, 10m Timeout, Mature Application Quarantine)**
+  - Model & Reasoning: Upgraded fleet orchestrator and work state to Gemini 3.8 Flash High effort (`--effort high`, `--model gemini-3.8-flash-high`) and expanded timeout to 10 minutes.
+  - Quality Directives: Eliminated blindfold directives (removed single-pass batch restrictions and no-re-read bans); mandated iterative diff checks, build verification, and automated startup testing (`test_app_startup.py`).
+  - Mature Quarantine Policy: Codified anti-skip policy across orchestrator, workspace rules, and all skills: apps skipped for maturity/completion are permanently quarantined to `## Mature Applications` and removed from active queues until user reassigns.
+  - Queue Sanitization: Purged mature apps from upcoming queues (seeded `KTowers`, `KDarts`, `KReversi`, `KMines`, `KPong`, `KAsteroids`, `KChess`, `KConnect4` in quarantine table).
+  - Verification: Clean Vite build (`npm.cmd run build`), 100% security lint PASS, dry-run orchestrator verified.
 
 - **2026-10-17T09:35:00-07:00 — kilo-adhoc: Fleet Dashboard & Scheduler (Turn Metrics, PC A Slot Claim, Tool Budget Uncap)**
   - Dashboard Metrics: Fixed turn metrics to accurately display all-time turns (1,941 receipts) and last 24h turns (42 receipts) with zero-overhead cached counter.
@@ -193,16 +227,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Status: ⏭️ Skip — Imagen 3 asset replacement not appropriate for KWizard (pure vector, board game, or mature art).
   - Optimization: Handled via orchestrator pre-flight zero-token auto-skip.
   - Queue: Advanced `kilo-graphics` to `KWizard`; rotation handoff to `kilo-soundscape`.
-
-- **2026-10-17T15:15:00+0000 — kilo-creator: kweb://asm-temple (Virtual 1999 Win32 ASM Temple Destination)**
-  - Anti-Potemkin Audit: Verified 10 functioning hypermedia modules (Opcode Oracle 177 ops, Assembler & CPU Stepper, PE Dissector, VGA Mode 13h Lab, Bitwise Altar, YM2612/SPC700 Jukebox, Guestbook).
-  - Webring & Linking: Fully integrated into KNet portal directory, Webring node list, and cross-site navigators.
-  - Verification: Clean Vite build (`npm.cmd run build` 0 errors); size 354 KB (<999 KB ceiling).
-  - Queue: Advanced `kilo_creator` and `virtual_web_target` to `kweb://cybercafe`; handoff to `kilo-graphics`.
-
-- **2026-10-17T14:35:00+0000 — kilo-expander: KHex (Opcode Disassembler & CPU Instruction Decoder)**
-  - Feature Expansion: Added multi-architecture opcode disassembler (x86-32, x86-16, MOS 6502, Z80) with instruction decode tables.
-  - Interactive Inspector: Linked disassembly addresses directly to hex viewer byte offsets with mnemonic filtering and category tagging.
-  - Export & Tools: Added .ASM download and clipboard export; integrated sample retro routines (x86 cracktro, 6502 screen clear, Z80 vblank).
-  - Verification: `npm run build` clean (0 errors); `khex.html` ~208 KB (<999 KB ceiling).
-  - Queue: Advanced `kilo_expander` to `KFont`; rotation handoff to `kilo-creator`.

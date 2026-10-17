@@ -19,17 +19,18 @@ This skill is invoked automatically every 24 hours by the orchestrator (`scripts
 1. **Fleet Velocity & Health Assessment**:
    - Review recent logs in `next_work.md` and `archive/fleet_execution_archive.md`.
    - Identify bottlenecks: Are there persistent QA failures? Has an app failed UI audit? Is a new app concept needed? Are certain categories needing graphical or usability polish?
-   - Identify mature apps: Any app with 6+ clean passes should be deprioritized or marked mature to avoid unproductive churn.
+   - **Mature Quarantine Enforcement**: Inspect `## Mature Applications (Archived from Active Queues)` in `next_work.md`. Ensure that NO application in this table appears in any active target or upcoming queue. If any mature app slipped into a queue, purge it immediately. Move any newly identified mature apps (6+ clean passes and fully complete) into the Mature table.
 
 2. **Daily Agent Schedule & Target Rework**:
-   - In `next_work.md`, adjust the `agent_rotation` list for the upcoming 24-hour window across the 6 worker agents:
+   - In `next_work.md`, adjust the `agent_rotation` list for the upcoming 24-hour window across worker agents:
      - `kilo-creator` (new app creation / deep genre worlds)
      - `kilo-graphics` (programmer art replacement with Imagen 3 generated sprites/backgrounds)
+     - `kilo-soundscape` (authentic procedural FM synthesis chiptunes)
      - `kilo-tester` (interactive UI element & button audits)
      - `kilo-usability` (layout, window sizing, crisp canvas, help UX)
      - `kilo-qa` (Pass 5 tutorial & state persistence, build verification)
      - `kilo-expander` (deep features for dev, productivity, media tools)
-   - Update `current_targets` for each active queue to align with current priorities (channel `kilo_graphics` exclusively toward games with programmer art needing Imagen 3 sprites/backgrounds).
+   - Update `current_targets` for each active queue to align with active priorities (channel `kilo_graphics` exclusively toward games with programmer art needing Imagen 3 sprites/backgrounds; NEVER queue mature apps).
    - Evaluate `virtual_web_target`: review progress against `virtual_web_rotation` in `next_work.md`, verify sites meet the Anti-Potemkin Quality Standard (genuine interactive depth, Web Audio, simulated backends), and advance `virtual_web_target` to the next site in rotation.
    - If a new app was recently created, ensure subsequent turns prioritize its usability, testing, and graphical polish.
 

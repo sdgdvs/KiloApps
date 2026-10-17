@@ -15,11 +15,13 @@ Nobuo Uematsu, Jake Kaufman). Zero external audio files — everything generated
 
 ---
 
-## Token Efficiency Directive
+## Quality & Craft Directive
 - **Skip Turn Fast-Path**: If target is a pure utility/text tool (see Skip List below), log skip,
-  advance queue in `next_work.md`, commit, and STOP immediately.
-- **Single-File Only**: Edit only the target `.html` file (web) or `main.c` (native).
-  Run `cd KiloOS && npm run build` once. Never run full-repo test suites.
+  advance queue in `next_work.md`, commit, and STOP immediately. (Do NOT mark mature, as other agents work on utilities).
+- **Mature Quarantine**: If skipping because an app/game already has complete, production-grade procedural audio (6+ passes):
+  move to `## Mature Applications (Archived from Active Queues)` in `next_work.md`, remove from active queues, advance target, and STOP.
+- **Single-File Craft**: Iteratively compose and calibrate audio parameters in the target `.html` file. Inspect diffs to verify synth engines and patch parameters.
+- **Validation**: Run `cd KiloOS && npm run build` and `python scripts/security_lint.py`. Never run full-repo test suites.
 - **No Archives**: Never read `archive/` or `.agents/receipts/`.
 
 ---

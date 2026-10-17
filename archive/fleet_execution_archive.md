@@ -4,6 +4,19 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-17T15:15:00+0000 — kilo-creator: kweb://asm-temple (Virtual 1999 Win32 ASM Temple Destination)**
+  - Anti-Potemkin Audit: Verified 10 functioning hypermedia modules (Opcode Oracle 177 ops, Assembler & CPU Stepper, PE Dissector, VGA Mode 13h Lab, Bitwise Altar, YM2612/SPC700 Jukebox, Guestbook).
+  - Webring & Linking: Fully integrated into KNet portal directory, Webring node list, and cross-site navigators.
+  - Verification: Clean Vite build (`npm.cmd run build` 0 errors); size 354 KB (<999 KB ceiling).
+  - Queue: Advanced `kilo_creator` and `virtual_web_target` to `kweb://cybercafe`; handoff to `kilo-graphics`.
+
+- **2026-10-17T14:35:00+0000 — kilo-expander: KHex (Opcode Disassembler & CPU Instruction Decoder)**
+  - Feature Expansion: Added multi-architecture opcode disassembler (x86-32, x86-16, MOS 6502, Z80) with instruction decode tables.
+  - Interactive Inspector: Linked disassembly addresses directly to hex viewer byte offsets with mnemonic filtering and category tagging.
+  - Export & Tools: Added .ASM download and clipboard export; integrated sample retro routines (x86 cracktro, 6502 screen clear, Z80 vblank).
+  - Verification: `npm run build` clean (0 errors); `khex.html` ~208 KB (<999 KB ceiling).
+  - Queue: Advanced `kilo_expander` to `KFont`; rotation handoff to `kilo-creator`.
+
 - **2026-10-17 — kilo-tester — KPac**: PASS ✅ (No issues found)
   - Interactive UI audit: all 93 onclick handlers and modals verified with valid IDs and handlers.
   - Controls & modals: F1/H codex, Forge, Duel Arena, Replay, FEN, HUD, and virtual D-pad operational.

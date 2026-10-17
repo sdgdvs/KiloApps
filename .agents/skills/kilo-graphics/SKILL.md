@@ -29,13 +29,16 @@ This skill executes visual art overhauls replacing programmer art with Imagen 3 
 2. **⏭️ Turn Skipping for Inappropriate Targets (DIRECTOR MANDATE - CRITICAL)**:
    - If `kilo-graphics` reaches an application where Imagen 3 asset generation would NOT be appropriate:
      - *Pure Vector / Wireframe Classics*: Games whose foundational aesthetic is authentic retro vector math or line art (e.g. *KAsteroids*, *Battlezone*-style wireframes).
-     - *Classic Abstract Board / Puzzle Games*: Traditional board games where standard geometric pieces or symbols are appropriate (*KChess*, *KGo*, *KReversi*, *KTowers*).
-     - *Mature / Completed Art*: Games that already possess complete, production-grade custom art with zero programmer cutouts.
      - *Text / Terminal Apps*: Pure text or command-line style utilities.
    - **ACTION**: Skip the turn immediately! Format: `⏭️ Skip — Imagen 3 asset replacement not appropriate for <TargetGame>`.
-   - Rotate the target to the bottom of the queue, advance `current_agent`, commit, push, and STOP without touching code or inventing arbitrary additions.
-3. **Maturity & Skip Protocol**:
-   - For mature games (6+ passes) that are already cohesive, balanced, and complete without pending directives: log `⏭️ Skip — app is mature, balanced, and complete.` Rotate to queue bottom and finish turn cleanly without churning code.
+   - Advance `current_targets.kilo_graphics` to the next game in queue. **Note**: Do NOT mark as mature here—the app may still require testing, usability, or audio passes by other skills. Advance queue, advance `current_agent`, commit, push, and STOP.
+3. **Mature Application Quarantine Protocol (DIRECTOR MANDATE - CRITICAL)**:
+   - For mature games (6+ passes) that are already cohesive, visually complete with production assets, and fully finished:
+     - **DO NOT rotate it to the queue bottom!** (Rotating to the bottom causes endless skip loops that waste tokens repeatedly).
+     - **Quarantine to Mature**: Move the game into `## Mature Applications (Archived from Active Queues)` in `next_work.md`.
+     - **Remove from Queues**: Remove the game completely from all active queues and upcoming lists across `next_work.md`.
+     - **Advance Target**: Advance `current_targets.kilo_graphics` to the next non-mature game in line.
+     - Log: `⏭️ Skip — promoted <TargetGame> to Mature Applications quarantine.` Advance rotation, commit, push, and STOP cleanly.
 4. **Alternate Reality Fictionalization Mandate**:
    - All commercial video game titles, software products, corporate entities, and demoscene warez groups must be fictionalized parodies (e.g. *Surreal Tournament*, *Tremor III Arena*, *VoidCraft*, *Machina Ex*, *FLARELIGHT*, *RAZOR 1999*, *SlashNet*, *Cabled*). Never use real trademarked names. Enforced algorithmically by `scripts/security_lint.py`.
 5. **🚫 Specular Glint & Traveling Comet Ban (DIRECTOR MANDATE - CRITICAL)**:

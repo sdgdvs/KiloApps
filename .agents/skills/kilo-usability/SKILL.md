@@ -11,10 +11,10 @@ description: >-
 
 This skill executes usability, layout, and UX enhancements on exactly ONE application per turn (or KiloOS shell).
 
-## Token Efficiency Directive
-- **Batch Edits**: Inspect the target HTML/C file ONCE. Plan and apply all usability fixes in a single edit block.
-- **No Re-reads**: Never call `view_file` on files you just edited.
-- **Single-App Build Only**: Run only `cd KiloOS && npm run build`. NEVER run repository-wide suites (no `quality_gate.js`, no screenshot regeneration).
+## Quality & Craft Directive
+- **Iterative Craft**: Audit window dimensions, interactive layout, responsive design, keyboard shortcuts, and canvas HiDPI crispness. Inspect diffs and code after editing to verify layout stability and dual web/native parity.
+- **Validation**: Run `cd KiloOS && npm run build` and `uv run scripts/test_app_startup.py --app <TargetApp>` to ensure startup modals dismiss cleanly and gameplay/UI surfaces are not occluded.
+- **No Full-Repo Test Suites**: Run only target build/startup verification. NEVER run repo-wide suites (`quality_gate.js`, screenshot generation).
 - **No Archives/Receipts**: Never read `archive/` or `.agents/receipts/`.
 - Advance queue in `next_work.md`, commit, push, and STOP immediately.
 
@@ -33,8 +33,13 @@ This skill executes usability, layout, and UX enhancements on exactly ONE applic
    - Ensure canvas-based apps account for `window.devicePixelRatio` so rendering is crisp on high-DPI displays rather than blurry.
 4. **Responsive Controls & Touch/Mouse Handling**:
    - Controls must be sized for easy clicking/tapping with clear hover/active feedback.
-5. **Maturity & Skip Protocol**:
-   - If an app has undergone 6+ passes and possesses clean layout, crisp rendering, and intuitive controls: log `⏭️ Skip — app usability is complete and mature.` Rotate to queue bottom and stop cleanly.
+5. **Mature Application Quarantine Protocol (DIRECTOR MANDATE - CRITICAL)**:
+   - If an app has undergone multiple passes and possesses clean layout, crisp rendering, robust keyboard navigation, and intuitive controls:
+     - **DO NOT rotate it to the queue bottom!** (Rotating to the bottom causes endless skip loops that waste tokens repeatedly).
+     - **Quarantine to Mature**: Move the app into `## Mature Applications (Archived from Active Queues)` in `next_work.md`.
+     - **Remove from Queues**: Remove the app completely from all active queues and upcoming lists across `next_work.md`.
+     - **Advance Target**: Advance `current_targets.kilo_usability` to the next non-mature app in line.
+     - Log: `⏭️ Skip — promoted <TargetApp> to Mature Applications quarantine.` Advance rotation, commit, push, and STOP cleanly.
 
 ## Verification
 1. Verify web app build: `cd KiloOS && npm run build`.

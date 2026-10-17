@@ -111,6 +111,18 @@
     }
   }
 
+  .help-hint-pill {
+    font-size: 11px;
+    color: var(--accent);
+    font-weight: 600;
+    margin-left: 8px;
+    background: rgba(59, 130, 246, 0.12);
+    padding: 2px 8px;
+    border-radius: 4px;
+    display: inline-block;
+    border: 1px solid rgba(59, 130, 246, 0.25);
+  }
+
   @media (max-width: 640px) {
     header {
       padding: 6px 10px;
@@ -147,6 +159,34 @@
     }
   }
 
+  @media (max-width: 540px) {
+    .help-hint-pill {
+      display: block;
+      margin-left: 0;
+      margin-top: 4px;
+      font-size: 10px;
+      text-align: center;
+    }
+    .toolbar {
+      width: 100%;
+      justify-content: flex-start;
+      gap: 4px;
+    }
+    .btn-group {
+      width: 100%;
+      justify-content: flex-start;
+    }
+    .btn-group button {
+      flex: 1 1 auto;
+      text-align: center;
+      padding: 5px 6px;
+      font-size: 11px;
+    }
+    .table-wrapper {
+      max-height: 220px;
+    }
+  }
+
   @media (max-width: 440px) {
     .logo-title span {
       font-size: 14px;
@@ -160,9 +200,10 @@
     }
   }
 
-  button:focus-visible, .btn:focus-visible, select:focus-visible {
+  button:focus-visible, .btn:focus-visible, select:focus-visible, input[type="text"]:focus-visible, input[type="number"]:focus-visible {
     outline: 2px solid var(--focus-ring);
     outline-offset: 1px;
+    box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.35);
   }
 
   /* Card Component */
@@ -2022,8 +2063,6 @@
     }
 
     // Legend on right
-    const legX = canvasW - 140;
-    const maxLegW = canvasW - legX - 16;
     const rowH = Math.min(22, Math.max(15, (canvasH - 60) / Math.max(1, data.length)));
     const legY = cy - (n * rowH) / 2;
     ctx.font = "11px 'Inter', sans-serif";
@@ -2287,8 +2326,6 @@
     }
 
     // Legend
-    const legX = canvasW - 140;
-    const maxLegW = canvasW - legX - 16;
     const rowH = Math.min(22, Math.max(15, (canvasH - 60) / Math.max(1, data.length)));
     const legY = cy - (data.length * rowH) / 2;
     ctx.font = "11px 'Inter', sans-serif";

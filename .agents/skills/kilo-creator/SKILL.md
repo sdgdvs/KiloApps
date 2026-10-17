@@ -11,9 +11,10 @@ description: >-
 
 This skill designs and implements new applications or deep game worlds on exactly ONE application per turn.
 
-## Token Efficiency Directive
-- **Batch Implementations**: Write the web page or destination file in a single write/edit pass.
-- **Single-App Build Only**: Run only `cd KiloOS && npm run build`. NEVER run full-repo test suites (no `quality_gate.js`, no screenshot regeneration).
+## Quality & Craft Directive
+- **Iterative Craft**: Design and implement high-craft, feature-rich web applications or 1999 virtual web destinations. Develop iteratively across modular components, inspect diffs, and verify styling, mechanics, and audio synthesis.
+- **Validation**: Run `cd KiloOS && npm run build` and `uv run scripts/test_app_startup.py --app <TargetApp>` (for web apps). Ensure size is strictly < 999 KB.
+- **No Full-Repo Test Suites**: Run only target build/startup verification. NEVER run repo-wide suites (`quality_gate.js`, screenshot generation).
 - **No Archives/Receipts**: Never read `archive/` or `.agents/receipts/`.
 - Advance queue in `next_work.md`, commit, push, and STOP immediately.
 

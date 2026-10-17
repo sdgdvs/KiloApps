@@ -11,10 +11,10 @@ description: >-
 
 This skill executes a self-contained interactive UI audit and repair on exactly ONE web application.
 
-## Token Efficiency Directive
-- **Batch Edits**: Inspect target HTML once, apply all event/modal fixes in a single edit block.
-- **No Re-reads**: Do NOT re-read files after editing them.
-- **Single-App Validation Only**: Run `uv run scripts/test_app_startup.py --app <TargetApp>` and `cd KiloOS && npm run build`. NEVER run full-repo test suites (no `quality_gate.js`, no screenshot regeneration).
+## Quality & Craft Directive
+- **Iterative Craft**: Rigorously audit every interactive UI element, modal dismissals, storage handlers, and keyboard hotkeys. Inspect diffs and code after editing to ensure correct event binding, syntax, and responsive stability.
+- **Validation**: Run `uv run scripts/test_app_startup.py --app <TargetApp>` and `cd KiloOS && npm run build`.
+- **No Full-Repo Test Suites**: Run only target build/startup verification. NEVER run repo-wide suites (`quality_gate.js`, screenshot generation).
 - **No Archives/Receipts**: Never read `archive/` or `.agents/receipts/`.
 - Advance queue in `next_work.md`, commit, push, and STOP immediately.
 
@@ -56,7 +56,15 @@ This skill executes a self-contained interactive UI audit and repair on exactly 
    - Run `npm run build` inside `KiloOS/` to confirm zero Vite build breaks.
    - Ensure the HTML file does not exceed 999 KB.
 
-6. **Queue Handoff & Terse Logging (CRITICAL)**:
+6. **Mature Application Quarantine Protocol (DIRECTOR MANDATE - CRITICAL)**:
+   - If an app passes UI audit with zero defects, passes `test_app_startup.py`, and is functionally mature:
+     - **DO NOT rotate it to the queue bottom!** (Rotating to the bottom causes endless skip loops that waste tokens repeatedly).
+     - **Quarantine to Mature**: Move the app into `## Mature Applications (Archived from Active Queues)` in `next_work.md`.
+     - **Remove from Queues**: Remove the app completely from all active queues and upcoming lists across `next_work.md`.
+     - **Advance Target**: Advance `current_targets.kilo_tester` to the next non-mature app in line.
+     - Log: `⏭️ Skip — promoted <TargetApp> to Mature Applications quarantine.` Advance rotation, commit, push, and STOP cleanly.
+
+7. **Queue Handoff & Terse Logging (CRITICAL)**:
    - Edit [next_work.md](../../next_work.md):
      - Update YAML frontmatter:
        - Set `current_agent` to the next scheduled agent in `agent_rotation` (or `kilo-qa` if critical defects were found).
@@ -67,7 +75,7 @@ This skill executes a self-contained interactive UI audit and repair on exactly 
        - **Strict limit**: ≤8 lines of terse bullet points. No paragraphs.
        - Format: `PASS ✅ (N issues, M fixed)` or `PASS ✅ (No issues found)`.
        - Log WHAT changed + test results, not HOW.
-     - Move the completed app to the bottom of the Tester queue table.
+     - If the app was not promoted to Mature, move it to the bottom of the Tester upcoming queue.
 
 7. **Commit and Push**:
    - `git add <modified files> next_work.md`

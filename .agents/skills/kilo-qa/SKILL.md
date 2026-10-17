@@ -11,10 +11,10 @@ description: >-
 
 This skill executes a self-contained Pass 5 QA and build audit on exactly ONE application.
 
-## Token Efficiency Directive
-- **Batch Edits**: Inspect target source once, apply state persistence / tutorial fixes in a single edit block.
-- **No Re-reads**: Do NOT re-read files after editing them.
-- **Single-App Build Only**: Run `cd KiloOS && npm run build` and native `build.bat` if present. NEVER run full-repo test suites (no `quality_gate.js`, no screenshot regeneration).
+## Quality & Craft Directive
+- **Iterative Craft**: Rigorously audit state persistence, onboarding tutorials, and modal dismissals. Inspect diffs and code after editing to verify syntax, error catching, and parity between web (HTML) and native (C).
+- **Parity & Validation**: Run `cd KiloOS && npm run build` and `uv run scripts/test_app_startup.py --app <TargetApp>`. If native C source exists, compile via `cmd.exe /c build.bat`.
+- **No Full-Repo Test Suites**: Run only target build/startup verification. NEVER run repo-wide suites (`quality_gate.js`, screenshot generation).
 - **No Archives/Receipts**: Never read `archive/` or `.agents/receipts/`.
 - Advance queue in `next_work.md`, commit, push, and STOP immediately.
 
@@ -37,9 +37,18 @@ This skill executes a self-contained Pass 5 QA and build audit on exactly ONE ap
 3. **Build & Size Verification**:
    - Web: Run `npm run build` inside `KiloOS/` to confirm zero Vite build breaks.
    - Native: If native source exists, run its `build.bat` to ensure compilation produces a clean `.exe`.
+   - Startup Audit: Run `uv run scripts/test_app_startup.py --app <TargetApp>`.
    - Size limit: Ensure neither the `.exe` nor the `.html` exceeds 999 KB.
 
-4. **Queue Handoff & Terse Logging (CRITICAL)**:
+4. **Mature Application Quarantine Protocol (DIRECTOR MANDATE - CRITICAL)**:
+   - If an app passes Pass 5 with zero defects, full state persistence, clean modal handling, and is functionally mature:
+     - **DO NOT rotate it to the queue bottom!** (Rotating to the bottom causes endless skip loops that waste tokens repeatedly).
+     - **Quarantine to Mature**: Move the app into `## Mature Applications (Archived from Active Queues)` in `next_work.md`.
+     - **Remove from Queues**: Remove the app completely from all active queues and upcoming lists across `next_work.md`.
+     - **Advance Target**: Advance `current_targets.kilo_qa` to the next non-mature app in line.
+     - Log: `⏭️ Skip — promoted <TargetApp> to Mature Applications quarantine.` Advance rotation, commit, push, and STOP cleanly.
+
+5. **Queue Handoff & Terse Logging (CRITICAL)**:
    - Edit [next_work.md](../../next_work.md):
      - Update YAML frontmatter:
         - Set `current_agent` to the next scheduled agent in `agent_rotation` (or `kilo-tester` / `kilo-creator` if specific follow-up is needed).
@@ -49,7 +58,7 @@ This skill executes a self-contained Pass 5 QA and build audit on exactly ONE ap
      - In the Execution Log section of `next_work.md`, append a run entry:
        - **Strict limit**: ≤8 lines of terse bullet points. No paragraphs.
        - Log WHAT changed + test results, not HOW. Never list parameter names or regurgitate code.
-     - Move the completed app to the bottom of the QA queue table.
+     - If the app was not promoted to Mature, move it to the bottom of the QA upcoming list.
 
 5. **Commit and Push**:
    - `git add <modified files> next_work.md`

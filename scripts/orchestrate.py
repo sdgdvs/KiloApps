@@ -657,12 +657,14 @@ def validate_next_work_file(path: Path) -> tuple[bool, str]:
 
 
 TOKEN_EFFICIENCY_SUFFIX = (
-    " TOKEN EFFICIENCY DIRECTIVE: "
-    "Inspect the target app file ONCE. Batch all edits in a single pass. "
-    "Do NOT re-read files after editing. "
-    "Do NOT read archive files (archive/), receipt files, or unrelated apps. "
-    "Run ONLY target app build verification (npm run build). NEVER run full-repo test suites like quality_gate.js or screenshot generation. "
-    "Update next_work.md with a <=5 line terse log, commit, push, and STOP immediately."
+    " QUALITY & VERIFICATION DIRECTIVE: "
+    "Plan iteratively and implement robust, high-craft functionality. "
+    "Always inspect your changes and diffs after editing to verify syntax, logic, and dual-target parity (Web HTML + Win32 C). "
+    "Do NOT read historical archive files (archive/) or receipts. "
+    "Verify builds (npm run build in KiloOS; build.bat if native C exists) and run automated startup check (uv run scripts/test_app_startup.py --app <target>). "
+    "MATURE QUARANTINE DIRECTIVE: If you decide to skip an app because it is complete or mature (except graphics skipping non-game apps), do NOT rotate it to the queue bottom! "
+    "You MUST move the app into '## Mature Applications (Archived from Active Queues)' in next_work.md and remove it from ALL active queues so it is not repeatedly skipped. "
+    "Update next_work.md with a <=8 line terse log, commit, push, and STOP immediately."
 )
 
 INAPPROPRIATE_IMAGEN_TARGETS = {
@@ -1017,13 +1019,14 @@ def main():
             agent = args.force_agent or frontmatter.get("current_agent", "kilo-tester")
 
         status = frontmatter.get("status", "ready")
-        model = os.environ.get("AGY_MODEL") or frontmatter.get("model", "gemini-3.8-flash-medium")
-        timeout_min = int(frontmatter.get("timeout_minutes", 6))
+        model = os.environ.get("AGY_MODEL") or frontmatter.get("model", "gemini-3.8-flash-high")
+        effort = os.environ.get("AGY_EFFORT") or frontmatter.get("effort", "high")
+        timeout_min = int(frontmatter.get("timeout_minutes", 10))
         targets = frontmatter.get("current_targets", {})
         if isinstance(targets, str):
             targets = {}
 
-        log(f"Queue State: agent='{agent}', status='{status}', model='{model}', timeout={timeout_min}m")
+        log(f"Queue State: agent='{agent}', status='{status}', model='{model}', effort='{effort}', timeout={timeout_min}m")
 
         if status != "ready" and not args.force_agent and not should_run_planner:
             log(f"Task status is '{status}' (not 'ready'). Skipping dispatch.")
@@ -1045,7 +1048,7 @@ def main():
             "--model",
             model,
             "--effort",
-            "medium",
+            effort,
             "--dangerously-skip-permissions",
             f"--print-timeout={timeout_min}m",
         ]

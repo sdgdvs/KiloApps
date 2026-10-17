@@ -22,10 +22,10 @@
   - Native apps: run `build.bat` to confirm clean C/ASM compilation.
 
 ## 5. Token Conservation & Logging Rules
-- **Run log entries:** ≤6 lines of terse bullet points. No paragraphs.
+- **Run log entries:** ≤8 lines of terse bullet points. No paragraphs.
 - **Skip-turn entries:** exactly 1 line (`⏭️ Skip — [reason in ≤15 words]`).
 - **Never restate code:** Log WHAT changed + test results, not implementation details or parameter lists.
-- **Maturity restraint:** Apps with 5+ passes require no gratuitous churn. If an app is complete and lacks a specific directive, skipping the turn cleanly is expected.
+- **Mature Application Quarantine Policy (CRITICAL):** If an agent decides to skip an app because it is complete or mature (except `kilo-graphics` skipping non-game apps), do NOT rotate it to the queue bottom! The agent MUST move the app into `## Mature Applications (Archived from Active Queues)` in `next_work.md` and remove it completely from all active queues. The app remains archived and excluded from all turns until the Director personally directs otherwise.
 
 ## 6. Subagent Delegation Mandate (NO OPUS SUBAGENTS)
 - Whenever invoking `invoke_subagent`, you MUST explicitly set `"Model": "flash"` (or fallback `"Model": "sonnet"` if flash encounters a 503 capacity limit).
