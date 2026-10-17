@@ -790,6 +790,7 @@
     <button class="tab-btn" id="tabbtn-operations" role="tab" aria-selected="false" aria-controls="tab-operations" onclick="switchTab('operations')"><span class="badge" style="padding:2px 6px; font-size:0.7rem;">6</span> 🛠️ Byte Operations</button>
     <button class="tab-btn" id="tabbtn-export" role="tab" aria-selected="false" aria-controls="tab-export" onclick="switchTab('export')"><span class="badge" style="padding:2px 6px; font-size:0.7rem;">7</span> 💾 Data Export</button>
     <button class="tab-btn" id="tabbtn-strings" role="tab" aria-selected="false" aria-controls="tab-strings" onclick="switchTab('strings')"><span class="badge" style="padding:2px 6px; font-size:0.7rem;">8</span> 🧵 Strings & Diff</button>
+    <button class="tab-btn" id="tabbtn-disasm" role="tab" aria-selected="false" aria-controls="tab-disasm" onclick="switchTab('disasm')"><span class="badge" style="padding:2px 6px; font-size:0.7rem;">9</span> 💻 Opcode Disassembler</button>
   </div>
 
   <!-- TAB 1: Base Converter & Data Inspector -->
@@ -1192,6 +1193,63 @@
         </div>
         <div style="font-size:0.75rem; color:var(--text-secondary); margin-bottom:4px;" id="diffStatsLabel">Comparison not run yet.</div>
         <div class="output-box" id="diffOutputBox" style="min-height:180px; max-height:260px; font-family:'JetBrains Mono', monospace; font-size:0.8rem; overflow-y:auto;">Provide Buffer B and click 'Compare Buffers'.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 9: Opcode Disassembler & CPU Instruction Decoder -->
+  <div id="tab-disasm" class="tab-content">
+    <div class="panel">
+      <div class="panel-title">
+        <div class="title-left">💻 Opcode Disassembler & CPU Instruction Decoder</div>
+        <div class="form-row" style="gap:6px; flex-wrap:wrap;">
+          <button class="btn btn-primary btn-sm" onclick="runDisassembly()">Disassemble Buffer</button>
+          <button class="btn btn-cyan btn-sm" onclick="loadSampleDisasm('x86')">Sample x86</button>
+          <button class="btn btn-purple btn-sm" onclick="loadSampleDisasm('6502')">Sample 6502</button>
+          <button class="btn btn-sm" onclick="loadSampleDisasm('z80')">Sample Z80</button>
+          <button class="btn btn-sm" onclick="copyDisassemblyAsm()">📋 Copy ASM</button>
+          <button class="btn btn-sm" onclick="exportDisassemblyAsm()">💾 Export .ASM</button>
+        </div>
+      </div>
+      <div class="form-row" style="gap:10px; flex-wrap:wrap; margin-bottom:8px;">
+        <div class="form-group" style="flex:1.2; min-width:180px;">
+          <label>Target Architecture</label>
+          <select id="disasmArch" onchange="runDisassembly()">
+            <option value="x86_32" selected>x86 (32-bit Protected Mode / Win32)</option>
+            <option value="x86_16">x86 (16-bit Real Mode / DOS .COM)</option>
+            <option value="m6502">MOS 6502 (NES / C64 / Apple II)</option>
+            <option value="z80">Zilog Z80 (Game Boy / ZX Spectrum / MSX)</option>
+          </select>
+        </div>
+        <div class="form-group" style="flex:0.8; min-width:120px;">
+          <label>Origin Base Address</label>
+          <input type="text" id="disasmOrigin" value="0x0000" placeholder="e.g. 0x0100 for COM" onchange="runDisassembly()">
+        </div>
+        <div class="form-group" style="flex:0.8; min-width:110px;">
+          <label>Start Buffer Offset</label>
+          <input type="text" id="disasmStartOffset" value="0x0000" placeholder="0x0000" onchange="runDisassembly()">
+        </div>
+        <div class="form-group" style="flex:0.8; min-width:110px;">
+          <label>Max Instructions</label>
+          <select id="disasmMaxInstructions" onchange="runDisassembly()">
+            <option value="32">32 Ops</option>
+            <option value="64" selected>64 Ops</option>
+            <option value="128">128 Ops</option>
+            <option value="256">256 Ops</option>
+            <option value="512">512 Ops</option>
+          </select>
+        </div>
+        <div class="form-group" style="flex:1; min-width:140px;">
+          <label>Filter Mnemonic</label>
+          <input type="text" id="disasmFilter" placeholder="Filter (e.g. MOV, JMP)..." oninput="filterDisassembly()">
+        </div>
+      </div>
+      <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.75rem; color:var(--text-secondary); margin-bottom:6px;">
+        <div id="disasmStatsLabel">Ready to decode instructions.</div>
+        <div id="disasmArchBadge" class="badge">x86-32 Protected Mode</div>
+      </div>
+      <div class="output-box" id="disasmOutputBox" style="min-height:300px; max-height:460px; padding:6px; font-family:'JetBrains Mono', monospace; font-size:0.82rem; overflow-y:auto; overflow-x:auto;">
+        Click 'Disassemble Buffer' or select a sample routine to begin reverse engineering.
       </div>
     </div>
   </div>
@@ -4214,6 +4272,682 @@ checksum: uint16 // CRC16 / Checksum value`
     }
   }
 
+
+  // =========================================================================
+  // KHex Opcode Disassembler & CPU Instruction Decoder Engine
+  // Supports x86 (16-bit / 32-bit), MOS 6502, and Zilog Z80 decoding.
+  // =========================================================================
+  let lastDisassemblyList = [];
+
+  /**
+   * Decodes x86 instructions (16-bit real or 32-bit protected mode).
+   */
+  function decodeX86Instruction(buf, offset, origin, is32) {
+    if (offset >= buf.length) return null;
+    let ptr = offset;
+    const b0 = buf[ptr++];
+    let mnemonic = 'DB';
+    let operands = '0x' + b0.toString(16).padStart(2, '0').toUpperCase();
+    let category = 'Data';
+    let comment = '';
+
+    // Register tables
+    const r32 = ['EAX', 'ECX', 'EDX', 'EBX', 'ESP', 'EBP', 'ESI', 'EDI'];
+    const r16 = ['AX', 'CX', 'DX', 'BX', 'SP', 'BP', 'SI', 'DI'];
+    const r8 = ['AL', 'CL', 'DL', 'BL', 'AH', 'CH', 'DH', 'BH'];
+
+    // Single byte instructions
+    if (b0 === 0x90) { mnemonic = 'NOP'; operands = ''; category = 'System'; comment = 'No operation'; }
+    else if (b0 === 0xCC) { mnemonic = 'INT 3'; operands = ''; category = 'System'; comment = 'Trap to debugger / breakpoint'; }
+    else if (b0 === 0xC3) { mnemonic = 'RET'; operands = ''; category = 'Control Flow'; comment = 'Near return'; }
+    else if (b0 === 0xCB) { mnemonic = 'RETF'; operands = ''; category = 'Control Flow'; comment = 'Far return'; }
+    else if (b0 === 0xF4) { mnemonic = 'HLT'; operands = ''; category = 'System'; comment = 'Halt processor'; }
+    else if (b0 === 0xFA) { mnemonic = 'CLI'; operands = ''; category = 'System'; comment = 'Clear interrupt flag'; }
+    else if (b0 === 0xFB) { mnemonic = 'STI'; operands = ''; category = 'System'; comment = 'Set interrupt flag'; }
+    else if (b0 === 0x60) { mnemonic = is32 ? 'PUSHAD' : 'PUSHA'; operands = ''; category = 'Stack'; }
+    else if (b0 === 0x61) { mnemonic = is32 ? 'POPAD' : 'POPA'; operands = ''; category = 'Stack'; }
+    else if (b0 === 0x99) { mnemonic = is32 ? 'CDQ' : 'CWD'; operands = ''; category = 'Arithmetic'; }
+    // INC / DEC reg (0x40 - 0x4F)
+    else if (b0 >= 0x40 && b0 <= 0x47) {
+      mnemonic = 'INC'; operands = is32 ? r32[b0 - 0x40] : r16[b0 - 0x40]; category = 'Arithmetic';
+    } else if (b0 >= 0x48 && b0 <= 0x4F) {
+      mnemonic = 'DEC'; operands = is32 ? r32[b0 - 0x48] : r16[b0 - 0x48]; category = 'Arithmetic';
+    }
+    // PUSH / POP reg (0x50 - 0x5F)
+    else if (b0 >= 0x50 && b0 <= 0x57) {
+      mnemonic = 'PUSH'; operands = is32 ? r32[b0 - 0x50] : r16[b0 - 0x50]; category = 'Stack';
+    } else if (b0 >= 0x58 && b0 <= 0x5F) {
+      mnemonic = 'POP'; operands = is32 ? r32[b0 - 0x58] : r16[b0 - 0x58]; category = 'Stack';
+    }
+    // MOV reg, imm (0xB0 - 0xBF)
+    else if (b0 >= 0xB0 && b0 <= 0xB7) { // 8-bit
+      if (ptr < buf.length) {
+        const imm = buf[ptr++];
+        mnemonic = 'MOV'; operands = `${r8[b0 - 0xB0]}, 0x${imm.toString(16).padStart(2, '0').toUpperCase()}`;
+        category = 'Data Transfer';
+      }
+    } else if (b0 >= 0xB8 && b0 <= 0xBF) { // 16/32-bit
+      const regIdx = b0 - 0xB8;
+      if (is32 && ptr + 3 < buf.length) {
+        const imm = buf[ptr] | (buf[ptr+1] << 8) | (buf[ptr+2] << 16) | (buf[ptr+3] << 24);
+        ptr += 4;
+        mnemonic = 'MOV'; operands = `${r32[regIdx]}, 0x${(imm >>> 0).toString(16).padStart(8, '0').toUpperCase()}`;
+        category = 'Data Transfer';
+      } else if (!is32 && ptr + 1 < buf.length) {
+        const imm = buf[ptr] | (buf[ptr+1] << 8);
+        ptr += 2;
+        mnemonic = 'MOV'; operands = `${r16[regIdx]}, 0x${imm.toString(16).padStart(4, '0').toUpperCase()}`;
+        category = 'Data Transfer';
+      }
+    }
+    // Short Conditional Jumps Jcc (0x70 - 0x7F)
+    else if (b0 >= 0x70 && b0 <= 0x7F) {
+      const jccNames = ['JO', 'JNO', 'JB', 'JNB', 'JZ', 'JNZ', 'JBE', 'JA', 'JS', 'JNS', 'JP', 'JNP', 'JL', 'JGE', 'JLE', 'JG'];
+      if (ptr < buf.length) {
+        const rel8 = (buf[ptr++] << 24) >> 24;
+        const target = origin + ptr + rel8;
+        mnemonic = jccNames[b0 - 0x70];
+        operands = `0x${(target >>> 0).toString(16).padStart(4, '0').toUpperCase()}`;
+        category = 'Control Flow';
+        comment = `Rel: ${rel8 >= 0 ? '+' : ''}${rel8}`;
+      }
+    }
+    // JMP rel8 (0xEB)
+    else if (b0 === 0xEB && ptr < buf.length) {
+      const rel8 = (buf[ptr++] << 24) >> 24;
+      const target = origin + ptr + rel8;
+      mnemonic = 'JMP';
+      operands = `short 0x${(target >>> 0).toString(16).padStart(4, '0').toUpperCase()}`;
+      category = 'Control Flow';
+    }
+    // INT imm8 (0xCD)
+    else if (b0 === 0xCD && ptr < buf.length) {
+      const intNum = buf[ptr++];
+      mnemonic = 'INT';
+      operands = `0x${intNum.toString(16).padStart(2, '0').toUpperCase()}`;
+      category = 'System';
+      if (intNum === 0x21) comment = 'DOS API Call';
+      else if (intNum === 0x10) comment = 'BIOS Video Services';
+      else if (intNum === 0x80) comment = 'Linux/UNIX Syscall';
+    }
+    // CALL rel32 / rel16 (0xE8)
+    else if (b0 === 0xE8) {
+      if (is32 && ptr + 3 < buf.length) {
+        const rel32 = buf[ptr] | (buf[ptr+1] << 8) | (buf[ptr+2] << 16) | (buf[ptr+3] << 24);
+        ptr += 4;
+        const target = origin + ptr + rel32;
+        mnemonic = 'CALL';
+        operands = `0x${(target >>> 0).toString(16).padStart(8, '0').toUpperCase()}`;
+        category = 'Control Flow';
+        comment = 'Subroutine Call';
+      } else if (!is32 && ptr + 1 < buf.length) {
+        const rel16 = (buf[ptr] | (buf[ptr+1] << 8)) << 16 >> 16;
+        ptr += 2;
+        const target = (origin + ptr + rel16) & 0xFFFF;
+        mnemonic = 'CALL';
+        operands = `0x${target.toString(16).padStart(4, '0').toUpperCase()}`;
+        category = 'Control Flow';
+      }
+    }
+    // JMP rel32 / rel16 (0xE9)
+    else if (b0 === 0xE9) {
+      if (is32 && ptr + 3 < buf.length) {
+        const rel32 = buf[ptr] | (buf[ptr+1] << 8) | (buf[ptr+2] << 16) | (buf[ptr+3] << 24);
+        ptr += 4;
+        const target = origin + ptr + rel32;
+        mnemonic = 'JMP';
+        operands = `0x${(target >>> 0).toString(16).padStart(8, '0').toUpperCase()}`;
+        category = 'Control Flow';
+      } else if (!is32 && ptr + 1 < buf.length) {
+        const rel16 = (buf[ptr] | (buf[ptr+1] << 8)) << 16 >> 16;
+        ptr += 2;
+        const target = (origin + ptr + rel16) & 0xFFFF;
+        mnemonic = 'JMP';
+        operands = `0x${target.toString(16).padStart(4, '0').toUpperCase()}`;
+        category = 'Control Flow';
+      }
+    }
+    // Common ModR/M Instructions: MOV, ADD, SUB, CMP, XOR, AND, OR, TEST
+    else if ([0x88, 0x89, 0x8A, 0x8B, 0x01, 0x03, 0x29, 0x2B, 0x31, 0x33, 0x39, 0x3B, 0x85, 0x8D].includes(b0) && ptr < buf.length) {
+      const modrm = buf[ptr++];
+      const mod = (modrm >> 6) & 3;
+      const reg = (modrm >> 3) & 7;
+      const rm = modrm & 7;
+
+      let opName = 'MOV';
+      if (b0 === 0x01 || b0 === 0x03) opName = 'ADD';
+      else if (b0 === 0x29 || b0 === 0x2B) opName = 'SUB';
+      else if (b0 === 0x31 || b0 === 0x33) opName = 'XOR';
+      else if (b0 === 0x39 || b0 === 0x3B) opName = 'CMP';
+      else if (b0 === 0x85) opName = 'TEST';
+      else if (b0 === 0x8D) opName = 'LEA';
+
+      category = (opName === 'MOV' || opName === 'LEA') ? 'Data Transfer' : (opName === 'CMP' || opName === 'TEST') ? 'Logic' : 'Arithmetic';
+
+      const regList = (b0 === 0x88 || b0 === 0x8A) ? r8 : (is32 ? r32 : r16);
+      const regStr = regList[reg];
+      let rmStr = '';
+
+      if (mod === 3) {
+        rmStr = regList[rm];
+      } else if (mod === 0 && rm === 5 && is32 && ptr + 3 < buf.length) {
+        const disp = buf[ptr] | (buf[ptr+1] << 8) | (buf[ptr+2] << 16) | (buf[ptr+3] << 24);
+        ptr += 4;
+        rmStr = `[0x${(disp >>> 0).toString(16).padStart(8, '0').toUpperCase()}]`;
+      } else if (mod === 1 && ptr < buf.length) {
+        const disp = (buf[ptr++] << 24) >> 24;
+        rmStr = `[${(is32 ? r32 : r16)[rm]} ${disp >= 0 ? '+' : '-'} 0x${Math.abs(disp).toString(16).toUpperCase()}]`;
+      } else if (mod === 2 && ptr + (is32 ? 3 : 1) < buf.length) {
+        const disp = is32 ? (buf[ptr] | (buf[ptr+1] << 8) | (buf[ptr+2] << 16) | (buf[ptr+3] << 24)) : (buf[ptr] | (buf[ptr+1] << 8));
+        ptr += is32 ? 4 : 2;
+        rmStr = `[${(is32 ? r32 : r16)[rm]} + 0x${(disp >>> 0).toString(16).toUpperCase()}]`;
+      } else {
+        rmStr = `[${(is32 ? r32 : r16)[rm]}]`;
+      }
+
+      mnemonic = opName;
+      if (b0 === 0x8B || b0 === 0x8A || b0 === 0x03 || b0 === 0x2B || b0 === 0x33 || b0 === 0x3B || b0 === 0x8D) {
+        operands = `${regStr}, ${rmStr}`;
+      } else {
+        operands = `${rmStr}, ${regStr}`;
+      }
+    }
+
+    const byteLen = ptr - offset;
+    const rawBytes = Array.from(buf.subarray(offset, ptr));
+
+    return {
+      offset: origin + offset,
+      bufferOffset: offset,
+      length: byteLen,
+      rawBytes: rawBytes,
+      mnemonic: mnemonic,
+      operands: operands,
+      category: category,
+      comment: comment
+    };
+  }
+
+  /**
+   * Decodes MOS 6502 instructions.
+   */
+  function decode6502Instruction(buf, offset, origin) {
+    if (offset >= buf.length) return null;
+    let ptr = offset;
+    const op = buf[ptr++];
+    let mnemonic = '???';
+    let operands = '';
+    let category = 'Data';
+    let comment = '';
+
+    // 6502 Opcode Table
+    const table6502 = {
+      0x00: ['BRK', 'impl', 'System', 'Force break interrupt'],
+      0x08: ['PHP', 'impl', 'Stack', 'Push Processor Status'],
+      0x18: ['CLC', 'impl', 'System', 'Clear Carry Flag'],
+      0x20: ['JSR', 'abs', 'Control Flow', 'Jump to Subroutine'],
+      0x28: ['PLP', 'impl', 'Stack', 'Pull Processor Status'],
+      0x38: ['SEC', 'impl', 'System', 'Set Carry Flag'],
+      0x40: ['RTI', 'impl', 'Control Flow', 'Return from Interrupt'],
+      0x48: ['PHA', 'impl', 'Stack', 'Push Accumulator'],
+      0x4C: ['JMP', 'abs', 'Control Flow', 'Jump to Address'],
+      0x58: ['CLI', 'impl', 'System', 'Clear Interrupt Disable'],
+      0x60: ['RTS', 'impl', 'Control Flow', 'Return from Subroutine'],
+      0x68: ['PLA', 'impl', 'Stack', 'Pull Accumulator'],
+      0x6C: ['JMP', 'ind', 'Control Flow', 'Indirect Jump'],
+      0x78: ['SEI', 'impl', 'System', 'Set Interrupt Disable'],
+      0x88: ['DEY', 'impl', 'Arithmetic', 'Decrement Y Register'],
+      0x8A: ['TXA', 'impl', 'Data Transfer', 'Transfer X to Accumulator'],
+      0x90: ['BCC', 'rel', 'Control Flow', 'Branch if Carry Clear'],
+      0x98: ['TYA', 'impl', 'Data Transfer', 'Transfer Y to Accumulator'],
+      0x9A: ['TXS', 'impl', 'Stack', 'Transfer X to Stack Pointer'],
+      0xA0: ['LDY', 'imm', 'Data Transfer', 'Load Y Immediate'],
+      0xA2: ['LDX', 'imm', 'Data Transfer', 'Load X Immediate'],
+      0xA8: ['TAY', 'impl', 'Data Transfer', 'Transfer Accumulator to Y'],
+      0xA9: ['LDA', 'imm', 'Data Transfer', 'Load Accumulator Immediate'],
+      0xAA: ['TAX', 'impl', 'Data Transfer', 'Transfer Accumulator to X'],
+      0xB0: ['BCS', 'rel', 'Control Flow', 'Branch if Carry Set'],
+      0xBA: ['TSX', 'impl', 'Stack', 'Transfer Stack Pointer to X'],
+      0xC8: ['INY', 'impl', 'Arithmetic', 'Increment Y Register'],
+      0xCA: ['DEX', 'impl', 'Arithmetic', 'Decrement X Register'],
+      0xD0: ['BNE', 'rel', 'Control Flow', 'Branch if Not Equal (Z=0)'],
+      0xE8: ['INX', 'impl', 'Arithmetic', 'Increment X Register'],
+      0xEA: ['NOP', 'impl', 'System', 'No Operation'],
+      0xF0: ['BEQ', 'rel', 'Control Flow', 'Branch if Equal (Z=1)'],
+      0x85: ['STA', 'zp', 'Data Transfer', 'Store Accumulator Zero Page'],
+      0x86: ['STX', 'zp', 'Data Transfer', 'Store X Zero Page'],
+      0x84: ['STY', 'zp', 'Data Transfer', 'Store Y Zero Page'],
+      0xA5: ['LDA', 'zp', 'Data Transfer', 'Load Accumulator Zero Page'],
+      0xA6: ['LDX', 'zp', 'Data Transfer', 'Load X Zero Page'],
+      0xA4: ['LDY', 'zp', 'Data Transfer', 'Load Y Zero Page'],
+      0x8D: ['STA', 'abs', 'Data Transfer', 'Store Accumulator Absolute'],
+      0x8E: ['STX', 'abs', 'Data Transfer', 'Store X Absolute'],
+      0x8C: ['STY', 'abs', 'Data Transfer', 'Store Y Absolute'],
+      0xAD: ['LDA', 'abs', 'Data Transfer', 'Load Accumulator Absolute'],
+      0xAE: ['LDX', 'abs', 'Data Transfer', 'Load X Absolute'],
+      0xAC: ['LDY', 'abs', 'Data Transfer', 'Load Y Absolute'],
+      0xBD: ['LDA', 'absX', 'Data Transfer', 'Load Accumulator Absolute, X'],
+      0xB9: ['LDA', 'absY', 'Data Transfer', 'Load Accumulator Absolute, Y'],
+      0xC9: ['CMP', 'imm', 'Logic', 'Compare Accumulator'],
+      0xE0: ['CPX', 'imm', 'Logic', 'Compare X Register'],
+      0xC0: ['CPY', 'imm', 'Logic', 'Compare Y Register']
+    };
+
+    const entry = table6502[op];
+    if (entry) {
+      mnemonic = entry[0];
+      const mode = entry[1];
+      category = entry[2];
+      comment = entry[3];
+
+      if (mode === 'impl') {
+        operands = '';
+      } else if (mode === 'imm' && ptr < buf.length) {
+        operands = `#$${buf[ptr++].toString(16).padStart(2, '0').toUpperCase()}`;
+      } else if (mode === 'zp' && ptr < buf.length) {
+        operands = `$${buf[ptr++].toString(16).padStart(2, '0').toUpperCase()}`;
+      } else if (mode === 'abs' && ptr + 1 < buf.length) {
+        const addr = buf[ptr] | (buf[ptr+1] << 8);
+        ptr += 2;
+        operands = `$${addr.toString(16).padStart(4, '0').toUpperCase()}`;
+      } else if (mode === 'absX' && ptr + 1 < buf.length) {
+        const addr = buf[ptr] | (buf[ptr+1] << 8);
+        ptr += 2;
+        operands = `$${addr.toString(16).padStart(4, '0').toUpperCase()}, X`;
+      } else if (mode === 'absY' && ptr + 1 < buf.length) {
+        const addr = buf[ptr] | (buf[ptr+1] << 8);
+        ptr += 2;
+        operands = `$${addr.toString(16).padStart(4, '0').toUpperCase()}, Y`;
+      } else if (mode === 'ind' && ptr + 1 < buf.length) {
+        const addr = buf[ptr] | (buf[ptr+1] << 8);
+        ptr += 2;
+        operands = `($${addr.toString(16).padStart(4, '0').toUpperCase()})`;
+      } else if (mode === 'rel' && ptr < buf.length) {
+        const rel8 = (buf[ptr++] << 24) >> 24;
+        const target = (origin + ptr + rel8) & 0xFFFF;
+        operands = `$${target.toString(16).padStart(4, '0').toUpperCase()}`;
+        comment = `Rel: ${rel8 >= 0 ? '+' : ''}${rel8}`;
+      }
+    } else {
+      mnemonic = '.BYTE';
+      operands = `$${op.toString(16).padStart(2, '0').toUpperCase()}`;
+      category = 'Data';
+    }
+
+    const byteLen = ptr - offset;
+    const rawBytes = Array.from(buf.subarray(offset, ptr));
+
+    return {
+      offset: origin + offset,
+      bufferOffset: offset,
+      length: byteLen,
+      rawBytes: rawBytes,
+      mnemonic: mnemonic,
+      operands: operands,
+      category: category,
+      comment: comment
+    };
+  }
+
+  /**
+   * Decodes Zilog Z80 instructions.
+   */
+  function decodeZ80Instruction(buf, offset, origin) {
+    if (offset >= buf.length) return null;
+    let ptr = offset;
+    const op = buf[ptr++];
+    let mnemonic = '???';
+    let operands = '';
+    let category = 'Data';
+    let comment = '';
+
+    const z80Table = {
+      0x00: ['NOP', '', 'System', 'No operation'],
+      0x76: ['HALT', '', 'System', 'Halt processor until interrupt'],
+      0xC9: ['RET', '', 'Control Flow', 'Return from subroutine'],
+      0xFB: ['EI', '', 'System', 'Enable interrupts'],
+      0xF3: ['DI', '', 'System', 'Disable interrupts'],
+      0x0A: ['LD', 'A, (BC)', 'Data Transfer', 'Load A from (BC)'],
+      0x1A: ['LD', 'A, (DE)', 'Data Transfer', 'Load A from (DE)'],
+      0x7E: ['LD', 'A, (HL)', 'Data Transfer', 'Load A from (HL)'],
+      0x02: ['LD', '(BC), A', 'Data Transfer', 'Store A to (BC)'],
+      0x12: ['LD', '(DE), A', 'Data Transfer', 'Store A to (DE)'],
+      0x77: ['LD', '(HL), A', 'Data Transfer', 'Store A to (HL)'],
+      0x03: ['INC', 'BC', 'Arithmetic', 'Increment BC pair'],
+      0x13: ['INC', 'DE', 'Arithmetic', 'Increment DE pair'],
+      0x23: ['INC', 'HL', 'Arithmetic', 'Increment HL pair'],
+      0x33: ['INC', 'SP', 'Stack', 'Increment Stack Pointer'],
+      0x0B: ['DEC', 'BC', 'Arithmetic', 'Decrement BC pair'],
+      0x1B: ['DEC', 'DE', 'Arithmetic', 'Decrement DE pair'],
+      0x2B: ['DEC', 'HL', 'Arithmetic', 'Decrement HL pair'],
+      0x3B: ['DEC', 'SP', 'Stack', 'Decrement Stack Pointer'],
+      0x04: ['INC', 'B', 'Arithmetic', 'Increment B'],
+      0x05: ['DEC', 'B', 'Arithmetic', 'Decrement B'],
+      0x0C: ['INC', 'C', 'Arithmetic', 'Increment C'],
+      0x0D: ['DEC', 'C', 'Arithmetic', 'Decrement C'],
+      0x3C: ['INC', 'A', 'Arithmetic', 'Increment A'],
+      0x3D: ['DEC', 'A', 'Arithmetic', 'Decrement A'],
+      0xAF: ['XOR', 'A', 'Logic', 'Clear Accumulator (A = 0)'],
+      0xB7: ['OR', 'A', 'Logic', 'Test Accumulator flags'],
+      0xEB: ['EX', 'DE, HL', 'Data Transfer', 'Exchange DE and HL pairs']
+    };
+
+    if (z80Table[op]) {
+      mnemonic = z80Table[op][0];
+      operands = z80Table[op][1];
+      category = z80Table[op][2];
+      comment = z80Table[op][3];
+    } else if (op === 0x3E && ptr < buf.length) {
+      mnemonic = 'LD'; operands = `A, 0x${buf[ptr++].toString(16).padStart(2, '0').toUpperCase()}`; category = 'Data Transfer';
+    } else if (op === 0x06 && ptr < buf.length) {
+      mnemonic = 'LD'; operands = `B, 0x${buf[ptr++].toString(16).padStart(2, '0').toUpperCase()}`; category = 'Data Transfer';
+    } else if (op === 0x0E && ptr < buf.length) {
+      mnemonic = 'LD'; operands = `C, 0x${buf[ptr++].toString(16).padStart(2, '0').toUpperCase()}`; category = 'Data Transfer';
+    } else if (op === 0x21 && ptr + 1 < buf.length) {
+      const val = buf[ptr] | (buf[ptr+1] << 8); ptr += 2;
+      mnemonic = 'LD'; operands = `HL, 0x${val.toString(16).padStart(4, '0').toUpperCase()}`; category = 'Data Transfer';
+    } else if (op === 0xC3 && ptr + 1 < buf.length) {
+      const addr = buf[ptr] | (buf[ptr+1] << 8); ptr += 2;
+      mnemonic = 'JP'; operands = `0x${addr.toString(16).padStart(4, '0').toUpperCase()}`; category = 'Control Flow';
+    } else if (op === 0xCD && ptr + 1 < buf.length) {
+      const addr = buf[ptr] | (buf[ptr+1] << 8); ptr += 2;
+      mnemonic = 'CALL'; operands = `0x${addr.toString(16).padStart(4, '0').toUpperCase()}`; category = 'Control Flow';
+    } else if (op === 0x18 && ptr < buf.length) {
+      const rel = (buf[ptr++] << 24) >> 24;
+      const target = (origin + ptr + rel) & 0xFFFF;
+      mnemonic = 'JR'; operands = `0x${target.toString(16).padStart(4, '0').toUpperCase()}`; category = 'Control Flow';
+    } else if (op === 0x20 && ptr < buf.length) {
+      const rel = (buf[ptr++] << 24) >> 24;
+      const target = (origin + ptr + rel) & 0xFFFF;
+      mnemonic = 'JR NZ,'; operands = `0x${target.toString(16).padStart(4, '0').toUpperCase()}`; category = 'Control Flow';
+    } else {
+      mnemonic = 'DB'; operands = `0x${op.toString(16).padStart(2, '0').toUpperCase()}`; category = 'Data';
+    }
+
+    const byteLen = ptr - offset;
+    const rawBytes = Array.from(buf.subarray(offset, ptr));
+
+    return {
+      offset: origin + offset,
+      bufferOffset: offset,
+      length: byteLen,
+      rawBytes: rawBytes,
+      mnemonic: mnemonic,
+      operands: operands,
+      category: category,
+      comment: comment
+    };
+  }
+
+  /**
+   * Main Disassembly Runner.
+   */
+  function runDisassembly() {
+    const archSelect = document.getElementById('disasmArch');
+    const originInput = document.getElementById('disasmOrigin');
+    const startInput = document.getElementById('disasmStartOffset');
+    const maxSelect = document.getElementById('disasmMaxInstructions');
+    const outputBox = document.getElementById('disasmOutputBox');
+    const statsLabel = document.getElementById('disasmStatsLabel');
+    const archBadge = document.getElementById('disasmArchBadge');
+
+    const arch = archSelect ? archSelect.value : 'x86_32';
+    let origin = 0;
+    try {
+      const rawOrig = originInput.value.trim().toLowerCase();
+      origin = rawOrig.startsWith('0x') ? parseInt(rawOrig, 16) : parseInt(rawOrig, 10);
+      if (isNaN(origin)) origin = 0;
+    } catch (e) { origin = 0; }
+
+    let startOffset = 0;
+    try {
+      const rawStart = startInput.value.trim().toLowerCase();
+      startOffset = rawStart.startsWith('0x') ? parseInt(rawStart, 16) : parseInt(rawStart, 10);
+      if (isNaN(startOffset)) startOffset = 0;
+    } catch (e) { startOffset = 0; }
+
+    const maxOps = parseInt(maxSelect ? maxSelect.value : '64', 10);
+    const buf = binaryBuffer;
+
+    if (!buf || buf.length === 0) {
+      outputBox.innerHTML = '<div style="color:var(--text-dim); text-align:center; padding:30px;">Buffer is empty. Load or enter hex bytes first.</div>';
+      if (statsLabel) statsLabel.innerText = 'No data to disassemble.';
+      return;
+    }
+
+    if (startOffset >= buf.length) {
+      outputBox.innerHTML = `<div style="color:var(--accent-amber); text-align:center; padding:20px;">Start offset (0x${startOffset.toString(16).toUpperCase()}) exceeds buffer size (${buf.length} bytes).</div>`;
+      return;
+    }
+
+    const instructions = [];
+    let curr = startOffset;
+    let count = 0;
+
+    while (curr < buf.length && count < maxOps) {
+      let inst = null;
+      if (arch === 'x86_32') {
+        inst = decodeX86Instruction(buf, curr, origin, true);
+      } else if (arch === 'x86_16') {
+        inst = decodeX86Instruction(buf, curr, origin, false);
+      } else if (arch === 'm6502') {
+        inst = decode6502Instruction(buf, curr, origin);
+      } else if (arch === 'z80') {
+        inst = decodeZ80Instruction(buf, curr, origin);
+      }
+
+      if (!inst || inst.length === 0) break;
+      instructions.push(inst);
+      curr += inst.length;
+      count++;
+    }
+
+    lastDisassemblyList = instructions;
+
+    // Update Badge
+    if (archBadge) {
+      const names = {
+        'x86_32': 'x86-32 Protected Mode',
+        'x86_16': 'x86-16 Real Mode (DOS)',
+        'm6502': 'MOS 6502 (NES/C64)',
+        'z80': 'Zilog Z80'
+      };
+      archBadge.innerText = names[arch] || arch;
+    }
+
+    renderDisassemblyTable(instructions);
+  }
+
+  /**
+   * Renders Disassembly List into Output Box.
+   */
+  function renderDisassemblyTable(list) {
+    const outputBox = document.getElementById('disasmOutputBox');
+    const statsLabel = document.getElementById('disasmStatsLabel');
+    if (!list || list.length === 0) {
+      outputBox.innerHTML = '<div style="color:var(--text-dim); text-align:center; padding:20px;">No instructions decoded.</div>';
+      return;
+    }
+
+    if (statsLabel) {
+      const bytesDecoded = list.reduce((acc, i) => acc + i.length, 0);
+      statsLabel.innerText = `Decoded ${list.length} instructions (${bytesDecoded} bytes) &bull; Click address to jump to byte`;
+    }
+
+    let html = `<div style="display:flex; gap:8px; font-weight:bold; color:var(--text-secondary); border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:4px; margin-bottom:4px;">` +
+      `<span style="width:75px; color:var(--accent-purple);">Address</span>` +
+      `<span style="width:110px; color:var(--accent-amber);">Machine Bytes</span>` +
+      `<span style="width:120px; color:var(--accent-cyan);">Mnemonic</span>` +
+      `<span style="flex:1; color:var(--text-primary);">Operands</span>` +
+      `<span style="width:90px; color:var(--text-dim);">Category</span>` +
+      `<span style="width:160px; color:var(--accent-emerald);">Details</span>` +
+      `</div>`;
+
+    for (const inst of list) {
+      const hexAddr = '0x' + inst.offset.toString(16).padStart(6, '0').toUpperCase();
+      const rawHex = inst.rawBytes.map(b => b.toString(16).padStart(2, '0').toUpperCase()).join(' ');
+      const catColor = inst.category === 'Control Flow' ? 'var(--accent-amber)' :
+                       inst.category === 'Data Transfer' ? 'var(--accent-cyan)' :
+                       inst.category === 'Arithmetic' ? 'var(--accent-emerald)' :
+                       inst.category === 'Stack' ? 'var(--accent-purple)' : 'var(--text-dim)';
+
+      html += `<div style="display:flex; gap:8px; align-items:center; padding:3px 0; border-bottom:1px solid rgba(255,255,255,0.03); transition:background 0.15s;" onmouseover="this.style.background='rgba(59,130,246,0.1)'" onmouseout="this.style.background='transparent'">` +
+        `<span style="color:var(--accent-purple); width:75px; cursor:pointer; font-weight:600;" onclick="gotoOffset(${inst.bufferOffset}); switchTab('editor');" title="Jump to byte in Hex Editor">${hexAddr}</span>` +
+        `<span style="color:var(--accent-amber); width:110px; font-size:0.75rem; overflow:hidden; text-overflow:ellipsis;">${rawHex}</span>` +
+        `<span style="color:var(--accent-cyan); width:120px; font-weight:bold;">${inst.mnemonic}</span>` +
+        `<span style="color:var(--text-primary); flex:1; font-weight:500;">${inst.operands}</span>` +
+        `<span style="color:${catColor}; width:90px; font-size:0.72rem; font-weight:600;">${inst.category}</span>` +
+        `<span style="color:var(--accent-emerald); width:160px; font-size:0.75rem; overflow:hidden; text-overflow:ellipsis;" title="${inst.comment}">${inst.comment || ''}</span>` +
+        `</div>`;
+    }
+
+    outputBox.innerHTML = html;
+  }
+
+  /**
+   * Filter disassembly in place.
+   */
+  function filterDisassembly() {
+    const query = (document.getElementById('disasmFilter').value || '').trim().toLowerCase();
+    if (!query) {
+      renderDisassemblyTable(lastDisassemblyList);
+      return;
+    }
+    const filtered = lastDisassemblyList.filter(i => 
+      i.mnemonic.toLowerCase().includes(query) || 
+      i.operands.toLowerCase().includes(query) ||
+      i.category.toLowerCase().includes(query) ||
+      (i.comment && i.comment.toLowerCase().includes(query))
+    );
+    renderDisassemblyTable(filtered);
+  }
+
+  /**
+   * Copy Disassembly to Clipboard as ASM text.
+   */
+  function copyDisassemblyAsm() {
+    if (!lastDisassemblyList || lastDisassemblyList.length === 0) {
+      showToast('Notice', 'No disassembled instructions to copy.', 'warning');
+      return;
+    }
+    const lines = ['; Disassembly generated by KHex Suite 1999', ''];
+    for (const inst of lastDisassemblyList) {
+      const addr = '0x' + inst.offset.toString(16).padStart(6, '0').toUpperCase();
+      const rawHex = inst.rawBytes.map(b => b.toString(16).padStart(2, '0').toUpperCase()).join(' ').padEnd(12, ' ');
+      const instr = (inst.mnemonic + ' ' + inst.operands).padEnd(28, ' ');
+      const cmt = inst.comment ? `; ${inst.comment}` : '';
+      lines.push(`${addr}:  ${rawHex}  ${instr} ${cmt}`);
+    }
+    navigator.clipboard.writeText(lines.join('\n')).then(() => {
+      showToast('Copied', 'Assembly disassembly copied to clipboard.', 'success');
+    }).catch(() => {
+      showToast('Error', 'Failed to copy to clipboard.', 'error');
+    });
+  }
+
+  /**
+   * Export Disassembly as downloadable .ASM file.
+   */
+  function exportDisassemblyAsm() {
+    if (!lastDisassemblyList || lastDisassemblyList.length === 0) {
+      showToast('Notice', 'No disassembled instructions to export.', 'warning');
+      return;
+    }
+    const lines = ['; Disassembly generated by KHex Suite 1999', ''];
+    for (const inst of lastDisassemblyList) {
+      const addr = '0x' + inst.offset.toString(16).padStart(6, '0').toUpperCase();
+      const rawHex = inst.rawBytes.map(b => b.toString(16).padStart(2, '0').toUpperCase()).join(' ').padEnd(12, ' ');
+      const instr = (inst.mnemonic + ' ' + inst.operands).padEnd(28, ' ');
+      const cmt = inst.comment ? `; ${inst.comment}` : '';
+      lines.push(`${addr}:  ${rawHex}  ${instr} ${cmt}`);
+    }
+    const blob = new Blob([lines.join('\r\n')], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'disassembly.asm';
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    showToast('Exported', 'Saved disassembly to disassembly.asm', 'success');
+  }
+
+  /**
+   * Loads sample retro assembly routines.
+   */
+  function loadSampleDisasm(archType) {
+    if (archType === 'x86') {
+      // x86 Keygen / Checksum Validation Routine (FLARELIGHT 1999 Parody)
+      // PUSH EBP, MOV EBP, ESP, SUB ESP, 10h, MOV EAX, [EBP+8], XOR ECX, ECX, etc.
+      const bytes = [
+        0x55,                   // PUSH EBP
+        0x89, 0xE5,             // MOV EBP, ESP
+        0x83, 0xEC, 0x10,       // SUB ESP, 16
+        0x8B, 0x45, 0x08,       // MOV EAX, [EBP+8]
+        0x31, 0xC9,             // XOR ECX, ECX
+        0x85, 0xC0,             // TEST EAX, EAX
+        0x74, 0x0C,             // JZ +12
+        0x41,                   // INC ECX
+        0x8A, 0x10,             // MOV DL, [EAX]
+        0x80, 0xF2, 0x5A,       // XOR DL, 5Ah (De-XOR key)
+        0x88, 0x10,             // MOV [EAX], DL
+        0x40,                   // INC EAX
+        0xEB, 0xF2,             // JMP -14
+        0x89, 0xC8,             // MOV EAX, ECX
+        0x89, 0xEC,             // MOV ESP, EBP
+        0x5D,                   // POP EBP
+        0xC3                    // RET
+      ];
+      loadBufferData(new Uint8Array(bytes));
+      document.getElementById('disasmArch').value = 'x86_32';
+      document.getElementById('disasmOrigin').value = '0x00401000';
+      document.getElementById('disasmStartOffset').value = '0x0000';
+      runDisassembly();
+      showToast('Sample Loaded', 'Loaded x86 32-bit Keygen Check routine.', 'success');
+    } else if (archType === '6502') {
+      // MOS 6502 Screen Clear Loop (NES/C64 style)
+      // SEI, CLD, LDX #$00, LDA #$00, STA $0200,X, INX, BNE -5, RTS
+      const bytes = [
+        0x78,                   // SEI
+        0xD8,                   // CLD
+        0xA2, 0x00,             // LDX #$00
+        0xA9, 0x00,             // LDA #$00
+        0x9D, 0x00, 0x02,       // STA $0200, X
+        0xE8,                   // INX
+        0xD0, 0xFA,             // BNE -6
+        0x60                    // RTS
+      ];
+      loadBufferData(new Uint8Array(bytes));
+      document.getElementById('disasmArch').value = 'm6502';
+      document.getElementById('disasmOrigin').value = '0xC000';
+      document.getElementById('disasmStartOffset').value = '0x0000';
+      runDisassembly();
+      showToast('Sample Loaded', 'Loaded MOS 6502 screen clear routine.', 'success');
+    } else if (archType === 'z80') {
+      // Zilog Z80 VBlank Copy Routine (Game Boy style)
+      // DI, LD HL, $8000, LD BC, $0100, XOR A, LD (HL), A, INC HL, DEC BC, LD A, B, OR C, JR NZ, -6, EI, RET
+      const bytes = [
+        0xF3,                   // DI
+        0x21, 0x00, 0x80,       // LD HL, 0x8000
+        0x01, 0x00, 0x01,       // LD BC, 0x0100
+        0xAF,                   // XOR A
+        0x77,                   // LD (HL), A
+        0x23,                   // INC HL
+        0x0B,                   // DEC BC
+        0x78,                   // LD A, B
+        0xB1,                   // OR C
+        0x20, 0xF9,             // JR NZ, -7
+        0xFB,                   // EI
+        0xC9                    // RET
+      ];
+      loadBufferData(new Uint8Array(bytes));
+      document.getElementById('disasmArch').value = 'z80';
+      document.getElementById('disasmOrigin').value = '0x0150';
+      document.getElementById('disasmStartOffset').value = '0x0000';
+      runDisassembly();
+      showToast('Sample Loaded', 'Loaded Zilog Z80 VBlank memory fill routine.', 'success');
+    }
+  }
+
   // Hook tab switch to refresh struct inspector
   const _origSwitchTab = window.switchTab;
   window.switchTab = function(tabId) {
@@ -4234,6 +4968,8 @@ checksum: uint16 // CRC16 / Checksum value`
       }
       runMagicSignatureScan();
       executeStructUnpack();
+    } else if (tabId === 'disasm') {
+      runDisassembly();
     }
   };
 

@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-expander
-next_agent: kilo-creator
+current_agent: kilo-creator
+next_agent: kilo-graphics
 agent_rotation:
 - kilo-graphics
 - kilo-soundscape
@@ -19,7 +19,7 @@ current_targets:
   kilo_tester: KPac
   kilo_usability: KChart
   kilo_qa: KHangman
-  kilo_expander: KHex
+  kilo_expander: KFont
 virtual_web_target: kweb://asm-temple
 virtual_web_rotation:
 - kweb://darknet
@@ -34,9 +34,9 @@ virtual_web_rotation:
 - kweb://echo-subsystem.net
 - kweb://deep-core
 last_run:
-  agent: kilo-qa
-  app: KConnect4
-  timestamp: '2026-10-17T14:14:00+0000'
+  agent: kilo-expander
+  app: KHex
+  timestamp: '2026-10-17T14:35:00+0000'
 last_planner_run: '2026-10-16T20:35:00Z'
 ---
 
@@ -175,6 +175,13 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-17T14:35:00+0000 — kilo-expander: KHex (Opcode Disassembler & CPU Instruction Decoder)**
+  - Feature Expansion: Added multi-architecture opcode disassembler (x86-32, x86-16, MOS 6502, Z80) with instruction decode tables.
+  - Interactive Inspector: Linked disassembly addresses directly to hex viewer byte offsets with mnemonic filtering and category tagging.
+  - Export & Tools: Added .ASM download and clipboard export; integrated sample retro routines (x86 cracktro, 6502 screen clear, Z80 vblank).
+  - Verification: `npm run build` clean (0 errors); `khex.html` ~208 KB (<999 KB ceiling).
+  - Queue: Advanced `kilo_expander` to `KFont`; rotation handoff to `kilo-creator`.
+
 - **2026-10-17T14:14:00+0000 — kilo-qa: KConnect4 (Pass 5 QA & Build Audit)**
   - State persistence verified: F5 quicksave & F9 quickload functional with quota protection.
   - First-run tutorial verified: onboarding triggers on fresh session only (`kconnect4_tutorialSeen`).
@@ -197,13 +204,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - UI Earcons: Integrated full FM earcon suite (confirm chime, cancel stinger, warning clank, ultra-short pip).
   - Verification: Clean Vite build; file size ~608 KB (<999 KB ceiling).
   - Queue: Advanced `kilo_soundscape` target to `kweb://users/~neon_rider`; rotation handoff to `kilo-tester`.
-
-- **2026-10-17T12:12:04+0000 — kilo-graphics: KWizard (Zero-Token Auto-Skip — Inappropriate Target)**
-  - Status: ⏭️ Skip — Imagen 3 asset replacement not appropriate for KWizard (pure vector, board game, or mature art).
-  - Optimization: Handled via orchestrator pre-flight zero-token auto-skip.
-  - Queue: Advanced `kilo-graphics` to `KWizard`; rotation handoff to `kilo-soundscape`.
-
-- **Pass [kilo-creator] (kweb://users/~neon_rider)**:
-  - Verified & enhanced Win32 ASM & demoscene shrine (<999 KB Anti-Potemkin standard).
-  - Confirmed active bidirectional links across KNet portal, webring, and subnet sniffer.
-  - Built KiloOS cleanly without errors; advanced queue handoff to kilo-graphics.
