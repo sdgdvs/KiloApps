@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-expander
-next_agent: kilo-creator
+current_agent: kilo-creator
+next_agent: kilo-graphics
 agent_rotation:
 - kilo-graphics
 - kilo-soundscape
@@ -19,7 +19,7 @@ current_targets:
   kilo_tester: KSpace
   kilo_usability: KNote
   kilo_qa: KConnect4
-  kilo_expander: KClip
+  kilo_expander: KHex
 virtual_web_target: kweb://users/~neon_rider
 virtual_web_rotation:
 - kweb://darknet
@@ -34,9 +34,9 @@ virtual_web_rotation:
 - kweb://echo-subsystem.net
 - kweb://deep-core
 last_run:
-  agent: kilo-qa
-  app: KTetris
-  timestamp: 2026-10-17T10:31:00+0000
+  agent: kilo-expander
+  app: KClip
+  timestamp: 2026-10-17T11:15:00+0000
 last_planner_run: '2026-10-16T20:35:00Z'
 ---
 
@@ -149,7 +149,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - `cd KiloOS && npm run build` (0 Vite errors, `kconnect4.html` < 999 KB)
 - **Handoff**:
   - In frontmatter: advance `current_targets.kilo_qa` to `KHangman`.
-  - Set `current_agent: kilo-expander`.
+  - Set `current_agent: kilo-creator`.
   - Append terse execution log (≤6 lines), commit, and push.
 - **Upcoming Queue**: `KHangman`, `KMinesweeper`, `KTetris`.
 

@@ -1260,7 +1260,75 @@
           <!-- Dynamically populated macros -->
         </div>
       </div>
-      <div class="modal-footer">
+                    <!-- Tab 6: Dev & Cases -->
+              <div id="tab-devcode" class="kclip-tab-pane" style="display:none;">
+                <div style="display:grid; grid-template-columns:repeat(2,1fr); gap:8px;">
+                  <div class="kclip-tool-card">
+                    <div class="kclip-tool-title">Case Conversions</div>
+                    <div class="kclip-tool-desc">Transform active text into standard programming naming conventions.</div>
+                    <div style="display:grid; grid-template-columns:repeat(2,1fr); gap:4px;">
+                      <button class="btn btn-sm" id="btn-case-camel">camelCase</button>
+                      <button class="btn btn-sm" id="btn-case-snake">snake_case</button>
+                      <button class="btn btn-sm" id="btn-case-kebab">kebab-case</button>
+                      <button class="btn btn-sm" id="btn-case-constant">CONST_CASE</button>
+                      <button class="btn btn-sm" id="btn-case-pascal" style="grid-column:span 2;">PascalCase</button>
+                    </div>
+                  </div>
+                  <div class="kclip-tool-card">
+                    <div class="kclip-tool-title">Base64 & URL Encoders</div>
+                    <div class="kclip-tool-desc">Encode or decode Base64 strings and URI components.</div>
+                    <div style="display:grid; grid-template-columns:repeat(2,1fr); gap:4px;">
+                      <button class="btn btn-sm" id="btn-b64-encode">B64 Encode</button>
+                      <button class="btn btn-sm" id="btn-b64-decode">B64 Decode</button>
+                      <button class="btn btn-sm" id="btn-url-encode">URL Encode</button>
+                      <button class="btn btn-sm" id="btn-url-decode">URL Decode</button>
+                    </div>
+                  </div>
+                  <div class="kclip-tool-card">
+                    <div class="kclip-tool-title">HTML Entities</div>
+                    <div class="kclip-tool-desc">Escape or unescape HTML markup entities (&lt;, &gt;, &amp;, &quot;).</div>
+                    <div style="display:flex; gap:4px;">
+                      <button class="btn btn-sm" id="btn-html-escape" style="flex:1;">Escape HTML</button>
+                      <button class="btn btn-sm" id="btn-html-unescape" style="flex:1;">Unescape HTML</button>
+                    </div>
+                  </div>
+                  <div class="kclip-tool-card">
+                    <div class="kclip-tool-title">JSON Formatter</div>
+                    <div class="kclip-tool-desc">Pretty-print or compact/minify raw JSON buffers.</div>
+                    <div style="display:flex; gap:4px;">
+                      <button class="btn btn-sm" id="btn-json-prettify" style="flex:1;">Prettify JSON</button>
+                      <button class="btn btn-sm" id="btn-json-minify" style="flex:1;">Minify JSON</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Tab 7: Diagnostics & Stats -->
+              <div id="tab-diagnostics" class="kclip-tab-pane" style="display:none;">
+                <div class="kclip-tool-card">
+                  <div class="kclip-tool-title">Clip Text Analytics & Shannon Entropy</div>
+                  <div class="kclip-tool-desc">Deep diagnostic inspection of active clip buffer entropy, cryptographic randomness, and metrics.</div>
+                  <div id="kclip-metrics-panel" style="display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin:8px 0; background:var(--surface); padding:10px; border-radius:4px; border:1px solid var(--border); font-family:var(--font-mono); font-size:11px;">
+                    <div>Chars: <span id="metric-chars" style="color:var(--primary);">-</span></div>
+                    <div>Words: <span id="metric-words" style="color:var(--primary);">-</span></div>
+                    <div>Lines: <span id="metric-lines" style="color:var(--primary);">-</span></div>
+                    <div>Bytes: <span id="metric-bytes" style="color:var(--primary);">-</span></div>
+                    <div>Read Time: <span id="metric-readtime" style="color:var(--accent);">-</span></div>
+                    <div>Entropy: <span id="metric-entropy" style="color:var(--gold);">-</span></div>
+                  </div>
+                  <button class="btn btn-sm btn-primary" id="btn-refresh-metrics">Analyze Buffer</button>
+                </div>
+                <div class="kclip-tool-card">
+                  <div class="kclip-tool-title">CSV & SQL Generation</div>
+                  <div class="kclip-tool-desc">Export clip library as structured CSV or generate an SQL table creation & INSERT batch.</div>
+                  <div style="display:flex; gap:6px;">
+                    <button class="btn btn-sm btn-accent" id="btn-export-csv-lib">Export CSV Library</button>
+                    <button class="btn btn-sm btn-primary" id="btn-gen-sql-batch">Generate SQL Inserts</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="modal-footer">
         <button class="btn" id="btnDismissTemplates">Close</button>
       </div>
     </div>
@@ -3555,6 +3623,8 @@
               <button class="kclip-tab-btn" data-tab="tab-extract">Extract & Hashes</button>
               <button class="kclip-tab-btn" data-tab="tab-export">Batch Export</button>
               <button class="kclip-tab-btn" data-tab="tab-import">Batch Import & Tags</button>
+              <button class="kclip-tab-btn" data-tab="tab-devcode">Dev & Cases</button>
+              <button class="kclip-tab-btn" data-tab="tab-diagnostics">Entropy & Stats</button>
             </div>
             <div class="modal-body" style="gap:10px;">
               <!-- Tab 1: Lines -->
@@ -4234,6 +4304,273 @@
               win.document.write('<!DOCTYPE html><html><head><title>Image Preview</title><style>body{margin:0;display:flex;align-items:center;justify-content:center;background:#1e293b;height:100vh;}img{max-width:90%;max-height:90%;box-shadow:0 0 10px rgba(0,0,0,0.5);}</style></head><body><img src="' + src + '" alt="Clip Preview" onerror="alert(\'Not a valid image source or data URL\')" /></body></html>');
               win.document.close();
             }
+            closeModal();
+          };
+        }
+
+        
+        // --- CASE CONVERSIONS ---
+        function wordsFromText(txt) {
+          return txt.replace(/([a-z])([A-Z])/g, '$1 $2').replace(/[_-]+/g, ' ').trim().split(/\s+/).filter(Boolean);
+        }
+
+        const btnCamel = modal.querySelector('#btn-case-camel');
+        if (btnCamel) {
+          btnCamel.onclick = function() {
+            const txt = getCurrentText();
+            const w = wordsFromText(txt);
+            if (!w.length) return;
+            const res = w[0].toLowerCase() + w.slice(1).map(s => s.charAt(0).toUpperCase() + s.slice(1).toLowerCase()).join('');
+            setCurrentText(res, 'Converted to camelCase');
+            closeModal();
+          };
+        }
+
+        const btnSnake = modal.querySelector('#btn-case-snake');
+        if (btnSnake) {
+          btnSnake.onclick = function() {
+            const txt = getCurrentText();
+            const w = wordsFromText(txt);
+            if (!w.length) return;
+            setCurrentText(w.map(s => s.toLowerCase()).join('_'), 'Converted to snake_case');
+            closeModal();
+          };
+        }
+
+        const btnKebab = modal.querySelector('#btn-case-kebab');
+        if (btnKebab) {
+          btnKebab.onclick = function() {
+            const txt = getCurrentText();
+            const w = wordsFromText(txt);
+            if (!w.length) return;
+            setCurrentText(w.map(s => s.toLowerCase()).join('-'), 'Converted to kebab-case');
+            closeModal();
+          };
+        }
+
+        const btnConstant = modal.querySelector('#btn-case-constant');
+        if (btnConstant) {
+          btnConstant.onclick = function() {
+            const txt = getCurrentText();
+            const w = wordsFromText(txt);
+            if (!w.length) return;
+            setCurrentText(w.map(s => s.toUpperCase()).join('_'), 'Converted to CONSTANT_CASE');
+            closeModal();
+          };
+        }
+
+        const btnPascal = modal.querySelector('#btn-case-pascal');
+        if (btnPascal) {
+          btnPascal.onclick = function() {
+            const txt = getCurrentText();
+            const w = wordsFromText(txt);
+            if (!w.length) return;
+            setCurrentText(w.map(s => s.charAt(0).toUpperCase() + s.slice(1).toLowerCase()).join(''), 'Converted to PascalCase');
+            closeModal();
+          };
+        }
+
+        // --- BASE64 & URL ENCODERS ---
+        const btnB64Enc = modal.querySelector('#btn-b64-encode');
+        if (btnB64Enc) {
+          btnB64Enc.onclick = function() {
+            try {
+              const txt = getCurrentText();
+              const enc = btoa(unescape(encodeURIComponent(txt)));
+              setCurrentText(enc, 'Encoded to Base64');
+              closeModal();
+            } catch (err) {
+              notify('Base64 Encode Error: ' + err.message);
+            }
+          };
+        }
+
+        const btnB64Dec = modal.querySelector('#btn-b64-decode');
+        if (btnB64Dec) {
+          btnB64Dec.onclick = function() {
+            try {
+              const txt = getCurrentText().trim();
+              const dec = decodeURIComponent(escape(atob(txt)));
+              setCurrentText(dec, 'Decoded from Base64');
+              closeModal();
+            } catch (err) {
+              notify('Base64 Decode Error: Invalid base64 sequence');
+            }
+          };
+        }
+
+        const btnUrlEnc = modal.querySelector('#btn-url-encode');
+        if (btnUrlEnc) {
+          btnUrlEnc.onclick = function() {
+            const txt = getCurrentText();
+            setCurrentText(encodeURIComponent(txt), 'URL Encoded component');
+            closeModal();
+          };
+        }
+
+        const btnUrlDec = modal.querySelector('#btn-url-decode');
+        if (btnUrlDec) {
+          btnUrlDec.onclick = function() {
+            try {
+              const txt = getCurrentText();
+              setCurrentText(decodeURIComponent(txt), 'URL Decoded component');
+              closeModal();
+            } catch (err) {
+              notify('URL Decode Error: ' + err.message);
+            }
+          };
+        }
+
+        // --- HTML ENTITIES & JSON ---
+        const btnHtmlEsc = modal.querySelector('#btn-html-escape');
+        if (btnHtmlEsc) {
+          btnHtmlEsc.onclick = function() {
+            const txt = getCurrentText();
+            const esc = txt.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+            setCurrentText(esc, 'Escaped HTML entities');
+            closeModal();
+          };
+        }
+
+        const btnHtmlUnesc = modal.querySelector('#btn-html-unescape');
+        if (btnHtmlUnesc) {
+          btnHtmlUnesc.onclick = function() {
+            const txt = getCurrentText();
+            const doc = new DOMParser().parseFromString(txt, 'text/html');
+            setCurrentText(doc.documentElement.textContent || txt, 'Unescaped HTML entities');
+            closeModal();
+          };
+        }
+
+        const btnJsonPretty = modal.querySelector('#btn-json-prettify');
+        if (btnJsonPretty) {
+          btnJsonPretty.onclick = function() {
+            try {
+              const txt = getCurrentText();
+              const obj = JSON.parse(txt);
+              setCurrentText(JSON.stringify(obj, null, 2), 'Formatted JSON (2 spaces)');
+              closeModal();
+            } catch (err) {
+              notify('JSON Parse Error: ' + err.message);
+            }
+          };
+        }
+
+        const btnJsonMin = modal.querySelector('#btn-json-minify');
+        if (btnJsonMin) {
+          btnJsonMin.onclick = function() {
+            try {
+              const txt = getCurrentText();
+              const obj = JSON.parse(txt);
+              setCurrentText(JSON.stringify(obj), 'Minified JSON');
+              closeModal();
+            } catch (err) {
+              notify('JSON Parse Error: ' + err.message);
+            }
+          };
+        }
+
+        // --- METRICS & SHANNON ENTROPY ---
+        function computeMetrics() {
+          const txt = getCurrentText();
+          const chars = txt.length;
+          const words = (txt.match(/\S+/g) || []).length;
+          const lines = txt.split(/\r?\n/).length;
+          const bytes = new Blob([txt]).size;
+          const readTime = Math.max(1, Math.ceil(words / 200)) + ' min';
+
+          let entropy = 0;
+          if (chars > 0) {
+            const freq = {};
+            for (let i = 0; i < chars; i++) {
+              const c = txt[i];
+              freq[c] = (freq[c] || 0) + 1;
+            }
+            for (let k in freq) {
+              const p = freq[k] / chars;
+              entropy -= p * Math.log2(p);
+            }
+          }
+
+          const elChars = modal.querySelector('#metric-chars');
+          const elWords = modal.querySelector('#metric-words');
+          const elLines = modal.querySelector('#metric-lines');
+          const elBytes = modal.querySelector('#metric-bytes');
+          const elRead = modal.querySelector('#metric-readtime');
+          const elEntropy = modal.querySelector('#metric-entropy');
+
+          if (elChars) elChars.textContent = chars.toLocaleString();
+          if (elWords) elWords.textContent = words.toLocaleString();
+          if (elLines) elLines.textContent = lines.toLocaleString();
+          if (elBytes) elBytes.textContent = bytes.toLocaleString() + ' B';
+          if (elRead) elRead.textContent = readTime;
+          if (elEntropy) {
+            const bits = entropy.toFixed(2);
+            let rating = ' (Text)';
+            if (entropy > 5.5) rating = ' (High / Cipher)';
+            else if (entropy > 4.2) rating = ' (Code)';
+            elEntropy.textContent = bits + ' bits/B' + rating;
+          }
+        }
+
+        const btnRefreshMetrics = modal.querySelector('#btn-refresh-metrics');
+        if (btnRefreshMetrics) {
+          btnRefreshMetrics.onclick = function() {
+            computeMetrics();
+            notify('Buffer metrics updated');
+          };
+        }
+
+        const tabDiagBtn = modal.querySelector('button[data-tab="tab-diagnostics"]');
+        if (tabDiagBtn) {
+          tabDiagBtn.addEventListener('click', function() {
+            computeMetrics();
+          });
+        }
+
+        // --- CSV LIBRARY EXPORT ---
+        const btnCsvLib = modal.querySelector('#btn-export-csv-lib');
+        if (btnCsvLib) {
+          btnCsvLib.onclick = function() {
+            const clips = (typeof state !== 'undefined' && state.clips) ? state.clips : [];
+            const rows = [['id', 'title', 'category', 'tags', 'pinned', 'created', 'length', 'content']];
+            clips.forEach(c => {
+              const tags = Array.isArray(c.tags) ? c.tags.join(';') : (c.tags || '');
+              const contentEscaped = '"' + String(c.content || '').replace(/"/g, '""') + '"';
+              const titleEscaped = '"' + String(c.title || '').replace(/"/g, '""') + '"';
+              rows.push([
+                c.id,
+                titleEscaped,
+                c.category || 'general',
+                '"' + tags + '"',
+                c.pinned ? 'true' : 'false',
+                c.created || '',
+                (c.content || '').length,
+                contentEscaped
+              ]);
+            });
+            const csvText = rows.map(r => r.join(',')).join('\n');
+            triggerDownload('kclip_library_' + Date.now() + '.csv', csvText, 'text/csv');
+            closeModal();
+          };
+        }
+
+        // --- SQL GENERATION BATCH ---
+        const btnSqlBatch = modal.querySelector('#btn-gen-sql-batch');
+        if (btnSqlBatch) {
+          btnSqlBatch.onclick = function() {
+            const clips = (typeof state !== 'undefined' && state.clips) ? state.clips : [];
+            let sql = '-- KClip Library SQL Dump\n-- Generated: ' + new Date().toISOString() + '\n\n';
+            sql += 'CREATE TABLE IF NOT EXISTS kclip_library (\n  id VARCHAR(64) PRIMARY KEY,\n  title VARCHAR(255),\n  category VARCHAR(64),\n  tags TEXT,\n  pinned BOOLEAN,\n  created BIGINT,\n  content TEXT\n);\n\n';
+            clips.forEach(c => {
+              const escTitle = String(c.title || '').replace(/'/g, "''");
+              const escCat = String(c.category || 'general').replace(/'/g, "''");
+              const tags = Array.isArray(c.tags) ? c.tags.join(',') : (c.tags || '');
+              const escTags = tags.replace(/'/g, "''");
+              const escContent = String(c.content || '').replace(/'/g, "''");
+              sql += `INSERT INTO kclip_library (id, title, category, tags, pinned, created, content) VALUES ('${c.id}', '${escTitle}', '${escCat}', '${escTags}', ${c.pinned ? 1 : 0}, ${c.created || Date.now()}, '${escContent}');\n`;
+            });
+            triggerDownload('kclip_inserts_' + Date.now() + '.sql', sql, 'application/sql');
             closeModal();
           };
         }
