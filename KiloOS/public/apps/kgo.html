@@ -1164,7 +1164,7 @@
 
   <div id="help-modal" class="modal">
     <div class="modal-content">
-      <button id="btn-close-help" class="close-btn" title="Close Guide (Esc)">Close</button>
+      <button id="btn-close-help" class="close-btn modal-close btn-close" onclick="closeAllModals()" title="Close Guide (Esc)">&times;</button>
       <h2>How to Play KGo</h2>
       <p><strong>Goal:</strong> Control more territory (empty grid intersections) than your opponent.</p>
       
@@ -1223,7 +1223,7 @@
 
   <div id="multiplayer-modal" class="modal">
     <div class="modal-content">
-      <button id="btn-close-mp" class="close-btn" onclick="closeAllModals()" title="Close (Esc)">Close</button>
+      <button id="btn-close-mp" class="close-btn modal-close btn-close" onclick="closeAllModals()" title="Close (Esc)">&times;</button>
       <h2>🌐 KGo - Online Multiplayer</h2>
       <p style="font-size: 0.85em; color: #d4af37; margin-top: -6px; margin-bottom: 14px;">
         Real-time cross-computer Baduk / Go powered by Firebase Realtime Database.
@@ -1437,7 +1437,41 @@
   let currentRoomStatus = 'none'; // 'none', 'waiting', 'playing', 'finished'
   let myPlayerNum = 0; // 0=Spectator, 1=Black(P1), 2=White(P2)
   let myPlayerColor = null; // 'B', 'W', null
-  let myPlayerName = localStorage.getItem('kgo_playerName') || ('GoMaster_' + Math.floor(1000 + Math.random() * 9000));
+  
+  /**
+   * Safe localStorage accessor with error fallback
+   * @param {string} key
+   * @param {*} fallback
+   */
+  function safeGet(key, fallback) {
+    try {
+      const item = localStorage.getItem(key);
+      if (item === null || item === undefined) return fallback;
+      try {
+        return JSON.parse(item);
+      } catch {
+        return item;
+      }
+    } catch {
+      return fallback;
+    }
+  }
+
+  /**
+   * Safe localStorage writer with quota try/catch
+   * @param {string} key
+   * @param {*} value
+   */
+  function safeSet(key, value) {
+    try {
+      const valStr = typeof value === 'string' ? value : JSON.stringify(value);
+      localStorage.setItem(key, valStr);
+    } catch (e) {
+      console.warn('[KGo] Storage write failed:', e);
+    }
+  }
+
+  let myPlayerName = safeGet('kgo_playerName', '') || ('GoMaster_' + Math.floor(1000 + Math.random() * 9000));
   let opponentName = 'Opponent';
   let isHost = false;
   let activeLobbyRef = null;
@@ -1541,11 +1575,10 @@
 
   let stats = { played: 0, aiWins: 0, aiLosses: 0, localB: 0, localW: 0 };
   function loadStats() {
-    const data = localStorage.getItem('kgo_stats');
-    if (data) stats = JSON.parse(data);
+    stats = safeGet('kgo_stats', { played: 0, aiWins: 0, aiLosses: 0, localB: 0, localW: 0 });
   }
   function saveStats() {
-    localStorage.setItem('kgo_stats', JSON.stringify(stats));
+    safeSet('kgo_stats', stats);
   }
   function recordGameEnd(winner) {
     stats.played++;
@@ -1692,7 +1725,8 @@
     const sgf = document.getElementById('sgf-modal');
     if (help) help.style.display = 'none';
     if (mp) mp.style.display = 'none';
-    if (inv) inv.style.display = 'none';
+    if (inv && inv.style.display === 'flex') declineInvite();
+    else if (inv) inv.style.display = 'none';
     if (sgf) sgf.style.display = 'none';
     const fb = (rMultiplayer && rMultiplayer.fb) || window.fb;
     if (activeLobbyRef && activeLobbyListener && fb) {
@@ -1721,7 +1755,7 @@
     const name = input.value.trim();
     if (name.length > 0) {
       myPlayerName = name;
-      localStorage.setItem('kgo_playerName', name);
+      safeSet('kgo_playerName', name);
       if (rMultiplayer) rMultiplayer.playerName = name;
       showToast(`Call-sign updated to "${escapeHtml(name)}"`, 'success');
     }
@@ -2394,7 +2428,7 @@
   }
 
   /* --- Match Clock & Timer Engine (ARCH-05 Compliant) --- */
-  function initClock() {
+  function initClock(preserveTimes = false) {
     stopClock();
     const clockBar = document.getElementById('clockBar');
     if (!clockBar) return;
@@ -2403,15 +2437,17 @@
       return;
     }
     clockBar.style.display = 'flex';
-    if (clockMode === 'blitz') {
-      blackTimeLeft = 30;
-      whiteTimeLeft = 30;
-    } else if (clockMode === 'rapid') {
-      blackTimeLeft = 300;
-      whiteTimeLeft = 300;
-    } else if (clockMode === 'standard') {
-      blackTimeLeft = 600;
-      whiteTimeLeft = 600;
+    if (!preserveTimes) {
+      if (clockMode === 'blitz') {
+        blackTimeLeft = 30;
+        whiteTimeLeft = 30;
+      } else if (clockMode === 'rapid') {
+        blackTimeLeft = 300;
+        whiteTimeLeft = 300;
+      } else if (clockMode === 'standard') {
+        blackTimeLeft = 600;
+        whiteTimeLeft = 600;
+      }
     }
     updateClockDisplay();
     startClock();
@@ -2810,8 +2846,11 @@
       lastMove,
       undoStack,
       redoStack,
+      consecutivePasses,
+      handicapStones,
       currentKomi,
       currentCampaignStage,
+      currentTsumegoIdx,
       aiToggle: document.getElementById('ai-toggle').checked,
       aiDifficulty: document.getElementById('ai-difficulty').value,
       moveRecord,
@@ -2822,19 +2861,20 @@
       whiteTimeLeft,
       timestamp: Date.now()
     };
-    localStorage.setItem('kgo_quicksave', JSON.stringify(state));
+    safeSet('kgo_quicksave', state);
+    safeSet('kgo_tutorialSeen', true);
+    safeSet('kgo_onboarded', true);
     showToast('💾 Quick Save completed (F5)!', 'success');
     playSound('turn');
   }
 
   function quickLoadGame() {
-    const data = localStorage.getItem('kgo_quicksave');
-    if (!data) {
+    const state = safeGet('kgo_quicksave', null);
+    if (!state) {
       showToast('⚠️ No quicksave data found (Press F5 to save first).', 'warning');
       return;
     }
     try {
-      const state = JSON.parse(data);
       restoreFullState(state);
       showToast('📂 Quick Load restored (F9)!', 'success');
       playSound('turn');
@@ -2853,11 +2893,21 @@
       history,
       captures,
       lastMove,
+      undoStack,
+      redoStack,
+      consecutivePasses,
+      handicapStones,
       currentKomi,
       currentCampaignStage,
+      currentTsumegoIdx,
       aiToggle: document.getElementById('ai-toggle').checked,
       aiDifficulty: document.getElementById('ai-difficulty').value,
       moveRecord,
+      showCoords,
+      showMoveNumbers,
+      clockMode,
+      blackTimeLeft,
+      whiteTimeLeft,
       timestamp: Date.now()
     };
     const jsonStr = JSON.stringify(state, null, 2);
@@ -2896,8 +2946,13 @@
     history = state.history || [];
     captures = state.captures || { B: 0, W: 0 };
     lastMove = state.lastMove || { x: -1, y: -1 };
+    undoStack = state.undoStack || [];
+    redoStack = state.redoStack || [];
+    consecutivePasses = state.consecutivePasses || 0;
+    handicapStones = state.handicapStones || [];
     currentKomi = state.currentKomi || 6.5;
     currentCampaignStage = state.currentCampaignStage !== undefined ? state.currentCampaignStage : -1;
+    if (state.currentTsumegoIdx !== undefined) currentTsumegoIdx = state.currentTsumegoIdx;
     moveRecord = state.moveRecord || [];
     if (state.aiToggle !== undefined) document.getElementById('ai-toggle').checked = state.aiToggle;
     if (state.aiDifficulty) document.getElementById('ai-difficulty').value = state.aiDifficulty;
@@ -2911,9 +2966,15 @@
     if (state.blackTimeLeft !== undefined) blackTimeLeft = state.blackTimeLeft;
     if (state.whiteTimeLeft !== undefined) whiteTimeLeft = state.whiteTimeLeft;
     document.getElementById('board-size').value = size;
+
+    // First-run tutorial integrity: never interrupt restored save states
+    const ob = document.getElementById('onboarding-banner');
+    if (ob) ob.style.display = 'none';
+    safeSet('kgo_tutorialSeen', true);
+    safeSet('kgo_onboarded', true);
     
     rebuildStoneMoveNumbers();
-    initClock();
+    initClock(true);
     updateStatus();
     drawBoard();
     if (currentPlayer === 'W' && document.getElementById('ai-toggle').checked) {
@@ -4281,19 +4342,33 @@
 
   const onboardingBanner = document.getElementById('onboarding-banner');
   const dismissBtn = document.getElementById('btn-dismiss-onboarding');
-  if (localStorage.getItem('kgo_onboarded') === 'true') {
-    if (onboardingBanner) onboardingBanner.style.display = 'none';
+  const tutorialSeen = safeGet('kgo_tutorialSeen', null) ?? (safeGet('kgo_onboarded', false) === true || safeGet('kgo_onboarded', '') === 'true');
+  if (tutorialSeen && onboardingBanner) {
+    onboardingBanner.style.display = 'none';
   }
   if (dismissBtn) {
     dismissBtn.addEventListener('click', () => {
       if (onboardingBanner) onboardingBanner.style.display = 'none';
-      localStorage.setItem('kgo_onboarded', 'true');
+      safeSet('kgo_tutorialSeen', true);
+      safeSet('kgo_onboarded', true);
     });
   }
 
   window.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
+      const anyModalOpen = [
+        document.getElementById('help-modal'),
+        document.getElementById('multiplayer-modal'),
+        document.getElementById('invite-modal'),
+        document.getElementById('sgf-modal')
+      ].some(m => m && m.style.display && m.style.display !== 'none');
+
       closeAllModals();
+      if (!anyModalOpen && onboardingBanner && onboardingBanner.style.display !== 'none') {
+        onboardingBanner.style.display = 'none';
+        safeSet('kgo_tutorialSeen', true);
+        safeSet('kgo_onboarded', true);
+      }
       return;
     }
     if (e.key === 'F5') {
@@ -4313,9 +4388,17 @@
     }
     if (e.ctrlKey || e.altKey || e.metaKey) return;
     if (document.getElementById('help-modal').style.display === 'flex') {
-      if (e.key === '?' || e.key === 'F1') {
+      if (e.key === '?' || e.key === 'F1' || e.key === 'Enter' || e.key === ' ') {
         e.preventDefault();
         document.getElementById('help-modal').style.display = 'none';
+      }
+      return;
+    }
+    const invModal = document.getElementById('invite-modal');
+    if (invModal && invModal.style.display === 'flex') {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        acceptInvite();
       }
       return;
     }

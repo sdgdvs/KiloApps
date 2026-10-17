@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-qa
+current_agent: kilo-expander
+next_agent: kilo-creator
 agent_rotation:
 - kilo-graphics
 - kilo-soundscape
@@ -19,7 +19,7 @@ current_targets:
   kilo_soundscape: KAlchemy
   kilo_tester: KNet
   kilo_usability: KCalc
-  kilo_qa: KGo
+  kilo_qa: KMaze
   kilo_expander: KJournal
 virtual_web_target: kweb://echo-subsystem.net
 virtual_web_rotation:
@@ -35,9 +35,9 @@ virtual_web_rotation:
 - kweb://echo-subsystem.net
 - kweb://deep-core
 last_run:
-  agent: kilo-usability
-  app: KDB
-  timestamp: 2026-10-17T22:20:00+0000
+  agent: kilo-qa
+  app: KGo
+  timestamp: 2026-10-17T22:56:00+0000
 last_planner_run: '2026-10-17T20:53:00Z'
 ---
 
@@ -137,22 +137,22 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Upcoming Queue**: `KCipher`, `KPass`, `KVault`.
 
 ### 6. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
-- **Target**: `KGo`
-- **Primary Files**: `KiloOS/public/apps/kgo.html`, `KGo/main.c`
-- **Objective**: Pass 5 QA audit: add first-run tutorial onboarding overlay (`kgo_tutorialSeen`), verify F5 quicksave & F9 quickload capture complete board state/captures/turn, test Escape modal dismissal, and ensure clean dual Win32 native compilation (`KGo.exe`) and web cartridge (<999 KB).
+- **Target**: `KMaze`
+- **Primary Files**: `KiloOS/public/apps/kmaze.html`, `KMaze/main.c` (if present)
+- **Objective**: Pass 5 QA audit: add first-run tutorial onboarding overlay (`kmaze_tutorialSeen`), verify F5 quicksave & F9 quickload capture complete maze generation/timer/stats, test Escape modal dismissal, and ensure clean dual Win32 native compilation and web cartridge (<999 KB).
 - **Action Steps**:
   1. State Persistence: F5 quicksave & F9 quickload capturing complete game state, stats, and settings.
   2. First-run Tutorial: Onboarding displays once on fresh sessions, never on restored saves.
   3. Modal Dismissals: Modals dismiss cleanly with Escape, Enter, or Close button.
-  4. Dual Parity & Build: Compile Win32 native client via `cmd.exe /c build.bat` in `KGo/` (if present) and verify web build.
+  4. Dual Parity & Build: Compile Win32 native client via `cmd.exe /c build.bat` in `KMaze/` (if present) and verify web build.
 - **Verification**:
-  - `uv run scripts/test_app_startup.py --app KGo`
-  - `cd KiloOS && npm run build` (0 Vite errors, `kgo.html` < 999 KB)
+  - `uv run scripts/test_app_startup.py --app KMaze`
+  - `cd KiloOS && npm run build` (0 Vite errors, `kmaze.html` < 999 KB)
 - **Handoff**:
-  - In frontmatter: advance `current_targets.kilo_qa` to `KMaze`.
+  - In frontmatter: advance `current_targets.kilo_qa` to `KSnake`.
   - Set `current_agent: kilo-expander`.
   - Append terse execution log (≤6 lines), commit, and push.
-- **Upcoming Queue**: `KMaze`, `KSnake`, `K2048`, `KSudoku`.
+- **Upcoming Queue**: `KSnake`, `K2048`, `KSudoku`.
 
 ### 7. Feature Expander Queue (`kilo-expander`)
 - **Target**: `KJournal`
@@ -190,10 +190,20 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | **KHangman** | `KiloOS/public/apps/khangman.html` | Pass 5 (2026-10-17) | Word / Puzzle | 20-stage campaign, blitz mode, custom word bank studio, dual Win32 native client, full F5/F9 state persistence. |
 | **KNote** | `KiloOS/public/apps/knote.html` | Pass 6+ (2026-10-17) | Office / Notes | Feature-complete cybernetic notepad; multi-tab editing, find/replace, markdown preview, keyboard navigation, full state persistence. |
 | **KPaint** | `KiloOS/public/apps/kpaint.html` | Pass 6+ (2026-10-17) | Media / Graphics | Feature-complete 1999 digital art studio; 15 export formats, sprite reel animation, multi-layer engine, dual Win32 client parity, zero glints. |
+| **KGo** | `KiloOS/public/apps/kgo.html` | Pass 5 (2026-10-17) | Strategy / Board | Feature-complete Baduk/Go with 20-stage campaign, tsumego puzzle solver, AI personalities, SGF export/import, dual Win32 native client parity, full F5/F9 state persistence. |
 
 ---
 
 ## Recent Execution Logs (Max 5 Entries)
+
+- **2026-10-17T22:56:00+0000 — kilo-qa: KGo (Pass 5 QA & Tutorial Integrity — Mature Quarantine)**
+  - State Persistence: Wrapped all storage in safeGet/safeSet; preserved timer remaining across quickload; persisted consecutivePasses, handicapStones, and tsumego index.
+  - Tutorial Integrity: Enforced kgo_tutorialSeen web flag & kgo_tutorialSeen.dat native check on fresh sessions only; auto-dismisses on saved game restore.
+  - Modal Dismissals & Shortcuts: Added accessible modal-close classes to help/mp dialogs; unified Escape key dismissal for modals & onboarding; added VK_ESCAPE in native C.
+  - Mature Promotion: Promoted feature-complete KGo (Pass 5) to Mature Applications quarantine; removed from active worker queues.
+  - Verification: Clean Vite build (npm run build 0 err), Win32 native compile (build.bat 0 err), test_app_startup PASS (168.1 KB < 999 KB ceiling).
+  - Status: PASS ✅ (Full state persistence, clean modal handling, dual-target parity verified; promoted to Mature quarantine).
+  - Queue: Advanced kilo_qa to KMaze; rotation handoff to kilo-expander.
 
 - **2026-10-17T22:20:00+0000 — kilo-usability: KDB (UI/UX & Usability Pass)**
   - Responsive & Viewport Ergonomics: Added <540px mobile wrapping for header controls, cards-grid single-column fallback, sleek custom scrollbars, and touch scroll.
@@ -225,11 +235,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Status: ⏭️ Skip — Imagen 3 asset replacement not appropriate for KDragon (pure vector, board game, or mature art).
   - Optimization: Handled via orchestrator pre-flight zero-token auto-skip.
   - Queue: Advanced `kilo-graphics` to `KDragon`; rotation handoff to `kilo-soundscape`.
-
-- **2026-10-17T20:53:00Z — kilo-planner: fleet-wide (Daily 24h Fleet Planning, Queue Health & Log Compaction)**
-  - Status: PASS ✅ (24h fleet health assessment, schedule rework, and log compaction complete).
-  - Icon Uniqueness: Verified 105 apps in App.jsx, 105 unique .ico files, 0 duplicate hashes (check_icons.py 100% PASS).
-  - Quarantine Enforcement: Quarantined mature KNote (Pass 6+); purged mature KMines and KNote from active queues.
-  - Queue Rework: Advanced kilo_creator/virtual_web to echo-subsystem; routed graphics to KDragon, soundscape to KFortress, tester to KPaint, usability to KDB, qa to KGo.
-  - Byte-Budget Gate: 107 web cartridges and 104 native executables verified <999 KB budget ceiling.
-  - Compaction & Archival: Executed rotate_logs.py with zero data loss; updated last_planner_run timestamp.

@@ -1043,7 +1043,15 @@ void SaveGameFile(HWND hwnd, const char* filename, int showMsg) {
         fwrite(&currentKomi, sizeof(float), 1, f);
         fwrite(&nativeMoveCount, sizeof(int), 1, f);
         fwrite(nativeMoves, sizeof(NativeMove), nativeMoveCount, f);
+        fwrite(&consecutivePasses, sizeof(int), 1, f);
+        fwrite(&lastMoveX, sizeof(int), 1, f);
+        fwrite(&lastMoveY, sizeof(int), 1, f);
         fclose(f);
+
+        // First-run tutorial flag: mark as seen so saved games are never interrupted
+        FILE *ftut = fopen("kgo_tutorialSeen.dat", "wb");
+        if (ftut) { fputc(1, ftut); fclose(ftut); }
+
         if (showMsg) MessageBox(hwnd, "Game saved.", "Save", MB_OK);
     } else {
         if (showMsg) MessageBox(hwnd, "Failed to save game.", "Error", MB_OK);
@@ -1070,7 +1078,19 @@ void LoadGameFile(HWND hwnd, const char* filename, int showMsg) {
         } else {
             nativeMoveCount = 0;
         }
+        if (fread(&consecutivePasses, sizeof(int), 1, f) == 1) {
+            fread(&lastMoveX, sizeof(int), 1, f);
+            fread(&lastMoveY, sizeof(int), 1, f);
+        } else {
+            consecutivePasses = 0;
+            lastMoveX = -1;
+            lastMoveY = -1;
+        }
         fclose(f);
+
+        // First-run tutorial flag: mark as seen so restored games are never interrupted
+        FILE *ftut = fopen("kgo_tutorialSeen.dat", "wb");
+        if (ftut) { fputc(1, ftut); fclose(ftut); }
         
         int sel = 0;
         if (boardSize == 13) sel = 1;
@@ -1396,7 +1416,25 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             return 0;
 
         case WM_KEYDOWN:
-            if (wParam == 'U' || wParam == 'u') {
+            if (wParam == VK_ESCAPE) {
+                int repainted = 0;
+                if (hintX != -1 || hintY != -1) {
+                    hintX = -1; hintY = -1;
+                    repainted = 1;
+                }
+                if (showAnalyzer) {
+                    showAnalyzer = 0;
+                    repainted = 1;
+                }
+                if (showEstimator) {
+                    showEstimator = 0;
+                    repainted = 1;
+                }
+                if (repainted) {
+                    InvalidateRect(hwnd, NULL, TRUE);
+                }
+                return 0;
+            } else if (wParam == 'U' || wParam == 'u') {
                 DoUndo(hwnd);
             } else if (wParam == 'H' || wParam == 'h') {
                 CalculateHint();
@@ -2328,6 +2366,26 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     LoadStats();
 
     ShowWindow(hwnd, nCmdShow);
+    UpdateWindow(hwnd);
+
+    // First-run tutorial integrity: show on fresh session only, never interrupt saved state
+    FILE *fsave = fopen("kgo_save.dat", "rb");
+    FILE *fqsave = fopen("kgo_quicksave.dat", "rb");
+    if (fsave || fqsave) {
+        if (fsave) fclose(fsave);
+        if (fqsave) fclose(fqsave);
+        FILE *fout = fopen("kgo_tutorialSeen.dat", "wb");
+        if (fout) { fputc(1, fout); fclose(fout); }
+    } else {
+        FILE *ftut = fopen("kgo_tutorialSeen.dat", "rb");
+        if (!ftut) {
+            FILE *fout = fopen("kgo_tutorialSeen.dat", "wb");
+            if (fout) { fputc(1, fout); fclose(fout); }
+            SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_HELP, 0), 0);
+        } else {
+            fclose(ftut);
+        }
+    }
 
     MSG msg = {0};
     while (GetMessage(&msg, NULL, 0, 0)) {
