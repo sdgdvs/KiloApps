@@ -4,6 +4,12 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-17T02:30:00+0000 — kilo-tester: KPac (Interactive UI Audit & Form Input Protection)**
+  - Controls: Protected input/textarea typing in FEN/Duel modals against unwanted hotkey triggers and dismissal.
+  - Modals: Integrated FEN modal into canvas click backdrop dismissal and escape navigation.
+  - Status: PASS ✅ (`kpac.html` 212.8 KB < 999 KB ceiling; Vite build 0 errors).
+  - Queue: Advanced `kilo_tester` target to `KCalendar`; rotation handoff to `kilo-usability`.
+
 - **2026-10-17T01:12:03+0000 — kilo-graphics: KWizard (Zero-Token Auto-Skip — Inappropriate Target)**
   - Status: ⏭️ Skip — Imagen 3 asset replacement not appropriate for KWizard (pure vector, board game, or mature art).
   - Optimization: Handled via orchestrator pre-flight zero-token auto-skip.
