@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-creator
 agent_rotation:
 - kilo-graphics
 - kilo-soundscape
@@ -18,7 +18,7 @@ current_targets:
   kilo_soundscape: KWizard
   kilo_tester: KCalendar
   kilo_usability: KDB
-  kilo_qa: KHangman
+  kilo_qa: KSudoku
   kilo_expander: KZip
 virtual_web_target: kweb://warez
 virtual_web_rotation:
@@ -34,9 +34,9 @@ virtual_web_rotation:
 - kweb://echo-subsystem.net
 - kweb://deep-core
 last_run:
-  agent: kilo-usability
-  app: KChart
-  timestamp: 2026-10-17T03:15:00+0000
+  agent: kilo-qa
+  app: KHangman
+  timestamp: 2026-10-17T03:35:00+0000
 last_planner_run: '2026-10-16T20:35:00Z'
 ---
 
@@ -135,22 +135,22 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Upcoming Queue**: `KCalc`, `KNote`, `KChart`.
 
 ### 6. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
-- **Target**: `KHangman`
-- **Primary Files**: `KiloOS/public/apps/khangman.html`, `apps/khangman/` (if present)
+- **Target**: `KSudoku`
+- **Primary Files**: `KiloOS/public/apps/ksudoku.html`, `apps/ksudoku/` (if present)
 - **Objective**: Pass 5 QA audit, state persistence integrity, and dual web/native parity.
 - **Action Steps**:
   1. State Persistence: F5 quicksave & F9 quickload capturing complete game state, stats, and settings.
   2. First-run Tutorial: Onboarding displays once on fresh sessions, never on restored saves.
   3. Modal Dismissals: Modals dismiss cleanly with Escape, Enter, or Close button.
-  4. Dual Parity & Build: Compile Win32 native client via `cmd.exe /c build.bat` in `apps/khangman/` (if present) and verify web build.
+  4. Dual Parity & Build: Compile Win32 native client via `cmd.exe /c build.bat` in `apps/ksudoku/` (if present) and verify web build.
 - **Verification**:
-  - `uv run scripts/test_app_startup.py --app KHangman`
-  - `cd KiloOS && npm run build` (0 Vite errors, `khangman.html` < 999 KB)
+  - `uv run scripts/test_app_startup.py --app KSudoku`
+  - `cd KiloOS && npm run build` (0 Vite errors, `ksudoku.html` < 999 KB)
 - **Handoff**:
-  - In frontmatter: advance `current_targets.kilo_qa` to `KSudoku`.
+  - In frontmatter: advance `current_targets.kilo_qa` to `KTetris`.
   - Set `current_agent: kilo-expander`.
   - Append terse execution log (≤6 lines), commit, and push.
-- **Upcoming Queue**: `KSudoku`, `KTetris`, `KConnect4`.
+- **Upcoming Queue**: `KTetris`, `KConnect4`, `KHangman`.
 
 ### 7. Feature Expander Queue (`kilo-expander`)
 - **Target**: `KClip`
@@ -174,6 +174,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
  
+- **2026-10-17T03:35:00+0000 — kilo-qa: KHangman (Pass 5 QA & State Persistence Audit)**
+  - State Persistence: Enhanced F5/F9 save/load with lifetime stats, timer, and game-ended state preservation.
+  - Modals & Tutorial: Added .modal-close and .btn-help-footer-close classes; ensured tutorial seen flag persists on dismissal.
+  - Status: PASS ✅ (`khangman.html` 148.6 KB < 999 KB ceiling; 0 JS errors, 0 Vite build errors).
+  - Queue: Advanced `kilo_qa` target to `KSudoku`; rotation handoff to `kilo-expander`.
+
 - **2026-10-17T03:15:00+0000 — kilo-usability: KChart (Bidirectional Data-Table Sync & Canvas HUD)**
   - Ergonomics: Implemented bidirectional table-chart hover synchronization and row focus highlighting.
   - HUD & Accessibility: Added responsive canvas status HUD and keyboard arrow navigation with auto-scrolling table sync.
@@ -198,10 +204,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Status: ⏭️ Skip — Imagen 3 asset replacement not appropriate for KWizard (pure vector, board game, or mature art).
   - Optimization: Handled via orchestrator pre-flight zero-token auto-skip.
   - Queue: Advanced `kilo-graphics` to `KWizard`; rotation handoff to `kilo-soundscape`.
-
-- **2026-10-17T00:35:00+0000 — kilo-creator: kweb://webring (Tab 11 WebStats & Widget Studio)**
-  - WebStats & Widgets: Added Tab 11 featuring 5 retro widget styles (Classic Table, Cyber Neon, Gold Bar, Green CRT, Minimal).
-  - CGI Simulator: Integrated `/cgi-bin/ringmaster.pl` query dispatcher with live 302/200 HTTP responses and cookie headers.
-  - Telemetry: Added live odometer hit counter, referral surge simulation, and procedural Web Audio click/chime effects.
-  - Status: PASS ✅ (`webring.html` 352 KB < 999 KB ceiling; KNet and portal links verified).
-  - Queue: Advanced virtual_web_target to `kweb://warez`; rotation handoff to `kilo-graphics`.
