@@ -4491,11 +4491,89 @@ function playFmTone(carrierFreq, modRatio, modIndex, time, dur, gainVal, useEcho
   } catch(e) {}
 }
 
-// UI Audio SFX - YM2612 FM Earcons & Stingers
-function playUiBeep(freq = 880, dur = 0.05, type = 'square') {
+// UI Audio SFX - YM2612 FM Earcons & Action Stingers (Chiptune Soundscape Standard)
+function playUiBeep(freqOrType = 880, dur = 0.05, optType = 'nav') {
   try {
     initAudioCtx();
-    playFmTone(freq, 2.0, 1.6, audioCtx.currentTime, dur, 0.09, false);
+    const t = audioCtx.currentTime;
+    if (freqOrType === 'confirm' || freqOrType === 'success') {
+      // Rising fifth FM chime with delayed vibrato
+      playFmTone(587.33, 2.0, 1.8, t, 0.08, 0.12, true); // D5
+      playFmTone(880.00, 3.0, 2.2, t + 0.07, 0.18, 0.14, true); // A5
+    } else if (freqOrType === 'cancel' || freqOrType === 'back') {
+      // Descending fifth with soft attack
+      playFmTone(659.25, 1.5, 1.4, t, 0.07, 0.10, false); // E5
+      playFmTone(440.00, 1.0, 1.1, t + 0.06, 0.12, 0.08, false); // A4
+    } else if (freqOrType === 'error' || freqOrType === 'warning') {
+      // Inharmonic metallic clank (ratio 1.414, mod index 4.5)
+      playFmTone(220.0, 1.414, 4.5, t, 0.14, 0.15, true);
+      playFmTone(311.1, 2.828, 3.8, t + 0.03, 0.16, 0.12, true);
+    } else if (freqOrType === 'pip' || typeof freqOrType === 'number') {
+      // Ultra-short high-register FM pip (15ms)
+      const f = typeof freqOrType === 'number' ? freqOrType : 1760;
+      playFmTone(f, 2.0, 1.2, t, dur || 0.02, 0.08, false);
+    } else {
+      playFmTone(880, 2.0, 1.5, t, dur || 0.04, 0.09, false);
+    }
+  } catch (e) {}
+}
+
+// Ambient Drone Voice (Algorithm 5/6 analog: 1:1 ratio, low index, gentle SPC700 stereo delay)
+let activeDroneCarrier = null;
+let activeDroneMod = null;
+let activeDroneGain = null;
+
+function playAmbientDrone(freq = 110.0, dur = 4.0, gainVal = 0.06) {
+  try {
+    initAudioCtx();
+    const t = audioCtx.currentTime;
+    const carrier = audioCtx.createOscillator();
+    const modulator = audioCtx.createOscillator();
+    const modGain = audioCtx.createGain();
+    const ampGain = audioCtx.createGain();
+    const filter = audioCtx.createBiquadFilter();
+
+    carrier.type = 'sine';
+    carrier.frequency.setValueAtTime(freq, t);
+    carrier.frequency.linearRampToValueAtTime(freq * 1.002, t + dur); // Subtle analog drift
+
+    modulator.type = 'sine';
+    modulator.frequency.setValueAtTime(freq * 1.0, t); // 1:1 warm ratio
+
+    modGain.gain.setValueAtTime(freq * 0.6, t);
+    modGain.gain.linearRampToValueAtTime(freq * 0.2, t + dur);
+
+    modulator.connect(modGain);
+    modGain.connect(carrier.frequency);
+
+    filter.type = 'lowpass';
+    filter.frequency.setValueAtTime(650, t);
+    filter.frequency.linearRampToValueAtTime(1200, t + dur * 0.5);
+    filter.frequency.linearRampToValueAtTime(500, t + dur);
+
+    ampGain.gain.setValueAtTime(0.001, t);
+    ampGain.gain.linearRampToValueAtTime(gainVal, t + 0.4);
+    ampGain.gain.linearRampToValueAtTime(0.001, t + dur);
+
+    carrier.connect(filter);
+    filter.connect(ampGain);
+    ampGain.connect(masterGain);
+    if (delayNode) ampGain.connect(delayNode);
+
+    carrier.start(t);
+    modulator.start(t);
+    carrier.stop(t + dur + 0.05);
+    modulator.stop(t + dur + 0.05);
+  } catch (e) {}
+}
+
+// Ch2 Counter-melody: Contrary motion voice using 2-op FM (brass/bell timbre)
+function playCounterMelody(note, time, dur) {
+  if (!note) return;
+  try {
+    const f = midiNoteToFreq(note);
+    // 2-Op FM patch: 3:1 ratio (bright bell/reed counterpoint)
+    playFmTone(f, 3.0, 2.4, time, dur, 0.11, true);
   } catch (e) {}
 }
 
