@@ -1,0 +1,10 @@
+{
+  "timestamp": "2026-09-25T07:52:25.997684+00:00",
+  "agent": "kilo-tester",
+  "model": "gemini-3.8-flash-high",
+  "target": "KVoid",
+  "duration_seconds": 443.21,
+  "returncode": 0,
+  "success": true,
+  "provenance": null
+}

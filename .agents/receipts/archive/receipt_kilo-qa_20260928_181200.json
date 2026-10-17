@@ -1,0 +1,10 @@
+{
+  "timestamp": "2026-09-28T18:12:00.506069+00:00",
+  "agent": "kilo-qa",
+  "model": "gemini-3.8-flash-high",
+  "target": "KTrader",
+  "duration_seconds": 598.14,
+  "returncode": 0,
+  "success": true,
+  "provenance": null
+}

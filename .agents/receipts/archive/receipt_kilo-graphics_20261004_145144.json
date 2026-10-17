@@ -1,0 +1,9 @@
+{
+  "timestamp": "2026-10-04T14:51:44.228005+00:00",
+  "agent": "kilo-graphics",
+  "model": "gemini-3.8-flash-high",
+  "target": "KQuest (Phase 5: Performance & Win32 Parity)",
+  "duration_sec": 45.0,
+  "returncode": 0,
+  "status": "skipped"
+}

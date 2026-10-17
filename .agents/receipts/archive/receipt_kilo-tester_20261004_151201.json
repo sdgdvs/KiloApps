@@ -1,0 +1,10 @@
+{
+  "timestamp": "2026-10-04T15:12:01.327141+00:00",
+  "agent": "kilo-tester",
+  "model": "gemini-3.8-flash-high",
+  "target": "KSubmarine",
+  "duration_seconds": 598.77,
+  "returncode": 0,
+  "success": true,
+  "provenance": null
+}

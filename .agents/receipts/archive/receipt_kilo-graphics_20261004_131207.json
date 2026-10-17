@@ -1,0 +1,10 @@
+{
+  "timestamp": "2026-10-04T13:12:07.789972+00:00",
+  "agent": "kilo-graphics",
+  "model": "gemini-3.8-flash-high",
+  "target": "KQuest (Phase 4: Town NPCs & Combat FX)",
+  "duration_seconds": 4.25,
+  "returncode": 3,
+  "success": false,
+  "provenance": null
+}

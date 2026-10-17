@@ -1,0 +1,10 @@
+{
+  "timestamp": "2026-10-01T10:27:07.352449+00:00",
+  "agent": "kilo-usability",
+  "model": "gemini-3.8-flash-high",
+  "target": "KRSS",
+  "duration_seconds": 905.97,
+  "returncode": 0,
+  "success": true,
+  "provenance": null
+}

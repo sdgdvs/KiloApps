@@ -1,0 +1,10 @@
+{
+  "timestamp": "2026-10-10T07:15:08.410858+00:00",
+  "agent": "kilo-qa",
+  "model": "gemini-3.8-flash-medium",
+  "target": "KBreakout",
+  "duration_seconds": 185.5,
+  "returncode": 0,
+  "success": true,
+  "provenance": null
+}

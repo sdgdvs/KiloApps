@@ -1,0 +1,10 @@
+{
+  "timestamp": "2026-10-05T05:12:07.127425+00:00",
+  "agent": "kilo-expander",
+  "model": "gemini-3.8-flash-high",
+  "target": "KSnake",
+  "duration_seconds": 4.06,
+  "returncode": 3,
+  "success": false,
+  "provenance": null
+}

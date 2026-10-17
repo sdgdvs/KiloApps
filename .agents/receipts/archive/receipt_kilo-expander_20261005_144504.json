@@ -1,0 +1,10 @@
+{
+  "timestamp": "2026-10-05T14:45:04.084751+00:00",
+  "agent": "kilo-expander",
+  "model": "gemini-3.8-flash-high",
+  "target": "KSpace (5-Level Campaign Expansion)",
+  "duration_seconds": 903.1,
+  "returncode": 0,
+  "success": true,
+  "provenance": null
+}

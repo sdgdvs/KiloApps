@@ -1,0 +1,10 @@
+{
+  "timestamp": "2026-09-29T23:19:34.105816+00:00",
+  "agent": "kilo-qa",
+  "model": "gemini-3.8-flash-high",
+  "target": "KScript",
+  "duration_seconds": 451.16,
+  "returncode": 3,
+  "success": false,
+  "provenance": null
+}

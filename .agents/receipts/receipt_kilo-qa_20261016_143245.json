@@ -1,0 +1,10 @@
+{
+  "timestamp": "2026-10-16T14:32:45.402909+00:00",
+  "agent": "kilo-qa",
+  "model": "gemini-3.8-flash-medium",
+  "target": "KHangman",
+  "duration_seconds": 163.28,
+  "returncode": 0,
+  "success": true,
+  "provenance": null
+}

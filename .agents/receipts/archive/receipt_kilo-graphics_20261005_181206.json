@@ -1,0 +1,10 @@
+{
+  "timestamp": "2026-10-05T18:12:06.575656+00:00",
+  "agent": "kilo-graphics",
+  "model": "gemini-3.8-flash-high",
+  "target": "KColosseum",
+  "duration_seconds": 2.78,
+  "returncode": 3,
+  "success": false,
+  "provenance": null
+}

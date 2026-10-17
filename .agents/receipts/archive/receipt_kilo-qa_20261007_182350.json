@@ -1,0 +1,10 @@
+{
+  "timestamp": "2026-10-07T18:23:50.989703+00:00",
+  "agent": "kilo-qa",
+  "model": "gemini-3.8-flash-high",
+  "target": "KHabit",
+  "duration_seconds": 708.17,
+  "returncode": 0,
+  "success": true,
+  "provenance": null
+}
