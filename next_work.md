@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-creator
 agent_rotation:
 - kilo-graphics
 - kilo-soundscape
@@ -18,7 +18,7 @@ current_targets:
   kilo_soundscape: kweb://users/~neon_rider
   kilo_tester: KPac
   kilo_usability: KChart
-  kilo_qa: KConnect4
+  kilo_qa: KHangman
   kilo_expander: KHex
 virtual_web_target: kweb://asm-temple
 virtual_web_rotation:
@@ -34,9 +34,9 @@ virtual_web_rotation:
 - kweb://echo-subsystem.net
 - kweb://deep-core
 last_run:
-  agent: kilo-usability
-  app: KNote
-  timestamp: '2026-10-17T13:32:00+0000'
+  agent: kilo-qa
+  app: KConnect4
+  timestamp: '2026-10-17T14:14:00+0000'
 last_planner_run: '2026-10-16T20:35:00Z'
 ---
 
@@ -136,22 +136,22 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 
 ### 6. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
-- **Target**: `KConnect4`
-- **Primary Files**: `KiloOS/public/apps/kconnect4.html`, `apps/kconnect4/` (if present)
+- **Target**: `KHangman`
+- **Primary Files**: `KiloOS/public/apps/khangman.html`, `apps/khangman/` (if present)
 - **Objective**: Pass 5 QA audit, state persistence integrity, and dual web/native parity.
 - **Action Steps**:
   1. State Persistence: F5 quicksave & F9 quickload capturing complete game state, stats, and settings.
   2. First-run Tutorial: Onboarding displays once on fresh sessions, never on restored saves.
   3. Modal Dismissals: Modals dismiss cleanly with Escape, Enter, or Close button.
-  4. Dual Parity & Build: Compile Win32 native client via `cmd.exe /c build.bat` in `apps/kconnect4/` (if present) and verify web build.
+  4. Dual Parity & Build: Compile Win32 native client via `cmd.exe /c build.bat` in `apps/khangman/` (if present) and verify web build.
 - **Verification**:
-  - `uv run scripts/test_app_startup.py --app KConnect4`
-  - `cd KiloOS && npm run build` (0 Vite errors, `kconnect4.html` < 999 KB)
+  - `uv run scripts/test_app_startup.py --app KHangman`
+  - `cd KiloOS && npm run build` (0 Vite errors, `khangman.html` < 999 KB)
 - **Handoff**:
-  - In frontmatter: advance `current_targets.kilo_qa` to `KHangman`.
-  - Set `current_agent: kilo-creator`.
+  - In frontmatter: advance `current_targets.kilo_qa` to `KMinesweeper`.
+  - Set `current_agent: kilo-expander`.
   - Append terse execution log (≤6 lines), commit, and push.
-- **Upcoming Queue**: `KHangman`, `KMinesweeper`, `KTetris`.
+- **Upcoming Queue**: `KMinesweeper`, `KTetris`, `KConnect4`.
 
 ### 7. Feature Expander Queue (`kilo-expander`)
 - **Target**: `KClip`
@@ -174,6 +174,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 ---
 
 ## Recent Execution Logs (Max 5 Entries)
+
+- **2026-10-17T14:14:00+0000 — kilo-qa: KConnect4 (Pass 5 QA & Build Audit)**
+  - State persistence verified: F5 quicksave & F9 quickload functional with quota protection.
+  - First-run tutorial verified: onboarding triggers on fresh session only (`kconnect4_tutorialSeen`).
+  - Native & web build parity verified: `KConnect4.exe` (190 KB) & `kconnect4.html` (186 KB) < 999 KB.
+  - Status: PASS ✅ (clean native C build & 0 Vite errors).
 
 - **2026-10-17T13:32:00+0000 — kilo-usability: KNote (Usability & Layout Audit)**
   - ⏭️ Skip — app usability is complete and mature.
