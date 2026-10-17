@@ -1006,6 +1006,9 @@
       <button class="btn" id="btnToggleAudio" title="Mute/Unmute FM Synthesizer">
         🔊 SFX: ON
       </button>
+      <button class="btn btn-accent" id="btnAdvTools" title="Advanced Expansion Suite (A)">
+        ⚡ Advanced Tools
+      </button>
       <button class="btn" id="btnSettings" title="Workstation Settings">
         ⚙️ Settings
       </button>
@@ -1035,6 +1038,8 @@
       <button class="pill" data-cat="url">URLs</button>
       <button class="pill" data-cat="json">JSON</button>
       <button class="pill" data-cat="color">Colors</button>
+      <button class="pill" data-cat="html">HTML</button>
+      <button class="pill" data-cat="image">Images</button>
       <button class="pill" data-cat="text">Text</button>
       <button class="pill" data-cat="secret">Encrypted</button>
     </div>
@@ -1108,6 +1113,8 @@
         <div class="view-mode-tabs">
           <button class="view-tab active" id="tabViewText">Raw Text</button>
           <button class="view-tab" id="tabViewHex">Hex Dump</button>
+          <button class="view-tab" id="tabViewHtml">HTML View</button>
+          <button class="view-tab" id="tabViewImage">Image View</button>
         </div>
       </div>
 
@@ -1138,10 +1145,12 @@
         <button class="btn btn-sm" data-action="csv_to_md" title="Convert CSV/TSV to Markdown Table">CSV &rarr; MD Table</button>
       </div>
 
-      <!-- Text / Hex Display Area -->
+      <!-- Text / Hex / HTML / Image Display Area -->
       <div class="inspector-content">
         <textarea id="editorClipContent" class="clip-editor" placeholder="Select or enter clip content here..."></textarea>
-        <div id="hexViewerContainer" class="hex-viewer"></div>
+        <div id="hexViewerContainer" class="hex-viewer" style="display:none;"></div>
+        <iframe id="htmlViewerContainer" class="html-viewer" sandbox="allow-same-origin" style="display:none; width:100%; height:100%; border:none; background:#ffffff; border-radius:4px;"></iframe>
+        <div id="imageViewerContainer" class="image-viewer" style="display:none; width:100%; height:100%; overflow:auto; align-items:center; justify-content:center; background:#080d16; padding:16px; border-radius:4px; box-sizing:border-box;"></div>
       </div>
 
       <!-- Live Inspector Readout -->
@@ -1260,75 +1269,7 @@
           <!-- Dynamically populated macros -->
         </div>
       </div>
-                    <!-- Tab 6: Dev & Cases -->
-              <div id="tab-devcode" class="kclip-tab-pane" style="display:none;">
-                <div style="display:grid; grid-template-columns:repeat(2,1fr); gap:8px;">
-                  <div class="kclip-tool-card">
-                    <div class="kclip-tool-title">Case Conversions</div>
-                    <div class="kclip-tool-desc">Transform active text into standard programming naming conventions.</div>
-                    <div style="display:grid; grid-template-columns:repeat(2,1fr); gap:4px;">
-                      <button class="btn btn-sm" id="btn-case-camel">camelCase</button>
-                      <button class="btn btn-sm" id="btn-case-snake">snake_case</button>
-                      <button class="btn btn-sm" id="btn-case-kebab">kebab-case</button>
-                      <button class="btn btn-sm" id="btn-case-constant">CONST_CASE</button>
-                      <button class="btn btn-sm" id="btn-case-pascal" style="grid-column:span 2;">PascalCase</button>
-                    </div>
-                  </div>
-                  <div class="kclip-tool-card">
-                    <div class="kclip-tool-title">Base64 & URL Encoders</div>
-                    <div class="kclip-tool-desc">Encode or decode Base64 strings and URI components.</div>
-                    <div style="display:grid; grid-template-columns:repeat(2,1fr); gap:4px;">
-                      <button class="btn btn-sm" id="btn-b64-encode">B64 Encode</button>
-                      <button class="btn btn-sm" id="btn-b64-decode">B64 Decode</button>
-                      <button class="btn btn-sm" id="btn-url-encode">URL Encode</button>
-                      <button class="btn btn-sm" id="btn-url-decode">URL Decode</button>
-                    </div>
-                  </div>
-                  <div class="kclip-tool-card">
-                    <div class="kclip-tool-title">HTML Entities</div>
-                    <div class="kclip-tool-desc">Escape or unescape HTML markup entities (&lt;, &gt;, &amp;, &quot;).</div>
-                    <div style="display:flex; gap:4px;">
-                      <button class="btn btn-sm" id="btn-html-escape" style="flex:1;">Escape HTML</button>
-                      <button class="btn btn-sm" id="btn-html-unescape" style="flex:1;">Unescape HTML</button>
-                    </div>
-                  </div>
-                  <div class="kclip-tool-card">
-                    <div class="kclip-tool-title">JSON Formatter</div>
-                    <div class="kclip-tool-desc">Pretty-print or compact/minify raw JSON buffers.</div>
-                    <div style="display:flex; gap:4px;">
-                      <button class="btn btn-sm" id="btn-json-prettify" style="flex:1;">Prettify JSON</button>
-                      <button class="btn btn-sm" id="btn-json-minify" style="flex:1;">Minify JSON</button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Tab 7: Diagnostics & Stats -->
-              <div id="tab-diagnostics" class="kclip-tab-pane" style="display:none;">
-                <div class="kclip-tool-card">
-                  <div class="kclip-tool-title">Clip Text Analytics & Shannon Entropy</div>
-                  <div class="kclip-tool-desc">Deep diagnostic inspection of active clip buffer entropy, cryptographic randomness, and metrics.</div>
-                  <div id="kclip-metrics-panel" style="display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin:8px 0; background:var(--surface); padding:10px; border-radius:4px; border:1px solid var(--border); font-family:var(--font-mono); font-size:11px;">
-                    <div>Chars: <span id="metric-chars" style="color:var(--primary);">-</span></div>
-                    <div>Words: <span id="metric-words" style="color:var(--primary);">-</span></div>
-                    <div>Lines: <span id="metric-lines" style="color:var(--primary);">-</span></div>
-                    <div>Bytes: <span id="metric-bytes" style="color:var(--primary);">-</span></div>
-                    <div>Read Time: <span id="metric-readtime" style="color:var(--accent);">-</span></div>
-                    <div>Entropy: <span id="metric-entropy" style="color:var(--gold);">-</span></div>
-                  </div>
-                  <button class="btn btn-sm btn-primary" id="btn-refresh-metrics">Analyze Buffer</button>
-                </div>
-                <div class="kclip-tool-card">
-                  <div class="kclip-tool-title">CSV & SQL Generation</div>
-                  <div class="kclip-tool-desc">Export clip library as structured CSV or generate an SQL table creation & INSERT batch.</div>
-                  <div style="display:flex; gap:6px;">
-                    <button class="btn btn-sm btn-accent" id="btn-export-csv-lib">Export CSV Library</button>
-                    <button class="btn btn-sm btn-primary" id="btn-gen-sql-batch">Generate SQL Inserts</button>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div class="modal-footer">
+      <div class="modal-footer">
         <button class="btn" id="btnDismissTemplates">Close</button>
       </div>
     </div>
@@ -1567,6 +1508,7 @@
           id: 'clip_1',
           content: '/* KClip Sovereign Clipboard Workstation v1.0 */\n#define KCLIP_MAX_STACK 128\nvoid FlushClipboardHistory(void);',
           category: 'code',
+          tags: ['c', 'win32', 'kernel'],
           pinned: true,
           timestamp: '1999-09-22 00:00:00'
         },
@@ -1574,6 +1516,7 @@
           id: 'clip_2',
           content: 'kweb://portal/search?q=kiloos+hypermedia',
           category: 'url',
+          tags: ['knet', 'bookmark', 'search'],
           pinned: true,
           timestamp: '1999-09-22 01:15:20'
         },
@@ -1581,6 +1524,7 @@
           id: 'clip_3',
           content: '{\n  "system": "KiloOS",\n  "app": "KClip",\n  "milestone": 99,\n  "status": "SOVEREIGN_VERIFIED"\n}',
           category: 'json',
+          tags: ['json', 'config'],
           pinned: false,
           timestamp: '1999-09-22 02:30:10'
         },
@@ -1588,6 +1532,7 @@
           id: 'clip_4',
           content: '#06b6d4',
           category: 'color',
+          tags: ['palette', 'cyan', 'hex'],
           pinned: false,
           timestamp: '1999-09-22 03:00:00'
         },
@@ -1595,8 +1540,25 @@
           id: 'clip_5',
           content: '// [PROJECT ECHO TRANSMISSION - NODE 0x99]\n// CLASSIFIED BUFFER OFFSET 0x10199904\n// "Carrier locked at 432 Hz. Node synchronization pending."\n// Residue: 0x101999',
           category: 'secret',
+          tags: ['classified', 'echo', 'relic'],
           pinned: true,
           timestamp: '1999-09-22 04:00:00'
+        },
+        {
+          id: 'clip_6',
+          content: '<svg xmlns="http://www.w3.org/2000/svg" width="160" height="48" viewBox="0 0 160 48">\n  <rect width="160" height="48" rx="6" fill="#111827" stroke="#06b6d4" stroke-width="2"/>\n  <circle cx="24" cy="24" r="10" fill="#06b6d4"/>\n  <text x="92" y="29" fill="#f1f5f9" font-family="monospace" font-size="13" font-weight="bold" text-anchor="middle">KCLIP 1999</text>\n</svg>',
+          category: 'image',
+          tags: ['svg', 'badge', 'logo'],
+          pinned: false,
+          timestamp: '1999-09-22 04:30:00'
+        },
+        {
+          id: 'clip_7',
+          content: '<div style="background:#0f172a; border:2px dashed #06b6d4; padding:14px; border-radius:6px; color:#38bdf8; font-family:sans-serif;">\n  <h3 style="margin:0 0 6px 0; color:#facc15;">⚡ KClip HTML Snippet</h3>\n  <p style="margin:0; font-size:12px; color:#cbd5e1;">Live rendering active inside sandboxed HTML preview frame.</p>\n</div>',
+          category: 'html',
+          tags: ['html', 'snippet', 'card'],
+          pinned: false,
+          timestamp: '1999-09-22 05:00:00'
         }
       ];
 
@@ -1694,6 +1656,9 @@
         if (trimmed.includes('PROJECT ECHO') || trimmed.includes('0x10199904')) {
           return 'secret';
         }
+        if (trimmed.startsWith('data:image/') || (trimmed.startsWith('<svg') && trimmed.includes('</svg>'))) {
+          return 'image';
+        }
         if (/^#(?:[0-9a-fA-F]{3}){1,2}$/.test(trimmed)) {
           return 'color';
         }
@@ -1706,8 +1671,12 @@
             return 'json';
           } catch (e) {}
         }
+        if (trimmed.startsWith('<!DOCTYPE html') || trimmed.startsWith('<html') ||
+            (/^<[a-z][\s\S]*>/i.test(trimmed) && (trimmed.includes('</') || trimmed.includes('/>')))) {
+          return 'html';
+        }
         if (trimmed.includes('function') || trimmed.includes('#include') || trimmed.includes('void ') ||
-            trimmed.includes('class ') || trimmed.includes('import ') || trimmed.includes('<html') ||
+            trimmed.includes('class ') || trimmed.includes('import ') ||
             trimmed.includes('const ') || trimmed.includes('let ') || trimmed.includes('var ')) {
           return 'code';
         }
@@ -1728,13 +1697,15 @@
       }
 
       // --- 6. CLIP MANAGEMENT ---
-      function addClip(content, pinned = false) {
+      function addClip(content, pinned = false, tags = null) {
         if (!content || !content.trim()) return null;
         const cat = classifyContent(content);
+        let clipTags = Array.isArray(tags) ? tags : [];
         const newClip = {
           id: 'clip_' + Date.now() + '_' + Math.floor(Math.random() * 1000),
           content: content,
           category: cat,
+          tags: clipTags,
           pinned: pinned,
           timestamp: new Date().toISOString().replace('T', ' ').substring(0, 19)
         };
@@ -1744,6 +1715,7 @@
         if (existingIdx !== -1) {
           const old = state.clips.splice(existingIdx, 1)[0];
           newClip.pinned = old.pinned || pinned;
+          if (!newClip.tags.length && Array.isArray(old.tags)) newClip.tags = old.tags;
         }
 
         // If current filter or search query would hide this new clip, reset to 'all' and clear search
@@ -2060,7 +2032,12 @@
           }
 
           filtered = filtered.filter(function(c) {
-            const tagsStr = Array.isArray(c.tags) ? c.tags.join(' ') : '';
+            const tagsArr = Array.isArray(c.tags) ? c.tags : [];
+            const tagsStr = tagsArr.join(' ');
+            if (rawQ.startsWith('#') && rawQ.length > 1) {
+              const tagQuery = rawQ.substring(1).toLowerCase();
+              return tagsArr.some(function(t) { return t.toLowerCase().includes(tagQuery); });
+            }
             if (regex) {
               return regex.test(c.content) || regex.test(c.category) || regex.test(tagsStr);
             }
@@ -2160,6 +2137,18 @@
           stats.innerHTML = '<span>' + clip.content.length + ' chars</span><span>' + clip.content.split('\n').length + ' lines</span>';
           card.appendChild(stats);
 
+          if (Array.isArray(clip.tags) && clip.tags.length > 0) {
+            const tagContainer = document.createElement('div');
+            tagContainer.style.cssText = 'display:flex; gap:4px; flex-wrap:wrap; margin-top:4px;';
+            clip.tags.slice(0, 4).forEach(function(t) {
+              const tagEl = document.createElement('span');
+              tagEl.style.cssText = 'font-size:9px; font-family:var(--font-mono); color:var(--primary); background:rgba(6,182,212,0.12); padding:1px 4px; border-radius:2px; border:1px solid rgba(6,182,212,0.25);';
+              tagEl.textContent = '#' + t;
+              tagContainer.appendChild(tagEl);
+            });
+            card.appendChild(tagContainer);
+          }
+
           card.setAttribute('tabindex', '0');
           card.setAttribute('role', 'button');
           card.setAttribute('aria-label', (clip.pinned ? 'Pinned ' : '') + clip.category + ' clip: ' + clip.content.substring(0, 40).replace(/\n/g, ' '));
@@ -2233,6 +2222,10 @@
           editor.value = sel.content;
         }
         if (hexViewer) hexViewer.textContent = generateHexDump(sel.content);
+        const htmlViewer = document.getElementById('htmlViewerContainer');
+        if (htmlViewer && state.viewMode === 'html') htmlViewer.srcdoc = sel.content;
+        const imgViewer = document.getElementById('imageViewerContainer');
+        if (imgViewer && state.viewMode === 'image') renderImagePreview(sel.content, imgViewer);
 
         const chars = sel.content.length;
         const words = sel.content.trim() ? sel.content.trim().split(/\s+/).length : 0;
@@ -2456,25 +2449,73 @@
         }
       }
 
+      function renderImagePreview(content, container) {
+        if (!container) return;
+        container.innerHTML = '';
+        const trimmed = (content || '').trim();
+        if (trimmed.startsWith('<svg') || trimmed.includes('xmlns="http://www.w3.org/2000/svg"')) {
+          const wrapper = document.createElement('div');
+          wrapper.style.cssText = 'max-width:100%; max-height:100%; display:flex; align-items:center; justify-content:center;';
+          wrapper.innerHTML = trimmed;
+          container.appendChild(wrapper);
+        } else if (trimmed.startsWith('data:image/') || /\.(?:png|jpg|jpeg|gif|webp|bmp|ico)(?:\?.*)?$/i.test(trimmed)) {
+          const img = document.createElement('img');
+          img.src = trimmed;
+          img.style.cssText = 'max-width:100%; max-height:100%; object-fit:contain; box-shadow:0 0 10px rgba(0,0,0,0.5); border-radius:4px;';
+          img.onerror = function() {
+            container.innerHTML = '<div style="color:var(--danger);font-size:12px;text-align:center;">⚠️ Failed to load image from data URL or path.</div>';
+          };
+          container.appendChild(img);
+        } else {
+          container.innerHTML = '<div style="color:var(--text-muted);font-size:12px;text-align:center;max-width:320px;">' +
+            '<p style="margin-bottom:6px;font-weight:bold;color:var(--primary);">🖼️ Image / DataURL Inspector</p>' +
+            '<p>Current clip is not an image data URL or SVG markup.<br>Paste a <code>data:image/png;base64,...</code> or <code>&lt;svg&gt;</code> snippet to view here.</p></div>';
+        }
+      }
+
       function applyViewMode(mode) {
-        state.viewMode = (mode === 'hex') ? 'hex' : 'text';
+        state.viewMode = mode || 'text';
         const tabText = document.getElementById('tabViewText');
         const tabHex = document.getElementById('tabViewHex');
+        const tabHtml = document.getElementById('tabViewHtml');
+        const tabImg = document.getElementById('tabViewImage');
         const editor = document.getElementById('editorClipContent');
         const hexViewer = document.getElementById('hexViewerContainer');
-        if (tabText && tabHex && editor && hexViewer) {
-          if (state.viewMode === 'hex') {
-            tabHex.classList.add('active');
-            tabText.classList.remove('active');
-            editor.style.display = 'none';
+        const htmlViewer = document.getElementById('htmlViewerContainer');
+        const imgViewer = document.getElementById('imageViewerContainer');
+
+        [tabText, tabHex, tabHtml, tabImg].forEach(function(t) {
+          if (t) t.classList.remove('active');
+        });
+        [editor, hexViewer, htmlViewer, imgViewer].forEach(function(el) {
+          if (el) el.style.display = 'none';
+        });
+
+        const sel = getSelectedClip();
+        const content = sel ? sel.content : (editor ? editor.value : '');
+
+        if (state.viewMode === 'hex') {
+          if (tabHex) tabHex.classList.add('active');
+          if (hexViewer) {
             hexViewer.style.display = 'block';
-            hexViewer.textContent = generateHexDump(editor.value);
-          } else {
-            tabText.classList.add('active');
-            tabHex.classList.remove('active');
-            editor.style.display = 'block';
-            hexViewer.style.display = 'none';
+            hexViewer.textContent = generateHexDump(content);
           }
+        } else if (state.viewMode === 'html') {
+          if (tabHtml) tabHtml.classList.add('active');
+          if (htmlViewer) {
+            htmlViewer.style.display = 'block';
+            htmlViewer.srcdoc = content || '<!DOCTYPE html><html><body style="font-family:sans-serif;color:#666;padding:12px;">No HTML content</body></html>';
+          }
+        } else if (state.viewMode === 'image') {
+          if (tabImg) tabImg.classList.add('active');
+          if (imgViewer) {
+            imgViewer.style.display = 'flex';
+            renderImagePreview(content, imgViewer);
+          }
+        } else {
+          state.viewMode = 'text';
+          if (tabText) tabText.classList.add('active');
+          if (editor) editor.style.display = 'block';
         }
       }
 
@@ -2939,18 +2980,33 @@
           });
         }
 
-        // View Mode Tabs (Text vs Hex)
+        // View Mode Tabs (Text, Hex, HTML, Image)
         const tabText = document.getElementById('tabViewText');
         const tabHex = document.getElementById('tabViewHex');
-        const hexViewer = document.getElementById('hexViewerContainer');
+        const tabHtml = document.getElementById('tabViewHtml');
+        const tabImg = document.getElementById('tabViewImage');
 
-        if (tabText && tabHex) {
+        if (tabText) {
           tabText.addEventListener('click', function() {
             applyViewMode('text');
             playSoundEffect('click');
           });
+        }
+        if (tabHex) {
           tabHex.addEventListener('click', function() {
             applyViewMode('hex');
+            playSoundEffect('click');
+          });
+        }
+        if (tabHtml) {
+          tabHtml.addEventListener('click', function() {
+            applyViewMode('html');
+            playSoundEffect('click');
+          });
+        }
+        if (tabImg) {
+          tabImg.addEventListener('click', function() {
+            applyViewMode('image');
             playSoundEffect('click');
           });
         }
@@ -3747,7 +3803,7 @@
                 </div>
                 <div class="kclip-tool-card">
                   <div class="kclip-tool-title">Plain Text Archive (.txt)</div>
-                  <div class="kclip-tool-desc">Delimited raw text dump with `=== CLIP ===` block separators for easy terminal ingestion.</div>
+                  <div class="kclip-tool-desc">Delimited raw text dump with '=== CLIP ===' block separators for easy terminal ingestion.</div>
                   <button class="btn btn-sm" id="btn-export-txt-archive" style="align-self:flex-start;">Download Text Archive</button>
                 </div>
                 <div class="kclip-tool-card">
@@ -3761,7 +3817,7 @@
               <div id="tab-import" class="kclip-tab-pane" style="display:none;">
                 <div class="kclip-tool-card">
                   <div class="kclip-tool-title">Batch Import (JSON Array or Delimited Text)</div>
-                  <div class="kclip-tool-desc">Paste a JSON export array `[{"content":"..."}]` or text blocks separated by `=== CLIP ===` or `---`.</div>
+                  <div class="kclip-tool-desc">Paste a JSON export array '[{"content":"..."}]' or text blocks separated by '=== CLIP ===' or '---'.</div>
                   <textarea id="kclip-import-input" class="text-input" style="height:90px; resize:vertical; font-size:11px;" placeholder='[{"content": "...", "category": "code", "tags": ["util"]}] OR\nItem 1\n===\nItem 2'></textarea>
                   <div style="display:flex; gap:6px; margin-top:6px;">
                     <button class="btn btn-sm btn-primary" id="btn-execute-json-import">Import JSON</button>
@@ -3771,7 +3827,7 @@
                 </div>
                 <div class="kclip-tool-card">
                   <div class="kclip-tool-title">Clip Tags & Custom Labels</div>
-                  <div class="kclip-tool-desc">Attach comma-separated tags to the currently selected clip (e.g. `urgent, snippet, api, sql`).</div>
+                  <div class="kclip-tool-desc">Attach comma-separated tags to the currently selected clip (e.g. urgent, snippet, api, sql).</div>
                   <div style="display:flex; gap:6px;">
                     <input type="text" id="kclip-tags-input" class="text-input" placeholder="e.g. sql, refactor, snippet" />
                     <button class="btn btn-sm btn-accent" id="btn-save-clip-tags">Save Tags</button>
@@ -3788,6 +3844,74 @@
                   </div>
                 </div>
               </div>
+
+              <!-- Tab 6: Dev & Cases -->
+              <div id="tab-devcode" class="kclip-tab-pane" style="display:none;">
+                <div style="display:grid; grid-template-columns:repeat(2,1fr); gap:8px;">
+                  <div class="kclip-tool-card">
+                    <div class="kclip-tool-title">Case Conversions</div>
+                    <div class="kclip-tool-desc">Transform active text into standard programming naming conventions.</div>
+                    <div style="display:grid; grid-template-columns:repeat(2,1fr); gap:4px;">
+                      <button class="btn btn-sm" id="btn-case-camel">camelCase</button>
+                      <button class="btn btn-sm" id="btn-case-snake">snake_case</button>
+                      <button class="btn btn-sm" id="btn-case-kebab">kebab-case</button>
+                      <button class="btn btn-sm" id="btn-case-constant">CONST_CASE</button>
+                      <button class="btn btn-sm" id="btn-case-pascal" style="grid-column:span 2;">PascalCase</button>
+                    </div>
+                  </div>
+                  <div class="kclip-tool-card">
+                    <div class="kclip-tool-title">Base64 &amp; URL Encoders</div>
+                    <div class="kclip-tool-desc">Encode or decode Base64 strings and URI components.</div>
+                    <div style="display:grid; grid-template-columns:repeat(2,1fr); gap:4px;">
+                      <button class="btn btn-sm" id="btn-b64-encode">B64 Encode</button>
+                      <button class="btn btn-sm" id="btn-b64-decode">B64 Decode</button>
+                      <button class="btn btn-sm" id="btn-url-encode">URL Encode</button>
+                      <button class="btn btn-sm" id="btn-url-decode">URL Decode</button>
+                    </div>
+                  </div>
+                  <div class="kclip-tool-card">
+                    <div class="kclip-tool-title">HTML Entities</div>
+                    <div class="kclip-tool-desc">Escape or unescape HTML markup entities (&amp;lt;, &amp;gt;, &amp;amp;, &amp;quot;).</div>
+                    <div style="display:flex; gap:4px;">
+                      <button class="btn btn-sm" id="btn-html-escape" style="flex:1;">Escape HTML</button>
+                      <button class="btn btn-sm" id="btn-html-unescape" style="flex:1;">Unescape HTML</button>
+                    </div>
+                  </div>
+                  <div class="kclip-tool-card">
+                    <div class="kclip-tool-title">JSON Formatter</div>
+                    <div class="kclip-tool-desc">Pretty-print or compact/minify raw JSON buffers.</div>
+                    <div style="display:flex; gap:4px;">
+                      <button class="btn btn-sm" id="btn-json-prettify" style="flex:1;">Prettify JSON</button>
+                      <button class="btn btn-sm" id="btn-json-minify" style="flex:1;">Minify JSON</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Tab 7: Diagnostics & Stats -->
+              <div id="tab-diagnostics" class="kclip-tab-pane" style="display:none;">
+                <div class="kclip-tool-card">
+                  <div class="kclip-tool-title">Clip Text Analytics &amp; Shannon Entropy</div>
+                  <div class="kclip-tool-desc">Deep diagnostic inspection of active clip buffer entropy, cryptographic randomness, and metrics.</div>
+                  <div id="kclip-metrics-panel" style="display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin:8px 0; background:var(--surface); padding:10px; border-radius:4px; border:1px solid var(--border); font-family:var(--font-mono); font-size:11px;">
+                    <div>Chars: <span id="metric-chars" style="color:var(--primary);">-</span></div>
+                    <div>Words: <span id="metric-words" style="color:var(--primary);">-</span></div>
+                    <div>Lines: <span id="metric-lines" style="color:var(--primary);">-</span></div>
+                    <div>Bytes: <span id="metric-bytes" style="color:var(--primary);">-</span></div>
+                    <div>Read Time: <span id="metric-readtime" style="color:var(--accent);">-</span></div>
+                    <div>Entropy: <span id="metric-entropy" style="color:var(--gold);">-</span></div>
+                  </div>
+                  <button class="btn btn-sm btn-primary" id="btn-refresh-metrics">Analyze Buffer</button>
+                </div>
+                <div class="kclip-tool-card">
+                  <div class="kclip-tool-title">CSV &amp; SQL Generation</div>
+                  <div class="kclip-tool-desc">Export clip library as structured CSV or generate an SQL table creation &amp; INSERT batch.</div>
+                  <div style="display:flex; gap:6px;">
+                    <button class="btn btn-sm btn-accent" id="btn-export-csv-lib">Export CSV Library</button>
+                    <button class="btn btn-sm btn-primary" id="btn-gen-sql-batch">Generate SQL Inserts</button>
+                  </div>
+                </div>
+              </div>
             </div>
             <div class="modal-footer">
               <button class="btn" id="kclip-adv-done">Close</button>
@@ -3795,6 +3919,14 @@
           </div>
         `;
         document.body.appendChild(modal);
+
+        const topAdvBtn = document.getElementById('btnAdvTools');
+        if (topAdvBtn) {
+          topAdvBtn.onclick = function() {
+            modal.style.display = 'flex';
+            if (typeof playSoundEffect === 'function') playSoundEffect('click');
+          };
+        }
 
         // Add Quick Action Buttons into .transform-toolbox
         const toolbox = document.querySelector('.transform-toolbox');

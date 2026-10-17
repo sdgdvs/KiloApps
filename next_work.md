@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-expander
-next_agent: kilo-creator
+current_agent: kilo-creator
+next_agent: kilo-graphics
 agent_rotation:
 - kilo-graphics
 - kilo-soundscape
@@ -20,7 +20,7 @@ current_targets:
   kilo_tester: KPaint
   kilo_usability: KDB
   kilo_qa: KMinesweeper
-  kilo_expander: KClip
+  kilo_expander: KJournal
 virtual_web_target: kweb://cybercafe
 virtual_web_rotation:
 - kweb://darknet
@@ -35,9 +35,9 @@ virtual_web_rotation:
 - kweb://echo-subsystem.net
 - kweb://deep-core
 last_run:
-  agent: kilo-qa
-  app: KHangman
-  timestamp: 2026-10-17T17:18:25+0000
+  agent: kilo-expander
+  app: KClip
+  timestamp: 2026-10-17T18:38:00+0000
 last_planner_run: '2026-10-16T20:35:00Z'
 ---
 
@@ -156,22 +156,19 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Upcoming Queue**: `KTetris`, `KAudio`.
 
 ### 7. Feature Expander Queue (`kilo-expander`)
-- **Target**: `KClip`
-- **Primary Files**: `KiloOS/public/apps/kclip.html`, `KClip/main.c` (if present)
-- **Objective**: Deep functional feature expansion for clipboard manager.
+- **Target**: `KJournal`
+- **Primary Files**: `KiloOS/public/apps/kjournal.html`, `KJournal/main.c` (if present)
+- **Objective**: Deep functional feature expansion for personal journaling and encrypted log keeper.
 - **Action Steps**:
-  1. Inspect `KiloOS/public/apps/kclip.html`.
-  2. Expand clipboard manager capabilities:
-     - Multi-format clip storage: Text, HTML snippet, image data URL, and hex dump preview.
-     - Snippet tags & categorization: Custom labels, search/filter regex, and pinned items.
-     - Batch Import & Export: JSON and plain text batch archive export and import.
+  1. Inspect `KiloOS/public/apps/kjournal.html`.
+  2. Expand journal utility: rich markdown rendering, calendar day indexing, tag searching, and export.
   3. Zero external dependencies; maintain responsive 1999 retro styling.
-- **Verification**: `uv run scripts/test_app_startup.py --app KClip` and `cd KiloOS && npm run build`. File size < 999 KB.
+- **Verification**: `uv run scripts/test_app_startup.py --app KJournal` and `cd KiloOS && npm run build`. File size < 999 KB.
 - **Handoff**:
-  - In frontmatter: advance `current_targets.kilo_expander` to `KJournal`.
-  - Set `current_agent: kilo-usability`.
+  - In frontmatter: advance `current_targets.kilo_expander` to `KBookmark`.
+  - Set `current_agent: kilo-creator`.
   - Append terse execution log (≤6 lines), commit, and push.
-- **Upcoming Queue**: `KJournal`, `KBookmark`, `KHex`, `KFont`.
+- **Upcoming Queue**: `KBookmark`, `KHex`, `KFont`.
 
 ---
 
@@ -196,6 +193,14 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 ---
 
 ## Recent Execution Logs (Max 5 Entries)
+
+- **2026-10-17T18:38:00+0000 — kilo-expander: KClip (Deep Feature Expansion & Dual-Target Parity)**
+  - Dual-Target Parity: Expanded Win32 C client with camelCase, snake_case, line deduplication, buffer telemetry (CRC-32, char/word counts), and text archive export/import.
+  - Multi-Format Views & Diagnostics: Added HTML live sandbox viewer and image/dataURL inspector to text/hex modes; added Shannon entropy & randomness metrics.
+  - Interoperability & Code Tools: Integrated JSON prettify/minify, HTML entity escaping/unescaping, Base64 & URL decoders, CSV library export, and SQL schema/INSERT generator.
+  - Template Library: Expanded snippet templates (Win32 WndProc, HTML5 retro skeleton, SQL DDL schema, REST JSON spec, Project Echo telemetry frame).
+  - Verification: Clean builds (`npm.cmd run build` 0 errors, `build.bat` 0 warnings); `test_app_startup.py` PASS; size: 188.7 KB HTML, 21.5 KB EXE (<999 KB ceiling).
+  - Queue: Advanced `kilo_expander` to `KJournal`; rotation handoff to `kilo-creator`.
 
 - **2026-10-17T17:18:25+0000 — kilo-qa: KHangman (Pass 5 State Persistence & Mature Quarantine)**
   - Dual Parity & State: Added full stats sync to Win32 `GameState`, enabled saving finished sessions, and ensured clean `KillTimer` on `WM_DESTROY`.
@@ -224,10 +229,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Tool Call Limit: Removed restrictive <=10 tool call directives from orchestrator agy agent dispatch and all skill definitions.
   - Security Lint: Resolved javascript: protocol in webring.html; security_lint 100% PASS.
   - Verification: Security gates passed; task registered in Windows Task Scheduler (next run :48).
-
-- **2026-10-17T16:24:00+0000 — kilo-soundscape: kweb://users/~neon_rider (YM2612 2-Op FM / SPC700 Procedural Audio Overhaul)**
-  - Audio Engine: Composed 6 authentic 32-step procedural chiptunes with 3-voice counterpoint (FM slap bass, lead, shell arps) and dynamic drum synthesis (FM kick, filtered noise snare, 2-op hi-hats).
-  - Presets & Earcons: Added FM Operator Lab presets (Slap Bass, Cyber Lead, Crystal Chime, Sub Drone, FM Brass, Action Stinger) and tactile UI earcons/stingers (success fanfare, error buzz, 1999Hz harmonic chime, micro-clicks).
-  - Delay Line: Calibrated SNES SPC700 slapback delay line (190ms with 2200Hz lowpass damping) and dynamic 4-channel VU meter bounce.
-  - Verification: Clean Vite build (`npm.cmd run build` 0 errors); `neon_rider.html` 287 KB (<999 KB ceiling).
-  - Queue: Advanced `kilo_soundscape` to `kweb://asm-temple`; rotation handoff to `kilo-tester`.
