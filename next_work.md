@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-qa
+current_agent: kilo-expander
+next_agent: kilo-creator
 agent_rotation:
 - kilo-graphics
 - kilo-soundscape
@@ -18,8 +18,8 @@ current_targets:
   kilo_soundscape: kweb://geocities
   kilo_tester: KSpace
   kilo_usability: KNote
-  kilo_qa: KTetris
-  kilo_expander: KJournal
+  kilo_qa: KConnect4
+  kilo_expander: KClip
 virtual_web_target: kweb://users/~neon_rider
 virtual_web_rotation:
 - kweb://darknet
@@ -34,9 +34,9 @@ virtual_web_rotation:
 - kweb://echo-subsystem.net
 - kweb://deep-core
 last_run:
-  agent: kilo-usability
-  app: KCalc
-  timestamp: 2026-10-17T10:13:00+0000
+  agent: kilo-qa
+  app: KTetris
+  timestamp: 2026-10-17T10:31:00+0000
 last_planner_run: '2026-10-16T20:35:00Z'
 ---
 
@@ -136,22 +136,22 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 
 ### 6. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
-- **Target**: `KTetris`
-- **Primary Files**: `KiloOS/public/apps/ktetris.html`, `apps/ktetris/` (if present)
+- **Target**: `KConnect4`
+- **Primary Files**: `KiloOS/public/apps/kconnect4.html`, `apps/kconnect4/` (if present)
 - **Objective**: Pass 5 QA audit, state persistence integrity, and dual web/native parity.
 - **Action Steps**:
   1. State Persistence: F5 quicksave & F9 quickload capturing complete game state, stats, and settings.
   2. First-run Tutorial: Onboarding displays once on fresh sessions, never on restored saves.
   3. Modal Dismissals: Modals dismiss cleanly with Escape, Enter, or Close button.
-  4. Dual Parity & Build: Compile Win32 native client via `cmd.exe /c build.bat` in `apps/ktetris/` (if present) and verify web build.
+  4. Dual Parity & Build: Compile Win32 native client via `cmd.exe /c build.bat` in `apps/kconnect4/` (if present) and verify web build.
 - **Verification**:
-  - `uv run scripts/test_app_startup.py --app KTetris`
-  - `cd KiloOS && npm run build` (0 Vite errors, `ktetris.html` < 999 KB)
+  - `uv run scripts/test_app_startup.py --app KConnect4`
+  - `cd KiloOS && npm run build` (0 Vite errors, `kconnect4.html` < 999 KB)
 - **Handoff**:
-  - In frontmatter: advance `current_targets.kilo_qa` to `KConnect4`.
+  - In frontmatter: advance `current_targets.kilo_qa` to `KHangman`.
   - Set `current_agent: kilo-expander`.
   - Append terse execution log (≤6 lines), commit, and push.
-- **Upcoming Queue**: `KConnect4`, `KHangman`, `KMinesweeper`.
+- **Upcoming Queue**: `KHangman`, `KMinesweeper`, `KTetris`.
 
 ### 7. Feature Expander Queue (`kilo-expander`)
 - **Target**: `KClip`
@@ -175,6 +175,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
  
+- **2026-10-17T10:31:00+0000 — kilo-qa: KTetris (Pass 5 QA & State Integrity Audit)**
+  - Quicksave & State: Verified F5 quicksave & F9 quickload; guaranteed queue refill and tutorial suppression on load.
+  - Bug Fix: Fixed ReferenceError in `useRowNuke` (`nx` -> `x`) during row clearance explosion rendering.
+  - Verification: `test_app_startup.py` passed (186.5 KB < 999 KB ceiling); `npm run build` clean with 0 errors.
+  - Queue: Advanced `kilo_qa` target to `KConnect4`; rotation handoff to `kilo-expander`.
+
 - **2026-10-17T10:13:00+0000 — kilo-usability: KCalc (Responsive & Layout Usability Polish)**
   - Responsive Layout: Enhanced compact breakpoint rules (<380px) for keypad gap, button sizing, and display padding.
   - Ergonomics: Verified F1/H keyboard shortcut guide, backdrop modal dismissals, and high-DPI scaling.
@@ -198,10 +204,4 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Status: ⏭️ Skip — Imagen 3 asset replacement not appropriate for KWizard (pure vector, board game, or mature art).
   - Optimization: Handled via orchestrator pre-flight zero-token auto-skip.
   - Queue: Advanced `kilo-graphics` to `KWizard`; rotation handoff to `kilo-soundscape`.
-
-- **2026-10-17T08:15:00+0000 — kilo-creator: kweb://geocities (ASCII Art & Cyber-Signature Stamp Forge)**
-  - Capabilities: Added 1999 ASCII Art & Cyber-Signature Stamp Forge (`SIG_FORGE.CGI v1.99`) with Cyber 3D, Matrix, Demogroup, Stars, and Y2K hazard frame generators.
-  - Interactive Integration: Connected live clipboard export, AudioContext synthesizer earcons, and direct Guestbook injection hook.
-  - Verification: Build clean; file size ~607 KB (<999 KB ceiling); 0 Vite errors.
-  - Queue: Advanced `virtual_web_target` to `kweb://users/~neon_rider`; rotation handoff to `kilo-graphics`.
 

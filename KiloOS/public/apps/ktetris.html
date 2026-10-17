@@ -1635,6 +1635,8 @@
           freezeCharges = state.freezeCharges ?? 2;
           freezeTimerMs = state.freezeTimerMs ?? 0;
           bag = Array.isArray(state.bag) ? state.bag : [];
+          setTutorialSeen();
+          fillNextQueue();
           
           isDuelMode = false;
           handleResize();
@@ -1806,7 +1808,7 @@
           for (let x = 0; x < W; x++) {
               if (grid[rY][x] > 0) {
                   let pCol = colors[grid[rY][x]];
-                  addLayeredExplosion((nx + 0.5) * CELL, (rY + 0.5) * CELL, pCol, false);
+                  addLayeredExplosion((x + 0.5) * CELL, (rY + 0.5) * CELL, pCol, false);
               }
           }
       }
