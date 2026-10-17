@@ -1607,12 +1607,13 @@ NOP</textarea>
       <div style="margin-top:14px; background:#060e18; border:1px solid var(--border-dim); padding:10px;">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
           <span style="font-size:12px; color:var(--accent-cyan); font-weight:bold;">🎹 YM2612 FM Operator Laboratory &amp; Piano Keys</span>
-          <div style="display:flex; gap:4px;">
+          <div style="display:flex; gap:4px; flex-wrap:wrap;">
             <button class="btn-retro" onclick="loadFmPreset('slap')">Slap Bass</button>
+            <button class="btn-retro" onclick="loadFmPreset('lead')">Cyber Lead</button>
+            <button class="btn-retro" onclick="loadFmPreset('bell')">Crystal Chime</button>
+            <button class="btn-retro" onclick="loadFmPreset('drone')">Sub Drone</button>
             <button class="btn-retro" onclick="loadFmPreset('brass')">FM Brass</button>
-            <button class="btn-retro" onclick="loadFmPreset('bell')">Crystal Bell</button>
-            <button class="btn-retro" onclick="loadFmPreset('laser')">Laser FX</button>
-            <button class="btn-retro" onclick="loadFmPreset('coin')">Coin Arp</button>
+            <button class="btn-retro" onclick="loadFmPreset('stinger')">Action Stinger</button>
           </div>
         </div>
 
@@ -3815,40 +3816,64 @@ NOP</textarea>
 
   const tracks = [
     {
-      title: "[01] Neon Overdrive 1999 (FM Slap Bass & Lead)",
-      tempo: 130,
-      bassNotes: [110, 110, 130.8, 146.8, 110, 110, 164.8, 146.8],
-      leadNotes: [440, 523.2, 659.2, 587.3, 523.2, 440, 392, 440]
+      title: "[01] Neon Highway 1999 (Cyber-Outrun FM Suite)",
+      tempo: 132,
+      bassRatio: 2.0, bassDepth: 650, bassDecay: 0.22,
+      leadRatio: 1.0, leadDepth: 340, leadDecay: 0.26,
+      bassNotes: [110, 0, 110, 220, 110, 0, 130.8, 146.8, 87.3, 0, 87.3, 174.6, 87.3, 0, 110, 130.8, 73.4, 0, 73.4, 146.8, 73.4, 0, 87.3, 98.0, 82.4, 0, 82.4, 164.8, 82.4, 98.0, 110, 123.5],
+      leadNotes: [440, 0, 523.3, 659.3, 0, 587.3, 523.3, 440, 349.2, 0, 440, 523.3, 0, 659.3, 523.3, 349.2, 293.7, 0, 349.2, 440, 0, 523.3, 440, 293.7, 329.6, 0, 392.0, 493.9, 0, 587.3, 493.9, 440],
+      arpNotes: [261.6, 392.0, 261.6, 392.0, 261.6, 392.0, 261.6, 392.0, 220.0, 329.6, 220.0, 329.6, 220.0, 329.6, 220.0, 329.6, 174.6, 261.6, 174.6, 261.6, 174.6, 261.6, 174.6, 261.6, 196.0, 293.7, 196.0, 293.7, 196.0, 293.7, 196.0, 293.7],
+      drums: ['K', 'H', 'H', 'H', 'S', 'H', 'H', 'H', 'K', 'H', 'K', 'H', 'S', 'H', 'OH', 'H', 'K', 'H', 'H', 'H', 'S', 'H', 'H', 'H', 'K', 'H', 'K', 'H', 'S', 'H', 'OH', 'H']
     },
     {
-      title: "[02] Subterranean Copper (SPC700 Warm Echo)",
-      tempo: 85,
-      bassNotes: [98, 98, 123.5, 130.8, 98, 98, 146.8, 130.8],
-      leadNotes: [392, 493.8, 523.2, 587.3, 493.8, 392, 329.6, 392]
+      title: "[02] 64k Demoscene Awakening (Fast Pulse Arp & Syncopation)",
+      tempo: 144,
+      bassRatio: 2.0, bassDepth: 700, bassDecay: 0.20,
+      leadRatio: 1.0, leadDepth: 380, leadDecay: 0.22,
+      bassNotes: [73.4, 146.8, 73.4, 0, 146.8, 73.4, 130.8, 146.8, 58.3, 116.5, 58.3, 0, 116.5, 58.3, 110, 116.5, 65.4, 130.8, 65.4, 0, 130.8, 65.4, 116.5, 130.8, 55.0, 110.0, 55.0, 0, 110.0, 55.0, 98.0, 110.0],
+      leadNotes: [587.3, 0, 698.5, 880, 0, 784, 698.5, 587.3, 466.2, 0, 587.3, 698.5, 0, 880, 698.5, 466.2, 523.3, 0, 659.3, 784, 0, 880, 784, 523.3, 440, 0, 523.3, 659.3, 0, 784, 659.3, 587.3],
+      arpNotes: [293.7, 440, 587.3, 440, 349.2, 440, 698.5, 440, 233.1, 349.2, 466.2, 349.2, 293.7, 349.2, 587.3, 349.2, 261.6, 392, 523.3, 392, 329.6, 392, 659.3, 392, 220, 329.6, 440, 329.6, 261.6, 329.6, 523.3, 329.6],
+      drums: ['K', 'H', 'S', 'H', 'K', 'K', 'S', 'H', 'K', 'H', 'S', 'H', 'K', 'OH', 'S', 'H', 'K', 'H', 'S', 'H', 'K', 'K', 'S', 'H', 'K', 'H', 'S', 'H', 'K', 'OH', 'S', 'H']
     },
     {
-      title: "[03] Demoscene Rush 64k (Fast Pulse Arps)",
-      tempo: 145,
-      bassNotes: [130.8, 146.8, 164.8, 174.6, 196, 174.6, 164.8, 146.8],
-      leadNotes: [523.2, 587.3, 659.2, 698.4, 783.9, 698.4, 659.2, 587.3]
+      title: "[03] Subterranean Carlsbad Ambient (Dark Drone & Bell Resonance)",
+      tempo: 72,
+      bassRatio: 0.5, bassDepth: 350, bassDecay: 0.55,
+      leadRatio: 3.5, leadDepth: 750, leadDecay: 0.85,
+      bassNotes: [41.2, 0, 0, 0, 41.2, 0, 0, 0, 65.4, 0, 0, 0, 65.4, 0, 0, 0, 61.7, 0, 0, 0, 61.7, 0, 0, 0, 41.2, 0, 0, 0, 82.4, 0, 0, 0],
+      leadNotes: [329.6, 0, 0, 0, 493.9, 0, 0, 0, 523.3, 0, 0, 0, 659.3, 0, 0, 0, 493.9, 0, 0, 0, 392.0, 0, 0, 0, 329.6, 0, 0, 0, 246.9, 0, 0, 0],
+      arpNotes: [196, 0, 246.9, 0, 392, 0, 493.9, 0, 261.6, 0, 329.6, 0, 523.3, 0, 659.3, 0, 246.9, 0, 293.7, 0, 493.9, 0, 587.3, 0, 196, 0, 246.9, 0, 392, 0, 493.9, 0],
+      drums: ['K', 0, 'H', 0, 'S', 0, 'H', 0, 'K', 0, 'H', 0, 'S', 0, 'OH', 0, 'K', 0, 'H', 0, 'S', 0, 'H', 0, 'K', 0, 'H', 0, 'S', 0, 'OH', 0]
     },
     {
-      title: "[04] Echoes of 10.19.99.4 (1999Hz Harmonic Lore)",
-      tempo: 110,
-      bassNotes: [82.4, 82.4, 110, 82.4, 98, 82.4, 123.4, 82.4],
-      leadNotes: [659.2, 880, 987.7, 880, 1999, 880, 659.2, 440]
-    },
-    {
-      title: "[05] Cyberpunk 1999 Highway (Dual FM Modulator & Slap Bass)",
+      title: "[04] Win32 ASM Matrix (Action Stinger & Industrial FM Riff)",
       tempo: 138,
-      bassNotes: [110, 110, 123.5, 146.8, 164.8, 146.8, 123.5, 110],
-      leadNotes: [440, 554.4, 659.3, 880, 739.9, 659.3, 554.4, 440]
+      bassRatio: 4.0, bassDepth: 880, bassDecay: 0.20,
+      leadRatio: 2.0, leadDepth: 480, leadDecay: 0.24,
+      bassNotes: [92.5, 92.5, 0, 92.5, 185.0, 0, 92.5, 92.5, 73.4, 73.4, 0, 73.4, 146.8, 0, 73.4, 73.4, 61.7, 61.7, 0, 61.7, 123.5, 0, 61.7, 61.7, 69.3, 69.3, 0, 69.3, 138.6, 0, 110.0, 123.5],
+      leadNotes: [370.0, 0, 440.0, 554.4, 0, 740.0, 554.4, 440.0, 293.7, 0, 370.0, 440.0, 0, 587.3, 440.0, 293.7, 246.9, 0, 293.7, 370.0, 0, 493.9, 370.0, 246.9, 277.2, 0, 349.2, 415.3, 0, 554.4, 415.3, 370.0],
+      arpNotes: [220.0, 277.2, 370.0, 440.0, 220.0, 277.2, 370.0, 440.0, 185.0, 220.0, 293.7, 370.0, 185.0, 220.0, 293.7, 370.0, 146.8, 185.0, 246.9, 293.7, 146.8, 185.0, 246.9, 293.7, 174.6, 207.7, 277.2, 349.2, 174.6, 207.7, 277.2, 349.2],
+      drums: ['K', 'H', 'S', 'H', 'K', 'K', 'S', 'H', 'K', 'H', 'S', 'H', 'K', 'H', 'KS', 'OH', 'K', 'H', 'S', 'H', 'K', 'K', 'S', 'H', 'K', 'H', 'S', 'H', 'K', 'H', 'KS', 'OH']
     },
     {
-      title: "[06] Carlsbad Bedrock Ambient (Subterranean Sine Resonance & SPC700 Delay)",
-      tempo: 75,
-      bassNotes: [73.4, 73.4, 82.4, 98.0, 73.4, 73.4, 110.0, 98.0],
-      leadNotes: [293.7, 369.9, 440.0, 587.3, 440.0, 369.9, 293.7, 220.0]
+      title: "[05] Echoes of 10.19.99.4 (1999Hz Harmonic Lore & Shell Voicings)",
+      tempo: 110,
+      bassRatio: 2.0, bassDepth: 550, bassDecay: 0.28,
+      leadRatio: 1.0, leadDepth: 320, leadDecay: 0.35,
+      bassNotes: [65.4, 0, 65.4, 130.8, 65.4, 0, 98.0, 116.5, 51.9, 0, 51.9, 103.8, 51.9, 0, 77.8, 92.5, 43.7, 0, 43.7, 87.3, 43.7, 0, 65.4, 77.8, 49.0, 0, 49.0, 98.0, 49.0, 65.4, 77.8, 87.3],
+      leadNotes: [523.3, 0, 622.3, 784.0, 0, 1999.0, 784.0, 523.3, 415.3, 0, 523.3, 622.3, 0, 1999.0, 622.3, 415.3, 349.2, 0, 415.3, 523.3, 0, 1999.0, 523.3, 349.2, 392.0, 0, 493.9, 587.3, 0, 1999.0, 784.0, 523.3],
+      arpNotes: [155.6, 233.1, 311.1, 466.2, 155.6, 233.1, 311.1, 466.2, 130.8, 207.7, 261.6, 415.3, 130.8, 207.7, 261.6, 415.3, 103.8, 174.6, 207.7, 349.2, 103.8, 174.6, 207.7, 349.2, 123.5, 196.0, 246.9, 392.0, 123.5, 196.0, 246.9, 392.0],
+      drums: ['K', 0, 'H', 'H', 'S', 0, 'H', 0, 'K', 0, 'K', 'H', 'S', 0, 'OH', 0, 'K', 0, 'H', 'H', 'S', 0, 'H', 0, 'K', 0, 'K', 'H', 'S', 0, 'OH', 0]
+    },
+    {
+      title: "[06] Sunset Copper Horizon (SPC700 Slapback & Melodic Counterpoint)",
+      tempo: 122,
+      bassRatio: 2.0, bassDepth: 600, bassDecay: 0.24,
+      leadRatio: 1.0, leadDepth: 350, leadDecay: 0.28,
+      bassNotes: [98.0, 0, 98.0, 196.0, 98.0, 0, 123.5, 146.8, 82.4, 0, 82.4, 164.8, 82.4, 0, 98.0, 123.5, 65.4, 0, 65.4, 130.8, 65.4, 0, 82.4, 98.0, 73.4, 0, 73.4, 146.8, 73.4, 98.0, 110.0, 123.5],
+      leadNotes: [392.0, 0, 493.9, 587.3, 0, 784.0, 587.3, 493.9, 329.6, 0, 392.0, 493.9, 0, 659.3, 493.9, 392.0, 261.6, 0, 329.6, 392.0, 0, 523.3, 392.0, 329.6, 293.7, 0, 369.9, 440.0, 0, 587.3, 440.0, 392.0],
+      arpNotes: [246.9, 329.6, 392.0, 493.9, 246.9, 329.6, 392.0, 493.9, 196.0, 246.9, 329.6, 392.0, 196.0, 246.9, 329.6, 392.0, 164.8, 196.0, 261.6, 329.6, 164.8, 196.0, 261.6, 329.6, 185.0, 220.0, 293.7, 369.9, 185.0, 220.0, 293.7, 369.9],
+      drums: ['K', 'H', 'H', 'H', 'S', 'H', 'H', 'H', 'K', 'H', 'K', 'H', 'S', 'H', 'OH', 'H', 'K', 'H', 'H', 'H', 'S', 'H', 'H', 'H', 'K', 'H', 'K', 'H', 'S', 'H', 'OH', 'H']
     }
   ];
 
@@ -3876,7 +3901,7 @@ NOP</textarea>
     analyser = audioCtx.createAnalyser();
     analyser.fftSize = 256;
 
-    // SNES SPC700 Stereo Slapback Delay Simulation
+    // SNES SPC700 Stereo Slapback Delay Simulation (190ms with 2200Hz low-pass damping)
     delayNode = audioCtx.createDelay();
     delayNode.delayTime.setValueAtTime(0.19, audioCtx.currentTime);
     feedbackGain = audioCtx.createGain();
@@ -3896,29 +3921,38 @@ NOP</textarea>
     requestAnimationFrame(renderScope);
   }
 
-  function triggerFmVoice(freq, duration, isBass, customRatio, customDepth) {
+  function triggerFmVoice(freq, duration, isBass, customRatio, customDepth, detuneCents = 0) {
     if (!audioCtx) return;
     const now = audioCtx.currentTime;
 
+    // Carrier Oscillator
     const carrier = audioCtx.createOscillator();
     carrier.type = isBass ? 'sawtooth' : 'sine';
     carrier.frequency.setValueAtTime(freq, now);
+    if (detuneCents) carrier.detune.setValueAtTime(detuneCents, now);
 
+    // Modulator Oscillator
     const modulator = audioCtx.createOscillator();
     modulator.type = 'sine';
-    const modRatio = customRatio !== undefined ? customRatio : (isBass ? 2 : 1);
+    const modRatio = customRatio !== undefined ? customRatio : (isBass ? 2.0 : 1.0);
     modulator.frequency.setValueAtTime(freq * modRatio, now);
+    if (detuneCents) modulator.detune.setValueAtTime(detuneCents * modRatio, now);
 
+    // FM Modulation Index Envelope (YM2612 TL & decay)
     const modGain = audioCtx.createGain();
-    const modDepth = customDepth !== undefined ? customDepth : (isBass ? 500 : 250);
+    const modDepth = customDepth !== undefined ? customDepth : (isBass ? 620 : 320);
     modGain.gain.setValueAtTime(modDepth, now);
-    modGain.gain.exponentialRampToValueAtTime(1, now + duration);
+    modGain.gain.exponentialRampToValueAtTime(Math.max(1, modDepth * 0.05), now + duration * 0.7);
+    modGain.gain.exponentialRampToValueAtTime(0.001, now + duration);
 
     modulator.connect(modGain);
     modGain.connect(carrier.frequency);
 
+    // Amplitude Envelope (ADSR)
     const voiceGain = audioCtx.createGain();
-    voiceGain.gain.setValueAtTime(isBass ? 0.35 : 0.2, now);
+    const peakVol = isBass ? 0.32 : 0.22;
+    voiceGain.gain.setValueAtTime(0.001, now);
+    voiceGain.gain.linearRampToValueAtTime(peakVol, now + 0.006);
     voiceGain.gain.exponentialRampToValueAtTime(0.001, now + duration);
 
     carrier.connect(voiceGain);
@@ -3926,89 +3960,220 @@ NOP</textarea>
 
     const delayToggle = document.getElementById('fmDelayToggle');
     if (!delayToggle || delayToggle.checked) {
-      voiceGain.connect(delayNode);
+      const sendGain = audioCtx.createGain();
+      sendGain.gain.setValueAtTime(isBass ? 0.15 : 0.45, now);
+      voiceGain.connect(sendGain);
+      sendGain.connect(delayNode);
     }
 
     modulator.start(now);
     carrier.start(now);
-    modulator.stop(now + duration);
-    carrier.stop(now + duration);
+    modulator.stop(now + duration + 0.05);
+    carrier.stop(now + duration + 0.05);
   }
 
-  function triggerNoiseSnare(duration) {
+  function triggerFmKick(now = audioCtx.currentTime) {
     if (!audioCtx) return;
-    const now = audioCtx.currentTime;
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.frequency.setValueAtTime(160, now);
+    osc.frequency.exponentialRampToValueAtTime(36, now + 0.12);
+    gain.gain.setValueAtTime(0.42, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.16);
+    osc.connect(gain);
+    gain.connect(masterGain);
+    osc.start(now);
+    osc.stop(now + 0.16);
+  }
+
+  function triggerNoiseSnare(duration = 0.14, now = audioCtx.currentTime) {
+    if (!audioCtx) return;
     const bufferSize = Math.floor(audioCtx.sampleRate * duration);
     const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
     const output = buffer.getChannelData(0);
     for (let i = 0; i < bufferSize; i++) {
-      output[i] = Math.random() * 2 - 1;
+      output[i] = (Math.random() * 2 - 1) * Math.exp(-i / (bufferSize * 0.3));
     }
     const whiteNoise = audioCtx.createBufferSource();
     whiteNoise.buffer = buffer;
 
-    const noiseFilter = audioCtx.createBiquadFilter();
-    noiseFilter.type = 'highpass';
-    noiseFilter.frequency.setValueAtTime(1000, now);
+    const filter = audioCtx.createBiquadFilter();
+    filter.type = 'highpass';
+    filter.frequency.setValueAtTime(1200, now);
 
     const noiseGain = audioCtx.createGain();
-    noiseGain.gain.setValueAtTime(0.2, now);
-    noiseGain.gain.exponentialRampToValueAtTime(0.01, now + duration);
+    noiseGain.gain.setValueAtTime(0.24, now);
+    noiseGain.gain.exponentialRampToValueAtTime(0.001, now + duration);
 
-    whiteNoise.connect(noiseFilter);
-    noiseFilter.connect(noiseGain);
+    whiteNoise.connect(filter);
+    filter.connect(noiseGain);
     noiseGain.connect(masterGain);
 
+    const bodyOsc = audioCtx.createOscillator();
+    const bodyGain = audioCtx.createGain();
+    bodyOsc.type = 'triangle';
+    bodyOsc.frequency.setValueAtTime(185, now);
+    bodyOsc.frequency.exponentialRampToValueAtTime(60, now + 0.08);
+    bodyGain.gain.setValueAtTime(0.2, now);
+    bodyGain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
+    bodyOsc.connect(bodyGain);
+    bodyGain.connect(masterGain);
+
     whiteNoise.start(now);
+    bodyOsc.start(now);
     whiteNoise.stop(now + duration);
+    bodyOsc.stop(now + duration);
+  }
+
+  function triggerFmHiHat(isOpen = false, now = audioCtx.currentTime) {
+    if (!audioCtx) return;
+    const dur = isOpen ? 0.18 : 0.045;
+    const carrier = audioCtx.createOscillator();
+    const modulator = audioCtx.createOscillator();
+    const modGain = audioCtx.createGain();
+    const gain = audioCtx.createGain();
+    const filter = audioCtx.createBiquadFilter();
+
+    carrier.frequency.setValueAtTime(6800, now);
+    modulator.frequency.setValueAtTime(9450, now);
+    modGain.gain.setValueAtTime(1200, now);
+    modulator.connect(modGain);
+    modGain.connect(carrier.frequency);
+
+    filter.type = 'highpass';
+    filter.frequency.setValueAtTime(7000, now);
+
+    gain.gain.setValueAtTime(isOpen ? 0.14 : 0.09, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + dur);
+
+    carrier.connect(filter);
+    filter.connect(gain);
+    gain.connect(masterGain);
+
+    modulator.start(now);
+    carrier.start(now);
+    modulator.stop(now + dur);
+    carrier.stop(now + dur);
+  }
+
+  function playActionStinger(type) {
+    initAudio();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    const now = audioCtx.currentTime;
+    if (type === 'click') {
+      const osc = audioCtx.createOscillator();
+      const g = audioCtx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(1800, now);
+      osc.frequency.exponentialRampToValueAtTime(320, now + 0.025);
+      g.gain.setValueAtTime(0.08, now);
+      g.gain.exponentialRampToValueAtTime(0.001, now + 0.025);
+      osc.connect(g);
+      g.connect(audioCtx.destination);
+      osc.start(now);
+      osc.stop(now + 0.025);
+    } else if (type === 'success') {
+      const notes = [293.66, 369.99, 440.00, 587.33];
+      notes.forEach((freq, idx) => {
+        setTimeout(() => {
+          triggerFmVoice(freq, 0.35, false, 1.0, 380);
+        }, idx * 60);
+      });
+    } else if (type === 'stinger') {
+      triggerFmKick(now);
+      triggerFmVoice(110, 0.45, true, 4.0, 950);
+      triggerFmVoice(440, 0.40, false, 2.5, 700);
+      triggerNoiseSnare(0.22, now);
+    } else if (type === 'alert' || type === 'lore') {
+      triggerFmVoice(1999, 0.55, false, 2.0, 480);
+      setTimeout(() => {
+        triggerFmVoice(999.5, 0.45, false, 3.0, 350);
+      }, 90);
+    } else if (type === 'error') {
+      const osc1 = audioCtx.createOscillator();
+      const osc2 = audioCtx.createOscillator();
+      const g = audioCtx.createGain();
+      osc1.type = 'sawtooth';
+      osc2.type = 'square';
+      osc1.frequency.setValueAtTime(110, now);
+      osc2.frequency.setValueAtTime(114, now);
+      g.gain.setValueAtTime(0.18, now);
+      g.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
+      osc1.connect(g);
+      osc2.connect(g);
+      g.connect(audioCtx.destination);
+      osc1.start(now);
+      osc2.start(now);
+      osc1.stop(now + 0.18);
+      osc2.stop(now + 0.18);
+    }
   }
 
   function playTone(freq, dur) {
     initAudio();
     if (audioCtx.state === 'suspended') audioCtx.resume();
-    triggerFmVoice(freq, dur, false, 1.0, 300);
+    triggerFmVoice(freq, dur, false, 1.0, 320);
   }
 
   function playClickSound() {
-    if (!audioCtx) return;
-    const now = audioCtx.currentTime;
-    const osc = audioCtx.createOscillator();
-    const g = audioCtx.createGain();
-    osc.type = 'triangle';
-    osc.frequency.setValueAtTime(800, now);
-    osc.frequency.exponentialRampToValueAtTime(200, now + 0.04);
-    g.gain.setValueAtTime(0.12, now);
-    g.gain.exponentialRampToValueAtTime(0.001, now + 0.04);
-    osc.connect(g);
-    g.connect(audioCtx.destination);
-    osc.start(now);
-    osc.stop(now + 0.04);
+    playActionStinger('click');
   }
 
   function stepTracker() {
     const track = tracks[trackIdx];
-    const bNote = track.bassNotes[tick % track.bassNotes.length];
-    const lNote = track.leadNotes[tick % track.leadNotes.length];
+    const step = tick % 32;
 
-    triggerFmVoice(bNote, 0.22, true);
-    if (tick % 2 === 0) {
-      triggerFmVoice(lNote, 0.18, false);
-    }
-    if (tick % 4 === 2) {
-      triggerNoiseSnare(0.12);
+    // Voice 1: FM Bass
+    const bNote = track.bassNotes[step];
+    if (bNote > 0) {
+      triggerFmVoice(bNote, track.bassDecay || 0.22, true, track.bassRatio || 2.0, track.bassDepth || 620);
+      document.getElementById('meter1').style.height = (Math.random() * 40 + 60) + '%';
+    } else {
+      document.getElementById('meter1').style.height = '10%';
     }
 
-    document.getElementById('meter1').style.height = (Math.random() * 60 + 40) + '%';
-    document.getElementById('meter2').style.height = (Math.random() * 70 + 30) + '%';
-    document.getElementById('meter3').style.height = (Math.random() * 50 + 20) + '%';
-    document.getElementById('meter4').style.height = (tick % 4 === 2 ? '90%' : '10%');
+    // Voice 2: Lead Melody
+    const lNote = track.leadNotes[step];
+    if (lNote > 0) {
+      triggerFmVoice(lNote, track.leadDecay || 0.22, false, track.leadRatio || 1.0, track.leadDepth || 340);
+      document.getElementById('meter2').style.height = (Math.random() * 45 + 55) + '%';
+    } else {
+      document.getElementById('meter2').style.height = '12%';
+    }
+
+    // Voice 3: Shell Voicings & Arpeggios
+    const aNote = track.arpNotes[step];
+    if (aNote > 0) {
+      triggerFmVoice(aNote, 0.16, false, 3.0, 500);
+      document.getElementById('meter3').style.height = (Math.random() * 50 + 40) + '%';
+    } else {
+      document.getElementById('meter3').style.height = '8%';
+    }
+
+    // Voice 4: Percussion Section
+    const drum = track.drums[step];
+    if (drum === 'K' || drum === 'KS') {
+      triggerFmKick();
+    }
+    if (drum === 'S' || drum === 'KS') {
+      triggerNoiseSnare(0.13);
+      document.getElementById('meter4').style.height = '95%';
+    } else if (drum === 'H') {
+      triggerFmHiHat(false);
+      document.getElementById('meter4').style.height = '45%';
+    } else if (drum === 'OH') {
+      triggerFmHiHat(true);
+      document.getElementById('meter4').style.height = '65%';
+    } else {
+      document.getElementById('meter4').style.height = '6%';
+    }
 
     setTimeout(() => {
-      document.getElementById('meter1').style.height = '10%';
+      document.getElementById('meter1').style.height = '8%';
       document.getElementById('meter2').style.height = '10%';
-      document.getElementById('meter3').style.height = '10%';
+      document.getElementById('meter3').style.height = '6%';
       document.getElementById('meter4').style.height = '5%';
-    }, 120);
+    }, 110);
 
     tick++;
   }
@@ -4020,7 +4185,7 @@ NOP</textarea>
 
     isPlayingAudio = true;
     btnPlayAudio.textContent = "⏸ Playing...";
-    const intervalMs = Math.round(60000 / (tracks[trackIdx].tempo * 2));
+    const intervalMs = Math.round((60000 / tracks[trackIdx].tempo) / 4);
     audioTimer = setInterval(stepTracker, intervalMs);
   });
 
@@ -4035,7 +4200,7 @@ NOP</textarea>
     currentTrackTitle.textContent = tracks[trackIdx].title;
     if (isPlayingAudio) {
       clearInterval(audioTimer);
-      const intervalMs = Math.round(60000 / (tracks[trackIdx].tempo * 2));
+      const intervalMs = Math.round((60000 / tracks[trackIdx].tempo) / 4);
       audioTimer = setInterval(stepTracker, intervalMs);
     }
   });
@@ -4145,24 +4310,35 @@ NOP</textarea>
   function loadFmPreset(type) {
     if (type === 'slap') {
       document.getElementById('fmModRatio').value = '2';
-      document.getElementById('fmModDepth').value = '600';
-      document.getElementById('fmDecay').value = '35';
+      document.getElementById('fmModDepth').value = '650';
+      document.getElementById('fmDecay').value = '32';
+      showToast("Loaded Preset: YM2612 Slap Bass");
+    } else if (type === 'lead') {
+      document.getElementById('fmModRatio').value = '1';
+      document.getElementById('fmModDepth').value = '320';
+      document.getElementById('fmDecay').value = '48';
+      showToast("Loaded Preset: Cyber Outrun Lead");
+    } else if (type === 'bell') {
+      document.getElementById('fmModRatio').value = '3.5';
+      document.getElementById('fmModDepth').value = '780';
+      document.getElementById('fmDecay').value = '90';
+      showToast("Loaded Preset: Crystal Chime");
+    } else if (type === 'drone') {
+      document.getElementById('fmModRatio').value = '0.5';
+      document.getElementById('fmModDepth').value = '280';
+      document.getElementById('fmDecay').value = '140';
+      showToast("Loaded Preset: Subterranean Drone");
     } else if (type === 'brass') {
       document.getElementById('fmModRatio').value = '1';
-      document.getElementById('fmModDepth').value = '300';
+      document.getElementById('fmModDepth').value = '450';
       document.getElementById('fmDecay').value = '60';
-    } else if (type === 'bell') {
-      document.getElementById('fmModRatio').value = '3';
-      document.getElementById('fmModDepth').value = '800';
-      document.getElementById('fmDecay').value = '90';
-    } else if (type === 'laser') {
+      showToast("Loaded Preset: 1999 FM Brass");
+    } else if (type === 'stinger') {
       document.getElementById('fmModRatio').value = '4';
-      document.getElementById('fmModDepth').value = '950';
-      document.getElementById('fmDecay').value = '15';
-    } else if (type === 'coin') {
-      document.getElementById('fmModRatio').value = '0.5';
-      document.getElementById('fmModDepth').value = '200';
-      document.getElementById('fmDecay').value = '20';
+      document.getElementById('fmModDepth').value = '920';
+      document.getElementById('fmDecay').value = '18';
+      playActionStinger('stinger');
+      showToast("Loaded Preset: Action Stinger");
     }
   }
 
