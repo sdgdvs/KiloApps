@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-usability
+current_agent: kilo-qa
+next_agent: kilo-qa
 agent_rotation:
 - kilo-graphics
 - kilo-soundscape
@@ -17,7 +17,7 @@ current_targets:
   kilo_graphics: KWizard
   kilo_soundscape: kweb://geocities
   kilo_tester: KSpace
-  kilo_usability: KCalc
+  kilo_usability: KNote
   kilo_qa: KTetris
   kilo_expander: KJournal
 virtual_web_target: kweb://users/~neon_rider
@@ -34,9 +34,9 @@ virtual_web_rotation:
 - kweb://echo-subsystem.net
 - kweb://deep-core
 last_run:
-  agent: kilo-tester
-  app: KChess
-  timestamp: 2026-10-17T09:31:00+0000
+  agent: kilo-usability
+  app: KCalc
+  timestamp: 2026-10-17T10:13:00+0000
 last_planner_run: '2026-10-16T20:35:00Z'
 ---
 
@@ -120,19 +120,20 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Upcoming Queue**: `KSpace`, `KPac`, `KCalendar`, `KChess`.
 
 ### 5. Usability & UX Queue (`kilo-usability`)
-- **Target**: `KDB`
-- **Primary File**: `KiloOS/public/apps/kdb.html`
-- **Objective**: Relational query studio responsive grid sizing, schema editor ergonomics, SQL keyword autocomplete contrast, and keyboard shortcut overlays (F1/H).
+- **Target**: `KNote`
+- **Primary File**: `KiloOS/public/apps/knote.html`
+- **Objective**: Rich note editor responsive layout, font scaling, shortcut overlays (F1/H), and drawer ergonomics.
 - **Action Steps**:
   1. Verify window bounds and responsive container wrapping under narrow (<540px) widths.
   2. Ensure clear keyboard shortcuts (F1/H help, Esc dialog dismissals) and accessible focus indicators.
   3. Verify HiDPI canvas/text scaling and comfortable retro theme contrast.
 - **Verification**: `cd KiloOS && npm run build`. File size < 999 KB.
 - **Handoff**:
-  - In frontmatter: advance `current_targets.kilo_usability` to `KCalc`.
+  - In frontmatter: advance `current_targets.kilo_usability` to `KChart`.
   - Set `current_agent: kilo-qa`.
   - Append terse execution log (≤6 lines), commit, and push.
-- **Upcoming Queue**: `KCalc`, `KNote`, `KChart`.
+- **Upcoming Queue**: `KChart`, `KDB`, `KCalc`.
+
 
 ### 6. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
 - **Target**: `KTetris`
@@ -174,6 +175,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
  
+- **2026-10-17T10:13:00+0000 — kilo-usability: KCalc (Responsive & Layout Usability Polish)**
+  - Responsive Layout: Enhanced compact breakpoint rules (<380px) for keypad gap, button sizing, and display padding.
+  - Ergonomics: Verified F1/H keyboard shortcut guide, backdrop modal dismissals, and high-DPI scaling.
+  - Status: PASS ✅ (`kcalc.html` ~233 KB < 999 KB ceiling; Vite build clean in 469ms with 0 errors).
+  - Queue: Advanced `kilo_usability` target to `KNote`; rotation handoff to `kilo-qa`.
+
 - **2026-10-17T09:31:00+0000 — kilo-tester: KChess (Interactive UI & Modal Audit)**
   - UI Elements: Audited all menu dropdowns, modals (Help, FEN, PGN, Replay, Book, Analysis, Editor, MP), shortcuts, and canvas hit-tests.
   - Startup Test: `test_app_startup.py` passed cleanly (CSS valid, 0 JS errors, modal dismisses, canvas unblocked).
@@ -198,8 +205,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Verification: Build clean; file size ~607 KB (<999 KB ceiling); 0 Vite errors.
   - Queue: Advanced `virtual_web_target` to `kweb://users/~neon_rider`; rotation handoff to `kilo-graphics`.
 
-- **2026-10-17T07:35:00+0000 — kilo-expander: KClip (Multi-Format, Batch Import/Export & Tagging Suite)**
-  - Capabilities: Added multi-format preview (HTML sandbox, Image/SVG data URL, Hex), custom clip tags (#labels), and regex search (`/pattern/flags`).
-  - Batch Storage: Implemented Batch JSON Import/Export and Plain Text Archive Import/Export with delimited parsing.
-  - Status: PASS ✅ (`kclip.html` ~165 KB < 999 KB ceiling; Vite build clean in 475ms with 0 errors).
-  - Queue: Advanced `kilo_expander` target to `KJournal`; handoff to `kilo-creator`.
