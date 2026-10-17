@@ -334,7 +334,7 @@
       <div style="display:flex; flex-direction:column; gap:8px; max-height:60vh; overflow-y:auto;" id="techList"></div>
       <div style="display:flex; justify-content:space-between; margin-top:14px; align-items:center;">
         <div class="stat-badge stat-gold">🪙 <span id="academyGoldDisplay">0</span></div>
-        <button class="btn btn-danger" id="closeAcademyBtn">CLOSE [Esc]</button>
+        <button class="btn btn-danger modal-close" id="closeAcademyBtn" title="Close">CLOSE [Esc]</button>
       </div>
     </div>
   </div>
@@ -345,7 +345,7 @@
       <h2 style="color:var(--purple-color); text-align:center; margin-bottom:12px; font-weight:900; letter-spacing:1px;">CHALLENGE MUTATORS [M]</h2>
       <div style="display:flex; flex-direction:column; gap:8px;" id="mutatorList"></div>
       <div style="display:flex; justify-content:flex-end; margin-top:14px;">
-        <button class="btn btn-primary" id="closeMutatorsBtn" style="background:var(--purple-color); color:#fff; border-color:#9333ea;">DONE [Esc]</button>
+        <button class="btn btn-primary modal-close" id="closeMutatorsBtn" title="Close" style="background:var(--purple-color); color:#fff; border-color:#9333ea;">DONE [Esc]</button>
       </div>
     </div>
   </div>
@@ -353,7 +353,10 @@
   <!-- HELP MODAL -->
   <div id="helpModal" class="modal-overlay" style="z-index:200;">
     <div style="background:var(--card-bg); border:1px solid var(--gold-color); padding:20px; border-radius:12px; width:680px; max-height:85vh; overflow-y:auto; box-shadow: 0 0 30px rgba(0,0,0,0.9); font-size:13px; color:var(--text-white);" onclick="event.stopPropagation();">
-      <h2 style="color:var(--gold-color); text-align:center; margin-bottom:12px; font-weight:900; font-size:20px; letter-spacing:1px;">COMMANDER'S FIELD GUIDE & SHORTCUTS</h2>
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+        <h2 style="color:var(--gold-color); margin:0; font-weight:900; font-size:20px; letter-spacing:1px;">COMMANDER'S FIELD GUIDE & SHORTCUTS</h2>
+        <button class="btn-close modal-close" id="closeHelpXBtn" title="Close" onclick="document.getElementById('helpModal').style.display='none'; clearToasts();" style="background:none; border:none; color:var(--text-muted); font-size:22px; cursor:pointer; line-height:1; padding:0 4px;">&times;</button>
+      </div>
 
       <h3 style="color:var(--gold-color); margin-top:10px; border-bottom:1px solid var(--border-color); padding-bottom:4px;">⌨️ KEYBOARD SHORTCUTS</h3>
       <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px; margin-top:6px; font-size:12px; background:rgba(0,0,0,0.3); padding:10px; border-radius:6px; border:1px solid var(--border-color);">
@@ -407,7 +410,7 @@
       </div>
       
       <div style="display:flex; justify-content:center; margin-top:18px;">
-        <button class="btn btn-primary" id="closeHelpBtn" style="width:180px; padding:8px;">UNDERSTOOD [Esc]</button>
+        <button class="btn btn-primary modal-close" id="closeHelpBtn" title="Close" style="width:180px; padding:8px;">UNDERSTOOD [Esc]</button>
       </div>
     </div>
   </div>
@@ -561,227 +564,579 @@
       }
     }
 
-    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    // ==========================================
+    // GENESIS YM2612 2-OP FM SYNTHESIS & SPC700 ECHO DSP
+    // ==========================================
+    let audioCtx = null;
+    let masterGain = null;
+    let snesDelayNode = null;
+    let snesFeedback = null;
+    let snesFilter = null;
     let soundMuted = safeGet('kf_soundMuted', 'false') === 'true';
 
+    function initAudio() {
+      if (!audioCtx) {
+        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        if (AudioContextClass) {
+          audioCtx = new AudioContextClass();
+        }
+      }
+      if (audioCtx) {
+        if (!masterGain) {
+          masterGain = audioCtx.createGain();
+          masterGain.gain.setValueAtTime(0.45, audioCtx.currentTime);
+          masterGain.connect(audioCtx.destination);
+        }
+        if (!snesDelayNode) {
+          try {
+            snesDelayNode = audioCtx.createDelay(1.0);
+            snesDelayNode.delayTime.setValueAtTime(0.185, audioCtx.currentTime); // 185ms delay
+            snesFeedback = audioCtx.createGain();
+            snesFeedback.gain.setValueAtTime(0.28, audioCtx.currentTime); // 28% feedback
+            snesFilter = audioCtx.createBiquadFilter();
+            snesFilter.type = 'lowpass';
+            snesFilter.frequency.setValueAtTime(2200, audioCtx.currentTime); // 2200Hz warm LP filter
+            snesDelayNode.connect(snesFilter);
+            snesFilter.connect(snesFeedback);
+            snesFeedback.connect(snesDelayNode);
+            snesFilter.connect(masterGain);
+          } catch (e) {}
+        }
+        if (audioCtx.state === 'suspended') {
+          audioCtx.resume();
+        }
+      }
+    }
+
     function toggleSound() {
+      initAudio();
       soundMuted = !soundMuted;
       safeSet('kf_soundMuted', soundMuted ? 'true' : 'false');
       updateSoundUI();
       if (!soundMuted) {
-        playBeep(660, 0.1, 'sine', 0.2);
-        showToast("Sound Unmuted", "Audio sound effects enabled [Shift+M]", "info", 2000);
+        playFmTone(587.33, 1.0, 1.5, 0.12, 0.15, true);
+        showToast("Audio Enabled", "YM2612 procedural chiptune soundscape online [Shift+M]", "info", 2000);
+        if (!gameOver) startBgm();
       } else {
-        showToast("Sound Muted", "Audio sound effects disabled [Shift+M]", "warning", 2000);
+        stopBgm();
+        showToast("Audio Muted", "Audio sound effects and music disabled [Shift+M]", "warning", 2000);
       }
     }
 
     function updateSoundUI() {
       const btn = document.getElementById('soundToggleBtn');
       if (btn) {
-        btn.textContent = soundMuted ? '🔇 SOUND: OFF' : '🔊 SOUND: ON';
+        btn.textContent = soundMuted ? '🔇 AUDIO: OFF' : '🔊 AUDIO: ON';
         btn.style.borderColor = soundMuted ? 'var(--red-color)' : 'var(--border-color)';
         btn.style.color = soundMuted ? 'var(--text-muted)' : 'var(--gold-color)';
       }
     }
 
-    function playBeep(freq, duration, type='sine', gainVal=0.1) {
-      if (soundMuted) return;
+    // Core 2-Operator FM Synthesizer with optional SPC700 Delay Send
+    function playFmTone(carrierFreq, modRatio, modIndex, duration, gainVal, useEcho = false) {
+      if (soundMuted || !carrierFreq) return;
+      initAudio();
+      if (!audioCtx || !masterGain) return;
       try {
-        if (audioCtx.state === 'suspended') audioCtx.resume();
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc.type = type;
-        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-        gain.gain.setValueAtTime(gainVal, audioCtx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
-        osc.connect(gain); gain.connect(audioCtx.destination);
-        osc.start(); osc.stop(audioCtx.currentTime + duration);
-      } catch(e){}
+        const now = audioCtx.currentTime;
+        const carrier = audioCtx.createOscillator();
+        const modulator = audioCtx.createOscillator();
+        const modGain = audioCtx.createGain();
+        const ampEnv = audioCtx.createGain();
+
+        carrier.type = 'sine';
+        modulator.type = 'sine';
+        carrier.frequency.setValueAtTime(carrierFreq, now);
+
+        const modFreq = carrierFreq * modRatio;
+        modulator.frequency.setValueAtTime(modFreq, now);
+
+        const initialModVal = modFreq * modIndex;
+        modGain.gain.setValueAtTime(initialModVal, now);
+        modGain.gain.exponentialRampToValueAtTime(Math.max(0.1, initialModVal * 0.04), now + duration);
+
+        ampEnv.gain.setValueAtTime(gainVal, now);
+        ampEnv.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+
+        modulator.connect(modGain);
+        modGain.connect(carrier.frequency);
+        carrier.connect(ampEnv);
+        ampEnv.connect(masterGain);
+        if (useEcho && snesDelayNode) {
+          ampEnv.connect(snesDelayNode);
+        }
+
+        modulator.start(now);
+        carrier.start(now);
+        modulator.stop(now + duration);
+        carrier.stop(now + duration);
+      } catch (e) {}
     }
 
+    // Named FM Patches:
+    // Patch 1: Distorted FM Guitar / Heavy Medieval Lead
+    function playFmLead(freq, dur, vol, useEcho = true) {
+      if (soundMuted || !freq) return;
+      initAudio();
+      if (!audioCtx || !masterGain) return;
+      try {
+        const now = audioCtx.currentTime;
+        const carrier = audioCtx.createOscillator();
+        const mod = audioCtx.createOscillator();
+        const modGain = audioCtx.createGain();
+        const amp = audioCtx.createGain();
+
+        carrier.type = 'sine';
+        carrier.frequency.setValueAtTime(freq, now);
+
+        // Delayed vibrato (after 120ms)
+        const lfo = audioCtx.createOscillator();
+        const lfoGain = audioCtx.createGain();
+        lfo.frequency.setValueAtTime(5.5, now);
+        lfoGain.gain.setValueAtTime(0, now);
+        lfoGain.gain.setValueAtTime(0, now + 0.12);
+        lfoGain.gain.linearRampToValueAtTime(freq * 0.02, now + 0.22);
+        lfo.connect(lfoGain);
+        lfoGain.connect(carrier.frequency);
+
+        mod.type = 'sawtooth';
+        mod.frequency.setValueAtTime(freq * 2.0, now);
+        modGain.gain.setValueAtTime(freq * 2.0 * 3.8, now);
+        modGain.gain.exponentialRampToValueAtTime(freq * 0.4, now + dur);
+
+        amp.gain.setValueAtTime(vol, now);
+        amp.gain.exponentialRampToValueAtTime(0.0001, now + dur);
+
+        mod.connect(modGain);
+        modGain.connect(carrier.frequency);
+        carrier.connect(amp);
+        amp.connect(masterGain);
+        if (useEcho && snesDelayNode) amp.connect(snesDelayNode);
+
+        lfo.start(now); mod.start(now); carrier.start(now);
+        lfo.stop(now + dur); mod.stop(now + dur); carrier.stop(now + dur);
+      } catch (e) {}
+    }
+
+    // Patch 2: Hollow Flute / Mystic Bell Counter-Melody
+    function playFmCounter(freq, dur, vol, useEcho = true) {
+      if (soundMuted || !freq) return;
+      initAudio();
+      if (!audioCtx || !masterGain) return;
+      try {
+        const now = audioCtx.currentTime;
+        const carrier = audioCtx.createOscillator();
+        const mod = audioCtx.createOscillator();
+        const modGain = audioCtx.createGain();
+        const amp = audioCtx.createGain();
+
+        carrier.type = 'sine';
+        carrier.frequency.setValueAtTime(freq, now);
+        mod.type = 'sine';
+        mod.frequency.setValueAtTime(freq, now);
+
+        modGain.gain.setValueAtTime(freq * 0.85, now);
+        modGain.gain.exponentialRampToValueAtTime(freq * 0.1, now + dur);
+
+        amp.gain.setValueAtTime(vol, now);
+        amp.gain.exponentialRampToValueAtTime(0.0001, now + dur);
+
+        mod.connect(modGain);
+        modGain.connect(carrier.frequency);
+        carrier.connect(amp);
+        amp.connect(masterGain);
+        if (useEcho && snesDelayNode) amp.connect(snesDelayNode);
+
+        mod.start(now); carrier.start(now);
+        mod.stop(now + dur); carrier.stop(now + dur);
+      } catch (e) {}
+    }
+
+    // Patch 3: War Horns / Shell Harmony Brass Stabs
+    function playFmBrass(freq, dur, vol, useEcho = true) {
+      if (soundMuted || !freq) return;
+      initAudio();
+      if (!audioCtx || !masterGain) return;
+      try {
+        const now = audioCtx.currentTime;
+        const carrier = audioCtx.createOscillator();
+        const mod = audioCtx.createOscillator();
+        const modGain = audioCtx.createGain();
+        const amp = audioCtx.createGain();
+
+        carrier.type = 'sine';
+        carrier.frequency.setValueAtTime(freq, now);
+        mod.type = 'sawtooth';
+        mod.frequency.setValueAtTime(freq, now);
+
+        modGain.gain.setValueAtTime(freq * 3.6, now);
+        modGain.gain.exponentialRampToValueAtTime(freq * 0.35, now + 0.08);
+        modGain.gain.exponentialRampToValueAtTime(0.1, now + dur);
+
+        amp.gain.setValueAtTime(vol, now);
+        amp.gain.exponentialRampToValueAtTime(0.0001, now + dur);
+
+        mod.connect(modGain);
+        modGain.connect(carrier.frequency);
+        carrier.connect(amp);
+        amp.connect(masterGain);
+        if (useEcho && snesDelayNode) amp.connect(snesDelayNode);
+
+        mod.start(now); carrier.start(now);
+        mod.stop(now + dur); carrier.stop(now + dur);
+      } catch (e) {}
+    }
+
+    // Patch 4: Slap / Heavy FM Bass (Dry - tight transients, no echo)
+    function playFmBass(freq, dur, vol) {
+      if (soundMuted || !freq) return;
+      initAudio();
+      if (!audioCtx || !masterGain) return;
+      try {
+        const now = audioCtx.currentTime;
+        const carrier = audioCtx.createOscillator();
+        const mod = audioCtx.createOscillator();
+        const modGain = audioCtx.createGain();
+        const amp = audioCtx.createGain();
+
+        carrier.type = 'sine';
+        carrier.frequency.setValueAtTime(freq, now);
+        mod.type = 'sine';
+        mod.frequency.setValueAtTime(freq * 2.0, now);
+
+        modGain.gain.setValueAtTime(freq * 2.0 * 3.5, now);
+        modGain.gain.exponentialRampToValueAtTime(freq * 0.05, now + 0.05);
+        modGain.gain.exponentialRampToValueAtTime(0.01, now + dur);
+
+        amp.gain.setValueAtTime(vol, now);
+        amp.gain.exponentialRampToValueAtTime(0.0001, now + dur);
+
+        mod.connect(modGain);
+        modGain.connect(carrier.frequency);
+        carrier.connect(amp);
+        amp.connect(masterGain);
+
+        mod.start(now); carrier.start(now);
+        mod.stop(now + dur); carrier.stop(now + dur);
+      } catch (e) {}
+    }
+
+    // Patch 5: FM Kick Drum
+    function playFmKick(vol = 0.25) {
+      if (soundMuted) return;
+      initAudio();
+      if (!audioCtx || !masterGain) return;
+      try {
+        const now = audioCtx.currentTime;
+        const osc = audioCtx.createOscillator();
+        const amp = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(145, now);
+        osc.frequency.exponentialRampToValueAtTime(38, now + 0.065);
+        amp.gain.setValueAtTime(vol, now);
+        amp.gain.exponentialRampToValueAtTime(0.0001, now + 0.14);
+        osc.connect(amp); amp.connect(masterGain);
+        osc.start(now); osc.stop(now + 0.14);
+      } catch (e) {}
+    }
+
+    // Patch 6: FM Snare Drum
+    function playFmSnare(vol = 0.20) {
+      if (soundMuted) return;
+      initAudio();
+      if (!audioCtx || !masterGain) return;
+      try {
+        const now = audioCtx.currentTime;
+        const c = audioCtx.createOscillator();
+        const m = audioCtx.createOscillator();
+        const mg = audioCtx.createGain();
+        const amp = audioCtx.createGain();
+
+        c.type = 'sine';
+        c.frequency.setValueAtTime(220, now);
+        m.type = 'sawtooth';
+        m.frequency.setValueAtTime(220 * 9.87, now);
+        mg.gain.setValueAtTime(220 * 9.87 * 7.5, now);
+        mg.gain.exponentialRampToValueAtTime(1, now + 0.09);
+
+        amp.gain.setValueAtTime(vol, now);
+        amp.gain.exponentialRampToValueAtTime(0.0001, now + 0.12);
+
+        m.connect(mg); mg.connect(c.frequency);
+        c.connect(amp); amp.connect(masterGain);
+
+        m.start(now); c.start(now);
+        m.stop(now + 0.12); c.stop(now + 0.12);
+      } catch (e) {}
+    }
+
+    // Patch 7: FM Hi-Hat
+    function playFmHiHat(vol = 0.08, open = false) {
+      if (soundMuted) return;
+      initAudio();
+      if (!audioCtx || !masterGain) return;
+      try {
+        const now = audioCtx.currentTime;
+        const dur = open ? 0.16 : 0.045;
+        const c = audioCtx.createOscillator();
+        const m = audioCtx.createOscillator();
+        const mg = audioCtx.createGain();
+        const amp = audioCtx.createGain();
+
+        c.type = 'sine';
+        c.frequency.setValueAtTime(3200, now);
+        m.type = 'sine';
+        m.frequency.setValueAtTime(3200 * 11.0, now);
+        mg.gain.setValueAtTime(14000, now);
+        mg.gain.exponentialRampToValueAtTime(10, now + dur);
+
+        amp.gain.setValueAtTime(vol, now);
+        amp.gain.exponentialRampToValueAtTime(0.0001, now + dur);
+
+        m.connect(mg); mg.connect(c.frequency);
+        c.connect(amp); amp.connect(masterGain);
+
+        m.start(now); c.start(now);
+        m.stop(now + dur); c.stop(now + dur);
+      } catch (e) {}
+    }
+
+    // Frequency Table: D Minor / D Phrygian Dominant
+    const NOTE = {
+      D2: 73.42,  E2: 82.41,  F2: 87.31,  G2: 98.00,  A2: 110.00, Bb2: 116.54, C3: 130.81, Csh3: 138.59,
+      D3: 146.83, Eb3: 155.56, E3: 164.81, F3: 174.61, Fsh3: 185.00, G3: 196.00, A3: 220.00, Bb3: 233.08, B3: 246.94,
+      C4: 261.63, Csh4: 277.18, D4: 293.66, Eb4: 311.13, E4: 329.63, F4: 349.23, Fsh4: 369.99, G4: 392.00, A4: 440.00, Bb4: 466.16, B4: 493.88,
+      C5: 523.25, Csh5: 554.37, D5: 587.33, Eb5: 622.25, E5: 659.26, F5: 698.46, G5: 783.99, A5: 880.00, Bb5: 932.33
+    };
+
+    // ==========================================
+    // TRACK: "Siege of the Iron Citadel"
+    // Authentic 3-Voice Counterpoint Chiptune Composition
+    // Progression: Dm -> C -> Bb -> A7 (4 measures, 32 steps)
+    // ==========================================
+    const bgmBass = [
+      // Dm (steps 0-7): Galloping root-octave 16ths
+      NOTE.D2, NOTE.D2, NOTE.D3, NOTE.D2, NOTE.D2, NOTE.D2, NOTE.A2, NOTE.D3,
+      // C (steps 8-15)
+      NOTE.C2, NOTE.C2, NOTE.C3, NOTE.C2, NOTE.C2, NOTE.C2, NOTE.G2, NOTE.C3,
+      // Bb (steps 16-23)
+      NOTE.Bb2, NOTE.Bb2, NOTE.F2, NOTE.Bb2, NOTE.Bb2, NOTE.Bb2, NOTE.D2, NOTE.Bb2,
+      // A7 (steps 24-31)
+      NOTE.A2, NOTE.A2, NOTE.E2, NOTE.A2, NOTE.A2, NOTE.Csh3, NOTE.E2, NOTE.A2
+    ];
+
+    const bgmLead = [
+      // Dm (steps 0-7): Heroic vocal phrasing
+      NOTE.D4, 0, NOTE.F4, 0, NOTE.A4, 0, NOTE.G4, NOTE.F4,
+      // C (steps 8-15): Sustained into rest (counter takes lead)
+      NOTE.E4, 0, 0, 0, NOTE.C4, 0, NOTE.E4, NOTE.G4,
+      // Bb (steps 16-23): Contrary motion to counter
+      NOTE.F4, 0, NOTE.D4, 0, NOTE.Bb4, 0, NOTE.A4, NOTE.G4,
+      // A7 (steps 24-31): Leading tone resolution
+      NOTE.F4, 0, NOTE.E4, 0, NOTE.Csh4, 0, 0, 0
+    ];
+
+    const bgmCounter = [
+      // Dm (steps 0-7): Contrary descending answers
+      0, NOTE.A4, 0, NOTE.F4, 0, NOTE.D4, 0, NOTE.C4,
+      // C (steps 8-15): Melodic spotlight while Lead rests
+      0, NOTE.G4, NOTE.B4, NOTE.C5, 0, NOTE.G4, 0, 0,
+      // Bb (steps 16-23): Ascending contrary counterpoint
+      0, NOTE.D4, 0, NOTE.F4, 0, NOTE.G4, 0, NOTE.F4,
+      // A7 (steps 24-31): Suspension resolving into Dm tonic
+      0, NOTE.G4, 0, NOTE.A4, 0, NOTE.Bb4, NOTE.A4, NOTE.G4
+    ];
+
+    // Shell Voicings: Root + 3rd + 7th (Never doubling the 5th)
+    const bgmHarmony = [
+      // Dm: Stabs on off-beats 2 & 6 [F4, C4]
+      null, null, [NOTE.F4, NOTE.C4], null, null, null, [NOTE.F4, NOTE.C4], null,
+      // C: Stabs on off-beats 10 & 14 [E4, Bb3]
+      null, null, [NOTE.E4, NOTE.Bb3], null, null, null, [NOTE.E4, NOTE.Bb3], null,
+      // Bb: Stabs on off-beats 18 & 22 [D4, A3]
+      null, null, [NOTE.D4, NOTE.A3], null, null, null, [NOTE.D4, NOTE.A3], null,
+      // A7: Stabs on off-beats 26 & 30 [C#4, G3]
+      null, null, [NOTE.Csh4, NOTE.G3], null, null, null, [NOTE.Csh4, NOTE.G3], null
+    ];
+
+    let bgmStep = 0;
+    let bgmTimer = null;
+    let bgmRunning = false;
+
+    function scheduleBgmStep() {
+      if (!bgmRunning || soundMuted) return;
+      // 5:3 Swing groove: 160ms on even steps, 108ms on odd steps (~112 BPM 16ths)
+      const isEven = (bgmStep % 2 === 0);
+      const nextDelay = isEven ? 160 : 108;
+      playBgmStep(bgmStep % 32);
+      bgmStep++;
+      bgmTimer = setTimeout(scheduleBgmStep, nextDelay);
+    }
+
+    function playBgmStep(step) {
+      if (soundMuted || gameOver) return;
+      const inBattle = waveInProgress;
+
+      // Channel 4: Bass (Galloping on battle; sustained roots during peacetime)
+      if (inBattle) {
+        const b = bgmBass[step];
+        if (b) playFmBass(b, 0.12, 0.22);
+      } else if (step % 8 === 0) {
+        const peaceRoots = [NOTE.D2, NOTE.C2, NOTE.Bb2, NOTE.A2];
+        const r = peaceRoots[Math.floor(step / 8)];
+        if (r) playFmBass(r, 0.85, 0.16);
+      }
+
+      // Channel 1: Lead Melody (Active in battle)
+      if (inBattle) {
+        const lead = bgmLead[step];
+        if (lead) playFmLead(lead, 0.22, 0.18, true);
+      }
+
+      // Channel 2: Counter-Melody (Hollow flute active in battle and ambient prep)
+      const counter = bgmCounter[step];
+      if (counter) {
+        playFmCounter(counter, 0.24, inBattle ? 0.14 : 0.18, true);
+      }
+
+      // Channel 3: Harmony Shell Brass Stabs
+      const harm = bgmHarmony[step];
+      if (harm && harm.length > 0) {
+        harm.forEach(f => playFmBrass(f, inBattle ? 0.16 : 0.32, inBattle ? 0.12 : 0.10, true));
+      }
+
+      // Channel 5: FM Kick & Snare Percussion
+      if (inBattle) {
+        if (step % 4 === 0 || step === 6 || step === 14 || step === 22 || step === 30) {
+          playFmKick(0.26);
+        }
+        if (step % 4 === 2) {
+          playFmSnare(0.20);
+        }
+        if (step === 31) {
+          playFmSnare(0.16); // quick fill before loop
+        }
+      } else if (step % 8 === 0) {
+        playFmKick(0.12);
+      }
+
+      // Channel 6: FM Hi-Hat
+      if (inBattle) {
+        const isOpen = (step % 8 === 7);
+        playFmHiHat(isOpen ? 0.13 : 0.08, isOpen);
+      } else if (step % 2 === 0) {
+        playFmHiHat(0.04, false);
+      }
+    }
+
+    function startBgm() {
+      if (bgmRunning) return;
+      initAudio();
+      bgmRunning = true;
+      bgmStep = 0;
+      scheduleBgmStep();
+    }
+
+    function stopBgm() {
+      bgmRunning = false;
+      if (bgmTimer) {
+        clearTimeout(bgmTimer);
+        bgmTimer = null;
+      }
+    }
+
+    // User Interaction Hook to resume AudioContext and start BGM cleanly
+    function userAudioResume() {
+      initAudio();
+      if (audioCtx && audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+      if (!soundMuted && !bgmRunning && !gameOver) {
+        startBgm();
+      }
+    }
+    window.addEventListener('click', userAudioResume, { passive: true });
+    window.addEventListener('keydown', userAudioResume, { passive: true });
+
+    // Backward-Compatible playBeep: upgraded to high-craft FM synthesis
+    function playBeep(freq, duration, type = 'sine', gainVal = 0.1) {
+      if (soundMuted || !freq) return;
+      const modRatio = (type === 'sawtooth') ? 1.0 : ((type === 'square') ? 2.0 : 1.0);
+      const modIndex = (type === 'sawtooth') ? 3.0 : ((type === 'square') ? 2.2 : 0.8);
+      playFmTone(freq, modRatio, modIndex, duration, gainVal, true);
+    }
+
+    // Action Stingers & Earcons
     function playSfx(type) {
       if (soundMuted) return;
+      initAudio();
       try {
-        if (audioCtx.state === 'suspended') audioCtx.resume();
-        const now = audioCtx.currentTime;
         if (type === 'bow') {
-          const osc = audioCtx.createOscillator();
-          const gain = audioCtx.createGain();
-          osc.type = 'triangle';
-          osc.frequency.setValueAtTime(650, now);
-          osc.frequency.exponentialRampToValueAtTime(180, now + 0.08);
-          gain.gain.setValueAtTime(0.12, now);
-          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
-          osc.connect(gain); gain.connect(audioCtx.destination);
-          osc.start(); osc.stop(now + 0.08);
+          // FM wooden bow twang and arrow swish
+          playFmTone(620, 2.0, 3.2, 0.08, 0.14, false);
         } else if (type === 'cannon') {
-          const osc = audioCtx.createOscillator();
-          const gain = audioCtx.createGain();
-          osc.type = 'sawtooth';
-          osc.frequency.setValueAtTime(130, now);
-          osc.frequency.exponentialRampToValueAtTime(35, now + 0.35);
-          gain.gain.setValueAtTime(0.3, now);
-          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
-          osc.connect(gain); gain.connect(audioCtx.destination);
-          osc.start(); osc.stop(now + 0.35);
+          // Heavy FM siege cannon detonation with sub-bass punch
+          playFmTone(62, 0.5, 4.5, 0.38, 0.35, false);
+          playFmSnare(0.28);
         } else if (type === 'magic') {
-          [520, 780, 1040].forEach((freq, idx) => {
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            osc.type = 'sine';
-            osc.frequency.setValueAtTime(freq, now + idx * 0.03);
-            gain.gain.setValueAtTime(0.09, now + idx * 0.03);
-            gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.03 + 0.18);
-            osc.connect(gain); gain.connect(audioCtx.destination);
-            osc.start(now + idx * 0.03); osc.stop(now + idx * 0.03 + 0.18);
+          // Cascading crystalline FM chime arpeggio with SPC700 delay
+          [520, 780, 1040, 1318].forEach((freq, idx) => {
+            setTimeout(() => playFmCounter(freq, 0.22, 0.14, true), idx * 35);
           });
         } else if (type === 'tesla') {
-          const osc = audioCtx.createOscillator();
-          const gain = audioCtx.createGain();
-          osc.type = 'sawtooth';
-          osc.frequency.setValueAtTime(420 + Math.random() * 180, now);
-          gain.gain.setValueAtTime(0.12, now);
-          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.07);
-          osc.connect(gain); gain.connect(audioCtx.destination);
-          osc.start(); osc.stop(now + 0.07);
+          // Cryo-electric dual FM arc discharge
+          playFmTone(440 + Math.random() * 120, 3.5, 6.0, 0.08, 0.16, true);
         } else if (type === 'frost') {
-          const osc = audioCtx.createOscillator();
-          const gain = audioCtx.createGain();
-          osc.type = 'sine';
-          osc.frequency.setValueAtTime(1100, now);
-          osc.frequency.linearRampToValueAtTime(1750, now + 0.12);
-          gain.gain.setValueAtTime(0.1, now);
-          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
-          osc.connect(gain); gain.connect(audioCtx.destination);
-          osc.start(); osc.stop(now + 0.12);
+          // Shimmering crystalline freeze with delay
+          playFmTone(1100, 2.76, 3.5, 0.15, 0.13, true);
         } else if (type === 'fanfare') {
-          [523.25, 659.25, 783.99, 1046.5].forEach((f, i) => {
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            osc.type = 'triangle';
-            osc.frequency.setValueAtTime(f, now + i * 0.08);
-            gain.gain.setValueAtTime(0.15, now + i * 0.08);
-            gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.08 + 0.35);
-            osc.connect(gain); gain.connect(audioCtx.destination);
-            osc.start(now + i * 0.08); osc.stop(now + i * 0.08 + 0.35);
+          // Triumphant Mario/Heroic Cadence: Bb -> C -> D war horn fanfare with echo
+          const fanNotes = [
+            { f: NOTE.Bb4, d: 0.16, t: 0 },
+            { f: NOTE.C5,  d: 0.18, t: 150 },
+            { f: NOTE.D5,  d: 0.45, t: 320 }
+          ];
+          fanNotes.forEach(fn => {
+            setTimeout(() => {
+              playFmBrass(fn.f, fn.d, 0.24, true);
+              playFmLead(fn.f * 0.5, fn.d, 0.18, true);
+            }, fn.t);
           });
         } else if (type === 'meteor') {
-          const osc = audioCtx.createOscillator();
-          const gain = audioCtx.createGain();
-          osc.type = 'sawtooth';
-          osc.frequency.setValueAtTime(260, now);
-          osc.frequency.exponentialRampToValueAtTime(45, now + 0.55);
-          gain.gain.setValueAtTime(0.35, now);
-          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.55);
-          osc.connect(gain); gain.connect(audioCtx.destination);
-          osc.start(); osc.stop(now + 0.55);
+          // Sub-bass earth-shaking meteor crash
+          playFmTone(55, 0.5, 5.0, 0.55, 0.40, false);
+          playFmSnare(0.35);
         } else if (type === 'poison') {
-          const osc = audioCtx.createOscillator();
-          const mod = audioCtx.createOscillator();
-          const modGain = audioCtx.createGain();
-          const gain = audioCtx.createGain();
-          osc.type = 'sawtooth';
-          osc.frequency.setValueAtTime(320, now);
-          osc.frequency.exponentialRampToValueAtTime(140, now + 0.16);
-          mod.type = 'sine';
-          mod.frequency.setValueAtTime(45, now);
-          modGain.gain.setValueAtTime(80, now);
-          modGain.gain.exponentialRampToValueAtTime(1, now + 0.16);
-          mod.connect(osc.frequency);
-          gain.gain.setValueAtTime(0.14, now);
-          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.16);
-          osc.connect(gain); gain.connect(audioCtx.destination);
-          mod.start(now); mod.stop(now + 0.16);
-          osc.start(now); osc.stop(now + 0.16);
+          // Corrosive bubbling FM timbre
+          playFmTone(280, 0.5, 4.2, 0.18, 0.16, true);
         } else if (type === 'ballista') {
-          const osc = audioCtx.createOscillator();
-          const gain = audioCtx.createGain();
-          osc.type = 'triangle';
-          osc.frequency.setValueAtTime(220, now);
-          osc.frequency.exponentialRampToValueAtTime(45, now + 0.12);
-          gain.gain.setValueAtTime(0.25, now);
-          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
-          osc.connect(gain); gain.connect(audioCtx.destination);
-          osc.start(now); osc.stop(now + 0.12);
+          // Heavy timber winch snap and iron bolt launch
+          playFmTone(180, 1.5, 3.0, 0.12, 0.25, false);
         } else if (type === 'solarbeam') {
-          // Yamaha YM2612 2-Operator FM Synthesis: Radiant Focused Laser Beam
-          const carrier = audioCtx.createOscillator();
-          const mod = audioCtx.createOscillator();
-          const modGain = audioCtx.createGain();
-          const gain = audioCtx.createGain();
-          carrier.type = 'sine';
-          carrier.frequency.setValueAtTime(880, now);
-          carrier.frequency.linearRampToValueAtTime(660, now + 0.08);
-          mod.type = 'sawtooth';
-          mod.frequency.setValueAtTime(440, now);
-          modGain.gain.setValueAtTime(380, now);
-          modGain.gain.exponentialRampToValueAtTime(10, now + 0.08);
-          mod.connect(carrier.frequency);
-          gain.gain.setValueAtTime(0.12, now);
-          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
-          carrier.connect(gain); gain.connect(audioCtx.destination);
-          mod.start(now); mod.stop(now + 0.08);
-          carrier.start(now); carrier.stop(now + 0.08);
+          // Focused radiant photon laser with FM carrier pitch slide
+          playFmTone(880, 1.0, 3.5, 0.12, 0.15, true);
         } else if (type === 'inferno') {
-          // Heavy Sub-Bass Volcanic Magma Detonation
-          const osc = audioCtx.createOscillator();
-          const gain = audioCtx.createGain();
-          osc.type = 'sawtooth';
-          osc.frequency.setValueAtTime(65, now);
-          osc.frequency.exponentialRampToValueAtTime(22, now + 0.42);
-          gain.gain.setValueAtTime(0.35, now);
-          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.42);
-          osc.connect(gain); gain.connect(audioCtx.destination);
-          osc.start(now); osc.stop(now + 0.42);
+          // Volcanic magma explosion
+          playFmTone(48, 0.5, 5.0, 0.45, 0.40, false);
         } else if (type === 'superconductor') {
-          // Cryo-Electric Dual FM Arc Discharge
-          const osc1 = audioCtx.createOscillator();
-          const osc2 = audioCtx.createOscillator();
-          const gain = audioCtx.createGain();
-          osc1.type = 'sawtooth'; osc1.frequency.setValueAtTime(520, now);
-          osc1.frequency.exponentialRampToValueAtTime(1300, now + 0.09);
-          osc2.type = 'triangle'; osc2.frequency.setValueAtTime(1040, now);
-          gain.gain.setValueAtTime(0.14, now);
-          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.09);
-          osc1.connect(gain); osc2.connect(gain);
-          gain.connect(audioCtx.destination);
-          osc1.start(now); osc1.stop(now + 0.09);
-          osc2.start(now); osc2.stop(now + 0.09);
+          // Cryo-electric dual FM arc discharge
+          playFmTone(520, 2.5, 4.0, 0.10, 0.18, true);
+          playFmTone(1040, 1.5, 3.0, 0.10, 0.14, true);
         } else if (type === 'trap') {
-          // Mechanical Iron Spring & Caltrop Concussion
-          const osc = audioCtx.createOscillator();
-          const gain = audioCtx.createGain();
-          osc.type = 'square';
-          osc.frequency.setValueAtTime(920, now);
-          osc.frequency.exponentialRampToValueAtTime(160, now + 0.07);
-          gain.gain.setValueAtTime(0.18, now);
-          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.07);
-          osc.connect(gain); gain.connect(audioCtx.destination);
-          osc.start(now); osc.stop(now + 0.07);
+          // Iron caltrop spring snap
+          playFmTone(750, 2.0, 3.0, 0.07, 0.20, false);
         } else if (type === 'breach') {
-          // Citadel Stone Impact & Warning Siren
-          const bass = audioCtx.createOscillator();
-          const bassGain = audioCtx.createGain();
-          bass.type = 'triangle';
-          bass.frequency.setValueAtTime(80, now);
-          bass.frequency.exponentialRampToValueAtTime(28, now + 0.28);
-          bassGain.gain.setValueAtTime(0.35, now);
-          bassGain.gain.exponentialRampToValueAtTime(0.001, now + 0.28);
-          bass.connect(bassGain); bassGain.connect(audioCtx.destination);
-          bass.start(now); bass.stop(now + 0.28);
-
-          const alarm = audioCtx.createOscillator();
-          const alarmGain = audioCtx.createGain();
-          alarm.type = 'sawtooth';
-          alarm.frequency.setValueAtTime(440, now + 0.04);
-          alarm.frequency.exponentialRampToValueAtTime(330, now + 0.22);
-          alarmGain.gain.setValueAtTime(0.14, now + 0.04);
-          alarmGain.gain.exponentialRampToValueAtTime(0.001, now + 0.22);
-          alarm.connect(alarmGain); alarmGain.connect(audioCtx.destination);
-          alarm.start(now + 0.04); alarm.stop(now + 0.22);
+          // Citadel wall stone impact + deep warning war horn
+          playFmTone(70, 0.5, 4.0, 0.35, 0.38, false);
+          playFmBrass(NOTE.D3, 0.4, 0.22, true);
+        } else if (type === 'dirge') {
+          // Solemn funeral bells on citadel defeat
+          const bells = [NOTE.D3, NOTE.A2, NOTE.F2, NOTE.D2];
+          bells.forEach((f, i) => {
+            setTimeout(() => playFmCounter(f, 0.8, 0.22, true), i * 320);
+          });
         }
-      } catch(e){}
+      } catch (e) {}
     }
 
     function clearToasts() {
@@ -1285,6 +1640,14 @@
       document.getElementById('helpModal').style.display = 'none';
       clearToasts();
     });
+    const closeHelpXBtn = document.getElementById('closeHelpXBtn');
+    if (closeHelpXBtn) {
+      closeHelpXBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        document.getElementById('helpModal').style.display = 'none';
+        clearToasts();
+      });
+    }
     document.getElementById('helpModal').addEventListener('click', () => {
       document.getElementById('helpModal').style.display = 'none';
       clearToasts();
@@ -2011,7 +2374,8 @@
       }
       
       spawnTimer = 0;
-      playBeep(440, 0.1, 'triangle', 0.15);
+      if (!soundMuted && !bgmRunning) startBgm();
+      playFmBrass(NOTE.D4, 0.25, 0.22, true);
       showToast(`Wave ${wave} Engaged!`, "Defend the citadel against incoming invaders!", "danger", 2500);
       updateHUD();
     });
@@ -2053,7 +2417,8 @@
       lavaPools = [];
       blizzTimer = 0;
       scorchMarks = [];
-      playBeep(300, 0.1, 'sawtooth', 0.2);
+      if (!soundMuted && !bgmRunning) startBgm();
+      playBeep(NOTE.D3, 0.15, 'triangle', 0.2);
       showToast("Citadel Reset", "All towers and traps cleared. Ready for Wave 1!", "info", 2500);
       updateHUD();
     }
@@ -2591,7 +2956,8 @@
           if (baseHp <= 0) {
             baseHp = 0;
             gameOver = true;
-            playBeep(120, 0.4, 'sawtooth', 0.3);
+            stopBgm();
+            playSfx('dirge');
             showToast("Citadel Fallen!", "Fortress walls breached! Press [R] or click RESET to retry.", "danger", 6000);
           }
           updateHUD();

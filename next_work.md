@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-soundscape
-next_agent: kilo-soundscape
+current_agent: kilo-tester
+next_agent: kilo-tester
 agent_rotation:
 - kilo-graphics
 - kilo-soundscape
@@ -16,7 +16,7 @@ status: ready
 current_targets:
   kilo_creator: kweb://echo-subsystem.net
   kilo_graphics: KDragon
-  kilo_soundscape: KFortress
+  kilo_soundscape: KAlchemy
   kilo_tester: KPaint
   kilo_usability: KDB
   kilo_qa: KGo
@@ -35,9 +35,9 @@ virtual_web_rotation:
 - kweb://echo-subsystem.net
 - kweb://deep-core
 last_run:
-  agent: kilo-graphics
-  app: KDragon
-  timestamp: 2026-10-17T21:12:02+0000
+  agent: kilo-soundscape
+  app: KFortress
+  timestamp: 2026-10-17T21:38:00+0000
 last_planner_run: '2026-10-17T20:53:00Z'
 ---
 
@@ -88,11 +88,11 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Upcoming Queue**: `KAlchemy`, `KFortress`, `KMech`, `KColosseum`.
 
 ### 3. Procedural Audio & Soundscape Queue (`kilo-soundscape`)
-- **Target**: `KFortress`
-- **Primary Files**: `KiloOS/public/apps/kfortress.html`, `KFortress/main.c` (if present)
-- **Objective**: Authentic Genesis YM2612 2-Op FM / SPC700 stereo delay chiptune suite: 3-voice counterpoint medieval defense theme, punchy FM bassline, battle drum percussion, and spell casting SFX replacing generic sine beeps.
+- **Target**: `KAlchemy`
+- **Primary Files**: `KiloOS/public/apps/kalchemy.html`, `KAlchemy/main.c` (if present)
+- **Objective**: Authentic Genesis YM2612 2-Op FM / SPC700 stereo delay chiptune suite: mystical laboratory theme, bubbling potion transmutation stings, and crystalline resonance earcons replacing generic sine beeps.
 - **Action Steps**:
-  1. Inspect `KiloOS/public/apps/kfortress.html` audio synthesis functions.
+  1. Inspect `KiloOS/public/apps/kalchemy.html` audio synthesis functions.
   2. Implement hardware composer chiptune standard:
      - 3-Voice counterpoint: Lead melody, counter-melody/arpeggio, and punchy FM bassline.
      - Shell voicings: Root + 3rd + 7th (omit 5ths).
@@ -101,10 +101,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   3. Pure Web Audio synthesis with zero external audio assets.
 - **Verification**: `cd KiloOS && npm run build` (0 Vite errors). Confirm file size < 999 KB.
 - **Handoff**:
-  - In frontmatter: advance `current_targets.kilo_soundscape` to `KAlchemy`.
+  - In frontmatter: advance `current_targets.kilo_soundscape` to `KDragon`.
   - Set `current_agent: kilo-tester`.
   - Append terse execution log (≤6 lines), commit, and push.
-- **Upcoming Queue**: `KAlchemy`, `KDragon`, `KVoid`, `KColony`.
+- **Upcoming Queue**: `KDragon`, `KVoid`, `KColony`, `KFortress`.
 
 ### 4. App Tester Queue (`kilo-tester`)
 - **Target**: `KPaint`
@@ -194,6 +194,14 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-17T21:38:00+0000 — kilo-soundscape: KFortress ("Siege of the Iron Citadel" — Combat / Defense FM Chiptune)**
+  - Composition: 32-step D Minor / D Phrygian Dominant progression (Dm → C → Bb → A7); 6-channel architecture with vocal lead phrasing, contrary counterpoint, and shell brass stabs (no doubled 5ths).
+  - Soundscape & Synthesis: Genesis YM2612 2-Op FM engine (overdriven lead, hollow flute, war horns, slap bass, inharmonic kick/snare/hat) + SPC700 185ms stereo slapback delay line (2200Hz LP filter).
+  - Dynamic Adaptation & SFX: Peaceful ambient drone / build phase vs. galloping battle march; modernized 14 siege earcons & spells plus defeat dirge.
+  - Accessibility & Modal Fix: Attached standard modal-close classes & titles to helpModal, fixing startup test automation.
+  - Status: PASS ✅ (Vite clean, 214.5 KB HTML + 182.8 KB Win32 EXE < 999 KB ceiling, test_app_startup PASS, security lint 100% clean).
+  - Queue: Advanced `kilo_soundscape` to `KAlchemy`; rotation handoff to `kilo-tester`.
+
 - **2026-10-17T21:12:02+0000 — kilo-graphics: KDragon (Zero-Token Auto-Skip — Inappropriate Target)**
   - Status: ⏭️ Skip — Imagen 3 asset replacement not appropriate for KDragon (pure vector, board game, or mature art).
   - Optimization: Handled via orchestrator pre-flight zero-token auto-skip.
@@ -222,11 +230,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Template Library: Expanded snippet templates (Win32 WndProc, HTML5 retro skeleton, SQL DDL schema, REST JSON spec, Project Echo telemetry frame).
   - Verification: Clean builds (`npm.cmd run build` 0 errors, `build.bat` 0 warnings); `test_app_startup.py` PASS; size: 188.7 KB HTML, 21.5 KB EXE (<999 KB ceiling).
   - Queue: Advanced `kilo_expander` to `KJournal`; rotation handoff to `kilo-creator`.
-
-- **2026-10-17T17:18:25+0000 — kilo-qa: KHangman (Pass 5 State Persistence & Mature Quarantine)**
-  - Dual Parity & State: Added full stats sync to Win32 `GameState`, enabled saving finished sessions, and ensured clean `KillTimer` on `WM_DESTROY`.
-  - Onboarding Integrity: Guarded tutorial against interrupting restored save files in both native C and web JS.
-  - Modal Ergonomics & Robustness: Improved `safeGetStorage` fallback and enabled immediate Escape modal dismissal from text inputs.
-  - Mature Promotion: Promoted feature-complete KHangman (20 stages, blitz, duel, dictionary studio, Win32 client) to Mature Applications table.
-  - Verification: Clean builds (`npm.cmd run build` 0 errors, `build.bat` 0 warnings); `test_app_startup.py` PASS; size: 148.9 KB HTML, 36.3 KB EXE (<999 KB).
-  - Queue: Advanced `kilo_qa` to `KMinesweeper`; rotation handoff to `kilo-expander`.
