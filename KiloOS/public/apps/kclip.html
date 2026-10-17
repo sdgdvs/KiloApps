@@ -1978,9 +1978,28 @@
         }
 
         if (state.searchQuery) {
-          const q = state.searchQuery.toLowerCase();
+          const rawQ = state.searchQuery.trim();
+          let regex = null;
+          if (rawQ.startsWith('/') && rawQ.length > 2 && rawQ.lastIndexOf('/') > 0) {
+            try {
+              const lastSlash = rawQ.lastIndexOf('/');
+              const pattern = rawQ.substring(1, lastSlash);
+              const flags = rawQ.substring(lastSlash + 1) || 'i';
+              regex = new RegExp(pattern, flags);
+            } catch (e) {
+              regex = null;
+            }
+          }
+
           filtered = filtered.filter(function(c) {
-            return c.content.toLowerCase().includes(q) || c.category.toLowerCase().includes(q);
+            const tagsStr = Array.isArray(c.tags) ? c.tags.join(' ') : '';
+            if (regex) {
+              return regex.test(c.content) || regex.test(c.category) || regex.test(tagsStr);
+            }
+            const q = rawQ.toLowerCase();
+            return c.content.toLowerCase().includes(q) ||
+                   c.category.toLowerCase().includes(q) ||
+                   tagsStr.toLowerCase().includes(q);
           });
         }
         return filtered;
@@ -3530,11 +3549,12 @@
               </div>
               <button class="modal-close" id="kclip-adv-close">✕</button>
             </div>
-            <div style="background:var(--card-bg); border-bottom:1px solid var(--border); padding:6px 14px; display:flex; gap:6px;">
+            <div style="background:var(--card-bg); border-bottom:1px solid var(--border); padding:6px 14px; display:flex; gap:6px; flex-wrap:wrap;">
               <button class="kclip-tab-btn active" data-tab="tab-lines">Lines & Text</button>
               <button class="kclip-tab-btn" data-tab="tab-data">Data & Formats</button>
               <button class="kclip-tab-btn" data-tab="tab-extract">Extract & Hashes</button>
               <button class="kclip-tab-btn" data-tab="tab-export">Batch Export</button>
+              <button class="kclip-tab-btn" data-tab="tab-import">Batch Import & Tags</button>
             </div>
             <div class="modal-body" style="gap:10px;">
               <!-- Tab 1: Lines -->
@@ -3656,9 +3676,46 @@
                   <button class="btn btn-sm" id="btn-export-json-backup" style="align-self:flex-start;">Download JSON Backup</button>
                 </div>
                 <div class="kclip-tool-card">
+                  <div class="kclip-tool-title">Plain Text Archive (.txt)</div>
+                  <div class="kclip-tool-desc">Delimited raw text dump with `=== CLIP ===` block separators for easy terminal ingestion.</div>
+                  <button class="btn btn-sm" id="btn-export-txt-archive" style="align-self:flex-start;">Download Text Archive</button>
+                </div>
+                <div class="kclip-tool-card">
                   <div class="kclip-tool-title">Self-Contained HTML Archive (.html)</div>
                   <div class="kclip-tool-desc">Generates a stand-alone, offline HTML document showcasing your clips with retro Cyberpunk styling.</div>
                   <button class="btn btn-sm btn-accent" id="btn-export-html-archive" style="align-self:flex-start;">Download HTML Archive</button>
+                </div>
+              </div>
+
+              <!-- Tab 5: Batch Import & Formats -->
+              <div id="tab-import" class="kclip-tab-pane" style="display:none;">
+                <div class="kclip-tool-card">
+                  <div class="kclip-tool-title">Batch Import (JSON Array or Delimited Text)</div>
+                  <div class="kclip-tool-desc">Paste a JSON export array `[{"content":"..."}]` or text blocks separated by `=== CLIP ===` or `---`.</div>
+                  <textarea id="kclip-import-input" class="text-input" style="height:90px; resize:vertical; font-size:11px;" placeholder='[{"content": "...", "category": "code", "tags": ["util"]}] OR\nItem 1\n===\nItem 2'></textarea>
+                  <div style="display:flex; gap:6px; margin-top:6px;">
+                    <button class="btn btn-sm btn-primary" id="btn-execute-json-import">Import JSON</button>
+                    <button class="btn btn-sm" id="btn-execute-text-import">Import Delimited Text</button>
+                    <button class="btn btn-sm" id="btn-clear-import">Clear Input</button>
+                  </div>
+                </div>
+                <div class="kclip-tool-card">
+                  <div class="kclip-tool-title">Clip Tags & Custom Labels</div>
+                  <div class="kclip-tool-desc">Attach comma-separated tags to the currently selected clip (e.g. `urgent, snippet, api, sql`).</div>
+                  <div style="display:flex; gap:6px;">
+                    <input type="text" id="kclip-tags-input" class="text-input" placeholder="e.g. sql, refactor, snippet" />
+                    <button class="btn btn-sm btn-accent" id="btn-save-clip-tags">Save Tags</button>
+                  </div>
+                  <div id="kclip-active-tags-display" style="margin-top:6px; font-size:11px; display:flex; gap:4px; flex-wrap:wrap;"></div>
+                </div>
+                <div class="kclip-tool-card">
+                  <div class="kclip-tool-title">Multi-Format Inspector Mode</div>
+                  <div class="kclip-tool-desc">Force content render type for active clip (HTML preview, Image data URL/SVG, or Hex).</div>
+                  <div style="display:flex; gap:6px; flex-wrap:wrap;">
+                    <button class="btn btn-sm" id="btn-fmt-preview-html">Preview as HTML</button>
+                    <button class="btn btn-sm" id="btn-fmt-preview-img">Preview as Image/DataURL</button>
+                    <button class="btn btn-sm" id="btn-fmt-preview-hex">Preview as Hex Dump</button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -3988,6 +4045,207 @@
           triggerDownload('kclip_archive_' + Date.now() + '.html', htmlDoc, 'text/html');
           closeModal();
         };
+
+        // Batch Plain Text Export
+        const btnTxtArchive = modal.querySelector('#btn-export-txt-archive');
+        if (btnTxtArchive) {
+          btnTxtArchive.onclick = function() {
+            const clips = (typeof state !== 'undefined' && state.clips) ? state.clips : [];
+            let txt = '# KCLIP PLAIN TEXT ARCHIVE\n# Exported: ' + new Date().toISOString() + '\n# Total: ' + clips.length + '\n\n';
+            clips.forEach((c, idx) => {
+              txt += '=== CLIP ' + (idx + 1) + ' [' + (c.category || 'general') + '] ===\n';
+              txt += (c.content || '') + '\n\n';
+            });
+            triggerDownload('kclip_archive_' + Date.now() + '.txt', txt, 'text/plain');
+            closeModal();
+          };
+        }
+
+        // Batch JSON Import
+        const btnJsonImport = modal.querySelector('#btn-execute-json-import');
+        if (btnJsonImport) {
+          btnJsonImport.onclick = function() {
+            const input = modal.querySelector('#kclip-import-input');
+            const val = input ? input.value.trim() : '';
+            if (!val) {
+              notify('Please paste JSON data to import');
+              return;
+            }
+            try {
+              let parsed = JSON.parse(val);
+              const items = Array.isArray(parsed) ? parsed : (parsed.clips && Array.isArray(parsed.clips) ? parsed.clips : [parsed]);
+              let added = 0;
+              items.forEach(it => {
+                if (it && typeof it.content === 'string' && it.content.trim()) {
+                  const newId = 'clip_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4);
+                  state.clips.unshift({
+                    id: newId,
+                    title: it.title || ('Imported ' + (it.category || 'Snippet')),
+                    content: it.content,
+                    category: it.category || 'snippets',
+                    tags: Array.isArray(it.tags) ? it.tags : (it.tags ? [String(it.tags)] : ['imported']),
+                    pinned: Boolean(it.pinned),
+                    created: Date.now(),
+                    timestamp: new Date().toISOString()
+                  });
+                  added++;
+                }
+              });
+              if (added > 0) {
+                state.selectedClipId = state.clips[0].id;
+                saveWorkstationState();
+                renderClipList();
+                updateInspector();
+                updateStatus();
+                notify('Imported ' + added + ' clips from JSON');
+                if (input) input.value = '';
+                closeModal();
+              } else {
+                notify('No valid clips found in JSON');
+              }
+            } catch (err) {
+              notify('JSON Parse Error: ' + err.message);
+            }
+          };
+        }
+
+        // Batch Delimited Text Import
+        const btnTextImport = modal.querySelector('#btn-execute-text-import');
+        if (btnTextImport) {
+          btnTextImport.onclick = function() {
+            const input = modal.querySelector('#kclip-import-input');
+            const val = input ? input.value.trim() : '';
+            if (!val) {
+              notify('Please paste delimited text to import');
+              return;
+            }
+            let parts = val.split(/(?:^|\n)(?:===.*?===|---|===\n)/g).map(p => p.trim()).filter(Boolean);
+            if (parts.length <= 1) {
+              parts = val.split(/\n\s*\n\s*\n/).map(p => p.trim()).filter(Boolean);
+            }
+            let added = 0;
+            parts.forEach((block, idx) => {
+              if (block.length > 0) {
+                const newId = 'clip_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4);
+                state.clips.unshift({
+                  id: newId,
+                  title: 'Text Clip #' + (idx + 1),
+                  content: block,
+                  category: typeof classifyContent === 'function' ? classifyContent(block) : 'text',
+                  tags: ['text-import', 'batch'],
+                  pinned: false,
+                  created: Date.now(),
+                  timestamp: new Date().toISOString()
+                });
+                added++;
+              }
+            });
+            if (added > 0) {
+              state.selectedClipId = state.clips[0].id;
+              saveWorkstationState();
+              renderClipList();
+              updateInspector();
+              updateStatus();
+              notify('Imported ' + added + ' text clips');
+              if (input) input.value = '';
+              closeModal();
+            } else {
+              notify('No text blocks found');
+            }
+          };
+        }
+
+        // Clear Import Input
+        const btnClearImport = modal.querySelector('#btn-clear-import');
+        if (btnClearImport) {
+          btnClearImport.onclick = function() {
+            const input = modal.querySelector('#kclip-import-input');
+            if (input) input.value = '';
+          };
+        }
+
+        // Clip Tags Management
+        const btnSaveTags = modal.querySelector('#btn-save-clip-tags');
+        if (btnSaveTags) {
+          btnSaveTags.onclick = function() {
+            const sel = getSelectedClip();
+            if (!sel) {
+              notify('No clip selected');
+              return;
+            }
+            const input = modal.querySelector('#kclip-tags-input');
+            const tags = input ? input.value.split(',').map(t => t.trim().toLowerCase()).filter(Boolean) : [];
+            sel.tags = tags;
+            saveWorkstationState();
+            renderClipList();
+            notify('Saved ' + tags.length + ' tags to active clip');
+            updateTagsDisplay();
+          };
+        }
+
+        function updateTagsDisplay() {
+          const display = modal.querySelector('#kclip-active-tags-display');
+          const input = modal.querySelector('#kclip-tags-input');
+          const sel = getSelectedClip();
+          if (display) {
+            display.innerHTML = '';
+            if (sel && sel.tags && sel.tags.length > 0) {
+              sel.tags.forEach(t => {
+                const chip = document.createElement('span');
+                chip.style.cssText = 'background:var(--card-bg); border:1px solid var(--primary); color:var(--primary); padding:2px 6px; border-radius:3px; font-family:var(--font-mono); font-size:10px;';
+                chip.textContent = '#' + t;
+                display.appendChild(chip);
+              });
+            } else {
+              display.innerHTML = '<span style="color:var(--text-muted); font-size:10px;">No tags yet</span>';
+            }
+          }
+          if (input && sel) {
+            input.value = Array.isArray(sel.tags) ? sel.tags.join(', ') : '';
+          }
+        }
+
+        // Multi-Format Preview buttons
+        const btnHtmlPreview = modal.querySelector('#btn-fmt-preview-html');
+        if (btnHtmlPreview) {
+          btnHtmlPreview.onclick = function() {
+            const sel = getSelectedClip();
+            if (!sel) return;
+            const win = window.open('', '_blank', 'width=600,height=400');
+            if (win) {
+              win.document.write('<!DOCTYPE html><html><head><title>HTML Preview</title><style>body{font-family:sans-serif;padding:16px;background:#fff;color:#000;}</style></head><body>' + sel.content + '</body></html>');
+              win.document.close();
+            }
+            closeModal();
+          };
+        }
+
+        const btnImgPreview = modal.querySelector('#btn-fmt-preview-img');
+        if (btnImgPreview) {
+          btnImgPreview.onclick = function() {
+            const sel = getSelectedClip();
+            if (!sel) return;
+            let src = sel.content.trim();
+            if (src.startsWith('<svg')) {
+              src = 'data:image/svg+xml;utf8,' + encodeURIComponent(src);
+            }
+            const win = window.open('', '_blank', 'width=600,height=400');
+            if (win) {
+              win.document.write('<!DOCTYPE html><html><head><title>Image Preview</title><style>body{margin:0;display:flex;align-items:center;justify-content:center;background:#1e293b;height:100vh;}img{max-width:90%;max-height:90%;box-shadow:0 0 10px rgba(0,0,0,0.5);}</style></head><body><img src="' + src + '" alt="Clip Preview" onerror="alert(\'Not a valid image source or data URL\')" /></body></html>');
+              win.document.close();
+            }
+            closeModal();
+          };
+        }
+
+        const btnHexPreview = modal.querySelector('#btn-fmt-preview-hex');
+        if (btnHexPreview) {
+          btnHexPreview.onclick = function() {
+            const hexTab = document.getElementById('tabViewHex');
+            if (hexTab) hexTab.click();
+            closeModal();
+          };
+        }
       }
 
       // --- 15. BOOTSTRAP WORKSTATION ---
