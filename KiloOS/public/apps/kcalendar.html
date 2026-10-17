@@ -2718,12 +2718,33 @@
       });
     }
 
+    const fallbackCopy = () => {
+      try {
+        const ta = document.createElement('textarea');
+        ta.value = summary;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.focus();
+        ta.select();
+        const ok = document.execCommand('copy');
+        document.body.removeChild(ta);
+        if (ok) {
+          showToast('Agenda summary copied to clipboard!', 'success');
+        } else {
+          showToast('Clipboard access unavailable', 'error');
+        }
+      } catch (err) {
+        showToast('Clipboard copy failed', 'error');
+      }
+    };
+
     if (navigator.clipboard && navigator.clipboard.writeText) {
       navigator.clipboard.writeText(summary)
         .then(() => showToast('Agenda summary copied to clipboard!', 'success'))
-        .catch(() => showToast('Clipboard write failed', 'error'));
+        .catch(() => fallbackCopy());
     } else {
-      showToast('Clipboard access unavailable', 'error');
+      fallbackCopy();
     }
   }
 

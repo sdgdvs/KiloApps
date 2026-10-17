@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-tester
-next_agent: kilo-tester
+current_agent: kilo-usability
+next_agent: kilo-usability
 agent_rotation:
 - kilo-graphics
 - kilo-soundscape
@@ -16,7 +16,7 @@ current_targets:
   kilo_creator: kweb://geocities
   kilo_graphics: KWizard
   kilo_soundscape: kweb://webring
-  kilo_tester: KCalendar
+  kilo_tester: KChess
   kilo_usability: KDB
   kilo_qa: KSudoku
   kilo_expander: KJournal
@@ -34,9 +34,9 @@ virtual_web_rotation:
 - kweb://echo-subsystem.net
 - kweb://deep-core
 last_run:
-  agent: kilo-soundscape
-  app: KWizard
-  timestamp: 2026-10-17T05:35:00+0000
+  agent: kilo-tester
+  app: KCalendar
+  timestamp: 2026-10-17T06:15:00+0000
 last_planner_run: '2026-10-16T20:35:00Z'
 ---
 
@@ -174,6 +174,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-17T06:15:00+0000 — kilo-tester: KCalendar (Interactive UI & Clipboard Fallback Audit)**
+  - UI Elements: Audited all buttons, export dropdown options, modals, shortcuts (F1/F5/F9/Escape), and event form hooks.
+  - Clipboard Reliability: Added textarea execCommand fallback to copyAgendaSummary for seamless operation in sandboxed iframes.
+  - Status: PASS ✅ (`kcalendar.html` 116.4 KB < 999 KB ceiling; Vite build clean in 1.22s with 0 errors).
+  - Queue: Advanced `kilo_tester` target to `KChess`; rotation handoff to `kilo-usability`.
+
 - **2026-10-17T05:35:00+0000 — kilo-soundscape: KWizard (Procedural FM Soundscape & Chiptune Overhaul)**
   - Audio Engine: 64-step 6-channel YM2612 2-Op FM + SPC700 stereo delay composition ("The Archmage's Duel" in D Dorian & Escalation).
   - Sound Design: Ambient mystic drone (D2/D1 respiration), rich element spell patches (fire, ice, arcane, lightning, poison, nature).
@@ -198,9 +204,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Deduplication & Cryptographic Hash Audit: SHA-256 / CRC-32 duplicate detector & space reclamation [Alt+D].
   - Archive Transcoder: 1-click container conversion between ZIP, KZA, TAR, and SFX [Ctrl+T].
   - Status: PASS ✅ (`kzip.html` 150.2 KB < 999 KB ceiling; 0 JS errors, 0 Vite build errors).
-
-- **2026-10-17T03:35:00+0000 — kilo-qa: KHangman (Pass 5 QA & State Persistence Audit)**
-  - State Persistence: Enhanced F5/F9 save/load with lifetime stats, timer, and game-ended state preservation.
-  - Modals & Tutorial: Added .modal-close and .btn-help-footer-close classes; ensured tutorial seen flag persists on dismissal.
-  - Status: PASS ✅ (`khangman.html` 148.6 KB < 999 KB ceiling; 0 JS errors, 0 Vite build errors).
-  - Queue: Advanced `kilo_qa` target to `KSudoku`; rotation handoff to `kilo-expander`.
