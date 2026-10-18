@@ -4,6 +4,15 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-17T22:20:00+0000 — kilo-usability: KDB (UI/UX & Usability Pass)**
+  - Responsive & Viewport Ergonomics: Added <540px mobile wrapping for header controls, cards-grid single-column fallback, sleek custom scrollbars, and touch scroll.
+  - Modal UX & Keyboard Navigation: Added header rows with close buttons (&times;) across all 9 modals; unified Escape key to dismiss any active modal and blur search.
+  - HiDPI Canvas & Visual Polish: Secured dimension fallbacks and middle baseline for charts, center KPI total readout on donut chart, and rAF debounced redraw on resize.
+  - Accessible Focus: Added high-contrast focus rings (`outline-offset: 2px`, glow shadow), button active press micro-interactions, and '?' accelerator shortcut.
+  - Verification: Clean Vite build (`npm.cmd run build` 0 err), Win32 native compile (`build.bat` 0 err), test_app_startup PASS (128.6 KB < 999 KB ceiling).
+  - Status: PASS ✅ (Layout, keyboard navigation, HiDPI charts, and accessible focus verified).
+  - Queue: Advanced `kilo_usability` to `KCalc`; rotation handoff to `kilo-qa`.
+
 - **2026-10-17T21:38:00+0000 — kilo-soundscape: KFortress ("Siege of the Iron Citadel" — Combat / Defense FM Chiptune)**
   - Composition: 32-step D Minor / D Phrygian Dominant progression (Dm → C → Bb → A7); 6-channel architecture with vocal lead phrasing, contrary counterpoint, and shell brass stabs (no doubled 5ths).
   - Soundscape & Synthesis: Genesis YM2612 2-Op FM engine (overdriven lead, hollow flute, war horns, slap bass, inharmonic kick/snare/hat) + SPC700 185ms stereo slapback delay line (2200Hz LP filter).
