@@ -1339,8 +1339,9 @@
     setTimeout(() => playFmTone(880.00, 1.5, 120, 0.22, 'sine'), 60);
   }
 
-  function playPingTone(latency) {
-    const freq = Math.max(300, Math.min(1200, 1200 - latency * 4));
+  function playPingTone(latency = 45) {
+    const lat = (typeof latency === 'number' && !isNaN(latency)) ? latency : 45;
+    const freq = Math.max(300, Math.min(1200, 1200 - lat * 4));
     playFmTone(freq, 1.0, 80, 0.08, 'sine');
   }
 
@@ -1417,7 +1418,7 @@
     const activeTabId = activeTabBtn ? activeTabBtn.dataset.tab : 'tab-http';
     let activeViewMode = 'rendered';
     if (httpContentArea && httpContentArea.style.display === 'block') activeViewMode = 'source';
-    else if (hexViewer && hexViewer.style.display === 'block') activeViewMode = 'hex';
+    else if (httpHexArea && httpHexArea.style.display === 'block') activeViewMode = 'hex';
 
     const state = {
       url: urlInput.value,
@@ -2083,6 +2084,15 @@
   // HTTP Inspector Logic
   async function fetchUrl(url, addToHistory = true) {
     if (!url) return;
+    initAudio();
+    playNavChime();
+
+    if (addToHistory && !url.startsWith('hex:') && url.toLowerCase() !== 'admin') {
+      navHistory = navHistory.slice(0, navIdx + 1);
+      navHistory.push(url);
+      navIdx++;
+      updateNavButtons();
+    }
     
     if (url.startsWith('hex:')) {
       const target = url.slice(4).trim();
@@ -2229,11 +2239,6 @@
       url = '/web/users/' + uClean + (uClean.endsWith('.html') ? '' : '.html');
     }
 
-    if (addToHistory) {
-      navHistory = navHistory.slice(0, navIdx + 1);
-      navHistory.push(url);
-      navIdx++;
-    }
     urlInput.value = url;
     updateNavButtons();
 
@@ -2380,6 +2385,68 @@
     httpSearchRow.style.display = 'flex';
     httpHexArea.textContent = generateHexDump(currentRawText);
   };
+
+  // Iframe Same-Origin Navigation Sync & History Tracking
+  httpWebFrame.addEventListener('load', () => {
+    try {
+      const frameWin = httpWebFrame.contentWindow;
+      if (!frameWin) return;
+      const frameLoc = frameWin.location;
+      if (!frameLoc || !frameLoc.pathname || frameLoc.pathname === 'blank' || frameLoc.href === 'about:blank') return;
+
+      const cleanPath = frameLoc.pathname;
+      let cleanSearch = '';
+      if (frameLoc.search) {
+        const sp = new URLSearchParams(frameLoc.search);
+        sp.delete('_t');
+        const s = sp.toString();
+        if (s) cleanSearch = '?' + s;
+      }
+      const fullPath = cleanPath + cleanSearch + (frameLoc.hash || '');
+
+      const virtualReverseMap = {
+        '/web/portal.html': 'kweb://portal',
+        '/web/webring.html': 'kweb://webring',
+        '/web/geocities.html': 'kweb://geocities',
+        '/web/cybercafe.html': 'kweb://cybercafe',
+        '/web/users/neon_rider.html': 'kweb://users/~neon_rider',
+        '/web/asm_temple.html': 'kweb://asm-temple',
+        '/web/warez.html': 'kweb://warez',
+        '/web/darknet.html': 'kweb://darknet',
+        '/web/echo_subsystem.html': 'kweb://echo-subsystem.net',
+        '/web/classified.html': 'kweb://10.19.99.4/classified',
+        '/web/deep_core.html': 'kweb://deep-core'
+      };
+
+      const displayUrl = virtualReverseMap[cleanPath] || fullPath;
+
+      if (displayUrl && urlInput.value !== displayUrl && urlInput.value !== fullPath) {
+        urlInput.value = displayUrl;
+        if (navHistory[navIdx] !== displayUrl) {
+          navHistory = navHistory.slice(0, navIdx + 1);
+          navHistory.push(displayUrl);
+          navIdx++;
+          updateNavButtons();
+        }
+        footerStatus.textContent = "Rendered hypermedia: " + displayUrl;
+        httpStatusBadge.className = "badge badge-success";
+        httpStatusBadge.textContent = "HTTP 200 OK";
+
+        fetch(fullPath, { cache: 'no-cache' })
+          .then(res => res.text())
+          .then(text => {
+            currentRawText = text;
+            httpContentArea.textContent = text;
+            httpHexArea.textContent = generateHexDump(text);
+            updateMetrics(1, 1, 3, text.length, 12, 'HTTP/1.1');
+            addTrafficLog('LOCAL', displayUrl, 'OK', 200, 12, text.length, text);
+          })
+          .catch(() => {});
+      }
+    } catch (e) {
+      // Cross-origin restriction (expected for external websites)
+    }
+  });
 
   btnGo.onclick = () => fetchUrl(urlInput.value.trim(), true);
   btnBack.onclick = () => { if (navIdx > 0) fetchUrl(navHistory[--navIdx], false); };
@@ -3607,8 +3674,40 @@
     if (drawer) drawer.style.display = 'none';
   };
 
+  // Handle launch parameters (hash or query params) and inter-app IPC messages
+  function parseLaunchUrl() {
+    let target = '';
+    if (window.location.hash && window.location.hash.length > 1) {
+      target = decodeURIComponent(window.location.hash.substring(1));
+    } else if (window.location.search) {
+      const params = new URLSearchParams(window.location.search);
+      target = params.get('url') || params.get('path') || params.get('q') || '';
+    }
+    if (target) {
+      urlInput.value = target;
+      fetchUrl(target, true);
+      return true;
+    }
+    return false;
+  }
+
+  window.addEventListener('hashchange', () => {
+    parseLaunchUrl();
+  });
+
+  window.addEventListener('message', (event) => {
+    if (event.origin !== window.location.origin) return;
+    if (!event.data || typeof event.data !== 'object') return;
+    const targetUrl = event.data.url || event.data.path || event.data.target;
+    if ((event.data.type === 'NAVIGATE' || event.data.type === 'OPEN_URL' || event.data.type === 'KILO_OPEN_URL' || event.data.type === 'KNET_NAVIGATE') && targetUrl) {
+      urlInput.value = targetUrl;
+      fetchUrl(targetUrl, true);
+    }
+  });
+
   // Auto-restore previous session state if available
   function restoreAutoSession() {
+    if (parseLaunchUrl()) return;
     try {
       const raw = localStorage.getItem('knet_session_state') || localStorage.getItem('knet_saved_state');
       if (raw) {
@@ -3701,7 +3800,7 @@
       const activeTabId = activeTabBtn ? activeTabBtn.dataset.tab : 'tab-http';
       let activeViewMode = 'rendered';
       if (httpContentArea && httpContentArea.style.display === 'block') activeViewMode = 'source';
-      else if (hexViewer && hexViewer.style.display === 'block') activeViewMode = 'hex';
+      else if (httpHexArea && httpHexArea.style.display === 'block') activeViewMode = 'hex';
 
       const autoState = {
         url: urlInput.value,
