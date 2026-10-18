@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-soundscape
-next_agent: kilo-soundscape
+current_agent: kilo-tester
+next_agent: kilo-usability
 agent_rotation:
 - kilo-graphics
 - kilo-soundscape
@@ -16,7 +16,7 @@ status: ready
 current_targets:
   kilo_creator: kweb://deep-core
   kilo_graphics: KDragon
-  kilo_soundscape: KAlchemy
+  kilo_soundscape: KDragon
   kilo_tester: KNet
   kilo_usability: KCalc
   kilo_qa: KMaze
@@ -35,9 +35,9 @@ virtual_web_rotation:
 - kweb://echo-subsystem.net
 - kweb://deep-core
 last_run:
-  agent: kilo-graphics
-  app: KDragon
-  timestamp: 2026-10-18T04:30:01+0000
+  agent: kilo-soundscape
+  app: KAlchemy
+  timestamp: 2026-10-18T05:38:00+0000
 last_planner_run: '2026-10-17T20:53:00Z'
 ---
 
@@ -88,11 +88,11 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Upcoming Queue**: `KAlchemy`, `KFortress`, `KMech`, `KColosseum`.
 
 ### 3. Procedural Audio & Soundscape Queue (`kilo-soundscape`)
-- **Target**: `KAlchemy`
-- **Primary Files**: `KiloOS/public/apps/kalchemy.html`, `KAlchemy/main.c` (if present)
-- **Objective**: Authentic Genesis YM2612 2-Op FM / SPC700 stereo delay chiptune suite: mystical laboratory theme, bubbling potion transmutation stings, and crystalline resonance earcons replacing generic sine beeps.
+- **Target**: `KDragon`
+- **Primary Files**: `KiloOS/public/apps/kdragon.html`, `KDragon/main.c` (if present)
+- **Objective**: Authentic Genesis YM2612 2-Op FM / SPC700 stereo delay chiptune suite: fantasy dragon arena & wyrm battle soundscape, breath roar stings, and draconian combat earcons.
 - **Action Steps**:
-  1. Inspect `KiloOS/public/apps/kalchemy.html` audio synthesis functions.
+  1. Inspect `KiloOS/public/apps/kdragon.html` audio synthesis functions.
   2. Implement hardware composer chiptune standard:
      - 3-Voice counterpoint: Lead melody, counter-melody/arpeggio, and punchy FM bassline.
      - Shell voicings: Root + 3rd + 7th (omit 5ths).
@@ -101,10 +101,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   3. Pure Web Audio synthesis with zero external audio assets.
 - **Verification**: `cd KiloOS && npm run build` (0 Vite errors). Confirm file size < 999 KB.
 - **Handoff**:
-  - In frontmatter: advance `current_targets.kilo_soundscape` to `KDragon`.
+  - In frontmatter: advance `current_targets.kilo_soundscape` to `KVoid`.
   - Set `current_agent: kilo-tester`.
   - Append terse execution log (≤6 lines), commit, and push.
-- **Upcoming Queue**: `KDragon`, `KVoid`, `KColony`, `KFortress`.
+- **Upcoming Queue**: `KVoid`, `KColony`, `KFortress`.
 
 ### 4. App Tester Queue (`kilo-tester`)
 - **Target**: `KNet`
@@ -196,6 +196,14 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-18T05:38:00+0000 — kilo-soundscape: KAlchemy ("The Hermetic Transmutation" — Mystical Laboratory FM Suite)**
+  - Composition: D Dorian / Andalusian cadence (Dm -> C -> Bb/G -> A7), 32 steps, 6 channels, shell voicings (no 5ths).
+  - Voice Leading & Patches: Mystic Flute/E-Piano lead (delayed LFO vibrato), Crystalline Celesta counter, Slap/Wood bass, SPC700 delay.
+  - Earcons: Upgraded bubbling simmer, dual FM crystal glass clinkers, electric transmutation zap, and 5-note pentatonic discovery chime.
+  - Ergonomics: Wired M key toggle & header badge state sync; persisted mute preference in localStorage.
+  - Verification: Clean Vite build (503ms), startup test PASS (253.0 KB < 999 KB, 0 JS err), security lint clean, native C clean (70.6 KB).
+  - Queue: Advanced kilo-soundscape to KDragon; rotation handoff to kilo-tester.
+
 - **2026-10-18T04:30:01+0000 — kilo-graphics: KDragon (Zero-Token Auto-Skip — Inappropriate Target)**
   - Status: ⏭️ Skip — Imagen 3 asset replacement not appropriate for KDragon (pure vector, board game, or mature art).
   - Optimization: Handled via orchestrator pre-flight zero-token auto-skip.
@@ -225,12 +233,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Dual Parity & Build Verification: Expanded Win32 C template list to 11 templates; verified clean build (`build.bat` 205 KB EXE, `npm run build`, `test_app_startup` PASS, <999 KB).
   - Status: PASS ✅ (Deep markdown, heatmap, vault security, tag studio, and dual parity verified).
   - Queue: Advanced `kilo_expander` to `KBookmark`; rotation handoff to `kilo-creator`.
-
-- **2026-10-17T22:56:00+0000 — kilo-qa: KGo (Pass 5 QA & Tutorial Integrity — Mature Quarantine)**
-  - State Persistence: Wrapped all storage in safeGet/safeSet; preserved timer remaining across quickload; persisted consecutivePasses, handicapStones, and tsumego index.
-  - Tutorial Integrity: Enforced kgo_tutorialSeen web flag & kgo_tutorialSeen.dat native check on fresh sessions only; auto-dismisses on saved game restore.
-  - Modal Dismissals & Shortcuts: Added accessible modal-close classes to help/mp dialogs; unified Escape key dismissal for modals & onboarding; added VK_ESCAPE in native C.
-  - Mature Promotion: Promoted feature-complete KGo (Pass 5) to Mature Applications quarantine; removed from active worker queues.
-  - Verification: Clean Vite build (npm run build 0 err), Win32 native compile (build.bat 0 err), test_app_startup PASS (168.1 KB < 999 KB ceiling).
-  - Status: PASS ✅ (Full state persistence, clean modal handling, dual-target parity verified; promoted to Mature quarantine).
-  - Queue: Advanced kilo_qa to KMaze; rotation handoff to kilo-expander.

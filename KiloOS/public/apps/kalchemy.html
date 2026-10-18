@@ -4088,17 +4088,11 @@
     setInterval(updateBuffTimers, 1000);
 
     function playBrewingSound() {
-      const freqs = [220, 330, 440, 550, 660];
-      freqs.forEach((f, idx) => {
-        setTimeout(() => playChime(f, 'sine', 0.15), idx * 80);
-      });
+      playFmBrewingPotion();
     }
 
     function playPotionDrinkSound() {
-      const freqs = [523, 659, 784, 987, 1174, 1318];
-      freqs.forEach((f, idx) => {
-        setTimeout(() => playChime(f, 'triangle', 0.12), idx * 70);
-      });
+      playFmDrinkElixir();
     }
 
     function checkTierUnlocks(notify = true) {
@@ -4734,23 +4728,15 @@
     }
 
     function playRetortSound() {
-      const freqs = [350, 440, 554, 659, 880];
-      freqs.forEach((f, idx) => {
-        setTimeout(() => playChime(f, 'sine', 0.15), idx * 60);
-      });
+      playFmRetortApparatus();
     }
 
     function playAlembicSound() {
-      const freqs = [523, 659, 784, 1046, 1318];
-      freqs.forEach((f, idx) => {
-        setTimeout(() => playChime(f, 'triangle', 0.15), idx * 60);
-      });
+      playFmAlembicSublimation();
     }
 
     function playAnvilSound() {
-      playChime(120, 'sawtooth', 0.25);
-      setTimeout(() => playChime(300, 'square', 0.2), 80);
-      setTimeout(() => playChime(600, 'sine', 0.25), 160);
+      playFmAnvilStrike();
     }
 
     function getVagueHint() {
@@ -4869,15 +4855,55 @@
       }
     }
 
-    // Audio Synthesizer & Sound Effects (Phase 13 Web Audio API)
-    let soundEnabled = true;
+    // =========================================================================
+    // Authentic YM2612 2-Operator FM Synthesizer & SPC700 Delay Audio Suite
+    // Track: "The Hermetic Transmutation" (Alchemical Laboratory Chiptune Suite)
+    // 6-Channel Counterpoint: Lead, Counter, Shell Harmony, Bass, Drums, Earcons
+    // =========================================================================
     let audioCtx = null;
+    let masterGain = null;
+    let snesDelayNode = null;
+    let snesFilterNode = null;
+    let snesFeedbackNode = null;
+    let soundEnabled = true;
 
-    function getAudioCtx() {
-      if (!soundEnabled) return null;
+    // Safely load persisted sound mute preference
+    try {
+      const savedMute = localStorage.getItem('kalchemy_soundMuted');
+      if (savedMute !== null) {
+        soundEnabled = (savedMute !== 'true');
+      }
+    } catch(e) {}
+
+    function initAudio() {
       if (!audioCtx) {
         const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-        if (AudioContextClass) audioCtx = new AudioContextClass();
+        if (AudioContextClass) {
+          audioCtx = new AudioContextClass();
+          masterGain = audioCtx.createGain();
+          masterGain.gain.setValueAtTime(0.72, audioCtx.currentTime);
+          masterGain.connect(audioCtx.destination);
+
+          // SPC700 Stereo Slapback Delay DSP (180ms delay, 2200Hz LP filter, 0.28 feedback)
+          try {
+            snesDelayNode = audioCtx.createDelay(1.0);
+            snesDelayNode.delayTime.setValueAtTime(0.18, audioCtx.currentTime);
+
+            snesFilterNode = audioCtx.createBiquadFilter();
+            snesFilterNode.type = 'lowpass';
+            snesFilterNode.frequency.setValueAtTime(2200, audioCtx.currentTime);
+
+            snesFeedbackNode = audioCtx.createGain();
+            snesFeedbackNode.gain.setValueAtTime(0.28, audioCtx.currentTime);
+
+            snesDelayNode.connect(snesFilterNode);
+            snesFilterNode.connect(snesFeedbackNode);
+            snesFeedbackNode.connect(snesDelayNode);
+            snesFilterNode.connect(masterGain);
+          } catch(err) {
+            snesDelayNode = null;
+          }
+        }
       }
       if (audioCtx && audioCtx.state === 'suspended') {
         audioCtx.resume();
@@ -4885,149 +4911,543 @@
       return audioCtx;
     }
 
+    function getAudioCtx() {
+      if (!soundEnabled) return null;
+      return initAudio();
+    }
+
     function toggleSound() {
+      initAudio();
       soundEnabled = !soundEnabled;
-      const el = document.getElementById('stat-sound');
-      if (el) el.innerText = soundEnabled ? '🔊 ON' : '🔇 OFF';
+      try {
+        localStorage.setItem('kalchemy_soundMuted', soundEnabled ? 'false' : 'true');
+      } catch(e) {}
+      updateSoundUI();
       if (soundEnabled) {
         playGlassClinker(1.2);
+        startBgm();
+      } else {
+        stopBgm();
       }
     }
 
-    function playChime(freq, type = 'sine', duration = 0.2) {
-      const ctx = getAudioCtx();
-      if (!ctx) return;
+    function updateSoundUI() {
+      const el = document.getElementById('stat-sound');
+      if (el) el.innerText = soundEnabled ? '🔊 ON' : '🔇 OFF';
+    }
+
+    function userAudioResume() {
+      if (!audioCtx) {
+        initAudio();
+        if (soundEnabled && !bgmRunning) {
+          startBgm();
+        }
+      } else if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+        if (soundEnabled && !bgmRunning) {
+          startBgm();
+        }
+      } else if (soundEnabled && !bgmRunning) {
+        startBgm();
+      }
+    }
+    window.addEventListener('click', userAudioResume, { passive: true });
+    window.addEventListener('keydown', userAudioResume, { passive: true });
+
+    // Core 2-Operator FM Synthesizer with optional SPC700 Delay Send
+    function playFmTone(carrierFreq, modRatio, modIndex, duration, gainVal, useEcho = false) {
+      if (!soundEnabled || !carrierFreq) return;
+      initAudio();
+      if (!audioCtx || !masterGain) return;
       try {
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.type = type;
-        osc.frequency.setValueAtTime(freq, ctx.currentTime);
-        gain.gain.setValueAtTime(0.12, ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        osc.start();
-        osc.stop(ctx.currentTime + duration);
+        const now = audioCtx.currentTime;
+        const carrier = audioCtx.createOscillator();
+        const modulator = audioCtx.createOscillator();
+        const modGain = audioCtx.createGain();
+        const ampEnv = audioCtx.createGain();
+
+        carrier.type = 'sine';
+        modulator.type = 'sine';
+        carrier.frequency.setValueAtTime(carrierFreq, now);
+
+        const modFreq = carrierFreq * modRatio;
+        modulator.frequency.setValueAtTime(modFreq, now);
+
+        const initialModVal = modFreq * modIndex;
+        modGain.gain.setValueAtTime(initialModVal, now);
+        modGain.gain.exponentialRampToValueAtTime(Math.max(0.1, initialModVal * 0.05), now + duration);
+
+        ampEnv.gain.setValueAtTime(gainVal, now);
+        ampEnv.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+
+        modulator.connect(modGain);
+        modGain.connect(carrier.frequency);
+        carrier.connect(ampEnv);
+        ampEnv.connect(masterGain);
+        if (useEcho && snesDelayNode) {
+          ampEnv.connect(snesDelayNode);
+        }
+
+        modulator.start(now);
+        carrier.start(now);
+        modulator.stop(now + duration);
+        carrier.stop(now + duration);
       } catch (e) {}
     }
 
-    function playBubbleSimmer() {
-      const ctx = getAudioCtx();
-      if (!ctx) return;
+    // Named FM Patches
+    // Patch 1: E-Piano / Mystic Flute Lead with 140ms delayed LFO vibrato
+    function playFmLead(freq, dur, vol, useEcho = true) {
+      if (!soundEnabled || !freq) return;
+      initAudio();
+      if (!audioCtx || !masterGain) return;
       try {
-        const now = ctx.currentTime;
-        for (let i = 0; i < 6; i++) {
-          const delay = i * 0.04 + Math.random() * 0.03;
-          const osc = ctx.createOscillator();
-          const gain = ctx.createGain();
-          const freq = 260 + Math.random() * 380;
-          osc.type = Math.random() > 0.5 ? 'sine' : 'triangle';
-          osc.frequency.setValueAtTime(freq, now + delay);
-          osc.frequency.exponentialRampToValueAtTime(freq * 1.6, now + delay + 0.045);
-          gain.gain.setValueAtTime(0.08, now + delay);
-          gain.gain.exponentialRampToValueAtTime(0.001, now + delay + 0.05);
-          osc.connect(gain);
-          gain.connect(ctx.destination);
-          osc.start(now + delay);
-          osc.stop(now + delay + 0.06);
-        }
-      } catch (e) {}
+        const now = audioCtx.currentTime;
+        const carrier = audioCtx.createOscillator();
+        const mod = audioCtx.createOscillator();
+        const modGain = audioCtx.createGain();
+        const amp = audioCtx.createGain();
+
+        carrier.type = 'sine';
+        carrier.frequency.setValueAtTime(freq, now);
+
+        // Delayed vibrato (after 140ms, 5.2 Hz rate)
+        const lfo = audioCtx.createOscillator();
+        const lfoGain = audioCtx.createGain();
+        lfo.frequency.setValueAtTime(5.2, now);
+        lfoGain.gain.setValueAtTime(0, now);
+        lfoGain.gain.setValueAtTime(0, now + 0.14);
+        lfoGain.gain.linearRampToValueAtTime(freq * 0.018, now + 0.26);
+        lfo.connect(lfoGain);
+        lfoGain.connect(carrier.frequency);
+
+        mod.type = 'sine';
+        mod.frequency.setValueAtTime(freq * 2.0, now);
+        modGain.gain.setValueAtTime(freq * 2.0 * 2.4, now);
+        modGain.gain.exponentialRampToValueAtTime(freq * 0.2, now + 0.08);
+        modGain.gain.exponentialRampToValueAtTime(0.01, now + dur);
+
+        amp.gain.setValueAtTime(vol, now);
+        amp.gain.exponentialRampToValueAtTime(0.0001, now + dur);
+
+        mod.connect(modGain);
+        modGain.connect(carrier.frequency);
+        carrier.connect(amp);
+        amp.connect(masterGain);
+        if (useEcho && snesDelayNode) amp.connect(snesDelayNode);
+
+        lfo.start(now); mod.start(now); carrier.start(now);
+        lfo.stop(now + dur); mod.stop(now + dur); carrier.stop(now + dur);
+      } catch(e) {}
+    }
+
+    // Patch 2: Crystalline Bell / Celesta (Counter-Melody & Chimes)
+    function playFmCounter(freq, dur, vol, useEcho = true) {
+      if (!soundEnabled || !freq) return;
+      initAudio();
+      if (!audioCtx || !masterGain) return;
+      try {
+        const now = audioCtx.currentTime;
+        const carrier = audioCtx.createOscillator();
+        const mod = audioCtx.createOscillator();
+        const modGain = audioCtx.createGain();
+        const amp = audioCtx.createGain();
+
+        carrier.type = 'sine';
+        carrier.frequency.setValueAtTime(freq, now);
+        mod.type = 'sine';
+        mod.frequency.setValueAtTime(freq * 3.5, now);
+
+        modGain.gain.setValueAtTime(freq * 3.5 * 3.8, now);
+        modGain.gain.exponentialRampToValueAtTime(freq * 0.08, now + 0.06);
+        modGain.gain.exponentialRampToValueAtTime(0.01, now + dur);
+
+        amp.gain.setValueAtTime(vol, now);
+        amp.gain.exponentialRampToValueAtTime(0.0001, now + dur);
+
+        mod.connect(modGain);
+        modGain.connect(carrier.frequency);
+        carrier.connect(amp);
+        amp.connect(masterGain);
+        if (useEcho && snesDelayNode) amp.connect(snesDelayNode);
+
+        mod.start(now); carrier.start(now);
+        mod.stop(now + dur); carrier.stop(now + dur);
+      } catch(e) {}
+    }
+
+    // Patch 3: Shell Voicing Harmony (Warm Mystic Brass / Pad)
+    function playFmHarmony(freq, dur, vol, useEcho = true) {
+      if (!soundEnabled || !freq) return;
+      initAudio();
+      if (!audioCtx || !masterGain) return;
+      try {
+        const now = audioCtx.currentTime;
+        const carrier = audioCtx.createOscillator();
+        const mod = audioCtx.createOscillator();
+        const modGain = audioCtx.createGain();
+        const amp = audioCtx.createGain();
+
+        carrier.type = 'triangle';
+        carrier.frequency.setValueAtTime(freq, now);
+        mod.type = 'sine';
+        mod.frequency.setValueAtTime(freq * 1.0, now);
+
+        modGain.gain.setValueAtTime(freq * 1.5, now);
+        modGain.gain.exponentialRampToValueAtTime(freq * 0.2, now + dur);
+
+        amp.gain.setValueAtTime(vol, now);
+        amp.gain.exponentialRampToValueAtTime(0.0001, now + dur);
+
+        mod.connect(modGain);
+        modGain.connect(carrier.frequency);
+        carrier.connect(amp);
+        amp.connect(masterGain);
+        if (useEcho && snesDelayNode) amp.connect(snesDelayNode);
+
+        mod.start(now); carrier.start(now);
+        mod.stop(now + dur); carrier.stop(now + dur);
+      } catch(e) {}
+    }
+
+    // Patch 4: Slap / Wood Bass (Dry, Tight transients, No echo)
+    function playFmBass(freq, dur, vol) {
+      if (!soundEnabled || !freq) return;
+      initAudio();
+      if (!audioCtx || !masterGain) return;
+      try {
+        const now = audioCtx.currentTime;
+        const carrier = audioCtx.createOscillator();
+        const mod = audioCtx.createOscillator();
+        const modGain = audioCtx.createGain();
+        const amp = audioCtx.createGain();
+
+        carrier.type = 'sine';
+        carrier.frequency.setValueAtTime(freq, now);
+        mod.type = 'sine';
+        mod.frequency.setValueAtTime(freq * 2.0, now);
+
+        modGain.gain.setValueAtTime(freq * 2.0 * 3.2, now);
+        modGain.gain.exponentialRampToValueAtTime(freq * 0.05, now + 0.04);
+        modGain.gain.exponentialRampToValueAtTime(0.01, now + dur);
+
+        amp.gain.setValueAtTime(vol, now);
+        amp.gain.exponentialRampToValueAtTime(0.0001, now + dur);
+
+        mod.connect(modGain);
+        modGain.connect(carrier.frequency);
+        carrier.connect(amp);
+        amp.connect(masterGain);
+
+        mod.start(now); carrier.start(now);
+        mod.stop(now + dur); carrier.stop(now + dur);
+      } catch(e) {}
+    }
+
+    // Patch 5: FM Kick Drum
+    function playFmKick(vol = 0.22) {
+      if (!soundEnabled) return;
+      initAudio();
+      if (!audioCtx || !masterGain) return;
+      try {
+        const now = audioCtx.currentTime;
+        const osc = audioCtx.createOscillator();
+        const amp = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(140, now);
+        osc.frequency.exponentialRampToValueAtTime(36, now + 0.055);
+        amp.gain.setValueAtTime(vol, now);
+        amp.gain.exponentialRampToValueAtTime(0.0001, now + 0.12);
+        osc.connect(amp); amp.connect(masterGain);
+        osc.start(now); osc.stop(now + 0.12);
+      } catch(e) {}
+    }
+
+    // Patch 6: FM Snare / Shaker
+    function playFmSnare(vol = 0.15) {
+      if (!soundEnabled) return;
+      initAudio();
+      if (!audioCtx || !masterGain) return;
+      try {
+        const now = audioCtx.currentTime;
+        const c = audioCtx.createOscillator();
+        const m = audioCtx.createOscillator();
+        const mg = audioCtx.createGain();
+        const amp = audioCtx.createGain();
+
+        c.type = 'sine';
+        c.frequency.setValueAtTime(240, now);
+        m.type = 'sawtooth';
+        m.frequency.setValueAtTime(240 * 9.87, now);
+        mg.gain.setValueAtTime(240 * 9.87 * 6.5, now);
+        mg.gain.exponentialRampToValueAtTime(1, now + 0.08);
+
+        amp.gain.setValueAtTime(vol, now);
+        amp.gain.exponentialRampToValueAtTime(0.0001, now + 0.10);
+
+        m.connect(mg); mg.connect(c.frequency);
+        c.connect(amp); amp.connect(masterGain);
+
+        m.start(now); c.start(now);
+        m.stop(now + 0.10); c.stop(now + 0.10);
+      } catch(e) {}
+    }
+
+    // Patch 7: FM Hi-Hat
+    function playFmHiHat(vol = 0.06, open = false) {
+      if (!soundEnabled) return;
+      initAudio();
+      if (!audioCtx || !masterGain) return;
+      try {
+        const now = audioCtx.currentTime;
+        const dur = open ? 0.14 : 0.038;
+        const c = audioCtx.createOscillator();
+        const m = audioCtx.createOscillator();
+        const mg = audioCtx.createGain();
+        const amp = audioCtx.createGain();
+
+        c.type = 'sine';
+        c.frequency.setValueAtTime(3400, now);
+        m.type = 'sine';
+        m.frequency.setValueAtTime(3400 * 11.0, now);
+        mg.gain.setValueAtTime(12000, now);
+        mg.gain.exponentialRampToValueAtTime(10, now + dur);
+
+        amp.gain.setValueAtTime(vol, now);
+        amp.gain.exponentialRampToValueAtTime(0.0001, now + dur);
+
+        m.connect(mg); mg.connect(c.frequency);
+        c.connect(amp); amp.connect(masterGain);
+
+        m.start(now); c.start(now);
+        m.stop(now + dur); c.stop(now + dur);
+      } catch(e) {}
+    }
+
+    // Patch 8: Laboratory Bubble Pop
+    function playFmBubblePop(vol = 0.10) {
+      if (!soundEnabled) return;
+      initAudio();
+      if (!audioCtx || !masterGain) return;
+      try {
+        const now = audioCtx.currentTime;
+        const startFreq = 220 + Math.random() * 260;
+        const endFreq = startFreq * (1.6 + Math.random() * 0.4);
+        const osc = audioCtx.createOscillator();
+        const mod = audioCtx.createOscillator();
+        const modGain = audioCtx.createGain();
+        const amp = audioCtx.createGain();
+
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(startFreq, now);
+        osc.frequency.exponentialRampToValueAtTime(endFreq, now + 0.05);
+
+        mod.type = 'sine';
+        mod.frequency.setValueAtTime(startFreq * 1.5, now);
+        modGain.gain.setValueAtTime(startFreq * 0.8, now);
+        modGain.gain.exponentialRampToValueAtTime(1, now + 0.05);
+
+        amp.gain.setValueAtTime(vol, now);
+        amp.gain.exponentialRampToValueAtTime(0.0001, now + 0.06);
+
+        mod.connect(modGain);
+        modGain.connect(osc.frequency);
+        osc.connect(amp);
+        amp.connect(masterGain);
+        if (snesDelayNode) amp.connect(snesDelayNode);
+
+        mod.start(now); osc.start(now);
+        mod.stop(now + 0.06); osc.stop(now + 0.06);
+      } catch(e) {}
+    }
+
+    // Frequency Table: D Dorian / D Aeolian with Andalusian Cadence
+    const NOTE = {
+      C2: 65.41,   D2: 73.42,   E2: 82.41,   F2: 87.31,   G2: 98.00,   A2: 110.00,  Bb2: 116.54, B2: 123.47,
+      C3: 130.81,  Csh3: 138.59, D3: 146.83, Eb3: 155.56, E3: 164.81,  F3: 174.61,  G3: 196.00,  A3: 220.00,  Bb3: 233.08, B3: 246.94,
+      C4: 261.63,  Csh4: 277.18, D4: 293.66, Eb4: 311.13, E4: 329.63,  F4: 349.23,  Fsh4: 369.99, G4: 392.00,  A4: 440.00,  Bb4: 466.16, B4: 493.88,
+      C5: 523.25,  Csh5: 554.37, D5: 587.33, Eb5: 622.25, E5: 659.26,  F5: 698.46,  G5: 783.99,  A5: 880.00,  Bb5: 932.33, B5: 987.77,
+      C6: 1046.50, D6: 1174.66, E6: 1318.51, G6: 1567.98
+    };
+
+    // =========================================================================
+    // Track: "The Hermetic Transmutation"
+    // 32-Step Chiptune Suite (Progression: Dm -> C -> Bb/G -> A7)
+    // 6-Channel Architecture with Counterpoint & Shell Voicings
+    // =========================================================================
+    const bgmLead = [
+      // Bar 1 (Steps 0-7): Dm (Ascending mystical query)
+      NOTE.D4, 0, NOTE.F4, NOTE.G4, NOTE.A4, 0, NOTE.C5, NOTE.A4,
+      // Bar 2 (Steps 8-15): C / F (Long vocal sustain, counter-melody spotlight)
+      NOTE.G4, 0, 0, 0, 0, 0, NOTE.E4, NOTE.F4,
+      // Bar 3 (Steps 16-23): Bb / G (Alchemical transmutation crest)
+      NOTE.Bb4, 0, NOTE.D5, NOTE.C5, NOTE.B4, NOTE.A4, NOTE.G4, NOTE.F4,
+      // Bar 4 (Steps 24-31): A7 (Hermetic tension resolving to C# leading tone)
+      NOTE.E4, 0, NOTE.G4, NOTE.F4, NOTE.E4, 0, NOTE.Csh4, 0
+    ];
+
+    const bgmCounter = [
+      // Bar 1 (Steps 0-7): Answering descending bell cascade (contrary motion)
+      0, NOTE.A5, 0, NOTE.F5, 0, NOTE.E5, 0, NOTE.D5,
+      // Bar 2 (Steps 8-15): Melodic spotlight with sparkling crystal 16ths!
+      0, NOTE.E5, NOTE.G5, NOTE.B5, NOTE.C6, NOTE.G5, NOTE.E5, NOTE.D5,
+      // Bar 3 (Steps 16-23): Contrary motion arpeggios
+      NOTE.F5, NOTE.D5, 0, NOTE.Bb4, 0, NOTE.G5, 0, NOTE.E5,
+      // Bar 4 (Steps 24-31): High bell suspension resolving into tonic
+      NOTE.A5, 0, NOTE.G5, 0, NOTE.F5, NOTE.E5, NOTE.Csh5, NOTE.E5
+    ];
+
+    // Shell Voicings: Root in Bass, 3rd + 7th in Upper Voice (No 5th doubling)
+    const bgmHarmony = [
+      // Bar 1 (Dm): Off-beat stabs [F4 (3rd), C5 (7th)]
+      null, null, [NOTE.F4, NOTE.C5], null, null, null, [NOTE.F4, NOTE.C5], null,
+      // Bar 2 (C7): Off-beat stabs [E4 (3rd), Bb4 (7th)]
+      null, null, [NOTE.E4, NOTE.Bb4], null, null, null, [NOTE.E4, NOTE.Bb4], null,
+      // Bar 3 (Bbmaj7 / G7): Steps 18 [D4, A4] and 22 [B3, F4]
+      null, null, [NOTE.D4, NOTE.A4], null, null, null, [NOTE.B3, NOTE.F4], null,
+      // Bar 4 (A7): Steps 26 & 30 [C#4, G4] (Tritone dominant tension)
+      null, null, [NOTE.Csh4, NOTE.G4], null, null, null, [NOTE.Csh4, NOTE.G4], null
+    ];
+
+    const bgmBass = [
+      // Bar 1 (Dm): Steps 0-7 - Melodic counterpoint with root & octave motion
+      NOTE.D2, 0, NOTE.D3, NOTE.D2, NOTE.F2, NOTE.G2, NOTE.A2, NOTE.D3,
+      // Bar 2 (C): Steps 8-15 - Stepwise walking run
+      NOTE.C2, 0, NOTE.C3, NOTE.C2, NOTE.E2, NOTE.G2, NOTE.C3, NOTE.B2,
+      // Bar 3 (Bb/G): Steps 16-23 - Contrary motion
+      NOTE.Bb2, 0, NOTE.Bb2, NOTE.D3, NOTE.G2, NOTE.B2, NOTE.D3, NOTE.G2,
+      // Bar 4 (A7): Steps 24-31 - Dominant push with C# leading tone
+      NOTE.A2, 0, NOTE.E3, NOTE.A2, NOTE.A2, NOTE.Csh3, NOTE.E3, NOTE.A2
+    ];
+
+    let bgmStep = 0;
+    let bgmTimer = null;
+    let bgmRunning = false;
+
+    function startBgm() {
+      if (!soundEnabled || bgmRunning) return;
+      initAudio();
+      bgmRunning = true;
+      scheduleBgmStep();
+    }
+
+    function stopBgm() {
+      bgmRunning = false;
+      if (bgmTimer) {
+        clearTimeout(bgmTimer);
+        bgmTimer = null;
+      }
+    }
+
+    function scheduleBgmStep() {
+      if (!bgmRunning || !soundEnabled) return;
+      // 5:3 Swing groove: 170ms on even steps, 110ms on odd steps (~107 BPM 16ths)
+      const isEven = (bgmStep % 2 === 0);
+      const nextDelay = isEven ? 170 : 110;
+      playBgmStep(bgmStep % 32);
+      bgmStep++;
+      bgmTimer = setTimeout(scheduleBgmStep, nextDelay);
+    }
+
+    function playBgmStep(step) {
+      if (!soundEnabled) return;
+
+      // Channel 4: Bass
+      const b = bgmBass[step];
+      if (b) playFmBass(b, 0.12, 0.22);
+
+      // Channel 1: Lead Melody
+      const l = bgmLead[step];
+      if (l) playFmLead(l, 0.26, 0.18, true);
+
+      // Channel 2: Counter-Melody
+      const c = bgmCounter[step];
+      if (c) playFmCounter(c, 0.20, 0.15, true);
+
+      // Channel 3: Shell Harmony
+      const h = bgmHarmony[step];
+      if (h && Array.isArray(h)) {
+        h.forEach(freq => playFmHarmony(freq, 0.22, 0.09, true));
+      }
+
+      // Channel 5: Percussion (Kick & Snare)
+      if (step === 0 || step === 8 || step === 16 || step === 24 || step === 28) {
+        playFmKick(step === 28 ? 0.18 : 0.22);
+      }
+      if (step === 4 || step === 12 || step === 20 || step === 28) {
+        playFmSnare(0.15);
+      } else if (step === 30) {
+        playFmSnare(0.09); // Ghost snare
+      }
+
+      // Channel 6: Hi-Hat & Bubbling FX
+      if (step % 2 === 1) {
+        const isOpen = (step === 14 || step === 30);
+        playFmHiHat(isOpen ? 0.08 : 0.05, isOpen);
+      }
+      if (step === 6 || step === 14 || step === 22) {
+        playFmBubblePop(0.08);
+      }
+    }
+
+    // Upgraded Backward-Compatible playChime
+    function playChime(freq, type = 'sine', duration = 0.2) {
+      if (!soundEnabled || !freq) return;
+      if (type === 'sawtooth') {
+        playFmTone(freq, 1.0, 3.2, duration, 0.14, false);
+      } else if (type === 'triangle') {
+        playFmTone(freq, 1.0, 1.2, duration, 0.12, true);
+      } else if (type === 'square') {
+        playFmTone(freq, 2.0, 2.4, duration, 0.12, false);
+      } else {
+        playFmTone(freq, 2.0, 1.5, duration, 0.12, true);
+      }
+    }
+
+    // Action Stingers & Apparatus Sounds
+    function playBubbleSimmer() {
+      if (!soundEnabled) return;
+      for (let i = 0; i < 5; i++) {
+        setTimeout(() => playFmBubblePop(0.11), i * 42 + Math.random() * 25);
+      }
     }
 
     function playGlassClinker(pitchMult = 1.0) {
-      const ctx = getAudioCtx();
-      if (!ctx) return;
-      try {
-        const now = ctx.currentTime;
-        const baseFreq = 1800 * pitchMult;
-        const osc1 = ctx.createOscillator();
-        const osc2 = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc1.type = 'sine';
-        osc2.type = 'triangle';
-        osc1.frequency.setValueAtTime(baseFreq, now);
-        osc2.frequency.setValueAtTime(baseFreq * 1.48, now);
-        gain.gain.setValueAtTime(0.12, now);
-        gain.gain.exponentialRampToValueAtTime(0.0005, now + 0.18);
-        osc1.connect(gain);
-        osc2.connect(gain);
-        gain.connect(ctx.destination);
-        osc1.start(now);
-        osc2.start(now);
-        osc1.stop(now + 0.2);
-        osc2.stop(now + 0.2);
-      } catch (e) {}
+      if (!soundEnabled) return;
+      const baseFreq = 1800 * pitchMult;
+      playFmCounter(baseFreq, 0.18, 0.14, true);
+      playFmTone(baseFreq * 1.48, 2.76, 2.8, 0.16, 0.10, true);
     }
 
     function playTransmutationZap() {
-      const ctx = getAudioCtx();
-      if (!ctx) return;
-      try {
-        const now = ctx.currentTime;
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.type = 'sawtooth';
-        osc.frequency.setValueAtTime(160, now);
-        osc.frequency.exponentialRampToValueAtTime(1450, now + 0.12);
-        osc.frequency.exponentialRampToValueAtTime(320, now + 0.25);
-        gain.gain.setValueAtTime(0.14, now);
-        gain.gain.linearRampToValueAtTime(0.18, now + 0.1);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        osc.start(now);
-        osc.stop(now + 0.26);
-      } catch (e) {}
+      if (!soundEnabled) return;
+      playFmTone(160, 2.5, 4.8, 0.24, 0.18, true);
+      setTimeout(() => playFmTone(640, 1.5, 3.2, 0.18, 0.16, true), 60);
+      setTimeout(() => playFmCounter(1318.51, 0.35, 0.18, true), 120);
     }
 
     function playDiscoveryChime() {
-      const ctx = getAudioCtx();
-      if (!ctx) return;
-      try {
-        const freqs = [1046.50, 1318.51, 1567.98, 2093.00, 2637.02];
-        const now = ctx.currentTime;
-        freqs.forEach((f, idx) => {
-          const startTime = now + idx * 0.055;
-          const osc = ctx.createOscillator();
-          const gain = ctx.createGain();
-          osc.type = 'sine';
-          osc.frequency.setValueAtTime(f, startTime);
-          gain.gain.setValueAtTime(0.12, startTime);
-          gain.gain.exponentialRampToValueAtTime(0.0005, startTime + 0.38);
-          osc.connect(gain);
-          gain.connect(ctx.destination);
-          osc.start(startTime);
-          osc.stop(startTime + 0.42);
-        });
-      } catch (e) {}
+      if (!soundEnabled) return;
+      const freqs = [NOTE.C5, NOTE.E5, NOTE.G5, NOTE.C6, NOTE.E6];
+      freqs.forEach((f, idx) => {
+        setTimeout(() => playFmCounter(f, 0.45, 0.16, true), idx * 55);
+      });
     }
 
     function playMagicFanfare() {
-      const ctx = getAudioCtx();
-      if (!ctx) return;
-      try {
-        const notes = [
-          { f: 523.25, time: 0 },
-          { f: 659.25, time: 0.09 },
-          { f: 783.99, time: 0.18 },
-          { f: 1046.50, time: 0.32 },
-          { f: 1318.51, time: 0.45 }
-        ];
-        const now = ctx.currentTime;
-        notes.forEach(n => {
-          const startTime = now + n.time;
-          const osc = ctx.createOscillator();
-          const gain = ctx.createGain();
-          osc.type = 'triangle';
-          osc.frequency.setValueAtTime(n.f, startTime);
-          gain.gain.setValueAtTime(0.14, startTime);
-          gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.48);
-          osc.connect(gain);
-          gain.connect(ctx.destination);
-          osc.start(startTime);
-          osc.stop(startTime + 0.52);
-        });
-      } catch (e) {}
+      if (!soundEnabled) return;
+      // Triumphant Mario/Heroic Dorian Cadence: Bb4 -> C5 -> D5 with brass & bells
+      const fanNotes = [
+        { f: NOTE.Bb4, d: 0.18, t: 0 },
+        { f: NOTE.C5,  d: 0.20, t: 140 },
+        { f: NOTE.D5,  d: 0.48, t: 300 }
+      ];
+      fanNotes.forEach(fn => {
+        setTimeout(() => {
+          playFmHarmony(fn.f, fn.d, 0.22, true);
+          playFmCounter(fn.f * 2, fn.d, 0.16, true);
+        }, fn.t);
+      });
     }
 
     function playFanfareDiscovery() {
@@ -5036,6 +5456,48 @@
 
     function playFanfareTier() {
       playMagicFanfare();
+    }
+
+    function playFmBrewingPotion() {
+      if (!soundEnabled) return;
+      const brewNotes = [NOTE.D4, NOTE.F4, NOTE.G4, NOTE.A4, NOTE.C5];
+      brewNotes.forEach((f, idx) => {
+        setTimeout(() => {
+          playFmLead(f, 0.14, 0.16, true);
+          playFmBubblePop(0.10);
+        }, idx * 75);
+      });
+    }
+
+    function playFmDrinkElixir() {
+      if (!soundEnabled) return;
+      const elixirNotes = [NOTE.E5, NOTE.G5, NOTE.A5, NOTE.C6, NOTE.D6, NOTE.E6];
+      elixirNotes.forEach((f, idx) => {
+        setTimeout(() => playFmCounter(f, 0.22, 0.14, true), idx * 60);
+      });
+    }
+
+    function playFmRetortApparatus() {
+      if (!soundEnabled) return;
+      const retortNotes = [NOTE.F4, NOTE.A4, NOTE.C5, NOTE.E5, NOTE.A5];
+      retortNotes.forEach((f, idx) => {
+        setTimeout(() => playFmTone(f, 2.76, 3.0, 0.16, 0.14, true), idx * 55);
+      });
+    }
+
+    function playFmAlembicSublimation() {
+      if (!soundEnabled) return;
+      const alembicNotes = [NOTE.A4, NOTE.C5, NOTE.E5, NOTE.G5, NOTE.C6];
+      alembicNotes.forEach((f, idx) => {
+        setTimeout(() => playFmCounter(f, 0.35, 0.15, true), idx * 50);
+      });
+    }
+
+    function playFmAnvilStrike() {
+      if (!soundEnabled) return;
+      playFmBass(90, 0.25, 0.35);
+      playFmTone(640, 1.0, 4.0, 0.18, 0.25, false);
+      setTimeout(() => playFmCounter(1280, 0.30, 0.20, true), 40);
     }
 
 
@@ -5365,6 +5827,8 @@
         const modal = document.getElementById('help-modal-overlay');
         if (modal && modal.classList.contains('show')) {
           toggleMinimizeHelpModal();
+        } else {
+          toggleSound();
         }
       } else if (key === 'escape') {
         closeHelpModal();
@@ -5774,6 +6238,7 @@
       }
     }
 
+    updateSoundUI();
     if (window.parent && window.parent.postMessage) {
       const targetOrigin = window.location.origin && window.location.origin !== 'null' ? window.location.origin : '*';
       window.parent.postMessage({ type: 'OS_SET_WINDOW_SIZE', width: 1200, height: 800 }, targetOrigin);
@@ -5895,7 +6360,7 @@
             <div class="help-list-item"><strong>Click Crucible Slot:</strong> Clears the selected element from that slot.</div>
             <div class="help-list-item"><strong>⚡ Auto-Fill Button:</strong> (Unlocked via Workshop Auto-Sorter Lvl 1+) Scans your Grimoire and automatically places valid missing recipe pairs into the Crucible!</div>
             <div class="help-list-item"><strong>🔮 Oracle & Research:</strong> Spend Arcane Dust to request a Vague Hint (20 Dust) or Oracle Vision (50 Dust).</div>
-            <div class="help-list-item"><strong>🔊 Audio Toggle:</strong> Click header badge to mute or restore laboratory sound effects.</div>
+            <div class="help-list-item"><strong>🔊 Audio Toggle (M):</strong> Click header badge or press <code>M</code> to mute or play the YM2612 FM chiptune soundscape ("The Hermetic Transmutation").</div>
           </div>
 
           <div class="help-card-box">
@@ -5912,7 +6377,7 @@
                 <div class="help-list-item"><span class="key-badge">I</span> Vague Research Hint (20 Dust)</div>
                 <div class="help-list-item"><span class="key-badge">O</span> Oracle Vision (50 Dust)</div>
                 <div class="help-list-item"><span class="key-badge">F1 / H / ?</span> Open / Toggle Grandmaster Manual</div>
-                <div class="help-list-item"><span class="key-badge">M</span> Minimize / Restore Manual</div>
+                <div class="help-list-item"><span class="key-badge">M</span> Toggle Soundscape / Minimize Manual</div>
                 <div class="help-list-item"><span class="key-badge">ESC</span> Close Modals / Dismiss Toast / Clear Search</div>
               </div>
             </div>

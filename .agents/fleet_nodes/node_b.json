@@ -13,9 +13,9 @@
   "session_end": null,
   "session_limit_enabled": false,
   "timer_enabled": false,
-  "turns_executed": 286,
+  "turns_executed": 287,
   "last_turn_timestamp": "2026-09-28T17:56:12Z",
-  "last_heartbeat": "2026-10-18T03:38:51.498238+00:00",
-  "current_target": "kweb://echo-subsystem.net",
+  "last_heartbeat": "2026-10-18T04:30:03.493992+00:00",
+  "current_target": "KDragon",
   "remote_command": "none"
 }
