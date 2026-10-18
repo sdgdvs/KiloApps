@@ -36,20 +36,20 @@ TASK_NAME = "KiloApps-Fleet-Orchestrator"
 CREATE_NO_WINDOW = 0x08000000 if sys.platform == "win32" else 0
 
 # Multi-PC Node Profiles: Dedicated, non-colliding dispatch windows based on account model tier:
-# - PC A: sdgdvs (Gemini Pro) - 2 turns/hr at :12, :48 past each hour (Windows :10 - :18, :46 - :54)
+# - PC A: sdgdvs (Gemini Pro) - 1 turn/hr at :12 past each hour (Window :10 - :18)
 # - PC B: anonymous2 (Gemini Pro) - 1 turn/hr at :30 past each hour (Window :28 - :36)
-# - PC C: This PC / anonymous1 (Gemini Ultra) - 3 turns/hr at :02, :20, :38 past each hour
+# - PC C: This PC / anonymous1 (Gemini Ultra) - 4 turns/hr at :02, :20, :38, :48 past each hour
 NODE_PROFILES = {
     "pc_a": {
         "node_id": "pc_a",
         "name": "PC A (sdgdvs)",
         "account": "sdgdvs",
         "model_tier": "Gemini Pro",
-        "cadence_desc": "2 turns/hr",
-        "minutes": [12, 48],
-        "safe_window": ":10 - :18 & :46 - :54",
-        "is_safe": lambda m: (10 <= m <= 18) or (46 <= m <= 54),
-        "collision_desc": "Reserved for PC B (Pro: :28-:36) & PC C (Ultra: :00-:10, :18-:28, :36-:46)",
+        "cadence_desc": "1 turn/hr",
+        "minutes": [12],
+        "safe_window": ":10 - :18",
+        "is_safe": lambda m: 10 <= m <= 18,
+        "collision_desc": "Reserved for PC B (Pro: :28-:36) & PC C (Ultra: Outside :10-:18, :28-:36)",
     },
     "pc_b": {
         "node_id": "pc_b",
@@ -60,7 +60,7 @@ NODE_PROFILES = {
         "minutes": [30],
         "safe_window": ":28 - :36",
         "is_safe": lambda m: 28 <= m <= 36,
-        "collision_desc": "Reserved for PC A (Pro: :10-:18, :46-:54) & PC C (Ultra: :00-:10, :18-:28, :36-:46)",
+        "collision_desc": "Reserved for PC A (Pro: :10-:18) & PC C (Ultra: Outside :10-:18, :28-:36)",
     },
     "pc_c": {
         "node_id": "pc_c",
@@ -68,11 +68,11 @@ NODE_PROFILES = {
         "account": "anonymous1",
         "hostname_hint": "12900K",
         "model_tier": "Gemini Ultra",
-        "cadence_desc": "3 turns/hr",
-        "minutes": [2, 20, 38],
-        "safe_window": "Outside Pro Windows (:00-:10, :18-:28, :36-:46)",
-        "is_safe": lambda m: not ((10 <= m <= 18) or (28 <= m <= 36) or (46 <= m <= 54)),
-        "collision_desc": "Reserved for PC A (Pro: :10-:18, :46-:54) & PC B (Pro: :28-:36)",
+        "cadence_desc": "4 turns/hr",
+        "minutes": [2, 20, 38, 48],
+        "safe_window": "Outside Pro Windows (:00-:10, :18-:28, :36-:60 excluding :28-:36)",
+        "is_safe": lambda m: not ((10 <= m <= 18) or (28 <= m <= 36)),
+        "collision_desc": "Reserved for PC A (Pro: :10-:18) & PC B (Pro: :28-:36)",
     },
 }
 
@@ -362,13 +362,16 @@ class FleetDashboard(tk.Tk):
         self.current_node_id = get_current_node_id()
         self.current_node_profile = dict(NODE_PROFILES.get(self.current_node_id, NODE_PROFILES["pc_c"]))
         if self.current_node_id == "pc_c":
-            cad = self.config_data.get("cadence", 3)
+            cad = self.config_data.get("cadence", 4)
             if cad == 2:
                 self.current_node_profile["minutes"] = [2, 20]
                 self.current_node_profile["cadence_desc"] = "2 turns/hr"
-            else:
+            elif cad == 3:
                 self.current_node_profile["minutes"] = [2, 20, 38]
                 self.current_node_profile["cadence_desc"] = "3 turns/hr"
+            else:
+                self.current_node_profile["minutes"] = [2, 20, 38, 48]
+                self.current_node_profile["cadence_desc"] = "4 turns/hr"
         self.current_node_name = self.current_node_profile["name"]
 
         # Telemetry query caching
@@ -439,12 +442,26 @@ class FleetDashboard(tk.Tk):
         )
         self.subtitle_lbl.pack(anchor="w")
 
-        # For PC C (Gemini Ultra): Cadence selection (3 or 4 turns/hr)
+        # For PC C (Gemini Ultra): Cadence selection (2, 3, or 4 turns/hr)
         if self.current_node_id == "pc_c":
             cad_frame = tk.Frame(main_frame, bg="#212234", padx=8, pady=4, highlightbackground=self.c_card_border, highlightthickness=1)
             cad_frame.pack(fill=tk.X, pady=(2, 6))
             tk.Label(cad_frame, text="⚡ ULTRA CADENCE:", font=("Segoe UI", 8, "bold"), fg=self.c_accent, bg="#212234").pack(side=tk.LEFT)
-            self.var_cadence = tk.IntVar(value=self.config_data.get("cadence", 3))
+            self.var_cadence = tk.IntVar(value=self.config_data.get("cadence", 4))
+            r4 = tk.Radiobutton(
+                cad_frame,
+                text="4 turns/hr (:02, :20, :38, :48)",
+                variable=self.var_cadence,
+                value=4,
+                command=self._on_change_cadence,
+                font=("Segoe UI", 8),
+                fg=self.c_fg,
+                bg="#212234",
+                selectcolor="#313244",
+                activebackground="#212234",
+                activeforeground=self.c_fg,
+            )
+            r4.pack(side=tk.LEFT, padx=(6, 4))
             r3 = tk.Radiobutton(
                 cad_frame,
                 text="3 turns/hr (:02, :20, :38)",
@@ -458,7 +475,7 @@ class FleetDashboard(tk.Tk):
                 activebackground="#212234",
                 activeforeground=self.c_fg,
             )
-            r3.pack(side=tk.LEFT, padx=(10, 6))
+            r3.pack(side=tk.LEFT, padx=(4, 4))
             r2 = tk.Radiobutton(
                 cad_frame,
                 text="2 turns/hr (:02, :20)",
@@ -765,9 +782,12 @@ class FleetDashboard(tk.Tk):
         if val == 2:
             self.current_node_profile["minutes"] = [2, 20]
             self.current_node_profile["cadence_desc"] = "2 turns/hr"
-        else:
+        elif val == 3:
             self.current_node_profile["minutes"] = [2, 20, 38]
             self.current_node_profile["cadence_desc"] = "3 turns/hr"
+        else:
+            self.current_node_profile["minutes"] = [2, 20, 38, 48]
+            self.current_node_profile["cadence_desc"] = "4 turns/hr"
         min_desc = ", ".join([f":{m:02d}" for m in self.current_node_profile["minutes"]])
         tier_desc = self.current_node_profile.get("model_tier", "Gemini Ultra")
         self.subtitle_lbl.configure(text=f"Multi-PC Dispatcher • Local: {self.current_node_name} • {tier_desc} (Slots {min_desc})")
@@ -1121,7 +1141,7 @@ class FleetDashboard(tk.Tk):
 
         # 3. Calculate Next Run Time
         now = datetime.datetime.now()
-        mins = self.current_node_profile.get("minutes", [12, 48])
+        mins = self.current_node_profile.get("minutes", [12])
         candidates = []
         for m in mins:
             t = now.replace(minute=m, second=0, microsecond=0)

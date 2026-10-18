@@ -4,6 +4,14 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-17T21:38:00+0000 — kilo-soundscape: KFortress ("Siege of the Iron Citadel" — Combat / Defense FM Chiptune)**
+  - Composition: 32-step D Minor / D Phrygian Dominant progression (Dm → C → Bb → A7); 6-channel architecture with vocal lead phrasing, contrary counterpoint, and shell brass stabs (no doubled 5ths).
+  - Soundscape & Synthesis: Genesis YM2612 2-Op FM engine (overdriven lead, hollow flute, war horns, slap bass, inharmonic kick/snare/hat) + SPC700 185ms stereo slapback delay line (2200Hz LP filter).
+  - Dynamic Adaptation & SFX: Peaceful ambient drone / build phase vs. galloping battle march; modernized 14 siege earcons & spells plus defeat dirge.
+  - Accessibility & Modal Fix: Attached standard modal-close classes & titles to helpModal, fixing startup test automation.
+  - Status: PASS ✅ (Vite clean, 214.5 KB HTML + 182.8 KB Win32 EXE < 999 KB ceiling, test_app_startup PASS, security lint 100% clean).
+  - Queue: Advanced `kilo_soundscape` to `KAlchemy`; rotation handoff to `kilo-tester`.
+
 - **2026-10-17T16:54:11+0000 — kilo-usability: KChart (Responsive Viewport Polish & Keyboard Accessibility)**
   - Responsive Viewport: Added narrow-viewport (<540px) adaptation, full-width toolbar flex-wrapping, button grouping, and table scrolling.
   - Accessibility & Polish: Added distinct help hint pill and high-visibility focus ring glow (`box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.35)`) on all inputs and buttons.

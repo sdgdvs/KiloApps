@@ -4,12 +4,13 @@
   "account": "anonymous1",
   "hostname": "12900K",
   "model_tier": "Gemini Ultra",
-  "cadence": "3 turns/hour",
+  "cadence": "4 turns/hour",
   "status": "active",
   "schedule_minutes": [
     2,
     20,
-    38
+    38,
+    48
   ],
   "session_start": "2026-10-10T21:27:43.0168353Z",
   "session_end": null,

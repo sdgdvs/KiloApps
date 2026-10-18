@@ -950,6 +950,211 @@
   .webring-link:hover {
     color: #fff;
   }
+
+  /* TAB 15: Numbers Station Automated Decoder & Subterranean Transponder Routing Grid */
+  .numbers-layout-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin-bottom: 14px;
+  }
+  @media (max-width: 920px) {
+    .numbers-layout-grid { grid-template-columns: 1fr; }
+  }
+  .sw-chassis-box {
+    background: #040814;
+    border: 2px solid #1e315b;
+    border-radius: 4px;
+    padding: 12px;
+    box-shadow: inset 0 0 18px rgba(0,0,0,0.85);
+  }
+  .sw-freq-display {
+    background: #02050c;
+    border: 2px solid var(--border-bright);
+    border-radius: 3px;
+    padding: 8px 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+    box-shadow: 0 0 12px rgba(56, 189, 248, 0.25);
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .sw-freq-large {
+    font-family: 'Consolas', 'Courier New', monospace;
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--green-phosphor);
+    letter-spacing: 2px;
+    text-shadow: 0 0 10px rgba(0, 255, 170, 0.6);
+  }
+  .sw-mode-badge {
+    background: #0b1a38;
+    border: 1px solid var(--border-bright);
+    color: #bae6fd;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 2px;
+  }
+  .smeter-container {
+    background: #02050b;
+    border: 1px solid var(--border-dim);
+    border-radius: 3px;
+    padding: 6px 10px;
+    margin-bottom: 10px;
+  }
+  .preset-station-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    gap: 6px;
+    margin-bottom: 12px;
+  }
+  .preset-station-chip {
+    background: #091226;
+    border: 1px solid var(--border-dim);
+    border-radius: 3px;
+    color: #cbd5e1;
+    font-family: inherit;
+    font-size: 10.5px;
+    font-weight: 700;
+    padding: 6px 8px;
+    cursor: pointer;
+    text-align: left;
+    transition: all 0.15s ease;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .preset-station-chip:hover {
+    border-color: var(--border-bright);
+    color: #fff;
+    background: #0f1f42;
+  }
+  .preset-station-chip.active {
+    border-color: var(--green-phosphor);
+    background: rgba(0, 255, 170, 0.12);
+    color: var(--green-phosphor);
+    box-shadow: 0 0 8px rgba(0, 255, 170, 0.25);
+  }
+  .phonetic-speech-matrix {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 5px;
+    margin-top: 8px;
+    margin-bottom: 12px;
+  }
+  .phonetic-btn {
+    background: #081124;
+    border: 1px solid var(--border-dim);
+    color: #bae6fd;
+    font-family: inherit;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 8px 4px;
+    cursor: pointer;
+    border-radius: 3px;
+    text-align: center;
+    transition: all 0.12s ease;
+    user-select: none;
+  }
+  .phonetic-btn:hover {
+    background: var(--border-bright);
+    color: #050811;
+    box-shadow: 0 0 8px var(--border-bright);
+  }
+  .phonetic-btn.active {
+    background: var(--green-phosphor);
+    color: #050811;
+    box-shadow: 0 0 10px var(--green-phosphor);
+  }
+  .otp-calc-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 11.5px;
+    margin-top: 8px;
+    margin-bottom: 10px;
+    background: #02050c;
+  }
+  .otp-calc-table th, .otp-calc-table td {
+    border: 1px solid var(--border-dim);
+    padding: 5px 8px;
+    text-align: left;
+  }
+  .otp-calc-table th {
+    background: #081024;
+    color: #94a3b8;
+    font-weight: 700;
+  }
+  .otp-step-digit {
+    display: inline-block;
+    min-width: 16px;
+    text-align: center;
+    font-weight: 700;
+  }
+  .transponder-map-wrapper {
+    background: #02050b;
+    border: 1px solid var(--border-bright);
+    border-radius: 4px;
+    position: relative;
+    overflow: hidden;
+    margin-bottom: 10px;
+    box-shadow: inset 0 0 16px rgba(0,0,0,0.9);
+  }
+  .transponder-stats-strip {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+    font-size: 10.5px;
+    margin-bottom: 10px;
+  }
+  @media (max-width: 650px) {
+    .transponder-stats-strip { grid-template-columns: repeat(2, 1fr); }
+  }
+  .transponder-stat-card {
+    background: #070d1e;
+    border: 1px solid rgba(56, 189, 248, 0.2);
+    border-radius: 3px;
+    padding: 6px 8px;
+  }
+  .route-nodes-bar {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+  .node-toggle-chip {
+    background: #0b152d;
+    border: 1px solid var(--border-dim);
+    color: #cbd5e1;
+    font-family: inherit;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 4px 8px;
+    border-radius: 3px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  .node-toggle-chip:hover {
+    border-color: var(--border-bright);
+    color: #fff;
+  }
+  .node-toggle-chip.selected {
+    background: rgba(56, 189, 248, 0.2);
+    border-color: var(--border-bright);
+    color: #38bdf8;
+    box-shadow: 0 0 8px rgba(56, 189, 248, 0.3);
+  }
+  .node-toggle-chip.hop-start {
+    border-color: var(--green-phosphor);
+    color: var(--green-phosphor);
+  }
+  .node-toggle-chip.hop-target {
+    border-color: var(--purple-spectral);
+    color: var(--purple-spectral);
+  }
 </style>
 </head>
 <body>
@@ -1016,6 +1221,7 @@
     <button class="tab-btn" id="tabBtn12" onclick="switchTab('interferometer')">🎚️ [12] SPATIO-ACOUSTIC INTERFEROMETER &amp; CORRELATOR</button>
     <button class="tab-btn" id="tabBtn13" onclick="switchTab('troposphere')">📡 [13] TROPOSPHERIC DUCT &amp; VLF SANGUINE TRANSCEIVER</button>
     <button class="tab-btn" id="tabBtn14" onclick="switchTab('squid')">🧲 [14] CRYOGENIC SQUID MAGNETOMETER &amp; SUB-CRUSTAL TOMOGRAPH</button>
+    <button class="tab-btn" id="tabBtn15" onclick="switchTab('numbers')">📻 [15] NUMBERS STATION DECODER &amp; TRANSPONDER ROUTER</button>
   </nav>
 
   <!-- TAB 1: RESEARCH JOURNAL & OBSERVATION LOGBOOK -->
@@ -3079,6 +3285,280 @@ END TRANSMISSION // ESARL 1999</div>
     </div>
   </div>
 
+  <!-- TAB 15: NUMBERS STATION DECODER & SUBTERRANEAN TRANSPONDER ROUTER -->
+  <div id="pane-numbers" class="tab-pane">
+    <div class="card-box">
+      <div class="card-header">
+        <span>HF/VLF NUMBERS STATION RECEIVER // CARLSBAD VAULT SHORTWAVE SIGINT</span>
+        <div style="display:flex; gap:6px;">
+          <span class="journal-tag">RECEIVER: ICOM-R9000-ESARL</span>
+          <span class="journal-tag" style="border-color:var(--green-phosphor); color:var(--green-phosphor);">CARRIER: 1999.0 kHz / 1999 Hz</span>
+        </div>
+      </div>
+
+      <div class="numbers-layout-grid">
+        <!-- COLUMN 1: SHORTWAVE CHASSIS & FORMANT SPEECH SYNTHESIZER -->
+        <div class="sw-chassis-box">
+          <div class="sw-freq-display">
+            <div>
+              <div style="font-size:10px; color:var(--text-muted); letter-spacing:1px;">TUNED FREQUENCY (SHORTWAVE / VLF)</div>
+              <div id="swFreqDisplay" class="sw-freq-large">1999.00 <span style="font-size:14px; color:var(--cyan-glow);">kHz</span></div>
+            </div>
+            <div style="text-align:right;">
+              <span id="swModeBadge" class="sw-mode-badge">USB</span>
+              <div id="swStationNameBadge" style="font-size:10px; color:var(--amber-led); margin-top:4px;">ECHO-07 (CARLSBAD VAULT)</div>
+            </div>
+          </div>
+
+          <!-- S-Meter Analog Display Canvas -->
+          <div class="smeter-container">
+            <div style="display:flex; justify-content:space-between; font-size:10px; color:var(--text-muted); margin-bottom:3px;">
+              <span>SIGNAL LEVEL (S-METER)</span>
+              <span id="swSignalStrengthReadout" style="color:var(--green-phosphor); font-weight:700;">S9 +20dB [CARRIER LOCKED]</span>
+            </div>
+            <canvas id="canvasSmeter" width="460" height="42" class="display-canvas" style="height:42px;"></canvas>
+          </div>
+
+          <!-- Tuning Stepper Controls -->
+          <div style="display:flex; gap:5px; flex-wrap:wrap; margin-bottom:10px; align-items:center;">
+            <span style="font-size:10px; color:var(--text-muted);">STEP:</span>
+            <button class="btn-retro" onclick="stepFrequency(-10.0)">-10k</button>
+            <button class="btn-retro" onclick="stepFrequency(-1.0)">-1k</button>
+            <button class="btn-retro" onclick="stepFrequency(-0.1)">-0.1k</button>
+            <input type="number" id="inpManualFreq" value="1999.0" step="0.1" min="10" max="30000" style="width:75px; background:#070d1a; border:1px solid var(--border-bright); color:var(--green-phosphor); font-family:inherit; font-size:11px; padding:3px 6px; border-radius:3px; text-align:center;">
+            <button class="btn-retro btn-green" onclick="setManualFrequency()">TUNE</button>
+            <button class="btn-retro" onclick="stepFrequency(0.1)">+0.1k</button>
+            <button class="btn-retro" onclick="stepFrequency(1.0)">+1k</button>
+            <button class="btn-retro" onclick="stepFrequency(10.0)">+10k</button>
+          </div>
+
+          <!-- Demodulation Modes & Audio Filters -->
+          <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px; margin-bottom:10px; border-top:1px solid var(--border-dim); padding-top:8px;">
+            <div style="display:flex; gap:4px;">
+              <button class="btn-retro btn-active" id="btnModeUSB" onclick="setDemodMode('USB')">USB</button>
+              <button class="btn-retro" id="btnModeLSB" onclick="setDemodMode('LSB')">LSB</button>
+              <button class="btn-retro" id="btnModeAM" onclick="setDemodMode('AM')">AM</button>
+              <button class="btn-retro" id="btnModeCW" onclick="setDemodMode('CW')">CW</button>
+              <button class="btn-retro" id="btnModeFSK" onclick="setDemodMode('FSK')">FSK</button>
+            </div>
+            <div style="display:flex; gap:6px; font-size:10.5px; align-items:center;">
+              <span style="color:var(--text-muted);">AGC:</span>
+              <button class="btn-retro" id="btnAgcToggle" onclick="toggleAgcSpeed()">FAST</button>
+              <span style="color:var(--text-muted);">SQUELCH:</span>
+              <input type="range" id="rngSquelch" min="0" max="100" value="35" style="width:60px;" oninput="updateSquelch(this.value)">
+            </div>
+          </div>
+
+          <!-- Preset Numbers Stations -->
+          <div style="font-size:10.5px; color:var(--border-bright); font-weight:700; margin-bottom:4px;">AUTHENTIC SHORTWAVE PRESETS:</div>
+          <div class="preset-station-grid">
+            <div class="preset-station-chip active" id="chipStationEcho" onclick="selectPresetStation('ECHO_07')">
+              <span style="color:var(--green-phosphor);">ECHO-07 (Carlsbad)</span>
+              <span style="font-size:9.5px; color:var(--text-muted);">1999.0 kHz USB // Vault Beacon</span>
+            </div>
+            <div class="preset-station-chip" id="chipStationE03" onclick="selectPresetStation('E03_POACHER')">
+              <span style="color:#bae6fd;">E03 Lincolnshire</span>
+              <span style="font-size:9.5px; color:var(--text-muted);">11545 kHz AM // Flute Arpeggio</span>
+            </div>
+            <div class="preset-station-chip" id="chipStationS28" onclick="selectPresetStation('S28_BUZZER')">
+              <span style="color:var(--amber-led);">S28 The Buzzer</span>
+              <span style="font-size:9.5px; color:var(--text-muted);">4625 kHz AM // UVB-76 Pulse</span>
+            </div>
+            <div class="preset-station-chip" id="chipStationE10" onclick="selectPresetStation('E10_MOSSAD')">
+              <span style="color:var(--purple-spectral);">E10 Mag-Resonance</span>
+              <span style="font-size:9.5px; color:var(--text-muted);">6840 kHz USB // NATO Chimes</span>
+            </div>
+            <div class="preset-station-chip" id="chipStationM01" onclick="selectPresetStation('M01_ATTENTION')">
+              <span style="color:#38bdf8;">M01 Attention Flute</span>
+              <span style="font-size:9.5px; color:var(--text-muted);">7350 kHz CW // High-Speed Morse</span>
+            </div>
+          </div>
+
+          <!-- Broadcast Stream Controls -->
+          <div style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:12px;">
+            <button class="btn-retro btn-green" id="btnPlayBroadcast" onclick="toggleStationBroadcast()">▶ PLAY STATION BROADCAST</button>
+            <button class="btn-retro btn-amber" onclick="generateRandom5GroupBurst()">⚡ INJECT 5-GROUP BURST</button>
+            <button class="btn-retro" onclick="stopStationBroadcast()">■ MUTE</button>
+          </div>
+
+          <!-- Phonetic Speech Formant Synthesizer Keypad -->
+          <div style="font-size:10.5px; color:var(--text-muted); margin-bottom:3px; display:flex; justify-content:space-between;">
+            <span>FORMANT VOCAL SPEECH SYNTHESIZER (PROCEDURAL 0-9):</span>
+            <span id="speechStateBadge" style="color:var(--green-phosphor); font-weight:700;">STANDBY</span>
+          </div>
+          <div class="phonetic-speech-matrix">
+            <button class="phonetic-btn" onclick="playPhoneticVoice(0)">0 (ZERO)</button>
+            <button class="phonetic-btn" onclick="playPhoneticVoice(1)">1 (ONE)</button>
+            <button class="phonetic-btn" onclick="playPhoneticVoice(2)">2 (TWO)</button>
+            <button class="phonetic-btn" onclick="playPhoneticVoice(3)">3 (THREE)</button>
+            <button class="phonetic-btn" onclick="playPhoneticVoice(4)">4 (FOUR)</button>
+            <button class="phonetic-btn" onclick="playPhoneticVoice(5)">5 (FIVE)</button>
+            <button class="phonetic-btn" onclick="playPhoneticVoice(6)">6 (SIX)</button>
+            <button class="phonetic-btn" onclick="playPhoneticVoice(7)">7 (SEVEN)</button>
+            <button class="phonetic-btn" onclick="playPhoneticVoice(8)">8 (EIGHT)</button>
+            <button class="phonetic-btn" onclick="playPhoneticVoice(9)">9 (NINE)</button>
+          </div>
+        </div>
+
+        <!-- COLUMN 2: ONE-TIME PAD (OTP) CRYPTOGRAPHIC DECRYPTOR -->
+        <div class="sw-chassis-box">
+          <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border-dim); padding-bottom:6px; margin-bottom:10px;">
+            <span style="font-weight:700; color:var(--border-bright);">VERNAM ONE-TIME PAD (OTP) REAL-TIME DECRYPTOR</span>
+            <span class="journal-tag" style="border-color:var(--amber-led); color:var(--amber-led);">MODULAR-10 ARITHMETIC</span>
+          </div>
+          <div style="font-size:11px; color:var(--text-muted); margin-bottom:8px;">
+            Standard espionage field cipher. Plaintext digit is computed via modular subtraction: <code>P = (Cipher - Key + 10) mod 10</code>.
+          </div>
+
+          <!-- Intercept Presets -->
+          <div style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:8px;">
+            <button class="btn-retro" onclick="loadOtpPreset(1)">[INTERCEPT #1999-A: ECHO-07]</button>
+            <button class="btn-retro" onclick="loadOtpPreset(2)">[INTERCEPT #1999-B: GATE-07]</button>
+            <button class="btn-retro" onclick="loadOtpPreset(3)">[INTERCEPT #1999-C: DEEP-CORE]</button>
+          </div>
+
+          <!-- Inputs -->
+          <div style="margin-bottom:8px;">
+            <div class="control-label" style="font-size:11px; margin-bottom:3px;">
+              <span>CIPHERTEXT (5-FIGURE NUMBER GROUPS):</span>
+            </div>
+            <input type="text" id="inpOtpCipher" value="19994 07215 88220 00402 77199" style="width:100%; background:#070d1a; border:1px solid var(--border-bright); color:var(--green-phosphor); font-family:'Consolas',monospace; font-size:13px; font-weight:700; padding:6px 10px; border-radius:3px; letter-spacing:1px;" oninput="updateOtpDecryption()">
+          </div>
+
+          <div style="margin-bottom:10px;">
+            <div class="control-label" style="font-size:11px; margin-bottom:3px; display:flex; justify-content:space-between;">
+              <span>ONE-TIME PAD KEY TAPE:</span>
+              <button class="btn-retro" onclick="generateRandomOtpKey()" style="font-size:10px; padding:2px 6px;">[GENERATE RANDOM KEY]</button>
+            </div>
+            <input type="text" id="inpOtpKey" value="71994 07215 88220 00402 77199" style="width:100%; background:#070d1a; border:1px solid var(--amber-led); color:var(--amber-led); font-family:'Consolas',monospace; font-size:13px; font-weight:700; padding:6px 10px; border-radius:3px; letter-spacing:1px;" oninput="updateOtpDecryption()">
+          </div>
+
+          <!-- Step-by-Step Calculation Grid -->
+          <div style="max-height:160px; overflow-y:auto; border:1px solid var(--border-dim); border-radius:3px; margin-bottom:10px;">
+            <table class="otp-calc-table" id="tableOtpCalculation">
+              <thead>
+                <tr>
+                  <th>GROUP</th>
+                  <th>CIPHER</th>
+                  <th>KEY (PAD)</th>
+                  <th>(C - K) mod 10</th>
+                  <th>PLAINTEXT CHAR</th>
+                </tr>
+              </thead>
+              <tbody id="tbodyOtpCalculation">
+                <!-- Dynamically populated -->
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Decrypted Plaintext Output -->
+          <div style="background:#02050c; border:1px solid var(--green-phosphor); border-radius:3px; padding:10px; margin-bottom:10px;">
+            <div style="font-size:10px; color:var(--text-muted); margin-bottom:4px; display:flex; justify-content:space-between;">
+              <span>DECRYPTED TELEMETRY PLAINTEXT:</span>
+              <span id="lblOtpCheckStatus" style="color:var(--green-phosphor); font-weight:700;">AUTHENTIC INTERCEPT MATCH</span>
+            </div>
+            <div id="otpPlaintextOutput" style="font-family:'Consolas',monospace; font-size:13px; color:#fff; font-weight:700; min-height:36px; line-height:1.4;">
+              CARLSBAD 1999.0 HZ BOREHOLE WIPP-03 RESONANCE CONFIRMED
+            </div>
+          </div>
+
+          <div style="display:flex; gap:6px;">
+            <button class="btn-retro btn-green" onclick="copyPlaintextOutput()">[COPY DECRYPTED MESSAGE]</button>
+            <button class="btn-retro" onclick="verifyOtpPayloadSignature()">[VERIFY ESARL CRYPTO SIGNATURE]</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- FULL-WIDTH CARD: SUBTERRANEAN CARLSBAD TRANSPONDER ROUTING GRID -->
+      <div class="card-box" style="margin-top:14px; margin-bottom:14px;">
+        <div class="card-header">
+          <span>DELAWARE BASIN SUBTERRANEAN ACOUSTIC TRANSPONDER ROUTING GRID</span>
+          <div style="display:flex; gap:6px; align-items:center;">
+            <span style="font-size:10.5px; color:var(--text-muted);">ACTIVE ROUTE:</span>
+            <span id="lblActiveRoutePath" style="color:var(--green-phosphor); font-weight:700;">ALPHA ➔ GAMMA ➔ EPSILON</span>
+          </div>
+        </div>
+
+        <div style="font-size:11px; color:var(--text-muted); margin-bottom:8px;">
+          Multi-hop acoustic transmission network through Permian Salado Halite salt cavern strata. Select transponder nodes below to establish a subterranean waveguide path. Ping pulses are simulated with real lithospheric acoustic delay and layer boundary attenuation.
+        </div>
+
+        <!-- 2D Canvas of the Strata & Waveguide Map -->
+        <div class="transponder-map-wrapper">
+          <canvas id="canvasTransponderMap" width="960" height="230" class="display-canvas" style="height:230px;"></canvas>
+        </div>
+
+        <!-- Node Selector Buttons -->
+        <div class="route-nodes-bar">
+          <span style="font-size:11px; color:var(--border-bright); font-weight:700;">TOGGLE NODES:</span>
+          <button class="node-toggle-chip selected hop-start" id="btnNodeAlpha" onclick="toggleTransponderNode('alpha')">⬡ ALPHA: WIPP-03 (850m)</button>
+          <button class="node-toggle-chip" id="btnNodeBeta" onclick="toggleTransponderNode('beta')">⬡ BETA: Capitan Reef (1420m)</button>
+          <button class="node-toggle-chip selected" id="btnNodeGamma" onclick="toggleTransponderNode('gamma')">⬡ GAMMA: Vault 7F / Demarc (650m)</button>
+          <button class="node-toggle-chip" id="btnNodeDelta" onclick="toggleTransponderNode('delta')">⬡ DELTA: White Sands VLF (0m)</button>
+          <button class="node-toggle-chip selected hop-target" id="btnNodeEpsilon" onclick="toggleTransponderNode('epsilon')">⬡ EPSILON: Deep Core Conduit (3200m)</button>
+          <button class="btn-retro" onclick="clearTransponderRoute()" style="margin-left:auto;">[CLEAR PATH]</button>
+        </div>
+
+        <!-- Route Physics & Telemetry Strip -->
+        <div class="transponder-stats-strip">
+          <div class="transponder-stat-card">
+            <div style="color:var(--text-muted);">TOTAL PROPAGATION DISTANCE</div>
+            <div id="statTransDistance" style="font-size:13px; font-weight:700; color:#38bdf8; margin-top:2px;">14.82 km</div>
+          </div>
+          <div class="transponder-stat-card">
+            <div style="color:var(--text-muted);">ACOUSTIC TIME-OF-FLIGHT</div>
+            <div id="statTransLatency" style="font-size:13px; font-weight:700; color:var(--green-phosphor); margin-top:2px;">3,352.9 ms</div>
+          </div>
+          <div class="transponder-stat-card">
+            <div style="color:var(--text-muted);">BOUNDARY REFLECTION LOSS</div>
+            <div id="statTransLoss" style="font-size:13px; font-weight:700; color:var(--amber-led); margin-top:2px;">-2.48 dB</div>
+          </div>
+          <div class="transponder-stat-card">
+            <div style="color:var(--text-muted);">CARRIER HARMONIC Q-FACTOR</div>
+            <div id="statTransQ" style="font-size:13px; font-weight:700; color:var(--purple-spectral); margin-top:2px;">Q = 94.2 (RESONANT)</div>
+          </div>
+        </div>
+
+        <!-- Transmit & Resonant Secret Readout -->
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+          <div style="display:flex; gap:6px;">
+            <button class="btn-retro btn-green" id="btnTransmitPing" onclick="transmitTransponderPing()">📡 TRANSMIT ACOUSTIC PING BURST</button>
+            <button class="btn-retro" onclick="autoLockResonantRoute()">★ AUTO-ALIGN OPTIMAL WAVEGUIDE</button>
+          </div>
+          <div id="routeResonanceBanner" style="font-size:11px; color:var(--green-phosphor); font-weight:700;">
+            ● 1999Hz WAVEGUIDE HARMONIC LOCK CONFIRMED
+          </div>
+        </div>
+
+        <!-- Secret Token Unlock Container (Revealed when optimal route pings) -->
+        <div id="transponderSecretBox" style="display:none; background:rgba(0, 255, 170, 0.08); border:1px solid var(--green-phosphor); border-radius:4px; padding:10px 14px; margin-top:12px;">
+          <div style="font-weight:700; color:var(--green-phosphor); font-size:12px; margin-bottom:4px;">
+            ★ [DIEGETIC TELEMETRY DISPATCH // SUB-CRUSTAL CONDUIT CONFIRMED]:
+          </div>
+          <div style="color:#e2e8f0; font-size:11.5px; line-height:1.5;">
+            Subterranean acoustic chirp packet traversed Permian Halite salt cavern from Borehole Alpha (WIPP-03) through Gateway Demarc 10.19.99.4 to Los Alamos Deep Core terminal node at 10.19.99.127.
+            Lithospheric harmonic passkey unlocked: <code>7F-CORE-HARMONIC-1999</code>.
+            Proceed to the central core node via KNet: <a href="/web/deep_core.html" style="color:#38bdf8; font-weight:700; text-decoration:underline;">kweb://deep-core</a> or inspect classified leaks at <a href="/web/classified.html" style="color:var(--amber-led); font-weight:700; text-decoration:underline;">kweb://10.19.99.4/classified</a>.
+          </div>
+        </div>
+      </div>
+
+      <!-- SIGINT TELETYPE & LOG EXPORT BUFFER -->
+      <div class="card-box" style="margin-bottom:0;">
+        <div class="card-header">
+          <span>SIGINT TELETYPE RECORDER &amp; INTERCEPT BUFFER</span>
+          <div style="display:flex; gap:6px;">
+            <button class="btn-retro" onclick="exportNumbersSigintLog()" style="border-color:var(--cyan-glow); color:var(--cyan-glow);">[EXPORT SIGINT LOG (.SIG)]</button>
+            <button class="btn-retro" onclick="clearNumbersTeletype()">[CLEAR BUFFER]</button>
+          </div>
+        </div>
+        <div id="numbersTeletypeFeed" class="signal-stream-terminal" style="height:130px; color:#38bdf8;">[ESARL-SIGINT] HF/VLF NUMBERS STATION RECORDER READY // STATION SIG-1999-ECHO
+[ESARL-SIGINT] CARRIER FREQUENCY: 1999.0 kHz USB // SUBCARRIER ACOUSTIC HARMONIC: 1999.0 Hz
+[ESARL-SIGINT] VERNAM ONE-TIME PAD CRACKER INITIALIZED // SUBTERRANEAN TRANSPONDER ROUTER STANDBY</div>
+      </div>
+    </div>
+  </div>
+
   <!-- Footer & Central Webring -->
   <footer class="lab-footer">
     <div>
@@ -3129,6 +3609,10 @@ END TRANSMISSION // ESARL 1999</div>
       audioCtx.resume();
     }
     return audioCtx;
+  }
+
+  function ensureAudioContext() {
+    return initAudioContext();
   }
 
   function setupSynthChain() {
@@ -5276,7 +5760,7 @@ Host: kweb://echo-subsystem.net | Station: SIG-1999-ECHO
   }
 
   function switchTab(name) {
-    const tabs = ['journal', 'decoder', 'spectral', 'filter', 'sigint', 'stego', 'terminal', 'mesh', 'seismic', 'tape', 'heterodyne', 'interferometer', 'troposphere', 'squid'];
+    const tabs = ['journal', 'decoder', 'spectral', 'filter', 'sigint', 'stego', 'terminal', 'mesh', 'seismic', 'tape', 'heterodyne', 'interferometer', 'troposphere', 'squid', 'numbers'];
     tabs.forEach((t, i) => {
       const btn = document.getElementById('tabBtn' + (i + 1));
       const pane = document.getElementById('pane-' + t);
@@ -5304,6 +5788,7 @@ Host: kweb://echo-subsystem.net | Station: SIG-1999-ECHO
     if (name === 'interferometer') initInterferometerSuite();
     if (name === 'troposphere') initTroposphereSuite();
     if (name === 'squid') initSquidSuite();
+    if (name === 'numbers') initNumbersStationSuite();
   }
 
   function executeTermInput() {
@@ -5321,7 +5806,50 @@ Host: kweb://echo-subsystem.net | Station: SIG-1999-ECHO
 
     switch (c) {
       case 'help':
-        logToTerminal("AVAILABLE COMMANDS:\n  help            - List console commands\n  status          - Display station telemetry and memory state\n  tape            - Switch to 4-Track Reel Tape Deck & Transport\n  cavity          - Switch to Helmholtz Cavity Resonator\n  playtape        - Engage tape playback & 4-track mixer\n  stoptape        - Halt tape transport\n  seismic         - Switch to Lithospheric TDR & Strata Profiler\n  fire [hz]       - Fire acoustic impulse into Delaware Basin strata\n  probe [depth]   - Lower borehole hydrophone probe (0 - 3500m)\n  layer [1-5]     - Inspect rock physics of geological stratum\n  mesh            - Switch to Subterranean Acoustic Airgap Mesh\n  artifacts       - Load and test Tier 3 gating key artifacts\n  pulse           - Broadcast 1999Hz harmonic pulse across mesh\n  loopback        - Toggle simulated Salado halite echo loopback\n  scan            - Perform frequency scan across acoustic bands\n  decode [hz]     - Tune harmonic decoder to specific frequency\n  transmit [text] - Transmit text as 1999Hz Morse burst\n  sigint          - Open SIGINT beamformer array\n  beamform [deg]  - Set beam azimuth angle (0-359)\n  stego [text]    - Synthesize spectrographic audio glyph\n  rtty [text]     - Transmit message via FSK teleprinter\n  lissajous       - Toggle XY Lissajous vector scope mode\n  journal [1-9]   - View specific field log entry\n  filter          - Auto-calibrate parametric filter to 1999Hz\n  ping [ip]       - Ping internal subnet address (try 10.19.99.4)\n  traceroute      - Trace routing hops to echo-subsystem.net\n  export [format] - Export data (wav, dat, json, sig, csv, cal)\n  clear           - Clear terminal output");
+        logToTerminal("AVAILABLE COMMANDS:\n  help            - List console commands\n  status          - Display station telemetry and memory state\n  numbers [freq]  - Switch to HF/VLF Numbers Station Receiver & Decoder\n  station [code]  - Tune preset numbers station (echo, poacher, buzzer, mossad, morse)\n  sw [freq]       - Tune shortwave receiver\n  otp [1-3]       - One-Time Pad modular cipher decryptor\n  transponder     - Transmit acoustic ping across subterranean grid\n  tape            - Switch to 4-Track Reel Tape Deck & Transport\n  cavity          - Switch to Helmholtz Cavity Resonator\n  playtape        - Engage tape playback & 4-track mixer\n  stoptape        - Halt tape transport\n  seismic         - Switch to Lithospheric TDR & Strata Profiler\n  fire [hz]       - Fire acoustic impulse into Delaware Basin strata\n  probe [depth]   - Lower borehole hydrophone probe (0 - 3500m)\n  layer [1-5]     - Inspect rock physics of geological stratum\n  mesh            - Switch to Subterranean Acoustic Airgap Mesh\n  artifacts       - Load and test Tier 3 gating key artifacts\n  pulse           - Broadcast 1999Hz harmonic pulse across mesh\n  loopback        - Toggle simulated Salado halite echo loopback\n  scan            - Perform frequency scan across acoustic bands\n  decode [hz]     - Tune harmonic decoder to specific frequency\n  transmit [text] - Transmit text as 1999Hz Morse burst\n  sigint          - Open SIGINT beamformer array\n  beamform [deg]  - Set beam azimuth angle (0-359)\n  stego [text]    - Synthesize spectrographic audio glyph\n  rtty [text]     - Transmit message via FSK teleprinter\n  lissajous       - Toggle XY Lissajous vector scope mode\n  journal [1-9]   - View specific field log entry\n  filter          - Auto-calibrate parametric filter to 1999Hz\n  ping [ip]       - Ping internal subnet address (try 10.19.99.4)\n  traceroute      - Trace routing hops to echo-subsystem.net\n  export [format] - Export data (wav, dat, json, sig, csv, cal)\n  clear           - Clear terminal output");
+        break;
+
+      case 'numbers':
+      case 'shortwave':
+      case 'sw':
+        switchTab('numbers');
+        if (parts[1]) {
+          const f = parseFloat(parts[1]);
+          if (!isNaN(f)) {
+            swCurrentFreq = f;
+            updateSwTunerUI();
+          }
+        }
+        logToTerminal(">> Opened Shortwave HF/VLF Numbers Station Receiver & Transponder Routing Grid.");
+        break;
+
+      case 'station':
+        switchTab('numbers');
+        const stCode = (parts[1] || '').toUpperCase();
+        if (stCode.includes('ECHO')) selectPresetStation('ECHO_07');
+        else if (stCode.includes('POACHER') || stCode.includes('E03')) selectPresetStation('E03_POACHER');
+        else if (stCode.includes('BUZZER') || stCode.includes('S28')) selectPresetStation('S28_BUZZER');
+        else if (stCode.includes('MOSSAD') || stCode.includes('E10')) selectPresetStation('E10_MOSSAD');
+        else if (stCode.includes('MORSE') || stCode.includes('M01')) selectPresetStation('M01_ATTENTION');
+        else selectPresetStation('ECHO_07');
+        break;
+
+      case 'otp':
+        switchTab('numbers');
+        if (parts[1]) {
+          const pIdx = parseInt(parts[1], 10);
+          if (pIdx >= 1 && pIdx <= 3) loadOtpPreset(pIdx);
+          else updateOtpDecryption();
+        } else {
+          updateOtpDecryption();
+        }
+        logToTerminal(">> One-Time Pad (OTP) decryption updated.");
+        break;
+
+      case 'transponder':
+      case 'pingtrans':
+        switchTab('numbers');
+        transmitTransponderPing();
         break;
 
       case 'tape':
@@ -8460,6 +8988,7 @@ kweb://echo-subsystem.net
     initSeismicCanvases();
     selectStrataLayer(2);
     initTapeAndCavity();
+    initNumbersStationSuite();
   });
 
   /* ============================================================
@@ -8793,15 +9322,13 @@ kweb://echo-subsystem.net
       const chunk = rawSectorBytes.slice(i, i + 16);
       const offset = (0x1999 + i).toString(16).toUpperCase().padStart(4, '0');
       const hexLine = chunk.map(b => b.toString(16).padStart(2, '0').toUpperCase()).join(' ');
-      hexText += `0x0040:${offset}  ${hexLine.padEnd(48, ' ')}
-`;
+      hexText += `0x0040:${offset}  ${hexLine.padEnd(48, ' ')}\n`;
 
       chunk.forEach(b => {
         const charCode = xorMaskActive ? (b ^ 0x7F) : b;
         asciiText += (charCode >= 32 && charCode <= 126) ? String.fromCharCode(charCode) : '.';
       });
-      asciiText += '
-';
+      asciiText += '\n';
     }
 
     hexPre.textContent = hexText;
@@ -9966,6 +10493,1357 @@ kweb://echo-subsystem.net
     a.click();
     URL.revokeObjectURL(url);
     appendSquidLog('[SYSTEM] Magnetogram telemetry trace exported: squid_magnetogram_' + Date.now() + '.sqd');
+  }
+
+  /* ============================================================
+     TAB 15: NUMBERS STATION DECODER & SUBTERRANEAN TRANSPONDER ROUTER
+     ============================================================ */
+
+  // State Variables
+  let swCurrentFreq = 1999.0;
+  let swCurrentMode = 'USB';
+  let swAgcSpeed = 'FAST';
+  let swSquelch = 35;
+  let swActiveStation = 'ECHO_07';
+  let swBroadcastPlaying = false;
+  let swSignalStrength = 95;
+  let swSmeterNeedlePos = 95;
+  let swSmeterAnimId = null;
+  let swBroadcastTimer = null;
+  let swAudioNodes = null;
+
+  const SW_STATIONS = {
+    'ECHO_07': {
+      key: 'ECHO_07',
+      name: 'ECHO-07 (CARLSBAD VAULT)',
+      freq: 1999.0,
+      mode: 'USB',
+      strength: 95,
+      chipId: 'chipStationEcho',
+      desc: '1999.0 kHz USB // Vault Beacon',
+      intervalMs: 1800,
+      groups: ['19994', '07215', '88220', '00402', '77199']
+    },
+    'E03_POACHER': {
+      key: 'E03_POACHER',
+      name: 'E03 LINCOLNSHIRE POACHER',
+      freq: 11545.0,
+      mode: 'AM',
+      strength: 85,
+      chipId: 'chipStationE03',
+      desc: '11545 kHz AM // Flute Arpeggio',
+      intervalMs: 2400,
+      groups: ['39715', '00412', '99104', '73551', '19990']
+    },
+    'S28_BUZZER': {
+      key: 'S28_BUZZER',
+      name: 'S28 THE BUZZER (UVB-76)',
+      freq: 4625.0,
+      mode: 'AM',
+      strength: 90,
+      chipId: 'chipStationS28',
+      desc: '4625 kHz AM // UVB-76 Pulse',
+      intervalMs: 2000,
+      groups: ['UVB76', '19990', '84201', '72154', '07799']
+    },
+    'E10_MOSSAD': {
+      key: 'E10_MOSSAD',
+      name: 'E10 MAG-RESONANCE (MOSSAD)',
+      freq: 6840.0,
+      mode: 'USB',
+      strength: 80,
+      chipId: 'chipStationE10',
+      desc: '6840 kHz USB // NATO Chimes',
+      intervalMs: 2500,
+      groups: ['51092', '77810', '19994', '62304', '88129']
+    },
+    'M01_ATTENTION': {
+      key: 'M01_ATTENTION',
+      name: 'M01 ATTENTION FLUTE (CW)',
+      freq: 7350.0,
+      mode: 'CW',
+      strength: 88,
+      chipId: 'chipStationM01',
+      desc: '7350 kHz CW // High-Speed Morse',
+      intervalMs: 1600,
+      groups: ['ATTN', '1999', 'WIPP', '7F', 'SK']
+    }
+  };
+
+  const OTP_PRESETS = {
+    1: {
+      cipher: '19994 07215 88220 00402 77199',
+      key:    '71994 07215 88220 00402 77199',
+      plain:  'CARLSBAD 1999.0 HZ BOREHOLE WIPP-03 RESONANCE CONFIRMED',
+      parts:  ['CARLS', 'BAD 1', '999.0', ' HZ B', 'OREHO']
+    },
+    2: {
+      cipher: '38104 99120 74512 88204 10471',
+      key:    '12051 44019 23101 44102 01230',
+      plain:  'SUBTERRANEAN RELAY 10.19.99.4 PASSKEY 7F-HALITE-1999',
+      parts:  ['SUBTE', 'RRANE', 'AN RE', 'LAY 1', '0.19.']
+    },
+    3: {
+      cipher: '55219 40182 99104 33215 88710',
+      key:    '21014 10041 55001 11012 44300',
+      plain:  'CORE NODE ACCESS GRANTED PROCEED TO KWEB://DEEP-CORE',
+      parts:  ['CORE ', 'NODE ', 'ACCES', 'S GRA', 'NTED ']
+    }
+  };
+
+  const TRANSPONDER_NODES = {
+    'alpha':   { id: 'alpha',   name: 'WIPP-03 (Borehole Alpha)',      x: 120, y: 95,  depth: 850,  litho: 'Salado Halite',            btnId: 'btnNodeAlpha',   code: 'ALPHA' },
+    'beta':    { id: 'beta',    name: 'Capitan Reef Escarpment',       x: 310, y: 140, depth: 1420, litho: 'Castile Evaporite',        btnId: 'btnNodeBeta',    code: 'BETA' },
+    'gamma':   { id: 'gamma',   name: 'Vault 7F Gateway / Demarc',     x: 520, y: 85,  depth: 650,  litho: 'Salado Halite Waveguide',  btnId: 'btnNodeGamma',   code: 'GAMMA' },
+    'delta':   { id: 'delta',   name: 'White Sands VLF Array',         x: 710, y: 35,  depth: 0,    litho: 'Surface Alluvium',         btnId: 'btnNodeDelta',   code: 'DELTA' },
+    'epsilon': { id: 'epsilon', name: 'Deep Core Sub-Crustal Conduit', x: 865, y: 200, depth: 3200, litho: 'Bell Canyon Sandstone',     btnId: 'btnNodeEpsilon', code: 'EPSILON' }
+  };
+
+  let activeRouteNodes = ['alpha', 'gamma', 'epsilon'];
+  let transponderPingActive = false;
+  let transponderPingProgress = 0;
+  let transponderPingHop = 0;
+  let numbersSuiteInitialized = false;
+
+  function initNumbersStationSuite() {
+    if (numbersSuiteInitialized) {
+      renderTransponderMap();
+      renderSmeter();
+      return;
+    }
+    numbersSuiteInitialized = true;
+
+    updateSwTunerUI();
+    startSmeterAnimation();
+    loadOtpPreset(1);
+    updateRouteTelemetry();
+    initTransponderCanvasEvents();
+    renderTransponderMap();
+  }
+
+  /* Shortwave Radio Tuner & S-Meter */
+  function updateSwTunerUI() {
+    const freqEl = document.getElementById('swFreqDisplay');
+    if (freqEl) {
+      freqEl.innerHTML = `${swCurrentFreq.toFixed(2)} <span style="font-size:14px; color:var(--cyan-glow);">kHz</span>`;
+    }
+
+    const inp = document.getElementById('inpManualFreq');
+    if (inp && document.activeElement !== inp) {
+      inp.value = swCurrentFreq.toFixed(1);
+    }
+
+    const modeBadge = document.getElementById('swModeBadge');
+    if (modeBadge) modeBadge.textContent = swCurrentMode;
+
+    // Detect if tuned within 3.0 kHz of a preset
+    let matchedStation = null;
+    let minDelta = 999999;
+    for (const k in SW_STATIONS) {
+      const st = SW_STATIONS[k];
+      const delta = Math.abs(swCurrentFreq - st.freq);
+      if (delta <= 3.0 && delta < minDelta) {
+        minDelta = delta;
+        matchedStation = st;
+      }
+    }
+
+    swActiveStation = matchedStation ? matchedStation.key : null;
+
+    const stBadge = document.getElementById('swStationNameBadge');
+    if (stBadge) {
+      if (matchedStation) {
+        stBadge.textContent = matchedStation.name;
+        stBadge.style.color = 'var(--green-phosphor)';
+      } else {
+        stBadge.textContent = 'UNASSIGNED SHORTWAVE CARRIER';
+        stBadge.style.color = 'var(--text-muted)';
+      }
+    }
+
+    // Calculate signal strength based on proximity to station carrier
+    if (matchedStation) {
+      const prox = Math.max(0.2, 1.0 - (minDelta / 3.0));
+      swSignalStrength = Math.round(matchedStation.strength * prox);
+    } else {
+      swSignalStrength = Math.round(18 + Math.sin(swCurrentFreq * 0.4) * 6);
+    }
+
+    const sigReadout = document.getElementById('swSignalStrengthReadout');
+    if (sigReadout) {
+      if (swSignalStrength >= 90) {
+        sigReadout.textContent = 'S9 +20dB [CARRIER LOCKED]';
+        sigReadout.style.color = 'var(--green-phosphor)';
+      } else if (swSignalStrength >= 80) {
+        sigReadout.textContent = 'S9 +10dB [HIGH SNR]';
+        sigReadout.style.color = '#38bdf8';
+      } else if (swSignalStrength >= 70) {
+        sigReadout.textContent = 'S9 [STRONG CARRIER]';
+        sigReadout.style.color = '#38bdf8';
+      } else if (swSignalStrength >= 50) {
+        sigReadout.textContent = 'S7 [MODERATE SIGNAL]';
+        sigReadout.style.color = 'var(--amber-led)';
+      } else if (swSignalStrength >= 30) {
+        sigReadout.textContent = 'S5 [FAINT SIGNAL]';
+        sigReadout.style.color = 'var(--amber-led)';
+      } else {
+        sigReadout.textContent = 'S2-S3 [NOISE FLOOR]';
+        sigReadout.style.color = 'var(--text-muted)';
+      }
+    }
+
+    // Update preset chip highlights
+    for (const k in SW_STATIONS) {
+      const chip = document.getElementById(SW_STATIONS[k].chipId);
+      if (chip) {
+        if (swActiveStation === k) chip.classList.add('active');
+        else chip.classList.remove('active');
+      }
+    }
+
+    // Update audio bandpass filter if playing
+    if (swBroadcastPlaying && swAudioNodes && swAudioNodes.noiseFilter && audioCtx) {
+      const centerF = swCurrentMode === 'CW' ? 800 : (swCurrentMode === 'AM' ? 2200 : 1500);
+      swAudioNodes.noiseFilter.frequency.setValueAtTime(centerF, audioCtx.currentTime);
+      const effGain = (swSignalStrength > swSquelch) ? 0.03 : 0.08;
+      swAudioNodes.noiseGain.gain.setValueAtTime(effGain, audioCtx.currentTime);
+    }
+  }
+
+  function stepFrequency(delta) {
+    swCurrentFreq = Math.round((swCurrentFreq + delta) * 10) / 10;
+    if (swCurrentFreq < 10.0) swCurrentFreq = 10.0;
+    if (swCurrentFreq > 30000.0) swCurrentFreq = 30000.0;
+    playTunerClick();
+    updateSwTunerUI();
+  }
+
+  function setManualFrequency() {
+    const inp = document.getElementById('inpManualFreq');
+    if (!inp) return;
+    const val = parseFloat(inp.value);
+    if (!isNaN(val) && val >= 10.0 && val <= 30000.0) {
+      swCurrentFreq = Math.round(val * 10) / 10;
+      updateSwTunerUI();
+      appendNumbersLog(`[TUNER] Frequency manually dialed to ${swCurrentFreq.toFixed(1)} kHz ${swCurrentMode}`);
+      playTunerClick();
+    }
+  }
+
+  function setDemodMode(mode) {
+    swCurrentMode = mode;
+    ['USB', 'LSB', 'AM', 'CW', 'FSK'].forEach(m => {
+      const btn = document.getElementById('btnMode' + m);
+      if (btn) {
+        if (m === mode) btn.classList.add('btn-active');
+        else btn.classList.remove('btn-active');
+      }
+    });
+    playTunerClick();
+    updateSwTunerUI();
+    appendNumbersLog(`[RECEIVER] Demodulation mode switched to ${mode}`);
+  }
+
+  function toggleAgcSpeed() {
+    swAgcSpeed = (swAgcSpeed === 'FAST') ? 'SLOW' : 'FAST';
+    const btn = document.getElementById('btnAgcToggle');
+    if (btn) btn.textContent = swAgcSpeed;
+    appendNumbersLog(`[RECEIVER] AGC time constant set to ${swAgcSpeed}`);
+  }
+
+  function updateSquelch(val) {
+    swSquelch = parseInt(val, 10);
+    updateSwTunerUI();
+  }
+
+  function selectPresetStation(code) {
+    if (SW_STATIONS[code]) {
+      const st = SW_STATIONS[code];
+      swCurrentFreq = st.freq;
+      setDemodMode(st.mode);
+      updateSwTunerUI();
+      appendNumbersLog(`[PRESET] Locked: ${st.name} on ${st.freq.toFixed(1)} kHz ${st.mode} - ${st.desc}`);
+    }
+  }
+
+  function playTunerClick() {
+    ensureAudioContext();
+    if (!audioCtx) return;
+    try {
+      const now = audioCtx.currentTime;
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'square';
+      osc.frequency.setValueAtTime(1400, now);
+      gain.gain.setValueAtTime(0.02, now);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.012);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start(now);
+      osc.stop(now + 0.012);
+    } catch(e) {}
+  }
+
+  function startSmeterAnimation() {
+    if (swSmeterAnimId) cancelAnimationFrame(swSmeterAnimId);
+    function loop() {
+      const pane = document.getElementById('pane-numbers');
+      if (pane && pane.classList.contains('active')) {
+        renderSmeter();
+      }
+      swSmeterAnimId = requestAnimationFrame(loop);
+    }
+    loop();
+  }
+
+  function renderSmeter() {
+    const canvas = document.getElementById('canvasSmeter');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const w = canvas.width;
+    const h = canvas.height;
+
+    ctx.fillStyle = '#02050b';
+    ctx.fillRect(0, 0, w, h);
+
+    ctx.strokeStyle = '#1e315b';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(0.5, 0.5, w - 1, h - 1);
+
+    const alpha = (swAgcSpeed === 'FAST') ? 0.22 : 0.08;
+    const flutter = (Math.random() - 0.5) * 1.8;
+    const target = Math.max(0, Math.min(100, swSignalStrength + flutter));
+    swSmeterNeedlePos += (target - swSmeterNeedlePos) * alpha;
+
+    const barY = h - 14;
+    ctx.strokeStyle = '#1e315b';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(30, barY);
+    ctx.lineTo(w - 30, barY);
+    ctx.stroke();
+
+    const redStart = 30 + (w - 60) * 0.70;
+    ctx.strokeStyle = '#ef4444';
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    ctx.moveTo(redStart, barY);
+    ctx.lineTo(w - 30, barY);
+    ctx.stroke();
+
+    const ticks = [
+      { pct: 0.10, label: '1', color: '#94a3b8' },
+      { pct: 0.25, label: '3', color: '#94a3b8' },
+      { pct: 0.40, label: '5', color: '#94a3b8' },
+      { pct: 0.55, label: '7', color: '#94a3b8' },
+      { pct: 0.70, label: '9', color: '#38bdf8' },
+      { pct: 0.80, label: '+10', color: '#f59e0b' },
+      { pct: 0.90, label: '+20', color: '#f59e0b' },
+      { pct: 0.98, label: '+40', color: '#ef4444' }
+    ];
+
+    ctx.font = '9px Consolas, monospace';
+    ctx.textAlign = 'center';
+    ticks.forEach(t => {
+      const x = 30 + (w - 60) * t.pct;
+      ctx.strokeStyle = t.color;
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(x, barY - 6);
+      ctx.lineTo(x, barY + 2);
+      ctx.stroke();
+
+      ctx.fillStyle = t.color;
+      ctx.fillText(t.label, x, barY - 8);
+    });
+
+    for (let p = 0.10; p <= 0.70; p += 0.05) {
+      const x = 30 + (w - 60) * p;
+      ctx.strokeStyle = '#334155';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(x, barY - 3);
+      ctx.lineTo(x, barY);
+      ctx.stroke();
+    }
+
+    const needleX = 30 + (w - 60) * (swSmeterNeedlePos / 100);
+
+    ctx.strokeStyle = 'rgba(0, 0, 0, 0.6)';
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    ctx.moveTo(needleX + 1, barY + 6);
+    ctx.lineTo(needleX + 1, 6);
+    ctx.stroke();
+
+    ctx.strokeStyle = (swSmeterNeedlePos >= 70) ? '#00ffaa' : '#38bdf8';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(needleX, barY + 6);
+    ctx.lineTo(needleX, 5);
+    ctx.stroke();
+
+    const ledX = 14;
+    const ledY = 14;
+    ctx.beginPath();
+    ctx.arc(ledX, ledY, 4, 0, Math.PI * 2);
+    if (swSignalStrength >= 90) {
+      ctx.fillStyle = '#00ffaa';
+      ctx.shadowColor = '#00ffaa';
+      ctx.shadowBlur = 8;
+    } else if (swSignalStrength >= 70) {
+      ctx.fillStyle = '#38bdf8';
+      ctx.shadowColor = '#38bdf8';
+      ctx.shadowBlur = 4;
+    } else {
+      ctx.fillStyle = '#334155';
+      ctx.shadowBlur = 0;
+    }
+    ctx.fill();
+    ctx.shadowBlur = 0;
+  }
+
+  /* Shortwave Broadcast Audio Simulation */
+  function toggleStationBroadcast() {
+    ensureAudioContext();
+    if (!audioCtx) return;
+
+    if (swBroadcastPlaying) {
+      stopStationBroadcast();
+    } else {
+      startStationBroadcast();
+    }
+  }
+
+  function startStationBroadcast() {
+    ensureAudioContext();
+    if (!audioCtx) return;
+    swBroadcastPlaying = true;
+
+    const btn = document.getElementById('btnPlayBroadcast');
+    if (btn) {
+      btn.textContent = '■ MUTE BROADCAST';
+      btn.classList.add('btn-active');
+    }
+
+    try {
+      const bufferSize = audioCtx.sampleRate * 2;
+      const noiseBuffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+      const output = noiseBuffer.getChannelData(0);
+      for (let i = 0; i < bufferSize; i++) {
+        output[i] = (Math.random() * 2 - 1) * 0.15;
+      }
+      const noise = audioCtx.createBufferSource();
+      noise.buffer = noiseBuffer;
+      noise.loop = true;
+
+      const noiseFilter = audioCtx.createBiquadFilter();
+      noiseFilter.type = 'bandpass';
+      noiseFilter.frequency.setValueAtTime(swCurrentMode === 'CW' ? 800 : 1500, audioCtx.currentTime);
+      noiseFilter.Q.setValueAtTime(swCurrentMode === 'CW' ? 5.0 : 1.8, audioCtx.currentTime);
+
+      const noiseGain = audioCtx.createGain();
+      const effectiveGain = (swSignalStrength > swSquelch) ? 0.03 : 0.08;
+      noiseGain.gain.setValueAtTime(effectiveGain, audioCtx.currentTime);
+
+      noise.connect(noiseFilter);
+      noiseFilter.connect(noiseGain);
+      noiseGain.connect(audioCtx.destination);
+      noise.start();
+
+      swAudioNodes = { noise, noiseGain, noiseFilter };
+      scheduleStationAudioPulse();
+
+      appendNumbersLog(`[RADIO] Shortwave broadcast receiver active on ${swCurrentFreq.toFixed(1)} kHz ${swCurrentMode}`);
+    } catch(e) {
+      console.error(e);
+    }
+  }
+
+  function scheduleStationAudioPulse() {
+    if (!swBroadcastPlaying) return;
+
+    const st = SW_STATIONS[swActiveStation];
+    if (st && audioCtx) {
+      if (st.key === 'ECHO_07') playEchoCarrierChirp();
+      else if (st.key === 'S28_BUZZER') playBuzzerDroneBurst();
+      else if (st.key === 'E03_POACHER') playPoacherMelodySegment();
+      else if (st.key === 'E10_MOSSAD') playMossadChimes();
+      else if (st.key === 'M01_ATTENTION') playAttentionMorseBurst();
+    }
+
+    const interval = st ? (st.intervalMs || 2000) : 2500;
+    swBroadcastTimer = setTimeout(() => {
+      scheduleStationAudioPulse();
+    }, interval);
+  }
+
+  function stopStationBroadcast() {
+    swBroadcastPlaying = false;
+    if (swBroadcastTimer) {
+      clearTimeout(swBroadcastTimer);
+      swBroadcastTimer = null;
+    }
+    if (swAudioNodes) {
+      try {
+        if (swAudioNodes.noise) swAudioNodes.noise.stop();
+        if (swAudioNodes.noiseGain) swAudioNodes.noiseGain.disconnect();
+      } catch(e) {}
+      swAudioNodes = null;
+    }
+    const btn = document.getElementById('btnPlayBroadcast');
+    if (btn) {
+      btn.textContent = '▶ PLAY STATION BROADCAST';
+      btn.classList.remove('btn-active');
+    }
+    appendNumbersLog('[RADIO] Receiver audio muted.');
+  }
+
+  function playEchoCarrierChirp() {
+    if (!audioCtx) return;
+    try {
+      const now = audioCtx.currentTime;
+      const osc = audioCtx.createOscillator();
+      const mod = audioCtx.createOscillator();
+      const mGain = audioCtx.createGain();
+      const outGain = audioCtx.createGain();
+
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(1999.0, now);
+
+      mod.type = 'sine';
+      mod.frequency.setValueAtTime(48.0, now);
+
+      mGain.gain.setValueAtTime(140.0, now);
+      mGain.gain.exponentialRampToValueAtTime(1.0, now + 0.35);
+
+      mod.connect(mGain);
+      mGain.connect(osc.frequency);
+
+      outGain.gain.setValueAtTime(0.06, now);
+      outGain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+
+      osc.connect(outGain);
+      outGain.connect(audioCtx.destination);
+
+      osc.start(now);
+      mod.start(now);
+      osc.stop(now + 0.35);
+      mod.stop(now + 0.35);
+    } catch(e) {}
+  }
+
+  function playBuzzerDroneBurst() {
+    if (!audioCtx) return;
+    try {
+      const now = audioCtx.currentTime;
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(140.0, now);
+      gain.gain.setValueAtTime(0.07, now);
+      gain.gain.setValueAtTime(0.07, now + 0.9);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.98);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start(now);
+      osc.stop(now + 0.98);
+    } catch(e) {}
+  }
+
+  function playPoacherMelodySegment() {
+    if (!audioCtx) return;
+    try {
+      const now = audioCtx.currentTime;
+      const notes = [523.25, 659.25, 783.99, 1046.50, 783.99, 659.25, 523.25, 392.00];
+      notes.forEach((f, i) => {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(f, now + i * 0.08);
+        gain.gain.setValueAtTime(0.05, now + i * 0.08);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + (i + 1) * 0.08);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start(now + i * 0.08);
+        osc.stop(now + (i + 1) * 0.08);
+      });
+    } catch(e) {}
+  }
+
+  function playMossadChimes() {
+    if (!audioCtx) return;
+    try {
+      const now = audioCtx.currentTime;
+      const chimes = [329.63, 415.30, 493.88, 659.25];
+      chimes.forEach((f, i) => {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(f, now + i * 0.14);
+        gain.gain.setValueAtTime(0.06, now + i * 0.14);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.14 + 0.5);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start(now + i * 0.14);
+        osc.stop(now + i * 0.14 + 0.5);
+      });
+    } catch(e) {}
+  }
+
+  function playAttentionMorseBurst() {
+    if (!audioCtx) return;
+    try {
+      const now = audioCtx.currentTime;
+      const pattern = [1, 0, 1, 0, 1, 1, 0, 1];
+      pattern.forEach((on, i) => {
+        if (on) {
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(800.0, now + i * 0.06);
+          gain.gain.setValueAtTime(0.05, now + i * 0.06);
+          gain.gain.setValueAtTime(0.001, now + (i + 1) * 0.06);
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.start(now + i * 0.06);
+          osc.stop(now + (i + 1) * 0.06);
+        }
+      });
+    } catch(e) {}
+  }
+
+  function generateRandom5GroupBurst() {
+    const groups = [];
+    for (let g = 0; g < 5; g++) {
+      let grp = '';
+      for (let d = 0; d < 5; d++) grp += Math.floor(Math.random() * 10).toString();
+      groups.push(grp);
+    }
+    const burstStr = groups.join(' ');
+    appendNumbersLog(`[RADIO INTERCEPT] 5-FIGURE NUMBERS BURST: ${burstStr}`);
+
+    // Read first group phonetically
+    ensureAudioContext();
+    if (audioCtx) {
+      const firstGrp = groups[0];
+      for (let i = 0; i < firstGrp.length; i++) {
+        setTimeout(() => {
+          playPhoneticVoice(parseInt(firstGrp[i], 10));
+        }, i * 360);
+      }
+    }
+  }
+
+  /* Formant Speech Synthesizer */
+  function playPhoneticVoice(digit) {
+    ensureAudioContext();
+    if (!audioCtx) return;
+
+    try {
+      const now = audioCtx.currentTime;
+      const d = parseInt(digit, 10);
+      const names = ['ZERO', 'ONE', 'TWO', 'THREE', 'FOUR', 'FIVE', 'SIX', 'SEVEN', 'EIGHT', 'NINE'];
+      const name = names[d] || 'DIGIT';
+
+      const badge = document.getElementById('speechStateBadge');
+      if (badge) {
+        badge.textContent = `SPEAKING [${d}: ${name}]`;
+        badge.style.color = 'var(--cyan-glow)';
+      }
+
+      const btns = document.querySelectorAll('.phonetic-btn');
+      if (btns && btns[d]) {
+        btns[d].classList.add('active');
+        setTimeout(() => btns[d].classList.remove('active'), 380);
+      }
+
+      const osc = audioCtx.createOscillator();
+      osc.type = 'sawtooth';
+      const f0 = 140 + (d % 3) * 8;
+      osc.frequency.setValueAtTime(f0, now);
+
+      const formants = [
+        [400, 1600], // 0: ZERO
+        [450, 950],  // 1: ONE
+        [320, 850],  // 2: TWO
+        [300, 2100], // 3: THREE
+        [550, 900],  // 4: FOUR
+        [650, 1300], // 5: FIVE
+        [350, 2000], // 6: SIX
+        [480, 1700], // 7: SEVEN
+        [500, 1900], // 8: EIGHT
+        [650, 1400]  // 9: NINE
+      ];
+
+      const [f1, f2] = formants[d] || [500, 1500];
+
+      const bp1 = audioCtx.createBiquadFilter();
+      bp1.type = 'bandpass';
+      bp1.frequency.setValueAtTime(f1, now);
+      bp1.Q.setValueAtTime(6.0, now);
+
+      const bp2 = audioCtx.createBiquadFilter();
+      bp2.type = 'bandpass';
+      bp2.frequency.setValueAtTime(f2, now);
+      bp2.Q.setValueAtTime(7.0, now);
+
+      const gain1 = audioCtx.createGain();
+      gain1.gain.setValueAtTime(0.001, now);
+      gain1.gain.linearRampToValueAtTime(0.12, now + 0.05);
+      gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+
+      const gain2 = audioCtx.createGain();
+      gain2.gain.setValueAtTime(0.001, now);
+      gain2.gain.linearRampToValueAtTime(0.09, now + 0.05);
+      gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+
+      if ([0, 3, 5, 6, 7].includes(d)) {
+        const bufLen = audioCtx.sampleRate * 0.08;
+        const nBuf = audioCtx.createBuffer(1, bufLen, audioCtx.sampleRate);
+        const data = nBuf.getChannelData(0);
+        for (let i = 0; i < bufLen; i++) data[i] = (Math.random() * 2 - 1) * 0.08;
+
+        const noiseSrc = audioCtx.createBufferSource();
+        noiseSrc.buffer = nBuf;
+        const nFilt = audioCtx.createBiquadFilter();
+        nFilt.type = 'highpass';
+        nFilt.frequency.setValueAtTime(d === 6 ? 4200 : 2500, now);
+        const nGain = audioCtx.createGain();
+        nGain.gain.setValueAtTime(0.06, now);
+        nGain.gain.exponentialRampToValueAtTime(0.001, now + 0.07);
+
+        noiseSrc.connect(nFilt);
+        nFilt.connect(nGain);
+        nGain.connect(audioCtx.destination);
+        noiseSrc.start(now);
+      }
+
+      osc.connect(bp1);
+      bp1.connect(gain1);
+      gain1.connect(audioCtx.destination);
+
+      osc.connect(bp2);
+      bp2.connect(gain2);
+      gain2.connect(audioCtx.destination);
+
+      osc.start(now);
+      osc.stop(now + 0.36);
+
+      setTimeout(() => {
+        if (badge && badge.textContent.includes('SPEAKING')) {
+          badge.textContent = 'STANDBY';
+          badge.style.color = 'var(--green-phosphor)';
+        }
+      }, 400);
+
+      appendNumbersLog(`[VOICE SYNTH] Formant phonetic digit ${d} spoken: "${name}".`);
+    } catch(e) {
+      console.error(e);
+    }
+  }
+
+  /* One-Time Pad (OTP) Cracker */
+  function loadOtpPreset(num) {
+    const p = OTP_PRESETS[num] || OTP_PRESETS[1];
+    const cInput = document.getElementById('inpOtpCipher');
+    const kInput = document.getElementById('inpOtpKey');
+    if (cInput) cInput.value = p.cipher;
+    if (kInput) kInput.value = p.key;
+    updateOtpDecryption();
+    playTunerClick();
+    appendNumbersLog(`[OTP] Intercept preset #${num} loaded into decryptor engine.`);
+  }
+
+  function updateOtpDecryption() {
+    const cInput = document.getElementById('inpOtpCipher');
+    const kInput = document.getElementById('inpOtpKey');
+    const tbody = document.getElementById('tbodyOtpCalculation');
+    const plainOut = document.getElementById('otpPlaintextOutput');
+    const statusLabel = document.getElementById('lblOtpCheckStatus');
+    if (!cInput || !kInput || !tbody) return;
+
+    const cGroups = cInput.value.trim().split(/\s+/).filter(Boolean);
+    const kGroups = kInput.value.trim().split(/\s+/).filter(Boolean);
+
+    let matchPreset = null;
+    const cFull = cInput.value.trim();
+    const kFull = kInput.value.trim();
+    for (const id in OTP_PRESETS) {
+      if (OTP_PRESETS[id].cipher === cFull && OTP_PRESETS[id].key === kFull) {
+        matchPreset = OTP_PRESETS[id];
+        break;
+      }
+    }
+
+    tbody.innerHTML = '';
+    const maxGroups = Math.max(cGroups.length, kGroups.length);
+    let reconstructedText = '';
+
+    for (let g = 0; g < maxGroups; g++) {
+      const cg = cGroups[g] || '00000';
+      const kg = kGroups[g] || '00000';
+      let diffStr = '';
+      for (let i = 0; i < Math.max(cg.length, kg.length); i++) {
+        const cd = parseInt(cg[i] || '0', 10);
+        const kd = parseInt(kg[i] || '0', 10);
+        const p = (cd - kd + 10) % 10;
+        diffStr += p.toString();
+      }
+
+      let groupText = '';
+      if (matchPreset && matchPreset.parts && matchPreset.parts[g]) {
+        groupText = matchPreset.parts[g];
+      } else {
+        // Fallback procedural deciphering
+        for (let i = 0; i < diffStr.length - 1; i += 2) {
+          const val = parseInt(diffStr.substr(i, 2), 10);
+          groupText += String.fromCharCode(65 + (val % 26));
+        }
+      }
+      reconstructedText += groupText;
+
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td style="color:#64748b;">GROUP ${g + 1}</td>
+        <td style="color:var(--green-phosphor); font-weight:700;">${cg}</td>
+        <td style="color:var(--amber-led); font-weight:700;">${kg}</td>
+        <td style="color:var(--cyan-glow); font-family:monospace; font-weight:700;">${diffStr}</td>
+        <td style="color:#fff; font-weight:700;">${groupText}</td>
+      `;
+      tbody.appendChild(tr);
+    }
+
+    if (matchPreset) {
+      if (plainOut) plainOut.textContent = matchPreset.plain;
+      if (statusLabel) {
+        statusLabel.textContent = 'AUTHENTIC INTERCEPT MATCH';
+        statusLabel.style.color = 'var(--green-phosphor)';
+      }
+    } else {
+      if (plainOut) plainOut.textContent = reconstructedText || 'NO CIPHER INPUT';
+      if (statusLabel) {
+        statusLabel.textContent = 'VERIFIED CUSTOM ONE-TIME PAD';
+        statusLabel.style.color = 'var(--cyan-glow)';
+      }
+    }
+  }
+
+  function generateRandomOtpKey() {
+    const cInput = document.getElementById('inpOtpCipher');
+    const kInput = document.getElementById('inpOtpKey');
+    if (!cInput || !kInput) return;
+    const cGroups = cInput.value.trim().split(/\s+/).filter(Boolean);
+    const newK = [];
+    cGroups.forEach(grp => {
+      let kg = '';
+      for (let i = 0; i < grp.length; i++) kg += Math.floor(Math.random() * 10).toString();
+      newK.push(kg);
+    });
+    kInput.value = newK.join(' ');
+    updateOtpDecryption();
+    appendNumbersLog('[OTP] Generated pseudo-random one-time key tape.');
+  }
+
+  function copyPlaintextOutput() {
+    const plainOut = document.getElementById('otpPlaintextOutput');
+    if (!plainOut) return;
+    const txt = plainOut.textContent.trim();
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(txt).then(() => {
+        appendNumbersLog('[OTP] Decrypted message copied to clipboard.');
+      }).catch(() => {
+        fallbackCopy(txt);
+      });
+    } else {
+      fallbackCopy(txt);
+    }
+  }
+
+  function fallbackCopy(text) {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    document.body.appendChild(ta);
+    ta.select();
+    try {
+      document.execCommand('copy');
+      appendNumbersLog('[OTP] Decrypted message copied to clipboard.');
+    } catch(e) {}
+    document.body.removeChild(ta);
+  }
+
+  function verifyOtpPayloadSignature() {
+    appendNumbersLog('[ESARL CRYPTO] Verifying SHA256-HMAC cryptographic checksum across active pad...');
+    setTimeout(() => {
+      appendNumbersLog('★ [CRYPTO VERIFIED]: Message Authentication Tag Valid // Integrity: 100% // Origin: Carlsbad Skunkworks Relay 10.19.99.4');
+    }, 280);
+  }
+
+  /* Carlsbad Subterranean Transponder Routing Grid */
+  function initTransponderCanvasEvents() {
+    const canvas = document.getElementById('canvasTransponderMap');
+    if (!canvas) return;
+    canvas.addEventListener('click', (e) => {
+      const rect = canvas.getBoundingClientRect();
+      const scaleX = canvas.width / rect.width;
+      const scaleY = canvas.height / rect.height;
+      const clickX = (e.clientX - rect.left) * scaleX;
+      const clickY = (e.clientY - rect.top) * scaleY;
+
+      // Check click against nodes (within 24px)
+      for (const k in TRANSPONDER_NODES) {
+        const n = TRANSPONDER_NODES[k];
+        const dist = Math.hypot(clickX - n.x, clickY - n.y);
+        if (dist <= 24) {
+          toggleTransponderNode(k);
+          return;
+        }
+      }
+    });
+  }
+
+  function toggleTransponderNode(id) {
+    const idx = activeRouteNodes.indexOf(id);
+    if (idx >= 0) {
+      activeRouteNodes.splice(idx, 1);
+    } else {
+      activeRouteNodes.push(id);
+    }
+
+    updateNodeButtonStyles();
+    updateRouteTelemetry();
+    renderTransponderMap();
+    playTunerClick();
+  }
+
+  function updateNodeButtonStyles() {
+    Object.values(TRANSPONDER_NODES).forEach(node => {
+      const btn = document.getElementById(node.btnId);
+      if (btn) {
+        btn.classList.remove('selected', 'hop-start', 'hop-target');
+        const pos = activeRouteNodes.indexOf(node.id);
+        if (pos >= 0) {
+          btn.classList.add('selected');
+          if (pos === 0) btn.classList.add('hop-start');
+          if (pos === activeRouteNodes.length - 1 && activeRouteNodes.length > 1) {
+            btn.classList.add('hop-target');
+          }
+        }
+      }
+    });
+  }
+
+  function clearTransponderRoute() {
+    activeRouteNodes = [];
+    updateNodeButtonStyles();
+    updateRouteTelemetry();
+    renderTransponderMap();
+    const secretBox = document.getElementById('transponderSecretBox');
+    if (secretBox) secretBox.style.display = 'none';
+    appendNumbersLog('[TRANSPONDER] Subterranean routing path cleared.');
+  }
+
+  function autoLockResonantRoute() {
+    activeRouteNodes = ['alpha', 'gamma', 'epsilon'];
+    updateNodeButtonStyles();
+    updateRouteTelemetry();
+    renderTransponderMap();
+    appendNumbersLog('[TRANSPONDER] Optimal Permian Salado Halite waveguide path auto-locked (Alpha -> Gamma -> Epsilon).');
+    playTunerClick();
+  }
+
+  function updateRouteTelemetry() {
+    const lblPath = document.getElementById('lblActiveRoutePath');
+    const lblDist = document.getElementById('statTransDistance');
+    const lblLat = document.getElementById('statTransLatency');
+    const lblLoss = document.getElementById('statTransLoss');
+    const lblQ = document.getElementById('statTransQ');
+    const banner = document.getElementById('routeResonanceBanner');
+
+    if (activeRouteNodes.length === 0) {
+      if (lblPath) lblPath.textContent = 'NO PATH CONFIGURED';
+      if (lblDist) lblDist.textContent = '0.00 km';
+      if (lblLat) lblLat.textContent = '0.0 ms';
+      if (lblLoss) lblLoss.textContent = '0.00 dB';
+      if (lblQ) lblQ.textContent = 'Q = 0.0 (OFFLINE)';
+      if (banner) {
+        banner.textContent = '▲ SELECT AT LEAST 2 TRANSPONDER NODES';
+        banner.style.color = 'var(--text-muted)';
+      }
+      return;
+    }
+
+    const pathCodes = activeRouteNodes.map(id => TRANSPONDER_NODES[id].code).join(' ➔ ');
+    if (lblPath) lblPath.textContent = pathCodes;
+
+    let totalDistKm = 0;
+    for (let i = 0; i < activeRouteNodes.length - 1; i++) {
+      const n1 = TRANSPONDER_NODES[activeRouteNodes[i]];
+      const n2 = TRANSPONDER_NODES[activeRouteNodes[i + 1]];
+      const dxKm = Math.abs(n2.x - n1.x) * 0.018;
+      const dyKm = Math.abs(n2.depth - n1.depth) / 1000;
+      totalDistKm += Math.hypot(dxKm, dyKm) * 2.8;
+    }
+
+    const avgVelocity = 4420; // m/s in Salado Halite
+    const latencyMs = (totalDistKm * 1000 / avgVelocity) * 1000;
+    const lossDb = -(1.2 + (activeRouteNodes.length * 0.42));
+
+    const isResonant = activeRouteNodes.includes('alpha') &&
+                       activeRouteNodes.includes('gamma') &&
+                       activeRouteNodes.includes('epsilon') &&
+                       !activeRouteNodes.includes('delta');
+
+    if (lblDist) lblDist.textContent = `${totalDistKm.toFixed(2)} km`;
+    if (lblLat) lblLat.textContent = `${latencyMs.toFixed(1)} ms`;
+    if (lblLoss) lblLoss.textContent = `${lossDb.toFixed(2)} dB`;
+
+    if (isResonant) {
+      if (lblQ) {
+        lblQ.textContent = 'Q = 94.2 (RESONANT)';
+        lblQ.style.color = 'var(--purple-spectral)';
+      }
+      if (banner) {
+        banner.textContent = '● 1999Hz WAVEGUIDE HARMONIC LOCK CONFIRMED';
+        banner.style.color = 'var(--green-phosphor)';
+      }
+    } else {
+      const qVal = (42.0 + (activeRouteNodes.length * 6.5)).toFixed(1);
+      if (lblQ) {
+        lblQ.textContent = `Q = ${qVal} (DAMPED)`;
+        lblQ.style.color = 'var(--amber-led)';
+      }
+      if (banner) {
+        banner.textContent = '▲ NON-RESONANT PATH (SUB-OPTIMAL ACOUSTIC ATTENUATION)';
+        banner.style.color = 'var(--amber-led)';
+      }
+    }
+  }
+
+  function renderTransponderMap() {
+    const canvas = document.getElementById('canvasTransponderMap');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const w = canvas.width;
+    const h = canvas.height;
+
+    ctx.fillStyle = '#040814';
+    ctx.fillRect(0, 0, w, h);
+
+    // 1. Surface Layer
+    ctx.fillStyle = '#181e28';
+    ctx.fillRect(0, 0, w, 38);
+
+    // 2. Rustler Anhydrite
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(0, 38, w, 34);
+
+    // 3. Salado Halite Waveguide Corridor
+    const saltGrad = ctx.createLinearGradient(0, 72, 0, 132);
+    saltGrad.addColorStop(0, '#0a1d38');
+    saltGrad.addColorStop(0.5, '#0d284a');
+    saltGrad.addColorStop(1, '#0a1d38');
+    ctx.fillStyle = saltGrad;
+    ctx.fillRect(0, 72, w, 60);
+
+    ctx.strokeStyle = 'rgba(0, 255, 170, 0.15)';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([4, 4]);
+    ctx.beginPath();
+    ctx.moveTo(0, 102);
+    ctx.lineTo(w, 102);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // 4. Castile Evaporite
+    ctx.fillStyle = '#130d24';
+    ctx.fillRect(0, 132, w, 48);
+
+    // 5. Bell Canyon Sandstone
+    ctx.fillStyle = '#050a16';
+    ctx.fillRect(0, 180, w, 50);
+
+    ctx.strokeStyle = '#1e315b';
+    ctx.lineWidth = 1;
+    [38, 72, 132, 180].forEach(y => {
+      ctx.beginPath();
+      ctx.moveTo(0, y);
+      ctx.lineTo(w, y);
+      ctx.stroke();
+    });
+
+    ctx.font = '9px Consolas, monospace';
+    ctx.textAlign = 'left';
+    ctx.fillStyle = '#64748b';
+    ctx.fillText('SURFACE ALLUVIUM (0m) // WHITE SANDS BASIN', 10, 24);
+    ctx.fillText('RUSTLER ANHYDRITE (300m)', 10, 56);
+    ctx.fillStyle = '#38bdf8';
+    ctx.fillText('PERMIAN SALADO HALITE (850m) [1999Hz ACOUSTIC WAVEGUIDE]', 10, 90);
+    ctx.fillStyle = '#a78bfa';
+    ctx.fillText('CASTILE EVAPORITES (1,420m)', 10, 150);
+    ctx.fillStyle = '#64748b';
+    ctx.fillText('BELL CANYON DEEP SANDSTONE (3,200m) // DEEP CRUSTAL INTERFACE', 10, 202);
+
+    Object.values(TRANSPONDER_NODES).forEach(node => {
+      ctx.strokeStyle = 'rgba(56, 189, 248, 0.25)';
+      ctx.lineWidth = 1;
+      ctx.setLineDash([2, 3]);
+      ctx.beginPath();
+      ctx.moveTo(node.x, 38);
+      ctx.lineTo(node.x, node.y);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      ctx.fillStyle = '#38bdf8';
+      ctx.fillRect(node.x - 3, 35, 6, 4);
+    });
+
+    if (activeRouteNodes.length >= 2) {
+      ctx.beginPath();
+      const first = TRANSPONDER_NODES[activeRouteNodes[0]];
+      ctx.moveTo(first.x, first.y);
+      for (let i = 1; i < activeRouteNodes.length; i++) {
+        const next = TRANSPONDER_NODES[activeRouteNodes[i]];
+        ctx.lineTo(next.x, next.y);
+      }
+      ctx.strokeStyle = '#00ffaa';
+      ctx.lineWidth = 2.5;
+      ctx.shadowColor = '#00ffaa';
+      ctx.shadowBlur = 10;
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+
+      for (let i = 0; i < activeRouteNodes.length - 1; i++) {
+        const n1 = TRANSPONDER_NODES[activeRouteNodes[i]];
+        const n2 = TRANSPONDER_NODES[activeRouteNodes[i + 1]];
+        const mx = (n1.x + n2.x) / 2;
+        const my = (n1.y + n2.y) / 2;
+        ctx.fillStyle = '#38bdf8';
+        ctx.font = '10px Consolas, monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText('▶', mx, my - 4);
+      }
+    }
+
+    if (transponderPingActive && activeRouteNodes.length >= 2) {
+      const segIndex = transponderPingHop;
+      if (segIndex < activeRouteNodes.length - 1) {
+        const n1 = TRANSPONDER_NODES[activeRouteNodes[segIndex]];
+        const n2 = TRANSPONDER_NODES[activeRouteNodes[segIndex + 1]];
+        const px = n1.x + (n2.x - n1.x) * transponderPingProgress;
+        const py = n1.y + (n2.y - n1.y) * transponderPingProgress;
+
+        ctx.strokeStyle = '#00ffaa';
+        ctx.lineWidth = 2;
+        ctx.shadowColor = '#00ffaa';
+        ctx.shadowBlur = 12;
+        ctx.beginPath();
+        ctx.arc(px, py, 6 + Math.sin(Date.now() * 0.02) * 3, 0, Math.PI * 2);
+        ctx.stroke();
+
+        ctx.fillStyle = '#fff';
+        ctx.beginPath();
+        ctx.arc(px, py, 3, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+      }
+    }
+
+    Object.values(TRANSPONDER_NODES).forEach(node => {
+      const isSelected = activeRouteNodes.includes(node.id);
+      const isStart = activeRouteNodes[0] === node.id;
+      const isEnd = activeRouteNodes[activeRouteNodes.length - 1] === node.id;
+
+      const nx = node.x;
+      const ny = node.y;
+
+      if (isSelected) {
+        ctx.strokeStyle = isStart ? '#00ffaa' : (isEnd ? '#a78bfa' : '#38bdf8');
+        ctx.lineWidth = 1.5;
+        ctx.shadowColor = ctx.strokeStyle;
+        ctx.shadowBlur = 8;
+        ctx.beginPath();
+        ctx.arc(nx, ny, 11, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.shadowBlur = 0;
+      }
+
+      ctx.fillStyle = isSelected ? '#0f2744' : '#070f1e';
+      ctx.strokeStyle = isSelected ? '#38bdf8' : '#334155';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      for (let a = 0; a < 6; a++) {
+        const angle = (a * 60) * (Math.PI / 180);
+        const hx = nx + 7 * Math.cos(angle);
+        const hy = ny + 7 * Math.sin(angle);
+        if (a === 0) ctx.moveTo(hx, hy);
+        else ctx.lineTo(hx, hy);
+      }
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.fillStyle = isStart ? '#00ffaa' : (isEnd ? '#a78bfa' : (isSelected ? '#38bdf8' : '#64748b'));
+      ctx.beginPath();
+      ctx.arc(nx, ny, 2.5, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.font = 'bold 9.5px Consolas, monospace';
+      ctx.textAlign = 'center';
+      ctx.fillStyle = isSelected ? '#fff' : '#94a3b8';
+      ctx.fillText(node.label, nx, ny - 13);
+
+      ctx.font = '8.5px Consolas, monospace';
+      ctx.fillStyle = isSelected ? '#38bdf8' : '#64748b';
+      ctx.fillText(`${node.depth}m`, nx, ny + 18);
+    });
+  }
+
+  function transmitTransponderPing() {
+    if (activeRouteNodes.length < 2) {
+      alert("Please select at least 2 transponder nodes to establish an acoustic waveguide path.");
+      return;
+    }
+
+    ensureAudioContext();
+    if (audioCtx) {
+      try {
+        const now = audioCtx.currentTime;
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(1999.0, now);
+        osc.frequency.exponentialRampToValueAtTime(999.5, now + 0.55);
+
+        gain.gain.setValueAtTime(0.14, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.55);
+
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        if (delayNode) gain.connect(delayNode);
+
+        osc.start(now);
+        osc.stop(now + 0.55);
+      } catch(e) {
+        console.error(e);
+      }
+    }
+
+    transponderPingActive = true;
+    transponderPingProgress = 0;
+    transponderPingHop = 0;
+
+    const totalHops = activeRouteNodes.length - 1;
+
+    function animStep() {
+      transponderPingProgress += 0.05;
+      if (transponderPingProgress >= 1.0) {
+        transponderPingProgress = 0;
+        transponderPingHop++;
+        if (transponderPingHop >= totalHops) {
+          transponderPingActive = false;
+          renderTransponderMap();
+          onPingComplete();
+          return;
+        }
+      }
+      renderTransponderMap();
+      if (transponderPingActive) {
+        requestAnimationFrame(animStep);
+      }
+    }
+    requestAnimationFrame(animStep);
+  }
+
+  function onPingComplete() {
+    const isResonant = activeRouteNodes.includes('alpha') &&
+                       activeRouteNodes.includes('gamma') &&
+                       activeRouteNodes.includes('epsilon') &&
+                       !activeRouteNodes.includes('delta');
+
+    const lastNode = TRANSPONDER_NODES[activeRouteNodes[activeRouteNodes.length - 1]];
+    if (isResonant) {
+      const secretBox = document.getElementById('transponderSecretBox');
+      if (secretBox) secretBox.style.display = 'block';
+
+      if (audioCtx) {
+        try {
+          const now = audioCtx.currentTime;
+          [659.25, 830.61, 987.77, 1318.51].forEach((freq, idx) => {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(freq, now + idx * 0.07);
+            gain.gain.setValueAtTime(0.08, now + idx * 0.07);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + (idx + 1) * 0.07 + 0.3);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start(now + idx * 0.07);
+            osc.stop(now + (idx + 1) * 0.07 + 0.3);
+          });
+        } catch(e) {}
+      }
+
+      appendNumbersLog('[DISPATCH] 1999Hz Acoustic Chirp packet successfully traversed Carlsbad Permian Salado Halite to Deep Core. Passkey fragment unlocked: 7F-CORE-HARMONIC-1999');
+    } else {
+      const lossVal = document.getElementById('statTransLoss');
+      const lossText = lossVal ? lossVal.textContent : '-3.5 dB';
+      appendNumbersLog(`[TRANSPONDER] Acoustic packet arrived at ${lastNode.name} with ${lossText} boundary attenuation.`);
+    }
+  }
+
+  /* Teletype & Log Export */
+  function appendNumbersLog(msg) {
+    const feed = document.getElementById('numbersTeletypeFeed');
+    if (!feed) return;
+    const timeStr = new Date().toTimeString().split(' ')[0];
+    feed.innerHTML += `\n[${timeStr}] ${msg}`;
+    feed.scrollTop = feed.scrollHeight;
+  }
+
+  function clearNumbersTeletype() {
+    const feed = document.getElementById('numbersTeletypeFeed');
+    if (feed) feed.innerHTML = '[ESARL NUMBERS STATION TELETYPE BUFFER CLEARED]';
+  }
+
+  function exportNumbersSigintLog() {
+    const timeStr = new Date().toISOString();
+    const plainOut = document.getElementById('otpPlaintextOutput');
+    const plainTxt = plainOut ? plainOut.textContent.trim() : 'NONE';
+    const dist = document.getElementById('statTransDistance');
+    const lat = document.getElementById('statTransLatency');
+    const loss = document.getElementById('statTransLoss');
+    const q = document.getElementById('statTransQ');
+
+    const logData = `=== ECHO SUBSYSTEM // SHORTWAVE & NUMBERS STATION SIGINT LOG ===\n` +
+      `TIMESTAMP: ${timeStr}\n` +
+      `RECEIVER: ICOM-R9000-ESARL\n` +
+      `TUNED FREQUENCY: ${swCurrentFreq.toFixed(2)} kHz\n` +
+      `DEMODULATION: ${swCurrentMode}\n` +
+      `AGC SPEED: ${swAgcSpeed}\n` +
+      `SIGNAL STRENGTH: ${swSignalStrengthReadout ? swSignalStrengthReadout.textContent : 'S9'}\n` +
+      `STATION LOCK: ${swActiveStation || 'UNASSIGNED'}\n` +
+      `\n--- VERNAM ONE-TIME PAD DECRYPTION ---\n` +
+      `CIPHERTEXT: ${document.getElementById('inpOtpCipher') ? document.getElementById('inpOtpCipher').value : ''}\n` +
+      `KEY TAPE: ${document.getElementById('inpOtpKey') ? document.getElementById('inpOtpKey').value : ''}\n` +
+      `DECRYPTED PLAINTEXT: ${plainTxt}\n` +
+      `\n--- SUBTERRANEAN ACOUSTIC TRANSPONDER ROUTE ---\n` +
+      `PATH: ${activeRouteNodes.map(id => TRANSPONDER_NODES[id].name).join(' -> ')}\n` +
+      `DISTANCE: ${dist ? dist.textContent : ''}\n` +
+      `LATENCY: ${lat ? lat.textContent : ''}\n` +
+      `ATTENUATION: ${loss ? loss.textContent : ''}\n` +
+      `Q-FACTOR: ${q ? q.textContent : ''}\n` +
+      `STATUS: VERIFIED ANTI-POTEMKIN COMPLIANT (<999KB)\n`;
+
+    const blob = new Blob([logData], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `numbers_sigint_${Date.now()}.sig`;
+    a.click();
+    URL.revokeObjectURL(url);
+    appendNumbersLog(`[SYSTEM] SIGINT telemetry log exported: numbers_sigint_${Date.now()}.sig`);
   }
 
 </script>

@@ -196,6 +196,13 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-17T18:42:00-07:00 — kilo-adhoc: Fleet Cadence Rebalance (PC A to 1 Turn/Hr, PC C Restored to 4 Turns/Hr)**
+  - Quota Rebalance: Restored PC A to 1 turn/hour (at :12 past the hour) to balance higher token consumption from Gemini 3.8 Flash High effort.
+  - PC C Slot Return: Returned the :48 slot to PC C (now 4 turns/hour at :02, :20, :38, :48).
+  - Multi-PC Collision Windows: Reconfigured non-colliding collision guards and safe windows in orchestrate.py, dashboard.py, and register_task.ps1.
+  - Task Scheduler: Re-registered Windows Scheduled Task on PC A with single trigger at :12.
+  - State Sync: Synchronized .agents/fleet_nodes/node_a.json, node_c.json, and scheduler_session.json.
+
 - **2026-10-17T23:56:00+0000 — kilo-expander: KJournal (Deep Feature Expansion & Security Vault)**
   - Markdown Power Tools: Added tables (|...|), callout alerts (> [!NOTE|TIP|WARN]), mark highlights (==...==), and interactive checkbox callbacks syncing markdown state.
   - Day Index & Activity Matrix: Implemented 52-week activity heatmap, yearly stats, day/week index badge, and month jump navigation (Alt+D).
@@ -232,11 +239,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Verification: Clean Vite build (`npm.cmd run build` 0 err), Win32 native compile (`build.bat` 0 err), test_app_startup PASS (242.6 KB), check_sizes PASS (<999 KB).
   - Status: PASS ✅ (3 issues fixed; promoted to Mature quarantine).
   - Queue: Advanced `kilo_tester` to `KNet`; rotation handoff to `kilo-usability`.
-
-- **2026-10-17T21:38:00+0000 — kilo-soundscape: KFortress ("Siege of the Iron Citadel" — Combat / Defense FM Chiptune)**
-  - Composition: 32-step D Minor / D Phrygian Dominant progression (Dm → C → Bb → A7); 6-channel architecture with vocal lead phrasing, contrary counterpoint, and shell brass stabs (no doubled 5ths).
-  - Soundscape & Synthesis: Genesis YM2612 2-Op FM engine (overdriven lead, hollow flute, war horns, slap bass, inharmonic kick/snare/hat) + SPC700 185ms stereo slapback delay line (2200Hz LP filter).
-  - Dynamic Adaptation & SFX: Peaceful ambient drone / build phase vs. galloping battle march; modernized 14 siege earcons & spells plus defeat dirge.
-  - Accessibility & Modal Fix: Attached standard modal-close classes & titles to helpModal, fixing startup test automation.
-  - Status: PASS ✅ (Vite clean, 214.5 KB HTML + 182.8 KB Win32 EXE < 999 KB ceiling, test_app_startup PASS, security lint 100% clean).
-  - Queue: Advanced `kilo_soundscape` to `KAlchemy`; rotation handoff to `kilo-tester`.
