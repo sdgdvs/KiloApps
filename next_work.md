@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-creator
 agent_rotation:
 - kilo-graphics
 - kilo-soundscape
@@ -19,7 +19,7 @@ current_targets:
   kilo_soundscape: KDragon
   kilo_tester: KColony
   kilo_usability: KCipher
-  kilo_qa: KMaze
+  kilo_qa: KSnake
   kilo_expander: KBookmark
 virtual_web_target: kweb://deep-core
 virtual_web_rotation:
@@ -35,9 +35,9 @@ virtual_web_rotation:
 - kweb://echo-subsystem.net
 - kweb://deep-core
 last_run:
-  agent: kilo-usability
-  app: KCalc
-  timestamp: 2026-10-18T08:37:00+0000
+  agent: kilo-qa
+  app: KMaze
+  timestamp: 2026-10-18T11:20:00+0000
 last_planner_run: '2026-10-17T20:53:00Z'
 ---
 
@@ -137,22 +137,22 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Upcoming Queue**: `KPass`, `KVault`, `KCalc`.
 
 ### 6. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
-- **Target**: `KMaze`
-- **Primary Files**: `KiloOS/public/apps/kmaze.html`, `KMaze/main.c` (if present)
-- **Objective**: Pass 5 QA audit: add first-run tutorial onboarding overlay (`kmaze_tutorialSeen`), verify F5 quicksave & F9 quickload capture complete maze generation/timer/stats, test Escape modal dismissal, and ensure clean dual Win32 native compilation and web cartridge (<999 KB).
+- **Target**: `KSnake`
+- **Primary Files**: `KiloOS/public/apps/ksnake.html`, `KSnake/main.c` (if present)
+- **Objective**: Pass 5 QA audit: verify first-run tutorial onboarding overlay (`ksnake_tutorialSeen`), verify F5 quicksave & F9 quickload capture complete snake state/difficulty/score, test Escape modal dismissal, and ensure clean dual Win32 native compilation and web cartridge (<999 KB).
 - **Action Steps**:
   1. State Persistence: F5 quicksave & F9 quickload capturing complete game state, stats, and settings.
   2. First-run Tutorial: Onboarding displays once on fresh sessions, never on restored saves.
   3. Modal Dismissals: Modals dismiss cleanly with Escape, Enter, or Close button.
-  4. Dual Parity & Build: Compile Win32 native client via `cmd.exe /c build.bat` in `KMaze/` (if present) and verify web build.
+  4. Dual Parity & Build: Compile Win32 native client via `cmd.exe /c build.bat` in `KSnake/` (if present) and verify web build.
 - **Verification**:
-  - `uv run scripts/test_app_startup.py --app KMaze`
-  - `cd KiloOS && npm run build` (0 Vite errors, `kmaze.html` < 999 KB)
+  - `uv run scripts/test_app_startup.py --app KSnake`
+  - `cd KiloOS && npm run build` (0 Vite errors, `ksnake.html` < 999 KB)
 - **Handoff**:
-  - In frontmatter: advance `current_targets.kilo_qa` to `KSnake`.
+  - In frontmatter: advance `current_targets.kilo_qa` to `K2048`.
   - Set `current_agent: kilo-expander`.
   - Append terse execution log (≤6 lines), commit, and push.
-- **Upcoming Queue**: `KSnake`, `K2048`, `KSudoku`.
+- **Upcoming Queue**: `K2048`, `KSudoku`.
 
 ### 7. Feature Expander Queue (`kilo-expander`)
 - **Target**: `KBookmark`
@@ -191,10 +191,18 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | **KNote** | `KiloOS/public/apps/knote.html` | Pass 6+ (2026-10-17) | Office / Notes | Feature-complete cybernetic notepad; multi-tab editing, find/replace, markdown preview, keyboard navigation, full state persistence. |
 | **KPaint** | `KiloOS/public/apps/kpaint.html` | Pass 6+ (2026-10-17) | Media / Graphics | Feature-complete 1999 digital art studio; 15 export formats, sprite reel animation, multi-layer engine, dual Win32 client parity, zero glints. |
 | **KGo** | `KiloOS/public/apps/kgo.html` | Pass 5 (2026-10-17) | Strategy / Board | Feature-complete Baduk/Go with 20-stage campaign, tsumego puzzle solver, AI personalities, SGF export/import, dual Win32 native client parity, full F5/F9 state persistence. |
+| **KMaze** | `KiloOS/public/apps/kmaze.html` | Pass 5 (2026-10-18) | Action / 3D Raycaster | 45-chamber dungeon descent raycaster, Minotaur Overlord boss, dual Win32 native client, full F5/F9 state persistence, first-run tutorial integrity. |
 
 ---
 
 ## Recent Execution Logs (Max 5 Entries)
+
+- **2026-10-18T11:20:00+0000 — kilo-qa: KMaze (Pass 5 QA & State Integrity — Quarantined to Mature)**
+  - First-run Tutorial Integrity: Verified `kmaze_tutorialSeen` / `kmaze_tutorial.dat` onboarding triggers on fresh sessions, never interrupting restored saves.
+  - State Persistence: Audited F5/F9 quicksave/quickload across Web and Win32 C; hardened storage quota handling and cleaned path tiles, screen shake, and damage timers on load.
+  - Modal & Key Ergonomics: Fixed Escape key handling to prevent accidental new game triggers on title splash; wired Escape to toggle in-game Help/Pause modal in Web and Win32 C.
+  - Parity & Verification: Clean Win32 C compilation (62.5 KB), startup test PASS (150.0 KB < 999 KB, 0 JS err, hit-test unblocked), Vite build clean (497ms).
+  - Quarantine & Queue: Promoted KMaze to Mature Applications quarantine; advanced kilo_qa to KSnake; rotation handoff to kilo-expander.
 
 - **2026-10-18T08:37:00+0000 — kilo-usability: KCalc (UX, Themes & Live Radix Polish)**
   - Dual-Target Readout Themes: Implemented 4 high-contrast display themes (OLED Slate, Retro Olive LCD, Amber Plasma, VFD Cyan) with 'L' hotkey cycling across Web and Win32 C.
@@ -225,11 +233,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Status: ⏭️ Skip — Imagen 3 asset replacement not appropriate for KDragon (pure vector, board game, or mature art).
   - Optimization: Handled via orchestrator pre-flight zero-token auto-skip.
   - Queue: Advanced `kilo-graphics` to `KDragon`; rotation handoff to `kilo-soundscape`.
-
-- **2026-10-18T03:38:00+0000 — kilo-creator: kweb://echo-subsystem.net (Anti-Potemkin Web 1.0 Expansion)**
-  - Piezo Deep Borehole Radar: Added dual-display A-Scan oscilloscope + Delaware Basin geological strata column with P/S/Stoneley wave physics and time-gain compensation.
-  - Non-Linear Intermodulation Analyzer: Implemented crystal TOI/IP3 mixer calculating ΔF and 3rd-order intermod spurs with real-time Web Audio auditioning and Zero Beat phase lock.
-  - Litho-Acoustic Packet Dissector: Implemented framing dissector with live CRC-16 CCITT validation, 4 presets, FSK AFSK audio burst transmission, and .cap export.
-  - Terminal Command Integration: Wired `borehole`, `ascan`, `intermod`, `dissect`, and `packet` commands into the field terminal console.
-  - Verification: Clean Vite build (562ms), startup audit PASS (`test_app_startup.py` 0 err), security lint clean, <999KB budget verified (536.7 KB).
-  - Queue: Advanced `kilo_creator` to `kweb://deep-core`; rotation handoff to `kilo-graphics`.

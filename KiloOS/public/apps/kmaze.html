@@ -264,6 +264,136 @@
     display: inline-block;
     flex-shrink: 0;
   }
+  /* Tutorial Onboarding Modal Overlay */
+  #tutorialModal {
+    display: none;
+    position: absolute;
+    inset: 0;
+    background: rgba(4, 8, 18, 0.92);
+    backdrop-filter: blur(8px);
+    z-index: 210;
+    justify-content: center;
+    align-items: center;
+    padding: 16px;
+    box-sizing: border-box;
+  }
+  #tutorialModal.open {
+    display: flex;
+  }
+  .tutorialCard {
+    max-width: 620px;
+    border: 2px solid #38bdf8;
+    box-shadow: 0 0 32px rgba(56, 189, 248, 0.4);
+  }
+  .tutStepBadge {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 1px;
+    color: #38bdf8;
+    background: rgba(56, 189, 248, 0.15);
+    border: 1px solid rgba(56, 189, 248, 0.35);
+    padding: 3px 8px;
+    border-radius: 4px;
+    margin-bottom: 8px;
+    align-self: flex-start;
+  }
+  .tutHeading {
+    margin: 0 0 10px 0;
+    font-size: 16px;
+    color: #f8fafc;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .tutContent {
+    background: #142036;
+    border: 1px solid #1e3a5f;
+    border-radius: 6px;
+    padding: 12px 14px;
+    font-size: 12px;
+    line-height: 1.6;
+    color: #cbd5e1;
+    min-height: 120px;
+  }
+  .tutContent p {
+    margin: 0 0 8px 0;
+  }
+  .tutContent p:last-child {
+    margin-bottom: 0;
+  }
+  .tutProgressDots {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 10px;
+  }
+  .tutDot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.2);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .tutDot.active {
+    background: #38bdf8;
+    box-shadow: 0 0 8px #38bdf8;
+    transform: scale(1.25);
+  }
+  .tutFooter {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 18px;
+    background: #142036;
+    border-top: 1px solid #00f0ff44;
+  }
+  .splashTutorialBanner {
+    background: rgba(56, 189, 248, 0.12);
+    border: 1px solid rgba(56, 189, 248, 0.4);
+    color: #38bdf8;
+    padding: 6px 14px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    margin-bottom: 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .splashTutorialBanner:hover {
+    background: rgba(56, 189, 248, 0.25);
+    border-color: #38bdf8;
+    color: #ffffff;
+    box-shadow: 0 0 12px rgba(56, 189, 248, 0.5);
+  }
+  /* In-game first-run onboarding banner */
+  #firstRunBanner {
+    position: absolute;
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(13, 21, 37, 0.94);
+    border: 1px solid #38bdf8;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6), 0 0 12px rgba(56, 189, 248, 0.3);
+    color: #e2e8f0;
+    padding: 8px 14px;
+    border-radius: 6px;
+    font-size: 11.5px;
+    z-index: 40;
+    display: none;
+    align-items: center;
+    gap: 10px;
+    backdrop-filter: blur(4px);
+    max-width: 90%;
+    pointer-events: auto;
+  }
+  #firstRunBanner.show {
+    display: flex;
+  }
   /* Splash Screen Overlay */
   #splashOverlay {
     position: absolute;
@@ -386,10 +516,14 @@
     <div id="splashOverlay">
       <div class="splashTitle">🛡️ KMAZE - DUNGEON DESCENT</div>
       <div class="splashSubtitle">Tactical 3D Raycaster Labyrinth • 45 Challenging Chambers</div>
+      <div id="splashTutorialBanner" class="splashTutorialBanner" onclick="openTutorialOverlay()">
+        <span>🔰 First Descent? Click here to view the 4-step Tactical Briefing</span>
+      </div>
       <div class="splashBtnGroup">
         <button id="btnSplashNew" class="splashBtn primary" onclick="startNewGame()"><span class="badge">Enter / N</span> ⚔️ New Game</button>
         <button id="btnSplashContinue" class="splashBtn" onclick="loadCheckpointGame()"><span class="badge">F9 / L</span> 💾 Continue Checkpoint</button>
-        <button id="btnSplashHelp" class="splashBtn" onclick="toggleHelpModal(true)"><span class="badge">F1 / H</span> 📖 Codex & Guide</button>
+        <button id="btnSplashTutorial" class="splashBtn" onclick="openTutorialOverlay()"><span class="badge">F1 / 🎓</span> 🔰 Tutorial</button>
+        <button id="btnSplashHelp" class="splashBtn" onclick="toggleHelpModal(true)"><span class="badge">H</span> 📖 Codex</button>
         <button id="btnSplashKeys" class="splashBtn" onclick="toggleKeybinds()"><span class="badge">K</span> ⌨️ Keybinds</button>
       </div>
       <div id="splashSaveStatus" style="font-size: 13px; color: #38bdf8; margin-bottom: 8px;"></div>
@@ -398,6 +532,7 @@
   </div>
   <div id="hudControls">
     <button id="btnNew" class="hudBtn" onclick="startNewGame()" title="Start a fresh dungeon descent"><span class="badge">N</span> New Game</button>
+    <button id="btnTutorial" class="hudBtn" onclick="openTutorialOverlay()" title="Tactical Onboarding Briefing (4 Steps)"><span class="badge">🎓</span> Tutorial</button>
     <button id="btnPickaxe" class="hudBtn" onclick="usePickaxe()" title="Cleave cracked or illusionary walls & attack monsters"><span class="badge">P</span> Break Wall</button>
     <button id="btnPathfinder" class="hudBtn" onclick="usePathfinder()" title="Reveal shortest path to key and exit (10s)"><span class="badge">C</span> Pathfinder</button>
     <button id="btnSpeed" class="hudBtn" onclick="useSpeedShoes()" title="Double movement speed (8s)"><span class="badge">S/B</span> Speed</button>
@@ -438,7 +573,8 @@
             <div><span class="kbd">S / B</span> : <b>Speed Shoes</b> (Double velocity, 8s)</div>
             <div><span class="kbd">F</span> : <b>Stun Spray</b> (Freezes minotaurs, 10s)</div>
             <div><span class="kbd">T</span> : <b>Time Freeze</b> (Halts dungeon entities, 10s)</div>
-            <div><span class="kbd">V / L</span> : Save / Load Checkpoint</div>
+            <div><span class="kbd">F5 / V</span> : Quicksave Checkpoint</div>
+            <div><span class="kbd">F9 / L</span> : Quickload Checkpoint</div>
           </div>
         </div>
 
@@ -465,6 +601,39 @@
         </div>
       </div>
     </div>
+  </div>
+
+  <!-- Onboarding Tutorial Overlay Modal -->
+  <div id="tutorialModal" role="dialog" aria-modal="true" aria-labelledby="tutModalTitle" onclick="if(event.target===this) closeTutorial()">
+    <div class="modalContent tutorialCard">
+      <div class="modalHeader">
+        <h2 id="tutModalTitle">🛡️ KMaze — Tactical Onboarding Briefing</h2>
+        <button class="modalCloseBtn" aria-label="Close Tutorial" onclick="closeTutorial()">✕ Close [Esc]</button>
+      </div>
+      <div class="modalBody">
+        <div class="tutStepBadge" id="tutStepBadge">STEP 1 OF 4 • NAVIGATION & STEALTH</div>
+        <h3 id="tutStepHeading" class="tutHeading">Master the Dungeon Corridors</h3>
+        <div id="tutStepContent" class="tutContent"></div>
+        <div class="tutProgressDots" id="tutDots">
+          <span class="tutDot active" onclick="setTutorialStep(0)"></span>
+          <span class="tutDot" onclick="setTutorialStep(1)"></span>
+          <span class="tutDot" onclick="setTutorialStep(2)"></span>
+          <span class="tutDot" onclick="setTutorialStep(3)"></span>
+        </div>
+      </div>
+      <div class="tutFooter">
+        <button id="btnTutPrev" class="hudBtn" onclick="prevTutorialStep()" style="display:none;">← Previous</button>
+        <div style="flex:1;"></div>
+        <button id="btnTutSkip" class="hudBtn" onclick="closeTutorial()">Skip Briefing</button>
+        <button id="btnTutNext" class="hudBtn primary" onclick="nextTutorialStep()">Next Step →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- In-game First Run HUD Guidance Strip -->
+  <div id="firstRunBanner">
+    <span>🛡️ <b>Tactical Briefing:</b> WASD Move • <span class="kbd">X</span> Sneak • <span class="kbd">P</span> Pickaxe • <span class="kbd">F5</span> Quicksave <button class="hudBtn" style="padding:1px 6px; font-size:11px; margin-left:6px;" onclick="openTutorialOverlay()">🎓 Briefing</button></span>
+    <button class="modalCloseBtn" style="padding: 1px 6px; font-size: 11px;" onclick="dismissFirstRunBanner()">✕</button>
   </div>
 </div>
 <input type="file" id="importFile" style="display:none" onchange="importStats(event)">
@@ -660,7 +829,11 @@
   function safeSetStorage(key, val) {
     try {
       localStorage.setItem(key, val);
-    } catch (e) {}
+      return true;
+    } catch (e) {
+      console.warn("Storage write failed for key:", key, e);
+      return false;
+    }
   }
   let bestTime = parseFloat(safeGetStorage('kmaze_best', '9999.9')) || 9999.9;
   let totalGames = parseInt(safeGetStorage('kmaze_games', '0'), 10) || 0;
@@ -758,6 +931,10 @@
               let bestStr = bestTime < 9999 ? bestTime.toFixed(1) + 's' : '--';
               statsEl.innerHTML = `Descent Records — Expeditions: <b>${totalGames}</b> | Escapes: <b>${totalEscapes}</b> | Best Record: <b>${bestStr}</b> | Lifetime Score: <b>${totalScore}</b>`;
           }
+          const tutBanner = document.getElementById('splashTutorialBanner');
+          if (tutBanner) {
+              tutBanner.style.display = safeGetStorage('kmaze_tutorialSeen') === '1' ? 'none' : 'inline-flex';
+          }
           const saveStatus = document.getElementById('splashSaveStatus');
           const continueBtn = document.getElementById('btnSplashContinue');
           let sd = safeGetStorage('kmaze_saveState', null) || safeGetStorage('kmaze_save', null);
@@ -767,7 +944,7 @@
                   if (saveStatus) saveStatus.innerHTML = `💾 Saved Checkpoint: <b>Level ${parsed.currentLevel + 1}</b> • Score: <b>${parsed.score || 0}</b> • Keys: <b>${parsed.keysHeld || 0}</b>`;
                   if (continueBtn) {
                       continueBtn.style.opacity = '1';
-                      continueBtn.title = `Resume descent at Level ${parsed.currentLevel + 1}`;
+                      continueBtn.title = `Resume descent at Level ${parsed.currentLevel + 1} (F9)`;
                   }
               } catch (e) {
                   if (saveStatus) saveStatus.textContent = "⚠️ Checkpoint data corrupted";
@@ -784,6 +961,126 @@
       }
   }
 
+  // --- Onboarding Tutorial System (Pass 5 QA & Craft) ---
+  const tutorialSteps = [
+      {
+          badge: "STEP 1 OF 4 • NAVIGATION & STEALTH",
+          heading: "🎮 Master Corridor Navigation & Stealth",
+          content: `<p><b>Movement:</b> Use <span class="kbd">W / A / S / D</span> or <span class="kbd">Arrow Keys</span> to walk and turn. Hold <span class="kbd">Shift</span> to sprint through long dungeon hallways.</p><p><b>Stealth Crouch (<span class="kbd">X</span> / <span class="kbd">Ctrl</span>):</b> Tapping crouch muffles your footsteps completely so prowling Minotaurs cannot track your scent, and cushions spike/lava trap damage by <b>-50%</b>!</p>`
+      },
+      {
+          badge: "STEP 2 OF 4 • ANCIENT RELICS & TOOLS",
+          heading: "⚔️ Wield Dungeon Tools & Relics",
+          content: `<p><b>Pickaxe (<span class="kbd">P</span> / <span class="kbd">1</span>):</b> Cleave cracked walls, smash secret illusory barriers, and strike dangerous beasts.</p><p><b>Pathfinder (<span class="kbd">C</span> / <span class="kbd">2</span>):</b> Summons a luminous golden trail showing the shortest route to the chamber key and exit portal for 10s.</p><p><b>Speed Shoes (<span class="kbd">S</span> / <span class="kbd">B</span> / <span class="kbd">3</span>):</b> Grants a double-velocity surge for 8s to cross hazards and outrun monsters.</p>`
+      },
+      {
+          badge: "STEP 3 OF 4 • COMBAT & LABYRINTH HAZARDS",
+          heading: "💀 Traps, Minotaurs & Sanctuary",
+          content: `<p><b>Stun Spray (<span class="kbd">F</span> / <span class="kbd">4</span>):</b> Emits a blinding mist that paralyzes hunting Minotaurs in place for 10s.</p><p><b>Time Freeze (<span class="kbd">T</span> / <span class="kbd">5</span>):</b> Suspends all labyrinth entities, hazards, and monster timers for 10s.</p><p><b>Sanctuary Shrines (<span style="color:#ffd700;font-weight:bold;">Gold Tile [28]</span>):</b> Restores all tool charges and automatically records your checkpoint.</p>`
+      },
+      {
+          badge: "STEP 4 OF 4 • CHECKPOINTS & VICTORY",
+          heading: "💾 Checkpoints, Saves & Chamber 45",
+          content: `<p><b>Quicksave (<span class="kbd">F5</span> / <span class="kbd">V</span>):</b> Instantly records your exact floor, position, tile changes, relic charges, and score.</p><p><b>Quickload (<span class="kbd">F9</span> / <span class="kbd">L</span>):</b> Resumes your latest saved checkpoint descent anytime from the title splash or in-game.</p><p><b>Descent Objective:</b> Traverse 45 chambers of escalating complexity, slay or bypass the Minotaur Overlord, and escape the labyrinth!</p>`
+      }
+  ];
+  let currentTutStep = 0;
+
+  function renderTutorialStep() {
+      const step = tutorialSteps[currentTutStep];
+      if (!step) return;
+      const badgeEl = document.getElementById('tutStepBadge');
+      const headEl = document.getElementById('tutStepHeading');
+      const contentEl = document.getElementById('tutStepContent');
+      const dotsEl = document.getElementById('tutDots');
+      const btnPrev = document.getElementById('btnTutPrev');
+      const btnNext = document.getElementById('btnTutNext');
+
+      if (badgeEl) badgeEl.textContent = step.badge;
+      if (headEl) headEl.innerHTML = step.heading;
+      if (contentEl) contentEl.innerHTML = step.content;
+
+      if (dotsEl) {
+          const dots = dotsEl.querySelectorAll('.tutDot');
+          dots.forEach((dot, idx) => {
+              if (idx === currentTutStep) dot.classList.add('active');
+              else dot.classList.remove('active');
+          });
+      }
+
+      if (btnPrev) {
+          btnPrev.style.display = currentTutStep > 0 ? 'inline-block' : 'none';
+      }
+      if (btnNext) {
+          btnNext.innerHTML = currentTutStep === tutorialSteps.length - 1 ? 'Begin Descent ⚔️' : 'Next Step →';
+      }
+  }
+
+  function openTutorialOverlay(stepIndex = 0) {
+      currentTutStep = Math.max(0, Math.min(stepIndex, tutorialSteps.length - 1));
+      renderTutorialStep();
+      const modal = document.getElementById('tutorialModal');
+      if (modal) modal.classList.add('open');
+      playTone(550, 'sine', 0.15);
+  }
+
+  let firstRunBannerTimeout = null;
+  function showFirstRunBanner() {
+      const banner = document.getElementById('firstRunBanner');
+      if (!banner) return;
+      banner.classList.add('show');
+      if (firstRunBannerTimeout) clearTimeout(firstRunBannerTimeout);
+      firstRunBannerTimeout = setTimeout(() => {
+          dismissFirstRunBanner();
+      }, 7000);
+  }
+
+  function dismissFirstRunBanner() {
+      const banner = document.getElementById('firstRunBanner');
+      if (banner) banner.classList.remove('show');
+      if (firstRunBannerTimeout) {
+          clearTimeout(firstRunBannerTimeout);
+          firstRunBannerTimeout = null;
+      }
+  }
+
+  function closeTutorial(silent = false) {
+      const modal = document.getElementById('tutorialModal');
+      if (modal) modal.classList.remove('open');
+      safeSetStorage('kmaze_tutorialSeen', '1');
+      const tutBanner = document.getElementById('splashTutorialBanner');
+      if (tutBanner) tutBanner.style.display = 'none';
+      if (!silent) {
+          playTone(400, 'triangle', 0.1);
+          if (gameState === 1) showFirstRunBanner();
+      }
+  }
+
+  function setTutorialStep(idx) {
+      currentTutStep = Math.max(0, Math.min(idx, tutorialSteps.length - 1));
+      renderTutorialStep();
+      playTone(480, 'sine', 0.08);
+  }
+
+  function nextTutorialStep() {
+      if (currentTutStep < tutorialSteps.length - 1) {
+          currentTutStep++;
+          renderTutorialStep();
+          playTone(520, 'sine', 0.08);
+      } else {
+          closeTutorial();
+          if (gameState === 0) startNewGame();
+      }
+  }
+
+  function prevTutorialStep() {
+      if (currentTutStep > 0) {
+          currentTutStep--;
+          renderTutorialStep();
+          playTone(420, 'sine', 0.08);
+      }
+  }
+
   function startNewGame() {
       gameState = 1;
       startTime = Date.now();
@@ -795,11 +1092,12 @@
       nextLevel();
       updateSplashOverlay();
 
-      // Pass 5 tutorial flag integrity: fires on new game, NOT on saved game load
+      // Pass 5 tutorial flag integrity: fires on fresh session, NOT on saved game load
       let tutorialSeen = safeGetStorage('kmaze_tutorialSeen') === '1';
       if (!tutorialSeen) {
           safeSetStorage('kmaze_tutorialSeen', '1');
-          showToast("🛡️ Welcome to KMaze! WASD/Arrows to Move, [F1] for Codex & Guide", "info", 5000);
+          showFirstRunBanner();
+          showToast("🛡️ Welcome to KMaze! WASD to Move, F1 for Guide, 🎓 for Tutorial", "info", 5000);
       } else {
           showToast("Descent Begun! Press F1 or H for Guide", "info");
       }
@@ -860,7 +1158,12 @@
   }
 
   function exportStats() {
-      let data = { bestTime, totalGames, totalEscapes, totalScore, keyBinds };
+      let sd = safeGetStorage('kmaze_saveState', null) || safeGetStorage('kmaze_save', null);
+      let checkpoint = null;
+      if (sd) {
+          try { checkpoint = JSON.parse(sd); } catch(e) {}
+      }
+      let data = { bestTime, totalGames, totalEscapes, totalScore, keyBinds, checkpoint };
       let blob = new Blob([JSON.stringify(data, null, 2)], {type: "application/json"});
       let a = document.createElement('a');
       let url = URL.createObjectURL(blob);
@@ -870,7 +1173,7 @@
       a.click();
       document.body.removeChild(a);
       setTimeout(() => URL.revokeObjectURL(url), 1000);
-      showToast("Statistics exported to kmaze_stats.json", "success");
+      showToast("Statistics & Checkpoint exported to kmaze_stats.json", "success");
   }
   function importStats(e) {
       let file = e.target.files[0];
@@ -887,11 +1190,15 @@
                   Object.assign(keyBinds, data.keyBinds);
                   safeSetStorage('kmaze_keybinds', JSON.stringify(keyBinds));
               }
+              if (data.checkpoint && typeof data.checkpoint === 'object' && Array.isArray(data.checkpoint.map)) {
+                  safeSetStorage('kmaze_saveState', JSON.stringify(data.checkpoint));
+                  safeSetStorage('kmaze_save', JSON.stringify(data.checkpoint));
+              }
               safeSetStorage('kmaze_best', bestTime);
               safeSetStorage('kmaze_games', totalGames);
               safeSetStorage('kmaze_escapes', totalEscapes);
               safeSetStorage('kmaze_score', totalScore);
-              msgText = "Stats Imported!"; msgTimer = 60;
+              msgText = "Stats & Checkpoint Imported!"; msgTimer = 60;
               updateSplashOverlay();
               showToast("Statistics successfully imported!", "success");
           } catch (err) {
@@ -1741,75 +2048,99 @@
       } catch (e) {}
   }
   
-  function saveCheckpointGame() {
-      if (gameState !== 1) {
-          showToast("Cannot save: dungeon descent not active!", "warning");
-          return;
-      }
-      let saveData = {
-          currentLevel, score, keysHeld, hasCompass, speedBoost, hasPickaxe,
-          pathfinderCharges, speedShoesCharges, stunSprayCharges, timeFreezeCharges,
-          pX, pY, dX, dY, planeX, planeY, map, isCrouching, bossHP,
-          torchTimer, pathfinderTimer, speedShoesTimer, stunSprayTimer, timeFreezeTimer,
-          elapsed: Date.now() - startTime
-      };
-      safeSetStorage('kmaze_save', JSON.stringify(saveData));
-      safeSetStorage('kmaze_saveState', JSON.stringify(saveData));
-      msgText = "Game Saved to Checkpoint!";
-      msgTimer = 60;
-      playTone(900, 'sine', 0.2);
-      showToast(`Checkpoint descent saved at Level ${currentLevel + 1}!`, "success");
-      updateSplashOverlay();
-  }
+    function saveCheckpointGame() {
+        if (gameState !== 1) {
+            showToast("Cannot save: dungeon descent not active!", "warning");
+            return;
+        }
+        let saveData = {
+            currentLevel, score, keysHeld, hasCompass, speedBoost, hasPickaxe,
+            pathfinderCharges, speedShoesCharges, stunSprayCharges, timeFreezeCharges,
+            pX, pY, dX, dY, planeX, planeY, map, isCrouching, bossHP,
+            torchTimer, pathfinderTimer, speedShoesTimer, stunSprayTimer, timeFreezeTimer,
+            elapsed: Date.now() - startTime
+        };
+        let ok1 = safeSetStorage('kmaze_save', JSON.stringify(saveData));
+        let ok2 = safeSetStorage('kmaze_saveState', JSON.stringify(saveData));
+        safeSetStorage('kmaze_tutorialSeen', '1');
+        if (ok1 || ok2) {
+            msgText = "Game Saved to Checkpoint!";
+            msgTimer = 60;
+            playTone(900, 'sine', 0.2);
+            showToast(`Checkpoint descent saved at Level ${currentLevel + 1}!`, "success");
+        } else {
+            showToast("Storage quota error: failed to write checkpoint!", "danger");
+        }
+        updateSplashOverlay();
+    }
 
-  function loadCheckpointGame() {
-      let sd = safeGetStorage('kmaze_saveState', null) || safeGetStorage('kmaze_save', null);
-      if (sd) {
-          try {
-              let saveData = JSON.parse(sd);
-              if (!saveData || !Array.isArray(saveData.map)) throw new Error("Invalid save data");
-              currentLevel = Number.isInteger(saveData.currentLevel) ? saveData.currentLevel : 0;
-              score = Number.isFinite(saveData.score) ? saveData.score : 0;
-              keysHeld = Number.isFinite(saveData.keysHeld) ? saveData.keysHeld : 0;
-              hasCompass = saveData.hasCompass ? 1 : 0;
-              speedBoost = saveData.speedBoost ? 1 : 0;
-              hasPickaxe = Number.isFinite(saveData.hasPickaxe) ? saveData.hasPickaxe : 1;
-              pathfinderCharges = Number.isFinite(saveData.pathfinderCharges) ? saveData.pathfinderCharges : 1;
-              speedShoesCharges = Number.isFinite(saveData.speedShoesCharges) ? saveData.speedShoesCharges : 1;
-              stunSprayCharges = Number.isFinite(saveData.stunSprayCharges) ? saveData.stunSprayCharges : 1;
-              timeFreezeCharges = Number.isFinite(saveData.timeFreezeCharges) ? saveData.timeFreezeCharges : 1;
-              pX = Number.isFinite(saveData.pX) ? saveData.pX : 1.5;
-              pY = Number.isFinite(saveData.pY) ? saveData.pY : 1.5;
-              dX = Number.isFinite(saveData.dX) ? saveData.dX : 1.0;
-              dY = Number.isFinite(saveData.dY) ? saveData.dY : 0.0;
-              planeX = Number.isFinite(saveData.planeX) ? saveData.planeX : 0.0;
-              planeY = Number.isFinite(saveData.planeY) ? saveData.planeY : 0.66;
-              map = saveData.map;
-              isCrouching = !!saveData.isCrouching;
-              bossHP = Number.isFinite(saveData.bossHP) ? saveData.bossHP : ((currentLevel >= 40) ? 4 : 3);
-              torchTimer = Number.isFinite(saveData.torchTimer) ? saveData.torchTimer : 0;
-              pathfinderTimer = Number.isFinite(saveData.pathfinderTimer) ? saveData.pathfinderTimer : 0;
-              speedShoesTimer = Number.isFinite(saveData.speedShoesTimer) ? saveData.speedShoesTimer : 0;
-              stunSprayTimer = Number.isFinite(saveData.stunSprayTimer) ? saveData.stunSprayTimer : 0;
-              timeFreezeTimer = Number.isFinite(saveData.timeFreezeTimer) ? saveData.timeFreezeTimer : 0;
-              startTime = Date.now() - (Number.isFinite(saveData.elapsed) ? saveData.elapsed : 0);
-              gameState = 1;
-              msgText = "Checkpoint / Save Loaded!";
-              msgTimer = 60;
-              playTone(900, 'sine', 0.2);
-              showToast(`Resumed descent at Level ${currentLevel + 1}!`, "success");
-              updateSplashOverlay();
-          } catch (err) {
-              msgText = "Corrupted checkpoint!";
-              msgTimer = 60;
-              showToast("Failed to load: Checkpoint data corrupted!", "danger");
-          }
-      } else {
-          msgText = "No saved checkpoint found!";
-          msgTimer = 60;
-          showToast("No saved checkpoint descent found!", "warning");
-      }
-  }
+    function loadCheckpointGame() {
+        let sd = safeGetStorage('kmaze_saveState', null) || safeGetStorage('kmaze_save', null);
+        if (sd) {
+            try {
+                let saveData = JSON.parse(sd);
+                if (!saveData || !Array.isArray(saveData.map)) throw new Error("Invalid save data");
+                currentLevel = Number.isInteger(saveData.currentLevel) ? saveData.currentLevel : 0;
+                score = Number.isFinite(saveData.score) ? saveData.score : 0;
+                keysHeld = Number.isFinite(saveData.keysHeld) ? saveData.keysHeld : 0;
+                hasCompass = saveData.hasCompass ? 1 : 0;
+                speedBoost = saveData.speedBoost ? 1 : 0;
+                hasPickaxe = Number.isFinite(saveData.hasPickaxe) ? saveData.hasPickaxe : 1;
+                pathfinderCharges = Number.isFinite(saveData.pathfinderCharges) ? saveData.pathfinderCharges : 1;
+                speedShoesCharges = Number.isFinite(saveData.speedShoesCharges) ? saveData.speedShoesCharges : 1;
+                stunSprayCharges = Number.isFinite(saveData.stunSprayCharges) ? saveData.stunSprayCharges : 1;
+                timeFreezeCharges = Number.isFinite(saveData.timeFreezeCharges) ? saveData.timeFreezeCharges : 1;
+                pX = Number.isFinite(saveData.pX) ? saveData.pX : 1.5;
+                pY = Number.isFinite(saveData.pY) ? saveData.pY : 1.5;
+                dX = Number.isFinite(saveData.dX) ? saveData.dX : 1.0;
+                dY = Number.isFinite(saveData.dY) ? saveData.dY : 0.0;
+                planeX = Number.isFinite(saveData.planeX) ? saveData.planeX : 0.0;
+                planeY = Number.isFinite(saveData.planeY) ? saveData.planeY : 0.66;
+                map = saveData.map;
+                isCrouching = !!saveData.isCrouching;
+                bossHP = Number.isFinite(saveData.bossHP) ? saveData.bossHP : ((currentLevel >= 40) ? 4 : 3);
+                torchTimer = Number.isFinite(saveData.torchTimer) ? saveData.torchTimer : 0;
+                pathfinderTimer = Number.isFinite(saveData.pathfinderTimer) ? saveData.pathfinderTimer : 0;
+                speedShoesTimer = Number.isFinite(saveData.speedShoesTimer) ? saveData.speedShoesTimer : 0;
+                stunSprayTimer = Number.isFinite(saveData.stunSprayTimer) ? saveData.stunSprayTimer : 0;
+                timeFreezeTimer = Number.isFinite(saveData.timeFreezeTimer) ? saveData.timeFreezeTimer : 0;
+                startTime = Date.now() - (Number.isFinite(saveData.elapsed) ? saveData.elapsed : 0);
+                gameState = 1;
+                replayLevels = [{
+                    level: currentLevel,
+                    map: JSON.parse(JSON.stringify(map)),
+                    frames: []
+                }];
+                if (pathfinderTimer > 0) computePathfinderPath();
+                else isPathTile = [];
+                damageFlinchTimer = 0;
+                screenShakeTimer = 0;
+                screenShakeIntensity = 0.0;
+                screenShakeMaxTimer = 0;
+                muzzleFlashTimer = 0;
+                recoilOffset = 0;
+                minotaurTimer = 0;
+                for (let k in keys) keys[k] = false;
+                toggleHelpModal(false);
+                closeTutorial(true);
+                dismissFirstRunBanner();
+                safeSetStorage('kmaze_tutorialSeen', '1');
+                msgText = "Checkpoint / Save Loaded!";
+                msgTimer = 60;
+                playTone(900, 'sine', 0.2);
+                showToast(`Resumed descent at Level ${currentLevel + 1}!`, "success");
+                updateSplashOverlay();
+            } catch (err) {
+                msgText = "Corrupted checkpoint!";
+                msgTimer = 60;
+                showToast("Failed to load: Checkpoint data corrupted!", "danger");
+            }
+        } else {
+            msgText = "No saved checkpoint found!";
+            msgTimer = 60;
+            showToast("No saved checkpoint descent found!", "warning");
+        }
+    }
 
   function toggleCrouch() {
       if (gameState !== 1) {
@@ -1979,6 +2310,33 @@
       // Unlock Web Audio context safely on user gesture
       if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
 
+      const tutModal = document.getElementById('tutorialModal');
+      const isTutOpen = tutModal && tutModal.classList.contains('open');
+
+      if (isTutOpen) {
+          if (e.key === 'Escape') {
+              e.preventDefault();
+              closeTutorial();
+              return;
+          }
+          if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              nextTutorialStep();
+              return;
+          }
+          if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') {
+              e.preventDefault();
+              nextTutorialStep();
+              return;
+          }
+          if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') {
+              e.preventDefault();
+              prevTutorialStep();
+              return;
+          }
+          return;
+      }
+
       const modal = document.getElementById('helpModal');
       const isModalOpen = modal && modal.classList.contains('open');
 
@@ -1987,14 +2345,20 @@
               toggleHelpModal(false);
               return;
           }
+          const banner = document.getElementById('firstRunBanner');
+          if (banner && banner.classList.contains('show')) {
+              dismissFirstRunBanner();
+              return;
+          }
           if (gameState === 4) {
               if (waitingForKey) { waitingForKey = null; }
               else { gameState = prevState; updateSplashOverlay(); updateKeybindsButtonState(); }
               return;
           }
           if (gameState === 3) { gameState = 2; return; }
-          if (gameState === 0) { startNewGame(); return; }
           if (gameState === 2) { gameState = 0; updateSplashOverlay(); return; }
+          if (gameState === 1) { toggleHelpModal(true); return; }
+          return;
       }
 
       if (isModalOpen) {
@@ -2013,7 +2377,7 @@
       }
       if (e.key === 'F9') {
           e.preventDefault();
-          if (gameState === 0 || gameState === 1) loadCheckpointGame();
+          loadCheckpointGame();
           return;
       }
 
@@ -2033,11 +2397,15 @@
           if (gameState === 0 || gameState === 2) {
               startNewGame();
           }
-      } else if (gameState === 0 && !hasMod && (e.key === 'l' || e.key === 'L')) {
+      } else if ((gameState === 0 || gameState === 2) && !hasMod && (e.key === 'l' || e.key === 'L')) {
           loadCheckpointGame();
       } else if (e.key === 'F1' || (!hasMod && (e.key === 'h' || e.key === 'H'))) {
           if (e.key === 'F1') e.preventDefault();
-          toggleHelpModal();
+          if (gameState === 0 && e.key === 'F1' && safeGetStorage('kmaze_tutorialSeen') !== '1') {
+              openTutorialOverlay(0);
+          } else {
+              toggleHelpModal();
+          }
       } else if (!hasMod && (e.key === 'k' || e.key === 'K')) {
           toggleKeybinds();
       }

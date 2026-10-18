@@ -1356,6 +1356,13 @@ void SaveCheckpoint() {
         extra[6] = torchTimer;
         WriteFile(hSave, extra, sizeof(extra), &written, NULL);
         CloseHandle(hSave);
+        HANDLE hTut = CreateFileA("kmaze_tutorial.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+        if (hTut != INVALID_HANDLE_VALUE) {
+            char m = '1';
+            DWORD wr = 0;
+            WriteFile(hTut, &m, 1, &wr, NULL);
+            CloseHandle(hTut);
+        }
     }
 }
 
@@ -1409,6 +1416,13 @@ void LoadCheckpoint() {
             torchTimer = 0;
         }
         CloseHandle(hLoad);
+        HANDLE hTut = CreateFileA("kmaze_tutorial.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+        if (hTut != INVALID_HANDLE_VALUE) {
+            char m = '1';
+            DWORD wr = 0;
+            WriteFile(hTut, &m, 1, &wr, NULL);
+            CloseHandle(hTut);
+        }
         if (gameState == 0 || gameState == 2) gameState = 1;
         strcpy(msgText, "Checkpoint / Save Loaded!");
         msgTimer = 60;
@@ -2622,16 +2636,22 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 break;
             }
             if (wParam == VK_F9) {
-                if (gameState == 0 || gameState == 1) LoadCheckpoint();
+                if (gameState == 0 || gameState == 1 || gameState == 2) LoadCheckpoint();
                 break;
             }
             if (gameState == 0) {
-                if (wParam == VK_ESCAPE || wParam == VK_RETURN || wParam == VK_SPACE || wParam == 'N' || wParam == 'n') {
+                if (wParam == VK_RETURN || wParam == VK_SPACE || wParam == 'N' || wParam == 'n') {
                     StartNewGame(hwnd);
                     break;
                 }
                 if (wParam == 'L' || wParam == 'l') {
                     LoadCheckpoint();
+                    break;
+                }
+            }
+            if (gameState == 1) {
+                if (wParam == VK_ESCAPE) {
+                    ShowHelpDialog(hwnd);
                     break;
                 }
             }

@@ -19,9 +19,9 @@
     "id": "kalchemy",
     "title": "KAlchemy",
     "folder": "Games",
-    "webBytes": 241464,
-    "exeBytes": 70144,
-    "budgetPercent": 24.2
+    "webBytes": 259058,
+    "exeBytes": 70656,
+    "budgetPercent": 25.9
   },
   {
     "id": "kanomaly",
@@ -91,9 +91,9 @@
     "id": "kcalc",
     "title": "KCalc",
     "folder": "System",
-    "webBytes": 232978,
+    "webBytes": 245249,
     "exeBytes": 28672,
-    "budgetPercent": 23.3
+    "budgetPercent": 24.5
   },
   {
     "id": "kcalendar",
@@ -427,9 +427,9 @@
     "id": "kmaze",
     "title": "KMaze",
     "folder": "Games",
-    "webBytes": 138420,
+    "webBytes": 153568,
     "exeBytes": 62464,
-    "budgetPercent": 13.9
+    "budgetPercent": 15.4
   },
   {
     "id": "kmech",
@@ -467,9 +467,9 @@
     "id": "knet",
     "title": "KNet",
     "folder": "Network",
-    "webBytes": 190387,
+    "webBytes": 194345,
     "exeBytes": 45056,
-    "budgetPercent": 19.1
+    "budgetPercent": 19.5
   },
   {
     "id": "knetmap",
