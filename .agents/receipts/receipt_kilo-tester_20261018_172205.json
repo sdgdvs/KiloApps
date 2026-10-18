@@ -1,0 +1,10 @@
+{
+  "timestamp": "2026-10-18T17:22:05.549321+00:00",
+  "agent": "kilo-tester",
+  "model": "gemini-3.8-flash-high",
+  "target": "KColony",
+  "duration_seconds": 602.23,
+  "returncode": 0,
+  "success": true,
+  "provenance": null
+}

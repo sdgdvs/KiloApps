@@ -105,8 +105,8 @@
   #toastNotification { display: none; position: fixed; bottom: 20px; right: 20px; left: auto; transform: none; background: #1e293b; color: #fff; padding: 10px 18px; border-radius: 8px; box-shadow: 0 4px 18px rgba(0,0,0,0.35); font-size: 12px; font-weight: 500; z-index: 2000; cursor: pointer; border-left: 4px solid #3b82f6; max-width: 360px; pointer-events: auto; }
   #toastNotification:hover { background: #273142; }
 
-  #helpOverlay, #exportModal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center; }
-  #helpOverlay.visible, #exportModal.visible { display: flex; animation: fadeIn 0.15s ease-out; }
+  #helpOverlay, #exportModal, #importModal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center; }
+  #helpOverlay.visible, #exportModal.visible, #importModal.visible { display: flex; animation: fadeIn 0.15s ease-out; }
   .help-modal { background: white; padding: 22px 28px; border-radius: 8px; box-shadow: 0 6px 30px rgba(0,0,0,0.3); max-width: 580px; font-family: inherit; position: relative; max-height: 90vh; overflow-y: auto; }
   .help-modal h2 { margin-top: 0; border-bottom: none; color: #0066cc; display: flex; justify-content: space-between; align-items: center; font-size: 18px; }
   .help-modal ul { margin-bottom: 14px; line-height: 1.6; font-size: 13px; color: #334155; }
@@ -286,7 +286,8 @@
             <option value="9600,9631">Block Elements (U+2580 - U+259F)</option>
             <option value="9632,9727">Geometric Shapes (U+25A0 - U+25FF)</option>
           </select>
-          <span style="font-size:12px; color:#64748b; margin-left:auto;">(Click any glyph to dissect in Anatomy tab)</span>
+          <span style="font-size:12px; color:#64748b; margin-left:auto;">(Click glyph to dissect; Shift+Click to edit in Bitmap)</span>
+          <button id="btnGlyphToBitmap" class="action-btn" style="background:#0284c7; margin-left:8px; font-size:11px; padding:3px 8px;" title="Open currently inspected glyph in Bitmap & ROM Studio [9]">Edit in Bitmap [9]</button>
         </div>
         <div class="glyph-grid" id="glyphGrid"></div>
       </div>
@@ -333,6 +334,7 @@
             <button class="chip-btn" data-char="★">★</button>
           </div>
           <button id="copyAnatomyReportBtn" class="action-btn" style="margin-left:auto;">Copy JSON Report [C]</button>
+          <button id="btnAnatomyToBitmap" class="action-btn" style="background:#0284c7; margin-left:6px;" title="Open this glyph in Bitmap & ROM Studio [9]">Edit in Bitmap [9]</button>
         </div>
 
         <div class="anatomy-canvas-container">
@@ -452,6 +454,36 @@
         <h2>Bitmap Font ROM &amp; Pixel Matrix Studio</h2>
         <p>Design, rasterize, edit, and export 1-bit monochrome bitmap font glyphs (8x8, 8x12, 16x16) for embedded microcontrollers, DOS CP437 font ROMs, Win32 monochrome icon masks, and retro game engines.</p>
         
+        <!-- Multi-Glyph Font Bank Sheet & Character Navigator -->
+        <div style="background:#f1f5f9; padding:12px 14px; border-radius:6px; border:1px solid #cbd5e1; margin-bottom:14px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:8px;">
+            <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+              <span style="font-weight:700; font-size:13px; color:#1e293b;">Active Glyph:</span>
+              <button class="chip-btn" id="btnBankPrev" title="Previous Glyph (Left Arrow)">◀</button>
+              <input type="text" id="bankCharInput" value="A" maxlength="2" style="width:36px; text-align:center; font-weight:bold; font-size:14px; padding:3px; border:1px solid #94a3b8; border-radius:4px;">
+              <span id="bankCharHex" style="font-family:monospace; font-size:12px; color:#0284c7; font-weight:600;">0x41 (65)</span>
+              <button class="chip-btn" id="btnBankNext" title="Next Glyph (Right Arrow)">▶</button>
+              
+              <button class="action-btn" id="btnStoreToBank" style="font-size:11px; padding:4px 8px; background:#0284c7;" title="Save current matrix to active bank slot">💾 Store to Bank</button>
+              <button class="chip-btn" id="btnRevertBank" title="Reload active glyph from Font Bank">↩ Revert</button>
+              <button class="chip-btn" id="btnSendToAnatomy" title="Open active glyph in Anatomy Tab [4]">Open in Anatomy [4]</button>
+            </div>
+            <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+              <button class="action-btn" id="btnBatchRasterize" style="font-size:11px; padding:4px 8px; background:#2563eb;" title="Rasterize all 95 printable ASCII glyphs (32..126) from current font">⚡ Batch Rasterize ASCII (32-126)</button>
+              <button class="action-btn" id="btnOpenImportModal" style="font-size:11px; padding:4px 8px; background:#475569;" title="Import BDF font file, C array, or hex stream">📥 Import BDF / Hex / C</button>
+            </div>
+          </div>
+          
+          <!-- Multi-Glyph Font Bank Canvas Sheet -->
+          <div style="border:1px solid #94a3b8; border-radius:4px; overflow:hidden; background:#0f172a; position:relative;">
+            <canvas id="bitmapBankCanvas" width="800" height="120" style="display:block; width:100%; height:120px; cursor:pointer;" title="Click any glyph to select into matrix editor"></canvas>
+          </div>
+          <div style="display:flex; justify-content:space-between; font-size:11px; color:#64748b; margin-top:4px;">
+            <span>Font Bank Sheet (ASCII 32 ' ' to 126 '~' - Click to select)</span>
+            <span id="bankHoverInfo">Hover: -</span>
+          </div>
+        </div>
+
         <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-bottom:14px; background:#f8fafc; padding:10px 14px; border-radius:6px; border:1px solid #e2e8f0;">
           <label for="bitmapGridSize" style="font-size:13px; font-weight:600;">Matrix Dimensions:</label>
           <select id="bitmapGridSize" style="padding:5px 8px; border:1px solid #cbd5e1; border-radius:4px; font-size:13px;">
@@ -493,7 +525,7 @@
         </div>
 
         <div style="display:flex; gap:20px; flex-wrap:wrap;">
-          <!-- Interactive Canvas Grid -->
+          <!-- Interactive Canvas Grid & TTF Diff Inspector -->
           <div style="flex:1; min-width:280px; max-width:400px;">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
               <span style="font-size:12px; font-weight:600; color:#334155;">Interactive Pixel Matrix Editor</span>
@@ -505,6 +537,27 @@
             <div style="font-size:11px; color:#64748b; margin-top:6px; display:flex; justify-content:space-between;">
               <span>Left Click / Drag: Draw</span>
               <span>Right Click / Shift+Drag: Erase</span>
+            </div>
+
+            <!-- Vector TTF vs 1-Bit Matrix Optical Diff & Error Heatmap -->
+            <div style="margin-top:14px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:6px; padding:12px;">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                <span style="font-size:12px; font-weight:600; color:#334155;">TTF Vector vs 1-Bit Matrix Diff</span>
+                <span style="font-size:10px; color:#64748b;">Quantization Heatmap</span>
+              </div>
+              <div style="display:flex; gap:12px; align-items:center;">
+                <canvas id="bitmapDiffCanvas" width="128" height="128" style="background:#090d16; border:1px solid #334155; border-radius:4px; image-rendering:pixelated; width:128px; height:128px; flex-shrink:0;"></canvas>
+                <div style="font-size:11px; color:#475569; line-height:1.5; flex:1;">
+                  <div id="diffMetricsFill">Fill Factor: <strong>-</strong></div>
+                  <div id="diffMetricsBounds">Bounds: <strong>-</strong></div>
+                  <div id="diffMetricsLum">Threshold: <strong>-</strong></div>
+                  <div style="display:flex; gap:8px; margin-top:6px; font-size:10px; flex-wrap:wrap;">
+                    <span style="color:#0284c7;">■ Vector TTF</span>
+                    <span style="color:#22c55e;">■ 1-Bit On</span>
+                    <span style="color:#ef4444;">■ Clipped Lum</span>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -544,24 +597,29 @@
 
             <!-- Live Code Exporter -->
             <div style="margin-top:14px;">
-              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
-                <div style="display:flex; gap:8px; align-items:center;">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; flex-wrap:wrap; gap:6px;">
+                <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
                   <label for="bitmapExportFormat" style="font-size:12px; font-weight:600; color:#334155;">Export Format:</label>
                   <select id="bitmapExportFormat" style="font-size:12px; padding:3px 6px; border:1px solid #cbd5e1; border-radius:4px;">
-                    <option value="c_array">C/C++ uint8_t Array</option>
+                    <option value="c_array">C/C++ uint8_t Glyph Array</option>
                     <option value="x86_asm">x86 Assembly (db ...h)</option>
                     <option value="hex_stream">Raw Hex Stream</option>
-                    <option value="bdf">Adobe BDF Chunk</option>
+                    <option value="bdf_single">Adobe BDF Single Glyph Chunk</option>
+                    <option value="bdf_full">Full Adobe BDF 2.1 Font File (Bank)</option>
+                    <option value="win_fnt_header">Windows .FNT / .FON Binary Header Spec</option>
+                    <option value="rom_c_table">Complete C ROM Table font_rom[95][H]</option>
                     <option value="arduino">Arduino PROGMEM Bitmap</option>
                     <option value="binary_bits">Binary (0b00111100)</option>
                   </select>
                 </div>
-                <div style="display:flex; gap:6px;">
+                <div style="display:flex; gap:6px; flex-wrap:wrap;">
                   <button class="action-btn" id="btnCopyBitmapCode" style="font-size:11px; padding:4px 8px;">Copy Code</button>
                   <button class="action-btn" id="btnDownloadBitmapHeader" style="font-size:11px; padding:4px 8px; background:#10b981;">Download .h</button>
+                  <button class="action-btn" id="btnDownloadBdf" style="font-size:11px; padding:4px 8px; background:#0284c7;">Download .bdf</button>
+                  <button class="action-btn" id="btnDownloadFnt" style="font-size:11px; padding:4px 8px; background:#6366f1;">Download .fnt</button>
                 </div>
               </div>
-              <pre id="bitmapExportCode" class="code-block" style="border-radius:4px; max-height:160px;"></pre>
+              <pre id="bitmapExportCode" class="code-block" style="border-radius:4px; max-height:220px;"></pre>
             </div>
           </div>
         </div>
@@ -796,6 +854,33 @@ Aa Bb Cc Dd Ee Ff Gg Hh Ii Jj Kk Ll Mm Nn Oo Pp Qq Rr Ss Tt Uu Vv Ww Xx Yy Zz</d
       <div style="margin-top: 14px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
         <button class="action-btn" id="applyProfileTextBtn" style="background: #10b981;">Apply Profile from Text</button>
         <button class="action-btn" id="exportModalCloseBtn" style="background: #64748b;">Close [Esc]</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="importModal" role="dialog" aria-modal="true" aria-labelledby="importTitle">
+    <div class="help-modal">
+      <h2 id="importTitle">
+        <span>Import Bitmap Font / Glyph</span>
+        <button class="help-close-btn" id="importCloseBtn" title="Close Dialog">&times;</button>
+      </h2>
+      <p>Import font glyphs from <strong>Adobe BDF font files</strong>, <strong>C/C++ uint8_t arrays</strong>, or <strong>raw hex byte streams</strong> (e.g. <code>0x3C, 0x42...</code>).</p>
+      
+      <div style="margin-bottom:12px; display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+        <label for="importTargetMode" style="font-size:12px; font-weight:600; color:#334155;">Import Target:</label>
+        <select id="importTargetMode" style="font-size:12px; padding:4px 8px; border:1px solid #cbd5e1; border-radius:4px;">
+          <option value="current">Current Active Glyph Only</option>
+          <option value="bank" selected>Entire Font Bank (Auto-detect BDF ENCODING or Sequential Hex)</option>
+        </select>
+        <span style="font-size:11px; color:#64748b;">(Auto-detects format)</span>
+      </div>
+
+      <label for="importCodeTextarea" style="font-size:11px; font-weight:600; color:#475569; display:block; margin-bottom:4px;">SOURCE SPECIFICATION CODE / HEX:</label>
+      <textarea id="importCodeTextarea" placeholder="Paste Adobe BDF file (STARTCHAR ... BITMAP ... ENDCHAR), C array, or hex bytes here..." style="width:100%; height:180px; font-family:Consolas, monospace; font-size:12px; padding:10px; border:1px solid #cbd5e1; border-radius:4px; box-sizing:border-box; resize:vertical; background:#f8fafc;"></textarea>
+
+      <div style="margin-top:14px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+        <button class="action-btn" id="btnExecuteImport" style="background:#10b981;">Parse &amp; Load Glyph(s)</button>
+        <button class="action-btn" id="importModalCloseBtn" style="background:#64748b;">Close [Esc]</button>
       </div>
     </div>
   </div>
@@ -2211,7 +2296,7 @@ body {
       ctx.fillRect(0, 0, bmpW, bmpH);
 
       const fontSize = Math.floor(bmpH * 0.85);
-      const fontFam = fontList.value.replace(/["\]/g, '');
+      const fontFam = fontList.value.replace(/["\\]/g, '');
       const weight = boldCheck.checked ? 'bold' : 'normal';
       const style = italicCheck.checked ? 'italic' : 'normal';
       ctx.font = `${style} ${weight} ${fontSize}px "${fontFam}", sans-serif`;
@@ -2348,21 +2433,13 @@ body {
 
       let output = '';
       if (fmt === 'c_array') {
-        output = `/* KFont 1-Bit Bitmap Glyph: ${bmpW}x${bmpH} */
-` +
-                 `const uint8_t glyph_${bmpW}x${bmpH}[${bmpH * bytesPerRow}] = {
-` +
-                 rowHex.join(',
-') + '
-};
-';
+        output = `/* KFont 1-Bit Bitmap Glyph: ${bmpW}x${bmpH} */\n` +
+                 `const uint8_t glyph_${bmpW}x${bmpH}[${bmpH * bytesPerRow}] = {\n` +
+                 rowHex.join(',\n') + '\n};\n';
       } else if (fmt === 'x86_asm') {
-        output = `; KFont 1-Bit Bitmap Glyph: ${bmpW}x${bmpH}
-` +
-                 `glyph_${bmpW}x${bmpH}:
-` +
-                 `    db ` + rowAsm.join(', ') + '
-';
+        output = `; KFont 1-Bit Bitmap Glyph: ${bmpW}x${bmpH}\n` +
+                 `glyph_${bmpW}x${bmpH}:\n` +
+                 `    db ` + rowAsm.join(', ') + '\n';
       } else if (fmt === 'hex_stream') {
         output = rawHexList.join(', ');
       } else if (fmt === 'bdf') {
@@ -2374,35 +2451,20 @@ body {
           }
           bdfRows.push(byteVal.toString(16).toUpperCase().padStart(2, '0'));
         }
-        output = `STARTCHAR glyph_${bmpW}x${bmpH}
-` +
-                 `ENCODING 65
-` +
-                 `SWIDTH 1000 0
-` +
-                 `DWIDTH ${bmpW} 0
-` +
-                 `BBX ${bmpW} ${bmpH} 0 0
-` +
-                 `BITMAP
-` +
-                 bdfRows.join('
-') + '
-' +
-                 `ENDCHAR
-`;
+        output = `STARTCHAR glyph_${bmpW}x${bmpH}\n` +
+                 `ENCODING 65\n` +
+                 `SWIDTH 1000 0\n` +
+                 `DWIDTH ${bmpW} 0\n` +
+                 `BBX ${bmpW} ${bmpH} 0 0\n` +
+                 `BITMAP\n` +
+                 bdfRows.join('\n') + '\n' +
+                 `ENDCHAR\n`;
       } else if (fmt === 'arduino') {
-        output = `// Adafruit GFX compatible bitmap (${bmpW}x${bmpH})
-` +
-                 `const unsigned char PROGMEM glyph_${bmpW}x${bmpH}[] = {
-` +
-                 rowHex.join(',
-') + '
-};
-';
+        output = `// Adafruit GFX compatible bitmap (${bmpW}x${bmpH})\n` +
+                 `const unsigned char PROGMEM glyph_${bmpW}x${bmpH}[] = {\n` +
+                 rowHex.join(',\n') + '\n};\n';
       } else if (fmt === 'binary_bits') {
-        output = binaryBits.join(',
-');
+        output = binaryBits.join(',\n');
       }
 
       codeEl.textContent = output;
@@ -2446,7 +2508,7 @@ body {
 
     function updateOtfPreview() {
       const settings = getActiveOtfSettings();
-      const safeFont = fontList.value.replace(/["\]/g, '');
+      const safeFont = fontList.value.replace(/["\\]/g, '');
       const weight = boldCheck.checked ? 'bold' : 'normal';
       const style = italicCheck.checked ? 'italic' : 'normal';
 
@@ -2489,7 +2551,7 @@ body {
       const wdth = document.getElementById('varWidth')?.value || 100;
       const slnt = document.getElementById('varSlant')?.value || 0;
       const opsz = document.getElementById('varOpsz')?.value || 16;
-      const safeFont = fontList.value.replace(/["\]/g, '');
+      const safeFont = fontList.value.replace(/["\\]/g, '');
 
       const box = document.getElementById('varFontPreviewBox');
       if (box) {
@@ -2660,8 +2722,8 @@ body {
       const fontANameEl = document.getElementById('compFontAName');
       if (fontANameEl) fontANameEl.textContent = fontA;
 
-      const safeA = fontA.replace(/["\]/g, '');
-      const safeB = fontB.replace(/["\]/g, '');
+      const safeA = fontA.replace(/["\\]/g, '');
+      const safeB = fontB.replace(/["\\]/g, '');
       const weight = boldCheck.checked ? 'bold' : 'normal';
       const style = italicCheck.checked ? 'italic' : 'normal';
 
