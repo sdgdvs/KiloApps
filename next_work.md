@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-soundscape
-next_agent: kilo-soundscape
+current_agent: kilo-tester
+next_agent: kilo-tester
 agent_rotation:
 - kilo-graphics
 - kilo-soundscape
@@ -15,8 +15,8 @@ timeout_minutes: 10
 status: ready
 current_targets:
   kilo_creator: kweb://darknet
-  kilo_graphics: KDragon
-  kilo_soundscape: KDragon
+  kilo_graphics: KAlchemy
+  kilo_soundscape: KVoid
   kilo_tester: KColony
   kilo_usability: KCipher
   kilo_qa: KSnake
@@ -35,9 +35,9 @@ virtual_web_rotation:
 - kweb://echo-subsystem.net
 - kweb://deep-core
 last_run:
-  agent: kilo-graphics
+  agent: kilo-soundscape
   app: KDragon
-  timestamp: 2026-10-18T15:12:02+0000
+  timestamp: 2026-10-18T16:15:00+0000
 last_planner_run: '2026-10-17T20:53:00Z'
 ---
 
@@ -72,27 +72,27 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Upcoming Queue**: `kweb://portal`, `kweb://webring`, `kweb://warez`, `kweb://geocities`.
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
-- **Target**: `KDragon`
-- **Primary Files**: `KiloOS/public/apps/kdragon.html`, `KDragon/main.c` (if present)
-- **Objective**: Dragon pet & battle visual overhaul: generate pet dragon stages (egg, hatchling, juvenile, wyrm) and fantasy arena background with Imagen 3 pipeline; ensure 0 specular glints or traveling border dots.
+- **Target**: `KAlchemy`
+- **Primary Files**: `KiloOS/public/apps/kalchemy.html`, `KAlchemy/main.c` (if present)
+- **Objective**: Alchemical lab & potion crafting visual overhaul: cauldron animations, reagent sprites, and parchment grimoire UI; ensure 0 specular glints or traveling border dots.
 - **Action Steps**:
-  1. Inspect `KiloOS/public/apps/kdragon.html` canvas rendering routines for programmer art.
-  2. Generate pet dragon / arena battle sprites via 2-stage asset pipeline (`generate_image` with solid `#FF00FF` -> `scripts/asset_pipeline.py`).
+  1. Inspect `KiloOS/public/apps/kalchemy.html` canvas rendering routines for programmer art.
+  2. Generate reagent / cauldron sprites via 2-stage asset pipeline (`generate_image` with solid `#FF00FF` -> `scripts/asset_pipeline.py`).
   3. Search for and eliminate any traveling border dots or rotating specular glints.
   4. Run `python scripts/check_icons.py` to audit icon uniqueness.
 - **Verification**: `cd KiloOS && npm run build`. Verify files < 999 KB.
 - **Handoff**:
-  - In frontmatter: advance `current_targets.kilo_graphics` to `KAlchemy`.
+  - In frontmatter: advance `current_targets.kilo_graphics` to `KFortress`.
   - Set `current_agent: kilo-soundscape`.
   - Append terse execution log (≤6 lines), commit, and push.
-- **Upcoming Queue**: `KAlchemy`, `KFortress`, `KMech`, `KColosseum`.
+- **Upcoming Queue**: `KFortress`, `KMech`, `KColosseum`.
 
 ### 3. Procedural Audio & Soundscape Queue (`kilo-soundscape`)
-- **Target**: `KDragon`
-- **Primary Files**: `KiloOS/public/apps/kdragon.html`, `KDragon/main.c` (if present)
-- **Objective**: Authentic Genesis YM2612 2-Op FM / SPC700 stereo delay chiptune suite: fantasy dragon arena & wyrm battle soundscape, breath roar stings, and draconian combat earcons.
+- **Target**: `KVoid`
+- **Primary Files**: `KiloOS/public/apps/kvoid.html`, `KVoid/main.c` (if present)
+- **Objective**: Authentic Genesis YM2612 2-Op FM / SPC700 stereo delay chiptune suite: cosmic void ambient drone, stellar jump resonance, and void combat earcons.
 - **Action Steps**:
-  1. Inspect `KiloOS/public/apps/kdragon.html` audio synthesis functions.
+  1. Inspect `KiloOS/public/apps/kvoid.html` audio synthesis functions.
   2. Implement hardware composer chiptune standard:
      - 3-Voice counterpoint: Lead melody, counter-melody/arpeggio, and punchy FM bassline.
      - Shell voicings: Root + 3rd + 7th (omit 5ths).
@@ -101,10 +101,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   3. Pure Web Audio synthesis with zero external audio assets.
 - **Verification**: `cd KiloOS && npm run build` (0 Vite errors). Confirm file size < 999 KB.
 - **Handoff**:
-  - In frontmatter: advance `current_targets.kilo_soundscape` to `KVoid`.
+  - In frontmatter: advance `current_targets.kilo_soundscape` to `KColony`.
   - Set `current_agent: kilo-tester`.
   - Append terse execution log (≤6 lines), commit, and push.
-- **Upcoming Queue**: `KVoid`, `KColony`, `KFortress`.
+- **Upcoming Queue**: `KColony`, `KFortress`.
 
 ### 4. App Tester Queue (`kilo-tester`)
 - **Target**: `KColony`
@@ -192,10 +192,17 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | **KPaint** | `KiloOS/public/apps/kpaint.html` | Pass 6+ (2026-10-17) | Media / Graphics | Feature-complete 1999 digital art studio; 15 export formats, sprite reel animation, multi-layer engine, dual Win32 client parity, zero glints. |
 | **KGo** | `KiloOS/public/apps/kgo.html` | Pass 5 (2026-10-17) | Strategy / Board | Feature-complete Baduk/Go with 20-stage campaign, tsumego puzzle solver, AI personalities, SGF export/import, dual Win32 native client parity, full F5/F9 state persistence. |
 | **KMaze** | `KiloOS/public/apps/kmaze.html` | Pass 5 (2026-10-18) | Action / 3D Raycaster | 45-chamber dungeon descent raycaster, Minotaur Overlord boss, dual Win32 native client, full F5/F9 state persistence, first-run tutorial integrity. |
+| **KDragon** | `KiloOS/public/apps/kdragon.html` | Pass 6+ (2026-10-18) | RPG / Virtual Pet | Complete dragon pet & arena combat simulation, dual Win32 native client parity, YM2612 2-Op FM / SPC700 3-track audio suite, full F5/F9 state persistence. |
 
 ---
 
 ## Recent Execution Logs (Max 5 Entries)
+
+- **2026-10-18T16:15:00+0000 — kilo-soundscape: KDragon (Audio Audit & Mature Quarantine)**
+  - Procedural Audio: Verified YM2612 2-Op FM / SPC700 chiptune suite (3 multi-voice tracks, 18 FM presets, swing-tick groove, delayed vibrato, stereo delay).
+  - Verification: Clean Win32 C build (`KDragon.exe`), startup test PASS (196.1 KB < 999 KB, 0 JS errors), Vite build clean (475ms), security lint PASS.
+  - Quarantine: Promoted KDragon to Mature Applications quarantine table; removed from active queues.
+  - Queue: Advanced `kilo_soundscape` to `KVoid`, `kilo_graphics` to `KAlchemy`; rotation handoff to `kilo-tester`.
 
 - **2026-10-18T15:12:02+0000 — kilo-graphics: KDragon (Zero-Token Auto-Skip — Inappropriate Target)**
   - Status: ⏭️ Skip — Imagen 3 asset replacement not appropriate for KDragon (pure vector, board game, or mature art).
@@ -224,11 +231,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Modal & Key Ergonomics: Fixed Escape key handling to prevent accidental new game triggers on title splash; wired Escape to toggle in-game Help/Pause modal in Web and Win32 C.
   - Parity & Verification: Clean Win32 C compilation (62.5 KB), startup test PASS (150.0 KB < 999 KB, 0 JS err, hit-test unblocked), Vite build clean (497ms).
   - Quarantine & Queue: Promoted KMaze to Mature Applications quarantine; advanced kilo_qa to KSnake; rotation handoff to kilo-expander.
-
-- **2026-10-18T08:37:00+0000 — kilo-usability: KCalc (UX, Themes & Live Radix Polish)**
-  - Dual-Target Readout Themes: Implemented 4 high-contrast display themes (OLED Slate, Retro Olive LCD, Amber Plasma, VFD Cyan) with 'L' hotkey cycling across Web and Win32 C.
-  - Multi-Base Live Strip: Added live HEX / DEC / OCT / BIN radix readout with click-to-copy in display card.
-  - Keyboard & Layout Ergonomics: Added accessible :focus-visible glow rings; widened native client bounds to 364px to eliminate control clipping; updated Help dialog (F1/H) with 'L' theme shortcut.
-  - State Persistence: Persisted display theme in localStorage, autoSaveSession, and F5/F9 quicksave/quickload snapshots.
-  - Verification: Clean Vite build (491ms), native C clean build (28.6 KB), startup test PASS (239.5 KB < 999 KB, 0 JS errors), security lint clean.
-  - Queue: Advanced kilo_usability to KCipher; rotation handoff to kilo-qa.
