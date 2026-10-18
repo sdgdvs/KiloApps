@@ -398,7 +398,7 @@
                 <button id="btn-load" title="Quickload Dragon [F9]"><span class="btn-badge">F9</span> Load (📂)</button>
                 <button id="btn-export" title="Export Save File (.json)"><span class="btn-badge">Exp</span> Export (📤)</button>
                 <button id="btn-import" title="Import Save File (.json)"><span class="btn-badge">Imp</span> Import (📥)</button>
-                <button id="btn-audio" title="Toggle Sound [U]"><span class="btn-badge">U</span> 🔊 Audio</button>
+                <button id="btn-audio" title="Toggle Sound [M/U]"><span class="btn-badge">M</span> 🔊 Audio</button>
                 <button id="btn-help" title="Dragon Master's Guide [F1/H]"><span class="btn-badge">F1</span> Help (❓)</button>
             </div>
             <div class="controls" id="shop-controls" style="display: none; flex-wrap: wrap; justify-content: center; gap: 14px;">
@@ -599,7 +599,7 @@
                     <tr><td>Quickload</td><td><span class="kbd-chip">F9</span></td><td>Restore saved dragon sanctuary state</td></tr>
                     <tr><td>Export Save</td><td><span class="kbd-chip">Exp</span></td><td>Download complete save state (.json)</td></tr>
                     <tr><td>Import Save</td><td><span class="kbd-chip">Imp</span></td><td>Upload &amp; restore JSON save file</td></tr>
-                    <tr><td>Toggle Sound</td><td><span class="kbd-chip">U</span></td><td>Toggle YM2612 FM Audio &amp; SPC700 Delay</td></tr>
+                    <tr><td>Toggle Sound</td><td><span class="kbd-chip">M</span> or <span class="kbd-chip">U</span></td><td>Toggle YM2612 FM Audio &amp; SPC700 Delay</td></tr>
                     <tr><td>Incubate Egg</td><td><span class="kbd-chip">Space</span> or <span class="kbd-chip">1</span></td><td>Hatch mystical dragon egg</td></tr>
                     <tr><td>Feed</td><td><span class="kbd-chip">1</span> or <span class="kbd-chip">F</span></td><td>Restore +20 Hunger (-5 Energy)</td></tr>
                     <tr><td>Play</td><td><span class="kbd-chip">2</span> or <span class="kbd-chip">P</span></td><td>Restore +20 Happiness (-20 Energy)</td></tr>
@@ -607,7 +607,7 @@
                     <tr><td>Training</td><td><span class="kbd-chip">4</span> or <span class="kbd-chip">T</span></td><td>Train Strength, Speed, Loyalty</td></tr>
                     <tr><td>Expedition (Hoard)</td><td><span class="kbd-chip">5</span> or <span class="kbd-chip">O</span></td><td>Forage for Gold and rare Artifacts</td></tr>
                     <tr><td>Battle Arena</td><td><span class="kbd-chip">6</span> or <span class="kbd-chip">B</span></td><td>Fight wild enemy dragons for Gold</td></tr>
-                    <tr><td>Shop Bazaar</td><td><span class="kbd-chip">7</span> or <span class="kbd-chip">M</span></td><td>Purchase Food, Toys, Equipment</td></tr>
+                    <tr><td>Shop Bazaar</td><td><span class="kbd-chip">7</span> or <span class="kbd-chip">K</span></td><td>Purchase Food, Toys, Equipment</td></tr>
                     <tr><td>Submenus & Modals</td><td><span class="kbd-chip">Esc</span></td><td>Close dialog / Cancel minigame / Return</td></tr>
                 </table>
 
@@ -979,12 +979,17 @@
             tempo: 120, // BPM for lair, 144 for battle
             isStarted: false,
 
-            toggleMute() {
-                this.muted = !this.muted;
+            syncMuteUI() {
                 const btn = document.getElementById('btn-audio');
                 if (btn) {
-                    btn.innerHTML = `<span class="btn-badge">U</span> ${this.muted ? '🔇 Muted' : '🔊 Audio'}`;
+                    btn.innerHTML = `<span class="btn-badge">M</span> ${this.muted ? '🔇 Muted' : '🔊 Audio'}`;
                 }
+            },
+
+            toggleMute() {
+                this.muted = !this.muted;
+                safeSetStorage('kdragon_audioMuted', this.muted ? '1' : '0');
+                this.syncMuteUI();
                 if (this.muted) {
                     this.stopSequencer();
                 } else {
@@ -996,6 +1001,11 @@
             },
 
             init() {
+                const savedMute = safeGetStorage('kdragon_audioMuted');
+                if (savedMute !== null) {
+                    this.muted = (savedMute === '1');
+                    this.syncMuteUI();
+                }
                 if (this.muted) return;
                 if (!this.ctx) {
                     const AudioCtx = window.AudioContext || window.webkitAudioContext;
@@ -1006,14 +1016,14 @@
                     this.masterGain.gain.setValueAtTime(0.7, this.ctx.currentTime);
                     this.masterGain.connect(this.ctx.destination);
 
-                    // SPC700 Warmth DSP (Stereo Delay line + Low-pass feedback filter)
+                    // SPC700 Warmth DSP (Stereo Delay line 180ms + 2200Hz Low-pass feedback filter)
                     this.delayNode = this.ctx.createDelay();
-                    this.delayNode.delayTime.value = 0.16;
+                    this.delayNode.delayTime.value = 0.18;
                     this.feedbackGain = this.ctx.createGain();
                     this.feedbackGain.gain.value = 0.28;
                     this.filterNode = this.ctx.createBiquadFilter();
                     this.filterNode.type = 'lowpass';
-                    this.filterNode.frequency.value = 2400;
+                    this.filterNode.frequency.value = 2200;
 
                     this.delayNode.connect(this.filterNode);
                     this.filterNode.connect(this.feedbackGain);
@@ -1188,6 +1198,92 @@
                 modulator.stop(now + dur); carrier.stop(now + dur);
             },
 
+            playSlapBass(freq, dur, vol = 0.18, t = null) {
+                if (!this.ctx || !freq) return;
+                const now = t !== null ? Math.max(t, this.ctx.currentTime) : this.ctx.currentTime;
+                const carrier = this.ctx.createOscillator();
+                const modulator = this.ctx.createOscillator();
+                const modGain = this.ctx.createGain();
+                const ampEnv = this.ctx.createGain();
+
+                carrier.type = 'sawtooth';
+                modulator.type = 'sine';
+                carrier.frequency.setValueAtTime(freq, now);
+                modulator.frequency.setValueAtTime(freq * 2.0, now);
+                modGain.gain.setValueAtTime(freq * 3.4, now);
+                modGain.gain.exponentialRampToValueAtTime(Math.max(0.1, freq * 0.05), now + 0.04);
+
+                ampEnv.gain.setValueAtTime(vol, now);
+                ampEnv.gain.exponentialRampToValueAtTime(0.0001, now + dur);
+
+                modulator.connect(modGain);
+                modGain.connect(carrier.frequency);
+                carrier.connect(ampEnv);
+                ampEnv.connect(this.masterGain);
+                // Tight, punchy transient kept dry (no delay) per SKILL.md guidelines
+
+                modulator.start(now); carrier.start(now);
+                modulator.stop(now + dur); carrier.stop(now + dur);
+            },
+
+            playCrystalCounter(freq, dur, vol = 0.11, t = null) {
+                if (!this.ctx || !freq) return;
+                const now = t !== null ? Math.max(t, this.ctx.currentTime) : this.ctx.currentTime;
+                const carrier = this.ctx.createOscillator();
+                const modulator = this.ctx.createOscillator();
+                const modGain = this.ctx.createGain();
+                const ampEnv = this.ctx.createGain();
+
+                carrier.type = 'sine';
+                modulator.type = 'sine';
+                carrier.frequency.setValueAtTime(freq, now);
+                modulator.frequency.setValueAtTime(freq * 3.5, now);
+                modGain.gain.setValueAtTime(freq * 2.8, now);
+                modGain.gain.exponentialRampToValueAtTime(Math.max(0.1, freq * 0.08), now + 0.08);
+
+                ampEnv.gain.setValueAtTime(vol, now);
+                ampEnv.gain.exponentialRampToValueAtTime(0.0001, now + dur);
+
+                modulator.connect(modGain);
+                modGain.connect(carrier.frequency);
+                carrier.connect(ampEnv);
+                ampEnv.connect(this.masterGain);
+                if (this.delayNode) ampEnv.connect(this.delayNode);
+
+                modulator.start(now); carrier.start(now);
+                modulator.stop(now + dur); carrier.stop(now + dur);
+            },
+
+            playWarHorn(freq, dur, vol = 0.16, t = null) {
+                if (!this.ctx || !freq) return;
+                const now = t !== null ? Math.max(t, this.ctx.currentTime) : this.ctx.currentTime;
+                const carrier = this.ctx.createOscillator();
+                const modulator = this.ctx.createOscillator();
+                const modGain = this.ctx.createGain();
+                const ampEnv = this.ctx.createGain();
+
+                carrier.type = 'sawtooth';
+                modulator.type = 'triangle';
+                carrier.frequency.setValueAtTime(freq * 0.96, now);
+                carrier.frequency.linearRampToValueAtTime(freq, now + 0.035);
+                modulator.frequency.setValueAtTime(freq * 1.0, now);
+                modGain.gain.setValueAtTime(freq * 4.0, now);
+                modGain.gain.exponentialRampToValueAtTime(Math.max(0.1, freq * 0.4), now + dur);
+
+                ampEnv.gain.setValueAtTime(0.001, now);
+                ampEnv.gain.linearRampToValueAtTime(vol, now + 0.025);
+                ampEnv.gain.exponentialRampToValueAtTime(0.0001, now + dur);
+
+                modulator.connect(modGain);
+                modGain.connect(carrier.frequency);
+                carrier.connect(ampEnv);
+                ampEnv.connect(this.masterGain);
+                if (this.delayNode) ampEnv.connect(this.delayNode);
+
+                modulator.start(now); carrier.start(now);
+                modulator.stop(now + dur); carrier.stop(now + dur);
+            },
+
             playKick(t = null) {
                 if (!this.ctx) return;
                 const now = t !== null ? Math.max(t, this.ctx.currentTime) : this.ctx.currentTime;
@@ -1251,8 +1347,8 @@
             NOTE: {
                 D1: 36.71, E1: 41.20, F1: 43.65, G1: 49.00, A1: 55.00, Bb1: 58.27, B1: 61.74, C2: 65.41,
                 D2: 73.42, E2: 82.41, F2: 87.31, Fsharp2: 92.50, G2: 98.00, A2: 110.00, Bb2: 116.54, B2: 123.47, C3: 130.81,
-                D3: 146.83, E3: 164.81, F3: 174.61, Fsharp3: 185.00, G3: 196.00, A3: 220.00, Bb3: 233.08, B3: 246.94, C4: 261.63, Csharp4: 277.18,
-                D4: 293.66, Eb4: 311.13, E4: 329.63, F4: 349.23, Fsharp4: 369.99, G4: 392.00, Gsharp4: 415.30, A4: 440.00, Bb4: 466.16, B4: 493.88, C5: 523.25,
+                D3: 146.83, E3: 164.81, F3: 174.61, Fsharp3: 185.00, G3: 196.00, Gsharp3: 207.65, A3: 220.00, Bb3: 233.08, B3: 246.94, C4: 261.63, Csharp4: 277.18,
+                D4: 293.66, Eb4: 311.13, E4: 329.63, F4: 349.23, Fsharp4: 369.99, G4: 392.00, Gsharp4: 415.30, A4: 440.00, Bb4: 466.16, B4: 493.88, C5: 523.25, Csharp5: 554.37,
                 D5: 587.33, E5: 659.25, F5: 698.46, G5: 783.99, A5: 880.00
             },
 
@@ -1389,6 +1485,49 @@
                         kicks: [0, 16],
                         snares: [8, 24],
                         hats: [2, 4, 6, 10, 12, 14, 18, 20, 22, 26, 28, 30]
+                    },
+
+                    // "Trial of the Dragonkin" - High-Energy Training & Tournament Suite in A Dorian (32-Step Loop)
+                    training: {
+                        tempo: 132,
+                        stepDur: (60 / 132) / 2,
+                        swing: 0.015,
+                        steps: 32,
+                        lead: [
+                            // Heroic War Horn / Brass phrases with rhythmic drive
+                            { s: 0, f: N.A4, d: 0.22 }, { s: 2, f: N.C5, d: 0.25 }, { s: 4, f: N.D5, d: 0.3 }, { s: 6, f: N.E5, d: 0.35 },
+                            { s: 8, f: N.D5, d: 0.25 }, { s: 10, f: N.C5, d: 0.25 }, { s: 12, f: N.A4, d: 0.3 }, { s: 14, f: N.Fsharp4, d: 0.35 },
+                            { s: 16, f: N.G4, d: 0.25 }, { s: 18, f: N.A4, d: 0.25 }, { s: 20, f: N.B4, d: 0.3 }, { s: 22, f: N.C5, d: 0.35 },
+                            { s: 24, f: N.B4, d: 0.25 }, { s: 26, f: N.Gsharp4, d: 0.25 }, { s: 28, f: N.A4, d: 0.4 }, { s: 30, f: N.E4, d: 0.4 }
+                        ],
+                        counter: [
+                            // Syncopated crystal contrary motion
+                            { s: 0, f: N.E4, d: 0.2 }, { s: 2, f: N.G4, d: 0.2 }, { s: 4, f: N.Fsharp4, d: 0.25 }, { s: 6, f: N.E4, d: 0.3 },
+                            { s: 8, f: N.Fsharp4, d: 0.2 }, { s: 12, f: N.D4, d: 0.25 }, { s: 14, f: N.C4, d: 0.3 },
+                            { s: 16, f: N.E4, d: 0.2 }, { s: 20, f: N.D4, d: 0.25 }, { s: 22, f: N.B3, d: 0.3 },
+                            { s: 24, f: N.D4, d: 0.2 }, { s: 28, f: N.C4, d: 0.25 }, { s: 30, f: N.A3, d: 0.35 }
+                        ],
+                        harp: [
+                            // 16th rolling medieval lute training arpeggios
+                            { s: 0, f: N.A3 }, { s: 1, f: N.E4 }, { s: 2, f: N.C4 }, { s: 3, f: N.E4 },
+                            { s: 4, f: N.A3 }, { s: 5, f: N.C4 }, { s: 6, f: N.E4 }, { s: 7, f: N.G4 },
+                            { s: 8, f: N.D3 }, { s: 9, f: N.A3 }, { s: 10, f: N.Fsharp4 }, { s: 11, f: N.A3 },
+                            { s: 12, f: N.D4 }, { s: 13, f: N.Fsharp4 }, { s: 14, f: N.A4 }, { s: 15, f: N.Fsharp4 },
+                            { s: 16, f: N.E3 }, { s: 17, f: N.B3 }, { s: 18, f: N.G4 }, { s: 19, f: N.B3 },
+                            { s: 20, f: N.E4 }, { s: 21, f: N.G4 }, { s: 22, f: N.B4 }, { s: 23, f: N.G4 },
+                            { s: 24, f: N.A2 }, { s: 25, f: N.E3 }, { s: 26, f: N.C4 }, { s: 27, f: N.E3 },
+                            { s: 28, f: N.Gsharp3 }, { s: 29, f: N.E3 }, { s: 30, f: N.B3 }, { s: 31, f: N.E4 }
+                        ],
+                        bass: [
+                            // Slap bass octave leaps below C3
+                            { s: 0, f: N.A1, d: 0.2 }, { s: 2, f: N.A2, d: 0.15 }, { s: 4, f: N.E2, d: 0.2 }, { s: 6, f: N.A2, d: 0.2 },
+                            { s: 8, f: N.D2, d: 0.2 }, { s: 10, f: N.D3, d: 0.15 }, { s: 12, f: N.A2, d: 0.2 }, { s: 14, f: N.D2, d: 0.2 },
+                            { s: 16, f: N.E2, d: 0.2 }, { s: 18, f: N.E3, d: 0.15 }, { s: 20, f: N.B2, d: 0.2 }, { s: 22, f: N.E2, d: 0.2 },
+                            { s: 24, f: N.A1, d: 0.2 }, { s: 26, f: N.A2, d: 0.15 }, { s: 28, f: N.E2, d: 0.2 }, { s: 30, f: N.A1, d: 0.25 }
+                        ],
+                        kicks: [0, 4, 8, 12, 16, 20, 24, 28],
+                        snares: [4, 12, 20, 28],
+                        hats: [2, 6, 10, 14, 18, 22, 26, 30]
                     }
                 };
             },
@@ -1439,6 +1578,8 @@
                         if (leadNote) {
                             if (this.currentTrack === 'battle') {
                                 this.playBrassStab(leadNote.f, leadNote.d, 0.13, t);
+                            } else if (this.currentTrack === 'training') {
+                                this.playWarHorn(leadNote.f, leadNote.d, 0.14, t);
                             } else {
                                 this.playLeadFlute(leadNote.f, leadNote.d, 0.12, t);
                             }
@@ -1447,7 +1588,7 @@
                         // Ch2: Counter-Melody
                         const counterNote = activeTrack.counter.find(n => n.s === s);
                         if (counterNote) {
-                            this.playFM(counterNote.f, 2.0, 1.2, counterNote.d, 'sine', true, 0.09, t);
+                            this.playCrystalCounter(counterNote.f, counterNote.d, 0.09, t);
                         }
 
                         // Ch3: Harmony / Arpeggio
@@ -1459,7 +1600,11 @@
                         // Ch4: Bass
                         const bassNote = activeTrack.bass.find(n => n.s === s);
                         if (bassNote) {
-                            this.playPluckBass(bassNote.f, bassNote.d, 0.16, t);
+                            if (this.currentTrack === 'battle' || this.currentTrack === 'training') {
+                                this.playSlapBass(bassNote.f, bassNote.d, 0.17, t);
+                            } else {
+                                this.playPluckBass(bassNote.f, bassNote.d, 0.16, t);
+                            }
                         }
 
                         // Ch5: Kick
@@ -2129,9 +2274,10 @@
                         e.target.value = '';
                     }
                 });
+                AudioEngine.init();
                 document.getElementById('btn-audio')?.addEventListener('click', () => {
                     const isMuted = AudioEngine.toggleMute();
-                    this.showToast(isMuted ? "🔇 Audio Muted [U]" : "🔊 Audio Enabled [U]", "info");
+                    this.showToast(isMuted ? "🔇 Audio Muted [M]" : "🔊 Audio Enabled [M]", "info");
                 });
                 const unlockAudio = () => {
                     if (!AudioEngine.isStarted && !AudioEngine.muted) {
@@ -2195,10 +2341,10 @@
                         if (!isClosing) safeSetStorage(TUTORIAL_KEY, '1');
                         return;
                     }
-                    if (e.key.toLowerCase() === 'u') {
+                    if (e.key.toLowerCase() === 'm' || e.key.toLowerCase() === 'u') {
                         e.preventDefault();
                         const isMuted = AudioEngine.toggleMute();
-                        this.showToast(isMuted ? "🔇 Audio Muted [U]" : "🔊 Audio Enabled [U]", "info");
+                        this.showToast(isMuted ? "🔇 Audio Muted [M]" : "🔊 Audio Enabled [M]", "info");
                         return;
                     }
                     if (e.key === 'Escape') {
@@ -2323,7 +2469,7 @@
                         else if (e.key === '4' || e.key.toLowerCase() === 't') { e.preventDefault(); document.getElementById('btn-train').click(); }
                         else if (e.key === '5' || e.key.toLowerCase() === 'o') { e.preventDefault(); this.action('hoard'); }
                         else if (e.key === '6' || e.key.toLowerCase() === 'b') { e.preventDefault(); this.startBattle(); }
-                        else if (e.key === '7' || e.key.toLowerCase() === 'm') { e.preventDefault(); document.getElementById('btn-shop').click(); }
+                        else if (e.key === '7' || e.key.toLowerCase() === 'k') { e.preventDefault(); document.getElementById('btn-shop').click(); }
                     }
                 });
                 
@@ -2804,6 +2950,7 @@
                 document.getElementById('train-controls').style.display = 'none';
                 this.stats.energy = Math.max(0, this.stats.energy - 15);
                 this.stats.hunger = Math.max(0, this.stats.hunger - 5);
+                AudioEngine.setTrack('training');
                 this.updateUI();
                 
                 if (type === 'str') {
@@ -3304,6 +3451,7 @@
                 this.isBusy = false;
                 document.getElementById(`minigame-${type}`).style.display = 'none';
                 document.getElementById('controls').style.display = 'flex';
+                AudioEngine.setTrack(this.state === 'elder' ? 'sanctuary' : 'lair');
                 this.updateUI();
             },
             
