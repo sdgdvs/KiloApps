@@ -1151,6 +1151,100 @@
     box-shadow: 0 0 5px var(--phosphor-glow);
   }
 
+  /* Seismic Waveguide & Geophone Telemetry Enhancements */
+  .seismic-subtabs {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+  }
+  .seismic-mode-btn {
+    background: #010a04;
+    border: 1px solid var(--border);
+    color: var(--phosphor);
+    font-family: var(--font-mono);
+    font-size: 10px;
+    padding: 2px 7px;
+    cursor: pointer;
+  }
+  .seismic-mode-btn.active {
+    background: var(--border-bright);
+    color: #000;
+    font-weight: bold;
+    box-shadow: 0 0 6px var(--phosphor-glow);
+  }
+  .tdr-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 10px;
+    font-family: var(--font-mono);
+    margin-top: 6px;
+  }
+  .tdr-table th {
+    background: rgba(0, 20, 10, 0.95);
+    border-bottom: 1px solid var(--border);
+    color: var(--phosphor-dim);
+    padding: 2px 4px;
+    text-align: left;
+  }
+  .tdr-table td {
+    padding: 2px 4px;
+    border-bottom: 1px solid rgba(26, 122, 53, 0.2);
+  }
+
+  /* Wiretap Raw Packet Forge & Dissector Tree Enhancements */
+  .wiretap-forge-box {
+    background: #010a04;
+    border: 1px solid var(--border);
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-size: 11px;
+  }
+  .forge-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .forge-label {
+    font-size: 10px;
+    color: var(--phosphor-dim);
+    min-width: 65px;
+  }
+  .forge-preview {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    background: #000;
+    border: 1px solid rgba(26, 122, 53, 0.5);
+    padding: 4px 6px;
+    color: var(--cyan);
+    word-break: break-all;
+  }
+  .tree-node-title {
+    cursor: pointer;
+    font-weight: bold;
+    color: var(--phosphor);
+    user-select: none;
+    margin-bottom: 2px;
+  }
+  .tree-node-title:hover {
+    color: var(--border-bright);
+  }
+  .tree-node-children {
+    padding-left: 12px;
+    border-left: 1px dashed rgba(26, 122, 53, 0.4);
+    margin-bottom: 4px;
+    font-size: 10.5px;
+  }
+  .tree-leaf {
+    padding: 1px 0;
+    color: #e2e8f0;
+  }
+  .tree-leaf strong {
+    color: var(--cyan);
+  }
+
   /* Tab 9: Subterranean Wiretap Sniffer Styles */
   .wiretap-deck {
     padding: 10px;
@@ -1822,26 +1916,50 @@
           <div class="seismic-viewports-container">
             <!-- Geological Strata Cross-Section Canvas -->
             <div class="seismic-panel-box" style="flex:1.4;">
-              <div class="side-card-title">
-                <span>GEOLOGICAL STRATA CROSS-SECTION &amp; TDR ACOUSTIC WAVEFRONT</span>
-                <span style="font-size:10px; color:var(--phosphor-dim);">0m - 900m DEPTH PROFILE</span>
+              <div class="side-card-title" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:4px;">
+                <span>GEOLOGICAL STRATA &amp; WAVEGUIDE TELEMETRY</span>
+                <div class="seismic-subtabs">
+                  <button class="seismic-mode-btn active" id="btnSeismicModeStrata" title="0-900m Strata cross-section and acoustic raypath wavefront">Strata Profile</button>
+                  <button class="seismic-mode-btn" id="btnSeismicModeDispersion" title="Lithospheric waveguide phase & group velocity dispersion curves">Waveguide Dispersion</button>
+                  <button class="seismic-mode-btn" id="btnSeismicModeArray" title="Simultaneous 4-channel geophone waterfall traces">4-CH Array</button>
+                </div>
               </div>
               <canvas id="seismicCanvas" width="620" height="280"></canvas>
             </div>
 
-            <!-- Geophone Oscilloscope Trace Canvas -->
+            <!-- Geophone Oscilloscope Trace Canvas & TDR Analysis -->
             <div class="seismic-panel-box" style="flex:1;">
               <div class="side-card-title">
-                <span>SURFACE GEOPHONE REFLECTION TRACE (TIME-DOMAIN ECHO)</span>
+                <span>TIME-DOMAIN ECHO TRACE &amp; TDR ANALYSIS</span>
                 <span id="lblSeismicCoherence" style="font-size:10px; color:var(--warn);">ECHO COHERENCE: 0%</span>
               </div>
-              <canvas id="geophoneCanvas" width="420" height="280"></canvas>
+              <canvas id="geophoneCanvas" width="420" height="175"></canvas>
+              <!-- Permian Basin Strata Acoustic Impedance Table -->
+              <table class="tdr-table">
+                <thead>
+                  <tr>
+                    <th>STRATUM</th>
+                    <th>DEPTH</th>
+                    <th>VEL (m/s)</th>
+                    <th>IMP (MRayl)</th>
+                    <th>REFL (R)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr><td>Caliche / Alluvium</td><td>0-80m</td><td>1,800</td><td>3.51</td><td style="color:#a3e635;">INCIDENT</td></tr>
+                  <tr><td>Rustler Aquifer</td><td>80-240m</td><td>3,200</td><td>7.84</td><td style="color:#38bdf8;">+0.381</td></tr>
+                  <tr><td>Salado Halite Evap.</td><td>240-540m</td><td>4,450</td><td>9.61</td><td style="color:#facc15;">+0.101</td></tr>
+                  <tr><td style="color:var(--border-bright); font-weight:bold;">Core Cavity (0x1999)</td><td>650m</td><td>4,450</td><td>9.61</td><td style="color:var(--border-bright); font-weight:bold;">1999Hz RES</td></tr>
+                  <tr><td>Basal Anhydrite Bed</td><td>700-900m</td><td>5,600</td><td>16.58</td><td style="color:#c084fc;">+0.266</td></tr>
+                </tbody>
+              </table>
             </div>
           </div>
 
           <!-- Controls Bar -->
           <div class="seismic-controls-bar">
             <button class="shell-btn" id="btnFireSeismicPulse" style="background:var(--border-bright); color:#000; font-weight:bold;">★ Fire Seismic Sounding</button>
+            <button class="shell-btn" id="btnExportSegy" style="background:rgba(56,189,248,0.2); border-color:var(--cyan); color:#fff; font-weight:bold;">Export SEG-Y (.SEGY)</button>
             <div style="display:flex; align-items:center; gap:6px;">
               <span>CARRIER FREQ:</span>
               <button class="shell-btn seismic-freq-btn" data-f="432">432 Hz</button>
@@ -1880,19 +1998,24 @@
         <div class="wiretap-deck">
           <!-- Toolbar -->
           <div class="wiretap-toolbar">
-            <div style="display:flex; gap:6px; align-items:center;">
+            <div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap;">
               <button class="shell-btn" id="btnToggleCapture">Pause Capture</button>
               <button class="shell-btn" id="btnClearPackets">Clear Buffer</button>
-              <button class="shell-btn" id="btnDownloadPcap" style="background:rgba(56,189,248,0.2); border-color:var(--cyan); color:#fff; font-weight:bold;">Download .PCAP File</button>
-              <button class="shell-btn" id="btnSendRelayFrame" style="color:var(--border-bright); border-color:var(--border-bright);">Inject Handshake Frame</button>
+              <button class="shell-btn" id="btnDownloadPcap" style="background:rgba(56,189,248,0.2); border-color:var(--cyan); color:#fff; font-weight:bold;">Download .PCAP</button>
+              <button class="shell-btn" id="btnDownloadTxtLog" title="Download formatted ASCII dissection and hex logs">Download .TXT Log</button>
+              <button class="shell-btn" id="btnToggleForge" style="color:var(--cyan); border-color:var(--cyan); font-weight:bold;">★ Forge Raw Frame</button>
+              <button class="shell-btn" id="btnSendRelayFrame" style="color:var(--border-bright); border-color:var(--border-bright);">Inject Sync Frame</button>
             </div>
-            <div style="display:flex; gap:8px; align-items:center;">
+            <div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap;">
+              <span>FILTER:</span>
+              <input type="text" id="wiretapBpfFilter" class="form-input" placeholder="Search (e.g. echo, 1999, syn)..." style="font-size:11px; background:#010a04; color:var(--phosphor); border:1px solid var(--border); padding:2px 6px; width:150px;" />
               <span>PROTO:</span>
               <select id="wiretapProtoFilter" class="form-input" style="font-size:11px; background:#010a04; color:var(--phosphor); border:1px solid var(--border); padding:2px 4px;">
                 <option value="ALL">ALL PROTOCOLS</option>
                 <option value="TCP">TCP (Port 1999/23/80)</option>
                 <option value="UDP">UDP (Port 1999/432)</option>
                 <option value="ICMP">ICMP Echo</option>
+                <option value="SRDP">SRDP (Ring-0 Datagram)</option>
                 <option value="ARP">ARP Subnet</option>
               </select>
               <span>HOST:</span>
@@ -1905,6 +2028,52 @@
                 <option value="10.19.99.127">10.19.99.127 (Deep Core)</option>
               </select>
             </div>
+          </div>
+
+          <!-- Raw Packet Forge & Injection Workbench (Toggleable) -->
+          <div class="wiretap-forge-box" id="wiretapForgePanel" style="display:none;">
+            <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border); padding-bottom:4px;">
+              <span style="font-weight:bold; color:var(--cyan);">★ SUBTERRANEAN RAW PACKET FORGE &amp; INJECTION BENCH</span>
+              <span style="font-size:10px; color:var(--phosphor-dim);">RFC 1071 16-BIT CHECKSUM &bull; L3/L4/L7 SYNTHESIZER</span>
+            </div>
+            <div class="forge-row">
+              <span class="forge-label">SOURCE IP:</span>
+              <select id="forgeSrcIp" class="form-input" style="font-size:11px; background:#000; color:var(--phosphor); border:1px solid var(--border); padding:2px 4px;">
+                <option value="10.19.99.127">10.19.99.127 (Deep Core - Local)</option>
+                <option value="10.19.99.4">10.19.99.4 (Darknet Relay 0x7F)</option>
+                <option value="10.19.99.19">10.19.99.19 (Echo Subsystem)</option>
+                <option value="10.19.99.1">10.19.99.1 (Carlsbad Gateway)</option>
+              </select>
+
+              <span class="forge-label">DEST IP:</span>
+              <select id="forgeDstIp" class="form-input" style="font-size:11px; background:#000; color:var(--phosphor); border:1px solid var(--border); padding:2px 4px;">
+                <option value="10.19.99.4">10.19.99.4 (Darknet Relay 0x7F)</option>
+                <option value="10.19.99.127">10.19.99.127 (Deep Core)</option>
+                <option value="10.19.99.19">10.19.99.19 (Echo Subsystem)</option>
+                <option value="10.19.99.1">10.19.99.1 (Carlsbad Gateway)</option>
+                <option value="10.19.99.255">10.19.99.255 (Broadcast)</option>
+              </select>
+
+              <span class="forge-label">PROTOCOL:</span>
+              <select id="forgeProto" class="form-input" style="font-size:11px; background:#000; color:var(--phosphor); border:1px solid var(--border); padding:2px 4px;">
+                <option value="TCP">TCP (Port 1999)</option>
+                <option value="UDP">UDP (Port 1999)</option>
+                <option value="ICMP">ICMP Echo Request</option>
+                <option value="SRDP">SRDP (Subterranean Relay Datagram)</option>
+              </select>
+            </div>
+            <div class="forge-row">
+              <span class="forge-label">TCP FLAGS:</span>
+              <label style="display:flex; align-items:center; gap:3px;"><input type="checkbox" id="chkForgeSyn" checked /> SYN</label>
+              <label style="display:flex; align-items:center; gap:3px;"><input type="checkbox" id="chkForgeAck" checked /> ACK</label>
+              <label style="display:flex; align-items:center; gap:3px;"><input type="checkbox" id="chkForgePsh" checked /> PSH</label>
+              <label style="display:flex; align-items:center; gap:3px;"><input type="checkbox" id="chkForgeFin" /> FIN</label>
+
+              <span class="forge-label" style="margin-left:10px;">PAYLOAD:</span>
+              <input type="text" id="inputForgePayload" class="form-input" value="ECHO_RELAY_SYNC_1999" placeholder="Enter ASCII payload..." style="flex:1; min-width:180px; font-size:11px; background:#000; color:#fff; border:1px solid var(--border); padding:2px 6px;" />
+              <button class="shell-btn" id="btnTransmitForgedFrame" style="background:var(--border-bright); color:#000; font-weight:bold;">★ Transmit Frame</button>
+            </div>
+            <div class="forge-preview" id="forgeHexPreview">0000: 45 00 00 4c 19 9a 40 00 40 06 e3 6e 0a 13 63 7f 0a 13 63 04 ... (RFC 1071 Checksum: 0xE36E)</div>
           </div>
 
           <!-- Packet List Table -->
@@ -2250,16 +2419,17 @@
     <p>
       This node houses the precursor architecture of <strong>App #100 (KMatrix)</strong>. To breach Ring-0 clearance:
     </p>
-    <p style="font-size:11.5px; color:var(--phosphor-bright);">
-      1. <strong>Defuse the 5 Quarantine Sectors</strong>: Heal the heap buffer, acquire 1999Hz harmonic lock, route the subterranean relay handshake, repair Inode 0x1999, and harmonize the neural lattice.<br>
-      2. <strong>Inspect the Ghost Spool Archive</strong>: Synthesize and download the 8 forensic documents and assembly source.<br>
-      3. <strong>Assemble the Passkey</strong>: Validate candidate tokens against the SHA-256 target hash.
+    <p style="font-size:11px; color:var(--phosphor-bright); line-height:1.5;">
+      1. <strong>Defuse Quarantine &amp; Breakers</strong>: Heal the heap buffer, acquire 1999Hz acoustic lock, route the subterranean relay handshake, repair Inode 0x1999, and harmonize the neural lattice.<br>
+      2. <strong>Execute x86 CPU Stepper</strong>: Step through Protected Mode opcode execution at <code>0x007F1990</code> and patch memory offsets.<br>
+      3. <strong>Fire 650m Seismic Strata Sonar</strong>: Measure acoustic raypath wavefronts and waveguide dispersion across the Permian Salado formation.<br>
+      4. <strong>Deploy Promiscuous Wiretap</strong>: Sniff and forge raw subterranean datagrams with live hex dissection and export authentic <code>.PCAP</code> packet traces.<br>
+      5. <strong>Inner Sanctum Singularity</strong>: Synchronize the tri-vector convergence to unseal the 4D Tesseract projection and harvest penultimate key fragment <strong>[1999-ARCH]</strong>.
     </p>
-    <p style="color:var(--warn); font-size:11px;">
-      &bull; Press <strong>F5</strong> at any time to quicksave terminal state to local storage.<br>
-      &bull; Press <strong>F9</strong> to restore previous sessions.<br>
-      &bull; Press <strong>M</strong> or click <strong>Track</strong> to cycle procedural ambient FM audio.<br>
-      &bull; Type <strong>help</strong> in the terminal for the complete directive manual.
+    <p style="color:var(--warn); font-size:11px; margin-top:6px;">
+      &bull; Press <strong>F5</strong> to quicksave session to local storage &bull; Press <strong>F9</strong> to quickload.<br>
+      &bull; Press <strong>F7</strong> in x86 Disasm to step CPU &bull; Press <strong>M</strong> to cycle procedural ambient FM audio.<br>
+      &bull; Type <strong>help</strong> in the terminal for the complete 28+ directive command manual.
     </p>
     <div style="display:flex; justify-content:flex-end; gap:8px;">
       <button class="shell-btn" id="btnDismissBriefing" style="padding:6px 14px; font-weight:700;">Acknowledge &amp; Enter Terminal</button>
@@ -2327,18 +2497,21 @@
     disasmRunning: false,
     disasmBreakpoint: 0,
 
-    // 650m Seismic Strata Sonar
+    // 650m Seismic Strata Sonar & Waveguide Telemetry
     seismicFreq: 1999.0,
     seismicWavelet: 'ricker',
     seismicGain: 2.5,
     seismicPulseActive: false,
     seismicPulseT: 0,
+    seismicViewMode: 'strata', // 'strata', 'dispersion', 'array'
 
-    // Subterranean Wiretap Promiscuous Sniffer
+    // Subterranean Wiretap Promiscuous Sniffer & Packet Forge
     wiretapCapturing: true,
     wiretapPromisc: true,
     wiretapProtoFilter: 'ALL',
     wiretapHostFilter: 'ALL',
+    wiretapBpfFilter: '',
+    wiretapForgeOpen: false,
     wiretapSelectedPkt: 0,
     wiretapPackets: [],
 
@@ -5328,15 +5501,119 @@ Timestamp: ${new Date().toISOString()}
     };
   });
 
+  const btnSeismicModeStrata = document.getElementById('btnSeismicModeStrata');
+  const btnSeismicModeDispersion = document.getElementById('btnSeismicModeDispersion');
+  const btnSeismicModeArray = document.getElementById('btnSeismicModeArray');
+  const btnExportSegy = document.getElementById('btnExportSegy');
+
+  function setSeismicViewMode(mode) {
+    state.seismicViewMode = mode;
+    if (btnSeismicModeStrata) btnSeismicModeStrata.classList.toggle('active', mode === 'strata');
+    if (btnSeismicModeDispersion) btnSeismicModeDispersion.classList.toggle('active', mode === 'dispersion');
+    if (btnSeismicModeArray) btnSeismicModeArray.classList.toggle('active', mode === 'array');
+    SFX.key();
+  }
+  if (btnSeismicModeStrata) btnSeismicModeStrata.onclick = () => setSeismicViewMode('strata');
+  if (btnSeismicModeDispersion) btnSeismicModeDispersion.onclick = () => setSeismicViewMode('dispersion');
+  if (btnSeismicModeArray) btnSeismicModeArray.onclick = () => setSeismicViewMode('array');
+
+  function generateSegyBinary() {
+    const textHeader = new Uint8Array(3200);
+    const cardText = 
+      "C01 KILO-NET DEEP CORE // LITHOSPHERIC SEISMIC WAVEGUIDE SURVEY                  \n" +
+      "C02 LOCATION: CARLSBAD PERMIAN BASIN, SECTOR 7F // SALT CAVITY CORE 650M        \n" +
+      "C03 DATE: 1999-12-31 // SOURCE: 1999.00 HZ ACOUSTIC TIME-DOMAIN SOUNDING       \n" +
+      "C04 GEOPHONE ARRAY: 4 CHANNELS (G1:0M, G2:160M, G3:450M, G4:650M CAVITY)        \n" +
+      "C05 FORMATION: PERMIAN SALADO HALITE EVAPORITE BED // Q-FACTOR: 420.5          \n" +
+      "C06 CAVITY RESONANCE: 1999.00 HZ SUBCARRIER COHERENCE 99.4%                     \n" +
+      "C07 FORMAT: IEEE 754 FLOAT 32-BIT // SAMPLE INTERVAL: 1000 US                   \n" +
+      "C08 END TEXTUAL HEADER                                                          \n";
+    for (let i = 0; i < Math.min(cardText.length, 3200); i++) {
+      textHeader[i] = cardText.charCodeAt(i);
+    }
+
+    const binHeader = new Uint8Array(400);
+    const binDv = new DataView(binHeader.buffer);
+    binDv.setInt32(0, 1999, false);
+    binDv.setInt32(4, 7, false);
+    binDv.setInt32(8, 1, false);
+    binDv.setInt16(12, 4, false);
+    binDv.setInt16(16, 1000, false);
+    binDv.setInt16(20, 1000, false);
+    binDv.setInt16(24, 5, false);
+    binDv.setInt16(26, 1, false);
+
+    const numSamples = 1000;
+    const channels = [
+      { id: 1, depth: 0, vel: 1800, delay: 0 },
+      { id: 2, depth: 160, vel: 3200, delay: 89 },
+      { id: 3, depth: 450, vel: 4450, delay: 180 },
+      { id: 4, depth: 650, vel: 4450, delay: 292 }
+    ];
+
+    const traceBuffers = [];
+    channels.forEach((ch, idx) => {
+      const trHeader = new Uint8Array(240);
+      const trDv = new DataView(trHeader.buffer);
+      trDv.setInt32(0, idx + 1, false);
+      trDv.setInt32(4, idx + 1, false);
+      trDv.setInt32(8, 1999, false);
+      trDv.setInt32(12, idx + 1, false);
+      trDv.setInt16(28, 1, false);
+      trDv.setInt16(114, numSamples, false);
+      trDv.setInt16(116, 1000, false);
+      trDv.setInt32(180, ch.depth, false);
+
+      const samples = new Uint8Array(numSamples * 4);
+      const sampDv = new DataView(samples.buffer);
+      const is1999 = Math.abs(state.seismicFreq - 1999.0) < 1.0;
+      for (let s = 0; s < numSamples; s++) {
+        const t = s * 0.001;
+        let amp = (Math.random() - 0.5) * 0.02;
+        const arrival = ch.delay * 0.001;
+        if (t >= arrival) {
+          const dt = t - arrival;
+          const env = Math.exp(-dt * 18);
+          const carrier = Math.sin(2 * Math.PI * state.seismicFreq * dt);
+          amp += env * carrier * (is1999 ? 1.0 : 0.35) * (state.seismicGain / 2.5);
+        }
+        sampDv.setFloat32(s * 4, amp, false);
+      }
+
+      traceBuffers.push(trHeader);
+      traceBuffers.push(samples);
+    });
+
+    const totalLen = 3200 + 400 + traceBuffers.reduce((acc, b) => acc + b.byteLength, 0);
+    const out = new Uint8Array(totalLen);
+    let offset = 0;
+    out.set(textHeader, offset); offset += 3200;
+    out.set(binHeader, offset); offset += 400;
+    traceBuffers.forEach(b => {
+      out.set(b, offset);
+      offset += b.byteLength;
+    });
+    return out;
+  }
+
+  if (btnExportSegy) {
+    btnExportSegy.onclick = () => {
+      const segyBytes = generateSegyBinary();
+      downloadFile('carlsbad_waveguide_1999hz.segy', segyBytes, 'application/octet-stream');
+      printLine('[SEGY EXPORT] Carlsbad Permian Halite 4-channel SEG-Y dataset exported to disk.', 'text-highlight');
+      SFX.beep();
+    };
+  }
+
   function fireSeismicSounding() {
     state.seismicPulseActive = true;
     state.seismicPulseT = 0;
     SFX.seismicBoom();
     if (seismicStatusBadge) {
-      seismicStatusBadge.textContent = `PULSE ACTIVE • ${state.seismicFreq} Hz [${state.seismicWavelet.toUpperCase()}]`;
+      seismicStatusBadge.textContent = `PULSE ACTIVE • ${state.seismicFreq.toFixed(1)} Hz [${state.seismicWavelet.toUpperCase()}]`;
       seismicStatusBadge.style.color = 'var(--warn)';
     }
-    printLine(`[SEISMIC] Lithospheric acoustic sounding fired at ${state.seismicFreq.toFixed(1)} Hz.`, 'text-cyan');
+    printLine(`[SEISMIC] Lithospheric acoustic sounding fired at ${state.seismicFreq.toFixed(1)} Hz (${state.seismicWavelet}).`, 'text-cyan');
   }
   document.getElementById('btnFireSeismicPulse').onclick = fireSeismicSounding;
 
@@ -5359,71 +5636,201 @@ Timestamp: ${new Date().toISOString()}
     seismicCtx.fillStyle = '#010502';
     seismicCtx.fillRect(0, 0, sw, sh);
 
-    // Draw Geological Strata Layers
-    STRATA_LAYERS.forEach(l => {
-      seismicCtx.fillStyle = l.color;
-      seismicCtx.fillRect(0, l.top, sw, l.bot - l.top);
-      seismicCtx.strokeStyle = l.stroke;
-      seismicCtx.lineWidth = 1;
-      seismicCtx.beginPath();
-      seismicCtx.moveTo(0, l.top);
-      seismicCtx.lineTo(sw, l.top);
-      seismicCtx.stroke();
+    const is1999 = Math.abs(state.seismicFreq - 1999.0) < 1.0;
 
-      seismicCtx.fillStyle = l.stroke;
-      seismicCtx.font = '10px monospace';
-      seismicCtx.fillText(`${l.name} [${l.depth}] - v=${l.vel}`, 10, l.top + 14);
-
-      if (l.isCavity) {
-        seismicCtx.strokeStyle = 'var(--border-bright)';
-        seismicCtx.fillStyle = 'rgba(34, 255, 102, 0.35)';
-        const cx = sw / 2;
-        const cy = (l.top + l.bot) / 2;
+    // View Mode 1: Strata Raypath Profile
+    if (state.seismicViewMode === 'strata') {
+      STRATA_LAYERS.forEach(l => {
+        seismicCtx.fillStyle = l.color;
+        seismicCtx.fillRect(0, l.top, sw, l.bot - l.top);
+        seismicCtx.strokeStyle = l.stroke;
+        seismicCtx.lineWidth = 1;
         seismicCtx.beginPath();
-        seismicCtx.arc(cx, cy, 14, 0, Math.PI * 2);
-        seismicCtx.fill();
+        seismicCtx.moveTo(0, l.top);
+        seismicCtx.lineTo(sw, l.top);
         seismicCtx.stroke();
-        seismicCtx.fillStyle = '#fff';
-        seismicCtx.font = 'bold 9.5px monospace';
-        seismicCtx.fillText('★ CORE 0x1999 (650m)', cx + 20, cy + 3);
-      }
-    });
 
-    if (state.seismicPulseActive) {
-      state.seismicPulseT += 2.2;
-      const waveY = state.seismicPulseT;
+        seismicCtx.fillStyle = l.stroke;
+        seismicCtx.font = '10px monospace';
+        seismicCtx.fillText(`${l.name} [${l.depth}] - v=${l.vel}`, 10, l.top + 14);
 
-      if (waveY < sh) {
-        seismicCtx.strokeStyle = 'rgba(255, 255, 255, 0.85)';
-        seismicCtx.lineWidth = 2.5;
-        seismicCtx.beginPath();
-        for (let x = 0; x < sw; x += 6) {
-          const mod = Math.sin(x * 0.08 + waveY * 0.1) * 3;
-          if (x === 0) seismicCtx.moveTo(x, waveY + mod);
-          else seismicCtx.lineTo(x, waveY + mod);
+        if (l.isCavity) {
+          seismicCtx.strokeStyle = 'var(--border-bright)';
+          seismicCtx.fillStyle = 'rgba(34, 255, 102, 0.35)';
+          const cx = sw / 2;
+          const cy = (l.top + l.bot) / 2;
+          seismicCtx.beginPath();
+          seismicCtx.arc(cx, cy, 14, 0, Math.PI * 2);
+          seismicCtx.fill();
+          seismicCtx.stroke();
+          seismicCtx.fillStyle = '#fff';
+          seismicCtx.font = 'bold 9.5px monospace';
+          seismicCtx.fillText('★ CORE 0x1999 (650m)', cx + 20, cy + 3);
         }
-        seismicCtx.stroke();
-      }
+      });
 
-      if (waveY >= 200 && waveY <= 240) {
-        seismicCtx.fillStyle = 'rgba(34, 255, 102, 0.2)';
-        seismicCtx.fillRect(0, 200, sw, 40);
-        if (Math.abs(state.seismicFreq - 1999.0) < 1.0) {
-          if (!state.verifiedSectors.AUDIO_DSP) {
-            defuseSector('AUDIO_DSP', 'Seismic acoustic sounding locked 1999.00 Hz cavity resonance.');
+      if (state.seismicPulseActive) {
+        state.seismicPulseT += 2.2;
+        const waveY = state.seismicPulseT;
+
+        if (waveY < sh) {
+          seismicCtx.strokeStyle = 'rgba(255, 255, 255, 0.85)';
+          seismicCtx.lineWidth = 2.5;
+          seismicCtx.beginPath();
+          for (let x = 0; x < sw; x += 6) {
+            const mod = Math.sin(x * 0.08 + waveY * 0.1) * 3;
+            if (x === 0) seismicCtx.moveTo(x, waveY + mod);
+            else seismicCtx.lineTo(x, waveY + mod);
+          }
+          seismicCtx.stroke();
+        }
+
+        if (waveY >= 200 && waveY <= 240) {
+          seismicCtx.fillStyle = 'rgba(34, 255, 102, 0.2)';
+          seismicCtx.fillRect(0, 200, sw, 40);
+          if (is1999) {
+            if (!state.verifiedSectors.AUDIO_DSP) {
+              defuseSector('AUDIO_DSP', 'Seismic acoustic sounding locked 1999.00 Hz cavity resonance.');
+            }
+          }
+        }
+
+        if (waveY > sh + 120) {
+          state.seismicPulseActive = false;
+          if (seismicStatusBadge) {
+            seismicStatusBadge.textContent = 'GEOPHONE ARRAY: LISTENING (READY)';
+            seismicStatusBadge.style.color = 'var(--cyan)';
           }
         }
       }
-
-      if (waveY > sh + 120) {
-        state.seismicPulseActive = false;
-        if (seismicStatusBadge) {
-          seismicStatusBadge.textContent = 'GEOPHONE ARRAY: LISTENING (READY)';
-          seismicStatusBadge.style.color = 'var(--cyan)';
-        }
+    } 
+    // View Mode 2: Lithospheric Waveguide Dispersion Spectrogram
+    else if (state.seismicViewMode === 'dispersion') {
+      seismicCtx.strokeStyle = 'rgba(26, 122, 53, 0.25)';
+      seismicCtx.lineWidth = 1;
+      for (let x = 50; x < sw; x += 55) {
+        seismicCtx.beginPath(); seismicCtx.moveTo(x, 20); seismicCtx.lineTo(x, sh - 30); seismicCtx.stroke();
       }
+      for (let y = 30; y < sh - 30; y += 35) {
+        seismicCtx.beginPath(); seismicCtx.moveTo(50, y); seismicCtx.lineTo(sw - 20, y); seismicCtx.stroke();
+      }
+
+      seismicCtx.fillStyle = 'var(--phosphor-dim)';
+      seismicCtx.font = '9.5px monospace';
+      seismicCtx.fillText('v_p (m/s)', 8, 28);
+      seismicCtx.fillText('5600', 15, 60);
+      seismicCtx.fillText('4450', 15, 115);
+      seismicCtx.fillText('3200', 15, 175);
+      seismicCtx.fillText('1800', 15, 235);
+      seismicCtx.fillText('Freq (Hz) ->', sw - 85, sh - 12);
+      seismicCtx.fillText('500', 120, sh - 15);
+      seismicCtx.fillText('1000', 215, sh - 15);
+      seismicCtx.fillText('1999 (LOCK)', 370, sh - 15);
+      seismicCtx.fillText('2500', 490, sh - 15);
+
+      // Asymptote v_s = 4450 m/s (Halite shear bulk velocity)
+      seismicCtx.strokeStyle = 'rgba(250, 204, 21, 0.4)';
+      seismicCtx.setLineDash([4, 4]);
+      seismicCtx.beginPath();
+      seismicCtx.moveTo(50, 112);
+      seismicCtx.lineTo(sw - 20, 112);
+      seismicCtx.stroke();
+      seismicCtx.setLineDash([]);
+      seismicCtx.fillStyle = '#facc15';
+      seismicCtx.fillText('Salado Bulk v_s = 4450 m/s', sw - 180, 108);
+
+      // Mode 1 Phase Velocity Curve
+      seismicCtx.strokeStyle = '#38bdf8';
+      seismicCtx.lineWidth = 2;
+      seismicCtx.beginPath();
+      for (let f = 100; f <= 2800; f += 20) {
+        const px = 50 + (f / 3000) * (sw - 70);
+        const fc = 13.9;
+        const ratio = Math.max(0.01, 1 - Math.pow(fc / f, 2));
+        const vp = 4450 / Math.sqrt(ratio);
+        const py = 250 - ((vp - 1800) / (5600 - 1800)) * 200;
+        if (f === 100) seismicCtx.moveTo(px, Math.max(30, Math.min(sh - 30, py)));
+        else seismicCtx.lineTo(px, Math.max(30, Math.min(sh - 30, py)));
+      }
+      seismicCtx.stroke();
+
+      // Mode 2 Group Velocity Curve
+      seismicCtx.strokeStyle = '#c084fc';
+      seismicCtx.lineWidth = 1.8;
+      seismicCtx.beginPath();
+      for (let f = 100; f <= 2800; f += 20) {
+        const px = 50 + (f / 3000) * (sw - 70);
+        const fc = 13.9;
+        const ratio = Math.max(0.01, 1 - Math.pow(fc / f, 2));
+        const vg = 4450 * Math.sqrt(ratio);
+        const py = 250 - ((vg - 1800) / (5600 - 1800)) * 200;
+        if (f === 100) seismicCtx.moveTo(px, Math.max(30, Math.min(sh - 30, py)));
+        else seismicCtx.lineTo(px, Math.max(30, Math.min(sh - 30, py)));
+      }
+      seismicCtx.stroke();
+
+      // 1999Hz Cavity Resonance Hotspot
+      const lockX = 50 + (1999 / 3000) * (sw - 70);
+      const lockY = 112;
+      seismicCtx.strokeStyle = 'var(--border-bright)';
+      seismicCtx.lineWidth = 1;
+      seismicCtx.beginPath();
+      seismicCtx.moveTo(lockX, 20); seismicCtx.lineTo(lockX, sh - 30);
+      seismicCtx.stroke();
+
+      seismicCtx.fillStyle = 'rgba(34, 255, 102, 0.35)';
+      seismicCtx.beginPath();
+      seismicCtx.arc(lockX, lockY, 12, 0, Math.PI * 2);
+      seismicCtx.fill();
+      seismicCtx.strokeStyle = '#fff';
+      seismicCtx.stroke();
+      seismicCtx.fillStyle = '#fff';
+      seismicCtx.font = 'bold 10px monospace';
+      seismicCtx.fillText('★ 1999.00 Hz CAVITY RESONANCE (Q=420.5)', lockX + 16, lockY - 8);
+    }
+    // View Mode 3: 4-Channel Geophone Waterfall Array
+    else if (state.seismicViewMode === 'array') {
+      const chLabels = [
+        { name: 'G1 [0m Surface Caliche]', vel: '1800 m/s', col: '#a3e635', base: 50 },
+        { name: 'G2 [160m Rustler Aquifer]', vel: '3200 m/s', col: '#38bdf8', base: 110 },
+        { name: 'G3 [450m Salado Halite]', vel: '4450 m/s', col: '#facc15', base: 170 },
+        { name: 'G4 [650m Deep Core Salt Vault]', vel: '1999Hz Lock', col: 'var(--border-bright)', base: 230 }
+      ];
+
+      chLabels.forEach((ch, cIdx) => {
+        seismicCtx.fillStyle = ch.col;
+        seismicCtx.font = 'bold 9.5px monospace';
+        seismicCtx.fillText(`${ch.name} (v=${ch.vel})`, 10, ch.base - 14);
+
+        seismicCtx.strokeStyle = 'rgba(26, 122, 53, 0.3)';
+        seismicCtx.beginPath();
+        seismicCtx.moveTo(0, ch.base); seismicCtx.lineTo(sw, ch.base);
+        seismicCtx.stroke();
+
+        seismicCtx.strokeStyle = ch.col;
+        seismicCtx.lineWidth = 1.4;
+        seismicCtx.beginPath();
+        for (let x = 0; x < sw; x += 2) {
+          let y = ch.base;
+          if (state.seismicPulseActive) {
+            const delayOffset = (cIdx * 50) + 20;
+            const t = (state.seismicPulseT - delayOffset) / 25;
+            if (t > 0 && t < 12) {
+              const env = Math.exp(-t * 0.45);
+              const wave = Math.sin(t * (state.seismicFreq / 250) * Math.PI) * 18 * env;
+              y += wave * (state.seismicGain / 2.5);
+            }
+          } else {
+            y += Math.sin(x * 0.08 + Date.now() * 0.003 + cIdx) * 2;
+          }
+          if (x === 0) seismicCtx.moveTo(x, y);
+          else seismicCtx.lineTo(x, y);
+        }
+        seismicCtx.stroke();
+      });
     }
 
+    // Right Canvas: Surface Geophone Oscilloscope Trace
     const gw = geophoneCanvas.width;
     const gh = geophoneCanvas.height;
     geophoneCtx.fillStyle = '#010502';
@@ -5444,7 +5851,6 @@ Timestamp: ${new Date().toISOString()}
     geophoneCtx.beginPath();
     const midY = gh / 2;
 
-    const is1999 = Math.abs(state.seismicFreq - 1999.0) < 1.0;
     const coherence = is1999 ? 99.4 : Math.max(12, 100 - Math.abs(state.seismicFreq - 1999.0) * 0.08);
 
     if (lblSeismicCoherence) {

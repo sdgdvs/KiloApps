@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-creator
-next_agent: kilo-graphics
+current_agent: kilo-graphics
+next_agent: kilo-soundscape
 agent_rotation:
 - kilo-graphics
 - kilo-soundscape
@@ -14,14 +14,14 @@ effort: high
 timeout_minutes: 10
 status: ready
 current_targets:
-  kilo_creator: kweb://deep-core
+  kilo_creator: kweb://darknet
   kilo_graphics: KDragon
   kilo_soundscape: KDragon
   kilo_tester: KColony
   kilo_usability: KCipher
   kilo_qa: KSnake
   kilo_expander: KFont
-virtual_web_target: kweb://deep-core
+virtual_web_target: kweb://darknet
 virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
@@ -35,9 +35,9 @@ virtual_web_rotation:
 - kweb://echo-subsystem.net
 - kweb://deep-core
 last_run:
-  agent: kilo-expander
-  app: KBookmark
-  timestamp: 2026-10-18T12:45:00+0000
+  agent: kilo-creator
+  app: kweb://deep-core
+  timestamp: 2026-10-18T14:20:00+0000
 last_planner_run: '2026-10-17T20:53:00Z'
 ---
 
@@ -66,10 +66,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 ## Active Target Queues (Gemini Flash Optimized Tickets)
 
 ### 1. Virtual 1999 Web & ARG Node Creator (`kilo-creator`)
-- **Target**: `kweb://deep-core`
-- **Primary File**: `KiloOS/public/web/deep_core.html`
-- **Objective**: Subterranean deep core command terminal & ARG climax precursor: seismic waveguide telemetry, subterranean relay packet analysis, and Tier 3 Anti-Potemkin depth (<999 KB).
-- **Upcoming Queue**: `kweb://darknet`, `kweb://portal`, `kweb://webring`, `kweb://warez`.
+- **Target**: `kweb://darknet`
+- **Primary File**: `KiloOS/public/web/darknet.html`
+- **Objective**: Encrypted underground relay & cryptography lab: hex memory inspector, Bell 103/202 FSK modem, Shared Signal Interlock, Feistel & RC4 cipher suites (<999 KB).
+- **Upcoming Queue**: `kweb://portal`, `kweb://webring`, `kweb://warez`, `kweb://geocities`.
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
 - **Target**: `KDragon`
@@ -197,6 +197,13 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-18T14:20:00+0000 — kilo-creator: kweb://deep-core (Subterranean Deep Core Command Terminal & ARG Precursor)**
+  - Comprehensive 10-Deck Architecture: Verified all 10 decks (VT100 Telnet, Sector Defusal, 3D Wireframe Salt Vault, Collaborative Signal Mesh, Ghost Spool Inodes, Passkey SHA-256 Crypto Lab, x86 Protected Mode Stepper, 650m Seismic Sonar, Promiscuous Wiretap, Inner Sanctum).
+  - Webring & Navigation Synchronization: Updated KiloNet Webring site #017 metadata and tags to reflect full technical capabilities and interconnects.
+  - Briefing & Ergonomics: Enriched F1 first-run briefing modal covering all 10 decks, keyboard shortcuts (F1/F5/F7/F9/M), and 28+ terminal directives.
+  - Verification & Budget: Passed Vite build (457ms), KNet startup test PASS (189.8 KB, 0 JS errors, hit-test unblocked), full ARG golden thread verification (Stages 1-7 PASS), and byte budget gate (<999 KB, 289.4 KB footprint).
+  - Queue Handoff: Advanced kilo-creator and virtual_web_target to `kweb://darknet`; rotated active agent to `kilo-graphics` on `KDragon`.
+
 - **2026-10-18T12:45:00+0000 — kilo-expander: KBookmark (Deep Feature Expansion & Hierarchical Netscape Vault)**
   - Hierarchical Folders & Breadcrumbs: Nested tree navigation in sidebar with expand/collapse, subfolder counts, parent folder selector, and interactive breadcrumbs.
   - Quick Jump Omni-Launcher: Ctrl+K / Ctrl+P / Alt+J modal launcher filtering across titles, URLs, tags, and folder paths with arrow navigation and immediate launch.
@@ -229,11 +236,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Viewport Sync: Implemented same-origin `httpWebFrame` load listener updating address bar, history, and source/hex inspector buffers on hypermedia clicks.
   - Parity & Verification: Verified Win32 native C client (`build.bat` 45 KB), startup test PASS (189.8 KB < 999 KB, 0 JS errors), Vite build clean (466ms).
   - Queue: Advanced `kilo_tester` to `KColony`; rotation handoff to `kilo-usability`.
-
-- **2026-10-18T05:38:00+0000 — kilo-soundscape: KAlchemy ("The Hermetic Transmutation" — Mystical Laboratory FM Suite)**
-  - Composition: D Dorian / Andalusian cadence (Dm -> C -> Bb/G -> A7), 32 steps, 6 channels, shell voicings (no 5ths).
-  - Voice Leading & Patches: Mystic Flute/E-Piano lead (delayed LFO vibrato), Crystalline Celesta counter, Slap/Wood bass, SPC700 delay.
-  - Earcons: Upgraded bubbling simmer, dual FM crystal glass clinkers, electric transmutation zap, and 5-note pentatonic discovery chime.
-  - Ergonomics: Wired M key toggle & header badge state sync; persisted mute preference in localStorage.
-  - Verification: Clean Vite build (503ms), startup test PASS (253.0 KB < 999 KB, 0 JS err), security lint clean, native C clean (70.6 KB).
-  - Queue: Advanced kilo-soundscape to KDragon; rotation handoff to kilo-tester.

@@ -1,21 +1,21 @@
-﻿{
-    "node_id":  "pc_a",
-    "name":  "PC A (sdgdvs)",
-    "account":  "sdgdvs",
-    "hostname":  "P10700",
-    "model_tier":  "Gemini Pro",
-    "cadence":  "1 turn/hour",
-    "status":  "active",
-    "schedule_minutes":  [
-                             12
-                         ],
-    "session_start":  "2026-10-18T01:41:48.1535014Z",
-    "session_end":  null,
-    "session_limit_enabled":  false,
-    "timer_enabled":  false,
-    "turns_executed":  302,
-    "last_turn_timestamp":  "2026-09-28T18:42:51Z",
-    "last_heartbeat":  "2026-10-18T01:41:48.1535014Z",
-    "current_target":  "kweb://echo-subsystem.net",
-    "remote_command":  "none"
+{
+  "node_id": "pc_a",
+  "name": "PC A (sdgdvs)",
+  "account": "sdgdvs",
+  "hostname": "P10700",
+  "model_tier": "Gemini Pro",
+  "cadence": "1 turn/hour",
+  "status": "active",
+  "schedule_minutes": [
+    12
+  ],
+  "session_start": "2026-10-18T01:41:48.1535014Z",
+  "session_end": null,
+  "session_limit_enabled": false,
+  "timer_enabled": false,
+  "turns_executed": 314,
+  "last_turn_timestamp": "2026-09-28T18:42:51Z",
+  "last_heartbeat": "2026-10-18T13:22:06.411041+00:00",
+  "current_target": "kweb://deep-core",
+  "remote_command": "none"
 }
