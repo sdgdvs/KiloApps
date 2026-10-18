@@ -227,6 +227,7 @@
 
             <!-- BRANCH SELECTION OVERLAY -->
             <div id="branchOverlay" class="overlay" style="display:none;" role="dialog" aria-modal="true" aria-label="Campaign Route Selection">
+                <button class="modal-close-btn" onclick="showMenu()" title="Back to Menu (ESC)">✕</button>
                 <h2 style="color:#fbc531;">CAMPAIGN ROUTE SELECTION</h2>
                 <p style="font-size:13px; color:#a4b0be; margin-bottom:8px;">Milestone Reached! Choose your campaign branch path:</p>
                 <div class="branch-card" onclick="chooseCampaignBranch(0)">
@@ -241,6 +242,7 @@
 
             <!-- GAME OVER OVERLAY -->
             <div id="gameOverOverlay" class="overlay" style="display:none;" role="dialog" aria-modal="true" aria-label="Game Result Dialog">
+                <button class="modal-close-btn" onclick="showMenu()" title="Back to Menu (ESC)">✕</button>
                 <h2 id="gameOverTitle" style="color: #ff4757;">GAME OVER</h2>
                 <p id="finalScoreText" style="font-size: 15px; font-weight: bold; color: #fbc531;"></p>
                 <div id="highScoreEntry" style="display:none; margin: 6px 0;">
@@ -3690,8 +3692,9 @@
             if (isHighVic) {
                 setTimeout(() => { const inp = document.getElementById('initialsInput'); if (inp) { inp.focus(); inp.select(); } }, 60);
             }
+            const savedStateVic = safeGetJSON('ksnakeSaveState', null);
             const qlBtn = document.getElementById('btnGameOverQuickload');
-            if (qlBtn) qlBtn.style.display = 'none';
+            if (qlBtn) qlBtn.style.display = (savedStateVic && savedStateVic.snake && savedStateVic.snake.length > 0) ? 'inline-block' : 'none';
             gameOverOverlay.style.display = 'flex';
             lastMatchStats = { ticks: matchTicks, apples: matchApplesEaten, coverage: Math.round((gridCoverage.size / 400) * 100), score: score, mode: gameMode };
             requestAnimationFrame(draw);
@@ -5495,6 +5498,7 @@
                 return;
             }
             try {
+                safeSetStorage('ksnake_tutorialSeen', 'true');
                 isReplayMode = false;
                 snake = s.snake || [{x: 5, y: 5}];
                 dir = s.dir || {x: 1, y: 0};
@@ -5799,8 +5803,9 @@
                 else if (k === 't' || e.key === 'Enter') startCustomGame();
                 else if (e.key === 'Escape') closeMapEditor();
             } else if (gameState === 9) { // Branch Choice
-                if (k === '1') chooseCampaignBranch(0);
+                if (k === '1' || e.key === 'Enter') chooseCampaignBranch(0);
                 else if (k === '2') chooseCampaignBranch(1);
+                else if (e.key === 'Escape') showMenu();
             } else if (gameState === 1) {
                 // Prevent default scrolling on movement / skill keys during game
                 if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' '].includes(e.key) ||
@@ -5831,14 +5836,14 @@
                     saveAndExit();
                 }
             } else if (gameState === 2 || gameState === 4) {
-                if (e.key === 'Enter' || e.key === 'Escape') {
+                if (e.key === 'Enter' || e.key === 'Escape' || e.key === ' ') {
                     showMenu();
                 }
             }
         });
 
         // Backdrop click dismissal for modal dialogs
-        [leaderboardOverlay, configOverlay, statsExportOverlay, exportImportOverlay, tutorialOverlay, pauseOverlay, replayOverlay].forEach(overlay => {
+        [leaderboardOverlay, configOverlay, statsExportOverlay, exportImportOverlay, tutorialOverlay, pauseOverlay, replayOverlay, gameOverOverlay, branchOverlay].forEach(overlay => {
             if (!overlay) return;
             overlay.addEventListener('click', e => {
                 if (e.target === overlay) {

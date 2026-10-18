@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-qa
+current_agent: kilo-expander
+next_agent: kilo-expander
 agent_rotation:
 - kilo-graphics
 - kilo-soundscape
@@ -19,7 +19,7 @@ current_targets:
   kilo_soundscape: KVoid
   kilo_tester: KTrader
   kilo_usability: KPass
-  kilo_qa: KSnake
+  kilo_qa: K2048
   kilo_expander: KFont
 virtual_web_target: kweb://darknet
 virtual_web_rotation:
@@ -35,9 +35,9 @@ virtual_web_rotation:
 - kweb://echo-subsystem.net
 - kweb://deep-core
 last_run:
-  agent: kilo-usability
-  app: KCipher
-  timestamp: 2026-10-18T18:36:00+0000
+  agent: kilo-qa
+  app: KSnake
+  timestamp: 2026-10-18T19:20:00+0000
 last_planner_run: '2026-10-17T20:53:00Z'
 ---
 
@@ -137,22 +137,22 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Upcoming Queue**: `KVault`, `KCalc`, `KHex`.
 
 ### 6. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
-- **Target**: `KSnake`
-- **Primary Files**: `KiloOS/public/apps/ksnake.html`, `KSnake/main.c` (if present)
-- **Objective**: Pass 5 QA audit: verify first-run tutorial onboarding overlay (`ksnake_tutorialSeen`), verify F5 quicksave & F9 quickload capture complete snake state/difficulty/score, test Escape modal dismissal, and ensure clean dual Win32 native compilation and web cartridge (<999 KB).
+- **Target**: `K2048`
+- **Primary Files**: `KiloOS/public/apps/k2048.html`, `K2048/main.c` (if present)
+- **Objective**: Pass 5 QA audit: verify first-run tutorial onboarding overlay (`k2048_tutorialSeen`), verify F5 quicksave & F9 quickload capture complete board state/score/undo history, test Escape modal dismissal, and ensure clean dual Win32 native compilation and web cartridge (<999 KB).
 - **Action Steps**:
   1. State Persistence: F5 quicksave & F9 quickload capturing complete game state, stats, and settings.
   2. First-run Tutorial: Onboarding displays once on fresh sessions, never on restored saves.
   3. Modal Dismissals: Modals dismiss cleanly with Escape, Enter, or Close button.
-  4. Dual Parity & Build: Compile Win32 native client via `cmd.exe /c build.bat` in `KSnake/` (if present) and verify web build.
+  4. Dual Parity & Build: Compile Win32 native client via `cmd.exe /c build.bat` in `K2048/` (if present) and verify web build.
 - **Verification**:
-  - `uv run scripts/test_app_startup.py --app KSnake`
-  - `cd KiloOS && npm run build` (0 Vite errors, `ksnake.html` < 999 KB)
+  - `uv run scripts/test_app_startup.py --app K2048`
+  - `cd KiloOS && npm run build` (0 Vite errors, `k2048.html` < 999 KB)
 - **Handoff**:
-  - In frontmatter: advance `current_targets.kilo_qa` to `K2048`.
+  - In frontmatter: advance `current_targets.kilo_qa` to `KSudoku`.
   - Set `current_agent: kilo-expander`.
   - Append terse execution log (≤6 lines), commit, and push.
-- **Upcoming Queue**: `K2048`, `KSudoku`.
+- **Upcoming Queue**: `KSudoku`, `KTetris`.
 
 ### 7. Feature Expander Queue (`kilo-expander`)
 - **Target**: `KFont`
@@ -194,10 +194,18 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | **KMaze** | `KiloOS/public/apps/kmaze.html` | Pass 5 (2026-10-18) | Action / 3D Raycaster | 45-chamber dungeon descent raycaster, Minotaur Overlord boss, dual Win32 native client, full F5/F9 state persistence, first-run tutorial integrity. |
 | **KDragon** | `KiloOS/public/apps/kdragon.html` | Pass 6+ (2026-10-18) | RPG / Virtual Pet | Complete dragon pet & arena combat simulation, dual Win32 native client parity, YM2612 2-Op FM / SPC700 3-track audio suite, full F5/F9 state persistence. |
 | **KColony** | `KiloOS/public/apps/kcolony.html` | Pass 6+ (2026-10-18) | Strategy / Simulation | 20-structure planetary colony simulation; 4 biomes, 7 modes, tech tree, expeditions, dual Win32 native client parity, YM2612 2-Op FM audio, full F5/F9 state persistence. |
+| **KSnake** | `KiloOS/public/apps/ksnake.html` | Pass 5 (2026-10-18) | Arcade / Classic | 30-stage campaign with branch choices, Gauntlet mode, Map Editor Lab, Replay Viewer (.ksr), online/AI duel, dual Win32 native client parity, full F5/F9 state persistence. |
 
 ---
 
 ## Recent Execution Logs (Max 5 Entries)
+
+- **2026-10-18T19:20:00+0000 — kilo-qa: KSnake (Pass 5 QA Audit & Mature Quarantine)**
+  - State Persistence: Verified F5 quicksave & F9 quickload capturing complete game state; enabled quickload on victory screen; ensured tutorial flag is safely recorded upon game restoration.
+  - Tutorial & Onboarding: Confirmed first-run tutorial overlay (`ksnake_tutorialSeen` / `ksnake_tutorial.dat`) displays on fresh sessions and never intrudes on restored saves; added [T] tutorial shortcut to Win32 C menu.
+  - Modal Dismissals & Ergonomics: Added close buttons and Escape/Enter/Space handlers to Game Over and Campaign Route Selection overlays; wired modal backdrop click dismissals.
+  - Dual Parity & Build: Verified clean Win32 C build (`KSnake.exe`, 55.3 KB), startup test PASS (283.4 KB < 999 KB, 0 JS errors), Vite build clean (456ms), security lint PASS.
+  - Quarantine & Queue: Promoted KSnake to Mature Applications quarantine table; advanced `kilo_qa` to K2048; rotation handoff to `kilo-expander`.
 
 - **2026-10-18T18:36:00+0000 — kilo-usability: KCipher (UX Polish, HiDPI Canvas & Accessible Ergonomics)**
   - HiDPI Canvas Crispness: Integrated `window.devicePixelRatio` scaling into frequency chart canvas for razor-sharp rendering on high-DPI screens.
@@ -224,10 +232,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Status: ⏭️ Skip — Imagen 3 asset replacement not appropriate for KDragon (pure vector, board game, or mature art).
   - Optimization: Handled via orchestrator pre-flight zero-token auto-skip.
   - Queue: Advanced `kilo-graphics` to `KDragon`; rotation handoff to `kilo-soundscape`.
-
-- **2026-10-18T14:20:00+0000 — kilo-creator: kweb://deep-core (Subterranean Deep Core Command Terminal & ARG Precursor)**
-  - Comprehensive 10-Deck Architecture: Verified all 10 decks (VT100 Telnet, Sector Defusal, 3D Wireframe Salt Vault, Collaborative Signal Mesh, Ghost Spool Inodes, Passkey SHA-256 Crypto Lab, x86 Protected Mode Stepper, 650m Seismic Sonar, Promiscuous Wiretap, Inner Sanctum).
-  - Webring & Navigation Synchronization: Updated KiloNet Webring site #017 metadata and tags to reflect full technical capabilities and interconnects.
-  - Briefing & Ergonomics: Enriched F1 first-run briefing modal covering all 10 decks, keyboard shortcuts (F1/F5/F7/F9/M), and 28+ terminal directives.
-  - Verification & Budget: Passed Vite build (457ms), KNet startup test PASS (189.8 KB, 0 JS errors, hit-test unblocked), full ARG golden thread verification (Stages 1-7 PASS), and byte budget gate (<999 KB, 289.4 KB footprint).
-  - Queue Handoff: Advanced kilo-creator and virtual_web_target to `kweb://darknet`; rotated active agent to `kilo-graphics` on `KDragon`.

@@ -790,6 +790,14 @@ int RestoreGameState() {
         num_rivals = 0;
     }
     CloseHandle(hFile);
+    // Ensure tutorial flag is marked seen when restoring a saved game
+    HANDLE hTut = CreateFileA("ksnake_tutorial.dat", GENERIC_WRITE, 0, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hTut != INVALID_HANDLE_VALUE) {
+        char val = '1';
+        DWORD written = 0;
+        WriteFile(hTut, &val, 1, &written, NULL);
+        CloseHandle(hTut);
+    }
     particle_count = 0;
     num_shockwaves = 0;
     screen_shake_timer = 0;
@@ -2110,6 +2118,17 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     InvalidateRect(hwnd, NULL, TRUE);
                 }
             } else if ((game_state == 2 || game_state == 4) && !is_high_score_entry) {
+                DWORD goSaveAttr = GetFileAttributesA("ksnake_save.dat");
+                int hasSave = (goSaveAttr != INVALID_FILE_ATTRIBUTES && !(goSaveAttr & FILE_ATTRIBUTE_DIRECTORY));
+                if (hasSave && ly >= 275 && ly <= 325) {
+                    if (RestoreGameState()) {
+                        game_state = 1;
+                        SetTimer(hwnd, TIMER_ID, current_speed, NULL);
+                        ShowToastNative("Quicksave Loaded! [F9]");
+                        InvalidateRect(hwnd, NULL, TRUE);
+                        break;
+                    }
+                }
                 game_state = 0;
                 InvalidateRect(hwnd, NULL, TRUE);
             } else if (game_state == 8) { // Map Editor
@@ -2625,6 +2644,27 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     ShowToastNative(wrap_mode ? "Wall Wrap: ON" : "Wall Wrap: OFF");
                 }
                 else if (wParam == 'H' || wParam == VK_F1) game_state = 5;
+                else if (wParam == 'T') {
+                    char helpText[1024];
+                    wsprintfA(helpText,
+                        "Welcome to KSnake Arcade!\n\n"
+                        "Controls:\n"
+                        "- Movement: Arrow Keys or WASD\n"
+                        "- Pause: P or ESC\n"
+                        "- Help & High Scores: F1 or H\n\n"
+                        "Active Skills:\n"
+                        "- [G] Ghost Mode: Glide through walls & tail\n"
+                        "- [F] Freeze: Slow enemy snakes and hazards by 50%%\n"
+                        "- [M] Magnet: Pull nearby fruits to your snake\n\n"
+                        "Quicksave System:\n"
+                        "- [F5] Quicksave at any time during gameplay\n"
+                        "- [F9] Quickload instantly at any time\n"
+                        "- [S / Q] in Pause menu to Save & Exit to title\n\n"
+                        "Game Modes:\n"
+                        "- Classic, Maze, Speed Ramp, Wall Wrap, Campaign, VS Mode, Custom Map, Gauntlet\n\n"
+                        "Press OK to return to menu!");
+                    MessageBoxA(hwnd, helpText, "KSnake Arcade - Tutorial & Guide", MB_OK | MB_ICONINFORMATION);
+                }
                 else if (wParam == 'R') {
                     if (RestoreGameState()) {
                         game_state = 1; SetTimer(hwnd, TIMER_ID, current_speed, NULL);
@@ -2696,7 +2736,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 else if (wParam == VK_ESCAPE) { game_state = 0; }
                 InvalidateRect(hwnd, NULL, TRUE);
             } else if (game_state == 9) { // Branch Choice Checkpoint
-                if (wParam == '1') {
+                if (wParam == '1' || wParam == VK_RETURN) {
                     campaign_branch = 0; // Solar Path
                     campaign_level++;
                     InitCampaignStage(campaign_level);
@@ -2712,6 +2752,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     game_state = 1;
                     SetTimer(hwnd, TIMER_ID, current_speed, NULL);
                     ShowToastNative("Shadow Labyrinth Selected!");
+                } else if (wParam == VK_ESCAPE) {
+                    game_state = 0;
                 }
                 InvalidateRect(hwnd, NULL, TRUE);
             } else if (game_state == 6) { // Config
@@ -2845,7 +2887,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 TextOutA(hdc, 110, 250, "Move: WASD/Arrows | Skills: G,F,M | Pause: P/ESC", 48);
 
                 SetTextColor(hdc, RGB(72, 219, 251));
-                TextOutA(hdc, 110, 280, "[F1 / H] Full Help & Scores", 27);
+                TextOutA(hdc, 110, 280, "[F1 / H] High Scores  |  [T] Tutorial", 37);
 
                 SelectObject(hdc, hFont);
                 SetTextColor(hdc, RGB(76, 209, 55));
@@ -3040,6 +3082,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 } else {
                     SelectObject(hdc, hFontSmall);
                     TextOutA(hdc, 130, 280, "Press ENTER or ESC to Return", 28);
+                    DWORD vicSaveAttr = GetFileAttributesA("ksnake_save.dat");
+                    if (vicSaveAttr != INVALID_FILE_ATTRIBUTES && !(vicSaveAttr & FILE_ATTRIBUTE_DIRECTORY)) {
+                        SetTextColor(hdc, RGB(76, 209, 55));
+                        TextOutA(hdc, 130, 305, "[F9] Reload Quicksave Checkpoint", 32);
+                    }
                     SelectObject(hdc, hFont);
                 }
             } else { // PLAYING
