@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-tester
-next_agent: kilo-tester
+current_agent: kilo-usability
+next_agent: kilo-usability
 agent_rotation:
 - kilo-graphics
 - kilo-soundscape
@@ -17,7 +17,7 @@ current_targets:
   kilo_creator: kweb://darknet
   kilo_graphics: KAlchemy
   kilo_soundscape: KVoid
-  kilo_tester: KColony
+  kilo_tester: KTrader
   kilo_usability: KCipher
   kilo_qa: KSnake
   kilo_expander: KFont
@@ -35,9 +35,9 @@ virtual_web_rotation:
 - kweb://echo-subsystem.net
 - kweb://deep-core
 last_run:
-  agent: kilo-soundscape
-  app: KDragon
-  timestamp: 2026-10-18T16:15:00+0000
+  agent: kilo-tester
+  app: KColony
+  timestamp: 2026-10-18T18:20:00+0000
 last_planner_run: '2026-10-17T20:53:00Z'
 ---
 
@@ -101,25 +101,25 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   3. Pure Web Audio synthesis with zero external audio assets.
 - **Verification**: `cd KiloOS && npm run build` (0 Vite errors). Confirm file size < 999 KB.
 - **Handoff**:
-  - In frontmatter: advance `current_targets.kilo_soundscape` to `KColony`.
+  - In frontmatter: advance `current_targets.kilo_soundscape` to `KFortress`.
   - Set `current_agent: kilo-tester`.
   - Append terse execution log (≤6 lines), commit, and push.
-- **Upcoming Queue**: `KColony`, `KFortress`.
+- **Upcoming Queue**: `KFortress`, `KMech`.
 
 ### 4. App Tester Queue (`kilo-tester`)
-- **Target**: `KColony`
-- **Primary File**: `KiloOS/public/apps/kcolony.html`
-- **Objective**: Space colony simulation UI audit: module construction controls, resource sliders, life support telemetry, disaster event dialogs, and save/load state.
+- **Target**: `KTrader`
+- **Primary File**: `KiloOS/public/apps/ktrader.html`
+- **Objective**: Space trading simulation UI audit: market commodity exchanges, ship cargo holds, navigation route controls, warp travel dialogs, and save/load state.
 - **Action Steps**:
-  1. Run automated startup check: `uv run scripts/test_app_startup.py --app KColony`.
-  2. Audit all UI elements: construction panel, worker allocations, trade depot, event modals, and hotkeys.
+  1. Run automated startup check: `uv run scripts/test_app_startup.py --app KTrader`.
+  2. Audit all UI elements: commodity buy/sell buttons, cargo capacity sliders, star map navigation, and hotkeys.
   3. Fix any broken button hooks, missing element IDs, or unhandled exceptions inline.
-- **Verification**: `uv run scripts/test_app_startup.py --app KColony` and `cd KiloOS && npm run build`. File size < 999 KB.
+- **Verification**: `uv run scripts/test_app_startup.py --app KTrader` and `cd KiloOS && npm run build`. File size < 999 KB.
 - **Handoff**:
-  - In frontmatter: advance `current_targets.kilo_tester` to `KTrader`.
+  - In frontmatter: advance `current_targets.kilo_tester` to `KMystery`.
   - Set `current_agent: kilo-usability`.
   - Append terse execution log (≤6 lines), commit, and push.
-- **Upcoming Queue**: `KTrader`, `KMystery`, `KNet`.
+- **Upcoming Queue**: `KMystery`, `KNet`, `KCalc`.
 
 ### 5. Usability & UX Queue (`kilo-usability`)
 - **Target**: `KCipher`
@@ -193,10 +193,18 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | **KGo** | `KiloOS/public/apps/kgo.html` | Pass 5 (2026-10-17) | Strategy / Board | Feature-complete Baduk/Go with 20-stage campaign, tsumego puzzle solver, AI personalities, SGF export/import, dual Win32 native client parity, full F5/F9 state persistence. |
 | **KMaze** | `KiloOS/public/apps/kmaze.html` | Pass 5 (2026-10-18) | Action / 3D Raycaster | 45-chamber dungeon descent raycaster, Minotaur Overlord boss, dual Win32 native client, full F5/F9 state persistence, first-run tutorial integrity. |
 | **KDragon** | `KiloOS/public/apps/kdragon.html` | Pass 6+ (2026-10-18) | RPG / Virtual Pet | Complete dragon pet & arena combat simulation, dual Win32 native client parity, YM2612 2-Op FM / SPC700 3-track audio suite, full F5/F9 state persistence. |
+| **KColony** | `KiloOS/public/apps/kcolony.html` | Pass 6+ (2026-10-18) | Strategy / Simulation | 20-structure planetary colony simulation; 4 biomes, 7 modes, tech tree, expeditions, dual Win32 native client parity, YM2612 2-Op FM audio, full F5/F9 state persistence. |
 
 ---
 
 ## Recent Execution Logs (Max 5 Entries)
+
+- **2026-10-18T18:20:00+0000 — kilo-tester: KColony (UI Audit, Hotkey Hardening & Mature Quarantine)**
+  - PASS ✅ (5 issues, 5 fixed): Fixed modal display check, repaired game loop intervals, added numpad/A hotkeys, wired active export autosave, and aligned structure panel order.
+  - Interactive Audit: Verified all 20 structure buttons, 13 research paths, 3 expedition tiers, trade depot, orbital strike, and Escape/backdrop modal dismissals.
+  - State Persistence: Confirmed F5 quicksave, F9 quickload, JSON import/export, and first-run tutorial flag (`kcolony_tutorialSeen`) never intrudes on restored saves.
+  - Verification: Clean Win32 C compilation (`KColony.exe`), startup test PASS (138.3 KB < 999 KB, 0 JS errors), Vite build clean (461ms), byte gate PASS.
+  - Quarantine & Queue: Promoted KColony to Mature Applications quarantine; advanced `kilo_tester` to KTrader; rotation handoff to `kilo-usability`.
 
 - **2026-10-18T16:15:00+0000 — kilo-soundscape: KDragon (Audio Audit & Mature Quarantine)**
   - Procedural Audio: Verified YM2612 2-Op FM / SPC700 chiptune suite (3 multi-voice tracks, 18 FM presets, swing-tick groove, delayed vibrato, stereo delay).
@@ -224,10 +232,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Universal Netscape Import/Export: RFC/Netscape HTML bookmark exporter and parser with nested DL/H3 hierarchy tracking, tags, and notes.
   - Verification & Dual Parity: Clean Win32 C build (24.0 KB), Vite build clean (473ms), startup test PASS (159.9 KB < 999 KB, 0 JS errors, hit-test unblocked).
   - Queue: Advanced kilo-expander to KFont; rotation handoff to kilo-creator.
-
-- **2026-10-18T11:20:00+0000 — kilo-qa: KMaze (Pass 5 QA & State Integrity — Quarantined to Mature)**
-  - First-run Tutorial Integrity: Verified `kmaze_tutorialSeen` / `kmaze_tutorial.dat` onboarding triggers on fresh sessions, never interrupting restored saves.
-  - State Persistence: Audited F5/F9 quicksave/quickload across Web and Win32 C; hardened storage quota handling and cleaned path tiles, screen shake, and damage timers on load.
-  - Modal & Key Ergonomics: Fixed Escape key handling to prevent accidental new game triggers on title splash; wired Escape to toggle in-game Help/Pause modal in Web and Win32 C.
-  - Parity & Verification: Clean Win32 C compilation (62.5 KB), startup test PASS (150.0 KB < 999 KB, 0 JS err, hit-test unblocked), Vite build clean (497ms).
-  - Quarantine & Queue: Promoted KMaze to Mature Applications quarantine; advanced kilo_qa to KSnake; rotation handoff to kilo-expander.

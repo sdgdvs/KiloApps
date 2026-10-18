@@ -52,72 +52,75 @@
         <button class="btn" style="margin:4px; padding:10px; width:460px; text-align:center; font-size:13px;" onclick="startGame(4)">[5] Sandbox Colony<br><small>Unlimited Resources & All Tech Unlocked</small></button>
         <button class="btn" style="margin:4px; padding:10px; width:460px; text-align:center; font-size:13px;" onclick="startGame(5)">[6] 100-Day Survival Challenge<br><small>Survive 100 Full Days</small></button>
         <button class="btn" style="margin:4px; padding:10px; width:460px; text-align:center; font-size:13px;" onclick="startGame(6)">[7] Resource Rush Challenge<br><small>Gather 1000 Mat & 100 AdvM by Day 50</small></button>
+        <button class="btn" id="btn-resume-mission" style="display:none; margin:4px; padding:10px; width:460px; text-align:center; font-size:13px; border-color:#00ffaa; color:#00ffaa; box-shadow:0 0 10px rgba(0,255,170,0.3);" onclick="resumeMission()">[Esc / Space] Resume Active Expedition<br><small id="lbl-resume-status" style="color:#aaffcc;">Return to active colony mission</small></button>
         <button class="btn" style="margin:4px; padding:10px; width:460px; text-align:center; font-size:13px;" onclick="quickLoad()">[9 / F9] Resume / Load Quicksave<br><small>Restore previous colony command state from storage</small></button>
         <button class="btn" style="margin:4px; padding:10px; width:460px; text-align:center; font-size:13px;" onclick="importSave()">[0] Import Colony State (.json)<br><small>Load saved expedition backup from file</small></button>
         <button class="btn" style="margin:4px; padding:10px; width:460px; text-align:center; font-size:13px;" onclick="toggleHelp()">[8 / H / F1] Administrator's Manual & Tech Spec Sheet<br><small>Full Rules, Shortcuts, Structures & Tech Guide</small></button>
     </div>
 
-    <div id="help-modal" style="display:none; position:fixed; top:4%; left:8%; width:84%; height:92%; background:rgba(10,20,30,0.98); z-index:200; border:2px solid #00ffff; border-radius:5px; padding:20px; overflow-y:auto; box-shadow:0 0 25px #00ffff; color:#00ffff;">
-        <h2 style="text-shadow: 0 0 10px #00ffff; text-align:center; margin-top:0;">KColony Administrator's Manual & Expanded Spec Sheet</h2>
-        <div style="position:absolute; top:15px; right:15px;"><button class="btn" onclick="toggleHelp()" style="padding:6px 12px; font-size:12px;">CLOSE [ESC]</button></div>
-        
-        <h3>Keyboard Controls & Hotkeys</h3>
-        <table style="width:100%; font-size:11px; border-collapse:collapse; margin-bottom:15px; color:#00ffff;">
-            <tr style="border-bottom:1px solid #00aaaa;"><th style="text-align:left; padding:4px;">Key</th><th style="text-align:left; padding:4px;">Action / Structure</th><th style="text-align:left; padding:4px;">Key</th><th style="text-align:left; padding:4px;">Action / Structure</th></tr>
-            <tr><td style="padding:2px;"><b style="color:#fff;">1 - 7</b></td><td>Start Scenario Mode (Menu)</td><td style="padding:2px;"><b style="color:#fff;">0 / I / Esc</b></td><td>Inspect Mode / Deselect</td></tr>
-            <tr><td style="padding:2px;"><b style="color:#fff;">- / R</b></td><td>Repair Damaged Structure</td><td style="padding:2px;"><b style="color:#fff;">1</b></td><td>[1] Solar Panel</td></tr>
-            <tr><td style="padding:2px;"><b style="color:#fff;">2</b></td><td>[2] Farm</td><td style="padding:2px;"><b style="color:#fff;">3</b></td><td>[3] Mine</td></tr>
-            <tr><td style="padding:2px;"><b style="color:#fff;">4</b></td><td>[4] Habitat</td><td style="padding:2px;"><b style="color:#fff;">5</b></td><td>[5] Battery</td></tr>
-            <tr><td style="padding:2px;"><b style="color:#fff;">6</b></td><td>[6] Laboratory</td><td style="padding:2px;"><b style="color:#fff;">7</b></td><td>[7] Nuclear Reactor (Unl)</td></tr>
-            <tr><td style="padding:2px;"><b style="color:#fff;">8</b></td><td>[8] Hydroponics (Unl)</td><td style="padding:2px;"><b style="color:#fff;">9</b></td><td>[9] Laser Defense (Unl)</td></tr>
-            <tr><td style="padding:2px;"><b style="color:#fff;">W</b></td><td>[10/W] Wall Fortification</td><td style="padding:2px;"><b style="color:#fff;">T</b></td><td>[11/T] Turret Defense</td></tr>
-            <tr><td style="padding:2px;"><b style="color:#fff;">C</b></td><td>[12/C] Factory (AdvM)</td><td style="padding:2px;"><b style="color:#fff;">G</b></td><td>[13/G] Geothermal Generator</td></tr>
-            <tr><td style="padding:2px;"><b style="color:#fff;">V</b></td><td>[14/V] Bio-Dome Terraformer</td><td style="padding:2px;"><b style="color:#fff;">E</b></td><td>[15/E] Shield Pylon Barrier</td></tr>
-            <tr><td style="padding:2px;"><b style="color:#fff;">U</b></td><td>[16/U] Drone Hub (Nanites)</td><td style="padding:2px;"><b style="color:#fff;">P</b></td><td>[17/P] Trade Port Hub</td></tr>
-            <tr><td style="padding:2px;"><b style="color:#fff;">K</b></td><td>[18/K] Cavern Drill Magma Tap</td><td style="padding:2px;"><b style="color:#fff;">O</b></td><td>[19/O] Orbital Defense Beacon</td></tr>
-            <tr><td style="padding:2px;"><b style="color:#fff;">F5</b></td><td>Quicksave Colony State</td><td style="padding:2px;"><b style="color:#fff;">F9</b></td><td>Quickload Colony State</td></tr>
-            <tr><td style="padding:2px;"><b style="color:#fff;">Space</b></td><td>Trigger Tactical Orbital Strike</td><td style="padding:2px;"><b style="color:#fff;">H / F1 / ?</b></td><td>Toggle Admin Manual / Help</td></tr>
-        </table>
+    <div id="help-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(5,10,15,0.85); z-index:200; align-items:center; justify-content:center; backdrop-filter:blur(2px);">
+        <div style="position:relative; width:84%; max-height:90%; background:rgba(10,20,30,0.98); border:2px solid #00ffff; border-radius:5px; padding:20px 24px; overflow-y:auto; box-shadow:0 0 25px #00ffff; color:#00ffff;">
+            <h2 style="text-shadow: 0 0 10px #00ffff; text-align:center; margin-top:0;">KColony Administrator's Manual & Expanded Spec Sheet</h2>
+            <div style="position:absolute; top:15px; right:15px;"><button class="btn" onclick="toggleHelp()" style="padding:6px 12px; font-size:12px;">CLOSE [ESC]</button></div>
+            
+            <h3>Keyboard Controls & Hotkeys</h3>
+            <table style="width:100%; font-size:11px; border-collapse:collapse; margin-bottom:15px; color:#00ffff;">
+                <tr style="border-bottom:1px solid #00aaaa;"><th style="text-align:left; padding:4px;">Key</th><th style="text-align:left; padding:4px;">Action / Structure</th><th style="text-align:left; padding:4px;">Key</th><th style="text-align:left; padding:4px;">Action / Structure</th></tr>
+                <tr><td style="padding:2px;"><b style="color:#fff;">1 - 7</b></td><td>Start Scenario Mode (Menu)</td><td style="padding:2px;"><b style="color:#fff;">0 / I / Esc</b></td><td>Inspect Mode / Deselect</td></tr>
+                <tr><td style="padding:2px;"><b style="color:#fff;">- / R</b></td><td>Repair Damaged Structure</td><td style="padding:2px;"><b style="color:#fff;">1 / S</b></td><td>[1] Solar Panel</td></tr>
+                <tr><td style="padding:2px;"><b style="color:#fff;">2 / F</b></td><td>[2] Farm</td><td style="padding:2px;"><b style="color:#fff;">3 / M</b></td><td>[3] Mine</td></tr>
+                <tr><td style="padding:2px;"><b style="color:#fff;">4 / A</b></td><td>[4] Habitat</td><td style="padding:2px;"><b style="color:#fff;">5 / B</b></td><td>[5] Battery</td></tr>
+                <tr><td style="padding:2px;"><b style="color:#fff;">6 / L</b></td><td>[6] Laboratory</td><td style="padding:2px;"><b style="color:#fff;">7 / N</b></td><td>[7] Nuclear Reactor (Unl)</td></tr>
+                <tr><td style="padding:2px;"><b style="color:#fff;">8 / Y</b></td><td>[8] Hydroponics (Unl)</td><td style="padding:2px;"><b style="color:#fff;">9 / D</b></td><td>[9] Laser Defense (Unl)</td></tr>
+                <tr><td style="padding:2px;"><b style="color:#fff;">W</b></td><td>[10/W] Wall Fortification</td><td style="padding:2px;"><b style="color:#fff;">T</b></td><td>[11/T] Turret Defense</td></tr>
+                <tr><td style="padding:2px;"><b style="color:#fff;">C</b></td><td>[12/C] Factory (AdvM)</td><td style="padding:2px;"><b style="color:#fff;">G</b></td><td>[13/G] Geothermal Generator</td></tr>
+                <tr><td style="padding:2px;"><b style="color:#fff;">V</b></td><td>[14/V] Bio-Dome Terraformer</td><td style="padding:2px;"><b style="color:#fff;">E</b></td><td>[15/E] Shield Pylon Barrier</td></tr>
+                <tr><td style="padding:2px;"><b style="color:#fff;">U</b></td><td>[16/U] Drone Hub (Nanites)</td><td style="padding:2px;"><b style="color:#fff;">P</b></td><td>[17/P] Trade Port Hub</td></tr>
+                <tr><td style="padding:2px;"><b style="color:#fff;">K</b></td><td>[18/K] Cavern Drill Magma Tap</td><td style="padding:2px;"><b style="color:#fff;">O</b></td><td>[19/O] Orbital Defense Beacon</td></tr>
+                <tr><td style="padding:2px;"><b style="color:#fff;">F5</b></td><td>Quicksave Colony State</td><td style="padding:2px;"><b style="color:#fff;">F9</b></td><td>Quickload Colony State</td></tr>
+                <tr><td style="padding:2px;"><b style="color:#fff;">Space</b></td><td>Trigger Tactical Orbital Strike</td><td style="padding:2px;"><b style="color:#fff;">H / F1 / ?</b></td><td>Toggle Admin Manual / Help</td></tr>
+            </table>
 
-        <h3>Resource Systems</h3>
-        <p><b>Food:</b> Colonist nourishment. <b>Power:</b> Energy network. <b>Mat:</b> Basic structural alloy. <b>AdvM:</b> High-tech alloy. <b>Science:</b> Research breakthroughs. <b>Happiness:</b> Productivity multiplier (up to 120%).</p>
-        
-        <h3>Core Structures</h3>
-        <ul style="line-height:1.5; font-size:12px;">
-            <li><b>Solar Panel (1 / S):</b> Generates 4 Power in daylight. (+50% with Solar IV).</li>
-            <li><b>Farm (2 / F):</b> +5 Food per tick. Costs 5 Power.</li>
-            <li><b>Mine (3 / M):</b> +3 Mat per tick. Costs 10 Power.</li>
-            <li><b>Habitat (4 / H):</b> +5 Max Population. Costs 5 Power.</li>
-            <li><b>Battery (5 / B):</b> +50 Max Stored Power for night/storms.</li>
-            <li><b>Laboratory (6 / L):</b> +2 Science per tick. Costs 5 Power.</li>
-            <li><b>Nuclear Reactor (7 / N):</b> +20 Power 24/7 constantly.</li>
-            <li><b>Hydroponics (8 / Y):</b> +15 Food per tick. Costs 10 Power.</li>
-            <li><b>Laser Defense (9 / D):</b> Range 5. Costs 20 Power. Auto-targets aliens.</li>
-            <li><b>Wall (10 / W):</b> Fortification. (With Xeno-Armor, reflects 2 damage to attackers).</li>
-            <li><b>Turret (11 / T):</b> Range 3. Costs 5 Power. Auto-targets aliens.</li>
-            <li><b>Factory (12 / C):</b> Converts 2 Mat into 1 AdvM per tick. Costs 10 Power.</li>
-        </ul>
+            <h3>Resource Systems</h3>
+            <p><b>Food:</b> Colonist nourishment. <b>Power:</b> Energy network. <b>Mat:</b> Basic structural alloy. <b>AdvM:</b> High-tech alloy. <b>Science:</b> Research breakthroughs. <b>Happiness:</b> Productivity multiplier (up to 120%).</p>
+            
+            <h3>Core Structures</h3>
+            <ul style="line-height:1.5; font-size:12px;">
+                <li><b>Solar Panel (1 / S):</b> Generates 4 Power in daylight. (+50% with Solar IV).</li>
+                <li><b>Farm (2 / F):</b> +5 Food per tick. Costs 5 Power.</li>
+                <li><b>Mine (3 / M):</b> +3 Mat per tick. Costs 10 Power.</li>
+                <li><b>Habitat (4 / A):</b> +5 Max Population. Costs 5 Power.</li>
+                <li><b>Battery (5 / B):</b> +50 Max Stored Power for night/storms.</li>
+                <li><b>Laboratory (6 / L):</b> +2 Science per tick. Costs 5 Power.</li>
+                <li><b>Nuclear Reactor (7 / N):</b> +20 Power 24/7 constantly.</li>
+                <li><b>Hydroponics (8 / Y):</b> +15 Food per tick. Costs 10 Power.</li>
+                <li><b>Laser Defense (9 / D):</b> Range 5. Costs 20 Power. Auto-targets aliens.</li>
+                <li><b>Wall (10 / W):</b> Fortification. (With Xeno-Armor, reflects 2 damage to attackers).</li>
+                <li><b>Turret (11 / T):</b> Range 3. Costs 5 Power. Auto-targets aliens.</li>
+                <li><b>Factory (12 / C):</b> Converts 2 Mat into 1 AdvM per tick. Costs 10 Power.</li>
+            </ul>
 
-        <h3>Advanced & Expansion Structures (Loop 2 & 3)</h3>
-        <ul style="line-height:1.5; font-size:12px;">
-            <li><b>Geothermal Generator (13 / G):</b> +35 Power constantly (immune to dust storms/blizzards; +50 Power on Cryo world). Cost: 35 Mat, 15 AdvM.</li>
-            <li><b>Bio-Dome / Terraformer (14 / V):</b> +25 Food, +8 Pop cap, +2 Happiness per tick up to 120%. Cost: 40 Mat, 20 AdvM, 20 Power.</li>
-            <li><b>Shield Pylon (15 / E):</b> 3x3 Energy Barrier protecting structures from meteors, blizzards, acid rain, and repels alien invasions. Cost: 50 Mat, 25 AdvM, 30 Power.</li>
-            <li><b>Drone Hub (16 / U):</b> Automated nanite repair drones fix broken structures on the grid (5 Mat) and boost nearby production. Cost: 60 Mat, 30 AdvM, 25 Power.</li>
-            <li><b>Trade Port (17 / P):</b> +10 Happiness, +3 Mat & +1 AdvM tariffs. Interstellar freighters arrive every 4 days! Cost: 70 Mat, 35 AdvM, 30 Power.</li>
-            <li><b>Cavern Drill (18 / K):</b> +40 Power deep magma tap, +5 Mat & +2 AdvM 24/7. 100% immune to surface disasters! Cost: 80 Mat, 40 AdvM, 40 Power.</li>
-            <li><b>Orbital Beacon (19 / O):</b> 100% planetary defense umbrella against meteors and unlocks tactical ORBITAL BOMBARDMENT! Cost: 100 Mat, 50 AdvM, 50 Power.</li>
-        </ul>
+            <h3>Advanced & Expansion Structures (Loop 2 & 3)</h3>
+            <ul style="line-height:1.5; font-size:12px;">
+                <li><b>Geothermal Generator (13 / G):</b> +35 Power constantly (immune to dust storms/blizzards; +50 Power on Cryo world). Cost: 35 Mat, 15 AdvM.</li>
+                <li><b>Bio-Dome / Terraformer (14 / V):</b> +25 Food, +8 Pop cap, +2 Happiness per tick up to 120%. Cost: 40 Mat, 20 AdvM, 20 Power.</li>
+                <li><b>Shield Pylon (15 / E):</b> 3x3 Energy Barrier protecting structures from meteors, blizzards, acid rain, and repels alien invasions. Cost: 50 Mat, 25 AdvM, 30 Power.</li>
+                <li><b>Drone Hub (16 / U):</b> Automated nanite repair drones fix broken structures on the grid (5 Mat) and boost nearby production. Cost: 60 Mat, 30 AdvM, 25 Power.</li>
+                <li><b>Trade Port (17 / P):</b> +10 Happiness, +3 Mat & +1 AdvM tariffs. Interstellar freighters arrive every 4 days! Cost: 70 Mat, 35 AdvM, 30 Power.</li>
+                <li><b>Cavern Drill (18 / K):</b> +40 Power deep magma tap, +5 Mat & +2 AdvM 24/7. 100% immune to surface disasters! Cost: 80 Mat, 40 AdvM, 40 Power.</li>
+                <li><b>Orbital Beacon (19 / O):</b> 100% planetary defense umbrella against meteors and unlocks tactical ORBITAL BOMBARDMENT! Cost: 100 Mat, 50 AdvM, 50 Power.</li>
+            </ul>
 
-        <h3>Expeditions & Operations</h3>
-        <p style="font-size:12px; line-height:1.5;">
-            - <b>Scout Recon (1 Pop, 15 Mat, 15 Pwr):</b> Low risk survey for raw materials and terrain data.<br>
-            - <b>Ruins Excavation (2 Pop, 30 Mat, 30 Pwr):</b> High rewards; chance to unlock <i>Crystal Monolith (+50% Science)</i>.<br>
-            - <b>Hive Incursion (4 Pop, 60 Mat, 50 Pwr):</b> Strike alien brood nest; unlocks <i>Subterranean Geode</i> or <i>Ionized Aurora</i>!<br>
-            - <b>Freighter Trade:</b> Exchange surplus Food or Mat for AdvM, Science, and emergency power.<br>
-            - <b>Cavern Dive:</b> Excavate deep subterranean crystal vaults for massive rare alloy caches.<br>
-            - <b>Orbital Strike [Space]:</b> Calls down kinetic bombardment from orbit to vaporize all aliens instantly!
-        </p>
+            <h3>Expeditions & Operations</h3>
+            <p style="font-size:12px; line-height:1.5;">
+                - <b>Scout Recon (1 Pop, 15 Mat, 15 Pwr):</b> Low risk survey for raw materials and terrain data.<br>
+                - <b>Ruins Excavation (2 Pop, 30 Mat, 30 Pwr):</b> High rewards; chance to unlock <i>Crystal Monolith (+50% Science)</i>.<br>
+                - <b>Hive Incursion (4 Pop, 60 Mat, 50 Pwr):</b> Strike alien brood nest; unlocks <i>Subterranean Geode</i> or <i>Ionized Aurora</i>!<br>
+                - <b>Freighter Trade:</b> Exchange surplus Food or Mat for AdvM, Science, and emergency power.<br>
+                - <b>Cavern Dive:</b> Excavate deep subterranean crystal vaults for massive rare alloy caches.<br>
+                - <b>Orbital Strike [Space]:</b> Calls down kinetic bombardment from orbit to vaporize all aliens instantly!
+            </p>
+        </div>
     </div>
 
     <div id="topbar">
@@ -162,15 +165,15 @@
                 <button class="btn" id="btn-solar" onclick="selectType(1)">[1] Solar Panel<br><small>Cost: 10 Mat</small></button>
                 <button class="btn" id="btn-farm" onclick="selectType(2)">[2] Farm<br><small>Cost: 10 Mat, 5 Pwr</small></button>
                 <button class="btn" id="btn-mine" onclick="selectType(3)">[3] Mine<br><small>Cost: 10 Pwr</small></button>
-                <button class="btn" id="btn-hab" onclick="selectType(4)">[4] Habitat<br><small>Cost: 15 Mat, 5 Pwr</small></button>
+                <button class="btn" id="btn-hab" onclick="selectType(4)">[4/A] Habitat<br><small>Cost: 15 Mat, 5 Pwr</small></button>
                 <button class="btn" id="btn-battery" onclick="selectType(5)">[5] Battery<br><small>Cost: 20 Mat</small></button>
                 <button class="btn" id="btn-lab" onclick="selectType(6)">[6] Laboratory<br><small>Cost: 20 Mat, 5 Pwr</small></button>
-                <button class="btn" id="btn-hydro" onclick="selectType(8)" style="display:none">[8] Hydroponics<br><small>Cost: 20 Mat, 10 Pwr</small></button>
-                <button class="btn" id="btn-factory" onclick="selectType(12)" style="display:none">[12/C] Factory<br><small>Cost: 30 Mat, 10 Pwr</small></button>
                 <button class="btn" id="btn-nuke" onclick="selectType(7)" style="display:none">[7] Nuclear Reactor<br><small>Cost: 20 Mat, 10 AdvM</small></button>
+                <button class="btn" id="btn-hydro" onclick="selectType(8)" style="display:none">[8] Hydroponics<br><small>Cost: 20 Mat, 10 Pwr</small></button>
                 <button class="btn" id="btn-laser" onclick="selectType(9)" style="display:none">[9] Laser Defense<br><small>Cost: 10 Mat, 10 AdvM, 20 Pwr</small></button>
                 <button class="btn" id="btn-wall" onclick="selectType(10)">[10/W] Wall<br><small>Cost: 5 Mat</small></button>
                 <button class="btn" id="btn-turret" onclick="selectType(11)">[11/T] Turret<br><small>Cost: 15 Mat, 5 Pwr</small></button>
+                <button class="btn" id="btn-factory" onclick="selectType(12)" style="display:none">[12/C] Factory<br><small>Cost: 30 Mat, 10 Pwr</small></button>
                 <button class="btn" id="btn-geo" onclick="selectType(13)" style="display:none">[13/G] Geothermal<br><small>Cost: 35 Mat, 15 AdvM</small></button>
                 <button class="btn" id="btn-bio" onclick="selectType(14)" style="display:none">[14/V] Bio-Dome<br><small>Cost: 40 Mat, 20 AdvM, 20 Pwr</small></button>
                 <button class="btn" id="btn-shield" onclick="selectType(15)" style="display:none">[15/E] Shield Pylon<br><small>Cost: 50 Mat, 25 AdvM, 30 Pwr</small></button>
@@ -289,11 +292,37 @@
 
         function toggleHelp() {
             const h = document.getElementById('help-modal');
-            h.style.display = h.style.display === 'none' ? 'block' : 'none';
+            if (!h) return;
+            if (h.style.display === 'none' || h.style.display === '') {
+                h.style.display = 'flex';
+            } else {
+                h.style.display = 'none';
+            }
+        }
+
+        function resumeMission() {
+            if (tick > 0) {
+                initAudio();
+                gameState = 1;
+                document.getElementById('start-screen').style.display = 'none';
+                startLoop();
+                showToast("Expedition Resumed", `Returned to colony command on Day ${day} (${planetNames[planetType] || 'Mars'}).`, "info", 2000);
+            }
         }
 
         function returnToMenu() {
             gameState = 0;
+            stopLoop();
+            const resBtn = document.getElementById('btn-resume-mission');
+            if (resBtn) {
+                if (tick > 0 && grid.some(g => g > 0)) {
+                    resBtn.style.display = 'block';
+                    const status = document.getElementById('lbl-resume-status');
+                    if (status) status.innerText = `Day ${day} (${planetNames[planetType] || 'Mars'}) | Pop ${pop} | Mat ${mat}`;
+                } else {
+                    resBtn.style.display = 'none';
+                }
+            }
             document.getElementById('start-screen').style.display = 'flex';
         }
 
@@ -303,6 +332,10 @@
 
         window.addEventListener('keydown', (e) => {
             const key = e.key.toLowerCase();
+            let numKey = e.key;
+            if (e.code && e.code.startsWith('Numpad') && e.code.length === 7) {
+                numKey = e.code.charAt(6);
+            }
             if (e.key === 'F1' || key === 'h' || key === '?') {
                 e.preventDefault();
                 toggleHelp();
@@ -320,48 +353,60 @@
             }
             const helpModal = document.getElementById('help-modal');
             if (e.key === 'Escape') {
-                if (helpModal && helpModal.style.display !== 'none') {
+                if (helpModal && helpModal.style.display !== 'none' && helpModal.style.display !== '') {
                     helpModal.style.display = 'none';
                     return;
                 }
                 if (gameState === 1) {
                     selectType(0);
+                    return;
+                }
+                if (gameState === 0 && tick > 0) {
+                    resumeMission();
+                    return;
                 }
                 return;
             }
-            if (helpModal && helpModal.style.display !== 'none') return;
+            if (helpModal && helpModal.style.display !== 'none' && helpModal.style.display !== '') return;
             if (gameState === 0) {
                 if (e.key === 'Enter') {
-                    startGame(0);
-                } else if (e.key >= '1' && e.key <= '7') {
-                    startGame(parseInt(e.key) - 1);
-                } else if (e.key === '8') {
+                    const resBtn = document.getElementById('btn-resume-mission');
+                    if (tick > 0 && resBtn && resBtn.style.display !== 'none') {
+                        resumeMission();
+                    } else {
+                        startGame(0);
+                    }
+                } else if (numKey >= '1' && numKey <= '7') {
+                    startGame(parseInt(numKey) - 1);
+                } else if (numKey === '8') {
                     toggleHelp();
-                } else if (e.key === '9') {
+                } else if (numKey === '9') {
                     quickLoad();
-                } else if (e.key === '0') {
+                } else if (numKey === '0') {
                     importSave();
+                } else if (e.key === ' ' || e.key === 'Escape') {
+                    if (tick > 0) resumeMission();
                 }
                 return;
             }
             if (gameState === 1) {
-                if (e.key === '0' || key === 'i') selectType(0);
-                else if (e.key === '-' || key === 'r') selectType(-1);
-                else if (e.key === '1' || key === 's') selectType(1);
-                else if (e.key === '2' || key === 'f') selectType(2);
-                else if (e.key === '3' || key === 'm') selectType(3);
-                else if (e.key === '4') selectType(4);
-                else if (e.key === '5' || key === 'b') selectType(5);
-                else if (e.key === '6' || key === 'l') selectType(6);
-                else if (e.key === '7' || key === 'n') {
+                if (numKey === '0' || key === 'i') selectType(0);
+                else if (e.key === '-' || e.key === '_' || key === 'r' || e.code === 'NumpadSubtract' || e.code === 'Minus') selectType(-1);
+                else if (numKey === '1' || key === 's') selectType(1);
+                else if (numKey === '2' || key === 'f') selectType(2);
+                else if (numKey === '3' || key === 'm') selectType(3);
+                else if (numKey === '4' || key === 'a') selectType(4);
+                else if (numKey === '5' || key === 'b') selectType(5);
+                else if (numKey === '6' || key === 'l') selectType(6);
+                else if (numKey === '7' || key === 'n') {
                     if (unlockedNuke) selectType(7);
                     else showToast("Locked Structure", "Nuclear Reactor requires research before construction.", "warning", 2000);
                 }
-                else if (e.key === '8' || key === 'y') {
+                else if (numKey === '8' || key === 'y') {
                     if (unlockedHydro) selectType(8);
                     else showToast("Locked Structure", "Hydroponics requires research before construction.", "warning", 2000);
                 }
-                else if (e.key === '9' || key === 'd') {
+                else if (numKey === '9' || key === 'd') {
                     if (unlockedLaser) selectType(9);
                     else showToast("Locked Structure", "Laser Defense requires research before construction.", "warning", 2000);
                 }
@@ -557,6 +602,8 @@
                 generateTerrain();
                 updateUI();
                 renderAll();
+                selectType(0);
+                startLoop();
                 playUnlock();
                 showToast("Quickload Restored [F9]", `Colony restored to Day ${day}!\nPlanet: ${planetNames[planetType] || 'Mars'}`, "success", 2500);
             } catch (err) {
@@ -565,6 +612,9 @@
         }
 
         function exportSave() {
+            if (gameState === 1) {
+                quickSave();
+            }
             let raw = null;
             try {
                 raw = localStorage.getItem('kcolony_quicksave');
@@ -691,6 +741,7 @@
             generateTerrain();
             updateUI();
             renderAll();
+            startLoop();
 
             // First-run tutorial prompt: fire only once for fresh commanders, never on restored states
             try {
@@ -999,6 +1050,7 @@
                         mat -= 5;
                         grid[idx] -= 20;
                         playBuild();
+                        spawnParticles(x, y, '#00ffaa', 15);
                         updateUI();
                         renderAll();
                         showToast("Repairs Complete", "Structure restored to operational status!", "success", 2000);
@@ -1014,12 +1066,30 @@
                 return;
             }
 
+            const hostileOnTile = aliens.find(a => a.x === x && a.y === y);
+            if (hostileOnTile) {
+                showToast("Sector Contested", "Cannot construct structure while hostile xenos occupy the sector!", "danger", 2500);
+                playTone(200, 'sawtooth', 0.15, 0.08);
+                return;
+            }
+
             if (grid[idx] !== 0) {
                 if (grid[idx] > 20) {
                     showToast("Structure Damaged", "Tile contains a damaged structure. Select Repair [-/R] to restore.", "warning", 2500);
                 } else {
                     showToast("Tile Occupied", "A structure is already built on this sector.", "info", 2000);
                 }
+                playTone(180, 'sawtooth', 0.12, 0.08);
+                return;
+            }
+
+            const lockCheck = {
+                7: unlockedNuke, 8: unlockedHydro, 9: unlockedLaser, 12: unlockedFactory,
+                13: unlockedGeo, 14: unlockedBio, 15: unlockedShield, 16: unlockedDrone,
+                17: unlockedTrade, 18: unlockedCavern, 19: unlockedOrbital
+            };
+            if (lockCheck[currentType] === false) {
+                showToast("Structure Locked", `${structNames[currentType] || 'Structure'} requires research prior to deployment.`, "warning", 2500);
                 playTone(180, 'sawtooth', 0.12, 0.08);
                 return;
             }
@@ -1051,6 +1121,7 @@
                 advm -= costAdv;
                 grid[idx] = currentType;
                 playBuild();
+                spawnParticles(x, y, '#00ffff', 12);
                 updateUI();
                 renderAll();
             } else {
@@ -1700,9 +1771,22 @@
             generateTerrain();
             requestAnimationFrame(renderWeatherFX);
             updateUI();
-            
-            let gameInterval = null;
-            function gameTick() {
+        }
+
+        let gameInterval = null;
+        function startLoop() {
+            if (!gameInterval) {
+                gameInterval = setInterval(gameTick, 2000);
+            }
+        }
+        function stopLoop() {
+            if (gameInterval) {
+                clearInterval(gameInterval);
+                gameInterval = null;
+            }
+        }
+
+        function gameTick() {
                 if (gameState !== 1) return;
                 tick++;
                 if (tick % 10 === 0) { day++; isDay = true; }
@@ -2027,6 +2111,8 @@
                     showToast("Scenario Complete", "100 Days Survived on the Alien Frontier! You Win!", "success", 8000);
                     gameState = 0;
                     stopLoop();
+                    const resBtn = document.getElementById('btn-resume-mission');
+                    if (resBtn) resBtn.style.display = 'none';
                     document.getElementById('start-screen').style.display = 'flex';
                 }
                 if (gameMode === 6) {
@@ -2036,11 +2122,15 @@
                         showToast("Resource Rush Complete", "Quota fulfilled on Day " + day + "! Colony Secured!", "success", 8000);
                         gameState = 0;
                         stopLoop();
+                        const resBtn = document.getElementById('btn-resume-mission');
+                        if (resBtn) resBtn.style.display = 'none';
                         document.getElementById('start-screen').style.display = 'flex';
                     } else if (day > 50) {
                         showToast("Mission Failed", "Day 50 reached without meeting quota! Mission Failed.", "danger", 8000);
                         gameState = 0;
                         stopLoop();
+                        const resBtn = document.getElementById('btn-resume-mission');
+                        if (resBtn) resBtn.style.display = 'none';
                         document.getElementById('start-screen').style.display = 'flex';
                     }
                 }
@@ -2048,23 +2138,11 @@
                     showToast("Colony Lost", "All structures destroyed and population lost! Mission Failed.", "danger", 8000);
                     gameState = 0;
                     stopLoop();
+                    const resBtn = document.getElementById('btn-resume-mission');
+                    if (resBtn) resBtn.style.display = 'none';
                     document.getElementById('start-screen').style.display = 'flex';
                 }
             }
-
-            function startLoop() {
-                if (!gameInterval) {
-                    gameInterval = setInterval(gameTick, 2000);
-                }
-            }
-            function stopLoop() {
-                if (gameInterval) {
-                    clearInterval(gameInterval);
-                    gameInterval = null;
-                }
-            }
-
-            startLoop();
 
             document.addEventListener('visibilitychange', () => {
                 if (document.hidden) {
@@ -2079,10 +2157,9 @@
                     }
                 }
             });
-        }
 
-        init();
-        showToast("Colony Command Online", "Welcome to KColony! Select a Biome [1-7] or press [H]/[F1] for Admin Manual & Keyboard Shortcuts.", "info", 6000);
-    </script>
+            init();
+            showToast("Colony Command Online", "Welcome to KColony! Select a Biome [1-7] or press [H]/[F1] for Admin Manual & Keyboard Shortcuts.", "info", 6000);
+        </script>
 </body>
 </html>

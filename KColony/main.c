@@ -1451,6 +1451,9 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             break;
         }
         case WM_KEYDOWN: {
+            if (wParam >= VK_NUMPAD0 && wParam <= VK_NUMPAD9) {
+                wParam = '0' + (wParam - VK_NUMPAD0);
+            }
             if (wParam == 'H' || wParam == VK_F1) {
                 if (gameState == 2) {
                     gameState = prevState;
@@ -1497,7 +1500,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     selectedType = 2;
                 } else if (wParam == '3') {
                     selectedType = 3;
-                } else if (wParam == '4') {
+                } else if (wParam == '4' || wParam == 'A') {
                     selectedType = 4;
                 } else if (wParam == '5') {
                     selectedType = 5;

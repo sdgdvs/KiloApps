@@ -171,9 +171,9 @@
     "id": "kcolony",
     "title": "KColony",
     "folder": "Games",
-    "webBytes": 136990,
+    "webBytes": 141619,
     "exeBytes": 174080,
-    "budgetPercent": 13.7
+    "budgetPercent": 14.2
   },
   {
     "id": "kcolor",
@@ -267,9 +267,9 @@
     "id": "kdragon",
     "title": "KDragon",
     "folder": "Games",
-    "webBytes": 200855,
+    "webBytes": 209814,
     "exeBytes": 154624,
-    "budgetPercent": 20.1
+    "budgetPercent": 21.0
   },
   {
     "id": "kexplorer",
