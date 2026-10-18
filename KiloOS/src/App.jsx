@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { DEFAULT_VFS } from './defaultVfs';
 import './App.css';
-const MICROS_VERSION = '0.4.30';
+const MICROS_VERSION = '0.4.31';
 
 // Singleton Web Audio Synthesizer (Replaces per-click new AudioContext() leak)
 const osAudioCtxRef = { current: null };
@@ -64,7 +64,7 @@ const APPS = [
   { id: 'knote', title: 'KNote', url: '/apps/knote.html', exeUrl: '/exe/KNote.exe', icon: '/assets/icons/knote.ico', w: 980, h: 680, folder: 'Office' },
   { id: 'kcolor', title: 'KColor', url: '/apps/kcolor.html', exeUrl: '/exe/KColor.exe', icon: '/assets/icons/kcolor.ico', w: 880, h: 660, folder: 'Media' },
   { id: 'kpass', title: 'KPass', url: '/apps/kpass.html', exeUrl: '/exe/KPass.exe', icon: '/assets/icons/kpass.ico', w: 600, h: 700, folder: 'System' },
-  { id: 'kcipher', title: 'KCipher', url: '/apps/kcipher.html', exeUrl: '/exe/KCipher.exe', icon: '/assets/icons/kcipher.ico', w: 960, h: 680, folder: 'System' },
+  { id: 'kcipher', title: 'KCipher', url: '/apps/kcipher.html', exeUrl: '/exe/KCipher.exe', icon: '/assets/icons/kcipher.ico', w: 980, h: 700, folder: 'System' },
   { id: 'kping', title: 'KPing', url: '/apps/kping.html', exeUrl: '/exe/KPing.exe', icon: '/assets/icons/kping.ico', w: 980, h: 700, folder: 'System' },
   { id: 'khex', title: 'KHex', url: '/apps/khex.html', exeUrl: '/exe/KHex.exe', icon: '/assets/icons/khex.ico', w: 980, h: 820, folder: 'System' },
   { id: 'ksys', title: 'KSys', url: '/apps/ksys.html', exeUrl: '/exe/KSys.exe', icon: '/assets/icons/ksys.ico', w: 1024, h: 768, folder: 'System' },

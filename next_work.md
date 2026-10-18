@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-usability
+current_agent: kilo-qa
+next_agent: kilo-qa
 agent_rotation:
 - kilo-graphics
 - kilo-soundscape
@@ -18,7 +18,7 @@ current_targets:
   kilo_graphics: KAlchemy
   kilo_soundscape: KVoid
   kilo_tester: KTrader
-  kilo_usability: KCipher
+  kilo_usability: KPass
   kilo_qa: KSnake
   kilo_expander: KFont
 virtual_web_target: kweb://darknet
@@ -35,9 +35,9 @@ virtual_web_rotation:
 - kweb://echo-subsystem.net
 - kweb://deep-core
 last_run:
-  agent: kilo-tester
-  app: KColony
-  timestamp: 2026-10-18T18:20:00+0000
+  agent: kilo-usability
+  app: KCipher
+  timestamp: 2026-10-18T18:36:00+0000
 last_planner_run: '2026-10-17T20:53:00Z'
 ---
 
@@ -122,19 +122,19 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Upcoming Queue**: `KMystery`, `KNet`, `KCalc`.
 
 ### 5. Usability & UX Queue (`kilo-usability`)
-- **Target**: `KCipher`
-- **Primary File**: `KiloOS/public/apps/kcipher.html`
-- **Objective**: Classical & modern cryptography studio layout: cipher tool ribbon, responsive side-by-side plaintext/ciphertext split panes, frequency analysis histogram scaling, keyboard shortcuts (F1/H help, Esc clear), and accessible focus glow.
+- **Target**: `KPass`
+- **Primary File**: `KiloOS/public/apps/kpass.html`
+- **Objective**: Retro password generator & security vault ergonomics: password entropy gauge, character set toggles, responsive master vault layout, clear keyboard shortcuts (F1/H help, Esc clear), and accessible focus glow.
 - **Action Steps**:
   1. Verify window bounds and responsive container wrapping under narrow (<540px) widths.
   2. Ensure clear keyboard shortcuts (F1/H help, Esc clear) and accessible focus indicators.
-  3. Verify cipher workspace ergonomics, HiDPI font scaling, and comfortable contrast.
+  3. Verify password generation ergonomics, HiDPI font scaling, and comfortable contrast.
 - **Verification**: `cd KiloOS && npm run build`. File size < 999 KB.
 - **Handoff**:
-  - In frontmatter: advance `current_targets.kilo_usability` to `KPass`.
+  - In frontmatter: advance `current_targets.kilo_usability` to `KVault`.
   - Set `current_agent: kilo-qa`.
   - Append terse execution log (≤6 lines), commit, and push.
-- **Upcoming Queue**: `KPass`, `KVault`, `KCalc`.
+- **Upcoming Queue**: `KVault`, `KCalc`, `KHex`.
 
 ### 6. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
 - **Target**: `KSnake`
@@ -199,6 +199,14 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-18T18:36:00+0000 — kilo-usability: KCipher (UX Polish, HiDPI Canvas & Accessible Ergonomics)**
+  - HiDPI Canvas Crispness: Integrated `window.devicePixelRatio` scaling into frequency chart canvas for razor-sharp rendering on high-DPI screens.
+  - Ergonomics & Shortcuts: Added Esc key clear for active textareas/panes, added tutorial step 5 hotkeys manual, and updated footer hotkeys reference.
+  - Accessible Focus & Navigation: Implemented theme-reactive `:focus-visible` glow rings on all interactive elements; added keyboard navigation to lore items.
+  - Responsive Layout: Added responsive wrapping under <=768px for frequency, stego, lore, header, footer, and transform controls.
+  - Dual Parity & Build: Added Esc clear handling and updated manual in Win32 C (`KCipher.exe`), clean build (11.5 KB), startup test PASS (111.5 KB < 999 KB, 0 JS errors), Vite build clean (487ms).
+  - Queue Handoff: Advanced `kilo_usability` to `KPass`; rotated active agent to `kilo-qa`.
+
 - **2026-10-18T18:20:00+0000 — kilo-tester: KColony (UI Audit, Hotkey Hardening & Mature Quarantine)**
   - PASS ✅ (5 issues, 5 fixed): Fixed modal display check, repaired game loop intervals, added numpad/A hotkeys, wired active export autosave, and aligned structure panel order.
   - Interactive Audit: Verified all 20 structure buttons, 13 research paths, 3 expedition tiers, trade depot, orbital strike, and Escape/backdrop modal dismissals.
@@ -223,12 +231,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Briefing & Ergonomics: Enriched F1 first-run briefing modal covering all 10 decks, keyboard shortcuts (F1/F5/F7/F9/M), and 28+ terminal directives.
   - Verification & Budget: Passed Vite build (457ms), KNet startup test PASS (189.8 KB, 0 JS errors, hit-test unblocked), full ARG golden thread verification (Stages 1-7 PASS), and byte budget gate (<999 KB, 289.4 KB footprint).
   - Queue Handoff: Advanced kilo-creator and virtual_web_target to `kweb://darknet`; rotated active agent to `kilo-graphics` on `KDragon`.
-
-- **2026-10-18T12:45:00+0000 — kilo-expander: KBookmark (Deep Feature Expansion & Hierarchical Netscape Vault)**
-  - Hierarchical Folders & Breadcrumbs: Nested tree navigation in sidebar with expand/collapse, subfolder counts, parent folder selector, and interactive breadcrumbs.
-  - Quick Jump Omni-Launcher: Ctrl+K / Ctrl+P / Alt+J modal launcher filtering across titles, URLs, tags, and folder paths with arrow navigation and immediate launch.
-  - Duplicate Vault Detector: Multi-criteria URL normalization scanning with group comparison, individual deletion, and 1-click intelligent auto-deduplication.
-  - Batch Health Diagnostic: Interactive animated network audit modal with progressive RTT latency metrics and 200/301/404 breakdown across entire vault.
-  - Universal Netscape Import/Export: RFC/Netscape HTML bookmark exporter and parser with nested DL/H3 hierarchy tracking, tags, and notes.
-  - Verification & Dual Parity: Clean Win32 C build (24.0 KB), Vite build clean (473ms), startup test PASS (159.9 KB < 999 KB, 0 JS errors, hit-test unblocked).
-  - Queue: Advanced kilo-expander to KFont; rotation handoff to kilo-creator.

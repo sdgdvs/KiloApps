@@ -538,7 +538,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     "4. Atbash: Mirror substitution (A<->Z, B<->Y).\n"
                     "5. RC4: Stream cipher with passphrase (hex output).\n\n"
                     "Shortcuts:\n"
-                    "F1 / H: Manual | Ctrl+E: Encrypt | Ctrl+D: Decrypt\n"
+                    "F1 / H: Manual | Esc: Clear Panes | Ctrl+E / Ctrl+Enter: Encrypt | Ctrl+D: Decrypt\n"
                     "F5: QuickSave snapshot | F9: QuickLoad snapshot",
                     "KCipher Manual", MB_OK | MB_ICONINFORMATION);
             } else if (wmId == ID_COMBO_CIPHER && HIWORD(wParam) == CBN_SELCHANGE) {
@@ -647,6 +647,12 @@ void MainEntry(void) {
             int isEdit = (hFocus == g_hEditInput || hFocus == g_hEditOutput || hFocus == g_hEditKey);
             BOOL ctrl = (GetKeyState(VK_CONTROL) & 0x8000) != 0;
 
+            if (msg.wParam == VK_ESCAPE) {
+                SetWindowTextA(g_hEditInput, "");
+                SetWindowTextA(g_hEditOutput, "");
+                SetWindowTextA(g_hStatusLabel, "Panes Cleared [Esc].");
+                continue;
+            }
             if (msg.wParam == VK_F5) {
                 SaveSnapshot(hwnd);
                 continue;

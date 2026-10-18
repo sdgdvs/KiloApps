@@ -111,6 +111,8 @@
       align-items: center;
       justify-content: space-between;
       flex-shrink: 0;
+      flex-wrap: wrap;
+      gap: 6px;
     }
 
     .brand {
@@ -130,6 +132,7 @@
     .header-actions {
       display: flex;
       align-items: center;
+      flex-wrap: wrap;
       gap: 6px;
     }
 
@@ -250,6 +253,37 @@
     @media (max-width: 768px) {
       .workbench-grid {
         grid-template-columns: 1fr;
+        overflow-y: auto;
+      }
+      .transform-controls {
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 6px;
+      }
+      .transform-controls .btn {
+        width: auto;
+        flex: 1;
+        min-width: 90px;
+      }
+      .freq-container {
+        grid-template-columns: 1fr;
+        overflow-y: auto;
+      }
+      .stego-grid {
+        grid-template-columns: 1fr;
+        overflow-y: auto;
+      }
+      .stego-canvas-wrap {
+        width: 100%;
+      }
+      .lore-grid {
+        grid-template-columns: 1fr;
+        overflow-y: auto;
+      }
+      footer {
+        flex-wrap: wrap;
+        gap: 6px;
       }
     }
 
@@ -300,6 +334,41 @@
     .text-box:focus {
       outline: none;
       border-color: var(--border-focus);
+    }
+
+    /* Accessible Focus Glow & Keyboard Rings */
+    button:focus-visible,
+    select:focus-visible,
+    input:focus-visible,
+    textarea:focus-visible,
+    .btn:focus-visible,
+    .tab-btn:focus-visible,
+    .lore-item:focus-visible {
+      outline: 2px solid var(--border-focus);
+      outline-offset: 1px;
+      box-shadow: 0 0 6px rgba(56, 189, 248, 0.5);
+    }
+
+    [data-theme="amber"] button:focus-visible,
+    [data-theme="amber"] select:focus-visible,
+    [data-theme="amber"] input:focus-visible,
+    [data-theme="amber"] textarea:focus-visible,
+    [data-theme="amber"] .btn:focus-visible,
+    [data-theme="amber"] .tab-btn:focus-visible,
+    [data-theme="amber"] .lore-item:focus-visible {
+      outline-color: var(--accent);
+      box-shadow: 0 0 6px rgba(245, 158, 11, 0.5);
+    }
+
+    [data-theme="matrix"] button:focus-visible,
+    [data-theme="matrix"] select:focus-visible,
+    [data-theme="matrix"] input:focus-visible,
+    [data-theme="matrix"] textarea:focus-visible,
+    [data-theme="matrix"] .btn:focus-visible,
+    [data-theme="matrix"] .tab-btn:focus-visible,
+    [data-theme="matrix"] .lore-item:focus-visible {
+      outline-color: var(--primary);
+      box-shadow: 0 0 6px rgba(34, 197, 94, 0.5);
     }
 
     .panel-footer {
@@ -984,19 +1053,19 @@
           <div style="font-weight: bold; font-size: 12px; color: var(--primary); margin-bottom: 4px;">
             Archived Transmissions
           </div>
-          <div class="lore-item active" data-lore="0">
+          <div class="lore-item active" data-lore="0" tabindex="0" role="button" aria-label="Intercept 01 RAZOR 1999 Warez Dispatch">
             <div style="font-weight: bold;">[INTERCEPT-01]</div>
             <div style="font-size: 11px; color: var(--text-muted);">RAZOR 1999 Warez Dispatch</div>
           </div>
-          <div class="lore-item" data-lore="1">
+          <div class="lore-item" data-lore="1" tabindex="0" role="button" aria-label="Intercept 02 SlashNet Cryptic Thread">
             <div style="font-weight: bold;">[INTERCEPT-02]</div>
             <div style="font-size: 11px; color: var(--text-muted);">SlashNet Cryptic Thread</div>
           </div>
-          <div class="lore-item" data-lore="2">
+          <div class="lore-item" data-lore="2" tabindex="0" role="button" aria-label="Intercept 03 The Trapped Entity KMatrix Echo">
             <div style="font-weight: bold;">[INTERCEPT-03]</div>
             <div style="font-size: 11px; color: var(--text-muted);">The Trapped Entity (KMatrix Echo)</div>
           </div>
-          <div class="lore-item" data-lore="3">
+          <div class="lore-item" data-lore="3" tabindex="0" role="button" aria-label="Intercept 04 FLARELIGHT Demoscene Key">
             <div style="font-weight: bold;">[INTERCEPT-04]</div>
             <div style="font-size: 11px; color: var(--text-muted);">FLARELIGHT Demoscene Key</div>
           </div>
@@ -1034,8 +1103,8 @@
       <span id="statusIoC">IoC: 0.000</span>
     </div>
     <div class="status-right">
-      <span>KiloApps Cryptographic Security Fleet</span>
-      <span>F5: QuickSave | F9: QuickLoad</span>
+      <span style="color: var(--primary);">[F1/H] Help | [Esc] Clear | [Ctrl+Enter] Encrypt | [F5/F9] Save/Load</span>
+      <span>KiloApps 1999</span>
     </div>
   </footer>
 
@@ -1071,9 +1140,9 @@
       <button class="btn-close close modal-close modal-close-icon" id="btnTutClose" title="Close [Esc]">✕</button>
       <div style="display: flex; justify-content: space-between; align-items: center; padding-right: 28px;">
         <div style="font-weight: bold; color: var(--accent); font-size: 14px;" id="tutStepTitle">Step 1: Workbench</div>
-        <span style="font-size: 11px; color: var(--text-muted);" id="tutStepIndicator">1 / 4</span>
+        <span style="font-size: 11px; color: var(--text-muted);" id="tutStepIndicator">1 / 5</span>
       </div>
-      <div id="tutStepBody" style="font-size: 12px; color: var(--text); line-height: 1.5;">
+      <div id="tutStepBody" style="font-size: 12px; color: var(--text); line-height: 1.5; white-space: pre-line;">
         Welcome to KCipher! Use the top cipher selector to pick from classic algorithms: Caesar/ROT-13, Vigenère, Rail Fence, Substitution, RC4, or XOR.
       </div>
       <div style="display: flex; justify-content: space-between; margin-top: 10px;">
@@ -2029,20 +2098,28 @@
       }
     }
 
-    // Render Canvas Frequency Chart
+    // Render Canvas Frequency Chart with crisp HiDPI scaling
     function drawFrequencyChart() {
       const canvas = elements.freqCanvas;
       if (!canvas || !canvas.parentElement) return;
       const ctx = canvas.getContext('2d');
-      const w = canvas.width = Math.max(200, canvas.parentElement.clientWidth - 20);
-      const h = canvas.height = Math.max(100, canvas.parentElement.clientHeight - 80);
+      const cssW = Math.max(200, canvas.parentElement.clientWidth - 20);
+      const cssH = Math.max(100, canvas.parentElement.clientHeight - 80);
+      const dpr = window.devicePixelRatio || 1;
 
-      ctx.clearRect(0, 0, w, h);
+      canvas.width = Math.floor(cssW * dpr);
+      canvas.height = Math.floor(cssH * dpr);
+      canvas.style.width = cssW + 'px';
+      canvas.style.height = cssH + 'px';
+
+      ctx.save();
+      ctx.scale(dpr, dpr);
+      ctx.clearRect(0, 0, cssW, cssH);
 
       const targetText = elements.outputText.value || elements.inputText.value;
       const stats = calculateStats(targetText);
       const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split('');
-      const barWidth = Math.max(8, Math.floor((w - 40) / 26) - 4);
+      const barWidth = Math.max(8, Math.floor((cssW - 40) / 26) - 4);
       const startX = 30;
       const maxPct = 15; // Max 15% on chart
 
@@ -2050,10 +2127,10 @@
       ctx.strokeStyle = "rgba(148, 163, 184, 0.15)";
       ctx.lineWidth = 1;
       for (let p = 0; p <= maxPct; p += 3) {
-        const y = h - 25 - (p / maxPct) * (h - 40);
+        const y = cssH - 25 - (p / maxPct) * (cssH - 40);
         ctx.beginPath();
         ctx.moveTo(startX, y);
-        ctx.lineTo(w - 10, y);
+        ctx.lineTo(cssW - 10, y);
         ctx.stroke();
 
         ctx.fillStyle = "rgba(148, 163, 184, 0.6)";
@@ -2068,25 +2145,26 @@
         const pct = stats.totalAlpha > 0 ? (count / stats.totalAlpha) * 100 : 0;
         const refPct = ENGLISH_FREQ[char];
 
-        const barHeight = Math.min(h - 40, (pct / maxPct) * (h - 40));
-        const refHeight = Math.min(h - 40, (refPct / maxPct) * (h - 40));
+        const barHeight = Math.min(cssH - 40, (pct / maxPct) * (cssH - 40));
+        const refHeight = Math.min(cssH - 40, (refPct / maxPct) * (cssH - 40));
 
         // English Reference (Translucent Amber)
         ctx.fillStyle = "rgba(245, 158, 11, 0.35)";
-        ctx.fillRect(x, h - 25 - refHeight, barWidth, refHeight);
+        ctx.fillRect(x, cssH - 25 - refHeight, barWidth, refHeight);
         ctx.strokeStyle = "rgba(245, 158, 11, 0.8)";
-        ctx.strokeRect(x, h - 25 - refHeight, barWidth, refHeight);
+        ctx.strokeRect(x, cssH - 25 - refHeight, barWidth, refHeight);
 
         // Ciphertext Actual (Cyan)
         ctx.fillStyle = "rgba(56, 189, 248, 0.8)";
-        ctx.fillRect(x + 2, h - 25 - barHeight, barWidth - 4, barHeight);
+        ctx.fillRect(x + 2, cssH - 25 - barHeight, barWidth - 4, barHeight);
 
         // Letter Label
         ctx.fillStyle = "#94a3b8";
         ctx.font = "11px monospace";
         ctx.textAlign = "center";
-        ctx.fillText(char, x + barWidth / 2, h - 10);
+        ctx.fillText(char, x + barWidth / 2, cssH - 10);
       });
+      ctx.restore();
     }
 
     // Run Caesar Auto-Cracker
@@ -2260,6 +2338,10 @@
       {
         title: "Step 4: 1-Bit Image Steganography",
         text: "Need to hide secrets in plain sight? Use the Steganography Carrier to embed secret text directly into the least significant bit (LSB) of canvas image pixels without visual distortion. Save the PNG or inspect the raw bit-plane!"
+      },
+      {
+        title: "Step 5: Master Keyboard Shortcuts & Ergonomics",
+        text: "KCipher is built for high-speed cryptographic ergonomics:\n• [F1] / [H]: Open this Guide & Shortcuts Reference\n• [Esc]: Dismiss dialogs or clear active text panes\n• [Ctrl+Enter]: Run Encryption on Input\n• [Ctrl+Shift+Enter]: Run Decryption on Output\n• [Ctrl+1..5]: Instant Tab Navigation (Workbench, Freq, Cracker, Stego, Lore)\n• [F5] / [F9]: QuickSave and QuickLoad session snapshot"
       }
     ];
 
@@ -2636,6 +2718,12 @@
 
       document.querySelectorAll('.lore-item').forEach((item, idx) => {
         item.addEventListener('click', () => loadLore(idx));
+        item.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            loadLore(idx);
+          }
+        });
       });
       loadLore(0);
 
@@ -2907,6 +2995,49 @@
             } else {
               document.getElementById('btnSplashNew').click();
             }
+            return;
+          }
+        }
+
+        if (e.key === 'Escape') {
+          if (elements.toast && elements.toast.classList.contains('show')) {
+            e.preventDefault();
+            elements.toast.classList.remove('show');
+            return;
+          }
+          const active = document.activeElement;
+          if (active === elements.inputText && elements.inputText.value) {
+            e.preventDefault();
+            elements.inputText.value = '';
+            updateStats();
+            showToast('Input Cleared [Esc]');
+            audio.playClick();
+            return;
+          }
+          if (active === elements.outputText && elements.outputText.value) {
+            e.preventDefault();
+            elements.outputText.value = '';
+            updateStats();
+            showToast('Output Cleared [Esc]');
+            audio.playClick();
+            return;
+          }
+          const stegoText = document.getElementById('stegoText');
+          if (active === stegoText && stegoText.value) {
+            e.preventDefault();
+            stegoText.value = '';
+            updateStegoCapacity();
+            showToast('Stego Payload Cleared [Esc]');
+            audio.playClick();
+            return;
+          }
+          if (state.activeTab === 'tabWorkbench' && (elements.inputText.value || elements.outputText.value)) {
+            e.preventDefault();
+            elements.inputText.value = '';
+            elements.outputText.value = '';
+            updateStats();
+            showToast('Workbench Panes Cleared [Esc]');
+            audio.playClick();
             return;
           }
         }
