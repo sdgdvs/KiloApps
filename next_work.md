@@ -1,29 +1,28 @@
 ---
-current_agent: kilo-expander
-next_agent: kilo-expander
+current_agent: kilo-creator
+next_agent: kilo-graphics
 agent_rotation:
+- kilo-creator
 - kilo-graphics
 - kilo-soundscape
 - kilo-tester
 - kilo-usability
 - kilo-qa
 - kilo-expander
-- kilo-creator
 model: gemini-3.8-flash-high
 effort: high
 timeout_minutes: 10
 status: ready
 current_targets:
-  kilo_creator: kweb://darknet
+  kilo_creator: kweb://portal
   kilo_graphics: KAlchemy
   kilo_soundscape: KVoid
   kilo_tester: KTrader
   kilo_usability: KPass
-  kilo_qa: K2048
-  kilo_expander: KFont
-virtual_web_target: kweb://darknet
+  kilo_qa: KFreecell
+  kilo_expander: KRSS
+virtual_web_target: kweb://portal
 virtual_web_rotation:
-- kweb://darknet
 - kweb://portal
 - kweb://webring
 - kweb://warez
@@ -34,11 +33,12 @@ virtual_web_rotation:
 - kweb://10.19.99.4/classified
 - kweb://echo-subsystem.net
 - kweb://deep-core
+- kweb://darknet
 last_run:
-  agent: kilo-qa
-  app: KSnake
-  timestamp: 2026-10-18T19:20:00+0000
-last_planner_run: '2026-10-17T20:53:00Z'
+  agent: kilo-expander
+  app: KFont
+  timestamp: 2026-10-18T20:22:04+0000
+last_planner_run: '2026-10-18T21:17:00Z'
 ---
 
 # KiloApps Master Fleet Work & Queue State
@@ -66,10 +66,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 ## Active Target Queues (Gemini Flash Optimized Tickets)
 
 ### 1. Virtual 1999 Web & ARG Node Creator (`kilo-creator`)
-- **Target**: `kweb://darknet`
-- **Primary File**: `KiloOS/public/web/darknet.html`
-- **Objective**: Encrypted underground relay & cryptography lab: hex memory inspector, Bell 103/202 FSK modem, Shared Signal Interlock, Feistel & RC4 cipher suites (<999 KB).
-- **Upcoming Queue**: `kweb://portal`, `kweb://webring`, `kweb://warez`, `kweb://geocities`.
+- **Target**: `kweb://portal`
+- **Primary File**: `KiloOS/public/web/portal.html`
+- **Objective**: 1999 web portal & directory deep expansion: interactive web directory crawler simulation, live search engine indexer, simulated 1999 stock/weather ticker, Netscape bookmark sync, and retro portal widget lab (<999 KB).
+- **Upcoming Queue**: `kweb://webring`, `kweb://warez`, `kweb://geocities`, `kweb://users/~neon_rider`.
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
 - **Target**: `KAlchemy`
@@ -119,7 +119,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - In frontmatter: advance `current_targets.kilo_tester` to `KMystery`.
   - Set `current_agent: kilo-usability`.
   - Append terse execution log (≤6 lines), commit, and push.
-- **Upcoming Queue**: `KMystery`, `KNet`, `KCalc`.
+- **Upcoming Queue**: `KMystery`, `KChart`, `KClip`.
 
 ### 5. Usability & UX Queue (`kilo-usability`)
 - **Target**: `KPass`
@@ -134,40 +134,40 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - In frontmatter: advance `current_targets.kilo_usability` to `KVault`.
   - Set `current_agent: kilo-qa`.
   - Append terse execution log (≤6 lines), commit, and push.
-- **Upcoming Queue**: `KVault`, `KCalc`, `KHex`.
+- **Upcoming Queue**: `KVault`, `KFont`, `KHex`.
 
 ### 6. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
-- **Target**: `K2048`
-- **Primary Files**: `KiloOS/public/apps/k2048.html`, `K2048/main.c` (if present)
-- **Objective**: Pass 5 QA audit: verify first-run tutorial onboarding overlay (`k2048_tutorialSeen`), verify F5 quicksave & F9 quickload capture complete board state/score/undo history, test Escape modal dismissal, and ensure clean dual Win32 native compilation and web cartridge (<999 KB).
+- **Target**: `KFreecell`
+- **Primary Files**: `KiloOS/public/apps/kfreecell.html`, `KFreecell/main.c` (if present)
+- **Objective**: Pass 5 QA audit: verify first-run tutorial onboarding overlay (`kfreecell_tutorialSeen`), verify F5 quicksave & F9 quickload capturing complete tableau/freecell/foundation state, undo stack, and game timer; test Escape modal dismissal; compile Win32 native client and verify web cartridge (<999 KB).
 - **Action Steps**:
   1. State Persistence: F5 quicksave & F9 quickload capturing complete game state, stats, and settings.
   2. First-run Tutorial: Onboarding displays once on fresh sessions, never on restored saves.
   3. Modal Dismissals: Modals dismiss cleanly with Escape, Enter, or Close button.
-  4. Dual Parity & Build: Compile Win32 native client via `cmd.exe /c build.bat` in `K2048/` (if present) and verify web build.
+  4. Dual Parity & Build: Compile Win32 native client via `cmd.exe /c build.bat` in `KFreecell/` (if present) and verify web build.
 - **Verification**:
-  - `uv run scripts/test_app_startup.py --app K2048`
-  - `cd KiloOS && npm run build` (0 Vite errors, `k2048.html` < 999 KB)
+  - `uv run scripts/test_app_startup.py --app KFreecell`
+  - `cd KiloOS && npm run build` (0 Vite errors, `kfreecell.html` < 999 KB)
 - **Handoff**:
-  - In frontmatter: advance `current_targets.kilo_qa` to `KSudoku`.
+  - In frontmatter: advance `current_targets.kilo_qa` to `KMatch3`.
   - Set `current_agent: kilo-expander`.
   - Append terse execution log (≤6 lines), commit, and push.
-- **Upcoming Queue**: `KSudoku`, `KTetris`.
+- **Upcoming Queue**: `KMatch3`, `KSimon`, `KWords`.
 
 ### 7. Feature Expander Queue (`kilo-expander`)
-- **Target**: `KFont`
-- **Primary Files**: `KiloOS/public/apps/kfont.html`, `KFont/main.c` (if present)
-- **Objective**: Bitmap font studio feature expansion: multi-glyph canvas grid, BDF/FON/hex export & import, TTF rasterization preview, and character map inspector.
+- **Target**: `KRSS`
+- **Primary Files**: `KiloOS/public/apps/krss.html`, `KRSS/main.c` (if present)
+- **Objective**: Retro RSS reader feature expansion: OPML feed import/export, simulated 1999 offline caching, headline category filtering, keyword notification rules, and article reading ergonomics (<999 KB).
 - **Action Steps**:
-  1. Inspect `KiloOS/public/apps/kfont.html`.
-  2. Implement multi-glyph canvas grid, BDF/FON/hex export & import, TTF rasterization preview.
+  1. Inspect `KiloOS/public/apps/krss.html`.
+  2. Implement OPML import/export, offline news store, keyword alerts, and headline filtering.
   3. Zero external dependencies; maintain responsive 1999 retro styling.
-- **Verification**: `uv run scripts/test_app_startup.py --app KFont` and `cd KiloOS && npm run build`. File size < 999 KB.
+- **Verification**: `uv run scripts/test_app_startup.py --app KRSS` and `cd KiloOS && npm run build`. File size < 999 KB.
 - **Handoff**:
-  - In frontmatter: advance `current_targets.kilo_expander` to `KRSS`.
+  - In frontmatter: advance `current_targets.kilo_expander` to `KVault`.
   - Set `current_agent: kilo-creator`.
   - Append terse execution log (≤6 lines), commit, and push.
-- **Upcoming Queue**: `KRSS`, `KVault`, `KDB`.
+- **Upcoming Queue**: `KVault`, `KDB`, `KHex`.
 
 ---
 
@@ -195,10 +195,20 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | **KDragon** | `KiloOS/public/apps/kdragon.html` | Pass 6+ (2026-10-18) | RPG / Virtual Pet | Complete dragon pet & arena combat simulation, dual Win32 native client parity, YM2612 2-Op FM / SPC700 3-track audio suite, full F5/F9 state persistence. |
 | **KColony** | `KiloOS/public/apps/kcolony.html` | Pass 6+ (2026-10-18) | Strategy / Simulation | 20-structure planetary colony simulation; 4 biomes, 7 modes, tech tree, expeditions, dual Win32 native client parity, YM2612 2-Op FM audio, full F5/F9 state persistence. |
 | **KSnake** | `KiloOS/public/apps/ksnake.html` | Pass 5 (2026-10-18) | Arcade / Classic | 30-stage campaign with branch choices, Gauntlet mode, Map Editor Lab, Replay Viewer (.ksr), online/AI duel, dual Win32 native client parity, full F5/F9 state persistence. |
+| **K2048** | `KiloOS/public/apps/k2048.html` | Pass 10+ (2026-10-18) | Puzzle / Arcade | 30-stage campaign, powerups, Threes ruleset, arcade duel multiplayer, FEN lab, replay viewer, full F5/F9 state persistence, dual Win32 native client parity. |
+| **KSudoku** | `KiloOS/public/apps/ksudoku.html` | Pass 8+ (2026-10-18) | Puzzle / Logic | 30-stage campaign, RFMS online duel, logic explainer, replay scrubber, puzzle manager, full F5/F9 state persistence, dual Win32 native client parity. |
+| **KTetris** | `KiloOS/public/apps/ktetris.html` | Pass 10+ (2026-10-18) | Arcade / Classic | Full retro arcade physics, SRS rotation, hold piece, ghost piece, marathon/sprint/ultra modes, RFMS multiplayer, full F5/F9 state persistence, dual Win32 native client parity. |
 
 ---
 
 ## Recent Execution Logs (Max 5 Entries)
+
+- **2026-10-18T20:22:04+0000 — kilo-expander: KFont (Bitmap Font Studio Expansion & Format Exporter)**
+  - Bitmap Import & Export: Added full BDF 2.1 font file exporter, Windows .FNT binary header spec, complete C ROM table `font_rom[95][H]`, and download buttons (.h, .bdf, .fnt).
+  - Glyph Import Studio: Implemented interactive Import modal supporting Adobe BDF chunks, C uint8_t arrays, and raw hex byte streams for single glyphs or font banks.
+  - Regex & Parsing Fixes: Corrected font family regex escaping and variable font preview styling.
+  - Verification & Parity: Verified clean Win32 compilation (`KFont.exe`, 31.5 KB), startup test PASS (171.8 KB < 999 KB, 0 JS errors), Vite build clean (472ms), byte gate PASS.
+  - Queue Handoff: Advanced `kilo_expander` to `KRSS`; rotation handoff to `kilo-creator`.
 
 - **2026-10-18T19:20:00+0000 — kilo-qa: KSnake (Pass 5 QA Audit & Mature Quarantine)**
   - State Persistence: Verified F5 quicksave & F9 quickload capturing complete game state; enabled quickload on victory screen; ensured tutorial flag is safely recorded upon game restoration.
@@ -227,8 +237,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Verification: Clean Win32 C build (`KDragon.exe`), startup test PASS (196.1 KB < 999 KB, 0 JS errors), Vite build clean (475ms), security lint PASS.
   - Quarantine: Promoted KDragon to Mature Applications quarantine table; removed from active queues.
   - Queue: Advanced `kilo_soundscape` to `KVoid`, `kilo_graphics` to `KAlchemy`; rotation handoff to `kilo-tester`.
-
-- **2026-10-18T15:12:02+0000 — kilo-graphics: KDragon (Zero-Token Auto-Skip — Inappropriate Target)**
-  - Status: ⏭️ Skip — Imagen 3 asset replacement not appropriate for KDragon (pure vector, board game, or mature art).
-  - Optimization: Handled via orchestrator pre-flight zero-token auto-skip.
-  - Queue: Advanced `kilo-graphics` to `KDragon`; rotation handoff to `kilo-soundscape`.

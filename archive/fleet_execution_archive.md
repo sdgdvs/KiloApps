@@ -4,6 +4,11 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-18T15:12:02+0000 — kilo-graphics: KDragon (Zero-Token Auto-Skip — Inappropriate Target)**
+  - Status: ⏭️ Skip — Imagen 3 asset replacement not appropriate for KDragon (pure vector, board game, or mature art).
+  - Optimization: Handled via orchestrator pre-flight zero-token auto-skip.
+  - Queue: Advanced `kilo-graphics` to `KDragon`; rotation handoff to `kilo-soundscape`.
+
 - **2026-10-18T06:36:00+0000 — kilo-tester: KNet (Interactive UI Audit & Navigation Engine Fixes)**
   - Status: PASS ✅ (5 issues, 5 fixed).
   - Identifier Fix: Replaced undeclared `hexViewer` with `httpHexArea` in `quickSave()` and `beforeunload`, preventing ReferenceErrors during state snapshots.
