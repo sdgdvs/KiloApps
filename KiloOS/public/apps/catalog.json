@@ -67,9 +67,9 @@
     "id": "kbookmark",
     "title": "KBookmark",
     "folder": "Office",
-    "webBytes": 121247,
+    "webBytes": 163746,
     "exeBytes": 24064,
-    "budgetPercent": 12.1
+    "budgetPercent": 16.4
   },
   {
     "id": "kbreakout",
@@ -123,9 +123,9 @@
     "id": "kchatserver",
     "title": "KChat Server",
     "folder": "Network",
-    "webBytes": 24901,
+    "webBytes": 24241,
     "exeBytes": 13824,
-    "budgetPercent": 2.5
+    "budgetPercent": 2.4
   },
   {
     "id": "kchess",
@@ -563,9 +563,9 @@
     "id": "kradio",
     "title": "KRadio",
     "folder": "Media",
-    "webBytes": 108315,
+    "webBytes": 111203,
     "exeBytes": 8704,
-    "budgetPercent": 10.8
+    "budgetPercent": 11.1
   },
   {
     "id": "kread",

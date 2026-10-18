@@ -514,6 +514,239 @@
       font-size: 12px;
     }
 
+    /* Breadcrumbs Navigation Bar */
+    .vault-breadcrumbs {
+      padding: 6px 14px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      font-family: var(--font-mono);
+      color: var(--text-muted);
+      overflow-x: auto;
+      white-space: nowrap;
+    }
+
+    .crumb-item {
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 2px 6px;
+      border-radius: 3px;
+      color: var(--text-muted);
+      transition: all 0.1s;
+    }
+
+    .crumb-item:hover {
+      background: var(--surface-hover);
+      color: var(--primary);
+    }
+
+    .crumb-item.active {
+      color: var(--primary);
+      font-weight: bold;
+      background: rgba(56, 189, 248, 0.12);
+    }
+
+    .crumb-sep {
+      color: var(--border);
+      user-select: none;
+    }
+
+    /* Hierarchical Folder Tree in Sidebar */
+    .category-item.cat-child {
+      padding-left: 26px;
+      font-size: 12px;
+      border-left: 3px solid transparent;
+      opacity: 0.95;
+    }
+
+    .category-item.cat-child-2 {
+      padding-left: 42px;
+      font-size: 11px;
+      opacity: 0.9;
+    }
+
+    .cat-toggle-btn {
+      width: 14px;
+      height: 14px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 9px;
+      cursor: pointer;
+      color: var(--text-muted);
+      border-radius: 2px;
+      flex-shrink: 0;
+      user-select: none;
+    }
+
+    .cat-toggle-btn:hover {
+      color: var(--primary);
+      background: rgba(255,255,255,0.1);
+    }
+
+    .cat-add-sub {
+      opacity: 0;
+      font-size: 11px;
+      color: var(--text-muted);
+      padding: 0 4px;
+      cursor: pointer;
+      border-radius: 2px;
+      transition: opacity 0.15s;
+    }
+
+    .category-item:hover .cat-add-sub {
+      opacity: 0.8;
+    }
+
+    .cat-add-sub:hover {
+      opacity: 1 !important;
+      color: var(--primary);
+      background: rgba(255,255,255,0.15);
+    }
+
+    /* Active Multi-Tag Filter Bar */
+    .active-tags-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      align-items: center;
+      padding: 4px 14px;
+      background: rgba(0,0,0,0.15);
+      border-bottom: 1px solid var(--border);
+      font-size: 11px;
+      font-family: var(--font-mono);
+    }
+
+    .active-tag-chip {
+      background: var(--primary);
+      color: #000;
+      font-weight: 600;
+      padding: 1px 6px;
+      border-radius: 3px;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      cursor: pointer;
+    }
+
+    .active-tag-chip .remove-tag {
+      font-weight: bold;
+      opacity: 0.7;
+    }
+
+    .active-tag-chip:hover .remove-tag {
+      opacity: 1;
+    }
+
+    /* Priority Badges */
+    .bm-priority-badge {
+      font-size: 9px;
+      font-weight: bold;
+      padding: 1px 4px;
+      border-radius: 2px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .priority-high { background: rgba(239, 68, 68, 0.25); color: #f87171; border: 1px solid #ef4444; }
+    .priority-medium { background: rgba(245, 158, 11, 0.25); color: #fbbf24; border: 1px solid #f59e0b; }
+    .priority-low { background: rgba(100, 116, 139, 0.25); color: #94a3b8; border: 1px solid #64748b; }
+
+    /* Quick Jump Palette */
+    .quick-jump-results {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .qj-item {
+      padding: 8px 10px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      cursor: pointer;
+      transition: all 0.1s;
+    }
+
+    .qj-item:hover, .qj-item.active {
+      border-color: var(--primary);
+      background: var(--surface-hover);
+    }
+
+    .qj-title-group {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      min-width: 0;
+    }
+
+    .qj-title {
+      font-weight: 600;
+      font-size: 13px;
+      color: var(--text);
+    }
+
+    .qj-url {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--text-muted);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      max-width: 320px;
+    }
+
+    .qj-path {
+      font-size: 10px;
+      color: var(--primary);
+      background: rgba(56, 189, 248, 0.1);
+      padding: 1px 5px;
+      border-radius: 2px;
+      white-space: nowrap;
+    }
+
+    /* Batch Health Audit & Duplicates */
+    .audit-progress-bar {
+      width: 100%;
+      height: 12px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      overflow: hidden;
+    }
+
+    .audit-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--primary), var(--success));
+      transition: width 0.1s ease;
+    }
+
+    .dup-group {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .dup-group-title {
+      font-weight: bold;
+      color: var(--accent);
+      font-size: 12px;
+      word-break: break-all;
+    }
+
     /* Bookmark Cards Container */
     .bookmarks-container {
       flex: 1;
@@ -1067,11 +1300,17 @@
       <button class="btn btn-primary" id="btnNewLink" title="Add Bookmark (Ctrl+N)">
         <span>+</span> New Link
       </button>
-      <button class="btn btn-responsive-hide" id="btnNewCat" title="Create Category">
+      <button class="btn btn-accent" id="btnQuickJump" title="Quick Jump Omni-Launcher (Ctrl+K or Alt+J)">
+        ⚡ <span>Quick Jump</span>
+      </button>
+      <button class="btn btn-responsive-hide" id="btnNewCat" title="Create Category Folder">
         <span>📁</span> New Folder
       </button>
       <button class="btn btn-responsive-hide" id="btnAuditAll" title="Probe All Link Latency & Health">
         <span>🩺</span> Health Audit
+      </button>
+      <button class="btn btn-responsive-hide" id="btnFindDuplicates" title="Scan for Duplicate Links">
+        <span>🔍</span> Duplicates
       </button>
 
       <div style="width: 1px; height: 20px; background: var(--border); margin: 0 4px;" class="btn-responsive-hide"></div>
@@ -1115,7 +1354,7 @@
     <aside class="vault-sidebar">
       <div class="sidebar-section">
         <div class="sidebar-title">
-          <span>Categories</span>
+          <span>Categories & Folders</span>
           <span id="catTotalCount" class="brand-badge">7</span>
         </div>
       </div>
@@ -1126,8 +1365,11 @@
 
       <div class="sidebar-section">
         <div class="sidebar-title">
-          <span>Filter by Tag</span>
-          <span style="cursor: pointer;" id="btnClearTagFilter" title="Clear tag filter">✕</span>
+          <span>Filter by Tags</span>
+          <div style="display: flex; gap: 4px; align-items: center;">
+            <button class="btn btn-sm" id="btnTagMode" title="Toggle Tag Match Mode (ALL / ANY)" style="padding: 1px 5px; font-size: 10px;">AND</button>
+            <span style="cursor: pointer; padding: 0 4px;" id="btnClearTagFilter" title="Clear tag filter">✕</span>
+          </div>
         </div>
         <div class="tag-cloud" id="tagCloud">
           <!-- Tag pills injected by JS -->
@@ -1143,6 +1385,16 @@
 
     <!-- Main Content -->
     <main class="vault-content">
+      <!-- Breadcrumb Navigation Bar -->
+      <div class="vault-breadcrumbs" id="vaultBreadcrumbs">
+        <!-- Breadcrumbs injected by JS -->
+      </div>
+
+      <!-- Active Tag Filter Bar (if multi-tags active) -->
+      <div class="active-tags-bar" id="activeTagsBar" style="display: none;">
+        <!-- Active tags injected by JS -->
+      </div>
+
       <!-- Search & Filter Ribbon -->
       <div class="sub-toolbar">
         <div class="search-wrapper">
@@ -1157,6 +1409,8 @@
             <option value="internal">internal:</option>
             <option value="https">https://</option>
             <option value="http">http://</option>
+            <option value="gopher">gopher://</option>
+            <option value="gemini">gemini://</option>
           </select>
 
           <select class="protocol-select" id="filterHealth">
@@ -1170,9 +1424,11 @@
           <select class="sort-select" id="sortSelect">
             <option value="date-desc">Newest Added</option>
             <option value="date-asc">Oldest Added</option>
+            <option value="priority-desc">Priority (High to Low)</option>
             <option value="title-asc">Title (A - Z)</option>
             <option value="title-desc">Title (Z - A)</option>
             <option value="visits-desc">Most Visited</option>
+            <option value="health-desc">Health Status</option>
           </select>
 
           <div class="view-toggle">
@@ -1249,9 +1505,25 @@
             </select>
           </div>
         </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Priority</label>
+            <select class="form-select" id="bmInputPriority">
+              <option value="normal">Normal</option>
+              <option value="high">High (★★★)</option>
+              <option value="medium">Medium (★★)</option>
+              <option value="low">Low (★)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Custom Icon / Glyph (Optional)</label>
+            <input type="text" class="form-input" id="bmInputGlyph" placeholder="e.g. 🌐, 🚀, 💻, 📻 (leave blank for protocol icon)" maxlength="4">
+          </div>
+        </div>
         <div class="form-group">
           <label class="form-label">Tags (comma separated)</label>
           <input type="text" class="form-input" id="bmInputTags" placeholder="retro, directory, 1999, search">
+          <div id="bmSuggestedTags" style="display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; max-height: 48px; overflow-y: auto;"></div>
         </div>
         <div class="form-group">
           <label class="form-label">Notes / Description</label>
@@ -1269,17 +1541,24 @@
     </div>
   </div>
 
-  <!-- MODAL: Add Category -->
+  <!-- MODAL: Add Category Folder -->
   <div class="modal-overlay" id="modalCategory">
-    <div class="modal-box" style="max-width: 400px;">
+    <div class="modal-box" style="max-width: 420px;">
       <div class="modal-header">
         <div class="modal-title">📁 New Category Folder</div>
         <button class="modal-close" id="btnCloseCatModal">✕</button>
       </div>
       <div class="modal-body">
         <div class="form-group">
-          <label class="form-label">Folder Name</label>
-          <input type="text" class="form-input" id="catInputName" placeholder="e.g. Cyber Security">
+          <label class="form-label">Folder Name *</label>
+          <input type="text" class="form-input" id="catInputName" placeholder="e.g. Compilers & Sandboxes">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Parent Folder (for nesting)</label>
+          <select class="form-select" id="catInputParent">
+            <option value="">[None - Top Level Folder]</option>
+            <!-- Populated dynamically -->
+          </select>
         </div>
         <div class="form-group">
           <label class="form-label">Icon Glyph</label>
@@ -1292,6 +1571,9 @@
             <option value="🗝">🗝 Secret</option>
             <option value="⚡">⚡ Signal</option>
             <option value="📦">📦 Archive</option>
+            <option value="🔬">🔬 Tools</option>
+            <option value="🎹">🎹 Audio</option>
+            <option value="📡">📡 Network</option>
           </select>
         </div>
       </div>
@@ -1304,7 +1586,7 @@
 
   <!-- MODAL: Link Health Diagnostic Drawer -->
   <div class="modal-overlay" id="modalDiag">
-    <div class="modal-box" style="max-width: 460px;">
+    <div class="modal-box" style="max-width: 480px;">
       <div class="modal-header">
         <div class="modal-title">🩺 Link Health Inspector</div>
         <button class="modal-close" id="btnCloseDiagModal">✕</button>
@@ -1334,6 +1616,66 @@
       </div>
       <div class="modal-footer">
         <button class="btn btn-primary" id="btnCloseQr">Done</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: Quick Jump Omni-Launcher -->
+  <div class="modal-overlay" id="modalQuickJump">
+    <div class="modal-box" style="max-width: 600px;">
+      <div class="modal-header">
+        <div class="modal-title">⚡ Quick Jump Omni-Launcher</div>
+        <button class="modal-close" id="btnCloseQuickJump">✕</button>
+      </div>
+      <div class="modal-body" style="padding: 12px; gap: 8px;">
+        <input type="text" class="form-input" id="quickJumpInput" placeholder="Type title, URL, tag, or folder... (↑/↓ to navigate, Enter to launch, Esc to close)" autocomplete="off">
+        <div class="quick-jump-results" id="quickJumpResults" style="max-height: 340px; overflow-y: auto;">
+          <!-- Results injected by JS -->
+        </div>
+      </div>
+      <div class="modal-footer" style="font-size: 11px; color: var(--text-muted); justify-content: space-between;">
+        <span>Press <b>Enter</b> to launch link | <b>Space</b> to pin | <b>Esc</b> to dismiss</span>
+        <button class="btn btn-sm" id="btnDoneQuickJump">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: Duplicate Link Detector -->
+  <div class="modal-overlay" id="modalDuplicates">
+    <div class="modal-box" style="max-width: 580px;">
+      <div class="modal-header">
+        <div class="modal-title">🔍 Duplicate Link Vault Detector</div>
+        <button class="modal-close" id="btnCloseDuplicates">✕</button>
+      </div>
+      <div class="modal-body" id="duplicatesContent" style="max-height: 360px; overflow-y: auto;">
+        <!-- Duplicates list rendered by JS -->
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-danger" id="btnAutoDedupe" style="display: none;">Deduplicate All (Keep Most Visited)</button>
+        <button class="btn btn-primary" id="btnDoneDuplicates">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: Batch Health Audit Progress -->
+  <div class="modal-overlay" id="modalBatchAudit">
+    <div class="modal-box" style="max-width: 480px;">
+      <div class="modal-header">
+        <div class="modal-title">🩺 Batch Link Health Audit</div>
+        <button class="modal-close" id="btnCloseBatchAudit">✕</button>
+      </div>
+      <div class="modal-body" style="gap: 12px;">
+        <div id="auditProgressText" style="font-size: 12px; color: var(--text-muted);">Auditing links...</div>
+        <div class="audit-progress-bar">
+          <div class="audit-fill" id="auditProgressFill" style="width: 0%;"></div>
+        </div>
+        <div class="diag-metric"><span>🟢 200 OK (Responsive)</span> <b id="auditCount200">0</b></div>
+        <div class="diag-metric"><span>🟡 301 Redirect / Moved</span> <b id="auditCount301">0</b></div>
+        <div class="diag-metric"><span>🔴 404 Not Found / Dead</span> <b id="auditCount404">0</b></div>
+        <div class="diag-metric"><span>Average Simulated Latency</span> <b id="auditAvgLatency">-- ms</b></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-primary" id="btnDoneBatchAudit">Close</button>
       </div>
     </div>
   </div>
@@ -1407,9 +1749,10 @@
       <div class="modal-body">
         <div style="display: flex; flex-direction: column; gap: 8px;">
           <div class="diag-metric"><span>H or F1</span> <b>Help & Quick Reference</b></div>
+          <div class="diag-metric"><span>Ctrl + K or Alt + J</span> <b>Quick Jump Omni-Launcher</b></div>
           <div class="diag-metric"><span>Ctrl + N</span> <b>Add New Bookmark</b></div>
           <div class="diag-metric"><span>Ctrl + F or /</span> <b>Focus Omni-Search</b></div>
-          <div class="diag-metric"><span>↑ / ↓</span> <b>Navigate Bookmarks</b></div>
+          <div class="diag-metric"><span>↑ / ↓</span> <b>Navigate Bookmarks / Results</b></div>
           <div class="diag-metric"><span>Enter</span> <b>Launch highlighted link / Confirm</b></div>
           <div class="diag-metric"><span>Space</span> <b>Toggle Star on highlighted</b></div>
           <div class="diag-metric"><span>1 – 9</span> <b>Switch Categories (1: All, 2: Starred...)</b></div>
@@ -1492,13 +1835,22 @@
       function sfxPing() { playTone(987.77, 'sine', 0.25, 0.06); }
       function sfxDelete() { playTone(180, 'sawtooth', 0.15, 0.08); }
 
-      // Initial Vault Data
+      // Initial Vault Data with Hierarchical Categories
       const DEFAULT_CATEGORIES = [
-        { id: 'cat-portals', name: 'Web 1.0 Portals', glyph: '🌐' },
-        { id: 'cat-dev', name: 'Development & Code', glyph: '💻' },
-        { id: 'cat-fleet', name: 'Fleet & System', glyph: '🛰' },
-        { id: 'cat-cyber', name: 'Cyberdeck & Media', glyph: '🕹' },
-        { id: 'cat-relays', name: 'Subcarrier Relays', glyph: '🗝' }
+        { id: 'cat-portals', name: 'Web 1.0 Portals', glyph: '🌐', parentId: null, collapsed: false },
+        { id: 'cat-portals-search', name: 'Search & Directories', glyph: '🔍', parentId: 'cat-portals' },
+        { id: 'cat-portals-webring', name: 'Retro Webrings', glyph: '💫', parentId: 'cat-portals' },
+        { id: 'cat-dev', name: 'Development & Code', glyph: '💻', parentId: null, collapsed: false },
+        { id: 'cat-dev-sandboxes', name: 'Sandboxes & Shells', glyph: '⚡', parentId: 'cat-dev' },
+        { id: 'cat-dev-tools', name: 'Inspectors & Hex', glyph: '🔬', parentId: 'cat-dev' },
+        { id: 'cat-fleet', name: 'Fleet & System', glyph: '🛰', parentId: null, collapsed: false },
+        { id: 'cat-fleet-telemetry', name: 'Telemetry & Daemons', glyph: '📊', parentId: 'cat-fleet' },
+        { id: 'cat-fleet-network', name: 'Network Probes', glyph: '📡', parentId: 'cat-fleet' },
+        { id: 'cat-cyber', name: 'Cyberdeck & Media', glyph: '🕹', parentId: null, collapsed: false },
+        { id: 'cat-cyber-audio', name: 'Audio & Synthesizers', glyph: '🎹', parentId: 'cat-cyber' },
+        { id: 'cat-cyber-sims', name: 'Shipyards & Games', glyph: '🚀', parentId: 'cat-cyber' },
+        { id: 'cat-relays', name: 'Subcarrier Relays', glyph: '🗝', parentId: null, collapsed: false },
+        { id: 'cat-relays-nodes', name: 'Clandestine Transmissions', glyph: '📻', parentId: 'cat-relays' }
       ];
 
       const DEFAULT_BOOKMARKS = [
@@ -1754,8 +2106,9 @@
       // State
       let categories = [];
       let bookmarks = [];
-      let activeCategory = 'all'; // 'all', 'starred', 'recent', or category name
-      let activeTagFilter = null;
+      let activeCategory = 'all'; // 'all', 'starred', 'recent', or category name / id
+      let activeTagFilters = new Set();
+      let tagMatchMode = 'all'; // 'all' (AND) or 'any' (OR)
       let searchQuery = '';
       let selectedProtocol = 'all';
       let selectedHealth = 'all';
@@ -1765,6 +2118,8 @@
       let activeTheme = 'dark';
       let activeDiagBookmarkId = null;
       let highlightedIndex = -1;
+      let qjSelectedIndex = 0;
+      let qjFilteredItems = [];
 
       // DOM Elements
       const categoryList = document.getElementById('categoryList');
@@ -1785,16 +2140,205 @@
       const batchRibbon = document.getElementById('batchRibbon');
       const selectAllCheckbox = document.getElementById('selectAllCheckbox');
       const selectedCountText = document.getElementById('selectedCountText');
+      const vaultBreadcrumbs = document.getElementById('vaultBreadcrumbs');
+      const activeTagsBar = document.getElementById('activeTagsBar');
+      const btnTagMode = document.getElementById('btnTagMode');
 
       // Modals
       const modalBookmark = document.getElementById('modalBookmark');
       const modalCategory = document.getElementById('modalCategory');
       const modalDiag = document.getElementById('modalDiag');
       const modalQr = document.getElementById('modalQr');
+      const modalQuickJump = document.getElementById('modalQuickJump');
+      const modalDuplicates = document.getElementById('modalDuplicates');
+      const modalBatchAudit = document.getElementById('modalBatchAudit');
       const modalExportImport = document.getElementById('modalExportImport');
       const modalSplash = document.getElementById('modalSplash');
       const modalHelp = document.getElementById('modalHelp');
       const checkTutorialSeen = document.getElementById('checkTutorialSeen');
+      const quickJumpInput = document.getElementById('quickJumpInput');
+      const quickJumpResults = document.getElementById('quickJumpResults');
+      const duplicatesContent = document.getElementById('duplicatesContent');
+      const btnAutoDedupe = document.getElementById('btnAutoDedupe');
+
+      // Category Hierarchy & Path Helpers
+      function getCategoryById(id) {
+        if (!id) return null;
+        return categories.find(c => c.id === id);
+      }
+
+      function getCategoryByName(name) {
+        if (!name) return null;
+        return categories.find(c => c.name.toLowerCase() === name.trim().toLowerCase());
+      }
+
+      function getCategoryPath(catIdOrName) {
+        let cat = getCategoryById(catIdOrName) || getCategoryByName(catIdOrName);
+        const path = [];
+        const seen = new Set();
+        while (cat && !seen.has(cat.id)) {
+          seen.add(cat.id);
+          path.unshift(cat);
+          cat = cat.parentId ? getCategoryById(cat.parentId) : null;
+        }
+        return path;
+      }
+
+      function getCategoryPathString(catIdOrName) {
+        const path = getCategoryPath(catIdOrName);
+        if (path.length === 0) return catIdOrName || 'General';
+        return path.map(c => c.name).join(' / ');
+      }
+
+      function getDescendantCategoryNames(catIdOrName) {
+        const rootCat = getCategoryById(catIdOrName) || getCategoryByName(catIdOrName);
+        const names = new Set();
+        if (!rootCat) {
+          if (catIdOrName) names.add(catIdOrName);
+          return names;
+        }
+        names.add(rootCat.name);
+        function recurse(parentId) {
+          categories.forEach(c => {
+            if (c.parentId === parentId) {
+              names.add(c.name);
+              recurse(c.id);
+            }
+          });
+        }
+        recurse(rootCat.id);
+        return names;
+      }
+
+      function findOrCreateCategoryByPath(pathParts) {
+        if (!Array.isArray(pathParts) || pathParts.length === 0) return null;
+        let parentId = null;
+        let lastCat = null;
+        pathParts.forEach((part) => {
+          const name = part.trim();
+          if (!name) return;
+          let existing = categories.find(c => c.name.toLowerCase() === name.toLowerCase() && (c.parentId || null) === parentId);
+          if (!existing) {
+            existing = {
+              id: 'cat-' + Date.now() + '-' + Math.random().toString(36).substr(2, 4),
+              name,
+              glyph: '📁',
+              parentId,
+              collapsed: false
+            };
+            categories.push(existing);
+          }
+          parentId = existing.id;
+          lastCat = existing;
+        });
+        return lastCat;
+      }
+
+      // Breadcrumb Navigation
+      function renderBreadcrumbs() {
+        if (!vaultBreadcrumbs) return;
+        vaultBreadcrumbs.innerHTML = '';
+
+        const homeCrumb = document.createElement('span');
+        homeCrumb.className = `crumb-item ${activeCategory === 'all' ? 'active' : ''}`;
+        homeCrumb.innerHTML = `<span>🏠</span> Vault Root`;
+        homeCrumb.onclick = () => {
+          sfxClick();
+          activeCategory = 'all';
+          renderBreadcrumbs();
+          renderCategories();
+          renderBookmarks();
+        };
+        vaultBreadcrumbs.appendChild(homeCrumb);
+
+        if (activeCategory === 'starred') {
+          const sep = document.createElement('span');
+          sep.className = 'crumb-sep';
+          sep.textContent = '>';
+          vaultBreadcrumbs.appendChild(sep);
+
+          const starCrumb = document.createElement('span');
+          starCrumb.className = 'crumb-item active';
+          starCrumb.innerHTML = `<span>★</span> Starred Vault`;
+          vaultBreadcrumbs.appendChild(starCrumb);
+          return;
+        }
+
+        if (activeCategory === 'recent') {
+          const sep = document.createElement('span');
+          sep.className = 'crumb-sep';
+          sep.textContent = '>';
+          vaultBreadcrumbs.appendChild(sep);
+
+          const recCrumb = document.createElement('span');
+          recCrumb.className = 'crumb-item active';
+          recCrumb.innerHTML = `<span>🕒</span> Recent History`;
+          vaultBreadcrumbs.appendChild(recCrumb);
+          return;
+        }
+
+        if (activeCategory !== 'all') {
+          const path = getCategoryPath(activeCategory);
+          path.forEach((c, idx) => {
+            const sep = document.createElement('span');
+            sep.className = 'crumb-sep';
+            sep.textContent = '>';
+            vaultBreadcrumbs.appendChild(sep);
+
+            const crumb = document.createElement('span');
+            const isLast = (idx === path.length - 1);
+            crumb.className = `crumb-item ${isLast ? 'active' : ''}`;
+            crumb.innerHTML = `<span>${c.glyph || '📁'}</span> ${escapeHtml(c.name)}`;
+            crumb.onclick = () => {
+              sfxClick();
+              activeCategory = c.id;
+              renderBreadcrumbs();
+              renderCategories();
+              renderBookmarks();
+            };
+            vaultBreadcrumbs.appendChild(crumb);
+          });
+        }
+      }
+
+      // Active Multi-Tags Bar
+      function renderActiveTagsBar() {
+        if (!activeTagsBar) return;
+        if (activeTagFilters.size === 0) {
+          activeTagsBar.style.display = 'none';
+          activeTagsBar.innerHTML = '';
+          return;
+        }
+
+        activeTagsBar.style.display = 'flex';
+        activeTagsBar.innerHTML = `<span style="color: var(--text-muted); margin-right: 4px;">Tags (${tagMatchMode.toUpperCase()}):</span>`;
+
+        activeTagFilters.forEach(tag => {
+          const chip = document.createElement('span');
+          chip.className = 'active-tag-chip';
+          chip.innerHTML = `#${escapeHtml(tag)} <span class="remove-tag" title="Remove filter">✕</span>`;
+          chip.onclick = () => {
+            sfxClick();
+            activeTagFilters.delete(tag);
+            renderTagCloud();
+            renderActiveTagsBar();
+            renderBookmarks();
+          };
+          activeTagsBar.appendChild(chip);
+        });
+
+        const clearBtn = document.createElement('span');
+        clearBtn.style.cssText = 'color: var(--primary); cursor: pointer; text-decoration: underline; margin-left: 6px;';
+        clearBtn.textContent = 'Clear All';
+        clearBtn.onclick = () => {
+          sfxClick();
+          activeTagFilters.clear();
+          renderTagCloud();
+          renderActiveTagsBar();
+          renderBookmarks();
+        };
+        activeTagsBar.appendChild(clearBtn);
+      }
 
       // Persistence Handlers
       function saveStateToLocal() {
@@ -1805,7 +2349,8 @@
             activeTheme,
             soundEnabled,
             isTableMode,
-            version: '1.0'
+            tagMatchMode,
+            version: '2.0'
           };
           const json = JSON.stringify(payload);
           localStorage.setItem('kbookmark_vault', json);
@@ -1821,10 +2366,28 @@
           const saved = localStorage.getItem('kbookmark_vault');
           if (saved) {
             const data = JSON.parse(saved);
-            if (data.categories && Array.isArray(data.categories)) categories = data.categories;
-            if (data.bookmarks && Array.isArray(data.bookmarks)) bookmarks = data.bookmarks;
+            if (data.categories && Array.isArray(data.categories)) {
+              categories = data.categories;
+              // Normalize legacy categories lacking parentId or collapsed
+              categories.forEach(c => {
+                if (c.parentId === undefined) c.parentId = null;
+                if (c.collapsed === undefined) c.collapsed = false;
+              });
+            }
+            if (data.bookmarks && Array.isArray(data.bookmarks)) {
+              bookmarks = data.bookmarks;
+              bookmarks.forEach(b => {
+                if (!b.priority) b.priority = 'normal';
+                if (b.health === undefined) b.health = 200;
+                if (b.visits === undefined) b.visits = 0;
+              });
+            }
             if (data.activeTheme) setTheme(data.activeTheme);
             if (data.soundEnabled !== undefined) soundEnabled = data.soundEnabled;
+            if (data.tagMatchMode) {
+              tagMatchMode = data.tagMatchMode;
+              if (btnTagMode) btnTagMode.textContent = tagMatchMode.toUpperCase();
+            }
             if (data.isTableMode !== undefined) {
               isTableMode = data.isTableMode;
               if (viewCardsBtn && viewTableBtn) {
@@ -1851,7 +2414,8 @@
             soundEnabled,
             isTableMode,
             activeCategory,
-            activeTagFilter,
+            activeTagFilters: Array.from(activeTagFilters),
+            tagMatchMode,
             searchQuery,
             selectedProtocol,
             selectedHealth,
@@ -1873,8 +2437,21 @@
             return;
           }
           const data = JSON.parse(raw);
-          if (data.categories && Array.isArray(data.categories)) categories = data.categories;
-          if (data.bookmarks && Array.isArray(data.bookmarks)) bookmarks = data.bookmarks;
+          if (data.categories && Array.isArray(data.categories)) {
+            categories = data.categories;
+            categories.forEach(c => {
+              if (c.parentId === undefined) c.parentId = null;
+              if (c.collapsed === undefined) c.collapsed = false;
+            });
+          }
+          if (data.bookmarks && Array.isArray(data.bookmarks)) {
+            bookmarks = data.bookmarks;
+            bookmarks.forEach(b => {
+              if (!b.priority) b.priority = 'normal';
+              if (b.health === undefined) b.health = 200;
+              if (b.visits === undefined) b.visits = 0;
+            });
+          }
           if (data.activeTheme) setTheme(data.activeTheme);
           if (data.soundEnabled !== undefined) soundEnabled = data.soundEnabled;
           if (data.isTableMode !== undefined) {
@@ -1885,7 +2462,17 @@
             }
           }
           if (data.activeCategory !== undefined) activeCategory = data.activeCategory;
-          if (data.activeTagFilter !== undefined) activeTagFilter = data.activeTagFilter;
+          if (data.activeTagFilters && Array.isArray(data.activeTagFilters)) {
+            activeTagFilters = new Set(data.activeTagFilters);
+          } else if (data.activeTagFilter) {
+            activeTagFilters = new Set([data.activeTagFilter]);
+          } else {
+            activeTagFilters.clear();
+          }
+          if (data.tagMatchMode) {
+            tagMatchMode = data.tagMatchMode;
+            if (btnTagMode) btnTagMode.textContent = tagMatchMode.toUpperCase();
+          }
           if (data.searchQuery !== undefined) {
             searchQuery = data.searchQuery;
             if (searchInput) searchInput.value = searchQuery;
@@ -1909,6 +2496,8 @@
           if (checkTutorialSeen) checkTutorialSeen.checked = true;
           if (splashTutorialCheck) splashTutorialCheck.checked = true;
           sfxLoad();
+          renderBreadcrumbs();
+          renderActiveTagsBar();
           renderCategories();
           renderBookmarks();
           saveStateToLocal();
@@ -2043,7 +2632,7 @@
         }
       }
 
-      // Rendering: Categories
+      // Rendering: Hierarchical Category Tree
       function renderCategories() {
         categoryList.innerHTML = '';
 
@@ -2069,6 +2658,7 @@
           li.onclick = () => {
             sfxClick();
             activeCategory = sc.id;
+            renderBreadcrumbs();
             renderCategories();
             renderBookmarks();
             closeMobileSidebar();
@@ -2083,34 +2673,82 @@
         divLi.style.margin = '4px 10px';
         categoryList.appendChild(divLi);
 
-        // Custom categories with hotkeys [4] to [9]
-        categories.forEach((c, idx) => {
-          const count = bookmarks.filter(b => b.category === c.name).length;
-          const hotkeyNum = idx + 4;
-          const hotkeyBadge = hotkeyNum <= 9 ? `<span class="cat-hotkey">[${hotkeyNum}]</span>` : '';
+        // Recursive tree rendering for custom categories
+        let hotkeyCounter = 4;
+
+        function renderCategoryNode(c, depth) {
+          const children = categories.filter(sub => sub.parentId === c.id);
+          const hasChildren = children.length > 0;
+          const descNames = getDescendantCategoryNames(c.id);
+          const count = bookmarks.filter(b => {
+            if (descNames.has(b.category)) return true;
+            const bPath = getCategoryPathString(b.category);
+            return descNames.has(bPath);
+          }).length;
+
+          const hotkeyBadge = (depth === 0 && hotkeyCounter <= 9) ? `<span class="cat-hotkey">[${hotkeyCounter++}]</span>` : '';
+          const isActive = (activeCategory === c.id || activeCategory === c.name);
+
           const li = document.createElement('li');
-          li.className = `category-item ${activeCategory === c.name ? 'active' : ''}`;
-          if (hotkeyNum <= 9) li.title = `Switch category (Hotkey [${hotkeyNum}])`;
+          let childClass = depth === 1 ? 'cat-child' : (depth >= 2 ? 'cat-child-2' : '');
+          li.className = `category-item ${childClass} ${isActive ? 'active' : ''}`;
+
           li.innerHTML = `
             <div class="cat-name-wrapper">
+              ${hasChildren ? `<span class="cat-toggle-btn" title="${c.collapsed ? 'Expand folder' : 'Collapse folder'}">${c.collapsed ? '▸' : '▾'}</span>` : '<span style="width: 14px; flex-shrink: 0;"></span>'}
               <span class="cat-glyph">${c.glyph || '📁'}</span>
-              <span class="cat-name">${c.name}</span>
+              <span class="cat-name" title="${escapeHtml(getCategoryPathString(c.id))}">${escapeHtml(c.name)}</span>
               ${hotkeyBadge}
+              <span class="cat-add-sub" title="Add subfolder under ${escapeHtml(c.name)}">+</span>
             </div>
             <span class="cat-badge">${count}</span>
           `;
-          li.onclick = () => {
+
+          // Toggle expand/collapse arrow
+          const toggleBtn = li.querySelector('.cat-toggle-btn');
+          if (toggleBtn) {
+            toggleBtn.onclick = (e) => {
+              e.stopPropagation();
+              sfxClick();
+              c.collapsed = !c.collapsed;
+              saveStateToLocal();
+              renderCategories();
+            };
+          }
+
+          // Add subfolder button
+          const addSubBtn = li.querySelector('.cat-add-sub');
+          if (addSubBtn) {
+            addSubBtn.onclick = (e) => {
+              e.stopPropagation();
+              openAddCategory(c.id);
+            };
+          }
+
+          li.onclick = (e) => {
+            if (e.target.closest('.cat-toggle-btn') || e.target.closest('.cat-add-sub')) return;
             sfxClick();
-            activeCategory = c.name;
+            activeCategory = c.id;
+            renderBreadcrumbs();
             renderCategories();
             renderBookmarks();
             closeMobileSidebar();
           };
+
           categoryList.appendChild(li);
-        });
+
+          // Render children if expanded
+          if (hasChildren && !c.collapsed) {
+            children.forEach(child => renderCategoryNode(child, depth + 1));
+          }
+        }
+
+        const rootCategories = categories.filter(c => !c.parentId);
+        rootCategories.forEach(c => renderCategoryNode(c, 0));
 
         if (catTotalCount) catTotalCount.textContent = categories.length;
         renderTagCloud();
+        renderActiveTagsBar();
         updateSummaryCounters();
       }
 
@@ -2129,14 +2767,19 @@
         const sortedTags = Array.from(tagMap.entries()).sort((a, b) => b[1] - a[1]).slice(0, 24);
         sortedTags.forEach(([tag, count]) => {
           const pill = document.createElement('span');
-          pill.className = `tag-pill ${activeTagFilter === tag ? 'active' : ''}`;
+          const isTagActive = activeTagFilters.has(tag);
+          pill.className = `tag-pill ${isTagActive ? 'active' : ''}`;
           pill.textContent = `#${tag} (${count})`;
           pill.onclick = () => {
             sfxClick();
-            activeTagFilter = (activeTagFilter === tag) ? null : tag;
+            if (activeTagFilters.has(tag)) {
+              activeTagFilters.delete(tag);
+            } else {
+              activeTagFilters.add(tag);
+            }
             renderTagCloud();
+            renderActiveTagsBar();
             renderBookmarks();
-            closeMobileSidebar();
           };
           tagCloud.appendChild(pill);
         });
@@ -2156,13 +2799,22 @@
           } else if (activeCategory === 'recent') {
             if (!b.visits || b.visits === 0) return false;
           } else if (activeCategory !== 'all') {
-            if (b.category !== activeCategory) return false;
+            const descNames = getDescendantCategoryNames(activeCategory);
+            const bPath = getCategoryPathString(b.category);
+            const inCategory = descNames.has(b.category) || descNames.has(bPath) || (b.category && b.category.toLowerCase().includes(activeCategory.toLowerCase()));
+            if (!inCategory) return false;
           }
 
-          // Tag filter
-          if (activeTagFilter) {
-            if (!b.tags || !b.tags.some(t => t.toLowerCase() === activeTagFilter.toLowerCase())) {
-              return false;
+          // Multi-Tag filter with ALL / ANY matching logic
+          if (activeTagFilters.size > 0) {
+            const bTags = (b.tags || []).map(t => t.toLowerCase());
+            const filterArray = Array.from(activeTagFilters);
+            if (tagMatchMode === 'all') {
+              const matchAll = filterArray.every(tf => bTags.includes(tf.toLowerCase()));
+              if (!matchAll) return false;
+            } else {
+              const matchAny = filterArray.some(tf => bTags.includes(tf.toLowerCase()));
+              if (!matchAny) return false;
             }
           }
 
@@ -2189,16 +2841,25 @@
             const inNotes = (b.notes || '').toLowerCase().includes(q);
             const inTags = (b.tags || []).some(t => t.toLowerCase().includes(q));
             const inCat = (b.category || '').toLowerCase().includes(q);
-            if (!inTitle && !inUrl && !inNotes && !inTags && !inCat) return false;
+            const inPath = getCategoryPathString(b.category).toLowerCase().includes(q);
+            if (!inTitle && !inUrl && !inNotes && !inTags && !inCat && !inPath) return false;
           }
 
           return true;
         }).sort((a, b) => {
           if (currentSort === 'date-desc') return (b.dateAdded || 0) - (a.dateAdded || 0);
           if (currentSort === 'date-asc') return (a.dateAdded || 0) - (b.dateAdded || 0);
+          if (currentSort === 'priority-desc') {
+            const prioVal = (p) => p === 'high' ? 3 : (p === 'medium' ? 2 : (p === 'low' ? 0 : 1));
+            return prioVal(b.priority) - prioVal(a.priority);
+          }
           if (currentSort === 'title-asc') return (a.title || '').localeCompare(b.title || '');
           if (currentSort === 'title-desc') return (b.title || '').localeCompare(a.title || '');
           if (currentSort === 'visits-desc') return (b.visits || 0) - (a.visits || 0);
+          if (currentSort === 'health-desc') {
+            const hVal = (h) => h === 200 ? 4 : (h === 301 ? 3 : (h === 404 ? 1 : 2));
+            return hVal(b.health) - hVal(a.health);
+          }
           return 0;
         });
       }
@@ -2241,6 +2902,9 @@
           else if (b.health === 404) healthClass = 'status-404';
 
           const tagPillsHtml = (b.tags || []).map(t => `<span class="bm-tag">#${escapeHtml(t)}</span>`).join('');
+          const priorityBadge = (b.priority && b.priority !== 'normal') ? `<span class="bm-priority-badge priority-${b.priority}">★ ${b.priority.toUpperCase()}</span>` : '';
+          const glyphPrefix = b.glyph ? `<span style="font-size: 14px; margin-right: 2px;">${escapeHtml(b.glyph)}</span>` : '';
+          const pathDisplay = escapeHtml(getCategoryPathString(b.category));
 
           card.innerHTML = `
             <div class="bm-header">
@@ -2248,7 +2912,9 @@
               <div class="bm-title-group">
                 <span class="bm-star ${b.starred ? 'active' : ''}" title="${b.starred ? 'Starred' : 'Unstarred'}">★</span>
                 <span class="bm-health-dot ${healthClass}" title="Health: ${b.health || 'Untested'}"></span>
+                ${glyphPrefix}
                 <span class="bm-title" title="${escapeHtml(b.title)}">${escapeHtml(b.title)}</span>
+                ${priorityBadge}
               </div>
               <div class="bm-actions">
                 <button class="btn btn-sm btn-icon btn-open" title="Open Link">🔗</button>
@@ -2270,7 +2936,7 @@
             ${tagPillsHtml ? `<div class="bm-tags-row">${tagPillsHtml}</div>` : ''}
 
             <div class="bm-footer">
-              <span class="bm-cat-pill">${escapeHtml(b.category || 'General')}</span>
+              <span class="bm-cat-pill" title="Folder path: ${pathDisplay}">${escapeHtml(b.category || 'General')}</span>
               <span style="color: var(--text-muted); font-size: 10px;">${formatDate(b.dateAdded)}</span>
             </div>
           `;
@@ -2408,8 +3074,8 @@
         categories.forEach(c => {
           const opt = document.createElement('option');
           opt.value = c.name;
-          opt.textContent = `${c.glyph || '📁'} ${c.name}`;
-          if (c.name === selectedCat) opt.selected = true;
+          opt.textContent = `${c.glyph || '📁'} ${getCategoryPathString(c.id)}`;
+          if (c.name === selectedCat || c.id === selectedCat) opt.selected = true;
           sel.appendChild(opt);
         });
       }
@@ -2487,10 +3153,21 @@
         }
       }
 
-      // Add Category
-      function openAddCategory() {
+      // Add Category (with hierarchical parent support)
+      function openAddCategory(parentId = null) {
         sfxClick();
         document.getElementById('catInputName').value = '';
+        const parentSel = document.getElementById('catInputParent');
+        if (parentSel) {
+          parentSel.innerHTML = '<option value="">[None - Top Level Folder]</option>';
+          categories.forEach(c => {
+            const opt = document.createElement('option');
+            opt.value = c.id;
+            opt.textContent = `${c.glyph || '📁'} ${getCategoryPathString(c.id)}`;
+            if (parentId && c.id === parentId) opt.selected = true;
+            parentSel.appendChild(opt);
+          });
+        }
         modalCategory.classList.add('active');
         document.getElementById('catInputName').focus();
       }
@@ -2498,18 +3175,23 @@
       function saveCategoryFromModal() {
         const name = document.getElementById('catInputName').value.trim();
         const glyph = document.getElementById('catInputGlyph').value;
+        const parentSel = document.getElementById('catInputParent');
+        const parentId = (parentSel && parentSel.value) ? parentSel.value : null;
         if (!name) return;
 
-        if (categories.some(c => c.name.toLowerCase() === name.toLowerCase())) {
-          alert('A folder with this name already exists.');
+        if (categories.some(c => c.name.toLowerCase() === name.toLowerCase() && (c.parentId || null) === parentId)) {
+          alert('A folder with this name already exists in this location.');
           return;
         }
 
-        categories.push({
-          id: 'cat-' + Date.now(),
+        const newCat = {
+          id: 'cat-' + Date.now() + '-' + Math.random().toString(36).substr(2, 4),
           name,
-          glyph
-        });
+          glyph,
+          parentId,
+          collapsed: false
+        };
+        categories.push(newCat);
 
         sfxSave();
         saveStateToLocal();
@@ -2518,70 +3200,317 @@
         setStatus(`Created category folder "${name}".`);
       }
 
-      // Diagnostic Probe Suite
-      function openDiagnostic(bmId) {
-        sfxPing();
-        activeDiagBookmarkId = bmId;
-        const bm = bookmarks.find(b => b.id === bmId);
-        if (!bm) return;
+      // Quick Jump Omni-Launcher
+      let quickJumpActiveIndex = 0;
+      let quickJumpFiltered = [];
 
-        runDiagnosticProbe(bm);
-        modalDiag.classList.add('active');
+      function openQuickJump() {
+        sfxClick();
+        if (!quickJumpInput) return;
+        quickJumpInput.value = '';
+        quickJumpActiveIndex = 0;
+        modalQuickJump.classList.add('active');
+        renderQuickJumpResults();
+        setTimeout(() => quickJumpInput.focus(), 50);
       }
 
-      function runDiagnosticProbe(bm) {
-        const diagContent = document.getElementById('diagContent');
-        diagContent.innerHTML = `
-          <div style="color: var(--primary); font-weight: bold; margin-bottom: 8px;">
-            Target: ${escapeHtml(bm.title)}
-          </div>
-          <div style="color: var(--text-muted); margin-bottom: 12px;">
-            Probing URL: ${escapeHtml(bm.url)}...
-          </div>
-          <div style="text-align: center; padding: 20px;">
-            <span>[🩺 Sending ICMP & HTTP Header Probe...]</span>
-          </div>
-        `;
+      function renderQuickJumpResults() {
+        const query = (quickJumpInput.value || '').trim().toLowerCase();
+        quickJumpFiltered = bookmarks.filter(b => {
+          if (!query) return true;
+          const matchTitle = (b.title || '').toLowerCase().includes(query);
+          const matchUrl = (b.url || '').toLowerCase().includes(query);
+          const matchNotes = (b.notes || '').toLowerCase().includes(query);
+          const matchCategory = (b.category || '').toLowerCase().includes(query);
+          const matchPath = getCategoryPathString(b.category).toLowerCase().includes(query);
+          const matchTags = (b.tags || []).some(t => t.toLowerCase().includes(query));
+          return matchTitle || matchUrl || matchNotes || matchCategory || matchPath || matchTags;
+        }).slice(0, 35);
 
-        setTimeout(() => {
-          // Realistic network simulation
-          const proto = getProtocol(bm.url);
-          const rtt = Math.floor(Math.random() * 45) + 12; // 12-57ms
-          const jitter = (Math.random() * 3.5).toFixed(1);
+        if (quickJumpActiveIndex >= quickJumpFiltered.length) {
+          quickJumpActiveIndex = Math.max(0, quickJumpFiltered.length - 1);
+        }
+
+        quickJumpResults.innerHTML = '';
+        if (quickJumpFiltered.length === 0) {
+          quickJumpResults.innerHTML = `<div style="text-align: center; color: var(--text-muted); padding: 24px; font-size: 12px;">No matching bookmarks found.</div>`;
+          return;
+        }
+
+        quickJumpFiltered.forEach((b, idx) => {
+          const item = document.createElement('div');
+          item.className = `qj-item ${idx === quickJumpActiveIndex ? 'active' : ''}`;
+          const starIcon = b.starred ? '<span style="color: var(--accent); margin-right: 4px;">★</span>' : '';
+          const healthClass = (b.health === 200 ? 'status-200' : (b.health === 301 ? 'status-301' : 'status-404'));
+          const healthDot = `<span class="bm-health-dot ${healthClass}" style="margin-right: 6px;"></span>`;
+          const path = escapeHtml(getCategoryPathString(b.category));
+          const tagsStr = (b.tags || []).map(t => `#${escapeHtml(t)}`).join(' ');
+
+          item.innerHTML = `
+            <div class="qj-title-group">
+              <div style="display: flex; align-items: center;">
+                ${healthDot}
+                ${starIcon}
+                <span class="qj-title">${escapeHtml(b.title)}</span>
+              </div>
+              <div class="qj-url">${escapeHtml(b.url)}</div>
+              ${tagsStr ? `<div style="font-size: 10px; color: var(--text-muted);">${tagsStr}</div>` : ''}
+            </div>
+            <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 4px; flex-shrink: 0;">
+              <span class="qj-path">${path}</span>
+              <span style="font-size: 10px; color: var(--text-muted);">${b.visits || 0} visits</span>
+            </div>
+          `;
+
+          item.onclick = () => {
+            modalQuickJump.classList.remove('active');
+            openLink(b.url, b.id);
+          };
+
+          item.onmouseenter = () => {
+            quickJumpActiveIndex = idx;
+            const items = quickJumpResults.querySelectorAll('.qj-item');
+            items.forEach((it, i) => it.classList.toggle('active', i === quickJumpActiveIndex));
+          };
+
+          quickJumpResults.appendChild(item);
+        });
+
+        scrollQuickJumpIntoView();
+      }
+
+      function scrollQuickJumpIntoView() {
+        const items = quickJumpResults.querySelectorAll('.qj-item');
+        if (items[quickJumpActiveIndex]) {
+          items[quickJumpActiveIndex].scrollIntoView({ block: 'nearest' });
+        }
+      }
+
+      if (quickJumpInput) {
+        quickJumpInput.oninput = () => {
+          quickJumpActiveIndex = 0;
+          renderQuickJumpResults();
+        };
+
+        quickJumpInput.onkeydown = (e) => {
+          if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            if (quickJumpFiltered.length > 0) {
+              quickJumpActiveIndex = (quickJumpActiveIndex + 1) % quickJumpFiltered.length;
+              const items = quickJumpResults.querySelectorAll('.qj-item');
+              items.forEach((it, i) => it.classList.toggle('active', i === quickJumpActiveIndex));
+              scrollQuickJumpIntoView();
+            }
+          } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            if (quickJumpFiltered.length > 0) {
+              quickJumpActiveIndex = (quickJumpActiveIndex - 1 + quickJumpFiltered.length) % quickJumpFiltered.length;
+              const items = quickJumpResults.querySelectorAll('.qj-item');
+              items.forEach((it, i) => it.classList.toggle('active', i === quickJumpActiveIndex));
+              scrollQuickJumpIntoView();
+            }
+          } else if (e.key === 'Enter') {
+            e.preventDefault();
+            if (quickJumpFiltered.length > 0 && quickJumpFiltered[quickJumpActiveIndex]) {
+              const b = quickJumpFiltered[quickJumpActiveIndex];
+              modalQuickJump.classList.remove('active');
+              openLink(b.url, b.id);
+            }
+          }
+        };
+      }
+
+      // Duplicate Link Vault Detector
+      function normalizeUrlForDedupe(url) {
+        if (!url) return '';
+        let u = url.trim().toLowerCase();
+        if (u.endsWith('/')) u = u.slice(0, -1);
+        u = u.replace(/^https?:\/\/(www\.)?/, 'http://');
+        return u;
+      }
+
+      function openDuplicatesFinder() {
+        sfxClick();
+        renderDuplicatesModal();
+        modalDuplicates.classList.add('active');
+      }
+
+      function renderDuplicatesModal() {
+        const groups = new Map();
+        bookmarks.forEach(b => {
+          const norm = normalizeUrlForDedupe(b.url);
+          if (!groups.has(norm)) groups.set(norm, []);
+          groups.get(norm).push(b);
+        });
+
+        const dupGroups = Array.from(groups.entries()).filter(([k, list]) => list.length > 1);
+
+        duplicatesContent.innerHTML = '';
+        if (dupGroups.length === 0) {
+          if (btnAutoDedupe) btnAutoDedupe.style.display = 'none';
+          duplicatesContent.innerHTML = `
+            <div style="text-align: center; color: var(--success); padding: 30px; font-size: 13px;">
+              <span style="font-size: 24px;">✨</span><br><br>
+              <b>Vault is 100% Unique!</b><br>
+              No duplicate URLs or redundant bookmarks detected.
+            </div>
+          `;
+          return;
+        }
+
+        if (btnAutoDedupe) {
+          btnAutoDedupe.style.display = 'inline-flex';
+          btnAutoDedupe.textContent = `Deduplicate All (${dupGroups.length} redundant sets)`;
+        }
+
+        const headerInfo = document.createElement('div');
+        headerInfo.style.cssText = 'color: var(--text-muted); font-size: 12px; margin-bottom: 12px;';
+        headerInfo.textContent = `Found ${dupGroups.length} duplicate URL sets across your vault. Review or auto-clean:`;
+        duplicatesContent.appendChild(headerInfo);
+
+        dupGroups.forEach(([urlKey, items]) => {
+          const groupDiv = document.createElement('div');
+          groupDiv.className = 'dup-group';
+          groupDiv.innerHTML = `
+            <div class="dup-group-title">🔗 ${escapeHtml(items[0].url)}</div>
+            <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 4px;">${items.length} copies found:</div>
+          `;
+
+          const listDiv = document.createElement('div');
+          listDiv.style.cssText = 'display: flex; flex-direction: column; gap: 4px;';
+
+          items.forEach((bm) => {
+            const row = document.createElement('div');
+            row.style.cssText = 'display: flex; align-items: center; justify-content: space-between; padding: 4px 6px; background: rgba(255,255,255,0.03); border-radius: 3px; font-size: 11px;';
+            const catPath = escapeHtml(getCategoryPathString(bm.category));
+            row.innerHTML = `
+              <div style="min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                <b>${escapeHtml(bm.title)}</b> <span style="color: var(--primary);">[${catPath}]</span>
+                <span style="color: var(--text-muted); font-size: 10px;">(${bm.visits || 0} visits${bm.starred ? ', ★' : ''})</span>
+              </div>
+              <button class="btn btn-sm btn-danger" style="padding: 2px 6px; font-size: 10px; flex-shrink: 0;">Delete</button>
+            `;
+
+            row.querySelector('button').onclick = () => {
+              sfxDelete();
+              bookmarks = bookmarks.filter(b => b.id !== bm.id);
+              saveStateToLocal();
+              renderCategories();
+              renderBookmarks();
+              renderDuplicatesModal();
+              setStatus(`Removed duplicate bookmark "${bm.title}".`);
+            };
+
+            listDiv.appendChild(row);
+          });
+
+          groupDiv.appendChild(listDiv);
+          duplicatesContent.appendChild(groupDiv);
+        });
+      }
+
+      function autoDeduplicateAll() {
+        sfxClick();
+        const groups = new Map();
+        bookmarks.forEach(b => {
+          const norm = normalizeUrlForDedupe(b.url);
+          if (!groups.has(norm)) groups.set(norm, []);
+          groups.get(norm).push(b);
+        });
+
+        let removedCount = 0;
+        const toKeepIds = new Set();
+
+        groups.forEach((items) => {
+          if (items.length <= 1) {
+            toKeepIds.add(items[0].id);
+            return;
+          }
+
+          items.sort((a, b) => {
+            if (a.starred !== b.starred) return (b.starred ? 1 : 0) - (a.starred ? 1 : 0);
+            if ((b.visits || 0) !== (a.visits || 0)) return (b.visits || 0) - (a.visits || 0);
+            return (a.dateAdded || 0) - (b.dateAdded || 0);
+          });
+
+          toKeepIds.add(items[0].id);
+          removedCount += (items.length - 1);
+        });
+
+        if (removedCount > 0) {
+          bookmarks = bookmarks.filter(b => toKeepIds.has(b.id));
+          sfxSave();
+          saveStateToLocal();
+          renderCategories();
+          renderBookmarks();
+          renderDuplicatesModal();
+          setStatus(`Auto-deduplicated vault: removed ${removedCount} redundant bookmarks.`);
+        }
+      }
+
+      // Batch Link Health Audit
+      function runBatchHealthAudit() {
+        sfxPing();
+        modalBatchAudit.classList.add('active');
+
+        const total = bookmarks.length;
+        if (total === 0) {
+          document.getElementById('auditProgressText').textContent = 'No bookmarks to audit.';
+          document.getElementById('auditProgressFill').style.width = '100%';
+          return;
+        }
+
+        let index = 0;
+        let c200 = 0;
+        let c301 = 0;
+        let c404 = 0;
+        let totalLatency = 0;
+
+        document.getElementById('auditProgressText').textContent = `Auditing link 1 of ${total}...`;
+        document.getElementById('auditProgressFill').style.width = '0%';
+        document.getElementById('auditCount200').textContent = '0';
+        document.getElementById('auditCount301').textContent = '0';
+        document.getElementById('auditCount404').textContent = '0';
+        document.getElementById('auditAvgLatency').textContent = '-- ms';
+
+        function stepAudit() {
+          if (index >= total) {
+            document.getElementById('auditProgressText').textContent = `Audit Complete! Verified ${total} link targets.`;
+            document.getElementById('auditProgressFill').style.width = '100%';
+            sfxSave();
+            saveStateToLocal();
+            renderBookmarks();
+            setStatus(`Health audit complete: 🟢 ${c200} OK, 🟡 ${c301} Moved, 🔴 ${c404} Dead.`);
+            return;
+          }
+
+          const bm = bookmarks[index];
+          const rtt = Math.floor(Math.random() * 45) + 12;
+          totalLatency += rtt;
           const statusCode = bm.url.includes('darknet') ? 301 : (bm.url.includes('missing') ? 404 : 200);
           bm.health = statusCode;
-          saveStateToLocal();
-          renderBookmarks();
 
-          diagContent.innerHTML = `
-            <div style="font-weight: bold; color: var(--primary); margin-bottom: 8px;">
-              Diagnostic Probe Complete: ${statusCode === 200 ? '🟢 200 OK' : (statusCode === 301 ? '🟡 301 Moved' : '🔴 404 Error')}
-            </div>
-            <div class="diag-metric"><span>URL</span> <b>${escapeHtml(bm.url)}</b></div>
-            <div class="diag-metric"><span>Protocol</span> <b>${proto.toUpperCase()}</b></div>
-            <div class="diag-metric"><span>Round-Trip Time (RTT)</span> <b>${rtt} ms</b></div>
-            <div class="diag-metric"><span>Estimated Jitter</span> <b>±${jitter} ms</b></div>
-            <div class="diag-metric"><span>Status Code</span> <b>${statusCode}</b></div>
-            <div class="diag-metric"><span>Server Daemon</span> <b>Apache/1.3.12 (Unix) / KiloNet Gateway</b></div>
-            <div class="diag-metric"><span>Content-Type</span> <b>text/html; charset=iso-8859-1</b></div>
-            <div class="diag-metric"><span>Encryption Grade</span> <b>${proto === 'https' ? 'TLS 1.3 (Sovereign)' : (proto === 'kweb' ? 'Retro Web 1.0 (Direct Pipe)' : 'Cleartext')}</b></div>
-          `;
-          setStatus(`Probe complete for ${bm.title}: ${statusCode} (${rtt}ms).`);
-        }, 350);
+          if (statusCode === 200) c200++;
+          else if (statusCode === 301) c301++;
+          else c404++;
+
+          index++;
+          const pct = Math.round((index / total) * 100);
+          document.getElementById('auditProgressFill').style.width = pct + '%';
+          document.getElementById('auditProgressText').textContent = `Auditing link ${index} of ${total}: ${bm.title}`;
+          document.getElementById('auditCount200').textContent = c200;
+          document.getElementById('auditCount301').textContent = c301;
+          document.getElementById('auditCount404').textContent = c404;
+          document.getElementById('auditAvgLatency').textContent = Math.round(totalLatency / index) + ' ms';
+
+          setTimeout(stepAudit, 15);
+        }
+
+        stepAudit();
       }
 
       function auditAllLinks() {
-        sfxPing();
-        setStatus('Running health diagnostic audit across all bookmarks in vault...');
-        let audited = 0;
-        bookmarks.forEach(bm => {
-          const code = bm.url.includes('darknet') ? 301 : (bm.url.includes('missing') ? 404 : 200);
-          bm.health = code;
-          audited++;
-        });
-        saveStateToLocal();
-        renderBookmarks();
-        setStatus(`Health audit complete: verified ${audited} link targets.`);
+        runBatchHealthAudit();
       }
 
       // QR Code / Retro Matrix 2D Generator
@@ -2707,7 +3636,7 @@
         setStatus(`Exported ${filename}.`);
       }
 
-      // Standard Netscape Bookmark HTML format (RFC / Netscape 1995 standard)
+      // Standard Netscape Bookmark HTML format (RFC / Netscape 1995 standard) with Hierarchical Nesting
       function exportNetscapeHtml() {
         let html = `<!DOCTYPE NETSCAPE-Bookmark-file-1>
 <!-- This is an automatically generated file.
@@ -2718,26 +3647,47 @@
 <H1>Bookmarks</H1>
 <DL><p>
 `;
-        // Group by category
-        const catMap = new Map();
-        bookmarks.forEach(b => {
-          const c = b.category || 'General';
-          if (!catMap.has(c)) catMap.set(c, []);
-          catMap.get(c).push(b);
-        });
+        const exportedBookmarkIds = new Set();
 
-        catMap.forEach((bms, catName) => {
-          html += `    <DT><H3 ADD_DATE="${Math.floor(Date.now()/1000)}">${escapeHtml(catName)}</H3>\n    <DL><p>\n`;
+        function exportCategoryNode(cat, indent) {
+          const spaces = '    '.repeat(indent);
+          const addDate = Math.floor(Date.now() / 1000);
+          html += `${spaces}<DT><H3 ADD_DATE="${addDate}">${escapeHtml(cat.name)}</H3>\n`;
+          html += `${spaces}<DL><p>\n`;
+
+          const bms = bookmarks.filter(b => b.category === cat.name || b.category === cat.id);
           bms.forEach(b => {
-            const addDate = Math.floor((b.dateAdded || Date.now()) / 1000);
+            exportedBookmarkIds.add(b.id);
+            const bDate = Math.floor((b.dateAdded || Date.now()) / 1000);
             const tagsAttr = (b.tags && b.tags.length) ? ` TAGS="${escapeHtml(b.tags.join(','))}"` : '';
-            html += `        <DT><A HREF="${escapeHtml(b.url)}" ADD_DATE="${addDate}"${tagsAttr}>${escapeHtml(b.title)}</A>\n`;
+            html += `${spaces}    <DT><A HREF="${escapeHtml(b.url)}" ADD_DATE="${bDate}"${tagsAttr}>${escapeHtml(b.title)}</A>\n`;
+            if (b.notes) {
+              html += `${spaces}    <DD>${escapeHtml(b.notes)}\n`;
+            }
+          });
+
+          const children = categories.filter(c => c.parentId === cat.id);
+          children.forEach(child => exportCategoryNode(child, indent + 1));
+
+          html += `${spaces}</DL><p>\n`;
+        }
+
+        const rootCategories = categories.filter(c => !c.parentId);
+        rootCategories.forEach(rootCat => exportCategoryNode(rootCat, 1));
+
+        const leftovers = bookmarks.filter(b => !exportedBookmarkIds.has(b.id));
+        if (leftovers.length > 0) {
+          html += `    <DT><H3 ADD_DATE="${Math.floor(Date.now()/1000)}">Uncategorized</H3>\n    <DL><p>\n`;
+          leftovers.forEach(b => {
+            const bDate = Math.floor((b.dateAdded || Date.now()) / 1000);
+            const tagsAttr = (b.tags && b.tags.length) ? ` TAGS="${escapeHtml(b.tags.join(','))}"` : '';
+            html += `        <DT><A HREF="${escapeHtml(b.url)}" ADD_DATE="${bDate}"${tagsAttr}>${escapeHtml(b.title)}</A>\n`;
             if (b.notes) {
               html += `        <DD>${escapeHtml(b.notes)}\n`;
             }
           });
           html += `    </DL><p>\n`;
-        });
+        }
 
         html += `</DL><p>\n`;
         downloadFile(html, 'kbookmark_netscape.html', 'text/html');
@@ -2845,33 +3795,48 @@
             // Not JSON, try Netscape Bookmark HTML
           }
 
-          // Netscape Bookmark HTML parsing: extract categories (<H3>) and links (<A>)
+          // Netscape Bookmark HTML parsing: extract categories (<H3>) and links (<A>) with nested hierarchy tracking
           const lines = text.split(/\r?\n/);
+          const folderStack = [];
           let currentCategory = 'Web 1.0 Portals';
+
           lines.forEach(line => {
             const h3Match = line.match(/<H3[^>]*>([^<]+)<\/H3>/i);
             if (h3Match && h3Match[1].trim()) {
-              currentCategory = h3Match[1].trim();
-              if (!categories.some(c => c.name.toLowerCase() === currentCategory.toLowerCase())) {
-                categories.push({
+              const folderName = h3Match[1].trim();
+              const parentId = folderStack.length > 0 ? folderStack[folderStack.length - 1].id : null;
+              let existing = categories.find(c => c.name.toLowerCase() === folderName.toLowerCase() && (c.parentId || null) === parentId);
+              if (!existing) {
+                existing = {
                   id: 'cat-' + Date.now() + '-' + Math.random().toString(36).substr(2, 4),
-                  name: currentCategory,
-                  glyph: '📁'
-                });
+                  name: folderName,
+                  glyph: '📁',
+                  parentId: parentId,
+                  collapsed: false
+                };
+                categories.push(existing);
               }
+              folderStack.push(existing);
+              currentCategory = existing.name;
             }
+
             const aRegex = /<A\s+[^>]*HREF=["']([^"'>\s]+)["'][^>]*>([^<]+)<\/A>/gi;
             let match;
             while ((match = aRegex.exec(line)) !== null) {
               const url = match[1];
               const title = match[2];
               if (url && !bookmarks.some(b => b.url === url)) {
+                let tags = ['netscape-import'];
+                const tagsMatch = match[0].match(/TAGS=["']([^"']+)["']/i);
+                if (tagsMatch && tagsMatch[1]) {
+                  tags = tagsMatch[1].split(',').map(t => t.trim().toLowerCase()).filter(t => t.length > 0);
+                }
                 bookmarks.push({
                   id: 'bm-' + Date.now() + '-' + Math.random().toString(36).substr(2, 5),
                   title: title.trim(),
                   url: url.trim(),
                   category: currentCategory,
-                  tags: ['netscape-import'],
+                  tags: tags,
                   notes: 'Imported from browser HTML bookmark export',
                   starred: false,
                   visits: 0,
@@ -2879,6 +3844,13 @@
                   health: 200
                 });
                 importedCount++;
+              }
+            }
+
+            if (/<\/DL>/i.test(line)) {
+              if (folderStack.length > 0) {
+                folderStack.pop();
+                currentCategory = folderStack.length > 0 ? folderStack[folderStack.length - 1].name : 'Web 1.0 Portals';
               }
             }
           });
@@ -2982,6 +3954,18 @@
             closeMobileSidebar();
             return;
           }
+          if (modalQuickJump && modalQuickJump.classList.contains('active')) {
+            modalQuickJump.classList.remove('active');
+            return;
+          }
+          if (modalDuplicates && modalDuplicates.classList.contains('active')) {
+            modalDuplicates.classList.remove('active');
+            return;
+          }
+          if (modalBatchAudit && modalBatchAudit.classList.contains('active')) {
+            modalBatchAudit.classList.remove('active');
+            return;
+          }
           const activeModals = document.querySelectorAll('.modal-overlay.active');
           if (activeModals.length > 0) {
             activeModals.forEach(m => m.classList.remove('active'));
@@ -2995,6 +3979,13 @@
             setStatus('Search cleared.');
             return;
           }
+        }
+
+        // Quick Jump Omni-Launcher: Ctrl+K, Ctrl+P, Alt+J
+        if (((e.ctrlKey || e.metaKey) && (e.key === 'k' || e.key === 'K' || e.key === 'p' || e.key === 'P')) || (e.altKey && (e.key === 'j' || e.key === 'J'))) {
+          e.preventDefault();
+          openQuickJump();
+          return;
         }
 
         // Global shortcuts: F1 or H/? when not focused in input
@@ -3062,6 +4053,16 @@
             sfxClick();
             return;
           }
+          if (modalDuplicates.classList.contains('active')) {
+            modalDuplicates.classList.remove('active');
+            sfxClick();
+            return;
+          }
+          if (modalBatchAudit.classList.contains('active')) {
+            modalBatchAudit.classList.remove('active');
+            sfxClick();
+            return;
+          }
           if (!hasActiveModal && !isInputFocused) {
             const items = getFilteredBookmarks();
             if (highlightedIndex >= 0 && highlightedIndex < items.length) {
@@ -3104,6 +4105,18 @@
           if (modalExportImport.classList.contains('active')) {
             e.preventDefault();
             modalExportImport.classList.remove('active');
+            sfxClick();
+            return;
+          }
+          if (modalDuplicates.classList.contains('active')) {
+            e.preventDefault();
+            modalDuplicates.classList.remove('active');
+            sfxClick();
+            return;
+          }
+          if (modalBatchAudit.classList.contains('active')) {
+            e.preventDefault();
+            modalBatchAudit.classList.remove('active');
             sfxClick();
             return;
           }
@@ -3241,10 +4254,25 @@
       };
 
       document.getElementById('btnClearTagFilter').onclick = () => {
-        activeTagFilter = null;
+        sfxClick();
+        activeTagFilters.clear();
         renderTagCloud();
+        renderActiveTagsBar();
         renderBookmarks();
+        setStatus('Tag filters cleared.');
       };
+
+      if (btnTagMode) {
+        btnTagMode.onclick = () => {
+          sfxClick();
+          tagMatchMode = (tagMatchMode === 'all') ? 'any' : 'all';
+          btnTagMode.textContent = (tagMatchMode === 'all') ? 'AND' : 'OR';
+          saveStateToLocal();
+          renderActiveTagsBar();
+          renderBookmarks();
+          setStatus(`Tag matching mode set to ${tagMatchMode.toUpperCase()} (${tagMatchMode === 'all' ? 'All selected tags must match' : 'Any selected tag matches'}).`);
+        };
+      }
 
       // Batch
       selectAllCheckbox.onchange = (e) => {
@@ -3287,6 +4315,27 @@
 
       document.getElementById('btnCloseHelpModal').onclick = () => modalHelp.classList.remove('active');
       document.getElementById('btnDoneHelp').onclick = () => modalHelp.classList.remove('active');
+
+      // Quick Jump, Duplicates, and Batch Audit modal controls
+      const btnQuickJump = document.getElementById('btnQuickJump');
+      if (btnQuickJump) btnQuickJump.onclick = openQuickJump;
+      const btnCloseQuickJump = document.getElementById('btnCloseQuickJump');
+      if (btnCloseQuickJump) btnCloseQuickJump.onclick = () => modalQuickJump.classList.remove('active');
+      const btnDoneQuickJump = document.getElementById('btnDoneQuickJump');
+      if (btnDoneQuickJump) btnDoneQuickJump.onclick = () => modalQuickJump.classList.remove('active');
+
+      const btnFindDuplicates = document.getElementById('btnFindDuplicates');
+      if (btnFindDuplicates) btnFindDuplicates.onclick = openDuplicatesFinder;
+      const btnCloseDuplicates = document.getElementById('btnCloseDuplicates');
+      if (btnCloseDuplicates) btnCloseDuplicates.onclick = () => modalDuplicates.classList.remove('active');
+      const btnDoneDuplicates = document.getElementById('btnDoneDuplicates');
+      if (btnDoneDuplicates) btnDoneDuplicates.onclick = () => modalDuplicates.classList.remove('active');
+      if (btnAutoDedupe) btnAutoDedupe.onclick = autoDeduplicateAll;
+
+      const btnCloseBatchAudit = document.getElementById('btnCloseBatchAudit');
+      if (btnCloseBatchAudit) btnCloseBatchAudit.onclick = () => modalBatchAudit.classList.remove('active');
+      const btnDoneBatchAudit = document.getElementById('btnDoneBatchAudit');
+      if (btnDoneBatchAudit) btnDoneBatchAudit.onclick = () => modalBatchAudit.classList.remove('active');
       
       const splashTutorialCheck = document.getElementById('splashTutorialCheck');
       if (splashTutorialCheck) {

@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-expander
-next_agent: kilo-creator
+current_agent: kilo-creator
+next_agent: kilo-graphics
 agent_rotation:
 - kilo-graphics
 - kilo-soundscape
@@ -20,7 +20,7 @@ current_targets:
   kilo_tester: KColony
   kilo_usability: KCipher
   kilo_qa: KSnake
-  kilo_expander: KBookmark
+  kilo_expander: KFont
 virtual_web_target: kweb://deep-core
 virtual_web_rotation:
 - kweb://darknet
@@ -35,9 +35,9 @@ virtual_web_rotation:
 - kweb://echo-subsystem.net
 - kweb://deep-core
 last_run:
-  agent: kilo-qa
-  app: KMaze
-  timestamp: 2026-10-18T11:20:00+0000
+  agent: kilo-expander
+  app: KBookmark
+  timestamp: 2026-10-18T12:45:00+0000
 last_planner_run: '2026-10-17T20:53:00Z'
 ---
 
@@ -155,19 +155,19 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Upcoming Queue**: `K2048`, `KSudoku`.
 
 ### 7. Feature Expander Queue (`kilo-expander`)
-- **Target**: `KBookmark`
-- **Primary Files**: `KiloOS/public/apps/kbookmark.html`, `KBookmark/main.c` (if present)
-- **Objective**: Deep bookmark manager expansion: hierarchical folders, tagging system, Netscape bookmark HTML format import/export, link health pings, and rich metadata.
+- **Target**: `KFont`
+- **Primary Files**: `KiloOS/public/apps/kfont.html`, `KFont/main.c` (if present)
+- **Objective**: Bitmap font studio feature expansion: multi-glyph canvas grid, BDF/FON/hex export & import, TTF rasterization preview, and character map inspector.
 - **Action Steps**:
-  1. Inspect `KiloOS/public/apps/kbookmark.html`.
-  2. Implement nested directory hierarchies, tag indexing, Netscape bookmark file import/export, and quick link launcher.
+  1. Inspect `KiloOS/public/apps/kfont.html`.
+  2. Implement multi-glyph canvas grid, BDF/FON/hex export & import, TTF rasterization preview.
   3. Zero external dependencies; maintain responsive 1999 retro styling.
-- **Verification**: `uv run scripts/test_app_startup.py --app KBookmark` and `cd KiloOS && npm run build`. File size < 999 KB.
+- **Verification**: `uv run scripts/test_app_startup.py --app KFont` and `cd KiloOS && npm run build`. File size < 999 KB.
 - **Handoff**:
-  - In frontmatter: advance `current_targets.kilo_expander` to `KFont`.
+  - In frontmatter: advance `current_targets.kilo_expander` to `KRSS`.
   - Set `current_agent: kilo-creator`.
   - Append terse execution log (≤6 lines), commit, and push.
-- **Upcoming Queue**: `KFont`, `KRSS`, `KVault`.
+- **Upcoming Queue**: `KRSS`, `KVault`, `KDB`.
 
 ---
 
@@ -196,6 +196,15 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 ---
 
 ## Recent Execution Logs (Max 5 Entries)
+
+- **2026-10-18T12:45:00+0000 — kilo-expander: KBookmark (Deep Feature Expansion & Hierarchical Netscape Vault)**
+  - Hierarchical Folders & Breadcrumbs: Nested tree navigation in sidebar with expand/collapse, subfolder counts, parent folder selector, and interactive breadcrumbs.
+  - Quick Jump Omni-Launcher: Ctrl+K / Ctrl+P / Alt+J modal launcher filtering across titles, URLs, tags, and folder paths with arrow navigation and immediate launch.
+  - Duplicate Vault Detector: Multi-criteria URL normalization scanning with group comparison, individual deletion, and 1-click intelligent auto-deduplication.
+  - Batch Health Diagnostic: Interactive animated network audit modal with progressive RTT latency metrics and 200/301/404 breakdown across entire vault.
+  - Universal Netscape Import/Export: RFC/Netscape HTML bookmark exporter and parser with nested DL/H3 hierarchy tracking, tags, and notes.
+  - Verification & Dual Parity: Clean Win32 C build (24.0 KB), Vite build clean (473ms), startup test PASS (159.9 KB < 999 KB, 0 JS errors, hit-test unblocked).
+  - Queue: Advanced kilo-expander to KFont; rotation handoff to kilo-creator.
 
 - **2026-10-18T11:20:00+0000 — kilo-qa: KMaze (Pass 5 QA & State Integrity — Quarantined to Mature)**
   - First-run Tutorial Integrity: Verified `kmaze_tutorialSeen` / `kmaze_tutorial.dat` onboarding triggers on fresh sessions, never interrupting restored saves.
@@ -228,8 +237,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Ergonomics: Wired M key toggle & header badge state sync; persisted mute preference in localStorage.
   - Verification: Clean Vite build (503ms), startup test PASS (253.0 KB < 999 KB, 0 JS err), security lint clean, native C clean (70.6 KB).
   - Queue: Advanced kilo-soundscape to KDragon; rotation handoff to kilo-tester.
-
-- **2026-10-18T04:30:01+0000 — kilo-graphics: KDragon (Zero-Token Auto-Skip — Inappropriate Target)**
-  - Status: ⏭️ Skip — Imagen 3 asset replacement not appropriate for KDragon (pure vector, board game, or mature art).
-  - Optimization: Handled via orchestrator pre-flight zero-token auto-skip.
-  - Queue: Advanced `kilo-graphics` to `KDragon`; rotation handoff to `kilo-soundscape`.
