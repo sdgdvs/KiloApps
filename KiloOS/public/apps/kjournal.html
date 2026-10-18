@@ -823,6 +823,120 @@
     .meta-label { display: none; }
     .toolbar-row { gap: 6px; }
   }
+
+  /* Markdown Tables */
+  .table-wrap { width: 100%; overflow-x: auto; margin: 14px 0; }
+  .markdown-table {
+    width: 100%; border-collapse: collapse; font-size: 13px; text-align: left;
+    background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 6px;
+    overflow: hidden;
+  }
+  .markdown-table th {
+    background: var(--bg-tertiary); color: var(--accent-gold); font-weight: 600;
+    padding: 8px 12px; border: 1px solid var(--border-color);
+  }
+  .markdown-table td {
+    padding: 7px 12px; border: 1px solid var(--border-color); color: var(--text-main);
+  }
+  .markdown-table tr:nth-child(even) td { background: rgba(255,255,255,0.02); }
+  .markdown-table tr:hover td { background: rgba(229, 192, 123, 0.05); }
+
+  /* Markdown Callouts */
+  .callout {
+    border-left: 4px solid var(--border-color);
+    background: var(--bg-secondary);
+    border-radius: 4px 8px 8px 4px;
+    padding: 10px 14px;
+    margin: 14px 0;
+    font-size: 13px;
+  }
+  .callout-header {
+    font-weight: 600; margin-bottom: 4px; display: flex; align-items: center; gap: 6px;
+    font-size: 13px;
+  }
+  .callout-body { color: var(--text-main); line-height: 1.5; }
+  .callout-note { border-left-color: var(--accent-cyan); background: rgba(86, 182, 194, 0.08); }
+  .callout-note .callout-header { color: var(--accent-cyan); }
+  .callout-tip { border-left-color: var(--accent-green); background: rgba(152, 195, 121, 0.08); }
+  .callout-tip .callout-header { color: var(--accent-green); }
+  .callout-warning { border-left-color: var(--accent-gold); background: rgba(229, 192, 123, 0.08); }
+  .callout-warning .callout-header { color: var(--accent-gold); }
+  .callout-important { border-left-color: var(--accent-red); background: rgba(224, 108, 117, 0.08); }
+  .callout-important .callout-header { color: var(--accent-red); }
+  .callout-goal { border-left-color: #61afef; background: rgba(97, 175, 239, 0.08); }
+  .callout-goal .callout-header { color: #61afef; }
+  .callout-idea { border-left-color: var(--accent-purple); background: rgba(198, 120, 221, 0.08); }
+  .callout-idea .callout-header { color: var(--accent-purple); }
+
+  /* Mark / Highlight */
+  .preview-mark {
+    background: rgba(229, 192, 123, 0.28);
+    color: var(--text-bright);
+    padding: 1px 4px;
+    border-radius: 3px;
+    border-bottom: 1px solid var(--accent-gold);
+  }
+
+  /* Interactive Task Checkboxes in Preview */
+  .task-item { display: flex; align-items: flex-start; gap: 8px; margin: 4px 0; list-style: none; }
+  .task-check {
+    cursor: pointer; accent-color: var(--accent-gold); width: 15px; height: 15px; margin-top: 3px;
+  }
+  .task-done { text-decoration: line-through; opacity: 0.6; }
+
+  /* Clickable Tags */
+  .preview-tag.clickable-tag {
+    cursor: pointer; transition: all 0.15s ease;
+  }
+  .preview-tag.clickable-tag:hover {
+    background: var(--accent-gold); color: #111; transform: translateY(-1px);
+  }
+
+  /* Day Index Badge & Heatmap */
+  .day-index-badge {
+    cursor: pointer; font-size: 11px; padding: 2px 8px; border-radius: 4px;
+    background: var(--bg-tertiary); color: var(--accent-cyan); border: 1px solid var(--border-color);
+    font-weight: 600; white-space: nowrap; transition: all 0.15s;
+    display: inline-flex; align-items: center; gap: 4px;
+  }
+  .day-index-badge:hover {
+    border-color: var(--accent-cyan); background: rgba(86, 182, 194, 0.15);
+  }
+  .year-heatmap-matrix {
+    display: grid; grid-template-columns: repeat(53, 1fr); gap: 3px; margin: 14px 0;
+    overflow-x: auto; padding: 6px 2px;
+  }
+  .heatmap-cell {
+    width: 11px; height: 11px; border-radius: 2px; background: var(--bg-tertiary);
+    cursor: pointer; border: 1px solid rgba(255,255,255,0.03); transition: transform 0.1s;
+  }
+  .heatmap-cell:hover { transform: scale(1.35); z-index: 2; border-color: #fff; }
+  .heatmap-cell.l1 { background: #1b3d2f; }
+  .heatmap-cell.l2 { background: #246d45; }
+  .heatmap-cell.l3 { background: #32a852; }
+  .heatmap-cell.l4 { background: #e5c07b; box-shadow: 0 0 4px rgba(229, 192, 123, 0.6); }
+
+  /* Tag Manager Table & Chips */
+  .tag-mgr-table {
+    width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 10px;
+  }
+  .tag-mgr-table th, .tag-mgr-table td {
+    padding: 8px 10px; border: 1px solid var(--border-color); text-align: left;
+  }
+  .tag-mgr-table th { background: var(--bg-tertiary); color: var(--accent-gold); }
+  .editor-tag-helper {
+    display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-bottom: 8px;
+    font-size: 11px; padding: 4px 8px; background: rgba(33, 38, 49, 0.5);
+    border-radius: 6px; border: 1px solid var(--border-color);
+  }
+  .editor-tag-chip {
+    background: var(--bg-tertiary); border: 1px solid var(--border-color);
+    color: var(--accent-cyan); padding: 2px 7px; border-radius: 4px; cursor: pointer;
+    font-size: 11px; transition: all 0.15s;
+  }
+  .editor-tag-chip:hover {
+    background: var(--accent-cyan); color: #111;
+  }
 </style>
 </head>
 <body>
@@ -930,10 +1044,15 @@
       </div>
     </div>
 
-    <!-- Hashtag Cloud -->
+    <!-- Hashtag Cloud & Tag Management -->
     <div class="tag-section" id="tagSection">
       <div class="tag-section-title" style="cursor:pointer; display:flex; align-items:center; justify-content:space-between;" onclick="toggleTagFold()" title="Toggle Hashtags Visibility">
         <span>Hashtags <span id="tagFoldIcon" style="font-size:10px; opacity:0.75;">▾</span></span>
+        <button class="icon-btn" onclick="event.stopPropagation(); openTagManagerModal()" title="Tag Management & Batch Edit Studio" style="font-size:11px; padding:1px 5px; color:var(--accent-gold);">⚙️ Manage</button>
+      </div>
+      <div id="tagFilterControls" style="display:flex; gap:4px; margin-bottom:6px;">
+        <input type="text" id="tagSearchInput" placeholder="Filter tags..." oninput="renderTagCloud()" style="width:100%; font-size:11px; padding:3px 6px; background:var(--bg-tertiary); border:1px solid var(--border-color); color:#fff; border-radius:4px;">
+        <button id="clearTagFilterBtn" class="icon-btn" onclick="clearTagFilters()" title="Clear Active Tag Filters" style="display:none; font-size:10px; padding:2px 6px; color:var(--accent-red);">✕</button>
       </div>
       <div class="tag-cloud" id="tagCloud"></div>
     </div>
@@ -955,9 +1074,10 @@
       <div class="toolbar-row">
         <div class="toolbar-nav">
           <button id="btnToggleSidebar" class="icon-btn" onclick="toggleSidebar()" title="Toggle Sidebar / Zen Focus Mode (Alt+S or F2)" style="padding:4px 8px; font-weight:bold; font-size:13px; color:var(--accent-gold);">☰</button>
-          <div style="display:flex; align-items:center; gap:4px;">
+          <div style="display:flex; align-items:center; gap:6px;">
             <button class="icon-btn" onclick="navigateDay(-1)" title="Previous Day (Alt+Left)" style="padding:4px 7px; font-weight:bold;">◀</button>
             <div class="date-title" id="currentDateDisplay">July 24, 2026</div>
+            <span id="dayIndexBadge" class="day-index-badge" onclick="openDayIndexModal()" title="Open Calendar Day Index & Activity Matrix (Alt+D)">Day 205 • Wk 30</span>
             <button class="icon-btn" onclick="navigateDay(1)" title="Next Day (Alt+Right)" style="padding:4px 7px; font-weight:bold;">▶</button>
             <button class="icon-btn" onclick="jumpToToday()" title="Today's Entry (Ctrl+N)" style="padding:4px 7px; font-size:11px; font-weight:600; color:var(--accent-gold);">Today</button>
           </div>
@@ -965,6 +1085,7 @@
 
         <div class="toolbar-actions">
           <button class="btn" onclick="openModal('helpModal')" title="Help & Keyboard Shortcuts (F1 or H)">❓ <span class="btn-lbl-long">Help</span> <span class="shortcut-tag">[F1]</span></button>
+          <button class="btn" onclick="openDayIndexModal()" title="Calendar Day Index & Activity Matrix (Alt+D)">📅 <span class="btn-lbl-long">Index</span> <span class="shortcut-tag">[Alt+D]</span></button>
           <button class="btn" onclick="openMemoryFlashback()" title="On This Day - Memory Flashback (Alt+M)">⏳ <span class="btn-lbl-long">Flashback</span> <span class="shortcut-tag">[Alt+M]</span></button>
           <button class="btn" onclick="insertRandomPrompt()" style="color:var(--accent-gold);" title="Get Inspired with a Daily Reflection Prompt (Alt+P)">💡 <span class="btn-lbl-long">Prompt</span> <span class="shortcut-tag">[Alt+P]</span></button>
           <button class="btn" onclick="copyCurrentEntry()" title="Copy Entry to Clipboard (Alt+C)">📋 <span class="btn-lbl-long">Copy</span> <span class="shortcut-tag">[Alt+C]</span></button>
@@ -1009,9 +1130,12 @@
       <div class="format-toolbar">
         <button class="fmt-btn" onclick="insertMarkdown('**', '**')" title="Bold (Ctrl+B)"><b>B</b></button>
         <button class="fmt-btn" onclick="insertMarkdown('*', '*')" title="Italic (Ctrl+I)"><i>I</i></button>
+        <button class="fmt-btn" onclick="insertMarkdown('==', '==')" title="Highlight (==text==)"><span style="background:rgba(229,192,123,0.3); padding:0 2px;">HL</span></button>
         <button class="fmt-btn" onclick="insertMarkdown('## ', '')" title="Header 2">H2</button>
         <button class="fmt-btn" onclick="insertMarkdown('### ', '')" title="Header 3">H3</button>
         <button class="fmt-btn" onclick="insertMarkdown('> ', '')" title="Blockquote">“ ”</button>
+        <button class="fmt-btn" onclick="insertMarkdown('> [!NOTE] ', '')" title="Insert Callout Note">💡 Note</button>
+        <button class="fmt-btn" onclick="insertTableMarkdown()" title="Insert Markdown Table">📊 Table</button>
         <button class="fmt-btn" onclick="insertMarkdown('- ', '')" title="Bulleted List">• List</button>
         <button class="fmt-btn" onclick="insertMarkdown('- [ ] ', '')" title="Task Checkbox">☑ Task</button>
         <button class="fmt-btn" onclick="insertMarkdown('\n---\n', '')" title="Horizontal Divider">—</button>
@@ -1031,6 +1155,10 @@
     </div>
 
     <div class="editor-container">
+      <div id="editorTagHelper" class="editor-tag-helper" style="display:none;">
+        <span style="color:var(--text-muted); font-weight:600;">🏷️ Quick Tags:</span>
+        <div id="editorTagChips" style="display:flex; gap:4px; flex-wrap:wrap;"></div>
+      </div>
       <div id="quickStarterBar" class="quick-starter-bar" style="display:none;">
         <span style="font-size:12px; color:var(--text-muted); display:flex; align-items:center; gap:4px;">✨ Quick Start:</span>
         <button class="quick-starter-chip" onclick="applyTemplate('morning', 'replace')">🌅 Morning</button>
@@ -1066,9 +1194,12 @@
       <button class="icon-btn" onclick="closeModal('templatesModal')">✕</button>
     </div>
     <div class="modal-body">
-      <p style="font-size:13px; color:var(--text-muted); margin-bottom: 12px;">
-        Choose a structured journaling framework or guided prompt to spark your thoughts.
-      </p>
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 12px; flex-wrap:wrap; gap:8px;">
+        <p style="font-size:13px; color:var(--text-muted); margin:0;">
+          Choose a structured journaling framework, or create your own custom prompt templates.
+        </p>
+        <button class="btn btn-primary" onclick="openCustomTemplateModal()" style="font-size:12px; padding:4px 10px;">+ Save Entry as Template</button>
+      </div>
       <div class="template-grid" id="templatesGrid"></div>
     </div>
     <div class="modal-footer">
@@ -1236,6 +1367,8 @@
           <button class="btn" onclick="exportData('opml')" title="Outline Processor Markup Language (OPML) format for outliners">📑 OPML Outline</button>
           <button class="btn" onclick="exportData('standalone')" title="Self-contained portable offline HTML reader bundle">🌐 Portable Web App</button>
           <button class="btn btn-primary" onclick="exportData('book')" title="Standalone printable journal chronicle with TOC">📖 Printable Book / PDF</button>
+          <button class="btn" onclick="openEncryptedExportModal()" style="border-color:var(--accent-purple); color:var(--accent-purple);" title="Export encrypted AES-256-GCM vault protected by master passphrase">🔐 Encrypted Vault (.kjv)</button>
+          <button class="btn" onclick="openEncryptedHtmlExportModal()" style="border-color:var(--accent-gold); color:var(--accent-gold);" title="Export standalone self-decrypting encrypted HTML vault with password lock">🛡️ Self-Decrypting Vault (.html)</button>
         </div>
       </div>
 
@@ -1244,9 +1377,9 @@
       <div class="form-group">
         <label><strong>Import Entries</strong></label>
         <p style="font-size:12px; color:var(--text-muted); margin-bottom:10px;">
-          Restore entries from a previously exported JSON backup, OPML outline, or CSV file.
+          Restore entries from a JSON backup, OPML outline, CSV spreadsheet, or encrypted <strong>.kjv</strong> vault package.
         </p>
-        <input type="file" id="importFileInput" accept=".json,.opml,.csv,.xml" class="form-control">
+        <input type="file" id="importFileInput" accept=".json,.opml,.csv,.xml,.kjv" class="form-control">
         <button class="btn btn-primary" onclick="importData()" style="margin-top:10px;">Import File</button>
       </div>
     </div>
@@ -1342,7 +1475,11 @@
         <li><strong>Interactive Daily Word Goal:</strong> Click the goal progress bar in the footer or adjust in Settings.</li>
         <li><strong>Real-time Search & Hashtags:</strong> Use hashtags (e.g. #gratitude #goals) to categorize and filter.</li>
         <li><strong>Analytics & Streaks:</strong> Track current streak, best streak, total words, keywords, and mood breakdown charts.</li>
-        <li><strong>PIN Lock Protection:</strong> Secure your personal entries with a 4-digit numeric PIN in Settings.</li>
+        <li><strong>Calendar Day Index & Activity Matrix:</strong> Press Alt+D (or click [📅 Index] or the Day badge) for 52-week activity heatmap and yearly stats.</li>
+        <li><strong>Rich Markdown Formatting:</strong> Supports tables (|...|), callouts (> [!NOTE]), highlights (==...==), and clickable checkboxes in preview.</li>
+        <li><strong>AES-256-GCM Encrypted Vault:</strong> Export master-passphrase protected encrypted archives (.kjv) or self-decrypting portable HTML vaults.</li>
+        <li><strong>Hashtag Index & Management:</strong> Press ⚙️ Manage on the hashtag header to inspect tag word counts and batch-rename tags.</li>
+        <li><strong>Custom Templates Studio:</strong> Save your own personalized journal prompts and frameworks directly into your template library.</li>
       </ul>
     </div>
     <div class="modal-footer">
@@ -1351,18 +1488,237 @@
   </div>
 </div>
 
+<!-- Calendar Day Index & Activity Matrix Modal -->
+<div class="modal-backdrop" id="dayIndexModal">
+  <div class="modal-card" style="width: 720px; max-width: 95vw;">
+    <div class="modal-header">
+      <div style="display:flex; align-items:center; gap:8px;">
+        <span>📅</span>
+        <h3 style="margin:0;">Calendar Day Index & Activity Matrix</h3>
+      </div>
+      <button class="icon-btn" onclick="closeModal('dayIndexModal')">✕</button>
+    </div>
+    <div class="modal-body" style="max-height: 520px; overflow-y: auto;">
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; flex-wrap:wrap; gap:8px;">
+        <div style="display:flex; align-items:center; gap:6px;">
+          <button class="icon-btn" onclick="changeMatrixYear(-1)" style="font-weight:bold; padding:4px 8px;">◀</button>
+          <span id="matrixYearDisplay" style="font-size:16px; font-weight:700; color:var(--accent-gold);">2026</span>
+          <button class="icon-btn" onclick="changeMatrixYear(1)" style="font-weight:bold; padding:4px 8px;">▶</button>
+        </div>
+        <div style="display:flex; align-items:center; gap:8px;">
+          <input type="date" id="jumpDateInput" class="form-control" style="padding:4px 8px; font-size:12px; width:auto;">
+          <button class="btn btn-primary" onclick="jumpToDateFromInput()" style="font-size:12px; padding:4px 10px;">Go to Date</button>
+        </div>
+      </div>
+
+      <!-- Year Summary Stats -->
+      <div class="stat-grid" style="margin-bottom:14px;">
+        <div class="stat-card">
+          <div class="stat-val" id="matrixDaysWritten" style="color:var(--accent-green);">0 / 365</div>
+          <div class="stat-label">Days Written (0%)</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-val" id="matrixTotalWords">0</div>
+          <div class="stat-label">Total Words in Year</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-val" id="matrixCurrentStreak">0 days</div>
+          <div class="stat-label">Current Streak 🔥</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-val" id="matrixBestStreak">0 days</div>
+          <div class="stat-label">Best Streak 🏆</div>
+        </div>
+      </div>
+
+      <!-- Heatmap Legend -->
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:6px; font-size:11px; color:var(--text-muted);">
+        <span>52-Week Activity Heatmap (Click any cell to jump to that date):</span>
+        <div style="display:flex; align-items:center; gap:4px;">
+          <span>0 words</span>
+          <span class="heatmap-cell" style="display:inline-block; width:10px; height:10px; background:var(--bg-tertiary);"></span>
+          <span class="heatmap-cell l1" style="display:inline-block; width:10px; height:10px;"></span>
+          <span class="heatmap-cell l2" style="display:inline-block; width:10px; height:10px;"></span>
+          <span class="heatmap-cell l3" style="display:inline-block; width:10px; height:10px;"></span>
+          <span class="heatmap-cell l4" style="display:inline-block; width:10px; height:10px;"></span>
+          <span>500+ words</span>
+        </div>
+      </div>
+
+      <!-- Heatmap Grid Container -->
+      <div id="yearHeatmapContainer" style="overflow-x:auto; background:var(--bg-secondary); border:1px solid var(--border-color); border-radius:8px; padding:12px;"></div>
+
+      <!-- Monthly Breakdown List -->
+      <div style="margin-top:16px;">
+        <div style="font-size:12px; font-weight:700; color:var(--accent-gold); margin-bottom:8px;">Monthly Calendar Index</div>
+        <div id="matrixMonthlyList" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap:8px;"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-primary" onclick="closeModal('dayIndexModal')">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- Tag Manager Studio Modal -->
+<div class="modal-backdrop" id="tagManagerModal">
+  <div class="modal-card" style="width: 640px; max-width: 95vw;">
+    <div class="modal-header">
+      <div style="display:flex; align-items:center; gap:8px;">
+        <span>🏷️</span>
+        <h3 style="margin:0;">Hashtag Index & Management Studio</h3>
+      </div>
+      <button class="icon-btn" onclick="closeModal('tagManagerModal')">✕</button>
+    </div>
+    <div class="modal-body" style="max-height: 480px; overflow-y: auto;">
+      <p style="font-size:12px; color:var(--text-muted); margin-bottom:12px;">
+        Review all hashtags used across your journal, inspect frequencies and word volume, batch-rename tags across all entries, or delete tags.
+      </p>
+      <div id="tagManagerContent"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-primary" onclick="closeModal('tagManagerModal')">Done</button>
+    </div>
+  </div>
+</div>
+
+<!-- Encrypted Vault Export Modal -->
+<div class="modal-backdrop" id="encryptedExportModal">
+  <div class="modal-card" style="width: 480px; max-width: 92vw;">
+    <div class="modal-header">
+      <div style="display:flex; align-items:center; gap:8px;">
+        <span>🔐</span>
+        <h3 style="margin:0;">Export Encrypted Journal Vault</h3>
+      </div>
+      <button class="icon-btn" onclick="closeModal('encryptedExportModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:12px; color:var(--text-muted); margin-bottom:12px;">
+        Encrypt your journal memories using <strong>AES-256-GCM</strong> military-grade encryption with a PBKDF2 stretched master passphrase.
+      </p>
+      <div class="form-group">
+        <label>Master Encryption Passphrase</label>
+        <input type="password" id="vaultPassphrase" class="form-control" placeholder="Enter strong master passphrase..." oninput="checkPassStrength()">
+        <div id="passStrengthMeter" style="font-size:11px; margin-top:4px; color:var(--text-muted);">Strength: Type passphrase...</div>
+      </div>
+      <div class="form-group">
+        <label>Confirm Passphrase</label>
+        <input type="password" id="vaultPassphraseConfirm" class="form-control" placeholder="Re-enter master passphrase...">
+      </div>
+      <div class="form-group">
+        <label>Passphrase Hint (Optional)</label>
+        <input type="text" id="vaultPassphraseHint" class="form-control" placeholder="A reminder hint in case you forget...">
+      </div>
+      <div style="display:flex; flex-direction:column; gap:8px; margin-top:14px;">
+        <button class="btn btn-primary" onclick="executeEncryptedExport('kjv')" style="justify-content:center; padding:9px;">
+          🔐 Download Encrypted Vault (.kjv)
+        </button>
+        <button class="btn" onclick="executeEncryptedExport('html')" style="justify-content:center; padding:9px; border-color:var(--accent-gold); color:var(--accent-gold);">
+          🛡️ Download Self-Decrypting Portable HTML Vault (.html)
+        </button>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('encryptedExportModal')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- Encrypted Vault Import Modal -->
+<div class="modal-backdrop" id="encryptedImportModal">
+  <div class="modal-card" style="width: 440px; max-width: 92vw;">
+    <div class="modal-header">
+      <div style="display:flex; align-items:center; gap:8px;">
+        <span>🔓</span>
+        <h3 style="margin:0;">Unlock & Decrypt Encrypted Vault</h3>
+      </div>
+      <button class="icon-btn" onclick="closeModal('encryptedImportModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:12px; color:var(--text-muted); margin-bottom:12px;">
+        This file is an encrypted KJournal vault. Enter the master passphrase to decrypt and restore its contents.
+      </p>
+      <div id="importVaultHintDisplay" style="font-size:12px; color:var(--accent-gold); margin-bottom:10px; display:none;"></div>
+      <div class="form-group">
+        <label>Passphrase</label>
+        <input type="password" id="importVaultPassphrase" class="form-control" placeholder="Enter decryption passphrase..." onkeydown="if(event.key==='Enter') executeEncryptedImport()">
+      </div>
+      <div id="decryptErrorMsg" style="color:var(--accent-red); font-size:12px; display:none; margin-top:6px;"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('encryptedImportModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="executeEncryptedImport()">Decrypt & Merge Entries</button>
+    </div>
+  </div>
+</div>
+
+<!-- Custom Template Studio Modal -->
+<div class="modal-backdrop" id="customTemplateModal">
+  <div class="modal-card" style="width: 480px; max-width: 92vw;">
+    <div class="modal-header">
+      <div style="display:flex; align-items:center; gap:8px;">
+        <span>📝</span>
+        <h3 style="margin:0;">Save as Custom Template</h3>
+      </div>
+      <button class="icon-btn" onclick="closeModal('customTemplateModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:12px; color:var(--text-muted); margin-bottom:12px;">
+        Save the current journal editor text as a reusable structured framework.
+      </p>
+      <div class="form-group">
+        <label>Template Title</label>
+        <input type="text" id="customTmplTitle" class="form-control" placeholder="e.g., Weekly Retrospective...">
+      </div>
+      <div class="form-group">
+        <label>Icon Emoji</label>
+        <input type="text" id="customTmplIcon" class="form-control" value="⭐" maxlength="4" style="width:70px;">
+      </div>
+      <div class="form-group">
+        <label>Description</label>
+        <input type="text" id="customTmplDesc" class="form-control" placeholder="Short description of this prompt framework...">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('customTemplateModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveCustomTemplate()">Save Template</button>
+    </div>
+  </div>
+</div>
+
 <script>
+  // Storage Safety Helpers (quality standards)
+  function safeGet(key, fallback = null) {
+    try {
+      const val = localStorage.getItem(key);
+      return val !== null ? val : fallback;
+    } catch (e) {
+      return fallback;
+    }
+  }
+  function safeSet(key, value) {
+    try {
+      localStorage.setItem(key, value);
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
   // Core State
   let entries = {}; // { 'YYYY-MM-DD': { text: '', mood: '😀', category: 'personal', updatedAt: timestamp } }
   let settings = { pin: '', pinEnabled: false, dailyGoal: 150, fontSize: 16 };
   let selectedDate = '';
   let selectedMood = '';
   let selectedTagFilter = '';
+  let selectedTags = new Set();
   let selectedCategoryFilter = 'all'; // 'all', 'personal', 'work', 'ideas', 'dreams', 'wellness'
   let selectedMoodFilter = ''; // '', '😀', '😊', '😐', '😔', '⚡', '🧘'
   let editorMode = 'edit'; // 'edit', 'split', 'preview'
   let calCurrentYear = new Date().getFullYear();
   let calCurrentMonth = new Date().getMonth(); // 0-indexed
+  let matrixYear = new Date().getFullYear();
+  let customTemplates = [];
 
   // Guided Reflection Templates Library
   const TEMPLATES = [
@@ -1413,6 +1769,46 @@
       desc: 'Deconstruct a tricky challenge with creative angles and direct action steps.',
       mood: '⚡',
       content: `## 💡 Brain Dump & Problem Solving\n\n### 🔍 The Core Challenge / Question:\n- \n\n### 🚀 Wild, Radical, or Alternative Approaches:\n- \n- \n\n### 📝 Immediate Next Action Step (Within 24 Hours):\n1. `
+    },
+    {
+      id: 'weekly',
+      title: 'Weekly Review & Horizon Planning',
+      icon: '📅',
+      desc: 'Review weekly wins, reflect on bottlenecks, and prioritize the week ahead.',
+      mood: '🧘',
+      content: `## 📅 Weekly Review & Planning\n\n### 🏆 Top Wins & Breakthroughs This Week:\n1. \n2. \n3. \n\n### 🚧 Bottlenecks, Delays & Lessons Learned:\n- \n\n### 🎯 Top 3 Big Rocks for Next Week:\n1. [ ] \n2. [ ] \n3. [ ] \n\n### 🌿 Habit & Energy Scorecard (1-10):\n- Sleep & Rest: /10\n- Deep Focus Work: /10\n- Physical Movement: /10`
+    },
+    {
+      id: 'decision',
+      title: 'Decision Journal & Mental Models',
+      icon: '⚖️',
+      desc: 'Record critical decisions, analyze second-order effects, and define review date.',
+      mood: '🧘',
+      content: `## ⚖️ Decision Journal\n\n### 📌 Decision Being Made:\n- \n\n### 🧠 Mental Model / Principle Applied:\n- \n\n### 🌊 Second & Third-Order Consequences:\n- Immediate (1st Order): \n- Downstream (2nd Order): \n\n### ❌ What Would Prove This Decision Wrong (Falsification):\n- \n\n### ⏳ Review Date (e.g. in 90 Days):\n- `
+    },
+    {
+      id: 'deepwork',
+      title: 'Deep Work Session & Focus Log',
+      icon: '🧠',
+      desc: 'Track concentrated deep work sessions, flow state, and output delivered.',
+      mood: '⚡',
+      content: `## 🧠 Deep Work Session Log\n\n### 🎯 Target Deliverable for This Block:\n- \n\n### ⏱️ Session Duration & Focus Rating:\n- Duration: 90 min\n- Flow State Quality (1-5): ⭐⭐⭐⭐⭐\n\n### 🚫 Distractions / Urges Defeated:\n- \n\n### 🚀 Tangible Output Produced:\n- `
+    },
+    {
+      id: 'wellness',
+      title: 'Mind & Body Wellness Check',
+      icon: '🌿',
+      desc: 'Audit sleep, movement, hydration, stress level, and personal boundaries.',
+      mood: '😊',
+      content: `## 🌿 Mind & Body Wellness Check\n\n### 💤 Sleep Quality & Resting Energy:\n- Hours: \n- Rating: \n\n### 💧 Hydration & Movement:\n- Water intake: \n- Physical activity: \n\n### 🧘 Current Mental State & Stress Triggers:\n- \n\n### 🛡️ Boundary Set or Maintained Today:\n- `
+    },
+    {
+      id: 'retro',
+      title: '1999 Cyber Deck / Tech Log',
+      icon: '🕹️',
+      desc: 'Retro hacker journal for coding sprints, architecture notes, and system specs.',
+      mood: '⚡',
+      content: `## 🕹️ Cyber Deck Terminal Log\n\n### 💻 System Specs & Runtime Environment:\n- Node: KiloOS Subsystem\n- Target Architecture: Win32 + Web Cartridge\n\n### 🛠️ Modules Upgraded & Bugs Squashed:\n1. [x] \n2. [ ] \n\n### 🌐 Network Pings & Subsystem Signals:\n> `
     }
   ];
 
@@ -1440,7 +1836,7 @@
     "What is a creative idea or curiosity that sparked in your mind today?"
   ];
 
-  // Markdown Parser
+  // Markdown Parser with Tables, Callouts, Interactive Tasks, and Highlights
   function renderMarkdown(md) {
     if (!md || !md.trim()) {
       return '<p style="color:var(--text-muted); font-style:italic;">No content written yet for this day. Switch to Edit mode to write or insert a template.</p>';
@@ -1458,6 +1854,32 @@
     // Inline code
     html = html.replace(/`([^`]+)`/g, '<code style="background:var(--bg-tertiary); padding:2px 5px; border-radius:4px; font-family:monospace; font-size:13px; color:var(--accent-gold); border:1px solid var(--border-color);">$1</code>');
 
+    // Tables
+    html = html.replace(/((?:^\|[^\n]+\|\r?\n)+)/gm, (match) => {
+      const lines = match.trim().split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+      if (lines.length >= 2) {
+        const isSep = /^\|?(\s*:?-+:?\s*\|)+\s*:?-+:?\s*\|?$/.test(lines[1]);
+        if (isSep) {
+          const headers = lines[0].replace(/^\||\|$/g, '').split('|').map(c => `<th>${c.trim()}</th>`).join('');
+          let rows = '';
+          for (let i = 2; i < lines.length; i++) {
+            const cells = lines[i].replace(/^\||\|$/g, '').split('|').map(c => `<td>${c.trim()}</td>`).join('');
+            rows += `<tr>${cells}</tr>`;
+          }
+          return `<div class="table-wrap"><table class="markdown-table"><thead><tr>${headers}</tr></thead><tbody>${rows}</tbody></table></div>\n`;
+        }
+      }
+      return match;
+    });
+
+    // Callout blocks
+    html = html.replace(/^>\s*\[!(NOTE|TIP|WARNING|IMPORTANT|GOAL|IDEA)\]\s*(.*)$/gim, (match, type, text) => {
+      const t = type.toUpperCase();
+      const icons = { NOTE: 'ℹ️', TIP: '💡', WARNING: '⚠️', IMPORTANT: '🚨', GOAL: '🎯', IDEA: '💡' };
+      const icon = icons[t] || '📌';
+      return `<div class="callout callout-${t.toLowerCase()}"><div class="callout-header">${icon} <span>${t}</span></div><div class="callout-body">${text}</div></div>`;
+    });
+
     // Headings
     html = html.replace(/^### (.*$)/gim, '<h3>$1</h3>');
     html = html.replace(/^## (.*$)/gim, '<h2>$1</h2>');
@@ -1469,9 +1891,13 @@
     // Blockquotes
     html = html.replace(/^> (.*$)/gim, '<blockquote>$1</blockquote>');
 
-    // Task list items
-    html = html.replace(/^- \[([xX])\] (.*$)/gim, '<li class="task-item"><input type="checkbox" class="task-check" checked disabled> <span>$2</span></li>');
-    html = html.replace(/^- \[ \] (.*$)/gim, '<li class="task-item"><input type="checkbox" class="task-check" disabled> <span>$2</span></li>');
+    // Task list items with interactive checkbox callback
+    let taskIndex = 0;
+    html = html.replace(/^- \[([ xX])\] (.*$)/gim, (match, checkChar, text) => {
+      const checked = checkChar.toLowerCase() === 'x';
+      const curIdx = taskIndex++;
+      return `<li class="task-item"><input type="checkbox" class="task-check" ${checked ? 'checked' : ''} onchange="toggleTaskCheckbox(${curIdx}, this.checked)" title="Toggle Task"> <span class="${checked ? 'task-done' : ''}">${text}</span></li>`;
+    });
 
     // Standard list items
     html = html.replace(/^[\*\-] (?!<input)(.*$)/gim, '<li>$1</li>');
@@ -1479,15 +1905,16 @@
     html = html.replace(/(<li>[\s\S]*?<\/li>)/g, '<ul style="margin:6px 0 10px 20px;">$1</ul>');
     html = html.replace(/<\/ul>\s*<ul style="margin:6px 0 10px 20px;">/g, '');
 
-    // Bold, italic, strike
+    // Bold, italic, strike, highlight
     html = html.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
     html = html.replace(/__([^_]+)__/g, '<strong>$1</strong>');
     html = html.replace(/\*([^*]+)\*/g, '<em>$1</em>');
     html = html.replace(/_([^_]+)_/g, '<em>$1</em>');
     html = html.replace(/~~([^~]+)~~/g, '<del style="opacity:0.7;">$1</del>');
+    html = html.replace(/==([^=\n]+)==/g, '<mark class="preview-mark">$1</mark>');
 
-    // Hashtags
-    html = html.replace(/#([a-zA-Z0-9_\-]+)/g, '<span class="preview-tag">#$1</span>');
+    // Hashtags (Interactive clickable pills)
+    html = html.replace(/#([a-zA-Z0-9_\-]+)/g, '<span class="preview-tag clickable-tag" onclick="filterByTag(\'$1\')" title="Filter by #$1">#$1</span>');
 
     // Paragraph wrapping
     const paragraphs = html.split(/\n{2,}/);
@@ -1496,13 +1923,58 @@
       if (!p) return '';
       if (p.startsWith('<h1') || p.startsWith('<h2') || p.startsWith('<h3') ||
           p.startsWith('<pre') || p.startsWith('<blockquote') ||
-          p.startsWith('<ul') || p.startsWith('<hr')) {
+          p.startsWith('<ul') || p.startsWith('<hr') ||
+          p.startsWith('<div class="table-wrap"') || p.startsWith('<div class="callout"')) {
         return p;
       }
       return `<p>${p.replace(/\n/g, '<br>')}</p>`;
     }).filter(Boolean).join('\n');
 
     return html;
+  }
+
+  // Interactive task checkbox state sync
+  function toggleTaskCheckbox(taskIdx, isChecked) {
+    let text = entries[selectedDate] && entries[selectedDate].text ? entries[selectedDate].text : '';
+    const area = document.getElementById('journalArea');
+    if (area && area.value) text = area.value;
+    
+    let currentMatch = 0;
+    const newText = text.replace(/^- \[([ xX])\]/gm, (match, char) => {
+      if (currentMatch === taskIdx) {
+        currentMatch++;
+        return isChecked ? '- [x]' : '- [ ]';
+      }
+      currentMatch++;
+      return match;
+    });
+
+    if (text !== newText) {
+      if (area) area.value = newText;
+      if (!entries[selectedDate]) {
+        entries[selectedDate] = { text: newText, mood: selectedMood || '😊', category: 'personal' };
+      } else {
+        entries[selectedDate].text = newText;
+      }
+      entries[selectedDate].updatedAt = Date.now();
+      isDirty = true;
+      saveEntry(false);
+      updateEditorStats();
+      updatePreview();
+      showToast(isChecked ? '✅ Task marked done!' : '◻️ Task unchecked');
+    }
+  }
+
+  function insertTableMarkdown() {
+    const tableTemplate = `\n\n| Item / Milestone | Status | Notes |\n| :--- | :---: | :--- |\n| Core Task Priority | In Progress | Focus block today |\n| Secondary Review | [ ] Pending | Verify output |\n\n`;
+    const area = document.getElementById('journalArea');
+    if (!area) return;
+    area.focus();
+    const start = area.selectionStart;
+    area.value = area.value.substring(0, start) + tableTemplate + area.value.substring(start);
+    area.selectionStart = area.selectionEnd = start + tableTemplate.length;
+    onEditorInput();
+    showToast('📊 Markdown table inserted!');
   }
 
   // Formatting & Editor Mode Helpers
@@ -1749,6 +2221,7 @@
     }
 
     updateLockBtnState();
+    loadCustomTemplates();
     renderTemplates();
     renderCalendar();
     renderTagCloud();
@@ -1920,26 +2393,29 @@
     if (!grid) return;
     grid.innerHTML = '';
 
-    TEMPLATES.forEach(tmpl => {
+    const allList = [...TEMPLATES, ...customTemplates];
+    allList.forEach(tmpl => {
       const card = document.createElement('div');
       card.className = 'template-card';
       card.setAttribute('role', 'article');
       card.setAttribute('aria-label', tmpl.title);
       
-      const snippet = tmpl.content.replace(/## /g, '').replace(/### /g, '• ').slice(0, 95) + '...';
+      const snippet = (tmpl.content || '').replace(/## /g, '').replace(/### /g, '• ').slice(0, 95) + '...';
 
       card.innerHTML = `
         <div>
           <div class="template-card-header">
-            <span class="template-card-icon" aria-hidden="true">${tmpl.icon}</span>
+            <span class="template-card-icon" aria-hidden="true">${tmpl.icon || '⭐'}</span>
             <span class="template-card-title">${tmpl.title}</span>
+            ${tmpl.isCustom ? `<span style="font-size:10px; background:var(--accent-gold); color:#111; padding:1px 5px; border-radius:3px; margin-left:auto; font-weight:700;">Custom</span>` : ''}
           </div>
-          <div class="template-card-desc">${tmpl.desc}</div>
+          <div class="template-card-desc">${tmpl.desc || ''}</div>
           <div class="template-card-preview">${snippet}</div>
         </div>
         <div class="template-btn-row">
           <button class="btn btn-primary" onclick="applyTemplate('${tmpl.id}', 'replace')">Replace</button>
           <button class="btn" onclick="applyTemplate('${tmpl.id}', 'append')">+ Append</button>
+          ${tmpl.isCustom ? `<button class="btn btn-danger" onclick="deleteCustomTemplate('${tmpl.id}')" title="Delete custom template" style="padding:4px 8px;">🗑️</button>` : ''}
         </div>
       `;
       grid.appendChild(card);
@@ -1952,7 +2428,8 @@
   }
 
   function applyTemplate(tmplId, mode) {
-    const tmpl = TEMPLATES.find(t => t.id === tmplId);
+    const allList = [...TEMPLATES, ...customTemplates];
+    const tmpl = allList.find(t => t.id === tmplId);
     if (!tmpl) return;
 
     const editor = document.getElementById('journalArea');
@@ -2423,6 +2900,8 @@
       saveStatus.innerText = entry.text ? 'Saved locally' : 'Ready';
     }
 
+    updateDayIndexBadge();
+    updateEditorTagHelper();
     updateEditorStats();
     updatePreview();
     renderEntryList();
@@ -2988,6 +3467,35 @@
         const textContent = e.target.result;
         let count = 0;
 
+        if (file.name.toLowerCase().endsWith('.kjv') || textContent.includes('"kiloapps": "KJOURNAL_VAULT"') || textContent.includes('"kiloapps":"KJOURNAL_VAULT"')) {
+          try {
+            const vaultObj = JSON.parse(textContent);
+            if (vaultObj.kiloapps === 'KJOURNAL_VAULT' && vaultObj.salt && vaultObj.iv && vaultObj.data) {
+              pendingEncryptedVaultData = vaultObj;
+              closeModal('importExportModal');
+              const hintEl = document.getElementById('importVaultHintDisplay');
+              if (hintEl) {
+                if (vaultObj.hint) {
+                  hintEl.innerText = `Passphrase Hint: ${vaultObj.hint}`;
+                  hintEl.style.display = 'block';
+                } else {
+                  hintEl.style.display = 'none';
+                }
+              }
+              document.getElementById('importVaultPassphrase').value = '';
+              const errEl = document.getElementById('decryptErrorMsg');
+              if (errEl) errEl.style.display = 'none';
+              openModal('encryptedImportModal');
+              setTimeout(() => {
+                const pIn = document.getElementById('importVaultPassphrase');
+                if (pIn) pIn.focus();
+              }, 100);
+              fileInput.value = '';
+              return;
+            }
+          } catch (err) {}
+        }
+
         if (file.name.toLowerCase().endsWith('.opml') || textContent.trim().startsWith('<opml') || textContent.trim().startsWith('<?xml')) {
           // OPML Parser
           const parser = new DOMParser();
@@ -3226,6 +3734,764 @@
     showToast('✨ Loaded 3 sample journal entries with tags & streaks!');
   }
 
+  // HTML Escaping Helper
+  function escapeHtml(str) {
+    if (!str) return '';
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
+  // Quick Date Navigation Helper
+  function jumpToDate(dateStr) {
+    selectDateWithAutoSave(dateStr);
+  }
+
+  // Calendar Day Index & Activity Matrix
+  function updateDayIndexBadge() {
+    const badge = document.getElementById('dayIndexBadge');
+    if (!badge || !selectedDate) return;
+    const parts = selectedDate.split('-');
+    if (parts.length !== 3) return;
+    const y = parseInt(parts[0], 10);
+    const m = parseInt(parts[1], 10) - 1;
+    const d = parseInt(parts[2], 10);
+    const curDate = new Date(y, m, d);
+    if (isNaN(curDate.getTime())) return;
+
+    const startOfYear = new Date(y, 0, 1);
+    const dayOfYear = Math.floor((curDate - startOfYear) / (24 * 60 * 60 * 1000)) + 1;
+    const isLeap = (y % 4 === 0 && y % 100 !== 0) || (y % 400 === 0);
+    const totalDays = isLeap ? 366 : 365;
+
+    // ISO 8601 week calculation
+    const target = new Date(curDate.valueOf());
+    const dayNr = (curDate.getDay() + 6) % 7;
+    target.setDate(target.getDate() - dayNr + 3);
+    const firstThursday = target.valueOf();
+    target.setMonth(0, 1);
+    if (target.getDay() !== 4) {
+      target.setMonth(0, 1 + ((4 - target.getDay()) + 7) % 7);
+    }
+    const weekNum = 1 + Math.ceil((firstThursday - target) / 604800000);
+
+    badge.innerText = `Day ${dayOfYear} • Wk ${weekNum}`;
+    badge.title = `Calendar Day Index & Activity Matrix (Alt+D) — Day ${dayOfYear} of ${totalDays}, Week ${weekNum}`;
+  }
+
+  function openDayIndexModal() {
+    const parts = selectedDate ? selectedDate.split('-') : [];
+    matrixYear = parts.length === 3 ? parseInt(parts[0], 10) : new Date().getFullYear();
+    const jumpIn = document.getElementById('jumpDateInput');
+    if (jumpIn) jumpIn.value = selectedDate;
+    renderDayIndexMatrix();
+    openModal('dayIndexModal');
+  }
+
+  function changeMatrixYear(delta) {
+    matrixYear += delta;
+    renderDayIndexMatrix();
+  }
+
+  function jumpToDateFromInput() {
+    const input = document.getElementById('jumpDateInput');
+    if (input && input.value) {
+      jumpToDate(input.value);
+      closeModal('dayIndexModal');
+      showToast(`Jumped to ${formatReadableDate(input.value)}`);
+    }
+  }
+
+  function renderDayIndexMatrix() {
+    const disp = document.getElementById('matrixYearDisplay');
+    if (disp) disp.innerText = matrixYear;
+
+    const isLeap = (matrixYear % 4 === 0 && matrixYear % 100 !== 0) || (matrixYear % 400 === 0);
+    const totalDays = isLeap ? 366 : 365;
+
+    let writtenCount = 0;
+    let yearWords = 0;
+    const prefix = `${matrixYear}-`;
+
+    for (const d in entries) {
+      if (d.startsWith(prefix) && entries[d] && entries[d].text && entries[d].text.trim()) {
+        writtenCount++;
+        const words = entries[d].text.trim().split(/\s+/).length;
+        yearWords += words;
+      }
+    }
+
+    const pct = Math.round((writtenCount / totalDays) * 100);
+    const daysEl = document.getElementById('matrixDaysWritten');
+    if (daysEl) daysEl.innerText = `${writtenCount} / ${totalDays} (${pct}%)`;
+
+    const wordsEl = document.getElementById('matrixTotalWords');
+    if (wordsEl) wordsEl.innerText = yearWords.toLocaleString();
+
+    const stats = calculateAnalytics();
+    const curStreakEl = document.getElementById('matrixCurrentStreak');
+    if (curStreakEl) curStreakEl.innerText = `${stats.currentStreak} days`;
+    const bestStreakEl = document.getElementById('matrixBestStreak');
+    if (bestStreakEl) bestStreakEl.innerText = `${stats.longestStreak} days`;
+
+    // 52-week activity heatmap
+    const container = document.getElementById('yearHeatmapContainer');
+    if (container) {
+      container.innerHTML = '';
+      const heatmapMatrix = document.createElement('div');
+      heatmapMatrix.className = 'year-heatmap-matrix';
+
+      const start = new Date(matrixYear, 0, 1);
+      const end = new Date(matrixYear, 11, 31);
+
+      let weekCol = document.createElement('div');
+      weekCol.style.display = 'flex';
+      weekCol.style.flexDirection = 'column';
+      weekCol.style.gap = '3px';
+
+      for (let i = 0; i < start.getDay(); i++) {
+        const emptyCell = document.createElement('div');
+        emptyCell.style.width = '11px';
+        emptyCell.style.height = '11px';
+        emptyCell.style.opacity = '0';
+        weekCol.appendChild(emptyCell);
+      }
+
+      for (let cur = new Date(start); cur <= end; cur.setDate(cur.getDate() + 1)) {
+        if (cur.getDay() === 0 && cur > start) {
+          heatmapMatrix.appendChild(weekCol);
+          weekCol = document.createElement('div');
+          weekCol.style.display = 'flex';
+          weekCol.style.flexDirection = 'column';
+          weekCol.style.gap = '3px';
+        }
+
+        const dStr = formatDateString(cur.getFullYear(), cur.getMonth() + 1, cur.getDate());
+        const entry = entries[dStr];
+        const hasText = entry && entry.text && entry.text.trim();
+        const words = hasText ? entry.text.trim().split(/\s+/).length : 0;
+
+        const cell = document.createElement('div');
+        cell.className = 'heatmap-cell';
+        if (words >= 500) cell.classList.add('l4');
+        else if (words >= 250) cell.classList.add('l3');
+        else if (words >= 100) cell.classList.add('l2');
+        else if (words > 0) cell.classList.add('l1');
+
+        if (dStr === selectedDate) {
+          cell.style.outline = '2px solid var(--accent-cyan)';
+        }
+
+        cell.title = `${formatReadableDate(dStr)}: ${words} words ${entry && entry.mood ? '(' + entry.mood + ')' : ''}`;
+        cell.onclick = () => {
+          jumpToDate(dStr);
+          closeModal('dayIndexModal');
+        };
+
+        weekCol.appendChild(cell);
+      }
+
+      heatmapMatrix.appendChild(weekCol);
+      container.appendChild(heatmapMatrix);
+    }
+
+    // Monthly index list
+    const monthListEl = document.getElementById('matrixMonthlyList');
+    if (monthListEl) {
+      monthListEl.innerHTML = '';
+      const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+      for (let m = 0; m < 12; m++) {
+        const mPrefix = `${matrixYear}-${String(m + 1).padStart(2, '0')}`;
+        let mCount = 0;
+        let mWords = 0;
+        for (const d in entries) {
+          if (d.startsWith(mPrefix) && entries[d] && entries[d].text && entries[d].text.trim()) {
+            mCount++;
+            mWords += entries[d].text.trim().split(/\s+/).length;
+          }
+        }
+        const card = document.createElement('div');
+        card.style.background = 'var(--bg-tertiary)';
+        card.style.border = '1px solid var(--border-color)';
+        card.style.borderRadius = '6px';
+        card.style.padding = '8px 10px';
+        card.style.fontSize = '12px';
+        card.style.cursor = 'pointer';
+        card.title = `Jump to ${monthNames[m]} ${matrixYear}`;
+        card.innerHTML = `
+          <div style="font-weight:700; color:var(--accent-gold); display:flex; justify-content:space-between;">
+            <span>${monthNames[m]}</span>
+            <span style="color:${mCount > 0 ? 'var(--accent-green)' : 'var(--text-muted)'}; font-size:11px;">${mCount} entries</span>
+          </div>
+          <div style="font-size:11px; color:var(--text-muted); margin-top:2px;">${mWords.toLocaleString()} words</div>
+        `;
+        card.onclick = () => {
+          const targetDate = `${matrixYear}-${String(m + 1).padStart(2, '0')}-01`;
+          jumpToDate(targetDate);
+          closeModal('dayIndexModal');
+        };
+        monthListEl.appendChild(card);
+      }
+    }
+  }
+
+  // Hashtag Quick Insertion & Tag Manager Studio
+  function updateEditorTagHelper() {
+    const helper = document.getElementById('editorTagHelper');
+    const chipsContainer = document.getElementById('editorTagChips');
+    if (!helper || !chipsContainer) return;
+
+    const allTags = Object.keys(extractAllHashtags());
+    if (allTags.length === 0) {
+      helper.style.display = 'none';
+      return;
+    }
+
+    const popularTags = allTags.slice(0, 10);
+    chipsContainer.innerHTML = '';
+    popularTags.forEach(tag => {
+      const chip = document.createElement('span');
+      chip.className = 'editor-tag-chip';
+      chip.innerText = tag;
+      chip.title = `Insert ${tag} into entry`;
+      chip.onclick = () => {
+        const area = document.getElementById('journalArea');
+        if (area) {
+          area.focus();
+          const start = area.selectionStart;
+          const end = area.selectionEnd;
+          area.value = area.value.substring(0, start) + `${tag} ` + area.value.substring(end);
+          area.selectionStart = area.selectionEnd = start + tag.length + 1;
+          onEditorInput();
+          showToast(`Inserted ${tag}`);
+        }
+      };
+      chipsContainer.appendChild(chip);
+    });
+    helper.style.display = 'flex';
+  }
+
+  function openTagManagerModal() {
+    renderTagManagerContent();
+    openModal('tagManagerModal');
+  }
+
+  function renderTagManagerContent() {
+    const container = document.getElementById('tagManagerContent');
+    if (!container) return;
+    container.innerHTML = '';
+
+    const tagStats = {};
+    for (const d in entries) {
+      const text = entries[d] ? (entries[d].text || '') : '';
+      const tags = text.match(/#[a-zA-Z0-9_\-]+/g) || [];
+      const words = text.trim() ? text.trim().split(/\s+/).length : 0;
+      const seenInEntry = new Set();
+      tags.forEach(t => {
+        const lower = t.toLowerCase();
+        if (!tagStats[lower]) {
+          tagStats[lower] = { count: 0, words: 0 };
+        }
+        if (!seenInEntry.has(lower)) {
+          seenInEntry.add(lower);
+          tagStats[lower].count++;
+          tagStats[lower].words += words;
+        }
+      });
+    }
+
+    const tags = Object.keys(tagStats).sort((a, b) => tagStats[b].count - tagStats[a].count);
+    if (tags.length === 0) {
+      container.innerHTML = '<div style="text-align:center; padding:24px; color:var(--text-muted); font-size:13px;">No hashtags found in your journal entries. Add #tags to your writing to organize them!</div>';
+      return;
+    }
+
+    let tableHtml = `
+      <table class="tag-mgr-table">
+        <thead>
+          <tr>
+            <th>Hashtag</th>
+            <th>Entries</th>
+            <th>Total Words</th>
+            <th style="text-align:right;">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+    `;
+
+    tags.forEach(tag => {
+      const info = tagStats[tag];
+      tableHtml += `
+        <tr>
+          <td><strong style="color:var(--accent-gold);">${tag}</strong></td>
+          <td>${info.count}</td>
+          <td>${info.words.toLocaleString()}</td>
+          <td style="text-align:right; white-space:nowrap;">
+            <button class="btn" onclick="renameTagGlobally('${tag}')" style="font-size:11px; padding:2px 8px; margin-right:4px;">✏️ Rename</button>
+            <button class="btn btn-danger" onclick="deleteTagGlobally('${tag}')" style="font-size:11px; padding:2px 8px;">🗑️ Delete</button>
+          </td>
+        </tr>
+      `;
+    });
+
+    tableHtml += '</tbody></table>';
+    container.innerHTML = tableHtml;
+  }
+
+  function renameTagGlobally(oldTag) {
+    const cleanOld = oldTag.replace(/^#/, '');
+    const newTagInput = prompt(`Rename hashtag "${oldTag}" across all entries to:`, cleanOld);
+    if (!newTagInput) return;
+    const cleanNew = newTagInput.trim().replace(/^#/, '').replace(/\s+/g, '_');
+    if (!cleanNew || cleanNew.toLowerCase() === cleanOld.toLowerCase()) return;
+
+    const regex = new RegExp(`(^|\\s)#${cleanOld}\\b`, 'gi');
+    let updatedCount = 0;
+
+    for (const d in entries) {
+      if (entries[d] && entries[d].text && regex.test(entries[d].text)) {
+        entries[d].text = entries[d].text.replace(regex, `$1#${cleanNew}`);
+        entries[d].updatedAt = Date.now();
+        updatedCount++;
+      }
+    }
+
+    if (updatedCount > 0) {
+      const area = document.getElementById('journalArea');
+      if (area && entries[selectedDate]) {
+        area.value = entries[selectedDate].text;
+      }
+      saveEntriesToStorage();
+      renderTagCloud();
+      renderEntryList();
+      updateEditorStats();
+      updatePreview();
+      updateEditorTagHelper();
+      renderTagManagerContent();
+      showToast(`Renamed #${cleanOld} to #${cleanNew} in ${updatedCount} entries!`);
+    } else {
+      showToast('No matching tags found to rename');
+    }
+  }
+
+  function deleteTagGlobally(tag) {
+    const cleanTag = tag.replace(/^#/, '');
+    showConfirmDialog(
+      'Delete Hashtag',
+      `Are you sure you want to remove #${cleanTag} from all entries? The tag text will be removed, but your entry content remains intact.`,
+      () => {
+        const regex = new RegExp(`(^|\\s)#${cleanTag}\\b`, 'gi');
+        let updatedCount = 0;
+        for (const d in entries) {
+          if (entries[d] && entries[d].text && regex.test(entries[d].text)) {
+            entries[d].text = entries[d].text.replace(regex, '$1').replace(/[ \t]{2,}/g, ' ');
+            entries[d].updatedAt = Date.now();
+            updatedCount++;
+          }
+        }
+        if (updatedCount > 0) {
+          const area = document.getElementById('journalArea');
+          if (area && entries[selectedDate]) {
+            area.value = entries[selectedDate].text;
+          }
+          saveEntriesToStorage();
+          renderTagCloud();
+          renderEntryList();
+          updateEditorStats();
+          updatePreview();
+          updateEditorTagHelper();
+          renderTagManagerContent();
+          showToast(`Removed #${cleanTag} from ${updatedCount} entries!`);
+        }
+      },
+      true
+    );
+  }
+
+  function clearTagFilters() {
+    selectedTagFilter = '';
+    selectedTags.clear();
+    const clearBtn = document.getElementById('clearTagFilterBtn');
+    if (clearBtn) clearBtn.style.display = 'none';
+    renderTagCloud();
+    renderEntryList();
+    showToast('Tag filter cleared');
+  }
+
+  function filterByTag(tag) {
+    const clean = tag.startsWith('#') ? tag.toLowerCase() : ('#' + tag.toLowerCase());
+    selectedTagFilter = clean;
+    const clearBtn = document.getElementById('clearTagFilterBtn');
+    if (clearBtn) clearBtn.style.display = 'inline-flex';
+    renderTagCloud();
+    renderEntryList();
+    showToast(`Filtered by ${clean}`);
+  }
+
+  // Military-Grade Encrypted Vault (AES-256-GCM + PBKDF2)
+  let pendingEncryptedVaultData = null;
+
+  function openEncryptedExportModal() {
+    document.getElementById('vaultPassphrase').value = '';
+    document.getElementById('vaultPassphraseConfirm').value = '';
+    document.getElementById('vaultPassphraseHint').value = '';
+    const meter = document.getElementById('passStrengthMeter');
+    if (meter) {
+      meter.innerText = 'Strength: Type passphrase...';
+      meter.style.color = 'var(--text-muted)';
+    }
+    closeModal('importExportModal');
+    openModal('encryptedExportModal');
+  }
+
+  function openEncryptedHtmlExportModal() {
+    openEncryptedExportModal();
+  }
+
+  function checkPassStrength() {
+    const pass = document.getElementById('vaultPassphrase').value;
+    const meter = document.getElementById('passStrengthMeter');
+    if (!meter) return;
+    if (!pass) {
+      meter.innerText = 'Strength: Type passphrase...';
+      meter.style.color = 'var(--text-muted)';
+      return;
+    }
+    let score = 0;
+    if (pass.length >= 6) score++;
+    if (pass.length >= 10) score++;
+    if (/[A-Z]/.test(pass) && /[a-z]/.test(pass)) score++;
+    if (/[0-9]/.test(pass)) score++;
+    if (/[^A-Za-z0-9]/.test(pass)) score++;
+
+    if (score <= 1) {
+      meter.innerText = 'Strength: Weak (Recommend at least 8 characters)';
+      meter.style.color = 'var(--accent-red)';
+    } else if (score <= 3) {
+      meter.innerText = 'Strength: Moderate (Good for personal privacy)';
+      meter.style.color = 'var(--accent-gold)';
+    } else {
+      meter.innerText = 'Strength: Strong / Military-Grade (AES-256-GCM)';
+      meter.style.color = 'var(--accent-green)';
+    }
+  }
+
+  async function deriveVaultKey(passphrase, saltBytes) {
+    const enc = new TextEncoder();
+    const baseKey = await window.crypto.subtle.importKey(
+      'raw',
+      enc.encode(passphrase),
+      'PBKDF2',
+      false,
+      ['deriveKey']
+    );
+    return await window.crypto.subtle.deriveKey(
+      {
+        name: 'PBKDF2',
+        salt: saltBytes,
+        iterations: 100000,
+        hash: 'SHA-256'
+      },
+      baseKey,
+      { name: 'AES-GCM', length: 256 },
+      false,
+      ['encrypt', 'decrypt']
+    );
+  }
+
+  async function executeEncryptedExport(format) {
+    const pass = document.getElementById('vaultPassphrase').value;
+    const confirm = document.getElementById('vaultPassphraseConfirm').value;
+    const hint = document.getElementById('vaultPassphraseHint').value.trim();
+
+    if (!pass || pass.length < 4) {
+      showToast('Passphrase must be at least 4 characters');
+      return;
+    }
+    if (pass !== confirm) {
+      showToast('Passphrases do not match!');
+      return;
+    }
+
+    const dates = Object.keys(entries).filter(d => entries[d] && typeof entries[d].text === 'string' && entries[d].text.trim()).sort();
+    if (dates.length === 0) {
+      showToast('No entries to export');
+      return;
+    }
+
+    try {
+      const salt = window.crypto.getRandomValues(new Uint8Array(16));
+      const iv = window.crypto.getRandomValues(new Uint8Array(12));
+      const key = await deriveVaultKey(pass, salt);
+
+      const payload = {
+        app: 'KJournal',
+        version: 2,
+        exportedAt: Date.now(),
+        entries: entries,
+        settings: settings
+      };
+
+      const plaintext = new TextEncoder().encode(JSON.stringify(payload));
+      const cipherBuffer = await window.crypto.subtle.encrypt(
+        { name: 'AES-GCM', iv: iv },
+        key,
+        plaintext
+      );
+
+      const saltB64 = btoa(String.fromCharCode.apply(null, salt));
+      const ivB64 = btoa(String.fromCharCode.apply(null, iv));
+      const cipherB64 = btoa(String.fromCharCode.apply(null, new Uint8Array(cipherBuffer)));
+
+      const filename = `kjournal_vault_${new Date().toISOString().slice(0, 10)}`;
+
+      if (format === 'kjv') {
+        const vaultJson = JSON.stringify({
+          kiloapps: 'KJOURNAL_VAULT',
+          version: 1,
+          salt: saltB64,
+          iv: ivB64,
+          hint: hint,
+          data: cipherB64
+        }, null, 2);
+
+        const blob = new Blob([vaultJson], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${filename}.kjv`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(() => URL.revokeObjectURL(url), 1500);
+        closeModal('encryptedExportModal');
+        showToast('🔐 Encrypted .kjv vault exported successfully!');
+      } else if (format === 'html') {
+        const selfHtml = `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>KJournal - Encrypted Memory Vault</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+  :root { --bg:#181b22; --card:#212631; --border:#313745; --text:#abb2bf; --gold:#e5c07b; --cyan:#56b6c2; --red:#e06c75; --green:#98c379; }
+  body { background:var(--bg); color:var(--text); font-family:sans-serif; margin:0; padding:24px; display:flex; justify-content:center; }
+  .vault-box { width:100%; max-width:850px; }
+  .unlock-card { background:var(--card); border:1px solid var(--border); border-radius:10px; padding:24px; text-align:center; box-shadow:0 4px 16px rgba(0,0,0,0.4); margin-bottom:24px; }
+  input { background:#2a303f; color:#fff; border:1px solid var(--border); padding:10px 14px; border-radius:6px; font-size:15px; width:70%; max-width:320px; box-sizing:border-box; margin:10px 0; }
+  button { background:var(--gold); color:#111; font-weight:700; border:none; padding:10px 18px; border-radius:6px; font-size:14px; cursor:pointer; }
+  button:hover { opacity:0.9; }
+  .entry-card { background:var(--card); border:1px solid var(--border); border-radius:8px; padding:18px 22px; margin-bottom:16px; line-height:1.6; }
+  .entry-date { color:var(--gold); font-size:18px; font-weight:700; margin-bottom:4px; }
+  .entry-meta { font-size:12px; color:var(--cyan); margin-bottom:12px; }
+  .entry-body { white-space:pre-wrap; }
+  #error { color:var(--red); font-size:13px; margin-top:8px; display:none; }
+</style>
+</head>
+<body>
+<div class="vault-box">
+  <div class="unlock-card" id="unlockCard">
+    <div style="font-size:36px; margin-bottom:8px;">🔐</div>
+    <h2 style="color:var(--gold); margin:0 0 6px 0;">KJournal Encrypted Memory Vault</h2>
+    <p style="font-size:13px; margin:0 0 14px 0;">This file contains an AES-256-GCM encrypted personal journal chronicle. Enter your master passphrase to decrypt and read offline.</p>
+    ${hint ? `<div style="font-size:12px; color:var(--cyan); margin-bottom:10px;">Hint: ${hint.replace(/</g, '&lt;')}</div>` : ''}
+    <div>
+      <input type="password" id="pass" placeholder="Master passphrase..." onkeydown="if(event.key==='Enter') unlockVault()">
+    </div>
+    <button onclick="unlockVault()">Unlock & Decrypt</button>
+    <div id="error"></div>
+  </div>
+  <div id="entriesList" style="display:none;"></div>
+</div>
+<script>
+  const V = ${JSON.stringify({ salt: saltB64, iv: ivB64, data: cipherB64 })};
+  async function unlockVault() {
+    const p = document.getElementById('pass').value;
+    const err = document.getElementById('error');
+    err.style.display = 'none';
+    if(!p) return;
+    try {
+      const salt = Uint8Array.from(atob(V.salt), c => c.charCodeAt(0));
+      const iv = Uint8Array.from(atob(V.iv), c => c.charCodeAt(0));
+      const cipher = Uint8Array.from(atob(V.data), c => c.charCodeAt(0));
+      const baseKey = await window.crypto.subtle.importKey('raw', new TextEncoder().encode(p), 'PBKDF2', false, ['deriveKey']);
+      const key = await window.crypto.subtle.deriveKey({ name:'PBKDF2', salt:salt, iterations:100000, hash:'SHA-256' }, baseKey, { name:'AES-GCM', length:256 }, false, ['decrypt']);
+      const decrypted = await window.crypto.subtle.decrypt({ name:'AES-GCM', iv:iv }, key, cipher);
+      const payload = JSON.parse(new TextDecoder().decode(decrypted));
+      renderDecrypted(payload.entries || {});
+    } catch(e) {
+      err.innerText = 'Incorrect passphrase! Decryption failed.';
+      err.style.display = 'block';
+    }
+  }
+  function renderDecrypted(ent) {
+    document.getElementById('unlockCard').style.display = 'none';
+    const list = document.getElementById('entriesList');
+    list.style.display = 'block';
+    const dates = Object.keys(ent).sort().reverse();
+    let html = '<div style="margin-bottom:16px; font-weight:700; color:var(--green);">✅ Decrypted ' + dates.length + ' journal entries successfully:</div>';
+    dates.forEach(d => {
+      const e = ent[d];
+      html += '<div class="entry-card"><div class="entry-date">' + d + ' ' + (e.mood || '') + '</div><div class="entry-meta">Notebook: ' + (e.category || 'personal').toUpperCase() + '</div><div class="entry-body">' + (e.text || '').replace(/</g, '&lt;') + '</div></div>';
+    });
+    list.innerHTML = html;
+  }
+<\/script>
+</body>
+</html>`;
+
+        const blob = new Blob([selfHtml], { type: 'text/html' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${filename}.html`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(() => URL.revokeObjectURL(url), 1500);
+        closeModal('encryptedExportModal');
+        showToast('🛡️ Self-decrypting HTML vault exported successfully!');
+      }
+    } catch (err) {
+      showToast('Encryption failed: WebCrypto error');
+    }
+  }
+
+  async function executeEncryptedImport() {
+    const pass = document.getElementById('importVaultPassphrase').value;
+    const errEl = document.getElementById('decryptErrorMsg');
+    if (errEl) errEl.style.display = 'none';
+
+    if (!pass) {
+      if (errEl) { errEl.innerText = 'Please enter master passphrase'; errEl.style.display = 'block'; }
+      return;
+    }
+
+    if (!pendingEncryptedVaultData) {
+      showToast('No pending vault file found');
+      closeModal('encryptedImportModal');
+      return;
+    }
+
+    try {
+      const salt = Uint8Array.from(atob(pendingEncryptedVaultData.salt), c => c.charCodeAt(0));
+      const iv = Uint8Array.from(atob(pendingEncryptedVaultData.iv), c => c.charCodeAt(0));
+      const cipher = Uint8Array.from(atob(pendingEncryptedVaultData.data), c => c.charCodeAt(0));
+
+      const key = await deriveVaultKey(pass, salt);
+      const decrypted = await window.crypto.subtle.decrypt(
+        { name: 'AES-GCM', iv: iv },
+        key,
+        cipher
+      );
+
+      const payload = JSON.parse(new TextDecoder().decode(decrypted));
+      const importedEntries = payload.entries || {};
+      let count = 0;
+
+      for (const d in importedEntries) {
+        if (importedEntries[d] && importedEntries[d].text) {
+          entries[d] = importedEntries[d];
+          count++;
+        }
+      }
+
+      if (payload.settings && typeof payload.settings === 'object') {
+        settings = Object.assign({}, settings, payload.settings);
+        saveSettingsToStorage();
+      }
+
+      saveEntriesToStorage();
+      renderCalendar();
+      renderTagCloud();
+      renderEntryList();
+      loadSelectedEntry();
+      closeModal('encryptedImportModal');
+      pendingEncryptedVaultData = null;
+      document.getElementById('importVaultPassphrase').value = '';
+      showToast(`🔓 Decrypted and imported ${count} entries successfully!`);
+    } catch (err) {
+      if (errEl) {
+        errEl.innerText = 'Incorrect passphrase! Decryption failed.';
+        errEl.style.display = 'block';
+      }
+    }
+  }
+
+  // Custom User Templates Studio
+  function loadCustomTemplates() {
+    try {
+      const raw = safeGet('kjournal_custom_templates');
+      if (raw) {
+        customTemplates = JSON.parse(raw);
+        if (!Array.isArray(customTemplates)) customTemplates = [];
+      }
+    } catch (e) {
+      customTemplates = [];
+    }
+  }
+
+  function saveCustomTemplatesToStorage() {
+    safeSet('kjournal_custom_templates', JSON.stringify(customTemplates));
+  }
+
+  function openCustomTemplateModal() {
+    const area = document.getElementById('journalArea');
+    if (!area || !area.value.trim()) {
+      showToast('Write your template text in the editor first!');
+      return;
+    }
+    document.getElementById('customTmplTitle').value = '';
+    document.getElementById('customTmplIcon').value = '⭐';
+    document.getElementById('customTmplDesc').value = '';
+    closeModal('templatesModal');
+    openModal('customTemplateModal');
+  }
+
+  function saveCustomTemplate() {
+    const title = document.getElementById('customTmplTitle').value.trim();
+    const icon = document.getElementById('customTmplIcon').value.trim() || '⭐';
+    const desc = document.getElementById('customTmplDesc').value.trim() || 'Custom user template';
+    const area = document.getElementById('journalArea');
+    const content = area ? area.value.trim() : '';
+
+    if (!title) {
+      showToast('Please enter a template title');
+      return;
+    }
+    if (!content) {
+      showToast('Editor is empty! Write template content first');
+      return;
+    }
+
+    const newTmpl = {
+      id: 'custom_' + Date.now(),
+      title: title,
+      icon: icon,
+      desc: desc,
+      mood: selectedMood || '😊',
+      content: content,
+      isCustom: true
+    };
+
+    customTemplates.push(newTmpl);
+    saveCustomTemplatesToStorage();
+    closeModal('customTemplateModal');
+    renderTemplates();
+    openModal('templatesModal');
+    showToast(`✨ Template "${title}" saved!`);
+  }
+
+  function deleteCustomTemplate(id) {
+    customTemplates = customTemplates.filter(t => t.id !== id);
+    saveCustomTemplatesToStorage();
+    renderTemplates();
+    showToast('Template deleted');
+  }
+
   // Utilities
   function formatDateString(year, month, day) {
     const y = String(year);
@@ -3396,6 +4662,16 @@
     if (e.altKey && e.key.toLowerCase() === 'p') {
       e.preventDefault();
       insertRandomPrompt();
+      return;
+    }
+    if (e.altKey && e.key.toLowerCase() === 'd') {
+      e.preventDefault();
+      openDayIndexModal();
+      return;
+    }
+    if (e.altKey && e.key.toLowerCase() === 'm') {
+      e.preventDefault();
+      openMemoryFlashback();
       return;
     }
     if ((e.ctrlKey || e.metaKey) && !e.altKey && e.key.toLowerCase() === 'i') {

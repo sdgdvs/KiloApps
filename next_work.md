@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-expander
-next_agent: kilo-creator
+current_agent: kilo-creator
+next_agent: kilo-graphics
 agent_rotation:
 - kilo-graphics
 - kilo-soundscape
@@ -20,7 +20,7 @@ current_targets:
   kilo_tester: KNet
   kilo_usability: KCalc
   kilo_qa: KMaze
-  kilo_expander: KJournal
+  kilo_expander: KBookmark
 virtual_web_target: kweb://echo-subsystem.net
 virtual_web_rotation:
 - kweb://darknet
@@ -35,9 +35,9 @@ virtual_web_rotation:
 - kweb://echo-subsystem.net
 - kweb://deep-core
 last_run:
-  agent: kilo-qa
-  app: KGo
-  timestamp: 2026-10-17T22:56:00+0000
+  agent: kilo-expander
+  app: KJournal
+  timestamp: 2026-10-17T23:56:00+0000
 last_planner_run: '2026-10-17T20:53:00Z'
 ---
 
@@ -155,19 +155,19 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Upcoming Queue**: `KSnake`, `K2048`, `KSudoku`.
 
 ### 7. Feature Expander Queue (`kilo-expander`)
-- **Target**: `KJournal`
-- **Primary Files**: `KiloOS/public/apps/kjournal.html`, `KJournal/main.c` (if present)
-- **Objective**: Deep functional feature expansion: rich markdown rendering, calendar day indexing, tag searching, encrypted entry export, and template library.
+- **Target**: `KBookmark`
+- **Primary Files**: `KiloOS/public/apps/kbookmark.html`, `KBookmark/main.c` (if present)
+- **Objective**: Deep bookmark manager expansion: hierarchical folders, tagging system, Netscape bookmark HTML format import/export, link health pings, and rich metadata.
 - **Action Steps**:
-  1. Inspect `KiloOS/public/apps/kjournal.html`.
-  2. Expand journal utility: rich markdown rendering, calendar day indexing, tag searching, and export.
+  1. Inspect `KiloOS/public/apps/kbookmark.html`.
+  2. Implement nested directory hierarchies, tag indexing, Netscape bookmark file import/export, and quick link launcher.
   3. Zero external dependencies; maintain responsive 1999 retro styling.
-- **Verification**: `uv run scripts/test_app_startup.py --app KJournal` and `cd KiloOS && npm run build`. File size < 999 KB.
+- **Verification**: `uv run scripts/test_app_startup.py --app KBookmark` and `cd KiloOS && npm run build`. File size < 999 KB.
 - **Handoff**:
-  - In frontmatter: advance `current_targets.kilo_expander` to `KBookmark`.
+  - In frontmatter: advance `current_targets.kilo_expander` to `KFont`.
   - Set `current_agent: kilo-creator`.
   - Append terse execution log (≤6 lines), commit, and push.
-- **Upcoming Queue**: `KBookmark`, `KFont`, `KRSS`, `KVault`.
+- **Upcoming Queue**: `KFont`, `KRSS`, `KVault`.
 
 ---
 
@@ -195,6 +195,16 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 ---
 
 ## Recent Execution Logs (Max 5 Entries)
+
+- **2026-10-17T23:56:00+0000 — kilo-expander: KJournal (Deep Feature Expansion & Security Vault)**
+  - Markdown Power Tools: Added tables (|...|), callout alerts (> [!NOTE|TIP|WARN]), mark highlights (==...==), and interactive checkbox callbacks syncing markdown state.
+  - Day Index & Activity Matrix: Implemented 52-week activity heatmap, yearly stats, day/week index badge, and month jump navigation (Alt+D).
+  - Hashtag Management Studio: Added batch tag rename and global tag deletion across all entries with frequency metrics and quick editor insertion chips.
+  - Military-Grade Encrypted Vault: Added AES-256-GCM + PBKDF2 (100k iter) encrypted vault export/import (.kjv) and standalone self-decrypting offline HTML vaults.
+  - Custom Templates Studio: Enabled user-defined prompt creation and library management alongside 11 built-in structured frameworks.
+  - Dual Parity & Build Verification: Expanded Win32 C template list to 11 templates; verified clean build (`build.bat` 205 KB EXE, `npm run build`, `test_app_startup` PASS, <999 KB).
+  - Status: PASS ✅ (Deep markdown, heatmap, vault security, tag studio, and dual parity verified).
+  - Queue: Advanced `kilo_expander` to `KBookmark`; rotation handoff to `kilo-creator`.
 
 - **2026-10-17T22:56:00+0000 — kilo-qa: KGo (Pass 5 QA & Tutorial Integrity — Mature Quarantine)**
   - State Persistence: Wrapped all storage in safeGet/safeSet; preserved timer remaining across quickload; persisted consecutivePasses, handicapStones, and tsumego index.
@@ -230,8 +240,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Accessibility & Modal Fix: Attached standard modal-close classes & titles to helpModal, fixing startup test automation.
   - Status: PASS ✅ (Vite clean, 214.5 KB HTML + 182.8 KB Win32 EXE < 999 KB ceiling, test_app_startup PASS, security lint 100% clean).
   - Queue: Advanced `kilo_soundscape` to `KAlchemy`; rotation handoff to `kilo-tester`.
-
-- **2026-10-17T21:12:02+0000 — kilo-graphics: KDragon (Zero-Token Auto-Skip — Inappropriate Target)**
-  - Status: ⏭️ Skip — Imagen 3 asset replacement not appropriate for KDragon (pure vector, board game, or mature art).
-  - Optimization: Handled via orchestrator pre-flight zero-token auto-skip.
-  - Queue: Advanced `kilo-graphics` to `KDragon`; rotation handoff to `kilo-soundscape`.

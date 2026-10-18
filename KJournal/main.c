@@ -77,9 +77,44 @@ static const JournalTemplate TEMPLATE_LIST[] = {
         "Deconstruct a tricky challenge with creative angles and direct action steps.",
         "Energetic",
         "## Brain Dump & Problem Solving\n\n### The Core Challenge / Question:\n- \n\n### Wild, Radical, or Alternative Approaches:\n- \n- \n\n### Immediate Next Action Step (Within 24 Hours):\n1. \n"
+    },
+    {
+        "Weekly Review & Horizon Planning",
+        "[Weekly]",
+        "Review weekly wins, reflect on bottlenecks, and prioritize the week ahead.",
+        "Focused",
+        "## Weekly Review & Planning\n\n### Top Wins & Breakthroughs This Week:\n1. \n2. \n3. \n\n### Bottlenecks, Delays & Lessons Learned:\n- \n\n### Top 3 Big Rocks for Next Week:\n1. [ ] \n2. [ ] \n3. [ ] \n\n### Habit & Energy Scorecard (1-10):\n- Sleep & Rest: /10\n- Deep Focus Work: /10\n- Physical Movement: /10\n"
+    },
+    {
+        "Decision Journal & Mental Models",
+        "[Decision]",
+        "Record critical decisions, analyze second-order effects, and define review date.",
+        "Focused",
+        "## Decision Journal\n\n### Decision Being Made:\n- \n\n### Mental Model / Principle Applied:\n- \n\n### Second & Third-Order Consequences:\n- Immediate (1st Order): \n- Downstream (2nd Order): \n\n### What Would Prove This Decision Wrong (Falsification):\n- \n\n### Review Date (e.g. in 90 Days):\n- \n"
+    },
+    {
+        "Deep Work Session & Focus Log",
+        "[DeepWork]",
+        "Track concentrated deep work sessions, flow state, and output delivered.",
+        "Energetic",
+        "## Deep Work Session Log\n\n### Target Deliverable for This Block:\n- \n\n### Session Duration & Focus Rating:\n- Duration: 90 min\n- Flow State Quality (1-5): ⭐⭐⭐⭐⭐\n\n### Distractions / Urges Defeated:\n- \n\n### Tangible Output Produced:\n- \n"
+    },
+    {
+        "Mind & Body Wellness Check",
+        "[Wellness]",
+        "Audit sleep, movement, hydration, stress level, and personal boundaries.",
+        "Calm",
+        "## Mind & Body Wellness Check\n\n### Sleep Quality & Resting Energy:\n- Hours: \n- Rating: \n\n### Hydration & Movement:\n- Water intake: \n- Physical activity: \n\n### Current Mental State & Stress Triggers:\n- \n\n### Boundary Set or Maintained Today:\n- \n"
+    },
+    {
+        "1999 Cyber Deck / Tech Log",
+        "[CyberDeck]",
+        "Retro hacker journal for coding sprints, architecture notes, and system specs.",
+        "Energetic",
+        "## Cyber Deck Terminal Log\n\n### System Specs & Runtime Environment:\n- Node: KiloOS Subsystem\n- Target Architecture: Win32 + Web Cartridge\n\n### Modules Upgraded & Bugs Squashed:\n1. [x] \n2. [ ] \n\n### Network Pings & Subsystem Signals:\n> \n"
     }
 };
-#define NUM_TEMPLATES 6
+#define NUM_TEMPLATES 11
 
 void show_help();
 void templates_library_menu();
