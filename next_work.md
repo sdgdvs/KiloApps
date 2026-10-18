@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-creator
-next_agent: kilo-graphics
+current_agent: kilo-graphics
+next_agent: kilo-soundscape
 agent_rotation:
 - kilo-graphics
 - kilo-soundscape
@@ -14,14 +14,14 @@ effort: high
 timeout_minutes: 10
 status: ready
 current_targets:
-  kilo_creator: kweb://echo-subsystem.net
+  kilo_creator: kweb://deep-core
   kilo_graphics: KDragon
   kilo_soundscape: KAlchemy
   kilo_tester: KNet
   kilo_usability: KCalc
   kilo_qa: KMaze
   kilo_expander: KBookmark
-virtual_web_target: kweb://echo-subsystem.net
+virtual_web_target: kweb://deep-core
 virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
@@ -35,9 +35,9 @@ virtual_web_rotation:
 - kweb://echo-subsystem.net
 - kweb://deep-core
 last_run:
-  agent: kilo-expander
-  app: KJournal
-  timestamp: 2026-10-17T23:56:00+0000
+  agent: kilo-creator
+  app: echo_subsystem
+  timestamp: 2026-10-18T03:38:00+0000
 last_planner_run: '2026-10-17T20:53:00Z'
 ---
 
@@ -66,10 +66,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 ## Active Target Queues (Gemini Flash Optimized Tickets)
 
 ### 1. Virtual 1999 Web & ARG Node Creator (`kilo-creator`)
-- **Target**: `kweb://echo-subsystem.net`
-- **Primary File**: `KiloOS/public/web/echo_subsystem.html`
-- **Objective**: Deep harmonic decoders & SIGINT grid expansion: acoustic spectrogram visualizer, carrier wave frequency analyzer, numbers station decoders, secret transponder routing, and Anti-Potemkin depth (<999 KB).
-- **Upcoming Queue**: `kweb://deep-core`, `kweb://darknet`, `kweb://portal`, `kweb://webring`.
+- **Target**: `kweb://deep-core`
+- **Primary File**: `KiloOS/public/web/deep_core.html`
+- **Objective**: Subterranean deep core command terminal & ARG climax precursor: seismic waveguide telemetry, subterranean relay packet analysis, and Tier 3 Anti-Potemkin depth (<999 KB).
+- **Upcoming Queue**: `kweb://darknet`, `kweb://portal`, `kweb://webring`, `kweb://warez`.
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
 - **Target**: `KDragon`
@@ -196,6 +196,14 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-18T03:38:00+0000 — kilo-creator: kweb://echo-subsystem.net (Anti-Potemkin Web 1.0 Expansion)**
+  - Piezo Deep Borehole Radar: Added dual-display A-Scan oscilloscope + Delaware Basin geological strata column with P/S/Stoneley wave physics and time-gain compensation.
+  - Non-Linear Intermodulation Analyzer: Implemented crystal TOI/IP3 mixer calculating ΔF and 3rd-order intermod spurs with real-time Web Audio auditioning and Zero Beat phase lock.
+  - Litho-Acoustic Packet Dissector: Implemented framing dissector with live CRC-16 CCITT validation, 4 presets, FSK AFSK audio burst transmission, and .cap export.
+  - Terminal Command Integration: Wired `borehole`, `ascan`, `intermod`, `dissect`, and `packet` commands into the field terminal console.
+  - Verification: Clean Vite build (562ms), startup audit PASS (`test_app_startup.py` 0 err), security lint clean, <999KB budget verified (536.7 KB).
+  - Queue: Advanced `kilo_creator` to `kweb://deep-core`; rotation handoff to `kilo-graphics`.
+
 - **2026-10-17T18:42:00-07:00 — kilo-adhoc: Fleet Cadence Rebalance (PC A to 1 Turn/Hr, PC C Restored to 4 Turns/Hr)**
   - Quota Rebalance: Restored PC A to 1 turn/hour (at :12 past the hour) to balance higher token consumption from Gemini 3.8 Flash High effort.
   - PC C Slot Return: Returned the :48 slot to PC C (now 4 turns/hour at :02, :20, :38, :48).
@@ -230,12 +238,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Verification: Clean Vite build (`npm.cmd run build` 0 err), Win32 native compile (`build.bat` 0 err), test_app_startup PASS (128.6 KB < 999 KB ceiling).
   - Status: PASS ✅ (Layout, keyboard navigation, HiDPI charts, and accessible focus verified).
   - Queue: Advanced `kilo_usability` to `KCalc`; rotation handoff to `kilo-qa`.
-
-- **2026-10-17T21:55:00+0000 — kilo-tester: KPaint (Interactive UI Audit & Inline Fixes — Mature Quarantine)**
-  - UI Element Audit: Verified 115 buttons, 12 inputs, 5 selects, 4 dialog modals, 22 filters/tools, and multi-layer reel animation controls.
-  - Storage Safety: Wrapped audio preference, tutorial flags, quicksave snapshot, and collab handle in safe storage try/catch handlers per quality standards.
-  - Keyboard & Modal UX: Elevated Escape key handler to dismiss modals/dropdowns from focused text inputs; wired handleExportFnKey preventing page scroll on Space.
-  - Mature Promotion: Promoted feature-complete KPaint (Pass 6+) to Mature Applications quarantine table; removed from active queues.
-  - Verification: Clean Vite build (`npm.cmd run build` 0 err), Win32 native compile (`build.bat` 0 err), test_app_startup PASS (242.6 KB), check_sizes PASS (<999 KB).
-  - Status: PASS ✅ (3 issues fixed; promoted to Mature quarantine).
-  - Queue: Advanced `kilo_tester` to `KNet`; rotation handoff to `kilo-usability`.
