@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-qa
+current_agent: kilo-qa
+next_agent: kilo-expander
 agent_rotation:
 - kilo-graphics
 - kilo-soundscape
@@ -18,7 +18,7 @@ current_targets:
   kilo_graphics: KDragon
   kilo_soundscape: KDragon
   kilo_tester: KColony
-  kilo_usability: KCalc
+  kilo_usability: KCipher
   kilo_qa: KMaze
   kilo_expander: KBookmark
 virtual_web_target: kweb://deep-core
@@ -35,9 +35,9 @@ virtual_web_rotation:
 - kweb://echo-subsystem.net
 - kweb://deep-core
 last_run:
-  agent: kilo-tester
-  app: KNet
-  timestamp: 2026-10-18T06:36:00+0000
+  agent: kilo-usability
+  app: KCalc
+  timestamp: 2026-10-18T08:37:00+0000
 last_planner_run: '2026-10-17T20:53:00Z'
 ---
 
@@ -122,19 +122,19 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Upcoming Queue**: `KTrader`, `KMystery`, `KNet`.
 
 ### 5. Usability & UX Queue (`kilo-usability`)
-- **Target**: `KCalc`
-- **Primary File**: `KiloOS/public/apps/kcalc.html`
-- **Objective**: Scientific/programmer calculator responsive keypad layout, narrow-viewport (<540px) button scaling, keyboard shortcuts (F1/H help, Esc clear), accessible focus glow, and high-contrast LCD readout.
+- **Target**: `KCipher`
+- **Primary File**: `KiloOS/public/apps/kcipher.html`
+- **Objective**: Classical & modern cryptography studio layout: cipher tool ribbon, responsive side-by-side plaintext/ciphertext split panes, frequency analysis histogram scaling, keyboard shortcuts (F1/H help, Esc clear), and accessible focus glow.
 - **Action Steps**:
   1. Verify window bounds and responsive container wrapping under narrow (<540px) widths.
   2. Ensure clear keyboard shortcuts (F1/H help, Esc clear) and accessible focus indicators.
-  3. Verify keypad ergonomics, HiDPI font scaling, and comfortable retro theme contrast.
+  3. Verify cipher workspace ergonomics, HiDPI font scaling, and comfortable contrast.
 - **Verification**: `cd KiloOS && npm run build`. File size < 999 KB.
 - **Handoff**:
-  - In frontmatter: advance `current_targets.kilo_usability` to `KCipher`.
+  - In frontmatter: advance `current_targets.kilo_usability` to `KPass`.
   - Set `current_agent: kilo-qa`.
   - Append terse execution log (≤6 lines), commit, and push.
-- **Upcoming Queue**: `KCipher`, `KPass`, `KVault`.
+- **Upcoming Queue**: `KPass`, `KVault`, `KCalc`.
 
 ### 6. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
 - **Target**: `KMaze`
@@ -196,6 +196,14 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-18T08:37:00+0000 — kilo-usability: KCalc (UX, Themes & Live Radix Polish)**
+  - Dual-Target Readout Themes: Implemented 4 high-contrast display themes (OLED Slate, Retro Olive LCD, Amber Plasma, VFD Cyan) with 'L' hotkey cycling across Web and Win32 C.
+  - Multi-Base Live Strip: Added live HEX / DEC / OCT / BIN radix readout with click-to-copy in display card.
+  - Keyboard & Layout Ergonomics: Added accessible :focus-visible glow rings; widened native client bounds to 364px to eliminate control clipping; updated Help dialog (F1/H) with 'L' theme shortcut.
+  - State Persistence: Persisted display theme in localStorage, autoSaveSession, and F5/F9 quicksave/quickload snapshots.
+  - Verification: Clean Vite build (491ms), native C clean build (28.6 KB), startup test PASS (239.5 KB < 999 KB, 0 JS errors), security lint clean.
+  - Queue: Advanced kilo_usability to KCipher; rotation handoff to kilo-qa.
+
 - **2026-10-18T06:36:00+0000 — kilo-tester: KNet (Interactive UI Audit & Navigation Engine Fixes)**
   - Status: PASS ✅ (5 issues, 5 fixed).
   - Identifier Fix: Replaced undeclared `hexViewer` with `httpHexArea` in `quickSave()` and `beforeunload`, preventing ReferenceErrors during state snapshots.
@@ -225,10 +233,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Terminal Command Integration: Wired `borehole`, `ascan`, `intermod`, `dissect`, and `packet` commands into the field terminal console.
   - Verification: Clean Vite build (562ms), startup audit PASS (`test_app_startup.py` 0 err), security lint clean, <999KB budget verified (536.7 KB).
   - Queue: Advanced `kilo_creator` to `kweb://deep-core`; rotation handoff to `kilo-graphics`.
-
-- **2026-10-17T18:42:00-07:00 — kilo-adhoc: Fleet Cadence Rebalance (PC A to 1 Turn/Hr, PC C Restored to 4 Turns/Hr)**
-  - Quota Rebalance: Restored PC A to 1 turn/hour (at :12 past the hour) to balance higher token consumption from Gemini 3.8 Flash High effort.
-  - PC C Slot Return: Returned the :48 slot to PC C (now 4 turns/hour at :02, :20, :38, :48).
-  - Multi-PC Collision Windows: Reconfigured non-colliding collision guards and safe windows in orchestrate.py, dashboard.py, and register_task.ps1.
-  - Task Scheduler: Re-registered Windows Scheduled Task on PC A with single trigger at :12.
-  - State Sync: Synchronized .agents/fleet_nodes/node_a.json, node_c.json, and scheduler_session.json.

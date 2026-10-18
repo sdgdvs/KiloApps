@@ -82,6 +82,7 @@ int operator = 0;
 double memoryStore = 0.0;
 int isNewOperand = 1;
 int currentMode = 0; // 0=Sci, 1=Fin, 2=Stats, 3=Const, 4=History
+int lcdTheme = 0;    // 0=OLED, 1=Retro Olive LCD, 2=Amber Plasma, 3=VFD Cyan
 double statLastMean = 0.0;
 double statLastSlope = 0.0;
 
@@ -98,6 +99,7 @@ int historyCount = 0;
 HWND hModeBtns[5];
 HWND hHelpBtn;
 HWND hCopyBtn;
+HWND hLcdBtn;
 HWND hSciBtns[42];
 HWND hFinControls[14];
 HWND hStatsControls[14];
@@ -112,6 +114,7 @@ HWND hHistControls[4];
 #define ID_MODE_HIST  3004
 #define ID_HELP       3006
 #define ID_COPY       3007
+#define ID_LCD_THEME  3008
 
 #define ID_FIN_CALC_PMT  4001
 #define ID_FIN_CALC_FV   4002
@@ -219,9 +222,10 @@ void ShowHelpDialog(HWND hwnd) {
         "  +, -, *, /, ^ : Arithmetic and powers\n"
         "  Enter or =    : Calculate result / evaluate form\n"
         "  Backspace     : Delete last character\n"
-        "  Esc           : Clear all / Reset\n"
+        "  Esc           : Clear all / Reset (or clear edit box)\n"
         "  F5            : Quicksave complete workspace state\n"
         "  F9            : Quickload saved workspace state\n"
+        "  L             : Cycle High-Contrast LCD Readout Themes\n"
         "  D             : Toggle DEG / RAD mode\n"
         "  Ctrl+C        : Copy display to clipboard\n"
         "  Ctrl+V        : Paste number from clipboard\n"
@@ -245,10 +249,12 @@ void FormatDisplay(double val) {
 
 void UpdateStatusText() {
     char statusBuf[128];
+    const char* themeNames[4] = {"OLED", "LCD", "AMBER", "VFD"};
+    const char* curTheme = themeNames[(lcdTheme >= 0 && lcdTheme < 4) ? lcdTheme : 0];
     if (memoryStore != 0.0) {
-        m_sprintf(statusBuf, "[%s] [M: %.6g] [F5:Save F9:Load] [F1:Help]", isDeg ? "DEG" : "RAD", memoryStore);
+        m_sprintf(statusBuf, "[%s] [%s] [M: %.6g] [F5/F9] [F1:Help]", isDeg ? "DEG" : "RAD", curTheme, memoryStore);
     } else {
-        m_sprintf(statusBuf, "[%s] [F5:Save F9:Load] [Ctrl+C:Copy] [F1:Help]", isDeg ? "DEG" : "RAD");
+        m_sprintf(statusBuf, "[%s] [%s] [F5:Save F9:Load] [L:Theme] [F1:Help]", isDeg ? "DEG" : "RAD", curTheme);
     }
     SetWindowTextA(hStatusText, statusBuf);
 }
@@ -660,13 +666,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hModeBtns[2] = CreateWindowA("BUTTON", "[3] Stat", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, S(106), S(8), S(48), S(26), hwnd, (HMENU)ID_MODE_STATS, NULL, NULL);
             hModeBtns[3] = CreateWindowA("BUTTON", "[4] Const",WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, S(156), S(8), S(50), S(26), hwnd, (HMENU)ID_MODE_CONST, NULL, NULL);
             hModeBtns[4] = CreateWindowA("BUTTON", "[5] Hist", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, S(208), S(8), S(46), S(26), hwnd, (HMENU)ID_MODE_HIST, NULL, NULL);
-            hCopyBtn     = CreateWindowA("BUTTON", "Copy",     WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, S(256), S(8), S(44), S(26), hwnd, (HMENU)ID_COPY, NULL, NULL);
-            hHelpBtn     = CreateWindowA("BUTTON", "? [F1]",   WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, S(302), S(8), S(38), S(26), hwnd, (HMENU)ID_HELP, NULL, NULL);
+            hLcdBtn      = CreateWindowA("BUTTON", "LCD",      WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, S(256), S(8), S(34), S(26), hwnd, (HMENU)ID_LCD_THEME, NULL, NULL);
+            hCopyBtn     = CreateWindowA("BUTTON", "Copy",     WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, S(292), S(8), S(38), S(26), hwnd, (HMENU)ID_COPY, NULL, NULL);
+            hHelpBtn     = CreateWindowA("BUTTON", "?",        WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, S(332), S(8), S(22), S(26), hwnd, (HMENU)ID_HELP, NULL, NULL);
 
             // Displays
-            hSubDisplay = CreateWindowExA(0, "STATIC", "", WS_CHILD | WS_VISIBLE | SS_RIGHT, S(10), S(38), S(324), S(18), hwnd, NULL, NULL, NULL);
-            hDisplay = CreateWindowExA(WS_EX_CLIENTEDGE, "STATIC", "0", WS_CHILD | WS_VISIBLE | SS_RIGHT, S(10), S(58), S(324), S(34), hwnd, NULL, NULL, NULL);
-            hStatusText = CreateWindowExA(0, "STATIC", "[DEG] [Ctrl+C: Copy] | Press 'H' / F1 for Help", WS_CHILD | WS_VISIBLE | SS_LEFT, S(10), S(94), S(330), S(16), hwnd, NULL, NULL, NULL);
+            hSubDisplay = CreateWindowExA(0, "STATIC", "", WS_CHILD | WS_VISIBLE | SS_RIGHT, S(10), S(38), S(344), S(18), hwnd, NULL, NULL, NULL);
+            hDisplay = CreateWindowExA(WS_EX_CLIENTEDGE, "STATIC", "0", WS_CHILD | WS_VISIBLE | SS_RIGHT, S(10), S(58), S(344), S(34), hwnd, NULL, NULL, NULL);
+            hStatusText = CreateWindowExA(0, "STATIC", "[DEG] [OLED] [L:Theme] [F1:Help]", WS_CHILD | WS_VISIBLE | SS_LEFT, S(10), S(94), S(344), S(16), hwnd, NULL, NULL, NULL);
 
             hFontMain = CreateFontA(-MulDiv(24, dpiX, 72), 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, 5, DEFAULT_PITCH | FF_SWISS, "Consolas");
             hFontSub = CreateFontA(-MulDiv(14, dpiX, 72), 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, 5, DEFAULT_PITCH | FF_SWISS, "Segoe UI");
@@ -764,12 +771,31 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         }
         case WM_CTLCOLORSTATIC: {
             HDC hdcStatic = (HDC)wParam;
-            if ((HWND)lParam == hDisplay) {
-                SetTextColor(hdcStatic, RGB(255, 255, 255));
-            } else {
-                SetTextColor(hdcStatic, RGB(148, 163, 184));
+            HWND hCtrl = (HWND)lParam;
+            COLORREF textColor, subColor, bkColor;
+            if (lcdTheme == 1) { // Retro Olive LCD
+                textColor = RGB(18, 28, 14);
+                subColor = RGB(45, 62, 38);
+                bkColor = RGB(154, 179, 141);
+            } else if (lcdTheme == 2) { // Amber Plasma
+                textColor = RGB(255, 183, 3);
+                subColor = RGB(217, 119, 6);
+                bkColor = RGB(20, 11, 4);
+            } else if (lcdTheme == 3) { // VFD Cyan
+                textColor = RGB(0, 255, 213);
+                subColor = RGB(8, 145, 178);
+                bkColor = RGB(2, 18, 21);
+            } else { // OLED Slate
+                textColor = RGB(255, 255, 255);
+                subColor = RGB(148, 163, 184);
+                bkColor = RGB(15, 23, 42);
             }
-            SetBkColor(hdcStatic, RGB(15, 23, 42));
+            if (hCtrl == hDisplay) {
+                SetTextColor(hdcStatic, textColor);
+            } else {
+                SetTextColor(hdcStatic, subColor);
+            }
+            SetBkColor(hdcStatic, bkColor);
             return (INT_PTR)hDisplayBgBrush;
         }
         case WM_CTLCOLOREDIT: {
@@ -788,6 +814,16 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             else if (id == ID_MODE_HIST) SetViewMode(4);
             else if (id == ID_HELP) ShowHelpDialog(hwnd);
             else if (id == ID_COPY) CopyToClipboard(hwnd, displayBuffer);
+            else if (id == ID_LCD_THEME) {
+                lcdTheme = (lcdTheme + 1) % 4;
+                if (hDisplayBgBrush) DeleteObject(hDisplayBgBrush);
+                if (lcdTheme == 1) hDisplayBgBrush = CreateSolidBrush(RGB(154, 179, 141));
+                else if (lcdTheme == 2) hDisplayBgBrush = CreateSolidBrush(RGB(20, 11, 4));
+                else if (lcdTheme == 3) hDisplayBgBrush = CreateSolidBrush(RGB(2, 18, 21));
+                else hDisplayBgBrush = CreateSolidBrush(RGB(15, 23, 42));
+                InvalidateRect(hwnd, NULL, TRUE);
+                UpdateStatusText();
+            }
 
             else if ((id >= '0' && id <= '9') || id == '.') {
                 AppendChar(id);
@@ -1022,7 +1058,7 @@ void __stdcall MainEntry() {
 
     RegisterClassA(&wc);
     // Adjust window rect based on DPI-scaled client size
-    RECT wr = {0, 0, S(350), S(430)};
+    RECT wr = {0, 0, S(364), S(430)};
     AdjustWindowRect(&wr, WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX, FALSE);
     int winW = wr.right - wr.left;
     int winH = wr.bottom - wr.top;
@@ -1090,6 +1126,17 @@ void __stdcall MainEntry() {
                     PasteFromClipboard(hwnd);
                     continue;
                 }
+            }
+
+            if (isEditFocused && key == VK_ESCAPE) {
+                SetWindowTextA(hFocus, "");
+                SetFocus(hwnd);
+                continue;
+            }
+
+            if ((key == 'L' || key == 'l') && !isEditFocused) {
+                SendMessageA(hwnd, WM_COMMAND, ID_LCD_THEME, 0);
+                continue;
             }
 
             if (key == VK_F8 && !isEditFocused && currentMode == 0) {

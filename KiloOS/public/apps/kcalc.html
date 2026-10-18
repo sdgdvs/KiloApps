@@ -165,11 +165,192 @@
   .badge-btn:active { transform: translateY(1px); }
   .badge-btn.active { background: rgba(16, 185, 129, 0.2); color: #34d399; border-color: rgba(16, 185, 129, 0.3); }
 
-  .badge-btn:focus-visible, .tab-btn:focus-visible, .calc-btn:focus-visible, .action-btn:focus-visible, .mini-btn:focus-visible {
-    outline: 2px solid #818cf8;
-    outline-offset: 1px;
+  /* Accessible High-Contrast Focus Glow */
+  :focus-visible {
+    outline: 2px solid #818cf8 !important;
+    outline-offset: 2px !important;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.4), 0 0 12px rgba(129, 140, 248, 0.5) !important;
+  }
+  .badge-btn:focus-visible,
+  .tab-btn:focus-visible,
+  .calc-btn:focus-visible,
+  .action-btn:focus-visible,
+  .mini-btn:focus-visible,
+  .kcalc-tool-btn:focus-visible,
+  .close-btn:focus-visible,
+  .help-prompt-badge:focus-visible {
+    outline: 2px solid #a5b4fc !important;
+    outline-offset: 1px !important;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.5), 0 0 14px rgba(129, 140, 248, 0.6) !important;
   }
 
+  /* Help Prompt Badge in Header */
+  .help-prompt-badge {
+    background: rgba(99, 102, 241, 0.15);
+    border: 1px solid rgba(99, 102, 241, 0.35);
+    color: #a5b4fc;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    user-select: none;
+    margin-left: 4px;
+    touch-action: manipulation;
+  }
+  .help-prompt-badge:hover {
+    background: rgba(99, 102, 241, 0.35);
+    color: #ffffff;
+    border-color: #818cf8;
+  }
+
+  /* --- High-Contrast LCD Readout Themes --- */
+  .display-card.theme-retro-lcd {
+    background: #9ab38d !important;
+    border: 3px inset #6d8262 !important;
+    box-shadow: inset 2px 2px 8px rgba(0, 0, 0, 0.45), inset -2px -2px 6px rgba(255, 255, 255, 0.3), 0 3px 12px rgba(0, 0, 0, 0.5) !important;
+    color: #121c0e !important;
+  }
+  .display-card.theme-retro-lcd .main-display {
+    color: #111a0d !important;
+    text-shadow: 1px 1px 0px rgba(18, 28, 14, 0.25) !important;
+    font-weight: 600 !important;
+  }
+  .display-card.theme-retro-lcd .sub-display {
+    color: #2e3e26 !important;
+    font-weight: 600 !important;
+  }
+  .display-card.theme-retro-lcd .status-chip {
+    background: rgba(18, 28, 14, 0.12) !important;
+    color: #1b2914 !important;
+    border-color: rgba(18, 28, 14, 0.35) !important;
+    font-weight: 800 !important;
+  }
+  .display-card.theme-retro-lcd .status-chip.highlight {
+    background: rgba(18, 28, 14, 0.25) !important;
+    color: #0b1208 !important;
+    border-color: #121c0e !important;
+  }
+  .display-card.theme-retro-lcd .status-chip.copy-btn {
+    background: rgba(18, 28, 14, 0.18) !important;
+    color: #0d160a !important;
+    border-color: rgba(18, 28, 14, 0.45) !important;
+  }
+  .display-card.theme-retro-lcd .quick-radix-strip {
+    color: #24351d !important;
+    border-top-color: rgba(18, 28, 14, 0.25) !important;
+  }
+  .display-card.theme-retro-lcd .quick-radix-val {
+    color: #0b1208 !important;
+  }
+
+  .display-card.theme-amber-plasma {
+    background: #140b04 !important;
+    border: 2px solid #5a300a !important;
+    box-shadow: inset 0 2px 14px rgba(0, 0, 0, 0.9), 0 0 16px rgba(245, 158, 11, 0.2) !important;
+    color: #fbbf24 !important;
+  }
+  .display-card.theme-amber-plasma .main-display {
+    color: #ffb703 !important;
+    text-shadow: 0 0 12px rgba(255, 183, 3, 0.6), 0 0 24px rgba(245, 158, 11, 0.3) !important;
+  }
+  .display-card.theme-amber-plasma .sub-display {
+    color: #d97706 !important;
+  }
+  .display-card.theme-amber-plasma .status-chip {
+    background: rgba(245, 158, 11, 0.12) !important;
+    color: #fbbf24 !important;
+    border-color: rgba(245, 158, 11, 0.3) !important;
+  }
+  .display-card.theme-amber-plasma .status-chip.highlight {
+    background: rgba(245, 158, 11, 0.3) !important;
+    color: #ffffff !important;
+    border-color: #fbbf24 !important;
+  }
+  .display-card.theme-amber-plasma .status-chip.copy-btn {
+    background: rgba(245, 158, 11, 0.2) !important;
+    color: #fde68a !important;
+    border-color: rgba(245, 158, 11, 0.4) !important;
+  }
+  .display-card.theme-amber-plasma .quick-radix-strip {
+    color: #b45309 !important;
+    border-top-color: rgba(245, 158, 11, 0.25) !important;
+  }
+  .display-card.theme-amber-plasma .quick-radix-val {
+    color: #fbbf24 !important;
+  }
+
+  .display-card.theme-vfd-cyan {
+    background: #021215 !important;
+    border: 2px solid #084c56 !important;
+    box-shadow: inset 0 2px 14px rgba(0, 0, 0, 0.9), 0 0 16px rgba(6, 182, 212, 0.25) !important;
+    color: #22d3ee !important;
+  }
+  .display-card.theme-vfd-cyan .main-display {
+    color: #00ffd5 !important;
+    text-shadow: 0 0 12px rgba(0, 255, 213, 0.65), 0 0 24px rgba(6, 182, 212, 0.35) !important;
+  }
+  .display-card.theme-vfd-cyan .sub-display {
+    color: #0891b2 !important;
+  }
+  .display-card.theme-vfd-cyan .status-chip {
+    background: rgba(6, 182, 212, 0.12) !important;
+    color: #22d3ee !important;
+    border-color: rgba(6, 182, 212, 0.3) !important;
+  }
+  .display-card.theme-vfd-cyan .status-chip.highlight {
+    background: rgba(6, 182, 212, 0.3) !important;
+    color: #ffffff !important;
+    border-color: #22d3ee !important;
+  }
+  .display-card.theme-vfd-cyan .status-chip.copy-btn {
+    background: rgba(6, 182, 212, 0.2) !important;
+    color: #a5f3fc !important;
+    border-color: rgba(6, 182, 212, 0.4) !important;
+  }
+  .display-card.theme-vfd-cyan .quick-radix-strip {
+    color: #0e7490 !important;
+    border-top-color: rgba(6, 182, 212, 0.25) !important;
+  }
+  .display-card.theme-vfd-cyan .quick-radix-val {
+    color: #00ffd5 !important;
+  }
+
+  /* Quick Radix Multi-Base Live Strip */
+  .quick-radix-strip {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--text-muted);
+    border-top: 1px dashed rgba(255, 255, 255, 0.08);
+    padding-top: 4px;
+    margin-top: 4px;
+    user-select: text;
+    flex-wrap: wrap;
+  }
+  .quick-radix-item {
+    cursor: pointer;
+    padding: 1px 4px;
+    border-radius: 4px;
+    transition: all 0.15s;
+    touch-action: manipulation;
+  }
+  .quick-radix-item:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: #fff;
+  }
+  .quick-radix-val {
+    font-weight: 600;
+    color: #818cf8;
+  }
+  .quick-radix-sep {
+    opacity: 0.3;
+  }
   /* Main Workspace Layout */
   .workspace {
     display: flex;
@@ -1304,6 +1485,7 @@
     <div class="header-controls">
       <button class="badge-btn" onclick="quicksaveState()" title="Quicksave Workspace State (F5)">💾 Save [F5]</button>
       <button class="badge-btn" onclick="quickloadState()" title="Restore Quicksaved State (F9)">📂 Load [F9]</button>
+      <button id="themeBadge" class="badge-btn" onclick="cycleDisplayTheme()" title="Cycle Display Theme (L): OLED / Retro LCD / Amber / VFD">🎨 OLED [L]</button>
       <button class="badge-btn" onclick="openHelpModal()" title="Help & Keyboard Shortcuts (H / F1)">Help [F1]</button>
       <button id="degRadBtn" class="badge-btn active" onclick="toggleDegRad()" title="Toggle Degrees / Radians (D)">DEG</button>
       <button id="hypBtn" class="badge-btn" onclick="toggleHypMode()" title="Toggle Hyperbolic Trigonometry [Y]">HYP</button>
@@ -1315,15 +1497,26 @@
   <main class="workspace">
     <div class="calc-pane">
       <!-- Screen Display -->
-      <div class="display-card" title="Click display to copy value (Ctrl+C)" onclick="copyMainDisplay()">
+      <div class="display-card" id="displayCard" title="Click display to copy value (Ctrl+C)" onclick="copyMainDisplay()">
         <div class="display-status">
           <span id="angleChip" class="status-chip highlight">DEG</span>
           <span id="hypChip" class="status-chip" style="display:none; color:#f59e0b; border-color:rgba(245,158,11,0.4);">HYP</span>
           <span id="memChip" class="status-chip" style="display:none;">MEM</span>
+          <span id="themeChip" class="status-chip" onclick="event.stopPropagation(); cycleDisplayTheme();" title="Cycle Display Theme (L)" style="cursor:pointer;">OLED</span>
           <button class="status-chip copy-btn" onclick="event.stopPropagation(); copyMainDisplay()" title="Copy result to clipboard (Ctrl+C)">📋 Copy</button>
         </div>
         <div class="sub-display" id="subDisp" title="Click to recall previous formula" onclick="event.stopPropagation(); recallSubDisplay()"></div>
         <div class="main-display" id="mainDisp" aria-live="polite" title="Click to copy value (Ctrl+C)">0</div>
+        <!-- Quick Radix Multi-Base Live Strip -->
+        <div class="quick-radix-strip" id="quickRadixStrip" title="Multi-base conversion of integer result (click value to copy)">
+          <span class="quick-radix-item" onclick="event.stopPropagation(); copyRadixVal('HEX')" title="Click to copy HEX">HEX <span class="quick-radix-val" id="radixHex">0x0</span></span>
+          <span class="quick-radix-sep">|</span>
+          <span class="quick-radix-item" onclick="event.stopPropagation(); copyRadixVal('DEC')" title="Click to copy DEC">DEC <span class="quick-radix-val" id="radixDec">0</span></span>
+          <span class="quick-radix-sep">|</span>
+          <span class="quick-radix-item" onclick="event.stopPropagation(); copyRadixVal('OCT')" title="Click to copy OCT">OCT <span class="quick-radix-val" id="radixOct">0o0</span></span>
+          <span class="quick-radix-sep">|</span>
+          <span class="quick-radix-item" onclick="event.stopPropagation(); copyRadixVal('BIN')" title="Click to copy BIN">BIN <span class="quick-radix-val" id="radixBin">0b0</span></span>
+        </div>
       </div>
 
       <!-- Formula Expression Direct Bar -->
@@ -2137,6 +2330,7 @@
           <tr><td><span class="kbd-key">D</span></td><td>Toggle Trigonometric Degrees / Radians mode</td></tr>
           <tr><td><span class="kbd-key">Y</span></td><td>Toggle Hyperbolic Trigonometry mode (sinh, cosh, tanh)</td></tr>
           <tr><td><span class="kbd-key">M</span></td><td>Open Memory Registers Management Dialog</td></tr>
+          <tr><td><span class="kbd-key">L</span></td><td>Cycle High-Contrast LCD Readout Themes (OLED / Retro LCD / Amber / VFD)</td></tr>
           <tr><td><span class="kbd-key">H</span> or <span class="kbd-key">F1</span></td><td>Open this Help & Shortcuts Dialog</td></tr>
         </tbody>
       </table>
@@ -2318,10 +2512,121 @@
   // Initialize
   let tutorialActive = false;
 
+  // --- High-Contrast LCD Readout Themes ---
+  const LCD_THEMES = ['theme-oled', 'theme-retro-lcd', 'theme-amber-plasma', 'theme-vfd-cyan'];
+  const LCD_THEME_NAMES = ['OLED Slate', 'Retro Olive LCD', 'Amber Plasma', 'VFD Cyan'];
+  const LCD_THEME_CHIPS = ['OLED', 'LCD', 'AMBER', 'VFD'];
+  let currentThemeIndex = 0;
+
+  function cycleDisplayTheme() {
+    currentThemeIndex = (currentThemeIndex + 1) % 4;
+    applyDisplayTheme(currentThemeIndex);
+    showToast('🎨 Display Theme: ' + LCD_THEME_NAMES[currentThemeIndex], 'info', 2200);
+  }
+
+  function applyDisplayTheme(idx) {
+    currentThemeIndex = (typeof idx === 'number' && idx >= 0 && idx < 4) ? idx : 0;
+    const card = document.getElementById('displayCard');
+    if (card) {
+      card.classList.remove('theme-retro-lcd', 'theme-amber-plasma', 'theme-vfd-cyan');
+      if (currentThemeIndex === 1) card.classList.add('theme-retro-lcd');
+      else if (currentThemeIndex === 2) card.classList.add('theme-amber-plasma');
+      else if (currentThemeIndex === 3) card.classList.add('theme-vfd-cyan');
+    }
+    const chip = document.getElementById('themeChip');
+    if (chip) {
+      chip.textContent = LCD_THEME_CHIPS[currentThemeIndex];
+    }
+    const badge = document.getElementById('themeBadge');
+    if (badge) {
+      badge.textContent = '🎨 ' + LCD_THEME_CHIPS[currentThemeIndex] + ' [L]';
+    }
+    try {
+      localStorage.setItem('kcalc_displayTheme', currentThemeIndex.toString());
+    } catch {}
+  }
+
+  // --- Quick Radix Multi-Base Live Strip ---
+  function updateQuickRadix() {
+    const hexEl = document.getElementById('radixHex');
+    const decEl = document.getElementById('radixDec');
+    const octEl = document.getElementById('radixOct');
+    const binEl = document.getElementById('radixBin');
+    if (!hexEl || !decEl || !octEl || !binEl) return;
+
+    let val = NaN;
+    const trimmed = expr ? expr.trim() : '';
+    if (/^-?\d+(\.\d+)?$/.test(trimmed)) {
+      val = parseFloat(trimmed);
+    } else if (typeof lastAns === 'number' && !isNaN(lastAns)) {
+      val = lastAns;
+    }
+
+    if (isNaN(val) || !isFinite(val)) {
+      hexEl.textContent = '---';
+      decEl.textContent = '---';
+      octEl.textContent = '---';
+      binEl.textContent = '---';
+      return;
+    }
+
+    let intVal;
+    try {
+      intVal = BigInt(Math.trunc(val));
+    } catch {
+      hexEl.textContent = '---';
+      decEl.textContent = '---';
+      octEl.textContent = '---';
+      binEl.textContent = '---';
+      return;
+    }
+
+    if (intVal >= 0n) {
+      hexEl.textContent = '0x' + intVal.toString(16).toUpperCase();
+      decEl.textContent = intVal.toString(10);
+      octEl.textContent = '0o' + intVal.toString(8);
+      const bStr = intVal.toString(2);
+      binEl.textContent = bStr.length > 24 ? '...' + bStr.slice(-24) : '0b' + bStr;
+    } else {
+      const u32 = BigInt.asUintN(32, intVal);
+      hexEl.textContent = '0x' + u32.toString(16).toUpperCase();
+      decEl.textContent = intVal.toString(10);
+      octEl.textContent = '0o' + u32.toString(8);
+      const bStr = u32.toString(2);
+      binEl.textContent = '0b' + bStr;
+    }
+  }
+
+  function copyRadixVal(baseName) {
+    const map = {
+      'HEX': document.getElementById('radixHex')?.textContent || '',
+      'DEC': document.getElementById('radixDec')?.textContent || '',
+      'OCT': document.getElementById('radixOct')?.textContent || '',
+      'BIN': document.getElementById('radixBin')?.textContent || ''
+    };
+    const val = map[baseName] || '';
+    if (!val || val === '---') return;
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(val).then(() => {
+        showToast(`📋 Copied ${baseName}: ${val}`, 'success', 2200);
+      }).catch(() => {
+        showToast(`📋 ${baseName}: ${val}`, 'info', 2200);
+      });
+    } else {
+      showToast(`📋 ${baseName}: ${val}`, 'info', 2200);
+    }
+  }
+
   document.addEventListener('DOMContentLoaded', () => {
     populateConstants();
     loadHistoryFromStorage();
     loadSessionState();
+    let savedTheme = 0;
+    try {
+      const st = localStorage.getItem('kcalc_displayTheme');
+      if (st !== null) savedTheme = parseInt(st, 10);
+    } catch {}
+    applyDisplayTheme(savedTheme);
     render();
     calcPMT(true);
     calcFV(true);
@@ -2684,6 +2989,7 @@
       memBadge.classList.remove('active');
     }
 
+    updateQuickRadix();
     autoSaveSession();
   }
 
@@ -2704,6 +3010,7 @@
         activeCalcTool: document.querySelector('#view-calculus .fin-tab.active')?.id?.replace('tab-calc-', '') || activeCalcTool,
         activeMatrixTool: document.querySelector('#view-matrix .fin-tab.active')?.id?.replace('tab-mat-', '') || activeMatrixTool,
         matrixDim,
+        displayTheme: currentThemeIndex,
         finInputs: {
           pmtPrincipal: document.getElementById('pmt-principal')?.value || '',
           pmtRate: document.getElementById('pmt-rate')?.value || '',
@@ -2783,6 +3090,9 @@
         if (s.matrixDim !== undefined) {
           setMatrixDim(s.matrixDim === 3 ? 3 : 2);
         }
+        if (s.displayTheme !== undefined) {
+          applyDisplayTheme(s.displayTheme);
+        }
         if (s.finInputs && typeof s.finInputs === 'object') {
           if (document.getElementById('pmt-principal') && s.finInputs.pmtPrincipal !== undefined) document.getElementById('pmt-principal').value = s.finInputs.pmtPrincipal;
           if (document.getElementById('pmt-rate') && s.finInputs.pmtRate !== undefined) document.getElementById('pmt-rate').value = s.finInputs.pmtRate;
@@ -2858,6 +3168,7 @@
       activeCalcTool: document.querySelector('#view-calculus .fin-tab.active')?.id?.replace('tab-calc-', '') || activeCalcTool,
       activeMatrixTool: document.querySelector('#view-matrix .fin-tab.active')?.id?.replace('tab-mat-', '') || activeMatrixTool,
       matrixDim: matrixDim,
+      displayTheme: currentThemeIndex,
       historyTape: [...historyTape],
       subDisp: document.getElementById('subDisp')?.textContent || '',
       finInputs: {
@@ -2933,6 +3244,9 @@
     }
     if (snap.matrixDim !== undefined) {
       setMatrixDim(snap.matrixDim === 3 ? 3 : 2);
+    }
+    if (snap.displayTheme !== undefined) {
+      applyDisplayTheme(snap.displayTheme);
     }
     if (Array.isArray(snap.historyTape)) {
       historyTape = snap.historyTape;
@@ -4791,6 +5105,12 @@
     if (e.key === 'm' || e.key === 'M') {
       e.preventDefault();
       openMemoryModal();
+      return;
+    }
+
+    if (e.key === 'l' || e.key === 'L') {
+      e.preventDefault();
+      cycleDisplayTheme();
       return;
     }
 
