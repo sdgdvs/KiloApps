@@ -266,6 +266,7 @@ void DrawOrnateHUDCorners(HDC hdc, int winW, int winH) {
 }
 
 void DrawPerimeterInlay(HDC hdc, int winW, int winH, DWORD tick) {
+    (void)tick;
     int pad = 16;
     int x = pad;
     int y = pad;
@@ -273,10 +274,7 @@ void DrawPerimeterInlay(HDC hdc, int winW, int winH, DWORD tick) {
     int bh = winH - pad * 2;
     if (bw <= 0 || bh <= 0) return;
 
-    float pulse = sinf((float)tick * 0.003f) * 0.25f + 0.75f;
-    int rGold = (int)(255 * pulse); if (rGold > 255) rGold = 255;
-    int gGold = (int)(215 * pulse); if (gGold > 215) gGold = 215;
-    COLORREF inlayCol = RGB(rGold, gGold, 0);
+    COLORREF inlayCol = RGB(212, 175, 55); // Static clean gold perimeter inlay
 
     HPEN pen = CreatePen(PS_DOT, 1, inlayCol);
     HPEN oldPen = (HPEN)SelectObject(hdc, pen);
@@ -290,17 +288,8 @@ void DrawPerimeterInlay(HDC hdc, int winW, int winH, DWORD tick) {
 }
 
 void DrawSheenSweeps(HDC hdc, int winW, int winH, DWORD tick) {
-    float sweepPhase = fmodf((float)tick * 0.00035f, 1.0f);
-    int sweepX = (int)((float)winW * (sweepPhase * 1.6f - 0.3f));
-
-    HPEN sheenPen = CreatePen(PS_SOLID, 2, RGB(35, 115, 60));
-    HPEN oldPen = (HPEN)SelectObject(hdc, sheenPen);
-
-    MoveToEx(hdc, sweepX - 40, 20, NULL);
-    LineTo(hdc, sweepX + 40, winH - 20);
-
-    SelectObject(hdc, oldPen);
-    DeleteObject(sheenPen);
+    // Sheen sweeps eliminated per Perimeter Glint & Comet Ban (Fleet Directive 7)
+    (void)hdc; (void)winW; (void)winH; (void)tick;
 }
 
 void DrawShockwavesGDI(HDC hdc) {
@@ -744,6 +733,10 @@ void LoadGame(HWND hwnd) {
         if(fread(&statsTimeAttackWins, sizeof(statsTimeAttackWins), 1, f) != 1) statsTimeAttackWins = 0;
         if(fread(&statsBestTimeAttackTime, sizeof(statsBestTimeAttackTime), 1, f) != 1) statsBestTimeAttackTime = 0;
         fclose(f);
+        HANDLE hTut = CreateFileW(L"kfreecell_tutorialSeen.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+        if (hTut != INVALID_HANDLE_VALUE) {
+            DWORD bw = 0; WriteFile(hTut, "1", 1, &bw, NULL); CloseHandle(hTut);
+        }
         lastTimeTick = GetTickCount();
         selType = -1;
         won = 0;
@@ -2066,6 +2059,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 UseExtraCellPowerup(hwnd);
             } else if(wParam == VK_ESCAPE) {
                 selType = -1;
+                ClearAnims();
                 InvalidateRect(hwnd, NULL, TRUE);
             }
             return 0;
@@ -2221,6 +2215,18 @@ void MainEntry() {
         WS_OVERLAPPEDWINDOW | WS_VISIBLE,
         CW_USEDEFAULT, CW_USEDEFAULT, 800, 700,
         NULL, NULL, hInstance, NULL);
+        
+    int hasTutorial = (GetFileAttributesW(L"kfreecell_tutorialSeen.dat") != INVALID_FILE_ATTRIBUTES);
+    int hasExistingSave = (GetFileAttributesW(L"kfreecell_save.dat") != INVALID_FILE_ATTRIBUTES);
+    if (!hasTutorial) {
+        HANDLE hTut = CreateFileW(L"kfreecell_tutorialSeen.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+        if (hTut != INVALID_HANDLE_VALUE) {
+            DWORD bw = 0; WriteFile(hTut, "1", 1, &bw, NULL); CloseHandle(hTut);
+        }
+        if (!hasExistingSave) {
+            ShowHelp(hwnd);
+        }
+    }
         
     MSG msg;
     while(GetMessageW(&msg, NULL, 0, 0)) {

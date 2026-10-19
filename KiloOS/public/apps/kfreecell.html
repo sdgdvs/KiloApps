@@ -456,6 +456,28 @@
   </div>
 
   <script>
+    // Safe storage wrappers per quality standards
+    function safeGet(key, fallback) {
+      try {
+        const item = localStorage.getItem(key);
+        if (item === null || item === undefined) return fallback;
+        try {
+          return JSON.parse(item);
+        } catch {
+          return item;
+        }
+      } catch (e) {
+        return fallback;
+      }
+    }
+    function safeSet(key, value) {
+      try {
+        localStorage.setItem(key, JSON.stringify(value));
+      } catch (e) {
+        console.warn('[KFreecell] Storage write failed:', e);
+      }
+    }
+
     let audioCtx = null;
     function initAudio() {
       if(!audioCtx) {
@@ -764,11 +786,27 @@
           closeAllModals();
           return;
         }
+        const banner = document.getElementById('onboarding-banner');
+        if (banner && banner.style.display !== 'none') {
+          dismissOnboarding();
+          return;
+        }
         if (state.selected) {
           state.selected = null;
           render();
           return;
         }
+      }
+
+      if (isAnyModalOpen()) {
+        if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar') {
+          if (!document.activeElement || (document.activeElement.tagName !== 'BUTTON' && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'SELECT')) {
+            e.preventDefault();
+            closeAllModals();
+            return;
+          }
+        }
+        return;
       }
 
       if (e.key === 'F1') {
@@ -793,10 +831,6 @@
       }
 
       if (document.activeElement && (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'SELECT')) {
-        return;
-      }
-
-      if (isAnyModalOpen()) {
         return;
       }
 
@@ -950,7 +984,7 @@
       deckEl.title = "Card Back: Click to cycle design";
       deckEl.onclick = () => {
         settings.cardBack = (settings.cardBack + 1) % cardBacks.length;
-        localStorage.setItem('kfreecell_settings', JSON.stringify(settings));
+        safeSet('kfreecell_settings', settings);
         updateCardBackUI();
         playSound('flip');
       };
@@ -977,7 +1011,7 @@
           div.style.boxShadow = '0 3px 8px rgba(0,0,0,0.4)';
           div.onclick = () => {
             settings.cardBack = i;
-            localStorage.setItem('kfreecell_settings', JSON.stringify(settings));
+            safeSet('kfreecell_settings', settings);
             updateCardBackUI();
           };
           opts.appendChild(div);
@@ -986,18 +1020,15 @@
     }
 
     function saveStats() {
-      localStorage.setItem('kfreecell_stats', JSON.stringify({ stats, campaignStage, maxCampaignStage }));
+      safeSet('kfreecell_stats', { stats, campaignStage, maxCampaignStage });
     }
 
     function loadStats() {
-      const saved = localStorage.getItem('kfreecell_stats');
-      if (saved) {
-        try {
-          const data = JSON.parse(saved);
-          if (data.stats) Object.assign(stats, data.stats);
-          if (data.campaignStage) campaignStage = data.campaignStage;
-          if (data.maxCampaignStage) maxCampaignStage = data.maxCampaignStage;
-        } catch(e) {}
+      const data = safeGet('kfreecell_stats', null);
+      if (data) {
+        if (data.stats) Object.assign(stats, data.stats);
+        if (data.campaignStage) campaignStage = data.campaignStage;
+        if (data.maxCampaignStage) maxCampaignStage = data.maxCampaignStage;
       }
     }
 
@@ -1018,15 +1049,17 @@
     }
 
     function checkOnboarding() {
-      const seen = localStorage.getItem('kfreecell_tutorial_seen');
+      const seen = safeGet('kfreecell_tutorialSeen', null) || safeGet('kfreecell_tutorial_seen', null);
       const banner = document.getElementById('onboarding-banner');
-      if (!seen && banner) {
+      if (seen) return;
+      if (banner) {
         banner.style.display = 'flex';
       }
     }
 
     function dismissOnboarding() {
-      localStorage.setItem('kfreecell_tutorial_seen', '1');
+      safeSet('kfreecell_tutorialSeen', 1);
+      safeSet('kfreecell_tutorial_seen', 1);
       const banner = document.getElementById('onboarding-banner');
       if (banner) banner.style.display = 'none';
     }
@@ -1064,15 +1097,14 @@
       const mode = document.getElementById('game-mode').value;
       const seedVal = document.getElementById('seed-input').value;
       const data = { state, undoStack, stats, gameInProgress, timeElapsed, campaignStage, maxCampaignStage, powerupsShuffle, powerupsWand, powerupsExtraCell, timeRemaining, extraCellActive, extraCellTimer, buildRule, emptyKingOnly, mode, seedVal };
-      localStorage.setItem('kfreecell_save', JSON.stringify(data));
+      safeSet('kfreecell_save', data);
       document.getElementById('status').innerText = "Game Saved";
       playSound('place');
     }
 
     function loadGame() {
-      const saved = localStorage.getItem('kfreecell_save');
-      if (saved) {
-        const data = JSON.parse(saved);
+      const data = safeGet('kfreecell_save', null);
+      if (data) {
         state = data.state;
         undoStack = data.undoStack || [];
         stats = data.stats || { played: 0, wins: 0, streak: 0, bestStreak: 0, bestTime: 0, taWins: 0, taBestTime: 0 };
@@ -1088,7 +1120,7 @@
         timeRemaining = data.timeRemaining || 180;
         buildRule = data.buildRule || 'color';
         emptyKingOnly = !!data.emptyKingOnly;
-        numFreeCells = state.free.length;
+        numFreeCells = (state && state.free) ? state.free.length : 4;
         if (data.mode) {
           document.getElementById('game-mode').value = data.mode;
           updateModeUI();
@@ -1100,13 +1132,17 @@
         playSound('flip');
         updateGameInfo();
         render();
+        // Pass 5 QA Directive: Onboarding must never interrupt restored save state!
+        dismissOnboarding();
+        closeAllModals();
+        ensureGameTimer();
       } else {
         document.getElementById('status').innerText = "No Save Found";
         playSound('error');
       }
-      const savedSettings = localStorage.getItem('kfreecell_settings');
+      const savedSettings = safeGet('kfreecell_settings', null);
       if (savedSettings) {
-        settings = JSON.parse(savedSettings);
+        settings = savedSettings;
         updateCardBackUI();
       }
     }
@@ -1268,6 +1304,39 @@
         return dfs(startS);
     }
 
+    function ensureGameTimer() {
+      if (timerInterval) clearInterval(timerInterval);
+      timerInterval = setInterval(() => {
+        if (gameInProgress) {
+          timeElapsed++;
+          if (extraCellActive && extraCellTimer > 0) {
+            extraCellTimer--;
+            if (extraCellTimer === 0) {
+              let extraIdx = numFreeCells - 1;
+              if (state.free && !state.free[extraIdx]) {
+                numFreeCells--;
+                state.free.pop();
+                extraCellActive = false;
+              }
+            }
+          }
+          const mode = document.getElementById('game-mode').value;
+          if (mode === 'timeattack') {
+            timeRemaining--;
+            if (timeRemaining <= 30 && timeRemaining > 0 && timeRemaining % 5 === 0) {
+              playSound('place');
+            }
+            if (timeRemaining <= 0) {
+              gameInProgress = false;
+              document.getElementById('status').innerText = "Time Expired! Game Over.";
+              playSound('error');
+            }
+          }
+          updateGameInfo();
+        }
+      }, 1000);
+    }
+
     function initGame() {
       if (gameInProgress) {
         stats.streak = 0;
@@ -1346,36 +1415,7 @@
       state.moves = 0;
       timeElapsed = 0;
 
-      if (timerInterval) clearInterval(timerInterval);
-      timerInterval = setInterval(() => {
-        if (gameInProgress) {
-          timeElapsed++;
-          if (extraCellActive && extraCellTimer > 0) {
-            extraCellTimer--;
-            if (extraCellTimer === 0) {
-              let extraIdx = numFreeCells - 1;
-              if (!state.free[extraIdx]) {
-                numFreeCells--;
-                state.free.pop();
-                extraCellActive = false;
-              }
-            }
-          }
-          const mode = document.getElementById('game-mode').value;
-          if (mode === 'timeattack') {
-            timeRemaining--;
-            if (timeRemaining <= 30 && timeRemaining > 0 && timeRemaining % 5 === 0) {
-              playSound('place');
-            }
-            if (timeRemaining <= 0) {
-              gameInProgress = false;
-              document.getElementById('status').innerText = "Time Expired! Game Over.";
-              playSound('error');
-            }
-          }
-          updateGameInfo();
-        }
-      }, 1000);
+      ensureGameTimer();
 
       let c = 0;
       for(let i=0; i<52; i++) {
@@ -2620,14 +2660,17 @@
     }
 
     loadStats();
-    const initSavedSettings = localStorage.getItem('kfreecell_settings');
+    const initSavedSettings = safeGet('kfreecell_settings', null);
     if (initSavedSettings) {
-      settings = JSON.parse(initSavedSettings);
+      settings = initSavedSettings;
     }
     updateCardBackUI();
     updateModeUI();
     initGame();
     checkOnboarding();
+    window.addEventListener('beforeunload', () => {
+      if (timerInterval) clearInterval(timerInterval);
+    });
   </script>
 </body>
 </html>

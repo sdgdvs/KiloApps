@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-creator
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -19,7 +19,7 @@ current_targets:
   kilo_soundscape: KFortress
   kilo_tester: KMystery
   kilo_usability: KVault
-  kilo_qa: KFreecell
+  kilo_qa: KMatch3
   kilo_expander: KRSS
 virtual_web_target: kweb://webring
 virtual_web_rotation:
@@ -35,9 +35,9 @@ virtual_web_rotation:
 - kweb://deep-core
 - kweb://darknet
 last_run:
-  agent: kilo-usability
-  app: KPass
-  timestamp: '2026-10-19T05:35:00+0000'
+  agent: kilo-qa
+  app: KFreecell
+  timestamp: '2026-10-19T07:18:00+0000'
 last_planner_run: '2026-10-18T21:17:00Z'
 ---
 
@@ -137,22 +137,22 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Upcoming Queue**: `KFont`, `KHex`, `KPass`.
 
 ### 6. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
-- **Target**: `KFreecell`
-- **Primary Files**: `KiloOS/public/apps/kfreecell.html`, `KFreecell/main.c` (if present)
-- **Objective**: Pass 5 QA audit: verify first-run tutorial onboarding overlay (`kfreecell_tutorialSeen`), verify F5 quicksave & F9 quickload capturing complete tableau/freecell/foundation state, undo stack, and game timer; test Escape modal dismissal; compile Win32 native client and verify web cartridge (<999 KB).
+- **Target**: `KMatch3`
+- **Primary Files**: `KiloOS/public/apps/kmatch3.html`, `KMatch3/main.c` (if present)
+- **Objective**: Pass 5 QA audit: verify first-run tutorial onboarding overlay (`kmatch3_tutorialSeen`), verify F5 quicksave & F9 quickload capturing complete game board state, score, level, and active powerups; test Escape modal dismissal; compile Win32 native client and verify web cartridge (<999 KB).
 - **Action Steps**:
   1. State Persistence: F5 quicksave & F9 quickload capturing complete game state, stats, and settings.
   2. First-run Tutorial: Onboarding displays once on fresh sessions, never on restored saves.
   3. Modal Dismissals: Modals dismiss cleanly with Escape, Enter, or Close button.
-  4. Dual Parity & Build: Compile Win32 native client via `cmd.exe /c build.bat` in `KFreecell/` (if present) and verify web build.
+  4. Dual Parity & Build: Compile Win32 native client via `cmd.exe /c build.bat` in `KMatch3/` (if present) and verify web build.
 - **Verification**:
-  - `uv run scripts/test_app_startup.py --app KFreecell`
-  - `cd KiloOS && npm run build` (0 Vite errors, `kfreecell.html` < 999 KB)
+  - `uv run scripts/test_app_startup.py --app KMatch3`
+  - `cd KiloOS && npm run build` (0 Vite errors, `kmatch3.html` < 999 KB)
 - **Handoff**:
-  - In frontmatter: advance `current_targets.kilo_qa` to `KMatch3`.
+  - In frontmatter: advance `current_targets.kilo_qa` to `KSimon`.
   - Set `current_agent: kilo-expander`.
   - Append terse execution log (≤6 lines), commit, and push.
-- **Upcoming Queue**: `KMatch3`, `KSimon`, `KWords`.
+- **Upcoming Queue**: `KSimon`, `KWords`.
 
 ### 7. Feature Expander Queue (`kilo-expander`)
 - **Target**: `KRSS`
@@ -198,10 +198,19 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | **K2048** | `KiloOS/public/apps/k2048.html` | Pass 10+ (2026-10-18) | Puzzle / Arcade | 30-stage campaign, powerups, Threes ruleset, arcade duel multiplayer, FEN lab, replay viewer, full F5/F9 state persistence, dual Win32 native client parity. |
 | **KSudoku** | `KiloOS/public/apps/ksudoku.html` | Pass 8+ (2026-10-18) | Puzzle / Logic | 30-stage campaign, RFMS online duel, logic explainer, replay scrubber, puzzle manager, full F5/F9 state persistence, dual Win32 native client parity. |
 | **KTetris** | `KiloOS/public/apps/ktetris.html` | Pass 10+ (2026-10-18) | Arcade / Classic | Full retro arcade physics, SRS rotation, hold piece, ghost piece, marathon/sprint/ultra modes, RFMS multiplayer, full F5/F9 state persistence, dual Win32 native client parity. |
+| **KFreecell** | `KiloOS/public/apps/kfreecell.html` | Pass 5 (2026-10-19) | Card / Solitaire | 4 game modes (incl. 20-stage campaign & time attack), 5 active skills, dual Win32 native client parity, full F5/F9 state persistence, first-run tutorial integrity, zero glints. |
 
 ---
 
 ## Recent Execution Logs (Max 5 Entries)
+
+- **2026-10-19T07:18:00+0000 — kilo-qa: KFreecell (Pass 5 QA Audit & Mature Promotion)**
+  - State Persistence: Audited F5 quicksave & F9 quickload capturing complete tableau, freecells, foundations, undo stack, stats, and timer across Web and Win32 C.
+  - Tutorial & Modals: First-run onboarding banner / Help dialog fires once on fresh session (`kfreecell_tutorialSeen`), never interrupting restored saves; clean Esc/Enter/Space dismissals.
+  - Scoping & Storage: Refactored `ensureGameTimer` to top-level scope; audited storage quota safety (`safeGet`/`safeSet`) and `beforeunload` interval teardown.
+  - Glint & Mystery: Confirmed static perimeter inlay, zero specular glints/dots, zero un-diegetic tags, full anti-trademark compliance.
+  - Verification & Parity: Win32 C compile clean (`KFreecell.exe`, 129.5 KB), startup test PASS (105.6 KB, 0 JS errors, hit-test unblocked), Vite build clean (491ms), security lint PASS.
+  - Quarantine & Handoff: Promoted KFreecell to Mature Applications quarantine; advanced `kilo_qa` to `KMatch3`; rotation handoff to `kilo-expander`.
 
 - **2026-10-19T05:35:00+0000 — kilo-usability: KPass (Usability & Layout Polish)**
   - Responsive Layout: Added responsive wrapping for presets, control rows, and save form down to <540px and <440px without clipped buttons.
@@ -233,11 +242,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Perimeter Dots: Removed `rotateRune` continuous perimeter rotation to ensure static, period-accurate mystical border.
   - Verification & Parity: Verified clean Win32 C build (`KAlchemy.exe`, 70.1 KB), startup test PASS (252.3 KB, 0 JS errors), Vite build clean, security lint PASS.
   - Queue Handoff: Advanced `kilo_graphics` to `KFortress`; rotation handoff to `kilo-soundscape`.
-
-- **2026-10-19T01:16:00+0000 — kilo-creator: kweb://portal (1999 Web Portal & Directory Deep Expansion)**
-  - Web Directory Crawler & Spider: Implemented interactive KiloSpider 1.0 crawler with live hypermedia topology canvas visualizer, radar sweep, depth selector, terminal logs, and inverted index keyword extraction.
-  - Retro Widget Lab & Embed Sandbox: Created interactive webmaster studio to configure, preview, test audio, and generate self-contained 1999 HTML embed snippets for Hit Counters, Tickers, Clocks, Webrings, Modems, and 88x31 Badges.
-  - Bookmark Synchronization: Added bidirectional sync with KNet browser localStorage, full Netscape bookmarks.html export, and live HTML bookmark import parser.
-  - Live Ticker Tape & Silicon Bug Buster: Integrated continuous Wall St tech stock & weather ticker tape with sound toggles, and fully functional motherboard defense arcade mini-game.
-  - Verification & Budget: Startup test PASS (625.4 KB < 999 KB, 0 JS errors, hit-test unblocked), Vite build clean (npm run build), security lint PASS.
-  - Queue Handoff: Advanced kilo_creator to kweb://webring; rotation handoff to kilo-graphics.
