@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-creator
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -19,7 +19,7 @@ current_targets:
   kilo_soundscape: KMech
   kilo_tester: KChart
   kilo_usability: KFont
-  kilo_qa: KMatch3
+  kilo_qa: KSimon
   kilo_expander: KVault
 virtual_web_target: kweb://warez
 virtual_web_rotation:
@@ -35,9 +35,9 @@ virtual_web_rotation:
 - kweb://deep-core
 - kweb://darknet
 last_run:
-  agent: kilo-usability
-  app: KVault
-  timestamp: '2026-10-19T18:25:00+0000'
+  agent: kilo-qa
+  app: KMatch3
+  timestamp: '2026-10-19T19:38:00+0000'
 last_planner_run: '2026-10-18T21:17:00Z'
 ---
 
@@ -137,22 +137,22 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Upcoming Queue**: `KHex`, `KPass`.
 
 ### 6. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
-- **Target**: `KMatch3`
-- **Primary Files**: `KiloOS/public/apps/kmatch3.html`, `KMatch3/main.c` (if present)
-- **Objective**: Pass 5 QA audit: verify first-run tutorial onboarding overlay (`kmatch3_tutorialSeen`), verify F5 quicksave & F9 quickload capturing complete game board state, score, level, and active powerups; test Escape modal dismissal; compile Win32 native client and verify web cartridge (<999 KB).
+- **Target**: `KSimon`
+- **Primary Files**: `KiloOS/public/apps/ksimon.html`, `KSimon/main.c` (if present)
+- **Objective**: Pass 5 QA audit: verify first-run tutorial onboarding overlay (`ksimon_tutorialSeen`), verify F5 quicksave & F9 quickload capturing complete game sequence, round, speed, and high score; test Escape modal dismissal; compile Win32 native client and verify web cartridge (<999 KB).
 - **Action Steps**:
   1. State Persistence: F5 quicksave & F9 quickload capturing complete game state, stats, and settings.
   2. First-run Tutorial: Onboarding displays once on fresh sessions, never on restored saves.
   3. Modal Dismissals: Modals dismiss cleanly with Escape, Enter, or Close button.
-  4. Dual Parity & Build: Compile Win32 native client via `cmd.exe /c build.bat` in `KMatch3/` (if present) and verify web build.
+  4. Dual Parity & Build: Compile Win32 native client via `cmd.exe /c build.bat` in `KSimon/` (if present) and verify web build.
 - **Verification**:
-  - `uv run scripts/test_app_startup.py --app KMatch3`
-  - `cd KiloOS && npm run build` (0 Vite errors, `kmatch3.html` < 999 KB)
+  - `uv run scripts/test_app_startup.py --app KSimon`
+  - `cd KiloOS && npm run build` (0 Vite errors, `ksimon.html` < 999 KB)
 - **Handoff**:
-  - In frontmatter: advance `current_targets.kilo_qa` to `KSimon`.
+  - In frontmatter: advance `current_targets.kilo_qa` to `KWords`.
   - Set `current_agent: kilo-expander`.
   - Append terse execution log (≤6 lines), commit, and push.
-- **Upcoming Queue**: `KSimon`, `KWords`.
+- **Upcoming Queue**: `KWords`, `KColosseum`.
 
 ### 7. Feature Expander Queue (`kilo-expander`)
 - **Target**: `KVault`
@@ -201,10 +201,18 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | **KFreecell** | `KiloOS/public/apps/kfreecell.html` | Pass 5 (2026-10-19) | Card / Solitaire | 4 game modes (incl. 20-stage campaign & time attack), 5 active skills, dual Win32 native client parity, full F5/F9 state persistence, first-run tutorial integrity, zero glints. |
 | **KFortress** | `KiloOS/public/apps/kfortress.html` | Pass 6+ (2026-10-19) | Strategy / Tower Defense | Complete 12-map stronghold defense, Imagen 3 sprites & textured terrain, dual Win32 client parity, YM2612 2-Op FM / SPC700 2-movement soundscape, full F5/F9 state persistence. |
 | **KMystery** | `KiloOS/public/apps/kmystery.html` | Pass 6+ (2026-10-19) | Puzzle / Adventure | Detective noir murder mystery; interactive clue dossier sketch viewer, forensic lab scanner, suspect interrogation tree, YM2612 2-Op FM jazz, dual Win32 native client parity, full F5/F9 persistence. |
+| **KMatch3** | `KiloOS/public/apps/kmatch3.html` | Pass 5 (2026-10-19) | Puzzle / Match-3 | 20-stage campaign, Zen, Timed Rush & Duel Arena modes, Jewel King boss encounter, active skills, dual Win32 native client parity, full F5/F9 state persistence, first-run tutorial integrity. |
 
 ---
 
 ## Recent Execution Logs (Max 5 Entries)
+
+- **2026-10-19T19:38:00+0000 — kilo-qa: KMatch3 (Pass 5 State Persistence & Modal Audit + Mature Promotion)**
+  - State Persistence: Audited F5 quicksave and F9 quickload capturing complete game board state (grid, colors, types, ice, stone hits, barriers), scores, levels, objective counts, boss HP, maxBossHP, bossMoveTimer, stats, and settings without data loss or corruption across Web and Win32 C.
+  - Modal Dismissals & Dialogs: Replaced blocking `alert()` dialogs with custom retro `gameStatusModal` (Enter to continue/retry, Esc to dismiss, F5 to quicksave). Ensured all modal overlays dismiss on click-outside and on Esc. Interval timer pauses while any modal is open.
+  - Tutorial Integrity: Verified `kmatch3_tutorialSeen` / `kmatch3_tutorial.dat` flags fire only on fresh sessions, never interrupting restored save states.
+  - Dual Parity & Build: Recompiled Win32 native client (`KMatch3.exe`, 38.4 KB); startup test PASS (133.8 KB < 999 KB, 0 JS errors, hit-test unblocked); Vite build clean.
+  - Quarantine & Handoff: Promoted KMatch3 to Mature Applications quarantine; advanced `kilo_qa` to `KSimon`; rotation handoff to `kilo-expander`.
 
 - **2026-10-19T18:25:00+0000 — kilo-usability: KVault (UI/UX Ergonomics & Tree Explorer Polish)**
   - View Ergonomics & Hotkeys: Added `[Alt+1]` (Grid view), `[Alt+2]` (Tree Explorer), `[T]` view toggle, and `[/]` instant search jump hotkeys.
@@ -235,13 +243,5 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Glint & Border Ban: Verified clean static citadel architecture and filigree borders with zero traveling perimeter dots or rotating specular glints across Web and Win32 C.
   - Verification & Budget: Startup test PASS (213.5 KB < 999 KB, 0 JS errors, hit-test unblocked); Win32 C clean compile (182.8 KB); Vite clean (497ms); icon audit PASS (105/105); security lint PASS.
   - Queue Handoff: Advanced current_targets.kilo_graphics to KMech; rotation handoff to kilo-soundscape.
-
-- **2026-10-19T11:40:00+0000 — kilo-creator: kweb://webring (RingMaster v2.4 Guided Webmaster Enrollment Expansion)**
-  - RingMaster v2.4 Accreditation Wizard: Built 4-stage guided webmaster onboarding (Identity, Charter Audit, Neighbor Routing, Badge Customizer).
-  - Pre-flight Charter Diagnostics: Automated checks for HTML 4.01 strict semantics, <999KB payload budget, zero commercial trackers, and parody rules.
-  - Interactive Topology & Widgets: Dynamic predecessor placement in ring loop, live neighbor preview, and 4 retro widget archetypes (Table, Win95, Neon, 88x31).
-  - Local Member Registry: Full client-side member management with localStorage persistence, live directory/topology sync, and tour hop navigation.
-  - Verification & Budget: Startup audit PASS (402.2 KB < 999 KB, 0 JS errors, CSS valid, clean startup), Vite build clean (529ms), security lint clean.
-  - Queue Handoff: Advanced current_targets.kilo_creator to kweb://warez; rotation handoff to kilo-graphics.
 
 

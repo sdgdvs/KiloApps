@@ -392,7 +392,7 @@
   </div>
 
   <!-- Invite Gate Prompt Modal -->
-  <div id="inviteModal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="inviteTitle">
+  <div id="inviteModal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="inviteTitle" onclick="if(event.target === this) declineInvite()">
     <div class="modal-box" style="text-align:center;">
       <h2 id="inviteTitle" style="color:#00d9ff;">⚔️ Match-3 Duel Challenge!</h2>
       <p>A challenger has invited you to a real-time Match-3 Duel in room <b id="inviteRoomCodeLabel" style="color:#ffd700; font-family:monospace;">----</b>.</p>
@@ -469,7 +469,36 @@
     </div>
   </div>
 
+  <!-- Game Status (Stage Cleared / Game Over / Victory / Level Up) Modal -->
+  <div id="gameStatusModal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="statusModalTitle" onclick="if(event.target === this) closeStatusModal()">
+    <div class="modal-box" style="text-align: center;">
+      <h2 id="statusModalTitle" style="margin-top: 0; font-size: 20px;">🎉 Stage Cleared!</h2>
+      <p id="statusModalDesc" style="font-size: 13px; color: #ddd; margin: 10px 0;"></p>
+      <div id="statusModalStats" style="background: rgba(0,0,0,0.4); border: 1px solid #443355; border-radius: 6px; padding: 10px; margin-bottom: 15px; font-size: 12px; line-height: 1.6;"></div>
+      <div style="display: flex; gap: 8px; justify-content: center; flex-wrap: wrap;">
+        <button id="statusPrimaryBtn" onclick="handleStatusPrimaryAction()" class="modal-btn" style="flex: 1; min-width: 120px; color: #00ffaa; border-color: #00ffaa; padding: 7px 12px; font-size: 13px;">Next Stage [Enter]</button>
+        <button id="statusQuicksaveBtn" onclick="quicksaveState()" class="modal-btn" style="padding: 7px 12px; font-size: 12px;">💾 Quicksave [F5]</button>
+        <button onclick="closeStatusModal()" class="modal-btn" style="padding: 7px 12px; font-size: 12px;">Close [Esc]</button>
+      </div>
+    </div>
+  </div>
+
   <script>
+    function safeSetStorage(key, val) {
+      try { localStorage.setItem(key, val); } catch(e) { console.warn('safeSetStorage error', e); }
+    }
+    function safeGetStorage(key) {
+      try { return localStorage.getItem(key); } catch(e) { return null; }
+    }
+
+    function isAnyModalOpen() {
+      const modalIds = ['helpModal', 'multiplayerModal', 'inviteModal', 'saveModal', 'replayModal', 'keybindModal', 'gameStatusModal'];
+      return modalIds.some(id => {
+        const el = document.getElementById(id);
+        return el && el.style.display === 'flex';
+      });
+    }
+
     function showHelp() {
       const modal = document.getElementById('helpModal');
       if (modal) modal.style.display = 'flex';
@@ -479,6 +508,39 @@
       const modal = document.getElementById('helpModal');
       if (modal) modal.style.display = 'none';
       safeSetStorage('kmatch3_tutorialSeen', '1');
+    }
+
+    let currentStatusAction = null;
+    function openStatusModal({ title, titleColor = '#ffd700', desc, statsHtml, btnText = 'Continue [Enter]', action = null }) {
+      const modal = document.getElementById('gameStatusModal');
+      const titleEl = document.getElementById('statusModalTitle');
+      const descEl = document.getElementById('statusModalDesc');
+      const statsEl = document.getElementById('statusModalStats');
+      const btnEl = document.getElementById('statusPrimaryBtn');
+      if (titleEl) {
+        titleEl.textContent = title;
+        titleEl.style.color = titleColor;
+      }
+      if (descEl) descEl.textContent = desc;
+      if (statsEl) statsEl.innerHTML = statsHtml;
+      if (btnEl) btnEl.textContent = btnText;
+      currentStatusAction = action;
+      if (modal) modal.style.display = 'flex';
+      if (btnEl) btnEl.focus();
+    }
+
+    function closeStatusModal() {
+      const modal = document.getElementById('gameStatusModal');
+      if (modal) modal.style.display = 'none';
+      currentStatusAction = null;
+    }
+
+    function handleStatusPrimaryAction() {
+      const action = currentStatusAction;
+      closeStatusModal();
+      if (typeof action === 'function') {
+        action();
+      }
     }
 
     const CAMPAIGN_STAGES = [
@@ -675,9 +737,98 @@
     function closeMultiplayerModal() { document.getElementById('multiplayerModal').style.display = 'none'; }
 
     // --- Quicksave / Quickload (F5 / F9) & JSON Export/Import ---
+    function restoreGameState(state) {
+      if (!state || typeof state !== 'object' || !state.grid) return false;
+      try {
+        level = parseInt(state.level) || 1;
+        score = parseInt(state.score) || 0;
+        moves = state.moves !== undefined ? state.moves : 20;
+        targetScore = parseInt(state.targetScore) || 800;
+        gameMode = state.gameMode !== undefined ? parseInt(state.gameMode) : 0;
+        bossHP = parseInt(state.bossHP) || 0;
+        maxBossHP = parseInt(state.maxBossHP) || (gameMode === 0 && level >= 1 && level <= 20 ? CAMPAIGN_STAGES[level - 1].bossHP : 0);
+        bossMoveTimer = parseInt(state.bossMoveTimer) || 0;
+        collectedRed = parseInt(state.collectedRed) || 0;
+        collectedGreen = parseInt(state.collectedGreen) || 0;
+        collectedBlue = parseInt(state.collectedBlue) || 0;
+        if (state.campaignLevel) {
+          campaignLevel = Math.max(campaignLevel, parseInt(state.campaignLevel) || 1);
+        }
+
+        const modeSelect = document.getElementById('mode');
+        if (modeSelect) modeSelect.value = gameMode;
+
+        let isTimed = false;
+        if (gameMode === 0 && level >= 1 && level <= 20) {
+          const cfg = CAMPAIGN_STAGES[level - 1];
+          stageNameEl.textContent = cfg.name;
+          ROWS = state.rows || cfg.rows;
+          COLS = state.cols || cfg.cols;
+          isTimed = cfg.timeLimit > 0;
+          targetEl.textContent = (cfg.bossHP > 0) ? "BOSS" : targetScore;
+        } else if (gameMode === 3) {
+          stageNameEl.textContent = "Duel Arena";
+          ROWS = state.rows || 8;
+          COLS = state.cols || 8;
+          maxBossHP = 0;
+          isTimed = true;
+          targetEl.textContent = 5000;
+        } else {
+          stageNameEl.textContent = gameMode === 1 ? "Zen" : "Timed Rush";
+          ROWS = state.rows || 8;
+          COLS = state.cols || 8;
+          maxBossHP = 0;
+          isTimed = (gameMode === 2);
+          targetEl.textContent = targetScore;
+        }
+
+        const duelEl = document.getElementById('duelContainer');
+        if (duelEl) duelEl.style.display = (gameMode === 3) ? 'block' : 'none';
+
+        document.getElementById('movesLabel').textContent = (gameMode === 1) ? "Zen" : (gameMode === 3 ? "Duel Time" : (isTimed ? "Time" : "Moves"));
+        document.getElementById('btnMoves').textContent = isTimed ? "[E] +15s" : "[E] +Moves";
+        cellSize = Math.floor(400 / Math.max(ROWS, COLS));
+        scoreEl.textContent = score;
+        movesEl.textContent = moves;
+
+        boardEl.innerHTML = '';
+        boardEl.appendChild(fxCanvas);
+        grid = [];
+        for (let r = 0; r < ROWS; r++) {
+          let row = [];
+          for (let c = 0; c < COLS; c++) {
+            let sc = (state.grid[r] && state.grid[r][c]) ? state.grid[r][c] : null;
+            if (sc) {
+              let cell = createCellElement(r, c, sc.color, sc.type, sc.stoneHits, sc.ice, sc.barrier);
+              boardEl.appendChild(cell);
+              row.push({ color: sc.color, type: sc.type, ice: sc.ice, stoneHits: sc.stoneHits, barrier: sc.barrier, el: cell });
+            } else {
+              row.push(null);
+            }
+          }
+          grid.push(row);
+        }
+
+        selectedCell = null;
+        isProcessing = false;
+        powerupMode = 0;
+        hintTimer = 0;
+        clearHint();
+        document.querySelectorAll('.powerup-btn').forEach(b => b.classList.remove('active'));
+
+        updateObstacleCounts();
+        saveStats();
+        return true;
+      } catch (err) {
+        console.error("restoreGameState failed:", err);
+        return false;
+      }
+    }
+
     function quicksaveState() {
       const state = {
-        level, score, moves, targetScore, gameMode, bossHP,
+        level, score, moves, targetScore, gameMode, bossHP, maxBossHP, bossMoveTimer,
+        campaignLevel, rows: ROWS, cols: COLS,
         collectedRed, collectedGreen, collectedBlue,
         grid: grid.map(row => row.map(cell => cell ? {color: cell.color, type: cell.type, ice: cell.ice, stoneHits: cell.stoneHits, barrier: cell.barrier} : null)),
         savedAt: new Date().toLocaleString()
@@ -696,64 +847,15 @@
       }
       try {
         const state = JSON.parse(saved);
-        level = state.level || 1;
-        score = state.score || 0;
-        moves = state.moves;
-        targetScore = state.targetScore || 800;
-        gameMode = state.gameMode || 0;
-        bossHP = state.bossHP || 0;
-        collectedRed = state.collectedRed || 0;
-        collectedGreen = state.collectedGreen || 0;
-        collectedBlue = state.collectedBlue || 0;
-        document.getElementById('mode').value = gameMode;
-
-        let isTimed = false;
-        if (gameMode === 0 && level >= 1 && level <= 20) {
-          const cfg = CAMPAIGN_STAGES[level - 1];
-          stageNameEl.textContent = cfg.name;
-          ROWS = cfg.rows; COLS = cfg.cols;
-          maxBossHP = cfg.bossHP;
-          isTimed = cfg.timeLimit > 0;
-          targetEl.textContent = (cfg.bossHP > 0) ? "BOSS" : targetScore;
-        } else if (gameMode === 3) {
-          stageNameEl.textContent = "Duel Arena";
-          ROWS = 8; COLS = 8; maxBossHP = 0;
-          isTimed = true;
-          targetEl.textContent = 5000;
+        if (restoreGameState(state)) {
+          safeSetStorage('kmatch3_tutorialSeen', '1');
+          playPowerupSound();
+          showToast("💾 Quickloaded State! [F9]", "success");
+          return true;
         } else {
-          stageNameEl.textContent = gameMode === 1 ? "Zen" : "Timed Rush";
-          ROWS = 8; COLS = 8; maxBossHP = 0;
-          isTimed = (gameMode === 2);
-          targetEl.textContent = targetScore;
+          showToast("Failed to restore quickload state.", "error");
+          return false;
         }
-
-        document.getElementById('movesLabel').textContent = (gameMode === 1) ? "Zen" : (gameMode === 3 ? "Duel Time" : (isTimed ? "Time" : "Moves"));
-        document.getElementById('btnMoves').textContent = isTimed ? "[E] +15s" : "[E] +Moves";
-        cellSize = Math.floor(400 / Math.max(ROWS, COLS));
-        scoreEl.textContent = score;
-        movesEl.textContent = moves;
-
-        boardEl.innerHTML = '';
-        boardEl.appendChild(fxCanvas);
-        grid = [];
-        for (let r = 0; r < ROWS; r++) {
-          let row = [];
-          for (let c = 0; c < COLS; c++) {
-            let sc = state.grid[r][c];
-            if (sc) {
-              let cell = createCellElement(r, c, sc.color, sc.type, sc.stoneHits, sc.ice, sc.barrier);
-              boardEl.appendChild(cell);
-              row.push({ color: sc.color, type: sc.type, ice: sc.ice, stoneHits: sc.stoneHits, barrier: sc.barrier, el: cell });
-            } else {
-              row.push(null);
-            }
-          }
-          grid.push(row);
-        }
-        updateObstacleCounts();
-        playPowerupSound();
-        showToast("💾 Quickloaded State! [F9]", "success");
-        return true;
       } catch(e) {
         showToast("Failed to restore quickload state.", "error");
         return false;
@@ -767,7 +869,8 @@
         timestamp: Date.now(),
         stats: { gamesPlayed, bestScore, maxCombo, campaignLevel },
         state: {
-          level, score, moves, targetScore, gameMode, bossHP,
+          level, score, moves, targetScore, gameMode, bossHP, maxBossHP, bossMoveTimer,
+          campaignLevel, rows: ROWS, cols: COLS,
           collectedRed, collectedGreen, collectedBlue,
           grid: grid.map(row => row.map(cell => cell ? {color: cell.color, type: cell.type, ice: cell.ice, stoneHits: cell.stoneHits, barrier: cell.barrier} : null))
         }
@@ -797,16 +900,20 @@
           const data = JSON.parse(evt.target.result);
           if (!data || !data.state) throw new Error("Invalid format");
           safeSetStorage('kmatch3_quicksave', JSON.stringify(data.state));
-          quickloadState();
-          if (data.stats) {
-            gamesPlayed = data.stats.gamesPlayed || gamesPlayed;
-            bestScore = data.stats.bestScore || bestScore;
-            maxCombo = data.stats.maxCombo || maxCombo;
-            campaignLevel = data.stats.campaignLevel || campaignLevel;
-            saveStats();
+          if (restoreGameState(data.state)) {
+            safeSetStorage('kmatch3_tutorialSeen', '1');
+            if (data.stats) {
+              gamesPlayed = data.stats.gamesPlayed || gamesPlayed;
+              bestScore = data.stats.bestScore || bestScore;
+              maxCombo = data.stats.maxCombo || maxCombo;
+              campaignLevel = data.stats.campaignLevel || campaignLevel;
+              saveStats();
+            }
+            showToast("Session imported and restored successfully!", "success");
+            closeSaveModal();
+          } else {
+            showToast("Failed to parse imported state data.", "error");
           }
-          showToast("Session imported and restored successfully!", "success");
-          closeSaveModal();
         } catch(err) {
           showToast("Failed to parse import file: " + err.message, "error");
         }
@@ -2048,13 +2155,6 @@
       shuffleBoard();
     }
 
-    function safeSetStorage(key, val) {
-      try { localStorage.setItem(key, val); } catch(e) {}
-    }
-    function safeGetStorage(key) {
-      try { return localStorage.getItem(key); } catch(e) { return null; }
-    }
-
     function saveStats() {
       safeSetStorage('kmatch3_stats', JSON.stringify({gamesPlayed, bestScore, maxCombo, campaignLevel}));
     }
@@ -2076,9 +2176,11 @@
 
     function saveGame() {
       const state = {
-        level, score, moves, targetScore, gameMode, bossHP,
+        level, score, moves, targetScore, gameMode, bossHP, maxBossHP, bossMoveTimer,
+        campaignLevel, rows: ROWS, cols: COLS,
         collectedRed, collectedGreen, collectedBlue,
-        grid: grid.map(row => row.map(cell => cell ? {color: cell.color, type: cell.type, ice: cell.ice, stoneHits: cell.stoneHits, barrier: cell.barrier} : null))
+        grid: grid.map(row => row.map(cell => cell ? {color: cell.color, type: cell.type, ice: cell.ice, stoneHits: cell.stoneHits, barrier: cell.barrier} : null)),
+        savedAt: new Date().toLocaleString()
       };
       safeSetStorage('kmatch3_save', JSON.stringify(state));
     }
@@ -2088,58 +2190,10 @@
       if (saved) {
         try {
           const state = JSON.parse(saved);
-          level = state.level || 1;
-          score = state.score || 0;
-          moves = state.moves;
-          targetScore = state.targetScore || 800;
-          gameMode = state.gameMode || 0;
-          bossHP = state.bossHP || 0;
-          collectedRed = state.collectedRed || 0;
-          collectedGreen = state.collectedGreen || 0;
-          collectedBlue = state.collectedBlue || 0;
-          document.getElementById('mode').value = gameMode;
-
-          let isTimed = false;
-          if (gameMode === 0 && level >= 1 && level <= 20) {
-            const cfg = CAMPAIGN_STAGES[level - 1];
-            stageNameEl.textContent = cfg.name;
-            ROWS = cfg.rows; COLS = cfg.cols;
-            maxBossHP = cfg.bossHP;
-            isTimed = cfg.timeLimit > 0;
-            targetEl.textContent = (cfg.bossHP > 0) ? "BOSS" : targetScore;
-          } else {
-            stageNameEl.textContent = gameMode === 1 ? "Zen" : "Timed Rush";
-            ROWS = 8; COLS = 8; maxBossHP = 0;
-            isTimed = (gameMode === 2);
-            targetEl.textContent = targetScore;
+          if (restoreGameState(state)) {
+            safeSetStorage('kmatch3_tutorialSeen', '1');
+            return true;
           }
-
-          document.getElementById('movesLabel').textContent = (gameMode === 1) ? "Zen" : (isTimed ? "Time" : "Moves");
-          document.getElementById('btnMoves').textContent = isTimed ? "[E] +15s" : "[E] +Moves";
-
-          cellSize = Math.floor(400 / Math.max(ROWS, COLS));
-          scoreEl.textContent = score;
-          movesEl.textContent = moves;
-
-          boardEl.innerHTML = '';
-          boardEl.appendChild(fxCanvas);
-          grid = [];
-          for (let r = 0; r < ROWS; r++) {
-            let row = [];
-            for (let c = 0; c < COLS; c++) {
-              let savedCell = state.grid[r][c];
-              if (savedCell) {
-                let cell = createCellElement(r, c, savedCell.color, savedCell.type, savedCell.stoneHits, savedCell.ice, savedCell.barrier);
-                boardEl.appendChild(cell);
-                row.push({ color: savedCell.color, type: savedCell.type, ice: savedCell.ice, stoneHits: savedCell.stoneHits, barrier: savedCell.barrier, el: cell });
-              } else {
-                row.push(null);
-              }
-            }
-            grid.push(row);
-          }
-          updateObstacleCounts();
-          return true;
         } catch(e) {}
       }
       return false;
@@ -2700,10 +2754,19 @@
           endDuelMatch();
           return;
         }
-        alert("Game Over! Stage failed.");
         gamesPlayed++;
         saveStats();
-        initStage(level);
+        const stgName = (gameMode === 0 && level >= 1 && level <= 20) ? CAMPAIGN_STAGES[level - 1].name : `Stage ${level}`;
+        openStatusModal({
+          title: "💀 Stage Failed",
+          titleColor: "#ff4444",
+          desc: `Out of moves on ${stgName}! Would you like to retry?`,
+          statsHtml: `<div><strong>Score:</strong> ${score}</div><div><strong>Target:</strong> ${targetScore}</div><div><strong>Games Played:</strong> ${gamesPlayed}</div>`,
+          btnText: "Retry Stage [Enter]",
+          action: () => {
+            initStage(level);
+          }
+        });
     }
 
     function changeMode() {
@@ -2760,18 +2823,35 @@
         }
         if (gameMode === 0) {
           if (level < 20) {
-            alert("Stage Cleared! Advancing to next stage.");
+            const clearedStageName = cfg.name;
             level++;
             if (level > campaignLevel) {
               campaignLevel = level;
               saveStats();
             }
-            initStage(level);
+            openStatusModal({
+              title: "🎉 Stage Cleared!",
+              titleColor: "#00ffaa",
+              desc: `Congratulations! You cleared ${clearedStageName}!`,
+              statsHtml: `<div><strong>Score:</strong> ${score} / ${targetScore}</div><div><strong>Moves Left:</strong> ${moves}</div><div><strong>Best Score:</strong> ${bestScore}</div>`,
+              btnText: "Next Stage [Enter]",
+              action: () => {
+                initStage(level);
+              }
+            });
           } else {
-            alert("VICTORY!\nYou have defeated the Jewel King and completed all 20 stages of KMatch3!");
             campaignLevel = 1;
             saveStats();
-            initStage(1);
+            openStatusModal({
+              title: "👑 VICTORY! Jewel King Defeated!",
+              titleColor: "#ffd700",
+              desc: "You have conquered all 20 stages of KMatch3 and defeated the Jewel King!",
+              statsHtml: `<div><strong>Final Score:</strong> ${score}</div><div><strong>Max Combo:</strong> x${maxCombo}</div><div><strong>Campaign Completed!</strong></div>`,
+              btnText: "Play Again [Enter]",
+              action: () => {
+                initStage(1);
+              }
+            });
           }
         } else if (gameMode === 2) {
           level++;
@@ -2779,7 +2859,8 @@
           targetScore += 1000 + (level * 500);
           movesEl.textContent = moves;
           targetEl.textContent = targetScore;
-          alert("Level Up!");
+          showToast(`⚡ Level Up! +30s added. Next Target: ${targetScore}`, 'success', 3500);
+          createScorePopup(200, 200, "LEVEL UP! +30s", "#00ffaa");
         }
       } else if ((gameMode === 0 || gameMode === 2) && moves <= 0) {
         gameOver();
@@ -2793,21 +2874,18 @@
       let saveModal = document.getElementById('saveModal');
       let repModal = document.getElementById('replayModal');
       let kbModal = document.getElementById('keybindModal');
-      let isAnyModalOpen = (help && help.style.display === 'flex') ||
-                           (mpModal && mpModal.style.display === 'flex') ||
-                           (invModal && invModal.style.display === 'flex') ||
-                           (saveModal && saveModal.style.display === 'flex') ||
-                           (repModal && repModal.style.display === 'flex') ||
-                           (kbModal && kbModal.style.display === 'flex');
+      let statusModal = document.getElementById('gameStatusModal');
+      let anyOpen = isAnyModalOpen();
 
       if (e.key === 'Escape') {
-        if (isAnyModalOpen) {
-          if (help) hideHelp();
-          if (mpModal) closeMultiplayerModal();
-          if (invModal) declineInvite();
-          if (saveModal) closeSaveModal();
-          if (repModal) closeReplayModal();
-          if (kbModal) closeKeybindModal();
+        if (anyOpen) {
+          if (help && help.style.display === 'flex') hideHelp();
+          if (mpModal && mpModal.style.display === 'flex') closeMultiplayerModal();
+          if (invModal && invModal.style.display === 'flex') declineInvite();
+          if (saveModal && saveModal.style.display === 'flex') closeSaveModal();
+          if (repModal && repModal.style.display === 'flex') closeReplayModal();
+          if (kbModal && kbModal.style.display === 'flex') closeKeybindModal();
+          if (statusModal && statusModal.style.display === 'flex') closeStatusModal();
           return;
         }
         if (powerupMode > 0) {
@@ -2820,6 +2898,12 @@
           selectedCell = null;
           return;
         }
+      }
+
+      if ((e.key === 'Enter' || e.key === ' ') && statusModal && statusModal.style.display === 'flex') {
+        e.preventDefault();
+        handleStatusPrimaryAction();
+        return;
       }
 
       if (e.key === 'F1' || e.key === '?') {
@@ -2947,8 +3031,7 @@
 
     setInterval(() => {
         if (document.hidden) return;
-        let help = document.getElementById('helpModal');
-        if (help && help.style.display === 'flex') return;
+        if (isAnyModalOpen()) return;
         let isTimed = (gameMode === 0 && CAMPAIGN_STAGES[level-1].timeLimit > 0) || (gameMode === 2);
         if (isTimed && typeof moves === 'number' && moves > 0 && !isProcessing) {
             moves--;

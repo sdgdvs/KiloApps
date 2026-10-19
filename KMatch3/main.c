@@ -1488,6 +1488,7 @@ void SaveGame() {
     fwrite(stoneGrid, sizeof(int), MAX_ROWS * MAX_COLS, f);
     fwrite(barrierGrid, sizeof(int), MAX_ROWS * MAX_COLS, f);
     fwrite(&bossHP, sizeof(int), 1, f);
+    fwrite(&bossMoveTimer, sizeof(int), 1, f);
     fwrite(&collectedRed, sizeof(int), 1, f);
     fwrite(&collectedGreen, sizeof(int), 1, f);
     fwrite(&collectedBlue, sizeof(int), 1, f);
@@ -1508,6 +1509,7 @@ int LoadGame() {
     fread(stoneGrid, sizeof(int), MAX_ROWS * MAX_COLS, f);
     fread(barrierGrid, sizeof(int), MAX_ROWS * MAX_COLS, f);
     fread(&bossHP, sizeof(int), 1, f);
+    if (fread(&bossMoveTimer, sizeof(int), 1, f) != 1) bossMoveTimer = 0;
     if (fread(&collectedRed, sizeof(int), 1, f) != 1) collectedRed = 0;
     if (fread(&collectedGreen, sizeof(int), 1, f) != 1) collectedGreen = 0;
     if (fread(&collectedBlue, sizeof(int), 1, f) != 1) collectedBlue = 0;
@@ -1543,6 +1545,7 @@ void QuicksaveGame() {
     fwrite(stoneGrid, sizeof(int), MAX_ROWS * MAX_COLS, f);
     fwrite(barrierGrid, sizeof(int), MAX_ROWS * MAX_COLS, f);
     fwrite(&bossHP, sizeof(int), 1, f);
+    fwrite(&bossMoveTimer, sizeof(int), 1, f);
     fwrite(&collectedRed, sizeof(int), 1, f);
     fwrite(&collectedGreen, sizeof(int), 1, f);
     fwrite(&collectedBlue, sizeof(int), 1, f);
@@ -1563,10 +1566,18 @@ int QuickloadGame() {
     fread(stoneGrid, sizeof(int), MAX_ROWS * MAX_COLS, f);
     fread(barrierGrid, sizeof(int), MAX_ROWS * MAX_COLS, f);
     fread(&bossHP, sizeof(int), 1, f);
+    if (fread(&bossMoveTimer, sizeof(int), 1, f) != 1) bossMoveTimer = 0;
     if (fread(&collectedRed, sizeof(int), 1, f) != 1) collectedRed = 0;
     if (fread(&collectedGreen, sizeof(int), 1, f) != 1) collectedGreen = 0;
     if (fread(&collectedBlue, sizeof(int), 1, f) != 1) collectedBlue = 0;
     fclose(f);
+
+    FILE *ftw = fopen("kmatch3_tutorial.dat", "wb");
+    if (ftw) {
+        char flag = 1;
+        fwrite(&flag, 1, 1, ftw);
+        fclose(ftw);
+    }
 
     if (level < 1) level = 1;
     if (level > 20) level = 20;
@@ -1695,6 +1706,25 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (!LoadGame()) {
                 InitStage(1);
                 SaveGame();
+                FILE *ft = fopen("kmatch3_tutorial.dat", "rb");
+                if (!ft) {
+                    FILE *ftw = fopen("kmatch3_tutorial.dat", "wb");
+                    if (ftw) {
+                        char flag = 1;
+                        fwrite(&flag, 1, 1, ftw);
+                        fclose(ftw);
+                    }
+                    SetWindowTextA(hwnd, "KMatch3 - Welcome! Swap adjacent gems. [F1 for Help]");
+                } else {
+                    fclose(ft);
+                }
+            } else {
+                FILE *ftw = fopen("kmatch3_tutorial.dat", "wb");
+                if (ftw) {
+                    char flag = 1;
+                    fwrite(&flag, 1, 1, ftw);
+                    fclose(ftw);
+                }
             }
             SetTimer(hwnd, 1, 30, NULL);
             SetTimer(hwnd, 2, 1000, NULL);
