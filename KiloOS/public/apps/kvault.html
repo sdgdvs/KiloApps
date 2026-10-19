@@ -1103,8 +1103,14 @@
 
         <!-- Main Top Bar -->
         <div class="header">
-            <h1><span aria-hidden="true">🔒</span> KVault</h1>
+            <h1><span aria-hidden="true">🔒</span> KVault <span id="header-profile-badge" style="font-size:12px; font-weight:600; background:var(--badge-bg); border:1px solid var(--badge-border); padding:3px 8px; border-radius:12px; color:#a29bfe; margin-left:6px;">[Primary Vault]</span></h1>
             <div class="header-actions">
+                <select id="profile-select" onchange="switchProfile(parseInt(this.value))" title="Switch Multi-Vault Profile [F6]" aria-label="Select Vault Profile" style="padding:6px 9px; font-size:12px; font-weight:600; background:rgba(108,92,231,0.18); border:1px solid rgba(108,92,231,0.4); color:#fff; border-radius:8px;">
+                    <option value="0">🛡️ Primary Vault</option>
+                    <option value="1">💼 Work &amp; Ops</option>
+                    <option value="2">🕵️ Classified Mesh</option>
+                </select>
+                <button class="btn secondary" onclick="openCipherWorkbenchModal()" title="AES/XOR Cipher Workbench & Hasher [Ctrl+H / F4]" aria-label="Cipher Workbench">⚙️ Cipher [Ctrl+H]</button>
                 <button class="btn secondary" onclick="quicksaveState()" title="Quicksave Snapshot [F5]" aria-label="Quicksave Snapshot">💾 Save [F5]</button>
                 <button class="btn secondary" onclick="quickloadState()" title="Restore Quicksaved Snapshot [F9]" aria-label="Quickload Snapshot">📂 Load [F9]</button>
                 <button class="btn secondary" onclick="openGeneratorModal()" title="Password & Diceware Generator [Ctrl+G]" aria-label="Password Generator">🎲 Gen [Ctrl+G]</button>
@@ -1248,6 +1254,25 @@
                         <label class="gen-checkbox-label" style="font-size:13px; color:var(--gold-color);">
                             <input type="checkbox" id="new-secret-favorite"> ⭐ Pin to top
                         </label>
+                    </div>
+
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 12px; background:rgba(255,255,255,0.03); padding:8px 12px; border-radius:8px; border:1px solid var(--glass-border);">
+                        <span style="font-size:12px; font-weight:600; color:var(--text-muted); display:inline-flex; align-items:center; gap:6px;">
+                            <span>📋</span> Schema Preset:
+                        </span>
+                        <div style="display:flex; gap:8px; align-items:center;">
+                            <select id="schema-template-select" onchange="applySchemaTemplate(this.value)" style="padding:5px 8px; font-size:12px; background:var(--input-bg); color:var(--text-color); border:1px solid var(--glass-border); border-radius:6px;">
+                                <option value="">-- Apply Schema Template --</option>
+                                <option value="login">🔑 Web / App Login</option>
+                                <option value="finance">💳 Credit Card &amp; Banking</option>
+                                <option value="server">🖥️ Server &amp; SSH Keypair</option>
+                                <option value="api">🔌 API Key &amp; Token</option>
+                                <option value="passkey">🗝️ Crypto / Passkey / Seed</option>
+                                <option value="bbs">📟 1999 BBS Dial-up Node</option>
+                                <option value="database">🗄️ Database Cluster</option>
+                                <option value="router">📡 Wi-Fi Gateway / Router</option>
+                            </select>
+                        </div>
                     </div>
 
                     <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:12px;">
@@ -1423,6 +1448,60 @@
     
     <!-- Notification Toast -->
     <div class="notification" id="notification" role="status" aria-live="polite" onclick="dismissNotification()" title="Click to dismiss">Action successful</div>
+
+    <!-- AES / XOR Cipher Workbench & Cryptographic Hasher Modal -->
+    <div class="modal-overlay" id="cipher-modal" role="dialog" aria-modal="true" aria-labelledby="cipher-modal-title" style="display:none;">
+        <div class="modal-content" style="max-width: 540px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--glass-border); padding-bottom:10px; margin-bottom:14px;">
+                <h3 id="cipher-modal-title" style="margin:0; font-size:18px;">⚙️ Cipher Workbench &amp; Hasher</h3>
+                <button class="btn secondary icon-only" onclick="closeCipherWorkbenchModal()" aria-label="Close Cipher Workbench">✕</button>
+            </div>
+            <p style="font-size:13px; color:var(--text-muted); margin:0 0 14px 0; line-height:1.4;">
+                Multi-suite cryptographic workbench with dual-target stream cipher for Win32 KVault .DAT interoperability.
+            </p>
+
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:12px;">
+                <div class="input-group">
+                    <label for="cipher-suite-select">Cipher Suite</label>
+                    <select id="cipher-suite-select" onchange="updateCipherSuiteUI()">
+                        <option value="AES-GCM">AES-GCM 256-bit (PBKDF2)</option>
+                        <option value="XOR-STREAM">XOR-STREAM-1999 (Win32 .DAT)</option>
+                        <option value="SHA-256">SHA-256 Hash Digest</option>
+                        <option value="SHA-1">SHA-1 Checksum (Win32 F4)</option>
+                    </select>
+                </div>
+                <div class="input-group" id="cipher-key-group">
+                    <label for="cipher-key-input">Passphrase / Key</label>
+                    <input type="password" id="cipher-key-input" placeholder="Secret key...">
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label for="cipher-input-text">Input Payload</label>
+                <textarea id="cipher-input-text" placeholder="Enter plaintext to encrypt or ciphertext/hex to decrypt..." style="min-height:85px; font-family:monospace; font-size:12px;"></textarea>
+            </div>
+
+            <div style="display:flex; gap:8px; margin-bottom:12px; flex-wrap:wrap;">
+                <button class="btn" onclick="executeCipherAction('encrypt')" id="cipher-btn-encrypt">🔒 Encrypt</button>
+                <button class="btn secondary" onclick="executeCipherAction('decrypt')" id="cipher-btn-decrypt">🔓 Decrypt</button>
+                <button class="btn secondary" onclick="executeCipherAction('hash')" id="cipher-btn-hash" style="display:none;"># Compute Hash</button>
+                <button class="btn secondary" onclick="clearCipherWorkbench()">Clear</button>
+            </div>
+
+            <div class="input-group">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <label for="cipher-output-text">Cryptographic Output</label>
+                    <button class="btn secondary" style="padding:2px 8px; font-size:11px;" onclick="copyCipherOutput()">📋 Copy</button>
+                </div>
+                <textarea id="cipher-output-text" readonly placeholder="Output ciphertext, hash, or decrypted text will appear here..." style="min-height:85px; font-family:monospace; font-size:12px; background:rgba(0,0,0,0.45);"></textarea>
+                <div id="cipher-meta-info" style="font-size:11px; color:var(--text-muted); margin-top:4px;">Ready.</div>
+            </div>
+
+            <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:14px;">
+                <button class="btn secondary" onclick="closeCipherWorkbenchModal()">Close (Esc)</button>
+            </div>
+        </div>
+    </div>
 
     <!-- Password & Passphrase Generator Studio Modal -->
     <div class="modal-overlay" id="generator-modal" role="dialog" aria-modal="true" aria-labelledby="gen-modal-title">
@@ -1613,6 +1692,14 @@
                     </div>
                     <button class="btn secondary" onclick="exportKeePassXML()">Export XML</button>
                 </div>
+
+                <div style="background:rgba(255,255,255,0.03); border:1px solid var(--glass-border); border-radius:8px; padding:12px; display:flex; justify-content:space-between; align-items:center;">
+                    <div>
+                        <strong style="font-size:14px;">💾 Win32 Stream Snapshot (.dat)</strong>
+                        <div style="font-size:12px; color:var(--text-muted);">Direct stream snapshot compatible with KVault Win32 C executable.</div>
+                    </div>
+                    <button class="btn secondary" onclick="exportWin32DatSnapshot()">Export .DAT</button>
+                </div>
             </div>
 
             <button class="btn secondary close-modal" onclick="closeExportModal()">Cancel (Esc)</button>
@@ -1628,8 +1715,8 @@
             <div id="drop-zone" style="border: 2px dashed var(--glass-border); border-radius:10px; padding:30px 20px; text-align:center; background:rgba(0,0,0,0.2); cursor:pointer; margin: 16px 0;" onclick="document.getElementById('import-file-input').click()">
                 <div style="font-size:32px; margin-bottom:8px;">📁</div>
                 <div style="font-size:14px; font-weight:600; margin-bottom:4px;">Click to select file or Drag & Drop here</div>
-                <div style="font-size:12px; color:var(--text-muted);">Accepts .json (encrypted backup), .csv, .xml (KeePass), or .asc (PGP armor)</div>
-                <input type="file" id="import-file-input" accept=".json,.csv,.xml,.asc,.txt,text/csv,text/xml,application/json" style="display:none;" onchange="handleFileSelected(event)">
+                <div style="font-size:12px; color:var(--text-muted);">Accepts .json (encrypted backup), .csv, .xml (KeePass), .asc (PGP armor), or .dat (Win32 stream)</div>
+                <input type="file" id="import-file-input" accept=".json,.csv,.xml,.asc,.dat,.txt,text/csv,text/xml,application/json,application/octet-stream" style="display:none;" onchange="handleFileSelected(event)">
             </div>
 
             <button class="btn secondary close-modal" onclick="closeImportModal()">Cancel (Esc)</button>
@@ -1643,14 +1730,17 @@
             <p>Welcome to KVault! Your secure, client-side encrypted password manager, TOTP authenticator, and confidential data storage.</p>
             <ul>
                 <li><strong>Encryption:</strong> Local AES-GCM 256-bit encryption with PBKDF2 (100,000 rounds). The Master Password is NEVER sent over the network or stored unencrypted.</li>
+                <li><strong>Multi-Vault Profiles:</strong> Press <code>[F6]</code> to switch between Primary Vault, Work &amp; Ops, and Classified Mesh. Each profile maintains an isolated encrypted storage compartment.</li>
+                <li><strong>Cipher Workbench &amp; Hasher:</strong> Press <code>[Ctrl+H / F4]</code> to open the on-demand cryptographic workbench for AES-GCM, XOR-Stream-1999 (Win32 interoperable), SHA-256, and SHA-1 checksums.</li>
+                <li><strong>Schema Presets &amp; Builder:</strong> Apply pre-built schemas for Web Login, Credit Cards, Server/SSH, API Keys, Passkeys/Seeds, 1999 BBS, Database, or Router credentials.</li>
                 <li><strong>Tree Explorer & Preview:</strong> Press <code>[Alt+2 / T]</code> to browse items hierarchically by Compartment and Category with an instant document & credential preview pane. Press <code>[Alt+1]</code> for Card Grid view.</li>
                 <li><strong>TOTP 2FA Authenticator:</strong> Stores RFC 6238 Base32 secret keys and calculates live 6-digit one-time authorization tokens refreshed every 30 seconds with animated timers.</li>
-                <li><strong>Drag & Drop Vault Import:</strong> Drag any <code>.json</code>, <code>.csv</code>, <code>.xml</code>, or <code>.asc</code> archive onto the window with visual focus glow to import or restore secrets.</li>
+                <li><strong>Drag & Drop Vault Import:</strong> Drag any <code>.json</code>, <code>.csv</code>, <code>.xml</code>, <code>.asc</code>, or <code>.dat</code> archive onto the window with visual focus glow to import or restore secrets.</li>
                 <li><strong>Password Generator Studio:</strong> Press <code>[Ctrl+G]</code> anytime for high-entropy random passwords, 1999 Diceware passphrases, or PINs.</li>
                 <li><strong>Security Audit:</strong> Click <strong>🛡️ Audit</strong> to assess overall vault health, detect weak or reused credentials, and identify missing 2FA.</li>
                 <li><strong>Quicksave & Quickload:</strong> Press <strong>F5</strong> to save an instant snapshot of your vault state to localStorage, and <strong>F9</strong> to restore it.</li>
                 <li><strong>Auto-Lock & Wipe:</strong> Automatically locks and clears the operating system clipboard after inactivity.</li>
-                <li><strong>Shortcuts:</strong> <code>[Alt+1]</code> Grid View, <code>[Alt+2 / T]</code> Tree Explorer, <code>[↑/↓]</code> Navigate Tree, <code>[/]</code> Jump to Search, <code>[F5]</code> Quicksave, <code>[F9]</code> Quickload, <code>[F1 / H]</code> Help, <code>[M]</code> Audio, <code>[Ctrl+S]</code> Save/Export, <code>[Ctrl+L]</code> Lock, <code>[Ctrl+F]</code> Find, <code>[Ctrl+G]</code> Generator, <code>[Esc]</code> Clear search / Close modals.</li>
+                <li><strong>Shortcuts:</strong> <code>[Alt+1]</code> Grid View, <code>[Alt+2 / T]</code> Tree Explorer, <code>[↑/↓]</code> Navigate Tree, <code>[/]</code> Jump to Search, <code>[F4 / Ctrl+H]</code> Cipher Workbench, <code>[F5]</code> Quicksave, <code>[F6]</code> Switch Profile, <code>[F9]</code> Quickload, <code>[F1 / H]</code> Help, <code>[M]</code> Audio, <code>[Ctrl+S]</code> Save/Export, <code>[Ctrl+L]</code> Lock, <code>[Ctrl+F]</code> Find, <code>[Ctrl+G]</code> Generator, <code>[Esc]</code> Clear search / Close modals.</li>
             </ul>
             <button class="btn close-modal" onclick="closeHelp()">Got it (Esc / Enter)</button>
         </div>
@@ -1664,9 +1754,11 @@
             <div style="background: var(--input-bg); border: 1px solid var(--glass-border); border-radius: 8px; padding: 14px; margin: 12px 0; font-size: 13px; line-height: 1.6;">
                 <div>🔒 <strong>AES-GCM 256-bit:</strong> Secrets are encrypted locally with your Master Password.</div>
                 <div style="margin-top: 6px;">⏱️ <strong>Live TOTP 2FA:</strong> Generate time-based 2FA tokens directly inside vault entries.</div>
+                <div style="margin-top: 6px;">🛡️ <strong>Multi-Vault Profiles:</strong> Switch between Primary, Work, and Classified profiles with [F6].</div>
+                <div style="margin-top: 6px;">⚙️ <strong>Cipher Workbench:</strong> Test AES/XOR stream ciphers and SHA hashes with [F4 / Ctrl+H].</div>
                 <div style="margin-top: 6px;">💾 <strong>State & Quicksave:</strong> Press <strong>F5</strong> anytime to snapshot vault state, and <strong>F9</strong> to restore.</div>
                 <div style="margin-top: 6px;">🛡️ <strong>Security Audit:</strong> Identify reused, weak, or aging passwords with 1-click filters.</div>
-                <div style="margin-top: 6px;">⌨️ <strong>Hotkeys:</strong> [F1/H] Help &middot; [F5] Quicksave &middot; [F9] Quickload &middot; [Ctrl+L] Lock &middot; [Ctrl+G] Generator &middot; [M] Audio.</div>
+                <div style="margin-top: 6px;">⌨️ <strong>Hotkeys:</strong> [F1/H] Help &middot; [F4/Ctrl+H] Cipher &middot; [F5] Save &middot; [F6] Profile &middot; [F9] Load &middot; [Ctrl+L] Lock &middot; [Ctrl+G] Generator &middot; [M] Audio.</div>
             </div>
             <div style="display:flex; gap:10px; margin-top:20px;">
                 <button class="btn secondary close-modal tutorial-btn-skip tutorial-btn-dismiss" id="btnDismissTutorial" style="flex:1; margin-top:0;" onclick="dismissTutorial()">Skip (Esc)</button>
@@ -1707,6 +1799,169 @@
         let selectedTreeItemId = null;
         const expandedTreeFolders = new Set();
         let treeInitialized = false;
+
+        // Multi-Vault Profiles (Dual-Parity with Win32 C Client)
+        const VAULT_PROFILES = [
+            { id: 'primary', name: 'Primary Vault', icon: '🛡️', file: 'kvault.dat', storageKey: 'kvault_data', quicksaveKey: 'kvault_quicksave', desc: 'Personal credentials, master tokens & primary passwords' },
+            { id: 'work', name: 'Work & Ops', icon: '💼', file: 'kvault_work.dat', storageKey: 'kvault_data_work', quicksaveKey: 'kvault_quicksave_work', desc: 'Enterprise infrastructure, SSH keys, servers & ops' },
+            { id: 'classified', name: 'Classified Mesh', icon: '🕵️', file: 'kvault_classified.dat', storageKey: 'kvault_data_classified', quicksaveKey: 'kvault_quicksave_classified', desc: 'Air-gapped mesh, BBS nodes, passkeys & encrypted seeds' }
+        ];
+        let currentProfileIndex = parseInt(safeStorageGet('kvault_active_profile_idx', '0')) || 0;
+        if (currentProfileIndex < 0 || currentProfileIndex >= VAULT_PROFILES.length) currentProfileIndex = 0;
+
+        function getActiveProfile() {
+            return VAULT_PROFILES[currentProfileIndex] || VAULT_PROFILES[0];
+        }
+
+        function getStorageKey() {
+            return getActiveProfile().storageKey;
+        }
+
+        function getQuicksaveKey() {
+            return getActiveProfile().quicksaveKey;
+        }
+
+        function updateProfileUI() {
+            const prof = getActiveProfile();
+            const sel = document.getElementById('profile-select');
+            if (sel) sel.value = String(currentProfileIndex);
+            const badge = document.getElementById('header-profile-badge');
+            if (badge) badge.textContent = `[${prof.name}]`;
+            document.title = `KVault [${prof.name}] - Secure Storage`;
+        }
+
+        async function switchProfile(newIdx, promptSave = true) {
+            if (newIdx < 0 || newIdx >= VAULT_PROFILES.length) return;
+            if (newIdx === currentProfileIndex) return;
+
+            if (masterKey && promptSave) {
+                await saveVaultToStorage();
+            }
+
+            currentProfileIndex = newIdx;
+            safeStorageSet('kvault_active_profile_idx', String(currentProfileIndex));
+            updateProfileUI();
+
+            lockVault(true);
+            initAuthView();
+            playSound('click');
+            showNotification(`Switched profile to ${getActiveProfile().name} [F6]`);
+        }
+
+        // Schema Templates for Structured Credential Design
+        const SCHEMA_TEMPLATES = {
+            login: {
+                title: 'Web / App Login',
+                category: 'Login',
+                fields: [
+                    { label: 'Recovery Email', type: 'text', value: '' },
+                    { label: 'Security Question', type: 'text', value: '' },
+                    { label: '2FA Backup Codes', type: 'secret', value: '' }
+                ]
+            },
+            finance: {
+                title: 'Credit Card & Banking',
+                category: 'Finance',
+                fields: [
+                    { label: 'Card PIN', type: 'pin', value: '' },
+                    { label: 'Bank Routing #', type: 'text', value: '' },
+                    { label: 'Account #', type: 'secret', value: '' },
+                    { label: 'Billing Postal / ZIP', type: 'text', value: '' }
+                ]
+            },
+            server: {
+                title: 'Server & SSH Keypair',
+                category: 'Server',
+                fields: [
+                    { label: 'SSH User', type: 'text', value: 'root' },
+                    { label: 'SSH Port', type: 'text', value: '22' },
+                    { label: 'SSH Passphrase', type: 'secret', value: '' },
+                    { label: 'Public Key', type: 'text', value: 'ssh-rsa AAAAB3NzaC1...' },
+                    { label: 'Private Key', type: 'secret', value: '-----BEGIN RSA PRIVATE KEY-----\n-----END RSA PRIVATE KEY-----' }
+                ]
+            },
+            api: {
+                title: 'API Key & Token',
+                category: 'General',
+                fields: [
+                    { label: 'Service / Provider', type: 'text', value: '' },
+                    { label: 'Endpoint Base URL', type: 'url', value: 'https://api.' },
+                    { label: 'Client ID', type: 'text', value: '' },
+                    { label: 'Client Secret / Token', type: 'secret', value: '' },
+                    { label: 'Rate Limit / Quota', type: 'text', value: '1000 req/min' }
+                ]
+            },
+            passkey: {
+                title: 'Crypto / Passkey / Seed',
+                category: 'General',
+                fields: [
+                    { label: 'Public Address', type: 'text', value: '0x' },
+                    { label: 'Derivation Path', type: 'text', value: "m/44'/60'/0'/0/0" },
+                    { label: 'Seed Phrase (12/24 words)', type: 'secret', value: '' },
+                    { label: 'BIP39 Passphrase', type: 'secret', value: '' }
+                ]
+            },
+            bbs: {
+                title: '1999 BBS Dial-up Node',
+                category: 'General',
+                fields: [
+                    { label: 'Dial Number', type: 'text', value: '1-800-555-0199' },
+                    { label: 'Baud Rate', type: 'text', value: '56000 bps' },
+                    { label: 'Comm Port', type: 'text', value: 'COM1 / Modem' },
+                    { label: 'SysOp / Handle', type: 'text', value: '' },
+                    { label: 'Node Access Code', type: 'secret', value: 'ECHO-NODE-1999' }
+                ]
+            },
+            database: {
+                title: 'Database Cluster',
+                category: 'Server',
+                fields: [
+                    { label: 'DB Engine', type: 'text', value: 'PostgreSQL / MySQL' },
+                    { label: 'Host & Port', type: 'text', value: '127.0.0.1:5432' },
+                    { label: 'Database Name', type: 'text', value: 'prod_vault' },
+                    { label: 'DB User', type: 'text', value: 'admin' },
+                    { label: 'SSL Mode', type: 'text', value: 'require' }
+                ]
+            },
+            router: {
+                title: 'Wi-Fi Gateway / Router',
+                category: 'Server',
+                fields: [
+                    { label: 'Gateway IP', type: 'url', value: 'http://192.168.1.1' },
+                    { label: 'Gateway Admin User', type: 'text', value: 'admin' },
+                    { label: 'SSID Network Name', type: 'text', value: '' },
+                    { label: 'Wi-Fi WPA Passphrase', type: 'secret', value: '' },
+                    { label: 'Security Protocol', type: 'text', value: 'WPA2-PSK (AES)' }
+                ]
+            }
+        };
+
+        function applySchemaTemplate(templateKey) {
+            if (!templateKey || !SCHEMA_TEMPLATES[templateKey]) return;
+            playSound('click');
+            const tpl = SCHEMA_TEMPLATES[templateKey];
+
+            const catSelect = document.getElementById('new-secret-category');
+            if (catSelect && tpl.category) {
+                catSelect.value = tpl.category;
+                adjustFormForCategory();
+            }
+
+            const titleInput = document.getElementById('new-secret-title');
+            if (titleInput && (!titleInput.value || titleInput.value.trim().length === 0)) {
+                titleInput.value = tpl.title;
+            }
+
+            const container = document.getElementById('custom-fields-container');
+            if (container) {
+                container.innerHTML = '';
+                tpl.fields.forEach(f => {
+                    addCustomFieldRow(f.label, f.type, f.value);
+                });
+            }
+
+            showNotification(`Applied "${tpl.title}" schema template`);
+        }
 
         // 1999 Cyber / Retro Wordbank for Memorable Diceware Passphrases
         const WORD_BANK = [

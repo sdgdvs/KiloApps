@@ -24,6 +24,7 @@
 #define ID_BTN_QUICKSAVE 119
 #define ID_BTN_QUICKLOAD 120
 #define ID_BTN_CHECKSUM 121
+#define ID_COMBO_PROFILE 122
 
 #ifndef EM_SETCUEBANNER
 #define EM_SETCUEBANNER 0x1501
@@ -160,6 +161,9 @@ HFONT hFont = NULL, hTitleFont = NULL;
 DWORD g_lastActivity = 0;
 int g_timeoutMs = 60000;
 int g_theme = 0;
+int g_currentProfile = 0;
+static const char* g_profileFiles[3] = {"kvault.dat", "kvault_work.dat", "kvault_classified.dat"};
+static const char* g_profileNames[3] = {"Primary Vault", "Work & Ops", "Classified Mesh"};
 
 void EncryptData(HWND hTextEdit, HWND hPassEdit) {
     int textLen = GetWindowTextLengthA(hTextEdit);
@@ -473,7 +477,7 @@ void MarkTutorialSeen(void) {
 }
 
 int SaveSnapshot(HWND hwnd) {
-    HANDLE hFile = CreateFileA("kvault.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    HANDLE hFile = CreateFileA(g_profileFiles[g_currentProfile], GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
     if (hFile == INVALID_HANDLE_VALUE) return 0;
 
     char magic[4] = {'K', 'V', 'L', 'T'};
@@ -516,10 +520,12 @@ int SaveSnapshot(HWND hwnd) {
 }
 
 int LoadSnapshot(HWND hwnd, int showFeedback) {
-    HANDLE hFile = CreateFileA("kvault.dat", GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    HANDLE hFile = CreateFileA(g_profileFiles[g_currentProfile], GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
     if (hFile == INVALID_HANDLE_VALUE) {
         if (showFeedback) {
-            MessageBoxA(hwnd, "No quicksave snapshot found (kvault.dat).\nPress F5 to create a snapshot.", "KVault", MB_OK | MB_ICONWARNING);
+            char buf[160];
+            wsprintfA(buf, "No quicksave snapshot found (%s).\nPress F5 to create a snapshot.", g_profileFiles[g_currentProfile]);
+            MessageBoxA(hwnd, buf, "KVault", MB_OK | MB_ICONWARNING);
         }
         return 0;
     }
@@ -602,7 +608,9 @@ int LoadSnapshot(HWND hwnd, int showFeedback) {
     RedrawWindow(hwnd, NULL, NULL, RDW_INVALIDATE | RDW_ALLCHILDREN);
 
     if (showFeedback) {
-        MessageBoxA(hwnd, "Workspace state restored from kvault.dat [F9]", "KVault", MB_OK | MB_ICONINFORMATION);
+        char buf[160];
+        wsprintfA(buf, "Workspace restored from %s [%s] [F9]", g_profileFiles[g_currentProfile], g_profileNames[g_currentProfile]);
+        MessageBoxA(hwnd, buf, "KVault", MB_OK | MB_ICONINFORMATION);
     }
     return 1;
 }
@@ -615,8 +623,15 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hFont = CreateFontA(16, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_SWISS, "Segoe UI");
             hTitleFont = CreateFontA(22, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_SWISS, "Segoe UI");
             
-            HWND hTitle = CreateWindowA("STATIC", "🔒 KVault - Secure Storage", WS_VISIBLE | WS_CHILD, 15, 15, 290, 30, hwnd, NULL, NULL, NULL);
+            HWND hTitle = CreateWindowA("STATIC", "🔒 KVault:", WS_VISIBLE | WS_CHILD, 15, 18, 110, 26, hwnd, NULL, NULL, NULL);
             SendMessage(hTitle, WM_SETFONT, (WPARAM)hTitleFont, TRUE);
+
+            HWND hComboProf = CreateWindowA("COMBOBOX", "", CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 130, 18, 175, 120, hwnd, (HMENU)ID_COMBO_PROFILE, NULL, NULL);
+            SendMessage(hComboProf, WM_SETFONT, (WPARAM)hFont, TRUE);
+            SendMessage(hComboProf, CB_ADDSTRING, 0, (LPARAM)"Primary Vault");
+            SendMessage(hComboProf, CB_ADDSTRING, 0, (LPARAM)"Work & Ops");
+            SendMessage(hComboProf, CB_ADDSTRING, 0, (LPARAM)"Classified Mesh");
+            SendMessage(hComboProf, CB_SETCURSEL, g_currentProfile, 0);
             
             HWND hStatTimeout = CreateWindowA("STATIC", "Auto-lock:", WS_VISIBLE | WS_CHILD, 315, 22, 70, 20, hwnd, NULL, NULL, NULL);
             SendMessage(hStatTimeout, WM_SETFONT, (WPARAM)hFont, TRUE);
@@ -686,6 +701,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SendMessage(hComboTpl, CB_ADDSTRING, 0, (LPARAM)"Database");
             SendMessage(hComboTpl, CB_ADDSTRING, 0, (LPARAM)"SSH Key");
             SendMessage(hComboTpl, CB_ADDSTRING, 0, (LPARAM)"Router");
+            SendMessage(hComboTpl, CB_ADDSTRING, 0, (LPARAM)"Passkey");
+            SendMessage(hComboTpl, CB_ADDSTRING, 0, (LPARAM)"1999 BBS");
             SendMessage(hComboTpl, CB_SETCURSEL, 0, 0);
             
             HWND hBtnTpl = CreateWindowA("BUTTON", "Insert", WS_VISIBLE | WS_CHILD | BS_FLAT | WS_TABSTOP, 110, 355, 55, 25, hwnd, (HMENU)ID_BTN_INSERT_TEMPLATE, NULL, NULL);
@@ -839,6 +856,18 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 InvalidateRect(hwnd, NULL, TRUE);
                 RedrawWindow(hwnd, NULL, NULL, RDW_INVALIDATE | RDW_ALLCHILDREN);
             }
+            if (HIWORD(wParam) == CBN_SELCHANGE && LOWORD(wParam) == ID_COMBO_PROFILE) {
+                g_currentProfile = (int)SendMessage((HWND)lParam, CB_GETCURSEL, 0, 0);
+                if (g_currentProfile < 0 || g_currentProfile > 2) g_currentProfile = 0;
+                char titleBuf[128];
+                wsprintfA(titleBuf, "KVault [%s] - Secure Storage", g_profileNames[g_currentProfile]);
+                SetWindowTextA(hwnd, titleBuf);
+                if (HasSavedState(g_profileFiles[g_currentProfile])) {
+                    LoadSnapshot(hwnd, 0);
+                } else {
+                    ClearVault(hwnd);
+                }
+            }
             if (LOWORD(wParam) == ID_BTN_ENCRYPT) {
                 EncryptData(hData, hPass);
             } else if (LOWORD(wParam) == ID_BTN_DECRYPT) {
@@ -867,6 +896,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 else if (sel == 6) tpl = "\r\n--- Database ---\r\nEngine: PostgreSQL / MySQL\r\nHost: 127.0.0.1\r\nPort: 5432\r\nDatabase: \r\nUsername: \r\nPassword: \r\nSSL Mode: require\r\n----------------\r\n";
                 else if (sel == 7) tpl = "\r\n--- SSH Keypair ---\r\nHost: \r\nUser: \r\nPassphrase: \r\nPublic Key: ssh-rsa AAAAB3NzaC1...\r\nPrivate Key:\r\n-----BEGIN RSA PRIVATE KEY-----\r\n-----END RSA PRIVATE KEY-----\r\n-------------------\r\n";
                 else if (sel == 8) tpl = "\r\n--- Router Gateway ---\r\nIP: 192.168.1.1\r\nGateway User: admin\r\nGateway Pass: \r\nWiFi SSID: \r\nWiFi Pass: \r\nWPA Mode: WPA2-PSK\r\n----------------------\r\n";
+                else if (sel == 9) tpl = "\r\n--- Passkey / Seed ---\r\nAccount: \r\nPublic Address: \r\nSeed Words (12/24): \r\nDerivation Path: m/44'/60'/0'/0/0\r\nPassphrase: \r\n----------------------\r\n";
+                else if (sel == 10) tpl = "\r\n--- 1999 BBS Dial-up ---\r\nBBS Name: \r\nDial Number: 1-800-555-0199\r\nBaud Rate: 56000 bps\r\nComm Port: COM1 / Modem\r\nHandle: \r\nAccess Pass: \r\nNode ID: ECHO-NODE-1999\r\n------------------------\r\n";
                 SendMessage(hData, EM_REPLACESEL, TRUE, (LPARAM)tpl);
                 SetFocus(hData);
             } else if (LOWORD(wParam) == ID_BTN_COPY_DATA) {
@@ -906,7 +937,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 }
             } else if (LOWORD(wParam) == ID_BTN_QUICKSAVE) {
                 if (SaveSnapshot(hwnd)) {
-                    MessageBoxA(hwnd, "Workspace state quicksaved to kvault.dat [F5].", "KVault", MB_OK | MB_ICONINFORMATION);
+                    char buf[160];
+                    wsprintfA(buf, "Workspace state quicksaved to %s [%s] [F5].", g_profileFiles[g_currentProfile], g_profileNames[g_currentProfile]);
+                    MessageBoxA(hwnd, buf, "KVault", MB_OK | MB_ICONINFORMATION);
                 } else {
                     MessageBoxA(hwnd, "Failed to write quicksave snapshot.", "KVault", MB_OK | MB_ICONERROR);
                 }
@@ -919,21 +952,23 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     "KVault Help & Security Guide\n\n"
                     "1. Master Key: Encrypts/decrypts data with stream cipher.\n"
                     "2. Quicksave & Restore:\n"
-                    "   F5: Quicksave workspace snapshot to kvault.dat\n"
-                    "   F9: Quickload restored snapshot from kvault.dat\n"
-                    "3. Checksum & Hash:\n"
+                    "   F5: Quicksave workspace snapshot to active profile file\n"
+                    "   F9: Quickload restored snapshot from active profile file\n"
+                    "3. Multi-Vault Profiles:\n"
+                    "   F6: Switch profile (Primary / Work / Classified)\n"
+                    "4. Checksum & Hash:\n"
                     "   F4 / Ctrl+H: Compute SHA-1 cryptographic checksum of payload.\n"
-                    "4. Auto-Lock: Wipes displayed text and clipboard on inactivity.\n"
-                    "5. Shortcuts:\n"
-                    "   F4: Hash Checksum | F5: Quicksave | F9: Quickload\n"
+                    "5. Auto-Lock: Wipes displayed text and clipboard on inactivity.\n"
+                    "6. Shortcuts:\n"
+                    "   F4: Hash Checksum | F5: Quicksave | F6: Switch Profile | F9: Quickload\n"
                     "   Ctrl+S: Save file | Ctrl+O: Open file\n"
                     "   Ctrl+L: Lock vault | Ctrl+E: Encrypt data\n"
                     "   Ctrl+D: Decrypt data | Ctrl+G: Gen password\n"
                     "   Shift+Gen Pass: Generate 6-digit numeric PIN\n"
                     "   Ctrl+H: Checksum | Ctrl+F: Focus Find | F1: Help\n"
-                    "6. Templates: Login, Finance, Note, Server, API Key, 2FA, DB, SSH, Router.\n"
-                    "7. Drag & Drop: Drop file to load contents into editor.\n"
-                    "8. Clipboard: Clear Clip wipes clipboard after use.",
+                    "7. Templates: Login, Finance, Note, Server, API Key, 2FA, DB, SSH, Router, Passkey, BBS.\n"
+                    "8. Drag & Drop: Drop file to load contents into editor.\n"
+                    "9. Clipboard: Clear Clip wipes clipboard after use.",
                     "KVault Help", MB_OK | MB_ICONINFORMATION);
             } else if (LOWORD(wParam) == ID_BTN_FIND) {
                 char findText[256];
@@ -1082,6 +1117,19 @@ void __stdcall MainEntry() {
                         continue;
                     } else if (msg.wParam == VK_F5) {
                         SendMessage(hwnd, WM_COMMAND, ID_BTN_QUICKSAVE, 0);
+                        continue;
+                    } else if (msg.wParam == VK_F6) {
+                        g_currentProfile = (g_currentProfile + 1) % 3;
+                        HWND hCp = GetDlgItem(hwnd, ID_COMBO_PROFILE);
+                        if (hCp) SendMessage(hCp, CB_SETCURSEL, g_currentProfile, 0);
+                        char titleBuf[128];
+                        wsprintfA(titleBuf, "KVault [%s] - Secure Storage", g_profileNames[g_currentProfile]);
+                        SetWindowTextA(hwnd, titleBuf);
+                        if (HasSavedState(g_profileFiles[g_currentProfile])) {
+                            LoadSnapshot(hwnd, 0);
+                        } else {
+                            ClearVault(hwnd);
+                        }
                         continue;
                     } else if (msg.wParam == VK_F9) {
                         SendMessage(hwnd, WM_COMMAND, ID_BTN_QUICKLOAD, 0);
