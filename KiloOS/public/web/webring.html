@@ -52,7 +52,7 @@
   }
 
   /* Retro Scanline Overlay (Static, Non-glint) */
-  .scanline-overlay {
+  .crt-scanlines {
     position: fixed;
     top: 0;
     left: 0;
@@ -1454,6 +1454,106 @@
     border-left: 2px solid var(--cyan) !important;
   }
 
+  /* RingMaster v2.4 Join Wizard */
+  .wizard-progress-bar {
+    display: flex;
+    background: #090e1a;
+    border: 1px solid var(--border-med);
+    border-radius: 4px;
+    padding: 6px;
+    margin-bottom: 14px;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .wizard-step-tab {
+    flex: 1;
+    min-width: 140px;
+    background: #111827;
+    border: 1px solid var(--border-dark);
+    padding: 6px 10px;
+    border-radius: 3px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-muted);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.15s ease;
+  }
+  .wizard-step-tab:hover {
+    background: #1e293b;
+    color: var(--cyan);
+  }
+  .wizard-step-tab.active {
+    background: #0284c7;
+    border-color: #38bdf8;
+    color: #ffffff;
+    font-weight: bold;
+    box-shadow: 0 0 8px rgba(56, 189, 248, 0.35);
+  }
+  .wizard-step-tab.completed {
+    border-color: #10b981;
+    color: #34d399;
+  }
+  .wizard-step-content {
+    display: none;
+    animation: fadeIn 0.15s ease-in;
+  }
+  .wizard-step-content.active {
+    display: block;
+  }
+  .wizard-check-item {
+    background: #090f1d;
+    border: 1px solid var(--border-med);
+    padding: 10px 12px;
+    border-radius: 3px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 8px;
+    font-size: 12px;
+  }
+  .wizard-check-item.passed {
+    border-left: 3px solid var(--green-bright);
+    background: rgba(16, 185, 129, 0.06);
+  }
+  .neighbor-preview-box {
+    background: #050811;
+    border: 1px solid var(--border-bright);
+    padding: 14px;
+    border-radius: 4px;
+    margin: 12px 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    gap: 12px;
+    flex-wrap: wrap;
+    box-shadow: inset 0 0 12px rgba(56, 189, 248, 0.15);
+  }
+  .neighbor-node-card {
+    background: #111827;
+    border: 1px solid var(--border-med);
+    padding: 8px 12px;
+    border-radius: 3px;
+    text-align: center;
+    min-width: 130px;
+  }
+  .neighbor-arrow {
+    font-size: 18px;
+    color: var(--cyan);
+    font-weight: bold;
+  }
+  .topo-matrix-dock {
+    background: #080d1a;
+    border: 1px solid var(--border-bright);
+    padding: 10px 14px;
+    border-radius: 3px;
+    margin-top: 10px;
+    box-shadow: 0 0 10px rgba(56, 189, 248, 0.2);
+  }
+
   /* Footer */
   footer {
     border-top: 1px solid var(--border-med);
@@ -1468,7 +1568,7 @@
 </head>
 <body>
 
-<div class="scanline-overlay"></div>
+<div class="crt-scanlines"></div>
 
 <div class="container">
   <!-- Retro Marquee Header -->
@@ -2098,60 +2198,305 @@ Tune dial to match lithospheric harmonic frequency to isolate transit frames.
     <div class="panel-box">
       <div class="panel-header">
         <div class="panel-title">
-          <span>📝</span> Webmaster Application: Join KiloNet Webring
+          <span>📝</span> RingMaster v2.4 Guided Webmaster Enrollment Wizard
         </div>
-        <button class="btn-action" onclick="fillDemoSubmission()">
-          <span>⚡</span> Load Demo Application
-        </button>
+        <div style="font-family:var(--font-mono); font-size:11px; color:var(--text-muted);">
+          RFC-1999 Protocol &bull; 4-Stage Automated Accreditation &bull; Instant Ring Orbit Insertion
+        </div>
       </div>
       <div class="panel-desc">
-        Operate a retro personal page, demoscene shrine, or creative web tool? Submit your site to become an official node in the Central KiloNet Webring. Applications are verified and added instantly to your local directory.
+        Welcome to the RingMaster v2.4 Enrollment Wizard. Complete the 4-stage guided accreditation process to verify Charter compliance, calibrate neighbor topology routing, customize your official webring badge widget, and insert your site into the closed-loop ring orbit.
       </div>
 
-      <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
-        <div>
-          <div class="form-group">
-            <label class="form-label" for="subHandle">WEBMASTER HANDLE / ALIAS *</label>
-            <input type="text" class="form-control" id="subHandle" placeholder="e.g. ~neon_wanderer">
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="subTitle">SITE NAME / TITLE *</label>
-            <input type="text" class="form-control" id="subTitle" placeholder="e.g. Subterranean Pixel Sanctuary">
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="subUrl">DESTINATION URL (kweb:// or /web/) *</label>
-            <input type="text" class="form-control" id="subUrl" placeholder="e.g. /web/users/wanderer.html">
-          </div>
+      <!-- 4-Step Wizard Progress Bar -->
+      <div class="wizard-progress-bar" id="wizardProgressBar">
+        <div class="wizard-step-tab active" id="wizTab1" onclick="setWizardStep(1)">
+          <span>📋</span> [1] Node Identity
         </div>
-
-        <div>
-          <div class="form-group">
-            <label class="form-label" for="subCategory">SITE CATEGORY *</label>
-            <select class="form-control" id="subCategory">
-              <option value="community">Community &amp; Retro Homepages</option>
-              <option value="demoscene">Demoscene &amp; Hacker Vaults</option>
-              <option value="tools">Web Tools &amp; Utilities</option>
-              <option value="apps">Interactive Apps &amp; Games</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="subDesc">SITE DESCRIPTION (Max 140 chars) *</label>
-            <textarea class="form-control" id="subDesc" placeholder="Describe your site's focus, tech stack, and vintage highlights..."></textarea>
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="subButtonText">88x31 BUTTON LABEL (Optional)</label>
-            <input type="text" class="form-control" id="subButtonText" placeholder="e.g. [WANDERER '99]">
-          </div>
+        <div class="wizard-step-tab" id="wizTab2" onclick="setWizardStep(2)">
+          <span>🛡️</span> [2] Charter Audit
+        </div>
+        <div class="wizard-step-tab" id="wizTab3" onclick="setWizardStep(3)">
+          <span>🕸️</span> [3] Ring Placement
+        </div>
+        <div class="wizard-step-tab" id="wizTab4" onclick="setWizardStep(4)">
+          <span>🏷️</span> [4] Badge &amp; Orbit
         </div>
       </div>
 
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-top:14px; border-top:1px dashed var(--border-med); padding-top:12px; flex-wrap:wrap; gap:8px;">
-        <div style="font-size:11px; color:var(--text-dim); font-family:var(--font-mono);">
-          Requirements: Under 999KB, no commercial ads, embeds KiloNet badge snippet.
+      <!-- STEP 1: Node Identity & Metadata -->
+      <div class="wizard-step-content active" id="wizStep1">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+          <strong style="color:var(--cyan); font-family:var(--font-mono); font-size:12px;">STAGE 1: WEBMASTER IDENTITY &amp; NODE PROFILE</strong>
+          <button class="btn-action" onclick="fillDemoSubmission()">
+            <span>⚡</span> Load Demo Profile
+          </button>
         </div>
-        <button class="btn-teleport" onclick="submitRingApplication()">
-          <span>📨</span> Transmit Webmaster Application
-        </button>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+          <div>
+            <div class="form-group">
+              <label class="form-label" for="subHandle">WEBMASTER HANDLE / ALIAS *</label>
+              <input type="text" class="form-control" id="subHandle" placeholder="e.g. ~neon_wanderer" oninput="updateWizardNeighborPreview()">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="subTitle">SITE NAME / TITLE *</label>
+              <input type="text" class="form-control" id="subTitle" placeholder="e.g. Subterranean Pixel Sanctuary" oninput="updateWizardNeighborPreview()">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="subUrl">DESTINATION URL (kweb:// or /web/) *</label>
+              <input type="text" class="form-control" id="subUrl" placeholder="e.g. /web/users/wanderer.html" oninput="updateWizardNeighborPreview()">
+            </div>
+          </div>
+
+          <div>
+            <div class="form-group">
+              <label class="form-label" for="subCategory">SITE CATEGORY *</label>
+              <select class="form-control" id="subCategory" onchange="updateWizardNeighborPreview()">
+                <option value="community">Community &amp; Retro Homepages</option>
+                <option value="demoscene">Demoscene &amp; Hacker Vaults</option>
+                <option value="tools">Web Tools &amp; Utilities</option>
+                <option value="apps">Interactive Apps &amp; Games</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="subTech">TECHNOLOGY ARCHITECTURE *</label>
+              <input type="text" class="form-control" id="subTech" placeholder="e.g. HTML 4.01 / Web Audio / Win95 Canvas" value="HTML 4.01 / Member Node">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="subDesc">SITE DESCRIPTION (Max 140 chars) *</label>
+              <textarea class="form-control" id="subDesc" placeholder="Describe your site's focus, tech stack, and vintage highlights..."></textarea>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="subButtonText">88x31 BUTTON LABEL (Optional)</label>
+              <input type="text" class="form-control" id="subButtonText" placeholder="e.g. [WANDERER '99]">
+            </div>
+          </div>
+        </div>
+
+        <div style="display:flex; justify-content:flex-end; margin-top:14px; border-top:1px dashed var(--border-med); padding-top:12px;">
+          <button class="btn-teleport" onclick="validateStep1AndProceed()">
+            <span>➡</span> Next: Charter Compliance Audit
+          </button>
+        </div>
+      </div>
+
+      <!-- STEP 2: Charter Compliance Pre-Flight Audit -->
+      <div class="wizard-step-content" id="wizStep2">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+          <strong style="color:var(--cyan); font-family:var(--font-mono); font-size:12px;">STAGE 2: AUTOMATED CHARTER PRE-FLIGHT AUDIT</strong>
+          <button class="btn-teleport" onclick="runWizardPreflightDiagnostics()" style="padding:4px 10px; font-size:11px;">
+            <span>⚡</span> Re-run Diagnostics
+          </button>
+        </div>
+        <p style="font-size:12px; color:var(--text-muted); margin-bottom:12px;">
+          Every consortium candidate is pre-screened across 4 essential 1999 web guidelines before admission into the ring circuit.
+        </p>
+
+        <div class="wizard-check-item passed" id="wizCheckDoctype">
+          <div>
+            <strong>1. HTML 4.01 Strict Semantics &amp; Structure</strong>
+            <div style="color:var(--text-dim); font-size:11px;">Validates semantic tags, character encoding, and zero modern bloatware.</div>
+          </div>
+          <span style="color:var(--green-bright); font-family:var(--font-mono); font-weight:bold;" id="wizCheckDoctypeStatus">✅ PASSED (HTML 4.01)</span>
+        </div>
+
+        <div class="wizard-check-item passed" id="wizCheckFootprint">
+          <div>
+            <strong>2. Strict &lt;999 Kilobyte Asset Ceiling</strong>
+            <div style="color:var(--text-dim); font-size:11px;">Simulated candidate payload check: verified strictly within the sacred 999KB budget.</div>
+          </div>
+          <span style="color:var(--green-bright); font-family:var(--font-mono); font-weight:bold;" id="wizCheckFootprintStatus">✅ PASSED (~34.2 KB)</span>
+        </div>
+
+        <div class="wizard-check-item passed" id="wizCheckAds">
+          <div>
+            <strong>3. Zero Commercial Tracking / Spyware Cookies</strong>
+            <div style="color:var(--text-dim); font-size:11px;">Ensures candidate contains zero third-party commercial surveillance scripts.</div>
+          </div>
+          <span style="color:var(--green-bright); font-family:var(--font-mono); font-weight:bold;" id="wizCheckAdsStatus">✅ PASSED (0 Trackers)</span>
+        </div>
+
+        <div class="wizard-check-item passed" id="wizCheckParody">
+          <div>
+            <strong>4. Alternate Reality Parody Standard Compliance</strong>
+            <div style="color:var(--text-dim); font-size:11px;">Audits site terminology against RFC-1999 anti-trademark parody rules.</div>
+          </div>
+          <span style="color:var(--green-bright); font-family:var(--font-mono); font-weight:bold;" id="wizCheckParodyStatus">✅ PASSED (Policy Clean)</span>
+        </div>
+
+        <div style="background:#060a14; border:1px solid var(--border-med); padding:8px 12px; border-radius:3px; margin:12px 0; font-family:var(--font-mono); font-size:11px; display:flex; justify-content:space-between; align-items:center;">
+          <span>OVERALL ACCREDITATION STATUS:</span>
+          <strong style="color:var(--green-bright);" id="wizOverallStatus">CERTIFIED 100% COMPLIANT</strong>
+        </div>
+
+        <div style="display:flex; justify-content:space-between; margin-top:14px; border-top:1px dashed var(--border-med); padding-top:12px;">
+          <button class="btn-teleport alt" onclick="setWizardStep(1)">
+            <span>⬅</span> Back to Step 1
+          </button>
+          <button class="btn-teleport" onclick="setWizardStep(3)">
+            <span>➡</span> Next: Configure Ring Routing
+          </button>
+        </div>
+      </div>
+
+      <!-- STEP 3: Ring Routing & Topology Alignment -->
+      <div class="wizard-step-content" id="wizStep3">
+        <div style="margin-bottom:12px;">
+          <strong style="color:var(--cyan); font-family:var(--font-mono); font-size:12px;">STAGE 3: TOPOLOGY ROUTING &amp; NEIGHBOR PLACEMENT</strong>
+        </div>
+        <p style="font-size:12px; color:var(--text-muted); margin-bottom:12px;">
+          A webring is a continuous bidirectional loop. Configure your placement in the ring orbit to establish mutual neighbor hops with surrounding sites.
+        </p>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:14px;">
+          <div>
+            <div class="form-group">
+              <label class="form-label" for="wizPlacementMode">RING INSERTION STRATEGY</label>
+              <select class="form-control" id="wizPlacementMode" onchange="updateWizardNeighborPreview()">
+                <option value="tail" selected>Append to Current Orbit Tail (Recommended)</option>
+                <option value="custom">Custom Predecessor Insertion</option>
+              </select>
+            </div>
+            <div class="form-group" id="wizCustomPredecessorWrap" style="display:none;">
+              <label class="form-label" for="wizPredecessorSelect">PRECEDING NODE IN LOOP</label>
+              <select class="form-control" id="wizPredecessorSelect" onchange="updateWizardNeighborPreview()">
+                <!-- Populated dynamically with active ring nodes -->
+              </select>
+            </div>
+          </div>
+          <div>
+            <div style="background:#090e1a; border:1px solid var(--border-med); padding:10px 12px; border-radius:3px;">
+              <div style="font-family:var(--font-mono); font-size:10px; color:var(--text-dim); text-transform:uppercase;">ASSIGNED RING TELEMETRY</div>
+              <div style="margin-top:6px; font-family:var(--font-mono); font-size:12px;">
+                <div>Assigned Ring ID: <strong style="color:var(--cyan);" id="wizAssignedIdText">#019</strong></div>
+                <div>Routing AS: <strong style="color:var(--amber);">AS-1999 (Local Ring)</strong></div>
+                <div>Estimated Loop Latency: <strong style="color:var(--green-bright);">26 ms</strong></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <label class="form-label">LIVE BIDIRECTIONAL NEIGHBOR HOPS PREVIEW</label>
+        <div class="neighbor-preview-box">
+          <div class="neighbor-node-card">
+            <div style="font-size:10px; color:var(--text-dim); text-transform:uppercase;">PREVIOUS HOP</div>
+            <div style="font-family:var(--font-mono); font-weight:bold; color:var(--amber-bright); font-size:12px;" id="wizNeighborPrevName">Node #018</div>
+            <div style="font-size:10px; color:var(--text-muted);" id="wizNeighborPrevId">kweb://echo-subsystem</div>
+          </div>
+          <div class="neighbor-arrow">&harr;</div>
+          <div class="neighbor-node-card" style="border-color:var(--cyan); background:#0c172a; box-shadow:0 0 8px rgba(56, 189, 248, 0.4);">
+            <div style="font-size:10px; color:var(--cyan); text-transform:uppercase;">YOU (NEW NODE)</div>
+            <div style="font-family:var(--font-mono); font-weight:bold; color:#fff; font-size:12px;" id="wizNeighborCurrName">My Sanctuary</div>
+            <div style="font-size:10px; color:var(--green-bright);" id="wizNeighborCurrId">#019</div>
+          </div>
+          <div class="neighbor-arrow">&harr;</div>
+          <div class="neighbor-node-card">
+            <div style="font-size:10px; color:var(--text-dim); text-transform:uppercase;">NEXT HOP</div>
+            <div style="font-family:var(--font-mono); font-weight:bold; color:var(--amber-bright); font-size:12px;" id="wizNeighborNextName">Node #001</div>
+            <div style="font-size:10px; color:var(--text-muted);" id="wizNeighborNextId">kweb://portal</div>
+          </div>
+        </div>
+
+        <div style="display:flex; justify-content:space-between; margin-top:14px; border-top:1px dashed var(--border-med); padding-top:12px;">
+          <button class="btn-teleport alt" onclick="setWizardStep(2)">
+            <span>⬅</span> Back to Step 2
+          </button>
+          <button class="btn-teleport" onclick="setWizardStep(4)">
+            <span>➡</span> Next: Customize Badge Widget
+          </button>
+        </div>
+      </div>
+
+      <!-- STEP 4: Badge Customizer & Final Orbit Submission -->
+      <div class="wizard-step-content" id="wizStep4">
+        <div style="margin-bottom:12px;">
+          <strong style="color:var(--cyan); font-family:var(--font-mono); font-size:12px;">STAGE 4: OFFICIAL WEBRING WIDGET &amp; CODE GENERATION</strong>
+        </div>
+        <p style="font-size:12px; color:var(--text-muted); margin-bottom:12px;">
+          Choose your official KiloNet Webring widget format to embed in your site footer. Upon submission, your site is immediately linked to the ring circuit and live topology map.
+        </p>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+          <div>
+            <div class="form-group">
+              <label class="form-label" for="wizBadgeFormat">WIDGET FORMAT ARCHETYPE</label>
+              <select class="form-control" id="wizBadgeFormat" onchange="renderWizardWidgetPreview()">
+                <option value="table" selected>Style I: Classic 1999 3-Cell Table Nav Bar</option>
+                <option value="beveled">Style B: Windows 95 3D Beveled Box</option>
+                <option value="neon">Style C: Cyberpunk Neon HUD Badge</option>
+                <option value="button">Style D: 88x31 Micro Button Widget</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="wizBadgeTheme">WIDGET COLOR THEME</label>
+              <select class="form-control" id="wizBadgeTheme" onchange="renderWizardWidgetPreview()">
+                <option value="cyan" selected>Cyber Blue / Cyan (Default)</option>
+                <option value="amber">Vintage Amber CRT</option>
+                <option value="green">Matrix Terminal Green</option>
+                <option value="gray">Netscape 4.7 Classic Gray</option>
+              </select>
+            </div>
+
+            <label class="form-label">YOUR GENERATED EMBED HTML SNIPPET</label>
+            <textarea class="code-output" id="wizEmbedSnippet" readonly style="height:100px;"></textarea>
+            <button class="btn-action" onclick="copyWizardEmbedSnippet()" style="margin-top:6px; width:100%;">
+              <span>📋</span> Copy Widget Snippet To Clipboard
+            </button>
+          </div>
+
+          <div>
+            <label class="form-label">LIVE WIDGET PREVIEW ON YOUR PAGE</label>
+            <div id="wizLiveWidgetPreview" style="background:#070b16; border:1px solid var(--border-med); padding:16px; border-radius:3px; min-height:160px; display:flex; align-items:center; justify-content:center;">
+              <!-- Rendered dynamically -->
+            </div>
+          </div>
+        </div>
+
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:16px; border-top:1px dashed var(--border-med); padding-top:14px; flex-wrap:wrap; gap:8px;">
+          <button class="btn-teleport alt" onclick="setWizardStep(3)">
+            <span>⬅</span> Back to Step 3
+          </button>
+          <button class="btn-teleport" onclick="submitRingmasterWizardEnrollment()" style="background:linear-gradient(180deg, #10b981 0%, #059669 100%); border-color:#34d399; font-size:13px; padding:8px 16px;">
+            <span>🚀</span> Approve &amp; Launch Into Ring Orbit
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Enrolled Custom Member Nodes Manager -->
+    <div class="panel-box" style="margin-top:14px;">
+      <div class="panel-header">
+        <div class="panel-title">
+          <span>📂</span> Your Enrolled Member Nodes (Local Registry)
+        </div>
+        <div style="font-family:var(--font-mono); font-size:11px; color:var(--text-muted);" id="customNodesCountText">
+          0 Enrolled Custom Nodes
+        </div>
+      </div>
+      <div class="panel-desc">
+        Manage your registered member nodes stored locally. These sites are fully active in your local consortium directory, topology map, and Ring Surfer.
+      </div>
+
+      <div class="table-responsive">
+        <table class="ring-table" id="customNodesTable">
+          <thead>
+            <tr>
+              <th style="width:10%;">Ring ID</th>
+              <th style="width:25%;">Site Title &amp; Handle</th>
+              <th style="width:15%;">Category</th>
+              <th style="width:30%;">Destination URL</th>
+              <th style="width:20%;">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="customNodesTableBody">
+            <tr>
+              <td colspan="5" style="text-align:center; color:var(--text-dim); padding:14px;">
+                No custom member nodes enrolled yet. Use the Guided Enrollment Wizard above to add your retro site!
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </div>
   </section>
@@ -4202,6 +4547,11 @@ function switchTab(targetId) {
     if (typeof initRingmasterValidator === 'function') initRingmasterValidator();
   } else if (targetId === 'tab-bgp') {
     if (typeof initBgpRoutingMatrix === 'function') initBgpRoutingMatrix();
+  } else if (targetId === 'tab-join') {
+    if (typeof populateWizardPredecessorSelect === 'function') populateWizardPredecessorSelect();
+    if (typeof updateWizardNeighborPreview === 'function') updateWizardNeighborPreview();
+    if (typeof renderWizardWidgetPreview === 'function') renderWizardWidgetPreview();
+    if (typeof renderCustomNodesTable === 'function') renderCustomNodesTable();
   }
 }
 
@@ -6019,52 +6369,429 @@ function drawTopologyMap(canvas, ctx) {
 }
 
 /* =========================================================================
-   10. JOIN THE RING: APPLICATION PORTAL
+   10. JOIN THE RING: GUIDED WEBMASTER ENROLLMENT WIZARD (RINGMASTER v2.4)
    ========================================================================= */
-function fillDemoSubmission() {
-  playSfx('click');
-  document.getElementById('subHandle').value = "~vapor_scout";
-  document.getElementById('subTitle').value = "Subterranean Pixel Sanctuary";
-  document.getElementById('subUrl').value = "/web/users/vapor_scout.html";
-  document.getElementById('subCategory').value = "community";
-  document.getElementById('subDesc').value = "Cyberpunk pixel art archives, procedural MIDI soundscapes, and vintage 1999 computing hardware logs.";
-  document.getElementById('subButtonText').value = "PIXEL SANCTUARY";
+let currentWizardStep = 1;
+
+function setWizardStep(step) {
+  if (step < 1) step = 1;
+  if (step > 4) step = 4;
+
+  // Validation when moving forward past step 1
+  if (step > 1) {
+    const handle = document.getElementById('subHandle') ? document.getElementById('subHandle').value.trim() : '';
+    const title = document.getElementById('subTitle') ? document.getElementById('subTitle').value.trim() : '';
+    const url = document.getElementById('subUrl') ? document.getElementById('subUrl').value.trim() : '';
+    const desc = document.getElementById('subDesc') ? document.getElementById('subDesc').value.trim() : '';
+    if (!handle || !title || !url || !desc) {
+      alert("Please complete the required fields in Stage 1 (Handle, Title, URL, Description) before proceeding.");
+      if (typeof playSfx === 'function') playSfx('error');
+      step = 1;
+    }
+  }
+
+  currentWizardStep = step;
+  if (typeof playSfx === 'function') playSfx('click');
+
+  // Update wizard step tabs and content visibility
+  for (let i = 1; i <= 4; i++) {
+    const tabEl = document.getElementById(`wizTab${i}`);
+    const contentEl = document.getElementById(`wizStep${i}`);
+    if (tabEl) {
+      tabEl.classList.remove('active', 'completed');
+      if (i === step) {
+        tabEl.classList.add('active');
+      } else if (i < step) {
+        tabEl.classList.add('completed');
+      }
+    }
+    if (contentEl) {
+      if (i === step) {
+        contentEl.classList.add('active');
+      } else {
+        contentEl.classList.remove('active');
+      }
+    }
+  }
+
+  if (step === 2) {
+    runWizardPreflightDiagnostics();
+  } else if (step === 3) {
+    populateWizardPredecessorSelect();
+    updateWizardNeighborPreview();
+  } else if (step === 4) {
+    renderWizardWidgetPreview();
+  }
 }
 
-function submitRingApplication() {
-  const handle = document.getElementById('subHandle').value.trim();
-  const title = document.getElementById('subTitle').value.trim();
-  const url = document.getElementById('subUrl').value.trim();
-  const cat = document.getElementById('subCategory').value;
-  const desc = document.getElementById('subDesc').value.trim();
-  const btnLabel = document.getElementById('subButtonText').value.trim() || title.substring(0, 12).toUpperCase();
+function validateStep1AndProceed() {
+  const handle = document.getElementById('subHandle') ? document.getElementById('subHandle').value.trim() : '';
+  const title = document.getElementById('subTitle') ? document.getElementById('subTitle').value.trim() : '';
+  const url = document.getElementById('subUrl') ? document.getElementById('subUrl').value.trim() : '';
+  const desc = document.getElementById('subDesc') ? document.getElementById('subDesc').value.trim() : '';
 
   if (!handle || !title || !url || !desc) {
-    alert("Please fill in all mandatory application fields.");
-    playSfx('error');
+    alert("Please fill in all mandatory application fields marked with (*) to begin the Charter accreditation audit.");
+    if (typeof playSfx === 'function') playSfx('error');
     return;
   }
 
-  playSfx('submit');
+  if (typeof playSfx === 'function') playSfx('click');
+  setWizardStep(2);
+}
 
-  const nextNum = ringNodes.length + 1;
-  const paddedId = `#${String(nextNum).padStart(3, '0')}`;
+function runWizardPreflightDiagnostics() {
+  if (typeof playSfx === 'function') playSfx('ping');
+  const url = document.getElementById('subUrl') ? document.getElementById('subUrl').value.trim() : '';
+  const title = document.getElementById('subTitle') ? document.getElementById('subTitle').value.trim() : '';
+  const desc = document.getElementById('subDesc') ? document.getElementById('subDesc').value.trim() : '';
+
+  // Calculate deterministic simulated payload based on inputs
+  const seed = (url.length * 7 + title.length * 13 + desc.length * 3) % 40;
+  const simulatedSizeKb = (24.5 + seed * 0.8).toFixed(1);
+
+  const doctypeStatus = document.getElementById('wizCheckDoctypeStatus');
+  const footprintStatus = document.getElementById('wizCheckFootprintStatus');
+  const adsStatus = document.getElementById('wizCheckAdsStatus');
+  const parodyStatus = document.getElementById('wizCheckParodyStatus');
+  const overallStatus = document.getElementById('wizOverallStatus');
+
+  if (doctypeStatus) doctypeStatus.textContent = '✅ PASSED (HTML 4.01 Strict / Validated)';
+  if (footprintStatus) footprintStatus.textContent = `✅ PASSED (~${simulatedSizeKb} KB / <999KB Strict)`;
+  if (adsStatus) adsStatus.textContent = '✅ PASSED (0 Surveillance Trackers)';
+  if (parodyStatus) parodyStatus.textContent = '✅ PASSED (RFC-1999 Parody Compliant)';
+  if (overallStatus) {
+    overallStatus.textContent = 'CERTIFIED 100% CHARTER COMPLIANT';
+    overallStatus.style.color = 'var(--green-bright)';
+  }
+
+  showNoticeToast('🛡️ Pre-flight Charter diagnostics verified!');
+}
+
+function populateWizardPredecessorSelect() {
+  const sel = document.getElementById('wizPredecessorSelect');
+  if (!sel) return;
+  const currentVal = sel.value;
+  sel.innerHTML = '';
+
+  const activeNodes = ringNodes.filter(n => !n.hiddenFromDirectory);
+  activeNodes.forEach(node => {
+    const opt = document.createElement('option');
+    opt.value = node.id;
+    opt.textContent = `${node.id} — ${node.name} (${node.handle})`;
+    sel.appendChild(opt);
+  });
+
+  if (currentVal && activeNodes.some(n => n.id === currentVal)) {
+    sel.value = currentVal;
+  } else if (activeNodes.length > 0) {
+    sel.value = activeNodes[activeNodes.length - 1].id;
+  }
+}
+
+function updateWizardNeighborPreview() {
+  const modeEl = document.getElementById('wizPlacementMode');
+  const customWrap = document.getElementById('wizCustomPredecessorWrap');
+  const mode = modeEl ? modeEl.value : 'tail';
+
+  if (customWrap) {
+    customWrap.style.display = (mode === 'custom') ? 'block' : 'none';
+  }
+
+  const title = (document.getElementById('subTitle') && document.getElementById('subTitle').value.trim()) || "My Retro Sanctuary";
+  const handle = (document.getElementById('subHandle') && document.getElementById('subHandle').value.trim()) || "~new_webmaster";
+  const url = (document.getElementById('subUrl') && document.getElementById('subUrl').value.trim()) || "kweb://my-sanctuary";
+
+  // Calculate assigned ID
+  const maxNum = ringNodes.reduce((max, n) => Math.max(max, n.num || 0), 18);
+  const nextNum = maxNum + 1;
+  const candidateId = `#${String(nextNum).padStart(3, '0')}`;
+
+  const assignedIdText = document.getElementById('wizAssignedIdText');
+  if (assignedIdText) assignedIdText.textContent = candidateId;
+
+  const activeNodes = ringNodes.filter(n => !n.hiddenFromDirectory);
+  if (activeNodes.length === 0) return;
+
+  let prevNode = activeNodes[activeNodes.length - 1];
+  let nextNode = activeNodes[0];
+
+  if (mode === 'custom') {
+    const predSel = document.getElementById('wizPredecessorSelect');
+    const predId = predSel ? predSel.value : '';
+    const idx = activeNodes.findIndex(n => n.id === predId);
+    if (idx !== -1) {
+      prevNode = activeNodes[idx];
+      nextNode = activeNodes[(idx + 1) % activeNodes.length];
+    }
+  }
+
+  const prevNameEl = document.getElementById('wizNeighborPrevName');
+  const prevIdEl = document.getElementById('wizNeighborPrevId');
+  const currNameEl = document.getElementById('wizNeighborCurrName');
+  const currIdEl = document.getElementById('wizNeighborCurrId');
+  const nextNameEl = document.getElementById('wizNeighborNextName');
+  const nextIdEl = document.getElementById('wizNeighborNextId');
+
+  if (prevNameEl) prevNameEl.textContent = prevNode.name;
+  if (prevIdEl) prevIdEl.textContent = `${prevNode.id} • ${prevNode.url.replace('/web/', 'kweb://')}`;
+  if (currNameEl) currNameEl.textContent = title;
+  if (currIdEl) currIdEl.textContent = `${candidateId} • ${url}`;
+  if (nextNameEl) nextNameEl.textContent = nextNode.name;
+  if (nextIdEl) nextIdEl.textContent = `${nextNode.id} • ${nextNode.url.replace('/web/', 'kweb://')}`;
+
+  // Keep widget preview in sync
+  renderWizardWidgetPreview();
+}
+
+function renderWizardWidgetPreview() {
+  const previewBox = document.getElementById('wizLiveWidgetPreview');
+  const snippetBox = document.getElementById('wizEmbedSnippet');
+  if (!previewBox || !snippetBox) return;
+
+  const formatEl = document.getElementById('wizBadgeFormat');
+  const themeEl = document.getElementById('wizBadgeTheme');
+  const format = formatEl ? formatEl.value : 'table';
+  const theme = themeEl ? themeEl.value : 'cyan';
+
+  const title = (document.getElementById('subTitle') && document.getElementById('subTitle').value.trim()) || "Retro Sanctuary";
+  const maxNum = ringNodes.reduce((max, n) => Math.max(max, n.num || 0), 18);
+  const candidateId = `#${String(maxNum + 1).padStart(3, '0')}`;
+  const siteId = candidateId.replace('#', '');
+
+  // Theme palettes
+  const palettes = {
+    cyan: { primary: '#38bdf8', bg: '#081329', border: '#0284c7', text: '#e2e8f0', dim: '#94a3b8', glow: 'rgba(56, 189, 248, 0.4)' },
+    amber: { primary: '#fbbf24', bg: '#1c1204', border: '#d97706', text: '#fef3c7', dim: '#d97706', glow: 'rgba(251, 191, 36, 0.4)' },
+    green: { primary: '#34d399', bg: '#041d13', border: '#059669', text: '#d1fae5', dim: '#059669', glow: 'rgba(52, 211, 153, 0.4)' },
+    gray: { primary: '#f1f5f9', bg: '#18202f', border: '#475569', text: '#f8fafc', dim: '#64748b', glow: 'rgba(255, 255, 255, 0.2)' }
+  };
+  const pal = palettes[theme] || palettes.cyan;
+
+  let widgetHtml = '';
+  let embedCode = '';
+
+  if (format === 'table') {
+    widgetHtml = `
+      <table border="1" cellpadding="6" cellspacing="0" style="background:${pal.bg}; border:1px solid ${pal.border}; color:${pal.text}; font-family:var(--font-mono); font-size:11px; text-align:center; width:100%; max-width:440px; border-collapse:collapse; box-shadow:0 0 10px ${pal.glow};">
+        <tr>
+          <td width="26%" style="border:1px solid ${pal.border}; padding:6px;">
+            <a href="/web/webring.html?action=prev&id=${siteId}" style="color:${pal.primary}; font-weight:bold; text-decoration:none;">&laquo; Previous</a>
+          </td>
+          <td width="48%" style="border:1px solid ${pal.border}; padding:6px;">
+            <div style="font-size:9px; text-transform:uppercase; color:${pal.dim}; letter-spacing:1px;">MEMBER OF THE</div>
+            <div style="font-weight:bold; font-size:12px; color:#ffffff; margin:2px 0;">
+              <a href="/web/webring.html" style="color:#ffffff; text-decoration:none;">KiloNet 1999 Webring</a>
+            </div>
+            <div style="font-size:10px; color:${pal.dim};">
+              [ <a href="/web/webring.html?action=random" style="color:${pal.primary};">Random</a> | <a href="/web/webring.html" style="color:${pal.primary};">Directory</a> ]
+            </div>
+          </td>
+          <td width="26%" style="border:1px solid ${pal.border}; padding:6px;">
+            <a href="/web/webring.html?action=next&id=${siteId}" style="color:${pal.primary}; font-weight:bold; text-decoration:none;">Next &raquo;</a>
+          </td>
+        </tr>
+      </table>
+    `;
+    embedCode = `<!-- START KILONET WEBRING NAV BAR (Node ${candidateId}) -->
+<table border="1" cellpadding="4" cellspacing="0" style="background:${pal.bg}; border:1px solid ${pal.border}; color:${pal.text}; font-family:monospace; font-size:12px; text-align:center; max-width:440px;">
+  <tr>
+    <td width="25%"><a href="/web/webring.html?action=prev&id=${siteId}"><font color="${pal.primary}">&laquo; Previous</font></a></td>
+    <td width="50%">
+      <font size="1" color="${pal.dim}">KiloNet Webring &bull; Node ${candidateId}</font><br>
+      <b><a href="/web/webring.html"><font color="#FFFFFF">${escapeHtml(title)}</font></a></b><br>
+      <font size="1">[ <a href="/web/webring.html?action=random"><font color="${pal.primary}">Random</font></a> | <a href="/web/webring.html"><font color="${pal.primary}">Ring Hub</font></a> ]</font>
+    </td>
+    <td width="25%"><a href="/web/webring.html?action=next&id=${siteId}"><font color="${pal.primary}">Next &raquo;</font></a></td>
+  </tr>
+</table>
+<!-- END KILONET WEBRING NAV BAR -->`;
+  } else if (format === 'beveled') {
+    widgetHtml = `
+      <div style="border:2px outset #dfdfdf; background:#c0c0c0; color:#000000; font-family:'Segoe UI', Tahoma, sans-serif; font-size:11px; padding:8px 10px; width:100%; max-width:420px; box-shadow:2px 2px 0 #000;">
+        <div style="font-weight:bold; font-size:11px; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #808080; padding-bottom:3px; margin-bottom:6px;">
+          <span>🌐 KiloNet Webring Consortium</span>
+          <span style="font-family:monospace; font-size:10px; background:#000080; color:#fff; padding:1px 4px;">Node ${candidateId}</span>
+        </div>
+        <div style="font-size:11px; margin-bottom:8px; color:#111;">
+          This site is certified by the KiloNet Web Consortium.
+        </div>
+        <div style="display:flex; justify-content:space-between; gap:4px;">
+          <a href="/web/webring.html?action=prev&id=${siteId}" style="border:2px outset #ffffff; background:#d4d0c8; color:#000; text-decoration:none; padding:3px 6px; font-size:11px; flex:1; text-align:center; font-weight:bold;">&lt; Prev</a>
+          <a href="/web/webring.html?action=random" style="border:2px outset #ffffff; background:#d4d0c8; color:#000; text-decoration:none; padding:3px 6px; font-size:11px; flex:1; text-align:center;">Random</a>
+          <a href="/web/webring.html" style="border:2px outset #ffffff; background:#d4d0c8; color:#000; text-decoration:none; padding:3px 6px; font-size:11px; flex:1; text-align:center;">Ring Hub</a>
+          <a href="/web/webring.html?action=next&id=${siteId}" style="border:2px outset #ffffff; background:#d4d0c8; color:#000; text-decoration:none; padding:3px 6px; font-size:11px; flex:1; text-align:center; font-weight:bold;">Next &gt;</a>
+        </div>
+      </div>
+    `;
+    embedCode = `<!-- START KILONET WEBRING WIN95 WIDGET (Node ${candidateId}) -->
+<div style="border:2px outset #dfdfdf; background:#c0c0c0; color:#000; font-family:Tahoma,sans-serif; font-size:11px; padding:8px 10px; width:400px;">
+  <div style="font-weight:bold; display:flex; justify-content:space-between; border-bottom:1px solid #808080; padding-bottom:2px; margin-bottom:5px;">
+    <span>KiloNet Webring Consortium</span>
+    <span style="font-family:monospace; background:#000080; color:#fff; padding:0 3px;">${candidateId}</span>
+  </div>
+  <div style="margin-bottom:6px;">This site is certified by the KiloNet Web Consortium.</div>
+  <div style="display:flex; justify-content:space-between; gap:4px;">
+    <a href="/web/webring.html?action=prev&id=${siteId}" style="border:2px outset #fff; background:#d4d0c8; color:#000; text-decoration:none; padding:2px 8px;">&lt; Prev</a>
+    <a href="/web/webring.html?action=random" style="border:2px outset #fff; background:#d4d0c8; color:#000; text-decoration:none; padding:2px 8px;">Random</a>
+    <a href="/web/webring.html" style="border:2px outset #fff; background:#d4d0c8; color:#000; text-decoration:none; padding:2px 8px;">Hub</a>
+    <a href="/web/webring.html?action=next&id=${siteId}" style="border:2px outset #fff; background:#d4d0c8; color:#000; text-decoration:none; padding:2px 8px;">Next &gt;</a>
+  </div>
+</div>
+<!-- END KILONET WEBRING WIN95 WIDGET -->`;
+  } else if (format === 'neon') {
+    widgetHtml = `
+      <div style="border:1px solid ${pal.primary}; background:${pal.bg}; color:${pal.text}; font-family:var(--font-mono); padding:10px 14px; width:100%; max-width:440px; box-shadow:0 0 12px ${pal.glow}; border-radius:3px;">
+        <div style="display:flex; justify-content:space-between; font-size:10px; color:${pal.dim}; border-bottom:1px dashed ${pal.primary}; padding-bottom:4px; margin-bottom:8px;">
+          <span>[ KILONET // ORBIT CIRCUIT ]</span>
+          <span style="color:${pal.primary}; font-weight:bold;">NODE ${candidateId}</span>
+        </div>
+        <div style="font-size:12px; font-weight:bold; color:#ffffff; text-align:center; margin-bottom:8px; letter-spacing:1px;">
+          ${escapeHtml(title).toUpperCase()}
+        </div>
+        <div style="display:flex; justify-content:space-around; font-size:11px;">
+          <a href="/web/webring.html?action=prev&id=${siteId}" style="color:${pal.primary}; text-decoration:none; font-weight:bold;">◄ PREV</a>
+          <span style="color:${pal.dim};">&bull;</span>
+          <a href="/web/webring.html" style="color:#ffffff; text-decoration:none;">RING HUB</a>
+          <span style="color:${pal.dim};">&bull;</span>
+          <a href="/web/webring.html?action=random" style="color:${pal.primary}; text-decoration:none;">RANDOM</a>
+          <span style="color:${pal.dim};">&bull;</span>
+          <a href="/web/webring.html?action=next&id=${siteId}" style="color:${pal.primary}; text-decoration:none; font-weight:bold;">NEXT ►</a>
+        </div>
+      </div>
+    `;
+    embedCode = `<!-- START KILONET NEON HUD BADGE (Node ${candidateId}) -->
+<div style="border:1px solid ${pal.primary}; background:${pal.bg}; color:${pal.text}; font-family:monospace; padding:8px 12px; max-width:420px; box-shadow:0 0 8px ${pal.glow};">
+  <div style="display:flex; justify-content:space-between; font-size:10px; border-bottom:1px dashed ${pal.primary}; margin-bottom:6px;">
+    <span>KILONET ORBIT CIRCUIT</span>
+    <b>NODE ${candidateId}</b>
+  </div>
+  <div style="text-align:center; font-weight:bold; margin-bottom:6px;">${escapeHtml(title)}</div>
+  <div style="display:flex; justify-content:space-between; font-size:11px;">
+    <a href="/web/webring.html?action=prev&id=${siteId}" style="color:${pal.primary}; text-decoration:none;">◄ PREV</a>
+    <a href="/web/webring.html" style="color:#fff; text-decoration:none;">HUB</a>
+    <a href="/web/webring.html?action=random" style="color:${pal.primary}; text-decoration:none;">RANDOM</a>
+    <a href="/web/webring.html?action=next&id=${siteId}" style="color:${pal.primary}; text-decoration:none;">NEXT ►</a>
+  </div>
+</div>
+<!-- END KILONET NEON HUD BADGE -->`;
+  } else {
+    // Button format
+    widgetHtml = `
+      <div style="display:inline-flex; align-items:center; gap:8px; background:#0a0e1a; border:1px solid ${pal.border}; padding:6px 12px; border-radius:4px; font-family:var(--font-mono); font-size:11px; box-shadow:0 0 8px ${pal.glow};">
+        <a href="/web/webring.html?action=prev&id=${siteId}" style="color:${pal.primary}; text-decoration:none; font-weight:bold; font-size:13px;">&laquo;</a>
+        <div style="width:88px; height:31px; background:${pal.bg}; border:1px solid ${pal.primary}; display:flex; flex-direction:column; align-items:center; justify-content:center; box-shadow:inset 0 0 4px ${pal.glow}; cursor:pointer;" onclick="switchTab('tab-directory')">
+          <span style="font-size:8px; color:${pal.dim}; line-height:1;">KILONET</span>
+          <span style="font-size:9px; font-weight:bold; color:${pal.primary}; line-height:1.2;">WEBRING</span>
+          <span style="font-size:7px; color:#ffffff; line-height:1;">${candidateId}</span>
+        </div>
+        <a href="/web/webring.html?action=next&id=${siteId}" style="color:${pal.primary}; text-decoration:none; font-weight:bold; font-size:13px;">&raquo;</a>
+        <a href="/web/webring.html?action=random" style="color:${pal.dim}; font-size:10px; text-decoration:none; margin-left:4px;">[rnd]</a>
+      </div>
+    `;
+    embedCode = `<!-- START KILONET 88x31 MICRO BUTTON (Node ${candidateId}) -->
+<div style="display:inline-flex; align-items:center; gap:6px; background:#0a0e1a; border:1px solid ${pal.border}; padding:4px 8px; font-family:monospace; font-size:11px;">
+  <a href="/web/webring.html?action=prev&id=${siteId}" style="color:${pal.primary}; text-decoration:none; font-weight:bold;">&laquo;</a>
+  <a href="/web/webring.html" style="text-decoration:none;">
+    <div style="width:88px; height:31px; background:${pal.bg}; border:1px solid ${pal.primary}; text-align:center; display:flex; flex-direction:column; justify-content:center;">
+      <font size="1" color="${pal.primary}"><b>KILONET</b></font>
+      <font size="1" color="#fff">${candidateId}</font>
+    </div>
+  </a>
+  <a href="/web/webring.html?action=next&id=${siteId}" style="color:${pal.primary}; text-decoration:none; font-weight:bold;">&raquo;</a>
+</div>
+<!-- END KILONET 88x31 MICRO BUTTON -->`;
+  }
+
+  previewBox.innerHTML = widgetHtml;
+  snippetBox.value = embedCode;
+}
+
+function copyWizardEmbedSnippet() {
+  const snippetBox = document.getElementById('wizEmbedSnippet');
+  if (!snippetBox) return;
+
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(snippetBox.value).then(() => {
+      if (typeof playSfx === 'function') playSfx('click');
+      showNoticeToast('📋 Webring widget code copied to clipboard!');
+    }).catch(() => {
+      fallbackCopy(snippetBox);
+    });
+  } else {
+    fallbackCopy(snippetBox);
+  }
+
+  function fallbackCopy(el) {
+    el.select();
+    try {
+      document.execCommand('copy');
+      if (typeof playSfx === 'function') playSfx('click');
+      showNoticeToast('📋 Webring widget code copied to clipboard!');
+    } catch (err) {
+      alert("Please press Ctrl+C to copy the widget snippet.");
+    }
+  }
+}
+
+function submitRingmasterWizardEnrollment() {
+  const handle = document.getElementById('subHandle') ? document.getElementById('subHandle').value.trim() : '';
+  const title = document.getElementById('subTitle') ? document.getElementById('subTitle').value.trim() : '';
+  const url = document.getElementById('subUrl') ? document.getElementById('subUrl').value.trim() : '';
+  const cat = document.getElementById('subCategory') ? document.getElementById('subCategory').value : 'community';
+  const tech = document.getElementById('subTech') ? document.getElementById('subTech').value.trim() : 'HTML 4.01 / Member Node';
+  const desc = document.getElementById('subDesc') ? document.getElementById('subDesc').value.trim() : '';
+  const btnLabel = (document.getElementById('subButtonText') && document.getElementById('subButtonText').value.trim()) || title.substring(0, 12).toUpperCase();
+  const mode = document.getElementById('wizPlacementMode') ? document.getElementById('wizPlacementMode').value : 'tail';
+  const format = document.getElementById('wizBadgeFormat') ? document.getElementById('wizBadgeFormat').value : 'table';
+  const theme = document.getElementById('wizBadgeTheme') ? document.getElementById('wizBadgeTheme').value : 'cyan';
+
+  if (!handle || !title || !url || !desc) {
+    alert("Please fill in all mandatory application fields (Handle, Title, URL, Description).");
+    if (typeof playSfx === 'function') playSfx('error');
+    setWizardStep(1);
+    return;
+  }
+
+  if (typeof playSfx === 'function') playSfx('submit');
+
+  const maxNum = ringNodes.reduce((max, n) => Math.max(max, n.num || 0), 18);
+  const nextNum = maxNum + 1;
+  const candidateId = `#${String(nextNum).padStart(3, '0')}`;
 
   const newNode = {
-    id: paddedId,
+    id: candidateId,
     num: nextNum,
     name: title,
     handle: handle,
     category: cat,
     url: url,
     desc: desc,
-    tech: "HTML 4.01 / Member Node",
+    tech: tech,
     badgeLabel: btnLabel,
-    latency: 28,
+    latency: Math.floor(Math.random() * 20) + 18,
     isCommunity: true,
-    tags: `${cat},community,member,submission`
+    isCustomEnrolled: true,
+    widgetStyle: format,
+    widgetTheme: theme,
+    tags: `${cat},community,member,submission,wizard`
   };
 
+  // Ring insertion placement
+  if (mode === 'custom') {
+    const predSel = document.getElementById('wizPredecessorSelect');
+    const predId = predSel ? predSel.value : '';
+    const idx = ringNodes.findIndex(n => n.id === predId);
+    if (idx !== -1) {
+      ringNodes.splice(idx + 1, 0, newNode);
+    } else {
+      ringNodes.push(newNode);
+    }
+  } else {
+    ringNodes.push(newNode);
+  }
+
+  // Save to localStorage
   try {
     const saved = localStorage.getItem('knet_webring_custom_nodes');
     const customList = saved ? JSON.parse(saved) : [];
@@ -6074,6 +6801,7 @@ function submitRingApplication() {
     console.warn("Could not save to localStorage:", e);
   }
 
+  // Sync to Firebase if available
   if (window.fb && window.fb.db && window.fb.ref && window.fb.push) {
     try {
       window.fb.push(window.fb.ref(window.fb.db, 'webring/submissions'), newNode);
@@ -6082,23 +6810,155 @@ function submitRingApplication() {
     }
   }
 
-  ringNodes.push(newNode);
+  // Broadcast Webring signal
+  if (typeof broadcastWebringSignal === 'function') {
+    broadcastWebringSignal('node_enrolled', { id: candidateId, name: title, handle: handle });
+  }
+
+  // Refresh all components
   renderDirectoryTable();
   renderBadgesWall();
   updateDirectoryCounts();
   initTracerouteTargets();
   updateTourDisplay();
+  populateWizardPredecessorSelect();
+  renderCustomNodesTable();
+  if (typeof drawTopologyMap === 'function') drawTopologyMap();
 
-  alert(`Application Approved!\n\nWelcome to the KiloNet Webring, ${handle}!\nYour assigned Ring ID is ${paddedId}.\nYour node is now active in the local directory.`);
+  alert(`🚀 ACCREDITATION & ENROLLMENT COMPLETE!\n\nWelcome to the KiloNet Webring, ${handle}!\nYour site "${title}" is officially launched into ring orbit as Node ${candidateId}.\n\nYour neighbor routes and embed widget are now live in the consortium network!`);
 
-  // Reset form
-  document.getElementById('subHandle').value = "";
-  document.getElementById('subTitle').value = "";
-  document.getElementById('subUrl').value = "";
-  document.getElementById('subDesc').value = "";
-  document.getElementById('subButtonText').value = "";
+  // Reset form and return to step 1
+  if (document.getElementById('subHandle')) document.getElementById('subHandle').value = "";
+  if (document.getElementById('subTitle')) document.getElementById('subTitle').value = "";
+  if (document.getElementById('subUrl')) document.getElementById('subUrl').value = "";
+  if (document.getElementById('subDesc')) document.getElementById('subDesc').value = "";
+  if (document.getElementById('subButtonText')) document.getElementById('subButtonText').value = "";
 
-  switchTab('tab-directory');
+  setWizardStep(1);
+}
+
+function submitRingApplication() {
+  submitRingmasterWizardEnrollment();
+}
+
+function renderCustomNodesTable() {
+  const tbody = document.getElementById('customNodesTableBody');
+  const countText = document.getElementById('customNodesCountText');
+  if (!tbody) return;
+
+  let customList = [];
+  try {
+    const saved = localStorage.getItem('knet_webring_custom_nodes');
+    if (saved) {
+      customList = JSON.parse(saved);
+      if (!Array.isArray(customList)) customList = [];
+    }
+  } catch (e) {
+    console.warn("Error reading custom nodes:", e);
+  }
+
+  if (countText) {
+    countText.textContent = `${customList.length} Enrolled Custom Node${customList.length === 1 ? '' : 's'}`;
+  }
+
+  if (customList.length === 0) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="5" style="text-align:center; color:var(--text-dim); padding:16px;">
+          No custom member nodes enrolled yet. Use the Guided Enrollment Wizard above to add your retro site!
+        </td>
+      </tr>
+    `;
+    return;
+  }
+
+  tbody.innerHTML = '';
+  customList.forEach(node => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><span style="color:var(--cyan); font-family:var(--font-mono); font-weight:bold;">${escapeHtml(node.id)}</span></td>
+      <td>
+        <strong style="color:#ffffff;">${escapeHtml(node.name)}</strong>
+        <div style="font-size:10px; color:var(--amber); font-family:var(--font-mono);">${escapeHtml(node.handle)}</div>
+      </td>
+      <td><span class="cat-pill ${escapeHtml(node.category)}">${escapeHtml(node.category.toUpperCase())}</span></td>
+      <td>
+        <a href="${escapeHtml(node.url)}" style="color:var(--cyan); font-size:11px; text-decoration:none; font-family:var(--font-mono);" target="_blank">
+          ${escapeHtml(node.url)}
+        </a>
+      </td>
+      <td>
+        <div style="display:flex; gap:6px; flex-wrap:wrap;">
+          <button class="btn-action" style="padding:2px 8px; font-size:10px;" onclick="inspectCustomNode('${escapeHtml(node.id)}')">
+            <span>🔍</span> Tour Hop
+          </button>
+          <button class="btn-action" style="padding:2px 8px; font-size:10px; border-color:#ef4444; color:#f87171;" onclick="deleteCustomNode('${escapeHtml(node.id)}')">
+            <span>🗑️</span> Remove
+          </button>
+        </div>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+function inspectCustomNode(nodeId) {
+  if (typeof playSfx === 'function') playSfx('click');
+  const idx = ringNodes.findIndex(n => n.id === nodeId);
+  if (idx !== -1) {
+    currentTourIndex = idx;
+    switchTab('tab-surf');
+    if (typeof loadSurferUrl === 'function') {
+      const node = ringNodes[idx];
+      if (node) loadSurferUrl(node.url);
+    }
+  }
+}
+
+function deleteCustomNode(nodeId) {
+  if (!confirm(`Are you sure you want to remove node ${nodeId} from your local ring orbit?`)) return;
+  if (typeof playSfx === 'function') playSfx('click');
+
+  try {
+    const saved = localStorage.getItem('knet_webring_custom_nodes');
+    if (saved) {
+      let customList = JSON.parse(saved);
+      if (Array.isArray(customList)) {
+        customList = customList.filter(n => n.id !== nodeId);
+        localStorage.setItem('knet_webring_custom_nodes', JSON.stringify(customList));
+      }
+    }
+  } catch (e) {
+    console.warn("Could not delete from localStorage:", e);
+  }
+
+  ringNodes = ringNodes.filter(n => n.id !== nodeId);
+
+  renderDirectoryTable();
+  renderBadgesWall();
+  updateDirectoryCounts();
+  initTracerouteTargets();
+  updateTourDisplay();
+  populateWizardPredecessorSelect();
+  renderCustomNodesTable();
+  updateWizardNeighborPreview();
+  if (typeof drawTopologyMap === 'function') drawTopologyMap();
+
+  showNoticeToast(`Node ${nodeId} removed from local ring orbit.`);
+}
+
+function fillDemoSubmission() {
+  if (typeof playSfx === 'function') playSfx('click');
+  if (document.getElementById('subHandle')) document.getElementById('subHandle').value = "~vapor_scout";
+  if (document.getElementById('subTitle')) document.getElementById('subTitle').value = "Subterranean Pixel Sanctuary";
+  if (document.getElementById('subUrl')) document.getElementById('subUrl').value = "/web/users/vapor_scout.html";
+  if (document.getElementById('subCategory')) document.getElementById('subCategory').value = "community";
+  if (document.getElementById('subTech')) document.getElementById('subTech').value = "HTML 4.01 / Web Audio / Win95 Canvas";
+  if (document.getElementById('subDesc')) document.getElementById('subDesc').value = "Cyberpunk pixel art archives, procedural MIDI soundscapes, and vintage 1999 computing hardware logs.";
+  if (document.getElementById('subButtonText')) document.getElementById('subButtonText').value = "PIXEL SANCTUARY";
+  updateWizardNeighborPreview();
+  renderWizardWidgetPreview();
+  showNoticeToast("⚡ Loaded demo webmaster profile into Stage 1!");
 }
 
 /* =========================================================================
@@ -7943,6 +8803,10 @@ window.addEventListener('DOMContentLoaded', () => {
   initSubterraneanSignalsBoard();
   initGatewaySniffer();
   initRingSurfer();
+  populateWizardPredecessorSelect();
+  renderCustomNodesTable();
+  updateWizardNeighborPreview();
+  renderWizardWidgetPreview();
 
   if (window.fb && typeof window.onFirebaseReady === 'function') {
     window.onFirebaseReady();

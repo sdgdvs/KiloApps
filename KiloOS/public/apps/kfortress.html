@@ -1414,6 +1414,64 @@
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
 
+    // ==========================================
+    // 2D GAME ASSET PIPELINE & SPRITE REGISTRY
+    // ==========================================
+    const KFORTRESS_SPRITES = {};
+
+    function initKFortressAssets() {
+      const sprites = {
+        citadel: { file: 'citadel_keep.png', frames: 1 },
+        rift_gate: { file: 'rift_gate.png', frames: 1 },
+        orc: { file: 'enemy_orc.png', frames: 1 },
+        goblin: { file: 'enemy_goblin.png', frames: 3 },
+        skeleton: { file: 'enemy_skeleton.png', frames: 3 },
+        golem: { file: 'enemy_golem.png', frames: 3 },
+        wyvern: { file: 'enemy_wyvern.png', frames: 3 },
+        necromancer: { file: 'enemy_necromancer.png', frames: 3 }
+      };
+
+      const bgImg = new Image();
+      bgImg.src = '../assets/backgrounds/kfortress_bg.png';
+      bgImg.onload = () => { KFORTRESS_SPRITES['bg'] = { img: bgImg, loaded: true }; };
+      bgImg.onerror = () => {
+        const fb = new Image();
+        fb.src = 'assets/backgrounds/kfortress_bg.png';
+        fb.onload = () => { KFORTRESS_SPRITES['bg'] = { img: fb, loaded: true }; };
+      };
+
+      Object.keys(sprites).forEach(key => {
+        const info = sprites[key];
+        const img = new Image();
+        img.src = `../assets/sprites/kfortress/${info.file}`;
+        img.onload = () => {
+          KFORTRESS_SPRITES[key] = { img: img, loaded: true, frames: info.frames };
+        };
+        img.onerror = () => {
+          const fb = new Image();
+          fb.src = `assets/sprites/kfortress/${info.file}`;
+          fb.onload = () => {
+            KFORTRESS_SPRITES[key] = { img: fb, loaded: true, frames: info.frames };
+          };
+        };
+      });
+    }
+
+    function drawSpriteAsset(targetCtx, key, x, y, size, frameIdx) {
+      const item = KFORTRESS_SPRITES[key];
+      if (item && item.loaded && item.img && item.img.complete && item.img.naturalWidth > 0) {
+        const numFrames = item.frames || 1;
+        const f = Math.floor(Math.abs(frameIdx || 0)) % numFrames;
+        const fw = item.img.naturalWidth / numFrames;
+        const fh = item.img.naturalHeight;
+        targetCtx.drawImage(item.img, f * fw, 0, fw, fh, x - size / 2, y - size / 2, size, size);
+        return true;
+      }
+      return false;
+    }
+
+    initKFortressAssets();
+
     let selectedTowerType = 'Archer';
 
     const towerDefs = {
@@ -3901,6 +3959,21 @@
       ctx.translate(x, y);
       const t = e.type;
       const legCycle = Math.sin(frame * 0.3 + (e.id || 0) * 5) * 4;
+      const walkFrame = Math.floor(frame * 0.15 + (e.id || 0));
+
+      let assetKey = null;
+      let spriteSize = isBoss ? 44 : 28;
+      if (t === 'Goblin') { assetKey = 'goblin'; spriteSize = isBoss ? 40 : 26; }
+      else if (t === 'Orc') { assetKey = 'orc'; spriteSize = isBoss ? 50 : 34; }
+      else if (t === 'Skeleton') { assetKey = 'skeleton'; spriteSize = isBoss ? 44 : 28; }
+      else if (t === 'Golem') { assetKey = 'golem'; spriteSize = isBoss ? 56 : 40; }
+      else if (t === 'Wyvern') { assetKey = 'wyvern'; spriteSize = isBoss ? 56 : 40; }
+      else if (t === 'Necromancer') { assetKey = 'necromancer'; spriteSize = isBoss ? 48 : 32; }
+
+      if (assetKey && drawSpriteAsset(ctx, assetKey, 0, 0, spriteSize, walkFrame)) {
+        ctx.restore();
+        return;
+      }
 
       if (t === 'Goblin') {
         // Green skin Goblin with ragged tunic and curved rusty knife
@@ -4563,9 +4636,15 @@
         ctx.translate(-w / 2, -h / 2);
       }
 
-      // Base Background with subtle radial depth
-      ctx.fillStyle = map.bg;
-      ctx.fillRect(0, 0, w, h);
+      // Base Background with subtle radial depth & terrain texture
+      if (KFORTRESS_SPRITES['bg'] && KFORTRESS_SPRITES['bg'].loaded) {
+        ctx.drawImage(KFORTRESS_SPRITES['bg'].img, 0, 0, w, h);
+        ctx.fillStyle = 'rgba(10, 12, 16, 0.45)';
+        ctx.fillRect(0, 0, w, h);
+      } else {
+        ctx.fillStyle = map.bg;
+        ctx.fillRect(0, 0, w, h);
+      }
       
       const grad = ctx.createRadialGradient(w/2, h/2, 50, w/2, h/2, Math.hypot(w, h)/2);
       grad.addColorStop(0, 'rgba(255,255,255,0.02)');
@@ -4691,144 +4770,154 @@
       // Spawn Gate (Ancient Nether Rift Gate)
       const gateP = waypoints[0];
       ctx.save();
-      ctx.fillStyle = 'rgba(0,0,0,0.5)';
-      ctx.fillRect(gateP.x - 24, gateP.y - 24, 48, 48);
-      // Obsidian Carved Pillars
-      ctx.fillStyle = '#1e1b4b';
-      ctx.fillRect(gateP.x - 22, gateP.y - 22, 10, 44);
-      ctx.fillRect(gateP.x + 12, gateP.y - 22, 10, 44);
-      ctx.fillRect(gateP.x - 22, gateP.y - 24, 44, 8); // Top lintel
-      ctx.strokeStyle = '#4338ca'; ctx.lineWidth = 1.5;
-      ctx.strokeRect(gateP.x - 22, gateP.y - 24, 44, 46);
-      // Swirling Nether Vortex Core
-      const riftRot = globalFrame * 0.06;
-      ctx.save();
-      ctx.translate(gateP.x, gateP.y);
-      ctx.rotate(riftRot);
-      ctx.fillStyle = '#450a0a';
-      ctx.beginPath(); ctx.ellipse(0, 0, 14, 10, 0, 0, Math.PI * 2); ctx.fill();
-      ctx.fillStyle = '#b91c1c';
-      ctx.beginPath(); ctx.ellipse(0, 0, 9, 6, 0, 0, Math.PI * 2); ctx.fill();
-      ctx.fillStyle = '#fef08a';
-      ctx.beginPath(); ctx.arc(0, 0, 3, 0, Math.PI * 2); ctx.fill();
-      ctx.restore();
-      // Glowing runes
-      ctx.fillStyle = '#ef4444'; ctx.font = '800 8px Segoe UI'; ctx.textAlign = 'center';
-      ctx.fillText('RIFT', gateP.x, gateP.y - 14);
+      if (!drawSpriteAsset(ctx, 'rift_gate', gateP.x, gateP.y, 60, 0)) {
+        ctx.fillStyle = 'rgba(0,0,0,0.5)';
+        ctx.fillRect(gateP.x - 24, gateP.y - 24, 48, 48);
+        // Obsidian Carved Pillars
+        ctx.fillStyle = '#1e1b4b';
+        ctx.fillRect(gateP.x - 22, gateP.y - 22, 10, 44);
+        ctx.fillRect(gateP.x + 12, gateP.y - 22, 10, 44);
+        ctx.fillRect(gateP.x - 22, gateP.y - 24, 44, 8); // Top lintel
+        ctx.strokeStyle = '#4338ca'; ctx.lineWidth = 1.5;
+        ctx.strokeRect(gateP.x - 22, gateP.y - 24, 44, 46);
+        // Swirling Nether Vortex Core
+        const riftRot = globalFrame * 0.06;
+        ctx.save();
+        ctx.translate(gateP.x, gateP.y);
+        ctx.rotate(riftRot);
+        ctx.fillStyle = '#450a0a';
+        ctx.beginPath(); ctx.ellipse(0, 0, 14, 10, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#b91c1c';
+        ctx.beginPath(); ctx.ellipse(0, 0, 9, 6, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#fef08a';
+        ctx.beginPath(); ctx.arc(0, 0, 3, 0, Math.PI * 2); ctx.fill();
+        ctx.restore();
+        // Glowing runes
+        ctx.fillStyle = '#ef4444'; ctx.font = '800 8px Segoe UI'; ctx.textAlign = 'center';
+        ctx.fillText('RIFT', gateP.x, gateP.y - 14);
+      } else {
+        ctx.fillStyle = '#ef4444'; ctx.font = '800 8px Segoe UI'; ctx.textAlign = 'center';
+        ctx.fillText('RIFT', gateP.x, gateP.y - 32);
+      }
       ctx.restore();
 
       // Castle Keep (Royal Stone Citadel)
       const castleP = waypoints[waypoints.length - 1];
       ctx.save();
-      ctx.fillStyle = 'rgba(0,0,0,0.5)';
-      ctx.fillRect(castleP.x - 30, castleP.y - 30, 60, 60);
+      if (!drawSpriteAsset(ctx, 'citadel', castleP.x, castleP.y - 6, 76, 0)) {
+        ctx.fillStyle = 'rgba(0,0,0,0.5)';
+        ctx.fillRect(castleP.x - 30, castleP.y - 30, 60, 60);
 
-      // Ashlar Masonry Stone Base
-      ctx.fillStyle = '#334155'; ctx.fillRect(castleP.x - 26, castleP.y - 26, 52, 52);
-      ctx.strokeStyle = '#64748b'; ctx.lineWidth = 2; ctx.strokeRect(castleP.x - 26, castleP.y - 26, 52, 52);
+        // Ashlar Masonry Stone Base
+        ctx.fillStyle = '#334155'; ctx.fillRect(castleP.x - 26, castleP.y - 26, 52, 52);
+        ctx.strokeStyle = '#64748b'; ctx.lineWidth = 2; ctx.strokeRect(castleP.x - 26, castleP.y - 26, 52, 52);
 
-      // Masonry mortar lines
-      ctx.strokeStyle = 'rgba(15, 23, 42, 0.4)'; ctx.lineWidth = 1;
-      for (let my = -18; my <= 18; my += 9) {
-        ctx.beginPath(); ctx.moveTo(castleP.x - 26, castleP.y + my); ctx.lineTo(castleP.x + 26, castleP.y + my); ctx.stroke();
-      }
+        // Masonry mortar lines
+        ctx.strokeStyle = 'rgba(15, 23, 42, 0.4)'; ctx.lineWidth = 1;
+        for (let my = -18; my <= 18; my += 9) {
+          ctx.beginPath(); ctx.moveTo(castleP.x - 26, castleP.y + my); ctx.lineTo(castleP.x + 26, castleP.y + my); ctx.stroke();
+        }
 
-      // Arched Portcullis Gate
-      ctx.fillStyle = '#0f172a';
-      ctx.beginPath();
-      ctx.arc(castleP.x, castleP.y + 12, 10, Math.PI, 0);
-      ctx.lineTo(castleP.x + 10, castleP.y + 26);
-      ctx.lineTo(castleP.x - 10, castleP.y + 26);
-      ctx.closePath();
-      ctx.fill();
-      ctx.strokeStyle = '#d97706'; ctx.lineWidth = 1.2; ctx.stroke();
+        // Arched Portcullis Gate
+        ctx.fillStyle = '#0f172a';
+        ctx.beginPath();
+        ctx.arc(castleP.x, castleP.y + 12, 10, Math.PI, 0);
+        ctx.lineTo(castleP.x + 10, castleP.y + 26);
+        ctx.lineTo(castleP.x - 10, castleP.y + 26);
+        ctx.closePath();
+        ctx.fill();
+        ctx.strokeStyle = '#d97706'; ctx.lineWidth = 1.2; ctx.stroke();
 
-      // Corner Turrets with Conical Slate Roofs
-      const turrets = [
-        { x: castleP.x - 24, y: castleP.y - 24 },
-        { x: castleP.x + 24, y: castleP.y - 24 },
-        { x: castleP.x - 24, y: castleP.y + 24 },
-        { x: castleP.x + 24, y: castleP.y + 24 }
-      ];
-      turrets.forEach(t => {
-        ctx.fillStyle = '#1e293b';
-        ctx.beginPath(); ctx.arc(t.x, t.y, 6, 0, Math.PI * 2); ctx.fill();
-        ctx.strokeStyle = '#94a3b8'; ctx.lineWidth = 1; ctx.stroke();
-      });
-
-      // Battlements
-      ctx.fillStyle = '#475569';
-      for (let bx = -24; bx < 24; bx += 12) {
-        ctx.fillRect(castleP.x + bx, castleP.y - 30, 7, 5);
-      }
-
-      // Detailed Citadel Stonework & Warm Torchlight (Clean Static Architecture - No Traveling Glints)
-      ctx.save();
-      ctx.strokeStyle = '#334155';
-      ctx.lineWidth = 1;
-      // Stone course mortar lines
-      ctx.beginPath();
-      ctx.moveTo(castleP.x - 20, castleP.y - 12); ctx.lineTo(castleP.x + 20, castleP.y - 12);
-      ctx.moveTo(castleP.x - 20, castleP.y + 4); ctx.lineTo(castleP.x + 20, castleP.y + 4);
-      ctx.moveTo(castleP.x - 20, castleP.y + 18); ctx.lineTo(castleP.x + 20, castleP.y + 18);
-      // Vertical stone seams
-      ctx.moveTo(castleP.x - 8, castleP.y - 24); ctx.lineTo(castleP.x - 8, castleP.y - 12);
-      ctx.moveTo(castleP.x + 8, castleP.y - 24); ctx.lineTo(castleP.x + 8, castleP.y - 12);
-      ctx.moveTo(castleP.x, castleP.y - 12); ctx.lineTo(castleP.x, castleP.y + 4);
-      ctx.moveTo(castleP.x - 10, castleP.y + 4); ctx.lineTo(castleP.x - 10, castleP.y + 18);
-      ctx.moveTo(castleP.x + 10, castleP.y + 4); ctx.lineTo(castleP.x + 10, castleP.y + 18);
-      ctx.stroke();
-
-      // Heavy Portcullis Grating
-      ctx.fillStyle = '#0f172a';
-      ctx.fillRect(castleP.x - 7, castleP.y + 12, 14, 14);
-      ctx.strokeStyle = '#64748b'; ctx.lineWidth = 1;
-      ctx.beginPath();
-      ctx.moveTo(castleP.x - 3, castleP.y + 12); ctx.lineTo(castleP.x - 3, castleP.y + 26);
-      ctx.moveTo(castleP.x + 3, castleP.y + 12); ctx.lineTo(castleP.x + 3, castleP.y + 26);
-      ctx.moveTo(castleP.x - 7, castleP.y + 18); ctx.lineTo(castleP.x + 7, castleP.y + 18);
-      ctx.stroke();
-
-      // Warm Amber Sconce Lanterns
-      ctx.fillStyle = '#f59e0b';
-      ctx.beginPath(); ctx.arc(castleP.x - 11, castleP.y + 16, 2, 0, Math.PI * 2); ctx.fill();
-      ctx.beginPath(); ctx.arc(castleP.x + 11, castleP.y + 16, 2, 0, Math.PI * 2); ctx.fill();
-      ctx.fillStyle = '#fef08a';
-      ctx.beginPath(); ctx.arc(castleP.x - 11, castleP.y + 16, 1, 0, Math.PI * 2); ctx.fill();
-      ctx.beginPath(); ctx.arc(castleP.x + 11, castleP.y + 16, 1, 0, Math.PI * 2); ctx.fill();
-
-      // Mounted Citadel Defense Ballistas (Ramparts)
-      if (techSiegeEng > 0) {
-        [-24, 24].forEach(bx => {
-          ctx.save();
-          ctx.translate(castleP.x + bx, castleP.y - 24);
-          ctx.fillStyle = '#78350f';
-          ctx.fillRect(-2, -2, 4, 4);
-          ctx.strokeStyle = '#fbbf24'; ctx.lineWidth = 1.6;
-          ctx.beginPath(); ctx.arc(-2, 0, 5, -Math.PI * 0.6, Math.PI * 0.6); ctx.stroke();
-          ctx.strokeStyle = '#f8fafc'; ctx.lineWidth = 1.2;
-          ctx.beginPath(); ctx.moveTo(-4, 0); ctx.lineTo(5, 0); ctx.stroke();
-          ctx.restore();
+        // Corner Turrets with Conical Slate Roofs
+        const turrets = [
+          { x: castleP.x - 24, y: castleP.y - 24 },
+          { x: castleP.x + 24, y: castleP.y - 24 },
+          { x: castleP.x - 24, y: castleP.y + 24 },
+          { x: castleP.x + 24, y: castleP.y + 24 }
+        ];
+        turrets.forEach(t => {
+          ctx.fillStyle = '#1e293b';
+          ctx.beginPath(); ctx.arc(t.x, t.y, 6, 0, Math.PI * 2); ctx.fill();
+          ctx.strokeStyle = '#94a3b8'; ctx.lineWidth = 1; ctx.stroke();
         });
+
+        // Battlements
+        ctx.fillStyle = '#475569';
+        for (let bx = -24; bx < 24; bx += 12) {
+          ctx.fillRect(castleP.x + bx, castleP.y - 30, 7, 5);
+        }
+
+        // Detailed Citadel Stonework & Warm Torchlight (Clean Static Architecture - No Traveling Glints)
+        ctx.save();
+        ctx.strokeStyle = '#334155';
+        ctx.lineWidth = 1;
+        // Stone course mortar lines
+        ctx.beginPath();
+        ctx.moveTo(castleP.x - 20, castleP.y - 12); ctx.lineTo(castleP.x + 20, castleP.y - 12);
+        ctx.moveTo(castleP.x - 20, castleP.y + 4); ctx.lineTo(castleP.x + 20, castleP.y + 4);
+        ctx.moveTo(castleP.x - 20, castleP.y + 18); ctx.lineTo(castleP.x + 20, castleP.y + 18);
+        // Vertical stone seams
+        ctx.moveTo(castleP.x - 8, castleP.y - 24); ctx.lineTo(castleP.x - 8, castleP.y - 12);
+        ctx.moveTo(castleP.x + 8, castleP.y - 24); ctx.lineTo(castleP.x + 8, castleP.y - 12);
+        ctx.moveTo(castleP.x, castleP.y - 12); ctx.lineTo(castleP.x, castleP.y + 4);
+        ctx.moveTo(castleP.x - 10, castleP.y + 4); ctx.lineTo(castleP.x - 10, castleP.y + 18);
+        ctx.moveTo(castleP.x + 10, castleP.y + 4); ctx.lineTo(castleP.x + 10, castleP.y + 18);
+        ctx.stroke();
+
+        // Heavy Portcullis Grating
+        ctx.fillStyle = '#0f172a';
+        ctx.fillRect(castleP.x - 7, castleP.y + 12, 14, 14);
+        ctx.strokeStyle = '#64748b'; ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(castleP.x - 3, castleP.y + 12); ctx.lineTo(castleP.x - 3, castleP.y + 26);
+        ctx.moveTo(castleP.x + 3, castleP.y + 12); ctx.lineTo(castleP.x + 3, castleP.y + 26);
+        ctx.moveTo(castleP.x - 7, castleP.y + 18); ctx.lineTo(castleP.x + 7, castleP.y + 18);
+        ctx.stroke();
+
+        // Warm Amber Sconce Lanterns
+        ctx.fillStyle = '#f59e0b';
+        ctx.beginPath(); ctx.arc(castleP.x - 11, castleP.y + 16, 2, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(castleP.x + 11, castleP.y + 16, 2, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#fef08a';
+        ctx.beginPath(); ctx.arc(castleP.x - 11, castleP.y + 16, 1, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(castleP.x + 11, castleP.y + 16, 1, 0, Math.PI * 2); ctx.fill();
+
+        // Mounted Citadel Defense Ballistas (Ramparts)
+        if (techSiegeEng > 0) {
+          [-24, 24].forEach(bx => {
+            ctx.save();
+            ctx.translate(castleP.x + bx, castleP.y - 24);
+            ctx.fillStyle = '#78350f';
+            ctx.fillRect(-2, -2, 4, 4);
+            ctx.strokeStyle = '#fbbf24'; ctx.lineWidth = 1.6;
+            ctx.beginPath(); ctx.arc(-2, 0, 5, -Math.PI * 0.6, Math.PI * 0.6); ctx.stroke();
+            ctx.strokeStyle = '#f8fafc'; ctx.lineWidth = 1.2;
+            ctx.beginPath(); ctx.moveTo(-4, 0); ctx.lineTo(5, 0); ctx.stroke();
+            ctx.restore();
+          });
+        }
+        ctx.restore();
+
+        // Royal Gold & Azure Banner Fluttering
+        const bannerWave = Math.sin(globalFrame * 0.15) * 4.5;
+        ctx.fillStyle = '#1e40af';
+        ctx.beginPath();
+        ctx.moveTo(castleP.x + 14, castleP.y - 32);
+        ctx.lineTo(castleP.x + 30 + bannerWave, castleP.y - 26);
+        ctx.lineTo(castleP.x + 14, castleP.y - 20);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = '#fbbf24';
+        ctx.beginPath(); ctx.arc(castleP.x + 21 + bannerWave * 0.5, castleP.y - 26, 2.5, 0, Math.PI * 2); ctx.fill();
+        ctx.strokeStyle = '#d97706'; ctx.lineWidth = 1.5;
+        ctx.beginPath(); ctx.moveTo(castleP.x + 14, castleP.y - 36); ctx.lineTo(castleP.x + 14, castleP.y - 18); ctx.stroke();
+
+        ctx.fillStyle = '#fef08a'; ctx.font = '800 9px Segoe UI'; ctx.textAlign = 'center';
+        ctx.fillText('CITADEL', castleP.x, castleP.y - 3);
+      } else {
+        ctx.fillStyle = '#fef08a'; ctx.font = '800 9px Segoe UI'; ctx.textAlign = 'center';
+        ctx.fillText('CITADEL', castleP.x, castleP.y + 36);
       }
-      ctx.restore();
-
-      // Royal Gold & Azure Banner Fluttering
-      const bannerWave = Math.sin(globalFrame * 0.15) * 4.5;
-      ctx.fillStyle = '#1e40af';
-      ctx.beginPath();
-      ctx.moveTo(castleP.x + 14, castleP.y - 32);
-      ctx.lineTo(castleP.x + 30 + bannerWave, castleP.y - 26);
-      ctx.lineTo(castleP.x + 14, castleP.y - 20);
-      ctx.closePath();
-      ctx.fill();
-      ctx.fillStyle = '#fbbf24';
-      ctx.beginPath(); ctx.arc(castleP.x + 21 + bannerWave * 0.5, castleP.y - 26, 2.5, 0, Math.PI * 2); ctx.fill();
-      ctx.strokeStyle = '#d97706'; ctx.lineWidth = 1.5;
-      ctx.beginPath(); ctx.moveTo(castleP.x + 14, castleP.y - 36); ctx.lineTo(castleP.x + 14, castleP.y - 18); ctx.stroke();
-
-      ctx.fillStyle = '#fef08a'; ctx.font = '800 9px Segoe UI'; ctx.textAlign = 'center';
-      ctx.fillText('CITADEL', castleP.x, castleP.y - 3);
       ctx.restore();
 
       // Selected Range Circle
