@@ -729,6 +729,28 @@
     --border-color: #50e3c2;
     color: #80ffaa;
   }
+  body.theme-sunsetstrip {
+    --bg-dark: #12040c;
+    --neon-pink: #ff0055;
+    --neon-cyan: #ffaa00;
+    --neon-yellow: #ffff33;
+    --neon-green: #ff3366;
+    --neon-purple: #990044;
+    --card-bg: rgba(30, 8, 20, 0.95);
+    --border-color: #ff0055;
+    color: #ffbbdd;
+  }
+  body.theme-heartland {
+    --bg-dark: #0f1205;
+    --neon-pink: #f59e0b;
+    --neon-cyan: #84cc16;
+    --neon-yellow: #fde047;
+    --neon-green: #22c55e;
+    --neon-purple: #b45309;
+    --card-bg: rgba(22, 28, 10, 0.95);
+    --border-color: #f59e0b;
+    color: #fef08a;
+  }
 
   .neighborhood-bar {
     display: flex;
@@ -2107,6 +2129,8 @@
       <button class="neighborhood-btn" id="btnThemeBeverly" onclick="setNeighborhood('beverlyhills')">BeverlyHills</button>
       <button class="neighborhood-btn" id="btnThemeSoHo" onclick="setNeighborhood('soho')">SoHo</button>
       <button class="neighborhood-btn" id="btnThemeForest" onclick="setNeighborhood('enchantedforest')">EnchantedForest</button>
+      <button class="neighborhood-btn" id="btnThemeSunset" onclick="setNeighborhood('sunsetstrip')">SunsetStrip</button>
+      <button class="neighborhood-btn" id="btnThemeHeartland" onclick="setNeighborhood('heartland')">Heartland</button>
     </div>
     <div class="voyagers-pill">
       <span class="pulse-dot"></span>
@@ -2133,6 +2157,7 @@
     <a href="#oracle-section" class="nav-btn">🔮 Silicon Oracle '99</a>
     <a href="#y2k-diagnostic" class="nav-btn">⏱️ Y2K Diagnostic</a>
     <a href="#banner-studio" class="nav-btn">🚧 Banner Studio</a>
+    <a href="#decal-studio-section" class="nav-btn" style="color:#f43f5e; border-color:#f43f5e;">✨ Animated Decal Studio</a>
     <a href="#page-builder" class="nav-btn">🏗️ Page Builder</a>
     <a href="#cyber-poll-section" class="nav-btn">📊 Cyber Poll</a>
     <a href="#websafe-palette-section" class="nav-btn" style="color:#facc15; border-color:#facc15;">🎨 216 Web-Safe Palette</a>
@@ -2187,6 +2212,8 @@
       <button class="nh-tab-btn" id="tabNhBeverly" onclick="switchExplorerNeighborhood('beverlyhills')">💎 BeverlyHills (Dot-Com &amp; Glamour)</button>
       <button class="nh-tab-btn" id="tabNhSoHo" onclick="switchExplorerNeighborhood('soho')">🎨 SoHo (Text Art &amp; Acid Synths)</button>
       <button class="nh-tab-btn" id="tabNhForest" onclick="switchExplorerNeighborhood('enchantedforest')">🌲 EnchantedForest (MUDs &amp; Lore)</button>
+      <button class="nh-tab-btn" id="tabNhSunset" onclick="switchExplorerNeighborhood('sunsetstrip')">🎸 SunsetStrip (Rock, Grunge &amp; Riffs)</button>
+      <button class="nh-tab-btn" id="tabNhHeartland" onclick="switchExplorerNeighborhood('heartland')">🌻 Heartland (Prairie, Crafts &amp; Pets)</button>
       <button class="nh-tab-btn" id="tabNhCommunity" onclick="switchExplorerNeighborhood('community')" style="color:#ffcc00; border-color:#ffcc00;">⭐ Community Registry (<span id="nhUserCount">0</span>)</button>
     </div>
 
@@ -2216,7 +2243,7 @@
       <div style="display:flex; align-items:center; gap:8px;">
         <div class="passport-pill" onclick="openPassportModal()" title="Click to view your Cyberspace Passport">
           <span>📜 Cyberspace Passport:</span>
-          <strong id="passportBadgeCount" style="color:#ffff00;">0/7 Stamps</strong>
+          <strong id="passportBadgeCount" style="color:#ffff00;">0/9 Stamps</strong>
           <span id="passportProgressPct" style="color:#38bdf8;">(0%)</span>
         </div>
       </div>
@@ -2254,13 +2281,13 @@
         <button class="homestead-modal-close" onclick="closePassportModal()">✕</button>
       </div>
       <p style="font-size:11px; color:#94a3b8; margin:0 0 10px 0;">
-        Issued by the KiloNet Webring &amp; GeoCities Homestead Consortium. Explore neighborhoods, inspect anomalous carrier nodes, and dial virtual gateways to unlock all 7 commemorative stamps!
+        Issued by the KiloNet Webring &amp; GeoCities Homestead Consortium. Explore neighborhoods, inspect anomalous carrier nodes, and dial virtual gateways to unlock all 9 commemorative stamps!
       </p>
       <div class="passport-grid" id="passportGrid">
         <!-- Rendered dynamically -->
       </div>
       <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px dashed #334155; padding-top:8px; margin-top:10px;">
-        <span style="font-size:10px; color:#64748b;" id="passportTotalVisits">Visited: 0 / 25 Homesteads</span>
+        <span style="font-size:10px; color:#64748b;" id="passportTotalVisits">Visited: 0 / 35 Homesteads</span>
         <div style="display:flex; gap:6px;">
           <button class="tool-btn" style="background:#004466; color:#38bdf8;" onclick="downloadPassportTxt()">💾 Download Passport (.TXT)</button>
           <button class="tool-btn" style="background:#334155; color:#fff;" onclick="closePassportModal()">Close</button>
@@ -2305,6 +2332,8 @@
         <option value="2">03: Phosphor Cyberpunk Pulse (144 BPM - Hardcore Keygen Chiptune [02:13])</option>
         <option value="3">04: Silicon Horizon 1999 (140 BPM - Dreamy Euro-Trance / Paula Anthems [02:16])</option>
         <option value="4">05: Subterranean Bedrock Resonance (132 BPM - 1999Hz Harmonic Lore [02:18])</option>
+        <option value="5">06: Sunset Boulevard Overdrive (140 BPM - Grunge Rock Power Riffs [02:10])</option>
+        <option value="6">07: Prairie Solstice Bluegrass (124 BPM - Banjo &amp; Folk Counterpoint [02:04])</option>
       </select>
 
       <div class="vol-control">
@@ -3493,6 +3522,73 @@ Commands recognized: ATZ, ATDT, ATH0, ATI4.
     </div>
   </div>
 
+
+  <!-- 7B. Vintage Animated GIF Decal Studio & Sticker Forge '99 -->
+  <div class="section-box" id="decal-studio-section">
+    <div class="section-title">
+      <span>✨ VINTAGE ANIMATED GIF DECAL STUDIO &amp; STICKER FORGE '99</span>
+      <span style="font-size:11px; color:#ff00aa;">[PROCEDURAL RETRO WEB 1.0 DECALS]</span>
+    </div>
+    <p style="font-size:12px; margin:0 0 10px 0; line-height:1.5;">
+      In 1999, personal homepages lived and breathed through animated GIF decals: shoveling road workers, flaming text dividers, spinning 3D wireframe globes, fluttering email envelopes, and flashing "NEW!" starbursts. Configure retro animated stickers, stamp them onto your virtual homestead canvas, or copy the drop-in HTML/Canvas code snippet!
+    </p>
+
+    <div style="display:grid; grid-template-columns: 280px 1fr; gap:12px;">
+      <!-- Decal Selector & Settings -->
+      <div style="background:#0b0314; border:1px solid #ff00aa; padding:10px; font-size:11px;">
+        <div style="color:#ffff00; font-weight:bold; margin-bottom:6px;">Decal Gallery (Select Style):</div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:4px; margin-bottom:8px;">
+          <button class="tool-btn active" id="btnDecalWorker" onclick="selectDecalStyle('worker')">🚧 Digging Worker</button>
+          <button class="tool-btn" id="btnDecalFlame" onclick="selectDecalStyle('flame')">🔥 Flaming "HOT!"</button>
+          <button class="tool-btn" id="btnDecalGlobe" onclick="selectDecalStyle('globe')">🌐 Cyber Globe</button>
+          <button class="tool-btn" id="btnDecalEnvelope" onclick="selectDecalStyle('envelope')">✉️ Flying Email</button>
+          <button class="tool-btn" id="btnDecalStarburst" onclick="selectDecalStyle('starburst')">💥 Flashing NEW!</button>
+          <button class="tool-btn" id="btnDecalMascot" onclick="selectDecalStyle('mascot')">🐹 Dancing Hamster</button>
+          <button class="tool-btn" id="btnDecalCompass" onclick="selectDecalStyle('compass')">🧭 Netscape Compass</button>
+          <button class="tool-btn" id="btnDecalBeacon" onclick="selectDecalStyle('beacon')">🚨 Y2K Hazard Beacon</button>
+        </div>
+
+        <div style="margin-bottom:6px;">
+          <label style="color:#00ffcc; font-weight:bold;">Custom Sticker Text / Banner:</label>
+          <input type="text" id="decalCustomText" value="UNDER CONSTRUCTION" maxlength="24" oninput="updateDecalCustomText(this.value)" style="width:100%; background:#000; color:#ffff00; border:1px solid #00ffcc; font-family:'Courier New', monospace; font-size:11px; padding:3px;">
+        </div>
+
+        <div style="margin-bottom:6px;">
+          <label style="color:#00ffcc;">Animation Speed:</label>
+          <select id="decalAnimSpeed" onchange="setDecalSpeed(this.value)" style="width:100%; background:#000; color:#fff; border:1px solid #aa00aa; font-size:11px; padding:3px;">
+            <option value="0.6">Slow Chill (0.6x)</option>
+            <option value="1.0" selected>1999 Classic (1.0x)</option>
+            <option value="1.8">Overdrive Speed (1.8x)</option>
+          </select>
+        </div>
+
+        <div style="display:flex; gap:6px; margin-top:8px;">
+          <button class="tool-btn" style="flex:1; background:#004466; color:#00ffff;" onclick="stampDecalOnPad()">📌 Stamp on Pad</button>
+          <button class="tool-btn" style="flex:1; background:#440022; color:#ff66cc;" onclick="clearDecalPad()">🧹 Clear Pad</button>
+        </div>
+
+        <div style="margin-top:8px;">
+          <button class="tool-btn" style="width:100%; background:#1a0526; color:#ffff00; border:1px solid #ff00aa;" onclick="copyDecalHtmlSnippet()">📋 Copy HTML Decal Snippet</button>
+        </div>
+      </div>
+
+      <!-- Live Decal Canvas Preview & Stamping Pad -->
+      <div style="background:#02060f; border:2px inset #00ffff; padding:10px; display:flex; flex-direction:column;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+          <span style="font-size:11px; color:#ffff00; font-weight:bold;">📺 Live Animated Decal &amp; Homestead Stamping Pad</span>
+          <span style="font-size:10px; color:#38bdf8;">Click anywhere on pad to place sticker!</span>
+        </div>
+        <div style="position:relative; width:100%; height:200px; background:#000; border:1px solid #005577; overflow:hidden; cursor:crosshair;" id="decalPadContainer" onclick="handleDecalPadClick(event)">
+          <canvas id="decalPreviewCanvas" width="560" height="200" style="display:block; width:100%; height:100%;"></canvas>
+        </div>
+        <div style="margin-top:8px;">
+          <span style="font-size:10px; color:#88aacc;">Exported HTML &amp; Procedural Decal Code:</span>
+          <textarea id="decalCodeOutput" style="width:100%; height:50px; background:#000810; border:1px solid #004466; color:#00ffcc; font-family:'Courier New', monospace; font-size:10px; padding:4px;" readonly></textarea>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- 8. Webmaster Acolyte Workbench (1999 Personal Page Generator) -->
   <div class="section-box" id="page-builder">
     <div class="section-title">
@@ -3525,6 +3621,8 @@ Commands recognized: ATZ, ATDT, ATH0, ATI4.
               <option value="BeverlyHills">BeverlyHills (Glamour/Gold)</option>
               <option value="SoHo">SoHo (Bohemian/Art)</option>
               <option value="EnchantedForest">EnchantedForest (Fantasy)</option>
+              <option value="SunsetStrip">SunsetStrip (Rock/Grunge)</option>
+              <option value="Heartland">Heartland (Country/Prairie)</option>
             </select>
           </div>
         </div>
@@ -4320,6 +4418,8 @@ Commands recognized: ATZ, ATDT, ATH0, ATI4.
       <button class="quick-stamp-btn" onclick="applyQuickStamp('Silicon Oracle prophecy holds true!')">🔮 Oracle Prophecy</button>
       <button class="quick-stamp-btn" onclick="applyQuickStamp('Surfing from Area51 neighborhood!')">🛸 Area51 Voyager</button>
       <button class="quick-stamp-btn" onclick="applyQuickStamp('100% Y2K Compliant Workstation!')">⏱️ Y2K Compliant</button>
+      <button class="quick-stamp-btn" style="border-color:#ff0055; color:#ff66aa;" onclick="applyQuickStamp('🎸 Rocking the SunsetStrip grunge scene!')">🎸 SunsetStrip Rocker</button>
+      <button class="quick-stamp-btn" style="border-color:#f59e0b; color:#fbbf24;" onclick="applyQuickStamp('🌻 Heartland blue ribbon county fair proud!')">🌻 Heartland Pride</button>
       <button class="quick-stamp-btn" onclick="applyQuickStamp('Long live the 999KB Web 1.0 frontier!')">🌐 999KB Frontier</button>
       <button class="quick-stamp-btn" onclick="applyQuickStamp('Probing subnet 10.19.99.4 at 1999Hz carrier...')">📡 Subnet 10.19.99.4 Probe</button>
       <button class="quick-stamp-btn" onclick="applyQuickStamp('Intercepted 1999Hz subcarrier on 10.19.99.4!')">📡 1999Hz Subcarrier</button>
@@ -4345,6 +4445,8 @@ Commands recognized: ATZ, ATDT, ATH0, ATI4.
           <option value="beverlyhills">BeverlyHills</option>
           <option value="soho">SoHo</option>
           <option value="enchantedforest">EnchantedForest</option>
+          <option value="sunsetstrip">SunsetStrip</option>
+          <option value="heartland">Heartland</option>
         </select>
         <input type="text" id="gbSearchInput" placeholder="Search shouts (e.g. 1999Hz, FLARELIGHT)..." oninput="searchGuestbook(this.value)" style="background:#000; color:#ffff00; border:1px solid #005577; font-size:11px; padding:2px 6px; font-family:'Courier New', monospace; width:190px;" />
         <select id="gbSortOrder" onchange="changeGuestbookSort(this.value)" style="background:#000; color:#fff; border:1px solid #334155; font-size:11px; padding:2px;">
@@ -5039,7 +5141,886 @@ const track5 = {
   ]
 };
 
-const allTracks = [track1, track2, track3, track4, track5];
+
+// TRACK 6: Sunset Boulevard Overdrive (140 BPM - Grunge Rock Power Chords)
+const T6_LEAD_THEME = [
+  ...rep8([62, 65, 67, 65]),
+  ...rep8([62, 67, 70, 67]),
+  ...rep8([60, 65, 68, 65]),
+  ...rep8([58, 62, 65, 62])
+];
+const T6_CHORDS_MAIN = [
+  ...rep16([50, 57, 62, 65]),
+  ...rep16([53, 60, 65, 68]),
+  ...rep16([48, 55, 60, 63]),
+  ...rep16([46, 53, 58, 62])
+];
+const T6_BASS_MAIN = [
+  ...rep8([38, 38, 50, 38]),
+  ...rep8([41, 41, 53, 41]),
+  ...rep8([36, 36, 48, 36]),
+  ...rep8([34, 34, 46, 34])
+];
+
+const track6 = {
+  title: "Track 6: Sunset Boulevard Overdrive (140 BPM - Grunge Rock)",
+  shortTitle: "Sunset Boulevard Overdrive",
+  modName: "Sunset_Overdrive",
+  bpm: 140,
+  genre: "140 BPM - Grunge Rock Power Riffs",
+  patterns: [
+    { name: "Overdrive Fuzz Intro", lead: SILENT_64, arp: T6_CHORDS_MAIN, bass: SILENT_64, kick: KICK_4, snare: SNARE_OFF, hihat: HAT_OFFBEAT, crash: false, riser: false, laser: false },
+    { name: "Drop-D Power Verse", lead: T6_LEAD_THEME, arp: T6_CHORDS_MAIN, bass: T6_BASS_MAIN, kick: KICK_DRIVE, snare: SNARE_STD, hihat: HAT_16TH, crash: false, riser: false, laser: false },
+    { name: "Seattle Crunch Chorus", lead: T6_LEAD_THEME, arp: T6_CHORDS_MAIN, bass: T6_BASS_MAIN, kick: KICK_DRIVE, snare: SNARE_STD, hihat: HAT_OPEN, crash: true, riser: false, laser: false },
+    { name: "Sunset Solo Breakdown", lead: T6_LEAD_THEME, arp: T6_CHORDS_MAIN, bass: SILENT_64, kick: KICK_OFF, snare: SNARE_BUILD, hihat: HAT_OFF, crash: false, riser: true, laser: true },
+    { name: "Final Half-Stack Outro", lead: T6_LEAD_THEME, arp: T6_CHORDS_MAIN, bass: T6_BASS_MAIN, kick: KICK_DRIVE, snare: SNARE_STD, hihat: HAT_16TH, crash: true, riser: false, laser: false }
+  ]
+};
+
+// TRACK 7: Prairie Solstice Bluegrass (124 BPM - Banjo & Folk Counterpoint)
+const T7_LEAD_THEME = [
+  ...rep8([67, 71, 74, 79]),
+  ...rep8([65, 69, 72, 77]),
+  ...rep8([60, 64, 67, 72]),
+  ...rep8([62, 67, 71, 74])
+];
+const T7_CHORDS_MAIN = [
+  ...rep16([55, 59, 62, 67]),
+  ...rep16([53, 57, 60, 65]),
+  ...rep16([48, 52, 55, 60]),
+  ...rep16([50, 55, 59, 62])
+];
+const T7_BASS_MAIN = [
+  ...rep8([43, 43, 55, 43]),
+  ...rep8([41, 41, 53, 41]),
+  ...rep8([36, 36, 48, 36]),
+  ...rep8([38, 38, 50, 38])
+];
+
+const track7 = {
+  title: "Track 7: Prairie Solstice Bluegrass (124 BPM - Banjo & Folk)",
+  shortTitle: "Prairie Solstice Bluegrass",
+  modName: "Prairie_Solstice",
+  bpm: 124,
+  genre: "124 BPM - Banjo & Folk Counterpoint",
+  patterns: [
+    { name: "Front Porch Banjo Intro", lead: T7_LEAD_THEME, arp: T7_CHORDS_MAIN, bass: SILENT_64, kick: KICK_OFF, snare: SNARE_OFF, hihat: HAT_OFFBEAT, crash: false, riser: false, laser: false },
+    { name: "Midwest Hoedown Verse", lead: T7_LEAD_THEME, arp: T7_CHORDS_MAIN, bass: T7_BASS_MAIN, kick: KICK_4, snare: SNARE_STD, hihat: HAT_16TH, crash: false, riser: false, laser: false },
+    { name: "Prairie Breakdown Peak", lead: T7_LEAD_THEME, arp: T7_CHORDS_MAIN, bass: T7_BASS_MAIN, kick: KICK_DRIVE, snare: SNARE_STD, hihat: HAT_OPEN, crash: true, riser: false, laser: false },
+    { name: "Porch Sunset Outro", lead: T7_LEAD_THEME, arp: T7_CHORDS_MAIN, bass: SILENT_64, kick: KICK_OFF, snare: SNARE_OFF, hihat: HAT_OFFBEAT, crash: false, riser: false, laser: false }
+  ]
+};
+
+const allTracks = [track1, track2, track3, track4, track5, track6, track7];
+
+// ============================================================================
+// SUNSETSTRIP & HEARTLAND INTERACTIVE HOMESTEAD HANDLERS
+// ============================================================================
+
+// 1. Drop-D Guitar Riff Synthesizer
+function playDropDRiff(riffName) {
+  try {
+    initAudioCtx();
+    const riffs = {
+      grunge_intro: [38, 38, 50, 38, 48, 38, 38, 50, 48, 50, 53],
+      fuzz_verse: [38, 48, 38, 48, 43, 43, 45, 43],
+      drop_chorus: [46, 46, 46, 48, 48, 48, 50, 50]
+    };
+    const notes = riffs[riffName] || riffs.grunge_intro;
+    const tabEl = document.getElementById('tabOutput');
+    if (tabEl) {
+      tabEl.textContent = `Playing [${riffName.toUpperCase()}] :: Riff Notes: ${notes.join('-')} (Distorted Drop-D Web Audio Engine)`;
+    }
+    notes.forEach((midi, idx) => {
+      const t = audioCtx.currentTime + idx * 0.16;
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      const dist = audioCtx.createWaveShaper();
+      
+      // Distortion curve
+      const n_samples = 256;
+      const curve = new Float32Array(n_samples);
+      for (let i = 0; i < n_samples; ++i) {
+        const x = (i * 2) / n_samples - 1;
+        curve[i] = (Math.PI + 4) * x / (Math.PI + 4 * Math.abs(x));
+      }
+      dist.curve = curve;
+      dist.oversample = '2x';
+
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(midiNoteToFreq(midi), t);
+
+      gain.gain.setValueAtTime(0.12, t);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.35);
+
+      osc.connect(dist);
+      dist.connect(gain);
+      gain.connect(masterGain);
+      if (delayNode) gain.connect(delayNode);
+
+      osc.start(t);
+      osc.stop(t + 0.38);
+    });
+  } catch(e) {}
+}
+
+// 2. Sunset Power Chord Strummer
+function playDistortedChord(chord) {
+  try {
+    initAudioCtx();
+    const chordMap = {
+      'E5': [40, 47, 52],
+      'A5': [45, 52, 57],
+      'D5': [50, 57, 62],
+      'G5': [43, 50, 55],
+      'C5': [48, 55, 60],
+      'B5': [47, 54, 59]
+    };
+    const notes = chordMap[chord] || [40, 47, 52];
+    const outEl = document.getElementById('chordFretOutput');
+    if (outEl) {
+      outEl.textContent = `★ STRUMMED: ${chord} Power Chord • Frequencies: ${notes.map(n => Math.round(midiNoteToFreq(n)) + 'Hz').join(', ')}`;
+    }
+    notes.forEach((midi, i) => {
+      const t = audioCtx.currentTime + i * 0.025; // Slight guitar strum arpeggiation
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(midiNoteToFreq(midi), t);
+
+      gain.gain.setValueAtTime(0.14, t);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.65);
+
+      osc.connect(gain);
+      gain.connect(masterGain);
+      if (delayNode) gain.connect(delayNode);
+
+      osc.start(t);
+      osc.stop(t + 0.7);
+    });
+  } catch(e) {}
+}
+
+// 3. Gig Ticket Stub Generator
+function printGigTicketStub() {
+  playUiBeep(1200, 0.05);
+  const serial = Math.floor(100000 + Math.random() * 900000);
+  const msgEl = document.getElementById('ticketStubMsg');
+  if (msgEl) {
+    msgEl.innerHTML = `<span style="color:#ffff00; font-family:'Courier New', monospace; background:#111; padding:2px 6px; border:1px solid #ff00aa;">[TICKET #${serial} ADMIT ONE] Whisky A Go-Go • Millennium Eve 1999 • VALIDATED!</span>`;
+  }
+}
+
+// 4. Tube Saturation Chord Test
+function testTubeSaturationSound() {
+  playDistortedChord('D5');
+}
+
+// 5. Tape J-Card Generator
+function generateTapeJCard() {
+  playUiBeep(1400, 0.04);
+  const outEl = document.getElementById('jcardOutput');
+  if (outEl) {
+    outEl.innerHTML = `
+      <pre style="margin:0; font-size:9px; color:#ffddaa; background:#000; padding:6px; border:1px solid #ff3377;">
++-------------------------------------------------------------+
+| SIDE A: SUNSET STRIP GRUNGE RIFFS (28:44)                   |
+| 01. Neon Horizon Overdrive          04. Valve Saturation    |
+| 02. Drop-D Seattle Anthem           05. Whisky Gig Encore   |
+| 03. Tape Deck Fuzz Experiment       06. Midnight Millennium |
++-------------------------------------------------------------+
+| SIDE B: PRAIRIE BLUEGRASS & CHIPTUNES (27:12)               |
+| 01. Foggy Mountain Roll             04. Dutch Apple Waltz   |
+| 02. Rusty's Front Porch Jam         05. County Fair Jig     |
+| 03. Thunder over Iowa Field         06. Old 1999 Farewell   |
++-------------------------------------------------------------+
+   * C-90 Chrome High Bias * DIY Label * Hand-Dubbed in 1999 *
+      </pre>
+    `;
+  }
+}
+
+// 6. Heartland Pet Collar Bell
+function ringPetCollarBell() {
+  try {
+    initAudioCtx();
+    const bellNotes = [78, 83, 85, 90]; // Crisp silver bell harmonics
+    bellNotes.forEach((n, idx) => {
+      const t = audioCtx.currentTime + idx * 0.05;
+      const osc = audioCtx.createOscillator();
+      const g = audioCtx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(midiNoteToFreq(n), t);
+      g.gain.setValueAtTime(0.12, t);
+      g.gain.exponentialRampToValueAtTime(0.001, t + 0.5);
+      osc.connect(g);
+      g.connect(masterGain);
+      osc.start(t);
+      osc.stop(t + 0.55);
+    });
+    const mood = document.getElementById('petMoodMsg');
+    if (mood) mood.textContent = "🔔 Rusty perked his golden ears and gave a happy bark!";
+  } catch(e) {}
+}
+
+// 7. Feed Virtual Pet
+function feedVirtualPetTreat() {
+  playUiBeep(1500, 0.08);
+  const mood = document.getElementById('petMoodMsg');
+  if (mood) {
+    mood.innerHTML = "🦴 <em>*crunch crunch*</em> Rusty wagged his tail and licked your hand with pure love! ❤️";
+  }
+}
+
+// 8. Recipe Cards
+function showRecipeCard(type) {
+  playUiBeep(1100, 0.03);
+  const outEl = document.getElementById('recipeCardOutput');
+  if (!outEl) return;
+  const cards = {
+    apple_pie: `<strong>IOWA DUTCH APPLE CRUMB PIE (1st Prize, 1998 Warren County Fair)</strong><br>
+• Crust: 1-1/2 cups flour, 1/2 tsp salt, 1/2 cup cold farm lard, 3 tbsp ice water.<br>
+• Filling: 6 cups thinly sliced Granny Smith apples, 3/4 cup sugar, 1 tsp cinnamon, 1/4 tsp nutmeg.<br>
+• Dutch Streusel Topping: 1 cup brown sugar, 1/2 cup flour, 1/3 cup sweet cream butter.<br>
+• Bake at 375°F for 45 minutes until juices bubble golden amber. Serve warm with vanilla bean ice cream!`,
+    cornbread: `<strong>CAST IRON SKILLET CORNBREAD (Grandma Hattie's 1924 Recipe)</strong><br>
+• 1 cup stone-ground yellow cornmeal, 1 cup unbleached flour, 1/4 cup sugar.<br>
+• 1 tbsp baking powder, 1/2 tsp baking soda, 1 tsp kosher salt.<br>
+• 1 cup real cultured buttermilk, 2 fresh farm eggs, 1/3 cup melted bacon drippings.<br>
+• Preheat seasoned iron skillet with 1 tbsp bacon fat at 425°F. Pour batter into sizzling fat, bake 22 mins.`,
+    rhubarb: `<strong>PRAIRIE STRAWBERRY RHUBARB CRISP (June Solstice Tradition)</strong><br>
+• 3 cups fresh diced garden rhubarb, 2 cups sweet field strawberries.<br>
+• 2/3 cup cane sugar, 2 tbsp cornstarch, 1 tsp pure vanilla extract.<br>
+• Rolled Oat Crisp: 1 cup rolled oats, 1/2 cup flour, 1/2 cup packed brown sugar, 1/2 cup butter cubes.<br>
+• Bake in glass dish at 350°F for 35 minutes until crisp and ruby-red.`
+  };
+  outEl.innerHTML = cards[type] || cards.apple_pie;
+}
+
+// 9. Heartland Quilt Pattern Designer
+let quiltState = new Array(64).fill(0);
+function presetQuiltPattern(pat) {
+  playUiBeep(1300, 0.04);
+  quiltState.fill(0);
+  if (pat === 'star') {
+    // 8-point star coordinates on 8x8
+    const starIdxs = [
+      3, 4,
+      11, 12,
+      17, 18, 19, 20, 21, 22,
+      25, 26, 27, 28, 29, 30,
+      33, 34, 35, 36, 37, 38,
+      41, 42, 43, 44, 45, 46,
+      51, 52,
+      59, 60
+    ];
+    starIdxs.forEach(i => quiltState[i] = 1);
+  } else if (pat === 'cabin') {
+    // Log cabin borders
+    for (let r = 0; r < 8; r++) {
+      for (let c = 0; c < 8; c++) {
+        if (r === 0 || r === 7 || c === 0 || c === 7) quiltState[r * 8 + c] = 1;
+        else if (r === 3 && c === 3 || r === 3 && c === 4 || r === 4 && c === 3 || r === 4 && c === 4) quiltState[r * 8 + c] = 2;
+      }
+    }
+  }
+  renderQuilt();
+}
+
+function clearQuiltGrid() {
+  playUiBeep(900, 0.03);
+  quiltState.fill(0);
+  renderQuilt();
+}
+
+function renderQuilt() {
+  const container = document.getElementById('quiltGrid');
+  if (!container) return;
+  const colors = ['#0f3920', '#eab308', '#dc2626', '#2563eb'];
+  container.innerHTML = quiltState.map((val, idx) => `
+    <div onclick="toggleQuiltSquare(${idx})" style="width:20px; height:20px; background:${colors[val]}; border:1px solid #14532d; cursor:pointer;" title="Patch #${idx+1}"></div>
+  `).join('');
+}
+
+function toggleQuiltSquare(idx) {
+  quiltState[idx] = (quiltState[idx] + 1) % 4;
+  renderQuilt();
+  playUiBeep(800 + quiltState[idx] * 200, 0.02);
+}
+
+// 10. Prairie Thunderstorm Simulator
+function synthesizePrairieThunder() {
+  try {
+    initAudioCtx();
+    const reading = document.getElementById('weatherReading');
+    if (reading) reading.textContent = "⛈️ Thunder peal rumbling across the cornfields! Rain intensity: 1.4 in/hr";
+    
+    // Low frequency thunder noise
+    const bufferSize = audioCtx.sampleRate * 2.5;
+    const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+    const data = buffer.getChannelData(0);
+    let lastOut = 0.0;
+    for (let i = 0; i < bufferSize; i++) {
+      const white = Math.random() * 2 - 1;
+      data[i] = (lastOut + (0.02 * white)) / 1.02; // Brown noise approximation
+      lastOut = data[i];
+      data[i] *= 3.5;
+    }
+    const noise = audioCtx.createBufferSource();
+    noise.buffer = buffer;
+
+    const filter = audioCtx.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.frequency.setValueAtTime(140, audioCtx.currentTime);
+    filter.frequency.exponentialRampToValueAtTime(45, audioCtx.currentTime + 2.4);
+
+    const gain = audioCtx.createGain();
+    gain.gain.setValueAtTime(0.25, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 2.5);
+
+    noise.connect(filter);
+    filter.connect(gain);
+    gain.connect(masterGain);
+
+    noise.start();
+    noise.stop(audioCtx.currentTime + 2.5);
+  } catch(e) {}
+}
+
+// 11. Front Porch Banjo Roll Generator
+function playBanjoRoll(type) {
+  try {
+    initAudioCtx();
+    const rolls = {
+      foggy: [67, 62, 59, 62, 71, 62, 59, 62, 67, 62, 59, 62],
+      forward: [55, 59, 62, 67, 59, 62, 67, 62],
+      breakdown: [67, 71, 67, 62, 59, 62, 67, 74, 71, 67, 62, 59]
+    };
+    const notes = rolls[type] || rolls.foggy;
+    const outEl = document.getElementById('banjoRollOutput');
+    if (outEl) {
+      outEl.textContent = `🪕 Picking [${type.toUpperCase()}] roll: ${notes.map(n => Math.round(midiNoteToFreq(n)) + 'Hz').join('-')}`;
+    }
+    notes.forEach((midi, i) => {
+      const t = audioCtx.currentTime + i * 0.11; // 16th note tempo
+      const carrier = audioCtx.createOscillator();
+      const modulator = audioCtx.createOscillator();
+      const modGain = audioCtx.createGain();
+      const ampGain = audioCtx.createGain();
+
+      carrier.type = 'triangle';
+      modulator.type = 'sine';
+
+      const freq = midiNoteToFreq(midi);
+      carrier.frequency.setValueAtTime(freq, t);
+      modulator.frequency.setValueAtTime(freq * 3.5, t); // Metallic banjo skin timbre
+
+      modGain.gain.setValueAtTime(freq * 2.2, t);
+      modGain.gain.exponentialRampToValueAtTime(0.1, t + 0.12);
+
+      ampGain.gain.setValueAtTime(0.12, t);
+      ampGain.gain.exponentialRampToValueAtTime(0.001, t + 0.22);
+
+      modulator.connect(modGain);
+      modGain.connect(carrier.frequency);
+      carrier.connect(ampGain);
+      ampGain.connect(masterGain);
+
+      carrier.start(t);
+      modulator.start(t);
+      carrier.stop(t + 0.24);
+      modulator.stop(t + 0.24);
+    });
+  } catch(e) {}
+}
+
+// ============================================================================
+// ANIMATED GIF DECAL STUDIO & HOMESTEAD STICKER FORGE '99
+// ============================================================================
+let activeDecalStyle = 'worker';
+let decalCustomText = 'UNDER CONSTRUCTION';
+let decalSpeedMultiplier = 1.0;
+let stampedDecals = [
+  { style: 'worker', text: 'UNDER CONSTRUCTION', x: 40, y: 30 },
+  { style: 'flame', text: 'HOT!', x: 260, y: 35 },
+  { style: 'globe', text: 'NETRUNNER', x: 380, y: 40 }
+];
+
+function selectDecalStyle(style) {
+  playUiBeep(1200, 0.03);
+  activeDecalStyle = style;
+  const btnIds = {
+    worker: 'btnDecalWorker',
+    flame: 'btnDecalFlame',
+    globe: 'btnDecalGlobe',
+    envelope: 'btnDecalEnvelope',
+    starburst: 'btnDecalStarburst',
+    mascot: 'btnDecalMascot',
+    compass: 'btnDecalCompass',
+    beacon: 'btnDecalBeacon'
+  };
+  Object.values(btnIds).forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.classList.remove('active');
+  });
+  const cur = document.getElementById(btnIds[style]);
+  if (cur) cur.classList.add('active');
+
+  const defaultTexts = {
+    worker: 'UNDER CONSTRUCTION',
+    flame: 'HOT!',
+    globe: 'CYBERWORLD',
+    envelope: 'EMAIL ME',
+    starburst: 'NEW!',
+    mascot: 'HAMSTER DANCE',
+    compass: 'NETSCAPE 4.0',
+    beacon: 'Y2K ALERT'
+  };
+  const inp = document.getElementById('decalCustomText');
+  if (inp) {
+    inp.value = defaultTexts[style] || 'RETRO STICKER';
+    decalCustomText = inp.value;
+  }
+  updateDecalSnippet();
+}
+
+function updateDecalCustomText(txt) {
+  decalCustomText = txt;
+  updateDecalSnippet();
+}
+
+function setDecalSpeed(val) {
+  decalSpeedMultiplier = parseFloat(val) || 1.0;
+}
+
+function stampDecalOnPad() {
+  playUiBeep(1400, 0.05);
+  const pad = document.getElementById('decalPreviewCanvas');
+  const w = pad ? pad.width : 560;
+  const h = pad ? pad.height : 200;
+  const x = Math.floor(30 + Math.random() * (w - 180));
+  const y = Math.floor(25 + Math.random() * (h - 90));
+  stampedDecals.push({
+    style: activeDecalStyle,
+    text: decalCustomText,
+    x: x,
+    y: y
+  });
+  if (stampedDecals.length > 8) stampedDecals.shift();
+  updateDecalSnippet();
+}
+
+function clearDecalPad() {
+  playUiBeep(900, 0.04);
+  stampedDecals = [];
+  updateDecalSnippet();
+}
+
+function handleDecalPadClick(e) {
+  const pad = document.getElementById('decalPreviewCanvas');
+  if (!pad) return;
+  const rect = pad.getBoundingClientRect();
+  const scaleX = pad.width / rect.width;
+  const scaleY = pad.height / rect.height;
+  const x = (e.clientX - rect.left) * scaleX - 40;
+  const y = (e.clientY - rect.top) * scaleY - 30;
+
+  playUiBeep(1500, 0.04);
+  stampedDecals.push({
+    style: activeDecalStyle,
+    text: decalCustomText,
+    x: Math.max(10, Math.min(pad.width - 120, x)),
+    y: Math.max(10, Math.min(pad.height - 70, y))
+  });
+  if (stampedDecals.length > 8) stampedDecals.shift();
+  updateDecalSnippet();
+}
+
+function updateDecalSnippet() {
+  const codeEl = document.getElementById('decalCodeOutput');
+  if (!codeEl) return;
+  const snippet = `<!-- 1999 GeoCities Animated Decal: ${activeDecalStyle.toUpperCase()} -->\n<div class="geocities-decal decal-${activeDecalStyle}">\n  <span class="decal-icon"></span>\n  <span class="decal-label">${escapeHtml(decalCustomText)}</span>\n</div>`;
+  codeEl.value = snippet;
+}
+
+function copyDecalHtmlSnippet() {
+  playUiBeep(1300, 0.08);
+  const codeEl = document.getElementById('decalCodeOutput');
+  if (codeEl) {
+    codeEl.select();
+    navigator.clipboard.writeText(codeEl.value).then(() => {
+      alert("✨ Decal HTML Snippet copied to clipboard! Paste into any 1999 Web page!");
+    }).catch(() => {
+      alert("Snippet ready in box for copying!");
+    });
+  }
+}
+
+// Procedural Canvas Decal Renderer
+let decalPadAnimFrame = null;
+let decalGlobalTicks = 0;
+
+function renderDecalPad() {
+  const canvas = document.getElementById('decalPreviewCanvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return;
+
+  decalGlobalTicks += decalSpeedMultiplier;
+  const t = decalGlobalTicks;
+
+  // Background: 1999 grid wallpaper pattern
+  ctx.fillStyle = '#05020c';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  ctx.strokeStyle = 'rgba(255, 0, 255, 0.12)';
+  ctx.lineWidth = 1;
+  const gridSize = 24;
+  for (let x = 0; x < canvas.width; x += gridSize) {
+    ctx.beginPath();
+    ctx.moveTo(x, 0);
+    ctx.lineTo(x, canvas.height);
+    ctx.stroke();
+  }
+  for (let y = 0; y < canvas.height; y += gridSize) {
+    ctx.beginPath();
+    ctx.moveTo(0, y);
+    ctx.lineTo(canvas.width, y);
+    ctx.stroke();
+  }
+
+  // Draw each stamped decal
+  stampedDecals.forEach(item => {
+    drawProceduralDecal(ctx, item.style, item.text, item.x, item.y, t);
+  });
+
+  decalPadAnimFrame = requestAnimationFrame(renderDecalPad);
+}
+
+function drawProceduralDecal(ctx, style, text, x, y, ticks) {
+  ctx.save();
+  ctx.translate(x, y);
+
+  if (style === 'worker') {
+    // 🚧 Shoveling worker & caution beacon
+    const frame = Math.floor(ticks / 8) % 4; // 4-frame shovel cycle
+    ctx.fillStyle = '#ffcc00';
+    ctx.fillRect(0, 0, 150, 50);
+    ctx.strokeStyle = '#000';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(0, 0, 150, 50);
+
+    // Hazard stripes
+    ctx.fillStyle = '#000';
+    ctx.beginPath();
+    for (let s = 0; s < 150; s += 20) {
+      ctx.moveTo(s, 0); ctx.lineTo(s + 10, 0); ctx.lineTo(s, 10); ctx.lineTo(s - 10, 10);
+    }
+    ctx.fill();
+
+    // Worker head and hard hat
+    ctx.fillStyle = '#ff9900';
+    ctx.beginPath(); ctx.arc(22, 22, 7, 0, Math.PI * 2); ctx.fill(); // Hard hat
+    ctx.fillStyle = '#ffddaa';
+    ctx.fillRect(18, 25, 8, 8); // Face
+    // Body & shovel
+    ctx.fillStyle = '#0044aa';
+    ctx.fillRect(16, 33, 12, 14); // Overalls
+    const shovelOffset = frame * 3;
+    ctx.strokeStyle = '#888';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(26, 35);
+    ctx.lineTo(38 - shovelOffset, 42 - (frame === 2 ? 6 : 0));
+    ctx.stroke();
+
+    // Shovel blade
+    ctx.fillStyle = '#aaa';
+    ctx.fillRect(38 - shovelOffset, 40 - (frame === 2 ? 6 : 0), 6, 6);
+
+    // Dirt pile
+    ctx.fillStyle = '#8b5a2b';
+    ctx.beginPath(); ctx.arc(42, 47, 8, 0, Math.PI, true); ctx.fill();
+
+    // Flashing yellow warning lamp
+    const flash = Math.floor(ticks / 10) % 2 === 0;
+    ctx.fillStyle = flash ? '#ffff00' : '#886600';
+    ctx.beginPath(); ctx.arc(10, 14, 5, 0, Math.PI * 2); ctx.fill();
+    if (flash) {
+      ctx.strokeStyle = '#fff';
+      ctx.strokeRect(6, 10, 8, 8);
+    }
+
+    // Text label
+    ctx.fillStyle = '#000';
+    ctx.font = 'bold 9px "Courier New", monospace';
+    ctx.fillText(text.slice(0, 16), 46, 25);
+    ctx.font = '7px Arial, sans-serif';
+    ctx.fillText("BEST IN NETSCAPE", 46, 36);
+
+  } else if (style === 'flame') {
+    // 🔥 Animated procedural flame
+    const flameH = 40;
+    const flameW = 120;
+    ctx.fillStyle = 'rgba(0,0,0,0.85)';
+    ctx.fillRect(0, 0, flameW, flameH);
+    ctx.strokeStyle = '#ff3300';
+    ctx.strokeRect(0, 0, flameW, flameH);
+
+    // Flame particles
+    for (let i = 0; i < 22; i++) {
+      const pX = (i * 5 + (ticks * 2 + i * 7) % flameW) % (flameW - 10) + 5;
+      const life = ((ticks * 3 + i * 11) % 35);
+      const pY = flameH - life - 4;
+      const radius = Math.max(1, (35 - life) / 5);
+      const col = life < 12 ? '#ffff00' : (life < 24 ? '#ff6600' : '#ff0033');
+      ctx.fillStyle = col;
+      ctx.beginPath();
+      ctx.arc(pX, pY, radius, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // Glowing flame text
+    ctx.fillStyle = '#ffff00';
+    ctx.font = 'bold 12px Arial Black, sans-serif';
+    ctx.shadowColor = '#ff0000';
+    ctx.shadowBlur = 8;
+    ctx.fillText(text.slice(0, 14), 14, 25);
+    ctx.shadowBlur = 0;
+
+  } else if (style === 'globe') {
+    // 🌐 Spinning 3D Wireframe Cyber Globe
+    const gRadius = 18;
+    const gX = 24;
+    const gY = 24;
+    ctx.fillStyle = '#05111d';
+    ctx.fillRect(0, 0, 140, 48);
+    ctx.strokeStyle = '#00ffcc';
+    ctx.strokeRect(0, 0, 140, 48);
+
+    // Globe outline
+    ctx.strokeStyle = '#00ff66';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.arc(gX, gY, gRadius, 0, Math.PI * 2); ctx.stroke();
+
+    // Rotating longitude ellipses
+    const angle = (ticks * 0.05) % Math.PI;
+    const wFactor = Math.abs(Math.sin(angle));
+    ctx.strokeStyle = 'rgba(0, 255, 204, 0.7)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.ellipse(gX, gY, gRadius * wFactor, gRadius, 0, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // Equator line
+    ctx.beginPath();
+    ctx.ellipse(gX, gY, gRadius, gRadius * 0.35, 0, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // Label
+    ctx.fillStyle = '#00ffcc';
+    ctx.font = 'bold 10px "Courier New", monospace';
+    ctx.fillText(text.slice(0, 14), 50, 22);
+    ctx.fillStyle = '#38bdf8';
+    ctx.font = '8px monospace';
+    ctx.fillText("56k CYBERSPACE", 50, 34);
+
+  } else if (style === 'envelope') {
+    // ✉️ Flying email with flapping letter & sparkles
+    ctx.fillStyle = '#1a0520';
+    ctx.fillRect(0, 0, 130, 46);
+    ctx.strokeStyle = '#ff00aa';
+    ctx.strokeRect(0, 0, 130, 46);
+
+    const flapY = Math.sin(ticks * 0.15) * 4;
+    // Envelope base
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(10, 14, 30, 20);
+    // Stamp
+    ctx.fillStyle = '#f43f5e';
+    ctx.fillRect(32, 16, 6, 6);
+    // Envelope flap fold
+    ctx.strokeStyle = '#333';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(10, 14); ctx.lineTo(25, 24 + flapY); ctx.lineTo(40, 14);
+    ctx.stroke();
+
+    // Gold sparkle stars
+    const spX = 42 + (Math.sin(ticks * 0.2) * 4);
+    const spY = 16 + (Math.cos(ticks * 0.2) * 4);
+    ctx.fillStyle = '#ffff00';
+    ctx.fillText("★", spX, spY);
+
+    ctx.fillStyle = '#ff00aa';
+    ctx.font = 'bold 10px "Courier New", monospace';
+    ctx.fillText(text.slice(0, 12), 48, 22);
+    ctx.fillStyle = '#ffd700';
+    ctx.font = '8px monospace';
+    ctx.fillText("YOU HAVE MAIL!", 48, 34);
+
+  } else if (style === 'starburst') {
+    // 💥 Flashing 8-point rainbow starburst
+    ctx.fillStyle = '#000';
+    ctx.fillRect(0, 0, 110, 46);
+    ctx.strokeStyle = '#ffff00';
+    ctx.strokeRect(0, 0, 110, 46);
+
+    const rainbowCols = ['#ff0055', '#ffaa00', '#ffff00', '#00ff66', '#00ffff', '#aa00ff'];
+    const curCol = rainbowCols[Math.floor(ticks / 6) % rainbowCols.length];
+
+    ctx.save();
+    ctx.translate(24, 23);
+    const scale = 1.0 + Math.sin(ticks * 0.2) * 0.15;
+    ctx.scale(scale, scale);
+    ctx.fillStyle = curCol;
+    ctx.beginPath();
+    for (let p = 0; p < 8; p++) {
+      const a1 = (p * Math.PI) / 4;
+      const a2 = a1 + Math.PI / 8;
+      ctx.lineTo(Math.cos(a1) * 16, Math.sin(a1) * 16);
+      ctx.lineTo(Math.cos(a2) * 8, Math.sin(a2) * 8);
+    }
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 11px Arial Black, sans-serif';
+    ctx.fillText(text.slice(0, 8), 48, 24);
+    ctx.fillStyle = curCol;
+    ctx.font = '8px Arial';
+    ctx.fillText("★ FLASH SALE ★", 48, 35);
+
+  } else if (style === 'mascot') {
+    // 🐹 Stepping Hamster / Pixel Mascot
+    ctx.fillStyle = '#061a0d';
+    ctx.fillRect(0, 0, 140, 46);
+    ctx.strokeStyle = '#22c55e';
+    ctx.strokeRect(0, 0, 140, 46);
+
+    const step = Math.floor(ticks / 6) % 2;
+    const mX = 22;
+    const mY = 24 + (step ? -2 : 0);
+
+    // Hamster round body
+    ctx.fillStyle = '#d97706';
+    ctx.beginPath(); ctx.arc(mX, mY, 11, 0, Math.PI * 2); ctx.fill();
+    // Ears
+    ctx.fillStyle = '#f59e0b';
+    ctx.beginPath(); ctx.arc(mX - 7, mY - 9, 4, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(mX + 7, mY - 9, 4, 0, Math.PI * 2); ctx.fill();
+    // Eyes
+    ctx.fillStyle = '#000';
+    ctx.fillRect(mX - 5, mY - 3, 2, 2);
+    ctx.fillRect(mX + 3, mY - 3, 2, 2);
+    // Paws stepping
+    ctx.fillStyle = '#fed7aa';
+    ctx.fillRect(mX - 8, mY + 9 + (step ? -3 : 0), 4, 3);
+    ctx.fillRect(mX + 4, mY + 9 + (step ? 0 : -3), 4, 3);
+
+    // Musical note
+    ctx.fillStyle = '#ffff00';
+    ctx.font = '10px Arial';
+    ctx.fillText("♫", mX + 10, mY - 8);
+
+    ctx.fillStyle = '#86efac';
+    ctx.font = 'bold 9px "Courier New", monospace';
+    ctx.fillText(text.slice(0, 14), 46, 22);
+    ctx.fillStyle = '#fde047';
+    ctx.font = '8px monospace';
+    ctx.fillText("DANCE 1999!", 46, 34);
+
+  } else if (style === 'compass') {
+    // 🧭 Netscape Golden Steering Compass
+    ctx.fillStyle = '#001a33';
+    ctx.fillRect(0, 0, 130, 46);
+    ctx.strokeStyle = '#0088ff';
+    ctx.strokeRect(0, 0, 130, 46);
+
+    const cX = 22;
+    const cY = 23;
+    // Outer wheel
+    ctx.strokeStyle = '#ffd700';
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(cX, cY, 12, 0, Math.PI * 2); ctx.stroke();
+
+    // Needle rotating
+    const needleAngle = (ticks * 0.08);
+    ctx.save();
+    ctx.translate(cX, cY);
+    ctx.rotate(needleAngle);
+    ctx.fillStyle = '#ff0033';
+    ctx.beginPath(); ctx.moveTo(0, -10); ctx.lineTo(3, 0); ctx.lineTo(-3, 0); ctx.fill();
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath(); ctx.moveTo(0, 10); ctx.lineTo(3, 0); ctx.lineTo(-3, 0); ctx.fill();
+    ctx.restore();
+
+    ctx.fillStyle = '#00ffff';
+    ctx.font = 'bold 10px "Courier New", monospace';
+    ctx.fillText(text.slice(0, 12), 44, 22);
+    ctx.fillStyle = '#ffd700';
+    ctx.font = '8px monospace';
+    ctx.fillText("NAVIGATOR 4.0", 44, 34);
+
+  } else if (style === 'beacon') {
+    // 🚨 Y2K Hazard Warning Beacon
+    ctx.fillStyle = '#1c0a00';
+    ctx.fillRect(0, 0, 120, 46);
+    ctx.strokeStyle = '#ea580c';
+    ctx.strokeRect(0, 0, 120, 46);
+
+    const bX = 22;
+    const bY = 24;
+    // Base
+    ctx.fillStyle = '#333';
+    ctx.fillRect(bX - 10, bY + 4, 20, 8);
+    // Amber Dome
+    const flash = Math.sin(ticks * 0.25) > 0;
+    ctx.fillStyle = flash ? '#ffaa00' : '#884400';
+    ctx.beginPath(); ctx.arc(bX, bY + 4, 10, Math.PI, 0); ctx.fill();
+
+    // Sweeping beam
+    if (flash) {
+      ctx.fillStyle = 'rgba(255, 170, 0, 0.3)';
+      ctx.beginPath();
+      ctx.moveTo(bX, bY);
+      ctx.lineTo(bX - 18, bY - 14);
+      ctx.lineTo(bX + 18, bY - 14);
+      ctx.closePath();
+      ctx.fill();
+    }
+
+    ctx.fillStyle = '#fbbf24';
+    ctx.font = 'bold 10px "Courier New", monospace';
+    ctx.fillText(text.slice(0, 10), 40, 22);
+    ctx.fillStyle = '#ef4444';
+    ctx.font = '8px monospace';
+    ctx.fillText("CRITICAL ALERT", 40, 34);
+  }
+
+  ctx.restore();
+}
+
+// Start decal canvas animation loop on load
+window.addEventListener('DOMContentLoaded', () => {
+  renderDecalPad();
+  updateDecalSnippet();
+  if (typeof renderQuilt === 'function') {
+    presetQuiltPattern('star');
+  }
+});
+setTimeout(() => {
+  if (!decalPadAnimFrame) {
+    renderDecalPad();
+    updateDecalSnippet();
+  }
+  const qGrid = document.getElementById('quiltGrid');
+  if (qGrid && qGrid.children.length === 0) {
+    presetQuiltPattern('star');
+  }
+}, 800);
+
 const midiTracks = allTracks;
 
 // Lead, Bass, Percussion Synths
@@ -7219,7 +8200,7 @@ function playDemosceneChime() {
 // ============================================================================
 // GEOCITIES NEIGHBORHOOD THEMES
 // ============================================================================
-const NEIGHBORHOOD_NAMES = ['siliconvalley', 'area51', 'beverlyhills', 'soho', 'enchantedforest'];
+const NEIGHBORHOOD_NAMES = ['siliconvalley', 'area51', 'beverlyhills', 'soho', 'enchantedforest', 'sunsetstrip', 'heartland'];
 let currentNeighborhood = localStorage.getItem('cyberspire_neighborhood') || 'siliconvalley';
 
 function setNeighborhood(name) {
@@ -7237,7 +8218,9 @@ function setNeighborhood(name) {
     area51: 'btnThemeArea51',
     beverlyhills: 'btnThemeBeverly',
     soho: 'btnThemeSoHo',
-    enchantedforest: 'btnThemeForest'
+    enchantedforest: 'btnThemeForest',
+    sunsetstrip: 'btnThemeSunset',
+    heartland: 'btnThemeHeartland'
   };
 
   Object.values(btnMap).forEach(id => {
@@ -8061,6 +9044,8 @@ function generateWeb10Html() {
   else if (neigh === 'BeverlyHills') { bg = "#070e1e"; fg = "#ffd700"; link = "#64b5f6"; vlink = "#ffe082"; }
   else if (neigh === 'SoHo') { bg = "#120905"; fg = "#ffb74d"; link = "#ff6f00"; vlink = "#d84315"; }
   else if (neigh === 'EnchantedForest') { bg = "#041208"; fg = "#80ffaa"; link = "#ff80bf"; vlink = "#50e3c2"; }
+  else if (neigh === 'SunsetStrip') { bg = "#14040c"; fg = "#ffbbdd"; link = "#ff0055"; vlink = "#ffaa00"; }
+  else if (neigh === 'Heartland') { bg = "#0f1205"; fg = "#fef08a"; link = "#f59e0b"; vlink = "#84cc16"; }
 
   return `<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html>
@@ -11114,6 +12099,120 @@ const HOMESTEADS_DATA = {
       badge: "3D6 ROLLER",
       contentHtml: `<div style="background:#071207; color:#86efac; font-family:'Courier New', monospace; padding:14px; border:2px solid #16a34a;"><h2 style="color:#fde047; text-align:center; margin:0 0 6px 0;">⚔️ THE ANSI BBS TAVERN: 3d6 HERO ROLLER ⚔️</h2><p style="font-size:12px; margin:0 0 8px 0; line-height:1.5;">Step forward, adventurer! Roll your attributes for the underground BBS door games (Legend of the Red Dragon, Usurper, NetHack). Pure 3d6 Bell-curve generation!</p><div style="background:#020902; border:1px solid #22c55e; padding:8px; font-size:11px; margin-bottom:8px;"><div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;"><button class="tool-btn" onclick="roll3d6HeroStats()" style="background:#15803d; color:#fff; font-weight:bold;">🎲 Roll 3d6 Attributes</button><span id="heroClassOutput" style="color:#fde047; font-weight:bold;">Class: Novice Warrior</span></div><div id="heroStatsOutput" style="display:grid; grid-template-columns:repeat(3, 1fr); gap:4px; font-family:'Courier New', monospace; font-size:11px; background:#000; padding:6px; border:1px solid #14532d;"><div>STR: 14</div><div>DEX: 12</div><div>CON: 15</div><div>INT: 10</div><div>WIS: 11</div><div>CHA: 13</div></div></div></div>`
     }
+  ],
+  sunsetstrip: [
+    {
+      id: "hs_ss_01",
+      title: "The Viper Underground: Drop-D Grunge Tablature Archive '99",
+      webmaster: "~grunge_shredder",
+      address: "http://www.geocities.com/SunsetStrip/Viper/1999/",
+      desc: "Authentic 1999 Drop-D power riff tablatures, Russian Big Muff fuzz pedal schematics, and interactive browser-based guitar riff synthesizer.",
+      tags: ["Grunge", "DropD", "Fuzz", "Tablature", "Guitar"],
+      views: 18450,
+      badge: "GRUNGE TAB",
+      contentHtml: `<div style="background:#130209; color:#ffb7c5; font-family:'Courier New', monospace; padding:14px; border:2px solid #ff0055;"><h2 style="color:#ff0055; text-align:center; margin:0 0 6px 0;">🎸 VIPER UNDERGROUND: DROP-D GUITAR TABLATURE (1999)</h2><p style="font-size:12px; margin:0 0 8px 0; line-height:1.5;">Drop that low E down a full step to D! Plug your offset guitar through a saturated germanium fuzz box into a 4x12 half-stack.</p><div style="background:#220512; border:1px solid #ff3377; padding:8px; margin-bottom:8px; font-size:11px;"><div style="color:#ffff00; font-weight:bold; margin-bottom:4px;">Interactive Drop-D Riff Player:</div><div style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:6px;"><button class="tool-btn" onclick="playDropDRiff('grunge_intro')">⚡ Seattle Intro (D5-F5-G5)</button><button class="tool-btn" onclick="playDropDRiff('fuzz_verse')">🔥 Fuzz Verse (D5-C5-G5)</button><button class="tool-btn" onclick="playDropDRiff('drop_chorus')">💥 Heavy Chorus (Bb5-C5-D5)</button></div><pre id="tabOutput" style="background:#000; color:#00ffcc; padding:6px; font-size:10px; border:1px solid #550022; overflow-x:auto;">e|----------------------------------|\nB|----------------------------------|\nG|----------------------------------|\nD|--0-0-12-0-10-0-0-12-0-10-12-15---|\nA|--0-0-12-0-10-0-0-12-0-10-12-15---|\nD|--0-0-12-0-10-0-0-12-0-10-12-15---|   [DROP-D POWER RIFF]</pre></div></div>`
+    },
+    {
+      id: "hs_ss_02",
+      title: "Whisky A Go-Go Underground Gig Flyer Vault & Xerox Dither Lab",
+      webmaster: "~neon_flyers",
+      address: "http://www.geocities.com/SunsetStrip/Flyers/1999/",
+      desc: "High-contrast photocopied band gig flyers, staple-gun street poster archives, and interactive late-90s underground concert flyer customizer.",
+      tags: ["Flyers", "Whisky", "Xerox", "Punk", "LiveShow"],
+      views: 14200,
+      badge: "GIG FLYERS",
+      contentHtml: `<div style="background:#0d0514; color:#ffddbb; font-family:Impact, 'Arial Black', sans-serif; padding:14px; border:2px dashed #ff9900;"><h2 style="color:#ffff00; text-align:center; margin:0 0 6px 0; letter-spacing:1px;">⚡ SUNSET STRIP UNDERGROUND GIG ARCHIVE '99 ⚡</h2><div style="background:#1a0b24; padding:8px; border:1px solid #ff00aa; font-family:'Courier New', monospace; font-size:11px; margin-bottom:8px;"><p style="margin:0 0 6px 0; color:#00ffcc;">FRIDAY DEC 31, 1999 • MIDNIGHT MILLENNIUM BASH • TICKETS $5</p><p style="margin:0; color:#ffbb00;">LIVE ON STAGE: <strong>CYBER-SPIRE &amp; THE DISTORTION CREW</strong> with special guests <strong>SILICON DRIFTERS</strong>.</p></div><div style="display:flex; gap:6px; flex-wrap:wrap;"><button class="tool-btn" onclick="printGigTicketStub()">🎟️ Generate Commemorative Ticket Stub</button><span id="ticketStubMsg" style="color:#39ff14; font-size:11px; align-self:center;"></span></div></div>`
+    },
+    {
+      id: "hs_ss_03",
+      title: "Analog Tube Amp Workbench: JCM800 Tone Stacks & 12AX7 Saturation",
+      webmaster: "~tube_overdrive",
+      address: "http://www.geocities.com/SunsetStrip/Amps/1999/",
+      desc: "British valve circuitry, 50W EL34 push-pull output transformers, and interactive 3-band tone stack equalizer with simulated vacuum tube clipping.",
+      tags: ["TubeAmp", "JCM800", "ToneStack", "12AX7", "Overdrive"],
+      views: 11900,
+      badge: "TUBE WORKBENCH",
+      contentHtml: `<div style="background:#100600; color:#ffd0a0; font-family:'Courier New', monospace; padding:14px; border:2px solid #ff6600;"><h2 style="color:#ffaa00; text-align:center; margin:0 0 6px 0;">📻 100W TUBE AMPLIFIER TONE STACK SIMULATOR</h2><p style="font-size:12px; margin:0 0 8px 0; line-height:1.5;">Twin 12AX7 pre-amp triodes driving a passive FMV (Fender-Marshall-Vox) tone circuit. Dial in crunch, mid-scoop, and master presence.</p><div style="background:#200c00; border:1px solid #883300; padding:8px; font-size:11px;"><div style="display:grid; grid-template-columns:repeat(4, 1fr); gap:6px; margin-bottom:6px;"><div><label style="color:#ffcc00;">Pre-Gain:</label><input type="range" id="ampGain" min="1" max="10" value="8" style="width:100%;"><span id="ampGainVal" style="color:#fff;">8.0</span></div><div><label style="color:#ffcc00;">Bass:</label><input type="range" id="ampBass" min="1" max="10" value="6" style="width:100%;"><span id="ampBassVal" style="color:#fff;">6.0</span></div><div><label style="color:#ffcc00;">Mid:</label><input type="range" id="ampMid" min="1" max="10" value="4" style="width:100%;"><span id="ampMidVal" style="color:#fff;">4.0</span></div><div><label style="color:#ffcc00;">Treble:</label><input type="range" id="ampTreb" min="1" max="10" value="7" style="width:100%;"><span id="ampTrebVal" style="color:#fff;">7.0</span></div></div><button class="tool-btn" onclick="testTubeSaturationSound()">🔊 Audition Saturated Valve Chord</button></div></div>`
+    },
+    {
+      id: "hs_ss_04",
+      title: "DIY Cassette Demo Tape Dubbing & Street Punk Distro Collective",
+      webmaster: "~cassette_rebel",
+      address: "http://www.geocities.com/SunsetStrip/TapeDistro/1999/",
+      desc: "Type II chrome cassette dubbing tips, dual-well deck bias calibration, Xerox fold-out J-card template printer, and trade-by-mail etiquette.",
+      tags: ["Cassette", "TapeDub", "JCard", "DIY", "TapeTrading"],
+      views: 9800,
+      badge: "TAPE DISTRO",
+      contentHtml: `<div style="background:#090209; color:#ffc0cb; font-family:'Courier New', monospace; padding:14px; border:2px dashed #ff007f;"><h2 style="color:#ff3399; text-align:center; margin:0 0 6px 0;">📼 DIY CASSETTE J-CARD PRINTER &amp; TAPE TRADING POST</h2><p style="font-size:12px; margin:0 0 8px 0; line-height:1.5;">Send 2 blank Maxell XL-II 90 tapes plus return postage for our 14-track Sunset Strip compilation. Never let corporate labels monopolize your sound!</p><div style="background:#180618; border:1px solid #aa0055; padding:8px; font-size:11px;"><button class="tool-btn" onclick="generateTapeJCard()">🖨️ Format &amp; Preview Printable J-Card</button><div id="jcardOutput" style="font-size:10px; color:#ffddaa; margin-top:6px; background:#000; padding:6px; border:1px solid #440022;">Click above to render a standard fold-out cassette sleeve.</div></div></div>`
+    },
+    {
+      id: "hs_ss_05",
+      title: "Sunset Boulevard Power Chord Strummer (Fuzz & Distortion)",
+      webmaster: "~power_chord_king",
+      address: "http://www.geocities.com/SunsetStrip/PowerChords/1999/",
+      desc: "Interactive guitar fretboard synthesizer with 2-Op FM clipping: Strum heavy power chords (E5, A5, D5, G5, C5, B5) through a high-gain distortion stage.",
+      tags: ["PowerChords", "FMDistortion", "Strummer", "Rock", "WebAudio"],
+      views: 16800,
+      badge: "POWER CHORDS",
+      contentHtml: `<div style="background:#16020c; color:#ffddee; font-family:'Courier New', monospace; padding:14px; border:2px solid #ff0055;"><h2 style="color:#ffff00; text-align:center; margin:0 0 6px 0;">⚡ SUNSET STRIP POWER CHORD STRUMMER (FUZZ STAGE) ⚡</h2><p style="font-size:12px; margin:0 0 8px 0; line-height:1.5;">Click any chord button below to trigger real-time FM distorted power chords with resonant lowpass fuzz filtering!</p><div style="background:#260515; border:1px solid #ff0055; padding:8px; font-size:11px;"><div style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:8px;"><button class="tool-btn" style="background:#880022; color:#fff;" onclick="playDistortedChord('E5')">🎸 E5 (Low Chug)</button><button class="tool-btn" style="background:#880022; color:#fff;" onclick="playDistortedChord('A5')">🎸 A5 (Punchy)</button><button class="tool-btn" style="background:#880022; color:#fff;" onclick="playDistortedChord('D5')">🎸 D5 (Classic)</button><button class="tool-btn" style="background:#880022; color:#fff;" onclick="playDistortedChord('G5')">🎸 G5 (Bright)</button><button class="tool-btn" style="background:#880022; color:#fff;" onclick="playDistortedChord('C5')">🎸 C5 (Heavy)</button><button class="tool-btn" style="background:#880022; color:#fff;" onclick="playDistortedChord('B5')">🎸 B5 (Leading)</button></div><div id="chordFretOutput" style="color:#00ffcc; font-size:11px; background:#000; padding:6px; border:1px solid #550022;">Ready to rock. Click any power chord to strum.</div></div></div>`
+    }
+  ],
+  heartland: [
+    {
+      id: "hs_hl_01",
+      title: "The Golden Retriever & Prairie Pet Memorial Garden",
+      webmaster: "~prairie_paws",
+      address: "http://www.geocities.com/Heartland/PrairiePaws/1999/",
+      desc: "Beloved family dogs, barn cats, hamsters, and horses. Interactive virtual pet feeder, cheerful collar bell chime, and golden retriever tail wag animation.",
+      tags: ["Pets", "GoldenRetriever", "Prairie", "Heartland", "Memorial"],
+      views: 21300,
+      badge: "PET MEMORIAL",
+      contentHtml: `<div style="background:#0a1205; color:#fef08a; font-family:Georgia, serif; padding:14px; border:2px solid #84cc16;"><h2 style="color:#fde047; text-align:center; margin:0 0 6px 0;">🐾 THE PRAIRIE PET SHRINE: FOREVER IN OUR HEARTS 🐾</h2><p style="font-size:12px; line-height:1.5; margin:0 0 8px 0;">Dedicated to 'Rusty' the golden retriever (1987-1999), champion stick fetcher and faithful front porch guardian across 12 Iowa harvests.</p><div style="background:#14220b; border:1px solid #4d7c0f; padding:8px; font-size:11px; margin-bottom:8px;"><div style="display:flex; justify-content:space-between; align-items:center;"><button class="tool-btn" onclick="ringPetCollarBell()" style="background:#15803d; color:#fff;">🔔 Ring Rusty's Collar Bell</button><button class="tool-btn" onclick="feedVirtualPetTreat()" style="background:#ca8a04; color:#fff;">🦴 Give Rusty a Biscuit</button><span id="petMoodMsg" style="color:#86efac; font-weight:bold;">Rusty is resting in the warm sunshine!</span></div></div></div>`
+    },
+    {
+      id: "hs_hl_02",
+      title: "Grandma's Blue Ribbon County Fair Recipe Box (1898-1999)",
+      webmaster: "~apple_pie_grandma",
+      address: "http://www.geocities.com/Heartland/RecipeBox/1999/",
+      desc: "Four generations of prized county fair recipes: Iowa Dutch Apple Crumb Pie, Skillet Cornbread, and Rhubarb Crisp with serving scaler.",
+      tags: ["Recipes", "CountyFair", "ApplePie", "Baking", "Heritage"],
+      views: 17600,
+      badge: "BLUE RIBBON",
+      contentHtml: `<div style="background:#140e05; color:#fef3c7; font-family:'Times New Roman', serif; padding:14px; border:2px dashed #f59e0b;"><h2 style="color:#fbbf24; text-align:center; margin:0 0 6px 0;">🥧 BLUE RIBBON COUNTY FAIR RECIPE BOX (1898-1999) 🥧</h2><p style="font-size:12px; margin:0 0 8px 0; line-height:1.5;">Every recipe here won 1st Prize at the county fair. Hand-written on 3x5 index cards and preserved for the digital millennium!</p><div style="background:#261807; border:1px solid #d97706; padding:8px; font-size:11px;"><div style="display:flex; gap:6px; margin-bottom:6px;"><button class="tool-btn" onclick="showRecipeCard('apple_pie')">🥧 Dutch Apple Pie</button><button class="tool-btn" onclick="showRecipeCard('cornbread')">🌽 Iron Skillet Cornbread</button><button class="tool-btn" onclick="showRecipeCard('rhubarb')">🍓 Rhubarb Strawberry Crisp</button></div><div id="recipeCardOutput" style="background:#fffbeb; color:#451a03; padding:8px; border:1px solid #b45309; font-family:'Courier New', monospace; font-size:10px; line-height:1.4;">Select a recipe card above to view ingredients and baking instructions.</div></div></div>`
+    },
+    {
+      id: "hs_hl_03",
+      title: "The Heartland Quilter's Guild: 8-Point Star & Log Cabin Designer",
+      webmaster: "~quilt_craft",
+      address: "http://www.geocities.com/Heartland/Quilts/1999/",
+      desc: "Prairie heirloom quilt patterns: Star of Bethlehem, Log Cabin, and Flying Geese. Interactive 8x8 geometric quilt designer with traditional calico swatches.",
+      tags: ["Quilting", "Crafts", "Patterns", "LogCabin", "FolkArt"],
+      views: 13400,
+      badge: "QUILTER'S GUILD",
+      contentHtml: `<div style="background:#0f1710; color:#dcfce7; font-family:Georgia, serif; padding:14px; border:2px solid #16a34a;"><h2 style="color:#86efac; text-align:center; margin:0 0 6px 0;">🧵 PRAIRIE HEIRLOOM QUILT PATTERN DESIGNER 🧵</h2><p style="font-size:12px; margin:0 0 8px 0; line-height:1.5;">Quilting brings warmth to cold Midwestern winters. Click squares below to toggle calico fabric colors and create your own geometric quilt block.</p><div style="background:#052e16; border:1px solid #22c55e; padding:8px; font-size:11px;"><div id="quiltGrid" style="display:grid; grid-template-columns:repeat(8, 20px); gap:2px; justify-content:center; margin-bottom:8px;"></div><div style="display:flex; justify-content:center; gap:6px;"><button class="tool-btn" onclick="presetQuiltPattern('star')">⭐ 8-Point Star</button><button class="tool-btn" onclick="presetQuiltPattern('cabin')">🪵 Log Cabin</button><button class="tool-btn" onclick="clearQuiltGrid()">✨ Clear Pattern</button></div></div></div>`
+    },
+    {
+      id: "hs_hl_04",
+      title: "Heartland Weather Station & Old Farmer's Almanac Radar",
+      webmaster: "~cornfield_barometer",
+      address: "http://www.geocities.com/Heartland/Weather/1999/",
+      desc: "Borehole barometric pressure logs, frost date almanac calculators, and interactive Midwest prairie thunderstorm sound generator (thunder and rain).",
+      tags: ["Weather", "Almanac", "Radar", "Prairie", "Barometer"],
+      views: 15800,
+      badge: "WEATHER RADAR",
+      contentHtml: `<div style="background:#0b1319; color:#bae6fd; font-family:'Courier New', monospace; padding:14px; border:2px solid #0284c7;"><h2 style="color:#38bdf8; text-align:center; margin:0 0 6px 0;">⛅ HEARTLAND COOPERATIVE WEATHER WATCH '99 ⛅</h2><p style="font-size:12px; margin:0 0 8px 0; line-height:1.5;">Barometric pressure: 29.92 inHg (Steady). First frost prediction for Sector 9: October 24. Doppler radar sweep indicates clearing over the river valley.</p><div style="background:#082f49; border:1px solid #38bdf8; padding:8px; font-size:11px;"><div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px;"><button class="tool-btn" onclick="synthesizePrairieThunder()" style="background:#0369a1; color:#fff;">⛈️ Synthesize Prairie Thunderstorm</button><span id="weatherReading" style="color:#fef08a;">Wind: NW at 8 kts • Humidity: 54% • Dew Point: 48°F</span></div></div></div>`
+    },
+    {
+      id: "hs_hl_05",
+      title: "Front Porch 5-String Banjo & Fiddle Jam (Old-Time Chiptune)",
+      webmaster: "~bluegrass_picker",
+      address: "http://www.geocities.com/Heartland/BanjoJam/1999/",
+      desc: "Scruggs-style 3-finger rolls, G-modal mountain banjo tunings, and interactive 5-string banjo arpeggiator synthesized with high-speed FM plucks.",
+      tags: ["Banjo", "Bluegrass", "Chiptune", "Folk", "WebAudio"],
+      views: 14900,
+      badge: "BANJO JAM",
+      contentHtml: `<div style="background:#131106; color:#fef08a; font-family:Courier, monospace; padding:14px; border:2px solid #eab308;"><h2 style="color:#facc15; text-align:center; margin:0 0 6px 0;">🪕 FRONT PORCH 5-STRING BANJO &amp; CHIPTUNE ARPEGGIATOR 🪕</h2><p style="font-size:12px; margin:0 0 8px 0; line-height:1.5;">Pull up a rocking chair! Listen to authentic fast 16th-note banjo rolls generated in real-time with metallic high-Q FM pluck synthesis.</p><div style="background:#282305; border:1px solid #ca8a04; padding:8px; font-size:11px;"><div style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:6px;"><button class="tool-btn" onclick="playBanjoRoll('foggy')">🪕 Foggy Mountain Roll (G-D-B-D)</button><button class="tool-btn" onclick="playBanjoRoll('forward')">🪕 Forward-Reverse Roll</button><button class="tool-btn" onclick="playBanjoRoll('breakdown')">🪕 Fast Prairie Breakdown</button></div><div id="banjoRollOutput" style="color:#86efac; font-size:11px; background:#000; padding:6px; border:1px solid #554400;">Ready to pick. Choose a banjo roll above.</div></div></div>`
+    }
   ]
 };
 
@@ -11127,6 +12226,8 @@ function switchExplorerNeighborhood(nh) {
     beverlyhills: 'tabNhBeverly',
     soho: 'tabNhSoHo',
     enchantedforest: 'tabNhForest',
+    sunsetstrip: 'tabNhSunset',
+    heartland: 'tabNhHeartland',
     community: 'tabNhCommunity'
   };
 
@@ -11148,6 +12249,8 @@ function switchExplorerNeighborhood(nh) {
     beverlyhills: "BeverlyHills Dot-Com Mansions & Glamour",
     soho: "SoHo Digital Bohemia, ASCII Art & Acid Tracks",
     enchantedforest: "EnchantedForest Realms, MUDs & Magic",
+    sunsetstrip: "SunsetStrip Rock Lounges & Grunge Vaults",
+    heartland: "Heartland Prairie Shrines, Crafts & Pet Memorials",
     community: "Community Registered Homesteads (Live)"
   };
   const descs = {
@@ -11156,6 +12259,8 @@ function switchExplorerNeighborhood(nh) {
     beverlyhills: "High-flying IPO millionaires, Roland SC-88 MIDI tributes, and cyber-couture.",
     soho: "Underground 80x25 ANSI art, TB-303 acid synths, baud-rate poetry, and digital zines.",
     enchantedforest: "MUD wizard guilds, Elder Futhark rune divinations, and BBS roguelike lore.",
+    sunsetstrip: "Drop-D guitar tablature, tube amplifier mods, punk gig flyers, and power chord strummers.",
+    heartland: "Family pet memorials, county fair recipes, heirloom quilt pattern designers, and front porch banjo picking.",
     community: "Homepages published by fellow cyber voyagers using the Webmaster Page Builder."
   };
   if (leadTitle) leadTitle.textContent = titles[nh] || titles.siliconvalley;
@@ -11317,7 +12422,7 @@ function updatePassportBadges() {
   if (countEl) countEl.textContent = `${unlockedCount}/${stamps.length} Stamps`;
   const pct = Math.round((unlockedCount / stamps.length) * 100);
   if (pctEl) pctEl.textContent = `(${pct}%)`;
-  if (totalVisitsEl) totalVisitsEl.textContent = `Visited: ${visited.length} / 25 Homesteads`;
+  if (totalVisitsEl) totalVisitsEl.textContent = `Visited: ${visited.length} / 35 Homesteads`;
 }
 
 function getPassportStampDefinitions() {
@@ -11363,6 +12468,20 @@ function getPassportStampDefinitions() {
       title: "Enchanted Druid",
       desc: "Visit all 5 EnchantedForest MUD & lore shrines.",
       isUnlocked: (v) => ['hs_ef_01', 'hs_ef_02', 'hs_ef_03', 'hs_ef_04', 'hs_ef_05'].every(id => v.includes(id))
+    },
+    {
+      id: "stamp_sunset",
+      icon: "🎸",
+      title: "SunsetStrip Rocker",
+      desc: "Visit all 5 SunsetStrip rock lounges & flyer vaults.",
+      isUnlocked: (v) => ['hs_ss_01', 'hs_ss_02', 'hs_ss_03', 'hs_ss_04', 'hs_ss_05'].every(id => v.includes(id))
+    },
+    {
+      id: "stamp_heartland",
+      icon: "🌻",
+      title: "Heartland Prairie Homesteader",
+      desc: "Visit all 5 Heartland craft, recipe & porch shrines.",
+      isUnlocked: (v) => ['hs_hl_01', 'hs_hl_02', 'hs_hl_03', 'hs_hl_04', 'hs_hl_05'].every(id => v.includes(id))
     },
     {
       id: "stamp_carrier",
@@ -11430,7 +12549,7 @@ function downloadPassportTxt() {
   txt += `====================================================================\n`;
   txt += `Voyager ID:       ${localStorage.getItem('cyberspire_voyager_id') || 'Voyager-99'}\n`;
   txt += `Issue Date:       December 31, 1999\n`;
-  txt += `Total Homesteads Visited: ${visited.length} / 25\n`;
+  txt += `Total Homesteads Visited: ${visited.length} / 35\n`;
   txt += `--------------------------------------------------------------------\n`;
   txt += `COMMEMORATIVE STAMPS:\n`;
   stamps.forEach((s, i) => {
@@ -13597,6 +14716,7 @@ window.submitHomesteadToFirebase = function(homestead) {
     Area51: { bg: '#080010', text: '#39ff14', accent: '#a855f7', border: '#7e22ce', icon: '🛸' },
     SoHo: { bg: '#140008', text: '#ff00aa', accent: '#ff007f', border: '#ec4899', icon: '🎨' },
     Tokyo: { bg: '#100500', text: '#ffff00', accent: '#f59e0b', border: '#d97706', icon: '⚡' },
+    SunsetStrip: { bg: '#14040c', text: '#ffbbdd', accent: '#ff0055', border: '#ff0055', icon: '🎸' },
     Heartland: { bg: '#001005', text: '#86efac', accent: '#22c55e', border: '#15803d', icon: '🌻' }
   };
 

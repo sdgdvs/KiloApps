@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-creator
-next_agent: kilo-graphics
+current_agent: kilo-graphics
+next_agent: kilo-soundscape
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -14,14 +14,14 @@ effort: high
 timeout_minutes: 10
 status: ready
 current_targets:
-  kilo_creator: kweb://geocities
+  kilo_creator: kweb://users/~neon_rider
   kilo_graphics: KMech
   kilo_soundscape: KMech
   kilo_tester: KChart
   kilo_usability: KFont
   kilo_qa: KSimon
   kilo_expander: KDB
-virtual_web_target: kweb://geocities
+virtual_web_target: kweb://users/~neon_rider
 virtual_web_rotation:
 - kweb://portal
 - kweb://webring
@@ -35,9 +35,9 @@ virtual_web_rotation:
 - kweb://deep-core
 - kweb://darknet
 last_run:
-  agent: kilo-expander
-  app: KVault
-  timestamp: '2026-10-19T21:22:04+0000'
+  agent: kilo-creator
+  app: kweb://geocities
+  timestamp: '2026-10-19T23:38:30Z'
 last_planner_run: '2026-10-19T22:16:00Z'
 ---
 
@@ -66,10 +66,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 ## Active Target Queues (Gemini Flash Optimized Tickets)
 
 ### 1. Virtual 1999 Web & ARG Node Creator (`kilo-creator`)
-- **Target**: `kweb://geocities`
-- **Primary File**: `KiloOS/public/web/geocities.html`
-- **Objective**: 1999 neighborhood web portal expansion: animated GIF decals, MIDI jukebox, guestbook with persistent local entries, webring hub, visitor counter, and neighborhood explorer (SiliconValley, Area51, SunsetStrip, Heartland) adhering to Anti-Potemkin Quality Standard (<999 KB).
-- **Upcoming Queue**: `kweb://users/~neon_rider`, `kweb://asm-temple`, `kweb://cybercafe`, `kweb://10.19.99.4/classified`.
+- **Target**: `kweb://users/~neon_rider`
+- **Primary File**: `KiloOS/public/web/users/neon_rider.html`
+- **Objective**: Expand late-90s netrunner homestead: x86 assembly tutorial fragments, tracker .XM/.MOD showcase, retro demoscene greetings, Webring badges, and diegetic ARG breadcrumbs adhering to Anti-Potemkin Quality Standard (<999 KB).
+- **Upcoming Queue**: `kweb://asm-temple`, `kweb://cybercafe`, `kweb://10.19.99.4/classified`.
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
 - **Target**: `KMech`
@@ -207,6 +207,14 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-19T23:38:30Z — kilo-creator: kweb://geocities (SunsetStrip & Heartland Expansion + Animated Decal Studio)**
+  - Neighborhood Expansion: Added SunsetStrip (rock/grunge) and Heartland (prairie/crafts) CSS themes, explorer tabs, and 10 deep interactive homesteads with real Web Audio riffs, tube amp simulator, recipe cards, quilt designer, and banjo rolls.
+  - Animated Decal Studio: Built procedural '99 animated GIF decal generator & stamping pad (digging worker, flaming text, 3D cyber globe, flying email, pulsing starburst, dancing hamster, compass, beacon) with drop-in HTML export.
+  - Soundscape & Jukebox: Composed 2 new hardware chiptune tracks: Track 06 "Sunset Boulevard Overdrive" (140 BPM Grunge) and Track 07 "Prairie Solstice Bluegrass" (124 BPM Banjo) with Genesis 2-Op FM / SPC700 stereo delay.
+  - Passport & Guestbook: Expanded Cyberspace Passport to 9 stamps (including SunsetStrip Rocker & Heartland Homesteader, 35 homesteads); added guestbook filters and quick stamps.
+  - Verification & Parity: Web file verified clean (652 KB < 999 KB); startup test PASS (KNet 189.8 KB, 0 JS errors); Vite build clean (508ms); security lint clean.
+  - Queue Handoff: Advanced `current_targets.kilo_creator` to `kweb://users/~neon_rider`; rotation handoff to `kilo-graphics`.
+
 - **2026-10-19T21:22:04+0000 — kilo-expander: KVault (Multi-Vault Profiles & Structured Schema Templates)**
   - Multi-Vault Profiles: Implemented 3 vault profiles (Primary Vault, Work & Ops, Classified Mesh) with dedicated storage keys and per-profile `.dat` persistence.
   - Schema Templates: Added 8 structured templates (Login, Finance, Server/SSH, API Key, Passkey/Seed, 1999 BBS, Database, Router) for rapid credential generation.
@@ -234,11 +242,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Interactive Links & Guards: Wired notebook clicks to launch lab/interrogation directly; added safeguard preventing time loss when traveling to current location.
   - Dual Parity & Build: Rebuilt Win32 C native client (`KMystery.exe`, 40.4 KB); startup test PASS (156.5 KB < 999 KB, 0 JS errors, hit-test unblocked); Vite build clean.
   - Quarantine & Handoff: Promoted KMystery to Mature Applications quarantine; advanced `kilo_tester` to `KChart`; rotation handoff to `kilo-usability`.
-
-- **2026-10-19T14:16:00+0000 — kilo-soundscape: KFortress (Siege of the Iron Citadel & Vigil Soundscape)**
-  - Dual Movements: Composed "Citadel in Vigil" (peacetime D Aeolian meditation) and "Siege of the Iron Citadel" (combat D Phrygian Dominant martial drive).
-  - Voice Leading: 3-voice counterpoint with call-and-response lead/counter, root+3rd+7th shell voicings (no 5ths), and galloping 16th slap bass.
-  - Patch Suite: Authored 9 YM2612 patches (Slap Bass, Distorted Lead w/ LFO, Hollow Flute, War Brass, Crystal Harp, Sub Drone, FM Kick/Snare/Hat).
-  - DSP & Earcons: Wired SPC700 185ms/2200Hz delay selectively; upgraded 15+ action stingers/earcons (masonry build, gold coins, war horn, funeral dirge).
-  - Parity & Verification: Win32 C clean compile (182.8 KB), startup test PASS (225.4 KB < 999 KB, 0 JS err), Vite clean (461ms), security lint PASS.
-  - Quarantine & Handoff: Promoted KFortress to Mature Applications; advanced kilo_soundscape to KMech; rotation handoff to kilo-tester.
