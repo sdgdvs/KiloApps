@@ -116,7 +116,8 @@
       <div style="background:rgba(0,40,55,0.6); border:1px dashed #0ff; padding:12px; margin:15px 0; font-size:0.95em;">
         <div style="font-weight:bold; color:#ff0; margin-bottom:6px;">FLIGHT CONTROLS & SHORTCUTS:</div>
         <div>• <strong>[1-9]</strong> : Hyperspace jump to planetary destinations</div>
-        <div>• <strong>[R]</strong> : Quick refuel ship at starport</div>
+        <div>• <strong>[R]</strong> : Quick refuel ship at starport / emergency solar recharge</div>
+        <div>• <strong>Trading</strong> : Buy, Buy Max (rapid cargo fill), Sell, Sell All</div>
         <div>• <strong>[F5] / [F9]</strong> : Quicksave / Quickload voyage state</div>
         <div>• <strong>Export / Import</strong> : JSON voyage file backup & restore</div>
         <div>• <strong>[F1 / H]</strong> : Captain's Log & commodity price guide</div>
@@ -173,7 +174,8 @@
       <h3 style="color:#ff0;">Flight Controls & Hotkeys</h3>
       <ul>
         <li><strong>[1-9]:</strong> Jump to connected planetary destination routes</li>
-        <li><strong>[R]:</strong> Quick refuel ship at starport</li>
+        <li><strong>[R]:</strong> Quick refuel ship at starport / emergency solar recharge</li>
+        <li><strong>Trading:</strong> Use <strong>Buy Max</strong> to quickly purchase all units you can afford and hold in cargo hold; <strong>Sell All</strong> to quickly offload inventory.</li>
         <li><strong>[F5] / [F9]:</strong> Quicksave / Quickload voyage state</li>
         <li><strong>Export / Import:</strong> Save / restore JSON voyage backups</li>
         <li><strong>[F1] / [H] / [?]:</strong> Open / Close this Captain's Log</li>
@@ -826,6 +828,10 @@
         if (data.currentPrices && Object.keys(data.currentPrices).length > 0) {
           currentPrices = data.currentPrices;
         }
+        if (!planets[state.location]) {
+          const pKeys = Object.keys(planets);
+          if (pKeys.length > 0) state.location = pKeys[0];
+        }
         const baseShields = state.hasDreadnought ? 250 : 50;
         if (typeof state.playerShields !== 'number') state.playerShields = baseShields + (state.cargoLevel || 0) * 10;
         if (typeof state.enemyShields !== 'number') state.enemyShields = 30;
@@ -861,6 +867,7 @@
         if (raw) {
           const data = JSON.parse(raw);
           if (applySaveData(data)) {
+            closeAllModals();
             saveGame();
             log('Quicksave restored! [F9]');
             showToast('🚀 Quicksave restored! [F9]', 'success');
@@ -904,6 +911,7 @@
         try {
           const data = JSON.parse(e.target.result);
           if (applySaveData(data)) {
+            closeAllModals();
             saveGame();
             log('Voyage backup imported successfully!');
             showToast('🚀 Voyage imported & loaded!', 'success');
@@ -1014,6 +1022,7 @@
       const types = ['delivery', 'bounty', 'smuggling'];
       const currentPlanet = state.location;
       const otherPlanets = Object.keys(planets).filter(p => p !== currentPlanet);
+      if (otherPlanets.length === 0) return;
       
       for(let i=0; i<3; i++) {
         const type = types[Math.floor(Math.random() * types.length)];
@@ -1892,6 +1901,15 @@
         buyBtn.style.margin = '2px';
         buyBtn.disabled = state.credits < price || state.cargo >= state.maxCargo;
         buyBtn.onclick = () => buyGood(good, price);
+
+        const maxCanBuy = Math.min(state.maxCargo - state.cargo, Math.floor(state.credits / price));
+        const buyMaxBtn = document.createElement('button');
+        buyMaxBtn.textContent = 'Buy Max';
+        buyMaxBtn.title = `Buy max ${maxCanBuy} ${good} (${maxCanBuy * price} cr)`;
+        buyMaxBtn.style.padding = '2px 5px';
+        buyMaxBtn.style.margin = '2px';
+        buyMaxBtn.disabled = maxCanBuy <= 0;
+        buyMaxBtn.onclick = () => buyMaxGood(good, price);
         
         const sellBtn = document.createElement('button');
         sellBtn.textContent = 'Sell';
@@ -1910,6 +1928,7 @@
         sellAllBtn.onclick = () => sellAllGood(good, price);
 
         tdAction.appendChild(buyBtn);
+        tdAction.appendChild(buyMaxBtn);
         tdAction.appendChild(sellBtn);
         tdAction.appendChild(sellAllBtn);
         tr.appendChild(tdAction);
@@ -2039,6 +2058,7 @@
         if (state.activeMission) {
             if (!confirm(`Abandon mission: ${state.activeMission.desc}?`)) return;
             state.activeMission = null;
+            state.bountyTarget = false;
             log(`Mission abandoned.`);
             playSound('fail');
             saveGame();
@@ -2053,6 +2073,23 @@
         state.cargo = Object.values(state.inventory).reduce((a, b) => a + b, 0);
         state.repTraders++;
         log(`Bought 1 ${good} for ${price} cr.`);
+        playSound('chime');
+        saveGame();
+        updateUI();
+      }
+    }
+
+    function buyMaxGood(good, price) {
+      const remainingCargo = state.maxCargo - state.cargo;
+      const affordable = Math.floor(state.credits / price);
+      const count = Math.min(remainingCargo, affordable);
+      if (count > 0) {
+        const totalCost = count * price;
+        state.credits -= totalCost;
+        state.inventory[good] = (state.inventory[good] || 0) + count;
+        state.cargo = Object.values(state.inventory).reduce((a, b) => a + b, 0);
+        state.repTraders += count;
+        log(`Bought ${count} ${good} for ${totalCost} cr.`);
         playSound('chime');
         saveGame();
         updateUI();
@@ -2117,11 +2154,15 @@
       }
     }
 
+    let travelInProgress = false;
     function travel(target, actualCost) {
+      if (travelInProgress || state.inCombat) return;
       if (state.fuel >= actualCost) {
+        travelInProgress = true;
         playSound('jump');
         state.fuel -= actualCost;
         state.location = target;
+        state.bountyTarget = false;
         triggerJumpFX();
         log(`Hyperspace jump complete. Arrived at ${target}. Used ${actualCost} fuel.`);
         
@@ -2144,8 +2185,8 @@
             log(`Navy fined you ${fine} cr and confiscated the goods. Mission Failed!`, true);
             state.activeMission = null;
         } else if (forcedPirate) {
-            setTimeout(() => startCombat(), 500);
             state.bountyTarget = true;
+            setTimeout(() => startCombat(), 500);
         } else if (Math.random() < 0.3) {
           const enc = Math.random();
           if (enc < 0.33) {
@@ -2163,8 +2204,8 @@
             spawnParticleBurst(300, 75, 'celebration', 15);
             log(`Distress signal! Helped a stranded ship. +${creditsGained} cr, Traders Rep +5.`);
           } else {
-            setTimeout(() => startCombat(), 500);
             state.bountyTarget = false;
+            setTimeout(() => startCombat(), 500);
           }
         }
 
@@ -2183,6 +2224,7 @@
 
         saveGame();
         updateUI();
+        setTimeout(() => { travelInProgress = false; }, 500);
       } else {
         playSound('fail');
         log(`Insufficient fuel to reach ${target}!`, true);
@@ -2190,6 +2232,7 @@
     }
 
     function startCombat() {
+      travelInProgress = false;
       playSound('alert');
       state.inCombat = true;
       combatActionPending = false;
@@ -2223,12 +2266,14 @@
         log(`Recovered ${bounty} cr. Navy Rep +5, Pirates Rep -5.`);
         
         if (state.bountyTarget) {
+          if (state.activeMission && typeof state.activeMission.reward === 'number') {
             state.credits += state.activeMission.reward;
             state.repNavy += 5;
             spawnParticleBurst(500, 75, 'celebration', 25);
             log(`Bounty Complete! Earned ${state.activeMission.reward} cr bonus.`);
             state.activeMission = null;
-            state.bountyTarget = false;
+          }
+          state.bountyTarget = false;
         }
         
         state.inCombat = false;
@@ -2249,6 +2294,7 @@
         log("Successfully fled from the pirates!");
         triggerJumpFX();
         state.inCombat = false;
+        state.bountyTarget = false;
         combatActionPending = false;
         const baseShields = state.hasDreadnought ? 250 : 50;
         state.playerShields = baseShields + state.cargoLevel * 10;
@@ -2268,6 +2314,7 @@
         state.credits -= 100;
         state.repPirates += 5;
         state.inCombat = false;
+        state.bountyTarget = false;
         combatActionPending = false;
         const baseShields = state.hasDreadnought ? 250 : 50;
         state.playerShields = baseShields + state.cargoLevel * 10;
@@ -2304,6 +2351,7 @@
           state.credits -= creditsLost;
           log(`Pirates looted ${creditsLost} credits and left you drifting.`, true);
           state.inCombat = false;
+          state.bountyTarget = false;
           const baseShields = state.hasDreadnought ? 250 : 50;
           state.playerShields = baseShields + state.cargoLevel * 10;
         }
@@ -2380,6 +2428,15 @@
           const btnRefuel = document.querySelector('#ui-shipyard button');
           if (btnRefuel && !btnRefuel.disabled) {
             btnRefuel.click();
+          } else {
+            const destContainer = document.getElementById('destinations');
+            if (destContainer) {
+              const buttons = Array.from(destContainer.querySelectorAll('button'));
+              const emergencyBtn = buttons.find(b => b.textContent && b.textContent.includes('Emergency Solar'));
+              if (emergencyBtn) {
+                emergencyBtn.click();
+              }
+            }
           }
         }
       }

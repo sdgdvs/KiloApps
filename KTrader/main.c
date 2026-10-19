@@ -614,6 +614,7 @@ void PlaySoundEffect(int type) {
 void Travel(int btnIdx, HWND hwnd) {
     int cost = destCost[btnIdx];
     int target = destTarget[btnIdx];
+    state.bountyTarget = 0;
     
     if (state.fuel >= cost) {
         PlaySoundEffect(1); // jump
@@ -742,6 +743,7 @@ void EnemyTurn(HWND hwnd) {
         wsprintf(buf, "> Pirates looted %d credits and left you drifting.", lost);
         LogMessage(buf);
         state.inCombat = 0;
+        state.bountyTarget = 0;
         state.playerShields = 50 + state.cargoLevel * 10;
         SaveGame();
     }
@@ -1147,6 +1149,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 if (state.activeMissionType != 0) {
                     PlaySoundEffect(5); // fail
                     state.activeMissionType = 0;
+                    state.bountyTarget = 0;
                     LogMessage("> Mission abandoned.");
                     SaveGame();
                     UpdateUI(hwnd);
@@ -1192,6 +1195,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     LogMessage("> Successfully fled from the pirates!");
                     TriggerJumpFX();
                     state.inCombat = 0;
+                    state.bountyTarget = 0;
                     state.playerShields = 50 + state.cargoLevel * 10;
                     SaveGame();
                 } else {
@@ -1205,6 +1209,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     state.credits -= 100;
                     state.repPirates += 5;
                     state.inCombat = 0;
+                    state.bountyTarget = 0;
                     state.playerShields = 50 + state.cargoLevel * 10;
                     SpawnParticleBurst(300, 75, 3, 10);
                     LogMessage("> Paid 100 cr toll to pirates. Pirates Rep +5.");

@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-tester
-next_agent: kilo-usability
+current_agent: kilo-usability
+next_agent: kilo-qa
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -17,7 +17,7 @@ current_targets:
   kilo_creator: kweb://webring
   kilo_graphics: KFortress
   kilo_soundscape: KFortress
-  kilo_tester: KTrader
+  kilo_tester: KMystery
   kilo_usability: KPass
   kilo_qa: KFreecell
   kilo_expander: KRSS
@@ -35,9 +35,9 @@ virtual_web_rotation:
 - kweb://deep-core
 - kweb://darknet
 last_run:
-  agent: kilo-soundscape
-  app: KVoid
-  timestamp: 2026-10-19T02:40:00+0000
+  agent: kilo-tester
+  app: KTrader
+  timestamp: '2026-10-19T03:38:00+0000'
 last_planner_run: '2026-10-18T21:17:00Z'
 ---
 
@@ -107,19 +107,19 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Upcoming Queue**: `KMech`, `KColosseum`.
 
 ### 4. App Tester Queue (`kilo-tester`)
-- **Target**: `KTrader`
-- **Primary File**: `KiloOS/public/apps/ktrader.html`
-- **Objective**: Space trading simulation UI audit: market commodity exchanges, ship cargo holds, navigation route controls, warp travel dialogs, and save/load state.
+- **Target**: `KMystery`
+- **Primary File**: `KiloOS/public/apps/kmystery.html`
+- **Objective**: Detective mystery interactive UI audit: crime scene clue inspection, suspect interrogation dialogue choices, inventory evidence management, case docket notebook, and F5/F9 state persistence.
 - **Action Steps**:
-  1. Run automated startup check: `uv run scripts/test_app_startup.py --app KTrader`.
-  2. Audit all UI elements: commodity buy/sell buttons, cargo capacity sliders, star map navigation, and hotkeys.
+  1. Run automated startup check: `uv run scripts/test_app_startup.py --app KMystery`.
+  2. Audit all UI elements: clue investigation buttons, interrogation tree dialogs, evidence notebook, and hotkeys.
   3. Fix any broken button hooks, missing element IDs, or unhandled exceptions inline.
-- **Verification**: `uv run scripts/test_app_startup.py --app KTrader` and `cd KiloOS && npm run build`. File size < 999 KB.
+- **Verification**: `uv run scripts/test_app_startup.py --app KMystery` and `cd KiloOS && npm run build`. File size < 999 KB.
 - **Handoff**:
-  - In frontmatter: advance `current_targets.kilo_tester` to `KMystery`.
+  - In frontmatter: advance `current_targets.kilo_tester` to `KChart`.
   - Set `current_agent: kilo-usability`.
   - Append terse execution log (≤6 lines), commit, and push.
-- **Upcoming Queue**: `KMystery`, `KChart`, `KClip`.
+- **Upcoming Queue**: `KChart`, `KClip`, `KTrader`.
 
 ### 5. Usability & UX Queue (`kilo-usability`)
 - **Target**: `KPass`
@@ -203,6 +203,13 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-19T03:38:00+0000 — kilo-tester: KTrader (Interactive UI Audit & Inline Fixes)**
+  - UI Controls: Added Buy Max button for rapid cargo loading; wired emergency solar collector fallback to [R] hotkey when fuel is zero.
+  - Ghost Bounty Bug: Fixed state retention bug in bountyTarget across combat flee, bribe, defeat, and mission abandonment in Web and Win32 C.
+  - State & Parity: Added closeAllModals to quickload/import routines; guarded activeMission reward lookup against null; dual parity verified.
+  - Verification & Sizes: Startup test PASS (99.0 KB < 999 KB, 0 JS errors, CSS valid, hit-test unblocked); Win32 C clean compile (26.0 KB); Vite build clean (459ms); security lint PASS.
+  - Queue Handoff: Advanced kilo_tester to KMystery; rotation handoff to kilo-usability.
+
 - **2026-10-19T02:40:00+0000 — kilo-soundscape: KVoid ("Derelict Bulkhead Protocol" — Cosmic Void Chiptune)**
   - Composition: D Minor / D Phrygian progression with Lydian Horizon shift (#11 on Bb Maj7), 6 logical voices, 64-step sequence.
   - Patches: YM2612 2-Op FM Slap Bass, Hollow Flute with delayed vibrato, DX7 Cosmic Bell, Void Pad shell voicings, inharmonic hats.
@@ -233,10 +240,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Regex & Parsing Fixes: Corrected font family regex escaping and variable font preview styling.
   - Verification & Parity: Verified clean Win32 compilation (`KFont.exe`, 31.5 KB), startup test PASS (171.8 KB < 999 KB, 0 JS errors), Vite build clean (472ms), byte gate PASS.
   - Queue Handoff: Advanced `kilo_expander` to `KRSS`; rotation handoff to `kilo-creator`.
-
-- **2026-10-18T19:20:00+0000 — kilo-qa: KSnake (Pass 5 QA Audit & Mature Quarantine)**
-  - State Persistence: Verified F5 quicksave & F9 quickload capturing complete game state; enabled quickload on victory screen; ensured tutorial flag is safely recorded upon game restoration.
-  - Tutorial & Onboarding: Confirmed first-run tutorial overlay (`ksnake_tutorialSeen` / `ksnake_tutorial.dat`) displays on fresh sessions and never intrudes on restored saves; added [T] tutorial shortcut to Win32 C menu.
-  - Modal Dismissals & Ergonomics: Added close buttons and Escape/Enter/Space handlers to Game Over and Campaign Route Selection overlays; wired modal backdrop click dismissals.
-  - Dual Parity & Build: Verified clean Win32 C build (`KSnake.exe`, 55.3 KB), startup test PASS (283.4 KB < 999 KB, 0 JS errors), Vite build clean (456ms), security lint PASS.
-  - Quarantine & Queue: Promoted KSnake to Mature Applications quarantine table; advanced `kilo_qa` to K2048; rotation handoff to `kilo-expander`.
