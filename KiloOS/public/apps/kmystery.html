@@ -419,9 +419,11 @@
                 <div><b style="color:#d4af37;">[L]</b>: Forensic Lab</div>
                 <div><b style="color:#d4af37;">[I]</b>: Interrogate Suspect</div>
                 <div><b style="color:#d4af37;">[A]</b>: Accuse Suspect</div>
+                <div><b style="color:#d4af37;">[C]</b>: Clue Dossier Sketch</div>
                 <div><b style="color:#d4af37;">[1 - 5]</b>: Fast Travel Locations</div>
                 <div><b style="color:#d4af37;">[Esc]</b>: Close Dialog / Step Back</div>
                 <div><b style="color:#d4af37;">[Enter/Space]</b>: Confirm / Dismiss</div>
+                <div><b style="color:#d4af37;">[← / →]</b>: Flip Dossier Clues</div>
             </div>
             <h3>Interrogation Tips</h3>
             <p>- Every suspect has a breaking point (Patience). Presenting unrelated clues reduces patience.</p>
@@ -429,7 +431,7 @@
             <p>- Cross-reference alibis! If someone's alibi contradicts another's, they might be lying.</p>
             <h3>Evidence Guide</h3>
             <p>- In the lab, calibrate the scanner waveform to match the target frequency.</p>
-            <p>- Use the +11 [1], +7 [2], and -3 [3] frequency shifts strategically.</p>
+            <p>- Use the +11 [1], +7 [2], and -3 [3] frequency shifts, or Reset [R].</p>
             <div style="text-align:center; margin-top:20px;">
                 <button id="btn-close-help-footer" onclick="hideHelp()" class="modal-close btn-help-footer-close btn-gold" style="padding:8px 24px;">Close Manual [Esc]</button>
             </div>
@@ -455,8 +457,15 @@
                     </div>
                 </div>
             </div>
-            <div style="margin-top:16px; text-align:right;">
-                <button id="btn-return-dossier" onclick="closeDossier()" class="modal-close btn-gold" style="font-size:12px; padding:6px 18px;">Return to Case File</button>
+            <div style="margin-top:16px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+                <div style="display:flex; gap:6px;">
+                    <button id="btn-prev-dossier" onclick="prevDossier()" class="btn-gold" style="font-size:11px; padding:5px 12px;" title="Previous Clue [◀ / Left Arrow]">◀ Prev [←]</button>
+                    <button id="btn-next-dossier" onclick="nextDossier()" class="btn-gold" style="font-size:11px; padding:5px 12px;" title="Next Clue [▶ / Right Arrow]">Next [→] ▶</button>
+                </div>
+                <div style="display:flex; gap:8px; align-items:center;">
+                    <span id="dossier-counter" style="font-size:11px; color:#9c9586;">Clue 1 of 1</span>
+                    <button id="btn-return-dossier" onclick="closeDossier()" class="modal-close btn-gold" style="font-size:12px; padding:6px 18px;">Return to Case File [Esc]</button>
+                </div>
             </div>
         </div>
     </div>
@@ -529,6 +538,7 @@
                         <button onclick="adjScanner(11)" style="flex:1;" title="Shift frequency +11 kHz [1]">+11 kHz [1]</button>
                         <button onclick="adjScanner(7)" style="flex:1;" title="Shift frequency +7 kHz [2]">+7 kHz [2]</button>
                         <button onclick="adjScanner(-3)" style="flex:1;" title="Shift frequency -3 kHz [3]">-3 kHz [3]</button>
+                        <button onclick="resetScannerFreq()" style="flex:1;" class="btn-gold" title="Reset tuned frequency to 0 Hz [R / 4]">Reset [R]</button>
                     </div>
                 </div>
                 <button onclick="closeLab()" style="margin-top:10px;">Leave Lab [Esc]</button>
@@ -578,7 +588,7 @@
     </div>
     
     <div id="hotkey-footer" style="padding: 6px 16px; background: #0c0b0f; border-top: 1px solid #3a3222; font-size: 11px; color: #8e8574; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; z-index: 5;">
-        <span><b>Hotkeys:</b> <span style="color:#d4af37;">[F1/H]</span> Help · <span style="color:#d4af37;">[F5]</span> Save · <span style="color:#d4af37;">[F9]</span> Load · <span style="color:#d4af37;">[Ctrl+S]</span> Export · <span style="color:#d4af37;">[Ctrl+O]</span> Import · <span style="color:#d4af37;">[S]</span> Search · <span style="color:#d4af37;">[L]</span> Lab · <span style="color:#d4af37;">[I]</span> Question · <span style="color:#d4af37;">[A]</span> Accuse · <span style="color:#d4af37;">[1-5]</span> Travel</span>
+        <span><b>Hotkeys:</b> <span style="color:#d4af37;">[F1/H]</span> Help · <span style="color:#d4af37;">[F5]</span> Save · <span style="color:#d4af37;">[F9]</span> Load · <span style="color:#d4af37;">[Ctrl+S]</span> Export · <span style="color:#d4af37;">[Ctrl+O]</span> Import · <span style="color:#d4af37;">[S]</span> Search · <span style="color:#d4af37;">[L]</span> Lab · <span style="color:#d4af37;">[I]</span> Question · <span style="color:#d4af37;">[A]</span> Accuse · <span style="color:#d4af37;">[C]</span> Dossier · <span style="color:#d4af37;">[1-5]</span> Travel</span>
         <span style="color:#b0a898;">Inspect verified clues in notebook to view forensic sketches 🔍</span>
     </div>
 
@@ -1067,6 +1077,8 @@
         }
 
         function loadCaseData(data) {
+            closeDossier();
+            hideHelp();
             noirAudio.init();
             noirAudio.resume();
             Object.assign(state, data.state);
@@ -1358,9 +1370,12 @@
         }
 
         function updateStatsUI() {
-            let casesSolved = parseInt(safeGetStorage('kmystery_casesSolved') || safeGetStorage('casesSolved') || '0');
-            let fastestSolve = parseInt(safeGetStorage('kmystery_fastestSolve') || safeGetStorage('fastestSolve') || '999');
-            let perfectSolves = parseInt(safeGetStorage('kmystery_perfectSolves') || safeGetStorage('perfectSolves') || '0');
+            let casesSolved = parseInt(safeGetStorage('kmystery_casesSolved') || safeGetStorage('casesSolved') || '0', 10);
+            if (isNaN(casesSolved)) casesSolved = 0;
+            let fastestSolve = parseInt(safeGetStorage('kmystery_fastestSolve') || safeGetStorage('fastestSolve') || '999', 10);
+            if (isNaN(fastestSolve)) fastestSolve = 999;
+            let perfectSolves = parseInt(safeGetStorage('kmystery_perfectSolves') || safeGetStorage('perfectSolves') || '0', 10);
+            if (isNaN(perfectSolves)) perfectSolves = 0;
             
             let rank = "Rookie";
             if (casesSolved >= 1) rank = "Gumshoe";
@@ -1444,6 +1459,10 @@
 
         function travel(locationName) {
             if (state.locations[locationName]) {
+                if (locationName === state.currentLocation) {
+                    showToast(`ℹ️ You are already at ${locationName}.`);
+                    return;
+                }
                 if (advanceTime(1)) return;
                 state.currentLocation = locationName;
                 state.currentInterrogation = null;
@@ -1451,6 +1470,7 @@
                 state.inLab = false;
                 triggerScreenShake(4);
                 updateLocation();
+                updateNotebook();
             }
         }
 
@@ -1729,6 +1749,26 @@
             }
         }
 
+        function resetScannerFreq() {
+            if (!analysisState) return;
+            if (analysisState.current === 0) {
+                showToast("ℹ️ Frequency is already calibrated at 0 Hz.");
+                return;
+            }
+            analysisState.current = 0;
+            analysisState.moves--;
+            triggerScreenShake(4);
+            noirAudio.playCalibrationTone(0, analysisState.target);
+            if (analysisState.moves <= 0) {
+                triggerScreenShake(8);
+                showToast("⚠️ Calibration failed: Sensor overloaded. Try again.");
+                state.failedCalibrations++;
+                renderLabList();
+            } else {
+                updateScannerUI();
+            }
+        }
+
         function closeLab() {
             state.inLab = false;
             state.analyzingIdx = -1;
@@ -1797,8 +1837,14 @@
             }
         };
 
-        function inspectClue(idx) {
-            const rawClue = state.foundClues[idx];
+        let currentDossierIdx = 0;
+
+        function updateDossierView() {
+            if (state.foundClues.length === 0) return;
+            if (currentDossierIdx < 0) currentDossierIdx = 0;
+            if (currentDossierIdx >= state.foundClues.length) currentDossierIdx = state.foundClues.length - 1;
+
+            const rawClue = state.foundClues[currentDossierIdx];
             if (!rawClue) return;
             const parts = rawClue.split('] ');
             const locName = parts.length > 1 ? parts[0].replace('[', '') : 'Crime Scene';
@@ -1815,9 +1861,39 @@
             document.getElementById('dossier-analysis').textContent = info.analysis;
             document.getElementById('dossier-deduction').textContent = info.deduction;
 
+            const counter = document.getElementById('dossier-counter');
+            if (counter) counter.textContent = `Evidence ${currentDossierIdx + 1} of ${state.foundClues.length}`;
+
+            const prevBtn = document.getElementById('btn-prev-dossier');
+            const nextBtn = document.getElementById('btn-next-dossier');
+            if (prevBtn) prevBtn.disabled = (currentDossierIdx <= 0);
+            if (nextBtn) nextBtn.disabled = (currentDossierIdx >= state.foundClues.length - 1);
+
             drawDossierSketch(actualClue);
+        }
+
+        function inspectClue(idx) {
+            if (idx === undefined || idx < 0 || idx >= state.foundClues.length) idx = 0;
+            currentDossierIdx = idx;
+            updateDossierView();
             document.getElementById('dossier-modal').classList.remove('hidden');
             noirAudio.playClueReveal();
+        }
+
+        function prevDossier() {
+            if (currentDossierIdx > 0) {
+                currentDossierIdx--;
+                updateDossierView();
+                noirAudio.playTypewriter();
+            }
+        }
+
+        function nextDossier() {
+            if (currentDossierIdx < state.foundClues.length - 1) {
+                currentDossierIdx++;
+                updateDossierView();
+                noirAudio.playTypewriter();
+            }
         }
 
         function closeDossier() {
@@ -2021,10 +2097,14 @@
         function updateNotebook() {
             const suspectList = document.getElementById('suspect-list');
             if (state.knownSuspects.length > 0) {
+                const currLoc = state.locations[state.currentLocation];
                 suspectList.innerHTML = state.knownSuspects.map(s => {
                     const pat = state.patience[s] !== undefined ? state.patience[s] : 3;
                     const patienceDots = '●'.repeat(Math.max(0, pat)) + '○'.repeat(Math.max(0, 3 - pat));
-                    return `<li><b>${s}</b> <span style="font-size:11px; color:#d4af37; float:right;">[${patienceDots}]</span></li>`;
+                    const isHere = currLoc && currLoc.suspect === s;
+                    const hereBadge = isHere ? `<span style="color:#44ff44; font-size:10px; margin-left:4px; font-weight:bold;">[PRESENT]</span>` : '';
+                    const clickAttr = isHere && !state.inLab && !state.inAccusation ? `class="clue-item-clickable" onclick="startInterrogation()" title="Interrogate ${s} present at scene [I]"` : '';
+                    return `<li ${clickAttr}><b>${s}</b>${hereBadge} <span style="font-size:11px; color:#d4af37; float:right;">[${patienceDots}]</span></li>`;
                 }).join('');
             } else {
                 suspectList.innerHTML = '<li>No suspects yet.</li>';
@@ -2032,14 +2112,14 @@
 
             const unanalyzedList = document.getElementById('unanalyzed-list');
             if (state.unanalyzedClues.length > 0) {
-                unanalyzedList.innerHTML = state.unanalyzedClues.map(c => `<li>Object from <b>${c.locName}</b></li>`).join('');
+                unanalyzedList.innerHTML = state.unanalyzedClues.map(c => `<li class="clue-item-clickable" onclick="openLab()" title="Examine and calibrate in Forensic Lab [L]">🔬 Object from <b>${c.locName}</b> <span style="font-size:10px; color:#d4af37; float:right;">[Analyze]</span></li>`).join('');
             } else {
                 unanalyzedList.innerHTML = '<li>No evidence found.</li>';
             }
 
             const clueList = document.getElementById('clue-list');
             if (state.foundClues.length > 0) {
-                clueList.innerHTML = state.foundClues.map((c, idx) => `<li class="clue-item-clickable" onclick="inspectClue(${idx})" title="Click to inspect evidence dossier">🔍 <b>${c}</b></li>`).join('');
+                clueList.innerHTML = state.foundClues.map((c, idx) => `<li class="clue-item-clickable" onclick="inspectClue(${idx})" title="Click or press [C] to inspect evidence dossier sketch">🔍 <b>${c}</b></li>`).join('');
             } else {
                 clueList.innerHTML = '<li>No usable clues.</li>';
             }
@@ -2178,9 +2258,20 @@
                 return;
             }
             if (dossierModal && !dossierModal.classList.contains('hidden')) {
+                if (e.key === 'ArrowLeft' || e.key.toLowerCase() === 'p') {
+                    e.preventDefault();
+                    prevDossier();
+                    return;
+                }
+                if (e.key === 'ArrowRight' || e.key.toLowerCase() === 'n') {
+                    e.preventDefault();
+                    nextDossier();
+                    return;
+                }
                 if (e.key === 'Enter' || e.key === ' ') {
                     e.preventDefault();
                     closeDossier();
+                    return;
                 }
                 return;
             }
@@ -2217,20 +2308,26 @@
                         if (e.key === '1') { adjScanner(11); return; }
                         if (e.key === '2') { adjScanner(7); return; }
                         if (e.key === '3') { adjScanner(-3); return; }
+                        if (e.key === '4' || e.key.toLowerCase() === 'r') { resetScannerFreq(); return; }
                     } else {
-                        const num = parseInt(e.key);
+                        if (e.key.toLowerCase() === 'l') {
+                            closeLab();
+                            return;
+                        }
+                        const num = parseInt(e.key, 10);
                         if (!isNaN(num) && num >= 1 && num <= state.unanalyzedClues.length) {
                             startAnalysis(num - 1);
                             return;
                         }
                     }
+                    return;
                 }
 
                 // Keyboard controls in active interrogation
                 if (intArea && !intArea.classList.contains('hidden')) {
                     const selectClueH3 = intArea.querySelector('h3');
                     if (selectClueH3 && selectClueH3.textContent.includes('Select a clue')) {
-                        const num = parseInt(e.key);
+                        const num = parseInt(e.key, 10);
                         if (!isNaN(num) && num >= 1 && num <= state.foundClues.length) {
                             submitClue(num - 1);
                             return;
@@ -2240,6 +2337,7 @@
                         if (e.key === '2') { presentClue(); return; }
                         if (e.key === '3') { endInterrogation(); return; }
                     }
+                    return;
                 }
 
                 const k = e.key.toLowerCase();
@@ -2247,23 +2345,27 @@
                     const searchBtn = document.getElementById('search-btn');
                     if (searchBtn && !searchBtn.disabled) searchLocation();
                 } else if (k === 'l') {
-                    if (state.inLab) closeLab();
-                    else openLab();
+                    openLab();
                 } else if (k === 'i') {
                     const loc = state.locations[state.currentLocation];
-                    if (loc && loc.suspect && !state.inLab) startInterrogation();
+                    if (loc && loc.suspect) startInterrogation();
                 } else if (k === 'a') {
                     startAccusation();
-                } else if (['1', '2', '3', '4', '5'].includes(e.key) && (!intArea || intArea.classList.contains('hidden')) && (!labArea || labArea.classList.contains('hidden'))) {
+                } else if (k === 'c') {
+                    if (state.foundClues.length > 0) {
+                        inspectClue(currentDossierIdx < state.foundClues.length ? currentDossierIdx : 0);
+                    } else {
+                        showToast("ℹ️ No verified clues yet. Search locations and analyze evidence in the lab.");
+                    }
+                } else if (['1', '2', '3', '4', '5'].includes(e.key)) {
                     const locNames = Object.keys(state.locations);
-                    const idx = parseInt(e.key) - 1;
+                    const idx = parseInt(e.key, 10) - 1;
                     if (idx >= 0 && idx < locNames.length) {
                         travel(locNames[idx]);
                     }
                 }
             }
         }
-        document.addEventListener('keydown', handleKeyDown);
         window.addEventListener('keydown', handleKeyDown);
 
         // ==========================================

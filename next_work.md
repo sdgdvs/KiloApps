@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-tester
-next_agent: kilo-usability
+current_agent: kilo-usability
+next_agent: kilo-qa
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -17,7 +17,7 @@ current_targets:
   kilo_creator: kweb://warez
   kilo_graphics: KMech
   kilo_soundscape: KMech
-  kilo_tester: KMystery
+  kilo_tester: KChart
   kilo_usability: KVault
   kilo_qa: KMatch3
   kilo_expander: KVault
@@ -35,9 +35,9 @@ virtual_web_rotation:
 - kweb://deep-core
 - kweb://darknet
 last_run:
-  agent: kilo-soundscape
-  app: KFortress
-  timestamp: '2026-10-19T14:16:00+0000'
+  agent: kilo-tester
+  app: KMystery
+  timestamp: '2026-10-19T15:35:00+0000'
 last_planner_run: '2026-10-18T21:17:00Z'
 ---
 
@@ -107,19 +107,19 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Upcoming Queue**: `KColosseum`, `KTrader`.
 
 ### 4. App Tester Queue (`kilo-tester`)
-- **Target**: `KMystery`
-- **Primary File**: `KiloOS/public/apps/kmystery.html`
-- **Objective**: Detective mystery interactive UI audit: crime scene clue inspection, suspect interrogation dialogue choices, inventory evidence management, case docket notebook, and F5/F9 state persistence.
+- **Target**: `KChart`
+- **Primary File**: `KiloOS/public/apps/kchart.html`
+- **Objective**: Retro spreadsheet & business charting interactive UI audit: chart type selectors, data table cell editing, formula evaluation, import/export CSV, and keyboard navigation.
 - **Action Steps**:
-  1. Run automated startup check: `uv run scripts/test_app_startup.py --app KMystery`.
-  2. Audit all UI elements: clue investigation buttons, interrogation tree dialogs, evidence notebook, and hotkeys.
+  1. Run automated startup check: `uv run scripts/test_app_startup.py --app KChart`.
+  2. Audit all UI elements: chart rendering toggles, spreadsheet grid inputs, export buttons, and hotkeys.
   3. Fix any broken button hooks, missing element IDs, or unhandled exceptions inline.
-- **Verification**: `uv run scripts/test_app_startup.py --app KMystery` and `cd KiloOS && npm run build`. File size < 999 KB.
+- **Verification**: `uv run scripts/test_app_startup.py --app KChart` and `cd KiloOS && npm run build`. File size < 999 KB.
 - **Handoff**:
-  - In frontmatter: advance `current_targets.kilo_tester` to `KChart`.
+  - In frontmatter: advance `current_targets.kilo_tester` to `KClip`.
   - Set `current_agent: kilo-usability`.
   - Append terse execution log (≤6 lines), commit, and push.
-- **Upcoming Queue**: `KChart`, `KClip`, `KTrader`.
+- **Upcoming Queue**: `KClip`, `KTrader`.
 
 ### 5. Usability & UX Queue (`kilo-usability`)
 - **Target**: `KVault`
@@ -200,10 +200,18 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | **KTetris** | `KiloOS/public/apps/ktetris.html` | Pass 10+ (2026-10-18) | Arcade / Classic | Full retro arcade physics, SRS rotation, hold piece, ghost piece, marathon/sprint/ultra modes, RFMS multiplayer, full F5/F9 state persistence, dual Win32 native client parity. |
 | **KFreecell** | `KiloOS/public/apps/kfreecell.html` | Pass 5 (2026-10-19) | Card / Solitaire | 4 game modes (incl. 20-stage campaign & time attack), 5 active skills, dual Win32 native client parity, full F5/F9 state persistence, first-run tutorial integrity, zero glints. |
 | **KFortress** | `KiloOS/public/apps/kfortress.html` | Pass 6+ (2026-10-19) | Strategy / Tower Defense | Complete 12-map stronghold defense, Imagen 3 sprites & textured terrain, dual Win32 client parity, YM2612 2-Op FM / SPC700 2-movement soundscape, full F5/F9 state persistence. |
+| **KMystery** | `KiloOS/public/apps/kmystery.html` | Pass 6+ (2026-10-19) | Puzzle / Adventure | Detective noir murder mystery; interactive clue dossier sketch viewer, forensic lab scanner, suspect interrogation tree, YM2612 2-Op FM jazz, dual Win32 native client parity, full F5/F9 persistence. |
 
 ---
 
 ## Recent Execution Logs (Max 5 Entries)
+
+- **2026-10-19T15:35:00+0000 — kilo-tester: KMystery (Interactive UI Audit & Mature Promotion)**
+  - Clue Dossier & Navigation: Added `prevDossier()` / `nextDossier()`, `[←/→]` and `[P/N]` keyboard hotkeys to flip through discovered clues, and `[C]` hotkey to inspect evidence sketches.
+  - Scanner Frequency Reset: Added Reset `[R / 4]` frequency shift button to reset scanner to 0 Hz without wasting moves.
+  - Interactive Links & Guards: Wired notebook clicks to launch lab/interrogation directly; added safeguard preventing time loss when traveling to current location.
+  - Dual Parity & Build: Rebuilt Win32 C native client (`KMystery.exe`, 40.4 KB); startup test PASS (156.5 KB < 999 KB, 0 JS errors, hit-test unblocked); Vite build clean.
+  - Quarantine & Handoff: Promoted KMystery to Mature Applications quarantine; advanced `kilo_tester` to `KChart`; rotation handoff to `kilo-usability`.
 
 - **2026-10-19T14:16:00+0000 — kilo-soundscape: KFortress (Siege of the Iron Citadel & Vigil Soundscape)**
   - Dual Movements: Composed "Citadel in Vigil" (peacetime D Aeolian meditation) and "Siege of the Iron Citadel" (combat D Phrygian Dominant martial drive).
@@ -236,12 +244,4 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Ergonomics: Integrated Bionic speed-scan mode, reader width/font presets, reading progress bar, bottom article navigation cards, and quote clipping.
   - Parity & Verification: Win32 C clean compile (22.0 KB), startup check PASS (192.4 KB < 999 KB, 0 JS err, unblocked), Vite clean (516ms), security lint PASS.
   - Queue Handoff: Advanced current_targets.kilo_expander to KVault; rotation handoff to kilo-creator.
-
-- **2026-10-19T07:18:00+0000 — kilo-qa: KFreecell (Pass 5 QA Audit & Mature Promotion)**
-  - State Persistence: Audited F5 quicksave & F9 quickload capturing complete tableau, freecells, foundations, undo stack, stats, and timer across Web and Win32 C.
-  - Tutorial & Modals: First-run onboarding banner / Help dialog fires once on fresh session (`kfreecell_tutorialSeen`), never interrupting restored saves; clean Esc/Enter/Space dismissals.
-  - Scoping & Storage: Refactored `ensureGameTimer` to top-level scope; audited storage quota safety (`safeGet`/`safeSet`) and `beforeunload` interval teardown.
-  - Glint & Mystery: Confirmed static perimeter inlay, zero specular glints/dots, zero un-diegetic tags, full anti-trademark compliance.
-  - Verification & Parity: Win32 C compile clean (`KFreecell.exe`, 129.5 KB), startup test PASS (105.6 KB, 0 JS errors, hit-test unblocked), Vite build clean (491ms), security lint PASS.
-  - Quarantine & Handoff: Promoted KFreecell to Mature Applications quarantine; advanced `kilo_qa` to `KMatch3`; rotation handoff to `kilo-expander`.
 

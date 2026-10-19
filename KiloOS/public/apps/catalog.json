@@ -315,9 +315,9 @@
     "id": "kfortress",
     "title": "KFortress",
     "folder": "Games",
-    "webBytes": 218663,
+    "webBytes": 230846,
     "exeBytes": 182784,
-    "budgetPercent": 21.9
+    "budgetPercent": 23.1
   },
   {
     "id": "kfreecell",
@@ -459,9 +459,9 @@
     "id": "kmystery",
     "title": "KMystery",
     "folder": "Games",
-    "webBytes": 154779,
-    "exeBytes": 39936,
-    "budgetPercent": 15.5
+    "webBytes": 160262,
+    "exeBytes": 40448,
+    "budgetPercent": 16.0
   },
   {
     "id": "knet",
