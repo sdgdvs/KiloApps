@@ -568,6 +568,121 @@
       color: var(--star-color);
     }
 
+    .badge-rule {
+      font-size: 9px;
+      font-family: var(--font-mono);
+      padding: 1px 5px;
+      border-radius: 3px;
+      color: #ffffff;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      gap: 2px;
+      line-height: 1.2;
+    }
+
+    .badge-category {
+      font-size: 9px;
+      font-family: var(--font-mono);
+      background: var(--surface-hover);
+      border: 1px solid var(--border);
+      padding: 1px 5px;
+      border-radius: 3px;
+      color: var(--text-muted);
+      cursor: pointer;
+      line-height: 1.2;
+      transition: color 0.1s, border-color 0.1s;
+    }
+    .badge-category:hover {
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+
+    .reading-progress-track {
+      width: 100%;
+      height: 3px;
+      background: var(--surface);
+      position: relative;
+      flex-shrink: 0;
+    }
+
+    .reading-progress-bar {
+      height: 100%;
+      width: 0%;
+      background: var(--primary);
+      transition: width 0.1s linear;
+    }
+
+    .reader-body.width-standard { max-width: 820px; }
+    .reader-body.width-narrow { max-width: 620px; }
+    .reader-body.width-wide { max-width: 1040px; }
+    .reader-body.width-full { max-width: 100%; }
+
+    .reader-body.font-sans { font-family: var(--font-sans); }
+    .reader-body.font-serif { font-family: 'Georgia', 'Times New Roman', serif; }
+    .reader-body.font-mono { font-family: var(--font-mono); }
+
+    .reader-nav-footer {
+      margin-top: 36px;
+      padding-top: 20px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .reader-nav-card {
+      flex: 1;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 10px 14px;
+      cursor: pointer;
+      transition: border-color 0.15s, background 0.15s;
+    }
+    .reader-nav-card:hover {
+      background: var(--surface-hover);
+      border-color: var(--primary);
+    }
+
+    .reader-nav-label {
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--primary);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 4px;
+    }
+
+    .reader-nav-title {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .offline-badge {
+      font-size: 10px;
+      font-family: var(--font-mono);
+      background: #f59e0b22;
+      border: 1px solid var(--warning);
+      color: var(--warning);
+      padding: 2px 6px;
+      border-radius: 4px;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      cursor: pointer;
+      user-select: none;
+    }
+    .offline-badge.connected {
+      background: #10b98122;
+      border-color: var(--success);
+      color: var(--success);
+    }
+
     /* Pane 3: Reading Pane */
     .pane-reader {
       flex: 1;
@@ -1225,12 +1340,15 @@
         <span class="brand-badge">v1.1.0</span>
       </div>
       <div class="presence-badge" id="netPresenceBadge" title="Live Global Readers on KiloNet"><span class="presence-dot"></span><span id="onlineCount">1</span> Online</div>
+      <div class="offline-badge connected" id="dialupStatusBadge" title="Click to open Offline Cache & Dial-Up Manager (Alt+O)">⚡ 56k V.90</div>
     </div>
 
     <div class="header-actions">
       <button class="btn btn-sm" id="btnToggleSidebar" title="Toggle Feeds Sidebar (B)">📂 Feeds</button>
       <button class="btn btn-primary btn-sm" id="btnRefresh" title="Fetch / Poll Feeds (R)">🔄 Fetch</button>
       <button class="btn btn-sm" id="btnAddFeedModal" title="Subscribe to Feed (A)">➕ Add</button>
+      <button class="btn btn-sm" id="btnRulesModal" title="Keyword Alert Rules (Alt+K)">🔔 Rules (<span id="badgeRuleCount">5</span>)</button>
+      <button class="btn btn-sm" id="btnOfflineModal" title="1999 Offline News Cache & Spool (Alt+O)">💾 Cache</button>
       <button class="btn btn-sm" id="btnBroadcastModal" title="Broadcast Dispatch to Global Wire (W)">📣 Wire</button>
       <button class="btn btn-sm" id="btnCatalogModal" title="Browse Global Syndicate Catalog">🌐 Catalog</button>
       <button class="btn btn-sm" id="btnScrapbookModal" title="View Research Scrapbook / Clips (C)">✂️ Clips</button>
@@ -1278,15 +1396,21 @@
           <input type="text" id="inputSearch" placeholder="Filter headlines (Press / to search)...">
           <button id="btnClearSearch" title="Clear filter (Esc)" class="search-clear-btn">✕</button>
         </div>
-        <div style="display: flex; align-items: center; justify-content: space-between; gap: 4px;">
+        <div style="display: flex; align-items: center; justify-content: space-between; gap: 4px; flex-wrap: wrap;">
           <div class="filter-pills">
             <button class="filter-pill active" data-filter="all">All</button>
             <button class="filter-pill" data-filter="unread">Unread</button>
             <button class="filter-pill" data-filter="starred">★ Star</button>
+            <button class="filter-pill" data-filter="alerts">🔔 Alerts</button>
           </div>
-          <select id="selectTagFilter" class="btn btn-sm" style="padding: 2px 4px; font-size: 11px; max-width: 105px;">
-            <option value="">All Tags</option>
-          </select>
+          <div style="display:flex; gap:4px; align-items:center;">
+            <select id="selectCategoryFilter" class="btn btn-sm" style="padding: 2px 4px; font-size: 11px; max-width: 105px;" title="Filter by Channel Category">
+              <option value="">All Categories</option>
+            </select>
+            <select id="selectTagFilter" class="btn btn-sm" style="padding: 2px 4px; font-size: 11px; max-width: 90px;" title="Filter by Tag">
+              <option value="">All Tags</option>
+            </select>
+          </div>
         </div>
       </div>
 
@@ -1324,6 +1448,18 @@
           <button id="btnExportHtml" style="display:none;"></button>
         </div>
         <div class="reader-toolbar-group">
+          <button class="btn btn-sm" id="btnToggleBionic" title="Toggle Speed-Scan / Bionic Reading (B)">⚡ Scan</button>
+          <select id="selectReaderWidth" class="btn btn-sm" title="Reading Measure Width" style="padding: 2px 4px; font-size: 11px;">
+            <option value="standard">📐 Standard</option>
+            <option value="narrow">📐 Compact</option>
+            <option value="wide">📐 Wide</option>
+            <option value="full">📐 Full</option>
+          </select>
+          <select id="selectReaderFont" class="btn btn-sm" title="Reading Font Style" style="padding: 2px 4px; font-size: 11px;">
+            <option value="sans">🔤 Sans</option>
+            <option value="serif">🔤 Serif</option>
+            <option value="mono">🔤 Mono</option>
+          </select>
           <button class="btn btn-sm" id="btnToggleZen" title="Toggle Distraction-free Focus / Zen Mode (Z)">📖 Focus</button>
           <button class="btn btn-sm btn-icon" id="btnZoomOut" title="Decrease font size (-)">A-</button>
           <span id="zoomDisplay" style="font-family: var(--font-mono); font-size: 11px; color: var(--text-muted); min-width: 28px; text-align: center;">14px</span>
@@ -1359,6 +1495,7 @@
             <div class="article-tags-bar" id="articleTagsBar"></div>
           </div>
           <div class="reader-body" id="articleBody"></div>
+          <div id="readerNavFooterContainer"></div>
         </div>
       </div>
     </main>
@@ -1605,6 +1742,88 @@
     </div>
   </div>
 
+  <!-- MODAL: Keyword Notification Rules -->
+  <div class="modal-overlay" id="modalKeywordRules">
+    <div class="modal-box" style="max-width: 620px;">
+      <div class="modal-header">
+        <div class="modal-title">🔔 Keyword Notification Rules & Alerts</div>
+        <button class="modal-close" id="btnCloseKeywordRules">✕</button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size:12px; color:var(--text-muted); margin-bottom:12px;">
+          Set monitoring rules for incoming dispatches and retro feeds. When incoming articles match any keyword rule, KRSS highlights headlines, sounds a synthesized alert chime, and can auto-star the article.
+        </p>
+        <div style="background:var(--surface); border:1px solid var(--border); border-radius:4px; padding:10px; margin-bottom:14px;">
+          <div style="font-size:11px; font-weight:bold; color:var(--primary); margin-bottom:8px;">➕ Add Keyword Rule</div>
+          <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+            <input type="text" id="inputRuleKeyword" class="form-control" placeholder="Keyword (e.g. Y2K, Kernel, Anomaly)..." style="flex:2; min-width:140px;">
+            <label style="font-size:11px; display:inline-flex; align-items:center; gap:4px; cursor:pointer;">
+              <input type="checkbox" id="checkRuleAutoStar"> ★ Auto-Star
+            </label>
+            <label style="font-size:11px; display:inline-flex; align-items:center; gap:4px; cursor:pointer;">
+              <input type="checkbox" id="checkRuleSound" checked> 🔔 Chime
+            </label>
+            <button class="btn btn-primary btn-sm" id="btnAddKeywordRule">+ Add Rule</button>
+          </div>
+        </div>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+          <span style="font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase;">Active Rules (<span id="rulesListCount">0</span>)</span>
+          <button class="btn btn-sm" id="btnTestRuleAlertChime">🔊 Test Chime</button>
+        </div>
+        <div id="rulesListContainer" style="display:flex; flex-direction:column; gap:6px; max-height:220px; overflow-y:auto;">
+          <!-- Dynamically populated -->
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn" id="btnCloseKeywordRulesModal">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: Simulated 1999 Offline News Cache & Spool -->
+  <div class="modal-overlay" id="modalOfflineCache">
+    <div class="modal-box" style="max-width: 600px;">
+      <div class="modal-header">
+        <div class="modal-title">💾 1999 Offline News Cache & Dial-Up Vault</div>
+        <button class="modal-close" id="btnCloseOfflineCache">✕</button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size:12px; color:var(--text-muted); margin-bottom:12px;">
+          In 1999, internet connections were billed per dial-up minute. KRSS allows you to pre-fetch all syndicated channels into a local disk spool and switch to disconnected offline mode.
+        </p>
+        <div style="display:flex; justify-content:space-between; align-items:center; background:var(--surface); border:1px solid var(--border); border-radius:4px; padding:10px 14px; margin-bottom:12px;">
+          <div>
+            <div style="font-size:12px; font-weight:bold;" id="cacheModeStatus">Connection: ⚡ KiloNet Dial-Up ISP (56k V.90)</div>
+            <div style="font-size:11px; color:var(--text-muted);" id="cacheSubStatus">Operating in live simulated online mode.</div>
+          </div>
+          <button class="btn btn-sm btn-primary" id="btnToggleOfflineMode">Disconnect & Read Offline</button>
+        </div>
+        <div style="background:var(--surface); border:1px solid var(--border); border-radius:4px; padding:10px; margin-bottom:12px; font-size:11px; font-family:var(--font-mono);">
+          <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+            <span>Cached Articles:</span><b id="cacheStatArticles">0 articles</b>
+          </div>
+          <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+            <span>Cached Channels:</span><b id="cacheStatFeeds">0 feeds</b>
+          </div>
+          <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+            <span>Estimated Spool Footprint:</span><b id="cacheStatSize">0.0 KB</b>
+          </div>
+          <div style="display:flex; justify-content:space-between;">
+            <span>Last Snapshot Timestamp:</span><b id="cacheStatTime">None</b>
+          </div>
+        </div>
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+          <button class="btn btn-sm" id="btnSnapshotOfflineCache">🔄 Snapshot & Pre-fetch All Feeds</button>
+          <button class="btn btn-sm" id="btnPurgeOfflineCache">🗑️ Purge Local Spool</button>
+          <button class="btn btn-sm" id="btnExportOfflineHtml">📄 Export Standalone Offline Reader (.html)</button>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn" id="btnCloseOfflineCacheModal">Close</button>
+      </div>
+    </div>
+  </div>
+
   <!-- MODAL: Help & Shortcuts -->
   <div class="modal-overlay" id="modalHelp">
     <div class="modal-box">
@@ -1620,12 +1839,14 @@
           <div><b>K / Up</b></div><div>Previous headline</div>
           <div><b>/</b></div><div>Focus search input filter</div>
           <div><b>V</b></div><div>Open original article URL in new window</div>
-          <div><b>B</b></div><div>Toggle Subscriptions sidebar</div>
+          <div><b>B</b></div><div>Toggle Speed-Scan / Bionic reading mode</div>
           <div><b>M</b></div><div>Toggle Read / Unread status</div>
           <div><b>Shift + M</b></div><div>Mark current view read</div>
           <div><b>S</b></div><div>Toggle Starred / Bookmark</div>
           <div><b>R</b></div><div>Poll / Fetch all feeds</div>
           <div><b>A</b></div><div>Open Add Feed dialog</div>
+          <div><b>Alt + K</b></div><div>Keyword Notification Rules dialog</div>
+          <div><b>Alt + O</b></div><div>Offline News Cache & Dial-Up manager</div>
           <div><b>W</b></div><div>Open Broadcast Wire dialog</div>
           <div><b>C</b></div><div>Open Research Scrapbook</div>
           <div><b>P</b></div><div>Read aloud via voice synthesizer</div>
@@ -1726,17 +1947,43 @@
         setTimeout(() => playTone(380, 'sine', 0.12, 0.04), 120);
       } else if (name === 'toast') {
         playTone(850, 'sine', 0.07, 0.03);
+      } else if (name === 'alert') {
+        playTone(880, 'square', 0.08, 0.05);
+        setTimeout(() => playTone(1320, 'square', 0.12, 0.05), 80);
+      }
+    }
+
+    // --- Storage Safety Wrappers (Quality Standards) ---
+    function safeGet(key, fallback) {
+      try {
+        const val = localStorage.getItem(key);
+        if (val === null) return fallback;
+        return JSON.parse(val) ?? fallback;
+      } catch {
+        return fallback;
+      }
+    }
+
+    function safeSet(key, value) {
+      try {
+        localStorage.setItem(key, JSON.stringify(value));
+      } catch (e) {
+        console.warn('[KRSS] Storage write failed:', e.message);
       }
     }
 
     // --- State Storage & Models ---
     const STORAGE_KEY = 'krss_workstation_state';
     const TUTORIAL_KEY = 'krss_tutorialSeen';
+    const RULES_KEY = 'krss_keyword_rules';
+    const OFFLINE_CACHE_KEY = 'krss_offline_cache';
+    const OFFLINE_MODE_KEY = 'krss_offline_mode';
 
     let feeds = [];
     let articles = [];
     let activeFeedId = 'all'; // 'all', 'unread', 'starred', or numeric/string feed ID
-    let activeFilter = 'all'; // 'all', 'unread', 'starred'
+    let activeFilter = 'all'; // 'all', 'unread', 'starred', 'alerts'
+    let selectedCategory = '';
     let selectedArticleId = null;
     let selectedTag = '';
     let searchQuery = '';
@@ -1749,6 +1996,20 @@
     let catalogSubscribed = false;
     let globalCatalogFeeds = [];
     const SCRAPBOOK_KEY = 'krss_scrapbook';
+
+    // Expanded Feature State
+    let keywordRules = safeGet(RULES_KEY, [
+      { id: 1, keyword: 'Y2K', autoStar: true, sound: true, color: '#f59e0b', active: true },
+      { id: 2, keyword: 'Kernel', autoStar: false, sound: true, color: '#38bdf8', active: true },
+      { id: 3, keyword: 'Intercept', autoStar: true, sound: true, color: '#ec4899', active: true },
+      { id: 4, keyword: 'Anomaly', autoStar: true, sound: true, color: '#a855f7', active: true },
+      { id: 5, keyword: 'Trapster', autoStar: false, sound: false, color: '#10b981', active: true }
+    ]);
+    let isOfflineMode = safeGet(OFFLINE_MODE_KEY, false);
+    let offlineCache = safeGet(OFFLINE_CACHE_KEY, null);
+    let isBionicReading = false;
+    let readerWidth = 'standard'; // 'standard', 'narrow', 'wide', 'full'
+    let readerFont = 'sans'; // 'sans', 'serif', 'mono'
 
     // --- Default Preloaded Retro Feeds & Telemetry Transmissions ---
     const DEFAULT_FEEDS = [
@@ -2064,7 +2325,38 @@
             const btn = document.getElementById('btnToggleSidebar');
             if (btn) btn.classList.toggle('active', !parsed.sidebarCollapsed);
           }
+          if (parsed.selectedCategory !== undefined) {
+            selectedCategory = parsed.selectedCategory;
+            const catSelect = document.getElementById('selectCategoryFilter');
+            if (catSelect) catSelect.value = selectedCategory;
+          }
+          if (Array.isArray(parsed.keywordRules)) {
+            keywordRules = parsed.keywordRules;
+            safeSet(RULES_KEY, keywordRules);
+          }
+          if (parsed.isOfflineMode !== undefined) {
+            isOfflineMode = !!parsed.isOfflineMode;
+            safeSet(OFFLINE_MODE_KEY, isOfflineMode);
+          }
+          if (parsed.readerWidth !== undefined) {
+            readerWidth = parsed.readerWidth;
+            const wSelect = document.getElementById('selectReaderWidth');
+            if (wSelect) wSelect.value = readerWidth;
+          }
+          if (parsed.readerFont !== undefined) {
+            readerFont = parsed.readerFont;
+            const fSelect = document.getElementById('selectReaderFont');
+            if (fSelect) fSelect.value = readerFont;
+          }
+          if (parsed.isBionicReading !== undefined) {
+            isBionicReading = !!parsed.isBionicReading;
+            const bBtn = document.getElementById('btnToggleBionic');
+            if (bBtn) bBtn.classList.toggle('btn-primary', isBionicReading);
+          }
           syncFilterPills();
+          populateCategoryFilterOptions();
+          updateOfflineStatsUI();
+          renderKeywordRulesList();
           return true;
         }
       } catch (e) {
@@ -2073,6 +2365,9 @@
       feeds = JSON.parse(JSON.stringify(DEFAULT_FEEDS));
       articles = JSON.parse(JSON.stringify(DEFAULT_ARTICLES));
       syncFilterPills();
+      populateCategoryFilterOptions();
+      updateOfflineStatsUI();
+      renderKeywordRulesList();
       return false;
     }
 
@@ -2126,29 +2421,279 @@
       try {
         const pane = document.querySelector('.pane-feeds');
         const payload = {
-          version: "1.1.0",
+          version: "1.2.0",
           timestamp: new Date().toISOString(),
           feeds: feeds,
           articles: articles,
           activeFeedId: activeFeedId,
           activeFilter: activeFilter,
+          selectedCategory: selectedCategory,
           selectedArticleId: selectedArticleId,
           selectedTag: selectedTag,
           searchQuery: searchQuery,
           soundEnabled: soundEnabled,
           theme: document.body.getAttribute('data-theme') || 'dark',
           zoomLevel: zoomLevel,
-          sidebarCollapsed: pane ? pane.classList.contains('collapsed') : false
+          sidebarCollapsed: pane ? pane.classList.contains('collapsed') : false,
+          keywordRules: keywordRules,
+          isOfflineMode: isOfflineMode,
+          readerWidth: readerWidth,
+          readerFont: readerFont,
+          isBionicReading: isBionicReading
         };
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+        safeSet(STORAGE_KEY, payload);
         if (!silent) {
           playSoundEffect('save');
           showToast("Workstation State Quicksaved [F5] ✅");
         }
       } catch (e) {
-        const msg = (e.name === 'QuotaExceededError') ? "Storage quota exceeded." : e.message;
+        const msg = (e && e.name === 'QuotaExceededError') ? "Storage quota exceeded." : (e ? e.message : 'Unknown error');
         showToast("Error saving state: " + msg, "danger");
       }
+    }
+
+    // --- Keyword Notification Rules Engine ---
+    function checkKeywordAlerts(art) {
+      if (!art || !Array.isArray(keywordRules) || keywordRules.length === 0) return [];
+      const text = `${art.title || ''} ${art.snippet || ''} ${art.content || ''}`.toLowerCase();
+      return keywordRules.filter(r => r.active !== false && text.includes(r.keyword.toLowerCase()));
+    }
+
+    function renderKeywordRulesList() {
+      const container = document.getElementById('rulesListContainer');
+      const countEl = document.getElementById('rulesListCount');
+      const badgeCountEl = document.getElementById('badgeRuleCount');
+      if (countEl) countEl.textContent = keywordRules.length;
+      if (badgeCountEl) badgeCountEl.textContent = keywordRules.length;
+      if (!container) return;
+      container.innerHTML = '';
+
+      if (keywordRules.length === 0) {
+        container.innerHTML = '<div style="color:var(--text-muted); font-size:11px; text-align:center; padding:12px;">No keyword rules defined. Add one above!</div>';
+        return;
+      }
+
+      keywordRules.forEach((rule, idx) => {
+        let matches = 0;
+        const kw = rule.keyword.toLowerCase();
+        articles.forEach(a => {
+          const t = `${a.title || ''} ${a.snippet || ''} ${a.content || ''}`.toLowerCase();
+          if (t.includes(kw)) matches++;
+        });
+
+        const row = document.createElement('div');
+        row.style.display = 'flex';
+        row.style.alignItems = 'center';
+        row.style.justifyContent = 'space-between';
+        row.style.background = 'var(--card-bg)';
+        row.style.border = '1px solid var(--border)';
+        row.style.borderRadius = '4px';
+        row.style.padding = '6px 10px';
+        row.style.fontSize = '12px';
+
+        row.innerHTML = `
+          <div style="display:flex; align-items:center; gap:8px;">
+            <span class="badge-rule" style="background:${rule.color || 'var(--primary)'};">🔔 ${escapeXml(rule.keyword)}</span>
+            <span style="font-size:11px; color:var(--text-muted); font-family:var(--font-mono);">${matches} matches</span>
+            ${rule.autoStar ? '<span style="font-size:10px; color:var(--star-color);" title="Auto-stars matching articles">★ Auto-Star</span>' : ''}
+            ${rule.sound ? '<span style="font-size:10px; color:var(--accent);" title="Sounds alert chime on arrival">🔔 Sound</span>' : ''}
+          </div>
+          <div style="display:flex; align-items:center; gap:6px;">
+            <button class="btn btn-sm btn-icon" title="${rule.active !== false ? 'Deactivate rule' : 'Activate rule'}" id="toggleRuleActive_${idx}">
+              ${rule.active !== false ? '✅ Active' : '⏸️ Paused'}
+            </button>
+            <button class="btn btn-sm btn-icon" title="Delete rule" id="deleteRule_${idx}">🗑️</button>
+          </div>
+        `;
+
+        container.appendChild(row);
+
+        const toggleBtn = row.querySelector(`#toggleRuleActive_${idx}`);
+        if (toggleBtn) {
+          toggleBtn.onclick = () => {
+            rule.active = (rule.active === false);
+            saveKeywordRules();
+            renderKeywordRulesList();
+            renderArticlesList();
+          };
+        }
+
+        const delBtn = row.querySelector(`#deleteRule_${idx}`);
+        if (delBtn) {
+          delBtn.onclick = () => {
+            keywordRules.splice(idx, 1);
+            saveKeywordRules();
+            renderKeywordRulesList();
+            renderArticlesList();
+            showToast(`Rule '${rule.keyword}' deleted.`);
+          };
+        }
+      });
+    }
+
+    function saveKeywordRules() {
+      safeSet(RULES_KEY, keywordRules);
+      const badgeCountEl = document.getElementById('badgeRuleCount');
+      if (badgeCountEl) badgeCountEl.textContent = keywordRules.length;
+    }
+
+    // --- Headline Category Filtering ---
+    function populateCategoryFilterOptions() {
+      const sel = document.getElementById('selectCategoryFilter');
+      if (!sel) return;
+      const currentVal = selectedCategory || sel.value;
+      const categories = [...new Set(feeds.map(f => f.category).filter(Boolean))].sort();
+      sel.innerHTML = '<option value="">All Categories</option>';
+      categories.forEach(cat => {
+        const opt = document.createElement('option');
+        opt.value = cat;
+        opt.textContent = `📁 ${cat}`;
+        if (cat === currentVal) opt.selected = true;
+        sel.appendChild(opt);
+      });
+    }
+
+    // --- Simulated 1999 Offline News Cache & Spool ---
+    function snapshotOfflineCache() {
+      offlineCache = {
+        timestamp: new Date().toISOString(),
+        feeds: JSON.parse(JSON.stringify(feeds)),
+        articles: JSON.parse(JSON.stringify(articles)),
+        count: articles.length
+      };
+      safeSet(OFFLINE_CACHE_KEY, offlineCache);
+      updateOfflineStatsUI();
+      playSoundEffect('save');
+      showToast(`Snapshot complete: ${articles.length} articles saved to local spool! 💾`);
+    }
+
+    function toggleOfflineMode(force) {
+      isOfflineMode = (force !== undefined) ? !!force : !isOfflineMode;
+      safeSet(OFFLINE_MODE_KEY, isOfflineMode);
+      updateOfflineStatsUI();
+      playSoundEffect('click');
+      if (isOfflineMode) {
+        showToast("Switched to Offline Mode (Disconnected Dial-Up) 💾", "warning");
+      } else {
+        showToast("Switched to Live Simulated Mode (56k V.90) ⚡", "info");
+      }
+    }
+
+    function purgeOfflineCache() {
+      if (confirm("Purge local offline news cache spool?")) {
+        offlineCache = null;
+        try { localStorage.removeItem(OFFLINE_CACHE_KEY); } catch (e) {}
+        updateOfflineStatsUI();
+        playSoundEffect('click');
+        showToast("Offline news cache spool purged.");
+      }
+    }
+
+    function updateOfflineStatsUI() {
+      const modeEl = document.getElementById('cacheModeStatus');
+      const subEl = document.getElementById('cacheSubStatus');
+      const btnToggle = document.getElementById('btnToggleOfflineMode');
+      const badge = document.getElementById('dialupStatusBadge');
+      const statArts = document.getElementById('cacheStatArticles');
+      const statFeeds = document.getElementById('cacheStatFeeds');
+      const statSize = document.getElementById('cacheStatSize');
+      const statTime = document.getElementById('cacheStatTime');
+
+      if (isOfflineMode) {
+        if (modeEl) modeEl.textContent = "Connection: 💾 Disconnected Dial-Up (Working Offline)";
+        if (subEl) subEl.textContent = "Reading exclusively from local offline cache spool.";
+        if (btnToggle) {
+          btnToggle.textContent = "Connect to 56k ISP (Go Online)";
+          btnToggle.className = "btn btn-sm btn-primary";
+        }
+        if (badge) {
+          badge.textContent = "💾 OFFLINE";
+          badge.className = "offline-badge";
+          badge.title = "Offline Mode: Click to open Dial-Up & Cache Manager (Alt+O)";
+        }
+      } else {
+        if (modeEl) modeEl.textContent = "Connection: ⚡ KiloNet Dial-Up ISP (56k V.90)";
+        if (subEl) subEl.textContent = "Operating in live simulated online mode.";
+        if (btnToggle) {
+          btnToggle.textContent = "Disconnect & Read Offline";
+          btnToggle.className = "btn btn-sm";
+        }
+        if (badge) {
+          badge.textContent = "⚡ 56k V.90";
+          badge.className = "offline-badge connected";
+          badge.title = "Connected: Click to open Dial-Up & Cache Manager (Alt+O)";
+        }
+      }
+
+      const arts = (offlineCache && offlineCache.articles) ? offlineCache.articles : [];
+      const fds = (offlineCache && offlineCache.feeds) ? offlineCache.feeds : [];
+      if (statArts) statArts.textContent = `${arts.length} articles`;
+      if (statFeeds) statFeeds.textContent = `${fds.length} feeds`;
+      const estSizeKb = (JSON.stringify(offlineCache || {}).length / 1024).toFixed(1);
+      if (statSize) statSize.textContent = `${estSizeKb} KB`;
+      if (statTime) statTime.textContent = (offlineCache && offlineCache.timestamp) ? new Date(offlineCache.timestamp).toLocaleString() : 'Never';
+    }
+
+    function exportOfflineHtml() {
+      const cacheArticles = (offlineCache && offlineCache.articles) ? offlineCache.articles : articles;
+      const html = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>KRSS - Offline Spool Archive (1999)</title>
+  <style>
+    body { background: #0b0f19; color: #f1f5f9; font-family: 'Segoe UI', Tahoma, sans-serif; margin: 0; padding: 20px; }
+    h1 { color: #f97316; font-size: 20px; border-bottom: 2px solid #23324d; padding-bottom: 8px; }
+    .badge { background: #23324d; color: #94a3b8; font-family: monospace; font-size: 11px; padding: 2px 6px; border-radius: 3px; }
+    .article { background: #151e32; border: 1px solid #23324d; border-radius: 4px; padding: 16px; margin-bottom: 16px; }
+    .title { font-size: 16px; font-weight: bold; color: #f97316; margin-bottom: 6px; }
+    .meta { font-size: 12px; color: #94a3b8; margin-bottom: 12px; }
+    .content { font-size: 14px; line-height: 1.6; }
+    a { color: #38bdf8; }
+  </style>
+</head>
+<body>
+  <h1>KRSS Standalone 1999 Offline Spool Archive <span class="badge">${cacheArticles.length} Articles</span></h1>
+  <p style="font-size:12px; color:#94a3b8;">Exported from KiloOS KRSS Workstation &bull; Timestamp: ${new Date().toUTCString()}</p>
+  <div id="articles">
+    ${cacheArticles.map(a => `
+      <div class="article">
+        <div class="title">${escapeXml(a.title)}</div>
+        <div class="meta">Author: ${escapeXml(a.author || 'Unknown')} | Date: ${escapeXml(a.date || '')}</div>
+        <div class="content">${a.content || escapeXml(a.snippet || '')}</div>
+      </div>
+    `).join('')}
+  </div>
+</body>
+</html>`;
+      const blob = new Blob([html], { type: 'text/html;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'krss-offline-spool.html';
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      showToast("Downloaded krss-offline-spool.html! ✅");
+    }
+
+    // --- Bionic Speed-Scan Formatter ---
+    function formatBionicText(html) {
+      const temp = document.createElement('div');
+      temp.innerHTML = html;
+      function walk(node) {
+        if (node.nodeType === Node.TEXT_NODE) {
+          const val = node.nodeValue;
+          if (val && val.trim().length > 0) {
+            const span = document.createElement('span');
+            span.innerHTML = val.replace(/\\b([a-zA-Z0-9]{1,3})([a-zA-Z0-9]*)\\b/g, '<b>$1</b>$2');
+            node.parentNode.replaceChild(span, node);
+          }
+        } else if (node.nodeType === Node.ELEMENT_NODE && node.nodeName !== 'SCRIPT' && node.nodeName !== 'STYLE' && node.nodeName !== 'PRE' && node.nodeName !== 'CODE') {
+          Array.from(node.childNodes).forEach(walk);
+        }
+      }
+      Array.from(temp.childNodes).forEach(walk);
+      return temp.innerHTML;
     }
 
     function showToast(msg, type = "info") {
@@ -3102,6 +3647,16 @@
         list = list.filter(a => !a.isRead);
       } else if (activeFilter === 'starred') {
         list = list.filter(a => a.isStarred);
+      } else if (activeFilter === 'alerts') {
+        list = list.filter(a => checkKeywordAlerts(a).length > 0);
+      }
+
+      // Filter by category selection
+      if (selectedCategory) {
+        list = list.filter(a => {
+          const feed = feeds.find(f => f.id === a.feedId);
+          return feed && feed.category === selectedCategory;
+        });
       }
 
       // Filter by tag selection
@@ -3138,7 +3693,7 @@
       }
 
       const totalUnread = filtered.filter(a => !a.isRead).length;
-      document.getElementById('statusActiveFeed').textContent = `Channel: ${activeFeedTitle}`;
+      document.getElementById('statusActiveFeed').textContent = `Channel: ${activeFeedTitle}${selectedCategory ? ' (' + selectedCategory + ')' : ''}`;
       document.getElementById('statusArticleCount').textContent = `${filtered.length} Articles (${totalUnread} Unread)`;
 
       if (filtered.length === 0) {
@@ -3154,7 +3709,8 @@
       }
 
       filtered.forEach((art) => {
-        const feed = feeds.find(f => f.id === art.feedId) || { title: "Syndicated" };
+        const feed = feeds.find(f => f.id === art.feedId) || { title: "Syndicated", category: "General" };
+        const matchedRules = checkKeywordAlerts(art);
         const li = document.createElement('li');
         li.className = `article-card ${!art.isRead ? 'unread' : ''} ${selectedArticleId === art.id ? 'active' : ''}`;
         
@@ -3165,12 +3721,18 @@
           </div>
           <div class="article-card-title">${escapeXml(art.title)}</div>
           <div class="article-card-snippet">${escapeXml(art.snippet || '')}</div>
-          <div class="article-card-footer">
-            ${!art.isRead ? '<span class="unread-indicator" title="Unread"></span>' : ''}
-            <button class="star-btn ${art.isStarred ? 'starred' : ''}" title="Star/Bookmark">
-              ${art.isStarred ? '★' : '☆'}
-            </button>
-            <span style="color:var(--text-muted); font-size:10px;">${escapeXml(art.author || '')}</span>
+          <div class="article-card-footer" style="flex-wrap: wrap; justify-content: space-between;">
+            <div style="display:flex; align-items:center; gap:6px;">
+              ${!art.isRead ? '<span class="unread-indicator" title="Unread"></span>' : ''}
+              <button class="star-btn ${art.isStarred ? 'starred' : ''}" title="Star/Bookmark">
+                ${art.isStarred ? '★' : '☆'}
+              </button>
+              <span style="color:var(--text-muted); font-size:10px;">${escapeXml(art.author || '')}</span>
+            </div>
+            <div style="display:flex; align-items:center; gap:4px; flex-wrap:wrap;">
+              ${matchedRules.map(r => `<span class="badge-rule" style="background:${r.color || 'var(--primary)'};">🔔 ${escapeXml(r.keyword)}</span>`).join('')}
+              <span class="badge-category" title="Filter by category: ${escapeXml(feed.category || 'General')}" data-cat="${escapeXml(feed.category || '')}">${escapeXml(feed.category || 'General')}</span>
+            </div>
           </div>
         `;
 
@@ -3182,6 +3744,16 @@
             renderFeedsList();
             if (selectedArticleId === art.id) renderReadingPane(art);
             return;
+          }
+          if (e.target.classList.contains('badge-category')) {
+            const cat = e.target.getAttribute('data-cat');
+            if (cat) {
+              selectedCategory = (selectedCategory === cat) ? '' : cat;
+              const catSel = document.getElementById('selectCategoryFilter');
+              if (catSel) catSel.value = selectedCategory;
+              renderArticlesList();
+              return;
+            }
           }
           selectedArticleId = art.id;
           if (window.innerWidth <= 768) setMobileView('reader');
@@ -3322,10 +3894,59 @@
       const pBar = document.getElementById('readingProgressBar');
       if (pBar) pBar.style.width = '0%';
 
-      // Sanitize and set content safely
+      // Sanitize and set content safely with reader width and font
       const bodyEl = document.getElementById('articleBody');
+      bodyEl.className = `reader-body width-${readerWidth} font-${readerFont}`;
       bodyEl.style.fontSize = `${zoomLevel}px`;
-      bodyEl.innerHTML = sanitizeArticleHtml(art.content || `<p>${escapeXml(art.title)}</p>`);
+      let contentHtml = sanitizeArticleHtml(art.content || `<p>${escapeXml(art.title)}</p>`);
+      if (isBionicReading) {
+        contentHtml = formatBionicText(contentHtml);
+      }
+      bodyEl.innerHTML = contentHtml;
+
+      // Bottom reader navigation cards
+      const navContainer = document.getElementById('readerNavFooterContainer');
+      if (navContainer) {
+        navContainer.innerHTML = '';
+        const prevArt = curIdx > 0 ? filtered[curIdx - 1] : null;
+        const nextArt = (curIdx >= 0 && curIdx < filtered.length - 1) ? filtered[curIdx + 1] : null;
+        if (prevArt || nextArt) {
+          const navFooter = document.createElement('div');
+          navFooter.className = 'reader-nav-footer';
+          navFooter.innerHTML = `
+            <div class="reader-nav-card" style="${prevArt ? '' : 'visibility:hidden; opacity:0;'}" id="btnNavPrevCard">
+              <div class="reader-nav-label">◀ Previous Dispatch</div>
+              <div class="reader-nav-title">${prevArt ? escapeXml(prevArt.title) : ''}</div>
+            </div>
+            <div class="reader-nav-card" style="${nextArt ? 'text-align:right;' : 'visibility:hidden; opacity:0;'}" id="btnNavNextCard">
+              <div class="reader-nav-label">Next Dispatch ▶</div>
+              <div class="reader-nav-title">${nextArt ? escapeXml(nextArt.title) : ''}</div>
+            </div>
+          `;
+          navContainer.appendChild(navFooter);
+
+          const prevCard = navFooter.querySelector('#btnNavPrevCard');
+          if (prevCard && prevArt) {
+            prevCard.onclick = () => {
+              selectedArticleId = prevArt.id;
+              if (!prevArt.isRead) { prevArt.isRead = true; renderFeedsList(); }
+              playSoundEffect('select');
+              renderArticlesList();
+              renderReadingPane(prevArt);
+            };
+          }
+          const nextCard = navFooter.querySelector('#btnNavNextCard');
+          if (nextCard && nextArt) {
+            nextCard.onclick = () => {
+              selectedArticleId = nextArt.id;
+              if (!nextArt.isRead) { nextArt.isRead = true; renderFeedsList(); }
+              playSoundEffect('select');
+              renderArticlesList();
+              renderReadingPane(nextArt);
+            };
+          }
+        }
+      }
 
       // Scroll reader to top
       document.getElementById('readerScroll').scrollTop = 0;

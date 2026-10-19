@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-expander
-next_agent: kilo-creator
+current_agent: kilo-creator
+next_agent: kilo-graphics
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -20,7 +20,7 @@ current_targets:
   kilo_tester: KMystery
   kilo_usability: KVault
   kilo_qa: KMatch3
-  kilo_expander: KRSS
+  kilo_expander: KVault
 virtual_web_target: kweb://webring
 virtual_web_rotation:
 - kweb://portal
@@ -35,9 +35,9 @@ virtual_web_rotation:
 - kweb://deep-core
 - kweb://darknet
 last_run:
-  agent: kilo-qa
-  app: KFreecell
-  timestamp: '2026-10-19T07:18:00+0000'
+  agent: kilo-expander
+  app: KRSS
+  timestamp: '2026-10-19T08:34:00+0000'
 last_planner_run: '2026-10-18T21:17:00Z'
 ---
 
@@ -155,19 +155,19 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Upcoming Queue**: `KSimon`, `KWords`.
 
 ### 7. Feature Expander Queue (`kilo-expander`)
-- **Target**: `KRSS`
-- **Primary Files**: `KiloOS/public/apps/krss.html`, `KRSS/main.c` (if present)
-- **Objective**: Retro RSS reader feature expansion: OPML feed import/export, simulated 1999 offline caching, headline category filtering, keyword notification rules, and article reading ergonomics (<999 KB).
+- **Target**: `KVault`
+- **Primary Files**: `KiloOS/public/apps/kvault.html`, `KVault/main.c` (if present)
+- **Objective**: Retro encrypted vault & secrets manager expansion: multi-vault profiles, AES/XOR cipher suites, password entropy meter, custom field schema builder, and CSV/JSON secure import/export (<999 KB).
 - **Action Steps**:
-  1. Inspect `KiloOS/public/apps/krss.html`.
-  2. Implement OPML import/export, offline news store, keyword alerts, and headline filtering.
+  1. Inspect `KiloOS/public/apps/kvault.html`.
+  2. Implement multi-vault management, cipher tools, entropy metrics, and schema expansion.
   3. Zero external dependencies; maintain responsive 1999 retro styling.
-- **Verification**: `uv run scripts/test_app_startup.py --app KRSS` and `cd KiloOS && npm run build`. File size < 999 KB.
+- **Verification**: `uv run scripts/test_app_startup.py --app KVault` and `cd KiloOS && npm run build`. File size < 999 KB.
 - **Handoff**:
-  - In frontmatter: advance `current_targets.kilo_expander` to `KVault`.
+  - In frontmatter: advance `current_targets.kilo_expander` to `KDB`.
   - Set `current_agent: kilo-creator`.
   - Append terse execution log (≤6 lines), commit, and push.
-- **Upcoming Queue**: `KVault`, `KDB`, `KHex`.
+- **Upcoming Queue**: `KDB`, `KHex`, `KPing`.
 
 ---
 
@@ -204,6 +204,14 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-19T08:34:00+0000 — kilo-expander: KRSS (Retro RSS Reader Feature Expansion)**
+  - Syndication & OPML: Added deterministic XML/JSON parsing for RSS 0.91/2.0, Atom 1.0, JSON Feed 1.1, and round-trip OPML 2.0 import/export.
+  - 1999 Offline News Spool: Implemented local disk caching spool, 56k dial-up ISP simulation toggle, and standalone offline reader HTML export.
+  - Filtering & Rules: Added headline category filtering dropdown/badges, and configurable keyword alert rules with audio chimes and auto-starring.
+  - Ergonomics: Integrated Bionic speed-scan mode, reader width/font presets, reading progress bar, bottom article navigation cards, and quote clipping.
+  - Parity & Verification: Win32 C clean compile (22.0 KB), startup check PASS (192.4 KB < 999 KB, 0 JS err, unblocked), Vite clean (516ms), security lint PASS.
+  - Queue Handoff: Advanced current_targets.kilo_expander to KVault; rotation handoff to kilo-creator.
+
 - **2026-10-19T07:18:00+0000 — kilo-qa: KFreecell (Pass 5 QA Audit & Mature Promotion)**
   - State Persistence: Audited F5 quicksave & F9 quickload capturing complete tableau, freecells, foundations, undo stack, stats, and timer across Web and Win32 C.
   - Tutorial & Modals: First-run onboarding banner / Help dialog fires once on fresh session (`kfreecell_tutorialSeen`), never interrupting restored saves; clean Esc/Enter/Space dismissals.
@@ -235,10 +243,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Status: PASS ✅ (Vite clean 470ms, 122.6 KB < 999 KB, startup check PASS, Win32 C build clean, security lint PASS).
   - Queue: Advanced kilo_soundscape to KFortress; rotation handoff to kilo-tester.
 
-- **2026-10-19T01:36:00+0000 — kilo-graphics: KAlchemy (Asset Suitability Audit & Glint Removal)**
-  - ⏭️ Skip — Imagen 3 asset replacement not appropriate for KAlchemy
-  - Suitability Assessment: Confirmed alchemical codex/recipe puzzle card interface with emoji elements & particle canvas (<999 KB: 258.3 KB).
-  - Glint Removal: Eliminated diagonal specular sheen sweep from crucible vessel in both Win32 C (`main.c`) and Web HTML (`kalchemy.html`).
-  - Perimeter Dots: Removed `rotateRune` continuous perimeter rotation to ensure static, period-accurate mystical border.
-  - Verification & Parity: Verified clean Win32 C build (`KAlchemy.exe`, 70.1 KB), startup test PASS (252.3 KB, 0 JS errors), Vite build clean, security lint PASS.
-  - Queue Handoff: Advanced `kilo_graphics` to `KFortress`; rotation handoff to `kilo-soundscape`.
