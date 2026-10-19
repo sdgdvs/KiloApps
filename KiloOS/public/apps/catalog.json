@@ -515,9 +515,9 @@
     "id": "kpass",
     "title": "KPass",
     "folder": "System",
-    "webBytes": 128060,
+    "webBytes": 132965,
     "exeBytes": 25600,
-    "budgetPercent": 12.8
+    "budgetPercent": 13.3
   },
   {
     "id": "kping",
@@ -787,9 +787,9 @@
     "id": "ktrader",
     "title": "KTrader",
     "folder": "Games",
-    "webBytes": 98571,
+    "webBytes": 101327,
     "exeBytes": 26624,
-    "budgetPercent": 9.9
+    "budgetPercent": 10.1
   },
   {
     "id": "ktype",
@@ -811,9 +811,9 @@
     "id": "kvoid",
     "title": "KVoid",
     "folder": "Games",
-    "webBytes": 107054,
+    "webBytes": 125506,
     "exeBytes": 31232,
-    "budgetPercent": 10.7
+    "budgetPercent": 12.6
   },
   {
     "id": "kwizard",

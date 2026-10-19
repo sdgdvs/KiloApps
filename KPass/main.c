@@ -587,7 +587,7 @@ void ShowHelpModal(HWND hwnd) {
         "  - Alt+M: Export vault to Markdown table\n"
         "  - Alt+A: Run Security Audit scan\n"
         "  - Alt+I: Import credentials from CSV\n"
-        "  - Escape: Clear search query\n"
+        "  - Escape: Clear search query / reset filters / clear field\n"
         "  - Delete: Remove selected credential from vault",
         "KPass Help & Shortcuts", MB_OK | MB_ICONINFORMATION);
 }
@@ -1097,9 +1097,18 @@ void __stdcall MainEntry() {
                     }
                 }
             } else if (msg.wParam == VK_ESCAPE) {
-                if (hFoc == hVaultSearch) {
+                if (hFoc == hVaultSearch || GetWindowTextLengthA(hVaultSearch) > 0) {
                     SetWindowTextA(hVaultSearch, "");
                     RefreshVaultList();
+                    SetWindowTextA(hStrengthDisplay, "Search cleared [Esc]");
+                    continue;
+                } else if (SendMessageA(hFilterCat, CB_GETCURSEL, 0, 0) > 0) {
+                    SendMessageA(hFilterCat, CB_SETCURSEL, 0, 0);
+                    RefreshVaultList();
+                    SetWindowTextA(hStrengthDisplay, "Category filter reset [Esc]");
+                    continue;
+                } else if (isEdit && hFoc) {
+                    SetWindowTextA(hFoc, "");
                     continue;
                 }
             } else if (!isEdit) {

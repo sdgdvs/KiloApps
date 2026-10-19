@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-qa
+current_agent: kilo-qa
+next_agent: kilo-expander
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -18,7 +18,7 @@ current_targets:
   kilo_graphics: KFortress
   kilo_soundscape: KFortress
   kilo_tester: KMystery
-  kilo_usability: KPass
+  kilo_usability: KVault
   kilo_qa: KFreecell
   kilo_expander: KRSS
 virtual_web_target: kweb://webring
@@ -35,9 +35,9 @@ virtual_web_rotation:
 - kweb://deep-core
 - kweb://darknet
 last_run:
-  agent: kilo-tester
-  app: KTrader
-  timestamp: '2026-10-19T03:38:00+0000'
+  agent: kilo-usability
+  app: KPass
+  timestamp: '2026-10-19T05:35:00+0000'
 last_planner_run: '2026-10-18T21:17:00Z'
 ---
 
@@ -122,19 +122,19 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Upcoming Queue**: `KChart`, `KClip`, `KTrader`.
 
 ### 5. Usability & UX Queue (`kilo-usability`)
-- **Target**: `KPass`
-- **Primary File**: `KiloOS/public/apps/kpass.html`
-- **Objective**: Retro password generator & security vault ergonomics: password entropy gauge, character set toggles, responsive master vault layout, clear keyboard shortcuts (F1/H help, Esc clear), and accessible focus glow.
+- **Target**: `KVault`
+- **Primary File**: `KiloOS/public/apps/kvault.html`
+- **Objective**: Encrypted document & archive vault ergonomics: file tree hierarchy, responsive preview pane, clear keyboard shortcuts (F1/H help, Esc clear), and accessible drag-and-drop focus glow.
 - **Action Steps**:
   1. Verify window bounds and responsive container wrapping under narrow (<540px) widths.
   2. Ensure clear keyboard shortcuts (F1/H help, Esc clear) and accessible focus indicators.
-  3. Verify password generation ergonomics, HiDPI font scaling, and comfortable contrast.
+  3. Verify document preview ergonomics, HiDPI font scaling, and comfortable contrast.
 - **Verification**: `cd KiloOS && npm run build`. File size < 999 KB.
 - **Handoff**:
-  - In frontmatter: advance `current_targets.kilo_usability` to `KVault`.
+  - In frontmatter: advance `current_targets.kilo_usability` to `KFont`.
   - Set `current_agent: kilo-qa`.
   - Append terse execution log (≤6 lines), commit, and push.
-- **Upcoming Queue**: `KVault`, `KFont`, `KHex`.
+- **Upcoming Queue**: `KFont`, `KHex`, `KPass`.
 
 ### 6. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
 - **Target**: `KFreecell`
@@ -203,6 +203,14 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-19T05:35:00+0000 — kilo-usability: KPass (Usability & Layout Polish)**
+  - Responsive Layout: Added responsive wrapping for presets, control rows, and save form down to <540px and <440px without clipped buttons.
+  - Window Sizing: Adjusted default dimensions to 640x720 in `App.jsx` and `kpass.html` for complete visibility of 4-mode controls and vault.
+  - Keyboard & Ergonomics: Enhanced Esc handling in Web and Win32 C to dismiss modals, clear search, and reset filter dropdowns with toast feedback.
+  - Visual Polish: Upgraded contrast for muted hints/labels (#888->#b0b0b0, #666->#949494) and unified focus-visible outlines.
+  - Verification & Parity: Verified clean Win32 C compile (`KPass.exe`, 25.6 KB), startup test PASS (129.8 KB < 999 KB, 0 JS errors), Vite build clean (736ms), security lint PASS.
+  - Queue Handoff: Advanced kilo_usability to KVault; rotation handoff to kilo-qa.
+
 - **2026-10-19T03:38:00+0000 — kilo-tester: KTrader (Interactive UI Audit & Inline Fixes)**
   - UI Controls: Added Buy Max button for rapid cargo loading; wired emergency solar collector fallback to [R] hotkey when fuel is zero.
   - Ghost Bounty Bug: Fixed state retention bug in bountyTarget across combat flee, bribe, defeat, and mission abandonment in Web and Win32 C.
@@ -233,10 +241,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Live Ticker Tape & Silicon Bug Buster: Integrated continuous Wall St tech stock & weather ticker tape with sound toggles, and fully functional motherboard defense arcade mini-game.
   - Verification & Budget: Startup test PASS (625.4 KB < 999 KB, 0 JS errors, hit-test unblocked), Vite build clean (npm run build), security lint PASS.
   - Queue Handoff: Advanced kilo_creator to kweb://webring; rotation handoff to kilo-graphics.
-
-- **2026-10-18T20:22:04+0000 — kilo-expander: KFont (Bitmap Font Studio Expansion & Format Exporter)**
-  - Bitmap Import & Export: Added full BDF 2.1 font file exporter, Windows .FNT binary header spec, complete C ROM table `font_rom[95][H]`, and download buttons (.h, .bdf, .fnt).
-  - Glyph Import Studio: Implemented interactive Import modal supporting Adobe BDF chunks, C uint8_t arrays, and raw hex byte streams for single glyphs or font banks.
-  - Regex & Parsing Fixes: Corrected font family regex escaping and variable font preview styling.
-  - Verification & Parity: Verified clean Win32 compilation (`KFont.exe`, 31.5 KB), startup test PASS (171.8 KB < 999 KB, 0 JS errors), Vite build clean (472ms), byte gate PASS.
-  - Queue Handoff: Advanced `kilo_expander` to `KRSS`; rotation handoff to `kilo-creator`.

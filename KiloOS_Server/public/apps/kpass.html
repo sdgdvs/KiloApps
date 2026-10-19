@@ -34,9 +34,10 @@
   ::-webkit-scrollbar-thumb:hover {
     background: #555;
   }
-  button:focus-visible, input:focus-visible, select:focus-visible, .btn-mode:focus-visible, .btn-preset:focus-visible, .audit-metric-card:focus-visible, .vault-pass:focus-visible, .display:focus-visible {
+  button:focus-visible, input:focus-visible, select:focus-visible, .btn-mode:focus-visible, .btn-preset:focus-visible, .audit-metric-card:focus-visible, .vault-pass:focus-visible, .display:focus-visible, .tab:focus-visible, .tab-help:focus-visible, .help-hint:focus-visible, .history-header:focus-visible, .vault-notes:focus-visible, .btn-micro:focus-visible, .btn-clear-search:focus-visible, input[type="range"]:focus-visible, input[type="checkbox"]:focus-visible {
     outline: 2px solid #e74c3c !important;
-    outline-offset: 1px;
+    outline-offset: 2px;
+    box-shadow: 0 0 0 3px rgba(231, 76, 60, 0.4) !important;
   }
   .tabs {
     display: flex;
@@ -51,7 +52,7 @@
     cursor: pointer;
     font-weight: 600;
     font-size: 13px;
-    color: #888;
+    color: #b0b0b0;
     transition: all 0.2s;
     user-select: none;
     border-bottom: 2px solid transparent;
@@ -71,7 +72,7 @@
     cursor: pointer;
     font-weight: 600;
     font-size: 12px;
-    color: #aaa;
+    color: #b8b8b8;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -94,7 +95,7 @@
   .help-hint {
     text-align: center;
     font-size: 11px;
-    color: #888;
+    color: #a8a8a8;
     margin-bottom: 6px;
     cursor: pointer;
     user-select: none;
@@ -117,8 +118,8 @@
     flex: 1;
     background: transparent;
     border: none;
-    color: #888;
-    padding: 5px 8px;
+    color: #b0b0b0;
+    padding: 6px 8px;
     font-size: 12px;
     font-weight: 600;
     border-radius: 4px;
@@ -136,19 +137,20 @@
   .display {
     background: #111;
     border: 1px solid #333;
-    padding: 10px 14px;
+    padding: 11px 14px;
     border-radius: 6px;
     font-family: 'Consolas', monospace;
     font-size: 20px;
+    line-height: 1.35;
     color: #e74c3c;
     text-align: center;
     margin-bottom: 8px;
     word-break: break-all;
     cursor: pointer;
     user-select: all;
-    transition: border-color 0.2s, background 0.2s;
+    transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
     position: relative;
-    min-height: 28px;
+    min-height: 32px;
   }
   .display:hover {
     border-color: #555;
@@ -156,7 +158,7 @@
   }
   .display-hint {
     font-size: 11px;
-    color: #666;
+    color: #949494;
     margin-top: 4px;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   }
@@ -188,6 +190,7 @@
     font-size: 12px;
     font-weight: bold;
     color: #aaa;
+    transition: color 0.3s;
   }
   .controls {
     display: flex;
@@ -213,16 +216,17 @@
     align-items: center;
     gap: 5px;
     font-size: 11px;
-    color: #888;
+    color: #a8a8a8;
   }
   .btn-preset {
-    background: #282828;
+    background: #2c2c2c;
     border: 1px solid #444;
-    color: #ccc;
-    padding: 2px 7px;
+    color: #ddd;
+    padding: 3px 8px;
     border-radius: 4px;
     font-size: 11px;
     cursor: pointer;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
   }
   .btn-preset:hover {
     background: #3a3a3a;
@@ -277,7 +281,7 @@
     justify-content: space-between;
     align-items: center;
     font-size: 11px;
-    color: #888;
+    color: #a8a8a8;
     cursor: pointer;
     user-select: none;
     padding: 2px 4px;
@@ -353,7 +357,7 @@
     right: 6px;
     background: transparent;
     border: none;
-    color: #888;
+    color: #a8a8a8;
     cursor: pointer;
     padding: 2px 6px;
     font-size: 12px;
@@ -366,7 +370,7 @@
     justify-content: space-between;
     align-items: center;
     font-size: 11px;
-    color: #888;
+    color: #a8a8a8;
     margin-bottom: 6px;
     padding: 0 4px;
   }
@@ -431,7 +435,7 @@
   }
   .vault-date {
     font-size: 10px;
-    color: #777;
+    color: #949494;
   }
   .vault-user-row {
     display: flex;
@@ -471,7 +475,7 @@
   }
   .vault-notes {
     font-size: 11px;
-    color: #999;
+    color: #b5b5b5;
     background: #202020;
     padding: 4px 8px;
     border-radius: 4px;
@@ -563,7 +567,7 @@
   }
   .audit-metric-label {
     font-size: 10px;
-    color: #888;
+    color: #a8a8a8;
     text-transform: uppercase;
     letter-spacing: 0.5px;
   }
@@ -691,6 +695,112 @@
     opacity: 1;
     pointer-events: auto;
   }
+
+  /* Responsive Layout & Ergonomic Wrapping (<540px and <440px) */
+  .control-row.responsive-wrap {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+  }
+  .save-form-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+  }
+  .vault-filter-select {
+    padding: 7px 8px;
+  }
+
+  @media (max-width: 540px) {
+    .content {
+      padding: 10px 12px;
+    }
+    .mode-pills {
+      flex-wrap: wrap;
+      gap: 4px;
+    }
+    .btn-mode {
+      flex: 1 1 calc(50% - 6px);
+      padding: 6px 4px;
+      font-size: 11px;
+    }
+    .display {
+      font-size: 17px;
+      padding: 9px 12px;
+    }
+    .control-row.responsive-wrap {
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .control-row.responsive-wrap .presets-row {
+      width: 100%;
+      justify-content: flex-end;
+      margin-top: 2px;
+    }
+    .save-form-row {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 6px;
+    }
+    .save-form-row > input,
+    .save-form-row > select,
+    .save-form-row > button {
+      width: 100% !important;
+      max-width: 100% !important;
+      box-sizing: border-box;
+    }
+    .search-wrap {
+      width: 100%;
+      min-width: 100%;
+    }
+    .vault-filter-select {
+      flex: 1 1 calc(33.3% - 6px);
+      max-width: none !important;
+      font-size: 11px;
+    }
+    .audit-grid {
+      grid-template-columns: repeat(2, 1fr);
+      gap: 6px;
+    }
+    .audit-metric-val {
+      font-size: 16px;
+    }
+    .audit-header-card {
+      padding: 10px 14px;
+    }
+    .audit-score-circle {
+      width: 50px;
+      height: 50px;
+      font-size: 18px;
+    }
+    .audit-score-info h3 {
+      font-size: 14px;
+    }
+  }
+
+  @media (max-width: 440px) {
+    .vault-pass-row {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 6px;
+    }
+    .vault-pass-row .item-btns {
+      justify-content: flex-end;
+    }
+    .tab {
+      font-size: 11px;
+      padding: 9px 4px;
+    }
+    .tab-help {
+      font-size: 11px;
+      padding: 9px 8px;
+    }
+    .vault-actions button {
+      flex: 1 1 calc(50% - 4px);
+    }
+  }
 </style>
 </head>
 <body>
@@ -736,6 +846,7 @@
         <div>&bull; '1' = Generator | '2' = Vault | '3' = Security Audit | 'H' / F1 = Help</div>
         <div>&bull; F5 = Quicksave snapshot | F9 = Quickload snapshot</div>
         <div>&bull; Enter = Unlock / Save / Generate | Ctrl+F or '/' = Focus Search</div>
+        <div>&bull; Esc = Close Modals / Clear Search / Reset Filters</div>
         <div>&bull; Ctrl+S = Save Credential | Ctrl+G = Generate | Ctrl+C = Copy Password</div>
         <div>&bull; Alt+L = Lock Vault | Alt+J = JSON | Alt+E = CSV | Alt+M = Markdown | Alt+I = Import</div>
       </div>
@@ -809,7 +920,7 @@
   
   <!-- Tab 1: Generator -->
   <div class="content" id="contentGen" role="tabpanel" aria-labelledby="tabGen">
-    <div class="help-hint" id="hintHelp" tabindex="0" role="button" aria-label="Help and Shortcuts">Press 'H' or F1 for Help &amp; Shortcuts</div>
+    <div class="help-hint" id="hintHelp" tabindex="0" role="button" aria-label="Help and Shortcuts">Press 'H' or F1 for Help &amp; Shortcuts &bull; Esc to Clear</div>
     
     <!-- Mode Pills -->
     <div class="mode-pills" role="radiogroup" aria-label="Generator Mode">
@@ -848,7 +959,7 @@
       <div class="control-row">
         <label><input type="checkbox" id="chkAmbiguous"> Exclude Ambiguous (l, 1, I, O, 0)</label>
       </div>
-      <div class="control-row" style="margin-top: 2px;">
+      <div class="control-row responsive-wrap" style="margin-top: 2px;">
         <label style="color: #fff;">Length: <span id="lenVal" style="font-weight:bold; color:#e74c3c;">16</span></label>
         <input type="range" id="rngLen" min="8" max="64" value="16" style="flex: 1; margin: 0 10px; accent-color: #e74c3c; cursor: pointer;" aria-label="Password length">
         <div class="presets-row">
@@ -862,7 +973,7 @@
 
     <!-- Mode 2: Passphrase (Diceware) Controls -->
     <div class="controls" id="controlsDiceware" style="display:none;">
-      <div class="control-row">
+      <div class="control-row responsive-wrap">
         <label style="color: #fff;">Words: <span id="dwWordsVal" style="font-weight:bold; color:#e74c3c;">4</span></label>
         <input type="range" id="rngDwWords" min="3" max="6" value="4" style="flex: 1; margin: 0 10px; accent-color: #e74c3c; cursor: pointer;" aria-label="Word count">
         <div class="presets-row">
@@ -890,7 +1001,7 @@
 
     <!-- Mode 3: PIN Controls -->
     <div class="controls" id="controlsPin" style="display:none;">
-      <div class="control-row">
+      <div class="control-row responsive-wrap">
         <label style="color: #fff;">Digits: <span id="pinLenVal" style="font-weight:bold; color:#e74c3c;">6</span></label>
         <input type="range" id="rngPinLen" min="4" max="12" value="6" style="flex: 1; margin: 0 10px; accent-color: #e74c3c; cursor: pointer;" aria-label="PIN digits">
         <div class="presets-row">
@@ -903,7 +1014,7 @@
 
     <!-- Mode 4: Hex Key Controls -->
     <div class="controls" id="controlsHex" style="display:none;">
-      <div class="control-row">
+      <div class="control-row responsive-wrap">
         <label style="color: #fff;">Hex Bytes: <span id="hexLenVal" style="font-weight:bold; color:#e74c3c;">32</span></label>
         <input type="range" id="rngHexLen" min="16" max="64" value="32" step="8" style="flex: 1; margin: 0 10px; accent-color: #e74c3c; cursor: pointer;" aria-label="Hex length">
         <div class="presets-row">
@@ -919,7 +1030,7 @@
 
     <!-- Save to Vault Form Row -->
     <div class="controls" style="margin-top: 6px; padding-top: 8px; border-top: 1px solid #333;">
-      <div class="control-row">
+      <div class="control-row save-form-row">
         <input type="text" id="labelInput" placeholder="Service / Label (e.g. Email)" aria-label="Credential Label">
         <input type="text" id="userInput" placeholder="Username / Account (optional)" aria-label="Username">
         <select id="catInput" style="max-width: 105px;" aria-label="Credential Category">
@@ -931,7 +1042,7 @@
           <option value="Other">Other</option>
         </select>
       </div>
-      <div class="control-row">
+      <div class="control-row save-form-row">
         <input type="text" id="notesInput" placeholder="Notes / Security hint (optional)" aria-label="Notes">
         <button id="btnSave" style="background:#27ae60; border-color:#27ae60; min-width:140px;" title="Save password to vault (Ctrl+S)">Save to Vault [Ctrl+S]</button>
       </div>
@@ -960,7 +1071,7 @@
         <input type="text" id="vaultSearch" placeholder="Search service, user, notes... (Ctrl+F)" aria-label="Search credentials">
         <button class="btn-clear-search" id="btnClearSearch" title="Clear search" style="display:none;">✕</button>
       </div>
-      <select id="vaultCatFilter" style="max-width: 100px;" aria-label="Filter by category">
+      <select id="vaultCatFilter" class="vault-filter-select" style="max-width: 100px;" aria-label="Filter by category">
         <option value="">All Cats</option>
         <option value="Personal">Personal</option>
         <option value="Work">Work</option>
@@ -969,13 +1080,13 @@
         <option value="Games">Games</option>
         <option value="Other">Other</option>
       </select>
-      <select id="vaultRiskFilter" style="max-width: 95px;" aria-label="Filter by security status">
+      <select id="vaultRiskFilter" class="vault-filter-select" style="max-width: 95px;" aria-label="Filter by security status">
         <option value="">All Status</option>
         <option value="weak">Weak Only</option>
         <option value="reused">Reused Only</option>
         <option value="stale">Stale (&gt;90d)</option>
       </select>
-      <select id="vaultSort" style="max-width: 100px;" aria-label="Sort vault entries">
+      <select id="vaultSort" class="vault-filter-select" style="max-width: 100px;" aria-label="Sort vault entries">
         <option value="date-desc">Newest</option>
         <option value="date-asc">Oldest</option>
         <option value="label-asc">A &rarr; Z</option>
@@ -1054,7 +1165,7 @@
 
   <script>
     try {
-      window.parent.postMessage({ type: 'VFS_SET_WINDOW_SIZE', width: 600, height: 700 }, '*');
+      window.parent.postMessage({ type: 'VFS_SET_WINDOW_SIZE', width: 640, height: 720 }, '*');
     } catch(e) {}
 
     // Safe storage wrappers
@@ -1878,11 +1989,45 @@
                 closeModals();
                 return;
             }
-            if (vaultSearch === document.activeElement && vaultSearch.value) {
-                vaultSearch.value = '';
-                btnClearSearch.style.display = 'none';
-                renderVault();
-                return;
+            if (contentVault && contentVault.style.display !== 'none') {
+                if (vaultSearch && vaultSearch.value) {
+                    vaultSearch.value = '';
+                    if (btnClearSearch) btnClearSearch.style.display = 'none';
+                    renderVault();
+                    showToast("Search cleared [Esc]");
+                    return;
+                }
+                if ((vaultCatFilter && vaultCatFilter.value) || (vaultRiskFilter && vaultRiskFilter.value)) {
+                    if (vaultCatFilter) vaultCatFilter.value = '';
+                    if (vaultRiskFilter) vaultRiskFilter.value = '';
+                    renderVault();
+                    showToast("Filters reset [Esc]");
+                    return;
+                }
+                if (vaultSearch && vaultSearch === document.activeElement) {
+                    vaultSearch.blur();
+                    return;
+                }
+            } else if (contentGen && contentGen.style.display !== 'none') {
+                if (document.activeElement === labelInput && labelInput && labelInput.value) {
+                    labelInput.value = '';
+                    showToast("Label cleared [Esc]");
+                    return;
+                }
+                if (document.activeElement === userInput && userInput && userInput.value) {
+                    userInput.value = '';
+                    showToast("User cleared [Esc]");
+                    return;
+                }
+                if (document.activeElement === notesInput && notesInput && notesInput.value) {
+                    notesInput.value = '';
+                    showToast("Notes cleared [Esc]");
+                    return;
+                }
+                if (document.activeElement && ['INPUT', 'SELECT', 'TEXTAREA'].includes(document.activeElement.tagName)) {
+                    document.activeElement.blur();
+                    return;
+                }
             }
         }
 
@@ -2186,11 +2331,16 @@
         const lblEntropy = document.getElementById('lblEntropy');
         const barStrength = document.getElementById('barStrength');
         const info = calcStrength(pass);
-        lblStrength.innerText = "Strength: " + info.rating;
-        lblEntropy.innerText = info.entropy + " bits";
-        barStrength.style.width = info.pct + "%";
-        barStrength.style.backgroundColor = info.color;
-        barStrength.setAttribute('aria-valuenow', String(info.pct));
+        if (lblStrength) {
+            lblStrength.innerText = "Strength: " + info.rating;
+            lblStrength.style.color = info.color;
+        }
+        if (lblEntropy) lblEntropy.innerText = info.entropy + " bits";
+        if (barStrength) {
+            barStrength.style.width = info.pct + "%";
+            barStrength.style.backgroundColor = info.color;
+            barStrength.setAttribute('aria-valuenow', String(info.pct));
+        }
         return info;
     }
 
