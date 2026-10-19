@@ -411,9 +411,9 @@
     "id": "kmatch3",
     "title": "KMatch3",
     "folder": "Games",
-    "webBytes": 132523,
+    "webBytes": 137050,
     "exeBytes": 38400,
-    "budgetPercent": 13.3
+    "budgetPercent": 13.7
   },
   {
     "id": "kmatrix",
@@ -803,9 +803,9 @@
     "id": "kvault",
     "title": "KVault",
     "folder": "System",
-    "webBytes": 258372,
-    "exeBytes": 20992,
-    "budgetPercent": 25.9
+    "webBytes": 274808,
+    "exeBytes": 22016,
+    "budgetPercent": 27.5
   },
   {
     "id": "kvoid",

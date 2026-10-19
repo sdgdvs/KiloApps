@@ -4,6 +4,14 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-19T12:40:00+0000 — kilo-graphics: KFortress (Imagen 3 Visual Assets & Pipeline Integration)**
+  - Asset Generation & Stage 2: Generated authentic Imagen 3 assets via 2-stage pipeline (`scripts/asset_pipeline.py`); keyed magenta backgrounds to 32-bit RGBA sprites.
+  - Sprite & Texture Registry: Integrated `citadel_keep.png`, `rift_gate.png`, `enemy_orc.png`, `enemy_goblin.png`, `enemy_skeleton.png`, `enemy_golem.png`, `enemy_wyvern.png`, and `kfortress_bg.png`.
+  - Engine Rendering: Upgraded canvas drawing in `kfortress.html` with modular `drawSpriteAsset` and textured terrain background overlay, preserving resilient procedural fallbacks.
+  - Glint & Border Ban: Verified clean static citadel architecture and filigree borders with zero traveling perimeter dots or rotating specular glints across Web and Win32 C.
+  - Verification & Budget: Startup test PASS (213.5 KB < 999 KB, 0 JS errors, hit-test unblocked); Win32 C clean compile (182.8 KB); Vite clean (497ms); icon audit PASS (105/105); security lint PASS.
+  - Queue Handoff: Advanced current_targets.kilo_graphics to KMech; rotation handoff to kilo-soundscape.
+
 - **2026-10-18T15:12:02+0000 — kilo-graphics: KDragon (Zero-Token Auto-Skip — Inappropriate Target)**
   - Status: ⏭️ Skip — Imagen 3 asset replacement not appropriate for KDragon (pure vector, board game, or mature art).
   - Optimization: Handled via orchestrator pre-flight zero-token auto-skip.

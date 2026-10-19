@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-expander
-next_agent: kilo-creator
+current_agent: kilo-creator
+next_agent: kilo-graphics
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -14,14 +14,14 @@ effort: high
 timeout_minutes: 10
 status: ready
 current_targets:
-  kilo_creator: kweb://warez
+  kilo_creator: kweb://geocities
   kilo_graphics: KMech
   kilo_soundscape: KMech
   kilo_tester: KChart
   kilo_usability: KFont
   kilo_qa: KSimon
-  kilo_expander: KVault
-virtual_web_target: kweb://warez
+  kilo_expander: KDB
+virtual_web_target: kweb://geocities
 virtual_web_rotation:
 - kweb://portal
 - kweb://webring
@@ -35,10 +35,10 @@ virtual_web_rotation:
 - kweb://deep-core
 - kweb://darknet
 last_run:
-  agent: kilo-qa
-  app: KMatch3
-  timestamp: '2026-10-19T19:38:00+0000'
-last_planner_run: '2026-10-18T21:17:00Z'
+  agent: kilo-expander
+  app: KVault
+  timestamp: '2026-10-19T21:22:04+0000'
+last_planner_run: '2026-10-19T22:16:00Z'
 ---
 
 # KiloApps Master Fleet Work & Queue State
@@ -66,10 +66,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 ## Active Target Queues (Gemini Flash Optimized Tickets)
 
 ### 1. Virtual 1999 Web & ARG Node Creator (`kilo-creator`)
-- **Target**: `kweb://warez`
-- **Primary File**: `KiloOS/public/web/warez.html`
-- **Objective**: Underground scene & warez hypermedia node expansion: ANSI/NFO browser, cracktro tracker synthesizer, BBS tele-relay gateway, and demoscene software vault (<999 KB).
-- **Upcoming Queue**: `kweb://geocities`, `kweb://users/~neon_rider`, `kweb://asm-temple`, `kweb://cybercafe`.
+- **Target**: `kweb://geocities`
+- **Primary File**: `KiloOS/public/web/geocities.html`
+- **Objective**: 1999 neighborhood web portal expansion: animated GIF decals, MIDI jukebox, guestbook with persistent local entries, webring hub, visitor counter, and neighborhood explorer (SiliconValley, Area51, SunsetStrip, Heartland) adhering to Anti-Potemkin Quality Standard (<999 KB).
+- **Upcoming Queue**: `kweb://users/~neon_rider`, `kweb://asm-temple`, `kweb://cybercafe`, `kweb://10.19.99.4/classified`.
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
 - **Target**: `KMech`
@@ -155,19 +155,19 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Upcoming Queue**: `KWords`, `KColosseum`.
 
 ### 7. Feature Expander Queue (`kilo-expander`)
-- **Target**: `KVault`
-- **Primary Files**: `KiloOS/public/apps/kvault.html`, `KVault/main.c` (if present)
-- **Objective**: Retro encrypted vault & secrets manager expansion: multi-vault profiles, AES/XOR cipher suites, password entropy meter, custom field schema builder, and CSV/JSON secure import/export (<999 KB).
+- **Target**: `KDB`
+- **Primary Files**: `KiloOS/public/apps/kdb.html`, `KDB/main.c` (if present)
+- **Objective**: Retro flat-file relational database & SQL-like engine expansion: multi-table joins, relational schema builder, index simulation, SQL query runner, and CSV/JSON export/import (<999 KB).
 - **Action Steps**:
-  1. Inspect `KiloOS/public/apps/kvault.html`.
-  2. Implement multi-vault management, cipher tools, entropy metrics, and schema expansion.
-  3. Zero external dependencies; maintain responsive 1999 retro styling.
-- **Verification**: `uv run scripts/test_app_startup.py --app KVault` and `cd KiloOS && npm run build`. File size < 999 KB.
+  1. Inspect `KiloOS/public/apps/kdb.html`.
+  2. Implement relational query capabilities, indexing tools, and schema expansion.
+  3. Ensure dual Win32 native client parity and responsive 1999 styling.
+- **Verification**: `uv run scripts/test_app_startup.py --app KDB` and `cd KiloOS && npm.cmd run build`. File size < 999 KB.
 - **Handoff**:
-  - In frontmatter: advance `current_targets.kilo_expander` to `KDB`.
+  - In frontmatter: advance `current_targets.kilo_expander` to `KHex`.
   - Set `current_agent: kilo-creator`.
   - Append terse execution log (≤6 lines), commit, and push.
-- **Upcoming Queue**: `KDB`, `KHex`, `KPing`.
+- **Upcoming Queue**: `KHex`, `KPing`.
 
 ---
 
@@ -207,6 +207,13 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-19T21:22:04+0000 — kilo-expander: KVault (Multi-Vault Profiles & Structured Schema Templates)**
+  - Multi-Vault Profiles: Implemented 3 vault profiles (Primary Vault, Work & Ops, Classified Mesh) with dedicated storage keys and per-profile `.dat` persistence.
+  - Schema Templates: Added 8 structured templates (Login, Finance, Server/SSH, API Key, Passkey/Seed, 1999 BBS, Database, Router) for rapid credential generation.
+  - Hotkey & Switching: Added `[F6]` multi-vault profile switcher in both Web and Win32 C, preserving clean auto-lock and quicksave integrity.
+  - Dual Parity & Build: Recompiled Win32 native client (`KVault.exe`, 22.0 KB); startup test PASS (268.4 KB < 999 KB, 0 JS errors, hit-test unblocked); Vite build clean.
+  - Queue Handoff: Advanced `current_targets.kilo_expander` to `KDB`; rotation handoff to `kilo-creator`.
+
 - **2026-10-19T19:38:00+0000 — kilo-qa: KMatch3 (Pass 5 State Persistence & Modal Audit + Mature Promotion)**
   - State Persistence: Audited F5 quicksave and F9 quickload capturing complete game board state (grid, colors, types, ice, stone hits, barriers), scores, levels, objective counts, boss HP, maxBossHP, bossMoveTimer, stats, and settings without data loss or corruption across Web and Win32 C.
   - Modal Dismissals & Dialogs: Replaced blocking `alert()` dialogs with custom retro `gameStatusModal` (Enter to continue/retry, Esc to dismiss, F5 to quicksave). Ensured all modal overlays dismiss on click-outside and on Esc. Interval timer pauses while any modal is open.
@@ -235,13 +242,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - DSP & Earcons: Wired SPC700 185ms/2200Hz delay selectively; upgraded 15+ action stingers/earcons (masonry build, gold coins, war horn, funeral dirge).
   - Parity & Verification: Win32 C clean compile (182.8 KB), startup test PASS (225.4 KB < 999 KB, 0 JS err), Vite clean (461ms), security lint PASS.
   - Quarantine & Handoff: Promoted KFortress to Mature Applications; advanced kilo_soundscape to KMech; rotation handoff to kilo-tester.
-
-- **2026-10-19T12:40:00+0000 — kilo-graphics: KFortress (Imagen 3 Visual Assets & Pipeline Integration)**
-  - Asset Generation & Stage 2: Generated authentic Imagen 3 assets via 2-stage pipeline (`scripts/asset_pipeline.py`); keyed magenta backgrounds to 32-bit RGBA sprites.
-  - Sprite & Texture Registry: Integrated `citadel_keep.png`, `rift_gate.png`, `enemy_orc.png`, `enemy_goblin.png`, `enemy_skeleton.png`, `enemy_golem.png`, `enemy_wyvern.png`, and `kfortress_bg.png`.
-  - Engine Rendering: Upgraded canvas drawing in `kfortress.html` with modular `drawSpriteAsset` and textured terrain background overlay, preserving resilient procedural fallbacks.
-  - Glint & Border Ban: Verified clean static citadel architecture and filigree borders with zero traveling perimeter dots or rotating specular glints across Web and Win32 C.
-  - Verification & Budget: Startup test PASS (213.5 KB < 999 KB, 0 JS errors, hit-test unblocked); Win32 C clean compile (182.8 KB); Vite clean (497ms); icon audit PASS (105/105); security lint PASS.
-  - Queue Handoff: Advanced current_targets.kilo_graphics to KMech; rotation handoff to kilo-soundscape.
-
-
