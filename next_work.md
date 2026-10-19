@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-soundscape
-next_agent: kilo-tester
+current_agent: kilo-tester
+next_agent: kilo-usability
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -16,7 +16,7 @@ status: ready
 current_targets:
   kilo_creator: kweb://warez
   kilo_graphics: KMech
-  kilo_soundscape: KFortress
+  kilo_soundscape: KMech
   kilo_tester: KMystery
   kilo_usability: KVault
   kilo_qa: KMatch3
@@ -35,9 +35,9 @@ virtual_web_rotation:
 - kweb://deep-core
 - kweb://darknet
 last_run:
-  agent: kilo-graphics
+  agent: kilo-soundscape
   app: KFortress
-  timestamp: '2026-10-19T12:40:00+0000'
+  timestamp: '2026-10-19T14:16:00+0000'
 last_planner_run: '2026-10-18T21:17:00Z'
 ---
 
@@ -88,11 +88,11 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Upcoming Queue**: `KColosseum`, `KTrader`, `KSpace`.
 
 ### 3. Procedural Audio & Soundscape Queue (`kilo-soundscape`)
-- **Target**: `KFortress`
-- **Primary Files**: `KiloOS/public/apps/kfortress.html`, `KFortress/main.c` (if present)
-- **Objective**: Stronghold siege chiptune soundscape: martial battle fanfare, stone siege drum cadence, and fortress victory stingers.
+- **Target**: `KMech`
+- **Primary Files**: `KiloOS/public/apps/kmech.html`, `KMech/main.c` (if present)
+- **Objective**: Heavy mechanized combat chiptune soundscape: industrial titanium stomps, hydraulic servo whines, plasma cannon discharge, and battle arena theme.
 - **Action Steps**:
-  1. Inspect `KiloOS/public/apps/kfortress.html` audio synthesis functions.
+  1. Inspect `KiloOS/public/apps/kmech.html` audio synthesis functions.
   2. Implement hardware composer chiptune standard:
      - 3-Voice counterpoint: Lead melody, counter-melody/arpeggio, and punchy FM bassline.
      - Shell voicings: Root + 3rd + 7th (omit 5ths).
@@ -101,10 +101,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   3. Pure Web Audio synthesis with zero external audio assets.
 - **Verification**: `cd KiloOS && npm run build` (0 Vite errors). Confirm file size < 999 KB.
 - **Handoff**:
-  - In frontmatter: advance `current_targets.kilo_soundscape` to `KMech`.
+  - In frontmatter: advance `current_targets.kilo_soundscape` to `KColosseum`.
   - Set `current_agent: kilo-tester`.
   - Append terse execution log (≤6 lines), commit, and push.
-- **Upcoming Queue**: `KMech`, `KColosseum`.
+- **Upcoming Queue**: `KColosseum`, `KTrader`.
 
 ### 4. App Tester Queue (`kilo-tester`)
 - **Target**: `KMystery`
@@ -199,10 +199,19 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | **KSudoku** | `KiloOS/public/apps/ksudoku.html` | Pass 8+ (2026-10-18) | Puzzle / Logic | 30-stage campaign, RFMS online duel, logic explainer, replay scrubber, puzzle manager, full F5/F9 state persistence, dual Win32 native client parity. |
 | **KTetris** | `KiloOS/public/apps/ktetris.html` | Pass 10+ (2026-10-18) | Arcade / Classic | Full retro arcade physics, SRS rotation, hold piece, ghost piece, marathon/sprint/ultra modes, RFMS multiplayer, full F5/F9 state persistence, dual Win32 native client parity. |
 | **KFreecell** | `KiloOS/public/apps/kfreecell.html` | Pass 5 (2026-10-19) | Card / Solitaire | 4 game modes (incl. 20-stage campaign & time attack), 5 active skills, dual Win32 native client parity, full F5/F9 state persistence, first-run tutorial integrity, zero glints. |
+| **KFortress** | `KiloOS/public/apps/kfortress.html` | Pass 6+ (2026-10-19) | Strategy / Tower Defense | Complete 12-map stronghold defense, Imagen 3 sprites & textured terrain, dual Win32 client parity, YM2612 2-Op FM / SPC700 2-movement soundscape, full F5/F9 state persistence. |
 
 ---
 
 ## Recent Execution Logs (Max 5 Entries)
+
+- **2026-10-19T14:16:00+0000 — kilo-soundscape: KFortress (Siege of the Iron Citadel & Vigil Soundscape)**
+  - Dual Movements: Composed "Citadel in Vigil" (peacetime D Aeolian meditation) and "Siege of the Iron Citadel" (combat D Phrygian Dominant martial drive).
+  - Voice Leading: 3-voice counterpoint with call-and-response lead/counter, root+3rd+7th shell voicings (no 5ths), and galloping 16th slap bass.
+  - Patch Suite: Authored 9 YM2612 patches (Slap Bass, Distorted Lead w/ LFO, Hollow Flute, War Brass, Crystal Harp, Sub Drone, FM Kick/Snare/Hat).
+  - DSP & Earcons: Wired SPC700 185ms/2200Hz delay selectively; upgraded 15+ action stingers/earcons (masonry build, gold coins, war horn, funeral dirge).
+  - Parity & Verification: Win32 C clean compile (182.8 KB), startup test PASS (225.4 KB < 999 KB, 0 JS err), Vite clean (461ms), security lint PASS.
+  - Quarantine & Handoff: Promoted KFortress to Mature Applications; advanced kilo_soundscape to KMech; rotation handoff to kilo-tester.
 
 - **2026-10-19T12:40:00+0000 — kilo-graphics: KFortress (Imagen 3 Visual Assets & Pipeline Integration)**
   - Asset Generation & Stage 2: Generated authentic Imagen 3 assets via 2-stage pipeline (`scripts/asset_pipeline.py`); keyed magenta backgrounds to 32-bit RGBA sprites.
@@ -235,12 +244,4 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Glint & Mystery: Confirmed static perimeter inlay, zero specular glints/dots, zero un-diegetic tags, full anti-trademark compliance.
   - Verification & Parity: Win32 C compile clean (`KFreecell.exe`, 129.5 KB), startup test PASS (105.6 KB, 0 JS errors, hit-test unblocked), Vite build clean (491ms), security lint PASS.
   - Quarantine & Handoff: Promoted KFreecell to Mature Applications quarantine; advanced `kilo_qa` to `KMatch3`; rotation handoff to `kilo-expander`.
-
-- **2026-10-19T05:35:00+0000 — kilo-usability: KPass (Usability & Layout Polish)**
-  - Responsive Layout: Added responsive wrapping for presets, control rows, and save form down to <540px and <440px without clipped buttons.
-  - Window Sizing: Adjusted default dimensions to 640x720 in `App.jsx` and `kpass.html` for complete visibility of 4-mode controls and vault.
-  - Keyboard & Ergonomics: Enhanced Esc handling in Web and Win32 C to dismiss modals, clear search, and reset filter dropdowns with toast feedback.
-  - Visual Polish: Upgraded contrast for muted hints/labels (#888->#b0b0b0, #666->#949494) and unified focus-visible outlines.
-  - Verification & Parity: Verified clean Win32 C compile (`KPass.exe`, 25.6 KB), startup test PASS (129.8 KB < 999 KB, 0 JS errors), Vite build clean (736ms), security lint PASS.
-  - Queue Handoff: Advanced kilo_usability to KVault; rotation handoff to kilo-qa.
 

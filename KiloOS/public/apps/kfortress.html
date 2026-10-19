@@ -632,6 +632,9 @@
       }
     }
 
+    // ==========================================
+    // GENESIS YM2612 2-OP FM SYNTHESIS & SPC700 ECHO DSP
+    // ==========================================
     // Core 2-Operator FM Synthesizer with optional SPC700 Delay Send
     function playFmTone(carrierFreq, modRatio, modIndex, duration, gainVal, useEcho = false) {
       if (soundMuted || !carrierFreq) return;
@@ -673,9 +676,46 @@
       } catch (e) {}
     }
 
-    // Named FM Patches:
-    // Patch 1: Distorted FM Guitar / Heavy Medieval Lead
-    function playFmLead(freq, dur, vol, useEcho = true) {
+    // ==========================================
+    // EXPRESSIVE NAMED YM2612 FM PATCHES
+    // ==========================================
+
+    // Patch 1: Slap Bass (Dry - tight transients, zero echo send for punchy low end)
+    function playFmSlapBass(freq, dur, vol) {
+      if (soundMuted || !freq) return;
+      initAudio();
+      if (!audioCtx || !masterGain) return;
+      try {
+        const now = audioCtx.currentTime;
+        const carrier = audioCtx.createOscillator();
+        const mod = audioCtx.createOscillator();
+        const modGain = audioCtx.createGain();
+        const amp = audioCtx.createGain();
+
+        carrier.type = 'sine';
+        carrier.frequency.setValueAtTime(freq, now);
+        mod.type = 'sine';
+        mod.frequency.setValueAtTime(freq * 2.0, now);
+
+        modGain.gain.setValueAtTime(freq * 2.0 * 3.4, now);
+        modGain.gain.exponentialRampToValueAtTime(freq * 0.04, now + 0.045);
+        modGain.gain.exponentialRampToValueAtTime(0.01, now + dur);
+
+        amp.gain.setValueAtTime(vol, now);
+        amp.gain.exponentialRampToValueAtTime(0.0001, now + dur);
+
+        mod.connect(modGain);
+        modGain.connect(carrier.frequency);
+        carrier.connect(amp);
+        amp.connect(masterGain);
+
+        mod.start(now); carrier.start(now);
+        mod.stop(now + dur); carrier.stop(now + dur);
+      } catch (e) {}
+    }
+
+    // Patch 2: Distorted FM Lead Guitar / Heroic Citadel Horn (Delayed Vibrato & SPC700 Send)
+    function playFmDistortedLead(freq, dur, vol, useEcho = true) {
       if (soundMuted || !freq) return;
       initAudio();
       if (!audioCtx || !masterGain) return;
@@ -689,20 +729,21 @@
         carrier.type = 'sine';
         carrier.frequency.setValueAtTime(freq, now);
 
-        // Delayed vibrato (after 120ms)
+        // Delayed vibrato (ramps in after 140ms at 5.6 Hz)
         const lfo = audioCtx.createOscillator();
         const lfoGain = audioCtx.createGain();
-        lfo.frequency.setValueAtTime(5.5, now);
+        lfo.frequency.setValueAtTime(5.6, now);
         lfoGain.gain.setValueAtTime(0, now);
-        lfoGain.gain.setValueAtTime(0, now + 0.12);
-        lfoGain.gain.linearRampToValueAtTime(freq * 0.02, now + 0.22);
+        lfoGain.gain.setValueAtTime(0, now + 0.14);
+        lfoGain.gain.linearRampToValueAtTime(freq * 0.022, now + 0.26);
         lfo.connect(lfoGain);
         lfoGain.connect(carrier.frequency);
 
         mod.type = 'sawtooth';
-        mod.frequency.setValueAtTime(freq * 2.0, now);
-        modGain.gain.setValueAtTime(freq * 2.0 * 3.8, now);
-        modGain.gain.exponentialRampToValueAtTime(freq * 0.4, now + dur);
+        mod.frequency.setValueAtTime(freq * 1.0, now);
+        modGain.gain.setValueAtTime(freq * 4.6, now);
+        modGain.gain.exponentialRampToValueAtTime(freq * 0.45, now + 0.08);
+        modGain.gain.exponentialRampToValueAtTime(0.1, now + dur);
 
         amp.gain.setValueAtTime(vol, now);
         amp.gain.exponentialRampToValueAtTime(0.0001, now + dur);
@@ -718,8 +759,8 @@
       } catch (e) {}
     }
 
-    // Patch 2: Hollow Flute / Mystic Bell Counter-Melody
-    function playFmCounter(freq, dur, vol, useEcho = true) {
+    // Patch 3: Hollow Flute / Medieval Reedy Woodwind (Gentle Vibrato & Echo)
+    function playFmHollowFlute(freq, dur, vol, useEcho = true) {
       if (soundMuted || !freq) return;
       initAudio();
       if (!audioCtx || !masterGain) return;
@@ -733,10 +774,10 @@
         carrier.type = 'sine';
         carrier.frequency.setValueAtTime(freq, now);
         mod.type = 'sine';
-        mod.frequency.setValueAtTime(freq, now);
+        mod.frequency.setValueAtTime(freq * 1.0, now);
 
         modGain.gain.setValueAtTime(freq * 0.85, now);
-        modGain.gain.exponentialRampToValueAtTime(freq * 0.1, now + dur);
+        modGain.gain.exponentialRampToValueAtTime(freq * 0.08, now + dur);
 
         amp.gain.setValueAtTime(vol, now);
         amp.gain.exponentialRampToValueAtTime(0.0001, now + dur);
@@ -752,8 +793,8 @@
       } catch (e) {}
     }
 
-    // Patch 3: War Horns / Shell Harmony Brass Stabs
-    function playFmBrass(freq, dur, vol, useEcho = true) {
+    // Patch 4: War Brass / Martial Fanfare Stabs (Bright Attack)
+    function playFmWarBrass(freq, dur, vol, useEcho = true) {
       if (soundMuted || !freq) return;
       initAudio();
       if (!audioCtx || !masterGain) return;
@@ -767,9 +808,9 @@
         carrier.type = 'sine';
         carrier.frequency.setValueAtTime(freq, now);
         mod.type = 'sawtooth';
-        mod.frequency.setValueAtTime(freq, now);
+        mod.frequency.setValueAtTime(freq * 1.0, now);
 
-        modGain.gain.setValueAtTime(freq * 3.6, now);
+        modGain.gain.setValueAtTime(freq * 3.8, now);
         modGain.gain.exponentialRampToValueAtTime(freq * 0.35, now + 0.08);
         modGain.gain.exponentialRampToValueAtTime(0.1, now + dur);
 
@@ -787,8 +828,8 @@
       } catch (e) {}
     }
 
-    // Patch 4: Slap / Heavy FM Bass (Dry - tight transients, no echo)
-    function playFmBass(freq, dur, vol) {
+    // Patch 5: Crystalline Harp / Ethereal Bell Chime (Inharmonic MUL 3.5, SPC700 Delay)
+    function playFmCrystalHarp(freq, dur, vol, useEcho = true) {
       if (soundMuted || !freq) return;
       initAudio();
       if (!audioCtx || !masterGain) return;
@@ -802,13 +843,48 @@
         carrier.type = 'sine';
         carrier.frequency.setValueAtTime(freq, now);
         mod.type = 'sine';
-        mod.frequency.setValueAtTime(freq * 2.0, now);
+        mod.frequency.setValueAtTime(freq * 3.5, now);
 
-        modGain.gain.setValueAtTime(freq * 2.0 * 3.5, now);
-        modGain.gain.exponentialRampToValueAtTime(freq * 0.05, now + 0.05);
+        modGain.gain.setValueAtTime(freq * 3.5 * 3.2, now);
+        modGain.gain.exponentialRampToValueAtTime(freq * 0.08, now + 0.06);
         modGain.gain.exponentialRampToValueAtTime(0.01, now + dur);
 
         amp.gain.setValueAtTime(vol, now);
+        amp.gain.exponentialRampToValueAtTime(0.0001, now + dur);
+
+        mod.connect(modGain);
+        modGain.connect(carrier.frequency);
+        carrier.connect(amp);
+        amp.connect(masterGain);
+        if (useEcho && snesDelayNode) amp.connect(snesDelayNode);
+
+        mod.start(now); carrier.start(now);
+        mod.stop(now + dur); carrier.stop(now + dur);
+      } catch (e) {}
+    }
+
+    // Patch 6: Sub Drone (Atmospheric stone resonance for peacetime fortification)
+    function playFmSubDrone(freq, dur, vol) {
+      if (soundMuted || !freq) return;
+      initAudio();
+      if (!audioCtx || !masterGain) return;
+      try {
+        const now = audioCtx.currentTime;
+        const carrier = audioCtx.createOscillator();
+        const mod = audioCtx.createOscillator();
+        const modGain = audioCtx.createGain();
+        const amp = audioCtx.createGain();
+
+        carrier.type = 'sine';
+        carrier.frequency.setValueAtTime(freq, now);
+        mod.type = 'sine';
+        mod.frequency.setValueAtTime(freq * 0.5, now);
+
+        modGain.gain.setValueAtTime(freq * 0.5 * 1.2, now);
+        modGain.gain.exponentialRampToValueAtTime(freq * 0.1, now + dur);
+
+        amp.gain.setValueAtTime(0.001, now);
+        amp.gain.linearRampToValueAtTime(vol, now + 0.08);
         amp.gain.exponentialRampToValueAtTime(0.0001, now + dur);
 
         mod.connect(modGain);
@@ -821,8 +897,8 @@
       } catch (e) {}
     }
 
-    // Patch 5: FM Kick Drum
-    function playFmKick(vol = 0.25) {
+    // Patch 7: FM Kick Drum (Fast pitch sweep 160Hz -> 36Hz with punch transient)
+    function playFmKick(vol = 0.28, punch = true) {
       if (soundMuted) return;
       initAudio();
       if (!audioCtx || !masterGain) return;
@@ -831,17 +907,29 @@
         const osc = audioCtx.createOscillator();
         const amp = audioCtx.createGain();
         osc.type = 'sine';
-        osc.frequency.setValueAtTime(145, now);
-        osc.frequency.exponentialRampToValueAtTime(38, now + 0.065);
+        osc.frequency.setValueAtTime(160, now);
+        osc.frequency.exponentialRampToValueAtTime(36, now + 0.065);
         amp.gain.setValueAtTime(vol, now);
         amp.gain.exponentialRampToValueAtTime(0.0001, now + 0.14);
         osc.connect(amp); amp.connect(masterGain);
         osc.start(now); osc.stop(now + 0.14);
+
+        if (punch) {
+          const clickOsc = audioCtx.createOscillator();
+          const clickAmp = audioCtx.createGain();
+          clickOsc.type = 'triangle';
+          clickOsc.frequency.setValueAtTime(380, now);
+          clickOsc.frequency.exponentialRampToValueAtTime(70, now + 0.015);
+          clickAmp.gain.setValueAtTime(vol * 0.5, now);
+          clickAmp.gain.exponentialRampToValueAtTime(0.0001, now + 0.015);
+          clickOsc.connect(clickAmp); clickAmp.connect(masterGain);
+          clickOsc.start(now); clickOsc.stop(now + 0.015);
+        }
       } catch (e) {}
     }
 
-    // Patch 6: FM Snare Drum
-    function playFmSnare(vol = 0.20) {
+    // Patch 8: FM Snare Drum (Inharmonic white-noise approximation, MUL 9.87)
+    function playFmSnare(vol = 0.22) {
       if (soundMuted) return;
       initAudio();
       if (!audioCtx || !masterGain) return;
@@ -853,10 +941,10 @@
         const amp = audioCtx.createGain();
 
         c.type = 'sine';
-        c.frequency.setValueAtTime(220, now);
+        c.frequency.setValueAtTime(210, now);
         m.type = 'sawtooth';
-        m.frequency.setValueAtTime(220 * 9.87, now);
-        mg.gain.setValueAtTime(220 * 9.87 * 7.5, now);
+        m.frequency.setValueAtTime(210 * 9.87, now);
+        mg.gain.setValueAtTime(210 * 9.87 * 8.0, now);
         mg.gain.exponentialRampToValueAtTime(1, now + 0.09);
 
         amp.gain.setValueAtTime(vol, now);
@@ -870,24 +958,24 @@
       } catch (e) {}
     }
 
-    // Patch 7: FM Hi-Hat
+    // Patch 9: FM Hi-Hat (Inharmonic metallic sizzle, MUL 11.0)
     function playFmHiHat(vol = 0.08, open = false) {
       if (soundMuted) return;
       initAudio();
       if (!audioCtx || !masterGain) return;
       try {
         const now = audioCtx.currentTime;
-        const dur = open ? 0.16 : 0.045;
+        const dur = open ? 0.18 : 0.045;
         const c = audioCtx.createOscillator();
         const m = audioCtx.createOscillator();
         const mg = audioCtx.createGain();
         const amp = audioCtx.createGain();
 
         c.type = 'sine';
-        c.frequency.setValueAtTime(3200, now);
+        c.frequency.setValueAtTime(3400, now);
         m.type = 'sine';
-        m.frequency.setValueAtTime(3200 * 11.0, now);
-        mg.gain.setValueAtTime(14000, now);
+        m.frequency.setValueAtTime(3400 * 11.0, now);
+        mg.gain.setValueAtTime(15000, now);
         mg.gain.exponentialRampToValueAtTime(10, now + dur);
 
         amp.gain.setValueAtTime(vol, now);
@@ -901,131 +989,259 @@
       } catch (e) {}
     }
 
-    // Frequency Table: D Minor / D Phrygian Dominant
+    // Backwards-compatible aliases for legacy callers
+    const playFmLead = playFmDistortedLead;
+    const playFmCounter = playFmHollowFlute;
+    const playFmBrass = playFmWarBrass;
+    const playFmBass = playFmSlapBass;
+
+    // Comprehensive Frequency Table: D Minor / D Phrygian Dominant & Chromatics
     const NOTE = {
-      D2: 73.42,  E2: 82.41,  F2: 87.31,  G2: 98.00,  A2: 110.00, Bb2: 116.54, C3: 130.81, Csh3: 138.59,
-      D3: 146.83, Eb3: 155.56, E3: 164.81, F3: 174.61, Fsh3: 185.00, G3: 196.00, A3: 220.00, Bb3: 233.08, B3: 246.94,
-      C4: 261.63, Csh4: 277.18, D4: 293.66, Eb4: 311.13, E4: 329.63, F4: 349.23, Fsh4: 369.99, G4: 392.00, A4: 440.00, Bb4: 466.16, B4: 493.88,
-      C5: 523.25, Csh5: 554.37, D5: 587.33, Eb5: 622.25, E5: 659.26, F5: 698.46, G5: 783.99, A5: 880.00, Bb5: 932.33
+      // Octave 2
+      C2: 65.41,   Db2: 69.30,  D2: 73.42,   Eb2: 77.78,  E2: 82.41,   F2: 87.31,   Fsh2: 92.50,  G2: 98.00,   Ab2: 103.83, A2: 110.00, Bb2: 116.54, B2: 123.47,
+      // Octave 3
+      C3: 130.81,  Csh3: 138.59, Db3: 138.59, D3: 146.83,  Eb3: 155.56, E3: 164.81,  F3: 174.61,  Fsh3: 185.00, G3: 196.00,  Ab3: 207.65, A3: 220.00, Bb3: 233.08, B3: 246.94,
+      // Octave 4
+      C4: 261.63,  Csh4: 277.18, Db4: 277.18, D4: 293.66,  Eb4: 311.13, E4: 329.63,  F4: 349.23,  Fsh4: 369.99, G4: 392.00,  Ab4: 415.30, A4: 440.00, Bb4: 466.16, B4: 493.88,
+      // Octave 5
+      C5: 523.25,  Csh5: 554.37, Db5: 554.37, D5: 587.33,  Eb5: 622.25, E5: 659.26,  F5: 698.46,  Fsh5: 739.99, G5: 783.99,  Ab5: 830.61, A5: 880.00, Bb5: 932.33, B5: 987.77,
+      // Octave 6
+      C6: 1046.50, D6: 1174.66,  E6: 1318.51
     };
 
-    // ==========================================
-    // TRACK: "Siege of the Iron Citadel"
-    // Authentic 3-Voice Counterpoint Chiptune Composition
-    // Progression: Dm -> C -> Bb -> A7 (4 measures, 32 steps)
-    // ==========================================
-    const bgmBass = [
-      // Dm (steps 0-7): Galloping root-octave 16ths
+    // =========================================================================
+    // MOVEMENT 1: "CITADEL IN VIGIL" (Atmospheric Fortification & Prep Phase)
+    // Mode: D Aeolian / Dorian & Harp Arpeggio Meditation (32 steps, 4 measures)
+    // =========================================================================
+    const peaceBass = [
+      NOTE.D2,   NOTE.Bb2,  NOTE.C2,   NOTE.A2
+    ];
+
+    const peaceHarp = [
+      // Measure 1: Dm
+      NOTE.D4, NOTE.F4, NOTE.A4, NOTE.D5, NOTE.A4, NOTE.F4, NOTE.D4, NOTE.A3,
+      // Measure 2: Bb
+      NOTE.D4, NOTE.F4, NOTE.Bb4, NOTE.D5, NOTE.Bb4, NOTE.F4, NOTE.D4, NOTE.Bb3,
+      // Measure 3: C
+      NOTE.C4, NOTE.E4, NOTE.G4, NOTE.C5, NOTE.G4, NOTE.E4, NOTE.C4, NOTE.G3,
+      // Measure 4: A7
+      NOTE.Csh4, NOTE.E4, NOTE.G4, NOTE.A4, NOTE.G4, NOTE.E4, NOTE.Csh4, NOTE.A3
+    ];
+
+    const peaceHorn = [
+      // Measure 1: Dm
+      NOTE.D4, 0, 0, 0, 0, 0, 0, 0,
+      // Measure 2: Bb
+      NOTE.F4, 0, 0, 0, 0, 0, 0, 0,
+      // Measure 3: C
+      NOTE.E4, 0, 0, 0, 0, 0, 0, 0,
+      // Measure 4: A7
+      NOTE.Csh4, 0, 0, 0, 0, 0, 0, 0
+    ];
+
+    const peaceHarmony = [
+      // Measure 1: Dm (steps 0-7) - Shell: [F3, C4] on offbeat step 2
+      null, null, [NOTE.F3, NOTE.C4], null, null, null, null, null,
+      // Measure 2: Bb (steps 8-15) - Shell: [D3, Bb3] on offbeat step 10
+      null, null, [NOTE.D3, NOTE.Bb3], null, null, null, null, null,
+      // Measure 3: C (steps 16-23) - Shell: [E3, C4] on offbeat step 18
+      null, null, [NOTE.E3, NOTE.C4], null, null, null, null, null,
+      // Measure 4: A7 (steps 24-31) - Shell: [C#4, G3] on offbeat step 26
+      null, null, [NOTE.Csh4, NOTE.G3], null, null, null, null, null
+    ];
+
+    // =========================================================================
+    // MOVEMENT 2: "SIEGE OF THE IRON CITADEL" (Martial Battle Drive)
+    // Mode: D Phrygian Dominant & Harmonic Minor (64 steps, 8 measures)
+    // Progression A: Dm -> C -> Bb -> A7 (Measures 1-4, steps 0-31)
+    // Progression B: Gm -> C7 -> Fmaj7 -> Dm -> Eb -> A7 -> Dm (Measures 5-8, steps 32-63)
+    // =========================================================================
+
+    // Channel 4: Galloping 16th Slap Bass (Strictly below C3 except octave slaps)
+    const combatBass = [
+      // Section 1: Dm (Steps 0-15) - Galloping Root-Octave 16ths
       NOTE.D2, NOTE.D2, NOTE.D3, NOTE.D2, NOTE.D2, NOTE.D2, NOTE.A2, NOTE.D3,
-      // C (steps 8-15)
-      NOTE.C2, NOTE.C2, NOTE.C3, NOTE.C2, NOTE.C2, NOTE.C2, NOTE.G2, NOTE.C3,
-      // Bb (steps 16-23)
-      NOTE.Bb2, NOTE.Bb2, NOTE.F2, NOTE.Bb2, NOTE.Bb2, NOTE.Bb2, NOTE.D2, NOTE.Bb2,
-      // A7 (steps 24-31)
-      NOTE.A2, NOTE.A2, NOTE.E2, NOTE.A2, NOTE.A2, NOTE.Csh3, NOTE.E2, NOTE.A2
+      NOTE.D2, NOTE.D2, NOTE.D3, NOTE.D2, NOTE.D2, NOTE.F2, NOTE.G2, NOTE.A2,
+      // Section 2: Bb -> A7 (Steps 16-31)
+      NOTE.Bb2, NOTE.Bb2, NOTE.Bb3, NOTE.Bb2, NOTE.Bb2, NOTE.Bb2, NOTE.F2, NOTE.Bb2,
+      NOTE.A2,  NOTE.A2,  NOTE.A3,  NOTE.A2,  NOTE.A2,  NOTE.Csh3, NOTE.E2, NOTE.A2,
+      // Section 3: Gm -> C -> F -> Dm (Steps 32-47)
+      NOTE.G2, NOTE.G2, NOTE.G3, NOTE.G2, NOTE.C2, NOTE.C2, NOTE.C3, NOTE.C2,
+      NOTE.F2, NOTE.F2, NOTE.F3, NOTE.F2, NOTE.D2, NOTE.D2, NOTE.A2, NOTE.D3,
+      // Section 4: Eb -> A7 -> Dm (Steps 48-63) - Neapolitan bII drive into Tonic
+      NOTE.Eb2, NOTE.Eb2, NOTE.Eb3, NOTE.Eb2, NOTE.A2, NOTE.A2, NOTE.A3, NOTE.A2,
+      NOTE.D2,  NOTE.D2,  NOTE.D3,  NOTE.D2,  NOTE.D2, NOTE.A2, NOTE.F2, NOTE.D2
     ];
 
-    const bgmLead = [
-      // Dm (steps 0-7): Heroic vocal phrasing
+    // Channel 1: Lead Melody (Heroic martial theme, vocal phrasing, rests for counter)
+    const combatLead = [
+      // Section 1: Dm (Steps 0-15) - Heroic opening arch
       NOTE.D4, 0, NOTE.F4, 0, NOTE.A4, 0, NOTE.G4, NOTE.F4,
-      // C (steps 8-15): Sustained into rest (counter takes lead)
-      NOTE.E4, 0, 0, 0, NOTE.C4, 0, NOTE.E4, NOTE.G4,
-      // Bb (steps 16-23): Contrary motion to counter
-      NOTE.F4, 0, NOTE.D4, 0, NOTE.Bb4, 0, NOTE.A4, NOTE.G4,
-      // A7 (steps 24-31): Leading tone resolution
-      NOTE.F4, 0, NOTE.E4, 0, NOTE.Csh4, 0, 0, 0
+      NOTE.E4, 0, NOTE.F4, NOTE.G4, NOTE.A4, 0, NOTE.C5, NOTE.A4,
+      // Section 2: Bb -> A7 (Steps 16-31) - Ascending tension into deliberate rest
+      NOTE.Bb4, 0, NOTE.A4, 0, NOTE.G4, 0, NOTE.F4, NOTE.Eb4,
+      NOTE.E4,  0, 0,       0, 0,       0, 0,       0,
+      // Section 3: Gm -> C -> F -> Dm (Steps 32-47) - High descending run
+      NOTE.D5, 0, NOTE.C5, 0, NOTE.Bb4, 0, NOTE.A4, NOTE.G4,
+      NOTE.F4, 0, NOTE.G4, NOTE.A4, NOTE.Bb4, 0, NOTE.G4, 0,
+      // Section 4: Eb -> A7 -> Dm (Steps 48-63) - Phrygian Dominant climax flourish
+      NOTE.G4, 0, NOTE.Bb4, 0, NOTE.Csh5, 0, NOTE.Eb5, 0,
+      NOTE.D5, 0, NOTE.A4,  0, NOTE.D4,   0, 0,        0
     ];
 
-    const bgmCounter = [
-      // Dm (steps 0-7): Contrary descending answers
-      0, NOTE.A4, 0, NOTE.F4, 0, NOTE.D4, 0, NOTE.C4,
-      // C (steps 8-15): Melodic spotlight while Lead rests
-      0, NOTE.G4, NOTE.B4, NOTE.C5, 0, NOTE.G4, 0, 0,
-      // Bb (steps 16-23): Ascending contrary counterpoint
+    // Channel 2: Counter-Melody (Hollow woodwind / flute in contrary motion & spotlight)
+    const combatCounter = [
+      // Section 1: Dm (Steps 0-15) - Contrary descending answers
+      0, NOTE.A3, 0, NOTE.D4, 0, NOTE.F4, 0, NOTE.D4,
+      0, NOTE.C4, 0, NOTE.Bb3, 0, NOTE.A3, 0, NOTE.F3,
+      // Section 2: Bb -> A7 (Steps 16-31) - Counter takes melodic spotlight while Lead rests!
       0, NOTE.D4, 0, NOTE.F4, 0, NOTE.G4, 0, NOTE.F4,
-      // A7 (steps 24-31): Suspension resolving into Dm tonic
-      0, NOTE.G4, 0, NOTE.A4, 0, NOTE.Bb4, NOTE.A4, NOTE.G4
+      0, NOTE.G4, NOTE.Bb4, NOTE.Csh5, NOTE.D5, NOTE.Csh5, NOTE.Bb4, NOTE.A4,
+      // Section 3: Gm -> C -> F -> Dm (Steps 32-47) - Ascending contrary motion
+      0, NOTE.Bb3, 0, NOTE.D4, 0, NOTE.E4, 0, NOTE.C4,
+      0, NOTE.A3,  0, NOTE.C4, 0, NOTE.D4, 0, NOTE.F4,
+      // Section 4: Eb -> A7 -> Dm (Steps 48-63) - Suspension resolving into tonic D4
+      0, NOTE.Eb4, 0, NOTE.G4, 0, NOTE.E4, 0, NOTE.G4,
+      0, NOTE.F4,  0, NOTE.E4, NOTE.F4, NOTE.E4, NOTE.D4, 0
     ];
 
-    // Shell Voicings: Root + 3rd + 7th (Never doubling the 5th)
-    const bgmHarmony = [
-      // Dm: Stabs on off-beats 2 & 6 [F4, C4]
+    // Channel 3: Harmony Shell Voicings (Root + 3rd + 7th on weak beats, no 5ths)
+    const combatHarmony = [
+      // Section 1: Dm (Steps 0-15) - Dm7 shell [F4, C4] on beats 2 & 4
       null, null, [NOTE.F4, NOTE.C4], null, null, null, [NOTE.F4, NOTE.C4], null,
-      // C: Stabs on off-beats 10 & 14 [E4, Bb3]
-      null, null, [NOTE.E4, NOTE.Bb3], null, null, null, [NOTE.E4, NOTE.Bb3], null,
-      // Bb: Stabs on off-beats 18 & 22 [D4, A3]
-      null, null, [NOTE.D4, NOTE.A3], null, null, null, [NOTE.D4, NOTE.A3], null,
-      // A7: Stabs on off-beats 26 & 30 [C#4, G3]
-      null, null, [NOTE.Csh4, NOTE.G3], null, null, null, [NOTE.Csh4, NOTE.G3], null
+      null, null, [NOTE.F4, NOTE.C4], null, null, null, [NOTE.F4, NOTE.C4], null,
+      // Section 2: Bb -> A7 (Steps 16-31) - Bb7 shell [D4, Ab3] and A7 shell [C#4, G3]
+      null, null, [NOTE.D4, NOTE.Ab3], null, null, null, [NOTE.D4, NOTE.Ab3], null,
+      null, null, [NOTE.Csh4, NOTE.G3], null, null, null, [NOTE.Csh4, NOTE.G3], null,
+      // Section 3: Gm -> C -> F -> Dm (Steps 32-47)
+      null, null, [NOTE.Bb4, NOTE.F4], null, null, null, [NOTE.E4, NOTE.Bb3], null,
+      null, null, [NOTE.A4, NOTE.Eb4], null, null, null, [NOTE.F4, NOTE.C4], null,
+      // Section 4: Eb -> A7 -> Dm (Steps 48-63)
+      null, null, [NOTE.G4, NOTE.Db4], null, null, null, [NOTE.Csh4, NOTE.G3], null,
+      null, null, [NOTE.F4, NOTE.C4],  null, null, null, [NOTE.F4, NOTE.C4],  null
     ];
+
+    // Backward-compatible references
+    const bgmBass = combatBass;
+    const bgmLead = combatLead;
+    const bgmCounter = combatCounter;
+    const bgmHarmony = combatHarmony;
 
     let bgmStep = 0;
     let bgmTimer = null;
     let bgmRunning = false;
 
+    // Swing-Tick Groove Sequencer (Hardware composer 5:3 swing timing)
     function scheduleBgmStep() {
       if (!bgmRunning || soundMuted) return;
-      // 5:3 Swing groove: 160ms on even steps, 108ms on odd steps (~112 BPM 16ths)
+      const inBattle = waveInProgress;
+      const isBoss = inBattle && (wave % 5 === 0 || enemies.some(e => e.type === 'Ogre' || e.type === 'Wyvern' || e.type === 'Golem'));
+
+      let evenDelay = 160;
+      let oddDelay = 108;
+      if (!inBattle) {
+        evenDelay = 175;
+        oddDelay = 115;
+      } else if (isBoss) {
+        evenDelay = 140;
+        oddDelay = 95;
+      }
+
       const isEven = (bgmStep % 2 === 0);
-      const nextDelay = isEven ? 160 : 108;
-      playBgmStep(bgmStep % 32);
+      const nextDelay = isEven ? evenDelay : oddDelay;
+
+      playBgmStep(bgmStep, inBattle, isBoss);
       bgmStep++;
       bgmTimer = setTimeout(scheduleBgmStep, nextDelay);
     }
 
-    function playBgmStep(step) {
+    function playBgmStep(globalStep, inBattle, isBoss) {
       if (soundMuted || gameOver) return;
-      const inBattle = waveInProgress;
 
-      // Channel 4: Bass (Galloping on battle; sustained roots during peacetime)
-      if (inBattle) {
-        const b = bgmBass[step];
-        if (b) playFmBass(b, 0.12, 0.22);
-      } else if (step % 8 === 0) {
-        const peaceRoots = [NOTE.D2, NOTE.C2, NOTE.Bb2, NOTE.A2];
-        const r = peaceRoots[Math.floor(step / 8)];
-        if (r) playFmBass(r, 0.85, 0.16);
-      }
+      if (!inBattle) {
+        // ==========================================
+        // PEACETIME FORTIFICATION: "Citadel in Vigil"
+        // ==========================================
+        const step = globalStep % 32;
 
-      // Channel 1: Lead Melody (Active in battle)
-      if (inBattle) {
-        const lead = bgmLead[step];
-        if (lead) playFmLead(lead, 0.22, 0.18, true);
-      }
+        // Sub-bass drone on measure downbeat (steps 0, 8, 16, 24)
+        if (step % 8 === 0) {
+          const root = peaceBass[Math.floor(step / 8)];
+          if (root) playFmSubDrone(root, 0.95, 0.22);
+        }
 
-      // Channel 2: Counter-Melody (Hollow flute active in battle and ambient prep)
-      const counter = bgmCounter[step];
-      if (counter) {
-        playFmCounter(counter, 0.24, inBattle ? 0.14 : 0.18, true);
-      }
+        // Crystalline harp arpeggio (16th notes floating in SPC700 delay)
+        const harpNote = peaceHarp[step];
+        if (harpNote) {
+          playFmCrystalHarp(harpNote, 0.26, 0.13, true);
+        }
 
-      // Channel 3: Harmony Shell Brass Stabs
-      const harm = bgmHarmony[step];
-      if (harm && harm.length > 0) {
-        harm.forEach(f => playFmBrass(f, inBattle ? 0.16 : 0.32, inBattle ? 0.12 : 0.10, true));
-      }
+        // Solo horn theme call on phrase start
+        const hornNote = peaceHorn[step];
+        if (hornNote) {
+          playFmWarBrass(hornNote, 0.38, 0.16, true);
+        }
 
-      // Channel 5: FM Kick & Snare Percussion
-      if (inBattle) {
-        if (step % 4 === 0 || step === 6 || step === 14 || step === 22 || step === 30) {
-          playFmKick(0.26);
+        // Subtle shell harmony
+        const harm = peaceHarmony[step];
+        if (harm && harm.length > 0) {
+          harm.forEach(f => playFmWarBrass(f, 0.40, 0.09, true));
+        }
+
+        // Gentle martial rim click and closed hat
+        if (step % 8 === 0) {
+          playFmTone(240, 2.0, 1.5, 0.04, 0.10, false);
+        }
+        if (step % 2 === 0) {
+          playFmHiHat(0.04, false);
+        }
+
+      } else {
+        // ==========================================
+        // ACTIVE COMBAT: "Siege of the Iron Citadel"
+        // ==========================================
+        const step = globalStep % 64;
+
+        // Channel 4: Galloping 16th Slap Bass
+        const b = combatBass[step];
+        if (b) {
+          playFmSlapBass(b, 0.11, isBoss ? 0.25 : 0.22);
+        }
+
+        // Channel 1: Lead Melody (Heroic distorted FM horn/lead)
+        const lead = combatLead[step];
+        if (lead) {
+          playFmDistortedLead(lead, 0.22, isBoss ? 0.22 : 0.19, true);
+        }
+
+        // Channel 2: Counter-Melody (Hollow woodwind / flute in contrary motion)
+        const counter = combatCounter[step];
+        if (counter) {
+          playFmHollowFlute(counter, 0.24, 0.16, true);
+        }
+
+        // Channel 3: Harmony Shell Brass Stabs
+        const harm = combatHarmony[step];
+        if (harm && harm.length > 0) {
+          harm.forEach(f => playFmWarBrass(f, 0.18, isBoss ? 0.14 : 0.11, true));
+        }
+
+        // Channel 5: FM Kick & Snare Percussion
+        const isKickBeat = (step % 4 === 0 || step === 6 || step === 14 || step === 22 || step === 30 || step === 38 || step === 46 || step === 54 || step === 62);
+        if (isKickBeat) {
+          playFmKick(isBoss ? 0.32 : 0.27, true);
         }
         if (step % 4 === 2) {
-          playFmSnare(0.20);
+          playFmSnare(isBoss ? 0.25 : 0.21);
         }
-        if (step === 31) {
-          playFmSnare(0.16); // quick fill before loop
+        // Snare fill at phrase ends (steps 30-31 and 62-63)
+        if (step === 30 || step === 31 || step === 62 || step === 63) {
+          playFmSnare(0.18);
         }
-      } else if (step % 8 === 0) {
-        playFmKick(0.12);
-      }
 
-      // Channel 6: FM Hi-Hat
-      if (inBattle) {
+        // Channel 6: FM Hi-Hat
         const isOpen = (step % 8 === 7);
-        playFmHiHat(isOpen ? 0.13 : 0.08, isOpen);
-      } else if (step % 2 === 0) {
-        playFmHiHat(0.04, false);
+        playFmHiHat(isOpen ? 0.14 : 0.08, isOpen);
       }
     }
 
@@ -1058,83 +1274,149 @@
     window.addEventListener('click', userAudioResume, { passive: true });
     window.addEventListener('keydown', userAudioResume, { passive: true });
 
-    // Backward-Compatible playBeep: upgraded to high-craft FM synthesis
+    // Intelligently Upgraded playBeep: routes legacy calls to authentic FM synthesis
     function playBeep(freq, duration, type = 'sine', gainVal = 0.1) {
       if (soundMuted || !freq) return;
-      const modRatio = (type === 'sawtooth') ? 1.0 : ((type === 'square') ? 2.0 : 1.0);
-      const modIndex = (type === 'sawtooth') ? 3.0 : ((type === 'square') ? 2.2 : 0.8);
-      playFmTone(freq, modRatio, modIndex, duration, gainVal, true);
+      if (freq < 150) {
+        playFmTone(freq, 0.5, 3.5, duration, gainVal * 1.2, false);
+      } else if (freq >= 1000) {
+        playFmCrystalHarp(freq, duration, gainVal * 0.8, true);
+      } else if (type === 'sawtooth') {
+        playFmDistortedLead(freq, duration, gainVal, true);
+      } else if (type === 'square') {
+        playFmWarBrass(freq, duration, gainVal, true);
+      } else {
+        playFmHollowFlute(freq, duration, gainVal, true);
+      }
     }
 
-    // Action Stingers & Earcons
+    // Action Stingers & UI Earcons
     function playSfx(type) {
       if (soundMuted) return;
       initAudio();
       try {
-        if (type === 'bow') {
-          // FM wooden bow twang and arrow swish
-          playFmTone(620, 2.0, 3.2, 0.08, 0.14, false);
-        } else if (type === 'cannon') {
-          // Heavy FM siege cannon detonation with sub-bass punch
-          playFmTone(62, 0.5, 4.5, 0.38, 0.35, false);
-          playFmSnare(0.28);
-        } else if (type === 'magic') {
-          // Cascading crystalline FM chime arpeggio with SPC700 delay
-          [520, 780, 1040, 1318].forEach((freq, idx) => {
-            setTimeout(() => playFmCounter(freq, 0.22, 0.14, true), idx * 35);
-          });
-        } else if (type === 'tesla') {
-          // Cryo-electric dual FM arc discharge
-          playFmTone(440 + Math.random() * 120, 3.5, 6.0, 0.08, 0.16, true);
-        } else if (type === 'frost') {
-          // Shimmering crystalline freeze with delay
-          playFmTone(1100, 2.76, 3.5, 0.15, 0.13, true);
-        } else if (type === 'fanfare') {
-          // Triumphant Mario/Heroic Cadence: Bb -> C -> D war horn fanfare with echo
-          const fanNotes = [
-            { f: NOTE.Bb4, d: 0.16, t: 0 },
-            { f: NOTE.C5,  d: 0.18, t: 150 },
-            { f: NOTE.D5,  d: 0.45, t: 320 }
-          ];
-          fanNotes.forEach(fn => {
-            setTimeout(() => {
-              playFmBrass(fn.f, fn.d, 0.24, true);
-              playFmLead(fn.f * 0.5, fn.d, 0.18, true);
-            }, fn.t);
-          });
-        } else if (type === 'meteor') {
-          // Sub-bass earth-shaking meteor crash
-          playFmTone(55, 0.5, 5.0, 0.55, 0.40, false);
-          playFmSnare(0.35);
-        } else if (type === 'poison') {
-          // Corrosive bubbling FM timbre
-          playFmTone(280, 0.5, 4.2, 0.18, 0.16, true);
-        } else if (type === 'ballista') {
-          // Heavy timber winch snap and iron bolt launch
-          playFmTone(180, 1.5, 3.0, 0.12, 0.25, false);
-        } else if (type === 'solarbeam') {
-          // Focused radiant photon laser with FM carrier pitch slide
-          playFmTone(880, 1.0, 3.5, 0.12, 0.15, true);
-        } else if (type === 'inferno') {
-          // Volcanic magma explosion
-          playFmTone(48, 0.5, 5.0, 0.45, 0.40, false);
-        } else if (type === 'superconductor') {
-          // Cryo-electric dual FM arc discharge
-          playFmTone(520, 2.5, 4.0, 0.10, 0.18, true);
-          playFmTone(1040, 1.5, 3.0, 0.10, 0.14, true);
-        } else if (type === 'trap') {
-          // Iron caltrop spring snap
-          playFmTone(750, 2.0, 3.0, 0.07, 0.20, false);
-        } else if (type === 'breach') {
-          // Citadel wall stone impact + deep warning war horn
-          playFmTone(70, 0.5, 4.0, 0.35, 0.38, false);
-          playFmBrass(NOTE.D3, 0.4, 0.22, true);
-        } else if (type === 'dirge') {
-          // Solemn funeral bells on citadel defeat
-          const bells = [NOTE.D3, NOTE.A2, NOTE.F2, NOTE.D2];
-          bells.forEach((f, i) => {
-            setTimeout(() => playFmCounter(f, 0.8, 0.22, true), i * 320);
-          });
+        switch (type) {
+          case 'click':
+          case 'select':
+            // Crisp stone UI toggle
+            playFmTone(540, 1.5, 1.8, 0.04, 0.12, false);
+            break;
+          case 'build':
+            // Heavy stone masonry strike + chisel resonance
+            playFmTone(85, 0.5, 4.0, 0.22, 0.35, false);
+            playFmWarBrass(NOTE.D3, 0.14, 0.18, false);
+            break;
+          case 'upgrade':
+            // Ascending gilded chime fanfare
+            [NOTE.D4, NOTE.F4, NOTE.A4, NOTE.D5].forEach((f, i) => {
+              setTimeout(() => playFmCrystalHarp(f, 0.28, 0.16, true), i * 45);
+            });
+            break;
+          case 'sell':
+            // Gold coins spilling into purse
+            [NOTE.A4, NOTE.Csh5, NOTE.E5].forEach((f, i) => {
+              setTimeout(() => playFmTone(f, 3.5, 3.0, 0.08, 0.14, false), i * 35);
+            });
+            break;
+          case 'error':
+            // Dull wooden shield block / denied buzz
+            playFmTone(95, 0.5, 4.5, 0.18, 0.28, false);
+            playFmTone(140, 2.0, 3.5, 0.12, 0.20, false);
+            break;
+          case 'wave_start':
+            // Rallying war horn fanfare (Bb3 -> D4 -> F4 -> A4)
+            [NOTE.Bb3, NOTE.D4, NOTE.F4, NOTE.A4].forEach((f, i) => {
+              setTimeout(() => {
+                playFmWarBrass(f, 0.32, 0.24, true);
+                playFmDistortedLead(f * 0.5, 0.28, 0.18, true);
+              }, i * 75);
+            });
+            break;
+          case 'gold':
+          case 'coin':
+            // High-pitched crystal coin chime
+            playFmCrystalHarp(NOTE.D5, 0.18, 0.14, true);
+            break;
+          case 'fanfare':
+            // Triumphant Heroic Cadence (Bb4 -> C5 -> D5) with rich brass & SPC700 echo
+            [
+              { f: NOTE.Bb4, d: 0.18, t: 0 },
+              { f: NOTE.C5,  d: 0.20, t: 160 },
+              { f: NOTE.D5,  d: 0.55, t: 340 }
+            ].forEach(fn => {
+              setTimeout(() => {
+                playFmWarBrass(fn.f, fn.d, 0.26, true);
+                playFmDistortedLead(fn.f * 0.5, fn.d, 0.20, true);
+              }, fn.t);
+            });
+            break;
+          case 'dirge':
+            // Solemn funeral bells on citadel breach with sub-bass drone
+            playFmSubDrone(NOTE.D2, 1.8, 0.35);
+            [NOTE.D3, NOTE.A2, NOTE.F2, NOTE.D2].forEach((f, i) => {
+              setTimeout(() => playFmHollowFlute(f, 0.85, 0.25, true), i * 320);
+            });
+            break;
+          case 'bow':
+            // FM wooden bow twang and arrow swish
+            playFmTone(620, 2.0, 3.2, 0.08, 0.14, false);
+            break;
+          case 'cannon':
+            // Heavy FM siege cannon detonation with sub-bass punch
+            playFmTone(58, 0.5, 5.0, 0.42, 0.40, false);
+            playFmSnare(0.30);
+            break;
+          case 'magic':
+            // Cascading crystalline FM chime arpeggio with SPC700 delay
+            [NOTE.D4, NOTE.G4, NOTE.Bb4, NOTE.D5].forEach((freq, idx) => {
+              setTimeout(() => playFmCrystalHarp(freq, 0.24, 0.14, true), idx * 35);
+            });
+            break;
+          case 'tesla':
+            // Cryo-electric dual FM arc discharge
+            playFmTone(440 + Math.random() * 140, 3.5, 6.0, 0.08, 0.16, true);
+            break;
+          case 'frost':
+            // Shimmering crystalline freeze with delay
+            playFmCrystalHarp(1200, 0.20, 0.15, true);
+            break;
+          case 'meteor':
+            // Sub-bass earth-shaking meteor crash
+            playFmTone(52, 0.5, 5.5, 0.60, 0.45, false);
+            playFmSnare(0.38);
+            break;
+          case 'poison':
+            // Corrosive bubbling FM timbre
+            playFmTone(280, 0.5, 4.2, 0.18, 0.16, true);
+            break;
+          case 'ballista':
+            // Heavy timber winch snap and iron bolt launch
+            playFmTone(180, 1.5, 3.0, 0.12, 0.25, false);
+            break;
+          case 'solarbeam':
+            // Focused radiant photon laser with FM carrier pitch slide
+            playFmTone(880, 1.0, 3.5, 0.12, 0.15, true);
+            break;
+          case 'inferno':
+            // Volcanic magma explosion
+            playFmTone(48, 0.5, 5.0, 0.45, 0.40, false);
+            break;
+          case 'superconductor':
+            // Cryo-electric dual FM arc discharge
+            playFmTone(520, 2.5, 4.0, 0.10, 0.18, true);
+            playFmTone(1040, 1.5, 3.0, 0.10, 0.14, true);
+            break;
+          case 'trap':
+            // Iron caltrop spring snap
+            playFmTone(750, 2.0, 3.0, 0.07, 0.20, false);
+            break;
+          case 'breach':
+            // Citadel wall stone impact + deep warning war horn
+            playFmTone(65, 0.5, 4.5, 0.40, 0.42, false);
+            playFmWarBrass(NOTE.D3, 0.45, 0.24, true);
+            break;
+          default:
+            playFmTone(440, 1.0, 1.0, 0.08, 0.10, false);
         }
       } catch (e) {}
     }
@@ -2270,10 +2552,10 @@
                 animTimer: 0,
                 beamTarget: null
               };
-              playBeep(600, 0.08, 'square', 0.15);
+              playSfx('build');
               spawnFloatingText(slot.sx, slot.sy - 20, "-" + def.cost + "g", "#ef4444");
             } else {
-              playBeep(200, 0.15, 'sawtooth', 0.2);
+              playSfx('error');
               spawnFloatingText(slot.sx, slot.sy - 20, "NEED " + def.cost + "g!", "#ef4444");
             }
           } else {
@@ -2288,10 +2570,10 @@
                 t.range = Math.floor(t.range * 1.15);
                 t.maxCooldown = Math.max(10, Math.floor(t.maxCooldown * 0.85));
                 if (t.splash) t.splash = Math.floor(t.splash * 1.25);
-                playBeep(800, 0.1, 'square', 0.15);
+                playSfx('upgrade');
                 spawnFloatingText(slot.sx, slot.sy - 20, "LVL " + t.level + "!", "#fbbf24");
               } else {
-                playBeep(200, 0.15, 'sawtooth', 0.2);
+                playSfx('error');
                 spawnFloatingText(slot.sx, slot.sy - 20, "NEED " + upCost + "g!", "#ef4444");
               }
             } else if (t.level === 3) {
@@ -2331,9 +2613,9 @@
                   spawnFloatingText(slot.sx, slot.sy - 20, "SOLAR BEAM FUSION!", "#fef08a");
                   showToast("Elemental Fusion Activated!", "Solar Prism Beam laser focus active!", "warning", 3500);
                 }
-                playBeep(1000, 0.2, 'square', 0.25);
+                playSfx('upgrade');
               } else {
-                playBeep(200, 0.15, 'sawtooth', 0.2);
+                playSfx('error');
                 spawnFloatingText(slot.sx, slot.sy - 20, "FUSE: NEED " + fusCost + "g!", "#ef4444");
                 showToast("Insufficient Gold", `Need ${fusCost}g for Mythic Fusion Upgrade!`, "danger", 2500);
               }
@@ -2356,10 +2638,10 @@
               hp: selectedTowerType === 'Barricade' ? (def.hp + techFortTraps * 75) : def.hp,
               radius: def.radius
             });
-            playBeep(300, 0.1, 'square', 0.1);
+            playSfx('trap');
             spawnFloatingText(clickX, clickY - 20, "-" + def.cost + "g", "#ef4444");
           } else {
-            playBeep(200, 0.15, 'sawtooth', 0.2);
+            playSfx('error');
             spawnFloatingText(clickX, clickY - 20, "NEED " + def.cost + "g!", "#ef4444");
             showToast("Insufficient Gold", `Need ${def.cost}g to place ${selectedTowerType}.`, "danger", 2500);
           }
@@ -2377,7 +2659,7 @@
       if (gameOver) return;
       if(gold >= 100) {
         gold -= 100;
-        playBeep(100, 0.5, 'sawtooth', 0.4);
+        playSfx('inferno');
         const rect = canvas.getBoundingClientRect();
         spawnFloatingText(rect.width/2, rect.height/2, "FIRESTORM!", "#ef4444");
         enemies.forEach(e => { e.hp -= 150; spawnParticleEffect(e.x, e.y, "#ef4444"); });
@@ -2392,7 +2674,7 @@
       if(gold >= 80) {
         gold -= 80;
         blizzTimer = 300;
-        playBeep(600, 0.5, 'sine', 0.3);
+        playSfx('frost');
         const rect = canvas.getBoundingClientRect();
         spawnFloatingText(rect.width/2, rect.height/2, "BLIZZARD!", "#3b82f6");
         showToast("Blizzard Active!", "Bitter frost severely slows all enemy movement!", "info", 3000);
@@ -2433,7 +2715,7 @@
       
       spawnTimer = 0;
       if (!soundMuted && !bgmRunning) startBgm();
-      playFmBrass(NOTE.D4, 0.25, 0.22, true);
+      playSfx('wave_start');
       showToast(`Wave ${wave} Engaged!`, "Defend the citadel against incoming invaders!", "danger", 2500);
       updateHUD();
     });
