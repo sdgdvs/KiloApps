@@ -2246,6 +2246,282 @@
     max-height: 250px;
     overflow-y: auto;
   }
+
+  /* =========================================================================
+     EXPANSION: 1999 TICKER TAPE, WIDGET LAB, SPIDER & BOOKMARK SYNC STYLES
+     ========================================================================= */
+  .ticker-tape-container {
+    background: #000000;
+    color: #ffd700;
+    border-top: 2px inset #555;
+    border-bottom: 2px inset #555;
+    font-family: 'Courier New', monospace;
+    font-size: 11px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+    margin: 4px 0 6px 0;
+    height: 28px;
+    user-select: none;
+  }
+  .ticker-badge-tag {
+    background: #cc0000;
+    color: #ffffff;
+    font-size: 10px;
+    padding: 2px 8px;
+    white-space: nowrap;
+    border-right: 2px solid #ffffff;
+    letter-spacing: 1px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    z-index: 2;
+  }
+  .ticker-tape-scroll {
+    flex: 1;
+    overflow: hidden;
+    white-space: nowrap;
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+  .ticker-tape-content {
+    display: inline-block;
+    white-space: nowrap;
+    animation: tickerScroll 40s linear infinite;
+    cursor: pointer;
+  }
+  .ticker-tape-content:hover {
+    animation-play-state: paused;
+  }
+  @keyframes tickerScroll {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+  }
+  .ticker-stock-pill {
+    margin-right: 18px;
+    cursor: pointer;
+    padding: 1px 4px;
+    border-radius: 2px;
+  }
+  .ticker-stock-pill:hover {
+    background: #222222;
+    outline: 1px dotted #ffd700;
+  }
+  .ticker-weather-pill {
+    color: #38bdf8;
+    margin-right: 18px;
+  }
+  .ticker-controls-wrap {
+    display: flex;
+    align-items: center;
+    background: #111111;
+    padding: 0 6px;
+    gap: 4px;
+    border-left: 2px solid #555;
+    z-index: 2;
+  }
+  .ticker-btn {
+    background: #222;
+    color: #ddd;
+    border: 1px outset #666;
+    font-size: 10px;
+    font-family: 'MS Sans Serif', Tahoma, sans-serif;
+    padding: 1px 5px;
+    cursor: pointer;
+  }
+  .ticker-btn:active {
+    border-style: inset;
+  }
+
+  /* Widget Lab Styles */
+  .widgetlab-hero {
+    background: linear-gradient(180deg, #fef3c7 0%, #fde68a 100%);
+    border: 2px groove #b45309;
+    padding: 10px 14px;
+    margin-bottom: 12px;
+  }
+  .widgetlab-grid {
+    display: grid;
+    grid-template-columns: 320px 1fr;
+    gap: 12px;
+  }
+  @media (max-width: 768px) {
+    .widgetlab-grid { grid-template-columns: 1fr; }
+  }
+  .widget-type-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    background: #e5e7eb;
+    border: 1px inset #9ca3af;
+    padding: 6px;
+    max-height: 220px;
+    overflow-y: auto;
+    margin-bottom: 8px;
+  }
+  .widget-type-item {
+    background: #ffffff;
+    border: 1px outset #cbd5e1;
+    padding: 6px 8px;
+    font-size: 11px;
+    font-family: Arial, sans-serif;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    user-select: none;
+  }
+  .widget-type-item:hover {
+    background: #eff6ff;
+  }
+  .widget-type-item.active {
+    background: #000080;
+    color: #ffffff;
+    border-color: #000040;
+    font-weight: bold;
+  }
+  .widget-config-box {
+    background: #ffffff;
+    border: 2px groove #999;
+    padding: 8px;
+    font-size: 11px;
+    font-family: Arial, sans-serif;
+  }
+  .widget-sandbox-card {
+    background: #f1f5f9;
+    border: 2px outset #ffffff;
+    box-shadow: 1px 1px 4px rgba(0,0,0,0.2);
+    display: flex;
+    flex-direction: column;
+  }
+  .widget-sandbox-viewport {
+    background: #ffffff;
+    border: 2px inset #999;
+    min-height: 180px;
+    padding: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: auto;
+  }
+  .widget-embed-code {
+    background: #000000;
+    color: #39ff14;
+    font-family: 'Courier New', monospace;
+    font-size: 11px;
+    padding: 8px;
+    border: 1px inset #555;
+    height: 100px;
+    overflow-y: auto;
+    white-space: pre-wrap;
+    line-height: 1.3;
+    margin: 6px 0;
+  }
+
+  /* Hit Counter Styles */
+  .counter-display-led {
+    background: #000000;
+    color: #ff2222;
+    font-family: 'Courier New', monospace;
+    font-weight: 900;
+    padding: 6px 12px;
+    border: 3px inset #666;
+    letter-spacing: 4px;
+    display: inline-block;
+    text-shadow: 0 0 6px rgba(255,0,0,0.8);
+  }
+  .counter-display-odometer {
+    background: #1e293b;
+    border: 3px outset #cbd5e1;
+    display: inline-flex;
+    padding: 2px;
+    box-shadow: inset 0 2px 4px #000;
+  }
+  .counter-digit-box {
+    background: #0f172a;
+    color: #f8fafc;
+    font-family: 'Times New Roman', serif;
+    font-weight: bold;
+    font-size: 18px;
+    padding: 4px 6px;
+    border: 1px solid #334155;
+    border-top: 2px solid #000;
+    border-bottom: 2px solid #000;
+    margin: 0 1px;
+    text-shadow: 0 1px 2px #000;
+  }
+  .counter-display-matrix {
+    background: #022c22;
+    color: #34d399;
+    font-family: 'Courier New', monospace;
+    font-weight: bold;
+    padding: 6px 12px;
+    border: 2px solid #059669;
+    letter-spacing: 3px;
+    text-shadow: 0 0 8px #10b981;
+  }
+  .counter-display-amber {
+    background: #2b1800;
+    color: #fbbf24;
+    font-family: 'Courier New', monospace;
+    font-weight: bold;
+    padding: 6px 12px;
+    border: 2px solid #d97706;
+    letter-spacing: 3px;
+    text-shadow: 0 0 8px #f59e0b;
+  }
+
+  /* Visual Spider Canvas & Inverted Index Styles */
+  .spider-canvas-frame {
+    background: #000000;
+    border: 2px inset #555;
+    position: relative;
+    margin-bottom: 8px;
+  }
+  .inverted-index-card {
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    padding: 8px;
+    font-family: Arial, sans-serif;
+    font-size: 11px;
+    margin-top: 8px;
+  }
+  .index-term-pill {
+    display: inline-block;
+    background: #f1f5f9;
+    border: 1px solid #cbd5e1;
+    border-radius: 3px;
+    padding: 2px 6px;
+    font-size: 10px;
+    margin: 2px;
+    font-family: 'Courier New', monospace;
+  }
+  .index-term-pill strong {
+    color: #000080;
+  }
+  .index-term-pill span {
+    color: #059669;
+  }
+
+  /* Retro Toast Notification */
+  .retro-toast {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    background: #ffffcc;
+    color: #000080;
+    border: 2px outset #d4d0c8;
+    box-shadow: 3px 3px 10px rgba(0,0,0,0.5);
+    padding: 8px 14px;
+    font-family: 'MS Sans Serif', Tahoma, sans-serif;
+    font-size: 12px;
+    font-weight: bold;
+    z-index: 9999;
+    display: none;
+  }
 </style>
 </head>
 <body>
@@ -2272,6 +2548,7 @@
 
     <div class="quick-bar">
       <div class="quick-links">
+        <a href="#" onclick="switchPortalTab('widgetlab'); return false;" style="color:#b91c1c; font-weight:bold;">🧪 Widget Lab '99</a>
         <a href="#" onclick="switchPortalTab('webmail'); return false;" style="color:#0000cc; font-weight:bold;">✉️ KiloMail Web</a>
         <a href="#" onclick="switchPortalTab('downloads'); return false;" style="color:#008080; font-weight:bold;">💾 Shareware Depot</a>
         <a href="/apps/kchat.html">💬 KChat IRC</a>
@@ -2296,19 +2573,33 @@
       </div>
     </div>
 
-    <!-- Live Stock Ticker Bar -->
-    <div class="stock-ticker-banner" id="liveStockBanner">
-      <span class="ticker-item">NASDAQ-1999:</span>
-      <span class="ticker-item">KLNT: <span class="tick-up">$44.25 ▲ +3.10</span></span>
-      <span class="ticker-item">CYBR: <span class="tick-up">$88.50 ▲ +12.30</span></span>
-      <span class="ticker-item">GEOC: <span class="tick-up">$64.20 ▲ +5.80</span></span>
-      <span class="ticker-item">VOOD: <span class="tick-up">$42.10 ▲ +4.60</span></span>
-      <span class="ticker-item">ASMX: <span class="tick-up">$114.00 ▲ +7.50</span></span>
-      <span class="ticker-item">TRAP: <span class="tick-up">$19.80 ▲ +4.20</span></span>
-      <span class="ticker-item">AETH: <span class="tick-down">$19.99 ▼ -0.40</span></span>
-      <span class="ticker-item">MODT: <span class="tick-up">$35.00 ▲ +2.10</span></span>
-      <span class="ticker-item">SURR: <span class="tick-up">$54.20 ▲ +1.80</span></span>
-      <span class="ticker-item">FLAR: <span class="tick-down">$46.50 ▼ -0.80</span></span>
+    <!-- Continuous 1999 Live Stock & Weather Ticker Tape -->
+    <div class="ticker-tape-container" id="liveTickerContainer">
+      <div class="ticker-badge-tag">
+        <span>📈 WALL ST '99</span>
+      </div>
+      <div class="ticker-tape-scroll">
+        <div class="ticker-tape-content" id="liveTickerScroll">
+          <!-- Real-time stock + weather stream injected via JS -->
+          <span class="ticker-stock-pill" onclick="openStockFromTicker('KLNT')">KLNT: <span class="tick-up">$142.50 ▲ +18.25</span></span>
+          <span class="ticker-stock-pill" onclick="openStockFromTicker('CYBR')">CYBR: <span class="tick-up">$88.50 ▲ +12.30</span></span>
+          <span class="ticker-weather-pill">🌁 SF 67°F (Fog)</span>
+          <span class="ticker-stock-pill" onclick="openStockFromTicker('GEOC')">GEOC: <span class="tick-up">$89.00 ▲ +12.25</span></span>
+          <span class="ticker-stock-pill" onclick="openStockFromTicker('VOOD')">VOOD: <span class="tick-up">$42.25 ▲ +6.50</span></span>
+          <span class="ticker-weather-pill">⛅ NYC 63°F</span>
+          <span class="ticker-stock-pill" onclick="openStockFromTicker('ASMX')">ASMX: <span class="tick-up">$114.00 ▲ +7.50</span></span>
+          <span class="ticker-stock-pill" onclick="openStockFromTicker('SURR')">SURR: <span class="tick-up">$54.20 ▲ +1.80</span></span>
+          <span class="ticker-weather-pill">🌧️ LON 55°F</span>
+          <span class="ticker-stock-pill" onclick="openStockFromTicker('AETH')">AETH: <span class="tick-down">$19.99 ▼ -0.40</span></span>
+          <span class="ticker-weather-pill">📡 CARLSBAD 74°F [1999Hz]</span>
+        </div>
+      </div>
+      <div class="ticker-controls-wrap">
+        <button class="ticker-btn" id="tickerPauseBtn" onclick="toggleTickerPause()" title="Pause/Resume scrolling">⏸</button>
+        <button class="ticker-btn" id="tickerSpeedBtn" onclick="cycleTickerSpeed()" title="Speed: 1x / 2x / 3x">1x</button>
+        <button class="ticker-btn" id="tickerSoundBtn" onclick="toggleTickerSound()" title="Teletype Clacker Audio">🔊 Clack: ON</button>
+        <button class="ticker-btn" onclick="switchPortalTab('stocks')" style="color:#ffd700;" title="Go to Trading Floor">Trading Floor »</button>
+      </div>
     </div>
 
     <!-- Breaking News Marquee -->
@@ -2322,6 +2613,7 @@
     <!-- Navigation Tabs -->
     <div class="tab-row">
       <div class="portal-tab active" id="tabNav-directory" onclick="switchPortalTab('directory')">📂 Web Directory &amp; Search</div>
+      <div class="portal-tab" id="tabNav-widgetlab" onclick="switchPortalTab('widgetlab')">🧪 Widget Lab '99</div>
       <div class="portal-tab" id="tabNav-mykilonet" onclick="switchPortalTab('mykilonet')">⭐ My KiloNet '99</div>
       <div class="portal-tab" id="tabNav-downloads" onclick="switchPortalTab('downloads')">💾 Shareware Depot '99</div>
       <div class="portal-tab" id="tabNav-webmail" onclick="switchPortalTab('webmail')">✉️ KiloMail Web '99</div>
@@ -2530,6 +2822,124 @@
     </div>
   </main>
 
+  <!-- TAB: RETRO PORTAL WIDGET LAB & EMBED GENERATOR -->
+  <section id="tab-widgetlab" class="tab-content">
+    <div class="widgetlab-hero">
+      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+        <div>
+          <h3 style="margin:0 0 4px 0; color:#78350f; font-family:Arial, sans-serif;">
+            🧪 KiloNet '99 Retro Portal Widget Lab &amp; Webmaster Sandbox
+          </h3>
+          <p style="margin:0; font-size:12px; color:#451a03;">
+            Design, customize, live-test, and generate authentic 1999 hypermedia widgets for your personal homepages, GeoCities shrines, and webrings!
+          </p>
+        </div>
+        <div style="display:flex; gap:6px; align-items:center;">
+          <span style="font-size:11px; background:#b45309; color:#fff; padding:3px 8px; border-radius:3px; font-weight:bold;">WEBMASTER TOOLS v2.4</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="widgetlab-grid">
+      <!-- Left Column: Widget Selector & Options -->
+      <div>
+        <div style="background:#d4d0c8; border:2px outset #ffffff; padding:6px; margin-bottom:10px;">
+          <div style="font-size:11px; font-weight:bold; color:var(--navy-dark); margin-bottom:4px;">
+            1. Select Widget Type:
+          </div>
+          <div class="widget-type-list" id="widgetTypeList">
+            <div class="widget-type-item active" onclick="selectWidgetType('counter')" id="wtype-counter">
+              <span style="font-size:16px;">📟</span>
+              <div>
+                <strong>Visitor Hit Counter</strong><br>
+                <span style="font-size:10px; color:#555;">LED, Odometer, Phosphor Matrix, Amber</span>
+              </div>
+            </div>
+            <div class="widget-type-item" onclick="selectWidgetType('ticker')" id="wtype-ticker">
+              <span style="font-size:16px;">📈</span>
+              <div>
+                <strong>Wall St &amp; Weather Ticker</strong><br>
+                <span style="font-size:10px; color:#555;">Real-time scrolling ticker tape bar</span>
+              </div>
+            </div>
+            <div class="widget-type-item" onclick="selectWidgetType('clock')" id="wtype-clock">
+              <span style="font-size:16px;">🕒</span>
+              <div>
+                <strong>Silicon Web Clock</strong><br>
+                <span style="font-size:10px; color:#555;">Timezone synchronized retro digital clock</span>
+              </div>
+            </div>
+            <div class="widget-type-item" onclick="selectWidgetType('webring')" id="wtype-webring">
+              <span style="font-size:16px;">🌐</span>
+              <div>
+                <strong>Webring Member Navbar</strong><br>
+                <span style="font-size:10px; color:#555;">Previous / Next / Random ring navigation</span>
+              </div>
+            </div>
+            <div class="widget-type-item" onclick="selectWidgetType('modem')" id="wtype-modem">
+              <span style="font-size:16px;">📡</span>
+              <div>
+                <strong>Dial-Up V.90 &amp; NOC Status</strong><br>
+                <span style="font-size:10px; color:#555;">Carrier detect &amp; 1999Hz acoustic monitor</span>
+              </div>
+            </div>
+            <div class="widget-type-item" onclick="selectWidgetType('badge')" id="wtype-badge">
+              <span style="font-size:16px;">🎨</span>
+              <div>
+                <strong>88x31 Button Crafter</strong><br>
+                <span style="font-size:10px; color:#555;">Netscape 4.7 &amp; Notepad badge generator</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Dynamic Configuration Panel -->
+        <div class="widget-config-box" id="widgetConfigBox">
+          <div style="font-weight:bold; color:var(--navy-dark); border-bottom:1px solid #ccc; padding-bottom:4px; margin-bottom:8px;">
+            ⚙️ 2. Configure Widget Properties:
+          </div>
+          <div id="widgetDynamicConfig">
+            <!-- Injected dynamically based on selected widget -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Column: Interactive Sandbox & Code Generator -->
+      <div>
+        <div class="widget-sandbox-card">
+          <div style="background:var(--navy-dark); color:#ffffff; padding:4px 8px; font-weight:bold; font-size:11px; display:flex; justify-content:space-between; align-items:center;">
+            <span>🖥️ 3. Live Interactive Sandbox (Test Click &amp; Hover)</span>
+            <span style="font-size:10px; color:#93c5fd;">[Fully Rendered HTML/CSS DOM]</span>
+          </div>
+          <div class="widget-sandbox-viewport" id="widgetSandboxViewport">
+            <!-- Sandbox preview element injected dynamically -->
+          </div>
+          <div style="background:#e5e7eb; border-top:1px solid #cbd5e1; padding:6px 10px; display:flex; justify-content:space-between; align-items:center;">
+            <div style="font-size:11px; color:#555;" id="widgetSandboxStatus">Click elements in sandbox to test interactions.</div>
+            <div style="display:flex; gap:6px;">
+              <button class="btn-retro" style="font-size:10px; padding:2px 8px;" onclick="testWidgetEarcon()">🔊 Test Sound</button>
+              <button class="btn-retro" style="font-size:10px; padding:2px 8px;" onclick="renderWidgetSandbox()">🔄 Reset Sandbox</button>
+            </div>
+          </div>
+        </div>
+
+        <div style="margin-top:12px; background:#f8fafc; border:2px outset #ffffff; padding:10px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+            <span style="font-size:11px; font-weight:bold; color:var(--navy-dark);">📋 4. Clean 1999 Self-Contained HTML Embed Code:</span>
+            <div style="display:flex; gap:6px;">
+              <button class="btn-retro btn-primary-retro" style="font-size:11px; padding:2px 10px; font-weight:bold;" onclick="copyWidgetCode()">📋 Copy HTML Code</button>
+              <button class="btn-retro" style="font-size:11px; padding:2px 10px;" onclick="downloadWidgetSnippet()">💾 Download .html Snippet</button>
+            </div>
+          </div>
+          <textarea class="widget-embed-code" id="widgetEmbedCode" readonly></textarea>
+          <div style="font-size:10px; color:#666; margin-top:4px;">
+            💡 Paste this snippet anywhere into your GeoCities, personal site, or blog HTML markup. 100% self-contained, zero external CDN scripts.
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <!-- TAB: MY KILONET '99 DASHBOARD & CUSTOMIZER -->
   <section id="tab-mykilonet" class="tab-content">
     <div class="myk-hero">
@@ -2548,10 +2958,14 @@
         <div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap;">
           <span class="myk-time-pill" id="mykClockPill">🕒 14:00:00 PST</span>
           <button class="btn-retro" onclick="toggleMyKSettings()">⚙️ Customize Profile &amp; Theme</button>
+          <button class="btn-retro" onclick="exportNetscapeBookmarks()" title="Export standard Netscape bookmarks.html">📑 Export Bookmarks.html</button>
+          <label class="btn-retro" style="cursor:pointer; margin:0;" title="Import Netscape bookmarks.html">
+            📥 Import Netscape <input type="file" id="netscapeImportInput" accept=".html,.htm" style="display:none;" onchange="importNetscapeBookmarks(event)">
+          </label>
+          <button class="btn-retro" onclick="syncWithKNetBookmarks()" title="Sync bookmarks bidirectionally with KNet browser storage">🔄 Sync KNet</button>
           <button class="btn-retro" onclick="exportMyKProfile()">💾 Export Profile</button>
-          <button class="btn-retro" onclick="exportNetscapeBookmarks()">📑 Export Bookmarks.html</button>
           <label class="btn-retro" style="cursor:pointer; margin:0;">
-            📂 Import <input type="file" id="mykImportInput" accept=".json" style="display:none;" onchange="importMyKProfile(event)">
+            📂 Import Profile <input type="file" id="mykImportInput" accept=".json" style="display:none;" onchange="importMyKProfile(event)">
           </label>
           <button class="btn-retro" onclick="resetMyKSettings()">↺ Reset</button>
         </div>
@@ -3482,6 +3896,24 @@ Ready. Select target destination to begin automated indexing pass.
             </div>
           </div>
         </div>
+
+        <!-- Live Spider Graph & Inverted Index Visualizer -->
+        <div style="margin-top:10px; border-top:1px solid #cbd5e1; padding-top:8px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+            <strong style="font-size:11px; color:var(--navy-dark);">🕸️ Live Hypermedia Topology Graph &amp; Spider Radar:</strong>
+            <span style="font-size:10px; color:#555;">[Visual DOM Link Graph &bull; Real-time Packet Latency Traversal]</span>
+          </div>
+          <div class="spider-canvas-frame" style="height:130px; background:#000000; border:2px inset #555; position:relative; overflow:hidden;">
+            <canvas id="spiderCanvas" width="880" height="130" style="width:100%; height:100%; display:block;"></canvas>
+          </div>
+        </div>
+        <div class="inverted-index-card" id="spiderIndexCard" style="display:none; margin-top:8px;">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <strong style="color:var(--navy-dark);">📚 Inverted Index Term Dictionary &amp; TF-IDF Weights:</strong>
+            <span style="font-size:10px; color:#666;">Click any keyword to instantly search portal directory:</span>
+          </div>
+          <div id="spiderTermPills" style="margin-top:6px; display:flex; flex-wrap:wrap; gap:4px; max-height:80px; overflow-y:auto;"></div>
+        </div>
       </div>
     </div>
   </section>
@@ -3822,6 +4254,9 @@ Ready. Select target destination to begin automated indexing pass.
     <div class="status-cell" id="portalClockCell">🕒 1999-10-15 14:22:00</div>
   </div>
 </div>
+
+<!-- Global Retro Toast Notification -->
+<div class="retro-toast" id="retroToast"></div>
 
 <!-- MODAL 1: Post Classified Ad -->
 <div class="modal-overlay" id="postAdModal">
@@ -4877,6 +5312,40 @@ document.addEventListener('visibilitychange', () => {
     startProceduralBgm();
   }
 });
+
+// Global Retro Toast Notification
+function showRetroToast(msg, duration = 3200) {
+  const el = document.getElementById('retroToast');
+  if (!el) return;
+  el.textContent = msg;
+  el.style.display = 'block';
+  playClick();
+  clearTimeout(el._toastTimer);
+  el._toastTimer = setTimeout(() => {
+    el.style.display = 'none';
+  }, duration);
+}
+
+// Teletype Clacker Mechanical Audio
+function playTeletypeClack() {
+  if (!audioEnabled || !tickerSoundEnabled) return;
+  initAudio();
+  if (!audioCtx) return;
+  try {
+    const now = audioCtx.currentTime;
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(2600 + Math.random() * 600, now);
+    osc.frequency.exponentialRampToValueAtTime(320, now + 0.016);
+    gain.gain.setValueAtTime(0.045, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.016);
+    osc.connect(gain);
+    gain.connect(masterGain || audioCtx.destination);
+    osc.start(now);
+    osc.stop(now + 0.018);
+  } catch(e) {}
+}
 
 // Upgraded UI Earcons & Action Stingers (YM2612 2-Op FM + SPC700 Stereo Delay)
 function playClick() {
@@ -6168,6 +6637,53 @@ function updatePortfolioStats() {
   }
 }
 
+let tickerPaused = false;
+let tickerSpeedLevel = 1;
+let tickerSoundEnabled = true;
+
+function toggleTickerPause() {
+  playClick();
+  tickerPaused = !tickerPaused;
+  const content = document.getElementById('liveTickerScroll');
+  const btn = document.getElementById('tickerPauseBtn');
+  if (content) {
+    content.style.animationPlayState = tickerPaused ? 'paused' : 'running';
+  }
+  if (btn) {
+    btn.textContent = tickerPaused ? '▶' : '⏸';
+    btn.title = tickerPaused ? 'Resume scrolling' : 'Pause scrolling';
+  }
+}
+
+function cycleTickerSpeed() {
+  playClick();
+  tickerSpeedLevel = (tickerSpeedLevel % 3) + 1;
+  const content = document.getElementById('liveTickerScroll');
+  const btn = document.getElementById('tickerSpeedBtn');
+  const durations = { 1: '40s', 2: '20s', 3: '12s' };
+  if (content) {
+    content.style.animationDuration = durations[tickerSpeedLevel] || '40s';
+  }
+  if (btn) {
+    btn.textContent = tickerSpeedLevel + 'x';
+  }
+}
+
+function toggleTickerSound() {
+  playClick();
+  tickerSoundEnabled = !tickerSoundEnabled;
+  const btn = document.getElementById('tickerSoundBtn');
+  if (btn) {
+    btn.textContent = tickerSoundEnabled ? '🔊 Clack: ON' : '🔇 Clack: OFF';
+  }
+}
+
+function openStockFromTicker(sym) {
+  playStockChime();
+  switchPortalTab('stocks');
+  openStockChart(sym);
+}
+
 // Tick stock prices periodically with subtle dot-com market swings
 function tickStockMarket() {
   STOCK_DATA.forEach(stock => {
@@ -6183,14 +6699,39 @@ function tickStockMarket() {
 
   // Update top banner
   const banner = document.getElementById('liveStockBanner');
-  let bannerHtml = '<span class="ticker-item">NASDAQ-1999:</span>';
-  STOCK_DATA.forEach(s => {
-    const isUp = s.change >= 0;
-    const cls = isUp ? 'tick-up' : 'tick-down';
-    const sign = isUp ? '▲ +' : '▼ ';
-    bannerHtml += `<span class="ticker-item">${s.symbol}: <span class="${cls}">$${s.price.toFixed(2)} ${sign}${Math.abs(s.change).toFixed(2)}</span></span>`;
-  });
-  banner.innerHTML = bannerHtml;
+  if (banner) {
+    let bannerHtml = '<span class="ticker-item">NASDAQ-1999:</span>';
+    STOCK_DATA.forEach(s => {
+      const isUp = s.change >= 0;
+      const cls = isUp ? 'tick-up' : 'tick-down';
+      const sign = isUp ? '▲ +' : '▼ ';
+      bannerHtml += `<span class="ticker-item">${s.symbol}: <span class="${cls}">$${s.price.toFixed(2)} ${sign}${Math.abs(s.change).toFixed(2)}</span></span>`;
+    });
+    banner.innerHTML = bannerHtml;
+  }
+
+  // Update continuous 1999 ticker tape
+  const tickerScroll = document.getElementById('liveTickerScroll');
+  if (tickerScroll) {
+    let tickerHtml = '';
+    STOCK_DATA.forEach(s => {
+      const isUp = s.change >= 0;
+      const cls = isUp ? 'tick-up' : 'tick-down';
+      const sign = isUp ? '▲ +' : '▼ ';
+      tickerHtml += `<span class="ticker-stock-pill" onclick="openStockFromTicker('${s.symbol}')">${s.symbol}: <span class="${cls}">$${s.price.toFixed(2)} ${sign}${Math.abs(s.change).toFixed(2)}</span></span>`;
+    });
+    tickerHtml += `<span class="ticker-weather-pill">🌁 SF 67°F (Fog)</span>`;
+    tickerHtml += `<span class="ticker-weather-pill">⛅ NYC 63°F</span>`;
+    tickerHtml += `<span class="ticker-weather-pill">🌧️ LON 55°F</span>`;
+    tickerHtml += `<span class="ticker-weather-pill">🌙 TYO 72°F</span>`;
+    tickerHtml += `<span class="ticker-weather-pill" style="color:#ffd700;">📡 CARLSBAD 74°F [1999Hz]</span>`;
+    tickerHtml += `<span class="ticker-weather-pill" style="color:#34d399;">🛰️ ORBITAL 70°F</span>`;
+
+    // Duplicate so continuous CSS transform scroll doesn't leave blank gaps
+    tickerScroll.innerHTML = tickerHtml + tickerHtml;
+  }
+
+  playTeletypeClack();
 
   // Refresh table if active tab is stocks
   const stocksTab = document.getElementById('tab-stocks');
@@ -6200,7 +6741,7 @@ function tickStockMarket() {
   }
 
   // Refresh chart modal if open
-  if (activeChartSymbol && document.getElementById('stockChartModal').style.display === 'flex') {
+  if (activeChartSymbol && document.getElementById('stockChartModal') && document.getElementById('stockChartModal').style.display === 'flex') {
     const activeStock = STOCK_DATA.find(s => s.symbol === activeChartSymbol);
     if (activeStock) renderStockSvgChart(activeStock);
   }
@@ -6679,10 +7220,15 @@ function sendClassifiedReply() {
 const WEATHER_DATA = {
   NY: {
     station: "STATION: NY-ALLEY-01 // LAT: 40.71° N, LON: 74.00° W",
+    name: "New York, NY",
+    icon: "⛅",
     temp: "17°C / 63°F",
+    tempF: 63,
+    cond: "Overcast CRT Haze",
     condition: "Overcast CRT Haze • Mild Autumn Breeze",
     baro: "1016.4 hPa",
-    humidity: "58%",
+    barometer: "1016.4 hPa",
+    humidity: "58",
     wind: "NE @ 14 km/h",
     solar: "3.2 (Moderate)",
     forecast: [
@@ -6693,10 +7239,15 @@ const WEATHER_DATA = {
   },
   SF: {
     station: "STATION: SF-VALLEY-02 // LAT: 37.77° N, LON: 122.41° W",
+    name: "San Francisco, CA",
+    icon: "🌁",
     temp: "19°C / 67°F",
+    tempF: 67,
+    cond: "Coastal Fog Dissipating",
     condition: "Coastal Fog Dissipating • Silicon Haze",
     baro: "1014.8 hPa",
-    humidity: "65%",
+    barometer: "1014.8 hPa",
+    humidity: "65",
     wind: "W @ 18 km/h",
     solar: "4.8 (High)",
     forecast: [
@@ -6707,10 +7258,15 @@ const WEATHER_DATA = {
   },
   LON: {
     station: "STATION: LON-ROUNDABOUT // LAT: 51.50° N, LON: 0.12° W",
+    name: "London, UK",
+    icon: "🌧️",
     temp: "13°C / 55°F",
+    tempF: 55,
+    cond: "Dense Fog & Light Drizzle",
     condition: "Dense Fog & Light Drizzle • Chilly",
     baro: "1009.2 hPa",
-    humidity: "82%",
+    barometer: "1009.2 hPa",
+    humidity: "82",
     wind: "SW @ 22 km/h",
     solar: "1.5 (Low)",
     forecast: [
@@ -6721,10 +7277,15 @@ const WEATHER_DATA = {
   },
   TYO: {
     station: "STATION: TYO-AKIHABARA // LAT: 35.68° N, LON: 139.77° E",
+    name: "Tokyo, JP",
+    icon: "🌙",
     temp: "22°C / 72°F",
+    tempF: 72,
+    cond: "Clear Neon Starfield",
     condition: "Clear Neon Starfield • Pleasant Night",
     baro: "1015.0 hPa",
-    humidity: "51%",
+    barometer: "1015.0 hPa",
+    humidity: "51",
     wind: "E @ 11 km/h",
     solar: "5.1 (High)",
     forecast: [
@@ -6733,12 +7294,36 @@ const WEATHER_DATA = {
       { cond: "Light Rain", high: "66°F", low: "55°F" }
     ]
   },
+  CARLSBAD: {
+    station: "STATION: CARLSBAD-TRANSPONDER // LAT: 32.42° N, LON: 104.22° W",
+    name: "Carlsbad Station, NM",
+    icon: "📡",
+    temp: "23°C / 74°F",
+    tempF: 74,
+    cond: "Dry Cavern Acoustic Haze",
+    condition: "Subterranean Halite Cavern • Dry Acoustic Haze",
+    baro: "1018.3 hPa",
+    barometer: "1018.3 hPa",
+    humidity: "28",
+    wind: "Sub-surface Drift @ 4 km/h",
+    solar: "0.0 (Lithospheric Vault)",
+    forecast: [
+      { cond: "Halite Cavern Dry", high: "75°F", low: "68°F" },
+      { cond: "Permian Strata Stable", high: "74°F", low: "67°F" },
+      { cond: "Acoustic Carrier 1999Hz", high: "74°F", low: "68°F" }
+    ]
+  },
   ORB: {
     station: "STATION: K-NET-ORBITAL // ALT: 350 KM // ORBIT VEL: 7.7 km/s",
+    name: "K-Net Orbital Station",
+    icon: "🛰️",
     temp: "21°C / 70°F (Hab Module)",
+    tempF: 70,
+    cond: "Clear Starfield",
     condition: "Clear Starfield • Calm Solar Wind",
     baro: "1013.2 hPa",
-    humidity: "42%",
+    barometer: "1013.2 hPa",
+    humidity: "42",
     wind: "Orbital Drift @ 7.7 km/s",
     solar: "1.2 (Shielded)",
     forecast: [
@@ -6748,6 +7333,12 @@ const WEATHER_DATA = {
     ]
   }
 };
+WEATHER_DATA.sf = WEATHER_DATA.SF;
+WEATHER_DATA.ny = WEATHER_DATA.NY;
+WEATHER_DATA.london = WEATHER_DATA.LON;
+WEATHER_DATA.tokyo = WEATHER_DATA.TYO;
+WEATHER_DATA.carlsbad = WEATHER_DATA.CARLSBAD;
+WEATHER_DATA.orb = WEATHER_DATA.ORB;
 
 function updateWeatherDisplay() {
   const code = document.getElementById('weatherStationSelect').value;
@@ -7516,6 +8107,7 @@ const ZODIAC_DATA = {
     prophecy: "Harmonic overtones resonate deeply within your soul. Tune your FM carrier frequency to exactly 1999Hz. The warm SPC700 stereo delay reflections carry mysterious messages from across the void."
   }
 };
+ZODIAC_DATA.transistor = ZODIAC_DATA.aries;
 
 let activeZodiacKey = 'aries';
 
@@ -7750,7 +8342,7 @@ function saveBunkerItem(key) {
 
 function switchPortalTab(tabName) {
   playClick();
-  const tabs = ['directory', 'mykilonet', 'downloads', 'webmail', 'comics', 'guestbook', 'noc', 'arcade', 'news', 'radio', 'stocks', 'classifieds', 'yellowpages', 'weather', 'speedtest', 'horoscope', 'trivia', 'y2k'];
+  const tabs = ['directory', 'widgetlab', 'mykilonet', 'downloads', 'webmail', 'comics', 'guestbook', 'noc', 'arcade', 'news', 'radio', 'stocks', 'classifieds', 'yellowpages', 'weather', 'speedtest', 'horoscope', 'trivia', 'y2k'];
   tabs.forEach(t => {
     const navEl = document.getElementById(`tabNav-${t}`);
     const contentEl = document.getElementById(`tab-${t}`);
@@ -7763,7 +8355,9 @@ function switchPortalTab(tabName) {
   if (activeNav) activeNav.classList.add('active');
   if (activeContent) activeContent.classList.add('active');
 
-  if (tabName === 'stocks') {
+  if (tabName === 'widgetlab') {
+    initWidgetLab();
+  } else if (tabName === 'stocks') {
     renderStockTable();
     updatePortfolioStats();
   } else if (tabName === 'downloads') {
@@ -9410,7 +10004,7 @@ const SAMPLE_HTML_CODE = `<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitio
     printHop();
   };
 })();
-</script>
+<\/script>
 
 </body>
 </html>`;
@@ -9753,6 +10347,253 @@ function updateSpiderIndexCounts() {
   if (termsEl) termsEl.textContent = `${1840 + customCount * 12}+ Terms`;
 }
 
+let spiderCanvas = null;
+let spiderCanvasCtx = null;
+let spiderAnimId = null;
+let spiderRadarAngle = 0;
+let spiderPackets = [];
+
+const SPIDER_NODES = [
+  { id: 'portal', label: 'PORTAL HUB', url: '/web/portal.html', x: 440, y: 65, color: '#38bdf8', isHub: true },
+  { id: 'geocities', label: 'GEOCITIES', url: '/web/geocities.html', x: 130, y: 35, color: '#ec4899' },
+  { id: 'warez', label: 'WAREZ SCENE', url: '/web/warez.html', x: 230, y: 100, color: '#a855f7' },
+  { id: 'webring', label: 'WEBRING HUB', url: '/web/webring.html', x: 310, y: 30, color: '#3b82f6' },
+  { id: 'neon', label: '~NEON_RIDER', url: '/web/users/neon_rider.html', x: 570, y: 30, color: '#10b981' },
+  { id: 'asm', label: 'ASM TEMPLE', url: '/web/asm_temple.html', x: 670, y: 100, color: '#eab308' },
+  { id: 'cybercafe', label: 'CYBERCAFE', url: '/web/cybercafe.html', x: 770, y: 40, color: '#f97316' },
+  { id: 'carlsbad', label: 'CARLSBAD [10.19.99.4]', url: '/web/classified.html', x: 440, y: 110, color: '#ffd700', sigint: true }
+];
+
+const SPIDER_EDGES = [
+  ['portal', 'geocities'],
+  ['portal', 'warez'],
+  ['portal', 'webring'],
+  ['portal', 'neon'],
+  ['portal', 'asm'],
+  ['portal', 'cybercafe'],
+  ['portal', 'carlsbad'],
+  ['geocities', 'warez'],
+  ['webring', 'geocities'],
+  ['webring', 'neon'],
+  ['asm', 'cybercafe'],
+  ['carlsbad', 'warez']
+];
+
+function initSpiderTopology() {
+  spiderCanvas = document.getElementById('spiderCanvas');
+  if (!spiderCanvas) return;
+  spiderCanvasCtx = spiderCanvas.getContext('2d');
+  drawSpiderTopology(null, false, 0);
+}
+
+function drawSpiderTopology(highlightTargetUrl = null, isCrawling = false, progressRatio = 0) {
+  if (!spiderCanvasCtx || !spiderCanvas) return;
+  const ctx = spiderCanvasCtx;
+  const w = spiderCanvas.width;
+  const h = spiderCanvas.height;
+
+  // Background
+  ctx.fillStyle = '#050b14';
+  ctx.fillRect(0, 0, w, h);
+
+  // Subtle phosphor grid
+  ctx.strokeStyle = '#0f172a';
+  ctx.lineWidth = 1;
+  for (let x = 0; x < w; x += 40) {
+    ctx.beginPath();
+    ctx.moveTo(x, 0);
+    ctx.lineTo(x, h);
+    ctx.stroke();
+  }
+  for (let y = 0; y < h; y += 25) {
+    ctx.beginPath();
+    ctx.moveTo(0, y);
+    ctx.lineTo(w, y);
+    ctx.stroke();
+  }
+
+  // Find target node if any
+  let targetNode = null;
+  if (highlightTargetUrl) {
+    targetNode = SPIDER_NODES.find(n => highlightTargetUrl.includes(n.id) || highlightTargetUrl.includes(n.url) || n.url.includes(highlightTargetUrl));
+    if (!targetNode) targetNode = SPIDER_NODES[1];
+  }
+
+  // Draw Radar sweep if crawling
+  if (isCrawling) {
+    const hub = SPIDER_NODES[0];
+    ctx.save();
+    ctx.beginPath();
+    ctx.moveTo(hub.x, hub.y);
+    ctx.arc(hub.x, hub.y, 450, spiderRadarAngle - 0.45, spiderRadarAngle);
+    ctx.closePath();
+    const grad = ctx.createRadialGradient(hub.x, hub.y, 10, hub.x, hub.y, 450);
+    grad.addColorStop(0, 'rgba(56, 189, 248, 0.25)');
+    grad.addColorStop(1, 'rgba(56, 189, 248, 0.01)');
+    ctx.fillStyle = grad;
+    ctx.fill();
+
+    ctx.beginPath();
+    ctx.moveTo(hub.x, hub.y);
+    ctx.lineTo(hub.x + Math.cos(spiderRadarAngle) * 450, hub.y + Math.sin(spiderRadarAngle) * 450);
+    ctx.strokeStyle = 'rgba(56, 189, 248, 0.6)';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  // Draw Edges
+  SPIDER_EDGES.forEach(([fromId, toId]) => {
+    const n1 = SPIDER_NODES.find(n => n.id === fromId);
+    const n2 = SPIDER_NODES.find(n => n.id === toId);
+    if (!n1 || !n2) return;
+
+    const isEdgeActive = targetNode && (
+      (n1.id === 'portal' && n2.id === targetNode.id) ||
+      (n2.id === 'portal' && n1.id === targetNode.id)
+    );
+
+    ctx.beginPath();
+    ctx.moveTo(n1.x, n1.y);
+    ctx.lineTo(n2.x, n2.y);
+    if (isEdgeActive && isCrawling) {
+      ctx.strokeStyle = '#38bdf8';
+      ctx.lineWidth = 2;
+    } else {
+      ctx.strokeStyle = '#1e293b';
+      ctx.lineWidth = 1;
+    }
+    ctx.stroke();
+  });
+
+  // Draw Packets traveling along edges
+  if (isCrawling && targetNode) {
+    const hub = SPIDER_NODES[0];
+    spiderPackets.forEach(p => {
+      const px = hub.x + (targetNode.x - hub.x) * p.progress;
+      const py = hub.y + (targetNode.y - hub.y) * p.progress;
+      ctx.beginPath();
+      ctx.arc(px, py, 3.5, 0, Math.PI * 2);
+      ctx.fillStyle = '#39ff14';
+      ctx.shadowColor = '#39ff14';
+      ctx.shadowBlur = 6;
+      ctx.fill();
+      ctx.shadowBlur = 0;
+    });
+  }
+
+  // Draw Nodes
+  SPIDER_NODES.forEach(n => {
+    const isTarget = targetNode && targetNode.id === n.id;
+    const isHub = n.isHub;
+
+    ctx.beginPath();
+    const radius = isHub ? 8 : (isTarget ? 7 : 5);
+    ctx.arc(n.x, n.y, radius, 0, Math.PI * 2);
+
+    if (isTarget && isCrawling) {
+      ctx.fillStyle = '#39ff14';
+      ctx.shadowColor = '#39ff14';
+      ctx.shadowBlur = 10;
+      ctx.fill();
+      ctx.shadowBlur = 0;
+
+      ctx.beginPath();
+      ctx.arc(n.x, n.y, radius + 4 + Math.sin(Date.now() * 0.008) * 3, 0, Math.PI * 2);
+      ctx.strokeStyle = 'rgba(57, 255, 20, 0.6)';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+    } else {
+      ctx.fillStyle = n.color;
+      ctx.fill();
+    }
+
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    ctx.font = 'bold 9px "Courier New", monospace';
+    ctx.fillStyle = isTarget ? '#ffd700' : (isHub ? '#38bdf8' : '#94a3b8');
+    ctx.textAlign = 'center';
+    ctx.fillText(n.label, n.x, n.y + (n.y > 65 ? 14 : -10));
+
+    if (n.sigint) {
+      ctx.fillStyle = '#fbbf24';
+      ctx.font = '8px "Courier New", monospace';
+      ctx.fillText('[1999Hz SIGINT]', n.x, n.y + 23);
+    }
+  });
+
+  // Header status overlay on canvas
+  ctx.font = '10px "Courier New", monospace';
+  ctx.fillStyle = isCrawling ? '#39ff14' : '#64748b';
+  ctx.textAlign = 'left';
+  const statusStr = isCrawling
+    ? `[SPIDER CRAWL ACTIVE]: Target: ${highlightTargetUrl || 'KiloNet'} • Progress: ${Math.round(progressRatio * 100)}% • Radar locked`
+    : `[TOPOLOGY MAP]: 8 Active Hypermedia Nodes • AS-1999 Gateway Connected • Radar Standby`;
+  ctx.fillText(statusStr, 10, 15);
+}
+
+function animateSpiderGraph() {
+  if (!spiderCrawling) {
+    if (spiderAnimId) cancelAnimationFrame(spiderAnimId);
+    spiderAnimId = null;
+    return;
+  }
+
+  spiderRadarAngle += 0.045;
+  if (Math.random() < 0.25) {
+    spiderPackets.push({ progress: 0, speed: 0.03 + Math.random() * 0.03 });
+  }
+
+  for (let i = spiderPackets.length - 1; i >= 0; i--) {
+    spiderPackets[i].progress += spiderPackets[i].speed;
+    if (spiderPackets[i].progress >= 1.0) {
+      spiderPackets.splice(i, 1);
+    }
+  }
+
+  const customInput = document.getElementById('spiderCustomUrlInput');
+  const targetUrl = (customInput?.value || '/web/geocities.html').trim();
+  const progressEl = document.getElementById('spiderProgressBar');
+  const ratio = progressEl ? (parseFloat(progressEl.style.width) || 10) / 100 : 0.2;
+
+  drawSpiderTopology(targetUrl, true, ratio);
+  spiderAnimId = requestAnimationFrame(animateSpiderGraph);
+}
+
+function renderSpiderInvertedIndex(crawlMeta) {
+  const card = document.getElementById('spiderIndexCard');
+  const pillsBox = document.getElementById('spiderTermPills');
+  if (!card || !pillsBox) return;
+
+  card.style.display = 'block';
+  pillsBox.innerHTML = '';
+
+  const terms = Array.isArray(crawlMeta.keywords) ? crawlMeta.keywords : ['web', 'kilonet', 'hypermedia', '1999'];
+  const baseWeights = [0.96, 0.92, 0.88, 0.84, 0.79, 0.75, 0.71, 0.68, 0.64, 0.60, 0.55, 0.51, 0.48, 0.44];
+
+  terms.forEach((t, i) => {
+    const weight = baseWeights[i % baseWeights.length];
+    const pill = document.createElement('span');
+    pill.className = 'index-term-pill';
+    pill.style.cursor = 'pointer';
+    pill.title = `Click to search for "${t}" in directory`;
+    pill.innerHTML = `<strong>${escapeHtml(t)}</strong> <span>w:${weight.toFixed(2)}</span>`;
+    pill.onclick = () => searchSpiderTerm(t);
+    pillsBox.appendChild(pill);
+  });
+}
+
+function searchSpiderTerm(term) {
+  playClick();
+  const input = document.getElementById('portalSearchInput');
+  if (input) input.value = term;
+  switchPortalTab('directory');
+  executeSearch(term.toLowerCase());
+  showRetroToast(`Searching directory for keyword: ${term}`);
+}
+
 function startSpiderCrawl() {
   if (spiderCrawling) return;
   playClick();
@@ -9780,6 +10621,9 @@ function startSpiderCrawl() {
   if (abortBtn) abortBtn.disabled = false;
   if (indexBtn) indexBtn.disabled = true;
   if (progressEl) progressEl.style.width = '10%';
+
+  if (!spiderCanvasCtx) initSpiderTopology();
+  animateSpiderGraph();
 
   termEl.innerHTML = `[SPIDER]: Initiating crawl pass on target: <strong>${escapeHtml(targetUrl)}</strong> (Depth: Level ${depth})...<br>`;
 
@@ -9849,6 +10693,10 @@ function startSpiderCrawl() {
     if (abortBtn) abortBtn.disabled = true;
     if (indexBtn) indexBtn.disabled = false;
 
+    renderSpiderInvertedIndex(crawlMeta);
+    drawSpiderTopology(targetUrl, false, 1.0);
+    showRetroToast(`Spider crawl complete: ${crawlMeta.title}`);
+
     lastCrawledData = {
       id: 'spider_' + Date.now(),
       title: crawlMeta.title,
@@ -9885,6 +10733,10 @@ function abortSpiderCrawl() {
   spiderCrawling = false;
   spiderTimeoutIds.forEach(id => clearTimeout(id));
   spiderTimeoutIds = [];
+
+  drawSpiderTopology(null, false, 0);
+  if (spiderAnimId) cancelAnimationFrame(spiderAnimId);
+  spiderAnimId = null;
 
   const termEl = document.getElementById('spiderTerminalLog');
   const progressEl = document.getElementById('spiderProgressBar');
@@ -9934,6 +10786,834 @@ function addSpiderToSearchIndex() {
   } catch(e) {
     alert("Error saving custom spider index: " + e.message);
   }
+}
+
+/* =========================================================================
+   15.7 RETRO PORTAL WIDGET LAB '99 GENERATOR & SANDBOX ENGINE
+   ========================================================================= */
+let activeWidgetType = 'counter';
+let widgetCounterHits = 48291;
+let widgetClockInterval = null;
+
+const WIDGET_CONFIGS = {
+  counter: {
+    style: 'led',
+    hits: 48291,
+    digits: 7,
+    label: 'Net Visitors:'
+  },
+  ticker: {
+    mode: 'hybrid',
+    speed: '40s',
+    theme: 'black',
+    tag: "WALL ST '99"
+  },
+  clock: {
+    tz: 'PST',
+    format: '12h',
+    showSec: true,
+    style: 'matrix'
+  },
+  webring: {
+    name: "Silicon Ring '99",
+    hub: "/web/webring.html",
+    style: 'bevel',
+    showRandom: true
+  },
+  modem: {
+    baud: '56,000 bps V.90',
+    cd: true,
+    rd: true,
+    sd: false,
+    tr: true,
+    oh: false
+  },
+  badge: {
+    preset: 'netscape',
+    l1: 'NETSCAPE 4.7',
+    l2: 'NOW!',
+    theme: 'blue'
+  }
+};
+
+function initWidgetLab() {
+  selectWidgetType(activeWidgetType || 'counter');
+}
+
+function selectWidgetType(type) {
+  playClick();
+  activeWidgetType = type;
+
+  // Update active state in widget type list
+  const types = ['counter', 'ticker', 'clock', 'webring', 'modem', 'badge'];
+  types.forEach(t => {
+    const el = document.getElementById(`wtype-${t}`);
+    if (el) {
+      if (t === type) el.classList.add('active');
+      else el.classList.remove('active');
+    }
+  });
+
+  renderWidgetConfig();
+  renderWidgetSandbox();
+  generateWidgetEmbedCode();
+}
+
+function renderWidgetConfig() {
+  const container = document.getElementById('widgetDynamicConfig');
+  if (!container) return;
+
+  if (activeWidgetType === 'counter') {
+    const c = WIDGET_CONFIGS.counter;
+    container.innerHTML = `
+      <div style="display:flex; flex-direction:column; gap:6px;">
+        <div>
+          <label style="display:block; font-weight:bold; margin-bottom:2px;">Display Style:</label>
+          <select class="form-input" id="wcfg_counter_style" onchange="updateWidgetFromConfig()" style="width:100%; font-size:11px;">
+            <option value="led" ${c.style === 'led' ? 'selected' : ''}>Ruby Red LED (7-Segment Glow)</option>
+            <option value="odometer" ${c.style === 'odometer' ? 'selected' : ''}>Mechanical Rolling Odometer</option>
+            <option value="matrix" ${c.style === 'matrix' ? 'selected' : ''}>Phosphor Matrix (Cyber Green)</option>
+            <option value="amber" ${c.style === 'amber' ? 'selected' : ''}>Amber Plasma (Vintage Terminal)</option>
+          </select>
+        </div>
+        <div style="display:flex; gap:8px;">
+          <div style="flex:1;">
+            <label style="display:block; font-weight:bold; margin-bottom:2px;">Initial Hits:</label>
+            <input type="number" class="form-input" id="wcfg_counter_hits" value="${c.hits}" oninput="updateWidgetFromConfig()" style="width:100%; font-size:11px;" />
+          </div>
+          <div style="width:90px;">
+            <label style="display:block; font-weight:bold; margin-bottom:2px;">Digits:</label>
+            <select class="form-input" id="wcfg_counter_digits" onchange="updateWidgetFromConfig()" style="width:100%; font-size:11px;">
+              <option value="5" ${c.digits === 5 ? 'selected' : ''}>5 Digits</option>
+              <option value="6" ${c.digits === 6 ? 'selected' : ''}>6 Digits</option>
+              <option value="7" ${c.digits === 7 ? 'selected' : ''}>7 Digits</option>
+              <option value="8" ${c.digits === 8 ? 'selected' : ''}>8 Digits</option>
+            </select>
+          </div>
+        </div>
+        <div>
+          <label style="display:block; font-weight:bold; margin-bottom:2px;">Header Tag / Label:</label>
+          <input type="text" class="form-input" id="wcfg_counter_label" value="${escapeHtml(c.label)}" oninput="updateWidgetFromConfig()" style="width:100%; font-size:11px;" />
+        </div>
+      </div>
+    `;
+  } else if (activeWidgetType === 'ticker') {
+    const c = WIDGET_CONFIGS.ticker;
+    container.innerHTML = `
+      <div style="display:flex; flex-direction:column; gap:6px;">
+        <div>
+          <label style="display:block; font-weight:bold; margin-bottom:2px;">Data Feed Stream:</label>
+          <select class="form-input" id="wcfg_ticker_mode" onchange="updateWidgetFromConfig()" style="width:100%; font-size:11px;">
+            <option value="hybrid" ${c.mode === 'hybrid' ? 'selected' : ''}>Hybrid (Tech Stocks + Weather + News Wire)</option>
+            <option value="stocks" ${c.mode === 'stocks' ? 'selected' : ''}>NASDAQ-1999 Tech Stocks (KLNT, CYBR, GEOC, VOOD)</option>
+            <option value="weather" ${c.mode === 'weather' ? 'selected' : ''}>Global Metropolis Weather (SF, NYC, LON, TYO)</option>
+          </select>
+        </div>
+        <div style="display:flex; gap:8px;">
+          <div style="flex:1;">
+            <label style="display:block; font-weight:bold; margin-bottom:2px;">Scroll Speed:</label>
+            <select class="form-input" id="wcfg_ticker_speed" onchange="updateWidgetFromConfig()" style="width:100%; font-size:11px;">
+              <option value="40s" ${c.speed === '40s' ? 'selected' : ''}>Standard (40s)</option>
+              <option value="25s" ${c.speed === '25s' ? 'selected' : ''}>Brisk (25s)</option>
+              <option value="15s" ${c.speed === '15s' ? 'selected' : ''}>Hyperspeed (15s)</option>
+            </select>
+          </div>
+          <div style="flex:1;">
+            <label style="display:block; font-weight:bold; margin-bottom:2px;">Color Scheme:</label>
+            <select class="form-input" id="wcfg_ticker_theme" onchange="updateWidgetFromConfig()" style="width:100%; font-size:11px;">
+              <option value="black" ${c.theme === 'black' ? 'selected' : ''}>Pitch Black / Gold</option>
+              <option value="navy" ${c.theme === 'navy' ? 'selected' : ''}>Navy Blue / White</option>
+              <option value="matrix" ${c.theme === 'matrix' ? 'selected' : ''}>Matrix Green / Charcoal</option>
+            </select>
+          </div>
+        </div>
+        <div>
+          <label style="display:block; font-weight:bold; margin-bottom:2px;">Ticker Tag / Title:</label>
+          <input type="text" class="form-input" id="wcfg_ticker_tag" value="${escapeHtml(c.tag)}" oninput="updateWidgetFromConfig()" style="width:100%; font-size:11px;" />
+        </div>
+      </div>
+    `;
+  } else if (activeWidgetType === 'clock') {
+    const c = WIDGET_CONFIGS.clock;
+    container.innerHTML = `
+      <div style="display:flex; flex-direction:column; gap:6px;">
+        <div>
+          <label style="display:block; font-weight:bold; margin-bottom:2px;">Timezone Anchor:</label>
+          <select class="form-input" id="wcfg_clock_tz" onchange="updateWidgetFromConfig()" style="width:100%; font-size:11px;">
+            <option value="PST" ${c.tz === 'PST' ? 'selected' : ''}>Pacific (Silicon Valley - PST)</option>
+            <option value="EST" ${c.tz === 'EST' ? 'selected' : ''}>Eastern (Wall Street - EST)</option>
+            <option value="GMT" ${c.tz === 'GMT' ? 'selected' : ''}>UTC / GMT (London Telecom Center)</option>
+            <option value="JST" ${c.tz === 'JST' ? 'selected' : ''}>Tokyo (Akihabara Neon Grid - JST)</option>
+            <option value="CARLSBAD" ${c.tz === 'CARLSBAD' ? 'selected' : ''}>Carlsbad Station (Permian Lithosphere 1999Hz)</option>
+          </select>
+        </div>
+        <div style="display:flex; gap:8px;">
+          <div style="flex:1;">
+            <label style="display:block; font-weight:bold; margin-bottom:2px;">Time Format:</label>
+            <select class="form-input" id="wcfg_clock_fmt" onchange="updateWidgetFromConfig()" style="width:100%; font-size:11px;">
+              <option value="12h" ${c.format === '12h' ? 'selected' : ''}>12-Hour (AM/PM)</option>
+              <option value="24h" ${c.format === '24h' ? 'selected' : ''}>24-Hour (Military / NOC)</option>
+            </select>
+          </div>
+          <div style="flex:1;">
+            <label style="display:block; font-weight:bold; margin-bottom:2px;">Phosphor Glow:</label>
+            <select class="form-input" id="wcfg_clock_style" onchange="updateWidgetFromConfig()" style="width:100%; font-size:11px;">
+              <option value="matrix" ${c.style === 'matrix' ? 'selected' : ''}>Phosphor Green</option>
+              <option value="amber" ${c.style === 'amber' ? 'selected' : ''}>Amber Plasma</option>
+              <option value="ruby" ${c.style === 'ruby' ? 'selected' : ''}>Ruby Red LED</option>
+              <option value="ice" ${c.style === 'ice' ? 'selected' : ''}>Ice Cyan VFD</option>
+            </select>
+          </div>
+        </div>
+        <div style="margin-top:2px;">
+          <label style="display:flex; align-items:center; gap:6px; cursor:pointer;">
+            <input type="checkbox" id="wcfg_clock_sec" ${c.showSec ? 'checked' : ''} onchange="updateWidgetFromConfig()">
+            <span>Display Running Seconds (:SS)</span>
+          </label>
+        </div>
+      </div>
+    `;
+  } else if (activeWidgetType === 'webring') {
+    const c = WIDGET_CONFIGS.webring;
+    container.innerHTML = `
+      <div style="display:flex; flex-direction:column; gap:6px;">
+        <div>
+          <label style="display:block; font-weight:bold; margin-bottom:2px;">Ring Title / Community:</label>
+          <input type="text" class="form-input" id="wcfg_webring_name" value="${escapeHtml(c.name)}" oninput="updateWidgetFromConfig()" style="width:100%; font-size:11px;" />
+        </div>
+        <div>
+          <label style="display:block; font-weight:bold; margin-bottom:2px;">Hub Central URL:</label>
+          <input type="text" class="form-input" id="wcfg_webring_hub" value="${escapeHtml(c.hub)}" oninput="updateWidgetFromConfig()" style="width:100%; font-size:11px;" />
+        </div>
+        <div style="display:flex; gap:8px;">
+          <div style="flex:1;">
+            <label style="display:block; font-weight:bold; margin-bottom:2px;">Navbar Button Style:</label>
+            <select class="form-input" id="wcfg_webring_style" onchange="updateWidgetFromConfig()" style="width:100%; font-size:11px;">
+              <option value="bevel" ${c.style === 'bevel' ? 'selected' : ''}>Windows 95 Outset Bevel</option>
+              <option value="netscape" ${c.style === 'netscape' ? 'selected' : ''}>Netscape Navigator Blue</option>
+              <option value="ascii" ${c.style === 'ascii' ? 'selected' : ''}>Demoscene ASCII Brackets</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    `;
+  } else if (activeWidgetType === 'modem') {
+    const c = WIDGET_CONFIGS.modem;
+    container.innerHTML = `
+      <div style="display:flex; flex-direction:column; gap:6px;">
+        <div>
+          <label style="display:block; font-weight:bold; margin-bottom:2px;">Modem Protocol &amp; Baud:</label>
+          <select class="form-input" id="wcfg_modem_baud" onchange="updateWidgetFromConfig()" style="width:100%; font-size:11px;">
+            <option value="56,000 bps V.90" ${c.baud.includes('56,000') ? 'selected' : ''}>56,000 bps ITU-T V.90 / K56flex</option>
+            <option value="33,600 bps V.34" ${c.baud.includes('33,600') ? 'selected' : ''}>33,600 bps ITU-T V.34+</option>
+            <option value="14,400 bps V.32bis" ${c.baud.includes('14,400') ? 'selected' : ''}>14,400 bps Rockwell V.32bis</option>
+            <option value="1999 bps Acoustic" ${c.baud.includes('1999') ? 'selected' : ''}>1999 bps Permian Acoustic Carrier Lock</option>
+          </select>
+        </div>
+        <div>
+          <label style="display:block; font-weight:bold; margin-bottom:2px;">Front Panel Diagnostic LEDs:</label>
+          <div style="display:flex; gap:12px; font-size:11px; margin-top:2px;">
+            <label style="cursor:pointer;"><input type="checkbox" id="wcfg_modem_cd" ${c.cd ? 'checked' : ''} onchange="updateWidgetFromConfig()"> CD (Carrier)</label>
+            <label style="cursor:pointer;"><input type="checkbox" id="wcfg_modem_rd" ${c.rd ? 'checked' : ''} onchange="updateWidgetFromConfig()"> RD (Recv)</label>
+            <label style="cursor:pointer;"><input type="checkbox" id="wcfg_modem_sd" ${c.sd ? 'checked' : ''} onchange="updateWidgetFromConfig()"> SD (Send)</label>
+            <label style="cursor:pointer;"><input type="checkbox" id="wcfg_modem_tr" ${c.tr ? 'checked' : ''} onchange="updateWidgetFromConfig()"> TR (Ready)</label>
+            <label style="cursor:pointer;"><input type="checkbox" id="wcfg_modem_oh" ${c.oh ? 'checked' : ''} onchange="updateWidgetFromConfig()"> OH (OffHook)</label>
+          </div>
+        </div>
+      </div>
+    `;
+  } else if (activeWidgetType === 'badge') {
+    const c = WIDGET_CONFIGS.badge;
+    container.innerHTML = `
+      <div style="display:flex; flex-direction:column; gap:6px;">
+        <div>
+          <label style="display:block; font-weight:bold; margin-bottom:2px;">88x31 Button Preset:</label>
+          <select class="form-input" id="wcfg_badge_preset" onchange="applyBadgePreset(this.value)" style="width:100%; font-size:11px;">
+            <option value="netscape" ${c.preset === 'netscape' ? 'selected' : ''}>Netscape Navigator 4.7 Now!</option>
+            <option value="notepad" ${c.preset === 'notepad' ? 'selected' : ''}>Made with Microsoft Notepad</option>
+            <option value="res" ${c.preset === 'res' ? 'selected' : ''}>Best Viewed 800x600 True Color</option>
+            <option value="y2k" ${c.preset === 'y2k' ? 'selected' : ''}>100% Y2K Compliant 1999</option>
+            <option value="geocities" ${c.preset === 'geocities' ? 'selected' : ''}>CyberSpire GeoCities Resident</option>
+            <option value="custom" ${c.preset === 'custom' ? 'selected' : ''}>Custom 88x31 Micro-Button</option>
+          </select>
+        </div>
+        <div style="display:flex; gap:8px;">
+          <div style="flex:1;">
+            <label style="display:block; font-weight:bold; margin-bottom:2px;">Line 1:</label>
+            <input type="text" class="form-input" id="wcfg_badge_l1" value="${escapeHtml(c.l1)}" oninput="updateWidgetFromConfig()" style="width:100%; font-size:11px;" />
+          </div>
+          <div style="flex:1;">
+            <label style="display:block; font-weight:bold; margin-bottom:2px;">Line 2:</label>
+            <input type="text" class="form-input" id="wcfg_badge_l2" value="${escapeHtml(c.l2)}" oninput="updateWidgetFromConfig()" style="width:100%; font-size:11px;" />
+          </div>
+        </div>
+        <div>
+          <label style="display:block; font-weight:bold; margin-bottom:2px;">Palette Accent:</label>
+          <select class="form-input" id="wcfg_badge_theme" onchange="updateWidgetFromConfig()" style="width:100%; font-size:11px;">
+            <option value="blue" ${c.theme === 'blue' ? 'selected' : ''}>Netscape Blue / Cyan</option>
+            <option value="yellow" ${c.theme === 'yellow' ? 'selected' : ''}>Notepad Gold / Black</option>
+            <option value="green" ${c.theme === 'green' ? 'selected' : ''}>Cyber Green / Slate</option>
+            <option value="amber" ${c.theme === 'amber' ? 'selected' : ''}>Amber Glow / Dark Gold</option>
+            <option value="purple" ${c.theme === 'purple' ? 'selected' : ''}>GeoCities Purple / Magenta</option>
+          </select>
+        </div>
+      </div>
+    `;
+  }
+}
+
+function updateWidgetFromConfig() {
+  if (activeWidgetType === 'counter') {
+    const styleEl = document.getElementById('wcfg_counter_style');
+    const hitsEl = document.getElementById('wcfg_counter_hits');
+    const digitsEl = document.getElementById('wcfg_counter_digits');
+    const labelEl = document.getElementById('wcfg_counter_label');
+    if (styleEl) WIDGET_CONFIGS.counter.style = styleEl.value;
+    if (hitsEl) {
+      const val = parseInt(hitsEl.value);
+      if (!isNaN(val)) {
+        WIDGET_CONFIGS.counter.hits = val;
+        widgetCounterHits = val;
+      }
+    }
+    if (digitsEl) WIDGET_CONFIGS.counter.digits = parseInt(digitsEl.value) || 7;
+    if (labelEl) WIDGET_CONFIGS.counter.label = labelEl.value;
+  } else if (activeWidgetType === 'ticker') {
+    const m = document.getElementById('wcfg_ticker_mode');
+    const s = document.getElementById('wcfg_ticker_speed');
+    const t = document.getElementById('wcfg_ticker_theme');
+    const tag = document.getElementById('wcfg_ticker_tag');
+    if (m) WIDGET_CONFIGS.ticker.mode = m.value;
+    if (s) WIDGET_CONFIGS.ticker.speed = s.value;
+    if (t) WIDGET_CONFIGS.ticker.theme = t.value;
+    if (tag) WIDGET_CONFIGS.ticker.tag = tag.value;
+  } else if (activeWidgetType === 'clock') {
+    const tz = document.getElementById('wcfg_clock_tz');
+    const fmt = document.getElementById('wcfg_clock_fmt');
+    const sty = document.getElementById('wcfg_clock_style');
+    const sec = document.getElementById('wcfg_clock_sec');
+    if (tz) WIDGET_CONFIGS.clock.tz = tz.value;
+    if (fmt) WIDGET_CONFIGS.clock.format = fmt.value;
+    if (sty) WIDGET_CONFIGS.clock.style = sty.value;
+    if (sec) WIDGET_CONFIGS.clock.showSec = sec.checked;
+  } else if (activeWidgetType === 'webring') {
+    const n = document.getElementById('wcfg_webring_name');
+    const h = document.getElementById('wcfg_webring_hub');
+    const s = document.getElementById('wcfg_webring_style');
+    if (n) WIDGET_CONFIGS.webring.name = n.value;
+    if (h) WIDGET_CONFIGS.webring.hub = h.value;
+    if (s) WIDGET_CONFIGS.webring.style = s.value;
+  } else if (activeWidgetType === 'modem') {
+    const b = document.getElementById('wcfg_modem_baud');
+    const cd = document.getElementById('wcfg_modem_cd');
+    const rd = document.getElementById('wcfg_modem_rd');
+    const sd = document.getElementById('wcfg_modem_sd');
+    const tr = document.getElementById('wcfg_modem_tr');
+    const oh = document.getElementById('wcfg_modem_oh');
+    if (b) WIDGET_CONFIGS.modem.baud = b.value;
+    if (cd) WIDGET_CONFIGS.modem.cd = cd.checked;
+    if (rd) WIDGET_CONFIGS.modem.rd = rd.checked;
+    if (sd) WIDGET_CONFIGS.modem.sd = sd.checked;
+    if (tr) WIDGET_CONFIGS.modem.tr = tr.checked;
+    if (oh) WIDGET_CONFIGS.modem.oh = oh.checked;
+  } else if (activeWidgetType === 'badge') {
+    const p = document.getElementById('wcfg_badge_preset');
+    const l1 = document.getElementById('wcfg_badge_l1');
+    const l2 = document.getElementById('wcfg_badge_l2');
+    const th = document.getElementById('wcfg_badge_theme');
+    if (p) WIDGET_CONFIGS.badge.preset = p.value;
+    if (l1) WIDGET_CONFIGS.badge.l1 = l1.value;
+    if (l2) WIDGET_CONFIGS.badge.l2 = l2.value;
+    if (th) WIDGET_CONFIGS.badge.theme = th.value;
+  }
+
+  renderWidgetSandbox();
+  generateWidgetEmbedCode();
+}
+
+function applyBadgePreset(preset) {
+  playClick();
+  WIDGET_CONFIGS.badge.preset = preset;
+  if (preset === 'netscape') {
+    WIDGET_CONFIGS.badge.l1 = 'NETSCAPE 4.7';
+    WIDGET_CONFIGS.badge.l2 = 'NOW!';
+    WIDGET_CONFIGS.badge.theme = 'blue';
+  } else if (preset === 'notepad') {
+    WIDGET_CONFIGS.badge.l1 = 'MADE WITH';
+    WIDGET_CONFIGS.badge.l2 = 'NOTEPAD';
+    WIDGET_CONFIGS.badge.theme = 'yellow';
+  } else if (preset === 'res') {
+    WIDGET_CONFIGS.badge.l1 = 'BEST VIEWED';
+    WIDGET_CONFIGS.badge.l2 = '800 x 600';
+    WIDGET_CONFIGS.badge.theme = 'cyan';
+  } else if (preset === 'y2k') {
+    WIDGET_CONFIGS.badge.l1 = '100% Y2K';
+    WIDGET_CONFIGS.badge.l2 = 'COMPLIANT';
+    WIDGET_CONFIGS.badge.theme = 'green';
+  } else if (preset === 'geocities') {
+    WIDGET_CONFIGS.badge.l1 = 'GEOCITIES';
+    WIDGET_CONFIGS.badge.l2 = 'CYBERSPIRE';
+    WIDGET_CONFIGS.badge.theme = 'purple';
+  }
+  renderWidgetConfig();
+  renderWidgetSandbox();
+  generateWidgetEmbedCode();
+}
+
+function renderWidgetSandbox() {
+  const viewport = document.getElementById('widgetSandboxViewport');
+  const statusEl = document.getElementById('widgetSandboxStatus');
+  if (!viewport) return;
+
+  if (widgetClockInterval) {
+    clearInterval(widgetClockInterval);
+    widgetClockInterval = null;
+  }
+
+  if (activeWidgetType === 'counter') {
+    const c = WIDGET_CONFIGS.counter;
+    const hitStr = String(widgetCounterHits).padStart(c.digits, '0');
+    let displayHtml = '';
+
+    if (c.style === 'led') {
+      displayHtml = `<div class="counter-display-led" onclick="incrementSandboxCounter()" style="cursor:pointer;" title="Click to increment counter">${hitStr}</div>`;
+    } else if (c.style === 'odometer') {
+      const digitsHtml = hitStr.split('').map(d => `<span class="counter-digit-box">${d}</span>`).join('');
+      displayHtml = `<div class="counter-display-odometer" onclick="incrementSandboxCounter()" style="cursor:pointer;" title="Click to increment counter">${digitsHtml}</div>`;
+    } else if (c.style === 'matrix') {
+      displayHtml = `<div class="counter-display-matrix" onclick="incrementSandboxCounter()" style="cursor:pointer;" title="Click to increment counter">${hitStr}</div>`;
+    } else if (c.style === 'amber') {
+      displayHtml = `<div class="counter-display-amber" onclick="incrementSandboxCounter()" style="cursor:pointer;" title="Click to increment counter">${hitStr}</div>`;
+    }
+
+    viewport.innerHTML = `
+      <div style="text-align:center; user-select:none;">
+        ${c.label ? `<div style="font-family:'MS Sans Serif', Tahoma, sans-serif; font-size:11px; font-weight:bold; color:var(--navy-dark); margin-bottom:6px;">${escapeHtml(c.label)}</div>` : ''}
+        ${displayHtml}
+        <div style="font-size:10px; color:#666; margin-top:6px;">[Click counter above to test hit increment]</div>
+      </div>
+    `;
+    if (statusEl) statusEl.textContent = `Hit Counter active: ${hitStr} hits recorded in sandbox.`;
+  } else if (activeWidgetType === 'ticker') {
+    const c = WIDGET_CONFIGS.ticker;
+    let bg = '#000000';
+    let fg = '#ffd700';
+    if (c.theme === 'navy') { bg = '#000080'; fg = '#ffffff'; }
+    else if (c.theme === 'matrix') { bg = '#022c22'; fg = '#39ff14'; }
+
+    let itemsHtml = '';
+    if (c.mode === 'stocks' || c.mode === 'hybrid') {
+      itemsHtml += `
+        <span style="margin-right:16px;">KLNT: <span style="color:#22c55e;">$142.50 ▲ +18.25</span></span>
+        <span style="margin-right:16px;">CYBR: <span style="color:#22c55e;">$88.50 ▲ +12.30</span></span>
+        <span style="margin-right:16px;">GEOC: <span style="color:#22c55e;">$89.00 ▲ +12.25</span></span>
+        <span style="margin-right:16px;">VOOD: <span style="color:#22c55e;">$42.25 ▲ +6.50</span></span>
+      `;
+    }
+    if (c.mode === 'weather' || c.mode === 'hybrid') {
+      itemsHtml += `
+        <span style="margin-right:16px; color:#38bdf8;">🌁 SF 67°F</span>
+        <span style="margin-right:16px; color:#38bdf8;">⛅ NYC 63°F</span>
+        <span style="margin-right:16px; color:#38bdf8;">🌧️ LON 55°F</span>
+        <span style="margin-right:16px; color:#38bdf8;">🌙 TYO 72°F</span>
+        <span style="margin-right:16px; color:#ffd700;">📡 CARLSBAD 74°F [1999Hz]</span>
+      `;
+    }
+    if (c.mode === 'hybrid') {
+      itemsHtml += `<span style="margin-right:16px; color:#f43f5e;">⚡ FLASH: KiloApps Fleet reaches 99 retro modules!</span>`;
+    }
+
+    viewport.innerHTML = `
+      <div style="width:100%; max-width:620px;">
+        <div style="background:${bg}; color:${fg}; border:2px inset #555; display:flex; align-items:center; height:30px; overflow:hidden; font-family:'Courier New', monospace; font-size:11px; font-weight:bold;">
+          <div style="background:#cc0000; color:#fff; font-size:10px; padding:3px 8px; white-space:nowrap; border-right:2px solid #fff;">${escapeHtml(c.tag)}</div>
+          <div style="flex:1; overflow:hidden; white-space:nowrap; position:relative;">
+            <div style="display:inline-block; animation:tickerScroll ${c.speed} linear infinite;">
+              ${itemsHtml}${itemsHtml}
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+    if (statusEl) statusEl.textContent = `Ticker scrolling active (${c.speed}). Hover to pause in embed.`;
+  } else if (activeWidgetType === 'clock') {
+    const c = WIDGET_CONFIGS.clock;
+    let clockColors = { bg: '#022c22', fg: '#39ff14', border: '#059669', shadow: '#10b981' };
+    if (c.style === 'amber') clockColors = { bg: '#2b1800', fg: '#fbbf24', border: '#d97706', shadow: '#f59e0b' };
+    else if (c.style === 'ruby') clockColors = { bg: '#000000', fg: '#ef4444', border: '#dc2626', shadow: '#f87171' };
+    else if (c.style === 'ice') clockColors = { bg: '#082f49', fg: '#38bdf8', border: '#0284c7', shadow: '#38bdf8' };
+
+    viewport.innerHTML = `
+      <div style="text-align:center;">
+        <div style="font-family:'Courier New', monospace; font-size:10px; color:#555; margin-bottom:4px; font-weight:bold;">
+          ANCHOR: [${c.tz} STATION] • FORMAT: ${c.format.toUpperCase()}
+        </div>
+        <div id="sandboxClockDisplay" style="background:${clockColors.bg}; color:${clockColors.fg}; border:3px inset ${clockColors.border}; font-family:'Courier New', monospace; font-size:22px; font-weight:900; letter-spacing:3px; padding:6px 16px; display:inline-block; text-shadow:0 0 8px ${clockColors.shadow};">
+          --:--:--
+        </div>
+      </div>
+    `;
+
+    const updateClockSandbox = () => {
+      const el = document.getElementById('sandboxClockDisplay');
+      if (!el) return;
+      const now = new Date();
+      let hrs = now.getHours();
+      let mins = now.getMinutes();
+      let secs = now.getSeconds();
+
+      // Timezone offsets relative to local
+      if (c.tz === 'EST') hrs = (hrs + 3) % 24;
+      else if (c.tz === 'GMT') hrs = (hrs + 8) % 24;
+      else if (c.tz === 'JST') hrs = (hrs + 17) % 24;
+      else if (c.tz === 'CARLSBAD') hrs = (hrs + 1) % 24;
+
+      let suffix = '';
+      if (c.format === '12h') {
+        suffix = hrs >= 12 ? ' PM' : ' AM';
+        hrs = hrs % 12;
+        if (hrs === 0) hrs = 12;
+      }
+      const hStr = String(hrs).padStart(2, '0');
+      const mStr = String(mins).padStart(2, '0');
+      const sStr = String(secs).padStart(2, '0');
+
+      el.textContent = `${hStr}:${mStr}${c.showSec ? ':' + sStr : ''}${suffix}`;
+    };
+
+    updateClockSandbox();
+    widgetClockInterval = setInterval(updateClockSandbox, 1000);
+    if (statusEl) statusEl.textContent = `Silicon Web Clock running live (${c.tz} timezone).`;
+  } else if (activeWidgetType === 'webring') {
+    const c = WIDGET_CONFIGS.webring;
+    viewport.innerHTML = `
+      <div style="background:#f1f5f9; border:2px outset #ffffff; box-shadow:2px 2px 5px rgba(0,0,0,0.2); padding:10px 16px; text-align:center; max-width:380px;">
+        <div style="font-weight:bold; font-size:12px; color:var(--navy-dark); font-family:Arial, sans-serif; margin-bottom:6px;">
+          🌐 Member of the <u>${escapeHtml(c.name)}</u>
+        </div>
+        <div style="display:flex; justify-content:center; gap:6px; flex-wrap:wrap; font-size:11px;">
+          <button class="btn-retro" onclick="navSandboxWebring('prev')">&laquo; Prev Site</button>
+          <button class="btn-retro" onclick="navSandboxWebring('hub')" style="font-weight:bold;">Ring Hub</button>
+          <button class="btn-retro" onclick="navSandboxWebring('next')">Next Site &raquo;</button>
+          ${c.showRandom ? `<button class="btn-retro" onclick="navSandboxWebring('rand')" style="color:#000080;">Random 🔀</button>` : ''}
+        </div>
+        <div style="font-size:9px; color:#666; margin-top:6px; font-family:'Courier New', monospace;">
+          [ Powered by KiloNet Webring Engine v2.0 • 18 Ring Members ]
+        </div>
+      </div>
+    `;
+    if (statusEl) statusEl.textContent = `Webring navbar active. Click navigation buttons to test.`;
+  } else if (activeWidgetType === 'modem') {
+    const c = WIDGET_CONFIGS.modem;
+    viewport.innerHTML = `
+      <div style="background:#334155; border:3px outset #94a3b8; padding:8px 14px; border-radius:3px; max-width:440px; box-shadow:inset 0 1px 3px #000;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; border-bottom:1px solid #475569; padding-bottom:4px;">
+          <span style="font-family:'Courier New', monospace; font-size:11px; font-weight:bold; color:#f8fafc;">📡 COURIER V.90 FAX/MODEM</span>
+          <span style="font-family:'Courier New', monospace; font-size:10px; color:#38bdf8;">${escapeHtml(c.baud)}</span>
+        </div>
+        <div style="display:flex; justify-content:space-around; align-items:center; background:#0f172a; padding:6px; border:2px inset #1e293b;">
+          ${renderModemLed('HS', true, '#22c55e')}
+          ${renderModemLed('AA', false, '#ef4444')}
+          ${renderModemLed('CD', c.cd, '#22c55e')}
+          ${renderModemLed('RD', c.rd, '#38bdf8')}
+          ${renderModemLed('SD', c.sd, '#38bdf8')}
+          ${renderModemLed('TR', c.tr, '#22c55e')}
+          ${renderModemLed('OH', c.oh, '#ef4444')}
+          ${renderModemLed('MR', true, '#22c55e')}
+        </div>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:6px;">
+          <span style="font-size:10px; color:#cbd5e1; font-family:'Courier New', monospace;">STATUS: V.90 CARRIER LOCK</span>
+          <button class="btn-retro" style="font-size:10px; padding:1px 8px;" onclick="testSandboxModemDial()">⚡ Test Dial / Lock</button>
+        </div>
+      </div>
+    `;
+    if (statusEl) statusEl.textContent = `Modem panel rendered (${c.baud}). Click LEDs or Test Dial.`;
+  } else if (activeWidgetType === 'badge') {
+    const c = WIDGET_CONFIGS.badge;
+    let bBg = '#000080';
+    let bFg = '#ffffff';
+    let bAccent = '#38bdf8';
+    if (c.theme === 'yellow') { bBg = '#713f12'; bFg = '#fef08a'; bAccent = '#ca8a04'; }
+    else if (c.theme === 'green') { bBg = '#064e3b'; bFg = '#6ee7b7'; bAccent = '#10b981'; }
+    else if (c.theme === 'amber') { bBg = '#451a03'; bFg = '#fed7aa'; bAccent = '#f97316'; }
+    else if (c.theme === 'purple') { bBg = '#4c1d95'; bFg = '#f5d0fe'; bAccent = '#d946ef'; }
+    else if (c.theme === 'cyan') { bBg = '#0e7490'; bFg = '#cffafe'; bAccent = '#06b6d4'; }
+
+    viewport.innerHTML = `
+      <div style="text-align:center;">
+        <div style="display:inline-flex; width:88px; height:31px; border:2px outset #ffffff; background:${bBg}; color:${bFg}; font-family:'Courier New', monospace; font-size:8px; font-weight:bold; box-sizing:border-box; overflow:hidden; user-select:none; cursor:pointer;" onclick="playClick(); showRetroToast('88x31 Button Clicked!');" title="Standard 88x31 Web Badge">
+          <div style="width:28px; background:${bAccent}; color:#000000; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:900; border-right:1px solid #000;">
+            ★
+          </div>
+          <div style="flex:1; display:flex; flex-direction:column; justify-content:center; align-items:center; line-height:1.1; padding:1px;">
+            <span>${escapeHtml(c.l1)}</span>
+            <span style="color:${bAccent};">${escapeHtml(c.l2)}</span>
+          </div>
+        </div>
+        <div style="font-size:10px; color:#666; margin-top:8px;">
+          Standard 88x31 micro-button format for 1999 webrings and GeoCities footers.
+        </div>
+      </div>
+    `;
+    if (statusEl) statusEl.textContent = `88x31 button badge ready. Click badge to test click action.`;
+  }
+}
+
+function renderModemLed(label, active, glowColor = '#22c55e') {
+  return `
+    <div style="text-align:center; cursor:pointer;" onclick="toggleSandboxModemLed('${label}')">
+      <div style="width:10px; height:10px; border-radius:50%; margin:0 auto 2px auto; background:${active ? glowColor : '#1e293b'}; border:1px solid ${active ? '#fff' : '#475569'}; box-shadow:${active ? '0 0 6px ' + glowColor : 'none'};"></div>
+      <span style="font-size:9px; font-family:'Courier New', monospace; font-weight:bold; color:${active ? '#f8fafc' : '#64748b'};">${label}</span>
+    </div>
+  `;
+}
+
+function toggleSandboxModemLed(led) {
+  playClick();
+  const key = led.toLowerCase();
+  if (WIDGET_CONFIGS.modem.hasOwnProperty(key)) {
+    WIDGET_CONFIGS.modem[key] = !WIDGET_CONFIGS.modem[key];
+    renderWidgetSandbox();
+    generateWidgetEmbedCode();
+  }
+}
+
+function testSandboxModemDial() {
+  testWidgetEarcon();
+  const statusEl = document.getElementById('widgetSandboxStatus');
+  if (statusEl) statusEl.textContent = 'Simulating V.90 handshake & 1999Hz acoustic carrier lock...';
+  WIDGET_CONFIGS.modem.oh = true;
+  WIDGET_CONFIGS.modem.rd = true;
+  WIDGET_CONFIGS.modem.sd = true;
+  renderWidgetSandbox();
+  setTimeout(() => {
+    WIDGET_CONFIGS.modem.oh = false;
+    WIDGET_CONFIGS.modem.sd = false;
+    renderWidgetSandbox();
+    if (statusEl) statusEl.textContent = 'Carrier locked at 56,000 bps. Line clear.';
+  }, 1800);
+}
+
+function incrementSandboxCounter() {
+  playClick();
+  playTeletypeClack();
+  widgetCounterHits++;
+  WIDGET_CONFIGS.counter.hits = widgetCounterHits;
+  const hitsInput = document.getElementById('wcfg_counter_hits');
+  if (hitsInput) hitsInput.value = widgetCounterHits;
+  renderWidgetSandbox();
+  generateWidgetEmbedCode();
+  showRetroToast(`Hit Counter: ${widgetCounterHits}!`);
+}
+
+function navSandboxWebring(action) {
+  playClick();
+  const statusEl = document.getElementById('widgetSandboxStatus');
+  if (action === 'prev') {
+    if (statusEl) statusEl.textContent = 'Navigating to previous ring member site...';
+    triggerFmChime(440, 0.2, 0.4, 0.1);
+  } else if (action === 'next') {
+    if (statusEl) statusEl.textContent = 'Navigating to next ring member site...';
+    triggerFmChime(660, 0.2, 0.4, 0.1);
+  } else if (action === 'rand') {
+    if (statusEl) statusEl.textContent = 'Teleporting to random webring site...';
+    triggerFmChime(880, 0.3, 0.5, 0.15);
+  } else {
+    if (statusEl) statusEl.textContent = 'Opening Central Webring Hub directory...';
+  }
+}
+
+function generateWidgetEmbedCode() {
+  const codeBox = document.getElementById('widgetEmbedCode');
+  if (!codeBox) return;
+
+  let snippet = '';
+  if (activeWidgetType === 'counter') {
+    const c = WIDGET_CONFIGS.counter;
+    const hitStr = String(c.hits).padStart(c.digits, '0');
+    snippet = `<!-- Begin KiloNet 1999 Visitor Counter Widget -->
+<div style="display:inline-block; text-align:center; font-family:'Courier New', monospace; user-select:none;">
+  ${c.label ? `<div style="font-size:11px; font-weight:bold; color:#000080; margin-bottom:4px;">${escapeHtml(c.label)}</div>` : ''}
+  <div style="background:#000; color:${c.style === 'amber' ? '#fbbf24' : (c.style === 'matrix' ? '#39ff14' : '#ff2222')}; font-size:18px; font-weight:900; letter-spacing:3px; padding:4px 10px; border:3px inset #666; display:inline-block;">
+    ${hitStr}
+  </div>
+  <div style="font-size:9px; color:#777; margin-top:3px;"><a href="/web/portal.html" style="color:#777; text-decoration:none;">KiloNet! Web Services</a></div>
+</div>
+<!-- End KiloNet 1999 Visitor Counter Widget -->`;
+  } else if (activeWidgetType === 'ticker') {
+    const c = WIDGET_CONFIGS.ticker;
+    let bg = c.theme === 'navy' ? '#000080' : (c.theme === 'matrix' ? '#022c22' : '#000000');
+    let fg = c.theme === 'navy' ? '#ffffff' : (c.theme === 'matrix' ? '#39ff14' : '#ffd700');
+    snippet = `<!-- Begin KiloNet 1999 Ticker Tape Widget -->
+<style>
+@keyframes knetTicker { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+.knet-ticker-wrap { background:${bg}; color:${fg}; border:2px inset #555; display:flex; align-items:center; height:28px; overflow:hidden; font-family:'Courier New', monospace; font-size:11px; font-weight:bold; }
+.knet-ticker-tag { background:#cc0000; color:#fff; font-size:10px; padding:2px 8px; white-space:nowrap; border-right:2px solid #fff; }
+.knet-ticker-scroll { flex:1; overflow:hidden; white-space:nowrap; }
+.knet-ticker-inner { display:inline-block; animation:knetTicker ${c.speed} linear infinite; }
+.knet-ticker-inner:hover { animation-play-state:paused; }
+</style>
+<div class="knet-ticker-wrap">
+  <div class="knet-ticker-tag">${escapeHtml(c.tag)}</div>
+  <div class="knet-ticker-scroll">
+    <div class="knet-ticker-inner">
+      <span style="margin-right:16px;">KLNT: $142.50 ▲ +18.25</span>
+      <span style="margin-right:16px;">CYBR: $88.50 ▲ +12.30</span>
+      <span style="margin-right:16px;">🌁 SF 67°F (Fog)</span>
+      <span style="margin-right:16px;">GEOC: $89.00 ▲ +12.25</span>
+      <span style="margin-right:16px;">⛅ NYC 63°F</span>
+      <span style="margin-right:16px;">VOOD: $42.25 ▲ +6.50</span>
+      <!-- Loop repeat for smooth wrap -->
+      <span style="margin-right:16px;">KLNT: $142.50 ▲ +18.25</span>
+      <span style="margin-right:16px;">CYBR: $88.50 ▲ +12.30</span>
+      <span style="margin-right:16px;">🌁 SF 67°F (Fog)</span>
+      <span style="margin-right:16px;">GEOC: $89.00 ▲ +12.25</span>
+      <span style="margin-right:16px;">⛅ NYC 63°F</span>
+      <span style="margin-right:16px;">VOOD: $42.25 ▲ +6.50</span>
+    </div>
+  </div>
+</div>
+<!-- End KiloNet 1999 Ticker Tape Widget -->`;
+  } else if (activeWidgetType === 'clock') {
+    const c = WIDGET_CONFIGS.clock;
+    let fg = c.style === 'amber' ? '#fbbf24' : (c.style === 'ruby' ? '#ef4444' : (c.style === 'ice' ? '#38bdf8' : '#39ff14'));
+    let bg = c.style === 'amber' ? '#2b1800' : (c.style === 'ruby' ? '#000000' : (c.style === 'ice' ? '#082f49' : '#022c22'));
+    snippet = `<!-- Begin KiloNet 1999 Silicon Clock Widget -->
+<div style="display:inline-block; text-align:center; font-family:'Courier New', monospace;">
+  <div id="knet_clock_box" style="background:${bg}; color:${fg}; border:3px inset #666; font-size:18px; font-weight:900; letter-spacing:2px; padding:4px 12px; display:inline-block;">
+    --:--:--
+  </div>
+  <div style="font-size:9px; color:#555; margin-top:2px;">[${c.tz} TIMEZONE] • <a href="/web/portal.html" style="color:#555; text-decoration:none;">KiloNet</a></div>
+</div>
+<script>
+(function(){
+  function updateKClock(){
+    var el = document.getElementById('knet_clock_box');
+    if (!el) return;
+    var d = new Date();
+    var h = d.getHours();
+    var m = d.getMinutes();
+    var s = d.getSeconds();
+    ${c.tz === 'EST' ? 'h = (h + 3) % 24;' : (c.tz === 'GMT' ? 'h = (h + 8) % 24;' : (c.tz === 'JST' ? 'h = (h + 17) % 24;' : ''))}
+    var suf = '';
+    ${c.format === '12h' ? 'suf = h >= 12 ? " PM" : " AM"; h = h % 12; if (h === 0) h = 12;' : ''}
+    el.textContent = (h < 10 ? '0' : '') + h + ':' + (m < 10 ? '0' : '') + m + ${c.showSec ? '":" + (s < 10 ? "0" : "") + s' : '""'} + suf;
+  }
+  setInterval(updateKClock, 1000);
+  updateKClock();
+})();
+<\/script>
+<!-- End KiloNet 1999 Silicon Clock Widget -->`;
+  } else if (activeWidgetType === 'webring') {
+    const c = WIDGET_CONFIGS.webring;
+    snippet = `<!-- Begin KiloNet 1999 Webring Navbar Widget -->
+<table border="1" cellpadding="4" cellspacing="0" style="background:#f1f5f9; border:2px outset #ffffff; font-family:Arial, sans-serif; font-size:11px; text-align:center;">
+  <tr>
+    <td colspan="4" style="background:#000080; color:#ffffff; font-weight:bold; padding:3px 6px;">
+      🌐 Member of the ${escapeHtml(c.name)}
+    </td>
+  </tr>
+  <tr>
+    <td><a href="${escapeHtml(c.hub)}?nav=prev">&laquo; Previous</a></td>
+    <td><a href="${escapeHtml(c.hub)}">Ring Central</a></td>
+    <td><a href="${escapeHtml(c.hub)}?nav=next">Next &raquo;</a></td>
+    ${c.showRandom ? `<td><a href="${escapeHtml(c.hub)}?nav=rand">Random</a></td>` : ''}
+  </tr>
+</table>
+<!-- End KiloNet 1999 Webring Navbar Widget -->`;
+  } else if (activeWidgetType === 'modem') {
+    const c = WIDGET_CONFIGS.modem;
+    snippet = `<!-- Begin KiloNet 1999 Modem Status Widget -->
+<div style="background:#334155; border:3px outset #94a3b8; padding:6px 10px; display:inline-block; font-family:'Courier New', monospace; font-size:10px; color:#f8fafc;">
+  <div style="display:flex; justify-content:space-between; gap:12px; margin-bottom:4px; border-bottom:1px solid #475569; padding-bottom:2px;">
+    <span>📡 COURIER V.90</span>
+    <span style="color:#38bdf8;">${escapeHtml(c.baud)}</span>
+  </div>
+  <div style="display:flex; gap:8px;">
+    <span>CD:<span style="color:#22c55e;">●</span></span>
+    <span>RD:<span style="color:#38bdf8;">●</span></span>
+    <span>SD:<span style="color:#64748b;">○</span></span>
+    <span>TR:<span style="color:#22c55e;">●</span></span>
+    <span>MR:<span style="color:#22c55e;">●</span></span>
+  </div>
+</div>
+<!-- End KiloNet 1999 Modem Status Widget -->`;
+  } else if (activeWidgetType === 'badge') {
+    const c = WIDGET_CONFIGS.badge;
+    let bBg = c.theme === 'yellow' ? '#713f12' : (c.theme === 'green' ? '#064e3b' : (c.theme === 'amber' ? '#451a03' : (c.theme === 'purple' ? '#4c1d95' : '#000080')));
+    let bFg = c.theme === 'yellow' ? '#fef08a' : (c.theme === 'green' ? '#6ee7b7' : (c.theme === 'amber' ? '#fed7aa' : (c.theme === 'purple' ? '#f5d0fe' : '#ffffff')));
+    let bAcc = c.theme === 'yellow' ? '#ca8a04' : (c.theme === 'green' ? '#10b981' : (c.theme === 'amber' ? '#f97316' : (c.theme === 'purple' ? '#d946ef' : '#38bdf8')));
+    snippet = `<!-- Begin KiloNet 1999 88x31 Button Badge -->
+<a href="/web/portal.html" title="KiloNet Portal 1999" style="text-decoration:none;">
+  <div style="display:inline-flex; width:88px; height:31px; border:2px outset #ffffff; background:${bBg}; color:${bFg}; font-family:'Courier New', monospace; font-size:8px; font-weight:bold; box-sizing:border-box; overflow:hidden;">
+    <div style="width:28px; background:${bAcc}; color:#000; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:900;">★</div>
+    <div style="flex:1; display:flex; flex-direction:column; justify-content:center; align-items:center; line-height:1.1; padding:1px;">
+      <span>${escapeHtml(c.l1)}</span>
+      <span style="color:${bAcc};">${escapeHtml(c.l2)}</span>
+    </div>
+  </div>
+</a>
+<!-- End KiloNet 1999 88x31 Button Badge -->`;
+  }
+
+  codeBox.value = snippet;
+}
+
+function testWidgetEarcon() {
+  if (activeWidgetType === 'counter') {
+    playTeletypeClack();
+  } else if (activeWidgetType === 'ticker') {
+    playTeletypeClack();
+  } else if (activeWidgetType === 'clock') {
+    triggerFmChime(1760.0, 0.08, 0.3, 0.05);
+    setTimeout(() => triggerFmChime(2200.0, 0.08, 0.3, 0.05), 90);
+  } else if (activeWidgetType === 'webring') {
+    triggerFmChime(523.25, 0.15, 0.4, 0.1);
+    setTimeout(() => triggerFmChime(659.25, 0.15, 0.4, 0.1), 120);
+    setTimeout(() => triggerFmChime(783.99, 0.3, 0.5, 0.15), 240);
+  } else if (activeWidgetType === 'modem') {
+    triggerFmChime(1999.0, 0.6, 0.5, 0.2);
+  } else if (activeWidgetType === 'badge') {
+    playClick();
+  }
+}
+
+function copyWidgetCode() {
+  const codeBox = document.getElementById('widgetEmbedCode');
+  if (!codeBox) return;
+  codeBox.select();
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(codeBox.value).then(() => {
+      showRetroToast("📋 Widget HTML code copied to clipboard!");
+      playSuccessChime();
+    }).catch(() => {
+      document.execCommand('copy');
+      showRetroToast("📋 Widget HTML code copied to clipboard!");
+      playSuccessChime();
+    });
+  } else {
+    document.execCommand('copy');
+    showRetroToast("📋 Widget HTML code copied to clipboard!");
+    playSuccessChime();
+  }
+}
+
+function downloadWidgetSnippet() {
+  const codeBox = document.getElementById('widgetEmbedCode');
+  if (!codeBox) return;
+  playClick();
+
+  const fullDoc = `<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">\n<html>\n<head>\n<title>KiloNet 1999 Widget - ${activeWidgetType.toUpperCase()}</title>\n<style>\nbody { font-family: Arial, sans-serif; background: #c0c0c0; padding: 40px; text-align: center; }\n</style>\n</head>\n<body>\n<h3>KiloNet '99 Webmaster Widget (${activeWidgetType.toUpperCase()})</h3>\n${codeBox.value}\n</body>\n</html>`;
+
+  const blob = new Blob([fullDoc], { type: 'text/html' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `kilonet_widget_${activeWidgetType}.html`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  playSuccessChime();
+  showRetroToast(`💾 Downloaded kilonet_widget_${activeWidgetType}.html!`);
 }
 
 /* =========================================================================
@@ -10538,7 +12218,7 @@ const DEFAULT_MYK_PROFILE = {
   theme: "classic",
   pinnedStocks: ["KLNT", "VOOD", "CYBR", "GEOC"],
   weatherCity: "sf",
-  zodiacSign: "transistor",
+  zodiacSign: "aries",
   bookmarks: [
     { title: "KiloNet Central Directory", url: "/web/portal.html" },
     { title: "GeoCities CyberSpire", url: "/web/geocities.html" },
@@ -10686,25 +12366,32 @@ function renderMyKStockPills() {
 function renderMyKWeather() {
   const container = document.getElementById('mykWeatherContent');
   if (!container) return;
-  const cityKey = myKProfile.weatherCity || 'sf';
-  const c = WEATHER_DATA[cityKey] || WEATHER_DATA.sf;
+  const rawKey = (myKProfile.weatherCity || 'sf').toLowerCase();
+  const c = WEATHER_DATA[rawKey] || WEATHER_DATA[rawKey.toUpperCase()] || WEATHER_DATA.SF;
   const sel = document.getElementById('mykCitySelect');
-  if (sel) sel.value = cityKey;
+  if (sel) sel.value = rawKey;
 
-  const tempF = c.temp;
+  const tempF = typeof c.tempF === 'number' ? c.tempF : (parseInt(String(c.temp || '67').match(/\d+/)?.[0] || '67'));
   const tempC = Math.round((tempF - 32) * 5 / 9);
+  const icon = c.icon || '⛅';
+  const name = c.name || (c.station ? c.station.split('//')[0].replace('STATION:', '').trim() : 'Local Station');
+  const cond = c.cond || c.condition || 'Fair';
+  const humidity = c.humidity || '55';
+  const baro = c.barometer || c.baro || '1014.8 hPa';
+  const wind = c.wind || 'Calm';
+
   container.innerHTML = `
     <div style="display:flex; align-items:center; gap:8px;">
-      <span style="font-size:26px;">${c.icon}</span>
+      <span style="font-size:26px;">${icon}</span>
       <div>
         <div style="font-size:14px; font-weight:bold; color:var(--navy-dark);">${tempF}°F / ${tempC}°C</div>
-        <div style="font-size:11px; color:#555;">${c.cond} • ${c.name}</div>
+        <div style="font-size:11px; color:#555;">${cond} • ${name}</div>
       </div>
     </div>
     <div style="text-align:right; font-size:10px; color:#666; font-family:'Courier New', monospace;">
-      <div>Humidity: ${c.humidity}%</div>
-      <div>Barometer: ${c.barometer}</div>
-      <div>Wind: ${c.wind}</div>
+      <div>Humidity: ${humidity}%</div>
+      <div>Barometer: ${baro}</div>
+      <div>Wind: ${wind}</div>
     </div>
   `;
 }
@@ -10796,21 +12483,24 @@ function renderMyKZodiac() {
   const sel = document.getElementById('mykZodiacSelect');
   if (sel && sel.options.length === 0) {
     sel.innerHTML = Object.keys(ZODIAC_DATA).map(k => `
-      <option value="${k}">${ZODIAC_DATA[k].sign}</option>
+      <option value="${k}">${ZODIAC_DATA[k].title || ZODIAC_DATA[k].sign || k}</option>
     `).join('');
   }
-  const signKey = myKProfile.zodiacSign || 'transistor';
+  const signKey = (myKProfile.zodiacSign && ZODIAC_DATA[myKProfile.zodiacSign]) ? myKProfile.zodiacSign : 'aries';
   if (sel) sel.value = signKey;
 
   const container = document.getElementById('mykZodiacContent');
   if (!container) return;
-  const z = ZODIAC_DATA[signKey] || ZODIAC_DATA.transistor;
+  const z = ZODIAC_DATA[signKey] || ZODIAC_DATA.aries;
+  const signTitle = z.title || z.sign || 'Silicon Zodiac';
+  const element = z.element || 'Silicon & Copper';
+  const prophecy = z.prophecy || 'Favorable clock cycles ahead.';
   container.innerHTML = `
     <div style="font-weight:bold; color:#5b21b6; margin-bottom:2px;">
-      ${z.sign} • Element: ${z.element}
+      ${signTitle} • Element: ${element}
     </div>
     <div style="color:#333; font-style:italic;">
-      "${z.prophecy}"
+      "${prophecy}"
     </div>
   `;
 }
@@ -10877,6 +12567,95 @@ function importMyKProfile(event) {
     }
   };
   reader.readAsText(file);
+}
+
+function importNetscapeBookmarks(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const htmlText = e.target.result || '';
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(htmlText, 'text/html');
+      const anchors = doc.querySelectorAll('a');
+      let count = 0;
+      if (!myKProfile.bookmarks) myKProfile.bookmarks = [];
+
+      anchors.forEach(a => {
+        const href = a.getAttribute('href') || a.getAttribute('HREF');
+        const title = a.textContent.trim() || href;
+        if (href && !myKProfile.bookmarks.some(b => b.url === href)) {
+          myKProfile.bookmarks.push({ title, url: href });
+          count++;
+        }
+      });
+
+      if (count === 0) {
+        const regex = /<A\s+[^>]*HREF=["']([^"']+)["'][^>]*>(.*?)<\/A>/gi;
+        let match;
+        while ((match = regex.exec(htmlText)) !== null) {
+          const href = match[1];
+          const title = match[2].replace(/<[^>]+>/g, '').trim() || href;
+          if (href && !myKProfile.bookmarks.some(b => b.url === href)) {
+            myKProfile.bookmarks.push({ title, url: href });
+            count++;
+          }
+        }
+      }
+
+      saveMyKiloNetProfile();
+      renderMyKBookmarks();
+
+      try {
+        const knetBm = JSON.parse(localStorage.getItem('knet_bookmarks') || '[]');
+        myKProfile.bookmarks.forEach(bm => {
+          if (!knetBm.some(k => k.url === bm.url)) knetBm.push(bm);
+        });
+        localStorage.setItem('knet_bookmarks', JSON.stringify(knetBm));
+      } catch (err) {}
+
+      playSuccessChime();
+      showRetroToast(`Imported ${count} bookmarks from Netscape file!`);
+    } catch (err) {
+      alert("Error parsing Netscape Bookmarks: " + err.message);
+    }
+  };
+  reader.readAsText(file);
+}
+
+function syncWithKNetBookmarks() {
+  playClick();
+  let count = 0;
+  try {
+    const knetBm = JSON.parse(localStorage.getItem('knet_bookmarks') || '[]');
+    if (!myKProfile.bookmarks) myKProfile.bookmarks = [];
+    if (Array.isArray(knetBm)) {
+      knetBm.forEach(k => {
+        if (!myKProfile.bookmarks.some(b => b.url === k.url)) {
+          myKProfile.bookmarks.push({ title: k.title || k.url, url: k.url });
+          count++;
+        }
+      });
+    }
+    myKProfile.bookmarks.forEach(b => {
+      if (!knetBm.some(k => k.url === b.url)) {
+        knetBm.push({ title: b.title, url: b.url });
+      }
+    });
+    localStorage.setItem('knet_bookmarks', JSON.stringify(knetBm));
+    saveMyKiloNetProfile();
+    renderMyKBookmarks();
+
+    if (window.parent && window.parent !== window) {
+      window.parent.postMessage({ type: 'KNET_BOOKMARKS_SYNCED', bookmarks: myKProfile.bookmarks }, '*');
+    }
+
+    playSuccessChime();
+    showRetroToast(`Synced ${myKProfile.bookmarks.length} bookmarks with KNet Browser!`);
+  } catch (err) {
+    alert("Could not sync with KNet bookmarks: " + err.message);
+  }
 }
 
 function resetMyKSettings() {
@@ -12789,6 +14568,8 @@ window.addEventListener('DOMContentLoaded', () => {
   initNocDisplay();
   generateWebmasterSnippet();
   updateSpiderIndexCounts();
+  initSpiderTopology();
+  initWidgetLab();
   initArcadeGame();
   renderMyKiloNet();
   renderComicEpisode(0);
@@ -12873,8 +14654,9 @@ window.addEventListener('DOMContentLoaded', () => {
 });
 
 function exportNetscapeBookmarks() {
-  const bookmarks = (typeof mykProfile !== 'undefined' && mykProfile && Array.isArray(mykProfile.bookmarks) && mykProfile.bookmarks.length > 0)
-    ? mykProfile.bookmarks
+  playClick();
+  const bookmarks = (typeof myKProfile !== 'undefined' && myKProfile && Array.isArray(myKProfile.bookmarks) && myKProfile.bookmarks.length > 0)
+    ? myKProfile.bookmarks
     : [
         { title: "KiloNet Central Portal", url: "/web/portal.html" },
         { title: "Central Webring Hub", url: "/web/webring.html" },
@@ -12896,6 +14678,8 @@ function exportNetscapeBookmarks() {
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
+  playSuccessChime();
+  showRetroToast("Netscape bookmarks.html downloaded successfully!");
 }
 </script>
 </body>
