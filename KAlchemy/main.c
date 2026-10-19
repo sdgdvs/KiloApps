@@ -3414,15 +3414,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 SelectObject(hdc, oldHi);
                 DeleteObject(hHighlight);
 
-                // Diagonal Specular Sheen Sweep traversing the crucible vessel
-                int sheenPos = ((int)(tick / 25)) % 180 - 90;
-                HPEN hSheenPen = CreatePen(PS_SOLID, 2, RGB(225, 220, 255));
-                HGDIOBJ oldSheen = SelectObject(hdc, hSheenPen);
-                MoveToEx(hdc, cx - 20 + sheenPos, cy - 25, NULL);
-                LineTo(hdc, cx + 20 + sheenPos, cy + 25);
-                SelectObject(hdc, oldSheen);
-                DeleteObject(hSheenPen);
-
                 // Render Dual-Tier Concentric Shockwaves
                 for (int sw = 0; sw < MAX_SHOCKWAVES; sw++) {
                     if (g_Shockwaves[sw].life > 0.0f) {

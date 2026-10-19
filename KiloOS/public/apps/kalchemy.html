@@ -428,7 +428,6 @@
       border-radius: 50%;
       border: 1px solid rgba(243, 156, 18, 0.4);
       box-shadow: 0 0 15px var(--glow-gold), inset 0 0 15px var(--glow-purple);
-      animation: rotateRune 40s linear infinite;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -442,11 +441,6 @@
       color: var(--accent-gold);
       letter-spacing: 6px;
       text-shadow: 0 0 5px var(--accent-gold);
-    }
-
-    @keyframes rotateRune {
-      from { transform: rotate(0deg); }
-      to { transform: rotate(360deg); }
     }
 
     .crucible-vessel {
@@ -464,24 +458,6 @@
       box-shadow: 15px 25px 30px rgba(0, 0, 0, 0.8), 0 0 35px var(--glow-purple), inset 0 0 20px rgba(155, 89, 182, 0.4);
       transition: all 0.3s ease;
       z-index: 2;
-    }
-
-    .crucible-vessel::before {
-      content: '';
-      position: absolute;
-      top: -60%;
-      left: -60%;
-      width: 220%;
-      height: 220%;
-      background: linear-gradient(135deg, transparent 42%, rgba(255, 255, 255, 0.22) 50%, transparent 58%);
-      transform: rotate(25deg);
-      animation: vesselSheen 4.5s ease-in-out infinite;
-      pointer-events: none;
-    }
-
-    @keyframes vesselSheen {
-      0% { transform: translateY(-130%) rotate(25deg); }
-      25%, 100% { transform: translateY(130%) rotate(25deg); }
     }
 
     .crucible-vessel.reacting {

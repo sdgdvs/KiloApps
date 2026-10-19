@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-graphics
-next_agent: kilo-soundscape
+current_agent: kilo-soundscape
+next_agent: kilo-tester
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -15,7 +15,7 @@ timeout_minutes: 10
 status: ready
 current_targets:
   kilo_creator: kweb://webring
-  kilo_graphics: KAlchemy
+  kilo_graphics: KFortress
   kilo_soundscape: KVoid
   kilo_tester: KTrader
   kilo_usability: KPass
@@ -35,9 +35,9 @@ virtual_web_rotation:
 - kweb://deep-core
 - kweb://darknet
 last_run:
-  agent: kilo-creator
-  app: kweb://portal
-  timestamp: 2026-10-19T01:16:00+0000
+  agent: kilo-graphics
+  app: KAlchemy
+  timestamp: 2026-10-19T01:36:00+0000
 last_planner_run: '2026-10-18T21:17:00Z'
 ---
 
@@ -72,20 +72,20 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Upcoming Queue**: `kweb://warez`, `kweb://geocities`, `kweb://users/~neon_rider`, `kweb://asm-temple`.
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
-- **Target**: `KAlchemy`
-- **Primary Files**: `KiloOS/public/apps/kalchemy.html`, `KAlchemy/main.c` (if present)
-- **Objective**: Alchemical lab & potion crafting visual overhaul: cauldron animations, reagent sprites, and parchment grimoire UI; ensure 0 specular glints or traveling border dots.
+- **Target**: `KFortress`
+- **Primary Files**: `KiloOS/public/apps/kfortress.html`, `KFortress/main.c` (if present)
+- **Objective**: Stronghold and fortress visual asset pipeline evaluation: terrain/tile textures, entity sprites, and UI HUD; eliminate any specular glints or traveling border dots.
 - **Action Steps**:
-  1. Inspect `KiloOS/public/apps/kalchemy.html` canvas rendering routines for programmer art.
-  2. Generate reagent / cauldron sprites via 2-stage asset pipeline (`generate_image` with solid `#FF00FF` -> `scripts/asset_pipeline.py`).
+  1. Inspect `KiloOS/public/apps/kfortress.html` canvas rendering routines for programmer art.
+  2. Generate sprites via 2-stage asset pipeline if appropriate (`generate_image` with solid `#FF00FF` -> `scripts/asset_pipeline.py`).
   3. Search for and eliminate any traveling border dots or rotating specular glints.
   4. Run `python scripts/check_icons.py` to audit icon uniqueness.
 - **Verification**: `cd KiloOS && npm run build`. Verify files < 999 KB.
 - **Handoff**:
-  - In frontmatter: advance `current_targets.kilo_graphics` to `KFortress`.
+  - In frontmatter: advance `current_targets.kilo_graphics` to `KMech`.
   - Set `current_agent: kilo-soundscape`.
   - Append terse execution log (≤6 lines), commit, and push.
-- **Upcoming Queue**: `KFortress`, `KMech`, `KColosseum`.
+- **Upcoming Queue**: `KMech`, `KColosseum`, `KTrader`.
 
 ### 3. Procedural Audio & Soundscape Queue (`kilo-soundscape`)
 - **Target**: `KVoid`
@@ -203,6 +203,14 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-19T01:36:00+0000 — kilo-graphics: KAlchemy (Asset Suitability Audit & Glint Removal)**
+  - ⏭️ Skip — Imagen 3 asset replacement not appropriate for KAlchemy
+  - Suitability Assessment: Confirmed alchemical codex/recipe puzzle card interface with emoji elements & particle canvas (<999 KB: 258.3 KB).
+  - Glint Removal: Eliminated diagonal specular sheen sweep from crucible vessel in both Win32 C (`main.c`) and Web HTML (`kalchemy.html`).
+  - Perimeter Dots: Removed `rotateRune` continuous perimeter rotation to ensure static, period-accurate mystical border.
+  - Verification & Parity: Verified clean Win32 C build (`KAlchemy.exe`, 70.1 KB), startup test PASS (252.3 KB, 0 JS errors), Vite build clean, security lint PASS.
+  - Queue Handoff: Advanced `kilo_graphics` to `KFortress`; rotation handoff to `kilo-soundscape`.
+
 - **2026-10-19T01:16:00+0000 — kilo-creator: kweb://portal (1999 Web Portal & Directory Deep Expansion)**
   - Web Directory Crawler & Spider: Implemented interactive KiloSpider 1.0 crawler with live hypermedia topology canvas visualizer, radar sweep, depth selector, terminal logs, and inverted index keyword extraction.
   - Retro Widget Lab & Embed Sandbox: Created interactive webmaster studio to configure, preview, test audio, and generate self-contained 1999 HTML embed snippets for Hit Counters, Tickers, Clocks, Webrings, Modems, and 88x31 Badges.
@@ -232,10 +240,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Responsive Layout: Added responsive wrapping under <=768px for frequency, stego, lore, header, footer, and transform controls.
   - Dual Parity & Build: Added Esc clear handling and updated manual in Win32 C (`KCipher.exe`), clean build (11.5 KB), startup test PASS (111.5 KB < 999 KB, 0 JS errors), Vite build clean (487ms).
   - Queue Handoff: Advanced `kilo_usability` to `KPass`; rotated active agent to `kilo-qa`.
-
-- **2026-10-18T18:20:00+0000 — kilo-tester: KColony (UI Audit, Hotkey Hardening & Mature Quarantine)**
-  - PASS ✅ (5 issues, 5 fixed): Fixed modal display check, repaired game loop intervals, added numpad/A hotkeys, wired active export autosave, and aligned structure panel order.
-  - Interactive Audit: Verified all 20 structure buttons, 13 research paths, 3 expedition tiers, trade depot, orbital strike, and Escape/backdrop modal dismissals.
-  - State Persistence: Confirmed F5 quicksave, F9 quickload, JSON import/export, and first-run tutorial flag (`kcolony_tutorialSeen`) never intrudes on restored saves.
-  - Verification: Clean Win32 C compilation (`KColony.exe`), startup test PASS (138.3 KB < 999 KB, 0 JS errors), Vite build clean (461ms), byte gate PASS.
-  - Quarantine & Queue: Promoted KColony to Mature Applications quarantine; advanced `kilo_tester` to KTrader; rotation handoff to `kilo-usability`.
