@@ -79,7 +79,7 @@
             pointer-events: none;
             z-index: 10;
         }
-        .crt-overlay {
+        .crt-vignette {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
             background: radial-gradient(circle, rgba(0,0,0,0) 60%, rgba(0,0,0,0.4) 100%);
@@ -251,7 +251,7 @@
         <div id="canvas-wrapper">
             <canvas id="gameCanvas" width="640" height="480"></canvas>
             <div class="scanlines"></div>
-            <div class="crt-overlay"></div>
+            <div class="crt-vignette"></div>
         </div>
         <div id="message">Use WASD or Click to move &bull; Space for EMP &bull; [F] Flare &bull; [F1] Guide &bull; [M] Audio &bull; [F5] Save &bull; [F9] Load</div>
         <div class="btn-panel">
@@ -348,7 +348,10 @@
             updateSoundButton();
             showMessage(soundMuted ? "AUDIO FX MUTED." : "AUDIO FX ENABLED.", soundMuted ? "#aaa" : "#00ffff");
             if (!soundMuted) {
-                playBeep(660, 'sine', 0.1, 0.15);
+                playCosmicBell(880, 0.22, 0.16);
+                startBgm();
+            } else {
+                stopBgm();
             }
         }
 
@@ -408,6 +411,10 @@
         }
 
         let audioCtx = null;
+        let snesDelayNode = null;
+        let snesFilterNode = null;
+        let snesFeedbackNode = null;
+
         function getAudioContext() {
             if (!audioCtx) {
                 try {
@@ -417,9 +424,32 @@
             if (audioCtx && audioCtx.state === 'suspended') {
                 audioCtx.resume().catch(() => {});
             }
+            if (audioCtx && !snesDelayNode) {
+                setupSnesDelay(audioCtx);
+            }
             return audioCtx;
         }
-        
+
+        // SNES SPC700 Warm Stereo Slapback Delay DSP line (185ms, 2.2kHz LP filter, 0.30 feedback)
+        function setupSnesDelay(actx) {
+            try {
+                snesDelayNode = actx.createDelay();
+                snesDelayNode.delayTime.setValueAtTime(0.185, actx.currentTime);
+
+                snesFilterNode = actx.createBiquadFilter();
+                snesFilterNode.type = 'lowpass';
+                snesFilterNode.frequency.setValueAtTime(2200, actx.currentTime);
+
+                snesFeedbackNode = actx.createGain();
+                snesFeedbackNode.gain.setValueAtTime(0.30, actx.currentTime);
+
+                snesDelayNode.connect(snesFilterNode);
+                snesFilterNode.connect(snesFeedbackNode);
+                snesFeedbackNode.connect(snesDelayNode);
+                snesFilterNode.connect(actx.destination);
+            } catch (e) {}
+        }
+
         function playBeep(freq, type, duration, vol=0.1) {
             if (soundMuted) return;
             try {
@@ -430,7 +460,7 @@
                 osc.type = type;
                 osc.frequency.setValueAtTime(freq, actx.currentTime);
                 gain.gain.setValueAtTime(vol, actx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.01, actx.currentTime + duration);
+                gain.gain.exponentialRampToValueAtTime(0.001, actx.currentTime + duration);
                 osc.connect(gain);
                 gain.connect(actx.destination);
                 osc.start();
@@ -438,8 +468,8 @@
             } catch (e) {}
         }
 
-        // Yamaha YM2612 2-Operator FM Synthesis Engine & SNES Stereo Delay Warmth
-        function playFMTone(carrierFreq, modRatio, modDepth, duration, vol=0.15, waveform='sine') {
+        // Yamaha YM2612 2-Operator FM Synthesis Core
+        function playFMTone(carrierFreq, modRatio, modIndex, duration, vol=0.15, waveform='sine', useEcho=false, delayedVibrato=false) {
             if (soundMuted) return;
             try {
                 let actx = getAudioContext();
@@ -455,17 +485,35 @@
                 carrier.frequency.setValueAtTime(carrierFreq, now);
                 modulator.frequency.setValueAtTime(carrierFreq * modRatio, now);
 
-                modGain.gain.setValueAtTime(modDepth, now);
-                modGain.gain.exponentialRampToValueAtTime(1.0, now + duration);
+                let modDepth = carrierFreq * modRatio * modIndex;
+                modGain.gain.setValueAtTime(Math.max(1.0, modDepth), now);
+                modGain.gain.exponentialRampToValueAtTime(Math.max(0.1, carrierFreq * 0.15), now + Math.max(0.02, duration * 0.75));
 
                 modulator.connect(modGain);
                 modGain.connect(carrier.frequency);
 
-                masterGain.gain.setValueAtTime(vol, now);
-                masterGain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+                if (delayedVibrato && duration > 0.3) {
+                    let lfo = actx.createOscillator();
+                    let lfoGain = actx.createGain();
+                    lfo.frequency.setValueAtTime(5.5, now);
+                    lfoGain.gain.setValueAtTime(0.001, now);
+                    lfoGain.gain.setValueAtTime(0.001, now + 0.18);
+                    lfoGain.gain.linearRampToValueAtTime(5.0, now + 0.35);
+                    lfo.connect(lfoGain);
+                    lfoGain.connect(carrier.frequency);
+                    lfo.start(now);
+                    lfo.stop(now + duration);
+                }
+
+                masterGain.gain.setValueAtTime(Math.max(0.0001, vol), now);
+                masterGain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
 
                 carrier.connect(masterGain);
                 masterGain.connect(actx.destination);
+
+                if (useEcho && snesDelayNode) {
+                    masterGain.connect(snesDelayNode);
+                }
 
                 carrier.start(now);
                 modulator.start(now);
@@ -474,13 +522,154 @@
             } catch (e) {}
         }
 
+        // --- Hardware Chiptune FM Instrument Patches ---
+        function playVoidPad(freq, dur, vol=0.08) {
+            if (soundMuted) return;
+            playFMTone(freq, 0.5, 1.2, dur, vol, 'sine', true, false);
+        }
+
+        function playCosmicBell(freq, dur, vol=0.12) {
+            if (soundMuted) return;
+            playFMTone(freq, 3.5, 4.5, dur, vol, 'sine', true, false);
+        }
+
+        function playHollowLead(freq, dur, vol=0.12, vibrato=true) {
+            if (soundMuted) return;
+            playFMTone(freq, 1.0, 0.9, dur, vol, 'sine', true, vibrato);
+        }
+
+        function playSlapBass(freq, dur, vol=0.16) {
+            if (soundMuted) return;
+            playFMTone(freq, 2.0, 3.2, dur, vol, 'sine', false, false);
+        }
+
+        function playFmKick(vol=0.22) {
+            if (soundMuted) return;
+            try {
+                let actx = getAudioContext();
+                if (!actx) return;
+                let now = actx.currentTime;
+                let osc = actx.createOscillator();
+                let gain = actx.createGain();
+                osc.frequency.setValueAtTime(125, now);
+                osc.frequency.exponentialRampToValueAtTime(38, now + 0.04);
+                gain.gain.setValueAtTime(vol, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.14);
+                osc.connect(gain);
+                gain.connect(actx.destination);
+                osc.start(now);
+                osc.stop(now + 0.14);
+            } catch (e) {}
+        }
+
+        function playFmSnare(vol=0.16) {
+            if (soundMuted) return;
+            try {
+                let actx = getAudioContext();
+                if (!actx) return;
+                let now = actx.currentTime;
+                let dur = 0.12;
+                playFMTone(185, 9.77, 4.0, dur, vol * 0.7, 'sine', false, false);
+                let bufferSize = Math.floor(actx.sampleRate * dur);
+                let buffer = actx.createBuffer(1, bufferSize, actx.sampleRate);
+                let data = buffer.getChannelData(0);
+                for (let i = 0; i < bufferSize; i++) data[i] = (Math.random() * 2 - 1) * 0.35;
+                let noise = actx.createBufferSource();
+                noise.buffer = buffer;
+                let filter = actx.createBiquadFilter();
+                filter.type = 'bandpass';
+                filter.frequency.setValueAtTime(1800, now);
+                filter.Q.value = 2.2;
+                let gain = actx.createGain();
+                gain.gain.setValueAtTime(vol * 0.8, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + dur);
+                noise.connect(filter);
+                filter.connect(gain);
+                gain.connect(actx.destination);
+                noise.start(now);
+                noise.stop(now + dur);
+            } catch (e) {}
+        }
+
+        function playFmHiHat(vol=0.06, open=false) {
+            if (soundMuted) return;
+            let dur = open ? 0.16 : 0.045;
+            playFMTone(480, 11.0, 5.5, dur, vol, 'sine', false, false);
+        }
+
+        // --- Action Stingers & UI Earcons ---
+        function playKeycardJingle(type) {
+            if (soundMuted) return;
+            if (type === 6) { // Red Keycard
+                playCosmicBell(440.00, 0.18, 0.14); // A4
+                setTimeout(() => playCosmicBell(587.33, 0.18, 0.14), 65); // D5
+                setTimeout(() => playCosmicBell(739.99, 0.20, 0.16), 130); // F#5
+                setTimeout(() => playCosmicBell(880.00, 0.35, 0.18), 195); // A5
+            } else if (type === 7) { // Green Keycard
+                playCosmicBell(392.00, 0.18, 0.14); // G4
+                setTimeout(() => playCosmicBell(493.88, 0.18, 0.14), 65); // B4
+                setTimeout(() => playCosmicBell(587.33, 0.20, 0.16), 130); // D5
+                setTimeout(() => playCosmicBell(783.99, 0.35, 0.18), 195); // G5
+            } else { // Blue Keycard
+                playCosmicBell(349.23, 0.18, 0.14); // F4
+                setTimeout(() => playCosmicBell(440.00, 0.18, 0.14), 65); // A4
+                setTimeout(() => playCosmicBell(523.25, 0.20, 0.16), 130); // C5
+                setTimeout(() => playCosmicBell(659.26, 0.35, 0.18), 195); // E5
+            }
+        }
+
+        function playTerminalChirp() {
+            if (soundMuted) return;
+            playFMTone(1999, 1.5, 2.5, 0.08, 0.14, 'sine', true);
+            setTimeout(() => playCosmicBell(1174.66, 0.25, 0.16), 75); // D6
+        }
+
+        function playSaveEarcon() {
+            if (soundMuted) return;
+            playCosmicBell(587.33, 0.15, 0.14); // D5
+            setTimeout(() => playCosmicBell(880.00, 0.15, 0.15), 60); // A5
+            setTimeout(() => playCosmicBell(1174.66, 0.30, 0.18), 120); // D6
+        }
+
+        function playLoadEarcon() {
+            if (soundMuted) return;
+            playCosmicBell(1174.66, 0.15, 0.16); // D6
+            setTimeout(() => playCosmicBell(880.00, 0.15, 0.15), 60); // A5
+            setTimeout(() => playCosmicBell(698.46, 0.30, 0.16), 120); // F5
+        }
+
+        function playGameOverDrone() {
+            if (soundMuted) return;
+            playVoidPad(146.83, 1.5, 0.25); // D3
+            setTimeout(() => playVoidPad(155.56, 1.5, 0.25), 350); // Eb3 Phrygian tension
+            setTimeout(() => playSlapBass(73.42, 2.0, 0.3), 700); // D2 dark descent
+        }
+
+        function playVictoryFanfare() {
+            if (soundMuted) return;
+            playVoidPad(116.54, 0.6, 0.2); // Bb2
+            playCosmicBell(466.16, 0.5, 0.15); // Bb4
+            playCosmicBell(659.26, 0.5, 0.16); // E5 (#11)
+            setTimeout(() => {
+                playVoidPad(130.81, 0.6, 0.2); // C3
+                playCosmicBell(523.25, 0.5, 0.16); // C5
+                playCosmicBell(587.33, 0.5, 0.16); // D5 (9th)
+            }, 300);
+            setTimeout(() => {
+                playVoidPad(146.83, 1.8, 0.25); // D3
+                playCosmicBell(587.33, 1.8, 0.18); // D5
+                playCosmicBell(880.00, 1.8, 0.20); // A5
+                playCosmicBell(1174.66, 2.0, 0.22); // D6
+            }, 650);
+        }
+
         function playO2Hiss() {
             if (soundMuted) return;
             try {
                 let actx = getAudioContext();
                 if (!actx) return;
                 let now = actx.currentTime;
-                let bufferSize = Math.floor(actx.sampleRate * 0.3);
+                let bufferSize = Math.floor(actx.sampleRate * 0.32);
                 let buffer = actx.createBuffer(1, bufferSize, actx.sampleRate);
                 let data = buffer.getChannelData(0);
                 for (let i = 0; i < bufferSize; i++) data[i] = (Math.random() * 2 - 1) * 0.3;
@@ -488,53 +677,81 @@
                 noise.buffer = buffer;
                 let filter = actx.createBiquadFilter();
                 filter.type = 'bandpass';
-                filter.frequency.setValueAtTime(1500, now);
-                filter.frequency.exponentialRampToValueAtTime(350, now + 0.3);
-                filter.Q.value = 3.0;
+                filter.frequency.setValueAtTime(1600, now);
+                filter.frequency.exponentialRampToValueAtTime(320, now + 0.32);
+                filter.Q.value = 3.2;
                 let gain = actx.createGain();
-                gain.gain.setValueAtTime(0.25, now);
-                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+                gain.gain.setValueAtTime(0.24, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.32);
                 noise.connect(filter);
                 filter.connect(gain);
                 gain.connect(actx.destination);
                 noise.start(now);
-                playFMTone(540, 1.5, 90, 0.25, 0.12);
+                playFMTone(587.33, 1.5, 2.0, 0.28, 0.14, 'sine', true);
             } catch (e) {}
         }
 
         function playBatterySurge() {
             if (soundMuted) return;
-            playFMTone(220, 2.0, 120, 0.1, 0.15);
-            setTimeout(() => playFMTone(440, 2.0, 160, 0.12, 0.18), 70);
-            setTimeout(() => playFMTone(880, 1.0, 80, 0.22, 0.2), 140);
+            playFMTone(220, 2.0, 3.0, 0.12, 0.15, 'sine', false);
+            setTimeout(() => playFMTone(440, 2.0, 2.5, 0.14, 0.18, 'sine', false), 60);
+            setTimeout(() => playCosmicBell(880, 0.35, 0.20), 130);
         }
 
         function playFlareIgnite() {
             if (soundMuted) return;
-            playFMTone(180, 3.5, 200, 0.4, 0.22, 'sawtooth');
-            setTimeout(() => playBeep(920, 'triangle', 0.2, 0.15), 100);
+            playFMTone(180, 3.5, 3.5, 0.45, 0.22, 'sawtooth', true);
+            setTimeout(() => playCosmicBell(920, 0.25, 0.16), 90);
         }
 
         function playAcidSizzle() {
             if (soundMuted) return;
-            playFMTone(140, 4.0, 160, 0.3, 0.25, 'sawtooth');
+            playFMTone(140, 4.2, 4.0, 0.32, 0.24, 'sawtooth', false);
         }
 
         function playApexRoar() {
             if (soundMuted) return;
-            playFMTone(55, 1.5, 100, 0.7, 0.35, 'sawtooth');
+            playFMTone(48, 1.48, 3.8, 0.85, 0.36, 'sawtooth', true);
         }
 
         function playHeartbeat() {
             if (soundMuted) return;
-            playBeep(40, 'sine', 0.5, 0.5);
-            setTimeout(() => playBeep(40, 'sine', 0.5, 0.5), 200);
+            try {
+                let actx = getAudioContext();
+                if (!actx) return;
+                let now = actx.currentTime;
+                let osc = actx.createOscillator();
+                let gain = actx.createGain();
+                osc.frequency.setValueAtTime(46, now);
+                osc.frequency.exponentialRampToValueAtTime(28, now + 0.12);
+                gain.gain.setValueAtTime(0.35, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.13);
+                osc.connect(gain);
+                gain.connect(actx.destination);
+                osc.start(now);
+                osc.stop(now + 0.13);
+
+                setTimeout(() => {
+                    if (soundMuted) return;
+                    let now2 = actx.currentTime;
+                    let osc2 = actx.createOscillator();
+                    let gain2 = actx.createGain();
+                    osc2.frequency.setValueAtTime(40, now2);
+                    osc2.frequency.exponentialRampToValueAtTime(24, now2 + 0.14);
+                    gain2.gain.setValueAtTime(0.28, now2);
+                    gain2.gain.exponentialRampToValueAtTime(0.001, now2 + 0.15);
+                    osc2.connect(gain2);
+                    gain2.connect(actx.destination);
+                    osc2.start(now2);
+                    osc2.stop(now2 + 0.15);
+                }, 160);
+            } catch (e) {}
         }
 
         function playAlarm() {
             if (soundMuted) return;
-            playBeep(800, 'square', 0.3, 0.2);
-            setTimeout(() => playBeep(600, 'square', 0.3, 0.2), 300);
+            playFMTone(880, 1.0, 2.0, 0.2, 0.2, 'square');
+            setTimeout(() => playFMTone(659.26, 1.0, 2.0, 0.2, 0.2, 'square'), 220);
         }
 
         function playAlienScreech() {
@@ -542,18 +759,168 @@
             try {
                 let actx = getAudioContext();
                 if (!actx) return;
+                let now = actx.currentTime;
                 let osc = actx.createOscillator();
-                let gain = actx.createGain();
+                let mod = actx.createOscillator();
+                let modG = actx.createGain();
+                let master = actx.createGain();
+
                 osc.type = 'sawtooth';
-                osc.frequency.setValueAtTime(2000, actx.currentTime);
-                osc.frequency.exponentialRampToValueAtTime(100, actx.currentTime + 0.5);
-                gain.gain.setValueAtTime(0.3, actx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.01, actx.currentTime + 0.5);
-                osc.connect(gain);
-                gain.connect(actx.destination);
-                osc.start();
-                osc.stop(actx.currentTime + 0.5);
+                mod.type = 'sawtooth';
+                osc.frequency.setValueAtTime(1800, now);
+                osc.frequency.exponentialRampToValueAtTime(120, now + 0.45);
+                mod.frequency.setValueAtTime(640, now);
+                mod.frequency.linearRampToValueAtTime(90, now + 0.45);
+                modG.gain.setValueAtTime(700, now);
+                modG.gain.exponentialRampToValueAtTime(10, now + 0.45);
+
+                mod.connect(modG);
+                modG.connect(osc.frequency);
+
+                master.gain.setValueAtTime(0.28, now);
+                master.gain.exponentialRampToValueAtTime(0.001, now + 0.45);
+
+                osc.connect(master);
+                master.connect(actx.destination);
+                if (snesDelayNode) master.connect(snesDelayNode);
+
+                osc.start(now);
+                mod.start(now);
+                osc.stop(now + 0.45);
+                mod.stop(now + 0.45);
             } catch (e) {}
+        }
+
+        // --- 64-Step Procedural Chiptune BGM Engine: "Derelict Bulkhead Protocol" ---
+        // Mode: D Minor / D Phrygian with Lydian Horizon modal shift
+        let bgmStep = 0;
+        let bgmTimer = null;
+
+        const B_D2 = 73.42, B_F2 = 87.31, B_G2 = 98.00, B_A2 = 110.00, B_BB1 = 58.27, B_BB2 = 116.54;
+        const B_C3 = 130.81, B_CS3 = 138.59, B_D3 = 146.83, B_EB2 = 77.78, B_G1 = 49.00;
+        const P_F4 = 349.23, P_C5 = 523.25, P_D4 = 293.66, P_A4 = 440.00, P_BB4 = 466.16, P_F5 = 698.46;
+        const P_G4 = 392.00, P_CS5 = 554.37, P_E5 = 659.26, P_EB5 = 622.25, P_D5 = 587.33, P_G5 = 783.99, P_A5 = 880.00, P_BB5 = 932.33;
+
+        function playBgmStep(step) {
+            if (soundMuted || isDead || wonGame) return;
+
+            let s = step % 64;
+            let urgent = selfDestructActive || oxygen <= 20 || battery <= 20;
+
+            // Channel 4: Melodic Counterpoint Bass (YM2612 Slap Bass - Dry, Punchy)
+            if (s === 0 || s === 4 || s === 8 || s === 12) playSlapBass(B_D2, 0.22, 0.16);
+            else if (s === 6) playSlapBass(B_D3, 0.16, 0.14);
+            else if (s === 14) playSlapBass(B_C3, 0.18, 0.15);
+            else if (s === 16 || s === 20 || s === 24 || s === 28) playSlapBass(B_BB1, 0.24, 0.17);
+            else if (s === 22) playSlapBass(B_F2, 0.16, 0.14);
+            else if (s === 30) playSlapBass(B_A2, 0.18, 0.15);
+            else if (s === 32 || s === 36 || s === 40 || s === 44) playSlapBass(B_G1, 0.24, 0.17);
+            else if (s === 38) playSlapBass(B_D2, 0.16, 0.14);
+            else if (s === 46) playSlapBass(B_F2, 0.18, 0.15);
+            else if (s === 48 || s === 52) playSlapBass(B_EB2, 0.22, 0.17);
+            else if (s === 54) playSlapBass(B_BB2, 0.16, 0.14);
+            else if (s === 56 || s === 60) playSlapBass(B_A2, 0.22, 0.16);
+            else if (s === 62) playSlapBass(B_CS3, 0.18, 0.15);
+
+            // Channel 3: Harmonic Shell Voicing / Void Pad (3rd + 7th, no doubled 5th)
+            if (s === 0 || s === 8) {
+                playVoidPad(P_F4, 1.4, 0.08); // Minor 3rd
+                playVoidPad(P_C5, 1.4, 0.07); // Minor 7th
+            } else if (s === 16 || s === 24) {
+                playVoidPad(P_D4, 1.4, 0.08); // Major 3rd
+                playVoidPad(P_A4, 1.4, 0.07); // Major 7th
+            } else if (s === 32 || s === 40) {
+                playVoidPad(P_BB4, 1.4, 0.08); // Minor 3rd
+                playVoidPad(P_F5, 1.4, 0.07); // Minor 7th
+            } else if (s === 48 || s === 56) {
+                playVoidPad(P_G4, 1.4, 0.08); // 7th
+                playVoidPad(P_CS5, 1.4, 0.07); // Tritone leading tone
+            }
+
+            // Channel 1: Lead Melody (Hollow Flute / Ghost Lead - Vocal Phrasing & Vibrato)
+            if (s === 0) playHollowLead(P_D5, 0.45, 0.13, false);
+            else if (s === 3) playHollowLead(P_F5, 0.40, 0.13, false);
+            else if (s === 6) playHollowLead(P_E5, 0.35, 0.12, false);
+            else if (s === 8) playHollowLead(P_D5, 0.70, 0.14, true);
+            else if (s === 12) playHollowLead(P_C5, 0.30, 0.12, false);
+            else if (s === 14) playHollowLead(P_D5, 0.45, 0.13, false);
+            // Steps 16-24: Lead RESTS (Call & Response silence for counter-melody)
+            else if (s === 26) playHollowLead(P_F5, 0.35, 0.13, false);
+            else if (s === 28) playHollowLead(P_E5, 0.35, 0.12, false);
+            else if (s === 30) playHollowLead(P_C5, 0.40, 0.12, false);
+            else if (s === 32) playHollowLead(P_D5, 0.50, 0.13, false);
+            else if (s === 35) playHollowLead(P_BB4, 0.40, 0.12, false);
+            else if (s === 38) playHollowLead(P_C5, 0.35, 0.12, false);
+            else if (s === 40) playHollowLead(P_D5, 0.65, 0.14, true);
+            else if (s === 44) playHollowLead(P_G5, 0.60, 0.15, true);
+            else if (s === 48) playHollowLead(P_EB5, 0.45, 0.14, false); // Phrygian b2 tension
+            else if (s === 51) playHollowLead(P_D5, 0.40, 0.13, false);
+            else if (s === 54) playHollowLead(P_CS5, 0.45, 0.13, true);
+            else if (s === 58) playHollowLead(P_E5, 0.40, 0.13, false);
+            else if (s === 62) playHollowLead(P_D5, 0.50, 0.14, false);
+
+            // Channel 2: Counter-Melody / Bell (Cosmic DX7 Chime - Contrary Motion & Solos)
+            if (s === 4) playCosmicBell(P_A5, 0.28, 0.11);
+            else if (s === 10) playCosmicBell(P_F5, 0.28, 0.11);
+            // Solo Spotlight when Lead rests (Steps 16-24)
+            else if (s === 16) playCosmicBell(P_BB4, 0.32, 0.14);
+            else if (s === 18) playCosmicBell(P_D5, 0.32, 0.14);
+            else if (s === 20) playCosmicBell(P_F5, 0.32, 0.15);
+            else if (s === 22) playCosmicBell(P_E5, 0.40, 0.16); // #11 Lydian wonder!
+            else if (s === 24) playCosmicBell(P_A5, 0.45, 0.16); // Maj7 crystal
+            else if (s === 36) playCosmicBell(P_D5, 0.30, 0.12);
+            else if (s === 42) playCosmicBell(P_F5, 0.32, 0.13);
+            else if (s === 46) playCosmicBell(P_BB5, 0.42, 0.15);
+            else if (s === 50) playCosmicBell(P_G5, 0.28, 0.12);
+            else if (s === 53) playCosmicBell(P_E5, 0.28, 0.12);
+            else if (s === 56) playCosmicBell(P_CS5, 0.32, 0.13);
+            else if (s === 60) playCosmicBell(P_A5, 0.35, 0.14);
+
+            // Channel 5: Percussion (Kick & Snare)
+            if (s === 0 || s === 8 || s === 16 || s === 24 || s === 32 || s === 40 || s === 48 || s === 56) {
+                playFmKick(urgent ? 0.26 : 0.22);
+            }
+            if (urgent && (s === 10 || s === 26 || s === 42 || s === 58)) {
+                playFmKick(0.18);
+            }
+            if (s === 4 || s === 12 || s === 20 || s === 28 || s === 36 || s === 44 || s === 52) {
+                playFmSnare(0.15);
+            }
+            if (s >= 60 && s <= 63) { // 16th snare roll fill
+                playFmSnare(0.12 + (s - 60) * 0.03);
+            }
+
+            // Channel 6: Hi-Hat with 5:3 Swing Feel
+            if (s % 2 === 0) {
+                let isOpen = (s === 14 || s === 30 || s === 46 || s === 62);
+                playFmHiHat(0.06, isOpen);
+            }
+        }
+
+        function scheduleBgmStep() {
+            if (soundMuted || isDead || wonGame) {
+                bgmTimer = null;
+                return;
+            }
+            playBgmStep(bgmStep);
+            let urgent = selfDestructActive || oxygen <= 20 || battery <= 20;
+            let isEven = (bgmStep % 2 === 0);
+            let nextDelay = urgent ? (isEven ? 125 : 75) : (isEven ? 175 : 105);
+            bgmStep++;
+            bgmTimer = setTimeout(scheduleBgmStep, nextDelay);
+        }
+
+        function startBgm() {
+            if (soundMuted || isDead || wonGame || bgmTimer) return;
+            getAudioContext();
+            bgmTimer = setTimeout(scheduleBgmStep, 50);
+        }
+
+        function stopBgm() {
+            if (bgmTimer) {
+                clearTimeout(bgmTimer);
+                bgmTimer = null;
+            }
         }
 
         function deployEMP() {
@@ -564,7 +931,7 @@
             }
             emps--;
             showMessage("EMP DEPLOYED. ALIENS STUNNED.", "#0ff");
-            playFMTone(320, 2.5, 180, 0.35, 0.25, 'sawtooth');
+            playFMTone(320, 2.5, 3.5, 0.45, 0.28, 'sawtooth', true);
             let pCentX = player.x * TILE_SIZE + TILE_SIZE / 2;
             let pCentY = player.y * TILE_SIZE + TILE_SIZE / 2;
             spawnParticles(pCentX, pCentY, '#0ff', 40);
@@ -958,12 +1325,14 @@
         startGameTickInterval();
 
         function die(msg) {
+            stopBgm();
             if (!isDead) {
                 let px = player.x * TILE_SIZE + TILE_SIZE/2;
                 let py = player.y * TILE_SIZE + TILE_SIZE/2;
                 spawnParticles(px, py, '#f00', 60);
                 addShockwave(px, py, '#ff0033', 100);
                 triggerScreenShake(6);
+                playGameOverDrone();
             }
             isDead = true;
             document.getElementById('message').innerText = msg;
@@ -1904,7 +2273,7 @@
                         }
                     }
                     map[newY][newX] = 10;
-                    playFMTone(780, 1.5, 80, 0.2, 0.15);
+                    playTerminalChirp();
                     showMessage(msg, "#0ff");
                     draw();
                 } else if (target === 10) {
@@ -1920,10 +2289,14 @@
                     updateInventoryDisplay();
                     updateStatsDisplay();
                     startAlienInterval();
+                    playCosmicBell(880, 0.35, 0.15);
+                    setTimeout(() => playCosmicBell(1174.66, 0.5, 0.18), 120);
                     showMessage(`ELEVATOR TO DECK ${deck}. STATS & EQUIPMENT RESTORED.`, "#ff0");
                     draw();
                 } else if (target === 14) {
                     wonGame = true;
+                    stopBgm();
+                    playVictoryFanfare();
                     if (selfDestructActive) {
                         if (totalTime < 300) {
                             winEnding = "S-RANK: STATION DESTROYED, SPEEDRUN ESCAPE!";
@@ -1952,11 +2325,13 @@
                         if (target === 6) { keys.r = true; showMessage("PICKED UP RED KEYCARD.", "#f00"); }
                         if (target === 7) { keys.g = true; showMessage("PICKED UP GREEN KEYCARD.", "#0f0"); }
                         if (target === 8) { keys.b = true; showMessage("PICKED UP BLUE KEYCARD.", "#55f"); }
+                        playKeycardJingle(target);
                         map[newY][newX] = 0;
                         updateInventoryDisplay();
                     }
                     if (target === 12) {
                         emps++;
+                        playCosmicBell(659.26, 0.3, 0.16);
                         showMessage("PICKED UP EMP CHARGE.", "#0ff");
                         map[newY][newX] = 0;
                         updateInventoryDisplay();
@@ -2070,7 +2445,7 @@
                 };
                 localStorage.setItem('kvoid_save', JSON.stringify(saveState));
                 showMessage("STATE QUICKSAVED (F5)", "#0f0");
-                playBeep(880, 'sine', 0.15, 0.2);
+                playSaveEarcon();
             } catch (err) {
                 showMessage("QUICKSAVE FAILED (STORAGE ERROR)", "#f00");
             }
@@ -2119,7 +2494,8 @@
                 updateStatsDisplay();
                 startAlienInterval();
                 showMessage("STATE QUICKLOADED (F9)", "#0f0");
-                playBeep(523, 'sine', 0.15, 0.2);
+                playLoadEarcon();
+                if (!soundMuted && !isDead && !wonGame) startBgm();
                 draw();
                 return true;
             } catch (err) {
@@ -2187,6 +2563,9 @@
                 resetGame();
                 return;
             }
+            if (!soundMuted && !bgmTimer && !isDead && !wonGame) {
+                startBgm();
+            }
             const rect = canvas.getBoundingClientRect();
             const clickX = (e.clientX - rect.left) / rect.width * VIRTUAL_WIDTH;
             const clickY = (e.clientY - rect.top) / rect.height * VIRTUAL_HEIGHT;
@@ -2204,6 +2583,7 @@
         });
 
         function resetGame() {
+            stopBgm();
             closeHelp();
             deck = 1;
             player = { x: 2, y: 2 };
@@ -2228,12 +2608,17 @@
             updateStatsDisplay();
             startAlienInterval();
             startGameTickInterval();
+            bgmStep = 0;
+            if (!soundMuted) startBgm();
             showMessage("Use WASD or Click to move • Space for EMP • [F] Flare • [F1] Guide • [M] Audio");
             draw();
         }
 
         window.addEventListener('keydown', (e) => {
             if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume().catch(() => {});
+            if (!soundMuted && !bgmTimer && !isDead && !wonGame) {
+                startBgm();
+            }
             if (e.key === 'F1') {
                 e.preventDefault();
                 toggleHelp();
@@ -2341,6 +2726,7 @@
 
         document.addEventListener('visibilitychange', () => {
             if (document.hidden) {
+                stopBgm();
                 if (renderLoopId) {
                     cancelAnimationFrame(renderLoopId);
                     renderLoopId = null;
@@ -2362,6 +2748,9 @@
                 }
                 if (!gameTickInterval && !isDead && !wonGame) {
                     startGameTickInterval();
+                }
+                if (!soundMuted && !bgmTimer && !isDead && !wonGame) {
+                    startBgm();
                 }
             }
         });
