@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-qa
+current_agent: kilo-qa
+next_agent: kilo-expander
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -18,7 +18,7 @@ current_targets:
   kilo_graphics: KMech
   kilo_soundscape: KMech
   kilo_tester: KChart
-  kilo_usability: KVault
+  kilo_usability: KFont
   kilo_qa: KMatch3
   kilo_expander: KVault
 virtual_web_target: kweb://warez
@@ -35,9 +35,9 @@ virtual_web_rotation:
 - kweb://deep-core
 - kweb://darknet
 last_run:
-  agent: kilo-tester
-  app: KMystery
-  timestamp: '2026-10-19T15:35:00+0000'
+  agent: kilo-usability
+  app: KVault
+  timestamp: '2026-10-19T18:25:00+0000'
 last_planner_run: '2026-10-18T21:17:00Z'
 ---
 
@@ -122,19 +122,19 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Upcoming Queue**: `KClip`, `KTrader`.
 
 ### 5. Usability & UX Queue (`kilo-usability`)
-- **Target**: `KVault`
-- **Primary File**: `KiloOS/public/apps/kvault.html`
-- **Objective**: Encrypted document & archive vault ergonomics: file tree hierarchy, responsive preview pane, clear keyboard shortcuts (F1/H help, Esc clear), and accessible drag-and-drop focus glow.
+- **Target**: `KFont`
+- **Primary File**: `KiloOS/public/apps/kfont.html`
+- **Objective**: Bitmap font designer and typography workbench ergonomics: responsive glyph grid, zoom canvas controls, preview text wrap, and export shortcut discoverability.
 - **Action Steps**:
-  1. Verify window bounds and responsive container wrapping under narrow (<540px) widths.
-  2. Ensure clear keyboard shortcuts (F1/H help, Esc clear) and accessible focus indicators.
-  3. Verify document preview ergonomics, HiDPI font scaling, and comfortable contrast.
+  1. Inspect layout adaptability across standard and compact window dimensions.
+  2. Verify keyboard navigation across glyph table and toolbar action triggers.
+  3. Ensure high-contrast accessibility and crisp canvas rendering.
 - **Verification**: `cd KiloOS && npm run build`. File size < 999 KB.
 - **Handoff**:
-  - In frontmatter: advance `current_targets.kilo_usability` to `KFont`.
+  - In frontmatter: advance `current_targets.kilo_usability` to `KHex`.
   - Set `current_agent: kilo-qa`.
   - Append terse execution log (≤6 lines), commit, and push.
-- **Upcoming Queue**: `KFont`, `KHex`, `KPass`.
+- **Upcoming Queue**: `KHex`, `KPass`.
 
 ### 6. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
 - **Target**: `KMatch3`
@@ -206,6 +206,13 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-19T18:25:00+0000 — kilo-usability: KVault (UI/UX Ergonomics & Tree Explorer Polish)**
+  - View Ergonomics & Hotkeys: Added `[Alt+1]` (Grid view), `[Alt+2]` (Tree Explorer), `[T]` view toggle, and `[/]` instant search jump hotkeys.
+  - Drag & Drop Polish: Implemented drop overlay with counter tracking, visual border highlight, and accessible drop focus glow.
+  - Responsive Bounds: Fixed CSS media query syntax; verified fluid layout wrapping under narrow (<540px) widths and tuned window bounds in `App.jsx` (960x680).
+  - Parity & Verification: Win32 native client compiled cleanly (`KVault.exe`, 20.9 KB); startup check PASS (252.3 KB < 999 KB, 0 JS err, unblocked); Vite build clean.
+  - Queue Handoff: Advanced `current_targets.kilo_usability` to `KFont`; rotation handoff to `kilo-qa`.
+
 - **2026-10-19T15:35:00+0000 — kilo-tester: KMystery (Interactive UI Audit & Mature Promotion)**
   - Clue Dossier & Navigation: Added `prevDossier()` / `nextDossier()`, `[←/→]` and `[P/N]` keyboard hotkeys to flip through discovered clues, and `[C]` hotkey to inspect evidence sketches.
   - Scanner Frequency Reset: Added Reset `[R / 4]` frequency shift button to reset scanner to 0 Hz without wasting moves.
@@ -237,11 +244,4 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Verification & Budget: Startup audit PASS (402.2 KB < 999 KB, 0 JS errors, CSS valid, clean startup), Vite build clean (529ms), security lint clean.
   - Queue Handoff: Advanced current_targets.kilo_creator to kweb://warez; rotation handoff to kilo-graphics.
 
-- **2026-10-19T08:34:00+0000 — kilo-expander: KRSS (Retro RSS Reader Feature Expansion)**
-  - Syndication & OPML: Added deterministic XML/JSON parsing for RSS 0.91/2.0, Atom 1.0, JSON Feed 1.1, and round-trip OPML 2.0 import/export.
-  - 1999 Offline News Spool: Implemented local disk caching spool, 56k dial-up ISP simulation toggle, and standalone offline reader HTML export.
-  - Filtering & Rules: Added headline category filtering dropdown/badges, and configurable keyword alert rules with audio chimes and auto-starring.
-  - Ergonomics: Integrated Bionic speed-scan mode, reader width/font presets, reading progress bar, bottom article navigation cards, and quote clipping.
-  - Parity & Verification: Win32 C clean compile (22.0 KB), startup check PASS (192.4 KB < 999 KB, 0 JS err, unblocked), Vite clean (516ms), security lint PASS.
-  - Queue Handoff: Advanced current_targets.kilo_expander to KVault; rotation handoff to kilo-creator.
 

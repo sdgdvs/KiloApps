@@ -81,7 +81,7 @@ const APPS = [
   { id: 'kquarantine', title: 'Q̷u̷a̷r̷a̷n̷t̷i̷n̷e̷', url: '#', exeUrl: null, icon: '/assets/icons/kquarantine.ico', w: 300, h: 200, folder: 'Hidden' },
   { id: 'ksettings', title: 'Settings', url: '/apps/ksettings.html', exeUrl: null, icon: '/assets/icons/ksettings.ico', w: 700, h: 560, folder: 'System' },
   { id: 'ktaskmgr', title: 'Task Manager', url: '/apps/ktaskmgr.html', exeUrl: null, icon: '/assets/icons/ktaskmgr.ico', w: 650, h: 500, folder: 'System' },
-  { id: 'kvault', title: 'KVault', url: '/apps/kvault.html', exeUrl: '/exe/KVault.exe', icon: '/assets/icons/kvault.ico', w: 900, h: 660, folder: 'System' },
+  { id: 'kvault', title: 'KVault', url: '/apps/kvault.html', exeUrl: '/exe/KVault.exe', icon: '/assets/icons/kvault.ico', w: 960, h: 680, folder: 'System' },
   { id: 'kjournal', title: 'KJournal', url: '/apps/kjournal.html', exeUrl: '/exe/KJournal.exe', icon: '/assets/icons/kjournal.ico', w: 1100, h: 750, folder: 'Office' },
   { id: 'kbreakout', title: 'KBreakout', url: '/apps/kbreakout.html', exeUrl: '/exe/KBreakout.exe', icon: '/assets/icons/kbreakout.ico', w: 430, h: 460, folder: 'Games' },
   { id: 'kbudget', title: 'KBudget', url: '/apps/kbudget.html', exeUrl: '/exe/KBudget.exe', icon: '/assets/icons/kbudget.ico', w: 920, h: 650, folder: 'Office' },

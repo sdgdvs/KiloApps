@@ -10,7 +10,7 @@
         :root {
             --bg-color: #0f0f13;
             --text-color: #ffffff;
-            --text-muted: rgba(255, 255, 255, 0.65);
+            --text-muted: rgba(255, 255, 255, 0.76);
             --glass-bg: rgba(255, 255, 255, 0.03);
             --glass-border: rgba(255, 255, 255, 0.08);
             --glass-hover: rgba(255, 255, 255, 0.08);
@@ -36,6 +36,9 @@
             padding: 0;
             height: 100%;
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            text-rendering: optimizeLegibility;
             background-color: var(--bg-color);
             background-image: radial-gradient(circle at top left, rgba(108, 92, 231, 0.15), transparent 45%),
                               radial-gradient(circle at bottom right, rgba(108, 92, 231, 0.06), transparent 45%);
@@ -793,18 +796,311 @@
             animation: fadeIn 0.3s ease;
         }
 
+        /* Accessible Focus Indicators */
+        button:focus-visible,
+        input:focus-visible,
+        select:focus-visible,
+        textarea:focus-visible,
+        .pill-btn:focus-visible,
+        .comp-btn:focus-visible,
+        .btn-field-mini:focus-visible,
+        .btn-tree-mini:focus-visible,
+        .fav-star:focus-visible,
+        .tag-badge:focus-visible,
+        .totp-box:focus-visible,
+        .tree-item-row:focus-visible,
+        .audit-card:focus-visible {
+            outline: 2px solid var(--primary-accent) !important;
+            outline-offset: 2px !important;
+            box-shadow: 0 0 10px rgba(108, 92, 231, 0.45) !important;
+        }
+
+        /* Drag & Drop Accessible Focus Glow & Overlay */
+        .container.drag-active {
+            border-color: var(--primary-accent) !important;
+            box-shadow: 0 0 35px rgba(108, 92, 231, 0.55), inset 0 0 40px rgba(108, 92, 231, 0.22) !important;
+        }
+
+        .drag-drop-overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(15, 15, 19, 0.90);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 2500;
+            pointer-events: none;
+            border: 2px dashed var(--primary-accent);
+            border-radius: 8px;
+            box-sizing: border-box;
+            animation: fadeIn 0.15s ease;
+        }
+
+        .drag-drop-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--primary-accent);
+            border-radius: 16px;
+            padding: 32px 40px;
+            text-align: center;
+            box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6), 0 0 30px rgba(108, 92, 231, 0.4);
+        }
+
+        /* View Mode Toggle */
+        .view-mode-toggle {
+            display: inline-flex;
+            gap: 4px;
+            background: rgba(0, 0, 0, 0.35);
+            border: 1px solid var(--glass-border);
+            padding: 2px;
+            border-radius: 20px;
+            align-items: center;
+        }
+
+        .view-mode-toggle .pill-btn {
+            border: none;
+            padding: 4px 10px;
+            font-size: 11px;
+            border-radius: 16px;
+        }
+
+        .view-mode-toggle .pill-btn.active {
+            background: var(--primary-accent);
+            color: #fff;
+            box-shadow: 0 2px 6px rgba(108, 92, 231, 0.35);
+        }
+
+        /* Archive Tree Hierarchy & Responsive Document Preview Pane */
+        .vault-tree-container {
+            display: flex;
+            gap: 16px;
+            flex: 1;
+            min-height: 440px;
+            margin-bottom: 16px;
+            align-items: stretch;
+        }
+
+        .tree-hierarchy-pane {
+            width: 300px;
+            min-width: 240px;
+            background: rgba(0, 0, 0, 0.32);
+            border: 1px solid var(--glass-border);
+            border-radius: 10px;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            overflow-y: auto;
+            max-height: calc(100vh - 240px);
+        }
+
+        .tree-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 1px solid var(--glass-border);
+            padding-bottom: 8px;
+        }
+
+        .btn-tree-mini {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border);
+            color: var(--text-color);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 10px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .btn-tree-mini:hover {
+            background: rgba(255, 255, 255, 0.12);
+        }
+
+        .tree-folder {
+            margin-bottom: 4px;
+        }
+
+        .tree-folder-title {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 6px 8px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            color: #fff;
+            background: rgba(255, 255, 255, 0.03);
+            user-select: none;
+            transition: all 0.15s ease;
+        }
+
+        .tree-folder-title:hover {
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .tree-folder-chevron {
+            font-size: 10px;
+            color: var(--text-muted);
+            transition: transform 0.15s ease;
+            display: inline-block;
+            margin-right: 6px;
+        }
+
+        .tree-folder.open > .tree-folder-title .tree-folder-chevron {
+            transform: rotate(90deg);
+        }
+
+        .tree-folder-children {
+            display: none;
+            margin-left: 10px;
+            margin-top: 3px;
+            border-left: 1px dashed rgba(255, 255, 255, 0.12);
+            padding-left: 8px;
+        }
+
+        .tree-folder.open > .tree-folder-children {
+            display: block;
+        }
+
+        .tree-subfolder {
+            margin-top: 4px;
+            margin-bottom: 4px;
+        }
+
+        .tree-subfolder-title {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 4px 6px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 11px;
+            font-weight: 600;
+            color: #c7c1ff;
+            user-select: none;
+            transition: all 0.15s ease;
+        }
+
+        .tree-subfolder-title:hover {
+            background: rgba(255, 255, 255, 0.06);
+        }
+
+        .tree-subfolder-children {
+            display: none;
+            margin-left: 8px;
+            border-left: 1px dotted rgba(255, 255, 255, 0.08);
+            padding-left: 6px;
+        }
+
+        .tree-subfolder.open > .tree-subfolder-children {
+            display: block;
+        }
+
+        .tree-item-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 5px 8px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            color: var(--text-color);
+            margin-top: 2px;
+            transition: all 0.15s ease;
+            outline: none;
+            user-select: none;
+        }
+
+        .tree-item-row:hover {
+            background: rgba(108, 92, 231, 0.15);
+            color: #fff;
+        }
+
+        .tree-item-row.selected {
+            background: var(--primary-accent);
+            color: #fff;
+            font-weight: 600;
+            box-shadow: 0 2px 8px rgba(108, 92, 231, 0.4);
+        }
+
+        .tree-preview-pane {
+            flex: 1;
+            background: var(--card-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 10px;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            min-width: 0;
+            max-height: calc(100vh - 240px);
+        }
+
+        .tree-preview-placeholder {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            text-align: center;
+            opacity: 0.7;
+            padding: 40px 20px;
+        }
+
+        @media (max-width: 760px) {
+            .vault-tree-container { flex-direction: column; }
+            .tree-hierarchy-pane { width: 100%; max-height: 240px; }
+            .tree-preview-pane { max-height: none; }
+        }
+
         @media (max-width: 640px) {
-            .container { padding: 14px; }
-            .header { flex-direction: column; align-items: flex-start; }
-            .header-actions { width: 100%; justify-content: flex-start; }
-            .modal-content { padding: 18px; }
+            .container { padding: 12px; }
+            .header { flex-direction: column; align-items: stretch; gap: 8px; }
+            .header-actions { width: 100%; justify-content: flex-start; gap: 6px; }
+            .header-actions .btn { padding: 6px 10px; font-size: 11px; }
+            .modal-content { padding: 16px; }
             .secret-list { grid-template-columns: 1fr; }
             .gen-options-grid { grid-template-columns: 1fr; }
+            #cat-fields-login > div,
+            #cat-fields-finance > div,
+            #cat-fields-server > div,
+            #view-add .card > div:nth-child(2) {
+                grid-template-columns: 1fr !important;
+            }
+        }
+
+        @media (max-width: 540px) {
+            .container { padding: 8px; }
+            .header-actions { gap: 4px; }
+            .header-actions .btn { padding: 5px 8px; font-size: 10px; }
+            .compartment-bar, .filter-bar { overflow-x: auto; flex-wrap: nowrap; padding-bottom: 4px; }
+            .view-mode-toggle .pill-btn { padding: 3px 7px; font-size: 10px; }
+            #search-input { width: 100% !important; margin-bottom: 4px; }
+            .tree-hierarchy-pane { max-height: 200px; padding: 8px; }
+            .tree-preview-pane { padding: 12px; }
         }
     </style>
 </head>
 <body>
     <div class="container" id="app-container">
+        <!-- Accessible Drag & Drop Import Overlay -->
+        <div id="drag-drop-overlay" class="drag-drop-overlay" style="display:none;" aria-hidden="true">
+            <div class="drag-drop-card">
+                <div style="font-size:44px; margin-bottom:12px;">📥</div>
+                <div style="font-size:18px; font-weight:700; color:#fff; margin-bottom:6px;">Drop Encrypted Vault or Backup File</div>
+                <div style="font-size:13px; color:var(--text-muted);">Release anywhere to import .json, .csv, .xml, or .asc archive</div>
+            </div>
+        </div>
+
         <!-- Main Top Bar -->
         <div class="header">
             <h1><span aria-hidden="true">🔒</span> KVault</h1>
@@ -862,9 +1158,13 @@
                     <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
                         <h2 style="margin:0; font-size: 20px; font-weight: 700;">Vault Items</h2>
                         <span id="vault-count-badge" style="font-size:12px; color:var(--text-muted); background:rgba(255,255,255,0.06); padding:3px 8px; border-radius:12px;">0 items</span>
+                        <div class="view-mode-toggle" role="group" aria-label="Vault View Mode">
+                            <button id="view-mode-grid-btn" class="pill-btn active" onclick="setViewMode('grid')" title="Card Grid View [Alt+1]">🗂️ Grid</button>
+                            <button id="view-mode-tree-btn" class="pill-btn" onclick="setViewMode('tree')" title="Archive Tree & Document Preview Pane [Alt+2 / T]">🌲 Tree Explorer</button>
+                        </div>
                     </div>
                     <div style="display:flex; gap: 8px; align-items: center; flex-wrap: wrap;">
-                        <input type="text" id="search-input" placeholder="Search (Ctrl+F)..." oninput="filterSecrets()" aria-label="Search Secrets" style="padding: 8px 12px; width: 160px; font-size: 13px;">
+                        <input type="text" id="search-input" placeholder="Search (Ctrl+F / /)..." oninput="filterSecrets()" aria-label="Search Secrets" style="padding: 8px 12px; width: 170px; font-size: 13px;">
                         <button class="btn secondary" onclick="openAuditModal()" title="Security & Password Health Audit" aria-label="Security Audit">🛡️ Audit</button>
                         <button class="btn secondary" onclick="openImportModal()" aria-label="Import Backup">Import</button>
                         <button class="btn secondary" onclick="openExportModal()" aria-label="Export Options">Export</button>
@@ -898,6 +1198,35 @@
                 <!-- Secret Cards Grid -->
                 <div class="secret-list" id="secret-list">
                     <!-- Dynamic secrets injected here -->
+                </div>
+
+                <!-- Archive Tree Hierarchy & Responsive Document Preview Pane -->
+                <div id="vault-tree-explorer" class="vault-tree-container" style="display:none;">
+                    <!-- Left: File Tree Hierarchy Pane -->
+                    <div class="tree-hierarchy-pane" id="tree-hierarchy-pane" role="tree" aria-label="Archive Folder Hierarchy">
+                        <div class="tree-header">
+                            <span>🌲 Archive Hierarchy</span>
+                            <div style="display:flex; gap:4px;">
+                                <button class="btn-tree-mini" onclick="expandAllTree()" title="Expand All Folders">➕ Expand</button>
+                                <button class="btn-tree-mini" onclick="collapseAllTree()" title="Collapse All Folders">➖ Collapse</button>
+                            </div>
+                        </div>
+                        <div class="tree-nodes-list" id="tree-nodes-list">
+                            <!-- Dynamic tree nodes injected here -->
+                        </div>
+                    </div>
+                    
+                    <!-- Right: Responsive Document & Credential Preview Pane -->
+                    <div class="tree-preview-pane" id="tree-preview-pane" role="region" aria-label="Document & Credential Preview">
+                        <div id="tree-preview-empty" class="tree-preview-placeholder">
+                            <div style="font-size:36px; margin-bottom:8px;">📄</div>
+                            <div style="font-size:15px; font-weight:600; margin-bottom:4px;">Select an Archive Item</div>
+                            <p style="font-size:12px; color:var(--text-muted); margin:0;">Click any document, key, or credential in the hierarchy to inspect, decrypt, or copy in real-time.</p>
+                        </div>
+                        <div id="tree-preview-content" style="display:none; height:100%; flex-direction:column;">
+                            <!-- Dynamic preview details injected here -->
+                        </div>
+                    </div>
                 </div>
                 
                 <!-- Empty State -->
@@ -1314,12 +1643,14 @@
             <p>Welcome to KVault! Your secure, client-side encrypted password manager, TOTP authenticator, and confidential data storage.</p>
             <ul>
                 <li><strong>Encryption:</strong> Local AES-GCM 256-bit encryption with PBKDF2 (100,000 rounds). The Master Password is NEVER sent over the network or stored unencrypted.</li>
+                <li><strong>Tree Explorer & Preview:</strong> Press <code>[Alt+2 / T]</code> to browse items hierarchically by Compartment and Category with an instant document & credential preview pane. Press <code>[Alt+1]</code> for Card Grid view.</li>
                 <li><strong>TOTP 2FA Authenticator:</strong> Stores RFC 6238 Base32 secret keys and calculates live 6-digit one-time authorization tokens refreshed every 30 seconds with animated timers.</li>
+                <li><strong>Drag & Drop Vault Import:</strong> Drag any <code>.json</code>, <code>.csv</code>, <code>.xml</code>, or <code>.asc</code> archive onto the window with visual focus glow to import or restore secrets.</li>
                 <li><strong>Password Generator Studio:</strong> Press <code>[Ctrl+G]</code> anytime for high-entropy random passwords, 1999 Diceware passphrases, or PINs.</li>
                 <li><strong>Security Audit:</strong> Click <strong>🛡️ Audit</strong> to assess overall vault health, detect weak or reused credentials, and identify missing 2FA.</li>
                 <li><strong>Quicksave & Quickload:</strong> Press <strong>F5</strong> to save an instant snapshot of your vault state to localStorage, and <strong>F9</strong> to restore it.</li>
                 <li><strong>Auto-Lock & Wipe:</strong> Automatically locks and clears the operating system clipboard after inactivity.</li>
-                <li><strong>Shortcuts:</strong> <code>[F5]</code> Quicksave, <code>[F9]</code> Quickload, <code>[F1 / H]</code> Help, <code>[M]</code> Toggle Sound, <code>[Ctrl+S]</code> Save/Export, <code>[Ctrl+L]</code> Lock instantly, <code>[Ctrl+F]</code> Find, <code>[Ctrl+G]</code> Generator, <code>[Esc]</code> Close modals / Return.</li>
+                <li><strong>Shortcuts:</strong> <code>[Alt+1]</code> Grid View, <code>[Alt+2 / T]</code> Tree Explorer, <code>[↑/↓]</code> Navigate Tree, <code>[/]</code> Jump to Search, <code>[F5]</code> Quicksave, <code>[F9]</code> Quickload, <code>[F1 / H]</code> Help, <code>[M]</code> Audio, <code>[Ctrl+S]</code> Save/Export, <code>[Ctrl+L]</code> Lock, <code>[Ctrl+F]</code> Find, <code>[Ctrl+G]</code> Generator, <code>[Esc]</code> Clear search / Close modals.</li>
             </ul>
             <button class="btn close-modal" onclick="closeHelp()">Got it (Esc / Enter)</button>
         </div>
@@ -1372,6 +1703,10 @@
         let currentAuditFilter = null;
         let genTargetIsForm = false;
         let totpTimer = null;
+        let currentViewMode = safeStorageGet('kvault_view_mode', 'grid');
+        let selectedTreeItemId = null;
+        const expandedTreeFolders = new Set();
+        let treeInitialized = false;
 
         // 1999 Cyber / Retro Wordbank for Memorable Diceware Passphrases
         const WORD_BANK = [
@@ -2076,6 +2411,7 @@
         function showVault() {
             switchView('view-vault');
             document.getElementById('auth-controls').style.display = 'flex';
+            updateViewModeButtons();
             renderCompartmentTabs();
             renderSecrets();
             updateStatusBar(true);
@@ -2204,6 +2540,634 @@
             if (badgeGeneral) badgeGeneral.textContent = counts.General;
             const badgeTrash = document.getElementById('badge-count-trash');
             if (badgeTrash) badgeTrash.textContent = counts.TRASH;
+        }
+
+        // --- View Mode & Archive Tree Explorer ---
+        function updateViewModeButtons() {
+            const gridBtn = document.getElementById('view-mode-grid-btn');
+            const treeBtn = document.getElementById('view-mode-tree-btn');
+            if (gridBtn) gridBtn.classList.toggle('active', currentViewMode === 'grid');
+            if (treeBtn) treeBtn.classList.toggle('active', currentViewMode === 'tree');
+        }
+
+        function setViewMode(mode) {
+            currentViewMode = mode;
+            safeStorageSet('kvault_view_mode', mode);
+            updateViewModeButtons();
+            playSound('click');
+            renderSecrets();
+        }
+
+        function calcEntropy(val) {
+            if (!val || val.length === 0) return { entropy: 0, quality: 'None', color: 'var(--text-muted)', width: '0%' };
+            let pool = 0;
+            if (/[a-z]/.test(val)) pool += 26;
+            if (/[A-Z]/.test(val)) pool += 26;
+            if (/[0-9]/.test(val)) pool += 10;
+            if (/[^a-zA-Z0-9]/.test(val)) pool += 33;
+            if (pool === 0) pool = 10;
+            const entropy = Math.round(val.length * Math.log2(pool));
+            if (entropy < 40) {
+                return { entropy, quality: 'Weak', color: 'var(--danger-accent)', width: '30%' };
+            } else if (entropy < 65) {
+                return { entropy, quality: 'Medium', color: 'var(--warning-color)', width: '65%' };
+            } else {
+                return { entropy, quality: 'Very Strong', color: 'var(--success-color)', width: '100%' };
+            }
+        }
+
+        function toggleTreeFolder(folderId, ev) {
+            if (ev) ev.stopPropagation();
+            playSound('click');
+            if (expandedTreeFolders.has(folderId)) {
+                expandedTreeFolders.delete(folderId);
+            } else {
+                expandedTreeFolders.add(folderId);
+            }
+            const el = document.getElementById(folderId);
+            if (el) {
+                el.classList.toggle('open', expandedTreeFolders.has(folderId));
+            }
+        }
+
+        function expandAllTree() {
+            playSound('click');
+            document.querySelectorAll('.tree-folder, .tree-subfolder').forEach(el => {
+                el.classList.add('open');
+                if (el.id) expandedTreeFolders.add(el.id);
+            });
+            showNotification("Expanded all archive folders");
+        }
+
+        function collapseAllTree() {
+            playSound('click');
+            document.querySelectorAll('.tree-folder, .tree-subfolder').forEach(el => {
+                el.classList.remove('open');
+            });
+            expandedTreeFolders.clear();
+            showNotification("Collapsed all archive folders");
+        }
+
+        function selectTreeItem(id) {
+            selectedTreeItemId = id;
+            document.querySelectorAll('.tree-item-row').forEach(row => {
+                const matches = row.getAttribute('data-item-id') === id;
+                row.classList.toggle('selected', matches);
+                row.setAttribute('aria-selected', matches ? 'true' : 'false');
+            });
+            const selEl = document.getElementById('tree-item-' + id);
+            if (selEl && document.activeElement !== selEl) {
+                selEl.focus();
+            }
+            playSound('click');
+            renderTreePreview(id);
+        }
+
+        function handleTreeItemKeyDown(e, itemId) {
+            const rows = Array.from(document.querySelectorAll('.tree-item-row'));
+            const idx = rows.findIndex(r => r.getAttribute('data-item-id') === itemId);
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                if (idx < rows.length - 1) {
+                    const nextId = rows[idx + 1].getAttribute('data-item-id');
+                    selectTreeItem(nextId);
+                }
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                if (idx > 0) {
+                    const prevId = rows[idx - 1].getAttribute('data-item-id');
+                    selectTreeItem(prevId);
+                }
+            } else if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                selectTreeItem(itemId);
+            }
+        }
+
+        function renderTreePreview(id) {
+            const previewEmpty = document.getElementById('tree-preview-empty');
+            const previewContent = document.getElementById('tree-preview-content');
+            if (!previewEmpty || !previewContent) return;
+
+            const s = vaultData.find(item => item.id === id);
+            if (!s) {
+                previewEmpty.style.display = 'flex';
+                previewContent.style.display = 'none';
+                return;
+            }
+
+            previewEmpty.style.display = 'none';
+            previewContent.style.display = 'flex';
+
+            const safeTitle = escapeHtml(s.title);
+            const safeCat = escapeHtml(s.category || 'General');
+            const safeComp = escapeHtml(s.compartment || 'Personal');
+            const safeUser = escapeHtml(s.username || '');
+            const safeUrl = escapeHtml(s.url || '');
+            const isTrash = !!s.trash;
+
+            const catIcons = { Login: '🔑', Finance: '💳', Note: '📝', Server: '🖥️', General: '📦' };
+            const icon = catIcons[s.category] || '📦';
+
+            let badgesHtml = `
+                <span class="cat-badge" style="background:rgba(255,255,255,0.06); color:#a0a0ff;">📁 ${safeComp}</span>
+                <span class="cat-badge">${icon} ${safeCat}</span>
+            `;
+            if (s.favorite && !isTrash) {
+                badgesHtml += ` <span class="cat-badge" style="background:rgba(255,211,42,0.15); color:#ffd32a; font-weight:700;">★ Pinned</span>`;
+            }
+            if (s.expires) {
+                const expTime = new Date(s.expires).getTime();
+                const days = Math.ceil((expTime - Date.now()) / (1000 * 60 * 60 * 24));
+                if (days < 0) {
+                    badgesHtml += ` <span class="cat-badge" style="background:rgba(255,71,87,0.25); border-color:var(--danger-accent); color:var(--danger-accent); font-weight:700;">⚠️ Expired (${escapeHtml(s.expires)})</span>`;
+                } else if (days <= 14) {
+                    badgesHtml += ` <span class="cat-badge" style="background:rgba(255,165,2,0.25); border-color:var(--warning-color); color:var(--warning-color); font-weight:600;">⏳ Expiring in ${days}d</span>`;
+                } else {
+                    badgesHtml += ` <span class="cat-badge" style="opacity:0.8;">📅 ${escapeHtml(s.expires)}</span>`;
+                }
+            }
+
+            let actionBtns = '';
+            if (isTrash) {
+                actionBtns = `
+                    <button class="btn secondary" onclick="restoreSecret('${s.id}')">🔄 Restore</button>
+                    <button class="btn danger" onclick="deletePermanently('${s.id}')">🗑️ Delete Forever</button>
+                `;
+            } else {
+                actionBtns = `
+                    <button class="btn secondary" onclick="toggleFavorite('${s.id}')" title="Pin / Unpin">${s.favorite ? '★ Unpin' : '☆ Pin'}</button>
+                    <button class="btn secondary" onclick="editSecret('${s.id}')" title="Edit Secret">✏️ Edit</button>
+                    <button class="btn danger" onclick="trashSecret('${s.id}')" title="Move to Trash">🗑️ Trash</button>
+                `;
+            }
+
+            let copyBarHtml = '';
+            if (s.value) {
+                copyBarHtml += `<button class="btn secondary" style="padding:5px 10px; font-size:12px;" onclick="copySecret('${escapeHtml(s.value)}', 'Copied secret!')">📋 Copy ${s.category === 'Note' ? 'Note' : 'Password'}</button>`;
+            }
+            if (safeUser) {
+                copyBarHtml += `<button class="btn secondary" style="padding:5px 10px; font-size:12px;" onclick="copySecret('${escapeHtml(s.username)}', 'Copied username!')">👤 Copy Username</button>`;
+            }
+            if (safeUrl) {
+                copyBarHtml += `<button class="btn secondary" style="padding:5px 10px; font-size:12px;" onclick="copySecret('${safeUrl}', 'Copied URL!')">🔗 Copy URL</button>`;
+                copyBarHtml += `<a href="${safeUrl}" target="_blank" rel="noopener noreferrer" class="btn secondary" style="padding:5px 10px; font-size:12px; text-decoration:none;">↗️ Open Link</a>`;
+            }
+            if (s.category === 'Finance') {
+                if (s.cardNumber) copyBarHtml += `<button class="btn secondary" style="padding:5px 10px; font-size:12px;" onclick="copySecret('${escapeHtml(s.cardNumber)}', 'Copied card number!')">💳 Copy Card</button>`;
+                if (s.cardCvv) copyBarHtml += `<button class="btn secondary" style="padding:5px 10px; font-size:12px;" onclick="copySecret('${escapeHtml(s.cardCvv)}', 'Copied CVV!')">🔒 Copy CVV</button>`;
+            }
+            if (s.category === 'Server' && s.serverHost) {
+                copyBarHtml += `<button class="btn secondary" style="padding:5px 10px; font-size:12px;" onclick="copySecret('${escapeHtml(s.serverHost)}', 'Copied host address!')">🖥️ Copy Host</button>`;
+            }
+
+            let fieldsHtml = '';
+            const domId = 'preview_' + s.id.replace(/[^a-zA-Z0-9_-]/g, '_');
+
+            if (s.category === 'Login') {
+                if (safeUser) {
+                    fieldsHtml += `
+                        <div class="secret-field-row" style="padding:8px 0; border-bottom:1px solid rgba(255,255,255,0.06);">
+                            <span class="secret-field-label">Username</span>
+                            <span class="secret-field-val" style="font-weight:600;">${safeUser}</span>
+                            <div class="secret-field-actions">
+                                <button class="btn-field-mini" onclick="copySecret('${escapeHtml(s.username)}')">Copy</button>
+                            </div>
+                        </div>
+                    `;
+                }
+                if (s.value) {
+                    const maskedPass = '••••••••••••';
+                    const ent = calcEntropy(s.value);
+                    fieldsHtml += `
+                        <div class="secret-field-row" style="padding:8px 0; border-bottom:1px solid rgba(255,255,255,0.06);">
+                            <span class="secret-field-label">Password</span>
+                            <span class="secret-field-val masked" id="val-pass-${domId}">${maskedPass}</span>
+                            <div class="secret-field-actions">
+                                <button class="btn-field-mini" onclick="toggleMask('val-pass-${domId}', '${escapeHtml(s.value)}', '${maskedPass}')">Reveal</button>
+                                <button class="btn-field-mini" onclick="copySecret('${escapeHtml(s.value)}')">Copy</button>
+                            </div>
+                        </div>
+                        <div style="margin:6px 0 12px 0;">
+                            <div style="display:flex; justify-content:space-between; font-size:11px; margin-bottom:3px; color:var(--text-muted);">
+                                <span>Entropy: ~${ent.entropy} bits</span>
+                                <span style="font-weight:600; color:${ent.color};">${ent.quality}</span>
+                            </div>
+                            <div style="height:4px; background:rgba(255,255,255,0.1); border-radius:2px; overflow:hidden;">
+                                <div style="height:100%; width:${ent.width}; background:${ent.color}; transition:all 0.2s;"></div>
+                            </div>
+                        </div>
+                    `;
+                }
+                if (safeUrl) {
+                    fieldsHtml += `
+                        <div class="secret-field-row" style="padding:8px 0; border-bottom:1px solid rgba(255,255,255,0.06);">
+                            <span class="secret-field-label">URL</span>
+                            <span class="secret-field-val"><a href="${safeUrl}" target="_blank" rel="noopener noreferrer" style="color:#00f2fe; text-decoration:none;">${safeUrl}</a></span>
+                            <div class="secret-field-actions">
+                                <button class="btn-field-mini" onclick="copySecret('${safeUrl}')">Copy</button>
+                            </div>
+                        </div>
+                    `;
+                }
+            } else if (s.category === 'Finance') {
+                if (s.cardNumber) {
+                    const maskedCard = s.cardNumber.length > 4 ? `•••• •••• •••• ${s.cardNumber.slice(-4)}` : s.cardNumber;
+                    fieldsHtml += `
+                        <div class="secret-field-row" style="padding:8px 0; border-bottom:1px solid rgba(255,255,255,0.06);">
+                            <span class="secret-field-label">Card Number</span>
+                            <span class="secret-field-val masked" id="val-card-${domId}">${maskedCard}</span>
+                            <div class="secret-field-actions">
+                                <button class="btn-field-mini" onclick="toggleMask('val-card-${domId}', '${escapeHtml(s.cardNumber)}', '${maskedCard}')">Reveal</button>
+                                <button class="btn-field-mini" onclick="copySecret('${escapeHtml(s.cardNumber)}')">Copy</button>
+                            </div>
+                        </div>
+                    `;
+                }
+                if (s.cardHolder) {
+                    fieldsHtml += `
+                        <div class="secret-field-row" style="padding:8px 0; border-bottom:1px solid rgba(255,255,255,0.06);">
+                            <span class="secret-field-label">Cardholder</span>
+                            <span class="secret-field-val">${escapeHtml(s.cardHolder)}</span>
+                            <div class="secret-field-actions">
+                                <button class="btn-field-mini" onclick="copySecret('${escapeHtml(s.cardHolder)}')">Copy</button>
+                            </div>
+                        </div>
+                    `;
+                }
+                if (s.cardExpiry || s.cardCvv) {
+                    fieldsHtml += `
+                        <div class="secret-field-row" style="padding:8px 0; border-bottom:1px solid rgba(255,255,255,0.06);">
+                            <span class="secret-field-label">Expiry & CVV</span>
+                            <span class="secret-field-val">${escapeHtml(s.cardExpiry || 'N/A')} &middot; CVV: •••</span>
+                            <div class="secret-field-actions">
+                                <button class="btn-field-mini" onclick="copySecret('${escapeHtml(s.cardCvv || '')}')">Copy CVV</button>
+                            </div>
+                        </div>
+                    `;
+                }
+                if (s.value) {
+                    const maskedPin = '••••';
+                    fieldsHtml += `
+                        <div class="secret-field-row" style="padding:8px 0; border-bottom:1px solid rgba(255,255,255,0.06);">
+                            <span class="secret-field-label">PIN / Code</span>
+                            <span class="secret-field-val masked" id="val-pass-${domId}">${maskedPin}</span>
+                            <div class="secret-field-actions">
+                                <button class="btn-field-mini" onclick="toggleMask('val-pass-${domId}', '${escapeHtml(s.value)}', '${maskedPin}')">Reveal</button>
+                                <button class="btn-field-mini" onclick="copySecret('${escapeHtml(s.value)}')">Copy</button>
+                            </div>
+                        </div>
+                    `;
+                }
+            } else if (s.category === 'Server') {
+                if (s.serverHost) {
+                    fieldsHtml += `
+                        <div class="secret-field-row" style="padding:8px 0; border-bottom:1px solid rgba(255,255,255,0.06);">
+                            <span class="secret-field-label">Host</span>
+                            <span class="secret-field-val" style="font-weight:600;">${escapeHtml(s.serverHost)}:${escapeHtml(s.serverPort || '22')}</span>
+                            <div class="secret-field-actions">
+                                <button class="btn-field-mini" onclick="copySecret('${escapeHtml(s.serverHost)}')">Copy</button>
+                            </div>
+                        </div>
+                    `;
+                }
+                if (safeUser) {
+                    fieldsHtml += `
+                        <div class="secret-field-row" style="padding:8px 0; border-bottom:1px solid rgba(255,255,255,0.06);">
+                            <span class="secret-field-label">SSH User</span>
+                            <span class="secret-field-val">${safeUser}</span>
+                            <div class="secret-field-actions">
+                                <button class="btn-field-mini" onclick="copySecret('${escapeHtml(s.username)}')">Copy</button>
+                            </div>
+                        </div>
+                    `;
+                }
+                if (s.value) {
+                    const maskedPass = '••••••••••••';
+                    fieldsHtml += `
+                        <div class="secret-field-row" style="padding:8px 0; border-bottom:1px solid rgba(255,255,255,0.06);">
+                            <span class="secret-field-label">Key / Pass</span>
+                            <span class="secret-field-val masked" id="val-pass-${domId}">${maskedPass}</span>
+                            <div class="secret-field-actions">
+                                <button class="btn-field-mini" onclick="toggleMask('val-pass-${domId}', '${escapeHtml(s.value)}', '${maskedPass}')">Reveal</button>
+                                <button class="btn-field-mini" onclick="copySecret('${escapeHtml(s.value)}')">Copy</button>
+                            </div>
+                        </div>
+                    `;
+                }
+            } else if (s.category === 'Note') {
+                const words = s.value ? s.value.trim().split(/\s+/).filter(Boolean).length : 0;
+                const chars = s.value ? s.value.length : 0;
+                const lines = s.value ? s.value.split(/\r?\n/).length : 0;
+                fieldsHtml += `
+                    <div style="margin: 10px 0;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                            <span style="font-size:11px; text-transform:uppercase; font-weight:700; color:var(--text-muted); letter-spacing:0.5px;">📄 Document Archive (${words} words &middot; ${chars} chars &middot; ${lines} lines)</span>
+                            <button class="btn-field-mini" onclick="copySecret('${escapeHtml(s.value)}', 'Copied full note!')">📋 Copy Text</button>
+                        </div>
+                        <pre style="background:rgba(0,0,0,0.35); border:1px solid var(--glass-border); border-radius:8px; padding:16px; font-family:'Courier New', Consolas, monospace; font-size:13px; line-height:1.6; color:#e0e0ff; white-space:pre-wrap; word-break:break-word; max-height:360px; overflow-y:auto; user-select:text;">${escapeHtml(s.value)}</pre>
+                    </div>
+                `;
+            } else {
+                if (s.value) {
+                    const maskedPass = '••••••••••••';
+                    fieldsHtml += `
+                        <div class="secret-field-row" style="padding:8px 0; border-bottom:1px solid rgba(255,255,255,0.06);">
+                            <span class="secret-field-label">Secret</span>
+                            <span class="secret-field-val masked" id="val-pass-${domId}">${maskedPass}</span>
+                            <div class="secret-field-actions">
+                                <button class="btn-field-mini" onclick="toggleMask('val-pass-${domId}', '${escapeHtml(s.value)}', '${maskedPass}')">Reveal</button>
+                                <button class="btn-field-mini" onclick="copySecret('${escapeHtml(s.value)}')">Copy</button>
+                            </div>
+                        </div>
+                    `;
+                }
+            }
+
+            if (Array.isArray(s.customFields) && s.customFields.length > 0) {
+                let cfHtml = '';
+                s.customFields.forEach((cf, cfIdx) => {
+                    if (!cf || (!cf.label && !cf.value)) return;
+                    const safeLabel = escapeHtml(cf.label || 'Field');
+                    const safeVal = escapeHtml(cf.value || '');
+                    const cfDomId = `preview-cf-${domId}-${cfIdx}`;
+                    if (cf.type === 'secret') {
+                        const maskedCf = '••••••••';
+                        cfHtml += `
+                            <div class="secret-field-row" style="padding:6px 0; border-bottom:1px solid rgba(255,255,255,0.04);">
+                                <span class="secret-field-label">${safeLabel}</span>
+                                <span class="secret-field-val masked" id="${cfDomId}">${maskedCf}</span>
+                                <div class="secret-field-actions">
+                                    <button class="btn-field-mini" onclick="toggleMask('${cfDomId}', '${safeVal}', '${maskedCf}')">👁️</button>
+                                    <button class="btn-field-mini" onclick="copySecret('${safeVal}')">Copy</button>
+                                </div>
+                            </div>
+                        `;
+                    } else if (cf.type === 'url') {
+                        cfHtml += `
+                            <div class="secret-field-row" style="padding:6px 0; border-bottom:1px solid rgba(255,255,255,0.04);">
+                                <span class="secret-field-label">${safeLabel}</span>
+                                <span class="secret-field-val"><a href="${safeVal}" target="_blank" rel="noopener noreferrer" style="color:#00f2fe; text-decoration:none;">${safeVal}</a></span>
+                                <div class="secret-field-actions">
+                                    <button class="btn-field-mini" onclick="copySecret('${safeVal}')">Copy</button>
+                                </div>
+                            </div>
+                        `;
+                    } else {
+                        cfHtml += `
+                            <div class="secret-field-row" style="padding:6px 0; border-bottom:1px solid rgba(255,255,255,0.04);">
+                                <span class="secret-field-label">${safeLabel}</span>
+                                <span class="secret-field-val">${safeVal}</span>
+                                <div class="secret-field-actions">
+                                    <button class="btn-field-mini" onclick="copySecret('${safeVal}')">Copy</button>
+                                </div>
+                            </div>
+                        `;
+                    }
+                });
+                if (cfHtml) {
+                    fieldsHtml += `<div style="margin-top:10px;"><div style="font-size:11px; text-transform:uppercase; font-weight:700; color:var(--text-muted); margin-bottom:4px;">Custom Fields</div>${cfHtml}</div>`;
+                }
+            }
+
+            let totpHtml = '';
+            if (s.totpKey) {
+                totpHtml = `
+                    <div style="margin: 12px 0;">
+                        <div class="totp-box" data-totp-key="${escapeHtml(s.totpKey)}" onclick="copySecret(this.querySelector('.totp-code').textContent.replace(/\\s/g, ''), 'Copied 2FA token!')" title="Click to copy 2FA token">
+                            <div>
+                                <div style="font-size:10px; color:var(--text-muted); text-transform:uppercase; font-weight:700;">2FA AUTHENTICATOR CODE</div>
+                                <div class="totp-code">--- ---</div>
+                            </div>
+                            <div class="totp-meta">
+                                <span class="totp-seconds">30s</span>
+                                <svg class="totp-progress-ring" viewBox="0 0 24 24">
+                                    <circle class="totp-progress-bg" cx="12" cy="12" r="9" fill="none" stroke-width="2.5"></circle>
+                                    <circle class="totp-progress-fill" cx="12" cy="12" r="9" fill="none" stroke-width="2.5" stroke-dasharray="56.5" stroke-dashoffset="0"></circle>
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                calculateTOTP(s.totpKey).then(res => {
+                    if (res) {
+                        const box = previewContent.querySelector(`[data-totp-key="${s.totpKey}"]`);
+                        if (box) {
+                            const codeSpan = box.querySelector('.totp-code');
+                            const secSpan = box.querySelector('.totp-seconds');
+                            const circle = box.querySelector('.totp-progress-fill');
+                            if (codeSpan) codeSpan.textContent = res.formatted;
+                            if (secSpan) secSpan.textContent = `${res.remaining}s`;
+                            if (circle) {
+                                const offset = 56.5 - (56.5 * res.progress / 100);
+                                circle.style.strokeDashoffset = offset;
+                            }
+                        }
+                    }
+                });
+            }
+
+            let tagsHtml = '';
+            if (Array.isArray(s.tags) && s.tags.length > 0) {
+                tagsHtml = s.tags.map(t => `<span class="tag-badge" onclick="filterByTag('${escapeHtml(t)}')">#${escapeHtml(t)}</span>`).join(' ');
+            }
+
+            let notesHtml = '';
+            if (s.notes && s.category !== 'Note') {
+                notesHtml = `
+                    <div style="margin-top:14px; background:rgba(0,0,0,0.25); border:1px solid rgba(255,255,255,0.06); border-radius:8px; padding:12px;">
+                        <div style="font-size:11px; text-transform:uppercase; font-weight:700; color:var(--text-muted); margin-bottom:6px;">Notes / Remarks</div>
+                        <div style="font-size:13px; line-height:1.5; color:var(--text-color); white-space:pre-wrap;">${escapeHtml(s.notes)}</div>
+                    </div>
+                `;
+            }
+
+            previewContent.innerHTML = `
+                <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:12px; gap:12px; flex-wrap:wrap;">
+                    <div>
+                        <div style="display:flex; align-items:center; gap:8px;">
+                            <span style="font-size:24px;">${icon}</span>
+                            <h3 style="margin:0; font-size:20px; font-weight:700; color:#fff;">${safeTitle}</h3>
+                        </div>
+                        <div style="display:flex; gap:6px; margin-top:6px; flex-wrap:wrap; align-items:center;">
+                            ${badgesHtml}
+                        </div>
+                    </div>
+                    <div style="display:flex; gap:6px; flex-wrap:wrap;">
+                        ${actionBtns}
+                    </div>
+                </div>
+                ${copyBarHtml ? `<div style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:14px; padding-bottom:10px; border-bottom:1px solid rgba(255,255,255,0.08);">${copyBarHtml}</div>` : ''}
+                ${tagsHtml ? `<div style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:12px;">${tagsHtml}</div>` : ''}
+                <div style="flex:1; overflow-y:auto;">
+                    ${fieldsHtml}
+                    ${totpHtml}
+                    ${notesHtml}
+                </div>
+                <div style="margin-top:auto; padding-top:12px; border-top:1px solid rgba(255,255,255,0.06); display:flex; justify-content:space-between; font-size:11px; color:var(--text-muted); flex-wrap:wrap; gap:8px;">
+                    <span>Item ID: <code>${escapeHtml(s.id)}</code></span>
+                    <span>Last Updated: ${s.updated ? new Date(s.updated).toLocaleString() : 'N/A'}</span>
+                </div>
+            `;
+        }
+
+        function renderTreeExplorer(filtered) {
+            const treeNodesList = document.getElementById('tree-nodes-list');
+            if (!treeNodesList) return;
+
+            treeNodesList.innerHTML = '';
+
+            if (!filtered || filtered.length === 0) {
+                treeNodesList.innerHTML = `<div style="text-align:center; padding:30px 12px; color:var(--text-muted); font-size:12px;">No archive items match current filters</div>`;
+                renderTreePreview(null);
+                return;
+            }
+
+            if (!treeInitialized) {
+                expandedTreeFolders.add('tree_comp_trash');
+                customCompartments.forEach(c => {
+                    const compFolderId = `tree_comp_${c.replace(/[^a-zA-Z0-9_-]/g, '_')}`;
+                    expandedTreeFolders.add(compFolderId);
+                    ['Login', 'Finance', 'Note', 'Server', 'General'].forEach(cat => {
+                        expandedTreeFolders.add(`${compFolderId}_cat_${cat}`);
+                    });
+                });
+                treeInitialized = true;
+            }
+
+            const catMeta = {
+                Login: { icon: '🔑', label: 'Logins' },
+                Finance: { icon: '💳', label: 'Finance' },
+                Note: { icon: '📝', label: 'Notes' },
+                Server: { icon: '🖥️', label: 'Servers' },
+                General: { icon: '📦', label: 'General' }
+            };
+
+            const fragment = document.createDocumentFragment();
+
+            if (activeCategoryFilter === 'TRASH') {
+                const folderId = 'tree_comp_trash';
+                const isOpen = expandedTreeFolders.has(folderId) || !expandedTreeFolders.size;
+                const folderEl = document.createElement('div');
+                folderEl.className = `tree-folder ${isOpen ? 'open' : ''}`;
+                folderEl.id = folderId;
+
+                let itemsHtml = '';
+                filtered.forEach(s => {
+                    const isSel = selectedTreeItemId === s.id;
+                    const icon = (catMeta[s.category] || catMeta.General).icon;
+                    itemsHtml += `
+                        <div class="tree-item-row ${isSel ? 'selected' : ''}" 
+                             id="tree-item-${s.id}" 
+                             data-item-id="${s.id}" 
+                             tabindex="0" 
+                             role="treeitem"
+                             aria-selected="${isSel ? 'true' : 'false'}"
+                             onclick="selectTreeItem('${s.id}')"
+                             onkeydown="handleTreeItemKeyDown(event, '${s.id}')">
+                            <span style="display:flex; align-items:center; gap:6px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+                                <span>${icon}</span>
+                                <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${escapeHtml(s.title)}</span>
+                            </span>
+                            <span class="pill-badge" style="font-size:10px; background:rgba(255,71,87,0.2); color:var(--danger-accent);">Trash</span>
+                        </div>
+                    `;
+                });
+
+                folderEl.innerHTML = `
+                    <div class="tree-folder-title" onclick="toggleTreeFolder('${folderId}', event)">
+                        <span><span class="tree-folder-chevron">▶</span> 🗑️ Trash Archive</span>
+                        <span class="pill-badge">${filtered.length}</span>
+                    </div>
+                    <div class="tree-folder-children">${itemsHtml}</div>
+                `;
+                fragment.appendChild(folderEl);
+            } else {
+                const comps = customCompartments.slice();
+                filtered.forEach(s => {
+                    const c = s.compartment || 'Personal';
+                    if (!comps.includes(c)) comps.push(c);
+                });
+
+                comps.forEach(comp => {
+                    const compItems = filtered.filter(s => (s.compartment || 'Personal') === comp);
+                    if (compItems.length === 0) return;
+
+                    const compFolderId = `tree_comp_${comp.replace(/[^a-zA-Z0-9_-]/g, '_')}`;
+                    const isCompOpen = expandedTreeFolders.has(compFolderId) || !expandedTreeFolders.size;
+
+                    const compFolder = document.createElement('div');
+                    compFolder.className = `tree-folder ${isCompOpen ? 'open' : ''}`;
+                    compFolder.id = compFolderId;
+
+                    let subfoldersHtml = '';
+
+                    ['Login', 'Finance', 'Note', 'Server', 'General'].forEach(cat => {
+                        const catItems = compItems.filter(s => (s.category || 'General') === cat);
+                        if (catItems.length === 0) return;
+
+                        const meta = catMeta[cat] || catMeta.General;
+                        const subId = `${compFolderId}_cat_${cat}`;
+                        const isSubOpen = expandedTreeFolders.has(subId) || !expandedTreeFolders.size;
+
+                        let itemsHtml = '';
+                        catItems.forEach(s => {
+                            const isSel = selectedTreeItemId === s.id;
+                            itemsHtml += `
+                                <div class="tree-item-row ${isSel ? 'selected' : ''}" 
+                                     id="tree-item-${s.id}" 
+                                     data-item-id="${s.id}" 
+                                     tabindex="0" 
+                                     role="treeitem"
+                                     aria-selected="${isSel ? 'true' : 'false'}"
+                                     onclick="selectTreeItem('${s.id}')"
+                                     onkeydown="handleTreeItemKeyDown(event, '${s.id}')">
+                                    <span style="display:flex; align-items:center; gap:6px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+                                        <span>${meta.icon}</span>
+                                        <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${escapeHtml(s.title)}</span>
+                                    </span>
+                                    <span style="display:flex; align-items:center; gap:4px; flex-shrink:0;">
+                                        ${s.favorite ? '<span style="color:#ffd32a; font-size:11px;">★</span>' : ''}
+                                        ${s.totpKey ? '<span style="font-size:10px; background:rgba(0,242,254,0.15); color:#00f2fe; padding:1px 4px; border-radius:3px;">2FA</span>' : ''}
+                                    </span>
+                                </div>
+                            `;
+                        });
+
+                        subfoldersHtml += `
+                            <div class="tree-subfolder ${isSubOpen ? 'open' : ''}" id="${subId}">
+                                <div class="tree-subfolder-title" onclick="toggleTreeFolder('${subId}', event)">
+                                    <span><span class="tree-folder-chevron">▶</span> ${meta.icon} ${meta.label}</span>
+                                    <span class="pill-badge" style="font-size:10px;">${catItems.length}</span>
+                                </div>
+                                <div class="tree-subfolder-children">${itemsHtml}</div>
+                            </div>
+                        `;
+                    });
+
+                    compFolder.innerHTML = `
+                        <div class="tree-folder-title" onclick="toggleTreeFolder('${compFolderId}', event)">
+                            <span><span class="tree-folder-chevron">▶</span> 📁 ${escapeHtml(comp)}</span>
+                            <span class="pill-badge">${compItems.length}</span>
+                        </div>
+                        <div class="tree-folder-children">${subfoldersHtml}</div>
+                    `;
+
+                    fragment.appendChild(compFolder);
+                });
+            }
+
+            treeNodesList.appendChild(fragment);
+
+            if (!selectedTreeItemId || !filtered.some(s => s.id === selectedTreeItemId)) {
+                if (filtered.length > 0) {
+                    selectTreeItem(filtered[0].id);
+                } else {
+                    renderTreePreview(null);
+                }
+            } else {
+                renderTreePreview(selectedTreeItemId);
+            }
         }
 
         // --- Add / Edit Secrets Flow ---
@@ -2640,10 +3604,12 @@
         async function renderSecrets() {
             const list = document.getElementById('secret-list');
             const empty = document.getElementById('empty-state');
+            const treeExplorer = document.getElementById('vault-tree-explorer');
             const queryElem = document.getElementById('search-input');
             const query = queryElem ? queryElem.value.toLowerCase().trim() : '';
 
             updateCategoryCounts();
+            updateViewModeButtons();
 
             // Filter
             let filtered = vaultData.slice();
@@ -2691,11 +3657,10 @@
                 return (a.title || '').localeCompare(b.title || '');
             });
 
-            list.innerHTML = '';
-
             if (filtered.length === 0) {
                 empty.style.display = 'block';
                 list.style.display = 'none';
+                if (treeExplorer) treeExplorer.style.display = 'none';
                 const p = document.getElementById('empty-state-text');
                 const btn = document.getElementById('empty-state-btn');
                 if (activeCategoryFilter === 'TRASH') {
@@ -2712,7 +3677,17 @@
             }
 
             empty.style.display = 'none';
+
+            if (currentViewMode === 'tree') {
+                list.style.display = 'none';
+                if (treeExplorer) treeExplorer.style.display = 'flex';
+                renderTreeExplorer(filtered);
+                return;
+            }
+
+            if (treeExplorer) treeExplorer.style.display = 'none';
             list.style.display = 'grid';
+            list.innerHTML = '';
 
             // Calculate TOTP in parallel to prevent sequential WebCrypto blocking
             const totpPromises = filtered.map(s => s.totpKey ? calculateTOTP(s.totpKey) : Promise.resolve(null));
@@ -4062,7 +5037,15 @@ Store this sheet in a fireproof safe or secure physical vault. It provides emerg
             }
 
             const hasModifier = e.ctrlKey || e.metaKey;
-            if (hasModifier && !e.altKey) {
+            if (e.altKey && !e.ctrlKey && !e.metaKey) {
+                if (e.key === '1') {
+                    e.preventDefault();
+                    setViewMode('grid');
+                } else if (e.key === '2') {
+                    e.preventDefault();
+                    setViewMode('tree');
+                }
+            } else if (hasModifier && !e.altKey) {
                 if (e.key === 's' || e.key === 'S') {
                     e.preventDefault();
                     const activeView = document.querySelector('.view-section.active');
@@ -4103,6 +5086,19 @@ Store this sheet in a fireproof safe or secure physical vault. It provides emerg
                 } else if (e.key === 'F9') {
                     e.preventDefault();
                     quickloadState();
+                } else if (e.key === '/' && e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
+                    const searchInput = document.getElementById('search-input');
+                    if (searchInput && masterKey) {
+                        e.preventDefault();
+                        showVault();
+                        searchInput.focus();
+                        searchInput.select();
+                    }
+                } else if (e.key.toLowerCase() === 't' && e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
+                    if (masterKey) {
+                        e.preventDefault();
+                        setViewMode(currentViewMode === 'tree' ? 'grid' : 'tree');
+                    }
                 } else if (e.key.toLowerCase() === 'm' && e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
                     e.preventDefault();
                     toggleSound();
@@ -4125,24 +5121,40 @@ Store this sheet in a fireproof safe or secure physical vault. It provides emerg
             }
         });
 
-        // Drag & drop file to import anywhere in container
+        // Drag & drop file to import anywhere in container with visual overlay & focus glow
+        let dragCounter = 0;
+        document.addEventListener('dragenter', (e) => {
+            e.preventDefault();
+            dragCounter++;
+            const container = document.querySelector('.container');
+            const overlay = document.getElementById('drag-drop-overlay');
+            if (container) container.classList.add('drag-active');
+            if (overlay) overlay.style.display = 'flex';
+        });
         document.addEventListener('dragover', (e) => {
             e.preventDefault();
             e.stopPropagation();
-            const container = document.querySelector('.container');
-            if (container) container.style.borderColor = 'var(--primary-accent)';
         });
         document.addEventListener('dragleave', (e) => {
             e.preventDefault();
             e.stopPropagation();
-            const container = document.querySelector('.container');
-            if (container) container.style.borderColor = 'var(--glass-border)';
+            dragCounter--;
+            if (dragCounter <= 0) {
+                dragCounter = 0;
+                const container = document.querySelector('.container');
+                const overlay = document.getElementById('drag-drop-overlay');
+                if (container) container.classList.remove('drag-active');
+                if (overlay) overlay.style.display = 'none';
+            }
         });
         document.addEventListener('drop', (e) => {
             e.preventDefault();
             e.stopPropagation();
+            dragCounter = 0;
             const container = document.querySelector('.container');
-            if (container) container.style.borderColor = 'var(--glass-border)';
+            const overlay = document.getElementById('drag-drop-overlay');
+            if (container) container.classList.remove('drag-active');
+            if (overlay) overlay.style.display = 'none';
             if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length > 0) {
                 processImportFile(e.dataTransfer.files[0]);
             }
