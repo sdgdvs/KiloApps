@@ -78,6 +78,7 @@ void PlaySoundAsync(int freq, int duration) {
 
 HWND hwndMain;
 HWND hwndModeBox;
+HWND hwndStartBtn;
 HWND hwndSaveBtn;
 HWND hwndLoadBtn;
 HWND hwndResetBtn;
@@ -536,8 +537,8 @@ void SaveGameState() {
         InvalidateRect(hwndMain, NULL, FALSE);
         return;
     }
-    char str[2048] = {0};
-    char temp[16];
+    char str[4096] = {0};
+    char temp[32];
     for(int i = 0; i < sequence_length; i++) {
         sprintf(temp, "%d,", sequence[i]);
         strcat(str, temp);
@@ -559,6 +560,10 @@ void SaveGameState() {
     WritePrivateProfileString("GameState", "Freezes", temp, ".\\ksimon.ini");
     sprintf(temp, "%d", current_stage);
     WritePrivateProfileString("GameState", "Stage", temp, ".\\ksimon.ini");
+    sprintf(temp, "%d", is_time_frozen);
+    WritePrivateProfileString("GameState", "TimeFrozen", temp, ".\\ksimon.ini");
+    sprintf(temp, "%d", is_slowmo_active);
+    WritePrivateProfileString("GameState", "SlowmoActive", temp, ".\\ksimon.ini");
     strcpy(status_text, "Game Saved! (F5)");
     InvalidateRect(hwndMain, NULL, FALSE);
 }
@@ -570,6 +575,9 @@ void LoadGameState() {
         InvalidateRect(hwndMain, NULL, FALSE);
         return;
     }
+    KillTimer(hwndMain, TIMER_SEQUENCE);
+    KillTimer(hwndMain, TIMER_COUNTDOWN);
+    WritePrivateProfileString("Settings", "TutorialSeen", "1", ".\\ksimon.ini");
     sequence_length = len;
     current_mode = GetPrivateProfileInt("GameState", "Mode", MODE_4BTN_CLASSIC, ".\\ksimon.ini");
     int elapsed = GetPrivateProfileInt("GameState", "ElapsedTime", 0, ".\\ksimon.ini");
@@ -579,8 +587,10 @@ void LoadGameState() {
     shields_remaining = GetPrivateProfileInt("GameState", "Shields", 1, ".\\ksimon.ini");
     freezes_remaining = GetPrivateProfileInt("GameState", "Freezes", 2, ".\\ksimon.ini");
     current_stage = GetPrivateProfileInt("GameState", "Stage", 1, ".\\ksimon.ini");
+    is_time_frozen = GetPrivateProfileInt("GameState", "TimeFrozen", 0, ".\\ksimon.ini");
+    is_slowmo_active = GetPrivateProfileInt("GameState", "SlowmoActive", 0, ".\\ksimon.ini");
     
-    char str[2048] = {0};
+    char str[4096] = {0};
     GetPrivateProfileString("GameState", "Sequence", "", str, sizeof(str), ".\\ksimon.ini");
     
     char* token = strtok(str, ",");
@@ -594,6 +604,7 @@ void LoadGameState() {
     RECT rc; GetClientRect(hwndMain, &rc); LayoutButtons(rc.right, rc.bottom);
     EnableWindow(hwndModeBox, FALSE);
     EnableWindow(hwndSaveBtn, FALSE);
+    EnableWindow(hwndStartBtn, FALSE);
     
     score = sequence_length - 1;
     player_step = 0;
@@ -1008,17 +1019,7 @@ void DrawBoard(HDC hdc, int width, int height) {
         DeleteObject(btnBrush);
         DeleteObject(borderPen);
 
-        // Diagonal Specular Sheen Sweep across Button
-        float sheenPhase = fmodf((tick * 0.0015f + i * 0.7f), 3.0f);
-        if (sheenPhase < 1.0f) {
-            HPEN sheenPen = CreatePen(PS_SOLID, 2, RGB(255, 255, 255));
-            oldP = SelectObject(hdc, sheenPen);
-            int shX = bCx - radius + (int)(sheenPhase * 2.0f * radius);
-            MoveToEx(hdc, shX - 6, bCy - radius + 4, NULL);
-            LineTo(hdc, shX + 6, bCy + radius - 4);
-            SelectObject(hdc, oldP);
-            DeleteObject(sheenPen);
-        }
+        // Button bevel (specular glint removed)
 
         // 3D Bevel (Top half highlight)
         HPEN hiPen = CreatePen(PS_SOLID, 2, isFlash ? RGB(255, 255, 255) : RGB(220, 220, 220));
@@ -1135,7 +1136,9 @@ void DrawBoard(HDC hdc, int width, int height) {
     HFONT ledFont = CreateFontA(18, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_MODERN, "Consolas");
     HGDIOBJ oldF = SelectObject(hdc, ledFont);
     char scoreStr[32];
-    if (!is_playing_sequence && sequence_length > 0) {
+    if (sequence_length == 0) {
+        sprintf(scoreStr, "START");
+    } else if (!is_playing_sequence && sequence_length > 0) {
         if (is_time_frozen) sprintf(scoreStr, "FROZ");
         else sprintf(scoreStr, "%02d|%02d", score, input_countdown / 10);
     } else {
@@ -1265,6 +1268,7 @@ void StartGame() {
     current_mode = SendMessage(hwndModeBox, CB_GETCURSEL, 0, 0);
     EnableWindow(hwndModeBox, FALSE);
     EnableWindow(hwndSaveBtn, FALSE);
+    EnableWindow(hwndStartBtn, FALSE);
     sequence_length = 0;
     score = 0;
     hints_remaining = 3;
@@ -1382,6 +1386,7 @@ void TriggerGameOver() {
     sequence_length = 0;
     EnableWindow(hwndModeBox, TRUE);
     EnableWindow(hwndSaveBtn, FALSE);
+    EnableWindow(hwndStartBtn, TRUE);
     InvalidateRect(hwndMain, NULL, FALSE);
 }
 
@@ -1442,7 +1447,7 @@ void HandleClick(int btn_id) {
                 TriggerVictoryFireworks(rc.right / 2, rc.bottom / 2);
                 if (current_stage > 20) {
                     strcpy(status_text, "GRANDMASTER VICTORY! Campaign Complete!");
-                    is_playing_sequence = 1;
+                    is_playing_sequence = 0;
                     score += 200;
                     if (score > high_scores[current_mode]) {
                         high_scores[current_mode] = score;
@@ -1455,6 +1460,7 @@ void HandleClick(int btn_id) {
                     SaveStats();
                     sequence_length = 0;
                     EnableWindow(hwndModeBox, TRUE);
+                    EnableWindow(hwndStartBtn, TRUE);
                     InvalidateRect(hwndMain, NULL, FALSE);
                     return;
                 } else {
@@ -1508,6 +1514,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             hwndSlowBtn   = CreateWindowEx(0, "BUTTON", "Slow (S)", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 90, 140, 75, 25, hwnd, (HMENU)1007, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
             hwndShieldBtn = CreateWindowEx(0, "BUTTON", "Shield (B)", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 170, 140, 75, 25, hwnd, (HMENU)1008, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
             hwndFreezeBtn = CreateWindowEx(0, "BUTTON", "Freeze (F)", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 250, 140, 75, 25, hwnd, (HMENU)1009, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+            hwndStartBtn  = CreateWindowEx(0, "BUTTON", "Start (Space)", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 330, 140, 103, 25, hwnd, (HMENU)1010, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
 
             EnableWindow(hwndSaveBtn, FALSE);
             SetTimer(hwnd, TIMER_ANIM, 16, NULL); // 60 FPS animation
@@ -1550,6 +1557,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 UseShield();
             } else if (LOWORD(wParam) == 1009) {
                 UseFreeze();
+            } else if (LOWORD(wParam) == 1010) {
+                if (sequence_length == 0) StartGame();
             }
             break;
         case WM_SIZE: {
@@ -1563,6 +1572,17 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             POINT pt;
             pt.x = LOWORD(lParam);
             pt.y = HIWORD(lParam);
+            if (sequence_length == 0) {
+                RECT rc;
+                GetClientRect(hwnd, &rc);
+                int cx = rc.right / 2;
+                int cy = (rc.bottom + 170) / 2;
+                int distSq = (pt.x - cx) * (pt.x - cx) + (pt.y - cy) * (pt.y - cy);
+                if (distSq <= 200 * 200) {
+                    StartGame();
+                    break;
+                }
+            }
             int num_btns = GetActiveButtonCount();
             for (int i = 0; i < num_btns; i++) {
                 if (PtInRect(&btn_rects[i], pt)) {
@@ -1573,7 +1593,20 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             break;
         }
         case WM_KEYDOWN:
-            if (wParam == VK_F1) {
+            if (wParam == VK_ESCAPE) {
+                if (sequence_length > 0 || is_playing_sequence) {
+                    KillTimer(hwnd, TIMER_SEQUENCE);
+                    KillTimer(hwnd, TIMER_COUNTDOWN);
+                    is_playing_sequence = 0;
+                    sequence_length = 0;
+                    score = 0;
+                    EnableWindow(hwndModeBox, TRUE);
+                    EnableWindow(hwndSaveBtn, FALSE);
+                    EnableWindow(hwndStartBtn, TRUE);
+                    strcpy(status_text, "Game Cancelled (Esc). Press Space to start.");
+                    InvalidateRect(hwndMain, NULL, FALSE);
+                }
+            } else if (wParam == VK_F1) {
                 SendMessage(hwnd, WM_COMMAND, 1005, 0);
             } else if (wParam == VK_F5) {
                 SaveGameState();

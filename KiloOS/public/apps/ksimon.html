@@ -549,6 +549,9 @@
       <li><strong>Campaign:</strong> 20 stages culminating in Stage 20 Grandmaster Memory Master Challenge!</li>
       <li><strong>🌐 Online Multiplayer:</strong> Real-time cross-computer Speed Matches & Add-A-Step Volley Duels via Subnet RFMS!</li>
     </ul>
+    <div style="margin-top: 16px; text-align: center;">
+      <button class="action-btn tutorial-btn-primary" onclick="closeHelp(true)" style="width: 100%; padding: 10px; font-weight: bold; background: linear-gradient(180deg, #184860 0%, #0e2b3a 100%); border-color: #00e5ff; color: #79eeff;">Got It! Start Playing (Space / Enter)</button>
+    </div>
   </div>
 </div>
 
@@ -1417,20 +1420,7 @@
       ctx.fillStyle = btnGrad;
       ctx.fill();
 
-      // Diagonal Specular Sheen Sweep Highlight across Button Bevel
-      const sheenPhase = ((now * 0.0015 + i * 0.7) % 3.0);
-      if (sheenPhase < 1.0) {
-        ctx.save();
-        ctx.clip(); // clip to polygon
-        const sheenX = -btn.radius * 2 + sheenPhase * (btn.radius * 4);
-        const sheenGrad = ctx.createLinearGradient(sheenX - 15, -btn.radius, sheenX + 15, btn.radius);
-        sheenGrad.addColorStop(0, 'transparent');
-        sheenGrad.addColorStop(0.5, 'rgba(255, 255, 255, 0.45)');
-        sheenGrad.addColorStop(1, 'transparent');
-        ctx.fillStyle = sheenGrad;
-        ctx.fillRect(-btn.radius * 2, -btn.radius * 2, btn.radius * 4, btn.radius * 4);
-        ctx.restore();
-      }
+// Button bevel highlight (glint removed)
 
       // 3D Bevel Top Arc / Polygon Rim
       ctx.beginPath();
@@ -1484,20 +1474,7 @@
     ctx.strokeStyle = '#777788';
     ctx.stroke();
 
-    // Center Disc Specular Sheen Sweep
-    const discSheen = (now * 0.001) % 4.0;
-    if (discSheen < 1.0) {
-      ctx.save();
-      ctx.clip();
-      const dsX = -discRadius * 2 + discSheen * (discRadius * 4);
-      const dsGrad = ctx.createLinearGradient(dsX - 20, -discRadius, dsX + 20, discRadius);
-      dsGrad.addColorStop(0, 'transparent');
-      dsGrad.addColorStop(0.5, 'rgba(255, 255, 255, 0.25)');
-      dsGrad.addColorStop(1, 'transparent');
-      ctx.fillStyle = dsGrad;
-      ctx.fillRect(-discRadius, -discRadius, discRadius * 2, discRadius * 2);
-      ctx.restore();
-    }
+// Center disc surface (glint removed)
 
     // Animated Robot Mascot Face
     const mascotFrame = Math.floor(now / 200) % 4;
@@ -1560,6 +1537,9 @@
         const timerStr = inputCountdown < 10 ? '0' + inputCountdown : '' + inputCountdown;
         ctx.fillText(scoreStr + '|' + timerStr + 's', 0, -8);
       }
+    } else if (sequence.length === 0) {
+      ctx.font = 'bold 12px monospace';
+      ctx.fillText("START", 0, -8);
     } else {
       ctx.fillText(scoreStr, 0, -8);
     }
@@ -1705,11 +1685,22 @@
   requestAnimationFrame(renderCanvas);
 
   function handleCanvasPointerDown(clientX, clientY) {
-    if (isPlayingSequence || sequence.length === 0) return;
     if (audioCtx.state === 'suspended') audioCtx.resume();
     const rect = canvas.getBoundingClientRect();
     const mx = (clientX - rect.left) * (CANVAS_LOGICAL_WIDTH / rect.width);
     const my = (clientY - rect.top) * (CANVAS_LOGICAL_HEIGHT / rect.height);
+
+    if (sequence.length === 0) {
+      const cx = CANVAS_LOGICAL_WIDTH / 2;
+      const cy = CANVAS_LOGICAL_HEIGHT / 2;
+      const distCenter = Math.hypot(mx - cx, my - cy);
+      if (distCenter <= 54) {
+        startGame();
+        return;
+      }
+      return;
+    }
+    if (isPlayingSequence) return;
 
     const activeCount = getActiveButtonCount();
     for (let i = 0; i < activeCount; i++) {
@@ -1922,9 +1913,12 @@
   });
   updateHighScoreDisplay();
 
-  function closeHelp() {
+  function closeHelp(shouldStart = false) {
     helpModal.style.display = 'none';
     safeSetRaw('ksimon_tutorialSeen', '1');
+    if (shouldStart && sequence.length === 0 && !isMultiplayerActive) {
+      startGame();
+    }
   }
 
   startBtn.addEventListener('click', startGame);
@@ -2053,8 +2047,12 @@
       slowmoRemaining: slowmoRemaining,
       shieldsRemaining: shieldsRemaining,
       freezesRemaining: freezesRemaining,
+      inputCountdown: inputCountdown,
+      isTimeFrozen: isTimeFrozen,
+      isSlowmoActive: isSlowmoActive,
       elapsedTime: Date.now() - startTime,
-      score: sequence.length - 1
+      score: sequence.length - 1,
+      lastCompletedSequence: (lastCompletedSequence && lastCompletedSequence.length > 0) ? lastCompletedSequence : sequence
     };
     safeSet('KSimon_GameState', gameState);
     statusDisplay.innerText = "Game Saved! (F5)";
@@ -2078,13 +2076,22 @@
         showToast("Saved game has no active sequence.", "warning");
         return;
       }
-      sequence = gameState.sequence;
+      safeSetRaw('ksimon_tutorialSeen', '1');
+      stopSequencePlayback();
+      clearInterval(inputTimer);
+      
+      sequence = [...gameState.sequence];
       currentMode = gameState.currentMode || '4btn';
       currentStage = gameState.currentStage || 1;
       hintsRemaining = gameState.hintsRemaining !== undefined ? gameState.hintsRemaining : 3;
       slowmoRemaining = gameState.slowmoRemaining !== undefined ? gameState.slowmoRemaining : 2;
       shieldsRemaining = gameState.shieldsRemaining !== undefined ? gameState.shieldsRemaining : 1;
       freezesRemaining = gameState.freezesRemaining !== undefined ? gameState.freezesRemaining : 2;
+      isSlowmoActive = Boolean(gameState.isSlowmoActive);
+      isTimeFrozen = Boolean(gameState.isTimeFrozen);
+      lastCompletedSequence = Array.isArray(gameState.lastCompletedSequence) && gameState.lastCompletedSequence.length > 0
+        ? [...gameState.lastCompletedSequence]
+        : [...sequence];
       startTime = Date.now() - (gameState.elapsedTime || 0);
       
       if (audioCtx.state === 'suspended') audioCtx.resume();
@@ -2210,6 +2217,9 @@
   });
 
   document.addEventListener('keydown', (e) => {
+    if (e.target && e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
+      checkArgKeystroke(e.key);
+    }
     if (e.key === 'Escape') {
       let closed = false;
       if (helpModal && helpModal.style.display === 'flex') {
@@ -2245,6 +2255,20 @@
         e.preventDefault();
         return;
       }
+      // Clean cancellation if in active single-player game
+      if (sequence.length > 0 && !isMultiplayerActive) {
+        stopSequencePlayback();
+        clearInterval(inputTimer);
+        sequence = [];
+        playerSequence = [];
+        startBtn.disabled = false;
+        modeSelect.disabled = false;
+        saveBtn.disabled = true;
+        statusDisplay.innerText = "Game Cancelled (Esc). Press Space to start.";
+        updateDisplays();
+        e.preventDefault();
+        return;
+      }
     }
     if (e.key === 'Enter') {
       const invM = document.getElementById('invite-modal');
@@ -2255,7 +2279,7 @@
       }
       if (helpModal && helpModal.style.display === 'flex') {
         e.preventDefault();
-        closeHelp();
+        closeHelp(true);
         return;
       }
       const kbModal = document.getElementById('keybinds-modal');
@@ -2288,10 +2312,26 @@
       loadGameState();
       return;
     }
-    if (e.key === ' ' && sequence.length === 0) {
+    if (e.key === ' ') {
+      if (helpModal && helpModal.style.display === 'flex') {
         e.preventDefault();
-        startGame();
+        closeHelp(true);
         return;
+      }
+      const kbModal = document.getElementById('keybinds-modal');
+      if (kbModal && kbModal.style.display === 'flex') {
+        e.preventDefault();
+        closeKeybindsModal();
+        return;
+      }
+      if (sequence.length === 0 && !isMultiplayerActive) {
+        const mpM = document.getElementById('mp-modal');
+        if (!mpM || mpM.style.display !== 'flex') {
+          e.preventDefault();
+          startGame();
+          return;
+        }
+      }
     }
     if (e.key.toLowerCase() === 'h') {
         if (sequence.length > 0) {
@@ -2382,6 +2422,7 @@
       helpModal.style.display = 'flex';
       return;
     }
+    stopSequencePlayback();
     clearInterval(inputTimer);
     startTime = Date.now();
     currentMode = modeSelect.value;
@@ -2413,7 +2454,18 @@
     playSequence();
   }
 
+  let sequencePlaybackToken = 0;
+  function stopSequencePlayback() {
+    sequencePlaybackToken++;
+    isPlayingSequence = false;
+    for (let i = 0; i < buttonStates.length; i++) {
+      releaseButtonFlash(i);
+    }
+  }
+
   function playSequence() {
+    stopSequencePlayback();
+    const token = sequencePlaybackToken;
     isPlayingSequence = true;
     saveBtn.disabled = true;
     clearInterval(inputTimer);
@@ -2450,10 +2502,12 @@
     }
 
     function flashNext() {
+      if (token !== sequencePlaybackToken) return;
       if (i >= sequence.length) {
         isPlayingSequence = false;
         isSlowmoActive = false;
-        let isRev = currentMode === 'chaos_rev' || (currentMode === 'campaign' && (campaignStages[currentStage-1].modifier === 1 || campaignStages[currentStage-1].modifier === 3));
+        let stg = campaignStages[currentStage - 1] || campaignStages[0];
+        let isRev = currentMode === 'chaos_rev' || (currentMode === 'campaign' && (stg.modifier === 1 || stg.modifier === 3));
         statusDisplay.innerText = isRev ? "Your Turn (REVERSE)!" : "Your Turn!";
         saveBtn.disabled = isMultiplayerActive;
         updateDisplays();
@@ -2463,14 +2517,16 @@
       const index = sequence[i];
       triggerButtonFlash(index);
       
-      let toneFreq = freqs[index];
-      let isChaos = currentMode === 'chaos' || currentMode === 'chaos_rev' || (currentMode === 'campaign' && (campaignStages[currentStage-1].modifier === 2 || campaignStages[currentStage-1].modifier === 3));
+      let toneFreq = freqs[index] || 440;
+      let stg = campaignStages[currentStage - 1] || campaignStages[0];
+      let isChaos = currentMode === 'chaos' || currentMode === 'chaos_rev' || (currentMode === 'campaign' && (stg.modifier === 2 || stg.modifier === 3));
       if (isChaos) {
           toneFreq += Math.floor(Math.random() * 160) - 80;
       }
       
       playTone(toneFreq, flashDuration);
       setTimeout(() => {
+        if (token !== sequencePlaybackToken) return;
         releaseButtonFlash(index);
         i++;
         setTimeout(flashNext, pauseDuration);
@@ -2481,6 +2537,7 @@
   }
 
   function handleGameOver() {
+      stopSequencePlayback();
       clearInterval(inputTimer);
       document.body.classList.add('game-over-flash');
       setTimeout(() => document.body.classList.remove('game-over-flash'), 500);
@@ -2511,6 +2568,7 @@
       updateStatsDisplay();
       
       sequence = [];
+      isPlayingSequence = false;
       startBtn.disabled = false;
       modeSelect.disabled = false;
       saveBtn.disabled = true;
@@ -2530,7 +2588,8 @@
     playerSequence.push(index);
 
     const currentStep = playerSequence.length - 1;
-    let isRev = currentMode === 'chaos_rev' || (currentMode === 'campaign' && (campaignStages[currentStage-1].modifier === 1 || campaignStages[currentStage-1].modifier === 3));
+    let stg = campaignStages[currentStage - 1] || campaignStages[0];
+    let isRev = currentMode === 'chaos_rev' || (currentMode === 'campaign' && (stg.modifier === 1 || stg.modifier === 3));
     let expectedIndex = isRev ? sequence[sequence.length - 1 - currentStep] : sequence[currentStep];
 
     if (playerSequence[currentStep] !== expectedIndex) {
@@ -2563,7 +2622,8 @@
               triggerVictoryFireworks();
               if (currentStage > 20) {
                   statusDisplay.innerText = "GRANDMASTER VICTORY! Campaign Complete!";
-                  isPlayingSequence = true;
+                  stopSequencePlayback();
+                  isPlayingSequence = false;
                   let finalScore = sequence.length - 1 + 200;
                   if (finalScore > getHighScore(currentMode)) {
                       setHighScore(currentMode, finalScore);

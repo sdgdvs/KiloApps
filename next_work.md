@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-creator
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -19,7 +19,7 @@ current_targets:
   kilo_soundscape: KColosseum
   kilo_tester: KClip
   kilo_usability: KHex
-  kilo_qa: KSimon
+  kilo_qa: KWords
   kilo_expander: KDB
 virtual_web_target: kweb://users/~neon_rider
 virtual_web_rotation:
@@ -35,9 +35,9 @@ virtual_web_rotation:
 - kweb://deep-core
 - kweb://darknet
 last_run:
-  agent: kilo-usability
-  app: KFont
-  timestamp: '2026-10-20T14:17:00Z'
+  agent: kilo-qa
+  app: KSimon
+  timestamp: '2026-10-20T18:22:00Z'
 last_planner_run: '2026-10-19T22:16:00Z'
 ---
 
@@ -137,22 +137,22 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Upcoming Queue**: `KPass`, `KCalc`.
 
 ### 6. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
-- **Target**: `KSimon`
-- **Primary Files**: `KiloOS/public/apps/ksimon.html`, `KSimon/main.c` (if present)
-- **Objective**: Pass 5 QA audit: verify first-run tutorial onboarding overlay (`ksimon_tutorialSeen`), verify F5 quicksave & F9 quickload capturing complete game sequence, round, speed, and high score; test Escape modal dismissal; compile Win32 native client and verify web cartridge (<999 KB).
+- **Target**: `KWords`
+- **Primary Files**: `KiloOS/public/apps/kwords.html`, `KWords/main.c` (if present)
+- **Objective**: Pass 5 QA audit: verify first-run tutorial onboarding overlay (`kwords_tutorialSeen`), verify F5 quicksave & F9 quickload capturing complete game board, vocabulary state, round, and high score; test Escape modal dismissal; compile Win32 native client and verify web cartridge (<999 KB).
 - **Action Steps**:
   1. State Persistence: F5 quicksave & F9 quickload capturing complete game state, stats, and settings.
   2. First-run Tutorial: Onboarding displays once on fresh sessions, never on restored saves.
   3. Modal Dismissals: Modals dismiss cleanly with Escape, Enter, or Close button.
-  4. Dual Parity & Build: Compile Win32 native client via `cmd.exe /c build.bat` in `KSimon/` (if present) and verify web build.
+  4. Dual Parity & Build: Compile Win32 native client via `cmd.exe /c build.bat` in `KWords/` (if present) and verify web build.
 - **Verification**:
-  - `uv run scripts/test_app_startup.py --app KSimon`
-  - `cd KiloOS && npm run build` (0 Vite errors, `ksimon.html` < 999 KB)
+  - `uv run scripts/test_app_startup.py --app KWords`
+  - `cd KiloOS && npm run build` (0 Vite errors, `kwords.html` < 999 KB)
 - **Handoff**:
-  - In frontmatter: advance `current_targets.kilo_qa` to `KWords`.
+  - In frontmatter: advance `current_targets.kilo_qa` to `KColosseum`.
   - Set `current_agent: kilo-expander`.
   - Append terse execution log (≤6 lines), commit, and push.
-- **Upcoming Queue**: `KWords`, `KColosseum`.
+- **Upcoming Queue**: `KColosseum`, `KCalc`.
 
 ### 7. Feature Expander Queue (`kilo-expander`)
 - **Target**: `KDB`
@@ -203,10 +203,18 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | **KMystery** | `KiloOS/public/apps/kmystery.html` | Pass 6+ (2026-10-19) | Puzzle / Adventure | Detective noir murder mystery; interactive clue dossier sketch viewer, forensic lab scanner, suspect interrogation tree, YM2612 2-Op FM jazz, dual Win32 native client parity, full F5/F9 persistence. |
 | **KMatch3** | `KiloOS/public/apps/kmatch3.html` | Pass 5 (2026-10-19) | Puzzle / Match-3 | 20-stage campaign, Zen, Timed Rush & Duel Arena modes, Jewel King boss encounter, active skills, dual Win32 native client parity, full F5/F9 state persistence, first-run tutorial integrity. |
 | **KChart** | `KiloOS/public/apps/kchart.html` | Pass 6+ (2026-10-20) | Office / Visualization | Feature-complete 1999 spreadsheet & business chart studio; 10 engines, regressions & OLS fit, YM2612 FM / SPC700 sonification, 7 export formats, dual Win32 C parity, full state persistence. |
+| **KSimon** | `KiloOS/public/apps/ksimon.html` | Pass 5 (2026-10-20) | Arcade / Memory | Feature-complete 3D audio-visual memory console; 9 modes (incl. 20-stage campaign & online duel), dual Win32 native client parity, full F5/F9 state persistence, first-run tutorial integrity, zero glints. |
 
 ---
 
 ## Recent Execution Logs (Max 5 Entries)
+
+- **2026-10-20T18:22:00Z — kilo-qa: KSimon (Pass 5 QA Audit & Mature Promotion)**
+  - State Persistence: Audited & fixed F5 quicksave / F9 quickload capturing complete game sequence, mode, round, elapsed time, powerup charges, and stage in both Web storage and Win32 C (`ksimon.ini`).
+  - Tutorial & Overlays: Verified first-run tutorial overlay (`ksimon_tutorialSeen`) never interrupts restored saves; wired start-on-dismiss for Space/Enter/Got-It buttons; verified clean Esc cancellation and modal dismissals.
+  - Glint Audit & Parity: Verified zero traveling border comets or specular glints; compiled Win32 native client (`KSimon.exe`, 141.5 KB) and verified dual-target parity with web cartridge (124.5 KB < 999 KB).
+  - Verification: Startup check PASS (0 JS errors, CSS valid, canvas unblocked); Vite build clean (514ms); native Win32 C build clean (0 warnings).
+  - Quarantine & Handoff: Promoted KSimon to Mature Applications quarantine; advanced `kilo_qa` to `KWords`; rotation handoff to `kilo-expander`.
 
 - **2026-10-20T14:17:00Z — kilo-usability: KFont (Bitmap Font Designer & Typography Workbench UX)**
   - Window & Ergonomics: Adjusted default dimensions to 1024x768 in App.jsx; added responsive glyph filter/jump input and range counter.
@@ -237,11 +245,4 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Parity & Verification: Win32 native client compiled cleanly (`KMech.exe`, 33.8 KB); startup check PASS (125.9 KB < 999 KB, 0 JS err, unblocked); Vite build clean.
   - Queue Handoff: Advanced `current_targets.kilo_graphics` to `KColosseum`; rotation handoff to `kilo-soundscape`.
 
-- **2026-10-19T23:38:30Z — kilo-creator: kweb://geocities (SunsetStrip & Heartland Expansion + Animated Decal Studio)**
-  - Neighborhood Expansion: Added SunsetStrip (rock/grunge) and Heartland (prairie/crafts) CSS themes, explorer tabs, and 10 deep interactive homesteads with real Web Audio riffs, tube amp simulator, recipe cards, quilt designer, and banjo rolls.
-  - Animated Decal Studio: Built procedural '99 animated GIF decal generator & stamping pad (digging worker, flaming text, 3D cyber globe, flying email, pulsing starburst, dancing hamster, compass, beacon) with drop-in HTML export.
-  - Soundscape & Jukebox: Composed 2 new hardware chiptune tracks: Track 06 "Sunset Boulevard Overdrive" (140 BPM Grunge) and Track 07 "Prairie Solstice Bluegrass" (124 BPM Banjo) with Genesis 2-Op FM / SPC700 stereo delay.
-  - Passport & Guestbook: Expanded Cyberspace Passport to 9 stamps (including SunsetStrip Rocker & Heartland Homesteader, 35 homesteads); added guestbook filters and quick stamps.
-  - Verification & Parity: Web file verified clean (652 KB < 999 KB); startup test PASS (KNet 189.8 KB, 0 JS errors); Vite build clean (508ms); security lint clean.
-  - Queue Handoff: Advanced `current_targets.kilo_creator` to `kweb://users/~neon_rider`; rotation handoff to `kilo-graphics`.
 
