@@ -944,6 +944,189 @@
     color: #0b0f17;
     border-color: var(--primary);
   }
+
+  /* 5. Relational Schema & ER Diagram Studio */
+  .schema-studio {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+    min-height: 0;
+    background: #090d15;
+    position: relative;
+    overflow: hidden;
+  }
+  .schema-toolbar {
+    padding: 6px 12px;
+    background: rgba(0, 0, 0, 0.45);
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    z-index: 5;
+  }
+  .schema-diagram-container {
+    flex-grow: 1;
+    min-height: 280px;
+    position: relative;
+    overflow: auto;
+    background-color: #080d16;
+    background-image: radial-gradient(rgba(56, 189, 248, 0.08) 1px, transparent 1px);
+    background-size: 20px 20px;
+    padding: 20px;
+  }
+  .schema-svg-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    min-width: 900px;
+    min-height: 500px;
+    pointer-events: none;
+    z-index: 1;
+  }
+  .schema-entities-grid {
+    position: relative;
+    z-index: 2;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(215px, 1fr));
+    gap: 28px;
+    min-width: 820px;
+    padding-bottom: 20px;
+  }
+  .schema-card {
+    background: rgba(14, 20, 32, 0.95);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+    overflow: hidden;
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  .schema-card:hover {
+    border-color: var(--primary);
+    box-shadow: 0 6px 20px rgba(56, 189, 248, 0.2);
+  }
+  .schema-card-header {
+    background: rgba(255, 255, 255, 0.04);
+    border-bottom: 1px solid var(--border-color);
+    padding: 8px 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .schema-card-title {
+    font-weight: 700;
+    font-size: 13px;
+    color: var(--primary);
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .schema-col-list {
+    list-style: none;
+    padding: 4px 0;
+    margin: 0;
+  }
+  .schema-col-item {
+    padding: 5px 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 11px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+    position: relative;
+  }
+  .schema-col-item:last-child { border-bottom: none; }
+  .schema-col-name {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    color: var(--text-main);
+    font-family: "JetBrains Mono", Consolas, monospace;
+  }
+  .schema-col-type {
+    color: var(--text-muted);
+    font-size: 10px;
+  }
+  .key-badge-pk {
+    background: rgba(245, 158, 11, 0.2);
+    color: #fcd34d;
+    border: 1px solid rgba(245, 158, 11, 0.4);
+    border-radius: 3px;
+    padding: 0 4px;
+    font-size: 9px;
+    font-weight: 700;
+  }
+  .key-badge-fk {
+    background: rgba(168, 85, 247, 0.2);
+    color: #d8b4fe;
+    border: 1px solid rgba(168, 85, 247, 0.4);
+    border-radius: 3px;
+    padding: 0 4px;
+    font-size: 9px;
+    font-weight: 700;
+    cursor: help;
+  }
+  .schema-bottom-panel {
+    background: rgba(10, 15, 24, 0.95);
+    border-top: 1px solid var(--border-color);
+    max-height: 160px;
+    display: flex;
+    flex-direction: column;
+    z-index: 5;
+  }
+  .schema-panel-header {
+    padding: 6px 12px;
+    background: rgba(0, 0, 0, 0.35);
+    border-bottom: 1px solid var(--border-color);
+    font-size: 11px;
+    font-weight: 600;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .schema-relations-table-container {
+    overflow-y: auto;
+    flex-grow: 1;
+  }
+
+  /* Index Optimizer & Benchmark Styles */
+  .benchmark-box {
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 10px;
+    margin-bottom: 10px;
+  }
+  .benchmark-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 8px;
+    margin-top: 8px;
+  }
+  .benchmark-metric {
+    background: rgba(255, 255, 255, 0.04);
+    padding: 8px;
+    border-radius: 4px;
+    text-align: center;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+  }
+  .benchmark-metric-val {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--primary);
+    font-family: "JetBrains Mono", monospace;
+  }
+  .benchmark-metric-lbl {
+    font-size: 9px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    margin-top: 2px;
+  }
+
   @media (max-width: 768px) {
     .charts-row { grid-template-columns: 1fr; }
     .stats-grid { grid-template-columns: repeat(2, 1fr); }
@@ -993,6 +1176,7 @@
         <button class="btn-tab" id="tabCards" onclick="switchView('cards')" title="Directory Cards View (2)">🗂️ Cards <span class="kbd-badge">2</span></button>
         <button class="btn-tab" id="tabSql" onclick="switchView('sql')" title="SQL Query Console (3)">⚡ SQL <span class="kbd-badge">3</span></button>
         <button class="btn-tab" id="tabDash" onclick="switchView('dash')" title="Analytics Dashboard (4)">📊 Dash <span class="kbd-badge">4</span></button>
+        <button class="btn-tab" id="tabSchema" onclick="switchView('schema')" title="Relational Schema & ER Diagram (5)">📐 Schema <span class="kbd-badge">5</span></button>
       </div>
 
       <!-- Search & Filters -->
@@ -1008,6 +1192,8 @@
       <!-- Action Buttons -->
       <button class="btn-accent" onclick="openStatsModal()" title="View Database Analytics & Metrics (A)">Stats <span class="kbd-badge">A</span></button>
       <button class="btn-secondary" onclick="openSchemaModal()" title="Alter Table Schema / Manage Columns (S)">Columns <span class="kbd-badge">S</span></button>
+      <button class="btn-secondary" onclick="openIndexLabModal()" title="Index Simulator & Optimizer Lab (X)">Indexes <span class="kbd-badge">X</span></button>
+      <button class="btn-secondary" onclick="openSeedModal()" title="Enterprise Synthetic Data Generator">Seed Data</button>
       
       <!-- Export Dropdown -->
       <div class="dropdown">
@@ -1094,6 +1280,17 @@
           <span style="font-size:11px;font-weight:600;color:var(--primary);">Preset Queries:</span>
           <select id="sqlPresetSelect" onchange="applySqlPreset(this.value)">
             <option value="">-- Choose SQL Template --</option>
+            <option value="SELECT e.name, e.role, d.name AS department, d.floor, p.title AS project FROM employees e INNER JOIN departments d ON e.dept = d.name LEFT JOIN projects p ON p.lead = e.name;">Chained Relational JOIN: 3-Table Pipeline</option>
+            <option value="SELECT e.name, e.dept, d.head, d.budget, d.floor FROM employees e INNER JOIN departments d ON e.dept = d.name;">Relational JOIN: Employee Dept Budgets</option>
+            <option value="SELECT a.tag, a.asset, e.name, e.dept, e.role FROM assets a LEFT JOIN employees e ON a.assigned_to = e.name;">LEFT JOIN: Hardware Asset Allocation</option>
+            <option value="SELECT p.title, p.priority, e.name AS lead_name, e.dept FROM projects p INNER JOIN employees e ON p.lead = e.name;">Relational JOIN: Project Leads</option>
+            <option value="SELECT d.name AS dept, COUNT(e.id) AS headcount FROM departments d LEFT JOIN employees e ON d.name = e.dept GROUP BY d.name;">Aggregated JOIN: Headcount by Dept</option>
+            <option value="SELECT * FROM employees WHERE (dept = 'Engineering' OR dept = 'Marketing') AND status IN ('Active', 'Remote');">Advanced WHERE: Parentheses, OR &amp; IN</option>
+            <option value="EXPLAIN SELECT e.name, d.name FROM employees e INNER JOIN departments d ON e.dept = d.name;">EXPLAIN: Multi-Table Optimizer Plan</option>
+            <option value="CREATE INDEX idx_emp_dept ON employees (dept);">DDL: Create Hash Index on Dept</option>
+            <option value="SHOW INDEXES FROM employees;">DDL: Inspect Table Indexes</option>
+            <option value="CREATE TABLE salaries (emp_id, salary, bonus, currency);">DDL: CREATE TABLE (Salaries)</option>
+            <option value="ALTER TABLE employees ADD COLUMN location;">DDL: ALTER TABLE (Add Column)</option>
             <option value="SELECT * FROM employees WHERE dept = 'Engineering';">Engineers Only (WHERE)</option>
             <option value="SELECT dept, COUNT(*) AS headcount FROM employees GROUP BY dept;">Headcount by Dept (GROUP BY)</option>
             <option value="SELECT * FROM employees WHERE status = 'Remote';">Remote Employees</option>
@@ -1104,10 +1301,64 @@
             <option value="DESCRIBE employees;">Table Schema (DESCRIBE)</option>
           </select>
         </div>
-        <div style="display:flex;gap:6px;">
+        <div style="display:flex;gap:6px;flex-wrap:wrap;">
           <button class="btn-primary" onclick="executeSqlFromEditor()" title="Run SQL (Ctrl+Enter)">▶ Run Query</button>
+          <button class="btn-accent" onclick="toggleQueryBuilder()" title="Visual Relational Query Constructor">⚡ Query Builder</button>
           <button class="btn-secondary" onclick="clearSqlEditor()">Clear</button>
           <button class="btn-secondary" onclick="copySqlToClipboard()">Copy SQL</button>
+          <button class="btn-secondary" onclick="openIndexLabModal()" title="Simulate Indexes &amp; Benchmark Speed">⚡ Index Lab</button>
+        </div>
+      </div>
+
+      <!-- Visual Relational Query Builder Assistant -->
+      <div class="sql-query-builder" id="sqlQueryBuilder" style="display:none;background:rgba(255,255,255,0.03);border:1px solid var(--border-color);border-radius:6px;padding:10px;margin-bottom:8px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+          <span style="font-size:12px;font-weight:700;color:var(--primary);display:flex;align-items:center;gap:6px;">
+            <span>⚡ Visual Relational Query Constructor</span>
+            <span class="badge" style="font-size:10px;">Interactive Assistant</span>
+          </span>
+          <button class="btn-secondary" style="padding:2px 7px;font-size:10px;" onclick="toggleQueryBuilder()">✕ Close</button>
+        </div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;font-size:11px;">
+          <div>
+            <label style="color:var(--text-muted);display:block;margin-bottom:3px;font-weight:600;">Base Table:</label>
+            <select id="qbBaseTable" onchange="updateQueryBuilderFields()" style="padding:5px 7px;border-radius:4px;border:1px solid var(--border-color);background:rgba(0,0,0,0.5);color:var(--text-main);font-size:11px;"></select>
+          </div>
+          <div>
+            <label style="color:var(--text-muted);display:block;margin-bottom:3px;font-weight:600;">Join Mode:</label>
+            <select id="qbJoinType" onchange="updateQueryBuilderFields()" style="padding:5px 7px;border-radius:4px;border:1px solid var(--border-color);background:rgba(0,0,0,0.5);color:var(--text-main);font-size:11px;">
+              <option value="NONE">-- No Join (Single Table) --</option>
+              <option value="INNER JOIN">INNER JOIN</option>
+              <option value="LEFT JOIN">LEFT JOIN</option>
+            </select>
+          </div>
+          <div id="qbJoinGroup" style="display:none;">
+            <label style="color:var(--text-muted);display:block;margin-bottom:3px;font-weight:600;">Join Table &amp; Match Condition:</label>
+            <div style="display:flex;gap:4px;align-items:center;">
+              <select id="qbJoinTable" onchange="updateQueryBuilderJoinCols()" style="padding:5px 7px;border-radius:4px;border:1px solid var(--border-color);background:rgba(0,0,0,0.5);color:var(--text-main);font-size:11px;"></select>
+              <span style="color:var(--primary);font-weight:600;">ON</span>
+              <select id="qbJoinBaseCol" style="padding:5px 7px;border-radius:4px;border:1px solid var(--border-color);background:rgba(0,0,0,0.5);color:var(--text-main);font-size:11px;"></select>
+              <span>=</span>
+              <select id="qbJoinTargetCol" style="padding:5px 7px;border-radius:4px;border:1px solid var(--border-color);background:rgba(0,0,0,0.5);color:var(--text-main);font-size:11px;"></select>
+            </div>
+          </div>
+          <div>
+            <label style="color:var(--text-muted);display:block;margin-bottom:3px;font-weight:600;">Filter (WHERE):</label>
+            <div style="display:flex;gap:4px;align-items:center;">
+              <select id="qbFilterCol" style="padding:5px 7px;border-radius:4px;border:1px solid var(--border-color);background:rgba(0,0,0,0.5);color:var(--text-main);font-size:11px;"></select>
+              <select id="qbFilterOp" style="padding:5px 7px;border-radius:4px;border:1px solid var(--border-color);background:rgba(0,0,0,0.5);color:var(--text-main);font-size:11px;">
+                <option value="=">=</option>
+                <option value="!=">!=</option>
+                <option value="LIKE">LIKE</option>
+                <option value=">">&gt;</option>
+                <option value="<">&lt;</option>
+              </select>
+              <input type="text" id="qbFilterVal" placeholder="value (optional)" style="width:100px;padding:5px 7px;border-radius:4px;border:1px solid var(--border-color);background:rgba(0,0,0,0.5);color:var(--text-main);font-size:11px;">
+            </div>
+          </div>
+          <div>
+            <button class="btn-primary" onclick="buildAndRunQuery()" style="padding:6px 12px;font-size:11px;">⚡ Build &amp; Run SQL</button>
+          </div>
         </div>
       </div>
 
@@ -1121,14 +1372,24 @@
           <button type="button" class="sql-chip" onclick="insertSqlKeyword(' INSERT INTO ')">INSERT</button>
           <button type="button" class="sql-chip" onclick="insertSqlKeyword(' UPDATE ')">UPDATE</button>
           <button type="button" class="sql-chip" onclick="insertSqlKeyword(' DELETE FROM ')">DELETE</button>
-          <button type="button" class="sql-chip" onclick="insertSqlKeyword(' JOIN ')">JOIN</button>
+          <button type="button" class="sql-chip" onclick="insertSqlKeyword(' INNER JOIN ')">INNER JOIN</button>
+          <button type="button" class="sql-chip" onclick="insertSqlKeyword(' LEFT JOIN ')">LEFT JOIN</button>
+          <button type="button" class="sql-chip" onclick="insertSqlKeyword(' ON ')">ON</button>
+          <button type="button" class="sql-chip" onclick="insertSqlKeyword('EXPLAIN ')">EXPLAIN</button>
+          <button type="button" class="sql-chip" onclick="insertSqlKeyword('CREATE INDEX ')">CREATE INDEX</button>
+          <button type="button" class="sql-chip" onclick="insertSqlKeyword('SHOW INDEXES;')">SHOW INDEXES</button>
         </div>
         <textarea id="sqlEditor" class="sql-editor" spellcheck="false" placeholder="Enter SQL query (e.g. SELECT * FROM employees WHERE dept = 'Engineering' ORDER BY name ASC;)" onkeydown="handleSqlKeyDown(event)"></textarea>
       </div>
 
       <div class="sql-status-bar">
         <span id="sqlStatusText">Ready. Press [Ctrl+Enter] to execute.</span>
-        <span id="sqlMetricsText">0 rows</span>
+        <div style="display:flex;align-items:center;gap:6px;">
+          <span id="sqlMetricsText" style="margin-right:8px;">0 rows</span>
+          <button class="btn-secondary" style="padding:2px 7px;font-size:10px;" onclick="exportSqlResultsCSV()" title="Export results as CSV">📥 CSV</button>
+          <button class="btn-secondary" style="padding:2px 7px;font-size:10px;" onclick="exportSqlResultsJSON()" title="Export results as JSON">📥 JSON</button>
+          <button class="btn-secondary" style="padding:2px 7px;font-size:10px;" onclick="copySqlResultsMarkdown()" title="Copy results as Markdown table">📋 Markdown</button>
+        </div>
       </div>
 
       <div class="sql-results-container">
@@ -1182,6 +1443,60 @@
       <div style="display:flex;justify-content:flex-end;gap:8px;">
         <button class="btn-accent" onclick="exportMarkdown()">Export Executive MD Report</button>
         <button class="btn-secondary" onclick="printReport()">Print Report View</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- VIEW 5: Relational Schema & Visual ER Diagram -->
+  <div class="view-container" id="viewSchema">
+    <div class="schema-studio">
+      <div class="schema-toolbar">
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+          <span style="font-size:12px;font-weight:700;color:var(--primary);display:flex;align-items:center;gap:6px;">
+            <span>📐 Entity-Relationship Studio</span>
+            <span class="badge" id="schemaRelationBadge">3 relations</span>
+          </span>
+          <button class="btn-accent" onclick="openAddRelationModal()" title="Add Foreign Key Relationship">➕ Add Relation</button>
+          <button class="btn-secondary" onclick="checkReferentialIntegrity()" title="Audit Foreign Keys for Orphan Records">🔍 Check Integrity</button>
+          <button class="btn-secondary" onclick="openIndexLabModal()" title="Simulate B-Tree &amp; Hash Indexes (X)">⚡ Index Lab <span class="kbd-badge">X</span></button>
+          <button class="btn-secondary" onclick="openSeedModal()" title="Generate Realistic Enterprise Records">🎲 Seed Data</button>
+        </div>
+        <div style="display:flex;gap:6px;">
+          <button class="btn-primary" onclick="exportRelationalDDL()" title="Export ANSI SQL DDL with Foreign Keys &amp; Indexes">📜 Export DDL</button>
+          <button class="btn-secondary" onclick="renderSchemaDiagram()" title="Redraw ER Diagram">🔄 Redraw</button>
+        </div>
+      </div>
+
+      <div class="schema-diagram-container" id="schemaDiagramContainer">
+        <!-- SVG Canvas for relationship connector lines -->
+        <svg id="schemaSvgOverlay" class="schema-svg-overlay"></svg>
+        <!-- Table Entity Cards rendered dynamically -->
+        <div class="schema-entities-grid" id="schemaEntitiesGrid"></div>
+      </div>
+
+      <div class="schema-bottom-panel">
+        <div class="schema-panel-header">
+          <span>Active Foreign Key Relationships &amp; Referential Constraints</span>
+          <span id="schemaIntegritySummary" style="color:#10b981;">Integrity: 100% OK</span>
+        </div>
+        <div class="schema-relations-table-container">
+          <table id="schemaRelationsTable">
+            <thead>
+              <tr>
+                <th>Source Table</th>
+                <th>Foreign Key</th>
+                <th>Target Table</th>
+                <th>Target Column (PK)</th>
+                <th>Type</th>
+                <th>Integrity</th>
+                <th style="text-align:right;">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="schemaRelationsBody">
+              <!-- Populated dynamically -->
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   </div>
@@ -1411,6 +1726,173 @@
   </div>
 </div>
 
+<!-- Add Relation Modal -->
+<div class="modal-overlay" id="addRelationModal" role="dialog" aria-modal="true" aria-labelledby="addRelationModalTitle" onclick="if(event.target===this) closeAddRelationModal()">
+  <div class="modal">
+    <div class="modal-header-row">
+      <h3 id="addRelationModalTitle">🔗 Add Foreign Key Relationship</h3>
+      <button class="modal-close-btn" onclick="closeAddRelationModal()" title="Close dialog (Esc)" aria-label="Close dialog">&times;</button>
+    </div>
+    <p style="font-size:12px;color:var(--text-muted);margin:0 0 10px 0;">Define a relational constraint linking a foreign key column to a target primary key.</p>
+    <div class="modal-field">
+      <label for="relFromTableSelect">Source Table (Child)</label>
+      <select id="relFromTableSelect" onchange="updateRelationColSelects()" style="width:100%;padding:6px;border-radius:4px;border:1px solid var(--border-color);background:rgba(0,0,0,0.4);color:var(--text-main);font-size:11px;"></select>
+    </div>
+    <div class="modal-field">
+      <label for="relFromColSelect">Foreign Key Column</label>
+      <select id="relFromColSelect" style="width:100%;padding:6px;border-radius:4px;border:1px solid var(--border-color);background:rgba(0,0,0,0.4);color:var(--text-main);font-size:11px;"></select>
+    </div>
+    <div class="modal-field">
+      <label for="relToTableSelect">Target Table (Parent)</label>
+      <select id="relToTableSelect" onchange="updateRelationColSelects()" style="width:100%;padding:6px;border-radius:4px;border:1px solid var(--border-color);background:rgba(0,0,0,0.4);color:var(--text-main);font-size:11px;"></select>
+    </div>
+    <div class="modal-field">
+      <label for="relToColSelect">Referenced Column (Target PK / Key)</label>
+      <select id="relToColSelect" style="width:100%;padding:6px;border-radius:4px;border:1px solid var(--border-color);background:rgba(0,0,0,0.4);color:var(--text-main);font-size:11px;"></select>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeAddRelationModal()">Cancel</button>
+      <button class="btn-primary" onclick="createRelationFromModal()">Establish Relation</button>
+    </div>
+  </div>
+</div>
+
+<!-- Index Simulator & Benchmark Lab Modal -->
+<div class="modal-overlay" id="indexLabModal" role="dialog" aria-modal="true" aria-labelledby="indexLabModalTitle" onclick="if(event.target===this) closeIndexLabModal()">
+  <div class="modal modal-wide" style="max-height:88vh;display:flex;flex-direction:column;">
+    <div class="modal-header-row">
+      <h3 id="indexLabModalTitle">⚡ Index Simulator &amp; Query Benchmark Lab</h3>
+      <button class="modal-close-btn" onclick="closeIndexLabModal()" title="Close dialog (Esc)" aria-label="Close dialog">&times;</button>
+    </div>
+    <p style="font-size:12px;color:var(--text-muted);margin:0 0 10px 0;">
+      Simulate B-Tree and Hash Index performance gains, inspect index memory footprint, and benchmark execution times under load.
+    </p>
+
+    <div style="overflow-y:auto;flex-grow:1;padding-right:4px;">
+      <div style="margin-bottom:12px;">
+        <h4 style="margin:0 0 6px 0;font-size:12px;color:#7dd3fc;text-transform:uppercase;">Active Indexes (<span id="activeIndexesCount">0</span>)</h4>
+        <div style="max-height:160px;overflow-y:auto;background:rgba(0,0,0,0.3);border:1px solid var(--border-color);border-radius:6px;">
+          <table style="width:100%;font-size:11px;">
+            <thead>
+              <tr style="background:rgba(255,255,255,0.06);color:var(--text-muted);">
+                <th style="padding:6px 8px;">Table</th>
+                <th style="padding:6px 8px;">Index Name</th>
+                <th style="padding:6px 8px;">Column</th>
+                <th style="padding:6px 8px;">Type</th>
+                <th style="padding:6px 8px;">Unique</th>
+                <th style="padding:6px 8px;">Est. Size</th>
+                <th style="padding:6px 8px;text-align:right;">Action</th>
+              </tr>
+            </thead>
+            <tbody id="indexLabTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div style="background:rgba(255,255,255,0.03);border:1px solid var(--border-color);border-radius:6px;padding:10px;margin-bottom:12px;">
+        <h4 style="margin:0 0 8px 0;font-size:12px;color:var(--primary);text-transform:uppercase;">➕ Create New Index</h4>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+          <select id="newIndexTableSelect" onchange="updateNewIndexColSelect()" style="padding:5px 8px;border-radius:4px;border:1px solid var(--border-color);background:rgba(0,0,0,0.4);color:var(--text-main);font-size:11px;"></select>
+          <select id="newIndexColSelect" style="padding:5px 8px;border-radius:4px;border:1px solid var(--border-color);background:rgba(0,0,0,0.4);color:var(--text-main);font-size:11px;"></select>
+          <select id="newIndexTypeSelect" style="padding:5px 8px;border-radius:4px;border:1px solid var(--border-color);background:rgba(0,0,0,0.4);color:var(--text-main);font-size:11px;">
+            <option value="Hash">Hash (Fast O(1) Equality)</option>
+            <option value="B-Tree">B-Tree (Range &amp; Sorting)</option>
+          </select>
+          <label style="font-size:11px;display:flex;align-items:center;gap:4px;color:var(--text-main);cursor:pointer;">
+            <input type="checkbox" id="newIndexUniqueCheck"> Unique
+          </label>
+          <button class="btn-primary" onclick="createIndexFromModal()">Create Index</button>
+        </div>
+      </div>
+
+      <div class="benchmark-box">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <h4 style="margin:0;font-size:12px;color:var(--accent);text-transform:uppercase;">🏎️ 1,000-Iteration Query Benchmark</h4>
+          <button class="btn-accent" onclick="runBenchmarkSimulation()">▶ Run Benchmark</button>
+        </div>
+        <p style="font-size:11px;color:var(--text-muted);margin:6px 0 0 0;">
+          Simulates 1,000 query evaluations comparing Full Table Scan vs Indexed B-Tree/Hash Seek on current dataset.
+        </p>
+        <div class="benchmark-grid" id="benchmarkResultsGrid">
+          <div class="benchmark-metric">
+            <div class="benchmark-metric-val" id="benchScanTime">-- ms</div>
+            <div class="benchmark-metric-lbl">Full Table Scan (1,000 ops)</div>
+          </div>
+          <div class="benchmark-metric">
+            <div class="benchmark-metric-val" id="benchSeekTime" style="color:var(--success);">-- ms</div>
+            <div class="benchmark-metric-lbl">Indexed Seek (1,000 ops)</div>
+          </div>
+          <div class="benchmark-metric">
+            <div class="benchmark-metric-val" id="benchSpeedup" style="color:var(--accent);">--</div>
+            <div class="benchmark-metric-lbl">Optimization Speedup</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-actions" style="margin-top:auto;">
+      <button class="btn-secondary" onclick="closeIndexLabModal()">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- Synthetic Data Generator Modal -->
+<div class="modal-overlay" id="seedModal" role="dialog" aria-modal="true" aria-labelledby="seedModalTitle" onclick="if(event.target===this) closeSeedModal()">
+  <div class="modal">
+    <div class="modal-header-row">
+      <h3 id="seedModalTitle">🎲 Synthetic Enterprise Data Generator</h3>
+      <button class="modal-close-btn" onclick="closeSeedModal()" title="Close dialog (Esc)" aria-label="Close dialog">&times;</button>
+    </div>
+    <p style="font-size:12px;color:var(--text-muted);margin:0 0 10px 0;">
+      Generate realistic 1999 enterprise datasets across relational tables with coherent foreign keys to test SQL joins, indexes, and profiler under load.
+    </p>
+    <div class="modal-field">
+      <label for="seedPresetSelect">Dataset Scale &amp; Scope</label>
+      <select id="seedPresetSelect" style="width:100%;padding:6px;border-radius:4px;border:1px solid var(--border-color);background:rgba(0,0,0,0.4);color:var(--text-main);font-size:11px;">
+        <option value="standard">Standard Batch (+15 Employees, +3 Depts, +5 Projects, +8 Assets)</option>
+        <option value="large">Stress Suite (+35 Employees, +5 Depts, +12 Projects, +20 Assets)</option>
+        <option value="employees_only">Employees Only (+20 Records with random departments)</option>
+      </select>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeSeedModal()">Cancel</button>
+      <button class="btn-primary" onclick="confirmSeedData()">Generate Records</button>
+    </div>
+  </div>
+</div>
+
+<!-- Referential Integrity Modal -->
+<div class="modal-overlay" id="integrityModal" role="dialog" aria-modal="true" aria-labelledby="integrityModalTitle" onclick="if(event.target===this) closeIntegrityModal()">
+  <div class="modal modal-wide">
+    <div class="modal-header-row">
+      <h3 id="integrityModalTitle">🔍 Referential Integrity &amp; Orphan Audit</h3>
+      <button class="modal-close-btn" onclick="closeIntegrityModal()" title="Close dialog (Esc)" aria-label="Close dialog">&times;</button>
+    </div>
+    <div id="integrityReportContent" style="max-height:300px;overflow-y:auto;margin-bottom:12px;"></div>
+    <div class="modal-actions">
+      <button class="btn-accent" id="autoReconcileBtn" style="display:none;" onclick="autoReconcileOrphans()">🪄 Auto-Reconcile Known Orphans</button>
+      <button class="btn-secondary" onclick="closeIntegrityModal()">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- Relational DDL Modal -->
+<div class="modal-overlay" id="ddlModal" role="dialog" aria-modal="true" aria-labelledby="ddlModalTitle" onclick="if(event.target===this) closeDdlModal()">
+  <div class="modal modal-wide" style="max-height:85vh;display:flex;flex-direction:column;">
+    <div class="modal-header-row">
+      <h3 id="ddlModalTitle">📜 Relational Database Schema DDL</h3>
+      <button class="modal-close-btn" onclick="closeDdlModal()" title="Close dialog (Esc)" aria-label="Close dialog">&times;</button>
+    </div>
+    <textarea id="ddlTextarea" readonly spellcheck="false" style="flex-grow:1;min-height:220px;background:rgba(10,14,22,0.9);border:1px solid var(--border-color);border-radius:6px;color:#38bdf8;font-family:'JetBrains Mono',monospace;font-size:11px;padding:8px;resize:none;margin-bottom:12px;"></textarea>
+    <div class="modal-actions" style="margin-top:auto;">
+      <button class="btn-primary" onclick="copyDdlToClipboard()">Copy SQL</button>
+      <button class="btn-accent" onclick="downloadDdlFile()">Download .sql</button>
+      <button class="btn-secondary" onclick="closeDdlModal()">Close</button>
+    </div>
+  </div>
+</div>
+
+
 <!-- Firebase Realtime Database Module for Live Sync -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
@@ -1503,11 +1985,22 @@ const DEFAULT_DATABASE = {
         { tag: 'AST-804', asset: 'DAT Tape Backup 24GB', assigned_to: 'IT Dept', specs: 'SCSI-3 Ultra-Wide', status: 'In Stock' }
       ]
     }
-  }
+  },
+  relations: [
+    { id: 'rel_emp_dept', fromTable: 'employees', fromCol: 'dept', toTable: 'departments', toCol: 'name', type: 'N:1' },
+    { id: 'rel_prj_lead', fromTable: 'projects', fromCol: 'lead', toTable: 'employees', toCol: 'name', type: 'N:1' },
+    { id: 'rel_ast_emp', fromTable: 'assets', fromCol: 'assigned_to', toTable: 'employees', toCol: 'name', type: 'N:1' }
+  ],
+  indexes: [
+    { name: 'idx_emp_dept', table: 'employees', column: 'dept', type: 'Hash', unique: false },
+    { name: 'idx_emp_id', table: 'employees', column: 'id', type: 'B-Tree', unique: true },
+    { name: 'idx_dept_name', table: 'departments', column: 'name', type: 'Hash', unique: true },
+    { name: 'idx_prj_lead', table: 'projects', column: 'lead', type: 'Hash', unique: false }
+  ]
 };
 
 let dbState = JSON.parse(JSON.stringify(DEFAULT_DATABASE));
-let currentView = 'grid'; // 'grid' | 'cards' | 'sql' | 'dash'
+let currentView = 'grid'; // 'grid' | 'cards' | 'sql' | 'dash' | 'schema'
 let sortCol = null;
 let sortAsc = true;
 let selectedRecordIds = new Set();
@@ -1632,6 +2125,12 @@ function loadDatabase() {
       const parsed = JSON.parse(raw);
       if (parsed && parsed.tables) {
         dbState = parsed;
+        if (!dbState.relations || !Array.isArray(dbState.relations)) {
+          dbState.relations = JSON.parse(JSON.stringify(DEFAULT_DATABASE.relations));
+        }
+        if (!dbState.indexes || !Array.isArray(dbState.indexes)) {
+          dbState.indexes = JSON.parse(JSON.stringify(DEFAULT_DATABASE.indexes));
+        }
       }
     }
   } catch(e) {
@@ -1713,7 +2212,7 @@ function renderTableTabs() {
 // --- View Switching ---
 function switchView(viewName) {
   currentView = viewName;
-  ['grid', 'cards', 'sql', 'dash'].forEach(v => {
+  ['grid', 'cards', 'sql', 'dash', 'schema'].forEach(v => {
     const el = document.getElementById(`view${v.charAt(0).toUpperCase() + v.slice(1)}`);
     const tabEl = document.getElementById(`tab${v.charAt(0).toUpperCase() + v.slice(1)}`);
     if (el) el.classList.toggle('active', v === viewName);
@@ -1724,6 +2223,8 @@ function switchView(viewName) {
     renderDashboard();
   } else if (viewName === 'sql') {
     updateSqlEditorPlaceholders();
+  } else if (viewName === 'schema') {
+    renderSchemaView();
   }
 }
 
@@ -2267,15 +2768,218 @@ function runSql(rawSql) {
   const tokens = sql.split(/\s+/);
   const command = tokens[0].toUpperCase();
 
+  if (command === 'EXPLAIN') {
+    const targetSql = sql.replace(/^EXPLAIN\s+/i, '').trim();
+    return explainSql(targetSql);
+  }
+
   if (command === 'SHOW') {
-    if (tokens[1] && tokens[1].toUpperCase() === 'TABLES') {
+    const sub = (tokens[1] || '').toUpperCase();
+    if (sub === 'TABLES') {
       const rows = Object.keys(dbState.tables).map(t => ({
         table_name: t,
-        title: dbState.tables[t].title,
+        title: dbState.tables[t].title || t,
         records: dbState.tables[t].records.length,
         columns: dbState.tables[t].columns.join(', ')
       }));
       return { columns: ['table_name', 'title', 'records', 'columns'], rows, message: 'SHOW TABLES completed' };
+    }
+    if (sub === 'INDEXES' || sub === 'INDEX') {
+      let targetTable = null;
+      if (tokens[2] && tokens[2].toUpperCase() === 'FROM' && tokens[3]) {
+        targetTable = tokens[3].toLowerCase();
+      }
+      let idxs = dbState.indexes || [];
+      if (targetTable) {
+        idxs = idxs.filter(i => i.table.toLowerCase() === targetTable);
+      }
+      const rows = idxs.map(i => ({
+        table: i.table,
+        index_name: i.name,
+        column: i.column,
+        type: i.type || 'Hash',
+        unique: i.unique ? 'YES' : 'NO'
+      }));
+      return { columns: ['table', 'index_name', 'column', 'type', 'unique'], rows, message: `${rows.length} index(es) listed` };
+    }
+  }
+
+  if (command === 'CREATE') {
+    // Check CREATE TABLE first
+    const tblMatch = sql.match(/CREATE\s+TABLE\s+(?:IF\s+NOT\s+EXISTS\s+)?([a-zA-Z0-9_]+)\s*\((.+?)\)/i);
+    if (tblMatch) {
+      const tblName = tblMatch[1].toLowerCase();
+      const rawCols = tblMatch[2].split(',').map(s => {
+        const parts = s.trim().split(/\s+/);
+        return parts[0].toLowerCase();
+      }).filter(Boolean);
+
+      if (rawCols.length === 0) throw new Error("Table must specify at least one column");
+      if (dbState.tables[tblName]) {
+        if (/IF\s+NOT\s+EXISTS/i.test(sql)) {
+          return { columns: ['status', 'table_name'], rows: [{ status: 'EXISTS', table_name: tblName }], message: `Table '${tblName}' already exists` };
+        }
+        throw new Error(`Table '${tblName}' already exists`);
+      }
+
+      dbState.tables[tblName] = {
+        title: tblName.charAt(0).toUpperCase() + tblName.slice(1),
+        columns: rawCols,
+        primaryKey: rawCols[0],
+        records: []
+      };
+      saveDatabase();
+      renderTableTabs();
+      switchTable(tblName);
+      renderAll();
+      return {
+        columns: ['status', 'table_name', 'columns'],
+        rows: [{ status: 'CREATED', table_name: tblName, columns: rawCols.join(', ') }],
+        message: `Table '${tblName}' created successfully`
+      };
+    }
+
+    // Check CREATE INDEX
+    const match = sql.match(/CREATE\s+(?:(UNIQUE)\s+)?INDEX\s+([a-zA-Z0-9_]+)\s+ON\s+([a-zA-Z0-9_]+)\s*\(([a-zA-Z0-9_]+)\)(?:\s+USING\s+(HASH|BTREE))?/i);
+    if (match) {
+      const isUnique = Boolean(match[1]);
+      const idxName = match[2];
+      const tblName = match[3].toLowerCase();
+      const colName = match[4].toLowerCase();
+      const idxType = match[5] && match[5].toUpperCase() === 'BTREE' ? 'B-Tree' : 'Hash';
+
+      if (!dbState.tables[tblName]) throw new Error(`Table '${tblName}' not found`);
+      if (!dbState.tables[tblName].columns.includes(colName)) throw new Error(`Column '${colName}' not found in table '${tblName}'`);
+
+      if (!dbState.indexes) dbState.indexes = [];
+      if (dbState.indexes.some(i => i.name.toLowerCase() === idxName.toLowerCase())) {
+        throw new Error(`Index '${idxName}' already exists`);
+      }
+
+      dbState.indexes.push({
+        name: idxName,
+        table: tblName,
+        column: colName,
+        type: idxType,
+        unique: isUnique
+      });
+      saveDatabase();
+      if (currentView === 'schema') renderSchemaView();
+      return {
+        columns: ['status', 'index_name', 'table', 'column', 'type', 'unique'],
+        rows: [{ status: 'CREATED', index_name: idxName, table: tblName, column: colName, type: idxType, unique: isUnique ? 'YES' : 'NO' }],
+        message: `Index '${idxName}' created on ${tblName}(${colName})`
+      };
+    }
+  }
+
+  if (command === 'DROP') {
+    // Check DROP TABLE
+    const dropTblMatch = sql.match(/DROP\s+TABLE\s+(?:IF\s+EXISTS\s+)?([a-zA-Z0-9_]+)/i);
+    if (dropTblMatch) {
+      const tblName = dropTblMatch[1].toLowerCase();
+      if (!dbState.tables[tblName]) {
+        if (/IF\s+EXISTS/i.test(sql)) {
+          return { columns: ['status', 'table_name'], rows: [{ status: 'NOT_FOUND', table_name: tblName }], message: `Table '${tblName}' not found` };
+        }
+        throw new Error(`Table '${tblName}' not found`);
+      }
+      const allTables = Object.keys(dbState.tables);
+      if (allTables.length <= 1) {
+        throw new Error("Cannot drop the last remaining table in the database");
+      }
+      delete dbState.tables[tblName];
+      if (dbState.indexes) {
+        dbState.indexes = dbState.indexes.filter(i => i.table.toLowerCase() !== tblName);
+      }
+      if (dbState.relations) {
+        dbState.relations = dbState.relations.filter(r => r.fromTable.toLowerCase() !== tblName && r.toTable.toLowerCase() !== tblName);
+      }
+      if (dbState.activeTable === tblName) {
+        dbState.activeTable = Object.keys(dbState.tables)[0];
+      }
+      saveDatabase();
+      renderTableTabs();
+      renderAll();
+      return {
+        columns: ['status', 'table_name'],
+        rows: [{ status: 'DROPPED', table_name: tblName }],
+        message: `Table '${tblName}' dropped successfully`
+      };
+    }
+
+    // Check DROP INDEX
+    const match = sql.match(/DROP\s+INDEX\s+([a-zA-Z0-9_]+)(?:\s+ON\s+([a-zA-Z0-9_]+))?/i);
+    if (match) {
+      const idxName = match[1];
+      if (!dbState.indexes) dbState.indexes = [];
+      const initLen = dbState.indexes.length;
+      dbState.indexes = dbState.indexes.filter(i => i.name.toLowerCase() !== idxName.toLowerCase());
+      if (dbState.indexes.length === initLen) throw new Error(`Index '${idxName}' not found`);
+      saveDatabase();
+      if (currentView === 'schema') renderSchemaView();
+      return {
+        columns: ['status', 'index_name'],
+        rows: [{ status: 'DROPPED', index_name: idxName }],
+        message: `Index '${idxName}' dropped successfully`
+      };
+    }
+  }
+
+  if (command === 'ALTER') {
+    const alterAddMatch = sql.match(/ALTER\s+TABLE\s+([a-zA-Z0-9_]+)\s+ADD\s+(?:COLUMN\s+)?([a-zA-Z0-9_]+)(?:\s+[a-zA-Z0-9_\(\)]+)?(?:\s+DEFAULT\s+['"]?([^'"]*)['"]?)?/i);
+    if (alterAddMatch) {
+      const tblName = alterAddMatch[1].toLowerCase();
+      const colName = alterAddMatch[2].toLowerCase();
+      const defVal = alterAddMatch[3] !== undefined ? alterAddMatch[3] : '';
+      if (!dbState.tables[tblName]) throw new Error(`Table '${tblName}' not found`);
+      const tbl = dbState.tables[tblName];
+      if (tbl.columns.includes(colName)) throw new Error(`Column '${colName}' already exists in table '${tblName}'`);
+      tbl.columns.push(colName);
+      tbl.records.forEach(r => { r[colName] = defVal; });
+      saveDatabase();
+      renderAll();
+      return {
+        columns: ['status', 'table_name', 'column'],
+        rows: [{ status: 'COLUMN_ADDED', table_name: tblName, column: colName }],
+        message: `Column '${colName}' added to table '${tblName}'`
+      };
+    }
+    const alterDropMatch = sql.match(/ALTER\s+TABLE\s+([a-zA-Z0-9_]+)\s+DROP\s+(?:COLUMN\s+)?([a-zA-Z0-9_]+)/i);
+    if (alterDropMatch) {
+      const tblName = alterDropMatch[1].toLowerCase();
+      const colName = alterDropMatch[2].toLowerCase();
+      if (!dbState.tables[tblName]) throw new Error(`Table '${tblName}' not found`);
+      const tbl = dbState.tables[tblName];
+      if (!tbl.columns.includes(colName)) throw new Error(`Column '${colName}' not found in table '${tblName}'`);
+      if (tbl.columns.length <= 1) throw new Error("Cannot drop all columns from table");
+      tbl.columns = tbl.columns.filter(c => c !== colName);
+      if (tbl.primaryKey === colName) tbl.primaryKey = tbl.columns[0];
+      tbl.records.forEach(r => { delete r[colName]; });
+      saveDatabase();
+      renderAll();
+      return {
+        columns: ['status', 'table_name', 'column'],
+        rows: [{ status: 'COLUMN_DROPPED', table_name: tblName, column: colName }],
+        message: `Column '${colName}' dropped from table '${tblName}'`
+      };
+    }
+  }
+
+  if (command === 'TRUNCATE') {
+    const truncMatch = sql.match(/TRUNCATE\s+(?:TABLE\s+)?([a-zA-Z0-9_]+)/i);
+    if (truncMatch) {
+      const tblName = truncMatch[1].toLowerCase();
+      if (!dbState.tables[tblName]) throw new Error(`Table '${tblName}' not found`);
+      const count = dbState.tables[tblName].records.length;
+      dbState.tables[tblName].records = [];
+      saveDatabase();
+      renderAll();
+      return {
+        columns: ['status', 'table_name', 'records_cleared'],
+        rows: [{ status: 'TRUNCATED', table_name: tblName, records_cleared: count }],
+        message: `Table '${tblName}' truncated (${count} records deleted)`
+      };
     }
   }
 
@@ -2283,10 +2987,10 @@ function runSql(rawSql) {
     const target = tokens[1] ? tokens[1].toLowerCase() : dbState.activeTable;
     if (!dbState.tables[target]) throw new Error(`Table '${target}' not found`);
     const tbl = dbState.tables[target];
-    const rows = tbl.columns.map((c, idx) => ({
+    const rows = tbl.columns.map((c) => ({
       column: c,
       type: 'VARCHAR(64)',
-      key: c === tbl.primaryKey ? 'PRIMARY KEY' : ''
+      key: c === tbl.primaryKey ? 'PRIMARY KEY' : ((dbState.relations || []).some(r => r.fromTable === target && r.fromCol === c) ? 'FOREIGN KEY' : '')
     }));
     return { columns: ['column', 'type', 'key'], rows, message: `Schema for ${target}` };
   }
@@ -2307,102 +3011,675 @@ function runSql(rawSql) {
     return executeDeleteSql(sql);
   }
 
-  throw new Error(`Unsupported SQL command '${command}'. Supported: SELECT, INSERT, UPDATE, DELETE, SHOW TABLES, DESCRIBE.`);
+  throw new Error(`Unsupported SQL command '${command}'. Supported: SELECT, INSERT, UPDATE, DELETE, CREATE TABLE, DROP TABLE, ALTER TABLE, TRUNCATE, SHOW TABLES, SHOW INDEXES, CREATE INDEX, DROP INDEX, EXPLAIN, DESCRIBE.`);
+}
+
+function explainSql(sql) {
+  let clean = sql.trim().replace(/;+\s*$/, '').trim();
+  if (!/^SELECT\s+/i.test(clean)) {
+    throw new Error("EXPLAIN currently supports SELECT queries.");
+  }
+
+  const fromIdx = clean.search(/\s+FROM\s+/i);
+  if (fromIdx === -1) throw new Error("Invalid SELECT query in EXPLAIN");
+
+  let rest = clean.substring(fromIdx).replace(/^\s+FROM\s+/i, '').trim();
+
+  let limitCount = null;
+  const limitMatch = rest.match(/\s+LIMIT\s+(\d+)\s*$/i);
+  if (limitMatch) {
+    limitCount = parseInt(limitMatch[1], 10);
+    rest = rest.substring(0, limitMatch.index).trim();
+  }
+
+  let orderBy = '';
+  const orderMatch = rest.match(/\s+ORDER\s+BY\s+([a-zA-Z0-9_\.]+)(?:\s+(ASC|DESC))?\s*$/i);
+  if (orderMatch) {
+    orderBy = orderMatch[1].trim();
+    rest = rest.substring(0, orderMatch.index).trim();
+  }
+
+  let groupBy = '';
+  const groupMatch = rest.match(/\s+GROUP\s+BY\s+([a-zA-Z0-9_\.]+)\s*$/i);
+  if (groupMatch) {
+    groupBy = groupMatch[1].trim();
+    rest = rest.substring(0, groupMatch.index).trim();
+  }
+
+  let whereClause = '';
+  const whereMatch = rest.match(/\s+WHERE\s+(.+)$/i);
+  if (whereMatch) {
+    whereClause = whereMatch[1].trim();
+    rest = rest.substring(0, whereMatch.index).trim();
+  }
+
+  // Parse all chained JOINs in rest
+  const joins = [];
+  const joinSplitRegex = /\s+((?:INNER\s+|LEFT\s+|RIGHT\s+|CROSS\s+)?JOIN)\s+/gi;
+  let match;
+  const joinIndices = [];
+  while ((match = joinSplitRegex.exec(rest)) !== null) {
+    joinIndices.push({ index: match.index, type: match[1].toUpperCase(), fullMatchLen: match[0].length });
+  }
+
+  let baseTableSpec = rest;
+  if (joinIndices.length > 0) {
+    baseTableSpec = rest.substring(0, joinIndices[0].index).trim();
+    for (let i = 0; i < joinIndices.length; i++) {
+      const start = joinIndices[i].index + joinIndices[i].fullMatchLen;
+      const end = (i + 1 < joinIndices.length) ? joinIndices[i + 1].index : rest.length;
+      const segment = rest.substring(start, end).trim();
+      const onIdx = segment.search(/\s+ON\s+/i);
+      if (onIdx !== -1) {
+        const tableSpec = segment.substring(0, onIdx).trim();
+        const condition = segment.substring(onIdx).replace(/^\s+ON\s+/i, '').trim();
+        const jTokens = tableSpec.split(/\s+/);
+        joins.push({
+          type: joinIndices[i].type.includes('LEFT') ? 'LEFT JOIN' : 'INNER JOIN',
+          table: jTokens[0].toLowerCase(),
+          alias: jTokens[1] ? jTokens[1].toLowerCase() : jTokens[0].toLowerCase(),
+          on: condition
+        });
+      }
+    }
+  }
+
+  const baseTable = baseTableSpec.split(/\s+/)[0].toLowerCase();
+  const tbl = dbState.tables[baseTable];
+  if (!tbl) throw new Error(`Table '${baseTable}' not found in database`);
+
+  const indexes = dbState.indexes || [];
+  const rows = [];
+  let step = 1;
+  let totalCost = 0.2;
+
+  let baseIndexUsed = 'NONE';
+  let baseAccess = 'TABLE SCAN (Full Linear Scan)';
+  let baseCost = (tbl.records.length * 1.2).toFixed(1);
+
+  if (whereClause) {
+    const matchIdx = indexes.find(i => i.table.toLowerCase() === baseTable && whereClause.toLowerCase().includes(i.column.toLowerCase()));
+    if (matchIdx) {
+      baseIndexUsed = matchIdx.name;
+      baseAccess = `INDEX SEEK (${matchIdx.type} on ${matchIdx.column})`;
+      baseCost = '1.0';
+    }
+  }
+  totalCost += parseFloat(baseCost);
+  rows.push({
+    step: step++,
+    operation: baseIndexUsed !== 'NONE' ? 'INDEX SEEK' : 'TABLE SCAN',
+    table: baseTable,
+    access_type: baseAccess,
+    index_used: baseIndexUsed,
+    cost_est: baseCost,
+    rows_est: tbl.records.length,
+    details: `Retrieve rows from base table ${baseTable}`
+  });
+
+  joins.forEach(j => {
+    const jTbl = dbState.tables[j.table];
+    const jCount = jTbl ? jTbl.records.length : 1;
+    let joinIdx = 'NONE';
+    const matchIdx = indexes.find(i => i.table.toLowerCase() === j.table && j.on.toLowerCase().includes(i.column.toLowerCase()));
+    if (matchIdx) joinIdx = matchIdx.name;
+
+    const joinCost = (jCount * 0.8).toFixed(1);
+    totalCost += parseFloat(joinCost);
+    rows.push({
+      step: step++,
+      operation: j.type === 'LEFT JOIN' ? 'LEFT HASH JOIN' : 'INNER HASH JOIN',
+      table: j.table,
+      access_type: joinIdx !== 'NONE' ? `Index Key Match (${joinIdx})` : 'Nested Loop Filter',
+      index_used: joinIdx,
+      cost_est: joinCost,
+      rows_est: jCount,
+      details: `Evaluate JOIN condition: ${j.on}`
+    });
+  });
+
+  if (whereClause && baseIndexUsed === 'NONE') {
+    rows.push({
+      step: step++,
+      operation: 'FILTER',
+      table: baseTable,
+      access_type: 'Predicate Evaluation',
+      index_used: 'NONE',
+      cost_est: '0.6',
+      rows_est: tbl.records.length,
+      details: `Evaluate predicate: ${whereClause}`
+    });
+    totalCost += 0.6;
+  }
+
+  if (groupBy) {
+    rows.push({
+      step: step++,
+      operation: 'HASH AGGREGATE',
+      table: 'N/A',
+      access_type: 'In-Memory Buckets',
+      index_used: 'NONE',
+      cost_est: '2.0',
+      rows_est: 'Groups',
+      details: `Aggregate & group rows by ${groupBy}`
+    });
+    totalCost += 2.0;
+  }
+
+  if (orderBy) {
+    rows.push({
+      step: step++,
+      operation: 'SORT',
+      table: 'N/A',
+      access_type: 'Quicksort O(N log N)',
+      index_used: 'NONE',
+      cost_est: '1.5',
+      rows_est: tbl.records.length,
+      details: `Sort dataset by ${orderBy}`
+    });
+    totalCost += 1.5;
+  }
+
+  rows.push({
+    step: step++,
+    operation: 'PROJECTION',
+    table: 'N/A',
+    access_type: 'Memory Buffer',
+    index_used: 'NONE',
+    cost_est: '0.2',
+    rows_est: 'Final',
+    details: 'Project requested columns and aliases'
+  });
+
+  return {
+    columns: ['step', 'operation', 'table', 'access_type', 'index_used', 'cost_est', 'rows_est', 'details'],
+    rows,
+    message: `EXPLAIN completed. Total Estimated Cost: ${totalCost.toFixed(1)} units (${baseIndexUsed !== 'NONE' ? 'Index Accelerated' : 'Full Scan'})`
+  };
 }
 
 function executeSelectSql(sql) {
-  // Regex to extract clauses with optional trailing whitespace
-  const regex = /SELECT\s+(.+?)\s+FROM\s+([a-zA-Z0-9_]+)(?:\s+WHERE\s+(.+?))?(?:\s+GROUP\s+BY\s+([a-zA-Z0-9_]+))?(?:\s+ORDER\s+BY\s+([a-zA-Z0-9_]+)(?:\s+(ASC|DESC))?)?(?:\s+LIMIT\s+(\d+))?\s*$/i;
-  const match = sql.match(regex);
-  if (!match) throw new Error("Invalid SELECT syntax. Example: SELECT * FROM employees WHERE dept = 'Engineering' ORDER BY name ASC;");
+  let clean = sql.trim().replace(/;+\s*$/, '').trim();
 
-  const selectClause = match[1].trim();
-  const tableTarget = match[2].trim().toLowerCase();
-  const whereClause = match[3] ? match[3].trim() : null;
-  const groupByClause = match[4] ? match[4].trim() : null;
-  const orderByCol = match[5] ? match[5].trim() : null;
-  const orderDir = match[6] ? match[6].toUpperCase() : 'ASC';
-  const limitCount = match[7] ? parseInt(match[7], 10) : null;
+  let limitCount = null;
+  const limitMatch = clean.match(/\s+LIMIT\s+(\d+)\s*$/i);
+  if (limitMatch) {
+    limitCount = parseInt(limitMatch[1], 10);
+    clean = clean.substring(0, limitMatch.index).trim();
+  }
 
-  if (!dbState.tables[tableTarget]) throw new Error(`Table '${tableTarget}' not found`);
-  const tbl = dbState.tables[tableTarget];
+  let orderByCol = null;
+  let orderDir = 'ASC';
+  const orderMatch = clean.match(/\s+ORDER\s+BY\s+([a-zA-Z0-9_\.]+)(?:\s+(ASC|DESC))?\s*$/i);
+  if (orderMatch) {
+    orderByCol = orderMatch[1].trim();
+    if (orderMatch[2]) orderDir = orderMatch[2].toUpperCase();
+    clean = clean.substring(0, orderMatch.index).trim();
+  }
 
-  let rows = [...tbl.records];
+  let groupByCol = null;
+  const groupMatch = clean.match(/\s+GROUP\s+BY\s+([a-zA-Z0-9_\.]+)\s*$/i);
+  if (groupMatch) {
+    groupByCol = groupMatch[1].trim();
+    clean = clean.substring(0, groupMatch.index).trim();
+  }
 
-  // Apply WHERE
+  let whereClause = null;
+  const whereMatch = clean.match(/\s+WHERE\s+(.+)$/i);
+  if (whereMatch) {
+    whereClause = whereMatch[1].trim();
+    clean = clean.substring(0, whereMatch.index).trim();
+  }
+
+  const fromIdx = clean.search(/\s+FROM\s+/i);
+  if (fromIdx === -1) throw new Error("Invalid SELECT syntax: missing FROM clause. Example: SELECT * FROM employees;");
+
+  let selectClause = clean.substring(0, fromIdx).replace(/^SELECT\s+/i, '').trim();
+  let isDistinct = false;
+  if (/^DISTINCT\s+/i.test(selectClause)) {
+    isDistinct = true;
+    selectClause = selectClause.replace(/^DISTINCT\s+/i, '').trim();
+  }
+
+  const restFrom = clean.substring(fromIdx).replace(/^\s+FROM\s+/i, '').trim();
+
+  // Parse all chained JOIN clauses
+  const joins = [];
+  const joinSplitRegex = /\s+((?:INNER\s+|LEFT\s+|RIGHT\s+|CROSS\s+)?JOIN)\s+/gi;
+  let match;
+  const joinIndices = [];
+  while ((match = joinSplitRegex.exec(restFrom)) !== null) {
+    joinIndices.push({ index: match.index, type: match[1].toUpperCase(), fullMatchLen: match[0].length });
+  }
+
+  let baseTableSpec = restFrom;
+  if (joinIndices.length > 0) {
+    baseTableSpec = restFrom.substring(0, joinIndices[0].index).trim();
+    for (let i = 0; i < joinIndices.length; i++) {
+      const start = joinIndices[i].index + joinIndices[i].fullMatchLen;
+      const end = (i + 1 < joinIndices.length) ? joinIndices[i + 1].index : restFrom.length;
+      const segment = restFrom.substring(start, end).trim();
+      const onIdx = segment.search(/\s+ON\s+/i);
+      if (onIdx === -1) {
+        throw new Error(`Missing ON condition in JOIN segment: ${segment}`);
+      }
+      const tableSpec = segment.substring(0, onIdx).trim();
+      const condition = segment.substring(onIdx).replace(/^\s+ON\s+/i, '').trim();
+      const condParts = condition.split('=').map(s => s.trim());
+      if (condParts.length !== 2) throw new Error(`Invalid JOIN condition syntax: ${condition}`);
+
+      const jTokens = tableSpec.split(/\s+/);
+      const jTable = jTokens[0].toLowerCase();
+      const jAlias = jTokens[1] ? jTokens[1].toLowerCase() : jTable;
+
+      joins.push({
+        type: joinIndices[i].type.includes('LEFT') ? 'LEFT' : 'INNER',
+        table: jTable,
+        alias: jAlias,
+        condLeft: condParts[0],
+        condRight: condParts[1]
+      });
+    }
+  }
+
+  const baseTokens = baseTableSpec.split(/\s+/);
+  const baseTableName = baseTokens[0].toLowerCase();
+  const baseAlias = baseTokens[1] ? baseTokens[1].toLowerCase() : baseTableName;
+
+  if (!dbState.tables[baseTableName]) {
+    throw new Error(`Table '${baseTableName}' not found in database`);
+  }
+  const baseTbl = dbState.tables[baseTableName];
+  const joinedTablesList = [baseTbl];
+
+  let rows = baseTbl.records.map(r => {
+    const m = { ...r };
+    Object.keys(r).forEach(k => {
+      m[`${baseTableName}.${k}`] = r[k];
+      if (baseAlias) m[`${baseAlias}.${k}`] = r[k];
+    });
+    return m;
+  });
+
+  for (const j of joins) {
+    if (!dbState.tables[j.table]) {
+      throw new Error(`Joined table '${j.table}' not found in database`);
+    }
+    const joinTbl = dbState.tables[j.table];
+    joinedTablesList.push(joinTbl);
+
+    const nextRows = [];
+    rows.forEach(r1 => {
+      let leftVal = r1[j.condLeft];
+      let targetCol = j.condRight;
+      if (leftVal === undefined) {
+        leftVal = r1[j.condRight];
+        targetCol = j.condLeft;
+      }
+      if (leftVal === undefined && j.condLeft.includes('.')) {
+        leftVal = r1[j.condLeft.split('.')[1]];
+        targetCol = j.condRight;
+      }
+      if (leftVal === undefined && j.condRight.includes('.')) {
+        leftVal = r1[j.condRight.split('.')[1]];
+        targetCol = j.condLeft;
+      }
+
+      const cleanCol = targetCol.includes('.') ? targetCol.split('.')[1].trim() : targetCol.trim();
+
+      const matches = joinTbl.records.filter(r2 => {
+        const rightVal = r2[cleanCol];
+        return String(leftVal || '').toLowerCase() === String(rightVal || '').toLowerCase();
+      });
+
+      if (matches.length > 0) {
+        matches.forEach(r2 => {
+          const merged = { ...r1 };
+          Object.keys(r2).forEach(k => {
+            if (merged[k] === undefined) merged[k] = r2[k];
+            merged[`${j.table}.${k}`] = r2[k];
+            if (j.alias) merged[`${j.alias}.${k}`] = r2[k];
+          });
+          nextRows.push(merged);
+        });
+      } else if (j.type === 'LEFT') {
+        const merged = { ...r1 };
+        joinTbl.columns.forEach(k => {
+          if (merged[k] === undefined) merged[k] = 'NULL';
+          merged[`${j.table}.${k}`] = 'NULL';
+          if (j.alias) merged[`${j.alias}.${k}`] = 'NULL';
+        });
+        nextRows.push(merged);
+      }
+    });
+    rows = nextRows;
+  }
+
   if (whereClause) {
     rows = rows.filter(r => evaluateWhere(r, whereClause));
   }
 
-  // Apply GROUP BY
-  if (groupByClause) {
+  const colExprs = selectClause === '*' ? null : selectClause.split(',').map(s => s.trim());
+  const hasAggregates = colExprs && colExprs.some(c => /\b(COUNT|SUM|AVG|MIN|MAX)\s*\(/i.test(c));
+
+  if (groupByCol || hasAggregates) {
     const groups = {};
     rows.forEach(r => {
-      const gVal = r[groupByClause] || 'NULL';
-      groups[gVal] = (groups[gVal] || 0) + 1;
+      let gVal = 'ALL';
+      if (groupByCol) {
+        let val = r[groupByCol];
+        if (val === undefined) val = r[groupByCol.toLowerCase()];
+        if (val === undefined && groupByCol.includes('.')) {
+          val = r[groupByCol.split('.')[1]];
+        }
+        gVal = val !== undefined && val !== null ? String(val) : 'NULL';
+      }
+      if (!groups[gVal]) groups[gVal] = [];
+      groups[gVal].push(r);
     });
-    const groupRows = Object.keys(groups).map(k => ({
-      [groupByClause]: k,
-      headcount: groups[k]
-    }));
-    return { columns: [groupByClause, 'headcount'], rows: groupRows, message: 'GROUP BY query completed' };
+
+    const groupResultRows = [];
+    const outputCols = [];
+
+    const projDefs = (colExprs || ['*']).map(expr => {
+      const asMatch = expr.match(/^(.+?)\s+AS\s+([a-zA-Z0-9_]+)$/i);
+      const rawExpr = asMatch ? asMatch[1].trim() : expr;
+      const colName = asMatch ? asMatch[2].trim() : rawExpr.replace(/^.+\./, '');
+
+      const aggMatch = rawExpr.match(/^(COUNT|SUM|AVG|MIN|MAX)\s*\(\s*(.*?)\s*\)$/i);
+      return {
+        colName,
+        rawExpr,
+        isAgg: Boolean(aggMatch),
+        aggFunc: aggMatch ? aggMatch[1].toUpperCase() : null,
+        aggArg: aggMatch ? aggMatch[2].trim() : null
+      };
+    });
+
+    projDefs.forEach(p => outputCols.push(p.colName));
+
+    Object.keys(groups).forEach(gKey => {
+      const groupRows = groups[gKey];
+      const outRow = {};
+
+      projDefs.forEach(p => {
+        if (p.isAgg) {
+          if (p.aggFunc === 'COUNT') {
+            if (p.aggArg === '*' || !p.aggArg) {
+              outRow[p.colName] = groupRows.length;
+            } else {
+              outRow[p.colName] = groupRows.filter(r => {
+                let v = r[p.aggArg];
+                if (v === undefined) v = r[p.aggArg.toLowerCase()];
+                if (v === undefined && p.aggArg.includes('.')) {
+                  v = r[p.aggArg.split('.')[1]];
+                }
+                return v !== undefined && v !== null && v !== 'NULL';
+              }).length;
+            }
+          } else if (p.aggFunc === 'SUM') {
+            let sum = 0;
+            groupRows.forEach(r => {
+              const v = parseFloat(String(r[p.aggArg] || '').replace(/[^0-9.-]/g, ''));
+              if (!isNaN(v)) sum += v;
+            });
+            outRow[p.colName] = sum;
+          } else if (p.aggFunc === 'AVG') {
+            let sum = 0, count = 0;
+            groupRows.forEach(r => {
+              const v = parseFloat(String(r[p.aggArg] || '').replace(/[^0-9.-]/g, ''));
+              if (!isNaN(v)) { sum += v; count++; }
+            });
+            outRow[p.colName] = count > 0 ? (sum / count).toFixed(2) : 0;
+          } else if (p.aggFunc === 'MIN') {
+            const vals = groupRows.map(r => r[p.aggArg]).filter(v => v !== undefined && v !== null);
+            outRow[p.colName] = vals.length > 0 ? vals.sort()[0] : 'NULL';
+          } else if (p.aggFunc === 'MAX') {
+            const vals = groupRows.map(r => r[p.aggArg]).filter(v => v !== undefined && v !== null);
+            outRow[p.colName] = vals.length > 0 ? vals.sort().reverse()[0] : 'NULL';
+          }
+        } else {
+          const first = groupRows[0];
+          let v = first[p.rawExpr];
+          if (v === undefined) v = first[p.rawExpr.toLowerCase()];
+          if (v === undefined && p.rawExpr.includes('.')) {
+            v = first[p.rawExpr.split('.')[1]];
+          }
+          outRow[p.colName] = v !== undefined ? v : (groupByCol && (p.rawExpr === groupByCol || p.colName === groupByCol) ? gKey : 'NULL');
+        }
+      });
+
+      groupResultRows.push(outRow);
+    });
+
+    rows = groupResultRows;
+    return { columns: outputCols, rows, message: `${rows.length} rows (Aggregated/GROUP BY)` };
   }
 
-  // Apply ORDER BY
   if (orderByCol) {
     rows.sort((a, b) => {
-      const vA = a[orderByCol] || '';
-      const vB = b[orderByCol] || '';
-      const nA = parseInt(vA, 10);
-      const nB = parseInt(vB, 10);
+      let vA = a[orderByCol];
+      if (vA === undefined) vA = a[orderByCol.toLowerCase()];
+      if (vA === undefined && orderByCol.includes('.')) vA = a[orderByCol.split('.')[1]];
+
+      let vB = b[orderByCol];
+      if (vB === undefined) vB = b[orderByCol.toLowerCase()];
+      if (vB === undefined && orderByCol.includes('.')) vB = b[orderByCol.split('.')[1]];
+
+      const nA = parseFloat(String(vA || '').replace(/[^0-9.-]/g, ''));
+      const nB = parseFloat(String(vB || '').replace(/[^0-9.-]/g, ''));
       if (!isNaN(nA) && !isNaN(nB)) return orderDir === 'ASC' ? (nA - nB) : (nB - nA);
-      const cmp = String(vA).localeCompare(String(vB));
+      const cmp = String(vA || '').localeCompare(String(vB || ''));
       return orderDir === 'ASC' ? cmp : -cmp;
     });
   }
 
-  // Apply LIMIT
   if (limitCount) {
     rows = rows.slice(0, limitCount);
   }
 
-  // Project columns
-  let columns = tbl.columns;
-  if (selectClause !== '*') {
-    columns = selectClause.split(',').map(c => c.trim());
+  let finalColumns = [];
+  let projectedRows = [];
+
+  if (selectClause === '*') {
+    const allCols = [];
+    joinedTablesList.forEach(tbl => {
+      tbl.columns.forEach(c => {
+        if (!allCols.includes(c)) allCols.push(c);
+      });
+    });
+    finalColumns = allCols;
+    projectedRows = rows.map(r => {
+      const item = {};
+      finalColumns.forEach(c => { item[c] = r[c] !== undefined ? r[c] : 'NULL'; });
+      return item;
+    });
+  } else {
+    const defs = colExprs.map(expr => {
+      const asMatch = expr.match(/^(.+?)\s+AS\s+([a-zA-Z0-9_]+)$/i);
+      const raw = asMatch ? asMatch[1].trim() : expr;
+      const colName = asMatch ? asMatch[2].trim() : raw.replace(/^.+\./, '');
+      return { raw, colName };
+    });
+
+    finalColumns = defs.map(d => d.colName);
+    projectedRows = rows.map(r => {
+      const item = {};
+      defs.forEach(d => {
+        let val = r[d.raw];
+        if (val === undefined) val = r[d.raw.toLowerCase()];
+        if (val === undefined && d.raw.includes('.')) {
+          val = r[d.raw.split('.')[1]];
+        }
+        item[d.colName] = val !== undefined ? val : 'NULL';
+      });
+      return item;
+    });
   }
 
-  return { columns, rows, message: `${rows.length} rows returned` };
+  if (isDistinct) {
+    const seen = new Set();
+    projectedRows = projectedRows.filter(r => {
+      const key = JSON.stringify(r);
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  }
+
+  return { columns: finalColumns, rows: projectedRows, message: `${projectedRows.length} rows returned` };
+}
+
+function splitTopLevel(str, separatorRegex) {
+  const parts = [];
+  let depth = 0;
+  let inSingleQuote = false;
+  let inDoubleQuote = false;
+  let lastIndex = 0;
+
+  for (let i = 0; i < str.length; i++) {
+    const ch = str[i];
+    if (ch === "'" && !inDoubleQuote) inSingleQuote = !inSingleQuote;
+    else if (ch === '"' && !inSingleQuote) inDoubleQuote = !inDoubleQuote;
+    else if (!inSingleQuote && !inDoubleQuote) {
+      if (ch === '(') depth++;
+      else if (ch === ')') depth = Math.max(0, depth - 1);
+      else if (depth === 0) {
+        const sub = str.substring(i);
+        const match = sub.match(separatorRegex);
+        if (match && match.index === 0) {
+          parts.push(str.substring(lastIndex, i).trim());
+          i += match[0].length - 1;
+          lastIndex = i + 1;
+        }
+      }
+    }
+  }
+  parts.push(str.substring(lastIndex).trim());
+  return parts.filter(p => p.length > 0);
 }
 
 function evaluateWhere(record, where) {
-  // Support basic operators: =, !=, >, <, LIKE
-  const parts = where.split(/\s+AND\s+/i);
-  return parts.every(part => {
-    part = part.trim();
-    if (part.includes('!=')) {
-      const [col, rawVal] = part.split('!=').map(s => s.trim().replace(/^['"]|['"]$/g, ''));
-      return String(record[col] || '').toLowerCase() !== rawVal.toLowerCase();
-    }
-    if (part.includes('=')) {
-      const [col, rawVal] = part.split('=').map(s => s.trim().replace(/^['"]|['"]$/g, ''));
-      return String(record[col] || '').toLowerCase() === rawVal.toLowerCase();
-    }
-    if (part.includes('>')) {
-      const [col, rawVal] = part.split('>').map(s => s.trim().replace(/^['"]|['"]$/g, ''));
-      return parseInt(record[col], 10) > parseInt(rawVal, 10);
-    }
-    if (part.includes('<')) {
-      const [col, rawVal] = part.split('<').map(s => s.trim().replace(/^['"]|['"]$/g, ''));
-      return parseInt(record[col], 10) < parseInt(rawVal, 10);
-    }
-    if (/LIKE/i.test(part)) {
-      const [col, rawVal] = part.split(/LIKE/i).map(s => s.trim().replace(/^['"]|['"]$/g, ''));
-      const cleanVal = rawVal.replace(/%/g, '').toLowerCase();
-      return String(record[col] || '').toLowerCase().includes(cleanVal);
-    }
-    return true;
+  if (!where || !where.trim()) return true;
+
+  const orBranches = splitTopLevel(where.trim(), /^\s+OR\s+/i);
+  return orBranches.some(branch => {
+    const andTerms = splitTopLevel(branch.trim(), /^\s+AND\s+/i);
+    return andTerms.every(term => evaluateSingleCondition(record, term.trim()));
   });
+}
+
+function evaluateSingleCondition(record, cond) {
+  cond = cond.trim();
+  if (cond.startsWith('(') && cond.endsWith(')')) {
+    return evaluateWhere(record, cond.substring(1, cond.length - 1));
+  }
+
+  let nullMatch = cond.match(/^([a-zA-Z0-9_\.]+)\s+IS\s+NOT\s+NULL$/i);
+  if (nullMatch) {
+    const val = getFieldValue(record, nullMatch[1]);
+    return val !== undefined && val !== null && val !== '' && val !== 'NULL';
+  }
+  nullMatch = cond.match(/^([a-zA-Z0-9_\.]+)\s+IS\s+NULL$/i);
+  if (nullMatch) {
+    const val = getFieldValue(record, nullMatch[1]);
+    return val === undefined || val === null || val === '' || val === 'NULL';
+  }
+
+  const inMatch = cond.match(/^([a-zA-Z0-9_\.]+)\s+(NOT\s+)?IN\s*\((.+?)\)$/i);
+  if (inMatch) {
+    const col = inMatch[1];
+    const isNot = Boolean(inMatch[2]);
+    const items = inMatch[3].split(',').map(s => s.trim().replace(/^['"]|['"]$/g, '').toLowerCase());
+    const val = String(getFieldValue(record, col) || '').toLowerCase();
+    const has = items.includes(val);
+    return isNot ? !has : has;
+  }
+
+  const betweenMatch = cond.match(/^([a-zA-Z0-9_\.]+)\s+(NOT\s+)?BETWEEN\s+(.+?)\s+AND\s+(.+)$/i);
+  if (betweenMatch) {
+    const col = betweenMatch[1];
+    const isNot = Boolean(betweenMatch[2]);
+    const low = betweenMatch[3].trim().replace(/^['"]|['"]$/g, '');
+    const high = betweenMatch[4].trim().replace(/^['"]|['"]$/g, '');
+    const val = getFieldValue(record, col);
+
+    const numVal = parseFloat(String(val || '').replace(/[^0-9.-]/g, ''));
+    const numLow = parseFloat(low.replace(/[^0-9.-]/g, ''));
+    const numHigh = parseFloat(high.replace(/[^0-9.-]/g, ''));
+
+    let within = false;
+    if (!isNaN(numVal) && !isNaN(numLow) && !isNaN(numHigh)) {
+      within = (numVal >= numLow && numVal <= numHigh);
+    } else {
+      const sVal = String(val || '').toLowerCase();
+      within = (sVal >= low.toLowerCase() && sVal <= high.toLowerCase());
+    }
+    return isNot ? !within : within;
+  }
+
+  let op = null;
+  let isNotLike = false;
+  if (/NOT\s+LIKE/i.test(cond)) { op = 'LIKE'; isNotLike = true; }
+  else if (/LIKE/i.test(cond)) { op = 'LIKE'; }
+  else if (cond.includes('!=')) op = '!=';
+  else if (cond.includes('<>')) op = '!=';
+  else if (cond.includes('>=')) op = '>=';
+  else if (cond.includes('<=')) op = '<=';
+  else if (cond.includes('>')) op = '>';
+  else if (cond.includes('<')) op = '<';
+  else if (cond.includes('=')) op = '=';
+
+  if (!op) return true;
+
+  let col = '';
+  let rawVal = '';
+  if (op === 'LIKE') {
+    const s = cond.split(isNotLike ? /NOT\s+LIKE/i : /LIKE/i);
+    col = s[0].trim();
+    rawVal = s[1].trim().replace(/^['"]|['"]$/g, '');
+  } else {
+    const s = cond.split(op === '!=' && cond.includes('<>') ? '<>' : op);
+    col = s[0].trim();
+    rawVal = s[1].trim().replace(/^['"]|['"]$/g, '');
+  }
+
+  const recVal = getFieldValue(record, col);
+  const sRecVal = String(recVal !== undefined && recVal !== null ? recVal : '');
+
+  if (op === '=') {
+    return sRecVal.toLowerCase() === rawVal.toLowerCase();
+  }
+  if (op === '!=') {
+    return sRecVal.toLowerCase() !== rawVal.toLowerCase();
+  }
+  if (op === 'LIKE') {
+    const cleanPattern = rawVal.replace(/%/g, '').toLowerCase();
+    const has = sRecVal.toLowerCase().includes(cleanPattern);
+    return isNotLike ? !has : has;
+  }
+
+  const numRec = parseFloat(sRecVal.replace(/[^0-9.-]/g, ''));
+  const numVal = parseFloat(rawVal.replace(/[^0-9.-]/g, ''));
+  if (!isNaN(numRec) && !isNaN(numVal)) {
+    if (op === '>') return numRec > numVal;
+    if (op === '<') return numRec < numVal;
+    if (op === '>=') return numRec >= numVal;
+    if (op === '<=') return numRec <= numVal;
+  }
+  return true;
+}
+
+function getFieldValue(record, col) {
+  if (!record || !col) return undefined;
+  if (record[col] !== undefined) return record[col];
+  if (record[col.toLowerCase()] !== undefined) return record[col.toLowerCase()];
+  if (col.includes('.')) {
+    const p = col.split('.')[1];
+    if (record[p] !== undefined) return record[p];
+    if (record[p.toLowerCase()] !== undefined) return record[p.toLowerCase()];
+  }
+  return undefined;
 }
 
 function executeInsertSql(sql) {
@@ -2485,7 +3762,10 @@ function executeDeleteSql(sql) {
   return { columns: ['deleted_rows'], rows: [{ deleted_rows: deletedCount }], message: `${deletedCount} rows deleted` };
 }
 
+let lastSqlResult = null;
+
 function renderSqlResults(result) {
+  lastSqlResult = result;
   const thead = document.getElementById('sqlResultsHead');
   const tbody = document.getElementById('sqlResultsBody');
 
@@ -2499,6 +3779,150 @@ function renderSqlResults(result) {
   tbody.innerHTML = result.rows.map(r => {
     return `<tr>${result.columns.map(c => `<td>${escapeHtml(r[c] !== undefined ? r[c] : 'NULL')}</td>`).join('')}</tr>`;
   }).join('');
+}
+
+function exportSqlResultsCSV() {
+  if (!lastSqlResult || !lastSqlResult.rows || lastSqlResult.rows.length === 0) {
+    showToast('No query results available to export.', 'warning');
+    return;
+  }
+  const cols = lastSqlResult.columns;
+  const header = cols.map(c => `"${c.replace(/"/g, '""')}"`).join(',') + '\r\n';
+  const lines = lastSqlResult.rows.map(r => {
+    return cols.map(c => {
+      const val = r[c] !== undefined ? String(r[c]) : '';
+      return `"${val.replace(/"/g, '""')}"`;
+    }).join(',');
+  }).join('\r\n');
+  const blob = new Blob([header + lines], { type: 'text/csv;charset=utf-8;' });
+  downloadBlob(blob, `kdb_query_result_${Date.now()}.csv`);
+  showToast('📥 Query results exported to CSV', 'success');
+}
+
+function exportSqlResultsJSON() {
+  if (!lastSqlResult || !lastSqlResult.rows || lastSqlResult.rows.length === 0) {
+    showToast('No query results available to export.', 'warning');
+    return;
+  }
+  const blob = new Blob([JSON.stringify(lastSqlResult.rows, null, 2)], { type: 'application/json' });
+  downloadBlob(blob, `kdb_query_result_${Date.now()}.json`);
+  showToast('📥 Query results exported to JSON', 'success');
+}
+
+function copySqlResultsMarkdown() {
+  if (!lastSqlResult || !lastSqlResult.rows || lastSqlResult.rows.length === 0) {
+    showToast('No query results available to export.', 'warning');
+    return;
+  }
+  const cols = lastSqlResult.columns;
+  let md = `| ${cols.join(' | ')} |\n`;
+  md += `| ${cols.map(() => '---').join(' | ')} |\n`;
+  lastSqlResult.rows.forEach(r => {
+    md += `| ${cols.map(c => String(r[c] !== undefined ? r[c] : 'NULL')).join(' | ')} |\n`;
+  });
+  navigator.clipboard.writeText(md).then(() => {
+    showToast('📋 Copied results as Markdown table', 'success');
+  }).catch(() => {
+    showToast('Clipboard access denied', 'danger');
+  });
+}
+
+function toggleQueryBuilder() {
+  const qb = document.getElementById('sqlQueryBuilder');
+  if (!qb) return;
+  const isHidden = qb.style.display === 'none';
+  qb.style.display = isHidden ? 'block' : 'none';
+  if (isHidden) {
+    initQueryBuilderUI();
+  }
+}
+
+function initQueryBuilderUI() {
+  const baseSel = document.getElementById('qbBaseTable');
+  const joinTblSel = document.getElementById('qbJoinTable');
+  if (!baseSel) return;
+
+  const tables = Object.keys(dbState.tables);
+  baseSel.innerHTML = tables.map(t => `<option value="${t}">${escapeHtml(dbState.tables[t].title || t)}</option>`).join('');
+  joinTblSel.innerHTML = tables.map(t => `<option value="${t}">${escapeHtml(dbState.tables[t].title || t)}</option>`).join('');
+
+  updateQueryBuilderFields();
+}
+
+function updateQueryBuilderFields() {
+  const baseTblName = document.getElementById('qbBaseTable').value;
+  const joinType = document.getElementById('qbJoinType').value;
+  const joinGroup = document.getElementById('qbJoinGroup');
+  const filterCol = document.getElementById('qbFilterCol');
+
+  const baseTbl = dbState.tables[baseTblName];
+  if (!baseTbl) return;
+
+  joinGroup.style.display = joinType === 'NONE' ? 'none' : 'block';
+
+  let cols = baseTbl.columns.map(c => `<option value="${baseTblName}.${c}">${baseTblName}.${c}</option>`);
+
+  if (joinType !== 'NONE') {
+    const joinTblName = document.getElementById('qbJoinTable').value;
+    const joinTbl = dbState.tables[joinTblName];
+    if (joinTbl) {
+      cols = cols.concat(joinTbl.columns.map(c => `<option value="${joinTblName}.${c}">${joinTblName}.${c}</option>`));
+    }
+  }
+
+  filterCol.innerHTML = `<option value="">-- No Filter --</option>` + cols.join('');
+  updateQueryBuilderJoinCols();
+}
+
+function updateQueryBuilderJoinCols() {
+  const baseTblName = document.getElementById('qbBaseTable').value;
+  const joinTblName = document.getElementById('qbJoinTable').value;
+  const baseColSel = document.getElementById('qbJoinBaseCol');
+  const targetColSel = document.getElementById('qbJoinTargetCol');
+
+  const baseTbl = dbState.tables[baseTblName];
+  const joinTbl = dbState.tables[joinTblName];
+  if (!baseTbl || !joinTbl) return;
+
+  baseColSel.innerHTML = baseTbl.columns.map(c => `<option value="${baseTblName}.${c}">${baseTblName}.${c}</option>`).join('');
+  targetColSel.innerHTML = joinTbl.columns.map(c => `<option value="${joinTblName}.${c}">${joinTblName}.${c}</option>`).join('');
+
+  // Auto-detect foreign key matches if any
+  (dbState.relations || []).forEach(r => {
+    if (r.fromTable === baseTblName && r.toTable === joinTblName) {
+      baseColSel.value = `${baseTblName}.${r.fromCol}`;
+      targetColSel.value = `${joinTblName}.${r.toCol}`;
+    } else if (r.toTable === baseTblName && r.fromTable === joinTblName) {
+      baseColSel.value = `${baseTblName}.${r.toCol}`;
+      targetColSel.value = `${joinTblName}.${r.fromCol}`;
+    }
+  });
+}
+
+function buildAndRunQuery() {
+  const baseTbl = document.getElementById('qbBaseTable').value;
+  const joinType = document.getElementById('qbJoinType').value;
+  let sql = `SELECT * FROM ${baseTbl}`;
+
+  if (joinType !== 'NONE') {
+    const joinTbl = document.getElementById('qbJoinTable').value;
+    const baseCol = document.getElementById('qbJoinBaseCol').value;
+    const targetCol = document.getElementById('qbJoinTargetCol').value;
+    sql += ` ${joinType} ${joinTbl} ON ${baseCol} = ${targetCol}`;
+  }
+
+  const filterCol = document.getElementById('qbFilterCol').value;
+  const filterOp = document.getElementById('qbFilterOp').value;
+  const filterVal = document.getElementById('qbFilterVal').value.trim();
+
+  if (filterCol && filterVal) {
+    sql += ` WHERE ${filterCol} ${filterOp} '${filterVal}'`;
+  }
+
+  sql += ';';
+
+  document.getElementById('sqlEditor').value = sql;
+  executeSqlFromEditor();
 }
 
 // --- Dashboard View & Canvas Visualizations ---
