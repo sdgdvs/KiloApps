@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-creator
-next_agent: kilo-graphics
+current_agent: kilo-graphics
+next_agent: kilo-soundscape
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -16,14 +16,14 @@ tool_call_cap: 30
 commit_checkpoint: 15
 status: ready
 current_targets:
-  kilo_creator: kweb://users/~neon_rider
+  kilo_creator: kweb://asm-temple
   kilo_graphics: KColosseum
   kilo_soundscape: KColosseum
   kilo_tester: KClip
   kilo_usability: KHex
   kilo_qa: KWords
   kilo_expander: KHex
-virtual_web_target: kweb://users/~neon_rider
+virtual_web_target: kweb://asm-temple
 virtual_web_rotation:
 - kweb://portal
 - kweb://webring
@@ -37,9 +37,9 @@ virtual_web_rotation:
 - kweb://deep-core
 - kweb://darknet
 last_run:
-  agent: kilo-qa
-  app: KSimon
-  timestamp: '2026-10-20T18:22:00Z'
+  agent: kilo-creator
+  app: kweb://users/~neon_rider
+  timestamp: '2026-10-20T22:20:00Z'
 last_planner_run: '2026-10-19T22:16:00Z'
 ---
 
@@ -68,10 +68,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 ## Active Target Queues (Gemini Flash Optimized Tickets)
 
 ### 1. Virtual 1999 Web & ARG Node Creator (`kilo-creator`)
-- **Target**: `kweb://users/~neon_rider`
-- **Primary File**: `KiloOS/public/web/users/neon_rider.html`
-- **Objective**: Expand late-90s netrunner homestead: x86 assembly tutorial fragments, tracker .XM/.MOD showcase, retro demoscene greetings, Webring badges, and diegetic ARG breadcrumbs adhering to Anti-Potemkin Quality Standard (<999 KB).
-- **Upcoming Queue**: `kweb://asm-temple`, `kweb://cybercafe`, `kweb://10.19.99.4/classified`.
+- **Target**: `kweb://asm-temple`
+- **Primary File**: `KiloOS/public/web/asm_temple.html`
+- **Objective**: Expand x86 assembly temple shrine: 16-bit real mode demos, interrupt vector tables, opcode reference matrices, and subterranean ARG reflections adhering to Anti-Potemkin Quality Standard (<999 KB).
+- **Upcoming Queue**: `kweb://cybercafe`, `kweb://10.19.99.4/classified`, `kweb://echo-subsystem.net`.
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
 - **Target**: `KColosseum`
@@ -209,7 +209,16 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ---
 
-## Recent Execution Logs (Max 5 Entries)
+## Recent Execution Logs (Terse Markdown Format)
+
+- **2026-10-20T22:20:00Z — kilo-creator: kweb://users/~neon_rider (Virtual 1999 Web Deep Expansion & Scoping Repair)**
+  - Navigation & Scoping Fix: Extracted Section 11 (Subnet Sniffer) out of `switchTab()` closure, fixing tab re-entrancy and leak; properly routed tab activation.
+  - Interactive Demoscene Shouts: Added interactive 1999 demoscene greetings box in `tab-about` with retro audio stingers (FLARELIGHT, RAZOR 1999, SKID VECTOR, PAST CREW, SILICON SILENCE, PARALAX).
+  - Devlog Expansion: Added Article 10 covering self-modifying x86 machine code, dynamic opcode rewriting, and `VirtualProtect` memory page permissions in Win32 protected mode.
+  - XM Tracker Display: Implemented real-time 4-channel FastTracker II / ProTracker pattern viewer row display synced to YM2612 2-Op FM + SPC700 tracker engine.
+  - Dual-Target Parity: Enhanced `KNet/main.c` Win32 C virtual web terminal to display matching 1999 ASM devlog, hardware rig, demoscene greetings, and webring nav; compiled cleanly to `KNet.exe` (46 KB).
+  - Verification: Security linter 100% PASS; `npm run build` clean in 550ms; startup check PASS (`KNet`); all sizes strictly < 999 KB (`neon_rider.html` 291.8 KB).
+  - Queue Handoff: Advanced `current_targets.kilo_creator` and `virtual_web_target` to `kweb://asm-temple`; rotated `current_agent` to `kilo-graphics`.
 
 - **2026-10-20T21:55:00Z — kilo-adhoc: Fleet Configuration (Token Efficiency & Tool Budget Upgrade)**
   - Tool Call Budget: Enforced strict <= 30 tool calls per turn with commit checkpoint at ~15 tool calls in orchestrator and all skills.

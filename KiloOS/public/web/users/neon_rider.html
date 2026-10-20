@@ -1142,6 +1142,19 @@
             <li>Mark Polishook &mdash; <em>Sound Programming for the PC Speaker &amp; FM Chips</em></li>
           </ul>
         </div>
+        <div style="grid-column: 1 / -1; background:#060d17; border:1px solid var(--border-dim); padding:10px; margin-top:8px;">
+          <span style="color:var(--accent-magenta); font-weight:bold; font-size:12px; display:block; margin-bottom:6px;">⚡ 1999 DEMOSCENE GREETINGS &amp; RESPECT</span>
+          <div style="display:flex; flex-wrap:wrap; gap:6px; font-size:11px;">
+            <button class="btn-retro" onclick="playActionStinger('stinger')">FLARELIGHT</button>
+            <button class="btn-retro" onclick="playActionStinger('success')">RAZOR 1999</button>
+            <button class="btn-retro" onclick="playActionStinger('stinger')">SKID VECTOR</button>
+            <button class="btn-retro" onclick="playActionStinger('success')">PAST CREW</button>
+            <button class="btn-retro" onclick="playActionStinger('stinger')">SILICON SILENCE</button>
+            <button class="btn-retro" onclick="playActionStinger('lore')">FARBLIGHT</button>
+            <button class="btn-retro" onclick="playActionStinger('success')">PARALAX</button>
+            <button class="btn-retro" onclick="playActionStinger('alert')">KILOAPPS FLEET</button>
+          </div>
+        </div>
       </div>
     </div>
   </section>
@@ -1359,6 +1372,28 @@ SUB EDI, EAX                 ; EDI = X' in 16.16 fixed format!
           Furthermore, scene couriers report that entering frequency tokens like <code>1999Hz</code>, <code>10.19.99.4</code>, or <code>Carlsbad</code> into the guestbook triggers automated packet reflections from listening daemons on the subterranean grid.
         </div>
       </div>
+
+      <!-- Article 10 -->
+      <div class="article-item" id="art-10" onclick="toggleArticle(10)">
+        <div class="article-header">
+          <span class="article-title">10. Self-Modifying Machine Code &amp; Dynamic Instruction Rewriting</span>
+          <span class="article-meta">1999-12-31 &bull; 0xNEON</span>
+        </div>
+        <div class="article-body">
+          In extreme 256-byte and 4KB intros, branching logic consumes precious bytes. Instead of checking a conditional jump on every scanline iteration, we overwrite the opcode in-place during runtime!
+          <div class="code-snippet">
+; Self-modifying JMP to NOP patch:
+patch_target:
+    jmp .initial_path   ; EB 04
+    nop
+    nop
+.initial_path:
+    ; Overwrite the JMP (0xEB) with two NOPs (0x90 0x90) on first execution:
+    mov word ptr [patch_target], 9090h
+          </div>
+          In Win32 protected mode, the code segment page must be marked with <code>PAGE_EXECUTE_READWRITE</code> permissions via <code>VirtualProtect</code>. Once unlocked, the CPU executes mutated instructions directly from the L1 instruction cache without branch prediction penalties!
+        </div>
+      </div>
     </div>
   </section>
 
@@ -1568,6 +1603,12 @@ NOP</textarea>
 
           <div style="margin-top:8px; font-size:11px; color:var(--accent-cyan);">
             <strong>NOW PLAYING:</strong> <span id="currentTrackTitle" style="color:#ffcc00;">[01] Neon Overdrive 1999 (FM Slap Bass &amp; Lead)</span>
+          </div>
+          <div style="background:#020509; border:1px solid #1e3a4a; padding:6px; margin-top:8px; font-family:var(--font-mono); font-size:10px; color:#38bdf8;">
+            <div style="display:flex; justify-content:space-between; border-bottom:1px solid #14283d; padding-bottom:3px; margin-bottom:4px; font-weight:bold; color:var(--accent-cyan);">
+              <span>ROW</span><span>CH1:BASS</span><span>CH2:LEAD</span><span>CH3:ARP</span><span>CH4:DRUM</span>
+            </div>
+            <div id="trackerPatternDisplay" style="height:42px; overflow:hidden; line-height:1.35; color:#94a3b8; font-family:var(--font-mono); font-size:9.5px;">00 | C-2 01 .. ... | C-4 02 .. ... | G-3 01 .. ... | K --- .. ...</div>
           </div>
         </div>
 
@@ -2287,7 +2328,8 @@ NOP</textarea>
     });
     if (targetId === 'tab-font' && typeof initFontStudio === 'function') initFontStudio();
     if (targetId === 'tab-copper' && typeof initCopperStudio === 'function') initCopperStudio();
-    initSnifferStudio();
+    if (targetId === 'tab-sniffer' && typeof initSnifferStudio === 'function') initSnifferStudio();
+  }
 
   /* =========================================================================
      11. SUBNET SNIFFER & PACKET INTERCEPTOR (V1.99)
@@ -2602,9 +2644,6 @@ NOP</textarea>
         generatePacket();
       }
     }, 4500);
-  }
-
-    if (targetId === 'tab-sniffer' && typeof initSnifferStudio === 'function') initSnifferStudio();
   }
 
   navButtons.forEach(btn => {
@@ -4148,6 +4187,19 @@ NOP</textarea>
       document.getElementById('meter3').style.height = (Math.random() * 50 + 40) + '%';
     } else {
       document.getElementById('meter3').style.height = '8%';
+    }
+
+    const patEl = document.getElementById('trackerPatternDisplay');
+    if (patEl) {
+      const rowHex = step.toString(16).toUpperCase().padStart(2, '0');
+      const bStr = bNote > 0 ? (bNote > 100 ? 'A-2 01' : 'C-2 01') : '... ..';
+      const lStr = lNote > 0 ? (lNote > 500 ? 'E-4 02' : 'C-4 02') : '... ..';
+      const aStr = aNote > 0 ? 'G-3 03' : '... ..';
+      const dStr = track.drums[step] ? (track.drums[step] + '   04') : '... ..';
+      patEl.innerHTML = `
+        <div style="color:#ff00aa; font-weight:bold;">${rowHex} | ${bStr} 00 000 | ${lStr} 00 000 | ${aStr} 00 000 | ${dStr} 00 000</div>
+        <div style="color:#64748b;">${((step+1)%32).toString(16).toUpperCase().padStart(2, '0')} | ... .. .. ... | ... .. .. ... | ... .. .. ... | ... .. .. ...</div>
+      `;
     }
 
     // Voice 4: Percussion Section
