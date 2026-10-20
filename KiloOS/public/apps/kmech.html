@@ -810,6 +810,13 @@
                 - <em>Energy Shield:</em> Absorbs 6 damage per incoming hit.<br>
                 - <em>Overdrive Core:</em> +25% attack damage boost (adds +12 heat).<br>
                 - <em>Repair Nanodrones:</em> Restores +10 HP (scaling with rank) whenever defending / venting heat.</p>
+
+                <p><strong>AUDIO SYNTHESIZER (YM2612 & SPC700):</strong><br>
+                - <em>Yamaha YM2612 2-Operator FM:</em> Custom hardware synth voices, slap bass, distorted leads, harmonic shell voicings, inharmonic hats, and percussion.<br>
+                - <em>SPC700 Stereo Delay DSP:</em> 180ms warm delay line with 2200Hz analog lowpass filtering.<br>
+                - <em>Track 01 ("Mech Bay 04: Diagnostics & Logistics"):</em> D Aeolian/Dorian hangar theme with warm Rhodes, walking bass, and servo pulses.<br>
+                - <em>Track 02 ("Titan Clash: Vector Arena Combat"):</em> D Phrygian Dominant & Andalusian battle theme with 16th galloping slap bass and distorted FM lead guitar.<br>
+                - <em>Mute / Toggle:</em> Press <span class="shortcut-key">M</span> or click the Audio button anytime.</p>
             </div>
             
             <div class="actions">
@@ -859,13 +866,14 @@
                 audioCtx = new AudioClass();
 
                 // Super Nintendo SPC700 Stereo Delay & Spatial Warmth Network
-                spcDelay = audioCtx.createDelay(0.5);
-                spcDelay.delayTime.value = 0.055; // 55ms warm slapback
+                // 180ms delay, LP filter at 2200Hz, feedback 0.28 per hardware composer standard
+                spcDelay = audioCtx.createDelay(1.0);
+                spcDelay.delayTime.value = 0.180; // 180ms warm SPC700 slapback
                 spcFeedback = audioCtx.createGain();
-                spcFeedback.gain.value = 0.22;
+                spcFeedback.gain.value = 0.28;
                 spcDamp = audioCtx.createBiquadFilter();
                 spcDamp.type = 'lowpass';
-                spcDamp.frequency.value = 3200; // Warm analog tape / SPC700 rolloff
+                spcDamp.frequency.value = 2200; // Warm analog SPC700 rolloff
 
                 spcDelay.connect(spcDamp);
                 spcDamp.connect(spcFeedback);
@@ -892,12 +900,20 @@
             soundEnabled = !soundEnabled;
             safeSetStorage('kmech_sound', soundEnabled ? '1' : '0');
             updateSoundButton();
-            showToast(soundEnabled ? '🔊 Audio Synthesizer: ONLINE' : '🔇 Audio Synthesizer: MUTED', 1800);
-            if (soundEnabled) playSound('click');
+            if (soundEnabled) {
+                initAudio();
+                if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+                startBgm();
+                playSound('click');
+                showToast('🔊 Audio Synthesizer: ONLINE', 1800);
+            } else {
+                stopBgm();
+                showToast('🔇 Audio Synthesizer: MUTED', 1800);
+            }
         }
 
-        // Sega Genesis YM2612 2-Operator Frequency Modulation Voice
-        function playFM(carrierFreq, modRatio, modIndex, duration, vol = 0.22, carrierType = 'sine', modType = 'sine') {
+        // Yamaha YM2612 2-Operator Frequency Modulation Voice
+        function playFmTone(carrierFreq, modRatio, modIndex, duration, vol = 0.22, useEcho = false, carrierType = 'sine', modType = 'sine') {
             if (!soundEnabled) return;
             const ctx = initAudio();
             if (!ctx) return;
@@ -925,7 +941,7 @@
 
                 op1.connect(masterGain);
                 masterGain.connect(ctx.destination);
-                if (spcDelay) masterGain.connect(spcDelay);
+                if (useEcho && spcDelay) masterGain.connect(spcDelay);
 
                 op2.start(t);
                 op1.start(t);
@@ -933,6 +949,644 @@
                 op1.stop(t + duration);
             } catch(e) {}
         }
+
+        // Backward-compatible alias
+        function playFM(carrierFreq, modRatio, modIndex, duration, vol = 0.22, carrierType = 'sine', modType = 'sine') {
+            playFmTone(carrierFreq, modRatio, modIndex, duration, vol, true, carrierType, modType);
+        }
+
+        // --- NAMED FM HARDWARE PATCHES ---
+
+        // 1. Industrial Punch / Slap Bass (tight fundamental, punchy transient, zero echo)
+        function playSlapBass(freq, dur = 0.16, vol = 0.26) {
+            if (!soundEnabled) return;
+            const ctx = initAudio();
+            if (!ctx) return;
+            const now = ctx.currentTime;
+            try {
+                const carrier = ctx.createOscillator();
+                const mod = ctx.createOscillator();
+                const modGain = ctx.createGain();
+                const amp = ctx.createGain();
+
+                carrier.type = 'sine';
+                mod.type = 'sawtooth';
+
+                carrier.frequency.setValueAtTime(freq, now);
+                mod.frequency.setValueAtTime(freq * 2.0, now);
+
+                modGain.gain.setValueAtTime(freq * 3.4, now);
+                modGain.gain.exponentialRampToValueAtTime(0.01, now + Math.min(dur * 0.5, 0.08));
+
+                amp.gain.setValueAtTime(vol, now);
+                amp.gain.exponentialRampToValueAtTime(0.001, now + dur);
+
+                mod.connect(modGain);
+                modGain.connect(carrier.frequency);
+                carrier.connect(amp);
+                amp.connect(ctx.destination); // tight dry bass, no spcDelay
+
+                mod.start(now);
+                carrier.start(now);
+                mod.stop(now + dur);
+                carrier.stop(now + dur);
+            } catch(e) {}
+        }
+
+        // 2. Cyber Mech Distorted Lead Guitar (warm aggressive FM tone + delayed vibrato + SPC700 stereo delay)
+        function playDistortedLead(freq, dur = 0.24, vol = 0.22) {
+            if (!soundEnabled) return;
+            const ctx = initAudio();
+            if (!ctx) return;
+            const now = ctx.currentTime;
+            try {
+                const carrier = ctx.createOscillator();
+                const mod = ctx.createOscillator();
+                const modGain = ctx.createGain();
+                const amp = ctx.createGain();
+
+                carrier.type = 'sawtooth';
+                mod.type = 'sine';
+
+                carrier.frequency.setValueAtTime(freq, now);
+                mod.frequency.setValueAtTime(freq * 1.0, now);
+
+                modGain.gain.setValueAtTime(freq * 4.6, now);
+                modGain.gain.exponentialRampToValueAtTime(freq * 1.2, now + dur);
+
+                // Delayed vibrato (after 90ms)
+                if (dur > 0.18) {
+                    carrier.frequency.setValueAtTime(freq, now + 0.09);
+                    carrier.frequency.linearRampToValueAtTime(freq * 1.025, now + 0.14);
+                    carrier.frequency.linearRampToValueAtTime(freq * 0.975, now + 0.19);
+                    carrier.frequency.linearRampToValueAtTime(freq, now + dur);
+                }
+
+                amp.gain.setValueAtTime(vol, now);
+                amp.gain.exponentialRampToValueAtTime(0.001, now + dur);
+
+                mod.connect(modGain);
+                modGain.connect(carrier.frequency);
+                carrier.connect(amp);
+                amp.connect(ctx.destination);
+                if (spcDelay) amp.connect(spcDelay);
+
+                mod.start(now);
+                carrier.start(now);
+                mod.stop(now + dur);
+                carrier.stop(now + dur);
+            } catch(e) {}
+        }
+
+        // 3. High-Tech EPiano / Warm Rhodes (bright attack decaying to warm fundamental)
+        function playEPiano(freq, dur = 0.35, vol = 0.20) {
+            if (!soundEnabled) return;
+            const ctx = initAudio();
+            if (!ctx) return;
+            const now = ctx.currentTime;
+            try {
+                const carrier = ctx.createOscillator();
+                const mod = ctx.createOscillator();
+                const modGain = ctx.createGain();
+                const amp = ctx.createGain();
+
+                carrier.type = 'sine';
+                mod.type = 'sine';
+
+                carrier.frequency.setValueAtTime(freq, now);
+                mod.frequency.setValueAtTime(freq * 2.0, now);
+
+                modGain.gain.setValueAtTime(freq * 2.8, now);
+                modGain.gain.exponentialRampToValueAtTime(freq * 0.15, now + 0.08);
+                modGain.gain.exponentialRampToValueAtTime(0.01, now + dur);
+
+                amp.gain.setValueAtTime(vol, now);
+                amp.gain.exponentialRampToValueAtTime(0.001, now + dur);
+
+                mod.connect(modGain);
+                modGain.connect(carrier.frequency);
+                carrier.connect(amp);
+                amp.connect(ctx.destination);
+                if (spcDelay) amp.connect(spcDelay);
+
+                mod.start(now);
+                carrier.start(now);
+                mod.stop(now + dur);
+                carrier.stop(now + dur);
+            } catch(e) {}
+        }
+
+        // 4. Hollow Flute / Digital Servo Horn (warm hollow resonance with delayed vibrato)
+        function playHollowLead(freq, dur = 0.28, vol = 0.18) {
+            if (!soundEnabled) return;
+            const ctx = initAudio();
+            if (!ctx) return;
+            const now = ctx.currentTime;
+            try {
+                const carrier = ctx.createOscillator();
+                const mod = ctx.createOscillator();
+                const modGain = ctx.createGain();
+                const amp = ctx.createGain();
+
+                carrier.type = 'triangle';
+                mod.type = 'sine';
+
+                carrier.frequency.setValueAtTime(freq, now);
+                mod.frequency.setValueAtTime(freq * 1.0, now);
+
+                modGain.gain.setValueAtTime(freq * 0.9, now);
+                modGain.gain.exponentialRampToValueAtTime(freq * 0.1, now + dur);
+
+                if (dur > 0.18) {
+                    carrier.frequency.setValueAtTime(freq, now + 0.10);
+                    carrier.frequency.linearRampToValueAtTime(freq * 1.018, now + 0.15);
+                    carrier.frequency.linearRampToValueAtTime(freq * 0.982, now + 0.20);
+                    carrier.frequency.linearRampToValueAtTime(freq, now + dur);
+                }
+
+                amp.gain.setValueAtTime(vol, now);
+                amp.gain.exponentialRampToValueAtTime(0.001, now + dur);
+
+                mod.connect(modGain);
+                modGain.connect(carrier.frequency);
+                carrier.connect(amp);
+                amp.connect(ctx.destination);
+                if (spcDelay) amp.connect(spcDelay);
+
+                mod.start(now);
+                carrier.start(now);
+                mod.stop(now + dur);
+                carrier.stop(now + dur);
+            } catch(e) {}
+        }
+
+        // 5. Metallic Crystal Chime / Titanium Bell
+        function playCrystalChime(freq, dur = 0.22, vol = 0.15) {
+            playFmTone(freq, 3.5, freq * 3.8, dur, vol, true, 'sine', 'sine');
+        }
+
+        // 6. Industrial Shell Brass Stab (warm 3rd + 7th chord punch)
+        function playShellBrass(freq, dur = 0.22, vol = 0.18) {
+            playFmTone(freq, 1.0, freq * 3.2, dur, vol, true, 'sawtooth', 'sine');
+        }
+
+        // 7. FM Kick Drum (rapid pitch sweep 145Hz -> 36Hz with kinetic punch)
+        function playFmKick(vol = 0.38) {
+            if (!soundEnabled) return;
+            const ctx = initAudio();
+            if (!ctx) return;
+            const now = ctx.currentTime;
+            try {
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(145, now);
+                osc.frequency.exponentialRampToValueAtTime(36, now + 0.08);
+
+                gain.gain.setValueAtTime(vol, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.13);
+
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+
+                osc.start(now);
+                osc.stop(now + 0.13);
+            } catch(e) {}
+        }
+
+        // 8. FM Snare (crisp mechanical noise burst + tonal body)
+        function playFmSnare(vol = 0.24) {
+            if (!soundEnabled) return;
+            const ctx = initAudio();
+            if (!ctx) return;
+            const now = ctx.currentTime;
+            try {
+                // Tonal body
+                playFmTone(190, 8.0, 320, 0.11, vol * 0.9, false, 'triangle', 'square');
+                // Noise crack
+                const bufferSize = Math.floor(ctx.sampleRate * 0.065);
+                const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+                const data = buffer.getChannelData(0);
+                for (let i = 0; i < bufferSize; i++) {
+                    data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (bufferSize * 0.42));
+                }
+                const noise = ctx.createBufferSource();
+                noise.buffer = buffer;
+                const filter = ctx.createBiquadFilter();
+                filter.type = 'highpass';
+                filter.frequency.value = 1600;
+                const gain = ctx.createGain();
+                gain.gain.setValueAtTime(vol * 0.95, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.065);
+
+                noise.connect(filter);
+                filter.connect(gain);
+                gain.connect(ctx.destination);
+                noise.start(now);
+            } catch(e) {}
+        }
+
+        // 9. Inharmonic Metallic Hi-Hat (MUL 11.0)
+        function playFmHiHat(isOpen = false, vol = 0.12) {
+            const dur = isOpen ? 0.15 : 0.045;
+            playFmTone(620, 11.0, 380, dur, vol, false, 'square', 'sine');
+        }
+
+        // 10. Heavy Hydraulic Titanium Stomp (Layered Sub-Punch + Metallic Transient + Pneumatic Hiss)
+        function playHydraulicStomp(vol = 0.32) {
+            if (!soundEnabled) return;
+            const ctx = initAudio();
+            if (!ctx) return;
+            const now = ctx.currentTime;
+            try {
+                // Low sub-bass kinetic impact (42Hz -> 20Hz, dry)
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(42, now);
+                osc.frequency.exponentialRampToValueAtTime(20, now + 0.14);
+                gain.gain.setValueAtTime(vol * 0.9, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.start(now);
+                osc.stop(now + 0.18);
+
+                // Metallic footpad clamp (dry)
+                playFmTone(75, 2.414, 240, 0.16, vol * 0.7, false, 'sawtooth', 'triangle');
+                // Pneumatic pressure hiss
+                playPneumaticVent(vol * 0.45);
+            } catch(e) {}
+        }
+
+        // 11. High-Speed Robotic Servo Whine (Dual-Operator Modulated Pitch Sweep)
+        function playServoWhine(vol = 0.16) {
+            if (!soundEnabled) return;
+            const ctx = initAudio();
+            if (!ctx) return;
+            const now = ctx.currentTime;
+            try {
+                const carrier = ctx.createOscillator();
+                const mod = ctx.createOscillator();
+                const modGain = ctx.createGain();
+                const amp = ctx.createGain();
+
+                carrier.type = 'sine';
+                mod.type = 'sine';
+
+                carrier.frequency.setValueAtTime(680, now);
+                carrier.frequency.exponentialRampToValueAtTime(1420, now + 0.08);
+
+                mod.frequency.setValueAtTime(1360, now);
+                mod.frequency.exponentialRampToValueAtTime(2840, now + 0.08);
+
+                modGain.gain.setValueAtTime(220, now);
+                modGain.gain.exponentialRampToValueAtTime(15, now + 0.08);
+
+                amp.gain.setValueAtTime(vol, now);
+                amp.gain.exponentialRampToValueAtTime(0.001, now + 0.09);
+
+                mod.connect(modGain);
+                modGain.connect(carrier.frequency);
+                carrier.connect(amp);
+                amp.connect(ctx.destination);
+
+                mod.start(now);
+                carrier.start(now);
+                mod.stop(now + 0.09);
+                carrier.stop(now + 0.09);
+            } catch(e) {}
+        }
+
+        // 12. Heavy Fusion Reactor Drone / Cooling Loop Hum (Hangar ambient pulse)
+        function playReactorDrone(vol = 0.08) {
+            if (!soundEnabled) return;
+            const ctx = initAudio();
+            if (!ctx) return;
+            const now = ctx.currentTime;
+            try {
+                const carrier = ctx.createOscillator();
+                const mod = ctx.createOscillator();
+                const modGain = ctx.createGain();
+                const amp = ctx.createGain();
+                const filter = ctx.createBiquadFilter();
+
+                carrier.type = 'sawtooth';
+                mod.type = 'sine';
+                filter.type = 'lowpass';
+                filter.frequency.setValueAtTime(180, now);
+                filter.frequency.linearRampToValueAtTime(140, now + 0.8);
+
+                carrier.frequency.setValueAtTime(55, now); // Sub A1
+                mod.frequency.setValueAtTime(27.5, now);  // Sub-octave modulation
+
+                modGain.gain.setValueAtTime(80, now);
+                modGain.gain.exponentialRampToValueAtTime(10, now + 0.8);
+
+                amp.gain.setValueAtTime(vol, now);
+                amp.gain.exponentialRampToValueAtTime(0.001, now + 0.85);
+
+                mod.connect(modGain);
+                modGain.connect(carrier.frequency);
+                carrier.connect(filter);
+                filter.connect(amp);
+                amp.connect(ctx.destination);
+
+                mod.start(now);
+                carrier.start(now);
+                mod.stop(now + 0.85);
+                carrier.stop(now + 0.85);
+            } catch(e) {}
+        }
+
+        // 13. Hydraulic Pneumatic Steam Vent / Pressure Release Hiss
+        function playPneumaticVent(vol = 0.14) {
+            if (!soundEnabled) return;
+            const ctx = initAudio();
+            if (!ctx) return;
+            const now = ctx.currentTime;
+            try {
+                const bufferSize = Math.floor(ctx.sampleRate * 0.12);
+                const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+                const data = buffer.getChannelData(0);
+                for (let i = 0; i < bufferSize; i++) {
+                    data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (bufferSize * 0.35));
+                }
+                const noise = ctx.createBufferSource();
+                noise.buffer = buffer;
+                const filter = ctx.createBiquadFilter();
+                filter.type = 'bandpass';
+                filter.frequency.setValueAtTime(1400, now);
+                filter.Q.value = 1.8;
+                const gain = ctx.createGain();
+                gain.gain.setValueAtTime(vol, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
+
+                noise.connect(filter);
+                filter.connect(gain);
+                gain.connect(ctx.destination);
+                noise.start(now);
+            } catch(e) {}
+        }
+
+        // ==================== CHIPTUNE SOUNDSCAPE ENGINE ====================
+        // Note Frequencies Reference (Hz)
+        const NOTE = {
+            D1: 36.71, E1: 41.20, F1: 43.65, G1: 49.00, A1: 55.00, Bb1: 58.27, C2: 65.41,
+            D2: 73.42, Eb2: 77.78, E2: 82.41, F2: 87.31, Fs2: 92.50, G2: 98.00, Ab2: 103.83, A2: 110.00, Bb2: 116.54, B2: 123.47,
+            C3: 130.81, Db3: 138.59, Csh3: 138.59, D3: 146.83, Eb3: 155.56, E3: 164.81, F3: 174.61, Fs3: 185.00, G3: 196.00, Ab3: 207.65, A3: 220.00, Bb3: 233.08, B3: 246.94,
+            C4: 261.63, Db4: 277.18, Csh4: 277.18, D4: 293.66, Eb4: 311.13, E4: 329.63, F4: 349.23, Fs4: 369.99, G4: 392.00, Ab4: 415.30, A4: 440.00, Bb4: 466.16, B4: 493.88,
+            C5: 523.25, Db5: 554.37, Csh5: 554.37, D5: 587.33, Eb5: 622.25, E5: 659.26, F5: 698.46, Fs5: 739.99, G5: 783.99, Ab5: 830.61, A5: 880.00, Bb5: 932.33, B5: 987.77,
+            C6: 1046.50
+        };
+
+        // Track 1: "Mech Bay 04: Diagnostics & Logistics" (Hangar / Garage Theme - 32 steps)
+        // Mode: D Dorian/Aeolian | Progression: Dm9 -> BbMaj7 -> Gm7 -> A7sus4 -> A7
+        const hangarBass = [
+            // Section 1: Dm (Steps 0-7)
+            NOTE.D2, 0, NOTE.D2, NOTE.D3, 0, NOTE.D2, NOTE.F2, 0,
+            // Section 2: BbMaj7 (Steps 8-15)
+            NOTE.Bb1, 0, NOTE.Bb2, 0, NOTE.F2, 0, NOTE.Bb2, NOTE.C3,
+            // Section 3: Gm7 (Steps 16-23)
+            NOTE.G2, 0, NOTE.G2, NOTE.D3, 0, NOTE.G2, NOTE.Bb2, 0,
+            // Section 4: A7sus4 -> A7 (Steps 24-31)
+            NOTE.A1, 0, NOTE.A2, 0, NOTE.E2, 0, NOTE.A2, NOTE.C3
+        ];
+
+        const hangarLead = [
+            // Section 1: Dm9 (Steps 0-7)
+            NOTE.A4, 0, NOTE.C5, 0, NOTE.D5, 0, 0, NOTE.C5,
+            // Section 2: BbMaj7 (Steps 8-15)
+            NOTE.D5, 0, NOTE.F5, 0, NOTE.E5, NOTE.D5, NOTE.C5, NOTE.A4,
+            // Section 3: Gm7 (Steps 16-23) - Rest on second half for counterpoint spotlight
+            NOTE.Bb4, 0, NOTE.D5, 0, NOTE.C5, 0, 0, 0,
+            // Section 4: A7sus4 -> A7 (Steps 24-31) - Suspension resolving to leading tone
+            0, 0, 0, 0, NOTE.G4, NOTE.A4, NOTE.C5, NOTE.Csh5
+        ];
+
+        const hangarCounter = [
+            // Section 1: Dm (Steps 0-7) - Contrary motion descent as lead ascends
+            0, NOTE.F4, 0, NOTE.E4, 0, NOTE.D4, 0, NOTE.E4,
+            // Section 2: BbMaj7 (Steps 8-15) - Sustained anchor
+            0, NOTE.D4, 0, NOTE.C4, 0, 0, 0, 0,
+            // Section 3: Gm7 (Steps 16-23) - Spotlight melodic run while Lead rests!
+            NOTE.D4, NOTE.F4, NOTE.G4, NOTE.Bb4, NOTE.A4, NOTE.G4, NOTE.F4, NOTE.D4,
+            // Section 4: A7sus4 (Steps 24-31) - Contrary ascent
+            NOTE.E4, NOTE.G4, NOTE.A4, NOTE.D5, 0, 0, 0, 0
+        ];
+
+        const hangarHarmony = [
+            // Section 1: Dm shell [F3, C4] on beats 2 & 4
+            null, null, [NOTE.F3, NOTE.C4], null, null, null, [NOTE.F3, NOTE.C4], null,
+            // Section 2: BbMaj7 shell [D3, A3]
+            null, null, [NOTE.D3, NOTE.A3], null, null, null, [NOTE.D3, NOTE.A3], null,
+            // Section 3: Gm7 shell [Bb3, F4]
+            null, null, [NOTE.Bb3, NOTE.F4], null, null, null, [NOTE.Bb3, NOTE.F4], null,
+            // Section 4: A7sus4 [G3, D4] resolving to A7 [G3, Csh4]
+            null, null, [NOTE.G3, NOTE.D4], null, null, null, [NOTE.G3, NOTE.Csh4], null
+        ];
+
+        // Track 2: "Titan Clash: Vector Arena Combat" (Combat Theme - 64 steps)
+        // Mode: D Phrygian Dominant & Andalusian Descent | Galloping 16ths, 3-Voice counterpoint
+        const combatBass = [
+            // Section 1: D Phrygian Dominant (Steps 0-15) - Galloping 16th drive
+            NOTE.D2, NOTE.D2, NOTE.D3, NOTE.D2, NOTE.Eb2, NOTE.Eb2, NOTE.Eb3, NOTE.Eb2,
+            NOTE.D2, NOTE.D2, NOTE.D3, NOTE.D2, NOTE.C3, NOTE.C3, NOTE.Bb2, NOTE.A2,
+            // Section 2: Bb -> A7 (Steps 16-31)
+            NOTE.Bb2, NOTE.Bb2, NOTE.Bb3, NOTE.Bb2, NOTE.Bb2, NOTE.Bb2, NOTE.D3, NOTE.Bb2,
+            NOTE.A2, NOTE.A2, NOTE.A3, NOTE.A2, NOTE.A2, NOTE.G2, NOTE.F2, NOTE.E2,
+            // Section 3: Andalusian Dm -> C -> Bb -> A (Steps 32-47)
+            NOTE.D2, NOTE.D2, NOTE.D3, NOTE.D2, NOTE.C2, NOTE.C2, NOTE.C3, NOTE.C2,
+            NOTE.Bb1, NOTE.Bb1, NOTE.Bb2, NOTE.Bb1, NOTE.A1, NOTE.A1, NOTE.A2, NOTE.A1,
+            // Section 4: Chromatic Tension Climb (Steps 48-63)
+            NOTE.Eb2, NOTE.Eb2, NOTE.Eb3, NOTE.Eb2, NOTE.F2, NOTE.F2, NOTE.F3, NOTE.F2,
+            NOTE.G2, NOTE.G2, NOTE.G3, NOTE.G2, NOTE.A2, NOTE.A2, NOTE.Bb2, NOTE.Csh3
+        ];
+
+        const combatLead = [
+            // Section 1: Main Phrygian Motif (Steps 0-15)
+            NOTE.D4, 0, NOTE.Fs4, 0, NOTE.G4, 0, NOTE.A4, 0,
+            NOTE.Bb4, NOTE.A4, NOTE.G4, NOTE.Fs4, NOTE.G4, 0, 0, 0,
+            // Section 2: Heroic Counter-Attack (Steps 16-31)
+            NOTE.D5, 0, NOTE.C5, 0, NOTE.Bb4, 0, NOTE.A4, 0,
+            NOTE.G4, NOTE.Fs4, NOTE.G4, NOTE.A4, NOTE.Fs4, 0, 0, 0,
+            // Section 3: Screaming Guitar Descent (Steps 32-47)
+            NOTE.A4, 0, NOTE.D5, 0, NOTE.C5, NOTE.Bb4, NOTE.A4, NOTE.G4,
+            NOTE.F4, 0, NOTE.G4, 0, NOTE.A4, NOTE.Bb4, NOTE.A4, NOTE.G4,
+            // Section 4: Peak Chromatic Ascent (Steps 48-63)
+            NOTE.Fs4, 0, NOTE.G4, 0, NOTE.A4, 0, NOTE.Bb4, 0,
+            NOTE.C5, 0, NOTE.D5, 0, NOTE.Eb5, NOTE.D5, NOTE.Csh5, 0
+        ];
+
+        const combatCounter = [
+            // Section 1: Strict Contrary Motion (Steps 0-15)
+            // As Lead ascends D4->Fs4->G4->A4, Counter descends A3->G3->Fs3->Eb3
+            NOTE.A3, 0, NOTE.G3, 0, NOTE.Fs3, 0, NOTE.Eb3, 0,
+            0, 0, 0, 0, 0, NOTE.Fs3, NOTE.G3, NOTE.A3,
+            // Section 2: Staccato Horn Call (Steps 16-31)
+            0, NOTE.Fs3, 0, NOTE.G3, 0, NOTE.A3, 0, NOTE.Fs3,
+            0, 0, 0, 0, 0, NOTE.Eb3, 0, NOTE.Fs3,
+            // Section 3: Contrary Motion Descent (Steps 32-47)
+            NOTE.F3, 0, NOTE.E3, 0, NOTE.D3, 0, NOTE.C3, 0,
+            NOTE.D3, 0, NOTE.E3, 0, NOTE.F3, 0, NOTE.G3, 0,
+            // Section 4: Ascending Power Drive (Steps 48-63)
+            NOTE.G3, 0, NOTE.A3, 0, NOTE.Bb3, 0, NOTE.C4, 0,
+            NOTE.D4, 0, NOTE.C4, 0, NOTE.Bb3, NOTE.A3, NOTE.G3, 0
+        ];
+
+        const combatHarmony = [
+            // Section 1: D Phrygian Dominant Shells [Fs3, C4]
+            null, null, [NOTE.Fs3, NOTE.C4], null, null, null, [NOTE.Fs3, NOTE.C4], null,
+            null, null, [NOTE.Fs3, NOTE.C4], null, null, null, [NOTE.Fs3, NOTE.C4], null,
+            // Section 2: Bb7 [D4, Ab3] and A7 [Csh4, G3]
+            null, null, [NOTE.D4, NOTE.Ab3], null, null, null, [NOTE.D4, NOTE.Ab3], null,
+            null, null, [NOTE.Csh4, NOTE.G3], null, null, null, [NOTE.Csh4, NOTE.G3], null,
+            // Section 3: Andalusian Shells [F4, C4] -> [E4, Bb3] -> [D4, Ab3] -> [Csh4, G3]
+            null, null, [NOTE.F4, NOTE.C4], null, null, null, [NOTE.E4, NOTE.Bb3], null,
+            null, null, [NOTE.D4, NOTE.Ab3], null, null, null, [NOTE.Csh4, NOTE.G3], null,
+            // Section 4: Buildup Shells [G4, Db4] -> [A4, Eb4] -> [Bb4, F4] -> [Csh4, G4]
+            null, null, [NOTE.G4, NOTE.Db4], null, null, null, [NOTE.A4, NOTE.Eb4], null,
+            null, null, [NOTE.Bb4, NOTE.F4], null, null, null, [NOTE.Csh4, NOTE.G4], null
+        ];
+
+        let bgmTimer = null;
+        let bgmStep = 0;
+        let bgmRunning = false;
+        let bgmMode = 'hangar'; // 'hangar' ("Mech Bay 04") or 'combat' ("Titan Clash")
+
+        function scheduleBgmStep() {
+            if (!bgmRunning || !soundEnabled) return;
+            const isCombat = (bgmMode === 'combat');
+            // Swing-Tick Groove:
+            // Combat (driving march ~118 BPM): Even 165ms, Odd 105ms (5:3 swing ratio)
+            // Hangar (stately diagnostics ~98 BPM): Even 185ms, Odd 125ms (5:3 swing ratio)
+            const isEven = (bgmStep % 2 === 0);
+            const nextDelay = isCombat ? (isEven ? 165 : 105) : (isEven ? 185 : 125);
+
+            playBgmStep(bgmStep, bgmMode);
+            bgmStep++;
+            bgmTimer = setTimeout(scheduleBgmStep, nextDelay);
+        }
+
+        function playBgmStep(globalStep, mode) {
+            if (!soundEnabled) return;
+
+            if (mode === 'hangar') {
+                // ==========================================
+                // TRACK 1: "Mech Bay 04: Diagnostics & Logistics"
+                // ==========================================
+                const s = globalStep % 32;
+
+                // Channel 4: Hangar Bass (Sub/Walking Bass)
+                const bassNote = hangarBass[s];
+                if (bassNote > 0) playSlapBass(bassNote, 0.17, 0.22);
+
+                // Channel 1: Lead Melody (Warm FM Rhodes with delayed vibrato)
+                const leadNote = hangarLead[s];
+                if (leadNote > 0) playEPiano(leadNote, 0.32, 0.19);
+
+                // Channel 2: Counter / Servo Horn
+                const counterNote = hangarCounter[s];
+                if (counterNote > 0) playHollowLead(counterNote, 0.22, 0.16);
+
+                // Channel 3: Harmony Shell Voicings
+                const harm = hangarHarmony[s];
+                if (harm && harm.length > 0) {
+                    harm.forEach(f => playShellBrass(f, 0.25, 0.11));
+                }
+
+                // Channel 5: Ambient Percussion & Hydraulic Pulses
+                if (s === 0 || s === 16) playReactorDrone(0.08);
+                if (s % 8 === 0) playFmKick(0.20);
+                if (s % 8 === 4) playServoWhine(0.06);
+
+                // Channel 6: Soft Closed Hi-Hat
+                if (s % 2 === 0) playFmHiHat(false, 0.06);
+
+            } else {
+                // ==========================================
+                // TRACK 2: "Titan Clash: Vector Arena Combat"
+                // ==========================================
+                const s = globalStep % 64;
+
+                // Channel 4: Galloping 16th Slap Bass
+                const bassNote = combatBass[s];
+                if (bassNote > 0) playSlapBass(bassNote, 0.12, 0.26);
+
+                // Channel 1: Distorted FM Mech Lead Guitar
+                const leadNote = combatLead[s];
+                if (leadNote > 0) playDistortedLead(leadNote, 0.22, 0.22);
+
+                // Channel 2: Contrary Motion Counterpoint
+                const counterNote = combatCounter[s];
+                if (counterNote > 0) playHollowLead(counterNote, 0.20, 0.17);
+
+                // Channel 3: Harmony Shell Brass Stabs
+                const harm = combatHarmony[s];
+                if (harm && harm.length > 0) {
+                    harm.forEach(f => playShellBrass(f, 0.18, 0.13));
+                }
+
+                // Channel 5: FM Kick & Snare Percussion
+                const isKick = (s % 4 === 0 || s % 8 === 6);
+                if (isKick) playFmKick(0.35);
+
+                if (s % 4 === 2) playFmSnare(0.24);
+
+                // Snare phrase fills on steps 30-31 and 62-63
+                if (s === 30 || s === 31 || s === 62 || s === 63) {
+                    playFmSnare(0.20);
+                }
+
+                // Channel 6: Inharmonic FM Hi-Hat
+                const isOpen = (s % 8 === 7);
+                playFmHiHat(isOpen, isOpen ? 0.14 : 0.09);
+            }
+        }
+
+        function startBgm(mode = null) {
+            if (mode) bgmMode = mode;
+            if (!soundEnabled) return;
+            initAudio();
+            if (bgmTimer) {
+                clearTimeout(bgmTimer);
+                bgmTimer = null;
+            }
+            bgmRunning = true;
+            bgmStep = 0;
+            scheduleBgmStep();
+        }
+
+        function stopBgm() {
+            bgmRunning = false;
+            if (bgmTimer) {
+                clearTimeout(bgmTimer);
+                bgmTimer = null;
+            }
+        }
+
+        function setBgmMode(mode) {
+            if (bgmMode === mode && bgmRunning) return;
+            bgmMode = mode;
+            if (bgmRunning && soundEnabled) {
+                bgmStep = 0;
+            }
+        }
+
+        // User Interaction Hook to resume AudioContext and start BGM cleanly
+        function userAudioResume() {
+            initAudio();
+            if (audioCtx && audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+            if (soundEnabled && !bgmRunning) {
+                const curScreen = getCurrentScreen();
+                setBgmMode(curScreen === 'battle' ? 'combat' : 'hangar');
+                startBgm();
+            }
+        }
+        window.addEventListener('click', userAudioResume, { passive: true });
+        window.addEventListener('keydown', userAudioResume, { passive: true });
 
         function playSound(type) {
             if (!soundEnabled) return;
@@ -942,67 +1596,109 @@
                 const t = ctx.currentTime;
 
                 if (type === 'laser') {
-                    // Pulse Laser: Biting FM Square-Sine 2:1 harmonic chirp
-                    playFM(880, 2.0, 420, 0.18, 0.2, 'square', 'sine');
+                    // Pulse Laser: Coherent optical chirp (880Hz -> 440Hz rapid drop, snappy FM bite)
+                    playFmTone(880, 2.0, 420, 0.14, 0.22, false, 'square', 'sine');
                 } else if (type === 'cannon') {
-                    // Heavy Gauss: 55Hz Sub-bass carrier with massive kinetic FM punch
-                    playFM(55, 3.5, 380, 0.38, 0.35, 'sawtooth', 'triangle');
+                    // Heavy Gauss Cannon: 48Hz Sub-bass carrier with massive kinetic FM punch (dry, tight)
+                    playFmTone(48, 3.5, 360, 0.32, 0.38, false, 'sawtooth', 'triangle');
+                    playPneumaticVent(0.18);
                 } else if (type === 'autocannon') {
-                    // Twin Autocannons: Staccato rapid dual tracer burst
-                    playFM(160, 2.2, 220, 0.12, 0.22, 'sawtooth', 'square');
+                    // Twin Autocannons: Staccato dual tracer burst (rapid 45ms stagger)
+                    playFmTone(175, 2.2, 240, 0.10, 0.24, false, 'sawtooth', 'square');
+                    setTimeout(() => {
+                        playFmTone(190, 2.2, 260, 0.10, 0.22, false, 'sawtooth', 'square');
+                    }, 45);
                 } else if (type === 'plasma') {
-                    // Plasma Mortar: Superheated 1.414 inharmonic sizzle
-                    playFM(260, 1.414, 520, 0.38, 0.28, 'triangle', 'sine');
+                    // Plasma Mortar: Superheated 1.414 inharmonic sizzle with slow release
+                    playFmTone(260, 1.414, 520, 0.36, 0.28, true, 'triangle', 'sine');
                 } else if (type === 'emp') {
-                    // EMP Arc Disruptor: Sawtooth electric arc with high modulation
-                    playFM(980, 4.0, 780, 0.28, 0.22, 'sawtooth', 'sawtooth');
+                    // EMP Arc Disruptor: Sawtooth electric arc with high modulation sizzle
+                    playFmTone(980, 4.0, 780, 0.26, 0.24, true, 'sawtooth', 'sawtooth');
                 } else if (type === 'beam') {
-                    // Particle Beam Lance: Coherent high-energy focused particle lance
-                    playFM(1200, 1.5, 650, 0.35, 0.25, 'sine', 'sawtooth');
+                    // Particle Beam Lance: Coherent high-energy focused particle lance with shimmer
+                    playFmTone(1200, 1.5, 650, 0.34, 0.26, true, 'sine', 'sawtooth');
                 } else if (type === 'missile') {
-                    // Swarm Cluster Missiles: Explosive rocket whoosh
-                    playFM(95, 4.2, 280, 0.26, 0.26, 'sawtooth', 'triangle');
+                    // Swarm Cluster Missiles: Explosive rocket whoosh + sub-rumble
+                    playFmTone(95, 4.2, 280, 0.25, 0.26, false, 'sawtooth', 'triangle');
+                    playPneumaticVent(0.20);
                 } else if (type === 'enemyLaser') {
                     // Hostile crimson laser pulse
-                    playFM(420, 1.8, 300, 0.22, 0.18, 'sawtooth', 'sine');
+                    playFmTone(420, 1.8, 300, 0.20, 0.20, false, 'sawtooth', 'sine');
                 } else if (type === 'impact') {
-                    // Armor plate impact thud with low-frequency resonance
-                    playFM(70, 2.0, 200, 0.16, 0.32, 'triangle', 'sawtooth');
+                    // Armor plate kinetic crunch: 70Hz -> 35Hz dry thud with low-frequency resonance
+                    playFmTone(70, 2.0, 200, 0.16, 0.34, false, 'triangle', 'sawtooth');
                 } else if (type === 'shield') {
-                    // SPC700 Delayed Deflector Ring
-                    playFM(640, 1.0, 280, 0.3, 0.22, 'sine', 'sine');
+                    // Energy Shield: SPC700 delayed resonant deflector ring
+                    playFmTone(640, 1.0, 280, 0.30, 0.24, true, 'sine', 'sine');
                 } else if (type === 'repair') {
                     // Nanite repair harmonic arpeggio (C4 -> E4 -> G4 -> C5)
-                    const notes = [261.6, 329.6, 392.0, 523.2];
+                    const notes = [NOTE.C4, NOTE.E4, NOTE.G4, NOTE.C5];
                     notes.forEach((freq, idx) => {
                         setTimeout(() => {
-                            playFM(freq, 2.0, 100, 0.15, 0.15, 'sine', 'sine');
-                        }, idx * 70);
+                            playFmTone(freq, 2.0, 100, 0.16, 0.16, true, 'sine', 'sine');
+                        }, idx * 65);
                     });
                 } else if (type === 'alarm') {
                     // Genesis FM two-tone warning klaxon
-                    playFM(1100, 1.0, 50, 0.12, 0.18, 'square', 'sine');
+                    playFmTone(1100, 1.0, 50, 0.12, 0.20, false, 'square', 'sine');
                     setTimeout(() => {
-                        playFM(850, 1.0, 50, 0.14, 0.18, 'square', 'sine');
-                    }, 120);
+                        playFmTone(850, 1.0, 50, 0.14, 0.20, false, 'square', 'sine');
+                    }, 115);
                 } else if (type === 'miss') {
                     // Deflection ricochet / evasive whoosh
-                    playFM(320, 0.5, 80, 0.1, 0.12, 'sine', 'sine');
+                    playFmTone(340, 0.5, 80, 0.10, 0.14, false, 'sine', 'sine');
                 } else if (type === 'victory') {
-                    // Genesis triumph fanfare (D4 -> F#4 -> A4 -> D5) with SPC700 stereo delay
-                    const fan = [293.7, 370.0, 440.0, 587.3];
-                    fan.forEach((freq, idx) => {
-                        setTimeout(() => {
-                            playFM(freq, 2.0, 120, 0.28, 0.22, 'square', 'sine');
-                        }, idx * 90);
-                    });
+                    // Heroic Mario Cadence (bVI - bVII - I: Bb -> C -> D) Triumphant Fanfare with SPC700 stereo delay
+                    // Bass contrary motion + Upper voice shell fanfare
+                    playSlapBass(NOTE.Bb1, 0.24, 0.26);
+                    playShellBrass(NOTE.D4, 0.22, 0.20);
+                    playCrystalChime(NOTE.F5, 0.26, 0.18);
+
+                    setTimeout(() => {
+                        playSlapBass(NOTE.C2, 0.24, 0.26);
+                        playShellBrass(NOTE.E4, 0.22, 0.20);
+                        playCrystalChime(NOTE.G5, 0.26, 0.18);
+                    }, 140);
+
+                    setTimeout(() => {
+                        playSlapBass(NOTE.D2, 0.45, 0.30);
+                        playShellBrass(NOTE.Fs4, 0.40, 0.24);
+                        playDistortedLead(NOTE.A4, 0.40, 0.22);
+                        playCrystalChime(NOTE.D5, 0.50, 0.22);
+                    }, 280);
                 } else if (type === 'defeat') {
-                    // Hydraulic failure shutdown groan
-                    playFM(240, 0.5, 120, 0.4, 0.25, 'sawtooth', 'sawtooth');
-                    setTimeout(() => playFM(140, 0.5, 80, 0.5, 0.25, 'sawtooth', 'triangle'), 300);
+                    // Mournful Phrygian collapse dirge with hydraulic pressure dump hiss
+                    playFmTone(240, 0.5, 120, 0.35, 0.26, false, 'sawtooth', 'sawtooth');
+                    playPneumaticVent(0.24);
+                    setTimeout(() => {
+                        playFmTone(180, 0.5, 90, 0.35, 0.25, false, 'sawtooth', 'triangle');
+                    }, 180);
+                    setTimeout(() => {
+                        playFmTone(120, 0.5, 70, 0.45, 0.28, false, 'sawtooth', 'sine');
+                        playPneumaticVent(0.20);
+                    }, 360);
+                } else if (type === 'rankup') {
+                    // Military Rank Promotion Fanfare: 5-note crystalline arpeggio into triumphant brass resolution
+                    const rankNotes = [NOTE.D4, NOTE.F4, NOTE.A4, NOTE.D5, NOTE.F5];
+                    rankNotes.forEach((freq, idx) => {
+                        setTimeout(() => {
+                            playCrystalChime(freq, 0.22, 0.20);
+                        }, idx * 55);
+                    });
+                    setTimeout(() => {
+                        playShellBrass(NOTE.A4, 0.35, 0.22);
+                        playShellBrass(NOTE.D5, 0.35, 0.22);
+                        playSlapBass(NOTE.D2, 0.35, 0.26);
+                    }, 300);
                 } else if (type === 'click') {
-                    // Tactile mechanical switch click
-                    playFM(1200, 0.5, 30, 0.035, 0.1, 'square', 'sine');
+                    // Tactile mechanical switch click (dry)
+                    playFmTone(1250, 0.5, 30, 0.030, 0.12, false, 'square', 'sine');
+                } else if (type === 'stomp') {
+                    // Heavy hydraulic titanium footstep
+                    playHydraulicStomp(0.32);
+                } else if (type === 'servo') {
+                    // High-speed servo motor positioning whine
+                    playServoWhine(0.16);
                 }
             } catch(e) {}
         }
@@ -1240,7 +1936,7 @@
                 const d = JSON.parse(raw);
                 if (restoreSavePayload(d)) {
                     showToast(`📂 Telemetry restored: ${getPilotRank(playerLevel)} (Battle #${battleCount}) [F9]`, 3500, 'info');
-                    playSound('victory');
+                    playSound('rankup');
                 } else {
                     showToast("⚠️ Failed to load telemetry data structure.", 3000, 'danger');
                 }
@@ -1337,7 +2033,7 @@
                     safeSetStorage('kmech_save', JSON.stringify(getSavePayload()));
                     closeTelemetryModal();
                     showToast(`✅ Telemetry restored: ${getPilotRank(playerLevel)} (Battle #${battleCount})`, 3500, 'info');
-                    playSound('victory');
+                    playSound('rankup');
                 } else {
                     showToast('⚠️ Invalid telemetry data structure.', 3000, 'danger');
                 }
@@ -2035,6 +2731,7 @@
             currentTargetLimb = (currentTargetLimb + 1) % limbs.length;
             const tgtName = limbs[currentTargetLimb].name;
             document.getElementById('btn-target').innerHTML = `<span class="key-badge">T</span> TGT: ${tgtName}`;
+            playSound('servo');
             showToast(`Target set to ${tgtName} (${limbs[currentTargetLimb].mult}x Dmg)`, 1800);
         }
 
@@ -2054,6 +2751,13 @@
             if (target) target.classList.add('active');
             if (id === 'help') {
                 safeSetStorage('kmech_tutorialSeen', '1');
+                setBgmMode('hangar');
+            } else if (id === 'battle') {
+                setBgmMode('combat');
+                if (soundEnabled && !bgmRunning) startBgm('combat');
+            } else if (id === 'garage') {
+                setBgmMode('hangar');
+                if (soundEnabled && !bgmRunning) startBgm('hangar');
             }
             updateMechVisuals();
         }
@@ -2100,7 +2804,7 @@
             equipWpn = (equipWpn + 1) % weapons.length;
             playerStats.atk = weapons[equipWpn].atk;
             playerHeatGen = weapons[equipWpn].heatGen;
-            playSound('click');
+            playSound('servo');
             showToast(`Weapon: ${weapons[equipWpn].name} (ATK ${playerStats.atk}, Heat ${playerHeatGen})`, 2000);
             updateGarage();
             quickSave(true);
@@ -2110,7 +2814,7 @@
             playerStats.def = armors[equipArm].def;
             playerStats.maxHp = armors[equipArm].maxHp;
             playerStats.hp = Math.min(playerStats.hp, playerStats.maxHp);
-            playSound('click');
+            playSound('servo');
             showToast(`Armor: ${armors[equipArm].name} (DEF ${playerStats.def}, HP ${playerStats.maxHp})`, 2000);
             updateGarage();
             quickSave(true);
@@ -2120,7 +2824,7 @@
             playerStats.maxHeat = heatSinks[equipSink].maxHeat;
             playerCooling = heatSinks[equipSink].cooling;
             if (playerStats.heat > playerStats.maxHeat) playerStats.heat = playerStats.maxHeat;
-            playSound('click');
+            playSound('servo');
             showToast(`Heat Sink: ${heatSinks[equipSink].name} (Cooling ${playerCooling}/turn, Max ${playerStats.maxHeat})`, 2000);
             updateGarage();
             quickSave(true);
@@ -2128,7 +2832,7 @@
 
         function cycleSpec() {
             equipSpec = (equipSpec + 1) % specials.length;
-            playSound('click');
+            playSound('servo');
             showToast(`Special: ${specials[equipSpec].name}`, 2000);
             updateGarage();
             quickSave(true);
@@ -2271,8 +2975,10 @@
             document.getElementById('post-battle-actions').style.display = 'none';
             logMsg(`Battle #${battleCount} Initiated! Hostile mech detected.`);
             playSound('alarm');
+            playSound('stomp');
             showToast(`🚨 BATTLE #${battleCount} ENGAGED! Press [A/Space] to attack.`, 3000, 'warning');
             updateBattle();
+            setBgmMode('combat');
             showScreen('battle');
         }
 
@@ -2289,6 +2995,7 @@
             }
             updateGarage();
             quickSave(true);
+            setBgmMode('hangar');
             showScreen('garage');
         }
 
@@ -2299,6 +3006,7 @@
             document.getElementById('battle-actions').style.display = 'none';
             document.getElementById('post-battle-actions').style.display = 'flex';
             if (victory) {
+                stopBgm();
                 playSound('victory');
                 spawnVictoryStars(478, 70);
                 let reward = 50 + (battleCount * 12);
@@ -2313,13 +3021,20 @@
                 if (playerXp >= playerLevel * 100) {
                     playerXp -= playerLevel * 100;
                     playerLevel++;
-                    playSound('victory');
+                    playSound('rankup');
                     logMsg(`LEVEL UP! Pilot promoted to Level ${playerLevel} (${getPilotRank(playerLevel)}).`);
                     showToast(`⭐ LEVEL UP! Pilot is now Level ${playerLevel} (${getPilotRank(playerLevel)})!`, 4000);
                 }
                 battleCount++;
                 quickSave(true);
+                setTimeout(() => {
+                    if (soundEnabled && getCurrentScreen() === 'battle') {
+                        setBgmMode('hangar');
+                        startBgm('hangar');
+                    }
+                }, 1600);
             } else {
+                stopBgm();
                 playSound('defeat');
                 spawnExplosion(140, 70, 35, false);
                 logMsg("CRITICAL DAMAGE. MECH DESTROYED. CAMPAIGN FAILED.");
@@ -2566,6 +3281,9 @@
 
         updateGarage();
         updateSoundButton();
+        if (soundEnabled) {
+            setBgmMode('hangar');
+        }
 
         // Welcome prompt on fresh startup only (Pass 5 tutorial integrity)
         const seenTutorial = safeGetStorage('kmech_tutorialSeen');
