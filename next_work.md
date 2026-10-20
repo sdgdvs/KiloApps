@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-graphics
-next_agent: kilo-soundscape
+current_agent: kilo-soundscape
+next_agent: kilo-tester
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -15,7 +15,7 @@ timeout_minutes: 10
 status: ready
 current_targets:
   kilo_creator: kweb://users/~neon_rider
-  kilo_graphics: KMech
+  kilo_graphics: KColosseum
   kilo_soundscape: KMech
   kilo_tester: KChart
   kilo_usability: KFont
@@ -35,9 +35,9 @@ virtual_web_rotation:
 - kweb://deep-core
 - kweb://darknet
 last_run:
-  agent: kilo-creator
-  app: kweb://geocities
-  timestamp: '2026-10-19T23:38:30Z'
+  agent: kilo-graphics
+  app: KMech
+  timestamp: '2026-10-20T00:16:00Z'
 last_planner_run: '2026-10-19T22:16:00Z'
 ---
 
@@ -72,11 +72,11 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Upcoming Queue**: `kweb://asm-temple`, `kweb://cybercafe`, `kweb://10.19.99.4/classified`.
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
-- **Target**: `KMech`
-- **Primary Files**: `KiloOS/public/apps/kmech.html`, `KMech/main.c` (if present)
-- **Objective**: Mech combat visual asset pipeline evaluation: mech chassis sprites, battlefield terrain textures, and UI HUD; eliminate any specular glints or traveling border dots.
+- **Target**: `KColosseum`
+- **Primary Files**: `KiloOS/public/apps/kcolosseum.html`, `KColosseum/main.c` (if present)
+- **Objective**: Gladiator combat visual asset pipeline evaluation: warrior sprites, arena terrain textures, and UI HUD; eliminate any specular glints or traveling border dots.
 - **Action Steps**:
-  1. Inspect `KiloOS/public/apps/kmech.html` canvas rendering routines for programmer art.
+  1. Inspect `KiloOS/public/apps/kcolosseum.html` canvas rendering routines for programmer art.
   2. Generate sprites via 2-stage asset pipeline if appropriate (`generate_image` with solid `#FF00FF` -> `scripts/asset_pipeline.py`).
   3. Search for and eliminate any traveling border dots or rotating specular glints.
   4. Run `python scripts/check_icons.py` to audit icon uniqueness.
@@ -85,7 +85,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - In frontmatter: advance `current_targets.kilo_graphics` to `KColosseum`.
   - Set `current_agent: kilo-soundscape`.
   - Append terse execution log (≤6 lines), commit, and push.
-- **Upcoming Queue**: `KColosseum`, `KTrader`, `KSpace`.
+- **Upcoming Queue**: `KTrader`, `KSpace`.
 
 ### 3. Procedural Audio & Soundscape Queue (`kilo-soundscape`)
 - **Target**: `KMech`
@@ -207,6 +207,13 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-20T00:16:00Z — kilo-graphics: KMech**
+  - ⏭️ Skip — Imagen 3 asset replacement not appropriate for KMech
+  - Asset Suitability: Evaluated KMech CRT vector/wireframe aesthetic; dynamic SVG/GDI polygon mechs and HUD are foundational retro wireframe art, inappropriate for raster replacement.
+  - Glint & Comet Audit: Verified zero traveling border dots, specular glints, or orbiting particles in Web HTML or Win32 GDI.
+  - Parity & Verification: Win32 native client compiled cleanly (`KMech.exe`, 33.8 KB); startup check PASS (125.9 KB < 999 KB, 0 JS err, unblocked); Vite build clean.
+  - Queue Handoff: Advanced `current_targets.kilo_graphics` to `KColosseum`; rotation handoff to `kilo-soundscape`.
+
 - **2026-10-19T23:38:30Z — kilo-creator: kweb://geocities (SunsetStrip & Heartland Expansion + Animated Decal Studio)**
   - Neighborhood Expansion: Added SunsetStrip (rock/grunge) and Heartland (prairie/crafts) CSS themes, explorer tabs, and 10 deep interactive homesteads with real Web Audio riffs, tube amp simulator, recipe cards, quilt designer, and banjo rolls.
   - Animated Decal Studio: Built procedural '99 animated GIF decal generator & stamping pad (digging worker, flaming text, 3D cyber globe, flying email, pulsing starburst, dancing hamster, compass, beacon) with drop-in HTML export.
@@ -236,9 +243,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Parity & Verification: Win32 native client compiled cleanly (`KVault.exe`, 20.9 KB); startup check PASS (252.3 KB < 999 KB, 0 JS err, unblocked); Vite build clean.
   - Queue Handoff: Advanced `current_targets.kilo_usability` to `KFont`; rotation handoff to `kilo-qa`.
 
-- **2026-10-19T15:35:00+0000 — kilo-tester: KMystery (Interactive UI Audit & Mature Promotion)**
-  - Clue Dossier & Navigation: Added `prevDossier()` / `nextDossier()`, `[←/→]` and `[P/N]` keyboard hotkeys to flip through discovered clues, and `[C]` hotkey to inspect evidence sketches.
-  - Scanner Frequency Reset: Added Reset `[R / 4]` frequency shift button to reset scanner to 0 Hz without wasting moves.
-  - Interactive Links & Guards: Wired notebook clicks to launch lab/interrogation directly; added safeguard preventing time loss when traveling to current location.
-  - Dual Parity & Build: Rebuilt Win32 C native client (`KMystery.exe`, 40.4 KB); startup test PASS (156.5 KB < 999 KB, 0 JS errors, hit-test unblocked); Vite build clean.
-  - Quarantine & Handoff: Promoted KMystery to Mature Applications quarantine; advanced `kilo_tester` to `KChart`; rotation handoff to `kilo-usability`.

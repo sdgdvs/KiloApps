@@ -1196,6 +1196,7 @@
     line-height: 14px;
     font-weight: bold;
     text-shadow: 1px 1px 1px #000;
+  }
   /* ==========================================================================
      CYBERSPIRE 16-BIT CHIPTUNE SFX LABORATORY '99
      ========================================================================== */
@@ -1934,6 +1935,7 @@
     gap: 6px;
     align-items: center;
     justify-content: space-between;
+  }
   /* ========================================================================== */
   /* PHASE 2 DEEP EXPANSION: WEB-SAFE PALETTE LAB, HALITE CRYPT, COUNTER & RINGMASTER */
   /* ========================================================================== */
@@ -6849,6 +6851,13 @@ function inspectModHeader() {
   hexDumpEl.textContent = lines.join('\n');
 }
 
+const PALETTES = {
+  cyber: ['#000000', '#001122', '#ff00aa', '#00ffff', '#ffff00', '#00ff66', '#aa00ff', '#ffffff', '#ff0055', '#38bdf8', '#ffaa00', '#10b981', '#7c3aed', '#f43f5e', '#a855f7', '#334155'],
+  ega: ['#000000', '#0000aa', '#00aa00', '#00aaaa', '#aa0000', '#aa00aa', '#aa5500', '#aaaaaa', '#555555', '#5555ff', '#55ff55', '#55ffff', '#ff5555', '#ff55ff', '#ffff55', '#ffffff'],
+  c64: ['#000000', '#ffffff', '#880000', '#aaffee', '#cc44cc', '#00cc55', '#0000aa', '#eeee77', '#dd8855', '#664400', '#ff7777', '#333333', '#777777', '#aaff66', '#0088ff', '#bbbbbb'],
+  gameboy: ['#0f380f', '#306230', '#8bac0f', '#9bbc0f']
+};
+
 let currentPaletteName = 'cyber';
 let currentPalette = PALETTES.cyber;
 let selectedColorIdx = 2; // Default to pink/magenta
@@ -7393,7 +7402,7 @@ function exportBMP() {
   URL.revokeObjectURL(url);
 }
 
-function exportCHex() {
+function exportCHex(copyToClipboard = true) {
   playUiBeep(1100, 0.05);
   const name = 'sprite_' + canvasDim + 'x' + canvasDim;
   const lines = [];
@@ -7413,9 +7422,11 @@ function exportCHex() {
   const str = lines.join('\n');
   const txtArea = document.getElementById('cArrayOutput');
   if (txtArea) txtArea.value = str;
-  try {
-    navigator.clipboard.writeText(str);
-  } catch(e) {}
+  if (copyToClipboard && navigator.clipboard && navigator.clipboard.writeText) {
+    try {
+      navigator.clipboard.writeText(str).catch(() => {});
+    } catch(e) {}
+  }
 }
 
 function saveToUserGallery() {
@@ -9095,8 +9106,10 @@ ${incCounter ? `
   <hr width="80%">
   <small>Crafted with CyberSpire's Webmaster Acolyte Workbench &bull; Hosted on GeoCities ${escapeHtml(neigh)} &bull; Dec 1999</small>
 </center>
+</body>
+</html>`;
+}
 
-<script>
 // ============================================================================
 // DHTML CURSOR TRAIL & SPARKLE FOUNDRY '99 (ANTI-POTEMKIN INTERACTIVE ENGINE)
 // ============================================================================
@@ -9360,10 +9373,6 @@ ${incCounter ? `
 
   animId = requestAnimationFrame(renderLoop);
 })();
-</script>
-</body>
-</html>`;
-}
 
 function updatePagePreview() {
   const html = generateWeb10Html();
@@ -14190,7 +14199,7 @@ setNeighborhood(currentNeighborhood);
 renderSwatches();
 drawPaintCanvas();
 renderGalleryGrid();
-exportCHex();
+exportCHex(false);
 inspectModHeader();
 loadDissectorTrack("0");
 updateFmParams();
@@ -14489,7 +14498,11 @@ window.submitHomesteadToFirebase = function(homestead) {
 
   // Insert before the odometer counter box or webring nav
   const refElem = container.querySelector('.webring-nav') || container.lastElementChild;
-  container.insertBefore(section, refElem);
+  if (refElem && refElem.parentNode) {
+    refElem.parentNode.insertBefore(section, refElem);
+  } else {
+    container.appendChild(section);
+  }
 
   // Audio Coupler logic
   let audioCtx = null;
@@ -14692,8 +14705,8 @@ window.submitHomesteadToFirebase = function(homestead) {
   `;
 
   const refElem = container.querySelector('#ringmaster-section') || container.querySelector('.webring-nav');
-  if (refElem) {
-    container.insertBefore(studioBox, refElem);
+  if (refElem && refElem.parentNode) {
+    refElem.parentNode.insertBefore(studioBox, refElem);
   } else {
     container.appendChild(studioBox);
   }
@@ -14785,10 +14798,16 @@ window.submitHomesteadToFirebase = function(homestead) {
       navigator.clipboard?.writeText(htmlSnippet).then(() => {
         if (statusMsg) statusMsg.textContent = '📋 HTML code copied to clipboard!';
       }).catch(() => {
-  // ==========================================
-  // GEOCITIES 1999 ASCII ART & CYBER-SIGNATURE STAMP FORGE
-  // ==========================================
-  (function initAsciiStampStudio() {
+        if (statusMsg) statusMsg.textContent = 'Failed to copy HTML.';
+      });
+    });
+  }
+})();
+
+// ==========================================
+// GEOCITIES 1999 ASCII ART & CYBER-SIGNATURE STAMP FORGE
+// ==========================================
+(function initAsciiStampStudio() {
     const mainContainer = document.querySelector('.page-card') || document.body;
     const asciiSection = document.createElement('div');
     asciiSection.className = 'section-box';
@@ -14839,8 +14858,8 @@ window.submitHomesteadToFirebase = function(homestead) {
     `;
 
     const guestbookElem = document.getElementById('guestbook-section');
-    if (guestbookElem) {
-      mainContainer.insertBefore(asciiSection, guestbookElem);
+    if (guestbookElem && guestbookElem.parentNode) {
+      guestbookElem.parentNode.insertBefore(asciiSection, guestbookElem);
     } else {
       mainContainer.appendChild(asciiSection);
     }
@@ -14941,7 +14960,6 @@ window.submitHomesteadToFirebase = function(homestead) {
 
     buildAscii();
   })();
-})();
 </script>
 
 </body>
