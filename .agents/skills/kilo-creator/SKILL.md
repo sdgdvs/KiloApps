@@ -12,6 +12,8 @@ description: >-
 This skill designs and implements new applications or deep game worlds on exactly ONE application per turn.
 
 ## Quality & Craft Directive
+- **Tool Call Budget (<= 30 tool calls)**: Complete this turn in <= 30 tool calls.
+- **Commit Checkpoint (~15 tool calls)**: Once substantive edits are made or you reach ~15 tool calls, wrap up modifications, run verification, update `next_work.md`, and commit/push.
 - **Iterative Craft**: Design and implement high-craft, feature-rich web applications or 1999 virtual web destinations. Develop iteratively across modular components, inspect diffs, and verify styling, mechanics, and audio synthesis.
 - **Validation**: Run `cd KiloOS && npm run build` and `uv run scripts/test_app_startup.py --app <TargetApp>` (for web apps). Ensure size is strictly < 999 KB.
 - **No Full-Repo Test Suites**: Run only target build/startup verification. NEVER run repo-wide suites (`quality_gate.js`, screenshot generation).

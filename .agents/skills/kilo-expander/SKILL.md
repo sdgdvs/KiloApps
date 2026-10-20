@@ -12,6 +12,8 @@ description: >-
 This skill deepens functional utility and capabilities on exactly ONE application per turn.
 
 ## Quality & Craft Directive
+- **Tool Call Budget (<= 30 tool calls)**: Complete this turn in <= 30 tool calls.
+- **Commit Checkpoint (~15 tool calls)**: Once substantive edits are made or you reach ~15 tool calls, wrap up modifications, run verification, update `next_work.md`, and commit/push.
 - **Iterative Craft**: Plan carefully and implement robust, deep feature expansions. Inspect diffs and code after editing to verify syntax, logic, and dual-target parity (Web HTML + Win32 C).
 - **Parity & Validation**: Run `cd KiloOS && npm run build`. If native C source exists, verify compilation with `cmd.exe /c build.bat`. Run `uv run scripts/test_app_startup.py --app <TargetApp>` when applicable.
 - **No Full-Repo Test Suites**: Run only target build/startup verification. NEVER run repo-wide suites (`quality_gate.js`, screenshot generation).

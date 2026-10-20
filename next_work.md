@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-expander
-next_agent: kilo-creator
+current_agent: kilo-creator
+next_agent: kilo-graphics
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -10,8 +10,10 @@ agent_rotation:
 - kilo-qa
 - kilo-expander
 model: gemini-3.8-flash-high
-effort: high
-timeout_minutes: 10
+effort: selective
+timeout_minutes: 8
+tool_call_cap: 30
+commit_checkpoint: 15
 status: ready
 current_targets:
   kilo_creator: kweb://users/~neon_rider
@@ -20,7 +22,7 @@ current_targets:
   kilo_tester: KClip
   kilo_usability: KHex
   kilo_qa: KWords
-  kilo_expander: KDB
+  kilo_expander: KHex
 virtual_web_target: kweb://users/~neon_rider
 virtual_web_rotation:
 - kweb://portal
@@ -53,7 +55,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 1. **Single-App-Per-Turn & Quality Craft**: Exactly ONE target application per turn. Plan iteratively, inspect diffs, test thoroughly, advance queue, commit, and push.
 2. **Strict Size Ceiling**: Every web file (`.html`) and native executable (`.exe`) must remain strictly **< 999 KB**.
-3. **Concise Logging & Verification**: ≤8 lines of terse bullet points in execution log. Inspect your diffs and re-read code as needed to verify correctness and dual-parity. Verify with `npm run build` and `uv run scripts/test_app_startup.py --app <target>`.
+3. **Tool Call Budget (<=30), Commit Checkpoint (~15) & Concise Logging**: Strict budget of <= 30 tool calls per turn. **Commit Checkpoint**: Once you have substantive edits or reach ~15 tool calls, wrap up, verify, update `next_work.md`, and commit/push immediately. Inspect diffs to verify correctness and dual-parity. Verify with `npm run build` and `uv run scripts/test_app_startup.py --app <target>`, and write a ≤8 line terse log.
 4. **Multiplayer Autostart Prohibition**: Games must NEVER autostart into matchmaking. Default to local offline play; multiplayer requires explicit button click. Include 25s solo AI fallback.
 5. **Anti-Trademark / Parody Rule**: No real commercial marks or scene group names (use *Surreal Tournament*, *VoidCraft*, *RAZOR 1999*, *FLARELIGHT*). Must pass `python scripts/security_lint.py`.
 6. **ARG Mystery Preservation (TINAG)**: Never label UI or copy with `(ARG)` or walkthrough guides; never leak `ECHO-1999-ARCHITECT` before App #100 (`KMatrix`).
@@ -155,19 +157,19 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Upcoming Queue**: `KColosseum`, `KCalc`.
 
 ### 7. Feature Expander Queue (`kilo-expander`)
-- **Target**: `KDB`
-- **Primary Files**: `KiloOS/public/apps/kdb.html`, `KDB/main.c` (if present)
-- **Objective**: Retro flat-file relational database & SQL-like engine expansion: multi-table joins, relational schema builder, index simulation, SQL query runner, and CSV/JSON export/import (<999 KB).
+- **Target**: `KHex`
+- **Primary Files**: `KiloOS/public/apps/khex.html`, `KHex/main.c` (if present)
+- **Objective**: Hexadecimal editor and binary analysis suite expansion: PE32 header dissector, multi-segment diffing, and binary patch builder (<999 KB).
 - **Action Steps**:
-  1. Inspect `KiloOS/public/apps/kdb.html`.
-  2. Implement relational query capabilities, indexing tools, and schema expansion.
-  3. Ensure dual Win32 native client parity and responsive 1999 styling.
-- **Verification**: `uv run scripts/test_app_startup.py --app KDB` and `cd KiloOS && npm.cmd run build`. File size < 999 KB.
+  1. Inspect `KiloOS/public/apps/khex.html`.
+  2. Implement deeper structural analysis tools and binary inspection features.
+  3. Ensure dual Win32 native client parity and clean build.
+- **Verification**: `uv run scripts/test_app_startup.py --app KHex` and `cd KiloOS && npm.cmd run build`. File size < 999 KB.
 - **Handoff**:
-  - In frontmatter: advance `current_targets.kilo_expander` to `KHex`.
+  - In frontmatter: advance `current_targets.kilo_expander` to `KPing`.
   - Set `current_agent: kilo-creator`.
   - Append terse execution log (≤6 lines), commit, and push.
-- **Upcoming Queue**: `KHex`, `KPing`.
+- **Upcoming Queue**: `KPing`, `KBase`.
 
 ---
 
@@ -209,6 +211,13 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-20T21:55:00Z — kilo-adhoc: Fleet Configuration (Token Efficiency & Tool Budget Upgrade)**
+  - Tool Call Budget: Enforced strict <= 30 tool calls per turn with commit checkpoint at ~15 tool calls in orchestrator and all skills.
+  - Timeout & Selective Effort: Reduced default timeout to 8m (from 10m); implemented selective effort (high for creator/expander/soundscape/planner; medium for tester/usability/qa/graphics).
+  - KDB Expansion Completed: Verified & committed KDB relational schema studio, visual ER diagram, and query builder; Win32 C and web builds clean.
+  - Verification: `security_lint.py` PASS; `test_app_startup.py --app KDB` PASS; Vite build clean (488ms).
+  - Queue Handoff: Advanced `current_targets.kilo_expander` to `KHex`; active rotation to `kilo-creator`.
+
 - **2026-10-20T18:22:00Z — kilo-qa: KSimon (Pass 5 QA Audit & Mature Promotion)**
   - State Persistence: Audited & fixed F5 quicksave / F9 quickload capturing complete game sequence, mode, round, elapsed time, powerup charges, and stage in both Web storage and Win32 C (`ksimon.ini`).
   - Tutorial & Overlays: Verified first-run tutorial overlay (`ksimon_tutorialSeen`) never interrupts restored saves; wired start-on-dismiss for Space/Enter/Got-It buttons; verified clean Esc cancellation and modal dismissals.
@@ -237,12 +246,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Patches & Earcons: 13 named hardware FM voices (slap bass, distorted guitar, Rhodes, servo whine, hydraulic stomp, steam vents, klaxon, fanfares).
   - Verification: Startup check PASS (158.5 KB < 999 KB, 0 JS err); Win32 C build clean (`KMech.exe`, 33.8 KB); Vite build clean; security lint clean.
   - Queue Handoff: Advanced `current_targets.kilo_soundscape` to `KColosseum`; rotation handoff to `kilo-tester`.
-
-- **2026-10-20T00:16:00Z — kilo-graphics: KMech**
-  - ⏭️ Skip — Imagen 3 asset replacement not appropriate for KMech
-  - Asset Suitability: Evaluated KMech CRT vector/wireframe aesthetic; dynamic SVG/GDI polygon mechs and HUD are foundational retro wireframe art, inappropriate for raster replacement.
-  - Glint & Comet Audit: Verified zero traveling border dots, specular glints, or orbiting particles in Web HTML or Win32 GDI.
-  - Parity & Verification: Win32 native client compiled cleanly (`KMech.exe`, 33.8 KB); startup check PASS (125.9 KB < 999 KB, 0 JS err, unblocked); Vite build clean.
-  - Queue Handoff: Advanced `current_targets.kilo_graphics` to `KColosseum`; rotation handoff to `kilo-soundscape`.
-
-

@@ -4,6 +4,13 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-20T00:16:00Z — kilo-graphics: KMech**
+  - ⏭️ Skip — Imagen 3 asset replacement not appropriate for KMech
+  - Asset Suitability: Evaluated KMech CRT vector/wireframe aesthetic; dynamic SVG/GDI polygon mechs and HUD are foundational retro wireframe art, inappropriate for raster replacement.
+  - Glint & Comet Audit: Verified zero traveling border dots, specular glints, or orbiting particles in Web HTML or Win32 GDI.
+  - Parity & Verification: Win32 native client compiled cleanly (`KMech.exe`, 33.8 KB); startup check PASS (125.9 KB < 999 KB, 0 JS err, unblocked); Vite build clean.
+  - Queue Handoff: Advanced `current_targets.kilo_graphics` to `KColosseum`; rotation handoff to `kilo-soundscape`.
+
 - **2026-10-19T12:40:00+0000 — kilo-graphics: KFortress (Imagen 3 Visual Assets & Pipeline Integration)**
   - Asset Generation & Stage 2: Generated authentic Imagen 3 assets via 2-stage pipeline (`scripts/asset_pipeline.py`); keyed magenta backgrounds to 32-bit RGBA sprites.
   - Sprite & Texture Registry: Integrated `citadel_keep.png`, `rift_gate.png`, `enemy_orc.png`, `enemy_goblin.png`, `enemy_skeleton.png`, `enemy_golem.png`, `enemy_wyvern.png`, and `kfortress_bg.png`.

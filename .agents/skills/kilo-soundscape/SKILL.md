@@ -16,6 +16,8 @@ Nobuo Uematsu, Jake Kaufman). Zero external audio files — everything generated
 ---
 
 ## Quality & Craft Directive
+- **Tool Call Budget (<= 30 tool calls)**: Complete this turn in <= 30 tool calls.
+- **Commit Checkpoint (~15 tool calls)**: Once substantive edits are made or you reach ~15 tool calls, wrap up modifications, run verification, update `next_work.md`, and commit/push.
 - **Skip Turn Fast-Path**: If target is a pure utility/text tool (see Skip List below), log skip,
   advance queue in `next_work.md`, commit, and STOP immediately. (Do NOT mark mature, as other agents work on utilities).
 - **Mature Quarantine**: If skipping because an app/game already has complete, production-grade procedural audio (6+ passes):

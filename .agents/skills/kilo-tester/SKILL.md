@@ -12,6 +12,8 @@ description: >-
 This skill executes a self-contained interactive UI audit and repair on exactly ONE web application.
 
 ## Quality & Craft Directive
+- **Tool Call Budget (<= 30 tool calls)**: Complete this turn in <= 30 tool calls.
+- **Commit Checkpoint (~15 tool calls)**: Once substantive edits are made or you reach ~15 tool calls, wrap up modifications, run verification, update `next_work.md`, and commit/push.
 - **Iterative Craft**: Rigorously audit every interactive UI element, modal dismissals, storage handlers, and keyboard hotkeys. Inspect diffs and code after editing to ensure correct event binding, syntax, and responsive stability.
 - **Validation**: Run `uv run scripts/test_app_startup.py --app <TargetApp>` and `cd KiloOS && npm run build`.
 - **No Full-Repo Test Suites**: Run only target build/startup verification. NEVER run repo-wide suites (`quality_gate.js`, screenshot generation).

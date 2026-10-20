@@ -12,6 +12,8 @@ description: >-
 This skill executes usability, layout, and UX enhancements on exactly ONE application per turn (or KiloOS shell).
 
 ## Quality & Craft Directive
+- **Tool Call Budget (<= 30 tool calls)**: Complete this turn in <= 30 tool calls.
+- **Commit Checkpoint (~15 tool calls)**: Once substantive edits are made or you reach ~15 tool calls, wrap up modifications, run verification, update `next_work.md`, and commit/push.
 - **Iterative Craft**: Audit window dimensions, interactive layout, responsive design, keyboard shortcuts, and canvas HiDPI crispness. Inspect diffs and code after editing to verify layout stability and dual web/native parity.
 - **Validation**: Run `cd KiloOS && npm run build` and `uv run scripts/test_app_startup.py --app <TargetApp>` to ensure startup modals dismiss cleanly and gameplay/UI surfaces are not occluded.
 - **No Full-Repo Test Suites**: Run only target build/startup verification. NEVER run repo-wide suites (`quality_gate.js`, screenshot generation).

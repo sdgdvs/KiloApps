@@ -657,9 +657,12 @@ def validate_next_work_file(path: Path) -> tuple[bool, str]:
 
 
 TOKEN_EFFICIENCY_SUFFIX = (
-    " QUALITY & VERIFICATION DIRECTIVE: "
-    "Plan iteratively and implement robust, high-craft functionality. "
-    "Always inspect your changes and diffs after editing to verify syntax, logic, and dual-target parity (Web HTML + Win32 C). "
+    " TOKEN EFFICIENCY & BUDGET DIRECTIVE: "
+    "Complete this turn in <= 30 tool calls. "
+    "COMMIT CHECKPOINT: Once you have substantive edits or reach ~15 tool calls, begin wrapping up, verify changes, update next_work.md, and commit immediately. Do not exceed 30 tool calls. "
+    "QUALITY & VERIFICATION DIRECTIVE: "
+    "Plan iteratively and implement robust, high-craft functionality with clean dual-target parity (Web HTML + Win32 C). "
+    "Inspect your diffs after editing to verify syntax, logic, and dual-target parity (Web HTML + Win32 C). "
     "Do NOT read historical archive files (archive/) or receipts. "
     "Verify builds (npm run build in KiloOS; build.bat if native C exists) and run automated startup check (uv run scripts/test_app_startup.py --app <target>). "
     "MATURE QUARANTINE DIRECTIVE: If you decide to skip an app because it is complete or mature (except graphics skipping non-game apps), do NOT rotate it to the queue bottom! "
@@ -759,6 +762,7 @@ def build_agent_prompt(agent: str, targets: dict) -> str:
             "Perform 24-hour fleet planning: evaluate project velocity, review queue health, "
             "rework the daily agent rotation schedule and active targets in next_work.md, "
             "compact execution logs to archive, update last_planner_run timestamp, git commit/push, then STOP."
+            + TOKEN_EFFICIENCY_SUFFIX
         )
     else:
         return (
@@ -1020,8 +1024,25 @@ def main():
 
         status = frontmatter.get("status", "ready")
         model = os.environ.get("AGY_MODEL") or frontmatter.get("model", "gemini-3.8-flash-high")
-        effort = os.environ.get("AGY_EFFORT") or frontmatter.get("effort", "high")
-        timeout_min = int(frontmatter.get("timeout_minutes", 10))
+
+        # Selective effort: creative/deep generative agents run high effort;
+        # structured audit/verification/testing agents run medium effort to prevent runaway reasoning loops.
+        CREATIVE_AGENTS = {"kilo-creator", "kilo-expander", "kilo-soundscape", "kilo-planner"}
+        fm_effort = frontmatter.get("effort", "selective")
+        if os.environ.get("AGY_EFFORT"):
+            effort = os.environ.get("AGY_EFFORT")
+        elif isinstance(frontmatter.get("agent_efforts"), dict) and agent in frontmatter["agent_efforts"]:
+            effort = frontmatter["agent_efforts"][agent]
+        elif fm_effort in ("high", "medium", "low"):
+            effort = fm_effort
+        else:
+            effort = "high" if agent in CREATIVE_AGENTS else "medium"
+
+        timeout_min = int(
+            os.environ.get("AGY_TIMEOUT")
+            or (frontmatter.get("agent_timeouts", {}).get(agent) if isinstance(frontmatter.get("agent_timeouts"), dict) else None)
+            or frontmatter.get("timeout_minutes", 8)
+        )
         targets = frontmatter.get("current_targets", {})
         if isinstance(targets, str):
             targets = {}

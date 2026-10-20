@@ -11,6 +11,8 @@ description: >-
 This skill executes visual art overhauls replacing programmer art with Imagen 3 generated assets on exactly ONE game per turn.
 
 ## Token Efficiency Directive
+- **Tool Call Budget (<= 30 tool calls)**: Complete this turn in <= 30 tool calls.
+- **Commit Checkpoint (~15 tool calls)**: Once substantive edits are made or you reach ~15 tool calls, wrap up modifications, run verification, update `next_work.md`, and commit/push.
 - **Skip Turn Fast-Path**: If target is inappropriate for Imagen 3 assets, log skip, advance queue in `next_work.md`, commit, and STOP immediately (do NOT inspect glints, rebuild binaries, or read archives).
 - **Single-App Build Only**: Run only `cd KiloOS && npm run build`. NEVER run full-repo test suites (no `quality_gate.js`, no screenshot regeneration).
 - **No Archives/Receipts**: Never read `archive/` or `.agents/receipts/`.

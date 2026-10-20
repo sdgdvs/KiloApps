@@ -12,6 +12,8 @@ description: >-
 This skill executes a self-contained Pass 5 QA and build audit on exactly ONE application.
 
 ## Quality & Craft Directive
+- **Tool Call Budget (<= 30 tool calls)**: Complete this turn in <= 30 tool calls.
+- **Commit Checkpoint (~15 tool calls)**: Once substantive edits are made or you reach ~15 tool calls, wrap up modifications, run verification, update `next_work.md`, and commit/push.
 - **Iterative Craft**: Rigorously audit state persistence, onboarding tutorials, and modal dismissals. Inspect diffs and code after editing to verify syntax, error catching, and parity between web (HTML) and native (C).
 - **Parity & Validation**: Run `cd KiloOS && npm run build` and `uv run scripts/test_app_startup.py --app <TargetApp>`. If native C source exists, compile via `cmd.exe /c build.bat`.
 - **No Full-Repo Test Suites**: Run only target build/startup verification. NEVER run repo-wide suites (`quality_gate.js`, screenshot generation).
