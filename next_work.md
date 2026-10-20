@@ -40,7 +40,7 @@ last_run:
   agent: kilo-creator
   app: kweb://users/~neon_rider
   timestamp: '2026-10-20T22:20:00Z'
-last_planner_run: '2026-10-19T22:16:00Z'
+last_planner_run: '2026-10-20T23:15:00Z'
 ---
 
 # KiloApps Master Fleet Work & Queue State
@@ -211,6 +211,15 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-20T23:15:00Z — kilo-planner: Fleet Planning & 24h Queue Rework (Daily Health & Log Compaction)**
+  - Velocity & Health: Reviewed 24h progress (KSimon & KChart mature promotions, neon_rider XM tracker expansion, 30-tool-budget upgrade).
+  - Mature Quarantine: Audited 25 quarantined mature apps; verified zero leakage into active targets or upcoming queues.
+  - Icon Uniqueness: Audited 105/105 app icons in App.jsx; 0 missing, 0 shared, 0 duplicate SHA256 hashes (`check_icons.py` PASS).
+  - Byte Budget & Build: Verified 107 cartridges & 104 native binaries strictly <999 KB (`byte_budget_gate.py` PASS); Vite build clean (477ms).
+  - Security Lint: Passed full repository security & provenance scan (`security_lint.py` PASS).
+  - Queue Alignment: Rebalanced active queues (creator: asm-temple, graphics/sound: KColosseum, tester: KClip, usability/expander: KHex, qa: KWords).
+  - Compaction & Handoff: Executed zero-discard log rotation (`rotate_logs.py`); updated `last_planner_run`; scheduled `kilo-graphics`.
+
 - **2026-10-20T22:20:00Z — kilo-creator: kweb://users/~neon_rider (Virtual 1999 Web Deep Expansion & Scoping Repair)**
   - Navigation & Scoping Fix: Extracted Section 11 (Subnet Sniffer) out of `switchTab()` closure, fixing tab re-entrancy and leak; properly routed tab activation.
   - Interactive Demoscene Shouts: Added interactive 1999 demoscene greetings box in `tab-about` with retro audio stingers (FLARELIGHT, RAZOR 1999, SKID VECTOR, PAST CREW, SILICON SILENCE, PARALAX).
@@ -241,9 +250,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Keyboard & Modal Shortcuts: Bound [F1/H] help, [F5/F9] save/load, [E] profile export, [M] audio toggle, and arrow key navigation.
   - Dual Parity & Build: Recompiled Win32 native client (`KFont.exe`, 32.8 KB); startup check PASS (218.0 KB < 999 KB, 0 JS err); Vite build clean.
   - Queue Handoff: Advanced `current_targets.kilo_usability` to `KHex`; rotation handoff to `kilo-qa`.
-
-- **2026-10-20T05:22:00Z — kilo-tester: KChart (UI Audit, Inline Fixes & Mature Promotion)**
-  - UI & Interaction Audit: Audited 10 visualization engines, 7 trend/regression overlays, YM2612 FM / SPC700 sonification sweep, 7 export formats (SVG, PNG, MD, C, HTML, CSV, JSON), and table editing.
-  - Inline Repairs: Added active sonification cancellation on table edits, transforms, and arrow nudges; fixed index bounds validation for inline cell edits; added hoveredIndex adjustment on point deletion.
-  - Parity & Verification: Startup check PASS (131.9 KB < 999 KB, CSS valid, 0 JS err, modal dismisses cleanly); native Win32 C clean (`KChart.exe`, 36.0 KB); Vite build clean (475ms).
-  - Quarantine & Handoff: Promoted KChart to Mature Applications quarantine; advanced `kilo_tester` to `KClip`; rotation handoff to `kilo-usability`.

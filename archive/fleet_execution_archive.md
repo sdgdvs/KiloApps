@@ -4,6 +4,12 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-20T05:22:00Z — kilo-tester: KChart (UI Audit, Inline Fixes & Mature Promotion)**
+  - UI & Interaction Audit: Audited 10 visualization engines, 7 trend/regression overlays, YM2612 FM / SPC700 sonification sweep, 7 export formats (SVG, PNG, MD, C, HTML, CSV, JSON), and table editing.
+  - Inline Repairs: Added active sonification cancellation on table edits, transforms, and arrow nudges; fixed index bounds validation for inline cell edits; added hoveredIndex adjustment on point deletion.
+  - Parity & Verification: Startup check PASS (131.9 KB < 999 KB, CSS valid, 0 JS err, modal dismisses cleanly); native Win32 C clean (`KChart.exe`, 36.0 KB); Vite build clean (475ms).
+  - Quarantine & Handoff: Promoted KChart to Mature Applications quarantine; advanced `kilo_tester` to `KClip`; rotation handoff to `kilo-usability`.
+
 - **2026-10-20T03:16:00Z — kilo-soundscape: KMech ("Mech Bay 04" & "Titan Clash")**
   - Audio Architecture: Dual-mode YM2612 2-Op FM + SPC700 stereo delay (180ms, 2200Hz LP, 0.28 FB) chiptune engine.
   - Tracks & Form: Track 01 Hangar theme (D Dorian/Aeolian, 32 steps) + Track 02 Arena Combat (D Phrygian Dominant & Andalusian descent, 64 steps) with 5:3 swing groove.
