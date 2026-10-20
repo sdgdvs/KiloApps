@@ -115,10 +115,33 @@
 
   :focus-visible { outline: 2px solid #3b82f6; outline-offset: 1px; }
   .tab-btn:focus-visible { outline: 2px solid #3b82f6; outline-offset: -2px; }
+  .glyph-cell:focus-visible { outline: 2px solid #2563eb !important; outline-offset: 1px !important; background: #e0f2fe !important; border-color: #2563eb !important; }
+  .action-btn:focus-visible, .chip-btn:focus-visible, .help-close-btn:focus-visible { outline: 2px solid #2563eb; outline-offset: 2px; }
+  .contrast-card:focus-visible { outline: 2px solid #2563eb !important; outline-offset: 2px; }
+  #bitmapBankCanvas:focus-visible, #bitmapEditorCanvas:focus-visible { outline: 2px solid #38bdf8 !important; outline-offset: 2px; }
 
+  @media (forced-colors: active) {
+    .header, .sidebar, .content, .panel, .metric-card, .glyph-cell, .kerning-pair, .contrast-card, .bmp-editor-container {
+      border: 1px solid ButtonText !important;
+    }
+    .tab-btn.active {
+      outline: 2px solid Highlight !important;
+    }
+  }
+
+  /* Zoom controls & Sample formatting ergonomics */
+  .zoom-controls { display: inline-flex; align-items: center; gap: 3px; background: #f1f5f9; padding: 2px 4px; border-radius: 4px; border: 1px solid #cbd5e1; }
+  .zoom-controls .chip-btn { min-width: 22px; padding: 2px 5px; font-size: 11px; line-height: 1; font-weight: 600; }
+  
+  .sample-box { white-space: pre-wrap !important; word-break: break-word !important; }
+  .sample-box.no-wrap { white-space: pre !important; word-break: normal !important; overflow-x: auto !important; }
+  .sample-box.align-left { text-align: left; }
+  .sample-box.align-center { text-align: center; }
+  .sample-box.align-right { text-align: right; }
+  .chip-btn.active { background: #0284c7; color: #fff; border-color: #0284c7; }
 
   /* Bitmap Studio & Canvas Editor */
-  .bmp-editor-container { position: relative; border: 2px solid #334155; border-radius: 6px; overflow: hidden; background: #111; user-select: none; box-shadow: 0 3px 12px rgba(0,0,0,0.15); }
+  .bmp-editor-container { position: relative; border: 2px solid #334155; border-radius: 6px; overflow: hidden; background: #0b0f17; user-select: none; box-shadow: 0 3px 12px rgba(0,0,0,0.15); transition: max-width 0.15s ease-out; display: flex; justify-content: center; align-items: center; padding: 12px; }
   .bmp-prev-box { background: #0b0f17; border: 1px solid #1e293b; border-radius: 6px; padding: 12px; display: flex; align-items: center; justify-content: center; }
   
   /* Multi-Font Diff Overlay */
@@ -203,8 +226,8 @@
     <div style="display:flex; gap:6px; align-items:center; margin-left:auto; flex-wrap:wrap;">
       <button id="quicksaveBtn" class="action-btn" title="Quicksave Workspace Snapshot [F5]">Save [F5]</button>
       <button id="quickloadBtn" class="action-btn" title="Quickload Workspace Snapshot [F9]">Load [F9]</button>
-      <button id="exportModalBtn" class="action-btn" title="Export / Import Workspace Profile [JSON]">Profile</button>
-      <button id="soundToggleBtn" class="action-btn" title="Toggle Synthesizer Sound Effects [M]">🔊 Sound: ON</button>
+      <button id="exportModalBtn" class="action-btn" title="Export / Import Workspace Profile [JSON/E]">Profile [E]</button>
+      <button id="soundToggleBtn" class="action-btn" title="Toggle Synthesizer Sound Effects [M]">🔊 Sound: ON [M]</button>
       <button id="helpBtn" class="action-btn" title="Typography Inspector Help &amp; Shortcuts [F1/H]">Help [F1/H]</button>
     </div>
   </div>
@@ -286,7 +309,8 @@
             <option value="9600,9631">Block Elements (U+2580 - U+259F)</option>
             <option value="9632,9727">Geometric Shapes (U+25A0 - U+25FF)</option>
           </select>
-          <span style="font-size:12px; color:#64748b; margin-left:auto;">(Click glyph to dissect; Shift+Click to edit in Bitmap)</span>
+          <input type="text" id="glyphFilterInput" placeholder="Filter / Jump (e.g. A, 41, U+0041)..." style="padding:5px 8px; border:1px solid #cbd5e1; border-radius:4px; font-size:12px; width:210px;" title="Filter glyphs in active range or jump to character">
+          <span id="glyphRangeCount" style="font-size:12px; color:#64748b; margin-left:auto;">(Click/Arrows: Dissect; Shift+Click: Bitmap)</span>
           <button id="btnGlyphToBitmap" class="action-btn" style="background:#0284c7; margin-left:8px; font-size:11px; padding:3px 8px;" title="Open currently inspected glyph in Bitmap & ROM Studio [9]">Edit in Bitmap [9]</button>
         </div>
         <div class="glyph-grid" id="glyphGrid"></div>
@@ -338,6 +362,18 @@
         </div>
 
         <div class="anatomy-canvas-container">
+          <div class="anatomy-canvas-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; flex-wrap:wrap; gap:6px;">
+            <span style="font-size:12px; font-weight:600; color:#475569;">Vector Outline &amp; Typographic Bounds Canvas</span>
+            <div style="display:flex; align-items:center; gap:6px;">
+              <label style="font-size:11px; color:#64748b; font-weight:600;">Canvas Zoom:</label>
+              <div class="zoom-controls">
+                <button class="chip-btn" id="btnAnatomyZoomOut" title="Zoom Out Anatomy Canvas [−]">−</button>
+                <span id="anatomyZoomLabel" style="font-size:11px; font-family:monospace; font-weight:600; min-width:38px; text-align:center;">100%</span>
+                <button class="chip-btn" id="btnAnatomyZoomIn" title="Zoom In Anatomy Canvas [＋]">+</button>
+                <button class="chip-btn" id="btnAnatomyZoomReset" title="Reset Zoom (100%)">100%</button>
+              </div>
+            </div>
+          </div>
           <canvas id="anatomyCanvas" width="840" height="320"></canvas>
           <div class="guideline-legend">
             <div class="legend-item"><div class="legend-dot" style="background:#dc3232;"></div> Baseline (Y:0)</div>
@@ -476,10 +512,10 @@
           
           <!-- Multi-Glyph Font Bank Canvas Sheet -->
           <div style="border:1px solid #94a3b8; border-radius:4px; overflow:hidden; background:#0f172a; position:relative;">
-            <canvas id="bitmapBankCanvas" width="800" height="120" style="display:block; width:100%; height:120px; cursor:pointer;" title="Click any glyph to select into matrix editor"></canvas>
+            <canvas id="bitmapBankCanvas" width="800" height="120" tabindex="0" role="listbox" aria-label="Font Bank Sheet (ASCII 32 to 126). Use arrow keys to navigate." style="display:block; width:100%; height:120px; cursor:pointer;" title="Click or use Arrow keys to select glyph into matrix editor"></canvas>
           </div>
           <div style="display:flex; justify-content:space-between; font-size:11px; color:#64748b; margin-top:4px;">
-            <span>Font Bank Sheet (ASCII 32 ' ' to 126 '~' - Click to select)</span>
+            <span>Font Bank Sheet (ASCII 32 ' ' to 126 '~' - Click or Arrow keys to select)</span>
             <span id="bankHoverInfo">Hover: -</span>
           </div>
         </div>
@@ -526,17 +562,25 @@
 
         <div style="display:flex; gap:20px; flex-wrap:wrap;">
           <!-- Interactive Canvas Grid & TTF Diff Inspector -->
-          <div style="flex:1; min-width:280px; max-width:400px;">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+          <div style="flex:1; min-width:280px; max-width:440px;" id="bmpEditorWrapper">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; flex-wrap:wrap; gap:6px;">
               <span style="font-size:12px; font-weight:600; color:#334155;">Interactive Pixel Matrix Editor</span>
-              <span id="bitmapCoordInfo" style="font-size:11px; font-family:monospace; color:#64748b;">X: - , Y: -</span>
+              <div style="display:flex; align-items:center; gap:6px;">
+                <span id="bitmapCoordInfo" style="font-size:11px; font-family:monospace; color:#64748b; margin-right:4px;">X: - , Y: -</span>
+                <div class="zoom-controls">
+                  <button class="chip-btn" id="btnBmpZoomOut" title="Zoom Out Matrix [−]">− [−]</button>
+                  <span id="bmpZoomLabel" style="font-size:11px; font-family:monospace; font-weight:600; min-width:38px; text-align:center;">100%</span>
+                  <button class="chip-btn" id="btnBmpZoomIn" title="Zoom In Matrix [＋]">+ [＋]</button>
+                  <button class="chip-btn" id="btnBmpZoomFit" title="Fit to Container">Fit</button>
+                </div>
+              </div>
             </div>
-            <div class="bmp-editor-container">
-              <canvas id="bitmapEditorCanvas" width="320" height="320" style="display:block; width:100%; cursor:crosshair;"></canvas>
+            <div class="bmp-editor-container" id="bmpEditorContainer" title="Scroll / Wheel to Zoom Matrix">
+              <canvas id="bitmapEditorCanvas" width="320" height="320" tabindex="0" role="application" aria-label="Interactive Pixel Matrix Editor. Use Arrow keys to navigate, Space to toggle pixel, Enter to set, Delete to clear." style="display:block; cursor:crosshair;"></canvas>
             </div>
-            <div style="font-size:11px; color:#64748b; margin-top:6px; display:flex; justify-content:space-between;">
-              <span>Left Click / Drag: Draw</span>
-              <span>Right Click / Shift+Drag: Erase</span>
+            <div style="font-size:11px; color:#64748b; margin-top:6px; display:flex; justify-content:space-between; flex-wrap:wrap; gap:4px;">
+              <span>Left Click / Drag / [Space]: Draw</span>
+              <span>Right Click / Shift+Drag / [Del]: Erase</span>
             </div>
 
             <!-- Vector TTF vs 1-Bit Matrix Optical Diff & Error Heatmap -->
@@ -797,6 +841,39 @@
           <button class="chip-btn" id="sampleSphinxBtn">Sphinx Pangram</button>
           <button class="chip-btn" id="sampleClearBtn" style="color:#d9534f;">Clear</button>
         </div>
+
+        <div class="sample-toolbar" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-top:10px; margin-bottom:6px; background:#f1f5f9; padding:8px 12px; border-radius:6px; border:1px solid #e2e8f0;">
+          <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+            <button class="action-btn" id="sampleWrapToggleBtn" style="font-size:11px; padding:3px 8px; background:#3b82f6;" title="Toggle text wrap on/off [W]">Wrap: ON [W]</button>
+            <div style="display:inline-flex; border:1px solid #cbd5e1; border-radius:4px; overflow:hidden;">
+              <button class="chip-btn active" id="btnSampleAlignLeft" title="Align Left" style="border-radius:0; padding:2px 7px; font-size:11px;">Left</button>
+              <button class="chip-btn" id="btnSampleAlignCenter" title="Align Center" style="border-radius:0; padding:2px 7px; font-size:11px;">Center</button>
+              <button class="chip-btn" id="btnSampleAlignRight" title="Align Right" style="border-radius:0; padding:2px 7px; font-size:11px;">Right</button>
+            </div>
+            <div style="display:flex; align-items:center; gap:4px;">
+              <label for="sampleFontSizeSelect" style="font-size:11px; color:#475569; font-weight:600;">Size:</label>
+              <select id="sampleFontSizeSelect" style="font-size:11px; padding:2px 5px; border:1px solid #cbd5e1; border-radius:3px;">
+                <option value="inherit">Inherit Header</option>
+                <option value="16px">16px (Body)</option>
+                <option value="20px">20px (Subhead)</option>
+                <option value="24px">24px (Title)</option>
+                <option value="32px">32px (Display)</option>
+                <option value="48px">48px (Hero)</option>
+                <option value="64px">64px (Jumbo)</option>
+              </select>
+            </div>
+            <div style="display:flex; align-items:center; gap:4px;">
+              <label for="sampleLineHeightSelect" style="font-size:11px; color:#475569; font-weight:600;">Leading:</label>
+              <select id="sampleLineHeightSelect" style="font-size:11px; padding:2px 5px; border:1px solid #cbd5e1; border-radius:3px;">
+                <option value="1.2">1.2 (Tight)</option>
+                <option value="1.5" selected>1.5 (Standard)</option>
+                <option value="1.8">1.8 (Open)</option>
+                <option value="2.0">2.0 (Double)</option>
+              </select>
+            </div>
+          </div>
+          <span id="sampleCharCountInfo" style="font-size:11px; color:#64748b; font-family:monospace;">0 chars • 0 words</span>
+        </div>
         <div id="sampleOutput" class="sample-box" contenteditable="true" aria-label="Live editable font sample">The quick brown fox jumps over the lazy dog.
 
 0123456789
@@ -828,6 +905,11 @@ Aa Bb Cc Dd Ee Ff Gg Hh Ii Jj Kk Ll Mm Nn Oo Pp Qq Rr Ss Tt Uu Vv Ww Xx Yy Zz</d
         </div>
       </div>
     </div>
+  </div>
+  
+  <div class="shortcut-status-bar" id="shortcutStatusBar" style="display:flex; justify-content:space-between; align-items:center; font-size:11px; color:#475569; background:#f8fafc; border-top:1px solid #cbd5e1; padding:6px 14px; flex-wrap:wrap; gap:6px;">
+    <span id="activeContextShortcutHint">Active: 1. Metrics &amp; OS/2 • Keys: [1-9,0,-] Tabs • [F1/H] Help • [F5/F9] Save/Load • [M] Audio</span>
+    <span style="font-family:monospace; font-size:10px; color:#64748b;">KFont v1.99 • Dual Win32 &amp; Web Parity</span>
   </div>
   
   <canvas id="canvasMetrics"></canvas>
@@ -908,6 +990,12 @@ Aa Bb Cc Dd Ee Ff Gg Hh Ii Jj Kk Ll Mm Nn Oo Pp Qq Rr Ss Tt Uu Vv Ww Xx Yy Zz</d
       <p><strong>Keyboard Shortcuts:</strong></p>
       <ul style="font-size:12px; color:#475569;">
         <li><kbd style="background:#eee; padding:1px 5px; border-radius:3px;">1</kbd>–<kbd style="background:#eee; padding:1px 5px; border-radius:3px;">9</kbd>, <kbd style="background:#eee; padding:1px 5px; border-radius:3px;">0</kbd>, <kbd style="background:#eee; padding:1px 5px; border-radius:3px;">-</kbd> : Switch inspector tabs (Tabs 1–11)</li>
+        <li><kbd style="background:#eee; padding:1px 5px; border-radius:3px;">Arrows</kbd> / <kbd style="background:#eee; padding:1px 5px; border-radius:3px;">Home</kbd> / <kbd style="background:#eee; padding:1px 5px; border-radius:3px;">End</kbd> : Navigate Unicode glyph grid</li>
+        <li><kbd style="background:#eee; padding:1px 5px; border-radius:3px;">Enter</kbd> / <kbd style="background:#eee; padding:1px 5px; border-radius:3px;">Space</kbd> : Dissect focused glyph in Anatomy (<kbd style="background:#eee; padding:1px 5px; border-radius:3px;">Shift</kbd> for Bitmap)</li>
+        <li><kbd style="background:#eee; padding:1px 5px; border-radius:3px;">W</kbd> : Toggle Live Sample text wrapping (Wrap ON / Single-line scroll)</li>
+        <li><kbd style="background:#eee; padding:1px 5px; border-radius:3px;">E</kbd> : Open Workspace Profile &amp; Export dialog</li>
+        <li><kbd style="background:#eee; padding:1px 5px; border-radius:3px;">+</kbd> / <kbd style="background:#eee; padding:1px 5px; border-radius:3px;">-</kbd> : Zoom in / out in Bitmap Matrix Editor and Anatomy Canvas</li>
+        <li><kbd style="background:#eee; padding:1px 5px; border-radius:3px;">◀</kbd> / <kbd style="background:#eee; padding:1px 5px; border-radius:3px;">▶</kbd> : Step previous / next glyph in Bitmap Studio</li>
         <li><kbd style="background:#eee; padding:1px 5px; border-radius:3px;">X</kbd> : Invert active pixel matrix in Bitmap Studio</li>
         <li><kbd style="background:#eee; padding:1px 5px; border-radius:3px;">F5</kbd> : Quicksave complete workspace snapshot</li>
         <li><kbd style="background:#eee; padding:1px 5px; border-radius:3px;">F9</kbd> : Quickload snapshot from storage</li>
@@ -926,9 +1014,9 @@ Aa Bb Cc Dd Ee Ff Gg Hh Ii Jj Kk Ll Mm Nn Oo Pp Qq Rr Ss Tt Uu Vv Ww Xx Yy Zz</d
   
   <script>
     if (window.top === window.self) {
-        window.resizeTo(980, 720);
+        window.resizeTo(1024, 768);
     } else {
-        window.parent.postMessage({ type: 'resize', width: 980, height: 720 }, '*');
+        window.parent.postMessage({ type: 'resize', width: 1024, height: 768 }, '*');
     }
 
     const fontList = document.getElementById('fontList');
@@ -985,6 +1073,10 @@ Aa Bb Cc Dd Ee Ff Gg Hh Ii Jj Kk Ll Mm Nn Oo Pp Qq Rr Ss Tt Uu Vv Ww Xx Yy Zz</d
 
     let soundEnabled = safeGetStorage('kfont_sound_enabled', '1') === '1';
     let audioCtx = null;
+    let anatomyZoomFactor = parseFloat(safeGetStorage('kfont_anatomy_zoom', '1.0')) || 1.0;
+    let bmpZoomFactor = parseFloat(safeGetStorage('kfont_bmp_zoom', '1.0')) || 1.0;
+    let sampleIsWrapped = safeGetStorage('kfont_sample_wrap', '1') === '1';
+    let sampleAlign = safeGetStorage('kfont_sample_align', 'left') || 'left';
 
     function getAudioContext() {
       if (!audioCtx) {
@@ -1162,6 +1254,8 @@ Aa Bb Cc Dd Ee Ff Gg Hh Ii Jj Kk Ll Mm Nn Oo Pp Qq Rr Ss Tt Uu Vv Ww Xx Yy Zz</d
         sampleText: sampleOutput.innerText,
         bitmapGrid: (typeof bmpGrid !== 'undefined') ? bmpGrid : [],
         bitmapSize: (typeof bmpW !== 'undefined') ? `${bmpW}x${bmpH}` : '8x8',
+        activeBankChar: (typeof activeBankChar !== 'undefined') ? activeBankChar : 'A',
+        fontBank: (typeof fontBank !== 'undefined') ? fontBank : {},
         activeTab: document.querySelector('.tab-btn.active')?.dataset.target || 'panel-metrics',
         otfFeatures: (typeof otfTags !== 'undefined') ? otfTags.filter(t => document.getElementById(`otf_${t}`)?.checked) : [],
         otfPreviewText: document.getElementById('otfPreviewOn')?.innerText || '',
@@ -1175,6 +1269,10 @@ Aa Bb Cc Dd Ee Ff Gg Hh Ii Jj Kk Ll Mm Nn Oo Pp Qq Rr Ss Tt Uu Vv Ww Xx Yy Zz</d
         compMode: document.querySelector('input[name="compViewMode"]:checked')?.value || 'split',
         compText: document.getElementById('compTestString')?.value || '',
         typoLintText: document.getElementById('typoLintInput')?.value || '',
+        anatomyZoom: anatomyZoomFactor,
+        bmpZoom: bmpZoomFactor,
+        sampleWrap: sampleIsWrapped,
+        sampleAlign: sampleAlign,
         soundEnabled: soundEnabled,
         savedAt: new Date().toISOString()
       };
@@ -1234,6 +1332,16 @@ Aa Bb Cc Dd Ee Ff Gg Hh Ii Jj Kk Ll Mm Nn Oo Pp Qq Rr Ss Tt Uu Vv Ww Xx Yy Zz</d
           if (document.getElementById('bitmapGridSize')) document.getElementById('bitmapGridSize').value = state.bitmapSize;
         }
       }
+      if (state.fontBank && typeof state.fontBank === 'object') {
+        fontBank = { ...state.fontBank };
+      }
+      if (state.activeBankChar) {
+        if (typeof selectBankChar === 'function') {
+          selectBankChar(state.activeBankChar, false);
+        } else {
+          activeBankChar = state.activeBankChar;
+        }
+      }
       if (Array.isArray(state.otfFeatures) && typeof otfTags !== 'undefined') {
         otfTags.forEach(t => {
           const el = document.getElementById(`otf_${t}`);
@@ -1280,6 +1388,18 @@ Aa Bb Cc Dd Ee Ff Gg Hh Ii Jj Kk Ll Mm Nn Oo Pp Qq Rr Ss Tt Uu Vv Ww Xx Yy Zz</d
       }
       if (state.typoLintText !== undefined && document.getElementById('typoLintInput')) {
         document.getElementById('typoLintInput').value = state.typoLintText;
+      }
+      if (typeof state.anatomyZoom === 'number') {
+        setAnatomyZoom(state.anatomyZoom);
+      }
+      if (typeof state.bmpZoom === 'number') {
+        setBmpZoom(state.bmpZoom);
+      }
+      if (typeof state.sampleWrap === 'boolean') {
+        setSampleWrap(state.sampleWrap);
+      }
+      if (typeof state.sampleAlign === 'string') {
+        setSampleAlign(state.sampleAlign);
       }
       if (typeof state.soundEnabled === 'boolean') {
         soundEnabled = state.soundEnabled;
@@ -1426,6 +1546,8 @@ Aa Bb Cc Dd Ee Ff Gg Hh Ii Jj Kk Ll Mm Nn Oo Pp Qq Rr Ss Tt Uu Vv Ww Xx Yy Zz</d
       const safeFont = fontList.value.replace(/["\\]/g, '');
       const isB = boldCheck.checked ? 'bold' : 'normal';
       const isI = italicCheck.checked ? 'italic' : 'normal';
+      const filterVal = (document.getElementById('glyphFilterInput')?.value || '').trim().toLowerCase();
+      let renderedCount = 0;
 
       for (let i = start; i <= end; i++) {
         const hex = i.toString(16).toUpperCase().padStart(4, '0');
@@ -1435,34 +1557,82 @@ Aa Bb Cc Dd Ee Ff Gg Hh Ii Jj Kk Ll Mm Nn Oo Pp Qq Rr Ss Tt Uu Vv Ww Xx Yy Zz</d
         } catch (e) {
           continue;
         }
+
+        if (filterVal) {
+          const matchHex = hex.toLowerCase().includes(filterVal) || `u+${hex.toLowerCase()}`.includes(filterVal) || `0x${hex.toLowerCase()}`.includes(filterVal);
+          const matchChar = char.toLowerCase().includes(filterVal);
+          const matchDec = i.toString().includes(filterVal);
+          if (!matchHex && !matchChar && !matchDec) continue;
+        }
+
+        renderedCount++;
         const safeChar = escapeHtml(char);
         html += `
-          <div class="glyph-cell" data-codepoint="${i}" tabindex="0" role="button" title="Click to dissect ${escapeAttr(char)} (U+${hex})" aria-label="Glyph U+${hex}">
+          <div class="glyph-cell" data-codepoint="${i}" tabindex="0" role="button" title="Click to dissect ${escapeAttr(char)} (U+${hex}); Shift+Click for Bitmap" aria-label="Glyph U+${hex}">
             <div class="glyph-char" style="font-family: '${safeFont}'; font-weight: ${isB}; font-style: ${isI};">${safeChar}</div>
             <div class="glyph-hex">U+${hex}</div>
           </div>
         `;
       }
-      grid.innerHTML = html;
+      grid.innerHTML = html || '<div style="grid-column: 1 / -1; padding: 24px; text-align: center; color: #64748b; font-size: 13px;">No glyphs match filter in this block.</div>';
 
-      function activateCell(cell) {
+      const countEl = document.getElementById('glyphRangeCount');
+      if (countEl) {
+        countEl.textContent = `${renderedCount} glyph${renderedCount === 1 ? '' : 's'} (Click/Arrows: Dissect; Shift+Click: Bitmap)`;
+      }
+
+      function activateCell(cell, e) {
         const cp = parseInt(cell.getAttribute('data-codepoint'), 10);
         if (!isNaN(cp)) {
           const char = String.fromCodePoint(cp);
-          anatomyInput.value = char;
-          safeSetStorage('kfont_anatomy_char', anatomyInput.value);
-          playSound('glyph', cp);
-          switchToTab('panel-anatomy');
-          showToast(`Dissecting "${char}" (U+${cp.toString(16).toUpperCase().padStart(4, '0')})`);
+          if (e && e.shiftKey) {
+            selectBankChar(char, true);
+            switchToTab('panel-bitmap');
+            playSound('tab');
+            showToast(`Opened "${char}" in Bitmap & ROM Studio`);
+          } else {
+            anatomyInput.value = char;
+            safeSetStorage('kfont_anatomy_char', anatomyInput.value);
+            playSound('glyph', cp);
+            switchToTab('panel-anatomy');
+            showToast(`Dissecting "${char}" (U+${cp.toString(16).toUpperCase().padStart(4, '0')})`);
+          }
         }
       }
 
-      grid.querySelectorAll('.glyph-cell').forEach(cell => {
-        cell.onclick = () => activateCell(cell);
+      const cells = Array.from(grid.querySelectorAll('.glyph-cell'));
+      cells.forEach((cell, idx) => {
+        cell.onclick = (e) => activateCell(cell, e);
         cell.onkeydown = (e) => {
           if (e.key === 'Enter' || e.key === ' ') {
             e.preventDefault();
-            activateCell(cell);
+            activateCell(cell, e);
+          } else if (e.key === 'ArrowRight') {
+            e.preventDefault();
+            const next = cells[idx + 1] || cells[0];
+            if (next) next.focus();
+          } else if (e.key === 'ArrowLeft') {
+            e.preventDefault();
+            const prev = cells[idx - 1] || cells[cells.length - 1];
+            if (prev) prev.focus();
+          } else if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            const colWidth = (cell.offsetWidth || 68) + 8;
+            const cols = Math.max(1, Math.round(grid.clientWidth / colWidth));
+            const next = cells[Math.min(cells.length - 1, idx + cols)];
+            if (next) next.focus();
+          } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            const colWidth = (cell.offsetWidth || 68) + 8;
+            const cols = Math.max(1, Math.round(grid.clientWidth / colWidth));
+            const prev = cells[Math.max(0, idx - cols)];
+            if (prev) prev.focus();
+          } else if (e.key === 'Home') {
+            e.preventDefault();
+            if (cells[0]) cells[0].focus();
+          } else if (e.key === 'End') {
+            e.preventDefault();
+            if (cells[cells.length - 1]) cells[cells.length - 1].focus();
           }
         };
       });
@@ -1636,6 +1806,32 @@ Aa Bb Cc Dd Ee Ff Gg Hh Ii Jj Kk Ll Mm Nn Oo Pp Qq Rr Ss Tt Uu Vv Ww Xx Yy Zz</d
       };
     }
 
+    function setAnatomyZoom(factor) {
+      anatomyZoomFactor = Math.min(2.5, Math.max(0.5, Math.round(factor * 100) / 100));
+      safeSetStorage('kfont_anatomy_zoom', anatomyZoomFactor.toString());
+      updateAnatomy();
+    }
+
+    function setBmpZoom(factor) {
+      bmpZoomFactor = Math.min(1.75, Math.max(0.65, Math.round(factor * 100) / 100));
+      safeSetStorage('kfont_bmp_zoom', bmpZoomFactor.toString());
+      const wrapper = document.getElementById('bmpEditorWrapper');
+      if (wrapper) {
+        const targetW = Math.round(380 * bmpZoomFactor);
+        wrapper.style.maxWidth = `${targetW}px`;
+      }
+      const zoomLabel = document.getElementById('bmpZoomLabel');
+      if (zoomLabel) zoomLabel.textContent = `${Math.round(bmpZoomFactor * 100)}%`;
+      if (typeof renderBitmapEditor === 'function') renderBitmapEditor();
+    }
+
+    const btnAnatomyZoomOut = document.getElementById('btnAnatomyZoomOut');
+    if (btnAnatomyZoomOut) btnAnatomyZoomOut.onclick = () => { setAnatomyZoom(anatomyZoomFactor - 0.1); playSound('click'); };
+    const btnAnatomyZoomIn = document.getElementById('btnAnatomyZoomIn');
+    if (btnAnatomyZoomIn) btnAnatomyZoomIn.onclick = () => { setAnatomyZoom(anatomyZoomFactor + 0.1); playSound('click'); };
+    const btnAnatomyZoomReset = document.getElementById('btnAnatomyZoomReset');
+    if (btnAnatomyZoomReset) btnAnatomyZoomReset.onclick = () => { setAnatomyZoom(1.0); playSound('click'); };
+
     function updateAnatomy() {
       const raw = anatomyInput.value.trim() || 'A';
       const info = getCharInfo(raw);
@@ -1645,17 +1841,20 @@ Aa Bb Cc Dd Ee Ff Gg Hh Ii Jj Kk Ll Mm Nn Oo Pp Qq Rr Ss Tt Uu Vv Ww Xx Yy Zz</d
       const ctx = canvas.getContext('2d');
       const dpr = window.devicePixelRatio || 1;
       const w = Math.max(320, (canvas.parentElement ? canvas.parentElement.clientWidth : 840) || 840);
-      const h = 320;
+      const h = Math.round(320 * Math.max(0.85, anatomyZoomFactor));
 
-      canvas.width = w * dpr;
-      canvas.height = h * dpr;
+      canvas.width = Math.round(w * dpr);
+      canvas.height = Math.round(h * dpr);
       canvas.style.width = `${w}px`;
       canvas.style.height = `${h}px`;
 
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       ctx.clearRect(0, 0, w, h);
 
-      const fontSize = 160;
+      const zoomLabel = document.getElementById('anatomyZoomLabel');
+      if (zoomLabel) zoomLabel.textContent = `${Math.round(anatomyZoomFactor * 100)}%`;
+
+      const fontSize = Math.round(160 * anatomyZoomFactor);
       const safeFont = fontList.value.replace(/["\\]/g, '');
       const fontStr = `${italicCheck.checked?'italic':'normal'} ${boldCheck.checked?'bold':'normal'} ${fontSize}px "${safeFont}", sans-serif`;
       ctx.font = fontStr;
@@ -1669,7 +1868,7 @@ Aa Bb Cc Dd Ee Ff Gg Hh Ii Jj Kk Ll Mm Nn Oo Pp Qq Rr Ss Tt Uu Vv Ww Xx Yy Zz</d
       const actRight = metrics.actualBoundingBoxRight || metrics.width;
       const advWidth = metrics.width;
 
-      const baselineY = 220;
+      const baselineY = Math.round(h * 0.68);
       let originX = Math.floor(w / 2 - advWidth / 2);
       if (originX < 60) originX = 60;
       if (originX + advWidth > w - 40) originX = Math.max(30, w - advWidth - 40);
@@ -2067,12 +2266,90 @@ body {
       }
     }
     
+    function updateSampleStats() {
+      const text = sampleOutput.innerText || '';
+      const chars = text.length;
+      const words = text.trim() ? text.trim().split(/\s+/).length : 0;
+      const infoEl = document.getElementById('sampleCharCountInfo');
+      if (infoEl) {
+        infoEl.textContent = `${chars} chars • ${words} words`;
+      }
+    }
+
+    function setSampleWrap(wrapped) {
+      sampleIsWrapped = wrapped;
+      safeSetStorage('kfont_sample_wrap', wrapped ? '1' : '0');
+      const btn = document.getElementById('sampleWrapToggleBtn');
+      if (wrapped) {
+        sampleOutput.classList.remove('no-wrap');
+        if (btn) {
+          btn.textContent = 'Wrap: ON [W]';
+          btn.style.background = '#3b82f6';
+        }
+      } else {
+        sampleOutput.classList.add('no-wrap');
+        if (btn) {
+          btn.textContent = 'Wrap: OFF [W]';
+          btn.style.background = '#64748b';
+        }
+      }
+    }
+
+    function setSampleAlign(align) {
+      sampleAlign = align;
+      safeSetStorage('kfont_sample_align', align);
+      sampleOutput.style.textAlign = align;
+      ['Left', 'Center', 'Right'].forEach(a => {
+        const b = document.getElementById(`btnSampleAlign${a}`);
+        if (b) b.classList.toggle('active', a.toLowerCase() === align);
+      });
+    }
+
     function updateSample() {
       sampleOutput.style.fontFamily = `"${fontList.value}", sans-serif`;
-      sampleOutput.style.fontSize = sizeList.value;
+      const szSelect = document.getElementById('sampleFontSizeSelect');
+      const szVal = (szSelect && szSelect.value !== 'inherit') ? szSelect.value : sizeList.value;
+      sampleOutput.style.fontSize = szVal;
       sampleOutput.style.fontWeight = boldCheck.checked ? 'bold' : 'normal';
       sampleOutput.style.fontStyle = italicCheck.checked ? 'italic' : 'normal';
+      const lhSelect = document.getElementById('sampleLineHeightSelect');
+      sampleOutput.style.lineHeight = lhSelect ? lhSelect.value : '1.5';
+      setSampleWrap(sampleIsWrapped);
+      setSampleAlign(sampleAlign);
       updateDissectorTable();
+      updateSampleStats();
+    }
+
+    const wrapBtn = document.getElementById('sampleWrapToggleBtn');
+    if (wrapBtn) {
+      wrapBtn.onclick = () => {
+        setSampleWrap(!sampleIsWrapped);
+        playSound('click');
+        showToast(`Text Wrap: ${sampleIsWrapped ? 'ON' : 'OFF'}`);
+      };
+    }
+    ['Left', 'Center', 'Right'].forEach(a => {
+      const b = document.getElementById(`btnSampleAlign${a}`);
+      if (b) {
+        b.onclick = () => {
+          setSampleAlign(a.toLowerCase());
+          playSound('click');
+        };
+      }
+    });
+    const sampleFontSizeSelect = document.getElementById('sampleFontSizeSelect');
+    if (sampleFontSizeSelect) {
+      sampleFontSizeSelect.onchange = () => {
+        updateSample();
+        playSound('click');
+      };
+    }
+    const sampleLineHeightSelect = document.getElementById('sampleLineHeightSelect');
+    if (sampleLineHeightSelect) {
+      sampleLineHeightSelect.onchange = () => {
+        updateSample();
+        playSound('click');
+      };
     }
     
 
@@ -2084,6 +2361,8 @@ body {
     let bmpGrid = new Array(bmpW * bmpH).fill(0);
     let isBmpDrawing = false;
     let bmpDrawVal = 1;
+    let activeBankChar = 'A';
+    let fontBank = {};
 
     const bmpPresets = {
       cp437_smiley: { w: 8, h: 8, rows: [0x3C, 0x42, 0xA5, 0x81, 0xA5, 0x99, 0x42, 0x3C] },
@@ -2094,6 +2373,236 @@ body {
       retro_cursor: { w: 8, h: 8, rows: [0x80, 0xC0, 0xE0, 0xF0, 0xF8, 0xDC, 0x8E, 0x06] },
       sword:        { w: 8, h: 8, rows: [0x01, 0x02, 0x04, 0x08, 0x10, 0x38, 0x54, 0x02] }
     };
+
+    function rasterizeCharToGrid(char, targetW = bmpW, targetH = bmpH) {
+      const off = document.createElement('canvas');
+      off.width = targetW;
+      off.height = targetH;
+      const ctx = off.getContext('2d');
+      ctx.fillStyle = '#000000';
+      ctx.fillRect(0, 0, targetW, targetH);
+
+      const fontSize = Math.floor(targetH * 0.85);
+      const fontFam = fontList.value.replace(/["\\]/g, '');
+      const weight = boldCheck.checked ? 'bold' : 'normal';
+      const style = italicCheck.checked ? 'italic' : 'normal';
+      ctx.font = `${style} ${weight} ${fontSize}px "${fontFam}", sans-serif`;
+      ctx.fillStyle = '#ffffff';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(char, targetW / 2, targetH / 2);
+
+      const imgData = ctx.getImageData(0, 0, targetW, targetH);
+      const threshold = parseInt(document.getElementById('bitmapThreshold')?.value || '50', 10) * 2.55;
+      const grid = new Array(targetW * targetH).fill(0);
+      for (let y = 0; y < targetH; y++) {
+        for (let x = 0; x < targetW; x++) {
+          const idx = (y * targetW + x) * 4;
+          const lum = imgData.data[idx] * 0.299 + imgData.data[idx + 1] * 0.587 + imgData.data[idx + 2] * 0.114;
+          grid[y * targetW + x] = (lum >= threshold && imgData.data[idx + 3] > 50) ? 1 : 0;
+        }
+      }
+      return grid;
+    }
+
+    function selectBankChar(char, saveCurrent = true) {
+      if (!char || typeof char !== 'string') char = 'A';
+      char = char.charAt(0);
+      if (saveCurrent && activeBankChar && bmpGrid && bmpGrid.length === bmpW * bmpH) {
+        fontBank[activeBankChar] = [...bmpGrid];
+      }
+      activeBankChar = char;
+      const bankCharInput = document.getElementById('bankCharInput');
+      if (bankCharInput) bankCharInput.value = char;
+      const bankCharHex = document.getElementById('bankCharHex');
+      if (bankCharHex) {
+        const code = char.charCodeAt(0);
+        bankCharHex.textContent = `0x${code.toString(16).toUpperCase().padStart(2, '0')} (${code})`;
+      }
+
+      if (fontBank[char] && fontBank[char].length === bmpW * bmpH) {
+        bmpGrid = [...fontBank[char]];
+      } else {
+        bmpGrid = rasterizeCharToGrid(char, bmpW, bmpH);
+        fontBank[char] = [...bmpGrid];
+      }
+
+      renderBitmapAll();
+      renderBitmapBankCanvas();
+    }
+
+    function stepBankChar(delta) {
+      const code = (activeBankChar || 'A').charCodeAt(0);
+      let nextCode = code + delta;
+      if (nextCode > 126) nextCode = 32;
+      if (nextCode < 32) nextCode = 126;
+      selectBankChar(String.fromCharCode(nextCode), true);
+      playSound('click');
+    }
+
+    function renderBitmapBankCanvas() {
+      const canvas = document.getElementById('bitmapBankCanvas');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      const dpr = window.devicePixelRatio || 1;
+      const rect = canvas.getBoundingClientRect();
+      const cssW = Math.round(rect.width) || 800;
+      const cssH = 120;
+
+      const targetW = Math.round(cssW * dpr);
+      const targetH = Math.round(cssH * dpr);
+      if (canvas.width !== targetW || canvas.height !== targetH) {
+        canvas.width = targetW;
+        canvas.height = targetH;
+      }
+      canvas.style.height = `${cssH}px`;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+      ctx.fillStyle = '#090d16';
+      ctx.fillRect(0, 0, cssW, cssH);
+
+      const cols = 32;
+      const rows = 3;
+      const cellW = cssW / cols;
+      const cellH = cssH / rows;
+
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+
+      for (let i = 0; i < 95; i++) {
+        const charCode = 32 + i;
+        const char = String.fromCharCode(charCode);
+        const col = i % cols;
+        const row = Math.floor(i / cols);
+        const x = col * cellW;
+        const y = row * cellH;
+
+        const isActive = (char === activeBankChar);
+        const hasBanked = !!fontBank[char];
+
+        if (isActive) {
+          ctx.fillStyle = '#1e293b';
+          ctx.fillRect(x, y, cellW, cellH);
+          ctx.strokeStyle = '#38bdf8';
+          ctx.lineWidth = 1.5;
+          ctx.strokeRect(x + 0.5, y + 0.5, cellW - 1, cellH - 1);
+        } else if (hasBanked) {
+          ctx.fillStyle = '#111827';
+          ctx.fillRect(x, y, cellW, cellH);
+          ctx.strokeStyle = '#1e293b';
+          ctx.lineWidth = 1;
+          ctx.strokeRect(x + 0.5, y + 0.5, cellW - 1, cellH - 1);
+        } else {
+          ctx.strokeStyle = '#161e2e';
+          ctx.lineWidth = 1;
+          ctx.strokeRect(x + 0.5, y + 0.5, cellW - 1, cellH - 1);
+        }
+
+        const label = charCode === 32 ? '␣' : char;
+        ctx.font = isActive ? 'bold 13px Consolas, monospace' : '11px Consolas, monospace';
+        ctx.fillStyle = isActive ? '#38bdf8' : (hasBanked ? '#93c5fd' : '#64748b');
+        ctx.fillText(label, x + cellW / 2, y + cellH / 2);
+      }
+    }
+
+    function renderBitmapDiff() {
+      const canvas = document.getElementById('bitmapDiffCanvas');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      const dpr = window.devicePixelRatio || 1;
+      const cssW = 128, cssH = 128;
+
+      if (canvas.width !== Math.round(cssW * dpr) || canvas.height !== Math.round(cssH * dpr)) {
+        canvas.width = Math.round(cssW * dpr);
+        canvas.height = Math.round(cssH * dpr);
+      }
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+      ctx.fillStyle = '#090d16';
+      ctx.fillRect(0, 0, cssW, cssH);
+
+      const off = document.createElement('canvas');
+      off.width = bmpW;
+      off.height = bmpH;
+      const offCtx = off.getContext('2d');
+      offCtx.fillStyle = '#000000';
+      offCtx.fillRect(0, 0, bmpW, bmpH);
+
+      const fontSize = Math.floor(bmpH * 0.85);
+      const fontFam = fontList.value.replace(/["\\]/g, '');
+      const weight = boldCheck.checked ? 'bold' : 'normal';
+      const style = italicCheck.checked ? 'italic' : 'normal';
+      offCtx.font = `${style} ${weight} ${fontSize}px "${fontFam}", sans-serif`;
+      offCtx.fillStyle = '#ffffff';
+      offCtx.textAlign = 'center';
+      offCtx.textBaseline = 'middle';
+      offCtx.fillText(activeBankChar || 'A', bmpW / 2, bmpH / 2);
+
+      const imgData = offCtx.getImageData(0, 0, bmpW, bmpH);
+      const threshold = parseInt(document.getElementById('bitmapThreshold')?.value || '50', 10) * 2.55;
+
+      const cellW = cssW / bmpW;
+      const cellH = cssH / bmpH;
+
+      let minX = bmpW, maxX = -1, minY = bmpH, maxY = -1;
+      let setPixels = 0;
+
+      for (let y = 0; y < bmpH; y++) {
+        for (let x = 0; x < bmpW; x++) {
+          const idx = (y * bmpW + x) * 4;
+          const lum = imgData.data[idx] * 0.299 + imgData.data[idx + 1] * 0.587 + imgData.data[idx + 2] * 0.114;
+          const isVecOn = lum >= threshold && imgData.data[idx + 3] > 50;
+          const isGridOn = bmpGrid[y * bmpW + x] === 1;
+
+          if (isGridOn) {
+            setPixels++;
+            if (x < minX) minX = x;
+            if (x > maxX) maxX = x;
+            if (y < minY) minY = y;
+            if (y > maxY) maxY = y;
+          }
+
+          const rx = x * cellW;
+          const ry = y * cellH;
+
+          if (isGridOn && isVecOn) {
+            ctx.fillStyle = 'rgba(34, 197, 94, 0.75)';
+            ctx.fillRect(rx, ry, cellW, cellH);
+          } else if (isGridOn && !isVecOn) {
+            ctx.fillStyle = 'rgba(2, 132, 199, 0.75)';
+            ctx.fillRect(rx, ry, cellW, cellH);
+          } else if (!isGridOn && isVecOn) {
+            ctx.fillStyle = 'rgba(239, 68, 68, 0.65)';
+            ctx.fillRect(rx, ry, cellW, cellH);
+          }
+
+          ctx.strokeStyle = '#1e293b';
+          ctx.lineWidth = 0.5;
+          ctx.strokeRect(rx, ry, cellW, cellH);
+        }
+      }
+
+      const totalPixels = bmpW * bmpH;
+      const fillPct = ((setPixels / totalPixels) * 100).toFixed(1);
+      const fillEl = document.getElementById('diffMetricsFill');
+      if (fillEl) fillEl.innerHTML = `Fill Factor: <strong>${fillPct}%</strong> (${setPixels}/${totalPixels} px)`;
+
+      const boundsEl = document.getElementById('diffMetricsBounds');
+      if (boundsEl) {
+        if (setPixels === 0) {
+          boundsEl.innerHTML = `Bounds: <strong>Empty (0x0)</strong>`;
+        } else {
+          const bw = maxX - minX + 1;
+          const bh = maxY - minY + 1;
+          boundsEl.innerHTML = `Bounds: <strong>[${minX},${minY}]-[${maxX},${maxY}]</strong> (${bw}x${bh})`;
+        }
+      }
+
+      const lumEl = document.getElementById('diffMetricsLum');
+      if (lumEl) {
+        lumEl.innerHTML = `Threshold: <strong>${document.getElementById('bitmapThreshold')?.value || 50}%</strong>`;
+      }
+    }
 
     function loadBmpPreset(key) {
       const preset = bmpPresets[key];
@@ -2109,7 +2618,11 @@ body {
           bmpGrid[y * bmpW + x] = bit;
         }
       }
+      if (activeBankChar) {
+        fontBank[activeBankChar] = [...bmpGrid];
+      }
       renderBitmapAll();
+      renderBitmapBankCanvas();
       playSound('load');
       showToast(`Loaded ROM Preset: ${key.replace('_', ' ').toUpperCase()}`);
     }
@@ -2132,24 +2645,33 @@ body {
             bmpGrid[y * bmpW + x] = oldGrid[y * oldW + x] || 0;
           }
         }
+        if (activeBankChar) {
+          fontBank[activeBankChar] = [...bmpGrid];
+        }
         renderBitmapAll();
+        renderBitmapBankCanvas();
         playSound('click');
         showToast(`Matrix resized to ${bmpW}x${bmpH}`);
       };
 
       document.getElementById('bitmapThreshold').oninput = (e) => {
         document.getElementById('thresholdDisplay').textContent = `${e.target.value}%`;
+        renderBitmapDiff();
       };
 
       document.getElementById('btnRasterizeActive').onclick = rasterizeActiveGlyph;
       document.getElementById('btnBmpInvert').onclick = () => {
         for (let i = 0; i < bmpGrid.length; i++) bmpGrid[i] = bmpGrid[i] ? 0 : 1;
+        if (activeBankChar) fontBank[activeBankChar] = [...bmpGrid];
         renderBitmapAll();
+        renderBitmapBankCanvas();
         playSound('pixel');
       };
       document.getElementById('btnBmpClear').onclick = () => {
         bmpGrid.fill(0);
+        if (activeBankChar) fontBank[activeBankChar] = [...bmpGrid];
         renderBitmapAll();
+        renderBitmapBankCanvas();
         playSound('click');
         showToast("Cleared pixel matrix");
       };
@@ -2161,7 +2683,9 @@ body {
           }
         }
         bmpGrid = next;
+        if (activeBankChar) fontBank[activeBankChar] = [...bmpGrid];
         renderBitmapAll();
+        renderBitmapBankCanvas();
         playSound('pixel');
       };
       document.getElementById('btnBmpFlipV').onclick = () => {
@@ -2172,7 +2696,9 @@ body {
           }
         }
         bmpGrid = next;
+        if (activeBankChar) fontBank[activeBankChar] = [...bmpGrid];
         renderBitmapAll();
+        renderBitmapBankCanvas();
         playSound('pixel');
       };
       document.getElementById('btnBmpShiftUp').onclick = () => shiftBitmap(0, -1);
@@ -2199,6 +2725,135 @@ body {
       };
 
       document.getElementById('btnDownloadBitmapHeader').onclick = downloadBitmapHeader;
+      document.getElementById('btnDownloadBdf').onclick = downloadBdf;
+      document.getElementById('btnDownloadFnt').onclick = downloadFnt;
+
+      document.getElementById('btnBankPrev').onclick = () => stepBankChar(-1);
+      document.getElementById('btnBankNext').onclick = () => stepBankChar(1);
+      document.getElementById('bankCharInput').oninput = (e) => {
+        if (e.target.value) selectBankChar(e.target.value.charAt(0), true);
+      };
+      document.getElementById('btnStoreToBank').onclick = () => {
+        fontBank[activeBankChar] = [...bmpGrid];
+        renderBitmapBankCanvas();
+        playSound('save');
+        showToast(`Stored '${activeBankChar}' to Font Bank`);
+      };
+      document.getElementById('btnRevertBank').onclick = () => {
+        bmpGrid = rasterizeCharToGrid(activeBankChar, bmpW, bmpH);
+        fontBank[activeBankChar] = [...bmpGrid];
+        renderBitmapAll();
+        renderBitmapBankCanvas();
+        playSound('click');
+        showToast(`Reverted '${activeBankChar}' to font rasterization`);
+      };
+      document.getElementById('btnSendToAnatomy').onclick = () => {
+        anatomyInput.value = activeBankChar;
+        safeSetStorage('kfont_anatomy_char', activeBankChar);
+        switchToTab('panel-anatomy');
+        playSound('tab');
+        showToast(`Dissecting '${activeBankChar}' in Glyph Anatomy`);
+      };
+      document.getElementById('btnBatchRasterize').onclick = () => {
+        for (let i = 0; i < 95; i++) {
+          const char = String.fromCharCode(32 + i);
+          fontBank[char] = rasterizeCharToGrid(char, bmpW, bmpH);
+        }
+        if (fontBank[activeBankChar]) {
+          bmpGrid = [...fontBank[activeBankChar]];
+        }
+        renderBitmapAll();
+        renderBitmapBankCanvas();
+        playSound('rasterize');
+        showToast(`Batch rasterized 95 ASCII glyphs (32..126) from ${fontList.value}`);
+      };
+
+      const btnBmpZoomIn = document.getElementById('btnBmpZoomIn');
+      if (btnBmpZoomIn) {
+        btnBmpZoomIn.onclick = () => { setBmpZoom(bmpZoomFactor + 0.15); playSound('click'); };
+      }
+      const btnBmpZoomOut = document.getElementById('btnBmpZoomOut');
+      if (btnBmpZoomOut) {
+        btnBmpZoomOut.onclick = () => { setBmpZoom(bmpZoomFactor - 0.15); playSound('click'); };
+      }
+      const btnBmpZoomFit = document.getElementById('btnBmpZoomFit');
+      if (btnBmpZoomFit) {
+        btnBmpZoomFit.onclick = () => { setBmpZoom(1.0); playSound('click'); };
+      }
+      setBmpZoom(bmpZoomFactor);
+
+      document.getElementById('btnOpenImportModal').onclick = openImportModal;
+      document.getElementById('importCloseBtn').onclick = closeImportModal;
+      document.getElementById('importModalCloseBtn').onclick = closeImportModal;
+      document.getElementById('btnExecuteImport').onclick = executeImport;
+
+      const importModalEl = document.getElementById('importModal');
+      if (importModalEl) {
+        importModalEl.onclick = (e) => {
+          if (e.target === importModalEl) closeImportModal();
+        };
+      }
+
+      const btnGlyphToBitmap = document.getElementById('btnGlyphToBitmap');
+      if (btnGlyphToBitmap) {
+        btnGlyphToBitmap.onclick = () => {
+          const char = (anatomyInput.value || 'A').trim().charAt(0) || 'A';
+          selectBankChar(char, true);
+          switchToTab('panel-bitmap');
+          playSound('tab');
+          showToast(`Opened '${char}' in Bitmap & ROM Studio`);
+        };
+      }
+
+      const btnAnatomyToBitmap = document.getElementById('btnAnatomyToBitmap');
+      if (btnAnatomyToBitmap) {
+        btnAnatomyToBitmap.onclick = () => {
+          const char = (anatomyInput.value || 'A').trim().charAt(0) || 'A';
+          selectBankChar(char, true);
+          switchToTab('panel-bitmap');
+          playSound('tab');
+          showToast(`Opened '${char}' in Bitmap & ROM Studio`);
+        };
+      }
+
+      const bankCanvas = document.getElementById('bitmapBankCanvas');
+      if (bankCanvas) {
+        bankCanvas.onmousemove = (e) => {
+          const rect = bankCanvas.getBoundingClientRect();
+          const mx = e.clientX - rect.left;
+          const my = e.clientY - rect.top;
+          const cellW = rect.width / 32;
+          const cellH = rect.height / 3;
+          const col = Math.floor(mx / cellW);
+          const row = Math.floor(my / cellH);
+          const idx = row * 32 + col;
+          if (idx >= 0 && idx < 95) {
+            const charCode = 32 + idx;
+            const char = String.fromCharCode(charCode);
+            const label = charCode === 32 ? 'SPACE (0x20)' : `'${char}' (0x${charCode.toString(16).toUpperCase()})`;
+            const status = fontBank[char] ? ' • Custom Banked' : ' • Font Rasterized';
+            document.getElementById('bankHoverInfo').textContent = `Hover: ${label}${status}`;
+          }
+        };
+        bankCanvas.onmouseleave = () => {
+          document.getElementById('bankHoverInfo').textContent = 'Hover: -';
+        };
+        bankCanvas.onclick = (e) => {
+          const rect = bankCanvas.getBoundingClientRect();
+          const mx = e.clientX - rect.left;
+          const my = e.clientY - rect.top;
+          const cellW = rect.width / 32;
+          const cellH = rect.height / 3;
+          const col = Math.floor(mx / cellW);
+          const row = Math.floor(my / cellH);
+          const idx = row * 32 + col;
+          if (idx >= 0 && idx < 95) {
+            const char = String.fromCharCode(32 + idx);
+            selectBankChar(char, true);
+            playSound('tab');
+          }
+        };
+      }
 
       // Mouse & touch drag handlers on canvas
       function getCanvasCell(e) {
@@ -2220,7 +2875,9 @@ body {
         const current = bmpGrid[cell.y * bmpW + cell.x];
         bmpDrawVal = (isRightClick || e.shiftKey) ? 0 : (current ? 0 : 1);
         bmpGrid[cell.y * bmpW + cell.x] = bmpDrawVal;
+        if (activeBankChar) fontBank[activeBankChar] = [...bmpGrid];
         renderBitmapAll();
+        renderBitmapBankCanvas();
         playSound('pixel');
       };
 
@@ -2230,7 +2887,9 @@ body {
         if (isBmpDrawing) {
           if (bmpGrid[cell.y * bmpW + cell.x] !== bmpDrawVal) {
             bmpGrid[cell.y * bmpW + cell.x] = bmpDrawVal;
+            if (activeBankChar) fontBank[activeBankChar] = [...bmpGrid];
             renderBitmapAll();
+            renderBitmapBankCanvas();
             playSound('pixel');
           }
         }
@@ -2244,8 +2903,10 @@ body {
         const current = bmpGrid[cell.y * bmpW + cell.x];
         bmpDrawVal = current ? 0 : 1;
         bmpGrid[cell.y * bmpW + cell.x] = bmpDrawVal;
+        if (activeBankChar) fontBank[activeBankChar] = [...bmpGrid];
         document.getElementById('bitmapCoordInfo').textContent = `X: ${cell.x} , Y: ${cell.y}`;
         renderBitmapAll();
+        renderBitmapBankCanvas();
         playSound('pixel');
       }, { passive: false });
 
@@ -2257,7 +2918,9 @@ body {
         if (isBmpDrawing) {
           if (bmpGrid[cell.y * bmpW + cell.x] !== bmpDrawVal) {
             bmpGrid[cell.y * bmpW + cell.x] = bmpDrawVal;
+            if (activeBankChar) fontBank[activeBankChar] = [...bmpGrid];
             renderBitmapAll();
+            renderBitmapBankCanvas();
             playSound('pixel');
           }
         }
@@ -2282,41 +2945,20 @@ body {
         }
       }
       bmpGrid = next;
+      if (activeBankChar) fontBank[activeBankChar] = [...bmpGrid];
       renderBitmapAll();
+      renderBitmapBankCanvas();
       playSound('pixel');
     }
 
     function rasterizeActiveGlyph() {
-      const char = (anatomyInput.value || 'A').trim().charAt(0) || 'A';
-      const off = document.createElement('canvas');
-      off.width = bmpW;
-      off.height = bmpH;
-      const ctx = off.getContext('2d');
-      ctx.fillStyle = '#000000';
-      ctx.fillRect(0, 0, bmpW, bmpH);
-
-      const fontSize = Math.floor(bmpH * 0.85);
-      const fontFam = fontList.value.replace(/["\\]/g, '');
-      const weight = boldCheck.checked ? 'bold' : 'normal';
-      const style = italicCheck.checked ? 'italic' : 'normal';
-      ctx.font = `${style} ${weight} ${fontSize}px "${fontFam}", sans-serif`;
-      ctx.fillStyle = '#ffffff';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText(char, bmpW / 2, bmpH / 2);
-
-      const imgData = ctx.getImageData(0, 0, bmpW, bmpH);
-      const threshold = parseInt(document.getElementById('bitmapThreshold').value, 10) * 2.55;
-      for (let y = 0; y < bmpH; y++) {
-        for (let x = 0; x < bmpW; x++) {
-          const idx = (y * bmpW + x) * 4;
-          const lum = imgData.data[idx] * 0.299 + imgData.data[idx + 1] * 0.587 + imgData.data[idx + 2] * 0.114;
-          bmpGrid[y * bmpW + x] = (lum >= threshold && imgData.data[idx + 3] > 50) ? 1 : 0;
-        }
-      }
+      const char = activeBankChar || (anatomyInput.value || 'A').trim().charAt(0) || 'A';
+      bmpGrid = rasterizeCharToGrid(char, bmpW, bmpH);
+      fontBank[char] = [...bmpGrid];
       renderBitmapAll();
+      renderBitmapBankCanvas();
       playSound('rasterize');
-      showToast(`Rasterized "${char}" from ${fontFam} (${bmpW}x${bmpH})`);
+      showToast(`Rasterized "${char}" from ${fontList.value} (${bmpW}x${bmpH})`);
     }
 
     function renderBitmapEditor() {
@@ -2350,7 +2992,6 @@ body {
             ctx.fillStyle = '#38bdf8';
             ctx.fillRect(x * cellW, y * cellH, cellW, cellH);
           }
-          // Grid lines
           ctx.strokeStyle = '#1e293b';
           ctx.lineWidth = 1;
           ctx.strokeRect(x * cellW, y * cellH, cellW, cellH);
@@ -2399,6 +3040,127 @@ body {
       });
     }
 
+    function generateFullBdf() {
+      const bytesPerRow = Math.ceil(bmpW / 8);
+      const safeFont = (fontList.value || 'KFont').replace(/[^a-zA-Z0-9]/g, '');
+      let bdf = `STARTFONT 2.1\n` +
+                `FONT -KiloApps-${safeFont}-Medium-R-Normal--${bmpH}-${bmpH}0-75-75-C-${bmpW}0-ISO8859-1\n` +
+                `SIZE ${bmpH} 75 75\n` +
+                `FONTBOUNDINGBOX ${bmpW} ${bmpH} 0 0\n` +
+                `STARTPROPERTIES 2\n` +
+                `FONT_ASCENT ${bmpH}\n` +
+                `FONT_DESCENT 0\n` +
+                `ENDPROPERTIES\n` +
+                `CHARS 95\n`;
+
+      for (let i = 0; i < 95; i++) {
+        const charCode = 32 + i;
+        const char = String.fromCharCode(charCode);
+        const grid = (fontBank[char] && fontBank[char].length === bmpW * bmpH) ?
+                     fontBank[char] :
+                     rasterizeCharToGrid(char, bmpW, bmpH);
+        const bdfRows = [];
+        for (let y = 0; y < bmpH; y++) {
+          let hexRow = '';
+          for (let b = 0; b < bytesPerRow; b++) {
+            let byteVal = 0;
+            for (let bit = 0; bit < 8; bit++) {
+              const x = b * 8 + bit;
+              byteVal = (byteVal << 1) | ((x < bmpW) ? (grid[y * bmpW + x] || 0) : 0);
+            }
+            hexRow += byteVal.toString(16).toUpperCase().padStart(2, '0');
+          }
+          bdfRows.push(hexRow);
+        }
+        bdf += `STARTCHAR char_${charCode.toString(16).toUpperCase()}\n` +
+               `ENCODING ${charCode}\n` +
+               `SWIDTH 1000 0\n` +
+               `DWIDTH ${bmpW} 0\n` +
+               `BBX ${bmpW} ${bmpH} 0 0\n` +
+               `BITMAP\n` +
+               bdfRows.join('\n') + '\n' +
+               `ENDCHAR\n`;
+      }
+      bdf += `ENDFONT\n`;
+      return bdf;
+    }
+
+    function generateFullRomTable() {
+      const bytesPerRow = Math.ceil(bmpW / 8);
+      const safeFont = (fontList.value || 'KFont').replace(/[^a-zA-Z0-9]/g, '_');
+      let code = `/* KFont Complete 95-Character ASCII ROM Table (ASCII 32..126) */\n` +
+                 `/* Font Family: ${fontList.value} (${bmpW}x${bmpH}) */\n` +
+                 `const uint8_t font_rom_${safeFont}_${bmpW}x${bmpH}[95][${bmpH * bytesPerRow}] = {\n`;
+
+      for (let i = 0; i < 95; i++) {
+        const charCode = 32 + i;
+        const char = String.fromCharCode(charCode);
+        const grid = (fontBank[char] && fontBank[char].length === bmpW * bmpH) ?
+                     fontBank[char] :
+                     rasterizeCharToGrid(char, bmpW, bmpH);
+        const hexList = [];
+        for (let y = 0; y < bmpH; y++) {
+          for (let b = 0; b < bytesPerRow; b++) {
+            let byteVal = 0;
+            for (let bit = 0; bit < 8; bit++) {
+              const x = b * 8 + bit;
+              byteVal = (byteVal << 1) | ((x < bmpW) ? (grid[y * bmpW + x] || 0) : 0);
+            }
+            hexList.push('0x' + byteVal.toString(16).toUpperCase().padStart(2, '0'));
+          }
+        }
+        const commentChar = charCode === 92 ? '\\\\' : (charCode >= 32 && charCode <= 126 ? char : ' ');
+        code += `    /* ${charCode} '${commentChar}' */ { ${hexList.join(', ')} }${i < 94 ? ',' : ''}\n`;
+      }
+      code += `};\n`;
+      return code;
+    }
+
+    function generateWinFntHeader() {
+      const bytesPerRow = Math.ceil(bmpW / 8);
+      const totalGlyphBytes = 95 * bmpH * bytesPerRow;
+      const totalFileSize = 148 + totalGlyphBytes;
+      return `/* Windows 3.1 / 95 / 98 .FNT Font File Header Spec */
+#pragma pack(push, 1)
+typedef struct {
+    uint16_t dfVersion;        /* 0x0300 (Windows 3.0+) */
+    uint32_t dfSize;           /* Total file size: ${totalFileSize} bytes */
+    char     dfCopyright[60];  /* "KFont 1999 Bitmap Font Studio" */
+    uint16_t dfType;           /* 0 = Bitmap Raster Font */
+    uint16_t dfPoints;         /* Nominal point size: ${bmpH}pt */
+    uint16_t dfVertRes;        /* 96 DPI */
+    uint16_t dfHorizRes;       /* 96 DPI */
+    uint16_t dfAscent;         /* Typographic Ascent: ${Math.floor(bmpH * 0.8)}px */
+    uint16_t dfInternalLeading;/* 0px */
+    uint16_t dfExternalLeading;/* 0px */
+    uint8_t  dfItalic;         /* ${italicCheck.checked ? 1 : 0} */
+    uint8_t  dfUnderline;      /* 0 */
+    uint8_t  dfStrikeOut;      /* 0 */
+    uint16_t dfWeight;         /* ${boldCheck.checked ? 700 : 400} */
+    uint8_t  dfCharSet;        /* 0 (ANSI_CHARSET) */
+    uint16_t dfPixWidth;       /* ${bmpW}px fixed width */
+    uint16_t dfPixHeight;      /* ${bmpH}px height */
+    uint8_t  dfPitchAndFamily; /* 0x01 (FIXED_PITCH) */
+    uint16_t dfAvgWidth;       /* ${bmpW} */
+    uint16_t dfMaxWidth;       /* ${bmpW} */
+    uint8_t  dfFirstChar;      /* 32 (' ') */
+    uint8_t  dfLastChar;       /* 126 ('~') */
+    uint8_t  dfDefaultChar;    /* 32 */
+    uint8_t  dfBreakChar;      /* 32 */
+    uint16_t dfWidthBytes;     /* ${bytesPerRow} byte(s) per scanline */
+    uint32_t dfDevice;         /* 0 (No device name string) */
+    uint32_t dfFace;           /* Offset to face name string */
+    uint32_t dfBitsPointer;    /* 0 (Runtime GDI pointer) */
+    uint32_t dfBitsOffset;     /* Offset 148 (Start of bitmap table) */
+} FONT_HEADER_WIN3;
+#pragma pack(pop)
+
+/* Binary Table Layout:
+   Offset 000..147 : FONT_HEADER_WIN3 (148 bytes)
+   Offset 148..${totalFileSize - 1} : Raw Bitmaps for ASCII 32..126 (${totalGlyphBytes} bytes)
+*/`;
+    }
+
     function updateBitmapExport() {
       const fmt = document.getElementById('bitmapExportFormat')?.value || 'c_array';
       const codeEl = document.getElementById('bitmapExportCode');
@@ -2432,35 +3194,49 @@ body {
       }
 
       let output = '';
+      const charName = activeBankChar || 'A';
+      const charCode = charName.charCodeAt(0);
+
       if (fmt === 'c_array') {
-        output = `/* KFont 1-Bit Bitmap Glyph: ${bmpW}x${bmpH} */\n` +
+        output = `/* KFont 1-Bit Bitmap Glyph: '${charName}' (0x${charCode.toString(16).toUpperCase()}) ${bmpW}x${bmpH} */\n` +
                  `const uint8_t glyph_${bmpW}x${bmpH}[${bmpH * bytesPerRow}] = {\n` +
                  rowHex.join(',\n') + '\n};\n';
       } else if (fmt === 'x86_asm') {
-        output = `; KFont 1-Bit Bitmap Glyph: ${bmpW}x${bmpH}\n` +
+        output = `; KFont 1-Bit Bitmap Glyph: '${charName}' (0x${charCode.toString(16).toUpperCase()}) ${bmpW}x${bmpH}\n` +
                  `glyph_${bmpW}x${bmpH}:\n` +
                  `    db ` + rowAsm.join(', ') + '\n';
       } else if (fmt === 'hex_stream') {
         output = rawHexList.join(', ');
-      } else if (fmt === 'bdf') {
+      } else if (fmt === 'bdf_single') {
         const bdfRows = [];
         for (let y = 0; y < bmpH; y++) {
-          let byteVal = 0;
-          for (let x = 0; x < Math.min(8, bmpW); x++) {
-            byteVal = (byteVal << 1) | (bmpGrid[y * bmpW + x] || 0);
+          let hexRow = '';
+          for (let b = 0; b < bytesPerRow; b++) {
+            let byteVal = 0;
+            for (let bit = 0; bit < 8; bit++) {
+              const x = b * 8 + bit;
+              byteVal = (byteVal << 1) | ((x < bmpW) ? (bmpGrid[y * bmpW + x] || 0) : 0);
+            }
+            hexRow += byteVal.toString(16).toUpperCase().padStart(2, '0');
           }
-          bdfRows.push(byteVal.toString(16).toUpperCase().padStart(2, '0'));
+          bdfRows.push(hexRow);
         }
-        output = `STARTCHAR glyph_${bmpW}x${bmpH}\n` +
-                 `ENCODING 65\n` +
+        output = `STARTCHAR char_${charCode.toString(16).toUpperCase()}\n` +
+                 `ENCODING ${charCode}\n` +
                  `SWIDTH 1000 0\n` +
                  `DWIDTH ${bmpW} 0\n` +
                  `BBX ${bmpW} ${bmpH} 0 0\n` +
                  `BITMAP\n` +
                  bdfRows.join('\n') + '\n' +
                  `ENDCHAR\n`;
+      } else if (fmt === 'bdf_full') {
+        output = generateFullBdf();
+      } else if (fmt === 'win_fnt_header') {
+        output = generateWinFntHeader();
+      } else if (fmt === 'rom_c_table') {
+        output = generateFullRomTable();
       } else if (fmt === 'arduino') {
-        output = `// Adafruit GFX compatible bitmap (${bmpW}x${bmpH})\n` +
+        output = `// Adafruit GFX compatible bitmap for '${charName}' (${bmpW}x${bmpH})\n` +
                  `const unsigned char PROGMEM glyph_${bmpW}x${bmpH}[] = {\n` +
                  rowHex.join(',\n') + '\n};\n';
       } else if (fmt === 'binary_bits') {
@@ -2473,6 +3249,7 @@ body {
     function renderBitmapAll() {
       renderBitmapEditor();
       renderBitmapPreviews();
+      renderBitmapDiff();
       updateBitmapExport();
     }
 
@@ -2489,6 +3266,248 @@ body {
       URL.revokeObjectURL(url);
       playSound('copy');
       showToast(`Downloaded kfont_glyph_${bmpW}x${bmpH}.h`);
+    }
+
+    function downloadBdf() {
+      const bdfText = generateFullBdf();
+      const safeFont = (fontList.value || 'KFont').replace(/[^a-zA-Z0-9]/g, '_');
+      const blob = new Blob([bdfText], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `kfont_${safeFont}_${bmpW}x${bmpH}.bdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      playSound('copy');
+      showToast(`Downloaded Adobe BDF Font: kfont_${safeFont}_${bmpW}x${bmpH}.bdf`);
+    }
+
+    function downloadFnt() {
+      const bytesPerRow = Math.ceil(bmpW / 8);
+      const glyphBytes = bmpH * bytesPerRow;
+      const totalGlyphBytes = 95 * glyphBytes;
+      const headerSize = 148;
+      const totalSize = headerSize + totalGlyphBytes;
+      const buffer = new ArrayBuffer(totalSize);
+      const view = new DataView(buffer);
+      const bytes = new Uint8Array(buffer);
+
+      view.setUint16(0, 0x0300, true);
+      view.setUint32(2, totalSize, true);
+      const copyright = "KFont 1999 Win32 Font Studio";
+      for (let i = 0; i < copyright.length && i < 60; i++) {
+        bytes[6 + i] = copyright.charCodeAt(i);
+      }
+      view.setUint16(66, 0, true);
+      view.setUint16(68, bmpH, true);
+      view.setUint16(70, 96, true);
+      view.setUint16(72, 96, true);
+      view.setUint16(74, Math.floor(bmpH * 0.8), true);
+      view.setUint16(76, 0, true);
+      view.setUint16(78, 0, true);
+      bytes[80] = italicCheck.checked ? 1 : 0;
+      bytes[81] = 0;
+      bytes[82] = 0;
+      view.setUint16(83, boldCheck.checked ? 700 : 400, true);
+      bytes[85] = 0;
+      view.setUint16(86, bmpW, true);
+      view.setUint16(88, bmpH, true);
+      bytes[90] = 0x01;
+      view.setUint16(91, bmpW, true);
+      view.setUint16(93, bmpW, true);
+      bytes[95] = 32;
+      bytes[96] = 126;
+      bytes[97] = 32;
+      bytes[98] = 32;
+      view.setUint16(99, bytesPerRow, true);
+      view.setUint32(101, 0, true);
+      view.setUint32(105, 0, true);
+      view.setUint32(109, 0, true);
+      view.setUint32(113, headerSize, true);
+
+      let offset = headerSize;
+      for (let i = 0; i < 95; i++) {
+        const charCode = 32 + i;
+        const char = String.fromCharCode(charCode);
+        const grid = (fontBank[char] && fontBank[char].length === bmpW * bmpH) ?
+                     fontBank[char] :
+                     rasterizeCharToGrid(char, bmpW, bmpH);
+        for (let y = 0; y < bmpH; y++) {
+          for (let b = 0; b < bytesPerRow; b++) {
+            let byteVal = 0;
+            for (let bit = 0; bit < 8; bit++) {
+              const x = b * 8 + bit;
+              byteVal = (byteVal << 1) | ((x < bmpW) ? (grid[y * bmpW + x] || 0) : 0);
+            }
+            bytes[offset++] = byteVal;
+          }
+        }
+      }
+
+      const safeFont = (fontList.value || 'KFont').replace(/[^a-zA-Z0-9]/g, '_');
+      const blob = new Blob([buffer], { type: 'application/octet-stream' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `kfont_${safeFont}_${bmpW}x${bmpH}.fnt`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      playSound('copy');
+      showToast(`Downloaded Windows .FNT: kfont_${safeFont}_${bmpW}x${bmpH}.fnt`);
+    }
+
+    function openImportModal() {
+      clearToasts();
+      lastActiveElementBeforeModal = document.activeElement;
+      document.getElementById('importModal').classList.add('visible');
+      const codeArea = document.getElementById('importCodeTextarea');
+      if (codeArea) {
+        codeArea.value = '';
+        codeArea.focus();
+      }
+      playSound('tab');
+    }
+
+    function closeImportModal() {
+      const modal = document.getElementById('importModal');
+      if (modal) modal.classList.remove('visible');
+      playSound('click');
+      if (lastActiveElementBeforeModal && typeof lastActiveElementBeforeModal.focus === 'function') {
+        lastActiveElementBeforeModal.focus();
+      }
+    }
+
+    function executeImport() {
+      const codeArea = document.getElementById('importCodeTextarea');
+      if (!codeArea) return;
+      const text = codeArea.value.trim();
+      if (!text) {
+        showToast("Please paste BDF, C array, or hex code to import.");
+        return;
+      }
+      const targetMode = document.getElementById('importTargetMode')?.value || 'bank';
+      let importedCount = 0;
+
+      if (text.includes('STARTCHAR') || text.includes('BITMAP')) {
+        const charChunks = text.split(/STARTCHAR/i);
+        charChunks.forEach(chunk => {
+          if (!chunk.includes('BITMAP')) return;
+          const encMatch = chunk.match(/ENCODING\s+(\d+)/i);
+          const enc = encMatch ? parseInt(encMatch[1], 10) : null;
+          const bbxMatch = chunk.match(/BBX\s+(\d+)\s+(\d+)/i);
+          let w = bmpW, h = bmpH;
+          if (bbxMatch) {
+            w = parseInt(bbxMatch[1], 10);
+            h = parseInt(bbxMatch[2], 10);
+          }
+
+          const bitmapPart = chunk.split(/BITMAP/i)[1];
+          if (!bitmapPart) return;
+          const endPart = bitmapPart.split(/ENDCHAR/i)[0];
+          const hexLines = endPart.trim().split(/\s+/).filter(l => /^[0-9a-fA-F]+$/.test(l));
+          if (hexLines.length === 0) return;
+
+          const grid = new Array(w * h).fill(0);
+          const bytesPerRow = Math.ceil(w / 8);
+          for (let y = 0; y < Math.min(h, hexLines.length); y++) {
+            const line = hexLines[y];
+            for (let b = 0; b < bytesPerRow; b++) {
+              const hexByte = line.substr(b * 2, 2);
+              const val = parseInt(hexByte || '0', 16);
+              for (let bit = 0; bit < 8; bit++) {
+                const x = b * 8 + bit;
+                if (x < w) {
+                  grid[y * w + x] = (val >> (7 - bit)) & 1;
+                }
+              }
+            }
+          }
+
+          if (targetMode === 'current') {
+            if (importedCount === 0) {
+              if (w !== bmpW || h !== bmpH) {
+                bmpW = w; bmpH = h;
+                const sizeEl = document.getElementById('bitmapGridSize');
+                if (sizeEl) sizeEl.value = `${w}x${h}`;
+              }
+              bmpGrid = grid;
+              if (enc && enc >= 32 && enc <= 126) {
+                activeBankChar = String.fromCharCode(enc);
+                fontBank[activeBankChar] = [...bmpGrid];
+              }
+              importedCount++;
+            }
+          } else {
+            if (enc && enc >= 32 && enc <= 126) {
+              const ch = String.fromCharCode(enc);
+              fontBank[ch] = grid;
+              importedCount++;
+            }
+          }
+        });
+      } else {
+        const hexMatches = text.match(/0x[0-9a-fA-F]{1,2}|[0-9a-fA-F]{2}h/gi) || text.match(/\b[0-9a-fA-F]{2}\b/g);
+        if (hexMatches && hexMatches.length > 0) {
+          const bytes = hexMatches.map(h => parseInt(h.replace(/0x|h/gi, ''), 16));
+          const bytesPerRow = Math.ceil(bmpW / 8);
+          const glyphBytes = bmpH * bytesPerRow;
+
+          if (targetMode === 'current') {
+            const grid = new Array(bmpW * bmpH).fill(0);
+            for (let y = 0; y < bmpH; y++) {
+              for (let b = 0; b < bytesPerRow; b++) {
+                const byteIdx = y * bytesPerRow + b;
+                const val = (byteIdx < bytes.length) ? bytes[byteIdx] : 0;
+                for (let bit = 0; bit < 8; bit++) {
+                  const x = b * 8 + bit;
+                  if (x < bmpW) {
+                    grid[y * bmpW + x] = (val >> (7 - bit)) & 1;
+                  }
+                }
+              }
+            }
+            bmpGrid = grid;
+            fontBank[activeBankChar] = [...bmpGrid];
+            importedCount = 1;
+          } else {
+            let offset = 0;
+            let charCode = 32;
+            while (offset + glyphBytes <= bytes.length && charCode <= 126) {
+              const grid = new Array(bmpW * bmpH).fill(0);
+              for (let y = 0; y < bmpH; y++) {
+                for (let b = 0; b < bytesPerRow; b++) {
+                  const val = bytes[offset + y * bytesPerRow + b];
+                  for (let bit = 0; bit < 8; bit++) {
+                    const x = b * 8 + bit;
+                    if (x < bmpW) {
+                      grid[y * bmpW + x] = (val >> (7 - bit)) & 1;
+                    }
+                  }
+                }
+              }
+              const ch = String.fromCharCode(charCode);
+              fontBank[ch] = grid;
+              offset += glyphBytes;
+              charCode++;
+              importedCount++;
+            }
+          }
+        }
+      }
+
+      if (importedCount > 0) {
+        closeImportModal();
+        renderBitmapAll();
+        renderBitmapBankCanvas();
+        playSound('load');
+        showToast(`Imported ${importedCount} glyph(s) into ${targetMode === 'bank' ? 'Font Bank' : 'active editor'}`);
+      } else {
+        showToast("No valid glyph data recognized in input.");
+      }
     }
 
     /* =========================================================================
@@ -2915,6 +3934,25 @@ body {
       if (typeof runTypoLinter === 'function') runTypoLinter();
     }
     
+    function updateShortcutHint(targetId) {
+      const hintEl = document.getElementById('activeContextShortcutHint');
+      if (!hintEl) return;
+      const hints = {
+        'panel-metrics': 'Active: 1. Metrics & OS/2 • Keys: [1-9,0,-] Tabs • [B/I] Bold/Italic • [F1/H] Help • [F5/F9] Save/Load',
+        'panel-glyphs': 'Active: 2. Unicode Ranges • Filter Jump • [Arrows/Home/End] Select • [Enter] Dissect • [Shift+Enter] Bitmap',
+        'panel-diagnostics': 'Active: 3. Kerning & Hinting • Test Custom Pairs • Subpixel Hinting Ladder • [F1/H] Help',
+        'panel-anatomy': 'Active: 4. Glyph Anatomy • [+/-] Zoom Canvas • [C] Copy JSON Report • [9] Edit Bitmap • [F1/H] Help',
+        'panel-waterfall': 'Active: 5. Type Waterfall • Modular Scale Ratio Ladder • [B/I] Bold/Italic • [F1/H] Help',
+        'panel-contrast': 'Active: 6. Contrast & WCAG • 6 OS Palettes • Interactive Color Picker • [F1/H] Help',
+        'panel-spec': 'Active: 7. Spec & Code Export • [C] Copy Win32 C Code • Copy CSS / SVG / JSON / TTX Specs',
+        'panel-sample': 'Active: 8. Live Sample & Run • [W] Toggle Wrap • Left/Center/Right Align • Advance Dissector Table',
+        'panel-bitmap': 'Active: 9. Bitmap & ROM Studio • [Left/Right] Step Glyph • [X] Invert • [+/-] Zoom Matrix • [F1/H] Help',
+        'panel-opentype': 'Active: 10. OpenType & Variables • Layout Feature Tags (liga, smcp, zero) • Variable Axis Oscillation',
+        'panel-compare': 'Active: 11. Compare & Typo Lint • Dual Font Diff Overlay • Typographic Rules Linter • [F1/H] Help'
+      };
+      hintEl.textContent = hints[targetId] || 'Active: KFont Typography Inspector • [F1/H] Help • [F5/F9] Save/Load';
+    }
+
     function switchToTab(targetId) {
       document.querySelectorAll('.tab-btn').forEach(b => {
         const isActive = b.dataset.target === targetId;
@@ -2925,6 +3963,7 @@ body {
         p.classList.toggle('active', p.id === targetId);
       });
       safeSetStorage('kfont_tab', targetId);
+      updateShortcutHint(targetId);
       if (typeof isOscillating !== 'undefined' && isOscillating && targetId !== 'panel-opentype') {
         isOscillating = false;
         const btn = document.getElementById('btnToggleOscillation');
@@ -2987,6 +4026,26 @@ body {
       safeSetStorage('kfont_range', unicodeRange.value);
       updateGlyphs();
     };
+    const glyphFilterInput = document.getElementById('glyphFilterInput');
+    if (glyphFilterInput) {
+      glyphFilterInput.oninput = () => {
+        updateGlyphs();
+      };
+      glyphFilterInput.onkeydown = (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          const firstCell = document.querySelector('#glyphGrid .glyph-cell');
+          if (firstCell) {
+            firstCell.focus();
+            firstCell.click();
+          }
+        } else if (e.key === 'Escape') {
+          glyphFilterInput.value = '';
+          updateGlyphs();
+          glyphFilterInput.blur();
+        }
+      };
+    }
     scaleRatio.onchange = () => {
       safeSetStorage('kfont_scale_ratio', scaleRatio.value);
       updateWaterfall();
@@ -3396,6 +4455,7 @@ body {
 
     document.addEventListener('keydown', (e) => {
       const isInput = e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.isContentEditable;
+      const importModalEl = document.getElementById('importModal');
 
       // Handle Tab focus trapping inside open modals
       if (helpOverlay && helpOverlay.classList.contains('visible')) {
@@ -3407,6 +4467,12 @@ body {
       if (exportModal && exportModal.classList.contains('visible')) {
         if (e.key === 'Tab') {
           trapFocus(exportModal, e);
+          return;
+        }
+      }
+      if (importModalEl && importModalEl.classList.contains('visible')) {
+        if (e.key === 'Tab') {
+          trapFocus(importModalEl, e);
           return;
         }
       }
@@ -3426,6 +4492,10 @@ body {
       if (e.key === 'Escape') {
         if (exportModal && exportModal.classList.contains('visible')) {
           closeExportModal();
+          return;
+        }
+        if (importModalEl && importModalEl.classList.contains('visible')) {
+          closeImportModal();
           return;
         }
         if (helpOverlay && helpOverlay.classList.contains('visible')) {
@@ -3453,7 +4523,9 @@ body {
       }
 
       if (e.ctrlKey || e.altKey || e.metaKey) return;
-      if (helpOverlay.classList.contains('visible') || (exportModal && exportModal.classList.contains('visible'))) {
+      if (helpOverlay.classList.contains('visible') || 
+          (exportModal && exportModal.classList.contains('visible')) || 
+          (importModalEl && importModalEl.classList.contains('visible'))) {
         if (e.key.toLowerCase() === 'h' && helpOverlay.classList.contains('visible')) {
           closeHelp();
         }
@@ -3463,12 +4535,44 @@ body {
       if (!isInput) {
         if (e.key.toLowerCase() === 'h') {
           openHelp();
+        } else if (e.key.toLowerCase() === 'e') {
+          openExportModal();
         } else if (e.key.toLowerCase() === 'm') {
           soundEnabled = !soundEnabled;
           safeSetStorage('kfont_sound_enabled', soundEnabled ? '1' : '0');
           updateSoundBtn();
           if (soundEnabled) playSound('save');
           showToast(`Sound FX: ${soundEnabled ? 'Enabled' : 'Muted'}`);
+        } else if (e.key.toLowerCase() === 'w') {
+          setSampleWrap(!sampleIsWrapped);
+          playSound('click');
+          showToast(`Text Wrap: ${sampleIsWrapped ? 'ON' : 'OFF'}`);
+        } else if (e.key === '+' || e.key === '=') {
+          const activePanel = document.querySelector('.panel.active');
+          if (activePanel && activePanel.id === 'panel-anatomy') {
+            setAnatomyZoom(anatomyZoomFactor + 0.1);
+            playSound('click');
+          } else if (activePanel && activePanel.id === 'panel-bitmap') {
+            setBmpZoom(bmpZoomFactor + 0.15);
+            playSound('click');
+          }
+        } else if (e.key === '-' || e.key === '_') {
+          const activePanel = document.querySelector('.panel.active');
+          if (activePanel && activePanel.id === 'panel-anatomy') {
+            setAnatomyZoom(anatomyZoomFactor - 0.1);
+            playSound('click');
+          } else if (activePanel && activePanel.id === 'panel-bitmap') {
+            setBmpZoom(bmpZoomFactor - 0.15);
+            playSound('click');
+          } else {
+            playSound('tab');
+            switchToTab('panel-compare');
+          }
+        } else if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+          const activePanel = document.querySelector('.panel.active');
+          if (activePanel && activePanel.id === 'panel-bitmap') {
+            stepBankChar(e.key === 'ArrowLeft' ? -1 : 1);
+          }
         } else if (e.key >= '1' && e.key <= '9') {
           const tabMap = [
             'panel-metrics', 'panel-glyphs', 'panel-diagnostics', 'panel-anatomy',
@@ -3483,9 +4587,6 @@ body {
         } else if (e.key === '0') {
           playSound('tab');
           switchToTab('panel-opentype');
-        } else if (e.key === '-' || e.key === '_') {
-          playSound('tab');
-          switchToTab('panel-compare');
         } else if (e.key.toLowerCase() === 'x') {
           const activePanel = document.querySelector('.panel.active');
           if (activePanel && activePanel.id === 'panel-bitmap') {

@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { DEFAULT_VFS } from './defaultVfs';
 import './App.css';
-const MICROS_VERSION = '0.4.32';
+const MICROS_VERSION = '0.4.33';
 
 // Singleton Web Audio Synthesizer (Replaces per-click new AudioContext() leak)
 const osAudioCtxRef = { current: null };
@@ -71,7 +71,7 @@ const APPS = [
   { id: 'kmandel', title: 'KMandel', url: '/apps/kmandel.html', exeUrl: '/exe/KMandel.exe', icon: '/assets/icons/kmandel.ico', w: 1024, h: 720, folder: 'Media' },
   { id: 'ktimer', title: 'KTimer', url: '/apps/ktimer.html', exeUrl: '/exe/KTimer.exe', icon: '/assets/icons/ktimer.ico', w: 520, h: 640, folder: 'System' },
   { id: 'ksynth', title: 'KSynth', url: '/apps/ksynth.html', exeUrl: '/exe/KSynth.exe', icon: '/assets/icons/ksynth.ico', w: 1040, h: 860, folder: 'Media' },
-  { id: 'kfont', title: 'KFont', url: '/apps/kfont.html', exeUrl: '/exe/KFont.exe', icon: '/assets/icons/kfont.ico', w: 980, h: 720, folder: 'System' },
+  { id: 'kfont', title: 'KFont', url: '/apps/kfont.html', exeUrl: '/exe/KFont.exe', icon: '/assets/icons/kfont.ico', w: 1024, h: 768, folder: 'System' },
   { id: 'kconverter', title: 'KConverter', url: '/apps/kconverter.html', exeUrl: '/exe/KConverter.exe', icon: '/assets/icons/kconverter.ico', w: 900, h: 650, folder: 'System' },
   { id: 'ktodo', title: 'KTodo', url: '/apps/ktodo.html', exeUrl: '/exe/KTodo.exe', icon: '/assets/icons/ktodo.ico', w: 960, h: 720, folder: 'System' },
   { id: 'kgraph', title: 'KGraph', url: '/apps/kgraph.html', exeUrl: '/exe/KGraph.exe', icon: '/assets/icons/kgraph.ico', w: 1024, h: 768, folder: 'System' },

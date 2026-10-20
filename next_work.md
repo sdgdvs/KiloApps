@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-qa
+current_agent: kilo-qa
+next_agent: kilo-expander
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -18,7 +18,7 @@ current_targets:
   kilo_graphics: KColosseum
   kilo_soundscape: KColosseum
   kilo_tester: KClip
-  kilo_usability: KFont
+  kilo_usability: KHex
   kilo_qa: KSimon
   kilo_expander: KDB
 virtual_web_target: kweb://users/~neon_rider
@@ -35,9 +35,9 @@ virtual_web_rotation:
 - kweb://deep-core
 - kweb://darknet
 last_run:
-  agent: kilo-tester
-  app: KChart
-  timestamp: '2026-10-20T05:22:00Z'
+  agent: kilo-usability
+  app: KFont
+  timestamp: '2026-10-20T14:17:00Z'
 last_planner_run: '2026-10-19T22:16:00Z'
 ---
 
@@ -122,19 +122,19 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Upcoming Queue**: `KTrader`, `KSpace`.
 
 ### 5. Usability & UX Queue (`kilo-usability`)
-- **Target**: `KFont`
-- **Primary File**: `KiloOS/public/apps/kfont.html`
-- **Objective**: Bitmap font designer and typography workbench ergonomics: responsive glyph grid, zoom canvas controls, preview text wrap, and export shortcut discoverability.
+- **Target**: `KHex`
+- **Primary File**: `KiloOS/public/apps/khex.html`
+- **Objective**: Hexadecimal editor and binary inspector ergonomics: responsive byte grid, ASCII sidebar, search/jump controls, and keyboard navigation.
 - **Action Steps**:
   1. Inspect layout adaptability across standard and compact window dimensions.
-  2. Verify keyboard navigation across glyph table and toolbar action triggers.
-  3. Ensure high-contrast accessibility and crisp canvas rendering.
+  2. Verify keyboard navigation across byte grid and inspector panels.
+  3. Ensure high-contrast accessibility and crisp font/cursor rendering.
 - **Verification**: `cd KiloOS && npm run build`. File size < 999 KB.
 - **Handoff**:
-  - In frontmatter: advance `current_targets.kilo_usability` to `KHex`.
+  - In frontmatter: advance `current_targets.kilo_usability` to `KPass`.
   - Set `current_agent: kilo-qa`.
   - Append terse execution log (≤6 lines), commit, and push.
-- **Upcoming Queue**: `KHex`, `KPass`.
+- **Upcoming Queue**: `KPass`, `KCalc`.
 
 ### 6. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
 - **Target**: `KSimon`
@@ -208,6 +208,14 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-20T14:17:00Z — kilo-usability: KFont (Bitmap Font Designer & Typography Workbench UX)**
+  - Window & Ergonomics: Adjusted default dimensions to 1024x768 in App.jsx; added responsive glyph filter/jump input and range counter.
+  - Zoom & Matrix Controls: Added zoom in/out/fit controls for pixel matrix editor and anatomy inspector with wheel zoom support.
+  - Accessibility & Navigation: Implemented forced-colors high contrast styles, sample text wrap/align toggles, and ARIA labels.
+  - Keyboard & Modal Shortcuts: Bound [F1/H] help, [F5/F9] save/load, [E] profile export, [M] audio toggle, and arrow key navigation.
+  - Dual Parity & Build: Recompiled Win32 native client (`KFont.exe`, 32.8 KB); startup check PASS (218.0 KB < 999 KB, 0 JS err); Vite build clean.
+  - Queue Handoff: Advanced `current_targets.kilo_usability` to `KHex`; rotation handoff to `kilo-qa`.
+
 - **2026-10-20T05:22:00Z — kilo-tester: KChart (UI Audit, Inline Fixes & Mature Promotion)**
   - UI & Interaction Audit: Audited 10 visualization engines, 7 trend/regression overlays, YM2612 FM / SPC700 sonification sweep, 7 export formats (SVG, PNG, MD, C, HTML, CSV, JSON), and table editing.
   - Inline Repairs: Added active sonification cancellation on table edits, transforms, and arrow nudges; fixed index bounds validation for inline cell edits; added hoveredIndex adjustment on point deletion.
@@ -237,9 +245,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Verification & Parity: Web file verified clean (652 KB < 999 KB); startup test PASS (KNet 189.8 KB, 0 JS errors); Vite build clean (508ms); security lint clean.
   - Queue Handoff: Advanced `current_targets.kilo_creator` to `kweb://users/~neon_rider`; rotation handoff to `kilo-graphics`.
 
-- **2026-10-19T21:22:04+0000 — kilo-expander: KVault (Multi-Vault Profiles & Structured Schema Templates)**
-  - Multi-Vault Profiles: Implemented 3 vault profiles (Primary Vault, Work & Ops, Classified Mesh) with dedicated storage keys and per-profile `.dat` persistence.
-  - Schema Templates: Added 8 structured templates (Login, Finance, Server/SSH, API Key, Passkey/Seed, 1999 BBS, Database, Router) for rapid credential generation.
-  - Hotkey & Switching: Added `[F6]` multi-vault profile switcher in both Web and Win32 C, preserving clean auto-lock and quicksave integrity.
-  - Dual Parity & Build: Recompiled Win32 native client (`KVault.exe`, 22.0 KB); startup test PASS (268.4 KB < 999 KB, 0 JS errors, hit-test unblocked); Vite build clean.
-  - Queue Handoff: Advanced `current_targets.kilo_expander` to `KDB`; rotation handoff to `kilo-creator`.

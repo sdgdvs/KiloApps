@@ -868,6 +868,7 @@ void ShowHelpDialog(HWND hwnd) {
         "  [B]    : Toggle Bold\n"
         "  [I]    : Toggle Italic\n"
         "  [C]    : Copy context report or C LOGFONT code snippet\n"
+        "  [ / ]  : Cycle Previous / Next font family\n"
         "  [F1/H] : Show this Help dialog\n\n"
         "Presets:\n"
         "  - Quick Glyphs: Click to jump directly to glyph anatomy\n"
@@ -1165,6 +1166,24 @@ void MainEntry() {
                     continue;
                 } else if (msg.wParam == 'C' || msg.wParam == 'c') {
                     CopyReportToClipboard(hwnd);
+                    continue;
+                } else if (msg.wParam == VK_OEM_4) {
+                    int cur = (int)SendMessage(hList, LB_GETCURSEL, 0, 0);
+                    int count = (int)SendMessage(hList, LB_GETCOUNT, 0, 0);
+                    if (count > 0) {
+                        cur = (cur - 1 + count) % count;
+                        SendMessage(hList, LB_SETCURSEL, cur, 0);
+                        SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(1, LBN_SELCHANGE), (LPARAM)hList);
+                    }
+                    continue;
+                } else if (msg.wParam == VK_OEM_6) {
+                    int cur = (int)SendMessage(hList, LB_GETCURSEL, 0, 0);
+                    int count = (int)SendMessage(hList, LB_GETCOUNT, 0, 0);
+                    if (count > 0) {
+                        cur = (cur + 1) % count;
+                        SendMessage(hList, LB_SETCURSEL, cur, 0);
+                        SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(1, LBN_SELCHANGE), (LPARAM)hList);
+                    }
                     continue;
                 }
             }
