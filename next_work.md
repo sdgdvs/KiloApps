@@ -209,7 +209,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ---
 
-## Recent Execution Logs (Terse Markdown Format)
+## Recent Execution Logs (Max 5 Entries)
 
 - **2026-10-20T22:20:00Z — kilo-creator: kweb://users/~neon_rider (Virtual 1999 Web Deep Expansion & Scoping Repair)**
   - Navigation & Scoping Fix: Extracted Section 11 (Subnet Sniffer) out of `switchTab()` closure, fixing tab re-entrancy and leak; properly routed tab activation.
@@ -247,11 +247,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Inline Repairs: Added active sonification cancellation on table edits, transforms, and arrow nudges; fixed index bounds validation for inline cell edits; added hoveredIndex adjustment on point deletion.
   - Parity & Verification: Startup check PASS (131.9 KB < 999 KB, CSS valid, 0 JS err, modal dismisses cleanly); native Win32 C clean (`KChart.exe`, 36.0 KB); Vite build clean (475ms).
   - Quarantine & Handoff: Promoted KChart to Mature Applications quarantine; advanced `kilo_tester` to `KClip`; rotation handoff to `kilo-usability`.
-
-- **2026-10-20T03:16:00Z — kilo-soundscape: KMech ("Mech Bay 04" & "Titan Clash")**
-  - Audio Architecture: Dual-mode YM2612 2-Op FM + SPC700 stereo delay (180ms, 2200Hz LP, 0.28 FB) chiptune engine.
-  - Tracks & Form: Track 01 Hangar theme (D Dorian/Aeolian, 32 steps) + Track 02 Arena Combat (D Phrygian Dominant & Andalusian descent, 64 steps) with 5:3 swing groove.
-  - Voice-Leading: 6-channel arrangement with contrary motion, shell voicings (no doubled 5ths), and call-and-response counterpoint.
-  - Patches & Earcons: 13 named hardware FM voices (slap bass, distorted guitar, Rhodes, servo whine, hydraulic stomp, steam vents, klaxon, fanfares).
-  - Verification: Startup check PASS (158.5 KB < 999 KB, 0 JS err); Win32 C build clean (`KMech.exe`, 33.8 KB); Vite build clean; security lint clean.
-  - Queue Handoff: Advanced `current_targets.kilo_soundscape` to `KColosseum`; rotation handoff to `kilo-tester`.

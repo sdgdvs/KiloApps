@@ -4,6 +4,14 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-20T03:16:00Z — kilo-soundscape: KMech ("Mech Bay 04" & "Titan Clash")**
+  - Audio Architecture: Dual-mode YM2612 2-Op FM + SPC700 stereo delay (180ms, 2200Hz LP, 0.28 FB) chiptune engine.
+  - Tracks & Form: Track 01 Hangar theme (D Dorian/Aeolian, 32 steps) + Track 02 Arena Combat (D Phrygian Dominant & Andalusian descent, 64 steps) with 5:3 swing groove.
+  - Voice-Leading: 6-channel arrangement with contrary motion, shell voicings (no doubled 5ths), and call-and-response counterpoint.
+  - Patches & Earcons: 13 named hardware FM voices (slap bass, distorted guitar, Rhodes, servo whine, hydraulic stomp, steam vents, klaxon, fanfares).
+  - Verification: Startup check PASS (158.5 KB < 999 KB, 0 JS err); Win32 C build clean (`KMech.exe`, 33.8 KB); Vite build clean; security lint clean.
+  - Queue Handoff: Advanced `current_targets.kilo_soundscape` to `KColosseum`; rotation handoff to `kilo-tester`.
+
 - **2026-10-20T00:16:00Z — kilo-graphics: KMech**
   - ⏭️ Skip — Imagen 3 asset replacement not appropriate for KMech
   - Asset Suitability: Evaluated KMech CRT vector/wireframe aesthetic; dynamic SVG/GDI polygon mechs and HUD are foundational retro wireframe art, inappropriate for raster replacement.
