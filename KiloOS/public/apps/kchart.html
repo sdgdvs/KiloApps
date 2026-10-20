@@ -1010,7 +1010,7 @@
       { label: "Telnet Daemon", value: 88 }
     ],
     soundcard: [
-      { label: "Sound Blaster Live!", value: 52 },
+      { label: "BlastSound Live!", value: 52 },
       { label: "AWE64 Gold", value: 22 },
       { label: "Gravis UltraSound", value: 11 },
       { label: "ESS Solo-1", value: 7 },
@@ -1413,14 +1413,32 @@
       tableBody.appendChild(tr);
     });
 
-    // Input listeners
+    // Input listeners with cell edit undo tracking and automatic state persistence
+    let preEditData = null;
     tableBody.querySelectorAll('.lbl-input').forEach(input => {
-      input.onfocus = () => dismissAllToasts();
+      input.onfocus = () => {
+        dismissAllToasts();
+        preEditData = JSON.parse(JSON.stringify(data));
+      };
       input.oninput = (e) => {
         dismissAllToasts();
         const idx = parseInt(e.target.dataset.index);
-        data[idx].label = e.target.value;
-        renderChart();
+        if (!isNaN(idx) && data[idx]) {
+          data[idx].label = e.target.value;
+          renderChart();
+        }
+      };
+      input.onchange = () => {
+        if (preEditData) {
+          undoStack.push(preEditData);
+          if (undoStack.length > 20) undoStack.shift();
+          preEditData = null;
+        }
+        saveCurrentState();
+      };
+      input.onblur = () => {
+        saveCurrentState();
+        preEditData = null;
       };
       input.onkeydown = (e) => {
         if (e.key === 'Enter') {
@@ -1432,13 +1450,30 @@
       };
     });
     tableBody.querySelectorAll('.val-input').forEach(input => {
-      input.onfocus = () => dismissAllToasts();
+      input.onfocus = () => {
+        dismissAllToasts();
+        preEditData = JSON.parse(JSON.stringify(data));
+      };
       input.oninput = (e) => {
         dismissAllToasts();
         const idx = parseInt(e.target.dataset.index);
-        data[idx].value = parseFloat(e.target.value) || 0;
-        computeStats();
-        renderChart();
+        if (!isNaN(idx) && data[idx]) {
+          data[idx].value = parseFloat(e.target.value) || 0;
+          computeStats();
+          renderChart();
+        }
+      };
+      input.onchange = () => {
+        if (preEditData) {
+          undoStack.push(preEditData);
+          if (undoStack.length > 20) undoStack.shift();
+          preEditData = null;
+        }
+        saveCurrentState();
+      };
+      input.onblur = () => {
+        saveCurrentState();
+        preEditData = null;
       };
       input.onkeydown = (e) => {
         if (e.key === 'Enter') {
@@ -1459,11 +1494,16 @@
     });
     tableBody.querySelectorAll('.del-btn').forEach(btn => {
       btn.onclick = () => {
+        if (isSonifying) stopSonification(true);
         pushUndo();
         const idx = parseInt(btn.dataset.index);
-        data.splice(idx, 1);
-        updateAll();
-        showToast('Deleted data point', 'info', '✕');
+        if (!isNaN(idx) && idx >= 0 && idx < data.length) {
+          data.splice(idx, 1);
+          if (hoveredIndex === idx) hoveredIndex = -1;
+          else if (hoveredIndex > idx) hoveredIndex--;
+          updateAll();
+          showToast('Deleted data point', 'info', '✕');
+        }
       };
     });
   }
@@ -2701,6 +2741,7 @@
       showToast("No transformations to undo.", "warning", "⚠️");
       return;
     }
+    if (isSonifying) stopSonification(true);
     data = undoStack.pop();
     updateAll();
     playSfx('transform');
@@ -2708,7 +2749,11 @@
   }
 
   function normalizeData() {
-    if (data.length === 0) return;
+    if (data.length === 0) {
+      showToast("No data to normalize.", "warning", "⚠️");
+      return;
+    }
+    if (isSonifying) stopSonification(true);
     pushUndo();
     const vals = data.map(d => Number(d.value) || 0);
     const min = Math.min(...vals);
@@ -2724,7 +2769,11 @@
   }
 
   function cumSumData() {
-    if (data.length === 0) return;
+    if (data.length === 0) {
+      showToast("No data to transform.", "warning", "⚠️");
+      return;
+    }
+    if (isSonifying) stopSonification(true);
     pushUndo();
     let acc = 0;
     data.forEach(d => {
@@ -2737,7 +2786,11 @@
   }
 
   function deltaData() {
-    if (data.length === 0) return;
+    if (data.length === 0) {
+      showToast("No data to transform.", "warning", "⚠️");
+      return;
+    }
+    if (isSonifying) stopSonification(true);
     pushUndo();
     let prev = Number(data[0].value) || 0;
     data[0].value = 0;
@@ -2752,7 +2805,11 @@
   }
 
   function smoothData() {
-    if (data.length < 3) return;
+    if (data.length < 3) {
+      showToast("Smoothing requires at least 3 data points.", "warning", "⚠️");
+      return;
+    }
+    if (isSonifying) stopSonification(true);
     pushUndo();
     const orig = data.map(d => Number(d.value) || 0);
     for (let i = 0; i < data.length; i++) {
@@ -2767,7 +2824,11 @@
   }
 
   function reverseData() {
-    if (data.length === 0) return;
+    if (data.length === 0) {
+      showToast("No data to reverse.", "warning", "⚠️");
+      return;
+    }
+    if (isSonifying) stopSonification(true);
     pushUndo();
     data.reverse();
     updateAll();
@@ -3027,6 +3088,7 @@
   document.getElementById('presetSelect').onchange = (e) => {
     const val = e.target.value;
     if (val && PRESETS[val]) {
+      if (isSonifying) stopSonification(true);
       pushUndo();
       lastLoadedPreset = val;
       const presetName = e.target.selectedOptions[0].text;
@@ -3039,6 +3101,7 @@
   };
 
   function cyclePreset() {
+    if (isSonifying) stopSonification(true);
     const presetKeys = Object.keys(PRESETS);
     let curIdx = presetKeys.indexOf(lastLoadedPreset || '');
     const nextIdx = (curIdx + 1) % presetKeys.length;
@@ -3047,13 +3110,19 @@
     lastLoadedPreset = nextKey;
     data = JSON.parse(JSON.stringify(PRESETS[nextKey]));
     const selectElem = document.getElementById('presetSelect');
-    if (selectElem) selectElem.value = nextKey;
+    let presetTitle = nextKey;
+    if (selectElem) {
+      selectElem.value = nextKey;
+      const opt = selectElem.querySelector(`option[value="${nextKey}"]`);
+      if (opt) presetTitle = opt.text;
+    }
     updateAll();
     playSfx('mode');
-    showToast(`Loaded Preset: ${nextKey}`, 'success', '📊');
+    showToast(`Loaded Preset: ${presetTitle}`, 'success', '📊');
   }
 
   document.getElementById('btnRandomize').onclick = () => {
+    if (isSonifying) stopSonification(true);
     pushUndo();
     if (data.length === 0) {
       data = [
@@ -3077,6 +3146,7 @@
       showToast("Maximum limit of 100 data points reached.", "warning", "⚠️");
       return;
     }
+    if (isSonifying) stopSonification(true);
     pushUndo();
     data.push({ label: `Item ${data.length + 1}`, value: Math.floor(10 + Math.random() * 50) });
     updateAll();
@@ -3087,6 +3157,11 @@
   };
 
   document.getElementById('btnSortAsc').onclick = () => {
+    if (data.length === 0) {
+      showToast("No data to sort.", "warning", "⚠️");
+      return;
+    }
+    if (isSonifying) stopSonification(true);
     pushUndo();
     data.sort((a, b) => (Number(a.value) || 0) - (Number(b.value) || 0));
     updateAll();
@@ -3095,6 +3170,11 @@
   };
 
   document.getElementById('btnSortDesc').onclick = () => {
+    if (data.length === 0) {
+      showToast("No data to sort.", "warning", "⚠️");
+      return;
+    }
+    if (isSonifying) stopSonification(true);
     pushUndo();
     data.sort((a, b) => (Number(b.value) || 0) - (Number(a.value) || 0));
     updateAll();
@@ -3103,6 +3183,7 @@
   };
 
   document.getElementById('btnClear').onclick = () => {
+    if (isSonifying) stopSonification(true);
     pushUndo();
     if (data.length === 0) {
       data = [
@@ -3492,6 +3573,7 @@
   }
 
   function loadFile(file) {
+    if (isSonifying) stopSonification(true);
     const reader = new FileReader();
     reader.onload = (event) => {
       const content = event.target.result;
@@ -3632,7 +3714,11 @@
       undoTransform();
     } else if (e.key === 'ArrowLeft') {
       if (data.length > 0) {
-        hoveredIndex = (hoveredIndex - 1 + data.length) % data.length;
+        if (hoveredIndex === -1) {
+          hoveredIndex = data.length - 1;
+        } else {
+          hoveredIndex = (hoveredIndex - 1 + data.length) % data.length;
+        }
         updateHoverCoordsForIndex(hoveredIndex);
         renderChart();
         const activeTr = tableBody && tableBody.children[hoveredIndex];
@@ -3640,7 +3726,11 @@
       }
     } else if (e.key === 'ArrowRight') {
       if (data.length > 0) {
-        hoveredIndex = (hoveredIndex + 1) % data.length;
+        if (hoveredIndex === -1) {
+          hoveredIndex = 0;
+        } else {
+          hoveredIndex = (hoveredIndex + 1) % data.length;
+        }
         updateHoverCoordsForIndex(hoveredIndex);
         renderChart();
         const activeTr = tableBody && tableBody.children[hoveredIndex];
@@ -3648,6 +3738,8 @@
       }
     } else if (e.key === 'ArrowUp' || e.key === '+' || e.key === '=') {
       if (data.length > 0) {
+        if (isSonifying) stopSonification(true);
+        pushUndo();
         const idx = (hoveredIndex >= 0 && hoveredIndex < data.length) ? hoveredIndex : 0;
         data[idx].value = Math.round((Number(data[idx].value) || 0) + 5);
         updateAll();
@@ -3656,6 +3748,8 @@
       }
     } else if (e.key === 'ArrowDown' || e.key === '-' || e.key === '_') {
       if (data.length > 0) {
+        if (isSonifying) stopSonification(true);
+        pushUndo();
         const idx = (hoveredIndex >= 0 && hoveredIndex < data.length) ? hoveredIndex : 0;
         data[idx].value = Math.max(0, Math.round((Number(data[idx].value) || 0) - 5));
         updateAll();
@@ -3665,8 +3759,14 @@
     } else if (e.key === 'Escape') {
       if (helpModal && helpModal.classList.contains('open')) {
         closeHelpModal();
-      } else if (document.activeElement) {
-        document.activeElement.blur();
+      } else {
+        if (hoveredIndex !== -1) {
+          hoveredIndex = -1;
+          renderChart();
+        }
+        if (document.activeElement) {
+          document.activeElement.blur();
+        }
       }
     }
   });

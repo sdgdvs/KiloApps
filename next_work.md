@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-tester
-next_agent: kilo-usability
+current_agent: kilo-usability
+next_agent: kilo-qa
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -17,7 +17,7 @@ current_targets:
   kilo_creator: kweb://users/~neon_rider
   kilo_graphics: KColosseum
   kilo_soundscape: KColosseum
-  kilo_tester: KChart
+  kilo_tester: KClip
   kilo_usability: KFont
   kilo_qa: KSimon
   kilo_expander: KDB
@@ -35,9 +35,9 @@ virtual_web_rotation:
 - kweb://deep-core
 - kweb://darknet
 last_run:
-  agent: kilo-soundscape
-  app: KMech
-  timestamp: '2026-10-20T03:16:00Z'
+  agent: kilo-tester
+  app: KChart
+  timestamp: '2026-10-20T05:22:00Z'
 last_planner_run: '2026-10-19T22:16:00Z'
 ---
 
@@ -107,19 +107,19 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Upcoming Queue**: `KTrader`, `KSpace`.
 
 ### 4. App Tester Queue (`kilo-tester`)
-- **Target**: `KChart`
-- **Primary File**: `KiloOS/public/apps/kchart.html`
-- **Objective**: Retro spreadsheet & business charting interactive UI audit: chart type selectors, data table cell editing, formula evaluation, import/export CSV, and keyboard navigation.
+- **Target**: `KClip`
+- **Primary File**: `KiloOS/public/apps/kclip.html`
+- **Objective**: Multi-format retro clipboard manager and snippet archive interactive UI audit: format tabs, paste history, search filtering, and hotkey persistence.
 - **Action Steps**:
-  1. Run automated startup check: `uv run scripts/test_app_startup.py --app KChart`.
-  2. Audit all UI elements: chart rendering toggles, spreadsheet grid inputs, export buttons, and hotkeys.
+  1. Run automated startup check: `uv run scripts/test_app_startup.py --app KClip`.
+  2. Audit all UI elements: snippet triggers, copy buttons, search inputs, tags, and shortcuts.
   3. Fix any broken button hooks, missing element IDs, or unhandled exceptions inline.
-- **Verification**: `uv run scripts/test_app_startup.py --app KChart` and `cd KiloOS && npm run build`. File size < 999 KB.
+- **Verification**: `uv run scripts/test_app_startup.py --app KClip` and `cd KiloOS && npm run build`. File size < 999 KB.
 - **Handoff**:
-  - In frontmatter: advance `current_targets.kilo_tester` to `KClip`.
+  - In frontmatter: advance `current_targets.kilo_tester` to `KTrader`.
   - Set `current_agent: kilo-usability`.
   - Append terse execution log (≤6 lines), commit, and push.
-- **Upcoming Queue**: `KClip`, `KTrader`.
+- **Upcoming Queue**: `KTrader`, `KSpace`.
 
 ### 5. Usability & UX Queue (`kilo-usability`)
 - **Target**: `KFont`
@@ -202,10 +202,17 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | **KFortress** | `KiloOS/public/apps/kfortress.html` | Pass 6+ (2026-10-19) | Strategy / Tower Defense | Complete 12-map stronghold defense, Imagen 3 sprites & textured terrain, dual Win32 client parity, YM2612 2-Op FM / SPC700 2-movement soundscape, full F5/F9 state persistence. |
 | **KMystery** | `KiloOS/public/apps/kmystery.html` | Pass 6+ (2026-10-19) | Puzzle / Adventure | Detective noir murder mystery; interactive clue dossier sketch viewer, forensic lab scanner, suspect interrogation tree, YM2612 2-Op FM jazz, dual Win32 native client parity, full F5/F9 persistence. |
 | **KMatch3** | `KiloOS/public/apps/kmatch3.html` | Pass 5 (2026-10-19) | Puzzle / Match-3 | 20-stage campaign, Zen, Timed Rush & Duel Arena modes, Jewel King boss encounter, active skills, dual Win32 native client parity, full F5/F9 state persistence, first-run tutorial integrity. |
+| **KChart** | `KiloOS/public/apps/kchart.html` | Pass 6+ (2026-10-20) | Office / Visualization | Feature-complete 1999 spreadsheet & business chart studio; 10 engines, regressions & OLS fit, YM2612 FM / SPC700 sonification, 7 export formats, dual Win32 C parity, full state persistence. |
 
 ---
 
 ## Recent Execution Logs (Max 5 Entries)
+
+- **2026-10-20T05:22:00Z — kilo-tester: KChart (UI Audit, Inline Fixes & Mature Promotion)**
+  - UI & Interaction Audit: Audited 10 visualization engines, 7 trend/regression overlays, YM2612 FM / SPC700 sonification sweep, 7 export formats (SVG, PNG, MD, C, HTML, CSV, JSON), and table editing.
+  - Inline Repairs: Added active sonification cancellation on table edits, transforms, and arrow nudges; fixed index bounds validation for inline cell edits; added hoveredIndex adjustment on point deletion.
+  - Parity & Verification: Startup check PASS (131.9 KB < 999 KB, CSS valid, 0 JS err, modal dismisses cleanly); native Win32 C clean (`KChart.exe`, 36.0 KB); Vite build clean (475ms).
+  - Quarantine & Handoff: Promoted KChart to Mature Applications quarantine; advanced `kilo_tester` to `KClip`; rotation handoff to `kilo-usability`.
 
 - **2026-10-20T03:16:00Z — kilo-soundscape: KMech ("Mech Bay 04" & "Titan Clash")**
   - Audio Architecture: Dual-mode YM2612 2-Op FM + SPC700 stereo delay (180ms, 2200Hz LP, 0.28 FB) chiptune engine.
@@ -236,11 +243,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Hotkey & Switching: Added `[F6]` multi-vault profile switcher in both Web and Win32 C, preserving clean auto-lock and quicksave integrity.
   - Dual Parity & Build: Recompiled Win32 native client (`KVault.exe`, 22.0 KB); startup test PASS (268.4 KB < 999 KB, 0 JS errors, hit-test unblocked); Vite build clean.
   - Queue Handoff: Advanced `current_targets.kilo_expander` to `KDB`; rotation handoff to `kilo-creator`.
-
-- **2026-10-19T19:38:00+0000 — kilo-qa: KMatch3 (Pass 5 State Persistence & Modal Audit + Mature Promotion)**
-  - State Persistence: Audited F5 quicksave and F9 quickload capturing complete game board state (grid, colors, types, ice, stone hits, barriers), scores, levels, objective counts, boss HP, maxBossHP, bossMoveTimer, stats, and settings without data loss or corruption across Web and Win32 C.
-  - Modal Dismissals & Dialogs: Replaced blocking `alert()` dialogs with custom retro `gameStatusModal` (Enter to continue/retry, Esc to dismiss, F5 to quicksave). Ensured all modal overlays dismiss on click-outside and on Esc. Interval timer pauses while any modal is open.
-  - Tutorial Integrity: Verified `kmatch3_tutorialSeen` / `kmatch3_tutorial.dat` flags fire only on fresh sessions, never interrupting restored save states.
-  - Dual Parity & Build: Recompiled Win32 native client (`KMatch3.exe`, 38.4 KB); startup test PASS (133.8 KB < 999 KB, 0 JS errors, hit-test unblocked); Vite build clean.
-  - Quarantine & Handoff: Promoted KMatch3 to Mature Applications quarantine; advanced `kilo_qa` to `KSimon`; rotation handoff to `kilo-expander`.
-
