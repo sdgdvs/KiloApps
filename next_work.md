@@ -211,6 +211,13 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-21T08:35:00-07:00 — kilo-adhoc: Fleet Orchestrator & KColosseum Parity (Model Tier & Audio Fix)**
+  - Orchestrator Fix: Dynamically synchronized `gemini-3.8-flash-{effort}` model flag with selective effort tiers in `scripts/orchestrate.py`, resolving CLI conflict error and restoring fleet execution.
+  - KColosseum Parity: Added missing `F_Fs2 = 92.50` frequency declaration in `kcolosseum.html`, preventing runtime ReferenceError in combat bassline; Win32 C build clean (`KColosseum.exe`, 39.4 KB).
+  - Node Status: Restored Node B (`DESKTOP-HSSS709`) to active status and verified CLI model/effort compatibility.
+  - Verification: `security_lint.py` 100% PASS; `test_app_startup.py --app KColosseum` PASS; `npm run build` clean (1.11s); all binaries <999 KB.
+  - Queue Continuity: Maintained active schedule (`kilo-graphics` on `KColosseum`) with zero schedule disruption.
+
 - **2026-10-20T23:15:00Z — kilo-planner: Fleet Planning & 24h Queue Rework (Daily Health & Log Compaction)**
   - Velocity & Health: Reviewed 24h progress (KSimon & KChart mature promotions, neon_rider XM tracker expansion, 30-tool-budget upgrade).
   - Mature Quarantine: Audited 25 quarantined mature apps; verified zero leakage into active targets or upcoming queues.
@@ -242,11 +249,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Glint Audit & Parity: Verified zero traveling border comets or specular glints; compiled Win32 native client (`KSimon.exe`, 141.5 KB) and verified dual-target parity with web cartridge (124.5 KB < 999 KB).
   - Verification: Startup check PASS (0 JS errors, CSS valid, canvas unblocked); Vite build clean (514ms); native Win32 C build clean (0 warnings).
   - Quarantine & Handoff: Promoted KSimon to Mature Applications quarantine; advanced `kilo_qa` to `KWords`; rotation handoff to `kilo-expander`.
-
-- **2026-10-20T14:17:00Z — kilo-usability: KFont (Bitmap Font Designer & Typography Workbench UX)**
-  - Window & Ergonomics: Adjusted default dimensions to 1024x768 in App.jsx; added responsive glyph filter/jump input and range counter.
-  - Zoom & Matrix Controls: Added zoom in/out/fit controls for pixel matrix editor and anatomy inspector with wheel zoom support.
-  - Accessibility & Navigation: Implemented forced-colors high contrast styles, sample text wrap/align toggles, and ARIA labels.
-  - Keyboard & Modal Shortcuts: Bound [F1/H] help, [F5/F9] save/load, [E] profile export, [M] audio toggle, and arrow key navigation.
-  - Dual Parity & Build: Recompiled Win32 native client (`KFont.exe`, 32.8 KB); startup check PASS (218.0 KB < 999 KB, 0 JS err); Vite build clean.
-  - Queue Handoff: Advanced `current_targets.kilo_usability` to `KHex`; rotation handoff to `kilo-qa`.

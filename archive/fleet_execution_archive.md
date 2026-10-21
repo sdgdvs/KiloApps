@@ -4,6 +4,14 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-20T14:17:00Z — kilo-usability: KFont (Bitmap Font Designer & Typography Workbench UX)**
+  - Window & Ergonomics: Adjusted default dimensions to 1024x768 in App.jsx; added responsive glyph filter/jump input and range counter.
+  - Zoom & Matrix Controls: Added zoom in/out/fit controls for pixel matrix editor and anatomy inspector with wheel zoom support.
+  - Accessibility & Navigation: Implemented forced-colors high contrast styles, sample text wrap/align toggles, and ARIA labels.
+  - Keyboard & Modal Shortcuts: Bound [F1/H] help, [F5/F9] save/load, [E] profile export, [M] audio toggle, and arrow key navigation.
+  - Dual Parity & Build: Recompiled Win32 native client (`KFont.exe`, 32.8 KB); startup check PASS (218.0 KB < 999 KB, 0 JS err); Vite build clean.
+  - Queue Handoff: Advanced `current_targets.kilo_usability` to `KHex`; rotation handoff to `kilo-qa`.
+
 - **2026-10-20T05:22:00Z — kilo-tester: KChart (UI Audit, Inline Fixes & Mature Promotion)**
   - UI & Interaction Audit: Audited 10 visualization engines, 7 trend/regression overlays, YM2612 FM / SPC700 sonification sweep, 7 export formats (SVG, PNG, MD, C, HTML, CSV, JSON), and table editing.
   - Inline Repairs: Added active sonification cancellation on table edits, transforms, and arrow nudges; fixed index bounds validation for inline cell edits; added hoveredIndex adjustment on point deletion.

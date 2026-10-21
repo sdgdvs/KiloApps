@@ -13,9 +13,9 @@
   "session_end": null,
   "session_limit_enabled": false,
   "timer_enabled": false,
-  "turns_executed": 329,
+  "turns_executed": 353,
   "last_turn_timestamp": "2026-09-28T17:56:12Z",
-  "last_heartbeat": "2026-10-19T22:40:04.188313+00:00",
-  "current_target": "kweb://geocities",
+  "last_heartbeat": "2026-10-21T15:30:03.233932+00:00",
+  "current_target": "KColosseum",
   "remote_command": "none"
 }

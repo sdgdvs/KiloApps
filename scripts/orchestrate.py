@@ -1038,6 +1038,10 @@ def main():
         else:
             effort = "high" if agent in CREATIVE_AGENTS else "medium"
 
+        # Align model identifier with effort for Gemini 3.8 Flash to prevent CLI conflict
+        if model.startswith("gemini-3.8-flash") and effort in ("high", "medium", "low"):
+            model = f"gemini-3.8-flash-{effort}"
+
         timeout_min = int(
             os.environ.get("AGY_TIMEOUT")
             or (frontmatter.get("agent_timeouts", {}).get(agent) if isinstance(frontmatter.get("agent_timeouts"), dict) else None)

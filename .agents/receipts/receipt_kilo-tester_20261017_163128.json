@@ -1,0 +1,10 @@
+{
+  "timestamp": "2026-10-17T16:31:28.185019+00:00",
+  "agent": "kilo-tester",
+  "model": "gemini-3.8-flash-medium",
+  "target": "KPac",
+  "duration_seconds": 85.57,
+  "returncode": 0,
+  "success": true,
+  "provenance": null
+}
