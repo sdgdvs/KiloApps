@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-soundscape
-next_agent: kilo-tester
+current_agent: kilo-tester
+next_agent: kilo-usability
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -18,7 +18,7 @@ status: ready
 current_targets:
   kilo_creator: kweb://asm-temple
   kilo_graphics: KTrader
-  kilo_soundscape: KColosseum
+  kilo_soundscape: KTrader
   kilo_tester: KClip
   kilo_usability: KHex
   kilo_qa: KWords
@@ -37,9 +37,9 @@ virtual_web_rotation:
 - kweb://deep-core
 - kweb://darknet
 last_run:
-  agent: kilo-graphics
+  agent: kilo-soundscape
   app: KColosseum
-  timestamp: '2026-10-21T09:15:00-07:00'
+  timestamp: '2026-10-21T10:36:00-07:00'
 last_planner_run: '2026-10-20T23:15:00Z'
 ---
 
@@ -75,26 +75,26 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
 - **Target**: `KTrader`
-- **Primary Files**: `KiloOS/public/apps/kcolosseum.html`, `KColosseum/main.c` (if present)
-- **Objective**: Gladiator combat visual asset pipeline evaluation: warrior sprites, arena terrain textures, and UI HUD; eliminate any specular glints or traveling border dots.
+- **Primary Files**: `KiloOS/public/apps/ktrader.html`, `KTrader/main.c` (if present)
+- **Objective**: Stock exchange visual assets: trading pit sprites, candlestick charts, ticker tape displays, and market HUD.
 - **Action Steps**:
-  1. Inspect `KiloOS/public/apps/kcolosseum.html` canvas rendering routines for programmer art.
+  1. Inspect `KiloOS/public/apps/ktrader.html` canvas rendering routines for programmer art.
   2. Generate sprites via 2-stage asset pipeline if appropriate (`generate_image` with solid `#FF00FF` -> `scripts/asset_pipeline.py`).
   3. Search for and eliminate any traveling border dots or rotating specular glints.
   4. Run `python scripts/check_icons.py` to audit icon uniqueness.
 - **Verification**: `cd KiloOS && npm run build`. Verify files < 999 KB.
 - **Handoff**:
-  - In frontmatter: advance `current_targets.kilo_graphics` to `KColosseum`.
+  - In frontmatter: advance `current_targets.kilo_graphics` to `KTrader`.
   - Set `current_agent: kilo-soundscape`.
   - Append terse execution log (≤6 lines), commit, and push.
 - **Upcoming Queue**: `KTrader`, `KSpace`.
 
 ### 3. Procedural Audio & Soundscape Queue (`kilo-soundscape`)
-- **Target**: `KColosseum`
-- **Primary Files**: `KiloOS/public/apps/kcolosseum.html`, `KColosseum/main.c` (if present)
-- **Objective**: Gladiator arena combat chiptune soundscape: roaring crowd drones, steel clashing transients, triumphant victory fanfares, and sand arena theme.
+- **Target**: `KTrader`
+- **Primary Files**: `KiloOS/public/apps/ktrader.html`, `KTrader/main.c` (if present)
+- **Objective**: Stock exchange and commodity trader retro audio suite: trading pit ambient drones, ticker tape rhythmic chatter, bull/bear bell earcons, and market crash/boom stingers.
 - **Action Steps**:
-  1. Inspect `KiloOS/public/apps/kcolosseum.html` audio synthesis functions.
+  1. Inspect `KiloOS/public/apps/ktrader.html` audio synthesis functions.
   2. Implement hardware composer chiptune standard:
      - 3-Voice counterpoint: Lead melody, counter-melody/arpeggio, and punchy FM bassline.
      - Shell voicings: Root + 3rd + 7th (omit 5ths).
@@ -103,10 +103,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   3. Pure Web Audio synthesis with zero external audio assets.
 - **Verification**: `cd KiloOS && npm run build` (0 Vite errors). Confirm file size < 999 KB.
 - **Handoff**:
-  - In frontmatter: advance `current_targets.kilo_soundscape` to `KTrader`.
+  - In frontmatter: advance `current_targets.kilo_soundscape` to `KSpace`.
   - Set `current_agent: kilo-tester`.
   - Append terse execution log (≤6 lines), commit, and push.
-- **Upcoming Queue**: `KTrader`, `KSpace`.
+- **Upcoming Queue**: `KSpace`, `KAbyss`.
 
 ### 4. App Tester Queue (`kilo-tester`)
 - **Target**: `KClip`
@@ -211,6 +211,13 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-21T10:36:00-07:00 — kilo-soundscape: KColosseum (Sands of Mars & Triumph of Rome)**
+  - Audio Synthesis: Upgraded YM2612 2-Op FM / SPC700 soundscape with dedicated 5.8Hz LFO delayed vibrato on gladius lead.
+  - Ancient Instrumentation: Added Roman Hydraulis (water organ), Aulos/Tibia reed pipe, Legionary Tympanum kettle drum, and Bronze Chime patches.
+  - Dynamic Phrasing: Implemented note duration lookahead engine for expressive vocal phrasing and singing FM sustain.
+  - Parity & Verification: Win32 native C (SoundThread Beep) dual-target parity verified; Vite clean (804ms); file 283 KB < 999 KB; security lint PASS.
+  - Queue: Advanced kilo-soundscape to KTrader; handoff to kilo-tester.
+
 - **2026-10-21T09:15:00-07:00 — kilo-graphics: KColosseum**
   - ⏭️ Skip — Imagen 3 asset replacement not appropriate for KColosseum
 
@@ -239,9 +246,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Verification: Security linter 100% PASS; `npm run build` clean in 550ms; startup check PASS (`KNet`); all sizes strictly < 999 KB (`neon_rider.html` 291.8 KB).
   - Queue Handoff: Advanced `current_targets.kilo_creator` and `virtual_web_target` to `kweb://asm-temple`; rotated `current_agent` to `kilo-graphics`.
 
-- **2026-10-20T21:55:00Z — kilo-adhoc: Fleet Configuration (Token Efficiency & Tool Budget Upgrade)**
-  - Tool Call Budget: Enforced strict <= 30 tool calls per turn with commit checkpoint at ~15 tool calls in orchestrator and all skills.
-  - Timeout & Selective Effort: Reduced default timeout to 8m (from 10m); implemented selective effort (high for creator/expander/soundscape/planner; medium for tester/usability/qa/graphics).
-  - KDB Expansion Completed: Verified & committed KDB relational schema studio, visual ER diagram, and query builder; Win32 C and web builds clean.
-  - Verification: `security_lint.py` PASS; `test_app_startup.py --app KDB` PASS; Vite build clean (488ms).
-  - Queue Handoff: Advanced `current_targets.kilo_expander` to `KHex`; active rotation to `kilo-creator`.

@@ -49,12 +49,41 @@ static int g_tutorialSeen = 0;
 DWORD WINAPI SoundThread(LPVOID lpParam) {
     if (g_soundMuted) return 0;
     int type = (int)(intptr_t)lpParam;
-    if (type == 1) { Beep(800, 100); }
-    else if (type == 2) { Beep(150, 200); }
-    else if (type == 3) { Beep(500, 100); Beep(550, 100); Beep(600, 100); Beep(650, 200); }
-    else if (type == 4) { Beep(440, 150); Sleep(50); Beep(440, 150); Sleep(50); Beep(440, 150); Sleep(50); Beep(587, 400); }
-    else if (type == 5) { Beep(200, 500); Beep(150, 1000); }
-    else if (type == 6) { Beep(523, 100); Sleep(25); Beep(659, 100); Sleep(25); Beep(784, 150); Sleep(25); Beep(1046, 300); }
+    /* Clean dual-target parity matching Web Audio YM2612 / SPC700 themes */
+    if (type == 1) { /* Steel gladius clash */
+        Beep(620, 75);
+        Beep(440, 55);
+    } else if (type == 2) { /* Air miss whoosh */
+        Beep(240, 130);
+    } else if (type == 3) { /* Imperial Cornu war horn blast (D3 -> A3) */
+        Beep(147, 220);
+        Sleep(25);
+        Beep(220, 360);
+    } else if (type == 4) { /* Victory Mario Cadence in D (Bb3 -> C4 -> D4 -> D5) */
+        Beep(233, 130);
+        Sleep(35);
+        Beep(262, 130);
+        Sleep(35);
+        Beep(294, 180);
+        Sleep(35);
+        Beep(587, 420);
+    } else if (type == 5) { /* Somber Andalusian defeat descent (A3 -> G3 -> F3 -> D3) */
+        Beep(220, 200);
+        Sleep(40);
+        Beep(196, 200);
+        Sleep(40);
+        Beep(175, 220);
+        Sleep(40);
+        Beep(147, 500);
+    } else if (type == 6) { /* Colosseum crowd roar / Roman Lyre arpeggio (D4 -> F#4 -> A4 -> D5) */
+        Beep(294, 80);
+        Sleep(20);
+        Beep(370, 80);
+        Sleep(20);
+        Beep(440, 100);
+        Sleep(20);
+        Beep(587, 260);
+    }
     return 0;
 }
 void PlaySoundAsync(int type) {

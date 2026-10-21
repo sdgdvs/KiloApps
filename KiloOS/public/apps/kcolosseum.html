@@ -746,13 +746,13 @@
       carrier.stop(now + duration);
     }
 
-    // --- NAMED FM PATCHES ---
-    // 1. Punchy Slap Bass (tight transient, no echo)
-    function playSlapBass(freq, dur = 0.14, vol = 0.3) {
+    // --- NAMED FM PATCHES & PROCEDURAL TIMBRES (YM2612 2-Op FM + SPC700) ---
+    // 1. Punchy Slap Bass (tight transient, no echo, Algorithm 4/5 analog)
+    function playSlapBass(freq, dur = 0.14, vol = 0.28) {
       playFmTone(freq, 2.0, 3.4, dur, vol, false);
     }
 
-    // 2. Distorted FM Guitar / Roman Gladius Lead (high modIndex, delayed vibrato)
+    // 2. Distorted FM Gladius Lead (sawtooth carrier, high modIndex, LFO delayed vibrato)
     function playDistortedLead(freq, dur = 0.22, vol = 0.24) {
       const ctx = initAudio();
       if (!ctx || soundMuted) return;
@@ -768,14 +768,23 @@
       mod.frequency.setValueAtTime(freq * 1.0, now);
 
       modGain.gain.setValueAtTime(freq * 4.5, now);
-      modGain.gain.exponentialRampToValueAtTime(freq * 0.8, now + dur);
+      modGain.gain.exponentialRampToValueAtTime(Math.max(freq * 0.8, 10), now + dur);
 
-      // Delayed vibrato (after 90ms)
-      if (dur > 0.2) {
-        carrier.frequency.setValueAtTime(freq, now + 0.09);
-        carrier.frequency.linearRampToValueAtTime(freq * 1.025, now + 0.14);
-        carrier.frequency.linearRampToValueAtTime(freq * 0.975, now + 0.19);
-        carrier.frequency.linearRampToValueAtTime(freq, now + dur);
+      // Authentic Genesis YM2612 5.8Hz delayed vibrato via dedicated LFO
+      if (dur > 0.16) {
+        try {
+          const lfo = ctx.createOscillator();
+          const lfoGain = ctx.createGain();
+          lfo.frequency.setValueAtTime(5.8, now);
+          lfoGain.gain.setValueAtTime(0, now);
+          lfoGain.gain.setValueAtTime(0, now + 0.09);
+          lfoGain.gain.linearRampToValueAtTime(freq * 0.026, now + 0.18);
+          lfoGain.gain.linearRampToValueAtTime(0, now + dur);
+          lfo.connect(lfoGain);
+          lfoGain.connect(carrier.frequency);
+          lfo.start(now);
+          lfo.stop(now + dur);
+        } catch (e) {}
       }
 
       ampEnv.gain.setValueAtTime(vol, now);
@@ -793,36 +802,145 @@
       carrier.stop(now + dur);
     }
 
-    // 3. Bright Imperial Brass Stab
-    function playBrassFanfareNote(freq, dur = 0.25, vol = 0.28) {
+    // 3. Bright Imperial Brass Stab (modRatio 1.0, modIndex 3.8 -> 0.4, SPC700 echo)
+    function playBrassFanfareNote(freq, dur = 0.25, vol = 0.26) {
       playFmTone(freq, 1.0, 3.8, dur, vol, true);
     }
 
-    // 4. Inharmonic FM Hi-Hat / Percussion Cymbal
+    // 4. Roman Lyre / Antique Harp Pluck (bright attack, fast decay to warm sine fundamental)
+    function playLyrePluck(freq, dur = 0.24, vol = 0.20) {
+      const ctx = initAudio();
+      if (!ctx || soundMuted) return;
+      const now = ctx.currentTime;
+      const carrier = ctx.createOscillator();
+      const mod = ctx.createOscillator();
+      const modGain = ctx.createGain();
+      const ampEnv = ctx.createGain();
+
+      carrier.type = 'sine';
+      mod.type = 'sine';
+      carrier.frequency.setValueAtTime(freq, now);
+      mod.frequency.setValueAtTime(freq * 2.0, now);
+
+      modGain.gain.setValueAtTime(freq * 2.0 * 2.6, now);
+      modGain.gain.exponentialRampToValueAtTime(freq * 0.12, now + 0.07);
+      modGain.gain.exponentialRampToValueAtTime(0.01, now + dur);
+
+      ampEnv.gain.setValueAtTime(vol, now);
+      ampEnv.gain.exponentialRampToValueAtTime(0.001, now + dur);
+
+      mod.connect(modGain);
+      modGain.connect(carrier.frequency);
+      carrier.connect(ampEnv);
+      ampEnv.connect(ctx.destination);
+      if (spcDelay) ampEnv.connect(spcDelay);
+
+      mod.start(now);
+      carrier.start(now);
+      mod.stop(now + dur);
+      carrier.stop(now + dur);
+    }
+
+    // 5. Roman Hydraulis / Water Organ (Harmonic pipes with chiff transient and pipe resonance)
+    function playHydraulis(freq, dur = 0.25, vol = 0.22) {
+      const ctx = initAudio();
+      if (!ctx || soundMuted) return;
+      const now = ctx.currentTime;
+      const carrier = ctx.createOscillator();
+      const mod = ctx.createOscillator();
+      const modGain = ctx.createGain();
+      const ampEnv = ctx.createGain();
+
+      carrier.type = 'sine';
+      mod.type = 'sine';
+      carrier.frequency.setValueAtTime(freq, now);
+      mod.frequency.setValueAtTime(freq * 2.0, now);
+
+      modGain.gain.setValueAtTime(freq * 1.6, now);
+      modGain.gain.exponentialRampToValueAtTime(freq * 0.18, now + 0.05);
+      modGain.gain.exponentialRampToValueAtTime(0.01, now + dur);
+
+      ampEnv.gain.setValueAtTime(vol * 0.8, now);
+      ampEnv.gain.linearRampToValueAtTime(vol, now + 0.03);
+      ampEnv.gain.exponentialRampToValueAtTime(0.001, now + dur);
+
+      mod.connect(modGain);
+      modGain.connect(carrier.frequency);
+      carrier.connect(ampEnv);
+      ampEnv.connect(ctx.destination);
+      if (spcDelay) ampEnv.connect(spcDelay);
+
+      mod.start(now);
+      carrier.start(now);
+      mod.stop(now + dur);
+      carrier.stop(now + dur);
+    }
+
+    // 6. Roman Aulos / Tibia Double-Reed Pipe (Hollow woodwind FM patch, modRatio 1.0, mellow decay)
+    function playAulosFlute(freq, dur = 0.22, vol = 0.18) {
+      const ctx = initAudio();
+      if (!ctx || soundMuted) return;
+      const now = ctx.currentTime;
+      const carrier = ctx.createOscillator();
+      const mod = ctx.createOscillator();
+      const modGain = ctx.createGain();
+      const ampEnv = ctx.createGain();
+
+      carrier.type = 'sine';
+      mod.type = 'sine';
+      carrier.frequency.setValueAtTime(freq, now);
+      mod.frequency.setValueAtTime(freq * 1.0, now);
+
+      modGain.gain.setValueAtTime(freq * 0.85, now);
+      modGain.gain.exponentialRampToValueAtTime(freq * 0.12, now + dur * 0.7);
+      modGain.gain.exponentialRampToValueAtTime(0.01, now + dur);
+
+      ampEnv.gain.setValueAtTime(0.01, now);
+      ampEnv.gain.linearRampToValueAtTime(vol, now + 0.025);
+      ampEnv.gain.exponentialRampToValueAtTime(0.001, now + dur);
+
+      mod.connect(modGain);
+      modGain.connect(carrier.frequency);
+      carrier.connect(ampEnv);
+      ampEnv.connect(ctx.destination);
+      if (spcDelay) ampEnv.connect(spcDelay);
+
+      mod.start(now);
+      carrier.start(now);
+      mod.stop(now + dur);
+      carrier.stop(now + dur);
+    }
+
+    // 7. Roman Bronze Bell / Temple Chime (Inharmonic FM bell, modRatio 3.5, modIndex 5.0)
+    function playBronzeChime(freq, dur = 0.35, vol = 0.22) {
+      playFmTone(freq, 3.5, 4.8, dur, vol, true);
+    }
+
+    // 8. Inharmonic FM Hi-Hat / Cymbal (modRatio 11.0, metallic splash)
     function playFmHiHat(isOpen = false) {
       const dur = isOpen ? 0.16 : 0.05;
       playFmTone(640, 11.0, 5.2, dur, 0.12, false);
     }
 
-    // 5. FM Kick Drum (rapid pitch drop 130Hz -> 38Hz)
-    function playFmKick() {
+    // 9. Roman Legionary Tympanum / Kettle War Drum (rapid pitch drop 140Hz -> 36Hz)
+    function playFmKick(isAccent = false) {
       const ctx = initAudio();
       if (!ctx || soundMuted) return;
       const now = ctx.currentTime;
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
       osc.type = 'sine';
-      osc.frequency.setValueAtTime(140, now);
-      osc.frequency.exponentialRampToValueAtTime(36, now + 0.09);
-      gain.gain.setValueAtTime(0.42, now);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.14);
+      osc.frequency.setValueAtTime(isAccent ? 155 : 140, now);
+      osc.frequency.exponentialRampToValueAtTime(isAccent ? 38 : 34, now + 0.10);
+      gain.gain.setValueAtTime(isAccent ? 0.48 : 0.40, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
       osc.connect(gain);
       gain.connect(ctx.destination);
       osc.start(now);
-      osc.stop(now + 0.14);
+      osc.stop(now + 0.15);
     }
 
-    // 6. FM Snare (noise burst + snappy body)
+    // 10. FM Snare Drum (snappy FM body + highpass noise burst)    // 7. FM Snare Drum (snappy FM body + highpass noise burst)
     function playFmSnare() {
       const ctx = initAudio();
       if (!ctx || soundMuted) return;
@@ -848,106 +966,278 @@
       } catch (e) {}
     }
 
-    // Fallback playTone wrapper for compatibility
+    // Dynamic Colosseum Crowd Roar & Arena Atmosphere Drone
+    let crowdDroneGain = null;
+    let crowdDroneFilter = null;
+    let crowdDroneSource = null;
+
+    function initCrowdDrone() {
+      const ctx = initAudio();
+      if (!ctx || crowdDroneGain) return;
+      try {
+        const bufferSize = ctx.sampleRate * 4;
+        const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+        const data = buffer.getChannelData(0);
+        let lastOut = 0.0;
+        for (let i = 0; i < bufferSize; i++) {
+          const white = Math.random() * 2 - 1;
+          lastOut = (lastOut + (0.04 * white)) / 1.04;
+          data[i] = lastOut * 3.2;
+        }
+        crowdDroneSource = ctx.createBufferSource();
+        crowdDroneSource.buffer = buffer;
+        crowdDroneSource.loop = true;
+
+        crowdDroneFilter = ctx.createBiquadFilter();
+        crowdDroneFilter.type = 'bandpass';
+        crowdDroneFilter.frequency.value = 540;
+        crowdDroneFilter.Q.value = 1.4;
+
+        crowdDroneGain = ctx.createGain();
+        crowdDroneGain.gain.setValueAtTime(0.001, ctx.currentTime);
+
+        crowdDroneSource.connect(crowdDroneFilter);
+        crowdDroneFilter.connect(crowdDroneGain);
+        crowdDroneGain.connect(ctx.destination);
+        if (spcDelay) crowdDroneGain.connect(spcDelay);
+
+        crowdDroneSource.start(0);
+      } catch (e) {}
+    }
+
+    function setCrowdIntensity(level = 0.04) {
+      if (!crowdDroneGain || soundMuted) return;
+      const ctx = initAudio();
+      if (!ctx) return;
+      const targetGain = Math.min(0.2, Math.max(0.001, level));
+      crowdDroneGain.gain.cancelScheduledValues(ctx.currentTime);
+      crowdDroneGain.gain.linearRampToValueAtTime(targetGain, ctx.currentTime + 0.35);
+    }
+
+    // Fallback playTone wrapper for backward compatibility
     function playTone(freq, type = 'sine', duration = 0.15, vol = 0.25) {
       if (type === 'triangle' || type === 'sine') {
-        playFmTone(freq, 1.0, 0.5, duration, vol, true);
+        playLyrePluck(freq, duration, vol);
       } else {
         playBrassFanfareNote(freq, duration, vol);
       }
     }
 
     // --- PROCEDURAL SOUNDSCAPE ENGINE (YM2612 2-Op FM + SPC700) ---
-    // Mode: D Phrygian Dominant (D - Eb - F# - G - A - Bb - C) & Andalusian Dm -> C -> Bb -> A
-    // Channels: Lead, Counter, Harmony Arp, Slap Bass, Kick, Snare, HiHat
+    // 6-Channel Hardware Composer Standard: Lead, Counter, Arpeggio, Slap Bass, Kick, Snare, Hi-Hat
     let bgmTimer = null;
     let bgmStep = 0;
-    let bgmMode = 'ludus'; // 'ludus' (ambient march) or 'combat' (driving battle)
+    let bgmMode = 'ludus'; // 'ludus' (stately antique march) or 'combat' (driving battle)
 
-    // Frequencies (Hz)
-    const F_D2 = 73.42, F_Eb2 = 77.78, F_Fs2 = 92.50, F_F2 = 87.31, F_G2 = 98.00, F_A2 = 110.00, F_Bb2 = 116.54, F_C3 = 130.81, F_D3 = 146.83;
-    const F_Eb3 = 155.56, F_Fs3 = 185.00, F_G3 = 196.00, F_A3 = 220.00, F_Bb3 = 233.08, F_C4 = 261.63, F_D4 = 293.66;
-    const F_Eb4 = 311.13, F_Fs4 = 369.99, F_G4 = 392.00, F_A4 = 440.00, F_Bb4 = 466.16, F_C5 = 523.25, F_D5 = 587.33;
+    // Note Frequencies Reference (Hz)
+    const F_C2 = 65.41, F_Cs2 = 69.30, F_D2 = 73.42, F_Eb2 = 77.78, F_E2 = 82.41, F_F2 = 87.31, F_Fs2 = 92.50, F_G2 = 98.00, F_Ab2 = 103.83, F_A2 = 110.00, F_Bb2 = 116.54, F_B2 = 123.47;
+    const F_C3 = 130.81, F_Cs3 = 138.59, F_D3 = 146.83, F_Eb3 = 155.56, F_E3 = 164.81, F_F3 = 174.61, F_Fs3 = 185.00, F_G3 = 196.00, F_Ab3 = 207.65, F_A3 = 220.00, F_Bb3 = 233.08, F_B3 = 246.94;
+    const F_C4 = 261.63, F_Cs4 = 277.18, F_D4 = 293.66, F_Eb4 = 311.13, F_E4 = 329.63, F_F4 = 349.23, F_Fs4 = 369.99, F_G4 = 392.00, F_Ab4 = 415.30, F_A4 = 440.00, F_Bb4 = 466.16, F_B4 = 493.88;
+    const F_C5 = 523.25, F_Cs5 = 554.37, F_D5 = 587.33, F_Eb5 = 622.25, F_E5 = 659.26, F_F5 = 698.46, F_Fs5 = 739.99, F_G5 = 783.99, F_Ab5 = 830.61, F_A5 = 880.00, F_Bb5 = 932.33, F_B5 = 987.77;
+    const F_C6 = 1046.50, F_D6 = 1174.66, F_E6 = 1318.51;
 
-    // 32-step Combat Phrygian Dominant Riff (Galloping 16ths, 3-Voice counterpoint)
+    // --- 64-STEP COMBAT SOUNDSCAPE: "Sands of Mars" ---
+    // Mode: D Phrygian Dominant (D - Eb - F# - G - A - Bb - C) with Andalusian Turnaround
+    // Ch1: Lead Melody (Distorted gladius lead, vocal phrasing, delayed vibrato)
     const combatLead = [
-      F_D4, 0, F_Eb4, F_Fs4, F_G4, 0, F_Fs4, F_Eb4,
-      F_D4, 0, F_A4, 0, F_G4, F_Fs4, F_Eb4, F_Fs4,
-      F_D4, 0, F_D5, 0, F_C5, F_Bb4, F_A4, F_G4,
-      F_Fs4, F_G4, F_A4, F_Bb4, F_A4, F_G4, F_Fs4, F_Eb4
-    ];
-    const combatCounter = [
-      0, F_Fs3, 0, F_G3, 0, F_A3, 0, F_G3,
-      F_Fs3, 0, 0, F_Fs3, 0, F_Eb3, 0, F_Fs3,
-      0, F_A3, 0, F_Bb3, 0, F_A3, 0, F_G3,
-      F_A3, 0, F_Fs3, 0, F_Eb3, 0, F_D3, 0
-    ];
-    const combatBass = [
-      F_D2, F_D2, F_D3, F_D2, F_Eb2, F_Eb2, F_Eb3, F_Eb2,
-      F_D2, F_D2, F_D3, F_D2, F_C3, F_C3, F_Bb2, F_A2,
-      F_D2, F_D2, F_D3, F_D2, F_G2, F_G2, F_G3, F_G2,
-      F_Fs2 || F_D2, F_D2, F_Eb2, F_Eb2, F_A2, F_A2, F_A2, 0
+      // Bar 1: D Phrygian Dominant (Steps 0-15)
+      F_D4, 0, F_Fs4, 0, F_A4, F_Bb4, F_A4, 0,
+      F_Fs4, 0, F_Eb4, 0, F_D4, 0, 0, 0,
+      // Bar 2: Eb Maj7 Neapolitan Lift (Steps 16-31)
+      F_D5, 0, 0, F_D5, F_C5, F_Bb4, F_G4, 0,
+      F_Eb4, 0, F_G4, 0, F_Bb4, 0, F_D5, 0,
+      // Bar 3: Gm7 Subdominant Attack (Steps 32-47)
+      F_G4, F_Bb4, F_D5, 0, F_Fs5, 0, F_G5, 0,
+      F_D5, 0, F_Bb4, 0, F_G4, 0, F_Fs4, 0,
+      // Bar 4: A7(b9) Turnaround Cadence (Steps 48-63)
+      F_A4, 0, F_G4, 0, F_Fs4, F_Eb4, F_D4, 0,
+      F_Eb4, F_Fs4, F_G4, F_A4, F_Bb4, F_A4, F_Fs4, F_Eb4
     ];
 
-    // 32-step Ludus Management Theme (Stately Roman March & Training)
+    // Ch2: Counter-Melody (Imperial brass answering in contrary motion)
+    const combatCounter = [
+      // Bar 1: Contrary descending motion
+      0, F_Fs3, 0, F_D3, 0, 0, F_C3, 0,
+      0, F_D3, 0, F_Fs3, 0, F_Eb3, 0, F_D3,
+      // Bar 2: Ascending answer to lead leap
+      0, 0, F_G3, 0, 0, F_Bb3, 0, F_D4,
+      0, F_Eb4, 0, F_D4, 0, F_Bb3, 0, F_G3,
+      // Bar 3: Contrary low counter-melody
+      0, F_D3, 0, F_G3, 0, F_Bb3, 0, F_D4,
+      0, F_C4, 0, F_Bb3, 0, F_A3, 0, F_G3,
+      // Bar 4: Turnaround contrary motion
+      0, F_Cs4, 0, F_E4, 0, F_G4, 0, F_A4,
+      F_G4, 0, F_E4, 0, F_Cs4, 0, F_Eb3, 0
+    ];
+
+    // Ch3: Harmony & Lyre Arpeggio (Shell voicings 3rd + 7th; no doubled 5ths)
+    const combatArp = [
+      // Bar 1: F#4 + C5 shell
+      0, 0, 0, F_Fs4, 0, 0, 0, F_C5,
+      0, 0, F_Fs4, 0, 0, 0, F_C5, 0,
+      // Bar 2: G4 + D5 shell
+      0, 0, 0, F_G4, 0, 0, 0, F_D5,
+      0, 0, F_Bb4, 0, 0, 0, F_D5, 0,
+      // Bar 3: Bb4 + F5 shell
+      0, 0, 0, F_Bb4, 0, 0, 0, F_F5,
+      0, 0, F_D5, 0, 0, 0, F_G4, 0,
+      // Bar 4: C#5 + G5 shell
+      0, 0, 0, F_Cs5, 0, 0, 0, F_G5,
+      0, 0, F_Bb4, 0, 0, 0, F_Cs5, 0
+    ];
+
+    // Ch4: Galloping Slap Bass (Root-Root-Octave motion below C3; stepwise in C3-C4)
+    const combatBass = [
+      // Bar 1: Galloping 16ths in D
+      F_D2, F_D2, F_D3, F_D2, F_D2, F_D2, F_D3, F_D2,
+      F_D2, F_D2, F_D3, F_D2, F_C3, F_C3, F_Bb2, F_A2,
+      // Bar 2: Galloping 16ths in Eb
+      F_Eb2, F_Eb2, F_Eb3, F_Eb2, F_Eb2, F_Eb2, F_Eb3, F_Eb2,
+      F_Eb2, F_Eb2, F_Eb3, F_Eb2, F_G2, F_G2, F_F2, F_Eb2,
+      // Bar 3: Galloping 16ths in G / Bb
+      F_G2, F_G2, F_G3, F_G2, F_G2, F_G2, F_G3, F_G2,
+      F_Bb2, F_Bb2, F_Bb3, F_Bb2, F_A2, F_A2, F_G2, F_F2,
+      // Bar 4: Turnaround in A7 -> D
+      F_A2, F_A2, F_A3, F_A2, F_A2, F_A2, F_A3, F_A2,
+      F_A2, F_G2, F_Fs2, F_Eb2, F_D2, F_Eb2, F_Fs2, F_A2
+    ];
+
+    // --- 64-STEP LUDUS SOUNDSCAPE: "Triumph of Rome" ---
+    // Mode: D Dorian / Andalusian Descent (Dm -> C -> Bb -> A7)
+    // Ch1: Stately Imperial Brass Lead
     const ludusLead = [
-      F_D4, 0, 0, F_A4, F_G4, 0, F_Fs4, 0,
-      F_G4, 0, F_Eb4, 0, F_D4, 0, 0, 0,
-      F_Fs4, 0, 0, F_A4, F_Bb4, 0, F_A4, 0,
-      F_G4, 0, F_Fs4, 0, F_Eb4, 0, F_D4, 0
+      // Bar 1: Dm (Steps 0-15)
+      F_D4, 0, 0, F_A4, F_G4, 0, F_F4, 0,
+      F_E4, 0, F_F4, 0, F_D4, 0, 0, 0,
+      // Bar 2: C Maj (Steps 16-31)
+      F_E4, 0, 0, F_G4, F_C5, 0, F_B4, 0,
+      F_A4, 0, F_G4, 0, F_E4, 0, 0, 0,
+      // Bar 3: Bb Maj7 (Steps 32-47)
+      F_D5, 0, 0, F_C5, F_Bb4, 0, F_A4, 0,
+      F_G4, 0, F_F4, 0, F_G4, 0, 0, 0,
+      // Bar 4: A7 Turnaround (Steps 48-63)
+      F_A4, 0, F_Bb4, 0, F_A4, 0, F_G4, 0,
+      F_Fs4, 0, F_E4, 0, F_Cs4, 0, F_D4, 0
     ];
+
+    // Ch2: Counterpoint Voice
     const ludusCounter = [
-      0, 0, F_Fs3, 0, 0, 0, F_Eb3, 0,
-      0, 0, F_D3, 0, 0, F_Fs3, 0, 0,
-      0, 0, F_D3, 0, 0, 0, F_Fs3, 0,
-      0, 0, F_Eb3, 0, 0, 0, F_D3, 0
+      // Bar 1:
+      0, 0, F_F3, 0, 0, 0, F_A3, 0,
+      0, 0, F_D3, 0, 0, F_F3, 0, 0,
+      // Bar 2:
+      0, 0, F_G3, 0, 0, 0, F_E3, 0,
+      0, 0, F_C3, 0, 0, F_G3, 0, 0,
+      // Bar 3:
+      0, 0, F_F3, 0, 0, 0, F_D3, 0,
+      0, 0, F_Bb2, 0, 0, F_F3, 0, 0,
+      // Bar 4:
+      0, 0, F_E3, 0, 0, 0, F_Cs3, 0,
+      0, 0, F_A2, 0, 0, 0, F_D3, 0
     ];
+
+    // Ch3: Roman Lyre Plucks (Shell voicings 3rd + 7th)
+    const ludusArp = [
+      // Bar 1: F4 + C5 shell
+      0, 0, 0, F_F4, 0, 0, 0, F_C5,
+      0, 0, F_A4, 0, 0, 0, F_D5, 0,
+      // Bar 2: E4 + Bb4 shell
+      0, 0, 0, F_E4, 0, 0, 0, F_Bb4,
+      0, 0, F_G4, 0, 0, 0, F_C5, 0,
+      // Bar 3: D4 + A4 shell
+      0, 0, 0, F_D4, 0, 0, 0, F_A4,
+      0, 0, F_F4, 0, 0, 0, F_D5, 0,
+      // Bar 4: C#4 + G4 shell
+      0, 0, 0, F_Cs4, 0, 0, 0, F_G4,
+      0, 0, F_A4, 0, 0, 0, F_Cs5, 0
+    ];
+
+    // Ch4: Stately Walking Bass
     const ludusBass = [
-      F_D2, 0, F_D3, 0, F_C3, 0, F_C3, 0,
-      F_Bb2, 0, F_Bb2, 0, F_A2, 0, F_A2, 0,
-      F_D2, 0, F_D3, 0, F_G2, 0, F_G3, 0,
-      F_Eb2, 0, F_Eb3, 0, F_D2, 0, F_D2, 0
+      // Bar 1: Dm
+      F_D2, 0, F_D3, 0, F_F2, 0, F_A2, 0,
+      F_D2, 0, F_D3, 0, F_C3, 0, F_A2, 0,
+      // Bar 2: C
+      F_C3, 0, F_C2, 0, F_E2, 0, F_G2, 0,
+      F_C3, 0, F_E3, 0, F_G2, 0, F_E2, 0,
+      // Bar 3: Bb
+      F_Bb2, 0, F_D3, 0, F_F3, 0, F_Bb2, 0,
+      F_Bb2, 0, F_F2, 0, F_D2, 0, F_Bb2, 0,
+      // Bar 4: A7 -> D
+      F_A2, 0, F_Cs3, 0, F_E3, 0, F_A2, 0,
+      F_A2, 0, F_G2, 0, F_E2, 0, F_D2, 0
     ];
+
+    // Dynamic Note Duration Calculator (Enables singing phrasing & delayed vibrato)
+    function getNoteDuration(noteArr, stepIdx, baseMs) {
+      let steps = 1;
+      const len = noteArr.length;
+      while ((stepIdx + steps) % len !== 0 && noteArr[(stepIdx + steps) % len] === 0 && steps < 5) {
+        steps++;
+      }
+      return Math.min(steps, 4) * (baseMs / 1000) * 0.94;
+    }
 
     function playBgmStep(stepIdx) {
       if (soundMuted) return;
-      const s = stepIdx % 32;
+      const s = stepIdx % 64;
 
       if (bgmMode === 'combat') {
-        // --- COMBAT ARENA SOUNDSCAPE ---
-        // Ch1: Lead Melody (Distorted Gladius Lead with delayed vibrato & echo)
+        // --- COMBAT ARENA SOUNDSCAPE: "Sands of Mars" (6 Channels) ---
+        // Ch1: Lead Melody (Distorted gladius lead with singing phrasing & LFO delayed vibrato)
         const leadNote = combatLead[s];
-        if (leadNote > 0) playDistortedLead(leadNote, 0.17, 0.22);
+        if (leadNote > 0) {
+          const dur = getNoteDuration(combatLead, s, 122);
+          playDistortedLead(leadNote, dur, 0.22);
+        }
 
-        // Ch2: Counterpoint (Brass harmony answering lead)
+        // Ch2: Counterpoint Voice (Imperial brass answering in contrary motion)
         const counterNote = combatCounter[s];
-        if (counterNote > 0) playBrassFanfareNote(counterNote, 0.15, 0.18);
+        if (counterNote > 0) {
+          const counterDur = getNoteDuration(combatCounter, s, 122);
+          playBrassFanfareNote(counterNote, counterDur, 0.18);
+        }
 
-        // Ch3: Galloping FM Slap Bass (tight root/octave motion)
+        // Ch3: Harmony & Lyre Arpeggio (Shell voicings 3rd + 7th on weak beats)
+        const arpNote = combatArp[s];
+        if (arpNote > 0) playLyrePluck(arpNote, 0.16, 0.18);
+
+        // Ch4: Galloping Slap Bass (tight root/octave motion, zero echo)
         const bassNote = combatBass[s];
         if (bassNote > 0) playSlapBass(bassNote, 0.12, 0.28);
 
-        // Ch5 & Ch6: Percussion (FM Kick + Snare + Hi-Hat)
-        if (s % 8 === 0 || s % 8 === 6) playFmKick();
-        if (s % 8 === 4) playFmSnare();
+        // Ch5 & Ch6: Percussion (Roman Tympanum + Snare + Hi-Hat with 5:3 swing groove)
+        if (s % 8 === 0 || s % 8 === 6 || s === 62) playFmKick(s % 8 === 0);
+        if (s % 8 === 4 || s === 61 || s === 63) playFmSnare();
         if (s % 2 === 0) playFmHiHat(s % 4 === 2);
       } else {
-        // --- LUDUS AMBIENT MARCH ---
-        // Ch1: Imperial Brass Phrasing
+        // --- LUDUS AMBIENT MARCH: "Triumph of Rome" (6 Channels) ---
+        // Ch1: Imperial Hydraulis (Water Organ) & Brass Phrasing
         const leadNote = ludusLead[s];
-        if (leadNote > 0) playBrassFanfareNote(leadNote, 0.24, 0.2);
+        if (leadNote > 0) {
+          const leadDur = getNoteDuration(ludusLead, s, 150);
+          playHydraulis(leadNote, leadDur, 0.22);
+        }
 
-        // Ch2: Counterpoint Voice
+        // Ch2: Roman Aulos / Tibia Double-Reed Counterpoint Voice
         const counterNote = ludusCounter[s];
-        if (counterNote > 0) playFmTone(counterNote, 1.0, 1.2, 0.22, 0.16, true);
+        if (counterNote > 0) {
+          const counterDur = getNoteDuration(ludusCounter, s, 150);
+          playAulosFlute(counterNote, counterDur, 0.18);
+        }
 
-        // Ch3: Stately Bass
+        // Ch3: Roman Lyre Plucks (Shell voicings)
+        const arpNote = ludusArp[s];
+        if (arpNote > 0) playLyrePluck(arpNote, 0.22, 0.18);
+
+        // Ch4: Stately Walking Bass
         const bassNote = ludusBass[s];
-        if (bassNote > 0) playSlapBass(bassNote, 0.2, 0.22);
+        if (bassNote > 0) playSlapBass(bassNote, 0.20, 0.22);
 
-        // Soft March Percussion
-        if (s % 8 === 0) playFmKick();
-        if (s % 8 === 4) playFmHiHat(true);
+        // Soft March Percussion (Tympanum & Snare)
+        if (s % 8 === 0) playFmKick(false);
+        if (s % 8 === 4) playFmSnare();
+        if (s % 4 === 2) playFmHiHat(false);
       }
     }
 
@@ -956,7 +1246,7 @@
       playBgmStep(bgmStep);
       bgmStep++;
 
-      // 5:3 Swing Groove timing: Even 175ms, Odd 105ms (Average 140ms per step = ~107 BPM)
+      // 5:3 Swing Groove timing: Even steps slightly longer than Odd steps
       const isEven = (bgmStep % 2 === 0);
       const nextDelay = bgmMode === 'combat' ? (isEven ? 150 : 95) : (isEven ? 180 : 120);
       bgmTimer = setTimeout(scheduleBgmStep, nextDelay);
@@ -968,6 +1258,10 @@
       if (bgmTimer) clearTimeout(bgmTimer);
       bgmStep = 0;
       scheduleBgmStep();
+      const trackName = bgmMode === 'combat'
+        ? 'Sands of Mars (YM2612 Phrygian Dominant)'
+        : 'Triumph of Rome (YM2612 Hydraulis & Brass March)';
+      showToast('🎵 Soundscape: ' + trackName, 'info');
     }
 
     function stopBgm() {
@@ -975,6 +1269,7 @@
         clearTimeout(bgmTimer);
         bgmTimer = null;
       }
+      setCrowdIntensity(0.001);
     }
 
     // --- REFINED COMBAT ACTION STINGERS & EARCONS ---
@@ -1022,6 +1317,8 @@
     function playCheer() {
       const ctx = initAudio();
       if (!ctx || soundMuted) return;
+      setCrowdIntensity(0.18);
+      setTimeout(() => setCrowdIntensity(0.04), 1600);
       try {
         const bufferSize = Math.floor(ctx.sampleRate * 1.8);
         const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
@@ -1074,7 +1371,7 @@
       playTrumpetFanfare();
       setTimeout(() => playCheer(), 250);
       setTimeout(() => {
-        if (!soundMuted) startBgm('ludus');
+        if (!soundMuted) { setCrowdIntensity(0.001); startBgm('ludus'); }
       }, 2500);
     }
 
@@ -1088,10 +1385,79 @@
         }, i * 210);
       });
       setTimeout(() => {
-        if (!soundMuted) startBgm('ludus');
+        if (!soundMuted) { setCrowdIntensity(0.001); startBgm('ludus'); }
       }, 2500);
     }
 
+    // --- HARDWARE COMPOSER UI EARCONS ---
+    // 1. Roman Coin Jingle (dual metallic bells, Algorithm 2)
+    function playCoinJingle() {
+      const ctx = initAudio();
+      if (!ctx || soundMuted) return;
+      playFmTone(F_C6, 3.5, 4.2, 0.12, 0.22, true);
+      setTimeout(() => {
+        playFmTone(F_E6, 3.5, 4.0, 0.18, 0.25, true);
+      }, 70);
+    }
+
+    // 2. Gladiator Recruitment Fanfare (heroic brass triad)
+    function playRecruitFanfare() {
+      const notes = [F_D4, F_Fs4, F_A4];
+      notes.forEach((f, i) => {
+        setTimeout(() => playBrassFanfareNote(f, 0.18, 0.28), i * 90);
+      });
+    }
+
+    // 3. Tactical Stance Click (crisp wood/leather shield tap)
+    function playTacticClick() {
+      playFmTone(320, 1.5, 2.5, 0.05, 0.18, false);
+    }
+
+    // 4. Training Stat Upgrade (gladius strike + resonant tone)
+    function playTrainingStab() {
+      playClash();
+      setTimeout(() => playFmTone(F_D4, 2.0, 2.0, 0.22, 0.25, true), 80);
+    }
+
+    // 5. Salve Healing Chime (soothing lyre arpeggio)
+    function playSalveChime() {
+      const notes = [F_F4, F_A4, F_D5];
+      notes.forEach((f, i) => {
+        setTimeout(() => playLyrePluck(f, 0.35, 0.20), i * 110);
+      });
+    }
+
+    // 6. Ludus Facility Upgrade Fanfare
+    function playUpgradeChime() {
+      const notes = [F_Bb3, F_C4, F_D4, F_Fs4, F_A4];
+      notes.forEach((f, i) => {
+        setTimeout(() => playBrassFanfareNote(f, i === 4 ? 0.45 : 0.16, 0.30), i * 100);
+      });
+    }
+
+    // 7. Quicksave / Quickload Chimes
+    function playSaveChime() {
+      playLyrePluck(F_D4, 0.15, 0.22);
+      setTimeout(() => playLyrePluck(F_A4, 0.28, 0.25), 80);
+    }
+    function playLoadChime() {
+      playLyrePluck(F_A4, 0.15, 0.22);
+      setTimeout(() => playLyrePluck(F_D4, 0.28, 0.25), 80);
+    }
+
+    // One-time user interaction unlock for Web Audio
+    function ensureAudioUnlocked() {
+      if (soundMuted) return;
+      initAudio();
+      if (!bgmTimer) {
+        startBgm(bgmMode || 'ludus');
+      }
+    }
+    if (typeof window !== 'undefined') {
+      ['click', 'keydown', 'pointerdown'].forEach(evt => {
+        window.addEventListener(evt, ensureAudioUnlocked, { once: true, passive: true });
+      });
+    }
     let funds = 1000;
     let nextId = 1;
     let arenaLevel = 1;
@@ -1147,7 +1513,7 @@
       updateDesc(g);
       const info = getStanceInfo(g.stance);
       showToast(`🥋 ${g.name} tactic set to ${info.name}!`, 'info');
-      if (!soundMuted) playTone(440, 'triangle', 0.1, 0.2);
+      playTacticClick();
       saveGame();
       updateUI();
     }
@@ -1206,7 +1572,7 @@
         updateDesc(g);
         owned.push(g);
         showToast(`⚔️ Recruited guest veteran ${g.name} into ludus!`, 'success');
-        if (!soundMuted) playTone(587.33, 'triangle', 0.2, 0.3);
+        playRecruitFanfare();
         saveGame();
         updateUI();
       } catch (e) {
@@ -1332,7 +1698,7 @@
         funds -= 50;
         market.length = 0;
         market.push(generateGladiator(), generateGladiator(), generateGladiator());
-        playTone(300, 'sine', 0.1, 0.2);
+        playCoinJingle();
         saveGame();
         updateUI();
       }
@@ -1445,8 +1811,7 @@
         funds -= recruit.cost;
         owned.push(recruit);
         market.splice(index, 1);
-        playTone(330, 'triangle', 0.12, 0.3);
-        setTimeout(() => playTone(440, 'triangle', 0.18, 0.3), 100);
+        playRecruitFanfare();
         showToast(`🏛️ Recruited ${recruit.name}!`, 'success');
         saveGame();
         updateUI();
@@ -1465,7 +1830,7 @@
           if (type === 'sica') { g.weapon = 3; itemLabel = "Twin Sica"; }
           if (type === 'armr') { g.armor = 1; itemLabel = "Cuirass Armor"; }
           if (type === 'shld') { g.shield = 1; itemLabel = "Bronze Shield"; }
-          playTone(400, 'square', 0.1, 0.2);
+          playTacticClick();
           updateDesc(g);
           showToast(`⚔️ Equipped ${itemLabel} on ${g.name}!`, 'info');
           saveGame();
@@ -1659,8 +2024,7 @@
       }
       funds -= cost;
       ludusFacilities[key] = lvl + 1;
-      playTone(523.25, 'triangle', 0.15, 0.35);
-      setTimeout(() => playTone(659.25, 'triangle', 0.2, 0.35), 90);
+      playUpgradeChime();
       showToast(`🏛️ Upgraded ${def.name} to Tier ${lvl + 1}!`, 'success');
       saveGame();
       updateUI();
@@ -1681,8 +2045,7 @@
           if (stat === 'str') gladiator.str += bonus;
           if (stat === 'agi') gladiator.agi += bonus;
           if (stat === 'vit') gladiator.vit += bonus;
-          playTone(280, 'sine', 0.12, 0.3);
-          setTimeout(() => playTone(370, 'sine', 0.15, 0.3), 80);
+          playTrainingStab();
           updateDesc(gladiator);
           showToast(`💪 Trained ${gladiator.name} (+1 ${stat.toUpperCase()})!`, 'info');
           saveGame();
@@ -1700,8 +2063,7 @@
         let chargedCost = Math.max(0, Math.round(healAmt * (1 - discountRate)));
         funds -= chargedCost;
         g.damageTaken -= healAmt;
-        playTone(523.25, 'sine', 0.15, 0.25);
-        setTimeout(() => playTone(659.25, 'sine', 0.2, 0.25), 100);
+        playSalveChime();
         updateDesc(g);
         showToast(`🩹 Healed ${g.name} (+${healAmt} HP)!`, 'success');
         saveGame();
@@ -3672,7 +4034,7 @@
       
       document.getElementById('dashboard').style.display = 'none';
       document.getElementById('arenaPanel').style.display = 'block';
-      if (!soundMuted) startBgm('combat');
+      if (!soundMuted) { initCrowdDrone(); setCrowdIntensity(0.04); startBgm('combat'); }
 
       // Ensure online duel overlays are reset for solo play
       isOnlineGame = false;
@@ -4186,7 +4548,7 @@
       if (animId) cancelAnimationFrame(animId);
       document.getElementById('arenaPanel').style.display = 'none';
       document.getElementById('dashboard').style.display = 'flex';
-      if (!soundMuted) startBgm('ludus');
+      if (!soundMuted) { setCrowdIntensity(0.001); startBgm('ludus'); }
 
       // Reset online duel overlays
       isOnlineGame = false;
@@ -4259,7 +4621,7 @@
       } catch (e) {}
       closeAllModals();
       showToast('🏛️ Welcome Lanista! Good fortune in the arena.', 'info');
-      playTone(440, 'triangle', 0.15, 0.3);
+      playRecruitFanfare();
     }
 
     function showExportModal() {
@@ -4402,7 +4764,7 @@
         localStorage.setItem('kcolosseum_quicksave', JSON.stringify(payload));
         localStorage.setItem('kcolosseum_save', JSON.stringify(payload));
         showToast('💾 Quicksave created! [F5]', 'success');
-        playTone(440, 'triangle', 0.12, 0.3);
+        playSaveChime();
         return true;
       } catch (e) {
         showToast('⚠️ Storage quota error on quicksave.', 'warning');
