@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-creator
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -21,7 +21,7 @@ current_targets:
   kilo_soundscape: KTrader
   kilo_tester: KTrader
   kilo_usability: KPass
-  kilo_qa: KWords
+  kilo_qa: KColosseum
   kilo_expander: KHex
 virtual_web_target: kweb://asm-temple
 virtual_web_rotation:
@@ -37,9 +37,9 @@ virtual_web_rotation:
 - kweb://deep-core
 - kweb://darknet
 last_run:
-  agent: kilo-usability
-  app: KHex
-  timestamp: '2026-10-21T13:36:00-07:00'
+  agent: kilo-qa
+  app: KWords
+  timestamp: '2026-10-21T14:35:00-07:00'
 last_planner_run: '2026-10-20T23:15:00Z'
 ---
 
@@ -134,27 +134,27 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Verification**: cd KiloOS && npm run build. File size < 999 KB.
 - **Handoff**:
   - In frontmatter: advance current_targets.kilo_usability to KCalc.
-  - Set current_agent: kilo-qa.
+  - Set current_agent: kilo-expander.
   - Append terse execution log (≤6 lines), commit, and push.
 - **Upcoming Queue**: KCalc, KPad.
 
 ### 6. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
-- **Target**: `KWords`
-- **Primary Files**: `KiloOS/public/apps/kwords.html`, `KWords/main.c` (if present)
-- **Objective**: Pass 5 QA audit: verify first-run tutorial onboarding overlay (`kwords_tutorialSeen`), verify F5 quicksave & F9 quickload capturing complete game board, vocabulary state, round, and high score; test Escape modal dismissal; compile Win32 native client and verify web cartridge (<999 KB).
+- **Target**: `KColosseum`
+- **Primary Files**: `KiloOS/public/apps/kcolosseum.html`, `apps/kcolosseum/main.c` (if present)
+- **Objective**: Pass 5 QA audit: verify first-run tutorial onboarding overlay (`kcolosseum_tutorialSeen`), verify F5 quicksave & F9 quickload capturing gladiator stats, arena stage, equipment, and gold; test modal dismissal; compile Win32 native client and verify web cartridge (<999 KB).
 - **Action Steps**:
-  1. State Persistence: F5 quicksave & F9 quickload capturing complete game state, stats, and settings.
+  1. State Persistence: F5 quicksave & F9 quickload capturing complete gladiator combat, inventory, and stage progression.
   2. First-run Tutorial: Onboarding displays once on fresh sessions, never on restored saves.
   3. Modal Dismissals: Modals dismiss cleanly with Escape, Enter, or Close button.
-  4. Dual Parity & Build: Compile Win32 native client via `cmd.exe /c build.bat` in `KWords/` (if present) and verify web build.
+  4. Dual Parity & Build: Compile Win32 native client via `cmd.exe /c build.bat` in `apps/kcolosseum/` (if present) and verify web build.
 - **Verification**:
-  - `uv run scripts/test_app_startup.py --app KWords`
-  - `cd KiloOS && npm run build` (0 Vite errors, `kwords.html` < 999 KB)
+  - `uv run scripts/test_app_startup.py --app KColosseum`
+  - `cd KiloOS && npm run build` (0 Vite errors, `kcolosseum.html` < 999 KB)
 - **Handoff**:
-  - In frontmatter: advance `current_targets.kilo_qa` to `KColosseum`.
+  - In frontmatter: advance `current_targets.kilo_qa` to `KCalc`.
   - Set `current_agent: kilo-expander`.
   - Append terse execution log (≤6 lines), commit, and push.
-- **Upcoming Queue**: `KColosseum`, `KCalc`.
+- **Upcoming Queue**: `KCalc`, `KPuzzle`.
 
 ### 7. Feature Expander Queue (`kilo-expander`)
 - **Target**: `KHex`
@@ -206,10 +206,18 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | **KMatch3** | `KiloOS/public/apps/kmatch3.html` | Pass 5 (2026-10-19) | Puzzle / Match-3 | 20-stage campaign, Zen, Timed Rush & Duel Arena modes, Jewel King boss encounter, active skills, dual Win32 native client parity, full F5/F9 state persistence, first-run tutorial integrity. |
 | **KChart** | `KiloOS/public/apps/kchart.html` | Pass 6+ (2026-10-20) | Office / Visualization | Feature-complete 1999 spreadsheet & business chart studio; 10 engines, regressions & OLS fit, YM2612 FM / SPC700 sonification, 7 export formats, dual Win32 C parity, full state persistence. |
 | **KSimon** | `KiloOS/public/apps/ksimon.html` | Pass 5 (2026-10-20) | Arcade / Memory | Feature-complete 3D audio-visual memory console; 9 modes (incl. 20-stage campaign & online duel), dual Win32 native client parity, full F5/F9 state persistence, first-run tutorial integrity, zero glints. |
+| **KWords** | `KiloOS/public/apps/kwords.html` | Pass 5 (2026-10-21) | Word / Puzzle | Feature-complete retro word search with 20-stage campaign, 12 themes, custom puzzle creator/import/export, replay scrubber, dual Win32 native client parity, full F5/F9 state persistence, first-run tutorial integrity. |
 
 ---
 
 ## Recent Execution Logs (Max 5 Entries)
+
+- **2026-10-21T14:35:00-07:00 — kilo-qa: KWords (Pass 5 QA & Build Quality Audit — Promoted to Mature)**
+  - State Persistence: Wired explicit F5 (quicksave) & F9 (quickload) hotkeys across web & Win32 native client; verified complete board, theme, charges, stage, and score backup.
+  - First-Run Tutorial: Ensured fresh sessions launch onboarding help modal via storage/dat flags, with restored saves automatically suppressing overlay.
+  - Modal Dismissals: Added Esc, Enter, and Space dismissals across help, statistics, and victory overlays; verified clean modal dismissal and canvas hit-test unblocked.
+  - Dual Parity & Build: Compiled Win32 native client KWords.exe cleanly (165.8 KB); web cartridge verified (156.4 KB < 999 KB); test_app_startup PASS; Vite build clean.
+  - Quarantine & Queue: Promoted KWords to Mature Applications table; advanced current_targets.kilo_qa to KColosseum; handoff to kilo-expander.
 
 - **2026-10-21T13:36:00-07:00 — kilo-usability: KHex (Navigation Ergonomics & Usability Polish)**
   - Tab Ergonomics: Upgraded .tab-nav to flex-wrap with 6px gap to comfortably display all 9 suite tabs without clipping or hidden scrolling.

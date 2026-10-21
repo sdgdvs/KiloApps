@@ -695,6 +695,8 @@
         <li style="width: auto;"><strong>Word Pathfinder (P):</strong> Outlines full exact path of 1 target word.</li>
         <li style="width: auto;"><strong>Freeze Timer (F):</strong> Freezes countdown timer for 15 seconds!</li>
         <li style="width: auto;"><strong>Hint (H):</strong> Reveals a random hidden letter in target word.</li>
+        <li style="width: auto;"><strong>Quick Save (F5 / S) & Quick Load (F9 / L):</strong> Full board & campaign state backup.</li>
+        <li style="width: auto;"><strong>Help (F1) / Dismiss (Esc / Enter / Space):</strong> Quick dialog navigation.</li>
       </ul>
       <h3 style="color:#48bb78; margin-bottom:4px;">Obstacles & Features</h3>
       <ul style="list-style-type: disc; padding-left: 18px;">
@@ -1137,12 +1139,35 @@
     let comboMultiplier = 1;
 
     document.addEventListener('keydown', (e) => {
+      if (e.key === 'F5') {
+        e.preventDefault();
+        saveGame();
+        return;
+      }
+      if (e.key === 'F9') {
+        e.preventDefault();
+        loadGame();
+        return;
+      }
+      if (e.key === 'F1') {
+        e.preventDefault();
+        const helpM = document.getElementById('help-modal');
+        if (helpM) helpM.style.display = (helpM.style.display === 'block') ? 'none' : 'block';
+        return;
+      }
       if (e.ctrlKey || e.altKey || e.metaKey) return;
       if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT')) {
         if (e.key === 'Escape') e.target.blur();
         return;
       }
+      const winEl = document.getElementById('win-message');
+      const isWinOpen = winEl && winEl.style.display === 'block';
+
       if (e.key === 'Escape') {
+        if (isWinOpen) {
+          winEl.style.display = 'none';
+          return;
+        }
         const modalIds = ['stats-modal', 'help-modal', 'multiplayer-modal', 'custom-modal', 'replay-modal', 'export-modal', 'lexicon-modal', 'duel-finish-modal'];
         let closedAny = false;
         modalIds.forEach(id => {
@@ -1157,6 +1182,25 @@
         }
         return;
       }
+
+      if (e.key === 'Enter' || e.key === ' ') {
+        if (isWinOpen) {
+          e.preventDefault();
+          initGame();
+          return;
+        }
+        const dismissibleModals = ['stats-modal', 'help-modal'];
+        let closedAny = false;
+        dismissibleModals.forEach(id => {
+          const el = document.getElementById(id);
+          if (el && el.style.display === 'block') { el.style.display = 'none'; closedAny = true; }
+        });
+        if (closedAny) {
+          e.preventDefault();
+          return;
+        }
+      }
+
       const isAnyModalOpen = ['stats-modal', 'help-modal', 'multiplayer-modal', 'custom-modal', 'replay-modal', 'export-modal', 'lexicon-modal', 'duel-finish-modal'].some(id => {
         const el = document.getElementById(id);
         return el && el.style.display === 'block';
@@ -1374,6 +1418,8 @@
         if (gameMode !== "campaign" || campaignStage === 1) score = 0;
         document.getElementById('score').textContent = score;
         document.getElementById('win-message').style.display = 'none';
+            const hm = document.getElementById('help-modal'); if (hm) hm.style.display = 'none';
+            const sm = document.getElementById('stats-modal'); if (sm) sm.style.display = 'none';
         document.getElementById('win-title').textContent = "You Win!";
         document.getElementById('win-title').style.color = "#48bb78";
         
@@ -1999,7 +2045,7 @@
             secretWords, secretFound, hintedWords
         };
         safeSetStorage('kwords_save', JSON.stringify(data));
-        showSecretBanner('GAME SAVED LOCALLY!');
+        showSecretBanner('GAME SAVED (F5)!');
     }
 
     function loadGame() {

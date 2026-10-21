@@ -1352,6 +1352,8 @@ void LoadGame(HWND hwnd) {
             }
         }
         
+        showHelp = false;
+        showStats = false;
         InvalidateRect(hwnd, NULL, TRUE);
     } else {
         MessageBox(hwnd, "No save file found.", "Load", MB_OK | MB_ICONINFORMATION);
@@ -1360,12 +1362,25 @@ void LoadGame(HWND hwnd) {
 
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch(msg) {
-        case WM_CREATE:
+        case WM_CREATE: {
             InitGame();
             SpawnParticles(0, 0, 3); // Initial dust
             SetTimer(hwnd, 1, 1000, NULL);
             SetTimer(hwnd, 2, 30, NULL);
+            FILE* ft = fopen("kwords_tutorial.dat", "rb");
+            if (!ft) {
+                showHelp = true;
+                ft = fopen("kwords_tutorial.dat", "wb");
+                if (ft) {
+                    char flag = 1;
+                    fwrite(&flag, 1, 1, ft);
+                    fclose(ft);
+                }
+            } else {
+                fclose(ft);
+            }
             break;
+        }
         case WM_TIMER:
             if(wParam == 1) {
                 if(!gameWon && !gameOver) {
@@ -1443,11 +1458,24 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             }
             break;
         case WM_KEYDOWN:
-            if (wParam == VK_ESCAPE) {
-                if (showStats) { showStats = false; InvalidateRect(hwnd, NULL, TRUE); }
-                else if (showHelp) { showHelp = false; InvalidateRect(hwnd, NULL, TRUE); }
-                else if (isSelecting) { isSelecting = false; ReleaseCapture(); InvalidateRect(hwnd, NULL, FALSE); }
+            if (wParam == VK_F5) {
+                SaveGame(hwnd);
                 break;
+            }
+            if (wParam == VK_F9) {
+                LoadGame(hwnd);
+                break;
+            }
+            if (wParam == VK_F1) {
+                showHelp = !showHelp;
+                InvalidateRect(hwnd, NULL, TRUE);
+                break;
+            }
+            if (wParam == VK_ESCAPE || wParam == VK_RETURN || wParam == VK_SPACE) {
+                if (showStats) { showStats = false; InvalidateRect(hwnd, NULL, TRUE); break; }
+                else if (showHelp) { showHelp = false; InvalidateRect(hwnd, NULL, TRUE); break; }
+                else if (gameWon || gameOver) { InitGame(); InvalidateRect(hwnd, NULL, TRUE); break; }
+                else if (wParam == VK_ESCAPE && isSelecting) { isSelecting = false; ReleaseCapture(); InvalidateRect(hwnd, NULL, FALSE); break; }
             }
             if (showStats || showHelp) break;
             if (GetKeyState(VK_CONTROL) < 0 || GetKeyState(VK_MENU) < 0) {
@@ -1458,7 +1486,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (wParam == 'R' || wParam == 'r' || wParam == 'W' || wParam == 'w') UseRadar(hwnd);
             else if (wParam == 'P' || wParam == 'p') UsePathfinder(hwnd);
             else if (wParam == 'F' || wParam == 'f') UseFreeze(hwnd);
-            else if (wParam == 'H' || wParam == 'h' || wParam == VK_F1) UseHint(hwnd);
+            else if (wParam == 'H' || wParam == 'h') UseHint(hwnd);
             else if (wParam == 'S' || wParam == 's') SaveGame(hwnd);
             else if (wParam == 'L' || wParam == 'l') LoadGame(hwnd);
             break;
@@ -2143,7 +2171,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 TextOut(hdc, 120, 545, "- Bonus Secret Words: Hidden bonus words award +500 PTS!", 55);
                 
                 SetTextColor(hdc, RGB(226, 232, 240));
-                TextOut(hdc, 100, 660, "Click anywhere to close help", 28);
+                TextOut(hdc, 120, 460, "F5 / S: Quick Save | F9 / L: Quick Load | F1: Toggle Help", 57);
+                TextOut(hdc, 100, 660, "Press Esc / Space / Enter or click anywhere to close", 52);
             }
             
             SelectObject(hdc, hOldFont);
