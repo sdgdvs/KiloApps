@@ -4,6 +4,13 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-21T10:36:00-07:00 — kilo-soundscape: KColosseum (Sands of Mars & Triumph of Rome)**
+  - Audio Synthesis: Upgraded YM2612 2-Op FM / SPC700 soundscape with dedicated 5.8Hz LFO delayed vibrato on gladius lead.
+  - Ancient Instrumentation: Added Roman Hydraulis (water organ), Aulos/Tibia reed pipe, Legionary Tympanum kettle drum, and Bronze Chime patches.
+  - Dynamic Phrasing: Implemented note duration lookahead engine for expressive vocal phrasing and singing FM sustain.
+  - Parity & Verification: Win32 native C (SoundThread Beep) dual-target parity verified; Vite clean (804ms); file 283 KB < 999 KB; security lint PASS.
+  - Queue: Advanced kilo-soundscape to KTrader; handoff to kilo-tester.
+
 - **2026-10-21T08:35:00-07:00 — kilo-adhoc: Fleet Orchestrator & KColosseum Parity (Model Tier & Audio Fix)**
   - Orchestrator Fix: Dynamically synchronized `gemini-3.8-flash-{effort}` model flag with selective effort tiers in `scripts/orchestrate.py`, resolving CLI conflict error and restoring fleet execution.
   - KColosseum Parity: Added missing `F_Fs2 = 92.50` frequency declaration in `kcolosseum.html`, preventing runtime ReferenceError in combat bassline; Win32 C build clean (`KColosseum.exe`, 39.4 KB).

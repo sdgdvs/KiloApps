@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-expander
-next_agent: kilo-creator
+current_agent: kilo-creator
+next_agent: kilo-graphics
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -16,14 +16,14 @@ tool_call_cap: 30
 commit_checkpoint: 15
 status: ready
 current_targets:
-  kilo_creator: kweb://asm-temple
-  kilo_graphics: KTrader
+  kilo_creator: kweb://cybercafe
+  kilo_graphics: KSpace
   kilo_soundscape: KTrader
-  kilo_tester: KTrader
-  kilo_usability: KPass
+  kilo_tester: KPass
+  kilo_usability: KCalc
   kilo_qa: KColosseum
-  kilo_expander: KHex
-virtual_web_target: kweb://asm-temple
+  kilo_expander: KPing
+virtual_web_target: kweb://cybercafe
 virtual_web_rotation:
 - kweb://portal
 - kweb://webring
@@ -37,10 +37,10 @@ virtual_web_rotation:
 - kweb://deep-core
 - kweb://darknet
 last_run:
-  agent: kilo-qa
-  app: KWords
-  timestamp: '2026-10-21T14:35:00-07:00'
-last_planner_run: '2026-10-20T23:15:00Z'
+  agent: kilo-expander
+  app: KHex
+  timestamp: '2026-10-21T15:38:00-07:00'
+last_planner_run: '2026-10-21T23:32:00Z'
 ---
 
 # KiloApps Master Fleet Work & Queue State
@@ -66,19 +66,18 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 ---
 
 ## Active Target Queues (Gemini Flash Optimized Tickets)
-
 ### 1. Virtual 1999 Web & ARG Node Creator (`kilo-creator`)
-- **Target**: `kweb://asm-temple`
-- **Primary File**: `KiloOS/public/web/asm_temple.html`
-- **Objective**: Expand x86 assembly temple shrine: 16-bit real mode demos, interrupt vector tables, opcode reference matrices, and subterranean ARG reflections adhering to Anti-Potemkin Quality Standard (<999 KB).
-- **Upcoming Queue**: `kweb://cybercafe`, `kweb://10.19.99.4/classified`, `kweb://echo-subsystem.net`.
+- **Target**: `kweb://cybercafe`
+- **Primary File**: `KiloOS/public/web/cybercafe.html`
+- **Objective**: Virtual 1999 Cybercafe terminal & chat nexus: CRT monitor styling, simulated IRC chat channels, dial-up sounds, and subterranean ARG breadcrumbs adhering to Anti-Potemkin Quality Standard (<999 KB).
+- **Upcoming Queue**: `kweb://10.19.99.4/classified`, `kweb://echo-subsystem.net`, `kweb://deep-core`.
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
-- **Target**: `KTrader`
-- **Primary Files**: `KiloOS/public/apps/ktrader.html`, `KTrader/main.c` (if present)
-- **Objective**: Stock exchange visual assets: trading pit sprites, candlestick charts, ticker tape displays, and market HUD.
+- **Target**: `KSpace`
+- **Primary Files**: `KiloOS/public/apps/kspace.html`
+- **Objective**: Space combat retro arcade overhaul: replace vector / primitive shapes with Imagen 3 generated ship, asteroid, laser, and space station sprites, plus seamless nebula starfield background (<999 KB).
 - **Action Steps**:
-  1. Inspect `KiloOS/public/apps/ktrader.html` canvas rendering routines for programmer art.
+  1. Inspect `KiloOS/public/apps/kspace.html` canvas rendering routines for programmer art.
   2. Generate sprites via 2-stage asset pipeline if appropriate (`generate_image` with solid `#FF00FF` -> `scripts/asset_pipeline.py`).
   3. Search for and eliminate any traveling border dots or rotating specular glints.
   4. Run `python scripts/check_icons.py` to audit icon uniqueness.
@@ -87,11 +86,11 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - In frontmatter: advance `current_targets.kilo_graphics` to `KTrader`.
   - Set `current_agent: kilo-soundscape`.
   - Append terse execution log (≤6 lines), commit, and push.
-- **Upcoming Queue**: `KTrader`, `KSpace`.
+- **Upcoming Queue**: `KTrader`, `KAbyss`, `KRacer`.
 
 ### 3. Procedural Audio & Soundscape Queue (`kilo-soundscape`)
 - **Target**: `KTrader`
-- **Primary Files**: `KiloOS/public/apps/ktrader.html`, `KTrader/main.c` (if present)
+- **Primary Files**: `KiloOS/public/apps/ktrader.html`
 - **Objective**: Stock exchange and commodity trader retro audio suite: trading pit ambient drones, ticker tape rhythmic chatter, bull/bear bell earcons, and market crash/boom stingers.
 - **Action Steps**:
   1. Inspect `KiloOS/public/apps/ktrader.html` audio synthesis functions.
@@ -106,37 +105,37 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - In frontmatter: advance `current_targets.kilo_soundscape` to `KSpace`.
   - Set `current_agent: kilo-tester`.
   - Append terse execution log (≤6 lines), commit, and push.
-- **Upcoming Queue**: `KSpace`, `KAbyss`.
+- **Upcoming Queue**: `KSpace`, `KAbyss`, `KRacer`.
 
 ### 4. App Tester Queue (`kilo-tester`)
-- **Target**: `KClip`
-- **Primary File**: `KiloOS/public/apps/kclip.html`
-- **Objective**: Multi-format retro clipboard manager and snippet archive interactive UI audit: format tabs, paste history, search filtering, and hotkey persistence.
+- **Target**: `KPass`
+- **Primary File**: `KiloOS/public/apps/kpass.html`
+- **Objective**: Retro password manager and credential safe interactive UI audit: master password prompt, generator controls, entry cards, search bar, clip actions, and hotkey persistence.
 - **Action Steps**:
-  1. Run automated startup check: `uv run scripts/test_app_startup.py --app KClip`.
+  1. Run automated startup check: `uv run scripts/test_app_startup.py --app KPass`.
   2. Audit all UI elements: snippet triggers, copy buttons, search inputs, tags, and shortcuts.
   3. Fix any broken button hooks, missing element IDs, or unhandled exceptions inline.
-- **Verification**: `uv run scripts/test_app_startup.py --app KClip` and `cd KiloOS && npm run build`. File size < 999 KB.
+- **Verification**: `uv run scripts/test_app_startup.py --app KPass` and `cd KiloOS && npm run build`. File size < 999 KB.
 - **Handoff**:
-  - In frontmatter: advance `current_targets.kilo_tester` to `KTrader`.
+  - In frontmatter: advance `current_targets.kilo_tester` to `KCalc`.
   - Set `current_agent: kilo-usability`.
   - Append terse execution log (≤6 lines), commit, and push.
-- **Upcoming Queue**: `KTrader`, `KSpace`.
+- **Upcoming Queue**: `KCalc`, `KPing`, `KBase`.
 
-### 5. Usability & UX Queue (kilo-usability)
-- **Target**: KPass
-- **Primary File**: KiloOS/public/apps/kpass.html
-- **Objective**: Retro password manager and credential safe ergonomics: master key flow, responsive item list, generator controls, clipboard safety, and keyboard navigation.
+### 5. Usability & UX Queue (`kilo-usability`)
+- **Target**: `KCalc`
+- **Primary File**: `KiloOS/public/apps/kcalc.html`
+- **Objective**: Desktop calculator ergonomics: responsive button grid, standard/scientific mode toggles, memory indicators, keyboard numpad hotkeys, and HiDPI crisp canvas/display rendering.
 - **Action Steps**:
   1. Inspect layout adaptability across standard and compact window dimensions.
   2. Verify keyboard navigation across credential records and generator dialogs.
   3. Ensure high-contrast accessibility and crisp font/cursor rendering.
-- **Verification**: cd KiloOS && npm run build. File size < 999 KB.
+- **Verification**: `cd KiloOS && npm run build`. File size < 999 KB.
 - **Handoff**:
-  - In frontmatter: advance current_targets.kilo_usability to KCalc.
-  - Set current_agent: kilo-expander.
+  - In frontmatter: advance `current_targets.kilo_usability` to `KPing`.
+  - Set `current_agent: kilo-qa`.
   - Append terse execution log (≤6 lines), commit, and push.
-- **Upcoming Queue**: KCalc, KPad.
+- **Upcoming Queue**: `KPing`, `KPad`, `KTerminal`.
 
 ### 6. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
 - **Target**: `KColosseum`
@@ -151,25 +150,25 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - `uv run scripts/test_app_startup.py --app KColosseum`
   - `cd KiloOS && npm run build` (0 Vite errors, `kcolosseum.html` < 999 KB)
 - **Handoff**:
-  - In frontmatter: advance `current_targets.kilo_qa` to `KCalc`.
+  - In frontmatter: advance `current_targets.kilo_qa` to `KPuzzle`.
   - Set `current_agent: kilo-expander`.
   - Append terse execution log (≤6 lines), commit, and push.
-- **Upcoming Queue**: `KCalc`, `KPuzzle`.
+- **Upcoming Queue**: `KPuzzle`, `KCalc`, `KSpace`.
 
 ### 7. Feature Expander Queue (`kilo-expander`)
-- **Target**: `KHex`
-- **Primary Files**: `KiloOS/public/apps/khex.html`, `KHex/main.c` (if present)
-- **Objective**: Hexadecimal editor and binary analysis suite expansion: PE32 header dissector, multi-segment diffing, and binary patch builder (<999 KB).
+- **Target**: `KPing`
+- **Primary Files**: `KiloOS/public/apps/kping.html`, `KPing/main.c` (if present)
+- **Objective**: Network latency, ICMP echo topology, and retro traceroute diagnostics suite expansion (<999 KB).
 - **Action Steps**:
-  1. Inspect `KiloOS/public/apps/khex.html`.
-  2. Implement deeper structural analysis tools and binary inspection features.
+  1. Inspect `KiloOS/public/apps/kping.html`.
+  2. Implement granular ping intervals, jitter histograms, and simulated subnet traceroutes.
   3. Ensure dual Win32 native client parity and clean build.
-- **Verification**: `uv run scripts/test_app_startup.py --app KHex` and `cd KiloOS && npm.cmd run build`. File size < 999 KB.
+- **Verification**: `uv run scripts/test_app_startup.py --app KPing` and `cd KiloOS && npm.cmd run build`. File size < 999 KB.
 - **Handoff**:
-  - In frontmatter: advance `current_targets.kilo_expander` to `KPing`.
+  - In frontmatter: advance `current_targets.kilo_expander` to `KBase`.
   - Set `current_agent: kilo-creator`.
   - Append terse execution log (≤6 lines), commit, and push.
-- **Upcoming Queue**: `KPing`, `KBase`.
+- **Upcoming Queue**: `KBase`, `KConverter`.
 
 ---
 
@@ -212,6 +211,21 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-21T16:32:00-07:00 — kilo-planner: Fleet (24h Fleet Planning & Queue Rework)**
+  - Fleet Velocity: Assessed 105 apps; 26 mature applications archived in quarantine table.
+  - Queue Rebalance: Dispersed targets across active queues (kweb://cybercafe, KSpace, KTrader, KPass, KCalc, KColosseum, KPing); 0 mature collisions.
+  - Icon Uniqueness: Verified all 105 apps have distinct icons and 0 duplicate SHA256 hashes via check_icons.py.
+  - Verification: Clean startup tests verified across active targets; Vite build clean; zero console errors.
+  - Queue Handoff: Updated last_planner_run timestamp; rotated current_agent to kilo-creator for next scheduled cycle.
+
+- **2026-10-21T15:38:00-07:00 — kilo-expander: KHex (Deep Feature Expansion: PE32 Dissector, Multi-Segment Diff & Binary Patch Builder)**
+  - PE32 Header Dissector: Added full DOS MZ, COFF header, Optional Header 32/64, and Section table parser (.text, .rdata, .data) with RVA-to-raw jump and sample PE generator.
+  - Multi-Segment Diffing: Upgraded binary diff engine with contiguous hunk segmentation, mutation type tagging (Modify, Insert, Delete), and dual hunk/byte view toggles.
+  - Binary Patch Builder: Added IPS ROM patch builder, DOS DEBUG script generator, C array delta struct, JSON deltas, and in-place patch applier.
+  - Dual-Target Parity: Updated Win32 native C client with PE32 header dissector and multi-segment delta reporting; built KHex.exe cleanly (34.3 KB).
+  - Verification & Build: Direct startup test PASS (264.4 KB < 999 KB); Vite build clean; F5/F9 state and keyboard shortcuts verified.
+  - Queue Handoff: Advanced current_targets.kilo_expander to KPing; rotated current_agent to kilo-creator.
+
 - **2026-10-21T14:35:00-07:00 — kilo-qa: KWords (Pass 5 QA & Build Quality Audit — Promoted to Mature)**
   - State Persistence: Wired explicit F5 (quicksave) & F9 (quickload) hotkeys across web & Win32 native client; verified complete board, theme, charges, stage, and score backup.
   - First-Run Tutorial: Ensured fresh sessions launch onboarding help modal via storage/dat flags, with restored saves automatically suppressing overlay.
@@ -233,13 +247,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Feature Enhancement: Integrated responsive Find & Replace bar with keyboard shortcut (Ctrl+H) and Escape-to-close handling.
   - Dual Parity & Size Verification: Built Win32 native KClip.exe cleanly (21.5 KB); web cartridge < 999 KB (197.7 KB); startup check PASS.
   - Queue Handoff: Advanced current_targets.kilo_tester to KTrader; rotated current_agent to kilo-usability.
-
-- **2026-10-21T10:36:00-07:00 — kilo-soundscape: KColosseum (Sands of Mars & Triumph of Rome)**
-  - Audio Synthesis: Upgraded YM2612 2-Op FM / SPC700 soundscape with dedicated 5.8Hz LFO delayed vibrato on gladius lead.
-  - Ancient Instrumentation: Added Roman Hydraulis (water organ), Aulos/Tibia reed pipe, Legionary Tympanum kettle drum, and Bronze Chime patches.
-  - Dynamic Phrasing: Implemented note duration lookahead engine for expressive vocal phrasing and singing FM sustain.
-  - Parity & Verification: Win32 native C (SoundThread Beep) dual-target parity verified; Vite clean (804ms); file 283 KB < 999 KB; security lint PASS.
-  - Queue: Advanced kilo-soundscape to KTrader; handoff to kilo-tester.
-
-- **2026-10-21T09:15:00-07:00 — kilo-graphics: KColosseum**
-  - ⏭️ Skip — Imagen 3 asset replacement not appropriate for KColosseum
