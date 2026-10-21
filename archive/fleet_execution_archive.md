@@ -4,6 +4,13 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-21T08:35:00-07:00 — kilo-adhoc: Fleet Orchestrator & KColosseum Parity (Model Tier & Audio Fix)**
+  - Orchestrator Fix: Dynamically synchronized `gemini-3.8-flash-{effort}` model flag with selective effort tiers in `scripts/orchestrate.py`, resolving CLI conflict error and restoring fleet execution.
+  - KColosseum Parity: Added missing `F_Fs2 = 92.50` frequency declaration in `kcolosseum.html`, preventing runtime ReferenceError in combat bassline; Win32 C build clean (`KColosseum.exe`, 39.4 KB).
+  - Node Status: Restored Node B (`DESKTOP-HSSS709`) to active status and verified CLI model/effort compatibility.
+  - Verification: `security_lint.py` 100% PASS; `test_app_startup.py --app KColosseum` PASS; `npm run build` clean (1.11s); all binaries <999 KB.
+  - Queue Continuity: Maintained active schedule (`kilo-graphics` on `KColosseum`) with zero schedule disruption.
+
 - **2026-10-20T23:15:00Z — kilo-planner: Fleet Planning & 24h Queue Rework (Daily Health & Log Compaction)**
   - Velocity & Health: Reviewed 24h progress (KSimon & KChart mature promotions, neon_rider XM tracker expansion, 30-tool-budget upgrade).
   - Mature Quarantine: Audited 25 quarantined mature apps; verified zero leakage into active targets or upcoming queues.
