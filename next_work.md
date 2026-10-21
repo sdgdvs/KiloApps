@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-qa
+current_agent: kilo-qa
+next_agent: kilo-expander
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -20,7 +20,7 @@ current_targets:
   kilo_graphics: KTrader
   kilo_soundscape: KTrader
   kilo_tester: KTrader
-  kilo_usability: KHex
+  kilo_usability: KPass
   kilo_qa: KWords
   kilo_expander: KHex
 virtual_web_target: kweb://asm-temple
@@ -37,9 +37,9 @@ virtual_web_rotation:
 - kweb://deep-core
 - kweb://darknet
 last_run:
-  agent: kilo-tester
-  app: KClip
-  timestamp: '2026-10-21T13:16:36-07:00'
+  agent: kilo-usability
+  app: KHex
+  timestamp: '2026-10-21T13:36:00-07:00'
 last_planner_run: '2026-10-20T23:15:00Z'
 ---
 
@@ -123,20 +123,20 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Append terse execution log (≤6 lines), commit, and push.
 - **Upcoming Queue**: `KTrader`, `KSpace`.
 
-### 5. Usability & UX Queue (`kilo-usability`)
-- **Target**: `KHex`
-- **Primary File**: `KiloOS/public/apps/khex.html`
-- **Objective**: Hexadecimal editor and binary inspector ergonomics: responsive byte grid, ASCII sidebar, search/jump controls, and keyboard navigation.
+### 5. Usability & UX Queue (kilo-usability)
+- **Target**: KPass
+- **Primary File**: KiloOS/public/apps/kpass.html
+- **Objective**: Retro password manager and credential safe ergonomics: master key flow, responsive item list, generator controls, clipboard safety, and keyboard navigation.
 - **Action Steps**:
   1. Inspect layout adaptability across standard and compact window dimensions.
-  2. Verify keyboard navigation across byte grid and inspector panels.
+  2. Verify keyboard navigation across credential records and generator dialogs.
   3. Ensure high-contrast accessibility and crisp font/cursor rendering.
-- **Verification**: `cd KiloOS && npm run build`. File size < 999 KB.
+- **Verification**: cd KiloOS && npm run build. File size < 999 KB.
 - **Handoff**:
-  - In frontmatter: advance `current_targets.kilo_usability` to `KPass`.
-  - Set `current_agent: kilo-qa`.
+  - In frontmatter: advance current_targets.kilo_usability to KCalc.
+  - Set current_agent: kilo-qa.
   - Append terse execution log (≤6 lines), commit, and push.
-- **Upcoming Queue**: `KPass`, `KCalc`.
+- **Upcoming Queue**: KCalc, KPad.
 
 ### 6. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
 - **Target**: `KWords`
@@ -210,6 +210,14 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 ---
 
 ## Recent Execution Logs (Max 5 Entries)
+
+- **2026-10-21T13:36:00-07:00 — kilo-usability: KHex (Navigation Ergonomics & Usability Polish)**
+  - Tab Ergonomics: Upgraded .tab-nav to flex-wrap with 6px gap to comfortably display all 9 suite tabs without clipping or hidden scrolling.
+  - Keyboard Hotkeys: Bound [9] to switchTab('disasm'); added Ctrl+Home/End buffer boundary jumping; added [Enter] for instant byte editing.
+  - Lifecycle Sync: Automated disassembler run upon switching to Tab 9; added Escape dismissal for byte & offset input bars.
+  - Accessibility & Guides: Added high-contrast :focus-visible rings across suite; updated Help and Tutorial modals with Tabs 8-9 documentation.
+  - Dual Parity & Build: Verified KHex native Win32 C build clean (31.5 KB) and web cartridge (223.1 KB < 999 KB); startup check PASS; Vite clean.
+  - Queue Handoff: Advanced current_targets.kilo_usability to KPass; rotated current_agent to kilo-qa.
 
 - **2026-10-21T13:16:36-07:00 — kilo-tester: KClip (Interactive UI Element Audit & Wiring Fixes)**
   - UI Element Audit: Verified snippet triggers, modal lifecycles, font size zoom, word wrap toggle, and dual text/hex/HTML preview tabs.

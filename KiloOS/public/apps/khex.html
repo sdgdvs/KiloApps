@@ -111,14 +111,17 @@
   /* Navigation Tabs */
   .tab-nav {
     display: flex;
-    gap: 5px;
+    flex-wrap: wrap;
+    gap: 6px;
     background: var(--panel-bg);
     padding: 6px;
     border-radius: 10px;
     border: 1px solid var(--border-color);
-    overflow-x: auto;
-    scrollbar-width: thin;
-    scrollbar-color: rgba(59, 130, 246, 0.25) transparent;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--accent-cyan) !important;
+    outline-offset: 2px !important;
   }
 
   .tab-btn {
@@ -1289,8 +1292,9 @@
             <tr style="border-bottom: 1px solid rgba(255,255,255,0.08);"><td style="padding: 4px 0; color: var(--accent-cyan); font-family: monospace;"><b>[Home] / [End]</b></td><td>Jump to Line Start / Line End (Ctrl+ for Buffer Start/End)</td></tr>
             <tr style="border-bottom: 1px solid rgba(255,255,255,0.08);"><td style="padding: 4px 0; color: var(--accent-cyan); font-family: monospace;"><b>[Ctrl+=] / [Ctrl+-]</b></td><td>Increase / Decrease Hex Font Zoom (A+ / A-)</td></tr>
             <tr style="border-bottom: 1px solid rgba(255,255,255,0.08);"><td style="padding: 4px 0; color: var(--accent-cyan); font-family: monospace;"><b>[T]</b></td><td>Toggle ASCII Column Visibility</td></tr>
+            <tr style="border-bottom: 1px solid rgba(255,255,255,0.08);"><td style="padding: 4px 0; color: var(--accent-cyan); font-family: monospace;"><b>[Enter]</b></td><td>Focus Selected Byte for Rapid In-Place Edit</td></tr>
             <tr style="border-bottom: 1px solid rgba(255,255,255,0.08);"><td style="padding: 4px 0; color: var(--accent-cyan); font-family: monospace;"><b>Double-Click</b></td><td>Focus Hex Byte for Rapid In-Place Edit</td></tr>
-            <tr><td style="padding: 4px 0; color: var(--accent-cyan); font-family: monospace;"><b>[1] - [7]</b></td><td>Quickly switch between Suite Tabs</td></tr>
+            <tr><td style="padding: 4px 0; color: var(--accent-cyan); font-family: monospace;"><b>[1] - [9]</b></td><td>Quickly switch between Suite Tabs (Tabs 1 to 9)</td></tr>
           </table>
         </div>
 
@@ -1304,6 +1308,8 @@
             <li><b>[5] Checksum & Hashes:</b> Instant 8/16/32-bit sums, XOR8, CRC-16 CCITT, IEEE CRC32, Adler-32, FNV-1a, MD5, and SHA-256 digests.</li>
             <li><b>[6] Byte Operations:</b> Bitwise NOT/XOR/AND/OR, shifts (&lt;&lt;/&gt;&gt;), rotations (ROL/ROR), arithmetic add/sub, ASCII case conversions, word endian swaps, and buffer reversal.</li>
             <li><b>[7] Data Export:</b> Formatted HexDump, C/C++ array, Intel HEX (.hex), NASM Assembly DB directives, JSON byte array, Rust byte slice, C# byte array, Python bytes, Base64, and RAW file download.</li>
+            <li><b>[8] Strings &amp; Diff:</b> String Carver &amp; Extractor (ASCII &amp; UTF-16LE with min-length and search filtering) and Side-by-Side Binary Difference &amp; Delta Analyzer with offset mismatch breakdown.</li>
+            <li><b>[9] Opcode Disassembler:</b> Multi-architecture CPU instruction decoder supporting x86-32 Protected Mode, x86-16 Real Mode (DOS .COM), MOS 6502 (NES/C64), and Zilog Z80 (Game Boy/ZX Spectrum), with address rebasing and copy/export to .ASM.</li>
           </ul>
         </div>
       </div>
@@ -1332,11 +1338,12 @@
             <li><b>Tab 2 (Hex Editor & Viewer):</b> 16 bytes/row hex view with inline byte editing, jump-to-offset, and ROM dump inspector.</li>
             <li><b>Tab 3 (Entropy & Dissection):</b> Shannon entropy meter, byte distribution histogram, and file magic signature detection.</li>
             <li><b>Tabs 4-7:</b> Pattern Search/Replace, Checksums (CRC32/MD5/SHA256), Bitwise Ops, and multi-format Export.</li>
+            <li><b>Tabs 8-9:</b> String Carver &amp; Binary Diff, Opcode Disassembler (x86, 6502, Z80).</li>
             <li><b>🛰️ Subsystem Memory Offset:</b> Load the Echo ROM sector to inspect classified offset <code>0x0024</code>!</li>
           </ul>
         </div>
         <div style="font-size:0.8rem; color:var(--text-secondary);">
-          Hotkeys: <b>[F1] / [H]</b> Help &bull; <b>[1-7]</b> Switch Tabs &bull; <b>[E]</b> Swap Endian &bull; <b>[F5] / [F9]</b> Quicksave/Load &bull; <b>[P]</b> Cycle Presets
+          Hotkeys: <b>[F1] / [H]</b> Help &bull; <b>[1-9]</b> Switch Tabs &bull; <b>[E]</b> Swap Endian &bull; <b>[F5] / [F9]</b> Quicksave/Load &bull; <b>[P]</b> Cycle Presets
         </div>
       </div>
       <div style="margin-top:16px; display:flex; justify-content:flex-end; gap:8px;">
@@ -1548,9 +1555,19 @@
     const oa = document.getElementById('opArg');
     if (oa) oa.addEventListener('keydown', (e) => { if (e.key === 'Enter') { applyByteOperation(); e.preventDefault(); } });
     const beh = document.getElementById('byteEditHexInput');
-    if (beh) beh.addEventListener('keydown', (e) => { if (e.key === 'Enter') { applyByteEdit(); e.preventDefault(); } });
+    if (beh) beh.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') { applyByteEdit(); e.preventDefault(); }
+      else if (e.key === 'Escape') { beh.blur(); e.preventDefault(); }
+    });
     const goIn = document.getElementById('gotoOffsetInput');
-    if (goIn) goIn.addEventListener('keydown', (e) => { if (e.key === 'Enter') { gotoOffset(); e.preventDefault(); } });
+    if (goIn) goIn.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') { gotoOffset(); e.preventDefault(); }
+      else if (e.key === 'Escape') { goIn.blur(); e.preventDefault(); }
+    });
+    const doIn = document.getElementById('disasmOrigin');
+    if (doIn) doIn.addEventListener('keydown', (e) => { if (e.key === 'Enter') { runDisassembly(); e.preventDefault(); } });
+    const dsIn = document.getElementById('disasmStartOffset');
+    if (dsIn) dsIn.addEventListener('keydown', (e) => { if (e.key === 'Enter') { runDisassembly(); e.preventDefault(); } });
 
     // Restore saved hex viewer zoom & ascii column preferences
     try {
@@ -1679,6 +1696,18 @@
         e.preventDefault();
         return;
       }
+      if (activeTab === 'editor') {
+        if (e.key === 'Home') {
+          gotoOffset(0);
+          e.preventDefault();
+          return;
+        }
+        if (e.key === 'End') {
+          gotoOffset(Math.max(0, binaryBuffer.length - 1));
+          e.preventDefault();
+          return;
+        }
+      }
     }
     if (!isHelpOpen && !isTutOpen && !e.ctrlKey && !e.altKey && !e.metaKey && e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
       if (activeTab === 'editor') {
@@ -1696,6 +1725,14 @@
           gotoOffset(Math.min(binaryBuffer.length - 1, selectedOffset - (selectedOffset % 16) + 15));
           e.preventDefault(); return;
         }
+        else if (e.key === 'Enter') {
+          const bhIn = document.getElementById('byteEditHexInput');
+          if (bhIn) {
+            bhIn.focus();
+            bhIn.select();
+          }
+          e.preventDefault(); return;
+        }
         else if (e.key === 't' || e.key === 'T') {
           toggleAsciiColumn();
           e.preventDefault(); return;
@@ -1709,6 +1746,7 @@
       else if (e.key === '6') { switchTab('operations'); e.preventDefault(); }
       else if (e.key === '7') { switchTab('export'); e.preventDefault(); }
       else if (e.key === '8') { switchTab('strings'); e.preventDefault(); }
+      else if (e.key === '9') { switchTab('disasm'); e.preventDefault(); }
       else if (e.key === 'e' || e.key === 'E') {
         isLittleEndian = !isLittleEndian;
         try { localStorage.setItem('khex_endian', isLittleEndian.toString()); } catch (err) {}
@@ -1767,6 +1805,7 @@
     if (tabId === 'operations') updateOpArgVisibility();
     if (tabId === 'export') generateExport();
     if (tabId === 'strings') runStringCarver();
+    if (tabId === 'disasm') runDisassembly();
   }
 
   // --- TAB 1: BASE CONVERTER & INSPECTOR LOGIC ---
