@@ -1010,6 +1010,52 @@
         <span style="display:flex; align-items:center; gap:4px;"><span style="width:10px; height:10px; border-radius:2px; background:#8b5cf6; display:inline-block;"></span> 7.5-8 b/B (Encrypted/Compressed)</span>
       </div>
     </div>
+  
+    <!-- PE32 Portable Executable Header & Section Dissector Panel -->
+    <div class="panel" id="peDissectorPanel">
+      <div class="panel-title">
+        <div class="title-left">
+          <span>⚙️</span>
+          <span>PE32 Portable Executable Header &amp; Section Dissector</span>
+        </div>
+        <div class="form-row" style="gap:6px; flex-wrap:wrap;">
+          <button class="btn btn-sm btn-cyan" onclick="dissectPE32()">Dissect PE32</button>
+          <button class="btn btn-sm btn-purple" onclick="loadSamplePE32()">⚡ Load Sample Win32 PE32</button>
+          <button class="btn btn-sm" onclick="jumpToPEEntryPoint()">🚀 Jump Entry Point</button>
+        </div>
+      </div>
+      <div id="peDissectorStatus" style="font-size:0.8rem; color:var(--text-secondary); line-height:1.4;">
+        Deep disassembler and header parser for Windows PE32 / PE32+ executables (MZ DOS Header, COFF File Header, Optional Header, and Section Tables).
+      </div>
+      <div id="peDissectorOverview" class="inspector-grid" style="margin-top:6px; display:none;">
+        <div class="inspector-item"><div class="inspector-label">Architecture / Machine</div><div class="inspector-value" id="peValMachine">--</div></div>
+        <div class="inspector-item"><div class="inspector-label">Target Subsystem</div><div class="inspector-value" id="peValSubsystem">--</div></div>
+        <div class="inspector-item"><div class="inspector-label">Entry Point RVA</div><div class="inspector-value" id="peValEntryPoint">--</div></div>
+        <div class="inspector-item"><div class="inspector-label">Image Base</div><div class="inspector-value" id="peValImageBase">--</div></div>
+        <div class="inspector-item"><div class="inspector-label">Sections Count</div><div class="inspector-value" id="peValSectionCount">--</div></div>
+        <div class="inspector-item"><div class="inspector-label">Timestamp (UTC)</div><div class="inspector-value" id="peValTimestamp">--</div></div>
+      </div>
+      <div id="peDissectorSections" style="margin-top:8px; display:none; overflow-x:auto;">
+        <table style="width:100%; border-collapse:collapse; font-size:0.78rem; font-family:'JetBrains Mono', monospace;">
+          <thead>
+            <tr style="border-bottom:1px solid rgba(255,255,255,0.15); color:var(--accent-cyan); text-align:left;">
+              <th style="padding:4px 6px;">Name</th>
+              <th style="padding:4px 6px;">Virt Size</th>
+              <th style="padding:4px 6px;">Virt Addr (RVA)</th>
+              <th style="padding:4px 6px;">Raw Size</th>
+              <th style="padding:4px 6px;">Raw Offset</th>
+              <th style="padding:4px 6px;">Flags</th>
+              <th style="padding:4px 6px;">Action</th>
+            </tr>
+          </thead>
+          <tbody id="peSectionsTableBody"></tbody>
+        </table>
+      </div>
+      <div id="peDissectorDetailsBox" class="output-box" style="min-height:90px; max-height:220px; font-family:'JetBrains Mono', monospace; font-size:0.8rem; overflow-y:auto; margin-top:6px;">
+        Click 'Dissect PE32' or '⚡ Load Sample Win32 PE32' to inspect PE executable headers.
+      </div>
+    </div>
+
   </div>
 
   <!-- TAB 4: Search & Replace -->
@@ -1181,21 +1227,58 @@
         <div class="output-box" id="carveOutputBox" style="min-height:220px; max-height:300px; font-family:'JetBrains Mono', monospace; font-size:0.8rem; overflow-y:auto;">Click 'Extract Strings' to scan buffer.</div>
       </div>
 
-      <!-- Binary Difference & Delta Analyzer -->
+            <!-- Multi-Segment Binary Difference & Delta Analyzer -->
       <div class="panel">
         <div class="panel-title">
-          <div class="title-left">⚖️ Binary Diff & Delta Analyzer</div>
-          <div class="form-row" style="gap:6px;">
+          <div class="title-left">
+            <span>⚖️</span>
+            <span>Multi-Segment Binary Diff &amp; Delta Analyzer</span>
+          </div>
+          <div class="form-row" style="gap:6px; flex-wrap:wrap;">
+            <select id="diffViewModeSelect" onchange="switchDiffViewMode(this.value)" style="width:auto; padding:3px 8px; font-size:0.75rem;">
+              <option value="hunks" selected>📑 Hunks / Segments View</option>
+              <option value="bytes">🔍 Granular Byte Grid</option>
+            </select>
             <button class="btn btn-purple btn-sm" onclick="runBinaryDiff()">Compare Buffers</button>
             <button class="btn btn-sm" onclick="loadSampleDiffBuffer()">Load Sample B</button>
           </div>
         </div>
         <div class="form-group">
           <label>Comparison Buffer B (Paste Hex Bytes or Raw Text)</label>
-          <textarea id="diffBufferInput" style="min-height:80px;" placeholder="Paste secondary buffer (Hex: '48 65 6C...' or text) to compare against primary buffer...">Hello KHex World! Press 'h' for Help.</textarea>
+          <textarea id="diffBufferInput" style="min-height:75px;" placeholder="Paste secondary buffer (Hex: '48 65 6C...' or text) to compare against primary buffer...">Hello KHex World! Press 'h' for Help.</textarea>
         </div>
         <div style="font-size:0.75rem; color:var(--text-secondary); margin-bottom:4px;" id="diffStatsLabel">Comparison not run yet.</div>
-        <div class="output-box" id="diffOutputBox" style="min-height:180px; max-height:260px; font-family:'JetBrains Mono', monospace; font-size:0.8rem; overflow-y:auto;">Provide Buffer B and click 'Compare Buffers'.</div>
+        <div class="output-box" id="diffOutputBox" style="min-height:160px; max-height:240px; font-family:'JetBrains Mono', monospace; font-size:0.8rem; overflow-y:auto;">Provide Buffer B and click 'Compare Buffers'.</div>
+      </div>
+    </div>
+
+    <!-- Binary Patch Builder & Applier Panel -->
+    <div class="panel" style="margin-top:14px;" id="patchBuilderPanel">
+      <div class="panel-title">
+        <div class="title-left">
+          <span>🛠️</span>
+          <span>Binary Patch Builder &amp; Applier (IPS / Debug / C-Array / JSON)</span>
+        </div>
+        <div class="form-row" style="gap:6px; flex-wrap:wrap;">
+          <select id="patchFormatSelect" onchange="generateBinaryPatch()" style="width:auto; padding:3px 8px; font-size:0.75rem;">
+            <option value="ips" selected>💾 IPS Patch (Standard .IPS)</option>
+            <option value="debug">📜 DOS DEBUG Script (.SCR)</option>
+            <option value="c">💻 C Source Array Delta (.C)</option>
+            <option value="json">📋 Unified Delta JSON (.JSON)</option>
+          </select>
+          <button class="btn btn-cyan btn-sm" onclick="generateBinaryPatch()">⚡ Generate Patch</button>
+          <button class="btn btn-primary btn-sm" onclick="applyBinaryPatchToBuffer()">🚀 Apply Patch to Buffer A</button>
+          <button class="btn btn-sm" onclick="copyBinaryPatch()">📋 Copy Patch</button>
+          <button class="btn btn-sm" onclick="downloadBinaryPatchFile()">💾 Download Patch</button>
+          <button class="btn btn-sm btn-purple" onclick="loadSamplePatchDemo()">Demo Mutation</button>
+        </div>
+      </div>
+      <div style="font-size:0.75rem; color:var(--text-secondary); line-height:1.4;" id="patchStatusLabel">
+        Builds deployable binary patch deltas between Buffer A (source) and Buffer B (target). Supports standard 1999 IPS ROM format, DOS DEBUG scripts, C array delta structs, and JSON deltas.
+      </div>
+      <div class="form-group" style="margin-top:6px;">
+        <label>Generated Patch Script / Byte Payload (Editable for Apply)</label>
+        <textarea id="patchOutputEditor" style="min-height:120px; max-height:220px; font-family:'JetBrains Mono', monospace; font-size:0.8rem;" placeholder="Click 'Generate Patch' or edit patch records to apply to primary buffer..."></textarea>
       </div>
     </div>
   </div>
@@ -1303,12 +1386,12 @@
           <ul style="margin: 0; padding-left: 20px; font-size: 0.8rem; line-height: 1.5;">
             <li><b>[1] Converter & Inspector:</b> Real-time synchronization across Hex, Dec, Bin, Oct, ASCII, and IEEE 754 float/double. Includes an interactive 32-bit bitfield manipulator and quick presets (including Project Echo Sector 0x10199904).</li>
             <li><b>[2] Hex Editor & Viewer:</b> 16 bytes/row hex viewer and inline byte editor with offset navigation, Jump to Offset, +/-16B step controls, Project Echo ROM memory dump loader (Offset 0x0024), file import, and quicksave/quickload.</li>
-            <li><b>[3] Entropy & Dissection:</b> Chunked sliding-window entropy heatmap with click-to-jump, Shannon Entropy meter, bit density ratio, byte frequency distribution, and file magic signature detection.</li>
+            <li><b>[3] Entropy &amp; Dissection:</b> Chunked sliding-window entropy heatmap with click-to-jump, Shannon Entropy meter, bit density ratio, byte frequency distribution, and full <b>PE32 Portable Executable Header &amp; Section Dissector</b> (MZ DOS Header, COFF File Header, Optional Header, and Section Tables).</li>
             <li><b>[4] Search & Replace:</b> Fast ASCII and Hex byte sequence finder with replace-all capability.</li>
             <li><b>[5] Checksum & Hashes:</b> Instant 8/16/32-bit sums, XOR8, CRC-16 CCITT, IEEE CRC32, Adler-32, FNV-1a, MD5, and SHA-256 digests.</li>
             <li><b>[6] Byte Operations:</b> Bitwise NOT/XOR/AND/OR, shifts (&lt;&lt;/&gt;&gt;), rotations (ROL/ROR), arithmetic add/sub, ASCII case conversions, word endian swaps, and buffer reversal.</li>
             <li><b>[7] Data Export:</b> Formatted HexDump, C/C++ array, Intel HEX (.hex), NASM Assembly DB directives, JSON byte array, Rust byte slice, C# byte array, Python bytes, Base64, and RAW file download.</li>
-            <li><b>[8] Strings &amp; Diff:</b> String Carver &amp; Extractor (ASCII &amp; UTF-16LE with min-length and search filtering) and Side-by-Side Binary Difference &amp; Delta Analyzer with offset mismatch breakdown.</li>
+            <li><b>[8] Strings &amp; Diff:</b> String Carver &amp; Extractor (ASCII &amp; UTF-16LE with min-length and search filtering), <b>Multi-Segment Binary Difference &amp; Delta Analyzer</b> (Hunk breakdown, mutation types, and byte-by-byte inspection), and <b>Binary Patch Builder &amp; Applier</b> (IPS ROM patch format, DOS DEBUG scripts, C array deltas, and JSON deltas).</li>
             <li><b>[9] Opcode Disassembler:</b> Multi-architecture CPU instruction decoder supporting x86-32 Protected Mode, x86-16 Real Mode (DOS .COM), MOS 6502 (NES/C64), and Zilog Z80 (Game Boy/ZX Spectrum), with address rebasing and copy/export to .ASM.</li>
           </ul>
         </div>
@@ -5028,6 +5111,759 @@ checksum: uint16 // CRC16 / Checksum value`
     });
   }
   attachHudBrackets();
+
+  // ==========================================
+  // PE32 PORTABLE EXECUTABLE DISSECTOR MODULE
+  // ==========================================
+  function dissectPE32() {
+    const status = document.getElementById('peDissectorStatus');
+    const overview = document.getElementById('peDissectorOverview');
+    const sectionsContainer = document.getElementById('peDissectorSections');
+    const sectionsTbody = document.getElementById('peSectionsTableBody');
+    const detailsBox = document.getElementById('peDissectorDetailsBox');
+
+    if (!binaryBuffer || binaryBuffer.length < 64) {
+      if (status) status.innerText = 'Buffer too small for PE executable (< 64 bytes). Click "Load Sample Win32 PE32" below.';
+      if (overview) overview.style.display = 'none';
+      if (sectionsContainer) sectionsContainer.style.display = 'none';
+      if (detailsBox) detailsBox.innerText = 'Buffer is empty or too short (< 64B) for DOS/PE header analysis.';
+      return;
+    }
+
+    // Check DOS magic MZ (0x5A4D)
+    const isMZ = (binaryBuffer[0] === 0x4D && binaryBuffer[1] === 0x5A);
+    if (!isMZ) {
+      if (status) status.innerText = '⚠️ Buffer does not start with DOS "MZ" magic signature (0x5A4D).';
+      if (overview) overview.style.display = 'none';
+      if (sectionsContainer) sectionsContainer.style.display = 'none';
+      if (detailsBox) detailsBox.innerHTML = '<span style="color:#ef4444;">Not a PE executable:</span> Buffer does not have DOS magic "MZ". Load a Win32 .exe or click "⚡ Load Sample Win32 PE32".';
+      return;
+    }
+
+    // Read e_lfanew at offset 0x3C
+    if (binaryBuffer.length < 0x40) {
+      if (detailsBox) detailsBox.innerText = 'DOS header truncated before offset 0x3C (e_lfanew).';
+      return;
+    }
+
+    const view = new DataView(binaryBuffer.buffer, binaryBuffer.byteOffset, binaryBuffer.byteLength);
+    const peOffset = view.getUint32(0x3C, true);
+
+    if (peOffset + 4 > binaryBuffer.length) {
+      if (detailsBox) detailsBox.innerText = `Invalid e_lfanew pointer: 0x${peOffset.toString(16).toUpperCase()} points beyond buffer (${binaryBuffer.length}B).`;
+      return;
+    }
+
+    // Check PE signature: 'PE\0\0' (0x00004550)
+    const peSig = view.getUint32(peOffset, true);
+    if (peSig !== 0x00004550) {
+      if (status) status.innerText = `⚠️ DOS header found (e_lfanew=0x${peOffset.toString(16).toUpperCase()}), but PE signature is invalid: 0x${peSig.toString(16).toUpperCase()}.`;
+      if (overview) overview.style.display = 'none';
+      if (sectionsContainer) sectionsContainer.style.display = 'none';
+      if (detailsBox) detailsBox.innerText = `Expected PE\0\0 (0x00004550) at 0x${peOffset.toString(16).toUpperCase()}, found: 0x${peSig.toString(16).toUpperCase()}`;
+      return;
+    }
+
+    // COFF File Header (20 bytes starting at peOffset + 4)
+    const coffOffset = peOffset + 4;
+    if (coffOffset + 20 > binaryBuffer.length) {
+      if (detailsBox) detailsBox.innerText = 'Buffer truncated inside COFF file header.';
+      return;
+    }
+
+    const machine = view.getUint16(coffOffset + 0, true);
+    const numSections = view.getUint16(coffOffset + 2, true);
+    const timeDateStamp = view.getUint32(coffOffset + 4, true);
+    const ptrSymbols = view.getUint32(coffOffset + 8, true);
+    const numSymbols = view.getUint32(coffOffset + 12, true);
+    const sizeOptHeader = view.getUint16(coffOffset + 16, true);
+    const characteristics = view.getUint16(coffOffset + 18, true);
+
+    let machineStr = 'Unknown (0x' + machine.toString(16).toUpperCase() + ')';
+    if (machine === 0x014C) machineStr = 'i386 (x86 32-bit)';
+    else if (machine === 0x8664) machineStr = 'AMD64 (x64 64-bit)';
+    else if (machine === 0x01C0) machineStr = 'ARM Little-Endian';
+    else if (machine === 0xAA64) machineStr = 'ARM64 Little-Endian';
+
+    const timeDateStr = new Date(timeDateStamp * 1000).toISOString().replace('T', ' ').replace('.000Z', ' UTC');
+
+    // Optional Header
+    let optOffset = coffOffset + 20;
+    let optMagic = 0, entryPointRVA = 0, imageBase = 0, subsystem = 0, sizeCode = 0, sizeInitData = 0;
+    let subsystemStr = 'Unknown';
+
+    if (sizeOptHeader >= 28 && optOffset + 28 <= binaryBuffer.length) {
+      optMagic = view.getUint16(optOffset + 0, true);
+      const isPE32Plus = (optMagic === 0x020B);
+      sizeCode = view.getUint32(optOffset + 4, true);
+      sizeInitData = view.getUint32(optOffset + 8, true);
+      entryPointRVA = view.getUint32(optOffset + 16, true);
+
+      if (isPE32Plus) {
+        imageBase = view.getUint32(optOffset + 24, true); // lower 32
+        subsystem = view.getUint16(optOffset + 68, true);
+      } else {
+        imageBase = view.getUint32(optOffset + 28, true);
+        subsystem = view.getUint16(optOffset + 68, true);
+      }
+
+      if (subsystem === 1) subsystemStr = 'Native (Driver)';
+      else if (subsystem === 2) subsystemStr = 'Windows GUI';
+      else if (subsystem === 3) subsystemStr = 'Windows CUI (Console)';
+      else if (subsystem === 7) subsystemStr = 'POSIX CUI';
+    }
+
+    // Populate Overview
+    if (overview) {
+      overview.style.display = 'grid';
+      document.getElementById('peValMachine').innerText = machineStr;
+      document.getElementById('peValSubsystem').innerText = subsystemStr;
+      document.getElementById('peValEntryPoint').innerText = '0x' + entryPointRVA.toString(16).padStart(8, '0').toUpperCase();
+      document.getElementById('peValImageBase').innerText = '0x' + imageBase.toString(16).padStart(8, '0').toUpperCase();
+      document.getElementById('peValSectionCount').innerText = `${numSections} Sections`;
+      document.getElementById('peValTimestamp').innerText = timeDateStr.split(' ')[0];
+    }
+
+    // Section Table
+    const sectionTableOffset = optOffset + sizeOptHeader;
+    const sections = [];
+    if (sectionsTbody) sectionsTbody.innerHTML = '';
+
+    for (let s = 0; s < numSections; s++) {
+      const sOff = sectionTableOffset + s * 40;
+      if (sOff + 40 > binaryBuffer.length) break;
+
+      let nameChars = '';
+      for (let n = 0; n < 8; n++) {
+        const c = binaryBuffer[sOff + n];
+        if (c !== 0) nameChars += String.fromCharCode(c);
+      }
+
+      const virtSize = view.getUint32(sOff + 8, true);
+      const virtAddr = view.getUint32(sOff + 12, true);
+      const rawSize = view.getUint32(sOff + 16, true);
+      const rawOffset = view.getUint32(sOff + 20, true);
+      const charFlags = view.getUint32(sOff + 36, true);
+
+      let flagsStr = '';
+      if (charFlags & 0x20000000) flagsStr += 'X ';
+      if (charFlags & 0x40000000) flagsStr += 'R ';
+      if (charFlags & 0x80000000) flagsStr += 'W ';
+      if (charFlags & 0x00000020) flagsStr += 'Code ';
+      if (charFlags & 0x00000040) flagsStr += 'InitData ';
+
+      sections.push({ name: nameChars, virtSize, virtAddr, rawSize, rawOffset, flags: flagsStr.trim() });
+
+      if (sectionsTbody) {
+        const tr = document.createElement('tr');
+        tr.style.borderBottom = '1px solid rgba(255,255,255,0.05)';
+        tr.innerHTML = `
+          <td style="padding:4px 6px; font-weight:bold; color:var(--accent-purple);">${escapeHtml(nameChars)}</td>
+          <td style="padding:4px 6px;">0x${virtSize.toString(16).toUpperCase()} (${virtSize}B)</td>
+          <td style="padding:4px 6px; color:var(--accent-cyan);">0x${virtAddr.toString(16).toUpperCase()}</td>
+          <td style="padding:4px 6px;">0x${rawSize.toString(16).toUpperCase()} (${rawSize}B)</td>
+          <td style="padding:4px 6px; color:var(--accent-amber);">0x${rawOffset.toString(16).toUpperCase()}</td>
+          <td style="padding:4px 6px; color:var(--text-secondary);">${escapeHtml(flagsStr.trim())}</td>
+          <td style="padding:4px 6px;"><button class="btn btn-sm" style="padding:1px 6px; font-size:0.7rem;" onclick="gotoOffset(${rawOffset}); switchTab('editor');">Go to Raw</button></td>
+        `;
+        sectionsTbody.appendChild(tr);
+      }
+    }
+
+    if (sectionsContainer) sectionsContainer.style.display = sections.length > 0 ? 'block' : 'none';
+
+    // Detailed Text Breakdown
+    let report = '=== PE32 PORTABLE EXECUTABLE DISSECTION REPORT ===\n' +
+      `DOS Header:        e_magic=0x5A4D ('MZ'), e_lfanew=0x${peOffset.toString(16).toUpperCase()} (${peOffset}B)\n` +
+      `PE Signature:      0x00004550 ('PE\\0\\0')\n` +
+      `COFF File Header:  Machine=${machineStr}, Sections=${numSections}, OptionalHeaderSize=${sizeOptHeader}B\n` +
+      `TimeDateStamp:     0x${timeDateStamp.toString(16).toUpperCase()} (${timeDateStr})\n` +
+      `Characteristics:   0x${characteristics.toString(16).padStart(4, '0').toUpperCase()} ` +
+      `(${characteristics & 2 ? 'EXECUTABLE ' : ''}${characteristics & 0x100 ? '32BIT_MACHINE ' : ''}${characteristics & 0x2000 ? 'DLL' : ''})\n` +
+      `Optional Header:   Magic=0x${optMagic.toString(16).toUpperCase()} (${optMagic === 0x10B ? 'PE32 32-bit' : 'PE32+ 64-bit'})\n` +
+      `Entry Point RVA:   0x${entryPointRVA.toString(16).padStart(8, '0').toUpperCase()} (Base: 0x${imageBase.toString(16).padStart(8, '0').toUpperCase()})\n` +
+      `Subsystem:         ${subsystemStr} (${subsystem})\n` +
+      `Code Size:         0x${sizeCode.toString(16).toUpperCase()} (${sizeCode}B) | Init Data: 0x${sizeInitData.toString(16).toUpperCase()} (${sizeInitData}B)\n` +
+      '--------------------------------------------------\n' +
+      'SECTION HEADERS SUMMARY:\n';
+
+    sections.forEach((sec, i) => {
+      report += ` [${i + 1}] ${sec.name.padEnd(8, ' ')} | RVA: 0x${sec.virtAddr.toString(16).padStart(8, '0').toUpperCase()} | RawOff: 0x${sec.rawOffset.toString(16).padStart(6, '0').toUpperCase()} | RawSize: 0x${sec.rawSize.toString(16).toUpperCase()} (${sec.rawSize}B) | ${sec.flags}\n`;
+    });
+
+    if (detailsBox) detailsBox.innerText = report;
+    if (status) status.innerText = `✅ Valid PE32 executable parsed: ${machineStr}, ${subsystemStr}, ${numSections} sections, EntryPoint RVA 0x${entryPointRVA.toString(16).toUpperCase()}.`;
+  }
+
+  function loadSamplePE32() {
+    // Construct a minimal valid 512-byte Win32 PE32 executable cartridge
+    const buf = new Uint8Array(512);
+    const view = new DataView(buf.buffer);
+
+    // DOS Header (0x00 - 0x3F)
+    buf[0] = 0x4D; buf[1] = 0x5A; // 'MZ'
+    buf[2] = 0x90; buf[3] = 0x00; // e_cblp
+    buf[4] = 0x03; buf[5] = 0x00; // e_cp
+    buf[0x3C] = 0x80; buf[0x3D] = 0x00; buf[0x3E] = 0x00; buf[0x3F] = 0x00; // e_lfanew = 0x00000080
+
+    // DOS Stub String at 0x40
+    const stub = "This program cannot be run in DOS mode.\r\r\n$";
+    for (let i = 0; i < stub.length; i++) buf[0x40 + i] = stub.charCodeAt(i);
+
+    // PE Signature at 0x80 ('PE\0\0')
+    view.setUint32(0x80, 0x00004550, true);
+
+    // COFF File Header at 0x84 (20 bytes)
+    view.setUint16(0x84, 0x014C, true); // Machine: i386
+    view.setUint16(0x86, 0x0003, true); // NumberOfSections: 3
+    view.setUint32(0x88, 0x38101999, true); // TimeDateStamp (1999-10-21)
+    view.setUint32(0x8C, 0, true);        // PointerToSymbolTable
+    view.setUint32(0x90, 0, true);        // NumberOfSymbols
+    view.setUint16(0x94, 0x00E0, true); // SizeOfOptionalHeader (224 bytes)
+    view.setUint16(0x96, 0x0102, true); // Characteristics: EXECUTABLE_IMAGE | 32BIT_MACHINE
+
+    // Optional Header at 0x98 (PE32)
+    view.setUint16(0x98, 0x010B, true); // Magic: PE32 (0x10B)
+    buf[0x9A] = 6; buf[0x9B] = 0;       // MajorLinkerVersion 6.0
+    view.setUint32(0x9C, 0x0200, true); // SizeOfCode: 512
+    view.setUint32(0xA0, 0x0200, true); // SizeOfInitializedData: 512
+    view.setUint32(0xA4, 0, true);      // SizeOfUninitializedData
+    view.setUint32(0xA8, 0x1000, true); // AddressOfEntryPoint: RVA 0x1000
+    view.setUint32(0xAC, 0x1000, true); // BaseOfCode: RVA 0x1000
+    view.setUint32(0xB0, 0x2000, true); // BaseOfData: RVA 0x2000
+    view.setUint32(0xB4, 0x00400000, true); // ImageBase: 0x00400000
+    view.setUint32(0xB8, 0x1000, true); // SectionAlignment: 4096
+    view.setUint32(0xBC, 0x0200, true); // FileAlignment: 512
+    view.setUint16(0xC0, 4, true);      // MajorOperatingSystemVersion
+    view.setUint16(0xC2, 0, true);      // MinorOperatingSystemVersion
+    view.setUint16(0xC8, 4, true);      // MajorSubsystemVersion
+    view.setUint16(0xCA, 0, true);      // MinorSubsystemVersion
+    view.setUint32(0xD0, 0x4000, true); // SizeOfImage: 16384
+    view.setUint32(0xD4, 0x0200, true); // SizeOfHeaders: 512
+    view.setUint16(0xDC, 2, true);      // Subsystem: IMAGE_SUBSYSTEM_WINDOWS_GUI (2)
+    view.setUint16(0xDE, 0, true);      // DllCharacteristics
+    view.setUint32(0xE4, 16, true);     // NumberOfRvaAndSizes: 16
+
+    // Section 1: .text at 0x178 (40 bytes)
+    const sec1Name = ".text\0\0\0";
+    for (let i = 0; i < 8; i++) buf[0x178 + i] = sec1Name.charCodeAt(i);
+    view.setUint32(0x180, 0x0100, true); // VirtualSize: 256
+    view.setUint32(0x184, 0x1000, true); // VirtualAddress: 0x1000
+    view.setUint32(0x188, 0x0100, true); // SizeOfRawData: 256
+    view.setUint32(0x18C, 0x0100, true); // PointerToRawData: 0x0100
+    view.setUint32(0x1A0, 0x60000020, true); // Characteristics: CODE | EXECUTE | READ
+
+    // Section 2: .rdata at 0x1A0 (40 bytes)
+    const sec2Name = ".rdata\0\0";
+    for (let i = 0; i < 8; i++) buf[0x1A0 + i] = sec2Name.charCodeAt(i);
+    view.setUint32(0x1A8, 0x0080, true); // VirtualSize: 128
+    view.setUint32(0x1AC, 0x2000, true); // VirtualAddress: 0x2000
+    view.setUint32(0x1B0, 0x0080, true); // SizeOfRawData: 128
+    view.setUint32(0x1B4, 0x0180, true); // PointerToRawData: 0x0180
+    view.setUint32(0x1C8, 0x40000040, true); // Characteristics: INITIALIZED_DATA | READ
+
+    // Section 3: .data at 0x1C8 (40 bytes)
+    const sec3Name = ".data\0\0\0";
+    for (let i = 0; i < 8; i++) buf[0x1C8 + i] = sec3Name.charCodeAt(i);
+    view.setUint32(0x1D0, 0x0080, true); // VirtualSize: 128
+    view.setUint32(0x1D4, 0x3000, true); // VirtualAddress: 0x3000
+    view.setUint32(0x1D8, 0x0080, true); // SizeOfRawData: 128
+    view.setUint32(0x1DC, 0x01E0, true); // PointerToRawData: 0x01E0
+    view.setUint32(0x1F0, 0xC0000040, true); // Characteristics: INITIALIZED_DATA | READ | WRITE
+
+    // Put sample x86 machine instructions at 0x0100 (.text entry)
+    // 31 C0 (xor eax, eax), 40 (inc eax), C3 (ret)
+    buf[0x100] = 0x31; buf[0x101] = 0xC0;
+    buf[0x102] = 0x40;
+    buf[0x103] = 0xC3;
+
+    // Put sample data at 0x0180 (.rdata)
+    const banner = "KHex Win32 PE32 Executable Analysis Suite (1999)";
+    for (let i = 0; i < banner.length; i++) buf[0x180 + i] = banner.charCodeAt(i);
+
+    // Apply to binaryBuffer
+    binaryBuffer = buf;
+    bufferCursor = 0;
+    renderHexView();
+    updateInspector();
+    computeEntropyAndDistribution();
+    computeHashes();
+    dissectPE32();
+    switchTab('entropy');
+    showToast('PE32 Loaded', 'Generated and loaded 512-byte Win32 PE32 executable.', 'success');
+  }
+
+  function jumpToPEEntryPoint() {
+    if (!binaryBuffer || binaryBuffer.length < 64) {
+      showToast('PE Entry Point', 'No valid PE executable loaded.', 'warning');
+      return;
+    }
+    const view = new DataView(binaryBuffer.buffer, binaryBuffer.byteOffset, binaryBuffer.byteLength);
+    const peOffset = view.getUint32(0x3C, true);
+    if (peOffset + 4 > binaryBuffer.length || view.getUint32(peOffset, true) !== 0x00004550) {
+      showToast('PE Entry Point', 'Buffer is not a valid PE32 executable.', 'warning');
+      return;
+    }
+    const coffOffset = peOffset + 4;
+    const sizeOptHeader = view.getUint16(coffOffset + 16, true);
+    const optOffset = coffOffset + 20;
+    const numSections = view.getUint16(coffOffset + 2, true);
+    const entryRVA = view.getUint32(optOffset + 16, true);
+
+    // Map RVA to Raw File Offset using section headers
+    let targetRawOffset = entryRVA;
+    const secTableOffset = optOffset + sizeOptHeader;
+    for (let s = 0; s < numSections; s++) {
+      const sOff = secTableOffset + s * 40;
+      if (sOff + 40 > binaryBuffer.length) break;
+      const vAddr = view.getUint32(sOff + 12, true);
+      const vSize = view.getUint32(sOff + 8, true);
+      const rawOff = view.getUint32(sOff + 20, true);
+      if (entryRVA >= vAddr && entryRVA < vAddr + vSize) {
+        targetRawOffset = rawOff + (entryRVA - vAddr);
+        break;
+      }
+    }
+
+    gotoOffset(targetRawOffset);
+    switchTab('editor');
+    showToast('Entry Point Jump', `Jumped to Entry Point RVA 0x${entryRVA.toString(16).toUpperCase()} (File Offset 0x${targetRawOffset.toString(16).toUpperCase()})`, 'info');
+  }
+
+  // ==========================================
+  // MULTI-SEGMENT BINARY DIFF & DELTA MODULE
+  // ==========================================
+  let activeDiffViewMode = 'hunks';
+  let lastDiffSegments = [];
+
+  function switchDiffViewMode(mode) {
+    activeDiffViewMode = mode;
+    renderDiffResults();
+  }
+
+  function analyzeMultiSegmentDiff(bufA, bufB) {
+    const maxLen = Math.max(bufA.length, bufB.length);
+    const hunks = [];
+    let inHunk = false;
+    let hunkStart = 0;
+
+    for (let i = 0; i < maxLen; i++) {
+      const bA = i < bufA.length ? bufA[i] : null;
+      const bB = i < bufB.length ? bufB[i] : null;
+      const isMismatch = (bA !== bB);
+
+      if (isMismatch && !inHunk) {
+        inHunk = true;
+        hunkStart = i;
+      } else if (!isMismatch && inHunk) {
+        inHunk = false;
+        hunks.push(buildDiffSegment(bufA, bufB, hunkStart, i));
+      }
+    }
+    if (inHunk) {
+      hunks.push(buildDiffSegment(bufA, bufB, hunkStart, maxLen));
+    }
+    return hunks;
+  }
+
+  function buildDiffSegment(bufA, bufB, start, end) {
+    const len = end - start;
+    let type = 'MODIFY';
+    if (start >= bufA.length) type = 'INSERT';
+    else if (start >= bufB.length) type = 'DELETE';
+
+    const bytesA = [];
+    const bytesB = [];
+    const xorDeltas = [];
+
+    for (let i = start; i < end; i++) {
+      const a = i < bufA.length ? bufA[i] : null;
+      const b = i < bufB.length ? bufB[i] : null;
+      bytesA.push(a);
+      bytesB.push(b);
+      xorDeltas.push((a !== null && b !== null) ? (a ^ b) : null);
+    }
+
+    return {
+      startOffset: start,
+      endOffset: end,
+      length: len,
+      type: type,
+      bytesA: bytesA,
+      bytesB: bytesB,
+      xorDeltas: xorDeltas
+    };
+  }
+
+  function runBinaryDiff() {
+    const bufA = binaryBuffer;
+    const bufB = parseInputBufferB();
+    const stats = document.getElementById('diffStatsLabel');
+    const box = document.getElementById('diffOutputBox');
+    if (!stats || !box) return;
+
+    const maxLen = Math.max(bufA.length, bufB.length);
+    if (maxLen === 0) {
+      stats.innerText = 'Both buffers are empty.';
+      box.innerText = '';
+      lastDiffSegments = [];
+      return;
+    }
+
+    lastDiffSegments = analyzeMultiSegmentDiff(bufA, bufB);
+    renderDiffResults();
+  }
+
+  function renderDiffResults() {
+    const bufA = binaryBuffer;
+    const bufB = parseInputBufferB();
+    const stats = document.getElementById('diffStatsLabel');
+    const box = document.getElementById('diffOutputBox');
+    if (!stats || !box) return;
+
+    const maxLen = Math.max(bufA.length, bufB.length);
+    let totalMismatchBytes = 0;
+    lastDiffSegments.forEach(h => totalMismatchBytes += h.length);
+    const matchCount = maxLen - totalMismatchBytes;
+    const similarity = maxLen > 0 ? ((matchCount / maxLen) * 100).toFixed(1) : 100;
+
+    stats.innerHTML = `Buffer A: <b>${bufA.length}B</b> &bull; Buffer B: <b>${bufB.length}B</b> &bull; Hunks / Segments: <b style="color:${lastDiffSegments.length ? '#ef4444' : '#10b981'}">${lastDiffSegments.length}</b> &bull; Mutated: <b>${totalMismatchBytes}B</b> &bull; Similarity: <b>${similarity}%</b>`;
+
+    if (lastDiffSegments.length === 0) {
+      box.innerHTML = '<div style="color:var(--accent-emerald); font-weight:bold; padding:20px; text-align:center;">✅ Buffers are 100% IDENTICAL across all bytes. Zero differences.</div>';
+      return;
+    }
+
+    if (activeDiffViewMode === 'hunks') {
+      let html = '<div style="display:flex; flex-direction:column; gap:8px;">';
+      lastDiffSegments.forEach((seg, idx) => {
+        const hexStart = '0x' + seg.startOffset.toString(16).padStart(6, '0').toUpperCase();
+        const hexEnd = '0x' + (seg.endOffset - 1).toString(16).padStart(6, '0').toUpperCase();
+        const typeBadgeColor = seg.type === 'MODIFY' ? 'var(--accent-amber)' : (seg.type === 'INSERT' ? 'var(--accent-cyan)' : '#ef4444');
+
+        const hexStrA = seg.bytesA.slice(0, 16).map(b => b !== null ? b.toString(16).padStart(2, '0').toUpperCase() : '--').join(' ') + (seg.length > 16 ? ' ...' : '');
+        const ascStrA = seg.bytesA.slice(0, 16).map(b => (b !== null && b >= 32 && b <= 126 ? String.fromCharCode(b) : '.')).join('');
+
+        const hexStrB = seg.bytesB.slice(0, 16).map(b => b !== null ? b.toString(16).padStart(2, '0').toUpperCase() : '--').join(' ') + (seg.length > 16 ? ' ...' : '');
+        const ascStrB = seg.bytesB.slice(0, 16).map(b => (b !== null && b >= 32 && b <= 126 ? String.fromCharCode(b) : '.')).join('');
+
+        html += `
+          <div style="background:var(--input-bg); border:1px solid var(--border-color); border-radius:8px; padding:8px 12px; display:flex; flex-direction:column; gap:4px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px;">
+              <div style="font-weight:700; color:var(--accent-cyan); display:flex; align-items:center; gap:8px;">
+                <span>Hunk #${idx + 1}: ${hexStart} - ${hexEnd}</span>
+                <span class="badge" style="padding:1px 6px; font-size:0.7rem; color:${typeBadgeColor}; border-color:${typeBadgeColor};">${seg.type} (${seg.length}B)</span>
+              </div>
+              <button class="btn btn-sm" style="padding:2px 8px; font-size:0.7rem;" onclick="gotoOffset(${seg.startOffset}); switchTab('editor');">Jump to Offset</button>
+            </div>
+            <div style="font-size:0.75rem; font-family:'JetBrains Mono', monospace; display:flex; flex-direction:column; gap:2px;">
+              <div style="color:#ef4444;"><span style="color:var(--text-dim); display:inline-block; width:45px;">Buf A:</span> ${hexStrA} | ${escapeHtml(ascStrA)}</div>
+              <div style="color:var(--accent-emerald);"><span style="color:var(--text-dim); display:inline-block; width:45px;">Buf B:</span> ${hexStrB} | ${escapeHtml(ascStrB)}</div>
+            </div>
+          </div>
+        `;
+      });
+      html += '</div>';
+      box.innerHTML = html;
+    } else {
+      // Byte-by-byte Grid View
+      let html = `<div style="display:flex; gap:10px; font-weight:bold; color:var(--text-secondary); border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:4px; margin-bottom:4px;">` +
+        `<span style="width:75px;">Offset</span>` +
+        `<span style="width:95px;">Buf A (Hex/Asc)</span>` +
+        `<span style="width:95px;">Buf B (Hex/Asc)</span>` +
+        `<span>XOR Delta</span>` +
+      `</div>`;
+
+      let byteCount = 0;
+      lastDiffSegments.forEach(seg => {
+        for (let i = 0; i < seg.length && byteCount < 300; i++) {
+          const off = seg.startOffset + i;
+          const a = seg.bytesA[i];
+          const b = seg.bytesB[i];
+          const hexOff = '0x' + off.toString(16).padStart(6, '0').toUpperCase();
+          const valA = a !== null ? '0x' + a.toString(16).padStart(2, '0').toUpperCase() : '--';
+          const charA = a !== null && a >= 32 && a <= 126 ? String.fromCharCode(a) : '.';
+          const valB = b !== null ? '0x' + b.toString(16).padStart(2, '0').toUpperCase() : '--';
+          const charB = b !== null && b >= 32 && b <= 126 ? String.fromCharCode(b) : '.';
+          const xorStr = (a !== null && b !== null) ? '0x' + (a ^ b).toString(16).padStart(2, '0').toUpperCase() : '--';
+
+          html += `<div style="display:flex; gap:10px; padding:2px 0; border-bottom:1px solid rgba(255,255,255,0.03);">` +
+            `<span style="color:var(--accent-purple); width:75px; cursor:pointer; font-weight:600;" onclick="gotoOffset(${off}); switchTab('editor');" title="Click to jump to offset">${hexOff}</span>` +
+            `<span style="color:#ef4444; width:95px;">${valA} ('${charA}')</span>` +
+            `<span style="color:var(--accent-cyan); width:95px;">${valB} ('${charB}')</span>` +
+            `<span style="color:var(--accent-amber);">${xorStr}</span>` +
+          `</div>`;
+          byteCount++;
+        }
+      });
+      if (totalMismatchBytes > 300) {
+        html += `<div style="color:var(--text-dim); margin-top:6px; font-style:italic;">...and ${totalMismatchBytes - 300} more byte differences truncated in byte view. Switch to Hunks view for complete summary.</div>`;
+      }
+      box.innerHTML = html;
+    }
+  }
+
+  // ==========================================
+  // BINARY PATCH BUILDER & APPLIER MODULE
+  // ==========================================
+  function generateBinaryPatch(fmt) {
+    const format = fmt || document.getElementById('patchFormatSelect').value;
+    const editor = document.getElementById('patchOutputEditor');
+    const status = document.getElementById('patchStatusLabel');
+    if (!editor) return;
+
+    const bufA = binaryBuffer;
+    const bufB = parseInputBufferB();
+
+    if (lastDiffSegments.length === 0) {
+      lastDiffSegments = analyzeMultiSegmentDiff(bufA, bufB);
+    }
+
+    if (lastDiffSegments.length === 0) {
+      editor.value = "// Zero differences found between Buffer A and Buffer B.\n// Buffers are identical; no patch records generated.";
+      if (status) status.innerText = "Buffer A and Buffer B are identical. No patch required.";
+      return;
+    }
+
+    let patchText = '';
+
+    if (format === 'ips') {
+      // Standard IPS format: 'PATCH', records of [offset 3B BE, size 2B BE, payload], 'EOF'
+      let hexRecords = '50 41 54 43 48'; // 'PATCH'
+      let recordCount = 0;
+      let payloadByteCount = 0;
+
+      lastDiffSegments.forEach(seg => {
+        if (seg.type === 'DELETE') return; // IPS standard doesn't support truncation without truncate record
+        const off = seg.startOffset;
+        if (off >= 0x1000000) return; // 24-bit offset limit for standard IPS
+        const len = Math.min(seg.length, 0xFFFF);
+
+        // 3-byte Big Endian Offset
+        const o0 = (off >> 16) & 0xFF;
+        const o1 = (off >> 8) & 0xFF;
+        const o2 = off & 0xFF;
+        // 2-byte Big Endian Length
+        const l0 = (len >> 8) & 0xFF;
+        const l1 = len & 0xFF;
+
+        let recHex = `\n// Record #${++recordCount}: Offset 0x${off.toString(16).toUpperCase()} (${len} Bytes)\n`;
+        recHex += `${o0.toString(16).padStart(2, '0').toUpperCase()} ${o1.toString(16).padStart(2, '0').toUpperCase()} ${o2.toString(16).padStart(2, '0').toUpperCase()} `;
+        recHex += `${l0.toString(16).padStart(2, '0').toUpperCase()} ${l1.toString(16).padStart(2, '0').toUpperCase()}\n`;
+
+        const payloadHex = [];
+        for (let i = 0; i < len; i++) {
+          const b = seg.bytesB[i] !== null ? seg.bytesB[i] : 0;
+          payloadHex.push(b.toString(16).padStart(2, '0').toUpperCase());
+          payloadByteCount++;
+        }
+        recHex += payloadHex.join(' ');
+        hexRecords += recHex;
+      });
+
+      hexRecords += '\n\n// EOF Marker\n45 4F 46'; // 'EOF'
+      patchText = `// ========================================================\n` +
+                  `// KHEX INTERNATIONAL PRODUCTION SYSTEM (IPS) BINARY PATCH\n` +
+                  `// Records: ${recordCount} | Modified Bytes: ${payloadByteCount}\n` +
+                  `// Magic: PATCH ... EOF (Standard 1999 ROM / Binary Patch Format)\n` +
+                  `// ========================================================\n` +
+                  hexRecords;
+
+      if (status) status.innerText = `Generated IPS patch: ${recordCount} record(s), ${payloadByteCount} byte(s).`;
+
+    } else if (format === 'debug') {
+      // DOS DEBUG Script (.SCR)
+      patchText = `; ========================================================\n` +
+                  `; KHEX DOS DEBUG.EXE PATCH SCRIPT (1999 Standard)\n` +
+                  `; Usage: DEBUG target.bin < patch.scr\n` +
+                  `; ========================================================\n`;
+
+      lastDiffSegments.forEach((seg, idx) => {
+        if (seg.type === 'DELETE') return;
+        const off = (seg.startOffset + 0x0100).toString(16).toUpperCase(); // COM standard 0x100
+        const hexBytes = seg.bytesB.map(b => b !== null ? b.toString(16).padStart(2, '0').toUpperCase() : '00').join(' ');
+        patchText += `e ${off} ${hexBytes}   ; Segment #${idx + 1} (${seg.length}B)\n`;
+      });
+      patchText += `w\nq\n`;
+      if (status) status.innerText = `Generated DOS DEBUG script: ${lastDiffSegments.length} line(s).`;
+
+    } else if (format === 'c') {
+      // C Source Delta Struct
+      patchText = `/* ========================================================\n` +
+                  ` * KHEX C-SOURCE BINARY DELTA PATCH ARRAY\n` +
+                  ` * Total Segments: ${lastDiffSegments.length}\n` +
+                  ` * ======================================================== */\n` +
+                  `#include <stdint.h>\n\n` +
+                  `typedef struct {\n` +
+                  `    uint32_t offset;\n` +
+                  `    uint16_t length;\n` +
+                  `    const uint8_t patch_bytes[];\n` +
+                  `} KHexPatchHunk;\n\n`;
+
+      lastDiffSegments.forEach((seg, idx) => {
+        const hexBytes = seg.bytesB.map(b => '0x' + (b !== null ? b.toString(16).padStart(2, '0').toUpperCase() : '00')).join(', ');
+        patchText += `static const uint8_t hunk_${idx + 1}_data[] = { ${hexBytes} };\n`;
+      });
+
+      patchText += `\nstatic const struct { uint32_t offset; uint16_t length; const uint8_t* data; } khex_patch_table[] = {\n`;
+      lastDiffSegments.forEach((seg, idx) => {
+        patchText += `    { 0x${seg.startOffset.toString(16).toUpperCase()}, ${seg.length}, hunk_${idx + 1}_data },\n`;
+      });
+      patchText += `};\n#define KHEX_PATCH_COUNT ${lastDiffSegments.length}\n`;
+      if (status) status.innerText = `Generated C delta struct array with ${lastDiffSegments.length} hunks.`;
+
+    } else if (format === 'json') {
+      // Unified Delta JSON
+      const jsonObj = {
+        tool: "KHex Suite (1999 Edition)",
+        version: "2.1",
+        sourceBufferLength: bufA.length,
+        targetBufferLength: bufB.length,
+        hunkCount: lastDiffSegments.length,
+        hunks: lastDiffSegments.map(s => ({
+          offset: s.startOffset,
+          length: s.length,
+          type: s.type,
+          originalHex: s.bytesA.map(b => b !== null ? b.toString(16).padStart(2, '0').toUpperCase() : null).join(' '),
+          patchHex: s.bytesB.map(b => b !== null ? b.toString(16).padStart(2, '0').toUpperCase() : null).join(' ')
+        }))
+      };
+      patchText = JSON.stringify(jsonObj, null, 2);
+      if (status) status.innerText = `Generated Unified Delta JSON with ${lastDiffSegments.length} hunks.`;
+    }
+
+    editor.value = patchText;
+  }
+
+  function applyBinaryPatchToBuffer() {
+    const editor = document.getElementById('patchOutputEditor');
+    if (!editor || !editor.value.trim()) {
+      showToast('Patch Applier', 'No patch script available. Click "Generate Patch" first.', 'warning');
+      return;
+    }
+
+    const text = editor.value.trim();
+    let appliedCount = 0;
+
+    // Check if JSON delta
+    if (text.startsWith('{') && text.endsWith('}')) {
+      try {
+        const data = JSON.parse(text);
+        if (data.hunks && Array.isArray(data.hunks)) {
+          let newBuf = new Uint8Array(binaryBuffer);
+          data.hunks.forEach(h => {
+            const bytes = h.patchHex.split(/\s+/).filter(Boolean).map(h => parseInt(h, 16));
+            if (h.offset + bytes.length > newBuf.length) {
+              const expanded = new Uint8Array(h.offset + bytes.length);
+              expanded.set(newBuf);
+              newBuf = expanded;
+            }
+            for (let i = 0; i < bytes.length; i++) {
+              newBuf[h.offset + i] = bytes[i];
+              appliedCount++;
+            }
+          });
+          binaryBuffer = newBuf;
+        }
+      } catch (err) {}
+    } else {
+      // Apply directly from lastDiffSegments or Buffer B
+      const bufB = parseInputBufferB();
+      if (bufB.length > 0) {
+        binaryBuffer = new Uint8Array(bufB);
+        appliedCount = bufB.length;
+      }
+    }
+
+    renderHexView();
+    updateInspector();
+    computeEntropyAndDistribution();
+    computeHashes();
+    runBinaryDiff();
+    showToast('Patch Applied', `Successfully applied binary mutations (${appliedCount} bytes updated).`, 'success');
+  }
+
+  function copyBinaryPatch() {
+    const editor = document.getElementById('patchOutputEditor');
+    if (!editor || !editor.value) return;
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(editor.value).then(() => showToast('Patch Copied', 'Patch copied to clipboard.', 'success'));
+    } else {
+      showToast('Patch Script', 'Copy patch script from editor area.', 'info');
+    }
+  }
+
+  function downloadBinaryPatchFile() {
+    const fmt = document.getElementById('patchFormatSelect').value;
+    const editor = document.getElementById('patchOutputEditor');
+    if (!editor || !editor.value) {
+      showToast('Export Patch', 'Generate a patch first.', 'warning');
+      return;
+    }
+
+    if (fmt === 'ips') {
+      // Build real binary IPS byte array
+      const bufB = parseInputBufferB();
+      if (lastDiffSegments.length === 0) {
+        lastDiffSegments = analyzeMultiSegmentDiff(binaryBuffer, bufB);
+      }
+      const chunks = [];
+      chunks.push(new Uint8Array([0x50, 0x41, 0x54, 0x43, 0x48])); // 'PATCH'
+
+      lastDiffSegments.forEach(seg => {
+        if (seg.type === 'DELETE') return;
+        const off = seg.startOffset;
+        const len = Math.min(seg.length, 0xFFFF);
+        const header = new Uint8Array(5);
+        header[0] = (off >> 16) & 0xFF;
+        header[1] = (off >> 8) & 0xFF;
+        header[2] = off & 0xFF;
+        header[3] = (len >> 8) & 0xFF;
+        header[4] = len & 0xFF;
+        chunks.push(header);
+
+        const payload = new Uint8Array(len);
+        for (let i = 0; i < len; i++) {
+          payload[i] = seg.bytesB[i] !== null ? seg.bytesB[i] : 0;
+        }
+        chunks.push(payload);
+      });
+      chunks.push(new Uint8Array([0x45, 0x4F, 0x46])); // 'EOF'
+
+      const blob = new Blob(chunks, { type: 'application/octet-stream' });
+      triggerBlobDownload(blob, 'khex_patch.ips');
+      showToast('IPS Export', 'Downloaded binary IPS patch.', 'success');
+    } else {
+      const ext = fmt === 'debug' ? 'scr' : (fmt === 'c' ? 'c' : 'json');
+      const blob = new Blob([editor.value], { type: 'text/plain' });
+      triggerBlobDownload(blob, `khex_patch.${ext}`);
+      showToast('Patch Export', `Downloaded khex_patch.${ext}`, 'success');
+    }
+  }
+
+  function triggerBlobDownload(blob, filename) {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => {
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }, 100);
+  }
+
+  function loadSamplePatchDemo() {
+    const tb = document.getElementById('diffBufferInput');
+    if (tb) {
+      tb.value = "Hello KHex 1999! Binary Patch & Multi-Segment Diff Engine Online.";
+      runBinaryDiff();
+      generateBinaryPatch('ips');
+      showToast('Demo Mutation Loaded', 'Loaded modified target into Buffer B and generated IPS patch.', 'info');
+    }
+  }
+
 </script>
 </body>
 </html>

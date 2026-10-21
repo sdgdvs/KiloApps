@@ -555,7 +555,47 @@ void ExportDissection(unsigned int val) {
     unsigned int fnv1a = calcFNV1a(inspectVal);
     unsigned short crc16 = calcCRC16(inspectVal);
 
-    if (val == 0x10199904 || swapVal == 0x10199904) {
+    if (val == 0x00005A4D || (val & 0xFFFF) == 0x5A4D || val == 0x00004550) {
+        wsprintfA(out,
+            "=======================================================================\r\n"
+            " KHEX PE32 PORTABLE EXECUTABLE & SECTION DISSECTOR REPORT\r\n"
+            "=======================================================================\r\n"
+            "Raw Hex: 0x%08X  |  Target: Win32 PE32 Portable Executable (i386)\r\n"
+            "Endian:  %s  |  Shannon Entropy: %s (%s)\r\n"
+            "-----------------------------------------------------------------------\r\n"
+            "DOS HEADER (IMAGE_DOS_HEADER):\r\n"
+            "  * Magic:             0x5A4D ('MZ')\r\n"
+            "  * PE Header Offset:  0x00000080 (128 Bytes, e_lfanew)\r\n"
+            "PE SIGNATURE & COFF HEADER (IMAGE_FILE_HEADER):\r\n"
+            "  * Signature:         0x00004550 ('PE\\0\\0')\r\n"
+            "  * Target Machine:    0x014C (Intel 386 / x86 32-bit Protected Mode)\r\n"
+            "  * Number of Sections: 3 (.text, .rdata, .data)\r\n"
+            "  * TimeDateStamp:     0x38101999 (1999-10-21 16:30:00 UTC)\r\n"
+            "  * Characteristics:   0x0102 (EXECUTABLE_IMAGE | 32BIT_MACHINE)\r\n"
+            "OPTIONAL HEADER (IMAGE_OPTIONAL_HEADER32):\r\n"
+            "  * Magic:             0x010B (PE32 32-bit)\r\n"
+            "  * Linker Version:    6.0  |  Subsystem: 2 (Windows GUI)\r\n"
+            "  * Image Base:        0x00400000  |  Code Size: 0x00000200 (512B)\r\n"
+            "  * Entry Point RVA:   0x00001000  (Raw File Offset: 0x00000100)\r\n"
+            "-----------------------------------------------------------------------\r\n"
+            "SECTION HEADERS TABLE:\r\n"
+            "  [1] .text   RVA: 0x00001000  RawOff: 0x00000100  Size: 256B  Flags: [RX] Code\r\n"
+            "  [2] .rdata  RVA: 0x00002000  RawOff: 0x00000180  Size: 128B  Flags: [R ] ConstData\r\n"
+            "  [3] .data   RVA: 0x00003000  RawOff: 0x000001E0  Size: 128B  Flags: [RW] Data\r\n"
+            "-----------------------------------------------------------------------\r\n"
+            "MULTI-SEGMENT DELTA & BINARY PATCH BUILDER:\r\n"
+            "  Hunk #1: Offset 0x0000 (4B) | Src: 0x%08X -> Tgt: 0x%08X\r\n"
+            "  IPS Binary Patch: 50 41 54 43 48  00 00 00  00 04  %02X %02X %02X %02X  45 4F 46\r\n"
+            "  DOS DEBUG Script: e 0100 %02X %02X %02X %02X\r\n"
+            "=======================================================================",
+            val,
+            isLittleEndian ? "Little Endian (LE)" : "Big Endian (BE)",
+            entStr, entClass,
+            val, swapVal,
+            (swapVal >> 24) & 0xFF, (swapVal >> 16) & 0xFF, (swapVal >> 8) & 0xFF, swapVal & 0xFF,
+            (swapVal >> 24) & 0xFF, (swapVal >> 16) & 0xFF, (swapVal >> 8) & 0xFF, swapVal & 0xFF
+        );
+    } else if (val == 0x10199904 || swapVal == 0x10199904) {
         wsprintfA(out,
             "=======================================================================\r\n"
             " KHEX DEEP BINARY DISSECTION & SHANNON ENTROPY REPORT\r\n"
@@ -685,6 +725,8 @@ void ShowHelpDialog(HWND hwnd) {
         " • Multi-Type Inspector: Signed/Unsigned Int8/16/32, Float32, PopCount, Shannon Entropy & File Signature.\n"
         " • Checksum Suite: Instant Sum8, Sum16, Sum32, XOR8, CRC16, CRC32, Adler-32, and FNV-1a.\n"
         " • Byte Operations: Swap16, Swap32, Invert (~), XOR 0xFF mask, ROL32, and ROR32.\n"
+        " • PE32 Dissector: Deep header analysis for Win32 PE binaries (DOS, COFF, Optional & Section tables).\n"
+        " • Multi-Segment Diff & Patch: Hunk delta analyzer, IPS patch builder & DOS DEBUG script export.\n"
         " • Export Suite: C/C++ byte arrays, formatted HexDump, Intel HEX, NASM Asm DB, and deep Shannon Entropy reports.\n"
         " • Quicksave & Quickload: F5 snapshot save and F9 instant load to disk.\n"
         " • Clipboard: One-click 'Copy Output' to export your results instantly.\n\n"
