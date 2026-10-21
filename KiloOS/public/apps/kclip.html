@@ -1147,6 +1147,16 @@
 
       <!-- Text / Hex / HTML / Image Display Area -->
       <div class="inspector-content">
+        <!-- Find & Replace Bar -->
+        <div id="findReplaceBar" style="display:none; padding: 6px 10px; background: var(--bg-alt); border-bottom: 1px solid var(--border); align-items: center; gap: 6px; font-size: 11px; flex-wrap: wrap;">
+          <span style="font-weight: 700; color: var(--primary); font-size: 11px; font-family: var(--font-mono);">FIND:</span>
+          <input type="text" id="findInput" placeholder="Find in clip..." class="text-input" style="padding: 3px 8px; font-size: 11px; width: 140px;" />
+          <input type="text" id="replaceInput" placeholder="Replace with..." class="text-input" style="padding: 3px 8px; font-size: 11px; width: 140px;" />
+          <button class="btn btn-sm" id="btnFindNext" title="Find next match (Enter)">Find Next</button>
+          <button class="btn btn-sm" id="btnReplaceOne" title="Replace current match">Replace</button>
+          <button class="btn btn-sm btn-primary" id="btnReplaceAll" title="Replace all occurrences">Replace All</button>
+          <button class="btn btn-sm" id="btnCloseFindReplace" title="Close Find Bar (Esc)" style="margin-left: auto;">✕</button>
+        </div>
         <textarea id="editorClipContent" class="clip-editor" placeholder="Select or enter clip content here..."></textarea>
         <div id="hexViewerContainer" class="hex-viewer" style="display:none;"></div>
         <iframe id="htmlViewerContainer" class="html-viewer" sandbox="allow-same-origin" style="display:none; width:100%; height:100%; border:none; background:#ffffff; border-radius:4px;"></iframe>
@@ -1328,8 +1338,12 @@
             <td style="padding: 4px;">Focus search input</td>
           </tr>
           <tr style="border-bottom: 1px solid var(--border);">
+            <td style="padding: 4px; color: var(--gold);">Ctrl+H</td>
+            <td style="padding: 4px;">Toggle Find &amp; Replace in Editor</td>
+          </tr>
+          <tr style="border-bottom: 1px solid var(--border);">
             <td style="padding: 4px; color: var(--gold);">Esc</td>
-            <td style="padding: 4px;">Dismiss any open modal / Clear search</td>
+            <td style="padding: 4px;">Dismiss any open modal / Close Find / Clear search</td>
           </tr>
           <tr style="border-bottom: 1px solid var(--border);">
             <td style="padding: 4px; color: var(--gold);">Ctrl+Plus / Minus / 0</td>
@@ -1958,6 +1972,56 @@
           case 'reverse':
             transformed = content.split('').reverse().join('');
             break;
+          case 'kebab': {
+            const w = content.trim().replace(/[_\s]+/g, ' ').split(' ').filter(Boolean);
+            transformed = w.map(function(s) { return s.toLowerCase(); }).join('-');
+            break;
+          }
+          case 'sort_asc':
+            transformed = content.split(/\r?\n/).sort(function(a, b) {
+              return a.localeCompare(b, undefined, { numeric: true });
+            }).join('\n');
+            break;
+          case 'sort_desc':
+            transformed = content.split(/\r?\n/).sort(function(a, b) {
+              return b.localeCompare(a, undefined, { numeric: true });
+            }).join('\n');
+            break;
+          case 'dedupe': {
+            const lines = content.split(/\r?\n/);
+            transformed = Array.from(new Set(lines)).join('\n');
+            break;
+          }
+          case 'escape_html':
+            transformed = content
+              .replace(/&/g, '&amp;')
+              .replace(/</g, '&lt;')
+              .replace(/>/g, '&gt;')
+              .replace(/"/g, '&quot;')
+              .replace(/'/g, '&#039;');
+            break;
+          case 'unescape_html': {
+            const doc = new DOMParser().parseFromString(content, 'text/html');
+            transformed = doc.body.textContent || '';
+            break;
+          }
+          case 'csv_to_md': {
+            const rawLines = content.trim().split(/\r?\n/).filter(Boolean);
+            if (rawLines.length > 0) {
+              const delim = rawLines[0].includes('\t') ? '\t' : ',';
+              const rows = rawLines.map(function(l) { return l.split(delim).map(function(c) { return c.trim(); }); });
+              const headers = rows[0];
+              const divider = headers.map(function() { return '---'; });
+              const body = rows.slice(1);
+              let md = '| ' + headers.join(' | ') + ' |\n| ' + divider.join(' | ') + ' |\n';
+              body.forEach(function(r) {
+                while (r.length < headers.length) r.push('');
+                md += '| ' + r.slice(0, headers.length).join(' | ') + ' |\n';
+              });
+              transformed = md;
+            }
+            break;
+          }
         }
 
         if (transformed !== content) {
@@ -2957,6 +3021,137 @@
           });
         }
 
+        // Find & Replace Functionality
+        const findReplaceBar = document.getElementById('findReplaceBar');
+        const findInput = document.getElementById('findInput');
+        const replaceInput = document.getElementById('replaceInput');
+        const btnFindNext = document.getElementById('btnFindNext');
+        const btnReplaceOne = document.getElementById('btnReplaceOne');
+        const btnReplaceAll = document.getElementById('btnReplaceAll');
+        const btnCloseFindReplace = document.getElementById('btnCloseFindReplace');
+
+        function toggleFindReplace(force) {
+          if (!findReplaceBar) return;
+          const show = (force !== undefined) ? force : (findReplaceBar.style.display === 'none' || !findReplaceBar.style.display);
+          findReplaceBar.style.display = show ? 'flex' : 'none';
+          if (show) {
+            playSoundEffect('click');
+            if (findInput) {
+              findInput.focus();
+              findInput.select();
+            }
+          } else {
+            playSoundEffect('click');
+            const ed = document.getElementById('editorClipContent');
+            if (ed) ed.focus();
+          }
+        }
+
+        function findNextMatch() {
+          const ed = document.getElementById('editorClipContent');
+          if (!ed || !findInput) return;
+          const query = findInput.value;
+          if (!query) {
+            showToast('Enter text to find');
+            return;
+          }
+          const text = ed.value;
+          const startPos = ed.selectionEnd || 0;
+          let idx = text.toLowerCase().indexOf(query.toLowerCase(), startPos);
+          if (idx === -1) {
+            idx = text.toLowerCase().indexOf(query.toLowerCase(), 0);
+          }
+          if (idx !== -1) {
+            ed.focus();
+            ed.setSelectionRange(idx, idx + query.length);
+            updateCursorPosition();
+            playSoundEffect('click');
+          } else {
+            playSoundEffect('error');
+            showToast('Text not found');
+          }
+        }
+
+        function replaceCurrentMatch() {
+          const ed = document.getElementById('editorClipContent');
+          if (!ed || !findInput || !replaceInput) return;
+          const query = findInput.value;
+          const replacement = replaceInput.value;
+          if (!query) {
+            showToast('Enter text to find');
+            return;
+          }
+          const selStart = ed.selectionStart;
+          const selEnd = ed.selectionEnd;
+          const selectedText = ed.value.substring(selStart, selEnd);
+          if (selectedText.toLowerCase() === query.toLowerCase()) {
+            const before = ed.value.substring(0, selStart);
+            const after = ed.value.substring(selEnd);
+            ed.value = before + replacement + after;
+            ed.setSelectionRange(selStart, selStart + replacement.length);
+            ed.dispatchEvent(new Event('input'));
+            showToast('Replaced 1 match');
+            playSoundEffect('click');
+          } else {
+            findNextMatch();
+          }
+        }
+
+        function replaceAllMatches() {
+          const ed = document.getElementById('editorClipContent');
+          if (!ed || !findInput || !replaceInput) return;
+          const query = findInput.value;
+          const replacement = replaceInput.value;
+          if (!query) {
+            showToast('Enter text to find');
+            return;
+          }
+          const text = ed.value;
+          const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+          const reg = new RegExp(escaped, 'gi');
+          const matches = text.match(reg);
+          const count = matches ? matches.length : 0;
+          if (count === 0) {
+            playSoundEffect('error');
+            showToast('No matches found to replace');
+            return;
+          }
+          ed.value = text.replace(reg, replacement);
+          ed.dispatchEvent(new Event('input'));
+          showToast('Replaced ' + count + ' occurrences');
+          playSoundEffect('save');
+        }
+
+        if (btnFindNext) btnFindNext.addEventListener('click', findNextMatch);
+        if (btnReplaceOne) btnReplaceOne.addEventListener('click', replaceCurrentMatch);
+        if (btnReplaceAll) btnReplaceAll.addEventListener('click', replaceAllMatches);
+        if (btnCloseFindReplace) btnCloseFindReplace.addEventListener('click', function() {
+          toggleFindReplace(false);
+        });
+
+        if (findInput) {
+          findInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+              e.preventDefault();
+              findNextMatch();
+            } else if (e.key === 'Escape') {
+              e.preventDefault();
+              toggleFindReplace(false);
+            }
+          });
+        }
+        if (replaceInput) {
+          replaceInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+              e.preventDefault();
+              replaceCurrentMatch();
+            } else if (e.key === 'Escape') {
+              e.preventDefault();
+              toggleFindReplace(false);
+            }
+          });
+        }
+
         // Live Editor updates
         const editor = document.getElementById('editorClipContent');
         if (editor) {
@@ -3221,6 +3416,11 @@
               }
               return;
             }
+            // If Find & Replace bar is open, close it
+            if (findReplaceBar && findReplaceBar.style.display !== 'none') {
+              toggleFindReplace(false);
+              return;
+            }
             // If no modal open, clear search input
             const search = document.getElementById('inputSearch');
             if (search && (search.value || state.searchQuery)) {
@@ -3290,8 +3490,12 @@
             return;
           }
 
-          // If focused in text input, don't trigger navigation shortcuts
+          // If focused in text input, allow Ctrl+H (Find & Replace), otherwise ignore navigation hotkeys
           if (document.activeElement && (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA')) {
+            if ((e.ctrlKey || e.metaKey) && (e.key === 'h' || e.key === 'H')) {
+              e.preventDefault();
+              toggleFindReplace();
+            }
             return;
           }
 
