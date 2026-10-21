@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-graphics
-next_agent: kilo-soundscape
+current_agent: kilo-soundscape
+next_agent: kilo-tester
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -17,7 +17,7 @@ commit_checkpoint: 15
 status: ready
 current_targets:
   kilo_creator: kweb://asm-temple
-  kilo_graphics: KColosseum
+  kilo_graphics: KTrader
   kilo_soundscape: KColosseum
   kilo_tester: KClip
   kilo_usability: KHex
@@ -37,9 +37,9 @@ virtual_web_rotation:
 - kweb://deep-core
 - kweb://darknet
 last_run:
-  agent: kilo-creator
-  app: kweb://users/~neon_rider
-  timestamp: '2026-10-20T22:20:00Z'
+  agent: kilo-graphics
+  app: KColosseum
+  timestamp: '2026-10-21T09:15:00-07:00'
 last_planner_run: '2026-10-20T23:15:00Z'
 ---
 
@@ -74,7 +74,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Upcoming Queue**: `kweb://cybercafe`, `kweb://10.19.99.4/classified`, `kweb://echo-subsystem.net`.
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
-- **Target**: `KColosseum`
+- **Target**: `KTrader`
 - **Primary Files**: `KiloOS/public/apps/kcolosseum.html`, `KColosseum/main.c` (if present)
 - **Objective**: Gladiator combat visual asset pipeline evaluation: warrior sprites, arena terrain textures, and UI HUD; eliminate any specular glints or traveling border dots.
 - **Action Steps**:
@@ -211,6 +211,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-21T09:15:00-07:00 — kilo-graphics: KColosseum**
+  - ⏭️ Skip — Imagen 3 asset replacement not appropriate for KColosseum
+
 - **2026-10-21T08:35:00-07:00 — kilo-adhoc: Fleet Orchestrator & KColosseum Parity (Model Tier & Audio Fix)**
   - Orchestrator Fix: Dynamically synchronized `gemini-3.8-flash-{effort}` model flag with selective effort tiers in `scripts/orchestrate.py`, resolving CLI conflict error and restoring fleet execution.
   - KColosseum Parity: Added missing `F_Fs2 = 92.50` frequency declaration in `kcolosseum.html`, preventing runtime ReferenceError in combat bassline; Win32 C build clean (`KColosseum.exe`, 39.4 KB).
@@ -242,10 +245,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - KDB Expansion Completed: Verified & committed KDB relational schema studio, visual ER diagram, and query builder; Win32 C and web builds clean.
   - Verification: `security_lint.py` PASS; `test_app_startup.py --app KDB` PASS; Vite build clean (488ms).
   - Queue Handoff: Advanced `current_targets.kilo_expander` to `KHex`; active rotation to `kilo-creator`.
-
-- **2026-10-20T18:22:00Z — kilo-qa: KSimon (Pass 5 QA Audit & Mature Promotion)**
-  - State Persistence: Audited & fixed F5 quicksave / F9 quickload capturing complete game sequence, mode, round, elapsed time, powerup charges, and stage in both Web storage and Win32 C (`ksimon.ini`).
-  - Tutorial & Overlays: Verified first-run tutorial overlay (`ksimon_tutorialSeen`) never interrupts restored saves; wired start-on-dismiss for Space/Enter/Got-It buttons; verified clean Esc cancellation and modal dismissals.
-  - Glint Audit & Parity: Verified zero traveling border comets or specular glints; compiled Win32 native client (`KSimon.exe`, 141.5 KB) and verified dual-target parity with web cartridge (124.5 KB < 999 KB).
-  - Verification: Startup check PASS (0 JS errors, CSS valid, canvas unblocked); Vite build clean (514ms); native Win32 C build clean (0 warnings).
-  - Quarantine & Handoff: Promoted KSimon to Mature Applications quarantine; advanced `kilo_qa` to `KWords`; rotation handoff to `kilo-expander`.
