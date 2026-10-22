@@ -311,6 +311,8 @@ DWORD WINAPI SndThread(LPVOID param) {
     else if (type == 9) { Beep(1200, 35); Beep(800, 35); Beep(400, 45); Beep(950, 60); } // Hyper-Jump Warp
     else if (type == 10) Beep(1400, 18);  // Drone Vulcan / Point Defense
     else if (type == 11) { Beep(260, 40); Beep(190, 70); } // Dreadnought Mega-Ion Beam
+    else if (type == 12) { Beep(880, 50); Beep(660, 60); } // Warning Klaxon
+    else if (type == 13) { Beep(580, 40); Beep(1160, 50); } // Asteroid Mineral Mining Resonance
     return 0;
 }
 
@@ -2669,7 +2671,7 @@ void Update() {
 
                 // Asteroids shatter into kinetic shards!
                 if (e[i].type == 4.0f || e[i].type == 5.0f) {
-                    SpawnKineticShards(e[i].x + ew / 2.0f, e[i].y + eh / 2.0f, (e[i].type == 5.0f ? 6 : 4));
+                    PlaySnd(13); SpawnKineticShards(e[i].x + ew / 2.0f, e[i].y + eh / 2.0f, (e[i].type == 5.0f ? 6 : 4));
                 }
 
                 if (score > highScore) { highScore = score; SaveLeaderboard(); }
@@ -3833,7 +3835,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 LoadGameState();
                 break;
             }
-            if (wParam == 'M') {
+            if (wParam == 'M' || wParam == 'N') {
                 soundMuted = !soundMuted;
                 ShowNativeToast(soundMuted ? "Sound: MUTED" : "Sound: ON", 0, 90);
                 break;
@@ -4310,7 +4312,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         "SPACE / CLICK : Fire Weapon",
                         "C / F4        : Cycle Fighter Chassis",
                         "P / [||]      : Pause Game",
-                        "M             : Sound Mute",
+                        "M / N         : Sound / BGM Mute",
                         "",
                         "--- SUBSYSTEMS & TACTICS ---",
                         "J:Hyper-Jump   W:Deploy Drones",

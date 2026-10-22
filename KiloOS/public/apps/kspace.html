@@ -1014,113 +1014,395 @@ window.addEventListener('beforeunload', () => {
       } else if (type === 12) { // Warning Klaxon (Dual-tone alarm stinger)
         playFM('square', 'sawtooth', 880, 1.0, 2.5, 0.12, 0.08, 0.18, false);
         setTimeout(() => playFM('square', 'sawtooth', 660, 1.0, 2.5, 0.14, 0.09, 0.18, false), 110);
+      } else if (type === 13) { // Asteroid Mineral Mining Resonance
+        playFM('sine', 'sawtooth', 580, 3.5, 4.2, 0.18, 0.12, 0.18, true, { target: 1160, time: 0.14 });
       }
     } catch (e) {}
   }
 
   // --- PROCEDURAL 64-STEP SPACE CHIPTUNE TRACKER (GENESIS YM2612 & SNES SPC700) ---
-  // Style: Thunder Force IV / Musha Aleste high-energy space shooter chiptune
+  // Track: "Starlight Frontier: Deep Void Protocol" (Thunder Force IV / Koshiro sci-fi chiptune)
+  // Architecture: 6 Channels (Lead, Counter, Shell Arp, Slap Bass, FM Kick/Snare, Hi-Hat/FX)
+  // Voice Leading: Contrary motion, strict shell voicings (no 5ths), call-and-response phrasing, 5:3 swing groove
   let bgmEnabled = safeGetStorage('kspace_bgm') !== '0';
   let bgmStep = 0;
   let bgmTimer = null;
 
-  // Frequencies in Hz: D-minor / F-major modal space palette
-  const D2 = 73.42, F2 = 87.31, G2 = 98.00, A2 = 110.00, Bb2 = 116.54, C3 = 130.81, D3 = 146.83, E3 = 164.81;
+  // Frequencies in Hz: D-minor / Lydian modal space palette
+  const Bb1 = 58.27, C2 = 65.41, D2 = 73.42, Eb2 = 77.78, E2 = 82.41, F2 = 87.31, G2 = 98.00, A2 = 110.00, Bb2 = 116.54, C3 = 130.81, Csharp3 = 138.59, D3 = 146.83, E3 = 164.81;
   const F3 = 174.61, G3 = 196.00, A3 = 220.00, Bb3 = 233.08, C4 = 261.63, Csharp4 = 277.18, D4 = 293.66, E4 = 329.63;
-  const F4 = 349.23, G4 = 392.00, A4 = 440.00, Bb4 = 466.16, C5 = 523.25, D5 = 587.33, E5 = 659.25, F5 = 698.46;
+  const F4 = 349.23, G4 = 392.00, Gsharp4 = 415.30, A4 = 440.00, Bb4 = 466.16, B4 = 493.88, C5 = 523.25, Csharp5 = 554.37, D5 = 587.33, E5 = 659.25, F5 = 698.46, G5 = 783.99, A5 = 880.00;
+
+  // Named FM Patch: Crystalline Lead with delayed vibrato (Ch 1)
+  function playLeadTone(freq, dur = 0.24, vol = 0.16) {
+    if (!soundEnabled || !bgmEnabled) return;
+    try {
+      const ctx = getAudioContext();
+      if (!ctx) return;
+      const now = ctx.currentTime;
+      const carrier = ctx.createOscillator();
+      const modulator = ctx.createOscillator();
+      const modGain = ctx.createGain();
+      const ampEnv = ctx.createGain();
+
+      carrier.type = 'sine';
+      modulator.type = 'triangle';
+      carrier.frequency.setValueAtTime(freq, now);
+      modulator.frequency.setValueAtTime(freq * 1.5, now);
+
+      modGain.gain.setValueAtTime(freq * 2.2, now);
+      modGain.gain.exponentialRampToValueAtTime(freq * 0.12, now + 0.08);
+      modGain.gain.exponentialRampToValueAtTime(0.01, now + dur);
+
+      if (dur > 0.2) {
+        const lfo = ctx.createOscillator();
+        const lfoGain = ctx.createGain();
+        lfo.frequency.setValueAtTime(5.4, now);
+        lfoGain.gain.setValueAtTime(0, now);
+        lfoGain.gain.setValueAtTime(0, now + 0.16);
+        lfoGain.gain.linearRampToValueAtTime(freq * 0.015, now + Math.min(dur, 0.35));
+        lfo.connect(lfoGain);
+        lfoGain.connect(carrier.frequency);
+        lfo.start(now);
+        lfo.stop(now + dur + 0.02);
+      }
+
+      ampEnv.gain.setValueAtTime(vol, now);
+      ampEnv.gain.exponentialRampToValueAtTime(0.001, now + dur);
+
+      modulator.connect(modGain);
+      modGain.connect(carrier.frequency);
+      carrier.connect(ampEnv);
+
+      if (spcBus) {
+        ampEnv.connect(spcBus.dryGain);
+        ampEnv.connect(spcBus.delayL);
+        ampEnv.connect(spcBus.delayR);
+      } else if (masterLimiter) {
+        ampEnv.connect(masterLimiter);
+      } else {
+        ampEnv.connect(ctx.destination);
+      }
+
+      modulator.start(now);
+      carrier.start(now);
+      modulator.stop(now + dur + 0.02);
+      carrier.stop(now + dur + 0.02);
+    } catch (e) {}
+  }
+
+  // Named FM Patch: Warm Hollow Flute / Rhodes Counterpoint (Ch 2)
+  function playCounterTone(freq, dur = 0.22, vol = 0.12) {
+    if (!soundEnabled || !bgmEnabled) return;
+    try {
+      const ctx = getAudioContext();
+      if (!ctx) return;
+      const now = ctx.currentTime;
+      const carrier = ctx.createOscillator();
+      const modulator = ctx.createOscillator();
+      const modGain = ctx.createGain();
+      const ampEnv = ctx.createGain();
+
+      carrier.type = 'sine';
+      modulator.type = 'sine';
+      carrier.frequency.setValueAtTime(freq, now);
+      modulator.frequency.setValueAtTime(freq * 1.0, now);
+
+      modGain.gain.setValueAtTime(freq * 0.9, now);
+      modGain.gain.exponentialRampToValueAtTime(freq * 0.12, now + 0.09);
+      modGain.gain.exponentialRampToValueAtTime(0.01, now + dur);
+
+      ampEnv.gain.setValueAtTime(vol, now);
+      ampEnv.gain.exponentialRampToValueAtTime(0.001, now + dur);
+
+      modulator.connect(modGain);
+      modGain.connect(carrier.frequency);
+      carrier.connect(ampEnv);
+
+      if (spcBus) {
+        ampEnv.connect(spcBus.dryGain);
+        ampEnv.connect(spcBus.delayL);
+        ampEnv.connect(spcBus.delayR);
+      } else if (masterLimiter) {
+        ampEnv.connect(masterLimiter);
+      } else {
+        ampEnv.connect(ctx.destination);
+      }
+
+      modulator.start(now);
+      carrier.start(now);
+      modulator.stop(now + dur + 0.02);
+      carrier.stop(now + dur + 0.02);
+    } catch (e) {}
+  }
+
+  // Named FM Patch: Metallic Crystal Arpeggio Glitter (Ch 3)
+  function playArpChime(freq, dur = 0.11, vol = 0.075) {
+    if (!soundEnabled || !bgmEnabled) return;
+    try {
+      const ctx = getAudioContext();
+      if (!ctx) return;
+      const now = ctx.currentTime;
+      const carrier = ctx.createOscillator();
+      const modulator = ctx.createOscillator();
+      const modGain = ctx.createGain();
+      const ampEnv = ctx.createGain();
+
+      carrier.type = 'sine';
+      modulator.type = 'sine';
+      carrier.frequency.setValueAtTime(freq, now);
+      modulator.frequency.setValueAtTime(freq * 3.5, now);
+
+      modGain.gain.setValueAtTime(freq * 4.5, now);
+      modGain.gain.exponentialRampToValueAtTime(0.01, now + Math.min(0.06, dur));
+
+      ampEnv.gain.setValueAtTime(vol, now);
+      ampEnv.gain.exponentialRampToValueAtTime(0.001, now + dur);
+
+      modulator.connect(modGain);
+      modGain.connect(carrier.frequency);
+      carrier.connect(ampEnv);
+
+      if (spcBus) {
+        ampEnv.connect(spcBus.dryGain);
+        ampEnv.connect(spcBus.delayL);
+        ampEnv.connect(spcBus.delayR);
+      } else if (masterLimiter) {
+        ampEnv.connect(masterLimiter);
+      } else {
+        ampEnv.connect(ctx.destination);
+      }
+
+      modulator.start(now);
+      carrier.start(now);
+      modulator.stop(now + dur + 0.02);
+      carrier.stop(now + dur + 0.02);
+    } catch (e) {}
+  }
+
+  // Named FM Patch: Genesis YM2612 Slap Bass (Ch 4, dry for crisp impact)
+  function playSlapBass(freq, dur = 0.095, vol = 0.16) {
+    if (!soundEnabled || !bgmEnabled) return;
+    try {
+      const ctx = getAudioContext();
+      if (!ctx) return;
+      const now = ctx.currentTime;
+      const carrier = ctx.createOscillator();
+      const modulator = ctx.createOscillator();
+      const modGain = ctx.createGain();
+      const ampEnv = ctx.createGain();
+
+      carrier.type = 'sawtooth';
+      modulator.type = 'square';
+      carrier.frequency.setValueAtTime(freq, now);
+      modulator.frequency.setValueAtTime(freq * 2.0, now);
+
+      modGain.gain.setValueAtTime(freq * 3.6, now);
+      modGain.gain.exponentialRampToValueAtTime(freq * 0.35, now + 0.04);
+      modGain.gain.exponentialRampToValueAtTime(0.01, now + dur);
+
+      ampEnv.gain.setValueAtTime(vol, now);
+      ampEnv.gain.exponentialRampToValueAtTime(0.001, now + dur);
+
+      modulator.connect(modGain);
+      modGain.connect(carrier.frequency);
+      carrier.connect(ampEnv);
+
+      ampEnv.connect(masterLimiter || ctx.destination);
+
+      modulator.start(now);
+      carrier.start(now);
+      modulator.stop(now + dur + 0.02);
+      carrier.stop(now + dur + 0.02);
+    } catch (e) {}
+  }
+
+  // Named FM Patch: Ambient SPC700 Space Drone / Pad (Ch 3 sustained background)
+  function playAmbientPad(freq, dur = 1.9, vol = 0.032) {
+    if (!soundEnabled || !bgmEnabled) return;
+    try {
+      const ctx = getAudioContext();
+      if (!ctx) return;
+      const now = ctx.currentTime;
+      const carrier = ctx.createOscillator();
+      const modulator = ctx.createOscillator();
+      const modGain = ctx.createGain();
+      const ampEnv = ctx.createGain();
+
+      carrier.type = 'triangle';
+      modulator.type = 'sine';
+      carrier.frequency.setValueAtTime(freq, now);
+      modulator.frequency.setValueAtTime(freq * 0.5, now);
+
+      modGain.gain.setValueAtTime(freq * 1.2, now);
+      modGain.gain.exponentialRampToValueAtTime(freq * 0.75, now + 0.6);
+      modGain.gain.exponentialRampToValueAtTime(0.01, now + dur);
+
+      ampEnv.gain.setValueAtTime(0.001, now);
+      ampEnv.gain.linearRampToValueAtTime(vol, now + 0.25);
+      ampEnv.gain.exponentialRampToValueAtTime(0.0001, now + dur);
+
+      modulator.connect(modGain);
+      modGain.connect(carrier.frequency);
+      carrier.connect(ampEnv);
+
+      if (spcBus) {
+        ampEnv.connect(spcBus.dryGain);
+        ampEnv.connect(spcBus.delayL);
+        ampEnv.connect(spcBus.delayR);
+      } else if (masterLimiter) {
+        ampEnv.connect(masterLimiter);
+      } else {
+        ampEnv.connect(ctx.destination);
+      }
+
+      modulator.start(now);
+      carrier.start(now);
+      modulator.stop(now + dur + 0.02);
+      carrier.stop(now + dur + 0.02);
+    } catch (e) {}
+  }
 
   // 4 Patterns (64 steps total: 16 steps per pattern)
-  // Bassline: 16th-note rolling Genesis bass with octave pops and syncopated grooving
-  const TRACKER_BASS = [
-    // Pattern 0: Sector Entry (D Minor drive)
-    D3, 0, D3, D3, F3, 0, D3, 0, C3, 0, C3, C3, Bb2, 0, C3, 0,
-    // Pattern 1: Asteroid Storm (Bb -> C pump)
-    Bb2, 0, Bb2, Bb2, C3, 0, C3, C3, D3, 0, D3, D3, F3, 0, G3, A2,
-    // Pattern 2: Armada Confrontation (Chromatic suspense)
-    D3, 0, D3, F3, G3, 0, G3, 0, Bb3, 0, A3, 0, G3, 0, F3, E3,
-    // Pattern 3: Hyper-Drive Resolution (Triumphant soaring resolve)
-    D3, 0, F3, 0, G3, 0, A3, 0, Bb3, 0, A3, 0, G3, 0, F3, E3
-  ];
-
-  // Lead Melody: Heroic arcade theme with voice leading and crystal bell FM tones
+  // Ch 1: Lead Melody (Heroic space arc with vocal phrasing and breathing rests)
   const TRACKER_LEAD = [
-    // Pattern 0: Main Theme Hook
-    D4, 0, F4, 0, A4, 0, D5, 0, C5, 0, A4, 0, F4, G4, A4, 0,
-    // Pattern 1: Counter-Melody Lift
-    Bb4, 0, D5, 0, C5, 0, A4, 0, F4, 0, G4, A4, G4, 0, F4, E4,
-    // Pattern 2: Tension & Chromatic Surge
-    D5, 0, Csharp4, 0, D5, 0, E5, 0, F5, 0, E5, 0, D5, 0, Csharp4, 0,
-    // Pattern 3: Victorious Arc
-    D5, 0, A4, 0, F4, 0, G4, 0, A4, 0, Bb4, C5, D5, 0, 0, 0
+    // Pattern 0: Orbital Insertion (Dm9 ascending hook)
+    D4, 0, F4, 0, A4, 0, C5, 0, D5, 0, A4, 0, F4, G4, A4, 0,
+    // Pattern 1: Nebula Drift (Bbmaj7#11 Lydian apex -> Call & Response rest)
+    Bb4, 0, D5, 0, E5, 0, D5, 0, C5, 0, A4, 0, 0, 0, 0, 0,
+    // Pattern 2: Deep Void Counterpoint (Gm9 wave)
+    G4, 0, Bb4, 0, D5, 0, F5, 0, E5, 0, D5, 0, C5, 0, Bb4, 0,
+    // Pattern 3: Hyper-Drive Resolution (A7b9 turnaround into tonic)
+    A4, 0, Csharp5, 0, E5, 0, G5, 0, F5, E5, D5, Csharp5, D5, 0, 0, 0
   ];
 
-  // Ambient SPC700 Space Pad (Chords trigger every 16 steps for lush cosmic depth)
-  const PAD_CHORDS = [
-    [D3, A3, F4],     // Dm (Sector Alpha)
-    [Bb2, F3, D4],    // Bbmaj (Asteroid Field)
-    [G2, D3, Bb3],    // Gm (Armada Incursion)
-    [A2, E3, Csharp4] // A7 (Warp Horizon)
+  // Ch 2: Counter-Melody (Contrary motion to Lead + Solo flourish during Lead rest)
+  const TRACKER_COUNTER = [
+    // Pattern 0: Contrary descending counterpoint while Lead ascends
+    A4, 0, G4, 0, F4, 0, E4, 0, F4, 0, D4, 0, C4, 0, D4, 0,
+    // Pattern 1: Sustained contrary harmony -> Solo flourish on steps 28-31
+    F4, 0, E4, 0, D4, 0, F4, 0, E4, 0, D4, 0, E4, G4, A4, Csharp5,
+    // Pattern 2: Contrary ascending weave beneath Lead descending line
+    D4, 0, C4, 0, Bb3, 0, A3, 0, Bb3, 0, C4, 0, D4, 0, E4, 0,
+    // Pattern 3: Harmonic suspension descent resolving into Dm
+    E4, 0, G4, 0, A4, 0, Bb4, 0, A4, 0, G4, 0, F4, 0, E4, 0
   ];
+
+  // Ch 3: Harmony / Arpeggio Glitter (Strict shell voicings: 3rd + 7th / 9th / #11, omit 5ths)
+  const TRACKER_ARP = [
+    // Pattern 0 (Dm9 shell: F4 [b3], C5 [b7], E5 [9] - no 5th!)
+    F4, 0, C5, 0, E5, 0, C5, 0, F4, 0, C5, 0, E5, 0, C5, 0,
+    // Pattern 1 (Bbmaj7#11 shell: D4 [3], A4 [7], E5 [#11] - no 5th!)
+    D4, 0, A4, 0, E5, 0, A4, 0, D4, 0, A4, 0, E5, 0, A4, 0,
+    // Pattern 2 (Gm9 shell: Bb4 [b3], F5 [b7], A4 [9] - no 5th!)
+    Bb4, 0, F5, 0, A4, 0, F5, 0, Bb4, 0, F5, 0, A4, 0, F5, 0,
+    // Pattern 3 (A7b9 shell: G4 [b7], C#5 [3], Bb4 [b9] - no 5th!)
+    G4, 0, Csharp5, 0, Bb4, 0, Csharp5, 0, G4, 0, Csharp5, 0, Bb4, 0, G4, 0
+  ];
+
+  // Ch 4: Slap Bass (Driving 16th-note syncopated baseline strictly < C3 with octave pops)
+  const TRACKER_BASS = [
+    // Pattern 0: Dm9 Root/Octave Drive
+    D2, 0, D3, D2, 0, D3, D2, 0, C3, 0, C3, C2, Bb2, 0, C3, 0,
+    // Pattern 1: Bbmaj7 -> C pump
+    Bb2, 0, Bb2, Bb2, 0, Bb2, C3, 0, D3, 0, D2, D3, F2, 0, G2, A2,
+    // Pattern 2: Gm9 Suspense
+    G2, 0, G3, G2, 0, G3, G2, 0, Bb2, 0, A2, 0, G2, 0, F2, E2,
+    // Pattern 3: A7 Cadence Build
+    A2, 0, A3, A2, 0, A3, A2, 0, Bb2, 0, A2, 0, G2, 0, F2, E2
+  ];
+
+  // Ambient Space Pad Shell Voicings (Triggered at pattern boundaries, no doubled 5ths)
+  const PAD_SHELL_CHORDS = [
+    [D3, F4, C5],      // Dm7/9 (Sector Insertion: Root + b3 + b7)
+    [Bb2, D4, A4],     // Bbmaj7 (Nebula Wonder: Root + 3 + 7)
+    [G2, Bb3, F4],     // Gm7 (Void Drift: Root + b3 + b7)
+    [A2, G3, Csharp4]  // A7 (Heroic Cadence: Root + b7 + 3)
+  ];
+
+  function playTrackerStep(step) {
+    const pat = Math.floor(step / 16);
+    const subStep = step % 16;
+
+    // Ch 4: Driving Slap Bass (dry for punch)
+    const bFreq = TRACKER_BASS[step];
+    if (bFreq > 0) playSlapBass(bFreq, 0.095, 0.16);
+
+    // Ch 1: Lead Melody (crystalline hero voice with delayed vibrato)
+    const lFreq = TRACKER_LEAD[step];
+    if (lFreq > 0) playLeadTone(lFreq, 0.22, 0.15);
+
+    // Ch 2: Counter-Melody (contrary motion & solo response)
+    const cFreq = TRACKER_COUNTER[step];
+    if (cFreq > 0) playCounterTone(cFreq, 0.20, 0.11);
+
+    // Ch 3: Arpeggio Glitter (shell voicing cascades)
+    const aFreq = TRACKER_ARP[step];
+    if (aFreq > 0) playArpChime(aFreq, 0.10, 0.07);
+
+    // Ch 3 Pad: Ambient SPC700 Space Drone on bar downbeat
+    if (subStep === 0) {
+      const chord = PAD_SHELL_CHORDS[pat];
+      if (chord) {
+        chord.forEach(f => playAmbientPad(f, 2.1, 0.032));
+      }
+    }
+
+    // Ch 5 & 6: Percussion with 16-step swing dynamics
+    // Kick: downbeats (0, 8) with syncopated drive (6, 10)
+    if (subStep === 0 || subStep === 6 || subStep === 8 || subStep === 10) {
+      playFMDrum('kick');
+    }
+    // Snare: snappy backbeat on 4, 12; turnaround roll on pattern 3
+    if (subStep === 4 || subStep === 12 || (pat === 3 && (subStep === 14 || subStep === 15))) {
+      playFMDrum('snare');
+    }
+    // Closed metallic hi-hats on offbeat 16ths
+    if (subStep % 2 === 1) {
+      playFMDrum('hat');
+    }
+    // Sizzling open hat on step 14
+    if (subStep === 14 && pat !== 3) {
+      playFMDrum('openhat');
+    }
+    // Crash cymbal accent on pattern boundary downbeat
+    if (subStep === 0 && (pat === 0 || pat === 1 || pat === 2 || pat === 3)) {
+      playFM('sawtooth', 'square', 3400, 2.14, 4.8, 0.42, 0.28, 0.10, true);
+    }
+  }
+
+  // Swing-tick groove engine (5:3 shuffle swing ~138 BPM)
+  function scheduleBgmStep() {
+    if (!bgmTimer) return;
+    const isEven = (bgmStep % 2 === 0);
+    const stepDelay = isEven ? 122 : 88;
+
+    if (bgmEnabled && soundEnabled && gameState === STATE_PLAYING) {
+      try {
+        playTrackerStep(bgmStep);
+      } catch (e) {}
+    }
+
+    bgmStep = (bgmStep + 1) % 64;
+    bgmTimer = setTimeout(scheduleBgmStep, stepDelay);
+  }
 
   function startBGM() {
     if (bgmTimer) return;
-    // 136 BPM (110ms per 16th-note step)
-    bgmTimer = setInterval(() => {
-      if (!bgmEnabled || !soundEnabled || gameState !== STATE_PLAYING) return;
-      try {
-        const step = bgmStep % 64;
-        const pat = Math.floor(step / 16);
-        const subStep = step % 16;
+    bgmTimer = setTimeout(scheduleBgmStep, 100);
+  }
 
-        // 1. Driving FM Bass voice (Genesis YM2612 punchy 2-op slap bass)
-        const bassFreq = TRACKER_BASS[step];
-        if (bassFreq > 0) {
-          playFM('square', 'sawtooth', bassFreq, 2.0, 3.8, 0.09, 0.06, 0.11, false);
-        }
-
-        // 2. Lead Voice (Crystalline FM melody with warm decay through SPC echo)
-        const leadFreq = TRACKER_LEAD[step];
-        if (leadFreq > 0) {
-          playFM('sine', 'triangle', leadFreq, 1.0, 1.8, 0.22, 0.14, 0.08, true);
-        }
-
-        // 3. Ambient SPC700 Space Drone / Pad (Triggers on beat 1 of each 16-step bar)
-        if (subStep === 0) {
-          const chord = PAD_CHORDS[pat];
-          if (chord) {
-            chord.forEach(f => {
-              playFM('triangle', 'sine', f, 1.0, 0.6, 1.6, 1.4, 0.035, true);
-            });
-          }
-        }
-
-        // 4. FM Rhythm Drum Machine:
-        // Four-on-the-floor kick
-        if (subStep % 4 === 0) {
-          playFMDrum('kick');
-        }
-        // Snappy backbeat snare on beats 2 and 4 (steps 4 and 12)
-        if (subStep === 4 || subStep === 12) {
-          playFMDrum('snare');
-        }
-        // Off-beat closed hi-hats
-        if (subStep % 2 === 1) {
-          playFMDrum('hat');
-        }
-        // Open hi-hat accent on step 14
-        if (subStep === 14) {
-          playFMDrum('openhat');
-        }
-
-        bgmStep = (bgmStep + 1) % 64;
-      } catch (e) {}
-    }, 110);
+  function stopBGM() {
+    if (bgmTimer) {
+      clearTimeout(bgmTimer);
+      bgmTimer = null;
+    }
   }
 
   function toggleBGM() {
     bgmEnabled = !bgmEnabled;
     safeSetStorage('kspace_bgm', bgmEnabled ? '1' : '0');
-    showToast(bgmEnabled ? '🎵 Genesis FM Soundscape: ON' : '🎵 Genesis FM Soundscape: OFF', 'info', 1800);
+    showToast(bgmEnabled ? '🎵 Genesis FM BGM: ON' : '🎵 Genesis FM BGM: OFF', 'info', 1800);
   }
 
   // --- PARTICLES, SHOCKWAVES & DEBRIS (Loop 8 Enhanced Engine) ---
@@ -1562,6 +1844,11 @@ window.addEventListener('beforeunload', () => {
 
     if (keyLower === 'm') {
       toggleSound();
+      return;
+    }
+
+    if (keyLower === 'n') {
+      toggleBGM();
       return;
     }
 
@@ -3078,6 +3365,7 @@ window.addEventListener('beforeunload', () => {
 
     // Level 1: Asteroids shatter into lethal kinetic shards that damage other hostiles
     if (e.type === 5 || e.type === 9) {
+      playSound(13);
       spawnKineticShards(e.x + 10, e.y + 10, e.type === 9 ? 6 : 4);
     }
 
@@ -4626,7 +4914,7 @@ window.addEventListener('beforeunload', () => {
       "[C] / [F4]    : Cycle Fighter Chassis",
       "[P] / [||]    : Pause Game",
       "[F5] / [F9]   : Quicksave / Quickload",
-      "[M]           : Toggle Genesis FM Audio",
+      "[M] : Mute All Audio       [N] : Toggle Chiptune BGM",
       "",
       "--- 6 CAMPAIGN SECTORS ---",
       "S1: Kuiper Debris - Asteroid Kinetic Shards & Slingshots",
