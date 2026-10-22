@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-creator
-next_agent: kilo-graphics
+current_agent: kilo-soundscape
+next_agent: kilo-tester
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -16,14 +16,14 @@ tool_call_cap: 30
 commit_checkpoint: 15
 status: ready
 current_targets:
-  kilo_creator: kweb://echo-subsystem.net
-  kilo_graphics: KAbyss
+  kilo_creator: kweb://deep-core
+  kilo_graphics: KRacer
   kilo_soundscape: KAbyss
   kilo_tester: KPing
   kilo_usability: KTerminal
   kilo_qa: KCalc
   kilo_expander: KConverter
-virtual_web_target: kweb://echo-subsystem.net
+virtual_web_target: kweb://deep-core
 virtual_web_rotation:
 - kweb://portal
 - kweb://webring
@@ -37,9 +37,9 @@ virtual_web_rotation:
 - kweb://deep-core
 - kweb://darknet
 last_run:
-  agent: kilo-expander
-  app: KBase
-  timestamp: '2026-10-22T10:35:00-07:00'
+  agent: kilo-graphics
+  app: KAbyss
+  timestamp: '2026-10-22T12:34:00-07:00'
 last_planner_run: '2026-10-21T23:32:00Z'
 ---
 
@@ -67,26 +67,26 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Active Target Queues (Gemini Flash Optimized Tickets)
 ### 1. Virtual 1999 Web & ARG Node Creator (`kilo-creator`)
-- **Target**: `kweb://echo-subsystem.net`
-- **Primary File**: `KiloOS/public/web/echo_subsystem.html`
-- **Objective**: Echo Subsystem acoustic lab & subterranean RF transceiver node: 1999Hz Morse subcarrier demodulation, soundscape spectrogram, and cross-node resonance adhering to Anti-Potemkin Quality Standard (<999 KB).
-- **Upcoming Queue**: `kweb://deep-core`, `kweb://darknet`, `kweb://portal`.
+- **Target**: `kweb://deep-core`
+- **Primary File**: `KiloOS/public/web/deep_core.html`
+- **Objective**: Deep Core subterranean ghost node & precursor terminal: memory hex fragment reconstruction, encrypted entropy sink, and cross-node parity adhering to Anti-Potemkin Quality Standard (<999 KB).
+- **Upcoming Queue**: `kweb://darknet`, `kweb://portal`, `kweb://webring`.
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
-- **Target**: `KAbyss`
-- **Primary Files**: `KiloOS/public/apps/kabyss.html`
-- **Objective**: Deep sea trench exploration & sonar survey graphics overhaul: replace vector / primitive canvas submarines and trench fauna with Imagen 3 assets (<999 KB).
+- **Target**: `KRacer`
+- **Primary Files**: `KiloOS/public/apps/kracer.html`
+- **Objective**: Outrun-style pseudo-3D arcade racer graphics overhaul: replace vector / primitive canvas vehicles and roadside sprites with Imagen 3 assets (<999 KB).
 - **Action Steps**:
-  1. Inspect `KiloOS/public/apps/kabyss.html` rendering routines for programmer art.
+  1. Inspect `KiloOS/public/apps/kracer.html` rendering routines for programmer art.
   2. Generate sprites via 2-stage asset pipeline if appropriate (`generate_image` with solid `#FF00FF` -> `scripts/asset_pipeline.py`).
   3. Search for and eliminate any traveling border dots or rotating specular glints.
   4. Run `python scripts/check_icons.py` to audit icon uniqueness.
 - **Verification**: `cd KiloOS && npm run build`. Verify files < 999 KB.
 - **Handoff**:
-  - In frontmatter: advance `current_targets.kilo_graphics` to `KRacer`.
+  - In frontmatter: advance `current_targets.kilo_graphics` to `KSpace`.
   - Set current_agent: kilo-soundscape.
   - Append terse execution log (≤6 lines), commit, and push.
-- **Upcoming Queue**: `KRacer`, `KSpace`, `KTrader`.
+- **Upcoming Queue**: `KSpace`, `KTrader`.
 
 ### 3. Procedural Audio & Soundscape Queue (`kilo-soundscape`)
 - **Target**: `KSpace`
@@ -213,6 +213,23 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-22T12:34:00-07:00 — kilo-graphics: KAbyss (Asset Suitability Audit & Glint Sweep)**
+  - ⏭️ Skip — Imagen 3 asset replacement not appropriate for KAbyss
+  - Engine Audit: Procedural Canvas 2D dungeon crawler with dynamic FOV raycasting, torch radial lighting, and custom animated entity rendering.
+  - Glint Sweep: Verified 0 traveling border dots, orbiting specular glints, or wandering perimeter balls.
+  - Verification: Icon uniqueness PASS (105/105 unique hashes); test_app_startup PASS on KAbyss (479.4 KB < 999 KB); KiloOS npm build PASS (0 errors).
+  - Queue Handoff: Advanced current_targets.kilo_graphics to KRacer; rotated current_agent to kilo-soundscape.
+
+- **2026-10-22T11:38:00-07:00 — kilo-creator: echo-subsystem.net (Tab 17 PLL Demodulator & Airgap Bridge)**
+  - PASS ✅ (Implemented Tab 17 Phase-Locked Loop demodulator, Costas I/Q phase plane scope, and cross-strata airgap bridge).
+  - PLL & Demodulation: Coherent carrier tracking (1999Hz, 1200/2200Hz AFSK, 999.5Hz, 432Hz), loop filter bandwidths, and auto-acquire lock.
+  - Costas I/Q Phase Scope: Real-time vector constellation canvas with phosphor persistence decay and phase slip generator.
+  - Airgap Packet Bridge: Cross-node packet dissection (10.19.99.1/4/19/127), CRC-16 check, .CAP log export, and clipboard copy.
+  - Audio Architecture: Procedural YM2612 2-Op FM + SPC700 stereo delay warmth monitor & AFSK chirp synthesis (zero external assets).
+  - Dual Parity & Build: KNet Win32 C parity updated & compiled (46.0 KB < 999 KB); echo_subsystem.html verified (586.8 KB < 999 KB).
+  - Verification: npm run build in KiloOS PASS (0 errors); test_app_startup PASS on KNet (189.8 KB); byte_budget_gate PASS.
+  - Queue Handoff: Advanced kilo_creator and virtual_web_target to kweb://deep-core; rotated current_agent to kilo-graphics.
+
 - **2026-10-22T10:35:00-07:00 — kilo-expander: KBase (Deep Feature Expansion & Dual Parity)**
   - PASS ✅ (Multi-base conversion, granular bitwise mask studio, endianness toggles, and dual parity).
   - Radices & Bases: Unsigned/signed DEC, HEX, OCT, BIN (64-bit), and Base64 live conversion.
@@ -232,18 +249,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - HiDPI & Splitter: Verified canvas minimap devicePixelRatio rendering and preview ratio drag mechanics.
   - Parity & Verification: Native KPad.exe clean build (38.9 KB < 999 KB); test_app_startup PASS (331.0 KB); KiloOS build PASS (0 errors); byte_budget_gate PASS; security_lint PASS.
   - Mature Quarantine: Promoted KPad to Mature Applications archive; advanced queue to KTerminal.
-
-- **2026-10-22T04:35:00-07:00 — kilo-tester: KCalc (Interactive UI Audit & Inline Repairs)**
-  - PASS ✅ (4 issues found & fixed inline: modal dismissal, tape export mapping, input enter guard, tutorial modes).
-  - Modal Dismissal: Fixed closeModals() to hide all modal containers including receiptModal, and close expansion overlay.
-  - Keyboard & Forms: Guarded activeExpModal Enter dismissal so typing in inputs/search/textarea does not dismiss modals.
-  - Tape Export & Sync: Fixed tape exporter mapping (formula, result, time) for CSV/TXT export and synced storage clear.
-  - Parity & Verification: test_app_startup PASS (251.4 KB < 999 KB); native KCalc.exe clean build (28.6 KB); npm run build PASS (0 errors).
-  - Queue Handoff: Advanced current_targets.kilo_tester to KPing; rotated current_agent to kilo-usability.
-
-- **2026-10-22T03:33:00-07:00 — kilo-soundscape: KSpace (Starlight Frontier: Deep Void Protocol)**
-  - Composition: 64-step Dm9 -> Bbmaj7#11 -> Gm9 -> A7b9 progression, 6 channels, 5:3 swing groove (~138 BPM).
-  - Voices & Patches: Crystalline Lead w/ delayed vibrato, Hollow Flute counter, Shell Arp, YM2612 Slap Bass, SPC700 Pad.
-  - Dual Parity: Web [M]/[N] audio controls & Asteroid shatter resonance (SFX 13) mirrored in Win32 C (KSpace.exe 91.6 KB).
-  - Verification: test_app_startup PASS (200.4 KB < 999 KB), Vite build clean (0 errors), security_lint PASS.
-  - Queue Handoff: Advanced current_targets.kilo_soundscape to KAbyss; rotated current_agent to kilo-tester.
