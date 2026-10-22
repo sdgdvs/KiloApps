@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-creator
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -21,7 +21,7 @@ current_targets:
   kilo_soundscape: KRacer
   kilo_tester: KBase
   kilo_usability: KBase
-  kilo_qa: KCalc
+  kilo_qa: KSpace
   kilo_expander: KConverter
 virtual_web_target: kweb://deep-core
 virtual_web_rotation:
@@ -37,9 +37,9 @@ virtual_web_rotation:
 - kweb://deep-core
 - kweb://darknet
 last_run:
-  agent: kilo-usability
-  app: KTerm
-  timestamp: '2026-10-22T15:34:00-07:00'
+  agent: kilo-qa
+  app: KCalc
+  timestamp: '2026-10-22T16:35:00-07:00'
 last_planner_run: '2026-10-21T23:32:00Z'
 ---
 
@@ -120,7 +120,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - In frontmatter: advance `current_targets.kilo_tester` to `KPass`.
   - Set `current_agent: kilo-usability`.
   - Append terse execution log (≤6 lines), commit, and push.
-- **Upcoming Queue**: `KPass`, `KCalc`.
+- **Upcoming Queue**: `KPass`, `KTrader`.
 
 ### 5. Usability & UX Queue (`kilo-usability`)
 - **Target**: `KBase`
@@ -135,25 +135,25 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - In frontmatter: advance `current_targets.kilo_usability` to `KPass`.
   - Set `current_agent: kilo-qa`.
   - Append terse execution log (≤6 lines), commit, and push.
-- **Upcoming Queue**: `KPass`, `KCalc`.
+- **Upcoming Queue**: `KPass`, `KTrader`.
 
 ### 6. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
-- **Target**: `KCalc`
-- **Primary Files**: `KiloOS/public/apps/kcalc.html`, `KCalc/main.c` (if present)
-- **Objective**: Pass 5 QA audit: verify calculator precision, memory registers, tape history, export formats, F5 quicksave & F9 quickload persistence, modal dismissals, and dual Win32 native client parity (<999 KB).
+- **Target**: `KSpace`
+- **Primary Files**: `KiloOS/public/apps/kspace.html`, `apps/kspace/main.c` (if present)
+- **Objective**: Pass 5 QA audit: verify space trader mechanics, cargo manifests, celestial navigation, F5 quicksave & F9 quickload persistence, modal dismissals, and dual Win32 native client parity (<999 KB).
 - **Action Steps**:
-  1. State Persistence: F5 quicksave & F9 quickload capturing complete calculator state, history tape, memory registers, and unit conversions.
+  1. State Persistence: F5 quicksave & F9 quickload capturing complete ship state, credits, cargo, and location without data loss.
   2. First-run Tutorial: Onboarding displays once on fresh sessions, never on restored saves.
   3. Modal Dismissals: Modals dismiss cleanly with Escape, Enter, or Close button.
-  4. Dual Parity & Build: Compile Win32 native client via `cmd.exe /c build.bat` in `apps/kcalc/` or `KCalc/` (if present) and verify web build.
+  4. Dual Parity & Build: Compile Win32 native client via `cmd.exe /c build.bat` in `apps/kspace/` or `KSpace/` (if present) and verify web build.
 - **Verification**:
-  - `uv run scripts/test_app_startup.py --app KCalc`
-  - `cd KiloOS && npm run build` (0 Vite errors, `kcalc.html` < 999 KB)
+  - `uv run scripts/test_app_startup.py --app KSpace`
+  - `cd KiloOS && npm run build` (0 Vite errors, `kspace.html` < 999 KB)
 - **Handoff**:
-  - In frontmatter: advance `current_targets.kilo_qa` to `KSpace`.
+  - In frontmatter: advance `current_targets.kilo_qa` to `KTrader`.
   - Set current_agent: kilo-expander.
   - Append terse execution log (≤6 lines), commit, and push.
-- **Upcoming Queue**: `KSpace`, `KPing`.
+- **Upcoming Queue**: `KTrader`, `KBase`.
 
 ### 7. Feature Expander Queue (`kilo-expander`)
 - **Target**: `KConverter`
@@ -165,10 +165,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   3. Ensure dual Win32 native client parity and clean build.
 - **Verification**: `uv run scripts/test_app_startup.py --app KConverter` and `cd KiloOS && npm run build`. File size < 999 KB.
 - **Handoff**:
-  - In frontmatter: advance `current_targets.kilo_expander` to `KCalc`.
+  - In frontmatter: advance `current_targets.kilo_expander` to `KTrader`.
   - Set `current_agent: kilo-creator`.
   - Append terse execution log (≤6 lines), commit, and push.
-- **Upcoming Queue**: `KCalc`.
+- **Upcoming Queue**: `KTrader`, `KBase`.
 
 ---
 
@@ -210,10 +210,19 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | **KPad** | `KiloOS/public/apps/kpad.html` | Pass 6+ (2026-10-22) | Office / Code Editor | Feature-complete multi-tab code & text workstation; markdown split preview, outline sidebar with touch drag, regex workbench, hex inspector, AES-256 lock, dual Win32 C parity, full F5/F9 state persistence. |
 | **KPing** | `KiloOS/public/apps/kping.html` | Pass 6+ (2026-10-22) | Network / Diagnostics | Precision ICMP echo, PMTU sweep, subnet LAN sweep & topo trace, DNS, BGP AS route, RFC 8290 bufferbloat, RTDB mesh, dual Win32 C parity, F5/F9 state. |
 | **KTerm** | `KiloOS/public/apps/kterm.html` | Pass 6+ (2026-10-22) | System / Shell | Feature-complete multi-tab terminal emulator; responsive viewport layout, prompt & input font zoom sync, CRT themes, F5/F9 state, dual Win32 C parity. |
+| **KCalc** | `KiloOS/public/apps/kcalc.html` | Pass 5 (2026-10-22) | Utility / Scientific | 5-in-1 calculator suite (Scientific, Financial, Stats, Calculus, Matrix), multi-base radix strip, M0-M7 register bank, tape export, dual Win32 C parity, full F5/F9 state persistence. |
 
 ---
 
 ## Recent Execution Logs (Max 5 Entries)
+
+- **2026-10-22T16:35:00-07:00 — kilo-qa: KCalc (Pass 5 State Persistence & Mature Quarantine)**
+  - PASS ✅ (Matrix & memory bank state persistence, first-run tutorial integrity, promoted to Mature).
+  - State Persistence: F5 quicksave & F9 quickload capturing complete calculator state, history tape, multi-register memory bank M0-M7, and matrix cell grids.
+  - Tutorial & Modals: First-run onboarding flagged on state restore; all modal overlays dismiss cleanly via Escape, Enter, Space, and Close buttons.
+  - Dual Parity & Build: Verified native `KCalc.exe` (28.0 KB < 999 KB) compiles cleanly via `build.bat`; web `kcalc.html` (254.5 KB < 999 KB).
+  - Verification: `test_app_startup` PASS (0 errors, hit-test unblocked), KiloOS `npm run build` PASS (0 Vite errors).
+  - Mature Quarantine: Promoted KCalc to Mature Applications archive; advanced kilo_qa to KSpace; rotated agent to kilo-expander.
 
 - **2026-10-22T15:34:00-07:00 — kilo-usability: KTerm (Ergonomics & Layout Polish, Mature Quarantine)**
   - PASS ✅ (Responsive viewport scaling, font zoom sync, dual-target parity, promoted to Mature).
@@ -243,10 +252,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Verification: Icon uniqueness PASS (105/105 unique hashes); test_app_startup PASS on KAbyss (479.4 KB < 999 KB); KiloOS npm build PASS (0 errors).
   - Queue Handoff: Advanced current_targets.kilo_graphics to KRacer; rotated current_agent to kilo-soundscape.
 
-- **2026-10-22T11:38:00-07:00 — kilo-creator: echo-subsystem.net (Tab 17 PLL Demodulator & Airgap Bridge)**
-  - PASS ✅ (Implemented Tab 17 Phase-Locked Loop demodulator, Costas I/Q phase plane scope, and cross-strata airgap bridge).
-  - PLL & Demodulation: Coherent carrier tracking (1999Hz, 1200/2200Hz AFSK, 999.5Hz, 432Hz), loop filter bandwidths, and auto-acquire lock.
-  - Costas I/Q Phase Scope: Real-time vector constellation canvas with phosphor persistence decay and phase slip generator.
-  - Dual Parity & Build: KNet Win32 C parity updated & compiled (46.0 KB < 999 KB); echo_subsystem.html verified (586.8 KB < 999 KB).
-  - Verification: npm run build in KiloOS PASS (0 errors); test_app_startup PASS on KNet (189.8 KB); byte_budget_gate PASS.
-  - Queue Handoff: Advanced kilo_creator and virtual_web_target to kweb://deep-core; rotated current_agent to kilo-graphics.

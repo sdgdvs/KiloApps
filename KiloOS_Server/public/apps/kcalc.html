@@ -3292,6 +3292,8 @@
           polyCD: document.getElementById('poly-c-d')?.value || '-6'
         },
         matrixInputs: {
+          matA: typeof getMatrixValues === 'function' ? getMatrixValues('A') : null,
+          matB: typeof getMatrixValues === 'function' ? getMatrixValues('B') : null,
           scalarK: document.getElementById('mat-scalar-k')?.value || '2',
           vecUx: document.getElementById('vec-ux')?.value || '2',
           vecUy: document.getElementById('vec-uy')?.value || '3',
@@ -3299,7 +3301,8 @@
           vecVx: document.getElementById('vec-vx')?.value || '4',
           vecVy: document.getElementById('vec-vy')?.value || '-2',
           vecVz: document.getElementById('vec-vz')?.value || '5'
-        }
+        },
+        expansionRegisters: typeof window.getExpansionRegisters === 'function' ? window.getExpansionRegisters() : null
       };
       localStorage.setItem('kcalc_session', JSON.stringify(state));
     } catch {}
@@ -3376,6 +3379,26 @@
           if (document.getElementById('poly-c-d') && s.calcInputs.polyCD !== undefined) document.getElementById('poly-c-d').value = s.calcInputs.polyCD;
         }
         if (s.matrixInputs && typeof s.matrixInputs === 'object') {
+          if (Array.isArray(s.matrixInputs.matA)) {
+            for (let r = 0; r < matrixDim; r++) {
+              for (let c = 0; c < matrixDim; c++) {
+                const el = document.getElementById(`mat-A-${r}-${c}`);
+                if (el && s.matrixInputs.matA[r] && s.matrixInputs.matA[r][c] !== undefined) {
+                  el.value = s.matrixInputs.matA[r][c];
+                }
+              }
+            }
+          }
+          if (Array.isArray(s.matrixInputs.matB)) {
+            for (let r = 0; r < matrixDim; r++) {
+              for (let c = 0; c < matrixDim; c++) {
+                const el = document.getElementById(`mat-B-${r}-${c}`);
+                if (el && s.matrixInputs.matB[r] && s.matrixInputs.matB[r][c] !== undefined) {
+                  el.value = s.matrixInputs.matB[r][c];
+                }
+              }
+            }
+          }
           if (document.getElementById('mat-scalar-k') && s.matrixInputs.scalarK !== undefined) document.getElementById('mat-scalar-k').value = s.matrixInputs.scalarK;
           if (document.getElementById('vec-ux') && s.matrixInputs.vecUx !== undefined) document.getElementById('vec-ux').value = s.matrixInputs.vecUx;
           if (document.getElementById('vec-uy') && s.matrixInputs.vecUy !== undefined) document.getElementById('vec-uy').value = s.matrixInputs.vecUy;
@@ -3383,6 +3406,9 @@
           if (document.getElementById('vec-vx') && s.matrixInputs.vecVx !== undefined) document.getElementById('vec-vx').value = s.matrixInputs.vecVx;
           if (document.getElementById('vec-vy') && s.matrixInputs.vecVy !== undefined) document.getElementById('vec-vy').value = s.matrixInputs.vecVy;
           if (document.getElementById('vec-vz') && s.matrixInputs.vecVz !== undefined) document.getElementById('vec-vz').value = s.matrixInputs.vecVz;
+        }
+        if (Array.isArray(s.expansionRegisters) && typeof window.setExpansionRegisters === 'function') {
+          window.setExpansionRegisters(s.expansionRegisters);
         }
         if (s.activeFinTool) switchFinTool(s.activeFinTool);
         if (s.activeStatsTool) switchStatsTool(s.activeStatsTool);
@@ -3452,6 +3478,8 @@
         polyCD: document.getElementById('poly-c-d')?.value || '-6'
       },
       matrixInputs: {
+        matA: typeof getMatrixValues === 'function' ? getMatrixValues('A') : null,
+        matB: typeof getMatrixValues === 'function' ? getMatrixValues('B') : null,
         scalarK: document.getElementById('mat-scalar-k')?.value || '2',
         vecUx: document.getElementById('vec-ux')?.value || '2',
         vecUy: document.getElementById('vec-uy')?.value || '3',
@@ -3459,7 +3487,8 @@
         vecVx: document.getElementById('vec-vx')?.value || '4',
         vecVy: document.getElementById('vec-vy')?.value || '-2',
         vecVz: document.getElementById('vec-vz')?.value || '5'
-      }
+      },
+      expansionRegisters: typeof window.getExpansionRegisters === 'function' ? window.getExpansionRegisters() : null
     };
   }
 
@@ -3548,6 +3577,26 @@
       calcQuadratic(true);
     }
     if (snap.matrixInputs && typeof snap.matrixInputs === 'object') {
+      if (Array.isArray(snap.matrixInputs.matA)) {
+        for (let r = 0; r < matrixDim; r++) {
+          for (let c = 0; c < matrixDim; c++) {
+            const el = document.getElementById(`mat-A-${r}-${c}`);
+            if (el && snap.matrixInputs.matA[r] && snap.matrixInputs.matA[r][c] !== undefined) {
+              el.value = snap.matrixInputs.matA[r][c];
+            }
+          }
+        }
+      }
+      if (Array.isArray(snap.matrixInputs.matB)) {
+        for (let r = 0; r < matrixDim; r++) {
+          for (let c = 0; c < matrixDim; c++) {
+            const el = document.getElementById(`mat-B-${r}-${c}`);
+            if (el && snap.matrixInputs.matB[r] && snap.matrixInputs.matB[r][c] !== undefined) {
+              el.value = snap.matrixInputs.matB[r][c];
+            }
+          }
+        }
+      }
       if (document.getElementById('mat-scalar-k') && snap.matrixInputs.scalarK !== undefined) document.getElementById('mat-scalar-k').value = snap.matrixInputs.scalarK;
       if (document.getElementById('vec-ux') && snap.matrixInputs.vecUx !== undefined) document.getElementById('vec-ux').value = snap.matrixInputs.vecUx;
       if (document.getElementById('vec-uy') && snap.matrixInputs.vecUy !== undefined) document.getElementById('vec-uy').value = snap.matrixInputs.vecUy;
@@ -3557,6 +3606,10 @@
       if (document.getElementById('vec-vz') && snap.matrixInputs.vecVz !== undefined) document.getElementById('vec-vz').value = snap.matrixInputs.vecVz;
       calcVectorOps(true);
     }
+    if (Array.isArray(snap.expansionRegisters) && typeof window.setExpansionRegisters === 'function') {
+      window.setExpansionRegisters(snap.expansionRegisters);
+    }
+    try { localStorage.setItem('kcalc_tutorialSeen', 'true'); } catch {}
     if (snap.activeFinTool) switchFinTool(snap.activeFinTool);
     if (snap.activeStatsTool) switchStatsTool(snap.activeStatsTool);
     if (snap.activeCalcTool) switchCalcTool(snap.activeCalcTool);
@@ -6013,6 +6066,18 @@
     updateQuickBitSummary();
     setInterval(updateQuickBitSummary, 1000);
   }
+
+  // Expose memory registers bank for workspace persistence & snapshots
+  window.getExpansionRegisters = function() {
+    return Array.isArray(registers) ? JSON.parse(JSON.stringify(registers)) : [];
+  };
+  window.setExpansionRegisters = function(newRegs) {
+    if (Array.isArray(newRegs) && newRegs.length === 8) {
+      registers = JSON.parse(JSON.stringify(newRegs));
+      saveRegisters();
+      updateQuickBitSummary();
+    }
+  };
 
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', bindExpansionButtons);
