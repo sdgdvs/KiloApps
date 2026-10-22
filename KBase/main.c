@@ -97,6 +97,45 @@ static void u64_to_dec(UINT64 val, char* outBuf) {
     outBuf[outPos] = '\0';
 }
 
+static void u64_to_oct(UINT64 val, char* outBuf) {
+    if (val == 0) {
+        outBuf[0] = '0';
+        outBuf[1] = '\0';
+        return;
+    }
+    char temp[32];
+    int pos = 0;
+    while (val > 0) {
+        temp[pos++] = '0' + (char)(val & 7);
+        val >>= 3;
+    }
+    int outPos = 0;
+    for (int i = pos - 1; i >= 0; i--) {
+        outBuf[outPos++] = temp[i];
+    }
+    outBuf[outPos] = '\0';
+}
+
+static void u64_to_b64(UINT64 val, char* outBuf) {
+    BYTE bytes[8];
+    int len = 0;
+    UINT64 temp = val;
+    do {
+        bytes[7 - len] = (BYTE)(temp & 0xFF);
+        temp >>= 8;
+        len++;
+    } while (temp > 0);
+    BYTE* start = &bytes[8 - len];
+    DWORD outLen = 32;
+    if (CryptBinaryToStringA(start, len, CRYPT_STRING_BASE64 | CRYPT_STRING_NOCRLF, outBuf, &outLen)) {
+        while (outLen > 0 && (outBuf[outLen - 1] == '\r' || outBuf[outLen - 1] == '\n' || outBuf[outLen - 1] == ' ')) {
+            outBuf[--outLen] = '\0';
+        }
+    } else {
+        outBuf[0] = '\0';
+    }
+}
+
 // Clipboard and Status Notification Utilities
 static void CopyToClipboard(HWND hwnd, const char* text) {
     if (!text || !*text) return;
@@ -295,7 +334,7 @@ void DoHexDecode() {
     HeapFree(GetProcessHeap(), 0, outBuf);
 }
 
-// Convert Base live
+// Convert Base live (Multi-Radix: Dec, Hex, Oct, Bin, Base64 + Endianness)
 void DoConvertBases() {
     char buf[128];
     GetWindowTextA(hInput, buf, 128);
@@ -304,15 +343,143 @@ void DoConvertBases() {
         val = parse_u64(buf, 16);
     }
     
-    char hex[32], dec[32], bin[68], formatted[256];
+    char hex[32], dec[32], bin[72], oct[32], b64[32];
     u64_to_hex(val, hex);
     u64_to_dec(val, dec);
     u64_to_bin(val, bin);
+    u64_to_oct(val, oct);
+    u64_to_b64(val, b64);
 
-    wsprintfA(formatted, "DEC: %s\r\nHEX: 0x%s\r\nBIN: %s", dec, hex, bin);
+    INT64 sval = (INT64)val;
+    char sdec[32];
+    if (sval < 0) {
+        sdec[0] = '-';
+        u64_to_dec((UINT64)(-sval), &sdec[1]);
+    } else {
+        u64_to_dec((UINT64)sval, sdec);
+    }
+
+    UINT32 u32 = (UINT32)(val & 0xFFFFFFFF);
+    UINT32 swap32 = ((u32 & 0x000000FF) << 24) | ((u32 & 0x0000FF00) << 8) | ((u32 & 0x00FF0000) >> 8) | ((u32 & 0xFF000000) >> 24);
+    UINT64 swap64 = 0;
+    for (int i = 0; i < 8; i++) {
+        swap64 = (swap64 << 8) | ((val >> (i * 8)) & 0xFF);
+    }
+    char swap64Hex[32];
+    u64_to_hex(swap64, swap64Hex);
+
+    int popcount = 0;
+    for (int i = 0; i < 64; i++) {
+        if ((val >> i) & 1) popcount++;
+    }
+
+    char formatted[1024];
+    wsprintfA(formatted,
+        "=== Universal Radices & Base Conversion ===\r\n"
+        "DEC (Unsigned 64):  %s\r\n"
+        "DEC (Signed 64):    %s\r\n"
+        "HEX (Base 16):      0x%s\r\n"
+        "OCT (Base 8):       0o%s\r\n"
+        "BIN (Base 2):       0b%s\r\n"
+        "BASE64 (RFC 4648):  %s\r\n\r\n"
+        "[Endianness & Memory Layout]\r\n"
+        "Popcount: %d bits set | High byte: 0x%02X | Low byte: 0x%02X\r\n"
+        "Little-Endian 64:   0x%s\r\n"
+        "Big-Endian 64:      0x%s\r\n"
+        "32-Bit Swapped:     0x%08X",
+        dec, sdec, hex, oct, bin, b64,
+        popcount, (DWORD)((val >> 56) & 0xFF), (DWORD)(val & 0xFF),
+        hex, swap64Hex, swap32);
+
     SetWindowTextA(hOutput, formatted);
     SetWindowTextA(hBitDisplay, bin);
-    ShowNativeStatus(GetParent(hOutput), "Base Conversion synchronized [Enter]");
+    ShowNativeStatus(GetParent(hOutput), "Multi-Base (Dec/Hex/Oct/Bin/Base64) synchronized [Enter]");
+}
+
+// Granular Bitwise Mask & Field Deposit Studio
+void DoGranularMask(int op) {
+    char bufV[128], bufM[128], bufB[128];
+    GetWindowTextA(hInput, bufV, 128);
+    GetWindowTextA(hEditA, bufM, 128);
+    GetWindowTextA(hEditB, bufB, 128);
+
+    UINT64 v = parse_u64(bufV, 16);
+    if (v == 0 && bufV[0] != '0') v = parse_u64(bufV, 10);
+
+    UINT64 m = parse_u64(bufM, 16);
+    if (m == 0 && bufM[0] != '0') m = parse_u64(bufM, 10);
+
+    UINT64 shift = parse_u64(bufB, 10);
+    if (shift > 63) shift = 0;
+
+    UINT64 f = parse_u64(bufB, 16);
+    if (f == 0 && bufB[0] != '0') f = parse_u64(bufB, 10);
+
+    UINT64 resApply   = v & m;
+    UINT64 resSet     = v | m;
+    UINT64 resClear   = v & (~m);
+    UINT64 resToggle  = v ^ m;
+    UINT64 resExtract = (v >> shift) & m;
+    UINT64 resDeposit = (v & ~(m << shift)) | ((f & m) << shift);
+
+    char hApp[32], hSet[32], hClr[32], hTog[32], hExt[32], hDep[32];
+    char dApp[32], dSet[32], dClr[32], dTog[32], dExt[32], dDep[32];
+    char bApp[72];
+    u64_to_hex(resApply, hApp);   u64_to_dec(resApply, dApp); u64_to_bin(resApply, bApp);
+    u64_to_hex(resSet, hSet);     u64_to_dec(resSet, dSet);
+    u64_to_hex(resClear, hClr);   u64_to_dec(resClear, dClr);
+    u64_to_hex(resToggle, hTog);  u64_to_dec(resToggle, dTog);
+    u64_to_hex(resExtract, hExt); u64_to_dec(resExtract, dExt);
+    u64_to_hex(resDeposit, hDep); u64_to_dec(resDeposit, dDep);
+
+    char outStr[1536];
+    wsprintfA(outStr,
+        "=== Granular Bitwise Mask & Field Deposit Studio ===\r\n"
+        "Target Value (V):   0x%08X%08X (DEC: %s)\r\n"
+        "Bitmask      (M):   0x%08X%08X\r\n"
+        "Shift Offset (S):   %d bits | Field/Slice (F): 0x%08X\r\n\r\n"
+        "[1] Apply Mask   (V & M):         0x%s  (DEC: %s)\r\n"
+        "[2] Set Bits     (V | M):         0x%s  (DEC: %s)\r\n"
+        "[3] Clear Bits   (V & ~M):        0x%s  (DEC: %s)\r\n"
+        "[4] Toggle Bits  (V ^ M):         0x%s  (DEC: %s)\r\n"
+        "[5] Extract      ((V>>S) & M):    0x%s  (DEC: %s)\r\n"
+        "[6] Deposit      (Insert Field):  0x%s  (DEC: %s)\r\n\r\n"
+        "[Masked Binary Stream]\r\n"
+        "0b%s",
+        (DWORD)(v >> 32), (DWORD)(v & 0xFFFFFFFF), bufV,
+        (DWORD)(m >> 32), (DWORD)(m & 0xFFFFFFFF),
+        (int)shift, (DWORD)(f & 0xFFFFFFFF),
+        hApp, dApp,
+        hSet, dSet,
+        hClr, dClr,
+        hTog, dTog,
+        hExt, dExt,
+        hDep, dDep,
+        bApp);
+
+    SetWindowTextA(hOutput, outStr);
+    SetWindowTextA(hBitDisplay, bApp);
+    ShowNativeStatus(GetParent(hOutput), "Granular Mask & Field Operations [M]");
+}
+
+// In-place 64-bit Endianness Toggle for hInput
+void DoToggleEndianInput() {
+    char buf[128];
+    GetWindowTextA(hInput, buf, 128);
+    UINT64 val = parse_u64(buf, 10);
+    if (val == 0 && buf[0] != '0') val = parse_u64(buf, 16);
+    
+    UINT64 swap64 = 0;
+    for (int i = 0; i < 8; i++) {
+        swap64 = (swap64 << 8) | ((val >> (i * 8)) & 0xFF);
+    }
+    char swapHex[32];
+    u64_to_hex(swap64, swapHex);
+    char outVal[48];
+    wsprintfA(outVal, "0x%s", swapHex);
+    SetWindowTextA(hInput, outVal);
+    DoConvertBases();
+    ShowNativeStatus(GetParent(hOutput), "Toggled 64-Bit Endianness (LE <-> BE) [T]");
 }
 
 static void DoLoadDemo(HWND hwnd) {
@@ -1098,8 +1265,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             HWND hBtnBCD = CreateWindowA("BUTTON", "BCD/Gray [G]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 720, 107, 90, 24, hwnd, (HMENU)23, NULL, NULL);
             SendMessageA(hBtnBCD, WM_SETFONT, (WPARAM)hFont, 0);
 
-            HWND hBtnFloat = CreateWindowA("BUTTON", "Float [F]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 815, 107, 70, 24, hwnd, (HMENU)24, NULL, NULL);
+            HWND hBtnFloat = CreateWindowA("BUTTON", "Float [F]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 785, 107, 50, 24, hwnd, (HMENU)24, NULL, NULL);
             SendMessageA(hBtnFloat, WM_SETFONT, (WPARAM)hFont, 0);
+            HWND hBtnMask = CreateWindowA("BUTTON", "Mask [M]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 838, 107, 47, 24, hwnd, (HMENU)34, NULL, NULL);
+            SendMessageA(hBtnMask, WM_SETFONT, (WPARAM)hFont, 0);
 
             // Extended Bitwise Operator Buttons
             HWND hBtnAnd = CreateWindowA("BUTTON", "AND", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 10, 137, 48, 24, hwnd, (HMENU)10, NULL, NULL);
@@ -1130,8 +1299,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SendMessageA(hBtnClmul, WM_SETFONT, (WPARAM)hFont, 0);
             HWND hBtnLsbIso = CreateWindowA("BUTTON", "LSB-Iso", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 696, 137, 66, 24, hwnd, (HMENU)33, NULL, NULL);
             SendMessageA(hBtnLsbIso, WM_SETFONT, (WPARAM)hFont, 0);
-            HWND hBtnEndian = CreateWindowA("BUTTON", "Endian [E]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 766, 137, 119, 24, hwnd, (HMENU)25, NULL, NULL);
+            HWND hBtnEndian = CreateWindowA("BUTTON", "Endian [E]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 766, 137, 58, 24, hwnd, (HMENU)25, NULL, NULL);
             SendMessageA(hBtnEndian, WM_SETFONT, (WPARAM)hFont, 0);
+            HWND hBtnToggleE = CreateWindowA("BUTTON", "LE/BE [T]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 826, 137, 59, 24, hwnd, (HMENU)35, NULL, NULL);
+            SendMessageA(hBtnToggleE, WM_SETFONT, (WPARAM)hFont, 0);
 
             // 64-Bit Binary Stream Display
             CreateWindowA("STATIC", "64-Bit Binary Stream:", WS_CHILD | WS_VISIBLE, 10, 167, 200, 18, hwnd, NULL, NULL, NULL);
@@ -1169,6 +1340,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             else if (id == 23) { DoBCDAndGray(); ShowNativeStatus(hwnd, "Gray Code & Packed BCD converted [G]"); }
             else if (id == 24) { DoFloatInspect(); ShowNativeStatus(hwnd, "Floating & Fixed-Point inspected [F]"); }
             else if (id == 25) { DoEndianSwap(); ShowNativeStatus(hwnd, "Endian & Nybble Swapped [E]"); }
+            else if (id == 34) { DoGranularMask(1); }
+            else if (id == 35) { DoToggleEndianInput(); }
             else if (id == 26) { DoGenCode(); ShowNativeStatus(hwnd, "Code snippets generated [K]"); }
             else if (id == 100) DoConvertBases();
             else if (id == 201) DoCopyOutput(hwnd);
@@ -1357,6 +1530,14 @@ void __stdcall MainEntry() {
                 }
                 if (msg.wParam == 'E' || msg.wParam == 'e') {
                     SendMessageA(hwnd, WM_COMMAND, 25, 0);
+                    continue;
+                }
+                if (msg.wParam == 'M' || msg.wParam == 'm') {
+                    SendMessageA(hwnd, WM_COMMAND, 34, 0);
+                    continue;
+                }
+                if (msg.wParam == 'T' || msg.wParam == 't') {
+                    SendMessageA(hwnd, WM_COMMAND, 35, 0);
                     continue;
                 }
                 if (msg.wParam == 'K' || msg.wParam == 'k') {

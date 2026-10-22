@@ -51,9 +51,9 @@
     "id": "kbase",
     "title": "KBase",
     "folder": "System",
-    "webBytes": 118450,
-    "exeBytes": 24576,
-    "budgetPercent": 11.9
+    "webBytes": 161174,
+    "exeBytes": 27648,
+    "budgetPercent": 16.1
   },
   {
     "id": "kbbs",
