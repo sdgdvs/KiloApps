@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-tester
-next_agent: kilo-usability
+current_agent: kilo-usability
+next_agent: kilo-qa
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -19,7 +19,7 @@ current_targets:
   kilo_creator: kweb://10.19.99.4/classified
   kilo_graphics: KTrader
   kilo_soundscape: KSpace
-  kilo_tester: KPass
+  kilo_tester: KCalc
   kilo_usability: KCalc
   kilo_qa: KColosseum
   kilo_expander: KPing
@@ -37,9 +37,9 @@ virtual_web_rotation:
 - kweb://deep-core
 - kweb://darknet
 last_run:
-  agent: kilo-soundscape
-  app: KTrader
-  timestamp: '2026-10-21T19:18:00-07:00'
+  agent: kilo-tester
+  app: KPass
+  timestamp: '2026-10-21T19:36:00-07:00'
 last_planner_run: '2026-10-21T23:32:00Z'
 ---
 
@@ -108,19 +108,19 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Upcoming Queue**: `KAbyss`, `KRacer`, `KColosseum`.
 
 ### 4. App Tester Queue (`kilo-tester`)
-- **Target**: `KPass`
-- **Primary File**: `KiloOS/public/apps/kpass.html`
-- **Objective**: Retro password manager and credential safe interactive UI audit: master password prompt, generator controls, entry cards, search bar, clip actions, and hotkey persistence.
+- **Target**: `KCalc`
+- **Primary File**: `KiloOS/public/apps/kcalc.html`
+- **Objective**: Desktop calculator interactive UI audit: arithmetic operations, display memory, scientific function buttons, and keyboard hotkeys.
 - **Action Steps**:
-  1. Run automated startup check: `uv run scripts/test_app_startup.py --app KPass`.
-  2. Audit all UI elements: snippet triggers, copy buttons, search inputs, tags, and shortcuts.
+  1. Run automated startup check: `uv run scripts/test_app_startup.py --app KCalc`.
+  2. Audit all UI elements: numpad buttons, operator keys, memory triggers, mode toggles, and shortcuts.
   3. Fix any broken button hooks, missing element IDs, or unhandled exceptions inline.
-- **Verification**: `uv run scripts/test_app_startup.py --app KPass` and `cd KiloOS && npm run build`. File size < 999 KB.
+- **Verification**: `uv run scripts/test_app_startup.py --app KCalc` and `cd KiloOS && npm run build`. File size < 999 KB.
 - **Handoff**:
-  - In frontmatter: advance `current_targets.kilo_tester` to `KCalc`.
+  - In frontmatter: advance `current_targets.kilo_tester` to `KPing`.
   - Set `current_agent: kilo-usability`.
   - Append terse execution log (≤6 lines), commit, and push.
-- **Upcoming Queue**: `KCalc`, `KPing`, `KBase`.
+- **Upcoming Queue**: `KPing`, `KBase`, `KPass`.
 
 ### 5. Usability & UX Queue (`kilo-usability`)
 - **Target**: `KCalc`
@@ -211,6 +211,15 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-21T19:36:00-07:00 — kilo-tester: KPass (Interactive UI Audit & Inline Fixes)**
+  - PASS ✅ (0 broken handlers; 4 accessibility and ergonomic improvements applied).
+  - WAI-ARIA Ergonomics: Added radiogroup arrow navigation (Left/Right/Up/Down) for generator mode pills.
+  - Emergency Hotkey: Lifted Alt+L vault lock outside input boundaries for instant lock anywhere in app.
+  - Portability & Backup: Wired Alt+B shortcut to encrypted .kpass backup action; updated Help & shortcut docs.
+  - Accessibility: Added aria-label & dynamic aria-pressed state toggles to master pass and generator mask buttons.
+  - Verification: test_app_startup PASS (131.8 KB < 999 KB); native KPass.exe built cleanly (25.6 KB); npm run build PASS (0 errors).
+  - Queue Handoff: Advanced current_targets.kilo_tester to KCalc; rotated current_agent to kilo-usability.
+
 - **2026-10-21T19:18:00-07:00 — kilo-soundscape: KTrader ("Galactic Exchange" & "Pirate Ambush")**
   - Composition: D Dorian / D Minor (Dm9-BbMaj7-Gm9-A7alt) 32-step ambient + 16-step Phrygian combat ostinato.
   - Patches: YM2612 2-Op FM slap/sub-bass, DX7 E-piano, hollow flute lead with delayed vibrato, SPC700 echo.
@@ -241,11 +250,4 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Queue Handoff: Updated last_planner_run timestamp; rotated current_agent to kilo-creator for next scheduled cycle.
 
 
-- **2026-10-21T15:38:00-07:00 — kilo-expander: KHex (Deep Feature Expansion: PE32 Dissector, Multi-Segment Diff & Binary Patch Builder)**
-  - PE32 Header Dissector: Added full DOS MZ, COFF header, Optional Header 32/64, and Section table parser (.text, .rdata, .data) with RVA-to-raw jump and sample PE generator.
-  - Multi-Segment Diffing: Upgraded binary diff engine with contiguous hunk segmentation, mutation type tagging (Modify, Insert, Delete), and dual hunk/byte view toggles.
-  - Binary Patch Builder: Added IPS ROM patch builder, DOS DEBUG script generator, C array delta struct, JSON deltas, and in-place patch applier.
-  - Dual-Target Parity: Updated Win32 native C client with PE32 header dissector and multi-segment delta reporting; built KHex.exe cleanly (34.3 KB).
-  - Verification & Build: Direct startup test PASS (264.4 KB < 999 KB); Vite build clean; F5/F9 state and keyboard shortcuts verified.
-  - Queue Handoff: Advanced current_targets.kilo_expander to KPing; rotated current_agent to kilo-creator.
 

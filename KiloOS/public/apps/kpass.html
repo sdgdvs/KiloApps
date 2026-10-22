@@ -809,7 +809,7 @@
     <h1 id="lockTitle">KPass Vault Locked</h1>
     <div style="position:relative; width:100%; max-width:300px; margin-bottom:15px; display:flex; align-items:center;">
       <input type="password" id="masterPass" placeholder="Master Password" autofocus aria-label="Master Password" style="width:100%; margin-bottom:0; font-size:16px; text-align:center; padding-right:38px;">
-      <button type="button" id="btnToggleMasterPass" title="Show / Hide Master Password" style="position:absolute; right:6px; top:50%; transform:translateY(-50%); background:transparent; border:none; color:#aaa; font-size:16px; cursor:pointer; padding:4px 6px; width:auto; max-width:none;">👁</button>
+      <button type="button" id="btnToggleMasterPass" title="Show / Hide Master Password" aria-label="Toggle master password visibility" aria-pressed="false" style="position:absolute; right:6px; top:50%; transform:translateY(-50%); background:transparent; border:none; color:#aaa; font-size:16px; cursor:pointer; padding:4px 6px; width:auto; max-width:none;">👁</button>
     </div>
     <button class="primary" id="btnUnlock">Unlock / Setup [Enter]</button>
     <div id="lockError" role="alert"></div>
@@ -848,7 +848,7 @@
         <div>&bull; Enter = Unlock / Save / Generate | Ctrl+F or '/' = Focus Search</div>
         <div>&bull; Esc = Close Modals / Clear Search / Reset Filters</div>
         <div>&bull; Ctrl+S = Save Credential | Ctrl+G = Generate | Ctrl+C = Copy Password</div>
-        <div>&bull; Alt+L = Lock Vault | Alt+J = JSON | Alt+E = CSV | Alt+M = Markdown | Alt+I = Import</div>
+        <div>&bull; Alt+L = Lock Vault | Alt+J = JSON | Alt+E = CSV | Alt+M = Markdown | Alt+B = Backup | Alt+I = Import</div>
       </div>
       <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 14px;">
         <button id="btnQuicksaveHelp" style="background: #333; border-color: #444; color: #ddd;" title="Save quicksave snapshot [F5]">Save [F5]</button>
@@ -934,7 +934,7 @@
       <div class="display" id="pwdDisplay" title="Click to copy password" tabindex="0">...
         <div class="display-hint">Click password to copy</div>
       </div>
-      <button type="button" id="btnToggleGenMask" title="Conceal Password" style="position: absolute; right: 10px; top: 12px; background: transparent; border: none; color: #888; font-size: 16px; cursor: pointer; padding: 4px 6px; user-select: none;">👁</button>
+      <button type="button" id="btnToggleGenMask" title="Conceal Password" aria-label="Conceal or reveal generated password" aria-pressed="false" style="position: absolute; right: 10px; top: 12px; background: transparent; border: none; color: #888; font-size: 16px; cursor: pointer; padding: 4px 6px; user-select: none;">👁</button>
     </div>
     
     <!-- Password Strength Meter -->
@@ -1100,7 +1100,7 @@
         <button class="btn-sm" id="btnExportJSON" title="Export vault to JSON (Alt+J)">JSON [Alt+J]</button>
         <button class="btn-sm" id="btnExportCSV" title="Export vault to CSV (Alt+E)">CSV [Alt+E]</button>
         <button class="btn-sm" id="btnExportMD" title="Export vault to formatted Markdown (Alt+M)">Markdown [Alt+M]</button>
-        <button class="btn-sm" id="btnBackupKPass" title="Save encrypted backup (.kpass)">Backup (.kpass)</button>
+        <button class="btn-sm" id="btnBackupKPass" title="Save encrypted backup (.kpass) [Alt+B]">Backup (.kpass) [Alt+B]</button>
       </div>
       <div style="display:flex; gap:5px; flex-wrap:wrap;">
         <button class="btn-sm" id="btnImport" title="Import credentials from CSV, JSON or .kpass (Alt+I)">Import [Alt+I]</button>
@@ -1340,10 +1340,14 @@
                 masterPassInput.type = 'text';
                 btnToggleMasterPass.innerText = '🔒';
                 btnToggleMasterPass.title = 'Hide Master Password';
+                btnToggleMasterPass.setAttribute('aria-label', 'Hide Master Password');
+                btnToggleMasterPass.setAttribute('aria-pressed', 'true');
             } else {
                 masterPassInput.type = 'password';
                 btnToggleMasterPass.innerText = '👁';
                 btnToggleMasterPass.title = 'Show Master Password';
+                btnToggleMasterPass.setAttribute('aria-label', 'Show Master Password');
+                btnToggleMasterPass.setAttribute('aria-pressed', 'false');
             }
             masterPassInput.focus();
         });
@@ -1367,6 +1371,8 @@
             isGenMasked = !isGenMasked;
             btnToggleGenMask.innerText = isGenMasked ? '🔒' : '👁';
             btnToggleGenMask.title = isGenMasked ? 'Reveal Password' : 'Conceal Password';
+            btnToggleGenMask.setAttribute('aria-label', isGenMasked ? 'Reveal Password' : 'Conceal Password');
+            btnToggleGenMask.setAttribute('aria-pressed', isGenMasked ? 'true' : 'false');
             updateGenDisplay();
         });
     }
@@ -2080,6 +2086,15 @@
             return;
         }
 
+        // Global Alt+L emergency lock (works anywhere whenever vault is unlocked)
+        if (e.altKey && e.key.toLowerCase() === 'l') {
+            e.preventDefault();
+            if (lockScreen.style.display === 'none') {
+                lockVault();
+            }
+            return;
+        }
+
         const isInput = ['INPUT', 'SELECT', 'TEXTAREA'].includes(e.target.tagName);
         if (!isInput && lockScreen.style.display === 'none') {
             if (e.key === 'Enter' && contentGen.style.display !== 'none') {
@@ -2115,9 +2130,10 @@
                     return;
                 }
             }
-            if (e.altKey && e.key.toLowerCase() === 'l') {
+            if (e.altKey && e.key.toLowerCase() === 'b') {
                 e.preventDefault();
-                lockVault();
+                const btnBackup = document.getElementById('btnBackupKPass');
+                if (btnBackup) btnBackup.click();
                 return;
             }
             if (e.altKey && e.key.toLowerCase() === 'j') {
@@ -2179,6 +2195,25 @@
     btnModeDiceware.addEventListener('click', () => setGenMode('diceware'));
     btnModePin.addEventListener('click', () => setGenMode('pin'));
     btnModeHex.addEventListener('click', () => setGenMode('hex'));
+
+    // WAI-ARIA radiogroup keyboard navigation for mode pills
+    const modePillButtons = [btnModeChars, btnModeDiceware, btnModePin, btnModeHex];
+    const modePillKeys = ['chars', 'diceware', 'pin', 'hex'];
+    modePillButtons.forEach((btn, idx) => {
+        btn.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+                e.preventDefault();
+                const nextIdx = (idx + 1) % modePillButtons.length;
+                modePillButtons[nextIdx].focus();
+                setGenMode(modePillKeys[nextIdx]);
+            } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+                e.preventDefault();
+                const prevIdx = (idx - 1 + modePillButtons.length) % modePillButtons.length;
+                modePillButtons[prevIdx].focus();
+                setGenMode(modePillKeys[prevIdx]);
+            }
+        });
+    });
 
     // Generator inputs
     const chkUpper = document.getElementById('chkUpper');
