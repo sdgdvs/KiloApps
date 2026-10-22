@@ -165,11 +165,192 @@
   .badge-btn:active { transform: translateY(1px); }
   .badge-btn.active { background: rgba(16, 185, 129, 0.2); color: #34d399; border-color: rgba(16, 185, 129, 0.3); }
 
-  .badge-btn:focus-visible, .tab-btn:focus-visible, .calc-btn:focus-visible, .action-btn:focus-visible, .mini-btn:focus-visible {
-    outline: 2px solid #818cf8;
-    outline-offset: 1px;
+  /* Accessible High-Contrast Focus Glow */
+  :focus-visible {
+    outline: 2px solid #818cf8 !important;
+    outline-offset: 2px !important;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.4), 0 0 12px rgba(129, 140, 248, 0.5) !important;
+  }
+  .badge-btn:focus-visible,
+  .tab-btn:focus-visible,
+  .calc-btn:focus-visible,
+  .action-btn:focus-visible,
+  .mini-btn:focus-visible,
+  .kcalc-tool-btn:focus-visible,
+  .close-btn:focus-visible,
+  .help-prompt-badge:focus-visible {
+    outline: 2px solid #a5b4fc !important;
+    outline-offset: 1px !important;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.5), 0 0 14px rgba(129, 140, 248, 0.6) !important;
   }
 
+  /* Help Prompt Badge in Header */
+  .help-prompt-badge {
+    background: rgba(99, 102, 241, 0.15);
+    border: 1px solid rgba(99, 102, 241, 0.35);
+    color: #a5b4fc;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    user-select: none;
+    margin-left: 4px;
+    touch-action: manipulation;
+  }
+  .help-prompt-badge:hover {
+    background: rgba(99, 102, 241, 0.35);
+    color: #ffffff;
+    border-color: #818cf8;
+  }
+
+  /* --- High-Contrast LCD Readout Themes --- */
+  .display-card.theme-retro-lcd {
+    background: #9ab38d !important;
+    border: 3px inset #6d8262 !important;
+    box-shadow: inset 2px 2px 8px rgba(0, 0, 0, 0.45), inset -2px -2px 6px rgba(255, 255, 255, 0.3), 0 3px 12px rgba(0, 0, 0, 0.5) !important;
+    color: #121c0e !important;
+  }
+  .display-card.theme-retro-lcd .main-display {
+    color: #111a0d !important;
+    text-shadow: 1px 1px 0px rgba(18, 28, 14, 0.25) !important;
+    font-weight: 600 !important;
+  }
+  .display-card.theme-retro-lcd .sub-display {
+    color: #2e3e26 !important;
+    font-weight: 600 !important;
+  }
+  .display-card.theme-retro-lcd .status-chip {
+    background: rgba(18, 28, 14, 0.12) !important;
+    color: #1b2914 !important;
+    border-color: rgba(18, 28, 14, 0.35) !important;
+    font-weight: 800 !important;
+  }
+  .display-card.theme-retro-lcd .status-chip.highlight {
+    background: rgba(18, 28, 14, 0.25) !important;
+    color: #0b1208 !important;
+    border-color: #121c0e !important;
+  }
+  .display-card.theme-retro-lcd .status-chip.copy-btn {
+    background: rgba(18, 28, 14, 0.18) !important;
+    color: #0d160a !important;
+    border-color: rgba(18, 28, 14, 0.45) !important;
+  }
+  .display-card.theme-retro-lcd .quick-radix-strip {
+    color: #24351d !important;
+    border-top-color: rgba(18, 28, 14, 0.25) !important;
+  }
+  .display-card.theme-retro-lcd .quick-radix-val {
+    color: #0b1208 !important;
+  }
+
+  .display-card.theme-amber-plasma {
+    background: #140b04 !important;
+    border: 2px solid #5a300a !important;
+    box-shadow: inset 0 2px 14px rgba(0, 0, 0, 0.9), 0 0 16px rgba(245, 158, 11, 0.2) !important;
+    color: #fbbf24 !important;
+  }
+  .display-card.theme-amber-plasma .main-display {
+    color: #ffb703 !important;
+    text-shadow: 0 0 12px rgba(255, 183, 3, 0.6), 0 0 24px rgba(245, 158, 11, 0.3) !important;
+  }
+  .display-card.theme-amber-plasma .sub-display {
+    color: #d97706 !important;
+  }
+  .display-card.theme-amber-plasma .status-chip {
+    background: rgba(245, 158, 11, 0.12) !important;
+    color: #fbbf24 !important;
+    border-color: rgba(245, 158, 11, 0.3) !important;
+  }
+  .display-card.theme-amber-plasma .status-chip.highlight {
+    background: rgba(245, 158, 11, 0.3) !important;
+    color: #ffffff !important;
+    border-color: #fbbf24 !important;
+  }
+  .display-card.theme-amber-plasma .status-chip.copy-btn {
+    background: rgba(245, 158, 11, 0.2) !important;
+    color: #fde68a !important;
+    border-color: rgba(245, 158, 11, 0.4) !important;
+  }
+  .display-card.theme-amber-plasma .quick-radix-strip {
+    color: #b45309 !important;
+    border-top-color: rgba(245, 158, 11, 0.25) !important;
+  }
+  .display-card.theme-amber-plasma .quick-radix-val {
+    color: #fbbf24 !important;
+  }
+
+  .display-card.theme-vfd-cyan {
+    background: #021215 !important;
+    border: 2px solid #084c56 !important;
+    box-shadow: inset 0 2px 14px rgba(0, 0, 0, 0.9), 0 0 16px rgba(6, 182, 212, 0.25) !important;
+    color: #22d3ee !important;
+  }
+  .display-card.theme-vfd-cyan .main-display {
+    color: #00ffd5 !important;
+    text-shadow: 0 0 12px rgba(0, 255, 213, 0.65), 0 0 24px rgba(6, 182, 212, 0.35) !important;
+  }
+  .display-card.theme-vfd-cyan .sub-display {
+    color: #0891b2 !important;
+  }
+  .display-card.theme-vfd-cyan .status-chip {
+    background: rgba(6, 182, 212, 0.12) !important;
+    color: #22d3ee !important;
+    border-color: rgba(6, 182, 212, 0.3) !important;
+  }
+  .display-card.theme-vfd-cyan .status-chip.highlight {
+    background: rgba(6, 182, 212, 0.3) !important;
+    color: #ffffff !important;
+    border-color: #22d3ee !important;
+  }
+  .display-card.theme-vfd-cyan .status-chip.copy-btn {
+    background: rgba(6, 182, 212, 0.2) !important;
+    color: #a5f3fc !important;
+    border-color: rgba(6, 182, 212, 0.4) !important;
+  }
+  .display-card.theme-vfd-cyan .quick-radix-strip {
+    color: #0e7490 !important;
+    border-top-color: rgba(6, 182, 212, 0.25) !important;
+  }
+  .display-card.theme-vfd-cyan .quick-radix-val {
+    color: #00ffd5 !important;
+  }
+
+  /* Quick Radix Multi-Base Live Strip */
+  .quick-radix-strip {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--text-muted);
+    border-top: 1px dashed rgba(255, 255, 255, 0.08);
+    padding-top: 4px;
+    margin-top: 4px;
+    user-select: text;
+    flex-wrap: wrap;
+  }
+  .quick-radix-item {
+    cursor: pointer;
+    padding: 1px 4px;
+    border-radius: 4px;
+    transition: all 0.15s;
+    touch-action: manipulation;
+  }
+  .quick-radix-item:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: #fff;
+  }
+  .quick-radix-val {
+    font-weight: 600;
+    color: #818cf8;
+  }
+  .quick-radix-sep {
+    opacity: 0.3;
+  }
   /* Main Workspace Layout */
   .workspace {
     display: flex;
@@ -949,16 +1130,374 @@
   }
 
   @media (max-width: 680px) {
-    .header { flex-direction: column; align-items: stretch; }
-    .mode-tabs { overflow-x: auto; }
+    .header { flex-direction: column; align-items: stretch; gap: 8px; }
+    .mode-tabs { overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 2px; }
+    .header-controls { flex-wrap: wrap; justify-content: center; gap: 4px; }
+    .badge-btn { padding: 4px 7px; font-size: 10px; }
+    .keypad-grid { gap: 4px; }
+    .calc-btn { font-size: 12px; min-height: 38px; }
+    .calc-btn.op, .calc-btn.num { font-size: 14px; }
+    .display-card { min-height: 80px; padding: 10px 14px; }
+    .main-display { font-size: 24px; }
+    .sub-display { font-size: 11px; }
     .mem-reg-grid { grid-template-columns: 1fr; }
     .toast-container { top: 56px; right: 12px; max-width: calc(100vw - 24px); }
   }
+  @media (max-width: 540px) {
+    .app-container { padding: 6px; gap: 6px; }
+    .header { padding: 6px 8px; }
+    .logo-icon { width: 20px; height: 20px; font-size: 11px; }
+    .logo { font-size: 14px; }
+    .tab-btn { padding: 4px 6px; font-size: 11px; }
+    .display-card { min-height: 72px; padding: 8px 10px; }
+    .main-display { font-size: 22px; letter-spacing: -0.5px; }
+    .sub-display { font-size: 11px; min-height: 16px; }
+    .formula-bar { padding: 4px 8px; gap: 4px; }
+    .keypad-grid { grid-template-columns: repeat(7, 1fr); gap: 3px; }
+    .calc-btn { font-size: 11px; min-height: 32px; border-radius: 6px; }
+    .calc-btn.op, .calc-btn.num { font-size: 13px; }
+    .kcalc-expansion-bar { padding: 6px 8px; font-size: 11px; }
+    .kcalc-tool-btn { padding: 3px 6px; font-size: 10px; }
+    .mem-reg-grid { grid-template-columns: 1fr; gap: 8px; }
+    .history-toolbar { flex-direction: column; align-items: stretch; }
+    .search-input { min-width: 100%; }
+    .modal-content, .kcalc-exp-modal { padding: 14px; max-height: 90vh; }
+  }
+  @media (max-width: 480px) {
+    .calc-btn { font-size: 10px; min-height: 30px; padding: 2px; }
+    .calc-btn.op, .calc-btn.num { font-size: 12px; }
+    .main-display { font-size: 19px; }
+  }
+  @media (max-width: 380px) {
+    .app-container { padding: 4px; gap: 4px; }
+    .header { padding: 4px 6px; }
+    .keypad-grid { gap: 3px; }
+    .calc-btn { font-size: 9px; min-height: 28px; border-radius: 6px; }
+    .main-display { font-size: 16px; }
+    .display-card { min-height: 80px; padding: 10px 12px; }
+  }
+
+  /* Compact Height Ergonomics & Scroll Safety */
+  @media (max-height: 660px) {
+    .app-container { padding: 6px; gap: 6px; }
+    .header { padding: 4px 8px; }
+    .display-card { min-height: 70px; padding: 6px 12px; }
+    .main-display { font-size: 22px; margin-top: 2px; }
+    .sub-display { min-height: 14px; font-size: 11px; }
+    .quick-radix-strip { font-size: 10px; margin-top: 2px; padding-top: 2px; }
+    .formula-bar { padding: 4px 8px; }
+    .adv-funcs-strip { padding: 2px 0; gap: 3px; }
+    .calc-btn { min-height: 32px; font-size: 12px; }
+    .std-keypad-grid .calc-btn { min-height: 38px; font-size: 14px; }
+  }
+  @media (max-height: 520px) {
+    .app-container { padding: 4px; gap: 4px; }
+    .header { padding: 3px 6px; }
+    .display-card { min-height: 58px; padding: 4px 8px; }
+    .main-display { font-size: 18px; }
+    .quick-radix-strip { display: none; }
+    .formula-bar { padding: 2px 6px; }
+    .calc-btn { min-height: 26px; font-size: 11px; }
+    .std-keypad-grid .calc-btn { min-height: 30px; font-size: 12px; }
+  }
+
+  /* Standard 5-Column Calculator Grid */
+  .std-keypad-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 8px;
+    flex: 1;
+  }
+  .std-keypad-grid .calc-btn {
+    font-size: 15px;
+    min-height: 48px;
+  }
+  .std-keypad-grid .calc-btn.num {
+    font-size: 18px;
+    font-weight: 600;
+  }
+  .std-keypad-grid .calc-btn.op {
+    font-size: 18px;
+  }
+
+  /* HiDPI Regression Canvas */
+  .regression-canvas {
+    width: 100%;
+    height: 180px;
+    background: rgba(0, 0, 0, 0.45);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    margin-top: 8px;
+    display: block;
+  }
+
+
+/* --- KCalc Deep Expansion Features --- */
+.kcalc-expansion-bar {
+  display: flex;
+  gap: 8px;
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 8px 12px;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  backdrop-filter: blur(12px);
+  font-size: 12px;
+}
+.kcalc-exp-tools {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+.kcalc-tool-btn {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-color);
+  color: var(--text-main);
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  transition: all 0.15s ease;
+  font-family: 'Inter', sans-serif;
+}
+.kcalc-tool-btn:hover {
+  background: rgba(99, 102, 241, 0.2);
+  border-color: #6366f1;
+  color: #fff;
+}
+.kcalc-tool-btn.active {
+  background: var(--primary-gradient);
+  border-color: #818cf8;
+  color: #fff;
+  box-shadow: 0 0 10px var(--accent-glow);
+}
+.kcalc-exp-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(6px);
+  z-index: 9999;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+.kcalc-exp-modal-overlay.open {
+  display: flex;
+}
+.kcalc-exp-modal {
+  background: #0f131f;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 16px;
+  width: 100%;
+  max-width: 620px;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8), 0 0 20px var(--accent-glow);
+  overflow: hidden;
+}
+.kcalc-exp-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 18px;
+  border-bottom: 1px solid var(--border-color);
+  background: rgba(255, 255, 255, 0.02);
+}
+.kcalc-exp-modal-title {
+  font-size: 14px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #f8fafc;
+}
+.kcalc-exp-modal-close {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 18px;
+  cursor: pointer;
+  padding: 4px;
+  line-height: 1;
+  border-radius: 4px;
+}
+.kcalc-exp-modal-close:hover { color: #fff; background: rgba(255,255,255,0.1); }
+.kcalc-exp-modal-body {
+  padding: 16px;
+  overflow-y: auto;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.kcalc-reg-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+}
+.kcalc-reg-table th {
+  text-align: left;
+  padding: 6px 10px;
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-muted);
+  border-bottom: 1px solid var(--border-color);
+  font-size: 11px;
+}
+.kcalc-reg-table td {
+  padding: 8px 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  vertical-align: middle;
+}
+.kcalc-reg-val-input {
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid var(--border-color);
+  color: #38bdf8;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-family: inherit;
+  font-size: 12px;
+  width: 100%;
+}
+.kcalc-reg-label-input {
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid var(--border-color);
+  color: #f1f5f9;
+  padding: 4px 6px;
+  border-radius: 6px;
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  width: 100%;
+}
+.kcalc-const-search {
+  width: 100%;
+  padding: 8px 12px;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  color: #fff;
+  font-family: inherit;
+  font-size: 12px;
+  margin-bottom: 8px;
+}
+.kcalc-const-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 8px;
+  max-height: 380px;
+  overflow-y: auto;
+}
+.kcalc-const-item {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 8px 10px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.kcalc-const-item:hover {
+  background: rgba(99, 102, 241, 0.15);
+  border-color: #6366f1;
+  transform: translateY(-1px);
+}
+.kcalc-const-name { font-size: 11px; font-weight: 600; color: #f8fafc; }
+.kcalc-const-symbol { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #a5b4fc; }
+.kcalc-const-val { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #38bdf8; overflow: hidden; text-overflow: ellipsis; }
+.kcalc-tape-textarea {
+  width: 100%;
+  height: 220px;
+  background: rgba(0,0,0,0.5);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  color: #e2e8f0;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  padding: 10px;
+  resize: vertical;
+}
+.kcalc-bit-grid {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 4px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  margin: 6px 0;
+}
+.kcalc-bit-cell {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  padding: 6px 2px;
+  text-align: center;
+  cursor: pointer;
+  user-select: none;
+}
+.kcalc-bit-cell.on {
+  background: rgba(16, 185, 129, 0.25);
+  border-color: #10b981;
+  color: #34d399;
+  font-weight: 700;
+}
+.kcalc-bit-label {
+  font-size: 9px;
+  color: var(--text-muted);
+  display: block;
+}
+
 </style>
 </head>
 <body>
 
 <div class="app-container">
+
+  <!-- KCalc Deep Feature Expansion Toolbar -->
+  <div class="kcalc-expansion-bar" id="kcalcExpBar">
+    <div class="kcalc-exp-tools">
+      <span style="font-weight: 600; color: var(--text-muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;">Toolkit:</span>
+      <button class="kcalc-tool-btn" id="btnOpenRegisters" title="Manage Multi-Register Memory Banks M0-M7">
+        <span>💾</span> Memory Bank (M0-M7)
+      </button>
+      <button class="kcalc-tool-btn" id="btnOpenConstants" title="Scientific, Physical & Mathematical Constants Library">
+        <span>⚛️</span> Constants Library
+      </button>
+      <button class="kcalc-tool-btn" id="btnOpenTapeExport" title="Export / Import Calculation History & Tape">
+        <span>📜</span> Tape Export/Import
+      </button>
+      <button class="kcalc-tool-btn" id="btnOpenBitInspector" title="Bitwise Word & Register Diagnostic Inspector">
+        <span>🔲</span> Bitwise Inspector
+      </button>
+    </div>
+    <div style="font-size: 11px; color: var(--text-muted); font-family: 'JetBrains Mono', monospace;" id="quickBitSummary">
+      HEX: <span id="quickHex" style="color: #38bdf8;">0x0</span> | BIN: <span id="quickBin" style="color: #34d399;">00000000</span>
+    </div>
+  </div>
+
+  <!-- Modal Container for Tools -->
+  <div class="kcalc-exp-modal-overlay" id="kcalcExpModalOverlay">
+    <div class="kcalc-exp-modal" id="kcalcExpModal">
+      <div class="kcalc-exp-modal-header">
+        <div class="kcalc-exp-modal-title" id="kcalcExpModalTitle">
+          <span>🛠️</span> Tool Dialog
+        </div>
+        <button class="kcalc-exp-modal-close" id="kcalcExpModalClose" title="Close Dialog">&times;</button>
+      </div>
+      <div class="kcalc-exp-modal-body" id="kcalcExpModalBody">
+        <!-- Dynamic Content Injected Here -->
+      </div>
+    </div>
+  </div>
+
   <!-- Header Bar -->
   <header class="header">
     <div class="logo">
@@ -1000,7 +1539,9 @@
     <div class="header-controls">
       <button class="badge-btn" onclick="quicksaveState()" title="Quicksave Workspace State (F5)">💾 Save [F5]</button>
       <button class="badge-btn" onclick="quickloadState()" title="Restore Quicksaved State (F9)">📂 Load [F9]</button>
+      <button id="themeBadge" class="badge-btn" onclick="cycleDisplayTheme()" title="Cycle Display Theme (L): OLED / Retro LCD / Amber / VFD">🎨 OLED [L]</button>
       <button class="badge-btn" onclick="openHelpModal()" title="Help & Keyboard Shortcuts (H / F1)">Help [F1]</button>
+      <button id="keypadModeBtn" class="badge-btn" onclick="toggleKeypadMode()" title="Toggle Standard (Basic 5-col) vs Scientific (7-col) Keypad [S]"><span>📐</span> Sci [S]</button>
       <button id="degRadBtn" class="badge-btn active" onclick="toggleDegRad()" title="Toggle Degrees / Radians (D)">DEG</button>
       <button id="hypBtn" class="badge-btn" onclick="toggleHypMode()" title="Toggle Hyperbolic Trigonometry [Y]">HYP</button>
       <button id="memBadge" class="badge-btn" onclick="openMemoryModal()" title="Memory Registers (M)">M: 0</button>
@@ -1011,15 +1552,26 @@
   <main class="workspace">
     <div class="calc-pane">
       <!-- Screen Display -->
-      <div class="display-card" title="Click display to copy value (Ctrl+C)" onclick="copyMainDisplay()">
+      <div class="display-card" id="displayCard" title="Click display to copy value (Ctrl+C)" onclick="copyMainDisplay()">
         <div class="display-status">
           <span id="angleChip" class="status-chip highlight">DEG</span>
           <span id="hypChip" class="status-chip" style="display:none; color:#f59e0b; border-color:rgba(245,158,11,0.4);">HYP</span>
-          <span id="memChip" class="status-chip" style="display:none;">MEM</span>
+          <span id="memChip" class="status-chip" onclick="event.stopPropagation(); openMemoryModal();" title="Active Memory: Click to manage registers [M]" style="display:none; cursor:pointer;">MEM</span>
+          <span id="themeChip" class="status-chip" onclick="event.stopPropagation(); cycleDisplayTheme();" title="Cycle Display Theme (L)" style="cursor:pointer;">OLED</span>
           <button class="status-chip copy-btn" onclick="event.stopPropagation(); copyMainDisplay()" title="Copy result to clipboard (Ctrl+C)">📋 Copy</button>
         </div>
         <div class="sub-display" id="subDisp" title="Click to recall previous formula" onclick="event.stopPropagation(); recallSubDisplay()"></div>
         <div class="main-display" id="mainDisp" aria-live="polite" title="Click to copy value (Ctrl+C)">0</div>
+        <!-- Quick Radix Multi-Base Live Strip -->
+        <div class="quick-radix-strip" id="quickRadixStrip" title="Multi-base conversion of integer result (click value to copy)">
+          <span class="quick-radix-item" onclick="event.stopPropagation(); copyRadixVal('HEX')" title="Click to copy HEX">HEX <span class="quick-radix-val" id="radixHex">0x0</span></span>
+          <span class="quick-radix-sep">|</span>
+          <span class="quick-radix-item" onclick="event.stopPropagation(); copyRadixVal('DEC')" title="Click to copy DEC">DEC <span class="quick-radix-val" id="radixDec">0</span></span>
+          <span class="quick-radix-sep">|</span>
+          <span class="quick-radix-item" onclick="event.stopPropagation(); copyRadixVal('OCT')" title="Click to copy OCT">OCT <span class="quick-radix-val" id="radixOct">0o0</span></span>
+          <span class="quick-radix-sep">|</span>
+          <span class="quick-radix-item" onclick="event.stopPropagation(); copyRadixVal('BIN')" title="Click to copy BIN">BIN <span class="quick-radix-val" id="radixBin">0b0</span></span>
+        </div>
       </div>
 
       <!-- Formula Expression Direct Bar -->
@@ -1042,7 +1594,7 @@
           <button class="mini-btn" onclick="append('root(')" title="N-th Root: root(n, x)">root(n,x)</button>
           <button class="mini-btn" onclick="append('logBase(')" title="Logarithm with Base: logBase(base, x)">logBase</button>
         </div>
-        <div class="keypad-grid">
+        <div id="keypadGridSci" class="keypad-grid">
           <!-- Row 0: Memory & Clear -->
           <button class="calc-btn mem" onclick="memClear()" title="Memory Clear (MC)">MC</button>
           <button class="calc-btn mem" onclick="memRecall()" title="Memory Recall (MR)">MR</button>
@@ -1112,6 +1664,50 @@
           <button class="calc-btn num" onclick="append('.')" title="Decimal Point: .">.</button>
           <button class="calc-btn op" style="grid-column: span 2;" onclick="append('+')" title="Addition: +">+</button>
           <button class="calc-btn op" style="grid-column: span 2; background: linear-gradient(135deg, #10b981 0%, #059669 100%);" onclick="calculate()" title="Calculate (Enter / =)">=</button>
+        </div>
+        <!-- Standard Mode Keypad Grid -->
+        <div id="keypadGridStd" class="keypad-grid std-keypad-grid" style="display:none;">
+          <!-- Row 1: Memory -->
+          <button class="calc-btn mem" onclick="memClear()" title="Memory Clear (MC)">MC</button>
+          <button class="calc-btn mem" onclick="memRecall()" title="Memory Recall (MR)">MR</button>
+          <button class="calc-btn mem" onclick="memStore()" title="Memory Store (MS)">MS</button>
+          <button class="calc-btn mem" onclick="memAdd()" title="Memory Add (M+)">M+</button>
+          <button class="calc-btn mem" onclick="memSub()" title="Memory Subtract (M-)">M-</button>
+
+          <!-- Row 2: Clear & Math Helpers -->
+          <button class="calc-btn danger" onclick="clearAll()" title="Clear All (Esc)">C</button>
+          <button class="calc-btn danger" onclick="backspace()" title="Backspace (⌫)">⌫</button>
+          <button class="calc-btn func" onclick="toggleSign()" title="Toggle Sign (±)">±</button>
+          <button class="calc-btn func" onclick="append('sqrt(')" title="Square Root (√)">√</button>
+          <button class="calc-btn func" onclick="reciprocal()" title="Reciprocal (1/x)">1/x</button>
+
+          <!-- Row 3: Keypad 7-9 & Div / Percent -->
+          <button class="calc-btn num" onclick="append('7')" title="Number 7">7</button>
+          <button class="calc-btn num" onclick="append('8')" title="Number 8">8</button>
+          <button class="calc-btn num" onclick="append('9')" title="Number 9">9</button>
+          <button class="calc-btn op" onclick="append('/')" title="Division (÷)">÷</button>
+          <button class="calc-btn op" onclick="append('%')" title="Percentage (%)">%</button>
+
+          <!-- Row 4: Keypad 4-6 & Mul / Square -->
+          <button class="calc-btn num" onclick="append('4')" title="Number 4">4</button>
+          <button class="calc-btn num" onclick="append('5')" title="Number 5">5</button>
+          <button class="calc-btn num" onclick="append('6')" title="Number 6">6</button>
+          <button class="calc-btn op" onclick="append('*')" title="Multiplication (×)">×</button>
+          <button class="calc-btn func" onclick="append('^2')" title="Square (x²)">x²</button>
+
+          <!-- Row 5: Keypad 1-3 & Sub / Ans -->
+          <button class="calc-btn num" onclick="append('1')" title="Number 1">1</button>
+          <button class="calc-btn num" onclick="append('2')" title="Number 2">2</button>
+          <button class="calc-btn num" onclick="append('3')" title="Number 3">3</button>
+          <button class="calc-btn op" onclick="append('-')" title="Subtraction (−)">−</button>
+          <button class="calc-btn func" onclick="append('Ans')" title="Previous Answer (Ans)">Ans</button>
+
+          <!-- Row 6: 00, 0, ., Add, Equal -->
+          <button class="calc-btn num" onclick="append('00')" title="Double Zero (00)">00</button>
+          <button class="calc-btn num" onclick="append('0')" title="Number 0">0</button>
+          <button class="calc-btn num" onclick="append('.')" title="Decimal Point (.)">.</button>
+          <button class="calc-btn op" onclick="append('+')" title="Addition (+)">+</button>
+          <button class="calc-btn op" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); font-weight:700;" onclick="calculate()" title="Calculate (Enter / =)">=</button>
         </div>
       </div>
 
@@ -1380,6 +1976,14 @@
                   <button class="mini-btn" onclick="sendToCalc(document.getElementById('reg-pred-y').textContent)">Use ŷ</button>
                 </div>
               </div>
+            </div>
+
+            <div style="margin-top:12px;">
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <span style="font-size:12px; font-weight:600; color:var(--text-muted);">HiDPI Scatter Plot & Trendline:</span>
+                <span id="canvasPointCount" style="font-size:11px; color:#818cf8; font-family:'JetBrains Mono',monospace;">0 points plotted</span>
+              </div>
+              <canvas id="regressionCanvas" class="regression-canvas" height="180" title="Linear Regression Scatter Plot & Trendline"></canvas>
             </div>
           </div>
         </div>
@@ -1830,9 +2434,11 @@
           <tr><td><span class="kbd-key">Ctrl</span>+<span class="kbd-key">C</span></td><td>Copy current result / display to clipboard</td></tr>
           <tr><td><span class="kbd-key">Ctrl</span>+<span class="kbd-key">V</span></td><td>Paste numbers / expression from clipboard</td></tr>
           <tr><td><span class="kbd-key">±</span></td><td>Toggle positive / negative sign (±)</td></tr>
+          <tr><td><span class="kbd-key">S</span></td><td>Toggle Standard (Basic 5-col) vs Scientific (7-col) Keypad Mode</td></tr>
           <tr><td><span class="kbd-key">D</span></td><td>Toggle Trigonometric Degrees / Radians mode</td></tr>
           <tr><td><span class="kbd-key">Y</span></td><td>Toggle Hyperbolic Trigonometry mode (sinh, cosh, tanh)</td></tr>
           <tr><td><span class="kbd-key">M</span></td><td>Open Memory Registers Management Dialog</td></tr>
+          <tr><td><span class="kbd-key">L</span></td><td>Cycle High-Contrast LCD Readout Themes (OLED / Retro LCD / Amber / VFD)</td></tr>
           <tr><td><span class="kbd-key">H</span> or <span class="kbd-key">F1</span></td><td>Open this Help & Shortcuts Dialog</td></tr>
         </tbody>
       </table>
@@ -1914,7 +2520,7 @@
         High-precision scientific, financial, and statistical calculation suite.
       </p>
       <div style="background: rgba(0,0,0,0.3); border: 1px solid var(--border-color); border-radius: 8px; padding: 10px 12px; display: flex; flex-direction: column; gap: 8px;">
-        <div><strong style="color:#818cf8;">1. Mode Navigation:</strong> Switch between <strong>Scientific</strong>, <strong>Financial</strong> (PMT/FV/Margin/CAGR), <strong>Statistics</strong> (1-Var & LinReg), <strong>Constants</strong>, and <strong>History Tape</strong> via tabs or <span class="kbd-key">1</span>–<span class="kbd-key">5</span>.</div>
+        <div><strong style="color:#818cf8;">1. Mode Navigation:</strong> Switch between <strong>Scientific</strong>, <strong>Financial</strong> (PMT/FV/Margin/CAGR), <strong>Statistics</strong>, <strong>Calculus</strong>, <strong>Matrix</strong>, <strong>Constants</strong>, and <strong>History Tape</strong> via tabs or <span class="kbd-key">1</span>–<span class="kbd-key">7</span>.</div>
         <div><strong style="color:#818cf8;">2. Natural Formula Input:</strong> Type expressions directly in the <em>fx</em> bar (e.g. <code>sin(45) + sqrt(144)</code> or <code>10 mod 3</code>) or click the keypad.</div>
         <div><strong style="color:#818cf8;">3. Workspace Quicksave:</strong> Press <span class="kbd-key">F5</span> anytime to quicksave your workspace, registers, and tape. Press <span class="kbd-key">F9</span> to instantly restore.</div>
         <div><strong style="color:#818cf8;">4. Clipboard & Export:</strong> Click the main display or press <span class="kbd-key">Ctrl</span>+<span class="kbd-key">C</span> to copy results. Export tape logs to CSV, TXT, or JSON.</div>
@@ -1940,6 +2546,7 @@
   let memoryStore = 0.0;
   let multiMemory = { M1: 0, M2: 0, M3: 0 };
   let isDeg = true;
+  let isStandardMode = false;
   let isHyp = false;
   let activeCalcTool = 'integ';
   let activeMatrixTool = 'matrix';
@@ -2014,10 +2621,125 @@
   // Initialize
   let tutorialActive = false;
 
+  // --- High-Contrast LCD Readout Themes ---
+  const LCD_THEMES = ['theme-oled', 'theme-retro-lcd', 'theme-amber-plasma', 'theme-vfd-cyan'];
+  const LCD_THEME_NAMES = ['OLED Slate', 'Retro Olive LCD', 'Amber Plasma', 'VFD Cyan'];
+  const LCD_THEME_CHIPS = ['OLED', 'LCD', 'AMBER', 'VFD'];
+  let currentThemeIndex = 0;
+
+  function cycleDisplayTheme() {
+    currentThemeIndex = (currentThemeIndex + 1) % 4;
+    applyDisplayTheme(currentThemeIndex);
+    showToast('🎨 Display Theme: ' + LCD_THEME_NAMES[currentThemeIndex], 'info', 2200);
+  }
+
+  function applyDisplayTheme(idx) {
+    currentThemeIndex = (typeof idx === 'number' && idx >= 0 && idx < 4) ? idx : 0;
+    const card = document.getElementById('displayCard');
+    if (card) {
+      card.classList.remove('theme-retro-lcd', 'theme-amber-plasma', 'theme-vfd-cyan');
+      if (currentThemeIndex === 1) card.classList.add('theme-retro-lcd');
+      else if (currentThemeIndex === 2) card.classList.add('theme-amber-plasma');
+      else if (currentThemeIndex === 3) card.classList.add('theme-vfd-cyan');
+    }
+    const chip = document.getElementById('themeChip');
+    if (chip) {
+      chip.textContent = LCD_THEME_CHIPS[currentThemeIndex];
+    }
+    const badge = document.getElementById('themeBadge');
+    if (badge) {
+      badge.textContent = '🎨 ' + LCD_THEME_CHIPS[currentThemeIndex] + ' [L]';
+    }
+    try {
+      localStorage.setItem('kcalc_displayTheme', currentThemeIndex.toString());
+    } catch {}
+  }
+
+  // --- Quick Radix Multi-Base Live Strip ---
+  function updateQuickRadix() {
+    const hexEl = document.getElementById('radixHex');
+    const decEl = document.getElementById('radixDec');
+    const octEl = document.getElementById('radixOct');
+    const binEl = document.getElementById('radixBin');
+    if (!hexEl || !decEl || !octEl || !binEl) return;
+
+    let val = NaN;
+    const trimmed = expr ? expr.trim() : '';
+    if (/^-?\d+(\.\d+)?$/.test(trimmed)) {
+      val = parseFloat(trimmed);
+    } else if (typeof lastAns === 'number' && !isNaN(lastAns)) {
+      val = lastAns;
+    }
+
+    if (isNaN(val) || !isFinite(val)) {
+      hexEl.textContent = '---';
+      decEl.textContent = '---';
+      octEl.textContent = '---';
+      binEl.textContent = '---';
+      return;
+    }
+
+    let intVal;
+    try {
+      intVal = BigInt(Math.trunc(val));
+    } catch {
+      hexEl.textContent = '---';
+      decEl.textContent = '---';
+      octEl.textContent = '---';
+      binEl.textContent = '---';
+      return;
+    }
+
+    if (intVal >= 0n) {
+      hexEl.textContent = '0x' + intVal.toString(16).toUpperCase();
+      decEl.textContent = intVal.toString(10);
+      octEl.textContent = '0o' + intVal.toString(8);
+      const bStr = intVal.toString(2);
+      binEl.textContent = bStr.length > 24 ? '...' + bStr.slice(-24) : '0b' + bStr;
+    } else {
+      const u32 = BigInt.asUintN(32, intVal);
+      hexEl.textContent = '0x' + u32.toString(16).toUpperCase();
+      decEl.textContent = intVal.toString(10);
+      octEl.textContent = '0o' + u32.toString(8);
+      const bStr = u32.toString(2);
+      binEl.textContent = '0b' + bStr;
+    }
+  }
+
+  function copyRadixVal(baseName) {
+    const map = {
+      'HEX': document.getElementById('radixHex')?.textContent || '',
+      'DEC': document.getElementById('radixDec')?.textContent || '',
+      'OCT': document.getElementById('radixOct')?.textContent || '',
+      'BIN': document.getElementById('radixBin')?.textContent || ''
+    };
+    const val = map[baseName] || '';
+    if (!val || val === '---') return;
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(val).then(() => {
+        showToast(`📋 Copied ${baseName}: ${val}`, 'success', 2200);
+      }).catch(() => {
+        showToast(`📋 ${baseName}: ${val}`, 'info', 2200);
+      });
+    } else {
+      showToast(`📋 ${baseName}: ${val}`, 'info', 2200);
+    }
+  }
+
   document.addEventListener('DOMContentLoaded', () => {
     populateConstants();
     loadHistoryFromStorage();
     loadSessionState();
+    let savedTheme = 0;
+    try {
+      const st = localStorage.getItem('kcalc_displayTheme');
+      if (st !== null) savedTheme = parseInt(st, 10);
+    } catch {}
+    applyDisplayTheme(savedTheme);
+    try {
+      const sm = localStorage.getItem('kcalc_standardMode');
+      if (sm === 'true') toggleKeypadMode(true);
+    } catch {}
     render();
     calcPMT(true);
     calcFV(true);
@@ -2152,16 +2874,14 @@
     if (tutorialActive) {
       closeTutorialModal();
     }
-    document.getElementById('modalOverlay').classList.remove('active');
-    const help = document.getElementById('helpModal');
-    help.style.display = 'none';
-    help.setAttribute('aria-modal', 'false');
-    const mem = document.getElementById('memModal');
-    mem.style.display = 'none';
-    mem.setAttribute('aria-modal', 'false');
-    const tut = document.getElementById('tutorialModal');
-    tut.style.display = 'none';
-    tut.setAttribute('aria-modal', 'false');
+    const overlay = document.getElementById('modalOverlay');
+    if (overlay) overlay.classList.remove('active');
+    document.querySelectorAll('#modalOverlay .modal-content').forEach(m => {
+      m.style.display = 'none';
+      m.setAttribute('aria-modal', 'false');
+    });
+    const expOverlay = document.getElementById('kcalcExpModalOverlay');
+    if (expOverlay) expOverlay.classList.remove('open');
     tutorialActive = false;
   }
 
@@ -2264,6 +2984,138 @@
     showToast(`Hyperbolic Mode: ${isHyp ? 'ON (sinh, cosh, tanh)' : 'OFF'}`, 'info', 1800);
     autoSaveSession();
   }
+
+  function toggleKeypadMode(forceMode) {
+    if (typeof forceMode === 'boolean') {
+      isStandardMode = forceMode;
+    } else {
+      isStandardMode = !isStandardMode;
+    }
+    const sciGrid = document.getElementById('keypadGridSci');
+    const stdGrid = document.getElementById('keypadGridStd');
+    const advStrip = document.querySelector('.adv-funcs-strip');
+    const modeBtn = document.getElementById('keypadModeBtn');
+
+    if (isStandardMode) {
+      if (sciGrid) sciGrid.style.display = 'none';
+      if (stdGrid) stdGrid.style.display = 'grid';
+      if (advStrip) advStrip.style.display = 'none';
+      if (modeBtn) {
+        modeBtn.innerHTML = '<span>🔢</span> Std [S]';
+        modeBtn.classList.add('active');
+        modeBtn.title = 'Current: Standard Mode. Click or press S to switch to Scientific';
+      }
+    } else {
+      if (sciGrid) sciGrid.style.display = 'grid';
+      if (stdGrid) stdGrid.style.display = 'none';
+      if (advStrip) advStrip.style.display = 'flex';
+      if (modeBtn) {
+        modeBtn.innerHTML = '<span>📐</span> Sci [S]';
+        modeBtn.classList.remove('active');
+        modeBtn.title = 'Current: Scientific Mode. Click or press S to switch to Standard';
+      }
+    }
+    try { localStorage.setItem('kcalc_standardMode', isStandardMode ? 'true' : 'false'); } catch {}
+  }
+
+  function drawRegressionPlot(points, m, b) {
+    const canvas = document.getElementById('regressionCanvas');
+    if (!canvas) return;
+    const countEl = document.getElementById('canvasPointCount');
+    if (countEl) countEl.textContent = `${points.length} points plotted (y = ${m.toFixed(2)}x ${b >= 0 ? '+' : '-'} ${Math.abs(b).toFixed(2)})`;
+
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    const width = rect.width || 460;
+    const height = 180;
+    canvas.width = Math.floor(width * dpr);
+    canvas.height = Math.floor(height * dpr);
+
+    const ctx = canvas.getContext('2d');
+    ctx.scale(dpr, dpr);
+
+    ctx.fillStyle = '#0a0d16';
+    ctx.fillRect(0, 0, width, height);
+
+    if (!points || points.length === 0) return;
+
+    const pad = 36;
+    const xs = points.map(p => p.x);
+    const ys = points.map(p => p.y);
+    let minX = Math.min(...xs), maxX = Math.max(...xs);
+    let minY = Math.min(...ys), maxY = Math.max(...ys);
+
+    if (minX === maxX) { minX -= 1; maxX += 1; }
+    if (minY === maxY) { minY -= 1; maxY += 1; }
+
+    const spanX = (maxX - minX) * 1.15;
+    const spanY = (maxY - minY) * 1.15;
+    const midX = (minX + maxX) / 2;
+    const midY = (minY + maxY) / 2;
+    minX = midX - spanX / 2;
+    maxX = midX + spanX / 2;
+    minY = midY - spanY / 2;
+    maxY = midY + spanY / 2;
+
+    const toScreenX = (x) => pad + ((x - minX) / (maxX - minX)) * (width - 2 * pad);
+    const toScreenY = (y) => (height - pad) - ((y - minY) / (maxY - minY)) * (height - 2 * pad);
+
+    // Subtle grid lines
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
+    ctx.lineWidth = 1;
+    for (let i = 0; i <= 4; i++) {
+      const gx = pad + (i / 4) * (width - 2 * pad);
+      ctx.beginPath();
+      ctx.moveTo(gx, pad / 2);
+      ctx.lineTo(gx, height - pad);
+      ctx.stroke();
+
+      const gy = pad / 2 + (i / 4) * (height - 1.5 * pad);
+      ctx.beginPath();
+      ctx.moveTo(pad, gy);
+      ctx.lineTo(width - pad, gy);
+      ctx.stroke();
+    }
+
+    // Trendline
+    ctx.strokeStyle = '#34d399';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    const y1 = m * minX + b;
+    const y2 = m * maxX + b;
+    ctx.moveTo(toScreenX(minX), toScreenY(y1));
+    ctx.lineTo(toScreenX(maxX), toScreenY(y2));
+    ctx.stroke();
+
+    // Plotted points
+    for (let p of points) {
+      const px = toScreenX(p.x);
+      const py = toScreenY(p.y);
+      ctx.fillStyle = 'rgba(129, 140, 248, 0.35)';
+      ctx.beginPath();
+      ctx.arc(px, py, 6, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = '#818cf8';
+      ctx.beginPath();
+      ctx.arc(px, py, 3.5, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // Axes bounds readout
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '10px "JetBrains Mono", monospace';
+    ctx.textAlign = 'left';
+    ctx.fillText(`x: [${minX.toFixed(1)}, ${maxX.toFixed(1)}]`, pad, height - 8);
+    ctx.textAlign = 'right';
+    ctx.fillText(`y: [${minY.toFixed(1)}, ${maxY.toFixed(1)}]`, width - pad, 16);
+  }
+
+  window.addEventListener('resize', () => {
+    if (typeof currentRegModel !== 'undefined' && currentRegModel && document.getElementById('stat-2var-card')?.style.display !== 'none') {
+      calc2VarRegression(true);
+    }
+  });
 
   function toggleDegRad() {
     isDeg = !isDeg;
@@ -2380,6 +3232,7 @@
       memBadge.classList.remove('active');
     }
 
+    updateQuickRadix();
     autoSaveSession();
   }
 
@@ -2400,6 +3253,7 @@
         activeCalcTool: document.querySelector('#view-calculus .fin-tab.active')?.id?.replace('tab-calc-', '') || activeCalcTool,
         activeMatrixTool: document.querySelector('#view-matrix .fin-tab.active')?.id?.replace('tab-mat-', '') || activeMatrixTool,
         matrixDim,
+        displayTheme: currentThemeIndex,
         finInputs: {
           pmtPrincipal: document.getElementById('pmt-principal')?.value || '',
           pmtRate: document.getElementById('pmt-rate')?.value || '',
@@ -2479,6 +3333,9 @@
         if (s.matrixDim !== undefined) {
           setMatrixDim(s.matrixDim === 3 ? 3 : 2);
         }
+        if (s.displayTheme !== undefined) {
+          applyDisplayTheme(s.displayTheme);
+        }
         if (s.finInputs && typeof s.finInputs === 'object') {
           if (document.getElementById('pmt-principal') && s.finInputs.pmtPrincipal !== undefined) document.getElementById('pmt-principal').value = s.finInputs.pmtPrincipal;
           if (document.getElementById('pmt-rate') && s.finInputs.pmtRate !== undefined) document.getElementById('pmt-rate').value = s.finInputs.pmtRate;
@@ -2554,6 +3411,7 @@
       activeCalcTool: document.querySelector('#view-calculus .fin-tab.active')?.id?.replace('tab-calc-', '') || activeCalcTool,
       activeMatrixTool: document.querySelector('#view-matrix .fin-tab.active')?.id?.replace('tab-mat-', '') || activeMatrixTool,
       matrixDim: matrixDim,
+      displayTheme: currentThemeIndex,
       historyTape: [...historyTape],
       subDisp: document.getElementById('subDisp')?.textContent || '',
       finInputs: {
@@ -2629,6 +3487,9 @@
     }
     if (snap.matrixDim !== undefined) {
       setMatrixDim(snap.matrixDim === 3 ? 3 : 2);
+    }
+    if (snap.displayTheme !== undefined) {
+      applyDisplayTheme(snap.displayTheme);
     }
     if (Array.isArray(snap.historyTape)) {
       historyTape = snap.historyTape;
@@ -3464,6 +4325,7 @@
     document.getElementById('reg-r2').textContent = r2.toFixed(4);
 
     predictRegressionY();
+    drawRegressionPlot(points, m, b);
     if (!silent) {
       addHistoryEntry(`LinReg (N=${n})`, `y=${m.toFixed(4)}x${sign}${Math.abs(b).toFixed(4)}, r=${r.toFixed(4)}`);
       showToast(`Linear Model Computed: y = ${m.toFixed(2)}x ${sign} ${Math.abs(b).toFixed(2)}`, 'success');
@@ -4416,6 +5278,14 @@
       }
     }
 
+    // Dismiss active expansion modals
+    const activeExpModal = document.querySelector('.kcalc-exp-modal-overlay.open');
+    if (activeExpModal && (e.key === 'Escape' || (e.key === 'Enter' && !['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)))) {
+      e.preventDefault();
+      activeExpModal.classList.remove('open');
+      return;
+    }
+
     // If modal is open, handle toggling and dismissal shortcuts
     if (document.getElementById('modalOverlay').classList.contains('active')) {
       if (e.key === 'Escape' || e.key === 'Enter') {
@@ -4464,6 +5334,12 @@
       return;
     }
 
+    if (e.key === 's' || e.key === 'S') {
+      e.preventDefault();
+      toggleKeypadMode();
+      return;
+    }
+
     if (e.key === 'd' || e.key === 'D') {
       e.preventDefault();
       toggleDegRad();
@@ -4479,6 +5355,12 @@
     if (e.key === 'm' || e.key === 'M') {
       e.preventDefault();
       openMemoryModal();
+      return;
+    }
+
+    if (e.key === 'l' || e.key === 'L') {
+      e.preventDefault();
+      cycleDisplayTheme();
       return;
     }
 
@@ -4565,9 +5447,25 @@
       else if (e.key === '7') { e.preventDefault(); switchView('history'); return; }
     }
 
-    // Scientific keypad shortcuts
+    // Scientific & Standard keypad shortcuts with full Numpad coverage
+    if (e.code === 'NumpadAdd') { append('+'); return; }
+    if (e.code === 'NumpadSubtract') { append('-'); return; }
+    if (e.code === 'NumpadMultiply') { append('*'); return; }
+    if (e.code === 'NumpadDivide') { e.preventDefault(); append('/'); return; }
+    if (e.code === 'NumpadEnter') { e.preventDefault(); calculate(); return; }
+
     if (e.key >= '0' && e.key <= '9') append(e.key);
-    else if (e.key === '.') append('.');
+    else if (e.key === '.' || e.code === 'NumpadDecimal') append('.');
+    else if (e.key === ',') {
+      e.preventDefault();
+      const lastOpen = expr.lastIndexOf('(');
+      const lastClose = expr.lastIndexOf(')');
+      if (lastOpen !== -1 && lastOpen > lastClose) {
+        append(',');
+      } else {
+        append('.');
+      }
+    }
     else if (e.key === '+') append('+');
     else if (e.key === '-') append('-');
     else if (e.key === '*') append('*');
@@ -4581,5 +5479,548 @@
     else if (e.key === 'Escape') clearAll();
   });
 </script>
+
+<script>
+// --- KCalc Deep Expansion Logic (Memory Bank, Constants, Tape Exporter, Bitwise Inspector) ---
+(function() {
+  const STORAGE_KEY_REGISTERS = 'kcalc_registers_v1';
+  const STORAGE_KEY_TAPE = 'kcalc_history_v1';
+
+  // 1. Multi-Register Memory Bank (M0-M7)
+  let registers = [
+    { id: 0, label: 'Accumulator', value: 0 },
+    { id: 1, label: 'Subtotal A', value: 0 },
+    { id: 2, label: 'Subtotal B', value: 0 },
+    { id: 3, label: 'Rate/Coeff', value: 0 },
+    { id: 4, label: 'Constant K', value: 0 },
+    { id: 5, label: 'Scratch 1', value: 0 },
+    { id: 6, label: 'Scratch 2', value: 0 },
+    { id: 7, label: 'Scratch 3', value: 0 }
+  ];
+
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY_REGISTERS);
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      if (Array.isArray(parsed) && parsed.length === 8) {
+        registers = parsed;
+      }
+    }
+  } catch(e) {}
+
+  function saveRegisters() {
+    try {
+      localStorage.setItem(STORAGE_KEY_REGISTERS, JSON.stringify(registers));
+    } catch(e) {}
+  }
+
+  // 2. Physical, Chemical and Mathematical Constants
+  const CONSTANTS_DB = [
+    { name: 'Speed of Light in Vacuum', symbol: 'c', value: 299792458, unit: 'm/s', cat: 'Physics' },
+    { name: 'Planck Constant', symbol: 'h', value: 6.62607015e-34, unit: 'J⋅s', cat: 'Quantum' },
+    { name: 'Reduced Planck Constant', symbol: 'ħ', value: 1.054571817e-34, unit: 'J⋅s', cat: 'Quantum' },
+    { name: 'Gravitational Constant', symbol: 'G', value: 6.67430e-11, unit: 'm³/(kg⋅s²)', cat: 'Physics' },
+    { name: 'Standard Acceleration of Gravity', symbol: 'g₀', value: 9.80665, unit: 'm/s²', cat: 'Physics' },
+    { name: 'Elementary Charge', symbol: 'e_charge', value: 1.602176634e-19, unit: 'C', cat: 'Physics' },
+    { name: 'Electron Mass', symbol: 'm_e', value: 9.1093837015e-31, unit: 'kg', cat: 'Physics' },
+    { name: 'Proton Mass', symbol: 'm_p', value: 1.67262192369e-27, unit: 'kg', cat: 'Physics' },
+    { name: 'Avogadro Constant', symbol: 'N_A', value: 6.02214076e23, unit: 'mol⁻¹', cat: 'Chemistry' },
+    { name: 'Boltzmann Constant', symbol: 'k_B', value: 1.380649e-23, unit: 'J/K', cat: 'Thermodynamics' },
+    { name: 'Molar Gas Constant', symbol: 'R', value: 8.314462618, unit: 'J/(mol⋅K)', cat: 'Chemistry' },
+    { name: 'Stefan-Boltzmann Constant', symbol: 'σ', value: 5.670374419e-8, unit: 'W/(m²⋅K⁴)', cat: 'Thermodynamics' },
+    { name: 'Vacuum Permittivity', symbol: 'ε₀', value: 8.8541878128e-12, unit: 'F/m', cat: 'Electromagnetism' },
+    { name: 'Vacuum Permeability', symbol: 'μ₀', value: 1.25663706212e-6, unit: 'N/A²', cat: 'Electromagnetism' },
+    { name: 'Pi (Archimedes Constant)', symbol: 'π', value: 3.141592653589793, unit: 'scalar', cat: 'Math' },
+    { name: 'Euler Number (Base e)', symbol: 'e', value: 2.718281828459045, unit: 'scalar', cat: 'Math' },
+    { name: 'Golden Ratio', symbol: 'φ', value: 1.618033988749895, unit: 'scalar', cat: 'Math' },
+    { name: 'Euler-Mascheroni Constant', symbol: 'γ', value: 0.5772156649015329, unit: 'scalar', cat: 'Math' },
+    { name: 'Square Root of 2', symbol: '√2', value: 1.4142135623730951, unit: 'scalar', cat: 'Math' },
+    { name: 'Fine-Structure Constant', symbol: 'α', value: 7.2973525693e-3, unit: 'scalar', cat: 'Quantum' }
+  ];
+
+  function getCurrentDisplayValue() {
+    const disp = document.getElementById('mainDisplay') || document.querySelector('.main-display');
+    if (!disp) return 0;
+    const text = disp.innerText || disp.textContent || '0';
+    const clean = text.replace(/,/g, '').trim();
+    const num = parseFloat(clean);
+    return isNaN(num) ? 0 : num;
+  }
+
+  function setDisplayValue(val) {
+    const formulaInput = document.getElementById('formulaInput');
+    if (formulaInput) {
+      formulaInput.value = val;
+      formulaInput.dispatchEvent(new Event('input'));
+    }
+    const disp = document.getElementById('mainDisplay') || document.querySelector('.main-display');
+    if (disp) {
+      disp.innerText = val.toString();
+    }
+    updateQuickBitSummary();
+  }
+
+  function insertConstant(val) {
+    const formulaInput = document.getElementById('formulaInput');
+    if (formulaInput) {
+      const start = formulaInput.selectionStart || formulaInput.value.length;
+      const end = formulaInput.selectionEnd || formulaInput.value.length;
+      const cur = formulaInput.value;
+      formulaInput.value = cur.substring(0, start) + val + cur.substring(end);
+      formulaInput.focus();
+      formulaInput.setSelectionRange(start + String(val).length, start + String(val).length);
+      formulaInput.dispatchEvent(new Event('input'));
+    } else {
+      setDisplayValue(val);
+    }
+    closeModal();
+  }
+
+  function updateQuickBitSummary() {
+    const val = getCurrentDisplayValue();
+    const intVal = (Math.trunc(val) >>> 0) & 0xFFFFFFFF;
+    const hexSpan = document.getElementById('quickHex');
+    const binSpan = document.getElementById('quickBin');
+    if (hexSpan) hexSpan.textContent = '0x' + intVal.toString(16).toUpperCase().padStart(8, '0');
+    if (binSpan) {
+      const b = intVal.toString(2).padStart(32, '0');
+      binSpan.textContent = b.substring(24, 32);
+    }
+  }
+
+  // Modal helpers
+  const modalOverlay = document.getElementById('kcalcExpModalOverlay');
+  const modalTitle = document.getElementById('kcalcExpModalTitle');
+  const modalBody = document.getElementById('kcalcExpModalBody');
+  const modalClose = document.getElementById('kcalcExpModalClose');
+
+  function openModal(title, contentBuilder) {
+    modalTitle.innerHTML = title;
+    modalBody.innerHTML = '';
+    contentBuilder(modalBody);
+    modalOverlay.classList.add('open');
+  }
+
+  function closeModal() {
+    modalOverlay.classList.remove('open');
+  }
+
+  if (modalClose) modalClose.addEventListener('click', closeModal);
+  if (modalOverlay) {
+    modalOverlay.addEventListener('click', function(e) {
+      if (e.target === modalOverlay) closeModal();
+    });
+  }
+
+  // --- 1. Memory Bank UI ---
+  function renderMemoryBank(container) {
+    const curVal = getCurrentDisplayValue();
+    let html = `
+      <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">
+        Current Active Display Value: <strong style="color: #38bdf8;">${curVal}</strong>
+      </div>
+      <table class="kcalc-reg-table">
+        <thead>
+          <tr>
+            <th style="width: 50px;">Reg</th>
+            <th style="width: 140px;">Label</th>
+            <th>Value</th>
+            <th style="width: 150px; text-align: right;">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+    `;
+
+    registers.forEach((reg, idx) => {
+      html += `
+        <tr>
+          <td><strong style="color: #a5b4fc;">M${idx}</strong></td>
+          <td>
+            <input type="text" class="kcalc-reg-label-input" id="regLabel_${idx}" value="${reg.label}" placeholder="Label">
+          </td>
+          <td>
+            <input type="text" class="kcalc-reg-val-input" id="regVal_${idx}" value="${reg.value}">
+          </td>
+          <td style="text-align: right; white-space: nowrap;">
+            <button class="kcalc-tool-btn" style="display:inline-flex; padding: 2px 6px;" onclick="window.kcalcRecallReg(${idx})">RCL</button>
+            <button class="kcalc-tool-btn" style="display:inline-flex; padding: 2px 6px;" onclick="window.kcalcStoreReg(${idx})">STO</button>
+            <button class="kcalc-tool-btn" style="display:inline-flex; padding: 2px 6px;" onclick="window.kcalcAddReg(${idx})">M+</button>
+            <button class="kcalc-tool-btn" style="display:inline-flex; padding: 2px 6px; color:#f87171;" onclick="window.kcalcClearReg(${idx})">CLR</button>
+          </td>
+        </tr>
+      `;
+    });
+
+    html += `
+        </tbody>
+      </table>
+      <div style="display:flex; justify-content:space-between; margin-top: 10px;">
+        <button class="kcalc-tool-btn" onclick="window.kcalcResetAllRegs()">Reset All Registers</button>
+        <button class="kcalc-tool-btn active" onclick="window.kcalcSaveRegsFromUI()">Save Changes</button>
+      </div>
+    `;
+
+    container.innerHTML = html;
+  }
+
+  window.kcalcRecallReg = function(idx) {
+    const val = registers[idx].value;
+    setDisplayValue(val);
+    closeModal();
+  };
+
+  window.kcalcStoreReg = function(idx) {
+    const curVal = getCurrentDisplayValue();
+    registers[idx].value = curVal;
+    saveRegisters();
+    renderMemoryBank(modalBody);
+  };
+
+  window.kcalcAddReg = function(idx) {
+    const curVal = getCurrentDisplayValue();
+    registers[idx].value = (Number(registers[idx].value) || 0) + curVal;
+    saveRegisters();
+    renderMemoryBank(modalBody);
+  };
+
+  window.kcalcClearReg = function(idx) {
+    registers[idx].value = 0;
+    saveRegisters();
+    renderMemoryBank(modalBody);
+  };
+
+  window.kcalcResetAllRegs = function() {
+    registers.forEach(r => r.value = 0);
+    saveRegisters();
+    renderMemoryBank(modalBody);
+  };
+
+  window.kcalcSaveRegsFromUI = function() {
+    registers.forEach((r, idx) => {
+      const lblInput = document.getElementById('regLabel_' + idx);
+      const valInput = document.getElementById('regVal_' + idx);
+      if (lblInput) r.label = lblInput.value.trim() || ('M' + idx);
+      if (valInput) r.value = parseFloat(valInput.value) || 0;
+    });
+    saveRegisters();
+    closeModal();
+  };
+
+  // --- 2. Constants Library UI ---
+  function renderConstantsLibrary(container) {
+    container.innerHTML = `
+      <input type="text" class="kcalc-const-search" id="kcalcConstSearch" placeholder="Search constant by name, symbol, or category (e.g. Planck, Speed, Math)...">
+      <div class="kcalc-const-grid" id="kcalcConstGrid"></div>
+    `;
+
+    const searchInput = container.querySelector('#kcalcConstSearch');
+    const grid = container.querySelector('#kcalcConstGrid');
+
+    function populate(filter = '') {
+      grid.innerHTML = '';
+      const f = filter.toLowerCase().trim();
+      const filtered = CONSTANTS_DB.filter(c => 
+        c.name.toLowerCase().includes(f) || 
+        c.symbol.toLowerCase().includes(f) || 
+        c.cat.toLowerCase().includes(f)
+      );
+
+      if (filtered.length === 0) {
+        grid.innerHTML = '<div style="color:var(--text-muted); font-size:12px; grid-column:1/-1; padding:20px; text-align:center;">No matching constants found.</div>';
+        return;
+      }
+
+      filtered.forEach(c => {
+        const item = document.createElement('div');
+        item.className = 'kcalc-const-item';
+        item.innerHTML = `
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span class="kcalc-const-name">${c.name}</span>
+            <span style="font-size:9px; background:rgba(255,255,255,0.08); padding:1px 4px; border-radius:3px; color:var(--text-muted);">${c.cat}</span>
+          </div>
+          <div style="display:flex; justify-content:space-between; align-items:baseline; margin-top:2px;">
+            <span class="kcalc-const-symbol">${c.symbol}</span>
+            <span style="font-size:10px; color:var(--text-muted);">${c.unit}</span>
+          </div>
+          <div class="kcalc-const-val">${c.value}</div>
+        `;
+        item.addEventListener('click', () => insertConstant(c.value));
+        grid.appendChild(item);
+      });
+    }
+
+    searchInput.addEventListener('input', (e) => populate(e.target.value));
+    populate('');
+    setTimeout(() => searchInput.focus(), 50);
+  }
+
+  // --- 3. Tape Exporter & Importer UI ---
+  function renderTapeExport(container) {
+    let historyEntries = [];
+    try {
+      const histRaw = localStorage.getItem(STORAGE_KEY_TAPE) || localStorage.getItem('kcalc_history') || '[]';
+      historyEntries = JSON.parse(histRaw);
+    } catch(e) {}
+
+    // Fallback: collect history from DOM history panel if available
+    const domHist = document.querySelectorAll('.history-item, .tape-item');
+    if (domHist.length > 0 && historyEntries.length === 0) {
+      domHist.forEach(el => {
+        historyEntries.push({ text: el.innerText.trim(), timestamp: new Date().toISOString() });
+      });
+    }
+
+    container.innerHTML = `
+      <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+        <span style="font-size:12px; color:var(--text-muted);">Format:</span>
+        <button class="kcalc-tool-btn active" id="btnExportTxt">Plain Text</button>
+        <button class="kcalc-tool-btn" id="btnExportJson">JSON</button>
+        <button class="kcalc-tool-btn" id="btnExportCsv">CSV</button>
+        <button class="kcalc-tool-btn" id="btnTapeCopy" style="margin-left:auto;">📋 Copy to Clipboard</button>
+      </div>
+      <textarea class="kcalc-tape-textarea" id="kcalcTapeArea"></textarea>
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <span style="font-size:11px; color:var(--text-muted);">${historyEntries.length} calculation tape records logged</span>
+        <div style="display:flex; gap:8px;">
+          <button class="kcalc-tool-btn" id="btnDownloadTape">💾 Download File</button>
+          <button class="kcalc-tool-btn" id="btnClearTapeStorage" style="color:#f87171;">Clear Tape</button>
+        </div>
+      </div>
+    `;
+
+    const area = container.querySelector('#kcalcTapeArea');
+    const btnTxt = container.querySelector('#btnExportTxt');
+    const btnJson = container.querySelector('#btnExportJson');
+    const btnCsv = container.querySelector('#btnExportCsv');
+    const btnCopy = container.querySelector('#btnTapeCopy');
+    const btnDown = container.querySelector('#btnDownloadTape');
+    const btnClr = container.querySelector('#btnClearTapeStorage');
+
+    let currentFormat = 'txt';
+
+    function generateContent(format) {
+      currentFormat = format;
+      if (format === 'json') {
+        area.value = JSON.stringify(historyEntries, null, 2);
+      } else if (format === 'csv') {
+        let csv = 'Index,Timestamp,Expression,Result\n';
+        historyEntries.forEach((h, i) => {
+          const expr = (h.formula || h.expr || h.expression || h.text || '').replace(/"/g, '""');
+          const res = (h.result !== undefined ? h.result : (h.res !== undefined ? h.res : '')).toString().replace(/"/g, '""');
+          const ts = h.time || h.timestamp || '';
+          csv += `${i + 1},"${ts}","${expr}","${res}"\n`;
+        });
+        area.value = csv;
+      } else {
+        let txt = '=== KCALC PRO CALCULATION TAPE ===\n';
+        historyEntries.forEach((h, i) => {
+          const expr = h.formula || h.expr || h.expression || h.text || '';
+          const res = h.result !== undefined ? h.result : (h.res !== undefined ? h.res : '');
+          txt += `[${i + 1}] ${expr} ${res ? '= ' + res : ''}\n`;
+        });
+        if (historyEntries.length === 0) {
+          txt += '(No history records currently stored in this session)\n';
+        }
+        area.value = txt;
+      }
+    }
+
+    btnTxt.onclick = () => { [btnTxt, btnJson, btnCsv].forEach(b => b.classList.remove('active')); btnTxt.classList.add('active'); generateContent('txt'); };
+    btnJson.onclick = () => { [btnTxt, btnJson, btnCsv].forEach(b => b.classList.remove('active')); btnJson.classList.add('active'); generateContent('json'); };
+    btnCsv.onclick = () => { [btnTxt, btnJson, btnCsv].forEach(b => b.classList.remove('active')); btnCsv.classList.add('active'); generateContent('csv'); };
+
+    btnCopy.onclick = () => {
+      area.select();
+      navigator.clipboard.writeText(area.value).then(() => {
+        btnCopy.innerText = '✅ Copied!';
+        setTimeout(() => btnCopy.innerText = '📋 Copy to Clipboard', 2000);
+      });
+    };
+
+    btnDown.onclick = () => {
+      const blob = new Blob([area.value], { type: 'text/plain;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `kcalc_tape_${Date.now()}.${currentFormat}`;
+      a.click();
+      URL.revokeObjectURL(url);
+    };
+
+    btnClr.onclick = () => {
+      if (confirm('Clear all calculation history records?')) {
+        historyEntries = [];
+        if (typeof historyTape !== 'undefined') historyTape = [];
+        try {
+          localStorage.removeItem(STORAGE_KEY_TAPE);
+          localStorage.removeItem('kcalc_history');
+        } catch(e) {}
+        generateContent(currentFormat);
+        if (typeof renderHistory === 'function') renderHistory();
+      }
+    };
+
+    generateContent('txt');
+  }
+
+  // --- 4. Bitwise Inspector UI ---
+  function renderBitwiseInspector(container) {
+    let curVal = getCurrentDisplayValue();
+    let intVal = (Math.trunc(curVal) >>> 0) & 0xFFFFFFFF;
+    let wordSize = 32;
+
+    container.innerHTML = `
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+        <span style="font-size:12px; color:var(--text-muted);">Word Size:</span>
+        <div style="display:flex; gap:4px;">
+          <button class="kcalc-tool-btn" id="btnWord8">8-bit</button>
+          <button class="kcalc-tool-btn" id="btnWord16">16-bit</button>
+          <button class="kcalc-tool-btn active" id="btnWord32">32-bit</button>
+        </div>
+      </div>
+      <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 4px;">Click any bit to toggle state (0 / 1):</div>
+      <div id="bitGridContainer"></div>
+      <div style="background: rgba(0,0,0,0.3); border:1px solid var(--border-color); border-radius:8px; padding:10px; margin-top:10px; font-family:'JetBrains Mono',monospace; font-size:12px; display:flex; flex-direction:column; gap:6px;">
+        <div style="display:flex; justify-content:space-between;">
+          <span style="color:var(--text-muted);">Unsigned Dec:</span>
+          <span id="bitDecUnsigned" style="color:#38bdf8;">0</span>
+        </div>
+        <div style="display:flex; justify-content:space-between;">
+          <span style="color:var(--text-muted);">Signed Dec:</span>
+          <span id="bitDecSigned" style="color:#34d399;">0</span>
+        </div>
+        <div style="display:flex; justify-content:space-between;">
+          <span style="color:var(--text-muted);">Hexadecimal:</span>
+          <span id="bitHex" style="color:#f59e0b;">0x00000000</span>
+        </div>
+        <div style="display:flex; justify-content:space-between;">
+          <span style="color:var(--text-muted);">Octal:</span>
+          <span id="bitOct" style="color:#a5b4fc;">0o0</span>
+        </div>
+        <div style="display:flex; justify-content:space-between;">
+          <span style="color:var(--text-muted);">ASCII representation:</span>
+          <span id="bitAscii" style="color:#f43f5e;">N/A</span>
+        </div>
+      </div>
+      <div style="display:flex; justify-content:space-between; margin-top:12px;">
+        <button class="kcalc-tool-btn" id="btnInvertBits">NOT (~x)</button>
+        <button class="kcalc-tool-btn" id="btnShiftLeft">&lt;&lt; Shift Left</button>
+        <button class="kcalc-tool-btn" id="btnShiftRight">&gt;&gt; Shift Right</button>
+        <button class="kcalc-tool-btn active" id="btnApplyBitToCalc">Apply to Calculator</button>
+      </div>
+    `;
+
+    const gridContainer = container.querySelector('#bitGridContainer');
+    const decUnsigned = container.querySelector('#bitDecUnsigned');
+    const decSigned = container.querySelector('#bitDecSigned');
+    const hexSpan = container.querySelector('#bitHex');
+    const octSpan = container.querySelector('#bitOct');
+    const asciiSpan = container.querySelector('#bitAscii');
+
+    const btn8 = container.querySelector('#btnWord8');
+    const btn16 = container.querySelector('#btnWord16');
+    const btn32 = container.querySelector('#btnWord32');
+
+    function updateBitsUI() {
+      const mask = wordSize === 8 ? 0xFF : (wordSize === 16 ? 0xFFFF : 0xFFFFFFFF);
+      intVal = intVal & mask;
+
+      // Render bit cells
+      gridContainer.innerHTML = '';
+      const grid = document.createElement('div');
+      grid.className = 'kcalc-bit-grid';
+      grid.style.gridTemplateColumns = `repeat(${Math.min(wordSize, 8)}, 1fr)`;
+
+      for (let bit = wordSize - 1; bit >= 0; bit--) {
+        const isSet = ((intVal >>> bit) & 1) === 1;
+        const cell = document.createElement('div');
+        cell.className = 'kcalc-bit-cell' + (isSet ? ' on' : '');
+        cell.innerHTML = `
+          <span>${isSet ? '1' : '0'}</span>
+          <span class="kcalc-bit-label">${bit}</span>
+        `;
+        cell.onclick = () => {
+          intVal ^= (1 << bit);
+          updateBitsUI();
+        };
+        grid.appendChild(cell);
+      }
+      gridContainer.appendChild(grid);
+
+      // Numbers
+      decUnsigned.textContent = intVal.toString(10);
+
+      // Signed
+      let signedVal = intVal;
+      if (wordSize === 8 && (intVal & 0x80)) signedVal = intVal - 0x100;
+      else if (wordSize === 16 && (intVal & 0x8000)) signedVal = intVal - 0x10000;
+      else if (wordSize === 32 && (intVal & 0x80000000)) signedVal = intVal | 0;
+      decSigned.textContent = signedVal.toString(10);
+
+      hexSpan.textContent = '0x' + intVal.toString(16).toUpperCase().padStart(wordSize / 4, '0');
+      octSpan.textContent = '0o' + intVal.toString(8);
+
+      // ASCII
+      let ascii = '';
+      for (let b = (wordSize / 8) - 1; b >= 0; b--) {
+        const byte = (intVal >>> (b * 8)) & 0xFF;
+        if (byte >= 32 && byte <= 126) ascii += String.fromCharCode(byte);
+        else ascii += '·';
+      }
+      asciiSpan.textContent = ascii || 'N/A';
+    }
+
+    btn8.onclick = () => { wordSize = 8; [btn8, btn16, btn32].forEach(b => b.classList.remove('active')); btn8.classList.add('active'); updateBitsUI(); };
+    btn16.onclick = () => { wordSize = 16; [btn8, btn16, btn32].forEach(b => b.classList.remove('active')); btn16.classList.add('active'); updateBitsUI(); };
+    btn32.onclick = () => { wordSize = 32; [btn8, btn16, btn32].forEach(b => b.classList.remove('active')); btn32.classList.add('active'); updateBitsUI(); };
+
+    container.querySelector('#btnInvertBits').onclick = () => {
+      const mask = wordSize === 8 ? 0xFF : (wordSize === 16 ? 0xFFFF : 0xFFFFFFFF);
+      intVal = (~intVal) & mask;
+      updateBitsUI();
+    };
+
+    container.querySelector('#btnShiftLeft').onclick = () => {
+      intVal = (intVal << 1);
+      updateBitsUI();
+    };
+
+    container.querySelector('#btnShiftRight').onclick = () => {
+      intVal = (intVal >>> 1);
+      updateBitsUI();
+    };
+
+    container.querySelector('#btnApplyBitToCalc').onclick = () => {
+      setDisplayValue(intVal);
+      closeModal();
+    };
+
+    updateBitsUI();
+  }
+
+  // Bind Buttons
+  function bindExpansionButtons() {
+    const btnRegs = document.getElementById('btnOpenRegisters');
+    const btnConst = document.getElementById('btnOpenConstants');
+    const btnTape = document.getElementById('btnOpenTapeExport');
+    const btnBit = document.getElementById('btnOpenBitInspector');
+
+    if (btnRegs) btnRegs.onclick = () => openModal('💾 Multi-Register Memory Bank (M0-M7)', renderMemoryBank);
+    if (btnConst) btnConst.onclick = () => openModal('⚛️ Scientific & Mathematical Constants Library', renderConstantsLibrary);
+    if (btnTape) btnTape.onclick = () => openModal('📜 Calculation History & Tape Exporter/Importer', renderTapeExport);
+    if (btnBit) btnBit.onclick = () => openModal('🔲 Bitwise Word & Register Diagnostic Inspector', renderBitwiseInspector);
+
+    updateQuickBitSummary();
+    setInterval(updateQuickBitSummary, 1000);
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', bindExpansionButtons);
+  } else {
+    bindExpansionButtons();
+  }
+})();
+</script>
+
 </body>
 </html>

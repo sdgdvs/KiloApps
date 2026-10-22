@@ -2520,7 +2520,7 @@
         High-precision scientific, financial, and statistical calculation suite.
       </p>
       <div style="background: rgba(0,0,0,0.3); border: 1px solid var(--border-color); border-radius: 8px; padding: 10px 12px; display: flex; flex-direction: column; gap: 8px;">
-        <div><strong style="color:#818cf8;">1. Mode Navigation:</strong> Switch between <strong>Scientific</strong>, <strong>Financial</strong> (PMT/FV/Margin/CAGR), <strong>Statistics</strong> (1-Var & LinReg), <strong>Constants</strong>, and <strong>History Tape</strong> via tabs or <span class="kbd-key">1</span>–<span class="kbd-key">5</span>.</div>
+        <div><strong style="color:#818cf8;">1. Mode Navigation:</strong> Switch between <strong>Scientific</strong>, <strong>Financial</strong> (PMT/FV/Margin/CAGR), <strong>Statistics</strong>, <strong>Calculus</strong>, <strong>Matrix</strong>, <strong>Constants</strong>, and <strong>History Tape</strong> via tabs or <span class="kbd-key">1</span>–<span class="kbd-key">7</span>.</div>
         <div><strong style="color:#818cf8;">2. Natural Formula Input:</strong> Type expressions directly in the <em>fx</em> bar (e.g. <code>sin(45) + sqrt(144)</code> or <code>10 mod 3</code>) or click the keypad.</div>
         <div><strong style="color:#818cf8;">3. Workspace Quicksave:</strong> Press <span class="kbd-key">F5</span> anytime to quicksave your workspace, registers, and tape. Press <span class="kbd-key">F9</span> to instantly restore.</div>
         <div><strong style="color:#818cf8;">4. Clipboard & Export:</strong> Click the main display or press <span class="kbd-key">Ctrl</span>+<span class="kbd-key">C</span> to copy results. Export tape logs to CSV, TXT, or JSON.</div>
@@ -2874,16 +2874,14 @@
     if (tutorialActive) {
       closeTutorialModal();
     }
-    document.getElementById('modalOverlay').classList.remove('active');
-    const help = document.getElementById('helpModal');
-    help.style.display = 'none';
-    help.setAttribute('aria-modal', 'false');
-    const mem = document.getElementById('memModal');
-    mem.style.display = 'none';
-    mem.setAttribute('aria-modal', 'false');
-    const tut = document.getElementById('tutorialModal');
-    tut.style.display = 'none';
-    tut.setAttribute('aria-modal', 'false');
+    const overlay = document.getElementById('modalOverlay');
+    if (overlay) overlay.classList.remove('active');
+    document.querySelectorAll('#modalOverlay .modal-content').forEach(m => {
+      m.style.display = 'none';
+      m.setAttribute('aria-modal', 'false');
+    });
+    const expOverlay = document.getElementById('kcalcExpModalOverlay');
+    if (expOverlay) expOverlay.classList.remove('open');
     tutorialActive = false;
   }
 
@@ -5282,7 +5280,7 @@
 
     // Dismiss active expansion modals
     const activeExpModal = document.querySelector('.kcalc-exp-modal-overlay.open');
-    if (activeExpModal && (e.key === 'Escape' || e.key === 'Enter')) {
+    if (activeExpModal && (e.key === 'Escape' || (e.key === 'Enter' && !['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)))) {
       e.preventDefault();
       activeExpModal.classList.remove('open');
       return;
@@ -5807,17 +5805,17 @@
       } else if (format === 'csv') {
         let csv = 'Index,Timestamp,Expression,Result\n';
         historyEntries.forEach((h, i) => {
-          const expr = (h.expr || h.expression || h.text || '').replace(/"/g, '""');
-          const res = (h.res || h.result || '').toString().replace(/"/g, '""');
-          const ts = h.timestamp || '';
+          const expr = (h.formula || h.expr || h.expression || h.text || '').replace(/"/g, '""');
+          const res = (h.result !== undefined ? h.result : (h.res !== undefined ? h.res : '')).toString().replace(/"/g, '""');
+          const ts = h.time || h.timestamp || '';
           csv += `${i + 1},"${ts}","${expr}","${res}"\n`;
         });
         area.value = csv;
       } else {
         let txt = '=== KCALC PRO CALCULATION TAPE ===\n';
         historyEntries.forEach((h, i) => {
-          const expr = h.expr || h.expression || h.text || '';
-          const res = h.res || h.result || '';
+          const expr = h.formula || h.expr || h.expression || h.text || '';
+          const res = h.result !== undefined ? h.result : (h.res !== undefined ? h.res : '');
           txt += `[${i + 1}] ${expr} ${res ? '= ' + res : ''}\n`;
         });
         if (historyEntries.length === 0) {
@@ -5852,11 +5850,13 @@
     btnClr.onclick = () => {
       if (confirm('Clear all calculation history records?')) {
         historyEntries = [];
+        if (typeof historyTape !== 'undefined') historyTape = [];
         try {
           localStorage.removeItem(STORAGE_KEY_TAPE);
           localStorage.removeItem('kcalc_history');
         } catch(e) {}
         generateContent(currentFormat);
+        if (typeof renderHistory === 'function') renderHistory();
       }
     };
 

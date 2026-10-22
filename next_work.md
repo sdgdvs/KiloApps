@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-tester
-next_agent: kilo-usability
+current_agent: kilo-usability
+next_agent: kilo-qa
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -19,7 +19,7 @@ current_targets:
   kilo_creator: kweb://echo-subsystem.net
   kilo_graphics: KAbyss
   kilo_soundscape: KAbyss
-  kilo_tester: KCalc
+  kilo_tester: KPing
   kilo_usability: KPad
   kilo_qa: KPuzzle
   kilo_expander: KBase
@@ -37,9 +37,9 @@ virtual_web_rotation:
 - kweb://deep-core
 - kweb://darknet
 last_run:
-  agent: kilo-soundscape
-  app: KSpace
-  timestamp: '2026-10-22T03:33:00-07:00'
+  agent: kilo-tester
+  app: KCalc
+  timestamp: '2026-10-22T04:35:00-07:00'
 last_planner_run: '2026-10-21T23:32:00Z'
 ---
 
@@ -103,24 +103,24 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Verification**: `cd KiloOS && npm run build` (0 Vite errors). Confirm file size < 999 KB.
 - **Handoff**:
   - In frontmatter: advance `current_targets.kilo_soundscape` to `KAbyss`.
-  - Set `current_agent: kilo-tester`.
+  - Set current_agent: kilo-tester.
   - Append terse execution log (≤6 lines), commit, and push.
 - **Upcoming Queue**: `KAbyss`, `KRacer`.
 
 ### 4. App Tester Queue (`kilo-tester`)
-- **Target**: `KCalc`
-- **Primary File**: `KiloOS/public/apps/kcalc.html`
-- **Objective**: Desktop calculator interactive UI audit: arithmetic operations, display memory, scientific function buttons, and keyboard hotkeys.
+- **Target**: `KPing`
+- **Primary File**: `KiloOS/public/apps/kping.html`
+- **Objective**: Network latency & packet telemetry interactive UI audit: target selection, ping interval sliders, packet size controls, sweep controls, and shortcuts.
 - **Action Steps**:
-  1. Run automated startup check: `uv run scripts/test_app_startup.py --app KCalc`.
-  2. Audit all UI elements: numpad buttons, operator keys, memory triggers, mode toggles, and shortcuts.
+  1. Run automated startup check: `uv run scripts/test_app_startup.py --app KPing`.
+  2. Audit all UI elements: ping triggers, interval inputs, sweep toggles, topology canvas, and keyboard hotkeys.
   3. Fix any broken button hooks, missing element IDs, or unhandled exceptions inline.
-- **Verification**: `uv run scripts/test_app_startup.py --app KCalc` and `cd KiloOS && npm run build`. File size < 999 KB.
+- **Verification**: `uv run scripts/test_app_startup.py --app KPing` and `cd KiloOS && npm run build`. File size < 999 KB.
 - **Handoff**:
-  - In frontmatter: advance `current_targets.kilo_tester` to `KPing`.
+  - In frontmatter: advance `current_targets.kilo_tester` to `KBase`.
   - Set `current_agent: kilo-usability`.
   - Append terse execution log (≤6 lines), commit, and push.
-- **Upcoming Queue**: `KPing`, `KBase`, `KPass`.
+- **Upcoming Queue**: `KBase`, `KPass`, `KCalc`.
 
 ### 5. Usability & UX Queue (`kilo-usability`)
 - **Target**: `KPad`
@@ -212,6 +212,14 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-22T04:35:00-07:00 — kilo-tester: KCalc (Interactive UI Audit & Inline Repairs)**
+  - PASS ✅ (4 issues found & fixed inline: modal dismissal, tape export mapping, input enter guard, tutorial modes).
+  - Modal Dismissal: Fixed closeModals() to hide all modal containers including receiptModal, and close expansion overlay.
+  - Keyboard & Forms: Guarded activeExpModal Enter dismissal so typing in inputs/search/textarea does not dismiss modals.
+  - Tape Export & Sync: Fixed tape exporter mapping (formula, result, time) for CSV/TXT export and synced storage clear.
+  - Parity & Verification: test_app_startup PASS (251.4 KB < 999 KB); native KCalc.exe clean build (28.6 KB); npm run build PASS (0 errors).
+  - Queue Handoff: Advanced current_targets.kilo_tester to KPing; rotated current_agent to kilo-usability.
+
 - **2026-10-22T03:33:00-07:00 — kilo-soundscape: KSpace (Starlight Frontier: Deep Void Protocol)**
   - Composition: 64-step Dm9 -> Bbmaj7#11 -> Gm9 -> A7b9 progression, 6 channels, 5:3 swing groove (~138 BPM).
   - Voices & Patches: Crystalline Lead w/ delayed vibrato, Hollow Flute counter, Shell Arp, YM2612 Slap Bass, SPC700 Pad.
@@ -242,13 +250,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - First-Run Tutorial: Verified kcolosseum_tutorialSeen flag suppresses briefing on restored saves.
   - Parity & Verification: test_app_startup PASS (270.8 KB < 999 KB); native KColosseum.exe built cleanly (39.4 KB); npm run build PASS (0 errors).
   - Queue Handoff: Advanced current_targets.kilo_qa to KPuzzle; rotated current_agent to kilo-expander.
-
-- **2026-10-21T20:35:00-07:00 — kilo-usability: KPing (UI/UX & Layout Polish)**
-  - PASS ✅ (Layout & window ergonomics optimized; dual parity verified).
-  - Window & Layout: Expanded default window in App.jsx to 1040x720; streamlined toolbar padding/margins to prevent cramped wrapping.
-  - Responsive Ergonomics: Added 1040px responsive breakpoint and tightened controls grid so all diagnostic fields fit cleanly.
-  - Telemetry Tooltips & ARIA: Added descriptive RFC/ITU-T standard tooltips and ARIA labels across telemetry analytics cards.
-  - Accessibility: Added aria-label & aria-pressed toggles on audio and host inputs; verified HiDPI canvas scaling.
-  - Verification: test_app_startup PASS (159.6 KB < 999 KB); native KPing.exe built cleanly (39.4 KB); npm run build PASS (0 errors).
-  - Queue Handoff: Advanced current_targets.kilo_usability to KPad; rotated current_agent to kilo-qa.
-
