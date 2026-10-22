@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-creator
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -21,7 +21,7 @@ current_targets:
   kilo_soundscape: KSpace
   kilo_tester: KCalc
   kilo_usability: KPad
-  kilo_qa: KColosseum
+  kilo_qa: KPuzzle
   kilo_expander: KPing
 virtual_web_target: kweb://10.19.99.4/classified
 virtual_web_rotation:
@@ -37,9 +37,9 @@ virtual_web_rotation:
 - kweb://deep-core
 - kweb://darknet
 last_run:
-  agent: kilo-usability
-  app: KPing
-  timestamp: '2026-10-21T20:35:00-07:00'
+  agent: kilo-qa
+  app: KColosseum
+  timestamp: '2026-10-21T21:35:00-07:00'
 last_planner_run: '2026-10-21T23:32:00Z'
 ---
 
@@ -105,7 +105,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - In frontmatter: advance `current_targets.kilo_soundscape` to `KAbyss`.
   - Set `current_agent: kilo-tester`.
   - Append terse execution log (≤6 lines), commit, and push.
-- **Upcoming Queue**: `KAbyss`, `KRacer`, `KColosseum`.
+- **Upcoming Queue**: `KAbyss`, `KRacer`.
 
 ### 4. App Tester Queue (`kilo-tester`)
 - **Target**: `KCalc`
@@ -138,22 +138,22 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Upcoming Queue**: `KTerminal`, `KBase`.
 
 ### 6. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
-- **Target**: `KColosseum`
-- **Primary Files**: `KiloOS/public/apps/kcolosseum.html`, `apps/kcolosseum/main.c` (if present)
-- **Objective**: Pass 5 QA audit: verify first-run tutorial onboarding overlay (`kcolosseum_tutorialSeen`), verify F5 quicksave & F9 quickload capturing gladiator stats, arena stage, equipment, and gold; test modal dismissal; compile Win32 native client and verify web cartridge (<999 KB).
+- **Target**: `KPuzzle`
+- **Primary Files**: `KiloOS/public/apps/kpuzzle.html`
+- **Objective**: Pass 5 QA audit: verify first-run tutorial onboarding overlay (`kpuzzle_tutorialSeen`), verify F5 quicksave & F9 quickload capturing grid state, move count, timer, and difficulty; test modal dismissal; compile Win32 native client (if present) and verify web cartridge (<999 KB).
 - **Action Steps**:
-  1. State Persistence: F5 quicksave & F9 quickload capturing complete gladiator combat, inventory, and stage progression.
+  1. State Persistence: F5 quicksave & F9 quickload capturing complete puzzle layout, timer, moves, and completion records.
   2. First-run Tutorial: Onboarding displays once on fresh sessions, never on restored saves.
   3. Modal Dismissals: Modals dismiss cleanly with Escape, Enter, or Close button.
-  4. Dual Parity & Build: Compile Win32 native client via `cmd.exe /c build.bat` in `apps/kcolosseum/` (if present) and verify web build.
+  4. Dual Parity & Build: Compile Win32 native client via `cmd.exe /c build.bat` in `apps/kpuzzle/` (if present) and verify web build.
 - **Verification**:
-  - `uv run scripts/test_app_startup.py --app KColosseum`
-  - `cd KiloOS && npm run build` (0 Vite errors, `kcolosseum.html` < 999 KB)
+  - `uv run scripts/test_app_startup.py --app KPuzzle`
+  - `cd KiloOS && npm run build` (0 Vite errors, `kpuzzle.html` < 999 KB)
 - **Handoff**:
-  - In frontmatter: advance `current_targets.kilo_qa` to `KPuzzle`.
+  - In frontmatter: advance `current_targets.kilo_qa` to `KCalc`.
   - Set `current_agent: kilo-expander`.
   - Append terse execution log (≤6 lines), commit, and push.
-- **Upcoming Queue**: `KPuzzle`, `KCalc`, `KSpace`.
+- **Upcoming Queue**: `KCalc`, `KSpace`.
 
 ### 7. Feature Expander Queue (`kilo-expander`)
 - **Target**: `KPing`
@@ -206,10 +206,19 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | **KChart** | `KiloOS/public/apps/kchart.html` | Pass 6+ (2026-10-20) | Office / Visualization | Feature-complete 1999 spreadsheet & business chart studio; 10 engines, regressions & OLS fit, YM2612 FM / SPC700 sonification, 7 export formats, dual Win32 C parity, full state persistence. |
 | **KSimon** | `KiloOS/public/apps/ksimon.html` | Pass 5 (2026-10-20) | Arcade / Memory | Feature-complete 3D audio-visual memory console; 9 modes (incl. 20-stage campaign & online duel), dual Win32 native client parity, full F5/F9 state persistence, first-run tutorial integrity, zero glints. |
 | **KWords** | `KiloOS/public/apps/kwords.html` | Pass 5 (2026-10-21) | Word / Puzzle | Feature-complete retro word search with 20-stage campaign, 12 themes, custom puzzle creator/import/export, replay scrubber, dual Win32 native client parity, full F5/F9 state persistence, first-run tutorial integrity. |
+| **KColosseum** | KiloOS/public/apps/kcolosseum.html | Pass 5 (2026-10-21) | Strategy / RPG | Gladiatorial ludus management & 10-stage arena combat; 6 facility upgrades, F5/F9 state persistence, first-run tutorial integrity, replay telemetry, dual Win32 native client parity. |
 
 ---
 
 ## Recent Execution Logs (Max 5 Entries)
+
+- **2026-10-21T21:35:00-07:00 — kilo-qa: KColosseum (Pass 5 QA & Build Audit)**
+  - PASS ✅ (Modal dismissal & facilities persistence repaired; promoted to Mature Quarantine).
+  - Modal Dismissal: Included facilitiesModal in closeAllModals & anyModalOpen; added Enter dismissal.
+  - State Persistence: Extended applySaveData to initialize all 6 ludus facilities; verified F5/F9 save/load parity.
+  - First-Run Tutorial: Verified kcolosseum_tutorialSeen flag suppresses briefing on restored saves.
+  - Parity & Verification: test_app_startup PASS (270.8 KB < 999 KB); native KColosseum.exe built cleanly (39.4 KB); npm run build PASS (0 errors).
+  - Queue Handoff: Advanced current_targets.kilo_qa to KPuzzle; rotated current_agent to kilo-expander.
 
 - **2026-10-21T20:35:00-07:00 — kilo-usability: KPing (UI/UX & Layout Polish)**
   - PASS ✅ (Layout & window ergonomics optimized; dual parity verified).
@@ -244,8 +253,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Queue Handoff: Advanced current_targets.kilo_graphics to KTrader; rotated current_agent to kilo-soundscape.
 
 
-- **2026-10-21T17:35:00-07:00 — kilo-creator: kweb://cybercafe (Virtual 1999 Cybercafe Deep Expansion & ARG Webring Polish)**
-  - Webring Topology Polish: Replaced clearnet link to Tier 3 echo-subsystem with canonical Member #007 Contributor Portal per arg_plan.md.
-  - Subterranean Litho-BBS Relay: Implemented station CLI `dial 10.19.99.254` / `telnet 10.19.99.254` with acoustic V.90 handshake & Node 0x7F telemetry burst.
-  - Verification & Lint: Verified 0 security lint violations, 0 Vite build errors, and cybercafe.html strictly compliant (<999 KB, 471 KB).
-  - Queue Handoff: Advanced current_targets.kilo_creator and virtual_web_target to kweb://10.19.99.4/classified; rotated current_agent to kilo-graphics.

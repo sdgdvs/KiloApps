@@ -4596,7 +4596,7 @@
     }
 
     function closeAllModals() {
-      ['helpModal', 'tutorialModal', 'exportModal', 'victoryModal', 'multiplayerModal', 'invite-modal', 'replayModal', 'statsModal'].forEach(id => {
+      ['helpModal', 'tutorialModal', 'exportModal', 'victoryModal', 'multiplayerModal', 'invite-modal', 'replayModal', 'statsModal', 'facilitiesModal'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.style.display = 'none';
       });
@@ -4777,7 +4777,7 @@
       if (typeof data.funds === 'number') funds = data.funds;
       if (typeof data.arenaLevel === 'number') arenaLevel = data.arenaLevel;
       if (typeof data.nextId === 'number') nextId = data.nextId;
-      if (data.ludusFacilities && typeof data.ludusFacilities === 'object') ludusFacilities = Object.assign({infirmary:0,armory:0,palaestra:0,banquet:0}, data.ludusFacilities);
+      if (data.ludusFacilities && typeof data.ludusFacilities === 'object') ludusFacilities = Object.assign({infirmary:0,armory:0,palaestra:0,banquet:0,shrine:0,scriptorium:0}, data.ludusFacilities);
       if (typeof data.soundMuted === 'boolean') {
         soundMuted = data.soundMuted;
         updateSoundButton();
@@ -6702,7 +6702,8 @@
       const invOpen = document.getElementById('invite-modal') && document.getElementById('invite-modal').style.display === 'flex';
       const repOpen = document.getElementById('replayModal') && document.getElementById('replayModal').style.display === 'flex';
       const stOpen = document.getElementById('statsModal') && document.getElementById('statsModal').style.display === 'flex';
-      const anyModalOpen = helpOpen || tutOpen || expOpen || vicOpen || mpOpen || invOpen || repOpen || stOpen;
+      const facOpen = document.getElementById('facilitiesModal') && document.getElementById('facilitiesModal').style.display === 'flex';
+      const anyModalOpen = helpOpen || tutOpen || expOpen || vicOpen || mpOpen || invOpen || repOpen || stOpen || facOpen;
       const arenaOpen = document.getElementById('arenaPanel') && document.getElementById('arenaPanel').style.display !== 'none';
 
       if (e.key === 'Escape') {
@@ -6782,8 +6783,8 @@
         }
       }
 
-      if (vicOpen) {
-        if (e.key === 'Enter' || e.key === ' ') {
+      if (vicOpen || helpOpen || facOpen || repOpen || stOpen) {
+        if (e.key === 'Enter') {
           e.preventDefault();
           closeAllModals();
           return;
