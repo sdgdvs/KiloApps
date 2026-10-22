@@ -11,9 +11,9 @@
     "id": "kabyss",
     "title": "KAbyss",
     "folder": "Games",
-    "webBytes": 490865,
-    "exeBytes": 242176,
-    "budgetPercent": 49.1
+    "webBytes": 511574,
+    "exeBytes": 248320,
+    "budgetPercent": 51.2
   },
   {
     "id": "kalchemy",
@@ -523,9 +523,9 @@
     "id": "kping",
     "title": "KPing",
     "folder": "System",
-    "webBytes": 179662,
+    "webBytes": 175838,
     "exeBytes": 47616,
-    "budgetPercent": 18.0
+    "budgetPercent": 17.6
   },
   {
     "id": "kpomodoro",

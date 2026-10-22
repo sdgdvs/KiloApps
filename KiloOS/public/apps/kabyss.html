@@ -2327,6 +2327,8 @@
             musicVol: 0.50,
             masterGain: null,
             musicGain: null,
+            musicDryGain: null,
+            musicWetGain: null,
             ambienceGain: null,
             ambienceOsc1: null,
             ambienceOsc2: null,
@@ -2398,11 +2400,22 @@
                     this.delayFeedback.connect(this.delayR);
                     this.delayFilter.connect(this.masterGain);
 
+                    // Music Master Volume Bus
                     this.musicGain = this.ctx.createGain();
                     this.musicGain.gain.value = this.musicVol;
                     this.musicGain.connect(this.masterGain);
-                    this.musicGain.connect(this.delayL);
-                    this.musicGain.connect(this.delayR);
+
+                    // Dry bus: Bass and Percussion (keeps low end tight and punchy, unclouded by delay)
+                    this.musicDryGain = this.ctx.createGain();
+                    this.musicDryGain.gain.value = 1.0;
+                    this.musicDryGain.connect(this.musicGain);
+
+                    // Wet bus: Melodic Leads, Counterpoint, Harmony (adds spatial warmth via stereo delay)
+                    this.musicWetGain = this.ctx.createGain();
+                    this.musicWetGain.gain.value = 0.92;
+                    this.musicWetGain.connect(this.musicGain);
+                    this.musicWetGain.connect(this.delayL);
+                    this.musicWetGain.connect(this.delayR);
 
                     this.musicInitialized = true;
                     this.startMusicSequencer();
@@ -2411,42 +2424,72 @@
                 }
             },
 
-            playFMNote(freq, dur = 0.42, timbre = 'lead', velocity = 0.6) {
-                if (!this.ctx || !this.soundEnabled || !this.musicEnabled || !this.musicGain) return;
+            // --- Genesis YM2612 2-Op FM Synthesis Patches ---
+
+            // Ch1: Lead Melody with Delayed Vibrato (Hollow Flute / Organ / Crystalline Lead)
+            playFmLead(freq, dur = 0.40, vel = 0.55, modMul = 1.0, modIdx = 2.4) {
+                if (!this.ctx || !this.soundEnabled || !this.musicEnabled || !this.musicWetGain) return;
                 try {
                     const now = this.ctx.currentTime;
+                    const car = this.ctx.createOscillator();
                     const mod = this.ctx.createOscillator();
                     const modGain = this.ctx.createGain();
-                    const car = this.ctx.createOscillator();
                     const carGain = this.ctx.createGain();
 
-                    let modRatio = 1.5;
-                    let modDepth = freq * 1.6;
-                    let attack = 0.02;
-                    let decay = dur * 0.90;
+                    mod.type = 'sine';
+                    mod.frequency.setValueAtTime(freq * modMul, now);
+                    modGain.gain.setValueAtTime(freq * modIdx * vel, now);
+                    modGain.gain.exponentialRampToValueAtTime(Math.max(1, freq * 0.15), now + 0.08);
+                    modGain.gain.exponentialRampToValueAtTime(0.01, now + dur);
 
-                    if (timbre === 'bass') {
-                        modRatio = 0.5;
-                        modDepth = freq * 2.2;
-                        attack = 0.02;
-                        decay = dur * 0.85;
-                        velocity *= 1.2;
-                    } else if (timbre === 'chime') {
-                        modRatio = 3.5;
-                        modDepth = freq * 1.8;
-                        attack = 0.01;
-                        decay = dur * 0.92;
-                    } else if (timbre === 'pad') {
-                        modRatio = 1.004;
-                        modDepth = freq * 0.8;
-                        attack = dur * 0.22;
-                        decay = dur * 0.85;
-                    }
+                    mod.connect(modGain);
+                    modGain.connect(car.frequency);
+
+                    // Delayed vibrato (after 0.18s) - signature vocal phrasing
+                    const vib = this.ctx.createOscillator();
+                    const vibGain = this.ctx.createGain();
+                    vib.frequency.setValueAtTime(5.6, now);
+                    vibGain.gain.setValueAtTime(0.0001, now);
+                    vibGain.gain.setValueAtTime(0.0001, now + 0.18);
+                    vibGain.gain.linearRampToValueAtTime(freq * 0.024, now + 0.32);
+                    vib.connect(vibGain);
+                    vibGain.connect(car.frequency);
+
+                    car.type = 'sine';
+                    car.frequency.setValueAtTime(freq, now);
+
+                    const peakGain = Math.max(0.0001, vel * 0.22);
+                    carGain.gain.setValueAtTime(0.0001, now);
+                    carGain.gain.linearRampToValueAtTime(peakGain, now + 0.015);
+                    carGain.gain.exponentialRampToValueAtTime(0.0001, now + dur);
+
+                    car.connect(carGain);
+                    carGain.connect(this.musicWetGain);
+
+                    mod.start(now);
+                    car.start(now);
+                    vib.start(now);
+                    const stopTime = now + dur;
+                    mod.stop(stopTime);
+                    car.stop(stopTime);
+                    vib.stop(stopTime);
+                } catch (e) {}
+            },
+
+            // Ch2: Counter-Melody Voice (Hollow Reed / Glass Bell, contrary motion)
+            playFmCounter(freq, dur = 0.36, vel = 0.45) {
+                if (!this.ctx || !this.soundEnabled || !this.musicEnabled || !this.musicWetGain) return;
+                try {
+                    const now = this.ctx.currentTime;
+                    const car = this.ctx.createOscillator();
+                    const mod = this.ctx.createOscillator();
+                    const modGain = this.ctx.createGain();
+                    const carGain = this.ctx.createGain();
 
                     mod.type = 'sine';
-                    mod.frequency.setValueAtTime(freq * modRatio, now);
-                    modGain.gain.setValueAtTime(modDepth * velocity, now);
-                    modGain.gain.exponentialRampToValueAtTime(1.0, now + decay);
+                    mod.frequency.setValueAtTime(freq * 1.0, now);
+                    modGain.gain.setValueAtTime(freq * 0.9 * vel, now);
+                    modGain.gain.exponentialRampToValueAtTime(Math.max(1, freq * 0.1), now + dur * 0.5);
 
                     mod.connect(modGain);
                     modGain.connect(car.frequency);
@@ -2454,19 +2497,210 @@
                     car.type = 'sine';
                     car.frequency.setValueAtTime(freq, now);
 
-                    const finalGain = Math.max(0.0001, velocity * 0.22 * this.musicVol);
+                    const peakGain = Math.max(0.0001, vel * 0.18);
                     carGain.gain.setValueAtTime(0.0001, now);
-                    carGain.gain.linearRampToValueAtTime(finalGain, now + attack);
-                    carGain.gain.exponentialRampToValueAtTime(0.0001, now + decay);
+                    carGain.gain.linearRampToValueAtTime(peakGain, now + 0.02);
+                    carGain.gain.exponentialRampToValueAtTime(0.0001, now + dur);
 
                     car.connect(carGain);
-                    carGain.connect(this.musicGain);
+                    carGain.connect(this.musicWetGain);
 
                     mod.start(now);
                     car.start(now);
-                    mod.stop(now + decay);
-                    car.stop(now + decay);
+                    const stopTime = now + dur;
+                    mod.stop(stopTime);
+                    car.stop(stopTime);
                 } catch (e) {}
+            },
+
+            // Ch3: Harmony Shell Voicings (3rd + 7th, no doubled 5ths)
+            playFmHarmony(notes, dur = 0.52, vel = 0.38) {
+                if (!this.ctx || !this.soundEnabled || !this.musicEnabled || !this.musicWetGain) return;
+                const arr = Array.isArray(notes) ? notes : [notes];
+                arr.forEach((freq, idx) => {
+                    if (!freq) return;
+                    try {
+                        const now = this.ctx.currentTime;
+                        const car = this.ctx.createOscillator();
+                        const mod = this.ctx.createOscillator();
+                        const modGain = this.ctx.createGain();
+                        const carGain = this.ctx.createGain();
+
+                        mod.type = 'sine';
+                        mod.frequency.setValueAtTime(freq * 2.0, now);
+                        modGain.gain.setValueAtTime(freq * 1.4 * vel, now);
+                        modGain.gain.exponentialRampToValueAtTime(Math.max(1, freq * 0.12), now + 0.1);
+                        modGain.gain.exponentialRampToValueAtTime(0.01, now + dur);
+
+                        mod.connect(modGain);
+                        modGain.connect(car.frequency);
+
+                        car.type = 'sine';
+                        car.frequency.setValueAtTime(freq, now);
+
+                        const peakGain = Math.max(0.0001, vel * 0.14);
+                        carGain.gain.setValueAtTime(0.0001, now);
+                        carGain.gain.linearRampToValueAtTime(peakGain, now + 0.025 + idx * 0.01);
+                        carGain.gain.exponentialRampToValueAtTime(0.0001, now + dur);
+
+                        car.connect(carGain);
+                        carGain.connect(this.musicWetGain);
+
+                        mod.start(now);
+                        car.start(now);
+                        const stopTime = now + dur;
+                        mod.stop(stopTime);
+                        car.stop(stopTime);
+                    } catch (e) {}
+                });
+            },
+
+            // Ch4: Punchy YM2612 Slap Bass (tight dry bus, root/octave motion below C3)
+            playFmBass(freq, dur = 0.36, vel = 0.68) {
+                if (!this.ctx || !this.soundEnabled || !this.musicEnabled || !this.musicDryGain) return;
+                try {
+                    const now = this.ctx.currentTime;
+                    const car = this.ctx.createOscillator();
+                    const mod = this.ctx.createOscillator();
+                    const modGain = this.ctx.createGain();
+                    const carGain = this.ctx.createGain();
+
+                    mod.type = 'sine';
+                    mod.frequency.setValueAtTime(freq * 2.0, now);
+                    modGain.gain.setValueAtTime(freq * 3.2 * vel, now);
+                    modGain.gain.exponentialRampToValueAtTime(Math.max(1, freq * 0.15), now + 0.06);
+                    modGain.gain.exponentialRampToValueAtTime(0.01, now + dur);
+
+                    mod.connect(modGain);
+                    modGain.connect(car.frequency);
+
+                    car.type = 'sine';
+                    car.frequency.setValueAtTime(freq, now);
+
+                    const peakGain = Math.max(0.0001, vel * 0.28);
+                    carGain.gain.setValueAtTime(0.0001, now);
+                    carGain.gain.linearRampToValueAtTime(peakGain, now + 0.01);
+                    carGain.gain.exponentialRampToValueAtTime(0.0001, now + dur);
+
+                    car.connect(carGain);
+                    carGain.connect(this.musicDryGain); // DRY BUS (no muddy delay)
+
+                    mod.start(now);
+                    car.start(now);
+                    const stopTime = now + dur;
+                    mod.stop(stopTime);
+                    car.stop(stopTime);
+                } catch (e) {}
+            },
+
+            // Ch5: FM Percussion - Kick
+            playFmKick(vel = 0.75) {
+                if (!this.ctx || !this.soundEnabled || !this.musicEnabled || !this.musicDryGain) return;
+                try {
+                    const now = this.ctx.currentTime;
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(125, now);
+                    osc.frequency.exponentialRampToValueAtTime(36, now + 0.038);
+
+                    gain.gain.setValueAtTime(0.0001, now);
+                    gain.gain.linearRampToValueAtTime(vel * 0.32, now + 0.004);
+                    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.14);
+
+                    osc.connect(gain);
+                    gain.connect(this.musicDryGain);
+
+                    osc.start(now);
+                    osc.stop(now + 0.14);
+                } catch (e) {}
+            },
+
+            // Ch5: FM Percussion - Snare
+            playFmSnare(vel = 0.55) {
+                if (!this.ctx || !this.soundEnabled || !this.musicEnabled || !this.musicDryGain) return;
+                try {
+                    const now = this.ctx.currentTime;
+                    const car = this.ctx.createOscillator();
+                    const mod = this.ctx.createOscillator();
+                    const modGain = this.ctx.createGain();
+                    const carGain = this.ctx.createGain();
+
+                    mod.type = 'sine';
+                    mod.frequency.setValueAtTime(180 * 10.0, now);
+                    modGain.gain.setValueAtTime(180 * 8.0 * vel, now);
+                    modGain.gain.exponentialRampToValueAtTime(1.0, now + 0.11);
+
+                    mod.connect(modGain);
+                    modGain.connect(car.frequency);
+
+                    car.type = 'sine';
+                    car.frequency.setValueAtTime(180, now);
+                    car.frequency.exponentialRampToValueAtTime(80, now + 0.11);
+
+                    carGain.gain.setValueAtTime(0.0001, now);
+                    carGain.gain.linearRampToValueAtTime(vel * 0.22, now + 0.003);
+                    carGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.11);
+
+                    car.connect(carGain);
+                    carGain.connect(this.musicDryGain);
+
+                    mod.start(now);
+                    car.start(now);
+                    const stopTime = now + 0.11;
+                    mod.stop(stopTime);
+                    car.stop(stopTime);
+                } catch (e) {}
+            },
+
+            // Ch6: Inharmonic FM Hi-Hat
+            playFmHiHat(vel = 0.35, isOpen = false) {
+                if (!this.ctx || !this.soundEnabled || !this.musicEnabled || !this.musicDryGain) return;
+                try {
+                    const now = this.ctx.currentTime;
+                    const car = this.ctx.createOscillator();
+                    const mod = this.ctx.createOscillator();
+                    const modGain = this.ctx.createGain();
+                    const carGain = this.ctx.createGain();
+                    const hpf = this.ctx.createBiquadFilter();
+
+                    const dur = isOpen ? 0.18 : 0.045;
+                    mod.type = 'sine';
+                    mod.frequency.setValueAtTime(800 * 11.0, now);
+                    modGain.gain.setValueAtTime(800 * 6.0, now);
+                    modGain.gain.exponentialRampToValueAtTime(10.0, now + dur);
+
+                    mod.connect(modGain);
+                    modGain.connect(car.frequency);
+
+                    car.type = 'sine';
+                    car.frequency.setValueAtTime(800, now);
+
+                    hpf.type = 'highpass';
+                    hpf.frequency.setValueAtTime(6500, now);
+
+                    carGain.gain.setValueAtTime(0.0001, now);
+                    carGain.gain.linearRampToValueAtTime(vel * 0.14, now + 0.002);
+                    carGain.gain.exponentialRampToValueAtTime(0.0001, now + dur);
+
+                    car.connect(hpf);
+                    hpf.connect(carGain);
+                    carGain.connect(this.musicDryGain);
+
+                    mod.start(now);
+                    car.start(now);
+                    const stopTime = now + dur;
+                    mod.stop(stopTime);
+                    car.stop(stopTime);
+                } catch (e) {}
+            },
+
+            // Backward-compatible generic wrapper
+            playFMNote(freq, dur = 0.42, timbre = 'lead', velocity = 0.6) {
+                if (timbre === 'bass') this.playFmBass(freq, dur, velocity);
+                else if (timbre === 'chime' || timbre === 'pad') this.playFmCounter(freq, dur, velocity);
+                else this.playFmLead(freq, dur, velocity);
             },
 
             getZoneTrackName(zIdx = null) {
@@ -2495,6 +2729,11 @@
                 if (this.musicGain && this.ctx) {
                     this.musicGain.gain.setValueAtTime(this.musicEnabled ? this.musicVol : 0.0001, this.ctx.currentTime);
                 }
+                if (this.musicEnabled) {
+                    this.startMusicSequencer();
+                } else {
+                    this.stopMusicSequencer();
+                }
                 const btn = document.getElementById('btnMusicToggle');
                 if (btn) {
                     btn.innerText = this.musicEnabled ? '🎵 Music: On [YM2612]' : '🎵 Music: Off';
@@ -2505,12 +2744,28 @@
             },
 
             startMusicSequencer() {
-                if (this.seqTimer) clearInterval(this.seqTimer);
+                this.stopMusicSequencer();
                 this.seqStep = 0;
-                this.seqTimer = setInterval(() => {
-                    if (!this.soundEnabled || !this.musicEnabled || !this.ctx) return;
-                    this.tickSequencerStep();
-                }, 340);
+                this.scheduleNextStep();
+            },
+
+            stopMusicSequencer() {
+                if (this.seqTimer) {
+                    clearTimeout(this.seqTimer);
+                    this.seqTimer = null;
+                }
+            },
+
+            scheduleNextStep() {
+                if (!this.soundEnabled || !this.musicEnabled || !this.ctx) return;
+                this.tickSequencerStep();
+                // 5:3 subtle swing groove for dungeon crawl pacing:
+                // Even step: 180ms, Odd step: 130ms (avg ~155ms per step, ~96 BPM 16th groove)
+                const isEven = (this.seqStep % 2 === 0);
+                const nextDelay = isEven ? 180 : 130;
+                this.seqTimer = setTimeout(() => {
+                    this.scheduleNextStep();
+                }, nextDelay);
             },
 
             tickSequencerStep() {
@@ -2520,38 +2775,69 @@
                 const z = (typeof getZone === 'function' && typeof depthLevel !== 'undefined') ? getZone(depthLevel) : this.currentZoneTrack;
                 this.currentZoneTrack = z;
 
+                // 4 Zone Musical Compositions (16 steps per cycle, 6 logical channels):
+                // Ch1: Lead Melody (vocal phrasing, rests, delayed vibrato)
+                // Ch2: Counter-Melody (contrary motion to Lead, fills gaps)
+                // Ch3: Harmony Shell Voicings (3rd + 7th, no doubled 5ths)
+                // Ch4: Bass (Roots/octaves below C3, tight & dry)
+                // Ch5: FM Percussion (Kick & Snare)
+                // Ch6: Inharmonic FM Hi-Hat
                 const patterns = {
-                    0: { // The Catacombs: Hymn of the Sepulcher (D minor)
-                        bass: [73.42, 0, 0, 0, 55.00, 0, 0, 0, 87.31, 0, 0, 0, 65.41, 0, 0, 0],
-                        lead: [293.66, 0, 349.23, 0, 440.00, 0, 349.23, 523.25, 0, 440.00, 0, 293.66, 349.23, 0, 293.66, 0],
-                        chime: [0, 587.33, 0, 440.00, 0, 0, 523.25, 0, 0, 698.46, 0, 587.33, 0, 440.00, 0, 880.00]
+                    0: { // Zone 0: The Catacombs - "HYMN OF THE SEPULCHER" (D Phrygian / Andalusian descent)
+                        lead:    [293.66, 0, 349.23, 0, 329.63, 0, 293.66, 0, 233.08, 0, 261.63, 0, 277.18, 0, 293.66, 0],
+                        counter: [0, 440.00, 0, 392.00, 0, 349.23, 0, 329.63, 0, 293.66, 0, 261.63, 0, 233.08, 0, 220.00],
+                        harmony: [[349.23, 523.25], 0, 0, 0, [329.63, 466.16], 0, 0, 0, [293.66, 440.00], 0, 0, 0, [277.18, 392.00], 0, 0, 0],
+                        bass:    [73.42, 0, 0, 73.42, 65.41, 0, 0, 65.41, 58.27, 0, 0, 58.27, 55.00, 0, 0, 55.00],
+                        perc:    [1, 0, 0, 0, 2, 0, 0, 0, 1, 0, 1, 0, 2, 0, 0, 0],
+                        hat:     [0, 1, 0, 1, 0, 1, 0, 2, 0, 1, 0, 1, 0, 1, 0, 2]
                     },
-                    1: { // Sunken Grotto: Bioluminescent Depths (E Dorian)
-                        bass: [82.41, 0, 0, 0, 61.74, 0, 0, 0, 98.00, 0, 0, 0, 73.42, 0, 0, 0],
-                        lead: [329.63, 0, 392.00, 0, 493.88, 0, 0, 587.33, 0, 493.88, 0, 392.00, 0, 329.63, 0, 493.88],
-                        chime: [0, 659.25, 0, 0, 783.99, 0, 659.25, 0, 0, 987.77, 0, 783.99, 0, 659.25, 0, 587.33]
+                    1: { // Zone 1: Sunken Grotto - "BIOLUMINESCENT DEPTHS" (E Dorian aquatic pulse)
+                        lead:    [392.00, 0, 0, 440.00, 0, 493.88, 0, 0, 587.33, 0, 554.37, 0, 493.88, 0, 392.00, 0],
+                        counter: [0, 659.25, 0, 0, 587.33, 0, 493.88, 0, 0, 440.00, 0, 369.99, 0, 329.63, 0, 440.00],
+                        harmony: [[392.00, 587.33], 0, 0, 0, [277.18, 392.00], 0, 0, 0, [293.66, 440.00], 0, 0, 0, [329.63, 493.88], 0, 0, 0],
+                        bass:    [82.41, 0, 82.41, 0, 55.00, 0, 0, 55.00, 61.74, 0, 61.74, 0, 69.30, 0, 0, 69.30],
+                        perc:    [1, 0, 0, 0, 2, 0, 0, 0, 0, 0, 1, 0, 2, 0, 0, 0],
+                        hat:     [0, 1, 1, 0, 0, 1, 0, 1, 0, 1, 1, 0, 0, 1, 0, 2]
                     },
-                    2: { // Forgotten Crypt: Requiem of the Lich (C minor)
-                        bass: [65.41, 0, 0, 0, 49.00, 0, 0, 0, 103.83, 0, 0, 0, 87.31, 0, 0, 0],
-                        lead: [261.63, 0, 311.13, 0, 392.00, 0, 415.30, 523.25, 0, 392.00, 0, 311.13, 415.30, 0, 261.63, 0],
-                        chime: [0, 523.25, 0, 392.00, 0, 622.25, 0, 0, 0, 783.99, 0, 523.25, 0, 392.00, 0, 622.25]
+                    2: { // Zone 2: Forgotten Crypt - "REQUIEM OF THE LICH" (C Gothic Dirge / Harmonic Minor)
+                        lead:    [311.13, 0, 392.00, 0, 415.30, 0, 392.00, 0, 349.23, 0, 311.13, 0, 293.66, 0, 246.94, 0],
+                        counter: [0, 523.25, 0, 493.88, 0, 523.25, 0, 622.25, 0, 587.33, 0, 523.25, 0, 415.30, 0, 392.00],
+                        harmony: [[311.13, 466.16], 0, 0, 0, [261.63, 392.00], 0, 0, 0, [207.65, 311.13], 0, 0, 0, [246.94, 349.23], 0, 0, 0],
+                        bass:    [65.41, 0, 130.81, 0, 51.91, 0, 103.83, 0, 43.65, 0, 87.31, 0, 49.00, 0, 98.00, 0],
+                        perc:    [1, 0, 0, 0, 2, 0, 1, 0, 1, 0, 0, 0, 2, 0, 1, 0],
+                        hat:     [1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 2]
                     },
-                    3: { // The Void Abyss: Astral Singularity (Ab minor)
-                        bass: [51.91, 0, 0, 0, 77.78, 0, 0, 0, 69.30, 0, 0, 0, 41.20, 0, 0, 0],
-                        lead: [415.30, 0, 493.88, 0, 622.25, 0, 659.25, 830.61, 0, 622.25, 0, 493.88, 415.30, 0, 622.25, 0],
-                        chime: [0, 830.61, 0, 622.25, 0, 0, 987.77, 0, 0, 1244.51, 0, 830.61, 0, 622.25, 0, 987.77]
+                    3: { // Zone 3: The Void Abyss - "ASTRAL SINGULARITY" (Ab Cosmic Lydian / Suspended Cascade)
+                        lead:    [783.99, 0, 0, 523.25, 0, 622.25, 0, 0, 698.46, 0, 0, 587.33, 0, 466.16, 0, 415.30],
+                        counter: [0, 311.13, 0, 0, 349.23, 0, 392.00, 0, 0, 466.16, 0, 0, 493.88, 0, 587.33, 0],
+                        harmony: [[261.63, 392.00], 0, 0, 0, [233.08, 349.23], 0, 0, 0, [233.08, 311.13], 0, 0, 0, [196.00, 277.18], 0, 0, 0],
+                        bass:    [51.91, 0, 0, 0, 46.25, 0, 0, 0, 43.65, 0, 0, 0, 41.20, 0, 0, 0],
+                        perc:    [1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0],
+                        hat:     [0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 2]
                     }
                 };
 
                 const pat = patterns[z] || patterns[0];
+
+                // Play 6 logical channels:
                 if (pat.bass && pat.bass[step]) {
-                    this.playFMNote(pat.bass[step], 0.40, 'bass', 0.65);
+                    this.playFmBass(pat.bass[step], 0.36, 0.68);
                 }
                 if (pat.lead && pat.lead[step]) {
-                    this.playFMNote(pat.lead[step], 0.35, 'lead', 0.50);
+                    this.playFmLead(pat.lead[step], 0.40, 0.55);
                 }
-                if (pat.chime && pat.chime[step]) {
-                    this.playFMNote(pat.chime[step], 0.38, 'chime', 0.42);
+                if (pat.counter && pat.counter[step]) {
+                    this.playFmCounter(pat.counter[step], 0.36, 0.45);
+                }
+                if (pat.harmony && pat.harmony[step]) {
+                    this.playFmHarmony(pat.harmony[step], 0.52, 0.38);
+                }
+                if (pat.perc && pat.perc[step]) {
+                    if (pat.perc[step] === 1) this.playFmKick(0.75);
+                    else if (pat.perc[step] === 2) this.playFmSnare(0.55);
+                }
+                if (pat.hat && pat.hat[step]) {
+                    this.playFmHiHat(0.35, pat.hat[step] === 2);
                 }
             },
 
@@ -2568,9 +2854,13 @@
                 }
                 if (!this.soundEnabled) {
                     this.stopAmbience();
+                    this.stopMusicSequencer();
                 } else {
                     if (this.ambienceEnabled) this.startAmbience();
-                    if (this.musicEnabled && !this.musicInitialized) this.initMusicSystem();
+                    if (this.musicEnabled) {
+                        if (!this.musicInitialized) this.initMusicSystem();
+                        else this.startMusicSequencer();
+                    }
                 }
                 logMessage(this.soundEnabled ? '🔊 Dungeon Audio & Procedural Sound FX: ENABLED.' : '🔇 Dungeon Audio & Sound FX: MUTED.', 'magic');
                 return this.soundEnabled;
@@ -3012,51 +3302,105 @@
                 this.init();
                 if (!this.ctx || !this.soundEnabled) return;
                 const now = this.ctx.currentTime;
-                const osc = this.ctx.createOscillator();
-                const gain = this.ctx.createGain();
-                osc.type = 'triangle';
-                osc.frequency.setValueAtTime(320, now);
-                osc.frequency.exponentialRampToValueAtTime(80, now + 0.12);
-                gain.gain.setValueAtTime(0.2, now);
-                gain.gain.linearRampToValueAtTime(0.01, now + 0.12);
-                osc.connect(gain);
-                gain.connect(this.masterGain);
-                osc.start(now);
-                osc.stop(now + 0.12);
+                try {
+                    const car = this.ctx.createOscillator();
+                    const mod = this.ctx.createOscillator();
+                    const modGain = this.ctx.createGain();
+                    const gain = this.ctx.createGain();
+
+                    mod.type = 'sine';
+                    mod.frequency.setValueAtTime(320 * 2.5, now);
+                    modGain.gain.setValueAtTime(320 * 3.5, now);
+                    modGain.gain.exponentialRampToValueAtTime(1.0, now + 0.12);
+                    mod.connect(modGain);
+                    modGain.connect(car.frequency);
+
+                    car.type = 'triangle';
+                    car.frequency.setValueAtTime(320, now);
+                    car.frequency.exponentialRampToValueAtTime(65, now + 0.12);
+
+                    gain.gain.setValueAtTime(0.0001, now);
+                    gain.gain.linearRampToValueAtTime(0.24, now + 0.004);
+                    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.12);
+
+                    car.connect(gain);
+                    gain.connect(this.masterGain);
+
+                    mod.start(now);
+                    car.start(now);
+                    mod.stop(now + 0.12);
+                    car.stop(now + 0.12);
+                } catch (e) {}
             },
 
             playMonsterDeath() {
                 this.init();
                 if (!this.ctx || !this.soundEnabled) return;
                 const now = this.ctx.currentTime;
-                const osc = this.ctx.createOscillator();
-                const gain = this.ctx.createGain();
-                osc.type = 'sawtooth';
-                osc.frequency.setValueAtTime(180, now);
-                osc.frequency.exponentialRampToValueAtTime(45, now + 0.35);
-                gain.gain.setValueAtTime(0.22, now);
-                gain.gain.linearRampToValueAtTime(0.01, now + 0.35);
-                osc.connect(gain);
-                gain.connect(this.masterGain);
-                osc.start(now);
-                osc.stop(now + 0.35);
+                try {
+                    const car = this.ctx.createOscillator();
+                    const mod = this.ctx.createOscillator();
+                    const modGain = this.ctx.createGain();
+                    const gain = this.ctx.createGain();
+
+                    mod.type = 'sawtooth';
+                    mod.frequency.setValueAtTime(220, now);
+                    modGain.gain.setValueAtTime(350, now);
+                    modGain.gain.exponentialRampToValueAtTime(1.0, now + 0.35);
+                    mod.connect(modGain);
+                    modGain.connect(car.frequency);
+
+                    car.type = 'triangle';
+                    car.frequency.setValueAtTime(180, now);
+                    car.frequency.exponentialRampToValueAtTime(35, now + 0.35);
+
+                    gain.gain.setValueAtTime(0.0001, now);
+                    gain.gain.linearRampToValueAtTime(0.24, now + 0.01);
+                    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.35);
+
+                    car.connect(gain);
+                    gain.connect(this.masterGain);
+
+                    mod.start(now);
+                    car.start(now);
+                    mod.stop(now + 0.35);
+                    car.stop(now + 0.35);
+                } catch (e) {}
             },
 
             playPlayerHurt() {
                 this.init();
                 if (!this.ctx || !this.soundEnabled) return;
                 const now = this.ctx.currentTime;
-                const osc = this.ctx.createOscillator();
-                const gain = this.ctx.createGain();
-                osc.type = 'square';
-                osc.frequency.setValueAtTime(140, now);
-                osc.frequency.exponentialRampToValueAtTime(50, now + 0.18);
-                gain.gain.setValueAtTime(0.25, now);
-                gain.gain.linearRampToValueAtTime(0.01, now + 0.18);
-                osc.connect(gain);
-                gain.connect(this.masterGain);
-                osc.start(now);
-                osc.stop(now + 0.18);
+                try {
+                    const car = this.ctx.createOscillator();
+                    const mod = this.ctx.createOscillator();
+                    const modGain = this.ctx.createGain();
+                    const gain = this.ctx.createGain();
+
+                    mod.type = 'square';
+                    mod.frequency.setValueAtTime(150 * 1.5, now);
+                    modGain.gain.setValueAtTime(450, now);
+                    modGain.gain.exponentialRampToValueAtTime(1.0, now + 0.18);
+                    mod.connect(modGain);
+                    modGain.connect(car.frequency);
+
+                    car.type = 'sawtooth';
+                    car.frequency.setValueAtTime(160, now);
+                    car.frequency.exponentialRampToValueAtTime(45, now + 0.18);
+
+                    gain.gain.setValueAtTime(0.0001, now);
+                    gain.gain.linearRampToValueAtTime(0.26, now + 0.005);
+                    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.18);
+
+                    car.connect(gain);
+                    gain.connect(this.masterGain);
+
+                    mod.start(now);
+                    car.start(now);
+                    mod.stop(now + 0.18);
+                    car.stop(now + 0.18);
+                } catch (e) {}
             },
 
             playShadowBolt() {
@@ -3151,73 +3495,158 @@
             playCoin() {
                 this.init();
                 if (!this.ctx || !this.soundEnabled) return;
-                const now = this.ctx.currentTime;
-                [987, 1318].forEach((freq, i) => {
-                    const osc = this.ctx.createOscillator();
-                    const gain = this.ctx.createGain();
-                    osc.type = 'sine';
-                    osc.frequency.setValueAtTime(freq, now + i * 0.08);
-                    gain.gain.setValueAtTime(0.14, now + i * 0.08);
-                    gain.gain.linearRampToValueAtTime(0.001, now + i * 0.08 + 0.16);
-                    osc.connect(gain);
-                    gain.connect(this.masterGain);
-                    osc.start(now + i * 0.08);
-                    osc.stop(now + i * 0.08 + 0.16);
-                });
+                try {
+                    const now = this.ctx.currentTime;
+                    // Crystalline 2-op FM bell cascade earcon (MUL 3.5, modIndex 4.5 -> 0)
+                    [987.77, 1318.51].forEach((freq, i) => {
+                        const t = now + i * 0.07;
+                        const car = this.ctx.createOscillator();
+                        const mod = this.ctx.createOscillator();
+                        const modGain = this.ctx.createGain();
+                        const gain = this.ctx.createGain();
+
+                        mod.type = 'sine';
+                        mod.frequency.setValueAtTime(freq * 3.5, t);
+                        modGain.gain.setValueAtTime(freq * 4.5, t);
+                        modGain.gain.exponentialRampToValueAtTime(1.0, t + 0.22);
+                        mod.connect(modGain);
+                        modGain.connect(car.frequency);
+
+                        car.type = 'sine';
+                        car.frequency.setValueAtTime(freq, t);
+
+                        gain.gain.setValueAtTime(0.0001, t);
+                        gain.gain.linearRampToValueAtTime(0.18, t + 0.005);
+                        gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.22);
+
+                        car.connect(gain);
+                        gain.connect(this.masterGain);
+
+                        mod.start(t);
+                        car.start(t);
+                        mod.stop(t + 0.22);
+                        car.stop(t + 0.22);
+                    });
+                } catch (e) {}
             },
 
             playMerchant() {
                 this.init();
                 if (!this.ctx || !this.soundEnabled) return;
-                const now = this.ctx.currentTime;
-                [523, 659, 784, 1046].forEach((freq, i) => {
-                    const osc = this.ctx.createOscillator();
-                    const gain = this.ctx.createGain();
-                    osc.type = 'triangle';
-                    osc.frequency.setValueAtTime(freq, now + i * 0.06);
-                    gain.gain.setValueAtTime(0.12, now + i * 0.06);
-                    gain.gain.linearRampToValueAtTime(0.001, now + i * 0.06 + 0.2);
-                    osc.connect(gain);
-                    gain.connect(this.masterGain);
-                    osc.start(now + i * 0.06);
-                    osc.stop(now + i * 0.06 + 0.2);
-                });
+                try {
+                    const now = this.ctx.currentTime;
+                    // Warm DX7/Rhodes electric piano chord (MUL 2.0, modIndex 2.8 -> 0.15)
+                    [523.25, 659.25, 783.99, 1046.50].forEach((freq, i) => {
+                        const t = now + i * 0.045;
+                        const dur = 0.28;
+                        const car = this.ctx.createOscillator();
+                        const mod = this.ctx.createOscillator();
+                        const modGain = this.ctx.createGain();
+                        const gain = this.ctx.createGain();
+
+                        mod.type = 'sine';
+                        mod.frequency.setValueAtTime(freq * 2.0, t);
+                        modGain.gain.setValueAtTime(freq * 2.6, t);
+                        modGain.gain.exponentialRampToValueAtTime(freq * 0.15, t + 0.08);
+                        modGain.gain.exponentialRampToValueAtTime(0.01, t + dur);
+                        mod.connect(modGain);
+                        modGain.connect(car.frequency);
+
+                        car.type = 'sine';
+                        car.frequency.setValueAtTime(freq, t);
+
+                        gain.gain.setValueAtTime(0.0001, t);
+                        gain.gain.linearRampToValueAtTime(0.14, t + 0.01);
+                        gain.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+
+                        car.connect(gain);
+                        gain.connect(this.masterGain);
+
+                        mod.start(t);
+                        car.start(t);
+                        mod.stop(t + dur);
+                        car.stop(t + dur);
+                    });
+                } catch (e) {}
             },
 
             playLevelUp() {
                 this.init();
                 if (!this.ctx || !this.soundEnabled) return;
-                const now = this.ctx.currentTime;
-                [523, 659, 784, 1046, 1318].forEach((freq, i) => {
-                    const osc = this.ctx.createOscillator();
-                    const gain = this.ctx.createGain();
-                    osc.type = 'sine';
-                    osc.frequency.setValueAtTime(freq, now + i * 0.08);
-                    gain.gain.setValueAtTime(0.15, now + i * 0.08);
-                    gain.gain.linearRampToValueAtTime(0.001, now + i * 0.08 + 0.22);
-                    osc.connect(gain);
-                    gain.connect(this.masterGain);
-                    osc.start(now + i * 0.08);
-                    osc.stop(now + i * 0.08 + 0.22);
-                });
+                try {
+                    const now = this.ctx.currentTime;
+                    // Heroic fanfare stinger with bright brass FM (MUL 1.0, modIndex 3.8 -> 0.4)
+                    const fanfareNotes = [523.25, 659.25, 783.99, 1046.50, 1318.51];
+                    fanfareNotes.forEach((freq, i) => {
+                        const t = now + i * 0.075;
+                        const dur = (i === fanfareNotes.length - 1) ? 0.45 : 0.16;
+                        const car = this.ctx.createOscillator();
+                        const mod = this.ctx.createOscillator();
+                        const modGain = this.ctx.createGain();
+                        const gain = this.ctx.createGain();
+
+                        mod.type = 'sine';
+                        mod.frequency.setValueAtTime(freq * 1.0, t);
+                        modGain.gain.setValueAtTime(freq * 3.8, t);
+                        modGain.gain.exponentialRampToValueAtTime(freq * 0.4, t + dur);
+                        mod.connect(modGain);
+                        modGain.connect(car.frequency);
+
+                        car.type = 'sine';
+                        car.frequency.setValueAtTime(freq, t);
+
+                        gain.gain.setValueAtTime(0.0001, t);
+                        gain.gain.linearRampToValueAtTime(0.20, t + 0.01);
+                        gain.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+
+                        car.connect(gain);
+                        gain.connect(this.masterGain);
+
+                        mod.start(t);
+                        car.start(t);
+                        mod.stop(t + dur);
+                        car.stop(t + dur);
+                    });
+                } catch (e) {}
             },
 
             playStairs() {
                 this.init();
                 if (!this.ctx || !this.soundEnabled) return;
-                const now = this.ctx.currentTime;
-                [260, 220, 175, 130].forEach((freq, i) => {
-                    const osc = this.ctx.createOscillator();
-                    const gain = this.ctx.createGain();
-                    osc.type = 'triangle';
-                    osc.frequency.setValueAtTime(freq, now + i * 0.09);
-                    gain.gain.setValueAtTime(0.16, now + i * 0.09);
-                    gain.gain.linearRampToValueAtTime(0.001, now + i * 0.09 + 0.25);
-                    osc.connect(gain);
-                    gain.connect(this.masterGain);
-                    osc.start(now + i * 0.09);
-                    osc.stop(now + i * 0.09 + 0.25);
-                });
+                try {
+                    const now = this.ctx.currentTime;
+                    // Abyssal descending resonance with hollow flute & sub rumble
+                    [293.66, 261.63, 220.00, 174.61, 130.81].forEach((freq, i) => {
+                        const t = now + i * 0.08;
+                        const dur = 0.32;
+                        const car = this.ctx.createOscillator();
+                        const mod = this.ctx.createOscillator();
+                        const modGain = this.ctx.createGain();
+                        const gain = this.ctx.createGain();
+
+                        mod.type = 'sine';
+                        mod.frequency.setValueAtTime(freq * 1.0, t);
+                        modGain.gain.setValueAtTime(freq * 1.5, t);
+                        modGain.gain.exponentialRampToValueAtTime(0.1, t + dur);
+                        mod.connect(modGain);
+                        modGain.connect(car.frequency);
+
+                        car.type = 'sine';
+                        car.frequency.setValueAtTime(freq, t);
+
+                        gain.gain.setValueAtTime(0.0001, t);
+                        gain.gain.linearRampToValueAtTime(0.16, t + 0.015);
+                        gain.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+
+                        car.connect(gain);
+                        gain.connect(this.masterGain);
+
+                        mod.start(t);
+                        car.start(t);
+                        mod.stop(t + dur);
+                        car.stop(t + dur);
+                    });
+                } catch (e) {}
             }
         };
 

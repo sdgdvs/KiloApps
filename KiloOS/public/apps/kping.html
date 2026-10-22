@@ -1112,7 +1112,7 @@ Press Enter or 'P' to Ping, 'X' for Subnet Topo, 'J' for Jitter Hist, 'B' for BG
 
   function cleanHost(val) {
     let h = (val || '').trim();
-    h = h.replace(/^https?:\/\//i, '');
+    h = h.replace(/^[a-z]+:\/\//i, '');
     h = h.replace(/\/.*$/, '');
     h = h.replace(/:\d+$/, '');
     return h || '127.0.0.1';
@@ -1229,7 +1229,7 @@ Press Enter or 'P' to Ping, 'X' for Subnet Topo, 'J' for Jitter Hist, 'B' for BG
       safeSetStorage('kping_sound_muted', soundMuted);
       updateSoundButton();
     }
-    if (saved.graphMode && (saved.graphMode === 'line' || saved.graphMode === 'hist' || saved.graphMode === 'strip')) {
+    if (saved.graphMode && (saved.graphMode === 'line' || saved.graphMode === 'hist' || saved.graphMode === 'strip' || saved.graphMode === 'jitter')) {
       setGraphMode(saved.graphMode);
     }
     if (saved.currentFilter && typeof setConsoleFilter === 'function') {
@@ -2598,7 +2598,6 @@ Press Enter or 'P' to Ping, 'X' for Subnet Topo, 'J' for Jitter Hist, 'B' for BG
       btnTrace.disabled = true;
       btnMTU.disabled = true;
       btnSubnet.disabled = true;
-      if (btnTopo) btnTopo.disabled = true;
       btnDNS.disabled = true;
       if (btnBGP) btnBGP.disabled = true;
       if (btnBloat) btnBloat.disabled = true;
@@ -2739,6 +2738,7 @@ Press Enter or 'P' to Ping, 'X' for Subnet Topo, 'J' for Jitter Hist, 'B' for BG
       btnAction.disabled = true;
       btnTrace.disabled = true;
       btnMTU.disabled = true;
+      if (btnTopo) btnTopo.disabled = true;
       btnDNS.disabled = true;
       if (btnBGP) btnBGP.disabled = true;
       if (btnBloat) btnBloat.disabled = true;
@@ -2787,6 +2787,7 @@ Press Enter or 'P' to Ping, 'X' for Subnet Topo, 'J' for Jitter Hist, 'B' for BG
       btnAction.disabled = false;
       btnTrace.disabled = false;
       btnMTU.disabled = false;
+      if (btnTopo) btnTopo.disabled = false;
       btnDNS.disabled = false;
       if (btnBGP) btnBGP.disabled = false;
       if (btnBloat) btnBloat.disabled = false;
@@ -3558,9 +3559,13 @@ Press Enter or 'P' to Ping, 'X' for Subnet Topo, 'J' for Jitter Hist, 'B' for BG
   };
 
   btnSubnet.onclick = () => {
-      if (isSubnetSweeping) stopSubnetSweep(true);
-          if (isTopoTracing) stopSubnetTrace(true);
-      else startSubnetSweep();
+      if (isSubnetSweeping) {
+          stopSubnetSweep(true);
+      } else if (isTopoTracing) {
+          stopSubnetTrace(true);
+      } else {
+          startSubnetSweep();
+      }
   };
 
   if (btnTopo) {
@@ -3577,9 +3582,11 @@ Press Enter or 'P' to Ping, 'X' for Subnet Topo, 'J' for Jitter Hist, 'B' for BG
   if (intervalPreset) {
       intervalPreset.onchange = () => {
           if (intervalPreset.value && intervalInput) {
-              intervalInput.value = intervalPreset.value;
+              const val = intervalPreset.value;
+              intervalInput.value = val;
+              intervalPreset.value = "";
               saveConfig();
-              showToast(`Pacing Interval: <strong>${intervalPreset.value}ms</strong>`, 'info', 1500);
+              showToast(`Pacing Interval: <strong>${val}ms</strong>`, 'info', 1500);
           }
       };
   }
@@ -3897,6 +3904,7 @@ Press Enter or 'P' to Ping, 'X' for Subnet Topo, 'J' for Jitter Hist, 'B' for BG
           if (isTracing) stopTrace(true);
           if (isMtuSweeping) stopMtuSweep();
           if (isSubnetSweeping) stopSubnetSweep(true);
+          if (isTopoTracing) stopSubnetTrace(true);
           if (isDnsInspecting) btnDNS.click();
           if (isBgpInspecting) btnBGP.click();
           if (isBloatTesting) stopBufferbloat(true);

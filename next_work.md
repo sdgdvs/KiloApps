@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-soundscape
-next_agent: kilo-tester
+current_agent: kilo-usability
+next_agent: kilo-qa
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -18,8 +18,8 @@ status: ready
 current_targets:
   kilo_creator: kweb://deep-core
   kilo_graphics: KRacer
-  kilo_soundscape: KAbyss
-  kilo_tester: KPing
+  kilo_soundscape: KRacer
+  kilo_tester: KBase
   kilo_usability: KTerminal
   kilo_qa: KCalc
   kilo_expander: KConverter
@@ -37,9 +37,9 @@ virtual_web_rotation:
 - kweb://deep-core
 - kweb://darknet
 last_run:
-  agent: kilo-graphics
-  app: KAbyss
-  timestamp: '2026-10-22T12:34:00-07:00'
+  agent: kilo-tester
+  app: KPing
+  timestamp: '2026-10-22T14:35:00-07:00'
 last_planner_run: '2026-10-21T23:32:00Z'
 ---
 
@@ -89,38 +89,38 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Upcoming Queue**: `KSpace`, `KTrader`.
 
 ### 3. Procedural Audio & Soundscape Queue (`kilo-soundscape`)
-- **Target**: `KSpace`
-- **Primary Files**: `KiloOS/public/apps/kspace.html`
-- **Objective**: Deep space exploration and asteroid mining retro audio suite: celestial ambient drones, mining laser resonance, mineral collection chimes, and warp drive sweeps.
+- **Target**: `KRacer`
+- **Primary Files**: `KiloOS/public/apps/kracer.html`
+- **Objective**: Arcade pseudo-3D racer chiptune suite: driving synthwave basslines, high-octane FM lead hooks, revving engine whine, and tire screech earcons.
 - **Action Steps**:
-  1. Inspect `KiloOS/public/apps/kspace.html` audio synthesis functions.
+  1. Inspect `KiloOS/public/apps/kracer.html` audio synthesis functions.
   2. Implement hardware composer chiptune standard:
-     - 3-Voice counterpoint: Lead melody, counter-melody/arpeggio, and punchy FM bassline.
-     - Shell voicings: Root + 3rd + 7th (omit 5ths).
-     - Swing-tick groove: 16-step rhythmic swing.
-     - SPC700 warm stereo slapback delay line (180ms with lowpass filtering).
+     - 6-Channel logical synthesis: Lead melody, counter-melody, shell voicings, punchy dry FM bass, kick/snare, and inharmonic hi-hat.
+     - Voice leading: Contrary motion and shell voicings (3rd + 7th).
+     - Swing-tick groove: 16-step rhythmic swing with alternating delays.
+     - Selective SPC700 stereo delay: Lead and counter wet; bass and drums strictly dry.
   3. Pure Web Audio synthesis with zero external audio assets.
 - **Verification**: `cd KiloOS && npm run build` (0 Vite errors). Confirm file size < 999 KB.
 - **Handoff**:
-  - In frontmatter: advance `current_targets.kilo_soundscape` to `KAbyss`.
+  - In frontmatter: advance `current_targets.kilo_soundscape` to `KMaze`.
   - Set current_agent: kilo-tester.
-  - Append terse execution log (≤6 lines), commit, and push.
-- **Upcoming Queue**: `KAbyss`, `KRacer`.
+  - Append terse execution log (≤8 lines), commit, and push.
+- **Upcoming Queue**: `KMaze`, `KRogue`.
 
 ### 4. App Tester Queue (`kilo-tester`)
-- **Target**: `KPing`
-- **Primary File**: `KiloOS/public/apps/kping.html`
-- **Objective**: Network latency & packet telemetry interactive UI audit: target selection, ping interval sliders, packet size controls, sweep controls, and shortcuts.
+- **Target**: `KBase`
+- **Primary File**: `KiloOS/public/apps/kbase.html`
+- **Objective**: Multi-base and radix converter interactive UI audit: bitwise mask tools, endianness toggles, and keyboard shortcuts.
 - **Action Steps**:
-  1. Run automated startup check: `uv run scripts/test_app_startup.py --app KPing`.
-  2. Audit all UI elements: ping triggers, interval inputs, sweep toggles, topology canvas, and keyboard hotkeys.
+  1. Run automated startup check: `uv run scripts/test_app_startup.py --app KBase`.
+  2. Audit all UI elements: base conversions, mask buttons, endian toggles, import/export, and shortcuts.
   3. Fix any broken button hooks, missing element IDs, or unhandled exceptions inline.
-- **Verification**: `uv run scripts/test_app_startup.py --app KPing` and `cd KiloOS && npm run build`. File size < 999 KB.
+- **Verification**: `uv run scripts/test_app_startup.py --app KBase` and `cd KiloOS && npm run build`. File size < 999 KB.
 - **Handoff**:
-  - In frontmatter: advance `current_targets.kilo_tester` to `KBase`.
+  - In frontmatter: advance `current_targets.kilo_tester` to `KPass`.
   - Set `current_agent: kilo-usability`.
   - Append terse execution log (≤6 lines), commit, and push.
-- **Upcoming Queue**: `KBase`, `KPass`, `KCalc`.
+- **Upcoming Queue**: `KPass`, `KCalc`.
 
 ### 5. Usability & UX Queue (`kilo-usability`)
 - **Target**: `KTerminal`
@@ -168,7 +168,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - In frontmatter: advance `current_targets.kilo_expander` to `KCalc`.
   - Set `current_agent: kilo-creator`.
   - Append terse execution log (≤6 lines), commit, and push.
-- **Upcoming Queue**: `KCalc`, `KPing`.
+- **Upcoming Queue**: `KCalc`.
 
 ---
 
@@ -208,10 +208,25 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | **KWords** | `KiloOS/public/apps/kwords.html` | Pass 5 (2026-10-21) | Word / Puzzle | Feature-complete retro word search with 20-stage campaign, 12 themes, custom puzzle creator/import/export, replay scrubber, dual Win32 native client parity, full F5/F9 state persistence, first-run tutorial integrity. |
 | **KColosseum** | KiloOS/public/apps/kcolosseum.html | Pass 5 (2026-10-21) | Strategy / RPG | Gladiatorial ludus management & 10-stage arena combat; 6 facility upgrades, F5/F9 state persistence, first-run tutorial integrity, replay telemetry, dual Win32 native client parity. |
 | **KPad** | `KiloOS/public/apps/kpad.html` | Pass 6+ (2026-10-22) | Office / Code Editor | Feature-complete multi-tab code & text workstation; markdown split preview, outline sidebar with touch drag, regex workbench, hex inspector, AES-256 lock, dual Win32 C parity, full F5/F9 state persistence. |
+| **KPing** | `KiloOS/public/apps/kping.html` | Pass 6+ (2026-10-22) | Network / Diagnostics | Precision ICMP echo, PMTU sweep, subnet LAN sweep & topo trace, DNS, BGP AS route, RFC 8290 bufferbloat, RTDB mesh, dual Win32 C parity, F5/F9 state. |
 
 ---
 
 ## Recent Execution Logs (Max 5 Entries)
+
+- **2026-10-22T14:35:00-07:00 — kilo-tester: KPing (UI Audit, In-Line Repairs & Mature Quarantine)**
+  - PASS ✅ (5 UI/event bugs fixed, clean dual-target parity, promoted to Mature).
+  - Subnet & Topo Controls: Fixed dangling else in `btnSubnet.onclick` triggering duplicate starts; unblocked `btnTopo` from self-disabling on start; added topo trace cancellation to Escape listener.
+  - Controls & State: Added RFC 3550 `'jitter'` mode restore to `quickloadState` [F9]; auto-reset `intervalPreset` dropdown after selection; generalized `cleanHost` URI protocol stripper.
+  - Dual Parity & Build: Verified native `KPing.exe` (46.5 KB < 999 KB) and Web `kping.html` (171.7 KB < 999 KB).
+  - Verification: `test_app_startup` PASS (0 errors), KiloOS `npm run build` PASS (0 errors), `byte_budget_gate` PASS, `security_lint` PASS.
+  - Mature Quarantine: Promoted KPing to Mature Applications archive; advanced queue to KBase; rotated agent to kilo-usability.
+
+- **2026-10-22T13:38:00-07:00 — kilo-soundscape: KAbyss (Procedural Audio & Delay DSP Suite)**
+  - PASS ✅ (Genesis YM2612 2-Op FM soundscape with dry bass/percussion and wet stereo delay).
+  - Audio Architecture: Dual bus topology (dry bass/kicks + wet leads/counterpoint); 3-voice counterpoint and delayed vibrato.
+  - Parity & Verification: Native KAbyss.exe (242.5 KB < 999 KB) and Web kabyss.html (499.5 KB < 999 KB); test_app_startup PASS; KiloOS npm build PASS (0 errors).
+  - Queue Handoff: Advanced kilo_soundscape to KRacer; rotated current_agent to kilo-tester.
 
 - **2026-10-22T12:34:00-07:00 — kilo-graphics: KAbyss (Asset Suitability Audit & Glint Sweep)**
   - ⏭️ Skip — Imagen 3 asset replacement not appropriate for KAbyss
@@ -224,8 +239,6 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - PASS ✅ (Implemented Tab 17 Phase-Locked Loop demodulator, Costas I/Q phase plane scope, and cross-strata airgap bridge).
   - PLL & Demodulation: Coherent carrier tracking (1999Hz, 1200/2200Hz AFSK, 999.5Hz, 432Hz), loop filter bandwidths, and auto-acquire lock.
   - Costas I/Q Phase Scope: Real-time vector constellation canvas with phosphor persistence decay and phase slip generator.
-  - Airgap Packet Bridge: Cross-node packet dissection (10.19.99.1/4/19/127), CRC-16 check, .CAP log export, and clipboard copy.
-  - Audio Architecture: Procedural YM2612 2-Op FM + SPC700 stereo delay warmth monitor & AFSK chirp synthesis (zero external assets).
   - Dual Parity & Build: KNet Win32 C parity updated & compiled (46.0 KB < 999 KB); echo_subsystem.html verified (586.8 KB < 999 KB).
   - Verification: npm run build in KiloOS PASS (0 errors); test_app_startup PASS on KNet (189.8 KB); byte_budget_gate PASS.
   - Queue Handoff: Advanced kilo_creator and virtual_web_target to kweb://deep-core; rotated current_agent to kilo-graphics.
@@ -238,14 +251,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Dual Parity & Build: Verified native KBase.exe (26.6 KB < 999 KB) and Web kbase.html (157.4 KB).
   - Verification: test_app_startup PASS, KiloOS npm build PASS (0 errors), security_lint PASS.
   - Queue Handoff: Advanced current_targets.kilo_expander to KConverter; rotated current_agent to kilo-creator.
-
-- **2026-10-22T07:18:00-07:00 — kilo-qa: KPuzzle (Pass 5 QA & Build Audit)**
-  - ⏭️ Skip — KPuzzle does not exist in fleet catalog; advanced target to KCalc.
-
-- **2026-10-22T06:36:00-07:00 — kilo-usability: KPad (UI/UX Ergonomics & Mature Quarantine)**
-  - PASS ✅ (Layout responsiveness, touch outline splitter, modal enter guards, and mature quarantine).
-  - Modal Ergonomics: Fixed global Enter listener to guard interactive inputs (search, go-to-line, encryption passphrase) against premature modal dismissal.
-  - Touch & Small Viewports: Added touch drag gestures (`touchstart`/`touchmove`/`touchend`) to outline splitter; constrained user-opened outline width to 75vw on mobile.
-  - HiDPI & Splitter: Verified canvas minimap devicePixelRatio rendering and preview ratio drag mechanics.
-  - Parity & Verification: Native KPad.exe clean build (38.9 KB < 999 KB); test_app_startup PASS (331.0 KB); KiloOS build PASS (0 errors); byte_budget_gate PASS; security_lint PASS.
-  - Mature Quarantine: Promoted KPad to Mature Applications archive; advanced queue to KTerminal.
