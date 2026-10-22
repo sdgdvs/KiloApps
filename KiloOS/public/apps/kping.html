@@ -136,6 +136,9 @@
   .btn-mtu:hover { background: var(--purple-hover); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(139, 92, 246, 0.4); }
   .btn-subnet { background: var(--cyan); color: #0f172a; font-weight: 700; }
   .btn-subnet:hover { background: var(--cyan-hover); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(6, 182, 212, 0.4); }
+  .btn-topo { background: linear-gradient(135deg, #4f46e5 0%, #06b6d4 100%); color: white; font-weight: 700; }
+  .btn-topo:hover { background: linear-gradient(135deg, #6366f1 0%, #22d3ee 100%); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(79, 70, 229, 0.4); }
+  .status-badge.topo { background: rgba(79, 70, 229, 0.25); color: #818cf8; }
   .btn-dns { background: var(--emerald); color: white; }
   .btn-dns:hover { background: var(--emerald-hover); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4); }
   .btn-mesh { background: linear-gradient(135deg, #0284c7 0%, #0d9488 100%); color: white; font-weight: 700; }
@@ -416,9 +419,20 @@
         <label for="size">Size (B)</label>
         <input type="number" id="size" value="32" min="1" max="65500" title="Payload buffer size in bytes (excludes 28B header)">
       </div>
-      <div class="input-group interval-group" style="width: 58px;">
+      <div class="input-group interval-group" style="width: 86px;">
         <label for="interval">Int(ms)</label>
-        <input type="number" id="interval" value="1000" min="50" max="5000" step="50" title="Packet interval pacing (50ms burst to 5000ms slow pulse)">
+        <div style="display:flex; gap:2px; align-items:center;">
+          <input type="number" id="interval" value="1000" min="50" max="5000" step="50" style="width:58px;" title="Packet interval pacing (50ms burst to 5000ms slow pulse)">
+          <select id="intervalPreset" title="Quick Interval Presets (50ms - 2500ms)" style="padding:4px 2px; font-size:10px; width:24px; cursor:pointer;">
+            <option value="" disabled selected>▼</option>
+            <option value="50">50ms (Flood/Turbo)</option>
+            <option value="100">100ms (Burst)</option>
+            <option value="200">200ms (Gaming)</option>
+            <option value="500">500ms (VoIP)</option>
+            <option value="1000">1000ms (Standard)</option>
+            <option value="2500">2500ms (Slow Pulse)</option>
+          </select>
+        </div>
       </div>
       <div class="input-group pattern-group" style="width: 104px;">
         <label for="patternSelect">Pattern</label>
@@ -475,6 +489,7 @@
         <button id="btnTrace" class="btn btn-primary" title="Start/Stop Route Trace [T]">Trace <span class="kbd-badge">T</span></button>
         <button id="btnMTU" class="btn btn-mtu" title="Path MTU Discovery [M]">MTU <span class="kbd-badge">M</span></button>
         <button id="btnSubnet" class="btn btn-subnet" title="Subnet LAN Discovery Sweep [S]">Subnet <span class="kbd-badge">S</span></button>
+        <button id="btnTopo" class="btn btn-topo" title="Subnet Topology & Multi-Hop Traceroute [X]">Topo <span class="kbd-badge">X</span></button>
         <button id="btnDNS" class="btn btn-dns" title="DNS & IP Inspector [D]">DNS <span class="kbd-badge">D</span></button>
         <button id="btnBGP" class="btn btn-bgp" title="BGP AS Route Transit Inspector [B]">BGP <span class="kbd-badge">B</span></button>
         <button id="btnBloat" class="btn btn-bloat" title="Bufferbloat & AQM Latency Under Load Audit [Q]">Bloat <span class="kbd-badge">Q</span></button>
@@ -515,9 +530,9 @@
         </div>
       </div>
       <textarea id="out" readonly spellcheck="false" role="log" aria-live="polite" aria-atomic="false">Welcome to KPing Network Diagnostics Suite.
-Modes: Ping [P], Route Trace [T], Path MTU [M], Subnet LAN Sweep [S], DNS Inspector [D], BGP [B], Bloat [Q], Global Mesh [G].
+Modes: Ping [P], Route Trace [T], Path MTU [M], Subnet LAN Sweep [S], Subnet Topo [X], DNS [D], BGP [B], Bloat [Q], Mesh [G].
 Metrics: Mean Jitter (RFC 3550), Std Dev, VoIP MOS Quality Score, SLA Rating.
-Press Enter or 'P' to Ping, 'B' for BGP, 'Q' for Bloat, 'G' for Global Mesh, F5/F9 to Save/Load, or 'F1' for Help.
+Press Enter or 'P' to Ping, 'X' for Subnet Topo, 'J' for Jitter Hist, 'B' for BGP, 'Q' for Bloat, F5/F9 to Save/Load, or 'F1' for Help.
 
 </textarea>
     </div>
@@ -552,7 +567,8 @@ Press Enter or 'P' to Ping, 'B' for BGP, 'Q' for Bloat, 'G' for Global Mesh, F5/
         <span style="font-size: 10px; color: var(--text-muted); position: absolute; top: 2px; left: 8px; font-family: monospace;">Latency & Jitter Telemetry (ms)</span>
         <div class="graph-mode-pills">
           <button id="btnModeLine" class="g-pill active" title="Latency Trend Line">Line</button>
-          <button id="btnModeHist" class="g-pill" title="Jitter Distribution Histogram">Hist</button>
+          <button id="btnModeHist" class="g-pill" title="RTT Latency Distribution Histogram">Hist</button>
+          <button id="btnModeJitter" class="g-pill" title="RFC 3550 Inter-Packet Jitter Histogram [J]">Jitter</button>
           <button id="btnModeStrip" class="g-pill" title="Packet Timeline Strip">Strip</button>
         </div>
         <canvas id="graphCanvas" role="img" aria-label="Network latency and jitter telemetry chart"></canvas>
@@ -859,6 +875,10 @@ Press Enter or 'P' to Ping, 'B' for BGP, 'Q' for Bloat, 'G' for Global Mesh, F5/
   const btnMTU = document.getElementById('btnMTU');
   const btnTrace = document.getElementById('btnTrace');
   const btnSubnet = document.getElementById('btnSubnet');
+  const btnTopo = document.getElementById('btnTopo');
+  const btnModeJitter = document.getElementById('btnModeJitter');
+  const intervalPreset = document.getElementById('intervalPreset');
+  let isTopoTracing = false;
   const btnDNS = document.getElementById('btnDNS');
   const btnBGP = document.getElementById('btnBGP');
   const btnBloat = document.getElementById('btnBloat');
@@ -1273,6 +1293,9 @@ Press Enter or 'P' to Ping, 'B' for BGP, 'Q' for Bloat, 'G' for Global Mesh, F5/
     } else if (mode === 'subnet') {
       statusBadge.classList.add('subnet');
       statusText.textContent = 'SUBNET SWEEP';
+    } else if (mode === 'topo') {
+      statusBadge.classList.add('topo');
+      statusText.textContent = 'SUBNET TOPO';
     } else if (mode === 'dns') {
       statusBadge.classList.add('dns');
       statusText.textContent = 'DNS QUERY';
@@ -1390,9 +1413,10 @@ Press Enter or 'P' to Ping, 'B' for BGP, 'Q' for Bloat, 'G' for Global Mesh, F5/
 
   function setGraphMode(mode) {
     graphMode = mode;
-    [btnModeLine, btnModeHist, btnModeStrip].forEach(b => b.classList.remove('active'));
+    [btnModeLine, btnModeHist, btnModeJitter, btnModeStrip].forEach(b => { if (b) b.classList.remove('active'); });
     if (mode === 'line') btnModeLine.classList.add('active');
     else if (mode === 'hist') btnModeHist.classList.add('active');
+    else if (mode === 'jitter') { if (btnModeJitter) btnModeJitter.classList.add('active'); }
     else if (mode === 'strip') btnModeStrip.classList.add('active');
     drawGraph();
   }
@@ -1655,7 +1679,7 @@ Press Enter or 'P' to Ping, 'B' for BGP, 'Q' for Bloat, 'G' for Global Mesh, F5/
   }
 
   function isBusy() {
-      return isPinging || isTracing || isMtuSweeping || isSubnetSweeping || isDnsInspecting || isBgpInspecting || isBloatTesting || isMeshPinging;
+      return isPinging || isTracing || isMtuSweeping || isSubnetSweeping || isTopoTracing || isDnsInspecting || isBgpInspecting || isBloatTesting || isMeshPinging;
   }
 
   function classifyIP(ip) {
@@ -1727,6 +1751,7 @@ Press Enter or 'P' to Ping, 'B' for BGP, 'Q' for Bloat, 'G' for Global Mesh, F5/
       btnTrace.disabled = true;
       btnMTU.disabled = true;
       btnSubnet.disabled = true;
+      if (btnTopo) btnTopo.disabled = true;
       btnDNS.disabled = true;
       btnBGP.disabled = true;
       if (btnBloat) btnBloat.disabled = true;
@@ -1872,6 +1897,8 @@ Press Enter or 'P' to Ping, 'B' for BGP, 'Q' for Bloat, 'G' for Global Mesh, F5/
 
       if (graphMode === 'hist') {
         drawHistogram(w, h);
+      } else if (graphMode === 'jitter') {
+        drawJitterHistogram(w, h);
       } else if (graphMode === 'strip') {
         drawPacketStrip(w, h, hoverIdx);
       } else {
@@ -1998,6 +2025,77 @@ Press Enter or 'P' to Ping, 'B' for BGP, 'Q' for Bloat, 'G' for Global Mesh, F5/
               }
           }
       }
+  }
+
+  function drawJitterHistogram(w, h) {
+      const paddingLeft = 32;
+      const paddingRight = 14;
+      const paddingTop = 20;
+      const paddingBottom = 22;
+      const plotW = w - paddingLeft - paddingRight;
+      const plotH = h - paddingTop - paddingBottom;
+      if (plotW <= 0 || plotH <= 0) return;
+
+      const valid = historyData.filter(d => d !== null);
+      if (valid.length < 2) {
+        ctx.fillStyle = 'rgba(148, 163, 184, 0.5)';
+        ctx.font = '11px Consolas, monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText("Need >= 2 packet samples for jitter variation", w / 2, h / 2 + 4);
+        return;
+      }
+
+      // Compute RFC 3550 inter-packet delay variation
+      const deltas = [];
+      for (let i = 1; i < valid.length; i++) {
+        deltas.push(Math.abs(valid[i] - valid[i-1]));
+      }
+
+      const buckets = [
+        { label: "<2ms", count: 0, color: "#10b981", desc: "Ultra-Stable" },
+        { label: "2-4ms", count: 0, color: "#3b82f6", desc: "Optimal" },
+        { label: "5-9ms", count: 0, color: "#06b6d4", desc: "Moderate" },
+        { label: "10-19ms", count: 0, color: "#f59e0b", desc: "Noticeable" },
+        { label: ">=20ms", count: 0, color: "#ef4444", desc: "High Jitter" }
+      ];
+
+      deltas.forEach(d => {
+        if (d < 2) buckets[0].count++;
+        else if (d < 5) buckets[1].count++;
+        else if (d < 10) buckets[2].count++;
+        else if (d < 20) buckets[3].count++;
+        else buckets[4].count++;
+      });
+
+      const maxCount = Math.max(1, ...buckets.map(b => b.count));
+      const barW = Math.min(54, (plotW / buckets.length) - 10);
+      const stepX = plotW / buckets.length;
+
+      buckets.forEach((b, idx) => {
+        const x = paddingLeft + idx * stepX + (stepX - barW) / 2;
+        const barH = (b.count / maxCount) * (plotH - 12);
+        const y = paddingTop + plotH - barH;
+
+        ctx.fillStyle = b.color;
+        ctx.beginPath();
+        if (typeof ctx.roundRect === 'function') {
+          ctx.roundRect(x, y, barW, barH, [4, 4, 0, 0]);
+        } else {
+          ctx.fillRect(x, y, barW, barH);
+        }
+        ctx.fill();
+
+        ctx.fillStyle = '#ffffff';
+        ctx.font = '10px Consolas, monospace';
+        ctx.textAlign = 'center';
+        if (b.count > 0) {
+          ctx.fillText(b.count, x + barW / 2, y - 4);
+        }
+
+        ctx.fillStyle = 'rgba(148, 163, 184, 0.85)';
+        ctx.font = '9.5px Consolas, monospace';
+        ctx.fillText(b.label, x + barW / 2, paddingTop + plotH + 13);
+      });
   }
 
   function drawHistogram(w, h) {
@@ -2206,6 +2304,7 @@ Press Enter or 'P' to Ping, 'B' for BGP, 'Q' for Bloat, 'G' for Global Mesh, F5/
       btnTrace.disabled = false;
       btnMTU.disabled = false;
       btnSubnet.disabled = false;
+      if (btnTopo) btnTopo.disabled = false;
       btnDNS.disabled = false;
       if (btnBGP) btnBGP.disabled = false;
       if (btnBloat) btnBloat.disabled = false;
@@ -2223,6 +2322,27 @@ Press Enter or 'P' to Ping, 'B' for BGP, 'Q' for Bloat, 'G' for Global Mesh, F5/
           append(`Approximate round trip times in milli-seconds:\n`, 'summary_times_header');
           append(`    Minimum = ${min}ms, Maximum = ${max}ms, Average = ${avg}ms, Jitter = ${valJitter.textContent}\n`, 'summary_times', { min, max, avg });
           append(`    VoIP MOS Score = ${valMOS.textContent}/4.5, SLA Compliance = ${valSLA.textContent}\n`, 'summary_sla');
+
+          const valid = historyData.filter(d => d !== null);
+          if (valid.length > 1) {
+              const jDeltas = [];
+              for (let i = 1; i < valid.length; i++) jDeltas.push(Math.abs(valid[i] - valid[i-1]));
+              let jb1 = 0, jb2 = 0, jb3 = 0, jb4 = 0, jb5 = 0;
+              jDeltas.forEach(d => {
+                  if (d < 2) jb1++;
+                  else if (d < 5) jb2++;
+                  else if (d < 10) jb3++;
+                  else if (d < 20) jb4++;
+                  else jb5++;
+              });
+              const totalJ = jDeltas.length;
+              append(`\nRFC 3550 Inter-Packet Jitter (Delay Variation) Distribution:\n`, 'summary_jitter_header');
+              append(`    [ < 2ms   ] : ${'#'.repeat(Math.min(20, Math.round((jb1/totalJ)*20))).padEnd(20, ' ')} (${jb1}) [${Math.round((jb1/totalJ)*100)}%] - Ultra-Stable\n`, 'summary_jitter');
+              append(`    [ 2-4ms   ] : ${'#'.repeat(Math.min(20, Math.round((jb2/totalJ)*20))).padEnd(20, ' ')} (${jb2}) [${Math.round((jb2/totalJ)*100)}%] - Optimal\n`, 'summary_jitter');
+              append(`    [ 5-9ms   ] : ${'#'.repeat(Math.min(20, Math.round((jb3/totalJ)*20))).padEnd(20, ' ')} (${jb3}) [${Math.round((jb3/totalJ)*100)}%] - Moderate\n`, 'summary_jitter');
+              append(`    [ 10-19ms ] : ${'#'.repeat(Math.min(20, Math.round((jb4/totalJ)*20))).padEnd(20, ' ')} (${jb4}) [${Math.round((jb4/totalJ)*100)}%] - Noticeable\n`, 'summary_jitter');
+              append(`    [ >= 20ms ] : ${'#'.repeat(Math.min(20, Math.round((jb5/totalJ)*20))).padEnd(20, ' ')} (${jb5}) [${Math.round((jb5/totalJ)*100)}%] - High Jitter\n`, 'summary_jitter');
+          }
       }
       playCompleteSound();
       showToast(`Ping completed (${lossPercent}% loss)`, lossPercent === 0 ? 'success' : 'warning', 3000);
@@ -2255,6 +2375,7 @@ Press Enter or 'P' to Ping, 'B' for BGP, 'Q' for Bloat, 'G' for Global Mesh, F5/
       btnAction.disabled = true;
       btnTrace.disabled = true;
       btnSubnet.disabled = true;
+      if (btnTopo) btnTopo.disabled = true;
       btnDNS.disabled = true;
       if (btnBGP) btnBGP.disabled = true;
       if (btnBloat) btnBloat.disabled = true;
@@ -2303,6 +2424,7 @@ Press Enter or 'P' to Ping, 'B' for BGP, 'Q' for Bloat, 'G' for Global Mesh, F5/
       btnAction.disabled = false;
       btnTrace.disabled = false;
       btnSubnet.disabled = false;
+      if (btnTopo) btnTopo.disabled = false;
       btnDNS.disabled = false;
       if (btnBGP) btnBGP.disabled = false;
       if (btnBloat) btnBloat.disabled = false;
@@ -2341,6 +2463,7 @@ Press Enter or 'P' to Ping, 'B' for BGP, 'Q' for Bloat, 'G' for Global Mesh, F5/
       btnAction.disabled = false;
       btnTrace.disabled = false;
       btnSubnet.disabled = false;
+      if (btnTopo) btnTopo.disabled = false;
       btnDNS.disabled = false;
       if (btnBGP) btnBGP.disabled = false;
       if (btnBloat) btnBloat.disabled = false;
@@ -2372,6 +2495,7 @@ Press Enter or 'P' to Ping, 'B' for BGP, 'Q' for Bloat, 'G' for Global Mesh, F5/
       btnAction.disabled = true;
       btnMTU.disabled = true;
       btnSubnet.disabled = true;
+      if (btnTopo) btnTopo.disabled = true;
       btnDNS.disabled = true;
       if (btnBGP) btnBGP.disabled = true;
       if (btnBloat) btnBloat.disabled = true;
@@ -2424,6 +2548,7 @@ Press Enter or 'P' to Ping, 'B' for BGP, 'Q' for Bloat, 'G' for Global Mesh, F5/
       btnAction.disabled = false;
       btnMTU.disabled = false;
       btnSubnet.disabled = false;
+      if (btnTopo) btnTopo.disabled = false;
       btnDNS.disabled = false;
       if (btnBGP) btnBGP.disabled = false;
       if (btnBloat) btnBloat.disabled = false;
@@ -2432,6 +2557,152 @@ Press Enter or 'P' to Ping, 'B' for BGP, 'Q' for Bloat, 'G' for Global Mesh, F5/
       if (manual) {
           append(`\n[!] Route trace cancelled by user.\n\n`, 'warning');
           showToast("Route trace cancelled", "warning", 2500);
+      }
+  }
+
+  // Subnet Topology & Multi-Hop ICMP Traceroute
+  function startSubnetTrace() {
+      if (isBusy()) return;
+      currentHost = cleanHost(hostInput.value);
+      hostInput.value = currentHost;
+      saveConfig();
+      out.value = "";
+      allConsoleLines = [];
+      logEntries = [];
+      historyData = [];
+      valJitter.textContent = "-";
+      valLoss.textContent = "-";
+      drawGraph();
+
+      let prefix = "192.168.1.";
+      const parts = currentHost.split('.');
+      if (parts.length === 4 && parts.every(p => !isNaN(parseInt(p)))) {
+          prefix = `${parts[0]}.${parts[1]}.${parts[2]}.`;
+      } else if (currentHost.startsWith("10.19.99.")) {
+          prefix = "10.19.99.";
+      }
+
+      append(`============================================================\n`, 'trace_header');
+      append(` KPing Subnet ICMP Echo Topology & Traceroute\n`, 'trace_header');
+      append(` Subnet Scope: ${prefix}0/24 (Target Anchor: ${currentHost})\n`, 'trace_header');
+      append(` Interrogating multi-hop topology, gateway fabric & node branches...\n`, 'trace_header');
+      append(`============================================================\n\n`, 'trace_header');
+
+      isTopoTracing = true;
+      setStatus('topo');
+      if (btnTopo) {
+          btnTopo.innerHTML = 'Stop <span class="kbd-badge">X</span>';
+          btnTopo.className = 'btn btn-danger';
+      }
+      btnAction.disabled = true;
+      btnTrace.disabled = true;
+      btnMTU.disabled = true;
+      btnSubnet.disabled = true;
+      if (btnTopo) btnTopo.disabled = true;
+      btnDNS.disabled = true;
+      if (btnBGP) btnBGP.disabled = true;
+      if (btnBloat) btnBloat.disabled = true;
+      if (btnMesh) btnMesh.disabled = true;
+      setInputsDisabled(true);
+
+      const topoNodes = [
+        { hop: "1", name: "Default Gateway / Catalyst L3", ip: `${prefix}1`, vendor: "Cisco Systems", minLat: 0.3, maxLat: 1.2 },
+        { hop: "2", name: "Managed LAN Core Switch", ip: `${prefix}254`, vendor: "3Com SuperStack 100TX", minLat: 0.8, maxLat: 2.1 },
+        { hop: "3a", name: "Primary DNS / WINS Resolver", ip: `${prefix}2`, vendor: "Sun Microsystems (Solaris)", minLat: 1.1, maxLat: 2.8 },
+        { hop: "3b", name: "Storage / NFS File Server", ip: `${prefix}15`, vendor: "Silicon Graphics (IRIX)", minLat: 1.4, maxLat: 3.2 },
+        { hop: "3c", name: "Workstation Alpha (DHCP)", ip: `${prefix}42`, vendor: "Intel Fast Ethernet", minLat: 1.6, maxLat: 3.5 },
+        { hop: "3d", name: "Network Spooler / Print Server", ip: `${prefix}70`, vendor: "Hewlett-Packard JetDirect", minLat: 2.0, maxLat: 4.5 },
+        { hop: "4", name: "Subnet Uplink / Fiber Demarc", ip: prefix.startsWith("10.19.") ? "10.19.99.1" : "10.19.99.1", vendor: "KiloNet Core Router", minLat: 5.2, maxLat: 9.8 },
+        { hop: "5", name: "Regional Transit Edge PoP", ip: "198.51.100.25", vendor: "Autonomous System Transit", minLat: 12.0, maxLat: 18.5 }
+      ];
+
+      let step = 0;
+      showToast(`Tracing subnet topology <strong>${escapeHtml(prefix)}0/24</strong>...`, 'info', 2500);
+
+      if (pingInterval) clearInterval(pingInterval);
+      pingInterval = setInterval(() => {
+          if (step >= topoNodes.length) {
+              finishSubnetTrace(prefix, topoNodes);
+              return;
+          }
+
+          const node = topoNodes[step];
+          const t1 = Math.round((node.minLat + Math.random() * (node.maxLat - node.minLat)) * 10) / 10;
+          const t2 = Math.round((node.minLat + Math.random() * (node.maxLat - node.minLat)) * 10) / 10;
+          const t3 = Math.round((node.minLat + Math.random() * (node.maxLat - node.minLat)) * 10) / 10;
+          const avg = Math.round(((t1 + t2 + t3) / 3) * 10) / 10;
+
+          historyData.push(Math.round(avg));
+          if (historyData.length > 200) historyData.shift();
+          drawGraph();
+
+          const hopStr = `Hop ${node.hop}`;
+          append(`[${hopStr.padEnd(8, ' ')}] ${t1}ms  ${t2}ms  ${t3}ms (avg ${avg}ms) -> ${node.ip.padEnd(16, ' ')} | ${node.name} [${node.vendor}]\n`, 'trace_hop', { hop: node.hop, ip: node.ip, avg, name: node.name });
+          playTraceSound();
+          step++;
+      }, 550);
+  }
+
+  function finishSubnetTrace(prefix, topoNodes) {
+      clearInterval(pingInterval);
+      pingInterval = null;
+      isTopoTracing = false;
+      setStatus('idle');
+      if (btnTopo) {
+          btnTopo.innerHTML = 'Topo <span class="kbd-badge">X</span>';
+          btnTopo.className = 'btn btn-topo';
+      }
+      btnAction.disabled = false;
+      btnTrace.disabled = false;
+      btnMTU.disabled = false;
+      btnSubnet.disabled = false;
+      if (btnTopo) btnTopo.disabled = false;
+      btnDNS.disabled = false;
+      if (btnBGP) btnBGP.disabled = false;
+      if (btnBloat) btnBloat.disabled = false;
+      if (btnMesh) btnMesh.disabled = false;
+      setInputsDisabled(false);
+
+      append(`\n------------------------------------------------------------\n`, 'subnet_summary');
+      append(` ICMP Echo Topology Map for Subnet ${prefix}0/24:\n`, 'subnet_summary');
+      append(`------------------------------------------------------------\n`, 'subnet_summary');
+      append(` [Local Host: ${prefix}42 (Current Station)]\n`, 'subnet_summary');
+      append(`    |-- [Hop 1: Default Gateway]  ${prefix}1 (Cisco Catalyst L3)\n`, 'subnet_summary');
+      append(`    |     +-- [Hop 2: Core Switch] ${prefix}254 (3Com 100BASE-TX Fabric)\n`, 'subnet_summary');
+      append(`    |     |     |-- [DNS/WINS]     ${prefix}2 (Sun Solaris Server)\n`, 'subnet_summary');
+      append(`    |     |     |-- [NFS/Data]     ${prefix}15 (SGI IRIX Storage)\n`, 'subnet_summary');
+      append(`    |     |     |-- [Workstation]  ${prefix}42 (Intel Fast Eth)\n`, 'subnet_summary');
+      append(`    |     |     \\-- [Printer]      ${prefix}70 (HP JetDirect)\n`, 'subnet_summary');
+      append(`    |     +-- [Hop 4: Uplink]      10.19.99.1 (Fiber Demarcation)\n`, 'subnet_summary');
+      append(`    |           \\-- [Hop 5: WAN]   198.51.100.25 (Regional Transit AS)\n`, 'subnet_summary');
+      append(`------------------------------------------------------------\n\n`, 'subnet_summary');
+      playCompleteSound();
+      showToast("Subnet Topology Trace complete", "success", 3000);
+  }
+
+  function stopSubnetTrace(manual = true) {
+      if (!isTopoTracing) return;
+      clearInterval(pingInterval);
+      pingInterval = null;
+      isTopoTracing = false;
+      setStatus('idle');
+      if (btnTopo) {
+          btnTopo.innerHTML = 'Topo <span class="kbd-badge">X</span>';
+          btnTopo.className = 'btn btn-topo';
+      }
+      btnAction.disabled = false;
+      btnTrace.disabled = false;
+      btnMTU.disabled = false;
+      btnSubnet.disabled = false;
+      if (btnTopo) btnTopo.disabled = false;
+      btnDNS.disabled = false;
+      if (btnBGP) btnBGP.disabled = false;
+      if (btnBloat) btnBloat.disabled = false;
+      if (btnMesh) btnMesh.disabled = false;
+      setInputsDisabled(false);
+      if (manual) {
+          append(`\n[!] Subnet topology traceroute cancelled by user.\n\n`, 'warning');
+          showToast("Subnet topology trace cancelled", "warning", 2000);
       }
   }
 
@@ -2566,6 +2837,7 @@ Press Enter or 'P' to Ping, 'B' for BGP, 'Q' for Bloat, 'G' for Global Mesh, F5/
       btnTrace.disabled = true;
       btnMTU.disabled = true;
       btnSubnet.disabled = true;
+      if (btnTopo) btnTopo.disabled = true;
       if (btnBGP) btnBGP.disabled = true;
       if (btnBloat) btnBloat.disabled = true;
       if (btnMesh) btnMesh.disabled = true;
@@ -2600,6 +2872,7 @@ Press Enter or 'P' to Ping, 'B' for BGP, 'Q' for Bloat, 'G' for Global Mesh, F5/
               btnTrace.disabled = false;
               btnMTU.disabled = false;
               btnSubnet.disabled = false;
+      if (btnTopo) btnTopo.disabled = false;
               if (btnBGP) btnBGP.disabled = false;
               if (btnBloat) btnBloat.disabled = false;
               if (btnMesh) btnMesh.disabled = false;
@@ -2650,6 +2923,7 @@ Press Enter or 'P' to Ping, 'B' for BGP, 'Q' for Bloat, 'G' for Global Mesh, F5/
     btnTrace.disabled = true;
     btnMTU.disabled = true;
     btnSubnet.disabled = true;
+      if (btnTopo) btnTopo.disabled = true;
     btnDNS.disabled = true;
     if (btnBloat) btnBloat.disabled = true;
     btnMesh.disabled = true;
@@ -2707,6 +2981,7 @@ Press Enter or 'P' to Ping, 'B' for BGP, 'Q' for Bloat, 'G' for Global Mesh, F5/
         btnTrace.disabled = false;
         btnMTU.disabled = false;
         btnSubnet.disabled = false;
+      if (btnTopo) btnTopo.disabled = false;
         btnDNS.disabled = false;
         if (btnBloat) btnBloat.disabled = false;
         btnMesh.disabled = false;
@@ -2738,6 +3013,7 @@ Press Enter or 'P' to Ping, 'B' for BGP, 'Q' for Bloat, 'G' for Global Mesh, F5/
       btnTrace.disabled = false;
       btnMTU.disabled = false;
       btnSubnet.disabled = false;
+      if (btnTopo) btnTopo.disabled = false;
       btnDNS.disabled = false;
       if (btnBloat) btnBloat.disabled = false;
       btnMesh.disabled = false;
@@ -2777,6 +3053,7 @@ Press Enter or 'P' to Ping, 'B' for BGP, 'Q' for Bloat, 'G' for Global Mesh, F5/
     btnTrace.disabled = true;
     btnMTU.disabled = true;
     btnSubnet.disabled = true;
+      if (btnTopo) btnTopo.disabled = true;
     btnDNS.disabled = true;
     btnBGP.disabled = true;
     btnMesh.disabled = true;
@@ -2840,6 +3117,7 @@ Press Enter or 'P' to Ping, 'B' for BGP, 'Q' for Bloat, 'G' for Global Mesh, F5/
     btnTrace.disabled = false;
     btnMTU.disabled = false;
     btnSubnet.disabled = false;
+      if (btnTopo) btnTopo.disabled = false;
     btnDNS.disabled = false;
     btnBGP.disabled = false;
     btnMesh.disabled = false;
@@ -2894,6 +3172,7 @@ Press Enter or 'P' to Ping, 'B' for BGP, 'Q' for Bloat, 'G' for Global Mesh, F5/
     btnTrace.disabled = false;
     btnMTU.disabled = false;
     btnSubnet.disabled = false;
+      if (btnTopo) btnTopo.disabled = false;
     btnDNS.disabled = false;
     btnBGP.disabled = false;
     btnMesh.disabled = false;
@@ -3020,6 +3299,7 @@ Press Enter or 'P' to Ping, 'B' for BGP, 'Q' for Bloat, 'G' for Global Mesh, F5/
     btnTrace.disabled = true;
     btnMTU.disabled = true;
     btnSubnet.disabled = true;
+      if (btnTopo) btnTopo.disabled = true;
     btnDNS.disabled = true;
     btnBGP.disabled = true;
     if (btnBloat) btnBloat.disabled = true;
@@ -3069,6 +3349,7 @@ Press Enter or 'P' to Ping, 'B' for BGP, 'Q' for Bloat, 'G' for Global Mesh, F5/
           btnTrace.disabled = false;
           btnMTU.disabled = false;
           btnSubnet.disabled = false;
+      if (btnTopo) btnTopo.disabled = false;
           btnDNS.disabled = false;
           btnBGP.disabled = false;
           if (btnBloat) btnBloat.disabled = false;
@@ -3122,6 +3403,7 @@ Press Enter or 'P' to Ping, 'B' for BGP, 'Q' for Bloat, 'G' for Global Mesh, F5/
         btnTrace.disabled = false;
         btnMTU.disabled = false;
         btnSubnet.disabled = false;
+      if (btnTopo) btnTopo.disabled = false;
         btnDNS.disabled = false;
         btnBGP.disabled = false;
         if (btnBloat) btnBloat.disabled = false;
@@ -3148,6 +3430,7 @@ Press Enter or 'P' to Ping, 'B' for BGP, 'Q' for Bloat, 'G' for Global Mesh, F5/
         btnTrace.disabled = false;
         btnMTU.disabled = false;
         btnSubnet.disabled = false;
+      if (btnTopo) btnTopo.disabled = false;
         btnDNS.disabled = false;
         btnBGP.disabled = false;
         if (btnBloat) btnBloat.disabled = false;
@@ -3169,6 +3452,7 @@ Press Enter or 'P' to Ping, 'B' for BGP, 'Q' for Bloat, 'G' for Global Mesh, F5/
     btnTrace.disabled = false;
     btnMTU.disabled = false;
     btnSubnet.disabled = false;
+      if (btnTopo) btnTopo.disabled = false;
     btnDNS.disabled = false;
     btnBGP.disabled = false;
     if (btnBloat) btnBloat.disabled = false;
@@ -3275,8 +3559,30 @@ Press Enter or 'P' to Ping, 'B' for BGP, 'Q' for Bloat, 'G' for Global Mesh, F5/
 
   btnSubnet.onclick = () => {
       if (isSubnetSweeping) stopSubnetSweep(true);
+          if (isTopoTracing) stopSubnetTrace(true);
       else startSubnetSweep();
   };
+
+  if (btnTopo) {
+      btnTopo.onclick = () => {
+          if (isTopoTracing) stopSubnetTrace(true);
+          else startSubnetTrace();
+      };
+  }
+
+  if (btnModeJitter) {
+      btnModeJitter.onclick = () => setGraphMode('jitter');
+  }
+
+  if (intervalPreset) {
+      intervalPreset.onchange = () => {
+          if (intervalPreset.value && intervalInput) {
+              intervalInput.value = intervalPreset.value;
+              saveConfig();
+              showToast(`Pacing Interval: <strong>${intervalPreset.value}ms</strong>`, 'info', 1500);
+          }
+      };
+  }
 
   btnDNS.onclick = () => {
       if (isDnsInspecting) {
@@ -3290,6 +3596,7 @@ Press Enter or 'P' to Ping, 'B' for BGP, 'Q' for Bloat, 'G' for Global Mesh, F5/
           btnTrace.disabled = false;
           btnMTU.disabled = false;
           btnSubnet.disabled = false;
+      if (btnTopo) btnTopo.disabled = false;
           if (btnBGP) btnBGP.disabled = false;
           if (btnBloat) btnBloat.disabled = false;
           if (btnMesh) btnMesh.disabled = false;
@@ -3635,6 +3942,29 @@ Press Enter or 'P' to Ping, 'B' for BGP, 'Q' for Bloat, 'G' for Global Mesh, F5/
           } else if (e.key === 's' || e.key === 'S') {
               e.preventDefault();
               if (isSubnetSweeping) stopSubnetSweep(true); else startSubnetSweep();
+          } else if (e.key === 'x' || e.key === 'X') {
+              e.preventDefault();
+              if (isTopoTracing) stopSubnetTrace(true); else startSubnetTrace();
+          } else if (e.key === 'j' || e.key === 'J') {
+              e.preventDefault();
+              setGraphMode('jitter');
+              showToast("Graph Mode: <strong>JITTER HISTOGRAM</strong>", "info", 1500);
+          } else if (e.key === '[') {
+              e.preventDefault();
+              if (intervalInput) {
+                  let v = Math.max(50, (parseInt(intervalInput.value) || 1000) - 50);
+                  intervalInput.value = v;
+                  saveConfig();
+                  showToast(`Interval Pacing: <strong>${v}ms</strong>`, 'info', 1200);
+              }
+          } else if (e.key === ']') {
+              e.preventDefault();
+              if (intervalInput) {
+                  let v = Math.min(5000, (parseInt(intervalInput.value) || 1000) + 50);
+                  intervalInput.value = v;
+                  saveConfig();
+                  showToast(`Interval Pacing: <strong>${v}ms</strong>`, 'info', 1200);
+              }
           } else if (e.key === 'd' || e.key === 'D') {
               e.preventDefault();
               if (isDnsInspecting) btnDNS.click(); else startDnsInspect();

@@ -14,6 +14,8 @@ HWND hBtn;
 HWND hBtnTrace;
 HWND hBtnMTU;
 HWND hBtnSubnet;
+HWND hBtnTopo;
+HWND hBtnMesh;
 HWND hBtnDNS;
 HWND hBtnBGP;
 HWND hBtnBloat;
@@ -26,6 +28,7 @@ HWND hStaticCount, hInputCount;
 HWND hStaticSize, hInputSize;
 HWND hStaticTTL, hInputTTL;
 HWND hStaticTimeout, hInputTimeout;
+HWND hStaticInterval, hInputInterval;
 HWND hCheckCont, hCheckHex, hCheckDF, hCheckResolve, hCheckSound;
 HANDLE hThread = NULL;
 HANDLE hPingProcess = NULL;
@@ -49,6 +52,7 @@ typedef struct {
     int size;
     int ttl;
     int timeout;
+    int interval;
     BOOL continuous;
     BOOL hexdump;
     BOOL dfbit;
@@ -64,7 +68,7 @@ const char* PRESET_NAMES[] = {
     "4. 10.19.99.19 (Carrier Node)",
     "5. 10.19.99.127 (Classified Relay)",
     "6. 1.1.1.1 (Cloudflare)",
-    "7. 8.8.8.8 (Google DNS)",
+    "7. 8.8.8.8 (OmniNet DNS)",
     "8. 9.9.9.9 (Quad9 DNS)",
     "9. 192.168.1.1 (Gateway)"
 };
@@ -184,6 +188,7 @@ void ShowHelpDialog(HWND hwnd) {
         "  • T          : Start / Stop Route Trace (traceroute)\n"
         "  • M          : Start / Stop Path MTU Discovery Sweep\n"
         "  • S          : Start / Stop Subnet LAN Discovery Sweep\n"
+        "  • X          : Start / Stop Subnet ICMP Topology & Traceroute\n"
         "  • D          : Run DNS & RFC IP Address Inspector\n"
         "  • B          : Start / Stop BGP AS Transit Route Inspector\n"
         "  • Q          : Run Bufferbloat & AQM Latency Under Load Audit\n"
@@ -202,11 +207,13 @@ void ShowHelpDialog(HWND hwnd) {
         "  • MTU Sweep  : Probes Don't-Fragment buffer limits to detect\n"
         "                 exact Path MTU and recommended TCP MSS\n"
         "  • Subnet     : Sweeps local LAN /24 segment for active hosts\n"
+        "  • Subnet Topo: Multi-hop ICMP echo topology discovery across LAN & gateway\n"
         "  • DNS        : Reverse PTR lookup and RFC IP classification\n"
         "  • BGP Route  : Autonomous System (AS) transit path inspector\n"
         "  • Bufferbloat: Evaluates unloaded vs loaded queue latency (RFC 8290)\n\n"
         "ADVANCED PARAMETERS:\n"
         "  • Timeout    : Per-packet wait threshold in milliseconds\n"
+        "  • Int(ms)    : Granular packet interval pacing (50ms - 5000ms)\n"
         "  • -a Resolve : Reverse DNS resolution of responding hosts\n"
         "  • -f DF Bit  : Sets Don't-Fragment bit in IP header\n"
         "  • Hex Dump   : Displays raw payload buffer in hexadecimal\n"
@@ -277,6 +284,12 @@ void SaveState(HWND hwnd) {
     for (int i = 0; numBuf[i] >= '0' && numBuf[i] <= '9'; i++) { toVal = toVal * 10 + (numBuf[i] - '0'); hasToDigits = TRUE; }
     st.timeout = (hasToDigits && toVal >= 100) ? toVal : 1000;
 
+    GetWindowTextA(hInputInterval, numBuf, 32);
+    int intVal = 0;
+    BOOL hasIntDigits = FALSE;
+    for (int i = 0; numBuf[i] >= '0' && numBuf[i] <= '9'; i++) { intVal = intVal * 10 + (numBuf[i] - '0'); hasIntDigits = TRUE; }
+    st.interval = (hasIntDigits && intVal >= 50) ? intVal : 1000;
+
     st.continuous = SendMessage(hCheckCont, BM_GETCHECK, 0, 0) == BST_CHECKED;
     st.hexdump = SendMessage(hCheckHex, BM_GETCHECK, 0, 0) == BST_CHECKED;
     st.dfbit = SendMessage(hCheckDF, BM_GETCHECK, 0, 0) == BST_CHECKED;
@@ -304,6 +317,7 @@ void LoadState(HWND hwnd) {
             wsprintfA(numBuf, "%d", st.size); SetWindowTextA(hInputSize, numBuf);
             wsprintfA(numBuf, "%d", st.ttl); SetWindowTextA(hInputTTL, numBuf);
             wsprintfA(numBuf, "%d", st.timeout); SetWindowTextA(hInputTimeout, numBuf);
+            wsprintfA(numBuf, "%d", st.interval > 0 ? st.interval : 1000); SetWindowTextA(hInputInterval, numBuf);
             SendMessage(hCheckCont, BM_SETCHECK, st.continuous ? BST_CHECKED : BST_UNCHECKED, 0);
             SendMessage(hCheckHex, BM_SETCHECK, st.hexdump ? BST_CHECKED : BST_UNCHECKED, 0);
             SendMessage(hCheckDF, BM_SETCHECK, st.dfbit ? BST_CHECKED : BST_UNCHECKED, 0);
@@ -499,6 +513,7 @@ DWORD WINAPI PingThread(LPVOID param) {
         EnableWindow(hBtn, FALSE);
         EnableWindow(hBtnTrace, FALSE);
         EnableWindow(hBtnSubnet, FALSE);
+        if (hBtnTopo) EnableWindow(hBtnTopo, FALSE);
         EnableWindow(hBtnDNS, FALSE);
 
         char banner[1024];
@@ -610,6 +625,7 @@ DWORD WINAPI PingThread(LPVOID param) {
         EnableWindow(hBtn, TRUE);
         EnableWindow(hBtnTrace, TRUE);
         EnableWindow(hBtnSubnet, TRUE);
+        if (hBtnTopo) EnableWindow(hBtnTopo, TRUE);
         EnableWindow(hBtnDNS, TRUE);
     } else if (mode == 3) {
         // Mode 3: Subnet Sweep Mode
@@ -726,6 +742,116 @@ DWORD WINAPI PingThread(LPVOID param) {
         EnableWindow(hBtnTrace, TRUE);
         EnableWindow(hBtnMTU, TRUE);
         EnableWindow(hBtnDNS, TRUE);
+    } else if (mode == 7) {
+        // Mode 7: Subnet Topology & Multi-Hop ICMP Traceroute Mode
+        SetWindowTextA(hBtnTopo, "Stop [X]");
+        EnableWindow(hBtn, FALSE);
+        EnableWindow(hBtnTrace, FALSE);
+        EnableWindow(hBtnMTU, FALSE);
+        EnableWindow(hBtnSubnet, FALSE);
+        if (hBtnTopo) EnableWindow(hBtnTopo, FALSE);
+        EnableWindow(hBtnDNS, FALSE);
+        EnableWindow(hBtnBGP, FALSE);
+        EnableWindow(hBtnBloat, FALSE);
+
+        char basePrefix[64] = "192.168.1.";
+        int dots = 0, lastDot = -1;
+        for (int k = 0; host[k] != 0; k++) {
+            if (host[k] == '.') {
+                dots++;
+                lastDot = k;
+            }
+        }
+        if (dots >= 3 && lastDot > 0) {
+            for (int k = 0; k <= lastDot; k++) basePrefix[k] = host[k];
+            basePrefix[lastDot + 1] = 0;
+        } else if (StrContains(host, "10.19.99")) {
+            lstrcpyA(basePrefix, "10.19.99.");
+        }
+
+        char banner[1024];
+        wsprintfA(banner, "============================================================\r\n"
+                          " KPing Subnet ICMP Echo Topology & Traceroute\r\n"
+                          " Subnet Scope: %s0/24 (Target Anchor: %s)\r\n"
+                          " Interrogating multi-hop topology, gateway fabric & node branches...\r\n"
+                          "============================================================\r\n\r\n",
+                          basePrefix, host);
+        AppendText(banner);
+
+        struct TopoHop {
+            const char* hop;
+            const char* name;
+            int lastOctet;
+            const char* vendor;
+            int baseLat;
+        } hops[] = {
+            { "Hop 1",  "Default Gateway / Catalyst L3",  1,   "Cisco Systems",           1 },
+            { "Hop 2",  "Managed LAN Core Switch",        254, "3Com SuperStack 100TX",   2 },
+            { "Node 3a", "Primary DNS / WINS Resolver",   2,   "Sun Microsystems",        3 },
+            { "Node 3b", "Storage / NFS File Server",     15,  "Silicon Graphics (IRIX)", 3 },
+            { "Node 3c", "Workstation Alpha (DHCP)",      42,  "Intel Fast Ethernet",     4 },
+            { "Node 3d", "Network Spooler / Print Server", 70, "HP JetDirect",            4 },
+            { "Hop 4",  "Subnet Uplink / Fiber Demarc",   0,   "KiloNet Core Router",     8 },
+            { "Hop 5",  "Regional Transit Edge PoP",      0,   "Autonomous System 65000", 15 }
+        };
+        int numHops = sizeof(hops) / sizeof(hops[0]);
+
+        for (int i = 0; i < numHops && !bCancelOperation; i++) {
+            char hopIP[128];
+            if (hops[i].lastOctet > 0) {
+                wsprintfA(hopIP, "%s%d", basePrefix, hops[i].lastOctet);
+            } else if (i == 6) {
+                lstrcpyA(hopIP, "10.19.99.1");
+            } else {
+                lstrcpyA(hopIP, "198.51.100.25");
+            }
+
+            int t1 = hops[i].baseLat + (GetTickCount() % 3);
+            int t2 = hops[i].baseLat + ((GetTickCount() / 3) % 3);
+            int t3 = hops[i].baseLat + ((GetTickCount() / 7) % 3);
+            int avg = (t1 + t2 + t3) / 3;
+
+            char line[256];
+            wsprintfA(line, "[%-8s] %dms  %dms  %dms (avg %dms) -> %-16s | %s [%s]\r\n",
+                      hops[i].hop, t1, t2, t3, avg, hopIP, hops[i].name, hops[i].vendor);
+            AppendText(line);
+
+            if (SendMessage(hCheckSound, BM_GETCHECK, 0, 0) == BST_CHECKED) {
+                MessageBeep(MB_OK);
+            }
+            Sleep(250);
+        }
+
+        if (!bCancelOperation) {
+            char summary[1024];
+            wsprintfA(summary, "\r\n------------------------------------------------------------\r\n"
+                               " ICMP Echo Topology Map for Subnet %s0/24:\r\n"
+                               "------------------------------------------------------------\r\n"
+                               " [Local Host: %s42 (Current Station)]\r\n"
+                               "    |-- [Hop 1: Default Gateway]  %s1 (Cisco Catalyst L3)\r\n"
+                               "    |     +-- [Hop 2: Core Switch] %s254 (3Com 100BASE-TX Fabric)\r\n"
+                               "    |     |     |-- [DNS/WINS]     %s2 (Sun Solaris Server)\r\n"
+                               "    |     |     |-- [NFS/Data]     %s15 (SGI IRIX Storage)\r\n"
+                               "    |     |     |-- [Workstation]  %s42 (Intel Fast Eth)\r\n"
+                               "    |     |     \\-- [Printer]      %s70 (HP JetDirect)\r\n"
+                               "    |     +-- [Hop 4: Uplink]      10.19.99.1 (Fiber Demarcation)\r\n"
+                               "    |           \\-- [Hop 5: WAN]   198.51.100.25 (Regional Transit AS)\r\n"
+                               "------------------------------------------------------------\r\n\r\n",
+                               basePrefix, basePrefix, basePrefix, basePrefix, basePrefix, basePrefix, basePrefix, basePrefix);
+            AppendText(summary);
+        } else {
+            AppendText("\r\n[!] Subnet topology traceroute cancelled by user.\r\n\r\n");
+        }
+
+        SetWindowTextA(hBtnTopo, "Topo [X]");
+        EnableWindow(hBtn, TRUE);
+        EnableWindow(hBtnTrace, TRUE);
+        EnableWindow(hBtnMTU, TRUE);
+        EnableWindow(hBtnSubnet, TRUE);
+        if (hBtnTopo) EnableWindow(hBtnTopo, TRUE);
+        EnableWindow(hBtnDNS, TRUE);
+        EnableWindow(hBtnBGP, TRUE);
+        EnableWindow(hBtnBloat, TRUE);
     } else if (mode == 4) {
         // Mode 4: DNS / IP Inspector Mode
         SetWindowTextA(hBtnDNS, "Stop [D]");
@@ -733,6 +859,7 @@ DWORD WINAPI PingThread(LPVOID param) {
         EnableWindow(hBtnTrace, FALSE);
         EnableWindow(hBtnMTU, FALSE);
         EnableWindow(hBtnSubnet, FALSE);
+        if (hBtnTopo) EnableWindow(hBtnTopo, FALSE);
 
         char ipClass[128];
         ClassifyIPAddress(host, ipClass, sizeof(ipClass));
@@ -811,6 +938,7 @@ DWORD WINAPI PingThread(LPVOID param) {
         EnableWindow(hBtnTrace, TRUE);
         EnableWindow(hBtnMTU, TRUE);
         EnableWindow(hBtnSubnet, TRUE);
+        if (hBtnTopo) EnableWindow(hBtnTopo, TRUE);
         EnableWindow(hBtnBGP, TRUE);
         EnableWindow(hBtnBloat, TRUE);
     } else if (mode == 5) {
@@ -820,6 +948,7 @@ DWORD WINAPI PingThread(LPVOID param) {
         EnableWindow(hBtnTrace, FALSE);
         EnableWindow(hBtnMTU, FALSE);
         EnableWindow(hBtnSubnet, FALSE);
+        if (hBtnTopo) EnableWindow(hBtnTopo, FALSE);
         EnableWindow(hBtnDNS, FALSE);
         EnableWindow(hBtnBloat, FALSE);
 
@@ -914,6 +1043,7 @@ DWORD WINAPI PingThread(LPVOID param) {
         EnableWindow(hBtnTrace, TRUE);
         EnableWindow(hBtnMTU, TRUE);
         EnableWindow(hBtnSubnet, TRUE);
+        if (hBtnTopo) EnableWindow(hBtnTopo, TRUE);
         EnableWindow(hBtnDNS, TRUE);
         EnableWindow(hBtnBloat, TRUE);
     } else if (mode == 6) {
@@ -923,6 +1053,7 @@ DWORD WINAPI PingThread(LPVOID param) {
         EnableWindow(hBtnTrace, FALSE);
         EnableWindow(hBtnMTU, FALSE);
         EnableWindow(hBtnSubnet, FALSE);
+        if (hBtnTopo) EnableWindow(hBtnTopo, FALSE);
         EnableWindow(hBtnDNS, FALSE);
         EnableWindow(hBtnBGP, FALSE);
 
@@ -1028,8 +1159,103 @@ DWORD WINAPI PingThread(LPVOID param) {
         EnableWindow(hBtnTrace, TRUE);
         EnableWindow(hBtnMTU, TRUE);
         EnableWindow(hBtnSubnet, TRUE);
+        if (hBtnTopo) EnableWindow(hBtnTopo, TRUE);
         EnableWindow(hBtnDNS, TRUE);
         EnableWindow(hBtnBGP, TRUE);
+        if (hBtnMesh) EnableWindow(hBtnMesh, TRUE);
+    } else if (mode == 8) {
+        // Mode 8: Global Fleet Mesh Echo & Node Telemetry
+        SetWindowTextA(hBtnMesh, "Stop [G]");
+        EnableWindow(hBtn, FALSE);
+        EnableWindow(hBtnTrace, FALSE);
+        EnableWindow(hBtnMTU, FALSE);
+        EnableWindow(hBtnSubnet, FALSE);
+        if (hBtnTopo) EnableWindow(hBtnTopo, FALSE);
+        EnableWindow(hBtnDNS, FALSE);
+        EnableWindow(hBtnBGP, FALSE);
+        EnableWindow(hBtnBloat, FALSE);
+
+        char banner[1024];
+        wsprintfA(banner, "============================================================\r\n"
+                          " KPing Global Fleet Mesh Echo & Node Telemetry\r\n"
+                          " Station Call Sign:   KStation-Win32 (Client v2.5)\r\n"
+                          " Transport Protocol:  Retro Firebase RTDB / Virtual Mesh Relays\r\n"
+                          " Target Anchor Node:  %s\r\n"
+                          " Interrogating multi-point peer echo, presence & RTT telemetry...\r\n"
+                          "============================================================\r\n\r\n", host);
+        AppendText(banner);
+
+        typedef struct {
+            const char* callsign;
+            const char* id;
+            const char* region;
+            const char* ip;
+            int baseRtt;
+            const char* type;
+        } MESH_NODE;
+
+        MESH_NODE meshNodes[] = {
+            { "KCentral-Relay",  "relay_gw01", "US-East (Ashburn Backbone)",  "198.51.100.1", 12, "Core Relay" },
+            { "Subterranean-19", "relay_echo", "Pacific Northwest Sub-Core",  "10.19.99.19",   3, "Intranet" },
+            { "PacRim-Gateway",  "peer_tyo",   "Asia-East (Tokyo Otemachi)",  "203.0.113.88", 28, "Peer Node" },
+            { "Euro-Transit",    "peer_fra",   "Europe-Central (DE-CIX)",     "195.66.224.1", 24, "Peer Node" },
+            { "Cal-Exchange",    "peer_sfo",   "US-West (MAE-West San Jose)", "198.32.160.1", 16, "Peer Node" }
+        };
+        int numNodes = sizeof(meshNodes) / sizeof(meshNodes[0]);
+        int meshRtts[16];
+        int rttCount = 0;
+        int rttSum = 0;
+
+        for (int i = 0; i < numNodes && !bCancelOperation; i++) {
+            Sleep(250);
+            int jitter = (GetTickCount() + i * 7) % 6;
+            int rtt = meshNodes[i].baseRtt + jitter;
+            meshRtts[rttCount++] = rtt;
+            rttSum += rtt;
+
+            char line[512];
+            wsprintfA(line, "  Echo Reply [%d/%d] from %-17s [%-10s] %-15s : rtt=%d ms  status=ACTIVE  [%s]\r\n",
+                      i + 1, numNodes, meshNodes[i].callsign, meshNodes[i].id, meshNodes[i].ip, rtt, meshNodes[i].type);
+            AppendText(line);
+
+            if (SendMessage(hCheckSound, BM_GETCHECK, 0, 0) == BST_CHECKED) {
+                MessageBeep(MB_OK);
+            }
+        }
+
+        if (!bCancelOperation && rttCount > 0) {
+            int avgMesh = rttSum / rttCount;
+            int meshJitterSum = 0;
+            for (int j = 1; j < rttCount; j++) {
+                meshJitterSum += ABS(meshRtts[j] - meshRtts[j-1]);
+            }
+            int avgJitter = rttCount > 1 ? (meshJitterSum / (rttCount - 1)) : 0;
+
+            char summary[1024];
+            wsprintfA(summary, "\r\n------------------------------------------------------------\r\n"
+                               " Global Fleet Mesh Telemetry Summary:\r\n"
+                               "   - Active Fleet Relays:     %d online stations\r\n"
+                               "   - Average Peer RTT:        %d ms\r\n"
+                               "   - Inter-Station Jitter:    %d ms (RFC 3550)\r\n"
+                               "   - Mesh Health Index:       Optimal (100%% Reachability)\r\n"
+                               "   - Subcarrier Echo:         Carrier lock on 10.19.99.19 verified\r\n"
+                               "------------------------------------------------------------\r\n\r\n",
+                      rttCount, avgMesh, avgJitter);
+            AppendText(summary);
+        } else if (bCancelOperation) {
+            AppendText("\r\n[!] Global fleet mesh echo cancelled by user.\r\n\r\n");
+        }
+
+        SetWindowTextA(hBtnMesh, "Mesh [G]");
+        EnableWindow(hBtn, TRUE);
+        EnableWindow(hBtnTrace, TRUE);
+        EnableWindow(hBtnMTU, TRUE);
+        EnableWindow(hBtnSubnet, TRUE);
+        if (hBtnTopo) EnableWindow(hBtnTopo, TRUE);
+        EnableWindow(hBtnDNS, TRUE);
+        EnableWindow(hBtnBGP, TRUE);
+        EnableWindow(hBtnBloat, TRUE);
+        if (hBtnMesh) EnableWindow(hBtnMesh, TRUE);
     } else {
         // Standard Ping or Traceroute
         BOOL traceMode = (mode == 1);
@@ -1038,6 +1264,7 @@ DWORD WINAPI PingThread(LPVOID param) {
             EnableWindow(hBtn, FALSE);
             EnableWindow(hBtnMTU, FALSE);
             EnableWindow(hBtnSubnet, FALSE);
+        if (hBtnTopo) EnableWindow(hBtnTopo, FALSE);
             EnableWindow(hBtnDNS, FALSE);
             EnableWindow(hBtnBGP, FALSE);
             EnableWindow(hBtnBloat, FALSE);
@@ -1046,6 +1273,7 @@ DWORD WINAPI PingThread(LPVOID param) {
             EnableWindow(hBtnTrace, FALSE);
             EnableWindow(hBtnMTU, FALSE);
             EnableWindow(hBtnSubnet, FALSE);
+        if (hBtnTopo) EnableWindow(hBtnTopo, FALSE);
             EnableWindow(hBtnDNS, FALSE);
             EnableWindow(hBtnBGP, FALSE);
             EnableWindow(hBtnBloat, FALSE);
@@ -1289,6 +1517,33 @@ DWORD WINAPI PingThread(LPVOID param) {
                               bdpT1, bdpT1 < 2048 ? 2048 : bdpT1,
                               bdp10M, bdp10M < 8192 ? 8192 : bdp10M,
                               bdp100M, bdp100M < 32768 ? 32768 : bdp100M);
+                    // Inter-Packet Jitter (Delta-RTT) Distribution Histogram
+                    int j1 = 0, j2 = 0, j3 = 0, j4 = 0, j5 = 0;
+                    for (int r = 1; r < rttCount; r++) {
+                        int jd = ABS(rttHistory[r] - rttHistory[r - 1]);
+                        if (jd < 2) j1++;
+                        else if (jd < 5) j2++;
+                        else if (jd < 10) j3++;
+                        else if (jd < 20) j4++;
+                        else j5++;
+                    }
+                    char jbar1[32] = "", jbar2[32] = "", jbar3[32] = "", jbar4[32] = "", jbar5[32] = "";
+                    for (int k = 0; k < j1 && k < 20; k++) jbar1[k] = '#'; jbar1[j1 < 20 ? j1 : 20] = 0;
+                    for (int k = 0; k < j2 && k < 20; k++) jbar2[k] = '#'; jbar2[j2 < 20 ? j2 : 20] = 0;
+                    for (int k = 0; k < j3 && k < 20; k++) jbar3[k] = '#'; jbar3[j3 < 20 ? j3 : 20] = 0;
+                    for (int k = 0; k < j4 && k < 20; k++) jbar4[k] = '#'; jbar4[j4 < 20 ? j4 : 20] = 0;
+                    for (int k = 0; k < j5 && k < 20; k++) jbar5[k] = '#'; jbar5[j5 < 20 ? j5 : 20] = 0;
+
+                    char jitterHistReport[1024];
+                    wsprintfA(jitterHistReport, " RFC 3550 Inter-Packet Jitter (Delta-RTT) Distribution:\r\n"
+                                                "   [ < 2ms   ] : %-20s (%d) [Ultra-Stable]\r\n"
+                                                "   [ 2-4ms   ] : %-20s (%d) [Optimal]\r\n"
+                                                "   [ 5-9ms   ] : %-20s (%d) [Moderate]\r\n"
+                                                "   [ 10-19ms ] : %-20s (%d) [Noticeable]\r\n"
+                                                "   [ >= 20ms ] : %-20s (%d) [High Jitter]\r\n"
+                                                "--------------------------------------------------------------\r\n\r\n",
+                              jbar1, j1, jbar2, j2, jbar3, j3, jbar4, j4, jbar5, j5);
+                    AppendText(jitterHistReport);
                     AppendText(histReport);
                 }
             } else {
@@ -1303,6 +1558,7 @@ DWORD WINAPI PingThread(LPVOID param) {
         EnableWindow(hBtnTrace, TRUE);
         EnableWindow(hBtnMTU, TRUE);
         EnableWindow(hBtnSubnet, TRUE);
+        if (hBtnTopo) EnableWindow(hBtnTopo, TRUE);
         EnableWindow(hBtnDNS, TRUE);
         EnableWindow(hBtnBGP, TRUE);
         EnableWindow(hBtnBloat, TRUE);
@@ -1338,6 +1594,26 @@ void TriggerMTU() {
     if (!hThread) {
         ClearOutput();
         hThread = CreateThread(NULL, 0, PingThread, (LPVOID)2, 0, NULL);
+    } else {
+        bCancelOperation = TRUE;
+        if (hPingProcess) TerminateProcess(hPingProcess, 0);
+    }
+}
+
+void TriggerTopo() {
+    if (hThread == NULL) {
+        bCancelOperation = FALSE;
+        hThread = CreateThread(NULL, 0, PingThread, (LPVOID)7, 0, NULL);
+    } else {
+        bCancelOperation = TRUE;
+        if (hPingProcess) TerminateProcess(hPingProcess, 0);
+    }
+}
+
+void TriggerMesh() {
+    if (hThread == NULL) {
+        bCancelOperation = FALSE;
+        hThread = CreateThread(NULL, 0, PingThread, (LPVOID)8, 0, NULL);
     } else {
         bCancelOperation = TRUE;
         if (hPingProcess) TerminateProcess(hPingProcess, 0);
@@ -1442,9 +1718,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hBtnTrace = CreateWindowEx(0, "BUTTON", "Trace [T]", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 506, 12, 66, 24, hwnd, (HMENU)2, NULL, NULL);
             hBtnMTU = CreateWindowEx(0, "BUTTON", "MTU [M]", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 575, 12, 66, 24, hwnd, (HMENU)4, NULL, NULL);
             hBtnSubnet = CreateWindowEx(0, "BUTTON", "Subnet [S]", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 644, 12, 70, 24, hwnd, (HMENU)7, NULL, NULL);
-            hBtnDNS = CreateWindowEx(0, "BUTTON", "DNS [D]", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 717, 12, 64, 24, hwnd, (HMENU)8, NULL, NULL);
-            hBtnBGP = CreateWindowEx(0, "BUTTON", "BGP [B]", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 784, 12, 66, 24, hwnd, (HMENU)9, NULL, NULL);
-            hBtnHelp = CreateWindowEx(0, "BUTTON", "Help [F1]", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 853, 12, 66, 24, hwnd, (HMENU)6, NULL, NULL);
+            hBtnTopo = CreateWindowEx(0, "BUTTON", "Topo [X]", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 717, 12, 66, 24, hwnd, (HMENU)13, NULL, NULL);
+            hBtnDNS = CreateWindowEx(0, "BUTTON", "DNS [D]", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 786, 12, 64, 24, hwnd, (HMENU)8, NULL, NULL);
+            hBtnBGP = CreateWindowEx(0, "BUTTON", "BGP [B]", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 853, 12, 66, 24, hwnd, (HMENU)9, NULL, NULL);
+            hBtnHelp = CreateWindowEx(0, "BUTTON", "Help [F1]", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 922, 12, 66, 24, hwnd, (HMENU)6, NULL, NULL);
 
             // Row 2: Parameters, Checkboxes, and Utility Buttons
             hStaticCount = CreateWindowEx(0, "STATIC", "Count:", WS_CHILD | WS_VISIBLE, 15, 44, 36, 22, hwnd, NULL, NULL, NULL);
@@ -1463,23 +1740,28 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hInputTimeout = CreateWindowEx(0, "EDIT", "1000", WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP | ES_NUMBER, 255, 42, 36, 22, hwnd, NULL, NULL, NULL);
             SetWindowLongPtr(hInputTimeout, GWLP_WNDPROC, (LONG_PTR)EditSubclassProc);
 
-            hCheckCont = CreateWindowEx(0, "BUTTON", "Cont (-t)", WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_AUTOCHECKBOX, 298, 44, 68, 20, hwnd, NULL, NULL, NULL);
-            hCheckHex = CreateWindowEx(0, "BUTTON", "Hex Dump", WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_AUTOCHECKBOX, 371, 44, 72, 20, hwnd, NULL, NULL, NULL);
-            hCheckDF = CreateWindowEx(0, "BUTTON", "DF (-f)", WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_AUTOCHECKBOX, 448, 44, 54, 20, hwnd, NULL, NULL, NULL);
-            hCheckResolve = CreateWindowEx(0, "BUTTON", "Resolve (-a)", WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_AUTOCHECKBOX, 507, 44, 82, 20, hwnd, NULL, NULL, NULL);
+            hStaticInterval = CreateWindowEx(0, "STATIC", "Int:", WS_CHILD | WS_VISIBLE, 297, 44, 24, 22, hwnd, NULL, NULL, NULL);
+            hInputInterval = CreateWindowEx(0, "EDIT", "1000", WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP | ES_NUMBER, 323, 42, 38, 22, hwnd, NULL, NULL, NULL);
+            SetWindowLongPtr(hInputInterval, GWLP_WNDPROC, (LONG_PTR)EditSubclassProc);
+
+            hCheckCont = CreateWindowEx(0, "BUTTON", "Cont (-t)", WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_AUTOCHECKBOX, 366, 44, 68, 20, hwnd, NULL, NULL, NULL);
+            hCheckHex = CreateWindowEx(0, "BUTTON", "Hex Dump", WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_AUTOCHECKBOX, 438, 44, 72, 20, hwnd, NULL, NULL, NULL);
+            hCheckDF = CreateWindowEx(0, "BUTTON", "DF (-f)", WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_AUTOCHECKBOX, 514, 44, 54, 20, hwnd, NULL, NULL, NULL);
+            hCheckResolve = CreateWindowEx(0, "BUTTON", "Resolve (-a)", WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_AUTOCHECKBOX, 572, 44, 82, 20, hwnd, NULL, NULL, NULL);
 
             hCheckSound = CreateWindowEx(0, "BUTTON", "Audio [U]", WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_AUTOCHECKBOX, 674, 44, 68, 20, hwnd, (HMENU)12, NULL, NULL);
             SendMessage(hCheckSound, BM_SETCHECK, BST_CHECKED, 0);
 
             hBtnBloat = CreateWindowEx(0, "BUTTON", "Bloat [Q]", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 748, 42, 62, 22, hwnd, (HMENU)11, NULL, NULL);
-            hBtnExport = CreateWindowEx(0, "BUTTON", "Export [E]", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 814, 42, 56, 22, hwnd, (HMENU)3, NULL, NULL);
+            hBtnMesh = CreateWindowEx(0, "BUTTON", "Mesh [G]", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 814, 42, 62, 22, hwnd, (HMENU)14, NULL, NULL);
+            hBtnExport = CreateWindowEx(0, "BUTTON", "Export [E]", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 880, 42, 56, 22, hwnd, (HMENU)3, NULL, NULL);
             hBtnClear = CreateWindowEx(0, "BUTTON", "Clear [C]", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 874, 42, 44, 22, hwnd, (HMENU)5, NULL, NULL);
 
             // Output Terminal Console
             hOutput = CreateWindowEx(0, "EDIT", "Welcome to KPing Network Diagnostics Suite.\r\n"
-                                               "Modes: Ping [P], Route Trace [T], Path MTU [M], Subnet LAN Sweep [S], DNS Inspector [D], BGP [B], Bloat [Q].\r\n"
+                                               "Modes: Ping [P], Route Trace [T], Path MTU [M], Subnet LAN Sweep [S], Topo [X], DNS [D], BGP [B], Bloat [Q], Mesh [G].\r\n"
                                                "Metrics: Mean Jitter (RFC 3550), Std Dev, VoIP MOS Quality Score, SLA Rating, Latency Histograms.\r\n"
-                                               "Press Enter or 'P' to Ping, 'B' for BGP Route, 'Q' for Bufferbloat, F5/F9 to Save/Load, or 'F1' for Help.\r\n\r\n",
+                                               "Press Enter or 'P' to Ping, 'X' for Topo, 'G' for Mesh, 'J' for Jitter, [ / ] for Interval, F5/F9 to Save/Load, or 'F1' for Help.\r\n\r\n",
                 WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP | WS_VSCROLL | WS_HSCROLL | ES_MULTILINE | ES_AUTOVSCROLL | ES_AUTOHSCROLL | ES_READONLY,
                 15, 75, W - 30, H - 90, hwnd, NULL, NULL, NULL);
             SendMessage(hOutput, EM_LIMITTEXT, 1048576, 0);
@@ -1493,13 +1775,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         case WM_CTLCOLORSTATIC: {
             HDC hdc = (HDC)wParam;
             if ((HWND)lParam == hStatic || (HWND)lParam == hStaticCount || (HWND)lParam == hStaticSize || 
-                (HWND)lParam == hStaticTTL || (HWND)lParam == hStaticTimeout || (HWND)lParam == hCheckCont || 
+                (HWND)lParam == hStaticTTL || (HWND)lParam == hStaticTimeout || (HWND)lParam == hStaticInterval || (HWND)lParam == hCheckCont || 
                 (HWND)lParam == hCheckHex || (HWND)lParam == hCheckDF || (HWND)lParam == hCheckResolve || (HWND)lParam == hCheckSound) {
                 SetTextColor(hdc, RGB(226, 232, 240));
                 SetBkColor(hdc, RGB(15, 23, 42));
                 return (LRESULT)hbg;
             } else if ((HWND)lParam == hOutput || (HWND)lParam == hInput || (HWND)lParam == hInputCount || 
-                       (HWND)lParam == hInputSize || (HWND)lParam == hInputTTL || (HWND)lParam == hInputTimeout) {
+                       (HWND)lParam == hInputSize || (HWND)lParam == hInputTTL || (HWND)lParam == hInputTimeout || (HWND)lParam == hInputInterval) {
                 SetTextColor(hdc, (HWND)lParam == hOutput ? RGB(163, 190, 140) : RGB(226, 232, 240));
                 SetBkColor(hdc, RGB(30, 41, 59));
                 return (LRESULT)hinputBg;
@@ -1535,6 +1817,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 ShowHelpDialog(hwnd);
             } else if (id == 7) { // Subnet Sweep
                 TriggerSubnet();
+            } else if (id == 13) { // Subnet Topo
+                TriggerTopo();
             } else if (id == 8) { // DNS Inspector
                 TriggerDNS();
             } else if (id == 9) { // BGP Inspector
@@ -1548,30 +1832,31 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             int nw = LOWORD(lParam);
             int nh = HIWORD(lParam);
 
-            int btnX = nw - 485;
-            if (btnX < 400) btnX = 400;
+            int btnX = nw - 550;
+            if (btnX < 360) btnX = 360;
 
-            // Ensure hComboPreset (145px) sits between hInput and btnX with clean 8px gaps
             int inputW = btnX - 56 - 145 - 16;
-            if (inputW < 110) inputW = 110;
+            if (inputW < 90) inputW = 90;
 
             MoveWindow(hInput, 56, 12, inputW, 24, TRUE);
             MoveWindow(hComboPreset, 56 + inputW + 8, 12, 145, 200, TRUE);
-            
+
             MoveWindow(hBtn, btnX, 12, 64, 24, TRUE);
             MoveWindow(hBtnTrace, btnX + 67, 12, 66, 24, TRUE);
             MoveWindow(hBtnMTU, btnX + 136, 12, 66, 24, TRUE);
             MoveWindow(hBtnSubnet, btnX + 205, 12, 70, 24, TRUE);
-            MoveWindow(hBtnDNS, btnX + 278, 12, 64, 24, TRUE);
-            MoveWindow(hBtnBGP, btnX + 345, 12, 66, 24, TRUE);
-            MoveWindow(hBtnHelp, btnX + 414, 12, 66, 24, TRUE);
+            MoveWindow(hBtnTopo, btnX + 277, 12, 66, 24, TRUE);
+            MoveWindow(hBtnDNS, btnX + 345, 12, 64, 24, TRUE);
+            MoveWindow(hBtnBGP, btnX + 411, 12, 66, 24, TRUE);
+            MoveWindow(hBtnHelp, btnX + 479, 12, 66, 24, TRUE);
 
-            int right2X = nw - 250;
-            if (right2X < 600) right2X = 600;
+            int right2X = nw - 315;
+            if (right2X < 660) right2X = 660;
             MoveWindow(hCheckSound, right2X, 44, 68, 20, TRUE);
-            MoveWindow(hBtnBloat, right2X + 74, 42, 62, 22, TRUE);
-            MoveWindow(hBtnExport, right2X + 140, 42, 56, 22, TRUE);
-            MoveWindow(hBtnClear, right2X + 200, 42, 44, 22, TRUE);
+            MoveWindow(hBtnBloat, right2X + 70, 42, 62, 22, TRUE);
+            MoveWindow(hBtnMesh, right2X + 134, 42, 62, 22, TRUE);
+            MoveWindow(hBtnExport, right2X + 198, 42, 56, 22, TRUE);
+            MoveWindow(hBtnClear, right2X + 256, 42, 44, 22, TRUE);
 
             MoveWindow(hOutput, 15, 75, nw - 30, nh - 90, TRUE);
             break;
@@ -1643,7 +1928,7 @@ void MainEntry() {
         if (msg.message == WM_KEYDOWN) {
             HWND hFocus = GetFocus();
             BOOL isEditing = (hFocus == hInput || hFocus == hInputCount || hFocus == hInputSize || 
-                              hFocus == hInputTTL || hFocus == hInputTimeout || hFocus == hComboPreset);
+                              hFocus == hInputTTL || hFocus == hInputTimeout || hFocus == hInputInterval || hFocus == hComboPreset);
 
             if (msg.wParam == VK_F1 || (!isEditing && (msg.wParam == 'H' || msg.wParam == 'h'))) {
                 ShowHelpDialog(hwnd);
@@ -1674,6 +1959,9 @@ void MainEntry() {
                 } else if (msg.wParam == 'S' || msg.wParam == 's') {
                     TriggerSubnet();
                     continue;
+                } else if (msg.wParam == 'X' || msg.wParam == 'x') {
+                    TriggerTopo();
+                    continue;
                 } else if (msg.wParam == 'D' || msg.wParam == 'd') {
                     TriggerDNS();
                     continue;
@@ -1682,6 +1970,39 @@ void MainEntry() {
                     continue;
                 } else if (msg.wParam == 'Q' || msg.wParam == 'q') {
                     TriggerBloat();
+                    continue;
+                } else if (msg.wParam == 'G' || msg.wParam == 'g') {
+                    TriggerMesh();
+                    continue;
+                } else if (msg.wParam == VK_OEM_4) { // '['
+                    char intBuf[32];
+                    GetWindowTextA(hInputInterval, intBuf, 32);
+                    int iv = 0;
+                    for (int i = 0; intBuf[i] >= '0' && intBuf[i] <= '9'; i++) iv = iv * 10 + (intBuf[i] - '0');
+                    if (iv <= 0) iv = 1000;
+                    iv = (iv - 50 < 50) ? 50 : (iv - 50);
+                    wsprintfA(intBuf, "%d", iv);
+                    SetWindowTextA(hInputInterval, intBuf);
+                    char toast[64];
+                    wsprintfA(toast, "[i] Pacing Interval: %d ms\r\n", iv);
+                    AppendText(toast);
+                    continue;
+                } else if (msg.wParam == VK_OEM_6) { // ']'
+                    char intBuf[32];
+                    GetWindowTextA(hInputInterval, intBuf, 32);
+                    int iv = 0;
+                    for (int i = 0; intBuf[i] >= '0' && intBuf[i] <= '9'; i++) iv = iv * 10 + (intBuf[i] - '0');
+                    if (iv <= 0) iv = 1000;
+                    iv = (iv + 50 > 5000) ? 5000 : (iv + 50);
+                    wsprintfA(intBuf, "%d", iv);
+                    SetWindowTextA(hInputInterval, intBuf);
+                    char toast[64];
+                    wsprintfA(toast, "[i] Pacing Interval: %d ms\r\n", iv);
+                    AppendText(toast);
+                    continue;
+                } else if (msg.wParam == 'J' || msg.wParam == 'j') {
+                    AppendText("\r\n[i] Jitter Telemetry: RFC 3550 inter-packet delay variance (Delta-RTT) is actively computed during Ping [P] operations.\r\n"
+                               "    Metrics: Mean Jitter, Quartile Latency Distribution, VoIP MOS Quality Score, and SLA compliance grading.\r\n\r\n");
                     continue;
                 } else if (msg.wParam == 'U' || msg.wParam == 'u') {
                     BOOL cur = SendMessage(hCheckSound, BM_GETCHECK, 0, 0) == BST_CHECKED;
