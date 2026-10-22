@@ -1177,6 +1177,60 @@
     .display-card { min-height: 80px; padding: 10px 12px; }
   }
 
+  /* Compact Height Ergonomics & Scroll Safety */
+  @media (max-height: 660px) {
+    .app-container { padding: 6px; gap: 6px; }
+    .header { padding: 4px 8px; }
+    .display-card { min-height: 70px; padding: 6px 12px; }
+    .main-display { font-size: 22px; margin-top: 2px; }
+    .sub-display { min-height: 14px; font-size: 11px; }
+    .quick-radix-strip { font-size: 10px; margin-top: 2px; padding-top: 2px; }
+    .formula-bar { padding: 4px 8px; }
+    .adv-funcs-strip { padding: 2px 0; gap: 3px; }
+    .calc-btn { min-height: 32px; font-size: 12px; }
+    .std-keypad-grid .calc-btn { min-height: 38px; font-size: 14px; }
+  }
+  @media (max-height: 520px) {
+    .app-container { padding: 4px; gap: 4px; }
+    .header { padding: 3px 6px; }
+    .display-card { min-height: 58px; padding: 4px 8px; }
+    .main-display { font-size: 18px; }
+    .quick-radix-strip { display: none; }
+    .formula-bar { padding: 2px 6px; }
+    .calc-btn { min-height: 26px; font-size: 11px; }
+    .std-keypad-grid .calc-btn { min-height: 30px; font-size: 12px; }
+  }
+
+  /* Standard 5-Column Calculator Grid */
+  .std-keypad-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 8px;
+    flex: 1;
+  }
+  .std-keypad-grid .calc-btn {
+    font-size: 15px;
+    min-height: 48px;
+  }
+  .std-keypad-grid .calc-btn.num {
+    font-size: 18px;
+    font-weight: 600;
+  }
+  .std-keypad-grid .calc-btn.op {
+    font-size: 18px;
+  }
+
+  /* HiDPI Regression Canvas */
+  .regression-canvas {
+    width: 100%;
+    height: 180px;
+    background: rgba(0, 0, 0, 0.45);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    margin-top: 8px;
+    display: block;
+  }
+
 
 /* --- KCalc Deep Expansion Features --- */
 .kcalc-expansion-bar {
@@ -1487,6 +1541,7 @@
       <button class="badge-btn" onclick="quickloadState()" title="Restore Quicksaved State (F9)">📂 Load [F9]</button>
       <button id="themeBadge" class="badge-btn" onclick="cycleDisplayTheme()" title="Cycle Display Theme (L): OLED / Retro LCD / Amber / VFD">🎨 OLED [L]</button>
       <button class="badge-btn" onclick="openHelpModal()" title="Help & Keyboard Shortcuts (H / F1)">Help [F1]</button>
+      <button id="keypadModeBtn" class="badge-btn" onclick="toggleKeypadMode()" title="Toggle Standard (Basic 5-col) vs Scientific (7-col) Keypad [S]"><span>📐</span> Sci [S]</button>
       <button id="degRadBtn" class="badge-btn active" onclick="toggleDegRad()" title="Toggle Degrees / Radians (D)">DEG</button>
       <button id="hypBtn" class="badge-btn" onclick="toggleHypMode()" title="Toggle Hyperbolic Trigonometry [Y]">HYP</button>
       <button id="memBadge" class="badge-btn" onclick="openMemoryModal()" title="Memory Registers (M)">M: 0</button>
@@ -1501,7 +1556,7 @@
         <div class="display-status">
           <span id="angleChip" class="status-chip highlight">DEG</span>
           <span id="hypChip" class="status-chip" style="display:none; color:#f59e0b; border-color:rgba(245,158,11,0.4);">HYP</span>
-          <span id="memChip" class="status-chip" style="display:none;">MEM</span>
+          <span id="memChip" class="status-chip" onclick="event.stopPropagation(); openMemoryModal();" title="Active Memory: Click to manage registers [M]" style="display:none; cursor:pointer;">MEM</span>
           <span id="themeChip" class="status-chip" onclick="event.stopPropagation(); cycleDisplayTheme();" title="Cycle Display Theme (L)" style="cursor:pointer;">OLED</span>
           <button class="status-chip copy-btn" onclick="event.stopPropagation(); copyMainDisplay()" title="Copy result to clipboard (Ctrl+C)">📋 Copy</button>
         </div>
@@ -1539,7 +1594,7 @@
           <button class="mini-btn" onclick="append('root(')" title="N-th Root: root(n, x)">root(n,x)</button>
           <button class="mini-btn" onclick="append('logBase(')" title="Logarithm with Base: logBase(base, x)">logBase</button>
         </div>
-        <div class="keypad-grid">
+        <div id="keypadGridSci" class="keypad-grid">
           <!-- Row 0: Memory & Clear -->
           <button class="calc-btn mem" onclick="memClear()" title="Memory Clear (MC)">MC</button>
           <button class="calc-btn mem" onclick="memRecall()" title="Memory Recall (MR)">MR</button>
@@ -1609,6 +1664,50 @@
           <button class="calc-btn num" onclick="append('.')" title="Decimal Point: .">.</button>
           <button class="calc-btn op" style="grid-column: span 2;" onclick="append('+')" title="Addition: +">+</button>
           <button class="calc-btn op" style="grid-column: span 2; background: linear-gradient(135deg, #10b981 0%, #059669 100%);" onclick="calculate()" title="Calculate (Enter / =)">=</button>
+        </div>
+        <!-- Standard Mode Keypad Grid -->
+        <div id="keypadGridStd" class="keypad-grid std-keypad-grid" style="display:none;">
+          <!-- Row 1: Memory -->
+          <button class="calc-btn mem" onclick="memClear()" title="Memory Clear (MC)">MC</button>
+          <button class="calc-btn mem" onclick="memRecall()" title="Memory Recall (MR)">MR</button>
+          <button class="calc-btn mem" onclick="memStore()" title="Memory Store (MS)">MS</button>
+          <button class="calc-btn mem" onclick="memAdd()" title="Memory Add (M+)">M+</button>
+          <button class="calc-btn mem" onclick="memSub()" title="Memory Subtract (M-)">M-</button>
+
+          <!-- Row 2: Clear & Math Helpers -->
+          <button class="calc-btn danger" onclick="clearAll()" title="Clear All (Esc)">C</button>
+          <button class="calc-btn danger" onclick="backspace()" title="Backspace (⌫)">⌫</button>
+          <button class="calc-btn func" onclick="toggleSign()" title="Toggle Sign (±)">±</button>
+          <button class="calc-btn func" onclick="append('sqrt(')" title="Square Root (√)">√</button>
+          <button class="calc-btn func" onclick="reciprocal()" title="Reciprocal (1/x)">1/x</button>
+
+          <!-- Row 3: Keypad 7-9 & Div / Percent -->
+          <button class="calc-btn num" onclick="append('7')" title="Number 7">7</button>
+          <button class="calc-btn num" onclick="append('8')" title="Number 8">8</button>
+          <button class="calc-btn num" onclick="append('9')" title="Number 9">9</button>
+          <button class="calc-btn op" onclick="append('/')" title="Division (÷)">÷</button>
+          <button class="calc-btn op" onclick="append('%')" title="Percentage (%)">%</button>
+
+          <!-- Row 4: Keypad 4-6 & Mul / Square -->
+          <button class="calc-btn num" onclick="append('4')" title="Number 4">4</button>
+          <button class="calc-btn num" onclick="append('5')" title="Number 5">5</button>
+          <button class="calc-btn num" onclick="append('6')" title="Number 6">6</button>
+          <button class="calc-btn op" onclick="append('*')" title="Multiplication (×)">×</button>
+          <button class="calc-btn func" onclick="append('^2')" title="Square (x²)">x²</button>
+
+          <!-- Row 5: Keypad 1-3 & Sub / Ans -->
+          <button class="calc-btn num" onclick="append('1')" title="Number 1">1</button>
+          <button class="calc-btn num" onclick="append('2')" title="Number 2">2</button>
+          <button class="calc-btn num" onclick="append('3')" title="Number 3">3</button>
+          <button class="calc-btn op" onclick="append('-')" title="Subtraction (−)">−</button>
+          <button class="calc-btn func" onclick="append('Ans')" title="Previous Answer (Ans)">Ans</button>
+
+          <!-- Row 6: 00, 0, ., Add, Equal -->
+          <button class="calc-btn num" onclick="append('00')" title="Double Zero (00)">00</button>
+          <button class="calc-btn num" onclick="append('0')" title="Number 0">0</button>
+          <button class="calc-btn num" onclick="append('.')" title="Decimal Point (.)">.</button>
+          <button class="calc-btn op" onclick="append('+')" title="Addition (+)">+</button>
+          <button class="calc-btn op" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); font-weight:700;" onclick="calculate()" title="Calculate (Enter / =)">=</button>
         </div>
       </div>
 
@@ -1877,6 +1976,14 @@
                   <button class="mini-btn" onclick="sendToCalc(document.getElementById('reg-pred-y').textContent)">Use ŷ</button>
                 </div>
               </div>
+            </div>
+
+            <div style="margin-top:12px;">
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <span style="font-size:12px; font-weight:600; color:var(--text-muted);">HiDPI Scatter Plot & Trendline:</span>
+                <span id="canvasPointCount" style="font-size:11px; color:#818cf8; font-family:'JetBrains Mono',monospace;">0 points plotted</span>
+              </div>
+              <canvas id="regressionCanvas" class="regression-canvas" height="180" title="Linear Regression Scatter Plot & Trendline"></canvas>
             </div>
           </div>
         </div>
@@ -2327,6 +2434,7 @@
           <tr><td><span class="kbd-key">Ctrl</span>+<span class="kbd-key">C</span></td><td>Copy current result / display to clipboard</td></tr>
           <tr><td><span class="kbd-key">Ctrl</span>+<span class="kbd-key">V</span></td><td>Paste numbers / expression from clipboard</td></tr>
           <tr><td><span class="kbd-key">±</span></td><td>Toggle positive / negative sign (±)</td></tr>
+          <tr><td><span class="kbd-key">S</span></td><td>Toggle Standard (Basic 5-col) vs Scientific (7-col) Keypad Mode</td></tr>
           <tr><td><span class="kbd-key">D</span></td><td>Toggle Trigonometric Degrees / Radians mode</td></tr>
           <tr><td><span class="kbd-key">Y</span></td><td>Toggle Hyperbolic Trigonometry mode (sinh, cosh, tanh)</td></tr>
           <tr><td><span class="kbd-key">M</span></td><td>Open Memory Registers Management Dialog</td></tr>
@@ -2438,6 +2546,7 @@
   let memoryStore = 0.0;
   let multiMemory = { M1: 0, M2: 0, M3: 0 };
   let isDeg = true;
+  let isStandardMode = false;
   let isHyp = false;
   let activeCalcTool = 'integ';
   let activeMatrixTool = 'matrix';
@@ -2627,6 +2736,10 @@
       if (st !== null) savedTheme = parseInt(st, 10);
     } catch {}
     applyDisplayTheme(savedTheme);
+    try {
+      const sm = localStorage.getItem('kcalc_standardMode');
+      if (sm === 'true') toggleKeypadMode(true);
+    } catch {}
     render();
     calcPMT(true);
     calcFV(true);
@@ -2873,6 +2986,138 @@
     showToast(`Hyperbolic Mode: ${isHyp ? 'ON (sinh, cosh, tanh)' : 'OFF'}`, 'info', 1800);
     autoSaveSession();
   }
+
+  function toggleKeypadMode(forceMode) {
+    if (typeof forceMode === 'boolean') {
+      isStandardMode = forceMode;
+    } else {
+      isStandardMode = !isStandardMode;
+    }
+    const sciGrid = document.getElementById('keypadGridSci');
+    const stdGrid = document.getElementById('keypadGridStd');
+    const advStrip = document.querySelector('.adv-funcs-strip');
+    const modeBtn = document.getElementById('keypadModeBtn');
+
+    if (isStandardMode) {
+      if (sciGrid) sciGrid.style.display = 'none';
+      if (stdGrid) stdGrid.style.display = 'grid';
+      if (advStrip) advStrip.style.display = 'none';
+      if (modeBtn) {
+        modeBtn.innerHTML = '<span>🔢</span> Std [S]';
+        modeBtn.classList.add('active');
+        modeBtn.title = 'Current: Standard Mode. Click or press S to switch to Scientific';
+      }
+    } else {
+      if (sciGrid) sciGrid.style.display = 'grid';
+      if (stdGrid) stdGrid.style.display = 'none';
+      if (advStrip) advStrip.style.display = 'flex';
+      if (modeBtn) {
+        modeBtn.innerHTML = '<span>📐</span> Sci [S]';
+        modeBtn.classList.remove('active');
+        modeBtn.title = 'Current: Scientific Mode. Click or press S to switch to Standard';
+      }
+    }
+    try { localStorage.setItem('kcalc_standardMode', isStandardMode ? 'true' : 'false'); } catch {}
+  }
+
+  function drawRegressionPlot(points, m, b) {
+    const canvas = document.getElementById('regressionCanvas');
+    if (!canvas) return;
+    const countEl = document.getElementById('canvasPointCount');
+    if (countEl) countEl.textContent = `${points.length} points plotted (y = ${m.toFixed(2)}x ${b >= 0 ? '+' : '-'} ${Math.abs(b).toFixed(2)})`;
+
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    const width = rect.width || 460;
+    const height = 180;
+    canvas.width = Math.floor(width * dpr);
+    canvas.height = Math.floor(height * dpr);
+
+    const ctx = canvas.getContext('2d');
+    ctx.scale(dpr, dpr);
+
+    ctx.fillStyle = '#0a0d16';
+    ctx.fillRect(0, 0, width, height);
+
+    if (!points || points.length === 0) return;
+
+    const pad = 36;
+    const xs = points.map(p => p.x);
+    const ys = points.map(p => p.y);
+    let minX = Math.min(...xs), maxX = Math.max(...xs);
+    let minY = Math.min(...ys), maxY = Math.max(...ys);
+
+    if (minX === maxX) { minX -= 1; maxX += 1; }
+    if (minY === maxY) { minY -= 1; maxY += 1; }
+
+    const spanX = (maxX - minX) * 1.15;
+    const spanY = (maxY - minY) * 1.15;
+    const midX = (minX + maxX) / 2;
+    const midY = (minY + maxY) / 2;
+    minX = midX - spanX / 2;
+    maxX = midX + spanX / 2;
+    minY = midY - spanY / 2;
+    maxY = midY + spanY / 2;
+
+    const toScreenX = (x) => pad + ((x - minX) / (maxX - minX)) * (width - 2 * pad);
+    const toScreenY = (y) => (height - pad) - ((y - minY) / (maxY - minY)) * (height - 2 * pad);
+
+    // Subtle grid lines
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
+    ctx.lineWidth = 1;
+    for (let i = 0; i <= 4; i++) {
+      const gx = pad + (i / 4) * (width - 2 * pad);
+      ctx.beginPath();
+      ctx.moveTo(gx, pad / 2);
+      ctx.lineTo(gx, height - pad);
+      ctx.stroke();
+
+      const gy = pad / 2 + (i / 4) * (height - 1.5 * pad);
+      ctx.beginPath();
+      ctx.moveTo(pad, gy);
+      ctx.lineTo(width - pad, gy);
+      ctx.stroke();
+    }
+
+    // Trendline
+    ctx.strokeStyle = '#34d399';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    const y1 = m * minX + b;
+    const y2 = m * maxX + b;
+    ctx.moveTo(toScreenX(minX), toScreenY(y1));
+    ctx.lineTo(toScreenX(maxX), toScreenY(y2));
+    ctx.stroke();
+
+    // Plotted points
+    for (let p of points) {
+      const px = toScreenX(p.x);
+      const py = toScreenY(p.y);
+      ctx.fillStyle = 'rgba(129, 140, 248, 0.35)';
+      ctx.beginPath();
+      ctx.arc(px, py, 6, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = '#818cf8';
+      ctx.beginPath();
+      ctx.arc(px, py, 3.5, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // Axes bounds readout
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '10px "JetBrains Mono", monospace';
+    ctx.textAlign = 'left';
+    ctx.fillText(`x: [${minX.toFixed(1)}, ${maxX.toFixed(1)}]`, pad, height - 8);
+    ctx.textAlign = 'right';
+    ctx.fillText(`y: [${minY.toFixed(1)}, ${maxY.toFixed(1)}]`, width - pad, 16);
+  }
+
+  window.addEventListener('resize', () => {
+    if (typeof currentRegModel !== 'undefined' && currentRegModel && document.getElementById('stat-2var-card')?.style.display !== 'none') {
+      calc2VarRegression(true);
+    }
+  });
 
   function toggleDegRad() {
     isDeg = !isDeg;
@@ -4082,6 +4327,7 @@
     document.getElementById('reg-r2').textContent = r2.toFixed(4);
 
     predictRegressionY();
+    drawRegressionPlot(points, m, b);
     if (!silent) {
       addHistoryEntry(`LinReg (N=${n})`, `y=${m.toFixed(4)}x${sign}${Math.abs(b).toFixed(4)}, r=${r.toFixed(4)}`);
       showToast(`Linear Model Computed: y = ${m.toFixed(2)}x ${sign} ${Math.abs(b).toFixed(2)}`, 'success');
@@ -5090,6 +5336,12 @@
       return;
     }
 
+    if (e.key === 's' || e.key === 'S') {
+      e.preventDefault();
+      toggleKeypadMode();
+      return;
+    }
+
     if (e.key === 'd' || e.key === 'D') {
       e.preventDefault();
       toggleDegRad();
@@ -5197,9 +5449,25 @@
       else if (e.key === '7') { e.preventDefault(); switchView('history'); return; }
     }
 
-    // Scientific keypad shortcuts
+    // Scientific & Standard keypad shortcuts with full Numpad coverage
+    if (e.code === 'NumpadAdd') { append('+'); return; }
+    if (e.code === 'NumpadSubtract') { append('-'); return; }
+    if (e.code === 'NumpadMultiply') { append('*'); return; }
+    if (e.code === 'NumpadDivide') { e.preventDefault(); append('/'); return; }
+    if (e.code === 'NumpadEnter') { e.preventDefault(); calculate(); return; }
+
     if (e.key >= '0' && e.key <= '9') append(e.key);
-    else if (e.key === '.') append('.');
+    else if (e.key === '.' || e.code === 'NumpadDecimal') append('.');
+    else if (e.key === ',') {
+      e.preventDefault();
+      const lastOpen = expr.lastIndexOf('(');
+      const lastClose = expr.lastIndexOf(')');
+      if (lastOpen !== -1 && lastOpen > lastClose) {
+        append(',');
+      } else {
+        append('.');
+      }
+    }
     else if (e.key === '+') append('+');
     else if (e.key === '-') append('-');
     else if (e.key === '*') append('*');

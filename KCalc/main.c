@@ -1166,7 +1166,7 @@ void __stdcall MainEntry() {
                 else if (key == VK_RETURN) cmd = '=';
                 else if (key == VK_BACK) cmd = '<';
                 else if (key == VK_ESCAPE) cmd = 'C';
-                else if (key == VK_DECIMAL || key == VK_OEM_PERIOD) cmd = '.';
+                else if (key == VK_DECIMAL || key == VK_OEM_PERIOD || key == VK_OEM_COMMA) cmd = '.';
                 
                 if (cmd) {
                     SendMessageA(hwnd, WM_COMMAND, cmd, 0);

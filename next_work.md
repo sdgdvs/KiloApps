@@ -20,7 +20,7 @@ current_targets:
   kilo_graphics: KTrader
   kilo_soundscape: KSpace
   kilo_tester: KCalc
-  kilo_usability: KCalc
+  kilo_usability: KPing
   kilo_qa: KColosseum
   kilo_expander: KPing
 virtual_web_target: kweb://10.19.99.4/classified
