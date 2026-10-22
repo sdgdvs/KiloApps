@@ -347,6 +347,7 @@
     }
     function showVictory() {
       closeAllModals();
+      playSound('victory');
       const statBox = document.getElementById('victory-stats');
       if (statBox) {
         statBox.innerHTML = `
@@ -366,11 +367,16 @@
     }
 
     // --- PROCEDURAL FM SYNTHESIS AUDIO ENGINE (YM2612 2-Op / SPC700) ---
+    // Architecture: 6 Logical Channels, Swing-Tick Sequencer, SNES DSP Echo Line
     let audioCtx = null;
     let audioMasterGain = null;
     let audioEnabled = true;
-    let musicIntervalId = null;
+    let snesDelayNode = null;
+    let snesDelayFilter = null;
+    let snesDelayFeedback = null;
+    let soundscapeTimeoutId = null;
     let musicStep = 0;
+    let lastCombatState = false;
 
     function getAudioContext() {
       if (!audioCtx) {
@@ -380,6 +386,24 @@
           audioMasterGain = audioCtx.createGain();
           audioMasterGain.gain.setValueAtTime(audioEnabled ? 0.35 : 0.0, audioCtx.currentTime);
           audioMasterGain.connect(audioCtx.destination);
+
+          // SPC700-Style Echo (SNES Delay DSP: 180ms, LP filter @ 2200Hz, feedback 0.28)
+          try {
+            snesDelayNode = audioCtx.createDelay(1.0);
+            snesDelayNode.delayTime.setValueAtTime(0.18, audioCtx.currentTime);
+            snesDelayFilter = audioCtx.createBiquadFilter();
+            snesDelayFilter.type = 'lowpass';
+            snesDelayFilter.frequency.setValueAtTime(2200, audioCtx.currentTime);
+            snesDelayFeedback = audioCtx.createGain();
+            snesDelayFeedback.gain.setValueAtTime(0.28, audioCtx.currentTime);
+
+            snesDelayNode.connect(snesDelayFilter);
+            snesDelayFilter.connect(snesDelayFeedback);
+            snesDelayFeedback.connect(snesDelayNode);
+            snesDelayFilter.connect(audioMasterGain);
+          } catch (e) {
+            snesDelayNode = null;
+          }
         }
       }
       if (audioCtx && audioCtx.state === 'suspended') {
@@ -411,7 +435,7 @@
 
     // 2-Operator FM Synthesizer Voice (YM2612 Architecture: Modulator -> Carrier)
     function triggerFMVoice(freq, duration, opts = {}) {
-      if (!audioEnabled) return;
+      if (!audioEnabled || !freq || freq <= 0) return;
       const ctx = getAudioContext();
       if (!ctx || !audioMasterGain) return;
 
@@ -424,12 +448,29 @@
       const decay = opts.decay !== undefined ? opts.decay : duration * 0.7;
       const sustain = opts.sustain !== undefined ? opts.sustain : 0.2;
       const release = opts.release !== undefined ? opts.release : 0.08;
-      const volume = opts.volume !== undefined ? opts.volume : 0.4;
+      const volume = opts.volume !== undefined ? opts.volume : 0.3;
+      const useEcho = !!opts.useEcho;
+      const modDecayRatio = opts.modDecayRatio !== undefined ? opts.modDecayRatio : 0.15;
 
       // Carrier
       const carOsc = ctx.createOscillator();
       carOsc.type = carType;
       carOsc.frequency.setValueAtTime(freq, now);
+
+      // Delayed Vibrato LFO (wait 0.18s then ramp in for vocal/solo phrasing)
+      let vibOsc = null, vibGain = null;
+      if (opts.vibrato) {
+        vibOsc = ctx.createOscillator();
+        vibGain = ctx.createGain();
+        vibOsc.frequency.setValueAtTime(5.4, now);
+        vibGain.gain.setValueAtTime(0, now);
+        vibGain.gain.setValueAtTime(0, now + 0.18);
+        vibGain.gain.linearRampToValueAtTime(freq * 0.025, now + 0.4);
+        vibOsc.connect(vibGain);
+        vibGain.connect(carOsc.frequency);
+        vibOsc.start(now);
+        vibOsc.stop(now + duration + release + 0.06);
+      }
 
       // Carrier Gain (ADSR)
       const carGain = ctx.createGain();
@@ -445,152 +486,348 @@
 
       // Modulator Gain (FM Index Envelope)
       const modGain = ctx.createGain();
-      modGain.gain.setValueAtTime(modIndex, now);
-      modGain.gain.exponentialRampToValueAtTime(Math.max(0.1, modIndex * 0.15), now + duration * 0.8);
+      modGain.gain.setValueAtTime(Math.max(0.1, modIndex), now);
+      modGain.gain.exponentialRampToValueAtTime(Math.max(0.1, modIndex * modDecayRatio), now + attack + decay);
       modGain.gain.linearRampToValueAtTime(0.0001, now + duration + release);
 
       // Wire: Modulator -> Carrier Frequency
       modOsc.connect(modGain);
       modGain.connect(carOsc.frequency);
 
-      // Wire: Carrier -> Master
+      // Output Routing: Carrier -> Master (+ optional SPC700 Delay)
       carOsc.connect(carGain);
       carGain.connect(audioMasterGain);
+      if (useEcho && snesDelayNode) {
+        try { carGain.connect(snesDelayNode); } catch (e) {}
+      }
 
       modOsc.start(now);
       carOsc.start(now);
-      modOsc.stop(now + duration + release + 0.05);
-      carOsc.stop(now + duration + release + 0.05);
+      modOsc.stop(now + duration + release + 0.06);
+      carOsc.stop(now + duration + release + 0.06);
     }
 
-    // Procedural YM2612 / SPC700 Chiptune Soundscape Sequencer
-    // Scale: D Dorian / Minor (D, E, F, G, A, B, C)
-    const FREQS = {
-      D1: 36.71, A1: 55.00, D2: 73.42, F2: 87.31, G2: 98.00, A2: 110.00, Bb2: 116.54, C3: 130.81,
-      D3: 146.83, E3: 164.81, F3: 174.61, G3: 196.00, A3: 220.00, Bb3: 233.08, C4: 261.63,
-      D4: 293.66, E4: 329.63, F4: 349.23, G4: 392.00, A4: 440.00, Bb4: 466.16, C5: 523.25,
-      D5: 587.33, E5: 659.25, F5: 698.46, G5: 783.99, A5: 880.00
+    // Named YM2612 Hardware FM Patches
+    function playSlapBass(freq, dur, vol, time) {
+      triggerFMVoice(freq, dur, {
+        time,
+        modRatio: 2.0,
+        modIndex: 320,
+        modDecayRatio: 0.05,
+        attack: 0.004,
+        decay: dur * 0.5,
+        sustain: 0.2,
+        release: 0.04,
+        volume: vol,
+        carType: 'sawtooth',
+        modType: 'sine',
+        useEcho: false
+      });
+    }
+
+    function playSubBass(freq, dur, vol, time) {
+      triggerFMVoice(freq, dur, {
+        time,
+        modRatio: 0.5,
+        modIndex: 85,
+        modDecayRatio: 0.2,
+        attack: 0.015,
+        decay: dur * 0.75,
+        sustain: 0.35,
+        release: 0.08,
+        volume: vol,
+        carType: 'triangle',
+        modType: 'sine',
+        useEcho: false
+      });
+    }
+
+    function playEPiano(freq, dur, vol, time, useEcho = true) {
+      triggerFMVoice(freq, dur, {
+        time,
+        modRatio: 2.0,
+        modIndex: 260,
+        modDecayRatio: 0.08,
+        attack: 0.006,
+        decay: dur * 0.65,
+        sustain: 0.18,
+        release: 0.12,
+        volume: vol,
+        carType: 'sine',
+        modType: 'sine',
+        useEcho
+      });
+    }
+
+    function playHollowLead(freq, dur, vol, time, vibrato = true) {
+      triggerFMVoice(freq, dur, {
+        time,
+        modRatio: 1.0,
+        modIndex: 120,
+        modDecayRatio: 0.25,
+        attack: 0.012,
+        decay: dur * 0.7,
+        sustain: 0.35,
+        release: 0.14,
+        volume: vol,
+        carType: 'sine',
+        modType: 'sine',
+        vibrato,
+        useEcho: true
+      });
+    }
+
+    function playCosmicChime(freq, dur, vol, time) {
+      triggerFMVoice(freq, dur, {
+        time,
+        modRatio: 3.5,
+        modIndex: 450,
+        modDecayRatio: 0.04,
+        attack: 0.002,
+        decay: dur * 0.5,
+        sustain: 0.05,
+        release: 0.2,
+        volume: vol,
+        carType: 'sine',
+        modType: 'sine',
+        useEcho: true
+      });
+    }
+
+    function playFMKick(time, vol = 0.32) {
+      if (!audioEnabled) return;
+      const ctx = getAudioContext();
+      if (!ctx || !audioMasterGain) return;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(140, time);
+      osc.frequency.exponentialRampToValueAtTime(42, time + 0.038);
+      gain.gain.setValueAtTime(vol, time);
+      gain.gain.exponentialRampToValueAtTime(0.001, time + 0.13);
+      osc.connect(gain);
+      gain.connect(audioMasterGain);
+      osc.start(time);
+      osc.stop(time + 0.14);
+    }
+
+    function playFMSnare(time, vol = 0.22) {
+      if (!audioEnabled) return;
+      const ctx = getAudioContext();
+      if (!ctx || !audioMasterGain) return;
+      triggerFMVoice(185, 0.11, {
+        time,
+        modRatio: 9.87,
+        modIndex: 820,
+        modDecayRatio: 0.02,
+        attack: 0.002,
+        decay: 0.08,
+        sustain: 0.05,
+        release: 0.03,
+        volume: vol,
+        carType: 'sawtooth',
+        modType: 'square',
+        useEcho: false
+      });
+    }
+
+    function playFMHiHat(time, vol = 0.11, open = false) {
+      if (!audioEnabled) return;
+      const dur = open ? 0.12 : 0.035;
+      triggerFMVoice(920, dur, {
+        time,
+        modRatio: 11.23,
+        modIndex: 580,
+        modDecayRatio: 0.03,
+        attack: 0.001,
+        decay: dur * 0.8,
+        sustain: 0.05,
+        release: 0.02,
+        volume: vol,
+        carType: 'square',
+        modType: 'sawtooth',
+        useEcho: false
+      });
+    }
+
+    function playTickerTape(time, vol = 0.06) {
+      if (!audioEnabled) return;
+      const ctx = getAudioContext();
+      if (!ctx || !audioMasterGain) return;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(2600, time);
+      gain.gain.setValueAtTime(vol, time);
+      gain.gain.exponentialRampToValueAtTime(0.0001, time + 0.012);
+      osc.connect(gain);
+      gain.connect(audioMasterGain);
+      osc.start(time);
+      osc.stop(time + 0.015);
+    }
+
+    // Note Frequencies Reference
+    const N = {
+      D1: 36.71, F1: 43.65, G1: 49.00, A1: 55.00, Bb1: 58.27, C2: 65.41, Cs2: 69.30,
+      D2: 73.42, Eb2: 77.78, E2: 82.41, F2: 87.31, G2: 98.00, Ab2: 103.83, A2: 110.00, Bb2: 116.54,
+      C3: 130.81, Cs3: 138.59, D3: 146.83, Eb3: 155.56, E3: 164.81, F3: 174.61, G3: 196.00, Ab3: 207.65, A3: 220.00, Bb3: 233.08,
+      C4: 261.63, Cs4: 277.18, D4: 293.66, Eb4: 311.13, E4: 329.63, F4: 349.23, G4: 392.00, Ab4: 415.30, A4: 440.00, Bb4: 466.16,
+      C5: 523.25, Cs5: 554.37, D5: 587.33, Eb5: 622.25, E5: 659.25, F5: 698.46, G5: 783.99, A5: 880.00, Bb5: 932.33,
+      C6: 1046.50
     };
 
-    // Deep Space Orbit progression (16 steps per bar, 2 bars = 32 steps)
-    const AMBIENT_BASS = [
-      FREQS.D2, 0, FREQS.D2, 0, FREQS.A1, 0, FREQS.D2, 0,
-      FREQS.Bb2, 0, FREQS.Bb2, 0, FREQS.F2, 0, FREQS.Bb2, 0,
-      FREQS.G2, 0, FREQS.G2, 0, FREQS.D2, 0, FREQS.G2, 0,
-      FREQS.A2, 0, FREQS.A2, 0, FREQS.E3, 0, FREQS.A2, 0
+    // --- TRACK 1: "GALACTIC EXCHANGE" (Ambient Trading Pit & Deep Orbit) ---
+    // Mode: D Dorian / D Minor (32 steps cycle: Dm9 -> BbMaj7 -> Gm9 -> A7alt)
+    const AMB_LEAD = [
+      N.D4, 0,    N.F4, 0,    N.A4, 0,    N.C5, 0,      // Dm9 ascent
+      N.D5, 0,    0,    N.C5, N.Bb4, 0,   N.A4, 0,      // BbMaj7 vocal phrase
+      N.G4, 0,    N.Bb4, 0,   N.D5, 0,    N.F5, 0,      // Gm9 climb
+      N.E5, 0,    0,    N.D5, N.Cs5, 0,   0,    0       // A7sus4 suspension -> C# resolution
     ];
 
-    const AMBIENT_MELODY = [
-      FREQS.D4, 0, FREQS.F4, FREQS.A4, 0, FREQS.D5, 0, FREQS.C5,
-      FREQS.Bb4, 0, FREQS.D4, FREQS.F4, 0, FREQS.A4, 0, FREQS.F4,
-      FREQS.G4, 0, FREQS.Bb4, FREQS.D5, 0, FREQS.F5, 0, FREQS.D5,
-      FREQS.E5, 0, FREQS.C5, FREQS.A4, 0, FREQS.E4, FREQS.F4, FREQS.E4
+    const AMB_COUNTER = [
+      0,    N.C5, 0,    N.A4, 0,    N.F4, 0,    N.E4,   // Contrary motion descending shell
+      0,    N.A4, N.F4, 0,    0,    N.D4, 0,    N.F4,   // Call-and-response
+      0,    N.F5, 0,    N.D5, 0,    N.Bb4, 0,   N.A4,   // Upper counterpoint
+      0,    N.G4, N.Bb4, 0,   0,    N.G4, 0,    N.E4    // Tension resolution
     ];
 
-    // Combat Ostinato (High-tempo action)
-    const COMBAT_BASS = [
-      FREQS.D2, FREQS.D2, FREQS.F2, FREQS.D2, FREQS.G2, FREQS.D2, FREQS.A2, FREQS.D2,
-      FREQS.Bb2, FREQS.Bb2, FREQS.A2, FREQS.G2, FREQS.F2, FREQS.G2, FREQS.A2, FREQS.C3
+    const AMB_BASS = [
+      N.D2, 0,    N.D3, 0,    N.A2, 0,    N.C3, 0,      // Dm walking root/5th/7th
+      N.Bb1, 0,   N.Bb2, 0,   N.F2, 0,    N.A2, 0,      // BbMaj7 root/3rd
+      N.G1, 0,    N.G2, 0,    N.D2, 0,    N.F2, 0,      // Gm9 root/7th
+      N.A1, 0,    N.A2, 0,    N.Cs2, 0,   N.E2, 0       // A7 leading-tone transition
     ];
 
-    const COMBAT_MELODY = [
-      FREQS.D4, FREQS.D4, FREQS.A4, 0, FREQS.F4, 0, FREQS.D4, FREQS.E4,
-      FREQS.F4, FREQS.F4, FREQS.G4, FREQS.A4, FREQS.D5, 0, FREQS.C5, FREQS.A4
+    // --- TRACK 2: "PIRATE AMBUSH" (Combat Action Ostinato) ---
+    // Mode: D Minor / Phrygian Dominant (16 steps high-tempo loop)
+    const CMB_LEAD = [
+      N.D4, N.D4, 0,    N.A4, N.F4, 0,    N.G4, 0,
+      N.Bb4, 0,   N.D5, 0,    N.Cs5, 0,   N.A4, 0
     ];
 
-    function scheduleSoundscapeStep() {
+    const CMB_STAB = [
+      0,    0,    N.C5, 0,    0,    0,    N.D5, 0,
+      0,    N.A4, 0,    0,    0,    N.Bb4, 0,   0
+    ];
+
+    const CMB_BASS = [
+      N.D2, N.D2, N.D3, N.D2, N.F2, N.D2, N.Ab2, N.A2,
+      N.Bb1, N.Bb2, N.Bb1, N.Bb2, N.C2, N.Cs2, N.D2, N.Cs2
+    ];
+
+    function playSoundscapeStep() {
       if (!audioEnabled) return;
       const ctx = getAudioContext();
       if (!ctx || !audioMasterGain) return;
 
-      const stepTime = ctx.currentTime + 0.05;
       const isCombat = !!state.inCombat;
-      const stepLen = isCombat ? 0.13 : 0.22;
-
-      if (isCombat) {
-        // Fast Combat Tracker
-        const bIdx = musicStep % COMBAT_BASS.length;
-        const mIdx = musicStep % COMBAT_MELODY.length;
-        const bNote = COMBAT_BASS[bIdx];
-        const mNote = COMBAT_MELODY[mIdx];
-
-        if (bNote) {
-          triggerFMVoice(bNote, stepLen * 0.8, {
-            time: stepTime,
-            modRatio: 2.0,
-            modIndex: 260,
-            attack: 0.005,
-            decay: stepLen * 0.6,
-            sustain: 0.2,
-            release: 0.04,
-            volume: 0.28,
-            carType: 'sawtooth',
-            modType: 'sine'
-          });
-        }
-        if (mNote) {
-          triggerFMVoice(mNote, stepLen * 0.6, {
-            time: stepTime,
-            modRatio: 3.5,
-            modIndex: 420,
-            attack: 0.003,
-            decay: stepLen * 0.5,
-            sustain: 0.1,
-            release: 0.03,
-            volume: 0.22,
-            carType: 'square',
-            modType: 'sine'
-          });
-        }
-      } else {
-        // Ambient Exploration Tracker
-        const bIdx = musicStep % AMBIENT_BASS.length;
-        const mIdx = musicStep % AMBIENT_MELODY.length;
-        const bNote = AMBIENT_BASS[bIdx];
-        const mNote = AMBIENT_MELODY[mIdx];
-
-        if (bNote) {
-          triggerFMVoice(bNote, stepLen * 1.4, {
-            time: stepTime,
-            modRatio: 1.0,
-            modIndex: 110,
-            attack: 0.02,
-            decay: stepLen * 0.9,
-            sustain: 0.35,
-            release: 0.12,
-            volume: 0.24,
-            carType: 'triangle',
-            modType: 'sine'
-          });
-        }
-        if (mNote && Math.random() < 0.85) {
-          triggerFMVoice(mNote, stepLen * 1.1, {
-            time: stepTime,
-            modRatio: 2.5,
-            modIndex: 320,
-            attack: 0.008,
-            decay: stepLen * 0.7,
-            sustain: 0.15,
-            release: 0.15,
-            volume: 0.18,
-            carType: 'sine',
-            modType: 'sine'
-          });
-        }
+      // If combat state toggled, reset musicStep for a crisp transition
+      if (isCombat !== lastCombatState) {
+        musicStep = 0;
+        lastCombatState = isCombat;
       }
 
-      musicStep++;
+      const stepTime = ctx.currentTime + 0.04;
+      const isEven = (musicStep % 2 === 0);
+
+      if (isCombat) {
+        // Fast Combat Tracker (~158 BPM syncopated swing)
+        const step = musicStep % CMB_BASS.length;
+        const bNote = CMB_BASS[step];
+        const lNote = CMB_LEAD[step];
+        const sNote = CMB_STAB[step];
+
+        // Ch1: Slap Bass (galloping 16ths, tight & dry)
+        if (bNote) {
+          playSlapBass(bNote, 0.11, 0.28, stepTime);
+        }
+        // Ch2: Combat Synth Lead (piercing stabs with echo)
+        if (lNote) {
+          triggerFMVoice(lNote, 0.14, {
+            time: stepTime,
+            modRatio: 2.5,
+            modIndex: 400,
+            modDecayRatio: 0.1,
+            attack: 0.003,
+            decay: 0.09,
+            sustain: 0.15,
+            release: 0.04,
+            volume: 0.22,
+            carType: 'sawtooth',
+            modType: 'square',
+            useEcho: true
+          });
+        }
+        // Ch3: Off-beat Shell Stabs
+        if (sNote) {
+          playEPiano(sNote, 0.09, 0.18, stepTime, true);
+        }
+        // Ch4: Four-on-the-floor Kick
+        if (step % 4 === 0) {
+          playFMKick(stepTime, 0.36);
+        }
+        // Ch5: Backbeat Snare
+        if (step === 4 || step === 12) {
+          playFMSnare(stepTime, 0.24);
+        }
+        // Ch6: Rolling 16th Hi-Hat
+        playFMHiHat(stepTime, 0.10, step === 6 || step === 14);
+
+        musicStep++;
+        const nextDelay = isEven ? 115 : 75; // ~158 BPM syncopated swing
+        soundscapeTimeoutId = setTimeout(playSoundscapeStep, nextDelay);
+      } else {
+        // Galactic Exchange Ambient Tracker (~107 BPM 5:3 subtle swing)
+        const step = musicStep % AMB_BASS.length;
+        const bNote = AMB_BASS[step];
+        const lNote = AMB_LEAD[step];
+        const cNote = AMB_COUNTER[step];
+
+        // Ch1: Sub Bass (warm, un-echoed, melodic walking)
+        if (bNote) {
+          playSubBass(bNote, 0.28, 0.26, stepTime);
+        }
+        // Ch2: Hollow Flute / Synth Lead (call-and-response with vibrato & echo)
+        if (lNote) {
+          playHollowLead(lNote, 0.38, 0.22, stepTime, true);
+        }
+        // Ch3: DX7 E-Piano Counter-melody & Shell Voicings
+        if (cNote) {
+          playEPiano(cNote, 0.24, 0.16, stepTime, true);
+        }
+        // Ch4: Downtempo Kick on beats 1 & 9
+        if (step === 0 || step === 8 || step === 16 || step === 24) {
+          playFMKick(stepTime, 0.28);
+        }
+        // Ch5: Snare Backbeat on beats 5 & 13
+        if (step === 4 || step === 12 || step === 20 || step === 28) {
+          playFMSnare(stepTime, 0.18);
+        }
+        // Ch6: Swing Hi-Hat
+        if (step % 2 === 0) {
+          playFMHiHat(stepTime, 0.09, step === 14 || step === 30);
+        }
+        // Ch6 FX: Rhythmic Ticker-Tape clicks on off-beats
+        if (step % 4 === 3) {
+          playTickerTape(stepTime, 0.05);
+        }
+
+        musicStep++;
+        const nextDelay = isEven ? 175 : 105; // 5:3 swing
+        soundscapeTimeoutId = setTimeout(playSoundscapeStep, nextDelay);
+      }
     }
 
     function startSoundscape() {
-      if (musicIntervalId) return;
-      musicIntervalId = setInterval(scheduleSoundscapeStep, 210);
+      if (soundscapeTimeoutId) return;
+      playSoundscapeStep();
     }
 
     function stopSoundscape() {
-      if (musicIntervalId) {
-        clearInterval(musicIntervalId);
-        musicIntervalId = null;
+      if (soundscapeTimeoutId) {
+        clearTimeout(soundscapeTimeoutId);
+        soundscapeTimeoutId = null;
       }
     }
 
@@ -603,29 +840,9 @@
         const now = ctx.currentTime;
 
         if (type === 'chime') {
-          // Dual 2-Op FM crystal bell earcon (Buy / Sell / Save / Progress)
-          triggerFMVoice(659.25, 0.25, {
-            time: now,
-            modRatio: 2.76,
-            modIndex: 400,
-            attack: 0.002,
-            decay: 0.2,
-            sustain: 0.05,
-            release: 0.1,
-            volume: 0.28,
-            carType: 'sine'
-          });
-          triggerFMVoice(987.77, 0.35, {
-            time: now + 0.05,
-            modRatio: 3.5,
-            modIndex: 500,
-            attack: 0.002,
-            decay: 0.25,
-            sustain: 0.05,
-            release: 0.12,
-            volume: 0.24,
-            carType: 'sine'
-          });
+          // Bull Market Trade Bell — Dual 2-Op FM crystal bell with SPC700 echo
+          playCosmicChime(659.25, 0.32, 0.24, now);
+          playCosmicChime(987.77, 0.45, 0.22, now + 0.06);
         } else if (type === 'jump') {
           // Hyperspace Warp: Resonant FM sub-bass glide + cosmic shimmer
           const osc = ctx.createOscillator();
@@ -654,6 +871,9 @@
           modG.connect(osc.frequency);
           osc.connect(gain);
           gain.connect(audioMasterGain);
+          if (snesDelayNode) {
+            try { gain.connect(snesDelayNode); } catch (e) {}
+          }
 
           mod.start(now);
           osc.start(now);
@@ -665,6 +885,7 @@
             time: now,
             modRatio: 3.0,
             modIndex: 750,
+            modDecayRatio: 0.05,
             attack: 0.001,
             decay: 0.12,
             sustain: 0.01,
@@ -674,11 +895,12 @@
             modType: 'square'
           });
         } else if (type === 'alert') {
-          // FM Klaxon Alarm (Alternating minor-second klaxon)
+          // FM Klaxon Alarm (Alternating minor-third tactical alert)
           triggerFMVoice(440, 0.14, {
             time: now,
             modRatio: 1.5,
             modIndex: 350,
+            modDecayRatio: 0.2,
             attack: 0.005,
             decay: 0.12,
             sustain: 0.2,
@@ -686,10 +908,11 @@
             volume: 0.3,
             carType: 'sawtooth'
           });
-          triggerFMVoice(622.25, 0.18, {
+          triggerFMVoice(523.25, 0.18, {
             time: now + 0.15,
             modRatio: 1.5,
             modIndex: 350,
+            modDecayRatio: 0.2,
             attack: 0.005,
             decay: 0.15,
             sustain: 0.2,
@@ -703,6 +926,7 @@
             time: now,
             modRatio: 1.414,
             modIndex: 450,
+            modDecayRatio: 0.15,
             attack: 0.005,
             decay: 0.35,
             sustain: 0.1,
@@ -712,18 +936,28 @@
             modType: 'triangle'
           });
         } else if (type === 'victory') {
-          // Dreadnought Fanfare chord
-          [293.66, 369.99, 440.00, 587.33].forEach((f, i) => {
-            triggerFMVoice(f, 0.8, {
-              time: now + i * 0.08,
-              modRatio: 2.0,
-              modIndex: 280,
-              attack: 0.01,
-              decay: 0.5,
-              sustain: 0.2,
-              release: 0.2,
-              volume: 0.22,
-              carType: 'sine'
+          // Dreadnought Fanfare: Mario / Heroic Cadence (♭VI – ♭VII – I in D: Bb -> C -> D)
+          const chords = [
+            { notes: [N.Bb3, N.D4, N.F4], dur: 0.35, delay: 0 },
+            { notes: [N.C4, N.E4, N.G4], dur: 0.35, delay: 0.28 },
+            { notes: [N.D4, N.Fs4, N.A4, N.D5], dur: 0.85, delay: 0.56 }
+          ];
+          chords.forEach(ch => {
+            ch.notes.forEach(f => {
+              triggerFMVoice(f, ch.dur, {
+                time: now + ch.delay,
+                modRatio: 2.0,
+                modIndex: 320,
+                modDecayRatio: 0.1,
+                attack: 0.008,
+                decay: ch.dur * 0.6,
+                sustain: 0.25,
+                release: 0.2,
+                volume: 0.24,
+                carType: 'sawtooth',
+                modType: 'sine',
+                useEcho: true
+              });
             });
           });
         }
