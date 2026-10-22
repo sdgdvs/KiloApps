@@ -155,9 +155,9 @@
     "id": "kclip",
     "title": "KClip",
     "folder": "System",
-    "webBytes": 193195,
+    "webBytes": 202489,
     "exeBytes": 22016,
-    "budgetPercent": 19.3
+    "budgetPercent": 20.3
   },
   {
     "id": "kclock",
@@ -187,9 +187,9 @@
     "id": "kcolosseum",
     "title": "KColosseum",
     "folder": "Games",
-    "webBytes": 269952,
+    "webBytes": 283965,
     "exeBytes": 39424,
-    "budgetPercent": 27.0
+    "budgetPercent": 28.4
   },
   {
     "id": "kconnect4",
@@ -371,9 +371,9 @@
     "id": "khex",
     "title": "KHex",
     "folder": "System",
-    "webBytes": 226319,
-    "exeBytes": 32256,
-    "budgetPercent": 22.7
+    "webBytes": 270743,
+    "exeBytes": 34304,
+    "budgetPercent": 27.1
   },
   {
     "id": "kimage",
@@ -827,9 +827,9 @@
     "id": "kwords",
     "title": "KWords",
     "folder": "Games",
-    "webBytes": 158427,
+    "webBytes": 160123,
     "exeBytes": 165888,
-    "budgetPercent": 15.9
+    "budgetPercent": 16.0
   },
   {
     "id": "kzip",

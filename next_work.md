@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-graphics
-next_agent: kilo-soundscape
+current_agent: kilo-soundscape
+next_agent: kilo-tester
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -17,7 +17,7 @@ commit_checkpoint: 15
 status: ready
 current_targets:
   kilo_creator: kweb://10.19.99.4/classified
-  kilo_graphics: KSpace
+  kilo_graphics: KTrader
   kilo_soundscape: KTrader
   kilo_tester: KPass
   kilo_usability: KCalc
@@ -37,9 +37,9 @@ virtual_web_rotation:
 - kweb://deep-core
 - kweb://darknet
 last_run:
-  agent: kilo-creator
-  app: kweb://cybercafe
-  timestamp: '2026-10-21T17:35:00-07:00'
+  agent: kilo-graphics
+  app: KSpace
+  timestamp: '2026-10-21T18:14:00-07:00'
 last_planner_run: '2026-10-21T23:32:00Z'
 ---
 
@@ -73,20 +73,20 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Upcoming Queue**: `kweb://echo-subsystem.net`, `kweb://deep-core`, `kweb://darknet`.
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
-- **Target**: `KSpace`
-- **Primary Files**: `KiloOS/public/apps/kspace.html`
-- **Objective**: Space combat retro arcade overhaul: replace vector / primitive shapes with Imagen 3 generated ship, asteroid, laser, and space station sprites, plus seamless nebula starfield background (<999 KB).
+- **Target**: `KTrader`
+- **Primary Files**: `KiloOS/public/apps/ktrader.html`
+- **Objective**: Stock exchange and commodity trader graphics overhaul: replace vector / primitive canvas charts and icons with Imagen 3 assets (<999 KB).
 - **Action Steps**:
-  1. Inspect `KiloOS/public/apps/kspace.html` canvas rendering routines for programmer art.
+  1. Inspect `KiloOS/public/apps/ktrader.html` rendering routines for programmer art.
   2. Generate sprites via 2-stage asset pipeline if appropriate (`generate_image` with solid `#FF00FF` -> `scripts/asset_pipeline.py`).
   3. Search for and eliminate any traveling border dots or rotating specular glints.
   4. Run `python scripts/check_icons.py` to audit icon uniqueness.
 - **Verification**: `cd KiloOS && npm run build`. Verify files < 999 KB.
 - **Handoff**:
-  - In frontmatter: advance `current_targets.kilo_graphics` to `KTrader`.
+  - In frontmatter: advance `current_targets.kilo_graphics` to `KAbyss`.
   - Set `current_agent: kilo-soundscape`.
   - Append terse execution log (≤6 lines), commit, and push.
-- **Upcoming Queue**: `KTrader`, `KAbyss`, `KRacer`.
+- **Upcoming Queue**: `KAbyss`, `KRacer`, `KSpace`.
 
 ### 3. Procedural Audio & Soundscape Queue (`kilo-soundscape`)
 - **Target**: `KTrader`
@@ -211,6 +211,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-21T18:14:00-07:00 — kilo-graphics: KSpace (Graphics Suitability Audit)**
+  - ⏭️ Skip — Imagen 3 asset replacement not appropriate for KSpace
+  - Asset & Glint Audit: Confirmed 13 Imagen 3 sprites & nebula background active; zero traveling border dots or rotating specular glints in web or Win32 client.
+  - Verification: Direct startup PASS (190.0 KB < 999 KB); Win32 KSpace.exe clean build (91.1 KB); check_icons PASS; Vite build clean.
+  - Queue Handoff: Advanced current_targets.kilo_graphics to KTrader; rotated current_agent to kilo-soundscape.
+
 - **2026-10-21T17:35:00-07:00 — kilo-creator: kweb://cybercafe (Virtual 1999 Cybercafe Deep Expansion & ARG Webring Polish)**
   - Webring Topology Polish: Replaced clearnet link to Tier 3 echo-subsystem with canonical Member #007 Contributor Portal per arg_plan.md.
   - Subterranean Litho-BBS Relay: Implemented station CLI `dial 10.19.99.254` / `telnet 10.19.99.254` with acoustic V.90 handshake & Node 0x7F telemetry burst.
@@ -238,11 +244,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Modal Dismissals: Added Esc, Enter, and Space dismissals across help, statistics, and victory overlays; verified clean modal dismissal and canvas hit-test unblocked.
   - Dual Parity & Build: Compiled Win32 native client KWords.exe cleanly (165.8 KB); web cartridge verified (156.4 KB < 999 KB); test_app_startup PASS; Vite build clean.
   - Quarantine & Queue: Promoted KWords to Mature Applications table; advanced current_targets.kilo_qa to KColosseum; handoff to kilo-expander.
-
-- **2026-10-21T13:36:00-07:00 — kilo-usability: KHex (Navigation Ergonomics & Usability Polish)**
-  - Tab Ergonomics: Upgraded .tab-nav to flex-wrap with 6px gap to comfortably display all 9 suite tabs without clipping or hidden scrolling.
-  - Keyboard Hotkeys: Bound [9] to switchTab('disasm'); added Ctrl+Home/End buffer boundary jumping; added [Enter] for instant byte editing.
-  - Lifecycle Sync: Automated disassembler run upon switching to Tab 9; added Escape dismissal for byte & offset input bars.
-  - Accessibility & Guides: Added high-contrast :focus-visible rings across suite; updated Help and Tutorial modals with Tabs 8-9 documentation.
-  - Dual Parity & Build: Verified KHex native Win32 C build clean (31.5 KB) and web cartridge (223.1 KB < 999 KB); startup check PASS; Vite clean.
-  - Queue Handoff: Advanced current_targets.kilo_usability to KPass; rotated current_agent to kilo-qa.
