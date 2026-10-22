@@ -3773,7 +3773,7 @@ Ready to initiate packet stream. Click "START TRANSMISSION" to begin.</div>
       <a href="/web/geocities.html" class="btn-retro">✨ CyberSpire Shrine</a>
       <a href="/web/webring.html" class="btn-retro">🌐 Webring Hub</a>
       <a href="/web/warez.html" class="btn-retro">💾 Warez Vault</a>
-      <a href="/web/echo_subsystem.html" class="btn-retro">🔬 Echo Subsystem</a>
+      <a href="/apps/contribute.html" class="btn-retro">📜 Contributor Portal</a>
       <a href="/web/users/neon_rider.html" class="btn-retro">Next: ~neon_rider »</a>
     </div>
   </div>
@@ -5620,6 +5620,7 @@ function execStationCli() {
   ping <ip>          - ICMP echo request probe (e.g. ping 10.19.99.4)
   traceroute <ip>    - Trace packet hops across KiloNet switches
   telnet <ip> [port] - Connect to remote telnet socket / echo carrier
+  dial <ip>          - Dial remote BBS modem relay (e.g. dial 10.19.99.254)
   route              - Display kernel IP routing table
   ifconfig           - Display 10Base-T network interface configuration
   dmesg              - Print Linux kernel ring buffer logs
@@ -5651,6 +5652,20 @@ Telemetry payload: [CARRIER_1999HZ_FACILITY_CARLSBAD_OFFSET_0x0040]`);
  1  10.19.99.1 (cafe-switch-01.knet)  0.28 ms
  2  10.19.99.12 (station-02.knet)     0.41 ms
  3  10.19.99.4 (echo-bus-loopback)    0.35 ms [ANOMALY]`);
+  } else if (cmd === 'dial' || (cmd === 'telnet' && arg.includes('10.19.99.254')) || cmd === 'bbs') {
+    playModemChirp();
+    logStationCli(`ATDT 10.19.99.254:1999...
+CONNECT 56000/V.90/LAPM/V42BIS (Hardware V.42bis Compression Active)
+========================================================================
+[SUBTERRANEAN LITHO-BBS DIALUP RELAY // NODE 0x7F]
+Station IP: 10.19.99.254 | Baud: 56,600 bps | SysOp: @SysOp_0x7F
+Location: Sub-Basement Telecom Vault / Carlsbad Relay
+Subcarrier Frequency: 1999.04 Hz (Harmonic lock verified)
+Transit Gate: kweb://darknet (Encrypted Onion Relay)
+Memory Bridge: Sector 0x7F / Checksum 0x7F199942
+========================================================================
+NO CARRIER (Carrier timeout after telemetry burst)`);
+    broadcastArgSignalFragment(1999, 'DIALUP_LITHO_RELAY');
   } else if (cmd === 'telnet') {
     const target = arg || '10.19.99.4 1999';
     if (target.includes('10.19.99.4')) {
