@@ -723,7 +723,7 @@
   <!-- Top Security Classification Bar -->
   <div class="security-top-bar">
     <div style="display:flex; align-items:center; gap:8px;">
-      <span class="blink-alert">⚠️ TOP SECRET // LEVEL 4 CLASSIFIED</span>
+      <span class="blink-alert" id="hdrClearanceBadge">⚠️ TOP SECRET // LEVEL 4 CLASSIFIED</span>
       <span>• INTRANET GATEWAY 10.19.99.4:1999</span>
     </div>
     <div style="display:flex; align-items:center; gap:12px;">
@@ -768,7 +768,7 @@
     <button class="tab-btn" onclick="switchTab('map')">🗺️ Subnet &amp; Bunker Topology <kbd style="font-size:10px; opacity:0.75; margin-left:3px;">[4]</kbd></button>
     <button class="tab-btn" onclick="switchTab('packets')">📡 Telemetry &amp; Sniffer <kbd style="font-size:10px; opacity:0.75; margin-left:3px;">[5]</kbd></button>
     <button class="tab-btn" onclick="switchTab('terminal')">📟 Skunkworks Terminal <kbd style="font-size:10px; opacity:0.75; margin-left:3px;">[6]</kbd></button>
-    <button class="tab-btn" onclick="switchTab('verify')">🔐 Hash Verification <kbd style="font-size:10px; opacity:0.75; margin-left:3px;">[7]</kbd></button>
+    <button class="tab-btn" onclick="switchTab('verify')">🔐 Clearances &amp; Decryptor <kbd style="font-size:10px; opacity:0.75; margin-left:3px;">[7]</kbd></button>
     <button class="tab-btn" onclick="switchTab('airgap')">⚡ Deep Airgap &amp; Dual Resonance <kbd style="font-size:10px; opacity:0.75; margin-left:3px;">[8]</kbd></button>
     <button class="tab-btn" onclick="switchTab('interferometer')">🔬 Seismic Interferometer &amp; Resonator <kbd style="font-size:10px; opacity:0.75; margin-left:3px;">[9]</kbd></button>
     <button class="tab-btn" onclick="switchTab('cad')">📐 Transponder CAD &amp; RF Bench <kbd style="font-size:10px; opacity:0.75; margin-left:3px;">[0]</kbd></button>
@@ -1158,21 +1158,119 @@
     </div>
   </div>
 
-  <!-- TAB 7: CRYPTOGRAPHIC HASH VERIFICATION -->
+  <!-- TAB 7: SECURITY CLEARANCE & ENCRYPTED DOSSIER DECRYPTOR -->
   <div id="tab-verify" class="tab-pane">
-    <div style="background:var(--bg-card); border:1px solid var(--border); padding:16px; border-radius:4px; margin-bottom:14px;">
-      <h3 style="color:var(--amber-bright); margin-bottom:8px;">★ Subnet Cryptographic Checksum Registry ★</h3>
-      <p style="color:var(--text-muted); font-size:12px; margin-bottom:12px;">
-        To ensure mathematical verification of recovered sector directives without compromising classified blueprints, 
-        intranet operators can compute SHA-256 telemetry digests directly against authoritative sector records.
+    <!-- Top Clearance Status Banner -->
+    <div style="background:#090e1a; border:1px solid var(--border-amber); padding:12px 16px; border-radius:4px; margin-bottom:14px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+      <div>
+        <div style="display:flex; align-items:center; gap:8px;">
+          <span style="font-weight:700; color:var(--amber-bright); font-size:13px;">CARLSBAD SECURITY CLEARANCE AUTHENTICATION GATE:</span>
+          <span class="badge-tag" id="badgeActiveClearance" style="background:#450a0a; border-color:var(--red-alert); color:#fecaca; font-weight:bold;">LEVEL 4: TOP SECRET</span>
+        </div>
+        <div style="color:var(--text-muted); font-size:11px; margin-top:3px;">
+          Node <code>10.19.99.4:1999</code> &bull; Station 0x7F Subterranean HALITE Airgap &bull; Passkey Authenticator
+        </div>
+      </div>
+      <div style="display:flex; gap:6px; align-items:center;">
+        <span style="font-size:11px; color:var(--text-muted);">Quick Grants:</span>
+        <button class="btn-retro" style="font-size:10px; padding:2px 6px;" onclick="applyQuickClearance('CARLSBAD-SALT-99')">L4: Salt Token</button>
+        <button class="btn-retro" style="font-size:10px; padding:2px 6px;" onclick="applyQuickClearance('AETHEL-SECTOR-03')">L4: Sector 03</button>
+        <button class="btn-retro" style="font-size:10px; padding:2px 6px;" onclick="applyQuickClearance('0X7F1999')">L5: Precursor</button>
+      </div>
+    </div>
+
+    <!-- Clearance Authentication Input Form -->
+    <div style="background:var(--bg-card); border:1px solid var(--border); padding:14px; border-radius:4px; margin-bottom:14px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+        <strong style="color:var(--cyan-net); font-size:12px;">🔑 OPERATOR CLEARANCE PASSKEY VERIFICATION:</strong>
+        <span style="font-size:11px; color:var(--text-muted);">Levels: L1 Restricted &bull; L2 Confidential &bull; L3 Secret &bull; L4 Top Secret &bull; L5 Special Access</span>
+      </div>
+      <div style="display:flex; gap:8px; margin-bottom:8px; flex-wrap:wrap;">
+        <input type="text" id="clearancePasskeyInput" class="input-retro" style="flex:1; min-width:280px; text-transform:uppercase;" placeholder="Enter clearance passkey (e.g. CARLSBAD-SALT-99, AETHEL-SECTOR-03, 0x7F1999, 10.19.99.4)..." onkeydown="if(event.key==='Enter') authenticateClearanceInput()" />
+        <button class="btn-retro" onclick="authenticateClearanceInput()">🔐 Authenticate Clearance</button>
+        <button class="btn-retro" onclick="resetClearanceLevel()">Reset to L1</button>
+      </div>
+      <div id="clearanceAuthMsg" style="font-size:11px; color:var(--green-bright); min-height:18px;">
+        Active Session authenticated with Station 0x7F Top Secret Clearance (Level 4).
+      </div>
+    </div>
+
+    <!-- Interactive Dossier Decryptor Workbench -->
+    <div style="background:var(--bg-card); border:1px solid var(--border-amber); padding:14px; border-radius:4px; margin-bottom:14px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; flex-wrap:wrap; gap:8px;">
+        <div>
+          <strong style="color:var(--amber-bright); font-size:13px;">📂 CLASSIFIED ENCRYPTED DOSSIER DECRYPTOR WORKBENCH</strong>
+          <div style="color:var(--text-muted); font-size:11px; margin-top:2px;">
+            In-memory cryptographic demodulator for leaked Carlsbad intelligence dossiers and out-of-band sector fragments.
+          </div>
+        </div>
+        <div style="display:flex; gap:6px; align-items:center;">
+          <span style="font-size:11px; color:var(--text-muted);">Leaked Dossiers:</span>
+          <button class="btn-retro" style="font-size:10px; padding:3px 7px;" onclick="loadDossierPreset('salado')">Dossier #01: Salado Shield</button>
+          <button class="btn-retro" style="font-size:10px; padding:3px 7px;" onclick="loadDossierPreset('daemons')">Dossier #02: Subsystem Daemons</button>
+          <button class="btn-retro" style="font-size:10px; padding:3px 7px;" onclick="loadDossierPreset('transit')">Dossier #03: Precursor Transit</button>
+        </div>
+      </div>
+
+      <!-- Decryption Config Grid -->
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-bottom:10px;">
+        <!-- Left: Ciphertext Input -->
+        <div>
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+            <label style="font-size:11px; color:var(--text-muted); font-weight:bold;">ENCRYPTED CIPHERTEXT (HEX OR ASCII STREAM):</label>
+            <span id="lblCipherByteCount" style="font-size:10px; color:var(--cyan-net);">128 bytes</span>
+          </div>
+          <textarea id="cipherTextInput" class="input-retro" style="width:100%; height:110px; font-family:'Consolas','Courier New',monospace; font-size:11px; resize:vertical; padding:6px; line-height:1.4;" placeholder="Paste ciphertext hex stream or characters here..."></textarea>
+        </div>
+
+        <!-- Right: Plaintext Decrypted Output -->
+        <div>
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+            <label style="font-size:11px; color:var(--green-bright); font-weight:bold;">DECRYPTED INTELLIGENCE DOSSIER (PLAINTEXT):</label>
+            <span id="lblDecryptedStatus" style="font-size:10px; color:var(--green-bright);">DECRYPTED (CRC OK)</span>
+          </div>
+          <div id="decryptedOutputPane" style="width:100%; height:110px; overflow-y:auto; background:#02050b; border:1px solid var(--border); border-radius:3px; padding:6px; font-family:'Consolas','Courier New',monospace; font-size:11px; color:#f1f5f9; line-height:1.4; white-space:pre-wrap;"></div>
+        </div>
+      </div>
+
+      <!-- Controls Row -->
+      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; background:#040710; padding:8px 12px; border-radius:3px; border:1px solid var(--border);">
+        <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+          <span style="font-size:11px; color:var(--text-muted);">Algorithm:</span>
+          <select id="cipherAlgoSelect" class="input-retro" style="font-size:11px; padding:2px 6px;" onchange="onAlgoChange()">
+            <option value="xor">XOR Mask (Hex Byte Key)</option>
+            <option value="vigenere">Vigenère Keyword Cipher</option>
+            <option value="rot13">ROT-13 / Caesar Shift</option>
+            <option value="hex">Hex to ASCII Demodulator</option>
+            <option value="base64">Base64 Binary Frame</option>
+          </select>
+
+          <span style="font-size:11px; color:var(--text-muted);" id="lblCipherKey">Key:</span>
+          <input type="text" id="cipherKeyInput" class="input-retro" style="width:110px; font-size:11px; padding:2px 6px;" value="0x7F" placeholder="Key (e.g. 0x7F)" />
+
+          <button class="btn-retro" onclick="decryptCustomDossier()">⚡ Execute Decryption</button>
+        </div>
+
+        <div style="display:flex; gap:6px;">
+          <button class="btn-retro" onclick="exportDecryptedDossierTxt()">💾 Export Decrypted (.TXT)</button>
+          <button class="btn-retro" onclick="copyDecryptedText()">📋 Copy Text</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Subnet Cryptographic Checksum Registry -->
+    <div style="background:var(--bg-card); border:1px solid var(--border); padding:14px; border-radius:4px; margin-bottom:14px;">
+      <h3 style="color:var(--amber-bright); margin-bottom:8px; font-size:13px;">★ Subnet Cryptographic SHA-256 Checksum Registry ★</h3>
+      <p style="color:var(--text-muted); font-size:11px; margin-bottom:10px;">
+        Compute SHA-256 telemetry digests directly against authoritative sector records to verify discovered coordinates and key phrases without compromising blueprints.
       </p>
 
-      <div style="display:flex; gap:8px; margin-bottom:12px; flex-wrap:wrap;">
-        <input type="text" id="verifyInput" class="input-retro" style="flex:1; min-width:280px;" placeholder="Enter discovered key phrase, sector code, or fragment..." />
+      <div style="display:flex; gap:8px; margin-bottom:10px; flex-wrap:wrap;">
+        <input type="text" id="verifyInput" class="input-retro" style="flex:1; min-width:280px;" placeholder="Enter discovered key phrase, sector code, or fragment..." onkeydown="if(event.key==='Enter') verifyFragment()" />
         <button class="btn-retro" onclick="verifyFragment()">Calculate &amp; Verify Hash</button>
       </div>
 
-      <div id="verifyResult" style="padding:10px; background:#04070e; border:1px solid var(--border); font-size:12px; border-radius:3px;">
+      <div id="verifyResult" style="padding:10px; background:#04070e; border:1px solid var(--border); font-size:11px; border-radius:3px; min-height:44px;">
         Enter candidate text above to compute SHA-256 checksum and cross-reference with classified sector signatures.
       </div>
     </div>
@@ -1192,6 +1290,10 @@
         <tr style="border-bottom:1px solid #1e293b;">
           <td style="padding:6px; color:var(--amber-bright);">Carlsbad Precursor Fragment</td>
           <td style="padding:6px; font-family:monospace; color:#cbd5e1;">8f2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b...</td>
+        </tr>
+        <tr style="border-bottom:1px solid #1e293b;">
+          <td style="padding:6px; color:var(--amber-bright);">Halite Transit Pipe Token</td>
+          <td style="padding:6px; font-family:monospace; color:#cbd5e1;">a1b2c3d4e5f60718293a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e...</td>
         </tr>
       </table>
     </div>
@@ -1618,6 +1720,10 @@ The third precursor hash is hereby committed to the Carlsbad bedrock memory regi
           <button class="btn-retro" onclick="exportSeismicSig()">💾 Export Seismic Record (.SIG)</button>
           <a href="/web/deep_core.html" class="btn-retro" style="text-align:center; text-decoration:none; color:var(--cyan-net);">🚀 Proceed to Deep Core (10.19.99.127) &raquo;</a>
         </div>
+      </div>
+    </div>
+  </div>
+
   <!-- TAB 10: TRANSPONDER CAD SCHEMATIC & RF TEST BENCH -->
   <div id="tab-cad" class="tab-pane">
     <div style="background:#090e1a; border:1px solid var(--border); padding:10px 14px; margin-bottom:14px; border-radius:4px; font-size:12px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
@@ -4237,6 +4343,244 @@ ROTATION PROTOCOL: Sequential single-app execution cycle.`;
 /* =========================================================================
    6. CRYPTOGRAPHIC VERIFICATION STATION
    ========================================================================= */
+
+/* =========================================================================
+   6.1. SECURITY CLEARANCE AUTHENTICATION & DOSSIER DECRYPTOR
+   ========================================================================= */
+let activeClearanceLevel = 4; // 1: Restricted, 2: Confidential, 3: Secret, 4: Top Secret, 5: Special Access
+const CLEARANCE_LEVELS = {
+  1: { name: 'LEVEL 1: RESTRICTED', color: '#38bdf8', bg: '#0c2238' },
+  2: { name: 'LEVEL 2: CONFIDENTIAL', color: '#34d399', bg: '#062b1e' },
+  3: { name: 'LEVEL 3: SECRET', color: '#f59e0b', bg: '#3b2005' },
+  4: { name: 'LEVEL 4: TOP SECRET', color: '#f87171', bg: '#450a0a' },
+  5: { name: 'LEVEL 5: SPECIAL ACCESS', color: '#a78bfa', bg: '#2e1065' }
+};
+
+function updateClearanceUI() {
+  const conf = CLEARANCE_LEVELS[activeClearanceLevel] || CLEARANCE_LEVELS[4];
+  const topBadge = document.getElementById('hdrClearanceBadge');
+  if (topBadge) {
+    topBadge.textContent = `⚠️ ${conf.name} // INTRANET`;
+    topBadge.style.color = conf.color;
+    topBadge.style.borderColor = conf.color;
+  }
+  const badge = document.getElementById('badgeActiveClearance');
+  if (badge) {
+    badge.textContent = conf.name;
+    badge.style.color = conf.color;
+    badge.style.background = conf.bg;
+    badge.style.borderColor = conf.color;
+  }
+}
+
+function setClearanceLevel(lvl, msg, playAudio = true) {
+  activeClearanceLevel = Math.max(1, Math.min(5, lvl));
+  try { localStorage.setItem('carlsbad_clearance_level', String(activeClearanceLevel)); } catch(e) {}
+  updateClearanceUI();
+  applyRedactionVisibility();
+  if (playAudio) playResonanceChime();
+  const el = document.getElementById('clearanceAuthMsg');
+  if (el && msg) {
+    el.innerHTML = msg;
+  }
+}
+
+function authenticateClearanceInput() {
+  const input = document.getElementById('clearancePasskeyInput');
+  if (!input) return;
+  const val = input.value.trim().toUpperCase();
+  if (!val) return;
+
+  if (val.includes('0X7F1999') || val.includes('7F1999') || val.includes('DIRECTOR') || val.includes('TRANSCENDENCE')) {
+    setClearanceLevel(5, `<span style="color:var(--amber-bright); font-weight:bold;">★ LEVEL 5 CLEARANCE GRANTED:</span> Precursor Bedrock Directive Authenticated. Full Special Access unlocked.`);
+  } else if (val.includes('CARLSBAD-SALT-99') || val.includes('SALT-99') || val.includes('AETHEL-SECTOR-03') || val.includes('SECTOR-03') || val.includes('SECTOR_03') || val.includes('VANCE')) {
+    setClearanceLevel(4, `<span style="color:var(--green-bright); font-weight:bold;">★ LEVEL 4 TOP SECRET GRANTED:</span> Station 0x7F Subterranean Token Verified. Full memo declassification permitted.`);
+  } else if (val.includes('10.19.99.4') || val.includes('CLASSIFIED') || val.includes('ECHO')) {
+    setClearanceLevel(3, `<span style="color:var(--cyan-net); font-weight:bold;">★ LEVEL 3 SECRET GRANTED:</span> Intranet Repository Gateway Host Token Verified.`);
+  } else if (val.includes('1999HZ') || val.includes('1999') || val.includes('YM2612') || val.includes('HALITE')) {
+    setClearanceLevel(2, `<span style="color:var(--green-bright); font-weight:bold;">★ LEVEL 2 CONFIDENTIAL GRANTED:</span> Subcarrier RF Telemetry Beacon Verified.`);
+  } else {
+    setClearanceLevel(1, `<span style="color:var(--amber-bright);">● LEVEL 1 RESTRICTED:</span> Unrecognized clearance passkey. Default visitor access assigned.`, false);
+  }
+}
+
+function applyQuickClearance(token) {
+  const input = document.getElementById('clearancePasskeyInput');
+  if (input) input.value = token;
+  authenticateClearanceInput();
+}
+
+function resetClearanceLevel() {
+  setClearanceLevel(1, `<span style="color:var(--text-muted);">Clearance credentials revoked. Session reverted to Level 1 (Restricted).</span>`, false);
+  const input = document.getElementById('clearancePasskeyInput');
+  if (input) input.value = '';
+}
+
+// Classified Encrypted Dossier Presets
+const ENCRYPTED_DOSSIERS = {
+  salado: {
+    title: "Dossier #01: Operation Salado Shield",
+    algo: "xor",
+    key: "0x7F",
+    ciphertext: "30 20 35 22 31 24 39 3f 23 31 3c 31 34 3f 43 48 49 45 4c 44 7f 53 54 41 54 49 4f 4e 20 30 78 37 46 3a 20 53 75 62 74 65 72 72 61 6e 65 61 6e 20 62 65 64 64 65 64 20 68 61 6c 69 74 65 20 73 61 6c 74 20 76 61 75 6c 74 20 64 65 70 74 68 20 2d 36 35 30 6d 20 70 72 6f 76 69 64 65 73 20 69 6d 70 65 6e 65 74 72 61 62 6c 65 20 52 46 20 69 73 6f 6c 61 74 69 6f 6e 20 66 6f 72 20 63 6f 72 65 20 39 39 39 4b 42 20 61 70 70 6c 69 63 61 74 69 6f 6e 73 2e 20 43 61 70 61 63 69 74 69 76 65 20 67 72 6f 75 6e 64 20 77 61 76 65 20 66 72 65 71 75 65 6e 63 79 20 31 39 39 39 48 7a 20 6c 69 6e 6b 73 20 6e 6f 64 65 20 31 30 2e 31 39 2e 39 39 2e 34 20 74 6f 20 44 65 65 70 20 43 6f 72 65 20 61 74 20 31 30 2e 31 39 2e 39 39 2e 31 32 37 2e",
+    plaintext: "OPERATION SALADO SHIELD // STATION 0x7F: Subterranean bedded halite salt vault depth -650m provides impenetrable RF isolation for core 999KB applications. Capacitive ground wave frequency 1999Hz links node 10.19.99.4 to Deep Core at 10.19.99.127."
+  },
+  daemons: {
+    title: "Dossier #02: Subsystem Daemons",
+    algo: "rot13",
+    key: "13",
+    ciphertext: "CEBWRPG RPUB // FNYNQB INFGN: Gjb frafbe neenlf ebgngr va crecrghny fvkrra-fgrc qhgl plpyr: Terra-Engine (K-Creator), Chiptune-Synth (K-Soundscape), Quality-Audit (K-Tester), Ergonomics (K-Usability), Microcode-Gate (K-QA), and Transit-Relay (K-Expander). Nyy rapbqrq va fgevpg 999XO cre-nccyl fvcr.",
+    plaintext: "PROJECT ECHO // SALADO VASTA: Two sensor arrays rotate in perpetual sixteen-step duty cycle: Terra-Engine (K-Creator), Chiptune-Synth (K-Soundscape), Quality-Audit (K-Tester), Ergonomics (K-Usability), Microcode-Gate (K-QA), and Transit-Relay (K-Expander). All encoded in strict 999KB per-apply size."
+  },
+  transit: {
+    title: "Dossier #03: Precursor Transit",
+    algo: "xor",
+    key: "0x19",
+    ciphertext: "41 45 54 48 45 4c 2d 53 45 43 54 4f 52 2d 30 33 20 75 6e 6c 6f 63 6b 73 20 44 61 72 6b 6e 65 74 20 4e 6f 64 65 20 30 78 37 46 2e 20 50 72 65 63 75 72 73 6f 72 20 74 72 61 6e 73 69 74 20 6b 65 79 20 4c 49 54 48 4f 2d 43 4f 52 45 2d 39 39 20 73 79 6e 63 68 72 6f 6e 69 7a 65 73 20 44 65 65 70 20 43 6f 72 65 20 61 74 20 31 30 2e 31 39 2e 39 39 2e 31 32 37 2e",
+    plaintext: "AETHEL-SECTOR-03 unlocks Darknet Node 0x7F. Precursor transit key LITHO-CORE-99 synchronizes Deep Core at 10.19.99.127."
+  }
+};
+
+let currentDecryptedText = "";
+
+function onAlgoChange() {
+  const algo = document.getElementById('cipherAlgoSelect').value;
+  const keyLabel = document.getElementById('lblCipherKey');
+  const keyInput = document.getElementById('cipherKeyInput');
+  if (algo === 'xor') {
+    keyLabel.textContent = 'Hex Byte:';
+    keyInput.value = '0x7F';
+    keyInput.disabled = false;
+  } else if (algo === 'vigenere') {
+    keyLabel.textContent = 'Keyword:';
+    keyInput.value = 'HALITE';
+    keyInput.disabled = false;
+  } else if (algo === 'rot13') {
+    keyLabel.textContent = 'Shift:';
+    keyInput.value = '13';
+    keyInput.disabled = false;
+  } else {
+    keyLabel.textContent = 'Key:';
+    keyInput.value = '--';
+    keyInput.disabled = true;
+  }
+}
+
+function loadDossierPreset(id) {
+  const dossier = ENCRYPTED_DOSSIERS[id];
+  if (!dossier) return;
+  const txtArea = document.getElementById('cipherTextInput');
+  const algoSel = document.getElementById('cipherAlgoSelect');
+  const keyInput = document.getElementById('cipherKeyInput');
+  if (txtArea) txtArea.value = dossier.ciphertext;
+  if (algoSel) algoSel.value = dossier.algo;
+  if (keyInput) keyInput.value = dossier.key;
+  onAlgoChange();
+  const byteCount = document.getElementById('lblCipherByteCount');
+  if (byteCount) byteCount.textContent = `${dossier.ciphertext.length} bytes`;
+  decryptCustomDossier();
+}
+
+function decryptCustomDossier() {
+  const cipherInput = document.getElementById('cipherTextInput');
+  const algoSel = document.getElementById('cipherAlgoSelect');
+  const keyInput = document.getElementById('cipherKeyInput');
+  const outPane = document.getElementById('decryptedOutputPane');
+  const statusEl = document.getElementById('lblDecryptedStatus');
+  if (!cipherInput || !outPane) return;
+
+  const raw = cipherInput.value.trim();
+  const algo = algoSel ? algoSel.value : 'xor';
+  const key = keyInput ? keyInput.value.trim() : '0x7F';
+
+  let decrypted = '';
+  try {
+    if (algo === 'xor') {
+      const hexKey = parseInt(key.replace(/^0x/i, ''), 16) || 0x7F;
+      // Check if input is hex bytes separated by spaces or continuous hex
+      const cleanHex = raw.replace(/[^0-9a-fA-F]/g, '');
+      if (cleanHex.length >= 2 && cleanHex.length % 2 === 0 && raw.includes(' ')) {
+        const bytes = [];
+        for (let i = 0; i < cleanHex.length; i += 2) {
+          bytes.push(parseInt(cleanHex.substr(i, 2), 16) ^ hexKey);
+        }
+        decrypted = String.fromCharCode(...bytes);
+      } else {
+        // Plaintext XOR
+        decrypted = raw.split('').map(c => String.fromCharCode(c.charCodeAt(0) ^ hexKey)).join('');
+      }
+    } else if (algo === 'rot13') {
+      const shift = parseInt(key) || 13;
+      decrypted = raw.replace(/[a-zA-Z]/g, function(c) {
+        const base = c <= 'Z' ? 65 : 97;
+        return String.fromCharCode(((c.charCodeAt(0) - base + shift) % 26) + base);
+      });
+    } else if (algo === 'vigenere') {
+      const kw = key.toUpperCase() || 'HALITE';
+      let ki = 0;
+      decrypted = raw.replace(/[a-zA-Z]/g, function(c) {
+        const isUpper = c <= 'Z';
+        const base = isUpper ? 65 : 97;
+        const shift = kw.charCodeAt(ki % kw.length) - 65;
+        ki++;
+        return String.fromCharCode(((c.charCodeAt(0) - base - shift + 26) % 26) + base);
+      });
+    } else if (algo === 'hex') {
+      const cleanHex = raw.replace(/[^0-9a-fA-F]/g, '');
+      const bytes = [];
+      for (let i = 0; i < cleanHex.length; i += 2) {
+        bytes.push(parseInt(cleanHex.substr(i, 2), 16));
+      }
+      decrypted = String.fromCharCode(...bytes);
+    } else if (algo === 'base64') {
+      decrypted = atob(raw.replace(/\s/g, ''));
+    }
+  } catch (err) {
+    decrypted = `[DECRYPTION ERROR]: Malformed frame or key error (${err.message}).`;
+  }
+
+  currentDecryptedText = decrypted;
+  outPane.textContent = decrypted;
+  if (statusEl) {
+    statusEl.textContent = `DECRYPTED (${decrypted.length} CHARS)`;
+    statusEl.style.color = 'var(--green-bright)';
+  }
+
+  playFmTone(1999, 1.0, 15, 0.08, 0.06);
+}
+
+function exportDecryptedDossierTxt() {
+  if (!currentDecryptedText) {
+    alert('Please decrypt an intelligence dossier before exporting.');
+    return;
+  }
+  const blob = new Blob([
+    `AETHEL DYNAMICS CLASSIFIED INTELLIGENCE DOSSIER\n`,
+    `SOURCE: Node 10.19.99.4/classified (Station 0x7F Salado Vault)\n`,
+    `DATE: ${new Date().toISOString()}\n`,
+    `CLEARANCE: LEVEL ${activeClearanceLevel}\n`,
+    `----------------------------------------------------------------------\n\n`,
+    currentDecryptedText,
+    `\n\n----------------------------------------------------------------------\n`,
+    `CRC32: 0x7F1999AA &bull; 999KB WATCHDOG: ARMED\n`
+  ], { type: 'text/plain;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `CARLSBAD_DOSSIER_L${activeClearanceLevel}.TXT`;
+  a.click();
+}
+
+function copyDecryptedText() {
+  if (!currentDecryptedText) return;
+  navigator.clipboard.writeText(currentDecryptedText).then(() => {
+    const statusEl = document.getElementById('lblDecryptedStatus');
+    if (statusEl) {
+      statusEl.textContent = 'COPIED TO CLIPBOARD!';
+      setTimeout(() => { statusEl.textContent = `DECRYPTED (${currentDecryptedText.length} CHARS)`; }, 2000);
+    }
+  }).catch(() => {});
+}
+
 async function computeSha256(text) {
   const enc = new TextEncoder();
   const data = enc.encode(text.trim());
@@ -6316,6 +6660,12 @@ function startIncomingBeaconSimulation() {
 
 // Initial Boot Sequence
 window.addEventListener('DOMContentLoaded', () => {
+  try {
+    const savedLevel = localStorage.getItem('carlsbad_clearance_level');
+    if (savedLevel) activeClearanceLevel = parseInt(savedLevel) || 4;
+    updateClearanceUI();
+  } catch(e) {}
+  setTimeout(() => { loadDossierPreset('salado'); }, 200);
   renderMemoList();
   renderActiveMemo();
   loadSector('0x1999');
