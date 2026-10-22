@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-creator
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -21,7 +21,7 @@ current_targets:
   kilo_soundscape: KAbyss
   kilo_tester: KPing
   kilo_usability: KTerminal
-  kilo_qa: KPuzzle
+  kilo_qa: KCalc
   kilo_expander: KBase
 virtual_web_target: kweb://echo-subsystem.net
 virtual_web_rotation:
@@ -37,9 +37,9 @@ virtual_web_rotation:
 - kweb://deep-core
 - kweb://darknet
 last_run:
-  agent: kilo-usability
-  app: KPad
-  timestamp: '2026-10-22T06:36:00-07:00'
+  agent: kilo-qa
+  app: KPuzzle
+  timestamp: '2026-10-22T07:18:00-07:00'
 last_planner_run: '2026-10-21T23:32:00Z'
 ---
 
@@ -138,22 +138,22 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Upcoming Queue**: `KBase`, `KPass`.
 
 ### 6. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
-- **Target**: `KPuzzle`
-- **Primary Files**: `KiloOS/public/apps/kpuzzle.html`
-- **Objective**: Pass 5 QA audit: verify first-run tutorial onboarding overlay (`kpuzzle_tutorialSeen`), verify F5 quicksave & F9 quickload capturing grid state, move count, timer, and difficulty; test modal dismissal; compile Win32 native client (if present) and verify web cartridge (<999 KB).
+- **Target**: `KCalc`
+- **Primary Files**: `KiloOS/public/apps/kcalc.html`, `KCalc/main.c` (if present)
+- **Objective**: Pass 5 QA audit: verify calculator precision, memory registers, tape history, export formats, F5 quicksave & F9 quickload persistence, modal dismissals, and dual Win32 native client parity (<999 KB).
 - **Action Steps**:
-  1. State Persistence: F5 quicksave & F9 quickload capturing complete puzzle layout, timer, moves, and completion records.
+  1. State Persistence: F5 quicksave & F9 quickload capturing complete calculator state, history tape, memory registers, and unit conversions.
   2. First-run Tutorial: Onboarding displays once on fresh sessions, never on restored saves.
   3. Modal Dismissals: Modals dismiss cleanly with Escape, Enter, or Close button.
-  4. Dual Parity & Build: Compile Win32 native client via `cmd.exe /c build.bat` in `apps/kpuzzle/` (if present) and verify web build.
+  4. Dual Parity & Build: Compile Win32 native client via `cmd.exe /c build.bat` in `apps/kcalc/` or `KCalc/` (if present) and verify web build.
 - **Verification**:
-  - `uv run scripts/test_app_startup.py --app KPuzzle`
-  - `cd KiloOS && npm run build` (0 Vite errors, `kpuzzle.html` < 999 KB)
+  - `uv run scripts/test_app_startup.py --app KCalc`
+  - `cd KiloOS && npm run build` (0 Vite errors, `kcalc.html` < 999 KB)
 - **Handoff**:
-  - In frontmatter: advance `current_targets.kilo_qa` to `KCalc`.
+  - In frontmatter: advance `current_targets.kilo_qa` to `KSpace`.
   - Set `current_agent: kilo-expander`.
   - Append terse execution log (≤6 lines), commit, and push.
-- **Upcoming Queue**: `KCalc`, `KSpace`.
+- **Upcoming Queue**: `KSpace`, `KPing`.
 
 ### 7. Feature Expander Queue (`kilo-expander`)
 - **Target**: `KBase`
@@ -213,6 +213,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-22T07:18:00-07:00 — kilo-qa: KPuzzle (Pass 5 QA & Build Audit)**
+  - ⏭️ Skip — KPuzzle does not exist in fleet catalog; advanced target to KCalc.
+
 - **2026-10-22T06:36:00-07:00 — kilo-usability: KPad (UI/UX Ergonomics & Mature Quarantine)**
   - PASS ✅ (Layout responsiveness, touch outline splitter, modal enter guards, and mature quarantine).
   - Modal Ergonomics: Fixed global Enter listener to guard interactive inputs (search, go-to-line, encryption passphrase) against premature modal dismissal.
@@ -243,11 +246,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Dual Parity: Clean parity verified across Web HTML & Win32 C `KTrader.exe` (26.6 KB).
   - Verification: `npm run build` PASS (0 errors), `test_app_startup.py` PASS (107.2 KB < 999 KB), `security_lint.py` PASS, icons UNIQUE.
   - Queue Handoff: Advanced `current_targets.kilo_graphics` to `KAbyss`; rotated `current_agent` to `kilo-soundscape`.
-
-- **2026-10-21T23:36:00-07:00 — kilo-expander: KPing (Diagnostic Suite Expansion & Dual Parity)**
-  - PASS ✅ (Subnet topology, granular pacing & fleet mesh parity implemented across web and Win32 C).
-  - Web Improvements: Repaired btnTopo disable logic so subnet topology trace can be cleanly cancelled/stopped; wired subnet sweep & pacing controls.
-  - Native Win32 Parity: Created Topo [X] and Mesh [G] buttons; instantiated Int(ms) granular pacing input & hotkeys ('[' / ']'); added Mode 8 Fleet Mesh telemetry.
-  - Interactive Hotkeys: Added 'G' for fleet mesh echo, '[' / ']' for pacing interval adjustments, and 'J' for RFC 3550 jitter telemetry in native client.
-  - Parity & Verification: test_app_startup PASS (175.5 KB < 999 KB); native KPing.exe clean build (47.6 KB < 999 KB); Vite build PASS (0 errors).
-  - Queue Handoff: Advanced current_targets.kilo_expander to KBase; rotated current_agent to kilo-creator.

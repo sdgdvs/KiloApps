@@ -110,6 +110,10 @@ async def run_cdp_audit(app_name: str, browser_path: str, port: int) -> Dict[str
         return {
             "app": clean_name,
             "success": False,
+            "passed": False,
+            "file_size_kb": 0.0,
+            "human_perspective_summary": f"File not found: {app_file}",
+            "failures": [f"File not found: {app_file}"],
             "error": f"File not found: {app_file}"
         }
 
