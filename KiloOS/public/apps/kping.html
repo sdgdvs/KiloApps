@@ -43,29 +43,29 @@
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
   }
   .controls {
-    display: flex; flex-direction: column; gap: 8px; padding: 10px 14px; margin-bottom: 10px;
+    display: flex; flex-direction: column; gap: 6px; padding: 8px 12px; margin-bottom: 8px;
   }
   .controls-row {
-    display: flex; flex-wrap: wrap; gap: 8px; align-items: flex-end; width: 100%;
+    display: flex; flex-wrap: wrap; gap: 6px; align-items: flex-end; width: 100%;
   }
   .actions-row {
-    display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: space-between; width: 100%;
+    display: flex; flex-wrap: wrap; gap: 6px; align-items: center; justify-content: space-between; width: 100%;
     padding-top: 6px; border-top: 1px solid var(--border-subtle);
   }
   .actions-left, .actions-right {
-    display: flex; flex-wrap: wrap; gap: 6px; align-items: center;
+    display: flex; flex-wrap: wrap; gap: 5px; align-items: center;
   }
   .actions-divider {
     flex: 1; min-width: 8px;
   }
-  .host-group { flex: 1; min-width: 150px; }
-  .preset-group { width: 140px; }
-  .count-group { width: 52px; }
-  .size-group { width: 62px; }
-  .ttl-group { width: 52px; }
-  .timeout-group { width: 68px; }
+  .host-group { flex: 1; min-width: 140px; }
+  .preset-group { width: 136px; }
+  .count-group { width: 50px; }
+  .size-group { width: 60px; }
+  .ttl-group { width: 50px; }
+  .timeout-group { width: 66px; }
   .options-group {
-    display: flex; flex-wrap: wrap; gap: 10px; align-items: center; padding-bottom: 5px;
+    display: flex; flex-wrap: wrap; gap: 8px; align-items: center; padding-bottom: 5px;
   }
   .header-help-hint {
     background: rgba(59, 130, 246, 0.15);
@@ -115,15 +115,15 @@
   }
   input[type="checkbox"] { accent-color: var(--accent); width: 14px; height: 14px; cursor: pointer; }
   .btn {
-    padding: 6px 12px; border: none; border-radius: 6px; font-weight: 600; font-size: 12px;
-    min-height: 32px; touch-action: manipulation;
+    padding: 5px 9px; border: none; border-radius: 6px; font-weight: 600; font-size: 11.5px;
+    min-height: 30px; touch-action: manipulation;
     cursor: pointer; transition: all 0.2s ease;
-    display: flex; align-items: center; justify-content: center; gap: 5px; min-width: 68px;
+    display: flex; align-items: center; justify-content: center; gap: 4px; min-width: 56px;
     font-family: inherit; user-select: none;
   }
   .kbd-badge {
-    display: inline-block; font-size: 9.5px; font-family: "Consolas", monospace;
-    background: rgba(0, 0, 0, 0.3); padding: 1px 4px; border-radius: 4px;
+    display: inline-block; font-size: 9px; font-family: "Consolas", monospace;
+    background: rgba(0, 0, 0, 0.35); padding: 1px 3px; border-radius: 3px;
     border: 1px solid rgba(255, 255, 255, 0.2); opacity: 0.85; font-weight: normal;
   }
   .btn-primary { background: var(--accent); color: white; }
@@ -338,6 +338,11 @@
   }
 
   /* Responsive Layout Ergonomics */
+  @media (max-width: 1040px) {
+    .controls { padding: 8px 10px; gap: 6px; }
+    .controls-row { gap: 6px; }
+    .actions-row { gap: 6px; }
+  }
   @media (max-width: 768px) {
     body { padding: 8px; }
     .controls { padding: 8px 10px; }
@@ -386,7 +391,7 @@
     <div class="controls-row">
       <div class="input-group host-group">
         <label for="host">Target Host / IP</label>
-        <input type="text" id="host" value="127.0.0.1" placeholder="e.g. 1.1.1.1 or 10.19.99.1" title="Target IP address or domain name (Press Enter to Ping)">
+        <input type="text" id="host" value="127.0.0.1" placeholder="e.g. 1.1.1.1 or 10.19.99.1" title="Target IP address or domain name (Press Enter to Ping)" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" aria-label="Target Host or IP address">
       </div>
       <div class="input-group preset-group">
         <label for="presetSelect">Presets</label>
@@ -517,31 +522,31 @@ Press Enter or 'P' to Ping, 'B' for BGP, 'Q' for Bloat, 'G' for Global Mesh, F5/
 </textarea>
     </div>
     
-    <div class="glass analytics-panel">
-      <div class="stats-box">
+    <div class="glass analytics-panel" role="region" aria-label="Network Telemetry Metrics">
+      <div class="stats-box" title="RFC 3550 statistical delay variation between consecutive packets">
         <span>Avg Jitter</span>
-        <strong id="valJitter">0ms</strong>
+        <strong id="valJitter" aria-label="Average Jitter">0ms</strong>
       </div>
-      <div class="stats-box">
+      <div class="stats-box" title="Percentage of transmitted ICMP echo packets that received no reply">
         <span>Packet Loss</span>
-        <strong id="valLoss">0%</strong>
+        <strong id="valLoss" aria-label="Packet Loss Percentage">0%</strong>
       </div>
-      <div class="stats-box">
+      <div class="stats-box" title="Standard deviation of round-trip times reflecting latency consistency">
         <span>Std Dev (σ)</span>
-        <strong id="valStdDev">0ms</strong>
+        <strong id="valStdDev" aria-label="Standard Deviation of Latency">0ms</strong>
       </div>
-      <div class="stats-box">
+      <div class="stats-box" title="Mean Opinion Score (1.0 to 4.5) estimating call quality per ITU-T G.107">
         <span>VoIP MOS</span>
-        <strong id="valMOS">4.4</strong>
+        <strong id="valMOS" aria-label="VoIP Mean Opinion Score">4.4</strong>
         <span id="tagMOS" class="quality-tag tag-crystal">Crystal</span>
       </div>
-      <div class="stats-box">
+      <div class="stats-box" title="Service Level Agreement tier based on latency & packet stability">
         <span>SLA Grade</span>
-        <strong id="valSLA">A+</strong>
+        <strong id="valSLA" aria-label="SLA Grade">A+</strong>
       </div>
-      <div class="stats-box">
+      <div class="stats-box" title="Maximum Transmission Unit in bytes discovered before packet fragmentation">
         <span>Path MTU</span>
-        <strong id="valMTU">-</strong>
+        <strong id="valMTU" aria-label="Path Maximum Transmission Unit">-</strong>
       </div>
       <div class="graph-box" style="position: relative;">
         <span style="font-size: 10px; color: var(--text-muted); position: absolute; top: 2px; left: 8px; font-family: monospace;">Latency & Jitter Telemetry (ms)</span>
@@ -942,6 +947,7 @@ Press Enter or 'P' to Ping, 'B' for BGP, 'Q' for Bloat, 'G' for Global Mesh, F5/
     if (btnSound) {
       btnSound.innerHTML = soundMuted ? 'Audio: OFF <span class="kbd-badge">U</span>' : 'Audio: ON <span class="kbd-badge">U</span>';
       btnSound.style.opacity = soundMuted ? '0.7' : '1';
+      btnSound.setAttribute('aria-pressed', soundMuted ? 'false' : 'true');
     }
   }
   updateSoundButton();

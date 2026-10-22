@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-qa
+current_agent: kilo-qa
+next_agent: kilo-expander
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -20,7 +20,7 @@ current_targets:
   kilo_graphics: KTrader
   kilo_soundscape: KSpace
   kilo_tester: KCalc
-  kilo_usability: KPing
+  kilo_usability: KPad
   kilo_qa: KColosseum
   kilo_expander: KPing
 virtual_web_target: kweb://10.19.99.4/classified
@@ -37,9 +37,9 @@ virtual_web_rotation:
 - kweb://deep-core
 - kweb://darknet
 last_run:
-  agent: kilo-tester
-  app: KPass
-  timestamp: '2026-10-21T19:36:00-07:00'
+  agent: kilo-usability
+  app: KPing
+  timestamp: '2026-10-21T20:35:00-07:00'
 last_planner_run: '2026-10-21T23:32:00Z'
 ---
 
@@ -123,19 +123,19 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Upcoming Queue**: `KPing`, `KBase`, `KPass`.
 
 ### 5. Usability & UX Queue (`kilo-usability`)
-- **Target**: `KCalc`
-- **Primary File**: `KiloOS/public/apps/kcalc.html`
-- **Objective**: Desktop calculator ergonomics: responsive button grid, standard/scientific mode toggles, memory indicators, keyboard numpad hotkeys, and HiDPI crisp canvas/display rendering.
+- **Target**: `KPad`
+- **Primary File**: `KiloOS/public/apps/kpad.html`
+- **Objective**: Rich text & markdown scratchpad ergonomics: responsive sidebar layout, document outline scaling, keyboard shortcuts guide, and HiDPI crisp canvas/display rendering.
 - **Action Steps**:
   1. Inspect layout adaptability across standard and compact window dimensions.
-  2. Verify keyboard navigation across credential records and generator dialogs.
-  3. Ensure high-contrast accessibility and crisp font/cursor rendering.
+  2. Verify keyboard navigation, shortcut discoverability, and focus trapping.
+  3. Ensure high-contrast accessibility, crisp font rendering, and HiDPI canvas scaling.
 - **Verification**: `cd KiloOS && npm run build`. File size < 999 KB.
 - **Handoff**:
-  - In frontmatter: advance `current_targets.kilo_usability` to `KPing`.
+  - In frontmatter: advance `current_targets.kilo_usability` to `KTerminal`.
   - Set `current_agent: kilo-qa`.
   - Append terse execution log (≤6 lines), commit, and push.
-- **Upcoming Queue**: `KPing`, `KPad`, `KTerminal`.
+- **Upcoming Queue**: `KTerminal`, `KBase`.
 
 ### 6. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
 - **Target**: `KColosseum`
@@ -211,6 +211,15 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-21T20:35:00-07:00 — kilo-usability: KPing (UI/UX & Layout Polish)**
+  - PASS ✅ (Layout & window ergonomics optimized; dual parity verified).
+  - Window & Layout: Expanded default window in App.jsx to 1040x720; streamlined toolbar padding/margins to prevent cramped wrapping.
+  - Responsive Ergonomics: Added 1040px responsive breakpoint and tightened controls grid so all diagnostic fields fit cleanly.
+  - Telemetry Tooltips & ARIA: Added descriptive RFC/ITU-T standard tooltips and ARIA labels across telemetry analytics cards.
+  - Accessibility: Added aria-label & aria-pressed toggles on audio and host inputs; verified HiDPI canvas scaling.
+  - Verification: test_app_startup PASS (159.6 KB < 999 KB); native KPing.exe built cleanly (39.4 KB); npm run build PASS (0 errors).
+  - Queue Handoff: Advanced current_targets.kilo_usability to KPad; rotated current_agent to kilo-qa.
+
 - **2026-10-21T19:36:00-07:00 — kilo-tester: KPass (Interactive UI Audit & Inline Fixes)**
   - PASS ✅ (0 broken handlers; 4 accessibility and ergonomic improvements applied).
   - WAI-ARIA Ergonomics: Added radiogroup arrow navigation (Left/Right/Up/Down) for generator mode pills.
@@ -240,14 +249,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Subterranean Litho-BBS Relay: Implemented station CLI `dial 10.19.99.254` / `telnet 10.19.99.254` with acoustic V.90 handshake & Node 0x7F telemetry burst.
   - Verification & Lint: Verified 0 security lint violations, 0 Vite build errors, and cybercafe.html strictly compliant (<999 KB, 471 KB).
   - Queue Handoff: Advanced current_targets.kilo_creator and virtual_web_target to kweb://10.19.99.4/classified; rotated current_agent to kilo-graphics.
-
-
-- **2026-10-21T16:32:00-07:00 — kilo-planner: Fleet (24h Fleet Planning & Queue Rework)**
-  - Fleet Velocity: Assessed 105 apps; 26 mature applications archived in quarantine table.
-  - Queue Rebalance: Dispersed targets across active queues (kweb://cybercafe, KSpace, KTrader, KPass, KCalc, KColosseum, KPing); 0 mature collisions.
-  - Icon Uniqueness: Verified all 105 apps have distinct icons and 0 duplicate SHA256 hashes via check_icons.py.
-  - Verification: Clean startup tests verified across active targets; Vite build clean; zero console errors.
-  - Queue Handoff: Updated last_planner_run timestamp; rotated current_agent to kilo-creator for next scheduled cycle.
-
-
-
