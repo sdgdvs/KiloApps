@@ -880,6 +880,217 @@
     overflow: hidden;
   }
 
+  /* Collapsible Document Outline Sidebar */
+  .outline-sidebar {
+    width: 220px;
+    min-width: 170px;
+    max-width: 360px;
+    background: rgba(11, 15, 25, 0.95);
+    border-right: 1px solid var(--border-glass);
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    z-index: 10;
+    user-select: none;
+    transition: width 0.15s ease, margin-left 0.15s ease, opacity 0.15s ease;
+    flex-shrink: 0;
+  }
+  .outline-sidebar.collapsed {
+    width: 0 !important;
+    min-width: 0 !important;
+    margin-left: -1px;
+    opacity: 0;
+    pointer-events: none;
+    overflow: hidden;
+    border-right: none;
+  }
+  .outline-header {
+    padding: 8px 10px;
+    background: rgba(0, 0, 0, 0.25);
+    border-bottom: 1px solid var(--border-glass);
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    flex-shrink: 0;
+  }
+  .outline-title-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+  }
+  .outline-title {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .outline-count-badge {
+    background: rgba(59, 130, 246, 0.15);
+    color: var(--tok-kw);
+    font-size: 10px;
+    padding: 1px 6px;
+    border-radius: 10px;
+    border: 1px solid rgba(59, 130, 246, 0.3);
+  }
+  .outline-icon-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 2px 5px;
+    border-radius: 4px;
+    font-size: 12px;
+    line-height: 1;
+    transition: all 0.12s;
+  }
+  .outline-icon-btn:hover {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.1);
+  }
+  .outline-filter-input {
+    width: 100%;
+    box-sizing: border-box;
+    background: rgba(0, 0, 0, 0.35);
+    border: 1px solid var(--border-glass);
+    border-radius: 4px;
+    padding: 4px 8px;
+    font-size: 11px;
+    color: var(--text-primary);
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  .outline-filter-input:focus {
+    border-color: var(--accent);
+  }
+  .outline-list {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 6px 4px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .outline-list::-webkit-scrollbar { width: 4px; }
+  .outline-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
+  .outline-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 4px 6px;
+    border-radius: 4px;
+    font-size: 11px;
+    cursor: pointer;
+    transition: background 0.12s, color 0.12s;
+    color: var(--text-secondary);
+    user-select: none;
+    border: 1px solid transparent;
+  }
+  .outline-item:hover {
+    background: rgba(59, 130, 246, 0.15);
+    border-color: rgba(59, 130, 246, 0.25);
+    color: #fff;
+  }
+  .outline-item.active {
+    background: rgba(59, 130, 246, 0.25);
+    border-color: var(--border-active);
+    color: #38bdf8;
+    font-weight: 600;
+  }
+  .outline-tag {
+    font-size: 9px;
+    font-weight: 700;
+    padding: 1px 4px;
+    border-radius: 3px;
+    margin-right: 6px;
+    flex-shrink: 0;
+    line-height: 1.2;
+    text-transform: uppercase;
+  }
+  .outline-tag.tag-h1 { background: rgba(56, 189, 248, 0.2); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.4); }
+  .outline-tag.tag-h2 { background: rgba(52, 211, 153, 0.2); color: #34d399; border: 1px solid rgba(52, 211, 153, 0.4); }
+  .outline-tag.tag-h3 { background: rgba(167, 139, 250, 0.2); color: #a78bfa; border: 1px solid rgba(167, 139, 250, 0.4); }
+  .outline-tag.tag-h4 { background: rgba(245, 158, 11, 0.2); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.4); }
+  .outline-tag.tag-fn { background: rgba(244, 114, 182, 0.2); color: #f472b6; border: 1px solid rgba(244, 114, 182, 0.4); }
+  .outline-tag.tag-cls { background: rgba(251, 191, 36, 0.2); color: #fbbf24; border: 1px solid rgba(251, 191, 36, 0.4); }
+  .outline-text {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .outline-line {
+    font-size: 9px;
+    color: var(--text-muted);
+    margin-left: 4px;
+    flex-shrink: 0;
+    font-family: monospace;
+  }
+  .outline-empty {
+    color: var(--text-muted);
+    font-size: 11px;
+    text-align: center;
+    padding: 24px 8px;
+    line-height: 1.5;
+  }
+
+  /* Outline Resizer Splitter */
+  .outline-splitter {
+    width: 4px;
+    background: transparent;
+    cursor: col-resize;
+    position: relative;
+    z-index: 12;
+    flex-shrink: 0;
+    transition: background 0.15s;
+  }
+  .outline-splitter:hover, .outline-splitter.active {
+    background: var(--accent);
+  }
+
+  /* HiDPI Canvas Minimap */
+  .minimap-container {
+    width: 64px;
+    background: rgba(11, 15, 25, 0.85);
+    border-left: 1px solid var(--border-glass);
+    position: relative;
+    flex-shrink: 0;
+    user-select: none;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    z-index: 5;
+    transition: width 0.15s ease, opacity 0.15s ease;
+  }
+  .minimap-container.collapsed {
+    width: 0 !important;
+    opacity: 0;
+    pointer-events: none;
+    border-left: none;
+  }
+  #minimap-canvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+    cursor: pointer;
+  }
+  .minimap-slider {
+    position: absolute;
+    left: 0;
+    right: 0;
+    background: rgba(59, 130, 246, 0.22);
+    border-top: 1px solid rgba(59, 130, 246, 0.7);
+    border-bottom: 1px solid rgba(59, 130, 246, 0.7);
+    pointer-events: none;
+    transition: top 0.04s ease;
+    box-sizing: border-box;
+  }
+
   /* Gutter Line Numbers */
   .gutter {
     width: 50px;
@@ -1334,6 +1545,21 @@
     .status-bar { font-size: 10px; padding: 3px 8px; gap: 6px; }
     #stat-words, #stat-encoding { display: none; }
   }
+  @media (max-width: 768px) {
+    .outline-sidebar:not(.user-opened) {
+      width: 0 !important;
+      min-width: 0 !important;
+      margin-left: -1px;
+      opacity: 0;
+      pointer-events: none;
+      border-right: none;
+    }
+    .outline-sidebar.user-opened {
+      max-width: 75vw;
+    }
+    .outline-splitter { display: none; }
+    .minimap-container { display: none; }
+  }
   @media (max-width: 680px) {
     .quick-group:last-child { display: none; }
     .tag-preset-chip { display: none; }
@@ -1575,6 +1801,9 @@
 
     <div class="menu-btn">View
       <div class="dropdown">
+        <div onclick="toggleOutlineSidebar()"><span>Toggle Document Outline</span><span class="shortcut">Alt+O</span></div>
+        <div onclick="toggleMinimap()"><span>Toggle Canvas Minimap</span><span class="shortcut">Alt+U</span></div>
+        <div class="divider"></div>
         <div onclick="togglePreview()"><span>Toggle Live Preview (Markdown / HTML)</span><span class="shortcut">Alt+P</span></div>
         <div onclick="openGlobalTabSearch()"><span>Search All Open Tabs</span><span class="shortcut">Ctrl+Shift+F</span></div>
         <div class="divider"></div>
@@ -1661,6 +1890,12 @@
       <button class="quick-btn" onclick="openGlobalTabSearch()" title="Search Across All Open Tabs (Ctrl+Shift+F)">
         🌐 Tabs Search <span class="kbd-hint">Ctrl+Shift+F</span>
       </button>
+      <button class="quick-btn" id="btn-quick-outline" onclick="toggleOutlineSidebar()" title="Toggle Document Outline Sidebar (Alt+O)">
+        📑 Outline <span class="kbd-hint">Alt+O</span>
+      </button>
+      <button class="quick-btn" id="btn-quick-minimap" onclick="toggleMinimap()" title="Toggle HiDPI Canvas Minimap (Alt+U)">
+        🗺️ Minimap <span class="kbd-hint">Alt+U</span>
+      </button>
       <button class="quick-btn" id="btn-quick-preview" onclick="togglePreview()" title="Toggle Live Markdown / HTML Preview (Alt+P)">
         👁️ Preview <span class="kbd-hint">Alt+P</span>
       </button>
@@ -1733,13 +1968,36 @@
     </div>
   </div>
 
-  <!-- Editor Container with Line Gutter, Draggable Resizer, and Split Preview -->
+  <!-- Editor Container with Outline Sidebar, Line Gutter, Code Container, Minimap, Resizer, and Split Preview -->
   <div class="editor-wrapper" id="editor-wrapper">
+    <!-- Collapsible Document Outline Sidebar -->
+    <div class="outline-sidebar" id="outline-sidebar">
+      <div class="outline-header">
+        <div class="outline-title-row">
+          <span class="outline-title">📑 Outline</span>
+          <span class="outline-count-badge" id="outline-count-badge">0 items</span>
+          <button class="outline-icon-btn" onclick="toggleOutlineSidebar()" title="Collapse Outline (Alt+O)">◀</button>
+        </div>
+        <div class="outline-search-row">
+          <input type="text" id="outline-filter-input" class="outline-filter-input" placeholder="Filter headings / symbols..." oninput="filterOutline(this.value)">
+        </div>
+      </div>
+      <div class="outline-list" id="outline-list"></div>
+    </div>
+    <div class="outline-splitter" id="outline-splitter" title="Drag to resize Outline (double-click to reset 220px)"></div>
+
     <div class="gutter" id="gutter"></div>
     <div class="code-container" id="code-container">
       <pre id="highlight-pre" aria-hidden="true"><code id="highlight-code"></code></pre>
       <textarea id="editor" spellcheck="false" wrap="off" aria-label="Text Editor" placeholder="Start typing or click a template above (📝 Notes, ⚡ JS, 🌐 HTML5, ⚙️ C, 📦 JSON)..."></textarea>
     </div>
+
+    <!-- HiDPI Canvas Minimap -->
+    <div class="minimap-container" id="minimap-container">
+      <canvas id="minimap-canvas" width="64" height="400" title="Canvas Minimap - Click or drag to jump (Alt+U)"></canvas>
+      <div class="minimap-slider" id="minimap-slider"></div>
+    </div>
+
     <div class="preview-splitter" id="preview-splitter" style="display:none;" title="Drag to resize preview pane (double-click to reset 50/50)"></div>
     <div class="preview-pane" id="preview-pane" style="display:none;">
       <div class="preview-header">
@@ -1761,6 +2019,8 @@
     <div class="status-left">
       <div class="status-item" id="file-path">Untitled 1</div>
       <div class="status-item" id="file-status">Ready</div>
+      <div class="status-item status-clickable" id="stat-outline" onclick="toggleOutlineSidebar()" title="Click to toggle Document Outline (Alt+O)">📑 Outline</div>
+      <div class="status-item status-clickable" id="stat-minimap" onclick="toggleMinimap()" title="Click to toggle Canvas Minimap (Alt+U)">🗺️ Minimap</div>
       <div class="status-item status-clickable" id="stat-autosave" style="color: #34d399; font-size:10px;" onclick="triggerManualAutoSave()" title="Click to trigger manual autosave & sync snapshot">● Auto-Saved</div>
       <div class="status-item status-clickable" id="stat-collab" onclick="openCollabCenter()" title="Collab Session Status (Click for Collab Hub [Alt+M])">
         👥 Collab: Solo
@@ -2498,6 +2758,14 @@
         updatePreview();
       }
 
+      // Update Document Outline & HiDPI Canvas Minimap
+      if (typeof outlineVisible !== 'undefined' && outlineVisible) {
+        throttleUpdateOutline();
+      }
+      if (typeof minimapVisible !== 'undefined' && minimapVisible) {
+        renderMinimap();
+      }
+
       // Mark tab as modified
       if (activeTabIndex >= 0 && activeTabIndex < tabs.length) {
         if (text !== tabs[activeTabIndex].content) {
@@ -2533,6 +2801,9 @@
       highlightPre.scrollTop = editor.scrollTop;
       highlightPre.scrollLeft = editor.scrollLeft;
       gutter.scrollTop = editor.scrollTop;
+      if (typeof minimapVisible !== 'undefined' && minimapVisible) {
+        renderMinimap();
+      }
     });
 
     editor.addEventListener('input', updateEditor);
@@ -3297,6 +3568,459 @@
       window.addEventListener('touchmove', onPointerMove, { passive: true });
       window.addEventListener('mouseup', onPointerUp);
       window.addEventListener('touchend', onPointerUp);
+    }
+
+        // --- Document Outline Sidebar & Ergonomics ---
+    let outlineVisible = safeGetStorage('kpad_outline_visible') !== 'false';
+    let outlineFilterQuery = '';
+    let cachedOutlineItems = [];
+    let outlineUpdateTimer = null;
+
+    function toggleOutlineSidebar(forceState) {
+      const sidebar = document.getElementById('outline-sidebar');
+      const splitter = document.getElementById('outline-splitter');
+      const btn = document.getElementById('btn-quick-outline');
+      if (!sidebar) return;
+
+      if (typeof forceState === 'boolean') {
+        outlineVisible = forceState;
+      } else {
+        outlineVisible = !outlineVisible;
+      }
+
+      sidebar.classList.toggle('collapsed', !outlineVisible);
+      sidebar.classList.toggle('user-opened', outlineVisible);
+      if (splitter) splitter.style.display = outlineVisible ? 'block' : 'none';
+      if (btn) btn.classList.toggle('active', outlineVisible);
+
+      try {
+        safeSetStorage('kpad_outline_visible', outlineVisible ? 'true' : 'false');
+      } catch (e) {}
+
+      if (outlineVisible) {
+        updateOutline();
+      }
+    }
+
+    function initOutlineSidebar() {
+      const sidebar = document.getElementById('outline-sidebar');
+      const splitter = document.getElementById('outline-splitter');
+      const btn = document.getElementById('btn-quick-outline');
+      if (!sidebar) return;
+
+      if (window.innerWidth <= 768) {
+        outlineVisible = false;
+      }
+
+      sidebar.classList.toggle('collapsed', !outlineVisible);
+      if (splitter) splitter.style.display = outlineVisible ? 'block' : 'none';
+      if (btn) btn.classList.toggle('active', outlineVisible);
+    }
+
+    function initOutlineSplitter() {
+      const splitter = document.getElementById('outline-splitter');
+      const sidebar = document.getElementById('outline-sidebar');
+      if (!splitter || !sidebar) return;
+
+      let isDragging = false;
+
+      function startDrag(e) {
+        isDragging = true;
+        splitter.classList.add('active');
+        document.body.style.cursor = 'col-resize';
+        document.body.style.userSelect = 'none';
+      }
+
+      function moveDrag(clientX) {
+        if (!isDragging) return;
+        const wrapper = document.getElementById('editor-wrapper');
+        if (!wrapper) return;
+        const rect = wrapper.getBoundingClientRect();
+        const maxW = Math.min(380, Math.floor(window.innerWidth * 0.75));
+        const newWidth = Math.min(maxW, Math.max(140, clientX - rect.left));
+        sidebar.style.width = newWidth + 'px';
+      }
+
+      function endDrag() {
+        if (!isDragging) return;
+        isDragging = false;
+        splitter.classList.remove('active');
+        document.body.style.cursor = '';
+        document.body.style.userSelect = '';
+      }
+
+      splitter.addEventListener('mousedown', (e) => {
+        startDrag(e);
+        e.preventDefault();
+      });
+
+      window.addEventListener('mousemove', (e) => {
+        moveDrag(e.clientX);
+      });
+
+      window.addEventListener('mouseup', endDrag);
+
+      splitter.addEventListener('touchstart', (e) => {
+        startDrag(e);
+      }, { passive: true });
+
+      window.addEventListener('touchmove', (e) => {
+        if (isDragging && e.touches && e.touches[0]) {
+          moveDrag(e.touches[0].clientX);
+        }
+      }, { passive: true });
+
+      window.addEventListener('touchend', endDrag);
+      window.addEventListener('touchcancel', endDrag);
+
+      splitter.addEventListener('dblclick', () => {
+        sidebar.style.width = '220px';
+      });
+    }
+
+    function filterOutline(q) {
+      outlineFilterQuery = (q || '').trim().toLowerCase();
+      renderOutlineList();
+    }
+
+    function throttleUpdateOutline() {
+      if (outlineUpdateTimer) clearTimeout(outlineUpdateTimer);
+      outlineUpdateTimer = setTimeout(updateOutline, 120);
+    }
+
+    function updateOutline() {
+      const sidebar = document.getElementById('outline-sidebar');
+      if (!sidebar || sidebar.classList.contains('collapsed')) return;
+
+      const text = editor.value || '';
+      const lines = text.split('\n');
+      const items = [];
+
+      for (let i = 0; i < lines.length; i++) {
+        const rawLine = lines[i];
+        const trimmed = rawLine.trim();
+        if (!trimmed) continue;
+
+        // Markdown Headings: # Heading
+        const mdMatch = trimmed.match(/^(#{1,6})\s+(.*)$/);
+        if (mdMatch) {
+          const lvl = mdMatch[1].length;
+          items.push({
+            type: 'heading',
+            level: lvl,
+            tag: 'H' + lvl,
+            tagClass: 'tag-h' + Math.min(lvl, 4),
+            title: mdMatch[2].replace(/[#*`]/g, '').trim(),
+            line: i + 1
+          });
+          continue;
+        }
+
+        // JS/TS Function or Class
+        const jsFnMatch = trimmed.match(/^(?:async\s+)?function\s*([a-zA-Z0-9_$]+)/);
+        if (jsFnMatch) {
+          items.push({
+            type: 'function',
+            level: 1,
+            tag: 'FN',
+            tagClass: 'tag-fn',
+            title: jsFnMatch[1] + '()',
+            line: i + 1
+          });
+          continue;
+        }
+        const jsClsMatch = trimmed.match(/^class\s+([a-zA-Z0-9_$]+)/);
+        if (jsClsMatch) {
+          items.push({
+            type: 'class',
+            level: 1,
+            tag: 'CLS',
+            tagClass: 'tag-cls',
+            title: jsClsMatch[1],
+            line: i + 1
+          });
+          continue;
+        }
+
+        // Python def or class
+        const pyDefMatch = trimmed.match(/^def\s+([a-zA-Z0-9_]+)\s*\(/);
+        if (pyDefMatch) {
+          items.push({
+            type: 'function',
+            level: 1,
+            tag: 'DEF',
+            tagClass: 'tag-fn',
+            title: pyDefMatch[1] + '()',
+            line: i + 1
+          });
+          continue;
+        }
+        const pyClsMatch = trimmed.match(/^class\s+([a-zA-Z0-9_]+)/);
+        if (pyClsMatch) {
+          items.push({
+            type: 'class',
+            level: 1,
+            tag: 'CLS',
+            tagClass: 'tag-cls',
+            title: pyClsMatch[1],
+            line: i + 1
+          });
+          continue;
+        }
+
+        // C / C++ functions & macros
+        const cMatch = trimmed.match(/^(?:static\s+|inline\s+|const\s+)?([a-zA-Z_][a-zA-Z0-9_*&\s]+)\s+([a-zA-Z_][a-zA-Z0-9_]*)\s*\([^)]*\)\s*\{?$/);
+        if (cMatch && !['if', 'for', 'while', 'switch', 'catch', 'return'].includes(cMatch[2])) {
+          items.push({
+            type: 'function',
+            level: 1,
+            tag: 'FN',
+            tagClass: 'tag-fn',
+            title: cMatch[2] + '()',
+            line: i + 1
+          });
+          continue;
+        }
+        const cDefMatch = trimmed.match(/^#define\s+([a-zA-Z0-9_]+)/);
+        if (cDefMatch) {
+          items.push({
+            type: 'define',
+            level: 1,
+            tag: 'DEF',
+            tagClass: 'tag-h3',
+            title: cDefMatch[1],
+            line: i + 1
+          });
+          continue;
+        }
+
+        // HTML Headings / Sections
+        const htmlMatch = trimmed.match(/^<(h[1-6]|section|article|nav|header|footer)\b[^>]*>(.*?)<\/\1>/i);
+        if (htmlMatch) {
+          items.push({
+            type: 'html',
+            level: htmlMatch[1].startsWith('h') ? parseInt(htmlMatch[1][1], 10) : 2,
+            tag: htmlMatch[1].toUpperCase(),
+            tagClass: 'tag-h2',
+            title: htmlMatch[2].replace(/<[^>]+>/g, '').trim() || htmlMatch[1],
+            line: i + 1
+          });
+          continue;
+        }
+      }
+
+      cachedOutlineItems = items;
+      renderOutlineList();
+    }
+
+    function renderOutlineList() {
+      const container = document.getElementById('outline-list');
+      const countBadge = document.getElementById('outline-count-badge');
+      if (!container) return;
+
+      const filtered = cachedOutlineItems.filter(item => {
+        if (!outlineFilterQuery) return true;
+        return item.title.toLowerCase().includes(outlineFilterQuery) ||
+               item.tag.toLowerCase().includes(outlineFilterQuery) ||
+               String(item.line).includes(outlineFilterQuery);
+      });
+
+      if (countBadge) {
+        countBadge.innerText = `${filtered.length} item${filtered.length === 1 ? '' : 's'}`;
+      }
+
+      if (filtered.length === 0) {
+        if (outlineFilterQuery) {
+          container.innerHTML = `<div class="outline-empty">No outline items matching "<strong>${escapeHtml(outlineFilterQuery)}</strong>"</div>`;
+        } else {
+          container.innerHTML = `<div class="outline-empty">No headings (#) or symbols found.<br><span style="font-size:10px; color:var(--text-muted);">Use # Heading in Markdown or function/class in code.</span></div>`;
+        }
+        return;
+      }
+
+      let html = '';
+      filtered.forEach(item => {
+        const indent = Math.max(0, (item.level - 1) * 8);
+        html += `
+          <div class="outline-item" style="padding-left: ${4 + indent}px;" onclick="jumpToOutlineLine(${item.line})" title="Jump to line ${item.line}: ${escapeHtml(item.title)}">
+            <span class="outline-tag ${item.tagClass}">${item.tag}</span>
+            <span class="outline-text">${escapeHtml(item.title)}</span>
+            <span class="outline-line">L${item.line}</span>
+          </div>
+        `;
+      });
+      container.innerHTML = html;
+    }
+
+    function jumpToOutlineLine(lineNum) {
+      goToLineDirect(lineNum);
+      const items = document.querySelectorAll('.outline-item');
+      items.forEach(el => {
+        if (el.textContent.includes('L' + lineNum)) {
+          el.classList.add('active');
+          setTimeout(() => el.classList.remove('active'), 1200);
+        }
+      });
+    }
+
+    // --- HiDPI Canvas Minimap ---
+    let minimapVisible = safeGetStorage('kpad_minimap_visible') !== 'false';
+    let minimapDragging = false;
+
+    function toggleMinimap(forceState) {
+      const container = document.getElementById('minimap-container');
+      const btn = document.getElementById('btn-quick-minimap');
+      if (!container) return;
+
+      if (typeof forceState === 'boolean') {
+        minimapVisible = forceState;
+      } else {
+        minimapVisible = !minimapVisible;
+      }
+
+      container.classList.toggle('collapsed', !minimapVisible);
+      if (btn) btn.classList.toggle('active', minimapVisible);
+
+      try {
+        safeSetStorage('kpad_minimap_visible', minimapVisible ? 'true' : 'false');
+      } catch (e) {}
+
+      if (minimapVisible) {
+        renderMinimap();
+      }
+    }
+
+    function initMinimap() {
+      const canvas = document.getElementById('minimap-canvas');
+      const container = document.getElementById('minimap-container');
+      const btn = document.getElementById('btn-quick-minimap');
+      if (!canvas || !container) return;
+
+      if (window.innerWidth <= 768) {
+        minimapVisible = false;
+      }
+
+      container.classList.toggle('collapsed', !minimapVisible);
+      if (btn) btn.classList.toggle('active', minimapVisible);
+
+      function handleMinimapJump(e) {
+        const rect = canvas.getBoundingClientRect();
+        if (rect.height <= 0) return;
+        const clientY = e.clientY !== undefined ? e.clientY : (e.touches && e.touches[0] ? e.touches[0].clientY : null);
+        if (clientY === null) return;
+
+        const clickRatio = Math.max(0, Math.min(1, (clientY - rect.top) / rect.height));
+        const maxScroll = Math.max(0, editor.scrollHeight - editor.clientHeight);
+        editor.scrollTop = clickRatio * maxScroll;
+      }
+
+      canvas.addEventListener('mousedown', (e) => {
+        minimapDragging = true;
+        handleMinimapJump(e);
+      });
+
+      window.addEventListener('mousemove', (e) => {
+        if (minimapDragging) {
+          handleMinimapJump(e);
+        }
+      });
+
+      window.addEventListener('mouseup', () => {
+        minimapDragging = false;
+      });
+
+      canvas.addEventListener('touchstart', (e) => {
+        minimapDragging = true;
+        handleMinimapJump(e);
+      }, { passive: true });
+
+      window.addEventListener('touchmove', (e) => {
+        if (minimapDragging) {
+          handleMinimapJump(e);
+        }
+      }, { passive: true });
+
+      window.addEventListener('touchend', () => {
+        minimapDragging = false;
+      });
+
+      window.addEventListener('resize', () => {
+        if (minimapVisible) renderMinimap();
+      });
+    }
+
+    function renderMinimap() {
+      const container = document.getElementById('minimap-container');
+      const canvas = document.getElementById('minimap-canvas');
+      const slider = document.getElementById('minimap-slider');
+      if (!container || !canvas || container.classList.contains('collapsed')) return;
+
+      const rect = container.getBoundingClientRect();
+      if (rect.width <= 0 || rect.height <= 0) return;
+
+      const dpr = window.devicePixelRatio || 1;
+      const targetW = Math.floor(rect.width);
+      const targetH = Math.floor(rect.height);
+
+      if (canvas.width !== Math.floor(targetW * dpr) || canvas.height !== Math.floor(targetH * dpr)) {
+        canvas.width = Math.floor(targetW * dpr);
+        canvas.height = Math.floor(targetH * dpr);
+      }
+
+      const ctx = canvas.getContext('2d');
+      ctx.save();
+      ctx.scale(dpr, dpr);
+
+      // Background
+      ctx.fillStyle = '#080c16';
+      ctx.fillRect(0, 0, targetW, targetH);
+
+      const text = editor.value || '';
+      const lines = text.split('\n');
+      const totalLines = lines.length;
+      if (totalLines === 0) {
+        ctx.restore();
+        return;
+      }
+
+      const lineH = Math.max(1, Math.min(3, targetH / totalLines));
+      const step = Math.max(1, Math.floor(totalLines / targetH));
+
+      for (let i = 0; i < totalLines; i += step) {
+        const l = lines[i];
+        if (!l || !l.trim()) continue;
+
+        const y = (i / totalLines) * targetH;
+        const trimmed = l.trim();
+        const leadingSpaces = l.search(/\S|$/);
+        const x = Math.min(targetW - 10, 3 + leadingSpaces * 1.5);
+        const len = Math.min(targetW - x - 4, Math.max(4, trimmed.length * 1.2));
+
+        if (trimmed.startsWith('#')) {
+          ctx.fillStyle = '#38bdf8';
+        } else if (trimmed.startsWith('//') || trimmed.startsWith('/*') || trimmed.startsWith('*')) {
+          ctx.fillStyle = '#475569';
+        } else if (trimmed.includes('function') || trimmed.includes('class') || trimmed.includes('def ')) {
+          ctx.fillStyle = '#a78bfa';
+        } else if (trimmed.includes('"') || trimmed.includes("'")) {
+          ctx.fillStyle = '#34d399';
+        } else {
+          ctx.fillStyle = '#64748b';
+        }
+
+        ctx.fillRect(x, y, len, lineH);
+      }
+
+      ctx.restore();
+
+      if (slider) {
+        const maxScroll = Math.max(1, editor.scrollHeight - editor.clientHeight);
+        const scrollRatio = Math.max(0, Math.min(1, editor.scrollTop / maxScroll));
+        const thumbH = Math.max(16, Math.min(targetH, (editor.clientHeight / (editor.scrollHeight || 1)) * targetH));
+        const thumbTop = scrollRatio * (targetH - thumbH);
+        slider.style.top = thumbTop + 'px';
+        slider.style.height = thumbH + 'px';
+      }
     }
 
     function parseMarkdown(md) {
@@ -6753,6 +7477,8 @@ Strings, block comments, and line comments were safely bypassed during scanning.
       { cat: 'edit', label: 'Indent / Outdent Selection', key: 'Tab / Shift+Tab' },
       { cat: 'edit', label: 'Copy Entire Document', key: 'Alt+C / Ctrl+Shift+C' },
       { cat: 'edit', label: 'Clear Document Buffer', key: 'Alt + X' },
+      { cat: 'edit', label: 'Toggle Document Outline Sidebar', key: 'Alt + O' },
+      { cat: 'edit', label: 'Toggle HiDPI Canvas Minimap', key: 'Alt + U' },
       { cat: 'edit', label: 'Toggle Word Wrap', key: 'Alt + Z' },
       { cat: 'edit', label: 'Zoom In / Out / Reset', key: 'Ctrl++ / Ctrl+- / Ctrl+0' },
       { cat: 'edit', label: 'Insert Current Date & Time', key: 'F7' },
@@ -7064,13 +7790,14 @@ Strings, block comments, and line comments were safely bypassed during scanning.
       if (e.key === 'Enter') {
         const modal = document.getElementById('app-modal');
         if (modal && modal.classList.contains('active')) {
+          const isInteractiveInput = ['INPUT', 'TEXTAREA', 'SELECT', 'BUTTON'].includes(document.activeElement?.tagName);
+          if (isInteractiveInput) {
+            return;
+          }
           const footer = document.getElementById('modal-footer');
-          const isTextArea = document.activeElement?.tagName === 'TEXTAREA';
           if (footer && footer.style.display !== 'none') {
-            if (!isTextArea) {
-              e.preventDefault();
-              closeModal();
-            }
+            e.preventDefault();
+            closeModal();
           } else {
             const startBtn = modal.querySelector('button[onclick*="finishOnboarding"]');
             if (startBtn) {
@@ -7128,6 +7855,8 @@ Strings, block comments, and line comments were safely bypassed during scanning.
       if (e.altKey && (e.key === 'a' || e.key === 'A')) { e.preventDefault(); openSymbolPaletteModal(); }
       if (e.altKey && (e.key === 'm' || e.key === 'M')) { e.preventDefault(); openCollabCenter(); }
       if (e.altKey && (e.key === 'j' || e.key === 'J')) { e.preventDefault(); toggleGhostTypist(); }
+      if (e.altKey && (e.key === 'o' || e.key === 'O')) { e.preventDefault(); toggleOutlineSidebar(); }
+      if (e.altKey && (e.key === 'u' || e.key === 'U')) { e.preventDefault(); toggleMinimap(); }
       if (e.altKey && (e.key === 'p' || e.key === 'P')) { e.preventDefault(); togglePreview(); }
       if (e.altKey && (e.key === 't' || e.key === 'T')) { e.preventDefault(); promptAddTag(); }
       if (e.ctrlKey && (e.key === 'f' || e.key === 'F')) { e.preventDefault(); openFind(false); }
@@ -7228,6 +7957,9 @@ Strings, block comments, and line comments were safely bypassed during scanning.
       } catch (e) {}
 
       initSplitter();
+      initOutlineSidebar();
+      initOutlineSplitter();
+      initMinimap();
 
       let isRoomInvite = false;
       if (window.location.hash) {

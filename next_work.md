@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-qa
+current_agent: kilo-qa
+next_agent: kilo-expander
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -20,7 +20,7 @@ current_targets:
   kilo_graphics: KAbyss
   kilo_soundscape: KAbyss
   kilo_tester: KPing
-  kilo_usability: KPad
+  kilo_usability: KTerminal
   kilo_qa: KPuzzle
   kilo_expander: KBase
 virtual_web_target: kweb://echo-subsystem.net
@@ -37,9 +37,9 @@ virtual_web_rotation:
 - kweb://deep-core
 - kweb://darknet
 last_run:
-  agent: kilo-tester
-  app: KCalc
-  timestamp: '2026-10-22T04:35:00-07:00'
+  agent: kilo-usability
+  app: KPad
+  timestamp: '2026-10-22T06:36:00-07:00'
 last_planner_run: '2026-10-21T23:32:00Z'
 ---
 
@@ -123,19 +123,19 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Upcoming Queue**: `KBase`, `KPass`, `KCalc`.
 
 ### 5. Usability & UX Queue (`kilo-usability`)
-- **Target**: `KPad`
-- **Primary File**: `KiloOS/public/apps/kpad.html`
-- **Objective**: Rich text & markdown scratchpad ergonomics: responsive sidebar layout, document outline scaling, keyboard shortcuts guide, and HiDPI crisp canvas/display rendering.
+- **Target**: `KTerminal`
+- **Primary File**: `KiloOS/public/apps/kterminal.html`
+- **Objective**: Terminal emulator ergonomics: responsive scrollback buffer, command autocomplete, font scaling, shortcut guide, and HiDPI canvas/display rendering.
 - **Action Steps**:
   1. Inspect layout adaptability across standard and compact window dimensions.
   2. Verify keyboard navigation, shortcut discoverability, and focus trapping.
   3. Ensure high-contrast accessibility, crisp font rendering, and HiDPI canvas scaling.
 - **Verification**: `cd KiloOS && npm run build`. File size < 999 KB.
 - **Handoff**:
-  - In frontmatter: advance `current_targets.kilo_usability` to `KTerminal`.
+  - In frontmatter: advance `current_targets.kilo_usability` to `KBase`.
   - Set `current_agent: kilo-qa`.
   - Append terse execution log (≤6 lines), commit, and push.
-- **Upcoming Queue**: `KTerminal`, `KBase`.
+- **Upcoming Queue**: `KBase`, `KPass`.
 
 ### 6. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
 - **Target**: `KPuzzle`
@@ -207,10 +207,19 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | **KSimon** | `KiloOS/public/apps/ksimon.html` | Pass 5 (2026-10-20) | Arcade / Memory | Feature-complete 3D audio-visual memory console; 9 modes (incl. 20-stage campaign & online duel), dual Win32 native client parity, full F5/F9 state persistence, first-run tutorial integrity, zero glints. |
 | **KWords** | `KiloOS/public/apps/kwords.html` | Pass 5 (2026-10-21) | Word / Puzzle | Feature-complete retro word search with 20-stage campaign, 12 themes, custom puzzle creator/import/export, replay scrubber, dual Win32 native client parity, full F5/F9 state persistence, first-run tutorial integrity. |
 | **KColosseum** | KiloOS/public/apps/kcolosseum.html | Pass 5 (2026-10-21) | Strategy / RPG | Gladiatorial ludus management & 10-stage arena combat; 6 facility upgrades, F5/F9 state persistence, first-run tutorial integrity, replay telemetry, dual Win32 native client parity. |
+| **KPad** | `KiloOS/public/apps/kpad.html` | Pass 6+ (2026-10-22) | Office / Code Editor | Feature-complete multi-tab code & text workstation; markdown split preview, outline sidebar with touch drag, regex workbench, hex inspector, AES-256 lock, dual Win32 C parity, full F5/F9 state persistence. |
 
 ---
 
 ## Recent Execution Logs (Max 5 Entries)
+
+- **2026-10-22T06:36:00-07:00 — kilo-usability: KPad (UI/UX Ergonomics & Mature Quarantine)**
+  - PASS ✅ (Layout responsiveness, touch outline splitter, modal enter guards, and mature quarantine).
+  - Modal Ergonomics: Fixed global Enter listener to guard interactive inputs (search, go-to-line, encryption passphrase) against premature modal dismissal.
+  - Touch & Small Viewports: Added touch drag gestures (`touchstart`/`touchmove`/`touchend`) to outline splitter; constrained user-opened outline width to 75vw on mobile.
+  - HiDPI & Splitter: Verified canvas minimap devicePixelRatio rendering and preview ratio drag mechanics.
+  - Parity & Verification: Native KPad.exe clean build (38.9 KB < 999 KB); test_app_startup PASS (331.0 KB); KiloOS build PASS (0 errors); byte_budget_gate PASS; security_lint PASS.
+  - Mature Quarantine: Promoted KPad to Mature Applications archive; advanced queue to KTerminal.
 
 - **2026-10-22T04:35:00-07:00 — kilo-tester: KCalc (Interactive UI Audit & Inline Repairs)**
   - PASS ✅ (4 issues found & fixed inline: modal dismissal, tape export mapping, input enter guard, tutorial modes).
@@ -242,11 +251,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Interactive Hotkeys: Added 'G' for fleet mesh echo, '[' / ']' for pacing interval adjustments, and 'J' for RFC 3550 jitter telemetry in native client.
   - Parity & Verification: test_app_startup PASS (175.5 KB < 999 KB); native KPing.exe clean build (47.6 KB < 999 KB); Vite build PASS (0 errors).
   - Queue Handoff: Advanced current_targets.kilo_expander to KBase; rotated current_agent to kilo-creator.
-
-- **2026-10-21T21:35:00-07:00 — kilo-qa: KColosseum (Pass 5 QA & Build Audit)**
-  - PASS ✅ (Modal dismissal & facilities persistence repaired; promoted to Mature Quarantine).
-  - Modal Dismissal: Included facilitiesModal in closeAllModals & anyModalOpen; added Enter dismissal.
-  - State Persistence: Extended applySaveData to initialize all 6 ludus facilities; verified F5/F9 save/load parity.
-  - First-Run Tutorial: Verified kcolosseum_tutorialSeen flag suppresses briefing on restored saves.
-  - Parity & Verification: test_app_startup PASS (270.8 KB < 999 KB); native KColosseum.exe built cleanly (39.4 KB); npm run build PASS (0 errors).
-  - Queue Handoff: Advanced current_targets.kilo_qa to KPuzzle; rotated current_agent to kilo-expander.

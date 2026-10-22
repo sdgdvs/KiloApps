@@ -754,6 +754,56 @@
     transition: width 0.3s ease;
   }
 
+  /* Regular Expression Workbench & Pattern Lab */
+  .regex-wb-container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    font-size: 12px;
+  }
+  .regex-flags-wrap {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: rgba(0,0,0,0.3);
+    padding: 6px 12px;
+    border-radius: 6px;
+    border: 1px solid var(--border-glass);
+    flex-wrap: wrap;
+  }
+  .regex-flag-label {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    cursor: pointer;
+    user-select: none;
+    color: var(--text-secondary);
+  }
+  .regex-flag-label:hover { color: var(--text-primary); }
+  .regex-match-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: 'Consolas', monospace;
+    font-size: 11px;
+  }
+  .regex-match-table th {
+    background: rgba(255,255,255,0.06);
+    color: var(--accent-hover);
+    padding: 6px 8px;
+    text-align: left;
+    border-bottom: 1px solid var(--border-glass);
+  }
+  .regex-match-table td {
+    padding: 5px 8px;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    color: var(--text-primary);
+    word-break: break-all;
+  }
+  .regex-match-table tr:hover td {
+    background: rgba(59, 130, 246, 0.12);
+  }
+
   /* Find & Replace Floating Panel */
   .find-replace-panel {
     display: none;
@@ -828,6 +878,217 @@
     position: relative;
     background: var(--bg-surface);
     overflow: hidden;
+  }
+
+  /* Collapsible Document Outline Sidebar */
+  .outline-sidebar {
+    width: 220px;
+    min-width: 170px;
+    max-width: 360px;
+    background: rgba(11, 15, 25, 0.95);
+    border-right: 1px solid var(--border-glass);
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    z-index: 10;
+    user-select: none;
+    transition: width 0.15s ease, margin-left 0.15s ease, opacity 0.15s ease;
+    flex-shrink: 0;
+  }
+  .outline-sidebar.collapsed {
+    width: 0 !important;
+    min-width: 0 !important;
+    margin-left: -1px;
+    opacity: 0;
+    pointer-events: none;
+    overflow: hidden;
+    border-right: none;
+  }
+  .outline-header {
+    padding: 8px 10px;
+    background: rgba(0, 0, 0, 0.25);
+    border-bottom: 1px solid var(--border-glass);
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    flex-shrink: 0;
+  }
+  .outline-title-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+  }
+  .outline-title {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .outline-count-badge {
+    background: rgba(59, 130, 246, 0.15);
+    color: var(--tok-kw);
+    font-size: 10px;
+    padding: 1px 6px;
+    border-radius: 10px;
+    border: 1px solid rgba(59, 130, 246, 0.3);
+  }
+  .outline-icon-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 2px 5px;
+    border-radius: 4px;
+    font-size: 12px;
+    line-height: 1;
+    transition: all 0.12s;
+  }
+  .outline-icon-btn:hover {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.1);
+  }
+  .outline-filter-input {
+    width: 100%;
+    box-sizing: border-box;
+    background: rgba(0, 0, 0, 0.35);
+    border: 1px solid var(--border-glass);
+    border-radius: 4px;
+    padding: 4px 8px;
+    font-size: 11px;
+    color: var(--text-primary);
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  .outline-filter-input:focus {
+    border-color: var(--accent);
+  }
+  .outline-list {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 6px 4px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .outline-list::-webkit-scrollbar { width: 4px; }
+  .outline-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
+  .outline-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 4px 6px;
+    border-radius: 4px;
+    font-size: 11px;
+    cursor: pointer;
+    transition: background 0.12s, color 0.12s;
+    color: var(--text-secondary);
+    user-select: none;
+    border: 1px solid transparent;
+  }
+  .outline-item:hover {
+    background: rgba(59, 130, 246, 0.15);
+    border-color: rgba(59, 130, 246, 0.25);
+    color: #fff;
+  }
+  .outline-item.active {
+    background: rgba(59, 130, 246, 0.25);
+    border-color: var(--border-active);
+    color: #38bdf8;
+    font-weight: 600;
+  }
+  .outline-tag {
+    font-size: 9px;
+    font-weight: 700;
+    padding: 1px 4px;
+    border-radius: 3px;
+    margin-right: 6px;
+    flex-shrink: 0;
+    line-height: 1.2;
+    text-transform: uppercase;
+  }
+  .outline-tag.tag-h1 { background: rgba(56, 189, 248, 0.2); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.4); }
+  .outline-tag.tag-h2 { background: rgba(52, 211, 153, 0.2); color: #34d399; border: 1px solid rgba(52, 211, 153, 0.4); }
+  .outline-tag.tag-h3 { background: rgba(167, 139, 250, 0.2); color: #a78bfa; border: 1px solid rgba(167, 139, 250, 0.4); }
+  .outline-tag.tag-h4 { background: rgba(245, 158, 11, 0.2); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.4); }
+  .outline-tag.tag-fn { background: rgba(244, 114, 182, 0.2); color: #f472b6; border: 1px solid rgba(244, 114, 182, 0.4); }
+  .outline-tag.tag-cls { background: rgba(251, 191, 36, 0.2); color: #fbbf24; border: 1px solid rgba(251, 191, 36, 0.4); }
+  .outline-text {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .outline-line {
+    font-size: 9px;
+    color: var(--text-muted);
+    margin-left: 4px;
+    flex-shrink: 0;
+    font-family: monospace;
+  }
+  .outline-empty {
+    color: var(--text-muted);
+    font-size: 11px;
+    text-align: center;
+    padding: 24px 8px;
+    line-height: 1.5;
+  }
+
+  /* Outline Resizer Splitter */
+  .outline-splitter {
+    width: 4px;
+    background: transparent;
+    cursor: col-resize;
+    position: relative;
+    z-index: 12;
+    flex-shrink: 0;
+    transition: background 0.15s;
+  }
+  .outline-splitter:hover, .outline-splitter.active {
+    background: var(--accent);
+  }
+
+  /* HiDPI Canvas Minimap */
+  .minimap-container {
+    width: 64px;
+    background: rgba(11, 15, 25, 0.85);
+    border-left: 1px solid var(--border-glass);
+    position: relative;
+    flex-shrink: 0;
+    user-select: none;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    z-index: 5;
+    transition: width 0.15s ease, opacity 0.15s ease;
+  }
+  .minimap-container.collapsed {
+    width: 0 !important;
+    opacity: 0;
+    pointer-events: none;
+    border-left: none;
+  }
+  #minimap-canvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+    cursor: pointer;
+  }
+  .minimap-slider {
+    position: absolute;
+    left: 0;
+    right: 0;
+    background: rgba(59, 130, 246, 0.22);
+    border-top: 1px solid rgba(59, 130, 246, 0.7);
+    border-bottom: 1px solid rgba(59, 130, 246, 0.7);
+    pointer-events: none;
+    transition: top 0.04s ease;
+    box-sizing: border-box;
   }
 
   /* Gutter Line Numbers */
@@ -1284,12 +1545,38 @@
     .status-bar { font-size: 10px; padding: 3px 8px; gap: 6px; }
     #stat-words, #stat-encoding { display: none; }
   }
+  @media (max-width: 768px) {
+    .outline-sidebar:not(.user-opened) {
+      width: 0 !important;
+      min-width: 0 !important;
+      margin-left: -1px;
+      opacity: 0;
+      pointer-events: none;
+      border-right: none;
+    }
+    .outline-sidebar.user-opened {
+      max-width: 75vw;
+    }
+    .outline-splitter { display: none; }
+    .minimap-container { display: none; }
+  }
   @media (max-width: 680px) {
     .quick-group:last-child { display: none; }
     .tag-preset-chip { display: none; }
     .modal-card { width: 96%; max-height: 92vh; }
     #stat-crlf, #stat-indent { display: none; }
     .preview-ratio-btn { display: none; }
+  }
+  @media (max-width: 540px) {
+    .header-menu { overflow-x: auto; scrollbar-width: none; }
+    .header-menu::-webkit-scrollbar { display: none; }
+    .menu-btn { padding: 4px 8px; font-size: 11px; flex-shrink: 0; }
+    .status-bar { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
+    .status-bar::-webkit-scrollbar { display: none; }
+    .status-left, .status-right { flex-wrap: nowrap; gap: 8px; flex-shrink: 0; }
+    .gutter { width: 38px; }
+    .gutter-line { padding-right: 6px; font-size: 11px; }
+    #editor { font-size: 13px !important; -webkit-overflow-scrolling: touch; }
   }
   .shortcut-row {
     display: flex;
@@ -1423,6 +1710,9 @@
         <div onclick="exportDocument('tex')"><span>Export LaTeX Article (.tex)</span></div>
         <div onclick="exportDocument('csv')"><span>Export CSV Line Rows (.csv)</span></div>
         <div onclick="exportDocument('json')"><span>Export Session (.json)</span></div>
+        <div onclick="exportDocument('yaml')"><span>Export YAML Document (.yaml)</span></div>
+        <div onclick="exportDocument('c-source')"><span>Export C Header/Source (.h)</span></div>
+        <div onclick="exportDocument('base64')"><span>Export Base64 Encoded (.b64)</span></div>
         <div onclick="exportDocument('workspace')"><span>Export Workspace Snapshot (.json)</span><span class="shortcut">Ctrl+Shift+S</span></div>
         <div onclick="exportEncrypted()"><span>Export Encrypted (.kpad.enc)</span></div>
         <div class="divider"></div>
@@ -1458,6 +1748,7 @@
     <div class="menu-btn">Tools
       <div class="dropdown">
         <div onclick="openDiffModal()"><span>📊 Compare / Diff Documents...</span><span class="shortcut">Ctrl+Shift+D</span></div>
+        <div onclick="openRegexWorkbenchModal()"><span>🔬 Regular Expression Workbench...</span><span class="shortcut">Ctrl+Shift+R</span></div>
         <div onclick="openSyntaxLinterModal()"><span>🧪 Syntax Validator & Linter...</span><span class="shortcut">Ctrl+Shift+L</span></div>
         <div onclick="openHexDumpModal()"><span>🔢 Hex Dump Inspector & Entropy...</span><span class="shortcut">Ctrl+Shift+H</span></div>
         <div onclick="openSymbolPaletteModal()"><span>🔣 ASCII & CP437 Symbol Palette...</span><span class="shortcut">Alt+A</span></div>
@@ -1467,6 +1758,10 @@
         <div onclick="promptWrapLinesColumn()"><span>📏 Wrap Lines at Column (80c)...</span></div>
         <div onclick="promptFilterLines()"><span>🔍 Filter / Extract Matching Lines...</span></div>
         <div onclick="formatMarkdownTableInPlace()"><span>📐 Format & Align Markdown Table</span><span class="shortcut">Ctrl+Shift+T</span></div>
+        <div onclick="formatJSON()"><span>✨ Format / Beautify JSON</span></div>
+        <div onclick="minifyJSON()"><span>⚡ Minify / Compact JSON</span></div>
+        <div onclick="deduplicateLines()"><span>🧹 Remove Duplicate Lines</span></div>
+        <div onclick="trimWhitespace()"><span>✂️ Trim Trailing Whitespace</span></div>
         <div class="divider"></div>
         <div onclick="promptEncryptDocument()"><span>🔒 Encrypt Document (Password Lock)...</span><span class="shortcut">Ctrl+E</span></div>
         <div onclick="promptDecryptDocument()"><span>🔓 Decrypt Document (Unlock)...</span><span class="shortcut">Ctrl+D</span></div>
@@ -1506,6 +1801,9 @@
 
     <div class="menu-btn">View
       <div class="dropdown">
+        <div onclick="toggleOutlineSidebar()"><span>Toggle Document Outline</span><span class="shortcut">Alt+O</span></div>
+        <div onclick="toggleMinimap()"><span>Toggle Canvas Minimap</span><span class="shortcut">Alt+U</span></div>
+        <div class="divider"></div>
         <div onclick="togglePreview()"><span>Toggle Live Preview (Markdown / HTML)</span><span class="shortcut">Alt+P</span></div>
         <div onclick="openGlobalTabSearch()"><span>Search All Open Tabs</span><span class="shortcut">Ctrl+Shift+F</span></div>
         <div class="divider"></div>
@@ -1559,6 +1857,9 @@
       <button class="quick-btn" id="btn-diff" onclick="openDiffModal()" title="Compare & Diff Documents (Tabs vs Quicksave vs Clipboard) [Ctrl+Shift+D]">
         📊 Diff
       </button>
+      <button class="quick-btn" onclick="openRegexWorkbenchModal()" title="Regular Expression Workbench & Pattern Lab (Ctrl+Shift+R)">
+        🔬 Regex <span class="kbd-hint">Ctrl+Shift+R</span>
+      </button>
       <button class="quick-btn" onclick="openSyntaxLinterModal()" title="Syntax Validator & Linter Center (Ctrl+Shift+L)">
         🧪 Lint <span class="kbd-hint">Ctrl+Shift+L</span>
       </button>
@@ -1588,6 +1889,12 @@
       </button>
       <button class="quick-btn" onclick="openGlobalTabSearch()" title="Search Across All Open Tabs (Ctrl+Shift+F)">
         🌐 Tabs Search <span class="kbd-hint">Ctrl+Shift+F</span>
+      </button>
+      <button class="quick-btn" id="btn-quick-outline" onclick="toggleOutlineSidebar()" title="Toggle Document Outline Sidebar (Alt+O)">
+        📑 Outline <span class="kbd-hint">Alt+O</span>
+      </button>
+      <button class="quick-btn" id="btn-quick-minimap" onclick="toggleMinimap()" title="Toggle HiDPI Canvas Minimap (Alt+U)">
+        🗺️ Minimap <span class="kbd-hint">Alt+U</span>
       </button>
       <button class="quick-btn" id="btn-quick-preview" onclick="togglePreview()" title="Toggle Live Markdown / HTML Preview (Alt+P)">
         👁️ Preview <span class="kbd-hint">Alt+P</span>
@@ -1661,13 +1968,36 @@
     </div>
   </div>
 
-  <!-- Editor Container with Line Gutter, Draggable Resizer, and Split Preview -->
+  <!-- Editor Container with Outline Sidebar, Line Gutter, Code Container, Minimap, Resizer, and Split Preview -->
   <div class="editor-wrapper" id="editor-wrapper">
+    <!-- Collapsible Document Outline Sidebar -->
+    <div class="outline-sidebar" id="outline-sidebar">
+      <div class="outline-header">
+        <div class="outline-title-row">
+          <span class="outline-title">📑 Outline</span>
+          <span class="outline-count-badge" id="outline-count-badge">0 items</span>
+          <button class="outline-icon-btn" onclick="toggleOutlineSidebar()" title="Collapse Outline (Alt+O)">◀</button>
+        </div>
+        <div class="outline-search-row">
+          <input type="text" id="outline-filter-input" class="outline-filter-input" placeholder="Filter headings / symbols..." oninput="filterOutline(this.value)">
+        </div>
+      </div>
+      <div class="outline-list" id="outline-list"></div>
+    </div>
+    <div class="outline-splitter" id="outline-splitter" title="Drag to resize Outline (double-click to reset 220px)"></div>
+
     <div class="gutter" id="gutter"></div>
     <div class="code-container" id="code-container">
       <pre id="highlight-pre" aria-hidden="true"><code id="highlight-code"></code></pre>
       <textarea id="editor" spellcheck="false" wrap="off" aria-label="Text Editor" placeholder="Start typing or click a template above (📝 Notes, ⚡ JS, 🌐 HTML5, ⚙️ C, 📦 JSON)..."></textarea>
     </div>
+
+    <!-- HiDPI Canvas Minimap -->
+    <div class="minimap-container" id="minimap-container">
+      <canvas id="minimap-canvas" width="64" height="400" title="Canvas Minimap - Click or drag to jump (Alt+U)"></canvas>
+      <div class="minimap-slider" id="minimap-slider"></div>
+    </div>
+
     <div class="preview-splitter" id="preview-splitter" style="display:none;" title="Drag to resize preview pane (double-click to reset 50/50)"></div>
     <div class="preview-pane" id="preview-pane" style="display:none;">
       <div class="preview-header">
@@ -1689,6 +2019,8 @@
     <div class="status-left">
       <div class="status-item" id="file-path">Untitled 1</div>
       <div class="status-item" id="file-status">Ready</div>
+      <div class="status-item status-clickable" id="stat-outline" onclick="toggleOutlineSidebar()" title="Click to toggle Document Outline (Alt+O)">📑 Outline</div>
+      <div class="status-item status-clickable" id="stat-minimap" onclick="toggleMinimap()" title="Click to toggle Canvas Minimap (Alt+U)">🗺️ Minimap</div>
       <div class="status-item status-clickable" id="stat-autosave" style="color: #34d399; font-size:10px;" onclick="triggerManualAutoSave()" title="Click to trigger manual autosave & sync snapshot">● Auto-Saved</div>
       <div class="status-item status-clickable" id="stat-collab" onclick="openCollabCenter()" title="Collab Session Status (Click for Collab Hub [Alt+M])">
         👥 Collab: Solo
@@ -2426,6 +2758,14 @@
         updatePreview();
       }
 
+      // Update Document Outline & HiDPI Canvas Minimap
+      if (typeof outlineVisible !== 'undefined' && outlineVisible) {
+        throttleUpdateOutline();
+      }
+      if (typeof minimapVisible !== 'undefined' && minimapVisible) {
+        renderMinimap();
+      }
+
       // Mark tab as modified
       if (activeTabIndex >= 0 && activeTabIndex < tabs.length) {
         if (text !== tabs[activeTabIndex].content) {
@@ -2461,6 +2801,9 @@
       highlightPre.scrollTop = editor.scrollTop;
       highlightPre.scrollLeft = editor.scrollLeft;
       gutter.scrollTop = editor.scrollTop;
+      if (typeof minimapVisible !== 'undefined' && minimapVisible) {
+        renderMinimap();
+      }
     });
 
     editor.addEventListener('input', updateEditor);
@@ -2665,6 +3008,40 @@
       } catch (e) {
         showToast('Invalid JSON: ' + e.message, 'error', 3500);
       }
+    }
+
+    function minifyJSON() {
+      if (!editor.value.trim()) {
+        showToast('Editor is empty', 'warning', 1500);
+        return;
+      }
+      try {
+        const parsed = JSON.parse(editor.value);
+        editor.value = JSON.stringify(parsed);
+        setLanguage('json');
+        document.getElementById('lang-selector').value = 'json';
+        updateEditor();
+        showToast('Minified JSON successfully', 'success', 2000);
+      } catch (e) {
+        showToast('Invalid JSON: ' + e.message, 'error', 3500);
+      }
+    }
+
+    function deduplicateLines() {
+      const val = editor.value;
+      if (!val) return;
+      const lines = val.split('\n');
+      const seen = new Set();
+      const unique = [];
+      for (const line of lines) {
+        if (!seen.has(line)) {
+          seen.add(line);
+          unique.push(line);
+        }
+      }
+      editor.value = unique.join('\n');
+      updateEditor();
+      showToast(`Deduplicated: removed ${lines.length - unique.length} duplicate lines`, 'success', 2200);
     }
 
     function sortLines(mode = 'asc') {
@@ -3191,6 +3568,459 @@
       window.addEventListener('touchmove', onPointerMove, { passive: true });
       window.addEventListener('mouseup', onPointerUp);
       window.addEventListener('touchend', onPointerUp);
+    }
+
+        // --- Document Outline Sidebar & Ergonomics ---
+    let outlineVisible = safeGetStorage('kpad_outline_visible') !== 'false';
+    let outlineFilterQuery = '';
+    let cachedOutlineItems = [];
+    let outlineUpdateTimer = null;
+
+    function toggleOutlineSidebar(forceState) {
+      const sidebar = document.getElementById('outline-sidebar');
+      const splitter = document.getElementById('outline-splitter');
+      const btn = document.getElementById('btn-quick-outline');
+      if (!sidebar) return;
+
+      if (typeof forceState === 'boolean') {
+        outlineVisible = forceState;
+      } else {
+        outlineVisible = !outlineVisible;
+      }
+
+      sidebar.classList.toggle('collapsed', !outlineVisible);
+      sidebar.classList.toggle('user-opened', outlineVisible);
+      if (splitter) splitter.style.display = outlineVisible ? 'block' : 'none';
+      if (btn) btn.classList.toggle('active', outlineVisible);
+
+      try {
+        safeSetStorage('kpad_outline_visible', outlineVisible ? 'true' : 'false');
+      } catch (e) {}
+
+      if (outlineVisible) {
+        updateOutline();
+      }
+    }
+
+    function initOutlineSidebar() {
+      const sidebar = document.getElementById('outline-sidebar');
+      const splitter = document.getElementById('outline-splitter');
+      const btn = document.getElementById('btn-quick-outline');
+      if (!sidebar) return;
+
+      if (window.innerWidth <= 768) {
+        outlineVisible = false;
+      }
+
+      sidebar.classList.toggle('collapsed', !outlineVisible);
+      if (splitter) splitter.style.display = outlineVisible ? 'block' : 'none';
+      if (btn) btn.classList.toggle('active', outlineVisible);
+    }
+
+    function initOutlineSplitter() {
+      const splitter = document.getElementById('outline-splitter');
+      const sidebar = document.getElementById('outline-sidebar');
+      if (!splitter || !sidebar) return;
+
+      let isDragging = false;
+
+      function startDrag(e) {
+        isDragging = true;
+        splitter.classList.add('active');
+        document.body.style.cursor = 'col-resize';
+        document.body.style.userSelect = 'none';
+      }
+
+      function moveDrag(clientX) {
+        if (!isDragging) return;
+        const wrapper = document.getElementById('editor-wrapper');
+        if (!wrapper) return;
+        const rect = wrapper.getBoundingClientRect();
+        const maxW = Math.min(380, Math.floor(window.innerWidth * 0.75));
+        const newWidth = Math.min(maxW, Math.max(140, clientX - rect.left));
+        sidebar.style.width = newWidth + 'px';
+      }
+
+      function endDrag() {
+        if (!isDragging) return;
+        isDragging = false;
+        splitter.classList.remove('active');
+        document.body.style.cursor = '';
+        document.body.style.userSelect = '';
+      }
+
+      splitter.addEventListener('mousedown', (e) => {
+        startDrag(e);
+        e.preventDefault();
+      });
+
+      window.addEventListener('mousemove', (e) => {
+        moveDrag(e.clientX);
+      });
+
+      window.addEventListener('mouseup', endDrag);
+
+      splitter.addEventListener('touchstart', (e) => {
+        startDrag(e);
+      }, { passive: true });
+
+      window.addEventListener('touchmove', (e) => {
+        if (isDragging && e.touches && e.touches[0]) {
+          moveDrag(e.touches[0].clientX);
+        }
+      }, { passive: true });
+
+      window.addEventListener('touchend', endDrag);
+      window.addEventListener('touchcancel', endDrag);
+
+      splitter.addEventListener('dblclick', () => {
+        sidebar.style.width = '220px';
+      });
+    }
+
+    function filterOutline(q) {
+      outlineFilterQuery = (q || '').trim().toLowerCase();
+      renderOutlineList();
+    }
+
+    function throttleUpdateOutline() {
+      if (outlineUpdateTimer) clearTimeout(outlineUpdateTimer);
+      outlineUpdateTimer = setTimeout(updateOutline, 120);
+    }
+
+    function updateOutline() {
+      const sidebar = document.getElementById('outline-sidebar');
+      if (!sidebar || sidebar.classList.contains('collapsed')) return;
+
+      const text = editor.value || '';
+      const lines = text.split('\n');
+      const items = [];
+
+      for (let i = 0; i < lines.length; i++) {
+        const rawLine = lines[i];
+        const trimmed = rawLine.trim();
+        if (!trimmed) continue;
+
+        // Markdown Headings: # Heading
+        const mdMatch = trimmed.match(/^(#{1,6})\s+(.*)$/);
+        if (mdMatch) {
+          const lvl = mdMatch[1].length;
+          items.push({
+            type: 'heading',
+            level: lvl,
+            tag: 'H' + lvl,
+            tagClass: 'tag-h' + Math.min(lvl, 4),
+            title: mdMatch[2].replace(/[#*`]/g, '').trim(),
+            line: i + 1
+          });
+          continue;
+        }
+
+        // JS/TS Function or Class
+        const jsFnMatch = trimmed.match(/^(?:async\s+)?function\s*([a-zA-Z0-9_$]+)/);
+        if (jsFnMatch) {
+          items.push({
+            type: 'function',
+            level: 1,
+            tag: 'FN',
+            tagClass: 'tag-fn',
+            title: jsFnMatch[1] + '()',
+            line: i + 1
+          });
+          continue;
+        }
+        const jsClsMatch = trimmed.match(/^class\s+([a-zA-Z0-9_$]+)/);
+        if (jsClsMatch) {
+          items.push({
+            type: 'class',
+            level: 1,
+            tag: 'CLS',
+            tagClass: 'tag-cls',
+            title: jsClsMatch[1],
+            line: i + 1
+          });
+          continue;
+        }
+
+        // Python def or class
+        const pyDefMatch = trimmed.match(/^def\s+([a-zA-Z0-9_]+)\s*\(/);
+        if (pyDefMatch) {
+          items.push({
+            type: 'function',
+            level: 1,
+            tag: 'DEF',
+            tagClass: 'tag-fn',
+            title: pyDefMatch[1] + '()',
+            line: i + 1
+          });
+          continue;
+        }
+        const pyClsMatch = trimmed.match(/^class\s+([a-zA-Z0-9_]+)/);
+        if (pyClsMatch) {
+          items.push({
+            type: 'class',
+            level: 1,
+            tag: 'CLS',
+            tagClass: 'tag-cls',
+            title: pyClsMatch[1],
+            line: i + 1
+          });
+          continue;
+        }
+
+        // C / C++ functions & macros
+        const cMatch = trimmed.match(/^(?:static\s+|inline\s+|const\s+)?([a-zA-Z_][a-zA-Z0-9_*&\s]+)\s+([a-zA-Z_][a-zA-Z0-9_]*)\s*\([^)]*\)\s*\{?$/);
+        if (cMatch && !['if', 'for', 'while', 'switch', 'catch', 'return'].includes(cMatch[2])) {
+          items.push({
+            type: 'function',
+            level: 1,
+            tag: 'FN',
+            tagClass: 'tag-fn',
+            title: cMatch[2] + '()',
+            line: i + 1
+          });
+          continue;
+        }
+        const cDefMatch = trimmed.match(/^#define\s+([a-zA-Z0-9_]+)/);
+        if (cDefMatch) {
+          items.push({
+            type: 'define',
+            level: 1,
+            tag: 'DEF',
+            tagClass: 'tag-h3',
+            title: cDefMatch[1],
+            line: i + 1
+          });
+          continue;
+        }
+
+        // HTML Headings / Sections
+        const htmlMatch = trimmed.match(/^<(h[1-6]|section|article|nav|header|footer)\b[^>]*>(.*?)<\/\1>/i);
+        if (htmlMatch) {
+          items.push({
+            type: 'html',
+            level: htmlMatch[1].startsWith('h') ? parseInt(htmlMatch[1][1], 10) : 2,
+            tag: htmlMatch[1].toUpperCase(),
+            tagClass: 'tag-h2',
+            title: htmlMatch[2].replace(/<[^>]+>/g, '').trim() || htmlMatch[1],
+            line: i + 1
+          });
+          continue;
+        }
+      }
+
+      cachedOutlineItems = items;
+      renderOutlineList();
+    }
+
+    function renderOutlineList() {
+      const container = document.getElementById('outline-list');
+      const countBadge = document.getElementById('outline-count-badge');
+      if (!container) return;
+
+      const filtered = cachedOutlineItems.filter(item => {
+        if (!outlineFilterQuery) return true;
+        return item.title.toLowerCase().includes(outlineFilterQuery) ||
+               item.tag.toLowerCase().includes(outlineFilterQuery) ||
+               String(item.line).includes(outlineFilterQuery);
+      });
+
+      if (countBadge) {
+        countBadge.innerText = `${filtered.length} item${filtered.length === 1 ? '' : 's'}`;
+      }
+
+      if (filtered.length === 0) {
+        if (outlineFilterQuery) {
+          container.innerHTML = `<div class="outline-empty">No outline items matching "<strong>${escapeHtml(outlineFilterQuery)}</strong>"</div>`;
+        } else {
+          container.innerHTML = `<div class="outline-empty">No headings (#) or symbols found.<br><span style="font-size:10px; color:var(--text-muted);">Use # Heading in Markdown or function/class in code.</span></div>`;
+        }
+        return;
+      }
+
+      let html = '';
+      filtered.forEach(item => {
+        const indent = Math.max(0, (item.level - 1) * 8);
+        html += `
+          <div class="outline-item" style="padding-left: ${4 + indent}px;" onclick="jumpToOutlineLine(${item.line})" title="Jump to line ${item.line}: ${escapeHtml(item.title)}">
+            <span class="outline-tag ${item.tagClass}">${item.tag}</span>
+            <span class="outline-text">${escapeHtml(item.title)}</span>
+            <span class="outline-line">L${item.line}</span>
+          </div>
+        `;
+      });
+      container.innerHTML = html;
+    }
+
+    function jumpToOutlineLine(lineNum) {
+      goToLineDirect(lineNum);
+      const items = document.querySelectorAll('.outline-item');
+      items.forEach(el => {
+        if (el.textContent.includes('L' + lineNum)) {
+          el.classList.add('active');
+          setTimeout(() => el.classList.remove('active'), 1200);
+        }
+      });
+    }
+
+    // --- HiDPI Canvas Minimap ---
+    let minimapVisible = safeGetStorage('kpad_minimap_visible') !== 'false';
+    let minimapDragging = false;
+
+    function toggleMinimap(forceState) {
+      const container = document.getElementById('minimap-container');
+      const btn = document.getElementById('btn-quick-minimap');
+      if (!container) return;
+
+      if (typeof forceState === 'boolean') {
+        minimapVisible = forceState;
+      } else {
+        minimapVisible = !minimapVisible;
+      }
+
+      container.classList.toggle('collapsed', !minimapVisible);
+      if (btn) btn.classList.toggle('active', minimapVisible);
+
+      try {
+        safeSetStorage('kpad_minimap_visible', minimapVisible ? 'true' : 'false');
+      } catch (e) {}
+
+      if (minimapVisible) {
+        renderMinimap();
+      }
+    }
+
+    function initMinimap() {
+      const canvas = document.getElementById('minimap-canvas');
+      const container = document.getElementById('minimap-container');
+      const btn = document.getElementById('btn-quick-minimap');
+      if (!canvas || !container) return;
+
+      if (window.innerWidth <= 768) {
+        minimapVisible = false;
+      }
+
+      container.classList.toggle('collapsed', !minimapVisible);
+      if (btn) btn.classList.toggle('active', minimapVisible);
+
+      function handleMinimapJump(e) {
+        const rect = canvas.getBoundingClientRect();
+        if (rect.height <= 0) return;
+        const clientY = e.clientY !== undefined ? e.clientY : (e.touches && e.touches[0] ? e.touches[0].clientY : null);
+        if (clientY === null) return;
+
+        const clickRatio = Math.max(0, Math.min(1, (clientY - rect.top) / rect.height));
+        const maxScroll = Math.max(0, editor.scrollHeight - editor.clientHeight);
+        editor.scrollTop = clickRatio * maxScroll;
+      }
+
+      canvas.addEventListener('mousedown', (e) => {
+        minimapDragging = true;
+        handleMinimapJump(e);
+      });
+
+      window.addEventListener('mousemove', (e) => {
+        if (minimapDragging) {
+          handleMinimapJump(e);
+        }
+      });
+
+      window.addEventListener('mouseup', () => {
+        minimapDragging = false;
+      });
+
+      canvas.addEventListener('touchstart', (e) => {
+        minimapDragging = true;
+        handleMinimapJump(e);
+      }, { passive: true });
+
+      window.addEventListener('touchmove', (e) => {
+        if (minimapDragging) {
+          handleMinimapJump(e);
+        }
+      }, { passive: true });
+
+      window.addEventListener('touchend', () => {
+        minimapDragging = false;
+      });
+
+      window.addEventListener('resize', () => {
+        if (minimapVisible) renderMinimap();
+      });
+    }
+
+    function renderMinimap() {
+      const container = document.getElementById('minimap-container');
+      const canvas = document.getElementById('minimap-canvas');
+      const slider = document.getElementById('minimap-slider');
+      if (!container || !canvas || container.classList.contains('collapsed')) return;
+
+      const rect = container.getBoundingClientRect();
+      if (rect.width <= 0 || rect.height <= 0) return;
+
+      const dpr = window.devicePixelRatio || 1;
+      const targetW = Math.floor(rect.width);
+      const targetH = Math.floor(rect.height);
+
+      if (canvas.width !== Math.floor(targetW * dpr) || canvas.height !== Math.floor(targetH * dpr)) {
+        canvas.width = Math.floor(targetW * dpr);
+        canvas.height = Math.floor(targetH * dpr);
+      }
+
+      const ctx = canvas.getContext('2d');
+      ctx.save();
+      ctx.scale(dpr, dpr);
+
+      // Background
+      ctx.fillStyle = '#080c16';
+      ctx.fillRect(0, 0, targetW, targetH);
+
+      const text = editor.value || '';
+      const lines = text.split('\n');
+      const totalLines = lines.length;
+      if (totalLines === 0) {
+        ctx.restore();
+        return;
+      }
+
+      const lineH = Math.max(1, Math.min(3, targetH / totalLines));
+      const step = Math.max(1, Math.floor(totalLines / targetH));
+
+      for (let i = 0; i < totalLines; i += step) {
+        const l = lines[i];
+        if (!l || !l.trim()) continue;
+
+        const y = (i / totalLines) * targetH;
+        const trimmed = l.trim();
+        const leadingSpaces = l.search(/\S|$/);
+        const x = Math.min(targetW - 10, 3 + leadingSpaces * 1.5);
+        const len = Math.min(targetW - x - 4, Math.max(4, trimmed.length * 1.2));
+
+        if (trimmed.startsWith('#')) {
+          ctx.fillStyle = '#38bdf8';
+        } else if (trimmed.startsWith('//') || trimmed.startsWith('/*') || trimmed.startsWith('*')) {
+          ctx.fillStyle = '#475569';
+        } else if (trimmed.includes('function') || trimmed.includes('class') || trimmed.includes('def ')) {
+          ctx.fillStyle = '#a78bfa';
+        } else if (trimmed.includes('"') || trimmed.includes("'")) {
+          ctx.fillStyle = '#34d399';
+        } else {
+          ctx.fillStyle = '#64748b';
+        }
+
+        ctx.fillRect(x, y, len, lineH);
+      }
+
+      ctx.restore();
+
+      if (slider) {
+        const maxScroll = Math.max(1, editor.scrollHeight - editor.clientHeight);
+        const scrollRatio = Math.max(0, Math.min(1, editor.scrollTop / maxScroll));
+        const thumbH = Math.max(16, Math.min(targetH, (editor.clientHeight / (editor.scrollHeight || 1)) * targetH));
+        const thumbTop = scrollRatio * (targetH - thumbH);
+        slider.style.top = thumbTop + 'px';
+        slider.style.height = thumbH + 'px';
+      }
     }
 
     function parseMarkdown(md) {
@@ -3846,6 +4676,26 @@
         filename = 'kpad_session_backup.json';
         mime = 'application/json';
         content = JSON.stringify(tabs, null, 2);
+      } else if (format === 'yaml') {
+        filename += '.yaml';
+        mime = 'text/yaml';
+        const tagList = (tab.tags || []).map(t => '  - "' + t + '"').join('\n');
+        const escapedBody = content.split('\n').map(l => '  ' + l).join('\n');
+        content = `# KPad Pro YAML Export\nmetadata:\n  title: "${tab.name || 'Document'}"\n  created: "${new Date().toISOString()}"\n  tags:\n${tagList || '  - "document"'}\ncontent: |\n${escapedBody}\n`;
+      } else if (format === 'c-source') {
+        filename += '.h';
+        mime = 'text/x-c';
+        const safeIdent = (tab.name || 'document').replace(/[^a-zA-Z0-9_]/g, '_').toLowerCase();
+        const escaped = content.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/\n/g, '\\n"\n    "');
+        content = `/* Auto-generated by KPad Pro 1.6 */\n#ifndef KPAD_${safeIdent.toUpperCase()}_H\n#define KPAD_${safeIdent.toUpperCase()}_H\n\nconst char ${safeIdent}_doc[] =\n    "${escaped}";\n\n#endif /* KPAD_${safeIdent.toUpperCase()}_H */\n`;
+      } else if (format === 'base64') {
+        filename += '.b64';
+        mime = 'text/plain';
+        try {
+          content = btoa(unescape(encodeURIComponent(content)));
+        } catch (e) {
+          content = btoa(content);
+        }
       } else if (format === 'workspace') {
         if (activeTabIndex >= 0 && activeTabIndex < tabs.length) {
           tabs[activeTabIndex].content = editor.value;
@@ -5039,6 +5889,299 @@ Strings, block comments, and line comments were safely bypassed during scanning.
       }
     }
 
+    // --- Regular Expression Workbench & Pattern Lab ---
+    const REGEX_PRESETS = {
+      email: { pattern: '[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}', flags: 'g', desc: 'Email Addresses' },
+      url: { pattern: 'https?:\\/\\/[^\\s/$.?#].[^\\s]*', flags: 'g', desc: 'Web URLs (HTTP/HTTPS)' },
+      ipv4: { pattern: '\\b(?:\\d{1,3}\\.){3}\\d{1,3}\\b', flags: 'g', desc: 'IPv4 Addresses' },
+      hexcolor: { pattern: '#(?:[0-9a-fA-F]{3}){1,2}\\b', flags: 'g', desc: 'Hex Color Codes' },
+      isodate: { pattern: '\\d{4}-\\d{2}-\\d{2}(?:[T ]\\d{2}:\\d{2}:\\d{2})?', flags: 'g', desc: 'ISO Dates & Timestamps' },
+      c_ident: { pattern: '\\b[a-zA-Z_][a-zA-Z0-9_]*\\b', flags: 'g', desc: 'C / JS Identifiers' },
+      html_tag: { pattern: '<\\/?[a-zA-Z][a-zA-Z0-9]*(?:\\s+[^>]*?)?\\/?>', flags: 'g', desc: 'HTML / XML Tags' },
+      quoted_str: { pattern: '(["\'])(?:(?=(\\\\?))\\2.)*?\\1', flags: 'g', desc: 'Quoted Strings' },
+      numbers: { pattern: '\\b[-+]?\\d*\\.?\\d+(?:[eE][-+]?\\d+)?\\b', flags: 'g', desc: 'Numbers (Integers & Floats)' },
+      md_link: { pattern: '\\[([^\]]+)\\]\\(([^)]+)\\)', flags: 'g', desc: 'Markdown Links [title](url)' }
+    };
+
+    let lastRegexMatches = [];
+
+    function openRegexWorkbenchModal() {
+      const bodyHtml = `
+        <div class="regex-wb-container">
+          <div style="display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap;">
+            <div style="display:flex; align-items:center; gap:6px; flex:1; min-width:240px;">
+              <label class="form-label" style="margin-bottom:0; font-size:11px;">Preset:</label>
+              <select id="regex-preset-sel" class="tag-filter-select" style="flex:1;" onchange="loadRegexPreset(this.value)">
+                <option value="">-- Select Pattern Template --</option>
+                <option value="email">📧 Email Addresses</option>
+                <option value="url">🌐 Web URLs (HTTP/HTTPS)</option>
+                <option value="ipv4">🔢 IPv4 Addresses</option>
+                <option value="hexcolor">🎨 Hex Color Codes</option>
+                <option value="isodate">📅 ISO 8601 Timestamps</option>
+                <option value="c_ident">⚙️ C / JS Identifiers</option>
+                <option value="html_tag">🏷️ HTML / XML Tags</option>
+                <option value="quoted_str">💬 Quoted Strings</option>
+                <option value="numbers">🔢 Numeric Constants</option>
+                <option value="md_link">🔗 Markdown Links</option>
+              </select>
+            </div>
+            <div style="display:flex; gap:6px;">
+              <button class="quick-btn" onclick="extractRegexMatchesToTab()" title="Extract all matches into a new tab">📑 Extract to New Tab</button>
+              <button class="quick-btn" onclick="copyRegexMatches()" title="Copy all matches to clipboard">📋 Copy Matches</button>
+            </div>
+          </div>
+
+          <div style="display:flex; flex-direction:column; gap:6px;">
+            <label class="form-label" style="margin-bottom:0;">Regular Expression Pattern:</label>
+            <div style="display:flex; gap:6px;">
+              <input type="text" class="form-input" id="regex-pattern-input" placeholder="e.g. \\b[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}\\b" style="font-family:Consolas,monospace; font-size:12px;" oninput="updateRegexWorkbench()">
+            </div>
+          </div>
+
+          <div class="regex-flags-wrap">
+            <span style="font-weight:600; font-size:11px; color:var(--text-muted);">Flags:</span>
+            <label class="regex-flag-label"><input type="checkbox" id="rf-g" checked onchange="updateRegexWorkbench()"> Global (g)</label>
+            <label class="regex-flag-label"><input type="checkbox" id="rf-i" onchange="updateRegexWorkbench()"> Case Insensitive (i)</label>
+            <label class="regex-flag-label"><input type="checkbox" id="rf-m" checked onchange="updateRegexWorkbench()"> Multiline (m)</label>
+            <label class="regex-flag-label"><input type="checkbox" id="rf-s" onchange="updateRegexWorkbench()"> DotAll / Single-line (s)</label>
+            <label class="regex-flag-label" style="margin-left:auto;"><input type="checkbox" id="rf-sel-only" onchange="updateRegexWorkbench()"> Selection Only</label>
+          </div>
+
+          <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(0,0,0,0.3); padding:6px 12px; border-radius:6px; border:1px solid var(--border-glass);">
+            <div id="regex-status-badge" style="font-weight:600;">Enter a pattern above to test</div>
+            <div id="regex-summary-stat" style="font-size:11px; color:var(--text-muted);"></div>
+          </div>
+
+          <div style="display:flex; flex-direction:column; gap:6px;">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <label class="form-label" style="margin-bottom:0;">Substitution & Replacement ($1, $2, $&):</label>
+              <button class="quick-btn" onclick="applyRegexSubstitution()" style="background:rgba(16,185,129,0.25); border-color:#10b981; color:#34d399; font-weight:600;">⚡ Apply Replacement to Tab</button>
+            </div>
+            <input type="text" class="form-input" id="regex-replace-input" placeholder="Replacement string (leave blank to delete matches, or use $1, $2)" style="font-family:Consolas,monospace; font-size:12px;" oninput="updateRegexWorkbench()">
+          </div>
+
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+            <div style="display:flex; flex-direction:column; gap:4px;">
+              <div style="font-size:11px; font-weight:600; color:var(--text-muted);">Matches & Capture Groups:</div>
+              <div id="regex-matches-container" style="max-height:180px; overflow-y:auto; background:#090d16; border:1px solid var(--border-glass); border-radius:6px; padding:4px;"></div>
+            </div>
+            <div style="display:flex; flex-direction:column; gap:4px;">
+              <div style="font-size:11px; font-weight:600; color:var(--text-muted);">Substitution Preview:</div>
+              <div id="regex-replace-preview" style="max-height:180px; overflow-y:auto; background:#090d16; border:1px solid var(--border-glass); border-radius:6px; padding:8px; font-family:Consolas,monospace; font-size:11px; white-space:pre-wrap; word-break:break-all; color:var(--text-secondary);"></div>
+            </div>
+          </div>
+        </div>
+      `;
+
+      openModal('🔬 Regular Expression Workbench & Pattern Lab', bodyHtml, true, true);
+      setTimeout(() => {
+        const pInp = document.getElementById('regex-pattern-input');
+        if (pInp) pInp.focus();
+        updateRegexWorkbench();
+      }, 50);
+    }
+
+    function loadRegexPreset(key) {
+      if (!key || !REGEX_PRESETS[key]) return;
+      const preset = REGEX_PRESETS[key];
+      const pInp = document.getElementById('regex-pattern-input');
+      if (pInp) pInp.value = preset.pattern;
+      const g = document.getElementById('rf-g');
+      const i = document.getElementById('rf-i');
+      if (g) g.checked = preset.flags.includes('g');
+      if (i) i.checked = preset.flags.includes('i');
+      updateRegexWorkbench();
+    }
+
+    function getRegexFlags() {
+      let flags = '';
+      if (document.getElementById('rf-g')?.checked) flags += 'g';
+      if (document.getElementById('rf-i')?.checked) flags += 'i';
+      if (document.getElementById('rf-m')?.checked) flags += 'm';
+      if (document.getElementById('rf-s')?.checked) flags += 's';
+      return flags;
+    }
+
+    function updateRegexWorkbench() {
+      const pInp = document.getElementById('regex-pattern-input');
+      const rInp = document.getElementById('regex-replace-input');
+      const statusBadge = document.getElementById('regex-status-badge');
+      const summaryStat = document.getElementById('regex-summary-stat');
+      const matchesCont = document.getElementById('regex-matches-container');
+      const prevCont = document.getElementById('regex-replace-preview');
+      const selOnly = document.getElementById('rf-sel-only')?.checked;
+
+      if (!pInp || !statusBadge || !matchesCont || !prevCont) return;
+
+      const pattern = pInp.value;
+      const flags = getRegexFlags();
+      const replaceVal = rInp ? rInp.value : '';
+
+      let text = editor.value;
+      const start = editor.selectionStart;
+      const end = editor.selectionEnd;
+      if (selOnly && start !== end) {
+        text = text.substring(start, end);
+      }
+
+      if (!pattern) {
+        statusBadge.innerHTML = `<span style="color:var(--text-muted);">Enter a pattern above to test against active document</span>`;
+        if (summaryStat) summaryStat.innerText = `Document: ${text.length} chars, ${text.split('\n').length} lines`;
+        matchesCont.innerHTML = `<div style="text-align:center; padding:20px; color:var(--text-muted); font-size:11px;">No regex pattern specified.</div>`;
+        prevCont.innerText = text.substring(0, 1500) + (text.length > 1500 ? '\n...[truncated]' : '');
+        lastRegexMatches = [];
+        return;
+      }
+
+      let regex;
+      try {
+        regex = new RegExp(pattern, flags);
+      } catch (err) {
+        statusBadge.innerHTML = `<span style="color:#ef4444;">⚠️ Invalid Regex: ${escapeHtml(err.message)}</span>`;
+        if (summaryStat) summaryStat.innerText = '';
+        matchesCont.innerHTML = `<div style="padding:12px; color:#ef4444; font-size:11px;">${escapeHtml(err.message)}</div>`;
+        prevCont.innerText = 'Error compiling regular expression.';
+        lastRegexMatches = [];
+        return;
+      }
+
+      let matches = [];
+      try {
+        if (flags.includes('g')) {
+          matches = [...text.matchAll(regex)];
+        } else {
+          const m = text.match(regex);
+          if (m) matches = [m];
+        }
+      } catch (e) {
+        statusBadge.innerHTML = `<span style="color:#ef4444;">Execution Error: ${escapeHtml(e.message)}</span>`;
+        return;
+      }
+
+      lastRegexMatches = matches.map(m => m[0]);
+      const matchCount = matches.length;
+
+      statusBadge.innerHTML = matchCount > 0 
+        ? `<span style="color:#34d399;">✅ ${matchCount} match${matchCount === 1 ? '' : 'es'} found</span>`
+        : `<span style="color:#f59e0b;">ℹ️ No matches found</span>`;
+
+      if (summaryStat) {
+        const totalChars = matches.reduce((acc, m) => acc + (m[0] ? m[0].length : 0), 0);
+        summaryStat.innerText = `${totalChars} matched chars | Source: ${text.length} chars`;
+      }
+
+      if (matchCount === 0) {
+        matchesCont.innerHTML = `<div style="text-align:center; padding:20px; color:var(--text-muted); font-size:11px;">No matches found in active ${selOnly ? 'selection' : 'document'}.</div>`;
+      } else {
+        let tableHtml = `
+          <table class="regex-match-table">
+            <thead>
+              <tr>
+                <th style="width:30px;">#</th>
+                <th style="width:60px;">Index</th>
+                <th>Match</th>
+                <th>Groups</th>
+              </tr>
+            </thead>
+            <tbody>
+        `;
+        const displayLimit = Math.min(matches.length, 150);
+        for (let i = 0; i < displayLimit; i++) {
+          const m = matches[i];
+          const idx = m.index !== undefined ? m.index : '-';
+          const val = escapeHtml(m[0]);
+          const groups = m.length > 1 ? m.slice(1).map((g, gi) => `$${gi+1}: ${g !== undefined ? escapeHtml(g) : 'undefined'}`).join('<br>') : '<span style="color:var(--text-muted);">-</span>';
+          tableHtml += `
+            <tr>
+              <td style="color:var(--text-muted);">${i + 1}</td>
+              <td style="color:var(--accent);">${idx}</td>
+              <td style="color:#34d399;">${val}</td>
+              <td style="font-size:10px;">${groups}</td>
+            </tr>
+          `;
+        }
+        if (matches.length > displayLimit) {
+          tableHtml += `<tr><td colspan="4" style="text-align:center; color:var(--text-muted);">+ ${matches.length - displayLimit} additional matches not shown</td></tr>`;
+        }
+        tableHtml += '</tbody></table>';
+        matchesCont.innerHTML = tableHtml;
+      }
+
+      // Preview substitution
+      try {
+        const replaced = text.replace(regex, replaceVal);
+        prevCont.innerText = replaced.substring(0, 2000) + (replaced.length > 2000 ? '\n...[truncated]' : '');
+      } catch (e) {
+        prevCont.innerText = 'Replacement Error: ' + e.message;
+      }
+    }
+
+    function applyRegexSubstitution() {
+      const pInp = document.getElementById('regex-pattern-input');
+      const rInp = document.getElementById('regex-replace-input');
+      const selOnly = document.getElementById('rf-sel-only')?.checked;
+      if (!pInp) return;
+
+      const pattern = pInp.value;
+      if (!pattern) {
+        showToast('Please enter a regular expression pattern', 'warning');
+        return;
+      }
+
+      const flags = getRegexFlags();
+      let regex;
+      try {
+        regex = new RegExp(pattern, flags);
+      } catch (err) {
+        showToast('Invalid Regex: ' + err.message, 'error');
+        return;
+      }
+
+      const replaceVal = rInp ? rInp.value : '';
+      let text = editor.value;
+      const start = editor.selectionStart;
+      const end = editor.selectionEnd;
+
+      if (selOnly && start !== end) {
+        const selected = text.substring(start, end);
+        const replaced = selected.replace(regex, replaceVal);
+        editor.value = text.substring(0, start) + replaced + text.substring(end);
+        editor.setSelectionRange(start, start + replaced.length);
+      } else {
+        editor.value = text.replace(regex, replaceVal);
+      }
+
+      updateEditor();
+      showToast('Regular expression replacement applied successfully!', 'success');
+      updateRegexWorkbench();
+    }
+
+    function extractRegexMatchesToTab() {
+      if (!lastRegexMatches || lastRegexMatches.length === 0) {
+        showToast('No matches available to extract', 'warning');
+        return;
+      }
+      const content = lastRegexMatches.join('\n');
+      createTab('Regex_Matches.txt', content, null, 'plaintext', ['extracted', 'regex']);
+      closeModal();
+      showToast(`Extracted ${lastRegexMatches.length} matches to new tab!`, 'success');
+    }
+
+    function copyRegexMatches() {
+      if (!lastRegexMatches || lastRegexMatches.length === 0) {
+        showToast('No matches available to copy', 'warning');
+        return;
+      }
+      const text = lastRegexMatches.join('\n');
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(text).then(() => {
+          showToast(`Copied ${lastRegexMatches.length} matches to clipboard!`, 'success');
+        });
+      } else {
+        showToast(`Copied ${lastRegexMatches.length} matches!`, 'success');
+      }
+    }
+
     // --- Hex Dump Inspector & Shannon Entropy ---
     let lastHexDumpData = '';
 
@@ -5577,8 +6720,23 @@ Strings, block comments, and line comments were safely bypassed during scanning.
 
       const { onlineAvailable, inviteCode } = await mp.init();
       if (inviteCode) {
-        showToast(`Joining collaborative session [${inviteCode}]...`, 'info', 2500);
-        await joinCollabRoom(inviteCode);
+        const cleanCode = inviteCode.trim().toUpperCase();
+        openModal(
+          `👥 Collaborative Session Invite`,
+          `<div style="text-align:center; padding:10px;">
+            <p style="font-size:13px; color:var(--text-main); margin-bottom:14px;">
+              You have been invited to collaborate in room <strong style="color:var(--accent-amber); font-family:var(--font-mono); font-size:15px;">${escapeHtml(cleanCode)}</strong>.
+            </p>
+            <p style="font-size:11px; color:var(--text-muted); margin-bottom:18px;">
+              Would you like to connect and sync your editor with peers in this room?
+            </p>
+            <div style="display:flex; gap:10px; justify-content:center;">
+              <button class="btn btn-primary" onclick="closeModal(); joinCollabRoom('${escapeHtml(cleanCode)}')">👥 Join Session</button>
+              <button class="btn" onclick="closeModal(); showToast('Continuing in solo local editing mode.', 'info', 2500)">Decline (Solo Mode)</button>
+            </div>
+          </div>`,
+          false
+        );
       }
     }
 
@@ -6319,10 +7477,13 @@ Strings, block comments, and line comments were safely bypassed during scanning.
       { cat: 'edit', label: 'Indent / Outdent Selection', key: 'Tab / Shift+Tab' },
       { cat: 'edit', label: 'Copy Entire Document', key: 'Alt+C / Ctrl+Shift+C' },
       { cat: 'edit', label: 'Clear Document Buffer', key: 'Alt + X' },
+      { cat: 'edit', label: 'Toggle Document Outline Sidebar', key: 'Alt + O' },
+      { cat: 'edit', label: 'Toggle HiDPI Canvas Minimap', key: 'Alt + U' },
       { cat: 'edit', label: 'Toggle Word Wrap', key: 'Alt + Z' },
       { cat: 'edit', label: 'Zoom In / Out / Reset', key: 'Ctrl++ / Ctrl+- / Ctrl+0' },
       { cat: 'edit', label: 'Insert Current Date & Time', key: 'F7' },
       { cat: 'edit', label: 'Format & Pretty-Print JSON', key: 'Tools > Format JSON' },
+      { cat: 'edit', label: 'Regular Expression Workbench & Pattern Lab', key: 'Ctrl + Shift + R' },
       { cat: 'edit', label: 'Syntax Validator & Linter Center', key: 'Ctrl + Shift + L' },
       { cat: 'edit', label: 'Hex Dump Inspector & Shannon Entropy', key: 'Ctrl + Shift + H' },
       { cat: 'edit', label: 'ASCII & CP437 Symbol Palette', key: 'Alt + A' },
@@ -6629,13 +7790,14 @@ Strings, block comments, and line comments were safely bypassed during scanning.
       if (e.key === 'Enter') {
         const modal = document.getElementById('app-modal');
         if (modal && modal.classList.contains('active')) {
+          const isInteractiveInput = ['INPUT', 'TEXTAREA', 'SELECT', 'BUTTON'].includes(document.activeElement?.tagName);
+          if (isInteractiveInput) {
+            return;
+          }
           const footer = document.getElementById('modal-footer');
-          const isTextArea = document.activeElement?.tagName === 'TEXTAREA';
           if (footer && footer.style.display !== 'none') {
-            if (!isTextArea) {
-              e.preventDefault();
-              closeModal();
-            }
+            e.preventDefault();
+            closeModal();
           } else {
             const startBtn = modal.querySelector('button[onclick*="finishOnboarding"]');
             if (startBtn) {
@@ -6686,12 +7848,15 @@ Strings, block comments, and line comments were safely bypassed during scanning.
       if (e.ctrlKey && e.shiftKey && (e.key === 'f' || e.key === 'F')) { e.preventDefault(); openGlobalTabSearch(); }
       if (e.ctrlKey && e.shiftKey && (e.key === 's' || e.key === 'S')) { e.preventDefault(); exportDocument('workspace'); }
       if (e.ctrlKey && e.shiftKey && (e.key === 'd' || e.key === 'D')) { e.preventDefault(); openDiffModal(); }
+      if (e.ctrlKey && e.shiftKey && (e.key === 'r' || e.key === 'R')) { e.preventDefault(); openRegexWorkbenchModal(); }
       if (e.ctrlKey && e.shiftKey && (e.key === 'l' || e.key === 'L')) { e.preventDefault(); openSyntaxLinterModal(); }
       if (e.ctrlKey && e.shiftKey && (e.key === 'h' || e.key === 'H')) { e.preventDefault(); openHexDumpModal(); }
       if (e.ctrlKey && e.shiftKey && (e.key === 't' || e.key === 'T')) { e.preventDefault(); formatMarkdownTableInPlace(); }
       if (e.altKey && (e.key === 'a' || e.key === 'A')) { e.preventDefault(); openSymbolPaletteModal(); }
       if (e.altKey && (e.key === 'm' || e.key === 'M')) { e.preventDefault(); openCollabCenter(); }
       if (e.altKey && (e.key === 'j' || e.key === 'J')) { e.preventDefault(); toggleGhostTypist(); }
+      if (e.altKey && (e.key === 'o' || e.key === 'O')) { e.preventDefault(); toggleOutlineSidebar(); }
+      if (e.altKey && (e.key === 'u' || e.key === 'U')) { e.preventDefault(); toggleMinimap(); }
       if (e.altKey && (e.key === 'p' || e.key === 'P')) { e.preventDefault(); togglePreview(); }
       if (e.altKey && (e.key === 't' || e.key === 'T')) { e.preventDefault(); promptAddTag(); }
       if (e.ctrlKey && (e.key === 'f' || e.key === 'F')) { e.preventDefault(); openFind(false); }
@@ -6792,6 +7957,9 @@ Strings, block comments, and line comments were safely bypassed during scanning.
       } catch (e) {}
 
       initSplitter();
+      initOutlineSidebar();
+      initOutlineSplitter();
+      initMinimap();
 
       let isRoomInvite = false;
       if (window.location.hash) {
