@@ -747,9 +747,9 @@
     "id": "kterm",
     "title": "KTerm",
     "folder": "System",
-    "webBytes": 115953,
+    "webBytes": 117209,
     "exeBytes": 46080,
-    "budgetPercent": 11.6
+    "budgetPercent": 11.7
   },
   {
     "id": "ktetris",

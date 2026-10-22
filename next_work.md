@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-qa
+current_agent: kilo-qa
+next_agent: kilo-expander
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -20,7 +20,7 @@ current_targets:
   kilo_graphics: KRacer
   kilo_soundscape: KRacer
   kilo_tester: KBase
-  kilo_usability: KTerminal
+  kilo_usability: KBase
   kilo_qa: KCalc
   kilo_expander: KConverter
 virtual_web_target: kweb://deep-core
@@ -37,9 +37,9 @@ virtual_web_rotation:
 - kweb://deep-core
 - kweb://darknet
 last_run:
-  agent: kilo-tester
-  app: KPing
-  timestamp: '2026-10-22T14:35:00-07:00'
+  agent: kilo-usability
+  app: KTerm
+  timestamp: '2026-10-22T15:34:00-07:00'
 last_planner_run: '2026-10-21T23:32:00Z'
 ---
 
@@ -123,19 +123,19 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Upcoming Queue**: `KPass`, `KCalc`.
 
 ### 5. Usability & UX Queue (`kilo-usability`)
-- **Target**: `KTerminal`
-- **Primary File**: `KiloOS/public/apps/kterminal.html`
-- **Objective**: Terminal emulator ergonomics: responsive scrollback buffer, command autocomplete, font scaling, shortcut guide, and HiDPI canvas/display rendering.
+- **Target**: `KBase`
+- **Primary File**: `KiloOS/public/apps/kbase.html`
+- **Objective**: Base converter UX and ergonomics: clean responsive layout across compact windows, bitwise mask visual feedback, endianness toggle clarity, and keyboard shortcut guide.
 - **Action Steps**:
   1. Inspect layout adaptability across standard and compact window dimensions.
   2. Verify keyboard navigation, shortcut discoverability, and focus trapping.
-  3. Ensure high-contrast accessibility, crisp font rendering, and HiDPI canvas scaling.
+  3. Ensure high-contrast accessibility, crisp font rendering, and responsive controls.
 - **Verification**: `cd KiloOS && npm run build`. File size < 999 KB.
 - **Handoff**:
-  - In frontmatter: advance `current_targets.kilo_usability` to `KBase`.
+  - In frontmatter: advance `current_targets.kilo_usability` to `KPass`.
   - Set `current_agent: kilo-qa`.
   - Append terse execution log (≤6 lines), commit, and push.
-- **Upcoming Queue**: `KBase`, `KPass`.
+- **Upcoming Queue**: `KPass`, `KCalc`.
 
 ### 6. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
 - **Target**: `KCalc`
@@ -209,10 +209,18 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | **KColosseum** | KiloOS/public/apps/kcolosseum.html | Pass 5 (2026-10-21) | Strategy / RPG | Gladiatorial ludus management & 10-stage arena combat; 6 facility upgrades, F5/F9 state persistence, first-run tutorial integrity, replay telemetry, dual Win32 native client parity. |
 | **KPad** | `KiloOS/public/apps/kpad.html` | Pass 6+ (2026-10-22) | Office / Code Editor | Feature-complete multi-tab code & text workstation; markdown split preview, outline sidebar with touch drag, regex workbench, hex inspector, AES-256 lock, dual Win32 C parity, full F5/F9 state persistence. |
 | **KPing** | `KiloOS/public/apps/kping.html` | Pass 6+ (2026-10-22) | Network / Diagnostics | Precision ICMP echo, PMTU sweep, subnet LAN sweep & topo trace, DNS, BGP AS route, RFC 8290 bufferbloat, RTDB mesh, dual Win32 C parity, F5/F9 state. |
+| **KTerm** | `KiloOS/public/apps/kterm.html` | Pass 6+ (2026-10-22) | System / Shell | Feature-complete multi-tab terminal emulator; responsive viewport layout, prompt & input font zoom sync, CRT themes, F5/F9 state, dual Win32 C parity. |
 
 ---
 
 ## Recent Execution Logs (Max 5 Entries)
+
+- **2026-10-22T15:34:00-07:00 — kilo-usability: KTerm (Ergonomics & Layout Polish, Mature Quarantine)**
+  - PASS ✅ (Responsive viewport scaling, font zoom sync, dual-target parity, promoted to Mature).
+  - Usability Polish: Added responsive overflow handling for toolbar actions & statusbar guide on narrow screens (<768px/<480px); synchronized prompt font scaling with terminal zoom.
+  - Verification: `test_app_startup` PASS (0 errors, 114.5 KB < 999 KB), `npm run build` PASS (0 Vite errors), `byte_budget_gate` PASS (all < 999 KB), `security_lint` PASS.
+  - Dual Parity: Native Win32 `KTerm.exe` builds cleanly via `build.bat` with min tracking bounds (560x360).
+  - Mature Quarantine: Promoted KTerm to Mature Applications archive; advanced usability queue to KBase; rotated agent to kilo-qa.
 
 - **2026-10-22T14:35:00-07:00 — kilo-tester: KPing (UI Audit, In-Line Repairs & Mature Quarantine)**
   - PASS ✅ (5 UI/event bugs fixed, clean dual-target parity, promoted to Mature).
@@ -242,12 +250,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Dual Parity & Build: KNet Win32 C parity updated & compiled (46.0 KB < 999 KB); echo_subsystem.html verified (586.8 KB < 999 KB).
   - Verification: npm run build in KiloOS PASS (0 errors); test_app_startup PASS on KNet (189.8 KB); byte_budget_gate PASS.
   - Queue Handoff: Advanced kilo_creator and virtual_web_target to kweb://deep-core; rotated current_agent to kilo-graphics.
-
-- **2026-10-22T10:35:00-07:00 — kilo-expander: KBase (Deep Feature Expansion & Dual Parity)**
-  - PASS ✅ (Multi-base conversion, granular bitwise mask studio, endianness toggles, and dual parity).
-  - Radices & Bases: Unsigned/signed DEC, HEX, OCT, BIN (64-bit), and Base64 live conversion.
-  - Granular Mask Studio: Implemented 6-way simultaneous mask ops (Apply, Set, Clear, Toggle, Extract, Deposit).
-  - Endianness Suite: 64-bit byte swap, 32-bit swap, LE/BE toggles, and popcount diagnostics.
-  - Dual Parity & Build: Verified native KBase.exe (26.6 KB < 999 KB) and Web kbase.html (157.4 KB).
-  - Verification: test_app_startup PASS, KiloOS npm build PASS (0 errors), security_lint PASS.
-  - Queue Handoff: Advanced current_targets.kilo_expander to KConverter; rotated current_agent to kilo-creator.

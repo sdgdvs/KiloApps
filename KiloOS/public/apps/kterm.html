@@ -209,8 +209,13 @@
     display: flex;
     align-items: center;
     gap: 6px;
-    margin-left: 10px;
+    margin-left: auto;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+    flex-shrink: 1;
   }
+  .toolbar-actions::-webkit-scrollbar { display: none; }
 
   .btn-action {
     background: rgba(255, 255, 255, 0.05);
@@ -377,6 +382,58 @@
     align-items: center;
     user-select: none;
     flex-shrink: 0;
+    gap: 10px;
+    overflow: hidden;
+  }
+
+  #statusbar > div:first-child {
+    overflow-x: auto;
+    white-space: nowrap;
+    scrollbar-width: none;
+    flex: 1;
+    min-width: 0;
+  }
+  #statusbar > div:first-child::-webkit-scrollbar { display: none; }
+
+  #tabStatusInfo {
+    white-space: nowrap;
+    flex-shrink: 0;
+    font-weight: bold;
+    color: var(--term-sys);
+  }
+
+  @media (max-width: 768px) {
+    #header {
+      padding: 4px 6px;
+      min-height: 36px;
+    }
+    .tab {
+      padding: 4px 8px;
+      font-size: 11px;
+      max-width: 130px;
+    }
+    .btn-action {
+      padding: 3px 6px;
+      font-size: 10px;
+    }
+    #output {
+      padding: 8px;
+    }
+    #inputLine {
+      padding: 6px 8px;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .btn-action {
+      padding: 3px 5px;
+    }
+    .quick-label {
+      display: none;
+    }
+    #prompt {
+      margin-right: 4px;
+    }
   }
 
   .shortcut-tag {
@@ -2462,6 +2519,8 @@
     output.style.fontSize = currentFontSize + 'px';
     input.style.fontSize = currentFontSize + 'px';
     measurer.style.fontSize = currentFontSize + 'px';
+    if (prompt) prompt.style.fontSize = currentFontSize + 'px';
+    if (searchPrompt) searchPrompt.style.fontSize = currentFontSize + 'px';
     cursor.style.height = (currentFontSize + 2) + 'px';
     updateCursor();
     safeSetStorage('kterm_fontsize', String(currentFontSize));
