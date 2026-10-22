@@ -1241,6 +1241,42 @@
     font-weight: 700;
     margin-right: 4px;
   }
+
+  /* TAB 17: Phase-Locked Loop (PLL) Demodulator & Airgap Bridge Styles */
+  .pll-layout-grid {
+    display: grid;
+    grid-template-columns: 1.05fr 0.95fr;
+    gap: 14px;
+    margin-bottom: 14px;
+  }
+  @media (max-width: 960px) {
+    .pll-layout-grid { grid-template-columns: 1fr; }
+  }
+  .pll-scope-container {
+    background: #020612;
+    border: 1px solid var(--border-bright);
+    border-radius: 4px;
+    padding: 10px;
+    margin-bottom: 12px;
+    position: relative;
+    box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.95);
+  }
+  .pll-stats-strip {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+    font-size: 10.5px;
+    margin-bottom: 10px;
+  }
+  @media (max-width: 650px) {
+    .pll-stats-strip { grid-template-columns: repeat(2, 1fr); }
+  }
+  .pll-stat-card {
+    background: #070d1e;
+    border: 1px solid rgba(56, 189, 248, 0.25);
+    border-radius: 3px;
+    padding: 6px 8px;
+  }
 </style>
 </head>
 <body>
@@ -1309,6 +1345,7 @@
     <button class="tab-btn" id="tabBtn14" onclick="switchTab('squid')">🧲 [14] CRYOGENIC SQUID MAGNETOMETER &amp; SUB-CRUSTAL TOMOGRAPH</button>
     <button class="tab-btn" id="tabBtn15" onclick="switchTab('numbers')">📻 [15] NUMBERS STATION DECODER &amp; TRANSPONDER ROUTER</button>
     <button class="tab-btn" id="tabBtn16" onclick="switchTab('borehole')">⚡ [16] DEEP BOREHOLE RADAR &amp; PACKET DISSECTOR</button>
+    <button class="tab-btn" id="tabBtn17" onclick="switchTab('pll')">⚡ [17] PLL DEMODULATOR &amp; AIRGAP BRIDGE</button>
   </nav>
 
   <!-- TAB 1: RESEARCH JOURNAL & OBSERVATION LOGBOOK -->
@@ -3874,6 +3911,178 @@ END TRANSMISSION // ESARL 1999</div>
     </div>
   </div>
 
+  <!-- TAB 17: PHASE-LOCKED LOOP (PLL) DEMODULATOR & CROSS-STRATA AIRGAP BRIDGE -->
+  <div id="pane-pll" class="tab-pane">
+    <div class="card-box">
+      <div class="card-header">
+        <span>SEISMO-ACOUSTIC PHASE-LOCKED LOOP (PLL) &amp; CROSS-STRATA AIRGAP BRIDGE // STATION SIG-1999-ECHO</span>
+        <div style="display:flex; gap:6px; flex-wrap:wrap;">
+          <span class="journal-tag">RECEIVER: COSTAS I/Q LOOP</span>
+          <span class="journal-tag" style="border-color:var(--green-phosphor); color:var(--green-phosphor);">CARRIER: 1999.0 Hz</span>
+          <span class="journal-tag">AIRGAP DEMODULATOR</span>
+        </div>
+      </div>
+
+      <div class="pll-layout-grid">
+        <!-- COLUMN 1: PLL TRACKING SCOPES & COSTAS IQ CONSTELLATION -->
+        <div class="card-box" style="margin-bottom:0;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+            <span style="font-size:11px; font-weight:700; color:#bae6fd;">COHERENT CARRIER TRACKING &amp; ERROR RESIDUE SCOPE</span>
+            <span id="pllTrackStatus" style="font-size:10px; color:var(--green-phosphor); font-weight:700;">PLL LOCKED (1999.0 Hz)</span>
+          </div>
+
+          <!-- Dual Display Canvases: Waveform Phase Scope + Costas IQ Phase Plane -->
+          <div class="pll-scope-container">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; font-size:10px; color:var(--text-muted);">
+              <span>INPUT WAVEFORM (CYAN) vs. VCO LOCAL CARRIER (GREEN)</span>
+              <span>TIME DOMAIN (SWEEP: 5ms/div)</span>
+            </div>
+            <canvas id="canvasPllScope" width="580" height="160" class="display-canvas" style="width:100%; height:160px; margin-bottom:8px;"></canvas>
+
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; font-size:10px; color:var(--text-muted);">
+              <span>COSTAS LOOP IN-PHASE (I) / QUADRATURE (Q) PHASE TRAJECTORY</span>
+              <span>PHASE DETECTOR CONSTELLATION</span>
+            </div>
+            <canvas id="canvasCostasIq" width="580" height="150" class="display-canvas" style="width:100%; height:150px;"></canvas>
+          </div>
+
+          <!-- PLL Telemetry Strip -->
+          <div class="pll-stats-strip">
+            <div class="pll-stat-card">
+              <div style="font-size:9.5px; color:var(--text-muted);">CARRIER FREQ (fin)</div>
+              <div id="lblPllInputFreq" style="font-size:13px; font-weight:700; color:var(--cyan-glow);">1,999.0 Hz</div>
+            </div>
+            <div class="pll-stat-card">
+              <div style="font-size:9.5px; color:var(--text-muted);">VCO TRACK (fvco)</div>
+              <div id="lblPllVcoFreq" style="font-size:13px; font-weight:700; color:var(--green-phosphor);">1,999.0 Hz</div>
+            </div>
+            <div class="pll-stat-card">
+              <div style="font-size:9.5px; color:var(--text-muted);">PHASE ERROR (&Delta;&theta;)</div>
+              <div id="lblPllPhaseErr" style="font-size:13px; font-weight:700; color:var(--amber-led);">+0.012 rad (0.7&deg;)</div>
+            </div>
+            <div class="pll-stat-card">
+              <div style="font-size:9.5px; color:var(--text-muted);">LOOP SNR</div>
+              <div id="lblPllSnr" style="font-size:13px; font-weight:700; color:var(--purple-spectral);">34.8 dB</div>
+            </div>
+          </div>
+
+          <!-- Demodulated Baseband & Bit Stream Output -->
+          <div style="background:#070d1e; border:1px solid var(--border-dim); border-radius:3px; padding:10px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+              <span style="font-size:10.5px; font-weight:700; color:#38bdf8;">DEMODULATED ACOUSTIC BASEBAND FRAME</span>
+              <span id="lblBasebandSync" style="font-size:10px; color:var(--green-phosphor);">PREAMBLE LOCKED: 0x7F1999</span>
+            </div>
+            <div id="pllBasebandHex" class="packet-hex-box" style="height:65px; margin-bottom:6px; color:#a78bfa;">0000: 7F 19 99 00 10 19 99 04 10 19 99 13 45 43 48 4F | .........Echo..
+0010: 2D 31 39 39 39 2D 53 55 42 43 41 52 52 49 45 52 | -1999-SUBCARRIER
+0020: 20 41 43 4F 55 53 54 49 43 20 4C 4F 43 4B 45 44 |  ACOUSTIC LOCKED</div>
+            <div id="pllBasebandAscii" style="font-size:11px; color:#e2e8f0; font-family:monospace; background:#02050e; padding:6px 8px; border:1px solid #1e315b; border-radius:2px;">PAYLOAD: [ECHO-1999-SUBCARRIER ACOUSTIC LOCKED // NODE 10.19.99.19 // ESARL SIGINT]</div>
+          </div>
+        </div>
+
+        <!-- COLUMN 2: PLL DETECTOR CONTROLS & AIRGAP PACKET BRIDGE -->
+        <div class="card-box" style="margin-bottom:0;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+            <span style="font-size:11px; font-weight:700; color:#bae6fd;">PHASE DETECTOR &amp; AIRGAP TRANSCEIVER CONTROLS</span>
+            <button class="btn-retro" id="btnPllAudioMonitor" onclick="togglePllAudioMonitor()">🔊 AUDIO MONITOR: OFF</button>
+          </div>
+
+          <!-- Carrier & Modulation Selector -->
+          <div style="background:#070d1e; border:1px solid var(--border-dim); border-radius:3px; padding:10px; margin-bottom:10px;">
+            <div style="font-size:10.5px; font-weight:700; color:#bae6fd; margin-bottom:6px;">1. CARRIER INJECTION &amp; SIGNAL SOURCE</div>
+            <div style="display:flex; gap:5px; flex-wrap:wrap; margin-bottom:8px;">
+              <button class="btn-retro btn-active" id="btnCarrierInj1999" onclick="setPllCarrierSource(1999.0, 'Echo 1999Hz Beacon')">1999 Hz (Beacon)</button>
+              <button class="btn-retro" id="btnCarrierInj1200" onclick="setPllCarrierSource(1200.0, 'Bell 202 Mark')">1200 Hz (Mark)</button>
+              <button class="btn-retro" id="btnCarrierInj2200" onclick="setPllCarrierSource(2200.0, 'Bell 202 Space')">2200 Hz (Space)</button>
+              <button class="btn-retro" id="btnCarrierInj999" onclick="setPllCarrierSource(999.5, 'Sub-harmonic')">999.5 Hz (Sub)</button>
+              <button class="btn-retro" id="btnCarrierInj432" onclick="setPllCarrierSource(432.0, 'Bus Microphonic')">432 Hz (Hum)</button>
+            </div>
+
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+              <span style="font-size:10px; color:var(--text-muted);">MODULATION SCHEME:</span>
+              <span id="lblPllModScheme" style="font-size:10px; color:var(--cyan-glow); font-weight:700;">BELL 202 AFSK TELEMETRY</span>
+            </div>
+            <div style="display:flex; gap:5px; flex-wrap:wrap; margin-bottom:8px;">
+              <button class="btn-retro btn-active" id="btnModAfsk" onclick="setPllModulation('AFSK')">Bell 202 AFSK</button>
+              <button class="btn-retro" id="btnModCw" onclick="setPllModulation('CW')">CW Morse (1999Hz)</button>
+              <button class="btn-retro" id="btnModChirp" onclick="setPllModulation('CHIRP')">Swept Chirp</button>
+              <button class="btn-retro" id="btnModCarrier" onclick="setPllModulation('CARRIER')">Pure Unmodulated</button>
+            </div>
+
+            <div style="margin-bottom:8px;">
+              <label style="font-size:10px; color:var(--text-muted); display:flex; justify-content:space-between;">
+                <span>VCO MANUAL TUNING:</span>
+                <span id="lblVcoTuneVal" style="color:var(--cyan-glow); font-weight:700;">1,999 Hz</span>
+              </label>
+              <input type="range" id="sliderVcoTune" min="800" max="3200" step="1" value="1999" style="width:100%;" oninput="updateVcoTuneManual()">
+            </div>
+          </div>
+
+          <!-- Loop Filter Parameters -->
+          <div style="background:#070d1e; border:1px solid var(--border-dim); border-radius:3px; padding:10px; margin-bottom:10px;">
+            <div style="font-size:10.5px; font-weight:700; color:#bae6fd; margin-bottom:6px;">2. 2ND-ORDER LOOP FILTER DYNAMICS</div>
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px; margin-bottom:8px;">
+              <div>
+                <span style="font-size:10px; color:var(--text-muted); display:block; margin-bottom:3px;">LOOP BANDWIDTH (BL):</span>
+                <div style="display:flex; gap:4px;">
+                  <button class="btn-retro" id="btnBwNarrow" onclick="setPllBandwidth('narrow')">5 Hz</button>
+                  <button class="btn-retro btn-active" id="btnBwMedium" onclick="setPllBandwidth('medium')">25 Hz</button>
+                  <button class="btn-retro" id="btnBwWide" onclick="setPllBandwidth('wide')">80 Hz</button>
+                </div>
+              </div>
+              <div>
+                <span style="font-size:10px; color:var(--text-muted); display:block; margin-bottom:3px;">LOOP GAIN (Kloop):</span>
+                <div style="display:flex; gap:4px;">
+                  <button class="btn-retro" id="btnGain1x" onclick="setPllGain(1.0)">1x</button>
+                  <button class="btn-retro btn-active" id="btnGain4x" onclick="setPllGain(4.0)">4x</button>
+                  <button class="btn-retro" id="btnGain10x" onclick="setPllGain(10.0)">10x</button>
+                </div>
+              </div>
+            </div>
+
+            <div style="display:flex; gap:6px; flex-wrap:wrap;">
+              <button class="btn-retro btn-green" onclick="pllAutoAcquire()">⚡ AUTO-ACQUIRE LOCK</button>
+              <button class="btn-retro" onclick="pllForceSlip()">⚡ FORCE PHASE SLIP</button>
+              <button class="btn-retro" onclick="pllInjectImpulseNoise()">⚡ INJECT STRATA NOISE</button>
+            </div>
+          </div>
+
+          <!-- Cross-Strata Airgap Acoustic Bridge -->
+          <div style="background:#070d1e; border:1px solid var(--border-dim); border-radius:3px; padding:10px; margin-bottom:10px;">
+            <div style="font-size:10.5px; font-weight:700; color:#bae6fd; margin-bottom:6px;">3. CROSS-STRATA AIRGAP BRIDGE // TARGET NODE</div>
+            <div style="display:flex; gap:5px; flex-wrap:wrap; margin-bottom:8px;">
+              <button class="btn-retro" id="btnPllNode1" onclick="setPllTargetNode('10.19.99.1')">10.19.99.1 (Router)</button>
+              <button class="btn-retro" id="btnPllNode4" onclick="setPllTargetNode('10.19.99.4')">10.19.99.4 (Classified)</button>
+              <button class="btn-retro btn-active" id="btnPllNode19" onclick="setPllTargetNode('10.19.99.19')">10.19.99.19 (Echo Lab)</button>
+              <button class="btn-retro" id="btnPllNode127" onclick="setPllTargetNode('10.19.99.127')">10.19.99.127 (Deep Core)</button>
+            </div>
+
+            <div style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:6px;">
+              <button class="btn-retro btn-green" onclick="transceivePllPacket()">▶ TRANSCEIVE AIRGAP PACKET</button>
+              <button class="btn-retro" onclick="exportPllCaptureLog()">[EXPORT .CAP LOG]</button>
+              <button class="btn-retro" onclick="copyPllDecodedPayload()">Copy Payload</button>
+            </div>
+            <div style="font-size:10px; color:#94a3b8;">
+              Status: <span id="lblPllBridgeStatus" style="color:#38bdf8;">Demodulator synchronized with Permian Salado Halite lithosphere.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PLL TELETYPE LOG -->
+      <div class="card-box" style="margin-bottom:0;">
+        <div class="card-header">
+          <span>PHASE-LOCKED LOOP (PLL) &amp; AIRGAP BRIDGE TELEMETRY STREAM</span>
+          <div style="display:flex; gap:6px;">
+            <button class="btn-retro" onclick="clearPllLog()">[CLEAR STREAM]</button>
+          </div>
+        </div>
+        <div id="pllTeletypeFeed" class="signal-stream-terminal" style="height:115px; color:#38bdf8;">[PLL-SIGINT] COSTAS LOOP QUADRATURE PHASE DETECTOR ONLINE // STATION SIG-1999-ECHO
+[PLL-SIGINT] VCO CENTER TUNED TO 1999.0 Hz // LOOP FILTER DAMPING FACTOR: 0.707 (CRITICAL)
+[PLL-SIGINT] AIRGAP BRIDGE READY // PRECURSOR MEMORY OFFSET: 0x0040:0x1999 // LISTENING ON STRATA</div>
+      </div>
+    </div>
+  </div>
+
   <!-- Footer & Central Webring -->
   <footer class="lab-footer">
     <div>
@@ -6075,7 +6284,7 @@ Host: kweb://echo-subsystem.net | Station: SIG-1999-ECHO
   }
 
   function switchTab(name) {
-    const tabs = ['journal', 'decoder', 'spectral', 'filter', 'sigint', 'stego', 'terminal', 'mesh', 'seismic', 'tape', 'heterodyne', 'interferometer', 'troposphere', 'squid', 'numbers', 'borehole'];
+    const tabs = ['journal', 'decoder', 'spectral', 'filter', 'sigint', 'stego', 'terminal', 'mesh', 'seismic', 'tape', 'heterodyne', 'interferometer', 'troposphere', 'squid', 'numbers', 'borehole', 'pll'];
     tabs.forEach((t, i) => {
       const btn = document.getElementById('tabBtn' + (i + 1));
       const pane = document.getElementById('pane-' + t);
@@ -6105,6 +6314,7 @@ Host: kweb://echo-subsystem.net | Station: SIG-1999-ECHO
     if (name === 'squid') initSquidSuite();
     if (name === 'numbers') initNumbersStationSuite();
     if (name === 'borehole') initBoreholeRadarSuite();
+    if (name === 'pll') initPllBridgeSuite();
   }
 
   function executeTermInput() {
@@ -6173,6 +6383,24 @@ Host: kweb://echo-subsystem.net | Station: SIG-1999-ECHO
       case 'ascan':
         switchTab('borehole');
         logToTerminal(">> Opened Piezoelectric Deep Borehole Radar & A-Scan Reflectogram.");
+        break;
+
+            case 'pll':
+      case 'costas':
+      case 'lock':
+        switchTab('pll');
+        if (parts[1]) {
+          const f = parseFloat(parts[1]);
+          if (!isNaN(f)) setPllCarrierSource(f, `Manual ${f}Hz`);
+        }
+        logToTerminal(`>> Phase-Locked Loop (PLL) Demodulator online. Carrier: ${pllInputFreq.toFixed(1)}Hz, VCO: ${pllVcoFreq.toFixed(1)}Hz, Status: ${pllLockState ? 'LOCKED' : 'ACQUIRING'}.`);
+        break;
+
+      case 'airgap':
+      case 'bridge':
+        switchTab('pll');
+        transceivePllPacket();
+        logToTerminal(">> Airgap packet transceived through Permian Salado Halite acoustic waveguide.");
         break;
 
       case 'intermod':
@@ -13233,6 +13461,603 @@ kweb://echo-subsystem.net
   function clearBoreholeLog() {
     const feed = document.getElementById('boreholeTeletypeFeed');
     if (feed) feed.innerHTML = '[ESARL BOREHOLE RADAR & PACKET DISSECTOR TELEMETRY STREAM CLEARED]';
+  }
+
+
+  /* ============================================================
+     17. Phase-Locked Loop (PLL) Demodulator & Cross-Strata Airgap Bridge
+     ============================================================ */
+  let pllInputFreq = 1999.0;
+  let pllVcoFreq = 1999.0;
+  let pllPhaseIn = 0.0;
+  let pllPhaseVco = 0.0;
+  let pllPhaseErr = 0.012;
+  let pllLoopBandwidth = 'medium'; // 'narrow'=5, 'medium'=25, 'wide'=80
+  let pllLoopGain = 4.0;
+  let pllLockState = true;
+  let pllModulationMode = 'AFSK';
+  let pllTargetNode = '10.19.99.19';
+  let pllAudioMonitor = false;
+  let pllMonitorOsc = null;
+  let pllMonitorGain = null;
+  let pllAnimFrame = null;
+  let pllInitialized = false;
+  let pllNoiseLevel = 0.05;
+
+  const PLL_PACKETS = {
+    '10.19.99.1': {
+      src: '10.19.99.1 (echo-gw-07)',
+      dst: '10.19.99.19 (ESARL Hydrophone)',
+      type: 'ROUTING_CONTROL // ARPA BGP-99',
+      payload: 'BGP_ROUTER_ACK: 10.19.99.0/24 SUBCARRIER 1999.0Hz PHASE ALIGNED VIA SALADO WAVEGUIDE.',
+      hex: '7F 19 99 01 10 19 99 01 10 19 99 13 42 47 50 5F | .........EchoBGP_
+52 4F 55 54 45 52 5F 41 43 4B 3A 20 31 30 2E 31 | ROUTER_ACK: 10.1
+39 2E 39 39 2E 30 2F 32 34 20 53 55 42 43 41 52 | 9.99.0/24 SUBCAR
+52 49 45 52 20 31 39 39 39 48 7A 20 4C 4F 43 4B | RIER 1999Hz LOCK'
+    },
+    '10.19.99.4': {
+      src: '10.19.99.4 (/classified)',
+      dst: '10.19.99.19 (Echo Subsystem)',
+      type: 'INTRANET_TELEMETRY // AIRGAP_FRAME',
+      payload: 'CLASSIFIED_BUFFER: PRECURSOR RELIC 0x0040:0x1999 READY. SUBCARRIER ANOMALY PERSISTENT.',
+      hex: '7F 19 99 04 10 19 99 04 10 19 99 13 43 4C 41 53 | .........EchoCLAS
+53 49 46 49 45 44 5F 42 55 46 46 45 52 3A 20 50 | SIFIED_BUFFER: P
+52 45 43 55 52 53 4F 52 20 52 45 4C 49 43 20 30 | RECURSOR RELIC 0
+78 30 30 34 30 3A 30 78 31 39 39 39 20 53 59 4E | x0040:0x1999 SYN'
+    },
+    '10.19.99.19': {
+      src: '10.19.99.19 (Echo Lab)',
+      dst: 'BROADCAST (10.19.99.255)',
+      type: 'BEACON // SIG-1999-ECHO',
+      payload: 'ECHO-1999-SUBCARRIER ACOUSTIC LOCKED // NODE 10.19.99.19 // ESARL SIGINT PIEZO ARRAY',
+      hex: '7F 19 99 00 10 19 99 04 10 19 99 13 45 43 48 4F | .........Echo..
+2D 31 39 39 39 2D 53 55 42 43 41 52 52 49 45 52 | -1999-SUBCARRIER
+20 41 43 4F 55 53 54 49 43 20 4C 4F 43 4B 45 44 |  ACOUSTIC LOCKED'
+    },
+    '10.19.99.127': {
+      src: '10.19.99.127 (Deep Core)',
+      dst: '10.19.99.19 (Echo Subsystem)',
+      type: 'GHOST_CORE // ENTROPY_SINK',
+      payload: 'DEEP_CORE_SYNC: PASSKEY FRAGMENT RECONSTRUCTED. MATRIX KERNEL DEMANDS AUDIT AT APP #100.',
+      hex: '7F 19 99 7F 10 19 99 7F 10 19 99 13 44 45 45 50 | .........EchoDEEP
+5F 43 4F 52 45 5F 53 59 4E 43 3A 20 50 41 53 53 | _CORE_SYNC: PASS
+4B 45 59 20 46 52 41 47 4D 45 4E 54 20 4C 4F 43 | KEY FRAGMENT LOC
+4B 45 44 2E 20 4B 4D 41 54 52 49 58 20 31 39 39 | KED. KMATRIX 199'
+    }
+  };
+
+  function initPllBridgeSuite() {
+    if (!pllInitialized) {
+      pllInitialized = true;
+      appendPllLog("[SYSTEM] Initializing 2nd-order seismo-acoustic PLL demodulator...");
+      appendPllLog("[SYSTEM] Costas loop phase detector calibrated. VCO tracking enabled.");
+    }
+    if (!pllAnimFrame) {
+      animatePllLoop();
+    }
+  }
+
+  function setPllCarrierSource(freq, name) {
+    pllInputFreq = freq;
+    ['1999', '1200', '2200', '999', '432'].forEach(id => {
+      const b = document.getElementById('btnCarrierInj' + id);
+      if (b) b.classList.remove('btn-active');
+    });
+    if (Math.abs(freq - 1999.0) < 1) document.getElementById('btnCarrierInj1999')?.classList.add('btn-active');
+    else if (Math.abs(freq - 1200.0) < 1) document.getElementById('btnCarrierInj1200')?.classList.add('btn-active');
+    else if (Math.abs(freq - 2200.0) < 1) document.getElementById('btnCarrierInj2200')?.classList.add('btn-active');
+    else if (Math.abs(freq - 999.5) < 1) document.getElementById('btnCarrierInj999')?.classList.add('btn-active');
+    else if (Math.abs(freq - 432.0) < 1) document.getElementById('btnCarrierInj432')?.classList.add('btn-active');
+
+    appendPllLog(`[CARRIER] Input source changed to ${freq.toFixed(1)} Hz (${name})`);
+    checkPllLockCondition();
+  }
+
+  function setPllModulation(mode) {
+    pllModulationMode = mode;
+    ['btnModAfsk', 'btnModCw', 'btnModChirp', 'btnModCarrier'].forEach(id => {
+      document.getElementById(id)?.classList.remove('btn-active');
+    });
+    const map = { 'AFSK': 'btnModAfsk', 'CW': 'btnModCw', 'CHIRP': 'btnModChirp', 'CARRIER': 'btnModCarrier' };
+    document.getElementById(map[mode])?.classList.add('btn-active');
+
+    const descMap = {
+      'AFSK': 'BELL 202 AFSK TELEMETRY (1200/2200Hz)',
+      'CW': 'CW MORSE BEACON (1999.0Hz KEYING)',
+      'CHIRP': 'SWEPT LITHO-CHIRP (1000 - 2500Hz)',
+      'CARRIER': 'PURE UNMODULATED SUBCARRIER'
+    };
+    const el = document.getElementById('lblPllModScheme');
+    if (el) el.textContent = descMap[mode] || mode;
+    appendPllLog(`[MOD] Modulation scheme: ${mode}`);
+  }
+
+  function updateVcoTuneManual() {
+    const slider = document.getElementById('sliderVcoTune');
+    if (!slider) return;
+    pllVcoFreq = parseFloat(slider.value);
+    const valLabel = document.getElementById('lblVcoTuneVal');
+    if (valLabel) valLabel.textContent = `${pllVcoFreq.toFixed(0)} Hz`;
+    checkPllLockCondition();
+  }
+
+  function setPllBandwidth(bw) {
+    pllLoopBandwidth = bw;
+    ['btnBwNarrow', 'btnBwMedium', 'btnBwWide'].forEach(id => {
+      document.getElementById(id)?.classList.remove('btn-active');
+    });
+    if (bw === 'narrow') document.getElementById('btnBwNarrow')?.classList.add('btn-active');
+    if (bw === 'medium') document.getElementById('btnBwMedium')?.classList.add('btn-active');
+    if (bw === 'wide') document.getElementById('btnBwWide')?.classList.add('btn-active');
+    appendPllLog(`[PLL] Loop bandwidth set to ${bw.toUpperCase()} (${bw === 'narrow' ? '5Hz' : bw === 'medium' ? '25Hz' : '80Hz'})`);
+    checkPllLockCondition();
+  }
+
+  function setPllGain(g) {
+    pllLoopGain = g;
+    ['btnGain1x', 'btnGain4x', 'btnGain10x'].forEach(id => {
+      document.getElementById(id)?.classList.remove('btn-active');
+    });
+    if (g === 1.0) document.getElementById('btnGain1x')?.classList.add('btn-active');
+    if (g === 4.0) document.getElementById('btnGain4x')?.classList.add('btn-active');
+    if (g === 10.0) document.getElementById('btnGain10x')?.classList.add('btn-active');
+    appendPllLog(`[PLL] Loop gain multiplier set to ${g.toFixed(0)}x`);
+    checkPllLockCondition();
+  }
+
+  function pllAutoAcquire() {
+    appendPllLog("[PLL] Executing coherent auto-acquisition sweep...");
+    pllVcoFreq = pllInputFreq;
+    const slider = document.getElementById('sliderVcoTune');
+    if (slider) slider.value = pllInputFreq.toFixed(0);
+    const valLabel = document.getElementById('lblVcoTuneVal');
+    if (valLabel) valLabel.textContent = `${pllInputFreq.toFixed(0)} Hz`;
+    pllPhaseErr = (Math.random() - 0.5) * 0.02;
+    pllLockState = true;
+    updatePllTelemetryUI();
+    appendPllLog(`[PLL] Lock achieved! VCO coherent at ${pllVcoFreq.toFixed(1)} Hz with phase residual ${pllPhaseErr.toFixed(3)} rad.`);
+    playPllChirpTone(1999, 0.15);
+  }
+
+  function pllForceSlip() {
+    pllVcoFreq += 145.0 * (Math.random() > 0.5 ? 1 : -1);
+    pllPhaseErr = (Math.random() - 0.5) * 1.5;
+    pllLockState = false;
+    updatePllTelemetryUI();
+    appendPllLog(`[PLL] PHASE SLIP INJECTED: Cycle slip occurred! VCO pulled to ${pllVcoFreq.toFixed(1)} Hz.`);
+    playPllChirpTone(600, 0.25);
+  }
+
+  function pllInjectImpulseNoise() {
+    pllNoiseLevel = 0.45;
+    setTimeout(() => { pllNoiseLevel = 0.05; }, 900);
+    appendPllLog("[NOISE] Permian Salado Halite acoustic micro-fracture burst injected. High jitter on loop filter.");
+    playPllNoiseBurst(0.2);
+  }
+
+  function setPllTargetNode(nodeIp) {
+    pllTargetNode = nodeIp;
+    ['btnPllNode1', 'btnPllNode4', 'btnPllNode19', 'btnPllNode127'].forEach(id => {
+      document.getElementById(id)?.classList.remove('btn-active');
+    });
+    const map = {
+      '10.19.99.1': 'btnPllNode1',
+      '10.19.99.4': 'btnPllNode4',
+      '10.19.99.19': 'btnPllNode19',
+      '10.19.99.127': 'btnPllNode127'
+    };
+    document.getElementById(map[nodeIp])?.classList.add('btn-active');
+    appendPllLog(`[AIRGAP] Target transponder switched to Node ${nodeIp}`);
+
+    const pkt = PLL_PACKETS[nodeIp] || PLL_PACKETS['10.19.99.19'];
+    const hexBox = document.getElementById('pllBasebandHex');
+    if (hexBox) hexBox.textContent = pkt.hex;
+    const asciiBox = document.getElementById('pllBasebandAscii');
+    if (asciiBox) asciiBox.textContent = `PAYLOAD: [${pkt.payload}]`;
+  }
+
+  function transceivePllPacket() {
+    appendPllLog(`[AIRGAP] Transceiving seismo-acoustic frame to ${pllTargetNode}...`);
+    playPllPacketAudio();
+
+    const statusEl = document.getElementById('lblPllBridgeStatus');
+    if (statusEl) {
+      statusEl.innerHTML = `<span style="color:var(--amber-led);">TRANSMITTING... AFSK BURST THROUGH 2,150 FT HALITE BED</span>`;
+    }
+
+    setTimeout(() => {
+      const pkt = PLL_PACKETS[pllTargetNode] || PLL_PACKETS['10.19.99.19'];
+      const hexBox = document.getElementById('pllBasebandHex');
+      if (hexBox) hexBox.textContent = pkt.hex;
+      const asciiBox = document.getElementById('pllBasebandAscii');
+      if (asciiBox) asciiBox.textContent = `PAYLOAD: [${pkt.payload}]`;
+
+      const syncEl = document.getElementById('lblBasebandSync');
+      if (syncEl) syncEl.innerHTML = `<span style="color:var(--green-phosphor);">CRC-16 OK // SYNC 0x7F1999 // ${pkt.type}</span>`;
+
+      if (statusEl) {
+        statusEl.innerHTML = `<span style="color:var(--green-phosphor);">FRAME RECEIVED: Coherent demodulation successful (SNR: 34.8 dB).</span>`;
+      }
+      appendPllLog(`[AIRGAP] Frame ACK from ${pkt.src}: ${pkt.payload.substring(0, 48)}...`);
+    }, 450);
+  }
+
+  function checkPllLockCondition() {
+    const diff = Math.abs(pllInputFreq - pllVcoFreq);
+    const bwVal = pllLoopBandwidth === 'narrow' ? 6 : pllLoopBandwidth === 'medium' ? 30 : 95;
+    const captureRange = bwVal * (pllLoopGain * 0.5);
+
+    if (diff < captureRange) {
+      // Pull-in effect
+      pllVcoFreq += (pllInputFreq - pllVcoFreq) * 0.15;
+      pllPhaseErr = (pllInputFreq - pllVcoFreq) * 0.005;
+      pllLockState = true;
+    } else {
+      pllPhaseErr = (diff / 100.0) % (Math.PI);
+      pllLockState = false;
+    }
+    updatePllTelemetryUI();
+  }
+
+  function updatePllTelemetryUI() {
+    const inLbl = document.getElementById('lblPllInputFreq');
+    if (inLbl) inLbl.textContent = `${pllInputFreq.toFixed(1)} Hz`;
+
+    const vcoLbl = document.getElementById('lblPllVcoFreq');
+    if (vcoLbl) vcoLbl.textContent = `${pllVcoFreq.toFixed(1)} Hz`;
+
+    const errLbl = document.getElementById('lblPllPhaseErr');
+    if (errLbl) {
+      const deg = (pllPhaseErr * 180 / Math.PI).toFixed(1);
+      errLbl.textContent = `${pllPhaseErr >= 0 ? '+' : ''}${pllPhaseErr.toFixed(3)} rad (${deg}°)`;
+      errLbl.style.color = pllLockState ? 'var(--green-phosphor)' : 'var(--red-alert)';
+    }
+
+    const snrLbl = document.getElementById('lblPllSnr');
+    if (snrLbl) {
+      const snr = pllLockState ? (32.0 + Math.random() * 4.0).toFixed(1) : (6.0 + Math.random() * 5.0).toFixed(1);
+      snrLbl.textContent = `${snr} dB`;
+    }
+
+    const trackStatus = document.getElementById('pllTrackStatus');
+    if (trackStatus) {
+      if (pllLockState) {
+        trackStatus.textContent = `PLL LOCKED (${pllVcoFreq.toFixed(1)} Hz)`;
+        trackStatus.style.color = 'var(--green-phosphor)';
+      } else {
+        trackStatus.textContent = `ACQUIRING / UNLOCKED (Δf = ${Math.abs(pllInputFreq - pllVcoFreq).toFixed(1)} Hz)`;
+        trackStatus.style.color = 'var(--amber-led)';
+      }
+    }
+  }
+
+  function animatePllLoop() {
+    drawPllScopeWaveforms();
+    drawCostasIqConstellation();
+
+    // Natural loop tracking simulation
+    if (pllLockState) {
+      pllVcoFreq += (pllInputFreq - pllVcoFreq) * 0.08;
+      pllPhaseErr += (Math.random() - 0.5) * (pllNoiseLevel * 0.05);
+    } else {
+      pllPhaseErr += 0.05 * (pllInputFreq - pllVcoFreq);
+      if (Math.abs(pllInputFreq - pllVcoFreq) < 15) {
+        pllLockState = true;
+      }
+    }
+
+    pllAnimFrame = requestAnimationFrame(animatePllLoop);
+  }
+
+  function drawPllScopeWaveforms() {
+    const canvas = document.getElementById('canvasPllScope');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const w = canvas.width;
+    const h = canvas.height;
+
+    // Dark grid background
+    ctx.fillStyle = '#020612';
+    ctx.fillRect(0, 0, w, h);
+
+    ctx.strokeStyle = 'rgba(30, 49, 91, 0.4)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    for (let x = 0; x < w; x += 40) { ctx.moveTo(x, 0); ctx.lineTo(x, h); }
+    for (let y = 0; y < h; y += 30) { ctx.moveTo(0, y); ctx.lineTo(w, y); }
+    ctx.stroke();
+
+    const t = performance.now() * 0.005;
+    const cy = h / 2;
+
+    // 1. Draw Input Carrier waveform (cyan #38bdf8)
+    ctx.strokeStyle = '#38bdf8';
+    ctx.lineWidth = 1.8;
+    ctx.beginPath();
+    for (let i = 0; i < w; i++) {
+      const angle = (i * 0.06 * (pllInputFreq / 1999.0)) + t;
+      const noise = (Math.random() - 0.5) * pllNoiseLevel * 30;
+      const y = cy - 35 + Math.sin(angle) * 32 + noise;
+      if (i === 0) ctx.moveTo(i, y);
+      else ctx.lineTo(i, y);
+    }
+    ctx.stroke();
+
+    // 2. Draw Local VCO waveform (green #00ffaa)
+    ctx.strokeStyle = '#00ffaa';
+    ctx.lineWidth = 1.8;
+    ctx.beginPath();
+    for (let i = 0; i < w; i++) {
+      const angle = (i * 0.06 * (pllVcoFreq / 1999.0)) + t + pllPhaseErr;
+      const y = cy + 25 + Math.sin(angle) * 32;
+      if (i === 0) ctx.moveTo(i, y);
+      else ctx.lineTo(i, y);
+    }
+    ctx.stroke();
+
+    // 3. Error Multiplier Product (amber #f59e0b)
+    ctx.strokeStyle = 'rgba(245, 158, 11, 0.7)';
+    ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    for (let i = 0; i < w; i += 2) {
+      const aIn = (i * 0.06 * (pllInputFreq / 1999.0)) + t;
+      const aVco = (i * 0.06 * (pllVcoFreq / 1999.0)) + t + pllPhaseErr;
+      const err = Math.sin(aIn) * Math.cos(aVco);
+      const y = cy + err * 18;
+      if (i === 0) ctx.moveTo(i, y);
+      else ctx.lineTo(i, y);
+    }
+    ctx.stroke();
+
+    // Legend
+    ctx.fillStyle = '#38bdf8';
+    ctx.font = '10px Consolas, monospace';
+    ctx.fillText(`INPUT fin=${pllInputFreq.toFixed(1)}Hz`, 10, 16);
+    ctx.fillStyle = '#00ffaa';
+    ctx.fillText(`VCO fvco=${pllVcoFreq.toFixed(1)}Hz`, 160, 16);
+    ctx.fillStyle = '#f59e0b';
+    ctx.fillText(`PHASE DETECTOR ERROR e(t)`, 320, 16);
+  }
+
+  function drawCostasIqConstellation() {
+    const canvas = document.getElementById('canvasCostasIq');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const w = canvas.width;
+    const h = canvas.height;
+
+    // Persistent decay
+    ctx.fillStyle = 'rgba(2, 6, 18, 0.22)';
+    ctx.fillRect(0, 0, w, h);
+
+    const cx = w / 2;
+    const cy = h / 2;
+    const radius = Math.min(cx, cy) - 20;
+
+    // Crosshairs
+    ctx.strokeStyle = 'rgba(30, 49, 91, 0.5)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(cx - radius, cy); ctx.lineTo(cx + radius, cy);
+    ctx.moveTo(cx, cy - radius); ctx.lineTo(cx, cy + radius);
+    ctx.arc(cx, cy, radius * 0.5, 0, Math.PI * 2);
+    ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // Costas I/Q coordinates
+    const t = performance.now() * 0.004;
+    const dTheta = pllPhaseErr;
+
+    ctx.fillStyle = pllLockState ? '#00ffaa' : '#f59e0b';
+    for (let k = 0; k < 6; k++) {
+      let iVal = Math.cos(dTheta) + (Math.random() - 0.5) * (pllNoiseLevel + 0.08);
+      let qVal = Math.sin(dTheta) + (Math.random() - 0.5) * (pllNoiseLevel + 0.08);
+
+      // In unlocked state, constellation rotates
+      if (!pllLockState) {
+        const spin = t * ((pllInputFreq - pllVcoFreq) * 0.1);
+        const rotI = iVal * Math.cos(spin) - qVal * Math.sin(spin);
+        const rotQ = iVal * Math.sin(spin) + qVal * Math.cos(spin);
+        iVal = rotI;
+        qVal = rotQ;
+      }
+
+      const px = cx + iVal * (radius * 0.85);
+      const py = cy - qVal * (radius * 0.85);
+
+      ctx.beginPath();
+      ctx.arc(px, py, 2.5, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // Costas Axis Labels
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '9px Consolas, monospace';
+    ctx.fillText('+I (In-Phase)', cx + radius - 45, cy - 6);
+    ctx.fillText('+Q (Quadrature)', cx + 6, cy - radius + 12);
+  }
+
+  function togglePllAudioMonitor() {
+    initAudioContext();
+    if (!audioCtx) return;
+
+    const btn = document.getElementById('btnPllAudioMonitor');
+    if (!pllAudioMonitor) {
+      pllAudioMonitor = true;
+      if (btn) {
+        btn.textContent = '🔊 AUDIO MONITOR: ON';
+        btn.classList.add('btn-green');
+      }
+
+      // Genesis YM2612 2-Op FM patch for PLL monitoring
+      pllMonitorOsc = audioCtx.createOscillator();
+      const pllMod = audioCtx.createOscillator();
+      const pllModGain = audioCtx.createGain();
+      pllMonitorGain = audioCtx.createGain();
+
+      pllMonitorOsc.type = 'sine';
+      pllMonitorOsc.frequency.setValueAtTime(pllVcoFreq, audioCtx.currentTime);
+
+      pllMod.type = 'sine';
+      pllMod.frequency.setValueAtTime(pllVcoFreq * 2.0, audioCtx.currentTime);
+      pllModGain.gain.setValueAtTime(pllLockState ? 120 : 380, audioCtx.currentTime);
+
+      pllMod.connect(pllModGain);
+      pllModGain.connect(pllMonitorOsc.frequency);
+
+      pllMonitorGain.gain.setValueAtTime(0.04, audioCtx.currentTime);
+      pllMonitorOsc.connect(pllMonitorGain);
+      pllMonitorGain.connect(masterGain || audioCtx.destination);
+
+      pllMonitorOsc.start();
+      pllMod.start();
+      appendPllLog("[AUDIO] YM2612 2-Op FM procedural monitor active. Tone tracking VCO frequency.");
+    } else {
+      pllAudioMonitor = false;
+      if (btn) {
+        btn.textContent = '🔊 AUDIO MONITOR: OFF';
+        btn.classList.remove('btn-green');
+      }
+      if (pllMonitorOsc) {
+        try { pllMonitorOsc.stop(); } catch(e) {}
+        pllMonitorOsc = null;
+      }
+      appendPllLog("[AUDIO] Audio monitor halted.");
+    }
+  }
+
+  function playPllChirpTone(freq, duration) {
+    if (!audioCtx) initAudioContext();
+    if (!audioCtx) return;
+    try {
+      const osc = audioCtx.createOscillator();
+      const g = audioCtx.createGain();
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(freq * 1.5, audioCtx.currentTime + duration);
+      g.gain.setValueAtTime(0.06, audioCtx.currentTime);
+      g.gain.linearRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+      osc.connect(g);
+      g.connect(masterGain || audioCtx.destination);
+      osc.start();
+      osc.stop(audioCtx.currentTime + duration);
+    } catch (e) {}
+  }
+
+  function playPllNoiseBurst(duration) {
+    if (!audioCtx) initAudioContext();
+    if (!audioCtx) return;
+    try {
+      const bufferSize = audioCtx.sampleRate * duration;
+      const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+      const data = buffer.getChannelData(0);
+      for (let i = 0; i < bufferSize; i++) {
+        data[i] = (Math.random() * 2 - 1) * 0.08;
+      }
+      const noise = audioCtx.createBufferSource();
+      noise.buffer = buffer;
+      const filter = audioCtx.createBiquadFilter();
+      filter.type = 'bandpass';
+      filter.frequency.setValueAtTime(1999, audioCtx.currentTime);
+      filter.Q.setValueAtTime(2.5, audioCtx.currentTime);
+      noise.connect(filter);
+      filter.connect(masterGain || audioCtx.destination);
+      noise.start();
+    } catch (e) {}
+  }
+
+  function playPllPacketAudio() {
+    if (!audioCtx) initAudioContext();
+    if (!audioCtx) return;
+    try {
+      // Bell 202 AFSK dual frequency chirp (1200 / 2200 Hz)
+      const now = audioCtx.currentTime;
+      const osc = audioCtx.createOscillator();
+      const g = audioCtx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(1200, now);
+      osc.frequency.setValueAtTime(2200, now + 0.08);
+      osc.frequency.setValueAtTime(1200, now + 0.16);
+      osc.frequency.setValueAtTime(1999, now + 0.24);
+      g.gain.setValueAtTime(0.06, now);
+      g.gain.exponentialRampToValueAtTime(0.001, now + 0.38);
+      osc.connect(g);
+      g.connect(masterGain || audioCtx.destination);
+      osc.start();
+      osc.stop(now + 0.38);
+    } catch (e) {}
+  }
+
+  function exportPllCaptureLog() {
+    const pkt = PLL_PACKETS[pllTargetNode] || PLL_PACKETS['10.19.99.19'];
+    const cap = `[ESARL PHASE-LOCKED LOOP (PLL) AIRGAP CAPTURE LOG]
+` +
+      `STATION: SIG-1999-ECHO // ESARL ACOUSTIC MONITORING FACILITY
+` +
+      `TIMESTAMP: ${new Date().toISOString()}
+` +
+      `STRATA: Permian Salado Halite (4,420 m/s litho-acoustic)
+` +
+      `CARRIER FREQ: ${pllInputFreq.toFixed(1)} Hz
+` +
+      `VCO FREQ: ${pllVcoFreq.toFixed(1)} Hz
+` +
+      `PHASE ERROR: ${pllPhaseErr.toFixed(4)} rad
+` +
+      `LOCK STATE: ${pllLockState ? 'COHERENT_LOCKED' : 'SLIPPING'}
+` +
+      `TARGET NODE: ${pllTargetNode}
+` +
+      `MODULATION: ${pllModulationMode}
+` +
+      `
+--- PACKET FRAME ---
+` +
+      `SOURCE: ${pkt.src}
+` +
+      `DESTINATION: ${pkt.dst}
+` +
+      `FRAME TYPE: ${pkt.type}
+` +
+      `PAYLOAD: ${pkt.payload}
+` +
+      `
+HEX DISSECTION:
+${pkt.hex}
+`;
+
+    const blob = new Blob([cap], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `pll_airgap_${Date.now()}.cap`;
+    a.click();
+    URL.revokeObjectURL(url);
+    appendPllLog(`[SYSTEM] Exported airgap packet log: pll_airgap_${Date.now()}.cap`);
+  }
+
+  function copyPllDecodedPayload() {
+    const pkt = PLL_PACKETS[pllTargetNode] || PLL_PACKETS['10.19.99.19'];
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(pkt.payload).then(() => {
+        appendPllLog(`[CLIPBOARD] Copied payload to clipboard: "${pkt.payload}"`);
+      });
+    } else {
+      appendPllLog(`[CLIPBOARD] Payload: "${pkt.payload}"`);
+    }
+  }
+
+  function appendPllLog(msg) {
+    const feed = document.getElementById('pllTeletypeFeed');
+    if (!feed) return;
+    const timeStr = new Date().toTimeString().split(' ')[0];
+    feed.innerHTML += `\n[${timeStr}] ${msg}`;
+    feed.scrollTop = feed.scrollHeight;
+  }
+
+  function clearPllLog() {
+    const feed = document.getElementById('pllTeletypeFeed');
+    if (feed) feed.innerHTML = '[ESARL PHASE-LOCKED LOOP & AIRGAP BRIDGE TELEMETRY STREAM CLEARED]';
   }
 
 </script>

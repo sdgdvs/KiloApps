@@ -13,9 +13,9 @@
   "session_end": null,
   "session_limit_enabled": false,
   "timer_enabled": false,
-  "turns_executed": 374,
+  "turns_executed": 380,
   "last_turn_timestamp": "2026-09-28T17:56:12Z",
-  "last_heartbeat": "2026-10-22T12:38:05.097257+00:00",
-  "current_target": "KPad",
+  "last_heartbeat": "2026-10-22T18:38:03.716596+00:00",
+  "current_target": "kweb://echo-subsystem.net",
   "remote_command": "none"
 }

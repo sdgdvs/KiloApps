@@ -761,18 +761,21 @@ void ShowVirtualWeb(const char* site) {
             "Inspect KHex memory dump at offset 0x0000FF00 for signature 'K-MATRIX-1999'.\r\n"
             "When App #100 is born, enter the passkey in KDirector to unlock the bridge.\r\n"
             "========================================================================\r\n");
-    } else if (lstrcmpiA(site, "echo_subsystem") == 0 || lstrcmpiA(site, "kweb:echo_subsystem") == 0 || lstrcmpiA(site, "echo-subsystem.net") == 0) {
+    } else if (lstrcmpiA(site, "echo_subsystem") == 0 || lstrcmpiA(site, "kweb:echo_subsystem") == 0 || lstrcmpiA(site, "echo-subsystem.net") == 0 || lstrcmpiA(site, "kweb://echo-subsystem.net") == 0) {
         SetWindowTextA(hContentEdit,
             "========================================================================\r\n"
             "★ ECHO-SUBSYSTEM.NET // CLASSIFIED TELEMETRY STATION ★\r\n"
             "========================================================================\r\n"
-            "STATUS: ONLINE | Subcarrier Frequency: 1999 Hz | Resonance: 100%\r\n"
+            "STATUS: ONLINE | Subcarrier Frequency: 1999.0 Hz | Resonance: 100%\r\n"
             "------------------------------------------------------------------------\r\n\r\n"
             "DIAGNOSTIC TELEMETRY STREAM:\r\n"
-            "  • Routing Target: Subnet 10.19.99.0/24\r\n"
-            "  • ARPA Gateway  : 10.19.99.1\r\n"
-            "  • Terminal Node : 10.19.99.4 (/classified)\r\n"
-            "  • Carrier Pulse : 1999 Hz harmonic synchronization\r\n\r\n"
+            "  • Routing Target  : Subnet 10.19.99.0/24\r\n"
+            "  • ARPA Gateway    : 10.19.99.1 (echo-gw-07.kilonet.internal)\r\n"
+            "  • Terminal Node   : 10.19.99.4 (/classified)\r\n"
+            "  • Echo Lab Node   : 10.19.99.19 (ESARL Hydrophone Grid)\r\n"
+            "  • Carrier Pulse   : 1999.0 Hz Costas Phase-Locked Loop (PLL)\r\n"
+            "  • Strata Waveguide: Permian Salado Halite (4,420 m/s P-Wave)\r\n"
+            "  • Airgap Bridge   : Telemetry frame synchronized to offset 0x0040:0x1999\r\n\r\n"
             "Transmitting beacon echoes across the global KiloApps mesh.\r\n"
             "========================================================================\r\n");
     } else if (lstrcmpiA(site, "classified") == 0 || lstrcmpiA(site, "10.19.99.4") == 0 || lstrcmpiA(site, "kweb:classified") == 0) {
@@ -958,7 +961,7 @@ void FetchUrl(HWND hwnd, BOOL addToHistory) {
         AddTrafficLog("KWEB", "kweb://darknet", "OK", 10, 1024);
         return;
     }
-    if (lstrcmpiA(url, "echo_subsystem") == 0 || lstrcmpiA(url, "kweb:echo_subsystem") == 0 || lstrcmpiA(url, "echo-subsystem.net") == 0) {
+    if (lstrcmpiA(url, "echo_subsystem") == 0 || lstrcmpiA(url, "kweb:echo_subsystem") == 0 || lstrcmpiA(url, "echo-subsystem.net") == 0 || lstrcmpiA(url, "kweb://echo-subsystem.net") == 0) {
         ShowVirtualWeb("echo_subsystem");
         AddTrafficLog("KWEB", "kweb://echo_subsystem", "OK", 10, 1024);
         return;
