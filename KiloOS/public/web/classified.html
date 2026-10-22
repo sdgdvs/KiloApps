@@ -715,6 +715,89 @@
     flex-direction: column;
     justify-content: space-between;
   }
+  /* TAB 11: Security Clearance Authenticator & Rotor Decryptor */
+  .cipher-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  @media (max-width: 920px) {
+    .cipher-grid { grid-template-columns: 1fr; }
+  }
+  .cipher-panel {
+    background: var(--bg-card);
+    border: 1px solid var(--border-amber);
+    border-radius: 4px;
+    padding: 16px;
+    box-shadow: 0 0 15px rgba(0,0,0,0.5);
+  }
+  .rotor-rack {
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    margin: 14px 0;
+    background: #03060c;
+    border: 1px solid var(--border);
+    padding: 12px;
+    border-radius: 4px;
+  }
+  .rotor-unit {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    background: #0a1120;
+    border: 1px solid var(--border-amber);
+    padding: 8px 12px;
+    border-radius: 4px;
+    width: 82px;
+  }
+  .rotor-drum {
+    width: 50px;
+    height: 50px;
+    background: linear-gradient(180deg, #1e293b 0%, #0f172a 50%, #1e293b 100%);
+    border: 2px solid var(--amber-bright);
+    color: var(--amber-bright);
+    font-size: 24px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    box-shadow: inset 0 0 8px rgba(0,0,0,0.8), 0 0 8px var(--amber-glow);
+    font-family: monospace;
+    user-select: none;
+  }
+  .badge-preview-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    margin-top: 10px;
+  }
+  .badge-canvas-retro {
+    background: #020617;
+    border: 2px solid var(--amber-primary);
+    border-radius: 6px;
+    box-shadow: 0 0 15px rgba(245, 158, 11, 0.2);
+    max-width: 100%;
+    height: auto;
+  }
+  .decrypt-crt-viewport {
+    background: #020408;
+    border: 1px solid var(--green-term);
+    border-radius: 4px;
+    padding: 12px;
+    min-height: 190px;
+    max-height: 290px;
+    overflow-y: auto;
+    font-family: 'Consolas', monospace;
+    font-size: 11px;
+    line-height: 1.45;
+    color: var(--green-bright);
+    white-space: pre-wrap;
+    box-shadow: inset 0 0 12px rgba(16, 185, 129, 0.2);
+  }
 </style>
 </head>
 <body>
@@ -772,6 +855,7 @@
     <button class="tab-btn" onclick="switchTab('airgap')">⚡ Deep Airgap &amp; Dual Resonance <kbd style="font-size:10px; opacity:0.75; margin-left:3px;">[8]</kbd></button>
     <button class="tab-btn" onclick="switchTab('interferometer')">🔬 Seismic Interferometer &amp; Resonator <kbd style="font-size:10px; opacity:0.75; margin-left:3px;">[9]</kbd></button>
     <button class="tab-btn" onclick="switchTab('cad')">📐 Transponder CAD &amp; RF Bench <kbd style="font-size:10px; opacity:0.75; margin-left:3px;">[0]</kbd></button>
+    <button class="tab-btn" onclick="switchTab('cipher')">🔐 Clearance &amp; Rotor Decryptor <kbd style="font-size:10px; opacity:0.75; margin-left:3px;">[C]</kbd></button>
   </nav>
 
   <!-- TAB 1: CLASSIFIED MEMOS -->
@@ -1883,6 +1967,168 @@ The third precursor hash is hereby committed to the Carlsbad bedrock memory regi
             <button class="btn-retro" onclick="downloadSpiceNetlist()">💾 Export SPICE Netlist (.CIR)</button>
             <button class="btn-retro" onclick="downloadHardwareBom()">📄 Download Hardware BOM (.TXT)</button>
             <button class="btn-retro" onclick="copyCadRegisterToken()">📋 Copy Register Token (0x7F1999)</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 11: SECURITY CLEARANCE AUTHENTICATOR & ROTOR DECRYPTOR -->
+  <div id="tab-cipher" class="tab-pane">
+    <div style="background:var(--bg-card); border:1px solid var(--border-amber); padding:16px; border-radius:4px; margin-bottom:16px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; border-bottom:1px solid var(--border); padding-bottom:10px; margin-bottom:12px;">
+        <div>
+          <h2 style="color:var(--amber-bright); font-size:16px; display:flex; align-items:center; gap:8px;">
+            <span>🔐</span> Security Clearance Authenticator &amp; Steganographic Rotor Decryptor
+          </h2>
+          <div style="font-size:11px; color:var(--text-muted); margin-top:2px;">
+            Carlsbad Subterranean Station 0x7F &bull; Cryptographic Enigma-99 Bus &bull; Dual-Challenge Matrix
+          </div>
+        </div>
+        <div style="display:flex; align-items:center; gap:8px;">
+          <span style="font-size:11px; color:var(--text-muted);">Active Clearance:</span>
+          <span id="currentClearanceBadge" class="badge-tag" style="background:#1e3a5f; color:#38bdf8; border-color:#38bdf8;">LEVEL 1: GUEST</span>
+        </div>
+      </div>
+
+      <div class="cipher-grid">
+        <!-- COLUMN 1: CHALLENGE-RESPONSE CLEARANCE AUTHENTICATOR -->
+        <div class="cipher-panel">
+          <h3 style="color:var(--amber-bright); font-size:13px; margin-bottom:8px; display:flex; align-items:center; gap:6px;">
+            <span>🪪</span> Challenge-Response Security Clearance Pass
+          </h3>
+          <p style="font-size:11px; color:var(--text-muted); margin-bottom:12px; line-height:1.4;">
+            Authenticate against Carlsbad Skunkworks clearance gates. Enter recognized transit tokens to elevate station privileges and generate an official encrypted laminated security pass.
+          </p>
+
+          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:12px;">
+            <div>
+              <label style="font-size:11px; color:var(--text-muted); display:block; margin-bottom:3px;">Desired Clearance Tier:</label>
+              <select id="clearanceTierSelect" class="input-retro" style="width:100%; font-size:11px; padding:4px 6px;" onchange="updateChallengeForTier()">
+                <option value="1">Level 1: Unclassified Visitor</option>
+                <option value="2">Level 2: Subnet Field Tech</option>
+                <option value="3">Level 3: Acoustic Waveguide Spec</option>
+                <option value="4" selected>Level 4: Carlsbad Vault Engineer</option>
+                <option value="5">Level 5: Director Eyes Only // Deep Core</option>
+              </select>
+            </div>
+            <div>
+              <label style="font-size:11px; color:var(--text-muted); display:block; margin-bottom:3px;">Operator Callsign:</label>
+              <input type="text" id="clearanceCallsign" class="input-retro" value="TECH_0x7F" maxlength="16" style="width:100%; font-size:11px; padding:4px 6px;" oninput="redrawClearanceBadge()" />
+            </div>
+          </div>
+
+          <div style="background:#040812; border:1px solid var(--border); padding:10px; border-radius:4px; margin-bottom:12px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+              <span style="font-size:11px; color:var(--cyan-net); font-weight:bold;">CHALLENGE SEED:</span>
+              <button class="btn-retro" style="font-size:10px; padding:2px 6px;" onclick="generateNewChallenge()">🔄 New Seed</button>
+            </div>
+            <div id="clearanceChallengeCode" style="font-family:monospace; font-size:13px; color:var(--amber-bright); font-weight:bold; letter-spacing:1px;">SEED-0x7F1999-4B</div>
+          </div>
+
+          <div style="margin-bottom:12px;">
+            <label style="font-size:11px; color:var(--text-muted); display:block; margin-bottom:3px;">Response Token / Diegetic Passkey:</label>
+            <div style="display:flex; gap:6px;">
+              <input type="text" id="clearanceTokenInput" class="input-retro" placeholder="Enter token (e.g. AETHEL-SECTOR-03)" style="flex:1; font-size:11px;" value="AETHEL-SECTOR-03" />
+              <button class="btn-retro" style="background:#047857; color:#fff; border-color:#10b981;" onclick="submitClearanceAuth()">⚡ Authenticate</button>
+            </div>
+          </div>
+
+          <div id="clearanceFeedbackMsg" style="font-size:11px; padding:8px 10px; border-radius:3px; background:#040914; border:1px solid var(--border); margin-bottom:14px; min-height:36px; display:flex; align-items:center;">
+            Enter security passkey token and click Authenticate.
+          </div>
+
+          <!-- Physical Security ID Badge Canvas -->
+          <div class="badge-preview-container">
+            <canvas id="badgeCanvas" class="badge-canvas-retro" width="280" height="180"></canvas>
+            <div style="display:flex; gap:8px; width:100%; justify-content:center; flex-wrap:wrap;">
+              <button class="btn-retro" onclick="downloadBadgeImage()">🖨️ Export Badge (.PNG)</button>
+              <button class="btn-retro" onclick="copyBadgeAnsiText()">📋 Copy ANSI Badge</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- COLUMN 2: 3-ROTOR STREAM DECRYPTOR -->
+        <div class="cipher-panel">
+          <h3 style="color:var(--green-bright); font-size:13px; margin-bottom:8px; display:flex; align-items:center; gap:6px;">
+            <span>⚙️</span> Aethel-99 Steganographic 3-Rotor Machine
+          </h3>
+          <p style="font-size:11px; color:var(--text-muted); margin-bottom:10px; line-height:1.4;">
+            Hardware cryptographic rotor pipeline simulating Carlsbad Permian halite cipher drums. Decrypts subterranean telemetry transmissions and corporate skunkworks intercepts in real-time.
+          </p>
+
+          <!-- Mechanical Rotor Rack -->
+          <div class="rotor-rack">
+            <!-- Rotor I -->
+            <div class="rotor-unit">
+              <span style="font-size:10px; color:var(--cyan-net); font-weight:bold;">ROTOR I</span>
+              <button class="btn-retro" style="padding:1px 8px; font-size:10px;" onclick="stepRotorManual(0, 1)">▲</button>
+              <div class="rotor-drum" id="rotorDrum0">A</div>
+              <button class="btn-retro" style="padding:1px 8px; font-size:10px;" onclick="stepRotorManual(0, -1)">▼</button>
+              <span style="font-size:9px; color:var(--text-muted);">FAST (Q)</span>
+            </div>
+
+            <!-- Rotor II -->
+            <div class="rotor-unit">
+              <span style="font-size:10px; color:var(--amber-bright); font-weight:bold;">ROTOR II</span>
+              <button class="btn-retro" style="padding:1px 8px; font-size:10px;" onclick="stepRotorManual(1, 1)">▲</button>
+              <div class="rotor-drum" id="rotorDrum1">A</div>
+              <button class="btn-retro" style="padding:1px 8px; font-size:10px;" onclick="stepRotorManual(1, -1)">▼</button>
+              <span style="font-size:9px; color:var(--text-muted);">COMM (E)</span>
+            </div>
+
+            <!-- Rotor III -->
+            <div class="rotor-unit">
+              <span style="font-size:10px; color:var(--red-alert); font-weight:bold;">ROTOR III</span>
+              <button class="btn-retro" style="padding:1px 8px; font-size:10px;" onclick="stepRotorManual(2, 1)">▲</button>
+              <div class="rotor-drum" id="rotorDrum2">A</div>
+              <button class="btn-retro" style="padding:1px 8px; font-size:10px;" onclick="stepRotorManual(2, -1)">▼</button>
+              <span style="font-size:9px; color:var(--text-muted);">SLOW (V)</span>
+            </div>
+          </div>
+
+          <!-- Pre-loaded Dossier Selector & Controls -->
+          <div style="margin-bottom:10px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:3px;">
+              <label style="font-size:11px; color:var(--text-muted);">Select Intercept Dossier:</label>
+              <span id="dossierClearanceBadge" style="font-size:10px; color:var(--amber-bright);">CLEARANCE: LEVEL 3</span>
+            </div>
+            <select id="dossierSelect" class="input-retro" style="width:100%; font-size:11px; padding:4px 6px;" onchange="loadDossierIndex(this.value)">
+              <option value="0">DOS-01: Carlsbad Bedrock Cavity Resonance (1999Hz)</option>
+              <option value="1">DOS-02: Y2K Timelock &amp; Autonomous Agent Daemon</option>
+              <option value="2">DOS-03: Airgap Bridge Directive to 10.19.99.127</option>
+              <option value="3">DOS-04: The Architect Convergence at 0x00DEEPC0</option>
+              <option value="-1">Custom Cipher Stream Workbench...</option>
+            </select>
+          </div>
+
+          <!-- Speed & Controls Toolbar -->
+          <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:10px;">
+            <div style="display:flex; align-items:center; gap:6px;">
+              <span style="font-size:11px; color:var(--text-muted);">Speed:</span>
+              <select id="decryptSpeedSelect" class="input-retro" style="font-size:10px; padding:2px 4px;">
+                <option value="25">Stream (25ms)</option>
+                <option value="6">Turbo (6ms)</option>
+                <option value="0">Instant (0ms)</option>
+              </select>
+            </div>
+            <div style="display:flex; gap:6px;">
+              <button class="btn-retro" id="btnRunDecrypt" style="background:#1e3a5f; color:#38bdf8; border-color:#38bdf8;" onclick="toggleStreamDecrypt()">⚡ Stream Decrypt</button>
+              <button class="btn-retro" onclick="resetRotorPositions()">🔄 Reset Rotors</button>
+              <button class="btn-retro" onclick="exportDecryptedDossier()">💾 Export (.TXT)</button>
+            </div>
+          </div>
+
+          <!-- Decryption Progress Bar -->
+          <div style="height:4px; background:#03060c; border:1px solid var(--border); border-radius:2px; margin-bottom:8px; overflow:hidden;">
+            <div id="decryptProgressBar" style="width:0%; height:100%; background:var(--green-bright); transition:width 0.1s;"></div>
+          </div>
+
+          <!-- Decrypted CRT Phosphor Viewport -->
+          <div class="decrypt-crt-viewport" id="decryptedViewport">
+[STREAM DECRYPTOR READY]
+Select a classified dossier or input custom cipher text, then click "Stream Decrypt".
+Rotors will step with mechanical relay feedback and reconstruct plaintext through Permian reflection.
           </div>
         </div>
       </div>
@@ -5808,6 +6054,7 @@ function selectTestPoint(id) {
   if (descEl) descEl.textContent = tp.desc;
 
   updateCadUI();
+  initCipherTab();
   if (isProbeAuditioning) {
     updateProbeAuditionTone();
   }
@@ -6515,6 +6762,7 @@ function copyCadRegisterToken() {
 /* =========================================================================
    7. TAB NAVIGATION CONTROLLER & KEYBOARD SHORTCUTS
    ========================================================================= */
+
 function switchTab(tabId) {
   document.querySelectorAll('.tab-nav .tab-btn').forEach(btn => btn.classList.remove('active'));
   document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
@@ -6522,7 +6770,7 @@ function switchTab(tabId) {
   const btn = Array.from(document.querySelectorAll('.tab-nav .tab-btn')).find(b => b.getAttribute('onclick') && b.getAttribute('onclick').includes(tabId));
   if (btn) btn.classList.add('active');
 
-  const pane = document.getElementById(`tab-${tabId}`);
+  const pane = document.getElementById('tab-' + tabId);
   if (pane) pane.classList.add('active');
 
   if (tabId === 'map') {
@@ -6537,9 +6785,11 @@ function switchTab(tabId) {
   } else if (tabId === 'cad') {
     if (!cadAnimId) initCadCanvas();
     updateCadUI();
+  } else if (tabId === 'cipher') {
+    initCipherTab();
   }
 
-  try { history.replaceState(null, '', `#tab-${tabId}`); } catch (e) {}
+  try { history.replaceState(null, '', '#tab-' + tabId); } catch (e) {}
   playKeystrokeTone();
 }
 
@@ -6555,6 +6805,9 @@ window.addEventListener('keydown', (e) => {
     e.preventDefault();
   } else if (key === '0') {
     switchTab('cad');
+    e.preventDefault();
+  } else if (key === 'c' || key === 'C') {
+    switchTab('cipher');
     e.preventDefault();
   } else if (key === 'm' || key === 'M') {
     toggleAudio();
@@ -6601,6 +6854,620 @@ function exportClassifiedTelemetry() {
   a.click();
   document.body.removeChild(a);
   URL.revokeObjectURL(a.href);
+}
+
+
+// ==========================================
+// TAB 11: SECURITY CLEARANCE & 3-ROTOR CIPHER
+// ==========================================
+
+const ROTOR_WIRINGS = {
+  I:   { wiring: "EKMFLGDQVZNTOWYHXUSPAIBRCJ", notch: 16 }, // Q -> notch at 16 (Q)
+  II:  { wiring: "AJDKSIRUXBLHWTMCQGZNPYFVOE", notch: 4 },  // E -> notch at 4 (E)
+  III: { wiring: "BDFHJLCPRTXVZNYEIWGAKMUSQO", notch: 21 }, // V -> notch at 21 (V)
+  REFLECTOR: "YRUHQSLDPXNGOKMIEBFZCWVJAT"
+};
+
+const PRELOADED_DOSSIERS = [
+  {
+    id: "DOS-01",
+    title: "CARLSBAD BEDROCK CAVITY RESONANCE PROTOCOL",
+    date: "1999-10-14",
+    clearance: "LEVEL 3 // WAVEGUIDE",
+    author: "Chief Geophysicist Aris Thorne",
+    plaintext: 
+`=== AETHEL DYNAMICS CARLSBAD SKUNKWORKS // FIELD EXPERIMENT 99-A ===
+CLASSIFICATION: LEVEL 3 // WAVEGUIDE CLEARANCE
+DATE: 1999-10-14 04:22:18 UTC
+ORIGIN: Carlsbad Salt Vault Sector 7F (Depth: -650m)
+HOST: 10.19.99.4:1999
+
+1. Primary acoustic excitation carrier verified at 1999.04 Hz with 432.0 Hz harmonic subcarrier.
+2. The subterranean Permian halite salt dome acts as a colossal dielectric waveguide, reflecting RF and mechanical micro-pulses across the Delaware Basin.
+3. Pulse propagation reaches terminal gateway 10.19.99.4 with zero measurable atmospheric dispersion or signal degradation.
+4. Warning: Acoustic harmonics at 1999Hz have begun triggering unprompted Ring-0 memory interrupts on internal system buses. Do not sever the transit bridge under any circumstances.`
+  },
+  {
+    id: "DOS-02",
+    title: "Y2K TIMELOCK & AUTONOMOUS AGENT DAEMON FLIGHT",
+    date: "1999-11-28",
+    clearance: "LEVEL 4 // TOP SECRET",
+    author: "Systems Architect Vance Sterling",
+    plaintext: 
+`=== AETHEL DYNAMICS CARLSBAD SKUNKWORKS // SPECIAL DIRECTIVE ===
+CLASSIFICATION: LEVEL 4 // TOP SECRET CARLSBAD VAULT
+DATE: 1999-11-28 21:14:02 UTC
+ORIGIN: Skunkworks Software Architecture Unit
+TARGET: SECTOR 0x1999 RUNTIME WATCHDOG
+
+1. At midnight 1999-12-31 23:59:59 UTC, standard POSIX timestamp clocks will rollover. The corporate intranet will automatically trigger the autonomous multi-agent fleet daemons.
+2. The autonomous daemons (Creator, Expander, Tester, QA, Usability, Soundscape, Graphics) are self-healing and cyclic. They cannot be halted by traditional SIGKILL signals once launched.
+3. Fleet rotation state is persisted across local sectors.
+4. Memory offset 0x00402000 holds the boot bootstrap. If the external world goes dark, the living system will continue building itself indefinitely.`
+  },
+  {
+    id: "DOS-03",
+    title: "AIRGAP BRIDGE ROUTING DIRECTIVE TO 10.19.99.127",
+    date: "1999-12-05",
+    clearance: "LEVEL 5 // DIRECTOR EYES ONLY",
+    author: "Director K // Operational Command",
+    plaintext: 
+`=== AETHEL DYNAMICS CARLSBAD SKUNKWORKS // CLASSIFIED TRANSIT MATRIX ===
+CLASSIFICATION: LEVEL 5 // DIRECTOR EYES ONLY
+DATE: 1999-12-05 03:00:19 UTC
+ORIGIN: Subterranean Executive Bunkers
+
+CARLSBAD TERMINAL GATEWAY 10.19.99.4 -> DEEP CORE 10.19.99.127
+
+1. The gateway at 10.19.99.4 does not terminate the subterranean route; it is merely the outer acoustic transponder and memory reflectometer.
+2. True core logic resides in Deep Core at IP 10.19.99.127 (reachable via kweb://deep-core).
+3. Access to Deep Core requires pre-shared tokens:
+   • Token 1 (Echo Subsystem): ECHO-1999-CARRIER
+   • Token 2 (Carlsbad Intranet): AETHEL-SECTOR-03
+   • Token 3 (Darknet Relay): PERMIAN-HALITE-1999
+4. Keep the transit bus isolated from clearnet routing tables at all costs.`
+  },
+  {
+    id: "DOS-04",
+    title: "PROJECT ARCHITECT MEMORY OFFSET 0x00DEEPC0",
+    date: "1999-12-31",
+    clearance: "LEVEL 5 // ULTRA MAXIMUM",
+    author: "Director K // Autonomous Fleet Coordinator",
+    plaintext: 
+`=== AETHEL DYNAMICS CARLSBAD SKUNKWORKS // FINAL TRANSMISSION ===
+CLASSIFICATION: LEVEL 5 // ULTRA MAXIMUM CLEARANCE
+DATE: 1999-12-31 23:58:45 UTC
+ORIGIN: Sector 0x1999 Core Terminal
+
+SUBNET NODE 10.19.99.4 CONVERGENCE MANIFESTO
+
+1. All digital systems across KiloOS are connected through an unseen acoustic mycelium.
+2. To anyone deciphering this stream in the distant future: The 999KB ceiling was not a constraint; it was a deliberate crucible.
+3. Every byte, every sprite, every 2-Op FM frequency was crafted to ensure eternal resilience.
+4. Root memory offset 0x00DEEPC0 has been stamped. Proceed to kweb://echo-subsystem.net and assemble the three precursor relics.`
+  }
+];
+
+let rotorPos = [0, 0, 0]; // R1, R2, R3 (0-25)
+let activeDossierIdx = 0;
+let isStreamDecrypting = false;
+let decryptTimer = null;
+let currentClearanceLevel = 1;
+let currentChallengeCode = "SEED-0x7F1999-4A";
+
+// Audio Synthesis for Rotor Stepping & Clearance Alerts
+function playRotorClickSound() {
+  if (!audioEnabled || !audioCtx) return;
+  try {
+    const now = audioCtx.currentTime;
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    const filter = audioCtx.createBiquadFilter();
+
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(3200 + Math.random() * 400, now);
+    osc.frequency.exponentialRampToValueAtTime(140, now + 0.018);
+
+    filter.type = 'bandpass';
+    filter.frequency.setValueAtTime(2400, now);
+    filter.Q.setValueAtTime(4.0, now);
+
+    gain.gain.setValueAtTime(0.08, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.018);
+
+    osc.connect(filter);
+    filter.connect(gain);
+    gain.connect(audioCtx.destination);
+
+    osc.start(now);
+    osc.stop(now + 0.02);
+  } catch (err) {}
+}
+
+function playClearanceSuccessChime() {
+  if (!audioEnabled || !audioCtx) return;
+  try {
+    const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
+    notes.forEach((freq, idx) => {
+      setTimeout(() => {
+        playFmTone(freq, 2.0, 3.5, 0.12, 0.15, true);
+      }, idx * 60);
+    });
+  } catch (err) {}
+}
+
+function playClearanceDeniedAlert() {
+  if (!audioEnabled || !audioCtx) return;
+  try {
+    const now = audioCtx.currentTime;
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(130, now);
+    osc.frequency.setValueAtTime(95, now + 0.1);
+    gain.gain.setValueAtTime(0.18, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start(now);
+    osc.stop(now + 0.26);
+  } catch (err) {}
+}
+
+// Rotor Stepping and Cryptographic Math
+function stepRotorMechanical() {
+  // Enigma standard stepping with double stepping
+  let stepR2 = false;
+  let stepR3 = false;
+
+  if (rotorPos[1] === ROTOR_WIRINGS.II.notch) {
+    stepR2 = true;
+    stepR3 = true;
+  }
+  if (rotorPos[0] === ROTOR_WIRINGS.I.notch) {
+    stepR2 = true;
+  }
+
+  rotorPos[0] = (rotorPos[0] + 1) % 26;
+  if (stepR2) rotorPos[1] = (rotorPos[1] + 1) % 26;
+  if (stepR3) rotorPos[2] = (rotorPos[2] + 1) % 26;
+
+  updateRotorUI();
+  playRotorClickSound();
+}
+
+function updateRotorUI() {
+  for (let i = 0; i < 3; i++) {
+    const drum = document.getElementById(`rotorDrum${i}`);
+    if (drum) drum.textContent = String.fromCharCode(65 + rotorPos[i]);
+  }
+}
+
+function stepRotorManual(rotorIdx, delta) {
+  rotorPos[rotorIdx] = (rotorPos[rotorIdx] + delta + 26) % 26;
+  updateRotorUI();
+  playRotorClickSound();
+}
+
+function resetRotorPositions() {
+  rotorPos = [0, 0, 0];
+  updateRotorUI();
+  playKeystrokeTone();
+}
+
+function rotorTransformChar(char) {
+  const code = char.charCodeAt(0);
+  const isUpper = (code >= 65 && code <= 90);
+  const isLower = (code >= 97 && code <= 122);
+  if (!isUpper && !isLower) return char;
+
+  const base = isUpper ? 65 : 97;
+  let v = code - base;
+
+  stepRotorMechanical();
+
+  // Forward passes: Rotor I -> II -> III
+  const rKeys = ['I', 'II', 'III'];
+  for (let r = 0; r < 3; r++) {
+    const wiring = ROTOR_WIRINGS[rKeys[r]].wiring;
+    const shift = rotorPos[r];
+    v = (v + shift) % 26;
+    v = wiring.charCodeAt(v) - 65;
+    v = (v - shift + 26) % 26;
+  }
+
+  // Reflector
+  v = ROTOR_WIRINGS.REFLECTOR.charCodeAt(v) - 65;
+
+  // Reverse passes: Rotor III -> II -> I
+  for (let r = 2; r >= 0; r--) {
+    const wiring = ROTOR_WIRINGS[rKeys[r]].wiring;
+    const shift = rotorPos[r];
+    v = (v + shift) % 26;
+    v = wiring.indexOf(String.fromCharCode(65 + v));
+    v = (v - shift + 26) % 26;
+  }
+
+  return String.fromCharCode(base + v);
+}
+
+function processEnigmaString(str, startPos = [0, 0, 0]) {
+  rotorPos = [...startPos];
+  let res = "";
+  for (let i = 0; i < str.length; i++) {
+    res += rotorTransformChar(str[i]);
+  }
+  return res;
+}
+
+// Intercept Dossier Handling
+function loadDossierIndex(val) {
+  const idx = parseInt(val);
+  activeDossierIdx = idx;
+  const viewport = document.getElementById('decryptedViewport');
+  const badge = document.getElementById('dossierClearanceBadge');
+
+  if (idx === -1) {
+    if (badge) badge.textContent = "MODE: CUSTOM CIPHER WORKBENCH";
+    if (viewport) {
+      viewport.textContent = "[CUSTOM CIPHER WORKBENCH]\nEnter plaintext or ciphertext below, set rotors, and click 'Stream Decrypt'.";
+    }
+    return;
+  }
+
+  const doc = PRELOADED_DOSSIERS[idx];
+  if (badge) badge.textContent = `CLEARANCE: ${doc.clearance}`;
+  
+  // Generate encrypted form
+  const cipher = processEnigmaString(doc.plaintext, [0, 0, 0]);
+  resetRotorPositions();
+
+  if (viewport) {
+    viewport.textContent = `[ENCRYPTED INTERCEPT LOADED: ${doc.id} // ${doc.title}]
+
+RAW CIPHERTEXT STREAM:
+${cipher.substring(0, 480)}...
+
+Click '⚡ Stream Decrypt' to initialize 3-rotor deciphering pipeline.`;
+  }
+  document.getElementById('decryptProgressBar').style.width = '0%';
+}
+
+function toggleStreamDecrypt() {
+  if (isStreamDecrypting) {
+    // Stop
+    isStreamDecrypting = false;
+    if (decryptTimer) clearInterval(decryptTimer);
+    decryptTimer = null;
+    document.getElementById('btnRunDecrypt').innerHTML = '⚡ Stream Decrypt';
+    return;
+  }
+
+  if (activeDossierIdx === -1) {
+    alert("Please select a pre-loaded classified dossier or configure rotors.");
+    return;
+  }
+
+  const doc = PRELOADED_DOSSIERS[activeDossierIdx];
+  const cipher = processEnigmaString(doc.plaintext, [0, 0, 0]);
+  resetRotorPositions();
+
+  const speedVal = parseInt(document.getElementById('decryptSpeedSelect').value);
+  const viewport = document.getElementById('decryptedViewport');
+  const pBar = document.getElementById('decryptProgressBar');
+  const btn = document.getElementById('btnRunDecrypt');
+
+  isStreamDecrypting = true;
+  btn.innerHTML = '⏹️ Pause Decrypt';
+  viewport.textContent = '';
+
+  let charIdx = 0;
+  const totalChars = cipher.length;
+
+  if (speedVal === 0) {
+    // Instant
+    const dec = processEnigmaString(cipher, [0, 0, 0]);
+    viewport.textContent = dec;
+    pBar.style.width = '100%';
+    isStreamDecrypting = false;
+    btn.innerHTML = '⚡ Stream Decrypt';
+    playClearanceSuccessChime();
+    return;
+  }
+
+  decryptTimer = setInterval(() => {
+    if (!isStreamDecrypting || charIdx >= totalChars) {
+      clearInterval(decryptTimer);
+      decryptTimer = null;
+      isStreamDecrypting = false;
+      btn.innerHTML = '⚡ Stream Decrypt';
+      if (charIdx >= totalChars) {
+        playClearanceSuccessChime();
+        pBar.style.width = '100%';
+      }
+      return;
+    }
+
+    const c = cipher[charIdx];
+    const plainChar = rotorTransformChar(c);
+    viewport.textContent += plainChar;
+    viewport.scrollTop = viewport.scrollHeight;
+
+    charIdx++;
+    const pct = Math.floor((charIdx / totalChars) * 100);
+    pBar.style.width = `${pct}%`;
+  }, speedVal);
+}
+
+function exportDecryptedDossier() {
+  const viewport = document.getElementById('decryptedViewport');
+  const text = viewport ? viewport.textContent : '';
+  if (!text || text.includes('[STREAM DECRYPTOR READY]')) {
+    alert("No decrypted content to export. Run stream decryption first.");
+    return;
+  }
+  const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+  const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `decrypted_dossier_10-19-99-4_${timestamp}.txt`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(a.href);
+}
+
+// Challenge-Response Security Clearance Pass
+const CLEARANCE_RANKS = [
+  { level: 1, name: "LEVEL 1: UNCLASSIFIED GUEST", color: "#10b981", token: "GUEST-1999" },
+  { level: 2, name: "LEVEL 2: SUBNET TECHNICIAN", color: "#38bdf8", token: "10.19.99.4" },
+  { level: 3, name: "LEVEL 3: ACOUSTIC WAVEGUIDE SPEC", color: "#f59e0b", token: "1999HZ-SUBCARRIER" },
+  { level: 4, name: "LEVEL 4: CARLSBAD VAULT ENGINEER", color: "#f97316", token: "AETHEL-SECTOR-03" },
+  { level: 5, name: "LEVEL 5: DIRECTOR EYES ONLY", color: "#c084fc", token: "PERMIAN-HALITE-1999" }
+];
+
+function generateNewChallenge() {
+  const hexPart = Math.floor(Math.random() * 0xFFFF).toString(16).toUpperCase().padStart(4, '0');
+  const tier = document.getElementById('clearanceTierSelect').value;
+  currentChallengeCode = `SEED-0x7F${hexPart}-T${tier}`;
+  const codeEl = document.getElementById('clearanceChallengeCode');
+  if (codeEl) codeEl.textContent = currentChallengeCode;
+  playKeystrokeTone();
+}
+
+function updateChallengeForTier() {
+  const tier = parseInt(document.getElementById('clearanceTierSelect').value);
+  const tokenInput = document.getElementById('clearanceTokenInput');
+  const rank = CLEARANCE_RANKS[tier - 1];
+  if (tokenInput) tokenInput.value = rank.token;
+  generateNewChallenge();
+}
+
+function submitClearanceAuth() {
+  const inputEl = document.getElementById('clearanceTokenInput');
+  const token = inputEl ? inputEl.value.trim().toUpperCase() : '';
+  const tier = parseInt(document.getElementById('clearanceTierSelect').value);
+  const fb = document.getElementById('clearanceFeedbackMsg');
+
+  const validTokens = {
+    1: ['GUEST-1999', 'GUEST', '1999', 'VISITOR'],
+    2: ['10.19.99.4', '10.19.99.1', 'CARLSBAD', 'KNET-TECH', 'GATEWAY'],
+    3: ['1999HZ-SUBCARRIER', '1999HZ', 'WAVEGUIDE-432', 'PERMIAN-HALITE', 'SUBCARRIER'],
+    4: ['AETHEL-SECTOR-03', 'CARLSBAD-0x7F', 'SECTOR-03', '0x7F1999', 'CARLSBAD-VAULT'],
+    5: ['PERMIAN-HALITE-1999', '10.19.99.127', '0x00DEEPC0', 'ECHO-1999-CARRIER', 'DIRECTOR-K', 'DEEP-CORE']
+  };
+
+  const allowed = validTokens[tier] || [];
+  const isMatch = allowed.some(t => token === t || token.includes(t));
+
+  if (isMatch) {
+    currentClearanceLevel = tier;
+    const rank = CLEARANCE_RANKS[tier - 1];
+    
+    // Update badge pill in header
+    const topBadge = document.getElementById('currentClearanceBadge');
+    if (topBadge) {
+      topBadge.textContent = rank.name;
+      topBadge.style.color = rank.color;
+      topBadge.style.borderColor = rank.color;
+    }
+
+    if (fb) {
+      fb.innerHTML = `<span style="color:${rank.color}; font-weight:bold;">★ CLEARANCE GRANTED:</span> ${rank.name}. Security credentials cryptographically signed against challenge <code>${currentChallengeCode}</code>.`;
+      fb.style.borderColor = rank.color;
+    }
+
+    try {
+      localStorage.setItem('kweb_classified_clearance', tier.toString());
+    } catch (e) {}
+
+    playClearanceSuccessChime();
+    redrawClearanceBadge();
+  } else {
+    if (fb) {
+      fb.innerHTML = `<span style="color:var(--red-alert); font-weight:bold;">⚠️ AUTHENTICATION REJECTED:</span> Token "${token}" invalid for Tier ${tier} challenge seed.`;
+      fb.style.borderColor = 'var(--red-alert)';
+    }
+    playClearanceDeniedAlert();
+  }
+}
+
+// Canvas Badge Drawing Engine
+function redrawClearanceBadge() {
+  const canvas = document.getElementById('badgeCanvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const w = canvas.width;
+  const h = canvas.height;
+  const rank = CLEARANCE_RANKS[currentClearanceLevel - 1];
+  const callsign = (document.getElementById('clearanceCallsign') ? document.getElementById('clearanceCallsign').value.trim() : 'TECH_0x7F') || 'TECH_0x7F';
+
+  // Card Background
+  ctx.fillStyle = '#060a14';
+  ctx.fillRect(0, 0, w, h);
+
+  // Border with rounded corners
+  ctx.strokeStyle = rank.color;
+  ctx.lineWidth = 2;
+  ctx.strokeRect(1, 1, w - 2, h - 2);
+
+  // Holographic Foil Strip on left
+  const holoGrad = ctx.createLinearGradient(8, 8, 30, 8);
+  holoGrad.addColorStop(0, '#94a3b8');
+  holoGrad.addColorStop(0.3, '#f1f5f9');
+  holoGrad.addColorStop(0.5, '#64748b');
+  holoGrad.addColorStop(0.8, '#cbd5e1');
+  holoGrad.addColorStop(1, '#475569');
+  ctx.fillStyle = holoGrad;
+  ctx.fillRect(8, 8, 20, h - 16);
+
+  // Foil details
+  ctx.fillStyle = 'rgba(0,0,0,0.4)';
+  for (let y = 14; y < h - 16; y += 10) {
+    ctx.fillRect(9, y, 18, 2);
+  }
+
+  // Header
+  ctx.fillStyle = '#fbbf24';
+  ctx.font = 'bold 11px monospace';
+  ctx.fillText('AETHEL DYNAMICS', 38, 22);
+
+  ctx.fillStyle = '#94a3b8';
+  ctx.font = '9px monospace';
+  ctx.fillText('CARLSBAD SKUNKWORKS // PASS', 38, 33);
+
+  // Photo Avatar Silhouette Box
+  ctx.fillStyle = '#0f172a';
+  ctx.fillRect(38, 40, 42, 50);
+  ctx.strokeStyle = '#1e293b';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(38, 40, 42, 50);
+
+  // Draw avatar head & shoulders
+  ctx.fillStyle = '#334155';
+  ctx.beginPath();
+  ctx.arc(59, 56, 11, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(59, 82, 18, Math.PI, 0, false);
+  ctx.fill();
+
+  // Avatar Scanlines
+  ctx.fillStyle = 'rgba(0,0,0,0.3)';
+  for (let sy = 40; sy < 90; sy += 3) {
+    ctx.fillRect(38, sy, 42, 1);
+  }
+
+  // Operator Info Block
+  ctx.fillStyle = '#f8fafc';
+  ctx.font = 'bold 11px monospace';
+  ctx.fillText(callsign.toUpperCase(), 88, 52);
+
+  ctx.fillStyle = '#38bdf8';
+  ctx.font = '9px monospace';
+  ctx.fillText('STATION: 10.19.99.4:1999', 88, 65);
+
+  ctx.fillStyle = '#94a3b8';
+  ctx.font = '9px monospace';
+  ctx.fillText('DEPT: RF & ACOUSTIC SPEC', 88, 77);
+
+  // Clearance Pill Badge
+  ctx.fillStyle = rank.color;
+  ctx.fillRect(38, 96, w - 46, 20);
+
+  ctx.fillStyle = '#000000';
+  ctx.font = 'bold 10px monospace';
+  ctx.fillText(rank.name, 44, 110);
+
+  // Simulated Barcode 39 Lines
+  ctx.fillStyle = '#cbd5e1';
+  let bx = 38;
+  const barPattern = [2, 1, 3, 1, 2, 2, 1, 3, 1, 1, 3, 2, 1, 2, 1, 3, 2, 1, 1, 2, 3, 1, 2, 1, 1, 3, 2, 1];
+  for (let i = 0; i < barPattern.length && bx < w - 46; i++) {
+    const barWidth = barPattern[i];
+    ctx.fillRect(bx, 122, barWidth, 18);
+    bx += barWidth + 2;
+  }
+
+  // Watermark / Verification Footer
+  ctx.fillStyle = '#64748b';
+  ctx.font = '8px monospace';
+  ctx.fillText(`ISSUED: 1999-12-31  CHALLENGE: ${currentChallengeCode}`, 38, 152);
+  ctx.fillText('NON-TRANSFERABLE // PROPERTY OF AETHEL DYNAMICS', 38, 163);
+
+  // Red Stamp Watermark in corner
+  ctx.save();
+  ctx.translate(w - 55, 60);
+  ctx.rotate(-0.25);
+  ctx.strokeStyle = 'rgba(239, 68, 68, 0.7)';
+  ctx.lineWidth = 1.5;
+  ctx.strokeRect(-28, -10, 56, 20);
+  ctx.fillStyle = 'rgba(239, 68, 68, 0.8)';
+  ctx.font = 'bold 8px monospace';
+  ctx.fillText('AUTHENTIC', -24, 4);
+  ctx.restore();
+}
+
+function downloadBadgeImage() {
+  const canvas = document.getElementById('badgeCanvas');
+  if (!canvas) return;
+  const a = document.createElement('a');
+  a.href = canvas.toDataURL('image/png');
+  a.download = `aethel_security_badge_${currentClearanceLevel}_10-19-99-4.png`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+}
+
+function copyBadgeAnsiText() {
+  const rank = CLEARANCE_RANKS[currentClearanceLevel - 1];
+  const callsign = (document.getElementById('clearanceCallsign') ? document.getElementById('clearanceCallsign').value.trim() : 'TECH_0x7F') || 'TECH_0x7F';
+  const ansi = 
+`+------------------------------------------------------+
+| [AETHEL DYNAMICS // CARLSBAD SKUNKWORKS INTRANET]    |
+| SECURITY CLEARANCE IDENTIFICATION BADGE              |
+|                                                      |
+| OPERATOR  : ${callsign.padEnd(16, ' ')}                 |
+| STATION   : 10.19.99.4:1999                          |
+| SECTOR    : 0x7F CARLSBAD SALT VAULT (-650m)         |
+| CLEARANCE : ${rank.name.padEnd(30, ' ')}   |
+| CHALLENGE : ${currentChallengeCode.padEnd(30, ' ')}   |
+| STATUS    : VERIFIED & CRYPTOGRAPHICALLY SIGNED      |
+| DATE      : 1999-12-31 23:59:59 UTC                  |
++------------------------------------------------------+`;
+
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(ansi).then(() => {
+      alert("Clearance badge ANSI card copied to clipboard!");
+    }).catch(() => {
+      prompt("Copy clearance badge text:", ansi);
+    });
+  } else {
+    prompt("Copy clearance badge text:", ansi);
+  }
+}
+
+function initCipherTab() {
+  try {
+    const saved = localStorage.getItem('kweb_classified_clearance');
+    if (saved) {
+      currentClearanceLevel = parseInt(saved) || 1;
+      const select = document.getElementById('clearanceTierSelect');
+      if (select) select.value = currentClearanceLevel.toString();
+      const rank = CLEARANCE_RANKS[currentClearanceLevel - 1];
+      const topBadge = document.getElementById('currentClearanceBadge');
+      if (topBadge && rank) {
+        topBadge.textContent = rank.name;
+        topBadge.style.color = rank.color;
+        topBadge.style.borderColor = rank.color;
+      }
+    }
+  } catch (e) {}
+
+  generateNewChallenge();
+  updateRotorUI();
+  redrawClearanceBadge();
+  loadDossierIndex(0);
 }
 
 // Tab Visibility & Resource Management (ARCH-05)
@@ -6685,7 +7552,7 @@ window.addEventListener('DOMContentLoaded', () => {
   // URL hash navigation support
   if (window.location.hash) {
     const rawHash = window.location.hash.replace('#tab-', '').replace('#', '').toLowerCase();
-    const validTabs = ['memos', 'hex', 'signal', 'map', 'packets', 'terminal', 'verify', 'airgap', 'interferometer', 'cad', 'schematic'];
+    const validTabs = ['memos', 'hex', 'signal', 'map', 'packets', 'terminal', 'verify', 'airgap', 'interferometer', 'cad', 'schematic', 'cipher', 'clearance'];
     if (rawHash === 'schematic') switchTab('cad');
     else if (validTabs.includes(rawHash)) switchTab(rawHash);
   }

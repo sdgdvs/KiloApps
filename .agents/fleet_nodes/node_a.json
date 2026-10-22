@@ -13,9 +13,9 @@
   "session_end": null,
   "session_limit_enabled": false,
   "timer_enabled": false,
-  "turns_executed": 381,
+  "turns_executed": 389,
   "last_turn_timestamp": "2026-09-28T18:42:51Z",
-  "last_heartbeat": "2026-10-22T00:20:05.890184+00:00",
-  "current_target": "kweb://cybercafe",
+  "last_heartbeat": "2026-10-22T08:20:06.582767+00:00",
+  "current_target": "kweb://10.19.99.4/classified",
   "remote_command": "none"
 }

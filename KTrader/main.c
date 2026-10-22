@@ -1475,9 +1475,9 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     DeleteObject(hRingPen);
                 }
 
-                // Orbiting Satellite Beacon
-                int satX = 500 + (FastCos(animTick * 3) * 52) / 100;
-                int satY = 75 + (FastSin(animTick * 3) * 22) / 100;
+                // Fixed Orbital Dock Station (Tech level indicator, static mooring - zero orbital glints)
+                int satX = 550;
+                int satY = 61;
                 HBRUSH hSatBrush = CreateSolidBrush(RGB(0, 255, 255));
                 HPEN hSatPen = CreatePen(PS_SOLID, 1, RGB(255, 255, 255));
                 SelectObject(memDC, hSatBrush);

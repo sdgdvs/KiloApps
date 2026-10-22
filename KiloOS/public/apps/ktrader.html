@@ -1942,10 +1942,9 @@
           ctx.restore();
         }
 
-        // Orbiting Satellite / Beacon (Tech level indicator)
-        const orbAngle = animTime * 0.0015;
-        const satX = Math.cos(orbAngle) * 52;
-        const satY = Math.sin(orbAngle) * 22;
+        // Fixed Orbital Dock Station (Tech level indicator, static mooring - zero orbital glints)
+        const satX = 50;
+        const satY = -14;
         ctx.fillStyle = '#00ffff';
         ctx.fillRect(satX - 2, satY - 2, 4, 4);
         ctx.strokeStyle = '#ffffff';

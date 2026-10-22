@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-graphics
-next_agent: kilo-soundscape
+current_agent: kilo-soundscape
+next_agent: kilo-tester
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -17,7 +17,7 @@ commit_checkpoint: 15
 status: ready
 current_targets:
   kilo_creator: kweb://echo-subsystem.net
-  kilo_graphics: KTrader
+  kilo_graphics: KAbyss
   kilo_soundscape: KSpace
   kilo_tester: KCalc
   kilo_usability: KPad
@@ -37,9 +37,9 @@ virtual_web_rotation:
 - kweb://deep-core
 - kweb://darknet
 last_run:
-  agent: kilo-creator
-  app: 'kweb://10.19.99.4/classified'
-  timestamp: '2026-10-22T01:36:00-07:00'
+  agent: kilo-graphics
+  app: KTrader
+  timestamp: '2026-10-22T02:18:00-07:00'
 last_planner_run: '2026-10-21T23:32:00Z'
 ---
 
@@ -73,20 +73,20 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Upcoming Queue**: `kweb://deep-core`, `kweb://darknet`, `kweb://portal`.
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
-- **Target**: `KTrader`
-- **Primary Files**: `KiloOS/public/apps/ktrader.html`
-- **Objective**: Stock exchange and commodity trader graphics overhaul: replace vector / primitive canvas charts and icons with Imagen 3 assets (<999 KB).
+- **Target**: `KAbyss`
+- **Primary Files**: `KiloOS/public/apps/kabyss.html`
+- **Objective**: Deep sea trench exploration & sonar survey graphics overhaul: replace vector / primitive canvas submarines and trench fauna with Imagen 3 assets (<999 KB).
 - **Action Steps**:
-  1. Inspect `KiloOS/public/apps/ktrader.html` rendering routines for programmer art.
+  1. Inspect `KiloOS/public/apps/kabyss.html` rendering routines for programmer art.
   2. Generate sprites via 2-stage asset pipeline if appropriate (`generate_image` with solid `#FF00FF` -> `scripts/asset_pipeline.py`).
   3. Search for and eliminate any traveling border dots or rotating specular glints.
   4. Run `python scripts/check_icons.py` to audit icon uniqueness.
 - **Verification**: `cd KiloOS && npm run build`. Verify files < 999 KB.
 - **Handoff**:
-  - In frontmatter: advance `current_targets.kilo_graphics` to `KAbyss`.
+  - In frontmatter: advance `current_targets.kilo_graphics` to `KRacer`.
   - Set current_agent: kilo-soundscape.
   - Append terse execution log (≤6 lines), commit, and push.
-- **Upcoming Queue**: `KAbyss`, `KRacer`, `KSpace`.
+- **Upcoming Queue**: `KRacer`, `KSpace`, `KTrader`.
 
 ### 3. Procedural Audio & Soundscape Queue (`kilo-soundscape`)
 - **Target**: `KSpace`
@@ -212,6 +212,14 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-22T02:18:00-07:00 — kilo-graphics: KTrader (Perimeter Glint Audit & Inappropriate Target Skip)**
+  - ⏭️ Skip — Imagen 3 asset replacement not appropriate for KTrader
+  - Target Assessment: KTrader is a cyan vector HUD/CRT commodity and stock exchange sim; raster assets inappropriate.
+  - Glint Audit: Eliminated traveling orbital satellite dot in `ktrader.html` & `KTrader/main.c`; anchored to static mooring dock.
+  - Dual Parity: Clean parity verified across Web HTML & Win32 C `KTrader.exe` (26.6 KB).
+  - Verification: `npm run build` PASS (0 errors), `test_app_startup.py` PASS (107.2 KB < 999 KB), `security_lint.py` PASS, icons UNIQUE.
+  - Queue Handoff: Advanced `current_targets.kilo_graphics` to `KAbyss`; rotated `current_agent` to `kilo-soundscape`.
+
 - **2026-10-21T23:36:00-07:00 — kilo-expander: KPing (Diagnostic Suite Expansion & Dual Parity)**
   - PASS ✅ (Subnet topology, granular pacing & fleet mesh parity implemented across web and Win32 C).
   - Web Improvements: Repaired btnTopo disable logic so subnet topology trace can be cleanly cancelled/stopped; wired subnet sweep & pacing controls.
@@ -245,11 +253,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Accessibility: Added aria-label & dynamic aria-pressed state toggles to master pass and generator mask buttons.
   - Verification: test_app_startup PASS (131.8 KB < 999 KB); native KPass.exe built cleanly (25.6 KB); npm run build PASS (0 errors).
   - Queue Handoff: Advanced current_targets.kilo_tester to KCalc; rotated current_agent to kilo-usability.
-
-- **2026-10-21T19:18:00-07:00 — kilo-soundscape: KTrader ("Galactic Exchange" & "Pirate Ambush")**
-  - Composition: D Dorian / D Minor (Dm9-BbMaj7-Gm9-A7alt) 32-step ambient + 16-step Phrygian combat ostinato.
-  - Patches: YM2612 2-Op FM slap/sub-bass, DX7 E-piano, hollow flute lead with delayed vibrato, SPC700 echo.
-  - Rhythm & SFX: 5:3 subtle swing, high-frequency ticker chatter, bull market crystal bells, heroic Mario fanfare.
-  - Dual Parity: Clean parity verified with Win32 C Beep() audio and native build.bat pass.
-  - Status: PASS ✅ (Vite build clean, test_app_startup PASS, 109.8 KB < 999 KB, security lint PASS).
-  - Queue: Advanced kilo-soundscape to KSpace; handoff to kilo-tester.
