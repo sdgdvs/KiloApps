@@ -154,6 +154,7 @@
       gap: 5px;
       font-weight: 600;
       transition: all 0.15s ease;
+      touch-action: manipulation;
     }
 
     .btn:hover {
@@ -206,6 +207,9 @@
       align-items: center;
       gap: 6px;
       transition: all 0.15s;
+      flex-shrink: 0;
+      white-space: nowrap;
+      touch-action: manipulation;
     }
 
     .tab-btn:hover {
@@ -1279,7 +1283,7 @@
       <span id="statusIoC">IoC: 0.000</span>
     </div>
     <div class="status-right">
-      <span style="color: var(--primary);">[F1/H] Help | [Esc] Clear | [Ctrl+Enter] Encrypt | [F5/F9] Save/Load</span>
+      <span style="color: var(--primary);">[F1/H] Help | [Esc] Clear | [Ctrl+Enter] Encrypt | [Ctrl+S/F5] Save | [Ctrl+O/F9] Load</span>
       <span>KiloApps 1999</span>
     </div>
   </footer>
@@ -2717,7 +2721,7 @@
       audio.playClick();
 
       if (tabId === 'tabFrequency') {
-        drawFrequencyChart();
+        requestAnimationFrame(() => drawFrequencyChart());
       }
     }
 
@@ -3166,8 +3170,32 @@
       }
     ];
 
+    let lastFocusedElement = null;
+
+    function trapModalFocus(e, modalElement) {
+      if (e.key !== 'Tab') return;
+      const focusables = modalElement.querySelectorAll('button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])');
+      if (!focusables || focusables.length === 0) return;
+      const first = focusables[0];
+      const last = focusables[focusables.length - 1];
+      if (e.shiftKey) {
+        if (document.activeElement === first || !modalElement.contains(document.activeElement)) {
+          e.preventDefault();
+          last.focus();
+        }
+      } else {
+        if (document.activeElement === last || !modalElement.contains(document.activeElement)) {
+          e.preventDefault();
+          first.focus();
+        }
+      }
+    }
+
     function showTutorialStep(step) {
       if (elements.toast) elements.toast.classList.remove('show');
+      if (elements.tutorialOverlay.style.display !== 'flex') {
+        lastFocusedElement = document.activeElement;
+      }
       state.tutorialStep = step;
       const data = TUTORIAL_STEPS[step - 1];
       document.getElementById('tutStepTitle').textContent = data.title;
@@ -3176,6 +3204,9 @@
       document.getElementById('btnTutPrev').disabled = step === 1;
       document.getElementById('btnTutNext').textContent = step === TUTORIAL_STEPS.length ? "Finish" : "Next";
       elements.tutorialOverlay.style.display = 'flex';
+      setTimeout(() => {
+        try { document.getElementById('btnTutNext')?.focus(); } catch (err) {}
+      }, 30);
     }
 
     function closeTutorial() {
@@ -3183,6 +3214,10 @@
       try {
         localStorage.setItem('kcipher_tutorialSeen', '1');
       } catch (e) {}
+      if (lastFocusedElement) {
+        try { lastFocusedElement.focus(); } catch (err) {}
+        lastFocusedElement = null;
+      }
     }
 
     /* =========================================================
@@ -3270,6 +3305,7 @@
       elements.rotShift.addEventListener('input', (e) => {
         elements.rotShiftVal.textContent = e.target.value;
         state.rotShift = parseInt(e.target.value, 10);
+        updateKeyGuards();
         if (state.liveTransform) runEncrypt();
       });
 
@@ -3277,6 +3313,7 @@
         elements.rotShift.value = 13;
         elements.rotShiftVal.textContent = 13;
         state.rotShift = 13;
+        updateKeyGuards();
         if (state.liveTransform) runEncrypt();
       });
 
@@ -3284,12 +3321,14 @@
         elements.rotShift.value = 3;
         elements.rotShiftVal.textContent = 3;
         state.rotShift = 3;
+        updateKeyGuards();
         if (state.liveTransform) runEncrypt();
       });
 
       // Vigenere Inputs
       elements.vigenereKey.addEventListener('input', (e) => {
         state.vigenereKey = e.target.value;
+        updateKeyGuards();
         if (state.liveTransform) runEncrypt();
       });
 
@@ -3302,12 +3341,14 @@
       elements.railCount.addEventListener('input', (e) => {
         elements.railCountVal.textContent = e.target.value;
         state.railCount = parseInt(e.target.value, 10);
+        updateKeyGuards();
         if (state.liveTransform) runEncrypt();
       });
 
       // Substitution Controls
       elements.subAlphabet.addEventListener('input', (e) => {
         state.subAlphabet = e.target.value.toUpperCase();
+        updateKeyGuards();
         if (state.liveTransform) runEncrypt();
       });
 
@@ -3320,6 +3361,7 @@
         const randAlpha = letters.join('');
         elements.subAlphabet.value = randAlpha;
         state.subAlphabet = randAlpha;
+        updateKeyGuards();
         if (state.liveTransform) runEncrypt();
         audio.playClick();
       });
@@ -3327,6 +3369,7 @@
       document.getElementById('btnSubReset').addEventListener('click', () => {
         elements.subAlphabet.value = "ZYXWVUTSRQPONMLKJIHGFEDCBA";
         state.subAlphabet = "ZYXWVUTSRQPONMLKJIHGFEDCBA";
+        updateKeyGuards();
         if (state.liveTransform) runEncrypt();
         audio.playClick();
       });
@@ -3334,6 +3377,7 @@
       // RC4 Controls
       elements.rc4Key.addEventListener('input', (e) => {
         state.rc4Key = e.target.value;
+        updateKeyGuards();
         if (state.liveTransform) runEncrypt();
       });
       elements.rc4Format.addEventListener('change', (e) => {
@@ -3951,17 +3995,25 @@
         }
       });
 
-      // Window Resize Listener for Frequency Chart
+      // Window Resize Listener for Frequency Chart with RAF debouncing
+      let resizeFreqRaf = null;
       window.addEventListener('resize', () => {
-        if (state.activeTab === 'tabFrequency') {
-          drawFrequencyChart();
-        }
+        if (resizeFreqRaf) cancelAnimationFrame(resizeFreqRaf);
+        resizeFreqRaf = requestAnimationFrame(() => {
+          if (state.activeTab === 'tabFrequency') {
+            drawFrequencyChart();
+          }
+        });
       });
 
       // Keyboard Shortcuts (F1, H, F5, F9, Enter, Space, Arrows, Ctrl+Enter, Ctrl+Shift+Enter, Escape, Ctrl+1..5)
       window.addEventListener('keydown', (e) => {
-        // Modal overlay handling
+        // Modal overlay handling & focus trapping
         if (elements.tutorialOverlay.style.display === 'flex') {
+          if (e.key === 'Tab') {
+            trapModalFocus(e, elements.tutorialOverlay);
+            return;
+          }
           if (e.key === 'Escape') {
             e.preventDefault();
             closeTutorial();
@@ -3985,6 +4037,10 @@
         }
 
         if (elements.splashOverlay.style.display !== 'none') {
+          if (e.key === 'Tab') {
+            trapModalFocus(e, elements.splashOverlay);
+            return;
+          }
           if (e.key === 'Escape') {
             e.preventDefault();
             elements.splashOverlay.style.display = 'none';
@@ -4001,6 +4057,22 @@
             }
             return;
           }
+        }
+
+        // Global VFS & Export shortcuts: Ctrl+S and Ctrl+O
+        if (e.ctrlKey && (e.key === 's' || e.key === 'S')) {
+          e.preventDefault();
+          if (e.shiftKey) {
+            document.getElementById('btnExportJson')?.click();
+          } else {
+            document.getElementById('btnVFSSave')?.click();
+          }
+          return;
+        }
+        if (e.ctrlKey && (e.key === 'o' || e.key === 'O')) {
+          e.preventDefault();
+          document.getElementById('btnVFSOpen')?.click();
+          return;
         }
 
         if (e.key === 'Escape') {
