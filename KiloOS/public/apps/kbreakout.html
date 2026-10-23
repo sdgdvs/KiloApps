@@ -370,6 +370,34 @@ canvas { background: #10101a; border: 1px solid #282845; border-radius: 4px; cur
 const cvs = document.getElementById('c'), ctx = cvs.getContext('2d');
 let w = cvs.width, h = cvs.height;
 
+// --- KBreakout Production Visual Assets (Imagen 3 Pipeline) ---
+const KBREAKOUT_ASSETS = {
+    bgNebula: { img: null, loaded: false },
+    bossFlagship: { img: null, loaded: false }
+};
+
+function initKBreakoutAssets() {
+    const nebula = new Image();
+    nebula.src = '../assets/backgrounds/kspace/kspace_bg_nebula.png';
+    nebula.onload = () => { KBREAKOUT_ASSETS.bgNebula.img = nebula; KBREAKOUT_ASSETS.bgNebula.loaded = true; };
+    nebula.onerror = () => {
+        const fb = new Image();
+        fb.src = 'assets/backgrounds/kspace/kspace_bg_nebula.png';
+        fb.onload = () => { KBREAKOUT_ASSETS.bgNebula.img = fb; KBREAKOUT_ASSETS.bgNebula.loaded = true; };
+    };
+
+    const boss = new Image();
+    boss.src = '../assets/sprites/kspace/kspace_boss_flagship.png';
+    boss.onload = () => { KBREAKOUT_ASSETS.bossFlagship.img = boss; KBREAKOUT_ASSETS.bossFlagship.loaded = true; };
+    boss.onerror = () => {
+        const fb = new Image();
+        fb.src = 'assets/sprites/kspace/kspace_boss_flagship.png';
+        fb.onload = () => { KBREAKOUT_ASSETS.bossFlagship.img = fb; KBREAKOUT_ASSETS.bossFlagship.loaded = true; };
+    };
+}
+initKBreakoutAssets();
+
+
 // ============================================================================
 // SEGA GENESIS YM2612 2-OP FM SYNTHESIZER & SNES SPC700 STEREO SOUNDSCAPE
 // Track: "Neon Deflector: Superluminal Orbit" (Arcade Cyber-Breakout Suite)
@@ -3173,36 +3201,76 @@ function drawBrick(r, c, type, bx, by, hp) {
         return;
     }
 
-    // --- STANDARD & HARD BRICKS (Types 1, 2, 3, 5, 9, etc.) ---
-    ctx.fillStyle = baseColor;
-    ctx.fillRect(bx + 1, by + 1, BR_W - 2, BR_H - 2);
+    // --- METALLIC & CRYSTALLINE TEXTURED BRICKS ---
+    const isMetallic = (type === 8 || type === 9 || type === 3);
+    const isCrystalline = !isMetallic;
 
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
-    ctx.fillRect(bx + 1, by + 1, BR_W - 2, 2);
-    ctx.fillRect(bx + 1, by + 1, 2, BR_H - 2);
+    if (isMetallic) {
+        // Brushed metallic finish with chamfered specular highlights
+        let mGrad = ctx.createLinearGradient(bx, by, bx, by + BR_H);
+        mGrad.addColorStop(0, '#f0f4f8');
+        mGrad.addColorStop(0.18, baseColor);
+        mGrad.addColorStop(0.5, '#1e222a');
+        mGrad.addColorStop(0.85, baseColor);
+        mGrad.addColorStop(1, '#0c0e12');
+        ctx.fillStyle = mGrad;
+        ctx.fillRect(bx + 1, by + 1, BR_W - 2, BR_H - 2);
 
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.45)';
-    ctx.fillRect(bx + 1, by + BR_H - 3, BR_W - 2, 2);
-    ctx.fillRect(bx + BR_W - 3, by + 1, 2, BR_H - 2);
+        // Horizontal brushed specular streak
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.35)';
+        ctx.fillRect(bx + 2, by + Math.floor(BR_H * 0.35), BR_W - 4, 1.5);
 
-    ctx.strokeStyle = 'rgba(0, 0, 0, 0.25)';
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.moveTo(bx + 5, by + 5); ctx.lineTo(bx + BR_W - 5, by + 5);
-    ctx.stroke();
+        // Corner micro-rivets
+        ctx.fillStyle = '#cfd8dc';
+        ctx.fillRect(bx + 2, by + 2, 1.5, 1.5);
+        ctx.fillRect(bx + BR_W - 3.5, by + 2, 1.5, 1.5);
+        ctx.fillRect(bx + 2, by + BR_H - 3.5, 1.5, 1.5);
+        ctx.fillRect(bx + BR_W - 3.5, by + BR_H - 3.5, 1.5, 1.5);
 
-    if (type === 9) {
-        ctx.strokeStyle = '#d0d8e0'; ctx.lineWidth = 1.5;
+        if (type === 9) {
+            ctx.strokeStyle = '#e2e8f0'; ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.moveTo(bx + 4, by + 3); ctx.lineTo(bx + BR_W - 4, by + BR_H - 3);
+            ctx.moveTo(bx + BR_W - 4, by + 3); ctx.lineTo(bx + 4, by + BR_H - 3);
+            ctx.stroke();
+        } else if (type === 3) {
+            ctx.strokeStyle = '#ffd54f'; ctx.lineWidth = 1.2;
+            ctx.beginPath();
+            ctx.moveTo(bx + 8, by + 2); ctx.lineTo(bx + 8, by + BR_H - 2);
+            ctx.moveTo(bx + BR_W - 8, by + 2); ctx.lineTo(bx + BR_W - 8, by + BR_H - 2);
+            ctx.stroke();
+        }
+    } else {
+        // Crystalline gemstone cut with refractive interior facets
+        let cGrad = ctx.createLinearGradient(bx, by, bx + BR_W, by + BR_H);
+        cGrad.addColorStop(0, '#ffffff');
+        cGrad.addColorStop(0.2, baseColor);
+        cGrad.addColorStop(0.8, baseColor);
+        cGrad.addColorStop(1, '#050a14');
+        ctx.fillStyle = cGrad;
+        ctx.fillRect(bx + 1, by + 1, BR_W - 2, BR_H - 2);
+
+        // Gemstone bevel facet edges
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.45)';
+        ctx.fillRect(bx + 1, by + 1, BR_W - 2, 2);
+        ctx.fillRect(bx + 1, by + 1, 2, BR_H - 2);
+
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
+        ctx.fillRect(bx + 1, by + BR_H - 3, BR_W - 2, 2);
+        ctx.fillRect(bx + BR_W - 3, by + 1, 2, BR_H - 2);
+
+        // Internal crystalline light refraction facet
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+        ctx.lineWidth = 1;
         ctx.beginPath();
-        ctx.moveTo(bx + 4, by + 3); ctx.lineTo(bx + BR_W - 4, by + BR_H - 3);
-        ctx.moveTo(bx + BR_W - 4, by + 3); ctx.lineTo(bx + 4, by + BR_H - 3);
+        ctx.moveTo(bx + 4, by + BR_H - 4);
+        ctx.lineTo(bx + BR_W * 0.4, by + 3);
+        ctx.lineTo(bx + BR_W - 4, by + BR_H - 4);
         ctx.stroke();
-    } else if (type === 3) {
-        ctx.strokeStyle = '#ffe0a0'; ctx.lineWidth = 1;
-        ctx.beginPath();
-        ctx.moveTo(bx + 7, by + 3); ctx.lineTo(bx + 7, by + BR_H - 3);
-        ctx.moveTo(bx + BR_W - 7, by + 3); ctx.lineTo(bx + BR_W - 7, by + BR_H - 3);
-        ctx.stroke();
+
+        // Inner glowing core glint
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.55)';
+        ctx.fillRect(bx + BR_W / 2 - 1, by + 3, 2, 2);
     }
 }
 
@@ -3700,15 +3768,7 @@ function drawDustMotes(ctx) {
 }
 
 function drawPerimeterInlay(ctx) {
-    ctx.save();
-    let bx = 3, by = 31, bw = w - 6, bh = h - 34;
-    let pulseAlpha = 0.25 + Math.sin(frame * 0.08) * 0.15;
-    
-    // Pulsating energy perimeter inlay border
-    ctx.strokeStyle = chaos_mode ? `rgba(200, 50, 255, ${pulseAlpha})` : `rgba(0, 220, 255, ${pulseAlpha})`;
-    ctx.lineWidth = 1.5;
-    ctx.strokeRect(bx, by, bw, bh);
-    ctx.restore();
+    // Zero perimeter border dots / glints enforced per KiloApps graphics directive
 }
 
 function drawHUDCornerReticles(ctx) {
@@ -3742,45 +3802,58 @@ function drawHUDCornerReticles(ctx) {
 
 function drawSculptedPaddle(ctx, px, py, pw, ph) {
     ctx.save();
-    // Dual ion thruster nozzles & flickering exhaust at underside
-    let thrustFlicker = (frame % 4 < 2) ? 1.0 : 0.7;
-    let tLeftX = px + 8, tRightX = px + pw - 8, tY = py + ph;
+    // Dual plasma ion thruster nozzles & exhaust plume trails
+    let thrustFlicker = (frame % 4 < 2) ? 1.15 : 0.75;
+    let tLeftX = px + 9, tRightX = px + pw - 9, tY = py + ph;
     
-    let tGrad = ctx.createLinearGradient(0, tY, 0, tY + 8 * thrustFlicker);
-    tGrad.addColorStop(0, '#ffffff');
-    tGrad.addColorStop(0.3, '#00ffff');
-    tGrad.addColorStop(1, 'rgba(0, 150, 255, 0)');
-    ctx.fillStyle = tGrad;
+    // Outer high-energy plasma plume
+    let plumeGrad = ctx.createLinearGradient(0, tY, 0, tY + 11 * thrustFlicker);
+    plumeGrad.addColorStop(0, '#ffffff');
+    plumeGrad.addColorStop(0.25, chaos_mode ? '#ff00c8' : '#00e5ff');
+    plumeGrad.addColorStop(0.65, chaos_mode ? '#8800bb' : '#0055cc');
+    plumeGrad.addColorStop(1, 'rgba(0, 50, 150, 0)');
+    ctx.fillStyle = plumeGrad;
     ctx.beginPath();
-    ctx.moveTo(tLeftX - 4, tY); ctx.lineTo(tLeftX + 4, tY); ctx.lineTo(tLeftX, tY + 7 * thrustFlicker);
+    ctx.moveTo(tLeftX - 5, tY); ctx.lineTo(tLeftX + 5, tY); ctx.lineTo(tLeftX, tY + 10 * thrustFlicker);
     ctx.closePath(); ctx.fill();
     ctx.beginPath();
-    ctx.moveTo(tRightX - 4, tY); ctx.lineTo(tRightX + 4, tY); ctx.lineTo(tRightX, tY + 7 * thrustFlicker);
+    ctx.moveTo(tRightX - 5, tY); ctx.lineTo(tRightX + 5, tY); ctx.lineTo(tRightX, tY + 10 * thrustFlicker);
     ctx.closePath(); ctx.fill();
 
     // Sculpted metallic beveled chassis
-    let baseColor1 = dur_laser > 0 ? '#00e5ff' : (chaos_mode ? '#cc44ff' : '#00d2ff');
-    let baseColor2 = dur_laser > 0 ? '#005577' : (chaos_mode ? '#551177' : '#004466');
+    let baseColor1 = dur_laser > 0 ? '#00ffff' : (chaos_mode ? '#e044ff' : '#00d2ff');
+    let baseColor2 = dur_laser > 0 ? '#006688' : (chaos_mode ? '#661188' : '#004466');
     let pGrad = ctx.createLinearGradient(px, py, px, py + ph);
-    pGrad.addColorStop(0, '#e0f7ff');
-    pGrad.addColorStop(0.25, baseColor1);
-    pGrad.addColorStop(0.75, baseColor2);
-    pGrad.addColorStop(1, '#0a1020');
+    pGrad.addColorStop(0, '#ffffff');
+    pGrad.addColorStop(0.22, baseColor1);
+    pGrad.addColorStop(0.78, baseColor2);
+    pGrad.addColorStop(1, '#060a14');
     
     ctx.fillStyle = pGrad;
-    ctx.strokeStyle = '#00ffff';
-    ctx.lineWidth = 1;
+    ctx.strokeStyle = chaos_mode ? '#ff66ff' : '#00ffff';
+    ctx.lineWidth = 1.2;
     ctx.beginPath();
     ctx.roundRect(px, py, pw, ph, 4);
     ctx.fill();
     ctx.stroke();
 
-    // Inner glowing core energy bar
-    let coreW = Math.max(8, pw * 0.45);
+    // Plasma induction core with multi-stage corona
+    let coreW = Math.max(10, pw * 0.52);
     let coreX = px + (pw - coreW) / 2;
-    let corePulse = Math.sin(frame * 0.15) * 0.25 + 0.75;
-    ctx.fillStyle = `rgba(255, 255, 255, ${corePulse * 0.9})`;
-    ctx.fillRect(coreX, py + 3, coreW, ph - 6);
+    let corePulse = Math.sin(frame * 0.18) * 0.25 + 0.75;
+    
+    let coreGrad = ctx.createLinearGradient(coreX, 0, coreX + coreW, 0);
+    coreGrad.addColorStop(0, 'rgba(0, 255, 255, 0.1)');
+    coreGrad.addColorStop(0.5, `rgba(255, 255, 255, ${corePulse * 0.95})`);
+    coreGrad.addColorStop(1, 'rgba(0, 255, 255, 0.1)');
+    ctx.fillStyle = coreGrad;
+    ctx.fillRect(coreX, py + 2.5, coreW, ph - 5);
+
+    // Hazard accent indicator lines on paddle shoulders
+    ctx.fillStyle = '#ffcc00';
+    ctx.fillRect(px + 3, py + 2, 2, ph - 4);
+    ctx.fillRect(px + pw - 5, py + 2, 2, ph - 4);
+
     ctx.restore();
 }
 
@@ -3889,6 +3962,39 @@ function drawBoss(ctx) {
 
     if (boss_type === 1) {
         // --- BOSS 1: DREADNOUGHT FORTRESS CORE (Heavy Armored Warship) ---
+        // Imagen 3 Flagship Sprite Integration
+        if (KBREAKOUT_ASSETS.bossFlagship.loaded) {
+            ctx.save();
+            // Flagship sprite drawn centered with hazard glow
+            ctx.drawImage(KBREAKOUT_ASSETS.bossFlagship.img, bx, by - 6, bw, bh + 12);
+
+            // Pulsing hazard warning perimeter brackets
+            let hPulse = Math.sin(frame * 0.2) * 0.3 + 0.7;
+            ctx.strokeStyle = `rgba(255, 60, 0, ${hPulse})`;
+            ctx.lineWidth = 1.5;
+            ctx.strokeRect(bx - 2, by - 4, bw + 4, bh + 8);
+
+            // Hazard warning stripes along sponsor wings
+            ctx.fillStyle = '#ffaa00';
+            ctx.fillRect(bx + 4, by + bh - 2, 12, 3);
+            ctx.fillRect(bx + bw - 16, by + bh - 2, 12, 3);
+            ctx.fillStyle = '#111118';
+            ctx.fillRect(bx + 7, by + bh - 2, 3, 3);
+            ctx.fillRect(bx + bw - 13, by + bh - 2, 3, 3);
+
+            // Core energy reactor glow
+            let cPulse = Math.sin(frame * 0.15) * 0.3 + 0.7;
+            let cGrad = ctx.createRadialGradient(cx, cy, 2, cx, cy, 14);
+            cGrad.addColorStop(0, '#ffffff');
+            cGrad.addColorStop(0.35, `rgba(255, 80, 0, ${cPulse})`);
+            cGrad.addColorStop(1, 'rgba(255, 0, 0, 0)');
+            ctx.fillStyle = cGrad;
+            ctx.beginPath();
+            ctx.arc(cx, cy, 14, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+            return;
+        }
         let thrust = Math.sin(frame * 0.3) * 3 + 6;
         let t1 = bx + 22, t2 = bx + bw - 22;
         let thGrad = ctx.createLinearGradient(0, by, 0, by - thrust);
@@ -4152,9 +4258,14 @@ function render() {
         ctx.translate(-w / 2, -h / 2);
     }
 
-    // Dynamic background dust motes & perimeter inlay
+    // Dynamic background nebula texture & dust motes (zero perimeter border dots)
+    if (KBREAKOUT_ASSETS.bgNebula.loaded) {
+        ctx.save();
+        ctx.globalAlpha = chaos_mode ? 0.42 : 0.32;
+        ctx.drawImage(KBREAKOUT_ASSETS.bgNebula.img, 0, 0, w, h);
+        ctx.restore();
+    }
     drawDustMotes(ctx);
-    drawPerimeterInlay(ctx);
 
     if (state === 0) {
         ctx.fillStyle = '#fff'; ctx.font = 'bold 18px Segoe UI'; ctx.textAlign = 'center';

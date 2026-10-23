@@ -933,20 +933,7 @@ void DrawHUDCornerReticles(HDC hdc) {
 }
 
 void DrawPerimeterInlay(HDC hdc) {
-    int bx = 3, by = 31, bw = W - 6, bh = H - 34;
-    int pulse = FastSin((frame_counter * 2) % 16);
-    int clr_val = 140 + (pulse * 60) / 100;
-    COLORREF pClr = chaos_mode ? RGB(clr_val, 30, clr_val) : RGB(0, clr_val / 2, clr_val);
-    
-    HPEN pPen = CreatePen(PS_SOLID, 1, pClr);
-    HGDIOBJ oP = SelectObject(hdc, pPen);
-    HBRUSH nullBr = (HBRUSH)GetStockObject(NULL_BRUSH);
-    HGDIOBJ oB = SelectObject(hdc, nullBr);
-    Rectangle(hdc, bx, by, bx + bw, by + bh);
-
-    SelectObject(hdc, oP);
-    SelectObject(hdc, oB);
-    DeleteObject(pPen);
+    (void)hdc; // Zero perimeter border dots/glints enforced per KiloApps graphics directive
 }
 
 void DrawSpeedDustMotes(HDC hdc) {
