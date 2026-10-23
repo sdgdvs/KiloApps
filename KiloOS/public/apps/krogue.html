@@ -781,7 +781,65 @@
         canvas.width = C_WIDTH * dpr;
         canvas.height = C_HEIGHT * dpr;
         ctx.scale(dpr, dpr);
-        ctx.imageSmoothingEnabled = false;
+                ctx.imageSmoothingEnabled = false;
+
+        // --- KRogue Production Sprite Assets (Imagen 3 Pipeline) ---
+        const KROGUE_ASSETS = {
+            cobblestone: { img: null, pattern: null, loaded: false },
+            sprites: {}
+        };
+
+        function initKRogueAssets() {
+            const cobble = new Image();
+            cobble.src = '../assets/textures/cobblestone_seamless.png';
+            cobble.onload = () => {
+                KROGUE_ASSETS.cobblestone.img = cobble;
+                try {
+                    KROGUE_ASSETS.cobblestone.pattern = ctx.createPattern(cobble, 'repeat');
+                } catch(e) {}
+                KROGUE_ASSETS.cobblestone.loaded = true;
+            };
+            cobble.onerror = () => {
+                const fb = new Image();
+                fb.src = 'assets/textures/cobblestone_seamless.png';
+                fb.onload = () => {
+                    KROGUE_ASSETS.cobblestone.img = fb;
+                    try {
+                        KROGUE_ASSETS.cobblestone.pattern = ctx.createPattern(fb, 'repeat');
+                    } catch(e) {}
+                    KROGUE_ASSETS.cobblestone.loaded = true;
+                };
+            };
+
+            const spriteMap = {
+                'hero_warrior': 'hero_warrior',
+                'hero_mage': 'hero_mage',
+                'hero_rogue': 'hero_rogue',
+                'dragon': 'monster_dragon',
+                'goblin': 'monster_goblin',
+                'orc': 'monster_orc',
+                'skeleton': 'monster_skeleton',
+                'spectre': 'monster_spectre',
+                'void_archon': 'monster_void_archon',
+                'golem': 'monster_golem'
+            };
+
+            for (const [key, file] of Object.entries(spriteMap)) {
+                const img = new Image();
+                img.src = '../assets/sprites/kquest/kquest_' + file + '.png';
+                img.onload = () => {
+                    KROGUE_ASSETS.sprites[key] = { img: img, loaded: true };
+                };
+                img.onerror = () => {
+                    const fb = new Image();
+                    fb.src = 'assets/sprites/kquest/kquest_' + file + '.png';
+                    fb.onload = () => {
+                        KROGUE_ASSETS.sprites[key] = { img: fb, loaded: true };
+                    };
+                };
+            }
+        }
+        initKRogueAssets();
 
         // =========================================================================
         // SEGA GENESIS YM2612 2-OPERATOR FM SYNTHESIS & SNES SPC700 STEREO DELAY ENGINE
@@ -2357,6 +2415,13 @@
             ctx.globalAlpha = Math.max(0.1, alpha);
 
             ctx.fillStyle = mortarColor; ctx.fillRect(px, py, TILE, TILE);
+            if (KROGUE_ASSETS.cobblestone.loaded && KROGUE_ASSETS.cobblestone.pattern) {
+                ctx.save();
+                ctx.fillStyle = KROGUE_ASSETS.cobblestone.pattern;
+                ctx.globalAlpha = 0.22;
+                ctx.fillRect(px, py, TILE, TILE);
+                ctx.restore();
+            }
             ctx.fillStyle = baseColor;
             
             // Texture variation
@@ -2437,6 +2502,13 @@
             ctx.globalAlpha = Math.max(0.1, alpha);
 
             ctx.fillStyle = bg; ctx.fillRect(px, py, TILE, TILE);
+            if (KROGUE_ASSETS.cobblestone.loaded && KROGUE_ASSETS.cobblestone.pattern) {
+                ctx.save();
+                ctx.fillStyle = KROGUE_ASSETS.cobblestone.pattern;
+                ctx.globalAlpha = 0.12;
+                ctx.fillRect(px, py, TILE, TILE);
+                ctx.restore();
+            }
             
             let pebble = (x * 23 + y * 19) % 5;
             let tileStyle = (x * 7 + y * 11) % 3;
@@ -2586,6 +2658,45 @@
             let bob = Math.sin(frameCount * 0.15) * 1.5;
             let cx = px + TILE / 2, cy = py + TILE / 2 + bob;
 
+            const heroSprite = KROGUE_ASSETS.sprites['hero_' + (player.class || 'warrior')];
+            if (heroSprite && heroSprite.loaded) {
+                ctx.fillStyle = 'rgba(0,0,0,0.55)';
+                ctx.beginPath(); ctx.ellipse(cx, py + TILE - 3, 7, 3, 0, 0, Math.PI * 2); ctx.fill();
+
+                if (player.invisible_turns > 0) {
+                    let invisGlow = (Math.sin(frameCount * 0.18) + 1) * 0.5;
+                    ctx.fillStyle = 
+gba(183, 148, 244, );
+                    ctx.beginPath(); ctx.arc(cx, cy, 14, 0, Math.PI * 2); ctx.fill();
+                    ctx.strokeStyle = '#b794f4'; ctx.lineWidth = 1; ctx.stroke();
+                }
+                if (player.berserk_turns > 0) {
+                    let bGlow = (Math.sin(frameCount * 0.25) + 1) * 0.5;
+                    ctx.fillStyle = 
+gba(229, 62, 62, );
+                    ctx.beginPath(); ctx.arc(cx, cy, 15, 0, Math.PI * 2); ctx.fill();
+                }
+
+                const frameIdx = Math.floor((frameCount * 0.12) % 4);
+                const sw = 128, sh = 128;
+                const destSize = 26;
+                ctx.drawImage(heroSprite.img, frameIdx * sw, 0, sw, sh, cx - destSize / 2, cy - destSize / 2 - 2, destSize, destSize);
+
+                if (equipment.weapon && equipment.weapon.sockets && equipment.weapon.sockets.length > 0) {
+                    let firstGem = equipment.weapon.sockets[0];
+                    let gDef = GEMS_DEF[firstGem];
+                    let gCol = gDef ? gDef.color : '#ecc94b';
+                    let auraPulse = (Math.sin(frameCount * 0.25) + 1) * 0.5;
+                    ctx.fillStyle = gCol;
+                    ctx.globalAlpha = 0.5 + auraPulse * 0.4;
+                    ctx.beginPath();
+                    ctx.arc(cx + 8, cy - 6, 3 + auraPulse * 2.5, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.globalAlpha = 1.0;
+                }
+                return;
+            }
+
             // Ground shadow
             ctx.fillStyle = 'rgba(0,0,0,0.55)';
             ctx.beginPath(); ctx.ellipse(cx, py + TILE - 3, 7, 3, 0, 0, Math.PI * 2); ctx.fill();
@@ -2721,6 +2832,11 @@
                 ctx.lineWidth = 1;
                 ctx.beginPath(); ctx.arc(cx, cy, 9, 0, Math.PI * 2); ctx.stroke();
             } else if (pet.type === 'golem') {
+                if (KROGUE_ASSETS.sprites.golem && KROGUE_ASSETS.sprites.golem.loaded) {
+                    const frameIdx = Math.floor((frameCount * 0.12 + px) % 4);
+                    ctx.drawImage(KROGUE_ASSETS.sprites.golem.img, frameIdx * 128, 0, 128, 128, cx - 12, cy - 12, 24, 24);
+                    return;
+                }
                 // Stone Golem
                 ctx.fillStyle = '#4a5568'; ctx.fillRect(cx - 6, cy - 4, 12, 10);
                 ctx.fillStyle = '#2d3748'; ctx.fillRect(cx - 4, cy + 1, 8, 4);
@@ -2747,6 +2863,56 @@
             let cx = px + TILE / 2, cy = py + TILE / 2;
             let bob = Math.sin(frameCount * 0.12 + px) * 1.4;
             let isEnraged = (m.boss && current_hp < hp / 2);
+
+            // Boss Occult Aura & Runic Summoning Seal
+            if (type === '&' || m.boss) {
+                ctx.save();
+                let rAura = (Math.sin(frameCount * 0.18) + 1) * 0.5;
+                ctx.strokeStyle = isEnraged ? '#ff0055' : '#e53e3e';
+                ctx.lineWidth = 1.5;
+                ctx.beginPath();
+                ctx.arc(cx, cy + bob, 18 + rAura * 4, 0, Math.PI * 2);
+                ctx.stroke();
+
+                for (let a = 0; a < 4; a++) {
+                    let ang = frameCount * 0.03 + (a * Math.PI / 2);
+                    let rx = cx + Math.cos(ang) * (20 + rAura * 3);
+                    let ry = cy + bob + Math.sin(ang) * (20 + rAura * 3);
+                    ctx.fillStyle = '#f6e05e';
+                    ctx.fillRect(rx - 1.5, ry - 1.5, 3, 3);
+                }
+                ctx.font = 'bold 11px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillStyle = '#000000';
+                ctx.fillText('👑 ☠', cx + 1, cy - 17 + bob);
+                ctx.fillStyle = isEnraged ? '#ff007f' : '#f6e05e';
+                ctx.fillText('👑 ☠', cx, cy - 18 + bob);
+                ctx.restore();
+            }
+
+            let sKey = null;
+            if (type === '&' || m.boss) sKey = 'void_archon';
+            else if (type === 'D') sKey = 'dragon';
+            else if (type === 'g') sKey = 'goblin';
+            else if (type === 'o') sKey = 'orc';
+            else if (type === 's') sKey = 'skeleton';
+            else if (type === 'L' || type === 'b') sKey = 'spectre';
+            else if (type === 'v' || type === 'E') sKey = 'void_archon';
+
+            if (sKey && KROGUE_ASSETS.sprites[sKey] && KROGUE_ASSETS.sprites[sKey].loaded) {
+                // Ground shadow
+                ctx.fillStyle = (type === '&' || m.boss) ? 'rgba(0,0,0,0.6)' : 'rgba(0,0,0,0.5)';
+                ctx.beginPath();
+                ctx.ellipse(cx, py + TILE - 4, (type === '&' || m.boss) ? 14 : 7, (type === '&' || m.boss) ? 5 : 3, 0, 0, Math.PI * 2);
+                ctx.fill();
+
+                const sObj = KROGUE_ASSETS.sprites[sKey];
+                const frameIdx = Math.floor((frameCount * 0.12 + px) % 4);
+                const sw = 128, sh = 128;
+                const dSize = (type === '&' || m.boss) ? 36 : 24;
+                ctx.drawImage(sObj.img, frameIdx * sw, 0, sw, sh, cx - dSize / 2, cy - dSize / 2 + bob - (m.boss ? 4 : 0), dSize, dSize);
+                return;
+            }
 
             // Ground Shadow
             if (type !== '&' && type !== 'O' && type !== 'w' && type !== 'B') {
@@ -3045,6 +3211,26 @@
             drawPlayerSprite(player.x * TILE, player.y * TILE);
             if (typeof isDuelMode !== 'undefined' && isDuelMode && duelOpponent && duelOpponent.floor === dlevel) {
                 drawOpponentPhantomSprite(duelOpponent.x * TILE, duelOpponent.y * TILE, duelOpponent.class, duelOpponent.name);
+            }
+
+            // Atmospheric Subterranean Torchlight Vignette
+            if (state === 1 || state === 4) {
+                ctx.save();
+                const pcx = (player.x + 0.5) * TILE;
+                const pcy = (player.y + 0.5) * TILE;
+                const flicker = Math.sin(frameCount * 0.08) * 5 + Math.cos(frameCount * 0.17) * 3;
+                const innerR = Math.max(15, 52 + flicker);
+                const outerR = Math.max(innerR + 40, 260 + flicker * 2);
+                
+                const torchVignette = ctx.createRadialGradient(pcx, pcy, innerR * 0.35, pcx, pcy, outerR);
+                torchVignette.addColorStop(0, 'rgba(255, 190, 80, 0.05)');
+                torchVignette.addColorStop(0.35, 'rgba(160, 90, 20, 0.08)');
+                torchVignette.addColorStop(0.7, 'rgba(10, 8, 16, 0.62)');
+                torchVignette.addColorStop(1.0, 'rgba(4, 5, 10, 0.94)');
+                
+                ctx.fillStyle = torchVignette;
+                ctx.fillRect(0, 0, C_WIDTH, C_HEIGHT);
+                ctx.restore();
             }
 
             // Shimmering Challenge Vault HUD Banner
