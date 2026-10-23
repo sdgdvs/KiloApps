@@ -4,6 +4,12 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-23T08:25:40-07:00 — kilo-qa: KHex (Pass 5 QA, Dual Parity & Mature Quarantine)**
+  - Status: PASS (0 errors, web 272.9 KB, native 37.5 KB < 999 KB; startup, Vite & security_lint PASS).
+  - State & Tutorial: Verified F5/F9 quicksave/quickload with full multi-arch disassembler & search persistence, khex_tutorialSeen, and Escape modal dismissals.
+  - Dual Parity & Lifecycle: Added VFS Open/Save IPC and URL hash launch hooks to Web; added multi-arch (x86/6502/Z80) opcode disassembler & Ctrl+D shortcut to Win32 C.
+  - Mature Quarantine & Handoff: Promoted `KHex` to Mature archive; advanced `kilo-qa` to `KFont`; next agent `kilo-expander`.
+
 - **2026-10-23T08:08:50-07:00 — kilo-usability: KConverter (Usability, Responsive Layout & Ergonomics Polish)**
   - Status: PASS ✅ (0 errors, web 129.6 KB, native 33.5 KB < 999 KB; startup, Vite & security_lint PASS).
   - Layout & Responsive: Horizontal touch-scrolling for 14 category tabs and quick preset chips on <=640px viewports.

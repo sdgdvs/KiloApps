@@ -1245,6 +1245,7 @@
             <span class="key-badge">1</span> - <span class="key-badge">6</span> Switch Tabs &nbsp;|&nbsp;
             <span class="key-badge">←</span> / <span class="key-badge">→</span> Cycle Tabs &nbsp;|&nbsp;
             <span class="key-badge">X</span> or <span class="key-badge">S</span> Swap Units &nbsp;|&nbsp;
+            <span class="key-badge">E</span> Eng Notation &nbsp;|&nbsp;
             <span class="key-badge">P</span> Pin to Favs &nbsp;|&nbsp;
             <span class="key-badge">C</span> Copy Result &nbsp;|&nbsp;
             <span class="key-badge">F5</span> Quicksave &nbsp;|&nbsp;
@@ -1775,6 +1776,7 @@
     let favorites = safeGetStorage('kconv_favs', []);
     let customUnits = safeGetStorage('kconv_custom_units', []);
     let historyLog = safeGetStorage('kconv_history', []);
+    let lastConversionResult = null;
     let isInitialLoad = false;
     const viewNames = ['single', 'batch', 'express', 'fav', 'custom', 'history'];
 
@@ -2028,6 +2030,16 @@
         });
       }
 
+      // Listen for KiloOS IPC messages
+      window.addEventListener('message', (e) => {
+        if (!e.data || typeof e.data !== 'object') return;
+        if (e.data.type === 'OS_QUICKSAVE') {
+          quicksaveState();
+        } else if (e.data.type === 'OS_QUICKLOAD') {
+          quickloadState();
+        }
+      });
+
       // Keyboard navigation on nav tabs
       document.querySelectorAll('.nav-tab').forEach(tab => {
         tab.addEventListener('keydown', (e) => {
@@ -2105,6 +2117,9 @@
             } else {
               swapUnits();
             }
+          } else if (e.key === 'e' || e.key === 'E') {
+            e.preventDefault();
+            toggleEngineeringNotation();
           } else if (e.key === 'p' || e.key === 'P') {
             e.preventDefault();
             pinCurrentFavorite();
@@ -2524,6 +2539,7 @@
       }
 
       const formattedResult = formatNumber(result);
+      lastConversionResult = result;
       document.getElementById('outputVal').value = formattedResult;
 
       // Formula display
@@ -2665,11 +2681,33 @@
       uf.value = ut.value;
       ut.value = temp;
 
-      const outVal = document.getElementById('outputVal').value;
-      if (outVal && !isNaN(parseFloat(outVal))) {
-        document.getElementById('inputVal').value = parseFloat(outVal);
+      if (lastConversionResult !== null && !isNaN(lastConversionResult)) {
+        const prec = document.getElementById('precisionSel') ? document.getElementById('precisionSel').value : '4';
+        const p = prec === 'auto' ? 6 : Math.min(parseInt(prec, 10), 8);
+        document.getElementById('inputVal').value = parseFloat(lastConversionResult.toFixed(p));
+      } else {
+        const outVal = document.getElementById('outputVal').value;
+        if (outVal && !isNaN(parseFloat(outVal))) {
+          document.getElementById('inputVal').value = parseFloat(outVal);
+        }
       }
       convert();
+      showToast('⇄ Units swapped [X]', 'info');
+    }
+
+    function toggleEngineeringNotation() {
+      const notat = document.getElementById('notationSel');
+      if (!notat) return;
+      if (notat.value === 'eng') {
+        notat.value = 'std';
+        showToast('Format: Standard notation', 'info');
+      } else {
+        notat.value = 'eng';
+        showToast('Format: Engineering notation [E]', 'info');
+      }
+      convert();
+      renderBatch();
+      parseExpressInput();
     }
 
     function copyFormula() {
