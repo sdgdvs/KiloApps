@@ -4657,6 +4657,21 @@ window.addEventListener('keydown', function(e) {
       } else if (document.getElementById('profilerModal') && document.getElementById('profilerModal').classList.contains('active')) {
         e.preventDefault();
         closeDataProfilerModal();
+      } else if (document.getElementById('addRelationModal') && document.getElementById('addRelationModal').classList.contains('active')) {
+        e.preventDefault();
+        createRelationFromModal();
+      } else if (document.getElementById('seedModal') && document.getElementById('seedModal').classList.contains('active')) {
+        e.preventDefault();
+        confirmSeedData();
+      } else if (document.getElementById('indexLabModal') && document.getElementById('indexLabModal').classList.contains('active')) {
+        e.preventDefault();
+        closeIndexLabModal();
+      } else if (document.getElementById('integrityModal') && document.getElementById('integrityModal').classList.contains('active')) {
+        e.preventDefault();
+        closeIntegrityModal();
+      } else if (document.getElementById('ddlModal') && document.getElementById('ddlModal').classList.contains('active')) {
+        e.preventDefault();
+        closeDdlModal();
       }
     }
     return;
@@ -4683,8 +4698,10 @@ window.addEventListener('keydown', function(e) {
     else if (k === '2') switchView('cards');
     else if (k === '3') switchView('sql');
     else if (k === '4') switchView('dash');
+    else if (k === '5') switchView('schema');
     else if (k === 'h' || e.key === '?') openHelpModal();
     else if (k === 's') openSchemaModal();
+    else if (k === 'x') openIndexLabModal();
     else if (k === '/') {
       e.preventDefault();
       const s = document.getElementById('searchInput');
@@ -4977,6 +4994,676 @@ function exportProfilerReport() {
   const blob = new Blob([txt], { type: 'text/plain;charset=utf-8' });
   downloadBlob(blob, `kdb_integrity_profile_${tbl.id}_${now.slice(0,10)}.txt`);
   showToast('📄 Exported Integrity Audit Report', 'success');
+}
+
+
+// --- Relational Schema Studio, Foreign Keys & ER Diagram ---
+function renderSchemaView() {
+  const relations = dbState.relations || [];
+  const badgeEl = document.getElementById('schemaRelationBadge');
+  if (badgeEl) {
+    badgeEl.textContent = `${relations.length} relation${relations.length === 1 ? '' : 's'}`;
+  }
+
+  // Audit orphans across relations
+  let totalOrphans = 0;
+  const orphanMap = {};
+  relations.forEach(r => {
+    orphanMap[r.id] = 0;
+    const fromTbl = dbState.tables[r.fromTable];
+    const toTbl = dbState.tables[r.toTable];
+    if (fromTbl && toTbl) {
+      const parentKeys = new Set(toTbl.records.map(rec => String(rec[r.toCol] ?? '').trim().toLowerCase()));
+      fromTbl.records.forEach(rec => {
+        const val = String(rec[r.fromCol] ?? '').trim();
+        if (val && !parentKeys.has(val.toLowerCase())) {
+          orphanMap[r.id]++;
+          totalOrphans++;
+        }
+      });
+    }
+  });
+
+  const summaryEl = document.getElementById('schemaIntegritySummary');
+  if (summaryEl) {
+    if (totalOrphans === 0) {
+      summaryEl.style.color = '#10b981';
+      summaryEl.textContent = 'Integrity: 100% OK';
+    } else {
+      summaryEl.style.color = '#f87171';
+      summaryEl.textContent = `Integrity: ${totalOrphans} orphan record${totalOrphans === 1 ? '' : 's'} detected`;
+    }
+  }
+
+  // Render Table Entity Cards
+  const gridEl = document.getElementById('schemaEntitiesGrid');
+  if (gridEl) {
+    gridEl.innerHTML = '';
+    Object.keys(dbState.tables).forEach(tKey => {
+      const tbl = dbState.tables[tKey];
+      const card = document.createElement('div');
+      card.className = 'schema-card';
+      card.id = `schemaCard_${tKey}`;
+
+      const header = document.createElement('div');
+      header.className = 'schema-card-header';
+      header.innerHTML = `
+        <h4 class="schema-card-title">📊 ${escapeHtml(tbl.title || tKey)}</h4>
+        <span class="badge">${tbl.records.length} rows</span>
+      `;
+      card.appendChild(header);
+
+      const colList = document.createElement('ul');
+      colList.className = 'schema-col-list';
+
+      tbl.columns.forEach(col => {
+        const li = document.createElement('li');
+        li.className = 'schema-col-item';
+
+        const isPk = (col === tbl.primaryKey);
+        const fkRel = relations.find(r => r.fromTable === tKey && r.fromCol === col);
+
+        let keyBadge = '';
+        if (isPk) {
+          keyBadge = '<span class="key-badge-pk" title="Primary Key">PK</span>';
+        } else if (fkRel) {
+          keyBadge = `<span class="key-badge-fk" title="Foreign Key -> ${escapeHtml(fkRel.toTable)}.${escapeHtml(fkRel.toCol)}">FK</span>`;
+        }
+
+        li.innerHTML = `
+          <div class="schema-col-name">
+            ${keyBadge}
+            <span>${escapeHtml(col)}</span>
+          </div>
+          <span class="schema-col-type">VARCHAR</span>
+        `;
+        colList.appendChild(li);
+      });
+
+      card.appendChild(colList);
+      gridEl.appendChild(card);
+    });
+  }
+
+  // Render Schema Relations Table
+  const tbody = document.getElementById('schemaRelationsBody');
+  if (tbody) {
+    tbody.innerHTML = '';
+    if (relations.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:14px;">No foreign key relationships defined yet. Click "Add Relation" to connect tables.</td></tr>`;
+    } else {
+      relations.forEach(r => {
+        const orphans = orphanMap[r.id] || 0;
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td><strong>${escapeHtml(r.fromTable)}</strong></td>
+          <td><code>${escapeHtml(r.fromCol)}</code></td>
+          <td><strong>${escapeHtml(r.toTable)}</strong></td>
+          <td><code>${escapeHtml(r.toCol)}</code></td>
+          <td><span class="badge">${escapeHtml(r.type || 'N:1')}</span></td>
+          <td>${orphans > 0 ? `<span style="color:#f87171;font-weight:600;">⚠️ ${orphans} orphan(s)</span>` : `<span style="color:#10b981;">✅ OK</span>`}</td>
+          <td style="text-align:right;">
+            <button class="btn-danger" style="padding:2px 7px;font-size:10px;" onclick="removeRelation('${escapeHtml(r.id)}')">🗑️ Remove</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+  }
+
+  renderSchemaDiagram();
+}
+
+function renderSchemaDiagram() {
+  const svg = document.getElementById('schemaSvgOverlay');
+  if (!svg) return;
+  svg.innerHTML = '';
+  const container = document.getElementById('schemaDiagramContainer');
+  if (!container) return;
+  const containerRect = container.getBoundingClientRect();
+  const relations = dbState.relations || [];
+
+  relations.forEach(r => {
+    const fromCard = document.getElementById(`schemaCard_${r.fromTable}`);
+    const toCard = document.getElementById(`schemaCard_${r.toTable}`);
+    if (fromCard && toCard) {
+      const fromRect = fromCard.getBoundingClientRect();
+      const toRect = toCard.getBoundingClientRect();
+
+      const x1 = (fromRect.left + fromRect.width / 2) - containerRect.left + container.scrollLeft;
+      const y1 = (fromRect.bottom) - containerRect.top + container.scrollTop;
+      const x2 = (toRect.left + toRect.width / 2) - containerRect.left + container.scrollLeft;
+      const y2 = (toRect.top) - containerRect.top + container.scrollTop;
+
+      const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      const cy1 = y1 + 30;
+      const cy2 = y2 - 30;
+      path.setAttribute('d', `M ${x1} ${y1} C ${x1} ${cy1}, ${x2} ${cy2}, ${x2} ${y2}`);
+      path.setAttribute('stroke', '#a855f7');
+      path.setAttribute('stroke-width', '2');
+      path.setAttribute('stroke-dasharray', '4,4');
+      path.setAttribute('fill', 'none');
+      path.setAttribute('opacity', '0.7');
+      svg.appendChild(path);
+    }
+  });
+}
+
+function openAddRelationModal() {
+  const tableKeys = Object.keys(dbState.tables);
+  const fromSel = document.getElementById('relFromTableSelect');
+  const toSel = document.getElementById('relToTableSelect');
+  if (fromSel && toSel) {
+    fromSel.innerHTML = '';
+    toSel.innerHTML = '';
+    tableKeys.forEach(t => {
+      const opt1 = document.createElement('option');
+      opt1.value = t;
+      opt1.textContent = dbState.tables[t].title || t;
+      fromSel.appendChild(opt1);
+
+      const opt2 = document.createElement('option');
+      opt2.value = t;
+      opt2.textContent = dbState.tables[t].title || t;
+      toSel.appendChild(opt2);
+    });
+    if (tableKeys.length > 1) {
+      toSel.selectedIndex = 1;
+    }
+  }
+  updateRelationColSelects();
+  const modal = document.getElementById('addRelationModal');
+  if (modal) modal.classList.add('active');
+}
+
+function updateRelationColSelects() {
+  const fromTable = document.getElementById('relFromTableSelect')?.value;
+  const toTable = document.getElementById('relToTableSelect')?.value;
+  const fromColSel = document.getElementById('relFromColSelect');
+  const toColSel = document.getElementById('relToColSelect');
+
+  if (fromColSel && fromTable && dbState.tables[fromTable]) {
+    fromColSel.innerHTML = '';
+    dbState.tables[fromTable].columns.forEach(c => {
+      const opt = document.createElement('option');
+      opt.value = c;
+      opt.textContent = c;
+      fromColSel.appendChild(opt);
+    });
+  }
+
+  if (toColSel && toTable && dbState.tables[toTable]) {
+    toColSel.innerHTML = '';
+    const tbl = dbState.tables[toTable];
+    tbl.columns.forEach(c => {
+      const opt = document.createElement('option');
+      opt.value = c;
+      opt.textContent = c + (c === tbl.primaryKey ? ' [PK]' : '');
+      if (c === tbl.primaryKey) opt.selected = true;
+      toColSel.appendChild(opt);
+    });
+  }
+}
+
+function closeAddRelationModal() {
+  const modal = document.getElementById('addRelationModal');
+  if (modal) modal.classList.remove('active');
+}
+
+function createRelationFromModal() {
+  const fromTable = document.getElementById('relFromTableSelect')?.value;
+  const fromCol = document.getElementById('relFromColSelect')?.value;
+  const toTable = document.getElementById('relToTableSelect')?.value;
+  const toCol = document.getElementById('relToColSelect')?.value;
+
+  if (!fromTable || !fromCol || !toTable || !toCol) {
+    showToast('All relation fields are required.', 'warning');
+    return;
+  }
+  if (fromTable === toTable && fromCol === toCol) {
+    showToast('Cannot relate a column to itself.', 'warning');
+    return;
+  }
+
+  if (!dbState.relations) dbState.relations = [];
+  const exists = dbState.relations.some(r => r.fromTable === fromTable && r.fromCol === fromCol && r.toTable === toTable && r.toCol === toCol);
+  if (exists) {
+    showToast('This relationship already exists.', 'warning');
+    return;
+  }
+
+  const relId = 'rel_' + Date.now();
+  dbState.relations.push({
+    id: relId,
+    fromTable,
+    fromCol,
+    toTable,
+    toCol,
+    type: 'N:1'
+  });
+
+  saveDatabase();
+  closeAddRelationModal();
+  renderSchemaView();
+  showToast('🔗 Relationship established successfully', 'success');
+}
+
+function removeRelation(relId) {
+  if (!confirm('Remove this foreign key relationship constraint?')) return;
+  dbState.relations = (dbState.relations || []).filter(r => r.id !== relId);
+  saveDatabase();
+  renderSchemaView();
+  showToast('Relationship removed.', 'info');
+}
+
+// --- Referential Integrity & Orphan Audit ---
+function checkReferentialIntegrity() {
+  const relations = dbState.relations || [];
+  const reportEl = document.getElementById('integrityReportContent');
+  const autoBtn = document.getElementById('autoReconcileBtn');
+  let totalOrphans = 0;
+  let reportHtml = '';
+
+  if (relations.length === 0) {
+    reportHtml = `<div style="padding:12px;color:var(--text-muted);font-size:12px;">No active foreign key relationships to audit.</div>`;
+    if (autoBtn) autoBtn.style.display = 'none';
+  } else {
+    relations.forEach(r => {
+      const fromTbl = dbState.tables[r.fromTable];
+      const toTbl = dbState.tables[r.toTable];
+      if (!fromTbl || !toTbl) return;
+
+      const parentKeySet = new Set(toTbl.records.map(rec => String(rec[r.toCol] ?? '').trim().toLowerCase()));
+      const orphans = [];
+
+      fromTbl.records.forEach(rec => {
+        const val = String(rec[r.fromCol] ?? '').trim();
+        if (val && !parentKeySet.has(val.toLowerCase())) {
+          orphans.push({
+            pk: rec[fromTbl.primaryKey] || 'N/A',
+            val: val
+          });
+        }
+      });
+
+      totalOrphans += orphans.length;
+      reportHtml += `
+        <div style="background:rgba(255,255,255,0.03);border:1px solid var(--border-color);border-radius:6px;padding:10px;margin-bottom:8px;">
+          <div style="display:flex;justify-content:space-between;margin-bottom:6px;font-size:12px;">
+            <strong style="color:var(--primary);">${escapeHtml(r.fromTable)}.${escapeHtml(r.fromCol)} ➔ ${escapeHtml(r.toTable)}.${escapeHtml(r.toCol)}</strong>
+            <span style="color:${orphans.length > 0 ? '#f87171' : '#10b981'};font-weight:600;">
+              ${orphans.length > 0 ? `⚠️ ${orphans.length} Orphan Record(s)` : '✅ Fully Verified'}
+            </span>
+          </div>
+      `;
+
+      if (orphans.length > 0) {
+        reportHtml += `<ul style="margin:0;padding-left:18px;font-size:11px;color:#fca5a5;">`;
+        orphans.forEach(o => {
+          reportHtml += `<li>Row [${escapeHtml(fromTbl.primaryKey)}=${escapeHtml(o.pk)}]: Value "${escapeHtml(o.val)}" not found in parent table</li>`;
+        });
+        reportHtml += `</ul>`;
+      } else {
+        reportHtml += `<div style="font-size:11px;color:var(--text-muted);">All foreign key values reference existing valid parent records.</div>`;
+      }
+      reportHtml += `</div>`;
+    });
+
+    if (autoBtn) {
+      autoBtn.style.display = totalOrphans > 0 ? 'inline-block' : 'none';
+    }
+  }
+
+  if (reportEl) reportEl.innerHTML = reportHtml;
+  const modal = document.getElementById('integrityModal');
+  if (modal) modal.classList.add('active');
+}
+
+function closeIntegrityModal() {
+  const modal = document.getElementById('integrityModal');
+  if (modal) modal.classList.remove('active');
+}
+
+function autoReconcileOrphans() {
+  const relations = dbState.relations || [];
+  let reconciledCount = 0;
+
+  relations.forEach(r => {
+    const fromTbl = dbState.tables[r.fromTable];
+    const toTbl = dbState.tables[r.toTable];
+    if (!fromTbl || !toTbl || toTbl.records.length === 0) return;
+
+    const parentKeySet = new Set(toTbl.records.map(rec => String(rec[r.toCol] ?? '').trim().toLowerCase()));
+    const fallbackParentVal = toTbl.records[0][r.toCol] || '';
+
+    fromTbl.records.forEach(rec => {
+      const val = String(rec[r.fromCol] ?? '').trim();
+      if (val && !parentKeySet.has(val.toLowerCase())) {
+        rec[r.fromCol] = fallbackParentVal;
+        reconciledCount++;
+      }
+    });
+  });
+
+  saveDatabase();
+  renderAll();
+  renderSchemaView();
+  checkReferentialIntegrity();
+  showToast(`🪄 Reconciled ${reconciledCount} orphan record(s) to valid parent entities.`, 'success');
+}
+
+// --- Index Simulator & Query Benchmark Lab ---
+function openIndexLabModal() {
+  const tableKeys = Object.keys(dbState.tables);
+  const selTable = document.getElementById('newIndexTableSelect');
+  if (selTable) {
+    selTable.innerHTML = '';
+    tableKeys.forEach(t => {
+      const opt = document.createElement('option');
+      opt.value = t;
+      opt.textContent = dbState.tables[t].title || t;
+      selTable.appendChild(opt);
+    });
+    updateNewIndexColSelect();
+  }
+  renderIndexLabList();
+  const modal = document.getElementById('indexLabModal');
+  if (modal) modal.classList.add('active');
+}
+
+function updateNewIndexColSelect() {
+  const tKey = document.getElementById('newIndexTableSelect')?.value;
+  const selCol = document.getElementById('newIndexColSelect');
+  if (selCol && tKey && dbState.tables[tKey]) {
+    selCol.innerHTML = '';
+    dbState.tables[tKey].columns.forEach(c => {
+      const opt = document.createElement('option');
+      opt.value = c;
+      opt.textContent = c;
+      selCol.appendChild(opt);
+    });
+  }
+}
+
+function renderIndexLabList() {
+  const indexes = dbState.indexes || [];
+  const countEl = document.getElementById('activeIndexesCount');
+  if (countEl) countEl.textContent = indexes.length;
+
+  const tbody = document.getElementById('indexLabTableBody');
+  if (!tbody) return;
+  tbody.innerHTML = '';
+
+  if (indexes.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:12px;color:var(--text-muted);">No indexes configured. Add an index to simulate seek optimizations.</td></tr>`;
+    return;
+  }
+
+  indexes.forEach(idx => {
+    const tbl = dbState.tables[idx.table];
+    const rowCount = tbl ? tbl.records.length : 0;
+    const estSize = `${(rowCount * (idx.type === 'B-Tree' ? 32 : 16) + 128)} bytes`;
+
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td style="padding:6px 8px;"><strong>${escapeHtml(idx.table)}</strong></td>
+      <td style="padding:6px 8px;"><code>${escapeHtml(idx.name)}</code></td>
+      <td style="padding:6px 8px;">${escapeHtml(idx.column)}</td>
+      <td style="padding:6px 8px;"><span class="badge">${escapeHtml(idx.type)}</span></td>
+      <td style="padding:6px 8px;">${idx.unique ? '<span style="color:#10b981;">Yes</span>' : '<span style="color:var(--text-muted);">No</span>'}</td>
+      <td style="padding:6px 8px;font-family:monospace;font-size:10px;">${estSize}</td>
+      <td style="padding:6px 8px;text-align:right;">
+        <button class="btn-danger" style="padding:2px 6px;font-size:10px;" onclick="dropIndex('${escapeHtml(idx.name)}')">Drop</button>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+function createIndexFromModal() {
+  const table = document.getElementById('newIndexTableSelect')?.value;
+  const col = document.getElementById('newIndexColSelect')?.value;
+  const type = document.getElementById('newIndexTypeSelect')?.value || 'Hash';
+  const isUnique = Boolean(document.getElementById('newIndexUniqueCheck')?.checked);
+
+  if (!table || !col) {
+    showToast('Select a table and column for the index.', 'warning');
+    return;
+  }
+
+  if (!dbState.indexes) dbState.indexes = [];
+  const idxName = `idx_${table}_${col}`;
+  if (dbState.indexes.some(i => i.name === idxName || (i.table === table && i.column === col))) {
+    showToast('An index on this column already exists.', 'warning');
+    return;
+  }
+
+  dbState.indexes.push({
+    name: idxName,
+    table,
+    column: col,
+    type,
+    unique: isUnique
+  });
+
+  saveDatabase();
+  renderIndexLabList();
+  showToast(`⚡ Index '${idxName}' created`, 'success');
+}
+
+function dropIndex(idxName) {
+  dbState.indexes = (dbState.indexes || []).filter(i => i.name !== idxName);
+  saveDatabase();
+  renderIndexLabList();
+  showToast(`Index '${idxName}' dropped.`, 'info');
+}
+
+function closeIndexLabModal() {
+  const modal = document.getElementById('indexLabModal');
+  if (modal) modal.classList.remove('active');
+}
+
+function runBenchmarkSimulation() {
+  const indexes = dbState.indexes || [];
+  const totalRecords = Object.values(dbState.tables).reduce((acc, t) => acc + t.records.length, 0);
+
+  const t0 = performance.now();
+  let dummy = 0;
+  for (let i = 0; i < 1000; i++) {
+    dummy += (totalRecords * 3.5) % 17;
+  }
+  const scanTime = Math.max(12.4, (performance.now() - t0) * 15 + (totalRecords * 0.18)).toFixed(2);
+  const speedupFactor = indexes.length > 0 ? (12 + indexes.length * 4.5).toFixed(1) : '1.0';
+  const seekTime = (parseFloat(scanTime) / parseFloat(speedupFactor)).toFixed(2);
+
+  const scanEl = document.getElementById('benchScanTime');
+  const seekEl = document.getElementById('benchSeekTime');
+  const speedupEl = document.getElementById('benchSpeedup');
+
+  if (scanEl) scanEl.textContent = `${scanTime} ms`;
+  if (seekEl) seekEl.textContent = `${seekTime} ms`;
+  if (speedupEl) speedupEl.textContent = `${speedupFactor}x Speedup`;
+
+  showToast(`🏎️ Benchmark complete: ${speedupFactor}x speedup evaluated across 1,000 queries.`, 'success');
+}
+
+// --- Synthetic Enterprise Data Generator ---
+function openSeedModal() {
+  const modal = document.getElementById('seedModal');
+  if (modal) modal.classList.add('active');
+}
+
+function closeSeedModal() {
+  const modal = document.getElementById('seedModal');
+  if (modal) modal.classList.remove('active');
+}
+
+function confirmSeedData() {
+  const preset = document.getElementById('seedPresetSelect')?.value || 'standard';
+  const firstNames = ['David', 'Sarah', 'Michael', 'Jennifer', 'Robert', 'Lisa', 'William', 'Karen', 'Richard', 'Nancy', 'Thomas', 'Betty', 'Matthew', 'Sandra', 'James'];
+  const lastNames = ['Miller', 'Davis', 'Wilson', 'Anderson', 'Taylor', 'Thomas', 'Moore', 'Jackson', 'Martin', 'Lee', 'Perez', 'Thompson', 'White', 'Harris', 'Clark'];
+  const roles = ['Software Engineer', 'Systems Architect', 'Database Analyst', 'QA Lead', 'Network Admin', 'Technical Writer', 'Product Specialist', 'Support Engineer'];
+  const depts = ['Engineering', 'Marketing', 'Sales', 'Finance', 'Human Resources', 'Research'];
+
+  const empCount = preset === 'large' ? 35 : (preset === 'employees_only' ? 20 : 15);
+  const empTable = dbState.tables['employees'];
+
+  let addedEmp = 0;
+  if (empTable) {
+    for (let i = 0; i < empCount && empTable.records.length < MAX_RECORDS_PER_TABLE; i++) {
+      const fn = firstNames[Math.floor(Math.random() * firstNames.length)];
+      const ln = lastNames[Math.floor(Math.random() * lastNames.length)];
+      const name = `${fn} ${ln}`;
+      const dept = depts[Math.floor(Math.random() * depts.length)];
+      const role = roles[Math.floor(Math.random() * roles.length)];
+      const salary = String(55000 + Math.floor(Math.random() * 45) * 1000);
+      const year = 1995 + Math.floor(Math.random() * 5);
+      const month = String(1 + Math.floor(Math.random() * 12)).padStart(2, '0');
+      const day = String(1 + Math.floor(Math.random() * 28)).padStart(2, '0');
+      const start_date = `${year}-${month}-${day}`;
+
+      empTable.records.push({
+        id: nextRecordId(empTable),
+        name,
+        dept,
+        role,
+        salary,
+        start_date
+      });
+      addedEmp++;
+    }
+  }
+
+  if (preset !== 'employees_only') {
+    const deptTable = dbState.tables['departments'];
+    if (deptTable && deptTable.records.length < MAX_RECORDS_PER_TABLE) {
+      depts.forEach((dName, idx) => {
+        if (!deptTable.records.some(r => r.name.toLowerCase() === dName.toLowerCase())) {
+          deptTable.records.push({
+            name: dName,
+            budget: String(150000 + (idx * 50000)),
+            manager: `${firstNames[idx]} ${lastNames[idx]}`,
+            floor: `Floor ${idx + 1}`
+          });
+        }
+      });
+    }
+
+    const prjTable = dbState.tables['projects'];
+    if (prjTable && prjTable.records.length < MAX_RECORDS_PER_TABLE) {
+      const prjCodes = ['PRJ-901', 'PRJ-902', 'PRJ-903', 'PRJ-904', 'PRJ-905'];
+      const prjTitles = ['Y2K Compliance Audit', 'Oracle 8i Migration', 'Intranet Portal V2', 'Firewall Hardware Upgrade', 'Tape Archive Backup'];
+      prjCodes.forEach((code, idx) => {
+        if (!prjTable.records.some(r => r.code === code)) {
+          prjTable.records.push({
+            code,
+            title: prjTitles[idx],
+            lead: empTable && empTable.records[idx] ? empTable.records[idx].name : 'Alice Smith',
+            budget: String(20000 + (idx * 15000)),
+            status: idx % 2 === 0 ? 'Active' : 'Planning'
+          });
+        }
+      });
+    }
+
+    const astTable = dbState.tables['assets'];
+    if (astTable && astTable.records.length < MAX_RECORDS_PER_TABLE) {
+      const astTags = ['AST-901', 'AST-902', 'AST-903', 'AST-904'];
+      const astNames = ['UltraSPARC 60 Workstation', '100Base-TX Switch', 'LaserJet 4000N', 'DAT 72 Tape Drive'];
+      astTags.forEach((tag, idx) => {
+        if (!astTable.records.some(r => r.tag === tag)) {
+          astTable.records.push({
+            tag,
+            asset: astNames[idx],
+            assigned_to: empTable && empTable.records[idx] ? empTable.records[idx].name : 'Diana Prince',
+            specs: '100MHz SCSI / 128MB ECC',
+            status: 'Deployed'
+          });
+        }
+      });
+    }
+  }
+
+  saveDatabase();
+  renderAll();
+  if (currentView === 'schema') renderSchemaView();
+  closeSeedModal();
+  showToast(`🎲 Generated ${addedEmp} enterprise records.`, 'success');
+}
+
+// --- Relational Schema DDL Generator ---
+function exportRelationalDDL() {
+  let ddl = `-- ========================================================\n`;
+  ddl += `-- KDB Relational Database Schema & Constraints DDL Export\n`;
+  ddl += `-- Dialect: ANSI SQL-92 / Oracle 8i / PostgreSQL Compatible\n`;
+  ddl += `-- Timestamp: ${new Date().toISOString()}\n`;
+  ddl += `-- ========================================================\n\n`;
+
+  Object.keys(dbState.tables).forEach(tKey => {
+    const tbl = dbState.tables[tKey];
+    ddl += `CREATE TABLE ${tKey} (\n`;
+    const colDefs = [];
+    tbl.columns.forEach(col => {
+      let def = `  ${col.padEnd(16)} VARCHAR(255)`;
+      if (col === tbl.primaryKey) {
+        def += ` NOT NULL PRIMARY KEY`;
+      }
+      colDefs.push(def);
+    });
+
+    const tableFks = (dbState.relations || []).filter(r => r.fromTable === tKey);
+    tableFks.forEach(fk => {
+      colDefs.push(`  CONSTRAINT fk_${fk.fromTable}_${fk.fromCol} FOREIGN KEY (${fk.fromCol}) REFERENCES ${fk.toTable}(${fk.toCol})`);
+    });
+
+    ddl += colDefs.join(',\n') + '\n);\n\n';
+  });
+
+  if (dbState.indexes && dbState.indexes.length > 0) {
+    ddl += `-- ========================================================\n`;
+    ddl += `-- Indexes & Performance Constraints\n`;
+    ddl += `-- ========================================================\n`;
+    dbState.indexes.forEach(idx => {
+      ddl += `CREATE ${idx.unique ? 'UNIQUE ' : ''}INDEX ${idx.name} ON ${idx.table} (${idx.column});\n`;
+    });
+    ddl += '\n';
+  }
+
+  const txtEl = document.getElementById('ddlTextarea');
+  if (txtEl) txtEl.value = ddl;
+  const modal = document.getElementById('ddlModal');
+  if (modal) modal.classList.add('active');
+}
+
+function closeDdlModal() {
+  const modal = document.getElementById('ddlModal');
+  if (modal) modal.classList.remove('active');
+}
+
+function copyDdlToClipboard() {
+  const txtEl = document.getElementById('ddlTextarea');
+  if (txtEl) {
+    txtEl.select();
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(txtEl.value).then(() => {
+        showToast('📋 DDL SQL copied to clipboard', 'success');
+      }).catch(() => {
+        document.execCommand('copy');
+        showToast('📋 DDL SQL copied to clipboard', 'success');
+      });
+    } else {
+      document.execCommand('copy');
+      showToast('📋 DDL SQL copied to clipboard', 'success');
+    }
+  }
+}
+
+function downloadDdlFile() {
+  const txtEl = document.getElementById('ddlTextarea');
+  if (!txtEl || !txtEl.value) return;
+  const blob = new Blob([txtEl.value], { type: 'text/sql;charset=utf-8' });
+  downloadBlob(blob, `kdb_schema_ddl_${new Date().toISOString().slice(0, 10)}.sql`);
+  showToast('💾 Downloaded kdb_schema_ddl.sql', 'success');
 }
 
 // Window Resizing Messaging for KiloOS
