@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-expander
-next_agent: kilo-creator
+current_agent: kilo-creator
+next_agent: kilo-graphics
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -16,14 +16,14 @@ tool_call_cap: 30
 commit_checkpoint: 15
 status: ready
 current_targets:
-  kilo_creator: kweb://deep-core
-  kilo_graphics: KRacer
-  kilo_soundscape: KRacer
+  kilo_creator: kweb://darknet
+  kilo_graphics: KSpace
+  kilo_soundscape: KRogue
   kilo_tester: KBase
   kilo_usability: KBase
   kilo_qa: KSpace
   kilo_expander: KConverter
-virtual_web_target: kweb://deep-core
+virtual_web_target: kweb://darknet
 virtual_web_rotation:
 - kweb://portal
 - kweb://webring
@@ -37,10 +37,10 @@ virtual_web_rotation:
 - kweb://deep-core
 - kweb://darknet
 last_run:
-  agent: kilo-qa
-  app: KCalc
-  timestamp: '2026-10-22T16:35:00-07:00'
-last_planner_run: '2026-10-21T23:32:00Z'
+  agent: kilo-planner
+  app: Fleet
+  timestamp: '2026-10-22T18:35:00-07:00'
+last_planner_run: '2026-10-23T01:35:00Z'
 ---
 
 # KiloApps Master Fleet Work & Queue State
@@ -67,33 +67,33 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Active Target Queues (Gemini Flash Optimized Tickets)
 ### 1. Virtual 1999 Web & ARG Node Creator (`kilo-creator`)
-- **Target**: `kweb://deep-core`
-- **Primary File**: `KiloOS/public/web/deep_core.html`
-- **Objective**: Deep Core subterranean ghost node & precursor terminal: memory hex fragment reconstruction, encrypted entropy sink, and cross-node parity adhering to Anti-Potemkin Quality Standard (<999 KB).
-- **Upcoming Queue**: `kweb://darknet`, `kweb://portal`, `kweb://webring`.
+- **Target**: `kweb://darknet`
+- **Primary File**: `KiloOS/public/web/darknet.html`
+- **Objective**: Encrypted underground relay & cryptography lab: wardialer frequency sweeps, dead-drop key exchange, and airgap packet bridge (<999 KB).
+- **Upcoming Queue**: `kweb://portal`, `kweb://webring`, `kweb://warez`.
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
-- **Target**: `KRacer`
-- **Primary Files**: `KiloOS/public/apps/kracer.html`
-- **Objective**: Outrun-style pseudo-3D arcade racer graphics overhaul: replace vector / primitive canvas vehicles and roadside sprites with Imagen 3 assets (<999 KB).
+- **Target**: `KSpace`
+- **Primary Files**: `KiloOS/public/apps/kspace.html`
+- **Objective**: Space combat & celestial trader graphics overhaul: replace vector wireframes / primitive canvas assets with authentic Imagen 3 sprites, space stations, and seamless parallax starfields (<999 KB).
 - **Action Steps**:
-  1. Inspect `KiloOS/public/apps/kracer.html` rendering routines for programmer art.
+  1. Inspect `KiloOS/public/apps/kspace.html` rendering routines for programmer art.
   2. Generate sprites via 2-stage asset pipeline if appropriate (`generate_image` with solid `#FF00FF` -> `scripts/asset_pipeline.py`).
   3. Search for and eliminate any traveling border dots or rotating specular glints.
   4. Run `python scripts/check_icons.py` to audit icon uniqueness.
 - **Verification**: `cd KiloOS && npm run build`. Verify files < 999 KB.
 - **Handoff**:
-  - In frontmatter: advance `current_targets.kilo_graphics` to `KSpace`.
+  - In frontmatter: advance `current_targets.kilo_graphics` to `KTrader`.
   - Set current_agent: kilo-soundscape.
   - Append terse execution log (≤6 lines), commit, and push.
-- **Upcoming Queue**: `KSpace`, `KTrader`.
+- **Upcoming Queue**: `KTrader`, `KRogue`, `KBreakout`.
 
 ### 3. Procedural Audio & Soundscape Queue (`kilo-soundscape`)
-- **Target**: `KRacer`
-- **Primary Files**: `KiloOS/public/apps/kracer.html`
-- **Objective**: Arcade pseudo-3D racer chiptune suite: driving synthwave basslines, high-octane FM lead hooks, revving engine whine, and tire screech earcons.
+- **Target**: `KRogue`
+- **Primary Files**: `KiloOS/public/apps/krogue.html`
+- **Objective**: Procedural chiptune dungeon audio suite: atmospheric 3-voice counterpoint dungeon exploration theme, FM percussive combat earcons, and selective SPC700 stereo delay (<999 KB).
 - **Action Steps**:
-  1. Inspect `KiloOS/public/apps/kracer.html` audio synthesis functions.
+  1. Inspect `KiloOS/public/apps/krogue.html` audio synthesis functions.
   2. Implement hardware composer chiptune standard:
      - 6-Channel logical synthesis: Lead melody, counter-melody, shell voicings, punchy dry FM bass, kick/snare, and inharmonic hi-hat.
      - Voice leading: Contrary motion and shell voicings (3rd + 7th).
@@ -102,10 +102,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   3. Pure Web Audio synthesis with zero external audio assets.
 - **Verification**: `cd KiloOS && npm run build` (0 Vite errors). Confirm file size < 999 KB.
 - **Handoff**:
-  - In frontmatter: advance `current_targets.kilo_soundscape` to `KMaze`.
+  - In frontmatter: advance `current_targets.kilo_soundscape` to `KBreakout`.
   - Set current_agent: kilo-tester.
   - Append terse execution log (≤8 lines), commit, and push.
-- **Upcoming Queue**: `KMaze`, `KRogue`.
+- **Upcoming Queue**: `KBreakout`, `KQuest`, `KStarship`.
 
 ### 4. App Tester Queue (`kilo-tester`)
 - **Target**: `KBase`
@@ -216,6 +216,14 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-22T18:35:00-07:00 — kilo-planner: 24-Hour Fleet Planning & Queue Rework**
+  - Status: PASS ✅ (0 errors, 105 apps audited, rotation schedule & active queues refreshed).
+  - Queue Health: Purged non-existent `KRacer` and quarantined mature app `KMaze` from active/upcoming queues; advanced `virtual_web_target` to `kweb://darknet`.
+  - Target Allocations: Creator -> `kweb://darknet`, Graphics -> `KSpace`, Soundscape -> `KRogue`, Tester -> `KBase`, Usability -> `KBase`, QA -> `KSpace`, Expander -> `KConverter`.
+  - Icon Uniqueness: Verified 105 apps in App.jsx via `check_icons.py` (0 missing, 0 shared paths, 0 duplicate SHA256 hashes).
+  - Startup Verification: Verified `KSpace`, `KConverter`, `KBase`, `KTrader`, `KRogue`, `KBreakout`, `KQuest` startup tests all PASS.
+  - Handoff & Compaction: Set `current_agent: kilo-creator`, `next_agent: kilo-graphics`, updated `last_planner_run`, rotated logs.
+
 - **2026-10-22T17:47:00-07:00 — kilo-adhoc: Security & Dependency Hardening (KiloOS, KiloOS_Server, KBBSProxy, CI)**
   - Status: PASS ✅ (0 regressions, 0 runtime npm advisories, all binaries/web files < 999 KB ceiling).
   - Dependency Fixes: Upgraded `vite` (`8.3.5`), `nanoid` (`3.3.20`), `source-map-js` (`1.2.2`), `postcss` (`8.5.31`) in `KiloOS`; upgraded `express` (`4.22.3`), `proxy-addr` (`2.0.8`), `body-parser` (`1.20.9`), `qs` (`6.16.1`) in `KiloOS_Server`.
@@ -245,9 +253,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Dual Parity & Build: Verified native `KPing.exe` (46.5 KB < 999 KB) and Web `kping.html` (171.7 KB < 999 KB).
   - Verification: `test_app_startup` PASS (0 errors), KiloOS `npm run build` PASS (0 errors), `byte_budget_gate` PASS, `security_lint` PASS.
   - Mature Quarantine: Promoted KPing to Mature Applications archive; advanced queue to KBase; rotated agent to kilo-usability.
-
-- **2026-10-22T13:38:00-07:00 — kilo-soundscape: KAbyss (Procedural Audio & Delay DSP Suite)**
-  - PASS ✅ (Genesis YM2612 2-Op FM soundscape with dry bass/percussion and wet stereo delay).
-  - Audio Architecture: Dual bus topology (dry bass/kicks + wet leads/counterpoint); 3-voice counterpoint and delayed vibrato.
-  - Parity & Verification: Native KAbyss.exe (242.5 KB < 999 KB) and Web kabyss.html (499.5 KB < 999 KB); test_app_startup PASS; KiloOS npm build PASS (0 errors).
-  - Queue Handoff: Advanced kilo_soundscape to KRacer; rotated current_agent to kilo-tester.
