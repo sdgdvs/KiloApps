@@ -751,6 +751,48 @@
     }
 
     
+        /* VFS Script Manager */
+    .vfs-file-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 6px 10px;
+        border-radius: 6px;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        transition: all 0.15s ease;
+    }
+    .vfs-file-row:hover {
+        background: rgba(14, 165, 233, 0.12);
+        border-color: rgba(14, 165, 233, 0.35);
+    }
+    .vfs-file-path {
+        font-family: "Consolas", "Monaco", monospace;
+        font-size: 11.5px;
+        color: #e2e8f0;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        word-break: break-all;
+    }
+    .vfs-file-meta {
+        font-size: 10.5px;
+        color: #94a3b8;
+        margin-left: 8px;
+    }
+    .vfs-file-actions {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        flex-shrink: 0;
+    }
+    .vfs-btn-sm {
+        padding: 3px 8px;
+        font-size: 10.5px;
+        border-radius: 4px;
+        box-shadow: none;
+    }
+
     /* Status Bar & Ergonomics */
     .statusbar {
         display: flex;
@@ -862,7 +904,7 @@
     <div class="header">
         <div class="title-group">
             <h1>⚡ KScript</h1>
-            <span class="version-tag">v2.1 EXPANDED</span>
+            <span class="version-tag">v2.2 VFS-INTEGRATED</span>
             <span id="statusBadge" class="status-badge">READY</span>
         </div>
         <div class="toolbar">
@@ -908,6 +950,18 @@
                 </button>
                 <button id="btnExport" type="button" style="background:#0284c7" title="Export Formats & JSON">
                     <span>📤 Export</span>
+                </button>
+            </div>
+            <div class="toolbar-divider" aria-hidden="true"></div>
+            <div class="toolbar-group" role="group" aria-label="KiloOS VFS Mesh">
+                <button id="btnVfsManager" type="button" style="background:#0284c7" title="KiloOS VFS Script Manager (/home/scripts/)">
+                    <span>🌐 VFS</span>
+                </button>
+                <button id="btnVfsSaveQuick" type="button" style="background:#0369a1" title="Save Script to VFS (/home/scripts/)">
+                    <span>💾 VFS Save</span>
+                </button>
+                <button id="btnLaunchKHex" type="button" style="background:#7c3aed" title="Inspect Active Script in KHex (OS_LAUNCH_APP)">
+                    <span>🔍 In KHex</span>
                 </button>
             </div>
             <div class="toolbar-divider" aria-hidden="true"></div>
@@ -964,6 +1018,7 @@
         <button type="button" class="preset-chip" onclick="loadPreset('arrays')">📦 Arrays & Aggregation</button>
         <button type="button" class="preset-chip" onclick="loadPreset('crypto_hash')">🔑 FNV-1a Hash (32-bit)</button>
         <button type="button" class="preset-chip" onclick="loadPreset('lint_audit')">🛡️ Linter Audit</button>
+        <button type="button" class="preset-chip" onclick="loadPreset('vfs_demo')">🌐 VFS Scripting</button>
     </div>
 
     <!-- Onboarding / Quick Tip Banner -->
@@ -1219,6 +1274,37 @@
     </div>
 </div>
 
+<!-- KiloOS VFS Script Manager Modal -->
+<div id="vfsModal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="vfsModalTitle">
+    <div class="modal" style="max-width: 720px;">
+        <div class="modal-header">
+            <h2 id="vfsModalTitle">🌐 KiloOS VFS Script Manager</h2>
+            <button id="vfsModalClose" type="button" class="modal-close" title="Close [Esc]">&times;</button>
+        </div>
+        <div style="font-size:12.5px; color:var(--text-muted); margin-bottom:12px;">
+            Synchronized with KiloOS Virtual Filesystem (<code>/home/scripts/</code>). Save, load, and cross-launch into KiloOS workstations.
+        </div>
+        <div style="display:flex; gap:10px; margin-bottom:12px; align-items:center;">
+            <input type="text" id="vfsSaveFilename" placeholder="/home/scripts/myscript.ks" style="flex:1; background:#090d16; border:1px solid var(--glass-border); color:#f8fafc; padding:6px 10px; border-radius:6px; font-family:monospace; font-size:12px;" value="/home/scripts/myscript.ks" />
+            <button type="button" id="btnVfsSaveCommit" style="background:#0284c7; padding:6px 14px; font-size:12px;">💾 Save Active</button>
+            <button type="button" id="btnVfsHexLaunch" style="background:#7c3aed; padding:6px 14px; font-size:12px;" title="Save and inspect in KHex via OS_LAUNCH_APP">🔍 In KHex</button>
+        </div>
+        <div style="background:#090d16; border:1px solid var(--glass-border); border-radius:8px; padding:10px; max-height:260px; overflow-y:auto;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                <span style="font-size:11px; font-weight:700; color:#38bdf8; text-transform:uppercase; letter-spacing:0.5px;">Virtual Filesystem Files</span>
+                <span id="vfsFileCount" style="font-size:11px; color:#94a3b8; font-family:monospace;">0 files</span>
+            </div>
+            <div id="vfsFileList" style="display:flex; flex-direction:column; gap:6px;">
+                <!-- Dynamically populated file rows -->
+            </div>
+        </div>
+        <div class="modal-footer" style="display:flex; justify-content:space-between; align-items:center; margin-top:14px;">
+            <span style="font-size:11px; color:#64748b;">Tip: Scripts can also use <code>vfs_read(path)</code> and <code>vfs_write(path, data)</code> directly.</span>
+            <button type="button" id="btnVfsModalCloseBottom" style="background:#475569;">Close [Esc]</button>
+        </div>
+    </div>
+</div>
+
 <!-- Toast Container -->
 <div id="toastContainer" class="toast-container"></div>
 
@@ -1289,6 +1375,146 @@
             return def;
         }
     }
+
+    // ==========================================
+    // Phase VI KiloOS VFS & Inter-App IPC Bridge
+    // ==========================================
+    const KiloVFS = {
+        cache: {},
+        init() {
+            try {
+                const raw = localStorage.getItem('kiloos_vfs_state_v2');
+                if (raw) {
+                    const parsed = JSON.parse(raw);
+                    if (parsed && typeof parsed === 'object') {
+                        this.cache = Object.assign({}, parsed);
+                    }
+                }
+            } catch(e) {}
+            // Seed standard scripts if missing
+            if (!this.cache['/home/scripts/welcome.ks']) {
+                this.cache['/home/scripts/welcome.ks'] = '// KScript Virtual Filesystem\nprint "Welcome to KScript VFS!"\n';
+            }
+            if (!this.cache['/home/scripts/vfs_demo.ks']) {
+                this.cache['/home/scripts/vfs_demo.ks'] = '// KScript VFS Automation Demo\nvfs_write("/home/scripts/test.log", "VFS Ready")\nprint vfs_read("/home/scripts/test.log")\n';
+            }
+            // Listen to VFS messages from KiloOS parent
+            window.addEventListener('message', (e) => {
+                if (!e.data) return;
+                if (e.data.type === 'VFS_CHANGED') {
+                    if (e.data.deleted) {
+                        delete this.cache[e.data.path];
+                    } else if (e.data.path) {
+                        this.cache[e.data.path] = e.data.data;
+                    }
+                } else if (e.data.type === 'VFS_LIST_DONE' && e.data.files) {
+                    // Update list of files
+                }
+            });
+            try {
+                window.parent.postMessage({ type: 'VFS_LIST', requestId: 'init_list_' + Date.now() }, '*');
+            } catch(e) {}
+        },
+        saveToStorage() {
+            try {
+                localStorage.setItem('kiloos_vfs_state_v2', JSON.stringify(this.cache));
+            } catch(e) {}
+        },
+        write(path, data, notify = true) {
+            const payload = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
+            this.cache[path] = payload;
+            this.saveToStorage();
+            try {
+                window.parent.postMessage({ type: 'VFS_WRITE', path, data: payload, requestId: 'w_' + Date.now() }, '*');
+                if (notify) {
+                    window.parent.postMessage({ type: 'OS_NOTIFY', title: document.title, message: `Saved to VFS: ${path}` }, '*');
+                }
+            } catch(e) {}
+            return payload.length;
+        },
+        writeSync(path, data) {
+            return this.write(path, data, false);
+        },
+        appendSync(path, data) {
+            const existing = this.readSync(path);
+            const payload = (existing ? existing : "") + (typeof data === 'string' ? data : String(data));
+            return this.write(path, payload, false);
+        },
+        read(path, cb) {
+            const reqId = 'r_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+            let done = false;
+            const handler = (e) => {
+                if (e.data && e.data.type === 'VFS_READ_DONE' && e.data.requestId === reqId) {
+                    done = true;
+                    window.removeEventListener('message', handler);
+                    if (e.data.data !== undefined) this.cache[path] = e.data.data;
+                    cb(e.data.data ?? this.cache[path] ?? "", e.data.path);
+                }
+            };
+            window.addEventListener('message', handler);
+            try {
+                window.parent.postMessage({ type: 'VFS_READ', path, requestId: reqId }, '*');
+            } catch(e) {}
+            setTimeout(() => {
+                if (!done) {
+                    window.removeEventListener('message', handler);
+                    cb(this.cache[path] ?? "", path);
+                }
+            }, 150);
+        },
+        readSync(path) {
+            if (this.cache.hasOwnProperty(path)) return this.cache[path];
+            try {
+                const raw = localStorage.getItem('kiloos_vfs_state_v2');
+                if (raw) {
+                    const parsed = JSON.parse(raw);
+                    if (parsed && parsed[path] !== undefined) {
+                        this.cache[path] = parsed[path];
+                        return parsed[path];
+                    }
+                }
+            } catch(e) {}
+            return "";
+        },
+        existsSync(path) {
+            return this.cache.hasOwnProperty(path) || (this.readSync(path) !== "");
+        },
+        sizeSync(path) {
+            const content = this.readSync(path);
+            return typeof content === 'string' ? content.length : 0;
+        },
+        listSync(prefix = '') {
+            const keys = Object.keys(this.cache);
+            if (!prefix) return keys;
+            return keys.filter(k => k.startsWith(prefix));
+        },
+        deleteSync(path) {
+            delete this.cache[path];
+            this.saveToStorage();
+            try {
+                window.parent.postMessage({ type: 'VFS_DELETE', path, requestId: 'del_' + Date.now() }, '*');
+            } catch(e) {}
+            return true;
+        },
+        openPicker(cb) {
+            const reqId = 'open_' + Date.now();
+            const handler = (e) => {
+                if (e.data && e.data.type === 'VFS_SHOW_OPEN_DONE' && e.data.requestId === reqId) {
+                    window.removeEventListener('message', handler);
+                    if (e.data.path) KiloVFS.read(e.data.path, cb);
+                }
+            };
+            window.addEventListener('message', handler);
+            try {
+                window.parent.postMessage({ type: 'VFS_SHOW_OPEN', requestId: reqId }, '*');
+            } catch(e) {}
+        },
+        launchApp(targetApp, path = '') {
+            try {
+                window.parent.postMessage({ type: 'OS_LAUNCH_APP', targetApp, path }, '*');
+            } catch(e) {}
+        }
+    };
 
     // Quicksave (F5) & Quickload (F9) State Persistence
     function quicksaveState() {
@@ -1390,6 +1616,131 @@ while counter < 5
 endwhile
 print "Final total:", total`;
 
+
+    // ==========================================
+    // KiloOS VFS UI & Event Bindings
+    // ==========================================
+    const vfsModal = document.getElementById('vfsModal');
+    const vfsModalClose = document.getElementById('vfsModalClose');
+    const btnVfsModalCloseBottom = document.getElementById('btnVfsModalCloseBottom');
+    const btnVfsManager = document.getElementById('btnVfsManager');
+    const btnVfsSaveQuick = document.getElementById('btnVfsSaveQuick');
+    const btnLaunchKHex = document.getElementById('btnLaunchKHex');
+    const btnVfsSaveCommit = document.getElementById('btnVfsSaveCommit');
+    const btnVfsHexLaunch = document.getElementById('btnVfsHexLaunch');
+    const vfsSaveFilename = document.getElementById('vfsSaveFilename');
+    const vfsFileList = document.getElementById('vfsFileList');
+    const vfsFileCount = document.getElementById('vfsFileCount');
+
+    function renderVfsFileList() {
+        if (!vfsFileList) return;
+        vfsFileList.innerHTML = '';
+        const files = KiloVFS.listSync();
+        if (vfsFileCount) vfsFileCount.textContent = `${files.length} file${files.length === 1 ? '' : 's'}`;
+
+        if (files.length === 0) {
+            vfsFileList.innerHTML = '<div style="color:#64748b; font-size:11.5px; padding:8px 0; text-align:center;">No virtual files found. Save your first script above.</div>';
+            return;
+        }
+
+        files.sort().forEach(filePath => {
+            const size = KiloVFS.sizeSync(filePath);
+            const row = document.createElement('div');
+            row.className = 'vfs-file-row';
+            
+            const isScript = filePath.endsWith('.ks') || filePath.endsWith('.ksc');
+            const icon = isScript ? '📜' : (filePath.endsWith('.log') ? '📝' : '📦');
+
+            row.innerHTML = `
+                <div class="vfs-file-path" title="${filePath}">
+                    <span>${icon}</span>
+                    <span>${filePath}</span>
+                    <span class="vfs-file-meta">(${size} B)</span>
+                </div>
+                <div class="vfs-file-actions">
+                    <button type="button" class="vfs-btn-sm" style="background:#0284c7;" data-action="load" data-path="${filePath}">Load</button>
+                    <button type="button" class="vfs-btn-sm" style="background:#7c3aed;" data-action="khex" data-path="${filePath}">Hex</button>
+                    <button type="button" class="vfs-btn-sm" style="background:#ef4444;" data-action="del" data-path="${filePath}">Del</button>
+                </div>
+            `;
+
+            row.querySelector('[data-action="load"]').onclick = () => {
+                KiloVFS.read(filePath, (data) => {
+                    exprInput.value = data;
+                    renderGutter();
+                    showToast(`Loaded "${filePath}" from VFS`, "success");
+                    closeModal(vfsModal);
+                    btnRun.click();
+                });
+            };
+
+            row.querySelector('[data-action="khex"]').onclick = () => {
+                KiloVFS.launchApp('khex', filePath);
+                showToast(`Opening "${filePath}" in KHex...`, "info");
+            };
+
+            row.querySelector('[data-action="del"]').onclick = () => {
+                KiloVFS.deleteSync(filePath);
+                renderVfsFileList();
+                showToast(`Deleted "${filePath}"`, "info");
+            };
+
+            vfsFileList.appendChild(row);
+        });
+    }
+
+    if (btnVfsManager) {
+        btnVfsManager.onclick = () => {
+            toastContainer.innerHTML = '';
+            renderVfsFileList();
+            openModal(vfsModal);
+        };
+    }
+    if (vfsModalClose) vfsModalClose.onclick = () => closeModal(vfsModal);
+    if (btnVfsModalCloseBottom) btnVfsModalCloseBottom.onclick = () => closeModal(vfsModal);
+
+    if (btnVfsSaveCommit) {
+        btnVfsSaveCommit.onclick = () => {
+            let path = (vfsSaveFilename.value || '').trim();
+            if (!path) path = '/home/scripts/script_' + Date.now() + '.ks';
+            if (!path.startsWith('/')) path = '/home/scripts/' + path;
+            KiloVFS.write(path, exprInput.value, true);
+            showToast(`Saved to VFS: ${path}`, "success");
+            renderVfsFileList();
+        };
+    }
+
+    if (btnVfsHexLaunch) {
+        btnVfsHexLaunch.onclick = () => {
+            let path = (vfsSaveFilename.value || '').trim();
+            if (!path) path = '/home/scripts/active_script.ks';
+            if (!path.startsWith('/')) path = '/home/scripts/' + path;
+            KiloVFS.write(path, exprInput.value, false);
+            KiloVFS.launchApp('khex', path);
+            showToast(`Saved and launched in KHex: ${path}`, "info");
+        };
+    }
+
+    if (btnVfsSaveQuick) {
+        btnVfsSaveQuick.onclick = () => {
+            const path = '/home/scripts/active_script.ks';
+            KiloVFS.write(path, exprInput.value, true);
+            showToast(`Saved active script to VFS: ${path}`, "success");
+        };
+    }
+
+    if (btnLaunchKHex) {
+        btnLaunchKHex.onclick = () => {
+            const path = '/home/scripts/active_script.ks';
+            KiloVFS.write(path, exprInput.value, false);
+            KiloVFS.launchApp('khex', path);
+            showToast("Saved & opened in KHex", "info");
+        };
+    }
+
+    // Initialize KiloVFS on boot
+    KiloVFS.init();
+
     // Initialize code from localStorage
     try {
         const savedCode = localStorage.getItem('kscript_code_v2') || localStorage.getItem('kscript_code');
@@ -1400,6 +1751,40 @@ print "Final total:", total`;
 
     // Presets Library
     const PRESETS = {
+        vfs_demo: `// KiloOS VFS Scripting Pipeline Demo
+// Demonstrates vfs_write, vfs_append, vfs_read, vfs_exists, vfs_size, vfs_list
+
+log_path = "/home/scripts/automation_report.log"
+print "Target Virtual File:", log_path
+
+// Check if file already exists in VFS
+exists_before = vfs_exists(log_path)
+print "Exists before write:", exists_before
+
+// Write session header to KiloOS VFS
+header = "=== KScript VFS Telemetry Session ===\nTimestamp: " + hex(0x20261023) + "\n"
+vfs_write(log_path, header)
+
+// Compute algorithmic workload
+sum_squares = 0
+iter = 1
+while iter <= 8
+  sum_squares = sum_squares + (iter * iter)
+  line = "Iteration " + iter + " -> cumulative sum: " + sum_squares + "\n"
+  vfs_append(log_path, line)
+  iter = iter + 1
+endwhile
+
+// Read back written file from VFS
+file_size = vfs_size(log_path)
+content = vfs_read(log_path)
+
+print "--- File Content Verification (" + file_size + " bytes) ---"
+print content
+
+file_list = vfs_list("/home/scripts/")
+print "Total scripts in /home/scripts/:", len(file_list)`,
+
         basic: `// Basic Arithmetic & Precedence
 a = 15
 b = 4
@@ -1771,6 +2156,11 @@ endif
             openAstModal();
             return;
         }
+        if (e.altKey && !e.ctrlKey && (e.key === 'v' || e.key === 'V')) {
+            e.preventDefault();
+            if (btnVfsManager) btnVfsManager.click();
+            return;
+        }
     });
 
     // ==========================================
@@ -1805,7 +2195,25 @@ endif
         pop: (arr) => Array.isArray(arr) ? (arr.pop() ?? 0) : 0,
         at: (arr, idx) => Array.isArray(arr) ? (arr[idx >= 0 ? idx : arr.length + idx] ?? 0) : 0,
         sum: (arr) => Array.isArray(arr) ? arr.reduce((acc, x) => acc + (Number(x) || 0), 0) : 0,
-        avg: (arr) => Array.isArray(arr) && arr.length > 0 ? Math.round(arr.reduce((acc, x) => acc + (Number(x) || 0), 0) / arr.length) : 0
+        avg: (arr) => Array.isArray(arr) && arr.length > 0 ? Math.round(arr.reduce((acc, x) => acc + (Number(x) || 0), 0) / arr.length) : 0,
+        // KiloOS VFS Built-in APIs
+        vfs_read: (path) => KiloVFS.readSync(String(path)),
+        'vfs.read': (path) => KiloVFS.readSync(String(path)),
+        vfs_write: (path, data) => KiloVFS.writeSync(String(path), data),
+        'vfs.write': (path, data) => KiloVFS.writeSync(String(path), data),
+        vfs_append: (path, data) => KiloVFS.appendSync(String(path), data),
+        'vfs.append': (path, data) => KiloVFS.appendSync(String(path), data),
+        vfs_exists: (path) => KiloVFS.existsSync(String(path)) ? 1 : 0,
+        'vfs.exists': (path) => KiloVFS.existsSync(String(path)) ? 1 : 0,
+        vfs_size: (path) => KiloVFS.sizeSync(String(path)),
+        'vfs.size': (path) => KiloVFS.sizeSync(String(path)),
+        vfs_list: (prefix = '') => KiloVFS.listSync(String(prefix)),
+        'vfs.list': (prefix = '') => KiloVFS.listSync(String(prefix)),
+        vfs_delete: (path) => KiloVFS.deleteSync(String(path)) ? 1 : 0,
+        'vfs.delete': (path) => KiloVFS.deleteSync(String(path)) ? 1 : 0,
+        str: (x) => String(x),
+        int: (x) => parseInt(x, 10) || 0,
+        time: () => Date.now()
     };
 
     function parseExpression(str, vars, nodeCounter) {
@@ -1901,7 +2309,7 @@ endif
             // Identifiers / Function Calls
             if (/[a-zA-Z_]/.test(peek())) {
                 const start = idx;
-                while (/[a-zA-Z0-9_]/.test(peek())) advance();
+                while (/[a-zA-Z0-9_]/.test(peek()) || (peek() === '.' && /[a-zA-Z_]/.test(str[idx+1] || ''))) advance();
                 const ident = str.substring(start, idx);
                 skipWhitespace();
 
@@ -3374,7 +3782,7 @@ endif
 
             // Variable references check
             const words = line.match(/\b[a-zA-Z_]\w*\b/g) || [];
-            const keywords = new Set(['if', 'elif', 'else', 'endif', 'while', 'endwhile', 'print', 'true', 'false', 'abs', 'min', 'max', 'clamp', 'sqrt', 'pow', 'sign', 'rand', 'gcd', 'fact', 'hex', 'bin', 'len', 'push', 'pop', 'at', 'sum', 'avg']);
+            const keywords = new Set(['if', 'elif', 'else', 'endif', 'while', 'endwhile', 'print', 'true', 'false', 'abs', 'min', 'max', 'clamp', 'sqrt', 'pow', 'sign', 'rand', 'gcd', 'fact', 'hex', 'bin', 'len', 'push', 'pop', 'at', 'sum', 'avg', 'vfs_read', 'vfs_write', 'vfs_append', 'vfs_exists', 'vfs_size', 'vfs_list', 'vfs_delete', 'vfs', 'read', 'write', 'append', 'exists', 'size', 'list', 'delete', 'str', 'int', 'time']);
             words.forEach(w => {
                 const lw = w.toLowerCase();
                 if (!keywords.has(lw)) {

@@ -110,6 +110,74 @@ int MathPow(int base, int exp) {
     }
     return res;
 }
+// ==========================================
+// Virtual Filesystem (VFS) Emulation
+// ==========================================
+#define MAX_VFS_FILES 16
+#define MAX_VFS_PATH 64
+#define MAX_VFS_DATA 2048
+
+typedef struct {
+    char path[MAX_VFS_PATH];
+    char data[MAX_VFS_DATA];
+    int size;
+} VfsFile;
+
+VfsFile g_vfsFiles[MAX_VFS_FILES];
+int g_vfsCount = 0;
+
+int VfsFind(const char* path) {
+    for (int i = 0; i < g_vfsCount; i++) {
+        if (StrEqualCase(g_vfsFiles[i].path, path)) return i;
+    }
+    return -1;
+}
+
+int VfsWrite(const char* path, const char* data) {
+    int idx = VfsFind(path);
+    if (idx == -1) {
+        if (g_vfsCount >= MAX_VFS_FILES) return 0;
+        idx = g_vfsCount++;
+        int pLen = 0;
+        while (path[pLen] && pLen < MAX_VFS_PATH - 1) {
+            g_vfsFiles[idx].path[pLen] = path[pLen];
+            pLen++;
+        }
+        g_vfsFiles[idx].path[pLen] = '\0';
+    }
+    int dLen = 0;
+    while (data[dLen] && dLen < MAX_VFS_DATA - 1) {
+        g_vfsFiles[idx].data[dLen] = data[dLen];
+        dLen++;
+    }
+    g_vfsFiles[idx].data[dLen] = '\0';
+    g_vfsFiles[idx].size = dLen;
+    return dLen;
+}
+
+const char* VfsRead(const char* path) {
+    int idx = VfsFind(path);
+    if (idx != -1) return g_vfsFiles[idx].data;
+    return "";
+}
+
+int VfsExists(const char* path) {
+    return VfsFind(path) != -1 ? 1 : 0;
+}
+
+int VfsSize(const char* path) {
+    int idx = VfsFind(path);
+    if (idx != -1) return g_vfsFiles[idx].size;
+    return 0;
+}
+
+void VfsInitDefaults(void) {
+    if (g_vfsCount == 0) {
+        VfsWrite("/home/scripts/welcome.ks", "// KScript Virtual Filesystem\r\nval = 42\r\nprint \"VFS active:\", val\r\n");
+        VfsWrite("/home/scripts/calc_log.txt", "KScript Execution Session Initialized\r\n");
+    }
+}
+
 
 // Variable Table
 int FindVariable(const char* name) {
@@ -259,6 +327,9 @@ int ParsePrimary(const char** p) {
             if (StrEqualCase(ident, "sign")) return MathSign(arg1);
             if (StrEqualCase(ident, "rand")) return MathRand(arg1, arg2);
             if (StrEqualCase(ident, "pow")) return MathPow(arg1, arg2);
+            if (StrEqualCase(ident, "vfs_exists") || StrEqualCase(ident, "vfs.exists")) return (arg1 >= 0 && arg1 < g_vfsCount) ? 1 : 0;
+            if (StrEqualCase(ident, "vfs_size") || StrEqualCase(ident, "vfs.size")) return (arg1 >= 0 && arg1 < g_vfsCount) ? g_vfsFiles[arg1].size : 0;
+            if (StrEqualCase(ident, "vfs_count") || StrEqualCase(ident, "vfs.count")) return g_vfsCount;
             return arg1;
         }
 
@@ -988,6 +1059,10 @@ LRESULT CALLBACK InputEditProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
             SendMessage(GetParent(hwnd), WM_COMMAND, 5, 0);
             return 0;
         }
+        if (GetKeyState(VK_MENU) < 0 && (wp == 'V' || wp == 'v')) {
+            SendMessage(GetParent(hwnd), WM_COMMAND, 13, 0);
+            return 0;
+        }
         if (wp == VK_F1) {
             SendMessage(GetParent(hwnd), WM_COMMAND, 8, 0);
             return 0;
@@ -1095,6 +1170,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 S(624), S(42), S(340), S(H) - S(90), hwnd, NULL, NULL, NULL);
             SendMessage(hMemory, WM_SETFONT, (WPARAM)hFont, TRUE);
 
+            VfsInitDefaults();
             RunScript();
 
             if (!HasSeenTutorial() && !HasQuicksave()) {
@@ -1253,6 +1329,17 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     MessageBoxA(hwnd, "No quicksave snapshot found (kscript_quicksave.dat).\nPress F5 to save snapshot.", "KScript", MB_OK | MB_ICONWARNING);
                 }
             }
+            else if (wmId == 13) {
+                char vfsInfo[1024];
+                wsprintfA(vfsInfo, "KScript Virtual Filesystem (VFS)\r\nTotal Virtual Files: %d\r\n\r\n", g_vfsCount);
+                for (int i = 0; i < g_vfsCount; i++) {
+                    char entry[128];
+                    wsprintfA(entry, "%d) %s (%d B)\r\n", i + 1, g_vfsFiles[i].path, g_vfsFiles[i].size);
+                    lstrcatA(vfsInfo, entry);
+                }
+                lstrcatA(vfsInfo, "\r\nUse vfs_count(), vfs_size(i), or vfs_exists(i) in scripts.");
+                MessageBoxA(hwnd, vfsInfo, "KScript VFS Explorer [Alt+V]", MB_OK | MB_ICONINFORMATION);
+            }
             break;
         }
         case WM_SYSKEYDOWN: {
@@ -1270,6 +1357,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             }
             if (wParam == 'S' || wParam == 's') {
                 SendMessage(hwnd, WM_COMMAND, 6, 0);
+                return 0;
+            }
+            if (wParam == 'V' || wParam == 'v') {
+                SendMessage(hwnd, WM_COMMAND, 13, 0);
                 return 0;
             }
             return DefWindowProc(hwnd, msg, wParam, lParam);
