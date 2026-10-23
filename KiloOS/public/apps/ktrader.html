@@ -1466,6 +1466,34 @@
       document.hidden ? stopLoop() : startLoop();
     });
 
+    // --- KTrader Production Sprite Assets (Imagen 3 Pipeline) ---
+    const KTRADER_BG = { img: null, loaded: false };
+    const KTRADER_SPRITES = {};
+
+    function initKTraderAssets() {
+      const bgImg = new Image();
+      bgImg.src = '../assets/backgrounds/kspace/kspace_bg_nebula.png';
+      bgImg.onload = () => { KTRADER_BG.img = bgImg; KTRADER_BG.loaded = true; };
+      bgImg.onerror = () => {
+        const fb = new Image();
+        fb.src = 'assets/backgrounds/kspace/kspace_bg_nebula.png';
+        fb.onload = () => { KTRADER_BG.img = fb; KTRADER_BG.loaded = true; };
+      };
+
+      const spriteKeys = ['ship_alpha', 'ship_crimson', 'boss_flagship', 'planet_red', 'planet_ringed'];
+      spriteKeys.forEach(key => {
+        const img = new Image();
+        img.src = `../assets/sprites/kspace/kspace_${key}.png`;
+        img.onload = () => { KTRADER_SPRITES[key] = { img: img, loaded: true }; };
+        img.onerror = () => {
+          const fb = new Image();
+          fb.src = `assets/sprites/kspace/kspace_${key}.png`;
+          fb.onload = () => { KTRADER_SPRITES[key] = { img: fb, loaded: true }; };
+        };
+      });
+    }
+    initKTraderAssets();
+
     function setupHiDPICanvas() {
       const canvas = document.getElementById('gfx-canvas');
       if (!canvas) return;
@@ -1514,6 +1542,14 @@
       bgGrad.addColorStop(1, '#020712');
       ctx.fillStyle = bgGrad;
       ctx.fillRect(0, 0, W, H);
+
+      // Render Imagen 3 celestial nebula backdrop when loaded
+      if (KTRADER_BG.loaded && KTRADER_BG.img) {
+        ctx.save();
+        ctx.globalAlpha = 0.35;
+        ctx.drawImage(KTRADER_BG.img, 0, 0, W, H);
+        ctx.restore();
+      }
 
       // Hyperspace warp / jump transition animation
       if (jumpActive) {
@@ -1611,7 +1647,18 @@
       ctx.rotate(pTilt);
 
       if (state.hasDreadnought) {
-        // --- DREADNOUGHT FLAGSHIP TITAN SPRITE ---
+        if (KTRADER_SPRITES.boss_flagship && KTRADER_SPRITES.boss_flagship.loaded) {
+          const dFlameLen = 22 + Math.sin(animTime * 0.03) * 6;
+          const thGrad = ctx.createLinearGradient(-35, 0, -35 - dFlameLen, 0);
+          thGrad.addColorStop(0, '#ffffff');
+          thGrad.addColorStop(0.3, '#d000ff');
+          thGrad.addColorStop(1, 'transparent');
+          ctx.fillStyle = thGrad;
+          ctx.beginPath(); ctx.moveTo(-30, -12); ctx.lineTo(-35 - dFlameLen, -12); ctx.lineTo(-30, -6); ctx.fill();
+          ctx.beginPath(); ctx.moveTo(-30, 6); ctx.lineTo(-35 - dFlameLen, 6); ctx.lineTo(-30, 12); ctx.fill();
+          ctx.save(); ctx.rotate(Math.PI / 2); ctx.drawImage(KTRADER_SPRITES.boss_flagship.img, -40, -45, 80, 90); ctx.restore();
+        } else {
+        // --- DREADNOUGHT FLAGSHIP TITAN PROCEDURAL FALLBACK ---
         // Rear Thrusters (Dual heavy violet flames)
         const dFlameLen = 25 + Math.sin(animTime * 0.03) * 6;
         const thGrad = ctx.createLinearGradient(-35, 0, -35 - dFlameLen, 0);
@@ -1694,8 +1741,19 @@
         ctx.moveTo(-15, 12);
         ctx.lineTo(15, 12);
         ctx.stroke();
+        }
       } else {
-        // --- STANDARD PLAYER SCOUT / CRUISER SPRITE ---
+        if (KTRADER_SPRITES.ship_alpha && KTRADER_SPRITES.ship_alpha.loaded) {
+          const flameLen = 16 + Math.sin(animTime * 0.025) * 5;
+          const flameGrad = ctx.createLinearGradient(-15, 0, -15 - flameLen, 0);
+          flameGrad.addColorStop(0, '#ffffff');
+          flameGrad.addColorStop(0.3, '#00ffff');
+          flameGrad.addColorStop(1, 'transparent');
+          ctx.fillStyle = flameGrad;
+          ctx.beginPath(); ctx.moveTo(-15, -6); ctx.lineTo(-15 - flameLen, 0); ctx.lineTo(-15, 6); ctx.fill();
+          ctx.save(); ctx.rotate(Math.PI / 2); ctx.drawImage(KTRADER_SPRITES.ship_alpha.img, -30, -30, 60, 60); ctx.restore();
+        } else {
+        // --- STANDARD PLAYER SCOUT / CRUISER PROCEDURAL FALLBACK ---
         // Animated Engine Thrust Flame
         const flameLen = 18 + Math.sin(animTime * 0.025) * 5;
         const flameGrad = ctx.createLinearGradient(-12, 0, -12 - flameLen, 0);
@@ -1768,6 +1826,7 @@
         ctx.lineTo(12, 0);
         ctx.lineTo(-5, 8);
         ctx.stroke();
+        }
       }
 
       // Player Shield Bubble (during combat or hit)
@@ -1800,6 +1859,17 @@
         ctx.save();
         ctx.translate(500, 75 + eBobY);
         ctx.rotate(eTilt);
+
+        if (KTRADER_SPRITES.ship_crimson && KTRADER_SPRITES.ship_crimson.loaded) {
+          const pFlameLen = 15 + Math.sin(animTime * 0.03) * 5;
+          const pFlameGrad = ctx.createLinearGradient(15, 0, 15 + pFlameLen, 0);
+          pFlameGrad.addColorStop(0, '#ffffff');
+          pFlameGrad.addColorStop(0.3, '#ff2200');
+          pFlameGrad.addColorStop(1, 'transparent');
+          ctx.fillStyle = pFlameGrad;
+          ctx.beginPath(); ctx.moveTo(15, -6); ctx.lineTo(15 + pFlameLen, 0); ctx.lineTo(15, 6); ctx.fill();
+          ctx.save(); ctx.rotate(-Math.PI / 2); ctx.drawImage(KTRADER_SPRITES.ship_crimson.img, -30, -30, 60, 60); ctx.restore();
+        } else {
 
         // Pirate Engine Flame (Rightward thrust)
         const pFlameLen = 16 + Math.sin(animTime * 0.03) * 5;
@@ -1846,6 +1916,7 @@
         ctx.fillStyle = '#220000';
         ctx.fillRect(-22, -16, 12, 3);
         ctx.fillRect(-22, 13, 12, 3);
+        }
 
         // Pirate Shield Bubble
         if (state.enemyShields > 0) {
@@ -1868,10 +1939,23 @@
         }
         ctx.restore();
       } else {
-        // --- RICH DETAILED CELESTIAL PLANET ---
+        // --- RICH DETAILED CELESTIAL PLANET & ORBITAL DOCKING SPACEPORT ---
         const p = planets[state.location] || { ecoType: 'Balanced', techLevel: 3 };
         ctx.save();
         ctx.translate(500, 75);
+
+        const isRinged = (p.ecoType === 'Mining' || p.ecoType === 'Tech');
+        const planetSprite = isRinged ? KTRADER_SPRITES.planet_ringed : KTRADER_SPRITES.planet_red;
+        if (planetSprite && planetSprite.loaded) {
+          const atmGrad = ctx.createRadialGradient(0, 0, 36, 0, 0, 52);
+          atmGrad.addColorStop(0, isRinged ? '#00e5ff' : '#ff7043');
+          atmGrad.addColorStop(0.6, 'rgba(0, 180, 255, 0.2)');
+          atmGrad.addColorStop(1, 'transparent');
+          ctx.fillStyle = atmGrad;
+          ctx.beginPath(); ctx.arc(0, 0, 52, 0, Math.PI * 2); ctx.fill();
+          const pSize = isRinged ? 110 : 88;
+          ctx.drawImage(planetSprite.img, -pSize / 2, -pSize / 2, pSize, pSize);
+        } else {
 
         let cCore = '#2266aa', cAtm = '#00aaff', cDetail = '#338844';
         if (p.ecoType === "Agri") {
@@ -1942,14 +2026,30 @@
           ctx.restore();
         }
 
-        // Fixed Orbital Dock Station (Tech level indicator, static mooring - zero orbital glints)
-        const satX = 50;
-        const satY = -14;
+        }
+
+        // Upgraded Multi-Segment Orbital Spaceport Docking Hub (zero rotating specular glints)
+        const satX = 54;
+        const satY = -22;
+        ctx.save();
+        ctx.translate(satX, satY);
+        // Solar photovoltaic array wings
+        ctx.fillStyle = '#0a3d62';
+        ctx.strokeStyle = '#00ffff';
+        ctx.lineWidth = 1;
+        ctx.fillRect(-14, -4, 8, 8); ctx.strokeRect(-14, -4, 8, 8);
+        ctx.fillRect(6, -4, 8, 8); ctx.strokeRect(6, -4, 8, 8);
+        // Central pressurized docking module & mooring collar
+        ctx.fillStyle = '#1e272e';
+        ctx.strokeStyle = '#d2dae2';
+        ctx.fillRect(-6, -6, 12, 12); ctx.strokeRect(-6, -6, 12, 12);
+        // Navigational static mooring light (zero rotating glints)
         ctx.fillStyle = '#00ffff';
-        ctx.fillRect(satX - 2, satY - 2, 4, 4);
-        ctx.strokeStyle = '#ffffff';
-        ctx.lineWidth = 0.8;
-        ctx.strokeRect(satX - 2, satY - 2, 4, 4);
+        ctx.beginPath(); ctx.arc(0, 0, 2.5, 0, Math.PI * 2); ctx.fill();
+        // Communications spire
+        ctx.strokeStyle = '#00ffff';
+        ctx.beginPath(); ctx.moveTo(0, -6); ctx.lineTo(0, -10); ctx.stroke();
+        ctx.restore();
 
         ctx.restore();
       }

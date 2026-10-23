@@ -1475,17 +1475,27 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     DeleteObject(hRingPen);
                 }
 
-                // Fixed Orbital Dock Station (Tech level indicator, static mooring - zero orbital glints)
-                int satX = 550;
-                int satY = 61;
-                HBRUSH hSatBrush = CreateSolidBrush(RGB(0, 255, 255));
-                HPEN hSatPen = CreatePen(PS_SOLID, 1, RGB(255, 255, 255));
-                SelectObject(memDC, hSatBrush);
-                SelectObject(memDC, hSatPen);
-                Rectangle(memDC, satX - 2, satY - 2, satX + 3, satY + 3);
+                // Upgraded Multi-Segment Orbital Spaceport Docking Hub (zero orbital glints)
+                int satX = 554;
+                int satY = 53;
+                HBRUSH hSolar = CreateSolidBrush(RGB(10, 60, 100));
+                HPEN hCyanPen = CreatePen(PS_SOLID, 1, RGB(0, 255, 255));
+                SelectObject(memDC, hSolar);
+                SelectObject(memDC, hCyanPen);
+                Rectangle(memDC, satX - 12, satY - 4, satX - 4, satY + 4);
+                Rectangle(memDC, satX + 4, satY - 4, satX + 12, satY + 4);
+                HBRUSH hMod = CreateSolidBrush(RGB(30, 40, 50));
+                HPEN hWhitePen = CreatePen(PS_SOLID, 1, RGB(220, 220, 220));
+                SelectObject(memDC, hMod);
+                SelectObject(memDC, hWhitePen);
+                Rectangle(memDC, satX - 5, satY - 5, satX + 6, satY + 6);
+                SelectObject(memDC, hCyanPen);
+                MoveToEx(memDC, satX, satY - 5, NULL);
+                LineTo(memDC, satX, satY - 9);
                 SelectObject(memDC, origBrush);
                 SelectObject(memDC, origPen);
-                DeleteObject(hSatBrush); DeleteObject(hSatPen);
+                DeleteObject(hSolar); DeleteObject(hCyanPen);
+                DeleteObject(hMod); DeleteObject(hWhitePen);
             }
 
             // Laser Projectiles
