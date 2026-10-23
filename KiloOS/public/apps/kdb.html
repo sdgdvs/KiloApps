@@ -1205,6 +1205,9 @@
           <button class="dropdown-item" onclick="exportXML()" title="Export active table as XML document"><span>XML</span></button>
           <button class="dropdown-item" onclick="exportSQLDump()" title="Export ANSI SQL DDL + INSERT statements (.sql)"><span>SQL Dump</span></button>
           <button class="dropdown-item" onclick="exportMarkdown()" title="Export Markdown Directory Report (M)"><span>Markdown</span> <span class="kbd-badge">M</span></button>
+          <button class="dropdown-item" onclick="exportToVfs()" title="Mount and save database snapshot to KiloOS VFS (/home/data/)"><span>Save to VFS (.json)</span></button>
+          <button class="dropdown-item" onclick="exportCsvToVfs()" title="Save active table CSV to KiloOS VFS (/home/data/)"><span>Save Table to VFS (.csv)</span></button>
+          <button class="dropdown-item" onclick="plotInKGraph()" title="Plot active table data in KGraph (OS_LAUNCH_APP)"><span>Plot in KGraph 📈</span></button>
           <button class="dropdown-item" onclick="printReport()" title="Generate printable HTML report"><span>Print View</span></button>
         </div>
       </div>
@@ -1215,6 +1218,7 @@
         <div class="dropdown-content">
           <button class="dropdown-item" onclick="triggerImportCSV()" title="Import CSV file (I)"><span>Import CSV</span> <span class="kbd-badge">I</span></button>
           <button class="dropdown-item" onclick="triggerImportJSON()" title="Import JSON file (O)"><span>Import JSON</span> <span class="kbd-badge">O</span></button>
+          <button class="dropdown-item" onclick="importFromVfs()" title="Open and mount database or CSV from KiloOS VFS (/home/data/)"><span>Open from VFS</span></button>
         </div>
       </div>
       <input type="file" id="csvFileInput" accept=".csv" style="display:none;" onchange="importCSV(event)">
@@ -2234,6 +2238,13 @@ function renderAll() {
   filterTable();
   renderAddBar();
   updateQuotaText();
+  if (currentView === 'dash') {
+    renderDashboard();
+  } else if (currentView === 'schema') {
+    renderSchemaView();
+  } else if (currentView === 'sql') {
+    updateSqlEditorPlaceholders();
+  }
 }
 
 function updateQuotaText() {
@@ -4553,9 +4564,16 @@ function handleSearchKey(e) {
 
 function quicksaveDatabase() {
   try {
-    localStorage.setItem('kdb_quicksave', JSON.stringify(dbState));
-    localStorage.setItem('kdb_tutorialSeen', 'true');
-    localStorage.setItem('kdb_has_seen_tutorial', 'true');
+    const payload = {
+      dbState: dbState,
+      currentView: currentView,
+      timestamp: Date.now()
+    };
+    localStorage.setItem('kdb_quicksave', JSON.stringify(payload));
+    try {
+      localStorage.setItem('kdb_tutorialSeen', 'true');
+      localStorage.setItem('kdb_has_seen_tutorial', 'true');
+    } catch(e) {}
     showToast('💾 Quicksave recorded (F5)', 'success');
     updateStatus('Database snapshot quicksaved (F5)');
   } catch(err) {
@@ -4571,13 +4589,20 @@ function quickloadDatabase() {
       return;
     }
     const parsed = JSON.parse(saved);
-    if (parsed && parsed.tables) {
-      dbState = parsed;
+    let targetState = parsed;
+    if (parsed && parsed.dbState && parsed.dbState.tables) {
+      targetState = parsed.dbState;
+      if (parsed.currentView) switchView(parsed.currentView);
+    }
+    if (targetState && targetState.tables) {
+      dbState = targetState;
       sortCol = null;
       sortAsc = true;
       selectedRecordIds.clear();
-      localStorage.setItem('kdb_tutorialSeen', 'true');
-      localStorage.setItem('kdb_has_seen_tutorial', 'true');
+      try {
+        localStorage.setItem('kdb_tutorialSeen', 'true');
+        localStorage.setItem('kdb_has_seen_tutorial', 'true');
+      } catch(e) {}
       saveDatabase();
       renderAll();
       showToast('📂 Quicksave restored (F9)', 'success');
@@ -5690,19 +5715,165 @@ document.addEventListener('visibilitychange', () => {
   }
 });
 
+// --- KiloOS VFS & Cross-App IPC Client ---
+let currentReqId = 0;
+const vfsCallbacks = {};
+
+window.addEventListener('message', (e) => {
+  const msg = e.data;
+  if (!msg) return;
+  if (msg.requestId && vfsCallbacks[msg.requestId]) {
+    vfsCallbacks[msg.requestId](msg);
+    delete vfsCallbacks[msg.requestId];
+  }
+  if (msg.type === 'OPEN_FILE' && msg.data) {
+    handleVfsIncomingFile(msg.data, msg.path || 'file');
+  }
+});
+
+function sendToOS(msg) {
+  return new Promise((resolve) => {
+    if (window.parent === window) {
+      resolve(null);
+      return;
+    }
+    const id = ++currentReqId;
+    vfsCallbacks[id] = resolve;
+    window.parent.postMessage({ ...msg, requestId: id }, '*');
+    setTimeout(() => {
+      if (vfsCallbacks[id]) {
+        delete vfsCallbacks[id];
+        resolve(null);
+      }
+    }, 4000);
+  });
+}
+
+function handleVfsIncomingFile(content, path) {
+  try {
+    let data = content;
+    if (typeof data === 'string' && data.startsWith('ENC:')) {
+      const key = getPassword();
+      if (!key) {
+        showToast('Incoming file is encrypted. Please enter crypto key.', 'warning');
+        return;
+      }
+      data = decryptData(atob(data.substring(4)), key);
+    }
+    const parsed = typeof data === 'string' ? JSON.parse(data) : data;
+    if (parsed && parsed.tables) {
+      dbState = parsed;
+      sortCol = null;
+      sortAsc = true;
+      selectedRecordIds.clear();
+      saveDatabase();
+      renderAll();
+      showToast(`Database mounted from VFS: ${path}`, 'success');
+      return;
+    }
+  } catch(e) {}
+  if (typeof content === 'string') {
+    try {
+      parseAndInsertCsv(content, path);
+      return;
+    } catch(e2) {}
+  }
+  showToast('Unrecognized VFS file format', 'danger');
+}
+
+async function exportToVfs() {
+  const path = `/home/data/kdb_${dbState.activeTable}.json`;
+  await sendToOS({
+    type: 'VFS_WRITE',
+    path: path,
+    data: JSON.stringify(dbState, null, 2)
+  });
+  sendToOS({
+    type: 'OS_NOTIFY',
+    title: 'KDB Studio',
+    message: `Database mounted & saved to VFS (${path})`
+  });
+  showToast(`Saved database to VFS: ${path}`, 'success');
+  updateStatus(`Mounted to VFS: ${path}`);
+}
+
+async function exportCsvToVfs() {
+  const tbl = getActiveTable();
+  let csv = tbl.columns.map(c => `"${c.replace(/"/g, '""')}"`).join(',') + '\n';
+  tbl.records.forEach(r => {
+    csv += tbl.columns.map(c => `"${String(r[c] || '').replace(/"/g, '""').replace(/[\r\n]+/g, ' ')}"`).join(',') + '\n';
+  });
+  const path = `/home/data/${dbState.activeTable}.csv`;
+  await sendToOS({
+    type: 'VFS_WRITE',
+    path: path,
+    data: csv
+  });
+  sendToOS({
+    type: 'OS_NOTIFY',
+    title: 'KDB Studio',
+    message: `Table '${tbl.title}' exported to VFS: ${path}`
+  });
+  showToast(`Table exported to VFS: ${path}`, 'success');
+}
+
+async function importFromVfs() {
+  const res = await sendToOS({ type: 'VFS_SHOW_OPEN' });
+  if (res && res.path) {
+    const fileRes = await sendToOS({ type: 'VFS_READ', path: res.path });
+    if (fileRes && fileRes.data) {
+      handleVfsIncomingFile(fileRes.data, res.path);
+    }
+  } else if (!res && window.parent === window) {
+    showToast('VFS requires KiloOS shell. Using local file picker...', 'info');
+    triggerImportJSON();
+  }
+}
+
+async function plotInKGraph() {
+  const tbl = getActiveTable();
+  let csv = tbl.columns.join(',') + '\n';
+  tbl.records.forEach(r => {
+    csv += tbl.columns.map(c => `"${String(r[c] || '').replace(/"/g, '""').replace(/[\r\n]+/g, ' ')}"`).join(',') + '\n';
+  });
+  const path = `/home/data/${dbState.activeTable}.csv`;
+  await sendToOS({
+    type: 'VFS_WRITE',
+    path: path,
+    data: csv
+  });
+  sendToOS({
+    type: 'OS_LAUNCH_APP',
+    targetApp: 'kgraph',
+    path: path
+  });
+  showToast(`Exported ${tbl.title} & launching KGraph...`, 'info');
+  updateStatus(`Launched KGraph with ${path}`);
+}
+
 // Initial Boot
 loadDatabase();
-const hasSeenWelcome = localStorage.getItem('kdb_tutorialSeen') || localStorage.getItem('kdb_has_seen_tutorial');
-if (!hasSeenWelcome) {
-  setTimeout(() => {
-    if (!localStorage.getItem('kdb_tutorialSeen') && !localStorage.getItem('kdb_has_seen_tutorial')) {
-      showToast('👋 Welcome to KDB Studio! [1] Grid [2] Cards [3] SQL [4] Dash. [F1] Help | [F5] Quicksave.', 'info', 5000);
+try {
+  const hasSeenWelcome = localStorage.getItem('kdb_tutorialSeen') || localStorage.getItem('kdb_has_seen_tutorial');
+  if (!hasSeenWelcome) {
+    setTimeout(() => {
+      try {
+        if (!localStorage.getItem('kdb_tutorialSeen') && !localStorage.getItem('kdb_has_seen_tutorial')) {
+          showToast('👋 Welcome to KDB Studio! [1] Grid [2] Cards [3] SQL [4] Dash. [F1] Help | [F5] Quicksave.', 'info', 5000);
+          localStorage.setItem('kdb_tutorialSeen', 'true');
+          localStorage.setItem('kdb_has_seen_tutorial', 'true');
+        }
+      } catch(e) {}
+    }, 300);
+  } else {
+    try {
       localStorage.setItem('kdb_tutorialSeen', 'true');
-      localStorage.setItem('kdb_has_seen_tutorial', 'true');
-    }
-  }, 300);
-} else {
-  localStorage.setItem('kdb_tutorialSeen', 'true');
+    } catch(e) {}
+    setTimeout(() => {
+      updateStatus('Database ready. [F1] Help | [F5] Quicksave | [F9] Quickload');
+    }, 200);
+  }
+} catch(e) {
   setTimeout(() => {
     updateStatus('Database ready. [F1] Help | [F5] Quicksave | [F9] Quickload');
   }, 200);

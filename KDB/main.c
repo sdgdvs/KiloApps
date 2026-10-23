@@ -1211,6 +1211,12 @@ void MainEntry() {
                 SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(IDC_QUICKLOAD_BTN, BN_CLICKED), (LPARAM)hQuickLoad);
                 continue;
             }
+            if (msg.wParam == VK_ESCAPE) {
+                SetWindowTextA(hSearch, "");
+                PopulateListView("");
+                SetFocus(hListView);
+                continue;
+            }
             if (isCtrl && (msg.wParam == 'F' || msg.wParam == 'f')) {
                 SetFocus(hSearch);
                 SendMessage(hSearch, EM_SETSEL, 0, -1);
