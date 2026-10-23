@@ -378,6 +378,81 @@
 
         let playerDir = 0;
         let particles = [];
+        let hullDebris = [];
+        let isVoidTile = [];
+
+        // --- Production Visual Assets & Sprites ---
+        const KVOID_ASSETS = {
+            bgNebula: { img: null, loaded: false },
+            debrisAsteroid: { img: null, loaded: false },
+            phantomShip: { img: null, loaded: false },
+            spectre: { img: null, loaded: false },
+            voidArchon: { img: null, loaded: false }
+        };
+
+        function initKVoidAssets() {
+            function loadAsset(key, relPath, rootPath) {
+                const img = new Image();
+                img.src = relPath;
+                img.onload = () => { KVOID_ASSETS[key] = { img, loaded: true }; };
+                img.onerror = () => {
+                    const fb = new Image();
+                    fb.src = rootPath;
+                    fb.onload = () => { KVOID_ASSETS[key] = { img: fb, loaded: true }; };
+                };
+            }
+            loadAsset('bgNebula', '../assets/backgrounds/kspace/kspace_bg_nebula.png', 'assets/backgrounds/kspace/kspace_bg_nebula.png');
+            loadAsset('debrisAsteroid', '../assets/sprites/kspace/kspace_asteroid.png', 'assets/sprites/kspace/kspace_asteroid.png');
+            loadAsset('phantomShip', '../assets/sprites/kspace/kspace_ship_phantom.png', 'assets/sprites/kspace/kspace_ship_phantom.png');
+            loadAsset('spectre', '../assets/sprites/kquest/kquest_monster_spectre.png', 'assets/sprites/kquest/kquest_monster_spectre.png');
+            loadAsset('voidArchon', '../assets/sprites/kquest/kquest_monster_void_archon.png', 'assets/sprites/kquest/kquest_monster_void_archon.png');
+        }
+        initKVoidAssets();
+
+        function initHullDebris() {
+            hullDebris = [];
+            for (let i = 0; i < 18; i++) {
+                hullDebris.push({
+                    x: Math.random() * VIRTUAL_WIDTH,
+                    y: Math.random() * VIRTUAL_HEIGHT,
+                    vx: (Math.random() - 0.5) * 0.12,
+                    vy: (Math.random() - 0.5) * 0.12,
+                    rot: Math.random() * Math.PI * 2,
+                    vrot: (Math.random() - 0.5) * 0.015,
+                    size: 8 + Math.random() * 16,
+                    strobePhase: Math.random() * 10
+                });
+            }
+        }
+        initHullDebris();
+
+        function computeExteriorVoid() {
+            isVoidTile = [];
+            for (let y = 0; y < ROWS; y++) {
+                isVoidTile[y] = [];
+                for (let x = 0; x < COLS; x++) {
+                    if (!map[y] || map[y][x] !== 1) {
+                        isVoidTile[y][x] = false;
+                        continue;
+                    }
+                    let isVoid = true;
+                    for (let dy = -1; dy <= 1; dy++) {
+                        let ny = y + dy;
+                        if (ny < 0 || ny >= ROWS) continue;
+                        for (let dx = -1; dx <= 1; dx++) {
+                            let nx = x + dx;
+                            if (nx < 0 || nx >= COLS) continue;
+                            if (map[ny] && map[ny][nx] !== 1) {
+                                isVoid = false;
+                                break;
+                            }
+                        }
+                        if (!isVoid) break;
+                    }
+                    isVoidTile[y][x] = isVoid;
+                }
+            }
+        }
 
         function spawnParticles(x, y, color, count) {
             for (let i = 0; i < count; i++) {
@@ -1260,6 +1335,7 @@
                     }
                 }
             }
+            computeExteriorVoid();
         }
         generateMap();
 
@@ -1382,6 +1458,11 @@
                     let px = x * TILE_SIZE;
                     let py = y * TILE_SIZE;
 
+                    // Deep void outside derelict hull: allow background nebula & singularity lensing through
+                    if (tile === 1 && isVoidTile[y] && isVoidTile[y][x]) {
+                        continue;
+                    }
+
                     // Base Floor
                     ctx.fillStyle = '#060a0e';
                     ctx.fillRect(px, py, TILE_SIZE, TILE_SIZE);
@@ -1396,30 +1477,59 @@
                     ctx.fillRect(px + TILE_SIZE - 2, py + TILE_SIZE - 2, 1, 1);
 
                     if (tile === 1) {
-                        // Bulkhead Wall
-                        ctx.fillStyle = '#0f171e';
-                        ctx.fillRect(px, py, TILE_SIZE, TILE_SIZE);
+                        // Bulkhead Wall (Armored hull separating interior deck from exterior vacuum)
+                        let isOuterHull = false;
+                        for (let dy = -1; dy <= 1; dy++) {
+                            let ny = y + dy;
+                            if (ny < 0 || ny >= ROWS) { isOuterHull = true; break; }
+                            for (let dx = -1; dx <= 1; dx++) {
+                                let nx = x + dx;
+                                if (nx < 0 || nx >= COLS) { isOuterHull = true; break; }
+                                if (isVoidTile[ny] && isVoidTile[ny][nx]) { isOuterHull = true; break; }
+                            }
+                            if (isOuterHull) break;
+                        }
 
-                        // 3D Bevel Plate
-                        let wallGrad = ctx.createLinearGradient(px, py, px + TILE_SIZE, py + TILE_SIZE);
-                        wallGrad.addColorStop(0, '#1c2d3d');
-                        wallGrad.addColorStop(0.5, '#121d28');
-                        wallGrad.addColorStop(1, '#091017');
-                        ctx.fillStyle = wallGrad;
-                        ctx.fillRect(px + 2, py + 2, TILE_SIZE - 4, TILE_SIZE - 4);
+                        if (isOuterHull) {
+                            // Reinforced Outer Hull Plating with atmospheric seal bolts
+                            ctx.fillStyle = '#111b24';
+                            ctx.fillRect(px, py, TILE_SIZE, TILE_SIZE);
+                            ctx.strokeStyle = '#223648';
+                            ctx.lineWidth = 1;
+                            ctx.strokeRect(px + 0.5, py + 0.5, TILE_SIZE - 1, TILE_SIZE - 1);
+                            ctx.fillStyle = '#3a5a78';
+                            ctx.fillRect(px + 1, py + 1, 2, 2);
+                            ctx.fillRect(px + TILE_SIZE - 3, py + 1, 2, 2);
+                            ctx.fillRect(px + 1, py + TILE_SIZE - 3, 2, 2);
+                            ctx.fillRect(px + TILE_SIZE - 3, py + TILE_SIZE - 3, 2, 2);
+                            ctx.fillStyle = '#1d2e3d';
+                            ctx.fillRect(px + 4, py + 4, TILE_SIZE - 8, TILE_SIZE - 8);
+                        } else {
+                            // Interior Bulkhead Wall
+                            ctx.fillStyle = '#0f171e';
+                            ctx.fillRect(px, py, TILE_SIZE, TILE_SIZE);
 
-                        // Metallic highlight & shadow bevels
-                        ctx.fillStyle = '#2d4760';
-                        ctx.fillRect(px + 2, py + 2, TILE_SIZE - 4, 1);
-                        ctx.fillRect(px + 2, py + 2, 1, TILE_SIZE - 4);
-                        ctx.fillStyle = '#05080c';
-                        ctx.fillRect(px + 2, py + TILE_SIZE - 3, TILE_SIZE - 4, 1);
-                        ctx.fillRect(px + TILE_SIZE - 3, py + 2, 1, TILE_SIZE - 4);
+                            // 3D Bevel Plate
+                            let wallGrad = ctx.createLinearGradient(px, py, px + TILE_SIZE, py + TILE_SIZE);
+                            wallGrad.addColorStop(0, '#1c2d3d');
+                            wallGrad.addColorStop(0.5, '#121d28');
+                            wallGrad.addColorStop(1, '#091017');
+                            ctx.fillStyle = wallGrad;
+                            ctx.fillRect(px + 2, py + 2, TILE_SIZE - 4, TILE_SIZE - 4);
 
-                        // Circuit conduit pulse
-                        let conduitPulse = (Math.sin(time * 0.003 + x * 0.5 + y * 0.5) + 1) * 0.5;
-                        ctx.fillStyle = `rgba(0, 255, 120, ${0.15 + conduitPulse * 0.25})`;
-                        ctx.fillRect(px + 7, py + 7, 2, 2);
+                            // Metallic highlight & shadow bevels
+                            ctx.fillStyle = '#2d4760';
+                            ctx.fillRect(px + 2, py + 2, TILE_SIZE - 4, 1);
+                            ctx.fillRect(px + 2, py + 2, 1, TILE_SIZE - 4);
+                            ctx.fillStyle = '#05080c';
+                            ctx.fillRect(px + 2, py + TILE_SIZE - 3, TILE_SIZE - 4, 1);
+                            ctx.fillRect(px + TILE_SIZE - 3, py + 2, 1, TILE_SIZE - 4);
+
+                            // Circuit conduit pulse
+                            let conduitPulse = (Math.sin(time * 0.003 + x * 0.5 + y * 0.5) + 1) * 0.5;
+                            ctx.fillStyle = 'rgba(0, 255, 120, ' + (0.15 + conduitPulse * 0.25) + ')';
+                            ctx.fillRect(px + 7, py + 7, 2, 2);
+                        }
                     } else if (tile === 2) {
                         // Standard Hydraulic Blast Door
                         ctx.fillStyle = '#22281a';
@@ -1920,7 +2030,16 @@
                     ctx.shadowBlur = inLight ? 16 : 8;
                     ctx.shadowColor = '#00e5ff';
 
-                    // 4 Spectral Tendrils
+                                        // Anomaly Silhouette: Spectre / Phantom Phase Sprite
+                    if (KVOID_ASSETS.spectre.loaded && KVOID_ASSETS.spectre.img) {
+                        let sBob = Math.sin(time * 0.005 + a.x) * 2;
+                        ctx.drawImage(KVOID_ASSETS.spectre.img, ax - 10, ay - 10 + sBob, 20, 20);
+                    } else if (KVOID_ASSETS.phantomShip.loaded && KVOID_ASSETS.phantomShip.img) {
+                        let sBob = Math.sin(time * 0.005 + a.x) * 2;
+                        ctx.drawImage(KVOID_ASSETS.phantomShip.img, ax - 10, ay - 10 + sBob, 20, 20);
+                    }
+
+// 4 Spectral Tendrils
                     ctx.strokeStyle = isStunned ? '#ffffff' : '#00ffff';
                     ctx.lineWidth = 1.2;
                     let tendrilWave = Math.sin(time * 0.02 + a.y) * 3;
@@ -1989,7 +2108,16 @@
                     ctx.shadowBlur = isChasing ? 20 : 12;
                     ctx.shadowColor = '#ff0033';
 
-                    // 8 Spiked Heavy Chitin Legs
+                                        // Anomaly Silhouette: Void Archon Dread Titan
+                    if (KVOID_ASSETS.voidArchon.loaded && KVOID_ASSETS.voidArchon.img) {
+                        ctx.save();
+                        ctx.globalAlpha = 0.9;
+                        let bBob = Math.sin(time * 0.004 + a.x) * 1.5;
+                        ctx.drawImage(KVOID_ASSETS.voidArchon.img, ax - 12, ay - 12 + bBob, 24, 24);
+                        ctx.restore();
+                    }
+
+// 8 Spiked Heavy Chitin Legs
                     ctx.strokeStyle = isStunned ? '#4466aa' : '#aa1122';
                     ctx.lineWidth = 2.2;
                     let heavyWalk = Math.sin(time * 0.01 + a.x) * 2;
@@ -2082,7 +2210,147 @@
             }
         }
 
-        function draw(time = performance.now()) {
+                function drawGravitationalSingularity(time = performance.now()) {
+            let sx = VIRTUAL_WIDTH * 0.82 + Math.sin(time * 0.0003) * 12;
+            let sy = VIRTUAL_HEIGHT * 0.22 + Math.cos(time * 0.00025) * 8;
+
+            ctx.save();
+            // 1. Relativistic micro-lensing halo distortion rings
+            for (let r = 50; r <= 86; r += 12) {
+                let waveAlpha = (0.08 + 0.04 * Math.sin(time * 0.002 - r * 0.05));
+                ctx.strokeStyle = 'rgba(130, 210, 255, ' + waveAlpha + ')';
+                ctx.lineWidth = 1.2;
+                ctx.beginPath();
+                ctx.arc(sx, sy, r, 0, Math.PI * 2);
+                ctx.stroke();
+            }
+
+            // 2. Warped Upper Accretion Arch (lensed light arching over black hole)
+            let archGrad = ctx.createRadialGradient(sx, sy - 8, 12, sx, sy - 8, 38);
+            archGrad.addColorStop(0, 'rgba(0, 229, 255, 0.45)');
+            archGrad.addColorStop(0.5, 'rgba(160, 60, 255, 0.25)');
+            archGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+            ctx.fillStyle = archGrad;
+            ctx.beginPath();
+            ctx.ellipse(sx, sy - 6, 36, 20, 0, Math.PI, 0);
+            ctx.fill();
+
+            // 3. Accretion Disk with Relativistic Doppler Beaming
+            // Approaching side (left): blueshifted, hyper-luminous cyan/white
+            // Receding side (right): redshifted, darker amber/violet
+            let diskGrad = ctx.createLinearGradient(sx - 48, sy, sx + 48, sy);
+            diskGrad.addColorStop(0, 'rgba(0, 255, 255, 0.7)');
+            diskGrad.addColorStop(0.3, 'rgba(255, 255, 255, 0.9)');
+            diskGrad.addColorStop(0.6, 'rgba(180, 70, 255, 0.4)');
+            diskGrad.addColorStop(1, 'rgba(255, 90, 40, 0.2)');
+
+            ctx.save();
+            ctx.translate(sx, sy);
+            ctx.rotate(-0.25);
+            ctx.fillStyle = diskGrad;
+            ctx.beginPath();
+            ctx.ellipse(0, 0, 44, 9, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Accretion disk inner hot photon ring
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.ellipse(0, 0, 22, 4.5, 0, 0, Math.PI * 2);
+            ctx.stroke();
+            ctx.restore();
+
+            // 4. Warped Lower Accretion Arch (lensed around lower event horizon)
+            let lowerArchGrad = ctx.createRadialGradient(sx, sy + 8, 12, sx, sy + 8, 32);
+            lowerArchGrad.addColorStop(0, 'rgba(140, 50, 240, 0.35)');
+            lowerArchGrad.addColorStop(0.6, 'rgba(255, 80, 80, 0.15)');
+            lowerArchGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+            ctx.fillStyle = lowerArchGrad;
+            ctx.beginPath();
+            ctx.ellipse(sx, sy + 6, 32, 16, 0, 0, Math.PI);
+            ctx.fill();
+
+            // 5. Einstein Ring (Lensed Photon Sphere boundary)
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.85)';
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.arc(sx, sy, 17, 0, Math.PI * 2);
+            ctx.stroke();
+
+            // 6. Event Horizon (Total black hole shadow)
+            ctx.fillStyle = '#000000';
+            ctx.beginPath();
+            ctx.arc(sx, sy, 16, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.restore();
+        }
+
+        function drawDerelictDebris(time = performance.now()) {
+            ctx.save();
+            for (let d of hullDebris) {
+                d.x = (d.x + d.vx + VIRTUAL_WIDTH) % VIRTUAL_WIDTH;
+                d.y = (d.y + d.vy + VIRTUAL_HEIGHT) % VIRTUAL_HEIGHT;
+                d.rot += d.vrot;
+
+                ctx.save();
+                ctx.translate(d.x, d.y);
+                ctx.rotate(d.rot);
+
+                if (KVOID_ASSETS.debrisAsteroid.loaded && KVOID_ASSETS.debrisAsteroid.img) {
+                    ctx.drawImage(KVOID_ASSETS.debrisAsteroid.img, -d.size / 2, -d.size / 2, d.size, d.size);
+                } else {
+                    // Procedural Derelict Hull Shard
+                    ctx.fillStyle = '#1c2834';
+                    ctx.beginPath();
+                    ctx.moveTo(-d.size * 0.5, -d.size * 0.3);
+                    ctx.lineTo(d.size * 0.4, -d.size * 0.5);
+                    ctx.lineTo(d.size * 0.5, d.size * 0.4);
+                    ctx.lineTo(-d.size * 0.3, d.size * 0.5);
+                    ctx.closePath();
+                    ctx.fill();
+                    ctx.strokeStyle = '#3a4f65';
+                    ctx.lineWidth = 1;
+                    ctx.stroke();
+                }
+
+                // Derelict distress transponder LED (clean static blink, NO specular glints)
+                let isBlinking = ((Math.floor(time * 0.002 + d.strobePhase)) % 4 === 0);
+                if (isBlinking) {
+                    ctx.fillStyle = (d.size > 14) ? '#ff3344' : '#00e5ff';
+                    ctx.fillRect(-1, -1, 2, 2);
+                }
+                ctx.restore();
+            }
+            ctx.restore();
+        }
+
+        function drawDeepVoid(time = performance.now()) {
+            // 1. Cosmic Void & Nebula Layer
+            if (KVOID_ASSETS.bgNebula.loaded && KVOID_ASSETS.bgNebula.img) {
+                ctx.drawImage(KVOID_ASSETS.bgNebula.img, 0, 0, VIRTUAL_WIDTH, VIRTUAL_HEIGHT);
+                ctx.fillStyle = 'rgba(2, 4, 10, 0.45)';
+                ctx.fillRect(0, 0, VIRTUAL_WIDTH, VIRTUAL_HEIGHT);
+            } else {
+                let bgGrad = ctx.createRadialGradient(
+                    VIRTUAL_WIDTH * 0.75, VIRTUAL_HEIGHT * 0.25, 20,
+                    VIRTUAL_WIDTH * 0.5, VIRTUAL_HEIGHT * 0.5, VIRTUAL_WIDTH
+                );
+                bgGrad.addColorStop(0, '#0c071e');
+                bgGrad.addColorStop(0.35, '#050a14');
+                bgGrad.addColorStop(1, '#010204');
+                ctx.fillStyle = bgGrad;
+                ctx.fillRect(0, 0, VIRTUAL_WIDTH, VIRTUAL_HEIGHT);
+            }
+
+            // 2. Gravitational Singularity Lensing Effect
+            drawGravitationalSingularity(time);
+
+            // 3. Drifting Derelict Hull Debris
+            drawDerelictDebris(time);
+        }
+
+function draw(time = performance.now()) {
             ctx.save();
             ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
             // Apply Screen Shake
@@ -2094,6 +2362,7 @@
             }
 
             ctx.clearRect(-10, -10, VIRTUAL_WIDTH + 20, VIRTUAL_HEIGHT + 20);
+            drawDeepVoid(time);
             drawMap(time);
             drawActiveFlares(time);
             drawShockwaves();
@@ -2482,6 +2751,7 @@
                 rooms = (s.rooms || []).map(r => ({ x: r.x, y: r.y, w: r.w, h: r.h }));
                 aliens = (s.aliens || []).map(a => ({ x: a.x, y: a.y, state: a.state, stunTimer: a.stunTimer || 0, type: a.type || 0 }));
                 map = s.map.map(row => row.slice());
+                computeExteriorVoid();
 
                 particles = [];
                 shockwaves = [];
