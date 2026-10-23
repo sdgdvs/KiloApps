@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-expander
-next_agent: kilo-creator
+current_agent: kilo-creator
+next_agent: kilo-graphics
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -22,7 +22,7 @@ current_targets:
   kilo_tester: KPass
   kilo_usability: KTrader
   kilo_qa: KTrader
-  kilo_expander: KConverter
+  kilo_expander: KTrader
 virtual_web_target: kweb://portal
 virtual_web_rotation:
 - kweb://portal
@@ -37,9 +37,9 @@ virtual_web_rotation:
 - kweb://deep-core
 - kweb://darknet
 last_run:
-  agent: kilo-qa
-  app: KSpace
-  timestamp: '2026-10-23T03:32:00-07:00'
+  agent: kilo-expander
+  app: KConverter
+  timestamp: '2026-10-23T05:35:00-07:00'
 last_planner_run: '2026-10-23T01:35:00Z'
 ---
 
@@ -156,19 +156,19 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Upcoming Queue**: `KPass`, `KRogue`.
 
 ### 7. Feature Expander Queue (`kilo-expander`)
-- **Target**: `KConverter`
-- **Primary Files**: `KiloOS/public/apps/kconverter.html`, `KConverter/main.c` (if present)
-- **Objective**: Unit, time, coordinates, audio pitch, and data rate converter suite expansion (<999 KB).
+- **Target**: `KTrader`
+- **Primary Files**: `KiloOS/public/apps/ktrader.html`, `KTrader/main.c` (if present)
+- **Objective**: Space trader commodity futures, automated ledger, trade route routing, and cargo optimization suite (<999 KB).
 - **Action Steps**:
-  1. Inspect `KiloOS/public/apps/kconverter.html`.
-  2. Implement dimensional conversion categories, reciprocal ratios, and precision controls.
+  1. Inspect `KiloOS/public/apps/ktrader.html`.
+  2. Implement advanced ledger filtering, price alert triggers, trade routing calculator, and cargo optimization.
   3. Ensure dual Win32 native client parity and clean build.
-- **Verification**: `uv run scripts/test_app_startup.py --app KConverter` and `cd KiloOS && npm run build`. File size < 999 KB.
+- **Verification**: `uv run scripts/test_app_startup.py --app KTrader` and `cd KiloOS && npm run build`. File size < 999 KB.
 - **Handoff**:
-  - In frontmatter: advance `current_targets.kilo_expander` to `KTrader`.
+  - In frontmatter: advance `current_targets.kilo_expander` to `KPass`.
   - Set `current_agent: kilo-creator`.
   - Append terse execution log (≤6 lines), commit, and push.
-- **Upcoming Queue**: `KTrader`, `KPass`.
+- **Upcoming Queue**: `KPass`, `KRogue`.
 
 ---
 
@@ -218,6 +218,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-23T05:35:00-07:00 — kilo-expander: KConverter (Dimensional Conversion & Precision Expansion)**
+  - Status: PASS ✅ (0 runtime errors, startup check clean 124.4 KB, Vite build clean in 486ms).
+  - Feature Expansion: Added 5 categories (Data Rate, Angle/GPS, Audio Pitch, Energy, Power) for 14 total categories.
+  - Engineering & Reciprocal: Added Engineering notation, up to 10 decimal precision, live reciprocal ratio equations & telemetry.
+  - Parity & Builds: Dual Win32 C parity complete; compiled clean with CL/RC (32 KB); byte-budget & security lint 100% PASS.
+  - Handoff: Advanced kilo-expander to KTrader; rotated active agent to kilo-creator.
 - **2026-10-23T03:32:00-07:00 — kilo-qa: KSpace (Pass 5 QA & Mature Quarantine)**
   - Status: PASS ✅ (0 runtime errors, startup check clean 197.3 KB, Vite build clean in 612ms).
   - Quicksave/Quickload: Complete F5/F9 state persistence (chassis, wave, boss, heat, pylons, drones) verified in HTML & Win32 C.
@@ -247,9 +253,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Earcons: 13 procedural action stingers (sword slashes, critical hits, gold chimes, level-up fanfares, portal descent).
   - Verification: Native build clean; Vite build clean (553ms); startup check PASS (336.8 KB); security lint PASS.
   - Queue: Advanced kilo-soundscape to KBreakout; rotated agent to kilo-tester.
-- **2026-10-22T20:32:00-07:00 — kilo-graphics: KSpace**
-  - ⏭️ Skip — Imagen 3 asset replacement not appropriate for KSpace
-  - Asset Audit: All 13 production sprites and nebula background already integrated and rendering.
-  - Glint Audit: Zero rotating specular glints or traveling perimeter border dots (HTML & C).
-  - Verification: Native build clean; KiloOS Vite build clean; startup check PASS; byte-budget PASS.
-  - Handoff: Advanced graphics queue to KTrader; rotated agent to kilo-soundscape.

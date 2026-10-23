@@ -279,7 +279,7 @@
     border-color: #ef4444;
   }
 
-  /* Single Convert Card Layout */
+  /* Single Convert Card Layout & Responsive Ergonomics */
   .convert-grid {
     display: grid;
     grid-template-columns: 1fr auto 1fr;
@@ -287,9 +287,41 @@
     align-items: center;
   }
 
-  @media (max-width: 600px) {
+  /* Accessibility focus ring */
+  button:focus-visible, input:focus-visible, select:focus-visible, .nav-tab:focus-visible, .cat-tab:focus-visible {
+    outline: 2px solid var(--accent-blue);
+    outline-offset: 2px;
+  }
+
+  @media (max-width: 640px) {
+    .app-container {
+      padding: 10px;
+      gap: 8px;
+    }
+    .header {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 10px;
+    }
+    .controls-bar {
+      justify-content: space-between;
+      width: 100%;
+    }
     .convert-grid {
       grid-template-columns: 1fr;
+    }
+    .swap-btn {
+      margin: 4px auto !important;
+    }
+    .nav-tabs {
+      padding: 3px;
+    }
+    .nav-tab {
+      padding: 5px 8px;
+      font-size: 12px;
+    }
+    .quick-presets-bar {
+      padding: 6px 8px;
     }
   }
 
@@ -709,6 +741,97 @@
     color: var(--text-muted);
     margin-left: 4px;
   }
+
+  /* Reciprocal Ratio & Dimensional Analysis */
+  .reciprocal-card {
+    background: var(--card-bg);
+    border: 1px solid var(--panel-border);
+    border-radius: var(--radius-md);
+    padding: 10px 14px;
+    margin-top: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .reciprocal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 11px;
+    font-weight: 600;
+  }
+  .reciprocal-dim-tag {
+    background: rgba(56, 189, 248, 0.15);
+    border: 1px solid rgba(56, 189, 248, 0.35);
+    color: var(--accent-blue);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: monospace;
+    font-size: 11px;
+  }
+  .reciprocal-title {
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-size: 10px;
+  }
+  .reciprocal-body {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .reciprocal-formula {
+    font-family: 'Consolas', 'Courier New', monospace;
+    font-size: 12px;
+    color: var(--text-primary);
+  }
+  .reciprocal-actions {
+    display: flex;
+    gap: 6px;
+  }
+
+  /* Dimensional Telemetry Helper Cards */
+  .telemetry-helper-card {
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid rgba(148, 163, 184, 0.2);
+    border-radius: var(--radius-md);
+    padding: 10px 14px;
+    margin-top: 8px;
+    font-size: 12px;
+  }
+  .telemetry-helper-title {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--accent-blue);
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .telemetry-helper-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    gap: 8px;
+  }
+  .telemetry-helper-item {
+    background: rgba(0, 0, 0, 0.25);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 4px;
+    padding: 6px 8px;
+  }
+  .telemetry-helper-item .label {
+    font-size: 10px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+  }
+  .telemetry-helper-item .value {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-primary);
+    font-family: monospace;
+  }
 </style>
 </head>
 <body>
@@ -730,6 +853,8 @@
             <option value="4" selected>4</option>
             <option value="6">6</option>
             <option value="8">8</option>
+            <option value="10">10</option>
+            <option value="12">12</option>
           </select>
         </div>
         <div class="control-group">
@@ -737,6 +862,8 @@
           <select id="notationSel" onchange="convert(); renderBatch(); parseExpressInput();" class="btn-sm" aria-label="Notation Format">
             <option value="std" selected>Standard</option>
             <option value="sci">Scientific</option>
+            <option value="eng">Engineering</option>
+            <option value="frac">Fractional</option>
           </select>
         </div>
         <button class="btn-sm btn-save" onclick="quicksaveState()" title="Quicksave Workspace Snapshot (F5)" aria-label="Quicksave State">💾 Save [F5]</button>
@@ -797,6 +924,11 @@
           <button class="btn-sm preset-chip" onclick="applyPreset('weight', 1, 'kg', 'lb')">⚖️ 1 kg ➔ lb</button>
           <button class="btn-sm preset-chip" onclick="applyPreset('length', 1, 'm', 'ft')">📏 1 m ➔ ft</button>
           <button class="btn-sm preset-chip" onclick="applyPreset('data', 1, 'gb', 'mb')">💾 1 GB ➔ MB</button>
+          <button class="btn-sm preset-chip" onclick="applyPreset('datarate', 100, 'mbps', 'mbs')">🌐 100 Mbps ➔ MB/s</button>
+          <button class="btn-sm preset-chip" onclick="applyPreset('coord', 180, 'deg', 'rad')">🧭 180° ➔ rad</button>
+          <button class="btn-sm preset-chip" onclick="applyPreset('pitch', 440, 'hz', 'khz')">🎵 440 Hz (A4) ➔ kHz</button>
+          <button class="btn-sm preset-chip" onclick="applyPreset('energy', 1, 'kwh', 'mj')">⚡ 1 kWh ➔ MJ</button>
+          <button class="btn-sm preset-chip" onclick="applyPreset('power', 100, 'kw', 'hp')">🏎️ 100 kW ➔ hp</button>
           <button class="btn-sm preset-chip" onclick="applyPreset('pressure', 1, 'atm', 'psi')">🎈 1 atm ➔ psi</button>
           <button class="btn-sm preset-chip" onclick="applyPreset('volume', 1, 'l', 'gal')">🥤 1 L ➔ gal</button>
           <button class="btn-sm preset-chip" onclick="applyPreset('time', 1, 'hr', 'min')">⏱️ 1 hr ➔ min</button>
@@ -837,6 +969,27 @@
             <button class="btn-sm" onclick="pinCurrentFavorite()" title="Pin to Favorites [P]">⭐ Pin [P]</button>
             <button class="btn-sm" onclick="copyFormula()" title="Copy Equation">📋 Copy Eq</button>
           </div>
+        </div>
+
+        <!-- Reciprocal Ratios Card -->
+        <div class="reciprocal-card" id="reciprocalCard">
+          <div class="reciprocal-header">
+            <span class="reciprocal-dim-tag" id="reciprocalDim">[L] Length</span>
+            <span class="reciprocal-title">Reciprocal Conversion Ratios</span>
+          </div>
+          <div class="reciprocal-body">
+            <div class="reciprocal-formula" id="reciprocalFormula">1 Meter = 1.0000 Meter &nbsp;|&nbsp; 1 Meter = 1.0000 Meter</div>
+            <div class="reciprocal-actions">
+              <button class="btn-sm" onclick="swapUnits()" title="Invert / Swap Units [X]">⇄ Invert [X]</button>
+              <button class="btn-sm" onclick="copyReciprocal()" title="Copy Reciprocal Formula">📋 Copy Ratio</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Category Specialized Telemetry Helper (Coordinates, Audio Pitch, Data Rate) -->
+        <div class="telemetry-helper-card" id="telemetryHelperCard" style="display: none;">
+          <div class="telemetry-helper-title" id="telemetryHelperTitle">📊 Dimensional Telemetry</div>
+          <div class="telemetry-helper-grid" id="telemetryHelperGrid"></div>
         </div>
       </section>
 
@@ -1112,12 +1265,73 @@
         floz: { name: 'Fluid Ounces (US)', factor: 0.0295735295625 }
       },
       time: {
+        ms: { name: 'Milliseconds (ms)', factor: 0.001 },
+        us: { name: 'Microseconds (μs)', factor: 0.000001 },
+        ns: { name: 'Nanoseconds (ns)', factor: 1e-9 },
         sec: { name: 'Seconds', factor: 1 },
         min: { name: 'Minutes', factor: 60 },
         hr: { name: 'Hours', factor: 3600 },
         day: { name: 'Days', factor: 86400 },
         wk: { name: 'Weeks', factor: 604800 },
-        yr: { name: 'Years (365d)', factor: 31536000 }
+        mo: { name: 'Months (30.4d)', factor: 2629800 },
+        yr: { name: 'Years (365d)', factor: 31536000 },
+        dec: { name: 'Decades (10yr)', factor: 315360000 },
+        cen: { name: 'Centuries (100yr)', factor: 3153600000 }
+      },
+      datarate: {
+        bps: { name: 'Bits / sec (bps)', factor: 1 },
+        kbps: { name: 'Kilobits / sec (Kbps)', factor: 1000 },
+        mbps: { name: 'Megabits / sec (Mbps)', factor: 1000000 },
+        gbps: { name: 'Gigabits / sec (Gbps)', factor: 1000000000 },
+        tbps: { name: 'Terabits / sec (Tbps)', factor: 1000000000000 },
+        bs: { name: 'Bytes / sec (B/s)', factor: 8 },
+        kbs: { name: 'Kilobytes / sec (KB/s)', factor: 8000 },
+        kibs: { name: 'Kibibytes / sec (KiB/s)', factor: 8192 },
+        mbs: { name: 'Megabytes / sec (MB/s)', factor: 8000000 },
+        mibs: { name: 'Mebibytes / sec (MiB/s)', factor: 8388608 },
+        d56k: { name: '56k Modem (56 Kbps)', factor: 56000 },
+        t1: { name: 'T1 Carrier (1.544 Mbps)', factor: 1544000 },
+        eth10: { name: '10BASE-T Ethernet (10 Mbps)', factor: 10000000 },
+        eth100: { name: '100BASE-TX Fast Eth (100 Mbps)', factor: 100000000 }
+      },
+      coord: {
+        deg: { name: 'Degrees (°)', factor: 1 },
+        rad: { name: 'Radians (rad)', factor: 57.29577951308232 },
+        grad: { name: 'Gradians / Gon (grad)', factor: 0.9 },
+        arcmin: { name: 'Arcminutes (′)', factor: 0.016666666666666666 },
+        arcsec: { name: 'Arcseconds (″)', factor: 0.0002777777777777778 },
+        mrad: { name: 'Milliradians (mrad)', factor: 0.05729577951308232 },
+        mil: { name: 'NATO Mils (mil)', factor: 0.05625 },
+        rev: { name: 'Revolutions / Circles (rev)', factor: 360 }
+      },
+      pitch: {
+        hz: { name: 'Hertz (Hz)', factor: 1 },
+        khz: { name: 'Kilohertz (kHz)', factor: 1000 },
+        mhz: { name: 'Megahertz (MHz)', factor: 1000000 },
+        rpm: { name: 'RPM (rev/min)', factor: 0.016666666666666666 },
+        rads: { name: 'Radians / sec (rad/s)', factor: 0.15915494309189535 },
+        bpm: { name: 'Beats / Min (BPM)', factor: 0.016666666666666666 }
+      },
+      energy: {
+        j: { name: 'Joules (J)', factor: 1 },
+        kj: { name: 'Kilojoules (kJ)', factor: 1000 },
+        mj: { name: 'Megajoules (MJ)', factor: 1000000 },
+        cal: { name: 'Calories (cal)', factor: 4.184 },
+        kcal: { name: 'Kilocalories (kcal)', factor: 4184 },
+        wh: { name: 'Watt-hours (Wh)', factor: 3600 },
+        kwh: { name: 'Kilowatt-hours (kWh)', factor: 3600000 },
+        btu: { name: 'British Thermal Units (BTU)', factor: 1055.05585 },
+        ftlbf: { name: 'Foot-pounds (ft·lbf)', factor: 1.3558179483314004 },
+        ev: { name: 'Electronvolts (eV)', factor: 1.602176634e-19 }
+      },
+      power: {
+        w: { name: 'Watts (W)', factor: 1 },
+        kw: { name: 'Kilowatts (kW)', factor: 1000 },
+        mw: { name: 'Megawatts (MW)', factor: 1000000 },
+        hp: { name: 'Horsepower (Mechanical hp)', factor: 745.69987158227 },
+        ps: { name: 'Metric HP (PS / cv)', factor: 735.49875 },
+        btuh: { name: 'BTU / hour (BTU/h)', factor: 0.29307107 },
+        ftlbfs: { name: 'Foot-pounds / sec (ft·lbf/s)', factor: 1.3558179483314004 }
       },
       pressure: {
         pa: { name: 'Pascal (Pa)', factor: 1 },
@@ -1134,14 +1348,117 @@
       weight: 'Weight',
       temp: 'Temperature',
       data: 'Data Storage',
+      datarate: 'Data Rate',
       speed: 'Speed',
       area: 'Area',
       volume: 'Volume',
       time: 'Time',
-      pressure: 'Pressure'
+      pressure: 'Pressure',
+      coord: 'Angle / GPS',
+      pitch: 'Audio Pitch / Freq',
+      energy: 'Energy',
+      power: 'Power'
+    };
+
+    const categoryDimensions = {
+      length: '[L] Length',
+      weight: '[M] Mass',
+      temp: '[Θ] Temperature',
+      data: '[Bits] Information Quantity',
+      datarate: '[Bits·T⁻¹] Bandwidth / Transfer Rate',
+      speed: '[L·T⁻¹] Velocity',
+      area: '[L²] Area',
+      volume: '[L³] Volume',
+      time: '[T] Time / Duration',
+      pressure: '[M·L⁻¹·T⁻²] Pressure / Stress',
+      coord: '[Angle / 1] Plane Angle & Coordinates',
+      pitch: '[T⁻¹] Audio Frequency & Pitch',
+      energy: '[M·L²·T⁻²] Energy & Work',
+      power: '[M·L²·T⁻³] Power & Radiance'
     };
 
     const expressAliasTable = [
+      // Data Rate
+      { token: 'bps', cat: 'datarate', key: 'bps', dim: 'Bandwidth [Bits·T⁻¹]' },
+      { token: 'kbps', cat: 'datarate', key: 'kbps', dim: 'Bandwidth [Bits·T⁻¹]' },
+      { token: 'mbps', cat: 'datarate', key: 'mbps', dim: 'Bandwidth [Bits·T⁻¹]' },
+      { token: 'gbps', cat: 'datarate', key: 'gbps', dim: 'Bandwidth [Bits·T⁻¹]' },
+      { token: 'tbps', cat: 'datarate', key: 'tbps', dim: 'Bandwidth [Bits·T⁻¹]' },
+      { token: 'b/s', cat: 'datarate', key: 'bs', dim: 'Bandwidth [Bits·T⁻¹]' },
+      { token: 'kb/s', cat: 'datarate', key: 'kbs', dim: 'Bandwidth [Bits·T⁻¹]' },
+      { token: 'kbs', cat: 'datarate', key: 'kbs', dim: 'Bandwidth [Bits·T⁻¹]' },
+      { token: 'mb/s', cat: 'datarate', key: 'mbs', dim: 'Bandwidth [Bits·T⁻¹]' },
+      { token: 'mbs', cat: 'datarate', key: 'mbs', dim: 'Bandwidth [Bits·T⁻¹]' },
+      { token: 'gb/s', cat: 'datarate', key: 'gbps', dim: 'Bandwidth [Bits·T⁻¹]' },
+      { token: '56k', cat: 'datarate', key: 'd56k', dim: 'Bandwidth [Bits·T⁻¹]' },
+      { token: 't1', cat: 'datarate', key: 't1', dim: 'Bandwidth [Bits·T⁻¹]' },
+
+      // Angle & Coordinates
+      { token: 'deg', cat: 'coord', key: 'deg', dim: 'Angle [1]' },
+      { token: 'degree', cat: 'coord', key: 'deg', dim: 'Angle [1]' },
+      { token: 'degrees', cat: 'coord', key: 'deg', dim: 'Angle [1]' },
+      { token: 'rad', cat: 'coord', key: 'rad', dim: 'Angle [1]' },
+      { token: 'radian', cat: 'coord', key: 'rad', dim: 'Angle [1]' },
+      { token: 'radians', cat: 'coord', key: 'rad', dim: 'Angle [1]' },
+      { token: 'grad', cat: 'coord', key: 'grad', dim: 'Angle [1]' },
+      { token: 'gon', cat: 'coord', key: 'grad', dim: 'Angle [1]' },
+      { token: 'arcmin', cat: 'coord', key: 'arcmin', dim: 'Angle [1]' },
+      { token: 'arcsec', cat: 'coord', key: 'arcsec', dim: 'Angle [1]' },
+      { token: 'mrad', cat: 'coord', key: 'mrad', dim: 'Angle [1]' },
+      { token: 'mil', cat: 'coord', key: 'mil', dim: 'Angle [1]' },
+      { token: 'rev', cat: 'coord', key: 'rev', dim: 'Angle [1]' },
+
+      // Audio Pitch & Frequency
+      { token: 'hz', cat: 'pitch', key: 'hz', dim: 'Frequency [T⁻¹]' },
+      { token: 'hertz', cat: 'pitch', key: 'hz', dim: 'Frequency [T⁻¹]' },
+      { token: 'khz', cat: 'pitch', key: 'khz', dim: 'Frequency [T⁻¹]' },
+      { token: 'kilohertz', cat: 'pitch', key: 'khz', dim: 'Frequency [T⁻¹]' },
+      { token: 'mhz', cat: 'pitch', key: 'mhz', dim: 'Frequency [T⁻¹]' },
+      { token: 'rpm', cat: 'pitch', key: 'rpm', dim: 'Frequency [T⁻¹]' },
+      { token: 'rad/s', cat: 'pitch', key: 'rads', dim: 'Frequency [T⁻¹]' },
+      { token: 'bpm', cat: 'pitch', key: 'bpm', dim: 'Frequency [T⁻¹]' },
+
+      // Energy
+      { token: 'j', cat: 'energy', key: 'j', dim: 'Energy [M·L²·T⁻²]' },
+      { token: 'joule', cat: 'energy', key: 'j', dim: 'Energy [M·L²·T⁻²]' },
+      { token: 'joules', cat: 'energy', key: 'j', dim: 'Energy [M·L²·T⁻²]' },
+      { token: 'kj', cat: 'energy', key: 'kj', dim: 'Energy [M·L²·T⁻²]' },
+      { token: 'mj', cat: 'energy', key: 'mj', dim: 'Energy [M·L²·T⁻²]' },
+      { token: 'cal', cat: 'energy', key: 'cal', dim: 'Energy [M·L²·T⁻²]' },
+      { token: 'kcal', cat: 'energy', key: 'kcal', dim: 'Energy [M·L²·T⁻²]' },
+      { token: 'wh', cat: 'energy', key: 'wh', dim: 'Energy [M·L²·T⁻²]' },
+      { token: 'kwh', cat: 'energy', key: 'kwh', dim: 'Energy [M·L²·T⁻²]' },
+      { token: 'btu', cat: 'energy', key: 'btu', dim: 'Energy [M·L²·T⁻²]' },
+      { token: 'ft-lb', cat: 'energy', key: 'ftlbf', dim: 'Energy [M·L²·T⁻²]' },
+      { token: 'ev', cat: 'energy', key: 'ev', dim: 'Energy [M·L²·T⁻²]' },
+
+      // Power
+      { token: 'w', cat: 'power', key: 'w', dim: 'Power [M·L²·T⁻³]' },
+      { token: 'watt', cat: 'power', key: 'w', dim: 'Power [M·L²·T⁻³]' },
+      { token: 'watts', cat: 'power', key: 'w', dim: 'Power [M·L²·T⁻³]' },
+      { token: 'kw', cat: 'power', key: 'kw', dim: 'Power [M·L²·T⁻³]' },
+      { token: 'kilowatt', cat: 'power', key: 'kw', dim: 'Power [M·L²·T⁻³]' },
+      { token: 'kilowatts', cat: 'power', key: 'kw', dim: 'Power [M·L²·T⁻³]' },
+      { token: 'mw', cat: 'power', key: 'mw', dim: 'Power [M·L²·T⁻³]' },
+      { token: 'hp', cat: 'power', key: 'hp', dim: 'Power [M·L²·T⁻³]' },
+      { token: 'horsepower', cat: 'power', key: 'hp', dim: 'Power [M·L²·T⁻³]' },
+      { token: 'ps', cat: 'power', key: 'ps', dim: 'Power [M·L²·T⁻³]' },
+      { token: 'btu/h', cat: 'power', key: 'btuh', dim: 'Power [M·L²·T⁻³]' },
+
+      // Extended Time
+      { token: 'ms', cat: 'time', key: 'ms', dim: 'Time [T]' },
+      { token: 'millisecond', cat: 'time', key: 'ms', dim: 'Time [T]' },
+      { token: 'milliseconds', cat: 'time', key: 'ms', dim: 'Time [T]' },
+      { token: 'us', cat: 'time', key: 'us', dim: 'Time [T]' },
+      { token: 'microsecond', cat: 'time', key: 'us', dim: 'Time [T]' },
+      { token: 'ns', cat: 'time', key: 'ns', dim: 'Time [T]' },
+      { token: 'nanosecond', cat: 'time', key: 'ns', dim: 'Time [T]' },
+      { token: 'month', cat: 'time', key: 'mo', dim: 'Time [T]' },
+      { token: 'months', cat: 'time', key: 'mo', dim: 'Time [T]' },
+      { token: 'decade', cat: 'time', key: 'dec', dim: 'Time [T]' },
+      { token: 'decades', cat: 'time', key: 'dec', dim: 'Time [T]' },
+      { token: 'century', cat: 'time', key: 'cen', dim: 'Time [T]' },
+      { token: 'centuries', cat: 'time', key: 'cen', dim: 'Time [T]' },
       // Length
       { token: 'm', cat: 'length', key: 'm', dim: 'Length [L]' },
       { token: 'meter', cat: 'length', key: 'm', dim: 'Length [L]' },
@@ -1957,6 +2274,40 @@
       else if (keys.length > 0) buf.value = keys[0];
     }
 
+    function toFraction(val) {
+      if (Math.abs(val) < 1e-6) return '0';
+      const sign = val < 0 ? '-' : '';
+      val = Math.abs(val);
+      const whole = Math.floor(val);
+      const frac = val - whole;
+      if (frac < 1e-4) return `${sign}${whole}`;
+      
+      let bestNum = 1, bestDen = 1, minDiff = 1;
+      const maxDen = 64;
+      for (let den = 1; den <= maxDen; den++) {
+        const num = Math.round(frac * den);
+        const diff = Math.abs(frac - num / den);
+        if (diff < minDiff) {
+          minDiff = diff;
+          bestNum = num;
+          bestDen = den;
+          if (diff < 1e-4) break;
+        }
+      }
+      if (bestNum === bestDen) return `${sign}${whole + 1}`;
+      if (whole === 0) return `${sign}${bestNum}/${bestDen}`;
+      return `${sign}${whole} ${bestNum}/${bestDen}`;
+    }
+
+    function toEngineering(val, prec) {
+      if (val === 0) return '0';
+      const exp = Math.floor(Math.log10(Math.abs(val)));
+      const engExp = Math.floor(exp / 3) * 3;
+      const mantissa = val / Math.pow(10, engExp);
+      const p = prec === 'auto' ? 3 : parseInt(prec, 10);
+      return `${mantissa.toFixed(p)} × 10^${engExp}`;
+    }
+
     function formatNumber(num) {
       if (isNaN(num)) return '';
       const prec = document.getElementById('precisionSel').value;
@@ -1964,6 +2315,12 @@
 
       if (notat === 'sci') {
         return num.toExponential(prec === 'auto' ? 4 : parseInt(prec, 10));
+      }
+      if (notat === 'eng') {
+        return toEngineering(num, prec);
+      }
+      if (notat === 'frac') {
+        return toFraction(num);
       }
 
       if (prec === 'auto') {
@@ -2034,8 +2391,128 @@
       else if (isNegativePressure) formulaStr += ' ⚠️ (Negative Pressure)';
       document.getElementById('formulaText').innerText = formulaStr;
 
+      // Reciprocal ratio calculation & display
+      let forwardRatio = 1;
+      let recipRatio = 1;
+      if (currentCategory === 'temp') {
+        // Temperature scale slope
+        if ((fromKey === 'c' && toKey === 'f') || (fromKey === 'k' && toKey === 'f')) {
+          forwardRatio = 1.8;
+          recipRatio = 5 / 9;
+        } else if ((fromKey === 'f' && toKey === 'c') || (fromKey === 'f' && toKey === 'k')) {
+          forwardRatio = 5 / 9;
+          recipRatio = 1.8;
+        } else {
+          forwardRatio = 1.0;
+          recipRatio = 1.0;
+        }
+      } else {
+        const fromFactor = modeUnits[fromKey].factor || 1;
+        const toFactor = modeUnits[toKey].factor || 1;
+        if (toFactor > 0 && fromFactor > 0) {
+          forwardRatio = fromFactor / toFactor;
+          recipRatio = toFactor / fromFactor;
+        }
+      }
+
+      const fwdStr = formatNumber(forwardRatio);
+      const recipStr = formatNumber(recipRatio);
+      const dimLabel = categoryDimensions[currentCategory] || currentCategory;
+
+      const dimEl = document.getElementById('reciprocalDim');
+      if (dimEl) dimEl.innerText = dimLabel;
+
+      const recipEl = document.getElementById('reciprocalFormula');
+      if (recipEl) {
+        recipEl.innerHTML = `<strong>1 ${escapeHTML(fromName)}</strong> = ${fwdStr} ${escapeHTML(toName)} &nbsp;|&nbsp; <strong>1 ${escapeHTML(toName)}</strong> = ${recipStr} ${escapeHTML(fromName)} <span style="color: var(--accent-blue);">(reciprocal: ${recipStr})</span>`;
+      }
+
+      // Specialized Telemetry Helpers (Coordinates, Audio Pitch, Data Rate)
+      renderSpecializedTelemetry(currentCategory, val, fromKey, modeUnits);
+
       // Log conversion to history
       logHistory(currentCategory, val, fromName, formattedResult, toName);
+    }
+
+    function renderSpecializedTelemetry(cat, val, fromKey, modeUnits) {
+      const card = document.getElementById('telemetryHelperCard');
+      const title = document.getElementById('telemetryHelperTitle');
+      const grid = document.getElementById('telemetryHelperGrid');
+      if (!card || !title || !grid) return;
+
+      if (cat === 'coord') {
+        card.style.display = 'block';
+        title.innerHTML = '🧭 Coordinate & Angular Navigation Telemetry';
+        const degFactor = modeUnits[fromKey].factor || 1;
+        const totalDeg = val * degFactor;
+        const sign = totalDeg < 0 ? '-' : '';
+        const absDeg = Math.abs(totalDeg);
+        const d = Math.floor(absDeg);
+        const m = Math.floor((absDeg - d) * 60);
+        const s = (((absDeg - d) * 60 - m) * 60).toFixed(2);
+        const ddm = `${d}° ${((absDeg - d) * 60).toFixed(4)}'`;
+        const rad = (totalDeg * Math.PI / 180).toFixed(6);
+        const mils = (totalDeg * (6400 / 360)).toFixed(1);
+
+        grid.innerHTML = `
+          <div class="telemetry-helper-item"><div class="label">Decimal (DD)</div><div class="value">${totalDeg.toFixed(6)}°</div></div>
+          <div class="telemetry-helper-item"><div class="label">DMS Notation</div><div class="value">${sign}${d}° ${m}' ${s}"</div></div>
+          <div class="telemetry-helper-item"><div class="label">DDM Notation</div><div class="value">${sign}${ddm}</div></div>
+          <div class="telemetry-helper-item"><div class="label">Radians</div><div class="value">${rad} rad</div></div>
+          <div class="telemetry-helper-item"><div class="label">NATO Mils</div><div class="value">${mils} mil</div></div>
+        `;
+      } else if (cat === 'pitch') {
+        card.style.display = 'block';
+        title.innerHTML = '🎵 Audio Pitch & Acoustic Sonification Telemetry';
+        const factor = modeUnits[fromKey].factor || 1;
+        const hz = val * factor;
+        if (hz > 0) {
+          const midi = 69 + 12 * Math.log2(hz / 440);
+          const nearestMidi = Math.round(midi);
+          const noteNames = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+          const noteName = noteNames[((nearestMidi % 12) + 12) % 12];
+          const octave = Math.floor(nearestMidi / 12) - 1;
+          const cents = ((midi - nearestMidi) * 100).toFixed(1);
+          const periodMs = (1000 / hz).toFixed(3);
+          const wavelengthCm = (34300 / hz).toFixed(2);
+
+          grid.innerHTML = `
+            <div class="telemetry-helper-item"><div class="label">Nearest Musical Note</div><div class="value">${noteName}${octave} (${cents >= 0 ? '+' : ''}${cents}¢)</div></div>
+            <div class="telemetry-helper-item"><div class="label">MIDI Note #</div><div class="value">${nearestMidi} (dec ${midi.toFixed(2)})</div></div>
+            <div class="telemetry-helper-item"><div class="label">Wave Period (T)</div><div class="value">${periodMs} ms</div></div>
+            <div class="telemetry-helper-item"><div class="label">Wavelength (Air 20°C)</div><div class="value">${wavelengthCm} cm</div></div>
+          `;
+        } else {
+          grid.innerHTML = `<div class="telemetry-helper-item"><div class="label">Frequency</div><div class="value">0 Hz (DC)</div></div>`;
+        }
+      } else if (cat === 'datarate') {
+        card.style.display = 'block';
+        title.innerHTML = '🌐 1999 Telecom Bandwidth & Transfer Telemetry';
+        const factor = modeUnits[fromKey].factor || 1;
+        const bps = val * factor;
+        if (bps > 0) {
+          const floppySec = (1474560 * 8 / bps).toFixed(2);
+          const mp3Sec = (5000000 * 8 / bps).toFixed(1);
+          const cdMin = (650 * 8000000 / bps / 60).toFixed(1);
+
+          grid.innerHTML = `
+            <div class="telemetry-helper-item"><div class="label">1.44 MB Floppy Disk</div><div class="value">${floppySec > 60 ? (floppySec/60).toFixed(1) + ' min' : floppySec + ' s'}</div></div>
+            <div class="telemetry-helper-item"><div class="label">5 MB MP3 Audio Track</div><div class="value">${mp3Sec > 60 ? (mp3Sec/60).toFixed(1) + ' min' : mp3Sec + ' s'}</div></div>
+            <div class="telemetry-helper-item"><div class="label">650 MB CD-ROM ISO</div><div class="value">${cdMin > 60 ? (cdMin/60).toFixed(1) + ' hrs' : cdMin + ' min'}</div></div>
+          `;
+        } else {
+          grid.innerHTML = `<div class="telemetry-helper-item"><div class="label">Bandwidth</div><div class="value">0 bps</div></div>`;
+        }
+      } else {
+        card.style.display = 'none';
+      }
+    }
+
+    function copyReciprocal() {
+      const el = document.getElementById('reciprocalFormula');
+      if (el) {
+        copyToClipboard(el.innerText);
+      }
     }
 
     function swapUnits() {

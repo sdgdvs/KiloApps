@@ -63,8 +63,12 @@ void DoConvert();
 void DoExpressParse();
 
 // Categories and Units
-const char* catNames[] = {"Length", "Weight", "Temperature", "Data Storage", "Speed", "Area", "Volume", "Time", "Pressure"};
-const int numCats = 9;
+const char* catNames[] = {
+    "Length", "Weight", "Temperature", "Data Storage", "Speed",
+    "Area", "Volume", "Time", "Pressure", "Data Rate",
+    "Angle / GPS", "Audio Pitch", "Energy", "Power"
+};
+const int numCats = 14;
 
 const char* lenUnits[] = {"Meters", "Kilometers", "Centimeters", "Millimeters", "Miles", "Yards", "Feet", "Inches", "Nautical Miles"};
 const double lenFactors[] = {1.0, 1000.0, 0.01, 0.001, 1609.344, 0.9144, 0.3048, 0.0254, 1852.0};
@@ -93,13 +97,72 @@ const char* volUnits[] = {"Liters", "Milliliters", "Cubic Meters", "Gallons (US)
 const double volFactors[] = {1.0, 0.001, 1000.0, 3.785411784, 0.946352946, 0.0295735295625};
 const int volCount = 6;
 
-const char* timeUnits[] = {"Seconds", "Minutes", "Hours", "Days", "Weeks", "Years"};
-const double timeFactors[] = {1.0, 60.0, 3600.0, 86400.0, 604800.0, 31536000.0};
-const int timeCount = 6;
+const char* timeUnits[] = {
+    "Seconds", "Minutes", "Hours", "Days", "Weeks", "Years",
+    "Milliseconds", "Microseconds", "Nanoseconds", "Months", "Decades", "Centuries"
+};
+const double timeFactors[] = {
+    1.0, 60.0, 3600.0, 86400.0, 604800.0, 31536000.0,
+    0.001, 0.000001, 1e-9, 2629800.0, 315360000.0, 3153600000.0
+};
+const int timeCount = 12;
 
 const char* pressUnits[] = {"Pascal (Pa)", "Kilopascal (kPa)", "Bar", "PSI (lb/in\xC2\xB2)", "Atmosphere (atm)", "mmHg (Torr)"};
 const double pressFactors[] = {1.0, 1000.0, 100000.0, 6894.757293, 101325.0, 133.322368};
 const int pressCount = 6;
+
+// Data Rate
+const char* dataRateUnits[] = {
+    "Bits/sec (bps)", "Kilobits/sec (Kbps)", "Megabits/sec (Mbps)", "Gigabits/sec (Gbps)",
+    "Bytes/sec (B/s)", "Kilobytes/sec (KB/s)", "Megabytes/sec (MB/s)",
+    "56k Modem", "T1 Carrier", "100BASE-TX Eth"
+};
+const double dataRateFactors[] = {
+    1.0, 1000.0, 1000000.0, 1000000000.0,
+    8.0, 8000.0, 8000000.0,
+    56000.0, 1544000.0, 100000000.0
+};
+const int dataRateCount = 10;
+
+// Angle / Coordinates
+const char* angleUnits[] = {
+    "Degrees (deg)", "Radians (rad)", "Gradians (grad)", "Arcminutes (arcmin)",
+    "Arcseconds (arcsec)", "Milliradians (mrad)", "NATO Mils (mil)", "Revolutions (rev)"
+};
+const double angleFactors[] = {
+    1.0, 57.29577951308232, 0.9, 0.016666666666666666,
+    0.0002777777777777778, 0.05729577951308232, 0.05625, 360.0
+};
+const int angleCount = 8;
+
+// Audio Pitch & Frequency
+const char* pitchUnits[] = {
+    "Hertz (Hz)", "Kilohertz (kHz)", "Megahertz (MHz)", "RPM (rev/min)", "Rad/sec (rad/s)", "BPM (beats/min)"
+};
+const double pitchFactors[] = {
+    1.0, 1000.0, 1000000.0, 0.016666666666666666, 0.15915494309189535, 0.016666666666666666
+};
+const int pitchCount = 6;
+
+// Energy
+const char* energyUnits[] = {
+    "Joules (J)", "Kilojoules (kJ)", "Megajoules (MJ)", "Calories (cal)", "Kilocalories (kcal)",
+    "Watt-hours (Wh)", "Kilowatt-hours (kWh)", "BTU"
+};
+const double energyFactors[] = {
+    1.0, 1000.0, 1000000.0, 4.184, 4184.0,
+    3600.0, 3600000.0, 1055.05585
+};
+const int energyCount = 8;
+
+// Power
+const char* powerUnits[] = {
+    "Watts (W)", "Kilowatts (kW)", "Megawatts (MW)", "Horsepower (hp)", "Metric HP (PS)", "BTU/hour (BTU/h)"
+};
+const double powerFactors[] = {
+    1.0, 1000.0, 1000000.0, 745.69987158227, 735.49875, 0.29307107
+};
+const int powerCount = 6;
 
 typedef struct {
     const char* token;
@@ -178,7 +241,57 @@ const UnitAlias aliasTable[] = {
     {"bar", 8, 2, "Pressure [M \xC2\xB7 L\xE2\x81\xBB\xC2\xB9 \xC2\xB7 T\xE2\x81\xBB\xC2\xB2]"},
     {"psi", 8, 3, "Pressure [M \xC2\xB7 L\xE2\x81\xBB\xC2\xB9 \xC2\xB7 T\xE2\x81\xBB\xC2\xB2]"},
     {"atm", 8, 4, "Pressure [M \xC2\xB7 L\xE2\x81\xBB\xC2\xB9 \xC2\xB7 T\xE2\x81\xBB\xC2\xB2]"},
-    {"mmhg", 8, 5, "Pressure [M \xC2\xB7 L\xE2\x81\xBB\xC2\xB9 \xC2\xB7 T\xE2\x81\xBB\xC2\xB2]"}, {"torr", 8, 5, "Pressure [M \xC2\xB7 L\xE2\x81\xBB\xC2\xB9 \xC2\xB7 T\xE2\x81\xBB\xC2\xB2]"}
+    {"mmhg", 8, 5, "Pressure [M \xC2\xB7 L\xE2\x81\xBB\xC2\xB9 \xC2\xB7 T\xE2\x81\xBB\xC2\xB2]"}, {"torr", 8, 5, "Pressure [M \xC2\xB7 L\xE2\x81\xBB\xC2\xB9 \xC2\xB7 T\xE2\x81\xBB\xC2\xB2]"},
+
+    // Time Extensions
+    {"ms", 7, 6, "Time [T]"}, {"millisecond", 7, 6, "Time [T]"}, {"milliseconds", 7, 6, "Time [T]"},
+    {"us", 7, 7, "Time [T]"}, {"microsecond", 7, 7, "Time [T]"}, {"microseconds", 7, 7, "Time [T]"},
+    {"ns", 7, 8, "Time [T]"}, {"nanosecond", 7, 8, "Time [T]"}, {"nanoseconds", 7, 8, "Time [T]"},
+    {"mo", 7, 9, "Time [T]"}, {"month", 7, 9, "Time [T]"}, {"months", 7, 9, "Time [T]"},
+    {"decade", 7, 10, "Time [T]"}, {"decades", 7, 10, "Time [T]"},
+    {"century", 7, 11, "Time [T]"}, {"centuries", 7, 11, "Time [T]"},
+
+    // Data Rate
+    {"bps", 9, 0, "Bandwidth [Bits \xC2\xB7 T\xE2\x81\xBB\xC2\xB9]"}, {"bit/s", 9, 0, "Bandwidth [Bits \xC2\xB7 T\xE2\x81\xBB\xC2\xB9]"},
+    {"kbps", 9, 1, "Bandwidth [Bits \xC2\xB7 T\xE2\x81\xBB\xC2\xB9]"}, {"kbit/s", 9, 1, "Bandwidth [Bits \xC2\xB7 T\xE2\x81\xBB\xC2\xB9]"},
+    {"mbps", 9, 2, "Bandwidth [Bits \xC2\xB7 T\xE2\x81\xBB\xC2\xB9]"}, {"mbit/s", 9, 2, "Bandwidth [Bits \xC2\xB7 T\xE2\x81\xBB\xC2\xB9]"},
+    {"gbps", 9, 3, "Bandwidth [Bits \xC2\xB7 T\xE2\x81\xBB\xC2\xB9]"}, {"gbit/s", 9, 3, "Bandwidth [Bits \xC2\xB7 T\xE2\x81\xBB\xC2\xB9]"},
+    {"b/s", 9, 4, "Bandwidth [Bits \xC2\xB7 T\xE2\x81\xBB\xC2\xB9]"}, {"byte/s", 9, 4, "Bandwidth [Bits \xC2\xB7 T\xE2\x81\xBB\xC2\xB9]"},
+    {"kb/s", 9, 5, "Bandwidth [Bits \xC2\xB7 T\xE2\x81\xBB\xC2\xB9]"}, {"kbyte/s", 9, 5, "Bandwidth [Bits \xC2\xB7 T\xE2\x81\xBB\xC2\xB9]"},
+    {"mb/s", 9, 6, "Bandwidth [Bits \xC2\xB7 T\xE2\x81\xBB\xC2\xB9]"}, {"mbyte/s", 9, 6, "Bandwidth [Bits \xC2\xB7 T\xE2\x81\xBB\xC2\xB9]"},
+    {"56k", 9, 7, "Bandwidth [Bits \xC2\xB7 T\xE2\x81\xBB\xC2\xB9]"},
+    {"t1", 9, 8, "Bandwidth [Bits \xC2\xB7 T\xE2\x81\xBB\xC2\xB9]"},
+    {"100base", 9, 9, "Bandwidth [Bits \xC2\xB7 T\xE2\x81\xBB\xC2\xB9]"},
+
+    // Angle / Coordinates
+    {"deg", 10, 0, "Angle [Plane Angle]"}, {"degree", 10, 0, "Angle [Plane Angle]"}, {"degrees", 10, 0, "Angle [Plane Angle]"},
+    {"rad", 10, 1, "Angle [Plane Angle]"}, {"radian", 10, 1, "Angle [Plane Angle]"}, {"radians", 10, 1, "Angle [Plane Angle]"},
+    {"grad", 10, 2, "Angle [Plane Angle]"}, {"gradian", 10, 2, "Angle [Plane Angle]"},
+    {"arcmin", 10, 3, "Angle [Plane Angle]"}, {"arcsec", 10, 4, "Angle [Plane Angle]"},
+    {"mrad", 10, 5, "Angle [Plane Angle]"}, {"mil", 10, 6, "Angle [Plane Angle]"}, {"mils", 10, 6, "Angle [Plane Angle]"},
+    {"rev", 10, 7, "Angle [Plane Angle]"}, {"revolution", 10, 7, "Angle [Plane Angle]"},
+
+    // Audio Pitch & Frequency
+    {"hz", 11, 0, "Frequency [T\xE2\x81\xBB\xC2\xB9]"}, {"hertz", 11, 0, "Frequency [T\xE2\x81\xBB\xC2\xB9]"},
+    {"khz", 11, 1, "Frequency [T\xE2\x81\xBB\xC2\xB9]"}, {"mhz", 11, 2, "Frequency [T\xE2\x81\xBB\xC2\xB9]"},
+    {"rpm", 11, 3, "Frequency [T\xE2\x81\xBB\xC2\xB9]"}, {"rad/s", 11, 4, "Frequency [T\xE2\x81\xBB\xC2\xB9]"},
+    {"bpm", 11, 5, "Frequency [T\xE2\x81\xBB\xC2\xB9]"},
+
+    // Energy
+    {"j", 12, 0, "Energy [M \xC2\xB7 L\xC2\xB2 \xC2\xB7 T\xE2\x81\xBB\xC2\xB2]"}, {"joule", 12, 0, "Energy [M \xC2\xB7 L\xC2\xB2 \xC2\xB7 T\xE2\x81\xBB\xC2\xB2]"}, {"joules", 12, 0, "Energy [M \xC2\xB7 L\xC2\xB2 \xC2\xB7 T\xE2\x81\xBB\xC2\xB2]"},
+    {"kj", 12, 1, "Energy [M \xC2\xB7 L\xC2\xB2 \xC2\xB7 T\xE2\x81\xBB\xC2\xB2]"}, {"mj", 12, 2, "Energy [M \xC2\xB7 L\xC2\xB2 \xC2\xB7 T\xE2\x81\xBB\xC2\xB2]"},
+    {"cal", 12, 3, "Energy [M \xC2\xB7 L\xC2\xB2 \xC2\xB7 T\xE2\x81\xBB\xC2\xB2]"}, {"calorie", 12, 3, "Energy [M \xC2\xB7 L\xC2\xB2 \xC2\xB7 T\xE2\x81\xBB\xC2\xB2]"}, {"calories", 12, 3, "Energy [M \xC2\xB7 L\xC2\xB2 \xC2\xB7 T\xE2\x81\xBB\xC2\xB2]"},
+    {"kcal", 12, 4, "Energy [M \xC2\xB7 L\xC2\xB2 \xC2\xB7 T\xE2\x81\xBB\xC2\xB2]"},
+    {"wh", 12, 5, "Energy [M \xC2\xB7 L\xC2\xB2 \xC2\xB7 T\xE2\x81\xBB\xC2\xB2]"}, {"kwh", 12, 6, "Energy [M \xC2\xB7 L\xC2\xB2 \xC2\xB7 T\xE2\x81\xBB\xC2\xB2]"},
+    {"btu", 12, 7, "Energy [M \xC2\xB7 L\xC2\xB2 \xC2\xB7 T\xE2\x81\xBB\xC2\xB2]"},
+
+    // Power
+    {"w", 13, 0, "Power [M \xC2\xB7 L\xC2\xB2 \xC2\xB7 T\xE2\x81\xBB\xC2\xB3]"}, {"watt", 13, 0, "Power [M \xC2\xB7 L\xC2\xB2 \xC2\xB7 T\xE2\x81\xBB\xC2\xB3]"}, {"watts", 13, 0, "Power [M \xC2\xB7 L\xC2\xB2 \xC2\xB7 T\xE2\x81\xBB\xC2\xB3]"},
+    {"kw", 13, 1, "Power [M \xC2\xB7 L\xC2\xB2 \xC2\xB7 T\xE2\x81\xBB\xC2\xB3]"}, {"kilowatt", 13, 1, "Power [M \xC2\xB7 L\xC2\xB2 \xC2\xB7 T\xE2\x81\xBB\xC2\xB3]"},
+    {"mw", 13, 2, "Power [M \xC2\xB7 L\xC2\xB2 \xC2\xB7 T\xE2\x81\xBB\xC2\xB3]"}, {"megawatt", 13, 2, "Power [M \xC2\xB7 L\xC2\xB2 \xC2\xB7 T\xE2\x81\xBB\xC2\xB3]"},
+    {"hp", 13, 3, "Power [M \xC2\xB7 L\xC2\xB2 \xC2\xB7 T\xE2\x81\xBB\xC2\xB3]"}, {"horsepower", 13, 3, "Power [M \xC2\xB7 L\xC2\xB2 \xC2\xB7 T\xE2\x81\xBB\xC2\xB3]"},
+    {"ps", 13, 4, "Power [M \xC2\xB7 L\xC2\xB2 \xC2\xB7 T\xE2\x81\xBB\xC2\xB3]"},
+    {"btu/h", 13, 5, "Power [M \xC2\xB7 L\xC2\xB2 \xC2\xB7 T\xE2\x81\xBB\xC2\xB3]"}, {"btuh", 13, 5, "Power [M \xC2\xB7 L\xC2\xB2 \xC2\xB7 T\xE2\x81\xBB\xC2\xB3]"}
 };
 const int aliasCount = sizeof(aliasTable) / sizeof(aliasTable[0]);
 
@@ -191,6 +304,11 @@ double GetFactor(int cat, int index) {
     if (cat == 6 && index >= 0 && index < volCount) return volFactors[index];
     if (cat == 7 && index >= 0 && index < timeCount) return timeFactors[index];
     if (cat == 8 && index >= 0 && index < pressCount) return pressFactors[index];
+    if (cat == 9 && index >= 0 && index < dataRateCount) return dataRateFactors[index];
+    if (cat == 10 && index >= 0 && index < angleCount) return angleFactors[index];
+    if (cat == 11 && index >= 0 && index < pitchCount) return pitchFactors[index];
+    if (cat == 12 && index >= 0 && index < energyCount) return energyFactors[index];
+    if (cat == 13 && index >= 0 && index < powerCount) return powerFactors[index];
     return 1.0;
 }
 
@@ -204,6 +322,11 @@ const char* GetUnitName(int cat, int index) {
     if (cat == 6 && index >= 0 && index < volCount) return volUnits[index];
     if (cat == 7 && index >= 0 && index < timeCount) return timeUnits[index];
     if (cat == 8 && index >= 0 && index < pressCount) return pressUnits[index];
+    if (cat == 9 && index >= 0 && index < dataRateCount) return dataRateUnits[index];
+    if (cat == 10 && index >= 0 && index < angleCount) return angleUnits[index];
+    if (cat == 11 && index >= 0 && index < pitchCount) return pitchUnits[index];
+    if (cat == 12 && index >= 0 && index < energyCount) return energyUnits[index];
+    if (cat == 13 && index >= 0 && index < powerCount) return powerUnits[index];
     return "";
 }
 
@@ -217,6 +340,11 @@ int GetUnitCount(int cat) {
     if (cat == 6) return volCount;
     if (cat == 7) return timeCount;
     if (cat == 8) return pressCount;
+    if (cat == 9) return dataRateCount;
+    if (cat == 10) return angleCount;
+    if (cat == 11) return pitchCount;
+    if (cat == 12) return energyCount;
+    if (cat == 13) return powerCount;
     return 0;
 }
 
@@ -239,6 +367,19 @@ void FormatValue(double val, char* out, int precIdx, int formatIdx) {
         m_sprintf(out, "%.4e", val);
         return;
     }
+    if (formatIdx == 2) { // Engineering
+        if (val == 0.0) {
+            m_sprintf(out, "0");
+            return;
+        }
+        double absVal = val < 0.0 ? -val : val;
+        int exp = 0;
+        while (absVal >= 1000.0 && exp < 30) { absVal /= 1000.0; exp += 3; }
+        while (absVal < 1.0 && absVal > 0.0 && exp > -30) { absVal *= 1000.0; exp -= 3; }
+        double mantissa = val < 0.0 ? -absVal : absVal;
+        m_sprintf(out, "%.3f e%+d", mantissa, exp);
+        return;
+    }
     
     if (precIdx == 0) { // Auto
         if (val != 0.0 && (val > -1e-5 && val < 1e-5)) {
@@ -254,6 +395,10 @@ void FormatValue(double val, char* out, int precIdx, int formatIdx) {
         m_sprintf(out, "%.4f", val);
     } else if (precIdx == 4) { // 6 dec
         m_sprintf(out, "%.6f", val);
+    } else if (precIdx == 5) { // 8 dec
+        m_sprintf(out, "%.8f", val);
+    } else if (precIdx == 6) { // 10 dec
+        m_sprintf(out, "%.10f", val);
     } else {
         m_sprintf(out, "%.6g", val);
     }
@@ -318,16 +463,43 @@ void DoConvert() {
     FormatValue(result, resStr, precIdx, formatIdx);
     SetWindowTextA(hOutput, resStr);
 
-    // Formula label
+    // Formula label and reciprocal ratios
     const char* fromName = GetUnitName(catIdx, fromIdx);
     const char* toName = GetUnitName(catIdx, toIdx);
-    char eqStr[384];
-    if (isBelowAbsZero) {
-        m_sprintf(eqStr, "Formula: %g %s = %s %s (Below Abs Zero!)", val, fromName, resStr, toName);
+    char eqStr[512];
+
+    double forwardRatio = 1.0;
+    double recipRatio = 1.0;
+    if (catIdx != 2) {
+        double fFrom = GetFactor(catIdx, fromIdx);
+        double fTo = GetFactor(catIdx, toIdx);
+        if (fTo <= 0.0) fTo = 1.0;
+        if (fFrom <= 0.0) fFrom = 1.0;
+        forwardRatio = fFrom / fTo;
+        recipRatio = fTo / fFrom;
+    }
+    char fwdStr[64], recipStr[64];
+    FormatValue(forwardRatio, fwdStr, precIdx, formatIdx);
+    FormatValue(recipRatio, recipStr, precIdx, formatIdx);
+
+    if (catIdx == 2) {
+        if (isBelowAbsZero) {
+            m_sprintf(eqStr, "Formula: %g %s = %s %s (Below Abs Zero!)", val, fromName, resStr, toName);
+        } else {
+            m_sprintf(eqStr, "Formula: %g %s = %s %s", val, fromName, resStr, toName);
+        }
     } else {
-        m_sprintf(eqStr, "Formula: %g %s = %s %s", val, fromName, resStr, toName);
+        m_sprintf(eqStr, "Formula: %g %s = %s %s | Reciprocal: 1 %s = %s %s", val, fromName, resStr, toName, toName, recipStr, fromName);
     }
     SetWindowTextA(hFormulaStatic, eqStr);
+
+    char statusBuf[256];
+    if (catIdx == 2) {
+        m_sprintf(statusBuf, " Converted: %s %s = %s %s", buffer, fromName, resStr, toName);
+    } else {
+        m_sprintf(statusBuf, " Converted: %s %s = %s %s [Reciprocal: 1 %s = %s %s]", buffer, fromName, resStr, toName, toName, recipStr, fromName);
+    }
+    SetWindowTextA(hStatusBar, statusBuf);
 
     // Log entry
     char logLine[256];
@@ -792,7 +964,7 @@ void ShowHelpDialog(HWND hwnd) {
         "  - Smart Parser   : Evaluates phrases like '100 km/h to m/s' or '50 psi to bar'\r\n"
         "  - State Save/Load: Full quicksave (F5) and quickload (F9) persistence\r\n\r\n"
         "PHYSICAL CATEGORIES (9 total):\r\n"
-        "  Length, Weight, Temperature, Data Storage, Speed, Area, Volume, Time, Pressure",
+        "  Length, Weight, Temperature, Data Storage, Speed, Area, Volume, Time, Pressure, Data Rate, Angle / GPS, Audio Pitch, Energy, Power",
         "KConverter Pro Help", MB_OK | MB_ICONINFORMATION);
 }
 
@@ -903,11 +1075,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SendMessageA(hPrecision, CB_ADDSTRING, 0, (LPARAM)"2 Dec");
             SendMessageA(hPrecision, CB_ADDSTRING, 0, (LPARAM)"4 Dec");
             SendMessageA(hPrecision, CB_ADDSTRING, 0, (LPARAM)"6 Dec");
+            SendMessageA(hPrecision, CB_ADDSTRING, 0, (LPARAM)"8 Dec");
+            SendMessageA(hPrecision, CB_ADDSTRING, 0, (LPARAM)"10 Dec");
             SendMessageA(hPrecision, CB_SETCURSEL, 0, 0);
 
             // Populate Format Combo
             SendMessageA(hFormat, CB_ADDSTRING, 0, (LPARAM)"Standard");
             SendMessageA(hFormat, CB_ADDSTRING, 0, (LPARAM)"Scientific");
+            SendMessageA(hFormat, CB_ADDSTRING, 0, (LPARAM)"Engineering");
             SendMessageA(hFormat, CB_SETCURSEL, 0, 0);
 
             PopulateUnits(0);
