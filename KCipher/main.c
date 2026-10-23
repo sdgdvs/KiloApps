@@ -268,6 +268,37 @@ static void DoRC4(const char* in, char* out, const char* key, int decrypt) {
     }
 }
 
+static void DoXOR(const char* in, char* out, const char* key, int decrypt) {
+    int keyLen = k_strlen(key);
+    if (keyLen == 0) key = "SECRET";
+    keyLen = k_strlen(key);
+
+    const char hexChars[] = "0123456789ABCDEF";
+
+    if (!decrypt) {
+        int inLen = k_strlen(in);
+        int outPos = 0;
+        for (int i = 0; i < inLen; i++) {
+            unsigned char c = ((unsigned char)in[i]) ^ ((unsigned char)key[i % keyLen]);
+            out[outPos++] = hexChars[(c >> 4) & 0x0F];
+            out[outPos++] = hexChars[c & 0x0F];
+        }
+        out[outPos] = 0;
+    } else {
+        int inLen = k_strlen(in);
+        int outPos = 0;
+        for (int i = 0; i < inLen; i += 2) {
+            char h1 = in[i];
+            char h2 = (i + 1 < inLen) ? in[i + 1] : '0';
+            int v1 = (h1 >= '0' && h1 <= '9') ? (h1 - '0') : (h1 >= 'A' && h1 <= 'F' ? h1 - 'A' + 10 : (h1 >= 'a' && h1 <= 'f' ? h1 - 'a' + 10 : 0));
+            int v2 = (h2 >= '0' && h2 <= '9') ? (h2 - '0') : (h2 >= 'A' && h2 <= 'F' ? h2 - 'A' + 10 : (h2 >= 'a' && h2 <= 'f' ? h2 - 'a' + 10 : 0));
+            unsigned char encByte = (unsigned char)((v1 << 4) | v2);
+            out[outPos++] = (char)(encByte ^ ((unsigned char)key[(i / 2) % keyLen]));
+        }
+        out[outPos] = 0;
+    }
+}
+
 static void ProcessCipher(int decrypt) {
     char inText[4096];
     char outText[4096];
@@ -306,6 +337,11 @@ static void ProcessCipher(int decrypt) {
         case 4: { // RC4
             if (keyText[0] == 0) k_strcpy(keyText, "ARCHITECT_1999");
             DoRC4(inText, outText, keyText, decrypt);
+            break;
+        }
+        case 5: { // XOR Stream
+            if (keyText[0] == 0) k_strcpy(keyText, "SECRET");
+            DoXOR(inText, outText, keyText, decrypt);
             break;
         }
         default:
@@ -381,7 +417,7 @@ static void LoadSnapshot(HWND hwnd) {
         if (keyLen > 0 && keyLen < (int)sizeof(keyText)) ReadFile(hFile, keyText, keyLen, &read, NULL);
         CloseHandle(hFile);
 
-        if (sel >= 0 && sel <= 4) {
+        if (sel >= 0 && sel <= 5) {
             SendMessageA(g_hComboCipher, CB_SETCURSEL, sel, 0);
         }
         SetWindowTextA(g_hEditInput, inText);
@@ -448,6 +484,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SendMessageA(g_hComboCipher, CB_ADDSTRING, 0, (LPARAM)"Rail Fence (Key = Rails)");
             SendMessageA(g_hComboCipher, CB_ADDSTRING, 0, (LPARAM)"Atbash Mirror");
             SendMessageA(g_hComboCipher, CB_ADDSTRING, 0, (LPARAM)"RC4 Stream (Key = Passphrase)");
+            SendMessageA(g_hComboCipher, CB_ADDSTRING, 0, (LPARAM)"XOR Stream (Key = Passphrase)");
             SendMessageA(g_hComboCipher, CB_SETCURSEL, 0, 0);
             SendMessageA(g_hComboCipher, WM_SETFONT, (WPARAM)g_hFontNormal, TRUE);
 
@@ -548,6 +585,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 else if (sel == 2) SetWindowTextA(g_hEditKey, "3");
                 else if (sel == 3) SetWindowTextA(g_hEditKey, "(None)");
                 else if (sel == 4) SetWindowTextA(g_hEditKey, "ARCHITECT_1999");
+                else if (sel == 5) SetWindowTextA(g_hEditKey, "SECRET");
             }
             return 0;
         }

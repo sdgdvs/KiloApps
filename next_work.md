@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-expander
-next_agent: kilo-creator
+current_agent: kilo-creator
+next_agent: kilo-graphics
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -31,7 +31,7 @@ current_targets:
   kilo_tester: KConverter
   kilo_usability: KTrader
   kilo_qa: KFont
-  kilo_expander: KCipher
+  kilo_expander: KTrader
 virtual_web_target: kweb://slashnet
 virtual_web_rotation:
 - kweb://slashnet
@@ -52,9 +52,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-qa
-  app: KHex
-  timestamp: '2026-10-23T08:25:40-07:00'
+  agent: kilo-expander
+  app: KCipher
+  timestamp: '2026-10-23T08:44:11-07:00'
 last_planner_run: '2026-10-23T07:15:00Z'
 ---
 
@@ -169,11 +169,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KSolitaire` | `KiloOS/public/apps/ksolitaire.html`, `KSolitaire/main.c` | Pass 5 QA: verify deck state, move undo stack, scoring, F5/F9 persistence + dual Win32 C build (`KSolitaire.exe` <999 KB); promote to Mature if complete. |
 
 ### 7. Feature Expander Queue (`kilo-expander` — Phase VI VFS Mesh & RFMS Multiplayer)
-- **Active Target**: `KCipher`
+- **Active Target**: `KTrader`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KCipher` | `KiloOS/public/apps/kcipher.html`, `KCipher/main.c` | Phase VI VFS & IPC Mesh: add KiloOS VFS Open/Save (`/home/crypto/*.enc`), `"Inspect Ciphertext in KHex"` IPC launch (`OS_LAUNCH_APP`), multi-stage cipher chaining pipeline, and dual Win32 C parity. |
 | `KTrader` | `KiloOS/public/apps/ktrader.html`, `KTrader/main.c` | Phase VI RFMS & VFS Expansion: add RFMS Galactic Syndicate Trade Ticker & Cargo Duel (explicit Connect button, 25s solo AI fallback), commodity futures ledger, VFS manifest export (`/home/saves/ktrader_ledger.json`), and C parity. |
 | `KNet` | `KiloOS/public/apps/knet.html`, `KNet/main.c` | Phase VI VFS & TINAG Hardening: remove Tier 3 darknet nodes (`darknet`, `deep-core`, `10.19.99.4/classified`, `echo-subsystem.net`) from surface bookmark chips per `arg_plan.md` §6 (keep address-bar routing!), add `"Save Page/Spool to KiloOS VFS"` (`/home/downloads/`), and route new `kweb://` parodies (`slashnet`, `trapster`, `cabled`, `scallion`, `demoscene`, `rfc-archive`). |
 | `KBBS` | `KiloOS/public/apps/kbbs.html`, `KBBS/main.c` | Phase VI VFS & Door Game Mesh: allow downloading ANSI `.NFO` / `.TXT` bulletins from KBBS File Area directly into KiloOS VFS (`/home/bbs/`) and launching `KPad` or `KHex` via `OS_LAUNCH_APP` to inspect them. |
@@ -183,6 +182,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KStarForge` | `KiloOS/public/apps/kstarforge.html`, `KStarForge/main.c` | Phase VI RFMS Blueprint Exchange & Fleet Skirmish: integrate `retro_multiplayer.js` for online ship blueprint sharing & tactical test skirmish (explicit Connect gate, 25s AI fallback) + VFS `/home/blueprints/` save/load. |
 | `KAnomaly` | `KiloOS/public/apps/kanomaly.html`, `KAnomaly/main.c` | Phase VI VFS Signal Bridge: allow exporting demodulated subterranean signal frames directly to `/sys/anomaly_capture.sig` in KiloOS VFS and launching `KMatrix` or `KHex` via `OS_LAUNCH_APP` for cross-app decoding. |
 | `KDB` | `KiloOS/public/apps/kdb.html`, `KDB/main.c` | Phase VI VFS Database Mount & Chart Bridge: mount/save `.kdb` / `.csv` tables directly in KiloOS VFS (`/home/data/`) and add `"Plot in KGraph"` IPC launch (`OS_LAUNCH_APP` to `kgraph`). |
+| `KCipher` | `KiloOS/public/apps/kcipher.html`, `KCipher/main.c` | Phase VI VFS & IPC Mesh: add KiloOS VFS Open/Save (`/home/crypto/*.enc`), `"Inspect Ciphertext in KHex"` IPC launch (`OS_LAUNCH_APP`), multi-stage cipher chaining pipeline, and dual Win32 C parity. |
 
 ---
 
@@ -234,6 +234,14 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-23T08:44:11-07:00 — kilo-expander: KCipher (KCipher Phase VI VFS/IPC Mesh, Cipher Chaining & AES/RSA Workstation Depth)**
+  - Status: PASS (0 errors, web 153.9 KB, native compiled cleanly < 999 KB; startup, Vite & security_lint PASS).
+  - Added KiloOS VFS Open/Save (/home/crypto/*.enc) and Inspect Ciphertext in KHex IPC mesh (OS_LAUNCH_APP).
+  - Created Multi-Stage Cipher Chaining Pipeline tab with forward/reverse execution, intermediate stage inspection, and VFS presets.
+  - Implemented AES-128 (CTR) and Toy RSA asymmetric keypair engines with real-time key input validation badges.
+  - Enhanced cryptanalytic frequency metrics with Chi-Squared (χ²) test vs standard English and updated dual Win32 C parity with XOR stream.
+  - Handoff: Advanced `kilo-expander` to `KTrader`; rotated active agent to `kilo-creator`.
+
 - **2026-10-23T08:25:40-07:00 — kilo-qa: KHex (Pass 5 QA, Dual Parity & Mature Quarantine)**
   - Status: PASS (0 errors, web 272.9 KB, native 37.5 KB < 999 KB; startup, Vite & security_lint PASS).
   - State & Tutorial: Verified F5/F9 quicksave/quickload with full multi-arch disassembler & search persistence, khex_tutorialSeen, and Escape modal dismissals.
@@ -258,9 +266,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Composition: D Dorian / D minor synthwave, 6-channel counterpoint, 3rd/7th shell voicings, 5:3 swing groove.
   - Patches & DSP: 2-Op FM slap bass (<C3), crystalline lead w/ delayed LFO vibrato, flute counterpoint, inharmonic metallic hats, selective SPC700 stereo delay (190ms/240ms), UI audio toggle & [M] shortcut.
   - Handoff: Advanced `kilo-soundscape` to `KQuest`; rotated active agent to `kilo-tester`.
-
-- **2026-10-23T07:33:56-07:00 — kilo-graphics: KTrader (Imagen 3 Visual Assets & Docking Spaceport Upgrade)**
-  - Status: PASS ✅ (0 errors, web 112.2 KB, native 26.0 KB < 999 KB; startup, Vite & security_lint PASS).
-  - Integrated Imagen 3 space assets (nebula backdrop, player/pirate ship hulls, dreadnought, celestial planets) with procedural fallbacks.
-  - Replaced primitive 4x4 station square with multi-segment orbital spaceport hub and verified 0 perimeter glints across HTML and Win32 C.
-  - Handoff: Advanced `kilo-graphics` to `KRogue`; rotated active agent to `kilo-soundscape`.

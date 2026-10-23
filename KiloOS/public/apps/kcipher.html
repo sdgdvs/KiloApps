@@ -733,6 +733,97 @@
       transform: translateY(0);
       opacity: 1;
     }
+  
+    /* Key validation badges */
+    .key-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 1px 6px;
+      border-radius: 3px;
+      font-size: 11px;
+      font-family: var(--font-mono);
+      font-weight: 600;
+      letter-spacing: 0.3px;
+    }
+    .badge-valid {
+      background: rgba(16, 185, 129, 0.18);
+      color: var(--success);
+      border: 1px solid var(--success);
+    }
+    .badge-invalid {
+      background: rgba(239, 68, 68, 0.18);
+      color: var(--danger);
+      border: 1px solid var(--danger);
+    }
+
+    /* Pipeline / Chaining Styles */
+    .pipeline-container {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      height: 100%;
+      overflow-y: auto;
+      padding: 8px;
+    }
+    .pipeline-toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 8px 12px;
+      flex-shrink: 0;
+    }
+    .stage-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      flex: 1;
+      overflow-y: auto;
+    }
+    .stage-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 10px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      transition: border-color 0.15s;
+    }
+    .stage-card:hover {
+      border-color: var(--border-focus);
+    }
+    .stage-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      font-weight: 700;
+      font-size: 12px;
+    }
+    .stage-body {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      font-size: 12px;
+    }
+    .stage-preview {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      padding: 4px 8px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--text-muted);
+      overflow-x: auto;
+      white-space: pre;
+      max-height: 50px;
+    }
+
   </style>
 </head>
 <body data-theme="cyber">
@@ -746,6 +837,8 @@
     </div>
     <div class="header-actions">
       <button class="btn btn-sm" id="btnNewSession" title="Reset Session">📄 New</button>
+      <button class="btn btn-sm" id="btnVFSOpen" title="Open from KiloOS VFS (/home/crypto/)">📁 VFS Open</button>
+      <button class="btn btn-sm" id="btnVFSSave" title="Save ciphertext to KiloOS VFS (/home/crypto/)">💾 VFS Save</button>
       <button class="btn btn-sm" id="btnQuickSave" title="Save state (F5)">💾 QuickSave [F5]</button>
       <button class="btn btn-sm" id="btnQuickLoad" title="Load state (F9)">📂 QuickLoad [F9]</button>
       <button class="btn btn-sm" id="btnExportJSON" title="Export session JSON">📤 Export</button>
@@ -765,6 +858,7 @@
   <!-- Navigation Tabs -->
   <nav class="tabs-bar">
     <button class="tab-btn active" data-tab="tabWorkbench">🔐 Cipher Workbench</button>
+    <button class="tab-btn" data-tab="tabChain">🔗 Cipher Pipeline</button>
     <button class="tab-btn" data-tab="tabFrequency">📊 Frequency Analysis</button>
     <button class="tab-btn" data-tab="tabCracker">⚡ Caesar Auto-Cracker</button>
     <button class="tab-btn" data-tab="tabStego">🖼️ Image Steganography</button>
@@ -787,6 +881,8 @@
             <option value="substitution">Monoalphabetic Substitution</option>
             <option value="rc4">RC4 (ARC4 1990s Stream)</option>
             <option value="xor">Vernam XOR Stream</option>
+            <option value="aes">AES-128 (CTR Stream)</option>
+            <option value="rsa">RSA Toy (Public Key)</option>
           </select>
         </div>
 
@@ -797,18 +893,21 @@
           <span id="rotShiftVal" style="font-family: var(--font-mono); font-weight: bold; width: 24px;">13</span>
           <button class="btn btn-sm" id="btnPresetRot13">ROT-13</button>
           <button class="btn btn-sm" id="btnPresetCaesar">Caesar (3)</button>
+          <span id="rotKeyBadge" class="key-badge badge-valid">✓ Shift 13</span>
         </div>
 
         <div id="vigenereControls" class="config-group" style="display: none;">
           <label for="vigenereKey">Key Phrase:</label>
           <input type="text" id="vigenereKey" class="config-input" value="KILO1999" placeholder="Enter keyword" style="width: 140px;">
           <label><input type="checkbox" id="vigenereKeepPunct" checked> Keep Punctuation</label>
+          <span id="vigKeyBadge" class="key-badge badge-valid">✓ Alpha Key</span>
         </div>
 
         <div id="railControls" class="config-group" style="display: none;">
           <label for="railCount">Rails (2-10):</label>
           <input type="range" id="railCount" min="2" max="10" value="3" style="width: 70px;">
           <span id="railCountVal" style="font-family: var(--font-mono); font-weight: bold; width: 20px;">3</span>
+          <span id="railKeyBadge" class="key-badge badge-valid">✓ Rails 3</span>
         </div>
 
         <div id="subControls" class="config-group" style="display: none;">
@@ -816,6 +915,7 @@
           <input type="text" id="subAlphabet" class="config-input" value="ZYXWVUTSRQPONMLKJIHGFEDCBA" maxlength="26" style="width: 220px; font-family: var(--font-mono);">
           <button class="btn btn-sm" id="btnSubRandom">🎲 Randomize</button>
           <button class="btn btn-sm" id="btnSubReset">Reset</button>
+          <span id="subKeyBadge" class="key-badge badge-valid">✓ 26 Letters</span>
         </div>
 
         <div id="rc4Controls" class="config-group" style="display: none;">
@@ -826,6 +926,7 @@
             <option value="hex">Hexadecimal</option>
             <option value="base64">Base64</option>
           </select>
+          <span id="rc4KeyBadge" class="key-badge badge-valid">✓ Valid Key</span>
         </div>
 
         <div id="xorControls" class="config-group" style="display: none;">
@@ -835,6 +936,29 @@
             <option value="hex">Hex Output</option>
             <option value="base64">Base64 Output</option>
           </select>
+          <span id="xorKeyBadge" class="key-badge badge-valid">✓ Valid Key</span>
+        </div>
+
+        <div id="aesControls" class="config-group" style="display: none;">
+          <label for="aesKey">Passphrase (128-bit):</label>
+          <input type="text" id="aesKey" class="config-input" value="ARCHITECT_1999!" style="width: 150px;">
+          <select id="aesFormat" class="config-input">
+            <option value="hex">Hex Output</option>
+            <option value="base64">Base64 Output</option>
+          </select>
+          <span id="aesKeyBadge" class="key-badge badge-valid">✓ 128-bit</span>
+        </div>
+
+        <div id="rsaControls" class="config-group" style="display: none;">
+          <label for="rsaP">p:</label>
+          <input type="number" id="rsaP" class="config-input" value="61" min="3" max="251" style="width: 46px;">
+          <label for="rsaQ">q:</label>
+          <input type="number" id="rsaQ" class="config-input" value="53" min="3" max="251" style="width: 46px;">
+          <label for="rsaE">e:</label>
+          <input type="number" id="rsaE" class="config-input" value="17" style="width: 46px;">
+          <button class="btn btn-sm" id="btnGenRsaKeys" title="Generate Random Prime Keypair">🎲 Gen Keys</button>
+          <span id="rsaKeyInfo" style="font-family: var(--font-mono); font-size: 11px; color: var(--accent);">n=3233, d=2753</span>
+          <span id="rsaKeyBadge" class="key-badge badge-valid">✓ Valid RSA</span>
         </div>
 
         <div class="config-group" style="margin-left: auto;">
@@ -883,6 +1007,7 @@
           <div class="panel-header">
             <span>OUTPUT / CIPHERTEXT</span>
             <div style="display: flex; gap: 4px;">
+              <button class="btn btn-sm" id="btnInspectKHex" title="Inspect Ciphertext in KHex Hex Editor">🔍 Inspect in KHex</button>
               <button class="btn btn-sm" id="btnSendToFreq">📊 Analyze</button>
               <button class="btn btn-sm" id="btnSendToStego">🖼️ To Stego</button>
               <button class="btn btn-sm" id="btnClearOutput">Clear</button>
@@ -903,6 +1028,50 @@
         <div style="font-weight: bold; color: var(--primary); margin-bottom: 2px;" id="cipherDescTitle">Caesar / ROT-13 Cipher</div>
         <div style="color: var(--text-muted); line-height: 1.4; overflow-y: auto;" id="cipherDescBody">
           Monoalphabetic substitution where each letter in the plaintext is shifted by a fixed number of positions down the alphabet. Known since Julius Caesar (~58 BC). ROT-13 is its symmetric special case (shift 13) widely used in Usenet and BBS boards in 1999.
+        </div>
+      </div>
+    </div>
+
+        <!-- TAB 1.5: CIPHER PIPELINE / CHAINING -->
+    <div id="tabChain" class="tab-content">
+      <div class="pipeline-container">
+        <!-- Pipeline Toolbar -->
+        <div class="pipeline-toolbar">
+          <div style="font-weight: bold; font-size: 13px; color: var(--primary);">⛓️ Multi-Stage Cipher Chaining Pipeline</div>
+          <div style="display: flex; gap: 6px; margin-left: auto; flex-wrap: wrap;">
+            <button class="btn btn-sm btn-primary" id="btnPipelineEncrypt">▶ Run Forward (Encrypt)</button>
+            <button class="btn btn-sm btn-accent" id="btnPipelineDecrypt">◀ Run Reverse (Decrypt)</button>
+            <button class="btn btn-sm" id="btnAddPipelineStage">➕ Add Stage</button>
+            <button class="btn btn-sm" id="btnResetPipeline">🔄 Reset</button>
+            <button class="btn btn-sm" id="btnImportFromWorkbench">📥 From Workbench</button>
+            <button class="btn btn-sm" id="btnPushToWorkbench">📤 To Workbench</button>
+            <button class="btn btn-sm" id="btnSavePipelineVFS">💾 VFS Save Pipeline</button>
+            <button class="btn btn-sm" id="btnLoadPipelineVFS">📂 VFS Load Pipeline</button>
+          </div>
+        </div>
+
+        <div style="font-size: 11px; color: var(--text-muted); padding: 0 4px;">
+          Chain multiple cryptographic transformations sequentially (e.g. ROT-N ➔ Vigenère ➔ RC4 / XOR ➔ AES). Each stage processes the output of the preceding stage.
+        </div>
+
+        <!-- Stage Cards List -->
+        <div id="pipelineStagesList" class="stage-list">
+          <!-- Dynamically populated by renderPipeline() -->
+        </div>
+
+        <!-- Pipeline Final Output Box -->
+        <div class="panel" style="flex-shrink: 0; min-height: 120px; max-height: 180px;">
+          <div class="panel-header">
+            <span>PIPELINE FINAL OUTPUT</span>
+            <div style="display: flex; gap: 4px;">
+              <span id="pipelineStats" style="font-size: 11px; color: var(--text-muted); align-self: center; margin-right: 8px;">Chars: 0 | Entropy: 0.00</span>
+              <button class="btn btn-sm" id="btnCopyPipelineOutput">📋 Copy</button>
+              <button class="btn btn-sm" id="btnInspectPipelineKHex">🔍 Inspect in KHex</button>
+            </div>
+          </div>
+          <div class="panel-body">
+            <textarea id="pipelineFinalOutput" class="text-box" placeholder="Result of pipeline execution appears here..." readonly></textarea>
+          </div>
         </div>
       </div>
     </div>
@@ -933,6 +1102,13 @@
           <div class="stat-row">
             <span>Index of Coincidence (IoC):</span>
             <span id="statIoC" class="stat-val">0.000</span>
+          </div>
+          <div class="stat-row" style="margin-top: 4px;">
+            <span>Chi-Squared (χ² vs English):</span>
+            <span id="statChi2" class="stat-val">0.00</span>
+          </div>
+          <div style="font-size: 11px; color: var(--text-muted); margin-top: -6px;" id="statChi2Desc">
+            English ~ &lt; 35 | Uniform / Encrypted &gt; 150
           </div>
           <div style="font-size: 11px; color: var(--text-muted); margin-top: -6px;" id="statIoCDesc">
             English plaintext ~ 0.067 | Random ciphertext ~ 0.038
@@ -1301,6 +1477,278 @@
       U: 2.758, V: 0.978, W: 2.360, X: 0.150, Y: 1.974, Z: 0.074
     };
 
+    /* =========================================================
+       KILOOS VFS & CROSS-APP IPC BRIDGE
+       ========================================================= */
+    const KiloVFS = {
+      write(path, data) {
+        try {
+          const payload = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
+          window.parent.postMessage({ type: 'VFS_WRITE', path, data: payload, requestId: 'w_' + Date.now() }, '*');
+          window.parent.postMessage({ type: 'OS_NOTIFY', title: document.title, message: `Saved to VFS: ${path}` }, '*');
+        } catch (e) {}
+      },
+      read(path, cb) {
+        const reqId = 'r_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+        const handler = (e) => {
+          if (e.data && e.data.type === 'VFS_READ_DONE' && e.data.requestId === reqId) {
+            window.removeEventListener('message', handler);
+            cb(e.data.data, e.data.path);
+          }
+        };
+        window.addEventListener('message', handler);
+        try { window.parent.postMessage({ type: 'VFS_READ', path, requestId: reqId }, '*'); } catch (e) {}
+      },
+      openPicker(cb) {
+        const reqId = 'open_' + Date.now();
+        const handler = (e) => {
+          if (e.data && e.data.type === 'VFS_SHOW_OPEN_DONE' && e.data.requestId === reqId) {
+            window.removeEventListener('message', handler);
+            if (e.data.path) KiloVFS.read(e.data.path, cb);
+          }
+        };
+        window.addEventListener('message', handler);
+        try { window.parent.postMessage({ type: 'VFS_SHOW_OPEN', requestId: reqId }, '*'); } catch (e) {}
+      },
+      launchApp(targetApp, path = '') {
+        try { window.parent.postMessage({ type: 'OS_LAUNCH_APP', targetApp, path }, '*'); } catch (e) {}
+      }
+    };
+
+    /* =========================================================
+       ADVANCED CRYPTO ENGINES: AES-128 (CTR) & TOY RSA
+       ========================================================= */
+
+    // Educational AES-128 Core (Rijndael S-Box in CTR Stream Mode)
+    const AES_SBOX = [
+      0x63, 0x7c, 0x77, 0x7b, 0xf2, 0x6b, 0x6f, 0xc5, 0x30, 0x01, 0x67, 0x2b, 0xfe, 0xd7, 0xab, 0x76,
+      0xca, 0x82, 0xc9, 0x7d, 0xfa, 0x59, 0x47, 0xf0, 0xad, 0xd4, 0xa2, 0xaf, 0x9c, 0xa4, 0x72, 0xc0,
+      0xb7, 0xfd, 0x93, 0x26, 0x36, 0x3f, 0xf7, 0xcc, 0x34, 0xa5, 0xe5, 0xf1, 0x71, 0xd8, 0x31, 0x15,
+      0x04, 0xc7, 0x23, 0xc3, 0x18, 0x96, 0x05, 0x9a, 0x07, 0x12, 0x80, 0xe2, 0xeb, 0x27, 0xb2, 0x75,
+      0x09, 0x83, 0x2c, 0x1a, 0x1b, 0x6e, 0x5a, 0xa0, 0x52, 0x3b, 0xd6, 0xb3, 0x29, 0xe3, 0x2f, 0x84,
+      0x53, 0xd1, 0x00, 0xed, 0x20, 0xfc, 0xb1, 0x5b, 0x6a, 0xcb, 0xbe, 0x39, 0x4a, 0x4c, 0x58, 0xcf,
+      0xd0, 0xef, 0xaa, 0xfb, 0x43, 0x4d, 0x33, 0x85, 0x45, 0xf9, 0x02, 0x7f, 0x50, 0x3c, 0x9f, 0xa8,
+      0x51, 0xa3, 0x40, 0x8f, 0x92, 0x9d, 0x38, 0xf5, 0xbc, 0xb6, 0xda, 0x21, 0x10, 0xff, 0xf3, 0xd2,
+      0xcd, 0x0c, 0x13, 0xec, 0x5f, 0x97, 0x44, 0x17, 0xc4, 0xa7, 0x7e, 0x3d, 0x64, 0x5d, 0x19, 0x73,
+      0x60, 0x81, 0x4f, 0xdc, 0x22, 0x2a, 0x90, 0x88, 0x46, 0xee, 0xb8, 0x14, 0xde, 0x5e, 0x0b, 0xdb,
+      0xe0, 0x32, 0x3a, 0x0a, 0x49, 0x06, 0x24, 0x5e, 0xc2, 0xd3, 0xac, 0x62, 0x91, 0x95, 0xe4, 0x79,
+      0xe7, 0xc8, 0x37, 0x6d, 0x8d, 0xd5, 0x4e, 0xa9, 0x6c, 0x56, 0xf4, 0xea, 0x65, 0x7a, 0xae, 0x08,
+      0xba, 0x78, 0x25, 0x2e, 0x1c, 0xa6, 0xb4, 0xc6, 0xe8, 0xdd, 0x74, 0x1f, 0x4b, 0xbd, 0x8b, 0x8a,
+      0x70, 0x3e, 0xb5, 0x66, 0x48, 0x03, 0xf6, 0x0e, 0x61, 0x35, 0x57, 0xb9, 0x86, 0xc1, 0x1d, 0x9e,
+      0xe1, 0xf8, 0x98, 0x11, 0x69, 0xd9, 0x8e, 0x94, 0x9b, 0x1e, 0x87, 0xe9, 0xce, 0x55, 0x28, 0xdf,
+      0x8c, 0xa1, 0x89, 0x0d, 0xbf, 0xe6, 0x42, 0x68, 0x41, 0x99, 0x2d, 0x0f, 0xb0, 0x54, 0xbb, 0x16
+    ];
+    const AES_RCON = [0x00, 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1b, 0x36];
+
+    function aesKeyExpand(keyBytes) {
+      const w = [];
+      for (let i = 0; i < 4; i++) {
+        w[i] = [keyBytes[4*i] || 0, keyBytes[4*i+1] || 0, keyBytes[4*i+2] || 0, keyBytes[4*i+3] || 0];
+      }
+      for (let i = 4; i < 44; i++) {
+        let temp = [...w[i - 1]];
+        if (i % 4 === 0) {
+          const k0 = temp.shift();
+          temp.push(k0);
+          temp = temp.map(b => AES_SBOX[b]);
+          temp[0] ^= AES_RCON[i / 4];
+        }
+        w[i] = [
+          w[i - 4][0] ^ temp[0],
+          w[i - 4][1] ^ temp[1],
+          w[i - 4][2] ^ temp[2],
+          w[i - 4][3] ^ temp[3]
+        ];
+      }
+      return w;
+    }
+
+    function gmul(a, b) {
+      let p = 0;
+      for (let c = 0; c < 8; c++) {
+        if (b & 1) p ^= a;
+        const hi = a & 0x80;
+        a = (a << 1) & 0xff;
+        if (hi) a ^= 0x1b;
+        b >>= 1;
+      }
+      return p;
+    }
+
+    function aesCipherBlock(block, roundKeys) {
+      let state = [];
+      for (let r = 0; r < 4; r++) {
+        state[r] = [block[r], block[r+4], block[r+8], block[r+12]];
+      }
+      // AddRoundKey 0
+      for (let c = 0; c < 4; c++) {
+        for (let r = 0; r < 4; r++) state[r][c] ^= roundKeys[c][r];
+      }
+      // 9 Rounds
+      for (let round = 1; round <= 9; round++) {
+        // SubBytes
+        for (let r = 0; r < 4; r++) for (let c = 0; c < 4; c++) state[r][c] = AES_SBOX[state[r][c]];
+        // ShiftRows
+        state[1] = [state[1][1], state[1][2], state[1][3], state[1][0]];
+        state[2] = [state[2][2], state[2][3], state[2][0], state[2][1]];
+        state[3] = [state[3][3], state[3][0], state[3][1], state[3][2]];
+        // MixColumns
+        for (let c = 0; c < 4; c++) {
+          const a = [state[0][c], state[1][c], state[2][c], state[3][c]];
+          state[0][c] = gmul(a[0], 2) ^ gmul(a[1], 3) ^ a[2] ^ a[3];
+          state[1][c] = a[0] ^ gmul(a[1], 2) ^ gmul(a[2], 3) ^ a[3];
+          state[2][c] = a[0] ^ a[1] ^ gmul(a[2], 2) ^ gmul(a[3], 3);
+          state[3][c] = gmul(a[0], 3) ^ a[1] ^ a[2] ^ gmul(a[3], 2);
+        }
+        // AddRoundKey
+        const base = round * 4;
+        for (let c = 0; c < 4; c++) {
+          for (let r = 0; r < 4; r++) state[r][c] ^= roundKeys[base + c][r];
+        }
+      }
+      // Round 10
+      for (let r = 0; r < 4; r++) for (let c = 0; c < 4; c++) state[r][c] = AES_SBOX[state[r][c]];
+      state[1] = [state[1][1], state[1][2], state[1][3], state[1][0]];
+      state[2] = [state[2][2], state[2][3], state[2][0], state[2][1]];
+      state[3] = [state[3][3], state[3][0], state[3][1], state[3][2]];
+      for (let c = 0; c < 4; c++) {
+        for (let r = 0; r < 4; r++) state[r][c] ^= roundKeys[40 + c][r];
+      }
+      const out = [];
+      for (let c = 0; c < 4; c++) for (let r = 0; r < 4; r++) out[c*4 + r] = state[r][c];
+      return out;
+    }
+
+    function cipherAES(text, keyStr, decrypt = false, format = 'hex') {
+      if (!text) return '';
+      let keyBytes = Array.from(new TextEncoder().encode(keyStr || 'ARCHITECT_1999!'));
+      while (keyBytes.length < 16) keyBytes.push(0x5a);
+      keyBytes = keyBytes.slice(0, 16);
+      const roundKeys = aesKeyExpand(keyBytes);
+
+      let inputBytes = [];
+      if (decrypt && format === 'hex') {
+        const cleanHex = text.replace(/[^0-9a-fA-F]/g, '');
+        for (let k = 0; k < cleanHex.length; k += 2) inputBytes.push(parseInt(cleanHex.substr(k, 2), 16));
+      } else if (decrypt && format === 'base64') {
+        try {
+          const bin = atob(text.trim());
+          for (let k = 0; k < bin.length; k++) inputBytes.push(bin.charCodeAt(k));
+        } catch (e) {
+          inputBytes = Array.from(new TextEncoder().encode(text));
+        }
+      } else {
+        inputBytes = Array.from(new TextEncoder().encode(text));
+      }
+
+      const outBytes = [];
+      const nonce = [0x19, 0x99, 0x01, 0x01, 0xde, 0xad, 0xbe, 0xef];
+      for (let i = 0; i < inputBytes.length; i += 16) {
+        const blockIdx = Math.floor(i / 16);
+        const counterBlock = [
+          ...nonce,
+          0, 0, 0, 0,
+          (blockIdx >> 24) & 0xff, (blockIdx >> 16) & 0xff, (blockIdx >> 8) & 0xff, blockIdx & 0xff
+        ];
+        const keyStream = aesCipherBlock(counterBlock, roundKeys);
+        for (let b = 0; b < 16 && (i + b) < inputBytes.length; b++) {
+          outBytes.push(inputBytes[i + b] ^ keyStream[b]);
+        }
+      }
+
+      if (decrypt) {
+        return new TextDecoder().decode(new Uint8Array(outBytes));
+      } else {
+        if (format === 'hex') {
+          return outBytes.map(b => b.toString(16).padStart(2, '0')).join('');
+        } else {
+          let binStr = '';
+          outBytes.forEach(b => { binStr += String.fromCharCode(b); });
+          return btoa(binStr);
+        }
+      }
+    }
+
+    // Educational Toy RSA Core
+    function modPow(base, exp, mod) {
+      let res = 1n;
+      let b = BigInt(base) % BigInt(mod);
+      let e = BigInt(exp);
+      const m = BigInt(mod);
+      while (e > 0n) {
+        if (e % 2n === 1n) res = (res * b) % m;
+        e = e / 2n;
+        b = (b * b) % m;
+      }
+      return Number(res);
+    }
+
+    function gcd(a, b) {
+      while (b !== 0) {
+        const t = b;
+        b = a % b;
+        a = t;
+      }
+      return a;
+    }
+
+    function modInverse(e, phi) {
+      let [m0, y, x] = [phi, 0, 1];
+      if (phi === 1) return 0;
+      while (e > 1) {
+        const q = Math.floor(e / phi);
+        let t = phi;
+        phi = e % phi;
+        e = t;
+        t = y;
+        y = x - q * y;
+        x = t;
+      }
+      if (x < 0) x += m0;
+      return x;
+    }
+
+    function isProbablePrime(n) {
+      if (n < 2) return false;
+      if (n === 2 || n === 3) return true;
+      if (n % 2 === 0 || n % 3 === 0) return false;
+      for (let i = 5; i * i <= n; i += 6) {
+        if (n % i === 0 || n % (i + 2) === 0) return false;
+      }
+      return true;
+    }
+
+    function cipherRSA(text, p, q, e, decrypt = false) {
+      p = parseInt(p, 10) || 61;
+      q = parseInt(q, 10) || 53;
+      e = parseInt(e, 10) || 17;
+      const n = p * q;
+      const phi = (p - 1) * (q - 1);
+      const d = modInverse(e, phi);
+
+      if (!decrypt) {
+        // Encrypt characters to space-separated integers
+        const numbers = [];
+        for (let i = 0; i < text.length; i++) {
+          const m = text.charCodeAt(i);
+          numbers.push(modPow(m, e, n));
+        }
+        return numbers.join(' ');
+      } else {
+        // Decrypt space-separated integers back to characters
+        const tokens = text.trim().split(/\s+/);
+        let out = '';
+        for (const tok of tokens) {
+          const c = parseInt(tok, 10);
+          if (!isNaN(c)) {
+            const m = modPow(c, d, n);
+            out += String.fromCharCode(m);
+          }
+        }
+        return out;
+      }
+    }
+
     // 1. Caesar / ROT-N
     function cipherCaesar(text, shift, decrypt = false) {
       if (decrypt) shift = (26 - (shift % 26)) % 26;
@@ -1559,7 +2007,17 @@
         entropy -= p * Math.log2(p);
       }
 
-      return { ioc, entropy, counts, totalAlpha };
+      // Chi-squared statistic vs standard English letter frequencies
+      let chi2 = 0;
+      if (totalAlpha > 0) {
+        for (const [letter, freqPct] of Object.entries(ENGLISH_FREQ)) {
+          const expected = (freqPct / 100) * totalAlpha;
+          const observed = counts[letter] || 0;
+          chi2 += ((observed - expected) ** 2) / Math.max(0.1, expected);
+        }
+      }
+
+      return { ioc, entropy, counts, totalAlpha, chi2 };
     }
 
     // Automated English Quadgram / Letter scoring
@@ -1859,6 +2317,11 @@
       rc4Format: 'hex',
       xorKey: 'SECRET',
       xorFormat: 'hex',
+      aesKey: 'ARCHITECT_1999!',
+      aesFormat: 'hex',
+      rsaP: 61,
+      rsaQ: 53,
+      rsaE: 17,
       liveTransform: true,
       theme: 'cyber',
       tutorialStep: 1
@@ -1882,6 +2345,19 @@
       rc4Format: document.getElementById('rc4Format'),
       xorKey: document.getElementById('xorKey'),
       xorFormat: document.getElementById('xorFormat'),
+      aesKey: document.getElementById('aesKey'),
+      aesFormat: document.getElementById('aesFormat'),
+      rsaP: document.getElementById('rsaP'),
+      rsaQ: document.getElementById('rsaQ'),
+      rsaE: document.getElementById('rsaE'),
+      btnGenRsaKeys: document.getElementById('btnGenRsaKeys'),
+      rsaKeyInfo: document.getElementById('rsaKeyInfo'),
+      btnVFSOpen: document.getElementById('btnVFSOpen'),
+      btnVFSSave: document.getElementById('btnVFSSave'),
+      btnInspectKHex: document.getElementById('btnInspectKHex'),
+      pipelineStagesList: document.getElementById('pipelineStagesList'),
+      pipelineFinalOutput: document.getElementById('pipelineFinalOutput'),
+      pipelineStats: document.getElementById('pipelineStats'),
       chkLiveTransform: document.getElementById('chkLiveTransform'),
       themeSelect: document.getElementById('themeSelect'),
       btnSoundToggle: document.getElementById('btnSoundToggle'),
@@ -1923,6 +2399,312 @@
       }
     }
 
+
+    /* =========================================================
+       KEY INPUT GUARDS & CRYPTOGRAPHIC VALIDATION
+       ========================================================= */
+
+    function updateKeyGuards() {
+      // 1. Caesar Shift Guard
+      const shift = parseInt(elements.rotShift.value, 10);
+      const rotBadge = document.getElementById('rotKeyBadge');
+      if (rotBadge) {
+        if (shift >= 1 && shift <= 25) {
+          rotBadge.className = 'key-badge badge-valid';
+          rotBadge.textContent = `✓ Shift ${shift}`;
+        } else {
+          rotBadge.className = 'key-badge badge-invalid';
+          rotBadge.textContent = '⚠ Invalid Shift';
+        }
+      }
+
+      // 2. Vigenère Guard
+      const vigKey = elements.vigenereKey.value || '';
+      const vigClean = vigKey.replace(/[^a-zA-Z]/g, '');
+      const vigBadge = document.getElementById('vigKeyBadge');
+      if (vigBadge) {
+        if (vigClean.length >= 2) {
+          vigBadge.className = 'key-badge badge-valid';
+          vigBadge.textContent = `✓ Key (${vigClean.length} letters)`;
+        } else {
+          vigBadge.className = 'key-badge badge-invalid';
+          vigBadge.textContent = '⚠ Need ≥2 letters';
+        }
+      }
+
+      // 3. Rail Fence Guard
+      const rails = parseInt(elements.railCount.value, 10);
+      const railBadge = document.getElementById('railKeyBadge');
+      if (railBadge) {
+        if (rails >= 2 && rails <= 20) {
+          railBadge.className = 'key-badge badge-valid';
+          railBadge.textContent = `✓ Rails ${rails}`;
+        } else {
+          railBadge.className = 'key-badge badge-invalid';
+          railBadge.textContent = '⚠ 2-20 rails';
+        }
+      }
+
+      // 4. Substitution Guard
+      const subAlpha = (elements.subAlphabet.value || '').toUpperCase();
+      const uniqueChars = new Set(subAlpha.replace(/[^A-Z]/g, ''));
+      const subBadge = document.getElementById('subKeyBadge');
+      if (subBadge) {
+        if (subAlpha.length === 26 && uniqueChars.size === 26) {
+          subBadge.className = 'key-badge badge-valid';
+          subBadge.textContent = '✓ 26 Unique Letters';
+        } else {
+          subBadge.className = 'key-badge badge-invalid';
+          subBadge.textContent = `⚠ ${uniqueChars.size}/26 Unique`;
+        }
+      }
+
+      // 5. RC4 Guard
+      const rc4K = elements.rc4Key.value || '';
+      const rc4Badge = document.getElementById('rc4KeyBadge');
+      if (rc4Badge) {
+        if (rc4K.length >= 4) {
+          rc4Badge.className = 'key-badge badge-valid';
+          rc4Badge.textContent = `✓ Key (${rc4K.length} chars)`;
+        } else {
+          rc4Badge.className = 'key-badge badge-invalid';
+          rc4Badge.textContent = '⚠ Min 4 chars';
+        }
+      }
+
+      // 6. XOR Guard
+      const xorK = elements.xorKey.value || '';
+      const xorBadge = document.getElementById('xorKeyBadge');
+      if (xorBadge) {
+        if (xorK.length >= 1) {
+          xorBadge.className = 'key-badge badge-valid';
+          xorBadge.textContent = `✓ Key (${xorK.length} chars)`;
+        } else {
+          xorBadge.className = 'key-badge badge-invalid';
+          xorBadge.textContent = '⚠ Empty Key';
+        }
+      }
+
+      // 7. AES Guard
+      const aesK = elements.aesKey ? elements.aesKey.value : '';
+      const aesBadge = document.getElementById('aesKeyBadge');
+      if (aesBadge) {
+        const bytes = new TextEncoder().encode(aesK).length;
+        if (bytes >= 8) {
+          aesBadge.className = 'key-badge badge-valid';
+          aesBadge.textContent = `✓ Key (${bytes}B / 128b)`;
+        } else {
+          aesBadge.className = 'key-badge badge-invalid';
+          aesBadge.textContent = '⚠ Min 8 chars';
+        }
+      }
+
+      // 8. RSA Guard
+      const p = parseInt(elements.rsaP ? elements.rsaP.value : '61', 10);
+      const q = parseInt(elements.rsaQ ? elements.rsaQ.value : '53', 10);
+      const e = parseInt(elements.rsaE ? elements.rsaE.value : '17', 10);
+      const rsaBadge = document.getElementById('rsaKeyBadge');
+      const rsaInfo = document.getElementById('rsaKeyInfo');
+      if (rsaBadge && rsaInfo) {
+        const pPrime = isProbablePrime(p);
+        const qPrime = isProbablePrime(q);
+        const phi = (p - 1) * (q - 1);
+        const eCoprime = gcd(e, phi) === 1;
+        if (pPrime && qPrime && p !== q && eCoprime) {
+          const d = modInverse(e, phi);
+          rsaBadge.className = 'key-badge badge-valid';
+          rsaBadge.textContent = '✓ Valid RSA';
+          rsaInfo.textContent = `n=${p*q}, d=${d}`;
+        } else {
+          rsaBadge.className = 'key-badge badge-invalid';
+          rsaBadge.textContent = !pPrime || !qPrime ? '⚠ p,q must be prime' : (p === q ? '⚠ p ≠ q required' : '⚠ e not coprime');
+        }
+      }
+    }
+
+    /* =========================================================
+       MULTI-STAGE CIPHER CHAINING PIPELINE ENGINE
+       ========================================================= */
+
+    const pipelineState = {
+      stages: [
+        { id: 1, cipher: 'rot13', key: '7', output: '' },
+        { id: 2, cipher: 'vigenere', key: 'ARCHITECT', output: '' },
+        { id: 3, cipher: 'xor', key: 'SECRET', output: '' }
+      ],
+      nextId: 4
+    };
+
+    function addPipelineStage(cipher = 'rot13', key = '13') {
+      pipelineState.stages.push({
+        id: pipelineState.nextId++,
+        cipher,
+        key,
+        output: ''
+      });
+      renderPipeline();
+      executePipeline(false);
+      audio.playClick();
+    }
+
+    function removePipelineStage(idx) {
+      if (pipelineState.stages.length <= 1) {
+        showToast('Pipeline must have at least 1 stage');
+        audio.playError();
+        return;
+      }
+      pipelineState.stages.splice(idx, 1);
+      renderPipeline();
+      executePipeline(false);
+      audio.playClick();
+    }
+
+    function movePipelineStage(idx, dir) {
+      const target = idx + dir;
+      if (target < 0 || target >= pipelineState.stages.length) return;
+      const tmp = pipelineState.stages[idx];
+      pipelineState.stages[idx] = pipelineState.stages[target];
+      pipelineState.stages[target] = tmp;
+      renderPipeline();
+      executePipeline(false);
+      audio.playClick();
+    }
+
+    function executePipeline(decrypt = false) {
+      let currentText = elements.inputText.value || "TRANSMISSION_ALPHA_1999";
+      const stages = decrypt ? [...pipelineState.stages].reverse() : pipelineState.stages;
+
+      stages.forEach((stage) => {
+        let out = '';
+        switch (stage.cipher) {
+          case 'rot13':
+            out = cipherCaesar(currentText, parseInt(stage.key, 10) || 13, decrypt);
+            break;
+          case 'vigenere':
+            out = cipherVigenere(currentText, stage.key || 'KILO', decrypt, true);
+            break;
+          case 'railfence':
+            out = cipherRailFence(currentText, parseInt(stage.key, 10) || 3, decrypt);
+            break;
+          case 'atbash':
+            out = cipherSubstitution(currentText, "ZYXWVUTSRQPONMLKJIHGFEDCBA", decrypt);
+            break;
+          case 'substitution':
+            out = cipherSubstitution(currentText, stage.key || "ZYXWVUTSRQPONMLKJIHGFEDCBA", decrypt);
+            break;
+          case 'rc4':
+            out = cipherRC4(currentText, stage.key || 'SECRET', decrypt, 'hex');
+            break;
+          case 'xor':
+            out = cipherXOR(currentText, stage.key || 'SECRET', decrypt, 'hex');
+            break;
+          case 'aes':
+            out = cipherAES(currentText, stage.key || 'ARCHITECT_1999!', decrypt, 'hex');
+            break;
+          case 'rsa':
+            out = cipherRSA(currentText, 61, 53, 17, decrypt);
+            break;
+          default:
+            out = currentText;
+        }
+        stage.output = out;
+        currentText = out;
+      });
+
+      const finalArea = document.getElementById('pipelineFinalOutput');
+      if (finalArea) finalArea.value = currentText;
+
+      const pStats = document.getElementById('pipelineStats');
+      if (pStats) {
+        const stats = calculateStats(currentText);
+        pStats.textContent = `Chars: ${currentText.length} | Entropy: ${stats.entropy.toFixed(2)} bits | Mode: ${decrypt ? 'Decrypt' : 'Encrypt'}`;
+      }
+
+      pipelineState.stages.forEach((stg) => {
+        const prevEl = document.getElementById(`stagePreview_${stg.id}`);
+        if (prevEl) prevEl.textContent = stg.output.slice(0, 100) + (stg.output.length > 100 ? '...' : '');
+      });
+
+      if (decrypt) audio.playDecrypt();
+      else audio.playEncrypt();
+    }
+
+    function renderPipeline() {
+      const container = document.getElementById('pipelineStagesList');
+      if (!container) return;
+      container.innerHTML = '';
+
+      const cipherNames = {
+        rot13: 'Caesar / ROT-N',
+        vigenere: 'Vigenère',
+        railfence: 'Rail Fence',
+        atbash: 'Atbash Mirror',
+        substitution: 'Substitution',
+        rc4: 'RC4 Stream',
+        xor: 'XOR Stream',
+        aes: 'AES-128 (CTR)',
+        rsa: 'Toy RSA'
+      };
+
+      pipelineState.stages.forEach((stage, idx) => {
+        const card = document.createElement('div');
+        card.className = 'stage-card';
+
+        card.innerHTML = `
+          <div class="stage-header">
+            <span>Stage #${idx + 1}: <span style="color: var(--primary);">${cipherNames[stage.cipher] || stage.cipher}</span></span>
+            <div style="display: flex; gap: 4px;">
+              <button class="btn btn-sm btn-up" data-idx="${idx}" title="Move Stage Up" ${idx === 0 ? 'disabled' : ''}>▲</button>
+              <button class="btn btn-sm btn-down" data-idx="${idx}" title="Move Stage Down" ${idx === pipelineState.stages.length - 1 ? 'disabled' : ''}>▼</button>
+              <button class="btn btn-sm btn-del" data-idx="${idx}" title="Remove Stage" style="color: var(--danger);">✕</button>
+            </div>
+          </div>
+          <div class="stage-body">
+            <label style="font-weight: 600;">Cipher:</label>
+            <select class="config-input sel-cipher" data-idx="${idx}">
+              <option value="rot13" ${stage.cipher === 'rot13' ? 'selected' : ''}>Caesar / ROT-N</option>
+              <option value="vigenere" ${stage.cipher === 'vigenere' ? 'selected' : ''}>Vigenère</option>
+              <option value="railfence" ${stage.cipher === 'railfence' ? 'selected' : ''}>Rail Fence</option>
+              <option value="atbash" ${stage.cipher === 'atbash' ? 'selected' : ''}>Atbash Mirror</option>
+              <option value="substitution" ${stage.cipher === 'substitution' ? 'selected' : ''}>Substitution</option>
+              <option value="rc4" ${stage.cipher === 'rc4' ? 'selected' : ''}>RC4 Stream</option>
+              <option value="xor" ${stage.cipher === 'xor' ? 'selected' : ''}>XOR Stream</option>
+              <option value="aes" ${stage.cipher === 'aes' ? 'selected' : ''}>AES-128 (CTR)</option>
+              <option value="rsa" ${stage.cipher === 'rsa' ? 'selected' : ''}>Toy RSA</option>
+            </select>
+            <label style="font-weight: 600;">Key / Param:</label>
+            <input type="text" class="config-input inp-key" data-idx="${idx}" value="${stage.key}" style="width: 140px; font-family: var(--font-mono);">
+          </div>
+          <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">Intermediate Output:</div>
+          <div class="stage-preview" id="stagePreview_${stage.id}">${stage.output ? stage.output.slice(0, 100) : '(Pending execution...)'}</div>
+        `;
+
+        card.querySelector('.btn-up')?.addEventListener('click', () => movePipelineStage(idx, -1));
+        card.querySelector('.btn-down')?.addEventListener('click', () => movePipelineStage(idx, 1));
+        card.querySelector('.btn-del')?.addEventListener('click', () => removePipelineStage(idx));
+        card.querySelector('.sel-cipher')?.addEventListener('change', (e) => {
+          stage.cipher = e.target.value;
+          if (stage.cipher === 'rot13') stage.key = '13';
+          else if (stage.cipher === 'vigenere') stage.key = 'ARCHITECT';
+          else if (stage.cipher === 'railfence') stage.key = '3';
+          else if (stage.cipher === 'atbash') stage.key = '(None)';
+          else if (stage.cipher === 'substitution') stage.key = 'ZYXWVUTSRQPONMLKJIHGFEDCBA';
+          else if (stage.cipher === 'rc4') stage.key = 'ARCHITECT_1999';
+          else if (stage.cipher === 'xor') stage.key = 'SECRET';
+          else if (stage.cipher === 'aes') stage.key = 'KILO1999!';
+          else if (stage.cipher === 'rsa') stage.key = '61,53,17';
+          renderPipeline();
+          executePipeline(false);
+        });
+        card.querySelector('.inp-key')?.addEventListener('input', (e) => {
+          stage.key = e.target.value;
+          executePipeline(false);
+        });
+
+        container.appendChild(card);
+      });
+    }
+
     // Switch Tab
     function switchTab(tabId) {
       document.querySelectorAll('.tab-btn').forEach(btn => {
@@ -1950,6 +2732,9 @@
       document.getElementById('subControls').style.display = c === 'substitution' ? 'flex' : 'none';
       document.getElementById('rc4Controls').style.display = c === 'rc4' ? 'flex' : 'none';
       document.getElementById('xorControls').style.display = c === 'xor' ? 'flex' : 'none';
+      if (document.getElementById('aesControls')) document.getElementById('aesControls').style.display = c === 'aes' ? 'flex' : 'none';
+      if (document.getElementById('rsaControls')) document.getElementById('rsaControls').style.display = c === 'rsa' ? 'flex' : 'none';
+      updateKeyGuards();
 
       elements.statusCipher.textContent = `Active: ${elements.cipherSelect.options[elements.cipherSelect.selectedIndex].text}`;
 
@@ -1982,6 +2767,14 @@
         xor: {
           title: "Vernam XOR Stream Cipher",
           body: "Bitwise XOR with repeating secret key. If the key is truly random, never reused, and as long as the message, it constitutes an unbreakable One-Time Pad (Shannon 1949)."
+        },
+        aes: {
+          title: "AES-128 (Advanced Encryption Standard - CTR Mode)",
+          body: "Rijndael block cipher selected in 1999 as the next-generation global symmetric standard. Operates in Counter (CTR) stream mode with 128-bit key and nonces, providing high cryptographic diffusion."
+        },
+        rsa: {
+          title: "Toy RSA Public Key Asymmetric Cipher",
+          body: "Invented in 1977 by Rivest, Shamir, and Adleman. Asymmetric public-key encryption using prime numbers p, q, public exponent e, and private exponent d. Character blocks are modularly exponentiated (c = m^e mod n)."
         }
       };
 
@@ -2017,6 +2810,12 @@
           break;
         case 'xor':
           output = cipherXOR(input, state.xorKey, false, state.xorFormat);
+          break;
+        case 'aes':
+          output = cipherAES(input, state.aesKey, false, state.aesFormat);
+          break;
+        case 'rsa':
+          output = cipherRSA(input, state.rsaP, state.rsaQ, state.rsaE, false);
           break;
         default:
           output = input;
@@ -2055,6 +2854,12 @@
         case 'xor':
           output = cipherXOR(input, state.xorKey, true, state.xorFormat);
           break;
+        case 'aes':
+          output = cipherAES(input, state.aesKey, true, state.aesFormat);
+          break;
+        case 'rsa':
+          output = cipherRSA(input, state.rsaP, state.rsaQ, state.rsaE, true);
+          break;
         default:
           output = input;
       }
@@ -2084,6 +2889,7 @@
 
       // Update Analysis Tab stats if active
       document.getElementById('statIoC').textContent = stats.ioc.toFixed(3);
+      if (document.getElementById('statChi2')) document.getElementById('statChi2').textContent = stats.chi2 ? stats.chi2.toFixed(2) : '0.00';
       document.getElementById('statEntropy').textContent = `${stats.entropy.toFixed(2)} bits`;
       document.getElementById('statTotalChars').textContent = outText.length;
       document.getElementById('statAlphaLetters').textContent = stats.totalAlpha;
@@ -2244,6 +3050,12 @@
         rc4Format: elements.rc4Format.value,
         xorKey: elements.xorKey.value,
         xorFormat: elements.xorFormat.value,
+        aesKey: elements.aesKey ? elements.aesKey.value : 'ARCHITECT_1999!',
+        aesFormat: elements.aesFormat ? elements.aesFormat.value : 'hex',
+        rsaP: elements.rsaP ? parseInt(elements.rsaP.value, 10) : 61,
+        rsaQ: elements.rsaQ ? parseInt(elements.rsaQ.value, 10) : 53,
+        rsaE: elements.rsaE ? parseInt(elements.rsaE.value, 10) : 17,
+        pipelineStages: pipelineState.stages,
         stegoText: document.getElementById('stegoText') ? document.getElementById('stegoText').value : '',
         theme: document.body.dataset.theme,
         timestamp: Date.now()
@@ -2291,6 +3103,15 @@
         state.xorKey = data.xorKey || 'SECRET';
         elements.xorFormat.value = data.xorFormat || 'hex';
         state.xorFormat = data.xorFormat || 'hex';
+        if (elements.aesKey && data.aesKey) { elements.aesKey.value = data.aesKey; state.aesKey = data.aesKey; }
+        if (elements.aesFormat && data.aesFormat) { elements.aesFormat.value = data.aesFormat; state.aesFormat = data.aesFormat; }
+        if (elements.rsaP && data.rsaP) { elements.rsaP.value = data.rsaP; state.rsaP = data.rsaP; }
+        if (elements.rsaQ && data.rsaQ) { elements.rsaQ.value = data.rsaQ; state.rsaQ = data.rsaQ; }
+        if (elements.rsaE && data.rsaE) { elements.rsaE.value = data.rsaE; state.rsaE = data.rsaE; }
+        if (data.pipelineStages && Array.isArray(data.pipelineStages)) {
+          pipelineState.stages = data.pipelineStages;
+          renderPipeline();
+        }
 
         const stegoText = document.getElementById('stegoText');
         if (stegoText && data.stegoText !== undefined) {
@@ -2521,11 +3342,193 @@
       // XOR Controls
       elements.xorKey.addEventListener('input', (e) => {
         state.xorKey = e.target.value;
+        updateKeyGuards();
         if (state.liveTransform) runEncrypt();
       });
       elements.xorFormat.addEventListener('change', (e) => {
         state.xorFormat = e.target.value;
         if (state.liveTransform) runEncrypt();
+      });
+
+      // AES Controls
+      elements.aesKey?.addEventListener('input', (e) => {
+        state.aesKey = e.target.value;
+        updateKeyGuards();
+        if (state.liveTransform) runEncrypt();
+      });
+      elements.aesFormat?.addEventListener('change', (e) => {
+        state.aesFormat = e.target.value;
+        if (state.liveTransform) runEncrypt();
+      });
+
+      // RSA Controls & Key Generator
+      elements.rsaP?.addEventListener('input', (e) => {
+        state.rsaP = parseInt(e.target.value, 10);
+        updateKeyGuards();
+        if (state.liveTransform) runEncrypt();
+      });
+      elements.rsaQ?.addEventListener('input', (e) => {
+        state.rsaQ = parseInt(e.target.value, 10);
+        updateKeyGuards();
+        if (state.liveTransform) runEncrypt();
+      });
+      elements.rsaE?.addEventListener('input', (e) => {
+        state.rsaE = parseInt(e.target.value, 10);
+        updateKeyGuards();
+        if (state.liveTransform) runEncrypt();
+      });
+
+      document.getElementById('btnGenRsaKeys')?.addEventListener('click', () => {
+        const primes = [17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97];
+        const p = primes[Math.floor(Math.random() * primes.length)];
+        let q = primes[Math.floor(Math.random() * primes.length)];
+        while (q === p) q = primes[Math.floor(Math.random() * primes.length)];
+        const phi = (p - 1) * (q - 1);
+        const eCandidates = [3, 5, 7, 11, 13, 17, 19, 23, 29];
+        let e = 17;
+        for (const cand of eCandidates) {
+          if (cand < phi && gcd(cand, phi) === 1) { e = cand; break; }
+        }
+        elements.rsaP.value = p;
+        elements.rsaQ.value = q;
+        elements.rsaE.value = e;
+        state.rsaP = p; state.rsaQ = q; state.rsaE = e;
+        updateKeyGuards();
+        if (state.liveTransform) runEncrypt();
+        showToast(`Generated RSA Keys: p=${p}, q=${q}, e=${e}`);
+        audio.playClick();
+      });
+
+      // VFS & IPC Integration Handlers
+      document.getElementById('btnVFSOpen')?.addEventListener('click', () => {
+        KiloVFS.openPicker((data, path) => {
+          if (data) {
+            elements.inputText.value = data;
+            runEncrypt();
+            showToast(`Loaded from VFS: ${path || 'file'}`);
+            audio.playDecrypt();
+          }
+        });
+        setTimeout(() => {
+          if (!elements.inputText.value) {
+            const path = prompt("Enter KiloOS VFS path to read (e.g. /home/crypto/message.enc):", "/home/crypto/message.enc");
+            if (path) {
+              KiloVFS.read(path, (data) => {
+                if (data) {
+                  elements.inputText.value = data;
+                  runEncrypt();
+                  showToast(`Loaded: ${path}`);
+                  audio.playDecrypt();
+                }
+              });
+            }
+          }
+        }, 250);
+      });
+
+      document.getElementById('btnVFSSave')?.addEventListener('click', () => {
+        const textToSave = elements.outputText.value || elements.inputText.value;
+        if (!textToSave) {
+          showToast('Nothing to save! Encrypt a message first.');
+          audio.playError();
+          return;
+        }
+        const defaultPath = `/home/crypto/cipher_${Date.now().toString().slice(-6)}.enc`;
+        const path = prompt("Save ciphertext to KiloOS VFS path:", defaultPath) || defaultPath;
+        KiloVFS.write(path, textToSave);
+        showToast(`Saved to VFS: ${path}`);
+        audio.playSave();
+      });
+
+      document.getElementById('btnInspectKHex')?.addEventListener('click', () => {
+        const text = elements.outputText.value || elements.inputText.value;
+        if (!text) {
+          showToast('No ciphertext to inspect! Encrypt a message first.');
+          audio.playError();
+          return;
+        }
+        const inspectPath = '/home/crypto/cipher_inspect.bin';
+        KiloVFS.write(inspectPath, text);
+        KiloVFS.launchApp('khex', inspectPath);
+        showToast('Ciphertext dispatched to KHex');
+        audio.playSave();
+      });
+
+      // Pipeline Toolbar Handlers
+      document.getElementById('btnPipelineEncrypt')?.addEventListener('click', () => executePipeline(false));
+      document.getElementById('btnPipelineDecrypt')?.addEventListener('click', () => executePipeline(true));
+      document.getElementById('btnAddPipelineStage')?.addEventListener('click', () => addPipelineStage('rot13', '13'));
+      document.getElementById('btnResetPipeline')?.addEventListener('click', () => {
+        pipelineState.stages = [
+          { id: 1, cipher: 'rot13', key: '7', output: '' },
+          { id: 2, cipher: 'vigenere', key: 'ARCHITECT', output: '' },
+          { id: 3, cipher: 'xor', key: 'SECRET', output: '' }
+        ];
+        renderPipeline();
+        executePipeline(false);
+        showToast('Pipeline reset to defaults');
+        audio.playClick();
+      });
+      document.getElementById('btnImportFromWorkbench')?.addEventListener('click', () => {
+        executePipeline(false);
+        showToast('Imported workbench input into pipeline');
+        audio.playClick();
+      });
+      document.getElementById('btnPushToWorkbench')?.addEventListener('click', () => {
+        const text = document.getElementById('pipelineFinalOutput').value;
+        if (text) {
+          elements.outputText.value = text;
+          updateStats();
+          switchTab('tabWorkbench');
+          showToast('Pipeline output sent to Workbench');
+          audio.playSave();
+        }
+      });
+      document.getElementById('btnCopyPipelineOutput')?.addEventListener('click', () => {
+        const text = document.getElementById('pipelineFinalOutput').value;
+        if (text && navigator.clipboard) {
+          navigator.clipboard.writeText(text);
+          showToast('Pipeline output copied to clipboard');
+          audio.playSave();
+        }
+      });
+      document.getElementById('btnInspectPipelineKHex')?.addEventListener('click', () => {
+        const text = document.getElementById('pipelineFinalOutput').value;
+        if (!text) {
+          showToast('Execute pipeline first!');
+          audio.playError();
+          return;
+        }
+        const inspectPath = '/home/crypto/pipeline_output.bin';
+        KiloVFS.write(inspectPath, text);
+        KiloVFS.launchApp('khex', inspectPath);
+        showToast('Pipeline output sent to KHex');
+        audio.playSave();
+      });
+      document.getElementById('btnSavePipelineVFS')?.addEventListener('click', () => {
+        const data = JSON.stringify(pipelineState.stages, null, 2);
+        const path = '/home/crypto/pipeline.json';
+        KiloVFS.write(path, data);
+        showToast('Pipeline saved to /home/crypto/pipeline.json');
+        audio.playSave();
+      });
+      document.getElementById('btnLoadPipelineVFS')?.addEventListener('click', () => {
+        KiloVFS.read('/home/crypto/pipeline.json', (data) => {
+          if (data) {
+            try {
+              const loaded = JSON.parse(data);
+              if (Array.isArray(loaded)) {
+                pipelineState.stages = loaded;
+                renderPipeline();
+                executePipeline(false);
+                showToast('Pipeline loaded from VFS');
+                audio.playDecrypt();
+              }
+            } catch (err) {
+              showToast('Corrupted pipeline file in VFS');
+            }
+          }
+        });
       });
 
       // Live Transform checkbox
@@ -3066,13 +4069,14 @@
         } else if (e.key === 'Enter' && e.ctrlKey) {
           e.preventDefault();
           runEncrypt();
-        } else if (e.ctrlKey && e.key >= '1' && e.key <= '5') {
+        } else if (e.ctrlKey && e.key >= '1' && e.key <= '6') {
           const tabMap = {
             '1': 'tabWorkbench',
-            '2': 'tabFrequency',
-            '3': 'tabCracker',
-            '4': 'tabStego',
-            '5': 'tabLore'
+            '2': 'tabChain',
+            '3': 'tabFrequency',
+            '4': 'tabCracker',
+            '5': 'tabStego',
+            '6': 'tabLore'
           };
           if (tabMap[e.key]) {
             e.preventDefault();
@@ -3082,7 +4086,10 @@
       });
 
       // Initial run & stego capacity
+      renderPipeline();
+      executePipeline(false);
       updateCipherControls();
+      updateKeyGuards();
       updateStats();
       updateStegoCapacity();
     });
