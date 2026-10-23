@@ -601,7 +601,7 @@
       <button class="btn" style="background:#a6e3a1; color:#11111b; font-size:0.75rem; padding:4px 8px; font-weight:700;" onclick="saveSlot(0)" title="Quick Save (F5)">💾 Save (F5)</button>
       <button class="btn" style="background:#89b4fa; color:#11111b; font-size:0.75rem; padding:4px 8px; font-weight:700;" onclick="loadSlot(0)" title="Quick Load (F9)">📂 Load (F9)</button>
       <button class="btn" style="background:#313244; color:#cdd6f4; font-size:0.75rem; padding:4px 8px;" onclick="setGameState(STATE.CONFIG)" title="Game Settings & Key Binds">⚙️ Settings</button>
-      <button class="btn btn-accent" id="audio-toggle-btn" onclick="toggleAudio()" style="font-size:0.75rem; padding:4px 8px;">🔊 SFX: ON</button>
+      <button class="btn btn-accent" id="audio-toggle-btn" onclick="toggleAudio()" title="Toggle Sound & Music [M]" style="font-size:0.75rem; padding:4px 8px;">🔊 Audio: ON</button>
       <button class="btn btn-primary" onclick="openHelpModal()" style="font-size:0.75rem; padding:4px 8px;">❓ Help & Codex (H/F1)</button>
     </div>
   </header>
@@ -2615,146 +2615,757 @@
       }, 500);
     });
 
-    // --- PHASE 13: WEB AUDIO API SOUND EFFECTS ENGINE ---
+    // --- PHASE 13: YM2612 2-OP FM SYNTHESIS & SPC700 DELAY CHIPTUNE ENGINE ---
+    const AudioEngine = {
+      ctx: null,
+      delayNode: null,
+      feedbackGain: null,
+      filterNode: null,
+      masterGain: null,
+      muted: (function() {
+        try {
+          return localStorage.getItem('kquest_sfx') === '0';
+        } catch (e) {
+          return false;
+        }
+      })(),
+      currentTrack: null,
+      seqTimer: null,
+      seqStep: 0,
+      nextStepTime: 0,
+      isStarted: false,
 
-    let audioCtx = null;
-    let soundEnabled = (function() {
-      try {
-        return localStorage.getItem('kquest_sfx') !== '0';
-      } catch (e) {
-        return true;
-      }
-    })();
+      NOTE: {
+        C1: 32.70, D1: 36.71, E1: 41.20, F1: 43.65, G1: 49.00, A1: 55.00, Bb1: 58.27, B1: 61.74,
+        C2: 65.41, D2: 73.42, E2: 82.41, F2: 87.31, Fsharp2: 92.50, G2: 98.00, A2: 110.00, Bb2: 116.54, B2: 123.47,
+        C3: 130.81, D3: 146.83, Eb3: 155.56, E3: 164.81, F3: 174.61, Fsharp3: 185.00, G3: 196.00, Gsharp3: 207.65, A3: 220.00, Bb3: 233.08, B3: 246.94,
+        C4: 261.63, Csharp4: 277.18, D4: 293.66, Eb4: 311.13, E4: 329.63, F4: 349.23, Fsharp4: 369.99, G4: 392.00, Gsharp4: 415.30, A4: 440.00, Bb4: 466.16, B4: 493.88,
+        C5: 523.25, Csharp5: 554.37, D5: 587.33, Eb5: 622.25, E5: 659.25, F5: 698.46, Fsharp5: 739.99, G5: 783.99, Gsharp5: 830.61, A5: 880.00, Bb5: 932.33, B5: 987.77,
+        C6: 1046.50, D6: 1174.66, E6: 1318.51, G6: 1567.98
+      },
 
-    function getAudioContext() {
-      if (!audioCtx) {
-        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-        if (AudioContextClass) {
-          audioCtx = new AudioContextClass();
+      init() {
+        if (!this.ctx) {
+          const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+          if (!AudioContextClass) return;
+          this.ctx = new AudioContextClass();
+
+          this.masterGain = this.ctx.createGain();
+          this.masterGain.gain.setValueAtTime(0.70, this.ctx.currentTime);
+          this.masterGain.connect(this.ctx.destination);
+
+          // SPC700 Stereo Delay Line (200ms, 2200Hz Low-pass feedback)
+          this.delayNode = this.ctx.createDelay();
+          this.delayNode.delayTime.value = 0.20;
+          this.feedbackGain = this.ctx.createGain();
+          this.feedbackGain.gain.value = 0.28;
+          this.filterNode = this.ctx.createBiquadFilter();
+          this.filterNode.type = 'lowpass';
+          this.filterNode.frequency.value = 2200;
+
+          this.delayNode.connect(this.filterNode);
+          this.filterNode.connect(this.feedbackGain);
+          this.feedbackGain.connect(this.delayNode);
+          this.filterNode.connect(this.masterGain);
+        }
+        if (this.ctx && this.ctx.state === 'suspended') {
+          this.ctx.resume();
+        }
+      },
+
+      handleUserGesture() {
+        if (!this.isStarted) {
+          this.isStarted = true;
+          this.init();
+          if (!this.muted && !this.seqTimer) {
+            this.startSequencer();
+          }
+        }
+      },
+
+      syncMuteUI() {
+        const btn = document.getElementById('audio-toggle-btn');
+        if (btn) {
+          btn.textContent = this.muted ? '🔇 Audio: OFF' : '🔊 Audio: ON';
+        }
+        soundEnabled = !this.muted;
+      },
+
+      toggleMute() {
+        this.muted = !this.muted;
+        try {
+          localStorage.setItem('kquest_sfx', this.muted ? '0' : '1');
+        } catch (e) {}
+        this.syncMuteUI();
+        showToast(this.muted ? '🔇 Sound & Music Muted' : '🔊 Sound & Music Enabled', 2000);
+        logMsg(`Audio Engine ${this.muted ? 'MUTED 🔇' : 'ENABLED 🔊'}.`, 'system');
+        if (this.muted) {
+          this.stopSequencer();
+        } else {
+          this.init();
+          this.startSequencer();
+          this.playPreset('item');
+        }
+        return this.muted;
+      },
+
+      // 2-Op FM Voice Synthesis (YM2612 Architecture)
+      playFM(carrierFreq, modRatio, modIndex, duration, type = 'sine', enableEcho = false, masterVol = 0.16, startTime = null) {
+        if (this.muted || !carrierFreq) return;
+        this.init();
+        if (!this.ctx) return;
+        const t = startTime !== null ? Math.max(startTime, this.ctx.currentTime) : this.ctx.currentTime;
+        const carrier = this.ctx.createOscillator();
+        const modulator = this.ctx.createOscillator();
+        const modGain = this.ctx.createGain();
+        const carrierGain = this.ctx.createGain();
+
+        carrier.type = type;
+        modulator.type = 'sine';
+
+        carrier.frequency.setValueAtTime(carrierFreq, t);
+        modulator.frequency.setValueAtTime(carrierFreq * modRatio, t);
+
+        const modDev = carrierFreq * modIndex;
+        modGain.gain.setValueAtTime(modDev, t);
+        modGain.gain.exponentialRampToValueAtTime(Math.max(0.1, modDev * 0.05), t + duration);
+
+        carrierGain.gain.setValueAtTime(masterVol, t);
+        carrierGain.gain.exponentialRampToValueAtTime(0.0001, t + duration);
+
+        modulator.connect(modGain);
+        modGain.connect(carrier.frequency);
+
+        carrier.connect(carrierGain);
+        carrierGain.connect(this.masterGain);
+        if (enableEcho && this.delayNode) {
+          carrierGain.connect(this.delayNode);
+        }
+
+        modulator.start(t);
+        carrier.start(t);
+        modulator.stop(t + duration);
+        carrier.stop(t + duration);
+      },
+
+      // Expressive Lead Flute with delayed vibrato (ramp LFO after 180ms)
+      playFlute(freq, dur, vol = 0.13, t = null) {
+        if (this.muted || !this.ctx || !freq) return;
+        const now = t !== null ? Math.max(t, this.ctx.currentTime) : this.ctx.currentTime;
+        const carrier = this.ctx.createOscillator();
+        const modulator = this.ctx.createOscillator();
+        const modGain = this.ctx.createGain();
+        const ampEnv = this.ctx.createGain();
+
+        carrier.type = 'triangle';
+        modulator.type = 'sine';
+        carrier.frequency.setValueAtTime(freq, now);
+
+        // Delayed vibrato for authentic vocal expression
+        const lfo = this.ctx.createOscillator();
+        const lfoGain = this.ctx.createGain();
+        lfo.frequency.setValueAtTime(5.5, now);
+        lfoGain.gain.setValueAtTime(0.0001, now);
+        lfoGain.gain.setValueAtTime(0.0001, now + 0.18);
+        lfoGain.gain.linearRampToValueAtTime(freq * 0.02, now + 0.32);
+        lfo.connect(lfoGain);
+        lfoGain.connect(carrier.frequency);
+
+        modulator.frequency.setValueAtTime(freq * 1.0, now);
+        modGain.gain.setValueAtTime(freq * 0.8, now);
+        modGain.gain.exponentialRampToValueAtTime(freq * 0.08, now + dur);
+
+        ampEnv.gain.setValueAtTime(0.001, now);
+        ampEnv.gain.linearRampToValueAtTime(vol, now + 0.03);
+        ampEnv.gain.exponentialRampToValueAtTime(0.0001, now + dur);
+
+        modulator.connect(modGain);
+        modGain.connect(carrier.frequency);
+        carrier.connect(ampEnv);
+        ampEnv.connect(this.masterGain);
+        if (this.delayNode) ampEnv.connect(this.delayNode);
+
+        lfo.start(now); modulator.start(now); carrier.start(now);
+        lfo.stop(now + dur); modulator.stop(now + dur); carrier.stop(now + dur);
+      },
+
+      // E-Piano / Lute Counterpoint & Shell Voicings
+      playEPiano(freq, dur, vol = 0.11, t = null) {
+        if (this.muted || !this.ctx || !freq) return;
+        const now = t !== null ? Math.max(t, this.ctx.currentTime) : this.ctx.currentTime;
+        const carrier = this.ctx.createOscillator();
+        const modulator = this.ctx.createOscillator();
+        const modGain = this.ctx.createGain();
+        const ampEnv = this.ctx.createGain();
+
+        carrier.type = 'sine';
+        modulator.type = 'sine';
+        carrier.frequency.setValueAtTime(freq, now);
+        modulator.frequency.setValueAtTime(freq * 2.0, now);
+        modGain.gain.setValueAtTime(freq * 2.6, now);
+        modGain.gain.exponentialRampToValueAtTime(Math.max(0.1, freq * 0.08), now + 0.07);
+
+        ampEnv.gain.setValueAtTime(vol, now);
+        ampEnv.gain.exponentialRampToValueAtTime(0.0001, now + dur);
+
+        modulator.connect(modGain);
+        modGain.connect(carrier.frequency);
+        carrier.connect(ampEnv);
+        ampEnv.connect(this.masterGain);
+        if (this.delayNode) ampEnv.connect(this.delayNode);
+
+        modulator.start(now); carrier.start(now);
+        modulator.stop(now + dur); carrier.stop(now + dur);
+      },
+
+      // Heroic Brass Stabs (Combat Lead)
+      playHeroicBrass(freq, dur, vol = 0.14, t = null) {
+        if (this.muted || !this.ctx || !freq) return;
+        const now = t !== null ? Math.max(t, this.ctx.currentTime) : this.ctx.currentTime;
+        const carrier = this.ctx.createOscillator();
+        const modulator = this.ctx.createOscillator();
+        const modGain = this.ctx.createGain();
+        const ampEnv = this.ctx.createGain();
+
+        carrier.type = 'sawtooth';
+        modulator.type = 'sine';
+        carrier.frequency.setValueAtTime(freq * 0.98, now);
+        carrier.frequency.linearRampToValueAtTime(freq, now + 0.025);
+        modulator.frequency.setValueAtTime(freq * 1.0, now);
+        modGain.gain.setValueAtTime(freq * 3.8, now);
+        modGain.gain.exponentialRampToValueAtTime(Math.max(0.1, freq * 0.4), now + dur);
+
+        ampEnv.gain.setValueAtTime(0.001, now);
+        ampEnv.gain.linearRampToValueAtTime(vol, now + 0.02);
+        ampEnv.gain.exponentialRampToValueAtTime(0.0001, now + dur);
+
+        modulator.connect(modGain);
+        modGain.connect(carrier.frequency);
+        carrier.connect(ampEnv);
+        ampEnv.connect(this.masterGain);
+        if (this.delayNode) ampEnv.connect(this.delayNode);
+
+        modulator.start(now); carrier.start(now);
+        modulator.stop(now + dur); carrier.stop(now + dur);
+      },
+
+      // Shimmering Crystal Bell Counter
+      playCrystalBell(freq, dur, vol = 0.09, t = null) {
+        if (this.muted || !this.ctx || !freq) return;
+        const now = t !== null ? Math.max(t, this.ctx.currentTime) : this.ctx.currentTime;
+        this.playFM(freq, 3.5, 2.8, dur, 'sine', true, vol, now);
+      },
+
+      // Punchy 2-Op FM Slap/Sub Bass strictly below C3 (130.81Hz), strictly DRY
+      playFMBass(freq, dur, vol = 0.17, t = null) {
+        if (this.muted || !this.ctx || !freq) return;
+        const clampedFreq = Math.min(freq, 130.81);
+        const now = t !== null ? Math.max(t, this.ctx.currentTime) : this.ctx.currentTime;
+        const carrier = this.ctx.createOscillator();
+        const modulator = this.ctx.createOscillator();
+        const modGain = this.ctx.createGain();
+        const ampEnv = this.ctx.createGain();
+
+        carrier.type = 'sawtooth';
+        modulator.type = 'sine';
+        carrier.frequency.setValueAtTime(clampedFreq, now);
+        modulator.frequency.setValueAtTime(clampedFreq * 2.0, now);
+        modGain.gain.setValueAtTime(clampedFreq * 3.5, now);
+        modGain.gain.exponentialRampToValueAtTime(Math.max(0.1, clampedFreq * 0.05), now + 0.045);
+
+        ampEnv.gain.setValueAtTime(vol, now);
+        ampEnv.gain.exponentialRampToValueAtTime(0.0001, now + dur);
+
+        modulator.connect(modGain);
+        modGain.connect(carrier.frequency);
+        carrier.connect(ampEnv);
+        ampEnv.connect(this.masterGain);
+
+        modulator.start(now); carrier.start(now);
+        modulator.stop(now + dur); carrier.stop(now + dur);
+      },
+
+      // FM Pitch-Drop Kick (Strictly dry)
+      playKick(t = null) {
+        if (this.muted || !this.ctx) return;
+        const now = t !== null ? Math.max(t, this.ctx.currentTime) : this.ctx.currentTime;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(145, now);
+        osc.frequency.exponentialRampToValueAtTime(36, now + 0.12);
+        gain.gain.setValueAtTime(0.24, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+        osc.connect(gain);
+        gain.connect(this.masterGain);
+        osc.start(now);
+        osc.stop(now + 0.16);
+      },
+
+      // High-MUL FM Noise Snare (Strictly dry)
+      playSnare(t = null) {
+        if (this.muted || !this.ctx) return;
+        const now = t !== null ? Math.max(t, this.ctx.currentTime) : this.ctx.currentTime;
+        this.playFM(190, 10.0, 7.5, 0.11, 'triangle', false, 0.13, now);
+      },
+
+      // Metallic Inharmonic Hi-Hat (Strictly dry)
+      playHat(t = null, vol = 0.05) {
+        if (this.muted || !this.ctx) return;
+        const now = t !== null ? Math.max(t, this.ctx.currentTime) : this.ctx.currentTime;
+        this.playFM(1200, 11.0, 5.2, 0.035, 'sine', false, vol, now);
+      },
+
+      // Ambient Resonant FM Cavern Drone
+      playAmbientDrone(freq, dur, vol = 0.07, t = null) {
+        if (this.muted || !this.ctx || !freq) return;
+        const now = t !== null ? Math.max(t, this.ctx.currentTime) : this.ctx.currentTime;
+        const carrier = this.ctx.createOscillator();
+        const modulator = this.ctx.createOscillator();
+        const modGain = this.ctx.createGain();
+        const ampEnv = this.ctx.createGain();
+
+        carrier.type = 'sine';
+        modulator.type = 'triangle';
+        carrier.frequency.setValueAtTime(freq, now);
+        modulator.frequency.setValueAtTime(freq * 1.004, now);
+        modGain.gain.setValueAtTime(freq * 1.2, now);
+        modGain.gain.linearRampToValueAtTime(freq * 0.4, now + dur * 0.5);
+
+        ampEnv.gain.setValueAtTime(0.001, now);
+        ampEnv.gain.linearRampToValueAtTime(vol, now + dur * 0.25);
+        ampEnv.gain.exponentialRampToValueAtTime(0.0001, now + dur);
+
+        modulator.connect(modGain);
+        modGain.connect(carrier.frequency);
+        carrier.connect(ampEnv);
+        ampEnv.connect(this.masterGain);
+        if (this.delayNode) ampEnv.connect(this.delayNode);
+
+        modulator.start(now); carrier.start(now);
+        modulator.stop(now + dur); carrier.stop(now + dur);
+      },
+
+      // 6-Voice Procedural Music Suites
+      getTracks() {
+        const N = this.NOTE;
+        return {
+          // Track 1: "Overture of Valor" - Overworld & Town Suite (Royal Road IV-V-iii-vi in C Major / A Minor)
+          town: {
+            tempo: 112,
+            stepDur: (60 / 112) / 2, // 8th note steps
+            swing: 0.016, // Swing-tick groove
+            steps: 32,
+            // Ch1: Expressive Lead Flute
+            lead: [
+              // Bar 1 (Fmaj7): Noble ascending phrasing
+              { s: 0, f: N.C5, d: 0.32 }, { s: 2, f: N.D5, d: 0.28 }, { s: 4, f: N.E5, d: 0.32 }, { s: 6, f: N.G5, d: 0.45 },
+              // Bar 2 (G7): Graceful step & breath rest on step 14
+              { s: 8, f: N.D5, d: 0.30 }, { s: 10, f: N.E5, d: 0.28 }, { s: 12, f: N.F5, d: 0.32 }, { s: 15, f: N.A5, d: 0.38 },
+              // Bar 3 (Em7): Descending nostalgic cadence
+              { s: 16, f: N.B4, d: 0.32 }, { s: 18, f: N.C5, d: 0.28 }, { s: 20, f: N.D5, d: 0.32 }, { s: 22, f: N.G5, d: 0.42 },
+              // Bar 4 (Am7): Heroic resolution to high tonic
+              { s: 24, f: N.A5, d: 0.35 }, { s: 26, f: N.G5, d: 0.30 }, { s: 28, f: N.E5, d: 0.32 }, { s: 30, f: N.C5, d: 0.45 }
+            ],
+            // Ch2: Contrary Counter-Melody (E-Piano / Lute takes spotlight when Lead rests)
+            counter: [
+              // Contrary motion (descends when Lead ascends)
+              { s: 0, f: N.A4, d: 0.30 }, { s: 2, f: N.G4, d: 0.28 }, { s: 4, f: N.F4, d: 0.30 }, { s: 7, f: N.E4, d: 0.35 },
+              { s: 8, f: N.B4, d: 0.30 }, { s: 10, f: N.A4, d: 0.28 }, { s: 12, f: N.G4, d: 0.30 }, { s: 14, f: N.F4, d: 0.35 },
+              { s: 16, f: N.G4, d: 0.30 }, { s: 18, f: N.F4, d: 0.28 }, { s: 20, f: N.E4, d: 0.30 }, { s: 23, f: N.D4, d: 0.35 },
+              { s: 24, f: N.E4, d: 0.30 }, { s: 26, f: N.D4, d: 0.28 }, { s: 28, f: N.C4, d: 0.30 }, { s: 31, f: N.B3, d: 0.35 }
+            ],
+            // Ch3: Harmony Shell Voicings (3rd + 7th strictly — never double 5th)
+            harp: [
+              // Bar 1 (Fmaj7): 3rd = A3, 7th = E4
+              { s: 0, f: N.A3 }, { s: 1, f: N.E4 }, { s: 2, f: N.A3 }, { s: 3, f: N.E4 },
+              { s: 4, f: N.C4 }, { s: 5, f: N.E4 }, { s: 6, f: N.A3 }, { s: 7, f: N.E4 },
+              // Bar 2 (G7): 3rd = B3, 7th = F4
+              { s: 8, f: N.B3 }, { s: 9, f: N.F4 }, { s: 10, f: N.B3 }, { s: 11, f: N.F4 },
+              { s: 12, f: N.D4 }, { s: 13, f: N.F4 }, { s: 14, f: N.B3 }, { s: 15, f: N.F4 },
+              // Bar 3 (Em7): 3rd = G3, 7th = D4
+              { s: 16, f: N.G3 }, { s: 17, f: N.D4 }, { s: 18, f: N.G3 }, { s: 19, f: N.D4 },
+              { s: 20, f: N.B3 }, { s: 21, f: N.D4 }, { s: 22, f: N.G3 }, { s: 23, f: N.D4 },
+              // Bar 4 (Am7): 3rd = C4, 7th = G4
+              { s: 24, f: N.C4 }, { s: 25, f: N.G4 }, { s: 26, f: N.C4 }, { s: 27, f: N.G4 },
+              { s: 28, f: N.E4 }, { s: 29, f: N.G4 }, { s: 30, f: N.C4 }, { s: 31, f: N.G4 }
+            ],
+            // Ch4: FM Bass strictly below C3 (130.81Hz)
+            bass: [
+              { s: 0, f: N.F2, d: 0.28 }, { s: 2, f: N.F2, d: 0.20 }, { s: 4, f: N.C2, d: 0.24 }, { s: 6, f: N.F2, d: 0.28 },
+              { s: 8, f: N.G2, d: 0.28 }, { s: 10, f: N.G2, d: 0.20 }, { s: 12, f: N.D2, d: 0.24 }, { s: 14, f: N.G2, d: 0.28 },
+              { s: 16, f: N.E2, d: 0.28 }, { s: 18, f: N.E2, d: 0.20 }, { s: 20, f: N.B1, d: 0.24 }, { s: 22, f: N.E2, d: 0.28 },
+              { s: 24, f: N.A1, d: 0.28 }, { s: 26, f: N.A2, d: 0.20 }, { s: 28, f: N.E2, d: 0.24 }, { s: 30, f: N.A2, d: 0.30 }
+            ],
+            // Ch5: Drums
+            kicks: [0, 8, 16, 24],
+            snares: [4, 12, 20, 28],
+            // Ch6: Swing-tick Hi-Hats
+            hats: [2, 6, 10, 14, 18, 22, 26, 30]
+          },
+
+          // Track 2: "Steel & Sorcery" - Combat Suite (Heroic bVI-bVII-I Cadence in A Minor)
+          battle: {
+            tempo: 144,
+            stepDur: (60 / 144) / 2,
+            swing: 0.010,
+            steps: 32,
+            // Ch1: Heroic Brass Lead
+            lead: [
+              // Bar 1 (Dm): Driving heroic fanfare motive
+              { s: 0, f: N.D4, d: 0.18 }, { s: 2, f: N.F4, d: 0.18 }, { s: 4, f: N.A4, d: 0.22 }, { s: 6, f: N.D5, d: 0.30 },
+              // Bar 2 (Fmaj7 - bVI): Ascending heroic surge
+              { s: 8, f: N.C5, d: 0.18 }, { s: 10, f: N.A4, d: 0.18 }, { s: 12, f: N.F4, d: 0.22 }, { s: 14, f: N.A4, d: 0.30 },
+              // Bar 3 (G7 - bVII): Dominant tension building
+              { s: 16, f: N.B4, d: 0.18 }, { s: 18, f: N.D5, d: 0.18 }, { s: 20, f: N.F5, d: 0.22 }, { s: 22, f: N.E5, d: 0.30 },
+              // Bar 4 (Am - I): Heroic resolution to high tonic
+              { s: 24, f: N.C5, d: 0.20 }, { s: 26, f: N.B4, d: 0.18 }, { s: 28, f: N.A4, d: 0.25 }, { s: 30, f: N.A5, d: 0.40 }
+            ],
+            // Ch2: Counter-stabs & Contrary Motion
+            counter: [
+              { s: 0, f: N.A3, d: 0.18 }, { s: 4, f: N.D4, d: 0.20 }, { s: 6, f: N.F4, d: 0.25 },
+              { s: 8, f: N.F4, d: 0.18 }, { s: 12, f: N.C4, d: 0.20 }, { s: 14, f: N.D4, d: 0.25 },
+              { s: 16, f: N.G4, d: 0.18 }, { s: 20, f: N.D4, d: 0.20 }, { s: 22, f: N.B3, d: 0.25 },
+              { s: 24, f: N.E4, d: 0.20 }, { s: 28, f: N.C4, d: 0.22 }, { s: 30, f: N.E5, d: 0.35 }
+            ],
+            // Ch3: Driving 16th shell arpeggios
+            harp: [
+              { s: 0, f: N.F3 }, { s: 2, f: N.C4 }, { s: 4, f: N.F3 }, { s: 6, f: N.C4 },
+              { s: 8, f: N.A3 }, { s: 10, f: N.E4 }, { s: 12, f: N.A3 }, { s: 14, f: N.E4 },
+              { s: 16, f: N.B3 }, { s: 18, f: N.F4 }, { s: 20, f: N.B3 }, { s: 22, f: N.F4 },
+              { s: 24, f: N.C4 }, { s: 26, f: N.G4 }, { s: 28, f: N.C4 }, { s: 30, f: N.G4 }
+            ],
+            // Ch4: Driving 16th FM bass gallop strictly below C3
+            bass: [
+              { s: 0, f: N.D2, d: 0.18 }, { s: 2, f: N.D2, d: 0.14 }, { s: 3, f: N.D3, d: 0.14 }, { s: 4, f: N.D2, d: 0.18 }, { s: 6, f: N.A2, d: 0.18 },
+              { s: 8, f: N.F2, d: 0.18 }, { s: 10, f: N.F2, d: 0.14 }, { s: 11, f: N.F3, d: 0.14 }, { s: 12, f: N.F2, d: 0.18 }, { s: 14, f: N.C3, d: 0.18 },
+              { s: 16, f: N.G2, d: 0.18 }, { s: 18, f: N.G2, d: 0.14 }, { s: 19, f: N.G3, d: 0.14 }, { s: 20, f: N.G2, d: 0.18 }, { s: 22, f: N.D3, d: 0.18 },
+              { s: 24, f: N.A1, d: 0.18 }, { s: 26, f: N.A1, d: 0.14 }, { s: 27, f: N.A2, d: 0.14 }, { s: 28, f: N.A1, d: 0.18 }, { s: 30, f: N.E2, d: 0.22 }
+            ],
+            // Ch5: Driving Combat Kick & Snare
+            kicks: [0, 3, 6, 8, 11, 14, 16, 19, 22, 24, 27, 30],
+            snares: [4, 12, 20, 28],
+            // Ch6: 16th Combat Inharmonic Hi-Hats
+            hats: [1, 2, 5, 7, 9, 10, 13, 15, 17, 18, 21, 23, 25, 26, 29, 31]
+          },
+
+          // Track 3: "Depths of the Forgotten" - Dungeon Exploration Suite (D Dorian / Modal Mystery)
+          dungeon: {
+            tempo: 96,
+            stepDur: (60 / 96) / 2,
+            swing: 0.020,
+            steps: 32,
+            drone: [
+              { s: 0, f: N.D2, d: 2.2 },
+              { s: 16, f: N.A1, d: 2.2 }
+            ],
+            lead: [
+              { s: 0, f: N.D4, d: 0.35 }, { s: 3, f: N.F4, d: 0.30 }, { s: 6, f: N.A4, d: 0.40 },
+              { s: 9, f: N.G4, d: 0.30 }, { s: 12, f: N.F4, d: 0.35 }, { s: 14, f: N.E4, d: 0.40 },
+              { s: 16, f: N.F4, d: 0.35 }, { s: 19, f: N.A4, d: 0.30 }, { s: 22, f: N.C5, d: 0.40 },
+              { s: 25, f: N.B4, d: 0.30 }, { s: 28, f: N.A4, d: 0.35 }, { s: 30, f: N.D4, d: 0.45 }
+            ],
+            counter: [
+              { s: 2, f: N.A3, d: 0.30 }, { s: 8, f: N.D4, d: 0.35 },
+              { s: 18, f: N.C4, d: 0.30 }, { s: 24, f: N.E4, d: 0.35 }
+            ],
+            harp: [
+              { s: 0, f: N.D3 }, { s: 1, f: N.A3 }, { s: 2, f: N.F4 }, { s: 3, f: N.A3 },
+              { s: 8, f: N.Bb2 }, { s: 9, f: N.F3 }, { s: 10, f: N.D4 }, { s: 11, f: N.F3 },
+              { s: 16, f: N.C3 }, { s: 17, f: N.G3 }, { s: 18, f: N.E4 }, { s: 19, f: N.G3 },
+              { s: 24, f: N.A2 }, { s: 25, f: N.E3 }, { s: 26, f: N.Csharp4 }, { s: 27, f: N.E3 }
+            ],
+            bass: [
+              { s: 0, f: N.D2, d: 0.30 }, { s: 4, f: N.A1, d: 0.30 },
+              { s: 8, f: N.Bb1, d: 0.30 }, { s: 12, f: N.F2, d: 0.30 },
+              { s: 16, f: N.C2, d: 0.30 }, { s: 20, f: N.G1, d: 0.30 },
+              { s: 24, f: N.A1, d: 0.30 }, { s: 28, f: N.E2, d: 0.30 }
+            ],
+            kicks: [0, 16],
+            snares: [8, 24],
+            hats: [4, 12, 20, 28]
+          },
+
+          // Track 4: "Elegy of the Fallen" - Game Over Lament
+          gameover: {
+            tempo: 76,
+            stepDur: (60 / 76) / 2,
+            swing: 0.0,
+            steps: 16,
+            lead: [
+              { s: 0, f: N.D4, d: 0.50 }, { s: 4, f: N.A3, d: 0.50 },
+              { s: 8, f: N.F3, d: 0.60 }, { s: 12, f: N.D3, d: 0.80 }
+            ],
+            counter: [
+              { s: 2, f: N.F4, d: 0.40 }, { s: 6, f: N.D4, d: 0.40 },
+              { s: 10, f: N.C4, d: 0.50 }, { s: 14, f: N.A3, d: 0.70 }
+            ],
+            harp: [],
+            bass: [
+              { s: 0, f: N.D2, d: 0.60 }, { s: 8, f: N.A1, d: 0.60 }, { s: 12, f: N.D1, d: 0.90 }
+            ],
+            kicks: [0, 8],
+            snares: [],
+            hats: []
+          }
+        };
+      },
+
+      setTrack(name) {
+        if (this.currentTrack === name) return;
+        this.currentTrack = name;
+        this.seqStep = 0;
+        if (!this.muted && this.isStarted) {
+          this.init();
+          this.startSequencer();
+        }
+      },
+
+      startSequencer() {
+        if (this.seqTimer) {
+          clearInterval(this.seqTimer);
+          this.seqTimer = null;
+        }
+        if (this.muted) return;
+        this.init();
+        if (!this.ctx) return;
+
+        const tracks = this.getTracks();
+        const activeName = this.currentTrack || 'town';
+        const track = tracks[activeName];
+        if (!track) return;
+
+        this.nextStepTime = this.ctx.currentTime + 0.05;
+
+        // Precision lookahead scheduling loop (every 35ms, schedules 120ms ahead)
+        this.seqTimer = setInterval(() => {
+          if (this.muted || !this.ctx) return;
+          const currentTracks = this.getTracks();
+          const cur = currentTracks[this.currentTrack || 'town'];
+          if (!cur) return;
+
+          while (this.nextStepTime < this.ctx.currentTime + 0.12) {
+            const s = this.seqStep;
+            const swingOffset = (s % 2 === 1) ? (cur.swing || 0) : 0;
+            const t = this.nextStepTime + swingOffset;
+
+            // Ch0: Ambient Drone
+            if (cur.drone) {
+              const dNote = cur.drone.find(n => n.s === s);
+              if (dNote) this.playAmbientDrone(dNote.f, dNote.d, 0.07, t);
+            }
+
+            // Ch1: Lead Voice
+            if (cur.lead) {
+              const lNote = cur.lead.find(n => n.s === s);
+              if (lNote) {
+                if (this.currentTrack === 'battle') {
+                  this.playHeroicBrass(lNote.f, lNote.d, 0.14, t);
+                } else {
+                  this.playFlute(lNote.f, lNote.d, 0.13, t);
+                }
+              }
+            }
+
+            // Ch2: Counter-Melody
+            if (cur.counter) {
+              const cNote = cur.counter.find(n => n.s === s);
+              if (cNote) {
+                if (this.currentTrack === 'battle') {
+                  this.playCrystalBell(cNote.f, cNote.d, 0.10, t);
+                } else {
+                  this.playEPiano(cNote.f, cNote.d, 0.11, t);
+                }
+              }
+            }
+
+            // Ch3: Harmony Arpeggio / Shell Voicings
+            if (cur.harp) {
+              const hNote = cur.harp.find(n => n.s === s);
+              if (hNote) this.playEPiano(hNote.f, 0.24, 0.08, t);
+            }
+
+            // Ch4: Punchy FM Bass (< 130.81Hz, strictly DRY)
+            if (cur.bass) {
+              const bNote = cur.bass.find(n => n.s === s);
+              if (bNote) this.playFMBass(bNote.f, bNote.d, 0.18, t);
+            }
+
+            // Ch5: Kick Drum (Dry)
+            if (cur.kicks && cur.kicks.includes(s)) {
+              this.playKick(t);
+            }
+
+            // Ch5: Snare Drum (Dry)
+            if (cur.snares && cur.snares.includes(s)) {
+              this.playSnare(t);
+            }
+
+            // Ch6: Inharmonic Hi-Hats / Earcons with swing-tick accents
+            if (cur.hats && cur.hats.includes(s)) {
+              const isAccent = (s % 4 === 2);
+              this.playHat(t, isAccent ? 0.07 : 0.035);
+            }
+
+            this.seqStep = (this.seqStep + 1) % cur.steps;
+            this.nextStepTime += cur.stepDur;
+          }
+        }, 35);
+      },
+
+      stopSequencer() {
+        if (this.seqTimer) {
+          clearInterval(this.seqTimer);
+          this.seqTimer = null;
+        }
+      },
+
+      // Context-Specific Earcons & Action Stingers
+      playPreset(name) {
+        if (this.muted) return;
+        this.init();
+        if (!this.ctx) return;
+        const now = this.ctx.currentTime;
+        const N = this.NOTE;
+
+        switch (name) {
+          case 'hit': // FM Combat Blow with heavy pitch drop crunch
+            this.playFM(160, 3.5, 4.0, 0.14, 'sawtooth', false, 0.22, now);
+            break;
+
+          case 'spell': // Rising Resonant FM Arpeggio Sweep + Shimmer
+            this.playFM(320, 2.0, 3.2, 0.22, 'triangle', true, 0.18, now);
+            setTimeout(() => {
+              if (!this.muted) this.playFM(640, 2.5, 2.0, 0.20, 'sine', true, 0.15);
+            }, 60);
+            break;
+
+          case 'heal': // Shimmering Celestial 4-note ascending chime cascade with echo
+            [N.F5, N.A5, N.C6, N.E6].forEach((f, idx) => {
+              setTimeout(() => {
+                if (!this.muted) this.playEPiano(f, 0.25, 0.15);
+              }, idx * 60);
+            });
+            break;
+
+          case 'levelup': // Grand Triumphant 6-Channel Fanfare
+            [N.C4, N.E4, N.G4, N.C5, N.E5, N.G5].forEach((f, idx) => {
+              setTimeout(() => {
+                if (!this.muted) {
+                  this.playHeroicBrass(f, 0.30, 0.18);
+                  if (idx === 5) {
+                    this.playFMBass(N.C2, 0.60, 0.22);
+                    this.playKick();
+                  }
+                }
+              }, idx * 80);
+            });
+            break;
+
+          case 'quest': // Royal Quest Completion Stinger with shell resolution
+            [N.F4, N.A4, N.C5, N.E5, N.G5].forEach((f, idx) => {
+              setTimeout(() => {
+                if (!this.muted) {
+                  this.playCrystalBell(f, 0.35, 0.16);
+                  if (idx === 4) {
+                    this.playEPiano(N.C4, 0.50, 0.15);
+                    this.playEPiano(N.G4, 0.50, 0.15);
+                    this.playFMBass(N.F2, 0.50, 0.18);
+                  }
+                }
+              }, idx * 75);
+            });
+            break;
+
+          case 'item': // Crisp high-frequency metallic double chime
+            this.playCrystalBell(N.D5, 0.08, 0.16, now);
+            setTimeout(() => {
+              if (!this.muted) this.playCrystalBell(N.A5, 0.12, 0.18);
+            }, 70);
+            break;
+
+          case 'door': // Deep warm resonant dungeon swell
+            this.playFM(150, 1.0, 2.5, 0.25, 'sine', true, 0.16, now);
+            setTimeout(() => {
+              if (!this.muted) this.playFlute(N.D4, 0.35, 0.14);
+            }, 100);
+            break;
+
+          case 'death': // Minor Descending Tragic Gloom Cadence
+            [N.D4, N.A3, N.F3, N.D3].forEach((f, idx) => {
+              setTimeout(() => {
+                if (!this.muted) {
+                  this.playFM(f, 2.0, 3.0, 0.28, 'sawtooth', true, 0.20);
+                  if (idx === 3) this.playFMBass(N.D1, 0.60, 0.25);
+                }
+              }, idx * 130);
+            });
+            break;
+
+          case 'victory': // Victorious Heroic Fanfare Stinger
+            [N.D4, N.F4, N.G4, N.A4, N.D5].forEach((f, idx) => {
+              setTimeout(() => {
+                if (!this.muted) {
+                  this.playHeroicBrass(f, 0.30, 0.18);
+                  if (idx === 4) {
+                    this.playFMBass(N.D2, 0.55, 0.22);
+                    this.playKick();
+                    this.playSnare();
+                  }
+                }
+              }, idx * 85);
+            });
+            break;
+
+          case 'flee': // Rapid descending tactical staccato
+            [N.A4, N.G4, N.F4, N.D4].forEach((f, idx) => {
+              setTimeout(() => {
+                if (!this.muted) this.playFM(f, 1.5, 2.0, 0.08, 'square', false, 0.14);
+              }, idx * 55);
+            });
+            break;
+
+          default:
+            this.playFM(440, 1.0, 1.0, 0.1, 'sine', false, 0.12, now);
         }
       }
-      if (audioCtx && audioCtx.state === 'suspended') {
-        audioCtx.resume();
-      }
-      return audioCtx;
+    };
+
+    let soundEnabled = !AudioEngine.muted;
+
+    function getAudioContext() {
+      AudioEngine.init();
+      return AudioEngine.ctx;
     }
 
     function toggleAudio() {
-      soundEnabled = !soundEnabled;
-      try {
-        localStorage.setItem('kquest_sfx', soundEnabled ? '1' : '0');
-      } catch (e) {}
-      const btn = document.getElementById('audio-toggle-btn');
-      if (btn) {
-        btn.textContent = soundEnabled ? '🔊 SFX: ON' : '🔇 SFX: OFF';
+      AudioEngine.toggleMute();
+    }
+
+    // Bridge functions for seamless backward compatibility
+    function sfxCombatHit() { AudioEngine.playPreset('hit'); }
+    function sfxSpellCast() { AudioEngine.playPreset('spell'); }
+    function sfxMagicHeal() { AudioEngine.playPreset('heal'); }
+    function sfxLevelUp() { AudioEngine.playPreset('levelup'); }
+    function sfxQuestComplete() { AudioEngine.playPreset('quest'); }
+    function sfxItemPickup() { AudioEngine.playPreset('item'); }
+    function sfxDoorOpen() { AudioEngine.playPreset('door'); }
+    function sfxDeath() { AudioEngine.playPreset('death'); }
+    function sfxVictory() { AudioEngine.playPreset('victory'); }
+    function sfxFlee() { AudioEngine.playPreset('flee'); }
+
+    // Resume WebAudio on user interaction per browser autoplay security policies
+    window.addEventListener('click', () => AudioEngine.handleUserGesture(), { once: true });
+    window.addEventListener('keydown', () => AudioEngine.handleUserGesture(), { once: true });
+
+    // Clean up timer on visibilitychange when hidden
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) {
+        AudioEngine.stopSequencer();
+      } else if (!AudioEngine.muted && AudioEngine.isStarted) {
+        AudioEngine.startSequencer();
       }
-      showToast(soundEnabled ? '🔊 Audio SFX Enabled' : '🔇 Audio SFX Muted', 2000);
-      logMsg(`Audio Sound Effects ${soundEnabled ? 'ENABLED 🔊' : 'DISABLED 🔇'}.`, 'system');
-      if (soundEnabled) sfxItemPickup();
-    }
-
-    function playTone(freq, duration, type = 'sine', startVol = 0.15, endVol = 0.001) {
-      if (!soundEnabled) return;
-      try {
-        const ctx = getAudioContext();
-        if (!ctx) return;
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.type = type;
-        osc.frequency.setValueAtTime(freq, ctx.currentTime);
-        gain.gain.setValueAtTime(startVol, ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(Math.max(endVol, 0.0001), ctx.currentTime + duration);
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        osc.start();
-        osc.stop(ctx.currentTime + duration);
-      } catch (e) {}
-    }
-
-    // 1. Combat Hit SFX (Low pitch drop)
-    function sfxCombatHit() {
-      if (!soundEnabled) return;
-      try {
-        const ctx = getAudioContext();
-        if (!ctx) return;
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.type = 'sawtooth';
-        osc.frequency.setValueAtTime(180, ctx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(40, ctx.currentTime + 0.12);
-        gain.gain.setValueAtTime(0.2, ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.12);
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        osc.start();
-        osc.stop(ctx.currentTime + 0.12);
-      } catch (e) {}
-    }
-
-    // 2. Spell Cast SFX (Rising pitch sweep)
-    function sfxSpellCast() {
-      if (!soundEnabled) return;
-      try {
-        const ctx = getAudioContext();
-        if (!ctx) return;
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.type = 'triangle';
-        osc.frequency.setValueAtTime(300, ctx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(750, ctx.currentTime + 0.25);
-        gain.gain.setValueAtTime(0.2, ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.25);
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        osc.start();
-        osc.stop(ctx.currentTime + 0.25);
-      } catch (e) {}
-    }
-
-    // 3. Level Up SFX (Fanfare major arpeggio C4-E4-G4-C5)
-    function sfxLevelUp() {
-      if (!soundEnabled) return;
-      const notes = [261.63, 329.63, 392.00, 523.25];
-      notes.forEach((freq, idx) => {
-        setTimeout(() => playTone(freq, 0.15, 'sine', 0.2), idx * 90);
-      });
-    }
-
-    // 4. Item Pickup / Gold / Crafting SFX (High double chime)
-    function sfxItemPickup() {
-      if (!soundEnabled) return;
-      playTone(587.33, 0.08, 'sine', 0.15);
-      setTimeout(() => playTone(880.00, 0.12, 'sine', 0.15), 70);
-    }
-
-    // 5. Door Open / Dungeon Transition SFX (Deep warm rise)
-    function sfxDoorOpen() {
-      if (!soundEnabled) return;
-      try {
-        const ctx = getAudioContext();
-        if (!ctx) return;
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(160, ctx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(340, ctx.currentTime + 0.2);
-        gain.gain.setValueAtTime(0.15, ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.2);
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        osc.start();
-        osc.stop(ctx.currentTime + 0.2);
-      } catch (e) {}
-    }
-
-    // 6. Death / Game Over SFX (Descending tragic tones)
-    function sfxDeath() {
-      if (!soundEnabled) return;
-      const notes = [300, 220, 160, 100];
-      notes.forEach((freq, idx) => {
-        setTimeout(() => playTone(freq, 0.25, 'sawtooth', 0.25), idx * 140);
-      });
-    }
+    });
 
     // Game State Engine
     
@@ -3637,6 +4248,17 @@
     // State Switcher
     function setGameState(state) {
       currentState = state;
+      if (typeof AudioEngine !== 'undefined') {
+        if (state === STATE.COMBAT || state === STATE.BOSS_RUSH || state === STATE.ARMY_BATTLE || state === STATE.CASTLE_DEFENSE) {
+          AudioEngine.setTrack('battle');
+        } else if (state === STATE.DUNGEON) {
+          AudioEngine.setTrack('dungeon');
+        } else if (state === STATE.GAME_OVER) {
+          AudioEngine.setTrack('gameover');
+        } else {
+          AudioEngine.setTrack('town');
+        }
+      }
       const dyn = document.getElementById('dynamic-content');
       const ctrl = document.getElementById('controls-panel');
       dyn.innerHTML = '';
@@ -4421,6 +5043,7 @@
         player.companion.isDown = false;
         player.companion.hp = player.companion.maxHp;
       }
+      sfxMagicHeal();
       logMsg(`🍺 Rested comfortably at the Dragon's Rest Inn. HP, MP & Party restored!`, 'town');
       updateUI();
     }
@@ -4435,7 +5058,9 @@
           claimedCount++;
         }
       });
-      if (claimedCount === 0) {
+      if (claimedCount > 0) {
+        sfxQuestComplete();
+      } else {
         logMsg(`No completed quests to claim right now. Keep exploring!`, 'system');
       }
       updateUI();
@@ -4576,6 +5201,7 @@
       player.gold += b.rewardGold;
       player.xp += b.rewardXp;
       logMsg(`🎉 Claimed Bounty: "${b.title}"! Received +${b.rewardGold} Gold & +${b.rewardXp} XP!`, 'loot');
+      sfxQuestComplete();
 
       if (b.tier === 1) { // Bronze
         player.gold += 25;
@@ -6571,6 +7197,7 @@
 
       logMsg(`🎉 VICTORY! You defeated ${currentEnemy.name}!`, 'loot');
       triggerVictoryBanner('VICTORY!');
+      sfxVictory();
       player.gold += currentEnemy.gold;
 
       player.xp += currentEnemy.xp;
@@ -6667,6 +7294,7 @@
 
     function fleeCombat() {
       if (Math.random() < 0.6) {
+        sfxFlee();
         logMsg(`🏃 You successfully fled from combat back to safe ground!`, 'system');
         currentEnemy = null;
         if (player.arenaActive) {
@@ -6865,6 +7493,12 @@
           resetGame();
           return;
         }
+      }
+
+      if (e.key === 'm' || e.key === 'M') {
+        e.preventDefault();
+        toggleAudio();
+        return;
       }
 
       if (e.key === 'F5') {
