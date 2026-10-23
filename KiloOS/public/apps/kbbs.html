@@ -178,8 +178,11 @@
             #macrosDir .modal-card > div:nth-child(2) {
                 flex-direction: column !important;
             }
-            #dirList, #msgListPane, #macroList {
+            #dirList, #msgListPane, #macroList, #fileListPane {
                 width: 100% !important; height: 160px !important; border-right: none !important; border-bottom: 1px solid #27272a !important;
+            }
+            #fileAreaModal .modal-card > div:nth-child(3) {
+                flex-direction: column !important;
             }
             #toastContainer { right: 10px; left: 10px; top: 76px; }
             .kbbs-toast { max-width: 100%; }
@@ -199,6 +202,7 @@
                 <button id="btnDir" onclick="showDialingDir()">Directory [D]</button>
             </div>
             <div class="services-group">
+                <button id="btnFileArea" onclick="showFileArea()" style="background: linear-gradient(180deg, #0284c7 0%, #0369a1 100%); border-color: #075985;">Files [F]</button>
                 <button id="btnDoorGames" onclick="showDoorGames()" style="background: linear-gradient(180deg, #ec4899 0%, #be185d 100%); border-color: #9d174d;">Door Games [G]</button>
                 <button id="btnMsgBase" onclick="showMsgBase()" style="background: linear-gradient(180deg, #f59e0b 0%, #d97706 100%); border-color: #b45309;">EchoNet [E]</button>
                 <button id="btnAnsiArt" onclick="showAnsiArtViewer()" style="background: linear-gradient(180deg, #6366f1 0%, #4338ca 100%); border-color: #3730a3;">ANSI Art [A]</button>
@@ -308,7 +312,9 @@
                         </div>
                         <div>
                             <label style="font-size:11px; text-transform:uppercase; color:#71717a; font-weight:600;">Auto-Login Script / Macro String</label>
-                            <input type="text" id="dirAutoLogin" style="width:100%; background:#09090b; border:1px solid #27272a; color:#fff; padding:6px; border-radius:4px; outline:none; margin-top:3px;" placeholder="login:~guest~pass:~1234">
+                            <input type="text" id="dirAutoLogin" style="width:100%; background:#09090b; border:1px solid #27272a; color:#fff; padding:6px; border-radius:4px; outline:none; margin-top:3px;" placeholder="login:~guest
+~pass:~1234
+">
                         </div>
                         <div>
                             <label style="font-size:11px; text-transform:uppercase; color:#71717a; font-weight:600;">Tags & Notes</label>
@@ -346,6 +352,42 @@
                 <div style="padding: 12px 16px; border-top: 1px solid #27272a; display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.3);">
                     <span style="font-size: 11px; color: #a1a1aa;">Plays directly inside terminal stream with authentic CP437 ANSI colors & music!</span>
                     <button class="btn-action" onclick="streamDoorToTerminal()">Stream to Terminal Screen</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- KBBS File Area & Bulletins Library Modal -->
+        <div id="fileAreaModal" class="modal-overlay">
+            <div class="modal-card" style="width: 780px; max-width: 95%; height: 580px; max-height: 95%;">
+                <div class="modal-header" style="background: linear-gradient(90deg, #0284c7 0%, #0369a1 100%);">
+                    <span>📁 KBBS File Area & ANSI Bulletins Library</span>
+                    <button class="modal-close" id="btnCloseFileArea" aria-label="Close File Area" onclick="closeFileArea()">X</button>
+                </div>
+                <div style="padding: 10px 16px; border-bottom: 1px solid rgba(255,255,255,0.08); display: flex; gap: 8px; background: rgba(0,0,0,0.3); align-items: center; flex-wrap: wrap;">
+                    <span style="font-size:11px; font-weight:600; color:#d4d4d8; text-transform:uppercase;">Category:</span>
+                    <select id="fileCategorySelect" style="background:#09090b; border:1px solid #27272a; color:#38bdf8; padding:5px 8px; border-radius:4px; font-weight:600;" onchange="changeFileCategory()">
+                        <option value="all">All Library Files</option>
+                        <option value="demoscene">Demoscene & NFOs</option>
+                        <option value="doors">Door Game Strategy</option>
+                        <option value="echonet">EchoNet & Topology</option>
+                        <option value="system">ANSI.SYS Standards</option>
+                        <option value="classified">Classified Transmissions</option>
+                    </select>
+                    <input type="text" id="fileSearchInput" placeholder="Search bulletins by filename, author, tag..." style="flex:1; min-width:180px; background:#09090b; border:1px solid #27272a; color:#fff; padding:6px 10px; border-radius:6px; outline:none;" oninput="renderFileAreaList()">
+                    <button class="btn-secondary" onclick="exportAllBulletinsToVFS()" title="Sync all bulletins to KiloOS VFS /home/bbs/">Sync All to VFS</button>
+                </div>
+                <div style="flex: 1; display: flex; overflow: hidden;">
+                    <div style="width: 280px; border-right: 1px solid #27272a; overflow-y: auto;" id="fileListPane"></div>
+                    <div style="flex: 1; padding: 14px; display: flex; flex-direction: column; gap: 10px; overflow-y: auto;" id="fileViewPane">
+                        <!-- Rendered via JS -->
+                    </div>
+                </div>
+                <div style="padding: 10px 16px; border-top: 1px solid #27272a; display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.3);">
+                    <span id="fileAreaStatusCount" style="font-size: 11px; color: #a1a1aa;">Direct KiloOS VFS integration at /home/bbs/</span>
+                    <div style="display:flex; gap:8px;">
+                        <button class="btn-sub" onclick="streamSelectedBulletin()">Stream to Terminal Screen [T]</button>
+                        <button class="btn-action" onclick="saveSelectedBulletinToVFS()">Download to VFS [V]</button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -633,6 +675,42 @@ SEND:"secret\r"'></textarea>
     function safeSetStorage(key, val) {
         try { localStorage.setItem(key, val); return true; } catch (e) { return false; }
     }
+
+    // ─── KiloOS VFS & Inter-App IPC Bridge (Phase VI Mesh Integration) ───
+    const KiloVFS = {
+        write(path, data) {
+            try {
+                const payload = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
+                window.parent.postMessage({ type: 'VFS_WRITE', path, data: payload, requestId: 'w_' + Date.now() }, '*');
+                window.parent.postMessage({ type: 'OS_NOTIFY', title: 'KBBS File Terminal', message: `Saved to VFS: ${path}` }, '*');
+            } catch (e) {}
+        },
+        read(path, cb) {
+            const reqId = 'r_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+            const handler = (e) => {
+                if (e.data && e.data.type === 'VFS_READ_DONE' && e.data.requestId === reqId) {
+                    window.removeEventListener('message', handler);
+                    cb(e.data.data, e.data.path);
+                }
+            };
+            window.addEventListener('message', handler);
+            try { window.parent.postMessage({ type: 'VFS_READ', path, requestId: reqId }, '*'); } catch (e) {}
+        },
+        openPicker(cb) {
+            const reqId = 'open_' + Date.now();
+            const handler = (e) => {
+                if (e.data && e.data.type === 'VFS_SHOW_OPEN_DONE' && e.data.requestId === reqId) {
+                    window.removeEventListener('message', handler);
+                    if (e.data.path) KiloVFS.read(e.data.path, cb);
+                }
+            };
+            window.addEventListener('message', handler);
+            try { window.parent.postMessage({ type: 'VFS_SHOW_OPEN', requestId: reqId }, '*'); } catch (e) {}
+        },
+        launchApp(targetApp, path = '') {
+            try { window.parent.postMessage({ type: 'OS_LAUNCH_APP', targetApp, path }, '*'); } catch (e) {}
+        }
+    };
     function escapeHTML(str) {
         if (typeof str !== 'string') return '';
         return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
@@ -798,7 +876,7 @@ SEND:"secret\r"'></textarea>
     function prevTutorialStep() { if (currentTutStep > 1) switchTutorialStep(currentTutStep - 1); }
 
     function closeAllModalsExcept(exceptId) {
-        const modals = ['dialingDir', 'doorGamesModal', 'ansiArtModal', 'msgBaseModal', 'captureModal', 'macrosDir', 'settingsModal', 'helpModal', 'composeMsgModal'];
+        const modals = ['dialingDir', 'doorGamesModal', 'fileAreaModal', 'ansiArtModal', 'msgBaseModal', 'captureModal', 'macrosDir', 'settingsModal', 'helpModal', 'composeMsgModal'];
         modals.forEach(id => {
             if (id !== exceptId) {
                 const el = document.getElementById(id);
@@ -2036,6 +2114,12 @@ SEND:"secret\r"'></textarea>
                     <button class="btn-secondary" onclick="masterQuickload()">📂 Quickload (F9)</button>
                     <button class="btn-danger" style="margin-left:auto;" onclick="resetDoorGame('lord')">🔄 New Game</button>
                 </div>
+                <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap; background:#121215; padding:8px 10px; border-radius:6px; border:1px solid #27272a;">
+                    <span style="font-size:11px; color:#a1a1aa; font-weight:600;">VFS Mesh:</span>
+                    <button class="btn-sub" onclick="exportLordToVFS()" title="Save Character record to /home/bbs/lord_player.txt">💾 Save to VFS</button>
+                    <button class="btn-sub" onclick="exportLordToVFS('kpad')" title="Save & launch in KPad">📝 Open in KPad</button>
+                    <button class="btn-sub" onclick="exportLordToVFS('khex')" title="Save & inspect in KHex">🔍 Inspect in KHex</button>
+                </div>
                 <div id="lordLog" style="background:#000; color:#10b981; padding:10px; border-radius:6px; font-family:monospace; height:120px; overflow-y:auto; font-size:11px;">
                     ${lordLogHistory.join('<br>')}
                 </div>
@@ -2065,6 +2149,12 @@ SEND:"secret\r"'></textarea>
                     <button class="btn-secondary" onclick="masterQuicksave()">💾 Quicksave (F5)</button>
                     <button class="btn-secondary" onclick="masterQuickload()">📂 Quickload (F9)</button>
                     <button class="btn-danger" style="margin-left:auto;" onclick="resetDoorGame('tradewars')">🔄 New Game</button>
+                </div>
+                <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap; background:#121215; padding:8px 10px; border-radius:6px; border:1px solid #27272a;">
+                    <span style="font-size:11px; color:#a1a1aa; font-weight:600;">VFS Mesh:</span>
+                    <button class="btn-sub" onclick="exportTradeWarsToVFS()" title="Save flight ledger to /home/bbs/tw_manifest.txt">💾 Save to VFS</button>
+                    <button class="btn-sub" onclick="exportTradeWarsToVFS('kpad')" title="Save & launch in KPad">📝 Open in KPad</button>
+                    <button class="btn-sub" onclick="exportTradeWarsToVFS('khex')" title="Save & inspect in KHex">🔍 Inspect in KHex</button>
                 </div>
                 <div id="twLog" style="background:#000; color:#38bdf8; padding:10px; border-radius:6px; font-family:monospace; height:120px; overflow-y:auto; font-size:11px;">
                     ${twLogHistory.join('<br>')}
@@ -2909,7 +2999,7 @@ SEND:"secret\r"'></textarea>
             return true;
         }
 
-        let modals = ['dialingDir', 'doorGamesModal', 'ansiArtModal', 'msgBaseModal', 'captureModal', 'macrosDir', 'settingsModal', 'helpModal'];
+        let modals = ['dialingDir', 'doorGamesModal', 'fileAreaModal', 'ansiArtModal', 'msgBaseModal', 'captureModal', 'macrosDir', 'settingsModal', 'helpModal'];
         let closedAny = false;
         for (let m of modals) {
             let el = document.getElementById(m);
@@ -2930,8 +3020,413 @@ SEND:"secret\r"'></textarea>
     }
 
     function isAnyModalOpen() {
-        let modals = ['dialingDir', 'doorGamesModal', 'ansiArtModal', 'msgBaseModal', 'captureModal', 'macrosDir', 'settingsModal', 'helpModal', 'composeMsgModal'];
+        let modals = ['dialingDir', 'doorGamesModal', 'fileAreaModal', 'ansiArtModal', 'msgBaseModal', 'captureModal', 'macrosDir', 'settingsModal', 'helpModal', 'composeMsgModal'];
         return modals.some(m => isModalOpen(m));
+    }
+
+
+    // ─── 4. File Area & ANSI Bulletins Library (Phase VI VFS Mesh) ───
+    const bbsBulletins = [
+        {
+            name: "ACID-99.NFO",
+            title: "ACiD Productions '99 Telecomm Artpack Release",
+            size: 1840,
+            date: "1999-08-31",
+            uploader: "Merlin [Acid Underground 106.1]",
+            category: "demoscene",
+            desc: "Official release NFO for KiloBBS Station v2.5. Includes memberlist, board specs, and CP437 palette tables.",
+            content: `\x1B[1;36m════════════════════════════════════════════════════════════════════════════════\x1B[0m
+\x1B[1;33m       ___   _____ _     _   ___                  _             _   _             \x1B[0m
+\x1B[1;33m      /   \\ / ____(_)   | | | _ \\_ _ ___  ___ _  | |__  ___ _ _| |_(_)___ _ _ ___  \x1B[0m
+\x1B[1;33m     / /\\ \\| |    | | __| | |  _/ '_/ _ \\/ _ \\ |/ / '_ \\/ -_) '_| / / / _ \\ '_(_-<  \x1B[0m
+\x1B[1;33m    /_/  \\_\\\_____|_| \\__,_| |_| |_|  \\___/\\___/___/_.__/\\___|_|  |_\\_\\_\\___/_| /__/  \x1B[0m
+\x1B[1;36m════════════════════════════════════════════════════════════════════════════════\x1B[0m
+\x1B[1;32m[RELEASE INFO]\x1B[0m
+  Release Name : KiloBBS Station v2.5 Telecommunications Suite
+  Release Date : August 31, 1999
+  Artist Group : ACiD Productions (Acid Underground Node 106.1)
+  Packager     : Merlin <merlin@acid.org>
+  Distribution : KiloOS VFS /home/bbs/
+  Target Spec  : ANSI.SYS, CP437, 80x25, Zmodem-8K Streaming
+
+\x1B[1;32m[PRODUCT OVERVIEW]\x1B[0m
+  The Acid Underground is proud to present the official release of the KiloBBS
+  Terminal System for KiloOS. Includes integrated FidoNet EchoNet message base,
+  online multiplayer door games (L.O.R.D. and TradeWars 2015), CP437 ANSI raster
+  renderer with CRT scanline simulation, and automated file transmission.
+
+\x1B[1;32m[VFS INTER-APP MESH]\x1B[0m
+  Bulletins downloaded from this File Area sync directly into KiloOS VFS
+  under /home/bbs/. Open in KPad for full-screen text reading, or launch in
+  KHex to analyze raw binary byte streams and escape headers.
+
+\x1B[1;35m* Respect to: iCE, Razor 1999, The Humble Guys, Renaissance, Future Crew *\x1B[0m`
+        },
+        {
+            name: "LORD_REF.TXT",
+            title: "Legend of the Red Dragon Strategy & Boss Guide",
+            size: 1520,
+            date: "1999-08-31",
+            uploader: "DragonSlayer [1:100/42.12]",
+            category: "doors",
+            desc: "Complete warrior compendium: Tavern flirting formulas, weapon smith prices, and Royal Bank security.",
+            content: `\x1B[1;35m================================================================================\x1B[0m
+\x1B[1;31m   LEGEND OF THE RED DRAGON (L.O.R.D.) - COMPLETE WARRIOR COMPENDIUM v3.26      \x1B[0m
+\x1B[1;35m================================================================================\x1B[0m
+Author: DragonSlayer [1:100/42.12]
+BBS Conference: Area 3 (Door Games & Strategy)
+
+1. DAILY FOREST TACTICS:
+   - Always expend all daily forest fights before visiting the Tavern.
+   - Low-tier monsters (Goblin, Dire Wolf) drop 25-65 gold.
+   - Slay monsters until 250 gold is accumulated to trigger Level 2 promotion!
+
+2. WEAPON SMITH ARSENAL:
+   - Stick          :   0 Gold (Default wooden twig)
+   - Iron Blade     :  50 Gold (+10 Attack bonus)
+   - Steel Longsword: 150 Gold (+25 Attack bonus, required for dragon dungeon)
+
+3. ROYAL ARMORY:
+   - Peasant Rags   :   0 Gold
+   - Leather Armor  :  75 Gold (+15 Max HP)
+   - Heavy Chainmail: 175 Gold (+25 Max HP)
+
+4. ROYAL BANK SAFETY:
+   - NEVER log off a BBS session carrying unbanked gold. Rogue players and
+     forest thieves can ambush your sleeping character overnight!
+   - Deposit every coin at the Royal Bank [Action 4].`
+        },
+        {
+            name: "TW2015.NFO",
+            title: "TradeWars 2015 Sector Arbitrage & Navigation Specs",
+            size: 1410,
+            date: "1999-08-31",
+            uploader: "SectorTrader [2:201/33.0]",
+            category: "doors",
+            desc: "Starfleet triangular trade routes between Sol and Centauri, port classes, and pirate warning flags.",
+            content: `\x1B[1;34m╔══════════════════════════════════════════════════════════════════════════════╗\x1B[0m
+\x1B[1;36m║       TRADEWARS 2015 - STARFLEET COMMODITY & SECTOR TRADE ROUTE SPEC         ║\x1B[0m
+\x1B[1;34m╚══════════════════════════════════════════════════════════════════════════════╝\x1B[0m
+SysOp Node: Starport Exchange (2:201/33.0)
+Author    : SectorTrader
+
+[TRIANGULAR SECTOR ARBITRAGE]
+  Sector 1 (Sol Station)     : Buys Ore @ $48   | Sells Equipment @ $180
+  Sector 7 (Alpha Centauri)  : Sells Ore @ $12  | Buys Equipment @ $320
+  Sector 4 (Hazard Nebula)   : Pirate Raiding Zone! 45% attack chance.
+
+[PILOT PROTOCOL]
+  1. Initialize cargo holds with Ore at Sector 7.
+  2. Jump warp gate to Sector 1 and liquidate Ore for 300% profit.
+  3. Load high-density Equipment and return to Sector 7.
+  4. Always maintain shield capacitors at >= 50% via starport recharge.
+  5. Sync flight manifests to /home/bbs/tw_manifest.txt for KHex byte telemetry.`
+        },
+        {
+            name: "ECHONET.TXT",
+            title: "FidoNet Zone 1 Topology & Zone Mail Hour RFC",
+            size: 1630,
+            date: "1999-08-31",
+            uploader: "ZoneCoordinator [1:1/0.0]",
+            category: "echonet",
+            desc: "Official NetMail routing topology, Zone Mail Hour (03:00-04:00 UTC) policy, and member node list.",
+            content: `\x1B[1;33m================================================================================\x1B[0m
+\x1B[1;32m      FIDONET ZONE 1 TECHNICAL TOPOLOGY & ZONE MAIL HOUR (ZMH) STANDARD         \x1B[0m
+\x1B[1;33m================================================================================\x1B[0m
+Document: RFC-99-ECHO-Z1
+Audience: SysOps and NetMail Operators
+
+1. NETMAIL ROUTING TOPOLOGY:
+   Zone 1 (North America) utilizes distributed hub-and-spoke packet forwarding.
+   Packets (.PKT) bundle outbound compressed EchoMail conferences.
+
+2. ZONE MAIL HOUR (ZMH):
+   Every morning from 03:00 to 04:00 UTC, all member nodes enter ZMH mode.
+   Incoming interactive user sessions are disconnected; modems switch to
+   automated CRC32 Zmodem mailers (FrontDoor / BinkleyTerm).
+
+3. REGISTERED NODES:
+   - 1:100/42.0   KiloBBS Station Hub     (Baud 33600 V.34, SysOp Merlin)
+   - 1:249/106.1  Acid Underground Node   (Baud 56000 V.90, SysOp CyberPhreak)
+   - 1:100/42.12  Dragon Realm BBS        (Baud 28800 V.34, SysOp DragonSlayer)
+   - 2:201/33.0   Starport Exchange       (Baud 33600 V.34, SysOp SectorTrader)
+   - 1:1/0.0      Zone 1 Coordinator Desk (FidoNet Routing Policy)`
+        },
+        {
+            name: "ANSI-ART.TXT",
+            title: "ANSI.SYS Escape Codes & TheDraw Glyphs",
+            size: 1280,
+            date: "1999-08-31",
+            uploader: "CyberPhreak [1:249/106.1]",
+            category: "system",
+            desc: "Complete cheat sheet for ANSI escape codes, cursor coordinates, and CP437 block drawing characters.",
+            content: `\x1B[1;35m================================================================================\x1B[0m
+\x1B[1;37m        ANSI.SYS ESCAPE CODES & CP437 THE-DRAW PALETTE REFERENCE                \x1B[0m
+\x1B[1;35m================================================================================\x1B[0m
+
+1. CURSOR CONTROL:
+   ESC[<line>;<col>H   Move cursor to line and column (1-based)
+   ESC[2J              Clear screen and reset cursor to home (1,1)
+   ESC[K               Clear from cursor to end of current line
+
+2. COLOR ATTRIBUTES (ESC[<n>m):
+   0: Normal/Reset    1: Bold / High-Intensity    5: Slow Blink
+   Foreground: 30=Black 31=Red 32=Green 33=Yellow 34=Blue 35=Magenta 36=Cyan 37=White
+   Background: 40=Black 41=Red 42=Green 43=Yellow 44=Blue 45=Magenta 46=Cyan 47=White
+
+3. EXTENDED CP437 BLOCK CHARACTERS:
+   219 (0xDB) : Full block '█'
+   220 (0xDC) : Lower half block '▄'
+   223 (0xDF) : Upper half block '▀'
+   176-178    : Light/Medium/Dark Shading blocks '░▒▓'`
+        },
+        {
+            name: "CLASSIF.NFO",
+            title: "Restricted Node 10.19.99.4 Intercepted Packet",
+            size: 1340,
+            date: "1999-10-23",
+            uploader: "Daemon @ 10.19.99.4",
+            category: "classified",
+            desc: "Intercepted transmission from autonomous daemon. Inspect raw byte headers in KHex.",
+            content: `\x1B[1;31m--------------------------------------------------------------------------------\x1B[0m
+\x1B[1;31m[RESTRICTED BULLETIN - CLASSIFIED AUTONOMOUS PACKET INTERCEPT]\x1B[0m
+\x1B[1;37mORIGIN      : 10.19.99.4\x1B[0m
+\x1B[1;37mTRACE ROUTE : Zone 1 ZMH NetMail Bypass Relay\x1B[0m
+\x1B[1;37mTIMESTAMP   : 1999-10-23 03:14:07 UTC\x1B[0m
+\x1B[1;31m--------------------------------------------------------------------------------\x1B[0m
+INTERCEPT LOG:
+During the scheduled ZMH batch poll, an unlisted daemon handshake was captured
+from host 10.19.99.4. Packet header indicates automated synchronization across
+virtual web hosts (Scallion, Trapster, SlashNet).
+
+DATA INTEGRITY CHECKSUM:
+HEX-SIGNATURE: 0x4B 0x49 0x4C 0x4F 0x2D 0x4D 0x45 0x53 0x48 0x2D 0x39 0x39
+Inspect this NFO in KHex to examine binary raw payload and cryptographic salts.
+Authorized SysOps: Archive to KiloOS VFS path /home/bbs/CLASSIF.NFO immediately.
+\x1B[1;31m--------------------------------------------------------------------------------\x1B[0m`
+        }
+    ];
+
+    let selectedBulletinIndex = 0;
+    let currentFileCategory = 'all';
+
+    function showFileArea() {
+        closeAllModalsExcept('fileAreaModal');
+        dismissAllToasts();
+        document.getElementById('fileAreaModal').style.display = 'flex';
+        renderFileAreaList();
+        selectBulletinFile(selectedBulletinIndex);
+    }
+
+    function closeFileArea() {
+        document.getElementById('fileAreaModal').style.display = 'none';
+        dismissAllToasts();
+        if (typeof canvas !== 'undefined') canvas.focus();
+    }
+
+    function changeFileCategory() {
+        currentFileCategory = document.getElementById('fileCategorySelect').value || 'all';
+        selectedBulletinIndex = 0;
+        renderFileAreaList();
+        selectBulletinFile(0);
+    }
+
+    function getFilteredBulletins() {
+        const query = (document.getElementById('fileSearchInput')?.value || '').toLowerCase().trim();
+        return bbsBulletins.filter(b => {
+            const matchCat = (currentFileCategory === 'all') || (b.category === currentFileCategory);
+            const matchQuery = !query || b.name.toLowerCase().includes(query) || b.title.toLowerCase().includes(query) || b.uploader.toLowerCase().includes(query) || b.desc.toLowerCase().includes(query);
+            return matchCat && matchQuery;
+        });
+    }
+
+    function renderFileAreaList() {
+        const pane = document.getElementById('fileListPane');
+        if (!pane) return;
+        const filtered = getFilteredBulletins();
+        pane.innerHTML = '';
+        if (!filtered.length) {
+            pane.innerHTML = '<div style="padding:16px; color:#71717a; text-align:center; font-size:11px;">No bulletins found matching query.</div>';
+            return;
+        }
+
+        filtered.forEach((file, idx) => {
+            const item = document.createElement('div');
+            item.style.padding = '10px 12px';
+            item.style.cursor = 'pointer';
+            item.style.borderBottom = '1px solid #27272a';
+            item.style.background = (idx === selectedBulletinIndex) ? '#0284c7' : 'transparent';
+            item.style.color = (idx === selectedBulletinIndex) ? '#fff' : '#d4d4d8';
+            item.innerHTML = `
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <strong style="font-family:monospace; font-size:12px;">${escapeHTML(file.name)}</strong>
+                    <span style="font-size:10px; opacity:0.8;">${(file.size / 1024).toFixed(1)} KB</span>
+                </div>
+                <div style="font-size:11px; margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHTML(file.title)}</div>
+                <div style="font-size:10px; color:${(idx === selectedBulletinIndex) ? '#e0f2fe' : '#71717a'}; margin-top:2px;">${escapeHTML(file.date)} • ${escapeHTML(file.category)}</div>
+            `;
+            item.onclick = () => selectBulletinFile(idx);
+            pane.appendChild(item);
+        });
+
+        const statusEl = document.getElementById('fileAreaStatusCount');
+        if (statusEl) {
+            statusEl.textContent = `${filtered.length} bulletins available in /home/bbs/ • Direct VFS Mesh`;
+        }
+    }
+
+    function selectBulletinFile(idx) {
+        selectedBulletinIndex = idx;
+        const filtered = getFilteredBulletins();
+        const file = filtered[idx];
+        const pane = document.getElementById('fileViewPane');
+        if (!pane || !file) return;
+
+        // Clean ANSI escape sequences for text preview
+        const cleanContent = file.content.replace(/\x1B\[[0-9;]*[mKJH]/g, '');
+
+        pane.innerHTML = `
+            <div style="background:#09090b; border:1px solid #27272a; border-radius:6px; padding:12px;">
+                <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:8px;">
+                    <div>
+                        <h3 style="color:#38bdf8; font-family:monospace; font-size:15px; margin:0;">${escapeHTML(file.name)}</h3>
+                        <p style="color:#e4e4e7; font-size:12px; margin:4px 0 0 0; font-weight:600;">${escapeHTML(file.title)}</p>
+                    </div>
+                    <div style="text-align:right; font-size:11px; color:#a1a1aa; font-family:monospace;">
+                        ${file.size} bytes • ${escapeHTML(file.date)}<br>
+                        Uploader: <span style="color:#f59e0b;">${escapeHTML(file.uploader)}</span>
+                    </div>
+                </div>
+                <p style="font-size:11px; color:#d4d4d8; margin:8px 0 0 0; border-top:1px solid #1f2937; padding-top:6px;">
+                    ${escapeHTML(file.desc)}
+                </p>
+                <div style="margin-top:10px; display:flex; gap:6px; flex-wrap:wrap;">
+                    <button class="btn-action" style="background:#0284c7;" onclick="saveSelectedBulletinToVFS()">💾 Download to VFS</button>
+                    <button class="btn-sub" onclick="saveSelectedBulletinToVFS('kpad')">📝 Open in KPad</button>
+                    <button class="btn-sub" onclick="saveSelectedBulletinToVFS('khex')">🔍 Inspect in KHex</button>
+                    <button class="btn-sub" onclick="streamSelectedBulletin()">🖥️ Terminal View</button>
+                    <button class="btn-secondary" onclick="downloadSelectedBulletinBlob()">📥 Local File</button>
+                </div>
+            </div>
+            <div style="flex:1; display:flex; flex-direction:column; min-height:220px;">
+                <div style="font-size:11px; font-weight:600; color:#71717a; text-transform:uppercase; margin-bottom:4px;">ANSI Bulletin Content Preview:</div>
+                <pre style="flex:1; background:#000; color:#10b981; border:1px solid #27272a; border-radius:6px; padding:10px; font-family:monospace; font-size:11px; overflow:auto; margin:0; line-height:1.4; white-space:pre-wrap;">${escapeHTML(cleanContent)}</pre>
+            </div>
+        `;
+
+        // Update list styling
+        const listPane = document.getElementById('fileListPane');
+        if (listPane) {
+            Array.from(listPane.children).forEach((child, i) => {
+                child.style.background = (i === idx) ? '#0284c7' : 'transparent';
+                child.style.color = (i === idx) ? '#fff' : '#d4d4d8';
+            });
+        }
+    }
+
+    function saveSelectedBulletinToVFS(targetApp) {
+        const filtered = getFilteredBulletins();
+        const file = filtered[selectedBulletinIndex];
+        if (!file) return;
+
+        const vfsPath = `/home/bbs/${file.name}`;
+        KiloVFS.write(vfsPath, file.content);
+
+        if (targetApp) {
+            KiloVFS.launchApp(targetApp, vfsPath);
+            showToast(`Saved to ${vfsPath} & launching ${targetApp.toUpperCase()}!`, "success");
+        } else {
+            showToast(`Downloaded ${file.name} to KiloOS VFS (${vfsPath})!`, "success");
+        }
+    }
+
+    function exportAllBulletinsToVFS() {
+        bbsBulletins.forEach(b => {
+            KiloVFS.write(`/home/bbs/${b.name}`, b.content);
+        });
+        showToast(`All ${bbsBulletins.length} bulletins synchronized to /home/bbs/ in VFS!`, "success");
+    }
+
+    function downloadSelectedBulletinBlob() {
+        const filtered = getFilteredBulletins();
+        const file = filtered[selectedBulletinIndex];
+        if (!file) return;
+        const blob = new Blob([file.content], { type: 'text/plain;charset=utf-8' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = file.name;
+        a.click();
+        showToast(`Downloaded ${file.name} to local machine!`, "info");
+    }
+
+    function streamSelectedBulletin() {
+        const filtered = getFilteredBulletins();
+        const file = filtered[selectedBulletinIndex];
+        if (!file) return;
+        closeFileArea();
+        processData(`\r\n\x1B[1;36m[Reading Bulletin: /home/bbs/${file.name}]\x1B[0m\r\n`);
+        processData(file.content + "\r\n");
+        showToast(`Streamed ${file.name} to terminal screen!`, "success");
+    }
+
+    // Door Game VFS Mesh Exporters
+    function exportLordToVFS(targetApp) {
+        const report = `============================================================
+LEGEND OF THE RED DRAGON (L.O.R.D.) - CHARACTER RECORD
+BBS Node: KiloBBS Station Hub (1:100/42.0)
+Timestamp: 1999-10-23
+============================================================
+Warrior Name : ${lordPlayer.name}
+Combat Level : ${lordPlayer.level}
+Hit Points   : ${lordPlayer.hp} / ${lordPlayer.maxHp}
+Gold on Hand : ${lordPlayer.gold}
+Bank Deposit : ${lordPlayer.bank}
+Forest Fights: ${lordPlayer.fights}
+Weapon       : ${lordPlayer.weapon}
+Armor        : ${lordPlayer.armor}
+------------------------------------------------------------
+Battle History:
+${lordLogHistory.join('\n')}
+============================================================`;
+
+        const vfsPath = '/home/bbs/lord_player.txt';
+        KiloVFS.write(vfsPath, report);
+        if (targetApp) {
+            KiloVFS.launchApp(targetApp, vfsPath);
+            showToast(`Exported LORD stats to ${vfsPath} & launching ${targetApp.toUpperCase()}!`, "success");
+        } else {
+            showToast(`Exported LORD stats to VFS (${vfsPath})!`, "success");
+        }
+    }
+
+    function exportTradeWarsToVFS(targetApp) {
+        const report = `============================================================
+TRADEWARS 2015 - STARSHIP TRADE MANIFEST & FLIGHT LOG
+BBS Node: Starport Exchange (2:201/33.0)
+Timestamp: 1999-10-23
+============================================================
+Ship Commander : SectorTrader
+Current Sector : ${twPlayer.sector} (Sol Route)
+Credits        : $${twPlayer.credits}
+Cargo Holds    : ${twPlayer.holds} units
+Cargo Breakdown:
+  - Fuel Ore   : ${twPlayer.ore} units
+  - Organics   : ${twPlayer.organics} units
+  - Equipment  : ${twPlayer.equipment} units
+Shield Integrity: ${twPlayer.shields}%
+------------------------------------------------------------
+Navigation Log:
+${twLogHistory.join('\n')}
+============================================================`;
+
+        const vfsPath = '/home/bbs/tw_manifest.txt';
+        KiloVFS.write(vfsPath, report);
+        if (targetApp) {
+            KiloVFS.launchApp(targetApp, vfsPath);
+            showToast(`Exported TradeWars manifest to ${vfsPath} & launching ${targetApp.toUpperCase()}!`, "success");
+        } else {
+            showToast(`Exported TradeWars manifest to VFS (${vfsPath})!`, "success");
+        }
     }
 
     window.addEventListener('keydown', (e) => {
@@ -3063,7 +3558,45 @@ SEND:"secret\r"'></textarea>
             }
         }
         
+        // File Area modal keyboard navigation
+        if (isModalOpen('fileAreaModal')) {
+            const filtered = getFilteredBulletins();
+            if (e.key === 'ArrowUp' || e.key === 'k' || e.key === 'K') {
+                if (selectedBulletinIndex > 0) {
+                    selectBulletinFile(selectedBulletinIndex - 1);
+                }
+                e.preventDefault(); return;
+            }
+            if (e.key === 'ArrowDown' || e.key === 'j' || e.key === 'J') {
+                if (selectedBulletinIndex < filtered.length - 1) {
+                    selectBulletinFile(selectedBulletinIndex + 1);
+                }
+                e.preventDefault(); return;
+            }
+            if (e.key === 'v' || e.key === 'V') {
+                saveSelectedBulletinToVFS();
+                e.preventDefault(); return;
+            }
+            if (e.key === 'p' || e.key === 'P') {
+                saveSelectedBulletinToVFS('kpad');
+                e.preventDefault(); return;
+            }
+            if (e.key === 'x' || e.key === 'X') {
+                saveSelectedBulletinToVFS('khex');
+                e.preventDefault(); return;
+            }
+            if (e.key === 't' || e.key === 'T') {
+                streamSelectedBulletin();
+                e.preventDefault(); return;
+            }
+        }
+
         if (!isAnyModalOpen() && (!ws || ws.readyState !== 1)) {
+            if (e.key === 'f' || e.key === 'F') {
+                showFileArea();
+                e.preventDefault();
+                return;
+            }
             if (e.key === 'h' || e.key === 'H' || e.key === 'F1') {
                 showHelp();
                 e.preventDefault();

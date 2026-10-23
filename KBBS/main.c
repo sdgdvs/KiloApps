@@ -362,7 +362,7 @@ unsigned char transferBuf[132];
 int transferBytesTotal = 0;
 char transferStatusMsg[128] = "";
 
-HWND hBtnXmDl, hBtnXmUl, hBtnZmDl, hBtnZmUl, hBtnDoor, hBtnArt, hBtnMsg;
+HWND hBtnXmDl, hBtnXmUl, hBtnZmDl, hBtnZmUl, hBtnDoor, hBtnArt, hBtnMsg, hBtnFiles;
 unsigned char sigBuf[6] = {0};
 
 /* ZMODEM State */
@@ -2056,6 +2056,14 @@ void RunDoorGameStream(int choice) {
         StreamAnsiString("\x1B[1;32m(F)orest Hunt  (I)nn & Tavern  (A)rmory  (B)ank  (Q)uit\r\n");
         StreamAnsiString("\x1B[1;36m-> You enter the dark forest... A Forest Goblin appears!\r\n");
         StreamAnsiString("\x1B[1;33m-> You strike the goblin! +35 Gold! [Saved to kbbs_door.dat]\r\n\x1B[0m");
+        HANDLE hStats = CreateFileA("lord_player.txt", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, 0, NULL);
+        if (hStats != INVALID_HANDLE_VALUE) {
+            char rep[256];
+            wsprintfA(rep, "L.O.R.D. Character Record\r\nLevel: %d\r\nHP: %d/%d\r\nGold: %d\r\nBank: %d\r\nFights: %d\r\n",
+                gDoorState.lordLevel, gDoorState.lordHp, gDoorState.lordMaxHp, gDoorState.lordGold, gDoorState.lordBank, gDoorState.lordFights);
+            DWORD wr = 0; WriteFile(hStats, rep, my_strlen(rep), &wr, NULL); CloseHandle(hStats);
+            StreamAnsiString("\x1B[1;32m[Exported character record to lord_player.txt]\r\n\x1B[0m");
+        }
     } else {
         gDoorState.twSector = (gDoorState.twSector % 10) + 1;
         gDoorState.twCredits += 250;
@@ -2069,6 +2077,65 @@ void RunDoorGameStream(int choice) {
         StreamAnsiString("\x1B[1;35m(W)arp Sector  (P)ort Trade  (C)ombat Pirates  (Q)uit\r\n");
         wsprintfA(statBuf, "\x1B[1;32m-> Warping to Sector %d... Space Port detected! +$250 Credits! [Saved]\r\n\x1B[0m", gDoorState.twSector);
         StreamAnsiString(statBuf);
+        HANDLE hMan = CreateFileA("tw_manifest.txt", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, 0, NULL);
+        if (hMan != INVALID_HANDLE_VALUE) {
+            char rep[256];
+            wsprintfA(rep, "TradeWars Flight Manifest\r\nSector: %d\r\nCredits: $%d\r\nHolds: %d\r\nShields: %d%%\r\n",
+                gDoorState.twSector, gDoorState.twCredits, gDoorState.twHolds, gDoorState.twShields);
+            DWORD wr = 0; WriteFile(hMan, rep, my_strlen(rep), &wr, NULL); CloseHandle(hMan);
+            StreamAnsiString("\x1B[1;32m[Exported flight manifest to tw_manifest.txt]\r\n\x1B[0m");
+        }
+    }
+}
+
+void RunFileAreaStream(HWND hwnd) {
+    int choice = MessageBoxA(hwnd,
+        "KBBS ANSI File Area & Bulletins\n\n"
+        "[YES] = Download & Stream ACID-99.NFO (Demoscene 1999)\n"
+        "[NO]  = Download & Stream LORD_REF.TXT (L.O.R.D. Strategy)\n"
+        "[CANCEL] = Return to terminal screen",
+        "KBBS File Area & Bulletins [F]", MB_YESNOCANCEL | MB_ICONINFORMATION);
+    
+    if (choice == IDYES) {
+        ClearScreen();
+        const char* nfo = 
+            "================================================================================\r\n"
+            "ACiD PRODUCTIONS '99 PRESENTS: KiloBBS Station v2.5 Telecomm Suite\r\n"
+            "Pack Date: August 31, 1999 | Distribution: KiloOS VFS /home/bbs/\r\n"
+            "Artists  : Merlin, CyberPhreak | Target: ANSI.SYS, CP437, Zmodem-8K\r\n"
+            "================================================================================\r\n"
+            "Official ANSI release bulletin for KiloBBS. Includes EchoNet conferences,\r\n"
+            "online door games (L.O.R.D. and TradeWars), and CP437 font rasterizer.\r\n"
+            "* Respect: iCE, Razor 1999, The Humble Guys, Future Crew *\r\n";
+        HANDLE hFile = CreateFileA("ACID-99.NFO", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+        if (hFile != INVALID_HANDLE_VALUE) {
+            DWORD wr = 0;
+            WriteFile(hFile, nfo, my_strlen(nfo), &wr, NULL);
+            CloseHandle(hFile);
+        }
+        StreamAnsiString("\x1B[1;36m[Downloaded ACID-99.NFO to disk]\r\n\x1B[0m");
+        StreamAnsiString(nfo);
+        SetStatusText("Downloaded ACID-99.NFO to disk (KBBS File Area)");
+    } else if (choice == IDNO) {
+        ClearScreen();
+        const char* lord = 
+            "================================================================================\r\n"
+            "LEGEND OF THE RED DRAGON (L.O.R.D.) - COMPLETE WARRIOR COMPENDIUM v3.26\r\n"
+            "Author: DragonSlayer [1:100/42.12] | BBS Conference: Area 3\r\n"
+            "================================================================================\r\n"
+            "1. Forest Fights: Level 1 monsters drop 25-65g. Save 250g for Level 2!\r\n"
+            "2. Weapons: Stick (0g) -> Iron Blade (50g) -> Steel Longsword (150g)\r\n"
+            "3. Armor  : Rags (0g) -> Leather Armor (75g) -> Chainmail (175g)\r\n"
+            "4. Royal Bank: Always deposit excess gold before ending turn!\r\n";
+        HANDLE hFile = CreateFileA("LORD_REF.TXT", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+        if (hFile != INVALID_HANDLE_VALUE) {
+            DWORD wr = 0;
+            WriteFile(hFile, lord, my_strlen(lord), &wr, NULL);
+            CloseHandle(hFile);
+        }
+        StreamAnsiString("\x1B[1;35m[Downloaded LORD_REF.TXT to disk]\r\n\x1B[0m");
+        StreamAnsiString(lord);
+        SetStatusText("Downloaded LORD_REF.TXT to disk (KBBS File Area)");
     }
 }
 
@@ -2186,6 +2253,9 @@ LRESULT CALLBACK WndProc
             hBtnHelp = CreateWindowA("BUTTON", "Help [F1]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
                 dpiScale(482), dpiScale(30), dpiScale(74), dpiScale(22), hwnd, (HMENU)112, 0, 0);
 
+            hBtnFiles = CreateWindowA("BUTTON", "Files [F]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+                dpiScale(560), dpiScale(30), dpiScale(66), dpiScale(22), hwnd, (HMENU)116, 0, 0);
+
             SendMessageA(hEcho, BM_SETCHECK, kbbsSettings.localEcho ? BST_CHECKED : BST_UNCHECKED, 0);
 
             /* Subclass host and port edit controls for Enter key connect */
@@ -2211,6 +2281,7 @@ LRESULT CALLBACK WndProc
             SendMessageA(hBtnSettings, WM_SETFONT, (WPARAM)hUIFont, TRUE);
             SendMessageA(hBtnCapture, WM_SETFONT, (WPARAM)hUIFont, TRUE);
             SendMessageA(hBtnHelp, WM_SETFONT, (WPARAM)hUIFont, TRUE);
+            SendMessageA(hBtnFiles, WM_SETFONT, (WPARAM)hUIFont, TRUE);
             SendMessageA(hBtnDoor, WM_SETFONT, (WPARAM)hUIFont, TRUE);
             SendMessageA(hBtnArt, WM_SETFONT, (WPARAM)hUIFont, TRUE);
             SendMessageA(hBtnMsg, WM_SETFONT, (WPARAM)hUIFont, TRUE);
@@ -2239,7 +2310,7 @@ LRESULT CALLBACK WndProc
             StreamAnsiString("  | . \\/ // /___/ /_/ / /_/ / /_/ /___/ /  \r\n");
             StreamAnsiString("  |_|\\_\\___/_____/\\____/_____/_____//____/   \x1B[1;35m[Press F1 or 'H' for Help]\r\n");
             StreamAnsiString("\x1B[1;36m==============================================================================\r\n\x1B[0;37m");
-            StreamAnsiString("Ready to connect. Press [D] for Directory, [G] for Doors, or [M] for Macros.\r\n\r\n");
+            StreamAnsiString("Ready to connect. Press [D] for Directory, [F] for Files, [G] for Doors, or [M] for Macros.\r\n\r\n");
             break;
         }
         case WM_COMMAND: {
@@ -2480,6 +2551,8 @@ LRESULT CALLBACK WndProc
                 RunAnsiArtStream();
             } else if (LOWORD(wParam) == 115) {
                 DialogBoxParamA(GetModuleHandleA(NULL), MAKEINTRESOURCEA(IDD_MSGREADER), hwnd, MsgReaderProc, 0);
+            } else if (LOWORD(wParam) == 116) {
+                RunFileAreaStream(hwnd);
             }
             break;
         }
@@ -3077,6 +3150,10 @@ void __stdcall MainEntry() {
                     continue;
                 }
                 if (sock == INVALID_SOCKET) {
+                    if (msg.wParam == 'F' || msg.wParam == 'f') {
+                        SendMessageA(hMain, WM_COMMAND, 116, 0); // File Area
+                        continue;
+                    }
                     if (msg.wParam == 'D' || msg.wParam == 'd') {
                         SendMessageA(hMain, WM_COMMAND, 101, 0); // Directory
                         continue;
