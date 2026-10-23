@@ -2507,6 +2507,189 @@
   }
 
   /* Retro Toast Notification */
+    /* =========================================================================
+     KILONET AUCTIONS '99 STYLING
+     ========================================================================= */
+  .auction-hero-banner {
+    background: linear-gradient(135deg, #001f3f 0%, #003366 100%);
+    color: #ffffff;
+    border: 2px solid #ffd700;
+    padding: 10px 14px;
+    margin-bottom: 12px;
+    box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
+    font-family: Arial, sans-serif;
+  }
+  .auction-filter-bar {
+    background: #e4e0d8;
+    border: 2px outset #ffffff;
+    padding: 6px 10px;
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    font-family: Arial, sans-serif;
+    font-size: 12px;
+  }
+  .auction-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+    gap: 12px;
+    margin-bottom: 14px;
+  }
+  .auction-card {
+    background: #ffffff;
+    border: 2px outset #d4d0c8;
+    box-shadow: 2px 2px 6px rgba(0,0,0,0.15);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .auction-card:hover {
+    border-color: #000080;
+  }
+  .auction-card-header {
+    background: #000080;
+    color: #ffffff;
+    font-family: Arial, sans-serif;
+    font-weight: bold;
+    font-size: 12px;
+    padding: 5px 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .auction-card-body {
+    padding: 8px 10px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    font-size: 12px;
+    font-family: Arial, sans-serif;
+  }
+  .auction-thumb-box {
+    background: #f0f4f8;
+    border: 1px inset #b0c4de;
+    height: 72px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 6px;
+    font-family: 'Courier New', monospace;
+    font-size: 11px;
+    color: #1e3a8a;
+    text-align: center;
+    line-height: 1.25;
+    padding: 4px;
+  }
+  .auction-price-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin: 6px 0;
+    padding: 4px 6px;
+    background: #fdf6e2;
+    border: 1px dashed #d97706;
+  }
+  .auction-curr-bid {
+    font-size: 16px;
+    font-weight: 900;
+    color: #b91c1c;
+    font-family: 'Courier New', monospace;
+  }
+  .auction-meta-list {
+    font-size: 11px;
+    color: #4b5563;
+    line-height: 1.4;
+    margin-bottom: 8px;
+  }
+  .auction-bid-controls {
+    margin-top: auto;
+    padding-top: 6px;
+    border-top: 1px solid #e5e7eb;
+    display: flex;
+    gap: 4px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .auction-timer-badge {
+    display: inline-block;
+    padding: 2px 6px;
+    border-radius: 2px;
+    font-family: 'Courier New', monospace;
+    font-weight: bold;
+    font-size: 11px;
+  }
+  .timer-active {
+    background: #000000;
+    color: #22c55e;
+    border: 1px inset #555555;
+  }
+  .timer-urgent {
+    background: #7f1d1d;
+    color: #fef08a;
+    border: 1px inset #ef4444;
+  }
+  .timer-ended {
+    background: #374151;
+    color: #9ca3af;
+    border: 1px solid #6b7280;
+  }
+  .auction-history-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 11px;
+    font-family: 'Courier New', monospace;
+    margin-top: 6px;
+  }
+  .auction-history-table th {
+    background: #e2e8f0;
+    border: 1px solid #cbd5e1;
+    padding: 3px 6px;
+    text-align: left;
+  }
+  .auction-history-table td {
+    border: 1px solid #e2e8f0;
+    padding: 3px 6px;
+    background: #ffffff;
+  }
+  .modal-retro-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.65);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+  }
+  .modal-retro-box {
+    background: #d4d0c8;
+    border: 3px outset #ffffff;
+    box-shadow: 4px 4px 16px rgba(0,0,0,0.8);
+    width: 520px;
+    max-width: 95%;
+    max-height: 90vh;
+    overflow-y: auto;
+    font-family: Arial, sans-serif;
+  }
+  .modal-retro-header {
+    background: #000080;
+    color: #ffffff;
+    padding: 4px 8px;
+    font-weight: bold;
+    font-size: 13px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .modal-retro-body {
+    padding: 12px;
+  }
+
   .retro-toast {
     position: fixed;
     bottom: 24px;
@@ -2548,6 +2731,7 @@
 
     <div class="quick-bar">
       <div class="quick-links">
+        <a href="#" onclick="switchPortalTab('auctions'); return false;" style="color:#b45309; font-weight:bold;">🏷️ KiloAuctions '99</a>
         <a href="#" onclick="switchPortalTab('widgetlab'); return false;" style="color:#b91c1c; font-weight:bold;">🧪 Widget Lab '99</a>
         <a href="#" onclick="switchPortalTab('webmail'); return false;" style="color:#0000cc; font-weight:bold;">✉️ KiloMail Web</a>
         <a href="#" onclick="switchPortalTab('downloads'); return false;" style="color:#008080; font-weight:bold;">💾 Shareware Depot</a>
@@ -2631,6 +2815,7 @@
       <div class="portal-tab" id="tabNav-horoscope" onclick="switchPortalTab('horoscope')">🔮 Silicon Zodiac</div>
       <div class="portal-tab" id="tabNav-trivia" onclick="switchPortalTab('trivia')">🧠 1999 Trivia</div>
       <div class="portal-tab" id="tabNav-y2k" onclick="switchPortalTab('y2k')">🛡️ Y2K Readiness Lab</div>
+      <div class="portal-tab" id="tabNav-auctions" onclick="switchPortalTab('auctions')">🏷️ KiloAuctions '99</div>
     </div>
   </header>
 
@@ -4221,6 +4406,130 @@ Ready. Select target destination to begin automated indexing pass.
     </div>
   </section>
 
+  <!-- TAB: KiloAuctions '99 -->
+  <section id="tab-auctions" class="tab-content">
+    <div class="auction-hero-banner">
+      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+        <div>
+          <span style="font-size:18px; font-weight:bold; color:#ffd700; text-shadow:1px 1px 2px #000;">🏷️ KiloAuctions '99 — Premier Silicon Auction Block</span><br>
+          <span style="font-size:11px; color:#e0f2fe;">Live peer bidding on vintage 3D accelerators, wavetable audio cards, big-box classics, &amp; demoscene gear. Anti-sniping protection enabled!</span>
+        </div>
+        <div style="text-align:right; background:rgba(0,0,0,0.4); padding:4px 8px; border:1px solid #ffd700;">
+          <div style="font-size:11px; color:#fde047;">💼 Venture Dot-Com Balance:</div>
+          <div style="font-size:16px; font-weight:bold; color:#4ade80; font-family:'Courier New', monospace;">$<span id="auctionUserBalance">2,500.00</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Filter & Action Bar -->
+    <div class="auction-filter-bar">
+      <div style="display:flex; gap:4px; flex-wrap:wrap; align-items:center;">
+        <strong>Category:</strong>
+        <button class="btn-retro" id="catBtn-all" onclick="filterAuctions('all')" style="font-weight:bold;">All Lots (<span id="count-all">12</span>)</button>
+        <button class="btn-retro" id="catBtn-video" onclick="filterAuctions('video')">🎮 3D Video</button>
+        <button class="btn-retro" id="catBtn-audio" onclick="filterAuctions('audio')">🔊 Sound Cards</button>
+        <button class="btn-retro" id="catBtn-storage" onclick="filterAuctions('storage')">💾 Storage</button>
+        <button class="btn-retro" id="catBtn-games" onclick="filterAuctions('games')">🕹️ Big Box PC</button>
+        <button class="btn-retro" id="catBtn-modem" onclick="filterAuctions('modem')">📠 Networking</button>
+        <button class="btn-retro" id="catBtn-systems" onclick="filterAuctions('systems')">💻 Laptops &amp; Handhelds</button>
+      </div>
+      <div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap;">
+        <input type="text" id="auctionSearchInput" class="form-input" style="font-size:11px; padding:3px 6px; width:160px;" placeholder="Search lots..." oninput="handleAuctionSearch(this.value)" />
+        <button class="btn-retro" style="background:#059669; color:#fff; font-weight:bold;" onclick="openCreateAuctionModal()">➕ List Gear</button>
+        <button class="btn-retro" onclick="toggleWatchlistFilter()" id="watchlistFilterBtn">⭐ Watchlist (<span id="auctionWatchCount">0</span>)</button>
+        <button class="btn-retro" onclick="resetAuctionsState()" title="Restore default lots and starting bids">🔄 Reset Bids</button>
+      </div>
+    </div>
+
+    <!-- Active Auctions Grid -->
+    <div class="auction-grid" id="auctionGrid">
+      <!-- Injected via JavaScript -->
+    </div>
+
+    <!-- Sell Your Gear Modal -->
+    <div id="createAuctionModal" class="modal-retro-overlay" style="display:none;">
+      <div class="modal-retro-box">
+        <div class="modal-retro-header">
+          <span>➕ List Your Hardware / Software Item on KiloAuctions '99</span>
+          <button style="background:none; border:none; color:#fff; font-weight:bold; cursor:pointer;" onclick="closeCreateAuctionModal()">✕</button>
+        </div>
+        <div class="modal-retro-body">
+          <form onsubmit="submitNewAuction(event)">
+            <div style="margin-bottom:8px;">
+              <label style="font-weight:bold; font-size:12px; display:block; margin-bottom:2px;">Item Title / Name:</label>
+              <input type="text" id="newAuctionTitle" class="form-input" style="width:100%; box-sizing:border-box;" required placeholder="e.g. Diamond Monster 3D II 12MB Voodoo2 PCI" />
+            </div>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:8px;">
+              <div>
+                <label style="font-weight:bold; font-size:11px; display:block; margin-bottom:2px;">Category:</label>
+                <select id="newAuctionCategory" class="form-input" style="width:100%; box-sizing:border-box;">
+                  <option value="video">🎮 3D Accelerators</option>
+                  <option value="audio">🔊 Sound &amp; Wavetable</option>
+                  <option value="storage">💾 Removable Storage</option>
+                  <option value="games">🕹️ Big Box PC Classics</option>
+                  <option value="modem">📠 Modems &amp; Telecom</option>
+                  <option value="systems">💻 Laptops &amp; Handhelds</option>
+                </select>
+              </div>
+              <div>
+                <label style="font-weight:bold; font-size:11px; display:block; margin-bottom:2px;">Condition:</label>
+                <select id="newAuctionCondition" class="form-input" style="width:100%; box-sizing:border-box;">
+                  <option value="Factory Sealed (Mint)">Factory Sealed (Mint)</option>
+                  <option value="Complete In Box (CIB)">Complete In Box (CIB)</option>
+                  <option value="Tested Working w/ Drivers">Tested Working w/ Drivers</option>
+                  <option value="Bare Board / As-Is">Bare Board / As-Is</option>
+                </select>
+              </div>
+            </div>
+            <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-bottom:8px;">
+              <div>
+                <label style="font-weight:bold; font-size:11px; display:block; margin-bottom:2px;">Starting Bid ($):</label>
+                <input type="number" id="newAuctionStartBid" class="form-input" style="width:100%; box-sizing:border-box;" min="1" step="1" value="25" required />
+              </div>
+              <div>
+                <label style="font-weight:bold; font-size:11px; display:block; margin-bottom:2px;">Reserve ($):</label>
+                <input type="number" id="newAuctionReserve" class="form-input" style="width:100%; box-sizing:border-box;" min="0" step="1" value="45" />
+              </div>
+              <div>
+                <label style="font-weight:bold; font-size:11px; display:block; margin-bottom:2px;">Buy-It-Now ($):</label>
+                <input type="number" id="newAuctionBin" class="form-input" style="width:100%; box-sizing:border-box;" min="0" step="1" value="89" />
+              </div>
+            </div>
+            <div style="margin-bottom:8px;">
+              <label style="font-weight:bold; font-size:11px; display:block; margin-bottom:2px;">Seller Handle / Alias:</label>
+              <input type="text" id="newAuctionSeller" class="form-input" style="width:100%; box-sizing:border-box;" value="RetroCollector_99" required />
+            </div>
+            <div style="margin-bottom:12px;">
+              <label style="font-weight:bold; font-size:11px; display:block; margin-bottom:2px;">Detailed Specifications &amp; Lore:</label>
+              <textarea id="newAuctionDesc" class="form-input" style="width:100%; height:60px; box-sizing:border-box; font-family:'Courier New', monospace; font-size:11px;" required placeholder="Describe condition, revision, included accessories, and period provenance..."></textarea>
+            </div>
+            <div style="display:flex; justify-content:flex-end; gap:8px;">
+              <button type="button" class="btn-retro" onclick="closeCreateAuctionModal()">Cancel</button>
+              <button type="submit" class="btn-retro btn-primary-retro">🔨 Post Auction Listing</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bill of Sale Receipt Modal -->
+    <div id="auctionReceiptModal" class="modal-retro-overlay" style="display:none;">
+      <div class="modal-retro-box" style="width:580px;">
+        <div class="modal-retro-header" style="background:#047857;">
+          <span>🧾 Official KiloAuctions '99 Bill of Sale &amp; Escrow Voucher</span>
+          <button style="background:none; border:none; color:#fff; font-weight:bold; cursor:pointer;" onclick="closeAuctionReceiptModal()">✕</button>
+        </div>
+        <div class="modal-retro-body">
+          <pre id="auctionReceiptPreview" style="background:#000000; color:#4ade80; border:2px inset #374151; padding:10px; font-family:'Courier New', monospace; font-size:11px; white-space:pre-wrap; max-height:360px; overflow-y:auto;"></pre>
+          <div style="display:flex; justify-content:space-between; margin-top:10px;">
+            <button class="btn-retro" onclick="closeAuctionReceiptModal()">Close Window</button>
+            <button class="btn-retro" style="background:#059669; color:#fff; font-weight:bold;" onclick="downloadActiveAuctionReceipt()">💾 Download .TXT Receipt</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <!-- Webring Member Widget -->
   <div class="webring-widget">
     <strong>[ Central KiloNet 1999 Webring Member #001 ]</strong><br>
@@ -5348,6 +5657,47 @@ function playTeletypeClack() {
 }
 
 // Upgraded UI Earcons & Action Stingers (YM2612 2-Op FM + SPC700 Stereo Delay)
+
+function playGavelStrike() {
+  if (!audioEnabled || !audioCtx) return;
+  try {
+    const t0 = audioCtx.currentTime;
+    [0, 0.16].forEach((offset, idx) => {
+      const strikeTime = t0 + offset;
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(idx === 0 ? 180 : 195, strikeTime);
+      osc.frequency.exponentialRampToValueAtTime(40, strikeTime + 0.08);
+
+      gain.gain.setValueAtTime(0.45, strikeTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, strikeTime + 0.09);
+
+      osc.connect(gain);
+      gain.connect(masterGain);
+      osc.start(strikeTime);
+      osc.stop(strikeTime + 0.1);
+
+      if (noiseBuffer) {
+        const noiseSource = audioCtx.createBufferSource();
+        noiseSource.buffer = noiseBuffer;
+        const noiseFilter = audioCtx.createBiquadFilter();
+        noiseFilter.type = 'bandpass';
+        noiseFilter.frequency.setValueAtTime(750, strikeTime);
+        noiseFilter.Q.setValueAtTime(3.2, strikeTime);
+        const noiseGain = audioCtx.createGain();
+        noiseGain.gain.setValueAtTime(0.35, strikeTime);
+        noiseGain.gain.exponentialRampToValueAtTime(0.001, strikeTime + 0.04);
+        noiseSource.connect(noiseFilter);
+        noiseFilter.connect(noiseGain);
+        noiseGain.connect(masterGain);
+        noiseSource.start(strikeTime);
+        noiseSource.stop(strikeTime + 0.05);
+      }
+    });
+  } catch(e) {}
+}
+
 function playClick() {
   if (!audioEnabled) return;
   initAudio();
@@ -6154,7 +6504,8 @@ const APPS_DATABASE = [
   { id: 'web-deep-core', title: 'Deep Core Subterranean Ghost Terminal (Node 0x1999)', folder: 'Web', url: '/web/deep_core.html', desc: 'Subterranean Ring-0 relay, SHA-256 passkey analyzer, x86 opcode stepper, 650m lithospheric seismograph & subterranean wiretap packet sniffer.', tags: 'deep-core,terminal,ghost,passkey,hash,10.19.99.127,sha256,forensics,vt100,disasm,seismic,sniffer,web' },
   { id: 'web-contrib', title: 'Fleet Compute Contributor Portal', folder: 'Web', url: '/apps/contribute.html', desc: 'Volunteer compute portal donating free Gemini quota to fuel the living autonomous fleet.', tags: 'contribute,compute,quota,fleet,fuel,web' },
   { id: 'web-downloads', title: 'KiloNet Shareware & Download Depot \'99', folder: 'Web', url: '#tab-downloads', desc: 'Over 2,500+ Win95/98/NT titles rated 1 to 5 Cows, live dialup speed simulator, virus scanner & ASCII NFO viewer.', tags: 'downloads,shareware,freeware,files,tucows,winamp,winzip,mirc,glide,voodoo,games,utilities,web' },
-  { id: 'web-webmail', title: 'KiloMail Web Express \'99', folder: 'Web', url: '#tab-webmail', desc: 'Free Web 1.0 webmail inbox simulator: compose, check email, simulated SMTP dispatch & storage meter.', tags: 'webmail,email,mail,inbox,outbox,smtp,pop3,messages,compose,web' }
+  { id: 'web-webmail', title: 'KiloMail Web Express \'99', folder: 'Web', url: '#tab-webmail', desc: 'Free Web 1.0 webmail inbox simulator: compose, check email, simulated SMTP dispatch & storage meter.', tags: 'webmail,email,mail,inbox,outbox,smtp,pop3,messages,compose,web' },
+  { id: 'web-auctions', title: 'KiloAuctions \'99 Hardware Block', folder: 'Web', url: '#tab-auctions', desc: 'Live peer-to-peer 1999 tech auctions: 3D accelerators, wavetable audio cards, big box games, anti-sniping protection & Bill of Sale.', tags: 'auctions,hardware,ebay,bid,voodoo,soundblaster,thinkpad,web' }
 ];
 
 /* =========================================================================
@@ -8342,7 +8693,7 @@ function saveBunkerItem(key) {
 
 function switchPortalTab(tabName) {
   playClick();
-  const tabs = ['directory', 'widgetlab', 'mykilonet', 'downloads', 'webmail', 'comics', 'guestbook', 'noc', 'arcade', 'news', 'radio', 'stocks', 'classifieds', 'yellowpages', 'weather', 'speedtest', 'horoscope', 'trivia', 'y2k'];
+  const tabs = ['directory', 'widgetlab', 'mykilonet', 'downloads', 'webmail', 'comics', 'guestbook', 'noc', 'arcade', 'news', 'radio', 'stocks', 'classifieds', 'yellowpages', 'weather', 'speedtest', 'horoscope', 'trivia', 'y2k', 'auctions'];
   tabs.forEach(t => {
     const navEl = document.getElementById(`tabNav-${t}`);
     const contentEl = document.getElementById(`tab-${t}`);
@@ -8364,6 +8715,7 @@ function switchPortalTab(tabName) {
     renderDownloadsList();
   } else if (tabName === 'webmail') {
     renderWebmail();
+  renderAuctions();
   } else if (tabName === 'classifieds') {
     filterClassifieds();
   } else if (tabName === 'news') {
@@ -8391,6 +8743,8 @@ function switchPortalTab(tabName) {
     renderMyKiloNet();
   } else if (tabName === 'comics') {
     renderComicEpisode(currentComicIndex);
+  } else if (tabName === 'auctions') {
+    renderAuctions();
   }
 }
 
@@ -14532,6 +14886,768 @@ Carlsbad Automated Transponder Daemon`
 /* =========================================================================
    13. INITIALIZATION
    ========================================================================= */
+
+/* =========================================================================
+   KILONET AUCTIONS '99 SUITE (ANTI-POTEMKIN HARDWARE & SOFTWARE AUCTION BLOCK)
+   ========================================================================= */
+
+const DEFAULT_AUCTIONS = [
+  {
+    id: "auc-voodoo3",
+    title: "3dfx Voodoo 3 3500 TV AGP (16MB SDRAM)",
+    category: "video",
+    seller: "xX_GlideMaster_Xx",
+    rating: "100% (412 ⭐)",
+    condition: "Complete In Box (CIB)",
+    currentBid: 215,
+    startingBid: 120,
+    reservePrice: 180,
+    buyItNow: 320,
+    bidCount: 14,
+    highBidder: "GlideEnthusiast99",
+    timeLeft: 2840, // seconds
+    ended: false,
+    specs: "350MHz RAMDAC • 183MHz Core/Mem • Blue Breakout Pod • MPEG-2 Hardware Encoding • Glide 3.x",
+    asciiIcon: "[ 3dfx VOODOO 3 3500 AGP ]\n[ 16MB SDRAM • TV-TUNER POD ]\n[ GLIDE API READY • FAST! ]",
+    bids: [
+      { bidder: "GlideEnthusiast99", amount: 215, time: "10 mins ago" },
+      { bidder: "3DFX_Fanatic", amount: 205, time: "28 mins ago" },
+      { bidder: "VoodooPriest", amount: 190, time: "1 hour ago" },
+      { bidder: "HardwareHoarder", amount: 150, time: "3 hours ago" }
+    ]
+  },
+  {
+    id: "auc-sblive",
+    title: "Sound Blaster Live! Platinum w/ Live! Drive II",
+    category: "audio",
+    seller: "DSP_Audiophile",
+    rating: "99.4% (318 ⭐)",
+    condition: "Tested Working w/ Drivers",
+    currentBid: 179,
+    startingBid: 95,
+    reservePrice: 150,
+    buyItNow: 250,
+    bidCount: 11,
+    highBidder: "MIDI_Composer_99",
+    timeLeft: 1420,
+    ended: false,
+    specs: "EMU10K1 32-bit DSP • Optical S/PDIF In/Out • Dual MIDI DIN • 64 Hardware Voices • Environmental Audio Extensions (EAX)",
+    asciiIcon: "[ SB LIVE! PLATINUM + DRIVE ]\n[ EMU10K1 DSP • OPTICAL S/PDIF ]\n[ EAX 2.0 • 64-VOICE POLYPHONY ]",
+    bids: [
+      { bidder: "MIDI_Composer_99", amount: 179, time: "5 mins ago" },
+      { bidder: "RetroTrackerr", amount: 170, time: "42 mins ago" },
+      { bidder: "GravisRefugee", amount: 145, time: "2 hours ago" }
+    ]
+  },
+  {
+    id: "auc-zip250",
+    title: "Iomega Zip 250 SCSI External Drive + 10-Pack Disks",
+    category: "storage",
+    seller: "SysAdmin_Dave",
+    rating: "100% (523 ⭐)",
+    condition: "Tested Working w/ Drivers",
+    currentBid: 145,
+    startingBid: 60,
+    reservePrice: 110,
+    buyItNow: 199,
+    bidCount: 9,
+    highBidder: "BackupCurator",
+    timeLeft: 920,
+    ended: false,
+    specs: "Ultra-Fast SCSI-2 Interface • 250MB per Disk • Click-of-Death Clean Tested • Includes Active Terminator & 10 Rainbow Disks",
+    asciiIcon: "[ IOMEGA ZIP 250 SCSI EXT ]\n[ 250MB CARTRIDGE MEDIA ]\n[ ZERO CLICK-OF-DEATH • MINT ]",
+    bids: [
+      { bidder: "BackupCurator", amount: 145, time: "12 mins ago" },
+      { bidder: "DemosceneArchivist", amount: 135, time: "1 hour ago" },
+      { bidder: "SCSI_Lover", amount: 110, time: "4 hours ago" }
+    ]
+  },
+  {
+    id: "auc-surreal99",
+    title: "Surreal Tournament '99 Special Edition (Big Box PC)",
+    category: "games",
+    seller: "FragMaster_99",
+    rating: "98.7% (184 ⭐)",
+    condition: "Factory Sealed (Mint)",
+    currentBid: 68,
+    startingBid: 25,
+    reservePrice: 50,
+    buyItNow: 110,
+    bidCount: 8,
+    highBidder: "InstaGib_Pro",
+    timeLeft: 3450,
+    ended: false,
+    specs: "Unopened factory cellophane shrinkwrap with holographic seal • 4CD Special Edition • Metallic embossed silver slipcover",
+    asciiIcon: "[ SURREAL TOURNAMENT '99 ]\n[ BIG BOX FACTORY SEALED ]\n[ UNREAL WARFARE ENGINE • 4CD ]",
+    bids: [
+      { bidder: "InstaGib_Pro", amount: 68, time: "18 mins ago" },
+      { bidder: "LAN_ArenaChamp", amount: 60, time: "2 hours ago" },
+      { bidder: "CollectorKing", amount: 45, time: "5 hours ago" }
+    ]
+  },
+  {
+    id: "auc-tremor3",
+    title: "Tremor III Arena Collector's Tin (Big Box PC)",
+    category: "games",
+    seller: "RocketJumper_99",
+    rating: "100% (291 ⭐)",
+    condition: "Factory Sealed (Mint)",
+    currentBid: 92,
+    startingBid: 40,
+    reservePrice: 80,
+    buyItNow: 140,
+    bidCount: 13,
+    highBidder: "RailgunSniper",
+    timeLeft: 410, // Urgent timer!
+    ended: false,
+    specs: "Heavy embossed collector metal tin • Contains metal pewter player miniature, soundtrack audio CD & GLQuake engine guide",
+    asciiIcon: "[ TREMOR III ARENA TIN BOX ]\n[ EMBOSSED METAL • PEWTER MIN ]\n[ ID TECH 3 ENGINE CLASSIC ]",
+    bids: [
+      { bidder: "RailgunSniper", amount: 92, time: "1 min ago" },
+      { bidder: "StrafeHopGod", amount: 88, time: "3 mins ago" },
+      { bidder: "CTF_Captain", amount: 80, time: "15 mins ago" }
+    ]
+  },
+  {
+    id: "auc-usr56k",
+    title: "USRobotics Courier V.Everything 56k External Modem",
+    category: "modem",
+    seller: "BBS_Sysop_Legacy",
+    rating: "100% (680 ⭐)",
+    condition: "Tested Working w/ Drivers",
+    currentBid: 118,
+    startingBid: 50,
+    reservePrice: 90,
+    buyItNow: 175,
+    bidCount: 7,
+    highBidder: "DialupDaemon",
+    timeLeft: 1890,
+    ended: false,
+    specs: "Texas Instruments DSP • Dual 10-position DIP switches • V.90 & x2 hardware flash • Robust metal chassis • RS-232 serial cable",
+    asciiIcon: "[ USR COURIER V.EVERYTHING ]\n[ DUAL DIP SWITCHES • V.90 ]\n[ BBS WARDIALER WEAPON ]",
+    bids: [
+      { bidder: "DialupDaemon", amount: 118, time: "22 mins ago" },
+      { bidder: "PhreakWizard", amount: 105, time: "1 hour ago" },
+      { bidder: "BBS_Runner", amount: 85, time: "3 hours ago" }
+    ]
+  },
+  {
+    id: "auc-thinkpad",
+    title: "IBM ThinkPad 770X Mobile Workstation (14.1-inch TFT)",
+    category: "systems",
+    seller: "EnterpriseSalvage",
+    rating: "99.1% (890 ⭐)",
+    condition: "Tested Working w/ Drivers",
+    currentBid: 850,
+    startingBid: 450,
+    reservePrice: 750,
+    buyItNow: 1150,
+    bidCount: 16,
+    highBidder: "TrackPointLoyalist",
+    timeLeft: 3100,
+    ended: false,
+    specs: "Mobile Pentium II 300MHz • 128MB SDRAM • 14.1-inch SXGA+ 1280x1024 active matrix TFT • 8.1GB HDD • DVD-ROM drive • Dual battery Ultrabay",
+    asciiIcon: "[ IBM THINKPAD 770X LAPTOP ]\n[ PII 300 • 14.1-inch 1280x1024 TFT ]\n[ DVD-ROM • RED TRACKPOINT IV ]",
+    bids: [
+      { bidder: "TrackPointLoyalist", amount: 850, time: "8 mins ago" },
+      { bidder: "RoadWarrior99", amount: 820, time: "35 mins ago" },
+      { bidder: "ExecutiveMobile", amount: 760, time: "2 hours ago" }
+    ]
+  },
+  {
+    id: "auc-gusclassic",
+    title: "Gravis UltraSound Classic 1MB (Red PCB Rev 3.7)",
+    category: "audio",
+    seller: "TrackerGod_Scene",
+    rating: "100% (345 ⭐)",
+    condition: "Tested Working w/ Drivers",
+    currentBid: 280,
+    startingBid: 150,
+    reservePrice: 240,
+    buyItNow: 395,
+    bidCount: 15,
+    highBidder: "ModTrackerKing",
+    timeLeft: 540,
+    ended: false,
+    specs: "Iconic red PCB Revision 3.7 • Full 1024KB onboard sample RAM • 32 hardware channels • Demoscene gold standard for ProTracker .MOD playback",
+    asciiIcon: "[ GRAVIS ULTRASOUND 1MB ]\n[ RED PCB REV 3.7 • GF1 CHIP ]\n[ DEMOSCENE GRAIL HARDWARE ]",
+    bids: [
+      { bidder: "ModTrackerKing", amount: 280, time: "4 mins ago" },
+      { bidder: "ChiptuneArchivist", amount: 265, time: "18 mins ago" },
+      { bidder: "AmigaConvert", amount: 245, time: "1 hour ago" }
+    ]
+  },
+  {
+    id: "auc-palmv",
+    title: "Palm V Ultra-Slim Handheld Organizer (Anodized Aluminum)",
+    category: "systems",
+    seller: "SiliconExec",
+    rating: "99.8% (410 ⭐)",
+    condition: "Complete In Box (CIB)",
+    currentBid: 299,
+    startingBid: 140,
+    reservePrice: 250,
+    buyItNow: 380,
+    bidCount: 10,
+    highBidder: "HotSyncGuru",
+    timeLeft: 2200,
+    ended: false,
+    specs: "Motorola DragonBall EZ 16MHz • 2MB Flash RAM • Ultra-slim 0.4-inch anodized aluminum body • Emerald green EL backlight • Serial HotSync cradle",
+    asciiIcon: "[ PALM V ANODIZED ALUMINUM ]\n[ DRAGONBALL EZ • EL BACKLIGHT ]\n[ HOTSYNC SERIAL CRADLE ]",
+    bids: [
+      { bidder: "HotSyncGuru", amount: 299, time: "14 mins ago" },
+      { bidder: "GraffitiMaster", amount: 285, time: "45 mins ago" },
+      { bidder: "PDA_Lover", amount: 250, time: "3 hours ago" }
+    ]
+  },
+  {
+    id: "auc-sc55mk2",
+    title: "Roland Sound Canvas SC-55mkII Sound Module",
+    category: "audio",
+    seller: "GeneralMidi_Sensei",
+    rating: "100% (620 ⭐)",
+    condition: "Tested Working w/ Drivers",
+    currentBid: 340,
+    startingBid: 200,
+    reservePrice: 300,
+    buyItNow: 460,
+    bidCount: 12,
+    highBidder: "DoomSoundtrackBuff",
+    timeLeft: 1650,
+    ended: false,
+    specs: "General MIDI & GS Standard • 354 instrument tones • 10 drum sets • 28-voice polyphony • Backlit amber LCD • Stereo RCA audio out",
+    asciiIcon: "[ ROLAND SC-55mkII GS MIDI ]\n[ 354 TONES • 28 POLYPHONY ]\n[ DOOM & DUKE3D WONDER BOX ]",
+    bids: [
+      { bidder: "DoomSoundtrackBuff", amount: 340, time: "9 mins ago" },
+      { bidder: "SierraQuestLover", amount: 325, time: "50 mins ago" },
+      { bidder: "RetroStudioPro", amount: 300, time: "2 hours ago" }
+    ]
+  },
+  {
+    id: "auc-matroxg400",
+    title: "Matrox Millennium G400 MAX DualHead 32MB AGP",
+    category: "video",
+    seller: "CAD_Draftsman",
+    rating: "100% (175 ⭐)",
+    condition: "Tested Working w/ Drivers",
+    currentBid: 165,
+    startingBid: 80,
+    reservePrice: 140,
+    buyItNow: 230,
+    bidCount: 8,
+    highBidder: "DualMonitorPioneer",
+    timeLeft: 4100,
+    ended: false,
+    specs: "360MHz RAMDAC • Environment Mapped Bump Mapping (EMBM) • DualHead 2x VGA outputs • 32MB SGRAM • Unrivaled 2D desktop sharpness",
+    asciiIcon: "[ MATROX G400 MAX 32MB AGP ]\n[ EMBM BUMP MAPPING • DUALHEAD ]\n[ RAZOR-SHARP 2D RAMDAC ]",
+    bids: [
+      { bidder: "DualMonitorPioneer", amount: 165, time: "25 mins ago" },
+      { bidder: "PhotoshopUser99", amount: 150, time: "2 hours ago" },
+      { bidder: "MatroxFan", amount: 120, time: "6 hours ago" }
+    ]
+  },
+  {
+    id: "auc-voidcraft",
+    title: "VoidCraft Battle Chest (Big Box PC)",
+    category: "games",
+    seller: "RTS_Commander",
+    rating: "99.5% (530 ⭐)",
+    condition: "Complete In Box (CIB)",
+    currentBid: 75,
+    startingBid: 30,
+    reservePrice: 60,
+    buyItNow: 125,
+    bidCount: 11,
+    highBidder: "ZergRush99",
+    timeLeft: 1980,
+    ended: false,
+    specs: "Original Big Box collector set • Includes VoidCraft core game + Brood War expansion CDs + BradyGames official color strategy manuals",
+    asciiIcon: "[ VOIDCRAFT BATTLE CHEST ]\n[ CORE + BROOD WAR EXPANSION ]\n[ BIG BOX • PRISTINE CIB ]",
+    bids: [
+      { bidder: "ZergRush99", amount: 75, time: "11 mins ago" },
+      { bidder: "SpawnMoreOverlords", amount: 70, time: "30 mins ago" },
+      { bidder: "ProtossZealot", amount: 60, time: "2 hours ago" }
+    ]
+  }
+];
+
+let activeAuctions = [];
+let auctionUserBalance = 2500.00;
+let auctionWatchlist = [];
+let activeAuctionCategory = 'all';
+let activeAuctionSearch = '';
+let showingWatchlistOnly = false;
+let activeReceiptAuction = null;
+
+function loadAuctionsState() {
+  try {
+    const raw = localStorage.getItem('knet_portal_auctions');
+    if (raw) {
+      const data = JSON.parse(raw);
+      activeAuctions = Array.isArray(data.items) ? data.items : JSON.parse(JSON.stringify(DEFAULT_AUCTIONS));
+      auctionUserBalance = typeof data.balance === 'number' ? data.balance : 2500.00;
+      auctionWatchlist = Array.isArray(data.watchlist) ? data.watchlist : [];
+    } else {
+      activeAuctions = JSON.parse(JSON.stringify(DEFAULT_AUCTIONS));
+      auctionUserBalance = 2500.00;
+      auctionWatchlist = [];
+    }
+  } catch(e) {
+    activeAuctions = JSON.parse(JSON.stringify(DEFAULT_AUCTIONS));
+    auctionUserBalance = 2500.00;
+    auctionWatchlist = [];
+  }
+  updateAuctionBalanceDisplay();
+}
+
+function saveAuctionsState() {
+  try {
+    const data = {
+      items: activeAuctions,
+      balance: auctionUserBalance,
+      watchlist: auctionWatchlist
+    };
+    localStorage.setItem('knet_portal_auctions', JSON.stringify(data));
+  } catch(e) {}
+}
+
+function updateAuctionBalanceDisplay() {
+  const el = document.getElementById('auctionUserBalance');
+  if (el) el.textContent = auctionUserBalance.toFixed(2);
+  const watchCountEl = document.getElementById('auctionWatchCount');
+  if (watchCountEl) watchCountEl.textContent = auctionWatchlist.length;
+}
+
+function filterAuctions(cat) {
+  playClick();
+  activeAuctionCategory = cat;
+  showingWatchlistOnly = false;
+  ['all', 'video', 'audio', 'storage', 'games', 'modem', 'systems'].forEach(c => {
+    const btn = document.getElementById(`catBtn-${c}`);
+    if (btn) {
+      if (c === cat) {
+        btn.style.fontWeight = 'bold';
+        btn.style.background = '#000080';
+        btn.style.color = '#ffffff';
+      } else {
+        btn.style.fontWeight = 'normal';
+        btn.style.background = '#d4d0c8';
+        btn.style.color = '#000000';
+      }
+    }
+  });
+  renderAuctions();
+}
+
+function handleAuctionSearch(q) {
+  activeAuctionSearch = q.trim().toLowerCase();
+  renderAuctions();
+}
+
+function toggleWatchlistFilter() {
+  playClick();
+  showingWatchlistOnly = !showingWatchlistOnly;
+  const btn = document.getElementById('watchlistFilterBtn');
+  if (btn) {
+    btn.style.background = showingWatchlistOnly ? '#ffd700' : '#d4d0c8';
+    btn.style.color = showingWatchlistOnly ? '#000080' : '#000000';
+    btn.style.fontWeight = showingWatchlistOnly ? 'bold' : 'normal';
+  }
+  renderAuctions();
+}
+
+function renderAuctions() {
+  const grid = document.getElementById('auctionGrid');
+  if (!grid) return;
+
+  let filtered = activeAuctions.filter(item => {
+    if (showingWatchlistOnly && !auctionWatchlist.includes(item.id)) return false;
+    if (activeAuctionCategory !== 'all' && item.category !== activeAuctionCategory) return false;
+    if (activeAuctionSearch) {
+      const hay = (item.title + ' ' + item.seller + ' ' + item.specs + ' ' + item.condition).toLowerCase();
+      if (!hay.includes(activeAuctionSearch)) return false;
+    }
+    return true;
+  });
+
+  const countAll = document.getElementById('count-all');
+  if (countAll) countAll.textContent = activeAuctions.length;
+
+  if (filtered.length === 0) {
+    grid.innerHTML = `<div style="grid-column: 1 / -1; background:#fff; padding:20px; text-align:center; border:2px dashed #999;">
+      <div style="font-size:16px; font-weight:bold; color:#000080; margin-bottom:6px;">No auction lots found matching your filter criteria.</div>
+      <button class="btn-retro" onclick="filterAuctions('all')">Show All 12 Active Lots</button>
+    </div>`;
+    return;
+  }
+
+  grid.innerHTML = filtered.map(item => {
+    const isWatched = auctionWatchlist.includes(item.id);
+    const isUrgent = item.timeLeft <= 600 && !item.ended;
+    const isEnded = item.ended;
+    const isHighBidderMe = (item.highBidder === "You (VentureDotCom)" || item.highBidder === (typeof myKProfile !== 'undefined' ? myKProfile.alias : 'You'));
+
+    const hours = Math.floor(item.timeLeft / 3600);
+    const mins = Math.floor((item.timeLeft % 3600) / 60);
+    const secs = item.timeLeft % 60;
+    const timeFormatted = isEnded ? "AUCTION ENDED" : `${hours > 0 ? hours + 'h ' : ''}${mins}m ${secs.toString().padStart(2, '0')}s`;
+
+    let timerClass = 'timer-active';
+    if (isEnded) timerClass = 'timer-ended';
+    else if (isUrgent) timerClass = 'timer-urgent';
+
+    const minBidAmount = item.currentBid + (item.currentBid >= 500 ? 25 : (item.currentBid >= 100 ? 10 : 5));
+    const reserveMet = item.currentBid >= item.reservePrice;
+
+    return `
+      <div class="auction-card" id="card-${item.id}">
+        <div class="auction-card-header">
+          <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:200px;" title="${escapeHtml(item.title)}">${escapeHtml(item.title)}</span>
+          <span class="auction-timer-badge ${timerClass}" id="timer-${item.id}">${timeFormatted}</span>
+        </div>
+        <div class="auction-card-body">
+          <div class="auction-thumb-box">
+            <pre style="margin:0; font-family:'Courier New', monospace; font-size:10px;">${escapeHtml(item.asciiIcon)}</pre>
+          </div>
+          
+          <div class="auction-price-row">
+            <div>
+              <span style="font-size:10px; color:#555; display:block;">CURRENT BID:</span>
+              <span class="auction-curr-bid">$${item.currentBid.toFixed(2)}</span>
+            </div>
+            <div style="text-align:right;">
+              <span style="font-size:10px; color:#555; display:block;">STATUS:</span>
+              <span style="font-size:11px; font-weight:bold; color:${reserveMet ? '#15803d' : '#b45309'};">
+                ${reserveMet ? '🟢 Reserve Met' : '🟡 Reserve Not Met'}
+              </span>
+            </div>
+          </div>
+
+          <div class="auction-meta-list">
+            <div><strong>Seller:</strong> ${escapeHtml(item.seller)} <span style="color:#d97706;">(${escapeHtml(item.rating)})</span></div>
+            <div><strong>Condition:</strong> <span style="color:#1d4ed8;">${escapeHtml(item.condition)}</span></div>
+            <div><strong>High Bidder:</strong> <span style="font-weight:bold; color:${isHighBidderMe ? '#059669' : '#000'};">${escapeHtml(item.highBidder)}${isHighBidderMe ? ' 🏆' : ''}</span> (${item.bidCount} bids)</div>
+            <div style="margin-top:4px; font-size:10px; color:#6b7280; font-family:'Courier New', monospace;">${escapeHtml(item.specs)}</div>
+          </div>
+
+          <div class="auction-bid-controls">
+            ${!isEnded ? `
+              <div style="display:flex; gap:4px; width:100%; margin-bottom:4px;">
+                <input type="number" id="bidInput-${item.id}" class="form-input" style="width:75px; font-size:11px; padding:3px;" value="${minBidAmount}" min="${minBidAmount}" step="5" />
+                <button class="btn-retro btn-primary-retro" style="flex:1; font-size:11px; padding:3px 6px;" onclick="placeAuctionBid('${item.id}')">🔨 Place Bid</button>
+                ${item.buyItNow ? `<button class="btn-retro" style="background:#b45309; color:#fff; font-size:11px; font-weight:bold; padding:3px 6px;" onclick="buyItNow('${item.id}')" title="Buy Immediately at $${item.buyItNow}">⚡ BIN $${item.buyItNow}</button>` : ''}
+              </div>
+            ` : `
+              <div style="width:100%; background:#f3f4f6; border:1px solid #d1d5db; padding:4px; text-align:center; font-weight:bold; color:#4b5563; font-size:11px; margin-bottom:4px;">
+                Winner: ${escapeHtml(item.highBidder)} ($${item.currentBid.toFixed(2)})
+              </div>
+            `}
+            <div style="display:flex; justify-content:space-between; width:100%; font-size:11px;">
+              <button class="btn-retro" style="padding:2px 6px; font-size:10px;" onclick="toggleAuctionWatch('${item.id}')">
+                ${isWatched ? '⭐ Watching' : '☆ Watch'}
+              </button>
+              <button class="btn-retro" style="padding:2px 6px; font-size:10px;" onclick="toggleBidHistory('${item.id}')">
+                📜 History (${item.bidCount})
+              </button>
+              ${isEnded && isHighBidderMe ? `
+                <button class="btn-retro" style="background:#047857; color:#fff; font-weight:bold; padding:2px 6px; font-size:10px;" onclick="openAuctionReceipt('${item.id}')">
+                  🧾 Receipt
+                </button>
+              ` : ''}
+            </div>
+          </div>
+
+          <!-- Collapsible Bid History Table -->
+          <div id="history-${item.id}" style="display:none; margin-top:6px; max-height:90px; overflow-y:auto; border:1px inset #d1d5db;">
+            <table class="auction-history-table">
+              <thead>
+                <tr><th>Bidder</th><th>Amount</th><th>Timestamp</th></tr>
+              </thead>
+              <tbody>
+                ${item.bids && item.bids.length > 0 ? item.bids.map(b => `
+                  <tr>
+                    <td style="color:${b.bidder.startsWith('You') ? '#059669' : '#000'}; font-weight:${b.bidder.startsWith('You') ? 'bold' : 'normal'};">${escapeHtml(b.bidder)}</td>
+                    <td style="font-weight:bold;">$${b.amount.toFixed(2)}</td>
+                    <td style="color:#666;">${escapeHtml(b.time)}</td>
+                  </tr>
+                `).join('') : '<tr><td colspan="3">No previous bids logged.</td></tr>'}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function placeAuctionBid(id) {
+  initAudio();
+  const item = activeAuctions.find(a => a.id === id);
+  if (!item || item.ended) return;
+
+  const input = document.getElementById(`bidInput-${id}`);
+  const amount = input ? parseFloat(input.value) : (item.currentBid + 10);
+
+  if (isNaN(amount) || amount <= item.currentBid) {
+    showRetroToast(`Bid must exceed current bid of $${item.currentBid.toFixed(2)}!`);
+    playErrorBeep();
+    return;
+  }
+
+  if (amount > auctionUserBalance) {
+    showRetroToast(`Insufficient Dot-Com venture capital! Your balance: $${auctionUserBalance.toFixed(2)}`);
+    playErrorBeep();
+    return;
+  }
+
+  // Deduct previous winning bid if it was already us
+  const myAlias = typeof myKProfile !== 'undefined' && myKProfile.alias ? myKProfile.alias : "You (VentureDotCom)";
+
+  item.currentBid = amount;
+  item.highBidder = myAlias;
+  item.bidCount = (item.bidCount || 0) + 1;
+
+  if (!item.bids) item.bids = [];
+  item.bids.unshift({
+    bidder: myAlias,
+    amount: amount,
+    time: "Just now"
+  });
+
+  // Anti-sniping protection: if bid with <= 60 seconds left, add 60 seconds!
+  if (item.timeLeft <= 60) {
+    item.timeLeft += 60;
+    showRetroToast(`⚡ ANTI-SNIPE EXTENSION: 60 seconds added to lot!`);
+  }
+
+  playGavelStrike();
+  saveAuctionsState();
+  renderAuctions();
+  showRetroToast(`🔨 Bid of $${amount.toFixed(2)} confirmed on ${item.title}!`);
+}
+
+function buyItNow(id) {
+  initAudio();
+  const item = activeAuctions.find(a => a.id === id);
+  if (!item || item.ended || !item.buyItNow) return;
+
+  if (item.buyItNow > auctionUserBalance) {
+    showRetroToast(`Insufficient balance for Buy-It-Now ($${item.buyItNow.toFixed(2)})!`);
+    playErrorBeep();
+    return;
+  }
+
+  const myAlias = typeof myKProfile !== 'undefined' && myKProfile.alias ? myKProfile.alias : "You (VentureDotCom)";
+  auctionUserBalance -= item.buyItNow;
+  item.currentBid = item.buyItNow;
+  item.highBidder = myAlias;
+  item.ended = true;
+  item.timeLeft = 0;
+  item.bidCount = (item.bidCount || 0) + 1;
+
+  if (!item.bids) item.bids = [];
+  item.bids.unshift({
+    bidder: myAlias + " (BIN)",
+    amount: item.buyItNow,
+    time: "Instant Purchase"
+  });
+
+  playGavelStrike();
+  saveAuctionsState();
+  updateAuctionBalanceDisplay();
+  renderAuctions();
+  openAuctionReceipt(id);
+  showRetroToast(`🎉 CONGRATULATIONS! Instant purchase confirmed for ${item.title}!`);
+}
+
+function toggleAuctionWatch(id) {
+  initAudio();
+  playClick();
+  const idx = auctionWatchlist.indexOf(id);
+  if (idx >= 0) {
+    auctionWatchlist.splice(idx, 1);
+    showRetroToast("Lot removed from your Watchlist.");
+  } else {
+    auctionWatchlist.push(id);
+    showRetroToast("Lot added to your Watchlist!");
+  }
+  saveAuctionsState();
+  updateAuctionBalanceDisplay();
+  renderAuctions();
+}
+
+function toggleBidHistory(id) {
+  playClick();
+  const el = document.getElementById(`history-${id}`);
+  if (el) {
+    el.style.display = el.style.display === 'none' ? 'block' : 'none';
+  }
+}
+
+function tickAuctionTimers() {
+  let needsRender = false;
+  activeAuctions.forEach(item => {
+    if (!item.ended && item.timeLeft > 0) {
+      item.timeLeft -= 1;
+      if (item.timeLeft <= 0) {
+        item.ended = true;
+        item.timeLeft = 0;
+        needsRender = true;
+        if (item.highBidder.startsWith('You')) {
+          playGavelStrike();
+          showRetroToast(`🏆 AUCTION WON! You won "${item.title}" for $${item.currentBid.toFixed(2)}!`);
+        }
+      } else {
+        // Update live timer badge directly in DOM for performance
+        const badge = document.getElementById(`timer-${item.id}`);
+        if (badge) {
+          const hours = Math.floor(item.timeLeft / 3600);
+          const mins = Math.floor((item.timeLeft % 3600) / 60);
+          const secs = item.timeLeft % 60;
+          badge.textContent = `${hours > 0 ? hours + 'h ' : ''}${mins}m ${secs.toString().padStart(2, '0')}s`;
+          if (item.timeLeft <= 600) {
+            badge.className = 'auction-timer-badge timer-urgent';
+          }
+        }
+      }
+    }
+  });
+
+  if (needsRender) {
+    saveAuctionsState();
+    renderAuctions();
+  }
+}
+
+function openCreateAuctionModal() {
+  playClick();
+  const modal = document.getElementById('createAuctionModal');
+  if (modal) modal.style.display = 'flex';
+}
+
+function closeCreateAuctionModal() {
+  playClick();
+  const modal = document.getElementById('createAuctionModal');
+  if (modal) modal.style.display = 'none';
+}
+
+function submitNewAuction(e) {
+  e.preventDefault();
+  initAudio();
+
+  const title = document.getElementById('newAuctionTitle').value.trim();
+  const category = document.getElementById('newAuctionCategory').value;
+  const condition = document.getElementById('newAuctionCondition').value;
+  const startBid = parseFloat(document.getElementById('newAuctionStartBid').value) || 20;
+  const reserve = parseFloat(document.getElementById('newAuctionReserve').value) || startBid;
+  const bin = parseFloat(document.getElementById('newAuctionBin').value) || 0;
+  const seller = document.getElementById('newAuctionSeller').value.trim() || 'RetroSeller99';
+  const desc = document.getElementById('newAuctionDesc').value.trim();
+
+  const newLot = {
+    id: "auc-usr-" + Date.now(),
+    title: title,
+    category: category,
+    seller: seller,
+    rating: "100% (New Seller ⭐)",
+    condition: condition,
+    currentBid: startBid,
+    startingBid: startBid,
+    reservePrice: reserve,
+    buyItNow: bin > startBid ? bin : 0,
+    bidCount: 0,
+    highBidder: "None yet",
+    timeLeft: 3600, // 1 hour
+    ended: false,
+    specs: desc,
+    asciiIcon: `[ USER LOT: ${title.substring(0, 20).toUpperCase()} ]\n[ CONDITION: ${condition.substring(0, 22)} ]\n[ SELLER: ${seller.substring(0, 20)} ]`,
+    bids: []
+  };
+
+  activeAuctions.unshift(newLot);
+  playGavelStrike();
+  saveAuctionsState();
+  closeCreateAuctionModal();
+  renderAuctions();
+  showRetroToast(`🔨 New auction listing "${title}" posted successfully!`);
+}
+
+function resetAuctionsState() {
+  if (confirm("Reset KiloAuctions to default 1999 hardware lots and starting bids?")) {
+    playClick();
+    activeAuctions = JSON.parse(JSON.stringify(DEFAULT_AUCTIONS));
+    auctionUserBalance = 2500.00;
+    auctionWatchlist = [];
+    saveAuctionsState();
+    updateAuctionBalanceDisplay();
+    renderAuctions();
+    showRetroToast("KiloAuctions lots reset to factory state.");
+  }
+}
+
+function openAuctionReceipt(id) {
+  playClick();
+  const item = activeAuctions.find(a => a.id === id);
+  if (!item) return;
+
+  activeReceiptAuction = item;
+  const dateStr = new Date().toISOString().replace('T', ' ').substring(0, 19);
+  const authHash = "0x" + Math.floor(Math.random()*0xFFFFFFFF).toString(16).toUpperCase() + "-" + item.id.toUpperCase();
+
+  const receiptText = `========================================================================
+             KILONET AUCTIONS '99 - OFFICIAL BILL OF SALE
+========================================================================
+TRANSACTION IDENTIFIER : ${authHash}
+TIMESTAMP              : 1999-12-31 23:45:00 UTC (Local: ${dateStr})
+ESCROW PROTOCOL        : KILO-ESCROW-V1.9 [SETTLED & CLEARED]
+------------------------------------------------------------------------
+ITEM NUMBER            : #${item.id}
+ITEM DESCRIPTION       : ${item.title}
+CATEGORY               : ${item.category.toUpperCase()}
+CONDITION              : ${item.condition}
+SPECIFICATIONS         : ${item.specs}
+
+SELLER OF RECORD       : ${item.seller} [RATING: ${item.rating}]
+WINNING BIDDER         : ${item.highBidder}
+WINNING BID AMOUNT     : $${item.currentBid.toFixed(2)} USD
+SHIPPING METHOD        : Airborne Express Overnight Insured (Tracking: 1999-AX-${Math.floor(Math.random()*90000+10000)})
+PACKAGING PROTOCOL     : Anti-Static Metallic Bag + Double Bubble Wrap
+------------------------------------------------------------------------
+AUTHENTICITY GUARANTEE : 100% Period Hardware Authenticity Certified
+ESCROW STATUS          : FUNDS SECURED BY KILONET TRUST CONSORTIUM
+------------------------------------------------------------------------
+THANK YOU FOR TRADING ON THE KILONET 1999 SILICON AUCTION BLOCK!
+========================================================================`;
+
+  const pre = document.getElementById('auctionReceiptPreview');
+  if (pre) pre.textContent = receiptText;
+
+  const modal = document.getElementById('auctionReceiptModal');
+  if (modal) modal.style.display = 'flex';
+}
+
+function closeAuctionReceiptModal() {
+  playClick();
+  const modal = document.getElementById('auctionReceiptModal');
+  if (modal) modal.style.display = 'none';
+}
+
+function downloadActiveAuctionReceipt() {
+  playClick();
+  const pre = document.getElementById('auctionReceiptPreview');
+  if (!pre || !activeReceiptAuction) return;
+
+  const blob = new Blob([pre.textContent], { type: 'text/plain;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `kiloauctions_${activeReceiptAuction.id}_receipt.txt`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  playSuccessChime();
+  showRetroToast("Bill of Sale downloaded successfully!");
+}
+
 window.addEventListener('DOMContentLoaded', () => {
   // Visitor counter
   const counterEl = document.getElementById('visitorCounter');
@@ -14542,6 +15658,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
   // Load state
   loadCustomSites();
+  loadAuctionsState();
   loadDownloadsState();
   loadWebmailState();
   loadPortfolio();
@@ -14586,6 +15703,9 @@ window.addEventListener('DOMContentLoaded', () => {
 
   // Marquee rotator (every 6 seconds)
   setInterval(rotateMarquee, 6000);
+
+  // Auction countdown timer (every 1 second)
+  setInterval(tickAuctionTimers, 1000);
 
   // Clock updater (every 1 second)
   setInterval(() => {
