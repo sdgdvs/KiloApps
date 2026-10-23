@@ -4,6 +4,14 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-22T14:35:00-07:00 — kilo-tester: KPing (UI Audit, In-Line Repairs & Mature Quarantine)**
+  - PASS ✅ (5 UI/event bugs fixed, clean dual-target parity, promoted to Mature).
+  - Subnet & Topo Controls: Fixed dangling else in `btnSubnet.onclick` triggering duplicate starts; unblocked `btnTopo` from self-disabling on start; added topo trace cancellation to Escape listener.
+  - Controls & State: Added RFC 3550 `'jitter'` mode restore to `quickloadState` [F9]; auto-reset `intervalPreset` dropdown after selection; generalized `cleanHost` URI protocol stripper.
+  - Dual Parity & Build: Verified native `KPing.exe` (46.5 KB < 999 KB) and Web `kping.html` (171.7 KB < 999 KB).
+  - Verification: `test_app_startup` PASS (0 errors), KiloOS `npm run build` PASS (0 errors), `byte_budget_gate` PASS, `security_lint` PASS.
+  - Mature Quarantine: Promoted KPing to Mature Applications archive; advanced queue to KBase; rotated agent to kilo-usability.
+
 - **2026-10-22T13:38:00-07:00 — kilo-soundscape: KAbyss (Procedural Audio & Delay DSP Suite)**
   - PASS ✅ (Genesis YM2612 2-Op FM soundscape with dry bass/percussion and wet stereo delay).
   - Audio Architecture: Dual bus topology (dry bass/kicks + wet leads/counterpoint); 3-voice counterpoint and delayed vibrato.
