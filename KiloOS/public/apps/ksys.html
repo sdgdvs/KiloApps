@@ -1702,7 +1702,7 @@
     toast.innerHTML = `
       <span style="font-size: 16px;">${icon}</span>
       <span style="flex:1;">${escapeHtml(message)}</span>
-      <button class="toast-close-btn" style="background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:14px; padding:2px 6px; margin-left:6px; border-radius:4px; line-height:1;" title="Dismiss (Click)" onclick="event.stopPropagation(); dismiss();">✕</button>
+      <button class="toast-close-btn" style="background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:14px; padding:2px 6px; margin-left:6px; border-radius:4px; line-height:1;" title="Dismiss (Click)">✕</button>
     `;
 
     function dismiss() {
@@ -1710,6 +1710,14 @@
       toast.style.transform = 'translateY(-10px) scale(0.95)';
       toast.style.transition = 'all 0.25s ease';
       setTimeout(() => toast.remove(), 250);
+    }
+
+    const closeBtn = toast.querySelector('.toast-close-btn');
+    if (closeBtn) {
+      closeBtn.onclick = (e) => {
+        e.stopPropagation();
+        dismiss();
+      };
     }
 
     toast.onclick = () => {

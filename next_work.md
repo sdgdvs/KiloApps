@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-tester
-next_agent: kilo-usability
+current_agent: kilo-usability
+next_agent: kilo-qa
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -28,7 +28,7 @@ current_targets:
   kilo_creator: kweb://demoscene
   kilo_graphics: KVoid
   kilo_soundscape: KWizard
-  kilo_tester: KSys
+  kilo_tester: KScript
   kilo_usability: KScript
   kilo_qa: KTrader
   kilo_expander: KScript
@@ -52,9 +52,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-soundscape
-  app: KFarm
-  timestamp: '2026-10-23T14:51:38-07:00'
+  agent: kilo-tester
+  app: KSys
+  timestamp: '2026-10-23T15:03:19-07:00'
 last_planner_run: '2026-10-23T07:15:00Z'
 ---
 
@@ -125,14 +125,14 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KFarm` | `KiloOS/public/apps/kfarm.html` | Compose pastoral 16-bit harvest & seasonal town 6-channel suite (Major pentatonic / Mixolydian acoustic FM guitar, warm marimba counter-melody, brushed snare groove, harvest earcons). |
 
 ### 4. App Tester Queue (`kilo-tester`)
-- **Active Target**: `KSys`
+- **Active Target**: `KScript`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KSys` | `KiloOS/public/apps/ksys.html`, `KSys/main.c` | Audit system telemetry dashboard, process/memory graphs, diagnostic stress test toggles, and keyboard navigation. |
 | `KScript` | `KiloOS/public/apps/kscript.html`, `KScript/main.c` | Audit script IDE, AST/console runner, sample templates, breakpoint stepper, and VFS script save/load. |
 | `KSteno` | `KiloOS/public/apps/ksteno.html`, `KSteno/main.c` | Audit LSB image/audio steganography encoder/decoder, bitplane visualizer, passkey encryption, and modal dismissals. |
 | `KCipher` | `KiloOS/public/apps/kcipher.html`, `KCipher/main.c` | Audit cipher workbench (AES/XOR/Vigenère/ROT13/RSA toy), frequency histogram, key input guards, and VFS import/export. |
+| `KSys` | `KiloOS/public/apps/ksys.html`, `KSys/main.c` | Audit system telemetry dashboard, process/memory graphs, diagnostic stress test toggles, and keyboard navigation. |
 
 ### 5. Usability & UX Queue (`kilo-usability`)
 - **Active Target**: `KScript`
@@ -227,6 +227,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-23T15:03:19-07:00 — kilo-tester: KSys (Interactive UI Audit & Inline Repairs)**
+  - Status: PASS ✅ (0 errors, web 183.1 KB, native 31.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
+  - UI & Hotkey Audit: telemetry dashboard, benchmarks, services, and toasts verified with input guards.
+  - Repairs: fixed inline onclick ReferenceError on toast close button by attaching safe event listener.
+  - Handoff: Advanced `kilo-tester` to `KScript`; rotated active agent to `kilo-usability`.
+
 - **2026-10-23T14:59:45-07:00 — kilo-adhoc: Fleet Testing (`scripts/visual_probe.py`, `verify_turn.py`, `test_app_startup.py`, `baseline_diff.js`)**
   - Status: PASS ✅ (0 errors; Vite production build, security_lint, startup audit & visual probe PASS).
   - Upgraded `scripts/visual_probe.py` with in-process `KiloOS/public` HTTP server, real KiloOS window sizing, trusted-input CDP playtest, and 1-image before/after (`--compare-head`) contact sheets (`docs/gallery/review/<app>/sheet.png`).
@@ -253,10 +259,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Added The Scallion Infographic Lab with canvas charts and Front-Page Headline & Story Forge with live broadsheet preview.
   - Integrated kweb://scallion routing and reverse map in KNet, portal.html, and webring.html.
   - Handoff: Advanced `kilo-creator` to `kweb://demoscene`; rotated active agent to `kilo-graphics`.
-
-- **2026-10-23T14:24:44-07:00 — kilo-expander: KBBS (Phase VI VFS & Bulletins Mesh Integration)**
-  - Status: PASS ✅ (0 errors, web 195.4 KB, native 102.0 KB < 999 KB; startup, Vite & security_lint PASS).
-  - Implemented KiloOS VFS mesh and File Area modal [F] with 6 ANSI .NFO/.TXT bulletins directly downloadable into /home/bbs/.
-  - Added direct OS_LAUNCH_APP bridge to KPad and KHex, plus VFS character/manifest export for LORD and TradeWars door games.
-  - Dual Win32 C parity: added Files [F] command 116 with native bulletin saving and door stats export to disk.
-  - Handoff: Advanced `kilo-expander` to `KScript`; rotated active agent to `kilo-creator`.
