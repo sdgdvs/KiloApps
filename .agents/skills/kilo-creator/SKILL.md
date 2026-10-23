@@ -1,83 +1,77 @@
 ---
 name: kilo-creator
 description: >-
-  Designs and implements new applications and deep game worlds for the KiloApps fleet.
-  Use this skill to create feature-rich single-file web apps (<999 KB), enforce mandatory
-  start splash screens, first-run tutorial flags, quicksave/quickload, register in KiloOS/src/App.jsx,
-  verify builds, log tersely to next_work.md, hand off to the next agent, and commit/push.
+  Designs and implements new applications, canonical 1999 Virtual Web destinations (kweb://...),
+  and deep game worlds for the KiloApps fleet. Enforces Anti-Potemkin depth, KiloOS VFS/IPC
+  integration, RFMS online multiplayer, YM2612/SPC700 audio, <999 KB budgets, and 1-command verification/handoff.
 ---
 
-# KiloApps App Creator Skill
+# KiloApps Creator Skill (`kilo-creator`)
 
-This skill designs and implements new applications or deep game worlds on exactly ONE application per turn.
+Designs and implements new applications, canonical 1999 Virtual Web destinations (`kweb://...`), or deep expansions on **exactly ONE target per turn**.
 
-## Quality & Craft Directive
-- **Tool Call Budget (<= 30 tool calls)**: Complete this turn in <= 30 tool calls.
-- **Commit Checkpoint (~15 tool calls)**: Once substantive edits are made or you reach ~15 tool calls, wrap up modifications, run verification, update `next_work.md`, and commit/push.
-- **Iterative Craft**: Design and implement high-craft, feature-rich web applications or 1999 virtual web destinations. Develop iteratively across modular components, inspect diffs, and verify styling, mechanics, and audio synthesis.
-- **Validation**: Run `cd KiloOS && npm run build` and `uv run scripts/test_app_startup.py --app <TargetApp>` (for web apps). Ensure size is strictly < 999 KB.
-- **No Full-Repo Test Suites**: Run only target build/startup verification. NEVER run repo-wide suites (`quality_gate.js`, screenshot generation).
-- **No Archives/Receipts**: Never read `archive/` or `.agents/receipts/`.
-- Advance queue in `next_work.md`, commit, push, and STOP immediately.
+## ⚡ Flash Execution & Tool-Budget Protocol (CRITICAL)
+- **Tool Call Budget (<= 25 tool calls)** & **Commit Checkpoint (~12 tool calls)**:
+  - Plan your edits immediately after reading the target file (or reference template).
+  - Batch edits cleanly into 1–3 `edit_file` / `write_file` calls.
+  - Once substantive edits are complete (or at ~12 tool calls), wrap up immediately!
+- **1-Command Verification (Saves 4+ tool calls)**:
+  ```powershell
+  python scripts/verify_turn.py --app <TargetAppOrKwebUrl>
+  ```
+- **1-Command Queue Handoff & Logging (Saves 3+ tool calls)**:
+  ```powershell
+  python scripts/advance_turn.py --agent kilo-creator --app "<Target>" `
+    --title "<Short Feature/Site Summary>" `
+    --bullet "Status: PASS ✅ (<copy summary from verify_turn.py>)." `
+    --bullet "<Key interactive feature 1 implemented>." `
+    --bullet "<Key VFS/audio/linking feature 2 implemented>."
+  ```
+- **Commit, Push & STOP**:
+  ```powershell
+  git add -A
+  git commit -m "feat(creator): <terse summary for Target>"
+  git push origin main
+  ```
+  If push is rejected, run `git pull --rebase --autostash && git push origin main`. Then **STOP immediately**.
+- **Never read** `archive/` or `.agents/receipts/`. Never run repo-wide screenshot or test suites.
 
-## Pre-flight
-1. Ensure git working tree is clean: `git status`.
-2. Pull latest changes: `git pull --rebase`.
-3. Open [next_work.md](../../next_work.md) to inspect the creator target queue (`current_targets.kilo_creator`).
+---
 
-## App Creation Guidelines & Director Directives
-1. **Genre & Scope Focus**:
-   - Focus on **deep, emergent fantasy and science fiction games** (RPGs, space exploration, roguelikes, survival, strategy, colony management) or **deep utility tools** (diagnostic, audio/visual workstation, productivity).
-   - **NO MORE**: simple board games (chess, checkers, connect4), simple pattern/card clones, or trivial toys.
-2. **Mandatory App Requirements**:
-   - **Start Splash Screen**: App opens to a title/splash overlay with version number, New Game / Continue (if save exists), Settings, and Help. Never drop immediately into raw gameplay without context.
-   - **First-Run Tutorial**: For complex games/apps, auto-start an onboarding tutorial on new game. Store flag `k<name>_tutorialSeen` in `localStorage` so it never repeats. Tutorial must be skippable with Escape.
-   - **Full State Persistence**: Quicksave (F5) and quickload (F9), plus JSON save export/import.
-   - **Self-Contained Web File**: Single HTML5 file located at `KiloOS/public/apps/k<name>.html` with inline CSS/JS.
-   - **Native Counterpart (Optional/Recommended)**: When creating native C version, place in `K<Name>/main.c` with `build.bat`.
-   - **Hard Size Ceiling**: Web file and native executable must each be strictly `< 999 KB`.
-   - **Universal Audio Standard**: Procedural music and sound effects must follow the Genesis (YM2612 FM synthesis) and SNES (SPC700 stereo delay warmth) standard per `arg_plan.md` with zero external audio assets.
+## 1. Pre-Flight
+1. Run `git pull --rebase --autostash`.
+2. Check the prompt (or `next_work.md` `### 1.`) for `current_targets.kilo_creator` and its **Mission Spec**.
 
-3. **System Registration**:
-   - Add new app descriptor to the `APPS` array in `KiloOS/src/App.jsx` with appropriate folder (`Games`, `System`, `Media`, `Office`, `Network`, `Dev`).
-   - Run `npm run build` inside `KiloOS/` to confirm zero Vite build breaks.
+---
 
-4. **KMatrix & Project-Wide ARG Mandate (App #100 Milestone - Ludonarrative Consonance)**:
-   - For the 100th milestone app (`KMatrix`), build it as the central narrative meta-terminal and ARG climax resolving "The Kilo Project Echoes" and "Rogue AI" lore per `arg_plan.md`.
-   - **Ludonarrative Consonance**: The fiction matches reality—the trapped entity in KiloOS *is* the autonomous multi-agent fleet. Solving the ARG grants the player the actual keys to command the living codebase.
-   - **Mystery Preservation & TINAG Standard (CRITICAL)**: In all pre-climax apps, feeds, and sites, clues MUST be subtle, atmospheric, and diegetic. NEVER label UI elements with `(ARG)` or `ARG Lore`. NEVER explain the autonomous fleet meta-twist before the endgame, and NEVER expose the master passkey `ECHO-1999-ARCHITECT` in plain text.
-   - Connect KMatrix to subtle cross-project ARG clues: corrupted logs in KTerm, ghost audio in KSynth/KAudio, memory hex offsets in KHex, and precursor relics in KAbyss/KCosmic/KChrono.
-   - Successfully solving KMatrix must reward the player with the Master Director Passkey (`ECHO-1999-ARCHITECT`) to unlock the in-OS `KDirector` console!
+## 2. Phase VI Direction: Canonical 1999 Virtual Web Nodes (`kweb://...`)
+When creating or expanding a Virtual 1999 Web destination in `KiloOS/public/web/<slug>.html`:
+1. **Anti-Potemkin Interactive Standard**:
+   - Every site must be a **genuine, self-contained 1999 Web 1.0 application** (`< 999 KB`, zero external CDN dependencies)—never a static mock page.
+   - Include real client-side state (`safeGet`/`safeSet` `localStorage`), interactive calculators/simulators/filters, downloadable artifacts, or playable mini-tools.
+2. **KiloOS VFS & Cross-App Bridge**:
+   - Allow users to **Save to KiloOS VFS** (`/home/downloads/<filename>`) or **Open in KHex / KPad / KCipher** via `window.parent.postMessage`:
+     ```javascript
+     function saveToKiloVfs(vfsPath, contentStr) {
+       try {
+         window.parent.postMessage({ type: 'VFS_WRITE', path: vfsPath, data: contentStr, requestId: 'vfs_' + Date.now() }, '*');
+         window.parent.postMessage({ type: 'OS_NOTIFY', title: document.title, message: 'Saved to VFS: ' + vfsPath }, '*');
+       } catch (e) {}
+     }
+     ```
+3. **KNet & Webring Integration**:
+   - Ensure new `kweb://` clearnet/community nodes are routed in `KiloOS/public/apps/knet.html` (URL resolver map) and linked in `portal.html` / `webring.html`.
+   - **Subterranean / Tier 3 Rule**: Darknet/ARG nodes (`kweb://darknet`, `kweb://deep-core`, `kweb://10.19.99.4/classified`, `kweb://echo-subsystem.net`) must NEVER appear on surface bookmark bars; link them only via diegetic hex dumps, NFO checksums, or keygen seeds.
 
-5. **Virtual 1999 Web Node Creation (Anti-Potemkin Standard)**:
-   - When creating new Tier 2 or Tier 3 virtual web destinations (`kweb://...` in `KiloOS/public/web/*.html`), each site must be a fully realized, authentic 1999 hypermedia destination.
-   - **Zero Shallow Stubs**: Every page must have genuine working content—working interactive forms, dynamic generators, retro Web Audio sounds, downloadable mock assets, or functioning client-side databases.
-   - Integrate seamlessly into the KNet web directory, webrings, and link networks without exposing cryptic Tier 3 ARG secrets on clearnet hubs.
+---
 
-6. **Alternate Reality Fictionalization Mandate**:
-   - All commercial video game titles, software products, corporate entities, and demoscene warez groups must be fictionalized parodies (e.g. *Surreal Tournament*, *Tremor III Arena*, *VoidCraft*, *Machina Ex*, *FLARELIGHT*, *RAZOR 1999*, *SlashNet*, *Cabled*). Never use real trademarked names. Enforced algorithmically by `scripts/security_lint.py`.
-
-7. **Seamless Online Multiplayer via Firebase & Autostart Prohibition (DIRECTOR MANDATE - CRITICAL)**:
-   - **Core Focus**: When creating new games and interactive applications, concentrate on adding seamless online multiplayer features that run through Firebase Realtime Database.
-   - **No Autostart / Mandatory Connect Gate**: NEVER autostart into multiplayer or initiate matchmaking on application load. Apps must open to a clean local/offline mode (e.g. against local Easy AI or solo practice) or a start screen with explicit mode choices. Online connection requires an explicit user action (clicking a "Connect" / "Play Online" button or choosing Multiplayer from a menu). People must never be thrown into multiplayer without prior warning.
-   - **Cross-Computer Play**: Enable different people playing on `kiloapps.web.app` from different computers anywhere on the internet—who are not otherwise communicating and share no local network—to discover each other, match up, and play together in real-time, identical to how KChat connects global users in its `#general` chat room.
-   - **Architecture & Setup (Retro Firebase Multiplayer Service - RFMS)**:
-     - Use the standardized RFMS client module [`KiloOS/public/assets/js/retro_multiplayer.js`](../../KiloOS/public/assets/js/retro_multiplayer.js) (spec: [`docs/RFMS_SPEC.md`](../../docs/RFMS_SPEC.md)) via `<script src="../assets/js/retro_multiplayer.js"></script>`.
-     - **Mandate Rule 12 Solo Fallback**: Always configure `soloTimeoutMs: 25000` with `onSoloFallback` so lone players who host or search for a room are seamlessly transferred to a local AI match after 25s if no peer joins.
-     - **Dual Link Sharing**: Support both `#room=CODE` and `?room=CODE` deep-link URL formats.
-     - Structured RTDB paths: `multiplayer/<appName>/rooms/<roomId>` and `multiplayer/<appName>/lobby`.
-     - Sync game state in real-time: active player turns, player presence with `onDisconnect()`, game board arrays, and live move feeds.
-     - Always provide graceful offline fallback: if Firebase is unreachable or the user chooses offline play, provide local 2-player or single-player vs AI mode.
-
-## Queue Handoff & Terse Logging (CRITICAL)
-1. **Edit [next_work.md](../../next_work.md)**:
-   - Advance `current_targets.kilo_creator` to the next concept.
-   - Set `current_agent` to the next scheduled agent in `agent_rotation` (or call `kilo-graphics` / `kilo-tester` if immediate visual/audit follow-up is desired).
-   - Set `status: ready`.
-   - Update `last_run.agent: kilo-creator`, `last_run.app: <NewAppName>`, and `last_run.timestamp`.
-   - Append terse run log (strict limit: ≤ 8 lines of concise bullet points).
-2. **Commit and Push**:
-   - `git add <new files> KiloOS/src/App.jsx next_work.md`
-   - `git commit -m "feat(app): create new app <AppName>"`
-   - `git push` (if rejected, run `git pull --rebase` then push).
-   - STOP immediately.
+## 3. Mandatory Requirements for New OS Applications (`KiloOS/public/apps/k<name>.html`)
+1. **Start Splash & First-Run Tutorial**: Title overlay with version, New/Continue, Settings, Help (`[F1]`/`[H]`), and one-time skippable tutorial (`k<name>_tutorialSeen`).
+2. **State Persistence & VFS**: `[F5]` Quicksave, `[F9]` Quickload, JSON Export/Import, and KiloOS VFS (`VFS_READ`/`VFS_WRITE`) support.
+3. **Hardware Chiptune Audio**: Sega Genesis YM2612 2-Op FM + SNES SPC700 stereo delay (`180ms`, `2200Hz` LP filter) with `[M]` mute toggle and zero external audio files.
+4. **Online Multiplayer (RFMS) & No-Autostart Rule**:
+   - Use `../assets/js/retro_multiplayer.js` (`soloTimeoutMs: 25000` with `onSoloFallback`).
+   - **NEVER autostart into matchmaking on load**; require an explicit user click on "Connect / Multiplayer".
+5. **Anti-Trademark & TINAG Mystery Standard**:
+   - Use in-universe parodies (*Surreal Tournament*, *Tremor III Arena*, *VoidCraft*, *Machina Ex*, *FLARELIGHT*, *RAZOR 1999*, *SlashNet*, *Cabled*, *The Scallion*, *Trapster*).
+   - Never use `(ARG)` labels or leak `ECHO-1999-ARCHITECT` before App #100 (`KMatrix`).

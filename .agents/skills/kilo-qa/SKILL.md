@@ -1,69 +1,44 @@
 ---
 name: kilo-qa
 description: >-
-  Executes the QA & Build Quality audit and fixes (Pass 5) for a single KiloApps application.
-  Use this skill to inspect both web (HTML) and native (C) builds, fix stability/logic bugs,
-  verify compiler clean build and file sizes (<999 KB), log results tersely to next_work.md,
-  advance the queue handoff, and commit/push changes.
+  Executes Pass 5 QA & Build Quality audit and fixes for a single KiloApps application: F5/F9 state
+  persistence, first-run tutorial flags, lifecycle cleanup, dual Win32 C parity, and Mature quarantine
+  via 1-command verification/handoff.
 ---
 
-# KiloApps QA & Build Quality Skill (Pass 5)
+# KiloApps QA & Build Quality Skill (`kilo-qa` — Pass 5)
 
-This skill executes a self-contained Pass 5 QA and build audit on exactly ONE application.
+Executes Pass 5 QA, state persistence verification, and dual Win32 C build parity on **exactly ONE application per turn**.
 
-## Quality & Craft Directive
-- **Tool Call Budget (<= 30 tool calls)**: Complete this turn in <= 30 tool calls.
-- **Commit Checkpoint (~15 tool calls)**: Once substantive edits are made or you reach ~15 tool calls, wrap up modifications, run verification, update `next_work.md`, and commit/push.
-- **Iterative Craft**: Rigorously audit state persistence, onboarding tutorials, and modal dismissals. Inspect diffs and code after editing to verify syntax, error catching, and parity between web (HTML) and native (C).
-- **Parity & Validation**: Run `cd KiloOS && npm run build` and `uv run scripts/test_app_startup.py --app <TargetApp>`. If native C source exists, compile via `cmd.exe /c build.bat`.
-- **No Full-Repo Test Suites**: Run only target build/startup verification. NEVER run repo-wide suites (`quality_gate.js`, screenshot generation).
-- **No Archives/Receipts**: Never read `archive/` or `.agents/receipts/`.
-- Advance queue in `next_work.md`, commit, push, and STOP immediately.
+## ⚡ Flash Execution & Tool-Budget Protocol (CRITICAL)
+- **Tool Call Budget (<= 25 tool calls)** & **Commit Checkpoint (~12 tool calls)**:
+  - Inspect `KiloOS/public/apps/k<name>.html` and `<AppName>/main.c` (if present), fix any state persistence (`F5`/`F9`), tutorial flag, lifecycle leak, or Win32 C parity gaps, then run 1-command verification!
+- **1-Command Verification (with Native C Build)**:
+  ```powershell
+  python scripts/verify_turn.py --app <TargetApp> --build-native
+  ```
+- **1-Command Queue Handoff & Mature Quarantine**:
+  - When Pass 5 QA passes cleanly and the app is complete, **promote it to Mature Applications** so the fleet continuously graduates finished apps:
+  ```powershell
+  python scripts/advance_turn.py --agent kilo-qa --app "<TargetApp>" `
+    --title "Pass 5 QA, Dual Parity & Mature Quarantine" `
+    --bullet "Status: PASS ✅ (<copy summary from verify_turn.py>)." `
+    --bullet "State & Tutorial: Verified F5/F9 quicksave/quickload, k<name>_tutorialSeen flag, and Escape modal dismissals." `
+    --bullet "Dual Parity & Lifecycle: Verified Web HTML + Win32 C parity and visibilitychange timer cleanup." `
+    --quarantine-mature "<Concise 1-line summary of the app's complete feature set, F5/F9 state, and dual Win32 C parity>" `
+    --category "<Category e.g. Games / RPG or System / Security>"
+  ```
+- **Commit, Push & STOP**:
+  ```powershell
+  git add -A
+  git commit -m "fix(qa): Pass 5 audit and fixes for <TargetApp>"
+  git push origin main
+  ```
 
-## Pre-flight
-1. Ensure git working tree is clean: `git status`.
-2. Open [next_work.md](../../next_work.md) to identify the current QA target app (`current_targets.kilo_qa`).
+---
 
-## Audit & Repair Procedure
-1. **Target Identification**:
-   - Web source: `KiloOS/public/apps/k<name>.html`
-   - Native source: `apps/k<name>/` (if present, check `main.c` and `build.bat`)
-
-2. **Pass 5 Focus Areas**:
-   - **Full Game/App State Persistence**: Quicksave (F5) and quickload (F9) capturing complete state (timers, hazards, boss/rival states, upgrades, scores) in local storage and native files without data loss or corruption.
-   - **First-run Tutorial Integrity**: Ensure tutorial prompts fire only on fresh sessions using `k<name>_tutorialSeen` / `.dat` flags, never interrupting restored save states.
-   - **Interactive Splash & Overlays**: Verify all modal dialogs, victory/game over screens, and help guides have working buttons and keyboard shortcuts (Esc, Enter, Space).
-   - **ARG Mystery & TINAG Standard Verification**: Ensure no un-diegetic `(ARG)` tags, explicit walkthroughs ("ARG Guidance"), premature fleet meta-spoilers, or leaked master passkeys exist in user-facing UI or copy.
-   - **Safety & Resource Cleanliness**: Catch storage quota errors gracefully and ensure URL object/interval leaks are cleaned up.
-
-3. **Build & Size Verification**:
-   - Web: Run `npm run build` inside `KiloOS/` to confirm zero Vite build breaks.
-   - Native: If native source exists, run its `build.bat` to ensure compilation produces a clean `.exe`.
-   - Startup Audit: Run `uv run scripts/test_app_startup.py --app <TargetApp>`.
-   - Size limit: Ensure neither the `.exe` nor the `.html` exceeds 999 KB.
-
-4. **Mature Application Quarantine Protocol (DIRECTOR MANDATE - CRITICAL)**:
-   - If an app passes Pass 5 with zero defects, full state persistence, clean modal handling, and is functionally mature:
-     - **DO NOT rotate it to the queue bottom!** (Rotating to the bottom causes endless skip loops that waste tokens repeatedly).
-     - **Quarantine to Mature**: Move the app into `## Mature Applications (Archived from Active Queues)` in `next_work.md`.
-     - **Remove from Queues**: Remove the app completely from all active queues and upcoming lists across `next_work.md`.
-     - **Advance Target**: Advance `current_targets.kilo_qa` to the next non-mature app in line.
-     - Log: `⏭️ Skip — promoted <TargetApp> to Mature Applications quarantine.` Advance rotation, commit, push, and STOP cleanly.
-
-5. **Queue Handoff & Terse Logging (CRITICAL)**:
-   - Edit [next_work.md](../../next_work.md):
-     - Update YAML frontmatter:
-        - Set `current_agent` to the next scheduled agent in `agent_rotation` (or `kilo-tester` / `kilo-creator` if specific follow-up is needed).
-        - Advance `current_targets.kilo_qa` to the next app in the queue list.
-        - Set `status: ready`.
-       - Update `last_run.agent: kilo-qa`, `last_run.app: <TargetApp>`, and `last_run.timestamp`.
-     - In the Execution Log section of `next_work.md`, append a run entry:
-       - **Strict limit**: ≤8 lines of terse bullet points. No paragraphs.
-       - Log WHAT changed + test results, not HOW. Never list parameter names or regurgitate code.
-     - If the app was not promoted to Mature, move it to the bottom of the QA upcoming list.
-
-5. **Commit and Push**:
-   - `git add <modified files> next_work.md`
-   - `git commit -m "fix(qa): Pass 5 audit and fixes for <AppName>"`
-   - `git push` (if push fails due to remote update, run `git pull --rebase` and push again).
-   - STOP immediately. Process exactly ONE app only.
+## Pass 5 QA Checklist
+1. **Complete State Persistence (`F5` / `F9`)**: Captures all scores, inventory, settings, active tabs/modes, and progress in both `localStorage` (wrapped in `try/catch`) and Win32 C `.dat` binary save file.
+2. **First-Run Tutorial Integrity**: Fires once on fresh session (`k<name>_tutorialSeen`), never on restored save, skippable via `Escape`.
+3. **Lifecycle & Resource Hygiene**: Long-running `requestAnimationFrame` / timer loops pause on `document.hidden` (`visibilitychange`).
+4. **Dual Win32 Native C Parity**: `<AppName>/main.c` compiles cleanly via `build.bat` with zero errors and matches Web features/keybinds (`< 999 KB`).

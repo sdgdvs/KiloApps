@@ -12,20 +12,34 @@ agent_rotation:
 model: gemini-3.8-flash-high
 effort: selective
 timeout_minutes: 8
-tool_call_cap: 30
-commit_checkpoint: 15
+agent_timeouts:
+  kilo-creator: 9
+  kilo-expander: 9
+  kilo-soundscape: 9
+  kilo-graphics: 8
+  kilo-tester: 8
+  kilo-usability: 8
+  kilo-qa: 8
+  kilo-planner: 8
+tool_call_cap: 25
+commit_checkpoint: 12
 status: ready
 current_targets:
-  kilo_creator: kweb://webring
+  kilo_creator: kweb://slashnet
   kilo_graphics: KTrader
   kilo_soundscape: KBreakout
   kilo_tester: KPass
-  kilo_usability: KTrader
-  kilo_qa: KTrader
-  kilo_expander: KTrader
-virtual_web_target: kweb://webring
+  kilo_usability: KConverter
+  kilo_qa: KHex
+  kilo_expander: KCipher
+virtual_web_target: kweb://slashnet
 virtual_web_rotation:
-- kweb://portal
+- kweb://slashnet
+- kweb://trapster
+- kweb://cabled
+- kweb://scallion
+- kweb://demoscene
+- kweb://rfc-archive
 - kweb://webring
 - kweb://warez
 - kweb://geocities
@@ -36,139 +50,143 @@ virtual_web_rotation:
 - kweb://echo-subsystem.net
 - kweb://deep-core
 - kweb://darknet
+- kweb://portal
 last_run:
   agent: kilo-creator
   app: kweb://portal
   timestamp: '2026-10-23T07:12:00-07:00'
-last_planner_run: '2026-10-23T01:35:00Z'
+last_planner_run: '2026-10-23T07:15:00Z'
 ---
 
-# KiloApps Master Fleet Work & Queue State
+# KiloApps Master Fleet Work & Queue State (`Phase VI: System Convergence`)
 
 This document is the single active source of truth for autonomous agent dispatching.
-The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YAML frontmatter above on every tick to dispatch the active skill.
+The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YAML frontmatter and Mission Pipeline Tables below on every tick.
 
-## Fleet Core Directives (Quick Reference)
+## Strategic Direction — Phase VI: System Convergence, Cross-App VFS Mesh & The 1999 Web
+1. **Pillar 1 — KiloOS VFS & Inter-App IPC Mesh**: Transform KiloApps from isolated `localStorage` silos into an interconnected 1999 Operating System. Wire `VFS_READ`, `VFS_WRITE`, `VFS_SHOW_OPEN`, `VFS_SHOW_SAVE`, `OS_NOTIFY`, and `OS_LAUNCH_APP` (`postMessage` to KiloOS shell with graceful standalone fallback) so files saved in `KBBS`, `KNet`, `KCipher`, `KScript`, `KDB`, `KSynth`, or `KStarForge` can be opened and inspected across `File Browser` (`kexplorer`), `KHex`, `KPad`, `KGraph`, and `KMatrix`.
+2. **Pillar 2 — Deep Sci-Fi/Fantasy Multiplayer (RFMS) & Graduation**: Retrofit the 17 non-mature deep sci-fi/fantasy games and simulations with `retro_multiplayer.js` (strictly behind an explicit `"Multiplayer / Connect"` button, zero autostart, `soloTimeoutMs: 25000` AI fallback), complete 6-channel YM2612/SPC700 soundscapes, and graduate verified apps into `## Mature Applications`.
+3. **Pillar 3 — Canonical 1999 Virtual Web Expansion (`kweb://...`)**: Build out the canonical alternate-1999 web destinations from `arg_plan.md` §7 (`kweb://slashnet`, `kweb://trapster`, `kweb://cabled`, `kweb://scallion`, `kweb://demoscene`, `kweb://rfc-archive`) as self-contained `< 350 KB` interactive Web 1.0 cartridges and enforce strict Tier 3 darknet secrecy in `KNet`.
 
-> Full architectural rules codified in [.agents/AGENTS.md](.agents/AGENTS.md) and [.agents/rules/](.agents/rules/).
-> Full historical director directives codified in [archive/director_directives_archive.md](archive/director_directives_archive.md).
-
-1. **Single-App-Per-Turn & Quality Craft**: Exactly ONE target application per turn. Plan iteratively, inspect diffs, test thoroughly, advance queue, commit, and push.
-2. **Strict Size Ceiling**: Every web file (`.html`) and native executable (`.exe`) must remain strictly **< 999 KB**.
-3. **Tool Call Budget (<=30), Commit Checkpoint (~15) & Concise Logging**: Strict budget of <= 30 tool calls per turn. **Commit Checkpoint**: Once you have substantive edits or reach ~15 tool calls, wrap up, verify, update `next_work.md`, and commit/push immediately. Inspect diffs to verify correctness and dual-parity. Verify with `npm run build` and `uv run scripts/test_app_startup.py --app <target>`, and write a ≤8 line terse log.
-4. **Multiplayer Autostart Prohibition**: Games must NEVER autostart into matchmaking. Default to local offline play; multiplayer requires explicit button click. Include 25s solo AI fallback.
-5. **Anti-Trademark / Parody Rule**: No real commercial marks or scene group names (use *Surreal Tournament*, *VoidCraft*, *RAZOR 1999*, *FLARELIGHT*). Must pass `python scripts/security_lint.py`.
-6. **ARG Mystery Preservation (TINAG)**: Never label UI or copy with `(ARG)` or walkthrough guides; never leak `ECHO-1999-ARCHITECT` before App #100 (`KMatrix`).
-7. **Perimeter Glint & Comet Ban**: Remove traveling border dots, orbiting balls, and specular glints.
-8. **Chiptune Audio Architecture**: Genesis YM2612 2-Op FM / SNES SPC700 stereo delay standard. Zero external audio assets.
-9. **Mature Application Quarantine Policy (DIRECTOR MANDATE - CRITICAL)**: If any agent decides to skip an app because it is complete or mature (except `kilo-graphics` skipping non-game apps), do NOT rotate it to the queue bottom! The agent MUST move the app into `## Mature Applications (Archived from Active Queues)` in `next_work.md` and remove it completely from all active queues. The app is permanently archived from all fleet turns until the Director personally directs otherwise.
+## Fleet Core Directives & Fast Turn Protocol
+1. **Single-App-Per-Turn & Tool Budget (`<= 25` calls, Commit Checkpoint `~12` calls)**: Process ONE target per turn. Once substantive edits are complete (or at ~12 tool calls), wrap up immediately!
+2. **One-Command Verification (`scripts/verify_turn.py`)**: Run `python scripts/verify_turn.py --app <Target>` (add `--build-native` if C source modified) to validate `< 999 KB` byte budgets, native compilation, `test_app_startup.py`, Vite build, and `security_lint.py` in a single tool call.
+3. **One-Command Queue Handoff & Logging (`scripts/advance_turn.py`)**: Run `python scripts/advance_turn.py --agent <agent> --app <Target> --title "<Summary>" --bullet "<Status>" --bullet "<Change 1>" [--quarantine-mature "<Summary>" --category "<Category>"]` to deterministically advance queues, rotate agents, update logs, and archive excess entries at 0 token cost.
+4. **Invariants**: Strict `< 999 KB` file ceiling; zero multiplayer autostart; in-universe trademark parodies only (`security_lint.py`); TINAG mystery preservation (no `(ARG)` labels or `ECHO-1999-ARCHITECT` leaks); zero traveling perimeter border glints.
 
 ---
 
-## Active Target Queues (Gemini Flash Optimized Tickets)
+## Active Target Queues (Multi-Turn Mission Pipelines)
+
 ### 1. Virtual 1999 Web & ARG Node Creator (`kilo-creator`)
-- **Target**: `kweb://webring`
-- **Primary File**: `KiloOS/public/web/webring.html`
-- **Objective**: Central Webring Hub & RingMaster v2.4 deep expansion: interactive member hub traversal, ring topology visualizer, custom ring joining wizard, and retro webring badge generator (<999 KB).
-- **Upcoming Queue**: `kweb://warez`, `kweb://geocities`, `kweb://users/~neon_rider`, `kweb://asm-temple`.
+- **Active Target**: `kweb://slashnet`
+
+| Target | Primary Files | Phase VI Mission Spec (<999 KB) |
+|---|---|---|
+| `kweb://slashnet` | `KiloOS/public/web/slashnet.html`, `KiloOS/public/apps/knet.html` | Create *SlashNet: News for Nerds (1999)* (`slashnet.html` <250 KB): interactive Karma moderation (`-1 Troll` to `+5 Insightful`), threshold comment filter (`-1` to `+5`), Beowulf cluster calculator, Linux 2.2 kernel compile mini-sim, VFS article export, and route `kweb://slashnet` in `knet.html` / `portal.html`. |
+| `kweb://trapster` | `KiloOS/public/web/trapster.html`, `KiloOS/public/apps/knet.html` | Create *Trapster P2P Chiptune & Tracker Exchange v1.0b* (`trapster.html` <250 KB): searchable 1999 P2P node directory, simulated 56k/T1 download queue, live YM2612/SPC700 track previewer, VFS `.mod`/`.trk` save to `/home/music/`, and route `kweb://trapster` in `knet.html`. |
+| `kweb://cabled` | `KiloOS/public/web/cabled.html`, `KiloOS/public/apps/knet.html` | Create *Cabled Magazine 1999 Neon Edition* (`cabled.html` <250 KB): late-90s cyber-magazine with interactive Y2K Readiness Audit, Dot-Com IPO Bubble Stock Simulator, Jargon Watch generator, Hype-vs-Reality matrix, and route `kweb://cabled` in `knet.html`. |
+| `kweb://scallion` | `KiloOS/public/web/scallion.html`, `KiloOS/public/apps/knet.html` | Create *The Scallion: 1999 Satirical News* (`scallion.html` <250 KB): interactive late-90s tech/culture satire portal, "Ask A Sysadmin" interactive column, Infographic & Headline generator, VFS clipping export, and route `kweb://scallion` in `knet.html`. |
+| `kweb://demoscene` | `KiloOS/public/web/demoscene.html`, `KiloOS/public/apps/knet.html` | Create *Assembly '99 Demoscene Party Vault* (`demoscene.html` <250 KB): real-time 64K intro Canvas effect switcher (plasma, rotozoomer, 3D starfield, copper bars, metaballs), ANSI `.NFO` viewer with VFS save, and party voting board. |
+| `kweb://rfc-archive` | `KiloOS/public/web/rfc_archive.html`, `KiloOS/public/apps/knet.html` | Create *IETF 1999 Living RFC Workbench* (`rfc_archive.html` <250 KB): interactive RFC 1149 (IP over Avian Carriers) packet loss simulator, RFC 2324 (`418 I'm a teapot`) HTCPCP console, ASCII TCP state stepper, and VFS `.txt` export. |
+| `kweb://webring` | `KiloOS/public/web/webring.html` | Integrate new canonical nodes (`slashnet`, `trapster`, `cabled`, `scallion`, `demoscene`, `rfc-archive`) into RingMaster topology map, badge generator, and random/next ring traversal. |
+| `kweb://deep-core` | `KiloOS/public/web/deep_core.html` | Connect Tier 3 Ghost Node terminal to KiloOS VFS (`/sys/alpha.sys` & `/home/crypto/`) so decoded fragments can be written directly to VFS for `KMatrix` verification. |
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
-- **Target**: `KTrader`
-- **Primary Files**: `KiloOS/public/apps/ktrader.html`
-- **Objective**: Space trader commodity & planetary docking graphics: replace vector trading post graphics and planet circles with production celestial assets and trader ship sprites (<999 KB).
-- **Action Steps**:
-  1. Inspect `KiloOS/public/apps/ktrader.html` rendering routines for programmer art.
-  2. Generate sprites via 2-stage asset pipeline if appropriate (`generate_image` with solid `#FF00FF` -> `scripts/asset_pipeline.py`).
-  3. Search for and eliminate any traveling border dots or rotating specular glints.
-  4. Run `python scripts/check_icons.py` to audit icon uniqueness.
-- **Verification**: `cd KiloOS && npm run build`. Verify files < 999 KB.
-- **Handoff**:
-  - In frontmatter: advance `current_targets.kilo_graphics` to `KRogue`.
-  - Set current_agent: kilo-soundscape.
-  - Append terse execution log (<=6 lines), commit, and push.
-- **Upcoming Queue**: `KRogue`, `KBreakout`.
+- **Active Target**: `KTrader`
+
+| Target | Primary Files | Phase VI Mission Spec (<999 KB) |
+|---|---|---|
+| `KTrader` | `KiloOS/public/apps/ktrader.html` | Space trader commodity & planetary docking visual upgrade: replace primitive planet circles and station shapes with multi-layered celestial bodies, orbital spaceport sprites, ship hull silhouettes, and eliminate any perimeter glints. |
+| `KRogue` | `KiloOS/public/apps/krogue.html` | Subterranean roguelike visual polish: crisp tile/entity sprite rendering, atmospheric torchlight vignette, boss monster visual distinction, and perimeter glint sweep. |
+| `KBreakout` | `KiloOS/public/apps/kbreakout.html` | Arcade brick-breaker visual upgrade: textured metallic/crystalline bricks, plasma paddle/ball trails, boss hazard visuals, and zero perimeter border dots. |
+| `KStarship` | `KiloOS/public/apps/kstarship.html` | Starship bridge & sector tactical display upgrade: detailed hull subsystem schematics, nebula parallax backdrop, enemy cruiser silhouettes, and glint sweep. |
+| `KAlchemy` | `KiloOS/public/apps/kalchemy.html` | Alchemical laboratory & crucible visual overhaul: ornate alembic glassware, elemental reagent icons, transmutation reaction glow, and glint sweep. |
+| `KVoid` | `KiloOS/public/apps/kvoid.html` | Deep void survival visual upgrade: gravitational singularity lensing, derelict hull debris sprites, anomaly silhouettes, and glint sweep. |
+| `KCyber` | `KiloOS/public/apps/kcyber.html` | Netrunner icebreaker deck visual polish: isometric node towers, IC guardian constructs, matrix grid perspective, and glint sweep. |
+| `KStellar` | `KiloOS/public/apps/kstellar.html` | 4X stellar empire map visual upgrade: star spectral class rendering, fleet ship icons, orbital ringworlds, and glint sweep. |
+| `KSanctuary` | `KiloOS/public/apps/ksanctuary.html` | Xenobiology sanctuary habitat visuals: biome terrarium flora/fauna sprites, weather overlay polish, and glint sweep. |
+| `KSubmarine` | `KiloOS/public/apps/ksubmarine.html` | Bathysphere trench exploration visuals: bioluminescent leviathan silhouettes, hydrothermal vent plumes, sonar HUD polish, and glint sweep. |
 
 ### 3. Procedural Audio & Soundscape Queue (`kilo-soundscape`)
-- **Target**: KBreakout
-- **Primary Files**: KiloOS/public/apps/kbreakout.html
-- **Objective**: Procedural chiptune dungeon audio suite: atmospheric 3-voice counterpoint dungeon exploration theme, FM percussive combat earcons, and selective SPC700 stereo delay (<999 KB).
-- **Action Steps**:
-  1. Inspect `KiloOS/public/apps/krogue.html` audio synthesis functions.
-  2. Implement hardware composer chiptune standard:
-     - 6-Channel logical synthesis: Lead melody, counter-melody, shell voicings, punchy dry FM bass, kick/snare, and inharmonic hi-hat.
-     - Voice leading: Contrary motion and shell voicings (3rd + 7th).
-     - Swing-tick groove: 16-step rhythmic swing with alternating delays.
-     - Selective SPC700 stereo delay: Lead and counter wet; bass and drums strictly dry.
-  3. Pure Web Audio synthesis with zero external audio assets.
-- **Verification**: `cd KiloOS && npm run build` (0 Vite errors). Confirm file size < 999 KB.
-- **Handoff**:
-  - In frontmatter: advance current_targets.kilo_soundscape to KQuest.
-  - Set current_agent: kilo-tester.
-  - Append terse execution log (≤8 lines), commit, and push.
-- **Upcoming Queue**: KQuest, KStarship.
+- **Active Target**: `KBreakout`
+
+| Target | Primary Files | Phase VI Mission Spec (<999 KB) |
+|---|---|---|
+| `KBreakout` | `KiloOS/public/apps/kbreakout.html` | Compose high-energy 6-channel YM2612 FM arcade synthwave theme (Ionian/Mixolydian, 5:3 swing groove, slap bass, brass lead, selective SPC700 delay) + harmonic brick-hit combo pitch escalator and powerup earcons. |
+| `KQuest` | `KiloOS/public/apps/kquest.html` | Compose overworld & battle 6-channel JRPG chiptune suite (Royal Road `IV-V-iii-vi` town/overworld + Heroic `bVI-bVII-I` combat cadence, E-Piano & flute counterpoint, SPC700 echo) + spell/quest earcons. |
+| `KStarship` | `KiloOS/public/apps/kstarship.html` | Compose bridge alert & deep-space exploration 6-channel FM suite (Lydian `#4` pad + tactical Phrygian Dominant combat march, sonar/shield/warp earcons). |
+| `KAlchemy` | `KiloOS/public/apps/kalchemy.html` | Compose mystical alchemical workshop 6-channel suite (Dorian/Lydian celesta bells, warm glass pad, bubbling FM cauldron transients, transmutation fanfare stingers). |
+| `KFarm` | `KiloOS/public/apps/kfarm.html` | Compose pastoral 16-bit harvest & seasonal town 6-channel suite (Major pentatonic / Mixolydian acoustic FM guitar, warm marimba counter-melody, brushed snare groove, harvest earcons). |
+| `KWizard` | `KiloOS/public/apps/kwizard.html` | Compose arcane tower duel 6-channel chiptune suite (Harmonic Minor harpsichord/flute counterpoint, walking FM bass, spell-cast elemental earcons). |
+| `KVoid` | `KiloOS/public/apps/kvoid.html` | Compose dark cosmic horror / event-horizon 6-channel suite (Whole-tone / Phrygian clusters, sub-bass drone, cavernous 260ms SPC700 delay, Geiger/hull-stress earcons). |
+| `KCyber` | `KiloOS/public/apps/kcyber.html` | Compose 1999 cyberpunk netrunner breakbeat 6-channel FM suite (Dorian acid FM bass, syncopated 5:3 breakbeat drums, cold digital bell arpeggios, ICE breach alarms). |
+| `KStellar` | `KiloOS/public/apps/kstellar.html` | Compose grand 4X galactic diplomacy & fleet command 6-channel suite (Lydian brass fanfare, floating Maj9 pad voicings, hyperdrive & treaty earcons). |
+| `KSubmarine` | `KiloOS/public/apps/ksubmarine.html` | Compose abyssal sonar & trench descent 6-channel suite (Suspended `sus2/Maj7` cascade, muffled low-pass SPC700 echo, warm sine sub-bass, hydrophone ping earcons). |
 
 ### 4. App Tester Queue (`kilo-tester`)
-- **Target**: `KPass`
-- **Primary File**: `KiloOS/public/apps/kpass.html`
-- **Objective**: Password generator and credential safe interactive UI audit: entropy visualizer, copy shortcuts, and master password modal dismissals.
-- **Action Steps**:
-  1. Run automated startup check: `uv run scripts/test_app_startup.py --app KPass`.
-  2. Audit all UI elements: password generation toggles, vault storage, master password modals, export/import, and hotkeys.
-  3. Fix any broken button hooks, missing element IDs, or unhandled exceptions inline.
-- **Verification**: `uv run scripts/test_app_startup.py --app KPass` and `cd KiloOS && npm run build`. File size < 999 KB.
-- **Handoff**:
-  - In frontmatter: advance `current_targets.kilo_tester` to `KTrader`.
-  - Set `current_agent: kilo-usability`.
-  - Append terse execution log (≤6 lines), commit, and push.
-- **Upcoming Queue**: `KTrader`, `KRogue`.
+- **Active Target**: `KPass`
+
+| Target | Primary Files | Phase VI Mission Spec (<999 KB) |
+|---|---|---|
+| `KPass` | `KiloOS/public/apps/kpass.html`, `KPass/main.c` | Audit password generator, entropy visualizer, AES vault lock/unlock modals, keyboard shortcuts, and input focus guards; promote to Mature if 0 defects remain. |
+| `KConverter` | `KiloOS/public/apps/kconverter.html`, `KConverter/main.c` | Audit all 14 dimensional conversion categories, engineering notation toggle, reciprocal swap, presets, and F5/F9 persistence. |
+| `KHex` | `KiloOS/public/apps/khex.html`, `KHex/main.c` | Audit hex byte editor, multi-arch opcode disassembler (x86/6502/Z80), search/patch modals, and VFS file loading hooks. |
+| `KCipher` | `KiloOS/public/apps/kcipher.html`, `KCipher/main.c` | Audit cipher workbench (AES/XOR/Vigenère/ROT13/RSA toy), frequency histogram, key input guards, and VFS import/export. |
+| `KFont` | `KiloOS/public/apps/kfont.html`, `KFont/main.c` | Audit bitmap glyph matrix editor, zoom/pan controls, kerning preview, C header/JSON export, and keyboard shortcuts. |
+| `KDB` | `KiloOS/public/apps/kdb.html`, `KDB/main.c` | Audit SQL/table workbench, schema builder, query filter, chart modals, CSV/JSON/VFS export, and Escape modal dismissals. |
+| `KClip` | `KiloOS/public/apps/kclip.html`, `KClip/main.c` | Audit clipboard manager, 12 text transformation pipelines, regex find/replace bar (`Ctrl+H`), and F5/F9 persistence; promote to Mature if clean. |
+| `KSys` | `KiloOS/public/apps/ksys.html`, `KSys/main.c` | Audit system telemetry dashboard, process/memory graphs, diagnostic stress test toggles, and keyboard navigation. |
+| `KScript` | `KiloOS/public/apps/kscript.html`, `KScript/main.c` | Audit script IDE, AST/console runner, sample templates, breakpoint stepper, and VFS script save/load. |
+| `KSteno` | `KiloOS/public/apps/ksteno.html`, `KSteno/main.c` | Audit LSB image/audio steganography encoder/decoder, bitplane visualizer, passkey encryption, and modal dismissals. |
 
 ### 5. Usability & UX Queue (`kilo-usability`)
-- **Target**: `KTrader`
-- **Primary File**: `KiloOS/public/apps/ktrader.html`
-- **Objective**: Space trader market interface usability: compact responsive pricing table, clear transaction hotkeys, docking prompt focus trapping, and HiDPI canvas alignment.
-- **Action Steps**:
-  1. Inspect layout adaptability across standard and compact window dimensions.
-  2. Verify keyboard navigation, shortcut discoverability, and focus trapping.
-  3. Ensure high-contrast accessibility, crisp font rendering, and responsive controls.
-- **Verification**: `cd KiloOS && npm run build`. File size < 999 KB.
-- **Handoff**:
-  - In frontmatter: advance `current_targets.kilo_usability` to `KRogue`.
-  - Set `current_agent: kilo-qa`.
-  - Append terse execution log (≤6 lines), commit, and push.
-- **Upcoming Queue**: `KRogue`, `KTrader`.
+- **Active Target**: `KConverter`
 
-### 6. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
-- **Target**: `KTrader`
-- **Primary Files**: `KiloOS/public/apps/ktrader.html`, `apps/ktrader/main.c` (if present)
-- **Objective**: Pass 5 QA audit: verify space trader mechanics, cargo manifests, celestial navigation, F5 quicksave & F9 quickload persistence, modal dismissals, and dual Win32 native client parity (<999 KB).
-- **Action Steps**:
-  1. State Persistence: F5 quicksave & F9 quickload capturing complete ship state, credits, cargo, and location without data loss.
-  2. First-run Tutorial: Onboarding displays once on fresh sessions, never on restored saves.
-  3. Modal Dismissals: Modals dismiss cleanly with Escape, Enter, or Close button.
-  4. Dual Parity & Build: Compile Win32 native client via `cmd.exe /c build.bat` in `apps/ktrader/` or `KTrader/` (if present) and verify web build.
-- **Verification**:
-  - `uv run scripts/test_app_startup.py --app KTrader`
-  - `cd KiloOS && npm run build` (0 Vite errors, `ktrader.html` < 999 KB)
-- **Handoff**:
-  - In frontmatter: advance `current_targets.kilo_qa` to `KPass`.
-  - Set current_agent: kilo-expander.
-  - Append terse execution log (≤6 lines), commit, and push.
-- **Upcoming Queue**: `KPass`, `KRogue`.
+| Target | Primary Files | Phase VI Mission Spec (<999 KB) |
+|---|---|---|
+| `KConverter` | `KiloOS/public/apps/kconverter.html`, `KConverter/main.c` | Responsive 14-category selector layout on compact viewports, keyboard category/unit traversal, clear `[F1/H]` shortcut pill, and focus trapping. |
+| `KTrader` | `KiloOS/public/apps/ktrader.html`, `KTrader/main.c` | Space trader market table ergonomics: responsive commodity columns, `[1-9]`/`[B]`/`[S]` quick-trade hotkeys, HiDPI star map scaling, and docking modal focus trap. |
+| `KClip` | `KiloOS/public/apps/kclip.html`, `KClip/main.c` | Compact toolbar wrapping, keyboard snippet navigation (`ArrowUp/Down`, `Enter` to copy), high-contrast diff/hex tabs, and modal focus restoration. |
+| `KCipher` | `KiloOS/public/apps/kcipher.html`, `KCipher/main.c` | Side-by-side plaintext/ciphertext responsive split pane, HiDPI frequency chart crispness, one-click copy/swap ergonomics, and `[F1/H]` help overlay. |
+| `KScript` | `KiloOS/public/apps/kscript.html`, `KScript/main.c` | Split editor/output pane resizing, line-number gutter alignment, `Ctrl+Enter` run shortcut pill, and accessible focus rings. |
+| `KSys` | `KiloOS/public/apps/ksys.html`, `KSys/main.c` | HiDPI telemetry oscilloscopes (`devicePixelRatio`), responsive grid cards at `<640px`, and keyboard tab switching (`[1-5]`). |
+| `KSteno` | `KiloOS/public/apps/ksteno.html`, `KSteno/main.c` | Drag-and-drop / VFS carrier image picker UX, clear capacity progress bar, HiDPI bitplane canvas scaling, and accessible modal focus traps. |
+| `KHash` | `KiloOS/public/apps/khash.html`, `KHash/main.c` | Multi-digest comparison table responsiveness, one-click hash verification badge, HMAC toggle ergonomics, and keyboard shortcuts. |
+| `KVault` | `KiloOS/public/apps/kvault.html`, `KVault/main.c` | Encrypted container tree navigation, responsive hex/file inspector split, clear lock/unlock status banner, and modal focus trapping. |
+| `KAnomaly` | `KiloOS/public/apps/kanomaly.html`, `KAnomaly/main.c` | Subterranean waterfall spectrogram HiDPI scaling, frequency tuner wheel/keyboard precision (`ArrowLeft/Right`), and clear decoder telemetry readout. |
 
-### 7. Feature Expander Queue (`kilo-expander`)
-- **Target**: `KTrader`
-- **Primary Files**: `KiloOS/public/apps/ktrader.html`, `KTrader/main.c` (if present)
-- **Objective**: Space trader commodity futures, automated ledger, trade route routing, and cargo optimization suite (<999 KB).
-- **Action Steps**:
-  1. Inspect `KiloOS/public/apps/ktrader.html`.
-  2. Implement advanced ledger filtering, price alert triggers, trade routing calculator, and cargo optimization.
-  3. Ensure dual Win32 native client parity and clean build.
-- **Verification**: `uv run scripts/test_app_startup.py --app KTrader` and `cd KiloOS && npm run build`. File size < 999 KB.
-- **Handoff**:
-  - In frontmatter: advance `current_targets.kilo_expander` to `KPass`.
-  - Set `current_agent: kilo-creator`.
-  - Append terse execution log (≤6 lines), commit, and push.
-- **Upcoming Queue**: `KPass`, `KRogue`.
+### 6. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial, State & Mature Graduation)
+- **Active Target**: `KHex`
+
+| Target | Primary Files | Phase VI Mission Spec (<999 KB) |
+|---|---|---|
+| `KHex` | `KiloOS/public/apps/khex.html`, `KHex/main.c` | Pass 5 QA: verify F5/F9 hex buffer & disassembler state persistence, `khex_tutorialSeen` flag, VFS file open/save, and clean Win32 C build (`KHex.exe` <999 KB); promote to Mature if complete. |
+| `KFont` | `KiloOS/public/apps/kfont.html`, `KFont/main.c` | Pass 5 QA: verify custom glyph bitmap F5/F9 persistence, first-run tutorial flag, Escape modal dismissals, and dual Win32 C build (`KFont.exe` <999 KB); promote to Mature if complete. |
+| `KPass` | `KiloOS/public/apps/kpass.html`, `KPass/main.c` | Pass 5 QA: verify encrypted vault F5/F9 persistence, tutorial flag, lock timeout cleanup, and dual Win32 C build (`KPass.exe` <999 KB); promote to Mature if complete. |
+| `KConverter` | `KiloOS/public/apps/kconverter.html`, `KConverter/main.c` | Pass 5 QA: verify 14-category custom unit/history F5/F9 persistence, tutorial flag, and dual Win32 C build (`KConverter.exe` <999 KB); promote to Mature if complete. |
+| `KClip` | `KiloOS/public/apps/kclip.html`, `KClip/main.c` | Pass 5 QA: verify snippet vault & pinned history F5/F9 persistence, tutorial flag, and dual Win32 C build (`KClip.exe` <999 KB); promote to Mature if complete. |
+| `KDB` | `KiloOS/public/apps/kdb.html`, `KDB/main.c` | Pass 5 QA: verify multi-table schema/rows F5/F9 persistence, first-run tutorial flag, and dual Win32 C build (`KDB.exe` <999 KB); promote to Mature if complete. |
+| `KTrader` | `KiloOS/public/apps/ktrader.html`, `KTrader/main.c` | Pass 5 QA: verify ship credits, cargo manifest, sector position, and market ledger F5/F9 persistence + dual Win32 C build (`KTrader.exe` <999 KB). |
+| `KMech` | `KiloOS/public/apps/kmech.html`, `KMech/main.c` | Pass 5 QA: verify mech chassis loadout, heat/armor state, arena progression F5/F9 persistence + dual Win32 C build (`KMech.exe` <999 KB). |
+| `KPac` | `KiloOS/public/apps/kpac.html`, `KPac/main.c` | Pass 5 QA: verify campaign progression, maze editor, RFMS duel solo fallback, F5/F9 persistence + dual Win32 C build (`KPac.exe` <999 KB); promote to Mature if complete. |
+| `KSolitaire` | `KiloOS/public/apps/ksolitaire.html`, `KSolitaire/main.c` | Pass 5 QA: verify deck state, move undo stack, scoring, F5/F9 persistence + dual Win32 C build (`KSolitaire.exe` <999 KB); promote to Mature if complete. |
+
+### 7. Feature Expander Queue (`kilo-expander` — Phase VI VFS Mesh & RFMS Multiplayer)
+- **Active Target**: `KCipher`
+
+| Target | Primary Files | Phase VI Mission Spec (<999 KB) |
+|---|---|---|
+| `KCipher` | `KiloOS/public/apps/kcipher.html`, `KCipher/main.c` | Phase VI VFS & IPC Mesh: add KiloOS VFS Open/Save (`/home/crypto/*.enc`), `"Inspect Ciphertext in KHex"` IPC launch (`OS_LAUNCH_APP`), multi-stage cipher chaining pipeline, and dual Win32 C parity. |
+| `KTrader` | `KiloOS/public/apps/ktrader.html`, `KTrader/main.c` | Phase VI RFMS & VFS Expansion: add RFMS Galactic Syndicate Trade Ticker & Cargo Duel (explicit Connect button, 25s solo AI fallback), commodity futures ledger, VFS manifest export (`/home/saves/ktrader_ledger.json`), and C parity. |
+| `KNet` | `KiloOS/public/apps/knet.html`, `KNet/main.c` | Phase VI VFS & TINAG Hardening: remove Tier 3 darknet nodes (`darknet`, `deep-core`, `10.19.99.4/classified`, `echo-subsystem.net`) from surface bookmark chips per `arg_plan.md` §6 (keep address-bar routing!), add `"Save Page/Spool to KiloOS VFS"` (`/home/downloads/`), and route new `kweb://` parodies (`slashnet`, `trapster`, `cabled`, `scallion`, `demoscene`, `rfc-archive`). |
+| `KBBS` | `KiloOS/public/apps/kbbs.html`, `KBBS/main.c` | Phase VI VFS & Door Game Mesh: allow downloading ANSI `.NFO` / `.TXT` bulletins from KBBS File Area directly into KiloOS VFS (`/home/bbs/`) and launching `KPad` or `KHex` via `OS_LAUNCH_APP` to inspect them. |
+| `KScript` | `KiloOS/public/apps/kscript.html`, `KScript/main.c` | Phase VI VFS Scripting API: allow scripts in `KScript` to read/write virtual files in KiloOS VFS (`vfs.read()`, `vfs.write()`, `vfs.list()`), save `.ks` scripts to `/home/scripts/`, and sync with Win32 C interpreter. |
+| `KSteno` | `KiloOS/public/apps/ksteno.html`, `KSteno/main.c` | Phase VI VFS Carrier Pipeline: load/save steganographic carrier files directly from KiloOS VFS (`/home/media/`), add chi-square steganalysis detector, `"Send Payload to KCipher"` IPC button, and Win32 C parity. |
+| `KQuest` | `KiloOS/public/apps/kquest.html`, `KQuest/main.c` | Phase VI RFMS Co-Op Tavern & Guild Arena: integrate `retro_multiplayer.js` for online Tavern Party Raid / Arena Duel (explicit Connect gate, 25s AI party fallback) + VFS hero character sheet export (`/home/saves/kquest_hero.json`). |
+| `KStarForge` | `KiloOS/public/apps/kstarforge.html`, `KStarForge/main.c` | Phase VI RFMS Blueprint Exchange & Fleet Skirmish: integrate `retro_multiplayer.js` for online ship blueprint sharing & tactical test skirmish (explicit Connect gate, 25s AI fallback) + VFS `/home/blueprints/` save/load. |
+| `KAnomaly` | `KiloOS/public/apps/kanomaly.html`, `KAnomaly/main.c` | Phase VI VFS Signal Bridge: allow exporting demodulated subterranean signal frames directly to `/sys/anomaly_capture.sig` in KiloOS VFS and launching `KMatrix` or `KHex` via `OS_LAUNCH_APP` for cross-app decoding. |
+| `KDB` | `KiloOS/public/apps/kdb.html`, `KDB/main.c` | Phase VI VFS Database Mount & Chart Bridge: mount/save `.kdb` / `.csv` tables directly in KiloOS VFS (`/home/data/`) and add `"Plot in KGraph"` IPC launch (`OS_LAUNCH_APP` to `kgraph`). |
 
 ---
 
@@ -176,7 +194,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 > **POLICY**: Applications listed below have reached feature completion, high stability, and mature visual/audio design.
 > **EXCLUSION RULE**: These applications are **permanently removed from all active worker queues** until the Director personally directs otherwise.
-> **SKIP ADDICTION PREVENTION**: If any agent (except `kilo-graphics` skipping non-game apps) encounters or decides to skip an app because it is complete or mature, it must NOT rotate the app to the queue bottom! The agent MUST record the app in this table, remove it from all upcoming queues and targets in `next_work.md`, and advance to the next non-mature app.
+> **SKIP ADDICTION PREVENTION**: If any agent (except `kilo-graphics` skipping non-game apps) encounters or decides to skip an app because it is complete or mature, it must NOT rotate the app to the queue bottom! Use `python scripts/advance_turn.py ... --quarantine-mature "<summary>"` to record the app in this table and purge it from all active queues.
 
 | Application | Primary File | Pass Count / Date | Category | Summary of Mature State |
 |---|---|---|---|---|
@@ -208,7 +226,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | **KChart** | `KiloOS/public/apps/kchart.html` | Pass 6+ (2026-10-20) | Office / Visualization | Feature-complete 1999 spreadsheet & business chart studio; 10 engines, regressions & OLS fit, YM2612 FM / SPC700 sonification, 7 export formats, dual Win32 C parity, full state persistence. |
 | **KSimon** | `KiloOS/public/apps/ksimon.html` | Pass 5 (2026-10-20) | Arcade / Memory | Feature-complete 3D audio-visual memory console; 9 modes (incl. 20-stage campaign & online duel), dual Win32 native client parity, full F5/F9 state persistence, first-run tutorial integrity, zero glints. |
 | **KWords** | `KiloOS/public/apps/kwords.html` | Pass 5 (2026-10-21) | Word / Puzzle | Feature-complete retro word search with 20-stage campaign, 12 themes, custom puzzle creator/import/export, replay scrubber, dual Win32 native client parity, full F5/F9 state persistence, first-run tutorial integrity. |
-| **KColosseum** | KiloOS/public/apps/kcolosseum.html | Pass 5 (2026-10-21) | Strategy / RPG | Gladiatorial ludus management & 10-stage arena combat; 6 facility upgrades, F5/F9 state persistence, first-run tutorial integrity, replay telemetry, dual Win32 native client parity. |
+| **KColosseum** | `KiloOS/public/apps/kcolosseum.html` | Pass 5 (2026-10-21) | Strategy / RPG | Gladiatorial ludus management & 10-stage arena combat; 6 facility upgrades, F5/F9 state persistence, first-run tutorial integrity, replay telemetry, dual Win32 native client parity. |
 | **KPad** | `KiloOS/public/apps/kpad.html` | Pass 6+ (2026-10-22) | Office / Code Editor | Feature-complete multi-tab code & text workstation; markdown split preview, outline sidebar with touch drag, regex workbench, hex inspector, AES-256 lock, dual Win32 C parity, full F5/F9 state persistence. |
 | **KPing** | `KiloOS/public/apps/kping.html` | Pass 6+ (2026-10-22) | Network / Diagnostics | Precision ICMP echo, PMTU sweep, subnet LAN sweep & topo trace, DNS, BGP AS route, RFC 8290 bufferbloat, RTDB mesh, dual Win32 C parity, F5/F9 state. |
 | **KTerm** | `KiloOS/public/apps/kterm.html` | Pass 6+ (2026-10-22) | System / Shell | Feature-complete multi-tab terminal emulator; responsive viewport layout, prompt & input font zoom sync, CRT themes, F5/F9 state, dual Win32 C parity. |
@@ -218,13 +236,18 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-23T07:22:00-07:00 — kilo-adhoc: Fleet Architecture & Phase VI Direction Upgrade (Skills, Orchestrator & Pipeline Tables)**
+  - Status: PASS ✅ (0 regressions, Vite build clean, security_lint 100% PASS).
+  - 1-Command Automation: Added `scripts/verify_turn.py` and `scripts/advance_turn.py` (plus `scripts/check_sizes.py` alias), cutting post-edit verification and queue handoff from 7-9 tool calls down to 2 deterministic calls.
+  - Orchestrator Hardening: Fixed pre-flight auto-skip regex bug so `orchestrate.py` fast-forwards past Mature/inappropriate targets in-place and dispatches immediately in the same slot; added post-turn uncommitted work salvage and prompt Mission Spec injection.
+  - Phase VI Direction: Reworked `next_work.md` into 7 staggered 10-target Mission Pipeline Tables launching **Phase VI: System Convergence** (KiloOS VFS/IPC cross-app mesh, RFMS co-op/duel multiplayer across deep games, and 6 canonical 1999 `kweb://` destinations).
 - **2026-10-23T07:12:00-07:00 — kilo-creator: kweb://portal (KiloAuctions '99 Hardware Auction Block & Web Portal Expansion)**
   - KiloAuctions '99 Suite: Built authentic 1999 auction block featuring 12 vintage lots (Voodoo 3, SB Live! Platinum, Zip 250, Surreal Tournament '99, ThinkPad 770X, Gravis UltraSound, Palm V, Roland SC-55mkII) with live bids, proxy increments, and anti-sniping protection.
   - Interactive Commerce: Implemented Dot-Com Venture capital wallet ($2,500 budget), "Buy-It-Now" instant checkout, custom user gear listing modal, watchlist toggles, and live countdown timer ticker.
   - Gavel Synthesis & Bill of Sale: Added dual-strike wooden gavel sound via procedural Web Audio API, plus downloadable ASCII Bill of Sale & escrow certificate generator.
   - Directory & Search Alignment: Linked KiloAuctions into quick bar, tab row, search index, and registered missing fleet apps (`kquarantine`, `kcontribute`) to achieve 100% fleet search coverage.
   - Verification: Startup test PASS (670.4 KB < 999 KB, 0 JS errors, hit-test unblocked), Vite build clean (929ms), security lint PASS.
-  - Queue Handoff: Advanced `kilo_creator` and `virtual_web_target` to `kweb://webring`; rotated active agent to `kilo-graphics`.
+  - Queue Handoff: Advanced `kilo_creator` and `virtual_web_target` to `kweb://slashnet`; rotated active agent to `kilo-graphics`.
 - **2026-10-23T05:35:00-07:00 — kilo-expander: KConverter (Dimensional Conversion & Precision Expansion)**
   - Status: PASS ✅ (0 runtime errors, startup check clean 124.4 KB, Vite build clean in 486ms).
   - Feature Expansion: Added 5 categories (Data Rate, Angle/GPS, Audio Pitch, Energy, Power) for 14 total categories.
@@ -246,9 +269,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Keyboard Navigation: Vault list keyboard traversal (ArrowUp/Down, Enter/c to copy pass, u for user, e for edit, Del for delete).
   - Parity & Builds: Win32 C builds clean (25 KB); dual parity verified; security lint ALL PASS.
   - Handoff: Advanced kilo-usability to KTrader; rotated active agent to kilo-qa.
-- **2026-10-23T00:36:00-07:00 — kilo-tester: KBase (Interactive UI Audit & Mature Quarantine)**
-  - Status: PASS ✅ (0 runtime errors, 137 UI buttons, 37 presets, full keyboard shortcut suite verified).
-  - Interactive Audit: Verified endian toggle/swap [E], bitmask presets [D], text copy [C], radix 2-36, IEEE-754, ULEB/SLEB128, and F5/F9 state persistence.
-  - Parity & Builds: Dual-target parity confirmed; Win32 C compiled clean (27 KB); KiloOS build clean (731ms); startup check PASS (159.7 KB).
-  - Mature Quarantine: Promoted KBase to Mature Applications table; purged from all active queues per Director mandate.
-  - Handoff: Advanced kilo-tester and kilo-usability to KPass; rotated active agent to kilo-usability.

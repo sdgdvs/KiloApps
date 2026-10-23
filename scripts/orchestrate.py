@@ -657,23 +657,20 @@ def validate_next_work_file(path: Path) -> tuple[bool, str]:
 
 
 TOKEN_EFFICIENCY_SUFFIX = (
-    " TOKEN EFFICIENCY & BUDGET DIRECTIVE: "
-    "Complete this turn in <= 30 tool calls. "
-    "COMMIT CHECKPOINT: Once you have substantive edits or reach ~15 tool calls, begin wrapping up, verify changes, update next_work.md, and commit immediately. Do not exceed 30 tool calls. "
-    "QUALITY & VERIFICATION DIRECTIVE: "
-    "Plan iteratively and implement robust, high-craft functionality with clean dual-target parity (Web HTML + Win32 C). "
-    "Inspect your diffs after editing to verify syntax, logic, and dual-target parity (Web HTML + Win32 C). "
-    "Do NOT read historical archive files (archive/) or receipts. "
-    "Verify builds (npm run build in KiloOS; build.bat if native C exists) and run automated startup check (uv run scripts/test_app_startup.py --app <target>). "
-    "MATURE QUARANTINE DIRECTIVE: If you decide to skip an app because it is complete or mature (except graphics skipping non-game apps), do NOT rotate it to the queue bottom! "
-    "You MUST move the app into '## Mature Applications (Archived from Active Queues)' in next_work.md and remove it from ALL active queues so it is not repeatedly skipped. "
-    "Update next_work.md with a <=8 line terse log, commit, push, and STOP immediately."
+    " TOKEN EFFICIENCY & FAST VERIFICATION DIRECTIVE: "
+    "Complete this turn in <= 25 tool calls. "
+    "COMMIT CHECKPOINT: Once you have substantive edits or reach ~12 tool calls, wrap up immediately: "
+    "1) Run ONE-COMMAND verification: `python scripts/verify_turn.py --app <target>` (validates size <999KB, native C build if modified, startup check, Vite build, and security lint in 1 call). "
+    "2) Run ONE-COMMAND queue handoff & logging: `python scripts/advance_turn.py --agent <agent> --app <target> --title \"<Summary>\" --bullet \"<Status>\" --bullet \"<Key change>\"` (or pass `--quarantine-mature \"<Summary>\" --category \"<Category>\"` if promoting to Mature). "
+    "3) Commit (`git add -A && git commit -m ... && git push origin main`) and STOP immediately. "
+    "Do NOT read historical archive files (archive/) or receipts."
 )
 
 INAPPROPRIATE_IMAGEN_TARGETS = {
     "kasteroids", "kchess", "kgo", "kreversi", "ktowers", "kconnect4",
     "kterm", "kscript", "khex", "kdragon", "kcolony", "kwizard", "kfarm",
-    "kwords", "khangman", "ksudoku", "kcalc", "kmine", "kmines", "knetmap"
+    "kwords", "khangman", "ksudoku", "kcalc", "kmine", "kmines", "knetmap",
+    "kmaze", "kmech", "kabyss", "kcolosseum", "kspace", "kfortress", "kquest"
 }
 
 # Pure-utility / text-only apps where procedural soundscape composition is not appropriate.
@@ -687,73 +684,84 @@ INAPPROPRIATE_SOUNDSCAPE_TARGETS = {
 }
 
 
+def extract_target_mission_spec(target: str) -> str:
+    """Extracts the 1-line mission spec for `target` from next_work.md pipeline tables."""
+    if not target or not NEXT_WORK_FILE.exists():
+        return ""
+    try:
+        import re
+        content = NEXT_WORK_FILE.read_text(encoding="utf-8", errors="replace")
+        escaped = re.escape(target.strip())
+        m = re.search(rf"^\|\s*[`*]*{escaped}[`*]*\s*\|\s*([^|\n]+)\|\s*([^|\n]+)\|", content, re.MULTILINE | re.IGNORECASE)
+        if m:
+            files_col = m.group(1).strip()
+            spec_col = m.group(2).strip()
+            return f" [Target Files: {files_col} | Mission Spec: {spec_col}]"
+    except Exception:
+        pass
+    return ""
+
+
 def build_agent_prompt(agent: str, targets: dict) -> str:
+    target = str(targets.get(agent.replace("-", "_"), "the next app in queue"))
+    spec_hint = extract_target_mission_spec(target)
     if agent == "kilo-tester":
-        target = targets.get("kilo_tester", "the next app in queue")
         return (
             f"Activate skill 'kilo-tester'. "
-            f"Perform interactive UI audit and inline fixes for target app '{target}' per next_work.md. "
-            f"Verify builds, advance queue, update next_work.md, and git commit/push. Process 1 app only then STOP."
+            f"Perform interactive UI audit, VFS/IPC check, and inline fixes for target app '{target}' per next_work.md.{spec_hint} "
+            f"Verify with `python scripts/verify_turn.py --app {target}`, advance queue with `python scripts/advance_turn.py`, and git commit/push. Process 1 app only then STOP."
             + TOKEN_EFFICIENCY_SUFFIX
         )
     elif agent == "kilo-qa":
-        target = targets.get("kilo_qa", "the next app in queue")
         return (
             f"Activate skill 'kilo-qa'. "
-            f"Perform Pass 5 audit and fixes for target app '{target}' per next_work.md. "
-            f"Verify builds, advance queue, update next_work.md, and git commit/push. Process 1 app only then STOP."
+            f"Perform Pass 5 audit, F5/F9 persistence, and dual Win32 C parity fixes for target app '{target}' per next_work.md.{spec_hint} "
+            f"Verify with `python scripts/verify_turn.py --app {target} --build-native`, advance queue with `python scripts/advance_turn.py`, and git commit/push. Process 1 app only then STOP."
             + TOKEN_EFFICIENCY_SUFFIX
         )
     elif agent == "kilo-creator":
-        target = targets.get("kilo_creator", "the next virtual web / ARG concept per next_work.md")
         if "kweb://" in target or "Virtual Web" in target or "public/web" in target:
             return (
                 f"Activate skill 'kilo-creator'. "
-                f"Design and implement Virtual 1999 Web destination or deep expansion for '{target}' in KiloOS/public/web/ per next_work.md and arg_plan.md (Anti-Potemkin standard: fully functioning interactive Web 1.0 experience, <999KB). "
-                f"Link in KNet/portal/webring, verify builds, advance queue, update next_work.md, and git commit/push. Process 1 target only then STOP."
+                f"Design and implement Virtual 1999 Web destination or deep expansion for '{target}' in KiloOS/public/web/ per next_work.md and arg_plan.md (Anti-Potemkin standard: fully functioning interactive Web 1.0 experience, <999KB).{spec_hint} "
+                f"Link in KNet/portal/webring, verify with `python scripts/verify_turn.py --app {target}`, advance queue with `python scripts/advance_turn.py`, and git commit/push. Process 1 target only then STOP."
                 + TOKEN_EFFICIENCY_SUFFIX
             )
         return (
             f"Activate skill 'kilo-creator'. "
-            f"Design and implement new application or deep expansion for '{target}' per next_work.md. "
-            f"Verify builds (<999KB), register in App.jsx, advance queue, update next_work.md, and git commit/push. Process 1 app only then STOP."
+            f"Design and implement new application or deep expansion for '{target}' per next_work.md.{spec_hint} "
+            f"Verify builds (<999KB), register in App.jsx, advance queue with `python scripts/advance_turn.py`, and git commit/push. Process 1 app only then STOP."
             + TOKEN_EFFICIENCY_SUFFIX
         )
     elif agent == "kilo-graphics":
-        target = targets.get("kilo_graphics", "the next game in queue")
         return (
             f"Activate skill 'kilo-graphics'. "
-            f"Replace programmer art with Imagen 3 generated sprites and backgrounds for '{target}' per next_work.md. "
-            f"If Imagen 3 asset replacement is not appropriate for '{target}', skip turn cleanly with format: '⏭️ Skip — Imagen 3 asset replacement not appropriate for {target}'. "
+            f"Replace programmer art with Imagen 3 generated sprites and backgrounds for '{target}' per next_work.md.{spec_hint} "
+            f"If Imagen 3 asset replacement is not appropriate for '{target}', skip turn cleanly with `python scripts/advance_turn.py`. "
             f"Search for and remove any rotating specular glints or traveling perimeter border dots. "
-            f"Verify builds, advance queue, update next_work.md, and git commit/push. Process 1 app only then STOP."
+            f"Verify with `python scripts/verify_turn.py --app {target}`, advance queue with `python scripts/advance_turn.py`, and git commit/push. Process 1 app only then STOP."
             + TOKEN_EFFICIENCY_SUFFIX
         )
     elif agent == "kilo-soundscape":
-        target = targets.get("kilo_soundscape", "the next app in queue")
         return (
             f"Activate skill 'kilo-soundscape'. "
-            f"Compose unique procedural FM synthesis audio (YM2612 2-Op / SPC700) for '{target}' per next_work.md. "
-            f"Replace existing generic FM presets with genre-appropriate music: melodic themes, bass lines, ambient drones, UI earcons, and action stingers. "
-            f"Apply real chiptune composition techniques: proper voice leading, chord progressions, rhythmic variation, and expressive FM patch design. "
-            f"If procedural audio is not appropriate for '{target}' (pure utility/text tool), skip turn cleanly with format: '⏭️ Skip — Procedural soundscape not appropriate for {target}'. "
-            f"Verify builds, advance queue, update next_work.md, and git commit/push. Process 1 app only then STOP."
+            f"Compose unique procedural FM synthesis audio (YM2612 2-Op / SPC700) for '{target}' per next_work.md.{spec_hint} "
+            f"Replace existing generic FM presets with genre-appropriate 6-channel music: melodic themes, contrary counterpoint, shell voicings, swing-tick groove, UI earcons, and action stingers. "
+            f"Verify with `python scripts/verify_turn.py --app {target}`, advance queue with `python scripts/advance_turn.py`, and git commit/push. Process 1 app only then STOP."
             + TOKEN_EFFICIENCY_SUFFIX
         )
     elif agent == "kilo-usability":
-        target = targets.get("kilo_usability", "the next app in queue")
         return (
             f"Activate skill 'kilo-usability'. "
-            f"Perform UI/UX and usability pass for target app '{target}' per next_work.md. "
-            f"Verify builds, advance queue, update next_work.md, and git commit/push. Process 1 app only then STOP."
+            f"Perform UI/UX, responsive layout, HiDPI canvas, and keyboard/VFS shortcut usability pass for target app '{target}' per next_work.md.{spec_hint} "
+            f"Verify with `python scripts/verify_turn.py --app {target}`, advance queue with `python scripts/advance_turn.py`, and git commit/push. Process 1 app only then STOP."
             + TOKEN_EFFICIENCY_SUFFIX
         )
     elif agent == "kilo-expander":
-        target = targets.get("kilo_expander", "the next app in queue")
         return (
             f"Activate skill 'kilo-expander'. "
-            f"Perform deep feature expansion for target app '{target}' per next_work.md. "
-            f"Verify builds, advance queue, update next_work.md, and git commit/push. Process 1 app only then STOP."
+            f"Perform deep feature expansion (KiloOS VFS/IPC integration, RFMS online multiplayer, and domain workstation depth) for target app '{target}' per next_work.md.{spec_hint} "
+            f"Verify with `python scripts/verify_turn.py --app {target}`, advance queue with `python scripts/advance_turn.py`, and git commit/push. Process 1 app only then STOP."
             + TOKEN_EFFICIENCY_SUFFIX
         )
     elif agent == "kilo-planner":
@@ -773,118 +781,72 @@ def build_agent_prompt(agent: str, targets: dict) -> str:
 
 
 def handle_preflight_skip(agent: str, targets: dict, frontmatter: dict, node_id: str) -> bool:
-    """Pre-flight check in Python to auto-skip known inappropriate targets with 0 LLM tokens."""
-    target = str(targets.get(agent.replace("-", "_"), ""))
-    is_skip = False
-    skip_reason = ""
-
-    if agent == "kilo-graphics":
-        if target.lower() in INAPPROPRIATE_IMAGEN_TARGETS or "(skip)" in target.lower():
-            is_skip = True
-            skip_reason = f"Imagen 3 asset replacement not appropriate for {target} (pure vector, board game, or mature art)"
-
-    if agent == "kilo-soundscape":
-        if target.lower() in INAPPROPRIATE_SOUNDSCAPE_TARGETS or "(skip)" in target.lower():
-            is_skip = True
-            skip_reason = f"Procedural soundscape not appropriate for {target} (pure utility/text tool)"
-
-    if not is_skip:
-        return False
-
-    log(f"[PRE-FLIGHT] Auto-skipping turn for agent '{agent}', target '{target}': {skip_reason}")
-    now_utc = datetime.datetime.now(datetime.timezone.utc)
-    now_iso = now_utc.strftime("%Y-%m-%dT%H:%M:%S%z")
-
+    """
+    Pre-flight check in Python to auto-advance past Mature or inappropriate targets with 0 LLM tokens.
+    Instead of wasting the scheduled turn slot, advances `targets[fm_target_key]` in-place to the
+    next valid target in `next_work.md` and returns False so `orchestrate.py` immediately dispatches
+    the agent on the valid target!
+    """
     try:
-        # 1. Advance rotation
-        rotation = frontmatter.get("agent_rotation", [
-            "kilo-creator", "kilo-graphics", "kilo-soundscape", "kilo-tester", "kilo-usability", "kilo-qa", "kilo-expander"
-        ])
-        curr_idx = rotation.index(agent) if agent in rotation else 0
-        next_agent = rotation[(curr_idx + 1) % len(rotation)]
-
-        # 2. Advance target queue in next_work.md
-        content = NEXT_WORK_FILE.read_text(encoding="utf-8", errors="replace")
-        import re
-
-        # Map agents to their queue section header prefix and frontmatter target key
-        _QUEUE_PATTERNS = {
-            "kilo-graphics": (r"### 2\. Game Content \& Graphics Queue", "kilo_graphics"),
-            "kilo-soundscape": (r"### 3\. Procedural Audio \& Soundscape Queue", "kilo_soundscape"),
-        }
-        queue_pattern, fm_target_key = _QUEUE_PATTERNS.get(agent, (None, agent.replace("-", "_")))
-
-        next_target = ""
-        if queue_pattern:
-            queue_match = re.search(queue_pattern + r".*?\n- \*\*Current Target\*\*:.*?\n- \*\*Upcoming Queue\*\*: ([^\n]+)", content)
-            if queue_match:
-                upcoming_items = [x.strip() for x in queue_match.group(1).split(",")]
-                if upcoming_items:
-                    next_target = upcoming_items[0].split()[0]
-                    new_upcoming = ", ".join(upcoming_items[1:] + [target])
-                    content = content.replace(f"- **Current Target**: {target}", f"- **Current Target**: {next_target}")
-                    content = content.replace(queue_match.group(1), new_upcoming)
-
-        if not next_target:
-            next_target = target
-
-        # Update frontmatter YAML in content
-        parts = content.split("---", 2)
-        if len(parts) >= 3:
-            import yaml
-            fm_data = yaml.safe_load(parts[1])
-            fm_data["current_agent"] = next_agent
-            if "current_targets" in fm_data and isinstance(fm_data["current_targets"], dict):
-                fm_data["current_targets"][fm_target_key] = next_target
-            fm_data["last_run"] = {
-                "agent": agent,
-                "app": target,
-                "timestamp": now_iso
-            }
-            new_fm_str = yaml.dump(fm_data, sort_keys=False).strip()
-            content = f"---\n{new_fm_str}\n---" + parts[2]
-
-        # Insert log entry
-        log_entry = (
-            f"- **{now_iso} — {agent}: {target} (Zero-Token Auto-Skip — Inappropriate Target)**\n"
-            f"  - Status: ⏭️ Skip — {skip_reason}.\n"
-            f"  - Optimization: Handled via orchestrator pre-flight zero-token auto-skip.\n"
-            f"  - Queue: Advanced `{agent}` to `{next_target}`; rotation handoff to `{next_agent}`.\n\n"
-        )
-        marker = "## Recent Execution Logs (Max 5 Entries)\n\n"
-        if marker in content:
-            content = content.replace(marker, marker + log_entry)
-
-        NEXT_WORK_FILE.write_text(content, encoding="utf-8")
-
-        # Zero-discard rotation: ensure next_work.md never exceeds cap during auto-skips
+        from scripts.advance_turn import advance_section_and_pick_next, get_mature_apps
+    except ImportError:
         try:
-            rot_skip = rotate_next_work_logs(next_work_path=NEXT_WORK_FILE)
-            if rot_skip.get("archived", 0) > 0:
-                log(f"[PRE-FLIGHT ROTATION] Archived {rot_skip['archived']} old logs to archive/fleet_execution_archive.md.")
-                subprocess.run(["git", "add", "archive/fleet_execution_archive.md"], cwd=str(REPO_ROOT), capture_output=True)
+            from advance_turn import advance_section_and_pick_next, get_mature_apps
+        except ImportError:
+            return False
+
+    fm_target_key = agent.replace("-", "_")
+    content = NEXT_WORK_FILE.read_text(encoding="utf-8", errors="replace")
+    mature_set = get_mature_apps(content)
+
+    advanced_any = False
+    for _ in range(8):
+        target = str(targets.get(fm_target_key, "")).strip()
+        if not target:
+            break
+        t_low = target.lower()
+        skip_reason = ""
+
+        if t_low in mature_set:
+            skip_reason = f"{target} is already in Mature Applications quarantine"
+        elif agent == "kilo-graphics" and (t_low in INAPPROPRIATE_IMAGEN_TARGETS or "(skip)" in t_low):
+            skip_reason = f"Imagen 3 asset replacement not appropriate for {target}"
+        elif agent == "kilo-soundscape" and (t_low in INAPPROPRIATE_SOUNDSCAPE_TARGETS or "(skip)" in t_low):
+            skip_reason = f"Procedural soundscape not appropriate for {target}"
+
+        if not skip_reason:
+            break
+
+        log(f"[PRE-FLIGHT FAST-FORWARD] Advancing {agent} past '{target}' ({skip_reason})...")
+        content, next_target = advance_section_and_pick_next(
+            content=content,
+            agent=agent,
+            completed_app=target,
+            mature_set=mature_set,
+            quarantined=(t_low in mature_set),
+        )
+        if not next_target or next_target.lower() == t_low:
+            break
+        targets[fm_target_key] = next_target
+        advanced_any = True
+
+    if advanced_any:
+        try:
+            parts = content.split("---", 2)
+            if len(parts) >= 3:
+                import yaml
+                fm_data = yaml.safe_load(parts[1]) or {}
+                if "current_targets" not in fm_data or not isinstance(fm_data["current_targets"], dict):
+                    fm_data["current_targets"] = {}
+                fm_data["current_targets"][fm_target_key] = targets[fm_target_key]
+                new_fm_str = yaml.dump(fm_data, sort_keys=False, allow_unicode=True).strip()
+                content = f"---\n{new_fm_str}\n---" + parts[2]
+            NEXT_WORK_FILE.write_text(content, encoding="utf-8")
+            log(f"[PRE-FLIGHT FAST-FORWARD] Updated {agent} active target to '{targets[fm_target_key]}'. Proceeding to dispatch in same turn!")
         except Exception as e:
-            log(f"Warning in auto-skip log rotation: {e}")
+            log(f"Warning persisting pre-flight target fast-forward: {e}")
 
-        # 3. Commit and push
-        subprocess.run(["git", "add", "next_work.md"], cwd=str(REPO_ROOT), capture_output=True)
-        commit_msg = f"content(games): auto-skip {target} ({skip_reason})"
-        subprocess.run(["git", "commit", "-m", commit_msg], cwd=str(REPO_ROOT), capture_output=True)
-        push_env = os.environ.copy()
-        push_env["GIT_TERMINAL_PROMPT"] = "0"
-        push_env["GCM_INTERACTIVE"] = "never"
-        subprocess.run(["git", "push", "origin", "main"], cwd=str(REPO_ROOT), capture_output=True, env=push_env)
-
-        # 4. Receipt & Session
-        write_turn_receipt(agent=agent, model="orchestrator-preflight", duration=0.1, returncode=0, target=target)
-        record_turn_in_session()
-        broadcast_node_heartbeat(node_id, status="active", target=target)
-        log(f"[PRE-FLIGHT] Auto-skip completed in 0.1s. 0 tokens consumed.")
-        return True
-    except Exception as e:
-        log(f"Warning in pre-flight skip handling: {e}")
-        return False
-
+    return False
 
 
 def write_turn_receipt(agent: str, model: str, duration: float, returncode: int, target: str = "") -> Path:
@@ -1126,6 +1088,21 @@ def main():
         # Post-agent Git check: ensure unpushed commits and node state are synchronized to remote
         if process.returncode == 0 and not args.dry_run:
             try:
+                # Post-turn Uncommitted Work Salvage: if agent finished next_work.md right as --print-timeout fired
+                nw_status = subprocess.run(
+                    ["git", "status", "--porcelain", "next_work.md"],
+                    cwd=str(REPO_ROOT),
+                    capture_output=True,
+                    text=True,
+                )
+                if nw_status.returncode == 0 and nw_status.stdout.strip():
+                    log(f"[POST-TURN SALVAGE] Detected completed uncommitted turn in working tree for {agent} ({target_app}). Validating security lint...")
+                    lint_res = subprocess.run([sys.executable, "scripts/security_lint.py"], cwd=str(REPO_ROOT), capture_output=True)
+                    if lint_res.returncode == 0:
+                        subprocess.run(["git", "add", "-u"], cwd=str(REPO_ROOT), capture_output=True)
+                        subprocess.run(["git", "commit", "-m", f"feat({agent}): auto-salvage completed turn for {target_app}"], cwd=str(REPO_ROOT), capture_output=True)
+                        log(f"[POST-TURN SALVAGE] Committed completed turn for {agent} ({target_app}).")
+
                 # Post-turn 0-token rotation: ensure new logs written by agent don't exceed cap
                 rot_res = rotate_next_work_logs(next_work_path=NEXT_WORK_FILE)
                 if rot_res.get("archived", 0) > 0:

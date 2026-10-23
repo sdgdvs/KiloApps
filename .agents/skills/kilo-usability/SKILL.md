@@ -1,61 +1,46 @@
 ---
 name: kilo-usability
 description: >-
-  Audits and refines user experience, responsive layout, window sizing, and input ergonomics across KiloApps.
-  Use this skill to fix clipped layouts, ensure crisp HiDPI canvas scaling, add clear help guides (F1/H),
-  tune default window sizes in KiloOS/src/App.jsx, verify builds, log tersely to next_work.md,
-  advance the queue handoff, and commit/push.
+  Audits and refines user experience, responsive layout, HiDPI canvas scaling, focus trapping,
+  keyboard/VFS ergonomics, and window sizing across KiloApps using 1-command verification/handoff.
 ---
 
-# KiloApps Usability & UX Skill
+# KiloApps Usability & UX Skill (`kilo-usability`)
 
-This skill executes usability, layout, and UX enhancements on exactly ONE application per turn (or KiloOS shell).
+Executes UX, responsive layout, accessibility, and input ergonomics enhancements on **exactly ONE application per turn**.
 
-## Quality & Craft Directive
-- **Tool Call Budget (<= 30 tool calls)**: Complete this turn in <= 30 tool calls.
-- **Commit Checkpoint (~15 tool calls)**: Once substantive edits are made or you reach ~15 tool calls, wrap up modifications, run verification, update `next_work.md`, and commit/push.
-- **Iterative Craft**: Audit window dimensions, interactive layout, responsive design, keyboard shortcuts, and canvas HiDPI crispness. Inspect diffs and code after editing to verify layout stability and dual web/native parity.
-- **Validation**: Run `cd KiloOS && npm run build` and `uv run scripts/test_app_startup.py --app <TargetApp>` to ensure startup modals dismiss cleanly and gameplay/UI surfaces are not occluded.
-- **No Full-Repo Test Suites**: Run only target build/startup verification. NEVER run repo-wide suites (`quality_gate.js`, screenshot generation).
-- **No Archives/Receipts**: Never read `archive/` or `.agents/receipts/`.
-- Advance queue in `next_work.md`, commit, push, and STOP immediately.
+## ⚡ Flash Execution & Tool-Budget Protocol (CRITICAL)
+- **Tool Call Budget (<= 25 tool calls)** & **Commit Checkpoint (~12 tool calls)**:
+  - Inspect `KiloOS/public/apps/k<name>.html` (and `<AppName>/main.c` if native C exists), apply high-craft responsive layout, HiDPI canvas, focus trap, and keyboard/VFS UX improvements, then verify and hand off!
+- **1-Command Verification**:
+  ```powershell
+  python scripts/verify_turn.py --app <TargetApp>
+  ```
+- **1-Command Queue Handoff & Logging**:
+  ```powershell
+  python scripts/advance_turn.py --agent kilo-usability --app "<TargetApp>" `
+    --title "Usability, Responsive Layout & Ergonomics Polish" `
+    --bullet "Status: PASS ✅ (<copy summary from verify_turn.py>)." `
+    --bullet "Layout & HiDPI: <responsive wrapping, compact viewport support, devicePixelRatio crispness>." `
+    --bullet "Keyboard & Modals: <F1/H help, Escape dismissal, focus trapping, high-contrast focus rings>."
+  ```
+  *(If the app is now completely polished and mature across all passes, add `--quarantine-mature "<Mature summary>" --category "<Category>"` to promote it to Mature Applications!)*
+- **Commit, Push & STOP**:
+  ```powershell
+  git add -A
+  git commit -m "ux(usability): usability and layout polish for <TargetApp>"
+  git push origin main
+  ```
 
-## Pre-flight
-1. Ensure git working tree is clean: `git status`.
-2. Pull latest changes: `git pull --rebase`.
-3. Open [next_work.md](../../next_work.md) to inspect the usability target (`current_targets.kilo_usability`).
+---
 
 ## Usability Focus Areas
-1. **Window Dimensions & Layout**:
-   - Verify that the app's default window dimensions in `KiloOS/src/App.jsx` (`defaultWidth`, `defaultHeight`) comfortably display the full UI without awkward internal scrollbars or clipped action buttons.
-2. **First-Run Onboarding & Help**:
-   - Ensure a visible, easily discoverable help prompt exists (e.g. `Press H or F1 for Help / Controls`).
-   - Modal help guides must have clear instructions, hotkey lists, and be easily dismissed with Escape, backdrop click, or Close button.
-3. **Canvas & Font Crispness**:
-   - Ensure canvas-based apps account for `window.devicePixelRatio` so rendering is crisp on high-DPI displays rather than blurry.
-4. **Responsive Controls & Touch/Mouse Handling**:
-   - Controls must be sized for easy clicking/tapping with clear hover/active feedback.
-5. **Mature Application Quarantine Protocol (DIRECTOR MANDATE - CRITICAL)**:
-   - If an app has undergone multiple passes and possesses clean layout, crisp rendering, robust keyboard navigation, and intuitive controls:
-     - **DO NOT rotate it to the queue bottom!** (Rotating to the bottom causes endless skip loops that waste tokens repeatedly).
-     - **Quarantine to Mature**: Move the app into `## Mature Applications (Archived from Active Queues)` in `next_work.md`.
-     - **Remove from Queues**: Remove the app completely from all active queues and upcoming lists across `next_work.md`.
-     - **Advance Target**: Advance `current_targets.kilo_usability` to the next non-mature app in line.
-     - Log: `⏭️ Skip — promoted <TargetApp> to Mature Applications quarantine.` Advance rotation, commit, push, and STOP cleanly.
-
-## Verification
-1. Verify web app build: `cd KiloOS && npm run build`.
-2. Verify size constraint: `< 999 KB`.
-
-## Queue Handoff & Terse Logging (CRITICAL)
-1. **Edit [next_work.md](../../next_work.md)**:
-   - Advance `current_targets.kilo_usability` to next app in queue.
-   - Set `current_agent` to next scheduled agent in `agent_rotation`.
-   - Set `status: ready`.
-   - Update `last_run.agent: kilo-usability`, `last_run.app: <TargetApp>`, and `last_run.timestamp`.
-   - Append terse run log (strict limit: ≤ 8 lines of concise bullet points).
-2. **Commit and Push**:
-   - `git add <modified files> next_work.md`
-   - `git commit -m "ux(usability): usability and layout polish for <TargetApp>"`
-   - `git push` (if rejected, run `git pull --rebase` then push).
-   - STOP immediately.
+1. **Responsive Viewport & Window Ergonomics**:
+   - Ensure toolbars, sidebars, and tables wrap or scroll cleanly at both default window size (`KiloOS/src/App.jsx`) and narrow/snapped (`50%` width / `<600px`) dimensions without clipped buttons.
+2. **HiDPI Canvas & Crisp Typography**:
+   - Scale canvas buffers by `window.devicePixelRatio || 1` and handle `resize` via `requestAnimationFrame`.
+3. **Discoverable Help (`[F1]` / `[H]`) & Modal Focus Trapping**:
+   - Visible statusbar or header pill showing key shortcuts (`[F1/H] Help | [F5/F9] Save/Load | [M] Mute`).
+   - Modals trap `Tab` focus, restore focus on close, and dismiss cleanly on `Escape` or backdrop click.
+4. **High-Contrast Focus & Touch/Pointer Feedback**:
+   - Clear `:focus-visible` outlines and active button states; `touch-action: manipulation` (or `none` on game canvases).

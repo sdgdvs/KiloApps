@@ -1,85 +1,45 @@
 ---
 name: kilo-graphics
 description: >-
-  Executes game visual art overhauls replacing programmer art (vector cutouts, primitive canvas shapes)
-  with Imagen 3 generated game assets (sprites, sprite sheets, seamless backgrounds) via the 2-stage asset pipeline.
-  If the target app is not appropriate for Imagen 3 assets, cleanly skips the turn.
+  Executes game visual art overhauls replacing programmer art (primitive canvas shapes)
+  with Imagen 3 generated game assets (sprites, sprite sheets, seamless backgrounds) via the
+  2-stage asset pipeline, eliminates perimeter glints, and uses 1-command verification/handoff.
 ---
 
-# KiloApps Game Content & Graphics Skill
+# KiloApps Game Content & Graphics Skill (`kilo-graphics`)
 
-This skill executes visual art overhauls replacing programmer art with Imagen 3 generated assets on exactly ONE game per turn.
+Replaces programmer art with Imagen 3 generated assets and eliminates perimeter glints on **exactly ONE game per turn**.
 
-## Token Efficiency Directive
-- **Tool Call Budget (<= 30 tool calls)**: Complete this turn in <= 30 tool calls.
-- **Commit Checkpoint (~15 tool calls)**: Once substantive edits are made or you reach ~15 tool calls, wrap up modifications, run verification, update `next_work.md`, and commit/push.
-- **Skip Turn Fast-Path**: If target is inappropriate for Imagen 3 assets, log skip, advance queue in `next_work.md`, commit, and STOP immediately (do NOT inspect glints, rebuild binaries, or read archives).
-- **Single-App Build Only**: Run only `cd KiloOS && npm run build`. NEVER run full-repo test suites (no `quality_gate.js`, no screenshot regeneration).
-- **No Archives/Receipts**: Never read `archive/` or `.agents/receipts/`.
-- Advance queue in `next_work.md`, commit, push, and STOP immediately.
+## ⚡ Flash Execution & Tool-Budget Protocol (CRITICAL)
+- **Tool Call Budget (<= 25 tool calls)** & **Commit Checkpoint (~12 tool calls)**.
+- **Fast Skip Path (<= 3 tool calls total!)**:
+  - If the target game is pure vector/wireframe, abstract board/text, or **already has production sprites integrated**, **DO NOT compile C binaries, DO NOT run Vite builds, and DO NOT run startup tests!**
+  - Immediately run `python scripts/advance_turn.py --agent kilo-graphics --app <TargetGame> --title "Skip — Asset Suitability" --bullet "⏭️ Skip — Imagen 3 asset replacement not appropriate or already integrated for <TargetGame>."`, commit `next_work.md`, push, and **STOP immediately**!
+- **1-Command Verification (when edits were made)**:
+  ```powershell
+  python scripts/verify_turn.py --app <TargetGame>
+  ```
+- **1-Command Queue Handoff & Logging**:
+  ```powershell
+  python scripts/advance_turn.py --agent kilo-graphics --app "<TargetGame>" `
+    --title "Imagen 3 Visual Assets & Glint Sweep" `
+    --bullet "Status: PASS ✅ (<copy summary from verify_turn.py>)." `
+    --bullet "<Sprites/backgrounds integrated and rendering fallbacks verified>." `
+    --bullet "<Glint sweep & icon uniqueness verified>."
+  ```
+- **Commit, Push & STOP**:
+  ```powershell
+  git add -A
+  git commit -m "content(games): graphics pass for <TargetGame>"
+  git push origin main
+  ```
 
-## Pre-flight
-1. Ensure git working tree is clean: `git status`.
-2. Pull latest changes: `git pull --rebase`.
-3. Open [next_work.md](../../next_work.md) to inspect the graphics/games target (`current_targets.kilo_graphics`).
-4. **Target Suitability Assessment**: Evaluate if the target game has programmer art suitable for replacement with Imagen 3 assets. If NOT appropriate (e.g. pure vector/wireframe arcade games, abstract board games, or games that already have production art), SKIP THE TURN immediately per Rule 2 below.
+---
 
-## Category Directives & Rules
-1. **🖼️ Exclusive Mission: Replace Programmer Art with Imagen 3 Assets (DIRECTOR MANDATE - CRITICAL)**:
-   - For all upcoming turns, the `kilo-graphics` agent must do NOTHING BUT replace programmer art (primitive vector shapes, Canvas fills, geometric cutouts, procedural line art) with authentic Imagen 3 generated game assets (sprites, sprite sheets, seamless textures, and backgrounds) via the 2-stage asset pipeline.
-   - Do not add random gameplay mechanics, new campaign stages, or unrequested features. Channel all turns into visual asset generation, chroma keying, sprite strip packing, and engine rendering integration.
-2. **⏭️ Turn Skipping for Inappropriate Targets (DIRECTOR MANDATE - CRITICAL)**:
-   - If `kilo-graphics` reaches an application where Imagen 3 asset generation would NOT be appropriate:
-     - *Pure Vector / Wireframe Classics*: Games whose foundational aesthetic is authentic retro vector math or line art (e.g. *KAsteroids*, *Battlezone*-style wireframes).
-     - *Text / Terminal Apps*: Pure text or command-line style utilities.
-   - **ACTION**: Skip the turn immediately! Format: `⏭️ Skip — Imagen 3 asset replacement not appropriate for <TargetGame>`.
-   - Advance `current_targets.kilo_graphics` to the next game in queue. **Note**: Do NOT mark as mature here—the app may still require testing, usability, or audio passes by other skills. Advance queue, advance `current_agent`, commit, push, and STOP.
-3. **Mature Application Quarantine Protocol (DIRECTOR MANDATE - CRITICAL)**:
-   - For mature games (6+ passes) that are already cohesive, visually complete with production assets, and fully finished:
-     - **DO NOT rotate it to the queue bottom!** (Rotating to the bottom causes endless skip loops that waste tokens repeatedly).
-     - **Quarantine to Mature**: Move the game into `## Mature Applications (Archived from Active Queues)` in `next_work.md`.
-     - **Remove from Queues**: Remove the game completely from all active queues and upcoming lists across `next_work.md`.
-     - **Advance Target**: Advance `current_targets.kilo_graphics` to the next non-mature game in line.
-     - Log: `⏭️ Skip — promoted <TargetGame> to Mature Applications quarantine.` Advance rotation, commit, push, and STOP cleanly.
-4. **Alternate Reality Fictionalization Mandate**:
-   - All commercial video game titles, software products, corporate entities, and demoscene warez groups must be fictionalized parodies (e.g. *Surreal Tournament*, *Tremor III Arena*, *VoidCraft*, *Machina Ex*, *FLARELIGHT*, *RAZOR 1999*, *SlashNet*, *Cabled*). Never use real trademarked names. Enforced algorithmically by `scripts/security_lint.py`.
-5. **🚫 Specular Glint & Traveling Comet Ban (DIRECTOR MANDATE - CRITICAL)**:
-   - On every pass, search for and REMOVE any traveling/rotating specular glint comets, perimeter glint dots, or moving border balls across both web (HTML) and native (C).
-   - These traveling dots are distracting, look like rogue projectiles/balls, and annoy players across games.
-   - Replace with clean, static, or period-accurate borders without traveling dots or orbital glint particles. NEVER add new perimeter traveling glints.
-6. **🎨 Distinctive App Icon Uniqueness Audit (DIRECTOR MANDATE - CRITICAL)**:
-   - On every pass, run `python scripts/check_icons.py` to audit icon uniqueness across all applications in `KiloOS/src/App.jsx`.
-   - Ensure every app possesses a unique, distinctive 32x32 `.ico` file in `KiloOS/public/assets/icons/`. Reusing icons or copying existing `.ico` files is strictly prohibited.
-   - If missing or duplicate icon hashes are detected, run `python scripts/check_icons.py --fix` (or generate unique pixel art) to ensure 100% icon uniqueness across the fleet.
-7. **🖼️ 2D Sprite Sheet & Seamless Texture Pipeline (Technical Game Asset Pipeline)**:
-   - When generating or expanding sprite animations and environment terrain textures for 2D games, execute the standardized 2-stage asset pipeline:
-   - **Stage 1 (Asset Generation via `generate_image`)**:
-     - *Character Sprites / Run Cycles*: Orthographic 2D view, flat diffuse lighting, zero directional/floor shadows, solid magenta (`#FF00FF`) background, 1:1 aspect ratio, 1024x1024. Keep character visual tokens consistent across all prompts.
-     - *Terrain / Ground Textures*: "Seamless tileable texture, top-down albedo map, orthographic projection, no vignette, uniform diffuse lighting, 1024x1024".
-   - **Stage 2 (Automated Post-Processing via `scripts/asset_pipeline.py`)**:
-     - *Sprites*: `uv run scripts/asset_pipeline.py process-sprites --frames <f1> <f2> ... --out-strip <strip.png> --out-atlas <atlas.json> --box-size 128`
-       - Keys out `#FF00FF` to `alpha = 0` (32-bit RGBA) with despill and dark fringe cleanup.
-       - Auto-crops and centers each sprite into a uniform 128x128 bounding box.
-       - Packs frames into a horizontal sprite sheet (e.g. 512x128 `run_strip4.png`).
-       - Generates accompanying Phaser/Unity-compatible JSON coordinate atlas.
-     - *Textures*: `uv run scripts/asset_pipeline.py process-texture --input <raw.jpg> --out-seamless <path.png> [--quantize 256]`
-       - Applies `ImageChops.offset(512, 512)` seam test and blends quadrant seams to guarantee mathematical tileability.
-       - Use `--quantize 256` if needed to guarantee the texture remains strictly below the `< 999 KB` size ceiling.
-
-## Verification
-1. Verify web app build: `cd KiloOS && npm run build`.
-2. Verify size constraint: `< 999 KB`.
-3. Verify icon uniqueness: `python scripts/check_icons.py`.
-
-## Queue Handoff & Terse Logging (CRITICAL)
-1. **Edit [next_work.md](../../next_work.md)**:
-   - Advance `current_targets.kilo_graphics` to next game in queue.
-   - Set `current_agent` to next scheduled agent in `agent_rotation` (or hand off to `kilo-tester` / `kilo-qa` if extensive logic changed).
-   - Set `status: ready`.
-   - Update `last_run.agent: kilo-graphics`, `last_run.app: <TargetGame>`, and `last_run.timestamp`.
-   - Append terse run log (strict limit: ≤ 8 lines of concise bullet points).
-2. **Commit and Push**:
-   - `git add <modified files> next_work.md`
-   - `git commit -m "content(games): graphics and balance pass for <TargetGame>"`
-   - `git push` (if rejected, run `git pull --rebase` then push).
-   - STOP immediately.
+## Graphics Directives
+1. **Replace Programmer Art**: Replace primitive Canvas circles/rectangles in 2D games (`KiloOS/public/apps/k<name>.html`) with sprite rendering (`new Image()`, graceful procedural fallback while loading) or rich multi-stop pixel/canvas textures if `generate_image` is unavailable in headless CLI mode.
+2. **2-Stage Asset Pipeline (when `generate_image` tool is available)**:
+   - Stage 1: Generate on solid `#FF00FF` magenta background (`1024x1024`).
+   - Stage 2: `uv run scripts/asset_pipeline.py process-sprites --frames <f1> --out-strip <strip.png> --out-atlas <atlas.json> --box-size 128`.
+3. **Perimeter Glint & Comet Ban**: Search for and remove any traveling border dots, orbiting balls, or rotating specular glints across HTML and C.
+4. **Icon Uniqueness**: Run `python scripts/check_icons.py` if any icon was added or modified.
