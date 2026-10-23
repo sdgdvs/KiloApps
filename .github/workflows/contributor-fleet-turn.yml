@@ -52,7 +52,7 @@ jobs:
         shell: pwsh
         run: |
           cd KiloOS
-          npm ci
+          npm ci --ignore-scripts
 
       - name: Install and Configure agy CLI
         shell: pwsh
@@ -78,8 +78,9 @@ jobs:
           GITHUB_WORKFLOW: ${{ github.workflow }}
           GITHUB_SHA: ${{ github.sha }}
           GITHUB_REPOSITORY: ${{ github.repository }}
+          TARGET_AGENT: ${{ github.event.inputs.target_agent }}
         run: |
-          $agentFlag = if ("${{ github.event.inputs.target_agent }}") { "--force-agent ${{ github.event.inputs.target_agent }}" } else { "" }
+          $agentFlag = if ($env:TARGET_AGENT) { @("--force-agent", $env:TARGET_AGENT) } else { @() }
           uv run scripts/orchestrate.py $agentFlag
 
       - name: Verify Size Budget & Compilations

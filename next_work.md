@@ -216,6 +216,13 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-22T17:47:00-07:00 — kilo-adhoc: Security & Dependency Hardening (KiloOS, KiloOS_Server, KBBSProxy, CI)**
+  - Status: PASS ✅ (0 regressions, 0 runtime npm advisories, all binaries/web files < 999 KB ceiling).
+  - Dependency Fixes: Upgraded `vite` (`8.3.5`), `nanoid` (`3.3.20`), `source-map-js` (`1.2.2`), `postcss` (`8.5.31`) in `KiloOS`; upgraded `express` (`4.22.3`), `proxy-addr` (`2.0.8`), `body-parser` (`1.20.9`), `qs` (`6.16.1`) in `KiloOS_Server`.
+  - Proxy & Hosting Hardening: Enforced `ALLOWED_HOSTS` + `ALLOWED_PORTS` allowlists and tightened `Origin` validation in `KBBSProxy/telnet-proxy.js` and `KiloOS_Server/server.js`; added security headers (`X-Frame-Options`, `X-Content-Type-Options`, `Referrer-Policy`) to `KiloOS/firebase.json`.
+  - CI & Docker Hardening: Added `--ignore-scripts` and env-var input binding in `contributor-fleet-turn.yml`; hardened `KBBSProxy/Dockerfile` (`npm ci --omit=dev --ignore-scripts` + non-root `USER node`).
+  - Verification: Vite build clean (`8.3.5`); `npm audit` 0 runtime vulnerabilities; `check_sizes.py` PASS; `security_lint.py` 100% PASS.
+
 - **2026-10-22T16:35:00-07:00 — kilo-qa: KCalc (Pass 5 State Persistence & Mature Quarantine)**
   - PASS ✅ (Matrix & memory bank state persistence, first-run tutorial integrity, promoted to Mature).
   - State Persistence: F5 quicksave & F9 quickload capturing complete calculator state, history tape, multi-register memory bank M0-M7, and matrix cell grids.
@@ -244,11 +251,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Audio Architecture: Dual bus topology (dry bass/kicks + wet leads/counterpoint); 3-voice counterpoint and delayed vibrato.
   - Parity & Verification: Native KAbyss.exe (242.5 KB < 999 KB) and Web kabyss.html (499.5 KB < 999 KB); test_app_startup PASS; KiloOS npm build PASS (0 errors).
   - Queue Handoff: Advanced kilo_soundscape to KRacer; rotated current_agent to kilo-tester.
-
-- **2026-10-22T12:34:00-07:00 — kilo-graphics: KAbyss (Asset Suitability Audit & Glint Sweep)**
-  - ⏭️ Skip — Imagen 3 asset replacement not appropriate for KAbyss
-  - Engine Audit: Procedural Canvas 2D dungeon crawler with dynamic FOV raycasting, torch radial lighting, and custom animated entity rendering.
-  - Glint Sweep: Verified 0 traveling border dots, orbiting specular glints, or wandering perimeter balls.
-  - Verification: Icon uniqueness PASS (105/105 unique hashes); test_app_startup PASS on KAbyss (479.4 KB < 999 KB); KiloOS npm build PASS (0 errors).
-  - Queue Handoff: Advanced current_targets.kilo_graphics to KRacer; rotated current_agent to kilo-soundscape.
-

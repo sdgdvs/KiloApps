@@ -7,6 +7,19 @@ const { exec } = require('child_process');
 
 const PORT = process.env.PORT || 8080;
 
+const ALLOWED_HOSTS = [
+    '20forbeers.com', 'mutinybbs.com', 'borderlinebbs.dyndns.org', 'din.asciiattic.com',
+    'bbs.bottomlessabyss.net', 'bbs.darkrealms.ca', 'bbs.throwbackbbs.com', 'vert.synchro.net',
+    'bbs.electronicchicken.com', 'capitolcityonline.net', 'bbs.agency', 'xibalba.l33t.codes',
+    'blackflag.acid.org', 'bbs.absinthe.ws', 'bbs.thebrokenbubble.com', 'ttb.rgbbs.info',
+    'bbs.alsgeeklab.com', 'bbs.retrocampus.com', 'bbs.airandwave.net', 'bbs.nz',
+    'blocktronics.org', 'bbs.thekeep.net', '13leader.net', 'bbs.8bitboyz.com',
+    'particlesbbs.dyndns.org', '300baud.dynu.net', 'bbs.fozztexx.com', 'clutchbbs.com',
+    'bbs.endofthelinebbs.com'
+];
+
+const ALLOWED_PORTS = [23, 1337, 2323, 2525, 8023, 9023, 44510];
+
 const app = express();
 // Serve static files from the 'public' directory
 app.use(express.static(path.join(__dirname, 'public')));
@@ -41,17 +54,6 @@ wss.on('connection', (ws, req) => {
     const host = url.searchParams.get('host');
     const port = parseInt(url.searchParams.get('port') || '23', 10);
 
-    const ALLOWED_HOSTS = [
-        '20forbeers.com', 'mutinybbs.com', 'borderlinebbs.dyndns.org', 'din.asciiattic.com',
-        'bbs.bottomlessabyss.net', 'bbs.darkrealms.ca', 'bbs.throwbackbbs.com', 'vert.synchro.net',
-        'bbs.electronicchicken.com', 'capitolcityonline.net', 'bbs.agency', 'xibalba.l33t.codes',
-        'blackflag.acid.org', 'bbs.absinthe.ws', 'bbs.thebrokenbubble.com', 'ttb.rgbbs.info',
-        'bbs.alsgeeklab.com', 'bbs.retrocampus.com', 'bbs.airandwave.net', 'bbs.nz',
-        'blocktronics.org', 'bbs.thekeep.net', '13leader.net', 'bbs.8bitboyz.com',
-        'particlesbbs.dyndns.org', '300baud.dynu.net', 'bbs.fozztexx.com', 'clutchbbs.com',
-        'bbs.endofthelinebbs.com'
-    ];
-
     if (!host) {
         ws.close(1008, 'Missing host parameter');
         return;
@@ -60,6 +62,12 @@ wss.on('connection', (ws, req) => {
     if (!ALLOWED_HOSTS.includes(host.toLowerCase())) {
         console.error(`[PROXY] Connection rejected: Host '${host}' is not in the allowlist.`);
         ws.close(1008, 'Host not allowed');
+        return;
+    }
+
+    if (!Number.isInteger(port) || !ALLOWED_PORTS.includes(port)) {
+        console.error(`[PROXY] Connection rejected: Port '${port}' is not in the allowlist.`);
+        ws.close(1008, 'Port not allowed');
         return;
     }
 

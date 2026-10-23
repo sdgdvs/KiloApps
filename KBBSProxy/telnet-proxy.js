@@ -4,6 +4,19 @@ const http = require('http');
 
 const PORT = process.env.PORT || 8080;
 
+const ALLOWED_HOSTS = [
+    '20forbeers.com', 'mutinybbs.com', 'borderlinebbs.dyndns.org', 'din.asciiattic.com',
+    'bbs.bottomlessabyss.net', 'bbs.darkrealms.ca', 'bbs.throwbackbbs.com', 'vert.synchro.net',
+    'bbs.electronicchicken.com', 'capitolcityonline.net', 'bbs.agency', 'xibalba.l33t.codes',
+    'blackflag.acid.org', 'bbs.absinthe.ws', 'bbs.thebrokenbubble.com', 'ttb.rgbbs.info',
+    'bbs.alsgeeklab.com', 'bbs.retrocampus.com', 'bbs.airandwave.net', 'bbs.nz',
+    'blocktronics.org', 'bbs.thekeep.net', '13leader.net', 'bbs.8bitboyz.com',
+    'particlesbbs.dyndns.org', '300baud.dynu.net', 'bbs.fozztexx.com', 'clutchbbs.com',
+    'bbs.endofthelinebbs.com'
+];
+
+const ALLOWED_PORTS = [23, 1337, 2323, 2525, 8023, 9023, 44510];
+
 const server = http.createServer((req, res) => {
     res.writeHead(200, { 'Content-Type': 'text/plain' });
     res.end('KBBS WebSocket-to-Telnet Proxy is running.\n');
@@ -18,7 +31,7 @@ wss.on('connection', (ws, req) => {
 
     const origin = req.headers.origin || '';
     const isLocalhost = origin.startsWith('http://localhost:') || origin.startsWith('http://127.0.0.1:') || origin.startsWith('https://localhost:') || origin.startsWith('https://127.0.0.1:');
-    const isKiloApps = origin === 'https://kiloapps.web.app' || origin === 'https://kiloapps.firebaseapp.com' || origin.endsWith('.web.app') || origin.endsWith('.firebaseapp.com');
+    const isKiloApps = origin === 'https://kiloapps.web.app' || origin === 'https://kiloapps.firebaseapp.com' || (origin.startsWith('https://kiloapps--') && (origin.endsWith('.web.app') || origin.endsWith('.firebaseapp.com')));
     const isAllowedOrigin = isLocalhost || isKiloApps || !origin || origin === 'null';
 
     if (!isAllowedOrigin) {
@@ -37,6 +50,18 @@ wss.on('connection', (ws, req) => {
         const parts = host.split(':');
         host = parts[0];
         port = parseInt(parts[1], 10) || port;
+    }
+
+    if (!ALLOWED_HOSTS.includes(host.toLowerCase())) {
+        console.error(`[PROXY] Connection rejected: Host '${host}' is not in the allowlist.`);
+        ws.close(1008, 'Host not allowed');
+        return;
+    }
+
+    if (!Number.isInteger(port) || !ALLOWED_PORTS.includes(port)) {
+        console.error(`[PROXY] Connection rejected: Port '${port}' is not in the allowlist.`);
+        ws.close(1008, 'Port not allowed');
+        return;
     }
 
     console.log(`[PROXY] Connect request from ${origin} to ${host}:${port}...`);
