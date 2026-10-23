@@ -16,9 +16,9 @@
   "session_end": null,
   "session_limit_enabled": false,
   "timer_enabled": false,
-  "turns_executed": 283,
+  "turns_executed": 284,
   "last_turn_timestamp": "2026-10-06T16:51:00-07:00",
-  "last_heartbeat": "2026-10-23T18:50:46.075834+00:00",
-  "current_target": "KCipher",
+  "last_heartbeat": "2026-10-23T19:05:31.498291+00:00",
+  "current_target": "KClip",
   "remote_command": "none"
 }

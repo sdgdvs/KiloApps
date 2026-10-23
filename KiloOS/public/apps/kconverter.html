@@ -2050,6 +2050,13 @@
         });
       });
 
+      // Lifecycle hygiene: dismiss toast / pause on hidden
+      document.addEventListener('visibilitychange', () => {
+        if (document.hidden) {
+          dismissToast();
+        }
+      });
+
       // Global keyboard navigation
       document.addEventListener('keydown', (e) => {
         const isEditing = e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA';
@@ -2066,11 +2073,16 @@
           return;
         }
         
-        // Escape closes Help Modal, dismisses toast, or clears/unfocuses input
+        // Escape closes Help Modal, dismisses tutorial banner, dismisses toast, or clears/unfocuses input
         if (e.key === 'Escape') {
           const helpModal = document.getElementById('helpModal');
           if (helpModal && helpModal.classList.contains('open')) {
             toggleHelpModal(false);
+            return;
+          }
+          const tutorialBanner = document.getElementById('tutorialBanner');
+          if (tutorialBanner && tutorialBanner.style.display !== 'none') {
+            dismissTutorial(true);
             return;
           }
           dismissToast();

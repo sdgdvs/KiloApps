@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-creator
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -30,7 +30,7 @@ current_targets:
   kilo_soundscape: KAlchemy
   kilo_tester: KDB
   kilo_usability: KCipher
-  kilo_qa: KConverter
+  kilo_qa: KDB
   kilo_expander: KNet
 virtual_web_target: kweb://cabled
 virtual_web_rotation:
@@ -52,9 +52,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-usability
-  app: KClip
-  timestamp: '2026-10-23T12:05:20-07:00'
+  agent: kilo-qa
+  app: KConverter
+  timestamp: '2026-10-23T12:21:53-07:00'
 last_planner_run: '2026-10-23T07:15:00Z'
 ---
 
@@ -133,7 +133,6 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KSys` | `KiloOS/public/apps/ksys.html`, `KSys/main.c` | Audit system telemetry dashboard, process/memory graphs, diagnostic stress test toggles, and keyboard navigation. |
 | `KScript` | `KiloOS/public/apps/kscript.html`, `KScript/main.c` | Audit script IDE, AST/console runner, sample templates, breakpoint stepper, and VFS script save/load. |
 | `KSteno` | `KiloOS/public/apps/ksteno.html`, `KSteno/main.c` | Audit LSB image/audio steganography encoder/decoder, bitplane visualizer, passkey encryption, and modal dismissals. |
-| `KConverter` | `KiloOS/public/apps/kconverter.html`, `KConverter/main.c` | Audit all 14 dimensional conversion categories, engineering notation toggle, reciprocal swap, presets, and F5/F9 persistence. |
 | `KCipher` | `KiloOS/public/apps/kcipher.html`, `KCipher/main.c` | Audit cipher workbench (AES/XOR/Vigenère/ROT13/RSA toy), frequency histogram, key input guards, and VFS import/export. |
 
 ### 5. Usability & UX Queue (`kilo-usability`)
@@ -148,15 +147,13 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KHash` | `KiloOS/public/apps/khash.html`, `KHash/main.c` | Multi-digest comparison table responsiveness, one-click hash verification badge, HMAC toggle ergonomics, and keyboard shortcuts. |
 | `KVault` | `KiloOS/public/apps/kvault.html`, `KVault/main.c` | Encrypted container tree navigation, responsive hex/file inspector split, clear lock/unlock status banner, and modal focus trapping. |
 | `KAnomaly` | `KiloOS/public/apps/kanomaly.html`, `KAnomaly/main.c` | Subterranean waterfall spectrogram HiDPI scaling, frequency tuner wheel/keyboard precision (`ArrowLeft/Right`), and clear decoder telemetry readout. |
-| `KConverter` | `KiloOS/public/apps/kconverter.html`, `KConverter/main.c` | Responsive 14-category selector layout on compact viewports, keyboard category/unit traversal, clear `[F1/H]` shortcut pill, and focus trapping. |
 | `KTrader` | `KiloOS/public/apps/ktrader.html`, `KTrader/main.c` | Space trader market table ergonomics: responsive commodity columns, `[1-9]`/`[B]`/`[S]` quick-trade hotkeys, HiDPI star map scaling, and docking modal focus trap. |
 
 ### 6. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial, State & Mature Graduation)
-- **Active Target**: `KConverter`
+- **Active Target**: `KDB`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KConverter` | `KiloOS/public/apps/kconverter.html`, `KConverter/main.c` | Pass 5 QA: verify 14-category custom unit/history F5/F9 persistence, tutorial flag, and dual Win32 C build (`KConverter.exe` <999 KB); promote to Mature if complete. |
 | `KDB` | `KiloOS/public/apps/kdb.html`, `KDB/main.c` | Pass 5 QA: verify multi-table schema/rows F5/F9 persistence, first-run tutorial flag, and dual Win32 C build (`KDB.exe` <999 KB); promote to Mature if complete. |
 | `KTrader` | `KiloOS/public/apps/ktrader.html`, `KTrader/main.c` | Pass 5 QA: verify ship credits, cargo manifest, sector position, and market ledger F5/F9 persistence + dual Win32 C build (`KTrader.exe` <999 KB). |
 | `KMech` | `KiloOS/public/apps/kmech.html`, `KMech/main.c` | Pass 5 QA: verify mech chassis loadout, heat/armor state, arena progression F5/F9 persistence + dual Win32 C build (`KMech.exe` <999 KB). |
@@ -189,6 +186,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 | Application | Primary File | Pass Count / Date | Category | Summary of Mature State |
 |---|---|---|---|---|
+| **KConverter** | `KiloOS/public/apps/kconverter.html` | Pass 5+ (2026-10-23) | Productivity / Math & Units | High-precision engineering and dimensional unit converter across 14 physical categories with Smart Expression Parser, Batch tables, custom factors, F5/F9 persistence, and dual Win32 C parity. |
 | **KClip** | `KiloOS/public/apps/kclip.html` | Pass 5+ (2026-10-23) | Workstation & Utilities | Clipboard manager, 12 text transformation pipelines, regex find/replace, Diff/Hex inspector, F5/F9 persistence, and dual Win32 C parity. |
 | **KFont** | `KiloOS/public/apps/kfont.html` | Pass 5+ (2026-10-23) | Media / Typography | Complete typography workstation: 11 tabs, custom bitmap glyph editor & font bank, OTF axes, WCAG contrast matrix, C LOGFONT/JSON exports, F5/F9 persistence, dual Win32 C parity. |
 | **KHex** | `KiloOS/public/apps/khex.html` | Pass 5+ (2026-10-23) | System / Analysis | Complete binary byte workstation featuring 9 analysis/edit tabs, multi-arch disassembler (x86/6502/Z80), VFS Open/Save integration, F5/F9 persistence, and dual Win32 C parity. |
@@ -231,6 +229,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-23T12:21:53-07:00 — kilo-qa: KConverter (Pass 5 QA, Dual Parity & Mature Quarantine)**
+  - Status: PASS ✅ (0 errors, web 131.6 KB, native 33.5 KB < 999 KB; startup, Vite & security_lint PASS).
+  - State & Tutorial: Verified F5/F9 quicksave/quickload, kconverter_tutorialSeen flag, and Escape modal dismissals.
+  - Dual Parity & Lifecycle: Verified Web HTML + Win32 C parity across 14 categories and visibilitychange timer cleanup.
+  - Mature Quarantine & Handoff: Promoted `KConverter` to Mature archive; advanced `kilo-qa` to `KDB`; next agent `kilo-expander`.
+
 - **2026-10-23T12:05:20-07:00 — kilo-usability: KClip (Usability & Ergonomics Polish)**
   - Status: PASS ✅ (0 errors, web 207.0 KB, native 21.5 KB < 999 KB; startup, Vite & security_lint PASS).
   - Keyboard & Navigation: Added clip card ArrowUp/Down navigation, Enter to copy snippet, Tab modal focus trapping, and modal focus restoration.
@@ -254,10 +258,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Textured metallic/crystalline bricks, plasma paddle induction & ball trails integrated.
   - Boss flagship sprite & hazard chevrons added; zero perimeter dots/glints verified in Web & C.
   - Handoff: Advanced `kilo-graphics` to `KStarship`; rotated active agent to `kilo-soundscape`.
-
-- **2026-10-23T11:23:38-07:00 — kilo-creator: kweb://trapster (Trapster P2P Chiptune & Tracker Exchange v1.0b)**
-  - Status: PASS ✅ (0 errors, web 94.8 KB < 999 KB; startup, Vite & security_lint PASS).
-  - Created authentic 1999 Napster-style P2P client: searchable directory, 56k/T1 download queue & transfers manager.
-  - Integrated live 6-channel YM2612 2-Op FM + SPC700 stereo delay synthesizer with CRT oscilloscope/spectrum visualizer.
-  - Implemented KiloOS VFS /home/music/ .mod/.trk persistence, IRC chat lobby, and routed kweb://trapster in knet/portal/webring.
-  - Handoff: Advanced `kilo-creator` to `kweb://cabled`; rotated active agent to `kilo-graphics`.
