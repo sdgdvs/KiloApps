@@ -308,7 +308,7 @@
     "title": "KFont",
     "folder": "System",
     "webBytes": 227804,
-    "exeBytes": 32768,
+    "exeBytes": 32256,
     "budgetPercent": 22.8
   },
   {
@@ -787,9 +787,9 @@
     "id": "ktrader",
     "title": "KTrader",
     "folder": "Games",
-    "webBytes": 114922,
-    "exeBytes": 26112,
-    "budgetPercent": 11.5
+    "webBytes": 135421,
+    "exeBytes": 26624,
+    "budgetPercent": 13.6
   },
   {
     "id": "ktype",

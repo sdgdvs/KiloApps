@@ -1139,7 +1139,12 @@ void MainEntry() {
         if (msg.message == WM_KEYDOWN) {
             HWND hFocus = GetFocus();
             BOOL inEdit = (hFocus == hCustomText || hFocus == hAnatomyChar);
-            if (msg.wParam == VK_F5) {
+            if (msg.wParam == VK_ESCAPE) {
+                if (inEdit) {
+                    SetFocus(hwnd);
+                    continue;
+                }
+            } else if (msg.wParam == VK_F5) {
                 QuicksaveNative(hwnd);
                 continue;
             } else if (msg.wParam == VK_F9) {

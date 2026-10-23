@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-creator
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -30,7 +30,7 @@ current_targets:
   kilo_soundscape: KStarship
   kilo_tester: KCipher
   kilo_usability: KClip
-  kilo_qa: KFont
+  kilo_qa: KConverter
   kilo_expander: KTrader
 virtual_web_target: kweb://trapster
 virtual_web_rotation:
@@ -52,9 +52,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-usability
-  app: KTrader
-  timestamp: '2026-10-23T10:42:03-07:00'
+  agent: kilo-qa
+  app: KFont
+  timestamp: '2026-10-23T10:50:55-07:00'
 last_planner_run: '2026-10-23T07:15:00Z'
 ---
 
@@ -130,7 +130,6 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
 | `KCipher` | `KiloOS/public/apps/kcipher.html`, `KCipher/main.c` | Audit cipher workbench (AES/XOR/Vigenère/ROT13/RSA toy), frequency histogram, key input guards, and VFS import/export. |
-| `KFont` | `KiloOS/public/apps/kfont.html`, `KFont/main.c` | Audit bitmap glyph matrix editor, zoom/pan controls, kerning preview, C header/JSON export, and keyboard shortcuts. |
 | `KDB` | `KiloOS/public/apps/kdb.html`, `KDB/main.c` | Audit SQL/table workbench, schema builder, query filter, chart modals, CSV/JSON/VFS export, and Escape modal dismissals. |
 | `KClip` | `KiloOS/public/apps/kclip.html`, `KClip/main.c` | Audit clipboard manager, 12 text transformation pipelines, regex find/replace bar (`Ctrl+H`), and F5/F9 persistence; promote to Mature if clean. |
 | `KSys` | `KiloOS/public/apps/ksys.html`, `KSys/main.c` | Audit system telemetry dashboard, process/memory graphs, diagnostic stress test toggles, and keyboard navigation. |
@@ -155,11 +154,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KTrader` | `KiloOS/public/apps/ktrader.html`, `KTrader/main.c` | Space trader market table ergonomics: responsive commodity columns, `[1-9]`/`[B]`/`[S]` quick-trade hotkeys, HiDPI star map scaling, and docking modal focus trap. |
 
 ### 6. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial, State & Mature Graduation)
-- **Active Target**: `KFont`
+- **Active Target**: `KConverter`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KFont` | `KiloOS/public/apps/kfont.html`, `KFont/main.c` | Pass 5 QA: verify custom glyph bitmap F5/F9 persistence, first-run tutorial flag, Escape modal dismissals, and dual Win32 C build (`KFont.exe` <999 KB); promote to Mature if complete. |
 | `KConverter` | `KiloOS/public/apps/kconverter.html`, `KConverter/main.c` | Pass 5 QA: verify 14-category custom unit/history F5/F9 persistence, tutorial flag, and dual Win32 C build (`KConverter.exe` <999 KB); promote to Mature if complete. |
 | `KClip` | `KiloOS/public/apps/kclip.html`, `KClip/main.c` | Pass 5 QA: verify snippet vault & pinned history F5/F9 persistence, tutorial flag, and dual Win32 C build (`KClip.exe` <999 KB); promote to Mature if complete. |
 | `KDB` | `KiloOS/public/apps/kdb.html`, `KDB/main.c` | Pass 5 QA: verify multi-table schema/rows F5/F9 persistence, first-run tutorial flag, and dual Win32 C build (`KDB.exe` <999 KB); promote to Mature if complete. |
@@ -194,6 +192,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 | Application | Primary File | Pass Count / Date | Category | Summary of Mature State |
 |---|---|---|---|---|
+| **KFont** | `KiloOS/public/apps/kfont.html` | Pass 5+ (2026-10-23) | Media / Typography | Complete typography workstation: 11 tabs, custom bitmap glyph editor & font bank, OTF axes, WCAG contrast matrix, C LOGFONT/JSON exports, F5/F9 persistence, dual Win32 C parity. |
 | **KHex** | `KiloOS/public/apps/khex.html` | Pass 5+ (2026-10-23) | System / Analysis | Complete binary byte workstation featuring 9 analysis/edit tabs, multi-arch disassembler (x86/6502/Z80), VFS Open/Save integration, F5/F9 persistence, and dual Win32 C parity. |
 | **KPass** | `KiloOS/public/apps/kpass.html` | Pass 5+ (2026-10-23) | Security / Vault | Feature-complete retro password manager & vault; 4 generator modes, entropy visualizer, AES-GCM 256 encrypted vault, security audit scanner, export suite, F5/F9 persistence, dual Win32 C parity. |
 | **KSpace** | `KiloOS/public/apps/kspace.html` | Pass 5 (2026-10-23) | Action / Deep Space Shooter | 6-chassis space shooter, 12 enemy archetypes, 3 boss flagships, F5/F9 state persistence, first-run tutorial integrity, replay telemetry, dual Win32 native client parity. |
@@ -234,6 +233,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-23T10:50:55-07:00 — kilo-qa: KFont (Pass 5 QA, Dual Parity & Mature Quarantine)**
+  - Status: PASS ✅ (0 errors, web 226.2 KB, native 31.5 KB < 999 KB; startup, Vite & security_lint PASS).
+  - State & Tutorial: Verified F5/F9 quicksave/quickload, custom glyph bitmap matrix persistence, kfont_tutorialSeen flag, and Escape modal dismissals.
+  - Dual Parity & Lifecycle: Verified Web HTML + Win32 C parity, VK_ESCAPE focus blur, and visibilitychange rAF pause.
+  - Mature Quarantine & Handoff: Promoted `KFont` to Mature archive; advanced `kilo-qa` to `KConverter`; next agent `kilo-expander`.
+
 - **2026-10-23T10:42:03-07:00 — kilo-usability: KTrader (KTrader Usability, Responsive Layout & Ergonomics Polish)**
   - Status: PASS (0 errors, web 118.8 KB, native 25.5 KB < 999 KB; startup, Vite & security_lint PASS).
   - Ergonomics: Responsive market table, price trend indicators, and [1-8]/[B]/[S]/[D] quick-trade hotkeys.
@@ -258,9 +263,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Integrated Imagen 3 fantasy hero, monster and cobblestone texture assets with procedural fallbacks.
   - Added atmospheric subterranean torchlight vignette and occult boss visual distinction with zero perimeter glints.
   - Handoff: Advanced `kilo-graphics` to `KBreakout`; rotated active agent to `kilo-soundscape`.
-
-- **2026-10-23T08:54:03-07:00 — kilo-creator: kweb://slashnet (SlashNet 1999 Virtual Web Node)**
-  - Status: PASS ✅ (0 errors, web 81.4 KB < 999 KB; startup, Vite & security_lint PASS).
-  - Implemented SlashNet: News for Nerds (1999) with interactive Karma moderation (-1 to +5) and threshold comment filtering.
-  - Added Beowulf cluster calculator, Linux 2.2 kernel compile mini-sim, VFS article export, and routed in knet/portal/webring.
-  - Handoff: Advanced `kilo-creator` to `kweb://trapster`; rotated active agent to `kilo-graphics`.

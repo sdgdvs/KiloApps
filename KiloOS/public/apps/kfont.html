@@ -1326,16 +1326,20 @@ Aa Bb Cc Dd Ee Ff Gg Hh Ii Jj Kk Ll Mm Nn Oo Pp Qq Rr Ss Tt Uu Vv Ww Xx Yy Zz</d
       }
       if (Array.isArray(state.bitmapGrid) && state.bitmapGrid.length > 0) {
         bmpGrid = [...state.bitmapGrid];
+        safeSetStorage('kfont_bmpGrid', JSON.stringify(bmpGrid));
         if (state.bitmapSize) {
           const [w, h] = state.bitmapSize.split('x').map(Number);
           bmpW = w; bmpH = h;
           if (document.getElementById('bitmapGridSize')) document.getElementById('bitmapGridSize').value = state.bitmapSize;
+          safeSetStorage('kfont_bmpSize', state.bitmapSize);
         }
       }
       if (state.fontBank && typeof state.fontBank === 'object') {
         fontBank = { ...state.fontBank };
+        safeSetStorage('kfont_fontBank', JSON.stringify(fontBank));
       }
       if (state.activeBankChar) {
+        safeSetStorage('kfont_activeBankChar', state.activeBankChar);
         if (typeof selectBankChar === 'function') {
           selectBankChar(state.activeBankChar, false);
         } else {
@@ -1415,9 +1419,16 @@ Aa Bb Cc Dd Ee Ff Gg Hh Ii Jj Kk Ll Mm Nn Oo Pp Qq Rr Ss Tt Uu Vv Ww Xx Yy Zz</d
     }
 
     function quicksave() {
+      if (activeBankChar && bmpGrid && bmpGrid.length === bmpW * bmpH) {
+        fontBank[activeBankChar] = [...bmpGrid];
+      }
       const state = getWorkspaceState();
       const ok = safeSetStorage('kfont_quicksave', JSON.stringify(state));
       if (ok) {
+        safeSetStorage('kfont_fontBank', JSON.stringify(fontBank));
+        safeSetStorage('kfont_bmpGrid', JSON.stringify(bmpGrid));
+        safeSetStorage('kfont_bmpSize', `${bmpW}x${bmpH}`);
+        safeSetStorage('kfont_activeBankChar', activeBankChar);
         playSound('save');
         showToast("Workspace snapshot quicksaved [F5]");
       } else {
@@ -2627,11 +2638,62 @@ body {
       showToast(`Loaded ROM Preset: ${key.replace('_', ' ').toUpperCase()}`);
     }
 
+    function persistBitmapStorage() {
+      if (activeBankChar && bmpGrid && bmpGrid.length === bmpW * bmpH) {
+        fontBank[activeBankChar] = [...bmpGrid];
+      }
+      safeSetStorage('kfont_fontBank', JSON.stringify(fontBank));
+      safeSetStorage('kfont_bmpGrid', JSON.stringify(bmpGrid));
+      safeSetStorage('kfont_bmpSize', `${bmpW}x${bmpH}`);
+      safeSetStorage('kfont_activeBankChar', activeBankChar);
+    }
+
     function initBitmapStudio() {
       const canvas = document.getElementById('bitmapEditorCanvas');
       if (!canvas) return;
 
-      loadBmpPreset('cp437_smiley');
+      const savedBank = safeGetStorage('kfont_fontBank', null);
+      const savedSize = safeGetStorage('kfont_bmpSize', null);
+      const savedGrid = safeGetStorage('kfont_bmpGrid', null);
+      const savedActive = safeGetStorage('kfont_activeBankChar', null);
+
+      if (savedSize && document.getElementById('bitmapGridSize')) {
+        document.getElementById('bitmapGridSize').value = savedSize;
+        const [w, h] = savedSize.split('x').map(Number);
+        if (w && h) { bmpW = w; bmpH = h; }
+      }
+      if (savedBank) {
+        try {
+          fontBank = JSON.parse(savedBank) || {};
+        } catch (e) {
+          fontBank = {};
+        }
+      }
+      if (savedActive) {
+        activeBankChar = savedActive;
+        const bankCharInput = document.getElementById('bankCharInput');
+        if (bankCharInput) bankCharInput.value = activeBankChar;
+      }
+      if (savedGrid) {
+        try {
+          const parsed = JSON.parse(savedGrid);
+          if (Array.isArray(parsed) && parsed.length === bmpW * bmpH) {
+            bmpGrid = parsed;
+            renderBitmapAll();
+            renderBitmapBankCanvas();
+          } else {
+            loadBmpPreset('cp437_smiley');
+          }
+        } catch (e) {
+          loadBmpPreset('cp437_smiley');
+        }
+      } else if (savedBank && fontBank[activeBankChar] && fontBank[activeBankChar].length === bmpW * bmpH) {
+        bmpGrid = [...fontBank[activeBankChar]];
+        renderBitmapAll();
+        renderBitmapBankCanvas();
+      } else {
+        loadBmpPreset('cp437_smiley');
+      }
 
       document.getElementById('bitmapGridSize').onchange = (e) => {
         const [w, h] = e.target.value.split('x').map(Number);
@@ -3616,6 +3678,36 @@ typedef struct {
       }
       requestAnimationFrame(runOscillation);
     }
+
+    // Lifecycle & Resource Hygiene: pause rAF animation loop on document hidden
+    let wasOscillatingBeforeHidden = false;
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) {
+        if (isOscillating) {
+          wasOscillatingBeforeHidden = true;
+          isOscillating = false;
+          const btn = document.getElementById('btnTogglePulse');
+          if (btn) {
+            btn.textContent = '▶ Start Typographic Pulse / Breath Mode';
+            btn.style.background = '#7c3aed';
+          }
+        }
+      } else {
+        if (wasOscillatingBeforeHidden) {
+          wasOscillatingBeforeHidden = false;
+          const activeTab = document.querySelector('.tab-btn.active')?.dataset.target;
+          if (activeTab === 'panel-opentype') {
+            isOscillating = true;
+            const btn = document.getElementById('btnTogglePulse');
+            if (btn) {
+              btn.textContent = '⏹ Stop Typographic Pulse';
+              btn.style.background = '#dc2626';
+            }
+            requestAnimationFrame(runOscillation);
+          }
+        }
+      }
+    });
 
     function initOpenTypeStudio() {
       otfTags.forEach(t => {
