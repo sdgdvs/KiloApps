@@ -61,12 +61,16 @@
       background: linear-gradient(90deg, #0d0c1d 0%, #171433 50%, #0d0c1d 100%);
       border-bottom: 2px solid var(--accent-purple);
       box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6), 0 0 15px var(--glow-purple);
-      padding: 10px 24px;
+      padding: 8px 18px;
       display: flex;
       justify-content: space-between;
       align-items: center;
       position: relative;
       z-index: 10;
+      flex-wrap: wrap;
+      gap: 10px;
+      max-width: 100%;
+      box-sizing: border-box;
     }
 
     header::after {
@@ -126,8 +130,10 @@
     /* Golden Element Badges in Stats Bar */
     .stats-bar {
       display: flex;
-      gap: 12px;
-      font-size: 0.85rem;
+      gap: 8px;
+      font-size: 0.82rem;
+      flex-wrap: wrap;
+      align-items: center;
     }
 
     .stat-badge {
@@ -322,20 +328,70 @@
       border-radius: 3px;
     }
 
-    /* Golden Element Badge / Cards Styling */
+    /* Golden Element Badge / Cards Styling with Alchemical Reagent Seals */
     .element-card {
       background: linear-gradient(145deg, rgba(255, 255, 255, 0.03), rgba(155, 89, 182, 0.05));
       border: 1px solid var(--border-color);
       border-radius: 10px;
-      padding: 10px 8px;
+      padding: 8px 6px;
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 6px;
+      gap: 4px;
       cursor: pointer;
       transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
       position: relative;
       overflow: hidden;
+    }
+
+    .element-card .element-seal {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      background: radial-gradient(circle at 35% 35%, rgba(255,255,255,0.2) 0%, rgba(20,18,40,0.92) 80%);
+      border: 1.5px solid var(--tier-accent, var(--accent-purple));
+      box-shadow: 0 4px 10px rgba(0,0,0,0.65), inset 0 0 6px rgba(0,0,0,0.7), 0 0 8px var(--tier-glow, transparent);
+      transition: all 0.25s ease;
+      margin-top: 4px;
+    }
+
+    .element-card.t1 { --tier-accent: #e67e22; --tier-glow: rgba(230, 126, 34, 0.45); }
+    .element-card.t2 { --tier-accent: #2ecc71; --tier-glow: rgba(46, 204, 113, 0.45); }
+    .element-card.t3 { --tier-accent: #3498db; --tier-glow: rgba(52, 152, 219, 0.45); }
+    .element-card.t4 { --tier-accent: #9b59b6; --tier-glow: rgba(155, 89, 182, 0.5); }
+    .element-card.t5 { --tier-accent: #f1c40f; --tier-glow: rgba(241, 196, 15, 0.6); }
+    .element-card.t6 { --tier-accent: #ff69b4; --tier-glow: rgba(255, 105, 180, 0.7); }
+
+    .element-card:hover .element-seal {
+      transform: scale(1.1);
+      box-shadow: 0 6px 14px rgba(0,0,0,0.85), inset 0 0 10px rgba(255,255,255,0.25), 0 0 16px var(--tier-glow, var(--accent-gold));
+      border-color: var(--accent-gold-light);
+    }
+
+    .element-seal .seal-glyph {
+      position: absolute;
+      font-size: 0.7rem;
+      opacity: 0.35;
+      color: var(--tier-accent, var(--accent-gold));
+      top: 1px;
+      right: 3px;
+      font-weight: 700;
+      pointer-events: none;
+    }
+
+    .element-seal .element-icon {
+      font-size: 1.6rem;
+      line-height: 1;
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.8));
+      z-index: 1;
+    }
+
+    .slot-seal {
+      margin-bottom: 2px;
     }
 
     .element-card::before {
@@ -402,7 +458,7 @@
       background: var(--bg-crucible);
       align-items: center;
       justify-content: center;
-      padding: 24px 20px;
+      padding: 10px 16px;
       position: relative;
       background-image: 
         radial-gradient(circle at center, rgba(155, 89, 182, 0.15) 0%, transparent 70%),
@@ -418,7 +474,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      margin-bottom: 20px;
+      margin-bottom: 10px;
     }
 
     .rune-ring {
@@ -444,10 +500,13 @@
     }
 
     .crucible-vessel {
-      width: 150px;
-      height: 150px;
+      width: 154px;
+      height: 154px;
       border-radius: 50%;
-      background: radial-gradient(ellipse at 35% 35%, rgba(255,255,255,0.6) 0%, rgba(255,255,255,0) 20%), url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="150" height="150" viewBox="0 0 100 100"><path d="M30,30 L30,50 Q30,85 50,85 Q70,85 70,50 L70,30 Z" fill="%2337265f" stroke="%23f39c12" stroke-width="2"/><path d="M25,30 L75,30 L70,35 L30,35 Z" fill="%23d4ac0d"/></svg>'), radial-gradient(circle, rgba(155, 89, 182, 0.3) 0%, rgba(15, 14, 30, 0.95) 80%); background-repeat: no-repeat; background-position: center;
+      background: radial-gradient(ellipse at 35% 35%, rgba(255,255,255,0.45) 0%, rgba(255,255,255,0) 22%), url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="150" height="150" viewBox="0 0 100 100"><defs><radialGradient id="crucCore" cx="50%25" cy="60%25" r="50%25"><stop offset="0%25" stop-color="%23f39c12" stop-opacity="0.9"/><stop offset="50%25" stop-color="%238e44ad" stop-opacity="0.6"/><stop offset="90%25" stop-color="%231a102f" stop-opacity="0.95"/></radialGradient><linearGradient id="goldRim" x1="0" y1="0" x2="1" y2="0"><stop offset="0%25" stop-color="%23d4ac0d"/><stop offset="35%25" stop-color="%23f1c40f"/><stop offset="70%25" stop-color="%23b7950b"/><stop offset="100%25" stop-color="%23f39c12"/></linearGradient><linearGradient id="ironPot" x1="0" y1="0" x2="0" y2="1"><stop offset="0%25" stop-color="%232b2140"/><stop offset="60%25" stop-color="%23181228"/><stop offset="100%25" stop-color="%230b0816"/></linearGradient></defs><path d="M22,34 C22,72 32,88 50,88 C68,88 78,72 78,34 Z" fill="url(%23ironPot)" stroke="%23d4ac0d" stroke-width="1.8"/><ellipse cx="50" cy="58" rx="24" ry="22" fill="url(%23crucCore)"/><path d="M24,50 Q50,58 76,50" fill="none" stroke="%23d4ac0d" stroke-width="1.5" stroke-dasharray="2,3"/><path d="M26,62 Q50,70 74,62" fill="none" stroke="%23f1c40f" stroke-width="1" stroke-opacity="0.7"/><path d="M16,38 Q10,44 18,52 Q23,54 22,46 Z" fill="%23d4ac0d" stroke="%237d6608" stroke-width="1"/><path d="M84,38 Q90,44 82,52 Q77,54 78,46 Z" fill="%23d4ac0d" stroke="%237d6608" stroke-width="1"/><ellipse cx="50" cy="33" rx="29" ry="8" fill="url(%23goldRim)" stroke="%23f9e79f" stroke-width="1"/><ellipse cx="50" cy="33" rx="24" ry="5.5" fill="%23181228"/><ellipse cx="50" cy="33" rx="20" ry="4" fill="%23e67e22" fill-opacity="0.7"/><path d="M28,31 Q50,27 72,31" fill="none" stroke="%23ffffff" stroke-width="1" stroke-opacity="0.8"/></svg>'), radial-gradient(circle, rgba(155, 89, 182, 0.35) 0%, rgba(15, 14, 30, 0.95) 80%);
+      background-repeat: no-repeat;
+      background-position: center;
+      background-size: contain;
       border: 2px dashed var(--accent-gold);
       display: flex;
       flex-direction: column;
@@ -455,31 +514,86 @@
       justify-content: center;
       position: relative;
       overflow: hidden;
-      box-shadow: 15px 25px 30px rgba(0, 0, 0, 0.8), 0 0 35px var(--glow-purple), inset 0 0 20px rgba(155, 89, 182, 0.4);
-      transition: all 0.3s ease;
+      box-shadow: 15px 25px 35px rgba(0, 0, 0, 0.85), 0 0 35px var(--glow-purple), inset 0 0 25px rgba(155, 89, 182, 0.4);
+      transition: all 0.35s ease;
       z-index: 2;
     }
 
-    .crucible-vessel.reacting {
-      animation: pulseCrucible 0.6s infinite alternate;
-      border-color: var(--accent-gold-light);
-      box-shadow: 25px 35px 45px rgba(0, 0, 0, 0.9), 0 0 60px var(--glow-gold), inset 0 0 30px var(--glow-gold);
+    .crucible-vessel.vessel-crucible {
+      background-image: radial-gradient(ellipse at 35% 35%, rgba(255,255,255,0.45) 0%, rgba(255,255,255,0) 22%), url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="150" height="150" viewBox="0 0 100 100"><defs><radialGradient id="crucCore" cx="50%25" cy="60%25" r="50%25"><stop offset="0%25" stop-color="%23f39c12" stop-opacity="0.9"/><stop offset="50%25" stop-color="%238e44ad" stop-opacity="0.6"/><stop offset="90%25" stop-color="%231a102f" stop-opacity="0.95"/></radialGradient><linearGradient id="goldRim" x1="0" y1="0" x2="1" y2="0"><stop offset="0%25" stop-color="%23d4ac0d"/><stop offset="35%25" stop-color="%23f1c40f"/><stop offset="70%25" stop-color="%23b7950b"/><stop offset="100%25" stop-color="%23f39c12"/></linearGradient><linearGradient id="ironPot" x1="0" y1="0" x2="0" y2="1"><stop offset="0%25" stop-color="%232b2140"/><stop offset="60%25" stop-color="%23181228"/><stop offset="100%25" stop-color="%230b0816"/></linearGradient></defs><path d="M22,34 C22,72 32,88 50,88 C68,88 78,72 78,34 Z" fill="url(%23ironPot)" stroke="%23d4ac0d" stroke-width="1.8"/><ellipse cx="50" cy="58" rx="24" ry="22" fill="url(%23crucCore)"/><path d="M24,50 Q50,58 76,50" fill="none" stroke="%23d4ac0d" stroke-width="1.5" stroke-dasharray="2,3"/><path d="M26,62 Q50,70 74,62" fill="none" stroke="%23f1c40f" stroke-width="1" stroke-opacity="0.7"/><path d="M16,38 Q10,44 18,52 Q23,54 22,46 Z" fill="%23d4ac0d" stroke="%237d6608" stroke-width="1"/><path d="M84,38 Q90,44 82,52 Q77,54 78,46 Z" fill="%23d4ac0d" stroke="%237d6608" stroke-width="1"/><ellipse cx="50" cy="33" rx="29" ry="8" fill="url(%23goldRim)" stroke="%23f9e79f" stroke-width="1"/><ellipse cx="50" cy="33" rx="24" ry="5.5" fill="%23181228"/><ellipse cx="50" cy="33" rx="20" ry="4" fill="%23e67e22" fill-opacity="0.7"/><path d="M28,31 Q50,27 72,31" fill="none" stroke="%23ffffff" stroke-width="1" stroke-opacity="0.8"/></svg>'), radial-gradient(circle, rgba(243, 156, 18, 0.3) 0%, rgba(15, 14, 30, 0.95) 80%);
     }
 
-    @keyframes pulseCrucible {
-      from { transform: scale(1); box-shadow: 15px 25px 30px rgba(0, 0, 0, 0.8), 0 0 30px var(--glow-purple); }
-      to { transform: scale(1.08); box-shadow: 30px 40px 50px rgba(0, 0, 0, 0.95), 0 0 60px var(--glow-gold); }
+    .crucible-vessel.vessel-alembic {
+      border-color: #2ecc71;
+      box-shadow: 15px 25px 35px rgba(0, 0, 0, 0.85), 0 0 40px rgba(46, 204, 113, 0.5), inset 0 0 25px rgba(46, 204, 113, 0.35);
+      background-image: radial-gradient(ellipse at 35% 35%, rgba(255,255,255,0.55) 0%, rgba(255,255,255,0) 25%), url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="150" height="150" viewBox="0 0 100 100"><defs><radialGradient id="alembicLiquid" cx="45%25" cy="65%25" r="45%25"><stop offset="0%25" stop-color="%232ecc71" stop-opacity="0.9"/><stop offset="50%25" stop-color="%2316a085" stop-opacity="0.75"/><stop offset="85%25" stop-color="%230e4b3c" stop-opacity="0.9"/><stop offset="100%25" stop-color="%2309251e" stop-opacity="0.95"/></radialGradient><linearGradient id="brassFit" x1="0" y1="0" x2="1" y2="0"><stop offset="0%25" stop-color="%23b7950b"/><stop offset="50%25" stop-color="%23f1c40f"/><stop offset="100%25" stop-color="%237d6608"/></linearGradient></defs><path d="M30,86 L22,94 M70,86 L78,94 M50,87 L50,95" stroke="url(%23brassFit)" stroke-width="2.5" stroke-linecap="round"/><ellipse cx="50" cy="85" rx="24" ry="4" fill="none" stroke="url(%23brassFit)" stroke-width="2"/><circle cx="50" cy="62" r="23" fill="url(%23alembicLiquid)" stroke="%2370d6ff" stroke-width="1.8" stroke-opacity="0.8"/><circle cx="44" cy="66" r="2" fill="%23ffffff" fill-opacity="0.8"/><circle cx="52" cy="72" r="3" fill="%23a3e4d7" fill-opacity="0.75"/><circle cx="58" cy="60" r="1.5" fill="%23ffffff" fill-opacity="0.9"/><circle cx="48" cy="54" r="2.5" fill="%2358d68d" fill-opacity="0.7"/><rect x="42" y="38" width="16" height="5" rx="1.5" fill="url(%23brassFit)" stroke="%23d4ac0d" stroke-width="0.8"/><path d="M44,38 C35,32 36,18 50,18 C64,18 65,32 56,38 Z" fill="rgba(112,214,255,0.18)" stroke="%2370d6ff" stroke-width="1.6"/><path d="M58,24 C72,22 84,32 86,52 C87,60 85,68 84,72" fill="none" stroke="%2370d6ff" stroke-width="3" stroke-linecap="round"/><path d="M58,24 C72,22 84,32 86,52 C87,60 85,68 84,72" fill="none" stroke="%23ffffff" stroke-width="1" stroke-opacity="0.7"/><circle cx="84" cy="76" r="2.2" fill="%232ecc71" stroke="%23ffffff" stroke-width="0.8"/><rect x="80" y="80" width="8" height="12" rx="2" fill="rgba(46,204,113,0.35)" stroke="%2370d6ff" stroke-width="1"/><path d="M34,54 A18,18 0 0,1 46,42" fill="none" stroke="%23ffffff" stroke-width="2.2" stroke-linecap="round" stroke-opacity="0.75"/><path d="M42,24 A8,8 0 0,1 48,20" fill="none" stroke="%23ffffff" stroke-width="1.8" stroke-linecap="round"/></svg>'), radial-gradient(circle, rgba(46, 204, 113, 0.3) 0%, rgba(10, 25, 20, 0.95) 80%);
+    }
+
+    .crucible-vessel.vessel-retort {
+      border-color: #3498db;
+      box-shadow: 15px 25px 35px rgba(0, 0, 0, 0.85), 0 0 40px rgba(52, 152, 219, 0.5), inset 0 0 25px rgba(52, 152, 219, 0.35);
+      background-image: radial-gradient(ellipse at 35% 35%, rgba(255,255,255,0.55) 0%, rgba(255,255,255,0) 25%), url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="150" height="150" viewBox="0 0 100 100"><defs><radialGradient id="retortLiquid" cx="40%25" cy="60%25" r="50%25"><stop offset="0%25" stop-color="%233498db" stop-opacity="0.95"/><stop offset="50%25" stop-color="%232980b9" stop-opacity="0.8"/><stop offset="85%25" stop-color="%231a3d54" stop-opacity="0.95"/><stop offset="100%25" stop-color="%230b1a24" stop-opacity="1"/></radialGradient><linearGradient id="brassRetort" x1="0" y1="0" x2="1" y2="0"><stop offset="0%25" stop-color="%23d4ac0d"/><stop offset="50%25" stop-color="%23f39c12"/><stop offset="100%25" stop-color="%239a7d0a"/></linearGradient></defs><path d="M38,82 C22,82 18,65 24,50 C29,38 42,36 52,38 C64,40 76,55 86,68 L88,72 L83,74 C73,60 62,48 50,47 C44,46 32,50 30,62 C28,73 34,77 44,77 C54,77 60,70 60,65 L66,65 C66,74 54,82 38,82 Z" fill="url(%23retortLiquid)" stroke="%2370d6ff" stroke-width="1.6"/><path d="M23,54 C21,64 25,74 34,77" fill="none" stroke="%23ffffff" stroke-width="2" stroke-linecap="round" stroke-opacity="0.8"/><path d="M52,42 C64,44 74,56 82,67" fill="none" stroke="%23ffffff" stroke-width="1.5" stroke-linecap="round" stroke-opacity="0.7"/><ellipse cx="38" cy="85" rx="18" ry="4" fill="none" stroke="url(%23brassRetort)" stroke-width="2"/><path d="M24,86 L18,94 M52,86 L58,94" stroke="url(%23brassRetort)" stroke-width="2" stroke-linecap="round"/><line x1="33" y1="62" x2="38" y2="62" stroke="%23f1c40f" stroke-width="1" stroke-opacity="0.75"/><line x1="32" y1="68" x2="39" y2="68" stroke="%23f1c40f" stroke-width="1" stroke-opacity="0.75"/><circle cx="86" cy="76" r="2" fill="%233498db" stroke="%23ffffff" stroke-width="0.7"/></svg>'), radial-gradient(circle, rgba(52, 152, 219, 0.3) 0%, rgba(10, 20, 30, 0.95) 80%);
+    }
+
+    .crucible-vessel.vessel-brewing {
+      border-color: #55efc4;
+      box-shadow: 15px 25px 35px rgba(0, 0, 0, 0.85), 0 0 40px rgba(85, 239, 196, 0.5), inset 0 0 25px rgba(0, 184, 148, 0.35);
+      background-image: radial-gradient(ellipse at 35% 35%, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0) 25%), url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="150" height="150" viewBox="0 0 100 100"><defs><radialGradient id="brewGlow" cx="50%25" cy="40%25" r="50%25"><stop offset="0%25" stop-color="%2355efc4" stop-opacity="0.95"/><stop offset="45%25" stop-color="%2300b894" stop-opacity="0.8"/><stop offset="85%25" stop-color="%23006266" stop-opacity="0.95"/><stop offset="100%25" stop-color="%23051923" stop-opacity="1"/></radialGradient><linearGradient id="cauldronBrass" x1="0" y1="0" x2="1" y2="0"><stop offset="0%25" stop-color="%23a07830"/><stop offset="50%25" stop-color="%23e5b85c"/><stop offset="100%25" stop-color="%2372541e"/></linearGradient></defs><path d="M28,82 L20,93 M72,82 L80,93 M50,85 L50,95" stroke="url(%23cauldronBrass)" stroke-width="3" stroke-linecap="round"/><path d="M22,42 C16,65 24,84 50,84 C76,84 84,65 78,42 Z" fill="%2319152b" stroke="url(%23cauldronBrass)" stroke-width="2"/><ellipse cx="50" cy="50" rx="26" ry="12" fill="url(%23brewGlow)"/><circle cx="42" cy="48" r="3.5" fill="%2355efc4" stroke="%23ffffff" stroke-width="0.6"/><circle cx="56" cy="52" r="4.5" fill="%2300cec9" stroke="%23ffffff" stroke-width="0.8"/><circle cx="49" cy="45" r="2" fill="%23ffffff"/><ellipse cx="50" cy="40" rx="30" ry="7" fill="url(%23cauldronBrass)" stroke="%23f9e79f" stroke-width="1.2"/><ellipse cx="50" cy="40" rx="26" ry="5" fill="%23051923"/></svg>'), radial-gradient(circle, rgba(85, 239, 196, 0.3) 0%, rgba(10, 25, 25, 0.95) 80%);
+    }
+
+    .crucible-vessel.vessel-anvil {
+      border-color: var(--accent-gold);
+      box-shadow: 15px 25px 35px rgba(0, 0, 0, 0.85), 0 0 40px rgba(243, 156, 18, 0.5), inset 0 0 25px rgba(243, 156, 18, 0.3);
+      background-image: radial-gradient(ellipse at 35% 35%, rgba(255,255,255,0.45) 0%, rgba(255,255,255,0) 22%), url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="150" height="150" viewBox="0 0 100 100"><defs><linearGradient id="anvilSteel" x1="0" y1="0" x2="0" y2="1"><stop offset="0%25" stop-color="%234a4563"/><stop offset="50%25" stop-color="%232b2742"/><stop offset="100%25" stop-color="%23131120"/></linearGradient><linearGradient id="anvilGold" x1="0" y1="0" x2="1" y2="0"><stop offset="0%25" stop-color="%23d4ac0d"/><stop offset="50%25" stop-color="%23f1c40f"/><stop offset="100%25" stop-color="%23b7950b"/></linearGradient></defs><path d="M22,86 L78,86 L74,74 L26,74 Z" fill="url(%23anvilSteel)" stroke="%23d4ac0d" stroke-width="1.5"/><path d="M34,74 C34,60 38,56 36,46 L64,46 C62,56 66,60 66,74 Z" fill="url(%23anvilSteel)" stroke="%23d4ac0d" stroke-width="1.2"/><path d="M12,46 C22,46 30,48 36,46 L82,46 L86,52 L76,52 L66,54 C54,54 44,52 34,54 L20,52 Z" fill="url(%23anvilGold)" stroke="%23f9e79f" stroke-width="1"/><rect x="36" y="42" width="46" height="5" rx="1" fill="%23f1c40f" stroke="%23ffffff" stroke-width="0.8"/><path d="M44,62 L50,68 L56,62 M50,60 L50,72" fill="none" stroke="%2300ffff" stroke-width="1.5" stroke-linecap="round"/></svg>'), radial-gradient(circle, rgba(243, 156, 18, 0.25) 0%, rgba(20, 18, 35, 0.95) 80%);
+    }
+
+    .crucible-vessel.reacting {
+      animation: transmutationGlow 0.45s infinite alternate ease-in-out;
+      border-color: #ffe600 !important;
+      border-style: solid !important;
+    }
+
+    .transmutation-circle.reacting .rune-ring {
+      animation: spinRunes 2s linear infinite;
+      box-shadow: 0 0 40px var(--glow-gold), inset 0 0 30px var(--glow-purple);
+      border-color: var(--accent-gold-light);
+    }
+
+    @keyframes spinRunes {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    @keyframes transmutationGlow {
+      0% {
+        transform: scale(1) rotate(-1.5deg);
+        filter: brightness(1.25) drop-shadow(0 0 25px rgba(243, 156, 18, 0.85));
+        box-shadow: 0 0 40px rgba(243, 156, 18, 0.8), 0 0 80px rgba(155, 89, 182, 0.7), inset 0 0 30px rgba(241, 196, 15, 0.6);
+      }
+      100% {
+        transform: scale(1.12) rotate(1.5deg);
+        filter: brightness(1.7) drop-shadow(0 0 45px rgba(255, 230, 0, 1));
+        box-shadow: 0 0 70px rgba(255, 230, 0, 0.95), 0 0 120px rgba(224, 86, 253, 0.85), inset 0 0 50px rgba(255, 255, 255, 0.8);
+      }
     }
 
     .crucible-orb {
-      font-size: 3.5rem;
-      filter: drop-shadow(0 0 15px rgba(243, 156, 18, 0.6));
+      font-size: 2.8rem;
+      filter: drop-shadow(0 0 15px rgba(243, 156, 18, 0.7));
+      transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      z-index: 3;
+      user-select: none;
+    }
+
+    .crucible-vessel:hover .crucible-orb {
+      transform: scale(1.15) translateY(-3px);
+      filter: drop-shadow(0 0 20px rgba(255, 230, 0, 0.9));
     }
 
     .slots-container {
       display: flex;
-      gap: 20px;
-      margin-bottom: 20px;
+      gap: 14px;
+      margin-bottom: 12px;
       z-index: 2;
     }
 
@@ -690,25 +804,28 @@
 
     .oracle-buttons {
       display: flex;
-      gap: 10px;
+      gap: 8px;
       width: 100%;
       justify-content: center;
+      flex-wrap: wrap;
     }
 
     .btn-oracle {
-      flex: 1;
+      flex: 1 1 120px;
+      min-width: 110px;
+      max-width: 220px;
       background: linear-gradient(135deg, rgba(22, 21, 46, 0.9), rgba(45, 30, 75, 0.9));
       border: 1px solid var(--accent-purple);
       color: var(--text-main);
-      padding: 8px 10px;
+      padding: 6px 8px;
       border-radius: 8px;
-      font-size: 0.78rem;
+      font-size: 0.76rem;
       font-weight: 700;
       cursor: pointer;
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 3px;
+      gap: 2px;
       transition: all 0.25s ease;
       box-shadow: 0 4px 10px rgba(0,0,0,0.4);
     }
@@ -2376,7 +2493,7 @@
 
       <div class="transmutation-circle">
         <div class="rune-ring"></div>
-        <div class="crucible-vessel" id="crucible-vessel">
+        <div class="crucible-vessel vessel-crucible" id="crucible-vessel">
           <span class="crucible-orb" id="crucible-orb">🔮</span>
         </div>
       </div>
@@ -3798,17 +3915,30 @@
         if (oracleSec) oracleSec.style.display = 'flex';
 
         if (mode === 'crucible') {
-          descEl.innerHTML = "<strong>Crucible:</strong> Combine 2 elements to synthesize new compounds.";
+          descEl.innerHTML = "<strong>Crucible:</strong> Combine 2 elements to synthesize new compounds in the runic forge.";
           actionBtn.innerHTML = "✨ Transmute Elements [Space]";
         } else if (mode === 'retort') {
-          descEl.innerHTML = "<strong>Retort:</strong> Distill a complex element to extract primary ingredient & essence.";
+          descEl.innerHTML = "<strong>Retort:</strong> Distill a complex element through borosilicate swan neck glassware.";
           actionBtn.innerHTML = "⚗️ Distill Primary Essence [Space]";
         } else if (mode === 'alembic') {
-          descEl.innerHTML = "<strong>Alembic:</strong> Extract fractional 2nd constituent essence & ingredient.";
+          descEl.innerHTML = "<strong>Alembic:</strong> Extract secondary essence via multi-bulb condensation glassware.";
           actionBtn.innerHTML = "🧪 Extract Secondary Essence [Space]";
         } else if (mode === 'anvil') {
           descEl.innerHTML = "<strong>Anvil:</strong> Shatter a complex element to harvest raw Alchemical Essence & Dust.";
           actionBtn.innerHTML = "🔨 Crush for Essence [Space]";
+        }
+      }
+
+      const vessel = document.getElementById('crucible-vessel');
+      if (vessel) {
+        vessel.className = `crucible-vessel vessel-${mode}`;
+        const orb = document.getElementById('crucible-orb');
+        if (orb) {
+          if (mode === 'alembic') orb.innerText = '🧪';
+          else if (mode === 'retort') orb.innerText = '⚗️';
+          else if (mode === 'anvil') orb.innerText = '🔨';
+          else if (mode === 'brewing') orb.innerText = '🥣';
+          else orb.innerText = '🔮';
         }
       }
       playChime(450, 'sine', 0.1);
@@ -4139,6 +4269,23 @@
       if (activeEquipment === 'codex') renderCodex();
     }
 
+    function getAlchSymbol(el) {
+      if (!el) return '🜂';
+      if (el.alchSymbol) return el.alchSymbol;
+      const tierGlyphs = {
+        1: ['🜂', '🜄', '🜃', '🜁'],
+        2: ['🜍', '🜂', '🜛', '🜃', '🜄', '🜔', '🜃', '🜞', '🜁', '🜂', '🜄', '🜞'],
+        3: ['☿', '🜔', '🜛', '🜍', '♂', '🜂', '⚡', '☿', '🜍', '🜂', '🜛', '🜃'],
+        4: ['🜁', '☿', '🜛', '🜄', '🜂', '🜂', '🜔', 'ᛟ', '🜄', '☿', '🜂', '☽', '☉', '🜁'],
+        5: ['☉', '☽', '🜛', '🜄', '🜂', '🜞', '♾', '☽', '☉', '🜛', '☉', '🜔', '♄', '♾'],
+        6: ['👑', '🌌', '🛡️', '💎', '🧬', '✨', '🔮', '🔥']
+      };
+      const list = tierGlyphs[el.tier] || ['🜂', '🜄', '🜃', '🜁', '☿', '🜍', '🜔', '☉'];
+      let hash = 0;
+      for (let i = 0; i < el.id.length; i++) hash = (hash * 31 + el.id.charCodeAt(i)) >>> 0;
+      return list[hash % list.length];
+    }
+
     function renderGrimoire() {
       const grid = document.getElementById('element-grid');
       const search = document.getElementById('search-input').value.toLowerCase().trim();
@@ -4156,7 +4303,10 @@
 
         card.innerHTML = `
           ${badgeTag}
-          <div class="element-icon">${el.icon}</div>
+          <div class="element-seal">
+            <span class="seal-glyph">${getAlchSymbol(el)}</span>
+            <div class="element-icon">${el.icon}</div>
+          </div>
           <div class="element-name">${el.name}</div>
         `;
         card.onclick = () => selectElement(el);
@@ -4184,10 +4334,15 @@
       if (selectedSlots[0]) {
         const t1 = TIERS.find(t => t.id === selectedSlots[0].tier);
         const col1 = t1 ? t1.color : 'var(--accent-purple)';
-        slot1.innerHTML = `<span style="font-size:2rem">${selectedSlots[0].icon}</span><span style="font-size:0.8rem; font-weight:600">${selectedSlots[0].name}</span>`;
+        slot1.innerHTML = `
+          <div class="element-seal slot-seal" style="border-color:${col1}">
+            <span class="seal-glyph" style="color:${col1}">${getAlchSymbol(selectedSlots[0])}</span>
+            <div class="element-icon" style="font-size:1.6rem">${selectedSlots[0].icon}</div>
+          </div>
+          <span style="font-size:0.8rem; font-weight:600">${selectedSlots[0].name}</span>`;
         slot1.classList.add('active');
         slot1.style.borderColor = col1;
-        slot1.style.boxShadow = `0 0 12px ${col1}66`;
+        slot1.style.boxShadow = `0 0 14px ${col1}66`;
         if (selectedSlots[0].name === 'Fire') slot1.classList.add('anim-fire');
         if (selectedSlots[0].name === 'Water') slot1.classList.add('anim-water');
       } else {
@@ -4200,10 +4355,15 @@
       if (selectedSlots[1]) {
         const t2 = TIERS.find(t => t.id === selectedSlots[1].tier);
         const col2 = t2 ? t2.color : 'var(--accent-purple)';
-        slot2.innerHTML = `<span style="font-size:2rem">${selectedSlots[1].icon}</span><span style="font-size:0.8rem; font-weight:600">${selectedSlots[1].name}</span>`;
+        slot2.innerHTML = `
+          <div class="element-seal slot-seal" style="border-color:${col2}">
+            <span class="seal-glyph" style="color:${col2}">${getAlchSymbol(selectedSlots[1])}</span>
+            <div class="element-icon" style="font-size:1.6rem">${selectedSlots[1].icon}</div>
+          </div>
+          <span style="font-size:0.8rem; font-weight:600">${selectedSlots[1].name}</span>`;
         slot2.classList.add('active');
         slot2.style.borderColor = col2;
-        slot2.style.boxShadow = `0 0 12px ${col2}66`;
+        slot2.style.boxShadow = `0 0 14px ${col2}66`;
         if (selectedSlots[1].name === 'Fire') slot2.classList.add('anim-fire');
         if (selectedSlots[1].name === 'Water') slot2.classList.add('anim-water');
       } else {
@@ -4450,11 +4610,14 @@
       );
 
       const vessel = document.getElementById('crucible-vessel');
+      const transCircle = document.querySelector('.transmutation-circle');
       const orb = document.getElementById('crucible-orb');
-      vessel.classList.add('reacting');
+      if (vessel) vessel.classList.add('reacting');
+      if (transCircle) transCircle.classList.add('reacting');
 
       setTimeout(() => {
-        vessel.classList.remove('reacting');
+        if (vessel) vessel.classList.remove('reacting');
+        if (transCircle) transCircle.classList.remove('reacting');
 
         if (match) {
           const resElement = ALL_ELEMENTS.find(e => e.id === match.result);
@@ -4622,9 +4785,18 @@
       orb.innerText = ing1.icon;
       setTimeout(() => { orb.innerText = '🔮'; }, 1500);
 
+      const vessel = document.getElementById('crucible-vessel');
+      const transCircle = document.querySelector('.transmutation-circle');
+      if (vessel) vessel.classList.add('reacting');
+      if (transCircle) transCircle.classList.add('reacting');
+      setTimeout(() => {
+        if (vessel) vessel.classList.remove('reacting');
+        if (transCircle) transCircle.classList.remove('reacting');
+      }, 750);
+
       triggerToast("⚗️ Retort Distillation", `Extracted ${ing1.name} ${ing1.icon} (+${essGain} Essence, +${dustGain} Dust)`, ing1.icon);
       addLog(`⚗️ <strong>RETORT DISTILLATION:</strong> Distilled <strong>${el.name}</strong> ${el.icon} to extract primary essence <strong>${ing1.name}</strong> ${ing1.icon}! (+${essGain} Essence, +${dustGain} Dust)`, true, false, false, 'retort');
-      triggerTransmuteFX('#3498db');
+      triggerTransmuteFX('#3498db', ing1.tier, isNew);
       playRetortSound();
     }
 
@@ -4666,9 +4838,18 @@
       orb.innerText = ing2.icon;
       setTimeout(() => { orb.innerText = '🔮'; }, 1500);
 
+      const vessel = document.getElementById('crucible-vessel');
+      const transCircle = document.querySelector('.transmutation-circle');
+      if (vessel) vessel.classList.add('reacting');
+      if (transCircle) transCircle.classList.add('reacting');
+      setTimeout(() => {
+        if (vessel) vessel.classList.remove('reacting');
+        if (transCircle) transCircle.classList.remove('reacting');
+      }, 750);
+
       triggerToast("🧪 Alembic Extraction", `Extracted ${ing2.name} ${ing2.icon} (+${essGain} Essence, +${dustGain} Dust)`, ing2.icon);
       addLog(`🧪 <strong>ALEMBIC EXTRACTION:</strong> Extracted secondary essence <strong>${ing2.name}</strong> ${ing2.icon} from <strong>${el.name}</strong> ${el.icon}! (+${essGain} Essence, +${dustGain} Dust)`, true, false, false, 'alembic');
-      triggerTransmuteFX('#9b59b6');
+      triggerTransmuteFX('#2ecc71', ing2.tier, isNew);
       playAlembicSound();
     }
 

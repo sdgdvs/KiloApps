@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-graphics
-next_agent: kilo-soundscape
+current_agent: kilo-soundscape
+next_agent: kilo-tester
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -26,7 +26,7 @@ commit_checkpoint: 12
 status: ready
 current_targets:
   kilo_creator: kweb://demoscene
-  kilo_graphics: KAlchemy
+  kilo_graphics: KVoid
   kilo_soundscape: KFarm
   kilo_tester: KSys
   kilo_usability: KScript
@@ -52,9 +52,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-creator
-  app: kweb://scallion
-  timestamp: '2026-10-23T14:37:13-07:00'
+  agent: kilo-graphics
+  app: KAlchemy
+  timestamp: '2026-10-23T14:42:40-07:00'
 last_planner_run: '2026-10-23T07:15:00Z'
 ---
 
@@ -93,11 +93,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `kweb://scallion` | `KiloOS/public/web/scallion.html`, `KiloOS/public/apps/knet.html` | Create *The Scallion: 1999 Satirical News* (`scallion.html` <250 KB): interactive late-90s tech/culture satire portal, "Ask A Sysadmin" interactive column, Infographic & Headline generator, VFS clipping export, and route `kweb://scallion` in `knet.html`. |
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
-- **Active Target**: `KAlchemy`
+- **Active Target**: `KVoid`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KAlchemy` | `KiloOS/public/apps/kalchemy.html` | Alchemical laboratory & crucible visual overhaul: ornate alembic glassware, elemental reagent icons, transmutation reaction glow, and glint sweep. |
 | `KVoid` | `KiloOS/public/apps/kvoid.html` | Deep void survival visual upgrade: gravitational singularity lensing, derelict hull debris sprites, anomaly silhouettes, and glint sweep. |
 | `KCyber` | `KiloOS/public/apps/kcyber.html` | Netrunner icebreaker deck visual polish: isometric node towers, IC guardian constructs, matrix grid perspective, and glint sweep. |
 | `KStellar` | `KiloOS/public/apps/kstellar.html` | 4X stellar empire map visual upgrade: star spectral class rendering, fleet ship icons, orbital ringworlds, and glint sweep. |
@@ -107,6 +106,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KRogue` | `KiloOS/public/apps/krogue.html` | Subterranean roguelike visual polish: crisp tile/entity sprite rendering, atmospheric torchlight vignette, boss monster visual distinction, and perimeter glint sweep. |
 | `KBreakout` | `KiloOS/public/apps/kbreakout.html` | Arcade brick-breaker visual upgrade: textured metallic/crystalline bricks, plasma paddle/ball trails, boss hazard visuals, and zero perimeter border dots. |
 | `KStarship` | `KiloOS/public/apps/kstarship.html` | Starship bridge & sector tactical display upgrade: detailed hull subsystem schematics, nebula parallax backdrop, enemy cruiser silhouettes, and glint sweep. |
+| `KAlchemy` | `KiloOS/public/apps/kalchemy.html` | Alchemical laboratory & crucible visual overhaul: ornate alembic glassware, elemental reagent icons, transmutation reaction glow, and glint sweep. |
 
 ### 3. Procedural Audio & Soundscape Queue (`kilo-soundscape`)
 - **Active Target**: `KFarm`
@@ -227,6 +227,13 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-23T14:42:40-07:00 — kilo-graphics: KAlchemy (Alchemical Laboratory & Glassware Graphics Overhaul)**
+  - Status: PASS ✅ (0 errors, web 273.8 KB, native 68.5 KB < 999 KB; startup, Vite & security_lint PASS).
+  - Integrated ornate alembic glassware, runic crucible, retort & cauldron apparatus SVGs with active reaction glows.
+  - Upgraded elemental reagent cards with tier-specific alchemical seal discs, antique glyphs & responsive layout.
+  - Glint sweep verified: zero traveling perimeter dots or rotating specular glints.
+  - Handoff: Advanced `kilo-graphics` to `KVoid`; rotated active agent to `kilo-soundscape`.
+
 - **2026-10-23T14:37:13-07:00 — kilo-creator: kweb://scallion (Create The Scallion 1999 Satirical News Portal)**
   - Status: PASS ✅ (0 errors, web 88.7 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
   - Implemented The Scallion: 1999 satirical broadsheet portal with 5 complete articles, Y2K threat meter & interactive poll.
@@ -253,9 +260,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Layout & HiDPI: Enhanced touch-action manipulation, nowrap tabs, RAF-debounced canvas resize and pixelated stego canvas.
   - Keyboard & Modals: Added Tab focus trapping in modal overlays, lastFocusedElement restoration, live key input guards, and Ctrl+S / Ctrl+O VFS shortcuts in web and native C.
   - Handoff: Advanced `kilo-usability` to `KScript`; rotated active agent to `kilo-qa`.
-
-- **2026-10-23T13:41:14-07:00 — kilo-tester: KDB (Interactive UI Audit & Inline Repairs)**
-  - Status: PASS ✅ (0 errors, web 215.6 KB, native 66.0 KB < 999 KB; startup, Vite & security_lint PASS).
-  - UI & Hotkeys: Added Escape/Enter modal dismissal and hotkeys [5] Schema and [X] Index Lab.
-  - Repairs: Implemented Entity-Relationship Studio, Foreign Key audit, Index Simulator, Seed Data Generator, and DDL export.
-  - Handoff: Advanced `kilo-tester` to `KSys`; rotated active agent to `kilo-usability`.
