@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-creator
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -30,7 +30,7 @@ current_targets:
   kilo_soundscape: KQuest
   kilo_tester: KConverter
   kilo_usability: KTrader
-  kilo_qa: KHex
+  kilo_qa: KFont
   kilo_expander: KCipher
 virtual_web_target: kweb://slashnet
 virtual_web_rotation:
@@ -52,9 +52,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-usability
-  app: KConverter
-  timestamp: '2026-10-23T08:08:50-07:00'
+  agent: kilo-qa
+  app: KHex
+  timestamp: '2026-10-23T08:25:40-07:00'
 last_planner_run: '2026-10-23T07:15:00Z'
 ---
 
@@ -130,7 +130,6 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
 | `KConverter` | `KiloOS/public/apps/kconverter.html`, `KConverter/main.c` | Audit all 14 dimensional conversion categories, engineering notation toggle, reciprocal swap, presets, and F5/F9 persistence. |
-| `KHex` | `KiloOS/public/apps/khex.html`, `KHex/main.c` | Audit hex byte editor, multi-arch opcode disassembler (x86/6502/Z80), search/patch modals, and VFS file loading hooks. |
 | `KCipher` | `KiloOS/public/apps/kcipher.html`, `KCipher/main.c` | Audit cipher workbench (AES/XOR/Vigenère/ROT13/RSA toy), frequency histogram, key input guards, and VFS import/export. |
 | `KFont` | `KiloOS/public/apps/kfont.html`, `KFont/main.c` | Audit bitmap glyph matrix editor, zoom/pan controls, kerning preview, C header/JSON export, and keyboard shortcuts. |
 | `KDB` | `KiloOS/public/apps/kdb.html`, `KDB/main.c` | Audit SQL/table workbench, schema builder, query filter, chart modals, CSV/JSON/VFS export, and Escape modal dismissals. |
@@ -156,11 +155,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KConverter` | `KiloOS/public/apps/kconverter.html`, `KConverter/main.c` | Responsive 14-category selector layout on compact viewports, keyboard category/unit traversal, clear `[F1/H]` shortcut pill, and focus trapping. |
 
 ### 6. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial, State & Mature Graduation)
-- **Active Target**: `KHex`
+- **Active Target**: `KFont`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KHex` | `KiloOS/public/apps/khex.html`, `KHex/main.c` | Pass 5 QA: verify F5/F9 hex buffer & disassembler state persistence, `khex_tutorialSeen` flag, VFS file open/save, and clean Win32 C build (`KHex.exe` <999 KB); promote to Mature if complete. |
 | `KFont` | `KiloOS/public/apps/kfont.html`, `KFont/main.c` | Pass 5 QA: verify custom glyph bitmap F5/F9 persistence, first-run tutorial flag, Escape modal dismissals, and dual Win32 C build (`KFont.exe` <999 KB); promote to Mature if complete. |
 | `KConverter` | `KiloOS/public/apps/kconverter.html`, `KConverter/main.c` | Pass 5 QA: verify 14-category custom unit/history F5/F9 persistence, tutorial flag, and dual Win32 C build (`KConverter.exe` <999 KB); promote to Mature if complete. |
 | `KClip` | `KiloOS/public/apps/kclip.html`, `KClip/main.c` | Pass 5 QA: verify snippet vault & pinned history F5/F9 persistence, tutorial flag, and dual Win32 C build (`KClip.exe` <999 KB); promote to Mature if complete. |
@@ -196,6 +194,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 | Application | Primary File | Pass Count / Date | Category | Summary of Mature State |
 |---|---|---|---|---|
+| **KHex** | `KiloOS/public/apps/khex.html` | Pass 5+ (2026-10-23) | System / Analysis | Complete binary byte workstation featuring 9 analysis/edit tabs, multi-arch disassembler (x86/6502/Z80), VFS Open/Save integration, F5/F9 persistence, and dual Win32 C parity. |
 | **KPass** | `KiloOS/public/apps/kpass.html` | Pass 5+ (2026-10-23) | Security / Vault | Feature-complete retro password manager & vault; 4 generator modes, entropy visualizer, AES-GCM 256 encrypted vault, security audit scanner, export suite, F5/F9 persistence, dual Win32 C parity. |
 | **KSpace** | `KiloOS/public/apps/kspace.html` | Pass 5 (2026-10-23) | Action / Deep Space Shooter | 6-chassis space shooter, 12 enemy archetypes, 3 boss flagships, F5/F9 state persistence, first-run tutorial integrity, replay telemetry, dual Win32 native client parity. |
 | **KBase** | `KiloOS/public/apps/kbase.html` | Pass 5+ (2026-10-23) | Dev / Radix Converter | Full multi-base studio (radix 2-36, BCD, Gray, Base32/58/64, ULEB/SLEB128, IEEE-754, bitboard matrix), F5/F9 state, export suite (CSV/MD/JSON), dual Win32 C parity. |
@@ -235,6 +234,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-23T08:25:40-07:00 — kilo-qa: KHex (Pass 5 QA, Dual Parity & Mature Quarantine)**
+  - Status: PASS (0 errors, web 272.9 KB, native 37.5 KB < 999 KB; startup, Vite & security_lint PASS).
+  - State & Tutorial: Verified F5/F9 quicksave/quickload with full multi-arch disassembler & search persistence, khex_tutorialSeen, and Escape modal dismissals.
+  - Dual Parity & Lifecycle: Added VFS Open/Save IPC and URL hash launch hooks to Web; added multi-arch (x86/6502/Z80) opcode disassembler & Ctrl+D shortcut to Win32 C.
+  - Mature Quarantine & Handoff: Promoted `KHex` to Mature archive; advanced `kilo-qa` to `KFont`; next agent `kilo-expander`.
+
 - **2026-10-23T08:08:50-07:00 — kilo-usability: KConverter (Usability, Responsive Layout & Ergonomics Polish)**
   - Status: PASS ✅ (0 errors, web 129.6 KB, native 33.5 KB < 999 KB; startup, Vite & security_lint PASS).
   - Layout & Responsive: Horizontal touch-scrolling for 14 category tabs and quick preset chips on <=640px viewports.
@@ -259,9 +264,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Integrated Imagen 3 space assets (nebula backdrop, player/pirate ship hulls, dreadnought, celestial planets) with procedural fallbacks.
   - Replaced primitive 4x4 station square with multi-segment orbital spaceport hub and verified 0 perimeter glints across HTML and Win32 C.
   - Handoff: Advanced `kilo-graphics` to `KRogue`; rotated active agent to `kilo-soundscape`.
-
-- **2026-10-23T07:22:00-07:00 — kilo-adhoc: Fleet Architecture & Phase VI Direction Upgrade (Skills, Orchestrator & Pipeline Tables)**
-  - Status: PASS ✅ (0 regressions, Vite build clean, security_lint 100% PASS).
-  - 1-Command Automation: Added `scripts/verify_turn.py` and `scripts/advance_turn.py` (plus `scripts/check_sizes.py` alias), cutting post-edit verification and queue handoff from 7-9 tool calls down to 2 deterministic calls.
-  - Orchestrator Hardening: Fixed pre-flight auto-skip regex bug so `orchestrate.py` fast-forwards past Mature/inappropriate targets in-place and dispatches immediately in the same slot; added post-turn uncommitted work salvage and prompt Mission Spec injection.
-  - Phase VI Direction: Reworked `next_work.md` into 7 staggered 10-target Mission Pipeline Tables launching **Phase VI: System Convergence** (KiloOS VFS/IPC cross-app mesh, RFMS co-op/duel multiplayer across deep games, and 6 canonical 1999 `kweb://` destinations).

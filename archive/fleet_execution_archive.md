@@ -4,6 +4,12 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-23T07:22:00-07:00 — kilo-adhoc: Fleet Architecture & Phase VI Direction Upgrade (Skills, Orchestrator & Pipeline Tables)**
+  - Status: PASS ✅ (0 regressions, Vite build clean, security_lint 100% PASS).
+  - 1-Command Automation: Added `scripts/verify_turn.py` and `scripts/advance_turn.py` (plus `scripts/check_sizes.py` alias), cutting post-edit verification and queue handoff from 7-9 tool calls down to 2 deterministic calls.
+  - Orchestrator Hardening: Fixed pre-flight auto-skip regex bug so `orchestrate.py` fast-forwards past Mature/inappropriate targets in-place and dispatches immediately in the same slot; added post-turn uncommitted work salvage and prompt Mission Spec injection.
+  - Phase VI Direction: Reworked `next_work.md` into 7 staggered 10-target Mission Pipeline Tables launching **Phase VI: System Convergence** (KiloOS VFS/IPC cross-app mesh, RFMS co-op/duel multiplayer across deep games, and 6 canonical 1999 `kweb://` destinations).
+
 - **2026-10-23T07:12:00-07:00 — kilo-creator: kweb://portal (KiloAuctions '99 Hardware Auction Block & Web Portal Expansion)**
   - KiloAuctions '99 Suite: Built authentic 1999 auction block featuring 12 vintage lots (Voodoo 3, SB Live! Platinum, Zip 250, Surreal Tournament '99, ThinkPad 770X, Gravis UltraSound, Palm V, Roland SC-55mkII) with live bids, proxy increments, and anti-sniping protection.
   - Interactive Commerce: Implemented Dot-Com Venture capital wallet ($2,500 budget), "Buy-It-Now" instant checkout, custom user gear listing modal, watchlist toggles, and live countdown timer ticker.

@@ -882,10 +882,12 @@
   <div id="tab-editor" class="tab-content">
     <div class="panel">
       <div class="panel-title">
-        <div class="title-left">📂 Buffer Source</div>
+        <div class="title-left">📂 Buffer Source <span id="vfsPathIndicator" style="font-size:0.75rem; color:var(--accent-cyan); font-weight:normal; font-family:monospace;"></span></div>
         <div class="form-row">
           <input type="file" id="fileInput" style="display:none" onchange="handleFileSelect(event)">
           <button class="btn btn-cyan btn-sm" onclick="document.getElementById('fileInput').click()">Open File</button>
+          <button class="btn btn-primary btn-sm" onclick="openVFS()" title="Open File from KiloOS VFS">VFS Open</button>
+          <button class="btn btn-sm" onclick="saveVFS()" title="Save Current Buffer to KiloOS VFS">VFS Save</button>
           <button class="btn btn-sm" onclick="loadSampleBuffer()">Load Sample Data</button>
           <button class="btn btn-purple btn-sm" onclick="loadHexBuffer()">Load Hex Bytes</button>
           <button class="btn btn-sm" id="btnEchoRom" style="background:rgba(139,92,246,0.25); border:1px solid rgba(139,92,246,0.5); color:#c084fc;" onclick="loadEchoRomBuffer()" title="Load Project Echo ROM Sector (Offset 0x0024)">Echo ROM [0x0024]</button>
@@ -1500,6 +1502,142 @@
     try { localStorage.setItem('khex_tutorialSeen', '1'); } catch (e) {}
   }
 
+  // --- KiloOS Inter-App IPC & VFS Integration (Phase VI Pillar 1) ---
+  let currentVfsPath = null;
+  let currentReqId = 0;
+  const vfsCallbacks = {};
+
+  window.addEventListener('message', (e) => {
+    const msg = e.data;
+    if (msg && msg.requestId && vfsCallbacks[msg.requestId]) {
+      vfsCallbacks[msg.requestId](msg);
+      delete vfsCallbacks[msg.requestId];
+    }
+  });
+
+  function sendToOS(msg) {
+    return new Promise((resolve) => {
+      if (window.parent === window) {
+        resolve(null);
+        return;
+      }
+      const id = ++currentReqId;
+      vfsCallbacks[id] = resolve;
+      window.parent.postMessage({ ...msg, requestId: id }, '*');
+      setTimeout(() => {
+        if (vfsCallbacks[id]) {
+          delete vfsCallbacks[id];
+          resolve(null);
+        }
+      }, 4000);
+    });
+  }
+
+  function uint8ToBase64(u8) {
+    if (!u8) return '';
+    let binary = '';
+    const len = u8.byteLength;
+    const chunkSize = 8192;
+    for (let i = 0; i < len; i += chunkSize) {
+      binary += String.fromCharCode.apply(null, u8.subarray(i, Math.min(i + chunkSize, len)));
+    }
+    return window.btoa(binary);
+  }
+
+  function base64ToUint8(b64) {
+    const binaryStr = window.atob(b64);
+    const len = binaryStr.length;
+    const bytes = new Uint8Array(len);
+    for (let i = 0; i < len; i++) {
+      bytes[i] = binaryStr.charCodeAt(i);
+    }
+    return bytes;
+  }
+
+  async function loadVFSFile(path) {
+    if (!path) return;
+    try {
+      const res = await sendToOS({ type: 'VFS_READ', path });
+      if (!res || res.data === undefined || res.data === null) {
+        showToast('VFS Read Notice', `Could not read VFS path "${path}"`, 'warning');
+        return;
+      }
+      let raw = res.data;
+      let bytes;
+      if (typeof raw === 'string') {
+        if (raw.startsWith('data:application/octet-stream;base64,') || raw.startsWith('data:binary;base64,')) {
+          const b64 = raw.substring(raw.indexOf(',') + 1);
+          bytes = base64ToUint8(b64);
+        } else if (raw.startsWith('data:')) {
+          const b64 = raw.substring(raw.indexOf(',') + 1);
+          try { bytes = base64ToUint8(b64); } catch(e) { bytes = new TextEncoder().encode(raw); }
+        } else {
+          bytes = new TextEncoder().encode(raw);
+        }
+      } else if (raw instanceof Uint8Array) {
+        bytes = raw;
+      } else {
+        bytes = new TextEncoder().encode(String(raw));
+      }
+      binaryBuffer = bytes;
+      currentVfsPath = path;
+      const filename = path.split('/').pop() || 'file.bin';
+      const tb = document.getElementById('rawTextBuffer');
+      if (tb) tb.value = `[VFS Loaded: ${path} (${binaryBuffer.length} bytes)]`;
+      const indicator = document.getElementById('vfsPathIndicator');
+      if (indicator) indicator.innerText = `[VFS: ${path}]`;
+      selectedOffset = 0;
+      renderHexView();
+      if (binaryBuffer.length > 0) selectByte(0);
+      showToast('VFS File Loaded', `Successfully loaded "${filename}" (${binaryBuffer.length.toLocaleString()} bytes).`, 'success');
+    } catch (err) {
+      showToast('VFS Error', 'Error loading VFS file: ' + err.message, 'error');
+    }
+  }
+
+  async function openVFS() {
+    try {
+      const res = await sendToOS({ type: 'VFS_SHOW_OPEN' });
+      if (res && res.path) {
+        await loadVFSFile(res.path);
+      } else if (!res && window.parent === window) {
+        showToast('VFS Standalone', 'Opening local file selector...', 'info');
+        document.getElementById('fileInput').click();
+      }
+    } catch (e) {
+      showToast('VFS Open Error', e.message, 'error');
+    }
+  }
+
+  async function saveVFS() {
+    if (!binaryBuffer || binaryBuffer.length === 0) {
+      showToast('Buffer Empty', 'No binary buffer to save.', 'warning');
+      return;
+    }
+    try {
+      let path = currentVfsPath;
+      if (!path) {
+        const res = await sendToOS({ type: 'VFS_SHOW_SAVE' });
+        if (!res || !res.path) {
+          if (!res && window.parent === window) {
+            showToast('VFS Standalone', 'Downloading binary RAW file...', 'info');
+            downloadRawFile();
+          }
+          return;
+        }
+        path = res.path;
+      }
+      const b64Data = 'data:application/octet-stream;base64,' + uint8ToBase64(binaryBuffer);
+      await sendToOS({ type: 'VFS_WRITE', path, data: b64Data });
+      currentVfsPath = path;
+      const indicator = document.getElementById('vfsPathIndicator');
+      if (indicator) indicator.innerText = `[VFS: ${path}]`;
+      showToast('VFS Saved', `Buffer (${binaryBuffer.length} B) saved to ${path}`, 'success');
+    } catch (e) {
+      showToast('VFS Save Error', e.message, 'error');
+    }
+  }
+
   // Quicksave & Quickload Workspace State [F5 / F9]
   function quicksaveState() {
     if (!binaryBuffer || binaryBuffer.length === 0) {
@@ -1509,6 +1647,15 @@
     const hexStr = Array.from(binaryBuffer).map(b => b.toString(16).padStart(2, '0')).join('');
     const tb = document.getElementById('rawTextBuffer');
     const hexIn = document.getElementById('hexInput');
+    const archSel = document.getElementById('disasmArch');
+    const origIn = document.getElementById('disasmOrigin');
+    const startIn = document.getElementById('disasmStartOffset');
+    const maxSel = document.getElementById('disasmMaxInstructions');
+    const filtIn = document.getElementById('disasmFilter');
+    const sMode = document.getElementById('searchMode');
+    const sPat = document.getElementById('searchPattern');
+    const rPat = document.getElementById('replacePattern');
+
     const state = {
       hex: hexStr,
       text: tb ? tb.value : '',
@@ -1516,12 +1663,21 @@
       activeTab: activeTab,
       isLittleEndian: isLittleEndian,
       selectedOffset: selectedOffset,
+      currentVfsPath: currentVfsPath || null,
+      disasmArch: archSel ? archSel.value : 'x86_32',
+      disasmOrigin: origIn ? origIn.value : '0x00401000',
+      disasmStartOffset: startIn ? startIn.value : '0x0000',
+      disasmMaxInstructions: maxSel ? maxSel.value : '50',
+      disasmFilter: filtIn ? filtIn.value : '',
+      searchMode: sMode ? sMode.value : 'ascii',
+      searchPattern: sPat ? sPat.value : '',
+      replacePattern: rPat ? rPat.value : '',
       timestamp: Date.now()
     };
     try {
       localStorage.setItem('khex_quicksave', JSON.stringify(state));
       localStorage.setItem('khex_tutorialSeen', '1');
-      showToast('⚡ Quicksave Saved [F5]', `Saved buffer (${binaryBuffer.length} B) to workspace memory.`, 'success', 3000);
+      showToast('⚡ Quicksave Saved [F5]', `Saved buffer (${binaryBuffer.length} B) & workspace to memory.`, 'success', 3000);
     } catch (e) {
       showToast('Quicksave Error', 'Could not save state to localStorage.', 'error');
     }
@@ -1553,13 +1709,45 @@
         const eb = document.getElementById('endianBadge');
         if (eb) eb.innerText = isLittleEndian ? 'LE (Little Endian)' : 'BE (Big Endian)';
       }
+      if (state.currentVfsPath) {
+        currentVfsPath = state.currentVfsPath;
+        const ind = document.getElementById('vfsPathIndicator');
+        if (ind) ind.innerText = `[VFS: ${currentVfsPath}]`;
+      }
+      if (state.disasmArch && document.getElementById('disasmArch')) {
+        document.getElementById('disasmArch').value = state.disasmArch;
+      }
+      if (state.disasmOrigin && document.getElementById('disasmOrigin')) {
+        document.getElementById('disasmOrigin').value = state.disasmOrigin;
+      }
+      if (state.disasmStartOffset && document.getElementById('disasmStartOffset')) {
+        document.getElementById('disasmStartOffset').value = state.disasmStartOffset;
+      }
+      if (state.disasmMaxInstructions && document.getElementById('disasmMaxInstructions')) {
+        document.getElementById('disasmMaxInstructions').value = state.disasmMaxInstructions;
+      }
+      if (state.disasmFilter !== undefined && document.getElementById('disasmFilter')) {
+        document.getElementById('disasmFilter').value = state.disasmFilter;
+      }
+      if (state.searchMode && document.getElementById('searchMode')) {
+        document.getElementById('searchMode').value = state.searchMode;
+      }
+      if (state.searchPattern !== undefined && document.getElementById('searchPattern')) {
+        document.getElementById('searchPattern').value = state.searchPattern;
+      }
+      if (state.replacePattern !== undefined && document.getElementById('replacePattern')) {
+        document.getElementById('replacePattern').value = state.replacePattern;
+      }
       if (state.activeTab) switchTab(state.activeTab);
       renderHexView();
       if (state.selectedOffset !== undefined && state.selectedOffset < binaryBuffer.length) {
         selectByte(state.selectedOffset);
       }
+      if (state.activeTab === 'disasm') {
+        runDisassembly();
+      }
       localStorage.setItem('khex_tutorialSeen', '1');
-      showToast('⚡ Quickload Restored [F9]', `Restored buffer (${binaryBuffer.length} B) successfully.`, 'success', 3000);
+      showToast('⚡ Quickload Restored [F9]', `Restored buffer (${binaryBuffer.length} B) & workspace successfully.`, 'success', 3000);
     } catch (e) {
       showToast('Quickload Error', 'Failed to parse saved state.', 'error');
     }
@@ -1599,6 +1787,29 @@
     if (activeTab !== 'converter') {
       switchTab(activeTab);
     }
+
+    // Handle KiloOS VFS launch route via URL hash
+    if (window.location.hash && window.location.hash.length > 1) {
+      const hashPath = decodeURIComponent(window.location.hash.substring(1));
+      if (hashPath.startsWith('/') || hashPath.startsWith('vfs:')) {
+        loadVFSFile(hashPath.replace(/^vfs:/, ''));
+      }
+    }
+    window.addEventListener('hashchange', () => {
+      if (window.location.hash && window.location.hash.length > 1) {
+        const hashPath = decodeURIComponent(window.location.hash.substring(1));
+        if (hashPath.startsWith('/') || hashPath.startsWith('vfs:')) {
+          loadVFSFile(hashPath.replace(/^vfs:/, ''));
+        }
+      }
+    });
+
+    // Lifecycle hygiene: pause any background activities on tab hide
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) {
+        // Paused in background
+      }
+    });
 
     // First-Run Tutorial Check (Fires only on fresh sessions; never interrupts restored save states)
     try {

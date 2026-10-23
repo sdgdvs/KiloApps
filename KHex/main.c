@@ -29,6 +29,7 @@
 #define ID_BTN_ASMDB 25
 #define ID_BTN_QUICKSAVE 26
 #define ID_BTN_QUICKLOAD 27
+#define ID_BTN_DISASM 28
 
 HWND hHex, hDec, hBin, hOct, hAscii;
 HWND hInt8, hUint8, hInt16, hUint16, hInt32, hUint32, hFloat;
@@ -747,6 +748,7 @@ void ShowHelpDialog(HWND hwnd) {
         " • [Ctrl+7]           : Deep Dissection & Entropy Report\n"
         " • [Ctrl+8]           : Export as Intel HEX\n"
         " • [Ctrl+9]           : Export as Assembly DB\n"
+        " • [Ctrl+D]           : Multi-Arch Disassembly (x86/6502/Z80)\n"
         " • [Ctrl+C]           : Copy Output to Clipboard\n\n"
         "Tip: Type in any base field to instantly update all representations.",
         "KHex Help & Shortcuts", MB_OK | MB_ICONINFORMATION);
@@ -758,6 +760,95 @@ typedef struct {
     unsigned int val;
     BOOL isLittleEndian;
 } KHexQuickSave;
+
+void DisasmMultiArch(HWND hwnd) {
+    unsigned int val = GetCurrentVal();
+    unsigned char b[4];
+    if (isLittleEndian) {
+        b[0] = (unsigned char)(val & 0xFF);
+        b[1] = (unsigned char)((val >> 8) & 0xFF);
+        b[2] = (unsigned char)((val >> 16) & 0xFF);
+        b[3] = (unsigned char)((val >> 24) & 0xFF);
+    } else {
+        b[0] = (unsigned char)((val >> 24) & 0xFF);
+        b[1] = (unsigned char)((val >> 16) & 0xFF);
+        b[2] = (unsigned char)((val >> 8) & 0xFF);
+        b[3] = (unsigned char)(val & 0xFF);
+    }
+
+    char out[2048];
+    char* p = out;
+    p += wsprintfA(p, "=== KHEX MULTI-ARCH OPCODE DISASSEMBLY ===\r\n\r\n");
+    p += wsprintfA(p, "Buffer Bytes: 0x%02X 0x%02X 0x%02X 0x%02X  [32-bit Word: 0x%08X (%s)]\r\n\r\n",
+        b[0], b[1], b[2], b[3], val, isLittleEndian ? "Little Endian" : "Big Endian");
+
+    // 1. x86-32 Protected Mode
+    p += wsprintfA(p, "[ARCH 1: x86-32 Protected Mode / Win32]\r\n");
+    p += wsprintfA(p, "  00401000: ");
+    switch (b[0]) {
+        case 0x90: p += wsprintfA(p, "90             NOP\r\n"); break;
+        case 0x55: p += wsprintfA(p, "55             PUSH EBP\r\n"); break;
+        case 0x5D: p += wsprintfA(p, "5D             POP EBP\r\n"); break;
+        case 0x50: p += wsprintfA(p, "50             PUSH EAX\r\n"); break;
+        case 0x58: p += wsprintfA(p, "58             POP EAX\r\n"); break;
+        case 0x31: p += wsprintfA(p, "31 %02X          XOR r/m32, reg (modrm=0x%02X)\r\n", b[1], b[1]); break;
+        case 0x33: p += wsprintfA(p, "33 %02X          XOR reg, r/m32 (modrm=0x%02X)\r\n", b[1], b[1]); break;
+        case 0x89: p += wsprintfA(p, "89 %02X          MOV r/m32, reg (modrm=0x%02X)\r\n", b[1], b[1]); break;
+        case 0x8B: p += wsprintfA(p, "8B %02X          MOV reg, r/m32 (modrm=0x%02X)\r\n", b[1], b[1]); break;
+        case 0xB8: p += wsprintfA(p, "B8 %02X %02X %02X %02X MOV EAX, 0x%08X\r\n", b[0], b[1], b[2], b[3], val); break;
+        case 0xC3: p += wsprintfA(p, "C3             RET\r\n"); break;
+        case 0xCC: p += wsprintfA(p, "CC             INT 3 (Breakpoint Trap)\r\n"); break;
+        case 0xEB: p += wsprintfA(p, "EB %02X          JMP SHORT +%d (0x%08X)\r\n", b[1], (signed char)b[1], 0x00401002 + (signed char)b[1]); break;
+        case 0xE9: p += wsprintfA(p, "E9 %02X %02X %02X    JMP NEAR rel32\r\n", b[1], b[2], b[3]); break;
+        case 0xE8: p += wsprintfA(p, "E8 %02X %02X %02X    CALL NEAR rel32\r\n", b[1], b[2], b[3]); break;
+        default:   p += wsprintfA(p, "%02X %02X %02X %02X    DB 0x%02X, 0x%02X, 0x%02X, 0x%02X ; Raw Opcode\r\n", b[0], b[1], b[2], b[3], b[0], b[1], b[2], b[3]); break;
+    }
+    p += wsprintfA(p, "\r\n");
+
+    // 2. MOS 6502 (NES / C64 / Apple II)
+    p += wsprintfA(p, "[ARCH 2: MOS 6502 (NES / Commodore 64 / Apple II)]\r\n");
+    p += wsprintfA(p, "  C000: ");
+    switch (b[0]) {
+        case 0xEA: p += wsprintfA(p, "EA             NOP\r\n"); break;
+        case 0x78: p += wsprintfA(p, "78             SEI (Set Interrupt Disable)\r\n"); break;
+        case 0xD8: p += wsprintfA(p, "D8             CLD (Clear Decimal Mode)\r\n"); break;
+        case 0x58: p += wsprintfA(p, "58             CLI (Clear Interrupt Disable)\r\n"); break;
+        case 0xA9: p += wsprintfA(p, "A9 %02X          LDA #$%02X (Immediate)\r\n", b[1], b[1]); break;
+        case 0xA2: p += wsprintfA(p, "A2 %02X          LDX #$%02X (Immediate)\r\n", b[1], b[1]); break;
+        case 0xA0: p += wsprintfA(p, "A0 %02X          LDY #$%02X (Immediate)\r\n", b[1], b[1]); break;
+        case 0x85: p += wsprintfA(p, "85 %02X          STA $%02X (Zero Page)\r\n", b[1], b[1]); break;
+        case 0x8D: p += wsprintfA(p, "8D %02X %02X       STA $%02X%02X (Absolute)\r\n", b[1], b[2], b[2], b[1]); break;
+        case 0x20: p += wsprintfA(p, "20 %02X %02X       JSR $%02X%02X (Subroutine)\r\n", b[1], b[2], b[2], b[1]); break;
+        case 0x4C: p += wsprintfA(p, "4C %02X %02X       JMP $%02X%02X (Jump)\r\n", b[1], b[2], b[2], b[1]); break;
+        case 0x60: p += wsprintfA(p, "60             RTS (Return from Subroutine)\r\n"); break;
+        case 0xD0: p += wsprintfA(p, "D0 %02X          BNE $%04X (Branch Not Equal)\r\n", b[1], 0xC002 + (signed char)b[1]); break;
+        case 0xF0: p += wsprintfA(p, "F0 %02X          BEQ $%04X (Branch Equal)\r\n", b[1], 0xC002 + (signed char)b[1]); break;
+        default:   p += wsprintfA(p, "%02X %02X %02X       .BYTE $%02X, $%02X, $%02X\r\n", b[0], b[1], b[2], b[0], b[1], b[2]); break;
+    }
+    p += wsprintfA(p, "\r\n");
+
+    // 3. Zilog Z80 (Game Boy / ZX Spectrum / MSX)
+    p += wsprintfA(p, "[ARCH 3: Zilog Z80 (Game Boy / ZX Spectrum / MSX)]\r\n");
+    p += wsprintfA(p, "  0150: ");
+    switch (b[0]) {
+        case 0x00: p += wsprintfA(p, "00             NOP\r\n"); break;
+        case 0x76: p += wsprintfA(p, "76             HALT\r\n"); break;
+        case 0xF3: p += wsprintfA(p, "F3             DI (Disable Interrupts)\r\n"); break;
+        case 0xFB: p += wsprintfA(p, "FB             EI (Enable Interrupts)\r\n"); break;
+        case 0xAF: p += wsprintfA(p, "AF             XOR A\r\n"); break;
+        case 0x3E: p += wsprintfA(p, "3E %02X          LD A, 0x%02X\r\n", b[1], b[1]); break;
+        case 0x06: p += wsprintfA(p, "06 %02X          LD B, 0x%02X\r\n", b[1], b[1]); break;
+        case 0x0E: p += wsprintfA(p, "0E %02X          LD C, 0x%02X\r\n", b[1], b[1]); break;
+        case 0x21: p += wsprintfA(p, "21 %02X %02X       LD HL, 0x%02X%02X\r\n", b[1], b[2], b[2], b[1]); break;
+        case 0xC9: p += wsprintfA(p, "C9             RET\r\n"); break;
+        case 0xC3: p += wsprintfA(p, "C3 %02X %02X       JP 0x%02X%02X\r\n", b[1], b[2], b[2], b[1]); break;
+        case 0xCD: p += wsprintfA(p, "CD %02X %02X       CALL 0x%02X%02X\r\n", b[1], b[2], b[2], b[1]); break;
+        case 0x20: p += wsprintfA(p, "20 %02X          JR NZ, %d (0x%04X)\r\n", b[1], (signed char)b[1], 0x0152 + (signed char)b[1]); break;
+        default:   p += wsprintfA(p, "%02X %02X %02X       DEFB 0x%02X, 0x%02X, 0x%02X\r\n", b[0], b[1], b[2], b[0], b[1], b[2]); break;
+    }
+
+    SetWindowTextA(hExportEdit, out);
+}
 
 void QuickSaveState(HWND hwnd) {
     HANDLE hFile = CreateFileA("khex_quicksave.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
@@ -1148,9 +1239,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             CreateWindowEx(0, "BUTTON", "Intel HEX [^8]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 185, 328, 95, 24, hwnd, (HMENU)ID_BTN_INTELHEX, NULL, NULL);
             CreateWindowEx(0, "BUTTON", "Asm DB [^9]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 285, 328, 85, 24, hwnd, (HMENU)ID_BTN_ASMDB, NULL, NULL);
             CreateWindowEx(0, "BUTTON", "Dissect & Entropy [^7]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 375, 328, 140, 24, hwnd, (HMENU)ID_BTN_DISSECT, NULL, NULL);
-            CreateWindowEx(0, "BUTTON", "Preset [P]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 520, 328, 75, 24, hwnd, (HMENU)ID_BTN_PRESET, NULL, NULL);
-            CreateWindowEx(0, "BUTTON", "Reset", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 600, 328, 65, 24, hwnd, (HMENU)ID_BTN_RESET, NULL, NULL);
-            CreateWindowEx(0, "BUTTON", "Help [F1]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 670, 328, 75, 24, hwnd, (HMENU)100, NULL, NULL);
+            CreateWindowEx(0, "BUTTON", "Disasm [^D]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 520, 328, 85, 24, hwnd, (HMENU)ID_BTN_DISASM, NULL, NULL);
+            CreateWindowEx(0, "BUTTON", "Preset [P]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 610, 328, 70, 24, hwnd, (HMENU)ID_BTN_PRESET, NULL, NULL);
+            CreateWindowEx(0, "BUTTON", "Reset", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 685, 328, 55, 24, hwnd, (HMENU)ID_BTN_RESET, NULL, NULL);
+            CreateWindowEx(0, "BUTTON", "Help [F1]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 745, 328, 75, 24, hwnd, (HMENU)100, NULL, NULL);
 
             hExportEdit = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "Welcome to KHex Suite!\r\nPress F1 or click 'Help' for user guide & shortcuts.\r\n\r\nInitial test value 0x12345678 loaded.\r\nPress F5 to quicksave or F9 to quickload workspace state to disk.\r\nClick 'Preset [P]' to cycle famous signatures, or type in any base field.\r\nClick 'Copy Out' or press Ctrl+C to copy results to clipboard.", WS_CHILD | WS_VISIBLE | ES_MULTILINE | ES_AUTOVSCROLL | WS_VSCROLL | ES_READONLY | WS_TABSTOP, 10, 356, 810, 335, hwnd, NULL, NULL, NULL);
 
@@ -1234,6 +1326,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     ExportDissection(GetCurrentVal());
                     SpawnParticles(445, 340, RGB(6, 182, 212), 32);
                     SpawnShockwave(445, 340, RGB(6, 182, 212));
+                } else if (id == ID_BTN_DISASM) {
+                    DisasmMultiArch(hwnd);
+                    SpawnParticles(560, 340, RGB(139, 92, 246), 28);
+                    SpawnShockwave(560, 340, RGB(139, 92, 246));
                 } else if (id == ID_BTN_RESET) {
                     SetCurrentVal(0);
                     SpawnParticles(595, 312, RGB(239, 68, 68), 20);
@@ -1588,6 +1684,9 @@ void MainEntry() {
                     continue;
                 } else if (msg.wParam == '9') {
                     SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_ASMDB, BN_CLICKED), 0);
+                    continue;
+                } else if (msg.wParam == 'D' || msg.wParam == 'd') {
+                    SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_DISASM, BN_CLICKED), 0);
                     continue;
                 } else if (msg.wParam == 'L' || msg.wParam == 'l') {
                     SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_ROL32, BN_CLICKED), 0);
